@@ -192,12 +192,82 @@ readonly SYSTEM_ASM = "ml"  % Assembler
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
+m3back = "@cm3cg"
+m3back_options = [ ]
+
 %
-% -mno-align-double IS VERY IMPORTANT
+% -mno-align-double is VERY IMPORTANT
 % because the Modula-3 compiler has already computed various
 % offsets and the backend should not, must not change them.
 %
-readonly m3back = "@cm3cg -mno-align-double"
+% If you remove this, the floating point number in RTHeapInfo.m3
+% gets aligned and the runtime linking information is then
+% not at the expected offset and you crash in startup.
+%
+m3back_options += "-mno-align-double"
+
+%
+% This reports what gcc thinks is unreachable but is often
+% reachable via an exception. This should be fixed.
+%
+% m3back_options += "-Wunreachable-code"
+
+%
+% This should be good, but generates a warning about debuggability.
+% It should enable linker dead-stripping.
+%
+% m3back_options += "-ffunction-sections"
+
+%
+% If there is a warning, this is supposed to tell us how
+% to turn the warning off. It often fails.
+%
+m3back_options += "-fdiagnostics-show-option"
+
+%
+% These were hoped to either enable different checking or pessimism
+% in order to fix analysis around exceptions. They failed.
+%
+% m3back_options += "-fexceptions"
+% m3back_options += "-fno-reorder-blocks"
+
+%
+% These sounds like nice simple optimizations.
+%
+m3back_options += "-feliminate-dwarf2-dups"
+m3back_options += "-feliminate-unused-debug-symbols"
+m3back_options += "-feliminate-unused-debug-types"
+m3back_options += "-finline-functions-called-once"
+m3back_options += "-finline-functions"
+m3back_options += "-fzero-initialized-in-bss"
+
+%
+% Generate 32bit code (not 64bit code).
+%
+m3back_options += "-m32"
+
+%
+% Don't depend on cygwin1.dll.
+%
+m3back_options += "-mno-cygwin"
+
+%
+% Be compatiable with Microsoft bit fields.
+%
+m3back_options += "-mms-bitfields"
+
+%
+% Don't report timings and such.
+%
+m3back_options += "-quiet"
+
+m3back_optimize = [ ]
+m3back_optimize += "-O"
+
+%
+% This requires -O.
+%
+m3back_optimize += "-Wuninitialized"
 
 proc
 m3_backend(
@@ -207,13 +277,17 @@ m3_backend(
     debug,
     )
 is
-    local args = ["-quiet", source, "-o", object]
+    local args = [source, "-o", object]
     if optimize
-        args += "-O"
+        args += m3back_optimize
     end
-    if debug
-        args += "-gstabs"
-    end
+    %
+    % -g provides a little more information than -gstabs
+    % -g is the same as -gstabs+
+    % -ggdb crashes
+    %
+    args += "-g"
+    args += m3back_options
     if M3_PROFILING
         args += "-p"
     end
