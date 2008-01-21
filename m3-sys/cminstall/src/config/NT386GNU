@@ -158,6 +158,11 @@ readonly SYSTEM_ASM = "as"  % Assembler
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
+%
+% -mno-align-double IS VERY IMPORTANT
+% because the Modula-3 compiler has already computed various
+% offsets and the backend should not, must not change them.
+%
 readonly m3back = "@cm3cg -mno-align-double"
 
 proc
@@ -173,7 +178,7 @@ is
         args += "-O"
     end
     if debug
-        args += "-g"
+        args += "-gstabs"
     end
     if M3_PROFILING
         args += "-p"
@@ -256,12 +261,12 @@ is
         args += "-O"
     end
     if debug
-        args += "-g"
+        args += "-gstabs"
     end
     if M3_PROFILING
         args += "-pg"
     end
-    return try_exec("@" & SYSTEM_CC, args, "-c", source, "-o", object)
+    return try_exec(SYSTEM_CC, args, "-c", source, "-o", object)
 end
 
 %---------------------------------------------------------------- assembler ---
@@ -633,7 +638,6 @@ m3_link(
     shared,
     )
 is
-
     local readonly pgm_file = prog & ".exe"
     local readonly manifest_file = pgm_file & ".manifest"
     local readonly pdb_file = prog & ".pdb"
@@ -724,15 +728,24 @@ skip_link(
     shared,
     )
 is
+    local readonly pgm_file = prog & ".exe"
+    local readonly manifest_file = pgm_file & ".manifest"
+    local readonly pdb_file = prog & ".pdb"
+    local readonly listing  = prog & ".lst"
+
     local readonly Outputs = [
-        prog & ".exe",
-        pgm_file & ".manifest",
-        prog & ".pdb",
-        prog & ".lst",
-        ]
+        pgm_file,
+        listing,
+        manifest_file,
+        pdb_file,
+    ]
 
     % make sure files get cleaned up
     deriveds("", Outputs)
+
+    BindExport(pgm_file)
+    DeleteFile(manifest_file)
+    PdbExport(pdb_file)
 
     return 0
 end
