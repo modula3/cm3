@@ -1,4 +1,4 @@
-@rem $Id: sysinfo.cmd,v 1.17 2008-01-18 14:51:24 jkrell Exp $
+@rem $Id: sysinfo.cmd,v 1.18 2008-01-21 05:05:03 jkrell Exp $
 
 @if not "%1" == "" (shift & goto :%1)
 
@@ -79,10 +79,23 @@
 
 @call %~dp0clearenv || exit /b 1
 
+if defined CM3_TARGET if not "%CM3_TARGET%" == "NT386" if not "%CM3_TARGET%" == "NT386GNU" (
+    @echo ERROR: If CM3_TARGET is defined, it must be NT386 or NT386GNU.
+    @echo ERROR: Support is yet lacking for other NT architectures and cross builds.
+    exit /b 1
+)
+
 if defined TARGET if not "%TARGET%" == "NT386" if not "%TARGET%" == "NT386GNU" (
     @echo ERROR: If TARGET is defined, it must be NT386 or NT386GNU.
     @echo ERROR: Support is yet lacking for other NT architectures and cross builds.
     exit /b 1
+)
+
+if not defined CM3_TARGET if defined TARGET (
+    set CM3_TARGET=%TARGET%
+)
+if not defined TARGET if defined CM3_TARGET (
+    set TARGET=%CM3_TARGET%
 )
 
 @rem
