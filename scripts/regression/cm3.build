@@ -48,9 +48,12 @@ do_tests() {
                 # if we land here, core compilation succeeded with
 				# last release, so we have a new lastok
                 ( test_build_std_lastok ) 2>&1
+                r1=$?
                 ( test_m3tests ) 2>&1
+                r2=$?
                 ( test_m3_all_pkgs ) 2>&1
-				
+                r3=$?
+                return `expr ${r1} + ${r2} + ${r3}`
         fi
 }
 
