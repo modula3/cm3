@@ -1,4 +1,4 @@
-@rem $Id: sysinfo.cmd,v 1.18 2008-01-21 05:05:03 jkrell Exp $
+@rem $Id: sysinfo.cmd,v 1.19 2008-01-21 16:24:31 jkrell Exp $
 
 @if not "%1" == "" (shift & goto :%1)
 
@@ -237,7 +237,7 @@ if "%TARGET%" == "NT386" (
 
 if defined CM3LIBSEARCHPATH set CM3LIBSEARCHPATH=
 if defined CM3BINSEARCHPATH set CM3BINSEARCHPATH=
-if defined EXE          set EXE=
+set EXE=.exe
 if defined GCWRAPFLAGS  set GCWRAPFLAGS=
 if defined GREP         set GREP=
 if defined SCRIPTS      set SCRIPTS=

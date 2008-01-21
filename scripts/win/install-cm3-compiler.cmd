@@ -1,4 +1,4 @@
-@rem $Id: install-cm3-compiler.cmd,v 1.3 2008-01-11 22:51:37 jkrell Exp $
+@rem $Id: install-cm3-compiler.cmd,v 1.4 2008-01-21 16:24:31 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -90,45 +90,45 @@ goto :main
     set BACKEND_CM3VERSION=%BACKEND%-%CM3VERSION%
     set FRONTEND_DEST=%FRONTEND_CM3VERSION%
     set BACKEND_DEST=%BACKEND_CM3VERSION%
-    call :cp_if %FRONTEND_SRC%.exe %FRONTEND_DEST%.exe
-    call :cp_if %FRONTEND_SRC%.pdb %FRONTEND_DEST%.pdb
+    call :cp_if %FRONTEND_SRC%%EXE% %FRONTEND_DEST%%EXE%
+    if exist %FRONTEND_SRC%.pdb call :cp_if %FRONTEND_SRC%.pdb %FRONTEND_DEST%.pdb
     if /i "%GCC_BACKEND%" == "yes" (
         rem call :cp_if %BACKEND_SRC% %BACKEND_DEST%
-        call :cp_if %BACKEND_SRC%.exe %BACKEND_DEST%.exe
-        call :cp_if %BACKEND_SRC%.pdb %BACKEND_DEST%.pdb
+        call :cp_if %BACKEND_SRC%%EXE% %BACKEND_DEST%%EXE%
+        if exist %BACKEND_SRC%.pdb call :cp_if %BACKEND_SRC%.pdb %BACKEND_DEST%.pdb
     )
     goto :eof
 
 :backup_old
     call :capture_output OLDCM3VERSION "call %~dp0install-cm3-compiler getversion %FRONTEND%"
-    call :cp_if %FRONTEND%.exe %FRONTEND%-%OLDCM3VERSION%.exe
-    call :cp_if %FRONTEND%.pdb %FRONTEND%-%OLDCM3VERSION%.pdb
+    call :cp_if %FRONTEND%%EXE% %FRONTEND%-%OLDCM3VERSION%%EXE%
+    if exist %FRONTEND%.pdb call :cp_if %FRONTEND%.pdb %FRONTEND%-%OLDCM3VERSION%.pdb
     if /i "%GCC_BACKEND%" == "yes" (
-        call :cp_if %BACKEND%.exe %BACKEND%-%OLDCM3VERSION%.exe
-        call :cp_if %BACKEND%.pdb %BACKEND%-%OLDCM3VERSION%.pdb
+        call :cp_if %BACKEND%%EXE% %BACKEND%-%OLDCM3VERSION%%EXE%
+        if exist %BACKEND%.pdb call :cp_if %BACKEND%.pdb %BACKEND%-%OLDCM3VERSION%.pdb
     )
     goto :eof
 
 :rm_curent
     if /i not "%NoAction%" == "yes" (
         if exist %FRONTEND% del /f %FRONTEND%
-        if exist %FRONTEND%.exe del /f %FRONTEND%.exe
+        if exist %FRONTEND%%EXE% del /f %FRONTEND%%EXE%
         if exist %FRONTEND%.pdb del /f %FRONTEND%.pdb
         if /i "%GCC_BACKEND%" == "yes" (
             if exist %BACKEND% del /f %BACKEND%
-            if exist %BACKEND%.exe del /f %BACKEND%.exe
+            if exist %BACKEND%%EXE% del /f %BACKEND%%EXE%
             if exist %BACKEND%.pdb del /f %BACKEND%.pdb
         )
     )
     goto :eof
 
 :cp_version
-    call :cp_if %FRONTEND_CM3VERSION%.exe %FRONTEND%.exe
-    call :cp_if %FRONTEND_CM3VERSION%.pdb %FRONTEND%.pdb
+    call :cp_if %FRONTEND_CM3VERSION%%EXE% %FRONTEND%%EXE%
+    if exist %FRONTEND_CM3VERSION%.pdb call :cp_if %FRONTEND_CM3VERSION%.pdb %FRONTEND%.pdb
     if /i "%GCC_BACKEND%" == "yes" (
         rem call :cp_if %BACKEND_CM3VERSION% %BACKEND%
-        call :cp_if %BACKEND_CM3VERSION%.exe %BACKEND%.exe
-        call :cp_if %BACKEND_CM3VERSION%.pdb %BACKEND%.pdb
+        call :cp_if %BACKEND_CM3VERSION%%EXE% %BACKEND%%EXE%
+        if exist %BACKEND_CM3VERSION%.pdb call :cp_if %BACKEND_CM3VERSION%.pdb %BACKEND%.pdb
     )
     goto :eof
 
@@ -154,7 +154,7 @@ goto :main
         if "%2" == "" (
             echo please specify a version
             echo available versions are:
-            dir /b %INSTALLROOT%\bin\cm3-*.exe
+            dir /b %INSTALLROOT%\bin\cm3-*%EXE%
             exit /b 1
         )
         set CM3VERSION=%2
