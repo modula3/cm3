@@ -1336,8 +1336,7 @@ def CopyConfigForDevelopment():
     return True
 
 def CopyConfigForDistribution(To):
-    To = os.path.join(To, "bin")
-    CopyFile(GetConfigForDistribution(), To) or FatalError()
+    CopyFile(GetConfigForDistribution(), os.path.join(To, "bin", "cm3.cfg")) or FatalError()
     return True
 
 def _CopyCompiler(From, To):
