@@ -103,8 +103,11 @@ def TarBzip2(PackageSetName):
 
 def MakeArchives():
     for PackageSetName in ["min", "std", "core", "base"]:
-        Zip(PackageSetName)
-        TarBzip2(PackageSetName)
+        if (Target != "NT386GNU" or PackageSetName != "std"):
+            if Target == "NT386":
+                Zip(PackageSetName)
+            else:
+                TarBzip2(PackageSetName)
 
 def BuildShip(Packages):
     # This is more indirect than necessary.
@@ -353,7 +356,7 @@ else:
 Echo("build standard packages with new compiler")
 # ----------------------------------------------------------------------------------------------------------------------------------
 
-if False:
+if Target == "NT386GNU":
 
     print("skipping..")
 
