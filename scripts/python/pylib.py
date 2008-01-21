@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.39 2008-01-20 15:48:04 jkrell Exp $
+# $Id: pylib.py,v 1.40 2008-01-21 15:55:50 jkrell Exp $
 
 import os
 from os import getenv
@@ -1336,8 +1336,7 @@ def CopyConfigForDevelopment():
     return True
 
 def CopyConfigForDistribution(To):
-    To = os.path.join(To, "bin")
-    CopyFile(GetConfigForDistribution(), To) or FatalError()
+    CopyFile(GetConfigForDistribution(), os.path.join(To, "bin", "cm3.cfg")) or FatalError()
     return True
 
 def _CopyCompiler(From, To):
