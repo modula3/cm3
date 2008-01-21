@@ -237,7 +237,7 @@ if "%TARGET%" == "NT386" (
 
 if defined CM3LIBSEARCHPATH set CM3LIBSEARCHPATH=
 if defined CM3BINSEARCHPATH set CM3BINSEARCHPATH=
-if defined EXE          set EXE=
+set EXE=.exe
 if defined GCWRAPFLAGS  set GCWRAPFLAGS=
 if defined GREP         set GREP=
 if defined SCRIPTS      set SCRIPTS=
