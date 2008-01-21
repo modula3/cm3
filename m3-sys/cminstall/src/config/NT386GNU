@@ -504,6 +504,25 @@ is
     return 0
 end
 
+%------------------------------------------------------------------------------
+
+%
+% Modula-3 has fixed sized buffers and fails assertions if we try
+% to give it more than 1k. This is lame.
+%
+readonly
+proc
+EscapeListOneElementAtATimeLAME(
+    List
+    )
+is
+    local Result = [ ]
+    foreach Element in List
+        Result += escape(Element)
+    end
+    return Result
+end
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -615,7 +634,7 @@ is
                     "--disable-runtime-pseudo-reloc",
                     "--large-address-aware",
                     objects,
-                    escape(imported_libs),
+                    EscapeListOneElementAtATimeLAME(imported_libs),
                 ])
 
         ret_code =
@@ -764,7 +783,7 @@ is
                 "--large-address-aware",
                 options,
                 objects,
-                escape(imported_libs),
+                EscapeListOneElementAtATimeLAME(imported_libs),
             ])
 
     local ret_code = try_exec(SYSTEM_CC, "-Wl," & LinkResponseFile, "2>&1", ">", listing)
