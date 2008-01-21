@@ -400,16 +400,19 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Longint := Int32;
                  Long    := Word32;
 
+                 (* 0 as third argument is __cdecl, while 1 is __stdcall *)
+                 (* fourth parameter is FALSE for NT386, TRUE for NT386GNU *)
+
                  CCs := NEW (REF ARRAY OF CallingConvention, 9);
-                 NTCall (0, "C",          0); (* __cdecl *)
-                 NTCall (1, "WINAPI",     1); (* __stdcall *)
-                 NTCall (2, "CALLBACK",   1); (* __stdcall *)
-                 NTCall (3, "WINAPIV",    0); (* __cdecl *)
-                 NTCall (4, "APIENTRY",   1); (* __stdcall *)
-                 NTCall (5, "APIPRIVATE", 1); (* __stdcall *)
-                 NTCall (6, "PASCAL",     1); (* __stdcall *)
-                 NTCall (7, "__cdecl",    0); (* __cdecl *)
-                 NTCall (8, "__stdcall",  1); (* __stdcall *)
+                 NTCall (0, "C",          0, FALSE); (* __cdecl *)
+                 NTCall (1, "WINAPI",     1, FALSE); (* __stdcall *)
+                 NTCall (2, "CALLBACK",   1, FALSE); (* __stdcall *)
+                 NTCall (3, "WINAPIV",    0, FALSE); (* __cdecl *)
+                 NTCall (4, "APIENTRY",   1, FALSE); (* __stdcall *)
+                 NTCall (5, "APIPRIVATE", 1, FALSE); (* __stdcall *)
+                 NTCall (6, "PASCAL",     1, FALSE); (* __stdcall *)
+                 NTCall (7, "__cdecl",    0, FALSE); (* __cdecl *)
+                 NTCall (8, "__stdcall",  1, FALSE); (* __stdcall *)
 
     | Systems.OKI =>
                  max_align                 := 32;
@@ -690,28 +693,19 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                     a process's memory on NT are "free" and unreadable.
                     --- WKK  9/9/94 *)
 
-                 CCs := NEW (REF ARRAY OF CallingConvention, 9);
-                 NTCall (0, "C",          0); (* __cdecl *)
-                 NTCall (1, "WINAPI",     1); (* __stdcall *)
-                 NTCall (2, "CALLBACK",   1); (* __stdcall *)
-                 NTCall (3, "WINAPIV",    0); (* __cdecl *)
-                 NTCall (4, "APIENTRY",   1); (* __stdcall *)
-                 NTCall (5, "APIPRIVATE", 1); (* __stdcall *)
-                 NTCall (6, "PASCAL",     1); (* __stdcall *)
-                 NTCall (7, "__cdecl",    0); (* __cdecl *)
-                 NTCall (8, "__stdcall",  1); (* __stdcall *)
+                 (* 0 as third argument is __cdecl, while 1 is __stdcall *)
+                 (* fourth parameter is FALSE for NT386, TRUE for NT386GNU *)
 
-                 (* temporary workaround; parameters are getting reversed
-                 elsewhere, so reverse them here *)
-                 CCs[0].args_left_to_right := TRUE;
-                 CCs[1].args_left_to_right := TRUE;
-                 CCs[2].args_left_to_right := TRUE;
-                 CCs[3].args_left_to_right := TRUE;
-                 CCs[4].args_left_to_right := TRUE;
-                 CCs[5].args_left_to_right := TRUE;
-                 CCs[6].args_left_to_right := TRUE;
-                 CCs[7].args_left_to_right := TRUE;
-                 CCs[8].args_left_to_right := TRUE;
+                 CCs := NEW (REF ARRAY OF CallingConvention, 9);
+                 NTCall (0, "C",          0, TRUE); (* __cdecl *)
+                 NTCall (1, "WINAPI",     1, TRUE); (* __stdcall *)
+                 NTCall (2, "CALLBACK",   1, TRUE); (* __stdcall *)
+                 NTCall (3, "WINAPIV",    0, TRUE); (* __cdecl *)
+                 NTCall (4, "APIENTRY",   1, TRUE); (* __stdcall *)
+                 NTCall (5, "APIPRIVATE", 1, TRUE); (* __stdcall *)
+                 NTCall (6, "PASCAL",     1, TRUE); (* __stdcall *)
+                 NTCall (7, "__cdecl",    0, TRUE); (* __cdecl *)
+                 NTCall (8, "__stdcall",  1, TRUE); (* __stdcall *)
 
     |  Systems.PPC_LINUX => 
       (* FIXME: preliminary assumptions bound to change *)
@@ -805,14 +799,14 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
     RETURN TRUE;
   END Init;
 
-PROCEDURE NTCall (x: INTEGER;  nm: TEXT;  id: INTEGER) =
+PROCEDURE NTCall (x: INTEGER;  nm: TEXT;  id: INTEGER; gnuWin32: BOOLEAN) =
   BEGIN
     CCs[x] := NEW (CallingConvention,
                      name := nm,
                      m3cg_id := id,
-                     args_left_to_right := FALSE,
+                     args_left_to_right := gnuWin32,
                      results_on_left := TRUE,
-                     standard_structs := FALSE);
+                     standard_structs := gnuWin32);
   END NTCall;
 
 PROCEDURE FixI (VAR i: Int_type;  max_align: INTEGER) =
