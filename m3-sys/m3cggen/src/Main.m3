@@ -283,7 +283,7 @@ BEGIN
   Out ("  LAST_OPCODE } M3CG_opcode;");
   Out ("");
 
-  Out ("static char *M3CG_opnames[] = {");
+  Out ("static const char *M3CG_opnames[] = {");
   FOR op := FIRST(Map) TO LAST(Map) DO
     <*ASSERT op = Map[op].op*>
     Out ("  \"", Map[op].name, "\", ",
