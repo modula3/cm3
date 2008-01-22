@@ -4,7 +4,9 @@
 (*                                                             *)
 (* Last modified on Wed Oct 12 16:12:57 PDT 1994 by kalsow     *)
 
-MODULE M3BackWin32 EXPORTS M3Backend;
+(* $Id$ *)
+
+MODULE M3Backend;
 
 IMPORT Wr, Thread;
 IMPORT M3CG, Msg, Utils, NTObjFile, M3x86, M3ObjFile;
@@ -52,4 +54,4 @@ PROCEDURE Close (<*UNUSED*> cg: M3CG.T) =
   END Close;
 
 BEGIN
-END M3BackWin32.
+END M3Backend.

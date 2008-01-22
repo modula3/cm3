@@ -29,7 +29,6 @@ fi
 UsePackage()
 {
   case "$1" in
-    m3objfile | \
     mklib | \
     fix_nl | \
     libdump | \
@@ -48,7 +47,6 @@ UsePackage()
     juno-compiler | \
     juno-app) [ "${M3OSTYPE}" != "WIN32" ] ;;
 
-    m3back | \
     m3staloneback) [ "${GCC_BACKEND}" != yes ] ;;
     m3cc) [ "${GCC_BACKEND}" = yes ] && [ "${OMIT_GCC}" = "" ] ;;
  

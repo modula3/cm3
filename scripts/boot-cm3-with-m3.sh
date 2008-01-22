@@ -35,9 +35,9 @@ export BUILDARGS
 
 P=""
 P="${P} m3middle"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
+P="${P} m3objfile"
 P="${P} m3linker"
-[ "${GCC_BACKEND}" != yes ] && P="${P} m3back"
+P="${P} m3back"
 [ "${GCC_BACKEND}" != yes ] && P="${P} m3staloneback"
 P="${P} m3front"
 P="${P} m3quake"
