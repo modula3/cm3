@@ -1,0 +1,60 @@
+% Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
+% See file COPYRIGHT-CMASS for details.
+%
+% Standard configuration file for an x86 machine running Windows NT or perhaps Windows 95.
+%
+
+%
+% CONSIDER mnemonic single letters or VERY short strings here
+%
+% m for Microsoft (threading, compiler, linker, windowing, naming)
+% p for Posix (threading model, and others)
+% u for Unix (misc)
+% g for GNU (compiler/linker)
+% h for MinGNU (follows g, not exactly mnemonic)
+% u for user (threading model)
+% k for kernel (threading model)
+% c for Cygwin (C runtime, maybe compiler/linker)
+% n for NT
+% w for Windows (or m for Microsoft?)
+% v for vtalarm (threading model)
+% x for X Windows
+%
+
+%
+% 0 for integrated backend (i?)
+% 1 for cm3cg (g?)
+%
+readonly Modula3Backend = 0
+
+%
+% 0 for native Windows kernel threads  (n? k? w?)
+% 1 for pthreads  (p?)
+%
+readonly ThreadLibrarary = 0
+
+%
+% 0 for Windows (w? m?)
+% 1 for X Windows (x? u?)
+%
+readonly WindowLibrary = 0
+
+%
+% 0 for Visual C++ (m?)
+% 1 for gcc (g? u?)
+%
+readonly CCompiler = 0
+
+%
+% 0 for Visual C++
+% 1 for gcc
+%
+readonly Linker = 0
+
+%
+% 0 for Microsoft
+% 1 for Cygwin
+%
+readonly CLibrary = 0
+
+include(TARGET & ".common")
