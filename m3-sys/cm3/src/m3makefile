@@ -6,6 +6,8 @@
 % Last modified on Tue Jan 24 13:10:54 PST 1995 by kalsow
 %      modified on Wed Jun  2 12:06:33 PDT 1993 by muller
 
+% $Id: m3makefile,v 1.5 2008-01-22 16:36:01 jkrell Exp $
+
 % remove_m3_option ("-gui")
 % m3_option ("-times")
 
@@ -20,15 +22,12 @@ include ("version.quake")
 version_impl ("Version")
 interface ("Version")
 
+module ("M3Backend")
+import ("m3objfile")
+import ("m3back")
 if equal (OS_TYPE, "POSIX")
-  interface ("M3Backend")
-  implementation ("M3BackPosix")
   implementation ("UtilsPosix")
 else
-  import ("m3objfile")
-  import ("m3back")
-  interface ("M3Backend")
-  implementation ("M3BackWin32")
   implementation ("UtilsWin32")
 end
 

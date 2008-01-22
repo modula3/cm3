@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: boot-cm3-core.sh,v 1.7 2008-01-09 10:38:33 jkrell Exp $
+# $Id: boot-cm3-core.sh,v 1.8 2008-01-22 16:36:01 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -37,9 +37,9 @@ P=""
 P="${P} m3core"
 P="${P} libm3"
 P="${P} m3middle"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3objfile"
+P="${P} m3objfile"
 P="${P} m3linker"
-[ "${GCC_BACKEND}" != yes ] && P="${P} m3back"
+P="${P} m3back"
 [ "${GCC_BACKEND}" != yes ] && P="${P} m3staloneback"
 P="${P} m3front"
 P="${P} m3quake"

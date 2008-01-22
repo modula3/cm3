@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: copy-bootarchives.sh,v 1.4 2008-01-09 10:38:33 jkrell Exp $
+# $Id: copy-bootarchives.sh,v 1.5 2008-01-22 16:36:01 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -39,9 +39,9 @@ P=""
 P="${P} m3-libs/m3core"
 P="${P} m3-libs/libm3"
 P="${P} m3-sys/m3middle"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} m3-sys/m3objfile"
+P="${P} m3-sys/m3objfile"
 P="${P} m3-sys/m3linker"
-[ "${GCC_BACKEND}" != yes ] && P="${P} m3-sys/m3back"
+P="${P} m3-sys/m3back"
 [ "${GCC_BACKEND}" != yes ] && P="${P} m3-sys/m3staloneback"
 P="${P} m3-sys/m3front"
 P="${P} m3-sys/m3quake"

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: boot-cm3-build-on-target.sh,v 1.7 2008-01-09 10:38:33 jkrell Exp $
+# $Id: boot-cm3-build-on-target.sh,v 1.8 2008-01-22 16:36:01 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -35,9 +35,9 @@ P=""
 L="${L} m3-libs/m3core"
 L="${L} m3-libs/libm3"
 L="${L} m3-sys/m3middle"
-[ "${M3OSTYPE}" = "WIN32" ] && L="${L} m3-sys/m3objfile"
+L="${L} m3-sys/m3objfile"
 L="${L} m3-sys/m3linker"
-[ "${GCC_BACKEND}" != yes ] && L="${L} m3-sys/m3back"
+L="${L} m3-sys/m3back"
 [ "${GCC_BACKEND}" != yes ] && L="${L} m3-sys/m3staloneback"
 L="${L} m3-sys/m3front"
 L="${L} m3-sys/m3quake"
