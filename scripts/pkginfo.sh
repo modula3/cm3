@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.13 2008-01-10 21:18:10 jkrell Exp $
+# $Id: pkginfo.sh,v 1.14 2008-01-22 16:36:01 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -29,7 +29,6 @@ fi
 UsePackage()
 {
   case "$1" in
-    m3objfile | \
     mklib | \
     fix_nl | \
     libdump | \
@@ -48,7 +47,6 @@ UsePackage()
     juno-compiler | \
     juno-app) [ "${M3OSTYPE}" != "WIN32" ] ;;
 
-    m3back | \
     m3staloneback) [ "${GCC_BACKEND}" != yes ] ;;
     m3cc) [ "${GCC_BACKEND}" = yes ] && [ "${OMIT_GCC}" = "" ] ;;
  
