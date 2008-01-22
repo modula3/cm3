@@ -2,62 +2,54 @@
 % See file COPYRIGHT-CMASS for details.
 %
 % Standard configuration file for an x86 machine running Windows NT or perhaps Windows 95,
-% using gcc-based backend and gcc/ld linker but native threads, native windows, native c library.
+% using gcc-based backend and gcc/ld linker but native threads, native windows, native C library.
+%
+% $Id$
 %
 
-%
-% CONSIDER mnemonic single letters or VERY short strings here
-%
-% m for Microsoft (threading, compiler, linker, windowing, naming)
-% p for Posix (threading model, and others)
-% u for Unix (misc)
-% g for GNU (compiler/linker)
-% h for MinGNU (follows g, not exactly mnemonic)
-% u for user (threading model)
-% k for kernel (threading model)
-% c for Cygwin (C runtime, maybe compiler/linker)
-% n for NT
-% w for Windows (or m for Microsoft?)
-% v for vtalarm (threading model)
-% x for X Windows
-%
+% temporary compat; remove this
+readonly TARGET = "NT386"
 
-readonly TARGET = "NT386" % code generation target
+% The values and order here are chosen such that
+% NT386 is all 0.
+% NT386GNU is probably all 1.
+% NT386MINGNU is 1s followed by 0s.
+% This could be changed however.
 
 %
-% 0 for integrated backend (i?)
-% 1 for cm3cg (g?)
+% 0 for integrated backend
+% 1 for cm3cg
 %
-Modula3Backend = 1
+readonly Modula3Backend = 1
 
 %
-% 0 for native Windows kernel threads  (n? k? w?)
-% 1 for pthreads  (p?)
+% 0 for Visual C++ cl
+% 1 for gcc
 %
-ThreadLibrarary = 0
-
-%
-% 0 for Windows (w? m?)
-% 1 for X Windows (x? u?)
-%
-WindowLibrary = 0
-
-%
-% 0 for Visual C++ cl (m?)
-% 1 for gcc (g? u?)
-%
-CCompiler = 1
+readonly CCompiler = 1
 
 %
 % 0 for Visual C++ link
-% 1 for gcc/ld
+% 1 for gcc/ld/collect2/dlltool
 %
-Linker = 1
+readonly Linker = 1
+
+%
+% 0 for native Windows kernel threads
+% 1 for pthreads
+%
+readonly ThreadLibrarary = 0
+
+%
+% 0 for Windows
+% 1 for X Windows
+%
+readonly WindowLibrary = 0
 
 %
 % 0 for Microsoft/MinGWin
 % 1 for Cygwin
 %
-CLibrary = 0
+readonly CLibrary = 0
 
-include(TARGET & ".common")
+include("NT386.common")
