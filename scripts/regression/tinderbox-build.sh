@@ -14,9 +14,9 @@ then
 fi
 
 #source build config
-. $1
+. "$1"
  
-if [ -z "${PROJECT}" -o -z "${TREENAME}" -o -z "${TINDERBOX_URL}" ] 
+if [ -z "${PROJECT}" -o -z "${TREENAME}" ] 
 then 
     echo "Parameters missing, see included README for documentation." 
     exit 1 
@@ -24,17 +24,13 @@ fi
 
 # set default parameters:
 BUILDNAME=${BUILDNAME:-"`uname -n`-`uname -s`-`uname -r`-`uname -m`"}
-TINDERBOX_MAILER=${TINDERBOX_MAILER:-"wget -q -O - ${TINDERBOX_URL} --post-file"}
 
 echo "Building ${PROJECT}."
 echo "Tinderbox Tree:   \"${TREENAME}\""
 echo "Buildname:        \"${BUILDNAME}\""
 echo ""
-echo "Tinderbox URL:    \"${TINDERBOX_URL}\""
-echo "Tinderbox Mailer: \"${TINDERBOX_MAILER}\""
 
 NAME="build-${PROJECT}-`date "+%Y%m%d-%H%M%S"`" 
-
 
 tinderbox_header () {
 	TREE_NAME="$1"
@@ -94,7 +90,7 @@ mail_buildlog () {
 
 	TMP_LOG=${BUILDDIR}/mail_temp
 
-	if [ -z ${TMP_LOG} ]
+	if [ -z "${TMP_LOG}" ]
 	then
 		echo "Error: Cannot create temp file for mailer."
 		cleanup
@@ -104,11 +100,17 @@ mail_buildlog () {
 	{
 		tinderbox_header "${TREENAME}" "${BUILDNAME}" "$1" "${STARTTIME}"
 		cat ${LOG}
-	}  > $TMP_LOG
+	}  > "$TMP_LOG"
 	
-	${TINDERBOX_MAILER} ${TMP_LOG} > /dev/null
+	tinderbox_mailer "${TMP_LOG}"
 
-	rm -f ${TMP_LOG}
+	if [ $? != 0 ]; then
+	    echo "Error: Sending buildlog failed!"
+	    cleanup
+	    exit 4
+	fi
+
+	rm -f "${TMP_LOG}"
 }
 
 cleanup() {
