@@ -84,9 +84,11 @@ TYPE
   GLOBALHANDLE = WinBaseTypes.HANDLE;
   LOCALHANDLE  = WinBaseTypes.HANDLE;
 
-  PROC     = <*WINAPI*> PROCEDURE ();
-  NEARPROC = <*WINAPI*> PROCEDURE ();
-  FARPROC  = <*WINAPI*> PROCEDURE ();
+  (* PROC     = <*WINAPI*> PROCEDURE (); never used *)
+  (* NEARPROC = <*WINAPI*> PROCEDURE (); never used *)
+  (* WINAPI BUT if there any parameters, needs a cast (LOOPHOLE), and if there are NO parameters,
+     the calling convention doesn't make a difference. *)
+  FARPROC  = PROCEDURE ();
 
 TYPE
   HWND         <: HANDLE;
