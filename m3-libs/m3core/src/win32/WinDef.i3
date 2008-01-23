@@ -8,6 +8,8 @@
 (*      modified on Tue Nov  8 16:20:58 PST 1994 by kalsow   *)
 (*      modified on Thu Mar 18 17:53:33 PST 1993 by harrison *)
 
+(* $Id: WinDef.i3,v 1.3 2008-01-23 03:24:07 jkrell Exp $ *)
+
 INTERFACE WinDef;
 
 (* Corresponds to build version 0001 of windef.h *)
@@ -86,8 +88,10 @@ TYPE
 
   (* PROC     = <*WINAPI*> PROCEDURE (); never used *)
   (* NEARPROC = <*WINAPI*> PROCEDURE (); never used *)
-  (* WINAPI BUT if there any parameters, needs a cast (LOOPHOLE), and if there are NO parameters,
-     the calling convention doesn't make a difference. *)
+  (* WINAPI but if there are any parameters, needs a cast (LOOPHOLE), and if
+     there are no parameters, the calling convention doesn't make a
+     difference, and declaring it WINAPI causes warnings when non-NT386
+     consume this interface just for its types. *)
   FARPROC  = PROCEDURE ();
 
 TYPE
