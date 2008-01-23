@@ -2,12 +2,12 @@
 
 SNAPS=${SNAPS:-/var/www/modula3.elegosoft.com/cm3/uploaded-archives}
 FNPAT1=${FNPAT1:-"cm3-{min,std,all,core,base,doc}-{POSIX,WIN32,WIN,WIN64}-"}
-FNPATSUF=${FNPATSUF:-.{tar.gz,tar.bz,tgz,tbz,zip}}
+FNPATSUF=${FNPATSUF:-.{tar.gz,tar.bz,tar.bz2,tgz,tbz,zip}}
 FNPATLS=${FNPAT:-${FNPAT1}'*-*'${FNPATSUF}}
 INDEX=${INDEX:-index.html}
 cd $SNAPS || exit 1
 
-TARGETS=`eval ls -1 ${FNPATLS} |
+TARGETS=`eval ls -1 ${FNPATLS} 2>/dev/null |
   awk -F- '{ print $4 }' |
   sort -u`
 
@@ -38,7 +38,7 @@ cat > ${INDEX} << EOF
 
 EOF
 
-echo $TARGETS
+# echo $TARGETS
 for t in ${TARGETS}; do
   all=`eval ls -1t ${FNPAT1}${t}-*${FNPATSUF} 2>/dev/null`
   echo "<h3>Target Platform ${t}</h3>"
@@ -46,13 +46,11 @@ for t in ${TARGETS}; do
   for f in ${all}; do
     echo "<tr>"
     ls -hl "$f" | awk ' {
-      printf "<td width=\"5%%\" align=\"right\">\n"
+      printf "<td width=\"15%%\" align=\"right\">\n"
       printf "%s", $6
       printf "</td><td width=\"6%%\" align=\"left\">\n"
       printf "%s", $7
       printf "</td><td width=\"6%%\" align=\"right\">\n"
-      printf "%s", $8
-      printf "</td><td width=\"10%%\" align=\"right\">\n"
       printf "%s", $5
     }'
     echo "</td><td width=\"63%\" align=\"left\">"
