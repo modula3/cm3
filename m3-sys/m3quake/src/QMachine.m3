@@ -1424,6 +1424,7 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
     (* finally, execute the command *)
     TRY
       IF mergeStdinStdout THEN
+        Process.GetStandardFileHandles (stdin, stdout, stderr);
         Pipe.Open (hr := quake_in, hw := process_out);
         TRY
           (* fire up the subprocess *)
