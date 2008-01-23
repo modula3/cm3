@@ -8,7 +8,11 @@ TREENAME=cm3
 TINDERBOX_URL="http://tinderbox.elegosoft.com/tinderbox/cgi-bin/processmail_builds.cgi"
 
 # specify the program used to send the status to the server
+# this is what we use in our local network:
 TINDERBOX_MAILER="wget -q -O - ${TINDERBOX_URL} --post-file"
+
+#use this if you are committer of the cm3 repo:
+#TINDERBOX_MAILER="cat build.log | ssh YOURNAME@tinderbox.elegosoft.com \"sudo -u tinderbox /usr/local/tinderbox/tinderbox-cgi/processmail_builds.cgi\""
 
 # cm3 build script specific stuff
 BUILD_REL=${BUILD_REL:-"rel"}
