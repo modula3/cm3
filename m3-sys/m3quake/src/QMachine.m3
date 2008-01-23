@@ -7,7 +7,7 @@
 MODULE QMachine;
 
 IMPORT Atom, AtomList, IntRefTbl, Env, Fmt, Text, FileWr;
-IMPORT Wr, Thread, Stdio, OSError, TextSeq;
+IMPORT Pipe, Wr, Thread, Stdio, OSError, TextSeq;
 IMPORT Pathname, Process, File, FS, RTParams;
 IMPORT M3Buf, M3File, M3Process, CoffTime;
 IMPORT QIdent, QValue, QVal, QCode, QCompiler, QVTbl, QVSeq, QScanner;
@@ -1074,6 +1074,7 @@ CONST
     Builtin {"error",       DoError,     1, FALSE},
     Builtin {"escape",      DoEscape,    1, TRUE},
     Builtin {"exec",        DoExec,     -1, FALSE},
+    Builtin {"cm3_exec",    DoCm3Exec,  -1, FALSE},
     Builtin {"file",        DoFile,      0, TRUE},
     Builtin {"format",      DoFormat,   -1, TRUE},
     Builtin {"include",     DoInclude,   1, FALSE},
@@ -1082,6 +1083,7 @@ CONST
     Builtin {"path",        DoPath,      0, TRUE},
     Builtin {"stale",       DoStale,     2, TRUE},
     Builtin {"try_exec",    DoTryExec,  -1, TRUE},
+    Builtin {"try_cm3_exec",DoTryCm3Exec,-1, TRUE},
     Builtin {"unlink_file", DoUnlink,    1, TRUE},
     Builtin {"write",       DoWrite,    -1, FALSE},
     Builtin {"datetime",    DoDateTime,  0, TRUE},
@@ -1341,7 +1343,25 @@ PROCEDURE DoTryExec (t: T;  n_args: INTEGER)
     PushInt (t, info.exit_code);
   END DoTryExec;
 
-PROCEDURE ExecCommand (t: T;  n_args: INTEGER): ExecInfo
+PROCEDURE DoCm3Exec (t: T;  n_args: INTEGER)
+  RAISES {Error, Thread.Alerted} =
+  VAR info := ExecCommand (t, n_args, mergeStdinStdout := TRUE);
+  BEGIN
+    IF (info.exit_code # 0) AND NOT info.ignore_errors THEN
+      Err (t, Fmt.F("exit %s: %s", Fmt.Int(info.exit_code), info.command));
+    END;
+  END DoCm3Exec;
+
+PROCEDURE DoTryCm3Exec (t: T;  n_args: INTEGER)
+  RAISES {Error, Thread.Alerted} =
+  VAR info := ExecCommand (t, n_args, mergeStdinStdout := TRUE);
+  BEGIN
+    IF (info.ignore_errors) THEN info.exit_code := 0; END;
+    PushInt (t, info.exit_code);
+  END DoTryCm3Exec;
+
+PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
+                       mergeStdinStdout := FALSE): ExecInfo
   RAISES {Error, Thread.Alerted} =
   VAR
     info         : ExecInfo;
@@ -1354,6 +1374,9 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER): ExecInfo
     buf          : M3Buf.T;
     n_shell_args : INTEGER;
     wr           : Wr.T := CurWr (t);
+    quake_in     : Pipe.T;
+    process_out  : Pipe.T;
+    inbuf        : ARRAY [0..255] OF CHAR;
   BEGIN
     info.command := "";
     info.exit_code := 0;
@@ -1400,11 +1423,32 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER): ExecInfo
 
     (* finally, execute the command *)
     TRY
-      FlushIO ();
-      Process.GetStandardFileHandles (stdin, stdout, stderr);
-      handle := Process.Create (t.shell, SUBARRAY (args, 0, n_shell_args),
-                                stdin := stdin, stdout := stdout,
-                                stderr := stderr);
+      IF mergeStdinStdout THEN
+        Pipe.Open (hr := quake_in, hw := process_out);
+        TRY
+          (* fire up the subprocess *)
+          handle := Process.Create (t.shell, SUBARRAY (args, 0, n_shell_args),
+                                    stdin := stdin, stdout := process_out,
+                                    stderr := process_out);
+          (* close our copy of the writing end of the output pipe *)
+          process_out.close ();
+          LOOP 
+            (* send anything coming through the pipe to the quake output file *)
+            n := M3File.Read (quake_in, inbuf, NUMBER (inbuf));
+            IF (n <= 0) THEN EXIT; END;
+            Wr.PutString (wr, SUBARRAY (inbuf, 0, n));
+          END;
+        FINALLY
+          quake_in.close ();
+          FlushIO ();
+        END;
+      ELSE
+        FlushIO ();
+        Process.GetStandardFileHandles (stdin, stdout, stderr);
+        handle := Process.Create (t.shell, SUBARRAY (args, 0, n_shell_args),
+                                  stdin := stdin, stdout := stdout,
+                                  stderr := stderr);
+      END;
     EXCEPT
     | Thread.Alerted =>
         KillProcess (handle);
