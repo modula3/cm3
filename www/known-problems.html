@@ -80,17 +80,13 @@
       <a href="#p_6_4">6.4 asm/ipc.h not found on Linux</a><br>
     </p>
 
-    <a name="p_1">
-    <h3>1 General Problems</h3>
-    </a>
+    <h3><a name="p_1">1 General Problems</a></h3>
 
     <p>
       General problems and notes applying to all releases:
     </p>
 
-    <a name="p_1_1">
-    <h4>1.1 Linkage failure: cannot find -lXaw</h4>
-    </a>
+    <h4><a name="p_1_1">1.1 Linkage failure: cannot find -lXaw</a></h4>
 
     <p>
       <b>Platforms:</b> mostly LINUXLIBC6, LINUXELF
@@ -126,9 +122,7 @@
       much effort.
     </p>
 
-    <a name="p_1_2">
-    <h4>1.2 Filenames with spaces</h4>
-    </a>
+    <h4><a name="p_1_2">1.2 Filenames with spaces</a></h4>
 
     <p>
       <b>Platforms:</b> all, especially WIN32
@@ -162,10 +156,9 @@
       since release 5.1.1.
     </p>
 
-    <a name="p_1_3">
-    <h4>
+    <h4><a name="p_1_3">
       1.3 Linker trouble with latest Microsoft VC++
-      compilers on WIN32 platform
+      compilers on WIN32 platform</a>
     </h4>
 
     <p>
@@ -215,10 +208,9 @@
       templates for the global configuration file <tt>cm3.cfg</tt>.
     </p>
 
-    <a name="p_1_4">
-    <h4>
+    <h4><a name="p_1_4">
       1.4 Assembler problem on LINUXLIBC6 (filds 
-        instrcution)
+        instrcution)</a>
     </h4>
 
     <p>
@@ -229,7 +221,7 @@
     <p>
       <b>Description:</b>
       The assembler reports errors due to an unknown i386 instruction
-      like this:
+      like this:</p>
       <pre>
   new source -> compiling RealFloatExtras.m3
   RealFloatExtras.ms: Assembler messages:
@@ -242,7 +234,7 @@
   LongFloatExtras.ms:69: Error: no such 386 instruction: `filds'
   LongFloatExtras.ms:154: Error: no such 386 instruction: `filds'
   LongFloatExtras.ms:211: Error: no such 386 instruction: `filds'
-      </pre>
+      </pre><p>
       The above was observed on a RedHat 6.1 Linux system with libc6
       and gcc 2.91.66 (egcs-1.1.2). 
     </p>
@@ -258,9 +250,8 @@
       on (RedHat) Linux systems would be welcome.
     </p>
 
-    <a name="p_1_5">
-    <h4>
-      1.5 Version stamp mismatch during upgrading
+    <h4><a name="p_1_5">
+      1.5 Version stamp mismatch during upgrading</a>
     </h4>
 
     <p>
@@ -270,7 +261,7 @@
     <p>
       <b>Description:</b>
       The compiler reports version stamp mismatches in libm3
-      like this:
+      like this:</p>
       <pre>
  new source -> compiling ProcessPosix.m3
  new source -> compiling SocketPosix.m3
@@ -284,7 +275,6 @@
    <4d31a453f94cbb46> => SocketPosix.m3 
     => Compiler.i3 
   *** execution of  failed ***</pre>
-    </p>
 
     <p>
       <b>Solution:</b>
@@ -296,17 +286,13 @@
         CM3</a>.
     </p>
 
-    <a name="p_2">
-    <h3>2 Release 5.1.0</h3>
-    </a>
+    <h3><a name="p_2">2 Release 5.1.0</a></h3>
 
     <p>
       Problems and notes specific to release 5.1.0:
     </p>
 
-    <a name="p_2_1">
-    <h4>2.1 Installation on NT386 fails because of missing cygwin.dll</h4>
-    </a>
+    <h4><a name="p_2_1">2.1 Installation on NT386 fails because of missing cygwin.dll</a></h4>
 
     <p>
       <b>Platforms:</b> NT386
@@ -339,27 +325,21 @@
     </ul>
 
 
-    <a name="p_3">
-    <h3>3 Release 5.1.1</h3>
-    </a>
+    <h3><a name="p_3">3 Release 5.1.1</a></h3>
 
     <p>
       Problems and notes specific to release 5.1.1:
     </p>
 
-    <a name="p_4">
-    <h3>4 Release 5.1.2 - 5.1.8</h3>
-    </a>
+    <h3><a name="p_4">4 Release 5.1.2 - 5.1.8</a></h3>
 
     <p>
       Problems and notes specific to release 5.1.8:
     </p>
 
-    <a name="p_4_1">
-    <h4>
-      4.1 Linkage failure: missing -L before library paths (installer bug)
+    <h4><a name="p_4_1">
+      4.1 Linkage failure: missing -L before library paths (installer bug)</a>
     </h4>
-    </a>
 
     <p>
       <b>Platforms:</b> all
@@ -405,13 +385,11 @@ SYSTEM_LIBS = {
       5.1.8.
     </p>
 
-    <a name="p_4_2">
-    <h4>
+    <h4><a name="p_4_2">
       4.2 [Release 5.1.8] Linkage failure on POSIX platforms due to
           wrong paths (/pub/lang/m3/cm3-dist) in binary installation
-          archives
+          archives</a>
     </h4> 
-    </a>
 
     <p>
       <b>Platforms:</b> all POSIX platforms
@@ -501,18 +479,14 @@ SYSTEM_LIBS = {
       after installation.
     </p>
 
-    <a name="p_5">
-    <h3>
-      5 Release 5.2.X
+    <h3><a name="p_5">
+      5 Release 5.2.X</a>
     </h3> 
-    </a>
 
-    <a name="p_5_1">
-    <h4>
+    <h4><a name="p_5_1">
       5.1 Problems building the core distribution
-      with Apple's gcc
+      with Apple's gcc</a>
     </h4>
-    </a>
 
     <p>
       <b>Platforms:</b> PPC_DARWIN
@@ -599,12 +573,10 @@ SYSTEM_LIBS = {
       included in <b>CM3 5.2.4</b>.
     </p>
 
-    <a name="p_5_2">
-    <h4>
+    <h4><a name="p_5_2">
       5.2 Compilation of m3gc-enhanced fails on
-        PPC_DARWIN
+        PPC_DARWIN</a>
     </h4>
-    </a>
 
     <p>
       <b>Platforms:</b> PPC_DARWIN
@@ -615,8 +587,7 @@ SYSTEM_LIBS = {
       The compilation of package m3gc-enhanced fails on PPC_DARWIN
       with the following errors:
     </p>
-    <pre>
-      <font size="-1">
+    <pre style="font-size: 0.9em;">
       new source -> compiling RTHeapDepC.c
       ../src/runtime/PPC_DARWIN/RTHeapDepC.c:88:21: sys/msg.h: No such file or directory
       ../src/runtime/PPC_DARWIN/RTHeapDepC.c:141: error: parse error before "__unused"
@@ -670,7 +641,7 @@ SYSTEM_LIBS = {
       ../src/runtime/PPC_DARWIN/RTHeapDepC.c:1302: error: argument `tvp' doesn't match prototype
       /usr/include/sys/time.h:186: error: prototype declaration
       compilation failed => not building library "libm3gcdefs.a"
-      Fatal Error: package build failed</font></pre>
+      Fatal Error: package build failed</pre>
 
     <p>
       <b>Solution:</b>
@@ -696,12 +667,10 @@ SYSTEM_LIBS = {
       <tt>M3GC_SIMPLES=yes</tt> in your environment.
     </p>
 
-    <a name="p_5_3">
-    <h4>
+    <h4><a name="p_5_3">
       5.3 Problems with efficient exception handling (`stack walkers')
-          and gcc 3.2.1
+          and gcc 3.2.1</a>
     </h4>
-    </a>
 
     <p>
       <b>Platforms:</b> all (principally), SOLgnu
@@ -770,12 +739,11 @@ SYSTEM_LIBS = {
       targets in their cm3 configuration files.  We still should look into
       adapting the m3 frontend use the gcc exception framework.
     </p>
-    <a name="p_5_4">
-    <h4>
+
+    <h4><a name="p_5_4">
       5.4 Installation program fails with unhandled
-        OSError exception on SOLgnu platform
+        OSError exception on SOLgnu platform</a>
     </h4>
-    </a>
 
     <p>
       <b>Platforms:</b> SOLgnu
@@ -799,11 +767,10 @@ Abort</pre>
       installation program in the 5.2.6 archive is broken. There is no
       work-around.
     </p>
-    <a name="p_5_5">
-    <h4>
-      5.5 Segmentation fault errors on Fedora 3 and Gentoo Linux
+
+    <h4><a name="p_5_5">
+      5.5 Segmentation fault errors on Fedora 3 and Gentoo Linux</a>
     </h4>
-    </a>
 
     <p>
       <b>Platforms:</b> Linux
@@ -817,15 +784,12 @@ Abort</pre>
       Use the cm3-min-POSIX-LINUXLIBC6-d5.2.7-2005-03-31.tgz release. Previous versions of the cm3 compiler for Linux will not work on these distributions. Changes were made in m3core (tag &gt;= devel_m3core_d2_1_13) and m3gc-enhanced (tag &gt;= devel_m3gc-enhanced_d1_0_6).
     </p>
 
-  <a name="p_6">
-    <h3>
-      6 Release 5.4.X
+    <h3><a name="p_6">
+      6 Release 5.4.X</a>
     </h3> 
-    </a>
 
-    <a name="p_6_1">
-    <h4>
-      6.1 Segmentation violations on Linux, compile fails with PklFonts core dumping
+    <h4><a name="p_6_1">
+      6.1 Segmentation violations on Linux, compile fails with PklFonts core dumping</a>
     </h4>
 
     <p>
@@ -835,20 +799,20 @@ Abort</pre>
     <p>
     <b>Description:</b> All Modula3 programs (including cm3 itself)
     exit with a segmentation violation. The bootstrap process aborts with:
+    </p>
     <pre>
-      cd ../pkl-fonts/LINUXLIBC6 && ./PklFonts > FontData.pkl
+      cd ../pkl-fonts/LINUXLIBC6 &amp;&amp; ./PklFonts > FontData.pkl
       Segmentation fault (core dumped)
     </pre>
-    </p>
 
     <p>
       <b>Solution:</b>
      Set the LD_POINTER_GUARD environment
      variable to 0 before running Modula3 programs, using
      a command like &quot;<tt>export LD_POINTER_GUARD=0</tt>&quot; or equivalent.
-    <a name="p_6_2">
-    <h4>
-      6.2 Unresolved X11 libraries on NetBSD
+
+    <h4><a name="p_6_2">
+      6.2 Unresolved X11 libraries on NetBSD</a>
     </h4>
     <p>
       <b>Platforms:</b> NetBSD
@@ -863,9 +827,8 @@ Abort</pre>
     to <tt>/etc/ld.so.conf</tt>.
     </p>
 
-    <a name="p_6_3">
-    <h4>
-      6.3 Issues with /usr/bin/ld on Solaris
+    <h4><a name="p_6_3">
+      6.3 Issues with /usr/bin/ld on Solaris</a>
     </h4>
     <p>
       <b>Platforms:</b> Solaris
@@ -890,9 +853,8 @@ Abort</pre>
       <b>Solution:</b> Make sure that /usr/local/bin/ld is GNU ld.
     </p>
 
-    <a name="p_6_4">
-    <h4>
-      6.4 asm/ipc.h not found on Linux
+    <h4><a name="p_6_4">
+      6.4 asm/ipc.h not found on Linux</a>
     </h4>
 
     <p>
@@ -903,6 +865,7 @@ Abort</pre>
       <b>Description:</b>
       The compiler complains about a missing asm/ipc.h
       like this:
+    </p>
       <pre>
  new source -> compiling RTVM.c
  new source -> compiling sysdeps.c
@@ -911,20 +874,20 @@ Abort</pre>
  compilation failed => not building library "libm3gcdefs.a"
  Fatal Error: package build failed
  *** execution of  failed ***</pre>
-    </p>
 
     <p>
       <b>Solution:</b>
       Frankly, asm/ipc.h is not needed to compile. It is sufficient to delete
       or comment the lines 19-21 in file
       m3-libs/m3gc-simple/src/runtime/LINUXLIBC6/sysdeps.c like this:
+    </p>
 
       <pre>
- // #if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 1
+ // #if __GLIBC__ >= 2 &amp;&amp; __GLIBC_MINOR__ >= 1
  // #include &lt;asm/ipc.h&gt;
  // #endif
       </pre>
-
+    <p>
       This change has been committed to the repository, but it was too
       late to be included in the 5.4.0 release.
     </p>
