@@ -10,6 +10,7 @@ REM v1.30--08/29/2003 by RCC, added optional HOME argument, and
 REM                           revamped argument handling
 REM v1.31--12/06/2006 by RCC, added CM3Setup_DefaultSDKSetup
 REM v1.40--01/20/2008 by RCC, added IDE option, added SHOW option, misc enhance
+REM v1.41--01/24/2008 by RCC, set Visual Studio defaults to match 2008 Express
 REM ===========================================================================
 REM PURPOSE:
 REM    This Windows batch/command file sets up the environment for using cm3.
@@ -147,7 +148,7 @@ REM    Set to absolute path of BAT/CMD that sets up Microsoft Visual Studio/C/C+
 REM    Set to empty to disable calling this auto setup routine.
 REM    Example: set CM3Setup_DefaultVCSetup="C:\Program Files\Microsoft Visual Studio 8\VC\bin\VCVars32.bat"
 REM 
-set CM3Setup_DefaultVCSetup="C:\Program Files\Microsoft Visual Studio 8\VC\bin\VCVars32.bat"
+set CM3Setup_DefaultVCSetup="C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat"
 REM ---------------------------------------------------------------------------
 REM ...some other variants shown here for examples...
 REM set CM3Setup_DefaultVCSetup="C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat"
@@ -161,7 +162,7 @@ REM    Set to absolute command line for establishing the Microsoft Platform SDK
 REM    environment settings.  Set it to empty to disable calling this routine.
 REM    Example: set CM3Setup_DefaultSDKSetup="C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\SetEnv.CMD" /XP32 /RETAIL
 REM
-set CM3Setup_DefaultSDKSetup="C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\SetEnv.CMD" /XP32 /RETAIL
+set CM3Setup_DefaultSDKSetup=
 REM ---------------------------------------------------------------------------
 
 REM ---------------------------------------------------------------------------
@@ -184,7 +185,7 @@ REM fall thru to Begin
 :-----
 echo.
 echo -------------------------------------------------------------------------------
-echo cm3SetupCmdEnv.CMD, written by R.C.Coleburn 08/12/2003, v1.40 01/20/2008 by RCC
+echo cm3SetupCmdEnv.CMD, written by R.C.Coleburn 08/12/2003, v1.41 01/24/2008 by RCC
 echo -------------------------------------------------------------------------------
 echo.
 REM fall thru to Args1
