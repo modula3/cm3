@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-all.sh,v 1.5 2001-11-25 14:02:58 wagner Exp $
+# $Id: make-src-dist-all.sh,v 1.6 2008-01-24 23:45:32 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -16,6 +16,10 @@ else
   export root
 fi
 . "$sysinfo"
+# if a datestamp is set for the build of snapshots, include this, too
+if [ -n "$DS" ]; then
+  CM3VERSION="${CM3VERSION}-${DS}"
+fi
 #. "$ROOT/scripts/pkginfo.sh"
 #. "$ROOT/scripts/pkgcmds.sh"
 
@@ -48,6 +52,11 @@ export GZIP="-9 -v"
 ${TAR} -czf ${ARCHIVE} --files-from .tar-include --exclude-from .tar-exclude \
  || exit 1
 ls -l ${ARCHIVE}
+if [ -n "${DOSHIP}" ]; then
+  WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+  WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
+  scp "${ARCHIVE}" "${WWWDEST}" < /dev/null
+fi
 echo "done"
 exit 0
 
