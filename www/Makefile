@@ -54,12 +54,15 @@ all: ${CKSUMS} ${MD5S} archive.list archive.md5 archive.cksum
 
 archive.cksum: ${CKSUMS}
 	cat ${CKSUMS} >$@
+	ci -l -m'make' archive.cksum 2>&1
 
 archive.md5: ${MD5S}
 	cat ${MD5S} >$@
+	ci -l -m'make' archive.md5 2>&1
 
 archive.list: ${ARCHIVES}
 	ls -l ${ARCHIVES} > $@
+	ci -l -m'make' archive.list 2>&1
 
 clean:
 	rm -f ${MD5S}
