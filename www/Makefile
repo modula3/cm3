@@ -2,6 +2,10 @@
 
 ARCHIVES := ${wildcard *.tgz}
 ARCHIVES += ${wildcard *.zip}
+ARCHIVES += ${wildcard *.bz2}
+ARCHIVES += ${wildcard snaps/*.tgz}
+ARCHIVES += ${wildcard snaps/*.zip}
+ARCHIVES += ${wildcard snaps/*.bz2}
 
 BASES := ${basename ${ARCHIVES}}
 CKSUMS := ${addsuffix .cksum, ${BASES}}
@@ -15,13 +19,37 @@ all: ${CKSUMS} ${MD5S} archive.list archive.md5 archive.cksum
 %.cksum: %.tgz
 	cksum $< >$@
 
+%.cksum: %.bz2
+	cksum $< >$@
+
+%.cksum: snaps/%.tgz
+	cksum $< >$@
+
+%.cksum: snaps/%.bz2
+	cksum $< >$@
+
 %.md5: %.tgz
+	md5sum $< >$@
+
+%.md5: %.bz2
+	md5sum $< >$@
+
+%.md5: snaps%.tgz
+	md5sum $< >$@
+
+%.md5: snaps%.bz2
 	md5sum $< >$@
 
 %.cksum: %.zip
 	cksum $< >$@
 
+%.cksum: snaps/%.zip
+	cksum $< >$@
+
 %.md5: %.zip
+	md5sum $< >$@
+
+%.md5: snaps/%.zip
 	md5sum $< >$@
 
 archive.cksum: ${CKSUMS}
