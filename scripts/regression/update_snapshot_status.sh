@@ -14,6 +14,7 @@ CM3_OSTYPE=${CM3_OSTYPE:-POSIX}
 FNPAT1=${FNPAT1:-"cm3-min-${CM3_OSTYPE}-"}
 FNPATSUF=${FNPATSUF:-.tgz}
 FNPATLS=${FNPAT:-${FNPAT1}'*-*'${FNPATSUF}}
+FNPATSRC=${FNPATSRC:-cm3-src-*.tgz}
 INDEX=${INDEX:-snapshot-index.html}
 cd $SNAPS || exit 1
 
@@ -42,15 +43,48 @@ cat > ${INDEX} << EOF
 
 EOF
 
+tablerow() {
+  f="$1"
+  echo "<tr>"
+  ls -hl "$f" | awk ' {
+    printf "<td width=\"15%%\" align=\"right\">\n"
+    printf "%s", $6
+    printf "</td><td width=\"6%%\" align=\"left\">\n"
+    printf "%s", $7
+    printf "</td><td width=\"6%%\" align=\"right\">\n"
+    printf "%s", $5
+  }'
+  echo "</td><td width=\"63%\" align=\"left\">"
+  echo "<a href=\"$f\">$f</a>"
+  echo "</td><td width=\"10%\" align=\"center\">"
+  if [ -r "$f.README" ]; then
+    echo "<a href=\"$f.README\">README</a>"
+  elif [ -r "$f.html" ]; then
+    echo "<a href=\"$f.html\">Notes</a>"
+  elif [ -r "$f.txt" ]; then
+    echo "<a href=\"$f.txt\">Notes</a>"
+  else
+    echo "-"
+  fi
+  echo "</td></tr>"
+}
+
 for t in ${TARGETS}; do
   all=`ls -1 ${FNPAT1}${t}-*${FNPATSUF}`
   last=`ls -1 ${FNPAT1}${t}-*${FNPATSUF} | tail -1`
   last10=`ls -1 ${FNPAT1}${t}-*${FNPATSUF} | tail -10`
   ln -sf "${last}" "${FNPAT1}${t}${FNPATSUF}"
   echo "<h3>Target Platform ${t}</h3>"
+  echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
   for f in ${last10}; do
-    echo "<a href=\"$f\">$f</a><br>"
+    tablerow $f
   done
+  echo "</tbody></table>"
+done >> ${INDEX}
+
+echo "<h3>Source Archives</h3>"
+for f in `ls -1t ${FNPATSRC}`; do
+  tablerow $f
 done >> ${INDEX}
 
 # cleanup
@@ -59,6 +93,8 @@ for t in ${TARGETS}; do
   #echo "${pat}"
   ls -1d ${pat} | cleanup_all_but_last_n ${NKEEP}
 done
+
+ls -1d ${FNPATSRC} | cleanup_all_but_last_n ${NKEEP}
 
 cat >> ${INDEX} <<EOF
     <hr>
