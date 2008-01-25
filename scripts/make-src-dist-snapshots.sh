@@ -19,7 +19,8 @@ fi
 
 DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
 
-${ROOT}/make-src-dist-all.sh
-${ROOT}/make-src-dist-std.sh
-${ROOT}/make-src-dist-sys.sh
-${ROOT}/make-src-dist-gnu.sh
+( . ${ROOT}/scripts/make-src-dist-all.sh )
+( . ${ROOT}/scripts/make-src-dist-std.sh )
+( . ${ROOT}/scripts/make-src-dist-sys.sh )
+( . ${ROOT}/scripts/make-src-dist-gnu.sh )
+
