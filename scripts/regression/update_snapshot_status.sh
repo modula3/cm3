@@ -82,10 +82,14 @@ for t in ${TARGETS}; do
   echo "</tbody></table>"
 done >> ${INDEX}
 
-echo "<h3>Source Archives</h3>"
-for f in `ls -1t ${FNPATSRC}`; do
-  tablerow $f
-done >> ${INDEX}
+echo "<h3>Source Archives</h3>" >> ${INDEX}
+(
+  echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
+  for f in `ls -1t ${FNPATSRC}`; do
+    tablerow $f
+  done
+  echo "</tbody></table>"
+) >> ${INDEX}
 
 # cleanup
 for t in ${TARGETS}; do
