@@ -532,6 +532,24 @@ test_make_bin_dist()
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 snapshot build done"
 }
 
+make_src_dist_snapshots()
+{
+  echo " === `date -u +'%Y-%m-%d %H:%M:%S'` build cm3 source dist snapshots in ${WS}"
+  STAGE=${HTMP}
+  # checkout must have been done before
+  if cd "${WS}/cm3"; then
+    true
+  else
+    echo "cannot cd to ${WS}/cm3" 1>2
+    exit 1
+  fi
+
+  export STAGE
+  DOSHIP=yes ./scripts/make-src-dist-snapshots.sh || exit 1
+  echo " >>> OK make_src_dist_snapshots ${DS} ${WS}"
+  echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 source snapshot build done"
+}
+
 test_m3tests()
 {
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` run cm3 compiler and runtime regression test suite in ${WS} with lastok version"
