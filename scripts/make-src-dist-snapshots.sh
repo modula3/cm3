@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-snapshots.sh,v 1.1 2008-01-24 23:45:32 wagner Exp $
+# $Id: make-src-dist-snapshots.sh,v 1.2 2008-01-25 00:11:38 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -19,7 +19,8 @@ fi
 
 DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
 
-${ROOT}/make-src-dist-all.sh
-${ROOT}/make-src-dist-std.sh
-${ROOT}/make-src-dist-sys.sh
-${ROOT}/make-src-dist-gnu.sh
+( . ${ROOT}/scripts/make-src-dist-all.sh )
+( . ${ROOT}/scripts/make-src-dist-std.sh )
+( . ${ROOT}/scripts/make-src-dist-sys.sh )
+( . ${ROOT}/scripts/make-src-dist-gnu.sh )
+
