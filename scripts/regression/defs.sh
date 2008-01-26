@@ -577,8 +577,13 @@ test_m3tests()
 
   cd "${WS}/cm3/m3-sys/m3tests" || exit 1
 
-  cm3 -build 2>${M3TERR} | tee ${M3TOUT}
-
+  cm3 -build -DHTML 2>${M3TERR} | tee ${M3TOUT}
+  WWWSERVER=${WWWSERVER:-${CM3CVSSERVER}}
+  WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/m3tests}
+  if [ -r "m3tests.html" ]; then
+    scp "m3tests.html" "${WWWDEST}/m3tests-${CM3_TARGET}-${DS}.html" \
+      < /dev/null
+  fi
   
   echo " >>> test_m3tests error extract:"
   find ${CM3_TARGET} -type f -name stderr.pgm -print | \
