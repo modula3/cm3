@@ -47,4 +47,3 @@ include_dir ("word")
 % m3_option ("-times")
 
 Library ("m3core")
-
