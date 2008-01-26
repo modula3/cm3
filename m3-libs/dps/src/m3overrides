@@ -1,2 +1,0 @@
-override ("libm3", ROOT & "/m3-libs")
-override ("X11R4", ROOT & "/m3-ui")

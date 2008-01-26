@@ -1,4 +1,0 @@
-import_sys_lib ("ODBC")
-import("odbc")
-Interface("ODBCDBRep")
-implementation("ODBCDB")
