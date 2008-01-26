@@ -52,16 +52,105 @@ proc compare_file (file) is
 
   if stale (file, file)
     write (file, " is missing", CR)
+    html ([file, "missing"])
     return
   end
 
   if stale (base, base)
     write (base, " is missing", CR)
+    html ([base, "missing"])
     return
   end
 
   exec (diff, file, base, head)
+  if defined("HTML")
+    exec (diff, file, base, ">>", report)
+  end
 end
+
+proc cmp_file (file) is
+  local base = path_of (file)
+
+  if stale (file, file)
+    return ""
+  end
+
+  if stale (base, base)
+    return ""
+  end
+
+  if equal(try_exec ("@cmp", file, base), 0)
+    return "T"
+  end
+  return ""
+end
+
+%if equal(OSTYPE, "POSIX")
+%  NOW = "-" & datetime()
+%else
+%  NOW = ""
+%end
+report = PACKAGE_DIR & SL & "m3tests.html"
+
+if defined("HTML")
+  > report in
+    write( "" )
+  end
+end
+
+proc html (args) is
+  if defined("HTML")
+    >> report in
+      write( args )
+    end
+  end
+end
+
+html(["<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">", CR])
+html(["<html>", CR])
+html(["  <head>", CR])
+html(["    <title>CM3 M3Tests Status for target platform ", TARGET, "</title>", CR])
+html(["    <META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html\">", CR])
+html(["    <META HTTP-EQUIV=\"Content-Style-Type\" CONTENT=\"text/css\">", CR])
+html(["    <META HTTP-EQUIV=\"Resource-type\" CONTENT=\"document\"> ", CR])
+html(["    <META HTTP-EQUIV=\"Reply-to\" CONTENT=\"m3-support@elego.de\"> ", CR])
+html(["    <LINK HREF=\"../normal.css\" REL=\"stylesheet\" TYPE=\"text/css\">", CR])
+html(["    <META NAME=\"robots\" content=\"noindex\">", CR])
+html(["", CR])
+html(["    <style type=\"text/css\">", CR])
+html(["    <!--", CR])
+html(["    .white    { color:#FFFFFF; }", CR])
+html(["    .bgred    { background:#FF4444; }", CR])
+html(["    .bggreen  { background:#44FF44; }", CR])
+html(["    .bgblue   { background:#5555FF; }", CR])
+html(["    .bgyellow { background:#FFFF00; }", CR])
+html(["    .small    { font-size:8pt; }", CR])
+html(["    .tl       { text-align: left; vertical-align: top; }", CR])
+html(["    //-->", CR])
+html(["    </style>", CR])
+html(["  </head>", CR])
+html(["", CR])
+html(["  <body bgcolor=\"#ffffff\">", CR])
+html(["    <h2>CM3 M3Tests Status for Target Platform ", TARGET, "</h2>", CR])
+html(["", CR])
+
+html(["    <table border=\"2\" cellspacing=\"1\" cellpadding=\"4\">", CR])
+html(["      <thead>", CR])
+html(["        <tr class=\"bgblue white\">", CR])
+html(["          <td width=\"5%\">", CR])
+html(["            <b>Package</b>", CR])
+html(["          </td>", CR])
+html(["          <td width=\"45%\">", CR])
+html(["            <b>Status</b>", CR])
+html(["", CR])
+html(["          </td>", CR])
+html(["          <td width=\"50%\">", CR])
+html(["            <b>Diffs</b>", CR])
+html(["          </td>", CR])
+html(["        </tr>", CR])
+html(["      </thead>", CR])
+html(["      <tbody>", CR])
+
 
 %------------------------------------------------------------------------------
 % capture the customizations used for these test runs
@@ -130,12 +219,31 @@ readonly proc run_test (class, group, uid, comment, should_run) is
       cp_if (dir & "/stderr.build", path_of(dir & "/stderr.build"))
     end
 
+    local ok1 = cmp_file (dir & "/stdout.build") and
+                cmp_file (dir & "/stderr.build")
+    local ok2 = "T"
+
+    if should_run
+      ok2 = cmp_file (dir & "/stdout.pgm") and
+            cmp_file (dir & "/stderr.pgm")
+    end
+
+    if ok1 and ok2
+      html (["<tr class=\"bggreen tl\"><td>", uid,
+             "</td><td class=\"small\" width=\"45%\">", comment])
+    else
+      html (["<tr class=\"bgred tl\"><td>", uid,
+             "</td><td class=\"small\" width=\"45%\">", comment])
+    end
+
+    html ("</td><td class=\"small\"><pre>")
     compare_file (dir & "/stdout.build")
     compare_file (dir & "/stderr.build")
     if should_run
       compare_file (dir & "/stdout.pgm")
       compare_file (dir & "/stderr.pgm")
     end
+    html (["</pre></td></tr>", CR])
 
     if not defined ("keep")
       exec ("@-rm -rf", dir & "/" & BUILD_DIR)
@@ -577,4 +685,13 @@ c_test ("c1", "c131", "unknown")
 c_test ("c1", "c132", "unknown")
 c_test ("c1", "c133", "unknown")
 c_test ("c1", "c134", "statically initialized fields")
+
+html(["      </tbody>", CR])
+html(["    </table>", CR])
+html(["", CR])
+html(["    <hr>", CR])
+html(["    <address><a href=\"mailto:m3-support{at}elego.de\">m3-support{at}elego.de</a></address>", CR])
+html(["  </body>", CR])
+html(["</html>", CR])
+
 end % NOT LIB_ONLY
