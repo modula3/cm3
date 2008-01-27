@@ -31,6 +31,9 @@ INSTROOT_CUR=${INSTROOT_CUR:-${INSTBASE}/current}
 CM3CVSSERVER=${CM3CVSSERVER:-birch.elegosoft.com}
 CM3CVSROOT=${CM3CVSROOT:-${CM3CVSSERVER}:/usr/cvs}
 
+# WWW server site
+WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+
 # the whole test log
 RLOG=${RLOG:-${HTMP}/cm3-rlog-${DS}}
 # number of last run results to keep (for cleanup in main)
@@ -578,7 +581,6 @@ test_m3tests()
   cd "${WS}/cm3/m3-sys/m3tests" || exit 1
 
   cm3 -build -DHTML 2>${M3TERR} | tee ${M3TOUT}
-  WWWSERVER=${WWWSERVER:-${CM3CVSSERVER}}
   WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/m3tests}
   if [ -r "m3tests.html" ]; then
     scp "m3tests.html" "${WWWDEST}/m3tests-${CM3_TARGET}-${DS}.html" \
