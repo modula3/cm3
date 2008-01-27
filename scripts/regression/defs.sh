@@ -392,8 +392,9 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   cm3config ${INSTROOT_CUR}
   prependpath ${INSTROOT_CUR}/bin
   LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
+  DYLD_LIBRARY_PATH=${LD_LIBRARY_PATH}
   INSTALLROOT=${INSTROOT_CUR}
-  export LD_LIBRARY_PATH INSTALLROOT
+  export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
 
   if type cm3 > /dev/null; then
     true
@@ -509,9 +510,10 @@ test_make_bin_dist()
   cm3config ${INSTROOT_CUR}
   prependpath ${INSTROOT_CUR}/bin
   LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
+  DYLD_LIBRARY_PATH=${LD_LIBRARY_PATH}
   INSTALLROOT=${INSTROOT_CUR}
   STAGE=${HTMP}
-  export LD_LIBRARY_PATH INSTALLROOT STAGE DS
+  export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT STAGE DS
 
   if type cm3 > /dev/null; then
     true
@@ -557,9 +559,10 @@ test_m3tests()
 {
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` run cm3 compiler and runtime regression test suite in ${WS} with lastok version"
   prependpath ${INSTROOT_CUR}/bin
-  LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
+  LD_LIBRARY_PATH=${INSTROOT_CUR}/lib:{WS}/cm3/m3-sys/m3tests/${CM3_TARGET}
+  DYLD_LIBRARY_PATH=${LD_LIBRARY_PATH}
   INSTALLROOT=${INSTROOT_CUR}
-  export LD_LIBRARY_PATH INSTALLROOT
+  export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
 
   if type cm3 > /dev/null; then
     true
@@ -611,8 +614,9 @@ test_m3_all_pkgs()
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` build all packages and generate report in ${WS} with lastok version"
   prependpath ${INSTROOT_CUR}/bin
   LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
+  DYLD_LIBRARY_PATH=${LD_LIBRARY_PATH}
   INSTALLROOT=${INSTROOT_CUR}
-  export LD_LIBRARY_PATH INSTALLROOT
+  export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
 
   if type cm3 > /dev/null; then
     true
