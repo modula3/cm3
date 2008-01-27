@@ -156,31 +156,22 @@ end
 if not defined ("no_config")
   % configure the sources
   if stale(donep, donep)
+    local ConfigTarget = ""
+    local ConfigWithGNULD = ""
     if equal (M3CC_HOST, M3CC_TARGET)
       if equal (M3CC_TARGET, "SOLgnu")
-        m3cc_Run (["cd", build_dir, "; ../gcc/configure", 
-              M3CC_CONFIG,
-              "--srcdir=../gcc",
-              "--enable-languages=m3cg",
-              "--disable-nls",
-              "--with-gnu-ld=yes",
-              "&& echo \"done\" > " & done])
-      else
-        m3cc_Run (["cd", build_dir, "; ../gcc/configure", 
-              M3CC_CONFIG,
-              "--srcdir=../gcc",
-              "--enable-languages=m3cg",
-              "--disable-nls",
-              "&& echo \"done\" > " & done])
+        ConfigWithGNULD = "--with-gnu-ld=yes"
       end
     else
-      m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG,
-            "--srcdir=../gcc",
-            "--target=" & GNU_platform (M3CC_TARGET),
-            "--enable-languages=m3cg",
-            "--disable-nls",
-            "&& echo \"done\" > " & done])
+      ConfigTarget = "--target=" & GNU_platform (M3CC_TARGET)
     end
+    m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG,
+          "--srcdir=../gcc",
+          ConfigTarget,
+          "--enable-languages=m3cg",
+          "--disable-nls",
+          ConfigWithGNULD,
+          "&& echo \"done\" > " & done])
   end
 end
 
