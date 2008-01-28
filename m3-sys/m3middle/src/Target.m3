@@ -120,15 +120,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 		
     (* add the system-specific customization *)
 
-    CASE System OF
-    |  Systems.NT386,
-       Systems.NT386GNU =>
-      EOL := "\r\n";
-    ELSE
-      EOL                       := "\n";
-    END;
-
     OS_name := in_OS_name;
+    EOL                       := "\n";
     Jumpbuf_align             := Address.align;
     All_floats_legal          := TRUE;
     Checks_integer_ops        := FALSE;
@@ -297,9 +290,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Setjmp                    := "_setjmp";
 
     | Systems.NT386, Systems.NT386GNU =>
-                 IF OS_name = NIL THEN
-                   OS_name                 := "WIN32";
-                 END;
+
                  IF Text.Equal(OS_name, "WIN32") THEN
                    Jumpbuf_size           := 8 * Address.size;
                    Setjmp                 := "_setjmp";
@@ -309,6 +300,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                    Jumpbuf_size           := 52 * Address.size;
                    Setjmp                 := "setjmp";
                    EOL                    := "\n";
+                 ELSE
+                   RETURN FALSE;
                  END;
 
                  max_align                 := 32;
