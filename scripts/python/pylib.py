@@ -14,19 +14,18 @@ import shutil
 
 #
 # Several important variables are gotten from the environment or probed.
-# The probing is usually 100% correct, and the environment variable names
-# Are sometimes a bit generic, but the environment still wins.
+# The probing is usually 100% correct.
 #
-# CM3_TARGET / TARGET
+# CM3_TARGET
 #    probed with $OS and uname
 #
-# CM3_OSTYPE / M3OSTYPE
+# CM3_OSTYPE
 #    follows from Target
 #
-# CM3ROOT / ROOT
+# CM3ROOT
 #    the root of the source, computed from the path to this file
 #
-# CM3_INSTALL / INSTALLROOT
+# CM3_INSTALL
 #    the root of the installation, computed from finding cm3 in $PATH
 #
 
@@ -91,12 +90,6 @@ Variables = [
     # appended to executable paths to form actual file paths
     #
     "EXE",
-
-    #
-    # True or False -- does this platform use the gcc backend.
-    # True for all but NT386
-    #
-    "GCC_BACKEND",
 
     #
     # True or False -- should we build m3gdb.
@@ -232,7 +225,7 @@ CM3VERSION = getenv("CM3VERSION") or GetDefaultFromSh("CM3VERSION")
 CM3VERSIONNUM = getenv("CM3VERSIONNUM") or GetDefaultFromSh("CM3VERSIONNUM")
 CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetDefaultFromSh("CM3LASTCHANGED")
 
-CM3_GCC_BACKEND = True
+GCC_BACKEND = (getenv("CM3_GCC_BACKEND", "no") == "yes")
 CM3_GDB = False
 
 CM3 = getenv("CM3") or ExeName("cm3")
@@ -242,46 +235,54 @@ EXE = "" # executable extension, ".exe" or empty
 Q = "'"
 
 #-----------------------------------------------------------------------------
-# abstraction functions
-
-def strip_exe(a):
-    os.system("strip " + a)
-
-#-----------------------------------------------------------------------------
 # evaluate uname information
 
 #
 # very important -- what operating system/processor architecture
 # we are building for
 #
-Target = getenv("CM3_TARGET") or getenv("TARGET") or ""
-OSType = getenv("CM3_OSTYPE") or getenv("M3OSTYPE") or ""
+Target = getenv("CM3_TARGET") or ""
+OSType = getenv("CM3_OSTYPE") or ""
+Config = Target
 
 if (UName.startswith("windows")
         or Target.startswith("NT386")
-        or UNameCommand.startswith("mingw32_nt-")
-        or UNameCommand.startswith("cygwin_nt-")
-    ):
+        or UNameCommand.startswith("mingw")
+        or UNameCommand.startswith("cygwin")):
 
-    OSType = OSType or "WIN32"
     EXE = ".exe"
     Q = ""
     HAVE_SERIAL = True
     GMAKE = getenv("GMAKE") or "make"
 
     if (Target.startswith("NT386GNU")
-        or UNameCommand.startswith("mingw32_nt-")
-        or UNameCommand.startswith("cygwin_nt-")):
-        Target = Target or "NT386GNU"
-    else:
-        Target = Target or "NT386"
-        CM3_GCC_BACKEND = False
+        or UNameCommand.startswith("cygwin")
+        or OSType == "POSIX"):
 
-        def strip_exe(a):
-            pass
+        Target = "NT386"
+        Config = "NT386GNU"
+        OSType = "POSIX"
+        GCC_BACKEND = True
+
+    elif (Target.startswith("NT386MINGNU")
+        or UNameCommand.startswith("mingw")
+        or GCC_BACKEND):
+
+        Target = "NT386"
+        Config = "NT386MINGNU"
+        OSType = "WIN32"
+        GCC_BACKEND = True
+
+    else:
+
+        Target = "NT386"
+        Config = "NT386"
+        OSType = "WIN32"
+        GCC_BACKEND = False
 
 elif UName.startswith("freebsd"):
 
+    GCC_BACKEND = True
     if UNameArchM == "i386":
         if UNameRevision.startswith("1"):
             Target = "FreeBSD"
@@ -298,6 +299,7 @@ elif UName.startswith("freebsd"):
 
 elif UName.startswith("darwin"):
 
+    GCC_BACKEND = True
     # detect the m3 platform (Darwin runs on ppc and ix86)
     if UNameArchP.startswith("powerpc"):
         Target = "PPC_DARWIN"
@@ -307,11 +309,13 @@ elif UName.startswith("darwin"):
 
 elif UName.startswith("sunos"):
 
+    GCC_BACKEND = True
     Target = "SOLgnu"
     #Target = "SOLsun"
 
 elif UName.startswith("linux"):
 
+    GCC_BACKEND = True
     GMAKE = getenv("GMAKE") or "make"
     GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
     if UNameArchM == "ppc":
@@ -321,6 +325,7 @@ elif UName.startswith("linux"):
 
 elif UName.startswith("netbsd"):
 
+    GCC_BACKEND = True
     GMAKE = getenv("GMAKE") or "make"
     Target = "NetBSD2_i386" # only arch/version combination supported yet
 
@@ -334,12 +339,23 @@ else:
 
 M3GDB = (M3GDB or CM3_GDB)
 OSType = (OSType or "POSIX")
-GCC_BACKEND = (GCC_BACKEND or CM3_GCC_BACKEND)
 PKGSDB = (getenv("PKGSDB") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
 GMAKE = (GMAKE or "gmake")
 
+def GetConfigForDistribution(Target):
+#
+# Favor the config-no-install directory, else fallback to config.
+#
+    a = os.path.join(Root, "m3-sys", "cminstall", "src")
+    b = os.path.join(a, "config-no-install", Target)
+    if os.path.isfile(b):
+        return b
+    b = os.path.join(a, "config", Target)
+    return b
+
 os.environ["CM3_TARGET"] = Target
 os.environ["CM3_ROOT"] = Root
+os.environ["M3CONFIG"] = GetConfigForDistribution(Config)
 
 #-----------------------------------------------------------------------------
 # elego customizations
@@ -410,10 +426,24 @@ SRC_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
 
 # other commands
 
+#
+# Approximate support for "configurations" that are not specific "targets".
+#
+BuildDir = Target
+ConfigFile = os.environ.get("M3CONFIG")
+if ConfigFile:
+    RegExp = re.compile("BUILD_DIR\s*=\s*\"(\S+)\"")
+    for Line in open(ConfigFile):
+        Match = RegExp.search(Line)
+        if Match:
+            BuildDir = Match.group(1)
+            print("BUILD_DIR is " + BuildDir)
+            print("ConfigFile is " + ConfigFile)
+
 if os.name == "nt":
-    RealClean = RealClean or "if exist %(Target)s rmdir /q/s %(Target)s"
+    RealClean = RealClean or "if exist %(BuildDir)s rmdir /q/s %(BuildDir)s"
 else:
-    RealClean = RealClean or "rm -rf %(Target)s"
+    RealClean = RealClean or "rm -rf %(BuildDir)s"
 
 RealClean = (RealClean % vars())
 
@@ -1315,17 +1345,6 @@ def CopyFileIfExist(From, To):
         return CopyFile(From, To)
     return True
 
-def GetConfigForDistribution():
-#
-# Favor the config-no-install directory, else fallback to config.
-#
-    a = os.path.join(Root, "m3-sys", "cminstall", "src")
-    b = os.path.join(a, "config-no-install", Target)
-    if os.path.isfile(b):
-        return b
-    b = os.path.join(a, "config", Target)
-    return b
-
 def CopyConfigForDevelopment():
     To = os.path.join(InstallRoot, "bin")
     CopyFile(
@@ -1335,8 +1354,16 @@ def CopyConfigForDevelopment():
     CopyFile(os.path.join(Root, "scripts", "sysinfo.sh"), To) or FatalError()
     return True
 
+def CopyDirectoryNonRecursive(From, To):
+    CreateDirectory(To)
+    for File in glob.glob(os.path.join(From, "*")):
+        print(File + " => " + To + "\n")
+        CopyFile(File, To)
+
 def CopyConfigForDistribution(To):
-    CopyFile(GetConfigForDistribution(), os.path.join(To, "bin", "cm3.cfg")) or FatalError()
+    a = os.path.join(Root, "m3-sys", "cminstall", "src")
+    CopyDirectoryNonRecursive(os.path.join(a, "config"), os.path.join(To, "bin")) or FatalError()
+    CopyDirectoryNonRecursive(os.path.join(a, "config-no-install"), os.path.join(To, "bin")) or FatalError()
     return True
 
 def _CopyCompiler(From, To):
@@ -1351,7 +1378,7 @@ def ShipCompiler():
     # The compiler has trouble shipping itself currently because it in use.
     #
     return _CopyCompiler(
-        os.path.join(Root, "m3-sys", "cm3", Target),
+        os.path.join(Root, "m3-sys", "cm3", Config),
         os.path.join(InstallRoot, "bin"))
 
 def CopyMklib(From, To):
@@ -1456,7 +1483,7 @@ def SetupEnvironment():
     if SystemDrive:
         SystemDrive += os.path.sep
 
-    if Target == "NT386" and NT:
+    if Target == "NT386" and NT and Config == "NT386":
 
         VCBin = ""
         VCInc = ""
@@ -1557,6 +1584,9 @@ if __name__ == "__main__":
     # run test code if module run directly
     #
 
+    CopyDirectoryNonRecursive("\\windows", "\\")
+    sys.exit(1)
+
     print("\n\ncore: " + str(OrderPackages(PackageSets["core"])))
     print("\n\nbase: " + str(OrderPackages(PackageSets["base"])))
     print("\n\nmin: " + str(OrderPackages(PackageSets["min"])))
@@ -1648,5 +1678,3 @@ if __name__ == "__main__":
             print("%s(%-*s): %s" % (Function.__name__, Width, CommandLine, Function(CommandLine)))
 
     pkgmap(["-c"])
-
-    strip_exe("c")
