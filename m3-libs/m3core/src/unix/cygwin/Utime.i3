@@ -9,12 +9,12 @@
 (*      modified on Wed Dec  2 11:29:00 PST 1992 by mcjones   *)
 (*      modified on Mon Apr 23 16:37:40 1990 by jerome        *)
 
-
+(* $Id: Utime.i3,v 1.4 2008-01-28 15:37:01 jkrell Exp $ *)
 
 INTERFACE Utime;
 
 FROM Ctypes IMPORT char_star, int, long, long_star, 
-                   unsigned_short, short;
+                   unsigned_short, short, long_int;
 
 (*** <sys/time.h> ***)
 
@@ -26,6 +26,10 @@ TYPE
   struct_timezone = RECORD
     tz_minuteswest:  int; (* minutes west of Greenwich *)
     tz_dsttime:      int; (* type of dst correction *) END;
+
+  struct_timespec = RECORD
+    tv_sec: time_t;			 (* Seconds *)
+    tv_nsec: long_int;			 (* Nanoseconds *) END;
 
 CONST
   DST_NONE = 0;  (* not on dst *)
@@ -173,5 +177,8 @@ PROCEDURE asctime_r(tm: struct_tm_star; buf: char_star; buflen: int):char_star;
 
 <*EXTERNAL*> PROCEDURE tzset	 ();
 <*EXTERNAL*> PROCEDURE tzsetwall ();
+
+<*EXTERNAL*> PROCEDURE nanosleep (READONLY req: struct_timespec;
+                                  VAR rem: struct_timespec): int;
 
 END Utime.

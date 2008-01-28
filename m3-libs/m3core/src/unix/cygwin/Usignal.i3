@@ -11,6 +11,7 @@
 INTERFACE Usignal;
 
 FROM Ctypes IMPORT int, unsigned_int, unsigned_short_int, unsigned_long_int;
+IMPORT Uucontext;
 
 (*** <signal.h> ***)
 
@@ -91,6 +92,11 @@ TYPE
   END;
   sigset_t_star = UNTRACED REF sigset_t;
 
+  siginfo_t = RECORD
+    spare__:  ARRAY [0..256] OF int;
+  END;
+
+  siginfo_t_star = UNTRACED REF siginfo_t;
 
 CONST
   empty_sigset_t : sigset_t = sigset_t{ARRAY [0..SIGSET_NWORDS - 1] 
@@ -111,11 +117,13 @@ CONST
   SIG_SETMASK  = 2;    (* Set block mask to this mask *)
 
 TYPE
-  SignalActionHandler  = PROCEDURE (sig: int);
+  SignalActionHandler = PROCEDURE (sig: int;
+                                   sip: siginfo_t_star;
+                                   uap: Uucontext.ucontext_t_star);
   SignalRestoreHandler = PROCEDURE ();
 
   struct_sigaction = RECORD
-    sa_handler  : SignalActionHandler;  (* signal handler *)
+    sa_sigaction: SignalActionHandler;  (* signal handler *)
     sa_mask     : sigset_t;             (* signals to block while in handler *)
     sa_flags    : int;                  (* signal action flags *)
     sa_restorer : SignalRestoreHandler; (* restores interrupted state *)
@@ -252,8 +260,9 @@ VAR (*CONST*)
 (*** sigaction(2) - software signal facilities ***)
 
 <*EXTERNAL*>
-PROCEDURE sigaction (sig: int;  act, oact: struct_sigaction_star): int;
-
+PROCEDURE sigaction (sig: int;
+                     READONLY act: struct_sigaction;
+                     VAR oact: struct_sigaction): int;
 
 (*** sigprocmask(2) - set the blocked signals ***)
 
@@ -267,5 +276,23 @@ PROCEDURE SigIsMember(set : sigset_t; sig : INTEGER) : BOOLEAN;
 PROCEDURE SigAddSet(set : sigset_t; sig : INTEGER) : sigset_t;
 PROCEDURE SigDelSet(set : sigset_t; sig : INTEGER) : sigset_t;
 *)
+
+(* Change the set of blocked signals to SET,
+   wait until a signal arrives, and restore the set of blocked signals. *)
+<*EXTERNAL*> PROCEDURE sigsuspend (READONLY set: sigset_t): int;
+
+(* Select any of pending signals from SET or wait for any to arrive.  *)
+<*EXTERNAL*> PROCEDURE sigwait (READONLY set: sigset_t; VAR sig: int): int;
+
+(* Remove SIGNO from SET.  *)
+<*EXTERNAL*> PROCEDURE sigdelset (VAR set: sigset_t; signo: int): int;
+
+(* Set all signals in SET.  *)
+<*EXTERNAL*> PROCEDURE sigfillset (VAR set: sigset_t): int;
+
+(* Bits in `sa_flags'.  *)
+CONST
+  SA_SIGINFO   =  4;	      (* Invoke signal-catching function with
+				 three arguments instead of one.  *)
 
 END Usignal.

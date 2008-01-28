@@ -9,5 +9,7 @@ implementation ("RTOS")
 module         ("RTPerfTool")
 implementation ("RTProcessPosix")
 interface      ("RTThread")
-implementation ("RTThreadStk")
+if not equal (TARGET, "NT386")
+  implementation ("RTThreadStk")
+end
 
