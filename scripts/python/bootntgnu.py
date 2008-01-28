@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: bootntgnu.py,v 1.14 2008-01-28 16:03:41 jkrell Exp $
+# $Id: bootntgnu.py,v 1.15 2008-01-28 16:03:59 jkrell Exp $
 
 import sys
 import pylib
