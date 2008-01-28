@@ -10,4 +10,4 @@ VbtStarter("PSReader", "PSReaderPaneVBT")
 Module("TextSubsPaneUpdater")
 Module("TextSubsViewer")
 
-library("dcpane")
+Library("dcpane")

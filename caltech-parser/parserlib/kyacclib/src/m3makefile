@@ -12,4 +12,4 @@ Table("TextBoolean", "Text", "Boolean")
 Table("TextPrec", "Text", "Prec")
 Module("YaccParse")
 
-library("kyacclib")
+Library("kyacclib")

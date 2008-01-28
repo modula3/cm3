@@ -1,4 +1,9 @@
 /* $Id$ */
+
+if not defined("TOP")
+  TOP = PACKAGE_DIR & SL & ".."
+end
+
 import("cit_common")
 template("generics")
 Interface("DblRefany")

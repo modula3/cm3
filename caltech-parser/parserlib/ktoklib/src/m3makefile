@@ -33,4 +33,4 @@ Interface("Pragma")
 table("Pragma", "Text", "Pragma")
 Module("PragmaRead")
 
-library("ktoklib")
+Library("ktoklib")
