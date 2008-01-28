@@ -1,55 +1,27 @@
+%
+% $Id: NT386MINGNU,v 1.3 2008-01-28 15:54:39 jkrell Exp $
+%
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
+% Really?
 %
-% Standard configuration file for an x86 machine running Windows NT or perhaps Windows 95,
-% using gcc-based backend and gcc/ld linker but native threads, native windows, native C library.
-%
-% $Id: NT386MINGNU,v 1.2 2008-01-22 15:32:10 jkrell Exp $
+% Use GNU minimally.
+%   gcc and ld are from MinGWin
+%   msys is needed to build m3cg
+%   use native Windows threads, gui, C runtime
 %
 
-% temporary compat; remove this
-readonly TARGET = "NT386"
+if M3_PROFILING
+    readonly PROFILING_P = "p"
+else
+    readonly PROFILING_P = ""
+end
 
-% The values and order here are chosen such that
-% NT386 is all 0.
-% NT386GNU is probably all 1.
-% NT386MINGNU is 1s followed by 0s.
-% This could be changed however.
+readonly BUILD_DIR = "NT386MINGNU" & PROFILING_P
 
-%
-% 0 for integrated backend
-% 1 for cm3cg
-%
-readonly Modula3Backend = 1
+% see the NT386 file for information
+readonly M3_BACKEND_MODE = "3" % other values are 0, 1, 2
+readonly C_COMPILER = "GNU" % other values are MS
+readonly LINKER = "GNU" % other values are MS
 
-%
-% 0 for Visual C++ cl
-% 1 for gcc
-%
-readonly CCompiler = 1
-
-%
-% 0 for Visual C++ link
-% 1 for gcc/ld/collect2/dlltool
-%
-readonly Linker = 1
-
-%
-% 0 for native Windows kernel threads
-% 1 for pthreads
-%
-readonly ThreadLibrarary = 0
-
-%
-% 0 for Windows
-% 1 for X Windows
-%
-readonly WindowLibrary = 0
-
-%
-% 0 for Microsoft/MinGWin
-% 1 for Cygwin
-%
-readonly CLibrary = 0
-
-include("NT386.common")
+include("NT386")
