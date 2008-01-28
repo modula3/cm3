@@ -4,13 +4,14 @@
 (*                                                             *)
 (* Last modified on Wed Oct 12 16:12:57 PDT 1994 by kalsow     *)
 
-(* $Id: M3Backend.m3,v 1.2 2008-01-22 16:36:01 jkrell Exp $ *)
+(* $Id: M3Backend.m3,v 1.3 2008-01-28 16:51:27 jkrell Exp $ *)
 
 MODULE M3Backend;
 
 IMPORT Wr, Thread;
 IMPORT M3CG, Msg, Utils, NTObjFile, M3x86, M3ObjFile;
 IMPORT M3CG_BinWr;
+FROM Target IMPORT M3BackendMode_t, BackendIntegrated;
 
 VAR
   obj_file : M3ObjFile.T := NIL;
@@ -19,9 +20,9 @@ VAR
   log      : Wr.T        := NIL;
   log_name : TEXT        := NIL;
 
-PROCEDURE Open (target: Wr.T;  target_name: TEXT; backend: BOOLEAN): M3CG.T =
+PROCEDURE Open (target: Wr.T;  target_name: TEXT;  backend_mode: M3BackendMode_t): M3CG.T =
   BEGIN
-    IF backend THEN
+    IF NOT BackendIntegrated[backend_mode] THEN
       RETURN M3CG_BinWr.New (target);
     ELSE
       <*ASSERT obj_file = NIL *>

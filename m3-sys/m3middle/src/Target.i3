@@ -76,9 +76,23 @@ CONST
 CONST
   OSNames = ARRAY OF TEXT { "POSIX", "WIN32" };
 
+TYPE
+  M3BackendMode_t =
+  {
+    (* The primary modes are currently 0 and 3. *)
+    IntegratedObject,   (* "0"  -- don't call m3_backend, M3CG produces object code *)
+    IntegratedAssembly, (* "1"  -- don't call m3_backend, M3CG produces assembly code *)
+    ExternalObject,     (* "2"  -- call m3_backend, it produces object code *)
+    ExternalAssembly    (* "3"  -- call m3_backend, it produces assembly code *)
+  };
+
+CONST
+  BackendIntegrated = ARRAY M3BackendMode_t OF BOOLEAN { TRUE, TRUE, FALSE, FALSE };
+  BackendAssembly = ARRAY M3BackendMode_t OF BOOLEAN { FALSE, TRUE, FALSE, TRUE };
+
 (*-------------------------------------------------------- initialization ---*)
 
-PROCEDURE Init (system: TEXT): BOOLEAN;
+PROCEDURE Init (system: TEXT; osname := "POSIX"; backend_mode := M3BackendMode_t.ExternalAssembly): BOOLEAN;
 (* Initialize the variables of this interface to reflect the architecture
    of "system".  Returns TRUE iff the "system" was known and the initialization
    was successful.  *)

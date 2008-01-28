@@ -12,6 +12,7 @@ IMPORT Mx, MxMerge, MxCheck, MxGen, MxIn, MxOut, MxVS;
 IMPORT Msg, Arg, Utils, M3Path, M3Backend, M3Compiler;
 IMPORT Quake, QMachine, QValue, QVal, QVSeq;
 IMPORT M3Loc, M3Unit, M3Options, MxConfig AS M3Config;
+FROM Target IMPORT M3BackendMode_t, BackendAssembly;
 
 TYPE
   UK = M3Unit.Kind;
@@ -102,7 +103,7 @@ TYPE
     target        : TEXT;               (* target machine *)
     host_os       : M3Path.OSKind;      (* host system *)
     target_os     : M3Path.OSKind;      (* target os *)
-    m3backend_mode: [0..3];             (* tells how to turn M3CG -> object *)
+    m3backend_mode: M3BackendMode_t;    (* tells how to turn M3CG -> object *)
     m3backend     : ConfigProc;         (* translate M3CG -> ASM or OBJ *)
     c_compiler    : ConfigProc;         (* compile C code *)
     assembler     : ConfigProc;         (* assemble  *)
@@ -163,7 +164,8 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.m3env.globals := s;
 
     s.target := GetConfigItem (s, "TARGET");
-    IF NOT Target.Init (s.target) THEN
+    s.m3backend_mode := VAL (MAX (0, MIN (GetConfigInt (s, "M3_BACKEND_MODE"), 3)), M3BackendMode_t);
+    IF NOT Target.Init (s.target, GetConfigItem (s, "OS_TYPE", "POSIX"), s.m3backend_mode) THEN
       Msg.FatalError (NIL, "unrecognized target machine: TARGET = ", s.target);
     END;
     Target.Has_stack_walker := GetConfigBool(s, "M3_USE_STACK_WALKER",
@@ -176,8 +178,6 @@ PROCEDURE CompileUnits (main     : TEXT;
     END;
     M3Path.SetOS (s.host_os, host := TRUE);
     M3Path.SetOS (s.target_os, host := FALSE);
-
-    s.m3backend_mode := MAX (0, MIN (GetConfigInt (s, "M3_BACKEND_MODE"), 3));
 
     s.m3backend   := GetConfigProc (s, "m3_backend", 4);
     s.c_compiler  := GetConfigProc (s, "compile_c", 5);
@@ -231,9 +231,14 @@ PROCEDURE GetOSType (s: State;  sym: TEXT): M3Path.OSKind =
     RETURN M3Path.OSKind.Unix;
   END GetOSType;
 
-PROCEDURE GetConfigItem (s: State;  symbol: TEXT): TEXT =
+PROCEDURE GetConfigItem (s: State;  symbol: TEXT; default: TEXT := NIL): TEXT =
   VAR bind := GetDefn (s, symbol);
   BEGIN
+    IF bind = NIL THEN
+      IF default # NIL THEN
+        RETURN default;
+      END;
+    END;
     IF (bind = NIL) THEN ConfigErr (s, symbol, "not defined"); END;
     TRY
       RETURN QVal.ToText (s.machine, bind.value);
@@ -980,20 +985,20 @@ PROCEDURE CompileC (s: State;  u: M3Unit.T) =
       Utils.NoteNewFile (u.object);
     ELSIF s.bootstrap_mode THEN
       CASE s.m3backend_mode OF
-      | 0, 1 =>
+      | M3BackendMode_t.IntegratedObject, M3BackendMode_t.IntegratedAssembly =>
           Msg.FatalError (NIL, "this compiler cannot compile .ic or .mc files");
-      | 2, 3 =>
+      | M3BackendMode_t.ExternalObject, M3BackendMode_t.ExternalAssembly =>
           EVAL RunM3Back (s, UnitPath (u), u.object, u.debug, u.optimize);
           Utils.NoteNewFile (u.object);
       END;
     ELSE (* UK.IC or UK.MC *)
       CASE s.m3backend_mode OF
-      | 0, 1 =>
+      | M3BackendMode_t.IntegratedObject, M3BackendMode_t.IntegratedAssembly =>
           Msg.FatalError (NIL, "this compiler cannot compile .ic or .mc files");
-      | 2 =>
+      | M3BackendMode_t.ExternalObject =>
           EVAL RunM3Back (s, UnitPath (u), u.object, u.debug, u.optimize);
           Utils.NoteNewFile (u.object);
-      | 3 =>
+      | M3BackendMode_t.ExternalAssembly =>
           tmpS := TempSName (s, u);
           IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpS) END;
           IF  RunM3Back (s, UnitPath (u), tmpS, u.debug, u.optimize)
@@ -1046,7 +1051,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
   VAR
     tmpC, tmpS: TEXT;
     need_merge := FALSE;
-    plan: [0..7] := s.m3backend_mode;
+    plan: [0..7] := ORD(s.m3backend_mode);
   BEGIN
     u.link_info := NIL;
     ResetExports (s, u);
@@ -1447,10 +1452,7 @@ PROCEDURE Pass0_InitCodeGenerator (env: Env): M3CG.T =
     env.cg     := NIL;
     env.output := Utils.OpenWriter (env.object, fatal := FALSE);
     IF (env.output # NIL) THEN
-      CASE env.globals.m3backend_mode OF
-      | 0, 1 => env.cg := M3Backend.Open (env.output, env.object, FALSE);
-      | 2, 3 => env.cg := M3Backend.Open (env.output, env.object, TRUE);
-      END;
+      env.cg := M3Backend.Open (env.output, env.object, env.globals.m3backend_mode);
     END;
     RETURN env.cg;
   END Pass0_InitCodeGenerator;
@@ -1888,11 +1890,11 @@ PROCEDURE GenerateCGMain (s: State;  Main_O: TEXT) =
     plan     : [0..3] := 0;
   BEGIN
     CASE s.m3backend_mode OF
-    | 0 =>  (* -m3back, -asm => cg produces object code *)
+    | M3BackendMode_t.IntegratedObject =>  (* -m3back, -asm => cg produces object code *)
         GenCGMain (s, Main_O);
         Utils.NoteNewFile (Main_O);
       
-    | 1 =>  (* -m3back, +asm => cg produces assembly code *)
+    | M3BackendMode_t.IntegratedAssembly =>  (* -m3back, +asm => cg produces assembly code *)
         (* don't mess with a file comparison, just build the stupid thing... *)
         GenCGMain (s, Main_MS);
         ETimer.Pop ();
@@ -1902,8 +1904,8 @@ PROCEDURE GenerateCGMain (s: State;  Main_O: TEXT) =
         IF (NOT s.keep_files) THEN Utils.Remove (Main_MS); END;
         Utils.NoteNewFile (Main_O);
 
-    | 2,    (* +m3back, -asm => cg produces il, m3back produces object *)
-      3 =>  (* +m3back, +asm => cg produces il, m3back produces assembly *)
+    | M3BackendMode_t.ExternalObject,    (* +m3back, -asm => cg produces il, m3back produces object *)
+      M3BackendMode_t.ExternalAssembly =>  (* +m3back, +asm => cg produces il, m3back produces assembly *)
         (* check for an up-to-date Main_O *)
         time_O  := Utils.LocalModTime (Main_O);
         time_MC := Utils.LocalModTime (Main_MC);
@@ -1950,10 +1952,7 @@ PROCEDURE GenCGMain (s: State;  object: TEXT) =
     ETimer.Push (M3Timers.genMain);
     Msg.Commands ("generate ", object);
     wr := Utils.OpenWriter (object, fatal := TRUE);
-    CASE s.m3backend_mode OF
-    | 0, 1 => cg := M3Backend.Open (wr, object, FALSE);
-    | 2, 3 => cg := M3Backend.Open (wr, object, TRUE);
-    END;
+    cg := M3Backend.Open (wr, object, s.m3backend_mode);
     IF (cg # NIL) THEN
       MxGen.GenerateMain (s.link_base, NIL, cg, Msg.level >= Msg.Level.Debug,
                           s.gui AND (s.target_os = M3Path.OSKind.Win32), 
@@ -2714,7 +2713,7 @@ PROCEDURE ObjectName (s: State;  u: M3Unit.T): TEXT =
       ELSE RETURN NIL;
       END; 
 
-    ELSIF (s.m3backend_mode = 1) OR (s.m3backend_mode = 3) THEN
+    ELSIF BackendAssembly[s.m3backend_mode] THEN
       (* bootstrap with an assembler *)
       CASE ext OF 
       | UK.I3, UK.IC, UK.IS =>  ext :=  UK.IS;  shorten := TRUE;
