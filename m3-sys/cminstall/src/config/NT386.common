@@ -1,100 +1,15 @@
+%
+% $Id$
+%
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
 %
 % Common parameterized configuration file for an x86 machine running Windows NT or perhaps Windows 95,
-%
-% $Id$
-%
 
 %-------------------------------------------------- compilation environment ---
 
-%M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (option -profile)
-%M3_PROFILING = FALSE
-
-if M3_PROFILING
-    readonly PROFILING_P = "p"
-else
-    readonly PROFILING_P = ""
-end
-
-readonly
-proc
-GetBuildDir(
-    )
-is
-    local a = Modula3Backend & CCompiler & Linker & ThreadLibrarary & WindowLibrary & CLibrary
-    local b = "NT386-" & a
-    if equal(a, "000000")
-        b = "NT386"
-    end
-    if equal(a, "111111")
-        b = "NT386GNU"
-    end
-    if equal(a, "111000")
-        b = "NT386MINGNU"
-        %temporary compat
-        b = "NT386GNU"
-    end
-    return b & PROFILING_P
-end
-
-readonly
-proc
-GetOSType(
-    )
-is
-    if equal(CLibrary, 0)
-        return "WIN32"
-    end
-    %return "POSIX"
-    % temporary compat
-    return "WIN32"
-end
-
-readonly
-proc
-GetGNUPlatform(
-    )
-is
-    if equal(Modula3Backend, 0)
-        return ""
-    end
-    if equal(CLibrary, 0)
-        return "i686-pc-mingw32"
-    end
-    %return "i686-pc-cygwin"
-    % temporary compat
-    return "i686-pc-mingw32"
-end
-
-readonly
-proc
-GetNamingConventions(
-    )
-is
-    if equal(CLibrary, 0)
-        return "2"
-    end
-    %return "0"
-    % temporary compat
-    return "2"
-end
-
-% temporary compat; if should be removed
-if not defined("TARGET")
-    readonly TARGET       = "NT386"             % code generation target
-end
-readonly BUILD_DIR    = GetBuildDir()       % directory for results
-readonly OS_TYPE      = GetOSType()         % { "WIN32" or "POSIX" }
+readonly TARGET       = "NT386"             % code generation target
 readonly WORD_SIZE    = "32BITS"            % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = GetGNUPlatform()    % "cpu-vendor-os" string for GNU
-
-readonly NAMING_CONVENTIONS = GetNamingConventions()
-%                                        object files       libraries
-%  0=Unix                          =>  .o   .io    .mo       libXX.a
-%  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
-%  2=Windows NT or Windows 95      =>  .obj .io    .mo       XX.lib
-%
 
 %-------------------------------------------------- default compile options ---
 % "set_config_options" is called before starting the compilation. It should
@@ -168,11 +83,11 @@ readonly INSTALL_IMPLS = FALSE
 % If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
 % that the library is not available.
 
-readonly LibInPrefix  = [ "",     "-l" ][Linker]
-readonly LibInSuffix  = [ ".lib", ""   ][Linker]
-readonly LibOutPrefix = { "WIN32" : "",     "POSIX" : "lib" }{OS_TYPE}
-readonly LibOutSuffix = { "WIN32" : ".lib", "POSIX" : ".a"  }{OS_TYPE}
-readonly Obj          = { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE}
+readonly LibInPrefix  = { "MS" : "",     "GNU" : "-l" }{LINKER} % aka NAMING_CONVENTIONS
+readonly LibInSuffix  = { "MS" : ".lib", "GNU" : ""   }{LINKER} % aka NAMING_CONVENTIONS
+readonly LibOutPrefix = { "WIN32" : "",     "POSIX" : "lib" }{OS_TYPE} % aka NAMING_CONVENTIONS
+readonly LibOutSuffix = { "WIN32" : ".lib", "POSIX" : ".a"  }{OS_TYPE} % aka NAMING_CONVENTIONS
+readonly Obj          = { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE} % aka NAMING_CONVENTIONS
 
 local
 readonly
@@ -233,13 +148,13 @@ SYSTEM_LIBS_GNU =
     "TCP" : [ ],
 }
 
-SYSTEM_LIBS = { "0" : SYSTEM_LIBS_MS, "1" : SYSTEM_LIBS_GNU }{Linker}
+SYSTEM_LIBS = { "MS" : SYSTEM_LIBS_MS, "GNU" : SYSTEM_LIBS_GNU }{LINKER}
 
 %
 % Need to fill in X Windows for CygwinX
 %
 
-if equal(Linker, 0)
+if equal(LINKER, "MS")
 
 %
 % We must explicitly specify libcmt.lib or msvcrt.lib
@@ -310,7 +225,9 @@ m3back_options += "-mno-align-double"
 %
 % Don't depend on cygwin1.dll.
 %
-m3back_options += "-mno-cygwin"
+if equal(OS_TYPE, "WIN32")
+    m3back_options += "-mno-cygwin"
+end
 
 %
 % Don't report timings and such.
@@ -349,13 +266,6 @@ is
     end
     return try_exec(m3back, args)
 end
-
-readonly M3_BACKEND_MODE = ["0", "3"][Modula3Backend]
-% -- defines how the frontend, backend, and assembler interact
-%  "0"  -- don't call m3_backend, M3CG produces object code
-%  "1"  -- don't call m3_backend, M3CG produces assembly code
-%  "2"  -- call m3_backend, it produces object code
-%  "3"  -- call m3_backend, it produces assembly code
 
 %------------------------------------------------------------------------------
 
@@ -493,7 +403,7 @@ compile_c(
     debug,
     )
 is
-    if equal(CCompiler, 0)
+    if equal(C_COMPILER, "MS")
         return compile_c_ms(source, object, options, optimize, debug)
     end
     return compile_c_gnu(source, object, options, optimize, debug)
@@ -1006,7 +916,7 @@ make_lib(
     shared,
     )
 is
-    if equal(Linker, 0)
+    if equal(LINKER, "MS")
         return make_lib_ms(lib, options, objects, imported_libs, shared)
     end
     return make_lib_gnu(lib, options, objects, imported_libs, shared)
@@ -1303,7 +1213,7 @@ m3_link(
     shared,
     )
 is
-    if equal(Linker, 0)
+    if equal(LINKER, "MS")
         return m3_link_ms(prog, options, objects, imported_libs, shared)
     end
     return m3_link_gnu(prog, options, objects, imported_libs, shared)
