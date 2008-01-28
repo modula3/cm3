@@ -1,4 +1,4 @@
-% $Id: m3makefile,v 1.24 2008-01-15 12:18:26 jkrell Exp $
+% $Id: m3makefile,v 1.25 2008-01-28 16:02:29 jkrell Exp $
 %
 % Jay Krell
 % jaykrell@cornell.edu
@@ -90,22 +90,41 @@ deriveds("a", [ ".c", ".o", ".obj" ])
 deriveds("", [".M3WEB"])
 delete_file(INSTALL_ROOT & SL & "lib" & SL & "odbccp32.lib")
 
+%
 % Older Modula-3 toolsets, such as 5.1.3 from 2001, don't set M3_MODE.
-% That is ok, don't /really/ care about it, it just let'a us
+% That is ok, we don't /really/ care about it, it just let's us
 % implement "clean" correctly.
+%
 if not defined("M3_MODE")
     M3_MODE = ""
 end
-if equal(M3_MODE, "clean") or not equal(TARGET, "NT386")
-    % neuter the data rather than indent the whole rest of the file
+%
+% neuter the data rather than indent the whole rest of the file
+%
+if equal(M3_MODE, "clean")
     Files = { }
+end
+if not equal(TARGET, "NT386")
+    Files = { }
+end
+if defined("C_COMPILER")
+  if not equal(C_COMPILER, "MS")
+    Files = { }
+  end
+end
+if defined("LINKER")
+  if not equal(LINKER, "MS")
+    Files = { }
+  end
 end
 
 %
 % Quake can't do math. We simulate it badly.
 %
 
+%
 % These don't actually have be numbers. Using letters nets us valid C identifiers.
+%
 local readonly Integers = [
 "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S"
 ]
@@ -114,7 +133,9 @@ local readonly Integers = [
 % (Or at least that many unique values.)
 local UpTo = { }
 
+%
 % The values here really do have to be increasing multiples of 4.
+%
 local readonly Times4 = {
 "A":"0","B":"4","C":"8","D":"12","E":"16","F":"20","G":"24","H":"28","I":"32", "J":"36",
 "K":"40","L":"44","M":"48","N":"52","O":"56","P":"60","Q":"64","R":"68","S":"72",
