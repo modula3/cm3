@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: bootntgnu.py,v 1.14 2008-01-28 16:03:41 jkrell Exp $
+# $Id: bootntmingnu.py,v 1.1 2008-01-28 16:03:41 jkrell Exp $
 
 import sys
 import pylib
@@ -7,7 +7,7 @@ from pylib import *
 
 # hack
 os.environ["CM3_TARGET"] = "NT386"
-os.environ["CM3_OSTYPE"] = "POSIX"
+os.environ["CM3_OSTYPE"] = "WIN32"
 os.environ["CM3_GCC_BACKEND"] = "yes"
 reload(pylib)
 
@@ -17,7 +17,7 @@ reload(pylib)
 argv_RealClean = [sys.argv[0], "realclean"] + sys.argv[1:]
 argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 
-# DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
+DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
 
 #
 # There may not be a backend at all, so build it first.
