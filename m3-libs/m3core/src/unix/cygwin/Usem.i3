@@ -10,7 +10,7 @@
 
 UNSAFE INTERFACE Usem;
 
-FROM Ctypes IMPORT short, int;
+FROM Ctypes IMPORT short, int, char, unsigned_int;
 FROM Utypes IMPORT ushort, time_t;
 (*FROM Uexec  IMPORT wait_queue_star;*)
 FROM Uipc   IMPORT struct_ipc_perm;
@@ -20,6 +20,15 @@ FROM Uipc   IMPORT struct_ipc_perm;
 (*
 **      IPC Semaphore Facility.
 *)
+
+CONST
+  SIZEOF_SEM_T = 256;
+
+TYPE
+  sem_t = RECORD
+    data: ARRAY[1..SIZEOF_SEM_T] OF char;
+  END;
+  sem_t_star = UNTRACED REF sem_t;
 
 (*
 **      Implementation Constants.
@@ -177,6 +186,16 @@ TYPE
    union_buf = UNTRACED REF struct_semid_ds;
 (* union_array = ARRAY OF ushort *)
 
+<*EXTERNAL sem_getvalue*>
+PROCEDURE getvalue (VAR sem: sem_t; VAR value: int): int;
 
+<*EXTERNAL sem_wait*>
+PROCEDURE wait (VAR sem: sem_t): int;
+
+<*EXTERNAL sem_post*>
+PROCEDURE post (VAR sem: sem_t): int;
+
+<*EXTERNAL sem_init*>
+PROCEDURE init (VAR sem: sem_t; pshared: int; value: unsigned_int): int;
 
 END Usem.

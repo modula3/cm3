@@ -8,6 +8,10 @@
 %      modified on Wed May  5 11:53:58 PDT 1993 by mjordan
 
 include_dir ("Common")
-include_dir (TARGET)
+if equal (TARGET, "NT386") and equal(OS_TYPE, "POSIX")
+    include_dir ("NT386GNU")
+else
+    include_dir (TARGET)
+end
 include_dir (WORD_SIZE)
 
