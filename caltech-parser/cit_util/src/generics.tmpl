@@ -3,10 +3,13 @@
 /* commands: gmodule, ginterface, gimplementation. */
 /* other commands: build_generic_module. */
 
-/* $Id: generics.tmpl,v 1.2 2001-09-19 14:07:43 wagner Exp $ */
+/* $Id: generics.tmpl,v 1.3 2008-01-28 23:10:59 wagner Exp $ */
 
-
-_M3TMPLHACK = TOP & "/m3tmplhack/" & BUILD_DIR & "/m3tmplhack"
+if defined("TOP")
+  _M3TMPLHACK = TOP & "/m3tmplhack/" & BUILD_DIR & "/m3tmplhack"
+else
+  _M3TMPLHACK = BIN_INSTALL & SL & "m3tmplhack"
+end
 
 readonly proc Build_generic_module(nam, gen, args1, args2) is
         build_generic_intf(nam, gen, args1, VISIBLE)

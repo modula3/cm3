@@ -10,4 +10,4 @@ bundle("tokformBundle")
 
 %module("tokformBundle")
 implementation("Main")
-program("tok")
+Program("tok")

@@ -1,3 +1,7 @@
+if not defined("TOP")
+  TOP = PACKAGE_DIR & SL & ".." 
+end
+
 import("libm3")
 import("ui")
 import("cit_util")
@@ -34,4 +38,4 @@ module("PSReaderGuts")
 Module("Stroker")
 Module("Figure")
 
-library("drawcontext")
+Library("drawcontext")

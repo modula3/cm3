@@ -39,4 +39,4 @@ Table("NFA", "Text", "NFA")
 
 Module("LexParse")
 
-library("klexlib")
+Library("klexlib")
