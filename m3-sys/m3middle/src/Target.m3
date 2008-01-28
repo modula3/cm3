@@ -13,7 +13,7 @@ IMPORT Text, TargetMap, M3RT;
 VAR (*CONST*)
   CCs : REF ARRAY OF CallingConvention;
 
-PROCEDURE Init (system: TEXT): BOOLEAN =
+PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
   CONST FF = 16_ff;
   VAR sys := 0;  max_align := 64;
   BEGIN
@@ -24,8 +24,6 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
     END;
     System := VAL(sys, Systems);
     System_name := SystemNames[sys];
-
-    OS_name := "POSIX";			 (* default is POSIX *)
 
     (* build a generic 32-bit/IEEE system description *)
 
@@ -121,25 +119,35 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
     Allow_packed_byte_aligned := FALSE;
 		
     (* add the system-specific customization *)
+
+    CASE System OF
+    |  Systems.NT386,
+       Systems.NT386GNU =>
+      EOL := "\r\n";
+    ELSE
+      EOL                       := "\n";
+    END;
+
+    OS_name := in_OS_name;
+    Jumpbuf_align             := Address.align;
+    All_floats_legal          := TRUE;
+    Checks_integer_ops        := FALSE;
+    Has_stack_walker          := FALSE;
+    Aligned_procedures        := TRUE;
+    Bitfield_can_overlap      := FALSE;
+    Global_handler_stack      := TRUE;
+
     CASE System OF
     |  Systems.AIX386 =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 25 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     |  Systems.ALPHA_OSF =>
                  Integer := Int64;
@@ -150,19 +158,15 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 16_400000;
                  Jumpbuf_size              := 84 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
-                 All_floats_legal          := TRUE;
                  Has_stack_walker          := TRUE;
                  Setjmp                    := "_setjmp";
                  Checks_integer_ops        := TRUE;
                  Global_handler_stack      := FALSE; (* may use pthreads *)
                  Aligned_procedures        := FALSE;
-                 EOL                       := "\n";
 
     |  Systems.AP3000 =>
                  max_align                 := 16;
@@ -172,73 +176,45 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Bitfield_can_overlap      := TRUE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 83 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     |  Systems.ARM =>
                  max_align                 := 32;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 32;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 16 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     |  Systems.DS3100 =>
                  max_align                 := 64;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 16_400000;
                  Jumpbuf_size              := 84 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
-                 All_floats_legal          := TRUE;
                  Has_stack_walker          := TRUE;
                  Setjmp                    := "_setjmp";
                  Checks_integer_ops        := TRUE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     |  Systems.FreeBSD, Systems.FreeBSD2, Systems.FreeBSD3, Systems.FreeBSD4 =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 4096 * Char.size;
                  Jumpbuf_size              := 11 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0 * Char.size;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
                  Global_handler_stack      := FALSE; (* may use pthreads *)
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     |  Systems.HP300 =>
                  max_align                 := 16;
@@ -248,323 +224,214 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Bitfield_can_overlap      := TRUE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 100 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     |  Systems.HPPA =>
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 16;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 16_1000;
                  Jumpbuf_size              := 53 * Address.size;
                  Jumpbuf_align             := max_align;
                  Fixed_frame_size          := 8 * Address.size;
                  Guard_page_size           := 0;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
                  Aligned_procedures        := FALSE;
-                 EOL                       := "\n";
 
     |  Systems.IBMR2 =>
                  max_align                 := 32;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 32;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 65 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     | Systems.IBMRT =>
                  max_align                 := 32;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 17 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     |  Systems.IRIX5 =>
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 16_400000;
                  Jumpbuf_size              := 28 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     |  Systems.LINUX, Systems.LINUXELF =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 16_1000;
                  Jumpbuf_size              := 8 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0 * Char.size;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "__setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     | Systems.NEXT =>
                  max_align                 := 16;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 39 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
-    | Systems.NT386 =>
-                 OS_name                   := "WIN32";
+    | Systems.NT386, Systems.NT386GNU =>
+                 IF OS_name = NIL THEN
+                   OS_name                 := "WIN32";
+                 END;
+                 IF Text.Equal(OS_name, "WIN32") THEN
+                   Jumpbuf_size           := 8 * Address.size;
+                   Setjmp                 := "_setjmp";
+                   EOL                    := "\r\n";
+                 ELSIF Text.Equal(OS_name, "POSIX") THEN
+                   (* Cygwin *)
+                   Jumpbuf_size           := 52 * Address.size;
+                   Setjmp                 := "setjmp";
+                   EOL                    := "\n";
+                 END;
+
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
-                 First_readable_addr       := 4096;
-                 Jumpbuf_size              := 8 * Address.size;
-                 Jumpbuf_align             := Address.align;
-                 Fixed_frame_size          := 0;
-                 Guard_page_size           := 0;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
-                 Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := FALSE; (* uses NT threads *)
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\r\n";
                  (* initial experiments indicate that the first 64K of
                     a process's memory on NT are "free" and unreadable.
                     --- WKK  9/9/94 *)
+                 First_readable_addr       := 4096;
+                 Fixed_frame_size          := 0;
+                 Guard_page_size           := 4096 * Char.size;
+                 Global_handler_stack      := FALSE; (* uses NT or pthreads over NT threads *)
 
                  (* m3back doesn't handle 64 bit integers *)
-                 Longint := Int32;
-                 Long    := Word32;
+                 IF BackendIntegrated[backend_mode] THEN
+                   Longint := Int32;
+                   Long    := Word32;
+                 END;
 
                  (* 0 as third argument is __cdecl, while 1 is __stdcall *)
-                 (* fourth parameter is FALSE for NT386, TRUE for NT386GNU *)
 
                  CCs := NEW (REF ARRAY OF CallingConvention, 9);
-                 NTCall (0, "C",          0, FALSE); (* __cdecl *)
-                 NTCall (1, "WINAPI",     1, FALSE); (* __stdcall *)
-                 NTCall (2, "CALLBACK",   1, FALSE); (* __stdcall *)
-                 NTCall (3, "WINAPIV",    0, FALSE); (* __cdecl *)
-                 NTCall (4, "APIENTRY",   1, FALSE); (* __stdcall *)
-                 NTCall (5, "APIPRIVATE", 1, FALSE); (* __stdcall *)
-                 NTCall (6, "PASCAL",     1, FALSE); (* __stdcall *)
-                 NTCall (7, "__cdecl",    0, FALSE); (* __cdecl *)
-                 NTCall (8, "__stdcall",  1, FALSE); (* __stdcall *)
+                 NTCall (0, "C",          0, backend_mode); (* __cdecl *)
+                 NTCall (1, "WINAPI",     1, backend_mode); (* __stdcall *)
+                 NTCall (2, "CALLBACK",   1, backend_mode); (* __stdcall *)
+                 NTCall (3, "WINAPIV",    0, backend_mode); (* __cdecl *)
+                 NTCall (4, "APIENTRY",   1, backend_mode); (* __stdcall *)
+                 NTCall (5, "APIPRIVATE", 1, backend_mode); (* __stdcall *)
+                 NTCall (6, "PASCAL",     1, backend_mode); (* __stdcall *)
+                 NTCall (7, "__cdecl",    0, backend_mode); (* __cdecl *)
+                 NTCall (8, "__stdcall",  1, backend_mode); (* __stdcall *)
 
     | Systems.OKI =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 32;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 22 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     |  Systems.OS2 =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 8 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0 * Char.size;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "__setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
+                 EOL                       := "\n"; (* really? *)
 
     | Systems.SEQUENT =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 84 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     | Systems.SOLgnu, Systems.SOLsun =>
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 8192;
                  Jumpbuf_size              := 19 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 20 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
-                 All_floats_legal          := TRUE;
                  Has_stack_walker          := TRUE;
                  Setjmp                    := "setjmp";
-                 Checks_integer_ops        := FALSE;
                  Global_handler_stack      := FALSE; (* may use pthreads *)
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     | Systems.SPARC =>
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 8192;
                  Jumpbuf_size              := 10 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 20 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     | Systems.SUN3 =>
                  max_align                 := 16;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 79 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 1024 * Char.size;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     | Systems.SUN386 =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 8 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     | Systems.UMAX =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 10 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     | Systems.VAX =>
                  Real.min.fraction     := -1.70111x+38;
@@ -578,77 +445,50 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 10 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 12 * Address.size;
                  Guard_page_size           := 1024 * Char.size;
                  All_floats_legal          := FALSE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     |  Systems.LINUXLIBC6 =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 0;
                  Jumpbuf_size              := 40 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0 * Char.size;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
                  Global_handler_stack      := FALSE; (* may use pthreads *)
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     |  Systems.I386_DARWIN =>
                  max_align                 := 64;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 4096 * Char.size;
                  Jumpbuf_size              := 18 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 8 * Address.size;
                  Guard_page_size           := 0 * Char.size;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "setjmp";
-                 Checks_integer_ops        := FALSE;
                  Global_handler_stack      := FALSE; (* may use pthreads *)
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     |  Systems.PPC_DARWIN =>
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 4096 * Char.size;
                  Jumpbuf_size              := (26 + 36 + 129 + 1 + 1) * 
                                               Address.size;
                  Jumpbuf_align             := Word64.align;
                  Fixed_frame_size          := 8 * Address.size;
                  Guard_page_size           := 0 * Char.size;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "setjmp";
-                 Checks_integer_ops        := FALSE;
                  Global_handler_stack      := FALSE; (* may use pthreads *)
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
                  (* Allow_packed_byte_aligned := TRUE; use <*LAZYALIGN*>*)
 
     | Systems.BSDI4 =>
@@ -656,56 +496,11 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 4096;
                  Jumpbuf_size              := 10 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
-
-    | Systems.NT386GNU => 
-                 OS_name                   := "WIN32";
-                 max_align                 := 32;
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
-                 First_readable_addr       := 4096;
-                 Jumpbuf_size              := 52 * Address.size;
-                 Jumpbuf_align             := Address.align;
-                 Fixed_frame_size          := 0;
-                 Guard_page_size           := 0;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
-                 Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := FALSE; (* uses NT threads *)
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\r\n";
-                 (* initial experiments indicate that the first 64K of
-                    a process's memory on NT are "free" and unreadable.
-                    --- WKK  9/9/94 *)
-
-                 (* 0 as third argument is __cdecl, while 1 is __stdcall *)
-                 (* fourth parameter is FALSE for NT386, TRUE for NT386GNU *)
-
-                 CCs := NEW (REF ARRAY OF CallingConvention, 9);
-                 NTCall (0, "C",          0, TRUE); (* __cdecl *)
-                 NTCall (1, "WINAPI",     1, TRUE); (* __stdcall *)
-                 NTCall (2, "CALLBACK",   1, TRUE); (* __stdcall *)
-                 NTCall (3, "WINAPIV",    0, TRUE); (* __cdecl *)
-                 NTCall (4, "APIENTRY",   1, TRUE); (* __stdcall *)
-                 NTCall (5, "APIPRIVATE", 1, TRUE); (* __stdcall *)
-                 NTCall (6, "PASCAL",     1, TRUE); (* __stdcall *)
-                 NTCall (7, "__cdecl",    0, TRUE); (* __cdecl *)
-                 NTCall (8, "__stdcall",  1, TRUE); (* __stdcall *)
 
     |  Systems.PPC_LINUX => 
       (* FIXME: preliminary assumptions bound to change *)
@@ -713,39 +508,24 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 4096 * Char.size;
                  Jumpbuf_size              := 58 * Address.size + 
                                               32 * Address.size + 4;
                  Jumpbuf_align             := Word64.align;
                  Fixed_frame_size          := 8 * Address.size;
                  Guard_page_size           := 0 * Char.size;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     | Systems.NetBSD2_i386 =>
                  max_align                 := 32;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 Bitfield_can_overlap      := FALSE;
                  First_readable_addr       := 4096 * Char.size;
                  Jumpbuf_size              := 14 * Address.size;
-                 Jumpbuf_align             := Address.align;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 0 * Char.size;
-                 All_floats_legal          := TRUE;
-                 Has_stack_walker          := FALSE;
                  Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := FALSE;
-                 Global_handler_stack      := TRUE;
-                 Aligned_procedures        := TRUE;
-                 EOL                       := "\n";
 
     ELSE RETURN FALSE;
     END;
@@ -799,14 +579,17 @@ PROCEDURE Init (system: TEXT): BOOLEAN =
     RETURN TRUE;
   END Init;
 
-PROCEDURE NTCall (x: INTEGER;  nm: TEXT;  id: INTEGER; gnuWin32: BOOLEAN) =
+PROCEDURE NTCall (x: INTEGER;  nm: TEXT;  id: INTEGER; backend_mode: M3BackendMode_t) =
   BEGIN
+ (* The external backend handles more calling convention
+    details than the integrated backend -- reversing parameter
+    order and knowing how to return structs. *)
     CCs[x] := NEW (CallingConvention,
                      name := nm,
                      m3cg_id := id,
-                     args_left_to_right := gnuWin32,
+                     args_left_to_right := NOT BackendIntegrated[backend_mode],
                      results_on_left := TRUE,
-                     standard_structs := gnuWin32);
+                     standard_structs := NOT BackendIntegrated[backend_mode]);
   END NTCall;
 
 PROCEDURE FixI (VAR i: Int_type;  max_align: INTEGER) =

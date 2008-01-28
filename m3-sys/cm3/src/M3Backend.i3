@@ -7,8 +7,9 @@
 INTERFACE M3Backend;
 
 IMPORT Wr, M3CG;
+FROM Target IMPORT M3BackendMode_t;
 
-PROCEDURE Open (target: Wr.T;  target_name: TEXT;  backend: BOOLEAN): M3CG.T;
+PROCEDURE Open (target: Wr.T;  target_name: TEXT;  backend_mode: M3BackendMode_t): M3CG.T;
 PROCEDURE Close (cg: M3CG.T);
 
 END M3Backend.
