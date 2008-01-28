@@ -559,7 +559,7 @@ test_m3tests()
 {
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` run cm3 compiler and runtime regression test suite in ${WS} with lastok version"
   prependpath ${INSTROOT_CUR}/bin
-  LD_LIBRARY_PATH=${INSTROOT_CUR}/lib:{WS}/cm3/m3-sys/m3tests/${CM3_TARGET}
+  LD_LIBRARY_PATH=${INSTROOT_CUR}/lib:${WS}/cm3/m3-sys/m3tests/${CM3_TARGET}
   DYLD_LIBRARY_PATH=${LD_LIBRARY_PATH}
   INSTALLROOT=${INSTROOT_CUR}
   export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
