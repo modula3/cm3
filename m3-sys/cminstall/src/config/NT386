@@ -1,55 +1,74 @@
+%
+% $Id: NT386,v 1.51 2008-01-28 15:54:39 jkrell Exp $
+%
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
 %
-% Standard configuration file for an x86 machine running Windows NT or perhaps Windows 95.
+% Standard configuration file for an x86 machine running Windows NT or perhaps Windows 95,
+% uses the integrated backend, Win32 threads, Win32 gui, Microsoft C library.
 %
-%
-% $Id: NT386,v 1.50 2008-01-22 15:32:10 jkrell Exp $
+% Most of the variables in this file are independent of each other and
+% arbitrary configurations can be produced by changing them.
 %
 
-% temporary compat; remove this
-readonly TARGET = "NT386"
+if not defined("PROFILING_P")
+    if M3_PROFILING
+        readonly PROFILING_P = "p"
+    else
+        readonly PROFILING_P = ""
+    end
+end
 
-% The values and order here are chosen such that
-% NT386 is all 0.
-% NT386GNU is probably all 1.
-% NT386MINGNU is 1s followed by 0s.
-% This could be changed however.
+if not defined("BUILD_DIR")
+    readonly BUILD_DIR    = "NT386" & PROFILING_P
+end
+readonly OS_TYPE      = "WIN32"
+readonly GNU_PLATFORM = "i686-pc-mingw32" % "cpu-vendor-os" string for GNU
 
-%
-% 0 for integrated backend
-% 1 for cm3cg
-%
-readonly Modula3Backend = 0
-
-%
-% 0 for Visual C++ cl
-% 1 for gcc
-%
-readonly CCompiler = 0
-
-%
-% 0 for Visual C++ link
-% 1 for gcc/ld/collect2/dlltool
-%
-readonly Linker = 0
+if not defined("M3_BACKEND_MODE")
+    readonly M3_BACKEND_MODE = "0"
+% -- defines how the frontend, backend, and assembler interact
+%  "0"  -- don't call m3_backend, M3CG produces object code
+%  "1"  -- don't call m3_backend, M3CG produces assembly code
+%  "2"  -- call m3_backend, it produces object code
+%  "3"  -- call m3_backend, it produces assembly code
+end
 
 %
-% 0 for native Windows kernel threads 
-% 1 for pthreads
+% NAMING_CONVENTIONS is somewhat conflated with OS_TYPE and LINKER and this needs work.
 %
-readonly ThreadLibrarary = 0
+readonly NAMING_CONVENTIONS = "2"
+%                                        object files       libraries
+%  0=Unix                          =>  .o   .io    .mo       libXX.a
+%  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
+%  2=Windows NT or Windows 95      =>  .obj .io    .mo       XX.lib
 
 %
-% 0 for Windows
-% 1 for X Windows
+% "MS" cl
+% "GNU" gcc
 %
-readonly WindowLibrary = 0
+if not defined("C_COMPILER")
+    readonly C_COMPILER = "MS"
+end
 
 %
-% 0 for Microsoft/MinGWin
-% 1 for Cygwin
+% "MS" link
+% "GNU" gcc/ld
 %
-readonly CLibrary = 0
+if not defined("LINKER")
+    readonly LINKER = "MS"
+end
+
+%
+% "MS" Win32 kernel threads
+% "PTHREADS" Cygwin pthreads
+%
+readonly THREAD_LIBRARY = "MS"
+
+%
+% "MS"
+% "X"
+%
+readonly WINDOW_LIBRARY = "MS"
 
 include("NT386.common")
