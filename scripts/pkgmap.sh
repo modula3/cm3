@@ -213,8 +213,13 @@ for PKG in ${PKGS} ; do
     fi
     #deps=`cd "${PKG}" && cm3 -depend | head -1`
   else
-    exec_cmd "$PKG"
-    res=$?
+    if UsePackage `basename "${PKG}"` || [ "${CM3_ALL}" = yes ]; then
+      exec_cmd "$PKG"
+      res=$?
+    else
+      echo "=== package omitted on this platform ==="
+      res=0
+    fi
   fi
   if [ -n "${REPORT}" ]; then
     #if grep ': imported interface' "${PKG}/stdout.log" >/dev/null 2>&1; then
@@ -224,7 +229,7 @@ for PKG in ${PKGS} ; do
   fi
   if [ "$res" != "0" ] ; then
     if [ "${KEEP_GOING}" != "yes" ] ; then
-      echo " *** execution of $ACTION failed ***" 
+      echo " *** execution of $PKG_ACTION failed ***" 
       exit 1
     fi
   fi
