@@ -1,3 +1,6 @@
+%
+% $Id$
+%
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
@@ -87,7 +90,7 @@ m3gdb_ResponseFileCounter = "0"
 readonly proc m3gdb_Run (x)
 is
     if equal($OS, "Windows_NT")
-        local readonly Temp = "temp" & m3gdb_ResponseFileCounter & ".sh"
+        local readonly Temp = "_m3sh" & m3gdb_ResponseFileCounter & ".sh"
         > Temp in
             write(x)
         end
