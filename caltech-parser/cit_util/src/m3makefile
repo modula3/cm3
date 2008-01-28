@@ -1,4 +1,9 @@
-/* $Id: m3makefile,v 1.2 2001-09-19 14:07:43 wagner Exp $ */
+/* $Id: m3makefile,v 1.3 2008-01-28 23:10:59 wagner Exp $ */
+
+if not defined("TOP")
+  TOP = PACKAGE_DIR & SL & ".."
+end
+
 import("cit_common")
 template("generics")
 Interface("DblRefany")

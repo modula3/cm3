@@ -17,5 +17,5 @@ module("InitGen")
 module("Override")
 module("LoadSpec")
 implementation("Main")
-program("ext")
+Program("ext")
 

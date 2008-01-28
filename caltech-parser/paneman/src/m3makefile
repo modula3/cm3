@@ -1,3 +1,6 @@
+if not defined("TOP")
+  TOP = PACKAGE_DIR & SL & ".." 
+end
 
 import("vbtkit")
 import("ui")
@@ -51,4 +54,4 @@ interface("PaneManRequest")
 channel("PMRequest", "PaneManRequest")
 module("RequestDaemon")
 
-library("paneman")
+Library("paneman")
