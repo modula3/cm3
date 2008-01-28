@@ -23,8 +23,8 @@ readonly USE_PTHREADS = {
   "LINUXELF"   : FALSE,
   "LINUXLIBC6" : TRUE,  % old kernels without NPTL should be FALSE
   "NEXT"       : FALSE,
-  "NT386"      : FALSE,
-  "NT386GNU"   : FALSE,
+  "NT386"      : TRUE,
+  "NT386GNU"   : TRUE,
   "OKI"        : FALSE,
   "OS2"        : FALSE,
   "SEQUENT"    : FALSE,
@@ -42,8 +42,11 @@ readonly USE_PTHREADS = {
 }
 
 include_dir ("Common")
-if not defined("NOPTHREAD") and USE_PTHREADS{TARGET}
-  include_dir("PTHREAD")
+if equal (OS_TYPE, "WIN32")
+    include_dir (OS_TYPE)
+else if not defined("NOPTHREAD") and USE_PTHREADS{TARGET}
+    include_dir("PTHREAD")
 else
-  include_dir (OS_TYPE)
+    include_dir (OS_TYPE)
+end
 end

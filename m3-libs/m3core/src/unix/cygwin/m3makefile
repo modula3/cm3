@@ -6,6 +6,9 @@
 %      modified on Wed Jun  9 17:03:32 PDT 1993 by harrison
 %      modified on Tue Mar  2 17:17:34 PST 1993 by muller
 
+% $Id: m3makefile,v 1.2 2008-01-28 15:37:01 jkrell Exp $
+
+Interface ("Uucontext")
 Interface ("Udir")
 Interface ("Uerror")
 Interface ("Uexec")
@@ -17,8 +20,10 @@ Module    ("Umsg")
 Module    ("Unetdb")
 Interface ("Unix")
 Interface ("Uprocess")
+Interface ("Upthread")
 Interface ("Upwd")
 Interface ("Uresource")
+Interface ("Usched")
 Interface ("Usem")
 Interface ("Ushm")
 Module    ("Usignal")
