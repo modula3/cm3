@@ -1,4 +1,4 @@
-/* $Id: Upthread.i3.c,v 1.3 2008-01-30 18:10:09 jkrell Exp $ */
+/* $Id: Upthread.i3.c,v 1.4 2008-01-30 18:32:25 jkrell Exp $ */
 
 #include <pthread.h>
 #include <stdio.h>
@@ -18,11 +18,11 @@ int main()
 "(* All rights reserved.                                       *)", 0,
 "(* See the file COPYRIGHT for a full description.             *)", 0,
 "", 0,
-"(* $Id: Upthread.i3.c,v 1.3 2008-01-30 18:10:09 jkrell Exp $ *)", 0,
+"(* $Id: Upthread.i3.c,v 1.4 2008-01-30 18:32:25 jkrell Exp $ *)", 0,
 "", 0,
 "INTERFACE Upthread;", 0,
 "", 0,
-"FROM Ctypes IMPORT unsigned_int, void_star;", 0,
+"FROM Ctypes IMPORT int, unsigned_int, void_star;", 0,
 "FROM Utypes IMPORT size_t;", 0,
 "FROM Usignal IMPORT sigset_t;", 0,
 "FROM Utime IMPORT struct_timespec;", 0,
@@ -35,9 +35,10 @@ int main()
 "(* <bits/pthreadtypes.h> *)", 0,
 "", 0,
 "CONST", 0,
-"  SIZEOF_PTHREAD_MUTEX_T       = 16_%x;", SIZE(pthread_mutex_t),
-"  SIZEOF_PTHREAD_COND_T        = 16_%x;", SIZE(pthread_mutexattr_t),
-"  SIZEOF_PTHREAD_RWLOCK_T      = 16_%x;", SIZE(pthread_rwlock_t),
+"  SIZEOF_PTHREAD_MUTEX_T  = 16_%x;", SIZE(pthread_mutex_t),
+"  SIZEOF_PTHREAD_COND_T   = 16_%x;", SIZE(pthread_mutexattr_t),
+"  SIZEOF_PTHREAD_RWLOCK_T = 16_%x;", SIZE(pthread_rwlock_t),
+"  SIZEOF_PTHREAD_ONCE_T   = 16_%x;", SIZE(pthread_once_t),
 "", 0,
 "TYPE", 0,
 "  pthread_t = void_star;", 0,
@@ -68,7 +69,7 @@ int main()
 "(* Once-only execution *)", 0,
 "TYPE", 0,
 "  pthread_once_t = RECORD", 0,
-"    opaque: ARRAY [0..16_%x] OF unsigned_int;", SIZE(pthread_once_t),
+"    opaque: ARRAY [0..SIZEOF_PTHREAD_ONCE_T] OF unsigned_int;", 0,
 "  END;", 0,
 "", 0,
 "TYPE", 0,
@@ -104,7 +105,8 @@ int main()
 "", 0,
 "(* Single execution handling.  *)", 0,
 "CONST", 0,
-"  PTHREAD_ONCE_INITIALIZER = pthread_once_t { 0 };", 0,
+"  PTHREAD_ONCE_INITIALIZER = ", 0,
+"    pthread_once_t { ARRAY [0..SIZEOF_PTHREAD_ONCE_T] OF unsigned_int {0, .. } };", 0,
 "", 0,
 "TYPE start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;", 0,
 "<*EXTERNAL pthread_create*>", 0,
