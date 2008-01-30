@@ -82,7 +82,7 @@ tinderbox_header () {
 				echo ""
 }
 
-mail_buildlog () {
+mail_buildlog() {
 	if [ -z "$1" ]
 	then
 		return 1
@@ -114,15 +114,12 @@ mail_buildlog () {
 }
 
 cleanup() {
-	echo "cleaning up. waiting for tail to catch up..."
-	sleep 2 && kill -9 ${TAIL_PID}
 	echo "removing build tree ${BUILDDIR_BASE} ..." 
 	cd ${BUILDDIR_ROOT}
 	rm -rf ${BUILDDIR_BASE} 
 
 	# call build script cleanup
 	do_cleanup
-
 }
 
 STARTTIME=`date +%s`
@@ -164,10 +161,6 @@ then
 	exit 5
 fi
 
-tail -f $LOG &
-
-TAIL_PID=$!
-
 # starting build
 {
 	echo "" 
@@ -175,7 +168,7 @@ TAIL_PID=$!
 	echo "" 
 	echo "checkout, compile and test of ${PROJECT} ..." 
 	echo "`date "+%Y.%m.%d %H:%M:%S"` -- checkout in progress." 
-} >> ${LOG}
+} | tee -a ${LOG} 2>&1
 
 mail_buildlog "building"
 
@@ -189,10 +182,10 @@ mail_buildlog "building"
     CHECKOUT_RETURN=$? 
     echo cvs return value: ${CHECKOUT_RETURN} 
     echo "[end checkout `date "+%Y.%m.%d %H:%M:%S"`]" 
-} >> ${LOG} 2>&1 
+} | tee -a ${LOG} 2>&1
 
 if [ ${CHECKOUT_RETURN} != 0 ]; then 
-    echo "*** CHECKOUT FAILED" >> ${LOG}
+    echo "*** CHECKOUT FAILED" | tee -a ${LOG} 2>&1
     mail_buildlog "build_failed" 
     cleanup
     exit 1 
@@ -212,10 +205,10 @@ fi
  
     echo "compile return value: $?" 
     echo "[end compile `date "+%Y.%m.%d %H:%M:%S"`]" 
-} >> ${LOG} 2>&1 
+} | tee -a ${LOG} 2>&1
 
 if [ ${COMPILE_RETURN} != 0 ]; then 
-    echo "*** COMPILE FAILED" >> ${LOG}
+    echo "*** COMPILE FAILED" | tee -a ${LOG} 2>&1
     mail_buildlog "build_failed" 
     cleanup
     exit 1 
@@ -235,10 +228,10 @@ fi
 
     TESTS_RETURN=$?
     echo "[end run-tests `date "+%Y.%m.%d %H:%M:%S"`]" 
-} >> ${LOG} 2>&1 
+} | tee -a ${LOG} 2>&1
 
 if [ ${TESTS_RETURN} != 0 ]; then 
-    echo "*** TESTS FAILED" >> ${LOG}
+    echo "*** TESTS FAILED" | tee -a ${LOG} 2>&1
     mail_buildlog "test_failed" 
     cleanup
     exit 1 
@@ -249,7 +242,7 @@ fi
 		echo "" 
 		echo "---" 
 		echo "" 
-} >> ${LOG}
+} | tee -a ${LOG} 2>&1
     
 mail_buildlog "success"
  
