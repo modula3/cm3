@@ -24,7 +24,7 @@ CONST
   SIGIOT    =  6;      (* IOT instruction *)
   (* Linux 1.1.73 doesn't have SIGEMT - rrw *)
   SIGEMT    =  7;      (* EMT instruction *)
-  SIGBUS    =  7;      (* bus error *)
+  SIGBUS    =  10;      (* bus error *)
       BUS_HWERR	  = 1;     (* misc hardware error (e.g. timeout) *)
       BUS_ALIGN	  = 2;     (* hardware alignment error *)
   SIGFPE    =  8;      (* floating point exception *)
