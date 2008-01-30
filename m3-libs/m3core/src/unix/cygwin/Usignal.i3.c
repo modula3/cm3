@@ -1,4 +1,4 @@
-/* $Id: Usignal.i3.c,v 1.6 2008-01-30 18:32:50 jkrell Exp $ */
+/* $Id: Usignal.i3.c,v 1.7 2008-01-30 18:33:52 jkrell Exp $ */
 
 #include <signal.h>
 #include <stdio.h>
@@ -26,7 +26,7 @@ int main()
 "(*      modified on Tue Feb 14 20:58:12 GMT 1995 by rrw1000@cam.ac.uk *)", 0,
 "(*      modified on Tue Mar  2 17:18:02 PST 1993 by muller            *)", 0,
 "", 0,
-"(* $Id: Usignal.i3.c,v 1.6 2008-01-30 18:32:50 jkrell Exp $ *)", 0,
+"(* $Id: Usignal.i3.c,v 1.7 2008-01-30 18:33:52 jkrell Exp $ *)", 0,
 "", 0,
 "INTERFACE Usignal;", 0,
 "", 0,
@@ -61,7 +61,7 @@ int main()
 "  (* FPE_FLTSTK_TRAP      = %u;    *) (* [floating stack fault] *)", 16,
 "  (* FPE_FPA_ENABLE       = %u;    *) (* [FPA not enabled] *)", 17,
 "  (* FPE_FPA_ERROR        = %u;    *) (* [FPA arithmetic exception] *)", 18,
-"  (* SIGKILL   =  %u; *) (* kill (cannot be caught or ignored) *)", SIGKILL,
+"  SIGKILL   =  %u; (* kill (cannot be caught or ignored) *)", SIGKILL,
 "  (* SIGUSR1   =  %u; *) (* User signal 1 (from SysV) *)", 10,
 "  (* SIGSEGV   =  %u; *) (* segmentation violation *)", SIGSEGV,
 "  (* SEGV_NOMAP  = %u; *) (* no mapping at the fault address *)", 3,
