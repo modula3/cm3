@@ -6,7 +6,7 @@
 
 INTERFACE Upthread;
 
-FROM Ctypes IMPORT char, int, unsigned_int, void_star;
+FROM Ctypes IMPORT unsigned_int, void_star;
 FROM Utypes IMPORT size_t;
 FROM Usignal IMPORT sigset_t;
 FROM Utime IMPORT struct_timespec;
@@ -14,49 +14,50 @@ FROM Utime IMPORT struct_timespec;
 (* <bits/local_lim.h> *)
 
 CONST
-  PTHREAD_STACK_MIN = 16384;
-  PTHREAD_KEYS_MAX = 1024;
+  (* PTHREAD_STACK_MIN = ?; *)
+  PTHREAD_KEYS_MAX = 16_20;
 
 (* <bits/pthreadtypes.h> *)
 
 CONST
-  SIZEOF_PTHREAD_ATTR_T        = 256;
-  SIZEOF_PTHREAD_MUTEX_T       = 256;
-  SIZEOF_PTHREAD_MUTEXATTR_T   = 256;
-  SIZEOF_PTHREAD_COND_T        = 256;
-  SIZEOF_PTHREAD_COND_COMPAT_T = 256;
-  SIZEOF_PTHREAD_CONDATTR_T    = 256;
-  SIZEOF_PTHREAD_RWLOCK_T      = 256;
-  SIZEOF_PTHREAD_RWLOCKATTR_T  = 256;
-  SIZEOF_PTHREAD_BARRIER_T     = 256;
-  SIZEOF_PTHREAD_BARRIERATTR_T = 256;
+  SIZEOF_PTHREAD_ATTR_T        = 16_1;
+  SIZEOF_PTHREAD_MUTEX_T       = 16_1;
+  SIZEOF_PTHREAD_MUTEXATTR_T   = 16_1;
+  SIZEOF_PTHREAD_COND_T        = 16_1;
+  (* SIZEOF_PTHREAD_COND_COMPAT_T = ? *);
+  SIZEOF_PTHREAD_CONDATTR_T    = 16_1;
+  SIZEOF_PTHREAD_RWLOCK_T      = 16_1;
+  SIZEOF_PTHREAD_RWLOCKATTR_T  = 16_1;
+  (* SIZEOF_PTHREAD_BARRIER_T     = ? *);
+  (* SIZEOF_PTHREAD_BARRIERATTR_T = ? *);
+  SIZEOF_PTHREAD_ONCE_T = 16_2;
 
 (* Thread identifiers.  The structure of the attribute type is not
    exposed on purpose.  *)
 TYPE
   pthread_t = void_star;
   pthread_attr_t = RECORD
-    data: ARRAY[1..SIZEOF_PTHREAD_ATTR_T] OF char;
+    data: ARRAY[1..SIZEOF_PTHREAD_ATTR_T] OF unsigned_int;
   END;
 
 (* Data structures for mutex handling.  The structure of the attribute
    type is not exposed on purpose.  *)
 TYPE
   pthread_mutex_t = RECORD
-    data: ARRAY[1..SIZEOF_PTHREAD_MUTEX_T] OF char;
+    data: ARRAY[1..SIZEOF_PTHREAD_MUTEX_T] OF unsigned_int;
   END;
   pthread_mutexattr_t = RECORD
-    data: ARRAY[1..SIZEOF_PTHREAD_MUTEXATTR_T] OF char;
+    data: ARRAY[1..SIZEOF_PTHREAD_MUTEXATTR_T] OF unsigned_int;
   END;
 
 (* Data structure for conditional variable handling.  The structure of
    the attribute type is not exposed on purpose.  *)
 TYPE
   pthread_cond_t = RECORD
-    data: ARRAY [1..SIZEOF_PTHREAD_COND_T] OF char;
+    data: ARRAY [1..SIZEOF_PTHREAD_COND_T] OF unsigned_int;
   END;
   pthread_condattr_t = RECORD
-    data: ARRAY [1..SIZEOF_PTHREAD_CONDATTR_T] OF char;
+    data: ARRAY [1..SIZEOF_PTHREAD_CONDATTR_T] OF unsigned_int;
   END;
 
 (* Keys for thread-specific data *)
@@ -66,17 +67,17 @@ TYPE
 (* Once-only execution *)
 TYPE
   pthread_once_t = RECORD
-    data: int;
+    data: ARRAY [1..SIZEOF_PTHREAD_ONCE_T] OF unsigned_int;
   END;
 
 (* Data structure for read-write lock variable handling.  The
    structure of the attribute type is not exposed on purpose.  *)
 TYPE
   pthread_rwlock_t = RECORD
-    data: ARRAY [1..SIZEOF_PTHREAD_RWLOCK_T] OF char;
+    data: ARRAY [1..SIZEOF_PTHREAD_RWLOCK_T] OF unsigned_int;
   END;
   pthread_rwlockattr_t = RECORD
-    data: ARRAY [1..SIZEOF_PTHREAD_RWLOCKATTR_T] OF char;
+    data: ARRAY [1..SIZEOF_PTHREAD_RWLOCKATTR_T] OF unsigned_int;
   END;
 
 (* <bits/sched.h> *)
@@ -90,17 +91,17 @@ TYPE
 (* Mutex initializers.  *)
 CONST
   PTHREAD_MUTEX_INITIALIZER =
-    pthread_mutex_t { ARRAY [1..SIZEOF_PTHREAD_MUTEX_T] OF char {0, .. } };
+    pthread_mutex_t { ARRAY [1..SIZEOF_PTHREAD_MUTEX_T] OF unsigned_int {0, .. } };
 
 (* Read-write lock initializers.  *)
 CONST
   PTHREAD_RWLOCK_INITIALIZER =
-    pthread_rwlock_t { ARRAY [1..SIZEOF_PTHREAD_RWLOCK_T] OF char {0, .. } };
+    pthread_rwlock_t { ARRAY [1..SIZEOF_PTHREAD_RWLOCK_T] OF unsigned_int {0, .. } };
 
 (* Conditional variable handling.  *)
 CONST
   PTHREAD_COND_INITIALIZER =
-    pthread_cond_t { ARRAY [1..SIZEOF_PTHREAD_COND_T] OF char {0, .. } };
+    pthread_cond_t { ARRAY [1..SIZEOF_PTHREAD_COND_T] OF unsigned_int {0, .. } };
 
 (* Single execution handling.  *)
 CONST
