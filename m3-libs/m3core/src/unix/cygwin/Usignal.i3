@@ -79,7 +79,7 @@ CONST
   SIGABRT   = SIGIOT;
 
 CONST
-  SIGSET_NWORDS = 1024 DIV (8*4);
+  SIGSET_NWORDS = 1;
 
 (* Signal vector "template" used in sigaction call. *)
 TYPE
@@ -93,7 +93,7 @@ TYPE
   sigset_t_star = UNTRACED REF sigset_t;
 
   siginfo_t = RECORD
-    spare__:  ARRAY [0..256] OF int;
+    opaque:  ARRAY [0..37] OF int;
   END;
 
   siginfo_t_star = UNTRACED REF siginfo_t;
@@ -112,9 +112,9 @@ CONST
   SV_RESETHAND = 16_0004;  (* Reset handler to SIG_DFL on receipt *)
 
   (* Defines for sigprocmask() call. POSIX. *)
-  SIG_BLOCK    = 0;    (* Add these signals to block mask *)
-  SIG_UNBLOCK  = 1;    (* Remove these signals from block mask *)
-  SIG_SETMASK  = 2;    (* Set block mask to this mask *)
+  SIG_BLOCK    = 1;    (* Add these signals to block mask *)
+  SIG_UNBLOCK  = 2;    (* Remove these signals from block mask *)
+  SIG_SETMASK  = 0;    (* Set block mask to this mask *)
 
 TYPE
   SignalActionHandler = PROCEDURE (sig: int;
