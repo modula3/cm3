@@ -7,7 +7,11 @@ Automatic building & regression testing
 For this purpose you can use defs.sh like the following:
 
 Install your cm3 base release once:
+# ( . defs.sh ; download_bin_dist )
 # ( . defs.sh ; install_bin_dist )
+It'll ask where to install. You MUST install to the directory given by the
+script before! Scroll back and look for a line like
+"manual installation required. Install into /home/kaspar/work/cm3-inst/booze/rel-5.4.0!"
 
 Then you can checkout the newest CVS with:
 # ( . defs.sh ; checkout )
@@ -26,9 +30,13 @@ It takes a build configuration file as it's only argument.
 Please use cm3.build, it's what we at elego are using to run the
 checkout/build/test cycle.
 
-For the example cm3.build to work, you need to install a base binary
-distribution first (do this only once per host):
-# ( . defs.sh; install_bin_dist )
+Let's assume you are in the directory "cm3/scripts/regression" or it's
+contents are in the working directory.
+
+For the example build build configureation cm3.build to work, you need to
+install a base binary distribution first (do this only once per host):
+# ( . defs.sh ; download_bin_dist )
+# ( . defs.sh ; install_bin_dist ) 
 
 Now you can invoke the whole checkout, build and test cycle, using the
 last release binary distribution as base, with
