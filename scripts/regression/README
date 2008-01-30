@@ -33,10 +33,13 @@ checkout/build/test cycle.
 Let's assume you are in the directory "cm3/scripts/regression" or it's
 contents are in the working directory.
 
-For the example build build configureation cm3.build to work, you need to
+For the example build configuration cm3.build to work, you need to
 install a base binary distribution first (do this only once per host):
+
 # ( . defs.sh ; download_bin_dist )
-# ( . defs.sh ; install_bin_dist ) 
+# ( . defs.sh ; install_bin_dist )
+
+This will install into "~/work".
 
 Now you can invoke the whole checkout, build and test cycle, using the
 last release binary distribution as base, with
@@ -48,17 +51,9 @@ If you want to use the last sucessfully built version as base, invoke
 By default, this will just output the results to stdout.
 If you'd like to contribute your test results to the elego tinderbox server,
 contact us so we can set up an account for you. Your committer-account will do fine.
-Next you need to uncomment the "tinderbox_mailer"-function in cm3.build, and comment out the version that does nothing:
+Next you need to uncomment right line of the "tinderbox_mailer"-function in cm3.build.
 
-Now make sure you have set up passwordless ssh to modula3.elegosoft.com and tinderbox.elego.de, maybe changing your ~/.ssh/config.
-
-As we are using the FQDN in our build-listings, please check if hostname
-outputs the full hostname. It should on FreeBSD but not on Linux.
-If it does not, please create a file in the home directory of the user running the tests:
-# vim ~/cm3/`hostname`.conf
-
-wich contains the line
-TESTHOSTNAME=your.full.hostname.com
+Now make sure you have set up passwordless ssh to modula3.elegosoft.com and tinderbox.elego.de. I needed to change my your ~/.ssh/config.
 
 Now you can do
 # ./tinderbox-build.sh cm3.build
