@@ -1,12 +1,9 @@
 This directory contains scripts to automatically build/test cm3 and send
 the results to a tinderbox server.
 
-!! This is a draft. currently, our tinderbox only accepts build results from
-!! internal hosts. Stay tuned ;)
 
 Automatic building & regression testing
 ---------------------------------------
-
 For this purpose you can use defs.sh like the following:
 
 Install your cm3 base release once:
@@ -22,15 +19,15 @@ Likewise, to build cm3 using the last OK build:
 # ( . defs.sh ; test_build_core_lastok )
 
 
-Tinderbox
----------
-In order to send build results to the elegosoft tinderbox host,
-you can use the script tinderbox-build.sh.
-It takes a build configuration file as its only argument. Check cm3.build for an
-example.
+tinderbox-build.sh
+------------------
+In order to do fully automatic testing, you can use the script tinderbox-build.sh.
+It takes a build configuration file as it's only argument.
+Please use cm3.build, it's what we at elego are using to run the
+checkout/build/test cycle.
 
 For the example cm3.build to work, you need to install a base binary
-distribution:
+distribution first (do this only once per host):
 # ( . defs.sh; install_bin_dist )
 
 Now you can invoke the whole checkout, build and test cycle, using the
@@ -40,6 +37,24 @@ last release binary distribution as base, with
 If you want to use the last sucessfully built version as base, invoke
 # BUILD_REL=lastok ./tinderbox-build.sh cm3.build
 
-If you'd like to contribute your own test results, take cm3.build as an
-example and change the functions do_checkout. do_compile and do_tests 
-according to your needs.
+By default, this will just output the results to stdout.
+If you'd like to contribute your test results to the elego tinderbox server,
+contact us so we can set up an account for you. Your committer-account will do fine.
+Next you need to uncomment the "tinderbox_mailer"-function in cm3.build, and comment out the version that does nothing:
+
+Now make sure you have set up passwordless ssh to modula3.elegosoft.com and tinderbox.elego.de, maybe changing your ~/.ssh/config.
+
+As we are using the FQDN in our build-listings, please check if hostname
+outputs the full hostname. It should on FreeBSD but not on Linux.
+If it does not, please create a file in the home directory of the user running the tests:
+# vim ~/cm3/`hostname`.conf
+
+wich contains the line
+TESTHOSTNAME=your.full.hostname.com
+
+Now you can do
+# ./tinderbox-build.sh cm3.build
+or
+# BUILD_REL=lastok ./tinderbox-build.sh cm3.build
+as above. We do it nightly in a cron job.
+
