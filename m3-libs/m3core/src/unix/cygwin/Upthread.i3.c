@@ -1,4 +1,4 @@
-/* $Id: Upthread.i3.c,v 1.5 2008-01-30 18:32:50 jkrell Exp $ */
+/* $Id: Upthread.i3.c,v 1.6 2008-01-30 18:48:45 jkrell Exp $ */
 
 #include <pthread.h>
 #include <stdio.h>
@@ -18,7 +18,7 @@ int main()
 "(* All rights reserved.                                       *)", 0,
 "(* See the file COPYRIGHT for a full description.             *)", 0,
 "", 0,
-"(* $Id: Upthread.i3.c,v 1.5 2008-01-30 18:32:50 jkrell Exp $ *)", 0,
+"(* $Id: Upthread.i3.c,v 1.6 2008-01-30 18:48:45 jkrell Exp $ *)", 0,
 "", 0,
 "INTERFACE Upthread;", 0,
 "", 0,
@@ -91,22 +91,22 @@ int main()
 "(* Mutex initializers.  *)", 0,
 "CONST", 0,
 "  PTHREAD_MUTEX_INITIALIZER =", 0,
-"    pthread_mutex_t { ARRAY [0..SIZEOF_PTHREAD_MUTEX_T] OF unsigned_int {0, .. } };", 0,
+"    pthread_mutex_t { ARRAY [0..SIZEOF_PTHREAD_MUTEX_T] OF unsigned_int {%x, .. } };", (unsigned) (size_t) PTHREAD_MUTEX_INITIALIZER,
 "", 0,
 "(* Read-write lock initializers.  *)", 0,
 "CONST", 0,
 "  PTHREAD_RWLOCK_INITIALIZER =", 0,
-"    pthread_rwlock_t { ARRAY [0..SIZEOF_PTHREAD_RWLOCK_T] OF unsigned_int {0, .. } };", 0,
+"    pthread_rwlock_t { ARRAY [0..SIZEOF_PTHREAD_RWLOCK_T] OF unsigned_int {%u, .. } };", (unsigned) (size_t) PTHREAD_RWLOCK_INITIALIZER,
 "", 0,
 "(* Conditional variable handling.  *)", 0,
 "CONST", 0,
 "  PTHREAD_COND_INITIALIZER =", 0,
-"    pthread_cond_t { ARRAY [0..SIZEOF_PTHREAD_COND_T] OF unsigned_int {0, .. } };", 0,
+"    pthread_cond_t { ARRAY [0..SIZEOF_PTHREAD_COND_T] OF unsigned_int {%u, .. } };", (unsigned) (size_t) PTHREAD_COND_INITIALIZER,
 "", 0,
 "(* Single execution handling.  *)", 0,
 "CONST", 0,
-"  PTHREAD_ONCE_INITIALIZER = ", 0,
-"    pthread_once_t { ARRAY [0..SIZEOF_PTHREAD_ONCE_T] OF unsigned_int {0, .. } };", 0,
+"  PTHREAD_ONCE_INIT = ", 0,
+"    pthread_once_t { ARRAY [0..SIZEOF_PTHREAD_ONCE_T] OF unsigned_int {%u, .. } };", (unsigned) (size_t) PTHREAD_MUTEX_INITIALIZER,
 "", 0,
 "TYPE start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;", 0,
 "<*EXTERNAL pthread_create*>", 0,

@@ -7,7 +7,7 @@
 (*      modified on Tue Feb 14 20:58:12 GMT 1995 by rrw1000@cam.ac.uk *)
 (*      modified on Tue Mar  2 17:18:02 PST 1993 by muller            *)
 
-(* $Id: Usignal.i3,v 1.7 2008-01-30 18:33:52 jkrell Exp $ *)
+(* $Id: Usignal.i3,v 1.8 2008-01-30 18:48:45 jkrell Exp $ *)
 
 INTERFACE Usignal;
 
