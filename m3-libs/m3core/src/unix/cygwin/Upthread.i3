@@ -6,7 +6,7 @@
 
 INTERFACE Upthread;
 
-FROM Ctypes IMPORT unsigned_int, void_star;
+FROM Ctypes IMPORT int, unsigned_int, void_star;
 FROM Utypes IMPORT size_t;
 FROM Usignal IMPORT sigset_t;
 FROM Utime IMPORT struct_timespec;
@@ -19,9 +19,10 @@ CONST
 (* <bits/pthreadtypes.h> *)
 
 CONST
-  SIZEOF_PTHREAD_MUTEX_T       = 16_1;
-  SIZEOF_PTHREAD_COND_T        = 16_1;
-  SIZEOF_PTHREAD_RWLOCK_T      = 16_1;
+  SIZEOF_PTHREAD_MUTEX_T  = 16_1;
+  SIZEOF_PTHREAD_COND_T   = 16_1;
+  SIZEOF_PTHREAD_RWLOCK_T = 16_1;
+  SIZEOF_PTHREAD_ONCE_T   = 16_2;
 
 TYPE
   pthread_t = void_star;
@@ -52,7 +53,7 @@ TYPE
 (* Once-only execution *)
 TYPE
   pthread_once_t = RECORD
-    opaque: ARRAY [0..16_2] OF unsigned_int;
+    opaque: ARRAY [0..SIZEOF_PTHREAD_ONCE_T] OF unsigned_int;
   END;
 
 TYPE
@@ -88,7 +89,8 @@ CONST
 
 (* Single execution handling.  *)
 CONST
-  PTHREAD_ONCE_INITIALIZER = pthread_once_t { 0 };
+  PTHREAD_ONCE_INITIALIZER = 
+    pthread_once_t { ARRAY [0..SIZEOF_PTHREAD_ONCE_T] OF unsigned_int {0, .. } };
 
 TYPE start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;
 <*EXTERNAL pthread_create*>
