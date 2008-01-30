@@ -119,7 +119,10 @@ CM3_SNAPSHOT=${CM3_SNAPSHOT:-"${HTMP}/cm3-min-${CM3_OSTYPE}-${CM3_TARGET}-${CM3_
 HTML_REPORT="${HTML_REPORT:-${TMPDIR}/cm3-pkg-report-${CM3_TARGET}-${DS}.html}"
 
 # the binary installation archive to install from
-BINDISTMIN=${BINDISTMIN:-${HOME}/cm3-min-${CM3_OSTYPE}-${CM3_TARGET}-${LASTREL}.tgz}
+BINDISTMIN_NAME=${BINDISTMIN:-"cm3-min-${CM3_OSTYPE}-${CM3_TARGET}-${LASTREL}.tgz"}
+BINDISTMIN_LOC=${BINDISTMIN_LOC-"${HOME}/cm3"}
+BINDISTMIN=${BINDISTMIN:-"${BINDISTMIN_LOC}/${BINDISTMIN_NAME}"}
+BINDISTMIN_URL=${BINDISTMIN_URL:-"http://modula3.elegosoft.com/cm3"}
 
 # display some important settings
 echo "TESTHOSTNAME=${TESTHOSTNAME}"
@@ -358,7 +361,7 @@ install_bin_dist() {
   mkdir -p "${INSTROOT_REL}" || exit 1
   cd "${HTMP}" || exit 1
   if [ ! -r "${BINDISTMIN}" ]; then
-    echo "cannot read ${BINDISTMIN}" 1>2
+    echo "cannot read ${BINDISTMIN}! Maybe try \"( . defs.sh ; download_bin_dist )\"."
     exit 1
   fi
   tar xzf "${BINDISTMIN}"
@@ -378,6 +381,16 @@ install_bin_dist() {
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` installation done"
 }
 
+download_bin_dist() {
+  echo " === `date -u +'%Y-%m-%d %H:%M:%S'` downloading ${BINDISTMIN_URL}/${BINDISTMIN_NAME} into ${BINDISTMIN_LOC}"
+
+  wget "${BINDISTMIN_URL}/${BINDISTMIN_NAME}" -O "${BINDISTMIN_LOC}/${BINDISTMIN_NAME}"
+  
+  if [ "$?" = 0 ]; then
+    echo " >>> OK"
+  fi
+  echo " === `date -u +'%Y-%m-%d %H:%M:%S'` downloading done"
+}
 
 #----------------------------------------------------------------------------
 # tests
