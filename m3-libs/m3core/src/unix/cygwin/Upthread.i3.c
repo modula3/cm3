@@ -1,20 +1,24 @@
+/* $Id: Upthread.i3.c,v 1.3 2008-01-30 18:10:09 jkrell Exp $ */
+
 #include <pthread.h>
 #include <stdio.h>
 
-#define SIZE(a) ((sizeof(a) + sizeof(int) - 1) / sizeof(int))
+#define SIZE(a) (((sizeof(a) + sizeof(int) - 1)) / sizeof(int))
 
 int main()
 {
-unsigned i;
-struct {
-    const char* Format;
-    unsigned Value;
-} Data[] = {
+    unsigned i;
+    const static struct
+    {
+        const char* Format;
+        unsigned Value;
+    } Data[] =
+{
 "(* Copyright (C) 1994, Digital Equipment Corporation.         *)", 0,
 "(* All rights reserved.                                       *)", 0,
 "(* See the file COPYRIGHT for a full description.             *)", 0,
 "", 0,
-"(* $Id: Upthread.i3.c,v 1.2 2008-01-30 17:48:14 jkrell Exp $ *)", 0,
+"(* $Id: Upthread.i3.c,v 1.3 2008-01-30 18:10:09 jkrell Exp $ *)", 0,
 "", 0,
 "INTERFACE Upthread;", 0,
 "", 0,
@@ -26,50 +30,35 @@ struct {
 "(* <bits/local_lim.h> *)", 0,
 "", 0,
 "CONST", 0,
-"  (* PTHREAD_STACK_MIN = ?; *)", 0,
 "  PTHREAD_KEYS_MAX = 16_%x;", PTHREAD_KEYS_MAX,
 "", 0,
 "(* <bits/pthreadtypes.h> *)", 0,
 "", 0,
 "CONST", 0,
-"  SIZEOF_PTHREAD_ATTR_T        = 16_%x;", SIZE(pthread_attr_t),
 "  SIZEOF_PTHREAD_MUTEX_T       = 16_%x;", SIZE(pthread_mutex_t),
-"  SIZEOF_PTHREAD_MUTEXATTR_T   = 16_%x;", SIZE(pthread_mutexattr_t),
 "  SIZEOF_PTHREAD_COND_T        = 16_%x;", SIZE(pthread_mutexattr_t),
-"  (* SIZEOF_PTHREAD_COND_COMPAT_T = ? *);", 0,
-"  SIZEOF_PTHREAD_CONDATTR_T    = 16_%x;", SIZE(pthread_condattr_t),
 "  SIZEOF_PTHREAD_RWLOCK_T      = 16_%x;", SIZE(pthread_rwlock_t),
-"  SIZEOF_PTHREAD_RWLOCKATTR_T  = 16_%x;", SIZE(pthread_rwlockattr_t),
-"  (* SIZEOF_PTHREAD_BARRIER_T     = ? *);", 0,
-"  (* SIZEOF_PTHREAD_BARRIERATTR_T = ? *);", 0,
-"  SIZEOF_PTHREAD_ONCE_T = 16_%x;", SIZE(pthread_once_t),
 "", 0,
-"(* Thread identifiers.  The structure of the attribute type is not", 0,
-"   exposed on purpose.  *)", 0,
 "TYPE", 0,
 "  pthread_t = void_star;", 0,
 "  pthread_attr_t = RECORD", 0,
-"    data: ARRAY[1..SIZEOF_PTHREAD_ATTR_T] OF unsigned_int;", 0,
+"    opaque: ARRAY[0..16_%x] OF unsigned_int;", SIZE(pthread_attr_t),
 "  END;", 0,
 "", 0,
-"(* Data structures for mutex handling.  The structure of the attribute", 0,
-"   type is not exposed on purpose.  *)", 0,
 "TYPE", 0,
 "  pthread_mutex_t = RECORD", 0,
-"    data: ARRAY[1..SIZEOF_PTHREAD_MUTEX_T] OF unsigned_int;", 0,
+"    opaque: ARRAY[0..SIZEOF_PTHREAD_MUTEX_T] OF unsigned_int;", 0,
 "  END;", 0,
 "  pthread_mutexattr_t = RECORD", 0,
-"    data: ARRAY[1..SIZEOF_PTHREAD_MUTEXATTR_T] OF unsigned_int;", 0,
+"    opaque: ARRAY[0..16_%x] OF unsigned_int;", SIZE(pthread_mutexattr_t),
 "  END;", 0,
 "", 0,
-"(* Data structure for conditional variable handling.  The structure of", 0,
-"   the attribute type is not exposed on purpose.  *)", 0,
 "TYPE", 0,
 "  pthread_cond_t = RECORD", 0,
-"    data: ARRAY [1..SIZEOF_PTHREAD_COND_T] OF unsigned_int;", 0,
+"    opaque: ARRAY [0..SIZEOF_PTHREAD_COND_T] OF unsigned_int;", 0,
 "  END;", 0,
 "  pthread_condattr_t = RECORD", 0,
-"    data: ARRAY [1..SIZEOF_PTHREAD_CONDATTR_T] OF unsigned_int;", 0,
+"    opaque: ARRAY [0..16_%x] OF unsigned_int;", SIZE(pthread_condattr_t),
 "  END;", 0,
 "", 0,
 "(* Keys for thread-specific data *)", 0,
@@ -79,17 +68,15 @@ struct {
 "(* Once-only execution *)", 0,
 "TYPE", 0,
 "  pthread_once_t = RECORD", 0,
-"    data: ARRAY [1..SIZEOF_PTHREAD_ONCE_T] OF unsigned_int;", 0,
+"    opaque: ARRAY [0..16_%x] OF unsigned_int;", SIZE(pthread_once_t),
 "  END;", 0,
 "", 0,
-"(* Data structure for read-write lock variable handling.  The", 0,
-"   structure of the attribute type is not exposed on purpose.  *)", 0,
 "TYPE", 0,
 "  pthread_rwlock_t = RECORD", 0,
-"    data: ARRAY [1..SIZEOF_PTHREAD_RWLOCK_T] OF unsigned_int;", 0,
+"    opaque: ARRAY [0..SIZEOF_PTHREAD_RWLOCK_T] OF unsigned_int;", 0,
 "  END;", 0,
 "  pthread_rwlockattr_t = RECORD", 0,
-"    data: ARRAY [1..SIZEOF_PTHREAD_RWLOCKATTR_T] OF unsigned_int;", 0,
+"    opaque: ARRAY [0..16_%x] OF unsigned_int;", SIZE(pthread_rwlockattr_t),
 "  END;", 0,
 "", 0,
 "(* <bits/sched.h> *)", 0,
@@ -103,17 +90,17 @@ struct {
 "(* Mutex initializers.  *)", 0,
 "CONST", 0,
 "  PTHREAD_MUTEX_INITIALIZER =", 0,
-"    pthread_mutex_t { ARRAY [1..SIZEOF_PTHREAD_MUTEX_T] OF unsigned_int {0, .. } };", 0,
+"    pthread_mutex_t { ARRAY [0..SIZEOF_PTHREAD_MUTEX_T] OF unsigned_int {0, .. } };", 0,
 "", 0,
 "(* Read-write lock initializers.  *)", 0,
 "CONST", 0,
 "  PTHREAD_RWLOCK_INITIALIZER =", 0,
-"    pthread_rwlock_t { ARRAY [1..SIZEOF_PTHREAD_RWLOCK_T] OF unsigned_int {0, .. } };", 0,
+"    pthread_rwlock_t { ARRAY [0..SIZEOF_PTHREAD_RWLOCK_T] OF unsigned_int {0, .. } };", 0,
 "", 0,
 "(* Conditional variable handling.  *)", 0,
 "CONST", 0,
 "  PTHREAD_COND_INITIALIZER =", 0,
-"    pthread_cond_t { ARRAY [1..SIZEOF_PTHREAD_COND_T] OF unsigned_int {0, .. } };", 0,
+"    pthread_cond_t { ARRAY [0..SIZEOF_PTHREAD_COND_T] OF unsigned_int {0, .. } };", 0,
 "", 0,
 "(* Single execution handling.  *)", 0,
 "CONST", 0,
