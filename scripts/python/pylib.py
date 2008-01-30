@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.42 2008-01-28 16:03:59 jkrell Exp $
+# $Id: pylib.py,v 1.43 2008-01-30 18:49:40 jkrell Exp $
 
 import os
 from os import getenv
@@ -1483,7 +1483,10 @@ def SetupEnvironment():
     if SystemDrive:
         SystemDrive += os.path.sep
 
-    if Target == "NT386" and NT and Config == "NT386":
+    #
+    # some host/target confusion here..
+    #
+    if Target == "NT386" and NT and Config == "NT386" and (not GCC_BACKEND) and OSType == "WIN32":
 
         VCBin = ""
         VCInc = ""
@@ -1560,11 +1563,13 @@ def SetupEnvironment():
 
         _SetupEnvironmentVariableAll("PATH", ["cl", "link"], VCBin)
 
-    if Target == "NT386GNU" or (Target == "NT386" and GCC_BACKEND):
+    #
+    # some host/target confusion here..
+    #
+    if Target == "NT386MINGNU" or (Target == "NT386" and GCC_BACKEND and OSType == "WIN32"):
 
-        if Target == "NT386GNU":
-            _ClearEnvironmentVariable("LIB")
-            _ClearEnvironmentVariable("INCLUDE")
+        _ClearEnvironmentVariable("LIB")
+        _ClearEnvironmentVariable("INCLUDE")
 
         _SetupEnvironmentVariableAll(
             "PATH",
@@ -1578,6 +1583,19 @@ def SetupEnvironment():
             "PATH",
             ["sh", "sed", "gawk", "make"],
             os.path.join(SystemDrive, "msys", "1.0", "bin"))
+
+    #
+    # some host/target confusion here..
+    #
+    if Target == "NT386GNU" or (Target == "NT386" and GCC_BACKEND and OSType == "POSIX"):
+
+        _ClearEnvironmentVariable("LIB")
+        _ClearEnvironmentVariable("INCLUDE")
+
+        _SetupEnvironmentVariableAll(
+            "PATH",
+            ["gcc", "as", "ld"],
+            os.path.join(SystemDrive, "cygwin", "bin"))
 
 if __name__ == "__main__":
     #
