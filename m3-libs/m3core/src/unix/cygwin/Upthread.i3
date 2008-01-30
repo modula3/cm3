@@ -2,7 +2,7 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-(* $Id: Upthread.i3,v 1.5 2008-01-30 18:32:25 jkrell Exp $ *)
+(* $Id: Upthread.i3,v 1.6 2008-01-30 18:33:52 jkrell Exp $ *)
 
 INTERFACE Upthread;
 

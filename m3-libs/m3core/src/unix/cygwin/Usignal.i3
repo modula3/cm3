@@ -7,7 +7,7 @@
 (*      modified on Tue Feb 14 20:58:12 GMT 1995 by rrw1000@cam.ac.uk *)
 (*      modified on Tue Mar  2 17:18:02 PST 1993 by muller            *)
 
-(* $Id: Usignal.i3,v 1.6 2008-01-30 18:32:25 jkrell Exp $ *)
+(* $Id: Usignal.i3,v 1.7 2008-01-30 18:33:52 jkrell Exp $ *)
 
 INTERFACE Usignal;
 
@@ -42,7 +42,7 @@ CONST
   (* FPE_FLTSTK_TRAP      = 16;    *) (* [floating stack fault] *)
   (* FPE_FPA_ENABLE       = 17;    *) (* [FPA not enabled] *)
   (* FPE_FPA_ERROR        = 18;    *) (* [FPA arithmetic exception] *)
-  (* SIGKILL   =  9; *) (* kill (cannot be caught or ignored) *)
+  SIGKILL   =  9; (* kill (cannot be caught or ignored) *)
   (* SIGUSR1   =  10; *) (* User signal 1 (from SysV) *)
   (* SIGSEGV   =  11; *) (* segmentation violation *)
   (* SEGV_NOMAP  = 3; *) (* no mapping at the fault address *)
