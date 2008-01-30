@@ -1,4 +1,4 @@
-/* $Id: Upthread.i3.c,v 1.4 2008-01-30 18:32:25 jkrell Exp $ */
+/* $Id: Upthread.i3.c,v 1.5 2008-01-30 18:32:50 jkrell Exp $ */
 
 #include <pthread.h>
 #include <stdio.h>
@@ -18,7 +18,7 @@ int main()
 "(* All rights reserved.                                       *)", 0,
 "(* See the file COPYRIGHT for a full description.             *)", 0,
 "", 0,
-"(* $Id: Upthread.i3.c,v 1.4 2008-01-30 18:32:25 jkrell Exp $ *)", 0,
+"(* $Id: Upthread.i3.c,v 1.5 2008-01-30 18:32:50 jkrell Exp $ *)", 0,
 "", 0,
 "INTERFACE Upthread;", 0,
 "", 0,
