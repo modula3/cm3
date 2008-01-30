@@ -1,4 +1,4 @@
-/* $Id: Usignal.i3.c,v 1.5 2008-01-30 18:32:25 jkrell Exp $ */
+/* $Id: Usignal.i3.c,v 1.6 2008-01-30 18:32:50 jkrell Exp $ */
 
 #include <signal.h>
 #include <stdio.h>
@@ -26,7 +26,7 @@ int main()
 "(*      modified on Tue Feb 14 20:58:12 GMT 1995 by rrw1000@cam.ac.uk *)", 0,
 "(*      modified on Tue Mar  2 17:18:02 PST 1993 by muller            *)", 0,
 "", 0,
-"(* $Id: Usignal.i3.c,v 1.5 2008-01-30 18:32:25 jkrell Exp $ *)", 0,
+"(* $Id: Usignal.i3.c,v 1.6 2008-01-30 18:32:50 jkrell Exp $ *)", 0,
 "", 0,
 "INTERFACE Usignal;", 0,
 "", 0,
