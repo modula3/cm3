@@ -42,7 +42,7 @@ CONST
   (* FPE_FLTSTK_TRAP      = 16;    *) (* [floating stack fault] *)
   (* FPE_FPA_ENABLE       = 17;    *) (* [FPA not enabled] *)
   (* FPE_FPA_ERROR        = 18;    *) (* [FPA arithmetic exception] *)
-  (* SIGKILL   =  9; *) (* kill (cannot be caught or ignored) *)
+  SIGKILL   =  9; (* kill (cannot be caught or ignored) *)
   (* SIGUSR1   =  10; *) (* User signal 1 (from SysV) *)
   (* SIGSEGV   =  11; *) (* segmentation violation *)
   (* SEGV_NOMAP  = 3; *) (* no mapping at the fault address *)

@@ -61,7 +61,7 @@ int main()
 "  (* FPE_FLTSTK_TRAP      = %u;    *) (* [floating stack fault] *)", 16,
 "  (* FPE_FPA_ENABLE       = %u;    *) (* [FPA not enabled] *)", 17,
 "  (* FPE_FPA_ERROR        = %u;    *) (* [FPA arithmetic exception] *)", 18,
-"  (* SIGKILL   =  %u; *) (* kill (cannot be caught or ignored) *)", SIGKILL,
+"  SIGKILL   =  %u; (* kill (cannot be caught or ignored) *)", SIGKILL,
 "  (* SIGUSR1   =  %u; *) (* User signal 1 (from SysV) *)", 10,
 "  (* SIGSEGV   =  %u; *) (* segmentation violation *)", SIGSEGV,
 "  (* SEGV_NOMAP  = %u; *) (* no mapping at the fault address *)", 3,
