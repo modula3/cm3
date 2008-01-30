@@ -1,4 +1,5 @@
-for %%a in (*.i3.c) do call :F1 %%a
+rem call :F1 Usignal.i3.c
+call :F1 Upthread.i3.c
 goto :eof
 
 :F1
