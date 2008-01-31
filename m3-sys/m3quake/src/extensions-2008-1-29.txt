@@ -2,7 +2,8 @@ system information
 ------------------
 
   hostname() --> text
-
+  date()     --> text               # ISO date: YYYY-MM-DD
+  datestamp() --> text              # date/time as YYYY-MM-DD-hh-mm-ss
 
 command execution
 -----------------
@@ -75,11 +76,9 @@ file system utilities
 directory stack
 ---------------
 
-  ( not yet
-    pushd( dir )
-    popd()
-    setwd( dir )
-    getwd() --> text
-  )
+  pushd( dir )
+  popd()
+  cd( dir )
+  getwd() --> text
 
 

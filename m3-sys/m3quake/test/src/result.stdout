@@ -511,10 +511,10 @@ exec tests
 ------ e001 ------------------------------------------------------------------
 rc = 0
 out = total 8
--rw-rw-r--  1 wagner  wheel  17 31 Jan 00:59 apple
+-rw-rw-r--  1 wagner  wheel  17 31 Jan 15:52 apple
 -rw-rw-r--  1 wagner  wheel  17 29 Jan 18:43 ls-1
--rw-rw-r--  1 wagner  wheel  97 31 Jan 00:59 m3make.args
--rw-rw-r--  1 wagner  wheel  17 31 Jan 00:59 orange
+-rw-rw-r--  1 wagner  wheel  97 31 Jan 15:52 m3make.args
+-rw-rw-r--  1 wagner  wheel  17 31 Jan 15:52 orange
 
 
 ------ e002 ------------------------------------------------------------------
@@ -527,6 +527,46 @@ quake(res = q_exec( "rm cm3.version" )) --> OK
 a
 b
 c
+
+------------------------------------------------------------------------------
+directory stack tests
+------------------------------------------------------------------------------
+
+
+------ d001 ------------------------------------------------------------------
+quake("pushd( \"..\" ) base = getwd() popd() res = tcontains( base, \"test\" )")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+base = /d/home/wagner/work/cm3/m3-sys/m3quake/test
+------ d002 ------------------------------------------------------------------
+quake("pushd( src ) wd = getwd() res = subst( wd, base, \"\", 1 )")
+expected: "src"
+result:   "src"
+==> OK
+
+------ d003 ------------------------------------------------------------------
+quake("cd( base ) wd = getwd() res = subst( base, wd, \"\", 1 )")
+expected: "/"
+result:   "/"
+==> OK
+
+------ d004 ------------------------------------------------------------------
+quake("popd() wd = getwd() res = subst( wd, base, \"\", 1 )")
+expected: "FreeBSD4"
+result:   "FreeBSD4"
+==> OK
+
+
+------------------------------------------------------------------------------
+miscellanoues tests
+------------------------------------------------------------------------------
+
+hostname  = luthien.iceflower.in-berlin.de
+date      = 2008-01-31
+datetime  = 2008-01-31 14:52:23
+datestamp = 2008-01-31-14-52-23
+
 tests done
 
 
@@ -534,8 +574,8 @@ tests done
 summary
 ------------------------------------------------------------------------------
 
-80 tests succeeded:
-t001 t002 t003 t004 t005 t006 t007 t008 t009 t010 t011 t012 t013 t014 t015 t016 t017 t018 t019 t020 t021 t022 t023 t024 t025 t026 t027 t028 t029 t030 t031 t032 t033 t034 t035 t036 t037 t100 t101 t102 f001 f002 f003 f004 f005 f006 f007 f008 f009 f010 f011 f012 f013 f014 f015 f016 f017 f018 f019 f020 f021 f022 f023 f024 f025 f026 f027 f028 f029 f030 f031 f032 f033 f034 f035 f036 f037 f099 e002 e003
+84 tests succeeded:
+t001 t002 t003 t004 t005 t006 t007 t008 t009 t010 t011 t012 t013 t014 t015 t016 t017 t018 t019 t020 t021 t022 t023 t024 t025 t026 t027 t028 t029 t030 t031 t032 t033 t034 t035 t036 t037 t100 t101 t102 f001 f002 f003 f004 f005 f006 f007 f008 f009 f010 f011 f012 f013 f014 f015 f016 f017 f018 f019 f020 f021 f022 f023 f024 f025 f026 f027 f028 f029 f030 f031 f032 f033 f034 f035 f036 f037 f099 e002 e003 d001 d002 d003 d004
 
 0 tests failed:
 

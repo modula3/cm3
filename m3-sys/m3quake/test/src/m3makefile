@@ -423,6 +423,32 @@ header( "e004" )
 a = "a\nb\n\c"
 res = q_exec_put( "cat -", a )
 
+%-----------------------------------------------------------------------------
+section( "directory stack tests" )
+
+t = "pushd( \"..\" ) base = getwd() popd() res = tcontains( base, \"test\" )"
+check( "d001", t, "TRUE" )
+write( "base = ", base )
+
+base = base & SL
+src = ".." & SL & "src"
+t = "pushd( src ) wd = getwd() res = subst( wd, base, \"\", 1 )"
+check( "d002", t, "src" )
+
+t = "cd( base ) wd = getwd() res = subst( base, wd, \"\", 1 )"
+check( "d003", t, SL )
+
+t = "popd() wd = getwd() res = subst( wd, base, \"\", 1 )"
+check( "d004", t, TARGET )
+
+%-----------------------------------------------------------------------------
+section( "miscellanoues tests" )
+
+write( "hostname  = ", hostname(), CR )
+write( "date      = ", date(), CR )
+write( "datetime  = ", datetime(), CR )
+write( "datestamp = ", datestamp(), CR )
+
 write( CR, "tests done", CR )
 
 summary()
