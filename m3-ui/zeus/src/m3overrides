@@ -1,6 +1,0 @@
-override ("netobj", ROOT & "/m3-comm")
-override ("codeview", ROOT & "/m3-ui")
-override ("mg", ROOT & "/m3-ui")
-override ("mgkit", ROOT & "/m3-ui")
-_ZUME_EXEC = format (ROOT & "/m3-ui/m3zume/%s/m3zume", BUILD_DIR)
-_ZUME_OVERRIDE = "T"
