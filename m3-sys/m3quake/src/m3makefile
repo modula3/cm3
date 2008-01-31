@@ -11,6 +11,7 @@
 
 import("libm3")
 import("m3middle")
+import("sysutils")
 
 Module   ("Quake")
 Module   ("QToken")

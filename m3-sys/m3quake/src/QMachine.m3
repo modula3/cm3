@@ -6,14 +6,16 @@
 
 MODULE QMachine;
 
-IMPORT Atom, AtomList, IntRefTbl, Env, Fmt, Text, FileWr;
-IMPORT Pipe, Wr, Thread, Stdio, OSError, TextSeq;
+IMPORT ASCII, Atom, AtomList, IntRefTbl, Env, Fmt, Text, TextConv, FileWr;
+IMPORT Pipe, Rd, Wr, Thread, Stdio, OSError, TextSeq, TextClass;
 IMPORT Pathname, Process, File, FS, RTParams;
-IMPORT M3Buf, M3File, M3Process, CoffTime;
+IMPORT M3Buf, M3File, M3ID, M3Process, CoffTime;
 IMPORT QIdent, QValue, QVal, QCode, QCompiler, QVTbl, QVSeq, QScanner;
 FROM Quake IMPORT Error, ID, IDMap, NoID;
 IMPORT Date, Time;
-(* IMPORT IO; *)
+IMPORT TextUtils, FSUtils, System; (* sysutils *)
+
+IMPORT IO;
 
 CONST
   OnUnix = (CoffTime.EpochAdjust = 0.0d0);
@@ -579,10 +581,18 @@ PROCEDURE PopFrame (t: T): BOOLEAN
       t.reg.pc := f.saved.pc;
       t.reg.ln := f.saved.ln;
       t.reg.fn := f.saved.fn;
-      WHILE (t.reg.xp > f.saved.xp) DO PopScope (t);   END;
+      (* IO.Put("rsp="); IO.PutInt(t.reg.sp); *)
+      (* IO.Put(" ssp="); IO.PutInt(f.saved.sp); IO.Put("\n"); *)
       WHILE (t.reg.sp > f.saved.sp) DO Pop (t, val);   END;
+      (* IO.Put("rlp="); IO.PutInt(t.reg.lp); *)
+      (* IO.Put(" slp="); IO.PutInt(f.saved.lp); IO.Put("\n"); *)
       WHILE (t.reg.lp > f.saved.lp) DO PopLoop (t);    END;
+      (* IO.Put("rop="); IO.PutInt(t.reg.op); *)
+      (* IO.Put(" sop="); IO.PutInt(f.saved.op); IO.Put("\n"); *)
       WHILE (t.reg.op > f.saved.op) DO PopOutput (t);  END;
+      (* IO.Put("rxp="); IO.PutInt(t.reg.xp); *)
+      (* IO.Put(" sxp="); IO.PutInt(f.saved.xp); IO.Put("\n"); *)
+      WHILE (t.reg.xp > f.saved.xp) DO PopScope (t);   END;
       RETURN f.outer;
     END;
   END PopFrame;
@@ -681,6 +691,7 @@ PROCEDURE PopScope (t: T) =
   VAR b, last_b: QValue.Binding;
   BEGIN
     DEC (t.reg.xp);
+    (* IO.Put("trxp="); IO.PutInt(t.reg.xp); IO.Put("\n"); *)
     WITH s = t.scopes [t.reg.xp] DO
       b := s.bindings;
       IF (b # NIL) THEN
@@ -804,32 +815,57 @@ PROCEDURE Pop (t: T;  VAR(*OUT*) value: QValue.T) RAISES {Error} =
   END Pop;
 
 PROCEDURE PushText (t: T;  s: TEXT) =
-  VAR v: QValue.T;
+  VAR v := MakeText (t, s);
   BEGIN
-    IF (s = NIL) THEN s := ""; END;
-    v.kind := QK.String;
-    v.int  := t.map.txt2id (s);
-    v.ref  := NIL;
     Push (t, v);
   END PushText;
 
+PROCEDURE MakeText (t: T;  s: TEXT): QValue.T =
+  VAR v: QValue.T; len: INTEGER;
+  BEGIN
+    IF (s = NIL) THEN s := ""; END;
+    len := Text.Length (s);
+    v.kind := QK.String;
+    IF len > 1024 THEN
+      (* this would break the M3ID table! *)
+      v.int  := M3ID.NoID;
+      v.ref  := s;
+    ELSE
+      v.int  := t.map.txt2id (s);
+      v.ref  := NIL;
+    END;
+    RETURN v;
+  END MakeText;
+
 PROCEDURE PushBool (t: T;  b: BOOLEAN) =
+  VAR v := MakeBool (t, b);
+  BEGIN
+    Push (t, v);
+  END PushBool;
+
+PROCEDURE MakeBool (t: T;  b: BOOLEAN): QValue.T =
   VAR v: QValue.T;
   BEGIN
     v.kind := QK.String;
     v.int  := t.map.boolean [b];
     v.ref  := NIL;
-    Push (t, v);
-  END PushBool;
+    RETURN v;
+  END MakeBool;
 
 PROCEDURE PushInt (t: T;  i: INTEGER) =
+  VAR v := MakeInt (t, i);
+  BEGIN
+    Push (t, v);
+  END PushInt; 
+
+PROCEDURE MakeInt (<*UNUSED*>t: T;  i: INTEGER): QValue.T =
   VAR v: QValue.T;
   BEGIN
     v.kind := QK.Integer;
     v.int  := i;
     v.ref  := NIL;
-    Push (t, v);
-  END PushInt; 
+    RETURN v;
+  END MakeInt;
 
 PROCEDURE PushID (t: T;  nm: ID) =
   VAR v: QValue.T;
@@ -1066,28 +1102,71 @@ TYPE
 
 CONST
   Builtins = ARRAY OF Builtin {
-    Builtin {"arglist",     DoArgList,   2, TRUE},
-    Builtin {"cp_if",       DoCopyIfNew, 2, FALSE},
-    Builtin {"defined",     DoDefined,   1, TRUE},
-    Builtin {"empty",       DoEmpty,     1, TRUE},
-    Builtin {"equal",       DoEqual,     2, TRUE},
-    Builtin {"error",       DoError,     1, FALSE},
-    Builtin {"escape",      DoEscape,    1, TRUE},
-    Builtin {"exec",        DoExec,     -1, FALSE},
-    Builtin {"cm3_exec",    DoCm3Exec,  -1, FALSE},
-    Builtin {"file",        DoFile,      0, TRUE},
-    Builtin {"format",      DoFormat,   -1, TRUE},
-    Builtin {"include",     DoInclude,   1, FALSE},
-    Builtin {"make_dir",    DoMakeDir,   1, FALSE},
-    Builtin {"normalize",   DoNormalize, 2, TRUE},
-    Builtin {"path",        DoPath,      0, TRUE},
-    Builtin {"stale",       DoStale,     2, TRUE},
-    Builtin {"try_exec",    DoTryExec,  -1, TRUE},
-    Builtin {"try_cm3_exec",DoTryCm3Exec,-1, TRUE},
-    Builtin {"unlink_file", DoUnlink,    1, TRUE},
-    Builtin {"write",       DoWrite,    -1, FALSE},
-    Builtin {"datetime",    DoDateTime,  0, TRUE},
-    Builtin {"TRACE_INSTR", DoTrace,     0, FALSE}
+    Builtin {"arglist",       DoArgList,                    2, TRUE},
+    Builtin {"cp_if",         DoCopyIfNew,                  2, FALSE},
+    Builtin {"defined",       DoDefined,                    1, TRUE},
+    Builtin {"empty",         DoEmpty,                      1, TRUE},
+    Builtin {"equal",         DoEqual,                      2, TRUE},
+    Builtin {"error",         DoError,                      1, FALSE},
+    Builtin {"escape",        DoEscape,                     1, TRUE},
+    Builtin {"exec",          DoExec,                      -1, FALSE},
+    Builtin {"cm3_exec",      DoCm3Exec,                   -1, FALSE},
+    Builtin {"file",          DoFile,                       0, TRUE},
+    Builtin {"format",        DoFormat,                    -1, TRUE},
+    Builtin {"include",       DoInclude,                    1, FALSE},
+    Builtin {"make_dir",      DoMakeDir,                    1, FALSE},
+    Builtin {"normalize",     DoNormalize,                  2, TRUE},
+    Builtin {"path",          DoPath,                       0, TRUE},
+    Builtin {"stale",         DoStale,                      2, TRUE},
+    Builtin {"try_exec",      DoTryExec,                   -1, TRUE},
+    Builtin {"try_cm3_exec",  DoTryCm3Exec,                -1, TRUE},
+    Builtin {"unlink_file",   DoUnlink,                     1, TRUE},
+    Builtin {"write",         DoWrite,                     -1, FALSE},
+    Builtin {"datetime",      DoDateTime,                   0, TRUE},
+    Builtin {"TRACE_INSTR",   DoTrace,                      0, FALSE},
+    (* Builtin {"eval_func",  DoEvalFunc,                   1, TRUE}, *)
+    Builtin {"quake",         DoEvalProc,                   1, FALSE},
+
+    Builtin {"q_exec",        DoQExec,                      1, TRUE},
+    Builtin {"q_exec_put",    DoQExecPut,                   2, TRUE},
+    Builtin {"q_exec_get",    DoQExecGet,                   1, TRUE},
+
+    Builtin {"fs_exists",     DoFSExists,                   1, TRUE},
+    Builtin {"fs_readable",   DoFSReadable,                 1, TRUE},
+    Builtin {"fs_writable",   DoFSWritable,                 1, TRUE},
+    Builtin {"fs_executable", DoFSExecutable,               1, TRUE},
+    Builtin {"fs_isdir",      DoFSIsDir,                    1, TRUE},
+    Builtin {"fs_isfile",     DoFSIsFile,                   1, TRUE},
+    Builtin {"fs_contents",   DoFSContents,                 1, TRUE},
+    Builtin {"fs_putfile",    DoFSPutFile,                  2, FALSE},
+    Builtin {"fs_mkdir",      DoFSMkDir,                    1, FALSE},
+    Builtin {"fs_touch",      DoFSTouch,                    1, FALSE},
+    Builtin {"fs_lsdirs",     DoFSSubDirs,                  2, TRUE},
+    Builtin {"fs_lsfiles",    DoFSFiles,                    2, TRUE},
+    Builtin {"fs_rmdir",      DoFSRmDir,                    1, FALSE},
+    Builtin {"fs_rmfile",     DoFSRmFile,                   1, FALSE},
+    Builtin {"fs_rmrec",      DoFSRmRec,                    1, FALSE},
+    Builtin {"fs_cp",         DoFSCopy,                     2, FALSE},
+
+    Builtin {"len",           DoLen,                        1, TRUE},
+
+    Builtin {"split",         DoTextTokens,                 2, TRUE},
+    Builtin {"sub",           DoTextSub,                    3, TRUE},
+    Builtin {"skipl",         DoTextSkipLeft,               1, TRUE},
+    Builtin {"skipr",         DoTextSkipRight,              1, TRUE},
+    Builtin {"squeeze",       DoTextSqueeze,                1, TRUE},
+    Builtin {"compress",      DoTextCompress,               1, TRUE},
+    Builtin {"pos",           DoTextPos,                    2, TRUE},
+    Builtin {"tcontains",     DoTextContains,               2, TRUE},
+    Builtin {"bool",          DoTextBool,                   1, TRUE},
+    Builtin {"encode",        DoTextEncode,                 1, TRUE},
+    Builtin {"decode",        DoTextDecode,                 1, TRUE},
+    Builtin {"subst_chars",   DoTextSubstChars,             3, TRUE},
+    Builtin {"del_chars",     DoTextRemoveChars,            2, TRUE},
+    Builtin {"subst",         DoTextSubst,                  4, TRUE},
+    Builtin {"subst_env",     DoTextSubstEnv,               1, TRUE},
+    Builtin {"add_prefix",    DoTextAddPrefix,              2, TRUE},
+    Builtin {"add_suffix",    DoTextAddSuffix,              2, TRUE}
   };
 
 PROCEDURE InitBuiltins (t: T) =
@@ -1550,6 +1629,28 @@ PROCEDURE IncludeFile (t: T;  path: TEXT;  from_code: BOOLEAN)
     Eval (t);
   END IncludeFile;
 
+PROCEDURE DoEvalProc (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    val: QValue.T;
+    code: QCode.Stream;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, val);
+
+    TRY
+      TRY
+        code := QCompiler.CompileText ("eval", QVal.ToText (t, val), t.map);
+      EXCEPT Error(msg) =>
+        Err (t, msg);
+      END;
+      
+      PushInclude (t, code, t.reg);
+      Eval (t);
+    EXCEPT
+      Thread.Alerted => Err (t, "interrupted");
+    END;
+  END DoEvalProc;
+
 PROCEDURE DoMakeDir (t: T;  n_args: INTEGER) RAISES {Error} =
   VAR val: QValue.T;  dir: TEXT;
   BEGIN
@@ -1689,7 +1790,9 @@ PROCEDURE DoWrite (t: T;  n_args: INTEGER)
     txt := M3Buf.ToText (buf);
     FreeBuf (t, buf);
 
-    TRY Wr.PutText (wr, txt);
+    TRY
+      Wr.PutText (wr, txt);
+      Wr.Flush (wr);
     EXCEPT Wr.Failure (ec) => Err (t, "write failed" & OSErr (ec));
     END;
   END DoWrite;
@@ -1718,6 +1821,603 @@ PROCEDURE DoTrace (t: T;  n_args: INTEGER) =
     <*ASSERT n_args = 0*>
     t.tracing := NOT t.tracing;
   END DoTrace;
+
+
+(*------------------------------------------------------- exec extensions ---*)
+PROCEDURE DoQExec (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    val: QValue.T;
+    res: INTEGER;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, val);
+    TRY
+      res := System.ExecuteList (QVal.ToText (t, val));
+    EXCEPT
+      System.ExecuteError(msg) => Err (t, "execution failed: " & msg);
+    | Thread.Alerted => Err (t, "interrupted");
+    END;
+    PushInt (t, res);
+  END DoQExec;
+
+PROCEDURE DoQExecPut (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    val1, val2: QValue.T;
+    inputWr: Wr.T;
+    p: Process.T;
+    res: INTEGER;
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, val2);
+    Pop (t, val1);
+    TRY
+      p := System.PipeTo (QVal.ToText (t, val1), inputWr);
+      Wr.PutText( inputWr, (QVal.ToText (t, val2)));
+      Wr.Close (inputWr);
+      res := System.Wait (p);
+    EXCEPT
+      System.ExecuteError(msg) => Err (t, "execution failed: " & msg);
+    | System.Error(msg) => Err (t, "execution failed: " & msg);
+    | Wr.Failure(al) => Err (t, "execution failed: " & 
+                             System.AtomListToText(al));
+    | Thread.Alerted => Err (t, "interrupted");
+    END;
+    PushInt (t, res);
+  END DoQExecPut;
+
+
+PROCEDURE DoQExecGet (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    val, res: QValue.T;
+    outputRd: Rd.T;
+    outText: TEXT;
+    p: Process.T;
+    ret: INTEGER;
+    arr: QVSeq.T;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, val);
+    TRY
+      p := System.RdExecute (QVal.ToText (t, val), outputRd);
+      outText := Rd.GetText (outputRd, LAST(CARDINAL));
+      ret := System.Wait (p);
+      Rd.Close (outputRd);
+    EXCEPT
+      System.ExecuteError(msg) => Err (t, "execution failed: " & msg);
+    | Thread.Alerted => Err (t, "interrupted");
+    | System.Error(msg) => Err (t, "execution failed: " & msg);
+    | Rd.Failure(al) => Err (t, "execution failed: " & 
+                             System.AtomListToText(al));
+    END;
+    arr := NEW (QVSeq.T).init();
+    arr.addhi (MakeInt (t, ret));
+    arr.addhi (MakeText (t, outText));
+    res.kind := QK.Array;
+    res.int  := 0;
+    res.ref  := arr;
+    Push (t, res);
+  END DoQExecGet;
+
+(*--------------------------------------------------------- fs extensions ---*)
+PROCEDURE DoFSExists (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    res: BOOLEAN;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    res := FSUtils.Exists (QVal.ToText (t, pn));
+    PushBool (t, res);
+  END DoFSExists;
+
+PROCEDURE DoFSReadable (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    res: BOOLEAN;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    res := FSUtils.IsReadable (QVal.ToText (t, pn));
+    PushBool (t, res);
+  END DoFSReadable;
+
+PROCEDURE DoFSWritable (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    res: BOOLEAN;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    res := FSUtils.IsWritable (QVal.ToText (t, pn));
+    PushBool (t, res);
+  END DoFSWritable;
+
+PROCEDURE DoFSExecutable (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    res: BOOLEAN;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    res := FSUtils.IsExecutable (QVal.ToText (t, pn));
+    PushBool (t, res);
+  END DoFSExecutable;
+
+PROCEDURE DoFSIsDir (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    res: BOOLEAN;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    res := FSUtils.IsDir (QVal.ToText (t, pn));
+    PushBool (t, res);
+  END DoFSIsDir;
+
+PROCEDURE DoFSIsFile (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    res: BOOLEAN;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    res := FSUtils.IsFile (QVal.ToText (t, pn));
+    PushBool (t, res);
+  END DoFSIsFile;
+
+PROCEDURE DoFSContents (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    fn, res: TEXT;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    fn := QVal.ToText (t, pn);
+    TRY
+      res := FSUtils.FileContents (fn);
+    EXCEPT
+      FSUtils.E(m) => Err (t, "cannot read file " & fn & ": " & m);
+    END;
+    PushText (t, res);
+  END DoFSContents;
+
+PROCEDURE DoFSPutFile (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn, data: QValue.T;
+    fn: TEXT;
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, data);
+    Pop (t, pn);
+    fn := QVal.ToText (t, pn);
+    TRY
+      FSUtils.PutFile (fn, QVal.ToText (t, data));
+    EXCEPT
+      FSUtils.E(m) => Err (t, "cannot write file " & fn & ": " & m);
+    END;
+  END DoFSPutFile; 
+
+PROCEDURE DoFSSubDirs (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn, rel, res: QValue.T;
+    fn, a2: TEXT;
+    seq: TextSeq.T;
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, rel);
+    Pop (t, pn);
+    fn := QVal.ToText (t, pn);
+    a2 := QVal.ToText (t, rel);
+    TRY
+      seq := FSUtils.SubDirs (fn, Text.Length (a2) > 0);
+    EXCEPT
+      FSUtils.E(m) => Err (t, "cannot list dirs " & fn & ": " & m);
+    END;
+    res.kind := QK.Array;
+    res.int  := 0;
+    res.ref  := MakeQValSeq (t, seq);
+    Push (t, res);
+  END DoFSSubDirs;
+
+PROCEDURE DoFSFiles (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn, rel, res: QValue.T;
+    fn, a2: TEXT;
+    seq: TextSeq.T;
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, rel);
+    Pop (t, pn);
+    fn := QVal.ToText (t, pn);
+    a2 := QVal.ToText (t, rel);
+    TRY
+      seq := FSUtils.SubFiles (fn, Text.Length (a2) > 0);
+    EXCEPT
+      FSUtils.E(m) => Err (t, "cannot list files in " & fn & ": " & m);
+    END;
+    res.kind := QK.Array;
+    res.int  := 0;
+    res.ref  := MakeQValSeq (t, seq);
+    Push (t, res);
+  END DoFSFiles;
+
+PROCEDURE DoFSMkDir (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    fn: TEXT;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    fn := QVal.ToText (t, pn);
+    TRY
+      FSUtils.Mkdir (fn);
+    EXCEPT
+      FSUtils.E(m) => Err (t, "cannot create directories " & fn & ": " & m);
+    END;
+  END DoFSMkDir;
+
+PROCEDURE DoFSTouch (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    fn: TEXT;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    fn := QVal.ToText (t, pn);
+    TRY
+      FSUtils.Touch (fn);
+    EXCEPT
+      FSUtils.E(m) => Err (t, "cannot touch file " & fn & ": " & m);
+    END;
+  END DoFSTouch;
+
+PROCEDURE DoFSRmDir (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    fn: TEXT;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    fn := QVal.ToText (t, pn);
+    TRY
+      FSUtils.Rmdir (fn);
+    EXCEPT
+      FSUtils.E(m) => Err (t, "cannot remove directory " & fn & ": " & m);
+    END;
+  END DoFSRmDir;
+
+PROCEDURE DoFSRmFile (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    fn: TEXT;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    fn := QVal.ToText (t, pn);
+    TRY
+      FSUtils.Rm (fn);
+    EXCEPT
+      FSUtils.E(m) => Err (t, "cannot remove file " & fn & ": " & m);
+    END;
+  END DoFSRmFile;
+
+PROCEDURE DoFSRmRec (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    fn: TEXT;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    fn := QVal.ToText (t, pn);
+    TRY
+      FSUtils.RmRec (fn);
+    EXCEPT
+      FSUtils.E(m) => Err (t, "cannot remove recursively " & fn & ": " & m);
+    END;
+  END DoFSRmRec;
+
+PROCEDURE DoFSCopy (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn, dst: QValue.T;
+    fn, dest: TEXT;
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, dst);
+    Pop (t, pn);
+    fn := QVal.ToText (t, pn);
+    dest := QVal.ToText (t, dst);
+    TRY
+      FSUtils.Cp (fn, dest);
+    EXCEPT
+      FSUtils.E(m) => Err (t, "cannot cp " & fn & " to " & dest & ": " & m);
+    END;
+  END DoFSCopy; 
+
+
+(*------------------------------------------------------- text extensions ---*)
+PROCEDURE DoLen (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    val: QValue.T;
+    res: INTEGER;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, val);
+    CASE val.kind OF
+    | QK.Var     => res := Text.Length (QVal.ToTag (t, val));
+    | QK.Integer => res := QVal.ToInt (t, val);
+    | QK.String  => res := Text.Length (QVal.ToText (t, val));
+    | QK.Table   => res := QVal.ToTable (t, val).size();
+    | QK.Array   => res := QVal.ToArray (t, val).size();
+    | QK.Proc    => res := -2;
+    END;
+    PushInt (t, res);
+  END DoLen; 
+
+PROCEDURE DoTextTokens (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    str, sep, res: QValue.T;
+    seps: TEXT;
+    set := ASCII.Set{};
+    seq: TextSeq.T;
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, sep);
+    Pop (t, str);
+    seps := QVal.ToText (t, sep);
+    FOR i := 0 TO Text.Length (seps) -1 DO
+      set := set + ASCII.Set{Text.GetChar (seps, i)};
+    END;
+    seq := TextUtils.Tokenize (QVal.ToText (t, str), set);
+    res.kind := QK.Array;
+    res.int  := 0;
+    res.ref  := MakeQValSeq (t, seq);
+    Push (t, res);
+  END DoTextTokens;
+
+PROCEDURE MakeQValSeq (t: T; s: TextSeq.T): QVSeq.T =
+  VAR
+    arr: QVSeq.T;
+  BEGIN
+    arr := NEW (QVSeq.T).init();
+    FOR i := 0 TO s.size() -1 DO
+      arr.addhi (MakeText (t, s.get (i)));
+    END;
+    RETURN arr;
+  END MakeQValSeq;
+
+PROCEDURE DoTextSub (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    str, off, len: QValue.T;
+    res: TEXT;
+  BEGIN
+    <*ASSERT n_args = 3 *>
+    Pop (t, len);
+    Pop (t, off);
+    Pop (t, str);
+    res := Text.Sub (QVal.ToText (t, str), QVal.ToInt (t, off),
+                     QVal.ToInt (t, len));
+    PushText (t, res);
+  END DoTextSub;
+
+PROCEDURE DoTextSqueeze (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    str: QValue.T;
+    res: TEXT;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, str);
+    res := TextUtils.Squeeze (QVal.ToText (t, str));
+    PushText (t, res);
+  END DoTextSqueeze;
+
+PROCEDURE DoTextSkipLeft (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    val: QValue.T;
+    res: TEXT;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, val);
+    res := TextUtils.SkipLeft (QVal.ToText (t, val));
+    PushText (t, res);
+  END DoTextSkipLeft;
+
+PROCEDURE DoTextSkipRight (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    val: QValue.T;
+    res: TEXT;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, val);
+    res := TextUtils.SkipRight (QVal.ToText (t, val));
+    PushText (t, res);
+  END DoTextSkipRight;
+
+PROCEDURE DoTextCompress (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    val: QValue.T;
+    res: TEXT;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, val);
+    res := TextUtils.Compress (QVal.ToText (t, val));
+    PushText (t, res);
+  END DoTextCompress;
+
+PROCEDURE DoTextPos (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    str, sub: QValue.T;
+    res: INTEGER;
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, sub);
+    Pop (t, str);
+    res := TextUtils.Pos (QVal.ToText (t, str), QVal.ToText (t, sub));
+    IF res = -1 THEN
+      PushText (t, "-1"); (* quake has no integer denotation, so we cheat *)
+    ELSE
+      PushInt (t, res);
+    END;
+  END DoTextPos;
+
+PROCEDURE DoTextContains (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    str, sub: QValue.T;
+    res: BOOLEAN;
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, sub);
+    Pop (t, str);
+    res := TextUtils.Contains (QVal.ToText (t, str), QVal.ToText (t, sub));
+    PushBool (t, res);
+  END DoTextContains;
+
+PROCEDURE DoTextBool (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    str: QValue.T;
+    res: BOOLEAN;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, str);
+    res := TextUtils.BoolVal (QVal.ToText (t, str));
+    PushBool (t, res);
+  END DoTextBool;
+
+PROCEDURE DoTextEncode (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    str: QValue.T;
+    res: TEXT;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, str);
+    res := TextConv.Encode (QVal.ToText (t, str));
+    PushText (t, res);
+  END DoTextEncode; 
+
+ PROCEDURE DoTextDecode (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    str: QValue.T;
+    val, res: TEXT;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, str);
+    val := QVal.ToText (t, str);
+    TRY
+      res := TextConv.Decode (val);
+    EXCEPT
+      TextConv.Fail => Err (t, "text decode failed for " & val);
+    END;
+    PushText (t, res);
+  END DoTextDecode; 
+
+PROCEDURE DoTextSubstChars (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    str, a, b: QValue.T;
+    la, lb: INTEGER;
+    sa, sb: TEXT;
+    ta, tb: REF ARRAY OF CHAR;
+    res: TEXT;
+  BEGIN
+    <*ASSERT n_args = 3 *>
+    Pop (t, b);
+    Pop (t, a);
+    Pop (t, str);
+    sa := QVal.ToText (t, a);
+    sb := QVal.ToText (t, b);
+    la := Text.Length (sa);
+    lb := Text.Length (sb);
+    <*ASSERT la = lb *>
+    ta := NEW (REF ARRAY OF CHAR, la);
+    tb := NEW (REF ARRAY OF CHAR, lb);
+    TextClass.GetChars (sa, ta^, 0);
+    TextClass.GetChars (sb, tb^, 0);
+    res := TextUtils.SubstChars (QVal.ToText (t, str), ta^, tb^);
+    PushText (t, res);
+  END DoTextSubstChars;
+
+PROCEDURE DoTextRemoveChars (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    str, a: QValue.T;
+    aa: TEXT;
+    set := ASCII.Set{};
+    res: TEXT;
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, a);
+    Pop (t, str);
+    aa := QVal.ToText (t, a);
+    FOR i := 0 TO Text.Length (aa) -1 DO
+      set := set + ASCII.Set{Text.GetChar (aa, i)};
+    END;
+    res := TextUtils.RemoveChars (QVal.ToText (t, str), set);
+    PushText (t, res);
+  END DoTextRemoveChars;
+
+PROCEDURE DoTextSubst (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    str, a, b, n: QValue.T;
+    res: TEXT;
+  BEGIN
+    <*ASSERT n_args = 4 *>
+    Pop (t, n);
+    Pop (t, b);
+    Pop (t, a);
+    Pop (t, str);
+    res := TextUtils.Substitute (QVal.ToText (t, str), QVal.ToText (t, a),
+                                 QVal.ToText (t, b), QVal.ToInt (t, n));
+    PushText (t, res);
+  END DoTextSubst;
+
+PROCEDURE DoTextSubstEnv (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    str: QValue.T;
+    res: TEXT;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, str);
+    res := TextUtils.SubstEnvVars (QVal.ToText (t, str));
+    PushText (t, res);
+  END DoTextSubstEnv;
+
+PROCEDURE DoTextAddPrefix (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    arr, pre, res: QValue.T;
+    qseq: QVSeq.T;
+    seq: TextSeq.T := NEW (TextSeq.T).init();
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, pre);
+    Pop (t, arr);
+    qseq := QVal.ToArray (t, arr);
+    FOR i := 0 TO qseq.size() - 1 DO
+      seq.addhi (QVal.ToText (t, qseq.get (i)));
+    END;
+    seq := TextUtils.AddPrefix (seq, QVal.ToText (t, pre));
+    res.kind := QK.Array;
+    res.int  := 0;
+    res.ref  := MakeQValSeq (t, seq);
+    Push (t, res);
+  END DoTextAddPrefix; 
+
+PROCEDURE DoTextAddSuffix (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    arr, pre, res: QValue.T;
+    qseq: QVSeq.T;
+    seq: TextSeq.T := NEW (TextSeq.T).init();
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, pre);
+    Pop (t, arr);
+    qseq := QVal.ToArray (t, arr);
+    FOR i := 0 TO qseq.size() - 1 DO
+      seq.addhi (QVal.ToText (t, qseq.get (i)));
+    END;
+    seq := TextUtils.AddSuffix (seq, QVal.ToText (t, pre));
+    res.kind := QK.Array;
+    res.int  := 0;
+    res.ref  := MakeQValSeq (t, seq);
+    Push (t, res);
+  END DoTextAddSuffix;
+
 
 (*-------------------------------------------------------- memory buffers ---*)
 (* We don't use TRY/FINALLY or worry about buffers that aren't freed.
