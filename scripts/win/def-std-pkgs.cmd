@@ -12,7 +12,7 @@ set P=
 if "%M3OSTYPE%" == "WIN32" set P=%P% import-libs
 set P=%P% m3core
 set P=%P% libm3
-set P=%P% m3core
+set P=%P% sysutils
 @rem system / compiler libraries and tools
 set P=%P% m3middle
 set P=%P% m3quake

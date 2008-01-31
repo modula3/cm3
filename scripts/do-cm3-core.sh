@@ -23,6 +23,7 @@ fi
 P=""
 P="${P} m3core"
 P="${P} libm3"
+P="${P} sysutils"
 P="${P} patternmatching"
 P="${P} m3middle"
 P="${P} m3objfile"

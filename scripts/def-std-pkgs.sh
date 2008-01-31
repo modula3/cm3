@@ -5,6 +5,7 @@ P="${P} libm3"
 P="${P} patternmatching"
 
 # system / compiler libraries and tools
+P="${P} sysutils"
 P="${P} m3middle"
 P="${P} m3quake"
 P="${P} m3scanner"
