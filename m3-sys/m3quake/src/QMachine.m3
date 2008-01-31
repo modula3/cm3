@@ -13,9 +13,9 @@ IMPORT M3Buf, M3File, M3ID, M3Process, CoffTime;
 IMPORT QIdent, QValue, QVal, QCode, QCompiler, QVTbl, QVSeq, QScanner;
 FROM Quake IMPORT Error, ID, IDMap, NoID;
 IMPORT Date, Time;
-IMPORT TextUtils, FSUtils, System; (* sysutils *)
+IMPORT TextUtils, FSUtils, System, DirStack; (* sysutils *)
 
-IMPORT IO;
+(* IMPORT IO; *)
 
 CONST
   OnUnix = (CoffTime.EpochAdjust = 0.0d0);
@@ -1123,8 +1123,17 @@ CONST
     Builtin {"unlink_file",   DoUnlink,                     1, TRUE},
     Builtin {"write",         DoWrite,                     -1, FALSE},
     Builtin {"datetime",      DoDateTime,                   0, TRUE},
+    Builtin {"date",          DoDate,                       0, TRUE},
+    Builtin {"datestamp",     DoDateStamp,                  0, TRUE},
     Builtin {"TRACE_INSTR",   DoTrace,                      0, FALSE},
     (* Builtin {"eval_func",  DoEvalFunc,                   1, TRUE}, *)
+    Builtin {"hostname",      DoHostname,                   0, TRUE},
+
+    Builtin {"pushd",         DoPushdDir,                   1, FALSE},
+    Builtin {"popd",          DoPopDir,                     0, FALSE},
+    Builtin {"cd",            DoChangeDir,                  1, FALSE},
+    Builtin {"getwd",         DoGetWorkingDir,              0, TRUE},
+
     Builtin {"quake",         DoEvalProc,                   1, FALSE},
 
     Builtin {"q_exec",        DoQExec,                      1, TRUE},
@@ -1816,11 +1825,103 @@ PROCEDURE DoDateTime(t: T;  n_args: INTEGER) =
     END;
   END DoDateTime;
 
+PROCEDURE DoDate(t: T;  n_args: INTEGER) =
+  BEGIN
+    <*ASSERT n_args = 0*>
+    WITH date = Date.FromTime(Time.Now(), Date.UTC) DO
+        PushText (
+            t,
+            Fmt.FN(
+                "%04s-%02s-%02s",
+                ARRAY OF TEXT{
+                    Fmt.Int(date.year),
+                    Fmt.Int(ORD(date.month) + 1),
+                    Fmt.Int(date.day)
+                    }));
+    END;
+  END DoDate;
+
+PROCEDURE DoDateStamp(t: T;  n_args: INTEGER) =
+  BEGIN
+    <*ASSERT n_args = 0*>
+    WITH date = Date.FromTime(Time.Now(), Date.UTC) DO
+        PushText (
+            t,
+            Fmt.FN(
+                "%04s-%02s-%02s-%02s-%02s-%02s",
+                ARRAY OF TEXT{
+                    Fmt.Int(date.year),
+                    Fmt.Int(ORD(date.month) + 1),
+                    Fmt.Int(date.day),
+                    Fmt.Int(date.hour),
+                    Fmt.Int(date.minute),
+                    Fmt.Int(date.second)
+                    }));
+    END;
+  END DoDateStamp;
+
+PROCEDURE DoHostname(t: T;  n_args: INTEGER) =
+  BEGIN
+    <*ASSERT n_args = 0*>
+    PushText (t, System.Hostname());
+  END DoHostname;
+ 
 PROCEDURE DoTrace (t: T;  n_args: INTEGER) =
   BEGIN
     <*ASSERT n_args = 0*>
     t.tracing := NOT t.tracing;
   END DoTrace;
+
+
+(*--------------------------------------------------- dirstack extensions ---*)
+PROCEDURE DoPushdDir (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    val: QValue.T;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, val);
+    TRY
+      DirStack.PushDir (QVal.ToText (t, val));
+    EXCEPT
+      DirStack.Error(msg) => Err (t, "pushd failed: " & msg);
+    END;
+  END DoPushdDir;
+
+PROCEDURE DoPopDir (t: T;  n_args: INTEGER) RAISES {Error} =
+  BEGIN
+    <*ASSERT n_args = 0 *>
+    TRY
+      DirStack.PopDir ();
+    EXCEPT
+      DirStack.Error(msg) => Err (t, "popd failed: " & msg);
+    END;
+  END DoPopDir;
+
+PROCEDURE DoChangeDir (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    val: QValue.T;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, val);
+    TRY
+      DirStack.SetWorkingDir (QVal.ToText (t, val));
+    EXCEPT
+      DirStack.Error(msg) => Err (t, "cd failed: " & msg);
+    END;
+  END DoChangeDir;
+
+PROCEDURE DoGetWorkingDir (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    res: TEXT;
+  BEGIN
+    <*ASSERT n_args = 0 *>
+    TRY
+      res := DirStack.GetWorkingDir ();
+    EXCEPT
+      DirStack.Error(msg) => Err (t, "getwd failed: " & msg);
+    END;
+    PushText (t, res);
+  END DoGetWorkingDir; 
 
 
 (*------------------------------------------------------- exec extensions ---*)
