@@ -8,10 +8,10 @@
 
 import ("libm3")
 import ("m3tools")
+import ("sysutils")
 import ("parseparams")
 
 module ("Msg")
-module ("FSUtils")
 module ("FilePath")
 module ("TextDB")
 module ("DBRd")
