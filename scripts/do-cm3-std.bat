@@ -4,6 +4,9 @@ cm3 -ship
 cd ..\..\m3-libs\libm3
 cm3 -build
 cm3 -ship
+cd ..\m3-libs\sysutils
+cm3 -build
+cm3 -ship
 cd ..\..\m3-sys\m3middle
 cm3 -build
 cm3 -ship

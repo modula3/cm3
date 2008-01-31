@@ -1,4 +1,4 @@
-@rem $Id: do-cm3-core.cmd,v 1.8 2007-12-31 10:09:31 jkrell Exp $
+@rem $Id: do-cm3-core.cmd,v 1.9 2008-01-31 00:11:25 wagner Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -14,6 +14,7 @@ set P=^
  import-libs ^
  m3core ^
  libm3 ^
+ sysutils ^
  m3middle ^
  m3objfile ^
  m3linker ^

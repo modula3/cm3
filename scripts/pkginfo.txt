@@ -2,6 +2,7 @@ m3cc core front
 m3core base core front min std
 libm3 base core front min std
 patternmatching core std
+sysutils core std
 m3middle base core front std
 m3objfile core front
 m3linker core front

@@ -1,4 +1,4 @@
-@rem $Id: def-std-pkgs.cmd,v 1.5 2007-08-12 18:59:56 jkrell Exp $
+@rem $Id: def-std-pkgs.cmd,v 1.6 2008-01-31 00:11:25 wagner Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -12,7 +12,7 @@ set P=
 if "%M3OSTYPE%" == "WIN32" set P=%P% import-libs
 set P=%P% m3core
 set P=%P% libm3
-set P=%P% m3core
+set P=%P% sysutils
 @rem system / compiler libraries and tools
 set P=%P% m3middle
 set P=%P% m3quake

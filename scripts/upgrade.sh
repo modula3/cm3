@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.12 2008-01-08 23:02:49 wagner Exp $
+# $Id: upgrade.sh,v 1.13 2008-01-31 00:11:25 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -41,13 +41,13 @@ run() {
 # Try to make sure that m3bundle and cminstall are available.
 # These are only needed in case of cm3.cfg updates later. We need
 # to build them in advance though, but ignore errors in this step.
-P="m3bundle m3middle m3quake patternmatching cminstall"
+P="sysutils m3bundle m3middle m3quake patternmatching cminstall"
 run "$ROOT/scripts/do-pkg.sh" "$@" "buildship" ${P} || true
 
 # Now build the compiler with the installed version of the runtime;
 # do _not_ compile m3core and libm3 here.
 # We start with the front end...
-P=`FilterPackages m3middle m3objfile m3linker m3back m3staloneback \
+P=`FilterPackages sysutils m3middle m3objfile m3linker m3back m3staloneback \
    m3front m3quake cm3 mklib`
 run "$ROOT/scripts/do-pkg.sh" "$@" "buildship" ${P} || exit 1
 
