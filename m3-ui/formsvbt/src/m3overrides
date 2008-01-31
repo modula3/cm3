@@ -1,6 +1,0 @@
-
-override ("web", ROOT & "/m3-www")
-override ("ui", ROOT & "/m3-ui")
-override ("vbtkit", ROOT & "/m3-ui")
-override ("videovbt", ROOT & "/m3-ui")
-override ("formsvbtpixmaps", ROOT & "/m3-ui")
