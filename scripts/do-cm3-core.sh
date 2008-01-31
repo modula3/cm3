@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-core.sh,v 1.11 2008-01-22 16:36:01 jkrell Exp $
+# $Id: do-cm3-core.sh,v 1.12 2008-01-31 00:11:25 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -23,6 +23,7 @@ fi
 P=""
 P="${P} m3core"
 P="${P} libm3"
+P="${P} sysutils"
 P="${P} patternmatching"
 P="${P} m3middle"
 P="${P} m3objfile"
