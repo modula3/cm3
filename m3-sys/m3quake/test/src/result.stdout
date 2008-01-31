@@ -1,0 +1,541 @@
+--- building in FreeBSD4 ---
+
+quake extension tests
+
+
+
+------------------------------------------------------------------------------
+string function tests
+------------------------------------------------------------------------------
+
+
+------ t001 ------------------------------------------------------------------
+quake("a = \" \t ha ha\" res = skipl( a )")
+expected: "ha ha"
+result:   "ha ha"
+==> OK
+
+------ t002 ------------------------------------------------------------------
+quake("a = \"  ha\" res = skipl( a )")
+expected: "ha"
+result:   "ha"
+==> OK
+
+------ t003 ------------------------------------------------------------------
+quake("a = \"  ha  \" res = skipr( a ) & \"x\"")
+expected: "  hax"
+result:   "  hax"
+==> OK
+
+------ t004 ------------------------------------------------------------------
+quake("a = \"  ha  \" res = compress( a ) & \"x\"")
+expected: "hax"
+result:   "hax"
+==> OK
+
+------ t005 ------------------------------------------------------------------
+quake("a = \"apple plum  orange\" b = split(a, \" \") res = b[0] & b[2]")
+expected: "appleorange"
+result:   "appleorange"
+==> OK
+
+------ t006 ------------------------------------------------------------------
+quake("a = \"applepie\" res = sub(a, 5, 3)")
+expected: "pie"
+result:   "pie"
+==> OK
+
+------ t007 ------------------------------------------------------------------
+quake("a = \"applepie\" res = sub(a, 7, 3)")
+expected: "e"
+result:   "e"
+==> OK
+
+------ t008 ------------------------------------------------------------------
+quake("a = \"a\n\n\nb\n\n\n\nc\n\" res = squeeze(a)")
+expected: "a\n\nb\n\nc\n"
+result:   "a\n\nb\n\nc\n"
+==> OK
+
+------ t009 ------------------------------------------------------------------
+quake("a = \"applepie\" res = tcontains(a, \"pie\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ t010 ------------------------------------------------------------------
+quake("a = \"applepie\" res = tcontains(a, \"pies\")")
+expected: ""
+result:   ""
+==> OK
+
+------ t011 ------------------------------------------------------------------
+quake("a = \"applepie\" res = pos(a, \"pie\")")
+expected: "5"
+result:   "5"
+==> OK
+
+------ t012 ------------------------------------------------------------------
+quake("a = \"applepie\" res = pos(a, \"pies\")")
+expected: "-1"
+result:   "-1"
+==> OK
+
+------ t013 ------------------------------------------------------------------
+quake("a = \"applepie\" n = pos(a, \"pie\") res = sub(a, n, 1)")
+expected: "p"
+result:   "p"
+==> OK
+
+------ t014 ------------------------------------------------------------------
+quake("res = bool(\"true\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ t015 ------------------------------------------------------------------
+quake("res = bool(\"tRuE\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ t016 ------------------------------------------------------------------
+quake("res = bool(\"TRUE\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ t017 ------------------------------------------------------------------
+quake("res = bool(\"y\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ t018 ------------------------------------------------------------------
+quake("res = bool(\"yes\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ t019 ------------------------------------------------------------------
+quake("res = bool(\"Y\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ t020 ------------------------------------------------------------------
+quake("res = bool(\"YES \")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ t021 ------------------------------------------------------------------
+quake("res = bool(\"no\")")
+expected: ""
+result:   ""
+==> OK
+
+------ t022 ------------------------------------------------------------------
+quake("res = bool(\"false\")")
+expected: ""
+result:   ""
+==> OK
+
+------ t023 ------------------------------------------------------------------
+quake("res = bool(\"foo\")")
+expected: ""
+result:   ""
+==> OK
+
+------ t024 ------------------------------------------------------------------
+quake("res = bool(\"0\")")
+expected: ""
+result:   ""
+==> OK
+
+------ t025 ------------------------------------------------------------------
+quake("res = bool(\"1\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ t026 ------------------------------------------------------------------
+quake("a = \"aabaacabbbaccbca\" res = subst_chars(a, \"b\", \"d\")")
+expected: "aadaacadddaccdca"
+result:   "aadaacadddaccdca"
+==> OK
+
+------ t027 ------------------------------------------------------------------
+quake("a = \"aabaacabbbaccbca\" res = subst_chars(a, \"bc\", \"dd\")")
+expected: "aadaadadddadddda"
+result:   "aadaadadddadddda"
+==> OK
+
+------ t028 ------------------------------------------------------------------
+quake("a = \"aabaacabbbaccbca\" res = del_chars(a, \"b\")")
+expected: "aaaacaaccca"
+result:   "aaaacaaccca"
+==> OK
+
+------ t029 ------------------------------------------------------------------
+quake("a = \"aabaacabbbaccbca\" res = del_chars(a, \"bc\")")
+expected: "aaaaaaa"
+result:   "aaaaaaa"
+==> OK
+
+------ t030 ------------------------------------------------------------------
+quake("a = \"aabaacabbbaaccbca\" res = subst(a, \"aa\", \" 42 \", 1)")
+expected: " 42 baacabbbaaccbca"
+result:   " 42 baacabbbaaccbca"
+==> OK
+
+------ t031 ------------------------------------------------------------------
+quake("a = \"aabaacabbbaaccbca\" res = subst(a, \"aa\", \" 42 \", 2)")
+expected: " 42 b 42 cabbbaaccbca"
+result:   " 42 b 42 cabbbaaccbca"
+==> OK
+
+------ t032 ------------------------------------------------------------------
+quake("a = \"aabaacabbbaaccbca\" res = subst(a, \"aa\", \" 42 \", 99)")
+expected: " 42 b 42 cabbb 42 ccbca"
+result:   " 42 b 42 cabbb 42 ccbca"
+==> OK
+
+------ t033 ------------------------------------------------------------------
+quake("a = [ \"a\", \"b\", \"c\" ] res = add_prefix(a, \"pre-\")")
+expected: "pre-a pre-b pre-c"
+result:   "pre-a pre-b pre-c"
+==> OK
+
+------ t034 ------------------------------------------------------------------
+quake("a = [ \"a\", \"b\", \"c\" ] res = add_suffix(a, \"-suf\")")
+expected: "a-suf b-suf c-suf"
+result:   "a-suf b-suf c-suf"
+==> OK
+
+------ t035 ------------------------------------------------------------------
+quake("a = \"0123456789\"res = len( a )")
+expected: "10"
+result:   "10"
+==> OK
+
+------ t036 ------------------------------------------------------------------
+quake("a = [ \"a\", \"b\", \"c\" ] res = len( a )")
+expected: "3"
+result:   "3"
+==> OK
+
+------ t037 ------------------------------------------------------------------
+quake("a = { \"a\" : \"b\", \"c\" : \"d\" } res = len( a )")
+expected: "2"
+result:   "2"
+==> OK
+
+
+------------------------------------------------------------------------------
+large string tests
+------------------------------------------------------------------------------
+
+16 32 64 128 256 512 1k 2k 4k 8k 16k 32k 64k 128k 256k 512k 1m OK
+
+------ t100 ------------------------------------------------------------------
+quake("a = subst_chars(b, \"bc\", \"xy\") res = subst_chars(b, \"xy\", \"bc\")")
+expected: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef012
+result:   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef012
+==> OK
+
+------ t101 ------------------------------------------------------------------
+quake("res = sub(del_chars(b, \"0123456789cdef\"), 0, 10)")
+expected: "ababababab"
+result:   "ababababab"
+==> OK
+
+------ t102 ------------------------------------------------------------------
+quake("res = len( b )")
+expected: "1048576"
+result:   "1048576"
+==> OK
+
+
+------------------------------------------------------------------------------
+file system tests
+------------------------------------------------------------------------------
+
+
+------ f001 ------------------------------------------------------------------
+quake("res = fs_exists(\".\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f002 ------------------------------------------------------------------
+quake("res = fs_exists(\"..\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f003 ------------------------------------------------------------------
+quake("res = fs_exists(\"..\" & SL & \"src\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f004 ------------------------------------------------------------------
+quake("res = fs_isdir(\".\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f005 ------------------------------------------------------------------
+quake("res = fs_isdir(\"..\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f006 ------------------------------------------------------------------
+quake("res = fs_isdir(\"..\" & SL & \"src\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f007 ------------------------------------------------------------------
+quake("res = fs_isfile(\".\")")
+expected: ""
+result:   ""
+==> OK
+
+------ f008 ------------------------------------------------------------------
+quake("res = fs_isfile(\"..\")")
+expected: ""
+result:   ""
+==> OK
+
+------ f009 ------------------------------------------------------------------
+quake("res = fs_isfile(\"..\" & SL & \"src\")")
+expected: ""
+result:   ""
+==> OK
+
+------ f010 ------------------------------------------------------------------
+quake("res = fs_isfile(\"..\" & SL & \"src\" & SL & \"m3makefile\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f011 ------------------------------------------------------------------
+quake("res = fs_isdir(\"..\" & SL & \"src\" & SL & \"m3makefile\")")
+expected: ""
+result:   ""
+==> OK
+findexe(more)
+
+------ f012 ------------------------------------------------------------------
+quake("res = fs_executable( more )")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f013 ------------------------------------------------------------------
+quake("res = fs_writable( more )")
+expected: ""
+result:   ""
+==> OK
+
+------ f014 ------------------------------------------------------------------
+quake("res = fs_writable(\"..\" & SL & \"src\" & SL & \"m3makefile\")")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+findexe(cm3)
+
+------ f015 ------------------------------------------------------------------
+quake("fs_putfile( orange, data ) res = fs_contents( orange )")
+expected: "line1\nline2line3\n"
+result:   "line1\nline2line3\n"
+==> OK
+
+--------------------------------------
+dirs   = a/b
+dirs_0 = a/b/c
+dirs_1 = a/b/cc
+dirs_2 = a/b/ccc
+dirs_3 = a/bb
+fn_a   = a/b/c/a
+fn_b   = a/b/c/b
+fn_c   = a/b/c/c
+
+------ f016 ------------------------------------------------------------------
+quake("fs_mkdir( dirs_0 ) res = fs_isdir( dirs_0 )")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f017 ------------------------------------------------------------------
+quake("fs_mkdir( dirs_1 ) res = fs_isdir( dirs_1 )")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f018 ------------------------------------------------------------------
+quake("fs_mkdir( dirs_2 ) res = fs_isdir( dirs_2 )")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f019 ------------------------------------------------------------------
+quake("fs_mkdir( dirs_3 ) res = fs_isdir( dirs_3 )")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f020 ------------------------------------------------------------------
+quake("res = fs_lsdirs( dirs, \"\" )")
+expected: "a/b/c a/b/cc a/b/ccc"
+result:   "a/b/c a/b/cc a/b/ccc"
+==> OK
+
+------ f021 ------------------------------------------------------------------
+quake("res = fs_lsdirs( dirs, \"T\" )")
+expected: "c cc ccc"
+result:   "c cc ccc"
+==> OK
+
+------ f022 ------------------------------------------------------------------
+quake("fs_touch( fn_a ) res = fs_isfile( fn_a )")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f023 ------------------------------------------------------------------
+quake("fs_touch( fn_b ) res = fs_isfile( fn_b )")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f024 ------------------------------------------------------------------
+quake("fs_touch( fn_c ) res = fs_isfile( fn_c )")
+expected: "TRUE"
+result:   "TRUE"
+==> OK
+
+------ f025 ------------------------------------------------------------------
+quake("res = fs_lsfiles( dirs_0, \"\" )")
+expected: "a/b/c/a a/b/c/b a/b/c/c"
+result:   "a/b/c/a a/b/c/b a/b/c/c"
+==> OK
+
+------ f026 ------------------------------------------------------------------
+quake("res = fs_lsfiles( dirs_0, \"T\" )")
+expected: "a b c"
+result:   "a b c"
+==> OK
+
+------ f027 ------------------------------------------------------------------
+quake("res = fs_lsfiles( dirs, \"T\" )")
+expected: ""
+result:   ""
+==> OK
+
+------ f028 ------------------------------------------------------------------
+quake("fs_rmfile(fn_b) res = fs_lsfiles( dirs_0, \"T\" )")
+expected: "a c"
+result:   "a c"
+==> OK
+
+------ f029 ------------------------------------------------------------------
+quake("fs_rmfile(fn_b) res = fs_lsfiles( dirs_0, \"T\" )")
+expected: "a c"
+result:   "a c"
+==> OK
+
+------ f030 ------------------------------------------------------------------
+quake("fs_rmdir(dirs_3) res = fs_lsdirs( \"a\", \"T\" )")
+expected: "b"
+result:   "b"
+==> OK
+
+------ f031 ------------------------------------------------------------------
+quake("fs_rmdir(dirs_3) res = fs_lsdirs( \"a\", \"T\" )")
+expected: "b"
+result:   "b"
+==> OK
+
+------ f032 ------------------------------------------------------------------
+quake("fs_rmrec(dirs) res = fs_lsdirs( \"a\", \"T\" )")
+expected: ""
+result:   ""
+==> OK
+
+------ f033 ------------------------------------------------------------------
+quake("fs_touch(dirs) res = fs_lsfiles( \"a\", \"T\" )")
+expected: "b"
+result:   "b"
+==> OK
+
+------ f034 ------------------------------------------------------------------
+quake("fs_cp( orange, apple )  res = fs_contents( apple )")
+expected: "line1\nline2line3\n"
+result:   "line1\nline2line3\n"
+==> OK
+
+------ f035 ------------------------------------------------------------------
+quake("fs_cp( orange, apple2 )  res = fs_contents( apple2 )")
+expected: "line1\nline2line3\n"
+result:   "line1\nline2line3\n"
+==> OK
+
+------ f036 ------------------------------------------------------------------
+quake("res = fs_lsfiles( \"a\", \"T\" )")
+expected: "b apple"
+result:   "b apple"
+==> OK
+
+------ f037 ------------------------------------------------------------------
+quake("fs_rmfile(apple2) res = fs_lsfiles( \"a\", \"T\" )")
+expected: "b"
+result:   "b"
+==> OK
+
+------ f099 ------------------------------------------------------------------
+quake("fs_rmrec(\"a\") res = fs_lsdirs( \".\", \"T\" )")
+expected: ""
+result:   ""
+==> OK
+
+
+------------------------------------------------------------------------------
+exec tests
+------------------------------------------------------------------------------
+
+
+------ e001 ------------------------------------------------------------------
+rc = 0
+out = total 8
+-rw-rw-r--  1 wagner  wheel  17 31 Jan 00:59 apple
+-rw-rw-r--  1 wagner  wheel  17 29 Jan 18:43 ls-1
+-rw-rw-r--  1 wagner  wheel  97 31 Jan 00:59 m3make.args
+-rw-rw-r--  1 wagner  wheel  17 31 Jan 00:59 orange
+
+
+------ e002 ------------------------------------------------------------------
+quake(res = q_exec( "cm3 -version > cm3.version" )) --> OK
+
+------ e003 ------------------------------------------------------------------
+quake(res = q_exec( "rm cm3.version" )) --> OK
+
+------ e004 ------------------------------------------------------------------
+a
+b
+c
+tests done
+
+
+------------------------------------------------------------------------------
+summary
+------------------------------------------------------------------------------
+
+80 tests succeeded:
+t001 t002 t003 t004 t005 t006 t007 t008 t009 t010 t011 t012 t013 t014 t015 t016 t017 t018 t019 t020 t021 t022 t023 t024 t025 t026 t027 t028 t029 t030 t031 t032 t033 t034 t035 t036 t037 t100 t101 t102 f001 f002 f003 f004 f005 f006 f007 f008 f009 f010 f011 f012 f013 f014 f015 f016 f017 f018 f019 f020 f021 f022 f023 f024 f025 f026 f027 f028 f029 f030 f031 f032 f033 f034 f035 f036 f037 f099 e002 e003
+
+0 tests failed:
+

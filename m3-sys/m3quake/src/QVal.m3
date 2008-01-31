@@ -66,7 +66,12 @@ PROCEDURE ToText (m: Machine;  READONLY t: T): TEXT
   BEGIN
     CASE t.kind OF
     | QK.Integer => RETURN Fmt.Int (t.int);
-    | QK.String  => RETURN m.map.id2txt (t.int);
+    | QK.String  => 
+      IF t.ref = NIL THEN
+        RETURN m.map.id2txt (t.int);
+      ELSE
+        RETURN NARROW (t.ref, TEXT);
+      END;
     | QK.Array   => RETURN ArrayText (m, t.ref, FALSE);
     | QK.Table   => RETURN TableText (m, t.ref, FALSE);
     ELSE m.error ("cannot convert value to string: " & ToTag (m, t));  RETURN NIL;
@@ -122,7 +127,12 @@ PROCEDURE FillBuf (m: Machine;  READONLY t: T;  buf: M3Buf.T;  tag_only: BOOLEAN
   BEGIN
     CASE t.kind OF
     | QK.Integer => M3Buf.PutInt  (buf, t.int);
-    | QK.String  => M3Buf.PutText (buf, m.map.id2txt (t.int));
+    | QK.String  =>
+      IF t.ref = NIL THEN
+        M3Buf.PutText (buf, m.map.id2txt (t.int));
+      ELSE
+        M3Buf.PutText (buf, NARROW (t.ref, TEXT));
+      END;
     | QK.Array   => ArrayToBuf (m, t.ref, buf, tag_only);
     | QK.Table   => TableToBuf (m, t.ref, buf, tag_only);
     ELSE m.error ("cannot convert value to string: " & ToTag (m, t));
