@@ -2836,7 +2836,7 @@ m3cg_declare_local (void)
     }
 }
 
-static int current_param_count;
+static int current_param_count;	/* <0 => import_procedure, >0 => declare_procedure */
 
 static void
 m3cg_declare_param (void)
@@ -2853,9 +2853,21 @@ m3cg_declare_param (void)
 
   tree p;
 
-  if (current_param_count == 0) return;	/* ignore */
-
   p = current_function_decl;
+  if (current_param_count > 0) {
+    /* declare_procedure... */
+    current_param_count -= 1;
+  } else if (current_param_count < 0) {
+    /* import_procedure... */
+    current_param_count += 1;
+    if (current_param_count == 0) {
+      /* pop current_function_decl and reset DECL_CONTEXT=0 */
+      current_function_decl = DECL_CONTEXT(p);
+      DECL_CONTEXT(p) = NULL_TREE; /* imports are in global scope */
+    }
+  } else {
+    gcc_unreachable();
+  }
 
   DECL_NAME (v) = fix_name (n, id);
   if (option_procs_trace)
@@ -2872,14 +2884,14 @@ m3cg_declare_param (void)
   TREE_CHAIN (v) = DECL_ARGUMENTS (p);
   DECL_ARGUMENTS (p) = v;
 
-  if (--current_param_count == 0) {
+  if (current_param_count == 0) {
     /* arguments were accumulated in reverse, build type, then unreverse */
     tree parm;
     tree atypes = tree_cons (NULL_TREE, t_void, NULL_TREE);
     for (parm = DECL_ARGUMENTS (p); parm; parm = TREE_CHAIN (parm)) {
       atypes = tree_cons (NULL_TREE, TREE_TYPE (parm), atypes);
     }
-    TREE_TYPE (p) = build_function_type (TREE_TYPE (DECL_RESULT (p)), atypes);
+    TREE_TYPE (p) = build_function_type (TREE_TYPE (TREE_TYPE(p)), atypes);
     DECL_ARGUMENTS (p) = nreverse (DECL_ARGUMENTS (p));
   }
 }
@@ -3095,7 +3107,12 @@ m3cg_import_procedure (void)
   TREE_CHAIN (p) = global_decls;
   global_decls = p;
 
-  current_param_count = 0;	/* ignore them */
+  current_param_count = -n_params;
+  if (current_param_count) {
+    /* stack current_function_decl while we get the params */
+    DECL_CONTEXT(p) = current_function_decl;
+    current_function_decl = p;
+  }
 }
 
 static void
@@ -3212,7 +3229,7 @@ m3cg_end_procedure (void)
   current_stmts = TREE_VALUE (pending_stmts);
   pending_stmts = TREE_CHAIN (pending_stmts);
 
- /* good line numbers for epilog */
+  /* good line numbers for epilog */
   DECL_STRUCT_FUNCTION (p)->function_end_locus = input_location;
 
   current_function_decl = DECL_CONTEXT (p);
