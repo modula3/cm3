@@ -32,13 +32,38 @@ BODY { font-family: Helvetica, Arial, sans-serif ;
 /* TD.highlight { background: #99CCFF } */
 /* TD.highlight { background: #FFFFFF } */
 
-H1,
-H2,
-H3,
-H4,
-H5,
+H1 { font-family: 'Lucida Sans Unicode', Tahoma, Lucida, sans-serif ;
+     font-size  : 1.5em ;
+     /*background : #FFFFFF ;*/
+     color      : #0077FF;
+     text-align : center; }
+
+H2 { font-family: 'Lucida Sans Unicode', Tahoma, Lucida, sans-serif ;
+     font-size  : 1.2em ;
+     /*background : #FFFFFF ;*/
+     color      : #0077FF;
+     text-align : center; }
+
+H3 { font-family: 'Lucida Sans Unicode', Tahoma, Lucida, sans-serif ;
+     font-size  : 1em ;
+     /*background : #FFFFFF ;*/
+     color      : #0077FF;
+     text-align : center; }
+
+H4 { font-family: 'Lucida Sans Unicode', Tahoma, Lucida, sans-serif ;
+     font-size  : 0.8em ;
+     /*background : #FFFFFF ;*/
+     color      : #0077FF;
+     text-align : center; }
+
+H5 { font-family: 'Lucida Sans Unicode', Tahoma, Lucida, sans-serif ;
+     font-size  : 0.6em ;
+     /*background : #FFFFFF ;*/
+     color      : #0077FF;
+     text-align : center; }
+
 H6 { font-family: 'Lucida Sans Unicode', Tahoma, Lucida, sans-serif ;
-     font-size  : .98em ;
+     font-size  : 0.5em ;
      /*background : #FFFFFF ;*/
      color      : #0077FF;
      text-align : center; }
