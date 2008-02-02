@@ -1,4 +1,4 @@
-/* $Id: Usignal.i3.c,v 1.7 2008-01-30 18:33:52 jkrell Exp $ */
+/* $Id: Usignal.i3.c,v 1.8 2008-02-02 21:51:29 jkrell Exp $ */
 
 #include <signal.h>
 #include <stdio.h>
@@ -26,7 +26,7 @@ int main()
 "(*      modified on Tue Feb 14 20:58:12 GMT 1995 by rrw1000@cam.ac.uk *)", 0,
 "(*      modified on Tue Mar  2 17:18:02 PST 1993 by muller            *)", 0,
 "", 0,
-"(* $Id: Usignal.i3.c,v 1.7 2008-01-30 18:33:52 jkrell Exp $ *)", 0,
+"(* $Id: Usignal.i3.c,v 1.8 2008-02-02 21:51:29 jkrell Exp $ *)", 0,
 "", 0,
 "INTERFACE Usignal;", 0,
 "", 0,
@@ -69,7 +69,7 @@ int main()
 "  (* SEGV_OBJERR = %u; *) (* object returned errno value *)", 5,
 "  (* No SIGSYS in Linux 1.1.73 - rrw *)", 0,
 "  (* SIGSYS    =  %u; *) (* bad argument to system call *)", SIGSYS,
-"  (* SIGUSR2   =  %u; *) (* User signal 2 (from SysV) *)", SIGUSR2,
+"  SIGUSR2   =  %u; (* User signal 2 (from SysV) *)", SIGUSR2,
 "  (* SIGPIPE   =  %u; *) (* write on a pipe with no one to read it *)", SIGPIPE,
 "  (* SIGALRM   =  %u; *) (* alarm clock *)", SIGALRM,
 "  SIGTERM   =  %u; (* software termination signal from kill *)", SIGTERM,
