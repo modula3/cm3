@@ -49,7 +49,7 @@ end
 proc version_impl(name) is
   local filename = name & ".m3"
   local tempname = "_m3temp_" & filename
-  local datefn = ".." & SL & TARGET & SL & "_m3datenow.quake"
+  local datefn = ".." & SL & BUILD_DIR & SL & "_m3datenow.quake"
   local dcmd = ""
   local ret = 0
 
