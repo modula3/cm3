@@ -29,7 +29,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.10 2008-01-20 22:00:57 jkrell Exp $
+% $Id: version.quake,v 1.11 2008-02-02 22:17:27 jkrell Exp $
 
 
 %------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ end
 proc version_impl(name) is
   local filename = name & ".m3"
   local tempname = "_m3temp_" & filename
-  local datefn = ".." & SL & TARGET & SL & "_m3datenow.quake"
+  local datefn = ".." & SL & BUILD_DIR & SL & "_m3datenow.quake"
   local dcmd = ""
   local ret = 0
 
