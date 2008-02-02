@@ -69,7 +69,7 @@ int main()
 "  (* SEGV_OBJERR = %u; *) (* object returned errno value *)", 5,
 "  (* No SIGSYS in Linux 1.1.73 - rrw *)", 0,
 "  (* SIGSYS    =  %u; *) (* bad argument to system call *)", SIGSYS,
-"  (* SIGUSR2   =  %u; *) (* User signal 2 (from SysV) *)", SIGUSR2,
+"  SIGUSR2   =  %u; (* User signal 2 (from SysV) *)", SIGUSR2,
 "  (* SIGPIPE   =  %u; *) (* write on a pipe with no one to read it *)", SIGPIPE,
 "  (* SIGALRM   =  %u; *) (* alarm clock *)", SIGALRM,
 "  SIGTERM   =  %u; (* software termination signal from kill *)", SIGTERM,

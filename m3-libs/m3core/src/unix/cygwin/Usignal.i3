@@ -50,7 +50,7 @@ CONST
   (* SEGV_OBJERR = 5; *) (* object returned errno value *)
   (* No SIGSYS in Linux 1.1.73 - rrw *)
   (* SIGSYS    =  12; *) (* bad argument to system call *)
-  (* SIGUSR2   =  31; *) (* User signal 2 (from SysV) *)
+  SIGUSR2   =  31; (* User signal 2 (from SysV) *)
   (* SIGPIPE   =  13; *) (* write on a pipe with no one to read it *)
   (* SIGALRM   =  14; *) (* alarm clock *)
   SIGTERM   =  15; (* software termination signal from kill *)

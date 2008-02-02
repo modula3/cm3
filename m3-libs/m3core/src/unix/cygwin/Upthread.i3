@@ -27,23 +27,23 @@ CONST
 TYPE
   pthread_t = void_star;
   pthread_attr_t = RECORD
-    opaque: ARRAY[0..16_1] OF unsigned_int;
+    opaque: ARRAY[0..16_1 - 1] OF unsigned_int;
   END;
 
 TYPE
   pthread_mutex_t = RECORD
-    opaque: ARRAY[0..SIZEOF_PTHREAD_MUTEX_T] OF unsigned_int;
+    opaque: ARRAY[0..SIZEOF_PTHREAD_MUTEX_T - 1] OF unsigned_int;
   END;
   pthread_mutexattr_t = RECORD
-    opaque: ARRAY[0..16_1] OF unsigned_int;
+    opaque: ARRAY[0..16_1 - 1] OF unsigned_int;
   END;
 
 TYPE
   pthread_cond_t = RECORD
-    opaque: ARRAY [0..SIZEOF_PTHREAD_COND_T] OF unsigned_int;
+    opaque: ARRAY [0..SIZEOF_PTHREAD_COND_T - 1] OF unsigned_int;
   END;
   pthread_condattr_t = RECORD
-    opaque: ARRAY [0..16_1] OF unsigned_int;
+    opaque: ARRAY [0..16_1 - 1] OF unsigned_int;
   END;
 
 (* Keys for thread-specific data *)
@@ -53,15 +53,15 @@ TYPE
 (* Once-only execution *)
 TYPE
   pthread_once_t = RECORD
-    opaque: ARRAY [0..SIZEOF_PTHREAD_ONCE_T] OF unsigned_int;
+    opaque: ARRAY [0..SIZEOF_PTHREAD_ONCE_T - 1] OF unsigned_int;
   END;
 
 TYPE
   pthread_rwlock_t = RECORD
-    opaque: ARRAY [0..SIZEOF_PTHREAD_RWLOCK_T] OF unsigned_int;
+    opaque: ARRAY [0..SIZEOF_PTHREAD_RWLOCK_T - 1] OF unsigned_int;
   END;
   pthread_rwlockattr_t = RECORD
-    opaque: ARRAY [0..16_1] OF unsigned_int;
+    opaque: ARRAY [0..16_1 - 1] OF unsigned_int;
   END;
 
 (* <bits/sched.h> *)
@@ -75,22 +75,22 @@ TYPE
 (* Mutex initializers.  *)
 CONST
   PTHREAD_MUTEX_INITIALIZER =
-    pthread_mutex_t { ARRAY [0..SIZEOF_PTHREAD_MUTEX_T] OF unsigned_int {14, .. } };
+    pthread_mutex_t { ARRAY [0..SIZEOF_PTHREAD_MUTEX_T - 1] OF unsigned_int {14, .. } };
 
 (* Read-write lock initializers.  *)
 CONST
   PTHREAD_RWLOCK_INITIALIZER =
-    pthread_rwlock_t { ARRAY [0..SIZEOF_PTHREAD_RWLOCK_T] OF unsigned_int {22, .. } };
+    pthread_rwlock_t { ARRAY [0..SIZEOF_PTHREAD_RWLOCK_T - 1] OF unsigned_int {22, .. } };
 
 (* Conditional variable handling.  *)
 CONST
   PTHREAD_COND_INITIALIZER =
-    pthread_cond_t { ARRAY [0..SIZEOF_PTHREAD_COND_T] OF unsigned_int {21, .. } };
+    pthread_cond_t { ARRAY [0..SIZEOF_PTHREAD_COND_T - 1] OF unsigned_int {21, .. } };
 
 (* Single execution handling.  *)
 CONST
   PTHREAD_ONCE_INIT = 
-    pthread_once_t { ARRAY [0..SIZEOF_PTHREAD_ONCE_T] OF unsigned_int {20, .. } };
+    pthread_once_t { ARRAY [0..SIZEOF_PTHREAD_ONCE_T - 1] OF unsigned_int {20, .. } };
 
 TYPE start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;
 <*EXTERNAL pthread_create*>
