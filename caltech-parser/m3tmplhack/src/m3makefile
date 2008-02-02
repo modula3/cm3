@@ -1,4 +1,5 @@
 import("m3tk")
 import("cit_common")
 implementation("Main")
+build_standalone()
 Program("m3tmplhack")

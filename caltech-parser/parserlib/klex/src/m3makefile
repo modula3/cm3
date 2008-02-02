@@ -21,4 +21,5 @@ bundle("lexformBundle")
 
 module("LexFmt")
 implementation("Main")
+build_standalone()
 Program("lex")
