@@ -7,7 +7,7 @@
 (*      modified on Tue Feb 14 20:58:12 GMT 1995 by rrw1000@cam.ac.uk *)
 (*      modified on Tue Mar  2 17:18:02 PST 1993 by muller            *)
 
-(* $Id: Usignal.i3,v 1.8 2008-01-30 18:48:45 jkrell Exp $ *)
+(* $Id: Usignal.i3,v 1.9 2008-02-02 21:51:29 jkrell Exp $ *)
 
 INTERFACE Usignal;
 
@@ -50,7 +50,7 @@ CONST
   (* SEGV_OBJERR = 5; *) (* object returned errno value *)
   (* No SIGSYS in Linux 1.1.73 - rrw *)
   (* SIGSYS    =  12; *) (* bad argument to system call *)
-  (* SIGUSR2   =  31; *) (* User signal 2 (from SysV) *)
+  SIGUSR2   =  31; (* User signal 2 (from SysV) *)
   (* SIGPIPE   =  13; *) (* write on a pipe with no one to read it *)
   (* SIGALRM   =  14; *) (* alarm clock *)
   SIGTERM   =  15; (* software termination signal from kill *)
