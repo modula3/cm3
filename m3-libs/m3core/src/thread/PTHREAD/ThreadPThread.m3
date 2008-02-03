@@ -3,8 +3,7 @@
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
 UNSAFE MODULE ThreadPThread
-EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks,
-    ThreadPThread;
+EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks;
 
 IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError,  RTHeapRep, RTIO, RTMachine, RTParams,
@@ -12,7 +11,8 @@ IMPORT Cerrno, FloatMode, MutexRep,
        Unix, Utime, Word, Upthread, Usched, Usem, Usignal,
        Uucontext, Uerror, WeakRef;
 FROM Upthread
-IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t, pthread_mutex_t;
+IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t, pthread_mutex_t,
+       PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER;
 FROM Compiler IMPORT ThisFile, ThisLine;
 IMPORT Ctypes, Utypes;
 
@@ -22,6 +22,10 @@ VAR
   stack_grows_down: BOOLEAN;
 
   nextId: CARDINAL := 1;
+
+  activeMu := PTHREAD_MUTEX_INITIALIZER; (* global lock for list of active threads *)
+  slotMu   := PTHREAD_MUTEX_INITIALIZER; (* global lock for thread slot table *)
+  initMu   := PTHREAD_MUTEX_INITIALIZER; (* global lock for initializers *)
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "Mutex Pthread-1.0" OBJECT
@@ -1353,6 +1357,7 @@ PROCEDURE Die (lineno: INTEGER; msg: TEXT) =
 VAR
   perfW : RTPerfTool.Handle;
   perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
+  perfMu := PTHREAD_MUTEX_INITIALIZER;
 
 PROCEDURE PerfStart () =
   BEGIN
@@ -1441,6 +1446,8 @@ PROCEDURE XX (): ADDRESS =
    and collector. *)
 
 VAR
+  lockMu := PTHREAD_MUTEX_INITIALIZER;
+  lockCond := PTHREAD_COND_INITIALIZER;
   holder: pthread_t;
   lock_cnt := 0;
   do_signal := FALSE;

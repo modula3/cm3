@@ -9,6 +9,5 @@
 
 Interface ("SchedulerPosix")
 Interface ("ThreadF")
-c_source ("ThreadPThreadC")
 
-module ("ThreadPThread")
+implementation ("ThreadPThread")
