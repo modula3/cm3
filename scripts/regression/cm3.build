@@ -7,9 +7,9 @@ TREENAME=cm3
 # function used to send results to a tinderbox server.
 # per default it's empty so the build-log will just be output to stdout.
 tinderbox_mailer() { 
-	true	# needed if function is emtpy without this...
+#	true	# needed if function is emtpy without this...
 # to report to the elego tinderbox host, check README and uncomment this:
-#	cat "$1" | ssh tinderbox.elego.de "sudo -u tinderbox /usr/local/tinderbox/tinderbox-cgi/processmail_builds.cgi" 
+	cat "$1" | ssh tinderbox.elego.de "sudo -u tinderbox /usr/local/tinderbox/tinderbox-cgi/processmail_builds.cgi" 
 }
 
 # this is what we use in our local network:
