@@ -2,15 +2,15 @@
 # tinderbox-build.sh 
 
 usage () {
-	echo "usage: tinderbox-build.sh <build-config>"
+  echo "usage: tinderbox-build.sh <build-config>"
 }
 
 trap cleanup 1 2 3 6
 
 if [ -z "$1" ]
 then
-	usage
-	exit 1
+  usage
+  exit 1
 fi
 
 #source build config
@@ -18,8 +18,8 @@ fi
  
 if [ -z "${PROJECT}" -o -z "${TREENAME}" ] 
 then 
-    echo "Parameters missing, see included README for documentation." 
-    exit 1 
+  echo "Parameters missing, see included README for documentation." 
+  exit 1 
 fi 
 
 # set default parameters:
@@ -33,93 +33,93 @@ echo ""
 NAME="build-${PROJECT}-`date "+%Y%m%d-%H%M%S"`" 
 
 tinderbox_header () {
-	TREE_NAME="$1"
-	BUILD_NAME="$2"
-	STATUS="$3"
-	STARTTIME="$4"
+  TREE_NAME="$1"
+  BUILD_NAME="$2"
+  STATUS="$3"
+  STARTTIME="$4"
 
-	if [ -z "${TREE_NAME}" -o -z "${BUILD_NAME}" -o -z "${STATUS}" -o -z "${STARTTIME}" ]
-	then
-		echo ""
-		echo "example:"
-		echo "   $0 firefox debian-sarge-i386-gcc-4.1 building 1199624301"
-		echo ""
-		echo "usage:"
-		echo "   $0 <Tinderbox-tree-name> <build-name> <status> <starttime>"
-		echo "where"
-		echo "   <Tinderbox-tree-name>   a tree-name as defined in the"
-		echo "                           tinderbox-configuration"
-		echo "   <build-name>            will be the row-title on the"
-		echo "                           tinderbox build status page"
-		echo "   <status>                one of "building", "build_failed","
-		echo "                           "test_failed" or "success""
-		echo "   <starttime>             tinderbox-build-number in unix time format,"
-		echo "                           get it with:"
-		echo "                           date 'date +%s'"
-		echo "                           once for each build"
-		echo ""
-		echo "This script outputs the mail header that can be prepended"
-		echo "to the build log when sending the status mail."
-		echo ""
-		echo "Tinderbox identifies builds by starttime, so if you want to send"
-		echo "multiple status messages for the same build, be sure to always"
-		echo "use the same starttime"
-		echo ""
-		echo "ATTENTION: This script can not check validity of parameters."
-		echo "           Wrong tree-name or status will make the tinderbox"
-		echo "           ignore the status-mail."
-		return 1
-	fi
+  if [ -z "${TREE_NAME}" -o -z "${BUILD_NAME}" -o -z "${STATUS}" -o -z "${STARTTIME}" ]
+  then
+    echo ""
+    echo "example:"
+    echo "   $0 firefox debian-sarge-i386-gcc-4.1 building 1199624301"
+    echo ""
+    echo "usage:"
+    echo "   $0 <Tinderbox-tree-name> <build-name> <status> <starttime>"
+    echo "where"
+    echo "   <Tinderbox-tree-name>   a tree-name as defined in the"
+    echo "                           tinderbox-configuration"
+    echo "   <build-name>            will be the row-title on the"
+    echo "                           tinderbox build status page"
+    echo "   <status>                one of "building", "build_failed","
+    echo "                           "test_failed" or "success""
+    echo "   <starttime>             tinderbox-build-number in unix time format,"
+    echo "                           get it with:"
+    echo "                           date 'date +%s'"
+    echo "                           once for each build"
+    echo ""
+    echo "This script outputs the mail header that can be prepended"
+    echo "to the build log when sending the status mail."
+    echo ""
+    echo "Tinderbox identifies builds by starttime, so if you want to send"
+    echo "multiple status messages for the same build, be sure to always"
+    echo "use the same starttime"
+    echo ""
+    echo "ATTENTION: This script can not check validity of parameters."
+    echo "           Wrong tree-name or status will make the tinderbox"
+    echo "           ignore the status-mail."
+    return 1
+  fi
 
-	echo ""
-	echo tinderbox: tree: $TREE_NAME
-	echo tinderbox: starttime: $STARTTIME
-	echo tinderbox: timenow: `date +%s`
-	echo tinderbox: status: $STATUS
-	echo tinderbox: buildname: $BUILD_NAME
-	echo tinderbox: errorparser: unix
-	echo tinderbox: END
-	echo ""
+  echo ""
+  echo tinderbox: tree: $TREE_NAME
+  echo tinderbox: starttime: $STARTTIME
+  echo tinderbox: timenow: `date +%s`
+  echo tinderbox: status: $STATUS
+  echo tinderbox: buildname: $BUILD_NAME
+  echo tinderbox: errorparser: unix
+  echo tinderbox: END
+  echo ""
 }
 
 mail_buildlog() {
-	if [ -z "$1" ]
-	then
-		return 1
-	fi
+  if [ -z "$1" ]
+  then
+    return 1
+  fi
 
-	TMP_LOG=${BUILDDIR}/mail_temp
+  TMP_LOG=${BUILDDIR}/mail_temp
 
-	if [ -z "${TMP_LOG}" ]
-	then
-		echo "Error: Cannot create temp file for mailer."
-		cleanup
-		exit 4
-	fi
+  if [ -z "${TMP_LOG}" ]
+  then
+    echo "Error: Cannot create temp file for mailer."
+    cleanup
+    exit 4
+  fi
 
-	{
-		tinderbox_header "${TREENAME}" "${BUILDNAME}" "$1" "${STARTTIME}"
-		cat ${LOG}
-	}  > "$TMP_LOG"
-	
-	tinderbox_mailer "${TMP_LOG}"
+  {
+    tinderbox_header "${TREENAME}" "${BUILDNAME}" "$1" "${STARTTIME}"
+    cat ${LOG}
+  }  > "$TMP_LOG"
+  
+  tinderbox_mailer "${TMP_LOG}"
 
-	if [ $? != 0 ]; then
-	    echo "Error: Sending buildlog failed!"
-	    cleanup
-	    exit 4
-	fi
+  if [ $? != 0 ]; then
+      echo "Error: Sending buildlog failed!"
+      cleanup
+      exit 4
+  fi
 
-	rm -f "${TMP_LOG}"
+  rm -f "${TMP_LOG}"
 }
 
 cleanup() {
-	echo "removing build tree ${BUILDDIR_BASE} ..." 
-	cd ${BUILDDIR_ROOT}
-	rm -rf ${BUILDDIR_BASE} 
+  echo "removing build tree ${BUILDDIR_BASE} ..." 
+  cd ${BUILDDIR_ROOT}
+  rm -rf ${BUILDDIR_BASE} 
 
-	# call build script cleanup
-	do_cleanup
+  # call build script cleanup
+  do_cleanup
 }
 
 STARTTIME=`date +%s`
@@ -156,18 +156,18 @@ touch ${LOG}
 
 if [ ! -w ${LOG} ]
 then
-	echo "$0: ERROR: Cannot write to ${LOG}"
-	cleanup
-	exit 5
+  echo "$0: ERROR: Cannot write to ${LOG}"
+  cleanup
+  exit 5
 fi
 
 # starting build
 {
-	echo "" 
-	echo "---" 
-	echo "" 
-	echo "checkout, compile and test of ${PROJECT} ..." 
-	echo "`date "+%Y.%m.%d %H:%M:%S"` -- checkout in progress." 
+  echo "" 
+  echo "---" 
+  echo "" 
+  echo "checkout, compile and test of ${PROJECT} ..." 
+  echo "`date "+%Y.%m.%d %H:%M:%S"` -- checkout in progress." 
 } 2>&1 | tee -a ${LOG}
 
 mail_buildlog "building"
@@ -178,23 +178,23 @@ mail_buildlog "building"
 } 2>&1 | tee -a ${LOG}
 
 cd ${BUILDDIR} 
-do_checkout
+do_checkout 2>&1 | tee -a ${LOG}
 CHECKOUT_RETURN=$?
 
 {
-    echo cvs return value: ${CHECKOUT_RETURN} 
-    echo "[end checkout `date "+%Y.%m.%d %H:%M:%S"`]" 
+  echo cvs return value: ${CHECKOUT_RETURN} 
+  echo "[end checkout `date "+%Y.%m.%d %H:%M:%S"`]" 
 } | tee -a ${LOG} 2>&1
 
 echo "CHECKOUT_RETURN = ${CHECKOUT_RETURN}"
 
 if [ "${CHECKOUT_RETURN}" != 0 ]; then 
-    echo "*** CHECKOUT FAILED" | tee -a ${LOG} 2>&1
-    mail_buildlog "build_failed" 
-    cleanup
-    exit 1 
+  echo "*** CHECKOUT FAILED" | tee -a ${LOG} 2>&1
+  mail_buildlog "build_failed" 
+  cleanup
+  exit 1 
 else
-    mail_buildlog "building"
+  mail_buildlog "building"
 fi
  
 { 
@@ -204,23 +204,23 @@ fi
     echo "[start compile `date "+%Y.%m.%d %H:%M:%S"`]" 
 } 2>&1 | tee -a ${LOG}
 
-do_compile
+do_compile  2>&1 | tee -a ${LOG}
 COMPILE_RETURN=$? 
 
 { 
-    echo "compile return value: $?" 
-    echo "[end compile `date "+%Y.%m.%d %H:%M:%S"`]" 
+  echo "compile return value: $?" 
+  echo "[end compile `date "+%Y.%m.%d %H:%M:%S"`]" 
 } 2>&1 | tee -a ${LOG}
 
 echo "COMPILE_RETURN = ${COMPILE_RETURN}"
 
 if [ "${COMPILE_RETURN}" != 0 ]; then 
-    echo "*** COMPILE FAILED" | tee -a ${LOG} 2>&1
-    mail_buildlog "build_failed" 
-    cleanup
-    exit 1 
+  echo "*** COMPILE FAILED" | tee -a ${LOG} 2>&1
+  mail_buildlog "build_failed" 
+  cleanup
+  exit 1 
 else
-    mail_buildlog "building"
+  mail_buildlog "building"
 fi
 
  
@@ -231,27 +231,27 @@ fi
 }  2>&1 | tee -a ${LOG}
 
 cd "${BUILDDIR}" 
-do_tests
+do_tests  2>&1 | tee -a ${LOG}
 TESTS_RETURN=$?
 
 {
-    echo "[end run-tests `date "+%Y.%m.%d %H:%M:%S"`]" 
+  echo "[end run-tests `date "+%Y.%m.%d %H:%M:%S"`]" 
 } 2>&1 | tee -a ${LOG}
 
 echo "TESTS_RETURN = ${TESTS_RETURN}"
 
 if [ "${TESTS_RETURN}" != 0 ]; then 
-    echo "*** TESTS FAILED" | tee -a ${LOG} 2>&1
-    mail_buildlog "test_failed" 
-    cleanup
-    exit 1 
+  echo "*** TESTS FAILED" | tee -a ${LOG} 2>&1
+  mail_buildlog "test_failed" 
+  cleanup
+  exit 1 
 fi
 
 {
-    echo "`date "+%Y.%m.%d %H:%M:%S"` -- checkout, compile and test run done." 
-    echo "" 
-    echo "---" 
-    echo "" 
+  echo "`date "+%Y.%m.%d %H:%M:%S"` -- checkout, compile and test run done." 
+  echo "" 
+  echo "---" 
+  echo "" 
 }  2>&1 | tee -a ${LOG}
     
 mail_buildlog "success"
