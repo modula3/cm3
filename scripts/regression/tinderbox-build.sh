@@ -132,6 +132,7 @@ BUILDDIR_BASE="`mktemp -d ${BUILDDIR_ROOT}/${NAME}-XXXXXX`"
 BUILDDIR="${BUILDDIR_BASE}/build" 
 
 LOG="${BUILDDIR_BASE}/log.txt"
+T="${BUILDDIR_BASE}/tmp-$$"
  
 #check builddir
 #echo "creating temporary build directory ${BUILDDIR}" 
@@ -178,8 +179,9 @@ mail_buildlog "building"
 } 2>&1 | tee -a ${LOG}
 
 cd ${BUILDDIR} 
-do_checkout 2>&1 | tee -a ${LOG}
+do_checkout >"${T}" 2>&1
 CHECKOUT_RETURN=$?
+cat "${T}" >> ${LOG}
 
 {
   echo cvs return value: ${CHECKOUT_RETURN} 
@@ -204,8 +206,9 @@ fi
     echo "[start compile `date "+%Y.%m.%d %H:%M:%S"`]" 
 } 2>&1 | tee -a ${LOG}
 
-do_compile  2>&1 | tee -a ${LOG}
+do_compile >"${T}" 2>&1
 COMPILE_RETURN=$? 
+cat "${T}" >> ${LOG}
 
 { 
   echo "compile return value: $?" 
@@ -231,8 +234,9 @@ fi
 }  2>&1 | tee -a ${LOG}
 
 cd "${BUILDDIR}" 
-do_tests  2>&1 | tee -a ${LOG}
+do_tests >"${T}" 2>&1
 TESTS_RETURN=$?
+cat "${T}" >> ${LOG}
 
 {
   echo "[end run-tests `date "+%Y.%m.%d %H:%M:%S"`]" 
