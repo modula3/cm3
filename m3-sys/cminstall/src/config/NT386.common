@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.5 2008-02-04 01:12:24 jkrell Exp $
+% $Id: NT386.common,v 1.6 2008-02-04 02:03:57 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -1300,7 +1300,7 @@ end
 M3_OPTIONS = [ ]
 % --- user options passed directly to the Modula-3 front-end
 
-M3_KEEP_FILES = TRUE
+% M3_KEEP_FILES = TRUE
 % --- keep intermediate and temporary files
 
 % M3_WINDOWS_GUI = TRUE
