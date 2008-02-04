@@ -3,7 +3,7 @@ MODULE ConnectRdWr;
 (* All non-trivial code in this Module has been adapted from
    StreamRd by John D. Polstra *)
 
-IMPORT Rd, Wr, Thread, RdClass, IO, Stdio, System, RdCopy, Usignal;
+IMPORT Rd, Wr, Thread, RdClass, IO, Stdio, System, RdCopy (*, Usignal*);
 
 CONST Bufsize = 30000;
 
@@ -65,14 +65,14 @@ PROCEDURE Apply(self : T) : REFANY =
       END;
     FINALLY
       EVAL D(self, "I'm closing the writer.", 2);
-
+(*
       IF self.killpid # 0 THEN
         Thread.Pause(1.0d0);
         EVAL Usignal.kill(self.killpid, Usignal.SIGTERM); 
         Thread.Pause(1.0d0);
         EVAL Usignal.kill(self.killpid, Usignal.SIGKILL); 
       END;
-
+*)
       TRY Wr.Close(self.wr);
       EXCEPT 
         Wr.Failure(code) => RETURN D(self, "EXCEPTION WrFailure (while closing): " & System.AtomListToText(code));
