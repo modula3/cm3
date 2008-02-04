@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.10 2008-02-04 06:59:10 jkrell Exp $
+% $Id: NT386.common,v 1.11 2008-02-04 07:30:18 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -720,7 +720,7 @@ is
             "gcc",
             %"-v",
             "-shared", % must be visible to compiler
-            "-Wl," &,
+            "-Wl," &
                 WriteResponseFile(
                     LinkResponseFile,
                     ",",
@@ -793,7 +793,8 @@ is
 
     % build the static library
 
-    LibResponseFile =
+    local ret_code = try_exec(
+        "mklib",
         WriteResponseFile(
             LibResponseFile,
             " ",
@@ -802,9 +803,10 @@ is
                 "-out:" & lib_file,
                 options,
                 objects,
-            ])
-
-    local ret_code = try_exec("mklib", LibResponseFile, "2>&1", ">", listing)
+            ]),
+        "2>&1",
+        ">", listing
+        )
     if not equal(ret_code, 0) or not FileExists(lib_file)
         error(
             "library creation failed, see "
