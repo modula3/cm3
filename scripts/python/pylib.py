@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.44 2008-02-04 01:10:40 jkrell Exp $
+# $Id: pylib.py,v 1.45 2008-02-04 06:29:23 jkrell Exp $
 
 import os
 from os import getenv
@@ -225,7 +225,7 @@ CM3VERSION = getenv("CM3VERSION") or GetDefaultFromSh("CM3VERSION")
 CM3VERSIONNUM = getenv("CM3VERSIONNUM") or GetDefaultFromSh("CM3VERSIONNUM")
 CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetDefaultFromSh("CM3LASTCHANGED")
 
-GCC_BACKEND = (getenv("CM3_GCC_BACKEND", "no") == "yes")
+GCC_BACKEND = True
 CM3_GDB = False
 
 CM3 = getenv("CM3") or ExeName("cm3")
@@ -255,18 +255,20 @@ if (UName.startswith("windows")
     HAVE_SERIAL = True
     GMAKE = getenv("GMAKE") or "make"
 
-    if (Target.startswith("NT386GNU")
-        or UNameCommand.startswith("cygwin")
-        or OSType == "POSIX"):
+    if ((Target.startswith("NT386GNU")
+        or (UNameCommand.startswith("cygwin"))
+        or (OSType == "POSIX"))
+        and (getenv("CM3_GCC_BACKEND", "") != "no")):
 
         Target = "NT386"
         Config = "NT386GNU"
         OSType = "POSIX"
         GCC_BACKEND = True
 
-    elif (Target.startswith("NT386MINGNU")
+    elif ((Target.startswith("NT386MINGNU")
         or UNameCommand.startswith("mingw")
-        or GCC_BACKEND):
+        or GCC_BACKEND)
+        and (getenv("CM3_GCC_BACKEND", "") != "no")):
 
         Target = "NT386"
         Config = "NT386MINGNU"
@@ -282,7 +284,6 @@ if (UName.startswith("windows")
 
 elif UName.startswith("freebsd"):
 
-    GCC_BACKEND = True
     if UNameArchM == "i386":
         if UNameRevision.startswith("1"):
             Target = "FreeBSD"
@@ -299,7 +300,6 @@ elif UName.startswith("freebsd"):
 
 elif UName.startswith("darwin"):
 
-    GCC_BACKEND = True
     # detect the m3 platform (Darwin runs on ppc and ix86)
     if UNameArchP.startswith("powerpc"):
         Target = "PPC_DARWIN"
@@ -309,13 +309,11 @@ elif UName.startswith("darwin"):
 
 elif UName.startswith("sunos"):
 
-    GCC_BACKEND = True
     Target = "SOLgnu"
     #Target = "SOLsun"
 
 elif UName.startswith("linux"):
 
-    GCC_BACKEND = True
     GMAKE = getenv("GMAKE") or "make"
     GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
     if UNameArchM == "ppc":
@@ -325,7 +323,6 @@ elif UName.startswith("linux"):
 
 elif UName.startswith("netbsd"):
 
-    GCC_BACKEND = True
     GMAKE = getenv("GMAKE") or "make"
     Target = "NetBSD2_i386" # only arch/version combination supported yet
 
