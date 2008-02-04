@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.11 2008-02-04 07:30:18 jkrell Exp $
+% $Id: NT386.common,v 1.12 2008-02-04 07:38:10 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -720,8 +720,8 @@ is
             "gcc",
             %"-v",
             "-shared", % must be visible to compiler
-            "-Wl," &
-                WriteResponseFile(
+            "-Wl,"
+                & WriteResponseFile(
                     LinkResponseFile,
                     ",",
                     [
@@ -761,7 +761,7 @@ is
     local readonly manifest_file  = dll_file & ".manifest"
     local readonly pdb_file = lib & ".pdb"
     local readonly listing  = lib & ".lst"
-    local LibResponseFile = GetResponseFileName()
+    local readonly LibResponseFile = GetResponseFileName()
     local LinkResponseFile = LibResponseFile
 
     if shared
@@ -1079,8 +1079,8 @@ is
             "gcc",
             "-g",
             %"-v",
-            "-Wl," &
-                WriteResponseFile(
+            "-Wl,"
+                & WriteResponseFile(
                     LinkResponseFile,
                     ",",
                     [
@@ -1109,7 +1109,7 @@ is
     local readonly manifest_file = pgm_file & ".manifest"
     local readonly pdb_file = prog & ".pdb"
     local readonly listing  = prog & ".lst"
-    local LinkResponseFile = GetResponseFileName()
+    local readonly LinkResponseFile = GetResponseFileName()
 
     local readonly Outputs = [
         pgm_file,
@@ -1225,7 +1225,7 @@ end
 M3_OPTIONS = [ ]
 % --- user options passed directly to the Modula-3 front-end
 
-M3_KEEP_FILES = TRUE
+% M3_KEEP_FILES = TRUE
 % --- keep intermediate and temporary files
 
 % M3_WINDOWS_GUI = TRUE
