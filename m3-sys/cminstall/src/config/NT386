@@ -15,7 +15,9 @@
 % This could be NT386.common, but put it here
 % for the sake m3cgcat.exe + M3CONFIG environment variable.
 %
-readonly TARGET       = "NT386"             % code generation target
+if not defined("TARGET")
+    readonly TARGET = "NT386"   % code generation target
+end
 
 if not defined("PROFILING_P")
     if M3_PROFILING
