@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.4 2008-01-28 15:54:39 jkrell Exp $
+% $Id: NT386.common,v 1.5 2008-02-04 01:12:24 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -8,8 +8,18 @@
 
 %-------------------------------------------------- compilation environment ---
 
-readonly TARGET       = "NT386"             % code generation target
 readonly WORD_SIZE    = "32BITS"            % { "32BITS" or "64BITS" }
+
+%
+% These are usually NOT needed.
+% They enable some unusual tool/runtime combinations that
+% may aid debugging. Specifically, they are for using the MS linker
+% to target the Cygwin rutime, which in concert with the
+% integrated backend, enables debugging using Microsoft debuggers.
+%
+% for /f %a in ('gcc --print-libgcc') do cygpath --windows %a
+%
+readonly LIBGCC = "C:\\cygwin\\lib\\gcc\\i686-pc-cygwin\\3.4.4\\libgcc.a"
 
 %-------------------------------------------------- default compile options ---
 % "set_config_options" is called before starting the compilation. It should
@@ -83,8 +93,9 @@ readonly INSTALL_IMPLS = FALSE
 % If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
 % that the library is not available.
 
-readonly LibInPrefix  = { "MS" : "",     "GNU" : "-l" }{LINKER} % aka NAMING_CONVENTIONS
-readonly LibInSuffix  = { "MS" : ".lib", "GNU" : ""   }{LINKER} % aka NAMING_CONVENTIONS
+readonly LibInPrefix  = { "MS" : "",          "GNU" : "-l"  }{LINKER} % aka NAMING_CONVENTIONS
+readonly LibInSuffix  = { "MS" : ".lib",      "GNU" : ""    }{LINKER} % aka NAMING_CONVENTIONS
+readonly LibPath      = { "MS" : "-libpath:", "GNU" : "-L"  }{LINKER}
 readonly LibOutPrefix = { "WIN32" : "",     "POSIX" : "lib" }{OS_TYPE} % aka NAMING_CONVENTIONS
 readonly LibOutSuffix = { "WIN32" : ".lib", "POSIX" : ".a"  }{OS_TYPE} % aka NAMING_CONVENTIONS
 readonly Obj          = { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE} % aka NAMING_CONVENTIONS
@@ -154,7 +165,7 @@ SYSTEM_LIBS = { "MS" : SYSTEM_LIBS_MS, "GNU" : SYSTEM_LIBS_GNU }{LINKER}
 % Need to fill in X Windows for CygwinX
 %
 
-if equal(LINKER, "MS")
+if equal(OS_TYPE, "WIN32")
 
 %
 % We must explicitly specify libcmt.lib or msvcrt.lib
@@ -168,10 +179,11 @@ if equal(LINKER, "MS")
 % Not defined is treated as 1. This is a safe default for the
 % vast majority of toolsets, but not all.
 %
-if not equal($USE_MSVCRT, "0")
-    if not equal($USE_MSVCRT, "1")
-        if not equal($USE_MSVCRT, "")
-            error("The environment variable USE_MSVCRT should be 0, 1, or not defined, but it is " & $USE_MSVCRT & "." & EOL)
+    if not equal($USE_MSVCRT, "0")
+        if not equal($USE_MSVCRT, "1")
+            if not equal($USE_MSVCRT, "")
+                error("The environment variable USE_MSVCRT should be 0, 1, or not defined, but it is " & $USE_MSVCRT & "." & EOL)
+            end
         end
     end
 
@@ -183,11 +195,24 @@ if not equal($USE_MSVCRT, "0")
         end
     end
 
-        if USE_MSVCRT
-            SYSTEM_LIBS{"LIBC"} += ["msvcrt.lib"]
-        else
-            SYSTEM_LIBS{"LIBC"} += ["libcmt.lib"]
-        end
+    if USE_MSVCRT
+        SYSTEM_LIBS{"LIBC"} += [LibIn("msvcrt")]
+    else
+        SYSTEM_LIBS{"LIBC"} += [LibIn("libcmt")]
+    end
+
+else
+    %
+    % This needs work.
+    % It is for using the integrated backend and MS linker with Cygwin runtime
+    % to enable more debugging scenarios.
+    %
+    USE_MSVCRT = TRUE
+    %USE_DELAYLOAD = FALSE
+    if equal(LINKER, "MS")
+        %SYSTEM_LIBS{"LIBC"} += [LIBGCC, LIBGCC & "/../../../../crt0.o", LIBGCC & "/../../../../libcygwin.a" ]
+        SYSTEM_LIBS{"LIBC"} += [LibIn("msvcrt")]
+        SYSTEM_LIBS{"LIBC"} += [LIBGCC, LIBGCC & "/../../../../libcygwin.a" ]
     end
 end
 
@@ -873,6 +898,7 @@ is
         ret_code =
             try_exec(
                 "gcc",
+                "-v",
                 "-shared", % must be visible to compiler
                 "-Wl," & LinkResponseFile,
                 "2>&1",
@@ -1018,7 +1044,16 @@ if not equal($USE_DELAYLOAD, "0")
         end
     end
 end
-if not equal($USE_DELAYLOAD, "0")
+
+if not defined("USE_DELAYLOAD")
+    if equal($USE_DELAYLOAD, "0")
+        USE_DELAYLOAD = FALSE
+    else
+        USE_DELAYLOAD = TRUE
+    end
+end
+
+if USE_DELAYLOAD
     m3_link_flags +=
     [
     %
@@ -1144,7 +1179,7 @@ is
     deriveds("", Outputs)
 
     if not shared
-        options += "-static"
+        %options += "-static"
     end
     if M3_PROFILING
         options += "-pg"
@@ -1169,15 +1204,12 @@ is
             [
                 "--output",
                 pgm_file,
-                "--disable-auto-import",
-                "--disable-runtime-pseudo-reloc",
-                "--large-address-aware",
                 options,
                 objects,
                 EscapeList(imported_libs),
             ])
 
-    local ret_code = try_exec("gcc", "-Wl," & LinkResponseFile, "2>&1", ">", listing)
+    local ret_code = try_exec("gcc", "-g", "-v", "-Wl," & LinkResponseFile, "2>&1", ">", listing)
     if not equal(ret_code, 0) or not FileExists(pgm_file)
         error(
             "link failed, see "
@@ -1268,7 +1300,7 @@ end
 M3_OPTIONS = [ ]
 % --- user options passed directly to the Modula-3 front-end
 
-% M3_KEEP_FILES = TRUE
+M3_KEEP_FILES = TRUE
 % --- keep intermediate and temporary files
 
 % M3_WINDOWS_GUI = TRUE

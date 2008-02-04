@@ -1,5 +1,5 @@
 %
-% $Id: NT386GNU,v 1.22 2008-01-28 15:54:39 jkrell Exp $
+% $Id: NT386GNU,v 1.23 2008-02-04 01:12:24 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -15,6 +15,12 @@
 % arbitrary configurations can be produced by changing them.
 %
 
+%
+% This could be NT386.common, but put it here
+% for the sake m3cgcat.exe + M3CONFIG environment variable.
+%
+readonly TARGET       = "NT386"             % code generation target
+
 if M3_PROFILING
     readonly PROFILING_P = "p"
 else
@@ -25,7 +31,7 @@ readonly BUILD_DIR    = "NT386GNU" & PROFILING_P
 readonly OS_TYPE      = "POSIX"
 readonly GNU_PLATFORM = "i686-pc-cygwin" % "cpu-vendor-os" string for GNU
 
-readonly M3_BACKEND_MODE = "3"
+readonly M3_BACKEND_MODE = "0"
 % -- defines how the frontend, backend, and assembler interact
 %  "0"  -- don't call m3_backend, M3CG produces object code
 %  "1"  -- don't call m3_backend, M3CG produces assembly code
@@ -49,7 +55,7 @@ readonly C_COMPILER = "GNU"
 % "MS" link
 % "GNU" gcc/ld
 %
-readonly LINKER = "GNU"
+readonly LINKER = "MS"
 
 %
 % "MS" Win32 kernel threads
@@ -62,5 +68,7 @@ readonly THREAD_LIBRARY = "PTHREADS"
 % "X"
 %
 readonly WINDOW_LIBRARY = "X"
+
+M3_MAIN_IN_C = TRUE
 
 include("NT386.common")
