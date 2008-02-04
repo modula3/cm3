@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: bootntgnu.py,v 1.15 2008-01-28 16:03:59 jkrell Exp $
+# $Id: bootntgnu.py,v 1.16 2008-02-04 01:10:39 jkrell Exp $
 
 import sys
 import pylib
@@ -28,6 +28,7 @@ DoPackage(
     argv_BuildShip, [
     "m3core",
     "libm3",
+    "sysutils",
     "import-libs",
     "m3bundle",
     "m3middle",

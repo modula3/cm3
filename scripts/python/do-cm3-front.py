@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: do-cm3-front.py,v 1.6 2008-01-15 12:41:27 jkrell Exp $
+# $Id: do-cm3-front.py,v 1.7 2008-02-04 01:10:40 jkrell Exp $
 
 import sys
 from pylib import *
@@ -11,6 +11,7 @@ DoPackage(sys.argv, [
     "import-libs",
     "m3core",
     "libm3",
+    "sysutils",
     "m3middle",
     "m3objfile",
     "m3linker",

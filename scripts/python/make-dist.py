@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.22 2008-01-21 15:08:37 jkrell Exp $
+# $Id: make-dist.py,v 1.23 2008-02-04 01:10:40 jkrell Exp $
 
 import sys
 import os.path
@@ -288,6 +288,7 @@ Packages = [
     "import-libs",
     "m3core",
     "libm3",
+    "sysutils",
     "m3bundle",
     "m3middle",
     "m3objfile",
