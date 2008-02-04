@@ -61,7 +61,7 @@ do_compile() {
 }
 
 do_tests() {
-  if [ "${BUILD_REL}" == "rel" ] ; then
+  if [ "${BUILD_REL}" = "rel" ] ; then
      # if we land here, core compilation succeeded with
      # last release, so we have a new lastok
      ( test_build_std_lastok ) 2>&1
