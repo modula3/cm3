@@ -720,7 +720,7 @@ is
             "gcc",
             %"-v",
             "-shared", % must be visible to compiler
-            "-Wl," &,
+            "-Wl," &
                 WriteResponseFile(
                     LinkResponseFile,
                     ",",
@@ -793,7 +793,8 @@ is
 
     % build the static library
 
-    LibResponseFile =
+    local ret_code = try_exec(
+        "mklib",
         WriteResponseFile(
             LibResponseFile,
             " ",
@@ -802,9 +803,10 @@ is
                 "-out:" & lib_file,
                 options,
                 objects,
-            ])
-
-    local ret_code = try_exec("mklib", LibResponseFile, "2>&1", ">", listing)
+            ]),
+        "2>&1",
+        ">", listing
+        )
     if not equal(ret_code, 0) or not FileExists(lib_file)
         error(
             "library creation failed, see "
