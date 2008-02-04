@@ -2886,7 +2886,8 @@ m3cg_declare_param (void)
 
   if (current_param_count == 0) {
     /* arguments were accumulated in reverse, build type, then unreverse */
-    tree parm, args = void_list_node;
+    tree parm;
+    tree args = tree_cons (NULL_TREE, t_void, NULL_TREE);
     for (parm = DECL_ARGUMENTS (p); parm; parm = TREE_CHAIN(parm))
       args = tree_cons (NULL_TREE, TREE_TYPE (parm), args);
     args = build_function_type (TREE_TYPE (TREE_TYPE (p)), args);
