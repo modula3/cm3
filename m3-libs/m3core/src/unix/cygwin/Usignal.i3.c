@@ -28,6 +28,8 @@ int main()
 "", 0,
 "(* $Id$ *)", 0,
 "", 0,
+"(* This file was generated from " __FILE__ ". Do not edit it. *)", 0,
+"", 0,
 "INTERFACE Usignal;", 0,
 "", 0,
 "FROM Ctypes IMPORT int, unsigned_int, unsigned_short_int, unsigned_long_int;", 0,

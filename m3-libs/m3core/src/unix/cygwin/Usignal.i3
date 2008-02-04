@@ -9,6 +9,8 @@
 
 (* $Id$ *)
 
+(* This file was generated from Usignal.i3.c. Do not edit it. *)
+
 INTERFACE Usignal;
 
 FROM Ctypes IMPORT int, unsigned_int, unsigned_short_int, unsigned_long_int;

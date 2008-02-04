@@ -20,6 +20,8 @@ int main()
 "", 0,
 "(* $Id$ *)", 0,
 "", 0,
+"(* This file was generated from " __FILE__ ". Do not edit it. *)", 0,
+"", 0,
 "INTERFACE Upthread;", 0,
 "", 0,
 "FROM Ctypes IMPORT int, unsigned_int, void_star;", 0,
