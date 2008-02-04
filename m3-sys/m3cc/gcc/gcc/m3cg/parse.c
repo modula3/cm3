@@ -1027,7 +1027,7 @@ m3_init_decl_processing (void)
   size_type_node = t_word;
   set_sizetype (size_type_node);
   build_common_tree_nodes_2 (0);
-  void_list_node = build_void_list_node ();
+  void_list_node = build_tree_list (NULL_TREE, void_type_node);
 
   /* Build the remaining M3-specific type and value nodes. */
   t_addr = ptr_type_node;
