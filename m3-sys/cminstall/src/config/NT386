@@ -1,5 +1,5 @@
 %
-% $Id: NT386,v 1.51 2008-01-28 15:54:39 jkrell Exp $
+% $Id: NT386,v 1.52 2008-02-04 01:12:24 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -10,6 +10,12 @@
 % Most of the variables in this file are independent of each other and
 % arbitrary configurations can be produced by changing them.
 %
+
+%
+% This could be NT386.common, but put it here
+% for the sake m3cgcat.exe + M3CONFIG environment variable.
+%
+readonly TARGET       = "NT386"             % code generation target
 
 if not defined("PROFILING_P")
     if M3_PROFILING
