@@ -745,6 +745,7 @@ PackageSets = {
 
         "import-libs",
         "libm3",
+        "sysutils",
         "patternmatching",
         "m3core",
 
@@ -907,6 +908,7 @@ PackageSets = {
         "import-libs",
         "m3core",
         "libm3",
+        "sysutils",
         "patternmatching",
 
     # system / compiler libraries and tools
@@ -1079,6 +1081,7 @@ PackageSets_CoreBaseCommon = [
     "import-libs",
     "m3core",
     "libm3",
+    "sysutils",
     "m3middle",
     "m3quake",
     "m3scanner",
@@ -1558,7 +1561,7 @@ def SetupEnvironment():
 
         _SetupEnvironmentVariableAny(
             "PATH",
-            ["mspdb80.dll", "mspdb71.dll", "mspdb70.dll", "mspdb60.dll", "mspdb50.dll", "mspdb40.dll" ],
+            ["mspdb80.dll", "mspdb71.dll", "mspdb70.dll", "mspdb60.dll", "mspdb50.dll", "mspdb40.dll", "dbi.dll"],
             MspdbDir)
 
         _SetupEnvironmentVariableAll("PATH", ["cl", "link"], VCBin)
@@ -1589,8 +1592,8 @@ def SetupEnvironment():
     #
     if Target == "NT386GNU" or (Target == "NT386" and GCC_BACKEND and OSType == "POSIX"):
 
-        _ClearEnvironmentVariable("LIB")
-        _ClearEnvironmentVariable("INCLUDE")
+        #_ClearEnvironmentVariable("LIB")
+        #_ClearEnvironmentVariable("INCLUDE")
 
         _SetupEnvironmentVariableAll(
             "PATH",

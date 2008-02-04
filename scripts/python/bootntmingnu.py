@@ -28,6 +28,7 @@ DoPackage(
     argv_BuildShip, [
     "m3core",
     "libm3",
+    "sysutils",
     "import-libs",
     "m3bundle",
     "m3middle",

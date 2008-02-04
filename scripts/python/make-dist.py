@@ -288,6 +288,7 @@ Packages = [
     "import-libs",
     "m3core",
     "libm3",
+    "sysutils",
     "m3bundle",
     "m3middle",
     "m3objfile",

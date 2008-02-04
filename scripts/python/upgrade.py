@@ -47,6 +47,7 @@ DoPackage(
     argv_BuildShip,
     [
     "import-libs",
+    "sysutils",
     "m3middle",
     "m3objfile",
     "m3linker",

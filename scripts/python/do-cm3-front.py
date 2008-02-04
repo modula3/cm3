@@ -11,6 +11,7 @@ DoPackage(sys.argv, [
     "import-libs",
     "m3core",
     "libm3",
+    "sysutils",
     "m3middle",
     "m3objfile",
     "m3linker",
