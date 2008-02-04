@@ -609,7 +609,7 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
 	  mask = m3_build1 (BIT_NOT_EXPR, t, mask);
 	  new_bits = left_shift (m3_build2 (BIT_AND_EXPR, t, y, mask), i);
 	  saved_bits = m3_build1 (BIT_NOT_EXPR, t, left_shift (mask, i));
-	};
+	}
       x = m3_build2 (BIT_AND_EXPR, t, x, saved_bits);
       return m3_build2 (BIT_IOR_EXPR, t, x, new_bits);
     }
@@ -1375,7 +1375,7 @@ get_byte (void)
   if (input_cursor >= input_len) {
     reload_buffer ();
     if (input_eof) return 0;
-  };
+  }
   return (long)(input_buffer[input_cursor++] & 0xff);
 }
 
@@ -1504,7 +1504,7 @@ scan_sign (void)
   case 2:  return 'U';  /* unknown */
   default:
     fatal_error(" *** bad sign: %ld, at m3cg_lineno %d", x, m3cg_lineno);
-  };
+  }
   return '0';
 }
 
@@ -1540,7 +1540,7 @@ scan_target_int (void)
     } else {
       hi = hi | (((HOST_WIDE_INT) get_byte ()) << shift);
     }
-  };
+  }
 
   res = build_int_cst_wide (t, low, hi);
   if (sign < 0) { res = m3_build1 (NEGATE_EXPR, t, res); }
@@ -4433,7 +4433,7 @@ m3cg_index_address (void)
     } else {
       incr = m3_build2 (MULT_EXPR, t, incr, size_int (n_bytes));
     }
-  };
+  }
 
   EXPR_REF (-2) = m3_build2 (PLUS_EXPR, t_addr,
                              m3_cast (t_addr, EXPR_REF (-2)),
