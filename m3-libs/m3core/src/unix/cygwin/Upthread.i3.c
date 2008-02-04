@@ -1,4 +1,4 @@
-/* $Id: Upthread.i3.c,v 1.7 2008-02-02 21:51:29 jkrell Exp $ */
+/* $Id: Upthread.i3.c,v 1.8 2008-02-04 01:39:55 jkrell Exp $ */
 
 #include <pthread.h>
 #include <stdio.h>
@@ -18,7 +18,7 @@ int main()
 "(* All rights reserved.                                       *)", 0,
 "(* See the file COPYRIGHT for a full description.             *)", 0,
 "", 0,
-"(* $Id: Upthread.i3.c,v 1.7 2008-02-02 21:51:29 jkrell Exp $ *)", 0,
+"(* $Id: Upthread.i3.c,v 1.8 2008-02-04 01:39:55 jkrell Exp $ *)", 0,
 "", 0,
 "INTERFACE Upthread;", 0,
 "", 0,
@@ -91,22 +91,22 @@ int main()
 "(* Mutex initializers.  *)", 0,
 "CONST", 0,
 "  PTHREAD_MUTEX_INITIALIZER =", 0,
-"    pthread_mutex_t { ARRAY [0..SIZEOF_PTHREAD_MUTEX_T - 1] OF unsigned_int {%x, .. } };", (unsigned) (size_t) PTHREAD_MUTEX_INITIALIZER,
+"    pthread_mutex_t { ARRAY [0..SIZEOF_PTHREAD_MUTEX_T - 1] OF unsigned_int {16_%x, .. } };", (unsigned) (size_t) PTHREAD_MUTEX_INITIALIZER,
 "", 0,
 "(* Read-write lock initializers.  *)", 0,
 "CONST", 0,
 "  PTHREAD_RWLOCK_INITIALIZER =", 0,
-"    pthread_rwlock_t { ARRAY [0..SIZEOF_PTHREAD_RWLOCK_T - 1] OF unsigned_int {%u, .. } };", (unsigned) (size_t) PTHREAD_RWLOCK_INITIALIZER,
+"    pthread_rwlock_t { ARRAY [0..SIZEOF_PTHREAD_RWLOCK_T - 1] OF unsigned_int {16_%x, .. } };", (unsigned) (size_t) PTHREAD_RWLOCK_INITIALIZER,
 "", 0,
 "(* Conditional variable handling.  *)", 0,
 "CONST", 0,
 "  PTHREAD_COND_INITIALIZER =", 0,
-"    pthread_cond_t { ARRAY [0..SIZEOF_PTHREAD_COND_T - 1] OF unsigned_int {%u, .. } };", (unsigned) (size_t) PTHREAD_COND_INITIALIZER,
+"    pthread_cond_t { ARRAY [0..SIZEOF_PTHREAD_COND_T - 1] OF unsigned_int {16_%x, .. } };", (unsigned) (size_t) PTHREAD_COND_INITIALIZER,
 "", 0,
 "(* Single execution handling.  *)", 0,
 "CONST", 0,
 "  PTHREAD_ONCE_INIT = ", 0,
-"    pthread_once_t { ARRAY [0..SIZEOF_PTHREAD_ONCE_T - 1] OF unsigned_int {%u, .. } };", (unsigned) (size_t) PTHREAD_MUTEX_INITIALIZER,
+"    pthread_once_t { ARRAY [0..SIZEOF_PTHREAD_ONCE_T - 1] OF unsigned_int {16_%x, .. } };", (unsigned) (size_t) PTHREAD_MUTEX_INITIALIZER,
 "", 0,
 "TYPE start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;", 0,
 "<*EXTERNAL pthread_create*>", 0,
