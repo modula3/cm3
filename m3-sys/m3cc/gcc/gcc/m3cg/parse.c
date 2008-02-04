@@ -1212,7 +1212,7 @@ m3_init_decl_processing (void)
   divL_proc = builtin_function ("m3_divL", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
   modL_proc = builtin_function ("m3_modL", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
 
-  t = build_function_type (t_void, NULL_TREE);
+  t = build_function_type_list (t_void, NULL_TREE);
   set_union_proc  = builtin_function ("set_union",
 				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
   set_diff_proc   = builtin_function ("set_difference",
@@ -1226,7 +1226,7 @@ m3_init_decl_processing (void)
   set_range_proc  = builtin_function ("set_range",
 				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
 
-  t = build_function_type (t_int, NULL_TREE);
+  t = build_function_type_list (t_int, NULL_TREE);
   set_member_proc
     = builtin_function ("set_member", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
   set_eq_proc
@@ -1988,8 +1988,7 @@ m3_call_direct (tree p, tree t)
 static void
 m3_call_indirect (tree t, tree cc)
 {
-  tree argtypes = chainon (CALL_TOP_TYPE (),
-			   tree_cons (NULL_TREE, t_void, NULL_TREE));
+  tree argtypes = chainon (CALL_TOP_TYPE (), void_list_node);
   tree fntype = build_pointer_type (build_function_type (t, argtypes));
   tree call;
   tree fnaddr = EXPR_REF (-1);
