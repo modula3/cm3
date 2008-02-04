@@ -793,7 +793,7 @@ is
 
     % build the static library
 
-    local ret_code = try_exec(
+    ret_code = try_exec(
         "mklib",
         WriteResponseFile(
             LibResponseFile,
