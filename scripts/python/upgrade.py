@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.9 2008-01-20 14:54:25 jkrell Exp $
+# $Id: upgrade.py,v 1.10 2008-02-04 01:10:41 jkrell Exp $
 
 import sys
 import pylib
@@ -47,6 +47,7 @@ DoPackage(
     argv_BuildShip,
     [
     "import-libs",
+    "sysutils",
     "m3middle",
     "m3objfile",
     "m3linker",
