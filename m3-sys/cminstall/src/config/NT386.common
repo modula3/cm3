@@ -14,7 +14,7 @@ readonly WORD_SIZE    = "32BITS"            % { "32BITS" or "64BITS" }
 % These are usually NOT needed.
 % They enable some unusual tool/runtime combinations that
 % may aid debugging. Specifically, they are for using the MS linker
-% to target the Cygwin rutime, which in concert with the
+% to target the Cygwin runtime, which in concert with the
 % integrated backend, enables debugging using Microsoft debuggers.
 %
 % for /f %a in ('gcc --print-libgcc') do cygpath --windows %a
@@ -210,6 +210,7 @@ else
     USE_MSVCRT = TRUE
     %USE_DELAYLOAD = FALSE
     if equal(LINKER, "MS")
+        % crt0.o requires being linked with ld.
         %SYSTEM_LIBS{"LIBC"} += [LIBGCC, LIBGCC & "/../../../../crt0.o", LIBGCC & "/../../../../libcygwin.a" ]
         SYSTEM_LIBS{"LIBC"} += [LibIn("msvcrt")]
         SYSTEM_LIBS{"LIBC"} += [LIBGCC, LIBGCC & "/../../../../libcygwin.a" ]
