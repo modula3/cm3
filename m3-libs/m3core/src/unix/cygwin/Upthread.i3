@@ -2,7 +2,7 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-(* $Id: Upthread.i3,v 1.8 2008-02-02 21:51:29 jkrell Exp $ *)
+(* $Id: Upthread.i3,v 1.9 2008-02-04 01:39:55 jkrell Exp $ *)
 
 INTERFACE Upthread;
 
@@ -75,22 +75,22 @@ TYPE
 (* Mutex initializers.  *)
 CONST
   PTHREAD_MUTEX_INITIALIZER =
-    pthread_mutex_t { ARRAY [0..SIZEOF_PTHREAD_MUTEX_T - 1] OF unsigned_int {14, .. } };
+    pthread_mutex_t { ARRAY [0..SIZEOF_PTHREAD_MUTEX_T - 1] OF unsigned_int {16_14, .. } };
 
 (* Read-write lock initializers.  *)
 CONST
   PTHREAD_RWLOCK_INITIALIZER =
-    pthread_rwlock_t { ARRAY [0..SIZEOF_PTHREAD_RWLOCK_T - 1] OF unsigned_int {22, .. } };
+    pthread_rwlock_t { ARRAY [0..SIZEOF_PTHREAD_RWLOCK_T - 1] OF unsigned_int {16_16, .. } };
 
 (* Conditional variable handling.  *)
 CONST
   PTHREAD_COND_INITIALIZER =
-    pthread_cond_t { ARRAY [0..SIZEOF_PTHREAD_COND_T - 1] OF unsigned_int {21, .. } };
+    pthread_cond_t { ARRAY [0..SIZEOF_PTHREAD_COND_T - 1] OF unsigned_int {16_15, .. } };
 
 (* Single execution handling.  *)
 CONST
   PTHREAD_ONCE_INIT = 
-    pthread_once_t { ARRAY [0..SIZEOF_PTHREAD_ONCE_T - 1] OF unsigned_int {20, .. } };
+    pthread_once_t { ARRAY [0..SIZEOF_PTHREAD_ONCE_T - 1] OF unsigned_int {16_14, .. } };
 
 TYPE start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;
 <*EXTERNAL pthread_create*>
