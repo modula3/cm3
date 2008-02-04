@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.7 2008-02-04 02:08:42 jkrell Exp $
+% $Id: NT386.common,v 1.8 2008-02-04 06:42:37 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -227,8 +227,6 @@ SYSTEM_LIBORDER =
     "ODBC",
     "LIBC",
 ]
-
-%---------------------------------------------------------- system programs ---
 
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
@@ -653,35 +651,19 @@ make_lib_ms(
     objects,
     imported_libs,
     shared,
+    lib_file,
+    lib0_file,
+    def_file,
+    dll_file,
+    manifest_file,
+    pdb_file,
+    listing,
+    LibResponseFile,
+    LinkResponseFile,
     )
 is
     %% m3_lib_flags = ["-debugtype:cv", "-machine:i386"]
     m3_lib_flags = ["-ign:__real"]
-    local readonly lib_file = lib & ".lib"
-    local readonly lib0_file = lib & ".lib.sa"
-    local readonly def_file = lib & ".def"
-    local readonly dll_file = lib & ".dll"
-    local readonly manifest_file  = dll_file & ".manifest"
-    local readonly pdb_file = lib & ".pdb"
-    local readonly listing  = lib & ".lst"
-    local LibResponseFile = GetResponseFileName()
-    local LinkResponseFile = GetResponseFileName()
-    local readonly Outputs = [
-        lib_file,
-        lib0_file,
-        dll_file,
-        def_file,
-        listing,
-        manifest_file,
-        pdb_file,
-        LibResponseFile,
-        LinkResponseFile,
-        lib & ".ilk",
-        ]
-
-    % make sure files get cleaned up
-    DeleteFiles(Outputs)
-    deriveds("", Outputs)
 
     % build the static library
 
@@ -745,12 +727,6 @@ is
 
         MoveFile(lib_file, lib0_file)
 
-        % not yet tested, and there is a problem
-        % in particular, whether or not lib is sharable is a separate question
-        % than whether or not it shares other libs, but cm3 only exposes one
-        % of these two bits.
-        % imported_libs = ConvertLibsToStandalone(imported_libs, shared)
-
         LinkResponseFile =
             WriteResponseFile(
                 LinkResponseFile,
@@ -802,34 +778,18 @@ make_lib_gnu(
     objects,
     imported_libs,
     shared,
+    lib_file,
+    lib0_file,
+    def_file,
+    dll_file,
+    manifest_file,
+    pdb_file,
+    listing,
+    LibResponseFile,
+    LinkResponseFile,
     )
 is
     m3_lib_flags = [ ]
-    local readonly lib_file = lib & ".lib"
-    local readonly lib0_file = lib & ".lib.sa"
-    local readonly def_file = lib & ".def"
-    local readonly dll_file = lib & ".dll"
-    local readonly manifest_file  = dll_file & ".manifest"
-    local readonly pdb_file = lib & ".pdb"
-    local readonly listing  = lib & ".lst"
-    local LibResponseFile = GetResponseFileName()
-    local LinkResponseFile = GetResponseFileName()
-    local readonly Outputs = [
-        lib_file,
-        lib0_file,
-        dll_file,
-        def_file,
-        listing,
-        manifest_file,
-        pdb_file,
-        LibResponseFile,
-        LinkResponseFile,
-        lib & ".ilk",
-        ]
-
-    % make sure files get cleaned up
-    DeleteFiles(Outputs)
-    deriveds("", Outputs)
 
     % build the static library
 
@@ -871,12 +831,6 @@ is
             objects += "-pg"
         end
 
-        % not yet tested, and there is a problem
-        % in particular, whether or not lib is sharable is a separate question
-        % than whether or not it shares other libs, but cm3 only exposes one
-        % of these two bits.
-        % imported_libs = ConvertLibsToStandalone(imported_libs, shared)
-
         LinkResponseFile =
             WriteResponseFile(
                 LinkResponseFile,
@@ -899,7 +853,7 @@ is
         ret_code =
             try_exec(
                 "gcc",
-                "-v",
+                %"-v",
                 "-shared", % must be visible to compiler
                 "-Wl," & LinkResponseFile,
                 "2>&1",
@@ -943,10 +897,72 @@ make_lib(
     shared,
     )
 is
+    local ret_code = 0
+
+    local readonly lib_file = lib & ".lib"
+    local readonly lib0_file = lib & ".lib.sa"
+    local readonly def_file = lib & ".def"
+    local readonly dll_file = lib & ".dll"
+    local readonly manifest_file  = dll_file & ".manifest"
+    local readonly pdb_file = lib & ".pdb"
+    local readonly listing  = lib & ".lst"
+    local LibResponseFile = GetResponseFileName()
+    local LinkResponseFile = GetResponseFileName()
+    local readonly Outputs = [
+        lib_file,
+        lib0_file,
+        dll_file,
+        def_file,
+        listing,
+        manifest_file,
+        pdb_file,
+        LibResponseFile,
+        LinkResponseFile,
+        lib & ".ilk",
+        ]
+
+    % make sure files get cleaned up
+    DeleteFiles(Outputs)
+    deriveds("", Outputs)
+
     if equal(LINKER, "MS")
-        return make_lib_ms(lib, options, objects, imported_libs, shared)
+        ret_code =
+            make_lib_ms(
+                lib,
+                options,
+                objects,
+                imported_libs,
+                shared,
+                lib_file,
+                lib0_file,
+                def_file,
+                dll_file,
+                manifest_file,
+                pdb_file,
+                listing,
+                LibResponseFile,
+                LinkResponseFile,
+                )
+    else
+        ret_code =
+            make_lib_gnu(
+                lib,
+                options,
+                objects,
+                imported_libs,
+                shared,
+                lib_file,
+                lib0_file,
+                def_file,
+                dll_file,
+                manifest_file,
+                pdb_file,
+                listing,
+                LibResponseFile,
+                LinkResponseFile,
+                )
     end
-    return make_lib_gnu(lib, options, objects, imported_libs, shared)
+    return ret_code
 end
 
 %-------------------------------------------------------------------
@@ -1081,27 +1097,11 @@ m3_link_ms(
     objects,
     imported_libs,
     shared,
+    pgm_file,
+    listing,
+    LinkResponseFile,
     )
 is
-    local readonly pgm_file = prog & ".exe"
-    local readonly manifest_file = pgm_file & ".manifest"
-    local readonly pdb_file = prog & ".pdb"
-    local readonly listing  = prog & ".lst"
-    local LinkResponseFile = GetResponseFileName()
-
-    local readonly Outputs = [
-        pgm_file,
-        listing,
-        manifest_file,
-        pdb_file,
-        LinkResponseFile,
-        prog & ".ilk",
-        ]
-
-    % make sure files get cleaned up
-    DeleteFiles(Outputs)
-    deriveds("", Outputs)
-
     local entry = ["-subsystem:console", "-entry:mainCRTStartup"]
     if defined("M3_WINDOWS_GUI")
         if M3_WINDOWS_GUI
@@ -1109,9 +1109,8 @@ is
         end
     end
 
-    imported_libs = ConvertLibsToStandalone(imported_libs, shared)
-
-    LinkResponseFile =
+    return try_exec(
+        "link",
         WriteResponseFile(
             LinkResponseFile,
             " ",
@@ -1121,34 +1120,11 @@ is
                 m3_link_flags,
                 options,
                 objects,
-                imported_libs
-            ])
-
-    local ret_code = try_exec("link", LinkResponseFile, "2>&1", ">", listing)
-    if not equal(ret_code, 0) or not FileExists(pgm_file)
-        error(
-            "link failed, see "
-            & GetPackageDirectory()
-            & BUILD_DIR
-            & SL
-            & listing
-            & " for more information"
-            & EOL
-            )
-        if not equal(ret_code, 0)
-            return ret_code
-        end
-        return 1
-    end
-
-    ret_code = ManifestTool(pgm_file, manifest_file, "1")
-    if not equal(ret_code, 0)
-        return ret_code
-    end
-
-    PdbExport(pdb_file)
-
-    return ret_code
+                imported_libs,
+            ]),
+        "2>&1",
+        ">", listing
+        )
 end
 
 proc
@@ -1158,35 +1134,17 @@ m3_link_gnu(
     objects,
     imported_libs,
     shared,
+    pgm_file,
+    listing,
+    LinkResponseFile,
     )
 is
-    local readonly pgm_file = prog & ".exe"
-    local readonly manifest_file = pgm_file & ".manifest"
-    local readonly pdb_file = prog & ".pdb"
-    local readonly listing  = prog & ".lst"
-    local LinkResponseFile = GetResponseFileName()
-
-    local readonly Outputs = [
-        pgm_file,
-        listing,
-        manifest_file,
-        pdb_file,
-        LinkResponseFile,
-        prog & ".ilk",
-        ]
-
-    % make sure files get cleaned up
-    DeleteFiles(Outputs)
-    deriveds("", Outputs)
-
     if not shared
         %options += "-static"
     end
     if M3_PROFILING
         options += "-pg"
     end
-
-    imported_libs = ConvertLibsToStandalone(imported_libs, shared)
 
     % not tested
     % if not defined("M3_WINDOWS_GUI")
@@ -1198,19 +1156,81 @@ is
     %   options += "-mconsole"
     % end
 
-    LinkResponseFile =
-        WriteResponseFile(
-            LinkResponseFile,
-            ",",
-            [
-                "--output",
-                pgm_file,
-                options,
-                objects,
-                EscapeList(imported_libs),
-            ])
+    return try_exec(
+            "gcc",
+            "-g",
+            %"-v",
+            "-Wl," &
+                WriteResponseFile(
+                    LinkResponseFile,
+                    ",",
+                    [
+                        "--output",
+                        pgm_file,
+                        options,
+                        objects,
+                        EscapeList(imported_libs),
+                    ]),
+            "2>&1",
+            ">", listing
+            )
+end
 
-    local ret_code = try_exec("gcc", "-g", "-v", "-Wl," & LinkResponseFile, "2>&1", ">", listing)
+proc
+m3_link(
+    prog,
+    options,
+    objects,
+    imported_libs,
+    shared,
+    )
+is
+    local ret_code = 0
+    local readonly pgm_file = prog & ".exe"
+    local readonly manifest_file = pgm_file & ".manifest"
+    local readonly pdb_file = prog & ".pdb"
+    local readonly listing  = prog & ".lst"
+    local LinkResponseFile = GetResponseFileName()
+
+    local readonly Outputs = [
+        pgm_file,
+        listing,
+        manifest_file,
+        pdb_file,
+        LinkResponseFile,
+        prog & ".ilk",
+        ]
+
+    % make sure files get cleaned up
+    DeleteFiles(Outputs)
+    deriveds("", Outputs)
+
+    imported_libs = ConvertLibsToStandalone(imported_libs, shared)
+
+    if equal(LINKER, "MS")
+        ret_code = m3_link_ms(
+            prog,
+            options,
+            objects,
+            imported_libs,
+            shared,
+            pgm_file,
+            listing,
+            LinkResponseFile,
+            )
+    else
+        ret_code = m3_link_gnu(
+            prog,
+            options,
+            objects,
+            imported_libs,
+            shared,
+            pgm_file,
+            listing,
+            LinkResponseFile
+            )
+    end
+
     if not equal(ret_code, 0) or not FileExists(pgm_file)
         error(
             "link failed, see "
@@ -1235,21 +1255,6 @@ is
     PdbExport(pdb_file)
 
     return ret_code
-end
-
-proc
-m3_link(
-    prog,
-    options,
-    objects,
-    imported_libs,
-    shared,
-    )
-is
-    if equal(LINKER, "MS")
-        return m3_link_ms(prog, options, objects, imported_libs, shared)
-    end
-    return m3_link_gnu(prog, options, objects, imported_libs, shared)
 end
 
 %-------------------------------------------------------------------
@@ -1301,7 +1306,7 @@ end
 M3_OPTIONS = [ ]
 % --- user options passed directly to the Modula-3 front-end
 
-% M3_KEEP_FILES = TRUE
+M3_KEEP_FILES = TRUE
 % --- keep intermediate and temporary files
 
 % M3_WINDOWS_GUI = TRUE
