@@ -2871,8 +2871,8 @@ m3cg_declare_param (void)
 
   DECL_NAME (v) = fix_name (n, id);
   if (option_procs_trace)
-    fprintf(stderr, "  param %s type %d typeid %ld\n",
-	    IDENTIFIER_POINTER(DECL_NAME(v)), t, id);
+    fprintf(stderr, "  param %s type %d typeid %ld bytesize %ld alignment %ld in_memory %d up_level %d\n",
+	    IDENTIFIER_POINTER(DECL_NAME(v)), t, id, s, a, in_memory, up_level);
   TREE_TYPE (v) = m3_build_type (t, s, a);
   DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
