@@ -681,7 +681,8 @@ is
         options += "-noentry"
     end
 
-    LinkResponseFile =
+    return try_exec(
+        "link",
         WriteResponseFile(
             LinkResponseFile,
             " ",
@@ -693,11 +694,7 @@ is
                  options,
                  objects,
                  imported_libs,
-            ])
-
-    return try_exec(
-        "link",
-        LinkResponseFile,
+            ]),
         "2>&1",
         ">", listing
         )
