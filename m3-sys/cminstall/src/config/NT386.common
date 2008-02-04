@@ -1300,7 +1300,7 @@ end
 M3_OPTIONS = [ ]
 % --- user options passed directly to the Modula-3 front-end
 
-M3_KEEP_FILES = TRUE
+% M3_KEEP_FILES = TRUE
 % --- keep intermediate and temporary files
 
 % M3_WINDOWS_GUI = TRUE
