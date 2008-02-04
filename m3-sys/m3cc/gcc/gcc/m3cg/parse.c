@@ -1027,6 +1027,7 @@ m3_init_decl_processing (void)
   size_type_node = t_word;
   set_sizetype (size_type_node);
   build_common_tree_nodes_2 (0);
+  void_list_node = build_void_list_node ();
 
   /* Build the remaining M3-specific type and value nodes. */
   t_addr = ptr_type_node;
@@ -2886,8 +2887,7 @@ m3cg_declare_param (void)
 
   if (current_param_count == 0) {
     /* arguments were accumulated in reverse, build type, then unreverse */
-    tree parm;
-    tree args = tree_cons (NULL_TREE, t_void, NULL_TREE);
+    tree parm, args = void_list_node;
     for (parm = DECL_ARGUMENTS (p); parm; parm = TREE_CHAIN(parm))
       args = tree_cons (NULL_TREE, TREE_TYPE (parm), args);
     args = build_function_type (TREE_TYPE (TREE_TYPE (p)), args);
