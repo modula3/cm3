@@ -2887,12 +2887,14 @@ m3cg_declare_param (void)
   if (current_param_count == 0) {
     /* arguments were accumulated in reverse, build type, then unreverse */
     tree parm;
+    tree previous_type_attributes = TYPE_ATTRIBUTES (TREE_TYPE (p));
     tree atypes = tree_cons (NULL_TREE, t_void, NULL_TREE);
     for (parm = DECL_ARGUMENTS (p); parm; parm = TREE_CHAIN (parm)) {
       atypes = tree_cons (NULL_TREE, TREE_TYPE (parm), atypes);
     }
     TREE_TYPE (p) = build_function_type (TREE_TYPE (TREE_TYPE(p)), atypes);
     DECL_ARGUMENTS (p) = nreverse (DECL_ARGUMENTS (p));
+    decl_attributes (&TREE_TYPE (p), previous_type_attributes, 0);
   }
 }
 
@@ -3102,7 +3104,6 @@ m3cg_import_procedure (void)
   DECL_MODE (p) = FUNCTION_MODE;
 
   decl_attributes (&TREE_TYPE (p), cc, 0);
-  decl_attributes (&p, cc, 0);
 
   TREE_CHAIN (p) = global_decls;
   global_decls = p;
@@ -3161,7 +3162,6 @@ m3cg_declare_procedure (void)
   DECL_RESULT (p) = resultdecl;
 
   decl_attributes (&TREE_TYPE (p), cc, 0);
-  decl_attributes (&p, cc, 0);
 
   BLOCK_SUPERCONTEXT (parm_block) = p;
   DECL_INITIAL (p) = parm_block;
