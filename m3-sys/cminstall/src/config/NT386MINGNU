@@ -11,6 +11,12 @@
 %   use native Windows threads, gui, C runtime
 %
 
+%
+% This could be NT386.common, but put it here
+% for the sake m3cgcat.exe + M3CONFIG environment variable.
+%
+readonly TARGET       = "NT386"             % code generation target
+
 if M3_PROFILING
     readonly PROFILING_P = "p"
 else
