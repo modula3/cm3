@@ -690,7 +690,7 @@ test_m3tohtml()
   fi
 
   pkgs=`awk '{print $1}' ${WS}/cm3/scripts/pkginfo.txt | xargs -n 1 basename`
-  m3tohtml -dir html $pkgs
+  yes | m3tohtml -dir html $pkgs
   res=$?
   
   if [ 0 = "${res}" ]; then
