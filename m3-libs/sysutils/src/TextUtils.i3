@@ -81,6 +81,9 @@ PROCEDURE TextSeqToText(seq : TextSeq.T; sep := " "; maxCol := 0;
      > 0, use continuation sequence `contToken' at break. *)
 
 (*--------------------------------------------------------------------------*)
+PROCEDURE TextSeqToArray(seq : TextSeq.T) : REF ARRAY OF TEXT;
+
+(*--------------------------------------------------------------------------*)
 PROCEDURE SubstEnvVars(READONLY t : TEXT; 
                        env : TextTextTbl.T := NIL) : TEXT;
   (* Return the text `t' in which all environment variables of the
@@ -140,6 +143,20 @@ PROCEDURE BoolVal(READONLY t : TEXT; default := FALSE) : BOOLEAN;
   (* Evaluate the text t to a boolean value. For "yes", "true", "1", and
      "on", TRUE is returned, for "no", "false", "0", and "off", FALSE
      is returned, otherwise the default value. *)
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE Elem_Compare (a, b: TEXT): [-1..1];
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE Sort (VAR a: ARRAY OF TEXT;  cmp := Elem_Compare);
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE QuickSort (VAR a: ARRAY OF TEXT;  lo, hi: INTEGER;
+                     cmp := Elem_Compare);
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE InsertionSort (VAR a: ARRAY OF TEXT;  lo, hi: INTEGER;
+                         cmp := Elem_Compare);
 
 END TextUtils.
 
