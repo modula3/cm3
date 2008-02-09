@@ -93,7 +93,7 @@ PROCEDURE Get (rd: Rd.T;  path: TEXT): Insertion =
     (* build a list of insertions for the header *)
     AddH (z, "<HTML>\n<HEAD>\n<TITLE>Critical Mass Modula-3: ");
     AddH (z, path);
-    AddH (z, "</TITLE>\n</HEAD>\n<BODY bgcolor=\"#eeeeee\">\n");
+    AddH (z, "</TITLE>\n</HEAD>\n<BODY bgcolor=\"#ffffff\">\n");
     AddH (z, "<A NAME=\"0TOP0\">\n<H2>");
     AddH (z, path);
     AddH (z, "</H2></A><HR>\n");

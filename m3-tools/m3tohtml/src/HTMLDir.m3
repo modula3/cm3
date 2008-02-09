@@ -104,7 +104,7 @@ PROCEDURE RemoveDuplicates (VAR s: State;  start, len: INTEGER) =
     END;
     INC (s.next_id);
     Out (wr, "<HTML>\n<HEAD>\n<TITLE>", key, " locations</TITLE>\n</HEAD>\n");
-    Out (wr, "<BODY bgcolor=\"#eeeeee\">\n<H2>", key, 
+    Out (wr, "<BODY bgcolor=\"#ffffff\">\n<H2>", key, 
          " is located in:<H2>\n<UL>\n");
     FOR i := start TO start + len - 1 DO
       VAR nm := s.elts[i].name; BEGIN
@@ -265,7 +265,7 @@ PROCEDURE WriteDir (VAR s: State;  file: TEXT;  start, cnt, len: INTEGER) =
         OSError.E => M("cannot open file ", file & ".html"); RETURN;
       END;
       Out (wr, "<HTML>\n<HEAD>\n<TITLE>", s.title,
-               "</TITLE>\n</HEAD>\n<BODY bgcolor=\"#eeeeee\">\n");
+               "</TITLE>\n</HEAD>\n<BODY bgcolor=\"#ffffff\">\n");
     END;
     Out (wr, "<PRE>\n");
     FOR row := 0 TO n_rows-1 DO

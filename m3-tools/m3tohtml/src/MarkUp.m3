@@ -51,7 +51,7 @@ PROCEDURE Simple (rd: Rd.T;  wr: Wr.T;  path: TEXT)
     s.path := path;
     OutT (s, "<HTML><HEAD><TITLE>\n");
     OutT (s, path);
-    OutT (s, "</TITLE></HEAD><BODY BGCOLOR=\"#eeeeee\">\n");
+    OutT (s, "</TITLE></HEAD><BODY BGCOLOR=\"#ffffff\">\n");
     OutT (s, "<H2>\n");
     OutT (s, path);
     OutT (s, "</H2><HR>\n");
