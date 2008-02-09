@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: TextUtils.i3,v 1.2 2008-02-09 12:26:51 wagner Exp $ *)
+ * $Id: TextUtils.i3,v 1.3 2008-02-09 17:18:00 wagner Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 INTERFACE TextUtils;
@@ -149,14 +149,7 @@ PROCEDURE Elem_Compare (a, b: TEXT): [-1..1];
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE Sort (VAR a: ARRAY OF TEXT;  cmp := Elem_Compare);
-
-(*---------------------------------------------------------------------------*)
-PROCEDURE QuickSort (VAR a: ARRAY OF TEXT;  lo, hi: INTEGER;
-                     cmp := Elem_Compare);
-
-(*---------------------------------------------------------------------------*)
-PROCEDURE InsertionSort (VAR a: ARRAY OF TEXT;  lo, hi: INTEGER;
-                         cmp := Elem_Compare);
+(* quick sort from libm3 for convenience *)
 
 END TextUtils.
 
