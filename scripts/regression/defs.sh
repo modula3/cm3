@@ -665,6 +665,55 @@ test_m3_all_pkgs()
 }
 
 
+test_m3tohtml()
+{
+  echo " === `date -u +'%Y-%m-%d %H:%M:%S'` build HTML package doc in ${WS} with lastok version"
+  prependpath ${INSTROOT_CUR}/bin
+  LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
+  DYLD_LIBRARY_PATH=${LD_LIBRARY_PATH}
+  INSTALLROOT=${INSTROOT_CUR}
+  export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
+
+  if type m3tohtml > /dev/null; then
+    true
+  else
+    echo "m3tohtml not found" 1>&2
+    exit 1
+  fi
+
+  # checkout must have been done before
+  if cd "${WS}/cm3/m3-tools/m3tohtml"; then
+    true
+  else
+    echo "cannot cd to ${WS}/cm3/m3-tools/m3tohtml" 1>2
+    exit 1
+  fi
+
+  pkgs=`awk '{print $1}' ${WS}/cm3/scripts/pkginfo.txt | xargs -n 1 basename`
+  m3tohtml -dir html $pkgs
+  res=$?
+  
+  if [ 0 = "${res}" ]; then
+    if [ "${TESTHOSTNAME}" = birch -a `whoami` = "m3" ]; then
+      DOCDEST=/var/www/modula3.elegosoft.com/cm3/doc/help/gen_html
+      if [ -d "${DOCDEST}" ]; then
+        mv html "${DOCDEST}.new"
+        mv "${DOCDEST}" "${DOCDEST}.old" && 
+        mv "${DOCDEST}.new" "${DOCDEST}" &&
+        rm -rf "${DOCDEST}.old"
+      fi
+    fi
+    echo " >>> OK test_m3tohtml ${DS} ${WS}"
+    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` m3tohtml run done"
+    true
+  else
+    echo " >>> errors in test_m3tohtml ${DS} ${WS}"
+    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` m3tohtml run done"
+    false
+  fi
+}
+
+
 #----------------------------------------------------------------------------
 # testall -- checkout and perform all tests
 
@@ -692,6 +741,9 @@ testall()
 
   # m3 all package regression tests and reports
   test_m3_all_pkgs
+
+  # test m3tohtml
+  test_m3tohtml
 }
 
 #----------------------------------------------------------------------------
