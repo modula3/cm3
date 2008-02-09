@@ -1,3 +1,0 @@
-override ("libm3", ROOT & "/m3-libs")
-override ("odbc", ROOT & "/m3-db")
-override ("postgres95", ROOT & "/m3-db")
