@@ -1,9 +1,0 @@
-Last modified on Mon Apr 29 15:45:51 PDT 1996 by heydon
-
-/proj/m3/pkg/juno-machine/tests/nonlinear/README
-
-This directory contains a simple program to test Juno's non-linear
-solver, namely, the procedure RedundantSolve.P(). See the comments at
-the head of the file "src/NonLinearTest.m3" for details on how to run
-the program (these comments serve in lieu of a man page). Also see the
-file "src/README" for more information.
