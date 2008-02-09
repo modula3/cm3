@@ -149,14 +149,7 @@ PROCEDURE Elem_Compare (a, b: TEXT): [-1..1];
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE Sort (VAR a: ARRAY OF TEXT;  cmp := Elem_Compare);
-
-(*---------------------------------------------------------------------------*)
-PROCEDURE QuickSort (VAR a: ARRAY OF TEXT;  lo, hi: INTEGER;
-                     cmp := Elem_Compare);
-
-(*---------------------------------------------------------------------------*)
-PROCEDURE InsertionSort (VAR a: ARRAY OF TEXT;  lo, hi: INTEGER;
-                         cmp := Elem_Compare);
+(* quick sort from libm3 for convenience *)
 
 END TextUtils.
 
