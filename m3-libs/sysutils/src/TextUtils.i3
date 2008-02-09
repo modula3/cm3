@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: TextUtils.i3,v 1.1 2008-01-30 23:45:38 wagner Exp $ *)
+ * $Id: TextUtils.i3,v 1.2 2008-02-09 12:26:51 wagner Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 INTERFACE TextUtils;
@@ -79,6 +79,9 @@ PROCEDURE TextSeqToText(seq : TextSeq.T; sep := " "; maxCol := 0;
   (* Return a text containing the concatenation of all elements of
      the text sequence `seq'. Break lines before `maxCol' if it is
      > 0, use continuation sequence `contToken' at break. *)
+
+(*--------------------------------------------------------------------------*)
+PROCEDURE TextSeqToArray(seq : TextSeq.T) : REF ARRAY OF TEXT;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE SubstEnvVars(READONLY t : TEXT; 
@@ -140,6 +143,20 @@ PROCEDURE BoolVal(READONLY t : TEXT; default := FALSE) : BOOLEAN;
   (* Evaluate the text t to a boolean value. For "yes", "true", "1", and
      "on", TRUE is returned, for "no", "false", "0", and "off", FALSE
      is returned, otherwise the default value. *)
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE Elem_Compare (a, b: TEXT): [-1..1];
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE Sort (VAR a: ARRAY OF TEXT;  cmp := Elem_Compare);
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE QuickSort (VAR a: ARRAY OF TEXT;  lo, hi: INTEGER;
+                     cmp := Elem_Compare);
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE InsertionSort (VAR a: ARRAY OF TEXT;  lo, hi: INTEGER;
+                         cmp := Elem_Compare);
 
 END TextUtils.
 
