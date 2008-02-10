@@ -32,6 +32,7 @@ DoPackage(
     "m3back",
     "m3staloneback",
     "m3front",
+    "sysutils",
     "m3quake",
     "cm3",
     "mklib",
@@ -47,13 +48,13 @@ DoPackage(
     argv_BuildShip,
     [
     "import-libs",
-    "sysutils",
     "m3middle",
     "m3objfile",
     "m3linker",
     "m3back",
     "m3staloneback",
     "m3front",
+    "sysutils",
     "m3quake",
     "cm3",
     # only Win32 can build mklib in the first pass, since preexisting
