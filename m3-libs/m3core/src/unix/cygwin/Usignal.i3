@@ -136,20 +136,11 @@ TYPE
 
  (* valid flags define for sa_flag field of sigaction structure  *)
 CONST
-  SA_NOCLDSTOP = 1;           (* Don't generate SIGCLD when children stop *)
-  SA_STACK       = 16_08000000;
+  SA_NOCLDSTOP   = 16_00000001; (* Don't generate SIGCLD when children stop *)
   SA_RESTART     = 16_10000000;
-  SA_INTERRUPT   = 16_20000000;
   SA_NOMASK      = 16_40000000;
   SA_ONESHOT     = 16_80000000;
 
-  SA_ONSTACK     = 16_0001;   (* run on special signal stack *)
-  SA_OLDSTYLE    = 16_0002;   (* old "unreliable" UNIX semantics *)
-  SA_NODUMP      = 16_0010;   (* termination by this sig does not use a 
-                                 core file *)
-  SA_PARTDUMP    = 16_0020;   (* create a partial dump for this signal *)
-  SA_FULLDUMP    = 16_0040;   (* create a full dump (with data areas) *)
-  SA_SIGSETSTYLE = 16_0080;   (* new system V sigset type semantics *)
 
 TYPE
   struct_sigstack = RECORD 
