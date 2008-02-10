@@ -1,4 +1,4 @@
-/* $Id: Usignal.i3.c,v 1.9 2008-02-04 01:53:26 jkrell Exp $ */
+/* $Id: Usignal.i3.c,v 1.10 2008-02-10 04:19:14 jkrell Exp $ */
 
 #include <signal.h>
 #include <stdio.h>
@@ -26,7 +26,7 @@ int main()
 "(*      modified on Tue Feb 14 20:58:12 GMT 1995 by rrw1000@cam.ac.uk *)", 0,
 "(*      modified on Tue Mar  2 17:18:02 PST 1993 by muller            *)", 0,
 "", 0,
-"(* $Id: Usignal.i3.c,v 1.9 2008-02-04 01:53:26 jkrell Exp $ *)", 0,
+"(* $Id: Usignal.i3.c,v 1.10 2008-02-10 04:19:14 jkrell Exp $ *)", 0,
 "", 0,
 "(* This file was generated from " __FILE__ ". Do not edit it. *)", 0,
 "", 0,
@@ -155,20 +155,36 @@ int main()
 "", 0,
 " (* valid flags define for sa_flag field of sigaction structure  *)", 0,
 "CONST", 0,
-"  SA_NOCLDSTOP = %u;           (* Don't generate SIGCLD when children stop *)", SA_NOCLDSTOP,
-"  SA_STACK       = 16_%08x;", 0x08000000,
-"  SA_RESTART     = 16_%08x;", 0x10000000,
-"  SA_INTERRUPT   = 16_%08x;", 0x20000000,
-"  SA_NOMASK      = 16_%08x;", 0x40000000,
-"  SA_ONESHOT     = 16_%08x;", 0x80000000,
+"  SA_NOCLDSTOP   = 16_%08x; (* Don't generate SIGCLD when children stop *)", SA_NOCLDSTOP,
+#ifdef SA_STACK
+"  SA_STACK       = 16_%08x;", SA_STACK,
+#endif
+"  SA_RESTART     = 16_%08x;", SA_RESTART,
+#ifdef SA_INTERRUPT
+"  SA_INTERRUPT   = 16_%08x;", SA_INTERRUPT,
+#endif
+"  SA_NOMASK      = 16_%08x;", SA_NOMASK,
+"  SA_ONESHOT     = 16_%08x;", SA_ONESHOT,
 "", 0,
-"  SA_ONSTACK     = 16_%04x;   (* run on special signal stack *)", 1,
-"  SA_OLDSTYLE    = 16_%04x;   (* old \"unreliable\" UNIX semantics *)", 2,
-"  SA_NODUMP      = 16_%04x;   (* termination by this sig does not use a ", 0x10,
-"                                 core file *)", 0,
-"  SA_PARTDUMP    = 16_%04x;   (* create a partial dump for this signal *)", 0x20,
-"  SA_FULLDUMP    = 16_%04x;   (* create a full dump (with data areas) *)", 0x40,
-"  SA_SIGSETSTYLE = 16_%04x;   (* new system V sigset type semantics *)", 0x80,
+#ifdef SA_ONSTACK
+"  SA_ONSTACK     = 16_%04x; (* run on special signal stack *)", SA_ONSTACK,
+#endif
+#ifdef SA_OLDSTYLE
+"  SA_OLDSTYLE    = 16_%04x; (* old \"unreliable\" UNIX semantics *)", SA_OLDSTYLE,
+#endif
+#ifdef SA_NODUMP
+"  SA_NODUMP      = 16_%04x; (* termination by this sig does not use a ", SA_NODUMP,
+"                               core file *)", 0,
+#endif
+#ifdef SA_PARTDUMP
+"  SA_PARTDUMP    = 16_%04x; (* create a partial dump for this signal *)", SA_PARTDUMP,
+#endif
+#ifdef SA_FULLDUMP
+"  SA_FULLDUMP    = 16_%04x; (* create a full dump (with data areas) *)", SA_FULLDUMP,
+#endif
+#ifdef SA_SIGSETSTYLE
+"  SA_SIGSETSTYLE = 16_%04x; (* new system V sigset type semantics *)", SA_SIGSETSTYLE,
+#endif
 "", 0,
 "TYPE", 0,
 "  struct_sigstack = RECORD ", 0,

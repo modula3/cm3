@@ -1,4 +1,4 @@
-/* $Id: Upthread.i3.c,v 1.9 2008-02-04 01:53:26 jkrell Exp $ */
+/* $Id: Upthread.i3.c,v 1.10 2008-02-10 04:19:14 jkrell Exp $ */
 
 #include <pthread.h>
 #include <stdio.h>
@@ -18,7 +18,7 @@ int main()
 "(* All rights reserved.                                       *)", 0,
 "(* See the file COPYRIGHT for a full description.             *)", 0,
 "", 0,
-"(* $Id: Upthread.i3.c,v 1.9 2008-02-04 01:53:26 jkrell Exp $ *)", 0,
+"(* $Id: Upthread.i3.c,v 1.10 2008-02-10 04:19:14 jkrell Exp $ *)", 0,
 "", 0,
 "(* This file was generated from " __FILE__ ". Do not edit it. *)", 0,
 "", 0,
