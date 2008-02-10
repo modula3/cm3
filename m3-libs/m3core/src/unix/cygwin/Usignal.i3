@@ -19,70 +19,63 @@ IMPORT Uucontext;
 (*** <signal.h> ***)
 
 CONST
-  (* SIGHUP    =  1; *) (* hangup *)
-  SIGINT    =  2; (* interrupt *)
-  SIGQUIT   =  3; (* quit *)
-  (* SIGILL    =  4; *) (* illegal instruction (not reset when caught) *)
-  (* SIGTRAP   =  5; *) (* trace trap (not reset when caught) *)
-  SIGIOT    =  6; (* IOT instruction *)
-  (* Linux 1.1.73 doesn't have SIGEMT - rrw *)
-  (* SIGEMT    =  7; *) (* EMT instruction *)
-  (* SIGBUS    =  10; *) (* bus error *)
-  (* BUS_HWERR	  = 1; *) (* misc hardware error (e.g. timeout) *)
-  (* BUS_ALIGN	  = 2; *) (* hardware alignment error *)
-  (* SIGFPE    =  8; *) (* floating point exception *)
-  (* FPE_INTDIV_TRAP      = 20;    *) (* integer divide by zero *)
-  (* FPE_INTOVF_TRAP      = 21;    *) (* integer overflow *)
-  (* FPE_FLTOPERR_TRAP    =  1;   *) (* [floating operand error] *)
-  (* FPE_FLTDEN_TRAP      =  2;   *) (* [floating denormalized operand] *)
-  (* FPE_FLTDIV_TRAP      =  3;   *) (* [floating divide by zero] *)
-  (* FPE_FLTOVF_TRAP      =  4;   *) (* [floating overflow] *)
-  (* FPE_FLTUND_TRAP      =  5;   *) (* [floating underflow] *)
-  (* FPE_FLTINEX_TRAP     =  6;   *) (* [floating inexact result] *)
-  (* FPE_UUOP_TRAP        =  7;   *) (* [floating undefined opcode] *)
-  (* FPE_DATACH_TRAP      =  8;   *) (* [floating data chain exception] *)
-  (* FPE_FLTSTK_TRAP      = 16;    *) (* [floating stack fault] *)
-  (* FPE_FPA_ENABLE       = 17;    *) (* [FPA not enabled] *)
-  (* FPE_FPA_ERROR        = 18;    *) (* [FPA arithmetic exception] *)
-  SIGKILL   =  9; (* kill (cannot be caught or ignored) *)
-  (* SIGUSR1   =  10; *) (* User signal 1 (from SysV) *)
-  (* SIGSEGV   =  11; *) (* segmentation violation *)
-  (* SEGV_NOMAP  = 3; *) (* no mapping at the fault address *)
-  (* SEGV_PROT   = 4; *) (* access exceeded protections *)
-  (* SEGV_OBJERR = 5; *) (* object returned errno value *)
-  (* No SIGSYS in Linux 1.1.73 - rrw *)
-  (* SIGSYS    =  12; *) (* bad argument to system call *)
-  SIGUSR2   =  31; (* User signal 2 (from SysV) *)
-  (* SIGPIPE   =  13; *) (* write on a pipe with no one to read it *)
-  (* SIGALRM   =  14; *) (* alarm clock *)
-  SIGTERM   =  15; (* software termination signal from kill *)
-  (* SIGSTKFLT =  16; *) 
-  (* SIGCHLD   =  20; *) (* to parent on child stop or exit *)
-  (* SIGCONT   =  19; *) (* continue a stopped process *)
-  (* SIGSTOP   =  17; *) (* sendable stop signal not from tty *)
-  (* SIGTSTP   =  18; *) (* stop signal from tty *)
-  (* SIGTTIN   =  21; *) (* to readers pgrp upon background tty read *)
-  (* SIGTTOU   =  22; *) (* like TTIN for output if (tp->t_local&LTOSTOP) *)
-  (* SIGIO     =  23; *) (* input/output possible signal *)
-  (* SIGURG    =  SIGIO; *) (* urgent condition on IO channel *)
-  (* SIGPOLL   =  SIGIO; *) 
-  (* SIGXCPU   =  24; *) (* exceeded CPU time limit *)
-  (* SIGXFSZ   =  25; *) (* exceeded file size limit *)
-  SIGVTALRM =  26; (* virtual time alarm *)
-  (* SIGPROF   =  27; *) (* profiling time alarm *)
-  (* SIGWINCH  =  28; *) (* window size changes *)
-  (* SIGLOST is commented out of /usr/include/linux/signal.h in Linux 1.1.73 - rrw *)
-  (* SIGLOST   =  29; *) (* Sys-V rec lock: notify user upon server crash *)
-  (* Under Linux 1.1.73, signals 30 and 31 are :  - rrw *)
-  (* SIGPWR     = 30; *)
-  (* SIGUNUSED  = 31; *)
+  (* SIGHUP = 16_00000001; *) (* hangup *)
+  SIGINT = 16_00000002; (* interrupt *)
+  SIGQUIT = 16_00000003; (* quit *)
+  (* SIGILL = 16_00000004; *) (* illegal instruction (not reset when caught) *)
+  (* SIGTRAP = 16_00000005; *) (* trace trap (not reset when caught) *)
+  (* SIGEMT = 16_00000007; *) (* EMT instruction *)
+  (* SIGBUS = 16_0000000a; *) (* bus error *)
+  (* BUS_HWERR	 = 16_00000001; *) (* misc hardware error (e.g. timeout) *)
+  (* BUS_ALIGN	 = 16_00000002; *) (* hardware alignment error *)
+  (* SIGFPE = 16_00000008; *) (* floating point exception *)
+  (* FPE_INTDIV_TRAP = 16_00000014; *) (* integer divide by zero *)
+  (* FPE_INTOVF_TRAP = 16_00000015; *) (* integer overflow *)
+  (* FPE_FLTOPERR_TRAP = 16_00000001; *) (* [floating operand error] *)
+  (* FPE_FLTDEN_TRAP = 16_00000002; *) (* [floating denormalized operand] *)
+  (* FPE_FLTDIV_TRAP = 16_00000003; *) (* [floating divide by zero] *)
+  (* FPE_FLTOVF_TRAP = 16_00000004; *) (* [floating overflow] *)
+  (* FPE_FLTUND_TRAP = 16_00000005; *) (* [floating underflow] *)
+  (* FPE_FLTINEX_TRAP = 16_00000006; *) (* [floating inexact result] *)
+  (* FPE_UUOP_TRAP = 16_00000007; *) (* [floating undefined opcode] *)
+  (* FPE_DATACH_TRAP = 16_00000008; *) (* [floating data chain exception] *)
+  (* FPE_FLTSTK_TRAP = 16_00000010; *) (* [floating stack fault] *)
+  (* FPE_FPA_ENABLE = 16_00000011; *) (* [FPA not enabled] *)
+  (* FPE_FPA_ERROR = 16_00000012; *) (* [FPA arithmetic exception] *)
+  SIGKILL = 16_00000009; (* kill (cannot be caught or ignored) *)
+  (* SIGUSR1 = 16_0000000a; *) (* User signal 1 (from SysV) *)
+  (* SIGSEGV = 16_0000000b; *) (* segmentation violation *)
+  (* SEGV_NOMAP = 16_00000003; *) (* no mapping at the fault address *)
+  (* SEGV_PROT = 16_00000004; *) (* access exceeded protections *)
+  (* SEGV_OBJERR = 16_00000005; *) (* object returned errno value *)
+  (* SIGSYS = 16_0000000c; *) (* bad argument to system call *)
+  SIGUSR2 = 16_0000001f; (* User signal 2 (from SysV) *)
+  (* SIGPIPE = 16_0000000d; *) (* write on a pipe with no one to read it *)
+  (* SIGALRM = 16_0000000e; *) (* alarm clock *)
+  SIGTERM = 16_0000000f; (* software termination signal from kill *)
+  (* SIGSTKFLT = 16_00000010; *) 
+  (* SIGCHLD = 16_00000014; *) (* to parent on child stop or exit *)
+  (* SIGCONT = 16_00000013; *) (* continue a stopped process *)
+  (* SIGSTOP = 16_00000011; *) (* sendable stop signal not from tty *)
+  (* SIGTSTP = 16_00000012; *) (* stop signal from tty *)
+  (* SIGTTIN = 16_00000015; *) (* to readers pgrp upon background tty read *)
+  (* SIGTTOU = 16_00000016; *) (* like TTIN for output if (tp->t_local&LTOSTOP) *)
+  (* SIGIO = 16_00000017; *) (* input/output possible signal *)
+  (* SIGURG = SIGIO; *) (* urgent condition on IO channel *)
+  (* SIGPOLL = SIGIO; *) 
+  (* SIGXCPU = 16_00000018; *) (* exceeded CPU time limit *)
+  (* SIGXFSZ = 16_00000019; *) (* exceeded file size limit *)
+  SIGVTALRM = 16_0000001a; (* virtual time alarm *)
+  (* SIGPROF = 16_0000001b; *) (* profiling time alarm *)
+  (* SIGWINCH = 16_0000001c; *) (* window size changes *)
+  (* SIGLOST = 16_0000001d; *) (* Sys-V rec lock: notify user upon server crash *)
 
   (* System V definitions *)
-  (* SIGCLD    = SIGCHLD; *)
-  SIGABRT   = SIGIOT;
+  (* SIGCLD = SIGCHLD; *)
+  SIGABRT = SIGIOT;
 
 CONST
-  SIGSET_NWORDS = 1;
+  SIGSET_NWORDS = 16_00000001;
 
 (* Signal vector "template" used in sigaction call. *)
 TYPE
@@ -96,7 +89,7 @@ TYPE
   sigset_t_star = UNTRACED REF sigset_t;
 
   siginfo_t = RECORD
-    opaque:  ARRAY [0..37] OF int;
+    opaque:  ARRAY [0..16_00000025] OF int;
   END;
 
   siginfo_t_star = UNTRACED REF siginfo_t;
@@ -108,16 +101,16 @@ CONST
       OF INTEGER{0, ..}};
 
 CONST
-  (* SV_ONSTACK   = 16_0001 ;*)  (* take signal on signal stack *)
-  (* SV_INTERRUPT = 16_0002 ;*)  (* do not restart system on signal return *)
+  (* SV_ONSTACK = 16_00000001 ;*)  (* take signal on signal stack *)
+  (* SV_INTERRUPT = 16_00000002 ;*)  (* do not restart system on signal return *)
   (* SV_OLDSIG is not provided (explicitly, anyway) by glibc2 *)
-  (* SV_OLDSIG    = 16_1000 ;*)  (* Emulate old signal() for POSIX *)
-  (* SV_RESETHAND = 16_0004 ;*)  (* Reset handler to SIG_DFL on receipt *)
+  (* SV_OLDSIG = 16_00001000 ;*)  (* Emulate old signal() for POSIX *)
+  (* SV_RESETHAND = 16_00000004 ;*)  (* Reset handler to SIG_DFL on receipt *)
 
   (* Defines for sigprocmask() call. POSIX. *)
-  (* SIG_BLOCK    = 1 ;*)    (* Add these signals to block mask *)
-  (* SIG_UNBLOCK  = 2 ;*)    (* Remove these signals from block mask *)
-  (* SIG_SETMASK  = 0 ;*)    (* Set block mask to this mask *)
+  (* SIG_BLOCK = 16_00000001 ;*) (* Add these signals to block mask *)
+  (* SIG_UNBLOCK = 16_00000002 ;*) (* Remove these signals from block mask *)
+  (* SIG_SETMASK = 16_00000000 ;*) (* Set block mask to this mask *)
 
 TYPE
   SignalActionHandler = PROCEDURE (sig: int;
@@ -136,10 +129,10 @@ TYPE
 
  (* valid flags define for sa_flag field of sigaction structure  *)
 CONST
-  SA_NOCLDSTOP   = 16_00000001; (* Don't generate SIGCLD when children stop *)
-  SA_RESTART     = 16_10000000;
-  SA_NOMASK      = 16_40000000;
-  SA_ONESHOT     = 16_80000000;
+  SA_NOCLDSTOP = 16_00000001; (* Don't generate SIGCLD when children stop *)
+  SA_RESTART = 16_10000000;
+  SA_NOMASK = 16_40000000;
+  SA_ONESHOT = 16_80000000;
 
 
 TYPE
@@ -287,6 +280,6 @@ PROCEDURE SigDelSet(set : sigset_t; sig : INTEGER) : sigset_t;
 (* Bits in `sa_flags'.  *)
 CONST
   SA_SIGINFO = 16_00000002; (* Invoke signal-catching function with
-                               three arguments instead of one.  *)
+                               three arguments instead of one. *)
 
 END Usignal.
