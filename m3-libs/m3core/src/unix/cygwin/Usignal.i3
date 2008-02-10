@@ -13,7 +13,7 @@
 
 INTERFACE Usignal;
 
-FROM Ctypes IMPORT int, unsigned_int, unsigned_short_int, unsigned_long_int;
+FROM Ctypes IMPORT int, unsigned_int, unsigned_short, unsigned_long;
 IMPORT Uucontext;
 
 (*** <signal.h> ***)
@@ -74,18 +74,13 @@ CONST
   (* SIGCLD = SIGCHLD; *)
   SIGABRT = 16_00000006;
 
-CONST
-  SIGSET_NWORDS = 16_00000001;
-
 (* Signal vector "template" used in sigaction call. *)
 TYPE
   SignalHandler = PROCEDURE (sig: int;
                              scp: struct_sigcontext;
                              code: int);
 
-  sigset_t = RECORD
-    val : ARRAY [0 .. SIGSET_NWORDS - 1] OF INTEGER;
-  END;
+  sigset_t = unsigned_long;
   sigset_t_star = UNTRACED REF sigset_t;
 
   siginfo_t = RECORD
@@ -95,12 +90,10 @@ TYPE
   siginfo_t_star = UNTRACED REF siginfo_t;
 
 CONST
-  empty_sigset_t : sigset_t = sigset_t{ARRAY [0..SIGSET_NWORDS - 1] 
-      OF INTEGER{0, ..}};
-  empty_sv_mask  : sigset_t = sigset_t{ARRAY [0..SIGSET_NWORDS - 1] 
-      OF INTEGER{0, ..}};
+  empty_sigset_t : sigset_t = 0;
+  empty_sv_mask : sigset_t = 0;
 
-CONST
+(* CONST *)
   (* SV_ONSTACK = 16_00000001 ;*)  (* take signal on signal stack *)
   (* SV_INTERRUPT = 16_00000002 ;*)  (* do not restart system on signal return *)
   (* SV_OLDSIG is not provided (explicitly, anyway) by glibc2 *)
@@ -116,13 +109,11 @@ TYPE
   SignalActionHandler = PROCEDURE (sig: int;
                                    sip: siginfo_t_star;
                                    uap: Uucontext.ucontext_t_star);
-  SignalRestoreHandler = PROCEDURE ();
 
   struct_sigaction = RECORD
     sa_sigaction: SignalActionHandler;  (* signal handler *)
     sa_mask     : sigset_t;             (* signals to block while in handler *)
     sa_flags    : int;                  (* signal action flags *)
-    sa_restorer : SignalRestoreHandler; (* restores interrupted state *)
   END;
 
   struct_sigaction_star = UNTRACED REF struct_sigaction;
@@ -157,45 +148,45 @@ TYPE
   (* There seems to be no simple corresponding structure under Linux - 
       use the structure in Csetjmp.i3 instead *)
   struct_sigcontext = RECORD
-      gs, gsh: unsigned_short_int;
-      fs, fsh: unsigned_short_int;
-      es, esh: unsigned_short_int;
-      ds, dsh: unsigned_short_int;
-      edi: unsigned_long_int;
-      esi: unsigned_long_int;
-      ebp: unsigned_long_int;
-      esp: unsigned_long_int;
-      ebx: unsigned_long_int;
-      edx: unsigned_long_int;
-      ecx: unsigned_long_int;
-      eax: unsigned_long_int;
-      trapno: unsigned_long_int;
-      err: unsigned_long_int;
-      eip: unsigned_long_int;
-      cs, csh: unsigned_short_int;
-      eflags: unsigned_long_int;
-      esp_at_signal: unsigned_long_int;
-      ss, ssh: unsigned_short_int;
-      i387: unsigned_long_int; (* Actually a struct _fpstate * *)
-      oldmask: unsigned_long_int;
-      cr2: unsigned_long_int;
+      gs, gsh: unsigned_short;
+      fs, fsh: unsigned_short;
+      es, esh: unsigned_short;
+      ds, dsh: unsigned_short;
+      edi: unsigned_long;
+      esi: unsigned_long;
+      ebp: unsigned_long;
+      esp: unsigned_long;
+      ebx: unsigned_long;
+      edx: unsigned_long;
+      ecx: unsigned_long;
+      eax: unsigned_long;
+      trapno: unsigned_long;
+      err: unsigned_long;
+      eip: unsigned_long;
+      cs, csh: unsigned_short;
+      eflags: unsigned_long;
+      esp_at_signal: unsigned_long;
+      ss, ssh: unsigned_short;
+      i387: unsigned_long; (* Actually a struct _fpstate * *)
+      oldmask: unsigned_long;
+      cr2: unsigned_long;
     END;
   
  struct_fpreg = RECORD
-   significand : ARRAY [0..3] OF unsigned_short_int;
-   exponent : unsigned_short_int;
+   significand : ARRAY [0..3] OF unsigned_short;
+   exponent : unsigned_short;
  END;
 
  struct_fpstate = RECORD
-   cw : unsigned_long_int;
-   sw : unsigned_long_int;
-   tag : unsigned_long_int;
-   ipoff : unsigned_long_int;
-   cssel : unsigned_long_int;
-   dataoff: unsigned_long_int;
-   datasel : unsigned_long_int;
+   cw : unsigned_long;
+   sw : unsigned_long;
+   tag : unsigned_long;
+   ipoff : unsigned_long;
+   cssel : unsigned_long;
+   dataoff: unsigned_long;
+   datasel : unsigned_long;
    st : ARRAY [0..7] OF struct_fpreg;
-   status : unsigned_long_int;
+   status : unsigned_long;
  END;  
 
 
