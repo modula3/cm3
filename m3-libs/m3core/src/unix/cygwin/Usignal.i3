@@ -72,7 +72,6 @@ CONST
 
   (* System V definitions *)
   (* SIGCLD = SIGCHLD; *)
-  SIGABRT = SIGIOT;
 
 CONST
   SIGSET_NWORDS = 16_00000001;
