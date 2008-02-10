@@ -7,7 +7,7 @@
 (*      modified on Tue Feb 14 20:58:12 GMT 1995 by rrw1000@cam.ac.uk *)
 (*      modified on Tue Mar  2 17:18:02 PST 1993 by muller            *)
 
-(* $Id: Usignal.i3,v 1.11 2008-02-10 04:19:14 jkrell Exp $ *)
+(* $Id: Usignal.i3,v 1.12 2008-02-10 04:25:01 jkrell Exp $ *)
 
 (* This file was generated from Usignal.i3.c. Do not edit it. *)
 
@@ -286,7 +286,7 @@ PROCEDURE SigDelSet(set : sigset_t; sig : INTEGER) : sigset_t;
 
 (* Bits in `sa_flags'.  *)
 CONST
-  SA_SIGINFO   =  4;	      (* Invoke signal-catching function with
-				 three arguments instead of one.  *)
+  SA_SIGINFO = 16_00000002; (* Invoke signal-catching function with
+                               three arguments instead of one.  *)
 
 END Usignal.
