@@ -89,8 +89,8 @@ int main()
 "", 0,
 "  (* System V definitions *)", 0,
 "  (* SIGCLD = SIGCHLD; *)", 0,
-#ifdef SIGIOT
-"  SIGABRT = SIGIOT;", 0,
+#ifdef SIGABRT
+"  SIGABRT = 16_%08x;", SIGABRT,
 #endif
 "", 0,
 "CONST", 0,
