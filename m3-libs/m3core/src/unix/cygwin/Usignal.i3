@@ -286,7 +286,7 @@ PROCEDURE SigDelSet(set : sigset_t; sig : INTEGER) : sigset_t;
 
 (* Bits in `sa_flags'.  *)
 CONST
-  SA_SIGINFO   =  4;	      (* Invoke signal-catching function with
-				 three arguments instead of one.  *)
+  SA_SIGINFO = 16_00000002; (* Invoke signal-catching function with
+                               three arguments instead of one.  *)
 
 END Usignal.

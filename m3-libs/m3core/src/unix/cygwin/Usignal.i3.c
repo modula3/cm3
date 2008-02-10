@@ -330,8 +330,8 @@ int main()
 "", 0,
 "(* Bits in `sa_flags'.  *)", 0,
 "CONST", 0,
-"  SA_SIGINFO   =  %u;	      (* Invoke signal-catching function with", 4,
-"				 three arguments instead of one.  *)", 0,
+"  SA_SIGINFO = 16_%08x; (* Invoke signal-catching function with", SA_SIGINFO,
+"                               three arguments instead of one. *)", 0,
 "", 0,
 "END Usignal.", 0,
 };
