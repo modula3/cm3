@@ -89,9 +89,7 @@ int main()
 "", 0,
 "  (* System V definitions *)", 0,
 "  (* SIGCLD = SIGCHLD; *)", 0,
-#ifdef SIGABRT
 "  SIGABRT = 16_%08x;", SIGABRT,
-#endif
 "", 0,
 "CONST", 0,
 "  SIGSET_NWORDS = 16_%08x;", sizeof(sigset_t) / sizeof(int),
