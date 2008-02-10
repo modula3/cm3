@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.10 2008-02-04 01:10:41 jkrell Exp $
+# $Id: upgrade.py,v 1.11 2008-02-10 23:19:15 jkrell Exp $
 
 import sys
 import pylib
@@ -32,6 +32,7 @@ DoPackage(
     "m3back",
     "m3staloneback",
     "m3front",
+    "sysutils",
     "m3quake",
     "cm3",
     "mklib",
@@ -47,13 +48,13 @@ DoPackage(
     argv_BuildShip,
     [
     "import-libs",
-    "sysutils",
     "m3middle",
     "m3objfile",
     "m3linker",
     "m3back",
     "m3staloneback",
     "m3front",
+    "sysutils",
     "m3quake",
     "cm3",
     # only Win32 can build mklib in the first pass, since preexisting
