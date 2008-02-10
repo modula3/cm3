@@ -18,5 +18,5 @@ BEGIN
   SIG_ERR  := LOOPHOLE (-1, SignalActionHandler);
   SIG_DFL  := LOOPHOLE ( 0, SignalActionHandler);
   SIG_IGN  := LOOPHOLE ( 1, SignalActionHandler);
-  SIG_HOLD := LOOPHOLE ( 3, SignalActionHandler);
+  SIG_HOLD := LOOPHOLE ( 2, SignalActionHandler);
 END Usignal.
