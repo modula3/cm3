@@ -7,7 +7,7 @@
 (*      modified on Tue Feb 14 20:58:12 GMT 1995 by rrw1000@cam.ac.uk *)
 (*      modified on Tue Mar  2 17:18:02 PST 1993 by muller            *)
 
-(* $Id: Usignal.i3,v 1.13 2008-02-10 04:33:13 jkrell Exp $ *)
+(* $Id: Usignal.i3,v 1.14 2008-02-10 04:34:25 jkrell Exp $ *)
 
 (* This file was generated from Usignal.i3.c. Do not edit it. *)
 
@@ -72,7 +72,6 @@ CONST
 
   (* System V definitions *)
   (* SIGCLD = SIGCHLD; *)
-  SIGABRT = SIGIOT;
 
 CONST
   SIGSET_NWORDS = 16_00000001;

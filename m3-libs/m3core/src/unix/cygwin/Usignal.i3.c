@@ -1,4 +1,4 @@
-/* $Id: Usignal.i3.c,v 1.12 2008-02-10 04:33:13 jkrell Exp $ */
+/* $Id: Usignal.i3.c,v 1.13 2008-02-10 04:34:25 jkrell Exp $ */
 
 #include <signal.h>
 #include <stdio.h>
@@ -21,7 +21,7 @@ int main()
 "(*      modified on Tue Feb 14 20:58:12 GMT 1995 by rrw1000@cam.ac.uk *)", 0,
 "(*      modified on Tue Mar  2 17:18:02 PST 1993 by muller            *)", 0,
 "", 0,
-"(* $Id: Usignal.i3.c,v 1.12 2008-02-10 04:33:13 jkrell Exp $ *)", 0,
+"(* $Id: Usignal.i3.c,v 1.13 2008-02-10 04:34:25 jkrell Exp $ *)", 0,
 "", 0,
 "(* This file was generated from " __FILE__ ". Do not edit it. *)", 0,
 "", 0,
@@ -89,7 +89,9 @@ int main()
 "", 0,
 "  (* System V definitions *)", 0,
 "  (* SIGCLD = SIGCHLD; *)", 0,
+#ifdef SIGIOT
 "  SIGABRT = SIGIOT;", 0,
+#endif
 "", 0,
 "CONST", 0,
 "  SIGSET_NWORDS = 16_%08x;", sizeof(sigset_t) / sizeof(int),
