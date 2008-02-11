@@ -12,17 +12,17 @@ FROM Ctypes IMPORT int;
 
 PROCEDURE major (x: dev_t): int =
   BEGIN 
-    RETURN Word.And (Word.Shift (x[0], -8), 8_0377);
+    RETURN Word.And (Word.Shift (x, -8), 8_0377);
   END major;
 
 PROCEDURE minor (x: dev_t): int =
   BEGIN 
-    RETURN Word.And (x[0], 8_0377);
+    RETURN Word.And (x, 8_0377);
   END minor;
 
 PROCEDURE makedev (x, y: int): dev_t =
   BEGIN 
-    RETURN dev_t{Word.Or (Word.Shift (x, 8), y),0};
+    RETURN Word.Or (Word.Shift (x, 8), y);
   END makedev;
 
 PROCEDURE howmany (x, y: int): int =

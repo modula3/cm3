@@ -6,7 +6,7 @@
 (*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)
 (*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)
 
-(* $Id: Utypes.i3,v 1.8 2008-02-11 00:51:23 jkrell Exp $ *)
+(* $Id: Utypes.i3,v 1.9 2008-02-11 05:38:24 jkrell Exp $ *)
 
 (* This file was generated from Utypes.i3.cpp. Do not edit it. *)
 
@@ -14,7 +14,7 @@ INTERFACE Utypes;
 
 FROM Ctypes IMPORT 
 	long, unsigned_long, int, unsigned_int, unsigned_short,
-        unsigned_char;
+        unsigned_char, long_long, unsigned_long_long;
 
 (*** <sys/types.h> ***)
 
@@ -32,46 +32,29 @@ PROCEDURE minor (x: dev_t): int;
 PROCEDURE makedev (x, y: int): dev_t;
 
 TYPE
-  long_long_uint      = ARRAY [0..1] OF uint;
-
   u_char  = unsigned_char;
   u_short = unsigned_short;
   u_int   = unsigned_int;
-  uint    = unsigned_int;               (* sys V compatibility *)
+  uint    = unsigned_int; (* sys V compatibility *)
   u_long  = unsigned_long;
-  ushort  = unsigned_short;             (* sys III compat *)
+  ushort  = unsigned_short; (* sys III compat *)
 
-(* #ifdef vax
-  struct__physadr = RECORD r: ARRAY [0..0] OF int; END;
-  physadr         = UNTRACED REF struct__physadr;
-
-  struct_label_t = RECORD val: ARRAY [0..13] OF int; END;
-  label_t        = struct_label_t;
-#endif*)
-
-  struct__quad = RECORD val: ARRAY [0..1] OF long; END;
-  quad         = struct__quad;
+  quad         = long_long;
   daddr_t      = long; 
   caddr_t      = ADDRESS;
-  ino_t        = long_long_uint;
- (*
-  gno_t        = ;
-  cnt_t        = ; (* sys V compatibility *)
-  swblk_t      = ;
- *)
-  size_t       = uint;
+  ino_t        = unsigned_long_long;
+
+  size_t       = u_int;
   time_t       = long;
   dev_t        = u_long;
-  off_t        = long_long_uint;
- (*
-  paddr_t      = ; (* sys V compatibility *)
- *)
-  key_t        = long_long_uint; (* sys V compatibility *)
+  off_t        = long_long;
+
+  key_t        = long_long; (* sys V compatibility *)
   clock_t      = u_long; (* POSIX compliance *)
-  mode_t       = uint; (* POSIX compliance *)
+  mode_t       = u_int; (* POSIX compliance *)
   nlink_t      = u_short; (* POSIX compliance *)
   uid_t        = u_long; (* POSIX compliance *)
-  pid_t        = int;  (* POSIX compliance *)
+  pid_t        = int; (* POSIX compliance *)
   gid_t        = u_long; (* POSIX compliance *)
 
 CONST
