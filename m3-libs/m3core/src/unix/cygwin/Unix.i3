@@ -7,7 +7,7 @@
 (*      modified on Tue Jun  8 16:26:41 PDT 1993 by mcjones           *)
 (*      modified on Mon Jan 11 14:34:49 PST 1993 by muller            *)
 
-(* $Id: Unix.i3,v 1.3 2008-02-11 11:29:22 jkrell Exp $ *)
+(* $Id: Unix.i3,v 1.4 2008-02-11 11:38:03 jkrell Exp $ *)
 
 INTERFACE Unix;
 
@@ -343,7 +343,7 @@ TYPE
 
 <*EXTERNAL*> PROCEDURE truncate (path: char_star; length: off_t): int;
 
-<*EXTERNAL*> PROCEDURE ftruncate (fd, length: off_t): int;
+<*EXTERNAL*> PROCEDURE ftruncate (fd: int; length: off_t): int;
 
 (*** unlink - remove directory entry ***)
 
