@@ -1,9 +1,33 @@
-/* $Id: Utypes.i3.c,v 1.2 2008-02-11 00:24:13 jkrell Exp $ */
+/* $Id: Utypes.i3.cpp,v 1.1 2008-02-11 00:28:44 jkrell Exp $ */
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 
-#define SIZE(a) (((sizeof(a) + sizeof(int) - 1)) / sizeof(int))
+static void AssertTypes()
+{
+    dev_t * a = 0;
+    unsigned long * b = 0;
+
+    b = a;
+    a = b;
+}
+
+const char* PickType(unsigned size)
+{
+    switch (size)
+    {
+    case 1:
+        return "u_char";
+    case 2:
+        return "u_short";
+    case 4:
+        return "u_int";
+    default:
+        printf("unknown size %u\n", size);
+        exit(1);
+    }
+}
 
 int main()
 {
@@ -22,7 +46,7 @@ int main()
 "(*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)", 0,
 "(*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)", 0,
 "", 0,
-"(* $Id: Utypes.i3.c,v 1.2 2008-02-11 00:24:13 jkrell Exp $ *)", 0,
+"(* $Id: Utypes.i3.cpp,v 1.1 2008-02-11 00:28:44 jkrell Exp $ *)", 0,
 "", 0,
 "(* This file was generated from " __FILE__ ". Do not edit it. *)", 0,
 "", 0,
@@ -75,7 +99,7 @@ int main()
 "  swblk_t      = long;", 0,
 "  size_t       = u_int;", 0,
 "  time_t       = long;", 0,
-"  dev_t        = long_long_uint;", 0,
+"  dev_t        = u_long;", 0,
 "  off_t        = long;", 0,
 "  paddr_t      = long;                (* sys V compatibility *)", 0,
 "  key_t        = long;                (* sys V compatibility *)", 0,
