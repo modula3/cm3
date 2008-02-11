@@ -9,8 +9,6 @@
 (*      modified on Fri Feb 18 10:45:30 PST 1994 by mcjones *)
 (*      modified on Fri May  7 22:56:07 PDT 1993 by mjordan *)
 
-(*** STORAGE LEAK:  FS.Status():  FindFirstFile() must be followed by FindClose(). ****)
-
 UNSAFE MODULE FSWin32 EXPORTS FS;
 
 IMPORT Ctypes, File, FileWin32, M3toC, OSError, OSErrorWin32, OSWin32,
