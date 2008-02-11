@@ -1,4 +1,4 @@
-/* $Id: Utypes.i3.cpp,v 1.2 2008-02-11 00:46:24 jkrell Exp $ */
+/* $Id: Utypes.i3.cpp,v 1.3 2008-02-11 00:50:18 jkrell Exp $ */
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -35,7 +35,7 @@ int main()
 "(*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)", 0,
 "(*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)", 0,
 "", 0,
-"(* $Id: Utypes.i3.cpp,v 1.2 2008-02-11 00:46:24 jkrell Exp $ *)", 0,
+"(* $Id: Utypes.i3.cpp,v 1.3 2008-02-11 00:50:18 jkrell Exp $ *)", 0,
 "", 0,
 "(* This file was generated from " __FILE__ ". Do not edit it. *)", 0,
 "", 0,
@@ -83,18 +83,18 @@ int main()
 "  daddr_t      = %s; ", PickType(daddr_t()),
 "  caddr_t      = ADDRESS;", 0,
 "  ino_t        = %s;", PickType(ino_t()),
-#if 0
-"  gno_t        = %s;", PickType(gno_t()),
-"  cnt_t        = %s; (* sys V compatibility *)", PickType(cnt_t()),
-"  swblk_t      = %s;", PickType(swblk_t()),
-#endif
+" (*", 0,
+"  gno_t        = %s;", "",
+"  cnt_t        = %s; (* sys V compatibility *)", "",
+"  swblk_t      = %s;", "",
+" *)", 0,
 "  size_t       = %s;", PickType(size_t()),
 "  time_t       = %s;", PickType(time_t()),
 "  dev_t        = %s;", PickType(dev_t()),
 "  off_t        = %s;", PickType(off_t()),
-#if 0
-"  paddr_t      = %s; (* sys V compatibility *)", PickType(paddr_t()),
-#endif
+" (*", 0,
+"  paddr_t      = %s; (* sys V compatibility *)", "",
+" *)", 0,
 "  key_t        = %s; (* sys V compatibility *)", PickType(key_t()),
 "  clock_t      = %s; (* POSIX compliance *)", PickType(clock_t()),
 "  mode_t       = %s; (* POSIX compliance *)", PickType(mode_t()),

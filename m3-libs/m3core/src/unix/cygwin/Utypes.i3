@@ -6,7 +6,7 @@
 (*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)
 (*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)
 
-(* $Id: Utypes.i3,v 1.6 2008-02-11 00:46:24 jkrell Exp $ *)
+(* $Id: Utypes.i3,v 1.7 2008-02-11 00:50:18 jkrell Exp $ *)
 
 (* This file was generated from Utypes.i3.cpp. Do not edit it. *)
 
@@ -54,10 +54,18 @@ TYPE
   daddr_t      = long; 
   caddr_t      = ADDRESS;
   ino_t        = long_long_uint;
+ (*
+  gno_t        = ;
+  cnt_t        = ; (* sys V compatibility *)
+  swblk_t      = ;
+ *)
   size_t       = uint;
   time_t       = long;
   dev_t        = u_long;
   off_t        = long_long_uint;
+ (*
+  paddr_t      = ; (* sys V compatibility *)
+ *)
   key_t        = long_long_uint; (* sys V compatibility *)
   clock_t      = u_long; (* POSIX compliance *)
   mode_t       = uint; (* POSIX compliance *)
