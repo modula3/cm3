@@ -21,6 +21,7 @@ PROCEDURE Now(): T=
     RETURN TimeWin32.FromFileTime(fileTime);
   END Now;
 
+VAR t0, t1: T;
 BEGIN
   (* Determine value of "Grain" experimentally.  Note that
      this will fail if this thread is descheduled for a tick during the
@@ -30,11 +31,7 @@ BEGIN
      From WindowsNT 3.1 (final) release running on DEC 466ST (486 based)
      SCG - 22 Sep. 93 - Turns out the problem was in Now() - try again
   *)
-  WITH t0 = Now() DO
-    REPEAT
-        WITH t1 = Now() DO
-          Grain := t1 - t0;
-        END;
-    UNTIL Grain # 0.0d0;
-  END;
+  t0 := Now();
+  REPEAT t1 := Now() UNTIL t1 # t0;
+  Grain := t1-t0
 END Time.
