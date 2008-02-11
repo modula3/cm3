@@ -11,7 +11,7 @@ FROM SQLtypes IMPORT
   SFLOAT, SWORD, SQLCHAR_star;
 
 FROM DB IMPORT
-	Results, ResultDesc, DescList, ColumnDesc, Nullable, DataType, RefString, 
+	Results, ResultDesc, DescList, Nullable, DataType, RefString, 
 	RefBigInt, RefDate, RefTime, RefTimestamp, ErrorDesc, Error;
 
 
@@ -66,7 +66,7 @@ TYPE
 PROCEDURE Connect (
 	<*UNUSED*>this: Interface; 
 	database, user_id, password: TEXT; 
-	server: TEXT := NIL
+	<*UNUSED*>server: TEXT := NIL
 ): DB.T  RAISES {Error} =
   VAR
     t    := NEW (T);
