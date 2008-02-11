@@ -158,7 +158,13 @@ SYSTEM_LIBS_GNU =
 %       LibIn("kernel32"),
     ],
     "ODBC" : [LibIn("odbc32")], %  -lodbccp32 ?
-    "OPENGL" : [LibIn("glu32"), LibIn("opengl32")], % -lglut32 ?
+    % for MS Windows
+    % "OPENGL" : [LibIn("glu32"), LibIn("opengl32")], % -lglut32 ?
+    % for X Windows
+    "OPENGL" : [ LibPath & "/usr/X11R6/lib",
+                 LibIn("GLU"),
+                 LibIn("GL"),
+                 LibIn("Xext") ],
     "TCP" : [ ],
 
     "MOTIF" : [ LibPath & "/usr/X11R6/lib",
