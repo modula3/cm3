@@ -21,7 +21,7 @@ Module    ("Unetdb")
 Interface ("Unix")
 Interface ("Uprocess")
 Interface ("Upthread") % not used
-Interface ("Upwd")`
+Interface ("Upwd")
 Interface ("Uresource")
 Interface ("Usched") % not used
 Module    ("Usem") % not used
