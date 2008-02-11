@@ -6,6 +6,10 @@
 (*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)
 (*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)
 
+(* $Id$ *)
+
+(* This file was generated from Utypes.i3.c. Do not edit it. *)
+
 INTERFACE Utypes;
 
 FROM Ctypes IMPORT 
