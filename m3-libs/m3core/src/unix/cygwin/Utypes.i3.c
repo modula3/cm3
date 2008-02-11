@@ -1,104 +1,132 @@
-(* Copyright (C) 1990, Digital Equipment Corporation.         *)
-(* All rights reserved.                                       *)
-(* See the file COPYRIGHT for a full description.             *)
-(*                                                            *)
-(* Last modified on Fri Apr 29 15:38:49 PDT 1994 by kalsow    *)
-(*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)
-(*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)
+/* $Id: Utypes.i3.c,v 1.2 2008-02-11 00:24:13 jkrell Exp $ */
 
-INTERFACE Utypes;
+#include <sys/types.h>
+#include <stdio.h>
 
-FROM Ctypes IMPORT 
-	long, unsigned_long, int, unsigned_int, short, unsigned_short,
-        unsigned_char;
+#define SIZE(a) (((sizeof(a) + sizeof(int) - 1)) / sizeof(int))
 
-(*** <sys/types.h> ***)
-
-(*
- * Basic system types and major/minor device constructing/busting macros.
- *)
-
-(* major part of a device *)
-PROCEDURE major (x: dev_t): int;
-
-(* minor part of a device *)
-PROCEDURE minor (x: dev_t): int;
-
-(* make a device number *)
-PROCEDURE makedev (x, y: int): dev_t;
-
-TYPE
-  long_long_uint      = ARRAY [0..1] OF uint;
-
-  u_char  = unsigned_char;
-  u_short = unsigned_short;
-  u_int   = unsigned_int;
-  uint    = unsigned_int;               (* sys V compatibility *)
-  u_long  = unsigned_long;
-  ushort  = unsigned_short;             (* sys III compat *)
-
-(* #ifdef vax *)
-  struct__physadr = RECORD r: ARRAY [0..0] OF int; END;
-  physadr         = UNTRACED REF struct__physadr;
-
-  struct_label_t = RECORD val: ARRAY [0..13] OF int; END;
-  label_t        = struct_label_t;
-(*#endif*)
-
-  struct__quad = RECORD val: ARRAY [0..1] OF long; END;
-  quad         = struct__quad;
-  daddr_t      = int; 
-  caddr_t      = ADDRESS;
-  ino_t        = u_long;
-  gno_t        = u_long;
-  cnt_t        = short;               (* sys V compatibility *)
-  swblk_t      = long;
-  size_t       = u_int;
-  time_t       = long;
-  dev_t        = long_long_uint;
-  off_t        = long;
-  paddr_t      = long;                (* sys V compatibility *)
-  key_t        = long;                (* sys V compatibility *)
-  clock_t      = long;                (* POSIX compliance    *)
-  mode_t       = uint;                (* POSIX compliance    *)
-  nlink_t      = uint;                (* POSIX compliance    *)
-  uid_t        = uint;                (* POSIX compliance    *)
-  pid_t        = int;                 (* POSIX compliance    *)
-  gid_t        = uint;                (* POSIX compliance    *)
-
-CONST
-  NBBY = 8;                           (* number of bits in a byte *)
-
-  (*
-   * Select uses bit masks of file descriptors in longs.
-   * These macros manipulate such bit fields (the filesystem macros use chars).
-   * FD_SETSIZE may be defined by the user, but the default here
-   * should be >= NOFILE (param.h).
-   *)
-  FD_SETSIZE = 64;
-
-  (* How many things we'll allow select to use. 0 if unlimited *)
-  MAXSELFD = 256;
-
-TYPE
-  fd_mask        = long;
- 
-CONST
-  NFDBITS = BYTESIZE (fd_mask) * NBBY;      (* bits per mask (power of 2!)*)
-  NFDSHIFT = 5;                             (* Shift based on above *)
-
-PROCEDURE howmany (x, y: int): int;
-
-TYPE
-  struct_fd_set = RECORD
-       fds_bits: ARRAY [0 .. 
-                        (FD_SETSIZE + NFDBITS - 1) DIV NFDBITS -1] OF fd_mask;
-    END;
-  fd_set = struct_fd_set;
-
-PROCEDURE FD_SET   (n: int; p: UNTRACED REF fd_set): int;
-PROCEDURE FD_CLEAR (n: int; p: UNTRACED REF fd_set): int;
-PROCEDURE FD_ISSET (n: int; p: UNTRACED REF fd_set): int;
-PROCEDURE FD_ZERO  (p: UNTRACED REF fd_set);
-
-END Utypes.
+int main()
+{
+    unsigned i;
+    const static struct
+    {
+        const char* Format;
+        unsigned Value;
+    } Data[] =
+{
+"(* Copyright (C) 1990, Digital Equipment Corporation.         *)", 0,
+"(* All rights reserved.                                       *)", 0,
+"(* See the file COPYRIGHT for a full description.             *)", 0,
+"(*                                                            *)", 0,
+"(* Last modified on Fri Apr 29 15:38:49 PDT 1994 by kalsow    *)", 0,
+"(*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)", 0,
+"(*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)", 0,
+"", 0,
+"(* $Id: Utypes.i3.c,v 1.2 2008-02-11 00:24:13 jkrell Exp $ *)", 0,
+"", 0,
+"(* This file was generated from " __FILE__ ". Do not edit it. *)", 0,
+"", 0,
+"INTERFACE Utypes;", 0,
+"", 0,
+"FROM Ctypes IMPORT ", 0,
+"	long, unsigned_long, int, unsigned_int, short, unsigned_short,", 0,
+"        unsigned_char;", 0,
+"", 0,
+"(*** <sys/types.h> ***)", 0,
+"", 0,
+"(*", 0,
+" * Basic system types and major/minor device constructing/busting macros.", 0,
+" *)", 0,
+"", 0,
+"(* major part of a device *)", 0,
+"PROCEDURE major (x: dev_t): int;", 0,
+"", 0,
+"(* minor part of a device *)", 0,
+"PROCEDURE minor (x: dev_t): int;", 0,
+"", 0,
+"(* make a device number *)", 0,
+"PROCEDURE makedev (x, y: int): dev_t;", 0,
+"", 0,
+"TYPE", 0,
+"  long_long_uint      = ARRAY [0..1] OF uint;", 0,
+"", 0,
+"  u_char  = unsigned_char;", 0,
+"  u_short = unsigned_short;", 0,
+"  u_int   = unsigned_int;", 0,
+"  uint    = unsigned_int;               (* sys V compatibility *)", 0,
+"  u_long  = unsigned_long;", 0,
+"  ushort  = unsigned_short;             (* sys III compat *)", 0,
+"", 0,
+"(* #ifdef vax *)", 0,
+"  struct__physadr = RECORD r: ARRAY [0..0] OF int; END;", 0,
+"  physadr         = UNTRACED REF struct__physadr;", 0,
+"", 0,
+"  struct_label_t = RECORD val: ARRAY [0..13] OF int; END;", 0,
+"  label_t        = struct_label_t;", 0,
+"(*#endif*)", 0,
+"", 0,
+"  struct__quad = RECORD val: ARRAY [0..1] OF long; END;", 0,
+"  quad         = struct__quad;", 0,
+"  daddr_t      = int; ", 0,
+"  caddr_t      = ADDRESS;", 0,
+"  ino_t        = u_long;", 0,
+"  gno_t        = u_long;", 0,
+"  cnt_t        = short;               (* sys V compatibility *)", 0,
+"  swblk_t      = long;", 0,
+"  size_t       = u_int;", 0,
+"  time_t       = long;", 0,
+"  dev_t        = long_long_uint;", 0,
+"  off_t        = long;", 0,
+"  paddr_t      = long;                (* sys V compatibility *)", 0,
+"  key_t        = long;                (* sys V compatibility *)", 0,
+"  clock_t      = long;                (* POSIX compliance    *)", 0,
+"  mode_t       = uint;                (* POSIX compliance    *)", 0,
+"  nlink_t      = uint;                (* POSIX compliance    *)", 0,
+"  uid_t        = uint;                (* POSIX compliance    *)", 0,
+"  pid_t        = int;                 (* POSIX compliance    *)", 0,
+"  gid_t        = uint;                (* POSIX compliance    *)", 0,
+"", 0,
+"CONST", 0,
+"  NBBY = 8;                           (* number of bits in a byte *)", 0,
+"", 0,
+"  (*", 0,
+"   * Select uses bit masks of file descriptors in longs.", 0,
+"   * These macros manipulate such bit fields (the filesystem macros use chars).", 0,
+"   * FD_SETSIZE may be defined by the user, but the default here", 0,
+"   * should be >= NOFILE (param.h).", 0,
+"   *)", 0,
+"  FD_SETSIZE = 64;", 0,
+"", 0,
+"  (* How many things we'll allow select to use. 0 if unlimited *)", 0,
+"  MAXSELFD = 256;", 0,
+"", 0,
+"TYPE", 0,
+"  fd_mask        = long;", 0,
+" ", 0,
+"CONST", 0,
+"  NFDBITS = BYTESIZE (fd_mask) * NBBY;      (* bits per mask (power of 2!)*)", 0,
+"  NFDSHIFT = 5;                             (* Shift based on above *)", 0,
+"", 0,
+"PROCEDURE howmany (x, y: int): int;", 0,
+"", 0,
+"TYPE", 0,
+"  struct_fd_set = RECORD", 0,
+"       fds_bits: ARRAY [0 .. ", 0,
+"                        (FD_SETSIZE + NFDBITS - 1) DIV NFDBITS -1] OF fd_mask;", 0,
+"    END;", 0,
+"  fd_set = struct_fd_set;", 0,
+"", 0,
+"PROCEDURE FD_SET   (n: int; p: UNTRACED REF fd_set): int;", 0,
+"PROCEDURE FD_CLEAR (n: int; p: UNTRACED REF fd_set): int;", 0,
+"PROCEDURE FD_ISSET (n: int; p: UNTRACED REF fd_set): int;", 0,
+"PROCEDURE FD_ZERO  (p: UNTRACED REF fd_set);", 0,
+"", 0,
+"END Utypes.", 0,
+};
+    for (i = 0 ; i != sizeof(Data)/sizeof(Data[0]) ; ++i)
+    {
+        printf(Data[i].Format, Data[i].Value);
+        printf("\n");
+    }
+    return 0;
+}
