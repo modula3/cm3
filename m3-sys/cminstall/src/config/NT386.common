@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.14 2008-02-11 12:13:45 jkrell Exp $
+% $Id: NT386.common,v 1.15 2008-02-11 12:23:28 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -233,11 +233,11 @@ end
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
 % scanned by the linker.
 
-SYSTEM_LIBORDER = ["OPENGL"]
 if equal (WINDOW_LIBRARY, "X")
-    SYSTEM_LIBORDER += ["MOTIF", "X11"]
+    SYSTEM_LIBORDER = ["OPENGL", "MOTIF", "X11", "TCP", "ODBC", "LIBC"]
+else
+    SYSTEM_LIBORDER = ["OPENGL",                 "TCP", "ODBC", "LIBC"]
 end
-SYSTEM_LIBORDER += ["TCP", "ODBC", "LIBC"]
 
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
