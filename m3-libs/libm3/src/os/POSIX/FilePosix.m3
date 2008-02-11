@@ -148,7 +148,7 @@ PROCEDURE RegularFileSeek(
   : INTEGER RAISES {OSError.E} =
   BEGIN
     WITH result = Unix.lseek(h.fd, VAL(offset, Utypes.off_t), ORD(origin)) DO
-      IF result < VAL(0, Utypes.off_t) THEN OSErrorPosix.Raise() END;
+      IF result < 0 THEN OSErrorPosix.Raise() END;
       RETURN ORD(result)
     END
   END RegularFileSeek;
