@@ -7,3 +7,6 @@
 
 include_dir ("Common")
 include_dir (OS_TYPE)
+if equal (TARGET, "NT386") and equal (OS_TYPE, "POSIX")
+  include_dir ("WIN32")
+end

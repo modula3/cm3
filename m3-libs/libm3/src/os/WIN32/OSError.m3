@@ -5,7 +5,7 @@
 (*      modified on Fri May  7 10:40:38 PDT 1993 by mcjones *)
 (*      modified on Thu May  6 13:34:41 PDT 1993 by mjordan *)
 
-UNSAFE MODULE OSErrorWin32;
+UNSAFE MODULE OSErrorWin32 EXPORTS OSErrorWin32;
 
 IMPORT OSError, Text;
 IMPORT Atom, AtomList, Fmt;

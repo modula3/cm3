@@ -6,6 +6,13 @@
 %      modified on Thu Nov 10 15:17:04 PST 1994 by kalsow
 %      modified on Tue May  4 10:15:15 PDT 1993 by mjordan
 
+if equal (TARGET, "NT386") and equal (OS_TYPE, "POSIX")
+
+    Module("OSErrorWin32")
+    Module("FileWin32")
+
+else
+
 import_sys_lib ("TCP")
 
 Interface("OSConfig")
@@ -21,3 +28,5 @@ implementation("PipeWin32")
 implementation("ProcessWin32")
 implementation("SocketWin32")
 implementation("OSConfigWin32")
+
+end
