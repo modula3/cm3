@@ -1,4 +1,4 @@
-/* $Id: Utypes.i3.cpp,v 1.3 2008-02-11 00:50:18 jkrell Exp $ */
+/* $Id: Utypes.i3.cpp,v 1.4 2008-02-11 00:51:23 jkrell Exp $ */
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -10,7 +10,6 @@ const char* PickType(unsigned short) { return "u_short"; }
 const char* PickType(unsigned long) { return "u_long"; }
 
 const char* PickType(int) { return "int"; }
-const char* PickType(short) { return "short"; }
 const char* PickType(long) { return "long"; }
 
 /* Note this isn't quite correct. */
@@ -35,14 +34,14 @@ int main()
 "(*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)", 0,
 "(*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)", 0,
 "", 0,
-"(* $Id: Utypes.i3.cpp,v 1.3 2008-02-11 00:50:18 jkrell Exp $ *)", 0,
+"(* $Id: Utypes.i3.cpp,v 1.4 2008-02-11 00:51:23 jkrell Exp $ *)", 0,
 "", 0,
 "(* This file was generated from " __FILE__ ". Do not edit it. *)", 0,
 "", 0,
 "INTERFACE Utypes;", 0,
 "", 0,
 "FROM Ctypes IMPORT ", 0,
-"	long, unsigned_long, int, unsigned_int, short, unsigned_short,", 0,
+"	long, unsigned_long, int, unsigned_int, unsigned_short,", 0,
 "        unsigned_char;", 0,
 "", 0,
 "(*** <sys/types.h> ***)", 0,

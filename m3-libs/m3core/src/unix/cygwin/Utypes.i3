@@ -6,14 +6,14 @@
 (*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)
 (*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)
 
-(* $Id: Utypes.i3,v 1.7 2008-02-11 00:50:18 jkrell Exp $ *)
+(* $Id: Utypes.i3,v 1.8 2008-02-11 00:51:23 jkrell Exp $ *)
 
 (* This file was generated from Utypes.i3.cpp. Do not edit it. *)
 
 INTERFACE Utypes;
 
 FROM Ctypes IMPORT 
-	long, unsigned_long, int, unsigned_int, short, unsigned_short,
+	long, unsigned_long, int, unsigned_int, unsigned_short,
         unsigned_char;
 
 (*** <sys/types.h> ***)
