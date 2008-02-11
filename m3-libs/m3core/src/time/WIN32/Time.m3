@@ -21,6 +21,7 @@ PROCEDURE Now(): T=
     RETURN TimeWin32.FromFileTime(fileTime);
   END Now;
 
+BEGIN
 VAR t0, t1: T;
 BEGIN
   (* Determine value of "Grain" experimentally.  Note that
@@ -34,4 +35,5 @@ BEGIN
   t0 := Now();
   REPEAT t1 := Now() UNTIL t1 # t0;
   Grain := t1-t0
+END;
 END Time.
