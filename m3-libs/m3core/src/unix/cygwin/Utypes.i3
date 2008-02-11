@@ -54,10 +54,18 @@ TYPE
   daddr_t      = long; 
   caddr_t      = ADDRESS;
   ino_t        = long_long_uint;
+ (*
+  gno_t        = ;
+  cnt_t        = ; (* sys V compatibility *)
+  swblk_t      = ;
+ *)
   size_t       = uint;
   time_t       = long;
   dev_t        = u_long;
   off_t        = long_long_uint;
+ (*
+  paddr_t      = ; (* sys V compatibility *)
+ *)
   key_t        = long_long_uint; (* sys V compatibility *)
   clock_t      = u_long; (* POSIX compliance *)
   mode_t       = uint; (* POSIX compliance *)
