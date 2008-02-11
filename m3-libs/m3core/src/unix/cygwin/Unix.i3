@@ -343,7 +343,7 @@ TYPE
 
 <*EXTERNAL*> PROCEDURE truncate (path: char_star; length: off_t): int;
 
-<*EXTERNAL*> PROCEDURE ftruncate (fd, length: off_t): int;
+<*EXTERNAL*> PROCEDURE ftruncate (fd: int; length: off_t): int;
 
 (*** unlink - remove directory entry ***)
 
