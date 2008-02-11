@@ -8,20 +8,16 @@
 
 (* $Id$ *)
 
-UNSAFE MODULE Time;
+MODULE Time;
 
 IMPORT WinBase;
 IMPORT TimeWin32;
 
 PROCEDURE Now(): T=
   VAR
-    systemTime: WinBase.SYSTEMTIME;
     fileTime: WinBase.FILETIME;
-    status: INTEGER;
   BEGIN
-    WinBase.GetSystemTime(ADR(systemTime));
-    status := WinBase.SystemTimeToFileTime(ADR(systemTime), ADR(fileTime));
-    <*ASSERT status # 0*>
+    WinBase.GetSystemTimeAsFileTime(fileTime);
     RETURN TimeWin32.FromFileTime(fileTime);
   END Now;
 
