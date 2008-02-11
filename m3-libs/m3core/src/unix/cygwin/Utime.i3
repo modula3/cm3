@@ -120,7 +120,10 @@ CONST (* which *)
 <*EXTERNAL*>
 PROCEDURE getitimer (which: int; VAR value: struct_itimerval): int;
 
-<*EXTERNAL*>
+<*EXTERNAL setitimer*>
+PROCEDURE setitimer_ (which: int; 
+                     VAR value, ovalue: struct_itimerval): int;
+
 PROCEDURE setitimer (which: int; 
                      VAR value, ovalue: struct_itimerval): int;
 
