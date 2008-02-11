@@ -5,6 +5,8 @@
 (* Last modified on Fri May  7 11:00:07 PDT 1993 by muller     *)
 (*      modified on Wed Feb  7 15:49:32 1990 by jerome         *)
 
+(* $Id$ *)
+
 INTERFACE Ctypes;
 
 IMPORT BasicCtypes;
@@ -24,6 +26,8 @@ TYPE
   float                      = BasicCtypes.float;
   double                     = BasicCtypes.double;
   long_double                = BasicCtypes.long_double;
+  ptrdiff_t                  = BasicCtypes.ptrdiff_t;
+  size_t                     = BasicCtypes.size_t;
 
   (* void *)
   void_star                  = ADDRESS;
