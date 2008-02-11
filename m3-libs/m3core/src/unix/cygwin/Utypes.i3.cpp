@@ -10,7 +10,6 @@ const char* PickType(unsigned short) { return "u_short"; }
 const char* PickType(unsigned long) { return "u_long"; }
 
 const char* PickType(int) { return "int"; }
-const char* PickType(short) { return "short"; }
 const char* PickType(long) { return "long"; }
 
 /* Note this isn't quite correct. */
@@ -42,7 +41,7 @@ int main()
 "INTERFACE Utypes;", 0,
 "", 0,
 "FROM Ctypes IMPORT ", 0,
-"	long, unsigned_long, int, unsigned_int, short, unsigned_short,", 0,
+"	long, unsigned_long, int, unsigned_int, unsigned_short,", 0,
 "        unsigned_char;", 0,
 "", 0,
 "(*** <sys/types.h> ***)", 0,
