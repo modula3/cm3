@@ -8,7 +8,7 @@
 
 UNSAFE MODULE WinScreenType EXPORTS WinScreenType, WinScreenTypePrivate;
 
-IMPORT Axis, Ctypes, PaintOp, Pixmap, Rect, TrestleImpl, VBTRep, WinDef, 
+IMPORT Axis, Ctypes, PaintOp, Pixmap, Rect, TrestleImpl, VBTRep, 
        WinGDI, WinScrnColorMap, WinScrnCursor, WinScrnFont, WinScrnPaintOp, 
        WinScrnPixmap, WinTrestle, WinUser;
 
