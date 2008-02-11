@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.13 2008-02-04 08:19:35 jkrell Exp $
+% $Id: NT386.common,v 1.14 2008-02-11 12:13:45 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -120,6 +120,9 @@ is
     return LibInPrefix & a & LibInSuffix
 end
 
+%
+% more unification is desirable here
+%
 SYSTEM_LIBS_MS =
 {
     "LIBC" :
@@ -157,13 +160,23 @@ SYSTEM_LIBS_GNU =
     "ODBC" : [LibIn("odbc32")], %  -lodbccp32 ?
     "OPENGL" : [LibIn("glu32"), LibIn("opengl32")], % -lglut32 ?
     "TCP" : [ ],
+
+    "MOTIF" : [ LibPath & "/usr/X11R6/lib",
+                LibIn("Xm"),
+                LibIn("Mrm"),
+                LibIn("UIl") ],
+
+    "X11" : [ LibPath & "/usr/X11R6/lib",
+              LibIn("Xaw"),
+              LibIn("Xmu"),
+              LibIn("Xext"),
+              LibIn("Xt"),
+              LibIn("SM"),
+              LibIn("ICE"),
+              LibIn("X11") ],
 }
 
 SYSTEM_LIBS = { "MS" : SYSTEM_LIBS_MS, "GNU" : SYSTEM_LIBS_GNU }{LINKER}
-
-%
-% Need to fill in X Windows for CygwinX
-%
 
 if equal(OS_TYPE, "WIN32")
 
@@ -220,13 +233,11 @@ end
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
 % scanned by the linker.
 
-SYSTEM_LIBORDER =
-[
-    "OPENGL",
-    "TCP",
-    "ODBC",
-    "LIBC",
-]
+SYSTEM_LIBORDER = ["OPENGL"]
+if equal (WINDOW_LIBRARY, "X")
+    SYSTEM_LIBORDER += ["MOTIF", "X11"]
+end
+SYSTEM_LIBORDER += ["TCP", "ODBC", "LIBC"]
 
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
