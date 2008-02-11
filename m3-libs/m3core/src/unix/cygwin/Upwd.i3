@@ -6,10 +6,12 @@
 (*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)
 (*      modified on Mon Mar 09 19:02:29 PST 1992 by muller    *)
 
+(* $Id: Upwd.i3,v 1.4 2008-02-11 12:18:57 jkrell Exp $ *)
+
 INTERFACE Upwd;
 
 FROM Ctypes IMPORT char_star, int;
-FROM Utypes IMPORT uid_t;
+FROM Utypes IMPORT uid_t, gid_t;
 
 (*** <pwd.h> ***)
 
@@ -18,17 +20,10 @@ TYPE
     pw_name:     char_star;
     pw_passwd:   char_star;
     pw_uid:      uid_t;
-    pw_gid:      uid_t;
+    pw_gid:      gid_t;
     pw_gecos:    char_star;
     pw_dir:      char_star;
     pw_shell:    char_star;
-  END;
-
-  struct_comment = RECORD
-    c_dept:      char_star;
-    c_name:      char_star;
-    c_acct:      char_star;
-    c_bin:       char_star;
   END;
 
   struct_passwd_star = UNTRACED REF struct_passwd;
