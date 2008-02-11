@@ -10,9 +10,8 @@
 
 INTERFACE Ushm;
 
-FROM Ctypes IMPORT char, short, int, void_star, unsigned_long, char_star;
-FROM Utypes IMPORT time_t, key_t, size_t, ushort, swblk_t;
-FROM Uipc   IMPORT struct_ipc_perm;
+FROM Ctypes IMPORT int, char_star;
+FROM Utypes IMPORT key_t;
 
 (*** <sys/shm.h> ***)
 
@@ -79,78 +78,6 @@ CONST
 **      Structure Definitions.
 *)
 
-
-(*
-**      There is a shared mem id struct for each segment in the system.
-*)
-
-(* Doesn't seem to be present in glibc2/linux 2.0.32 - rrw *)
-TYPE
-  struct_shm_desc = RECORD
-    task      : void_star;     (* really 'struct task_struct *',
-                                  but they're horrible *)
-    shm_sgn   : unsigned_long; (* Signature for this attach *)
-    start     : unsigned_long; (* virt addr of attach, multiple of SHMLBA *)
-    end       : unsigned_long; (* multiple of SHMLBA *)
-    task_next : UNTRACED REF struct_shm_desc; (* next attach for task *)
-    seg_next  : UNTRACED REF struct_shm_desc; (* next attach for segment *)
-  END;
-
- (* The next two structs (one of which Linux does not seem to have)
-    had their names swapped! -- hayter *)
-  struct_shmid_ds = RECORD
-                                (* SM_PERM must be the first    *)
-                                (* element in the structure.    *)
-    shm_perm:    struct_ipc_perm;          (* permission struct *)
-    shm_segsz : int;				(* size of segment (bytes) *)
-    shm_atime : time_t;		   (* last attach time *)
-    shm_dtime : time_t;                  (* last detach time *)
-    shm_ctime : time_t;                  (* last change time *)
-    shm_cpid  : ushort;                  (* pid of creator *)
-    shm_lpid  : ushort;                  (* pid of last operator *)
-    shm_nattch : short;                  (* no. of current attaches *)
-    (* The following are private *)
-    shm_npages : ushort;                 (* Size of segment (pages) *)
-    shm_pages : UNTRACED REF unsigned_long; (* array of ptrs to
-                                                frames -> SHMMAX *)
-    attaches : UNTRACED REF struct_shm_desc;    (* descriptors for attaches *)
-  END;
-
-                        (* for SYSTEM V compatibility           *)
-  (*  key_t = long;     already defined in Utypes.i3 - em *)
-
- (* Linux doesn't appear to have this structure, so I can't check it - 
-    be cautious *)
-
-  struct_smem = RECORD
-                                (* SM_PERM must be the first    *)
-                                (* element in the structure.    *)
-    shm_perm:    struct_ipc_perm;          (* permission struct *)
-    sm_daddr:   UNTRACED REF swblk_t;    (* disk addrs of DMTEXT page segs *)
-    sm_ptdaddr: swblk_t;                  (* disk address of page table *)
-    shm_segsz:  size_t ;                  (* segment size (bytes) *)
-
-(* sm_caddr:   UNTRACED REF struct_proc; (* ptr to linked proc, if loaded *)*)
-    sm_caddr: ADDRESS;                    (* where is struct_proc ? - em *)
-      
-(* sm_ptaddr:  UNTRACED REF struct_pte;  (* ptr to assoc page table *) *)
-    sm_ptaddr:  ADDRESS;                  (* where is struct_pte ? - em *)
-
-    sm_rssize:  size_t;                   (* SM resource set size (pages) *)
-    shm_lpidL:  ushort;                   (* pid of last smop *)
-    shm_cpid:   ushort;                   (* pid of creator *)
-    shm_nattch: char;                     (* reference count *)
-    sm_ccount:  char;                     (* number of loaded references *)
-    sm_lcount:  short;                  (* number of processes locking SMS *)
-    sm_flag:    short;                    (* traced, written flags *)
-    sm_poip:    short;                    (* page out in progress count *)
-    shm_atime:  time_t;                   (* last smat time *)
-    shm_dtime:  time_t;                   (* last smdt time *)
-    shm_ctime:  time_t;                   (* last change time *)
-  END;
-
-  struct_shmid_ds_star = UNTRACED REF struct_shmid_ds;
-
 CONST
 
 (* NOTE:  These values must align with X* flag values in text.h *)
@@ -172,29 +99,6 @@ CONST
  *)  
 
 TYPE
-  (* Linux doesn't have this either, so use with care *)
-  struct_sminfo = RECORD
-    smmax: int;       (* max shared memory segment size *)
-    smmin: int;       (* min shared memory segment size *)
-    smmni: int;       (* # of shared memory identifiers *)
-    smseg: int;       (* max attached shared memory segs per proc *)
-    smbrk: int;       (* gap (in clicks) used between data and SM *)
-    smsmat: int;      (* max shmem attach addr (clicks) *)
-  END;
-
-                        (* for SYSTEM V compatibility *)
-  struct_shminfo = RECORD
-    shmmax: int;       (* max shared memory segment size *)
-    shmmin: int;       (* min shared memory segment size *)
-    shmmni: int;       (* # of shared memory identifiers *)
-    shmseg: int;       (* max attached shared memory segs per proc *)
-    shmall: int;       (* God knows *)
-  END;
-
-(*** shmctl(2) - shared memory control operations ***)
-
-<*EXTERNAL*>
-PROCEDURE shmctl (shmid, cmd: int; buf: struct_shmid_ds_star): int;
 
 (*** shmget(2) - get shared memory segment ***)
 
