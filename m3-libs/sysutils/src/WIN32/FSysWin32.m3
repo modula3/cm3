@@ -1,7 +1,7 @@
 (*--------------------------------------------------------------------------*)
 UNSAFE MODULE FSysWin32 EXPORTS FSUtils;
 
-IMPORT Pathname, WinNT, WinUser, M3toC, Text, OSError, File;
+IMPORT Pathname, Text, OSError, File;
 IMPORT PathRepr, (* FSFixed AS *) FS;
 
 (*--------------------------------------------------------------------------*)
