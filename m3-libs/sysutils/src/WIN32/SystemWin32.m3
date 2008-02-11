@@ -45,7 +45,7 @@ PROCEDURE Hostname() : TEXT =
     RETURN "amnesiac";
   END Hostname;
 
-PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
+PROCEDURE Wait(p: Process.T): Process.ExitCode =
   BEGIN
     RETURN Process.Wait(p);
   END Wait;
