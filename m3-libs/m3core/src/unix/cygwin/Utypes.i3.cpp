@@ -34,7 +34,7 @@ int main()
 "(*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)", 0,
 "(*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)", 0,
 "", 0,
-"(* $Id$ *)", 0,
+"(* $Id" "$ *)", 0,
 "", 0,
 "(* This file was generated from " __FILE__ ". Do not edit it. *)", 0,
 "", 0,
