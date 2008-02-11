@@ -1,4 +1,4 @@
-/* $Id: Utypes.i3.cpp,v 1.4 2008-02-11 00:51:23 jkrell Exp $ */
+/* $Id: Utypes.i3.cpp,v 1.5 2008-02-11 00:53:12 jkrell Exp $ */
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -34,7 +34,7 @@ int main()
 "(*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)", 0,
 "(*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)", 0,
 "", 0,
-"(* $Id: Utypes.i3.cpp,v 1.4 2008-02-11 00:51:23 jkrell Exp $ *)", 0,
+"(* $Id" "$ *)", 0,
 "", 0,
 "(* This file was generated from " __FILE__ ". Do not edit it. *)", 0,
 "", 0,
