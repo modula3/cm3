@@ -6,7 +6,9 @@
 (*      modified on Wed Sep 22 14:53:33 PDT 1993 by steveg     *)
 (*      modified on Thu Mar 11 13:01:04 PST 1993 by mjordan    *)
 
-UNSAFE MODULE TimeWin32 EXPORTS Time, TimeWin32;
+(* $Id$ *)
+
+UNSAFE MODULE TimeWin32;
 
 IMPORT WinBase, Word;
 IMPORT Time;
@@ -45,29 +47,5 @@ PROCEDURE FromFileTime (fileTime: WinBase.FILETIME): Time.T =
     RETURN (low + high) / 1.0D7;
   END FromFileTime;
 
-PROCEDURE Now(): T=
-  VAR
-    systemTime: WinBase.SYSTEMTIME;
-    fileTime: WinBase.FILETIME;
-    status: INTEGER;
-  BEGIN
-    WinBase.GetSystemTime(ADR(systemTime));
-    status := WinBase.SystemTimeToFileTime(ADR(systemTime), ADR(fileTime));
-    <*ASSERT status # 0*>
-    RETURN FromFileTime(fileTime);
-  END Now;
-
-VAR t0, t1: T;
 BEGIN
-  (* Determine value of "Grain" experimentally.  Note that
-     this will fail if this thread is descheduled for a tick during the
-     loop below. *)
-  (* Grain := 0.0075D0
-     SCG - 21 Sep. 93 - This does have problems, use experimental value
-     From WindowsNT 3.1 (final) release running on DEC 466ST (486 based)
-     SCG - 22 Sep. 93 - Turns out the problem was in Now() - try again
-  *)
-  t0 := Now();
-  REPEAT t1 := Now() UNTIL t1 # t0;
-  Grain := t1-t0
 END TimeWin32.
