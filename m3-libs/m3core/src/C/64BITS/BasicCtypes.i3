@@ -5,11 +5,7 @@
 (* Last modified on Thu May  6 12:08:19 PDT 1993 by muller     *)
 (*      modified on Wed Feb  7 15:49:32 1990 by jerome         *)
 
-(* $Id: BasicCtypes.i3,v 1.5 2008-02-11 11:18:33 jkrell Exp $ *)
-
 INTERFACE BasicCtypes;
-
-IMPORT Long;
 
 TYPE
   (* the four signed integer types *)
@@ -34,7 +30,6 @@ TYPE
   (* char *)
   char               = signed_char;
 
-  ptrdiff_t          = long_long;
-  size_t             = unsigned_long_long;
-
 END BasicCtypes.
+
+

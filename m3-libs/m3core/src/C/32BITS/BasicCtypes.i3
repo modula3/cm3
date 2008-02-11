@@ -5,8 +5,6 @@
 (* Last modified on Thu May  6 12:08:15 PDT 1993 by muller     *)
 (*      modified on Wed Feb  7 15:49:32 1990 by jerome         *)
 
-(* $Id: BasicCtypes.i3,v 1.8 2008-02-11 11:18:32 jkrell Exp $ *)
-
 INTERFACE BasicCtypes;
 
 IMPORT Word, Long;
@@ -34,7 +32,6 @@ TYPE
   (* char *)
   char               = signed_char;
 
-  ptrdiff_t          = int;
-  size_t             = unsigned_int;
-
 END BasicCtypes.
+
+
