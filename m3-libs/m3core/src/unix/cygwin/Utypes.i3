@@ -8,7 +8,7 @@
 
 (* $Id$ *)
 
-(* This file was generated from Utypes.i3.c. Do not edit it. *)
+(* This file was generated from Utypes.i3.cpp. Do not edit it. *)
 
 INTERFACE Utypes;
 
@@ -41,34 +41,30 @@ TYPE
   u_long  = unsigned_long;
   ushort  = unsigned_short;             (* sys III compat *)
 
-(* #ifdef vax *)
+(* #ifdef vax
   struct__physadr = RECORD r: ARRAY [0..0] OF int; END;
   physadr         = UNTRACED REF struct__physadr;
 
   struct_label_t = RECORD val: ARRAY [0..13] OF int; END;
   label_t        = struct_label_t;
-(*#endif*)
+#endif*)
 
   struct__quad = RECORD val: ARRAY [0..1] OF long; END;
   quad         = struct__quad;
-  daddr_t      = int; 
+  daddr_t      = long; 
   caddr_t      = ADDRESS;
-  ino_t        = u_long;
-  gno_t        = u_long;
-  cnt_t        = short;               (* sys V compatibility *)
-  swblk_t      = long;
-  size_t       = u_int;
+  ino_t        = long_long_uint;
+  size_t       = uint;
   time_t       = long;
-  dev_t        = long_long_uint;
-  off_t        = long;
-  paddr_t      = long;                (* sys V compatibility *)
-  key_t        = long;                (* sys V compatibility *)
-  clock_t      = long;                (* POSIX compliance    *)
-  mode_t       = uint;                (* POSIX compliance    *)
-  nlink_t      = uint;                (* POSIX compliance    *)
-  uid_t        = uint;                (* POSIX compliance    *)
-  pid_t        = int;                 (* POSIX compliance    *)
-  gid_t        = uint;                (* POSIX compliance    *)
+  dev_t        = u_long;
+  off_t        = long_long_uint;
+  key_t        = long_long_uint; (* sys V compatibility *)
+  clock_t      = u_long; (* POSIX compliance *)
+  mode_t       = uint; (* POSIX compliance *)
+  nlink_t      = u_short; (* POSIX compliance *)
+  uid_t        = u_long; (* POSIX compliance *)
+  pid_t        = int;  (* POSIX compliance *)
+  gid_t        = u_long; (* POSIX compliance *)
 
 CONST
   NBBY = 8;                           (* number of bits in a byte *)

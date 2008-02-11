@@ -4,30 +4,19 @@
 #include <sys/stat.h>
 #include <stdio.h>
 
-static void AssertTypes()
-{
-    dev_t * a = 0;
-    unsigned long * b = 0;
+const char* PickType(unsigned char) { return "u_char"; }
+const char* PickType(unsigned) { return "uint"; }
+const char* PickType(unsigned short) { return "u_short"; }
+const char* PickType(unsigned long) { return "u_long"; }
 
-    b = a;
-    a = b;
-}
+const char* PickType(int) { return "int"; }
+const char* PickType(short) { return "short"; }
+const char* PickType(long) { return "long"; }
 
-const char* PickType(unsigned size)
-{
-    switch (size)
-    {
-    case 1:
-        return "u_char";
-    case 2:
-        return "u_short";
-    case 4:
-        return "u_int";
-    default:
-        printf("unknown size %u\n", size);
-        exit(1);
-    }
-}
+/* Note this isn't quite correct. */
+const char* PickType(long long) { return "long_long_uint"; }
+
+const char* PickType(unsigned long long) { return "long_long_uint"; }
 
 int main()
 {
@@ -35,7 +24,7 @@ int main()
     const static struct
     {
         const char* Format;
-        unsigned Value;
+        const char* Value;
     } Data[] =
 {
 "(* Copyright (C) 1990, Digital Equipment Corporation.         *)", 0,
@@ -81,34 +70,38 @@ int main()
 "  u_long  = unsigned_long;", 0,
 "  ushort  = unsigned_short;             (* sys III compat *)", 0,
 "", 0,
-"(* #ifdef vax *)", 0,
+"(* #ifdef vax", 0,
 "  struct__physadr = RECORD r: ARRAY [0..0] OF int; END;", 0,
 "  physadr         = UNTRACED REF struct__physadr;", 0,
 "", 0,
 "  struct_label_t = RECORD val: ARRAY [0..13] OF int; END;", 0,
 "  label_t        = struct_label_t;", 0,
-"(*#endif*)", 0,
+"#endif*)", 0,
 "", 0,
 "  struct__quad = RECORD val: ARRAY [0..1] OF long; END;", 0,
 "  quad         = struct__quad;", 0,
-"  daddr_t      = int; ", 0,
+"  daddr_t      = %s; ", PickType(daddr_t()),
 "  caddr_t      = ADDRESS;", 0,
-"  ino_t        = u_long;", 0,
-"  gno_t        = u_long;", 0,
-"  cnt_t        = short;               (* sys V compatibility *)", 0,
-"  swblk_t      = long;", 0,
-"  size_t       = u_int;", 0,
-"  time_t       = long;", 0,
-"  dev_t        = u_long;", 0,
-"  off_t        = long;", 0,
-"  paddr_t      = long;                (* sys V compatibility *)", 0,
-"  key_t        = long;                (* sys V compatibility *)", 0,
-"  clock_t      = long;                (* POSIX compliance    *)", 0,
-"  mode_t       = uint;                (* POSIX compliance    *)", 0,
-"  nlink_t      = uint;                (* POSIX compliance    *)", 0,
-"  uid_t        = uint;                (* POSIX compliance    *)", 0,
-"  pid_t        = int;                 (* POSIX compliance    *)", 0,
-"  gid_t        = uint;                (* POSIX compliance    *)", 0,
+"  ino_t        = %s;", PickType(ino_t()),
+#if 0
+"  gno_t        = %s;", PickType(gno_t()),
+"  cnt_t        = %s; (* sys V compatibility *)", PickType(cnt_t()),
+"  swblk_t      = %s;", PickType(swblk_t()),
+#endif
+"  size_t       = %s;", PickType(size_t()),
+"  time_t       = %s;", PickType(time_t()),
+"  dev_t        = %s;", PickType(dev_t()),
+"  off_t        = %s;", PickType(off_t()),
+#if 0
+"  paddr_t      = %s; (* sys V compatibility *)", PickType(paddr_t()),
+#endif
+"  key_t        = %s; (* sys V compatibility *)", PickType(key_t()),
+"  clock_t      = %s; (* POSIX compliance *)", PickType(clock_t()),
+"  mode_t       = %s; (* POSIX compliance *)", PickType(mode_t()),
+"  nlink_t      = %s; (* POSIX compliance *)", PickType(nlink_t()),
+"  uid_t        = %s; (* POSIX compliance *)", PickType(uid_t()),
+"  pid_t        = %s;  (* POSIX compliance *)", PickType(pid_t()),
+"  gid_t        = %s; (* POSIX compliance *)", PickType(gid_t()),
 "", 0,
 "CONST", 0,
 "  NBBY = 8;                           (* number of bits in a byte *)", 0,
