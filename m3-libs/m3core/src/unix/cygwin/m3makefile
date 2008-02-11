@@ -6,36 +6,35 @@
 %      modified on Wed Jun  9 17:03:32 PDT 1993 by harrison
 %      modified on Tue Mar  2 17:17:34 PST 1993 by muller
 
-% $Id: m3makefile,v 1.3 2008-02-10 02:45:46 jkrell Exp $
+% $Id: m3makefile,v 1.4 2008-02-11 08:27:57 jkrell Exp $
 
 Interface ("Uucontext")
 Interface ("Udir")
 Interface ("Uerror")
 Interface ("Uexec")
-Interface ("Ugrp")
+Interface ("Ugrp") % not used
 Module    ("Uin")
-Interface ("Uipc")
+Interface ("Uipc") % not used
 Interface ("Umman")
-Module    ("Umsg")
+Module    ("Umsg") % not used
 Module    ("Unetdb")
 Interface ("Unix")
 Interface ("Uprocess")
-Interface ("Upthread")
-Interface ("Upwd")
+Interface ("Upthread") % not used
+Interface ("Upwd") % not used
 Interface ("Uresource")
-Interface ("Usched")
-Module    ("Usem")
-Interface ("Ushm")
+Interface ("Usched") % not used
+Module    ("Usem") % not used
+Interface ("Ushm") % not used
 Module    ("Usignal")
 Interface ("Ustat")
 Interface ("Usocket")
-Interface ("Usyslog")
-Interface ("Utermio")
+Interface ("Usyslog") % not used
+Interface ("Utermio") % not used
 Interface ("Utime")
 Module    ("Utypes")
 Interface ("Uugid")
 Interface ("Uuio")
-Interface ("Uutmp")
-Interface ("Upaths")
+Interface ("Uutmp") % not used
+Interface ("Upaths") % not used
 Interface ("Uutsname")
-

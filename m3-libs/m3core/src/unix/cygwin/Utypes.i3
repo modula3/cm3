@@ -6,7 +6,7 @@
 (*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)
 (*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)
 
-(* $Id: Utypes.i3,v 1.9 2008-02-11 05:38:24 jkrell Exp $ *)
+(* $Id: Utypes.i3,v 1.10 2008-02-11 08:27:57 jkrell Exp $ *)
 
 (* This file was generated from Utypes.i3.cpp. Do not edit it. *)
 
