@@ -9,7 +9,7 @@
 (*      modified on Wed Dec  2 11:29:00 PST 1992 by mcjones   *)
 (*      modified on Mon Apr 23 16:37:40 1990 by jerome        *)
 
-(* $Id: Utime.i3,v 1.4 2008-01-28 15:37:01 jkrell Exp $ *)
+(* $Id: Utime.i3,v 1.5 2008-02-11 14:27:30 jkrell Exp $ *)
 
 INTERFACE Utime;
 
@@ -120,7 +120,10 @@ CONST (* which *)
 <*EXTERNAL*>
 PROCEDURE getitimer (which: int; VAR value: struct_itimerval): int;
 
-<*EXTERNAL*>
+<*EXTERNAL setitimer*>
+PROCEDURE setitimer_ (which: int; 
+                     VAR value, ovalue: struct_itimerval): int;
+
 PROCEDURE setitimer (which: int; 
                      VAR value, ovalue: struct_itimerval): int;
 
