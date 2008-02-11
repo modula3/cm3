@@ -13,8 +13,8 @@ INTERFACE Unix;
 
 FROM Word IMPORT Or, And, Shift;
 
-FROM Ctypes IMPORT short, int, long, char_star, char_star_star;
-FROM Utypes IMPORT off_t, size_t;
+FROM Ctypes IMPORT short, int, long, char_star, char_star_star, ptrdiff_t;
+FROM Utypes IMPORT off_t, size_t, uid_t, gid_t;
 FROM Utime IMPORT struct_timeval;
 
 CONST
@@ -60,16 +60,14 @@ CONST
 
 <*EXTERNAL*> PROCEDURE acct (path: char_star): int;
 
-(*** brk, sbrk - change data segment space allocation *)
+(*** sbrk - change data segment space allocation *)
 
-<*EXTERNAL*> PROCEDURE brk (addr: ADDRESS): int;
-<*EXTERNAL*> PROCEDURE sbrk (inc: int): int;
+<*EXTERNAL*> PROCEDURE sbrk (inc: ptrdiff_t): int;
 
 
 (*** chdir - change working directory ***)
 
 <*EXTERNAL*> PROCEDURE chdir (path: char_star): int;
-
 
 
 (*** chmod, fchmod - change mde of file ***)
@@ -80,8 +78,8 @@ CONST
 
 (*** chown, fchown - change owner and group of a file ***)
 
-<*EXTERNAL*> PROCEDURE chown (path: char_star; owner, group: int): int;
-<*EXTERNAL*> PROCEDURE fchown (fd, owner, group: int): int;
+<*EXTERNAL*> PROCEDURE chown (path: char_star; owner: uid_t; group: gid_t): int;
+<*EXTERNAL*> PROCEDURE fchown (fd: int; owner: uid_t; group: gid_t): int;
 
 (*** chroot - change root directory ***)
 
@@ -343,9 +341,9 @@ TYPE
 
 (*** truncate, ftruncate - truncate a file to a specified length ***)
 
-<*EXTERNAL*> PROCEDURE truncate (path: char_star; length: int): int;
+<*EXTERNAL*> PROCEDURE truncate (path: char_star; length: off_t): int;
 
-<*EXTERNAL*> PROCEDURE ftruncate (fd, length: int): int;
+<*EXTERNAL*> PROCEDURE ftruncate (fd, length: off_t): int;
 
 (*** unlink - remove directory entry ***)
 
