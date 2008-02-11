@@ -1866,6 +1866,11 @@ PROCEDURE MulDiv (nNumber: int; nNumerator: int; nDenominator: int): int;
 <*EXTERNAL GetSystemTime:WINAPI*>
 PROCEDURE GetSystemTime (lpSystemTime: LPSYSTEMTIME);
 
+(* This is not in NT 3.1 but was introduced I think in NT 3.5.
+   It is in Win95. Not sure about Win32s. *)
+<*EXTERNAL GetSystemTimeAsFileTime:WINAPI*>
+PROCEDURE GetSystemTimeAsFileTime(VAR FileTime : FILETIME);
+
 <*EXTERNAL SetSystemTime:WINAPI*>
 PROCEDURE SetSystemTime (lpSystemTime: LPSYSTEMTIME): BOOL;
 
