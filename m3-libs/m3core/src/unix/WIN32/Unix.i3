@@ -1,4 +1,4 @@
-(* $Id: Unix.i3,v 1.1 2008-02-12 13:28:24 jkrell Exp $ *)
+(* $Id: Unix.i3,v 1.2 2008-02-12 13:30:48 jkrell Exp $ *)
 
 (*
 msvcr*.dll exposes a fair amount of "unix i/o".
@@ -9,8 +9,6 @@ most of it, somewhere.
 INTERFACE Unix;
 
 FROM Ctypes IMPORT int, long, const_char_star;
-
-CONST
 
 <*EXTERNAL "_access"*> PROCEDURE access (path: const_char_star; mod: int): int;
 <*EXTERNAL "_chdir"*> PROCEDURE chdir (path: const_char_star): int;
