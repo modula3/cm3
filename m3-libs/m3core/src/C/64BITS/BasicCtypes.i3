@@ -7,6 +7,8 @@
 
 INTERFACE BasicCtypes;
 
+IMPORT Long;
+
 TYPE
   (* the four signed integer types *)
   signed_char        = [-16_80 .. 16_7f];
