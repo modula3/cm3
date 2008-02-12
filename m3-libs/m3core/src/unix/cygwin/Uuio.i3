@@ -21,34 +21,6 @@ TYPE
   END;
   struct_iovec_star = UNTRACED REF struct_iovec;
 
-  (* There's no corresponding structure to struct_uio - be careful *)
-  struct_uio = RECORD
-    uio_iov: struct_iovec_star;
-    uio_iovcnt: int;
-    uio_offset: int;
-    uio_segflg: int;
-    uio_resid: int;
-    uio_flag: int;
-  END;
-
-  uio_rw = {UIO_READ, UIO_WRITE};
-
-(*
- * Segment flag values (should be enum).
- *)
-
-CONST
-  (* There appear to be no corresponing definitions for any of these
-     constants - use with caution. *)
-  UIO_USERSPACE =	0;		(* from user data space *)
-  UIO_SYSSPACE =	1;		(* from system space *)
-  UIO_USERISPACE =	2;		(* from user I space *)
-
-CONST
-  MAX_IOVEC = 		16;		(* maximum length of io vectors *)
-
-
-
 (*** read, readv(2) - read from a file ***)
 
 <*EXTERNAL*> PROCEDURE read (d: int; buf: char_star; nbytes: int): int;
