@@ -49,7 +49,7 @@ readonly _UnixPieces = {
   "NetBSD2_i386" : [ "netbsd2-i386" ]
 }
 
-if equal (TARGET, "NT386") and equal (OS_TYPE, "WIN32")
+if equal (OS_TYPE, "WIN32")
   include_dir ("NT386")
 else
 
