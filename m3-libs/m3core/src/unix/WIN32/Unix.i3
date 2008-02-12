@@ -10,8 +10,6 @@ INTERFACE Unix;
 
 FROM Ctypes IMPORT int, long, const_char_star;
 
-CONST
-
 <*EXTERNAL "_access"*> PROCEDURE access (path: const_char_star; mod: int): int;
 <*EXTERNAL "_chdir"*> PROCEDURE chdir (path: const_char_star): int;
 <*EXTERNAL "_close"*> PROCEDURE close (d: int): int;
