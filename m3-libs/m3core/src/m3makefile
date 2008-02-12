@@ -22,14 +22,7 @@ if equal (TARGET, "OS2")
 end
 
 include_dir ("win32")
-
-if equal (OS_TYPE, "WIN32")
-  % nothing
-else if equal (OS_TYPE, "POSIX")
-  include_dir ("unix")
-else
-  error ("m3core: unrecognized OS: " & OS_TYPE & CR)
-end end
+include_dir ("unix")
 
 include_dir ("C")
 include_dir ("float")
