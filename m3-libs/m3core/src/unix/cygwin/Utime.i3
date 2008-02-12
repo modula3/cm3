@@ -9,7 +9,7 @@
 (*      modified on Wed Dec  2 11:29:00 PST 1992 by mcjones   *)
 (*      modified on Mon Apr 23 16:37:40 1990 by jerome        *)
 
-(* $Id: Utime.i3,v 1.5 2008-02-11 14:27:30 jkrell Exp $ *)
+(* $Id: Utime.i3,v 1.6 2008-02-12 16:56:55 jkrell Exp $ *)
 
 INTERFACE Utime;
 
@@ -172,16 +172,11 @@ PROCEDURE gmtime_r (clock: long_star; res: struct_tm_star): struct_tm_star;
 <*EXTERNAL*>
 PROCEDURE asctime_r(tm: struct_tm_star; buf: char_star; buflen: int):char_star;
 
-<*EXTERNAL*> VAR timezone: time_t;
-(* This no longer exists in libc2 *)
-(*<*EXTERNAL*> VAR altzone: time_t;*)
-<*EXTERNAL*> VAR daylight: int;
-<*EXTERNAL*> VAR tzname: ARRAY [0..1] OF char_star;
+VAR timezone: time_t;
+<*EXTERNAL "Utime__timezone"*> VAR altzone: time_t; (* not really *)
+VAR daylight: int;
+VAR tzname: ARRAY [0..1] OF char_star;
 
-<*EXTERNAL*> PROCEDURE tzset	 ();
-<*EXTERNAL*> PROCEDURE tzsetwall ();
-
-<*EXTERNAL*> PROCEDURE nanosleep (READONLY req: struct_timespec;
-                                  VAR rem: struct_timespec): int;
+<*EXTERNAL "Utime__init"*> PROCEDURE init();
 
 END Utime.
