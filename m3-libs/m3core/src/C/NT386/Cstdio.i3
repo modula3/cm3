@@ -1,4 +1,4 @@
-(* $Id: Cstdio.i3,v 1.1 2008-02-12 12:32:57 jkrell Exp $ *)
+(* $Id: Cstdio.i3,v 1.4 2008-02-12 22:11:43 jkrell Exp $ *)
 
 INTERFACE Cstdio;
 
