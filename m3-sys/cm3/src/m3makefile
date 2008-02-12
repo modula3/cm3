@@ -6,8 +6,6 @@
 % Last modified on Tue Jan 24 13:10:54 PST 1995 by kalsow
 %      modified on Wed Jun  2 12:06:33 PDT 1993 by muller
 
-% $Id$
-
 % remove_m3_option ("-gui")
 % m3_option ("-times")
 
