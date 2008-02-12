@@ -50,7 +50,7 @@ readonly _UnixPieces = {
 }
 
 if equal (OS_TYPE, "WIN32")
-  include_dir ("NT386")
+  include_dir ("WIN32")
 else
 
 if _UnixPieces contains TARGET
