@@ -866,7 +866,7 @@ PROCEDURE CollectSomeInStateZero () =
     END;
 
     (* Scan the global variables for possible pointers *)
-    RTHeapMap.WalkGlobals (mover);
+    RTHeapMap.WalkGlobals (mover); (* TODO: can we do these incrementally *)
 
     IF perfOn THEN PerfPromotedRoots(); END;
 
@@ -1399,7 +1399,6 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
       (* not enough space left in the pool, take the long route *)
       res := NIL;  nextPtr := NIL;  (* in case of GC... *)
       DEC(thread.inCritical);
-      Scheduler.Yield();                 (* we may be a while *)
 
       RTOS.LockHeap();
 
