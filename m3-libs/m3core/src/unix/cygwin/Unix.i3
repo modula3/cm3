@@ -13,9 +13,12 @@ INTERFACE Unix;
 
 FROM Word IMPORT Or, And, Shift;
 
-FROM Ctypes IMPORT short, int, long, char_star, char_star_star, ptrdiff_t;
+FROM Ctypes IMPORT short, int, long, const_char_star, char_star, char_star_star;
 FROM Utypes IMPORT off_t, size_t, uid_t, gid_t;
 FROM Utime IMPORT struct_timeval;
+
+TYPE
+  ptrdiff_t = INTEGER;
 
 CONST
   MaxPathLen = 1024;
@@ -53,12 +56,7 @@ CONST
 
 (*** access - determine the accessibility of file ***)
 
-<*EXTERNAL*> PROCEDURE access (path: char_star; mod: int): int;
-
-
-(*** acct - turn accounting on or off ***)
-
-<*EXTERNAL*> PROCEDURE acct (path: char_star): int;
+<*EXTERNAL*> PROCEDURE access (path: const_char_star; mod: int): int;
 
 (*** sbrk - change data segment space allocation *)
 
@@ -67,23 +65,23 @@ CONST
 
 (*** chdir - change working directory ***)
 
-<*EXTERNAL*> PROCEDURE chdir (path: char_star): int;
+<*EXTERNAL*> PROCEDURE chdir (path: const_char_star): int;
 
 
 (*** chmod, fchmod - change mde of file ***)
 
-<*EXTERNAL*> PROCEDURE chmod (path: char_star; mode: int): int;
+<*EXTERNAL*> PROCEDURE chmod (path: const_char_star; mode: int): int;
 <*EXTERNAL*> PROCEDURE fchmod (fd, mode: int): int;
 
 
 (*** chown, fchown - change owner and group of a file ***)
 
-<*EXTERNAL*> PROCEDURE chown (path: char_star; owner: uid_t; group: gid_t): int;
+<*EXTERNAL*> PROCEDURE chown (path: const_char_star; owner: uid_t; group: gid_t): int;
 <*EXTERNAL*> PROCEDURE fchown (fd: int; owner: uid_t; group: gid_t): int;
 
 (*** chroot - change root directory ***)
 
-<*EXTERNAL*> PROCEDURE chroot (dirname: char_star): int;
+<*EXTERNAL*> PROCEDURE chroot (dirname: const_char_star): int;
 
 
 (*** close - delete a descriptor ***)
@@ -93,7 +91,7 @@ CONST
 
 (*** creat - create a new file ***)
 
-<*EXTERNAL*> PROCEDURE creat (name: char_star; mode: int): int;
+<*EXTERNAL*> PROCEDURE creat (name: const_char_star; mode: int): int;
 
 
 (*** dup, dup2 - duplicate an open file descriptor ***)
@@ -263,7 +261,7 @@ CONST
 
 (*** link - link to a file ***)
 
-<*EXTERNAL*> PROCEDURE link (name1, name2: char_star): int;
+<*EXTERNAL*> PROCEDURE link (name1, name2: const_char_star): int;
 
 
 (*** lseek, tell - move read/write pointer ***)
@@ -273,13 +271,13 @@ CONST (* whence *)
   L_INCR = 1;
   L_XTND = 2;
 
-<*EXTERNAL*> PROCEDURE lseek (d: int; offset: off_t; whence: int): int;
+<*EXTERNAL*> PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
 
-<*EXTERNAL*> PROCEDURE tell (d: int): int;
+<*EXTERNAL*> PROCEDURE tell (d: int): long;
 
 (*** mkdir - make a directory file ***)
 
-<*EXTERNAL*> PROCEDURE mkdir (path: char_star; mode: int): int;
+<*EXTERNAL*> PROCEDURE mkdir (path: const_char_star; mode: int): int;
 
 (*** open - open for reading or writing ***)
 
@@ -298,7 +296,7 @@ CONST (* flags *)
 
   M3_NONBLOCK = O_NDELAY; (* -1 => would block, 0 => EOF *)
 
-<*EXTERNAL*> PROCEDURE open (name: char_star; flags, mode: int): int;
+<*EXTERNAL*> PROCEDURE open (name: const_char_star; flags, mode: int): int;
 
 
 (*** pipe - create an interprocess channel ***)
@@ -309,15 +307,15 @@ CONST
 
 (*** readlink - read value of a symbolic link ***)
 
-<*EXTERNAL*> PROCEDURE readlink (path: char_star; buf: ADDRESS; bufsize: int): int;
+<*EXTERNAL*> PROCEDURE readlink (path: const_char_star; buf: ADDRESS; bufsize: int): int;
 
 (*** rename - change the name of a file ***)
 
-<*EXTERNAL*> PROCEDURE rename (from, to: char_star): int;
+<*EXTERNAL*> PROCEDURE rename (from, to: const_char_star): int;
 
 (*** rmdir - remove a directory file ***)
 
-<*EXTERNAL*> PROCEDURE rmdir (path: char_star): int;
+<*EXTERNAL*> PROCEDURE rmdir (path: const_char_star): int;
 
 (*** select - synchronous I/O mutiplexing ***)
 
@@ -333,7 +331,7 @@ TYPE
 
 (*** symlink - make symbolic link to a file ***)
 
-<*EXTERNAL*> PROCEDURE symlink (name1, name2: char_star): int;
+<*EXTERNAL*> PROCEDURE symlink (name1, name2: const_char_star): int;
 
 (*** sync - update super-block ***)
 
@@ -341,13 +339,13 @@ TYPE
 
 (*** truncate, ftruncate - truncate a file to a specified length ***)
 
-<*EXTERNAL*> PROCEDURE truncate (path: char_star; length: off_t): int;
+<*EXTERNAL*> PROCEDURE truncate (path: const_char_star; length: off_t): int;
 
 <*EXTERNAL*> PROCEDURE ftruncate (fd: int; length: off_t): int;
 
 (*** unlink - remove directory entry ***)
 
-<*EXTERNAL*> PROCEDURE unlink (path: char_star): int;
+<*EXTERNAL*> PROCEDURE unlink (path: const_char_star): int;
 
 (*** utimes - set file times ***)
 
@@ -362,7 +360,7 @@ TYPE
 <*EXTERNAL*> PROCEDURE isatty (filedes: int): int;
 
 (*** system(3) ***)
-<*EXTERNAL*> PROCEDURE system (string: char_star): int;
+<*EXTERNAL*> PROCEDURE system (string: const_char_star): int;
 
 
 END Unix.
