@@ -32,6 +32,7 @@ Interface ("Usocket")
 Interface ("Usyslog") % not used
 Interface ("Utermio") % not used
 Module    ("Utime")
+c_source  ("UtimeC")
 Module    ("Utypes")
 Interface ("Uugid")
 Interface ("Uuio")
