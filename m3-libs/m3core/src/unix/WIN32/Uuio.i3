@@ -12,7 +12,7 @@ FROM Ctypes IMPORT int, void_star, const_void_star, unsigned_int;
 
 TYPE
 
-<*EXTERNAL*> PROCEDURE read (d: int; buf: void_star; nbytes: unsigned_int): int;
-<*EXTERNAL*> PROCEDURE write (d: int; buf: const_void_star; nbytes: unsigned_int): int;
+<*EXTERNAL "_read"*> PROCEDURE read (d: int; buf: void_star; nbytes: unsigned_int): int;
+<*EXTERNAL "_write"*> PROCEDURE write (d: int; buf: const_void_star; nbytes: unsigned_int): int;
 
 END Uuio.
