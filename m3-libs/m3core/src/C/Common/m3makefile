@@ -11,6 +11,13 @@ Interface ("Cstddef")
 Interface ("Cstdlib")
 Interface ("Ctypes")
 
+if equal(TARGET, "NT386")
+% These should serve most targets, esp. with a little target preprocessing,
+% and said preprocessing could be in the .c file.
+    Interface ("Cstdio")
+    c_source ("CstdioC")
+end
+
 Module ("M3toC")
 Module ("Cstdarg")
 
