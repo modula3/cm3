@@ -259,7 +259,11 @@ readonly proc p_test (group, uid, comment) is
   run_test ("_ptests", group, uid, comment, "run")
 end
 
+% some currently failing tests...
+%p_test ("p1", "p155", "operations on small sets")
 %p_test ("p2", "p204", "IP address initializers")
+%p_test ("p2", "p205", "SUBARRAY of imported CONST ARRAY")
+%p_test ("p2", "p206", "ARRAY constructors in var decls using named open array types")
 
 p_test ("p0", "p001", "Hello world")
 p_test ("p0", "p002", "Text")
@@ -466,6 +470,8 @@ p_test ("p2", "p201", "recursive values")
 p_test ("p2", "p202", "SUBARRAY actual parameter")
 p_test ("p2", "p203", "fingerprint of NULL")
 p_test ("p2", "p204", "IP address initializers")
+p_test ("p2", "p205", "SUBARRAY of imported CONST ARRAY")
+p_test ("p2", "p206", "ARRAY constructors in var decls using named open array types")
 
 %------------------------------------------------------------------- rtests ---
 %  RUNTIME tests: modules containing runtime error where the generated
