@@ -1,9 +1,0 @@
-MODULE WaveSaw;
-
-PROCEDURE Wave (x: LONGREAL; ): LONGREAL =
-  BEGIN
-    RETURN 1.0D0 - 2.0D0 * x;
-  END Wave;
-
-BEGIN
-END WaveSaw.
