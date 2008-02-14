@@ -29,7 +29,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.11 2008-02-02 22:17:27 jkrell Exp $
+% $Id: version.quake,v 1.12 2008-02-14 11:06:11 jkrell Exp $
 
 
 %------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ proc version_impl(name) is
         NOW = "not available"
     end
 
-    if equal($OS, "Windows_NT")
+    if equal($OS, "Windows_NT") and not equal(OS_TYPE, "POSIX")
 
         % why two names for these?
         local readonly Map =
