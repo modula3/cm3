@@ -18,11 +18,7 @@ else
 end
 
 readonly TARGET       = "PPC_DARWIN"    % code generation target
-if M3_PROFILING
-  readonly BUILD_DIR  = TARGET & "p"    % code generation target
-else
-  readonly BUILD_DIR  = TARGET          % directory for results
-end
+readonly BUILD_DIR    = TARGET & PROFILING_P % directory for results
 readonly OS_TYPE      = "POSIX"         % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"        % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "powerpc-apple-darwin6.3"
@@ -61,10 +57,6 @@ is
     end
     if not equal($CM3_INSTALL, "")
         INSTALL_ROOT = $CM3_INSTALL
-        return
-    end
-    if not equal($INSTALLROOT, "")
-        INSTALL_ROOT = $INSTALLROOT
         return
     end
     INSTALL_ROOT = (path() & SL & "..")
