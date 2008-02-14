@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.45 2008-02-04 06:29:23 jkrell Exp $
+# $Id: pylib.py,v 1.46 2008-02-14 12:10:07 jkrell Exp $
 
 import os
 from os import getenv
@@ -171,6 +171,8 @@ UName = UNameTuple[0].lower()
 UNameArchP = platform.processor().lower()
 UNameArchM = UNameTuple[4].lower()
 UNameRevision = UNameTuple[2].lower()
+# print("UName is " + UName)
+# print("UNameArchM is " + UNameArchM)
 
 #-----------------------------------------------------------------------------
 # set some defaults
@@ -338,6 +340,9 @@ M3GDB = (M3GDB or CM3_GDB)
 OSType = (OSType or "POSIX")
 PKGSDB = (getenv("PKGSDB") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
 GMAKE = (GMAKE or "gmake")
+Config = Config or Target
+
+# print("Target is " + Target)
 
 def GetConfigForDistribution(Target):
 #
@@ -353,6 +358,7 @@ def GetConfigForDistribution(Target):
 os.environ["CM3_TARGET"] = Target
 os.environ["CM3_ROOT"] = Root
 os.environ["M3CONFIG"] = GetConfigForDistribution(Config)
+# print("os.environ[M3CONFIG] is " + os.environ["M3CONFIG"])
 
 #-----------------------------------------------------------------------------
 # elego customizations
@@ -428,6 +434,7 @@ SRC_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
 #
 BuildDir = Target
 ConfigFile = os.environ.get("M3CONFIG")
+# print("ConfigFile is " + ConfigFile)
 if ConfigFile:
     RegExp = re.compile("BUILD_DIR\s*=\s*\"(\S+)\"")
     for Line in open(ConfigFile):
