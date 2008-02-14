@@ -8,12 +8,14 @@
 %M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (option -profile)
 %M3_PROFILING = FALSE
 
-readonly TARGET       = "LINUXLIBC6"      % code generation target
-if M3_PROFILING 
-  readonly BUILD_DIR  = TARGET & "p"      % code generation target
+if M3_PROFILING
+    readonly PROFILING_P = "p"
 else
-  readonly BUILD_DIR  = TARGET            % directory for results
+    readonly PROFILING_P = ""
 end
+
+readonly TARGET       = "LINUXLIBC6"      % code generation target
+readonly BUILD_DIR    = TARGET & PROFILING_P % directory for results
 readonly OS_TYPE      = "POSIX"           % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "i486--linuxelf"  % "cpu-vendor-os" string for GNU
@@ -41,30 +43,30 @@ end
 % the installation will fail, but can be restarted after you have 
 % fixed the permissions.
 
-%
-% path() is not always available?
-%
-if equal(path(), "")
-    %
-    % fill this in if necessary
-    %
-    INSTALL_ROOT = "~/cm3"
-    BIN_INSTALL  = INSTALL_ROOT & "/bin"    %  executables
-else
-    INSTALL_ROOT = path() & "/.."
-    BIN_INSTALL   = path()                  % executables
+readonly
+proc
+CM3SetInstallRoot(
+    )
+is
+    if defined("INSTALL_ROOT")
+        return
+    end
+    if not equal($CM3_INSTALL, "")
+        INSTALL_ROOT = $CM3_INSTALL
+        return
+    end
+    INSTALL_ROOT = (path() & SL & "..")
 end
 
-if M3_PROFILING
-    LIB_INSTALL   = INSTALL_ROOT & "/libp"  % libraries
-else
-    LIB_INSTALL   = INSTALL_ROOT & "/lib"   % libraries
-end
-PKG_INSTALL   = INSTALL_ROOT & "/pkg"       % packages
-DOC_INSTALL   = INSTALL_ROOT & "/doc"       % documents
-EMACS_INSTALL = INSTALL_ROOT & "/elisp"     % emacs lisp code
-MAN_INSTALL   = INSTALL_ROOT & "/man"       % man pages
-HTML_INSTALL  = INSTALL_ROOT & "/www"       % public hypertext
+CM3SetInstallRoot()
+
+readonly BIN_INSTALL    = INSTALL_ROOT & SL & "bin"     % executables
+readonly LIB_INSTALL    = INSTALL_ROOT & SL & "lib" & PROFILING_P   % libraries
+readonly PKG_INSTALL    = INSTALL_ROOT & SL & "pkg"     % packages
+readonly DOC_INSTALL    = INSTALL_ROOT & SL & "doc"     % documents
+readonly EMACS_INSTALL  = INSTALL_ROOT & SL & "elisp"   % emacs lisp code
+readonly MAN_INSTALL    = INSTALL_ROOT & SL & "man"     % man pages
+readonly HTML_INSTALL   = INSTALL_ROOT & SL & "www"     % public hypertext
 
 % On some systems (e.g. AFS) you must install public files in a different
 % place from where you use them.  If that is the case for your system,
