@@ -1337,7 +1337,14 @@ PROCEDURE DoEqual (t: T;  n_args: INTEGER) RAISES {Error} =
       CASE v1.kind OF
       | QK.Var     => eq := (v1.int = v2.int) AND (v1.ref = v2.ref);
       | QK.Integer => eq := (v1.int = v2.int);
-      | QK.String  => eq := (v1.int = v2.int);
+      | QK.String  => 
+        IF v1.ref = NIL AND v2.ref = NIL THEN
+          eq := (v1.int = v2.int);
+        ELSIF v1.ref # NIL AND v2.ref # NIL THEN
+          eq := Text.Equal (NARROW (v1.ref, TEXT), NARROW (v2.ref, TEXT));
+        ELSE
+          eq := FALSE;
+        END;
       | QK.Table   => eq := (v1.ref = v2.ref);
       | QK.Array   => eq := (v1.ref = v2.ref);
       | QK.Proc    => eq := (v1.ref = v2.ref);
