@@ -68,6 +68,11 @@ proc compare_file (file) is
   end
 end
 
+if defined ("LOG_CMPS")
+  ll = PACKAGE_DIR & SL & "m3tests-" & datestamp() & ".diffs"
+  fs_rmfile(ll)
+end
+
 proc cmp_file (file) is
   local base = path_of (file)
 
@@ -79,8 +84,35 @@ proc cmp_file (file) is
     return ""
   end
 
-  if equal(try_exec ("@cmp", file, base), 0)
+  local r = []
+  if defined ("LOG_CMPS")
+    r += "cmp_file(" & file & ", " & base & ")\n"
+  end
+  fc = fs_contents (file)
+  fb = fs_contents (base)
+
+  fcc = subst (fc, " (core dumped)", "", 9)
+  fbb = subst (fb, " (core dumped)", "", 9)
+  if defined ("LOG_CMPS")
+    r += file & ":\n" & fcc & "\n"
+    r += base & ":\n" & fbb & "\n"
+  end
+
+  %if equal(try_exec ("@cmp", file, base), 0)
+  if equal(fcc, fbb)
+    if defined ("LOG_CMPS")
+      r += "--> TRUE\n"
+      >> ll in 
+        write (r)
+      end
+    end
     return "T"
+  end
+  if defined ("LOG_CMPS")
+    r += "--> FALSE\n"
+    >> ll in 
+      write (r)
+    end
   end
   return ""
 end
@@ -133,6 +165,9 @@ html(["", CR])
 html(["  <body bgcolor=\"#ffffff\">", CR])
 html(["    <h2>CM3 M3Tests Status for Target Platform ", TARGET, "</h2>", CR])
 html(["", CR])
+html(["    <p>", CR])
+html(["      report generated at ", datetime(), "on ", hostname(), CR])
+html(["    </p>", CR])
 
 html(["    <table border=\"2\" cellspacing=\"1\" cellpadding=\"4\">", CR])
 html(["      <thead>", CR])
