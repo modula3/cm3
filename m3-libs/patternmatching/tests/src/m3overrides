@@ -1,1 +1,1 @@
-override("patternmatching",  "../../..")
+override("patternmatching", PACKAGE_DIR & SL & ".." & SL & "..")
