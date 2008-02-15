@@ -127,6 +127,9 @@ report_header() {
           <td>
             <b>Errors</b>
           </td>
+          <td>
+            <b>Tests</b>
+          </td>
         </tr>
       </thead>
       <tbody>
@@ -156,10 +159,13 @@ write_pkg_report() {
   errlines=`egrep '^".*, line .*:|warning:|version stamp mismatch|bad version stamps|Fatal Error|failed|quake runtime error|ignoring override|unsupported' "$1/stdout.log"`
   if [ "$2" = "0" ] ; then
     echo "<tr class=\"bggreen\">"
+    bgt="bggreen"
   elif [ "$2" = "2" ] ; then
     echo "<tr class=\"bgyellow\">"
+    bgt="bgyellow"
   else
     echo "<tr class=\"bgred\">"
+    bgt="bgred"
     ERRS=`printf "${ERRS}${errlines}\\n"`
     res=`printf "${PKG}${ERRS}\\n"`
   fi >> "${R}"
@@ -175,6 +181,17 @@ write_pkg_report() {
     echo "  <td class=\"small\"><pre>"
     echo "$errlines"
     echo "  </pre></td>"
+    errlines=`echo "$3" | egrep 'version stamp mismatch|bad version stamps|Fatal Error|quake runtime error'`
+    if [ -n "$4" -o -n "${errlines}" ]; then
+      bgt="bgred"
+    fi
+    echo "  <td class=\"$bgt\"><pre class=\"small\">"
+    echo "$3" | cut -c 1-80
+    if [ -n "$4" ]; then
+      echo "stderr:"
+      echo "$4" | cut -c 1-80
+    fi
+    echo "  </pre></td>"
     echo "</tr>"
   ) >> "${R}"
   echo "${ERRS}"
@@ -189,6 +206,8 @@ OK=yes
 
 for PKG in ${PKGS} ; do
   echo "=== package ${PKG} ==="
+  tres=""
+  terr=""
   if [ "${REPORT}" = "yes" ] ; then
     rm -f "${PKG}/stdout.log"
     if UsePackage `basename "${PKG}"` || [ "${CM3_ALL}" = yes ]; then
@@ -204,6 +223,27 @@ for PKG in ${PKGS} ; do
         REDPKGS=`printf "${REDPKGS}${PKG}\\\\\\n"`
       else
         GREENPKGS=`printf "${GREENPKGS}${PKG}\\\\\\n"`
+        HERE=`pwd`
+        tres=""
+        cd ${PKG}
+        if [ -d "test" ]; then
+          cd test
+        elif [ -d "tests" ]; then
+          cd tests
+        else
+          tres="no tests"
+        fi
+        if [ -z "${tres}" ]; then
+          if [ -r "src/m3makefile" ]; then
+            echo "=== tests in `pwd` ==="
+            echo " +++ ${PKG_ACTION} -DRUN +++"
+            tres=`${PKG_ACTION} -DRUN` 2> stderr
+            terr=`cat stderr`
+          else
+            tres="no src/m3makefile"
+          fi
+        fi
+        cd "${HERE}"
       fi
     else
       touch "${PKG}/stdout.log"
@@ -225,15 +265,15 @@ for PKG in ${PKGS} ; do
     #if grep ': imported interface' "${PKG}/stdout.log" >/dev/null 2>&1; then
     #  res=2
     #fi
-    ERRS=`write_pkg_report "${PKG}" $res`
+    ERRS=`write_pkg_report "${PKG}" "${res}" "${tres}" "${terr}"`
   fi
-  if [ "$res" != "0" ] ; then
+  if [ "$res" != "0" -a "$res" != "2" ] ; then
     if [ "${KEEP_GOING}" != "yes" ] ; then
       echo " *** execution of $PKG_ACTION failed ***" 
       exit 1
     fi
   fi
-  if [ "${KEEP_GOING}" = "yes" ] ; then
+  if [ "$res" != "0" -a "${KEEP_GOING}" = "yes" ] ; then
     echo " ==> $PKG_ACTION returned $res"
   else
     echo " ==> ${PKG} done"
