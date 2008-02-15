@@ -13,3 +13,7 @@ end
 implementation("Main")
 program ("test-regex")
 
+if defined("RUN")
+  r = q_exec( "." & SL & "test-regex" )
+  write( CR, "program returned ", r, CR )
+end
