@@ -338,7 +338,7 @@ MoveFile(
     b,
     )
 is
-    if equal(OS, "Windows_NT")
+    if equal(OS, "Windows_NT") and not equal (OS_TYPE, "POSIX")
         exec("@cmd", "/c", "move", a, b)
     else
         exec("@mv", a, b)
@@ -772,7 +772,7 @@ is
     local ret_code = 0
 
     local readonly lib_file = lib & ".lib"
-    local readonly lib0_file = lib & ".lib.sa"
+    local readonly lib0_file = lib_file & ".sa"
     local readonly def_file = lib & ".def"
     local readonly dll_file = lib & ".dll"
     local readonly manifest_file  = dll_file & ".manifest"
@@ -896,7 +896,6 @@ is
         BindExport(dll_file)
         PdbExport(pdb_file)
         install_derived(lib0_file)
-
     end
     return ret_code
 end
@@ -912,8 +911,8 @@ skip_lib(
     shared,
     )
 is
-    local lib_file  = lib & ".lib"
-    local lib0_file = lib & ".lib.sa"
+    local readonly lib_file = lib & ".lib"
+    local readonly lib0_file = lib_file & ".sa"
     local def_file  = lib & ".def"
     local dll_file  = lib & ".dll"
     local manifest_file  = dll_file & ".manifest"
