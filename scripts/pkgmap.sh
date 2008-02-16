@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.16 2008-02-16 00:12:26 wagner Exp $
+# $Id: pkgmap.sh,v 1.17 2008-02-16 10:29:16 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -237,7 +237,10 @@ for PKG in ${PKGS} ; do
           if [ -r "src/m3makefile" ]; then
             echo "=== tests in `pwd` ==="
             echo " +++ ${PKG_ACTION} -DRUN +++"
-            tres=`${PKG_ACTION} -DRUN 2> stderr`
+            LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${PKG}/${TARGET}"
+            DYLD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+            export LD_LIBRARY_PATH DYLD_LIBRARY_PATH
+            tres=`cm3 -build -DTEST -DRUN 2> stderr`
             terr=`cat stderr`
           else
             tres="no src/m3makefile"
