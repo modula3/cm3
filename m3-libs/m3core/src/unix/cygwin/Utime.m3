@@ -43,4 +43,5 @@ BEGIN
 END setitimer;
 
 BEGIN
+    init();
 END Utime.
