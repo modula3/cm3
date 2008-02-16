@@ -9,7 +9,26 @@
 if equal (TARGET, "NT386") and equal (OS_TYPE, "POSIX")
 
     Module("OSErrorWin32")
-    Module("FileWin32")
+
+    %
+    % This leads to revealing File.T twice, which
+    % the compiler only seems to sometimes notice.
+    % Not having this breaks NT386GNU serial but
+    % for now that is ok.
+    %
+    % Ideally we restructure this somewhat
+    % so that FileWin32 can be used without
+    % revealing the portable parts.
+    %
+    % As to why the multiple revelations are only
+    % sometimes noticed deserves further investigation.
+    % In particular, the compiler noticed when I continued
+    % to try to have more Win32 code available on NT386GNU,
+    % particularly ProcessWin32 in trying to avoid problems
+    % with ProcessPosix on NT386GNU/Cygwin.
+    %
+    % Module("FileWin32")
+    %
 
 else
 
