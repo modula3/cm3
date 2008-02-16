@@ -6,7 +6,7 @@ INTERFACE Uutsname;
 FROM Ctypes IMPORT char, int;
 
 CONST
-  SYS_NMLN = 65;
+  SYS_NMLN = 20;
 
 TYPE
   struct_utsname_star = UNTRACED REF struct_utsname;
