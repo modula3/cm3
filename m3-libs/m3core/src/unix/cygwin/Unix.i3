@@ -121,14 +121,14 @@ CONST   (* request *)
   F_GETFL =  3;   (* Get fd status flags *)
   F_SETFL =  4;   (* Set fd status flags *)
 
+  F_GETOWN = 5;   (* Get owner *)
+  F_SETOWN = 6;   (* Set owner *)
+
   (* in these three cases, you need to pass LOOPHOLE (ADR (v), int) 
      for arg, where v is a variable of type struct_flock *)
-  F_GETLK  = 5;   (* Get file lock *)
-  F_SETLK  = 6;   (* Set file lock *)
-  F_SETLKW = 7;   (* Set file lock and wait *)
-
-  F_SETOWN = 8;   (* Set owner *)
-  F_GETOWN = 9;   (* Get owner *)
+  F_GETLK  = 7;   (* Get file lock *)
+  F_SETLK  = 8;   (* Set file lock *)
+  F_SETLKW = 9;   (* Set file lock and wait *)
 
 CONST (* fd flags *)
   FD_CLOEXEC = 1;    (* Close file descriptor on exec() *)
