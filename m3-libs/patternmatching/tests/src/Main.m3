@@ -126,7 +126,7 @@ PROCEDURE test_unix (pline, sline: TEXT; cmperr, result: BOOLEAN) =
   VAR
     ret    : Ctypes.char_star;
     rex    : Ctypes.char_star;
-    unixret: Ctypes.int;
+    unixret: Ctypes.int := -1;
   BEGIN
     (* first compile for unix and report error if it doesn't work *)
 
@@ -148,18 +148,20 @@ PROCEDURE test_unix (pline, sline: TEXT; cmperr, result: BOOLEAN) =
 
     (* execute for unix and time... *)
 
-    start_time := Time.Now();
-    FOR i := 1 TO reps DO
-      rex := M3toC.SharedTtoS(sline);
-      TRY <* NOWARN *>
-        unixret := regex.re_exec(rex);
-        M3toC.FreeSharedS(sline, rex);
-      EXCEPT ELSE
-        PutText (stdout, " ** ERROR: unexpected runtime exception\n");
-        RETURN;
-      END;
-    END; (* for *)
-    stop_time := Time.Now();
+    IF ret = NIL THEN
+      start_time := Time.Now();
+      FOR i := 1 TO reps DO
+        rex := M3toC.SharedTtoS(sline);
+        TRY <* NOWARN *>
+          unixret := regex.re_exec(rex);
+          M3toC.FreeSharedS(sline, rex);
+        EXCEPT ELSE
+          PutText (stdout, " ** ERROR: unexpected runtime exception\n");
+          RETURN;
+        END;
+      END; (* for *)
+      stop_time := Time.Now();
+    END;
 
     IF ((unixret = 1) # result) THEN
       PutText(
