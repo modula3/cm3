@@ -1,4 +1,4 @@
-(* $Id: Utime.m3,v 1.1 2008-02-11 14:27:30 jkrell Exp $ *)
+(* $Id: Utime.m3,v 1.2 2008-02-16 20:03:22 jkrell Exp $ *)
 
 MODULE Utime;
 
@@ -43,4 +43,5 @@ BEGIN
 END setitimer;
 
 BEGIN
+    init();
 END Utime.
