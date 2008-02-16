@@ -237,7 +237,7 @@ for PKG in ${PKGS} ; do
           if [ -r "src/m3makefile" ]; then
             echo "=== tests in `pwd` ==="
             echo " +++ ${PKG_ACTION} -DRUN +++"
-            tres=`${PKG_ACTION} -DRUN` 2> stderr
+            tres=`${PKG_ACTION} -DRUN 2> stderr`
             terr=`cat stderr`
           else
             tres="no src/m3makefile"
