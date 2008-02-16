@@ -7,7 +7,7 @@
 (*      modified on Tue Jun  8 16:26:41 PDT 1993 by mcjones           *)
 (*      modified on Mon Jan 11 14:34:49 PST 1993 by muller            *)
 
-(* $Id: Unix.i3,v 1.7 2008-02-16 20:26:01 jkrell Exp $ *)
+(* $Id: Unix.i3,v 1.8 2008-02-16 21:09:59 jkrell Exp $ *)
 
 INTERFACE Unix;
 
@@ -54,10 +54,6 @@ CONST
 (*** access - determine the accessibility of file ***)
 
 <*EXTERNAL*> PROCEDURE access (path: const_char_star; mod: int): int;
-
-(*** sbrk - change data segment space allocation *)
-
-<*EXTERNAL*> PROCEDURE sbrk (inc: ptrdiff_t): int;
 
 
 (*** chdir - change working directory ***)
@@ -206,38 +202,18 @@ CONST
 CONST
 
   IOCPARM_MASK = 16_7f;                 (* 128 bytes at most in parameters *)
-  IOC_VOID  = Shift (1, 29);       (* no parameters *)
   IOC_OUT   = Shift (1, 30);       (* copy out parameters *)
   IOC_IN    = Shift (1, 31);       (* copy in parameters *)
   IOC_INOUT = Or (IOC_IN, IOC_OUT);
 
-  NOARG  = IOC_VOID;
   R      = IOC_OUT;
-  W      = IOC_IN;
-  RW     = IOC_INOUT;
   
-(* if we had the structure declarations, we would use these 
-  INT    = Shift (And (BYTESIZE (INTEGER),              IOCPARM_MASK), 16);
-
-but instead we use these *)
-
   INT    = Shift (And (BYTESIZE (INTEGER),              IOCPARM_MASK), 16);
 
   (* File i/o controls *)
   FC = Shift (ORD ('f'), 8);
 
-  FIOCLEX =   Or (NOARG,       Or (FC,   1));  (* Set exclusive use on fd*)
-  FIONCLEX =  Or (NOARG,       Or (FC,   2));  (* Remove exclusive use   *)
-  FIOSINUSE = Or (NOARG,       Or (FC,   3));  (* Test & set IINUSE in inode *)
-  FIOCINUSE = Or (NOARG,       Or (FC,   4));  (* Clear mutex            *)
   FIONREAD =  Or (Or (R, INT), Or (FC, 127)); (* Get # bytes to read    *)
-  FIONBIO =   Or (Or (W, INT), Or (FC, 126)); (* Set/clear non-bl.i/o *)
-  FIOASYNC =  Or (Or (W, INT), Or (FC, 125)); (* Set/clear async i/o    *)
-      FIOSETOWN = Or (Or (W, INT), Or (FC, 124)); (* Set owner              *)
-  FIOGETOWN = Or (Or (R, INT), Or (FC, 123)); (* Get owner              *)
-  FIONBUF =   Or (Or (W, INT), Or (FC, 122)); (* N_buff i/o buf *)
-  FIONONBUF = Or (NOARG,       Or (FC, 121)); (* N_buff i/o on buf      *)
-  FIONBDONE = Or (Or (W, INT), Or (FC, 120)); (* N_buff i/o done buf    *)
 
 CONST
   R_OK = 8_4;
