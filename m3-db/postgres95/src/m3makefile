@@ -10,6 +10,8 @@ Interface ("PQ")
 Interface ("PQcomm")
 Interface ("Postgres")
 
+implementation ("PQ")
+
 if equal (TARGET, "ALPHA_OSF")
   % missing libpq.a => can't build local .so file...
   build_standalone ()

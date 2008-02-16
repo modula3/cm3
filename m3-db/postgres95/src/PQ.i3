@@ -159,12 +159,21 @@ TYPE
   END;
   PGresult_star = UNTRACED REF PGresult;
 
-<*EXTERNAL*> PROCEDURE PQsetdb (pghost: char_star;
+<*EXTERNAL*> PROCEDURE PQsetdbLogin(pghost: char_star;
+                                    pgport: char_star; 
+                                    pgoptions: char_star;
+                                    pgtty: char_star;
+                                    dbName: char_star;
+                                    login: char_star;
+                                    pwd: char_star): PGconn_star;
+  (* Make a new client connection to the backend *)
+
+(* PQsetdb is just there for compatibility *)
+             PROCEDURE PQsetdb (pghost: char_star;
                                 pgport: char_star; 
                                 pgoptions: char_star;
                                 pgtty: char_star;
                                 dbName: char_star): PGconn_star;
-  (* Make a new client connection to the backend *)
 
 <*EXTERNAL*> PROCEDURE PQfinish (conn: PGconn_star);
   (* close the current connection and free the PGconn data structure 
