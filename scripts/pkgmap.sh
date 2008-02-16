@@ -182,8 +182,10 @@ write_pkg_report() {
     echo "  <td class=\"small\"><pre>"
     echo "$errlines"
     echo "  </pre></td>"
-    errlines=`echo "$3" | egrep 'version stamp mismatch|bad version stamps|Fatal Error|quake runtime error'`
-    if [ -n "$4" ]; then
+    errlines=`echo "$3" | egrep -i 'version stamp mismatch|bad version stamps|Fatal Error|quake runtime error'`
+    if [ "$3" = "no tests" -o "$3" = "no src/m3makefile" ]; then
+      bgt="bgyellow"
+    elif [ -n "$4" ]; then
       bgt="bgorange"
     fi
     if [ -n "${errlines}" ]; then
@@ -240,11 +242,11 @@ for PKG in ${PKGS} ; do
         if [ -z "${tres}" ]; then
           if [ -r "src/m3makefile" ]; then
             echo "=== tests in `pwd` ==="
-            echo " +++ cm3 -build -DTEST -DRUN -DROOT=$ROOT +++"
+            echo " +++ cm3 -build -override -DTEST -DRUN -DROOT=$ROOT +++"
             LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${PKG}/${TARGET}"
             DYLD_LIBRARY_PATH="$LD_LIBRARY_PATH"
             export LD_LIBRARY_PATH DYLD_LIBRARY_PATH
-            tres=`cm3 -build -DTEST -DRUN -DROOT="${ROOT}" 2> stderr`
+            tres=`cm3 -build -override -DTEST -DRUN -DROOT="${ROOT}" 2> stderr`
             terr=`cat stderr`
           else
             tres="no src/m3makefile"
