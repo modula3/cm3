@@ -14,7 +14,7 @@ INTERFACE Unix;
 FROM Word IMPORT Or, And, Shift;
 
 FROM Ctypes IMPORT short, int, long, const_char_star, char_star, char_star_star;
-FROM Utypes IMPORT off_t, size_t, uid_t, gid_t;
+FROM Utypes IMPORT off_t, size_t, uid_t, gid_t, pid_t;
 FROM Utime IMPORT struct_timeval;
 
 TYPE
@@ -24,19 +24,16 @@ CONST
   MaxPathLen = 1024;
 
 (*** file flags ***)
-(* I'm not sure about these - take this with a pinch of salt -rrw *)
 
 CONST
   FREAD =      8_000001;        (* descriptor read/receive'able *)
   FWRITE =     8_000002;        (* descriptor write/send'ale *)
-  FCREAT =     8_000100;        (* create if nonexistant *)
-  FEXCL =      8_000200;        (* error if already created *)
-  FTRUNC  =    8_001000;        (* truncate to zero length *)
-  FAPPEND =    8_002000;        (* append on each write *)
-  FNBLOCK =    8_004000;        (* POSIX no delay *)
-  FNDELAY =    FNBLOCK;         (* no delay *)
-  FSYNCRON =   8_010000;        (* write file syncronously *)
-  FASYNC  =    8_020000;        (* Signal pgrp when data ready *)
+  FAPPEND   = 16_0008;          (* append on each write *)
+  FCREAT    = 16_0200;          (* create if nonexistant *)
+  FTRUNC    = 16_0400;          (* truncate to zero length *)
+  FEXCL     = 16_0800;          (* error if already created *)
+  FNONBLOCK = 16_4000;          (* non blocking I/O (POSIX style) *)
+  FNDELAY   = FNONBLOCK;        (* non blocking I/O (4.2 style) *)
 
 CONST
   MSETUID = 8_4000;
@@ -138,19 +135,15 @@ TYPE
   struct_flock = RECORD
     l_type:   short; (* see below *)
     l_whence: short;
-    l_start:  long   := 0;
-    l_len:    long   := 0;
-    l_pid:    int    := 0;
+    l_start:  off_t   := 0L;
+    l_len:    off_t   := 0L;
+    l_pid:    pid_t   := 0;
   END;
 
 CONST (* l_type values *)
-  F_RDLCK = 0; (* Read lock *) 
-  F_WRLCK = 1; (* Write lock *)
-  F_UNLCK = 2; (* Remove lock(s) *)
-
-  (* only on linux... *)
-  F_EXLCK = 4; (* exclusive lock *)
-  F_SHLCK = 8; (* shared lock *)
+  F_RDLCK = 1; (* Read lock *) 
+  F_WRLCK = 2; (* Write lock *)
+  F_UNLCK = 3; (* Remove lock(s) *)
 
 <*EXTERNAL*> PROCEDURE fcntl (fd, request, arg: int): int;
 
@@ -174,11 +167,6 @@ CONST
 
 
 (*** getdirentries - gets directory entries in a generic directory format ***)
-
-(* FIXME: disabled
-<*EXTERNAL*> PROCEDURE getdirentries (fd: int; buf: ADDRESS;
-                                  nbytes: int; VAR basep: long): int;
-*)
 
 (*** getdomainname, setdomainname - get or set name of current domain ***)
 
@@ -287,14 +275,11 @@ CONST (* flags *)
   O_RDWR   =    8_2;            (* open for read & write *)
   O_CREAT  =    FCREAT;         (* open with file create *)
   O_EXCL   =    FEXCL;          (* error on create if file exists *)
-  O_NOCTTY =    8_400;
   O_TRUNC  =    FTRUNC;         (* open with truncation *)
   O_APPEND =    FAPPEND;        (* append on each write *)
-  O_NONBLOCK =  FNBLOCK;        (* POSIX non-blocking I/O *)
   O_NDELAY =    FNDELAY;        (* non-blocking open *)
-  O_FSYNC =     FSYNCRON;       (* syncronous write *)
 
-  M3_NONBLOCK = O_NDELAY; (* -1 => would block, 0 => EOF *)
+  M3_NONBLOCK = O_NDELAY; (* -1 => would block, 0 => EOF *) 
 
 <*EXTERNAL*> PROCEDURE open (name: const_char_star; flags, mode: int): int;
 
