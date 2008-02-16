@@ -5,7 +5,7 @@ FROM PQ IMPORT PGconn_star, PGresult_star, PQfinish, PQexec, PQsetdb, PQstatus,
                PQgetvalue, PQntuples, PQftype,
                CONNECTION, PGRS;
 IMPORT Process, IO, Fmt, Params;
-FROM M3toC IMPORT TtoS, StoT, CopyStoT;
+FROM M3toC IMPORT SharedTtoS, FreeSharedS, StoT, CopyStoT;
 FROM Ctypes IMPORT char_star, int;
 IMPORT Word;
 
@@ -38,7 +38,7 @@ BEGIN
   m_dbname := Params.Get(1);
   query := Params.Get(2);
 
-  dbName := TtoS (m_dbname);
+  dbName := SharedTtoS (m_dbname);
 
   (* begin, by setting the parameters for a backend connection
      if the parameters are Null, then the system will try to use
@@ -56,7 +56,7 @@ BEGIN
   END;
 
   IO.Put(" start a transaction block \n");
-  res := PQexec(conn, TtoS("BEGIN")); 
+  res := PQexec(conn, SharedTtoS("BEGIN")); 
   IF (PQresultStatus(res) # PGRS.COMMAND_OK) THEN
     IO.Put("BEGIN command failed\n");
     PQclear(res);
@@ -67,7 +67,7 @@ BEGIN
   PQclear(res); 
 
   IO.Put(" fetch instances for query " & query & "\n");
-  res := PQexec(conn,TtoS("DECLARE myportal CURSOR FOR " & query));
+  res := PQexec(conn, SharedTtoS("DECLARE myportal CURSOR FOR " & query));
   
   IO.Put("result: 0x");
   IO.Put(Fmt.Unsigned(LOOPHOLE(res,Word.T)));
@@ -90,7 +90,7 @@ BEGIN
   END;
   PQclear(res);
 
-  res := PQexec(conn,TtoS("FETCH ALL in myportal"));
+  res := PQexec(conn, SharedTtoS("FETCH ALL in myportal"));
   IF (PQresultStatus(res) # PGRS.TUPLES_OK) THEN
     IO.Put ("FETCH ALL command didn't return tuples properly\n");
     PQclear(res);
@@ -131,16 +131,17 @@ BEGIN
   PQclear(res);
   
   IO.Put(" close the portal \n");
-  res := PQexec(conn, TtoS("CLOSE myportal"));
+  res := PQexec(conn, SharedTtoS("CLOSE myportal"));
   PQclear(res);
 
   IO.Put(" end the transaction \n");
-  res := PQexec(conn, TtoS("END"));
+  res := PQexec(conn, SharedTtoS("END"));
   PQclear(res);
 
   IO.Put(" close the connection to the database and cleanup \n");
   PQfinish(conn);
 
+  FreeSharedS(m_dbname, dbName);
 END Demo2.
   
 
