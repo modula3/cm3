@@ -103,6 +103,7 @@ report_header() {
     .bggreen  { background:#44FF44; }
     .bgblue   { background:#5555FF; }
     .bgyellow { background:#FFFF00; }
+    .bgorange { background:#FFAA00; }
     .small    { font-size:8pt; }
     .tl       { text-align: left; vertical-align: top; }
     //-->
@@ -182,7 +183,10 @@ write_pkg_report() {
     echo "$errlines"
     echo "  </pre></td>"
     errlines=`echo "$3" | egrep 'version stamp mismatch|bad version stamps|Fatal Error|quake runtime error'`
-    if [ -n "$4" -o -n "${errlines}" ]; then
+    if [ -n "$4" ]; then
+      bgt="bgorange"
+    fi
+    if [ -n "${errlines}" ]; then
       bgt="bgred"
     fi
     echo "  <td class=\"$bgt\"><pre class=\"small\">"
@@ -236,11 +240,11 @@ for PKG in ${PKGS} ; do
         if [ -z "${tres}" ]; then
           if [ -r "src/m3makefile" ]; then
             echo "=== tests in `pwd` ==="
-            echo " +++ ${PKG_ACTION} -DRUN +++"
+            echo " +++ cm3 -build -DTEST -DRUN -DROOT=$ROOT +++"
             LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${PKG}/${TARGET}"
             DYLD_LIBRARY_PATH="$LD_LIBRARY_PATH"
             export LD_LIBRARY_PATH DYLD_LIBRARY_PATH
-            tres=`cm3 -build -DTEST -DRUN 2> stderr`
+            tres=`cm3 -build -DTEST -DRUN -DROOT="${ROOT}" 2> stderr`
             terr=`cat stderr`
           else
             tres="no src/m3makefile"
