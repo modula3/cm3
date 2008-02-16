@@ -855,10 +855,37 @@ PROCEDURE CollectSomeInStateZero () =
 
     mover := NEW (Mover);  (* get one in the new space *)
 
-    (* It is possible that this collection started after a thread had
-       validated references from its stack.  We must ensure that the heap
-       pages referenced by such threads remain valid after the
-       collection begins. *)
+    (* VAR/READONLY and WITH allow programmers to generate interior pointers
+       to heap objects that are not true traced references.  These interior
+       pointers can be held only on the stack or in registers.  Accesses
+       through those pointers to reference fields will not be mediated by the
+       read barrier, which means a mutator could load a white reference unless
+       we do something about it.  To prevent mutators loading white references
+       in this way, whenever a VAR or WITH is used to create an interior
+       pointer in a program we run the read barrier on the reference from
+       which that pointer is created, to make sure the target of the reference
+       is black -- i.e., that it contains no white references.  This will
+       prevent mutators from ever loading a white reference.  Thus, we must
+       preserve the invariant after initiating GC that all stacks contain only
+       black references (i.e., that they refer only to black pages).  We do
+       that here by processing the pinned pages (i.e., promoted as directly
+       reachable from the stacks/registers) and cleaning them to make them
+       black.
+
+       A similar problem holds for dirty pages and the generational collector.
+       Since mutators holding interior pointers can freely store references
+       into objects in the heap without running the write barrier, we run the
+       write barrier on VAR parameters and WITH where the value is assigned in
+       the body of the WITH.  The barrier makes sure that the objects for
+       which the interior pointers are derived are marked as (potentially)
+       dirty.  We must preserve this invariant after initiating GC to make
+       sure such pages are left dirty.
+
+       In both cases, CleanPage, called from FinishThreadPages, will do the
+       right thing based on the page descriptors (clean/dirty,
+       Older/Younger).
+    *)
+
     IF generational AND RTLinker.generational
       OR incremental AND RTLinker.incremental THEN
       FinishThreadPages ();
