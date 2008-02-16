@@ -53,6 +53,12 @@ PROCEDURE Usage () =
                 & "-unix       -- compare unix regex(3) matching\n");
   END Usage;
 
+PROCEDURE PutString (s: Ctypes.char_star) =
+  VAR t := M3toC.CopyStoT (s);
+  BEGIN
+    Wr.PutText (stdout, t);
+  END PutString;
+
 PROCEDURE GetParameters () =
   VAR 
     pp := NEW(ParseParams.T).init(stderr);
@@ -125,11 +131,18 @@ PROCEDURE test_unix (pline, sline: TEXT; cmperr, result: BOOLEAN) =
     (* first compile for unix and report error if it doesn't work *)
 
     rex := M3toC.SharedTtoS(pline);
-    ret := regex.re_comp(rex);
-    M3toC.FreeSharedS(pline, rex);
+    TRY <* NOWARN *>
+      ret := regex.re_comp(rex);
+      M3toC.FreeSharedS(pline, rex);
+    EXCEPT ELSE
+      PutText (stdout, " ** ERROR: unexpected runtime exception\n");
+      RETURN;
+    END;
     IF ret # NIL AND NOT cmperr THEN
       PutText(
-        stdout, " ** Unexpected unix re_comp error for " & pline & "\n");
+        stdout, " ** Unexpected unix re_comp error for " & pline & ": ");
+      PutString (ret);
+      PutText (stdout, "\n");
       RETURN;
     END;
 
@@ -138,15 +151,24 @@ PROCEDURE test_unix (pline, sline: TEXT; cmperr, result: BOOLEAN) =
     start_time := Time.Now();
     FOR i := 1 TO reps DO
       rex := M3toC.SharedTtoS(sline);
-      unixret := regex.re_exec(rex);
-      M3toC.FreeSharedS(sline, rex);
+      TRY <* NOWARN *>
+        unixret := regex.re_exec(rex);
+        M3toC.FreeSharedS(sline, rex);
+      EXCEPT ELSE
+        PutText (stdout, " ** ERROR: unexpected runtime exception\n");
+        RETURN;
+      END;
     END; (* for *)
     stop_time := Time.Now();
 
     IF ((unixret = 1) # result) THEN
       PutText(
-        stdout, Fmt.F(" ** re_exec disagrees for '%s' (unix says %s)\n",
-                      pline, Fmt.Bool(unixret = 1)));
+        stdout, Fmt.F(" ** re_exec disagrees for '%s' '%s' (unix says %s)\n",
+                      pline, sline, Fmt.Bool(unixret = 1)));
+    ELSE
+      PutText(
+        stdout, Fmt.F(" OK '%s' '%s' (%s)\n", pline, sline,
+                      Fmt.Bool(unixret = 1)));
     END;
 
     IF time THEN PrintTime("Unix ", start_time, stop_time); END; (* if *)
@@ -168,6 +190,8 @@ BEGIN
         pat := RegEx.Compile(pstr);
       EXCEPT
       | RegEx.Error (err) => cmperr := err;
+      ELSE
+        cmperr := "unexpected runtime exception"
       END; (* try *)
 
       IF cmperr = NIL AND dump THEN
