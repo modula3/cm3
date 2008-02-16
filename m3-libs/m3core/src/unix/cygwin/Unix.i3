@@ -14,7 +14,7 @@ INTERFACE Unix;
 FROM Word IMPORT Or, And, Shift;
 
 FROM Ctypes IMPORT short, int, long, const_char_star, char_star, char_star_star;
-FROM Utypes IMPORT off_t, size_t, uid_t, gid_t, pid_t;
+FROM Utypes IMPORT off_t, size_t, pid_t;
 FROM Utime IMPORT struct_timeval;
 
 TYPE
@@ -52,7 +52,12 @@ CONST
   Mrwrwrw = MROWNER + MWOWNER + MRGROUP + MWGROUP + MROTHER + MWOTHER;
 
 (*** access - determine the accessibility of file ***)
-
+CONST
+ (* parameters to access *)
+  F_OK = 0; (* exist *)
+  X_OK = 1; (* executable *)
+  W_OK = 2; (* writable *)
+  R_OK = 4; (* readable *)
 <*EXTERNAL*> PROCEDURE access (path: const_char_star; mod: int): int;
 
 
@@ -60,32 +65,9 @@ CONST
 
 <*EXTERNAL*> PROCEDURE chdir (path: const_char_star): int;
 
-
-(*** chmod, fchmod - change mde of file ***)
-
-<*EXTERNAL*> PROCEDURE chmod (path: const_char_star; mode: int): int;
-<*EXTERNAL*> PROCEDURE fchmod (fd, mode: int): int;
-
-
-(*** chown, fchown - change owner and group of a file ***)
-
-<*EXTERNAL*> PROCEDURE chown (path: const_char_star; owner: uid_t; group: gid_t): int;
-<*EXTERNAL*> PROCEDURE fchown (fd: int; owner: uid_t; group: gid_t): int;
-
-(*** chroot - change root directory ***)
-
-<*EXTERNAL*> PROCEDURE chroot (dirname: const_char_star): int;
-
-
 (*** close - delete a descriptor ***)
 
 <*EXTERNAL*> PROCEDURE close (d: int): int;
-
-
-(*** creat - create a new file ***)
-
-<*EXTERNAL*> PROCEDURE creat (name: const_char_star; mode: int): int;
-
 
 (*** dup, dup2 - duplicate an open file descriptor ***)
 
@@ -153,42 +135,17 @@ CONST
 
 <*EXTERNAL*> PROCEDURE flock (fd, operation: int): int;
 
-(*** fork - create a new process ***)
-
-<*EXTERNAL*> PROCEDURE fork (): int;
-
 (*** fsync - synchronize a file's in-core state with that on disk ***)
 
 <*EXTERNAL*> PROCEDURE fsync (fd: int): int;
-
-
-(*** getdirentries - gets directory entries in a generic directory format ***)
-
-(*** getdomainname, setdomainname - get or set name of current domain ***)
-
-<*EXTERNAL*> PROCEDURE getdomainname (name: char_star; namelen: int): int;
-<*EXTERNAL*> PROCEDURE setdomainname (name: char_star; namelen: int): int;
 
 (*** getdtablesize - get descriptor table size ***)
 
 <*EXTERNAL*> PROCEDURE getdtablesize (): int;
 
-(*** getgroups - get group access list ***)
-
-<*EXTERNAL*> PROCEDURE getgroups (gidsetsize: int; VAR gidset: int): int;
-
-(*** gethostid, sethostid - get/set unique identifier of current host ***)
-
-<*EXTERNAL*> PROCEDURE gethostid (): int;
-
-<*EXTERNAL*> PROCEDURE sethostid (hostid: int): int;
-
-
 (*** gethostname, sethostname - get/set name of current host ***)
 
 <*EXTERNAL*> PROCEDURE gethostname (name: char_star; namelen: int): int;
-
-<*EXTERNAL*> PROCEDURE sethostname (name: char_star; namelen: int): int;
 
 (*** getpagesize - get system page size ***)
 
@@ -215,17 +172,7 @@ CONST
 
   FIONREAD =  Or (Or (R, INT), Or (FC, 127)); (* Get # bytes to read    *)
 
-CONST
-  R_OK = 8_4;
-  W_OK = 8_2;
-  X_OK = 8_1;
-  F_OK = 8_0;
-
 <*EXTERNAL*> PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
-
-(*** link - link to a file ***)
-
-<*EXTERNAL*> PROCEDURE link (name1, name2: const_char_star): int;
 
 
 (*** lseek, tell - move read/write pointer ***)
@@ -259,6 +206,9 @@ CONST (* flags *)
 
 <*EXTERNAL*> PROCEDURE open (name: const_char_star; flags, mode: int): int;
 
+(*** creat - create a new file ***)
+
+<*EXTERNAL*> PROCEDURE creat (name: const_char_star; mode: int): int;
 
 (*** pipe - create an interprocess channel ***)
 CONST
@@ -277,26 +227,6 @@ CONST
 (*** rmdir - remove a directory file ***)
 
 <*EXTERNAL*> PROCEDURE rmdir (path: const_char_star): int;
-
-(*** select - synchronous I/O mutiplexing ***)
-
-CONST
-  MAX_FDSET = 256;
-
-TYPE
-  FDSet = SET OF [0 .. MAX_FDSET - 1];
-
-<*EXTERNAL*> PROCEDURE select (nfds: int;
-                           readfds, writefds, exceptfds: UNTRACED REF FDSet;
-                           timeout: UNTRACED REF struct_timeval): int;
-
-(*** symlink - make symbolic link to a file ***)
-
-<*EXTERNAL*> PROCEDURE symlink (name1, name2: const_char_star): int;
-
-(*** sync - update super-block ***)
-
-<*EXTERNAL*> PROCEDURE sync (): int;
 
 (*** truncate, ftruncate - truncate a file to a specified length ***)
 
@@ -317,11 +247,7 @@ TYPE
 
 <*EXTERNAL*> PROCEDURE vfork (): int;
 
-(*** isatty(3) ***)
-<*EXTERNAL*> PROCEDURE isatty (filedes: int): int;
-
 (*** system(3) ***)
 <*EXTERNAL*> PROCEDURE system (string: const_char_star): int;
-
 
 END Unix.
