@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.46 2008-02-14 12:10:07 jkrell Exp $
+# $Id: pylib.py,v 1.47 2008-02-16 21:05:53 jkrell Exp $
 
 import os
 from os import getenv
@@ -266,6 +266,7 @@ if (UName.startswith("windows")
         Config = "NT386GNU"
         OSType = "POSIX"
         GCC_BACKEND = True
+        HAVE_SERIAL = False # temporary..
 
     elif ((Target.startswith("NT386MINGNU")
         or UNameCommand.startswith("mingw")
