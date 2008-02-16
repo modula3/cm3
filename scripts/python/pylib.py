@@ -266,6 +266,7 @@ if (UName.startswith("windows")
         Config = "NT386GNU"
         OSType = "POSIX"
         GCC_BACKEND = True
+        HAVE_SERIAL = False # temporary..
 
     elif ((Target.startswith("NT386MINGNU")
         or UNameCommand.startswith("mingw")
