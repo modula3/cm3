@@ -23,12 +23,13 @@ IMPORT Thread;
 <* FATAL Thread.Alerted, Wr.Failure *>
 
 CONST
-  ServerPort = 2000;
+  ServerPort = 20000;
   ClientPort = ServerPort + 1;
   ReceiveTimeout = 10.0d0;
   BuffSz = 4;
   Ack = "ACK";
   AckLen = 3;
+  max = 100;
 
 PROCEDURE PrintIPError(arg: AtomList.T) =
   BEGIN
@@ -69,7 +70,7 @@ PROCEDURE UnpickleInt(READONLY bytes: ARRAY OF CHAR): INTEGER =
   END UnpickleInt;
 
 PROCEDURE Server() RAISES {IP.Error} =
-  VAR conn: UDP.T; d: UDP.Datagram; sent: INTEGER; BEGIN
+  VAR conn: UDP.T; d: UDP.Datagram; sent: INTEGER; n := 0; BEGIN
     d.bytes := NEW(REF ARRAY OF CHAR, BuffSz);
     Wr.PutText(stdout, "Starting server...\n");
     Wr.Flush(stdout);
@@ -91,6 +92,7 @@ PROCEDURE Server() RAISES {IP.Error} =
             END
           UNTIL packetReceived
         END;
+        INC(n);
         VAR i := UnpickleInt(d.bytes^); BEGIN
           Wr.PutText(stdout, "Received packet " & Fmt.Int(i)
             & " from " & HostPort(d.other) & "; sending ACK...\n");
@@ -98,6 +100,7 @@ PROCEDURE Server() RAISES {IP.Error} =
         END;
         sent := conn.sendText(d.other, Ack);
         <* ASSERT sent = AckLen *>
+        IF n > max THEN EXIT END;
       END
     FINALLY
       conn.close()
@@ -145,6 +148,7 @@ PROCEDURE Client(server: IP.Address) RAISES {IP.Error} =
           (* wait before trying again *)
           Thread.Pause(1.0d0);
           INC(cnt);
+          IF cnt > max THEN EXIT END;
         END
       END
     FINALLY
