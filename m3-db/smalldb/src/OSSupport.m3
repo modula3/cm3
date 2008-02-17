@@ -41,5 +41,3 @@ PROCEDURE Truncate(wr: T) RAISES {OSError.E} =
   
 BEGIN
 END OSSupport.
-
-
