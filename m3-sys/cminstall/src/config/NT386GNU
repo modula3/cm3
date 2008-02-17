@@ -1,5 +1,5 @@
 %
-% $Id: NT386GNU,v 1.24 2008-02-04 02:03:58 jkrell Exp $
+% $Id: NT386GNU,v 1.25 2008-02-17 10:21:16 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -38,8 +38,8 @@ readonly M3_BACKEND_MODE = "3"
 %  "2"  -- call m3_backend, it produces object code
 %  "3"  -- call m3_backend, it produces assembly code
 
-%eadonly NAMING_CONVENTIONS = "0"
 readonly NAMING_CONVENTIONS = "2"
+readonly TARGET_NAMING = "2"
 %                                        object files       libraries
 %  0=Unix                          =>  .o   .io    .mo       libXX.a
 %  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
