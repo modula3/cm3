@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.19 2008-02-16 23:48:05 wagner Exp $
+# $Id: pkgmap.sh,v 1.20 2008-02-17 09:56:34 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -62,6 +62,7 @@ done
 if [ -n "${REPORT}" ]; then
   DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
   R="${HTML_REPORT:-${TMPDIR}/cm3-pkg-report-${TARGET}-${DS}.html}"
+  R2="`basename ${R} .html`.part2}"
   ERRS=""
   REDPKGS=""
   GREENPKGS=""
@@ -137,6 +138,10 @@ report_header() {
 
 EOF
   ) > "${R}"
+  (
+    echo "<hr>"
+    echo "<h3>Package Test Result Details</hr>"
+  ) > "${R2}"
 }
 
 report_footer() {
@@ -145,6 +150,12 @@ report_footer() {
 
       </tbody>
     </table>
+EOF
+  ) >> "${R}"
+  cat "${R2}" >> "${R}"
+  rm "${R2}"
+  (
+    cat << EOF
 
     <hr>
     <address><a href="mailto:m3-support{at}elego.de">m3-support{at}elego.de</a></address>
@@ -157,6 +168,7 @@ EOF
 
 write_pkg_report() {
   res=""
+  # evaluate package build status
   errlines=`egrep '^".*, line .*:|warning:|version stamp mismatch|bad version stamps|Fatal Error|failed|quake runtime error|ignoring override|unsupported' "$1/stdout.log"`
   if [ "$2" = "0" ] ; then
     echo "<tr class=\"bggreen\">"
@@ -170,6 +182,20 @@ write_pkg_report() {
     ERRS=`printf "${ERRS}${errlines}\\n"`
     res=`printf "${PKG}${ERRS}\\n"`
   fi >> "${R}"
+
+  # evaluate package test status
+  terrlines=`echo "$3" | egrep -i 'version stamp mismatch|bad version stamps|Fatal Error|quake runtime error'`
+  if [ "$3" = "no tests" -o "$3" = "no src/m3makefile" -o \
+       "$3" = "not supported on ${TARGET}" ]; then
+    bgt="bgyellow"
+  elif [ -n "$4" ]; then
+    bgt="bgorange"
+  fi
+  if [ -n "${terrlines}" ]; then
+    bgt="bgred"
+  fi
+
+  # write table fields for build and test part
   (
     echo "  <td class=\"tl\">$1</td>"
     if [ "$2" = "0" ] ; then
@@ -182,25 +208,35 @@ write_pkg_report() {
     echo "  <td class=\"small\"><pre>"
     echo "$errlines"
     echo "  </pre></td>"
-    errlines=`echo "$3" | egrep -i 'version stamp mismatch|bad version stamps|Fatal Error|quake runtime error'`
-    if [ "$3" = "no tests" -o "$3" = "no src/m3makefile" ]; then
-      bgt="bgyellow"
-    elif [ -n "$4" ]; then
-      bgt="bgorange"
+    echo "  <td class=\"$bgt\">"
+    if [ "${bgt}" = "bgyellow" ]; then
+      echo "$3"
+    else
+      echo "    <a href=\"#tr_$1\" id=\"ref_tr_$1\">"
+      echo "      Test Result Details for $1"
+      echo "    </a>"
     fi
-    if [ -n "${errlines}" ]; then
-      bgt="bgred"
-    fi
-    echo "  <td class=\"$bgt\"><pre class=\"small\">"
-    echo "$3" | cut -c 1-80
-    if [ -n "$4" ]; then
-      echo "stderr:"
-      echo "$4" | cut -c 1-80
-    fi
-    echo "  </pre></td>"
+    echo "  </td>"
     echo "</tr>"
   ) >> "${R}"
+  # log errors to stdout
   echo "${ERRS}"
+
+  # gather detailed test output at the end of the report
+  (
+    if [ "${bgt}" != "bgyellow" ]; then
+      echo "<hr><h4><a id=\"tr_$1\" href=\"#ref_tr_$1\">"
+      echo "  Test Result Details for $1"
+      echo "</a></h4>"
+      echo "<pre class=\"$bgt small\">"
+      echo "$3"
+      if [ -n "$4" ]; then
+        echo "stderr:"
+        echo "$4"
+      fi
+      echo "</pre>"
+    fi
+  ) >> "${R2}"
 }
 
 if [ -n "${REPORT}" ]; then
@@ -212,7 +248,7 @@ OK=yes
 
 for PKG in ${PKGS} ; do
   echo "=== package ${PKG} ==="
-  tres=""
+  tres="not supported on ${TARGET}"
   terr=""
   if [ "${REPORT}" = "yes" ] ; then
     rm -f "${PKG}/stdout.log"
