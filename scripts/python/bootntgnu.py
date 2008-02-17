@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: bootntgnu.py,v 1.16 2008-02-04 01:10:39 jkrell Exp $
+# $Id: bootntgnu.py,v 1.17 2008-02-17 10:23:27 jkrell Exp $
 
 import sys
 import pylib
@@ -44,11 +44,8 @@ DoPackage(
     "cm3",
     ]) or sys.exit(1)
 
-# not yet, not working
 # ShipCompiler() or sys.exit(1)
 
-
 # DoPackage(argv_BuildShip, PackageSets["std"]) or sys.exit(1)
-
 
 print("%s: Success." % os.path.basename(sys.argv[0]))
