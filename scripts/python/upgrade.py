@@ -81,8 +81,8 @@ CopyConfigForDevelopment() or sys.exit(1)
 os.environ["OMIT_GCC"] = "yes"
 reload(pylib)
 
-DoPackage(argv_RealClean, pylib.PackageSets["core"]) or sys.exit(1)
-DoPackage(argv_BuildShip, pylib.PackageSets["core"]) or sys.exit(1)
+# DoPackage(argv_RealClean, pylib.PackageSets["core"]) or sys.exit(1)
+# DoPackage(argv_BuildShip, pylib.PackageSets["core"]) or sys.exit(1)
 
 #
 # If everything has been successfull, we do another compiler upgrade.

@@ -72,7 +72,8 @@ InstallRoot = os.path.dirname(os.path.dirname(SearchPath("cm3") or ""))
 # the root of the source tree
 #
 Root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-Root = Root.replace("\\", os.path.sep).replace("/", os.path.sep).replace("\\", "\\\\")
+# Root = Root.replace("\\", os.path.sep).replace("/", os.path.sep).replace("\\", "\\\\")
+Root = Root.replace("\\", "/")
 
 BuildAll = getenv("CM3_ALL") or False
 
@@ -358,7 +359,7 @@ def GetConfigForDistribution(Target):
 
 os.environ["CM3_TARGET"] = Target
 os.environ["CM3_ROOT"] = Root
-os.environ["M3CONFIG"] = GetConfigForDistribution(Config)
+os.environ["M3CONFIG"] = GetConfigForDistribution(Config).replace("\\", "/")
 # print("os.environ[M3CONFIG] is " + os.environ["M3CONFIG"])
 
 #-----------------------------------------------------------------------------
