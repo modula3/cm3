@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.17 2008-02-16 12:44:42 jkrell Exp $
+% $Id: NT386.common,v 1.18 2008-02-17 10:21:16 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -96,9 +96,9 @@ readonly INSTALL_IMPLS = FALSE
 readonly LibInPrefix  = { "MS" : "",          "GNU" : "-l"  }{LINKER} % aka NAMING_CONVENTIONS
 readonly LibInSuffix  = { "MS" : ".lib",      "GNU" : ""    }{LINKER} % aka NAMING_CONVENTIONS
 readonly LibPath      = { "MS" : "-libpath:", "GNU" : "-L"  }{LINKER}
-readonly LibOutPrefix = { "WIN32" : "",     "POSIX" : "lib" }{OS_TYPE} % aka NAMING_CONVENTIONS
-readonly LibOutSuffix = { "WIN32" : ".lib", "POSIX" : ".a"  }{OS_TYPE} % aka NAMING_CONVENTIONS
-readonly Obj          = { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE} % aka NAMING_CONVENTIONS
+readonly LibOutPrefix = { "WIN32" : "",     "POSIX" : "lib" }{"WIN32"} % OS_TYPE or NAMING_CONVENTIONS
+readonly LibOutSuffix = { "WIN32" : ".lib", "POSIX" : ".a"  }{"WIN32"} % OS_TYPE or NAMING_CONVENTIONS
+readonly Obj          = { "WIN32" : ".obj", "POSIX" : ".o"  }{"WIN32"} % OS_TYPE or NAMING_CONVENTIONS
 
 local
 readonly

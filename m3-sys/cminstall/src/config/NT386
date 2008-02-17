@@ -1,5 +1,5 @@
 %
-% $Id: NT386,v 1.53 2008-02-04 02:01:44 jkrell Exp $
+% $Id: NT386,v 1.54 2008-02-17 10:21:15 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -46,6 +46,7 @@ end
 % NAMING_CONVENTIONS is somewhat conflated with OS_TYPE and LINKER and this needs work.
 %
 readonly NAMING_CONVENTIONS = "2"
+readonly TARGET_NAMING = "2"
 %                                        object files       libraries
 %  0=Unix                          =>  .o   .io    .mo       libXX.a
 %  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
