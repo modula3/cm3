@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.11 2008-02-10 23:19:15 jkrell Exp $
+# $Id: upgrade.py,v 1.12 2008-02-17 10:23:27 jkrell Exp $
 
 import sys
 import pylib
@@ -81,8 +81,8 @@ CopyConfigForDevelopment() or sys.exit(1)
 os.environ["OMIT_GCC"] = "yes"
 reload(pylib)
 
-DoPackage(argv_RealClean, pylib.PackageSets["core"]) or sys.exit(1)
-DoPackage(argv_BuildShip, pylib.PackageSets["core"]) or sys.exit(1)
+# DoPackage(argv_RealClean, pylib.PackageSets["core"]) or sys.exit(1)
+# DoPackage(argv_BuildShip, pylib.PackageSets["core"]) or sys.exit(1)
 
 #
 # If everything has been successfull, we do another compiler upgrade.
