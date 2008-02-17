@@ -46,6 +46,7 @@ end
 % NAMING_CONVENTIONS is somewhat conflated with OS_TYPE and LINKER and this needs work.
 %
 readonly NAMING_CONVENTIONS = "2"
+readonly TARGET_NAMING = "2"
 %                                        object files       libraries
 %  0=Unix                          =>  .o   .io    .mo       libXX.a
 %  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
