@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.21 2008-02-17 10:31:04 wagner Exp $
+# $Id: pkgmap.sh,v 1.22 2008-02-17 13:57:21 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -169,6 +169,7 @@ EOF
 write_pkg_report() {
   res=""
   # evaluate package build status
+  pname=`echo $1 | sed -e 's;/;-;g'`
   errlines=`egrep '^".*, line .*:|warning:|version stamp mismatch|bad version stamps|Fatal Error|failed|quake runtime error|ignoring override|unsupported' "$1/stdout.log"`
   if [ "$2" = "0" ] ; then
     echo "<tr class=\"bggreen\">"
@@ -212,8 +213,8 @@ write_pkg_report() {
     if [ "${bgt}" = "bgyellow" ]; then
       echo "$3"
     else
-      echo "    <a href=\"#tr_$1\" id=\"ref_tr_$1\">"
-      echo "      Test Result Details for $1"
+      echo "    <a href=\"#tr_${pname}\" id=\"ref_tr_${pname}\">"
+      echo "      test result details for $1"
       echo "    </a>"
     fi
     echo "  </td>"
@@ -225,7 +226,7 @@ write_pkg_report() {
   # gather detailed test output at the end of the report
   (
     if [ "${bgt}" != "bgyellow" ]; then
-      echo "<hr><h4><a id=\"tr_$1\" href=\"#ref_tr_$1\">"
+      echo "<hr><h4><a id=\"tr_${pname}\" href=\"#ref_tr_${pname}\">"
       echo "  Test Result Details for $1"
       echo "</a></h4>"
       echo "<div class=\"$bgt\">"
