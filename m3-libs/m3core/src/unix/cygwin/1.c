@@ -1,5 +1,5 @@
 /*
-Test how Cygwin behavis.
+Test how Cygwin behaves.
 1) Does zero initialization work? Not in general. It isn't guaranteed
 2) Does static initialization work? Yes.
 */
@@ -7,6 +7,7 @@ Test how Cygwin behavis.
 #include <stdio.h>
 #include <pthread.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 void once_callback_z(void)
 {
@@ -48,6 +49,8 @@ int main()
     pthread_once_t o = PTHREAD_ONCE_INIT;
     pthread_rwlock_t rw = PTHREAD_RWLOCK_INITIALIZER;
     int a = { 0 };
+    struct stat st;
+    int fd = { 0 };
 
 #define A(b) a = b; printf("%s:%d\n", #b, a);
 
@@ -82,6 +85,50 @@ int main()
     A(pthread_cond_timedwait(&c5, &m7, &t)); /* This works. */
     A(pthread_cond_timedwait(&c5, &m8, &t)); /* This works. */
     A(pthread_cond_timedwait(&c5, &m9, &t)); /* This works. */
+
+    stat("/dev/null", &st);
+
+    printf("st_dev %x\n", (int) st.st_dev);
+    printf("st_ino %x\n", (int) st.st_ino);
+    printf("st_mode %x\n", (int) st.st_mode);
+    printf("st_nlink %x\n", (int) st.st_nlink);
+    printf("st_uid %x\n", (int) st.st_uid);
+    printf("st_gid %x\n", (int) st.st_gid);
+    printf("st_rdev %x\n", (int) st.st_rdev);
+
+    printf("offsets:\n");
+    printf("st_dev %x\n", offsetof(struct stat, st_dev));
+    printf("st_ino %x\n", offsetof(struct stat, st_ino));
+    printf("st_mode %x\n", offsetof(struct stat, st_mode));
+    printf("st_nlink %x\n", offsetof(struct stat, st_nlink));
+    printf("st_uid %x\n", offsetof(struct stat, st_uid));
+    printf("st_gid %x\n", offsetof(struct stat, st_gid));
+    printf("st_rdev %x\n", offsetof(struct stat, st_rdev));
+    printf("st_size %x\n", offsetof(struct stat, st_size));
+    printf("st_atim %x\n", offsetof(struct stat, st_atim));
+    printf("st_mtim %x\n", offsetof(struct stat, st_mtim));
+    printf("st_ctim %x\n", offsetof(struct stat, st_ctim));
+    printf("st_blksize %x\n", offsetof(struct stat, st_blksize));
+    printf("st_blocks %x\n", offsetof(struct stat, st_blocks));
+    printf("st_spare4 %x\n", offsetof(struct stat, st_spare4));
+    printf("sizeof(stat) %x\n", sizeof(struct stat));
+
+
+    fd = open("/dev/null", 0);
+    printf("fd %x\n", fd);
+    close(fd);
+
+    fd = open("/dev/null", 0);
+    printf("fd %x\n", fd);
+
+    fd = open("/dev/null", 0);
+    printf("fd %x\n", fd);
+
+    fd = open("/dev/null", 0);
+    printf("fd %x\n", fd);
+
+    fd = open("foo", 0);
+    printf("fd %x\n", fd);
 
     return 0;
 }

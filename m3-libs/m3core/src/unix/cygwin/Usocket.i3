@@ -11,7 +11,7 @@
 INTERFACE Usocket;
 
 
-IMPORT Ctypes, Utypes, Uuio;
+IMPORT Ctypes, Uuio;
 
 (*** sys/socket.h ***)
 
@@ -93,35 +93,6 @@ CONST
   AF_UNSPEC      = 0;            (* unspecified *)
   AF_UNIX        = 1;            (* local to host (pipes, portals) *)
   AF_INET        = 2;            (* internetwork: UDP, TCP, etc. *)
-  AF_AX25        = 3;            (* Amateur Radio AX.25 *)
-  AF_IPX         = 4;            (* Novell IPX *)
-  AF_APPLETALK   = 5;            (* Don't use this *)
-  AF_NETROM      = 6;            (* Amateur radio NetROM *)
-  AF_BRIDGE      = 7;            (* Multiprotocol bridge *)
-  AF_AAL5        = 8;            (* Reserved for Werner's ATM *)
-  AF_X25         = 9;            (* X.25 *)
-  AF_INET6       =10;            (* IPv6 *)
-
-  AF_MAX         = 12;
-
-(*****
-  AF_IMPLINK     = 3;            (* arpanet imp addresses *)
-  AF_PUP         = 4;            (* pup protocols: e.g. BSP *)
-  AF_CHAOS       = 5;            (* mit CHAOS protocols *)
-  AF_NS          = 6;            (* XEROX NS protocols *)
-  AF_NBS         = 7;            (* nbs protocols *)
-  AF_ECMA        = 8;            (* european computer manufacturers *)
-  AF_DATAKIT     = 9;            (* datakit protocols *)
-  AF_CCITT       = 10;           (* CCITT protocols, X.25 etc *)
-  AF_SNA         = 11;           (* IBM SNA *)
-  AF_DECnet	 = 12;           (* DECnet *)
-  AF_DLI	 = 13;           (* Direct data link interface *)
-  AF_LAT         = 14;           (* LAT *)
-  AF_HYLINK      = 15;           (* NSC Hyperchannel *)
-  AF_APPLETALK   = 16;           (* Apple talk *)
-  AF_BSC         = 17;           (* BISYNC 2780/3780 *)
-  AF_DSS         = 18;           (* Distributed system services *)
-*******)
 
 (*
  * Structure used by kernel to store most
@@ -153,56 +124,19 @@ CONST
   PF_UNSPEC      = AF_UNSPEC;
   PF_UNIX        = AF_UNIX;
   PF_INET        = AF_INET;
-  PF_AX25        = AF_AX25;
-  PF_IPX         = AF_IPX;
-  PF_APPLETALK   = AF_APPLETALK;
-  PF_NETROM      = AF_NETROM;
-  PF_BRIDGE      = AF_BRIDGE;
-  PF_AAL5        = AF_AAL5;
-  PF_X25         = AF_X25;
-  PF_INET6       = AF_INET6;
-
-  (* NO supported on Linux:
-  PF_IMPLINK     = AF_IMPLINK;
-  PF_PUP         = AF_PUP;
-  PF_CHAOS       = AF_CHAOS;
-  PF_NS          = AF_NS;
-  PF_NBS         = AF_NBS;
-  PF_ECMA        = AF_ECMA;
-  PF_DATAKIT     = AF_DATAKIT;
-  PF_CCITT       = AF_CCITT;
-  PF_SNA         = AF_SNA;
-  PF_DECnet      = AF_DECnet;
-  PF_DLI         = AF_DLI;
-  PF_LAT         = AF_LAT;
-  PF_HYLINK      = AF_HYLINK;
-  PF_APPLETALK   = AF_APPLETALK;
-  PF_BSC         = AF_BSC;
-  PF_DSS         = AF_DSS;
-  ************)
-
-  PF_MAX	 = AF_MAX;
-
-(*
- * Maximum queue length specifiable by listen.
- *)
-  SOMAXCONN      = 128;
 
 (*
  * Message header for recvmsg and sendmsg calls.
  *)
 TYPE
   struct_msghdr = RECORD
-    msg_name: Utypes.caddr_t;         (* optional address *)
+    msg_name: Ctypes.void_star;       (* optional address *)
     msg_namelen: Ctypes.int;          (* size of address *)
     msg_iov: Uuio.struct_iovec_star;  (* scatter/gather array *)
     msg_iovlen: Ctypes.int;           (* # elements in msg_iov *)
-    msg_control: Utypes.caddr_t;      (* Ancilliary data *)
+    msg_control: Ctypes.void_star;     (* Ancilliary data *)
     msg_controllen : Ctypes.int;      (* Length of control *)
     msg_flags : Ctypes.int;           (* Flags on recieved message *)
-
-(*    msg_accrights: Utypes.caddr_t;    (* access rights sent/received *)
-    msg_accrightslen: Ctypes.int; *)
   END;
 
 (* Used for storage of ancilliary object info *)
@@ -218,11 +152,7 @@ CONST
   MSG_OOB        = 16_1;         (* process out-of-band data *)
   MSG_PEEK       = 16_2;         (* peek at incoming message *)
   MSG_DONTROUTE  = 16_4;         (* send without using routing tables *)
-  MSG_CTRUNC     = 16_8;         (* Control data lost before delivery *)
-  MSG_PROXY      =16_10;         (* Supply or ask second address *)
-
-(*  MSG_MAXIOVLEN  = 16;
-***)
+  MSG_CTRUNC     = 16_0200;      (* Control data lost before delivery *)
 
 (*
  * Definitions for UNIX IPC domain.

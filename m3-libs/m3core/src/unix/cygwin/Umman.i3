@@ -8,83 +8,62 @@
 
 INTERFACE Umman;
 
-FROM Ctypes IMPORT int;
-FROM Utypes IMPORT caddr_t, size_t, off_t;
+FROM Ctypes IMPORT int, void_star (*, const_void_star*);
+FROM Utypes IMPORT size_t, off_t;
 
 (*** sys/mman.h ***)
 
 CONST
+(*
   PROT_NONE  = 0;
+*)
   PROT_READ  = 16_1;
   PROT_WRITE = 16_2;
+(*
   PROT_EXEC  = 16_4;
 
+  MAP_FILE    = 0;
   MAP_SHARED  = 1;
+*)
   MAP_PRIVATE = 2;
+(*
   MAP_TYPE    = 16_f;
 
   MAP_FIXED   = 16_10;
-  MAP_RENAME  = 16_20; (* Doesn't appear to be supported any more - rrw *)
+*)
   MAP_ANON = 16_20;
+(*
   MAP_NORESERVE = 16_4000; 
+  MAP_AUTOGROW  = 16_8000; 
+*)
 
-  MAP_GROWSDOWN = 16_100; (* Stack-like segment *)
-  MAP_DENYWRITE = 16_800; (* ETXTBSY *)
-  MAP_EXECUTABLE = 16_1000; (* Mark it as an executable *)
-  MAP_LOCKED = 16_2000;
-
-  (* Up to & including MDV_DONTNEED appears not to be used any more *)
-  MAP_NEW  = 16_80000000;
-
-  MADV_NORMAL     = 0;
-  MADV_RANDOM     = 1;
-  MADV_SEQUENTIAL = 2;
-  MADV_WILLNEED   = 3;
-  MADV_DONTNEED   = 4;
+(*
+  MAP_FAILED = LOOPHOLE(-1, void_star);
 
   MS_ASYNC        = 16_1;
   MS_INVALIDATE   = 16_2;
   MS_SYNC         = 16_4; (* Synchronous memory sync., apparently *)
-
-  (* The following appear not to exist any more either - rrw *)
-  MC_SYNC         = 1;
-  MC_LOCK         = 2;
-  MC_UNLOCK       = 3;
-  MC_ADVISE       = 4;
-  MC_LOCKAS       = 5;
-  MC_UNLOCKAS     = 6;
-
-  MCL_CURRENT     = 16_1;
-  MCL_FUTURE      = 16_2;
-   
-  MREMAP_MAYMOVE  = 1;
+*)
 
 <*EXTERNAL*>
-PROCEDURE mmap (addr: caddr_t; len: size_t; prot,flags,fd: int; off: off_t)
-  : caddr_t;
+PROCEDURE mmap (addr: void_star; len: size_t; prot,flags,fd: int; off: off_t)
+  : void_star;
+
+(*
+<*EXTERNAL*>
+PROCEDURE munmap (addr: void_star; len: size_t): int;
 
 <*EXTERNAL*>
-PROCEDURE munmap (addr: caddr_t; len: size_t): int;
+PROCEDURE mprotect(addr: void_star; len: size_t; prot: int): int;
 
 <*EXTERNAL*>
-PROCEDURE mremap(addr : caddr_t; len : size_t; new : size_t; flags : int) : caddr_t;
+PROCEDURE msync(addr: void_star; len: size_t; flags: int): int;
 
 <*EXTERNAL*>
-PROCEDURE mprotect(addr: caddr_t; len: size_t; prot: int): int;
+PROCEDURE mlock(addr: const_void_star; len: size_t): int;
 
 <*EXTERNAL*>
-PROCEDURE msync(addr: caddr_t; len: size_t; flags: int): int;
-
-<*EXTERNAL*>
-PROCEDURE mlock(addr: caddr_t; len: size_t): int;
-
-<*EXTERNAL*>
-PROCEDURE munlock(addr: caddr_t; len: size_t): int;
-
-<*EXTERNAL*>
-PROCEDURE mlockall(flags: int): int;
-
-<*EXTERNAL*>
-PROCEDURE munlockall(): int;
+PROCEDURE munlock(addr: const_void_star; len: size_t): int;
+*)
 
 END Umman.

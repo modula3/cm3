@@ -12,30 +12,20 @@ Interface ("Uucontext")
 Interface ("Udir")
 Interface ("Uerror")
 Interface ("Uexec")
-Interface ("Ugrp") % not used
 Module    ("Uin")
-Interface ("Uipc") % not used
 Interface ("Umman")
-Module    ("Umsg") % not used
 Module    ("Unetdb")
 Interface ("Unix")
 Interface ("Uprocess")
-Interface ("Upthread") % not used
 Interface ("Upwd")
 Interface ("Uresource")
-Interface ("Usched") % not used
-Module    ("Usem") % not used
-Interface ("Ushm") % not used
 Module    ("Usignal")
 Interface ("Ustat")
 Interface ("Usocket")
-Interface ("Usyslog") % not used
-Interface ("Utermio") % not used
 Module    ("Utime")
 c_source  ("UtimeC")
-Module    ("Utypes")
+Interface ("Utypes")
 Interface ("Uugid")
 Interface ("Uuio")
 Interface ("Uutmp")
-Interface ("Upaths") % not used
 Interface ("Uutsname")
