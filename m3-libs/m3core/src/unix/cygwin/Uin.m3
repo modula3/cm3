@@ -6,7 +6,7 @@
 (*      modified on Tue Mar 24 21:10:33 PST 1992 by muller                   *)
 (*      modified on Tue Feb 11 22:04:30 PST 1992 by nichols@parc.xerox.com   *)
 
-(* Big-endian version. *)
+(* Little-endian version. *)
 
 UNSAFE MODULE Uin EXPORTS Uin;
 (* Only unsafe because it needs Usocket.AF_INET and Usocket is unsafe. *)
