@@ -6,7 +6,7 @@
 (*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)
 (*      modified on Mon Jan 11 14:34:58 PST 1993 by muller    *)
 
-(* $Id: Utypes.i3,v 1.11 2008-02-16 20:44:40 jkrell Exp $ *)
+(* $Id: Utypes.i3,v 1.12 2008-02-17 09:05:58 jkrell Exp $ *)
 
 (* This file was generated from Utypes.i3.cpp. Do not edit it. *)
 
@@ -19,33 +19,36 @@ FROM Ctypes IMPORT
 (*** <sys/types.h> ***)
 
 (*
- * Basic system types and major/minor device constructing/busting macros.
+ * Basic system types.
  *)
 
 TYPE
-  u_char  = unsigned_char;
+
+  u_char = unsigned_char;
   u_short = unsigned_short;
-  u_int   = unsigned_int;
-  uint    = unsigned_int; (* sys V compatibility *)
-  u_long  = unsigned_long;
-  ushort  = unsigned_short; (* sys III compat *)
-
-  quad         = long_long;
-  daddr_t      = long; 
-  caddr_t      = ADDRESS;
-  ino_t        = unsigned_long_long;
-
-  size_t       = u_int;
+  u_int = unsigned_int;
+  u_long = unsigned_long;
+  ino_t        = unsigned_long_long; (* inode -- the same for multiple hard links to the same file *)
+  size_t       = unsigned_int;
   time_t       = long;
-  dev_t        = u_long;
-  off_t        = long_long;
+  dev_t        = unsigned_long; (* device *) 
+  off_t        = long_long; (* file size or offset *)
+  clock_t      = unsigned_long;
+  mode_t       = unsigned_int; (* mode of a file *)
+  nlink_t      = unsigned_short; (* number of links to a file *)
+  uid_t        = unsigned_long; (* user id *)
+  pid_t        = int; (* process id *)
+  gid_t        = unsigned_long; (* group id *)
 
-  key_t        = long_long; (* sys V compatibility *)
-  clock_t      = u_long; (* POSIX compliance *)
-  mode_t       = u_int; (* POSIX compliance *)
-  nlink_t      = u_short; (* POSIX compliance *)
-  uid_t        = u_long; (* POSIX compliance *)
-  pid_t        = int; (* POSIX compliance *)
-  gid_t        = u_long; (* POSIX compliance *)
+  (* for struct stat *)
+  blkcnt_t     = long_long;
+  blksize_t     = long;
+
+  struct_timespec = RECORD
+    tv_sec  : long; (* Seconds *)
+    tv_nsec : long; (* Nanoseconds *)
+  END;
+
+  timestruc_t = struct_timespec;
 
 END Utypes.
