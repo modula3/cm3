@@ -1423,6 +1423,9 @@ PROCEDURE SuspendThread (hThread: HANDLE): DWORD;
 <*EXTERNAL ResumeThread:WINAPI*>
 PROCEDURE ResumeThread (hThread: HANDLE): DWORD;
 
+<*EXTERNAL IsDebuggerPresent:WINAPI*>
+PROCEDURE IsDebuggerPresent (): BOOL;
+
 <*EXTERNAL DebugBreak:WINAPI*>
 PROCEDURE DebugBreak ();
 
