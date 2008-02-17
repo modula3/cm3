@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.48 2008-02-17 10:23:27 jkrell Exp $
+# $Id: pylib.py,v 1.49 2008-02-17 10:29:52 jkrell Exp $
 
 import os
 from os import getenv
@@ -370,6 +370,7 @@ os.environ["M3CONFIG"] = GetConfigForDistribution(Config).replace("\\", "/")
 if not getenv("STAGE"):
 
     if ((OSType == "POSIX")
+            and (os.devnull == "/dev/null")
             and os.system("type domainname > /dev/null 2>/dev/null")
             and (os.popen("domainname 2>/dev/null").read().replace("\n", "") == "elegoohm")):
 
