@@ -4,9 +4,9 @@
 %
 % Last modified on Wed Nov  9 15:14:29 PST 1994 by kalsow  
 
-% $Id: m3makefile,v 1.4 2008-01-28 15:37:02 jkrell Exp $
+% $Id: m3makefile,v 1.5 2008-02-17 09:38:31 jkrell Exp $
 
-if not equal (OS_TYPE, "WIN32") and not equal (TARGET, "NT386") and not equal (TARGET, "NT386GNU")
+if not equal (TARGET, "NT386")
 
 Interface  ("WinBaseTypes")
 Module     ("WinDef")
