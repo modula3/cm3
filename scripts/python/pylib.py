@@ -370,6 +370,7 @@ os.environ["M3CONFIG"] = GetConfigForDistribution(Config).replace("\\", "/")
 if not getenv("STAGE"):
 
     if ((OSType == "POSIX")
+            and (os.devnull == "/dev/null")
             and os.system("type domainname > /dev/null 2>/dev/null")
             and (os.popen("domainname 2>/dev/null").read().replace("\n", "") == "elegoohm")):
 
