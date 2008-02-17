@@ -20,7 +20,11 @@ RTMachine__GetState (pthread_t t, i386_thread_state_t *state)
 		       (thread_state_t)state, &thread_state_count)
       != KERN_SUCCESS) abort();
   if (thread_state_count != i386_THREAD_STATE_COUNT) abort();
+#if __DARWIN_UNIX03
+  return (void *)(state->__esp);
+#else
   return (void *)(state->esp);
+#endif
 }
 
 void
