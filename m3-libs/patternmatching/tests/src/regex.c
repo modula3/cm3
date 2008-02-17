@@ -8,9 +8,7 @@ char buf[256];
 
 char * my_re_comp(const char *s) {
   int ret;
-#ifndef __FreeBSD__
   if (grex == NULL) grex = malloc(sizeof(regex_t));
-#endif
   ret = regcomp (grex, s, REG_NOSUB);
   if (ret == 0) return NULL;
   sprintf(buf, "regcomp returned %d", ret);

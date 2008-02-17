@@ -3,13 +3,8 @@ import ("libm3")
 import ("patternmatching")
 import ("parseparams")
 interface ("regex")
-c_source ("regex")
-
-if equal(TARGET, "FreeBSD3") or
-   equal(TARGET, "FreeBSD4") or
-   equal(TARGET, "FreeBSD5")
-  import_lib("compat", "/usr/lib")
-end
+implementation ("regex")
+%c_source ("regex")
 
 implementation("Main")
 program ("test-regex")
