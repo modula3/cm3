@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.13 2008-02-18 09:54:02 jkrell Exp $
+# $Id: upgrade.py,v 1.14 2008-02-18 09:56:49 jkrell Exp $
 
 import sys
 import pylib
@@ -69,12 +69,21 @@ DoPackage(argv_BuildShip, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m
                             "cm3", "mklib", "m3cc", "m3core", "libm3",
     ]) or sys.exit(1)
 
-# DoPackage(argv_RealClean, pylib.PackageSets["core"]) or sys.exit(1)
-# DoPackage(argv_BuildShip, pylib.PackageSets["core"]) or sys.exit(1)
+#
+# again now that the compiler has a current time
+#
+ShipCompiler() or sys.exit(1)
 
-#
-# If everything has been successfull, we do another compiler upgrade.
-#
+DoPackage(argv_RealClean, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
+                            "m3linker", "m3back", "m3staloneback", "m3front", "sysutils", 
+                            "cm3", "mklib", "m3cc", "m3core", "libm3",
+    ]) or sys.exit(1)
+
+DoPackage(argv_BuildShip, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
+                            "m3linker", "m3back", "m3staloneback", "m3front", "sysutils",
+                            "cm3", "mklib", "m3cc", "m3core", "libm3",
+    ]) or sys.exit(1)
+
 ShipCompiler() or sys.exit(1)
 
 print("%s: Success." % os.path.basename(sys.argv[0]))
