@@ -366,18 +366,19 @@ if not os.environ.get("M3CONFIG"):
 #
 # comment these if they interfere with your environment
 
-if not getenv("STAGE"):
-
-    if ((OSType == "POSIX")
-            and (os.devnull == "/dev/null")
-            and os.system("type domainname > /dev/null 2>/dev/null")
-            and (os.popen("domainname 2>/dev/null").read().replace("\n", "") == "elegoohm")):
-
-        STAGE = "/pub/lang/m3/cm3-dist"
-
-    elif (OSType == "WIN32") and (getenv("HOSTNAME") == "FIR"):
-
-        STAGE = "c:/tmp/cm3stage"
+# if not getenv("STAGE"):
+#
+#     if ((OSType == "POSIX")
+#             and (os.devnull == "/dev/null")
+#             and os.system("type domainname > /dev/null 2>/dev/null")
+#             and (os.popen("domainname 2>/dev/null").read().replace("\n", "") == "elegoohm")):
+#
+#         STAGE = "/pub/lang/m3/cm3-dist"
+#
+#     elif (OSType == "WIN32") and (getenv("HOSTNAME") == "FIR"):
+#
+#         STAGE = "c:/tmp/cm3stage"
+#
 
 #-----------------------------------------------------------------------------
 
