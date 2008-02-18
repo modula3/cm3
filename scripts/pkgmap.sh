@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.22 2008-02-17 13:57:21 wagner Exp $
+# $Id: pkgmap.sh,v 1.23 2008-02-18 08:32:11 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -185,15 +185,20 @@ write_pkg_report() {
   fi >> "${R}"
 
   # evaluate package test status
+  tbgt="${bgt}"
+  tmsg="$3"
   terrlines=`echo "$3" | egrep -i 'version stamp mismatch|bad version stamps|Fatal Error|quake runtime error'`
-  if [ "$3" = "no tests" -o "$3" = "no src/m3makefile" -o \
+  if [ "${bgt}" = "bgred" ]; then
+    tbgt="bgyellow"
+    tmsg="not tried"
+  elif [ "$3" = "no tests" -o "$3" = "no src/m3makefile" -o \
        "$3" = "not supported on ${TARGET}" ]; then
-    bgt="bgyellow"
+    tbgt="bgyellow"
   elif [ -n "$4" ]; then
-    bgt="bgorange"
+    tbgt="bgorange"
   fi
   if [ -n "${terrlines}" ]; then
-    bgt="bgred"
+    tbgt="bgred"
   fi
 
   # write table fields for build and test part
@@ -209,9 +214,9 @@ write_pkg_report() {
     echo "  <td class=\"small\"><pre>"
     echo "$errlines"
     echo "  </pre></td>"
-    echo "  <td class=\"$bgt\">"
-    if [ "${bgt}" = "bgyellow" ]; then
-      echo "$3"
+    echo "  <td class=\"${tbgt}\">"
+    if [ "${tbgt}" = "bgyellow" ]; then
+      echo "${tmsg}"
     else
       echo "    <a href=\"#tr_${pname}\" id=\"ref_tr_${pname}\">"
       echo "      test result details for $1"
@@ -225,11 +230,11 @@ write_pkg_report() {
 
   # gather detailed test output at the end of the report
   (
-    if [ "${bgt}" != "bgyellow" ]; then
+    if [ "${tbgt}" != "bgyellow" ]; then
       echo "<hr><h4><a id=\"tr_${pname}\" href=\"#ref_tr_${pname}\">"
       echo "  Test Result Details for $1"
       echo "</a></h4>"
-      echo "<div class=\"$bgt\">"
+      echo "<div class=\"$tbgt\">"
       echo "  <pre class=\"small\">"
       echo "$3"
       if [ -n "$4" ]; then
