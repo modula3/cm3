@@ -22,11 +22,14 @@ import shutil
 # CM3_OSTYPE
 #    follows from Target
 #
-# CM3ROOT
+# CM3_ROOT
 #    the root of the source, computed from the path to this file
 #
 # CM3_INSTALL
 #    the root of the installation, computed from finding cm3 in $PATH
+#
+# M3_CONFIG
+#    the config file, probed based on a few factors
 #
 
 # print("loading pylib..")
@@ -358,6 +361,7 @@ def GetConfigForDistribution(Target):
 
 os.environ["CM3_TARGET"] = Target
 os.environ["CM3_ROOT"] = Root
+os.environ["CM3_INSTALL"] = InstallRoot
 if not os.environ.get("M3CONFIG"):
     os.environ["M3CONFIG"] = GetConfigForDistribution(Config)
 
