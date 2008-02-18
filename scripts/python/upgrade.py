@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.14 2008-02-18 09:56:49 jkrell Exp $
+# $Id: upgrade.py,v 1.15 2008-02-18 09:57:05 jkrell Exp $
 
 import sys
 import pylib
@@ -70,7 +70,7 @@ DoPackage(argv_BuildShip, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m
     ]) or sys.exit(1)
 
 #
-# again now that the compiler has a current time
+# again now that the compiler has a current runtime
 #
 ShipCompiler() or sys.exit(1)
 
