@@ -318,8 +318,19 @@ PROCEDURE LibraryName (base: TEXT;  host: BOOLEAN): TEXT =
   END LibraryName;
 
 PROCEDURE Convert (nm: TEXT;  host: BOOLEAN): TEXT =
-  VAR len := Text.Length (nm);  buf: ARRAY [0..255] OF CHAR;
+  VAR
+    len  : INTEGER;
+    buf: ARRAY [0..255] OF CHAR;
+    good := DirSep [os_map [host]];
+    bad  := DirSep [os_map [NOT host]];
   BEGIN
+    IF good = bad THEN
+      RETURN nm;
+    END;
+    len := Text.Length (nm);
+    IF len = 0 THEN
+      RETURN nm;
+    END;
     IF (len <= NUMBER (buf))
       THEN RETURN DoConvert (nm, len, host, buf);
       ELSE RETURN DoConvert (nm, len, host, NEW (REF ARRAY OF CHAR, len)^);
@@ -331,13 +342,18 @@ PROCEDURE DoConvert (nm: TEXT;  len: INTEGER;  host: BOOLEAN;
   VAR
     good := DirSep [os_map [host]];
     bad  := DirSep [os_map [NOT host]];
-    cnt  := 0;
+    any  := FALSE;
   BEGIN
     Text.SetChars (buf, nm);
     FOR i := 0 TO len-1 DO
-      IF (buf[i] = bad) THEN  buf[i] := good;  INC (cnt);  END;
+      IF (buf[i] = bad) THEN
+        buf[i] := good;
+        any := TRUE;
+      END;
     END;
-    IF (cnt = 0) THEN RETURN nm; END;
+    IF NOT any THEN
+      RETURN nm;
+    END;
     RETURN Text.FromChars (SUBARRAY (buf, 0, len));
   END DoConvert;
 
