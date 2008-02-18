@@ -168,6 +168,7 @@ PROCEDURE CompileUnits (main     : TEXT;
 
     SetupNamingConventionsInternal (s, mach);
     s.result_name   := main;
+    s.info_name     := M3Path.Join (NIL, nm.base, info_kind, host := TRUE);
     s.config_file   := M3Config.FindFile ();
     s.sys_libs      := sys_libs;
     s.units         := units;
@@ -188,7 +189,6 @@ PROCEDURE CompileUnits (main     : TEXT;
     Target.Has_stack_walker := GetConfigBool(s, "M3_USE_STACK_WALKER",
                                              Target.Has_stack_walker);
 
-    s.info_name   := M3Path.Join (NIL, nm.base, info_kind, host := TRUE);
     s.m3backend   := GetConfigProc (s, "m3_backend", 4);
     s.c_compiler  := GetConfigProc (s, "compile_c", 5);
     s.assembler   := GetConfigProc (s, "assemble", 2);
@@ -1796,7 +1796,6 @@ PROCEDURE RunCC (s: State;  source, object: TEXT;  debug, optimize: BOOLEAN) =
     PushBool  (s, debug);
     IF CallProc (s, s.c_compiler) THEN
       s.compile_failed := TRUE;
-      Msg.Explain ("Jay1 compilation failed");
       Utils.Remove (object);
     END;
     ETimer.Pop ();
@@ -1814,7 +1813,6 @@ PROCEDURE RunM3Back (s: State;  source, object: TEXT;
     PushBool (s, debug);
     failed := CallProc (s, s.m3backend);
     IF failed THEN
-      Msg.Explain ("Jay2 compilation failed");
       s.compile_failed := TRUE;
       Utils.Remove (object);
     END;
@@ -1831,7 +1829,6 @@ PROCEDURE RunAsm (s: State;  source, object: TEXT): BOOLEAN =
     PushText (s, object);
     failed := CallProc (s, s.assembler);
     IF failed THEN
-      Msg.Explain ("Jay3 compilation failed");
       s.compile_failed := TRUE;
       Utils.Remove (object);
     END;
