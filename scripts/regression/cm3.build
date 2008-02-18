@@ -37,7 +37,7 @@ if [ "${BUILD_REL}" = "rel" ] ; then
 fi
 
 # source host specific overrides
-if [ -e ~/cm3/`hostname`.conf ]; then
+if [ -f ~/cm3/`hostname`.conf ]; then
   . ~/cm3/`hostname`.conf
 fi
 
