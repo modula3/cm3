@@ -70,7 +70,7 @@ DoPackage(argv_BuildShip, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m
     ]) or sys.exit(1)
 
 #
-# again now that the compiler has a current time
+# again now that the compiler has a current runtime
 #
 ShipCompiler() or sys.exit(1)
 
