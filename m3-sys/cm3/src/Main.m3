@@ -56,6 +56,8 @@ PROCEDURE DoIt () =
         CheckExpire (Quake.LookUp (mach, "INSTALL_KEY"));
         *)
 
+        Builder.SetupNamingConventions (mach);
+
         (* figure out where we are and get where we want to be *)
         build_dir := Quake.LookUp (mach, "BUILD_DIR");
         IF (build_dir = NIL) THEN

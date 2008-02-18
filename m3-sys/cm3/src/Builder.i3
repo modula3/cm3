@@ -3,7 +3,7 @@
 
 INTERFACE Builder;
 
-IMPORT Arg, M3Unit, Quake;
+IMPORT Arg, M3Unit, Quake, QMachine;
 
 PROCEDURE BuildPgm (prog: TEXT;  READONLY units: M3Unit.Set;
                     sys_libs: Arg.List;  shared: BOOLEAN;  m: Quake.Machine);
@@ -26,5 +26,7 @@ PROCEDURE CleanUp ();
 
 PROCEDURE EmitPkgImports (READONLY units: M3Unit.Set);
 (* Output all imported packages *)
+
+PROCEDURE SetupNamingConventions (mach : QMachine.T);
 
 END Builder.

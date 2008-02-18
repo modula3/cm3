@@ -13,6 +13,10 @@ TYPE
     kind : Kind;
   END;
 
+VAR (* possibly changed at initialization and then CONST *)
+  SlashChar := '/';
+  SlashText := "/";
+
 TYPE
   Kind = { Unknown, I3, IC, IS, IO, M3, MC, MS, MO,
            IG, MG, C, H, S, O, M3LIB, LIB, LIBX, PGM, PGMX, TMPL };

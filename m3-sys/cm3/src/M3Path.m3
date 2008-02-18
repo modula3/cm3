@@ -17,12 +17,12 @@ CONST
   Slash     = '/';
   BackSlash = '\\';
 
-CONST
-  DirSep = ARRAY OSKind OF CHAR { Slash,  Slash,  BackSlash };
-  VolSep = ARRAY OSKind OF CHAR { Null,   Null,   Colon  };
+VAR
+  DirSep := ARRAY OSKind OF CHAR { Slash,  Slash,  Slash };
+  VolSep := ARRAY OSKind OF CHAR { Null,   Null,   Colon  };
 
-CONST
-  DirSepText = ARRAY OSKind OF TEXT { "/",  "/",  "\\" };
+VAR
+  DirSepText := ARRAY OSKind OF TEXT { "/",  "/",  "/" };
 
 TYPE
   SMap = ARRAY Kind OF TEXT;
@@ -464,11 +464,34 @@ BEGIN
     lcase[i] := VAL (ORD (i) - ORD ('A') + ORD ('a'), CHAR);
   END;
 
-  (* guess some reasonable defaults for this platform *)
-  CONST XX = ARRAY BOOLEAN OF OSKind { OSKind.Win32, OSKind.Unix };
-  VAR   k := XX [Text.Equal (Pathname.Join ("a", "b", NIL), "a/b")];
-  BEGIN
-    os_map [TRUE]  := k;
-    os_map [FALSE] := k;
+ (* OSKind is determined from "naming conventions"
+    which are mostly about foo.lib vs. libfoo.a, foo.dll vs. libfoo.so, foo vs. foo.exe.
+    "Naming conventions" also determines the slash, however NT386GNU uses
+    Win32 "naming conventions" (currently) but forward slashes. In reality,
+    forward slashes work almost anywhere, but at this time we are not pushing
+    through the change to use forward slashes more on regular NT386.
+    What we do here is probe our runtime for its slash as was already being
+    done to set the Quake SL variable, but applying the result to more code.
+
+    In general this run-time/compile-time determinations probably need better abstraction.
+    At least in other places, where the way time works is used to determine if the runtime is Unix.
+    In this case, the slash could be fed in at build time, or set in Quake, however
+    how to get his data from Quake efficiently (and early enough?), is to be determined.
+  *)
+  WITH DynamicSlashChar = Text.GetChar (Pathname.Join ("a", "b"), 1) DO
+    IF DynamicSlashChar = BackSlash THEN
+      SlashChar := BackSlash;
+      SlashText := "\\";
+      DirSep[OSKind.Win32] := BackSlash;
+      DirSepText[OSKind.Win32] := "\\";
+    END;
+
+    (* guess some reasonable defaults for this platform *)
+    CONST XX = ARRAY BOOLEAN OF OSKind { OSKind.Win32, OSKind.Unix };
+    VAR   k := XX [DynamicSlashChar = Slash];
+    BEGIN
+      os_map [TRUE]  := k;
+      os_map [FALSE] := k;
+    END;
   END;
 END M3Path.
