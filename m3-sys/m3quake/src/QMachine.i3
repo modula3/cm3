@@ -48,4 +48,6 @@ PROCEDURE PopText (t: T): TEXT       RAISES {Error};
 PROCEDURE PopInt  (t: T): INTEGER    RAISES {Error};
 PROCEDURE PopID   (t: T): ID         RAISES {Error};
 
+PROCEDURE PathIsAbsolute (path: TEXT): BOOLEAN;
+
 END QMachine.
