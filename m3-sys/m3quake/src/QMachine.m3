@@ -1616,13 +1616,77 @@ PROCEDURE Include (t: T;  path: TEXT) RAISES {Error, Thread.Alerted} =
     IncludeFile (t, path, from_code := FALSE);
   END Include;
 
+PROCEDURE PathIsAbsolute(path: TEXT): BOOLEAN =
+VAR
+  len: INTEGER;
+  ch: CHAR;
+BEGIN
+  IF path = NIL THEN
+    RETURN Pathname.Absolute (path);
+  END;
+  len := Text.Length (path);
+  IF len = 0 THEN
+    RETURN Pathname.Absolute (path);
+  END;
+  ch := Text.GetChar (path, 0);
+  IF ch = '/' OR ch = '\\' THEN
+    RETURN TRUE;
+  END;
+(*
+  IF len < 3 THEN
+    RETURN Pathname.Absolute (path);
+  END;
+  ch := Text.GetChar (path, 1);
+  IF ch # ':' THEN
+    RETURN Pathname.Absolute (path);
+  END;
+
+  Paths of the form C:foo are problematic.
+  Every drive has its own working directory.
+  Therefore GetFullPathname(C:foo) # C:foo.
+  At "best" GetFullPathname(C:foo) = C:\foo.
+  Therefore for many purposes C:foo is not absolute.
+  Normally it is perfectly ok to remove all trailing
+  slashes from paths. Some code uses them to indicate
+  directories but practise varies. However C: is
+  correctly interpreted as the current working directory
+  on the C drive, whereas C:\ is the root directory on the
+  C drive. In this case, the trailing slash matters a lot.
+  However, for our purposes Absolute(b) is primarily
+  used to determine if Join(a, b) is just b or a + b.
+  For these purposes, considering C: to be absolute
+  is probably ok, or better -- as long as no code down
+  the line requires Absolute(b) given other common
+  implementations of Absolute. Besides, treating "\" as
+  Absolute on Win32 has the same problem.
+
+  This version of the code treats C: as not absolute
+  and C:\ as absolute.
+
+  The other version treats both as absolute.
+
+  ch := Text.GetChar (path, 2);
+  IF ch = '/' OR ch = '\\' THEN
+    RETURN TRUE;
+  END;
+*)
+  IF len = 1 THEN
+    RETURN Pathname.Absolute (path);
+  END;
+  ch := Text.GetChar (path, 1);
+  IF ch = ':' THEN
+    RETURN TRUE;
+  END;
+
+  RETURN Pathname.Absolute (path);
+END PathIsAbsolute;
+
 PROCEDURE IncludeFile (t: T;  path: TEXT;  from_code: BOOLEAN)
   RAISES {Error, Thread.Alerted} =
-  VAR old_path: TEXT;  code: QCode.Stream;
+  VAR code: QCode.Stream;
   BEGIN
     IF NOT Pathname.Absolute (path) THEN
-      old_path := CurFile (t);
-      path := Pathname.Join (Pathname.Prefix (old_path), path, NIL);
+      path := Pathname.Join (Pathname.Prefix (CurFile (t)), path, NIL);
     END;
 
     TRY

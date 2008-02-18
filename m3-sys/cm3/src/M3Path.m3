@@ -10,6 +10,7 @@
 MODULE M3Path;
 
 IMPORT Pathname, Text;
+FROM QMachine IMPORT PathIsAbsolute;
 
 CONST
   Null      = '\000';
@@ -75,21 +76,21 @@ PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
   VAR len: INTEGER;  buf: ARRAY [0..255] OF CHAR;  ref: REF ARRAY OF CHAR;
   BEGIN
     IF (b # NIL) THEN
-      IF Pathname.Absolute (b) THEN
+      IF PathIsAbsolute (b) THEN
         a := b;
       ELSE
         a := Pathname.Join (a, b, NIL);
       END;
     END;
     IF (c # NIL) THEN
-      IF Pathname.Absolute (c) THEN
+      IF PathIsAbsolute (c) THEN
         a := c;
       ELSE
         a := Pathname.Join (a, c, NIL);
       END;
     END;
     IF (d # NIL) THEN
-      IF Pathname.Absolute (d) THEN
+      IF PathIsAbsolute (d) THEN
         a := d;
       ELSE
         a := Pathname.Join (a, d, NIL);
