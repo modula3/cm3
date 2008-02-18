@@ -480,7 +480,7 @@ PROCEDURE InitBuiltins (t: T) =
       Quake.Define (t, "HIDDEN",   "hidden");
       Quake.Define (t, "VISIBLE",  "");
       Quake.Define (t, "CR",       Wr.EOL);
-      Quake.Define (t, "SL",       DetermineSlash ());
+      Quake.Define (t, "SL",       M3Path.SlashText);
 
       DefineArray (t, "intf_extensions", IntfExtensions);
       DefineArray (t, "impl_extensions", ImplExtensions);
@@ -508,13 +508,6 @@ PROCEDURE DefineArray (t: T;  nm: TEXT;  READONLY arr: ARRAY OF TEXT)
     v.ref  := seq;
     t.put (M3ID.Add (nm), v);
   END DefineArray;
-
-PROCEDURE DetermineSlash (): TEXT =
-  CONST Slash = ARRAY BOOLEAN OF TEXT { "\\", "/" };
-  VAR on_unix := Text.Equal ("a/b", Pathname.Join ("a", "b", NIL));
-  BEGIN
-    RETURN Slash [on_unix];
-  END DetermineSlash;
 
 (*------------------------------------------------------ package locations --*)
 

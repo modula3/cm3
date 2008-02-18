@@ -138,6 +138,24 @@ TYPE
     binding : QValue.Binding;
   END;
 
+PROCEDURE SetupNamingConventionsInternal (VAR s : State; mach : Quake.Machine) =
+  BEGIN
+    s.machine       := mach;
+    s.host_os := GetOSType (s, "NAMING_CONVENTIONS");
+    IF (GetDefn (s, "TARGET_NAMING") = NIL)
+      THEN s.target_os := s.host_os;
+      ELSE s.target_os := GetOSType (s, "TARGET_NAMING");
+    END;
+    M3Path.SetOS (s.host_os, host := TRUE);
+    M3Path.SetOS (s.target_os, host := FALSE);
+  END SetupNamingConventionsInternal;
+
+PROCEDURE SetupNamingConventions (mach : Quake.Machine) =
+  VAR s := NEW (State);
+  BEGIN
+    SetupNamingConventionsInternal (s, mach);
+  END SetupNamingConventions;
+
 PROCEDURE CompileUnits (main     : TEXT;
                READONLY units    : M3Unit.Set;
                         sys_libs : Arg.List;
@@ -148,11 +166,10 @@ PROCEDURE CompileUnits (main     : TEXT;
     DumpUnits (units);
     ETimer.ResetAll ();
 
+    SetupNamingConventionsInternal (s, mach);
     s.result_name   := main;
-    s.info_name     := M3Path.Join (NIL, nm.base, info_kind, host := TRUE);
     s.config_file   := M3Config.FindFile ();
     s.sys_libs      := sys_libs;
-    s.machine       := mach;
     s.units         := units;
     s.link_base     := NIL;
     s.magic         := NEW (IntRefTbl.Default).init (100);
@@ -171,14 +188,7 @@ PROCEDURE CompileUnits (main     : TEXT;
     Target.Has_stack_walker := GetConfigBool(s, "M3_USE_STACK_WALKER",
                                              Target.Has_stack_walker);
 
-    s.host_os := GetOSType (s, "NAMING_CONVENTIONS");
-    IF (GetDefn (s, "TARGET_NAMING") = NIL)
-      THEN s.target_os := s.host_os;
-      ELSE s.target_os := GetOSType (s, "TARGET_NAMING");
-    END;
-    M3Path.SetOS (s.host_os, host := TRUE);
-    M3Path.SetOS (s.target_os, host := FALSE);
-
+    s.info_name   := M3Path.Join (NIL, nm.base, info_kind, host := TRUE);
     s.m3backend   := GetConfigProc (s, "m3_backend", 4);
     s.c_compiler  := GetConfigProc (s, "compile_c", 5);
     s.assembler   := GetConfigProc (s, "assemble", 2);
@@ -1786,6 +1796,7 @@ PROCEDURE RunCC (s: State;  source, object: TEXT;  debug, optimize: BOOLEAN) =
     PushBool  (s, debug);
     IF CallProc (s, s.c_compiler) THEN
       s.compile_failed := TRUE;
+      Msg.Explain ("Jay1 compilation failed");
       Utils.Remove (object);
     END;
     ETimer.Pop ();
@@ -1803,6 +1814,7 @@ PROCEDURE RunM3Back (s: State;  source, object: TEXT;
     PushBool (s, debug);
     failed := CallProc (s, s.m3backend);
     IF failed THEN
+      Msg.Explain ("Jay2 compilation failed");
       s.compile_failed := TRUE;
       Utils.Remove (object);
     END;
@@ -1819,6 +1831,7 @@ PROCEDURE RunAsm (s: State;  source, object: TEXT): BOOLEAN =
     PushText (s, object);
     failed := CallProc (s, s.assembler);
     IF failed THEN
+      Msg.Explain ("Jay3 compilation failed");
       s.compile_failed := TRUE;
       Utils.Remove (object);
     END;
