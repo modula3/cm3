@@ -238,8 +238,12 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR;  host: BOOLEAN): T =
   END DoParse;
 
 PROCEDURE IsEqual (a, b: TEXT): BOOLEAN =
+  VAR len := Text.Length (a);
   BEGIN
-    RETURN RegionMatch (a, 0, b, 0, MAX (Text.Length (a), Text.Length (b)),
+    IF len # Text.Length (b) THEN
+      RETURN FALSE;
+    END;
+    RETURN RegionMatch (a, 0, b, 0, len,
                         ignore_case := (os_map [TRUE(*HOST*)] = OSKind.Win32));
   END IsEqual;
 
