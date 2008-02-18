@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.50 2008-02-18 03:21:17 jkrell Exp $
+# $Id: pylib.py,v 1.51 2008-02-18 03:32:06 jkrell Exp $
 
 import os
 from os import getenv
@@ -72,8 +72,7 @@ InstallRoot = os.path.dirname(os.path.dirname(SearchPath("cm3") or ""))
 # the root of the source tree
 #
 Root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# Root = Root.replace("\\", os.path.sep).replace("/", os.path.sep).replace("\\", "\\\\")
-Root = Root.replace("\\", "/")
+Root = Root.replace("\\", "\\\\")
 
 BuildAll = getenv("CM3_ALL") or False
 
@@ -278,7 +277,6 @@ if (UName.startswith("windows")
         Config = "NT386MINGNU"
         OSType = "WIN32"
         GCC_BACKEND = True
-        Root = Root.replace("\\", os.path.sep).replace("/", os.path.sep).replace("\\", "\\\\")
 
     else:
 
@@ -286,7 +284,6 @@ if (UName.startswith("windows")
         Config = "NT386"
         OSType = "WIN32"
         GCC_BACKEND = False
-        Root = Root.replace("\\", os.path.sep).replace("/", os.path.sep).replace("\\", "\\\\")
 
 elif UName.startswith("freebsd"):
 
@@ -361,11 +358,8 @@ def GetConfigForDistribution(Target):
 
 os.environ["CM3_TARGET"] = Target
 os.environ["CM3_ROOT"] = Root
-os.environ["M3CONFIG"] = GetConfigForDistribution(Config).replace("\\", "/")
-if Config == "NT386" or Config == "NT386MINGNU":
-    os.environ["M3CONFIG"] = os.environ["M3CONFIG"].replace("\\", os.path.sep).replace("/", os.path.sep).replace("\\", "\\\\")
-
-# print("os.environ[M3CONFIG] is " + os.environ["M3CONFIG"])
+if not os.environ.get("M3CONFIG"):
+    os.environ["M3CONFIG"] = GetConfigForDistribution(Config)
 
 #-----------------------------------------------------------------------------
 # elego customizations
