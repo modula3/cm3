@@ -278,6 +278,7 @@ if (UName.startswith("windows")
         Config = "NT386MINGNU"
         OSType = "WIN32"
         GCC_BACKEND = True
+        Root = Root.replace("\\", os.path.sep).replace("/", os.path.sep).replace("\\", "\\\\")
 
     else:
 
@@ -285,6 +286,7 @@ if (UName.startswith("windows")
         Config = "NT386"
         OSType = "WIN32"
         GCC_BACKEND = False
+        Root = Root.replace("\\", os.path.sep).replace("/", os.path.sep).replace("\\", "\\\\")
 
 elif UName.startswith("freebsd"):
 
@@ -360,6 +362,9 @@ def GetConfigForDistribution(Target):
 os.environ["CM3_TARGET"] = Target
 os.environ["CM3_ROOT"] = Root
 os.environ["M3CONFIG"] = GetConfigForDistribution(Config).replace("\\", "/")
+if Config == "NT386" or Config == "NT386MINGNU":
+    os.environ["M3CONFIG"] = os.environ["M3CONFIG"].replace("\\", os.path.sep).replace("/", os.path.sep).replace("\\", "\\\\")
+
 # print("os.environ[M3CONFIG] is " + os.environ["M3CONFIG"])
 
 #-----------------------------------------------------------------------------
