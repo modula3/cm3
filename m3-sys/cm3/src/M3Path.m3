@@ -265,6 +265,7 @@ PROCEDURE RegionMatch (a: TEXT;  start_a: INTEGER;
     len_a := Text.Length (a);
     len_b := Text.Length (b);
     buf_a, buf_b : ARRAY [0..N-1] OF CHAR;
+    cha, chb: CHAR;
   BEGIN
     IF (start_a < 0) OR (start_b < 0) THEN RETURN FALSE; END;
     IF (start_a + len > len_a) THEN RETURN FALSE; END;
@@ -274,7 +275,13 @@ PROCEDURE RegionMatch (a: TEXT;  start_a: INTEGER;
       Text.SetChars (buf_b, b, start_b);
       IF ignore_case THEN
         FOR i := 0 TO MIN (N, len) - 1 DO
-          IF lcase[buf_a[i]] # lcase[buf_b[i]] THEN RETURN FALSE; END;
+          cha := buf_a[i];
+          chb := buf_b[i];
+          IF cha # chb THEN
+            IF lcase[cha] # lcase[chb] THEN
+              RETURN FALSE;
+            END;
+          END;
         END;
       ELSE
         FOR i := 0 TO MIN (N, len) - 1 DO
