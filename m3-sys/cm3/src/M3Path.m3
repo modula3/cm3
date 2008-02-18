@@ -108,63 +108,60 @@ PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
 
 PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
   VAR
-    len    := 0;
-    os     := os_map [host];
-    pre    := Prefix [os][k];
-    ext    := Suffix [os][k];
-    d_sep  := DirSep [os];
-    v_sep  := VolSep [os];
-    result : TEXT;
-    ch     : CHAR;
-    buf    : ARRAY [0..255] OF CHAR;
-    ref    : REF ARRAY OF CHAR;
-  BEGIN
-    (* find out how much space we need *)
-    IF (dir # NIL) THEN
-      len := Text.Length (dir);
-      ch := Text.GetChar (dir, len-1);
-      IF (ch # d_sep) AND (ch # v_sep) THEN INC (len); END;
-    END;
-    INC (len, Text.Length (pre));
-    INC (len, Text.Length (base));
-    INC (len, Text.Length (ext));
+    len      := 0;
+    os       := os_map [host];
+    pre      := Prefix [os][k];
+    pre_len  := Text.Length (pre);
+    ext      := Suffix [os][k];
+    ext_len  := Text.Length (ext);
+    d_sep    := DirSep [os];
+    v_sep    := VolSep [os];
+    ch       : CHAR;
+    buf      : ARRAY [0..255] OF CHAR;
+    base_len := Text.Length (base);
+    dir_len  : INTEGER;
 
-    (* allocate it and fill it in *)
-    IF (len <= NUMBER (buf)) THEN
-      len := 0;
+    PROCEDURE DoJoin (VAR buf: ARRAY OF CHAR): TEXT =
+      VAR
+        len := 0;
+
+      PROCEDURE Append (VAR a: ARRAY OF CHAR;  start: INTEGER;  b: TEXT; b_len: INTEGER): INTEGER =
+      BEGIN
+          Text.SetChars (SUBARRAY (a, start, b_len), b);
+          RETURN start + b_len;
+      END Append;
+
+    BEGIN (* DoJoin *)
       IF (dir # NIL) THEN
-        len := Append (buf, 0, dir);
+        len := Append (buf, 0, dir, dir_len);
         IF (buf[len-1] # d_sep) AND (buf[len-1] # v_sep) THEN
           buf[len] := d_sep; INC (len);
         END;
       END;
-      len := Append (buf, len, pre);
-      len := Append (buf, len, base);
-      len := Append (buf, len, ext);
-      result := FixPath (SUBARRAY (buf, 0, len), host);
-    ELSE
-      ref := NEW (REF ARRAY OF CHAR, len);
-      len := 0;
-      IF (dir # NIL) THEN
-        len := Append (ref^, 0, dir);
-        IF (ref[len-1] # d_sep) AND (ref[len-1] # v_sep) THEN
-          ref[len] := d_sep; INC (len);
-        END;
-      END;
-      len := Append (ref^, len, pre);
-      len := Append (ref^, len, base);
-      len := Append (ref^, len, ext);
-      result := FixPath (SUBARRAY (ref^, 0, len), host);
-    END;
-    RETURN result;
-  END Join;
+      len := Append (buf, len, pre, pre_len);
+      len := Append (buf, len, base, base_len);
+      len := Append (buf, len, ext, ext_len);
+      RETURN FixPath (SUBARRAY (buf, 0, len), host);
+    END DoJoin;
 
-PROCEDURE Append (VAR a: ARRAY OF CHAR;  start: INTEGER;  b: TEXT): INTEGER =
-  VAR len := Text.Length (b);
-  BEGIN
-    Text.SetChars (SUBARRAY (a, start, len), b);
-    RETURN start + len;
-  END Append;
+  BEGIN (* Join *)
+    (* find out how much space we need *)
+    IF (dir # NIL) THEN
+      dir_len := Text.Length (dir);
+      len := dir_len;
+      ch := Text.GetChar (dir, len-1);
+      IF (ch # d_sep) AND (ch # v_sep) THEN INC (len); END;
+    END;
+    INC (len, pre_len);
+    INC (len, base_len);
+    INC (len, ext_len);
+
+    (* allocate it and fill it in *)
+    IF (len <= NUMBER (buf))
+      THEN RETURN DoJoin (SUBARRAY (buf, 0, len));
+      ELSE RETURN DoJoin (NEW (REF ARRAY OF CHAR, len)^);
+    END;
+  END Join;
 
 PROCEDURE Parse (nm: TEXT;  host: BOOLEAN): T =
   VAR len := Text.Length (nm);   buf: ARRAY [0..255] OF CHAR;
