@@ -19,7 +19,7 @@ INDEX=${INDEX:-snapshot-index.html}
 cd $SNAPS || exit 1
 
 TARGETS=`ls -1 ${FNPATLS} |
-  sed -e "s/${FNPAT1}\([A-Za-z0-6_]*\)-.*${FNPATSUF}/\1/" |
+  sed -e "s/${FNPAT1}\([A-Za-z0-9_]*\)-.*${FNPATSUF}/\1/" |
   sort -u`
 
 if [ -f "${INDEX}" ]; then
