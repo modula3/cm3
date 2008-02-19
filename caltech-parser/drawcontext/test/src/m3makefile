@@ -4,3 +4,8 @@ module("TestVBT")
 vbtStarter("TestVBT", "TestVBT")
 implementation("Main")
 program("test")
+
+if defined("RUN")
+  r = q_exec( "." & SL & "test" )
+  write( CR, "program returned ", r, CR )
+end

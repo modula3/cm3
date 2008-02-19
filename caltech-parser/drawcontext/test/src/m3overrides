@@ -1,2 +1,5 @@
-/* $Id: m3overrides,v 1.2 2001-09-19 15:30:31 wagner Exp $ */
+/* $Id: m3overrides,v 1.3 2008-02-19 23:57:16 wagner Exp $ */
+if not defined("TOP")
+  TOP = ROOT
+end
 include("../../../m3overrides")
