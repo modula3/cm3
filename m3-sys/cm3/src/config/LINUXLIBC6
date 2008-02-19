@@ -133,7 +133,8 @@ SYSTEM_LIBS = {
 % scanned by the linker.
 
 SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
-                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
+                    "POSTGRES95", "POSTGRESQL", "FLEX-BISON", "LEX-YACC",
+                    "LIBC" ]
 
 %---------------------------------------------------------- system programs ---
 
