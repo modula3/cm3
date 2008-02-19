@@ -15,3 +15,8 @@ import ("db")
 % implementation ("Demo5")
 
 program ("Demo")
+
+if defined("RUN")
+  r = q_exec_put( "." & SL & "Demo", "\n\n\n" )
+  write( CR, "program returned ", r, CR )
+end
