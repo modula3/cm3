@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-caltech-parser.sh,v 1.2 2008-01-18 00:41:12 wagner Exp $
+# $Id: do-cm3-caltech-parser.sh,v 1.3 2008-02-19 23:56:29 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -26,6 +26,8 @@ P="${P} m3tmplhack"
 P="${P} cit_util"
 P="${P} term"
 P="${P} drawcontext"
+P="${P} drawcontext/dcpane"
+P="${P} drawcontext/kgv"
 P="${P} hack"
 P="${P} m3browserhack"
 P="${P} paneman"
