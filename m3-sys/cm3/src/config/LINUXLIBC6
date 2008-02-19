@@ -120,6 +120,7 @@ SYSTEM_LIBS = {
 %                  END_CONFIG, "-ll" ],
   "FLEX-BISON" : [  "-L/usr/lib", "-lfl" ],
   "POSTGRES95" : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lpq" ],
+  "POSTGRESQL" : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lpq" ],
   "OPENGL"     : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lGLU", "-lGL", "-lXext" ],
   "ODBC"       : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lodbc" ],
   "MOTIF"      : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lXm" ],
