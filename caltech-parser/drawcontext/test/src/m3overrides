@@ -1,5 +1,2 @@
 /* $Id$ */
-if not defined("TOP")
-  TOP = ROOT
-end
-include("../../../m3overrides")
+include(".." & SL & ".." & SL & ".." & SL & "m3overrides")

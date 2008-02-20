@@ -7,18 +7,18 @@
 /* warning: some of these packages may include an overrides file, */
 /* which better not conflict with the ones at the end of this file */
 
-/* include("../.top") */
+/* include(".." & SL & ".top") */
 /* override("cit_util", TOP) */
 /* override("term", TOP) */
 
 /* include the "magic overrides file" which adds the compiler option */
 /* ensuring that static libraries can be found at runtime */
-include("../m3overrides")
+include(".." & SL & "m3overrides")
 
 /* these are the packages that are part of this distribution */
 /* .parsertop is made by the Makefile before building anything */
 %include(".parsertop")
-_PARSER_TOP = TOP & "/parserlib"
+_PARSER_TOP = TOP & SL & "parserlib"
 %override("ktoklib", _PARSER_TOP)
 override("klexlib", _PARSER_TOP)
 override("kyacclib", _PARSER_TOP)
