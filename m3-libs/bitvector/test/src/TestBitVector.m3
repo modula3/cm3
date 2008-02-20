@@ -53,7 +53,7 @@ PROCEDURE SetResetTest(): BOOLEAN =
 
 PROCEDURE IteratorTest(): BOOLEAN =
   CONST Lo = 190; Hi = 210;
-  VAR bv := NEW(BitVector.T); i := Lo; BEGIN
+  VAR bv := NEW(BitVector.T).init(); i := Lo; BEGIN
     IO.Put("*** Iterator Test ***\n");
     WHILE i < Hi DO
       VAR set := bv.set(i*i); BEGIN <* ASSERT NOT set *> END;

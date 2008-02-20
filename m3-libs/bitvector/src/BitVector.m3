@@ -1094,7 +1094,6 @@ PROCEDURE IterNext(self: Iterator; VAR (*OUT*) res: CARDINAL): BOOLEAN =
       	  WHILE self.mask # 0 DO
             VAR bit := (Word.And(self.mask, wd) # 0); BEGIN
       	      self.mask := Word.LeftShift(self.mask, 1);
-      	      INC(self.bitIndex);
               IF bit THEN
                 res := self.bitIndex;
                 INC(self.bitIndex);
