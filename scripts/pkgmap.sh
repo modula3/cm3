@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.23 2008-02-18 08:32:11 wagner Exp $
+# $Id: pkgmap.sh,v 1.24 2008-02-20 01:25:40 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -105,6 +105,10 @@ report_header() {
     .bgblue   { background:#5555FF; }
     .bgyellow { background:#FFFF00; }
     .bgorange { background:#FFAA00; }
+    a:link    { color: #0077ff; }
+    a:visited { color: #0077ff; }
+    a:active  { color: #4090ff; }
+    a:hover   { color: #4090ff; }
     .small    { font-size:8pt; }
     .tl       { text-align: left; vertical-align: top; }
     //-->
