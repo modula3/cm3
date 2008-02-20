@@ -129,13 +129,13 @@ m3tmplhack
 cit_util
 term
 deepcopy
+paneman
+paneman/kemacs
 drawcontext
 drawcontext/dcpane
 drawcontext/kgv
 hack
 m3browserhack
-paneman
-paneman/kemacs
 parserlib/ktoklib
 parserlib/klexlib
 parserlib/kyacclib
