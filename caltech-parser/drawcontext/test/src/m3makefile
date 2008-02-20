@@ -1,3 +1,11 @@
+dcpane = ".." & SL & ".." & SL & "dcpane"
+dcpaneTarget = dcpane & SL & TARGET
+if stale( dcpaneTarget, dcpaneTarget )
+  pushd( dcpane )
+  r = q_exec( "cm3 -build" )
+  popd()
+end
+
 import("dcpane")
 
 module("TestVBT")
@@ -5,7 +13,8 @@ vbtStarter("TestVBT", "TestVBT")
 implementation("Main")
 program("test")
 
-if defined("RUN")
-  r = q_exec( "." & SL & "test" )
-  write( CR, "program returned ", r, CR )
-end
+% FIXME: don't run this in this form, it will hang the tests
+%if defined("RUN")
+%  r = q_exec( "." & SL & "test" )
+%  write( CR, "program returned ", r, CR )
+%end
