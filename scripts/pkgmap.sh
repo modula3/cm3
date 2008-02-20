@@ -192,7 +192,7 @@ write_pkg_report() {
   # evaluate package test status
   tbgt="${bgt}"
   tmsg="$3"
-  terrlines=`echo "$3" | egrep -i 'version stamp mismatch|bad version stamps|Fatal Error|quake runtime error'`
+  terrlines=`echo "$3" | egrep -i 'version stamp mismatch|bad version stamps|Fatal Error|quake runtime error|test failed'`
   if [ "${bgt}" = "bgred" ]; then
     tbgt="bgyellow"
     tmsg="not tried"
