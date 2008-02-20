@@ -105,6 +105,10 @@ report_header() {
     .bgblue   { background:#5555FF; }
     .bgyellow { background:#FFFF00; }
     .bgorange { background:#FFAA00; }
+    a:link    { color: #0077ff; }
+    a:visited { color: #0077ff; }
+    a:active  { color: #4090ff; }
+    a:hover   { color: #4090ff; }
     .small    { font-size:8pt; }
     .tl       { text-align: left; vertical-align: top; }
     //-->
