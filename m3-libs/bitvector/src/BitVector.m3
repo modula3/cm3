@@ -120,7 +120,7 @@ PROCEDURE InitImpl(self: T; sizeHint: CARDINAL; doZero, freeMem: BOOLEAN): T =
       IF freeMem OR wdCnt > NUMBER(self.word^) THEN
         (* re-allocate the "word" array *)
         self.word := NIL;
-	IF wdCnt > 0 THEN
+        IF wdCnt > 0 THEN
           Extend(self, wdCnt, doPreserve := FALSE)
         END;
         zeroWds := wdCnt;
@@ -1091,20 +1091,20 @@ PROCEDURE IterNext(self: Iterator; VAR (*OUT*) res: CARDINAL): BOOLEAN =
         IF wd = 0 THEN
           INC(self.bitIndex, BitsPerWd)
         ELSE
-      	  WHILE self.mask # 0 DO
+          WHILE self.mask # 0 DO
             VAR bit := (Word.And(self.mask, wd) # 0); BEGIN
-      	      self.mask := Word.LeftShift(self.mask, 1);
+              self.mask := Word.LeftShift(self.mask, 1);
               IF bit THEN
                 res := self.bitIndex;
                 INC(self.bitIndex);
                 RETURN TRUE
               END;
-      	      INC(self.bitIndex);
+              INC(self.bitIndex);
             END
-      	  END
+          END
         END;
-      	INC(self.wordIndex);
-      	self.mask := 1
+        INC(self.wordIndex);
+        self.mask := 1
       END
     END;
     RETURN FALSE
