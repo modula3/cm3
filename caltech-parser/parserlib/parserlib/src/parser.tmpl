@@ -2,17 +2,17 @@ if not defined("ROOT")
   ROOT = PKG_INSTALL
 end
 if not defined("TOP")
-  TOP = ROOT & "/caltech-parser"
+  TOP = ROOT & SL & "caltech-parser"
 end
 if not defined("_PARSER_TOP")
-  _PARSER_TOP = TOP & "/parserlib"
+  _PARSER_TOP = TOP & SL & "parserlib"
 end
 
 if not defined("_PARSER_CMDS")
-	local _TOK = _PARSER_TOP & "/ktok/" & BUILD_DIR & "/tok"
-	local _LEX = _PARSER_TOP & "/klex/" & BUILD_DIR & "/lex"
-	local _YACC= _PARSER_TOP & "/kyacc/"& BUILD_DIR & "/yacc"
-	local _EXT = _PARSER_TOP & "/kext/" & BUILD_DIR & "/ext"
+	local _TOK = _PARSER_TOP & SL & "ktok" & SL & BUILD_DIR & SL & "tok"
+	local _LEX = _PARSER_TOP & SL & "klex" & SL & BUILD_DIR & SL & "lex"
+	local _YACC= _PARSER_TOP & SL & "kyacc" & SL& BUILD_DIR & SL & "yacc"
+	local _EXT = _PARSER_TOP & SL & "kext" & SL & BUILD_DIR & SL & "ext"
 	_PARSER_CMDS = {"t": _TOK, "l": _LEX, "y": _YACC, "e": _EXT}
 	_PARSER_SOURCES = []
 end
@@ -41,7 +41,7 @@ readonly proc _xCons(tok_nm, tok_spec, out_nm, out_spec, kind, vis) is
 		> include_source & ".tmpl" in
 			write("_PARSER_SOURCES += \"" & out_source & "\"",CR)
 		end
-		template("../" & BUILD_DIR & "/" & include_source)
+		template(".." & SL & BUILD_DIR & SL & "" & include_source)
 		%%% LibExport(out_source)
 	end
    end

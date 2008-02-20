@@ -1,4 +1,4 @@
-/* $Id: m3makefile,v 1.2 2001-09-19 13:27:07 wagner Exp $ */
+/* $Id: m3makefile,v 1.3 2008-02-20 11:14:00 wagner Exp $ */
 m3_option("-X2@-pg@")
 m3_option("-g")
 %remove_m3_option("-O")
