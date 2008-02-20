@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.24 2008-02-20 01:25:40 wagner Exp $
+# $Id: pkgmap.sh,v 1.25 2008-02-20 13:49:42 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -16,6 +16,7 @@ else
   fi
   export root
 fi
+SYSINFO_DONE=""
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
@@ -174,7 +175,7 @@ write_pkg_report() {
   res=""
   # evaluate package build status
   pname=`echo $1 | sed -e 's;/;-;g'`
-  errlines=`egrep '^".*, line .*:|warning:|version stamp mismatch|bad version stamps|Fatal Error|failed|quake runtime error|ignoring override|unsupported' "$1/stdout.log"`
+  errlines=`egrep '^".*, line .*:|warning:|version stamp mismatch|bad version stamps|Fatal Error|failed|quake runtime error|ignoring override|unsupported' "$1/${TARGET}/stdout.log"`
   if [ "$2" = "0" ] ; then
     echo "<tr class=\"bggreen\">"
     bgt="bggreen"
@@ -216,7 +217,11 @@ write_pkg_report() {
       echo "  <td class=\"tl\">build failed</td>"
     fi
     echo "  <td class=\"small\"><pre>"
-    echo "$errlines"
+    if FOLD="`find_exe fold /usr/bin`/fold" ; then
+      echo "$errlines" | ${FOLD} -s -w 64
+    else
+      echo "$errlines"
+    fi
     echo "  </pre></td>"
     echo "  <td class=\"${tbgt}\">"
     if [ "${tbgt}" = "bgyellow" ]; then
@@ -262,13 +267,15 @@ for PKG in ${PKGS} ; do
   echo "=== package ${PKG} ==="
   tres="not supported on ${TARGET}"
   terr=""
+  mkdir -p "${PKG}/${TARGET}"
+  STDOUTLOG="${PKG}/${TARGET}/stdout.log"
   if [ "${REPORT}" = "yes" ] ; then
-    rm -f "${PKG}/stdout.log"
+    rm -f "${STDOUTLOG}"
     if UsePackage `basename "${PKG}"` || [ "${CM3_ALL}" = yes ]; then
-      exec_cmd "$PKG" > "${PKG}/stdout.log" 2>&1
+      exec_cmd "$PKG" > "${STDOUTLOG}" 2>&1
       res=$?
-      cat "${PKG}/stdout.log"
-      if grep 'Fatal Error:' "${PKG}/stdout.log" >/dev/null 2>&1; then
+      cat "${STDOUTLOG}"
+      if grep 'Fatal Error:' "${STDOUTLOG}" >/dev/null 2>&1; then
         res=1
         OK=""
         REDPKGS=`printf "${REDPKGS}${PKG}\\\\\\n"`
@@ -303,7 +310,7 @@ for PKG in ${PKGS} ; do
         cd "${HERE}"
       fi
     else
-      touch "${PKG}/stdout.log"
+      touch "${STDOUTLOG}"
       echo "=== package omitted on this platform ==="
       res=2
       YELLOWPKGS=`printf "${YELLOWPKGS}${PKG}\\\\\\n"`
@@ -319,7 +326,7 @@ for PKG in ${PKGS} ; do
     fi
   fi
   if [ -n "${REPORT}" ]; then
-    #if grep ': imported interface' "${PKG}/stdout.log" >/dev/null 2>&1; then
+    #if grep ': imported interface' "${STDOUTLOG}" >/dev/null 2>&1; then
     #  res=2
     #fi
     ERRS=`write_pkg_report "${PKG}" "${res}" "${tres}" "${terr}"`
