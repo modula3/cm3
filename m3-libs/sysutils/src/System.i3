@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: System.i3,v 1.1 2008-01-30 23:45:37 wagner Exp $ *)
+ * $Id: System.i3,v 1.2 2008-02-21 00:06:59 wagner Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 INTERFACE System;
@@ -59,8 +59,11 @@ PROCEDURE ExecWithFileHandles(pgm : TEXT; params : TextSeq.T;
   *)
 
 (*---------------------------------------------------------------------------*)
-PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL; 
-               msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER 
+PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL;
+               msgif : MsgIF.T := NIL; wd : TEXT := NIL;
+               pstdin  : File.T := NIL;
+               pstdout : File.T := NIL;
+               pstderr : File.T := NIL) : INTEGER 
   RAISES {ExecuteError};
   (* Execute `pgm' with `params' as parameters. `Params' may contain
      simple input and output redirections. If param[i] is any of
@@ -78,7 +81,6 @@ PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL;
 |     2>> fn : append stderr to file fn
 |     &>> fn : append stdout and stderr to file fn
 |
-     Pipes are not yet implemented :-(
      IF `wd' is non-NIL, it is used as the working directory of the
      process.
   *)
@@ -142,12 +144,9 @@ PROCEDURE ExecuteShell(cmd : TEXT; shell := "/bin/sh";
 PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL; 
                       msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER 
   RAISES {ExecuteError, Thread.Alerted};
-  (* Parse `cmd', split it into single commands at every `;', `&&', and
+  (* Parse `cmd', split it into single commands at every `;', `|', `&&', and
      `||', and execute every command via `Exec'. The concatenation
      characters have the usual Bourne Shell meaning. 
-     All token must be separated by whitespace (even `;', `&&', and `||').
-     That is, `a&&b' will call progam `a&&b', while `a && b' will first
-     call progam a and in case of success program b.
      Token may be grouped by single or double quotes.
 
      Since Exec() is called internally, all input and output redirections
