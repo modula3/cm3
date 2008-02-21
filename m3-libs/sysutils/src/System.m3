@@ -21,14 +21,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: System.m3,v 1.1 2008-01-30 23:45:37 wagner Exp $ *)
+ * $Id: System.m3,v 1.2 2008-02-21 00:06:59 wagner Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 MODULE System EXPORTS System;
 
-IMPORT Process, TextRd, Rd, Wr, Pipe, File, FileRd, FileWr, Scan, Thread, 
+IMPORT ASCII, Process, TextRd, Rd, RdExtras, Wr, Pipe,
+       File, FileRd, FileWr, Thread, 
        AtomList, Atom, Text, TextSeq, OSError, Pathname, RegularFile,
-       Lex, FloatMode;
+       RefSeq, IntRefTbl;
 IMPORT MsgX, MsgIF, ProcessEnv, TextReadingUtils, OSSpecials;
 IMPORT (* FSFixed AS *) FS;
 
@@ -62,13 +63,31 @@ PROCEDURE ExecWithFileHandles(pgm : TEXT; params : TextSeq.T;
                               msgif : MsgIF.T := NIL;
                               wd : TEXT := NIL) : INTEGER 
   RAISES {ExecuteError} =
+  VAR p: Process.T;
+  BEGIN
+    p := RunWithFileHandles(pgm, params, stdin, stdout, stderr,
+                            env, msgif, wd);
+    IF p = NIL THEN
+      RETURN -1;
+    ELSE
+      RETURN Process.Wait(p);
+    END;
+  END ExecWithFileHandles;
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE RunWithFileHandles(pgm : TEXT; params : TextSeq.T;
+                             stdin, stdout, stderr : File.T;
+                             env : ProcessEnv.T := NIL; 
+                             msgif : MsgIF.T := NIL;
+                             wd : TEXT := NIL) : Process.T
+  RAISES {ExecuteError} =
   VAR
     args := NEW(REF ARRAY OF TEXT, params.size());
     stdinParent, stdoutParent, stderrParent : File.T;
     child :  Process.T;
     senv  := ProcessEnv.SystemRepr(env);
   BEGIN
-    MsgX.D(msgif, "System.ExecWithFileHandles(" & pgm & 
+    MsgX.D(msgif, "System.RunWithFileHandles(" & pgm & 
       ParListToText(params) & ")");
 
     FOR i := 0 TO params.size() - 1 DO
@@ -85,6 +104,7 @@ PROCEDURE ExecWithFileHandles(pgm : TEXT; params : TextSeq.T;
       stderr := stderrParent;
     END;
     TRY
+      (*
       IF Text.Equal(pgm, "echo") THEN
         VAR 
           wr := NEW(FileWr.T).init(stdout, TRUE); 
@@ -111,32 +131,30 @@ PROCEDURE ExecWithFileHandles(pgm : TEXT; params : TextSeq.T;
             Wr.Flush(wr);
           END;
         END;
-        RETURN 0;                        (* no process created, just bail *)
-      ELSIF Text.Equal(pgm, "exit") THEN
-        IF params.size() = 0 THEN
-          RETURN 0;
-        END;
-        TRY
-          RETURN Scan.Int(params.get(0));
-        EXCEPT
-          Lex.Error, FloatMode.Trap =>
-          RAISE ExecuteError("invalid exit argument: " & params.get(0));
-        END;
+        RETURN NIL; (* no process created, just bail *)
       ELSE
-        child := Process.Create(pgm, args^, senv, wd, stdin, stdout, stderr);
-      END;
+      *)
+      child := Process.Create(pgm, args^, senv, wd, stdin, stdout, stderr);
+      (*END;*)
     EXCEPT 
       OSError.E(list) => RAISE ExecuteError("execution of `" & pgm & 
         "' failed: " & AtomListToText(list));
-    | Thread.Alerted  => RAISE ExecuteError("ExecWithFileHandles: alerted");
-    | Wr.Failure => RAISE ExecuteError("ExecWithFileHandles: writer failure");
     END;
-    RETURN Process.Wait(child);
-  END ExecWithFileHandles;
+    RETURN child;
+  END RunWithFileHandles;
 
 (*---------------------------------------------------------------------------*)
-PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL;
-               msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER 
+PROCEDURE ExecNW(VAR estdin: File.T;
+                 VAR estdout: File.T;
+                 VAR estderr: File.T;
+                 pgm: TEXT; 
+                 params: TextSeq.T;
+                 env: ProcessEnv.T := NIL;
+                 msgif: MsgIF.T := NIL;
+                 wd: TEXT := NIL;
+                 pstdin  : File.T := NIL;
+                 pstdout : File.T := NIL;
+                 pstderr : File.T := NIL) : Process.T
   RAISES {ExecuteError} =
 
   PROCEDURE MakeAbsolute(pn : Pathname.T) : Pathname.T =
@@ -151,10 +169,10 @@ PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL;
   VAR
     stdin, stdout, stderr : RegularFile.T;
     args   := NEW(TextSeq.T).init(params.size());
-    ret, i : INTEGER;
+    i      : INTEGER;
     psize  := params.size();
   BEGIN
-    MsgX.D(msgif, "System.Exec(" & pgm & ParListToText(params) & ")");
+    MsgX.D(msgif, "System.ExecNW(" & pgm & ParListToText(params) & ")");
     stdin := NIL; stdout := NIL; stderr := NIL;
     i := 0;
     WHILE i < psize DO
@@ -344,8 +362,45 @@ PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL;
       INC(i);
     END;
 
-    ret := ExecWithFileHandles(pgm, args, stdin, stdout, stderr, env, 
-                               msgif, wd);
+    estdin := stdin;
+    estdout := stdout;
+    estderr := stderr;
+    IF estdin = NIL AND pstdin # NIL THEN
+      estdin := pstdin;
+    END;
+    IF estdout = NIL AND pstdout # NIL THEN
+      estdout := pstdout;
+    END;
+    IF estderr = NIL AND pstderr # NIL THEN
+      estderr := pstderr;
+    END;
+    RETURN RunWithFileHandles(pgm, args, estdin, estdout, estderr, env, 
+                              msgif, wd);
+  END ExecNW;
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL;
+               msgif : MsgIF.T := NIL; wd : TEXT := NIL;
+               pstdin  : File.T := NIL;
+               pstdout : File.T := NIL;
+               pstderr : File.T := NIL) : INTEGER 
+  RAISES {ExecuteError} =
+
+  VAR
+    stdin, stdout, stderr : File.T := NIL;
+    ret: INTEGER;
+    p : Process.T;
+  BEGIN
+    MsgX.D(msgif, "System.Exec(" & pgm & ParListToText(params) & ")");
+
+    p := ExecNW(stdin, stdout, stderr,
+                pgm, params, env, msgif, wd, pstdin, pstdout, pstderr);
+
+    IF p = NIL THEN
+      ret := -1;
+    ELSE
+      ret := Process.Wait(p);
+    END;
     IF stdin # NIL THEN
       TRY
         stdin.close();
@@ -403,7 +458,7 @@ PROCEDURE ExecuteShell(cmd : TEXT; shell := "/bin/sh";
                        msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER 
   RAISES {ExecuteError} =
   VAR
-    stdin, stdout, stderr : File.T;
+    stdin, stdout, stderr: File.T;
     child : Process.T;
     args  :  ARRAY [1..2] OF TEXT;
     senv  := ProcessEnv.SystemRepr(env);
@@ -428,6 +483,19 @@ PROCEDURE ExecuteShell(cmd : TEXT; shell := "/bin/sh";
 PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL; 
                       msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER 
   RAISES {ExecuteError, Thread.Alerted} =
+
+  CONST
+    STDINC  = 10000000;
+    STDOUTC = 10000001;
+    STDERRC = 10000002;
+    PIPEWR  = 10000003;
+
+    SPACES   = ASCII.Spaces;
+    IDEND    = SPACES + ASCII.Set{ '<', '>', '&', '|', ';', '$' };
+    OPS      = ASCII.Set{ '<', '>', '&', '1', '2', '|', ';', '$' };
+    OPEND    = ASCII.All - OPS;
+    STRDELIM = ASCII.Set{ '\'', '\"' };
+
   VAR
     rd := TextRd.New(cmd);
     token : TEXT;
@@ -435,31 +503,176 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
     args  : TextSeq.T := NIL;
     done  : BOOLEAN;
     ret   : INTEGER := 0;
+    childWr, 
+    childRd : Pipe.T := NIL;
+    stdin, stdout, stderr: File.T;
+    child: Process.T;
+    jobid: INTEGER := 1;
+    cjobid: INTEGER := 1;
+    openFiles: IntRefTbl.T := NEW(IntRefTbl.Default).init();
+    processes: RefSeq.T := NEW(RefSeq.T).init();
+    c: CHAR;
+
+  PROCEDURE WaitForAll() : INTEGER =
+    VAR p: Process.T; ret: INTEGER;
+    BEGIN
+      WHILE processes.size() > 0 DO
+        p := NARROW(processes.remlo(), Process.T);
+        ret := Process.Wait(p);
+        CloseFiles(cjobid);
+        INC(cjobid);
+      END;
+      RETURN ret;
+    END WaitForAll;
+
+  PROCEDURE RememberFiles(stdin: File.T; stdout: File.T; stderr: File.T;
+                          pipewr: File.T) =
+    BEGIN
+      IF stdin  # NIL THEN EVAL openFiles.put(STDINC  + jobid, stdin) END;
+      IF stdout # NIL THEN EVAL openFiles.put(STDOUTC + jobid, stdout) END;
+      IF stderr # NIL THEN EVAL openFiles.put(STDERRC + jobid, stderr) END;
+      IF pipewr # NIL THEN EVAL openFiles.put(PIPEWR  + jobid, pipewr) END;
+    END RememberFiles;
+
+  PROCEDURE CloseFiles(jobid: INTEGER) =
+    VAR ref: REFANY;
+    BEGIN
+      IF openFiles.get(PIPEWR + jobid, ref) THEN
+        TRY
+          WITH f = NARROW(ref, File.T) DO f.close(); END;
+        EXCEPT
+          OSError.E => (* skip *)
+        END;
+      END;
+      IF openFiles.get(STDINC  + jobid, ref) THEN
+        TRY
+          WITH f = NARROW(ref, File.T) DO f.close(); END;
+        EXCEPT
+          OSError.E => (* skip *)
+        END;
+      END;
+      IF openFiles.get(STDOUTC + jobid, ref) THEN
+        TRY
+          WITH f = NARROW(ref, File.T) DO f.close(); END;
+        EXCEPT
+          OSError.E => (* skip *)
+        END;
+      END;
+      IF openFiles.get(STDERRC + jobid, ref) THEN
+        TRY
+          WITH f = NARROW(ref, File.T) DO f.close(); END;
+        EXCEPT
+          OSError.E => (* skip *)
+        END;
+      END;
+    END CloseFiles;
+
   BEGIN
     MsgX.D(msgif, "System.ExecuteList(" & cmd & ")");
     TRY
       WHILE NOT Rd.EOF(rd) DO
-        pgm := TextReadingUtils.GetToken(rd); 
+        pgm := TextReadingUtils.GetToken(rd, terminate := IDEND,
+                                         unget := TRUE);
         args := NEW(TextSeq.T).init(10);
         done := FALSE;
         WHILE NOT done AND NOT Rd.EOF(rd) DO
-          token := TextReadingUtils.GetTokenOrString(rd);
+          c := RdExtras.Skip(rd, unget := TRUE);
+          IF c IN OPS THEN
+            token := TextReadingUtils.GetToken(rd, terminate := OPEND,
+                                               unget := TRUE);
+            IF NOT Text.Equal(token, "<") AND
+               NOT Text.Equal(token, ">") AND
+               NOT Text.Equal(token, "1>") AND
+               NOT Text.Equal(token, "2>") AND
+               NOT Text.Equal(token, "&>") AND
+               NOT Text.Equal(token, ">>") AND
+               NOT Text.Equal(token, "1>>") AND
+               NOT Text.Equal(token, "2>>") AND
+               NOT Text.Equal(token, "&>>") AND
+               NOT Text.Equal(token, ";") AND
+               NOT Text.Equal(token, "|") AND
+               NOT Text.Equal(token, "||") AND
+               NOT Text.Equal(token, "&&") THEN
+              RAISE ExecuteError("operator syntax error: " & token);
+            END;
+          ELSIF c IN STRDELIM THEN
+            token := TextReadingUtils.GetString(rd);
+          ELSE
+            token := TextReadingUtils.GetToken(rd, terminate := IDEND,
+                                               unget := TRUE);
+          END;
           (* MsgX.D(msgif, " token = " & token); *)
           IF Text.Equal(token, ";") THEN
-            ret := Exec(pgm, args, env, msgif, wd);
+            IF childRd = NIL THEN
+              ret := Exec(pgm, args, env, msgif, wd);
+            ELSE
+              child := ExecNW(stdin, stdout, stderr,
+                              pgm, args, env, msgif, wd, pstdin := childRd);
+              IF child  # NIL THEN processes.addhi(child) END;
+              RememberFiles(stdin, stdout, stderr, NIL);
+              IF processes.size() > 0 THEN
+                ret := WaitForAll();
+              END;
+              INC(jobid);
+              childRd := NIL;
+            END;
             done := TRUE;
           ELSIF Text.Equal(token, "&&") THEN
-            ret := Exec(pgm, args, env, msgif, wd);
+            IF childRd = NIL THEN
+              ret := Exec(pgm, args, env, msgif, wd);
+            ELSE
+              child := ExecNW(stdin, stdout, stderr,
+                              pgm, args, env, msgif, wd, pstdin := childRd);
+              IF child  # NIL THEN processes.addhi(child) END;
+              RememberFiles(stdin, stdout, stderr, NIL);
+              IF processes.size() > 0 THEN
+                ret := WaitForAll();
+              END;
+              INC(jobid);
+              childRd := NIL;
+            END;
             IF ret # 0 THEN
               RETURN ret;
             END;
             done := TRUE;
           ELSIF Text.Equal(token, "||") THEN
-            ret := Exec(pgm, args, env, msgif, wd);
+            IF childRd = NIL THEN
+              ret := Exec(pgm, args, env, msgif, wd);
+            ELSE
+              child := ExecNW(stdin, stdout, stderr,
+                              pgm, args, env, msgif, wd, pstdin := childRd);
+              IF child  # NIL THEN processes.addhi(child) END;
+              RememberFiles(stdin, stdout, stderr, NIL);
+              IF processes.size() > 0 THEN
+                ret := WaitForAll();
+              END;
+              INC(jobid);
+              childRd := NIL;
+            END;
             IF ret = 0 THEN
               RETURN ret;
             END;
             done := TRUE;
+          ELSIF Text.Equal(token, "|") THEN
+            VAR
+              lastChildRd := childRd;
+            BEGIN
+              TRY
+                Pipe.Open(hr := childRd, hw := childWr);
+              EXCEPT
+                OSError.E(l) =>
+                RAISE ExecuteError("pipe creation error (" & 
+                      AtomListToText(l) & ")"); 
+              END;
+              child := ExecNW(stdin, stdout, stderr,
+                              pgm, args, env, msgif, wd, 
+                              pstdin := lastChildRd,
+                              pstdout := childWr);
+            END;
+            IF child  # NIL THEN processes.addhi(child) END;
+            RememberFiles(stdin, stdout, stderr, childWr);
+            done := TRUE;
+            INC(jobid);
           ELSE
             args.addhi(token);
           END;
@@ -470,7 +683,18 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
       Rd.EndOfFile => (* skip *)
     END;
     IF NOT done AND pgm # NIL AND args # NIL THEN
-      ret := Exec(pgm, args, env, msgif, wd);
+      IF childRd = NIL THEN
+        ret := Exec(pgm, args, env, msgif, wd);
+      ELSE
+        child := ExecNW(stdin, stdout, stderr,
+                        pgm, args, env, msgif, wd, pstdin := childRd);
+        IF child  # NIL THEN processes.addhi(child) END;
+        RememberFiles(stdin, stdout, stderr, NIL);
+        INC(jobid);
+      END;
+    END;
+    IF processes.size() > 0 THEN
+      ret := WaitForAll();
     END;
     RETURN ret;
   END ExecuteList;

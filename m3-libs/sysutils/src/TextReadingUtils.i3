@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: TextReadingUtils.i3,v 1.1 2008-01-30 23:45:37 wagner Exp $ *)
+ * $Id: TextReadingUtils.i3,v 1.2 2008-02-21 00:06:59 wagner Exp $ *)
 
 (*--------------------------------------------------------------------*)
 INTERFACE TextReadingUtils;
@@ -37,7 +37,7 @@ PROCEDURE GetString(rd : Rd.T) : TEXT
 
 (*--------------------------------------------------------------------*)
 PROCEDURE GetToken(rd : Rd.T; skip := ASCII.Spaces; 
-                   terminate := ASCII.Spaces) : TEXT
+                   terminate := ASCII.Spaces; unget := FALSE) : TEXT
   RAISES {Rd.Failure, Rd.EndOfFile, Alerted};
   (* get the next token, that is everything that is not considered
      to be ASCII white space *)
