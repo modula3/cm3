@@ -37,7 +37,7 @@ PROCEDURE GetString(rd : Rd.T) : TEXT
 
 (*--------------------------------------------------------------------*)
 PROCEDURE GetToken(rd : Rd.T; skip := ASCII.Spaces; 
-                   terminate := ASCII.Spaces) : TEXT
+                   terminate := ASCII.Spaces; unget := FALSE) : TEXT
   RAISES {Rd.Failure, Rd.EndOfFile, Alerted};
   (* get the next token, that is everything that is not considered
      to be ASCII white space *)

@@ -48,10 +48,10 @@ PROCEDURE GetString(rd : Rd.T) : TEXT
 
 (*--------------------------------------------------------------------*)
 PROCEDURE GetToken(rd : Rd.T; skip := ASCII.Spaces; 
-                   terminate := ASCII.Spaces) : TEXT
+                   terminate := ASCII.Spaces; unget := FALSE) : TEXT
   RAISES {Rd.Failure, Rd.EndOfFile, Alerted} =
   BEGIN
-    RETURN RdExtras.GetText(rd, skip, terminate, FALSE);
+    RETURN RdExtras.GetText(rd, skip, terminate, unget);
   END GetToken;
 
 (*--------------------------------------------------------------------*)
