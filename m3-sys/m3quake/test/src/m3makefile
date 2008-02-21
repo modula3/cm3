@@ -59,7 +59,7 @@ proc checkExec( id, code ) is
     write( "OK", CR )
     oks += id
   else
-    write( "FAILED", CR )
+    write( "FAILED (ret = " & res & ")", CR )
     kos += id
   end
 end
@@ -422,6 +422,20 @@ checkExec( "e003", "res = q_exec( \"rm cm3.version\" )" )
 header( "e004" )
 a = "a\nb\n\c"
 res = q_exec_put( "cat -", a )
+
+checkExec( "e005", "res = q_exec( \"echo a && echo b && echo c\" )" )
+checkExec( "e006", "res = q_exec( \"echo a && false || echo c\" )" )
+checkExec( "e007", "res = q_exec( \"echo a | cat -\" )" )
+checkExec( "e008", "res = q_exec( \"echo abcdefgh | sed -e 's/d/4/g' | sed -e 's/h/8/g'\" )" )
+checkExec( "e009", "res = q_exec( \"true && echo abcdefgh | sed -e 's/d/4/g' | sed -e 's/h/8/g'\" )" )
+checkExec( "e010", "res = q_exec( \"echo abcdefgh | sed -e 's/d/4/g' ; echo abcdefgh | sed -e 's/h/8/g'\" )" )
+checkExec( "e011", "res = q_exec( \"echo abcdefgh | sed -e 's/d/4/g' && echo abcdefgh | sed -e 's/h/8/g'\" )" )
+
+checkExec( "e012", "res = q_exec( \"echo a&&echo b;echo c\" )" )
+checkExec( "e013", "res = q_exec( \"false||echo b;echo c\" )" )
+checkExec( "e014", "res = q_exec( \"false||false;echo c\" )" )
+% checkExec( "e015", "res = q_exec( \"false|&false;echo c\" )" )
+
 
 %-----------------------------------------------------------------------------
 section( "directory stack tests" )

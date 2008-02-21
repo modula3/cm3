@@ -511,10 +511,10 @@ exec tests
 ------ e001 ------------------------------------------------------------------
 rc = 0
 out = total 8
--rw-rw-r--  1 wagner  wheel  17 31 Jan 15:52 apple
+-rw-rw-r--  1 wagner  wheel  17 21 Feb 01:09 apple
 -rw-rw-r--  1 wagner  wheel  17 29 Jan 18:43 ls-1
--rw-rw-r--  1 wagner  wheel  97 31 Jan 15:52 m3make.args
--rw-rw-r--  1 wagner  wheel  17 31 Jan 15:52 orange
+-rw-rw-r--  1 wagner  wheel  97 21 Feb 01:09 m3make.args
+-rw-rw-r--  1 wagner  wheel  17 21 Feb 01:09 orange
 
 
 ------ e002 ------------------------------------------------------------------
@@ -527,6 +527,54 @@ quake(res = q_exec( "rm cm3.version" )) --> OK
 a
 b
 c
+------ e005 ------------------------------------------------------------------
+quake(res = q_exec( "echo a && echo b && echo c" )) --> a
+b
+c
+OK
+
+------ e006 ------------------------------------------------------------------
+quake(res = q_exec( "echo a && false || echo c" )) --> a
+c
+OK
+
+------ e007 ------------------------------------------------------------------
+quake(res = q_exec( "echo a | cat -" )) --> a
+OK
+
+------ e008 ------------------------------------------------------------------
+quake(res = q_exec( "echo abcdefgh | sed -e 's/d/4/g' | sed -e 's/h/8/g'" )) --> abc4efg8
+OK
+
+------ e009 ------------------------------------------------------------------
+quake(res = q_exec( "true && echo abcdefgh | sed -e 's/d/4/g' | sed -e 's/h/8/g'" )) --> abc4efg8
+OK
+
+------ e010 ------------------------------------------------------------------
+quake(res = q_exec( "echo abcdefgh | sed -e 's/d/4/g' ; echo abcdefgh | sed -e 's/h/8/g'" )) --> abc4efgh
+abcdefg8
+OK
+
+------ e011 ------------------------------------------------------------------
+quake(res = q_exec( "echo abcdefgh | sed -e 's/d/4/g' && echo abcdefgh | sed -e 's/h/8/g'" )) --> abc4efgh
+abcdefg8
+OK
+
+------ e012 ------------------------------------------------------------------
+quake(res = q_exec( "echo a&&echo b;echo c" )) --> a
+b
+c
+OK
+
+------ e013 ------------------------------------------------------------------
+quake(res = q_exec( "false||echo b;echo c" )) --> b
+c
+OK
+
+------ e014 ------------------------------------------------------------------
+quake(res = q_exec( "false||false;echo c" )) --> c
+OK
+
 
 ------------------------------------------------------------------------------
 directory stack tests
@@ -563,9 +611,9 @@ miscellanoues tests
 ------------------------------------------------------------------------------
 
 hostname  = luthien.iceflower.in-berlin.de
-date      = 2008-01-31
-datetime  = 2008-01-31 14:52:23
-datestamp = 2008-01-31-14-52-23
+date      = 2008-02-21
+datetime  = 2008-02-21 00:09:17
+datestamp = 2008-02-21-00-09-17
 
 tests done
 
@@ -574,8 +622,8 @@ tests done
 summary
 ------------------------------------------------------------------------------
 
-84 tests succeeded:
-t001 t002 t003 t004 t005 t006 t007 t008 t009 t010 t011 t012 t013 t014 t015 t016 t017 t018 t019 t020 t021 t022 t023 t024 t025 t026 t027 t028 t029 t030 t031 t032 t033 t034 t035 t036 t037 t100 t101 t102 f001 f002 f003 f004 f005 f006 f007 f008 f009 f010 f011 f012 f013 f014 f015 f016 f017 f018 f019 f020 f021 f022 f023 f024 f025 f026 f027 f028 f029 f030 f031 f032 f033 f034 f035 f036 f037 f099 e002 e003 d001 d002 d003 d004
+94 tests succeeded:
+t001 t002 t003 t004 t005 t006 t007 t008 t009 t010 t011 t012 t013 t014 t015 t016 t017 t018 t019 t020 t021 t022 t023 t024 t025 t026 t027 t028 t029 t030 t031 t032 t033 t034 t035 t036 t037 t100 t101 t102 f001 f002 f003 f004 f005 f006 f007 f008 f009 f010 f011 f012 f013 f014 f015 f016 f017 f018 f019 f020 f021 f022 f023 f024 f025 f026 f027 f028 f029 f030 f031 f032 f033 f034 f035 f036 f037 f099 e002 e003 e005 e006 e007 e008 e009 e010 e011 e012 e013 e014 d001 d002 d003 d004
 
 0 tests failed:
 
