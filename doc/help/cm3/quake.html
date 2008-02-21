@@ -530,14 +530,13 @@ following input/output redirections:</p>
      &amp;&gt;&gt; fn : append stdout and stderr to file fn
 </pre><p>
 <code>cmd</code> is parsed and split into single commands at every
-<code>;</code>, <code>&amp;&amp;</code>, and <code>||</code>. 
-The concatenation characters have the usual Bourne Shell meaning. 
-All token must be separated by whitespace (even <code>;</code>,
-<code>&amp;&amp;</code>, and <code>||</code>).
-That is, <code>a&amp;&amp;b</code> will call progam
-<code>a&amp;&amp;b</code>, while <code>a &amp;&amp; b</code> will
-first call progam <code>a</code> and in case of success program
-<code>b</code>.
+<code>;</code>, <code>|</code>, <code>&amp;&amp;</code>, and <code>||</code>. 
+The concatenation characters have the usual Bourne Shell meaning:</p>
+<pre>     a ; b    execute a followed by b
+     a | b    execute a and pipe its output to b's standard input
+     a &amp;&amp; b   execute a, then b if a has succeeded (returned 0)
+     a || b   execute a, then b if a has failed (returned #0)
+</pre><p>
 Token may be grouped by single or double quotes.
 </p>
 <p>
