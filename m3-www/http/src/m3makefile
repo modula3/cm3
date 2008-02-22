@@ -8,7 +8,7 @@
 
 import("libm3")
 import("tcp")
-%import("tcpextras")
+import("sysutils")
 
 Module("App")
 Module("AppBackup")
@@ -18,7 +18,5 @@ Module("HTTPPayment")
 Module("HTTPProxy")
 Module("HTTPControl")
 Module("HTTPControlValue")
-%module("TextExtras") % now in libm3
-Module("FastLex")
 
 Library("http")
