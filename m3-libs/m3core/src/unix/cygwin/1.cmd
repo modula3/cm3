@@ -1,6 +1,5 @@
 call :F1 Utypes.i3.cpp
 call :F1 Usignal.i3.c
-call :F1 Upthread.i3.c
 goto :eof
 
 :F1

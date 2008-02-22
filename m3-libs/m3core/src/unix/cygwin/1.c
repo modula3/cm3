@@ -8,6 +8,7 @@ Test how Cygwin behaves.
 #include <pthread.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <dirent.h>
 
 void once_callback_z(void)
 {
@@ -113,6 +114,9 @@ int main()
     printf("st_spare4 %x\n", offsetof(struct stat, st_spare4));
     printf("sizeof(stat) %x\n", sizeof(struct stat));
 
+    printf("offsets:\n");
+    printf("d_name %x\n", offsetof(struct dirent, d_name));
+    printf("sizeof(dirent) %x\n", sizeof(struct dirent));
 
     fd = open("/dev/null", 0);
     printf("fd %x\n", fd);
