@@ -44,6 +44,7 @@ import("libm3")
 %end
 
 module("EnvUtils")
+module("FingerprintFmt")
 module("FSUtils")
 module("SMsg")
 module("MsgIF")
