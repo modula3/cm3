@@ -8,7 +8,6 @@
 
 % $Id$
 
-Interface ("Uucontext")
 Interface ("Udir")
 Interface ("Uerror")
 Interface ("Uexec")
@@ -19,7 +18,7 @@ Interface ("Unix")
 Interface ("Uprocess")
 Interface ("Upwd")
 Interface ("Uresource")
-Module    ("Usignal")
+Interface ("Usignal")
 Interface ("Ustat")
 Interface ("Usocket")
 Module    ("Utime")
