@@ -10,8 +10,7 @@
 
 INTERFACE Uin;
 
-FROM Ctypes IMPORT short, char;
-FROM Utypes IMPORT u_short, u_long;
+FROM Ctypes IMPORT unsigned_short, unsigned_int, char;
 
 (* Constants and structures defined by the internet system,
    Per RFC 790, September 1981. *)
@@ -20,24 +19,30 @@ CONST
   IPPROTO_TCP = 6;		(* tcp *)
 
 TYPE
+
+  in_port_t = unsigned_short;
+  sa_family_t = unsigned_short;
+  in_addr_t = unsigned_int;
+
   struct_in_addr = RECORD
-    s_addr: u_long;
+    s_addr: in_addr_t;
   END;
 
 (* Socket address, internet style. *)
 TYPE
-  struct_sockaddr_in = RECORD
-    sin_family: short;
-    sin_port: u_short;
+  struct_sockaddr_in = BITS 16 * 8 FOR RECORD
+    sin_family: sa_family_t;
+    sin_port: in_port_t;
     sin_addr: struct_in_addr;
-    sin_zero: ARRAY [0..7] OF char;
+    (* Pad to size of `struct sockaddr'. *)
+    sin_zero : ARRAY [0..7] OF char;
   END;
   struct_sockaddr_in_star = UNTRACED REF struct_sockaddr_in;
 
 (* Procedures for number representation conversion. *)
-PROCEDURE ntohl(x: u_long): u_long;
-PROCEDURE ntohs(x: u_short): u_short;
-PROCEDURE htonl(x: u_long): u_long;
-PROCEDURE htons(x: u_short): u_short;
+PROCEDURE ntohl(x: unsigned_int): unsigned_int;
+PROCEDURE ntohs(x: unsigned_short): unsigned_short;
+PROCEDURE htonl(x: unsigned_int): unsigned_int;
+PROCEDURE htons(x: unsigned_short): unsigned_short;
 
 END Uin.

@@ -7,12 +7,11 @@
 (*      modified on Tue Jun  8 16:26:41 PDT 1993 by mcjones           *)
 (*      modified on Mon Jan 11 14:34:49 PST 1993 by muller            *)
 
-(* $Id: Unix.i3,v 1.10 2008-02-16 21:52:22 jkrell Exp $ *)
+(* $Id: Unix.i3,v 1.11 2008-02-23 11:03:00 jkrell Exp $ *)
 
 INTERFACE Unix;
 
 FROM Word IMPORT Or, And, Shift;
-
 FROM Ctypes IMPORT short, int, long, const_char_star, char_star, char_star_star;
 FROM Utypes IMPORT off_t, size_t, pid_t;
 FROM Utime IMPORT struct_timeval;
@@ -25,7 +24,6 @@ CONST
 
 (*** file flags ***)
 
-CONST
   FREAD =      8_000001;        (* descriptor read/receive'able *)
   FWRITE =     8_000002;        (* descriptor write/send'ale *)
   FAPPEND   = 16_0008;          (* append on each write *)
@@ -35,7 +33,6 @@ CONST
   FNONBLOCK = 16_4000;          (* non blocking I/O (POSIX style) *)
   FNDELAY   = FNONBLOCK;        (* non blocking I/O (4.2 style) *)
 
-CONST
   MSETUID = 8_4000;
   MSETGID = 8_2000;
   MSTICKY = 8_1000;
@@ -52,14 +49,14 @@ CONST
   Mrwrwrw = MROWNER + MWOWNER + MRGROUP + MWGROUP + MROTHER + MWOTHER;
 
 (*** access - determine the accessibility of file ***)
-CONST
+
  (* parameters to access *)
   F_OK = 0; (* exist *)
   X_OK = 1; (* executable *)
   W_OK = 2; (* writable *)
   R_OK = 4; (* readable *)
-<*EXTERNAL*> PROCEDURE access (path: const_char_star; mod: int): int;
 
+<*EXTERNAL*> PROCEDURE access (path: const_char_star; mod: int): int;
 
 (*** chdir - change working directory ***)
 
@@ -69,16 +66,14 @@ CONST
 
 <*EXTERNAL*> PROCEDURE close (d: int): int;
 
-(*** dup, dup2 - duplicate an open file descriptor ***)
+(*** dup2 - duplicate an open file descriptor ***)
 
-<*EXTERNAL*> PROCEDURE dup (oldd: int): int;
 <*EXTERNAL*> PROCEDURE dup2 (oldd, newd: int): int;
 
 (*** execve - execute a file ***)
 
-<*EXTERNAL*> PROCEDURE execve (name: char_star; 
+<*EXTERNAL*> PROCEDURE execve (name: const_char_star; 
                            argv, envp: char_star_star): int;
-
 
 (*** exit - terminate a process ***)
 
@@ -105,9 +100,8 @@ CONST   (* request *)
   F_SETLK  = 8;   (* Set file lock *)
   F_SETLKW = 9;   (* Set file lock and wait *)
 
-CONST (* fd flags *)
+(* fd flags *)
   FD_CLOEXEC = 1;    (* Close file descriptor on exec() *)
-
 
 TYPE
   struct_flock = RECORD
@@ -143,7 +137,7 @@ CONST
 
 <*EXTERNAL*> PROCEDURE getdtablesize (): int;
 
-(*** gethostname, sethostname - get/set name of current host ***)
+(*** gethostname - get name of current host ***)
 
 <*EXTERNAL*> PROCEDURE gethostname (name: char_star; namelen: int): int;
 
@@ -153,7 +147,6 @@ CONST
 
 (*** getwd - get current working directory pathname ***)
 
-<*EXTERNAL*> PROCEDURE getwd (pathname: char_star): char_star;
 <*EXTERNAL*> PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
 
 CONST
@@ -173,7 +166,6 @@ CONST
   FIONREAD =  Or (Or (R, INT), Or (FC, 127)); (* Get # bytes to read    *)
 
 <*EXTERNAL*> PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
-
 
 (*** lseek, tell - move read/write pointer ***)
 
@@ -228,13 +220,7 @@ CONST
 
 <*EXTERNAL*> PROCEDURE rmdir (path: const_char_star): int;
 
-(*** symlink - make symbolic link to a file ***)
-
-<*EXTERNAL*> PROCEDURE symlink (name1, name2: const_char_star): int;
-
-(*** truncate, ftruncate - truncate a file to a specified length ***)
-
-<*EXTERNAL*> PROCEDURE truncate (path: const_char_star; length: off_t): int;
+(*** ftruncate - truncate a file to a specified length ***)
 
 <*EXTERNAL*> PROCEDURE ftruncate (fd: int; length: off_t): int;
 
@@ -244,14 +230,11 @@ CONST
 
 (*** utimes - set file times ***)
 
-<*EXTERNAL*> PROCEDURE utimes (file: char_star;
+<*EXTERNAL*> PROCEDURE utimes (file: const_char_star;
                     tvp: UNTRACED REF ARRAY [0..1] OF struct_timeval): int;
 
 (*** vfork - spawn new process in a virtual memory efficient way ***)
 
 <*EXTERNAL*> PROCEDURE vfork (): int;
-
-(*** system(3) ***)
-<*EXTERNAL*> PROCEDURE system (string: const_char_star): int;
 
 END Unix.
