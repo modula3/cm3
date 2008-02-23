@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.16 2008-02-23 14:21:29 jkrell Exp $
+# $Id: upgrade.py,v 1.17 2008-02-23 14:22:30 jkrell Exp $
 
 import sys
 import pylib
@@ -66,13 +66,6 @@ DoPackage(argv_RealClean, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m
 
 DoPackage(argv_BuildShip, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
                             "m3linker", "m3back", "m3staloneback", "m3front", "sysutils",
-                            "cm3", "mklib", "m3cc", "m3core", "libm3",
-    ]) or sys.exit(1)
-
-ShipCompiler() or sys.exit(1)
-
-DoPackage(argv_RealClean, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
-                            "m3linker", "m3back", "m3staloneback", "m3front", "sysutils", 
                             "cm3", "mklib", "m3cc", "m3core", "libm3",
     ]) or sys.exit(1)
 
