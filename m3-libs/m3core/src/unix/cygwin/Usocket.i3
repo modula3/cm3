@@ -31,10 +31,9 @@ CONST
  *)
 TYPE
   struct_linger = RECORD
-    l_onoff: Ctypes.int;		(* option on/off *)
-    l_linger: Ctypes.int;		(* linger time *)
+    l_onoff: Ctypes.unsigned_short;  (* option on/off *)
+    l_linger: Ctypes.unsigned_short; (* linger time *)
   END;
-
 
 (*
  * Level number for (get/set)sockopt() to apply to socket itself.
@@ -42,12 +41,10 @@ TYPE
 CONST
   SOL_SOCKET     = 1;      (* options for socket level *)
 
-
 (*
  * Address families.
  *)
   AF_INET        = 2;            (* internetwork: UDP, TCP, etc. *)
-
 
 <*EXTERNAL*>
 PROCEDURE accept(
@@ -101,9 +98,6 @@ PROCEDURE getsockopt(
 PROCEDURE listen(s, backlog: Ctypes.int): Ctypes.int RAISES {};
 
 <*EXTERNAL*>
-PROCEDURE recv(s: Ctypes.int; buf: Ctypes.char_star; len, flags: Ctypes.int): Ctypes.int RAISES {};
-
-<*EXTERNAL*>
 PROCEDURE recvfrom(
     s: Ctypes.int;
     buf: Ctypes.char_star;
@@ -112,9 +106,6 @@ PROCEDURE recvfrom(
     fromlen: Ctypes.int_star)
     : Ctypes.int
     RAISES {};
-
-<*EXTERNAL*>
-PROCEDURE send(s: Ctypes.int; msg: Ctypes.char_star; len, flags: Ctypes.int): Ctypes.int RAISES {};
 
 <*EXTERNAL*>
 PROCEDURE sendto(
@@ -135,16 +126,6 @@ PROCEDURE setsockopt(
     RAISES {};
 
 <*EXTERNAL*>
-PROCEDURE shutdown(s, how: Ctypes.int): Ctypes.int RAISES {};
-
-<*EXTERNAL*>
 PROCEDURE socket(af, type, protocol: Ctypes.int): Ctypes.int RAISES {};
-
-<*EXTERNAL*>
-PROCEDURE socketpair(
-    d, type, protocol: Ctypes.int;
-    sv: UNTRACED REF ARRAY [0..1] OF Ctypes.int)
-    : Ctypes.int
-    RAISES {};
 
 END Usocket.
