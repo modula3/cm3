@@ -220,6 +220,10 @@ CONST
 
 <*EXTERNAL*> PROCEDURE rmdir (path: const_char_star): int;
 
+(*** symlink - make symbolic link to a file ***)
+
+<*EXTERNAL*> PROCEDURE symlink (name1, name2: const_char_star): int;
+
 (*** ftruncate - truncate a file to a specified length ***)
 
 <*EXTERNAL*> PROCEDURE ftruncate (fd: int; length: off_t): int;
