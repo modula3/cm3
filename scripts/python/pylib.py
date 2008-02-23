@@ -69,13 +69,13 @@ def SearchPath(name, paths = getenv("PATH")):
 #
 # the root of the installation
 #
-InstallRoot = os.path.dirname(os.path.dirname(SearchPath("cm3") or ""))
+InstallRoot = os.environ.get("CM3_INSTALL") or os.path.dirname(os.path.dirname(SearchPath("cm3") or ""))
 
 #
 # the root of the source tree
 #
-Root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-Root = Root.replace("\\", "\\\\")
+Root = (os.environ.get("CM3_ROOT")
+    or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).Root.replace("\\", "\\\\"))
 
 BuildAll = getenv("CM3_ALL") or False
 
@@ -380,13 +380,29 @@ def GetConfigForDistribution(Target):
     return b
 
 def SetEnvironmentVariable(Name, Value):
-    os.environ[Name] = Value
-    print("set " + Name + "=" + Value);
+    if not os.environ.get(Name):
+        os.environ[Name] = Value
+        print("set " + Name + "=" + Value);
 
+if IsCygwinBinary(CM3):
+    def ConvertToCygwinPath(a):
+        #
+        # assume user has setup symlinks at root /c => /cygdrive/c
+        # This way, 1) same code for MinGWin and Cygwin 2) shorter paths
+        # network paths also work
+        #
+        return a.replace("\\", "/").replace(":", "/")
+else:
+    def ConvertToCygwinPath(a):
+        return a
+
+NativeRoot = Root
+Root = ConvertToCygwinPath(Root)
 SetEnvironmentVariable("CM3_TARGET", Target);
 SetEnvironmentVariable("CM3_ROOT", Root);
-SetEnvironmentVariable("CM3_INSTALL", InstallRoot);
-SetEnvironmentVariable("M3CONFIG", GetConfigForDistribution(Config))
+SetEnvironmentVariable("CM3_INSTALL", ConvertToCygwinPath(InstallRoot));
+SetEnvironmentVariable("M3CONFIG", ConvertToCygwinPath(GetConfigForDistribution(Config)))
+Root = NativeRoot
 
 #-----------------------------------------------------------------------------
 # elego customizations
@@ -415,7 +431,10 @@ DEFS = "-keep -DROOT=%(Q)s%(Root)s%(Q)s"
 DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
 DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
 DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
+
+Root = ConvertToCygwinPath(Root)
 DEFS = (DEFS % vars())
+Root = NativeRoot
 
 #
 # workaround crash when booting from 5.1.3 that is
@@ -1636,10 +1655,27 @@ def SetupEnvironment():
             ["gcc", "as", "ld"],
             os.path.join(SystemDrive, "cygwin", "bin"))
 
+
+def FatalError(a = ""):
+    # logs don't work yet
+    #print("ERROR: see " + Logs)
+    print("fatal error " + a)
+    sys.exit(1)
+
+
+def IsCygwinBinary(a):
+    if env_OS != "Windows_NT":
+        return False
+    return (os.system("findstr >nul /m cygwin1.dll " + a) == 0)
+
 if __name__ == "__main__":
     #
     # run test code if module run directly
     #
+
+    print(IsCygwinBinary("c:\\cygwin\\bin\\gcc.exe"))
+    print(IsCygwinBinary("c:\\bin\\cdb.exe"))
+    sys.exit(1)
 
     CopyDirectoryNonRecursive("\\windows", "\\")
     sys.exit(1)
@@ -1735,9 +1771,3 @@ if __name__ == "__main__":
             print("%s(%-*s): %s" % (Function.__name__, Width, CommandLine, Function(CommandLine)))
 
     pkgmap(["-c"])
-
-def FatalError(a = ""):
-    # logs don't work yet
-    #print("ERROR: see " + Logs)
-    print("fatal error " + a)
-    sys.exit(1)
