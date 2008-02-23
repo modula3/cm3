@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.27 2008-02-23 17:22:17 jkrell Exp $
+# $Id: make-dist.py,v 1.28 2008-02-23 17:28:13 jkrell Exp $
 
 import sys
 import os.path
@@ -132,7 +132,7 @@ def RealClean(Packages):
     return Do("realclean", Packages)
 
 def CreateSkel():
-    for a in ("bin", "lib", "pkg"):
+    for a in ("bin", "pkg"):
         CreateDirectory(os.path.join(InstallRoot, a)) or FatalError()
     return True
 
