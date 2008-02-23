@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.13 2008-01-31 00:11:25 wagner Exp $
+# $Id: upgrade.sh,v 1.14 2008-02-23 15:03:24 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -64,11 +64,20 @@ run "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
 # m3cc, as this is written in C) from scratch with it.
 OMIT_GCC=yes run "$ROOT/scripts/do-cm3-core.sh" "$@" "realclean" || exit 1
 
-run "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship" || (
+if [ "${UPGRADE_CM3_CFG}" != "yes" ]; then
+  run "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
+  ret=$?
+fi
+
+if [ "${UPGRADE_CM3_CFG}" = "yes" -o "${ret}" != 0 ]; then (
 
   # If we fail, this may be caused by incompatible changes in cm3.cfg.
   # We try to install a new one with cminstall...
-  echo "core compilation failed; trying cm3.cfg upgrade..."
+  if [ "${UPGRADE_CM3_CFG}" != "yes" ]; then
+    echo "core compilation failed; trying cm3.cfg upgrade..."
+  else
+    echo "performing forced cm3.cfg upgrade..."
+  fi
 
   DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
   CFG="${INSTALLROOT}/bin/cm3.cfg"
@@ -84,7 +93,7 @@ run "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship" || (
 
   run "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
 
-) || exit 1
+) fi || exit 1
 
 # If everything has been successfull, we do another compiler upgrade.
 run "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
