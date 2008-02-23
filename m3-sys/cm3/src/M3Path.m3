@@ -21,8 +21,6 @@ CONST
 VAR
   DirSep := ARRAY OSKind OF CHAR { Slash,  Slash,  BackSlash };
   VolSep := ARRAY OSKind OF CHAR { Null,   Null,   Colon  };
-
-VAR
   DirSepText := ARRAY OSKind OF TEXT { "/",  "/",  "\\" };
 
 TYPE
