@@ -1,4 +1,4 @@
-/* $Id: Usignal.i3.c,v 1.19 2008-02-23 08:31:59 jkrell Exp $ */
+/* $Id: Usignal.i3.c,v 1.20 2008-02-23 09:50:39 jkrell Exp $ */
 
 #include <signal.h>
 #include <stdio.h>
@@ -27,7 +27,7 @@ int main()
 "", 0,
 "INTERFACE Usignal;", 0,
 "", 0,
-"FROM Ctypes IMPORT int, unsigned_int;", 0,
+"FROM Ctypes IMPORT int;", 0,
 "", 0,
 "(*** <signal.h> ***)", 0,
 "", 0,
