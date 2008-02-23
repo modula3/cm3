@@ -7,7 +7,7 @@
 (*      modified on Tue Jun  8 16:26:41 PDT 1993 by mcjones           *)
 (*      modified on Mon Jan 11 14:34:49 PST 1993 by muller            *)
 
-(* $Id: Unix.i3,v 1.11 2008-02-23 11:03:00 jkrell Exp $ *)
+(* $Id: Unix.i3,v 1.12 2008-02-23 11:12:07 jkrell Exp $ *)
 
 INTERFACE Unix;
 
@@ -219,6 +219,10 @@ CONST
 (*** rmdir - remove a directory file ***)
 
 <*EXTERNAL*> PROCEDURE rmdir (path: const_char_star): int;
+
+(*** symlink - make symbolic link to a file ***)
+
+<*EXTERNAL*> PROCEDURE symlink (name1, name2: const_char_star): int;
 
 (*** ftruncate - truncate a file to a specified length ***)
 
