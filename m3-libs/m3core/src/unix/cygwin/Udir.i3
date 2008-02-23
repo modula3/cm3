@@ -21,7 +21,7 @@ CONST
 TYPE
 
   dirent = BITS 16_114 * 8 FOR RECORD (* describes directory entry *)
-    pad : BITS 16_14 * 8 FOR ARRAY [0..0] OF Ctypes.char;
+    pad : BITS 16_14 * 8 FOR ARRAY [0..0] OF [0..0];
     d_name: ARRAY [0..255] OF Ctypes.char;  
   END;
 
