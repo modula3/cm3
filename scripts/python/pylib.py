@@ -28,7 +28,7 @@ import shutil
 # CM3_INSTALL
 #    the root of the installation, computed from finding cm3 in $PATH
 #
-# M3_CONFIG
+# M3CONFIG
 #    the config file, probed based on a few factors
 #
 
