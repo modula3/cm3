@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.23 2008-02-04 01:10:40 jkrell Exp $
+# $Id: make-dist.py,v 1.24 2008-02-23 15:12:04 jkrell Exp $
 
 import sys
 import os.path
@@ -257,7 +257,7 @@ CopyMklib(InstallRoot, InstallRoot_CompilerWithPrevious) or FatalError()
 def Setup(ExistingCompilerRoot, NewRoot):
     global InstallRoot
     InstallRoot = NewRoot
-    os.environ["INSTALLROOT"] = NewRoot
+    os.environ["CM3_INSTALL"] = NewRoot
     if (OriginalLIB): # This is Windows-only thing.
         os.environ["LIB"] = os.path.join(NewRoot, "lib") + OriginalLIB
     os.environ["PATH"] = (os.path.join(NewRoot, "bin") + OriginalPATH)
