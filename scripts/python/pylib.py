@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.56 2008-02-23 14:45:57 jkrell Exp $
+# $Id: pylib.py,v 1.57 2008-02-23 14:48:28 jkrell Exp $
 
 import os
 from os import getenv
@@ -28,7 +28,7 @@ import shutil
 # CM3_INSTALL
 #    the root of the installation, computed from finding cm3 in $PATH
 #
-# M3_CONFIG
+# M3CONFIG
 #    the config file, probed based on a few factors
 #
 
