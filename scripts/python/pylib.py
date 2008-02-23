@@ -260,6 +260,11 @@ if (UName.startswith("windows")
     HAVE_SERIAL = True
     GMAKE = getenv("GMAKE") or "make"
 
+    #
+    # TBD:
+    # If cl is not in the path, or link not in the path (Cygwin link doesn't count)
+    # then error toward GNU, and probe uname and gcc -v.
+    #
     if ((Target.startswith("NT386GNU")
         # uname can be in the %PATH% and still target native NT386
         #or UNameCommand.startswith("cygwin")
