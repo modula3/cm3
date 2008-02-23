@@ -257,7 +257,7 @@ CopyMklib(InstallRoot, InstallRoot_CompilerWithPrevious) or FatalError()
 def Setup(ExistingCompilerRoot, NewRoot):
     global InstallRoot
     InstallRoot = NewRoot
-    os.environ["INSTALLROOT"] = NewRoot
+    os.environ["CM3_INSTALL"] = NewRoot
     if (OriginalLIB): # This is Windows-only thing.
         os.environ["LIB"] = os.path.join(NewRoot, "lib") + OriginalLIB
     os.environ["PATH"] = (os.path.join(NewRoot, "bin") + OriginalPATH)
