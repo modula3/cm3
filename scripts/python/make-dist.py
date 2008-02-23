@@ -207,6 +207,7 @@ Echo("build new compiler with old compiler and old runtime (%(InstallRoot_Previo
 
 Packages = [
     "import-libs",
+    "sysutils",
     "m3middle",
     "m3linker",
     "m3front",
