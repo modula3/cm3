@@ -1,16 +1,7 @@
-/* $Id: Usignal.i3.c,v 1.18 2008-02-22 15:55:01 jkrell Exp $ */
+/* $Id: Usignal.i3.c,v 1.19 2008-02-23 08:31:59 jkrell Exp $ */
 
 #include <signal.h>
 #include <stdio.h>
-
-static void AssertTypes()
-{
-    sigset_t * a = 0;
-    unsigned long * b = 0;
-
-    b = a;
-    a = b;
-}
 
 int main()
 {
