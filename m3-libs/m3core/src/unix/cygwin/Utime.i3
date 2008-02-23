@@ -9,12 +9,11 @@
 (*      modified on Wed Dec  2 11:29:00 PST 1992 by mcjones   *)
 (*      modified on Mon Apr 23 16:37:40 1990 by jerome        *)
 
-(* $Id: Utime.i3,v 1.7 2008-02-23 07:12:21 jkrell Exp $ *)
+(* $Id: Utime.i3,v 1.8 2008-02-23 08:56:53 jkrell Exp $ *)
 
 INTERFACE Utime;
 
-FROM Ctypes IMPORT char_star, int, long, long_star, 
-                   unsigned_short, short, long_int;
+FROM Ctypes IMPORT char_star, int, long, long_star;
 
 (*** <sys/time.h> ***)
 
@@ -31,7 +30,7 @@ TYPE
 
   struct_timespec = RECORD
     tv_sec: time_t;			 (* Seconds *)
-    tv_nsec: long_int;			 (* Nanoseconds *)
+    tv_nsec: long;			 (* Nanoseconds *)
   END;
 
 TYPE
@@ -58,21 +57,7 @@ TYPE
   time_t = int; (* seconds since the Epoch *)
 
 (*** <sys/times.h> ***)
-
-(*
- * Structure returned by times()
- *)
-
 (*** <sys/timeb.h> ***)
-
-TYPE
-  struct_timeb_star = UNTRACED REF struct_timeb;
-  struct_timeb = RECORD
-    time     : long;
-    millitm  : unsigned_short;
-    timezone : short;
-    dstflag  : short;
-  END;
 
 (*** gettimeofday(2), settimeofday(2) - get/set date and time ***)
 
@@ -83,13 +68,6 @@ PROCEDURE gettimeofday (VAR t: struct_timeval;
 <*EXTERNAL*>
 PROCEDURE settimeofday (VAR t: struct_timeval;
                         z: UNTRACED REF struct_timezone := NIL): int;
-
-(*** adjtime(2) - correct the time to allow synchronization of the 
-                  system clock ***)
-
-<*EXTERNAL*>
-PROCEDURE adjtime (VAR delta, oldDelta: struct_timeval): int;
-
 
 (*** getitimer(2), setitimer(2) - get/set value of interval timer ***)
 
@@ -107,28 +85,18 @@ PROCEDURE setitimer_ (which: int;
 PROCEDURE setitimer (which: int; 
                      VAR value, ovalue: struct_itimerval): int;
 
-(*** stime(2) - set time ***)
-
-<*EXTERNAL*> PROCEDURE stime (VAR tp: long): int;
-
-
-
 (*** clock(3) - report CPU time used (in micro-seconds) ***)
 
 <*EXTERNAL*> PROCEDURE clock (): long;
 
-(*** times(3) - get process times (in ticks) ***)
-
-(*** time(3), ftime(3) - get date and time (in seconds) ***)
+(*** time(3) - get date and time (in seconds) ***)
 
 <*EXTERNAL*> PROCEDURE time  (tloc: long_star): long;
-<*EXTERNAL*> PROCEDURE ftime (tp: struct_timeb_star);
 
-(*** ctime(3), localtime(3), gmtime(3), asctime(3)
+(*** ctime(3), localtime(3), gmtime(3)
      - convert date and time (in seconds)  to string ***)
 
 <*EXTERNAL*> PROCEDURE ctime     (READONLY clock: long): char_star;
-<*EXTERNAL*> PROCEDURE asctime   (tm: struct_tm_star): char_star;
 
 <*EXTERNAL*> PROCEDURE localtime (clock: long_star): struct_tm_star;
 <*EXTERNAL*> PROCEDURE gmtime    (clock: long_star): struct_tm_star;
