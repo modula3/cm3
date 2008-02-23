@@ -99,7 +99,7 @@ PROCEDURE NewInternal (a, b, c, d: TEXT := NIL; host: BOOLEAN): TEXT =
     len := Text.Length (a);
     IF (len <= NUMBER (buf)) THEN
       Text.SetChars (buf, a);
-      RETURN FixPath (SUBARRAY (buf, 0, len), host := TRUE);
+      RETURN FixPath (SUBARRAY (buf, 0, len), host);
     ELSE
       ref := NEW (REF ARRAY OF CHAR, len);
       Text.SetChars (ref^, a);
@@ -474,8 +474,7 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR;  host: BOOLEAN): TEXT =
         FindSeps (p, len, info);  x := 1;  (* restart the scan *)
       ELSIF (s2 - s1 = 3)
         AND (p[s1+1] = '.') AND (p[s1+2] = '.')
-        AND ((p[s1] = Slash) OR (p[s1] = d_sep))
-        AND ((p[s1-1] # '.') OR (p[s1-2] # '.')) THEN
+        AND ((p[s1] = Slash) OR (p[s1] = d_sep)) THEN
         (* found a /<foo>/../ segment => remove it *)
         CutSection (p, s0+1, s2, len);
         FindSeps (p, len, info);  x := 1;  (* restart the scan *)
