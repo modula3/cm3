@@ -6,7 +6,6 @@
 %      modified on Thu Nov 10 15:17:04 PST 1994 by kalsow
 %      modified on Tue May  4 10:15:15 PDT 1993 by mjordan
 
-implementation("PathnameWin32")
 Module("OSErrorWin32")
 
 %
@@ -30,6 +29,8 @@ Module("OSErrorWin32")
 %
 
 if not equal (OS_TYPE, "POSIX")
+
+implementation("PathnameWin32")
 
 import_sys_lib ("TCP")
 
