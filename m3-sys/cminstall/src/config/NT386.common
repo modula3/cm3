@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.20 2008-02-23 07:01:11 jkrell Exp $
+% $Id: NT386.common,v 1.21 2008-02-23 07:02:25 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -338,7 +338,7 @@ MoveFile(
     b,
     )
 is
-    if defined("fs_cp") and defined("fs_cp")
+    if defined("fs_cp")
         fs_cp(a, b)
         DeleteFile(a)
     else
