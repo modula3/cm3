@@ -69,13 +69,15 @@ def SearchPath(name, paths = getenv("PATH")):
 #
 # the root of the installation
 #
-InstallRoot = os.environ.get("CM3_INSTALL") or os.path.dirname(os.path.dirname(SearchPath("cm3") or ""))
+CM3 = getenv("CM3") or ExeName("cm3") # to invoke
+Cm3FullPath = SearchPath(CM3) # a file that can be opened/copied
+InstallRoot = os.environ.get("CM3_INSTALL") or os.path.dirname(os.path.dirname(Cm3FullPath))
 
 #
 # the root of the source tree
 #
 Root = (os.environ.get("CM3_ROOT")
-    or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).Root.replace("\\", "\\\\"))
+    or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).replace("\\", "\\\\"))
 
 BuildAll = getenv("CM3_ALL") or False
 
@@ -233,7 +235,6 @@ CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetDefaultFromSh("CM3LASTCHANGED")
 GCC_BACKEND = getenv("CM3_GCC_BACKEND", "")
 CM3_GDB = False
 
-CM3 = getenv("CM3") or ExeName("cm3")
 M3Build = getenv("M3BUILD") or ExeName("m3build")
 M3Ship = getenv("M3SHIP") or "m3ship"
 EXE = "" # executable extension, ".exe" or empty
@@ -389,14 +390,14 @@ def IsCygwinBinary(a):
         return False
     return (os.system("findstr >nul /m cygwin1.dll " + a) == 0)
 
-if IsCygwinBinary(CM3):
+if IsCygwinBinary(Cm3FullPath):
     def ConvertToCygwinPath(a):
         #
         # assume user has setup symlinks at root /c => /cygdrive/c
         # This way, 1) same code for MinGWin and Cygwin 2) shorter paths
         # network paths also work
         #
-        return a.replace("\\", "/").replace(":", "/")
+        return "/" + a.replace("\\", "/").replace(":", "").replace("//", "/")
 else:
     def ConvertToCygwinPath(a):
         return a
