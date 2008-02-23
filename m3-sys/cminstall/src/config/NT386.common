@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.21 2008-02-23 07:02:25 jkrell Exp $
+% $Id: NT386.common,v 1.22 2008-02-23 23:35:32 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -658,6 +658,12 @@ is
     return Result
 end
 
+if not defined("subst_chars")
+    proc subst_chars(a, b, c) is
+        return a
+    end
+end
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -718,7 +724,7 @@ is
                 "-out:" & dll_file,
                  options,
                  objects,
-                 imported_libs,
+                 subst_chars(imported_libs, "/", "\\"),
             ]),
         "2>&1",
         ">", listing
@@ -859,7 +865,7 @@ is
                 make_dll_ms(
                     options,
                     objects,
-                    imported_libs,
+                    subst_chars(imported_libs, "/", "\\"),
                     lib_file,
                     def_file,
                     dll_file,
@@ -1063,7 +1069,7 @@ is
                 m3_link_flags,
                 options,
                 objects,
-                imported_libs,
+                subst_chars(imported_libs, "/", "\\"),
             ]),
         "2>&1",
         ">", listing
