@@ -71,13 +71,12 @@ def SearchPath(name, paths = getenv("PATH")):
 #
 CM3 = getenv("CM3") or ExeName("cm3") # to invoke
 Cm3FullPath = SearchPath(CM3) # a file that can be opened/copied
-InstallRoot = os.environ.get("CM3_INSTALL") or os.path.dirname(os.path.dirname(Cm3FullPath))
+InstallRoot = os.path.dirname(os.path.dirname(Cm3FullPath))
 
 #
 # the root of the source tree
 #
-Root = (os.environ.get("CM3_ROOT")
-    or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).replace("\\", "\\\\"))
+Root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).replace("\\", "\\\\")
 
 BuildAll = getenv("CM3_ALL") or False
 
@@ -402,12 +401,15 @@ else:
     def ConvertToCygwinPath(a):
         return a
 
+SetEnvironmentVariable("CM3_TARGET", Target);
+SetEnvironmentVariable("CM3_INSTALL", ConvertToCygwinPath(InstallRoot));
+ConfigFile = os.environ.get("M3CONFIG")
+if not ConfigFile:
+    ConfigFile = GetConfigForDistribution(Config)
+    SetEnvironmentVariable("M3CONFIG", ConvertToCygwinPath(ConfigFile))
 NativeRoot = Root
 Root = ConvertToCygwinPath(Root)
-SetEnvironmentVariable("CM3_TARGET", Target);
 SetEnvironmentVariable("CM3_ROOT", Root);
-SetEnvironmentVariable("CM3_INSTALL", ConvertToCygwinPath(InstallRoot));
-SetEnvironmentVariable("M3CONFIG", ConvertToCygwinPath(GetConfigForDistribution(Config)))
 Root = NativeRoot
 
 #-----------------------------------------------------------------------------
@@ -484,25 +486,10 @@ SRC_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
 
 # other commands
 
-#
-# Approximate support for "configurations" that are not specific "targets".
-#
-BuildDir = Target
-ConfigFile = os.environ.get("M3CONFIG")
-# print("ConfigFile is " + ConfigFile)
-if ConfigFile:
-    RegExp = re.compile("BUILD_DIR\s*=\s*\"(\S+)\"")
-    for Line in open(ConfigFile):
-        Match = RegExp.search(Line)
-        if Match:
-            BuildDir = Match.group(1)
-            print("BUILD_DIR is " + BuildDir)
-            print("ConfigFile is " + ConfigFile)
-
 if os.name == "nt":
-    RealClean = RealClean or "if exist %(BuildDir)s rmdir /q/s %(BuildDir)s"
+    RealClean = RealClean or "if exist %(Config)s rmdir /q/s %(Config)s"
 else:
-    RealClean = RealClean or "rm -rf %(BuildDir)s"
+    RealClean = RealClean or "rm -rf %(Config)s"
 
 RealClean = (RealClean % vars())
 

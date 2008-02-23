@@ -273,6 +273,8 @@ def Setup(ExistingCompilerRoot, NewRoot):
 
     reload(pylib) or FatalError()
 
+    os.environ["CM3_INSTALL"] = ConvertToCygwinPath(NewRoot)
+
 Setup(InstallRoot, InstallRoot_CompilerWithPrevious)
 
 RealClean(Packages) or FatalError()
