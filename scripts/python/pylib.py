@@ -384,6 +384,11 @@ def SetEnvironmentVariable(Name, Value):
         os.environ[Name] = Value
         print("set " + Name + "=" + Value);
 
+def IsCygwinBinary(a):
+    if env_OS != "Windows_NT":
+        return False
+    return (os.system("findstr >nul /m cygwin1.dll " + a) == 0)
+
 if IsCygwinBinary(CM3):
     def ConvertToCygwinPath(a):
         #
@@ -1661,12 +1666,6 @@ def FatalError(a = ""):
     #print("ERROR: see " + Logs)
     print("fatal error " + a)
     sys.exit(1)
-
-
-def IsCygwinBinary(a):
-    if env_OS != "Windows_NT":
-        return False
-    return (os.system("findstr >nul /m cygwin1.dll " + a) == 0)
 
 if __name__ == "__main__":
     #
