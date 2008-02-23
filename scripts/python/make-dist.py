@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.26 2008-02-23 15:41:02 jkrell Exp $
+# $Id: make-dist.py,v 1.27 2008-02-23 17:22:17 jkrell Exp $
 
 import sys
 import os.path
@@ -78,9 +78,12 @@ def MakeArchive(PackageSetName, Command, Extension):
 
     os.chdir(os.path.dirname(InstallRoot))
 
-    Symbols = FormArchiveName(PackageSetName, "-symbols." + Extension)
-    DeleteFile(Symbols)
-    Run(Command + " " + os.path.basename(Symbols) + " " + os.path.basename(SymbolsRoot))
+    if not os.listdir(SymbolsRoot):
+        os.rmdir(SymbolsRoot)
+    else:
+        Symbols = FormArchiveName(PackageSetName, "-symbols." + Extension)
+        DeleteFile(Symbols)
+        Run(Command + " " + os.path.basename(Symbols) + " " + os.path.basename(SymbolsRoot))
 
     Archive = FormArchiveName(PackageSetName, "." + Extension)
     DeleteFile(Archive)
@@ -103,8 +106,8 @@ def TarBzip2(PackageSetName):
 
 def MakeArchives():
     for PackageSetName in ["min", "std", "core", "base"]:
-        if (Target != "NT386GNU" or PackageSetName != "std"):
-            if Target == "NT386":
+        if (Config != "NT386GNU" or PackageSetName != "std"):
+            if Config == "NT386":
                 Zip(PackageSetName)
             else:
                 TarBzip2(PackageSetName)
@@ -143,6 +146,8 @@ def FatalError():
     print("fatal error")
     sys.exit(1)
 
+STAGE = getenv("STAGE")
+
 if (not STAGE):
     tempfile.tempdir = os.path.join(tempfile.gettempdir(), "cm3", "make-dist")
     CreateDirectory(tempfile.tempdir)
@@ -165,10 +170,10 @@ InstallRoot_CompilerWithSelf = os.path.join(STAGE, "compiler_with_self")
 # For now though, we only build min.
 #
 def FormInstallRoot(PackageSetName):
-    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + OSType + "-" + Target + "-" + CM3VERSION)
+    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + OSType + "-" + Config + "-" + CM3VERSION)
 
 def FormArchiveName(PackageSetName, Suffix):
-    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + OSType + "-" + Target + "-" + CM3VERSION + Suffix)
+    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + OSType + "-" + Config + "-" + CM3VERSION + Suffix)
 
 InstallRoot_Min = FormInstallRoot("min")
 InstallRoot_Standard = FormInstallRoot("std")
@@ -244,7 +249,7 @@ for a in RuntimeToCopy:
         os.path.join(InstallRoot, "pkg", a),
         os.path.join(InstallRoot_CompilerWithPrevious, "pkg", a)) or FatalError()
 
-if Target != "NT386":
+if Config != "NT386":
     NewLib = os.path.join(InstallRoot_CompilerWithPrevious, "lib")
     CreateDirectory(NewLib)
     for a in glob.glob(os.path.join(InstallRoot, "lib", "libm3gcdefs.*")):
@@ -328,7 +333,7 @@ BuildShip(Packages) or FatalError()
 Echo("build core packages with new compiler")
 # ----------------------------------------------------------------------------------------------------------------------------------
 
-if False:
+if True:
 
     print("skipping..")
 
@@ -344,7 +349,7 @@ else:
 Echo("build base packages with new compiler")
 # ----------------------------------------------------------------------------------------------------------------------------------
 
-if False:
+if True:
 
     print("skipping..")
 
@@ -360,7 +365,8 @@ else:
 Echo("build standard packages with new compiler")
 # ----------------------------------------------------------------------------------------------------------------------------------
 
-if Target == "NT386GNU":
+if True:
+#if Config == "NT386GNU":
 
     print("skipping..")
 

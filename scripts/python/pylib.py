@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.59 2008-02-23 15:28:05 jkrell Exp $
+# $Id: pylib.py,v 1.60 2008-02-23 17:22:17 jkrell Exp $
 
 import os
 from os import getenv
@@ -1395,6 +1395,13 @@ def CopyFileIfExist(From, To):
     return True
 
 def CopyConfigForDevelopment():
+    #
+    # The development environment is easily reconfigured
+    # for different targets based on environment variables and `uname`.
+    # The use of `uname` is not fully fleshed out (yet).
+    #
+    # The development environment depends on having a source tree, at least the cminstall\src\config directory.
+    #
     To = os.path.join(InstallRoot, "bin")
     CopyFile(
         os.path.join(Root, "m3-sys", "cminstall", "src", "config", "cm3.cfg"),
@@ -1403,18 +1410,32 @@ def CopyConfigForDevelopment():
     CopyFile(os.path.join(Root, "scripts", "sysinfo.sh"), To) or FatalError()
     return True
 
-def CopyDirectoryNonRecursive(From, To):
-    CreateDirectory(To)
-    for File in glob.glob(os.path.join(From, "*")):
+#def CopyDirectoryNonRecursive(From, To):
+#    CreateDirectory(To)
+#    for File in glob.glob(os.path.join(From, "*")):
+#        if os.path.isfile(File):
+#            print(File + " => " + To + "\n")
+#            CopyFile(File, To)
+#    return True
+
+def CopyConfigForDistribution(To):
+    #
+    # The distributed environment is minimal and targets only one
+    # or a small number of targets (e.g. NT386*).
+    #
+    # The distributed environment does not require a source tree.
+    #
+    a = os.path.join(Root, "m3-sys", "cminstall", "src")
+    To = os.path.join(To, "bin")
+    for File in glob.glob(os.path.join(a, "config", Target + "*")):
         if os.path.isfile(File):
             print(File + " => " + To + "\n")
             CopyFile(File, To)
-    return True
-
-def CopyConfigForDistribution(To):
-    a = os.path.join(Root, "m3-sys", "cminstall", "src")
-    CopyDirectoryNonRecursive(os.path.join(a, "config"), os.path.join(To, "bin")) or FatalError("1")
-    CopyDirectoryNonRecursive(os.path.join(a, "config-no-install"), os.path.join(To, "bin")) or FatalError("2")
+    for File in glob.glob(os.path.join(a, "config-no-install", Target + "*")):
+        if os.path.isfile(File):
+            print(File + " => " + To + "\n")
+            CopyFile(File, To)
+    open(os.path.join(To, "cm3.cfg"), "w").write("include(\"" + Config + "\")\n")
     return True
 
 def _CopyCompiler(From, To):
@@ -1648,13 +1669,12 @@ def SetupEnvironment():
             ["gcc", "as", "ld"],
             os.path.join(SystemDrive, "cygwin", "bin"))
 
-
 def FatalError(a = ""):
     # logs don't work yet
     #print("ERROR: see " + Logs)
     print("fatal error " + a)
     sys.exit(1)
-
+    
 if __name__ == "__main__":
     #
     # run test code if module run directly
@@ -1662,9 +1682,6 @@ if __name__ == "__main__":
 
     print(IsCygwinBinary("c:\\cygwin\\bin\\gcc.exe"))
     print(IsCygwinBinary("c:\\bin\\cdb.exe"))
-    sys.exit(1)
-
-    CopyDirectoryNonRecursive("\\windows", "\\")
     sys.exit(1)
 
     print("\n\ncore: " + str(OrderPackages(PackageSets["core"])))
