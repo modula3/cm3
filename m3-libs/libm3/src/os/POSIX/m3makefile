@@ -14,9 +14,7 @@ Module("FilePosix")
 
 implementation("FSPosix")
 implementation("PipePosix")
-if not equal (TARGET, "NT386")
-    implementation("PathnamePosix")
-end
+implementation("PathnamePosix")
 implementation("ProcessPosix")
 implementation("SocketPosix")
 implementation("OSConfigPosix")
