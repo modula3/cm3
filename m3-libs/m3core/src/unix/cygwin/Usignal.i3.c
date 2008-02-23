@@ -3,15 +3,6 @@
 #include <signal.h>
 #include <stdio.h>
 
-static void AssertTypes()
-{
-    sigset_t * a = 0;
-    unsigned long * b = 0;
-
-    b = a;
-    a = b;
-}
-
 int main()
 {
     unsigned i;
