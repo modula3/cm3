@@ -70,7 +70,9 @@ def SearchPath(name, paths = getenv("PATH")):
 # the root of the installation
 #
 CM3 = getenv("CM3") or ExeName("cm3") # to invoke
+print("CM3 is " + CM3)
 Cm3FullPath = SearchPath(CM3) # a file that can be opened/copied
+print("Cm3FullPath is " + Cm3FullPath)
 InstallRoot = os.path.dirname(os.path.dirname(Cm3FullPath))
 
 #
@@ -392,9 +394,14 @@ def SetEnvironmentVariable(Name, Value):
 def IsCygwinBinary(a):
     if env_OS != "Windows_NT":
         return False
-    return (os.system("findstr >nul /m cygwin1.dll " + a) == 0)
+    if os.path.isfile(a + ".exe"):
+        a += ".exe"
+    a = a.replace("/", "\\")
+    #print("a is " + a)
+    return (os.system("findstr 2>&1 >nul /m cygwin1.dll \"" + a + "\"") == 0)
 
 if IsCygwinBinary(Cm3FullPath):
+    #print(Cm3FullPath + " is a Cygwin binary")
     def ConvertToCygwinPath(a):
         #
         # assume user has setup symlinks at root /c => /cygdrive/c
