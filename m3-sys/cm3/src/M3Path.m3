@@ -575,6 +575,16 @@ BEGIN
     (* assume a native Win32 build *)
     os_map [TRUE]  := OSKind.Win32;
     os_map [FALSE] := OSKind.Win32;
+  ELSE
+    WITH OS = Env.Get("OS") DO
+      IF OS # NIL AND Text.Equal (OS, "Windows_NT") THEN
+        (* Cygwin uses foo.lib instead of libfoo.a, but forward slashes. *)
+        os_map [TRUE]  := OSKind.Win32;
+        os_map [FALSE] := OSKind.Win32;
+        DirSep [OSKind.Win32] := DirSep [OSKind.Unix];
+        VolSep [OSKind.Win32] := VolSep [OSKind.Unix];
+        DirSepText [OSKind.Win32] := DirSepText [OSKind.Unix];
+    END;
   END;
   Test ();
 END M3Path.
