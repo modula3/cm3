@@ -9,7 +9,7 @@
 (*      modified on Wed Dec  2 11:29:00 PST 1992 by mcjones   *)
 (*      modified on Mon Apr 23 16:37:40 1990 by jerome        *)
 
-(* $Id: Utime.i3,v 1.6 2008-02-12 16:56:55 jkrell Exp $ *)
+(* $Id: Utime.i3,v 1.7 2008-02-23 07:12:21 jkrell Exp $ *)
 
 INTERFACE Utime;
 
@@ -21,30 +21,24 @@ FROM Ctypes IMPORT char_star, int, long, long_star,
 TYPE
   struct_timeval = RECORD
     tv_sec: long;          (* seconds *)
-    tv_usec: long;         (* and microseconds *) END;
+    tv_usec: long;         (* and microseconds *)
+  END;
 
   struct_timezone = RECORD
     tz_minuteswest:  int; (* minutes west of Greenwich *)
-    tz_dsttime:      int; (* type of dst correction *) END;
+    tz_dsttime:      int; (* type of dst correction *)
+  END;
 
   struct_timespec = RECORD
     tv_sec: time_t;			 (* Seconds *)
-    tv_nsec: long_int;			 (* Nanoseconds *) END;
-
-CONST
-  DST_NONE = 0;  (* not on dst *)
-
-  DST_USA  = 1;  (* USA style dst *)
-  DST_AUST = 2;  (* Australian style dst *)
-  DST_WET  = 3;  (* Western European dst *)
-  DST_MET  = 4;  (* Middle European dst *)
-  DST_EET  = 5;  (* Eastern European dst *)
-
+    tv_nsec: long_int;			 (* Nanoseconds *)
+  END;
 
 TYPE
   struct_itimerval = RECORD
     it_interval: struct_timeval;            (* timer interval *)
-    it_value:    struct_timeval;            (* current value *)  END;
+    it_value:    struct_timeval;            (* current value *)
+  END;
 
   struct_tm_star = UNTRACED REF struct_tm;
   struct_tm = RECORD
@@ -69,20 +63,7 @@ TYPE
  * Structure returned by times()
  *)
 
-TYPE
-  struct_tms_star = UNTRACED REF struct_tms;
-  struct_tms = RECORD
-    tms_utime  : long; (* user time *)
-    tms_stime  : long; (* system time *)
-    tms_cutime : long; (* user time, children *)
-    tms_cstime : long; (* system time, children *)
-  END;
-
 (*** <sys/timeb.h> ***)
-
-(*
- * Structure returned by ftime system call
- *)
 
 TYPE
   struct_timeb_star = UNTRACED REF struct_timeb;
@@ -115,7 +96,6 @@ PROCEDURE adjtime (VAR delta, oldDelta: struct_timeval): int;
 CONST (* which *)
   ITIMER_REAL =    0;   (* real time intervals *)
   ITIMER_VIRTUAL = 1;   (* virtual time intervals *)
-  ITIMER_PROF    = 2;   (* user and system virtual time *)
 
 <*EXTERNAL*>
 PROCEDURE getitimer (which: int; VAR value: struct_itimerval): int;
@@ -139,8 +119,6 @@ PROCEDURE setitimer (which: int;
 
 (*** times(3) - get process times (in ticks) ***)
 
-<*EXTERNAL*> PROCEDURE times (buffer: struct_tms_star): long;
-
 (*** time(3), ftime(3) - get date and time (in seconds) ***)
 
 <*EXTERNAL*> PROCEDURE time  (tloc: long_star): long;
@@ -157,20 +135,6 @@ PROCEDURE setitimer (which: int;
 
 (*** mktime(3) - convert a struct_tm to a time_t ***)
 <*EXTERNAL*> PROCEDURE mktime (tm: struct_tm_star): time_t;
-
-(* Reentrant equivalents from POSIX.4a Draft #6. *)
-
-<*EXTERNAL*>
-PROCEDURE ctime_r (clock: long_star; buf: char_star; buflen: int): char_star;
-
-<*EXTERNAL*>
-PROCEDURE localtime_r (clock: long_star; res: struct_tm_star): struct_tm_star;
-
-<*EXTERNAL*>
-PROCEDURE gmtime_r (clock: long_star; res: struct_tm_star): struct_tm_star;
-
-<*EXTERNAL*>
-PROCEDURE asctime_r(tm: struct_tm_star; buf: char_star; buflen: int):char_star;
 
 VAR timezone: time_t;
 <*EXTERNAL "Utime__timezone"*> VAR altzone: time_t; (* not really *)
