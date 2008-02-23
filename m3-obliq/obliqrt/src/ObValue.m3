@@ -2443,14 +2443,14 @@ PROCEDURE CopyError (           self: ValAnything;
    object special for the replicated objects *)
 
 PROCEDURE WriteFields (out: Pickle.Writer; fields: REF ObjFields; 
-                       pkl: REF ObjFields) 
+                       <*UNUSED*> pkl: REF ObjFields) 
   RAISES {Pickle.Error, Wr.Failure, Thread.Alerted} =
   BEGIN
     PickleStubs.OutInteger(out, NUMBER(fields^));
     PickleStubs.OutRef(out, fields);
   END WriteFields;
 
-PROCEDURE ReadFields (in: Pickle.Reader; pkl: REF ObjFields): REF ObjFields
+PROCEDURE ReadFields (in: Pickle.Reader; <*UNUSED*> pkl: REF ObjFields): REF ObjFields
   RAISES {Pickle.Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
   VAR ret : REF ObjFields;
   BEGIN
