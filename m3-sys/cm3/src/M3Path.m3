@@ -584,6 +584,7 @@ BEGIN
         DirSep [OSKind.Win32] := DirSep [OSKind.Unix];
         VolSep [OSKind.Win32] := VolSep [OSKind.Unix];
         DirSepText [OSKind.Win32] := DirSepText [OSKind.Unix];
+      END;
     END;
   END;
   Test ();
