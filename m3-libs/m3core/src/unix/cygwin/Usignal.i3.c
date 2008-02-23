@@ -27,7 +27,7 @@ int main()
 "", 0,
 "INTERFACE Usignal;", 0,
 "", 0,
-"FROM Ctypes IMPORT int, unsigned_int;", 0,
+"FROM Ctypes IMPORT int;", 0,
 "", 0,
 "(*** <signal.h> ***)", 0,
 "", 0,

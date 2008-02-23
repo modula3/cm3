@@ -13,7 +13,7 @@
 
 INTERFACE Usignal;
 
-FROM Ctypes IMPORT int, unsigned_int;
+FROM Ctypes IMPORT int;
 
 (*** <signal.h> ***)
 
