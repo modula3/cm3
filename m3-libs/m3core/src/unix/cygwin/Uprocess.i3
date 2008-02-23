@@ -8,22 +8,9 @@ INTERFACE Uprocess;
 
 FROM Ctypes IMPORT int;
 
-
-(*** getpgrp(2) - get process group ***)
-
-<*EXTERNAL*> PROCEDURE getpgrp (pid: int): int;
-
-
-(*** getpid(2), getppid(2) - get process identification ***)
+(*** getpid(2) - get process identification ***)
 
 <*EXTERNAL*> PROCEDURE getpid (): int;
-<*EXTERNAL*> PROCEDURE getppid (): int;
-
-
-(*** setpgrp - set process group ***)
-
-<*EXTERNAL*> PROCEDURE setpgrp (pid, pgrp: int): int;
-
 
 END Uprocess.
 
