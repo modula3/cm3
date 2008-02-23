@@ -12,48 +12,6 @@ UNSAFE MODULE Uin EXPORTS Uin;
 (* Only unsafe because it needs Usocket.AF_INET and Usocket is unsafe. *)
 
 FROM Utypes IMPORT u_long, u_short, u_char;
-IMPORT Usocket, Word;
-
-PROCEDURE IN_CLASSA(i: INTEGER): BOOLEAN =
-  BEGIN
-    RETURN Word.And(i, Word.Shift(16_800000, 8)) = 0;
-  END IN_CLASSA;
-
-PROCEDURE IN_CLASSB(i: INTEGER): BOOLEAN =
-  BEGIN
-    RETURN Word.And(i, Word.Shift(16_c00000, 8)) = Word.Shift(16_800000, 8);
-  END IN_CLASSB;
-
-PROCEDURE IN_CLASSC(i: INTEGER): BOOLEAN =
-  BEGIN
-    RETURN Word.And(i, Word.Shift(16_e00000, 8)) = Word.Shift(16_c00000, 8);
-  END IN_CLASSC;
-
-PROCEDURE IN_CLASSD(i: INTEGER): BOOLEAN =
-  BEGIN
-    RETURN Word.And(i, Word.Shift(16_f00000, 8)) = Word.Shift(16_e00000, 8);
-  END IN_CLASSD;
-
-PROCEDURE IN_MULTICAST(i: INTEGER): BOOLEAN =
-  BEGIN
-    RETURN IN_CLASSD(i);
-  END IN_MULTICAST;
-
-PROCEDURE IN_EXPERIMENTAL(i: INTEGER): BOOLEAN =
-  BEGIN
-    RETURN Word.And(i, Word.Shift(16_e00000, 8)) = Word.Shift(16_e00000, 8);
-  END IN_EXPERIMENTAL;
-
-PROCEDURE IN_BADCLASS(i: INTEGER): BOOLEAN =
-  BEGIN
-    RETURN Word.And(i, Word.Shift(16_f00000, 8)) = Word.Shift(16_f00000, 8);
-  END IN_BADCLASS;
-
-PROCEDURE IN_SET_LOOPBACK_ADDR(a: struct_sockaddr_in_star) =
-  BEGIN
-    a.sin_addr.s_addr := htonl(INADDR_LOOPBACK);
-    a.sin_family := Usocket.AF_INET;
-  END IN_SET_LOOPBACK_ADDR;
 
 TYPE
   A = RECORD a, b, c, d: u_char; END;
