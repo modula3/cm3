@@ -132,7 +132,7 @@ def RealClean(Packages):
     return Do("realclean", Packages)
 
 def CreateSkel():
-    for a in ("bin", "lib", "pkg"):
+    for a in ("bin", "pkg"):
         CreateDirectory(os.path.join(InstallRoot, a)) or FatalError()
     return True
 
