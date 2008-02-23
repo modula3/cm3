@@ -10,6 +10,7 @@
 MODULE M3Path;
 
 IMPORT Pathname, Text;
+IMPORT RTIO, Process;
 
 CONST
   Null      = '\000';
@@ -71,7 +72,7 @@ PROCEDURE SetOS (kind: OSKind;  host: BOOLEAN) =
     os_map [host] := kind;
   END SetOS;
 
-PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
+PROCEDURE NewInternal (a, b, c, d: TEXT := NIL; host: BOOLEAN): TEXT =
   VAR len: INTEGER;  buf: ARRAY [0..255] OF CHAR;  ref: REF ARRAY OF CHAR;
   BEGIN
     IF (b # NIL) THEN
@@ -102,8 +103,14 @@ PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
     ELSE
       ref := NEW (REF ARRAY OF CHAR, len);
       Text.SetChars (ref^, a);
-      RETURN FixPath (ref^, host := TRUE);
+      RETURN FixPath (ref^, host);
     END;
+  END NewInternal;
+
+PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
+  VAR len: INTEGER;  buf: ARRAY [0..255] OF CHAR;  ref: REF ARRAY OF CHAR;
+  BEGIN
+    RETURN NewInternal (a, b, c, d, host);
   END New;
 
 PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
@@ -519,6 +526,41 @@ PROCEDURE CutSection (VAR buf: ARRAY OF CHAR;  start, stop: INTEGER;
     DEC (len, chop);
   END CutSection;
 
+PROCEDURE Test () =
+VAR
+  CONST a = ARRAY OF TEXT { "a", "/a", "\\a", "a/b", "a\\b", "a:b", "a:/b", "a:\\b", "a/b/c", "a\\b\\c", "a:\\b\\c",
+    "a:/b/c", "\\\\a\\b", "//a/b", "/a/b/../c", "/a/b../../c",
+     "/a/b/../c/d", "/a/b../../c/d", "c:\\a\\b\\..\\d",
+      "c:\\a\\b..\\..\\d",
+      "c:..\\d",
+      "c:.\\d",
+      "c:../d",
+      "c:./d"
+    };
+  CONST osname = ARRAY BOOLEAN OF TEXT { "Unix", "Win32" };
+  VAR b : T;
+BEGIN
+
+  (* remove this to enable test *)
+  RETURN;
+
+  <* NOWARN *> BEGIN END;
+  os_map [FALSE] := OSKind.Unix;
+  os_map [TRUE]  := OSKind.Win32;
+  FOR i := FIRST (a) TO LAST (a) DO
+    FOR host := FALSE TO TRUE DO
+      b := Parse(a[i], host);
+      IF b.dir = NIL THEN
+        b.dir := "<NIL>";
+      END;
+      RTIO.PutText ("Parse: " & a[i] & " " & osname[host] & " dir " & b.dir & " base " & b.base & "\n");
+      RTIO.PutText ("New: " & a[i] & " " & osname[host] & " " & NewInternal(a[i], host := host) & "\n");
+      RTIO.Flush ();
+    END;
+  END;
+  Process.Exit (1);
+END Test;
+
 BEGIN
   FOR i := FIRST (lcase) TO LAST (lcase) DO lcase[i] := i; END;
   FOR i := 'A' TO 'Z' DO
@@ -536,4 +578,5 @@ BEGIN
     os_map [TRUE]  := OSKind.Win32;
     os_map [FALSE] := OSKind.Win32;
   END;
+  Test ();
 END M3Path.
