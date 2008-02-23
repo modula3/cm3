@@ -11,18 +11,18 @@
 
 %readonly m3mkdir = format ("@%s%sm3mkdir", LIB_USE, SL)
 
-if equal (OS_TYPE, "POSIX")
+if equal ($OS, "Windows_NT")
+  readonly rm_dir  = "@-rmdir 2>nul /s /q"
+  readonly diff    = "@-fc"
+  readonly head    = ""
+  readonly cat     = "@-type"
+  readonly m3mkdir = "@-mkdir"
+else
   readonly rm_dir  = "@-rm -rf"
   readonly diff    = "@-diff -u"
   readonly head    = "| head -30"
   readonly cat     = "@-cat"
   readonly m3mkdir = "@-mkdir -p"
-else
-  readonly rm_dir  = "@-rmdir /s"
-  readonly diff    = "@-fc"
-  readonly head    = ""
-  readonly cat     = "@-type"
-  readonly m3mkdir = "@-md"
 end
 
 %------------------------------------------------------------------------------
@@ -192,10 +192,13 @@ html(["      <tbody>", CR])
 %
 if stale ("TESTARGS", path_of ("m3makefile"))
   > "TESTARGS" in
-    write ("override (\"m3tests\", \"", PACKAGE_DIR, "/..\")", CR)
+    write ("override (\"m3tests\", \"", escape(PACKAGE_DIR & SL & "..\")"), CR)
     if defined ("local_libs")
       write ("override (\"m3core\", ROOT)", CR)
       write ("override (\"libm3\", ROOT)", CR)
+    end
+    if equal ($OS, "Windows_NT")
+        write ("  build_standalone ()", CR)
     end
     write (CR)
 
@@ -216,9 +219,9 @@ if stale ("TESTARGS", path_of ("m3makefile"))
     write ("  program(\"pgm\")", CR)
     write ("  local f = program_name (\"pgm\")", CR)
     write ("  if not stale (f, f)", CR)
-    write ("    exec (\"@-./\" & f & \" >../stdout.pgm 2>../stderr.pgm\")", CR)
+    write ("    exec (\"@-.\" & SL & f & \" >.." & SL & "stdout.pgm 2>.." & SL & "stderr.pgm\")", CR)
     %local err = PACKAGE_DIR & SL & TARGET & SL & "all.stderr"
-    %write ("    exec (\"" & cat & " ../stderr.pgm >> " & err & "\")", CR)
+    %write ("    exec (\"" & cat & " .." & SL & "stderr.pgm >> " & err & "\")", CR)
     write ("  end", CR)
     write ("end", CR)
     %write ("RegisterCleanUp (RunTest)", CR) 
@@ -245,22 +248,30 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     %write ("dir: ", dir, CR)
     exec (rm_dir, dir)
     exec (m3mkdir, dir, "> /dev/null")
-    exec ("@ln -s ", "../../" & path_of (dir), dir & "/src")
-    exec ("@-cd", dir, "; cm3 -build ", args,
-          "-silent -FA ../../../TESTARGS >stdout.build 2>stderr.build")
-
-    if defined ("CAPTURE_BUILD")
-      cp_if (dir & "/stdout.build", path_of(dir & "/stdout.build"))
-      cp_if (dir & "/stderr.build", path_of(dir & "/stderr.build"))
+    if equal ($OS, "Windows_NT")
+        % exec ("cd")
+        % write("dir is " & dir & CR)
+        exec ("xcopy /iy", path_of (dir), dir & "\\src")
+        exec ("cd", dir, "&& cm3 -build ", args,
+              "-silent -FA .." & SL & ".." & SL & ".." & SL & "TESTARGS >stdout.build 2>stderr.build")
+    else
+        exec ("@ln -s ", "../../" & path_of (dir), dir & SL & "src")
+        exec ("@-cd", dir, "; cm3 -build ", args,
+              "-silent -FA .." & SL & ".." & SL & ".." & SL & "TESTARGS >stdout.build 2>stderr.build")
     end
 
-    local ok1 = cmp_file (dir & "/stdout.build") and
-                cmp_file (dir & "/stderr.build")
+    if defined ("CAPTURE_BUILD")
+      cp_if (dir & SL & "stdout.build", path_of(dir & SL & "stdout.build"))
+      cp_if (dir & SL & "stderr.build", path_of(dir & SL & "stderr.build"))
+    end
+
+    local ok1 = cmp_file (dir & SL & "stdout.build") and
+                cmp_file (dir & SL & "stderr.build")
     local ok2 = "T"
 
     if should_run
-      ok2 = cmp_file (dir & "/stdout.pgm") and
-            cmp_file (dir & "/stderr.pgm")
+      ok2 = cmp_file (dir & SL & "stdout.pgm") and
+            cmp_file (dir & SL & "stderr.pgm")
     end
 
     if ok1 and ok2
@@ -272,16 +283,16 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     end
 
     html ("</td><td class=\"small\"><pre>")
-    compare_file (dir & "/stdout.build")
-    compare_file (dir & "/stderr.build")
+    compare_file (dir & SL & "stdout.build")
+    compare_file (dir & SL & "stderr.build")
     if should_run
-      compare_file (dir & "/stdout.pgm")
-      compare_file (dir & "/stderr.pgm")
+      compare_file (dir & SL & "stdout.pgm")
+      compare_file (dir & SL & "stderr.pgm")
     end
     html (["</pre></td></tr>", CR])
 
     if not defined ("keep")
-      exec (rm_dir, dir & "/" & BUILD_DIR)
+      exec (rm_dir, dir & SL & BUILD_DIR)
     end
   end
 end
