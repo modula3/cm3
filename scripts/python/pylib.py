@@ -230,7 +230,7 @@ CM3VERSION = getenv("CM3VERSION") or GetDefaultFromSh("CM3VERSION")
 CM3VERSIONNUM = getenv("CM3VERSIONNUM") or GetDefaultFromSh("CM3VERSIONNUM")
 CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetDefaultFromSh("CM3LASTCHANGED")
 
-GCC_BACKEND = True
+GCC_BACKEND = getenv("CM3_GCC_BACKEND", "")
 CM3_GDB = False
 
 CM3 = getenv("CM3") or ExeName("cm3")
@@ -261,9 +261,12 @@ if (UName.startswith("windows")
     GMAKE = getenv("GMAKE") or "make"
 
     if ((Target.startswith("NT386GNU")
-        or (UNameCommand.startswith("cygwin"))
-        or (OSType == "POSIX"))
-        and (getenv("CM3_GCC_BACKEND", "") != "no")):
+        # uname can be in the %PATH% and still target native NT386
+        #or UNameCommand.startswith("cygwin")
+        or (OSType == "POSIX")
+        or (GCC_BACKEND == "yes"))
+        and (GCC_BACKEND != "no")
+        and (OSType != "WIN32")):
 
         Target = "NT386"
         Config = "NT386GNU"
@@ -272,23 +275,35 @@ if (UName.startswith("windows")
         HAVE_SERIAL = False # temporary..
 
     elif ((Target.startswith("NT386MINGNU")
-        or UNameCommand.startswith("mingw")
-        or GCC_BACKEND)
-        and (getenv("CM3_GCC_BACKEND", "") != "no")):
+        # uname can be in the %PATH% and still target native NT386
+        #or UNameCommand.startswith("mingw")
+        or (GCC_BACKEND == "yes"))
+        and (GCC_BACKEND != "no")
+        and (OSType != "POSIX")):
 
         Target = "NT386"
         Config = "NT386MINGNU"
         OSType = "WIN32"
         GCC_BACKEND = True
 
-    else:
+    elif ((not Target.startswith("NT386MINGNU"))
+        and (not Target.startswith("NT386GNU"))
+        and (OSType != "POSIX")
+        and (GCC_BACKEND != "yes")):
 
         Target = "NT386"
         Config = "NT386"
         OSType = "WIN32"
         GCC_BACKEND = False
 
+    else:
+
+        print("unable to determine configuration")
+        sys.exit(1)
+
 elif UName.startswith("freebsd"):
+
+    GCC_BACKEND = True
 
     if UNameArchM == "i386":
         if UNameRevision.startswith("1"):
@@ -306,6 +321,8 @@ elif UName.startswith("freebsd"):
 
 elif UName.startswith("darwin"):
 
+    GCC_BACKEND = True
+
     # detect the m3 platform (Darwin runs on ppc and ix86)
     if UNameArchP.startswith("powerpc"):
         Target = "PPC_DARWIN"
@@ -315,11 +332,13 @@ elif UName.startswith("darwin"):
 
 elif UName.startswith("sunos"):
 
+    GCC_BACKEND = True
     Target = "SOLgnu"
     #Target = "SOLsun"
 
 elif UName.startswith("linux"):
 
+    GCC_BACKEND = True
     GMAKE = getenv("GMAKE") or "make"
     GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
     if UNameArchM == "ppc":
@@ -329,6 +348,7 @@ elif UName.startswith("linux"):
 
 elif UName.startswith("netbsd"):
 
+    GCC_BACKEND = True
     GMAKE = getenv("GMAKE") or "make"
     Target = "NetBSD2_i386" # only arch/version combination supported yet
 
@@ -359,11 +379,14 @@ def GetConfigForDistribution(Target):
     b = os.path.join(a, "config", Target)
     return b
 
-os.environ["CM3_TARGET"] = Target
-os.environ["CM3_ROOT"] = Root
-os.environ["CM3_INSTALL"] = InstallRoot
-if not os.environ.get("M3CONFIG"):
-    os.environ["M3CONFIG"] = GetConfigForDistribution(Config)
+def SetEnvironmentVariable(Name, Value):
+    os.environ[Name] = Value
+    print("set " + Name + "=" + Value);
+
+SetEnvironmentVariable("CM3_TARGET", Target);
+SetEnvironmentVariable("CM3_ROOT", Root);
+SetEnvironmentVariable("CM3_INSTALL", InstallRoot);
+SetEnvironmentVariable("M3CONFIG", GetConfigForDistribution(Config))
 
 #-----------------------------------------------------------------------------
 # elego customizations
@@ -388,7 +411,7 @@ if not os.environ.get("M3CONFIG"):
 
 # define build and ship programs for Critical Mass Modula-3
 
-DEFS = "-DROOT=%(Q)s%(Root)s%(Q)s"
+DEFS = "-keep -DROOT=%(Q)s%(Root)s%(Q)s"
 DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
 DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
 DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
@@ -1371,20 +1394,22 @@ def CopyConfigForDevelopment():
 def CopyDirectoryNonRecursive(From, To):
     CreateDirectory(To)
     for File in glob.glob(os.path.join(From, "*")):
-        print(File + " => " + To + "\n")
-        CopyFile(File, To)
+        if os.path.isfile(File):
+            print(File + " => " + To + "\n")
+            CopyFile(File, To)
+    return True
 
 def CopyConfigForDistribution(To):
     a = os.path.join(Root, "m3-sys", "cminstall", "src")
-    CopyDirectoryNonRecursive(os.path.join(a, "config"), os.path.join(To, "bin")) or FatalError()
-    CopyDirectoryNonRecursive(os.path.join(a, "config-no-install"), os.path.join(To, "bin")) or FatalError()
+    CopyDirectoryNonRecursive(os.path.join(a, "config"), os.path.join(To, "bin")) or FatalError("1")
+    CopyDirectoryNonRecursive(os.path.join(a, "config-no-install"), os.path.join(To, "bin")) or FatalError("2")
     return True
 
 def _CopyCompiler(From, To):
     CreateDirectory(To)
-    CopyFile(os.path.join(From, "cm3" + EXE), To) or FatalError()
-    CopyFileIfExist(os.path.join(From, "cm3cg" + EXE), To) or FatalError()
-    CopyFileIfExist(os.path.join(From, "cm3.pdb"), To) or FatalError()
+    CopyFile(os.path.join(From, "cm3" + EXE), To) or FatalError("3")
+    CopyFileIfExist(os.path.join(From, "cm3cg" + EXE), To) or FatalError("4")
+    CopyFileIfExist(os.path.join(From, "cm3.pdb"), To) or FatalError("5")
     return True
 
 def ShipCompiler():
@@ -1403,10 +1428,10 @@ def CopyMklib(From, To):
     To = os.path.join(To, "bin")
     CreateDirectory(To)
     if Target == "NT386":
-        CopyFile(os.path.join(From, "mklib" + EXE), To) or FatalError()
+        CopyFile(os.path.join(From, "mklib" + EXE), To) or FatalError("6")
     else:
-        CopyFileIfExist(os.path.join(From, "mklib" + EXE), To) or FatalError()
-    CopyFileIfExist(os.path.join(From, "mklib.pdb"), To) or FatalError()
+        CopyFileIfExist(os.path.join(From, "mklib" + EXE), To) or FatalError("7")
+    CopyFileIfExist(os.path.join(From, "mklib.pdb"), To) or FatalError("8")
     return True
 
 def CopyCompiler(From, To):
@@ -1415,7 +1440,7 @@ def CopyCompiler(From, To):
     # The config file always comes right out of the source tree.
     #
     _CopyCompiler(os.path.join(From, "bin"), os.path.join(To, "bin"))
-    CopyMklib(From, To) or FatalError()
+    CopyMklib(From, To) or FatalError("9")
     return True
 
 def _FormatEnvironmentVariable(Name):
@@ -1710,3 +1735,9 @@ if __name__ == "__main__":
             print("%s(%-*s): %s" % (Function.__name__, Width, CommandLine, Function(CommandLine)))
 
     pkgmap(["-c"])
+
+def FatalError(a = ""):
+    # logs don't work yet
+    #print("ERROR: see " + Logs)
+    print("fatal error " + a)
+    sys.exit(1)
