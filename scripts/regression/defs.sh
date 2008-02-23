@@ -428,7 +428,7 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
 
   if [ "$1" = "rel" ]; then
     echo " === perform cm3 upgrade "
-    ./scripts/upgrade.sh || exit 1
+    UPGRADE_CM3_CFG=yes ./scripts/upgrade.sh || exit 1
     echo " >>> OK build_${1}_upgrade ${DS} ${WS}"
   fi
 
