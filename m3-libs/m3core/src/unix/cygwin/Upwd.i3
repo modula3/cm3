@@ -21,6 +21,7 @@ TYPE
     pw_passwd:   char_star;
     pw_uid:      uid_t;
     pw_gid:      gid_t;
+    pw_comment:  char_star;
     pw_gecos:    char_star;
     pw_dir:      char_star;
     pw_shell:    char_star;
@@ -28,13 +29,9 @@ TYPE
 
   struct_passwd_star = UNTRACED REF struct_passwd;
 
-(*** getpwent, getpwuid, getpwnam, setpwent, endpwent(2) - get
-     password file entry ***)
+(*** getpwuid, getpwnam(2) - get password file entry ***)
 
-<*EXTERNAL*> PROCEDURE getpwent (): struct_passwd_star;
 <*EXTERNAL*> PROCEDURE getpwuid (uid: int): struct_passwd_star;
 <*EXTERNAL*> PROCEDURE getpwnam (name: char_star): struct_passwd_star;
-<*EXTERNAL*> PROCEDURE setpwent(): int;
-<*EXTERNAL*> PROCEDURE endpwent(): int;
 
 END Upwd.
