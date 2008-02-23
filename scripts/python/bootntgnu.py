@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: bootntgnu.py,v 1.17 2008-02-17 10:23:27 jkrell Exp $
+# $Id: bootntgnu.py,v 1.18 2008-02-23 06:56:32 jkrell Exp $
 
 import sys
 import pylib
@@ -9,6 +9,7 @@ from pylib import *
 os.environ["CM3_TARGET"] = "NT386"
 os.environ["CM3_OSTYPE"] = "POSIX"
 os.environ["CM3_GCC_BACKEND"] = "yes"
+# os.environ["OMIT_GCC"] = "yes"
 reload(pylib)
 
 #
@@ -25,27 +26,14 @@ argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 DoPackage(argv_BuildShip, ["m3cc"]) or sys.exit(1)
 
 DoPackage(
-    argv_BuildShip, [
-    "m3core",
-    "libm3",
-    "sysutils",
-    "import-libs",
-    "m3bundle",
-    "m3middle",
-    "m3quake",
-    "m3middle",
-    "m3objfile",
-    "m3linker",
-    "m3back",
-    "m3staloneback",
-    "m3front",
-    "m3quake",
-    #"mklib", # not yet working
-    "cm3",
+    argv_BuildShip, [ "m3core", "libm3", "sysutils", "import-libs",
+    "m3bundle", "m3middle", "m3quake", "m3middle", "m3objfile",
+    "m3linker", "m3back", "m3staloneback", "m3front", "m3quake",
+    "mklib", "cm3",
     ]) or sys.exit(1)
 
 # ShipCompiler() or sys.exit(1)
 
-# DoPackage(argv_BuildShip, PackageSets["std"]) or sys.exit(1)
+DoPackage(argv_BuildShip, PackageSets["std"]) or sys.exit(1)
 
 print("%s: Success." % os.path.basename(sys.argv[0]))
