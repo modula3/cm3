@@ -21,11 +21,11 @@ TYPE
   END;
   struct_iovec_star = UNTRACED REF struct_iovec;
 
-(*** read, readv(2) - read from a file ***)
+(*** read(2) - read from a file ***)
 
 <*EXTERNAL*> PROCEDURE read (d: int; buf: char_star; nbytes: int): int;
 
-(*** write, writev(2) - write on a file ***)
+(*** write(2) - write on a file ***)
 
 <*EXTERNAL*> PROCEDURE write (d: int; buf: char_star; nbytes: int): int;
 

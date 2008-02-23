@@ -126,6 +126,9 @@ PROCEDURE setsockopt(
     RAISES {};
 
 <*EXTERNAL*>
+PROCEDURE shutdown(s, how: Ctypes.int): Ctypes.int RAISES {};
+
+<*EXTERNAL*>
 PROCEDURE socket(af, type, protocol: Ctypes.int): Ctypes.int RAISES {};
 
 END Usocket.
