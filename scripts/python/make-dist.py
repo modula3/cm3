@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.25 2008-02-23 15:28:05 jkrell Exp $
+# $Id: make-dist.py,v 1.26 2008-02-23 15:41:02 jkrell Exp $
 
 import sys
 import os.path
@@ -207,6 +207,7 @@ Echo("build new compiler with old compiler and old runtime (%(InstallRoot_Previo
 
 Packages = [
     "import-libs",
+    "sysutils",
     "m3middle",
     "m3linker",
     "m3front",
