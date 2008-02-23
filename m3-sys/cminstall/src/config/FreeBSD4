@@ -191,7 +191,7 @@ SYSTEM_LIBS = {
                        12 "/usr/local/pgsql/lib"
                        12 "/usr/local/postgres95/lib"
                        13 "/usr/local/lib"
-                   END_CONFIG, "-lodbc" ],
+                   END_CONFIG, "-liodbc" ],
   "MOTIF"      : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the Motif libraries?"
                        11 "libXm.so"
