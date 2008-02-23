@@ -108,9 +108,8 @@ PROCEDURE NewInternal (a, b, c, d: TEXT := NIL; host: BOOLEAN): TEXT =
   END NewInternal;
 
 PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
-  VAR len: INTEGER;  buf: ARRAY [0..255] OF CHAR;  ref: REF ARRAY OF CHAR;
   BEGIN
-    RETURN NewInternal (a, b, c, d, host);
+    RETURN NewInternal (a, b, c, d, host := TRUE);
   END New;
 
 PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
