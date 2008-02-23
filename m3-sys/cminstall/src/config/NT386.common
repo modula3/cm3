@@ -338,10 +338,18 @@ MoveFile(
     b,
     )
 is
-    if equal(OS, "Windows_NT") and not equal (OS_TYPE, "POSIX")
-        exec("@cmd", "/c", "move", a, b)
+    if defined("fs_cp") and defined("fs_cp")
+        fs_cp(a, b)
+        DeleteFile(a)
     else
-        exec("@mv", a, b)
+        %
+        % The check of OS_TYPE confuses host and target.
+        %
+        if equal(OS, "Windows_NT") and not equal (OS_TYPE, "POSIX")
+            exec("@cmd", "/c", "move", "\"" & a & "\"", "\"" & b & "\"")
+        else
+            exec("@mv", a, b)
+        end
     end
 end
 
@@ -407,7 +415,7 @@ is
         args += "-Ox"
     end
     args += "-Oi"
-    return try_exec("cl", [args, "-c", source])
+    return try_exec("cl", [escape(args), "-c", escape(source)])
 end
 
 proc
@@ -432,7 +440,7 @@ is
     if M3_PROFILING
         args += "-pg"
     end
-    return try_exec("gcc", args, "-c", escape(source), "-o", object)
+    return try_exec("gcc", escape(args), "-c", escape(source), "-o", object)
 end
 
 proc

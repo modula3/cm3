@@ -31,7 +31,9 @@ if not defined("BUILD_DIR")
     readonly BUILD_DIR    = "NT386" & PROFILING_P
 end
 readonly OS_TYPE      = "WIN32"
-readonly GNU_PLATFORM = "i686-pc-mingw32" % "cpu-vendor-os" string for GNU
+if not defined("GNU_PLATFORM")
+    readonly GNU_PLATFORM = "i686-pc-mingw32" % "cpu-vendor-os" string for GNU
+end
 
 if not defined("M3_BACKEND_MODE")
     readonly M3_BACKEND_MODE = "0"
