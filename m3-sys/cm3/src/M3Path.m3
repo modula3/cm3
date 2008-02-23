@@ -10,7 +10,7 @@
 MODULE M3Path;
 
 IMPORT Pathname, Text;
-IMPORT RTIO, Process;
+IMPORT RTIO, Process, Env;
 
 CONST
   Null      = '\000';
