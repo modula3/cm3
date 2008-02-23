@@ -11,8 +11,7 @@
 INTERFACE Uin;
 
 FROM Ctypes IMPORT short, char;
-FROM Utypes IMPORT u_char, u_short, u_long;
-IMPORT Word;
+FROM Utypes IMPORT u_short, u_long;
 
 (* Constants and structures defined by the internet system,
    Per RFC 790, September 1981. *)
