@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.55 2008-02-23 14:45:11 jkrell Exp $
+# $Id: pylib.py,v 1.56 2008-02-23 14:45:57 jkrell Exp $
 
 import os
 from os import getenv
@@ -383,6 +383,11 @@ def SetEnvironmentVariable(Name, Value):
     if not os.environ.get(Name):
         os.environ[Name] = Value
         print("set " + Name + "=" + Value);
+
+def IsCygwinBinary(a):
+    if env_OS != "Windows_NT":
+        return False
+    return (os.system("findstr >nul /m cygwin1.dll " + a) == 0)
 
 if IsCygwinBinary(CM3):
     def ConvertToCygwinPath(a):
@@ -1661,12 +1666,6 @@ def FatalError(a = ""):
     #print("ERROR: see " + Logs)
     print("fatal error " + a)
     sys.exit(1)
-
-
-def IsCygwinBinary(a):
-    if env_OS != "Windows_NT":
-        return False
-    return (os.system("findstr >nul /m cygwin1.dll " + a) == 0)
 
 if __name__ == "__main__":
     #
