@@ -6,29 +6,14 @@
 
 INTERFACE Uugid;
 
-FROM Ctypes IMPORT int;
+FROM Utypes IMPORT gid_t, uid_t;
 
+(*** geteuid(2) - get user identity ***)
 
-(*** getuid(2), geteuid(2) - get user identity ***)
+<*EXTERNAL*> PROCEDURE geteuid (): uid_t;
 
-<*EXTERNAL*> PROCEDURE getuid (): int;
-<*EXTERNAL*> PROCEDURE geteuid (): int;
+(*** getegid(2) - get group identity ***)
 
-
-(*** getgid(2), getguid(2) - get group identity ***)
-
-<*EXTERNAL*> PROCEDURE getgid (): int;
-<*EXTERNAL*> PROCEDURE getegid (): int;
-
-
-(*** setreuid(2) - set real and effective user ID's ***)
-
-<*EXTERNAL*> PROCEDURE setreuid (ruid, euid: int): int;
-
-
-(*** setregid(2) - set real and effective group ID ***)
-
-<*EXTERNAL*> PROCEDURE setregid (rgid, egid: int): int;
-
+<*EXTERNAL*> PROCEDURE getegid (): gid_t;
 
 END Uugid.
