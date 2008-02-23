@@ -1,5 +1,5 @@
 %
-% $Id: NT386GNU,v 1.25 2008-02-17 10:21:16 jkrell Exp $
+% $Id: NT386GNU,v 1.26 2008-02-23 16:56:39 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -8,7 +8,7 @@
 % Use GNU/Cygwin a lot.
 %   gcc compiler/linker/m3backend
 %   Cygwin C runtime
-%   Cygwin pthreads
+%   Windows threads (Cygwin pthreads attempted but passed over for now)
 %   CygwinX GUI
 %
 % Most of the variables in this file are independent of each other and
@@ -16,7 +16,7 @@
 %
 
 %
-% This could be NT386.common, but put it here
+% This could be in NT386.common, but put it here
 % for the sake m3cgcat.exe + M3CONFIG environment variable.
 %
 readonly TARGET       = "NT386"             % code generation target
