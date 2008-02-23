@@ -338,7 +338,7 @@ MoveFile(
     b,
     )
 is
-    if defined("fs_cp") and defined("fs_cp")
+    if defined("fs_cp")
         fs_cp(a, b)
         DeleteFile(a)
     else
