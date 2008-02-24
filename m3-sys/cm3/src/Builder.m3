@@ -1009,7 +1009,7 @@ PROCEDURE CompileC (s: State;  u: M3Unit.T) =
           EVAL RunM3Back (s, UnitPath (u), u.object, u.debug, u.optimize);
           Utils.NoteNewFile (u.object);
       | M3BackendMode_t.ExternalAssembly =>
-          tmpS := TempSName (s, u);
+          tmpS := TempSName (u);
           IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpS) END;
           IF  RunM3Back (s, UnitPath (u), tmpS, u.debug, u.optimize)
           AND RunAsm (s, tmpS, u.object) THEN
@@ -1078,7 +1078,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
         END;
 
     | 1 =>  (* -bootstrap, -m3back, +asm *)
-        tmpS := TempSName (s, u);
+        tmpS := TempSName (u);
         IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpS) END;
         IF RunM3 (s, u, tmpS) THEN
           EVAL RunAsm (s, tmpS, u.object);
@@ -1087,7 +1087,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
         IF (NOT s.keep_files) THEN Utils.Remove (tmpS) END;
 
     | 2 =>  (* -bootstrap, +m3back, -asm *)
-        tmpC := TempCName (s, u);
+        tmpC := TempCName (u);
         IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpC) END;
         IF RunM3 (s, u, tmpC) THEN
           EVAL RunM3Back (s, tmpC, u.object, u.debug, u.optimize);
@@ -1097,8 +1097,8 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
 
 
     | 3 =>  (* -bootstrap, +m3back, +asm *)
-        tmpC := TempCName (s, u);
-        tmpS := TempSName (s, u);
+        tmpC := TempCName (u);
+        tmpS := TempSName (u);
         IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpC) END;
         IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpS) END;
         IF RunM3 (s, u, tmpC) THEN
@@ -1112,7 +1112,7 @@ PROCEDURE PushOneM3 (s: State;  u: M3Unit.T): BOOLEAN =
 
     | 6,    (* +bootstrap, +m3back, -asm *)
       7 =>  (* +bootstrap, +m3back, +asm *)
-        tmpC := TempCName (s, u);
+        tmpC := TempCName (u);
         IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpC) END;
         IF RunM3 (s, u, tmpC) THEN
           EVAL RunM3Back (s, tmpC, u.object, u.debug, u.optimize);
@@ -2678,40 +2678,32 @@ PROCEDURE UnitPath (u: M3Unit.T): TEXT =
     RETURN path;
   END UnitPath;
 
-PROCEDURE TempCName (s: State;  u: M3Unit.T): TEXT =
-  VAR ext := u.kind;  base: TEXT;  shorten := FALSE;
+PROCEDURE TempCName (u: M3Unit.T): TEXT =
+  VAR ext := u.kind;
   BEGIN
     CASE ext OF
     | UK.I3, UK.IC => ext := UK.IC;
-    | UK.IS        => ext := UK.IS;  shorten := TRUE;
+    | UK.IS        => ext := UK.IS;
     | UK.M3, UK.MC => ext := UK.MC;
-    | UK.MS        => ext := UK.MS;  shorten := TRUE;
+    | UK.MS        => ext := UK.MS;
     ELSE <* ASSERT FALSE *>
     END;
-    base := M3ID.ToText (u.name);
-    IF (shorten) AND (s.target_os = M3Path.OSKind.Win32) THEN
-      base := ShortenName (M3ID.ToText (u.name));
-    END;
-    RETURN M3Path.Join (NIL, base, ext, host := FALSE);
+    RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext, host := FALSE);
   END TempCName;
 
-PROCEDURE TempSName (s: State;  u: M3Unit.T): TEXT =
-  VAR ext := u.kind;  base: TEXT;
+PROCEDURE TempSName (u: M3Unit.T): TEXT =
+  VAR ext := u.kind;
   BEGIN
     CASE ext OF
     | UK.I3, UK.IC => ext := UK.IS;
     | UK.M3, UK.MC => ext := UK.MS;
     ELSE <* ASSERT FALSE *>
     END;
-    base := M3ID.ToText (u.name);
-    IF (s.target_os = M3Path.OSKind.Win32) THEN
-      base := ShortenName (M3ID.ToText (u.name));
-    END;
-    RETURN M3Path.Join (NIL, base, ext, host := TRUE);
+    RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext, host := TRUE);
   END TempSName;
 
 PROCEDURE ObjectName (s: State;  u: M3Unit.T): TEXT =
-  VAR ext := u.kind;  base: TEXT;  shorten: BOOLEAN := FALSE;
+  VAR ext := u.kind;
   BEGIN
     IF NOT s.bootstrap_mode THEN
       (* produce object modules *)
@@ -2726,8 +2718,8 @@ PROCEDURE ObjectName (s: State;  u: M3Unit.T): TEXT =
     ELSIF BackendAssembly[s.m3backend_mode] THEN
       (* bootstrap with an assembler *)
       CASE ext OF 
-      | UK.I3, UK.IC, UK.IS =>  ext :=  UK.IS;  shorten := TRUE;
-      | UK.M3, UK.MC, UK.MS =>  ext :=  UK.MS;  shorten := TRUE;
+      | UK.I3, UK.IC, UK.IS =>  ext :=  UK.IS;
+      | UK.M3, UK.MC, UK.MS =>  ext :=  UK.MS;
       | UK.C, UK.S, UK.H    =>  (* skip *)
       | UK.IO, UK.MO, UK.O  =>  (* skip *)
       ELSE RETURN NIL; 
@@ -2745,72 +2737,8 @@ PROCEDURE ObjectName (s: State;  u: M3Unit.T): TEXT =
 
     END;
 
-    base := M3ID.ToText (u.name);
-    IF (s.target_os = M3Path.OSKind.Win32) AND (shorten) THEN
-      base := ShortenName (M3ID.ToText (u.name));
-    END;
-    RETURN M3Path.Join (NIL, base, ext, host := FALSE);
+    RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext, host := FALSE);
   END ObjectName;
-
-(*---------------------------------------------------------------------------*)
-(* HACK: Masm 5.1 on NT doesn't generate case sensitive labels
-         if the file name is longer than 13+3 !! *)
-TYPE
-  TruncatedName = REF RECORD
-    full, short : TEXT;
-    next : TruncatedName;
-  END;
-
-VAR long_names: IntRefTbl.T := NIL;
-PROCEDURE ShortenName (n: TEXT): TEXT =
-  CONST MaxName = 8;
-  VAR
-    buf: ARRAY [0..MaxName-1] OF CHAR;
-    short_id: M3ID.T;
-    ref: REFANY;
-    cnt: INTEGER;
-    name_list, t: TruncatedName;
-  BEGIN
-    IF Text.Length (n) < MaxName THEN RETURN n; END;
-
-    IF (long_names = NIL) THEN
-      long_names := NEW (IntRefTbl.Default).init ();
-    END;
-
-    (* fetch the list of truncations *)
-    Text.SetChars (buf, n);
-    short_id := M3ID.FromStr (buf);
-    IF long_names.get (short_id, ref)
-      THEN name_list := ref;
-      ELSE name_list := NIL;
-    END;
-
-    (* search for a match *)
-    t := name_list;  cnt := 0;
-    WHILE (t # NIL) DO
-      IF Text.Equal (n, t.full) THEN RETURN t.short END;
-      t := t.next;  INC (cnt);
-    END;
-
-    (* need to create a new name *)
-    IF (cnt > 0) THEN
-      VAR
-        new := Fmt.Int (cnt);
-        len := Text.Length (new);
-        num : ARRAY [0..LAST(buf)] OF CHAR;
-      BEGIN
-        Text.SetChars (num, new);
-        FOR i := 0 TO len - 1 DO
-          buf[NUMBER(buf) - len + i] := num[i];
-        END;
-      END;
-    END;
-    t := NEW (TruncatedName, full := n, short := Text.FromChars (buf),
-                next := name_list);
-    EVAL long_names.put (short_id, t);
-    Msg.Verbose ("long name: ", n, " -> ", t.short);
-    RETURN t.short;
-  END ShortenName;
 
 (*------------------------------------------------------------------ misc ---*)
 
