@@ -151,7 +151,7 @@ PROCEDURE SetupNamingConventionsInternal (VAR s : State; mach : Quake.Machine) =
   END SetupNamingConventionsInternal;
 
 PROCEDURE SetupNamingConventions (mach : Quake.Machine) =
-  VAR s := NEW (State); (* immediately becomes garbage, oh well *)
+  VAR s := NEW (State);
   BEGIN
     SetupNamingConventionsInternal (s, mach);
   END SetupNamingConventions;
@@ -168,7 +168,6 @@ PROCEDURE CompileUnits (main     : TEXT;
 
     SetupNamingConventionsInternal (s, mach);
     s.result_name   := main;
-    s.info_name     := M3Path.Join (NIL, nm.base, info_kind, host := TRUE);
     s.config_file   := M3Config.FindFile ();
     s.sys_libs      := sys_libs;
     s.units         := units;
@@ -189,6 +188,7 @@ PROCEDURE CompileUnits (main     : TEXT;
     Target.Has_stack_walker := GetConfigBool(s, "M3_USE_STACK_WALKER",
                                              Target.Has_stack_walker);
 
+    s.info_name   := M3Path.Join (NIL, nm.base, info_kind, host := TRUE);
     s.m3backend   := GetConfigProc (s, "m3_backend", 4);
     s.c_compiler  := GetConfigProc (s, "compile_c", 5);
     s.assembler   := GetConfigProc (s, "assemble", 2);
@@ -231,16 +231,11 @@ PROCEDURE CompileUnits (main     : TEXT;
   END CompileUnits;
 
 PROCEDURE GetOSType (s: State;  sym: TEXT): M3Path.OSKind =
-  VAR
-    val := GetConfigItem (s, sym);
-    ch : CHAR;
+  VAR val := GetConfigItem (s, sym);
   BEGIN
-    IF Text.Length (val) = 1 THEN
-      ch := Text.GetChar (val, 0);
-      IF    (ch = '0')   THEN RETURN M3Path.OSKind.Unix;
-      ELSIF (ch = '1')   THEN RETURN M3Path.OSKind.GrumpyUnix;
-      ELSIF (ch = '2')   THEN RETURN M3Path.OSKind.Win32;
-      END;
+    IF    Text.Equal (val, "0")   THEN RETURN M3Path.OSKind.Unix;
+    ELSIF Text.Equal (val, "1")   THEN RETURN M3Path.OSKind.GrumpyUnix;
+    ELSIF Text.Equal (val, "2")   THEN RETURN M3Path.OSKind.Win32;
     END;
     ConfigErr (s, sym, "unrecognized naming convention: " & val);
     RETURN M3Path.OSKind.Unix;
@@ -2693,10 +2688,9 @@ PROCEDURE TempCName (s: State;  u: M3Unit.T): TEXT =
     | UK.MS        => ext := UK.MS;  shorten := TRUE;
     ELSE <* ASSERT FALSE *>
     END;
+    base := M3ID.ToText (u.name);
     IF (shorten) AND (s.target_os = M3Path.OSKind.Win32) THEN
       base := ShortenName (M3ID.ToText (u.name));
-    ELSE
-      base := M3ID.ToText (u.name);
     END;
     RETURN M3Path.Join (NIL, base, ext, host := FALSE);
   END TempCName;
@@ -2709,10 +2703,9 @@ PROCEDURE TempSName (s: State;  u: M3Unit.T): TEXT =
     | UK.M3, UK.MC => ext := UK.MS;
     ELSE <* ASSERT FALSE *>
     END;
+    base := M3ID.ToText (u.name);
     IF (s.target_os = M3Path.OSKind.Win32) THEN
       base := ShortenName (M3ID.ToText (u.name));
-    ELSE
-      base := M3ID.ToText (u.name);
     END;
     RETURN M3Path.Join (NIL, base, ext, host := TRUE);
   END TempSName;
@@ -2752,10 +2745,9 @@ PROCEDURE ObjectName (s: State;  u: M3Unit.T): TEXT =
 
     END;
 
+    base := M3ID.ToText (u.name);
     IF (s.target_os = M3Path.OSKind.Win32) AND (shorten) THEN
       base := ShortenName (M3ID.ToText (u.name));
-    ELSE
-      base := M3ID.ToText (u.name);
     END;
     RETURN M3Path.Join (NIL, base, ext, host := FALSE);
   END ObjectName;
@@ -2770,19 +2762,7 @@ TYPE
   END;
 
 VAR long_names: IntRefTbl.T := NIL;
-
 PROCEDURE ShortenName (n: TEXT): TEXT =
-(* Shortening is not needed for GNU as and MASM isn't used
-   and perhaps newer versions have the behavior changed,
-   and this looks slow otherwise. *)
-  BEGIN
-    IF TRUE THEN
-      RETURN n;
-    END;
-    RETURN DoShortenName(n);
-  END ShortenName;
-
-PROCEDURE DoShortenName (n: TEXT): TEXT =
   CONST MaxName = 8;
   VAR
     buf: ARRAY [0..MaxName-1] OF CHAR;
@@ -2791,7 +2771,6 @@ PROCEDURE DoShortenName (n: TEXT): TEXT =
     cnt: INTEGER;
     name_list, t: TruncatedName;
   BEGIN
-
     IF Text.Length (n) < MaxName THEN RETURN n; END;
 
     IF (long_names = NIL) THEN
@@ -2831,7 +2810,7 @@ PROCEDURE DoShortenName (n: TEXT): TEXT =
     EVAL long_names.put (short_id, t);
     Msg.Verbose ("long name: ", n, " -> ", t.short);
     RETURN t.short;
-  END DoShortenName;
+  END ShortenName;
 
 (*------------------------------------------------------------------ misc ---*)
 
