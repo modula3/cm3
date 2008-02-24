@@ -40,7 +40,7 @@ DoPackage(
     "m3staloneback",
     "m3front",
     "m3quake",
-    #"mklib", # not yet working
+    "mklib",
     "cm3",
     ]) or sys.exit(1)
 

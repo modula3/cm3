@@ -32,7 +32,7 @@ DoPackage(
     "mklib", "cm3",
     ]) or sys.exit(1)
 
-# ShipCompiler() or sys.exit(1)
+ShipCompiler() or sys.exit(1)
 
 DoPackage(argv_BuildShip, PackageSets["std"]) or sys.exit(1)
 
