@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.62 2008-02-23 20:41:26 jkrell Exp $
+# $Id: pylib.py,v 1.63 2008-02-24 15:02:04 jkrell Exp $
 
 import os
 from os import getenv
@@ -70,15 +70,15 @@ def SearchPath(name, paths = getenv("PATH")):
 # the root of the installation
 #
 CM3 = getenv("CM3") or ExeName("cm3") # to invoke
-print("CM3 is " + CM3)
+# print("CM3 is " + CM3)
 Cm3FullPath = SearchPath(CM3) # a file that can be opened/copied
-print("Cm3FullPath is " + Cm3FullPath)
+# print("Cm3FullPath is " + Cm3FullPath)
 InstallRoot = os.path.dirname(os.path.dirname(Cm3FullPath))
 
 #
 # the root of the source tree
 #
-Root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).replace("\\", "\\\\")
+Root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 BuildAll = getenv("CM3_ALL") or False
 
@@ -400,15 +400,18 @@ def IsCygwinBinary(a):
     #print("a is " + a)
     return (os.system("findstr 2>&1 >nul /m cygwin1.dll \"" + a + "\"") == 0)
 
+def _ConvertToCygwinPath(a):
+    if (a.find('\\') == -1) and (a.find(':') == -1):
+        return a
+    a = a.replace("\\", "/")
+    if a.find(":/") == 1:
+        a = "/cygdrive/" + a[0:1] + a[2:]
+    return a
+
 if IsCygwinBinary(Cm3FullPath):
     #print(Cm3FullPath + " is a Cygwin binary")
     def ConvertToCygwinPath(a):
-        #
-        # assume user has setup symlinks at root /c => /cygdrive/c
-        # This way, 1) same code for MinGWin and Cygwin 2) shorter paths
-        # network paths also work
-        #
-        return "/" + a.replace("\\", "/").replace(":", "").replace("//", "/")
+        return _ConvertToCygwinPath(a)
 else:
     def ConvertToCygwinPath(a):
         return a
@@ -420,7 +423,7 @@ if not ConfigFile:
     ConfigFile = GetConfigForDistribution(Config)
     SetEnvironmentVariable("M3CONFIG", ConvertToCygwinPath(ConfigFile))
 NativeRoot = Root
-Root = ConvertToCygwinPath(Root)
+Root = ConvertToCygwinPath(Root).replace("\\", "\\\\")
 SetEnvironmentVariable("CM3_ROOT", Root);
 Root = NativeRoot
 
@@ -452,7 +455,7 @@ DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
 DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
 DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
 
-Root = ConvertToCygwinPath(Root)
+Root = ConvertToCygwinPath(Root).replace("\\", "\\\\")
 DEFS = (DEFS % vars())
 Root = NativeRoot
 
@@ -1692,6 +1695,14 @@ if __name__ == "__main__":
     # run test code if module run directly
     #
 
+    print(_ConvertToCygwinPath("a"));
+    print(_ConvertToCygwinPath("a\\b"));
+    print(_ConvertToCygwinPath("//a\\b"));
+    print(_ConvertToCygwinPath("c:\\b"));
+    print(_ConvertToCygwinPath("c:/b"));
+    print(_ConvertToCygwinPath("/b"));
+    print(_ConvertToCygwinPath("\\b"));
+    sys.exit(1)
     print(IsCygwinBinary("c:\\cygwin\\bin\\gcc.exe"))
     print(IsCygwinBinary("c:\\bin\\cdb.exe"))
     sys.exit(1)
