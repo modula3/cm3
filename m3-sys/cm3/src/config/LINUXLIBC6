@@ -122,7 +122,7 @@ SYSTEM_LIBS = {
   "POSTGRES95" : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lpq" ],
   "POSTGRESQL" : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lpq" ],
   "OPENGL"     : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lGLU", "-lGL", "-lXext" ],
-  "ODBC"       : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lodbc" ],
+  "ODBC"       : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-liodbc" ],
   "MOTIF"      : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lXm" ],
   "X11"        : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lXaw", "-lXmu", "-lXext",
                         "-lXt", "-lSM", "-lICE", "-lX11" ],
