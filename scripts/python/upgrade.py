@@ -8,11 +8,20 @@ from pylib import *
 argv_RealClean = [sys.argv[0], "realclean"] + sys.argv[1:]
 argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 
-#
-# Need to figure out how to do this properly, if at all.
-#
-SetupEnvironment()
+def _CleanupEnvironment():
+    # pylib.py figures these out correctly and in particular
+    # their forms have to change if we upgrade from NT386
+    # to NT3866GNU or vice versa; reloading pylib.py
+    # handles that
+    if os.environ.get("M3CONFIG"):
+        del(os.environ["M3CONFIG"])
+    #if os.environ.get("CM3_INSTALL"):
+        #del(os.environ["CM3_INSTALL"])
+    #if os.environ.get("CM3_ROOT"):
+        #del(os.environ["CM3_ROOT"])
 
+_CleanupEnvironment();
+SetupEnvironment()
 CopyConfigForDevelopment() or sys.exit(1)
 
 #
@@ -48,14 +57,15 @@ FilterPackages([ "m3cc" ]) and DoPackage(argv_BuildShip, [ "m3cc" ])
 # We do this now but keep backups of the old ones. (not yet)
 #
 ShipCompiler() or sys.exit(1)
-CopyConfigForDevelopment() or sys.exit(1)
 
 #
 # Now try the new compiler but building the core system (without
 # m3cc, as this is written in C) from scratch with it.
 #
 os.environ["OMIT_GCC"] = "yes"
-reload(pylib)
+_CleanupEnvironment();
+reload(pylib) # compiler host type may have changed and need to recompute stuff
+CopyConfigForDevelopment() or sys.exit(1)
 
 # once more
 
