@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: bootntmingnu.py,v 1.4 2008-02-24 12:20:37 jkrell Exp $
+# $Id: bootntmingnu.py,v 1.5 2008-02-24 12:22:01 jkrell Exp $
 
 import sys
 import pylib
@@ -25,23 +25,10 @@ DoPackage(argv_RealClean, PackageSets["all"]) or sys.exit(1)
 DoPackage(argv_BuildShip, ["m3cc"]) or sys.exit(1)
 
 DoPackage(
-    argv_BuildShip, [
-    "m3core",
-    "libm3",
-    "sysutils",
-    "import-libs",
-    "m3bundle",
-    "m3middle",
-    "m3quake",
-    "m3middle",
-    "m3objfile",
-    "m3linker",
-    "m3back",
-    "m3staloneback",
-    "m3front",
-    "m3quake",
-    "mklib",
-    "cm3",
+    argv_BuildShip, [ "m3core", "libm3", "sysutils", "import-libs",
+    "m3bundle", "m3middle", "m3quake", "m3middle", "m3objfile",
+    "m3linker", "m3back", "m3staloneback", "m3front",
+    "mklib", "cm3",
     ]) or sys.exit(1)
 
 ShipCompiler() or sys.exit(1)

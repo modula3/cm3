@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: bootntgnu.py,v 1.19 2008-02-24 12:20:37 jkrell Exp $
+# $Id: bootntgnu.py,v 1.20 2008-02-24 12:22:01 jkrell Exp $
 
 import sys
 import pylib
@@ -28,7 +28,7 @@ DoPackage(argv_BuildShip, ["m3cc"]) or sys.exit(1)
 DoPackage(
     argv_BuildShip, [ "m3core", "libm3", "sysutils", "import-libs",
     "m3bundle", "m3middle", "m3quake", "m3middle", "m3objfile",
-    "m3linker", "m3back", "m3staloneback", "m3front", "m3quake",
+    "m3linker", "m3back", "m3staloneback", "m3front",
     "mklib", "cm3",
     ]) or sys.exit(1)
 
