@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.18 2008-02-24 15:02:04 jkrell Exp $
+# $Id: upgrade.py,v 1.19 2008-02-24 15:04:30 jkrell Exp $
 
 import sys
 import pylib
@@ -20,7 +20,6 @@ def _CleanupEnvironment():
     #if os.environ.get("CM3_ROOT"):
         #del(os.environ["CM3_ROOT"])
 
-_CleanupEnvironment();
 SetupEnvironment()
 CopyConfigForDevelopment() or sys.exit(1)
 
