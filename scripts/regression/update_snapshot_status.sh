@@ -14,7 +14,9 @@ CM3_OSTYPE=${CM3_OSTYPE:-POSIX}
 FNPAT1=${FNPAT1:-"cm3-min-${CM3_OSTYPE}-"}
 FNPATSUF=${FNPATSUF:-.tgz}
 FNPATLS=${FNPAT:-${FNPAT1}'*-*'${FNPATSUF}}
-FNPATSRC=${FNPATSRC:-cm3-src-*.tgz}
+FNPATSRCSTART=${FNPATSRCSTART:-cm3-src}
+FNPATSRCEND=${FNPATSRCEND:*.tgz}
+FNPATSRC=${FNPATSRC:-${FNPATSRCHEAD}-*.tgz}
 INDEX=${INDEX:-snapshot-index.html}
 cd $SNAPS || exit 1
 
@@ -80,16 +82,21 @@ for t in ${TARGETS}; do
     tablerow $f
   done
   echo "</tbody></table>"
+  echo ""
 done >> ${INDEX}
 
-echo "<h3>Source Archives</h3>" >> ${INDEX}
-(
+
+for d in all std gnu sys; do
+  DIST=`echo ${d} | tr '[:lower:]' '[:upper:]'`
+  echo "<h3>Source Archives ${DIST}</h3>"
+
   echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
-  for f in `ls -1t ${FNPATSRC}`; do
+  for f in `ls -1t ${FNPATSRCSTART}-${d}-${FNPATSRCEND}`; do
     tablerow $f
   done
   echo "</tbody></table>"
-) >> ${INDEX}
+  echo ""
+done >> ${INDEX}
 
 # cleanup
 for t in ${TARGETS}; do
@@ -98,7 +105,10 @@ for t in ${TARGETS}; do
   ls -1d ${pat} | cleanup_all_but_last_n ${NKEEP}
 done
 
-ls -1d ${FNPATSRC} | cleanup_all_but_last_n ${NKEEP}
+for d in all std gnu sys; do
+  pat="${FNPATSRCSTART}-${d}-${FNPATSRCEND}"
+  ls -1d ${pat} | cleanup_all_but_last_n ${NKEEP}
+done
 
 cat >> ${INDEX} <<EOF
     <hr>
