@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-sys.sh,v 1.8 2008-01-24 23:45:32 wagner Exp $
+# $Id: make-src-dist-sys.sh,v 1.9 2008-02-24 01:07:25 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -40,8 +40,8 @@ cd "${ROOT}" || exit 1
 /bin/ls -1d m3-sys/m3loader m3-sys/m3middle m3-sys/m3objfile >> .tar-include
 /bin/ls -1d m3-sys/m3quake m3-sys/m3scanner m3-sys/scripts >> .tar-include
 /bin/ls -1d m3-sys/m3staloneback m3-sys/m3tools m3-sys/mklib >> .tar-include
-/bin/ls -1d m3-libs/m3core m3-libs/libm3 >> .tar-include
-/bin/ls -1d compat.quake >> .tar-include
+/bin/ls -1d m3-libs/m3core m3-libs/libm3 m3-libs/sysutils >> .tar-include
+/bin/ls -1d m3-tools/m3bundle compat.quake >> .tar-include
 /bin/ls -1d m3-*/*/${TARGET} > .tar-exclude
 /bin/ls -1d m3-*/*/${TARGET}p >> .tar-exclude
 echo "building exclude list..."
