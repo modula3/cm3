@@ -13,12 +13,9 @@ def _CleanupEnvironment():
     # their forms have to change if we upgrade from NT386
     # to NT3866GNU or vice versa; reloading pylib.py
     # handles that
-    if os.environ.get("M3CONFIG"):
-        del(os.environ["M3CONFIG"])
-    #if os.environ.get("CM3_INSTALL"):
-        #del(os.environ["CM3_INSTALL"])
-    #if os.environ.get("CM3_ROOT"):
-        #del(os.environ["CM3_ROOT"])
+    for a in ["M3CONFIG", "CM3_INSTALL", "CM3_ROOT"]:
+        if os.environ.get(a):
+            del(os.environ[a])
 
 SetupEnvironment()
 CopyConfigForDevelopment() or sys.exit(1)
