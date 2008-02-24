@@ -15,7 +15,7 @@ FNPAT1=${FNPAT1:-"cm3-min-${CM3_OSTYPE}-"}
 FNPATSUF=${FNPATSUF:-.tgz}
 FNPATLS=${FNPAT:-${FNPAT1}'*-*'${FNPATSUF}}
 FNPATSRCSTART=${FNPATSRCSTART:-cm3-src}
-FNPATSRCEND=${FNPATSRCEND:*.tgz}
+FNPATSRCEND=${FNPATSRCEND:-*.tgz}
 FNPATSRC=${FNPATSRC:-${FNPATSRCHEAD}-*.tgz}
 INDEX=${INDEX:-snapshot-index.html}
 cd $SNAPS || exit 1
@@ -42,6 +42,8 @@ cat > ${INDEX} << EOF
 
   <body>
     <h2>CM3 Snapshots</h2>
+
+    <h3>Binary Distribution Archives</h3>
 
 EOF
 
@@ -76,19 +78,30 @@ for t in ${TARGETS}; do
   last=`ls -1 ${FNPAT1}${t}-*${FNPATSUF} | tail -1`
   last10=`ls -1 ${FNPAT1}${t}-*${FNPATSUF} | tail -10`
   ln -sf "${last}" "${FNPAT1}${t}${FNPATSUF}"
-  echo "<h3>Target Platform ${t}</h3>"
+  echo "<h4>Target Platform ${t}</h4>"
   echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
   for f in ${last10}; do
     tablerow $f
   done
   echo "</tbody></table>"
-  echo ""
+  echo "<p></p>"
 done >> ${INDEX}
 
+(
+  echo "<hr>"
+  echo "<h3>Source Archives</h3>"
+  echo "<p style=\"margin-left:2em\">"
+  echo "ALL -- all sources<br>"
+  echo "STD -- sources for the standard set of packages<br>"
+  echo "GNU -- sources for all GNU packages<br>"
+  echo "SYS -- sources for all CM3 system packages<br>"
+  echo "</p>"
+  echo "<hr>"
+) >> ${INDEX}
 
 for d in all std gnu sys; do
   DIST=`echo ${d} | tr '[:lower:]' '[:upper:]'`
-  echo "<h3>Source Archives ${DIST}</h3>"
+  echo "<h4>Source Archives ${DIST}</h4>"
 
   echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
   for f in `ls -1t ${FNPATSRCSTART}-${d}-${FNPATSRCEND}`; do
