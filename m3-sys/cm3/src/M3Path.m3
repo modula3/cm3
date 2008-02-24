@@ -470,8 +470,16 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR;  host: BOOLEAN): TEXT =
         The suspected reasons are subtle. If s1 = 1, then either the previous
         character is not a dot and the expression ends before using s1 - 2,
         or the previous character was a dot and already got removed.
+
+        Also, normally the previous element is never "..", because
+        we are working left to right, removing them, and restarting
+        for every change. However, there could be a ".." element
+        here because we didn't have "room" to remove it.
+        This occurs for example with "../..".
+        ../.. should not be changed.
+        However if we have "a../..", that should be collapsed.
         *)
-        AND ((p[s1-1] # '.') OR (p[s1-2] # '.')) THEN
+        AND (((s1 - s0) # 3) OR (p[s1-1] # '.') OR (p[s1-2] # '.')) THEN
         (* found a /<foo>/../ segment => remove it *)
         CutSection (p, s0+1, s2, len);
         FindSeps (p, len, info);  x := 1;  (* restart the scan *)
@@ -525,7 +533,11 @@ PROCEDURE Test () =
 VAR
   CONST a = ARRAY OF TEXT {
 
-    (* these should not collapse at all, "for lack of room" *)
+    ".../..",
+
+    (* these should (almost) not collapse at all, "for lack of room" *)
+
+    "./..",
 
     "..",
     "../",
