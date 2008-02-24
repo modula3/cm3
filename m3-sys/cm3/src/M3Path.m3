@@ -10,7 +10,6 @@
 MODULE M3Path;
 
 IMPORT Pathname, Text;
-IMPORT RTIO, Process, Env;
 
 CONST
   Null      = '\000';
@@ -19,9 +18,11 @@ CONST
   BackSlash = '\\';
 
 VAR
-  DirSep := ARRAY OSKind OF CHAR { Slash,  Slash,  BackSlash };
+  DirSep := ARRAY OSKind OF CHAR { Slash,  Slash,  Slash };
   VolSep := ARRAY OSKind OF CHAR { Null,   Null,   Colon  };
-  DirSepText := ARRAY OSKind OF TEXT { "/",  "/",  "\\" };
+
+VAR
+  DirSepText := ARRAY OSKind OF TEXT { "/",  "/",  "/" };
 
 TYPE
   SMap = ARRAY Kind OF TEXT;
@@ -70,7 +71,7 @@ PROCEDURE SetOS (kind: OSKind;  host: BOOLEAN) =
     os_map [host] := kind;
   END SetOS;
 
-PROCEDURE NewInternal (a, b, c, d: TEXT := NIL; host: BOOLEAN): TEXT =
+PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
   VAR len: INTEGER;  buf: ARRAY [0..255] OF CHAR;  ref: REF ARRAY OF CHAR;
   BEGIN
     IF (b # NIL) THEN
@@ -97,78 +98,73 @@ PROCEDURE NewInternal (a, b, c, d: TEXT := NIL; host: BOOLEAN): TEXT =
     len := Text.Length (a);
     IF (len <= NUMBER (buf)) THEN
       Text.SetChars (buf, a);
-      RETURN FixPath (SUBARRAY (buf, 0, len), host);
+      RETURN FixPath (SUBARRAY (buf, 0, len), host := TRUE);
     ELSE
       ref := NEW (REF ARRAY OF CHAR, len);
       Text.SetChars (ref^, a);
-      RETURN FixPath (ref^, host);
+      RETURN FixPath (ref^, host := TRUE);
     END;
-  END NewInternal;
-
-PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
-  BEGIN
-    RETURN NewInternal (a, b, c, d, host := TRUE);
   END New;
 
 PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
   VAR
-    len      := 0;
-    os       := os_map [host];
-    pre      := Prefix [os][k];
-    pre_len  := Text.Length (pre);
-    ext      := Suffix [os][k];
-    ext_len  := Text.Length (ext);
-    d_sep    := DirSep [os];
-    v_sep    := VolSep [os];
-    ch       : CHAR;
-    buf      : ARRAY [0..255] OF CHAR;
-    base_len := Text.Length (base);
-    dir_len  : INTEGER;
+    len    := 0;
+    os     := os_map [host];
+    pre    := Prefix [os][k];
+    ext    := Suffix [os][k];
+    d_sep  := DirSep [os];
+    v_sep  := VolSep [os];
+    result : TEXT;
+    ch     : CHAR;
+    buf    : ARRAY [0..255] OF CHAR;
+    ref    : REF ARRAY OF CHAR;
+  BEGIN
+    (* find out how much space we need *)
+    IF (dir # NIL) THEN
+      len := Text.Length (dir);
+      ch := Text.GetChar (dir, len-1);
+      IF (ch # d_sep) AND (ch # v_sep) THEN INC (len); END;
+    END;
+    INC (len, Text.Length (pre));
+    INC (len, Text.Length (base));
+    INC (len, Text.Length (ext));
 
-    PROCEDURE DoJoin (VAR buf: ARRAY OF CHAR): TEXT =
-      VAR
-        len := 0;
-
-      PROCEDURE Append (VAR a: ARRAY OF CHAR;  start: INTEGER;  b: TEXT; b_len: INTEGER): INTEGER =
-      BEGIN
-          Text.SetChars (SUBARRAY (a, start, b_len), b);
-          RETURN start + b_len;
-      END Append;
-
-    BEGIN (* DoJoin *)
+    (* allocate it and fill it in *)
+    IF (len <= NUMBER (buf)) THEN
+      len := 0;
       IF (dir # NIL) THEN
-        len := Append (buf, 0, dir, dir_len);
-        ch := buf[len-1];
-        IF (ch # Slash) AND (ch # d_sep) AND (ch # v_sep) THEN
+        len := Append (buf, 0, dir);
+        IF (buf[len-1] # d_sep) AND (buf[len-1] # v_sep) THEN
           buf[len] := d_sep; INC (len);
         END;
       END;
-      len := Append (buf, len, pre, pre_len);
-      len := Append (buf, len, base, base_len);
-      len := Append (buf, len, ext, ext_len);
-      RETURN FixPath (SUBARRAY (buf, 0, len), host);
-    END DoJoin;
-
-  BEGIN (* Join *)
-    (* find out how much space we need *)
-    IF (dir # NIL) THEN
-      dir_len := Text.Length (dir);
-      len := dir_len;
-      ch := Text.GetChar (dir, len-1);
-      IF (ch # Slash) AND (ch # d_sep) AND (ch # v_sep) THEN
-        INC (len);
+      len := Append (buf, len, pre);
+      len := Append (buf, len, base);
+      len := Append (buf, len, ext);
+      result := FixPath (SUBARRAY (buf, 0, len), host);
+    ELSE
+      ref := NEW (REF ARRAY OF CHAR, len);
+      len := 0;
+      IF (dir # NIL) THEN
+        len := Append (ref^, 0, dir);
+        IF (ref[len-1] # d_sep) AND (ref[len-1] # v_sep) THEN
+          ref[len] := d_sep; INC (len);
+        END;
       END;
+      len := Append (ref^, len, pre);
+      len := Append (ref^, len, base);
+      len := Append (ref^, len, ext);
+      result := FixPath (SUBARRAY (ref^, 0, len), host);
     END;
-    INC (len, pre_len);
-    INC (len, base_len);
-    INC (len, ext_len);
-
-    (* allocate it and fill it in *)
-    IF (len <= NUMBER (buf))
-      THEN RETURN DoJoin (SUBARRAY (buf, 0, len));
-      ELSE RETURN DoJoin (NEW (REF ARRAY OF CHAR, len)^);
-    END;
+    RETURN result;
   END Join;
+
+PROCEDURE Append (VAR a: ARRAY OF CHAR;  start: INTEGER;  b: TEXT): INTEGER =
+  VAR len := Text.Length (b);
+  BEGIN
+    Text.SetChars (SUBARRAY (a, start, len), b);
+    RETURN start + len;
+  END Append;
 
 PROCEDURE Parse (nm: TEXT;  host: BOOLEAN): T =
   VAR len := Text.Length (nm);   buf: ARRAY [0..255] OF CHAR;
@@ -193,20 +189,12 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR;  host: BOOLEAN): T =
     ext     : TEXT;
     ext_len : INTEGER;
     pre     : TEXT;
-    ch      : CHAR;
   BEGIN
     Text.SetChars (nm, nm_txt);
 
     (* find the last instance of each separator *)
-    FOR i := 0 TO len-1 DO
-      ch := nm[i];
-      IF ch = v_sep THEN
-        v_index := i;
-      END;
-      IF (ch = Slash) OR (ch = d_sep) THEN
-        d_index := i;
-      END;
-    END;
+    FOR i := 0 TO len-1 DO IF (nm[i] = v_sep) THEN v_index := i; END; END;
+    FOR i := 0 TO len-1 DO IF (nm[i] = d_sep) THEN d_index := i; END; END;
 
     (* extract the prefix *)
     IF (v_index = -1) AND (d_index = -1) THEN
@@ -250,12 +238,8 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR;  host: BOOLEAN): T =
   END DoParse;
 
 PROCEDURE IsEqual (a, b: TEXT): BOOLEAN =
-  VAR len := Text.Length (a);
   BEGIN
-    IF len # Text.Length (b) THEN
-      RETURN FALSE;
-    END;
-    RETURN RegionMatch (a, 0, b, 0, len,
+    RETURN RegionMatch (a, 0, b, 0, MAX (Text.Length (a), Text.Length (b)),
                         ignore_case := (os_map [TRUE(*HOST*)] = OSKind.Win32));
   END IsEqual;
 
@@ -281,7 +265,6 @@ PROCEDURE RegionMatch (a: TEXT;  start_a: INTEGER;
     len_a := Text.Length (a);
     len_b := Text.Length (b);
     buf_a, buf_b : ARRAY [0..N-1] OF CHAR;
-    cha, chb: CHAR;
   BEGIN
     IF (start_a < 0) OR (start_b < 0) THEN RETURN FALSE; END;
     IF (start_a + len > len_a) THEN RETURN FALSE; END;
@@ -291,13 +274,7 @@ PROCEDURE RegionMatch (a: TEXT;  start_a: INTEGER;
       Text.SetChars (buf_b, b, start_b);
       IF ignore_case THEN
         FOR i := 0 TO MIN (N, len) - 1 DO
-          cha := buf_a[i];
-          chb := buf_b[i];
-          IF cha # chb THEN
-            IF lcase[cha] # lcase[chb] THEN
-              RETURN FALSE;
-            END;
-          END;
+          IF lcase[buf_a[i]] # lcase[buf_b[i]] THEN RETURN FALSE; END;
         END;
       ELSE
         FOR i := 0 TO MIN (N, len) - 1 DO
@@ -310,24 +287,9 @@ PROCEDURE RegionMatch (a: TEXT;  start_a: INTEGER;
   END RegionMatch;
 
 PROCEDURE EndOfArc (path: TEXT;  xx: CARDINAL;  os: OSKind): BOOLEAN =
-  VAR
-    len := Text.Length (path);
-    ch : CHAR;
+  VAR len := Text.Length (path);
   BEGIN
-    IF len = xx THEN
-      RETURN TRUE;
-    END;
-    IF len < xx THEN
-      RETURN FALSE;
-    END;
-    ch := Text.GetChar (path, xx);
-    IF ch = Slash THEN
-      RETURN TRUE;
-    END;
-    IF ch = DirSep[os] THEN
-      RETURN TRUE;
-    END;
-    RETURN FALSE;
+    RETURN (len = xx) OR ((len > xx) AND (Text.GetChar (path, xx) = DirSep[os]));
   END EndOfArc;
 
 PROCEDURE DefaultProgram (host: BOOLEAN): TEXT =
@@ -348,19 +310,8 @@ PROCEDURE LibraryName (base: TEXT;  host: BOOLEAN): TEXT =
   END LibraryName;
 
 PROCEDURE Convert (nm: TEXT;  host: BOOLEAN): TEXT =
-  VAR
-    len  : INTEGER;
-    buf: ARRAY [0..255] OF CHAR;
-    good := DirSep [os_map [host]];
-    bad  := DirSep [os_map [NOT host]];
+  VAR len := Text.Length (nm);  buf: ARRAY [0..255] OF CHAR;
   BEGIN
-    IF good = bad THEN
-      RETURN nm;
-    END;
-    len := Text.Length (nm);
-    IF len = 0 THEN
-      RETURN nm;
-    END;
     IF (len <= NUMBER (buf))
       THEN RETURN DoConvert (nm, len, host, buf);
       ELSE RETURN DoConvert (nm, len, host, NEW (REF ARRAY OF CHAR, len)^);
@@ -372,18 +323,13 @@ PROCEDURE DoConvert (nm: TEXT;  len: INTEGER;  host: BOOLEAN;
   VAR
     good := DirSep [os_map [host]];
     bad  := DirSep [os_map [NOT host]];
-    any  := FALSE;
+    cnt  := 0;
   BEGIN
     Text.SetChars (buf, nm);
     FOR i := 0 TO len-1 DO
-      IF (buf[i] = bad) THEN
-        buf[i] := good;
-        any := TRUE;
-      END;
+      IF (buf[i] = bad) THEN  buf[i] := good;  INC (cnt);  END;
     END;
-    IF NOT any THEN
-      RETURN nm;
-    END;
+    IF (cnt = 0) THEN RETURN nm; END;
     RETURN Text.FromChars (SUBARRAY (buf, 0, len));
   END DoConvert;
 
@@ -416,23 +362,15 @@ PROCEDURE DoEscape (nm: TEXT;  len: INTEGER;  VAR buf: ARRAY OF CHAR): TEXT =
     RETURN Text.FromChars (SUBARRAY (buf, 0, len + n_escapes));
   END DoEscape;
 
-PROCEDURE IsDirSep(ch, d_sep: CHAR): BOOLEAN =
-  BEGIN
-    RETURN ((ch = Slash) OR (ch = d_sep));
-  END IsDirSep;
-
 PROCEDURE MakeRelative (VAR path: TEXT;  full, rel: TEXT): BOOLEAN =
-  VAR
-    os := os_map[TRUE];
   BEGIN
-    IF PrefixMatch (path, full, os)
-      AND EndOfArc (path, Text.Length (full), os) THEN
+    IF PrefixMatch (path, full, os_map[TRUE])
+      AND EndOfArc (path, Text.Length (full), os_map[TRUE]) THEN
       VAR
         p := Text.Length(full);
         n := Text.Length(path);
-        d_sep := DirSep[os];
       BEGIN
-        WHILE (p < n) AND IsDirSep (Text.GetChar (path, p), d_sep) DO
+        WHILE p < n AND Text.GetChar(path, p) = DirSep[os_map[TRUE]] DO
           INC(p) 
         END;
         path := New (rel, Text.Sub (path, p)); 
@@ -455,9 +393,8 @@ TYPE
 PROCEDURE FixPath (VAR p: ARRAY OF CHAR;  host: BOOLEAN): TEXT =
   (* remove redundant "/arc/../" and "/./" segments *)
   VAR os := os_map [host];  len, x, s0, s1, s2: INTEGER;  info: SepInfo;
-    d_sep := DirSep [os];
   BEGIN
-    info.d_sep := d_sep;
+    info.d_sep := DirSep [os];
     info.v_sep := VolSep [os];
 
     len := NUMBER (p);
@@ -466,13 +403,14 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR;  host: BOOLEAN): TEXT =
       s0 := info.loc[x-1];
       s1 := info.loc[x];
       s2 := info.loc[x+1];
-      IF (s1 - s0 = 2) AND (p[s0+1] = '.') AND ((p[s1] = Slash OR p[s1] = d_sep)) THEN
+      IF (s1 - s0 = 2) AND (p[s0+1] = '.') AND (p[s1] = info.d_sep) THEN
         (* found a /./ arc  => remove it *)
         CutSection (p, s0+1, s1, len);
         FindSeps (p, len, info);  x := 1;  (* restart the scan *)
       ELSIF (s2 - s1 = 3)
         AND (p[s1+1] = '.') AND (p[s1+2] = '.')
-        AND ((p[s1] = Slash) OR (p[s1] = d_sep)) THEN
+        AND (p[s1] = info.d_sep)
+        AND ((p[s1-1] # '.') OR (p[s1-2] # '.')) THEN
         (* found a /<foo>/../ segment => remove it *)
         CutSection (p, s0+1, s2, len);
         FindSeps (p, len, info);  x := 1;  (* restart the scan *)
@@ -483,7 +421,7 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR;  host: BOOLEAN): TEXT =
     END;
 
     (* remove trailing slashs *)
-    WHILE (len > 0) AND ((p[len-1] = Slash) OR (p[len-1] = d_sep)) DO DEC (len); END;
+    WHILE (len > 0) AND (p[len-1] = info.d_sep) DO DEC (len); END;
     IF len <= 0 THEN RETURN "."; END;
     RETURN Text.FromChars (SUBARRAY (p, 0, len));
   END FixPath;
@@ -491,14 +429,12 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR;  host: BOOLEAN): TEXT =
 PROCEDURE FindSeps (READONLY buf: ARRAY OF CHAR;  len: INTEGER;
                     VAR(*OUT*) info: SepInfo) =
   VAR c: CHAR;
-    d_sep := info.d_sep;
-    v_sep := info.v_sep;
   BEGIN
     info.dots := FALSE;
     info.loc[0] := -1;  info.cnt := 1;  (* initial marker *)
     FOR i := 0 TO len-1 DO
       c := buf[i];
-      IF (c = Slash) OR (c = d_sep) OR (c = v_sep) THEN
+      IF (c = info.d_sep) OR (c = info.v_sep) THEN
         IF (info.cnt >= LAST (info.loc)) THEN EXIT; (*give up*) END;
         info.loc[info.cnt] := i;  INC (info.cnt);
       ELSIF (c = '.') THEN
@@ -522,68 +458,40 @@ PROCEDURE CutSection (VAR buf: ARRAY OF CHAR;  start, stop: INTEGER;
     DEC (len, chop);
   END CutSection;
 
-PROCEDURE Test () =
-VAR
-  CONST a = ARRAY OF TEXT { "a", "/a", "\\a", "a/b", "a\\b", "a:b", "a:/b", "a:\\b", "a/b/c", "a\\b\\c", "a:\\b\\c",
-    "a:/b/c", "\\\\a\\b", "//a/b", "/a/b/../c", "/a/b../../c",
-     "/a/b/../c/d", "/a/b../../c/d", "c:\\a\\b\\..\\d",
-      "c:\\a\\b..\\..\\d",
-      "c:..\\d",
-      "c:.\\d",
-      "c:../d",
-      "c:./d"
-    };
-  CONST osname = ARRAY BOOLEAN OF TEXT { "Unix", "Win32" };
-  VAR b : T;
-BEGIN
-
-  (* remove this to enable test *)
-  RETURN;
-
-  <* NOWARN *> BEGIN END;
-  os_map [FALSE] := OSKind.Unix;
-  os_map [TRUE]  := OSKind.Win32;
-  FOR i := FIRST (a) TO LAST (a) DO
-    FOR host := FALSE TO TRUE DO
-      b := Parse(a[i], host);
-      IF b.dir = NIL THEN
-        b.dir := "<NIL>";
-      END;
-      RTIO.PutText ("Parse: " & a[i] & " " & osname[host] & " dir " & b.dir & " base " & b.base & "\n");
-      RTIO.PutText ("New: " & a[i] & " " & osname[host] & " " & NewInternal(a[i], host := host) & "\n");
-      RTIO.Flush ();
-    END;
-  END;
-  Process.Exit (1);
-END Test;
-
 BEGIN
   FOR i := FIRST (lcase) TO LAST (lcase) DO lcase[i] := i; END;
   FOR i := 'A' TO 'Z' DO
     lcase[i] := VAL (ORD (i) - ORD ('A') + ORD ('a'), CHAR);
   END;
 
-  IF Text.GetChar (Pathname.Join ("a", "b"), 1) = BackSlash THEN
-    SlashChar := BackSlash;
-    SlashText := "\\";
+ (* OSKind is determined from "naming conventions"
+    which are mostly about foo.lib vs. libfoo.a, foo.dll vs. libfoo.so, foo vs. foo.exe.
+    "Naming conventions" also determines the slash, however NT386GNU uses
+    Win32 "naming conventions" (currently) but forward slashes. In reality,
+    forward slashes work almost anywhere, but at this time we are not pushing
+    through the change to use forward slashes more on regular NT386.
+    What we do here is probe our runtime for its slash as was already being
+    done to set the Quake SL variable, but applying the result to more code.
 
-    (* treat forward slash and backward slash as equal *)
-    lcase[Slash] := BackSlash;
+    In general this run-time/compile-time determinations probably need better abstraction.
+    At least in other places, where the way time works is used to determine if the runtime is Unix.
+    In this case, the slash could be fed in at build time, or set in Quake, however
+    how to get his data from Quake efficiently (and early enough?), is to be determined.
+  *)
+  WITH DynamicSlashChar = Text.GetChar (Pathname.Join ("a", "b"), 1) DO
+    IF DynamicSlashChar = BackSlash THEN
+      SlashChar := BackSlash;
+      SlashText := "\\";
+      DirSep[OSKind.Win32] := BackSlash;
+      DirSepText[OSKind.Win32] := "\\";
+    END;
 
-    (* assume a native Win32 build *)
-    os_map [TRUE]  := OSKind.Win32;
-    os_map [FALSE] := OSKind.Win32;
-  ELSE
-    WITH OS = Env.Get("OS") DO
-      IF OS # NIL AND Text.Equal (OS, "Windows_NT") THEN
-        (* Cygwin uses foo.lib instead of libfoo.a, but forward slashes. *)
-        os_map [TRUE]  := OSKind.Win32;
-        os_map [FALSE] := OSKind.Win32;
-        DirSep [OSKind.Win32] := DirSep [OSKind.Unix];
-        VolSep [OSKind.Win32] := VolSep [OSKind.Unix];
-        DirSepText [OSKind.Win32] := DirSepText [OSKind.Unix];
-      END;
+    (* guess some reasonable defaults for this platform *)
+    CONST XX = ARRAY BOOLEAN OF OSKind { OSKind.Win32, OSKind.Unix };
+    VAR   k := XX [DynamicSlashChar = Slash];
+    BEGIN
+      os_map [TRUE]  := k;
+      os_map [FALSE] := k;
     END;
   END;
-  Test ();
 END M3Path.
