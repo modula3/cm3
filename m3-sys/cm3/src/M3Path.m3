@@ -10,7 +10,7 @@
 MODULE M3Path;
 
 IMPORT Pathname, Text;
-IMPORT RTIO, Process, Env;
+IMPORT Env;
 
 CONST
   Null      = '\000';
@@ -460,8 +460,6 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR;  host: BOOLEAN): TEXT =
         CutSection (p, s0+1, s1, len);
         FindSeps (p, len, info);  x := 1;  (* restart the scan *)
       ELSIF (s2 - s1 = 3)
-        (* This area needs review. a../.. and ../.. should be treated
-           differently. *)
         AND (p[s1+1] = '.') AND (p[s1+2] = '.')
         AND (IsDirSep (p[s1], d_sep))
         AND (s1 # 0)
@@ -529,76 +527,6 @@ PROCEDURE CutSection (VAR buf: ARRAY OF CHAR;  start, stop: INTEGER;
     DEC (len, chop);
   END CutSection;
 
-PROCEDURE Test () =
-VAR
-  CONST a = ARRAY OF TEXT {
-
-    ".../..",
-
-    (* these should (almost) not collapse at all, "for lack of room" *)
-
-    "./..",
-
-    "..",
-    "../",
-    "../////",
-    "/..",
-    "/../",
-
-    "../..",
-    "../../",
-    "/../..",
-    "/../../",
-
-    (* these should all collapse to nothing *)
-    "a../..",
-    "a../../",
-    "/a../..",
-    "/a../../"
-    };
-  CONST osname = ARRAY BOOLEAN OF TEXT { "Unix", "Win32" };
-  VAR b : T;
-      anySlashes := FALSE;
-      new : TEXT;
-BEGIN
-
-  (* remove this to enable test *)
-  RETURN;
-
-  <* NOWARN *> BEGIN END; (* unreachable *)
-  os_map [FALSE] := OSKind.Unix;
-  os_map [TRUE]  := OSKind.Win32;
-  FOR i := FIRST (a) TO LAST (a) DO
-    FOR host := FALSE TO FALSE (* TRUE *) DO
-      b := Parse(a[i], host);
-      IF b.dir = NIL THEN
-        b.dir := "<NIL>";
-      END;
-      IF host = FALSE THEN (* Unix *)
-        anySlashes := FALSE;
-        FOR j := 0 TO Text.Length (a[i]) -1 DO
-          IF Text.GetChar (a[i], j) = '/' THEN
-            anySlashes := TRUE;
-          END;
-        END;
-      END;
-      (*
-      RTIO.PutText ("Parse: " & a[i] & " " & osname[host] & " dir " & b.dir & " base " & b.base & "\n");
-      *)
-      new := NewInternal(a[i], NIL, NIL, NIL, host);
-      RTIO.PutText ("New: " & a[i] & " " & osname[host] & " " & new & "\n");
-
-      (* For Unix, if there are no forward slashes, we should always get back the same as we put in. *)
-      IF host = FALSE AND NOT anySlashes AND NOT Text.Equal (new, a[i]) THEN
-        RTIO.PutText ("failed\n");
-      END;
-
-      RTIO.Flush ();
-    END;
-  END;
-  Process.Exit (1);
-END Test;
-
 BEGIN
   FOR i := FIRST (lcase) TO LAST (lcase) DO lcase[i] := i; END;
   FOR i := 'A' TO 'Z' DO
@@ -646,7 +574,5 @@ BEGIN
      END;
     END;
   END;
-
-  Test ();
 
 END M3Path.
