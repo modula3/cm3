@@ -112,19 +112,19 @@ PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
 
 PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
   VAR
-    os     := os_map [host];
-    pre    := Prefix [os][k];
-    ext    := Suffix [os][k];
-    d_sep  := DirSep [os];
-    v_sep  := VolSep [os];
-    ch     : CHAR;
-    buf    : ARRAY [0..255] OF CHAR;
-    dir_len := 0;
-    pre_len := Text.Length (pre);
+    os       := os_map [host];
+    pre      := Prefix [os][k];
+    ext      := Suffix [os][k];
+    d_sep    := DirSep [os];
+    v_sep    := VolSep [os];
+    ch       : CHAR;
+    buf      : ARRAY [0..255] OF CHAR;
+    dir_len  := 0;
+    pre_len  := Text.Length (pre);
     base_len := Text.Length (base);
-    ext_len := Text.Length (ext);
-    add_sep := FALSE;
-    len    := (pre_len + base_len + ext_len);
+    ext_len  := Text.Length (ext);
+    add_sep  := FALSE;
+    len      := (pre_len + base_len + ext_len);
 
     PROCEDURE Append (VAR a: ARRAY OF CHAR;  start: INTEGER;  b: TEXT; len: INTEGER): INTEGER =
       BEGIN
