@@ -516,30 +516,63 @@ PROCEDURE CutSection (VAR buf: ARRAY OF CHAR;  start, stop: INTEGER;
 
 PROCEDURE Test () =
 VAR
-  CONST a = ARRAY OF TEXT { "a", "/a", "\\a", "a/b", "a\\b", "a:b", "a:/b", "a:\\b", "a/b/c", "a\\b\\c", "a:\\b\\c",
-    "a:/b/c", "\\\\a\\b", "//a/b", "/a/b/../c", "/a/b../../c",
-     "/a/b/../c/d", "/a/b../../c/d", "c:\\a\\b\\..\\d",
-      "c:\\a\\b..\\..\\d", "c:..\\d", "c:.\\d", "c:../d", "c:./d",
-      "a/../", "a/b/../../", "a/../b/.."
+  CONST a = ARRAY OF TEXT {
+
+    "/../.."
+
+    (* these should not collapse at all, "for lack of room" *)
+    (*
+    "../..",
+    "../../",
+    "/../..",
+    "/../../",
+    *)
+
+    (* these should all collapse to nothing *)
+    (*
+    "a../..",
+    "a../../",
+    "/a../..",
+    "/a../../"
+    *)
     };
   CONST osname = ARRAY BOOLEAN OF TEXT { "Unix", "Win32" };
   VAR b : T;
+      anySlashes := FALSE;
+      new : TEXT;
 BEGIN
 
   (* remove this to enable test *)
   RETURN;
 
-  <* NOWARN *> BEGIN END;
+  <* NOWARN *> BEGIN END; (* unreachable *)
   os_map [FALSE] := OSKind.Unix;
   os_map [TRUE]  := OSKind.Win32;
   FOR i := FIRST (a) TO LAST (a) DO
-    FOR host := FALSE TO TRUE DO
+    FOR host := FALSE TO FALSE (* TRUE *) DO
       b := Parse(a[i], host);
       IF b.dir = NIL THEN
         b.dir := "<NIL>";
       END;
+      IF host = FALSE THEN (* Unix *)
+        anySlashes := FALSE;
+        FOR j := 0 TO Text.Length (a[i]) -1 DO
+          IF Text.GetChar (a[i], j) = '/' THEN
+            anySlashes := TRUE;
+          END;
+        END;
+      END;
+      (*
       RTIO.PutText ("Parse: " & a[i] & " " & osname[host] & " dir " & b.dir & " base " & b.base & "\n");
-      RTIO.PutText ("New: " & a[i] & " " & osname[host] & " " & NewInternal(a[i], NIL, NIL, NIL, host) & "\n");
+      *)
+      new := NewInternal(a[i], NIL, NIL, NIL, host);
+      RTIO.PutText ("New: " & a[i] & " " & osname[host] & " " & new & "\n");
+
+      (* For Unix, if there are no forward slashes, we should always get back the same as we put in. *)
+      IF host = FALSE AND NOT anySlashes AND NOT Text.Equal (new, a[i]) THEN
+        RTIO.PutText ("failed\n");
+      END;
+
       RTIO.Flush ();
     END;
   END;
