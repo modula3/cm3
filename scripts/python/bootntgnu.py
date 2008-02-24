@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: bootntgnu.py,v 1.18 2008-02-23 06:56:32 jkrell Exp $
+# $Id: bootntgnu.py,v 1.19 2008-02-24 12:20:37 jkrell Exp $
 
 import sys
 import pylib
@@ -32,7 +32,7 @@ DoPackage(
     "mklib", "cm3",
     ]) or sys.exit(1)
 
-# ShipCompiler() or sys.exit(1)
+ShipCompiler() or sys.exit(1)
 
 DoPackage(argv_BuildShip, PackageSets["std"]) or sys.exit(1)
 
