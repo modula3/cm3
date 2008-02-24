@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: bootntmingnu.py,v 1.3 2008-02-17 10:23:27 jkrell Exp $
+# $Id: bootntmingnu.py,v 1.4 2008-02-24 12:20:37 jkrell Exp $
 
 import sys
 import pylib
@@ -40,7 +40,7 @@ DoPackage(
     "m3staloneback",
     "m3front",
     "m3quake",
-    #"mklib", # not yet working
+    "mklib",
     "cm3",
     ]) or sys.exit(1)
 
