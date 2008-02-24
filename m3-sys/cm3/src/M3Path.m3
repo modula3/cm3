@@ -112,7 +112,6 @@ PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
 
 PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
   VAR
-    len    := 0;
     os     := os_map [host];
     pre    := Prefix [os][k];
     ext    := Suffix [os][k];
@@ -125,6 +124,7 @@ PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
     base_len := Text.Length (base);
     ext_len := Text.Length (ext);
     add_sep := FALSE;
+    len    := (pre_len + base_len + ext_len);
 
     PROCEDURE Append (VAR a: ARRAY OF CHAR;  start: INTEGER;  b: TEXT; len: INTEGER): INTEGER =
       BEGIN
@@ -137,7 +137,7 @@ PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
         len := 0;
       BEGIN
         IF dir_len # 0 THEN
-          len := Append (buf, 0, dir, dir_len);
+          len := Append (buf, len, dir, dir_len);
           IF add_sep THEN
             buf[len] := d_sep;
             INC (len);
@@ -153,9 +153,9 @@ PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
     (* find out how much space we need *)
     IF (dir # NIL) THEN
       dir_len := Text.Length (dir);
+      INC (len, dir_len);
       IF dir_len # 0 THEN
-        len := dir_len;
-        ch := Text.GetChar (dir, len-1);
+        ch := Text.GetChar (dir, dir_len-1);
         (* ensure there is a slash after dir *)
         IF (NOT IsDirSep(ch, d_sep)) AND (ch # v_sep) THEN
           add_sep := TRUE;
@@ -163,9 +163,6 @@ PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
         END;
       END;
     END;
-    INC (len, pre_len);
-    INC (len, base_len);
-    INC (len, ext_len);
 
     (* allocate it and fill it in *)
     IF (len <= NUMBER (buf)) THEN
