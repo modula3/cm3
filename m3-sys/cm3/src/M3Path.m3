@@ -464,6 +464,13 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR;  host: BOOLEAN): TEXT =
            differently. *)
         AND (p[s1+1] = '.') AND (p[s1+2] = '.')
         AND (IsDirSep (p[s1], d_sep))
+        AND (s1 # 0)
+        (* One would expect a possible need to check s1 # 1 here also
+        however I am unable to construct a case that crashes without that check.
+        The suspected reasons are subtle. If s1 = 1, then either the previous
+        character is not a dot and the expression ends before using s1 - 2,
+        or the previous character was a dot and already got removed.
+        *)
         AND ((p[s1-1] # '.') OR (p[s1-2] # '.')) THEN
         (* found a /<foo>/../ segment => remove it *)
         CutSection (p, s0+1, s2, len);
@@ -518,23 +525,24 @@ PROCEDURE Test () =
 VAR
   CONST a = ARRAY OF TEXT {
 
-    "/../.."
-
     (* these should not collapse at all, "for lack of room" *)
-    (*
+
+    "..",
+    "../",
+    "../////",
+    "/..",
+    "/../",
+
     "../..",
     "../../",
     "/../..",
     "/../../",
-    *)
 
     (* these should all collapse to nothing *)
-    (*
     "a../..",
     "a../../",
     "/a../..",
     "/a../../"
-    *)
     };
   CONST osname = ARRAY BOOLEAN OF TEXT { "Unix", "Win32" };
   VAR b : T;
