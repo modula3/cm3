@@ -20,10 +20,8 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=`FilterPackages m3core libm3 m3middle m3objfile m3linker m3back \
-   m3staloneback m3front m3quake cm3`
-# m3cc (between m3quake and cm3, but really, anywhere)
-# mklib (last)
+
+P=`grep -F " front" pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
@@ -47,4 +45,3 @@ ADDARGS=`add_action_opts $@`
 
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
-

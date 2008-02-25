@@ -20,39 +20,7 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=""
-P="${P} m3core"
-P="${P} libm3"
-P="${P} sysutils"
-P="${P} patternmatching"
-P="${P} m3middle"
-P="${P} m3objfile"
-P="${P} m3linker"
-P="${P} m3back"
-[ "${GCC_BACKEND}" != yes ] && P="${P} m3staloneback"
-P="${P} m3front"
-P="${P} m3quake"
-[ "${GCC_BACKEND}" = yes -a -z "$OMIT_GCC" ] && P="${P} m3cc"
-P="${P} cm3"
-P="${P} m3scanner"
-P="${P} m3tools"
-P="${P} m3cgcat"
-P="${P} m3cggen"
-[ "${M3GDB}" = yes ] && P="${P} m3gdb"
-P="${P} m3bundle"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} fix_nl"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} libdump"
-P="${P} bitvector"
-P="${P} digraph"
-P="${P} parseparams"
-P="${P} realgeometry"
-P="${P} set"
-P="${P} slisp"
-P="${P} sortedtableextras"
-P="${P} table-list"
-P="${P} tempfiles"
-[ "${HAVE_TCL}" = "yes" ] && P="${P} tcl"
+P=`grep -F " core" pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
@@ -75,4 +43,3 @@ ADDARGS=`add_action_opts $@`
 
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
-

@@ -20,33 +20,7 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=""
-P="${P} m3core"
-P="${P} libm3"
-P="${P} m3middle"
-P="${P} m3quake"
-P="${P} m3scanner"
-P="${P} m3tools"
-P="${P} m3cgcat"
-P="${P} m3cggen"
-#[ "${M3GDB}" = yes ] && P="${P} m3gdb"
-P="${P} m3bundle"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} fix_nl"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} libdump"
-P="${P} bitvector"
-P="${P} digraph"
-P="${P} parseparams"
-P="${P} realgeometry"
-P="${P} set"
-P="${P} slisp"
-P="${P} sortedtableextras"
-P="${P} table-list"
-P="${P} tempfiles"
-[ "${HAVE_TCL}" = "yes" ] && P="${P} tcl"
-P="${P} tcp"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} tapi"
-[ "${HAVE_SERIAL}" = "yes" ] && P="${P} serial"
+P=`grep -F " base" pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
@@ -69,4 +43,3 @@ ADDARGS=`add_action_opts $@`
 
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
-
