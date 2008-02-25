@@ -20,19 +20,7 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=""
-[ "${M3OSTYPE}" != "WIN32" ] && P="${P} X11R4"
-P="${P} ui"
-P="${P} vbtkit"
-P="${P} tcp"
-P="${P} cmvbt"
-P="${P} jvideo"
-P="${P} videovbt"
-P="${P} web"
-P="${P} formsvbtpixmaps"
-P="${P} formsvbt"
-P="${P} formsview"
-P="${P} formsedit"
+P=`grep -F " gui" pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
@@ -55,4 +43,3 @@ ADDARGS=`add_action_opts $@`
 
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
-
