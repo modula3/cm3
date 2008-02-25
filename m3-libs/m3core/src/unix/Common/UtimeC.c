@@ -18,7 +18,8 @@ time_t get_timezone(void)
 #endif
 }
 
-#if !defined(__CYGWIN__) && !defined(__hpux) /* is hpux correct? */
+/* Are these correct? */
+#if !defined(__CYGWIN__) && !defined(__hpux) && !defined(__linux)
 
 time_t get_altzone(void)
 {
