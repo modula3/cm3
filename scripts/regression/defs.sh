@@ -135,7 +135,10 @@ echo "INSTROOT_CUR=${INSTROOT_CUR}"
 echo "CM3_OSTYPE=${CM3_OSTYPE}"
 echo "CM3_TARGET=${CM3_TARGET}"
 echo "BINDISTMIN=${BINDISTMIN}"
-
+echo "CM3CVSSERVER=${CM3CVSSERVER}"
+echo "CM3CVSROOT=${CM3CVSROOT}"
+echo "BINDISTMIN_NAME=${BINDISTMIN_NAME}"
+echo "BINDISTMIN=${BINDISTMIN}"
 
 #----------------------------------------------------------------------------
 # checks
@@ -147,7 +150,9 @@ else
   exit 1
 fi
 
+echo "testing ssh ${CM3CVSSERVER}.."
 if ssh ${CM3CVSSERVER} true; then
+  echo "ssh ${CM3CVSSERVER} ok"
   true
 else
   echo "no ssh connection to ${CM3CVSSERVER}" 1>&2
