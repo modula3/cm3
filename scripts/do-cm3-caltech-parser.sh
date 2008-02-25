@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-caltech-parser.sh,v 1.4 2008-02-20 12:04:42 m3 Exp $
+# $Id: do-cm3-caltech-parser.sh,v 1.5 2008-02-25 16:26:52 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -20,27 +20,7 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=""
-P="${P} cit_common"
-P="${P} m3tmplhack"
-P="${P} cit_util"
-P="${P} term"
-P="${P} paneman"
-P="${P} paneman/kemacs"
-P="${P} drawcontext"
-P="${P} drawcontext/dcpane"
-P="${P} drawcontext/kgv"
-P="${P} hack"
-P="${P} m3browserhack"
-P="${P} parserlib/ktoklib"
-P="${P} parserlib/klexlib"
-P="${P} parserlib/kyacclib"
-P="${P} parserlib/ktok"
-P="${P} parserlib/klex"
-P="${P} parserlib/kyacc"
-P="${P} parserlib/kext"
-P="${P} parserlib/parserlib"
-P="${P} parserlib/parserlib/test"
+P=`grep -F " caltech-parser" pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
@@ -62,4 +42,3 @@ ADDARGS=`add_action_opts $@`
 
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
-
