@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-min.sh,v 1.7 2007-06-22 20:04:04 hosking Exp $
+# $Id: do-cm3-min.sh,v 1.8 2008-02-25 16:26:52 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -20,9 +20,7 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=""
-P="${P} m3core"
-P="${P} libm3"
+P=`grep -F " min" pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
@@ -45,4 +43,3 @@ ADDARGS=`add_action_opts $@`
 
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
-

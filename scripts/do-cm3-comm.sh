@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-comm.sh,v 1.4 2003-02-21 23:38:23 wagner Exp $
+# $Id: do-cm3-comm.sh,v 1.5 2008-02-25 16:26:52 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -20,15 +20,7 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=""
-P="${P} tcp"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} tapi"
-[ "${HAVE_SERIAL}" = "yes" ] && P="${P} serial"
-P="${P} netobj"
-P="${P} netobjd"
-P="${P} m3tk-misc"
-P="${P} m3tk"
-P="${P} stubgen"
+P=`grep -F " comm" pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
@@ -50,4 +42,3 @@ ADDARGS=`add_action_opts $@`
 
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
-

@@ -31,20 +31,20 @@ sortedtableextras base core std
 table-list base core std
 tempfiles base core std
 tcl base core std
-tcp base std
+tcp base std gui comm
 udp std
 libsio std
 libbuf std
 debug std
 listfuncs std
 embutils std
-m3tk-misc std
+m3tk-misc std comm
 http std
 binIO std
 commandrw std
-tapi base std
-serial base std
-m3tk std
+tapi base std comm
+serial base std comm
+m3tk std comm
 mtex std
 m3totex std
 m3tohtml std
@@ -55,9 +55,9 @@ cmpdir std
 cmpfp std
 dirfp std
 uniq std
-netobj std
-netobjd std
-stubgen std
+netobj std comm
+netobjd std comm
+stubgen std comm
 events std
 rdwr std
 sharedobj std
@@ -68,18 +68,18 @@ db std
 smalldb std
 stable std
 stablegen std
-X11R4 std
-ui std
+X11R4 std gui
+ui std gui
 PEX std
-vbtkit std
-cmvbt std
-jvideo std
-videovbt std
-web std
-formsvbtpixmaps std
-formsvbt std
-formsview std
-formsedit std
+vbtkit std gui
+cmvbt std gui
+jvideo std gui
+videovbt std gui
+web std gui
+formsvbtpixmaps std gui
+formsvbt std gui
+formsview std gui
+formsedit std gui
 codeview std
 mg std
 mgkit std
@@ -124,27 +124,27 @@ cube std
 calculator std
 fisheye std
 mentor std
-cit_common
-m3tmplhack
-cit_util
-term
+cit_common caltech-parser
+m3tmplhack caltech-parser
+cit_util caltech-parser
+term caltech-parser
 deepcopy
-paneman
-paneman/kemacs
-drawcontext
-drawcontext/dcpane
-drawcontext/kgv
-hack
-m3browserhack
-parserlib/ktoklib
-parserlib/klexlib
-parserlib/kyacclib
-parserlib/ktok
-parserlib/klex
-parserlib/kyacc
-parserlib/kext
-parserlib/parserlib
-parserlib/parserlib/test
+paneman caltech-parser
+paneman/kemacs caltech-parser
+drawcontext caltech-parser
+drawcontext/dcpane caltech-parser
+drawcontext/kgv caltech-parser
+hack caltech-parser
+m3browserhack caltech-parser
+parserlib/ktoklib caltech-parser
+parserlib/klexlib caltech-parser
+parserlib/kyacclib caltech-parser
+parserlib/ktok caltech-parser
+parserlib/klex caltech-parser
+parserlib/kyacc caltech-parser
+parserlib/kext caltech-parser
+parserlib/parserlib caltech-parser
+parserlib/parserlib/test caltech-parser
 pp
 kate
 sgml
