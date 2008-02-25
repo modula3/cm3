@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.25 2008-02-23 23:47:43 jkrell Exp $
+% $Id: NT386.common,v 1.26 2008-02-25 16:57:40 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -99,6 +99,12 @@ readonly LibPath      = { "MS" : "-libpath:", "GNU" : "-L"  }{LINKER}
 readonly LibOutPrefix = { "WIN32" : "",     "POSIX" : "lib" }{"WIN32"} % OS_TYPE or NAMING_CONVENTIONS
 readonly LibOutSuffix = { "WIN32" : ".lib", "POSIX" : ".a"  }{"WIN32"} % OS_TYPE or NAMING_CONVENTIONS
 readonly Obj          = { "WIN32" : ".obj", "POSIX" : ".o"  }{"WIN32"} % OS_TYPE or NAMING_CONVENTIONS
+
+% readonly FormatLib = { "2" : "%s.lib", "0" : "lib%s.a"}{NAMING_CONVENTIONS}
+% readonly FormatDll = { "2" : "%s.dll", "0" : "lib%s.so"}{NAMING_CONVENTIONS}
+% readonly FormatStandaloneLib = { "2" : "%s.lib.sa", "0" : "lib%s.a"}{NAMING_CONVENTIONS}
+readonly FormatDll = { "WIN32" : "%s.dll", "POSIX" : "%s.so"}{OS_TYPE}
+
 
 local
 readonly
@@ -801,7 +807,7 @@ is
     local readonly lib_file = lib & ".lib"
     local readonly lib0_file = lib_file & ".sa"
     local readonly def_file = lib & ".def"
-    local readonly dll_file = lib & ".dll"
+    local readonly dll_file = format(FormatDll, lib)
     local readonly manifest_file  = dll_file & ".manifest"
     local readonly pdb_file = lib & ".pdb"
     local readonly listing  = lib & ".lst"
@@ -941,7 +947,7 @@ is
     local readonly lib_file = lib & ".lib"
     local readonly lib0_file = lib_file & ".sa"
     local def_file  = lib & ".def"
-    local dll_file  = lib & ".dll"
+    local readonly dll_file = format(FormatDll, lib)
     local manifest_file  = dll_file & ".manifest"
     local pdb_file  = lib & ".pdb"
     local listing   = lib & ".lst"
