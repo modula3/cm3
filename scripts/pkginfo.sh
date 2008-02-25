@@ -18,6 +18,7 @@ fi
 . "$sysinfo"
 
 if [ ! -f "$PKGSDB" ] ; then
+   echo "making $PKGSDB (slow but rare)"
   . "$ROOT/scripts/find-packages.sh"
 fi
 
