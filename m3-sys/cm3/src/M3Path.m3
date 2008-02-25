@@ -9,8 +9,8 @@
 
 MODULE M3Path;
 
-IMPORT Pathname, Text;
-IMPORT Env;
+IMPORT Pathname, Text, Env;
+IMPORT RTIO, Process;
 
 CONST
   Null      = '\000';
@@ -70,6 +70,8 @@ PROCEDURE SetOS (kind: OSKind;  host: BOOLEAN) =
     os_map [host] := kind;
   END SetOS;
 
+(* New is split into New and NewInternal so that test code can pass host := FALSE *)
+
 PROCEDURE NewInternal (a, b, c, d: TEXT; host: BOOLEAN): TEXT =
   VAR len: INTEGER;  buf: ARRAY [0..255] OF CHAR;  ref: REF ARRAY OF CHAR;
   BEGIN
@@ -97,11 +99,11 @@ PROCEDURE NewInternal (a, b, c, d: TEXT; host: BOOLEAN): TEXT =
     len := Text.Length (a);
     IF (len <= NUMBER (buf)) THEN
       Text.SetChars (buf, a);
-      RETURN FixPath (SUBARRAY (buf, 0, len), host);
+      RETURN OldFixPath (SUBARRAY (buf, 0, len), host);
     ELSE
       ref := NEW (REF ARRAY OF CHAR, len);
       Text.SetChars (ref^, a);
-      RETURN FixPath (ref^, host);
+      RETURN OldFixPath (ref^, host);
     END;
   END NewInternal;
 
@@ -146,7 +148,7 @@ PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
         len := Append (buf, len, pre, pre_len);
         len := Append (buf, len, base, base_len);
         len := Append (buf, len, ext, ext_len);
-        RETURN FixPath (SUBARRAY (buf, 0, len), host);
+        RETURN OldFixPath (SUBARRAY (buf, 0, len), host);
       END DoJoin;
 
   BEGIN (* Join *)
@@ -426,7 +428,168 @@ TYPE
     loc   : ARRAY [0..31] OF INTEGER;
   END;
 
-PROCEDURE FixPath (VAR p: ARRAY OF CHAR;  host: BOOLEAN): TEXT =
+PROCEDURE Reverse (VAR p: ARRAY OF CHAR) =
+  VAR
+    len := NUMBER (p);
+    ch: CHAR;
+    i : INTEGER;
+    j : INTEGER;
+  BEGIN
+    IF len > 1 THEN
+      i := 0;
+      j := len - 1;
+      WHILE i < j DO
+        ch := p[i];
+        p[i] := p[j];
+        p[j] := ch;
+        INC (i);
+        DEC (j);
+      END;
+    END;
+  END Reverse;
+
+PROCEDURE PathAnyDots (READONLY p: ARRAY OF CHAR; READONLY start: INTEGER; READONLY len: CARDINAL): BOOLEAN =
+  BEGIN
+    FOR i := start TO (start + len - 1) DO
+      IF p[i] = '.' THEN
+        RETURN TRUE;
+      END;
+    END;
+    RETURN FALSE;
+  END PathAnyDots;
+
+PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: INTEGER; VAR len: CARDINAL; READONLY host: BOOLEAN) =
+  (* remove redundant "/arc/../" and "/./" segments *)
+  VAR
+    os    := os_map [host];
+    d_sep := DirSep [os];
+    v_sep := VolSep [os];
+    level := 0;
+    end   := (start + len);
+    from  := start;
+    to    := start;
+    ch    := Null;
+  BEGIN
+
+    IF len < 2 THEN
+      RETURN;
+    END;
+
+    (* first check for any dots in order to avoid being slower than the old version *)
+    IF NOT PathAnyDots (p, start, len) THEN
+      RETURN;
+    END;
+
+    Reverse (SUBARRAY (p, start, len));
+
+    WHILE from # end DO
+      ch := p[from];
+      IF (ch = '.')
+          AND (((from + 1) = end) OR (p[from + 1] = v_sep) OR IsDirSep (p[from + 1], d_sep))
+          AND ((from = start) OR IsDirSep (p[from - 1], d_sep)) THEN
+
+        (* change \.: to : probably v_sep should be allowed in fewer places *)
+        IF (v_sep # Null)
+            AND ((from + 1) # end) AND (p[from + 1] = v_sep)
+            AND (from # start) AND IsDirSep (p[from - 1], d_sep)
+            AND (to # start) AND IsDirSep (p[to - 1], d_sep) THEN
+          p[to - 1] := v_sep;
+        END;
+
+        INC (from);
+        IF from = end THEN
+          DEC (from);
+        END;
+      ELSE
+        IF (ch = '.')
+            AND ((from + 1) # end)
+            AND (p[from + 1] = '.')
+            AND (((from + 2) = end) OR (p[from + 2] = v_sep) OR IsDirSep (p[from + 2], d_sep))
+            (* probably v_sep should be allowed in fewer places *)
+            AND ((from = start) OR IsDirSep (p[from - 1], d_sep)) THEN
+          INC (level);
+          INC (from, 2);
+          (* remove the slash we already wrote; we will write the one at the end, if there is one *)
+          IF (to # start) AND IsDirSep (p[to - 1], d_sep) THEN
+            DEC (to);
+          END;
+          (* counteract the implicit slash at end *)
+          IF from = end THEN
+            INC (level);
+            DEC (from);
+          END;
+        ELSE
+          DEC (level, ORD ((level # 0) AND ((ch = '/') OR (ch = d_sep))));
+          IF level = 0 THEN
+            p[to] := ch;
+            INC (to);
+          END;
+        END;
+      END;
+      INC (from);
+    END;
+
+    (* implicit slash at end *)
+    DEC (level, ORD ((level # 0) AND NOT IsDirSep (p[end - 1], d_sep)));
+
+    (* if there were more ".."s than preceding elements, add back some ".."s *)
+    WHILE level # 0 DO
+      IF (to # start) AND (NOT IsDirSep (p[to - 1], d_sep)) THEN
+        p[to] := d_sep;
+        INC (to);
+      END;
+      p[to] := '.';
+      INC (to);
+      p[to] := '.';
+      INC (to);
+      DEC (level);
+    END;
+
+    end := to;
+    len := (end - start);
+
+    (* if input started with a separator or two, then so must output *)
+    IF IsDirSep (p[from - 1], d_sep) AND (len = 0 OR NOT IsDirSep (p[to - 1], d_sep)) THEN
+      p[to] := d_sep;
+      INC (to);
+      INC (end);
+      INC (len);
+      IF IsDirSep (p[from - 2], d_sep) AND (len = 1 OR NOT IsDirSep (p[to - 2], d_sep)) THEN
+        p[to] := d_sep;
+        INC (to);
+        INC (end);
+        INC (len);
+      END;
+    END;
+
+    Reverse (SUBARRAY (p, start, len));
+
+  END PathRemoveDots;
+
+PROCEDURE FixPath (VAR p: ARRAY OF CHAR; host := TRUE): TEXT =
+  VAR
+    os := os_map [host];
+    d_sep := DirSep [os];
+    start := 0;
+    len := NUMBER (p);
+  BEGIN
+    (* remove trailing slashes, leaving at most one *)
+    WHILE (len > 1) AND IsDirSep (p[start + len - 1], d_sep) DO
+      DEC (len);
+    END;
+    (* remove leading slashes, leaving at most two *)
+    WHILE (len > 2) AND IsDirSep (p[start], d_sep) AND IsDirSep (p[start + 1], d_sep) AND IsDirSep (p[start + 2], d_sep) DO
+      INC (start);
+      DEC (len);
+    END;
+    PathRemoveDots (p, start, len, host);
+    IF len = 0 THEN
+      RETURN ".";
+    END;
+    RETURN Text.FromChars (SUBARRAY (p, start, len));
+  END FixPath;
+
+PROCEDURE OldFixPath (VAR p: ARRAY OF CHAR;  host := TRUE): TEXT =
   (* remove redundant "/arc/../" and "/./" segments
    This function should be rewritten as follows:
      reverse the string
@@ -491,7 +654,7 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR;  host: BOOLEAN): TEXT =
     WHILE (len > 0) AND IsDirSep (p[len-1], d_sep) DO DEC (len); END;
     IF len <= 0 THEN RETURN "."; END;
     RETURN Text.FromChars (SUBARRAY (p, 0, len));
-  END FixPath;
+  END OldFixPath;
 
 PROCEDURE FindSeps (READONLY buf: ARRAY OF CHAR;  len: INTEGER;
                     VAR(*IN/OUT*) info: SepInfo) =
@@ -526,6 +689,74 @@ PROCEDURE CutSection (VAR buf: ARRAY OF CHAR;  start, stop: INTEGER;
     END;
     DEC (len, chop);
   END CutSection;
+
+PROCEDURE Test () =
+  CONST
+    data = ARRAY OF TEXT {
+        "abc",
+        "def",
+        "////c../..b/a..////",
+        "////..c/..b/a..////",
+        "////../..b/a..////",
+        "////../b../a..////",
+        "////../../a..////",
+        "////../../..////",
+        "../../..////",
+        "../../../a///",
+        "../../a/..////",
+        ".",
+        "./",
+        "/.",
+        "/./",
+        "/./.",
+        "/././",
+        "././.",
+        "./././",
+        "./.",
+        "a/./b",
+        "a/../b",
+        "a/b/../c/d",
+        "a/b/../c.",
+        "a/b/../../c.",
+        "a/b/../../../c.",
+        ".a/b/../../../c.",
+        "/.a/b/../../../c.",
+        "a/..",
+        "a/../",
+        "a/../../..",
+        "/../",
+        "/../a",
+        "c:\\b",
+        "c:.\\b",
+        "c:.\\b\\c",
+        "c:.\\b\\..\\c",
+        "c:\\b\\..\\c"
+        };
+  VAR
+    buf : ARRAY [0..255] OF CHAR;
+    t1 : TEXT;
+    t2 : TEXT;
+  BEGIN
+
+    os_map [TRUE]  := OSKind.Win32;
+    os_map [FALSE] := OSKind.Unix;
+
+    FOR i := 0 TO LAST(data) DO
+      Text.SetChars (buf, data[i]);
+      t1 := Convert (OldFixPath (SUBARRAY (buf, 0, Text.Length (data[i]))), TRUE);
+      Text.SetChars (buf, data[i]);
+      t2 := Convert (FixPath (SUBARRAY (buf, 0, Text.Length (data[i]))), TRUE);
+      IF NOT Text.Equal (t1, t2) THEN
+        RTIO.PutInt (i);
+        RTIO.PutText (" different result for " & data[i] & " => " & t1 & ", " & t2 & "\n");
+      ELSE
+        RTIO.PutInt (i);
+        RTIO.PutText (" same result for " & data[i] & " => " & t2 & "\n");
+      END;
+    END;
+    RTIO.Flush ();
+    Process.Exit (1);
+  END Test;
 
 BEGIN
   FOR i := FIRST (lcase) TO LAST (lcase) DO lcase[i] := i; END;
@@ -574,5 +805,7 @@ BEGIN
      END;
     END;
   END;
+
+  (* Test (); *)
 
 END M3Path.
