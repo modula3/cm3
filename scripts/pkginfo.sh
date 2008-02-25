@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.14 2008-01-22 16:36:01 jkrell Exp $
+# $Id: pkginfo.sh,v 1.15 2008-02-25 15:55:37 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -18,6 +18,7 @@ fi
 . "$sysinfo"
 
 if [ ! -f "$PKGSDB" ] ; then
+   echo "making $PKGSDB (slow but rare)"
   . "$ROOT/scripts/find-packages.sh"
 fi
 
