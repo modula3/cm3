@@ -9,11 +9,11 @@
 (*      modified on Wed Dec  2 11:29:00 PST 1992 by mcjones   *)
 (*      modified on Mon Apr 23 16:37:40 1990 by jerome        *)
 
-(* $Id: Utime.i3,v 1.8 2008-02-23 08:56:53 jkrell Exp $ *)
+(* $Id: Utime.i3,v 1.9 2008-02-25 18:11:50 jkrell Exp $ *)
 
 INTERFACE Utime;
 
-FROM Ctypes IMPORT char_star, int, long, long_star;
+FROM Ctypes IMPORT char_star, int, long, long_star, const_char_star;
 
 (*** <sys/time.h> ***)
 
@@ -50,8 +50,6 @@ TYPE
     tm_wday:  int;     (* day of week (Sunday = 0) *)
     tm_yday:  int;     (* day of year (0 - 365) *)
     tm_isdst: int;     (* flag: daylight savings time in effect *)
-    tm_gmtoff:long;    (* offset from GMT in seconds *)
-    tm_zone:  char_star; (* abbreviation of timezone name *)
   END;
 
   time_t = int; (* seconds since the Epoch *)
@@ -104,11 +102,11 @@ PROCEDURE setitimer (which: int;
 (*** mktime(3) - convert a struct_tm to a time_t ***)
 <*EXTERNAL*> PROCEDURE mktime (tm: struct_tm_star): time_t;
 
-VAR timezone: time_t;
-<*EXTERNAL "Utime__timezone"*> VAR altzone: time_t; (* not really *)
-VAR daylight: int;
-VAR tzname: ARRAY [0..1] OF char_star;
+<*EXTERNAL*> PROCEDURE get_timezone(): time_t;
+<*EXTERNAL "get_timezone"*> PROCEDURE get_altzone(): time_t;
+<*EXTERNAL*> PROCEDURE get_daylight(): int;
+<*EXTERNAL*> PROCEDURE get_tzname(a: [0..1]): const_char_star;
 
-<*EXTERNAL "Utime__init"*> PROCEDURE init();
+<*EXTERNAL*> PROCEDURE tzset();
 
 END Utime.

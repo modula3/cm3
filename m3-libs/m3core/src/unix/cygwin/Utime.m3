@@ -1,5 +1,3 @@
-(* $Id: Utime.m3,v 1.2 2008-02-16 20:03:22 jkrell Exp $ *)
-
 MODULE Utime;
 
 FROM Ctypes IMPORT int;
@@ -43,5 +41,4 @@ BEGIN
 END setitimer;
 
 BEGIN
-    init();
 END Utime.
