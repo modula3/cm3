@@ -1,5 +1,3 @@
-(* $Id$ *)
-
 MODULE Utime;
 
 FROM Ctypes IMPORT int;
@@ -43,5 +41,4 @@ BEGIN
 END setitimer;
 
 BEGIN
-    init();
 END Utime.

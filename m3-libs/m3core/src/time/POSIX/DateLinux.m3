@@ -34,11 +34,11 @@ PROCEDURE FromTime(t: Time.T; z: TimeZone := NIL): T =
       IF (z = NIL) OR (z^ = Local^) THEN
         tm := Utime.localtime(ADR(tv.tv_sec));
         IF tm.tm_isdst = 0 THEN
-          date.offset := Utime.timezone;
-          date.zone   := M3toC.CopyStoT (Utime.tzname[0]);
-        ELSIF tm.tm_isdst > 0 AND Utime.daylight # 0 THEN
-          date.offset := Utime.altzone;
-          date.zone   := M3toC.CopyStoT (Utime.tzname[1]);
+          date.offset := Utime.get_timezone();
+          date.zone   := M3toC.CopyStoT (Utime.get_tzname(0));
+        ELSIF tm.tm_isdst > 0 AND Utime.get_daylight() # 0 THEN
+          date.offset := Utime.get_altzone();
+          date.zone   := M3toC.CopyStoT (Utime.get_tzname(1));
         ELSE
           date.offset := 0;
           date.zone   := Unknown;
@@ -90,7 +90,7 @@ PROCEDURE ToTime(READONLY d: T): Time.T RAISES {Error} =
       (* In the following difference, we use the unshifted timezone (i.e.,
          the one that doesn't account for daylight savings) because we
          passed a value of 0 for "tm_isdst" to the mktime(3) call above. *)
-      INC(time, d.offset - Utime.timezone)
+      INC(time, d.offset - Utime.get_timezone())
     END;
 
     (* convert to a "Time.T" *)

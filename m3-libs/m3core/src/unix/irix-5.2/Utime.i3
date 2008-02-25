@@ -12,7 +12,7 @@
 
 INTERFACE Utime;
 
-FROM Ctypes IMPORT char_star, int, long, double;
+FROM Ctypes IMPORT char_star, int, long, double, const_char_star;
 IMPORT Utypes;
 
 (*** <time.h> ***)
@@ -77,9 +77,10 @@ PROCEDURE localtime_r(clock: time_t_star; result: struct_tm_star): struct_tm_sta
 
 <*EXTERNAL*> PROCEDURE tzset ();
 
-<*EXTERNAL*> VAR tzname: ARRAY [0..1] OF char_star;
-<*EXTERNAL*> VAR daylight: int;
-<*EXTERNAL*> VAR timezone, altzone: time_t;
+<*EXTERNAL*> PROCEDURE get_timezone(): time_t;
+<*EXTERNAL*> PROCEDURE get_altzone(): time_t;
+<*EXTERNAL*> PROCEDURE get_daylight(): int;
+<*EXTERNAL*> PROCEDURE get_tzname(a: [0..1]): const_char_star;
 
 VAR (*CONST*) CLK_TCK: INTEGER;
 
