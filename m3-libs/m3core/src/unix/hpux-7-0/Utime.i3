@@ -13,7 +13,7 @@
 INTERFACE Utime;
 
 FROM Ctypes IMPORT char_star, int, long, long_star, 
-                   unsigned_short, short;
+                   unsigned_short, short, const_char_star;
 
 (*** <sys/time.h> ***)
 
@@ -173,10 +173,10 @@ PROCEDURE asctime_r(tm: struct_tm_star; buf: char_star; buflen: int):char_star;
 <*EXTERNAL*> PROCEDURE nl_cxtime     (clock: long_star; format: char_star)
 							: char_star;
 
-<*EXTERNAL*> VAR timezone: time_t;
-<*EXTERNAL "timezone" *> VAR altzone: time_t;
-<*EXTERNAL*> VAR daylight: int;
-<*EXTERNAL*> VAR tzname: ARRAY [0..1] OF char_star;
+<*EXTERNAL*> PROCEDURE get_timezone(): time_t;
+<*EXTERNAL "get_timezone"*> PROCEDURE get_altzone(): time_t;
+<*EXTERNAL*> PROCEDURE get_daylight(): int;
+<*EXTERNAL*> PROCEDURE get_tzname(a: [0..1]): const_char_star;
 
 <*EXTERNAL*> PROCEDURE tzset	 ();
 <*EXTERNAL "tzset" *> PROCEDURE tzsetwall ();
