@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-std.sh,v 1.11 2008-02-25 16:15:05 jkrell Exp $
+# $Id: do-cm3-std.sh,v 1.12 2008-02-26 07:55:01 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -20,7 +20,7 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=`grep -F " std" pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
+P=`grep -F " std" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
