@@ -9,12 +9,14 @@
 %M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (option -profile)
 %M3_PROFILING = FALSE
 
-readonly TARGET       = "SOLgnu"              % code generation target
-if M3_PROFILING 
-  readonly BUILD_DIR  = TARGET & "p"          % code generation target
+if M3_PROFILING
+    readonly PROFILING_P = "p"
 else
-  readonly BUILD_DIR  = TARGET                % directory for results
+    readonly PROFILING_P = ""
 end
+
+readonly TARGET       = "SOLgnu"              % code generation target
+readonly BUILD_DIR    = TARGET & PROFILING_P % directory for results
 readonly OS_TYPE      = "POSIX"               % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"              % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "sparc-sun-solaris2"  % "cpu-vendor-os" string for GNU
@@ -131,11 +133,12 @@ readonly m3back = "@" & BIN_USE & "/cm3cg"
 M3_USE_STACK_WALKER = FALSE
 
 proc m3_backend (source, object, optimize, debug) is
-  return 0
   local args = [ "-quiet", "-fPIC", source, "-o", object ]
   if optimize  args += "-O"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
+  touch (object)
+  return 0
   return try_exec (m3back, args)
 end
 
@@ -146,17 +149,24 @@ M3_BACKEND_MODE = "3"
 %  "2"  -- call m3_backend, it produces object code
 %  "3"  -- call m3_backend, it produces assembly code
 
+%------------------------------------------------------------------------------
+
+proc touch (a) is
+  exec("touch " & a)
+end
+
 %--------------------------------------------------------------- C compiler ---
 % "compile_c" is called to compile C source files.  Note that this function
 % is only called if your program or library explicitly includes C source
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  return 0
   local args = [ "-pthreads", "-fPIC", options ]
   if optimize  args += "-O"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-pg" end
+  touch (object)
+  return 0
   return try_exec ("@" & SYSTEM_CC, args, "-c", source)
 end
 
@@ -166,6 +176,7 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble (source, object) is
+  touch (object)
   return 0
   return try_exec ("@" & SYSTEM_ASM, "-s", "-K", "PIC", source, "-o", object)
 end
@@ -175,11 +186,15 @@ end
 % a library.
 
 proc make_lib (lib, options, objects, imported_libs, shared) is
-  return 0
   local ret_code = 0
   local lib_a    = format ("lib%s.a", lib)
   local lib_so   = format ("lib%s.so", lib)
   local lib_sox  = format ("lib%s.so.5", lib)
+
+  touch (lib_a)
+  touch (lib_so)
+  touch (lib_sox)
+  return 0
 
   % first, build the non-shared library
   ret_code = try_exec ("@" & SYSTEM_AR, "cru", lib_a, objects)
@@ -239,6 +254,7 @@ end
 % "m3_link" is called to produce a final executable.
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
+  touch (prog)
   return 0
   local linker = [ "@" & SYSTEM_CC, "-pthreads", "-fPIC" ]
   local args = []
