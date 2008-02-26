@@ -29,7 +29,7 @@ PROCEDURE SetModifiedTime (path: TEXT;  time: LONGREAL) RAISES {OSError.E} =
   BEGIN
     tv[0] := TimePosix.ToUtime (time);  (* last accessed time *)
     tv[1] := tv[0];                     (* last modified time *)
-    IF Unix.utimes (M3toC.TtoS (path), ADR (tv[0])) < 0 THEN
+    IF Unix.utimes (M3toC.SharedTtoS (path), ADR (tv[0])) < 0 THEN
       OSErrorPosix.Raise ();
     END;
   END SetModifiedTime;
