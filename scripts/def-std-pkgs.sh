@@ -23,6 +23,8 @@ P="${P} m3bundle"
 
 # more useful quasi-standard libraries
 P="${P} arithmetic"
+P="${P} unittest"
+P="${P} unittest-arithmetic"
 P="${P} bitvector"
 P="${P} digraph"
 P="${P} parseparams"
@@ -81,8 +83,8 @@ P="${P} odbc"
 P="${P} postgres95"
 P="${P} db"
 P="${P} smalldb"
-P="${P} stable"
 P="${P} stablegen"
+P="${P} stable"
 
 # the standard graphical user interface: trestle and formsvbt
 [ "${M3OSTYPE}" != "WIN32" -o -n "${CM3_ALL}" ] && P="${P} X11R4"

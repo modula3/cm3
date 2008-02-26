@@ -3,6 +3,7 @@ m3core base core front min std
 libm3 base core front min std
 patternmatching core std
 sysutils core std
+unittest core std
 m3middle base core front std
 m3objfile core front
 m3linker core front
@@ -21,6 +22,7 @@ mklib base core front std
 fix_nl base core std
 libdump base core std
 arithmetic std
+unittest-arithmetic std
 bitvector base core std
 digraph base core std
 parseparams base core std
@@ -66,8 +68,8 @@ odbc std
 postgres95 std
 db std
 smalldb std
-stable std
 stablegen std
+stable std
 X11R4 std gui
 ui std gui
 PEX std
