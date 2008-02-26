@@ -131,6 +131,7 @@ readonly m3back = "@" & BIN_USE & "/cm3cg"
 M3_USE_STACK_WALKER = FALSE
 
 proc m3_backend (source, object, optimize, debug) is
+  return 0
   local args = [ "-quiet", "-fPIC", source, "-o", object ]
   if optimize  args += "-O"  end
   if debug     args += "-gstabs"  end
@@ -151,6 +152,7 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
+  return 0
   local args = [ "-pthreads", "-fPIC", options ]
   if optimize  args += "-O"  end
   if debug     args += "-gstabs"  end
@@ -164,6 +166,7 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble (source, object) is
+  return 0
   return try_exec ("@" & SYSTEM_ASM, "-s", "-K", "PIC", source, "-o", object)
 end
 
@@ -172,6 +175,7 @@ end
 % a library.
 
 proc make_lib (lib, options, objects, imported_libs, shared) is
+  return 0
   local ret_code = 0
   local lib_a    = format ("lib%s.a", lib)
   local lib_so   = format ("lib%s.so", lib)
@@ -235,6 +239,7 @@ end
 % "m3_link" is called to produce a final executable.
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
+  return 0
   local linker = [ "@" & SYSTEM_CC, "-pthreads", "-fPIC" ]
   local args = []
   if M3_PROFILING args += "-pg" end
