@@ -24,7 +24,7 @@ P="${P} m3bundle"
 # more useful quasi-standard libraries
 P="${P} arithmetic"
 P="${P} unittest"
-P="${P} unittest-arithmetic"
+P="${P} unittest-numeric"
 P="${P} bitvector"
 P="${P} digraph"
 P="${P} parseparams"

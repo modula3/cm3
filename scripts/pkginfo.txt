@@ -22,7 +22,7 @@ mklib base core front std
 fix_nl base core std
 libdump base core std
 arithmetic std
-unittest-arithmetic std
+unittest-numeric std
 bitvector base core std
 digraph base core std
 parseparams base core std
