@@ -20,7 +20,7 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=`grep -F " min" pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
+P=`grep -F " min" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]

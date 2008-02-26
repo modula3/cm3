@@ -21,7 +21,7 @@ fi
 . "$ROOT/scripts/pkgcmds.sh"
 
 
-P=`grep -F " front" pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
+P=`grep -F " front" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
