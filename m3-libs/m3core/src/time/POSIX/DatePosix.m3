@@ -35,11 +35,11 @@ PROCEDURE FromTime(t: Time.T; z: TimeZone := NIL): T =
     date.weekDay := VAL(tm.tm_wday, WeekDay);
 
     IF tm.tm_isdst = 0 THEN
-      date.offset := Utime.timezone;
-      date.zone   := M3toC.CopyStoT (Utime.tzname[0]);
-    ELSIF tm.tm_isdst > 0 AND Utime.daylight # 0 THEN
-      date.offset := Utime.altzone;
-      date.zone   := M3toC.CopyStoT (Utime.tzname[1]);
+      date.offset := Utime.get_timezone();
+      date.zone   := M3toC.CopyStoT (Utime.get_tzname(0));
+    ELSIF tm.tm_isdst > 0 AND Utime.get_daylight() # 0 THEN
+      date.offset := Utime.get_altzone();
+      date.zone   := M3toC.CopyStoT (Utime.get_tzname(1));
     ELSE
       date.offset := 0;
       date.zone   := Unknown;
