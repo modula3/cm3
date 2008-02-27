@@ -16,6 +16,6 @@ implementation ("Test2")
 program ("TestSortedTable")
 
 if defined("RUN")
-  r = q_exec( "." & SL & "TestSortedTable" )
+  r = q_exec( "." & SL & "TestSortedTable 3000 3000" )
   write( CR, "program returned ", r, CR )
 end
