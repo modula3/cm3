@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: System.m3,v 1.2 2008-02-21 00:06:59 wagner Exp $ *)
+ * $Id: System.m3,v 1.3 2008-02-27 23:06:15 wagner Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 MODULE System EXPORTS System;
@@ -580,20 +580,22 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
           IF c IN OPS THEN
             token := TextReadingUtils.GetToken(rd, terminate := OPEND,
                                                unget := TRUE);
-            IF NOT Text.Equal(token, "<") AND
-               NOT Text.Equal(token, ">") AND
-               NOT Text.Equal(token, "1>") AND
-               NOT Text.Equal(token, "2>") AND
-               NOT Text.Equal(token, "&>") AND
-               NOT Text.Equal(token, ">>") AND
-               NOT Text.Equal(token, "1>>") AND
-               NOT Text.Equal(token, "2>>") AND
-               NOT Text.Equal(token, "&>>") AND
-               NOT Text.Equal(token, ";") AND
-               NOT Text.Equal(token, "|") AND
-               NOT Text.Equal(token, "||") AND
-               NOT Text.Equal(token, "&&") THEN
-              RAISE ExecuteError("operator syntax error: " & token);
+            IF c # '1' AND c # '2' THEN (* FIXME: use a real scanner *)
+              IF NOT Text.Equal(token, "<") AND
+                 NOT Text.Equal(token, ">") AND
+                 NOT Text.Equal(token, "1>") AND
+                 NOT Text.Equal(token, "2>") AND
+                 NOT Text.Equal(token, "&>") AND
+                 NOT Text.Equal(token, ">>") AND
+                 NOT Text.Equal(token, "1>>") AND
+                 NOT Text.Equal(token, "2>>") AND
+                 NOT Text.Equal(token, "&>>") AND
+                 NOT Text.Equal(token, ";") AND
+                 NOT Text.Equal(token, "|") AND
+                 NOT Text.Equal(token, "||") AND
+                 NOT Text.Equal(token, "&&") THEN
+                RAISE ExecuteError("operator syntax error: " & token);
+              END;
             END;
           ELSIF c IN STRDELIM THEN
             token := TextReadingUtils.GetString(rd);
