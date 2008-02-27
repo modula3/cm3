@@ -64,13 +64,22 @@ PROCEDURE DoWalkRef (t: RT0.TypeDefn;  a: ADDRESS;  v: Visitor) =
   
 (*------------------------------------------------ walking of the globals ---*)
 
-TYPE ModuleMap = UNTRACED REF ARRAY OF RT0.ModulePtr;
-VAR countedIn: CARDINAL := 0; global_map: ModuleMap := NIL;
+TYPE
+  ModuleMap = UNTRACED REF ARRAY OF RT0.ModulePtr;
+VAR
+  n_modules: CARDINAL := 0;
+  global_map: ModuleMap := NIL;
 
 PROCEDURE WalkGlobals (v: Visitor) =
   VAR m: RT0.ModulePtr;
   BEGIN
-    IF (global_map = NIL) OR (RTModule.Count()-1 > countedIn) THEN BuildGlobalMap () END;
+    WITH n = RTModule.Count() DO
+      IF n # n_modules THEN
+        DISPOSE(global_map);
+        n_modules := n;
+      END;
+    END;
+    IF (global_map = NIL) THEN BuildGlobalMap () END;
     FOR i := 0 TO LAST (global_map^) DO
       m := global_map[i];
       IF DEBUG THEN
@@ -86,7 +95,7 @@ PROCEDURE WalkGlobals (v: Visitor) =
   END WalkGlobals;
 
 PROCEDURE BuildGlobalMap () =
-  VAR n0, n: INTEGER;  m: RT0.ModulePtr;  max := RTModule.Count()-1; extended_map: ModuleMap;
+  VAR n: INTEGER;  m: RT0.ModulePtr;  max := RTModule.Count()-1;
   BEGIN
     (* first, count the modules that qualify *)
     n := 0;
@@ -94,35 +103,19 @@ PROCEDURE BuildGlobalMap () =
       m := RTModule.Get (i);
       IF (m # NIL) AND (m.gc_map # NIL) THEN INC (n); END;
     END;
-    
-    IF global_map # NIL AND NUMBER(global_map^) = n THEN
-      (* No module to be added, all with gc_map set are already in *)
-      countedIn := max; (* No need to pass over these anymore *)
-      RETURN;
-    END;
 
     (* allocate the space *)
-    extended_map := NEW(ModuleMap, n);
-    IF global_map = NIL THEN
-      n0 := 0;
-    ELSE
-      n0 := NUMBER(global_map^);
-      SUBARRAY(extended_map^, 0, n0) := SUBARRAY(global_map^, 0, n0);
-      DISPOSE(global_map);
-    END;
-    global_map := extended_map;
+    global_map := NEW (ModuleMap, n);
 
     (* and fill it in *)
-    n := n0;
-    FOR i := countedIn+1 TO max DO
+    n := 0;
+    FOR i := 0 TO max DO
       m := RTModule.Get (i);
       IF (m # NIL) AND (m.gc_map # NIL) THEN
         global_map[n] := m;
         INC (n);
       END;
     END;
-
-    countedIn := max; (* No need to pass over these anymore *)
   END BuildGlobalMap;
 
 PROCEDURE WalkModuleGlobals (v: Visitor;  mod: CARDINAL) =
