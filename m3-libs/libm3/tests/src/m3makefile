@@ -2,6 +2,7 @@
 dirs = [ 
   ".." & SL & "os",
   ".." & SL & "sequence",
+  ".." & SL & "sortedtable",
   ".." & SL & "random"
 ]
 
