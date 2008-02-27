@@ -6,7 +6,7 @@
 (*      modified on Thu Dec  9 11:45:28 PST 1993 by mcjones  *)
 
 MODULE Test EXPORTS Main;
-IMPORT IntSeq;
+IMPORT IntSeq, IO;
 FROM IntSeq IMPORT Cat, Sub;
 
 TYPE T = IntSeq.T;
@@ -92,5 +92,6 @@ BEGIN
     EVAL a.remlo();
     FOR i := 0 TO 4 DO a.addhi(i) END;
     <* ASSERT Eq(a, Iota(5)) *>
-  END
+  END;
+  IO.Put("IntSeq.T test passed\n");
 END Test.
