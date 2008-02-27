@@ -4,6 +4,14 @@
 %
 % Last modified on Tue Nov  1 09:09:31 PST 1994 by kalsow 
 
-import(libm3)
-implementation(Test)
-program(Test)
+write(CR, "--- tests in ", getwd(), "---", CR)
+
+import("libm3")
+implementation("Test")
+program("Test")
+
+
+if defined("RUN")
+  r = q_exec( "." & SL & "Test" )
+  write( CR, "program returned ", r, CR )
+end
