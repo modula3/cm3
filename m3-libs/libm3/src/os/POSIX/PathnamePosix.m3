@@ -13,7 +13,7 @@ CONST
   DirSepChar = '/'; ExtSepChar = '.';
   DirSepText = "/"; ExtSepText = ".";
 
-CONST Illegal = SET OF CHAR {DirSepChar};
+CONST Illegal = SET OF CHAR {DirSepChar, '\000'};
 
 PROCEDURE Valid(pn: T): BOOLEAN =
   PROCEDURE Ignore(<* UNUSED *> start, end: CARDINAL) = BEGIN END Ignore;
