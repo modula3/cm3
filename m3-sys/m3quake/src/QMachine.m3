@@ -1668,10 +1668,14 @@ PROCEDURE DoEvalProc (t: T;  n_args: INTEGER) RAISES {Error} =
   END DoEvalProc;
 
 PROCEDURE DoMakeDir (t: T;  n_args: INTEGER) RAISES {Error} =
-  VAR val: QValue.T;  dir: TEXT;
+  VAR val: QValue.T;  dir, prefix: TEXT;
   BEGIN
     <*ASSERT n_args = 1 *>
     Pop (t, val);  dir := QVal.ToText (t, val);
+    prefix := Env.Get("CM3_INSTALL_PREFIX");
+    IF prefix # NIL THEN
+      dir := prefix & dir;
+    END;
     MakeDir (t, dir);
   END DoMakeDir;
 

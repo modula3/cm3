@@ -3,7 +3,7 @@
 
 MODULE M3Build;
 
-IMPORT IntArraySort, IntRefTbl, M3ID, Pathname, Text, TextList, Thread, Wr;
+IMPORT Env, IntArraySort, IntRefTbl, M3ID, Pathname, Text, TextList, Thread, Wr;
 IMPORT Quake, QValue, QCode, QMachine, QVal, QVSeq, QVTbl, M3Timers;
 IMPORT Arg, Builder, M3Loc, M3Options, M3Path, M3Unit, Msg, Utils;
 FROM QMachine IMPORT PushText, PopText, PopID, PopBool;
@@ -1728,7 +1728,7 @@ PROCEDURE DoInstallFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     "              ", "             ", "            ", "           ",
     "          ", "         ", "        ", "       ", "      ", "     ",
     "    ", "   ", "  ", " ", "" };
-  VAR t := Self (m);  src, dest, mode, src_dir, src_file: TEXT;
+  VAR t := Self (m);  src, dest, mode, src_dir, src_file, prefix: TEXT;
   BEGIN
     mode := PopText (t);  (* ignored *)
     dest := PopText (t);
@@ -1750,6 +1750,11 @@ PROCEDURE DoInstallFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
 
       MakeRoom (t, 2 + MAX (Text.Length (src_file), LAST (Pad)));
       Msg.Out ("  ", src_file, Pad [MIN (Text.Length (src_file), LAST (Pad))]);
+    END;
+
+    prefix := Env.Get("CM3_INSTALL_PREFIX");
+    IF prefix # NIL THEN
+      dest := prefix & dest;
     END;
 
     t.cp_if (src, dest);
@@ -2241,10 +2246,17 @@ PROCEDURE DoDeleteFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
 
 PROCEDURE DoLinkFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
-  VAR t := Self (m);  src, dest: TEXT;
+  VAR t := Self (m);  src, dest, prefix: TEXT;
   BEGIN
     dest := PopText (t);
     src  := PopText (t);
+    
+    prefix := Env.Get("CM3_INSTALL_PREFIX");
+    IF prefix # NIL AND Pathname.Absolute(src) THEN
+      src := prefix & src;
+      dest := prefix & dest;
+    END;
+
     Utils.LinkFile (src, dest);
   END DoLinkFile;
 
