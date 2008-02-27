@@ -640,6 +640,9 @@ CONST
     "  QUAKE_SHELL    shell to be used by the quake interpreter for exec()",
     "  QUAKE_SHELL_OPTION command option for quake shell (-c, /c)",
     "  QUAKE_TMPDIR   directory for temporary files used by quake",
+    "  ",
+    "  CM3_INSTALL_PREFIX path prefix to prepend to filenames being installed,",
+    "                 \"make DESTDIR=\" behaviour for cm3",
     "  "
   };
 
