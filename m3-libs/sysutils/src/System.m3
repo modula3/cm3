@@ -580,20 +580,22 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
           IF c IN OPS THEN
             token := TextReadingUtils.GetToken(rd, terminate := OPEND,
                                                unget := TRUE);
-            IF NOT Text.Equal(token, "<") AND
-               NOT Text.Equal(token, ">") AND
-               NOT Text.Equal(token, "1>") AND
-               NOT Text.Equal(token, "2>") AND
-               NOT Text.Equal(token, "&>") AND
-               NOT Text.Equal(token, ">>") AND
-               NOT Text.Equal(token, "1>>") AND
-               NOT Text.Equal(token, "2>>") AND
-               NOT Text.Equal(token, "&>>") AND
-               NOT Text.Equal(token, ";") AND
-               NOT Text.Equal(token, "|") AND
-               NOT Text.Equal(token, "||") AND
-               NOT Text.Equal(token, "&&") THEN
-              RAISE ExecuteError("operator syntax error: " & token);
+            IF c # '1' AND c # '2' THEN (* FIXME: use a real scanner *)
+              IF NOT Text.Equal(token, "<") AND
+                 NOT Text.Equal(token, ">") AND
+                 NOT Text.Equal(token, "1>") AND
+                 NOT Text.Equal(token, "2>") AND
+                 NOT Text.Equal(token, "&>") AND
+                 NOT Text.Equal(token, ">>") AND
+                 NOT Text.Equal(token, "1>>") AND
+                 NOT Text.Equal(token, "2>>") AND
+                 NOT Text.Equal(token, "&>>") AND
+                 NOT Text.Equal(token, ";") AND
+                 NOT Text.Equal(token, "|") AND
+                 NOT Text.Equal(token, "||") AND
+                 NOT Text.Equal(token, "&&") THEN
+                RAISE ExecuteError("operator syntax error: " & token);
+              END;
             END;
           ELSIF c IN STRDELIM THEN
             token := TextReadingUtils.GetString(rd);
