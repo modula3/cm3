@@ -4,6 +4,10 @@
 
 /* Last modified on Thu Apr 14 15:50:57 PDT 1994 by mcjones */
 
+if defined("getwd")
+write(CR, "--- tests in ", getwd(), "---", CR)
+end
+
 import("libm3")
 
 build_standalone()
@@ -13,3 +17,21 @@ interface("Subr")
 module("TextSubrTbl")
 implementation("OSTest")
 program("OSTest")
+
+if defined("RUN")
+  write( "performing pathname tests...", CR )
+  write( getwd(), CR )
+  pin = ".." & SL & "src" & SL & "pathname-tests-input"
+  pexp = ".." & SL & "src" & SL & "pathname-tests-output"
+  pout = "." & SL & "pathname-tests-output"
+  r = q_exec( "." & SL & "OSTest < " & pin & " 2> " & pout )
+  exp = fs_contents( pexp )
+  out = fs_contents( pout )
+  if equal(out, exp)
+    write( "pathname tests OK", CR )
+  else
+    write( "pathname tests differences:", CR )
+    r = q_exec( "diff -u " & pexp & " " & pout )
+  end
+  %write( CR, "program returned ", r, CR )
+end
