@@ -233,7 +233,7 @@ PROCEDURE LocalHere (VAR file: TEXT;  VAR line: INTEGER) =
   VAR fnum := offset DIV MaxLines;
   BEGIN
     IF (local_files[fnum] = NIL) THEN
-      local_files[fnum] := Host.FileTail (files[fnum]);
+      local_files[fnum] := files[fnum];
     END;
     file := local_files [fnum];
     line := offset MOD MaxLines;
