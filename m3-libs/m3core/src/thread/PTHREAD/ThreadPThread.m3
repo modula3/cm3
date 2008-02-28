@@ -9,14 +9,13 @@ IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError,  RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched, Usem, Usignal,
-       Uucontext, Uerror, WeakRef;
+       Uucontext, Uerror, WeakRef, Uexec;
 FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t, pthread_mutex_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 FROM Utypes IMPORT size_t;
-IMPORT Uexec;
 
 (*----------------------------------------------------- types and globals ---*)
 
