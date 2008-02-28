@@ -10,9 +10,14 @@
 INTERFACE SchedulerPosix;
 
 IMPORT Thread;
+FROM Ctypes IMPORT int;
 
 TYPE
   WaitResult = {Ready, Error, FDError, Timeout};
+
+(* This is a wrapper for Posix waitpid and merely ASSERTs(FALSE) on Win32. *)
+
+PROCEDURE WaitProcess(pid: int): int;
 
 PROCEDURE IOWait(fd: INTEGER; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult;

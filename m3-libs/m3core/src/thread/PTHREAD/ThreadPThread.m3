@@ -14,7 +14,8 @@ FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t, pthread_mutex_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER;
 FROM Compiler IMPORT ThisFile, ThisLine;
-IMPORT Ctypes, Utypes;
+FROM Ctypes IMPORT int;
+FROM Utypes IMPORT size_t;
 
 (*----------------------------------------------------- types and globals ---*)
 
@@ -561,7 +562,7 @@ PROCEDURE Fork (closure: Closure): T =
     t := CreateT(act);
     attr: pthread_attr_t;
     size := defaultStackSize;
-    bytes: Utypes.size_t;
+    bytes: size_t;
   BEGIN
     (* determine the initial size of the stack for this thread *)
     TYPECASE closure OF
@@ -824,11 +825,26 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
   END XIOWait;
 
 TYPE UTime = Utime.struct_timeval;
+
 PROCEDURE UTimeFromTime (time: Time.T): UTime =
   VAR floor := FLOOR(time);
   BEGIN
     RETURN UTime{floor, FLOOR(1.0D6 * (time - FLOAT(floor, LONGREAL)))};
   END UTimeFromTime;
+
+PROCEDURE WaitProcess (pid: int): int =
+(* ThreadPThread.m3 and ThreadPosix.m3 are very similar. *)
+  VAR
+    statusT: Uexec.w_T;
+    result := Uexec.waitpid(pid, ADR(statusT), 0);
+    statusM3 := Uexec.w_M3 { w_Filler := 0,
+                             w_Coredump := statusT.w_Coredump,
+                             w_Termsig := statusT.w_Termsig,
+                             w_Retcode := statusT.w_Retcode };
+  BEGIN
+    <* ASSERT result > 0 *>
+    RETURN LOOPHOLE(statusM3, Uexec.w_A);
+  END WaitProcess;
 
 (*--------------------------------------------------- Stack size controls ---*)
 
@@ -1247,7 +1263,7 @@ PROCEDURE StartWorld () =
   END StartWorld;
 
 VAR mask: Usignal.sigset_t;
-PROCEDURE SignalHandler (sig: Ctypes.int;
+PROCEDURE SignalHandler (sig: int;
                          <*UNUSED*> sip: Usignal.siginfo_t_star;
                          <*UNUSED*> uap: Uucontext.ucontext_t_star) =
   VAR

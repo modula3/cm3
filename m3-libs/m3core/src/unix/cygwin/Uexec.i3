@@ -10,95 +10,61 @@
 
 UNSAFE INTERFACE Uexec;
 
-IMPORT Ctypes, Utypes, Uresource;
+FROM Ctypes IMPORT int, const_char_star, char_star_star, unsigned_int;
+FROM Utypes IMPORT pid_t;
 
-(* Some of the Unix library process control calls. This is not a complete
-interface, and should be added to as needed *)
-
-<*EXTERNAL*> 
-PROCEDURE execv(
-    name: Ctypes.char_star;
-    argv: Ctypes.char_star_star)
-    : Ctypes.int
-    RAISES {};
-    
 <*EXTERNAL*> 
 PROCEDURE execvp(
-    name: Ctypes.char_star;
-    argv: Ctypes.char_star_star)
-    : Ctypes.int
+    name: const_char_star;
+    argv: char_star_star)
+    : int
     RAISES {};
 
 <*EXTERNAL*>
 PROCEDURE execve(
-    name : Ctypes.char_star;
-    arg : Ctypes.char_star_star;
-    envp : Ctypes.char_star_star) : Ctypes.int;
-
-
-(* What does this do ? - rrw *) 
-<*EXTERNAL*> 
-PROCEDURE exect(
-    name: Ctypes.char_star;
-    argv: Ctypes.char_star_star;
-    envp: Ctypes.char_star_star)
-    : Ctypes.int
-    RAISES {};
+    name : const_char_star;
+    arg : char_star_star;
+    envp : char_star_star) : int;
 
 (* options bits for the second argument of wait3. *)
 CONST
   WNOHANG = 1;			 (* dont hang in wait *)
-  WUNTRACED = 2;		 (* tell about stopped, untraced children *)
 
 TYPE
-  w_A = Ctypes.unsigned_int;
+  w_A = BITS 32 FOR unsigned_int;
 
   (* terminated process status *)
-  w_T = RECORD
+  w_T = BITS 32 FOR RECORD
       w_Termsig : BITS  7 FOR [0..16_7F];  (* termination signal *)
       w_Coredump: BITS  1 FOR [0..16_01];  (* core dump indicator *)
       w_Retcode : BITS  8 FOR [0..16_FF];  (* exit code if w_termsig == 0 *)
-      w_Filler  : BITS 16 FOR [0..16_FFFF]; END;
+      w_Filler  : BITS 16 FOR [0..16_FFFF];
+  END;
 
   (* M3 view of return code *)
-  w_M3 = RECORD
+  w_M3 = BITS 32 FOR RECORD
       w_Retcode : BITS  8 FOR [0..16_FF];  (* exit code if w_termsig == 0 *)
       w_Termsig : BITS  7 FOR [0..16_7F];  (* termination signal *)
       w_Coredump: BITS  1 FOR [0..16_01];  (* core dump indicator *)
-      w_Filler  : BITS 16 FOR [0..16_FFFF]; END;
+      w_Filler  : BITS 16 FOR [0..16_FFFF];
+  END;
 
   (* stopped process status *)
-  w_S = RECORD
+  (* w_S = BITS 32 FOR RECORD
       w_Stopval : BITS  8 FOR [0..16_FF];  (* == W_STOPPED if stopped *)
       w_Stopsig : BITS  8 FOR [0..16_FF];  (* signal that stopped us *)
-      w_Filler  : BITS 16 FOR [0..16_FFFF]; END;
+      w_Filler  : BITS 16 FOR [0..16_FFFF];
+     END;
+  *)
 
-  (* union wait is a union of the three types above.  We will use w_A
+  (* union wait is a union of the three types above. We could use w_A
      in the declarations and do a LOOPHOLE when necessary *)
   w_A_star = UNTRACED REF w_A;
 
-  (* Wait queues (needed for Umsg.i3) *)
-  wait_queue = RECORD
-     task : Ctypes.void_star;  (* : task_struct;  see below *)
-     next : UNTRACED REF wait_queue;
-   END;
-   (* task_struct - use Ctypes.void_star because task_struct
-     should never be touched and is very very hard to emulate in Modula-3
-   *)
-
-  wait_queue_star = UNTRACED REF wait_queue;
-
-(*** wait, wait3, waitpid - wait for process to terminate ***)
-
-<*EXTERNAL*> 
-PROCEDURE wait (status: w_A_star): Utypes.pid_t;
+(*** waitpid - wait for process to terminate ***)
 
 <*EXTERNAL*>
-PROCEDURE wait3 (status: w_A_star; options: Ctypes.int;
-                 rusage: Uresource.struct_rusage_star): Utypes.pid_t;
-
-<*EXTERNAL*>
-PROCEDURE waitpid (pid: Utypes.pid_t; status: w_A_star; 
-                   options: Ctypes.int): Utypes.pid_t;
+PROCEDURE waitpid (pid: pid_t; status: UNTRACED REF w_T;
+                   options: int := 0): pid_t;
 
 END Uexec.
