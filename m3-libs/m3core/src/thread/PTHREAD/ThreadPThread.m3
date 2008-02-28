@@ -3,7 +3,7 @@
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
 UNSAFE MODULE ThreadPThread
-EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks, Uexec;
+EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks;
 
 IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError,  RTHeapRep, RTIO, RTMachine, RTParams,
@@ -16,6 +16,7 @@ IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t, pthread_mutex_t
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 FROM Utypes IMPORT size_t;
+IMPORT Uexec;
 
 (*----------------------------------------------------- types and globals ---*)
 
