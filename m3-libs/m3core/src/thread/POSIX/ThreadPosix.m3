@@ -16,7 +16,7 @@ EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks;
 IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
        RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
        RTProcess, RTThread, RTIO, ThreadEvent, Time, TimePosix,
-       Unix, Usignal, Utime, Word;
+       Unix, Usignal, Utime, Word, Uexec;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 
