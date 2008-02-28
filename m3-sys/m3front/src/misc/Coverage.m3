@@ -77,9 +77,8 @@ PROCEDURE NoteProcedure (v: Value.T) =
 PROCEDURE GenerateTables () =
   VAR
     nLines    := MAX (0, maxLine - minLine) + 1;
-    fname     := Host.FileTail (Host.filename);
     l_header  := TLen (Header);
-    l_fname   := TLen (fname);
+    l_fname   := TLen (Host.filename);
     l_trailer := TLen (Trailer);
     size    : INTEGER;
     p       : ProcHead;
@@ -125,10 +124,10 @@ PROCEDURE GenerateTables () =
     (* CG.Init_int (size, Target.Integer.size, TInt.Zero, FALSE); *)
     INC (size, Target.Integer.size);             (*timestamp*)
 
-    CG.Init_intt (size, Target.Integer.size, Text.Length (fname), FALSE);
+    CG.Init_intt (size, Target.Integer.size, Text.Length (Host.filename), FALSE);
     INC (size, Target.Integer.size);             (*fileLen*)
 
-    CG.Init_chars (size, fname, FALSE);
+    CG.Init_chars (size, Host.filename, FALSE);
     INC (size, l_fname * Target.Char.size);      (*file*)
 
     CG.Init_intt (size, Target.Integer.size, minLine, FALSE);

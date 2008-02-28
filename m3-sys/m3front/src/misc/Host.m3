@@ -192,22 +192,5 @@ PROCEDURE CloseFile (rd: File.T) =
     END;
   END CloseFile;
 
-PROCEDURE FileTail (path: TEXT): TEXT =
-  VAR c: CHAR;
-  BEGIN
-    IF (path = NIL) THEN RETURN NIL END;
-
-    (* search for the last slash or blank in the string *)
-    FOR x := Text.Length (path) - 1 TO 0 BY -1 DO
-      c := Text.GetChar (path, x);
-      IF (c = '/') OR (c = ' ') OR (c = '\\') THEN
-        RETURN Text.Sub (path, x+1);
-      END;
-    END;
-
-    (* no slashes *)
-    RETURN path;
-  END FileTail;
-
 BEGIN
 END Host.
