@@ -9,7 +9,7 @@ UNSAFE MODULE ProcessPosix EXPORTS Process;
 
 IMPORT Atom, AtomList, Cerrno, Ctypes, Env, File, FilePosix, M3toC, OSError,
   OSErrorPosix, Pathname, RTLinker, RTProcess, RTSignal,
-  Scheduler, Text, Thread, Unix, Uerror, Uexec, Uprocess, Ustat,
+  Scheduler, Text, SchedulerPosix, Unix, Uerror, Uexec, Uprocess, Ustat,
   Utime, Uugid, Word;
  
 REVEAL T = BRANDED REF RECORD
@@ -278,27 +278,10 @@ PROCEDURE SetFd(fd: INTEGER; h: INTEGER(*File.T*)): BOOLEAN =
 EXCEPTION WaitAlreadyCalled;
 
 PROCEDURE Wait(p: T): ExitCode = <* FATAL WaitAlreadyCalled *> 
-  VAR
-    result: Ctypes.int;
-    statusT: Uexec.w_T;
-    statusM3: Uexec.w_M3;
-  CONST Delay = 0.1D0;
   BEGIN
     IF NOT p.waitOk THEN RAISE WaitAlreadyCalled END;
     p.waitOk := FALSE;
-    (* By rights, the SchedulerPosix interface should have a WaitPID
-       procedure that is integrated with the thread scheduler. *)
-    LOOP
-      result := Uexec.waitpid(p.pid, ADR(statusT), Uexec.WNOHANG);
-      IF result # 0 THEN EXIT END;
-      Thread.Pause(Delay)
-    END;
-    <* ASSERT result > 0 *>
-    statusM3.w_Filler := 0;
-    statusM3.w_Coredump := statusT.w_Coredump;
-    statusM3.w_Termsig := statusT.w_Termsig;
-    statusM3.w_Retcode := statusT.w_Retcode;
-    RETURN MIN(LAST(ExitCode),LOOPHOLE(statusM3,Uexec.w_A));
+    RETURN MIN(LAST(ExitCode), SchedulerPosix.WaitProcess (p.pid));
   END Wait;
 
 PROCEDURE Exit(n: ExitCode) =
