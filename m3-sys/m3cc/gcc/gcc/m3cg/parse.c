@@ -2263,8 +2263,12 @@ m3cg_export_unit (void)
 static void
 m3cg_set_source_file (void)
 {
+  static char fullpath[PATH_MAX + 1];
   NAME (s);
 
+  if (option_source_line_trace) fprintf(stderr, "  set_source_file %s\n", s);
+  s = (realpath (s, fullpath) ? fullpath : s);
+  if (option_source_line_trace) fprintf(stderr, "  set_source_file realpath %s\n", s);
   input_filename = s;
 }
 
