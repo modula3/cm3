@@ -3,7 +3,20 @@
 /*                                                                           */
 /* Last modified on Thu Sep  8 22:33:16 PDT 1994 by heydon                   */
 
-import (libm3)
-implementation (HeapSort)
+include( ".." & SL & ".." & SL & ".." & SL & "src" & SL & "defs.quake" )
 
-program(HeapSort)
+src = ".." & SL & "src"
+
+import("libm3")
+implementation("HeapSort")
+
+program("HeapSort")
+
+if defined("RUN")
+
+  tid = "pqueue-heapsort1"
+  write( CR, "performing " & tid & "...", CR )
+  r = q_exec( "." & SL & "HeapSort" )
+  write( CR, "program returned ", r, CR )
+
+end
