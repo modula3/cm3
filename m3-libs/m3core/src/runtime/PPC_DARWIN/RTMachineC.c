@@ -21,7 +21,11 @@ RTMachine__GetState (pthread_t t, ppc_thread_state_t *state)
 		       (thread_state_t)state, &thread_state_count)
       != KERN_SUCCESS) abort();
   if (thread_state_count != PPC_THREAD_STATE_COUNT) abort();
+#if __DARWIN_UNIX03
+  return (void *)(state->__r1 - C_RED_ZONE);
+#else
   return (void *)(state->r1 - C_RED_ZONE);
+#endif
 }
 
 void
