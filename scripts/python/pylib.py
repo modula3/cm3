@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.64 2008-03-02 23:29:33 jkrell Exp $
+# $Id: pylib.py,v 1.65 2008-03-02 23:34:32 jkrell Exp $
 
 import os
 from os import getenv
@@ -932,7 +932,7 @@ PackageSets = {
         "obliqlibm3",
         "obliqlibui",
         "obliqlibanim",
-        # "obliqlib3D" # does not compile
+        "obliqlib3D",
         "obliqsrvstd",
         "obliqsrvui",
         "obliqbinmin",
@@ -956,7 +956,6 @@ PackageSets = {
         "showheap",
         "shownew",
         "showthread",
-        # showthread needs ThreadEvent, which does not exist on win32
 
         # The Juno-2 graphical constraint based editor
 
@@ -1101,7 +1100,7 @@ PackageSets = {
         "obliqlibm3",
         "obliqlibui",
         "obliqlibanim",
-        # "obliqlib3D" # does not compile
+        "obliqlib3D",
         "obliqsrvstd",
         "obliqsrvui",
         "obliqbinmin",
