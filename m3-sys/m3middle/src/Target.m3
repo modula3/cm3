@@ -30,20 +30,20 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Int8.cg_type     := CGType.Int8;
     Int8.size        := 8;
     Int8.align       := 8;
-    Int8.min         := Int{NUMBER(IBytes), IBytes{16_80,FF,..}};
-    Int8.max         := Int{NUMBER(IBytes), IBytes{16_7f,00,..}};
+    Int8.min         := Int{NUMBER(IBytes), IBytes{16_80,FF,FF,FF,FF,FF,FF,FF}};
+    Int8.max         := Int{NUMBER(IBytes), IBytes{16_7f,00,00,00,00,00,00,00}};
 
     Int16.cg_type    := CGType.Int16;
     Int16.size       := 16;
     Int16.align      := 16;
-    Int16.min        := Int{NUMBER(IBytes), IBytes{00,16_80,FF,..}};
-    Int16.max        := Int{NUMBER(IBytes), IBytes{FF,16_7f,00,..}};
+    Int16.min        := Int{NUMBER(IBytes), IBytes{00,16_80,FF,FF,FF,FF,FF,FF}};
+    Int16.max        := Int{NUMBER(IBytes), IBytes{FF,16_7f,00,00,00,00,00,00}};
 
     Int32.cg_type    := CGType.Int32;
     Int32.size       := 32;
     Int32.align      := 32;
-    Int32.min        := Int{NUMBER(IBytes), IBytes{00,00,00,16_80,FF,..}};
-    Int32.max        := Int{NUMBER(IBytes), IBytes{FF,FF,FF,16_7f,00,..}};
+    Int32.min        := Int{NUMBER(IBytes), IBytes{00,00,00,16_80,FF,FF,FF,FF}};
+    Int32.max        := Int{NUMBER(IBytes), IBytes{FF,FF,FF,16_7f,00,00,00,00}};
 
     Int64.cg_type    := CGType.Int64;
     Int64.size       := 64;
@@ -54,20 +54,20 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Word8.cg_type    := CGType.Word8;
     Word8.size       := 8;
     Word8.align      := 8;
-    Word8.min        := Int{NUMBER(IBytes), IBytes{00,00,..}};
-    Word8.max        := Int{NUMBER(IBytes), IBytes{FF,00,..}};
+    Word8.min        := Int{NUMBER(IBytes), IBytes{00,00,00,00,00,00,00,00}};
+    Word8.max        := Int{NUMBER(IBytes), IBytes{FF,00,00,00,00,00,00,00}};
 
     Word16.cg_type   := CGType.Word16;
     Word16.size      := 16;
     Word16.align     := 16;
-    Word16.min       := Int{NUMBER(IBytes), IBytes{00,00,00,..}};
-    Word16.max       := Int{NUMBER(IBytes), IBytes{FF,FF,00,..}};
+    Word16.min       := Int{NUMBER(IBytes), IBytes{00,00,00,00,00,00,00,00}};
+    Word16.max       := Int{NUMBER(IBytes), IBytes{FF,FF,00,00,00,00,00,00}};
 
     Word32.cg_type   := CGType.Word32;
     Word32.size      := 32;
     Word32.align     := 32;
-    Word32.min       := Int{NUMBER(IBytes), IBytes{00,00,00,00,00,..}};
-    Word32.max       := Int{NUMBER(IBytes), IBytes{FF,FF,FF,FF,00,..}};
+    Word32.min       := Int{NUMBER(IBytes), IBytes{00,00,00,00,00,00,00,00}};
+    Word32.max       := Int{NUMBER(IBytes), IBytes{FF,FF,FF,FF,00,00,00,00}};
 
     Word64.cg_type   := CGType.Word64;
     Word64.size      := 64;
