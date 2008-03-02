@@ -792,8 +792,7 @@ PackageSets = {
         "m3core",
         ],
 
-    "std" : # This is in the proper order
-            # and is used to order core and base.
+    "std" :
         [
     # demo programs
 
@@ -818,7 +817,13 @@ PackageSets = {
         "m3tools",
         "m3cgcat",
         "m3cggen",
-
+        "m3cc",
+        "m3objfile",
+        "m3linker",
+        "m3back",
+        "m3staloneback",
+        "m3front",
+        "cm3",
         "m3gdb",
         "m3bundle",
         "mklib",
@@ -1017,8 +1022,8 @@ PackageSets = {
         "m3tk-misc",
         "http",
         "binIO",
-        # "deepcopy",
-        # "sgml",
+        "deepcopy",
+        "sgml",
         "commandrw",
 
         # some CM3 communication extensions
