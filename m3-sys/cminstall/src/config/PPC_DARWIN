@@ -234,6 +234,7 @@ proc m3_backend (source, object, optimize, debug) is
     % built from FSF source.
     "-fPIC",
   ]
+  args += "-fno-reorder-blocks"
   if optimize  args += "-O3"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
