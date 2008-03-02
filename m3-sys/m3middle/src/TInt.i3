@@ -21,8 +21,8 @@ INTERFACE TInt;
 FROM Target IMPORT Int, IBytes;
 
 CONST
-  Zero = Int{NUMBER (IBytes), IBytes{16_00,16_00,..}};
-  One  = Int{NUMBER (IBytes), IBytes{16_01,16_00,..}};
+  Zero = Int{NUMBER (IBytes), IBytes{16_00,16_00,16_00,16_00,16_00,16_00,16_00,16_00}};
+  One  = Int{NUMBER (IBytes), IBytes{16_01,16_00,16_00,16_00,16_00,16_00,16_00,16_00}};
   MOne = Int{NUMBER (IBytes), IBytes{16_ff,16_ff,16_ff,16_ff,16_ff,16_ff,16_ff,16_ff}};
 
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR i: Int): BOOLEAN;
