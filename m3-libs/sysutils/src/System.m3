@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: System.m3,v 1.3 2008-02-27 23:06:15 wagner Exp $ *)
+ * $Id: System.m3,v 1.4 2008-03-04 22:02:19 wagner Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 MODULE System EXPORTS System;
@@ -30,7 +30,7 @@ IMPORT ASCII, Process, TextRd, Rd, RdExtras, Wr, Pipe,
        File, FileRd, FileWr, Thread, 
        AtomList, Atom, Text, TextSeq, OSError, Pathname, RegularFile,
        RefSeq, IntRefTbl;
-IMPORT MsgX, MsgIF, ProcessEnv, TextReadingUtils, OSSpecials;
+IMPORT (* SMsg, *) MsgX, MsgIF, ProcessEnv, TextReadingUtils, OSSpecials;
 IMPORT (* FSFixed AS *) FS;
 
 (*---------------------------------------------------------------------------*)
@@ -492,13 +492,17 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
 
     SPACES   = ASCII.Spaces;
     IDEND    = SPACES + ASCII.Set{ '<', '>', '&', '|', ';', '$' };
-    OPS      = ASCII.Set{ '<', '>', '&', '1', '2', '|', ';', '$' };
+    OPS      = ASCII.Set{ '<', '>', '&', '|', ';', '$' };
     OPEND    = ASCII.All - OPS;
+    S12      = ASCII.Set{ '1', '2' };
+    NUM      = ASCII.Digits;
+    NUMEND   = ASCII.All - NUM;
     STRDELIM = ASCII.Set{ '\'', '\"' };
 
   VAR
     rd := TextRd.New(cmd);
     token : TEXT;
+    token2: TEXT;
     pgm   : TEXT := NIL;
     args  : TextSeq.T := NIL;
     done  : BOOLEAN;
@@ -512,6 +516,7 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
     openFiles: IntRefTbl.T := NEW(IntRefTbl.Default).init();
     processes: RefSeq.T := NEW(RefSeq.T).init();
     c: CHAR;
+    readOp: BOOLEAN := FALSE;
 
   PROCEDURE WaitForAll() : INTEGER =
     VAR p: Process.T; ret: INTEGER;
@@ -567,6 +572,34 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
       END;
     END CloseFiles;
 
+    PROCEDURE CheckOp( token: TEXT ) RAISES {ExecuteError} =
+      BEGIN
+        IF NOT Text.Equal(token, "<") AND
+           NOT Text.Equal(token, ">") AND
+           NOT Text.Equal(token, "1>") AND
+           NOT Text.Equal(token, "2>") AND
+           NOT Text.Equal(token, "&>") AND
+           NOT Text.Equal(token, ">>") AND
+           NOT Text.Equal(token, "1>>") AND
+           NOT Text.Equal(token, "2>>") AND
+           NOT Text.Equal(token, "&>>") AND
+           NOT Text.Equal(token, ";") AND
+           NOT Text.Equal(token, "|") AND
+           NOT Text.Equal(token, "||") AND
+           NOT Text.Equal(token, "&&") THEN
+          RAISE ExecuteError("operator syntax error: " & token);
+        END;
+      END CheckOp;
+
+    PROCEDURE CurrentChar( rd: Rd.T ): CHAR
+      RAISES {Thread.Alerted, Rd.Failure, Rd.EndOfFile} = 
+      VAR c: CHAR;
+      BEGIN
+        c := Rd.GetChar( rd );
+        Rd.UnGetChar( rd );
+        RETURN c;
+      END CurrentChar;
+
   BEGIN
     MsgX.D(msgif, "System.ExecuteList(" & cmd & ")");
     TRY
@@ -576,30 +609,31 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
         args := NEW(TextSeq.T).init(10);
         done := FALSE;
         WHILE NOT done AND NOT Rd.EOF(rd) DO
+          readOp := FALSE;
+          token := NIL;
           c := RdExtras.Skip(rd, unget := TRUE);
-          IF c IN OPS THEN
-            token := TextReadingUtils.GetToken(rd, terminate := OPEND,
+          IF c IN NUM THEN
+            token := TextReadingUtils.GetToken(rd, terminate := NUMEND,
                                                unget := TRUE);
-            IF c # '1' AND c # '2' THEN (* FIXME: use a real scanner *)
-              IF NOT Text.Equal(token, "<") AND
-                 NOT Text.Equal(token, ">") AND
-                 NOT Text.Equal(token, "1>") AND
-                 NOT Text.Equal(token, "2>") AND
-                 NOT Text.Equal(token, "&>") AND
-                 NOT Text.Equal(token, ">>") AND
-                 NOT Text.Equal(token, "1>>") AND
-                 NOT Text.Equal(token, "2>>") AND
-                 NOT Text.Equal(token, "&>>") AND
-                 NOT Text.Equal(token, ";") AND
-                 NOT Text.Equal(token, "|") AND
-                 NOT Text.Equal(token, "||") AND
-                 NOT Text.Equal(token, "&&") THEN
-                RAISE ExecuteError("operator syntax error: " & token);
-              END;
+            IF c IN S12 AND Text.Length( token ) = 1 THEN
+              c := CurrentChar( rd );
+              readOp := c = '>';
+            END;
+          END;
+          IF c IN OPS OR readOp THEN
+            token2 := TextReadingUtils.GetToken(rd, terminate := OPEND,
+                                                unget := TRUE);
+            IF token = NIL THEN
+              token := token2;
+            ELSE
+              token := token & token2;
+            END;
+            IF c IN OPS THEN
+              CheckOp( token );
             END;
           ELSIF c IN STRDELIM THEN
             token := TextReadingUtils.GetString(rd);
-          ELSE
+          ELSIF token = NIL THEN
             token := TextReadingUtils.GetToken(rd, terminate := IDEND,
                                                unget := TRUE);
           END;
