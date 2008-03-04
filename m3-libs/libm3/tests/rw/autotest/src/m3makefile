@@ -4,6 +4,20 @@
 %
 % Last modified on Tue Nov  1 09:02:32 PST 1994 by kalsow 
 
-import(libm3)
-implementation(AutoTest)
-program(AutoTest)
+include( ".." & SL & ".." & SL & ".." & SL & "src" & SL & "defs.quake" )
+
+src = ".." & SL & "src"
+inp = src & SL & "AutoTest.m3"
+
+import("libm3")
+implementation("AutoTest")
+program("AutoTest")
+
+if defined("RUN")
+
+  tid = "rw-autotest"
+  write( CR, "performing " & tid & "...", CR )
+  r = q_exec( "." & SL & "AutoTest 10 1000 0.001 0.002 < " & inp )
+  write( CR, "program returned ", r, CR )
+
+end

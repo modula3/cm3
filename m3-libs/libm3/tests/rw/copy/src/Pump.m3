@@ -6,15 +6,33 @@
 
 UNSAFE MODULE Pump EXPORTS Main;
 
-IMPORT Wr, Rd, RdCopy, Params, Lex, Stdio, Time, Fmt, TextF, Convert, UnsafeRd;
+IMPORT Wr, Rd, RdCopy, Params, Stdio, Time, Text, Fmt, Convert, Thread,
+       TextClass, IO; <* NOWARN *>
 
-VAR buffer: ARRAY [0..1024*1024 - 1] OF CHAR;
-   used: INTEGER; moved, read: INTEGER := 0;
+<* FATAL Thread.Alerted, Rd.Failure, Wr.Failure *>
+
+VAR 
+  buffer: ARRAY [0..1024*1024 - 1] OF CHAR;
+  moved, read: INTEGER := 0;
+
+PROCEDURE ToInt( s: TEXT ): INTEGER =
+  VAR 
+    used: INTEGER;
+    len := Text.Length( s );
+    buf := NEW( REF ARRAY OF CHAR, len );
+  BEGIN
+    TextClass.GetChars( s, buf^, 0 );
+    RETURN Convert.ToInt( buf^, used );
+  END ToInt;
 
 BEGIN
-  WITH size   = Convert.ToInt(Params.Get(1)^, used),
-       fast = Convert.ToInt(Params.Get(2)^, used),
-       t0     = Time.Now()                           DO
+  WITH size = ToInt(Params.Get(1)),
+       fast = ToInt(Params.Get(2)),
+       t0   = Time.Now()          DO
+    (*
+    IO.Put( "size = " & Fmt.Int( size ) & "\n");
+    IO.Put( "fast = " & Fmt.Int( fast ) & "\n");
+    *)
     IF fast = 1 THEN
       moved := RdCopy.ToWriter(Stdio.stdin, Stdio.stdout);
     ELSE
@@ -29,7 +47,7 @@ BEGIN
         Stdio.stderr, "Time: " & Fmt.LongReal(t1) & " Chars: "
                         & Fmt.Int(moved) & " Time/char: "
                         & Fmt.LongReal(t1 / FLOAT(moved, LONGREAL),
-                                       6, Fmt.Style.Sci) & "\n");
+                                       Fmt.Style.Sci, 6) & "\n");
     END;
   END;
 END Pump.

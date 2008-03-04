@@ -4,6 +4,8 @@ dirs = [
   ".." & SL & "pqueue" & SL & "fromtty",
   ".." & SL & "pqueue" & SL & "heapsort1",
   ".." & SL & "pqueue" & SL & "heapsort2",
+  ".." & SL & "rw" & SL & "autotest",
+  ".." & SL & "rw" & SL & "copy",
   ".." & SL & "sequence",
   ".." & SL & "sortedtable",
   ".." & SL & "random"
