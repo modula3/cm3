@@ -559,8 +559,6 @@ PROCEDURE ThreadBase (param: WinDef.LPVOID): WinDef.DWORD =
   END ThreadBase;
 
 PROCEDURE RunThread (me: Activation): WinNT.HANDLE =
-  TYPE ObjRef = UNTRACED REF MethodList;
-       MethodList = UNTRACED REF RECORD typecode: INTEGER;  method0: ADDRESS; END;
   VAR self, next_self: T;  cl: Closure; res: REFANY;
   BEGIN
     WinBase.EnterCriticalSection (slotMu);
@@ -574,8 +572,6 @@ PROCEDURE RunThread (me: Activation): WinNT.HANDLE =
 
     IF (cl = NIL) THEN
       Die (ThisLine(), "NIL closure passed to Thread.Fork!");
-    ELSIF (LOOPHOLE (cl, ObjRef)^^.method0 = NIL) THEN
-      Die (ThisLine(), "NIL apply method passed to Thread.Fork!");
     END;
 
     (* Run the user-level code. *)
