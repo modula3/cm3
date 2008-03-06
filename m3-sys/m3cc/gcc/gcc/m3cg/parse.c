@@ -2426,6 +2426,62 @@ m3cg_declare_set (void)
   debug_struct ();
 }
 
+/* m3cg_append_char, m3cg_fill_word_in_hex, and m3cg_fill_hex_value help
+   m3cg_declare_subrange to write hex values of lower and upper bounds.
+   They omit some redundant high bits, either positive or negative.  
+   However, the leftmost bit explicitly specified by the output is
+   always a sign bit and can be sign-extended.  For example, 
+   0x7F and 0x0FF are positive, while 0xF7F and 0xFF are negative. */
+ 
+static void
+m3cg_append_char (char c, char ** var_p, char * p_limit) 
+{
+  if (*var_p < p_limit) { **var_p = c; (*var_p)++; } 
+} 
+
+static void
+m3cg_fill_word_in_hex 
+( HOST_WIDE_INT i, char **var_p, char *p_limit, int *var_leading)
+{ 
+  int digit; 
+  int shift_ct = HOST_BITS_PER_WIDE_INT - 4; 
+
+  while (shift_ct >= 0) 
+    { digit = (i >> shift_ct) & 0xF; 
+      if (digit != *var_leading) 
+        { if (*var_leading == 0 && digit > 7) 
+            { /* A leading zero sign-bit is needed. */  
+              m3cg_append_char ('0', var_p, p_limit); 
+            }
+          else if (*var_leading == 0xF && digit <= 7) 
+            { /* A leading one sign-bit is needed. */  
+              m3cg_append_char ('F', var_p, p_limit); 
+            }
+          if (digit < 10) { m3cg_append_char (digit + '0', var_p , p_limit); }  
+          else { m3cg_append_char (digit - 10 + 'A', var_p , p_limit); }  
+          *var_leading = 0x10; 
+        } 
+      shift_ct -= 4; 
+    } 
+} 
+
+static void 
+m3cg_fill_hex_value 
+  (HOST_WIDE_INT a1, HOST_WIDE_INT a0, char **var_p, char *p_limit) 
+{ int leading; /*     0: skipping leading zero hex digits. 
+                    0xF: skipping leading 'F' hex digits.
+                  > 0xF: write all digits. */ 
+
+  if (a1 >= 0) {leading = 0; }
+  else {leading = 0XF; }   
+  m3cg_append_char('0', var_p, p_limit); 
+  m3cg_append_char('x', var_p, p_limit);
+  m3cg_fill_word_in_hex (a1, var_p , p_limit, &leading); 
+  m3cg_fill_word_in_hex (a0, var_p , p_limit, &leading); 
+  if (leading == 0) { m3cg_append_char('0', var_p, p_limit); } 
+  else if (leading == 0xF) { m3cg_append_char('F', var_p, p_limit); } 
+} 
+
 static void
 m3cg_declare_subrange (void)
 {
@@ -2437,6 +2493,10 @@ m3cg_declare_subrange (void)
   BITSIZE        (size);
 
   HOST_WIDE_INT  a0, a1, b0, b1;
+  char *p; 
+  char *p_limit; 
+  char buff [80]; /* Liberal. */ 
+
   a1 = TREE_INT_CST_HIGH(min);  a0 = TREE_INT_CST_LOW(min);
   b1 = TREE_INT_CST_HIGH(max);  b0 = TREE_INT_CST_LOW(max);
 
@@ -2450,27 +2510,18 @@ m3cg_declare_subrange (void)
 	    ", size %ld\n",
 	    my_id, a0, a1, b0, b1, size);
 
-  if (((a1 != 0) && (a1 != -1 || a0 >= 0)) &&
-      ((b1 != 0) && (b1 != -1 || b0 >= 0)))
-    debug_tag ('Z', my_id, "_%d_"
-	       HOST_WIDE_INT_PRINT_DOUBLE_HEX "_"
-	       HOST_WIDE_INT_PRINT_DOUBLE_HEX,
-	       size, a1, a0, b1, b0);
-  else if ((a1 != 0) && (a1 != -1 || a0 >= 0))
-    debug_tag ('Z', my_id, "_%d_"
-	       HOST_WIDE_INT_PRINT_DOUBLE_HEX "_"
-	       HOST_WIDE_INT_PRINT_HEX,
-	       size, a1, a0, b0);
-  else if ((b1 != 0) && (b1 != -1 || b0 >= 0))
-    debug_tag ('Z', my_id, "_%d_"
-	       HOST_WIDE_INT_PRINT_HEX "_"
-	       HOST_WIDE_INT_PRINT_DOUBLE_HEX,
-	       size, a0, b1, b0);
-  else
-    debug_tag ('Z', my_id, "_%d_"
-	       HOST_WIDE_INT_PRINT_HEX "_"
-	       HOST_WIDE_INT_PRINT_HEX,
-	       size, a0, b0);
+  p = buff; 
+  p_limit = p + sizeof(buff); 
+  m3cg_append_char('_', &p, p_limit); 
+  m3cg_append_char('%', &p, p_limit); 
+  m3cg_append_char('d', &p, p_limit); 
+  m3cg_append_char('_', &p, p_limit); 
+  m3cg_fill_hex_value (a1, a0, &p, p_limit); 
+  m3cg_append_char('_', &p, p_limit); 
+  m3cg_fill_hex_value (b1, b0, &p, p_limit); 
+  m3cg_append_char('\0', &p, p_limit); 
+  debug_tag('Z', my_id, buff, size); 
+
   debug_field_id (domain_id);
   debug_struct ();
 }
