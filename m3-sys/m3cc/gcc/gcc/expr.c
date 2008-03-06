@@ -8476,6 +8476,10 @@ expand_expr_real_1 (tree exp, rtx target, enum machine_mode tmode,
       /* Lowered by gimplify.c.  */
       gcc_unreachable ();
 
+    case STATIC_CHAIN_EXPR:
+      /* Lowered by tree-nested.c */
+      gcc_unreachable ();
+
     case EXC_PTR_EXPR:
       return get_exception_pointer (cfun);
 

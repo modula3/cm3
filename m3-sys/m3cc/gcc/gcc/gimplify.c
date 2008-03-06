@@ -4181,6 +4181,11 @@ gimplify_expr (tree *expr_p, tree *pre_p, tree *post_p,
 	    }
 	  break;
 
+	case STATIC_CHAIN_EXPR:
+	  /* The argument is used as information only.  No need to gimplify */
+	  ret = GS_ALL_DONE;
+	  break;
+
 	case TREE_LIST:
 	  gcc_unreachable ();
 
