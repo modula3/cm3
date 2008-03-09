@@ -3,7 +3,7 @@
 # global definitions
 
 # our hostname
-TESTHOSTNAME=${TESTHOSTNAME:-`hostname -s`}
+TESTHOSTNAME=${TESTHOSTNAME:-`hostname | sed -e 's/\..*//'`}
 # a user-local temporary files directory
 HTMP=${HTMP:-${HOME}/tmp/cm3/${TESTHOSTNAME}}
 
