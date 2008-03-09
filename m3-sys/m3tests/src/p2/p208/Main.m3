@@ -20,7 +20,7 @@ PROCEDURE TestAll() =
   END TestAll;
 
 BEGIN
-  TRY
+  TRY <*NOWARN*>
     TestAll();
   EXCEPT
   ELSE
