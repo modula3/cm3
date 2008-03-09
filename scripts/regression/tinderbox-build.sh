@@ -30,7 +30,7 @@ echo "Tinderbox Tree:   \"${TREENAME}\""
 echo "Buildname:        \"${BUILDNAME}\""
 echo ""
 
-NAME="build-${PROJECT}-`date "+%Y%m%d-%H%M%S"`" 
+NAME="build-${PROJECT}-`date '+%Y%m%d-%H%M%S'`" 
 
 tinderbox_header () {
   TREE_NAME="$1"
@@ -168,13 +168,13 @@ fi
   echo "---" 
   echo "" 
   echo "checkout, compile and test of ${PROJECT} ..." 
-  echo "`date "+%Y.%m.%d %H:%M:%S"` -- checkout in progress." 
+  echo "`date '+%Y.%m.%d %H:%M:%S'` -- checkout in progress." 
 } 2>&1 | tee -a ${LOG}
 
 mail_buildlog "building"
 
 {
-    echo "[start checkout `date "+%Y.%m.%d %H:%M:%S"`]" 
+    echo "[start checkout `date '+%Y.%m.%d %H:%M:%S'`]" 
     echo cd ${BUILDDIR} 
 } 2>&1 | tee -a ${LOG}
 
@@ -185,7 +185,7 @@ cat "${T}" >> ${LOG}
 
 {
   echo cvs return value: ${CHECKOUT_RETURN} 
-  echo "[end checkout `date "+%Y.%m.%d %H:%M:%S"`]" 
+  echo "[end checkout `date '+%Y.%m.%d %H:%M:%S'`]" 
 } | tee -a ${LOG} 2>&1
 
 echo "CHECKOUT_RETURN = ${CHECKOUT_RETURN}"
@@ -201,9 +201,9 @@ fi
  
 { 
     echo "--"
-    echo "`date "+%Y.%m.%d %H:%M:%S"` -- compile in progress." 
+    echo "`date '+%Y.%m.%d %H:%M:%S'` -- compile in progress." 
  
-    echo "[start compile `date "+%Y.%m.%d %H:%M:%S"`]" 
+    echo "[start compile `date '+%Y.%m.%d %H:%M:%S'`]" 
 } 2>&1 | tee -a ${LOG}
 
 do_compile >"${T}" 2>&1
@@ -212,7 +212,7 @@ cat "${T}" >> ${LOG}
 
 { 
   echo "compile return value: $?" 
-  echo "[end compile `date "+%Y.%m.%d %H:%M:%S"`]" 
+  echo "[end compile `date '+%Y.%m.%d %H:%M:%S'`]" 
 } 2>&1 | tee -a ${LOG}
 
 echo "COMPILE_RETURN = ${COMPILE_RETURN}"
@@ -228,8 +228,8 @@ fi
 
  
 { 
-    echo "`date "+%Y.%m.%d %H:%M:%S"` -- tests in progress." 
-    echo "[start run-tests `date "+%Y.%m.%d %H:%M:%S"`]" 
+    echo "`date '+%Y.%m.%d %H:%M:%S'` -- tests in progress." 
+    echo "[start run-tests `date '+%Y.%m.%d %H:%M:%S'`]" 
     echo cd "${BUILDDIR}" 
 }  2>&1 | tee -a ${LOG}
 
@@ -239,7 +239,7 @@ TESTS_RETURN=$?
 cat "${T}" >> ${LOG}
 
 {
-  echo "[end run-tests `date "+%Y.%m.%d %H:%M:%S"`]" 
+  echo "[end run-tests `date '+%Y.%m.%d %H:%M:%S'`]" 
 } 2>&1 | tee -a ${LOG}
 
 echo "TESTS_RETURN = ${TESTS_RETURN}"
@@ -252,7 +252,7 @@ if [ "${TESTS_RETURN}" != 0 ]; then
 fi
 
 {
-  echo "`date "+%Y.%m.%d %H:%M:%S"` -- checkout, compile and test run done." 
+  echo "`date '+%Y.%m.%d %H:%M:%S'` -- checkout, compile and test run done." 
   echo "" 
   echo "---" 
   echo "" 
