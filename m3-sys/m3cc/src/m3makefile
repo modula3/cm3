@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.31 2008-01-28 16:06:46 jkrell Exp $
+% $Id: m3makefile,v 1.32 2008-03-10 02:17:45 hosking Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -162,9 +162,11 @@ if not defined ("no_config")
     local ConfigTarget = ""
     local ConfigWithGNULD = ""
     if equal (M3CC_HOST, M3CC_TARGET)
-      if equal (M3CC_TARGET, "SOLgnu")
-        ConfigWithGNULD = "--with-gnu-ld=yes"
-      end
+%% Should not be using GNU ld.  SOLgnu => gcc only (ie, because cc not available),
+%% not other GNU tools
+%      if equal (M3CC_TARGET, "SOLgnu")
+%        ConfigWithGNULD = "--with-gnu-ld=yes"
+%      end
     else
       ConfigTarget = "--target=" & GNU_platform (M3CC_TARGET)
     end
