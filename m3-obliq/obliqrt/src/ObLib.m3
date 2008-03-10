@@ -149,6 +149,7 @@ PROCEDURE ReadLib (<*UNUSED*>ts: ObLibSpecial;
                    in: Pickle.Reader;
                    id: Pickle.RefID):REFANY
   RAISES {Pickle.Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
+  <*FATAL RTAllocator.OutOfMemory*>
   VAR ac := in.readType();
       lib := NARROW(RTAllocator.NewTraced(ac),T);
   BEGIN
