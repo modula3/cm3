@@ -294,7 +294,7 @@ M3_BACKEND_MODE = "3"
 
 proc compile_c (source, object, options, optimize, debug) is
   local args = [ "-fPIC", "-arch", "i486", options ]
-  args += [ "-isysroot", "/Developer/SDKs/MacOSX10.4u.sdk" ]
+%  args += [ "-isysroot", "/Developer/SDKs/MacOSX10.4u.sdk" ]
   if optimize  args += "-O"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-pg" end
@@ -332,14 +332,18 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if shared
     % build the shared library
     if M3_PROFILING 
-      ret_code = try_exec ("@" & SYSTEM_CC, "-pg", "-arch", "i486", "-isysroot", "/Developer/SDKs/MacOSX10.4u.sdk", "-dynamiclib",
+      ret_code = try_exec ("@" & SYSTEM_CC, "-pg", "-arch", "i486",
+%                           "-isysroot", "/Developer/SDKs/MacOSX10.4u.sdk",
+                           "-dynamiclib",
                            "-multiply_defined suppress",
                            "-twolevel_namespace",
                            "-compatibility_version", vmaj,
                            "-current_version", version, "-install_name", lib_pn,
                            "-lgcc", "-o", lib_soxx, objects, imported_libs)
     else
-      ret_code = try_exec ("@" & SYSTEM_CC, "-arch", "i486", "-isysroot", "/Developer/SDKs/MacOSX10.4u.sdk", "-dynamiclib",
+      ret_code = try_exec ("@" & SYSTEM_CC, "-arch", "i486",
+%                           "-isysroot", "/Developer/SDKs/MacOSX10.4u.sdk",
+                           "-dynamiclib",
                            "-multiply_defined suppress",
                            "-twolevel_namespace",
                            "-compatibility_version", vmaj,
@@ -412,7 +416,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   args += [ "-arch", "i486" ]
   args += [ "-o", prog, "-fPIC", options, objects, imported_libs ]
   args += [ "-multiply_defined suppress", "-bind_at_load", "-shared-libgcc" ]
-  args += [ "-isysroot", "/Developer/SDKs/MacOSX10.4u.sdk" ]
+%  args += [ "-isysroot", "/Developer/SDKs/MacOSX10.4u.sdk" ]
   return try_exec ("@cc", args)
 end
 
