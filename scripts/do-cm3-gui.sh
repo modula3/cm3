@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-gui.sh,v 1.5 2008-02-26 07:55:01 wagner Exp $
+# $Id: do-cm3-gui.sh,v 1.6 2008-03-10 03:43:22 hosking Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -20,7 +20,7 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=`grep -F " gui" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
+P=`fgrep " gui" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]

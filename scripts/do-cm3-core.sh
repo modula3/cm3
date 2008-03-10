@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: do-cm3-core.sh,v 1.14 2008-02-25 23:43:56 wagner Exp $
+# $Id: do-cm3-core.sh,v 1.15 2008-03-10 03:43:22 hosking Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -20,7 +20,7 @@ fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
-P=`grep -F " core" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
+P=`fgrep " core" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
