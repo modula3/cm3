@@ -83,12 +83,12 @@ BEGIN
 END Connect;
 
 
-PROCEDURE GetDataSources (): DescList  = 
+PROCEDURE GetDataSources (): DescList RAISES {Error} = 
 BEGIN
 	RETURN Default.get_data_sources();
 END GetDataSources;
 
-PROCEDURE GetDrivers (): DescList  =
+PROCEDURE GetDrivers (): DescList RAISES {Error} =
 BEGIN
 	RETURN Default.get_drivers();
 END GetDrivers;

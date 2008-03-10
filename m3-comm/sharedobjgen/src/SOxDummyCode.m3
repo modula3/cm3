@@ -21,6 +21,12 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.3  2008-01-13 03:57:47  jkrell
+ * fix some but not all of the warnings here
+ * it would be nice if UNUSED could be turned off for an entire file
+ * it is not a particularly useful warning, as it falls out of certain
+ * common designs and I turn it off all the time in my C and C++ code..
+ *
  * Revision 1.2  2001-12-03 17:23:37  wagner
  * add copyright notes and overrides
  *
@@ -114,7 +120,7 @@ PROCEDURE decls(<*UNUSED*>self: T;
                 <*UNUSED*>stypeID: Type.Qid;  
                 <*UNUSED*>implName: TEXT; 
                 <*UNUSED*>methods: ImportList.MethodList;
-                <*UNUSED*>umethods: AtomList.T) RAISES {SOxCodeGenError.E} =
+                <*UNUSED*>umethods: AtomList.T) RAISES <*NOWARN*> {SOxCodeGenError.E} =
   BEGIN
   END decls;
 
@@ -125,7 +131,7 @@ PROCEDURE main(<*UNUSED*>self: T;
                <*UNUSED*>stypeID: Type.Qid;  
                <*UNUSED*>implName: TEXT; 
                <*UNUSED*>methods: ImportList.MethodList;
-               <*UNUSED*>umethods: AtomList.T) RAISES {SOxCodeGenError.E} =
+               <*UNUSED*>umethods: AtomList.T) RAISES <*NOWARN*> {SOxCodeGenError.E} =
   BEGIN
   END main;
 
