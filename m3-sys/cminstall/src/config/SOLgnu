@@ -469,5 +469,5 @@ end
 
 GNU_CC     = "gcc"
 GNU_CFLAGS = "-gstabs"
-GNU_MAKE   = "make"
+GNU_MAKE   = "gmake"
 
