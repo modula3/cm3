@@ -16,7 +16,7 @@ m3scanner base core std
 m3tools base core std
 m3cgcat base core std
 m3cggen base core std
-m3gdb core std
+m3gdb std
 m3bundle base core std
 mklib base core front std
 fix_nl base core std
