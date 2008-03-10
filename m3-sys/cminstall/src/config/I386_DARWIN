@@ -176,7 +176,7 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-lGLU", "-lGL", "-lXext" ],
   "ODBC"       : [ BEGIN_CONFIG
                      "Where are the ODBC libraries?"
-                       11 "libodbc.a"
+                       11 "libiodbc.a"
                        12 "/usr/local/lib"
                        12 "/usr/lib"
                        12 "/usr/local/pgsql/lib"
