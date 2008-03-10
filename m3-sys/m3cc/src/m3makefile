@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.32 2008-03-10 02:17:45 hosking Exp $
+% $Id: m3makefile,v 1.33 2008-03-10 03:11:49 hosking Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -60,6 +60,8 @@ readonly m3cc_config = {
 
   "PPC_DARWIN" : "--disable-multilib",
   "I386_DARWIN" : "--disable-multilib",
+  "SOLgnu" : "--disable-multilib",
+  "SOLsun" : "--disable-multilib",
 
   "HPPA"  : "--with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
