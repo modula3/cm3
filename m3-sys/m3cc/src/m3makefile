@@ -60,6 +60,8 @@ readonly m3cc_config = {
 
   "PPC_DARWIN" : "--disable-multilib",
   "I386_DARWIN" : "--disable-multilib",
+  "SOLgnu" : "--disable-multilib",
+  "SOLsun" : "--disable-multilib",
 
   "HPPA"  : "--with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
