@@ -173,7 +173,9 @@ SYSTEM_LIBS = {
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
                        13 "/usr/X11R6/lib"
-                   END_CONFIG, "-lGLU", "-lGL", "-lXext" ],
+                   END_CONFIG,
+                   "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib",
+                   "-lGLU", "-lGL", "-lXext" ],
   "ODBC"       : [ BEGIN_CONFIG
                      "Where are the ODBC libraries?"
                        11 "libiodbc.a"
