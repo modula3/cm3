@@ -16,11 +16,44 @@
  * Update Count    : 18
  * 
  * $Source: /opt/cvs/cm3/m3-comm/sharedobjgen/src/SOxCodeUtils.m3,v $
- * $Date: 2001-12-03 17:23:37 $
- * $Author: wagner $
- * $Revision: 1.2 $
+ * $Date: 2008-03-10 13:34:31 $
+ * $Author: hosking $
+ * $Revision: 1.3 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2001/12/03 17:23:37  wagner
+ * add copyright notes and overrides
+ *
+ * added: sharedobjgen/COPYRIGHT
+ * added: sharedobjgen/COPYRIGHT-COLUMBIA
+ * added: sharedobjgen/src/COPYRIGHT-COLUMBIA
+ * added: sharedobjgen/src/m3overrides
+ * modified: sharedobjgen/src/SOxCodeFiles.i3
+ * modified: sharedobjgen/src/SOxCodeFiles.m3
+ * modified: sharedobjgen/src/SOxCodeGenError.i3
+ * modified: sharedobjgen/src/SOxCodeGenError.m3
+ * modified: sharedobjgen/src/SOxCodeUtils.i3
+ * modified: sharedobjgen/src/SOxCodeUtils.m3
+ * modified: sharedobjgen/src/SOxCoder.i3
+ * modified: sharedobjgen/src/SOxDummyCode.i3
+ * modified: sharedobjgen/src/SOxDummyCode.m3
+ * modified: sharedobjgen/src/SOxIntfCBCode.i3
+ * modified: sharedobjgen/src/SOxIntfCBCode.m3
+ * modified: sharedobjgen/src/SOxIntfCBProxyCode.i3
+ * modified: sharedobjgen/src/SOxIntfCBProxyCode.m3
+ * modified: sharedobjgen/src/SOxIntfPklCode.i3
+ * modified: sharedobjgen/src/SOxIntfPklCode.m3
+ * modified: sharedobjgen/src/SOxIntfProxyCode.i3
+ * modified: sharedobjgen/src/SOxIntfProxyCode.m3
+ * modified: sharedobjgen/src/SOxModuleCBCode.i3
+ * modified: sharedobjgen/src/SOxModuleCBCode.m3
+ * modified: sharedobjgen/src/SOxModuleProxyCode.i3
+ * modified: sharedobjgen/src/SOxModuleProxyCode.m3
+ * modified: sharedobjgen/src/SOxModuleSOCode.i3
+ * modified: sharedobjgen/src/SOxModuleSOCode.m3
+ * modified: sharedobjgen/src/StubGenTool.i3
+ * modified: sharedobjgen/src/StubGenTool.m3
+ *
  * Revision 1.1.1.1  2001/12/02 13:15:54  wagner
  * Blair MacIntyre's sharedobjgen package
  *
@@ -48,7 +81,7 @@
 MODULE SOxCodeUtils;
 
 IMPORT Atom, Wr, Formatter, Type, SOxCodeFiles, Time, FmtTime,
-       Stdio, Params;
+       Stdio, Params, Thread;
 
 <*FATAL Wr.Failure*>
 
@@ -75,7 +108,11 @@ PROCEDURE SetProxyCode(flag: BOOLEAN) =
 
 PROCEDURE Message(text: TEXT) =
   BEGIN
-    Wr.PutText(stubchatter, Params.Get(0) & ": " & text & "\n")
+    TRY
+      Wr.PutText(stubchatter, Params.Get(0) & ": " & text & "\n")
+    EXCEPT
+    | Thread.Alerted => (* ignore *)
+    END;
   END Message;
 
 (* ====== *)
