@@ -13,6 +13,7 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Type, Expr, Error, RunTyme;
 IMPORT Scope, AssignStmt, Formal, M3RT, IntegerExpr, TipeMap, M3String;
 IMPORT OpenArrayType, Target, TInt, Token, Ident, Module, CallExpr;
 IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer, TextExpr, NamedExpr;
+IMPORT PackedType;
 FROM Scanner IMPORT GetToken, Match, cur;
 
 CONST
@@ -260,6 +261,11 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
   VAR dfault: Expr.T;  min, max: Target.Int;  info: Type.Info;  ref: Type.T;
   BEGIN
     t.tipe     := Type.CheckInfo (TypeOf (t), info);
+    IF (info.class = Type.Class.Packed)
+      AND (t.formal # NIL)
+      AND (NOT t.indirect) THEN
+      EVAL Type.CheckInfo (PackedType.Base (t.tipe), info);
+    END;
     t.size     := info.size;
     t.align    := info.alignment;
     t.mem_type := info.mem_type;
