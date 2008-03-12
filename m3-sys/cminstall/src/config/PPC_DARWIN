@@ -106,11 +106,11 @@ SYSTEM_LIBS = {
   "POSTGRES95" : [ BEGIN_CONFIG
                      "Where are the Postgres95 libraries?"
                        11 "libpq.dylib"
+                       12 "/sw/lib"
                        12 "/usr/local/pgsql/lib"
                        12 "/usr/local/postgres95/lib"
                        12 "/usr/local/lib"
                        12 "/usr/lib"
-                       12 "/sw/lib"
                        13 "/usr/local/pgsql/lib"
                    END_CONFIG, "-lpq" ],
   "OPENGL"     : [ BEGIN_CONFIG
