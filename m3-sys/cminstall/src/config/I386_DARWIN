@@ -165,8 +165,8 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-lpq" ],
   "OPENGL"     : [ BEGIN_CONFIG
                      "Where are the OpenGL libraries?"
-                       11 "libGLU.a"
-                       11 "libGL.a"
+                       11 "libGLU.dylib"
+                       11 "libGL.dylib"
                        12 "/usr/X11R6/lib"
                        12 "/usr/X11/lib"
                        12 "/usr/lib"
