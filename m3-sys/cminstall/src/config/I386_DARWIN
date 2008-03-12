@@ -156,7 +156,8 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-lfl" ],
   "POSTGRES95" : [ BEGIN_CONFIG
                      "Where are the Postgres95 libraries?"
-                       11 "libpq.a"
+                       11 "libpq.dylib"
+		       12 "/sw/lib"
                        12 "/usr/local/pgsql/lib"
                        12 "/usr/local/postgres95/lib"
                        12 "/usr/local/lib"
