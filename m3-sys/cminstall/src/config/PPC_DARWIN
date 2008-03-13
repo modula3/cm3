@@ -17,7 +17,7 @@ else
 end
 readonly OS_TYPE      = "POSIX"         % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"        % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "powerpc-apple-darwin6.3"
+readonly GNU_PLATFORM = "powerpc-apple-darwin9.2.0"
                                         % "cpu-vendor-os" string for GNU
 
 readonly NAMING_CONVENTIONS = "0"
@@ -86,7 +86,7 @@ readonly INSTALL_IMPLS = TRUE
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"       : ["-lm" ],
+  "LIBC"       : [ "-lm" ],
 % "LEX-YACC"   : [ BEGIN_CONFIG
 %                    "Where are the lex/yacc libraries?"
 %                      11 "libl.dylib"
@@ -124,7 +124,7 @@ SYSTEM_LIBS = {
                        12 "/usr/local/gnu/lib"
                        13 "/usr/X11R6/lib"
                    END_CONFIG,
-                   "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework//Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib",
+                   "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib",
                    "-lGLU", "-lGL", "-lXext" ],
   "ODBC"       : [ BEGIN_CONFIG
                      "Where are the ODBC libraries?"
@@ -234,7 +234,7 @@ proc m3_backend (source, object, optimize, debug) is
     % fPIC really is needed here, despite man gcc saying it is the default.
     % This is because man gcc is about Apple's gcc but m3cg is
     % built from FSF source.
-    "-fPIC",
+    "-fPIC"
   ]
   args += "-fno-reorder-blocks"
   if optimize  args += "-O3"  end
