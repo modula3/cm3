@@ -114,8 +114,8 @@ BEGIN
       ELSE
         com.next := self.id + 1;
       END;
+      Thread.Broadcast (com.done);
     END; (*LOCK*)
-    Thread.Broadcast (com.done);
   END;
   RETURN NIL;
 END Task;
@@ -143,7 +143,9 @@ Int (com.count, 5, ": ");
 
 th := Thread.Fork (t);
 t.thread := th;
-Thread.Broadcast (com.done);
+LOCK com DO
+  Thread.Broadcast (com.done);
+END;
 
 LOOP
   LOCK com DO
