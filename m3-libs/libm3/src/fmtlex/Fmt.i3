@@ -36,6 +36,10 @@ PROCEDURE Unsigned(n: Word.T; base: Base := 16): TEXT;
    legal Modula-3 literal, you must write something like:
 | "16_" & Fmt.Unsigned(N, 16)
 *)
+PROCEDURE LongInt(n: LONGINT; base: Base := 10): TEXT;
+(* Return value of "LongInt" never contains trailing "L" and it never
+   starts with an explicit base and underscore.
+*)
 
 TYPE Style = {Sci, Fix, Auto};
 
