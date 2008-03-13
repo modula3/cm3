@@ -93,6 +93,81 @@ PROCEDURE FromInt (VAR buf    : Buffer;
     RETURN j;
   END FromInt;
 
+PROCEDURE FromLongInt (VAR buf    : Buffer;
+                       value  : LONGINT;
+                       base   : Base := 10;
+                       prefix : BOOLEAN := FALSE): INTEGER   RAISES {Failed} =
+  VAR
+    nDigits : INTEGER := 0;
+    minus   : BOOLEAN := FALSE;
+    bump    : BOOLEAN := FALSE;
+    i, j    : INTEGER;
+    c       : CHAR;
+    result  : ARRAY [0..BITSIZE (LONGINT)] OF CHAR;
+
+  BEGIN
+    IF (value = 0L) THEN
+      result[0] := '0';
+      nDigits := 1;
+    ELSE (* handle a non-zero number *)
+      (* get rid of negative numbers *)
+      IF (value < 0L) THEN
+        IF (value = FIRST (LONGINT)) THEN
+          (* 2's complement makes FIRST(LONGINT) a special case *)
+          bump := TRUE;
+	  INC (value);
+        END;
+        minus := TRUE;
+        value := -value;
+        <* ASSERT value > 0L *>
+      END;
+
+      (* convert the bulk of the digits *)
+      WHILE (value > 0L) DO
+        result [nDigits] := Digits [ORD(value MOD VAL(base, LONGINT))];
+        value := value DIV VAL(base, LONGINT);
+        INC (nDigits);
+      END;
+
+      (* fixup FIRST (INTEGER) *)
+      IF (bump) THEN
+        result [nDigits] := '0';
+        j := 0;
+        LOOP
+          c := result [j];
+          IF (c <= '9')
+            THEN i := ORD (c) - ORD ('0');
+            ELSE i := ORD (c) - ORD ('a') + 10;
+          END;
+          INC (i);
+	  IF (i < base) THEN  result [j] := Digits [i];  EXIT END;
+	  result [j] := '0';
+	  INC (j);
+        END;
+        nDigits := MAX (nDigits, j+1);
+      END;
+    END;
+
+    (* make sure we've got room for the result *)
+    j := nDigits;
+    IF minus THEN INC (j) END;
+    IF prefix THEN IF base > 9 THEN INC (j, 3) ELSE INC (j, 2) END END;
+    IF (j > NUMBER (buf)) THEN RAISE Failed END;
+
+    (* build the result buffer *)
+    j := 0;
+    IF (minus)  THEN buf [0] := '-';  j := 1; END;
+    IF (prefix) THEN
+      IF (base > 9) THEN buf[j] := '1'; INC (j); END;
+      buf[j] := Digits [base MOD 10];  INC (j);
+      buf[j] := '_';  INC (j);
+    END;
+    FOR k := nDigits-1 TO 0 BY -1 DO
+      buf [j] := result [k];  INC (j);
+    END;
+
+    RETURN j;
+  END FromLongInt;
 
 PROCEDURE FromUnsigned (VAR buf    : Buffer;
                             value  : INTEGER;
