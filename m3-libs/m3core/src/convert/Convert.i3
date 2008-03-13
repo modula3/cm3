@@ -47,6 +47,13 @@ PROCEDURE FromInt (VAR buf    : Buffer;
 (* converts value to ASCII in the specified base and stores the result in buf.
    If prefix=TRUE, include the base prefix in the result. *)
 
+PROCEDURE FromLongInt (VAR buf    : Buffer;
+                       value  : LONGINT;
+                       base   : Base := 10;
+                       prefix : BOOLEAN := FALSE): INTEGER RAISES {Failed};
+(* converts value to ASCII in the specified base and stores the result in buf.
+   If prefix=TRUE, include the base prefix in the result. *)
+
 PROCEDURE FromUnsigned (VAR buf    : Buffer;
                             value  : INTEGER;
                             base   : Base := 10;
