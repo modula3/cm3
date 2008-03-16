@@ -39,13 +39,13 @@ if env_OS == "Windows_NT":
     def uname():
         PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
+    pathext = getenv("PATHEXT");
+    if pathext and not "." in pathext.split(";"):
+        pathext = ".;" + pathext
+        os.environ["PATHEXT"] = pathext
+        print("set PATHEXT=.;%PATHEXT%")
 else:
     from os import uname
-
-def ExeName(a):
-    if os.name == "nt":
-        a += ".exe"
-    return a
 
 #
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52224
@@ -57,19 +57,20 @@ def SearchPath(name, paths = getenv("PATH")):
             return name
     if paths == "":
         return None
-    if os.name == "nt":
-        # support for $PATHEXT might be nice
-        if name.find(".") == -1:
-            name += ".exe"
-    for path in paths.split(os.path.pathsep):
-        candidate = os.path.join(path, name)
-        if os.path.isfile(candidate):
-            return os.path.abspath(candidate)
+    (base, exts) = os.path.splitext(name)
+    if not exts:
+        exts = (getenv("PATHEXT") or "").lower()
+    for ext in exts.split(";"):
+        name = (base + ext)
+        for path in paths.split(os.path.pathsep):
+            candidate = os.path.join(path, name)
+            if os.path.isfile(candidate):
+                return os.path.abspath(candidate)
 
 #
 # the root of the installation
 #
-CM3 = getenv("CM3") or ExeName("cm3") # to invoke
+CM3 = getenv("CM3") or "cm3" # to invoke
 # print("CM3 is " + CM3)
 Cm3FullPath = SearchPath(CM3) # a file that can be opened/copied
 # print("Cm3FullPath is " + Cm3FullPath)
@@ -236,7 +237,7 @@ CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetDefaultFromSh("CM3LASTCHANGED")
 GCC_BACKEND = getenv("CM3_GCC_BACKEND", "")
 CM3_GDB = False
 
-M3Build = getenv("M3BUILD") or ExeName("m3build")
+M3Build = getenv("M3BUILD") or "m3build"
 M3Ship = getenv("M3SHIP") or "m3ship"
 EXE = "" # executable extension, ".exe" or empty
 Q = "'"
@@ -1685,6 +1686,11 @@ def SetupEnvironment():
 
         _SetupEnvironmentVariableAll(
             "PATH",
+            ["cygX11-6.dll"],
+            os.path.join(SystemDrive, "cygwin", "usr", "X11R6", "bin"))
+
+        _SetupEnvironmentVariableAll(
+            "PATH",
             ["gcc", "as", "ld"],
             os.path.join(SystemDrive, "cygwin", "bin"))
 
@@ -1698,6 +1704,9 @@ if __name__ == "__main__":
     #
     # run test code if module run directly
     #
+
+    print(SearchPath("juno"));
+    sys.exit(1)
 
     print(_ConvertToCygwinPath("a"));
     print(_ConvertToCygwinPath("a\\b"));
