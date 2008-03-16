@@ -1,4 +1,4 @@
-@rem $Id: pkgmap.cmd,v 1.5 2007-12-31 10:09:31 jkrell Exp $
+@rem $Id: pkgmap.cmd,v 1.6 2008-03-16 13:38:48 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -36,6 +36,7 @@ if "%1" == "-k" (
 	    exit /b 1
     )
 )
+if not "%p%" == "" set p=%p:/=\%
 if not "%p%" == "" (
     if exist %p%\. (
         set PKGS=%PKGS% %p%
