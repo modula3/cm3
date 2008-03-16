@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.15 2008-02-25 15:55:37 jkrell Exp $
+# $Id: pkginfo.sh,v 1.16 2008-03-16 12:34:53 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -41,12 +41,7 @@ UsePackage()
     udp) [ "${M3OSTYPE}" = "POSIX" ] ;;
     tapi) [ "${M3OSTYPE}" = "WIN32" ] ;;
 
-    X11R4 | \
-    showthread | \
-    pkl-fonts | \
-    juno-machine | \
-    juno-compiler | \
-    juno-app) [ "${M3OSTYPE}" != "WIN32" ] ;;
+    X11R4) [ "${M3OSTYPE}" != "WIN32" ] ;;
 
     m3staloneback) [ "${GCC_BACKEND}" != yes ] ;;
     m3cc) [ "${GCC_BACKEND}" = yes ] && [ "${OMIT_GCC}" = "" ] ;;
