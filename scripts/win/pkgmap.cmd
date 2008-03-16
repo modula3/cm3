@@ -36,6 +36,7 @@ if "%1" == "-k" (
 	    exit /b 1
     )
 )
+if not "%p%" == "" set p=%p:/=\%
 if not "%p%" == "" (
     if exist %p%\. (
         set PKGS=%PKGS% %p%
