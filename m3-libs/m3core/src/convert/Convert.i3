@@ -36,50 +36,72 @@ EXCEPTION Failed;
 (*---- Binary to ASCII conversions ----*)
 
 (* The "From" procedures convert binary values to ASCII character strings.
-   Each procedure returns the number characters that resulted.  Extra
-   space in the buffers is left unmodified.  Failed is raised if the
-   supplied buffer is too small to hold the result. *)
+   Each procedure returns the number of characters that resulted.  Extra space
+   in the buffers is left unmodified.  Failed is raised if the supplied buffer
+   is too small to hold the result. *)
 
-PROCEDURE FromInt (VAR buf    : Buffer;
-                       value  : INTEGER;
-                       base   : Base := 10;
-                       prefix : BOOLEAN := FALSE): INTEGER RAISES {Failed};
+PROCEDURE FromInt (
+    VAR buf    : Buffer;
+        value  : INTEGER;
+        base   : Base := 10;
+        prefix : BOOLEAN := FALSE): INTEGER
+  RAISES {Failed};
 (* converts value to ASCII in the specified base and stores the result in buf.
    If prefix=TRUE, include the base prefix in the result. *)
 
-PROCEDURE FromLongInt (VAR buf    : Buffer;
-                       value  : LONGINT;
-                       base   : Base := 10;
-                       prefix : BOOLEAN := FALSE): INTEGER RAISES {Failed};
+PROCEDURE FromLongInt (
+    VAR buf    : Buffer;
+        value  : LONGINT;
+        base   : Base := 10;
+        prefix : BOOLEAN := FALSE): INTEGER
+  RAISES {Failed};
 (* converts value to ASCII in the specified base and stores the result in buf.
    If prefix=TRUE, include the base prefix in the result. *)
 
-PROCEDURE FromUnsigned (VAR buf    : Buffer;
-                            value  : INTEGER;
-                            base   : Base := 10;
-                            prefix : BOOLEAN := FALSE): INTEGER RAISES{Failed};
-(* treats value as an unsigned 32-bit number, converts it to ASCII in the
-   specified base and stores the result in buf.  If prefix=TRUE, include
-   the base prefix in the result. *)
+PROCEDURE FromUnsigned (
+    VAR buf    : Buffer;
+        value  : INTEGER;
+        base   : Base := 10;
+        prefix : BOOLEAN := FALSE): INTEGER
+  RAISES{Failed};
+(* treats value as unsigned, converts it to ASCII in the specified base and
+   stores the result in buf.  If prefix=TRUE, include the base prefix in the
+   result. *)
 
-PROCEDURE FromFloat (VAR buf       : Buffer;
-                         value     : REAL;
-                         precision : INTEGER := 6;
-                         style     := Style.Mix): INTEGER   RAISES {Failed};
+PROCEDURE FromLongUnsigned (
+    VAR buf    : Buffer;
+        value  : LONGINT;
+        base   : Base := 10;
+        prefix : BOOLEAN := FALSE): INTEGER
+  RAISES{Failed};
+(* treats value as unsigned, converts it to ASCII in the specified base and
+   stores the result in buf.  If prefix=TRUE, include the base prefix in the
+   result. *)
+
+PROCEDURE FromFloat (
+    VAR buf       : Buffer;
+        value     : REAL;
+        precision : INTEGER := 6;
+        style     := Style.Mix): INTEGER
+  RAISES {Failed};
 (* converts value to ASCII in the given style and stores the result in buf.
    The precision is the number of fractional digits.  *)
 
-PROCEDURE FromLongFloat (VAR buf   : Buffer;
-                         value     : LONGREAL;
-                         precision : INTEGER := 6;
-                         style     := Style.Mix): INTEGER   RAISES {Failed};
+PROCEDURE FromLongFloat (
+    VAR buf       : Buffer;
+        value     : LONGREAL;
+        precision : INTEGER := 6;
+        style     := Style.Mix): INTEGER
+  RAISES {Failed};
 (* converts value to ASCII in the given style and stores the result in buf.
    The precision is the number of fractional digits.  *)
 
-PROCEDURE FromExtended (VAR buf   : Buffer;
-                        value     : EXTENDED;
-                        precision : INTEGER := 6;
-                        style     := Style.Mix): INTEGER   RAISES {Failed};
+PROCEDURE FromExtended (
+    VAR buf       : Buffer;
+        value     : EXTENDED;
+        precision : INTEGER := 6;
+        style     := Style.Mix): INTEGER
+  RAISES {Failed};
 (* converts value to ASCII in the given style and stores the result in buf.
    The precision is the number of fractional digits.  *)
 
@@ -91,28 +113,54 @@ PROCEDURE FromExtended (VAR buf   : Buffer;
    the maximum number of characters possible.  The number of characters
    actually used is returned in 'used'.  *)
 
-PROCEDURE ToInt (READONLY buf  : Buffer;
-                      VAR used : INTEGER;
-                          base : Base := 10): INTEGER   RAISES {};
+PROCEDURE ToInt (
+    READONLY buf  : Buffer;
+         VAR used : INTEGER;
+             base : Base := 10): INTEGER
+  RAISES {};
 (* converts an integer.  The characters are interpreted in the specified
    base unless an explicit base prefix is in the number. *)
 
-PROCEDURE ToUnsigned (READONLY buf  : Buffer;
-                           VAR used : INTEGER;
-                               base : Base := 10): INTEGER  RAISES {};
+PROCEDURE ToLongInt (
+    READONLY buf  : Buffer;
+         VAR used : INTEGER;
+             base : Base := 10): LONGINT
+  RAISES {};
+(* converts an integer.  The characters are interpreted in the specified
+   base unless an explicit base prefix is in the number. *)
+
+PROCEDURE ToUnsigned (
+    READONLY buf  : Buffer;
+         VAR used : INTEGER;
+             base : Base := 10): INTEGER
+  RAISES {};
 (* converts an unsigned number. The characters are interpreted in the specified
    base unless an explicit base prefix is in the number. *)
 
-PROCEDURE ToFloat (READONLY buf  : Buffer;
-                        VAR used : INTEGER): REAL  RAISES {Failed};
+PROCEDURE ToLongUnsigned (
+    READONLY buf  : Buffer;
+         VAR used : INTEGER;
+             base : Base := 10): LONGINT
+  RAISES {};
+(* converts an unsigned number. The characters are interpreted in the specified
+   base unless an explicit base prefix is in the number. *)
+
+PROCEDURE ToFloat (
+    READONLY buf  : Buffer;
+         VAR used : INTEGER): REAL
+  RAISES {Failed};
 (* converts a floating point number. *)
 
-PROCEDURE ToLongFloat (READONLY buf  : Buffer;
-                        VAR used : INTEGER): LONGREAL  RAISES {Failed};
+PROCEDURE ToLongFloat (
+    READONLY buf  : Buffer;
+         VAR used : INTEGER): LONGREAL
+  RAISES {Failed};
 (* converts a floating point number. *)
 
-PROCEDURE ToExtended (READONLY buf  : Buffer;
-                      VAR used : INTEGER): EXTENDED  RAISES {Failed};
+PROCEDURE ToExtended (
+    READONLY buf  : Buffer;
+         VAR used : INTEGER): EXTENDED
+  RAISES {Failed};
 (* converts a floating point number. *)
 
 END Convert.
