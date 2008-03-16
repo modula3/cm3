@@ -1,5 +1,4 @@
 import("libm3")
-import("term")
 import("ktoklib")
 
 
@@ -7,7 +6,7 @@ if not defined("_clean")
   if stale("RegExpLex.m3", 
     ".." & SL & "src" & SL & "boot" & SL & "RegExpLex.m3")
     %local result = exec([".." & SL & "src" & SL & "boot" & SL & "install"])
-    exec([".." & SL & "src" & SL & "boot" & SL & "install"])
+    exec(["sh -c ../src/boot/install"])
   end
 end
 readonly proc _dmodule(nm) is
