@@ -991,7 +991,7 @@ PROCEDURE Choke (lineno: INTEGER) =
 
 VAR
   perfW : RTPerfTool.Handle;
-  perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
+  perfOn: BOOLEAN := FALSE;                             (* LL = perfMu *)
   perfMu := MyInitializeCriticalSection(ADR(perfMu_x)); (* read-only *)
   perfMu_x: WinBase.CRITICAL_SECTION;
 
