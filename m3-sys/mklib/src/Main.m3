@@ -3,6 +3,7 @@ UNSAFE MODULE Main;
 IMPORT Process, IO, Rd, Wr, FileRd, FileWr, Thread, OSError, TextRefTbl;
 IMPORT WinNT, Convert, CoffTime, File, FS, Text, Word, TextWr, TextSeq;
 IMPORT Fmt, Time, IntArraySort, RegularFile, WinDef, Params, Pathname;
+IMPORT TextExtras;
 
 CONST
   MaxKeeper    = 10000;            (* max file size we'll hold in memory *)
@@ -84,7 +85,7 @@ PROCEDURE ProcessArg (arg: TEXT) =
       END;
       ReadCommandFile (arg);
     ELSIF (ch = '-') THEN
-      IF Text.Equal (Text.Sub (arg, 0, 5), "-out:") THEN
+      IF TextExtras.CIEqual (Text.Sub (arg, 0, 5), "-out:") THEN
         IF (lib_name # NIL) THEN
           Die ("multiple library names specified: \"", lib_name, "\" and \"",
                 Text.Sub (arg, 5), "\".");
@@ -93,19 +94,19 @@ PROCEDURE ProcessArg (arg: TEXT) =
         IF Text.Length (lib_name) <= 0 THEN
           Die ("missing library name: -out:<lib>");
         END;
-      ELSIF Text.Equal (Text.Sub (arg, 0, 5), "-ign:") THEN
+      ELSIF TextExtras.CIEqual (Text.Sub (arg, 0, 5), "-ign:") THEN
         WITH ignText = Text.Sub (arg, 5) DO
           IF ignoreTexts = NIL THEN
             ignoreTexts := NEW(TextSeq.T).init();
           END;
           ignoreTexts.addhi(ignText);
         END;
-      ELSIF Text.Equal (arg, "-v") THEN
+      ELSIF TextExtras.CIEqual (arg, "-v") THEN
         verbose := TRUE;
-      ELSIF Text.Equal (arg, "-h") OR Text.Equal (arg, "-help") THEN
+      ELSIF TextExtras.CIEqual (arg, "-h") OR TextExtras.CIEqual (arg, "-help") THEN
         Usage();
         Process.Exit(0);
-      ELSIF Text.Equal (arg, "-noclean") THEN
+      ELSIF TextExtras.CIEqual (arg, "-noclean") THEN
         cleanSymbols := FALSE;
       ELSE
         Die ("unrecognized option: \"", arg, "\"");
@@ -187,9 +188,9 @@ PROCEDURE CheckLibName () =
       (* add on a ".LIB" extension *)
       def_name := Pathname.Join (NIL, lib_name, "def");
       lib_name := Pathname.Join (NIL, lib_name, "lib");
-    ELSIF Text.Equal (ext, "lib") OR Text.Equal (ext, "LIB") THEN
+    ELSIF TextExtras.CIEqual (ext, "lib") OR TextExtras.CIEqual (ext, "a") THEN
       def_name := Pathname.ReplaceExt (lib_name, "def");
-    ELSIF Text.Equal (ext, "def") OR Text.Equal (ext, "DEF") THEN
+    ELSIF TextExtras.CIEqual (ext, "def") THEN
       def_name := lib_name;
       lib_name := Pathname.ReplaceExt (lib_name, "lib");
     ELSE
