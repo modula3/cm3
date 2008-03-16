@@ -1,3 +1,4 @@
+import-libs base core front min std gui comm caltech-parser
 m3cc core front
 m3core base core front min std
 libm3 base core front min std
