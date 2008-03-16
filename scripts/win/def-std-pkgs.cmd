@@ -1,4 +1,4 @@
-@rem $Id: def-std-pkgs.cmd,v 1.6 2008-01-31 00:11:25 wagner Exp $
+@rem $Id: def-std-pkgs.cmd,v 1.7 2008-03-16 12:34:56 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -166,19 +166,10 @@ set P=%P% rehearsecode
 set P=%P% replayheap
 set P=%P% showheap
 set P=%P% shownew
-if not "%M3OSTYPE%" == "WIN32" (
-  set P=%P% showthread
-) else if not "%CM3_ALL" == "" (
-  set P=%P% showthread
-)
-@rem showthread needs ThreadEvent, which does not exist on win32
+set P=%P% showthread
 
 @rem The Juno-2 graphical constraint based editor
-if not "%M3OSTYPE%" == "WIN32" (
-  set P=%P% pkl-fonts juno-machine juno-compiler juno-app
-) else if not "%CM3_ALL" == "" (
-  set P=%P% pkl-fonts juno-machine juno-compiler juno-app
-)
+set P=%P% pkl-fonts juno-machine juno-compiler juno-app
 
 @rem demo programs
 set P=%P% cube

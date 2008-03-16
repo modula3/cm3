@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.67 2008-03-16 12:15:29 jkrell Exp $
+# $Id: pylib.py,v 1.68 2008-03-16 12:34:55 jkrell Exp $
 
 import os
 from os import getenv
@@ -763,10 +763,6 @@ def _FilterPackage(Package):
         "serial": BuildAll or HAVE_SERIAL,
 
         "X11R4": BuildAll or OSType != "WIN32",
-        "pkl-fonts": BuildAll or OSType != "WIN32",
-        "juno-machine": BuildAll or OSType != "WIN32",
-        "juno-compiler": BuildAll or OSType != "WIN32",
-        "juno-app": BuildAll or OSType != "WIN32",
 
         "m3cc": GCC_BACKEND and not OMIT_GCC,
     }
