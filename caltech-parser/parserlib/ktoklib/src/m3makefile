@@ -1,7 +1,6 @@
 
 import("parseparams")
 import("libm3")
-import("term")
 import("cit_util")
 
 template("listf")
