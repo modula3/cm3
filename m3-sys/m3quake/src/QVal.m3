@@ -8,7 +8,7 @@
 MODULE QVal;
 
 IMPORT Fmt, Convert, Text;
-IMPORT M3Buf, QIdent, QValue, QVTbl, QVSeq, QMachine, QCode;
+IMPORT M3Buf, Quake, QIdent, QValue, QVTbl, QVSeq, QMachine, QCode;
 FROM Quake IMPORT Error, Machine, ID;
 
 TYPE
@@ -67,7 +67,7 @@ PROCEDURE ToText (m: Machine;  READONLY t: T): TEXT
     CASE t.kind OF
     | QK.Integer => RETURN Fmt.Int (t.int);
     | QK.String  => 
-      IF t.ref = NIL THEN
+      IF t.int # Quake.NoID THEN
         RETURN m.map.id2txt (t.int);
       ELSE
         RETURN NARROW (t.ref, TEXT);
