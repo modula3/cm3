@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.68 2008-03-16 12:34:55 jkrell Exp $
+# $Id: pylib.py,v 1.69 2008-03-16 16:03:01 jkrell Exp $
 
 import os
 from os import getenv
@@ -1134,6 +1134,31 @@ PackageSets = {
         "calculator",
         "fisheye",
         "mentor",
+
+        "cit_common",
+        "m3tmplhack",
+        "cit_util",
+        #"term",
+        "deepcopy",
+        #"paneman",
+        #"paneman/kemacs",
+        "drawcontext",
+        #"drawcontext/dcpane",
+        #"drawcontext/kgv",
+        "hack",
+        "m3browserhack",
+        "parserlib/ktoklib",
+        "parserlib/klexlib",
+        "parserlib/kyacclib",
+        "parserlib/ktok",
+        #"parserlib/klex",
+        #"parserlib/kyacc",
+        "parserlib/kext",
+        "parserlib/parserlib",
+        #"parserlib/parserlib/test",
+        #"pp",
+        #"kate",
+        "sgml",
         ],
 }
 
