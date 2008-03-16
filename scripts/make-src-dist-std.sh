@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-std.sh,v 1.7 2008-01-24 23:45:32 wagner Exp $
+# $Id: make-src-dist-std.sh,v 1.8 2008-03-16 13:06:17 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -32,7 +32,7 @@ header "building CM3 source distribution in ${ARCHIVE}"
 # build the source distribution archive
 #
 CM3_ALL=yes
-. "$ROOT/scripts/def-std-pkgs.sh"
+P=`fgrep " std" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 PKGS=`pkgpath ${P}`
 #echo ${P}
