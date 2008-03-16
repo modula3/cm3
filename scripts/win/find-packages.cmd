@@ -1,4 +1,4 @@
-@rem $Id: find-packages.cmd,v 1.4 2008-03-16 13:38:48 jkrell Exp $
+@rem $Id: find-packages.cmd,v 1.5 2008-03-16 14:31:55 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -18,7 +18,7 @@ goto :eof
 
 :F1
 set a=%~f1
-for /f "tokens=*" %%b in ('echo %%a:%ROOT%\^=%%') do set a=%%b
+for /f "tokens=*" %%b in ('cmd /c echo %%a:%ROOT%\^=%%') do set a=%%b
 set a=%a:\=/%
 echo %a%
 @goto :eof
