@@ -1171,13 +1171,13 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
 PROCEDURE IOWait (<*UNUSED*> fd: INTEGER; <*UNUSED*> read: BOOLEAN;
                   <*UNUSED*> timeoutInterval: LONGREAL := -1.0D0): WaitResult =
   BEGIN
-    RETURN WaitResult.Ready;
+    RETURN WaitResult.Timeout;
   END IOWait;
 
 PROCEDURE IOAlertWait (<*UNUSED*> fd: INTEGER; <*UNUSED*> read: BOOLEAN;
                        <*UNUSED*> timeoutInterval: LONGREAL := -1.0D0): WaitResult =
   BEGIN
-    RETURN WaitResult.Ready;
+    RETURN WaitResult.Timeout;
   END IOAlertWait;
 
 BEGIN
