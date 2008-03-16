@@ -106,6 +106,8 @@ PROCEDURE Classify(t: M3AST_AS.TYPE_SPEC): Class RAISES {}=
         RETURN Class.Packed;
     | M3AST_AS.Integer_type =>
         RETURN Class.Integer;
+    | M3AST_AS.Longint_type =>
+        RETURN Class.Longint;
     | M3AST_AS.WideChar_type =>
         RETURN Class.WideChar;
     | M3AST_AS.Real_type =>

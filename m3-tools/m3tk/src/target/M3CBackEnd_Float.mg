@@ -6,21 +6,21 @@ GENERIC MODULE M3CBackEnd_Float(FloatType);
 
 IMPORT M3AST_AS, M3AST_SM, M3CStdProcs;
 
-IMPORT M3CBackEnd, M3CBackEnd_C;
+IMPORT M3CBackEnd;
+IMPORT M3CBackEnd_Int_Integer, M3CBackEnd_Int_Longint;
 IMPORT M3CBackEnd_Float_Real, M3CBackEnd_Float_LongReal,
-    M3CBackEnd_Float_Extended;
+       M3CBackEnd_Float_Extended;
 
-PROCEDURE New_value(r: FloatType.T): T RAISES {}=
+PROCEDURE New_value (r: FloatType.T): T RAISES {}=
   BEGIN
     RETURN NEW(T, sm_value := r);
   END New_value;
 
-PROCEDURE UnaryOp(
+PROCEDURE UnaryOp (
     op: M3AST_AS.UNARY;
     e: T;
     VAR (*out*) er: M3AST_SM.Exp_value)
-    : M3CBackEnd.NumStatus
-    RAISES {}=
+  : M3CBackEnd.NumStatus RAISES {}=
   VAR r: FloatType.T;
   BEGIN
     TYPECASE op OF
@@ -35,12 +35,13 @@ PROCEDURE UnaryOp(
     RETURN M3CBackEnd.NumStatus.Valid;
   END UnaryOp;
 
-PROCEDURE StdUnaryOp(
+PROCEDURE StdUnaryOp (
     f: M3CStdProcs.Func; 
     e: T;
     VAR (*out*) er: M3AST_SM.Exp_value;
-    ft: M3AST_AS.FLOAT_TYPE := NIL
-    ): M3CBackEnd.NumStatus RAISES {}=
+    it: M3AST_AS.INT_TYPE := NIL;
+    ft: M3AST_AS.FLOAT_TYPE := NIL)
+  : M3CBackEnd.NumStatus RAISES {}=
   VAR
     float: FloatType.T := e.sm_value;
   BEGIN
@@ -58,71 +59,88 @@ PROCEDURE StdUnaryOp(
         END; (* typecase *)
 
     | M3CStdProcs.T.Floor =>
-	er := M3CBackEnd_C.NewInteger_value(FLOOR(float));
+        TYPECASE it OF <*NOWARN*>
+        | M3AST_AS.Integer_type =>
+            er := M3CBackEnd_Int_Integer.New_value(FLOOR(float, INTEGER));
+        | M3AST_AS.Longint_type =>
+            er := M3CBackEnd_Int_Longint.New_value(FLOOR(float, LONGINT));
+        END; (* typecase *)
     | M3CStdProcs.T.Ceiling =>
-	er := M3CBackEnd_C.NewInteger_value(CEILING(float));
+        TYPECASE it OF <*NOWARN*>
+        | M3AST_AS.Integer_type =>
+            er := M3CBackEnd_Int_Integer.New_value(CEILING(float, INTEGER));
+        | M3AST_AS.Longint_type =>
+            er := M3CBackEnd_Int_Longint.New_value(CEILING(float, LONGINT));
+        END; (* typecase *)
     | M3CStdProcs.T.Round =>
-	er := M3CBackEnd_C.NewInteger_value(ROUND(float));
+        TYPECASE it OF <*NOWARN*>
+        | M3AST_AS.Integer_type =>
+            er := M3CBackEnd_Int_Integer.New_value(ROUND(float, INTEGER));
+        | M3AST_AS.Longint_type =>
+            er := M3CBackEnd_Int_Longint.New_value(ROUND(float, LONGINT));
+        END; (* typecase *)
     | M3CStdProcs.T.Trunc =>
-	er := M3CBackEnd_C.NewInteger_value(TRUNC(float));
+        TYPECASE it OF <*NOWARN*>
+        | M3AST_AS.Integer_type =>
+            er := M3CBackEnd_Int_Integer.New_value(TRUNC(float, INTEGER));
+        | M3AST_AS.Longint_type =>
+            er := M3CBackEnd_Int_Longint.New_value(TRUNC(float, LONGINT));
+        END; (* typecase *)
     ELSE RETURN M3CBackEnd.NumStatus.Unknown;
     END; (* case *)
     RETURN M3CBackEnd.NumStatus.Valid;
   END StdUnaryOp;
 
-PROCEDURE BinaryOp(
+PROCEDURE BinaryOp (
     op: M3AST_AS.BINARY;
     e1, e2: T;
     VAR (*out*) er: M3AST_SM.Exp_value)
-    : M3CBackEnd.NumStatus
-    RAISES {}=
+  : M3CBackEnd.NumStatus RAISES {}=
   VAR 
     float1 := e1.sm_value;
     float2 := e2.sm_value;
     floatr: FloatType.T;
-    intr := -1;
+    bool: BOOLEAN;
   BEGIN
     TYPECASE op OF
-    | M3AST_AS.Plus => floatr := float1 + float2;
+    | M3AST_AS.Plus =>  floatr := float1 + float2;
     | M3AST_AS.Minus => floatr := float1 - float2;
     | M3AST_AS.Times => floatr := float1 * float2;
-    | M3AST_AS.Rdiv => floatr := float1 / float2;
+    | M3AST_AS.Rdiv =>  floatr := float1 / float2;
     ELSE
       TYPECASE op OF
-      | M3AST_AS.Eq => intr := ORD(float1 = float2);
-      | M3AST_AS.Ne => intr := ORD(float1 # float2);
-      | M3AST_AS.Gt => intr := ORD(float1 > float2);
-      | M3AST_AS.Lt => intr := ORD(float1 < float2);
-      | M3AST_AS.Ge => intr := ORD(float1 >= float2);
-      | M3AST_AS.Le => intr := ORD(float1 <= float2);
+      | M3AST_AS.Eq => bool := float1 = float2;
+      | M3AST_AS.Ne => bool := float1 # float2;
+      | M3AST_AS.Gt => bool := float1 > float2;
+      | M3AST_AS.Lt => bool := float1 < float2;
+      | M3AST_AS.Ge => bool := float1 >= float2;
+      | M3AST_AS.Le => bool := float1 <= float2;
       ELSE RETURN M3CBackEnd.NumStatus.Unknown;
       END; (* case *)
+      er := M3CBackEnd_Int_Integer.New_value(ORD(bool));
+      RETURN M3CBackEnd.NumStatus.Valid;
     END;
-    IF intr < 0 THEN (* float result *)
-      er := New_value(floatr);
-    ELSE
-      er := M3CBackEnd_C.NewInteger_value(intr);
-    END;
+    er := New_value(floatr);
     RETURN M3CBackEnd.NumStatus.Valid;
   END BinaryOp;
 
-PROCEDURE StdBinaryOp(f: M3CStdProcs.Func; 
+PROCEDURE StdBinaryOp(
+    f: M3CStdProcs.Func; 
     e1, e2: T;
-    VAR (*out*) er: M3AST_SM.Exp_value): M3CBackEnd.NumStatus RAISES {}=
+    VAR (*out*) er: M3AST_SM.Exp_value)
+  : M3CBackEnd.NumStatus RAISES {}=
   BEGIN
     CASE f OF <*NOWARN*>
     | M3CStdProcs.T.Min =>
-        IF e1.sm_value < e2.sm_value THEN
-          er := e1;
-        ELSE
-          er := e2;
-        END;
+      IF e1.sm_value < e2.sm_value
+        THEN er := e1;
+        ELSE er := e2;
+      END;
     | M3CStdProcs.T.Max =>
-        IF e1.sm_value > e2.sm_value THEN
-          er := e1;
-        ELSE
-          er := e2;
-        END;
+      IF e1.sm_value > e2.sm_value
+        THEN er := e1;
+        ELSE er := e2;
+      END;
     END; (* case *)
     RETURN M3CBackEnd.NumStatus.Valid;
   END StdBinaryOp;

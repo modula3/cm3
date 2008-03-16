@@ -325,6 +325,11 @@ PROCEDURE Integer_type(<*UNUSED*> n: M3AST_AS_F.Integer_type): TEXT RAISES {}=
     RETURN "Integer_type";
   END Integer_type;
 
+PROCEDURE Longint_type(<*UNUSED*> n: M3AST_AS_F.Longint_type): TEXT RAISES {}=
+  BEGIN
+    RETURN "Longint_type";
+  END Longint_type;
+
 PROCEDURE WideChar_type(<*UNUSED*> n: M3AST_AS_F.Integer_type): TEXT RAISES {}=
   BEGIN
     RETURN "WideChar_type";
@@ -497,6 +502,12 @@ PROCEDURE Integer_literal(<*UNUSED*> n: M3AST_AS_F.Integer_literal): TEXT RAISES
   BEGIN
     RETURN "Integer_literal";
   END Integer_literal;
+
+
+PROCEDURE Longint_literal(<*UNUSED*> n: M3AST_AS_F.Longint_literal): TEXT RAISES {}=
+  BEGIN
+    RETURN "Longint_literal";
+  END Longint_literal;
 
 
 PROCEDURE Real_literal(<*UNUSED*> n: M3AST_AS_F.Real_literal): TEXT RAISES {}=

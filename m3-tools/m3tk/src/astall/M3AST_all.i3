@@ -138,7 +138,9 @@ REVEAL
   M3AST_AS.Real_type = Last_View.Real_type BRANDED OBJECT END;
   M3AST_AS.LongReal_type = Last_View.LongReal_type BRANDED OBJECT END;
   M3AST_AS.Extended_type = Last_View.Extended_type BRANDED OBJECT END;
+  M3AST_AS.INT_TYPE = Last_View.INT_TYPE BRANDED OBJECT END;
   M3AST_AS.Integer_type = Last_View.Integer_type BRANDED OBJECT END;
+  M3AST_AS.Longint_type = Last_View.Longint_type BRANDED OBJECT END;
   M3AST_AS.WideChar_type = Last_View.WideChar_type BRANDED OBJECT END;
   M3AST_AS.Null_type = Last_View.Null_type BRANDED OBJECT END;
   M3AST_AS.RefAny_type = Last_View.RefAny_type BRANDED OBJECT END;

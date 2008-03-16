@@ -1,16 +1,16 @@
-GENERIC INTERFACE M3CBackEnd_Float(FloatType);
+GENERIC INTERFACE M3CBackEnd_Int(IntType);
 
 (* Copyright (C) 1991, Digital Equipment Corporation           *)
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-IMPORT M3AST_AS, M3AST_SM, M3CStdProcs, M3CBackEnd;
+IMPORT M3AST_AS, M3AST_SM, M3CStdProcs, M3CBackEnd, M3CWordProcs;
 
 REVEAL M3AST_SM.Exp_value <: ROOT;
 
-TYPE T = M3AST_SM.Exp_value BRANDED OBJECT sm_value: FloatType.T END;
+TYPE T = M3AST_SM.Exp_value BRANDED OBJECT sm_value: IntType.T END;
 
-PROCEDURE New_value(r: FloatType.T): T RAISES {};
+PROCEDURE New_value(r: IntType.T): T RAISES {};
 
 PROCEDURE StdUnaryOp(
     f: M3CStdProcs.Func; 
@@ -41,4 +41,11 @@ PROCEDURE BinaryOp(
     : M3CBackEnd.NumStatus
     RAISES {};
 
-END M3CBackEnd_Float.
+PROCEDURE WordOp(
+    w: M3CWordProcs.T;
+    READONLY args: ARRAY OF M3AST_SM.Exp_value;
+    VAR (* out *) er: M3AST_SM.Exp_value)
+    : M3CBackEnd.NumStatus
+    RAISES {};
+
+END M3CBackEnd_Int.

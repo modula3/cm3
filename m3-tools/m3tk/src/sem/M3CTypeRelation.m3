@@ -372,6 +372,9 @@ PROCEDURE SubType(type1, type2: M3AST_SM.TYPE_SPEC_UNSET): BOOLEAN RAISES {}=
     | M3AST_AS.Integer_type =>
         IF ISTYPE(type2, M3AST_AS.Integer_type) THEN RETURN TRUE END;
         RETURN M3COrdinal.SubType(type1, type2);
+    | M3AST_AS.Longint_type =>
+        IF ISTYPE(type2, M3AST_AS.Longint_type) THEN RETURN TRUE END;
+        RETURN M3COrdinal.SubType(type1, type2);
     | M3AST_AS.WideChar_type =>
         IF ISTYPE(type2, M3AST_AS.WideChar_type) THEN RETURN TRUE END;
         RETURN M3COrdinal.SubType(type1, type2);

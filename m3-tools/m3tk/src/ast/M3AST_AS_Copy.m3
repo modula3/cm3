@@ -640,6 +640,13 @@ PROCEDURE Integer_type(
     RETURN SRC_NODE(n, NEW(M3AST_AS.Integer_type).init());
   END Integer_type;
 
+PROCEDURE Longint_type(
+    n: M3AST_AS_F.Longint_type; <*UNUSED*> h: AST_CopyRep.Handle;
+    ): AST.NODE=
+  BEGIN
+    RETURN SRC_NODE(n, NEW(M3AST_AS.Longint_type).init());
+  END Longint_type;
+
 PROCEDURE WideChar_type(
     n: M3AST_AS_F.WideChar_type; <*UNUSED*> h: AST_CopyRep.Handle;
     ): AST.NODE=
@@ -1003,6 +1010,14 @@ PROCEDURE Integer_literal(
   BEGIN
     RETURN LITERAL(n, SRC_NODE(n, NEW(M3AST_AS.Integer_literal).init()));
   END Integer_literal;
+
+
+PROCEDURE Longint_literal(
+    n: M3AST_AS_F.Longint_literal; <*UNUSED*> h: AST_CopyRep.Handle;
+    ): AST.NODE=
+  BEGIN
+    RETURN LITERAL(n, SRC_NODE(n, NEW(M3AST_AS.Longint_literal).init()));
+  END Longint_literal;
 
 
 PROCEDURE Real_literal(

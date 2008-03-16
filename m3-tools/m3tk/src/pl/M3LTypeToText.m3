@@ -452,7 +452,7 @@ PROCEDURE ComponentType(s: Wr.T; t: M3AST_AS.M3TYPE) RAISES {Wr.Failure, Thread.
   BEGIN
     M3CTypesMisc.GetTYPE_SPECFromM3TYPE(t, ts);
     TYPECASE ts OF
-    | M3AST_AS.Integer_type, M3AST_AS.WideChar_type, M3AST_AS.FLOAT_TYPE,
+    | M3AST_AS.INT_TYPE, M3AST_AS.WideChar_type, M3AST_AS.FLOAT_TYPE,
       M3AST_AS.RefAny_type,
       M3AST_AS.Address_type, M3AST_AS.Null_type,
       M3AST_AS.Root_type =>
@@ -482,6 +482,8 @@ PROCEDURE TypeSpec(
     TYPECASE t OF <*NOWARN*>
     | M3AST_AS.Integer_type =>
         Wr.PutChar(s, IntegerCh);
+    | M3AST_AS.Longint_type =>
+        Wr.PutChar(s, LongintCh);
     | M3AST_AS.WideChar_type =>
         Wr.PutChar(s, WideCharCh);
     | M3AST_AS.Real_type =>

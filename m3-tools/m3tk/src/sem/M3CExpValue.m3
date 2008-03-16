@@ -297,6 +297,11 @@ PROCEDURE GetBounds(
         EVAL M3CBackEnd.StdUnaryTypeOp(M3CStdProcs.T.Last, integerType, high);
         RETURN M3CBackEnd.NumStatus.Valid;
 
+    | M3AST_AS.Longint_type(longintType) =>
+        EVAL M3CBackEnd.StdUnaryTypeOp(M3CStdProcs.T.First, longintType, low);
+        EVAL M3CBackEnd.StdUnaryTypeOp(M3CStdProcs.T.Last, longintType, high);
+        RETURN M3CBackEnd.NumStatus.Valid;
+
     | M3AST_AS.WideChar_type(wideCharType) =>
         EVAL M3CBackEnd.StdUnaryTypeOp(M3CStdProcs.T.First, wideCharType, low);
         EVAL M3CBackEnd.StdUnaryTypeOp(M3CStdProcs.T.Last, wideCharType, high);
@@ -345,7 +350,7 @@ PROCEDURE Number(
     TYPECASE M3CTypesMisc.CheckedUnpack(ts) OF
     | NULL =>
         RETURN M3CBackEnd.NumStatus.Unknown;
-    | M3AST_AS.Integer_type =>
+    | M3AST_AS.INT_TYPE =>
         RETURN M3CBackEnd.NumStatus.Overflow
     | M3AST_AS.WideChar_type(wideCharType) =>
         RETURN M3CBackEnd.Val(NUMBER(WIDECHAR), wideCharType, number);
@@ -763,7 +768,7 @@ PROCEDURE EvalSpecialCall(
         IF IsOrdinalFloatOrArrayType(ts) THEN
           (* 'IsOrdinalFloatOrArrayType' ensures 'ts' is non NIL *)
           TYPECASE ts OF <*NOWARN*>
-          | M3AST_AS.Integer_type, M3AST_AS.FLOAT_TYPE =>
+          | M3AST_AS.INT_TYPE, M3AST_AS.FLOAT_TYPE =>
               IF pf = M3CStdProcs.T.Number THEN
                 BackEndFailure(call, M3CBackEnd.NumStatus.Overflow);
               ELSE
@@ -946,20 +951,24 @@ PROCEDURE StandardCall(
         ev1 := EvalActual(actual1, mode);
         IF ev1 # NIL THEN
           IF pf = M3CStdProcs.T.Float THEN
-            VAR ft: M3AST_AS.FLOAT_TYPE := NIL;
+            VAR
+              it: M3AST_AS.INT_TYPE := NIL;
+              ft: M3AST_AS.FLOAT_TYPE := NIL;
             BEGIN
               IF SeqM3AST_AS_Actual.Next(iterActuals, actual2) THEN
                 TYPECASE actual2.as_exp_type OF
                 | NULL =>
                 | M3AST_AS.FLOAT_TYPE(x) =>
                     ft := x;
+                | M3AST_AS.INT_TYPE(x) =>
+                    it := x;
                 ELSE    
                 END; (* typecase *)
               ELSE
                 ft := M3CStdTypes.Real();
               END;
               IF ft # NIL THEN
-                ChkVal(call, M3CBackEnd.StdUnaryOp(pf, ev1, er, ft));
+                ChkVal(call, M3CBackEnd.StdUnaryOp(pf, ev1, er, it, ft));
               END;
             END;
           ELSE
@@ -992,19 +1001,15 @@ PROCEDURE StandardCall(
             VAR
               boundsOK := FALSE;
             BEGIN
-              IF ISTYPE(ts, M3AST_AS.Integer_type) THEN
-                boundsOK := TRUE;
-              ELSE
-                VAR
-                  low, high: M3AST_SM.Exp_value;
-                BEGIN
-                  IF GetBounds(ts, low, high) = M3CBackEnd.NumStatus.Valid THEN
-                    IF NotInBounds(ev1, low, high) THEN
-                      M3Error.Report(actual1, 
-                          "VAL expression out of range for type");
-                    ELSE
-                      boundsOK := TRUE;
-                    END;
+              VAR
+                low, high: M3AST_SM.Exp_value;
+              BEGIN
+                IF GetBounds(ts, low, high) = M3CBackEnd.NumStatus.Valid THEN
+                  IF NotInBounds(ev1, low, high) THEN
+                    M3Error.Report(actual1, 
+                                   "VAL expression out of range for type");
+                  ELSE
+                    boundsOK := TRUE;
                   END;
                 END;
               END;
@@ -1048,7 +1053,7 @@ PROCEDURE WordCall(
         ev := EvalComponent(exp, mode);
         IF NOT (ev # NIL AND 
             M3COrdinal.Is(exp.sm_exp_type_spec, baseType) AND
-            baseType # NIL AND ISTYPE(baseType, M3AST_AS.Integer_type)) THEN
+            baseType # NIL AND ISTYPE(baseType, M3AST_AS.INT_TYPE)) THEN
           RETURN NIL;
         END;
       END;
