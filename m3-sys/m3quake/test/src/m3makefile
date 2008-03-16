@@ -261,6 +261,125 @@ check( "t102", t, "1048576")
 
 
 %-----------------------------------------------------------------------------
+section( "pathname tests" )
+
+a = SL & "a" & SL & "b" & SL & "c"
+a2 = SL & "a" & SL & "b"
+a3 = SL & "a"
+d = "d" & SL & "e"
+e = "e.ext"
+
+t = "res = pn_valid(a)"
+check( "p001", t, "TRUE" )
+
+t = "res = pn_valid(d)"
+check( "p002", t, "TRUE" )
+
+t = "res = pn_valid(e)"
+check( "p003", t, "TRUE" )
+
+t = "res = pn_absolute(a)"
+check( "p004", t, "TRUE" )
+
+t = "res = pn_absolute(d)"
+check( "p005", t, "" )
+
+t = "res = pn_absolute(e)"
+check( "p006", t, "" )
+
+t = "res = pn_decompose(a)"
+check( "p007", t, "/ a b c" )
+
+t = "res = pn_decompose(d)"
+check( "p008", t, " d e" )
+
+t = "res = pn_decompose(e)"
+check( "p009", t, " e.ext" )
+
+t = "res = pn_decompose(d)[0]"
+check( "p010", t, "" )
+
+t = "res = pn_decompose(d)[1]"
+check( "p011", t, "d" )
+
+t = "res = pn_decompose(d)[2]"
+check( "p012", t, "e" )
+
+t = "res = pn_compose(pn_decompose(a))"
+check( "p013", t, a )
+
+t = "res = pn_compose(pn_decompose(d))"
+check( "p014", t, d )
+
+t = "res = pn_prefix(a)"
+check( "p015", t, a2 )
+
+t = "res = pn_prefix(pn_prefix(a))"
+check( "p016", t, a3 )
+
+t = "res = pn_prefix(e)"
+check( "p017", t, "" )
+
+t = "res = pn_last(a)"
+check( "p018", t, "c" )
+
+t = "res = pn_last(a2)"
+check( "p019", t, "b" )
+
+t = "res = pn_last(d)"
+check( "p020", t, "e" )
+
+t = "res = pn_last(e)"
+check( "p021", t, "e.ext" )
+
+t = "res = pn_base(a & \".txt\")"
+check( "p022", t, a )
+
+t = "res = pn_base(a & \".\")"
+check( "p023", t, a & "." )
+
+t = "res = pn_base(a)"
+check( "p024", t, a )
+
+t = "res = pn_base(e)"
+check( "p025", t, "e" )
+
+t = "res = pn_lastbase(a & \".txt\")"
+check( "p026", t, "c" )
+
+t = "res = pn_lastbase(e)"
+check( "p027", t, "e" )
+
+t = "res = pn_lastext(a)"
+check( "p028", t, "" )
+
+t = "res = pn_lastext(a & \".txt\")"
+check( "p029", t, "txt" )
+
+t = "res = pn_lastext(e)"
+check( "p030", t, "ext" )
+
+t = "res = pn_replace_ext(a & \".txt\", \"log\")"
+check( "p031", t, a & ".log" )
+
+t = "res = pn_replace_ext(e, \"log\")"
+check( "p032", t, "e.log" )
+
+t = "res = pn_join(a, d)"
+check( "p033", t, a & SL & d )
+
+t = "res = pn_join2(a, d, \"log\")"
+check( "p034", t, a & SL & d & ".log" )
+
+t = "res = pn_join(a, pn_parent())"
+check( "p035", t, a & SL & ".." )
+
+t = "res = pn_join(pn_current(), d)"
+check( "p036", t, "." & SL & d )
+
+
+
+%-----------------------------------------------------------------------------
 section( "file system tests" )
 
 f = "res = fs_exists(\".\")"

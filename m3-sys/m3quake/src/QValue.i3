@@ -24,7 +24,7 @@ TYPE
     Var,      (*    Quake.ID    Binding *)
     Integer,  (*    value       ----    *)
     String,   (*    Quake.ID    ----    length <= 1024 *)
-              (*    NoID        TEXT    length <  1024 *)
+              (*    NoID        TEXT    length >  1024 *)
     Table,    (*    ------      QVTbl.T *)
     Array,    (*    ------      QVSeq.T *)
     Proc      (*    ------      Proc    *)

@@ -1157,6 +1157,21 @@ CONST
     Builtin {"fs_rmrec",      DoFSRmRec,                    1, FALSE},
     Builtin {"fs_cp",         DoFSCopy,                     2, FALSE},
 
+    Builtin {"pn_valid",      DoPnValid,                    1, TRUE},
+    Builtin {"pn_decompose",  DoPnDecompose,                1, TRUE},
+    Builtin {"pn_compose",    DoPnCompose,                  1, TRUE},
+    Builtin {"pn_absolute",   DoPnAbsolute,                 1, TRUE},
+    Builtin {"pn_prefix",     DoPnPrefix,                   1, TRUE},
+    Builtin {"pn_last",       DoPnLast,                     1, TRUE},
+    Builtin {"pn_base",       DoPnBase,                     1, TRUE},
+    Builtin {"pn_lastbase",   DoPnLastBase,                 1, TRUE},
+    Builtin {"pn_lastext",    DoPnLastExt,                  1, TRUE},
+    Builtin {"pn_join",       DoPnJoin,                     2, TRUE},
+    Builtin {"pn_join2",      DoPnJoin2,                    3, TRUE},
+    Builtin {"pn_replace_ext",DoPnReplaceExt,               2, TRUE},
+    Builtin {"pn_parent",     DoPnParent,                   0, TRUE},
+    Builtin {"pn_current",    DoPnCurrent,                  0, TRUE},
+
     Builtin {"len",           DoLen,                        1, TRUE},
 
     Builtin {"split",         DoTextTokens,                 2, TRUE},
@@ -2009,6 +2024,186 @@ PROCEDURE DoQExecGet (t: T;  n_args: INTEGER) RAISES {Error} =
     res.ref  := arr;
     Push (t, res);
   END DoQExecGet;
+
+(*--------------------------------------------------- pathname extensions ---*)
+PROCEDURE DoPnValid (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    res: BOOLEAN;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    res := Pathname.Valid (QVal.ToText (t, pn));
+    PushBool (t, res);
+  END DoPnValid;
+
+PROCEDURE DoPnAbsolute (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    res: BOOLEAN;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    res := Pathname.Absolute (QVal.ToText (t, pn));
+    PushBool (t, res);
+  END DoPnAbsolute; 
+
+<*FATAL Pathname.Invalid*>
+
+PROCEDURE DoPnDecompose (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    seq: TextSeq.T;
+    res: QValue.T;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    seq := Pathname.Decompose (QVal.ToText (t, pn));
+    res.kind := QK.Array;
+    res.int  := 0;
+    res.ref  := MakeQValSeq (t, seq);
+    Push (t, res);
+  END DoPnDecompose;
+
+PROCEDURE DoPnCompose (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    qseq: QVSeq.T;
+    seq: TextSeq.T := NEW (TextSeq.T).init();
+    res: Pathname.T;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    qseq := QVal.ToArray (t, pn);
+    FOR i := 0 TO qseq.size() - 1 DO
+      VAR
+        elem := qseq.get (i);
+        qval := QVal.ToText (t, elem);
+      BEGIN
+        (* IO.Put( "qval=" & qval & "\n"); *)
+        IF i = 0 AND Text.Empty(qval) THEN
+          (* FIXME: it seems there's no real NIL representation in quake? *)
+          qval := NIL;
+        END;
+        seq.addhi (qval);
+      END;
+    END;
+    res := Pathname.Compose (seq);
+    PushText (t, res);
+  END DoPnCompose;
+
+PROCEDURE DoPnPrefix (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    res: Pathname.T;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    res := Pathname.Prefix (QVal.ToText (t, pn));
+    PushText (t, res);
+  END DoPnPrefix; 
+
+PROCEDURE DoPnLast (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    res: Pathname.T;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    res := Pathname.Last (QVal.ToText (t, pn));
+    PushText (t, res);
+  END DoPnLast;
+
+PROCEDURE DoPnBase (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    res: Pathname.T;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    res := Pathname.Base (QVal.ToText (t, pn));
+    PushText (t, res);
+  END DoPnBase;
+
+PROCEDURE DoPnLastBase (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    res: Pathname.T;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    res := Pathname.LastBase (QVal.ToText (t, pn));
+    PushText (t, res);
+  END DoPnLastBase;
+
+PROCEDURE DoPnLastExt (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn: QValue.T;
+    res: Pathname.T;
+  BEGIN
+    <*ASSERT n_args = 1 *>
+    Pop (t, pn);
+    res := Pathname.LastExt (QVal.ToText (t, pn));
+    PushText (t, res);
+  END DoPnLastExt;
+
+PROCEDURE DoPnJoin (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn, pn2: QValue.T;
+    res: Pathname.T;
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, pn2);
+    Pop (t, pn);
+    res := Pathname.Join (QVal.ToText (t, pn), QVal.ToText (t, pn2));
+    PushText (t, res);
+  END DoPnJoin;
+
+PROCEDURE DoPnJoin2 (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn, pn2, ext: QValue.T;
+    res: Pathname.T;
+  BEGIN
+    <*ASSERT n_args = 3 *>
+    Pop (t, ext);
+    Pop (t, pn2);
+    Pop (t, pn);
+    res := Pathname.Join (QVal.ToText (t, pn),
+                          QVal.ToText (t, pn2),
+                          QVal.ToText (t, ext));
+    PushText (t, res);
+  END DoPnJoin2;
+
+PROCEDURE DoPnReplaceExt (t: T;  n_args: INTEGER) RAISES {Error} =
+  VAR 
+    pn, ext: QValue.T;
+    res: Pathname.T;
+  BEGIN
+    <*ASSERT n_args = 2 *>
+    Pop (t, ext);
+    Pop (t, pn);
+    res := Pathname.ReplaceExt (QVal.ToText (t, pn), QVal.ToText (t, ext));
+    PushText (t, res);
+  END DoPnReplaceExt;
+
+PROCEDURE DoPnParent (t: T;  n_args: INTEGER) =
+  VAR 
+    res: Pathname.T;
+  BEGIN
+    <*ASSERT n_args = 0 *>
+    res := Pathname.Parent;
+    PushText (t, res);
+  END DoPnParent;
+
+PROCEDURE DoPnCurrent (t: T;  n_args: INTEGER) =
+  VAR 
+    res: Pathname.T;
+  BEGIN
+    <*ASSERT n_args = 0 *>
+    res := Pathname.Current;
+    PushText (t, res);
+  END DoPnCurrent;
+
 
 (*--------------------------------------------------------- fs extensions ---*)
 PROCEDURE DoFSExists (t: T;  n_args: INTEGER) RAISES {Error} =
