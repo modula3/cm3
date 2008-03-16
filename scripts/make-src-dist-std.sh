@@ -32,7 +32,7 @@ header "building CM3 source distribution in ${ARCHIVE}"
 # build the source distribution archive
 #
 CM3_ALL=yes
-. "$ROOT/scripts/def-std-pkgs.sh"
+P=`fgrep " std" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
 
 PKGS=`pkgpath ${P}`
 #echo ${P}
