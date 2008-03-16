@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.66 2008-03-16 12:11:48 jkrell Exp $
+# $Id: pylib.py,v 1.67 2008-03-16 12:15:29 jkrell Exp $
 
 import os
 from os import getenv
@@ -763,7 +763,6 @@ def _FilterPackage(Package):
         "serial": BuildAll or HAVE_SERIAL,
 
         "X11R4": BuildAll or OSType != "WIN32",
-        "showthread": BuildAll or OSType != "WIN32",
         "pkl-fonts": BuildAll or OSType != "WIN32",
         "juno-machine": BuildAll or OSType != "WIN32",
         "juno-compiler": BuildAll or OSType != "WIN32",
@@ -1125,7 +1124,6 @@ PackageSets = {
         "showheap",
         "shownew",
         "showthread",
-        # showthread needs ThreadEvent, which does not exist on win32
 
         # The Juno-2 graphical constraint based editor
 
