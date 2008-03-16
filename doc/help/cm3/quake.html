@@ -83,11 +83,12 @@ information. </p>
         <a href="#inputoutputproc">9.1  Input Output</a>
         <a href="#codeexecproc">9.2  Code Execution</a>
         <a href="#filesystemproc">9.3  File System Functions and Procedures</a>
-        <a href="#argumentlists">9.4  Argument Lists</a>
-        <a href="#genericpredicates">9.5  Generic Predicates</a>
-        <a href="#textfuncs">9.6  Text Functions</a>
-        <a href="#dirfuncs">9.7  Directory (Stack) Functions and Procedures</a>
-        <a href="#systeminfo">9.8  System Information</a>
+        <a href="#pathnamefuncs">9.4  Pathname Functions</a>
+        <a href="#argumentlists">9.5  Argument Lists</a>
+        <a href="#genericpredicates">9.6  Generic Predicates</a>
+        <a href="#textfuncs">9.7  Text Functions</a>
+        <a href="#dirfuncs">9.8  Directory (Stack) Functions and Procedures</a>
+        <a href="#systeminfo">9.9  System Information</a>
   <a href="#outputredir">10  Output Redirection</a>
   <a href="#runningquake">11  Running Quake</a>
 </div>
@@ -686,8 +687,90 @@ Returns the contents of file <code>pn</code> as a text.
 
 </dl>
 
+<a name="pathnamefuncs"></a>
+<h4>9.4  Pathname Functions</h4>
+
+<dl>
+<dt>pn_valid(pn) --&gt; bool</dt>
+<dd><p>
+"TRUE" iff <code>pn</code> is a valid pathname.
+</p></dd>
+
+<dt>pn_absolute(pn) --&gt; bool</dt>
+<dd><p>
+"TRUE" iff <code>pn</code> is an absolute pathname.
+</p></dd>
+
+<dt>pn_compose(text[]) --&gt; text</dt>
+<dd><p>
+Builds a new pathname from <code>text[]</code>. The first element
+is the root (which may be empty), the rest are arcs of the pathname.
+</p></dd>
+
+<dt>pn_decompose(pn) --&gt; text[]</dt>
+<dd><p>
+Decomposes <code>pn</code> into its root and arcs.
+</p></dd>
+
+<dt>pn_prefix(pn) --&gt; text</dt>
+<dd><p>
+Strips the last arc from <code>pn</code>.
+</p></dd>
+
+<dt>pn_last(pn) --&gt; text</dt>
+<dd><p>
+Returns the last arc of <code>pn</code>.
+</p></dd>
+
+<dt>pn_base(pn) --&gt; text</dt>
+<dd><p>
+Strips the last extension from <code>pn</code>.
+</p></dd>
+
+<dt>pn_lastbase(pn) --&gt; text</dt>
+<dd><p>
+Returns the last arc from <code>pn</code> without its extension.
+</p></dd>
+
+<dt>pn_lastext(pn) --&gt; text</dt>
+<dd><p>
+Returns the extension of the last arc of <code>pn</code>.
+</p></dd>
+
+<dt>pn_join(pna, pnb) --&gt; text</dt>
+<dd><p>
+Returns the concatenation of <code>pna</code> and <code>pnb</code>.
+<code>pnb</code> must be a relative pathname.
+</p></dd>
+
+<dt>pn_join2(pna, pnb, ext) --&gt; text</dt>
+<dd><p>
+Returns the concatenation of <code>pna</code> and <code>pnb</code> and
+the extension <code>ext</code>.
+<code>pnb</code> must be a relative pathname.
+</p></dd>
+
+<dt>pn_replace_text(pn) --&gt; text</dt>
+<dd><p>
+Replaces the extension of the last arc of <code>pn</code>.
+</p></dd>
+
+<dt>pn_current() --&gt; text</dt>
+<dd><p>
+Returns a representation of the special arc denotating the current
+directory.
+</p></dd>
+
+<dt>pn_parent() --&gt; text</dt>
+<dd><p>
+Returns a representation of the special arc denotating the parent
+directory.
+</p></dd>
+
+</dl>
+
 <a name="argumentlists"></a>
-<h4>9.4  Argument Lists</h4>
+<h4>9.5  Argument Lists</h4>
 
 <dl>
 <dt>arglist(pfx, array)</dt>
@@ -706,7 +789,7 @@ creates a temporary file containing a list of the strings in the array
 </dl>
 
 <a name="genericpredicates"></a>
-<h4>9.5  Generic Predicates</h4>
+<h4>9.6  Generic Predicates</h4>
 
 <dl>
 <dt>defined(foo) --&gt; bool</dt>
@@ -735,7 +818,7 @@ equality and not as structural equality as in Modula-3.
 </dl>
 
 <a name="textfuncs"></a>
-<h4>9.6  Text Functions</h4>
+<h4>9.7  Text Functions</h4>
 
 <dl>
 <dt>escape(s) --&gt; text</dt>
@@ -851,7 +934,7 @@ with <code>suf</code>.
 </dl>
 
 <a name="dirfuncs"></a>
-<h4>9.7  Directory (Stack) Functions and Procedures</h4>
+<h4>9.8  Directory (Stack) Functions and Procedures</h4>
 
 <dl>
 
@@ -881,7 +964,7 @@ Returns the current working directory of the quake process.
 
 
 <a name="systeminfo"></a>
-<h4>9.8  System Information</h4>
+<h4>9.9  System Information</h4>
 
 <dl>
 
