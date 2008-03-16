@@ -763,10 +763,6 @@ def _FilterPackage(Package):
         "serial": BuildAll or HAVE_SERIAL,
 
         "X11R4": BuildAll or OSType != "WIN32",
-        "pkl-fonts": BuildAll or OSType != "WIN32",
-        "juno-machine": BuildAll or OSType != "WIN32",
-        "juno-compiler": BuildAll or OSType != "WIN32",
-        "juno-app": BuildAll or OSType != "WIN32",
 
         "m3cc": GCC_BACKEND and not OMIT_GCC,
     }

@@ -41,12 +41,7 @@ UsePackage()
     udp) [ "${M3OSTYPE}" = "POSIX" ] ;;
     tapi) [ "${M3OSTYPE}" = "WIN32" ] ;;
 
-    X11R4 | \
-    showthread | \
-    pkl-fonts | \
-    juno-machine | \
-    juno-compiler | \
-    juno-app) [ "${M3OSTYPE}" != "WIN32" ] ;;
+    X11R4) [ "${M3OSTYPE}" != "WIN32" ] ;;
 
     m3staloneback) [ "${GCC_BACKEND}" != yes ] ;;
     m3cc) [ "${GCC_BACKEND}" = yes ] && [ "${OMIT_GCC}" = "" ] ;;
