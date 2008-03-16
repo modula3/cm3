@@ -158,7 +158,7 @@ PROCEDURE Index(
         TYPECASE index OF
         | NULL =>
             RETURN Ix.Unknown;
-        | M3AST_AS.Integer_type,
+        | M3AST_AS.INT_TYPE,
           M3AST_AS.WideChar_type,
           M3AST_AS.Enumeration_type,
           M3AST_AS.Subrange_type =>

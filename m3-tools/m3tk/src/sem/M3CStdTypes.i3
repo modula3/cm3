@@ -29,6 +29,8 @@ IMPORT  M3AST_AS, M3AST_SM;
 
 PROCEDURE Integer(): M3AST_AS.Integer_type RAISES {};
 
+PROCEDURE Longint(): M3AST_AS.Longint_type RAISES {};
+
 PROCEDURE Real(): M3AST_AS.Real_type RAISES {};
 
 PROCEDURE LongReal(): M3AST_AS.LongReal_type RAISES {};

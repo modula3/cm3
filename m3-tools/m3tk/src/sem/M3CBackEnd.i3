@@ -154,10 +154,12 @@ TYPE
     PROCEDURE (f: M3CStdProcs.Func; 
         e: M3AST_SM.Exp_value;
         VAR (*out*) er: M3AST_SM.Exp_value;
+        intType: M3AST_AS.INT_TYPE := NIL;
         floatType: M3AST_AS.FLOAT_TYPE := NIL): NumStatus  RAISES {};
   (* As UnaryOp, but standard function identified by 'f'. 'f' will be one of:
     M3CStdProcs.T.{Abs,Float,Floor,Ceiling,Round,Trunc}. Iff 'f=Float'
-    then 'floatType' indicates, the expected type of the result. *)
+    then 'floatType' indicates the expected type of the result. Iff 'f=Int'
+    then 'intType' indicates the expected type of the result. *)
 
   StdBinaryOpProc =
     PROCEDURE (f: M3CStdProcs.Func; 
@@ -172,7 +174,7 @@ TYPE
         ts: M3AST_SM.TYPE_SPEC_UNSET;
         VAR (*out*) er: M3AST_SM.Exp_value): NumStatus RAISES {};
   (* M3CStdProcs.T.{BitSize,ByteSize,AdrSize,First,Last}.
-  For First/Last, Assert(TypeOf(ts) = Integer_type). The standard function
+  For First/Last, Assert(TypeOf(ts) = INT_TYPE). The standard function
   Number is handled elsewhere. *)
 
   WordOpProc = PROCEDURE(

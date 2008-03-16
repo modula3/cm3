@@ -367,7 +367,9 @@ subtype ("Enumeration_type" for "BOOLEAN"). *)
   LongReal_type <: FLOAT_TYPE;           (* LONGREAL *)
   Extended_type <: FLOAT_TYPE;           (* EXTENDED *)
 
-  Integer_type <: TYPE_SPEC;             (* INTEGER *)
+  INT_TYPE <: TYPE_SPEC;
+  Integer_type <: INT_TYPE;              (* INTEGER *)
+  Longint_type <: INT_TYPE;              (* LONGINT *)
   WideChar_type <: TYPE_SPEC;            (* WIDECHAR *)
   Null_type <: TYPE_SPEC;                (* NULL *)
   RefAny_type <: TYPE_SPEC;              (* REFANY *)
@@ -540,6 +542,7 @@ TYPE
   NUMERIC_LITERAL <: M3AST_LX.LITERAL;
 
   Integer_literal <: NUMERIC_LITERAL;
+  Longint_literal <: NUMERIC_LITERAL;
   Real_literal <: NUMERIC_LITERAL;
   LongReal_literal <: NUMERIC_LITERAL;
   Extended_literal <: NUMERIC_LITERAL;

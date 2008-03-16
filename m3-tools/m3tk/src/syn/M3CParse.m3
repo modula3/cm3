@@ -78,7 +78,7 @@ CONST
   StartOfBlock = TokenSet{M3CToken.BEGIN_} + StartOfDeclarationOrRevelation;
 
   AlwaysStartOfType = TokenSet{M3CToken.CurlyBra, M3CToken.SquareBra, M3CToken.ADDRESS_,
-      M3CToken.ARRAY_, M3CToken.BITS_, M3CToken.INTEGER_, M3CToken.LONGREAL_, M3CToken.NULL_,
+      M3CToken.ARRAY_, M3CToken.BITS_, M3CToken.INTEGER_, M3CToken.LONGINT_, M3CToken.LONGREAL_, M3CToken.NULL_,
       M3CToken.OBJECT_, M3CToken.REAL_, M3CToken.RECORD_, M3CToken.REF_, M3CToken.REFANY_,
       M3CToken.ROOT_, M3CToken.SET_, M3CToken.BRANDED_, M3CToken.UNTRACED_,
       M3CToken.EXTENDED_, M3CToken.WIDECHAR_};
@@ -1133,6 +1133,12 @@ PROCEDURE Type(
     BEGIN
               Pos(t, integer, TRUE);
               type := integer;
+            END;
+        | M3CToken.LONGINT_ =>
+            VAR longint: M3AST_AS.Longint_type := NEW(M3AST_AS.Longint_type).init();
+    BEGIN
+              Pos(t, longint, TRUE);
+              type := longint;
             END;
         | M3CToken.WIDECHAR_ =>
             VAR widechar: M3AST_AS.WideChar_type := NEW(M3AST_AS.WideChar_type).init();

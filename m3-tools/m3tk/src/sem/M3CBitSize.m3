@@ -149,7 +149,7 @@ PROCEDURE CheckOrdinal(
     IF M3COrdinal.Is(ts, baseType) THEN
       TYPECASE baseType OF
       | NULL =>
-      | M3AST_AS.Integer_type =>
+      | M3AST_AS.INT_TYPE =>
           RETURN;
       | M3AST_AS.WideChar_type,
         M3AST_AS.Enumeration_type =>

@@ -20,8 +20,9 @@ INTERFACE M3CBackEnd_C;
 (***************************************************************************)
 
 IMPORT M3AST_AS, M3AST_SM;
+IMPORT M3CBackEnd_Int_Integer, M3CBackEnd_Int_Longint;
 IMPORT M3CBackEnd_Float_Real, M3CBackEnd_Float_LongReal,
-    M3CBackEnd_Float_Extended;
+       M3CBackEnd_Float_Extended;
 
 (* This interface provides a 'friends' interface to the implementation
 of M3CBackEnd for the C-code generator. *)
@@ -47,12 +48,11 @@ TYPE
     sm_constructor: M3AST_AS.Constructor;
   END;
 
-  (* Note - Integer_value is used for all ordinals, including enumerations 
-  and the CHAR enumeration *)
+  (* Note - Integer_value is used for all INTEGER-based ordinals, including
+  enumerations and the CHAR enumeration *)
+  Integer_value = M3CBackEnd_Int_Integer.T;
 
-  Integer_value = M3AST_SM.Exp_value BRANDED OBJECT
-    sm_value: INTEGER;
-  END;
+  Longint_value = M3CBackEnd_Int_Longint.T;
 
   Proc_value = M3AST_SM.Exp_value BRANDED OBJECT
     sm_value: TEXT;  (* "I.P" *)
@@ -69,8 +69,5 @@ TYPE
   Real_value = M3CBackEnd_Float_Real.T;
   LongReal_value = M3CBackEnd_Float_LongReal.T;
   Extended_value = M3CBackEnd_Float_Extended.T;
-
-PROCEDURE NewInteger_value(i: INTEGER): Integer_value RAISES {};
-(* use this to create 'Integer_value' types *)
 
 END M3CBackEnd_C.

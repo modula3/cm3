@@ -132,9 +132,21 @@ PROCEDURE IRL(
     | M3AST_AS.FLOAT_TYPE =>
         (* Includes null case; result type is argument type *)
         RETURN ts;
-    | M3AST_AS.Subrange_type, M3AST_AS.Integer_type =>
+    | M3AST_AS.Subrange_type =>
+        IF intok THEN
+          RETURN IRL(BaseType(ts), intok);
+        ELSE
+          RETURN NIL;
+        END;
+    | M3AST_AS.Integer_type =>
         IF intok THEN
           RETURN M3CStdTypes.Integer();
+        ELSE
+          RETURN NIL;
+        END;
+    | M3AST_AS.Longint_type =>
+        IF intok THEN
+          RETURN M3CStdTypes.Longint();
         ELSE
           RETURN NIL;
         END;
@@ -153,7 +165,7 @@ PROCEDURE BaseType(
    BEGIN
      LOOP
        TYPECASE ts OF
-       | M3AST_AS.Integer_type, M3AST_AS.WideChar_type, M3AST_AS.Enumeration_type =>
+       | M3AST_AS.INT_TYPE, M3AST_AS.WideChar_type, M3AST_AS.Enumeration_type =>
            RETURN ts; (* includes the NULL case *)
        | M3AST_AS.Packed_type(packedType) =>
            ts := M3CTypesMisc.Unpack(packedType);
@@ -509,6 +521,8 @@ PROCEDURE InternalSet(
 
     | M3AST_AS.Integer_literal =>
         ts := M3CStdTypes.Integer();
+    | M3AST_AS.Longint_literal =>
+        ts := M3CStdTypes.Longint();
     | M3AST_AS.Real_literal =>
         ts := M3CStdTypes.Real();
     | M3AST_AS.LongReal_literal =>
@@ -580,7 +594,7 @@ PROCEDURE InternalSet(
                     IF NOT safe AND addressOp THEN
                       TYPECASE componentTypeSpec OF
                       | NULL =>
-                      | M3AST_AS.Subrange_type, M3AST_AS.Integer_type =>
+                      | M3AST_AS.Subrange_type, M3AST_AS.INT_TYPE =>
                           (* Int on rhs is not enough to resolve recursion *)
                           map.recursedTo := save;
                           componentTypeSpec := NIL;
@@ -702,7 +716,7 @@ PROCEDURE InternalSet(
                   index: M3AST_SM.TYPE_SPEC_UNSET;
                 BEGIN
                   TYPECASE actualTypeSpec OF
-                  | M3AST_AS.Integer_type, M3AST_AS.Subrange_type,
+                  | M3AST_AS.INT_TYPE, M3AST_AS.Subrange_type,
                     M3AST_AS.FLOAT_TYPE,
                     M3AST_AS.Enumeration_type =>
                       (* Result type is argument type; NIL case harmless *)

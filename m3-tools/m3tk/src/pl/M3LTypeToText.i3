@@ -23,6 +23,7 @@ INTERFACE M3LTypeToText;
 CONST
 (* Used in type strings *)
   IntegerCh         = 'I';
+  LongintCh         = 'J';
   CardinalCh        = 'C';
   CharCh            = 'H';
   WideCharCh        = 'W';
