@@ -177,6 +177,9 @@ PROCEDURE Named_type(
 PROCEDURE Integer_type(
     n: M3AST_AS_F.Integer_type; h: AST_CopyRep.Handle;
     ): AST.NODE RAISES ANY;
+PROCEDURE Longint_type(
+    n: M3AST_AS_F.Longint_type; h: AST_CopyRep.Handle;
+    ): AST.NODE RAISES ANY;
 PROCEDURE WideChar_type(
     n: M3AST_AS_F.WideChar_type; h: AST_CopyRep.Handle;
     ): AST.NODE RAISES ANY;
@@ -263,6 +266,9 @@ PROCEDURE Range(
     ): AST.NODE RAISES ANY;
 PROCEDURE Integer_literal(
     n: M3AST_AS_F.Integer_literal; h: AST_CopyRep.Handle;
+    ): AST.NODE RAISES ANY;
+PROCEDURE Longint_literal(
+    n: M3AST_AS_F.Longint_literal; h: AST_CopyRep.Handle;
     ): AST.NODE RAISES ANY;
 PROCEDURE Real_literal(
     n: M3AST_AS_F.Real_literal; h: AST_CopyRep.Handle;

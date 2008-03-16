@@ -121,7 +121,9 @@ TYPE
   Real_type = Previous_View.Real_type;
   LongReal_type = Previous_View.LongReal_type;
   Extended_type = Previous_View.Extended_type;
+  INT_TYPE = Previous_View.INT_TYPE;
   Integer_type = Previous_View.Integer_type;
+  Longint_type = Previous_View.Longint_type;
   WideChar_type = Previous_View.WideChar_type;
   Null_type = Previous_View.Null_type;
   RefAny_type = Previous_View.RefAny_type;

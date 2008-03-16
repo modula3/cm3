@@ -30,6 +30,7 @@ IMPORT M3CSrcPos;
 
 VAR
   integer: M3AST_AS.Integer_type;
+  longint: M3AST_AS.Longint_type;
   real: M3AST_AS.Real_type;
   longReal: M3AST_AS.LongReal_type;
   extended: M3AST_AS.Extended_type;
@@ -54,6 +55,11 @@ PROCEDURE Integer(): M3AST_AS.Integer_type RAISES {}=
   BEGIN
     RETURN integer;
   END Integer;
+
+PROCEDURE Longint(): M3AST_AS.Longint_type RAISES {}=
+  BEGIN
+    RETURN longint;
+  END Longint;
 
 PROCEDURE Real(): M3AST_AS.Real_type RAISES {}=
   BEGIN
@@ -174,6 +180,7 @@ PROCEDURE Init(n: M3AST_AS.SRC_NODE) RAISES {}=
 BEGIN
   charpos := 0;
   integer := NEW(M3AST_AS.Integer_type).init(); Init(integer);
+  longint := NEW(M3AST_AS.Longint_type).init(); Init(longint);
   widechar := NEW(M3AST_AS.WideChar_type).init(); Init(widechar);
   real := NEW(M3AST_AS.Real_type).init(); Init(real);
   longReal := NEW(M3AST_AS.LongReal_type).init(); Init(longReal);

@@ -395,6 +395,11 @@ TYPE
     copy := M3AST_AS_Copy.Integer_type;
     name := M3AST_AS_Name.Integer_type;
   END;
+  Longint_type = Previous_View.Longint_type OBJECT
+  OVERRIDES
+    copy := M3AST_AS_Copy.Longint_type;
+    name := M3AST_AS_Name.Longint_type;
+  END;
   WideChar_type = Previous_View.WideChar_type OBJECT
   OVERRIDES
     copy := M3AST_AS_Copy.WideChar_type;
@@ -577,6 +582,11 @@ TYPE
   OVERRIDES
     copy := M3AST_AS_Copy.Integer_literal;
     name := M3AST_AS_Name.Integer_literal;
+  END;
+  Longint_literal = Previous_View.Longint_literal OBJECT
+  OVERRIDES
+    copy := M3AST_AS_Copy.Longint_literal;
+    name := M3AST_AS_Name.Longint_literal;
   END;
   Real_literal = Previous_View.Real_literal OBJECT
   OVERRIDES
@@ -1028,6 +1038,7 @@ REVEAL
   M3AST_AS.Concrete_reveal <: Concrete_reveal;   
   M3AST_AS.Named_type <: Named_type;            
   M3AST_AS.Integer_type <: Integer_type;
+  M3AST_AS.Longint_type <: Longint_type;
   M3AST_AS.WideChar_type <: WideChar_type;
   M3AST_AS.Real_type <: Real_type;
   M3AST_AS.LongReal_type <: LongReal_type;
@@ -1056,6 +1067,7 @@ REVEAL
   M3AST_AS.Raisees_any <: Raisees_any;
   M3AST_AS.Range <: Range;
   M3AST_AS.Integer_literal <: Integer_literal;
+  M3AST_AS.Longint_literal <: Longint_literal;
   M3AST_AS.Real_literal <: Real_literal;
   M3AST_AS.LongReal_literal <: LongReal_literal;
   M3AST_AS.Extended_literal <: Extended_literal;
@@ -1149,6 +1161,7 @@ TYPE
   METHOD_OVERRIDE = Previous_View.METHOD_OVERRIDE;
   BRANDED_TYPE = Previous_View.BRANDED_TYPE;
   FLOAT_TYPE = Previous_View.FLOAT_TYPE;
+  INT_TYPE = Previous_View.INT_TYPE;
   RAISEES = Previous_View.RAISEES;
   EXP = Previous_View.EXP; 
   NUMERIC_LITERAL = Previous_View.NUMERIC_LITERAL;

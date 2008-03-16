@@ -101,7 +101,7 @@ PROCEDURE Unary(u: M3AST_AS.UNARY) RAISES {}=
         ok := M3CTypeChkUtil.IsSubTypeOfBoolean(type);
     | M3AST_AS.Unaryplus, M3AST_AS.Unaryminus =>
         ok := (ISTYPE(type, M3AST_AS.FLOAT_TYPE)) OR
-            (ISTYPE(type, M3AST_AS.Integer_type));
+            (ISTYPE(type, M3AST_AS.INT_TYPE));
     | M3AST_AS.Deref =>
         ok := TRUE; (* already checked *)
     END; (* case *)
@@ -147,7 +147,7 @@ PROCEDURE Binary(h: Handle; b: M3AST_AS.BINARY) RAISES {}=
     | M3AST_AS.Plus, M3AST_AS.Minus,
       M3AST_AS.Times, M3AST_AS.Rdiv =>
         TYPECASE type1 OF
-        | M3AST_AS.Integer_type, M3AST_AS.FLOAT_TYPE  =>
+        | M3AST_AS.INT_TYPE, M3AST_AS.FLOAT_TYPE  =>
             ok := (TYPECODE(type1) = TYPECODE(type2));
         | M3AST_AS.Set_type =>
             ok := (TYPECODE(type1) = TYPECODE(type2)) AND
@@ -157,13 +157,13 @@ PROCEDURE Binary(h: Handle; b: M3AST_AS.BINARY) RAISES {}=
           IF (NOT safe) AND
                 (ISTYPE(b, M3AST_AS.Plus) OR ISTYPE(b, M3AST_AS.Minus)) AND
                 M3CTypeChkUtil.IsSubTypeOfAddress(type1) THEN
-              ok := ISTYPE(type2, M3AST_AS.Integer_type) OR
+              ok := ISTYPE(type2, M3AST_AS.INT_TYPE) OR
                   (ISTYPE(b, M3AST_AS.Minus) AND
                       M3CTypeChkUtil.IsSubTypeOfAddress(type2));
             END; (* if *)
         END; (* case *)
     | M3AST_AS.Div, M3AST_AS.Mod => 
-        ok := (ISTYPE(type1, M3AST_AS.Integer_type) OR
+        ok := (ISTYPE(type1, M3AST_AS.INT_TYPE) OR
                    (ISTYPE(b, M3AST_AS.Mod) AND
                     ISTYPE(type1, M3AST_AS.FLOAT_TYPE))) AND
             (TYPECODE(type1) = TYPECODE(type2));
@@ -172,7 +172,7 @@ PROCEDURE Binary(h: Handle; b: M3AST_AS.BINARY) RAISES {}=
         IF ISTYPE(b, M3AST_AS.Eq) OR ISTYPE(b, M3AST_AS.Ne) THEN
           ok := TRUE;
         ELSE
-          ok := (ISTYPE(type1, M3AST_AS.Integer_type)) OR
+          ok := (ISTYPE(type1, M3AST_AS.INT_TYPE)) OR
               (ISTYPE(type1, M3AST_AS.Enumeration_type)) OR
               (ISTYPE(type1, M3AST_AS.FLOAT_TYPE)) OR
               (ISTYPE(type1, M3AST_AS.Set_type)) OR
@@ -385,9 +385,9 @@ PROCEDURE For(f: M3AST_AS.For_st) RAISES {}=
     END; (* if *)
     IF f.as_by # NIL THEN
       byType := BaseType(f.as_by.as_exp);
-      IF byType # NIL AND NOT ISTYPE(byType, M3AST_AS.Integer_type) THEN
+      IF byType # NIL AND NOT ISTYPE(byType, M3AST_AS.INT_TYPE) THEN
         M3Error.Report(f.as_by.as_exp,
-            "For loop BY expression is not subtype of INTEGER");
+            "For loop BY expression is not an integer value");
       END; (* if *)
     END; (* if *)
   END For;

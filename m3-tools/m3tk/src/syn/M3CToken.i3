@@ -51,7 +51,7 @@ TYPE
        FINALLY_, FOR_, FROM_,
        GENERIC_,
        IF_, IMPORT_, IN_, INTEGER_, INTERFACE_,
-       LOCK_, LONGREAL_, LOOP_,
+       LOCK_, LONGINT_, LONGREAL_, LOOP_,
        METHODS_, MOD_, MODULE_,
        NIL_, NOT_, NULL_,
        OBJECT_, OF_, OR_, OVERRIDES_,
@@ -118,6 +118,7 @@ CONST
   INTEGER_: T = ORD(E.INTEGER_);
   INTERFACE_: T = ORD(E.INTERFACE_);
   LOCK_: T = ORD(E.LOCK_);
+  LONGINT_: T = ORD(E.LONGINT_);
   LONGREAL_: T = ORD(E.LONGREAL_);
   LOOP_: T = ORD(E.LOOP_);
   METHODS_: T = ORD(E.METHODS_);
@@ -200,8 +201,8 @@ CONST
       "BY", "CASE",  "CONST", "DIV", "DO", "ELSE", "ELSIF", "END", "EVAL", 
       "EXCEPT", "EXCEPTION", "EXIT", "EXPORTS", "EXTENDED", "FINALLY", "FOR", 
       "FROM", "GENERIC", "IF", "IMPORT",
-      "IN", "INTEGER", "INTERFACE", "LOCK", "LONGREAL", "LOOP", "METHODS",
-      "MOD", "MODULE", "NIL", "NOT", "NULL", "OBJECT", "OF", "OR", 
+      "IN", "INTEGER", "INTERFACE", "LOCK", "LONGINT", "LONGREAL", "LOOP",
+      "METHODS", "MOD", "MODULE", "NIL", "NOT", "NULL", "OBJECT", "OF", "OR", 
       "OVERRIDES", "PROCEDURE",
       "RAISE", "RAISES", "READONLY", "REAL", "RECORD", "REF", "REFANY",
       "REPEAT", "RETURN", "REVEAL", "ROOT", "SET", "THEN", "TO", "TRY", "TYPE",

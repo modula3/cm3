@@ -254,7 +254,7 @@ PROCEDURE TmW (ts: M3AST_AS.M3TYPE; rs: RefStack): BOOLEAN
     TRY
       TYPECASE ts OF
       | M3AST_AS.Named_type (x) => RETURN TmW(x.sm_type_spec, rs);
-      | M3AST_AS.FLOAT_TYPE, M3AST_AS.Integer_type,
+      | M3AST_AS.FLOAT_TYPE, M3AST_AS.INT_TYPE,
           M3AST_AS.Null_type, M3AST_AS.RefAny_type,
           M3AST_AS.Address_type, M3AST_AS.Root_type =>
           RETURN FALSE;

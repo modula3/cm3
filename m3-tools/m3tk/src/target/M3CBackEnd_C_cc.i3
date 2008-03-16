@@ -45,6 +45,8 @@ VAR
   longRealS: INTEGER; (* = 64; *)
   intA: INTEGER; (* = a32; *)
   intS: INTEGER; (* = 32; *)
+  longintA: INTEGER; (* = a64; *)
+  longintS: INTEGER; (* = 64; *)
   wideCharA: INTEGER; (* = 16 *)
   wideCharS: INTEGER; (* = 16 *)
 
