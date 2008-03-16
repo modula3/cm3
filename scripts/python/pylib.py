@@ -1396,8 +1396,10 @@ GenericCommand:
                 sys.exit(1)
         if KeepGoing:
             print(" ==> %s returned %s" % (str(ActionCommands), ExitCode))
+            print("")
         else:
             print(" ==> %(p)s done" % vars())
+            print("")
 
     return Success
 
