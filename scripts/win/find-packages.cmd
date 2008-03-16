@@ -18,7 +18,7 @@ goto :eof
 
 :F1
 set a=%~f1
-for /f "tokens=*" %%b in ('echo %%a:%ROOT%\^=%%') do set a=%%b
+for /f "tokens=*" %%b in ('cmd /c echo %%a:%ROOT%\^=%%') do set a=%%b
 set a=%a:\=/%
 echo %a%
 @goto :eof
