@@ -1,4 +1,4 @@
-@rem $Id: pkgmap.cmd,v 1.6 2008-03-16 13:38:48 jkrell Exp $
+@rem $Id: pkgmap.cmd,v 1.7 2008-03-16 14:47:38 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -16,7 +16,10 @@ if "%1" == "" (
   goto :pkgmap_2
 )
 if (%PKG_ACTION%) == (" ") set PKG_ACTION=
-if "%1" == "-k" (
+call %ROOT%\scripts\win\pkginfo FilterOnePackage %1
+if errorlevel 1 (
+  echo === package %1 omitted on this platform ==
+) else if "%1" == "-k" (
   set KEEP_GOING=yes
 ) else if "%1" == "-n" (
   set NO_ACTION=yes
@@ -31,7 +34,7 @@ if "%1" == "-k" (
   set PKGS=%PKGS% %1
 ) else (
     call %ROOT%\scripts\win\pkginfo pkgpath p %1 || (
-        echo *** cannot find package %1 / %p%
+        echo *** cannot find package %1 / %p% 1
         endlocal
 	    exit /b 1
     )
@@ -43,7 +46,7 @@ if not "%p%" == "" (
     ) else if exist %ROOT%\%p% (
         set PKGS=%PKGS% %ROOT%\%p%
     ) else (
-        echo *** cannot find package %1 / %p%
+        echo *** cannot find package %1 / %p% 2
         endlocal
 	    exit /b 1
     )
