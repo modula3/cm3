@@ -14,17 +14,17 @@ IMPORT Atom, Fmt, Formatter, AtomRefTbl, StubCode, StubUtils,
 
 <* FATAL Wr.Failure  *>
 
-PROCEDURE ToText(t: Type.T; byName: BOOLEAN := TRUE): Text.T =
+PROCEDURE ToText (t: Type.T; byName: BOOLEAN := TRUE): Text.T =
   VAR text: Text.T;
   BEGIN
     IF t = NIL THEN RETURN "" END;
     IF t.name # NIL AND byName THEN RETURN QidToText(t.name); END;
-    TYPECASE t OF 
+    TYPECASE t OF
       | Type.Char => RETURN "CHAR"
       | Type.WideChar => RETURN "WIDECHAR"
-      | Type.UserDefined (ud) => 
+      | Type.UserDefined (ud) =>
           IF NUMBER(ud.elts^) = 0 THEN text := "";
-          ELSE 
+          ELSE
             text := Atom.ToText(ud.elts[0]);
             FOR i := 1 TO LAST(ud.elts^) DO
               text := text & ", " & Atom.ToText(ud.elts[i]);
@@ -34,7 +34,7 @@ PROCEDURE ToText(t: Type.T; byName: BOOLEAN := TRUE): Text.T =
       | Type.Enumeration (enum) =>
           IF enum = Type.boolean THEN RETURN "BOOLEAN"; END;
           StubUtils.Die("CodeForType.ToText: unsupported enumeration type");
-      | Type.Subrange (sub) => 
+      | Type.Subrange (sub) =>
           VAR min, max: INTEGER;
               ud: Type.UserDefined;
           BEGIN
@@ -52,12 +52,12 @@ PROCEDURE ToText(t: Type.T; byName: BOOLEAN := TRUE): Text.T =
                "[" & Fmt.Int(min) &  ".." & Fmt.Int(max) &"]"
             END;
             IF sub.base = Type.char THEN RETURN
-               "[VAL(" & Fmt.Int(min) &  ", CHAR) .. VAL(" & 
+               "[VAL(" & Fmt.Int(min) &  ", CHAR) .. VAL(" &
                      Fmt.Int(max) & ", CHAR)]"
             END;
             ud := NARROW(sub.base, Type.UserDefined);
-            RETURN "[" & ToText(sub.base) & "." & Atom.ToText(ud.elts[min]) & 
-                    ".." & ToText(sub.base) & "." & Atom.ToText(ud.elts[max]) & 
+            RETURN "[" & ToText(sub.base) & "." & Atom.ToText(ud.elts[min]) &
+                    ".." & ToText(sub.base) & "." & Atom.ToText(ud.elts[max]) &
                      "]";
           END;
       | Type.Real => RETURN "REAL";
@@ -65,25 +65,25 @@ PROCEDURE ToText(t: Type.T; byName: BOOLEAN := TRUE): Text.T =
       | Type.Extended => RETURN "EXTENDED";
       | Type.Reference (ref) =>
           TYPECASE ref OF
-          | Type.Opaque (o) => 
+          | Type.Opaque (o) =>
             (* Type can only be displayed by name *)
             RETURN "***Error*** Opaque type only printed by name: "
                     & "supertype " & ToText(o.revealedSuperType);
             (* RETURN Atom.ToText(t.name.intf) & "." & Atom.ToText(t.name.item)*)
           | Type.Object, Type.Ref =>
-            IF ref.brand # NIL THEN 
+            IF ref.brand # NIL THEN
               text := "BRANDED \"" &  Atom.ToText(ref.brand) & "\" ";
-            ELSE 
+            ELSE
               text := ""
             END;
             TYPECASE ref OF
-            | Type.Object(o) => 
+            | Type.Object(o) =>
               RETURN ToText(o.super) & " " & text & "OBJECT" & Wr.EOL &
                      FieldsToText(o.fields) & Wr.EOL
                   & "METHODS" & Wr.EOL
                   & MethodsToText(o.methods) & Wr.EOL
                   & "END";
-            | Type.Ref (r) => 
+            | Type.Ref (r) =>
               IF NOT r.traced THEN text := "UNTRACED " & text END;
               RETURN text & "REF " & ToText(r.target, TRUE);
             ELSE StubUtils.Die("CodeForType.ToText: unsupported reference type");
@@ -97,9 +97,9 @@ PROCEDURE ToText(t: Type.T; byName: BOOLEAN := TRUE): Text.T =
             text := ToText(arr.index);
           END;
           RETURN "ARRAY " & text & " OF " & ToText(arr.element);
-      | Type.Packed (p) => 
+      | Type.Packed (p) =>
           RETURN "BITS " & Fmt.Int(p.size) & "FORF " & ToText(p.base);
-      | Type.Record (rec) => 
+      | Type.Record (rec) =>
             RETURN "RECORD " & FieldsToText(rec.fields) & " END";
       | Type.Set (set) =>
           RETURN "SET OF " & ToText(set.range);
@@ -111,20 +111,22 @@ PROCEDURE ToText(t: Type.T; byName: BOOLEAN := TRUE): Text.T =
     RETURN NIL;
   END ToText;
 
-PROCEDURE QidToText(qid: Type.Qid): TEXT = 
+PROCEDURE QidToText(qid: Type.Qid): TEXT =
   BEGIN
-    IF qid.intf = nullAtm THEN RETURN Atom.ToText(qid.item)
-    ELSE RETURN Atom.ToText(qid.intf) & "." & Atom.ToText(qid.item) 
+    IF qid.intf = nullAtm THEN
+      RETURN Atom.ToText(qid.item)
+    ELSE
+      RETURN Atom.ToText(qid.intf) & "." & Atom.ToText(qid.item)
     END;
   END QidToText;
 
 
-PROCEDURE ProcHeader(f: Formatter.T; 
-                       objType: Type.Object; 
-                       procName: TEXT; 
-                       sig: Type.Signature;
-                       argPragmas: REF ARRAY OF TEXT := NIL;
-                       suffix := "") =
+PROCEDURE ProcHeader(f: Formatter.T;
+                     objType: Type.Object;
+                     procName: TEXT;
+                     sig: Type.Signature;
+                     argPragmas: REF ARRAY OF TEXT := NIL;
+                     suffix := "") =
   VAR exceptList:= NEW(AtomRefTbl.Default).init();
       ename: TEXT;
       firstException := TRUE;
@@ -141,14 +143,14 @@ PROCEDURE ProcHeader(f: Formatter.T;
       Formatter.Break(f);
       Formatter.PutText(f, ": " & ToText(sig.result));
     END;
-    IF sig.raises = NIL THEN 
+    IF sig.raises = NIL THEN
       Formatter.Break(f);
       Formatter.PutText(f, " RAISES ANY");
     ELSE
       Formatter.Break(f);
       Formatter.PutText(f, " RAISES {");
       FOR i := 0 TO LAST(sig.raises^) DO
-        IF NOT firstException THEN 
+        IF NOT firstException THEN
           Formatter.PutText(f,  ", ");
           Formatter.Break(f);
         END;
@@ -162,15 +164,14 @@ PROCEDURE ProcHeader(f: Formatter.T;
     Formatter.End(f);
   END ProcHeader;
 
-PROCEDURE FieldsToText(f: REF ARRAY OF Type.Field): TEXT =
+PROCEDURE FieldsToText (f: REF ARRAY OF Type.Field): TEXT =
   VAR notFirst := FALSE;
       text := "";
   BEGIN
     FOR i := 0 TO LAST(f^) DO
       IF notFirst THEN text := text & "; "; END;
       notFirst := TRUE;
-      text := text & Atom.ToText(f[i].name) & ": " & 
-                ToText(f[i].type);
+      text := text & Atom.ToText(f[i].name) & ": " & ToText(f[i].type);
       IF f[i].default # NIL THEN
         text := text & ":= " & ValueProc.ToText(f[i].default, f[i].type);
       END;
@@ -178,7 +179,7 @@ PROCEDURE FieldsToText(f: REF ARRAY OF Type.Field): TEXT =
     RETURN text;
   END FieldsToText;
 
-PROCEDURE MethodsToText(m: REF ARRAY OF Type.Method): TEXT =
+PROCEDURE MethodsToText (m: REF ARRAY OF Type.Method): TEXT =
   VAR notFirst := FALSE;
       text := "";
   BEGIN
@@ -188,17 +189,19 @@ PROCEDURE MethodsToText(m: REF ARRAY OF Type.Method): TEXT =
       text := text & Atom.ToText(m[i].name) (*& SigToText(m[i].sig);*);
       IF m[i].default # NIL THEN
         text := text & ":= " ;
-(*        TYPECASE m[i].default OF
+(*
+        TYPECASE m[i].default OF
           MethodDefault1 (md1) => text := text & QidToText(md1.qid);
         | MethodDefault2 (md2) => text := text & ToText(md2.obType) &
                                  "." & Atom.ToText(md2.method);
-        END;  *)
+        END;
+*)
       END;
     END;
     RETURN text;
   END MethodsToText;
 
-PROCEDURE Formals(fmtr: Formatter.T; 
+PROCEDURE Formals(fmtr: Formatter.T;
                   f: REF ARRAY OF Type.Formal;
                   argPragmas: REF ARRAY OF TEXT;
                   suffix := "") =
@@ -212,11 +215,13 @@ PROCEDURE Formals(fmtr: Formatter.T;
       IF argPragmas # NIL THEN
         Formatter.PutText(fmtr, argPragmas[i]);
       END;
-      Formatter.PutText(fmtr, modeName[f[i].mode] & 
+      Formatter.PutText(fmtr, modeName[f[i].mode] &
         Atom.ToText(f[i].name) & suffix & ": " & ToText(f[i].type));
-      (* IF f[i].default # NIL THEN
-          text := text & ":= " & ValueProc.ToText(f[i].default, f[i].type); 
-        END; *)
+(*
+        IF f[i].default # NIL THEN
+          text := text & ":= " & ValueProc.ToText(f[i].default, f[i].type);
+        END;
+*)
     END;
   END Formals;
 
@@ -232,7 +237,7 @@ PROCEDURE ImportRevelations(t: Type.Reference; importTbl: AtomRefTbl.T) =
           WHILE TRUE DO
             TYPECASE o.super OF
             | Type.Opaque => EXIT
-            | Type.Object => 
+            | Type.Object =>
               IF o.revIntf # NIL THEN
                 EVAL importTbl.put(o.revIntf, NIL);
               END;
@@ -241,12 +246,12 @@ PROCEDURE ImportRevelations(t: Type.Reference; importTbl: AtomRefTbl.T) =
             END;
           END;
         END;
-      ELSE 
+      ELSE
     END;
   END ImportRevelations;
 
-PROCEDURE ImportList(t: Type.Object; 
-                     importTbl: AtomRefTbl.T; 
+PROCEDURE ImportList(t: Type.Object;
+                     importTbl: AtomRefTbl.T;
                      methods: MethodList;
                      lastNewMethod: INTEGER;
                      byName: BOOLEAN:= TRUE) =
@@ -270,8 +275,8 @@ PROCEDURE ImportList(t: Type.Object;
     END;
   END ImportList;
 
-PROCEDURE ImportFromType(t: Type.T; importTbl: AtomRefTbl.T; 
-                     byName: BOOLEAN:= TRUE) =
+PROCEDURE ImportFromType(t: Type.T; importTbl: AtomRefTbl.T;
+                         byName: BOOLEAN:= TRUE) =
   BEGIN
     IF t = NIL THEN RETURN END;
     IF t.name # NIL AND t.name.intf # nullAtm THEN
@@ -280,15 +285,15 @@ PROCEDURE ImportFromType(t: Type.T; importTbl: AtomRefTbl.T;
     TYPECASE t OF
     | Type.Reference (ref) => ImportRevelations(ref, importTbl);
     ELSE
-    END; 
+    END;
     IF byName AND t.name # NIL THEN
       RETURN;
     END;
     TYPECASE t OF
-    | Type.Enumeration, Type.UserDefined, Type.Real, Type.LongReal, 
+    | Type.Enumeration, Type.UserDefined, Type.Real, Type.LongReal,
         Type.Extended =>
     | Type.Subrange (sr) => ImportFromType(sr.base, importTbl);
-    | Type.Object (ob) => 
+    | Type.Object (ob) =>
         ImportFromFields(ob.fields, importTbl);
         FOR i := 0 TO LAST(ob.methods^) DO
           ImportFromSig(ob.methods[i].sig, importTbl);
@@ -297,19 +302,19 @@ PROCEDURE ImportFromType(t: Type.T; importTbl: AtomRefTbl.T;
           EVAL importTbl.put(ob.revIntf, NIL);
         END;
     | Type.Ref (r) => ImportFromType(r.target, importTbl);
-    | Type.Opaque (op) => 
+    | Type.Opaque (op) =>
         ImportFromType(op.revealedSuperType, importTbl);
     | Type.Array (a) => ImportFromType(a.index, importTbl);
                    ImportFromType(a.element, importTbl);
     | Type.Packed (p) => ImportFromType(p.base, importTbl);
-    | Type.Record (rec) => ImportFromFields(rec.fields, importTbl);        
+    | Type.Record (rec) => ImportFromFields(rec.fields, importTbl);
     | Type.Set (s) => ImportFromType(s.range, importTbl);
     | Type.Procedure (p) => ImportFromSig(p.sig, importTbl);
     ELSE StubUtils.Die("CodeForType.ImportFromType: unsupported type");
     END;
   END ImportFromType;
 
-PROCEDURE ImportFromFields(fields: REF ARRAY OF Type.Field; 
+PROCEDURE ImportFromFields(fields: REF ARRAY OF Type.Field;
                            importTbl: AtomRefTbl.T) =
   BEGIN
     IF fields = NIL THEN RETURN END;
@@ -343,16 +348,16 @@ PROCEDURE ImportRefsFromType(t: Type.T; importTbl: AtomRefTbl.T) =
   BEGIN
     IF t = NIL THEN RETURN END;
     TYPECASE t OF
-    | Type.Enumeration, Type.UserDefined, Type.Real, Type.LongReal, 
+    | Type.Enumeration, Type.UserDefined, Type.Real, Type.LongReal,
         Type.Extended, Type.Subrange, Type.Set, Type.Procedure =>
-    | Type.Reference => 
+    | Type.Reference =>
         IF NOT Type.MayBeRefAny(t) AND Type.NamedType(t) THEN
           ImportFromType(t, importTbl)
         END;
     | Type.Array (a) => ImportFromType(a.index, importTbl);
                    ImportRefsFromType(a.element, importTbl);
     | Type.Packed (p) => ImportRefsFromType(p.base, importTbl);
-    | Type.Record (rec) => 
+    | Type.Record (rec) =>
         IF rec.fields = NIL THEN RETURN END;
         FOR i := 0 TO LAST(rec.fields^) DO
           ImportRefsFromType(rec.fields[i].type, importTbl);
@@ -361,7 +366,7 @@ PROCEDURE ImportRefsFromType(t: Type.T; importTbl: AtomRefTbl.T) =
     END;
   END ImportRefsFromType;
 
-PROCEDURE AugmentImportList(importList: AtomRefTbl.T; 
+PROCEDURE AugmentImportList(importList: AtomRefTbl.T;
      READONLY newImports: ARRAY OF Atom.T) =
   VAR dummy: REFANY;
   BEGIN
@@ -370,7 +375,7 @@ PROCEDURE AugmentImportList(importList: AtomRefTbl.T;
     END;
   END AugmentImportList;
 
-PROCEDURE AddModuleImports(importTbl: AtomRefTbl.T; 
+PROCEDURE AddModuleImports(importTbl: AtomRefTbl.T;
                            methods: MethodList;
                            lastNewMethod: INTEGER) =
   VAR thread := Atom.FromText("Thread");
@@ -388,14 +393,14 @@ PROCEDURE AddModuleImports(importTbl: AtomRefTbl.T;
               NOT (r.qid.intf = netobj AND r.qid.item = error) THEN
               ImportFromType(r.arg, importTbl);
             END;
-          END; 
+          END;
         END;
       END;
     END;
   END AddModuleImports;
 
-PROCEDURE ProduceImports(fmtWr: Formatter.T; 
-                         <* UNUSED *>objName: Type.Qid; 
+PROCEDURE ProduceImports(fmtWr: Formatter.T;
+                         <* UNUSED *>objName: Type.Qid;
                          imports: AtomRefTbl.T) =
   VAR key: Atom.T; value: REFANY;
     iter := imports.iterate();
@@ -404,10 +409,10 @@ PROCEDURE ProduceImports(fmtWr: Formatter.T;
     Formatter.Begin(fmtWr, 7);
     Formatter.PutText(fmtWr, "IMPORT ");
     WHILE iter.next(key, value) DO
-      OutputIntf(key, fmtWr, firstTime); 
+      OutputIntf(key, fmtWr, firstTime);
       firstTime := FALSE;
     END;
-    Formatter.PutText(fmtWr, ";"); 
+    Formatter.PutText(fmtWr, ";");
     Formatter.End(fmtWr);
     Formatter.NewLine(fmtWr, freshLine := FALSE);
   END ProduceImports;
@@ -422,41 +427,42 @@ PROCEDURE OutputIntf(intf: Atom.T; fmtWr: Formatter.T;
     Formatter.PutText(fmtWr, Atom.ToText(intf));
   END OutputIntf;
 
-PROCEDURE ImportSuperStubs(fmtWr: Formatter.T; 
+PROCEDURE ImportSuperStubs(fmtWr: Formatter.T;
                            methods: StubCode.MethodList;
                            lastNewMethod: INTEGER;
                            <*UNUSED*>typeName: Atom.T) =
-  (* VAR last := typeName;
-      printedAny := FALSE; *)
+(*
+  VAR last := typeName;
+      printedAny := FALSE;
+*)
   BEGIN
     IF lastNewMethod < LAST(methods^) THEN
-      (* Some stubs use methods from a supertype. 
+      (* Some stubs use methods from a supertype.
          That supertype must be imported.  *)
-      Formatter.PutText(fmtWr, "IMPORT " & 
-        Atom.ToText(methods[lastNewMethod+1].intf) &";");  
+      Formatter.PutText(fmtWr, "IMPORT " &
+        Atom.ToText(methods[lastNewMethod+1].intf) &";");
       Formatter.NewLine(fmtWr, freshLine := FALSE);
     END;
-    (*  
+(*
     FOR i := LAST(methods^) TO 0 BY -1 DO
       IF last # methods[i].intf THEN
         last := methods[i].intf;
         IF NOT printedAny THEN
-          Formatter.PutText(fmtWr, "IMPORT " & Atom.ToText(last));  
+          Formatter.PutText(fmtWr, "IMPORT " & Atom.ToText(last));
           printedAny := TRUE;
         ELSE
-          Formatter.PutText(fmtWr, ", " & Atom.ToText(last));  
+          Formatter.PutText(fmtWr, ", " & Atom.ToText(last));
         END;
       END;
     END;
-    IF printedAny THEN 
+    IF printedAny THEN
       Formatter.PutText(fmtWr, ";");
     END;
     Formatter.NewLine(fmtWr, freshLine := FALSE);
-    *)
+*)
   END ImportSuperStubs;
 
 VAR nullAtm := Atom.FromText("");
 
 BEGIN
-
 END CodeForType.
