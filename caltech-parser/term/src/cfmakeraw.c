@@ -27,7 +27,6 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
 #if defined(LIBC_SCCS) && !defined(lint)
 #if 0
 static char sccsid[] = "@(#)termios.c	8.2 (Berkeley) 2/21/94";
@@ -36,11 +35,9 @@ __RCSID("$NetBSD: cfmakeraw.c,v 1.8 2000/01/22 22:19:21 mycroft Exp $");
 #endif
 #endif /* LIBC_SCCS and not lint */
 
-#include "namespace.h"
-
 #include <assert.h>
 #include <stdio.h>
-#include <termios.h>
+#include "/usr/include/termios.h"
 
 #ifdef __weak_alias
 __weak_alias(cfmakeraw,_cfmakeraw)
