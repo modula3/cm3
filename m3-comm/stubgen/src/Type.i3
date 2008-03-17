@@ -10,7 +10,7 @@
 
 INTERFACE Type;
 
-(* A Type.T is a representation for a Modula-3 type, together with
+(* A "Type.T" is a representation for a Modula-3 type, together with
 information about the name of the type and its constituent types
 in some scope, called the global scope.  *)
 

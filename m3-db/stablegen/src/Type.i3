@@ -8,12 +8,11 @@
 (*      Modified On Fri Feb  2 10:35:09 PST 1990 by gnelson    *)
 (*      Modified On Wed Dec 20 18:07:50 1989 by kalsow         *)
 
+INTERFACE Type;
+
 (* A "Type.T" is a representation for a Modula-3 type, together with
 information about the name of the type and its constituent types
-in some scope, called the global scope.
-*)
-
-INTERFACE Type;
+in some scope, called the global scope.  *)
 
 IMPORT Atom, Text, Value;
 
@@ -30,9 +29,10 @@ TYPE
 
   Ordinal =  T BRANDED OBJECT END; (* Enumeration | Subrange *)
 
-  Enumeration = Ordinal BRANDED OBJECT END; (* Char | UserDefined *)
+  Enumeration = Ordinal BRANDED OBJECT END; (* Char | WideChar | UserDefined *)
 
   Char = Enumeration BRANDED OBJECT END;
+  WideChar = Enumeration BRANDED OBJECT END;
 
   UserDefined = Enumeration OBJECT
     elts : REF ARRAY OF Atom.T;
@@ -179,6 +179,7 @@ VAR (* READONLY *)
   cardinal      : Subrange;
   boolean       : UserDefined;
   char          : Char;
+  widechar      : WideChar;
   real          : Real;
   longreal      : LongReal;
   extended      : Extended;

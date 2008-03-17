@@ -27,6 +27,7 @@ PROCEDURE ToText(v: T; type: Type.T): TEXT =
           RETURN Fmt.Bool(VAL(i.val, BOOLEAN));
         ELSE TYPECASE type OF
           | Type.Char =>  RETURN "VAL(" & Fmt.Int(i.val) & ", CHAR)";
+          | Type.WideChar =>  RETURN "VAL(" & Fmt.Int(i.val) & ", WIDECHAR)";
           | Type.UserDefined (ud) => 
              RETURN Atom.ToText(ud.elts[i.val]);
           | Type.Subrange (sub) =>
@@ -36,7 +37,7 @@ PROCEDURE ToText(v: T; type: Type.T): TEXT =
           ELSE RAISE FatalError;
           END;
         END;
-    | Longint (i) => 
+    | Longint (i) =>
         IF (type = Type.longint) THEN
           RETURN Fmt.LongInt(i.val); 
         ELSE TYPECASE type OF
@@ -109,5 +110,4 @@ PROCEDURE ToText(v: T; type: Type.T): TEXT =
   END ToText;
 
 BEGIN
-
 END Value.

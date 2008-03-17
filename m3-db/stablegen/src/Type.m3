@@ -29,86 +29,88 @@ PROCEDURE ToText (t: T; byName: BOOLEAN := TRUE): Text.T =
     IF t.name # NIL AND byName THEN RETURN QidToText(t.name); END;
     TYPECASE t OF
     | Char => RETURN "CHAR"
+    | WideChar => RETURN "WIDECHAR"
     | UserDefined (ud) =>
-        IF NUMBER(ud.elts^) = 0 THEN
-          text := "";
-        ELSE
-          text := Atom.ToText(ud.elts[0]);
-          FOR i := 1 TO LAST(ud.elts^) DO
-            text := text & ", " & Atom.ToText(ud.elts[i]);
-          END;
+      IF NUMBER(ud.elts^) = 0 THEN text := "";
+      ELSE 
+        text := Atom.ToText(ud.elts[0]);
+        FOR i := 1 TO LAST(ud.elts^) DO
+          text := text & ", " & Atom.ToText(ud.elts[i]);
         END;
-        RETURN "{" & text & "}";
+      END;
+      RETURN "{" & text & "}";
     | Enumeration (enum) =>
-        IF enum = boolean THEN RETURN "BOOLEAN"; END;
-        <*ASSERT FALSE*>
+      IF enum = boolean THEN RETURN "BOOLEAN"; END;
+      <*ASSERT FALSE*>
     | Subrange (sub) =>
-        VAR
-          min, max: INTEGER;
-          ud      : UserDefined;
-        BEGIN
-          IF sub = integer THEN RETURN "INTEGER" END;
-          IF sub = longint THEN RETURN "LONGINT" END;
-          IF sub.base = longint THEN
-            WITH min = NARROW(sub.min, Value.Longint).val,
-                 max = NARROW(sub.max, Value.Longint).val DO
-              RETURN "[" & Fmt.LongInt(min) & "L.." & Fmt.LongInt(max) & "L]";
-            END;
+      VAR
+        min, max: INTEGER;
+        ud      : UserDefined;
+      BEGIN
+        IF sub = integer THEN RETURN "INTEGER" END;
+        IF sub = longint THEN RETURN "LONGINT" END;
+        IF sub.base = longint THEN
+          WITH min = NARROW(sub.min, Value.Longint).val,
+               max = NARROW(sub.max, Value.Longint).val DO
+            RETURN "[" & Fmt.LongInt(min) & "L.." & Fmt.LongInt(max) & "L]";
           END;
-          min := NARROW(sub.min, Value.Integer).val;
-          max := NARROW(sub.max, Value.Integer).val;
-          IF sub.base = integer THEN
-            RETURN "[" & Fmt.Int(min) & ".." & Fmt.Int(max) & "]"
-          END;
-          IF sub.base = char THEN
-            RETURN "[VAL(" & Fmt.Int(min) & ", CHAR) .. VAL("
-                     & Fmt.Int(max) & ", CHAR)]"
-          END;
-          ud := NARROW(sub.base, UserDefined);
-          RETURN
-            "[" & ToText(sub.base) & "." & Atom.ToText(ud.elts[min]) & ".."
-              & ToText(sub.base) & "." & Atom.ToText(ud.elts[max]) & "]";
         END;
+        min := NARROW(sub.min, Value.Integer).val;
+        max := NARROW(sub.max, Value.Integer).val;
+        IF sub.base = integer THEN
+          RETURN "[" & Fmt.Int(min) & ".." & Fmt.Int(max) & "]"
+        END;
+        IF sub.base = char THEN RETURN
+          "[VAL(" & Fmt.Int(min) &  ", CHAR) .. VAL(" &
+            Fmt.Int(max) & ", CHAR)]"
+        END;
+        IF sub.base = widechar THEN RETURN
+          "[VAL(" & Fmt.Int(min) &  ", WIDECHAR) .. VAL(" & 
+            Fmt.Int(max) & ", WIDECHAR)]"
+        END;
+        ud := NARROW(sub.base, UserDefined);
+        RETURN "[" & ToText(sub.base) & "." & Atom.ToText(ud.elts[min]) & 
+               ".." & ToText(sub.base) & "." & Atom.ToText(ud.elts[max]) & 
+               "]";
+      END;
     | Real => RETURN "REAL";
     | LongReal => RETURN "LONGREAL";
     | Extended => RETURN "EXTENDED";
     | Reference (ref) =>
+      TYPECASE ref OF
+      | Opaque (o) =>
+        (* Type can only be displayed by name *)
+        RETURN "***Error*** Opaque type only printed by name: "
+        & "supertype " & ToText(o.revealedSuperType);
+        (* RETURN Atom.ToText(t.name.intf) & "." & Atom.ToText(t.name.item)*)
+      | Object, Ref =>
+        IF ref.brand # NIL THEN
+          text := "BRANDED \"" & Atom.ToText(ref.brand) & "\" ";
+        ELSE
+          text := ""
+        END;
         TYPECASE ref OF
-        | Opaque (o) =>
-            (* Type can only be displayed by name *)
-            RETURN "***Error*** Opaque type only printed by name: "
-                     & "supertype " & ToText(o.revealedSuperType);
-          (* RETURN Atom.ToText(t.name.intf) & "." &
-             Atom.ToText(t.name.item)*)
-        | Object, Ref =>
-            IF ref.brand # NIL THEN
-              text := "BRANDED \"" & Atom.ToText(ref.brand) & "\" ";
-            ELSE
-              text := ""
-            END;
-            TYPECASE ref OF
-            | Object (o) =>
-                RETURN ToText(o.super) & " " & text & "OBJECT\n"
-                         & FieldsToText(o.fields) & "\nMETHODS\n"
-                         & MethodsToText(o.methods) & "\nEND";
-            | Ref (r) =>
-                IF NOT r.traced THEN text := "UNTRACED " & text END;
-                RETURN text & "REF " & ToText(r.target, TRUE);
-            ELSE
-              <*ASSERT FALSE*>
-            END;
+        | Object(o) => 
+          RETURN ToText(o.super) & " " & text & "OBJECT\n" &
+                 FieldsToText(o.fields) &
+                 "\nMETHODS\n" & MethodsToText(o.methods) & "\nEND";
+        | Ref (r) => 
+          IF NOT r.traced THEN text := "UNTRACED " & text END;
+          RETURN text & "REF " & ToText(r.target, TRUE);
         ELSE
           <*ASSERT FALSE*>
         END;
+      ELSE
+        <*ASSERT FALSE*>
+      END;
     | Array (arr) =>
-        IF arr.index = NIL THEN
-          text := "";
-        ELSE
-          text := ToText(arr.index);
-        END;
-        RETURN "ARRAY " & text & " OF " & ToText(arr.element);
-    | Packed (p) =>
-        RETURN "BITS " & Fmt.Int(p.size) & "FORF " & ToText(p.base);
+      IF arr.index = NIL THEN
+        text := "";
+      ELSE
+        text := ToText(arr.index);
+      END;
+      RETURN "ARRAY " & text & " OF " & ToText(arr.element);
+    | Packed (p) => RETURN "BITS " & Fmt.Int(p.size) & "FORF " & ToText(p.base);
     | Record (rec) => RETURN "RECORD " & FieldsToText(rec.fields) & " END";
     | Set (set) => RETURN "SET OF " & ToText(set.range);
     | Procedure (proc) => RETURN "PROCEDURE" & SigToText(proc.sig);
@@ -119,10 +121,8 @@ PROCEDURE ToText (t: T; byName: BOOLEAN := TRUE): Text.T =
 
 PROCEDURE QidToText (qid: Qid): TEXT =
   BEGIN
-    IF qid.intf = nullAtm THEN
-      RETURN Atom.ToText(qid.item)
-    ELSE
-      RETURN Atom.ToText(qid.intf) & "." & Atom.ToText(qid.item)
+    IF qid.intf = nullAtm THEN RETURN Atom.ToText(qid.item)
+    ELSE RETURN Atom.ToText(qid.intf) & "." & Atom.ToText(qid.item) 
     END;
   END QidToText;
 
@@ -178,10 +178,10 @@ PROCEDURE MethodsToText (m: REF ARRAY OF Method): TEXT =
       IF m[i].default # NIL THEN
         text := text & ":= ";
         TYPECASE m[i].default OF
-          MethodDefault1 (md1) => text := text & QidToText(md1.qid);
+        | MethodDefault1 (md1) =>
+          text := text & QidToText(md1.qid);
         | MethodDefault2 (md2) =>
-            text :=
-              text & ToText(md2.obType) & "." & Atom.ToText(md2.method);
+          text := text & ToText(md2.obType) & "." & Atom.ToText(md2.method);
         ELSE
           <*ASSERT FALSE*>
         END;
@@ -201,8 +201,9 @@ PROCEDURE FormalsToText (f: REF ARRAY OF Formal): TEXT =
       IF notFirst THEN text := text & "; "; END;
       notFirst := TRUE;
       IF f[i].outOnly THEN outPrag := "<*OUT*> " ELSE outPrag := "" END;
-      text := text & modeName[f[i].mode] & " " & outPrag
-                & Atom.ToText(f[i].name) & ": " & ToText(f[i].type);
+      text :=
+          text & modeName[f[i].mode] & " " & outPrag &
+          Atom.ToText(f[i].name) & ": " & ToText(f[i].type);
       IF f[i].default # NIL THEN
         text := text & ":= " & ValueProc.ToText(f[i].default, f[i].type);
       END;
@@ -216,8 +217,7 @@ PROCEDURE MayBeRefAny (t: T): BOOLEAN =
     TYPECASE t OF
     | Ref, Object => RETURN FALSE;
     | Opaque (o) => RETURN MayBeRefAny(o.revealedSuperType);
-    ELSE
-      RETURN FALSE               (* e.g.  type TEXT *)
+    ELSE RETURN FALSE (* e.g. type TEXT *)
     END;
   END MayBeRefAny;
 

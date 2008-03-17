@@ -24,12 +24,13 @@ PROCEDURE ToText(v: T; type: Type.T): TEXT =
         ELSIF type = Type.boolean THEN 
           RETURN Fmt.Bool(VAL(i.val, BOOLEAN));
         ELSE TYPECASE type OF
-            Type.Char =>  RETURN "VAL(" & Fmt.Int(i.val) & ", CHAR)";
+          | Type.Char =>  RETURN "VAL(" & Fmt.Int(i.val) & ", CHAR)";
+          | Type.WideChar =>  RETURN "VAL(" & Fmt.Int(i.val) & ", WIDECHAR)";
           | Type.UserDefined (ud) => 
              RETURN Atom.ToText(ud.elts[i.val]);
           | Type.Subrange (sub) =>
              RETURN ToText(NEW(Integer,
-                    val := i.val +  NARROW(sub.min, Integer).val),
+                               val := i.val +  NARROW(sub.min, Integer).val),
                            sub.base);
           ELSE StubUtils.Die("Value.ToText: unsupported ordinal type");
           END;
@@ -40,7 +41,7 @@ PROCEDURE ToText(v: T; type: Type.T): TEXT =
         ELSE TYPECASE type OF
           | Type.Subrange (sub) =>
              RETURN ToText(NEW(Longint,
-                    val := i.val +  NARROW(sub.min, Longint).val),
+                               val := i.val +  NARROW(sub.min, Longint).val),
                            sub.base);
           ELSE StubUtils.Die("Value.ToText: unsupported ordinal type");
           END;
