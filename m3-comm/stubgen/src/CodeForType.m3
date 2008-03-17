@@ -39,8 +39,15 @@ PROCEDURE ToText(t: Type.T; byName: BOOLEAN := TRUE): Text.T =
               ud: Type.UserDefined;
           BEGIN
             IF sub = Type.integer THEN RETURN "INTEGER" END;
-            min := NARROW(sub.min, Value.Ordinal).ord;
-            max := NARROW(sub.max, Value.Ordinal).ord;
+            IF sub = Type.longint THEN RETURN "LONGINT" END;
+            IF sub.base = Type.longint THEN
+              WITH min = NARROW(sub.min, Value.Longint).val,
+                   max = NARROW(sub.max, Value.Longint).val DO
+                RETURN "[" & Fmt.LongInt(min) & "L.." & Fmt.LongInt(max) & "L]";
+              END;
+            END;
+            min := NARROW(sub.min, Value.Integer).val;
+            max := NARROW(sub.max, Value.Integer).val;
             IF sub.base = Type.integer OR sub.base = Type.cardinal THEN RETURN
                "[" & Fmt.Int(min) &  ".." & Fmt.Int(max) &"]"
             END;
