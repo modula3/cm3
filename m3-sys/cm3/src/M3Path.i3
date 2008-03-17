@@ -14,7 +14,6 @@ TYPE
   END;
 
 VAR (* possibly changed at initialization and then CONST *)
-  SlashChar := '/';
   SlashText := "/";
 
 TYPE
