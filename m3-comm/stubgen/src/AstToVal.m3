@@ -13,7 +13,9 @@ PROCEDURE ProcessExp(
   BEGIN
     TYPECASE exp.sm_exp_value OF
       |  M3CBackEnd_C.Integer_value (int) =>
-           RETURN NEW(Value.Ordinal, ord := int.sm_value)
+           RETURN NEW(Value.Integer, val := int.sm_value)
+      |  M3CBackEnd_C.Longint_value (int) =>
+           RETURN NEW(Value.Longint, val := int.sm_value)
       |  M3CBackEnd_C.Text_value (txt) => 
            RETURN NEW(Value.Txt, val := txt.sm_value)
       |  M3CBackEnd_C.Real_value (real) => 

@@ -413,18 +413,19 @@ PROCEDURE MarshalTypedVal(fmtWr: Formatter.T;
   BEGIN
     TYPECASE t OF
     | Type.Char (ch) => 
-          Enumeration(fmtWr, varName, ch, d, 0, ORD(LAST(CHAR)));
+          Enumeration(fmtWr, varName, ch, d, 0,
+                      ORD(LAST(CHAR)));
     | Type.WideChar (wch) => 
           Enumeration(fmtWr, varName, wch, d, 0, ORD(LAST(WIDECHAR)));
     | Type.UserDefined (ud) => 
           Enumeration(fmtWr, varName, t, d, 0, LAST(ud.elts^));
     | Type.Subrange (sub) => 
         IF t = Type.integer THEN
-          StubLibCall(fmtWr, "Integer", varName, d); 
+          StubLibCall(fmtWr, "Integer", varName, d);
+        ELSIF t = Type.longint THEN
+          StubLibCall(fmtWr, "Longint", varName, d);
         ELSE
-          SubRange(fmtWr, varName, t, d, 
-                   NARROW(sub.min, Value.Ordinal).ord, 
-                   NARROW(sub.max, Value.Ordinal).ord);
+          SubRange(fmtWr, varName, t, d, sub.min, sub.max);
         END;
     | Type.Real => 
         StubLibCall(fmtWr, "Real", varName, d); 
@@ -507,14 +508,27 @@ PROCEDURE SubRange(fmtWr: Formatter.T;
                    varName: TEXT;
                    t: Type.Subrange;
                    d: Direction;
-                   min, max: INTEGER) =
+                   min, max: Value.T) =
   BEGIN
-    IF t.base = Type.integer OR t.base = t THEN
-      StubLibCall(fmtWr, "Integer", varName, d, 
-                  ", "  & Fmt.Int(min) & ", " & Fmt.Int(max));
+    IF t = Type.longint OR t.base = Type.longint THEN
+      WITH min = NARROW(min, Value.Longint).val,
+           max = NARROW(max, Value.Longint).val DO
+        StubLibCall(fmtWr, "Longint", varName, d, 
+                    ", "  & Fmt.LongInt(min) & ", " & Fmt.LongInt(max));
+      END;
+    ELSIF t = Type.integer OR t.base = Type.integer THEN
+      WITH min = NARROW(min, Value.Integer).val,
+           max = NARROW(max, Value.Integer).val DO
+        StubLibCall(fmtWr, "Integer", varName, d, 
+                    ", "  & Fmt.Int(min) & ", " & Fmt.Int(max));
+      END;
     ELSE
       TYPECASE t.base OF
-      | Type.Enumeration => Enumeration(fmtWr, varName, t.base, d, min, max);
+      | Type.Enumeration =>
+        WITH min = NARROW(min, Value.Integer).val,
+             max = NARROW(max, Value.Integer).val DO
+          Enumeration(fmtWr, varName, t.base, d, min, max);
+        END;
       | Type.Subrange => SubRange(fmtWr, varName, t.base, d, min, max);
       ELSE StubUtils.Die("ModuleStubCode.SubRange: unsupported subrange type");
       END;
