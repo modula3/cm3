@@ -48,8 +48,15 @@ PROCEDURE ToText (t: T; byName: BOOLEAN := TRUE): Text.T =
           ud      : UserDefined;
         BEGIN
           IF sub = integer THEN RETURN "INTEGER" END;
-          min := NARROW(sub.min, Value.Ordinal).ord;
-          max := NARROW(sub.max, Value.Ordinal).ord;
+          IF sub = longint THEN RETURN "LONGINT" END;
+          IF sub.base = longint THEN
+            WITH min = NARROW(sub.min, Value.Longint).val,
+                 max = NARROW(sub.max, Value.Longint).val DO
+              RETURN "[" & Fmt.LongInt(min) & "L.." & Fmt.LongInt(max) & "L]";
+            END;
+          END;
+          min := NARROW(sub.min, Value.Integer).val;
+          max := NARROW(sub.max, Value.Integer).val;
           IF sub.base = integer THEN
             RETURN "[" & Fmt.Int(min) & ".." & Fmt.Int(max) & "]"
           END;
@@ -256,13 +263,18 @@ BEGIN
   nullAtm := Atom.FromText("");
   integer := NEW(Subrange, name := NEW(Qid, intf := nullAtm,
                                        item := Atom.FromText("INTEGER")),
-                 min := NEW(Value.Ordinal, ord := FIRST(INTEGER)),
-                 max := NEW(Value.Ordinal, ord := LAST(INTEGER)));
+                 min := NEW(Value.Integer, val := FIRST(INTEGER)),
+                 max := NEW(Value.Integer, val := LAST(INTEGER)));
   integer.base := integer;
+  longint := NEW(Subrange, name := NEW(Qid, intf := nullAtm,
+                                       item := Atom.FromText("LONGINT")),
+                 min := NEW(Value.Longint, val := FIRST(LONGINT)),
+                 max := NEW(Value.Longint, val := LAST(LONGINT)));
+  longint.base := longint;
 
   cardinal := NEW(Subrange, name := NEW(Qid, intf := nullAtm,
                                         item := Atom.FromText("CARDINAL")),
-                  base := integer, min := NEW(Value.Ordinal, ord := 0),
+                  base := integer, min := NEW(Value.Integer, val := 0),
                   max := integer.max);
 
   boolean := NEW(
