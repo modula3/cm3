@@ -780,7 +780,6 @@ BEGIN
   *)
   IF Text.GetChar (Pathname.Join ("a", "b"), 1) = BackSlash THEN
 
-    SlashChar := BackSlash;
     SlashText := "\\";
     os_map [TRUE]  := OSKind.Win32;
     os_map [FALSE] := OSKind.Win32;
