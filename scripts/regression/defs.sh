@@ -752,6 +752,22 @@ testall()
 }
 
 #----------------------------------------------------------------------------
+# standard tests for cm3.build
+std_tests() {
+  ( test_make_bin_dist ) 2>&1
+  r0=$?
+  ( test_build_std_lastok ) 2>&1
+  r1=$?
+  ( test_m3tests ) 2>&1
+  r2=$?
+  ( test_m3_all_pkgs ) 2>&1
+  r3=$?
+  ( test_m3tohtml ) 2>&1
+  r4=$?
+  return `expr ${r0} + ${r1} + ${r2} + ${r3} + ${r4}`
+}
+
+#----------------------------------------------------------------------------
 # main
 
 main()
