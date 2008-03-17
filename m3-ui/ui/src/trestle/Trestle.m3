@@ -58,9 +58,9 @@ PROCEDURE Init() =
   BEGIN
     IF NOT inited THEN
       LOCK initMu DO
-      	IF NOT inited THEN
+        IF NOT inited THEN
           TrestleOS.Init();
-	  (* Add other classes of window system here *)
+          (* Add other classes of window system here *)
           TrestleConf.Init(CreateUser);
           defaultUser := Env.Get("ARGOUSER");
           IF defaultUser = NIL THEN defaultUser := TrestleOS.UserName() END;

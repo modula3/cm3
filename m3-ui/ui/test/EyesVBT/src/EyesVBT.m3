@@ -77,14 +77,14 @@ PROCEDURE Position(v: T; READONLY cd: VBT.PositionRec) RAISES {} =
       WITH focus = Rect.Project(dom, cd.cp.pt) DO
         IF NOT v.eyeSet OR NOT Point.Equal(v.pupil, focus) THEN
           newbox := Rect.Add(VBT.PixmapDomain(v, eyeball), focus);
-	  v.pupil := focus;
-	  v.eyeSet := TRUE;
-	  Rect.Factor(v.eyebox, newbox, a, 0, 0);
-	  a[2] := a[4];
+          v.pupil := focus;
+          v.eyeSet := TRUE;
+          Rect.Factor(v.eyebox, newbox, a, 0, 0);
+          a[2] := a[4];
           VBT.PolyTint(v, SUBARRAY(a, 0, 4), PaintOp.Bg);
           VBT.PaintPixmap(v, newbox, PaintOp.BgFg, eyeball, focus);
           v.eyebox := newbox
-	END
+        END
       END
     END;
     VBT.SetCage(v, VBT.CageFromPosition(cd.cp, TRUE, FALSE))

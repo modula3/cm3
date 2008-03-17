@@ -75,11 +75,11 @@ PROCEDURE RGBApply(cl: RGBClosure; st: VBT.ScreenType): ScrnPaintOp.T =
                 pix := st.cmap.standard().fromRGB(rgb, Mode.Normal)
               EXCEPT
                 ScrnColorMap.Failure => 
-		  IF cl.bw = BW.UseBg THEN
+                  IF cl.bw = BW.UseBg THEN
                     RETURN Palette.ResolveOp(st, Bg)
-		  ELSE
-		    RETURN Palette.ResolveOp(st, Fg)
-		  END
+                  ELSE
+                    RETURN Palette.ResolveOp(st, Fg)
+                  END
               END
           END;
           RETURN st.op.opaque(pix)

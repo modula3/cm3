@@ -143,9 +143,9 @@ PROCEDURE NewBrick(wall: Wall; x,y: CARDINAL): Brick =
       txt := borderTexture);
     brick :=
       NEW(Brick, wall:=wall, p:=Position{x:=x, y:=y}, state := UnknownState,
-	icon:=icon, border:=border,
-	pre:=BrickHighlightOn, 
-	cancel:=BrickHighlightOff, post:=BrickHighlightOff);
+        icon:=icon, border:=border,
+        pre:=BrickHighlightOn, 
+        cancel:=BrickHighlightOff, post:=BrickHighlightOff);
     EVAL ButtonVBT.T.init(brick, border, BrickAction);
     RETURN brick;
   END NewBrick;
@@ -156,7 +156,7 @@ PROCEDURE NewNoBrick(wall: Wall): Brick =
     icon := TextVBT.New("");
     RETURN
       NEW(Brick, wall:=wall, p:=Position{x:=0, y:=0}, state := NoBrickState,
-	icon:=icon, border:=BorderedVBT.New(icon), shown:=TRUE);
+        icon:=icon, border:=BorderedVBT.New(icon), shown:=TRUE);
   END NewNoBrick;
 
 TYPE
@@ -353,7 +353,7 @@ PROCEDURE BrickAction(self: ButtonVBT.T; READONLY cd: VBT.MouseRec) RAISES {} =
     brick := NARROW(self, Brick);
     IF brick.wall.gameOver THEN RETURN END;
     IF (cd.whatChanged = VBT.Modifier.MouseR) 
-	OR (VBT.Modifier.Shift IN cd.modifiers) THEN
+        OR (VBT.Modifier.Shift IN cd.modifiers) THEN
       ToggleMarking(brick);
     ELSIF brick.state # OKState THEN
       IF brick.good THEN brick.wall.GameLost();
@@ -363,11 +363,11 @@ PROCEDURE BrickAction(self: ButtonVBT.T; READONLY cd: VBT.MouseRec) RAISES {} =
         ELSE
           IF (cd.whatChanged = VBT.Modifier.MouseL) OR 
              (brick.wall.difficulty < Difficulty.Hard) THEN
-	    AutoBrick( brick, Range.Short);
-	  ELSE
-	    AutoBrick( brick, Range.Long);
-	  END;
-	END;
+            AutoBrick( brick, Range.Short);
+          ELSE
+            AutoBrick( brick, Range.Long);
+          END;
+        END;
         brick.wall.GameStatus(0, 0);
         IF brick.wall.badBricks = 0 THEN brick.wall.GameWon() END;
       END;
@@ -585,7 +585,7 @@ PROCEDURE NewWall(xSize,ySize: CARDINAL): Wall =
     wall: Wall;
   BEGIN
     wall := NEW(Wall, brick:=NIL, xSize:=xSize, ySize:=ySize,
-		msgArea:=TextVBT.New("", bgFg:=msgColorQuad));
+                msgArea:=TextVBT.New("", bgFg:=msgColorQuad));
     bricks := NEW(REF ARRAY OF ARRAY OF Brick, xSize, ySize);
     FOR x:=0 TO xSize-1 DO
       FOR y:=0 TO ySize-1 DO
@@ -599,10 +599,10 @@ PROCEDURE NewWall(xSize,ySize: CARDINAL): Wall =
     FOR y:=0 TO ySize-1 DO
       rowVBT := HVSplit.New(Axis.T.Hor, adjustable := FALSE);
       IF (y MOD 2)=1 THEN
-	Split.AddChild(rowVBT, NewBrickSpace());
+        Split.AddChild(rowVBT, NewBrickSpace());
       END;
       FOR x:=0 TO xSize-1 DO
-	Split.AddChild(rowVBT, bricks[x,y]);
+        Split.AddChild(rowVBT, bricks[x,y]);
       END;
       Split.AddChild(rowVBT, TextureVBT.New(op:=concretePaintOp));
       Split.AddChild(colVBT, rowVBT);
@@ -627,10 +627,10 @@ PROCEDURE StartGame(self: Wall; difficulty: Difficulty) =
      "ClickRight or ShiftClickLeft: mark/unmark bricks.");
     FOR y:=0 TO self.ySize-1 DO
       FOR x:=0 TO self.xSize-1 DO
-	brick := self.brick^[x,y];
-	brick.good := FALSE;
-	TextVBT.Put(brick.icon, "");
-	brick.state := UnknownState;
+        brick := self.brick^[x,y];
+        brick.good := FALSE;
+        TextVBT.Put(brick.icon, "");
+        brick.state := UnknownState;
         TextVBT.SetFont(brick.icon, Font.BuiltIn, brickColorQuad);
         BorderedVBT.SetColor(brick.border, darkLinesPaintOp, borderTexture);
         brick.shown := FALSE;
@@ -643,13 +643,13 @@ PROCEDURE StartGame(self: Wall; difficulty: Difficulty) =
       i:=0;
       LOOP
         IF i=n THEN EXIT END;
-	rx := rand.integer(0, self.xSize-1);
-	ry := rand.integer(0, self.ySize-1);
-	IF ((rx>=SafeZone) OR (ry>=SafeZone)) AND (NOT self.brick^[rx,ry].good) THEN
+        rx := rand.integer(0, self.xSize-1);
+        ry := rand.integer(0, self.ySize-1);
+        IF ((rx>=SafeZone) OR (ry>=SafeZone)) AND (NOT self.brick^[rx,ry].good) THEN
           self.brick^[rx,ry].good := TRUE;
-	  DEC(self.badBricks);
-	  INC(i); 
-	END;
+          DEC(self.badBricks);
+          INC(i); 
+        END;
       END;
       self.brick^[0,0].ShowAndFlood();
     END;
@@ -659,7 +659,7 @@ PROCEDURE GameLost(self: Wall) =
   BEGIN
     FOR x:=0 TO self.xSize-1 DO
       FOR y:=0 TO self.ySize-1 DO
-	self.brick^[x,y].EndGameShow();
+        self.brick^[x,y].EndGameShow();
       END;
     END;
     TextVBT.Put(self.msgArea, "OOPS! That was a perfectly good brick!");
@@ -682,7 +682,7 @@ PROCEDURE DoGame(b: ButtonVBT.T; <*UNUSED*>READONLY cd: VBT.MouseRec) =
   BEGIN
     wall0.StartGame(
       NARROW(VBT.GetProp(b, TYPECODE(RefDifficulty)), RefDifficulty)
-	.difficulty);
+        .difficulty);
     IF wall0.difficulty > Difficulty.Hard THEN
       TextVBT.Put(sensorMenuTitle, "  Sensor");
     ELSE
@@ -714,7 +714,7 @@ PROCEDURE GameMenu(): HVSplit.T =
     FOR difficulty:=FIRST(Difficulty) TO LAST(Difficulty) DO
       Split.AddChild(menu,
         MenuBtnVBT.TextItem(DifficultyName[difficulty], DoGame, 
-	  NEW(RefDifficulty, difficulty:=difficulty)));
+          NEW(RefDifficulty, difficulty:=difficulty)));
     END;
     Split.AddChild(menu,
       MenuBtnVBT.TextItem("Quit", QuitGame));

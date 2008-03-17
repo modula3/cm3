@@ -235,16 +235,16 @@ PROCEDURE FindUnscaled(dpy: X.DisplayStar; pat: TEXT): TEXT RAISES {X.Error} =
       RETURN NIL;
     END;
 
-    FOR i := 0 TO count - 1 DO	(* Search for an unscaled font *)
+    FOR i := 0 TO count - 1 DO  (* Search for an unscaled font *)
       IF NOT IsScaled(M3toC.StoT(fp^)) THEN
-	xmatch := fp^;
-	EXIT;
+        xmatch := fp^;
+        EXIT;
       END;
       fp := fp + ADRSIZE(fp^);
     END;
 
-    IF xmatch # NIL THEN	(* Found an unscaled font *)
-	match := M3toC.CopyStoT(xmatch);
+    IF xmatch # NIL THEN    (* Found an unscaled font *)
+        match := M3toC.CopyStoT(xmatch);
     END;
     X.XFreeFontNames(fonts);
     RETURN match;
@@ -259,18 +259,18 @@ PROCEDURE IsScaled(name: TEXT): BOOLEAN =
     hyphenPos: INTEGER;
   BEGIN
     (* A font is scaled if:
-	a. it is in canonical form (starts with '-', and all 14 XLFD fields
-	   are present), and
-	b. any of the fields pixel size, point size, or average width is 0. *)
+        a. it is in canonical form (starts with '-', and all 14 XLFD fields
+           are present), and
+        b. any of the fields pixel size, point size, or average width is 0. *)
     hyphenPos := Text.FindChar(name, '-', 0);
     WHILE hyphenPos # -1 DO
       INC(fieldNum);
       IF fieldNum = 7 OR fieldNum = 8 OR fieldNum = 12 THEN
-	IF hyphenPos+2 < len AND
-	Text.GetChar(name, hyphenPos+1) = '0' AND
-	Text.GetChar(name, hyphenPos+2) = '-' THEN
-	  found0 := TRUE;
-	END;
+        IF hyphenPos+2 < len AND
+        Text.GetChar(name, hyphenPos+1) = '0' AND
+        Text.GetChar(name, hyphenPos+2) = '-' THEN
+          found0 := TRUE;
+        END;
       END;
       hyphenPos := Text.FindChar(name, '-', hyphenPos+1);
     END;

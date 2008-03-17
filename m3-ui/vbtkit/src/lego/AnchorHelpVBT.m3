@@ -19,10 +19,10 @@ Split, VBTClass, TrestleComm, Time, Thread;
 
 REVEAL 
   T = Public BRANDED OBJECT
-    n: CARDINAL;		(* number of ZSplit to skip *)
-    hfudge, vfudge: REAL;	(* where to pop the help window *)
-    active: BOOLEAN;            (* help window popped *)
-    in: BOOLEAN;                (* position is inside *)
+    n: CARDINAL;            (* number of ZSplit to skip *)
+    hfudge, vfudge: REAL;   (* where to pop the help window *)
+    active: BOOLEAN;        (* help window popped *)
+    in: BOOLEAN;            (* position is inside *)
   OVERRIDES 
     position := Position;
     init := Be
@@ -190,10 +190,10 @@ PROCEDURE Get(v: T; VAR n: CARDINAL; VAR hfudge, vfudge: REAL) =
 
 TYPE
   HelpTimer = MUTEX OBJECT
-      inHelp: INTEGER;		(* number of nested T we are in *)
+      inHelp: INTEGER;          (* number of nested T we are in *)
       help: T;                  (* innermost T visited *)
       inHelpTime: LONGREAL;     (* entry time in T *)
-      outHelpTime: LONGREAL;	(* time of exit of T *)
+      outHelpTime: LONGREAL;    (* time of exit of T *)
       inDelay: LONGREAL;        (* delay before entering help mode *)
       outDelay: LONGREAL;       (* delay before leaving help mode *)
       helpMode: BOOLEAN;        (* are we in help mode *)

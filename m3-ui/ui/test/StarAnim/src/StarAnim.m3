@@ -161,22 +161,22 @@ PROCEDURE PaintPath(v: T; endT, startT: REAL; READONLY clip := Rect.Full) =
     IF startT < endT THEN
       path := NEW(Path.T);
       LOCK v DO
-    	width := v.width;
-    	VAR
+        width := v.width;
+        VAR
           step := v.sz * PathDeltaFrac;
           t := MAX(startT - step, Lo);
         BEGIN
-    	  Path.MoveTo(path, v.toPoint(Inner(t)));
-    	  LOOP
-    	    t := t + step;
-    	    IF t >= endT THEN EXIT END;
-    	    Path.LineTo(path, v.toPoint(Inner(t)))
-    	  END;
-    	  Path.LineTo(path, v.toPoint(Inner(endT)))
-    	END
+          Path.MoveTo(path, v.toPoint(Inner(t)));
+          LOOP
+            t := t + step;
+            IF t >= endT THEN EXIT END;
+            Path.LineTo(path, v.toPoint(Inner(t)))
+          END;
+          Path.LineTo(path, v.toPoint(Inner(endT)))
+        END
       END;
       VBT.Stroke(v, clip, path, width, end := VBT.EndStyle.Butt,
-    	join := VBT.JoinStyle.Bevel, op := PathColor)
+        join := VBT.JoinStyle.Bevel, op := PathColor)
     END
   END PaintPath;
 
