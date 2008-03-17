@@ -17,7 +17,7 @@ IMPORT M3AST_AS_F, M3AST_SM, M3AST_SM_F, M3AST_TM_F, M3ASTNext,
 IMPORT SeqM3AST_AS_Enum_id, SeqM3AST_AS_Fields,
        SeqM3AST_AS_Field_id, SeqM3AST_AS_Method, 
        SeqM3AST_AS_Qual_used_id, SeqM3AST_AS_TYPE_SPEC, M3CTypesMisc;
-IMPORT M3CBackEnd,M3CBackEnd_C;
+IMPORT M3CBackEnd_C;
 
 REVEAL Handle = Public BRANDED OBJECT
      netobjTypeSpec: M3AST_AS.TYPE_SPEC;
@@ -142,6 +142,7 @@ PROCEDURE ProcessNetObj(h: Handle;
 PROCEDURE InitAstTable(astTable: RefRefTbl.T) =
   BEGIN
     EVAL astTable.put(M3CStdTypes.Integer(), Type.integer);
+    EVAL astTable.put(M3CStdTypes.Longint(), Type.longint);
     EVAL astTable.put(M3CStdTypes.Real(), Type.real);
     EVAL astTable.put(M3CStdTypes.LongReal(), Type.longreal);
     EVAL astTable.put(M3CStdTypes.Extended(), Type.extended);
@@ -199,6 +200,7 @@ PROCEDURE ProcessM3Type(h: Handle; m3type: M3AST_AS.M3TYPE): Type.T =
           |  M3AST_AS.LongReal_type => t := Type.longreal;
           |  M3AST_AS.Extended_type => t := Type.extended;
           |  M3AST_AS.Integer_type => t := Type.integer;
+          |  M3AST_AS.Longint_type => t := Type.longint;
           |  M3AST_AS.WideChar_type => t := Type.widechar;
           |  M3AST_AS.Null_type => t := Type.null;
           |  M3AST_AS.RefAny_type => t := Type.refany;
@@ -255,19 +257,32 @@ PROCEDURE ProcessM3Type(h: Handle; m3type: M3AST_AS.M3TYPE): Type.T =
           |  M3AST_AS.Set_type (set) => 
                t := NEW(Type.Set, range := ProcessM3Type(h, set.as_type));
           |  M3AST_AS.Subrange_type (sub) =>
-             VAR  e1, e2: M3AST_AS.EXP;
-                  i1, i2: INTEGER;
-                  baseType: Type.T;
-             BEGIN 
-               baseType := ProcessTypeSpec(h, sub.sm_base_type_spec);
-               e1 := NARROW(sub.as_range, M3AST_AS.Range).as_exp1;
-               e2 := NARROW(sub.as_range,  M3AST_AS.Range).as_exp2;
-               EVAL M3CBackEnd.Ord(e1.sm_exp_value, i1);
-               EVAL M3CBackEnd.Ord(e2.sm_exp_value, i2);
-               t := NEW(Type.Subrange, base := baseType,
-                        min := NEW(Value.Ordinal, ord := i1),
-                        max := NEW(Value.Ordinal, ord := i2));
-             END
+              TYPECASE sub.sm_base_type_spec OF
+              | M3AST_AS.Longint_type =>
+                WITH baseType = ProcessTypeSpec(h, sub.sm_base_type_spec),
+                     e1 = NARROW(sub.as_range, M3AST_AS.Range).as_exp1,
+                     e2 = NARROW(sub.as_range, M3AST_AS.Range).as_exp2,
+                     i1 = NARROW(e1.sm_exp_value,
+                                 M3CBackEnd_C.Longint_value).sm_value,
+                     i2 = NARROW(e2.sm_exp_value,
+                                 M3CBackEnd_C.Longint_value).sm_value DO
+                  t := NEW(Type.Subrange, base := baseType,
+                           min := NEW(Value.Longint, val := i1),
+                           max := NEW(Value.Longint, val := i2));
+                END;
+              ELSE
+                WITH baseType = ProcessTypeSpec(h, sub.sm_base_type_spec),
+                     e1 = NARROW(sub.as_range, M3AST_AS.Range).as_exp1,
+                     e2 = NARROW(sub.as_range, M3AST_AS.Range).as_exp2,
+                     i1 = NARROW(e1.sm_exp_value,
+                                 M3CBackEnd_C.Integer_value).sm_value,
+                     i2 = NARROW(e2.sm_exp_value,
+                                 M3CBackEnd_C.Integer_value).sm_value DO
+                  t := NEW(Type.Subrange, base := baseType,
+                           min := NEW(Value.Integer, val := i1),
+                           max := NEW(Value.Integer, val := i2));
+                END;
+              END;
           |  M3AST_AS.Record_type (rec) => 
                t := NEW(Type.Record, 
                         fields := ProcessFields(h, rec.as_fields_s));

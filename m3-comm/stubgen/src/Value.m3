@@ -18,18 +18,29 @@ REVEAL T =  ROOT BRANDED OBJECT END;
 PROCEDURE ToText(v: T; type: Type.T): TEXT =
   BEGIN
     TYPECASE v OF
-    | Ordinal (ordinal) => 
+    | Integer (i) => 
         IF (type = Type.integer) OR (type = Type.cardinal) THEN
-          RETURN Fmt.Int(ordinal.ord); 
+          RETURN Fmt.Int(i.val); 
         ELSIF type = Type.boolean THEN 
-          RETURN Fmt.Bool(VAL(ordinal.ord, BOOLEAN));
+          RETURN Fmt.Bool(VAL(i.val, BOOLEAN));
         ELSE TYPECASE type OF
-            Type.Char =>  RETURN "VAL(" & Fmt.Int(ordinal.ord) & ", CHAR)";
+            Type.Char =>  RETURN "VAL(" & Fmt.Int(i.val) & ", CHAR)";
           | Type.UserDefined (ud) => 
-             RETURN Atom.ToText(ud.elts[ordinal.ord]);
+             RETURN Atom.ToText(ud.elts[i.val]);
           | Type.Subrange (sub) =>
-             RETURN ToText(NEW(Ordinal, 
-                    ord := ordinal.ord +  NARROW(sub.min, Ordinal).ord),
+             RETURN ToText(NEW(Integer,
+                    val := i.val +  NARROW(sub.min, Integer).val),
+                           sub.base);
+          ELSE StubUtils.Die("Value.ToText: unsupported ordinal type");
+          END;
+        END;
+    | Longint (i) =>
+        IF (type = Type.longint) THEN
+          RETURN Fmt.LongInt(i.val); 
+        ELSE TYPECASE type OF
+          | Type.Subrange (sub) =>
+             RETURN ToText(NEW(Longint,
+                    val := i.val +  NARROW(sub.min, Longint).val),
                            sub.base);
           ELSE StubUtils.Die("Value.ToText: unsupported ordinal type");
           END;
@@ -71,7 +82,7 @@ PROCEDURE ToText(v: T; type: Type.T): TEXT =
               IF notFirst THEN eltList := eltList & ", "; END;
               notFirst := TRUE;
               eltList := eltList & 
-                 ToText(NEW(Ordinal, ord:=i), baseType);
+                 ToText(NEW(Integer, val:=i), baseType);
             END;
           END;
           RETURN Type.ToText(type) & "{" & eltList & "}";

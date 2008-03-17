@@ -47,6 +47,9 @@ TYPE
   (* INTEGER is represented by a Subrange p with p.base = p,
      p.min = FIRST(INTEGER) and p.max = LAST(INTEGER). *)
 
+  (* LONGINT is represented by a Subrange p with p.base = p,
+     p.min = FIRST(LONGINT) and p.max = LAST(LONGINT). *)
+
   Real = T BRANDED OBJECT END;
 
   LongReal = T BRANDED OBJECT END;
@@ -172,6 +175,7 @@ TYPE
 
 VAR (* READONLY *)
   integer       : Subrange;
+  longint       : Subrange;
   cardinal      : Subrange;
   boolean       : UserDefined;
   char          : Char;
