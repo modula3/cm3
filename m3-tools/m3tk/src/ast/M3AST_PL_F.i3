@@ -167,6 +167,7 @@ TYPE
   EXP = Previous_View.EXP;
   NUMERIC_LITERAL = Previous_View.NUMERIC_LITERAL;
   Integer_literal = Previous_View.Integer_literal;
+  Longint_literal = Previous_View.Longint_literal;
   Real_literal = Previous_View.Real_literal;
   LongReal_literal = Previous_View.LongReal_literal;
   Extended_literal = Previous_View.Extended_literal;
