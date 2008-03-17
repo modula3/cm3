@@ -39,11 +39,11 @@ PROCEDURE FromType (type: Type.Object; methods: MethodList): T =
       WITH sig = methods[i].sig DO
         ImportFromSig(sig, importTbl);
         ImportRefsFromSig(sig, importTbl);
-        (* Hmm.  StableData.m3 will not actually handle the exceptions.
+(* Hmm.  StableData.m3 will not actually handle the exceptions.
         FOR j := 0 TO LAST(sig.raises^) DO
           ImportFromType(sig.raises[j].arg, importTbl);
         END;
-        *)
+*)
       END                        (*WITH*)
     END;                         (*FOR*)
     WHILE obj # NIL AND ISTYPE(obj, Type.Object) DO
