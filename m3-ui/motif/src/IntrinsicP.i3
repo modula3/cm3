@@ -23,7 +23,7 @@ FROM Ctypes IMPORT unsigned_long;
 (*============*)
 
 TYPE
-  XtAcceptFocusProc=PROCEDURE(widget: Xt.Widget; 
+  XtAcceptFocusProc=PROCEDURE(widget: Xt.Widget;
                               time: X.Time);
 
   XtAlmostProc=PROCEDURE(old: Xt.Widget;
@@ -34,13 +34,13 @@ TYPE
   XtArgsFunc = PROCEDURE(widget: Xt.Widget;
                          args: Xt.ArgList;
 			 num_args: Xt.CardinalStar): Xt.Boolean;
- 
+
   XtArgsProc = PROCEDURE(widget: Xt.Widget;
                          args: Xt.ArgList;
 			 num_args: Xt.CardinalStar);
 
   XtBoundActions = UNTRACED REF Xt.ActionProc;
-  
+
   XtGeometryHandler = PROCEDURE(w: Xt.Widget;
                                 request: UNTRACED REF Xt.GeometryResult;
 				geometry_return: UNTRACED REF Xt.GeometryResult
@@ -57,26 +57,26 @@ TYPE
   XtRealizeProc = PROCEDURE(widget: Xt.Widget;
                             mask: Xt.ValueMask;
 			    attributes: X.XSetWindowAttributes);
-               
+
   XtSetValuesFunc = PROCEDURE(old:     Xt.Widget;
                               request: Xt.Widget;
 			      new:     Xt.Widget;
 			      args:    Xt.ArgList;
-			      num_args:Xt.CardinalStar):Xt.Boolean; 
+			      num_args:Xt.CardinalStar):Xt.Boolean;
 
   XtStringProc = PROCEDURE(widget:Xt.Widget;
                            str: Xt.String);
 
   XtTMRec = RECORD
-              translations: Xt.Translations; 
+              translations: Xt.Translations;
 	      proc_table: XtBoundActions;
               current_state: ADDRESS;
 	      lastEventTime: unsigned_long;
-            END;	      
+            END;
 
-  XtVersionType = unsigned_long; 
+  XtVersionType = unsigned_long;
 
-  XtWidgetProc=PROCEDURE(widget:Xt.Widget);  
+  XtWidgetProc=PROCEDURE(widget:Xt.Widget);
 
   XtWidgetClassProc = PROCEDURE(class:Xt.WidgetClass);
 
@@ -114,8 +114,8 @@ TYPE
 		background_pixmap: X.Pixmap;(*window background pixmap or NIL*)
 		visible: Xt.Boolean;       (*is window mapped and not occluded?*)
 		mapped_when_managed: Xt.Boolean; (*map window if it is managed?*)
-              END;  
-		
+              END;
+
   CoreClassPart = RECORD
                 superclass: Xt.WidgetClass;(*pointer to superclass ClassRec*)
                 class_name: Xt.String;     (*widget resource class name*)
@@ -149,7 +149,7 @@ TYPE
 		query_geometry: XtGeometryHandler; (*return preferred geometry*)
 		display_accelerator: XtStringProc; (*display your accelerator*)
                 extension: Xt.Pointer;     (*pointer to extension record*)
-	      END;  
+	      END;
 
 
   WidgetRec = RECORD
@@ -159,11 +159,11 @@ TYPE
   WidgetClassRec = RECORD
                 core_class: CoreClassPart;
 	      END;
-    
+
   Widget    = UNTRACED REF WidgetRec;
   WidgetClass=UNTRACED REF WidgetClassRec;
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR coreWidgetClass: WidgetClass;
 
 END IntrinsicP.

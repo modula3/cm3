@@ -8,7 +8,7 @@ INTERFACE ImageUtils;
 
 IMPORT Rd, Thread, Wr;
 
-EXCEPTION Error; 
+EXCEPTION Error;
 
 PROCEDURE SetupGIF(filter: TEXT);
 

@@ -65,11 +65,11 @@ PROCEDURE New(
     RETURN Be(NEW(T), ch, borderSize, borderOp, borderTexture)
   END New;
 
-PROCEDURE Shape(v: T; ax: Axis.T; n: CARDINAL): VBT.SizeRange 
+PROCEDURE Shape(v: T; ax: Axis.T; n: CARDINAL): VBT.SizeRange
   RAISES {} =
   VAR temp: VBT.SizeRange; bw := 2 * v.bSize[ax]; BEGIN
-    IF v.ch = NIL THEN 
-      temp := VBT.DefaultShape 
+    IF v.ch = NIL THEN
+      temp := VBT.DefaultShape
     ELSE
       IF n > bw THEN
         n := n - bw
@@ -95,8 +95,8 @@ PROCEDURE SetSize(v: T; newSize: REAL) =
   END SetSize;
 
 PROCEDURE SetColor(
-  v: T; 
-  op: PaintOp.T; 
+  v: T;
+  op: PaintOp.T;
   texture: Pixmap.T := Pixmap.Solid) =
   BEGIN
     v.borderOp := op;
@@ -105,9 +105,9 @@ PROCEDURE SetColor(
   END SetColor;
 
 PROCEDURE Get(
-  v: T; 
-  VAR size: REAL; 
-  VAR op: PaintOp.T; 
+  v: T;
+  VAR size: REAL;
+  VAR op: PaintOp.T;
   VAR texture: Pixmap.T) =
   BEGIN
     size := v.borderSize;
@@ -123,7 +123,7 @@ PROCEDURE RepaintBorder(v: T; READONLY clip: Rect.T) RAISES {} =
       Rect.Meet(v.domain, clip),
       ChDom(v), a, 0, 0);
     a[2] := a[4];
-    VBT.PolyTexture(v, SUBARRAY(a, 0, 4), 
+    VBT.PolyTexture(v, SUBARRAY(a, 0, 4),
       v.borderOp, v.borderTexture)
   END RepaintBorder;
 
@@ -136,7 +136,7 @@ PROCEDURE ChDom(v: T): Rect.T =
   END ChDom;
 
 PROCEDURE Reshape(v: T; READONLY cd: VBT.ReshapeRec) RAISES {} =
-  VAR chDom: Rect.T; 
+  VAR chDom: Rect.T;
   BEGIN
     VBTClass.LocateChanged(v);
     IF v.ch # NIL THEN

@@ -39,23 +39,23 @@ TYPE T = VBT.T;
    be detached, as one would expect. *)
 
 
-PROCEDURE Succ (v: VBT.T; ch: VBT.T): VBT.T 
+PROCEDURE Succ (v: VBT.T; ch: VBT.T): VBT.T
   RAISES {NotAChild};
 <* LL >= {VBT.mu} *>
 (* Return the child of "v" that follows the child "ch". *)
 
-(* The successor of "NIL" is the first child; the successor of 
-   the last child is "NIL"; the successor of "NIL" is "NIL" if there 
+(* The successor of "NIL" is the first child; the successor of
+   the last child is "NIL"; the successor of "NIL" is "NIL" if there
    are no children. *)
 
-PROCEDURE Pred (v: VBT.T; ch: VBT.T): VBT.T 
+PROCEDURE Pred (v: VBT.T; ch: VBT.T): VBT.T
   RAISES {NotAChild};
 <* LL >= {VBT.mu} *>
 (* Return the child of "v" that precedes the child "ch". *)
 
 (* More precisely, "Pred(v,ch) = x" iff "Succ(v,x) = ch". *)
 
-PROCEDURE NumChildren (v: VBT.T): CARDINAL 
+PROCEDURE NumChildren (v: VBT.T): CARDINAL
   RAISES {NotAChild};
 <* LL >= {VBT.mu} *>
 (* Return the number of children of "v". *)
@@ -67,7 +67,7 @@ PROCEDURE Nth (v: VBT.T; n: CARDINAL): VBT.T;
 (* More precisely, "Nth(v, n)" is the child of "v" with "n" predecessors,
    or "NIL" if "v" has at most "n" children. *)
 
-PROCEDURE Index (v: VBT.T; ch: VBT.T): CARDINAL 
+PROCEDURE Index (v: VBT.T; ch: VBT.T): CARDINAL
   RAISES {NotAChild};
 <* LL >= {VBT.mu} *>
 (* Return the index of "v"'s child "ch". *)
@@ -80,17 +80,17 @@ PROCEDURE Locate (v: VBT.T; READONLY pt: Point.T): VBT.T;
 (* Return the child of "v" that would receive a mouse click at
    point "pt", or "NIL" if there is no such child. *)
 
-PROCEDURE Delete(v: T; ch: VBT.T) 
+PROCEDURE Delete(v: T; ch: VBT.T)
   RAISES {NotAChild};
 <* LL.sup = VBT.mu *>
 (* Delete the child "ch" of "v". *)
 
-PROCEDURE Replace (v: VBT.T; ch, new: VBT.T) 
+PROCEDURE Replace (v: VBT.T; ch, new: VBT.T)
   RAISES {NotAChild};
 <* LL.sup = VBT.mu *>
 (* Replace child "ch" of "v" with "new". *)
 
-PROCEDURE Insert (v: VBT.T; pred, new: VBT.T) 
+PROCEDURE Insert (v: VBT.T; pred, new: VBT.T)
   RAISES {NotAChild};
 <* LL.sup = VBT.mu *>
 (* Add "new" as a child of "v" following "pred". *)
@@ -103,20 +103,20 @@ PROCEDURE Insert (v: VBT.T; pred, new: VBT.T)
    individual multi-splits. *)
 
 
-PROCEDURE Move (v: VBT.T; pred, ch: VBT.T) 
+PROCEDURE Move (v: VBT.T; pred, ch: VBT.T)
   RAISES {NotAChild};
 <* LL.sup = VBT.mu *>
 (* Move child "ch" of "v" to follow "pred".  "ch" and, if
    non-"NIL", "pred", must be children of "v". *)
 
 PROCEDURE AddChildArray (
-    v: VBT.T; 
+    v: VBT.T;
     READONLY new: ARRAY OF VBT.T);
 <* LL.sup = VBT.mu *>
-(* Insert the non-"NIL" elements of "new" at the end of "v"'s 
+(* Insert the non-"NIL" elements of "new" at the end of "v"'s
    list of children. *)
 
-(* Procedure "AddChildArray" is equivalent to 
+(* Procedure "AddChildArray" is equivalent to
 |  pred := Pred(v, NIL);
 |  FOR i := FIRST(new) TO LAST(new) DO
 |    IF new[i] # NIL THEN
@@ -132,7 +132,7 @@ PROCEDURE AddChild (
 <* LL.sup = VBT.mu *>
 (* Insert the non-"NIL" parameters as children to "v". *)
 
-(* Procedure "AddChild" is equivalent to 
+(* Procedure "AddChild" is equivalent to
 |  AddChildArray(v,
 |    ARRAY OF VBT.T{n0, n1, n2, n3, n4, n5, n6, n7, n8, n9})
    *)

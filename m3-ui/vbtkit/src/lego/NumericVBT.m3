@@ -91,10 +91,10 @@ PROCEDURE Callback (<* UNUSED *> v: T; <* UNUSED *> event: AnyEvent.T) =
 
 PROCEDURE VBar (shadow: Shadow.T): VBT.T =
   BEGIN
-    IF shadow.size # 0.0 THEN 
+    IF shadow.size # 0.0 THEN
       RETURN NIL
-    ELSE 
-      RETURN FlexVBT.FromAxis(TextureVBT.New(shadow.bgFg), 
+    ELSE
+      RETURN FlexVBT.FromAxis(TextureVBT.New(shadow.bgFg),
                                 Axis.T.Hor, FlexVBT.RigidRange(1.0))
     END
   END VBar;
@@ -184,7 +184,7 @@ PROCEDURE StripLeadingBlanks (t: TEXT): TEXT =
     RETURN ""
   END StripLeadingBlanks;
 *************)
-  
+
 TYPE
   PlusMinusVBT = TrillSwitchVBT.T BRANDED OBJECT
                    v    : T;

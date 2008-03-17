@@ -103,15 +103,15 @@ PROCEDURE Rescreen (v: T; READONLY cd: VBT.RescreenRec) =
 
 PROCEDURE AllMissing (READONLY range: SizeRange): BOOLEAN =
   BEGIN
-    RETURN (range.natural = Missing) AND 
-           (range.shrink  = Missing) AND 
+    RETURN (range.natural = Missing) AND
+           (range.shrink  = Missing) AND
            (range.stretch = Missing);
   END AllMissing;
 
 PROCEDURE AnyMissing (READONLY range: SizeRange): BOOLEAN =
   BEGIN
-    RETURN (range.natural = Missing) OR 
-           (range.shrink  = Missing) OR 
+    RETURN (range.natural = Missing) OR
+           (range.shrink  = Missing) OR
            (range.stretch = Missing);
   END AnyMissing;
 

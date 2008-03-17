@@ -11,7 +11,7 @@
 
 MODULE ScrnCursor;
 
-REVEAL 
+REVEAL
   T = Public BRANDED OBJECT END;
   Private = BRANDED OBJECT END;
 

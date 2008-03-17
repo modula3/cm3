@@ -6,7 +6,7 @@ INTERFACE GridSplit;
 
 (* A "GridSplit" is a split which lays its
    children on a rectangular grid. The size
-   of the grid is not determined by the 
+   of the grid is not determined by the
    children, however. *)
 
 IMPORT VBT, Pixmap, PaintOp, Point, Split, Rect;
@@ -62,7 +62,7 @@ PROCEDURE GrowRows(v: T; nrows: CARDINAL := 1);
 PROCEDURE Dim (v: T; VAR nrows, ncols: CARDINAL);
 PROCEDURE NumRows(v: T): CARDINAL;
 PROCEDURE NumCols(v: T): CARDINAL;
-(* "Dim", "NumRows" and "NumCols" return the number of 
+(* "Dim", "NumRows" and "NumCols" return the number of
    rows and columns for "v". *)
 
 PROCEDURE GetColWidth (v: T; col: CARDINAL): CARDINAL;
@@ -83,7 +83,7 @@ PROCEDURE GetCoord (v: T;
 
 
 PROCEDURE Locate(v: T; p: Point.T): Location;
-(* Find out the location of a point within the VBT. If 
+(* Find out the location of a point within the VBT. If
    the point is within the outer left or top margin,
    "row" or "col" may be set to -1. The type "Location"
    describes where, within "v" is the cursor located. *)

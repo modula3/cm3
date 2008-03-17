@@ -268,7 +268,7 @@ PROCEDURE NewProc(proc: JunoAST.ProcDecl; mod: JunoAST.Id): Proc
   VAR
     tbl := NEW(StackTbl.T).init();
     header := proc.header;
-    slot := JunoRT.GetCodeIndex(JunoRT.ProcAttr{mod, header.name, 
+    slot := JunoRT.GetCodeIndex(JunoRT.ProcAttr{mod, header.name,
       JunoRT.Sig{header.outs.size, header.inouts.size, header.ins.size}});
   BEGIN
     RETURN NEW(Proc, index := slot, body := proc.body,

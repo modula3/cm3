@@ -50,7 +50,7 @@ PROCEDURE Insert (m: MC; pred, ch: VBT.T) =
     END
   END Insert;
 
-PROCEDURE Replace (m: MC; ch, new: VBT.T) = 
+PROCEDURE Replace (m: MC; ch, new: VBT.T) =
   <* FATAL Split.NotAChild *>
   BEGIN
     Split.Replace (m.vbt, ch, new)

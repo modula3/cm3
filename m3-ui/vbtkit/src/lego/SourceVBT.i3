@@ -104,7 +104,7 @@ TYPE
    convenient to use.
 
    The default "normal" and "excited" methods are no-ops. *)
-   
+
 PROCEDURE BeTarget (w: VBT.T; class: TargetClass);
 <* LL.sup < w *>
 (* Make "w" into a target for a "SourceVBT".  As a target, "w" may
@@ -114,7 +114,7 @@ PROCEDURE TargetClassOf (w: Target): TargetClass;
 <* LL.sup < w *>
 (* Return the "class" argument for which there was a previous call
    to "BeTarget(w, class)", or "NIL" if there was no such call. *)
-   
+
 PROCEDURE GetSource (w: Target): T;
 <* LL.sup = VBT.mu *>
 (* Called by a target's "normal" or "excited" methods to find out

@@ -37,13 +37,13 @@ TYPE
     in "edges".  If the any of the vertices (the two endpoints, with or without
     two addition control points) that define any of the edges
     are also moving, the path traced adjusts dynamically.  The time spent
-    moving along each edge is roughly proportional to the length of the 
+    moving along each edge is roughly proportional to the length of the
     edge.  The edges can be disjoint.
 *)
   MultipleEdgePath <: MultipleEdgePathPublic;
   MultipleEdgePathPublic =
     T OBJECT METHODS init (edges: RefList.T (* of GraphVBT.Edge *)): T END;
-  
+
 END AnimationPath.
 
 

@@ -11,7 +11,7 @@ MODULE Color;
 
 PROCEDURE Brightness (READONLY rgb: T): REAL =
   BEGIN
-    RETURN MIN(1.0, 
+    RETURN MIN(1.0,
               MAX(0.0, 0.239 * rgb.r + 0.686 * rgb.g + 0.075 * rgb.b))
   END Brightness;
 

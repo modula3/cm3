@@ -41,7 +41,7 @@ TYPE
 
 (* The call "v.init(ch)" initializes "v" as an "OffsetVBT" with
    child "ch".  And the northwest corner of the parent is aligned
-   at co-ordinate ("north", "west") mm in the child domain. 
+   at co-ordinate ("north", "west") mm in the child domain.
 
    The call "v.move(north, west)" adjusts the co-ordinate system
    so that the "v"s northwest corner is positioned at co-ordinate

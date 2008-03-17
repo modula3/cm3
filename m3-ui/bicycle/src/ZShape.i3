@@ -11,12 +11,12 @@
 (* A "ZShape.T" is a parent window with overlapping non-rectangular
    child windows.  This generalizes ZSplit by refining the notion
    of domain to exclude bits that the child doesn't want. *)
-   
+
 INTERFACE ZShape;
 
 IMPORT VBT, Region, ZSplit;
 
-TYPE 
+TYPE
   T <: ZSplit.T;
 
 PROCEDURE New(

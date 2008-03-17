@@ -23,12 +23,12 @@ REVEAL
         init := Init;
       END;
 
-TYPE ImageVBT = RigidPixmapVBT OBJECT 
+TYPE ImageVBT = RigidPixmapVBT OBJECT
   ismap: BOOLEAN
 END;
 
-REVEAL 
-  ImageInfo = PublicImageInfo BRANDED OBJECT 
+REVEAL
+  ImageInfo = PublicImageInfo BRANDED OBJECT
     vbt: ImageVBT;
   OVERRIDES
     load := LoadImage;
@@ -161,9 +161,9 @@ PROCEDURE NullifyEmptyHeaders (v: T) =
 PROCEDURE EnterHMode (v: T; parent: VBT.Split) =
   BEGIN
     IF v.hsplit = NIL THEN
-      IF v.verbatim THEN 
+      IF v.verbatim THEN
         v.hsplit := HVSplit.New(hv := Axis.T.Hor, adjustable := FALSE);
-      ELSE 
+      ELSE
         v.hsplit := PackSplit.New(op := RegularColors.bg, hgap := 1.0, vgap := 0.0);
       END;
       Split.AddChild(parent, v.hsplit);
@@ -214,7 +214,7 @@ PROCEDURE WalkSequence (v: T; vsplit: VBT.T; s: State; seq: HTML.Sequence) =
           ExitHMode(v);
           Split.AddChild(vsplit, VGlue(ParSkipAmt));
 
-      | HTML.LineBreak => 
+      | HTML.LineBreak =>
           ExitHMode(v);
 
       | HTML.HorizontalRule =>
@@ -339,7 +339,7 @@ PROCEDURE WalkSequence (v: T; vsplit: VBT.T; s: State; seq: HTML.Sequence) =
           Push();
           ChangeFont(
             s, s.family, s.size, FontWeight.Normal, FontSlant.Slanted);
-          WalkSequence(v, vsplit, s, addr.content); 
+          WalkSequence(v, vsplit, s, addr.content);
           Pop();
           ExitHMode(v);
 
@@ -369,7 +369,7 @@ PROCEDURE WalkGlossary (v: T; vsplit: VBT.T; s: State; glossary: HTML.Glossary) 
   VAR gs := glossary.content;
   BEGIN
     ExitHMode(v);
-    Split.AddChild(vsplit, VGlue(ParSkipAmt)); 
+    Split.AddChild(vsplit, VGlue(ParSkipAmt));
 
     IF glossary.preContent # NIL THEN
        ExitHMode(v);
@@ -384,7 +384,7 @@ PROCEDURE WalkGlossary (v: T; vsplit: VBT.T; s: State; glossary: HTML.Glossary) 
       END;
 
       IF gs.definition # NIL THEN
-        ExitHMode(v); 
+        ExitHMode(v);
         WITH hbox = HVSplit.New(hv := Axis.T.Hor, adjustable := FALSE) DO
           Split.AddChild(vsplit, hbox);
           Split.AddChild(hbox, HGlue(2.0*IndentAmt));
@@ -420,7 +420,7 @@ PROCEDURE WalkList (v: T; vsplit: VBT.T; s: State; list: HTML.List) =
     END;
 
     ExitHMode(v);
-    IF list.kind = HTML.ListKind.Ordered THEN 
+    IF list.kind = HTML.ListKind.Ordered THEN
       chCount := 1;
     ELSE
       chCount := 0;
@@ -428,7 +428,7 @@ PROCEDURE WalkList (v: T; vsplit: VBT.T; s: State; list: HTML.List) =
       INC(v.ulDepth);
     END;
 
-    Split.AddChild(vsplit, listhbox); 
+    Split.AddChild(vsplit, listhbox);
     Split.AddChild(listhbox, HGlue(IndentAmt));
     Split.AddChild(listhbox, listvbox);
     WHILE item # NIL DO
@@ -454,7 +454,7 @@ PROCEDURE WalkList (v: T; vsplit: VBT.T; s: State; list: HTML.List) =
       item := item.next;
     END;
 
-    IF list.kind # HTML.ListKind.Ordered THEN 
+    IF list.kind # HTML.ListKind.Ordered THEN
       DEC(v.ulDepth);
     END;
   END WalkList;
@@ -481,37 +481,37 @@ PROCEDURE WalkHeading (v: T; vsplit: VBT.T; s: State; heading: HTML.Heading):
 
    (HeaderBoxTSplit
      empty1
-     (VBox1 
+     (VBox1
        preglue
-       (HBox 
-         toggler 
-         (VBox2 
+       (HBox
+         toggler
+         (VBox2
            heading
-           (HideawayTSplit 
+           (HideawayTSplit
              empty2
              (ContentsVBox postglue ..stuff..))))))
 
 *)
 
-(* HideawayTSplit - Like a TSplit, except when the current child is NIL, 
+(* HideawayTSplit - Like a TSplit, except when the current child is NIL,
    the shape is empty rather than a VBT's default shape. *)
 
-TYPE HideawayTSplit = TSplit.T OBJECT  
-  METHODS 
+TYPE HideawayTSplit = TSplit.T OBJECT
+  METHODS
     set(show: BOOLEAN) := HTSet;
-  OVERRIDES 
-    shape := HTShape; 
+  OVERRIDES
+    shape := HTShape;
   END;
 
 PROCEDURE HTSet (v: HideawayTSplit; show: BOOLEAN) =
   BEGIN
-    IF show THEN 
+    IF show THEN
       TSplit.SetCurrent(v, Split.Succ(v, NIL))
     ELSE
       TSplit.SetCurrent(v, NIL)
     END
   END HTSet;
- 
+
 PROCEDURE HTShape (v: HideawayTSplit; ax: Axis.T; n: CARDINAL): VBT.SizeRange
   RAISES {} =
   BEGIN
@@ -527,11 +527,11 @@ REVEAL
                 empty: BOOLEAN; (* contents empty and no subheaders *)
                 level: INTEGER;
                 toExpand: BOOLEAN;
-                toggler : Toggler; 
+                toggler : Toggler;
                 contents: HVSplit.T;
                 next: HeaderBox;
               END;
-  
+
 PROCEDURE WalkZipperedHeading (v: T; s: State; heading: HTML.Heading): VBT.T =
   VAR
     header   := NEW(HeaderBox);
@@ -547,8 +547,8 @@ PROCEDURE WalkZipperedHeading (v: T; s: State; heading: HTML.Heading): VBT.T =
     hbox   := HVSplit.New(hv := Axis.T.Hor, adjustable := FALSE);
   BEGIN
     VAR l := v.headers; BEGIN
-      IF l = NIL THEN v.headers := header; 
-      ELSE 
+      IF l = NIL THEN v.headers := header;
+      ELSE
         WHILE l.next # NIL DO l := l.next END;
         l.next := header;
       END
@@ -680,7 +680,7 @@ PROCEDURE CollapseHeaders (level      : INTEGER;
     END
   END CollapseHeaders;
 
-  
+
 PROCEDURE ExpandHeader (h: HeaderBox) =
   BEGIN
     h.toExpand := TRUE;
@@ -702,8 +702,8 @@ PROCEDURE ExpandHeaders (level    : INTEGER;
         header := header.next
       ELSE (* skip subheaders *)
         VAR level := header.level; BEGIN
-          header := header.next;  
-          WHILE header # NIL AND header.level > level DO 
+          header := header.next;
+          WHILE header # NIL AND header.level > level DO
             header := header.next
           END
         END
@@ -792,8 +792,8 @@ PROCEDURE WalkBlockQuote (v: T; vsplit: VBT.T; s: State; quote: HTML.BlockQuote)
     vbox := HVSplit.New(hv := Axis.T.Ver, adjustable := FALSE);
   BEGIN
     ExitHMode(v);
-    Split.AddChild(vsplit, VGlue(ParSkipAmt)); 
-    Split.AddChild(vsplit, hbox); 
+    Split.AddChild(vsplit, VGlue(ParSkipAmt));
+    Split.AddChild(vsplit, hbox);
     Split.AddChild(hbox, HGlue(IndentAmt));
     Split.AddChild(hbox, vbox);
     WalkSequence(v, vbox, s, quote.content);
@@ -811,8 +811,8 @@ PROCEDURE DisplayIsIndex (v: T; vsplit: VBT.T) =
     Split.AddChild(vsplit, hbox);
     WITH prompt = NEW(RigidTextVBT).init(
                     txt := "This is a searchable index. Enter search keywords: ",
-                    hmargin := 0.0, halign := 0.5, 
-                    vmargin := 0.0, valign := 0.0, 
+                    hmargin := 0.0, halign := 0.5,
+                    vmargin := 0.0, valign := 0.0,
                     fnt := DefaultState.font, bgFg := DefaultState.bgFg) DO
       Split.AddChild(hbox, prompt)
     END;
@@ -828,15 +828,15 @@ PROCEDURE DisplayIsIndex (v: T; vsplit: VBT.T) =
   END DisplayIsIndex;
 
 TYPE
-  IsIndexTypeinVBT = TypeinVBT.T OBJECT 
+  IsIndexTypeinVBT = TypeinVBT.T OBJECT
     v: T;
   OVERRIDES
     returnAction := IsIndexAction;
   END;
 
-PROCEDURE IsIndexAction (                    vbt: IsIndexTypeinVBT; 
+PROCEDURE IsIndexAction (                    vbt: IsIndexTypeinVBT;
                          <*UNUSED*> READONLY cd : VBT.KeyRec) =
-  <* FATAL Thread.Alerted *>  
+  <* FATAL Thread.Alerted *>
      (* Not sure if fataling Thread.Alerted is appropriate -- najork 8/27/96 *)
   BEGIN
     vbt.v.isindex(Web.EncodeURL(TextPort.GetText(vbt)))
@@ -860,7 +860,7 @@ PROCEDURE DisplayWord (v: T; vsplit: VBT.T; s: State; word: HTML.Word) =
     NL        = '\n';
     NonNL     = AllChars - SET OF CHAR{NL};
 
-    <* FATAL Rd.EndOfFile, Rd.Failure, Thread.Alerted *>  
+    <* FATAL Rd.EndOfFile, Rd.Failure, Thread.Alerted *>
          (* Not sure if fataling everything is appropriate -- najork 8/27/96 *)
   BEGIN
     EnterHMode(v, vsplit);
@@ -919,7 +919,7 @@ PROCEDURE DisplayImage (v: T; vsplit: VBT.T; s: State; image: HTML.Image) =
     ELSE
       VAR
         vbt := NEW(ImageVBT, ismap := image.ismap).init(
-                 pm := EmptyImage, 
+                 pm := EmptyImage,
                  op := (* PaintOp.Copy *) RegularColors.bgFg,
                  bg := RegularColors.bg);
         border := BorderedVBT.New(
@@ -941,7 +941,7 @@ PROCEDURE DisplayImage (v: T; vsplit: VBT.T; s: State; image: HTML.Image) =
     END
   END DisplayImage;
 
-(* 
+(*
 PROCEDURE LoadImage (info: ImageInfo; page: Web.Page)
   RAISES {Thread.Alerted} =
   VAR pm: Pixmap.T;
@@ -973,7 +973,7 @@ PROCEDURE LoadImage (info: ImageInfo; page: Web.Page)
           END;
         ELSE
           RAISE Images.Error
-        END;  
+        END;
         Images.ToCache(info.url, pm);
         LOCK VBT.mu DO PixmapVBT.Put(info.vbt, pm) END
       END
@@ -1060,7 +1060,7 @@ PROCEDURE HBar (amt: REAL): VBT.T =
 
 
 
-REVEAL RigidPixmapVBT = PixmapVBT.T BRANDED OBJECT 
+REVEAL RigidPixmapVBT = PixmapVBT.T BRANDED OBJECT
   OVERRIDES shape := RigidPixmapVBTShape;
 END;
 
@@ -1073,7 +1073,7 @@ PROCEDURE RigidPixmapVBTShape (v: RigidPixmapVBT; ax: Axis.T; n: CARDINAL): VBT.
   END RigidPixmapVBTShape;
 
 
-REVEAL RigidTextVBT = TextVBT.T BRANDED OBJECT 
+REVEAL RigidTextVBT = TextVBT.T BRANDED OBJECT
   OVERRIDES shape := RigidTextVBTShape;
 END;
 
@@ -1110,22 +1110,22 @@ PROCEDURE LookupColors(bgName, fgName: TEXT): PaintOp.ColorQuad =
     fgOp := PaintOp.FromRGB(fg.r, fg.g, fg.b, mode:=PaintOp.Mode.Accurate, bw:=PaintOp.BW.UseFg);
     quad := PaintOp.MakeColorQuad(bgOp, fgOp);
 (*
-  TYPE 
+  TYPE
     ColorQuint = PaintOp.ColorQuad OBJECT
       bgBg: PaintOp.T;
     END;
 *)
   BEGIN
 (*
-     RETURN NEW(ColorQuint, 
-          bg := quad.bg, 
-          fg := quad.fg, 
-          bgFg := quad.bgFg, 
+     RETURN NEW(ColorQuint,
+          bg := quad.bg,
+          fg := quad.fg,
+          bgFg := quad.bgFg,
           transparentFg := quad.transparentFg,
           bgBg := PaintOp.Pair(bgOp, bgOp))
-*)    
+*)
     RETURN quad;
-  END LookupColors;    
+  END LookupColors;
 
 PROCEDURE ColorNameToRGB (name: TEXT): Color.T =
   (* gross hack here to ensure that the background color matches that of

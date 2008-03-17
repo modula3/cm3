@@ -25,7 +25,7 @@ TYPE
 
 (* The following three declarations control the precision of Juno-2's
    calculations. Currently they are set to use single precision. *)
-   
+
 TYPE
   Real = REAL;
 
@@ -33,10 +33,10 @@ CONST Zero = 0.0;
 
 VAR HalfEps: Real;
 
-(* "Zero" and "HalfEps" are the zero and the relative error for type 
-   "Real". That is, the difference between a real number "x" and 
+(* "Zero" and "HalfEps" are the zero and the relative error for type
+   "Real". That is, the difference between a real number "x" and
    the result of rounding it to a "Real" is at most "HalfEps*x".
-   "HalfEps" is initialized in the body of the "JunoValue" module. *) 
+   "HalfEps" is initialized in the body of the "JunoValue" module. *)
 
 VAR (*CONST*)
   Nil: Null;

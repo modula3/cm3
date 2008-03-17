@@ -103,7 +103,7 @@ PROCEDURE MemNearVarList(id: JunoAST.Id; l: JunoAST.NearVarList):
 (* ======================= Operations on IdList's ========================== *)
 
 PROCEDURE CopyIdLinks(l: JunoAST.IdLink; VAR (*OUT*) last: JunoAST.IdLink):
-  JunoAST.IdLink = 
+  JunoAST.IdLink =
 (* Return a copy of "l", but set "last" to the last "JunoAST.IdLink" of the
    new list. If "l" is "NIL", then "last" is set to "NIL". *)
   VAR res: JunoAST.IdLink := NIL; BEGIN

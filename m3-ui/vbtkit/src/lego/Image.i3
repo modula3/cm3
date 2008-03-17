@@ -15,7 +15,7 @@
 
 INTERFACE Image;
 
-IMPORT Pixmap, Rd, ScrnPixmap, Thread, TrestleComm, 
+IMPORT Pixmap, Rd, ScrnPixmap, Thread, TrestleComm,
   VBT, Word, Wr;
 
 TYPE T = Pixmap.T;
@@ -53,8 +53,8 @@ TYPE
       colorMode  := Mode.Normal;
     END;
 
-  RawPixmapCMap = RawPixmap OBJECT 
-      colors: REF ARRAY OF RGB;  
+  RawPixmapCMap = RawPixmap OBJECT
+      colors: REF ARRAY OF RGB;
     END;
 
 (* If "pm" is a "Raw" pixmap, then "pm" contains "pm.height"
@@ -62,9 +62,9 @@ TYPE
    are read-only after they are initialized.  The pixels are
    accessed with (0,0) in the northwest corner and
    "(width-1,height-1)" in the southeast corner.  The "pm.xres"
-   and "pm.yres" fields specify the resolution at which "pm" was 
+   and "pm.yres" fields specify the resolution at which "pm" was
    designed. The "get" and "set" methods retrieve and store
-   individual elements of the pixmap. 
+   individual elements of the pixmap.
 
    Each subtype of "Raw" can interpret a ``pixel'' in whatever way it
    chooses. The three subtypes defined here do the following:
@@ -87,7 +87,7 @@ TYPE
    "pm.needsGamma" indicates whether to let Trestle gamma-correct
    the colors.  The "pm.colorMode" field determines how each RGB
    value in the pixmap should be displayed on color-mapped
-   display.  
+   display.
 
    \item
    If "pm" is a "RawPixmapCMap", the pixels in "pm" are used as
@@ -96,11 +96,11 @@ TYPE
 
    \end{itemize}
 
-   The colors used to display a colored pixmap "pm" depends 
-   on a number of factors. The "pm.colorMode" field is 
+   The colors used to display a colored pixmap "pm" depends
+   on a number of factors. The "pm.colorMode" field is
    used to match colors in
    the pixmap with colors in the color table, as described in the
-   "ScrnPixmap" interface.  The matching 
+   "ScrnPixmap" interface.  The matching
    depends on other applications running, on other pixmaps
    being displayed, and on the depth of the screen.
 
@@ -174,7 +174,7 @@ PROCEDURE ToWr (raw: Raw; wr: Wr.T)
 PROCEDURE FromVBT(v : VBT.T; width, height: REAL): Raw
    RAISES {TrestleComm.Failure};
 <* LL = VBT.mu *>
-(* Return a screen-independent "Raw" that describes "v" when 
+(* Return a screen-independent "Raw" that describes "v" when
    "v" is scaled to be "width" by "height" millimeters. *)
 
 (* The current implementation of "FromVBT" will cause "v" to be
@@ -188,16 +188,16 @@ PROCEDURE FromVBT(v : VBT.T; width, height: REAL): Raw
    various VBT methods (reshape, rescreen, redisplay, and so on) are
    called.
 
-   The following procedure converts a 
+   The following procedure converts a
    screen-dependent pixmap (such as that returned
    by "VBT.Capture"), into one that is screen-independent: *)
 
 PROCEDURE FromScrnPixmap (
-    spm: ScrnPixmap.T; 
+    spm: ScrnPixmap.T;
     st: VBT.ScreenType): Raw RAISES {TrestleComm.Failure};
 <* LL.sup <= VBT.mu *>
 (* Returns a screen-independent "Raw" that describes the pixmap
-   "spm" when displayed on "st". Any field of "Raw" that cannot be 
+   "spm" when displayed on "st". Any field of "Raw" that cannot be
    computed from "spm" and "st" is given its default value. For example,
    the "needsGamma" and the "colorMode" fields of pixmaps that are
    deeper than 1-bit. *)
@@ -270,7 +270,7 @@ PROCEDURE ScaledN (READONLY raws: ARRAY OF Raw;
 
    For a given scale factor "s", the error is
 
-| ABS (MAX ((dpiX - MAX(s, maxScale) * pm.xres) / dpiX, 
+| ABS (MAX ((dpiX - MAX(s, maxScale) * pm.xres) / dpiX,
 |           (dpiY - MAX(s, maxScale) * pm.yres) / dpiY))
 
    If none of the pixmaps in the "raws" array satisfies the

@@ -12,14 +12,14 @@ MODULE Track EXPORTS Main;
 IMPORT VBT, Trestle, TextVBT, Fmt, TrestleComm;
 
 TYPE
-  TrackVBT = TextVBT.T OBJECT 
+  TrackVBT = TextVBT.T OBJECT
   METHODS
     init(): TrackVBT := Init
   OVERRIDES
     position := Position;
     mouse := Mouse;
   END;
-  
+
 PROCEDURE Init(v: TrackVBT): TrackVBT =
   BEGIN
     EVAL TextVBT.T.init(v, "Cursor gone");

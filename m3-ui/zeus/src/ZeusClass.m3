@@ -23,11 +23,11 @@ REVEAL
       END;
 
 
-PROCEDURE DefaultInstall (<*UNUSED*> v: T) = 
+PROCEDURE DefaultInstall (<*UNUSED*> v: T) =
   BEGIN
   END DefaultInstall;
 
-PROCEDURE DefaultDelete (<*UNUSED*> v: T) = 
+PROCEDURE DefaultDelete (<*UNUSED*> v: T) =
   BEGIN
   END DefaultDelete;
 
@@ -50,13 +50,13 @@ PROCEDURE DefaultRestore (<*UNUSED*> v: T; rd: Rd.T)
     END;
   END DefaultRestore;
 
-PROCEDURE DefaultConfig (<*UNUSED*> v: T; 
-                         <*UNUSED*> state: StateChange; 
+PROCEDURE DefaultConfig (<*UNUSED*> v: T;
+                         <*UNUSED*> state: StateChange;
                          <*UNUSED*> object: T) =
   BEGIN
   END DefaultConfig;
 
-PROCEDURE DefaultReactivity (<*UNUSED*> v: T; <*UNUSED*> on: BOOLEAN) = 
+PROCEDURE DefaultReactivity (<*UNUSED*> v: T; <*UNUSED*> on: BOOLEAN) =
   BEGIN
   END DefaultReactivity;
 

@@ -6,7 +6,7 @@
 (*      modified on Sun Nov 28 23:09:13 PST 1993 by najork  *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 
@@ -31,5 +31,5 @@ TYPE
         ue#(_EVENT_) (#(_ARGSTR_)) RAISES {Thread.Alerted};
 #}
       END;
-      
+
 END #(_ALGNAME_)3DViewClass.

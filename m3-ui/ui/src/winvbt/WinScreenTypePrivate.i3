@@ -28,10 +28,10 @@ TYPE
   END;
 (*
  * In the xvbt version, there is also a field "empty" that caches the id
- * (the index into st.pmtable, not the XID) of the empty pixmap 
- * ("Pixmap.Empty"). This field is updated by "XScrnPxmp.BuiltIn", and 
- * accessed by various "XGC.ResolveTextureGC", "XGC.ResolveFillGC", and 
- * "XGC.ResolveStrokeGC".  Its main purpose seems to be performance 
+ * (the index into st.pmtable, not the XID) of the empty pixmap
+ * ("Pixmap.Empty"). This field is updated by "XScrnPxmp.BuiltIn", and
+ * accessed by various "XGC.ResolveTextureGC", "XGC.ResolveFillGC", and
+ * "XGC.ResolveStrokeGC".  Its main purpose seems to be performance
  * optimization.
  *)
 

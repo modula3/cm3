@@ -17,7 +17,7 @@
 
 | ( (pre cancel) | (pre action post) )*
 
-   The minimum, maximum, and preferred size of a "ButtonVBT" 
+   The minimum, maximum, and preferred size of a "ButtonVBT"
    are all equal to the minimum size of its child, in each axis.  *)
 
 INTERFACE ButtonVBT;
@@ -26,20 +26,20 @@ IMPORT VBT, Filter, PackSplit, PaintOp;
 
 TYPE
   T <: Public;
-  Public = Filter.T OBJECT (*CONST*) 
+  Public = Filter.T OBJECT (*CONST*)
     action: Proc
-  METHODS 
+  METHODS
     <* LL.sup = VBT.mu *>
     pre();
     post();
     cancel();
     <* LL.sup <= VBT.mu *>
-    init(ch: VBT.T; 
-      action: Proc; 
-      ref: REFANY := NIL): T; 
+    init(ch: VBT.T;
+      action: Proc;
+      ref: REFANY := NIL): T;
   END;
-  
-  Proc = 
+
+  Proc =
     PROCEDURE(self: T; READONLY cd: VBT.MouseRec);
     <* LL.sup = VBT.mu *>
 
@@ -54,24 +54,24 @@ TYPE
    moves the mouse out of the button.  Otherwise they call the action
    procedure "proc" if the user releases the mouse button.
 
-   The default "pre" method highlights the button, the default "post" and 
-   "cancel" methods unhighlight it.  Consequently there should be a 
+   The default "pre" method highlights the button, the default "post" and
+   "cancel" methods unhighlight it.  Consequently there should be a
    "HighlightVBT" somewhere above the button.  Since "Trestle.Install"
    automatically inserts a "HighlightVBT", you usually don't have
    to worry about this.
 
-   The action procedure is a field rather than a method in order to 
-   allow buttons with different action procedures to share their 
+   The action procedure is a field rather than a method in order to
+   allow buttons with different action procedures to share their
    method suites. *)
 
 PROCEDURE New(
-  ch: VBT.T; 
-  action: Proc; 
+  ch: VBT.T;
+  action: Proc;
   ref: REFANY := NIL): T; <* LL.sup = VBT.mu *>
 (* "New(...)" is equivalent to "NEW(T).init(...)". *)
 
 PROCEDURE MenuBar(
-  ch0, ch1, ch2, ch3, ch4, ch5, 
+  ch0, ch1, ch2, ch3, ch4, ch5,
     ch6, ch7, ch8, ch9: VBT.T := NIL;
   op: PaintOp.T := PaintOp.Bg)
   : PackSplit.T; <* LL.sup = VBT.mu *>

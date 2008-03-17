@@ -21,7 +21,7 @@ TYPE
   END;
 
 (* For a TextPortButton.T "b", the field "b.interval" is set after
-   "b" is inserted into some TextPortWithButtons.T "t" 
+   "b" is inserted into some TextPortWithButtons.T "t"
    by calling "t.insertButton(b)". *)
 
 PROCEDURE GetExtents(b: T; VAR (*out*) left, right: CARDINAL);

@@ -1,5 +1,5 @@
 INTERFACE XKeySym;
-(* Derived from: $XConsortium: keysymdef.h,v 1.13 89/12/12 16:23:30 rws Exp $ 
+(* Derived from: $XConsortium: keysymdef.h,v 1.13 89/12/12 16:23:30 rws Exp $
    by steveg Thu Mar 22 14:25:56 PST 1990 *)
 (***********************************************************
 Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,

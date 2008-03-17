@@ -9,7 +9,7 @@
 
 MODULE Grid;
 
-IMPORT Axis, MG, MGV, 
+IMPORT Axis, MG, MGV,
        Pts, R2, VBT;
 
 REVEAL

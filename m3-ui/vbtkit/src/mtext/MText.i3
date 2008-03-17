@@ -34,7 +34,7 @@ INTERFACE MText;
    length" or "end" exceed "Length(m)", then "Length(m)" will
    be used.  (A previous implementation raised checked runtime
    errors in such cases.)
-   
+
  *)
 
 IMPORT Rd;
@@ -56,7 +56,7 @@ PROCEDURE New (t := ""; bufMax: CARDINAL := 256): T;
 PROCEDURE ChangeBufMax (m: T; bufMax: CARDINAL);
 
 PROCEDURE Close (m: T);
-(* 
+(*
 | = MText.Replace(m, 0, MText.Length(m), "")
 *)
 

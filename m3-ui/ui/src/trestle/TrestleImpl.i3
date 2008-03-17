@@ -22,7 +22,7 @@ PROCEDURE RootChild(v: VBT.T; VAR trsl: Trestle.T; VAR ch: VBT.T): BOOLEAN;
 PROCEDURE GetDecor(ch: VBT.T): TrestleClass.Decoration;
 
 PROCEDURE InnerDecorate(trsl: Trestle.T; ch: VBT.T;
-                        new: TrestleClass.Decoration) 
+                        new: TrestleClass.Decoration)
   RAISES {TrestleComm.Failure};
 
 PROCEDURE UpdateChalk(ch: VBT.T);

@@ -113,7 +113,7 @@ PROCEDURE Update (vt: T)
     view := vt.views;
     WHILE view # NIL DO UpdateView (view); view := view.next; END;
   END Update;
-  
+
 VAR boolToTriState: ARRAY BOOLEAN OF TriState;
 
 PROCEDURE UpdateView (view: View)
@@ -1168,7 +1168,7 @@ PROCEDURE PaintBackgroundTransparent (                view: View;
                                       READONLY chars : ARRAY OF CHAR;
                                                length: CARDINAL;
                                       READONLY intervalOptions:
-                                         IntervalOptions;  
+                                         IntervalOptions;
                                       <* UNUSED *>
                                       oldAllWhiteBelow: BOOLEAN;
                                       VAR (* OUT *) allWhiteBelow: BOOLEAN;
@@ -1729,7 +1729,7 @@ PROCEDURE PaintOverlayTransparent (                view  : View;
               END;               (* FOR *)
               IF h > h0 THEN PaintStroke (); PaintLeading (); END;
             END (* WITH *)
-          END (* FOR *) 
+          END (* FOR *)
         END (* WITH *)
       END (* WITH *) END (* WITH *)
     END PaintOverlayTransparent;

@@ -35,17 +35,17 @@ INTERFACE Card;
    can't think of anything else to do.  The stupid procedure suggests a
    move which is generally illegal, because it shows you what you might
    move onto this card to make progress.
-   
+
    This interface always keeps a log of the moves that have been made.
    No standard user interface for undo and redo is provided, since in
    some games it might be considered cheating.
 
-   In addition, the interface supports creating cards without stacking 
+   In addition, the interface supports creating cards without stacking
    semantics, which can be used when rectangular cards are good enough.
    This is the type "Card".
 
 *)
-     
+
 IMPORT TwoTone, VBT, ZSplit, Point;
 
 CONST
@@ -117,8 +117,8 @@ PROCEDURE Attach(c, p: T) RAISES {BadDeal};
 placed directly on top of p. Otherwise, c is shifted down by Overlap,
 unless p is itself the unreal card at the base of the stack.  Cards
 played on top of down-facing cards are offset by OverlapDown instead.
-All cards above c are moved as well.  If p is in the same stack as c, 
-BadDeal is raised, unless c is atop p. If p has any real card above it 
+All cards above c are moved as well.  If p is in the same stack as c,
+BadDeal is raised, unless c is atop p. If p has any real card above it
 other than c, BadDeal is raised. *)
 
 PROCEDURE StartUndoLog();
@@ -161,11 +161,11 @@ TYPE
   (* Returns a card on which to play the argument, else NIL *)
 
 VAR
-  
+
   attachable: AttachProc;
   play: PlayProc;
   obvious, trivial, stupid: MoveProc;
-  (* return the obvious move, if it exists (button 1 action); 
+  (* return the obvious move, if it exists (button 1 action);
      return the trivial move, if it exists (button 2 action);
      return a stupid but informative move  (button 3 action) *)
 
@@ -175,7 +175,7 @@ PROCEDURE EnableTracking(enable: BOOLEAN);
 
 PROCEDURE EnableHighlight(enable: BOOLEAN; chain: INTEGER);
   (* When true, pressing a mouse button highlights the selected
-     target card.  If chain is non-negative, every chain milliseconds, 
+     target card.  If chain is non-negative, every chain milliseconds,
      the next card is also highlighted.  These default to TRUE and 1000 *)
 
 END Card.

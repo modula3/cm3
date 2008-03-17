@@ -10,7 +10,7 @@
 <*PRAGMA LL*>
 
 (* The "Trestle" interface provides routines for connecting to window
-   systems; installing, decorating, and moving top-level windows, and 
+   systems; installing, decorating, and moving top-level windows, and
    performing related operations.  *)
 
 INTERFACE Trestle;
@@ -20,7 +20,7 @@ IMPORT VBT, Rect, Point, Region, ScrnPixmap, TrestleComm;
 TYPE
   T <: ROOT;
 
-(* A "Trestle.T" identifies an instance of a window system.  All the 
+(* A "Trestle.T" identifies an instance of a window system.  All the
    routines in this interface that take a "Trestle.T" accept the value "NIL",
    which represents the default window system obtained by calling
    "Connect(NIL)". *)
@@ -48,9 +48,9 @@ PROCEDURE Install(
    The text "applName" is the application name; it defaults to the
    application name from the process environment.
 
-   The text "inst" distinguishes windows with the same application name. 
-   For example, a text editor might use the full path name of the 
-   file being edited as the instance. The default is the value of 
+   The text "inst" distinguishes windows with the same application name.
+   For example, a text editor might use the full path name of the
+   file being edited as the instance. The default is the value of
    the environment variable "WINSTANCE".
 
    Trestle does not require that the pair "(applName, inst)" be unique, but
@@ -64,7 +64,7 @@ PROCEDURE Install(
    The icon for the window will contain the text "iconTitle" together
    with "iconWindow" (if it is not "NIL").  For example, "iconWindow"
    might be a small "BitmapVBT".  Some window managers ignore
-   "iconWindow".  The default for "iconTitle" is "inst", or 
+   "iconWindow".  The default for "iconTitle" is "inst", or
    "applName" if "inst" is "NIL".
 
    The triple "bgColorR", "bgColorG", "bgColorB" specify the red, green,
@@ -81,7 +81,7 @@ PROCEDURE Install(
    window's current size satisfies the new max and min constraints.
    Use "StableVBT.Disable" to force a new preferred size.
 
-   It is a checked runtime error if either "v" or "iconWindow" is 
+   It is a checked runtime error if either "v" or "iconWindow" is
    already installed.
 
    Installing a window inserts one or more filters above it, including
@@ -133,10 +133,10 @@ PROCEDURE GetDecoration(v: VBT.T;
   VAR instance, windowTitle, iconTitle, applName: TEXT;
   VAR bgColorR, bgColorG, bgColorB: REAL;
   VAR iconWindow: VBT.T): BOOLEAN; <* LL.sup = VBT.mu *>
-(* If "v" is decorated, fetch "v"'s decorations, and return "TRUE".  
+(* If "v" is decorated, fetch "v"'s decorations, and return "TRUE".
   Otherwise, return "FALSE". *)
-  
- 
+
+
 (* \subsection{Window placement} *)
 
 
@@ -163,22 +163,22 @@ PROCEDURE Overlap(
    pop-up or pull-down menus.  If "id" is out-of-range for this Trestle
    instance, the window will appear on the default screen. *)
 
-PROCEDURE Iconize(v: VBT.T) 
+PROCEDURE Iconize(v: VBT.T)
   RAISES {TrestleComm.Failure}; <* LL.sup = VBT.mu *>
 (* Make the window "v" become iconic. *)
 
-PROCEDURE MoveNear(v, w: VBT.T) 
+PROCEDURE MoveNear(v, w: VBT.T)
   RAISES {TrestleComm.Failure}; <* LL.sup = VBT.mu *>
 (* Move the window "v" to be near the window "w".  *)
 
-(* The exact effect of "MoveNear" depends on the window manager.  
+(* The exact effect of "MoveNear" depends on the window manager.
    If "w" is "NIL" or is not installed where "v" is, then
    "MoveNear" will attempt to bring "v" to the attention of the user;
    in particular, if "v" is an overlapping window, "v" will be brought
    to the top; if "v" is an icon, it will be deiconized; if "v" is
-   in the invisible state produced by "Attach", it will be opened in some 
-   visible place.  
-   
+   in the invisible state produced by "Attach", it will be opened in some
+   visible place.
+
    "Overlap", "Iconize", and "MoveNear" are all no-ops if "v" is not
    installed.  The effects of "Iconize" and "MoveNear" are undefined
    for undecorated windows.  *)
@@ -208,11 +208,11 @@ TYPE ScreenID = INTEGER;
 
 CONST NoScreen: ScreenID = -1;
 
-TYPE ScreenOfRec = RECORD 
-  id: ScreenID; 
-  q: Point.T; 
-  trsl: T; 
-  dom: Rect.T 
+TYPE ScreenOfRec = RECORD
+  id: ScreenID;
+  q: Point.T;
+  trsl: T;
+  dom: Rect.T
 END;
 
 PROCEDURE ScreenOf(
@@ -221,19 +221,19 @@ PROCEDURE ScreenOf(
 (* Return information about where "v" is installed. *)
 
 (* If "v" is an installed window, or a child of an installed window,
-    then after "res := ScreenOf(v, p)" we have 
+    then after "res := ScreenOf(v, p)" we have
 
 \medskip\bulletitem "res.id" is the "ID" of the screen currently
 containing "v";
-   
+
 \medskip\bulletitem "res.q" is the point in screen coordinates that
  corresponds to the point "p" in window coordinates;
 
 \medskip\bulletitem "res.trsl" is the window system on which "v" is
 installed; and
-   
+
 \medskip\bulletitem
-"res.dom" is the domain of the screen "res.id".  
+"res.dom" is the domain of the screen "res.id".
 
 \medskip The point "p" need not be in the domain of "v".  If "v" is
 not installed, then "res.trsl" will be "NIL", "res.id" will be
@@ -252,11 +252,11 @@ TYPE
   ScreenArray = REF ARRAY OF Screen;
 
 
-PROCEDURE GetScreens(trsl: T := NIL): ScreenArray 
+PROCEDURE GetScreens(trsl: T := NIL): ScreenArray
   RAISES {TrestleComm.Failure}; <* LL.sup = VBT.mu *>
 (* Return an array of descriptors of the screens of the window system
    "trsl".  *)
-   
+
 (* For each "Screen" "s" in the returned array, the rectangle "s.dom"
    is the domain of the "VBT" at the root of the screen.  The screens
    all lie in a global coordinate system, within which the user moves
@@ -280,16 +280,16 @@ PROCEDURE Capture(
   <* LL.sup = VBT.mu *>
 (* Read the contents of "clip" from screen "id" of "trsl".  *)
 
-(* "Capture(id, clip, br, trsl)" is like "VBT.Capture(r, clip, br)", 
-   where "r" is the "VBT" at the root of screen "id" of the window 
+(* "Capture(id, clip, br, trsl)" is like "VBT.Capture(r, clip, br)",
+   where "r" is the "VBT" at the root of screen "id" of the window
    system "trsl".  *)
 
 (* \subsection{Checking on recent input activity} *)
 
 
-PROCEDURE AllCeded(trsl: T := NIL): BOOLEAN 
+PROCEDURE AllCeded(trsl: T := NIL): BOOLEAN
     RAISES {TrestleComm.Failure}; <* LL.sup = VBT.mu *>
-(* Return whether there is pending input from "trsl". *) 
+(* Return whether there is pending input from "trsl". *)
 
 (* If a program calls "AllCeded(t)" and "TRUE" is returned, then there
    are no mouse clicks or keystrokes on their way to any top-level
@@ -314,14 +314,14 @@ PROCEDURE Connect(inst: TEXT := NIL): T
 (* Connect to the window system named "inst".  *)
 
 (* In general, the format and interpretation of "inst" are
-   implementation-dependent.  Here are the rules when using an 
+   implementation-dependent.  Here are the rules when using an
    X server:
-   
+
    If "inst" is "NIL", it defaults to the value of the environment
    variable "DISPLAY", unless this variable is undefined, in which
    case it defaults to ":0".
-   
-   The syntax of "inst" should be: 
+
+   The syntax of "inst" should be:
 
 | <machine name>(":" | "::")<number>("" | "." <number>)
 
@@ -337,7 +337,7 @@ PROCEDURE Connect(inst: TEXT := NIL): T
 
    The exception is raised if the designated window system doesn't
    exist or cannot be connected to. *)
-   
+
 END Trestle.
 
 

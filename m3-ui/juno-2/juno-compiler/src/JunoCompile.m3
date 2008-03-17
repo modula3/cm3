@@ -41,7 +41,7 @@ VAR debug := 0;
 | >= 2 => Show the predicate/command to be compiled
 | >= 3 => Show the command produced by the compilation
 | >= 4 => Show the disassembled version of the assembled command
-*) 
+*)
 
 VAR mu := NEW(MUTEX);
 (* The procedures exported by the "JunoCompile" interface
@@ -319,7 +319,7 @@ PROCEDURE AnnotateAtoms(
       | JunoAST.And (e) => Pred0(e.f1); Pred0(e.f2)
       | JunoAST.Or (e) => Pred0(e.f1); Pred0(e.f2)
       | JunoAST.Not (e) => Pred0(e.f);
-      | JunoAST.Exists (e) => 
+      | JunoAST.Exists (e) =>
 	  StackTbl.Mark(t);
           NearVarList(e.vars);
 	  Pred0(e.f);
@@ -538,7 +538,7 @@ PROCEDURE AnnotateAtoms(
           EVAL QIdInScope(c.save);
           EVAL QIdInScope(c.restore);
           Cmd0(c.body)
-      | JunoAST.Proj (c) => 
+      | JunoAST.Proj (c) =>
 	  StackTbl.Mark(t);
           NearVarList(c.vars);
 	  Cmd0(c.body);
@@ -787,7 +787,7 @@ PROCEDURE Cmd(
           grd := g.grd, body := C1(gBody))
       END
     END C1Grd;
-  
+
   PROCEDURE C2(cmd: JunoAST.Cmd): JunoAST.Cmd RAISES {Error} =
   (* Returns a command equivalent to "cmd" in which:
 
@@ -911,7 +911,7 @@ PROCEDURE Cmd(
 	  RETURN NEW(JunoAST.Query, f := pred, vars := JunoAST.EmptyNVList)
       END
     END C2q;
-  
+
   PROCEDURE C2p(cmd: JunoAST.Cmd; vars: JunoAST.NearVarList): JunoAST.Cmd
       RAISES {Error} =
   (* Returns a command that first solves the projected variables "vars" for
@@ -961,7 +961,7 @@ PROCEDURE Cmd(
 	  RETURN C2(cmd)
       END
     END C2p;
-  
+
   PROCEDURE C2pp(f: JunoAST.Formula; vars: JunoAST.NearVarList): JunoAST.Cmd
       RAISES {Error} =
   (* Returns a command that solves the projected variables "vars" for the

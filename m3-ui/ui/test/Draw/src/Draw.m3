@@ -39,7 +39,7 @@ PROCEDURE Reshape(v: DrawVBT; READONLY cd: VBT.ReshapeRec) =
   BEGIN
     InnerReshape(v, Rect.Middle(cd.new), Rect.Middle(cd.prev))
   END Reshape;
-  
+
 PROCEDURE InnerReshape(v: DrawVBT; READONLY new, old: Point.T) =
   BEGIN
     v.path := Path.Translate(v.path, Point.Sub(new, old));
@@ -85,7 +85,7 @@ PROCEDURE Position(v: DrawVBT; READONLY cd: VBT.PositionRec) =
     END
   END Position;
 
-PROCEDURE DoErase(<*UNUSED*>b: ButtonVBT.T; 
+PROCEDURE DoErase(<*UNUSED*>b: ButtonVBT.T;
   <*UNUSED*>READONLY cd: VBT.MouseRec) =
   BEGIN
     Path.Reset(drawVBT.path);
@@ -93,20 +93,20 @@ PROCEDURE DoErase(<*UNUSED*>b: ButtonVBT.T;
     Repaint(drawVBT, Region.Full)
   END DoErase;
 
-PROCEDURE DoExit(<*UNUSED*>b: ButtonVBT.T; 
+PROCEDURE DoExit(<*UNUSED*>b: ButtonVBT.T;
   <*UNUSED*>READONLY cd: VBT.MouseRec) =
   BEGIN
     Trestle.Delete(main);
   END DoExit;
 
-VAR 
+VAR
   drawVBT := NEW(DrawVBT, path := NEW(Path.T));
   menuBar := ButtonVBT.MenuBar(
     ButtonVBT.New(TextVBT.New("Erase"), DoErase),
     ButtonVBT.New(TextVBT.New("Exit"), DoExit));
   main := HVSplit.Cons(Axis.T.Ver, menuBar, drawVBT, adjustable := FALSE);
   <*FATAL TrestleComm.Failure*>
-BEGIN 
+BEGIN
   Trestle.Install(main);
   Trestle.AwaitDelete(main)
 END Draw.

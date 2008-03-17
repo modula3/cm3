@@ -15,14 +15,14 @@ IMPORT VBT, Filter, ButtonVBT, BtnVBTClass, TextVBT;
 
 FROM VBT IMPORT ClickType;
 
-REVEAL 
+REVEAL
   T = ButtonVBT.T BRANDED OBJECT
-  OVERRIDES 
+  OVERRIDES
     mouse := Mouse;
     init := Be
   END;
 
-PROCEDURE Be(v: T; ch: VBT.T; p: ButtonVBT.Proc; 
+PROCEDURE Be(v: T; ch: VBT.T; p: ButtonVBT.Proc;
   ref: REFANY := NIL): ButtonVBT.T =
   BEGIN
     EVAL ButtonVBT.T.init(v, ch, p, ref);
@@ -31,18 +31,18 @@ PROCEDURE Be(v: T; ch: VBT.T; p: ButtonVBT.Proc;
   END Be;
 
 PROCEDURE New(
-    ch: VBT.T; 
-    action: ButtonVBT.Proc; 
+    ch: VBT.T;
+    action: ButtonVBT.Proc;
     ref: REFANY := NIL): T RAISES {} =
   BEGIN
     RETURN Be(NEW(T), ch, action, ref)
   END New;
-  
+
 PROCEDURE Mouse(v: T; READONLY cd: VBT.MouseRec) RAISES {} =
   BEGIN
     Filter.T.mouse(v, cd);
     IF cd.clickType # ClickType.FirstDown THEN
-      IF (cd.clickType = ClickType.LastUp) AND NOT cd.cp.gone 
+      IF (cd.clickType = ClickType.LastUp) AND NOT cd.cp.gone
       THEN
         IF NOT v.ready THEN v.pre() END;
         v.action(v, cd);
@@ -54,8 +54,8 @@ PROCEDURE Mouse(v: T; READONLY cd: VBT.MouseRec) RAISES {} =
     END
   END Mouse;
 
-PROCEDURE TextItem(name: TEXT; 
-  action: ButtonVBT.Proc; 
+PROCEDURE TextItem(name: TEXT;
+  action: ButtonVBT.Proc;
   ref: REFANY := NIL): T RAISES {} =
   BEGIN
     RETURN
@@ -64,6 +64,6 @@ PROCEDURE TextItem(name: TEXT;
         ref := ref)
   END TextItem;
 
-BEGIN 
+BEGIN
 END MenuBtnVBT.
-    
+

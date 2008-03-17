@@ -8,7 +8,7 @@
 INTERFACE ObLibWeb;
 
 PROCEDURE PackageSetup();
-(* To be called at least once before any other use of the obliqlibweb 
+(* To be called at least once before any other use of the obliqlibweb
    package. *)
 
 END ObLibWeb.

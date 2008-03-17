@@ -86,9 +86,9 @@ END MacModel.
    environment variable "MacCommandModifier"\index{MacCommandModifier}
    to name the X-modifier that the user would like to behave as if it
    were the ``command'' key. The choices are:
-| lock, control, mod1, mod2, mod3, mod4, `and` mod5 
+| lock, control, mod1, mod2, mod3, mod4, `and` mod5
    (Case is not significant in these names.) The default is "control".
-   Consult the manpage for "xmodmap(1)" for more information on these 
+   Consult the manpage for "xmodmap(1)" for more information on these
    modifiers.
 
    Similarly, the Mac model uses the environment variable

@@ -12,11 +12,11 @@
 
 MODULE TranslateVBT;
 
-IMPORT Filter, FilterClass, Point, VBTClass, VBT, Rect, 
+IMPORT Filter, FilterClass, Point, VBTClass, VBT, Rect,
   Region, Trestle, Batch, BatchUtil, ScrnPixmap, MouseSplit;
 
-REVEAL 
-  T = Filter.T BRANDED OBJECT 
+REVEAL
+  T = Filter.T BRANDED OBJECT
     delta: Point.T;
     (* child coord + delta = parent coord. *)
     (* v.delta is protected both by v and by VBT.mu.
@@ -56,10 +56,10 @@ PROCEDURE New(ch: VBT.T): T =
 
 PROCEDURE BeChild(v: T; ch: VBT.T) RAISES {} =
   BEGIN
-    Filter.T.beChild(v, ch); 
+    Filter.T.beChild(v, ch);
     VBTClass.ClearShortCircuit(ch)
   END BeChild;
-    
+
 PROCEDURE Mouse(prnt: T; READONLY cd: VBT.MouseRec) RAISES {} =
   VAR cdP: VBT.MouseRec; child := prnt.ch;
   BEGIN (* LL = VBT.mu *)
@@ -137,10 +137,10 @@ PROCEDURE ScreenOf(
   END ScreenOf;
 
 PROCEDURE SetCage(prnt: T; ch: VBT.T) RAISES {} =
-  VAR cg := VBTClass.Cage(ch); 
+  VAR cg := VBTClass.Cage(ch);
   BEGIN (* LL=ch *)
     LOCK prnt DO
-      IF cg.rect # Rect.Full AND prnt.screen = cg.screen THEN 
+      IF cg.rect # Rect.Full AND prnt.screen = cg.screen THEN
         cg.rect := Rect.Move(cg.rect, prnt.delta)
       END;
       VBTClass.SetCage(prnt, cg)
@@ -159,8 +159,8 @@ PROCEDURE SetCursor(prnt: T; ch: VBT.T) RAISES {} =
   END SetCursor;
 
 PROCEDURE Capture(
-    prnt: T; 
-    <*UNUSED*> ch: VBT.T; 
+    prnt: T;
+    <*UNUSED*> ch: VBT.T;
     READONLY rect: Rect.T;
     VAR (*out*) br: Region.T)
     : ScrnPixmap.T RAISES {} =

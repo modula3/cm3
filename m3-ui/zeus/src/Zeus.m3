@@ -32,7 +32,7 @@ REVEAL
               post := PostDefault;
             END;
 
-TYPE 
+TYPE
   Prop = REF RECORD zeus: Session END;
 
 
@@ -162,7 +162,7 @@ PROCEDURE AlertViews (zeus: Session) =
     END;
     ReleaseShared(zeus);
   END AlertViews;
-    
+
 
 (* **** Synchronizing Editing Actions **** *)
 
@@ -453,7 +453,7 @@ PROCEDURE Release (zeus: Session) =
     ReleaseShared (zeus);
   END Release;
 
-(* The following implements a simple reader/writer scheme. 
+(* The following implements a simple reader/writer scheme.
    See SPwM3, p103. Alternatively, track down Andrew Birrell. *)
 
 PROCEDURE AcquireExclusive (zeus: Session) =
@@ -477,20 +477,20 @@ PROCEDURE AcquireShared (zeus: Session) =
 PROCEDURE ReleaseExclusive (zeus: Session) =
 <* LL <= VBT.mu *>
   BEGIN
-    LOCK zeus.m DO 
-      zeus.rw := 0; 
-      Thread.Broadcast (zeus.c) 
+    LOCK zeus.m DO
+      zeus.rw := 0;
+      Thread.Broadcast (zeus.c)
     END
   END ReleaseExclusive;
 
 PROCEDURE ReleaseShared (zeus: Session) =
 <* LL <= VBT.mu *>
   BEGIN
-    LOCK zeus.m DO 
-      DEC(zeus.rw); 
-      IF zeus.rw = 0 THEN Thread.Signal (zeus.c) END 
+    LOCK zeus.m DO
+      DEC(zeus.rw);
+      IF zeus.rw = 0 THEN Thread.Signal (zeus.c) END
     END
-  END ReleaseShared; 
+  END ReleaseShared;
 
 
 (* ****  Mainline  **** *)

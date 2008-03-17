@@ -17,7 +17,7 @@
 | reader(v)           `an intermittent, unseekable reader`
 | writer(v)           `a buffered, unseekable writer`
 | readingThread(v)    `a thread`
-   
+
    "reader(v)" provides the client with input that the user typed.
    "writer(v)" is used to display output. The reader and writer are
    paired such that the writer is flushed whenever a seek blocks on
@@ -72,7 +72,7 @@ TYPE
 
    The call "v.interrupt(time)" simulates an interrupt by
    flushing any pending type-in, writing the characters "^C", and then
-   calling "v.handleInterrupt(time)". 
+   calling "v.handleInterrupt(time)".
 
    The call "v.handleInterrupt(time)" alerts "readingThread(v)".
 

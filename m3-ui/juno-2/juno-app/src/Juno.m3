@@ -52,11 +52,11 @@ TYPE
     misc := Misc
   END;
 
-(* If "w: Window", then "w.fileName" is the complete absolute pathname 
-   of the current module file, and "w.fileStale" iff the disk file 
-   is out-of-date with respect to the contents of the current module 
-   editor.  The value of "checkPointStale" is "TRUE" if the checkpoint file 
-   differs from the state of the editor and source view. *) 
+(* If "w: Window", then "w.fileName" is the complete absolute pathname
+   of the current module file, and "w.fileStale" iff the disk file
+   is out-of-date with respect to the contents of the current module
+   editor.  The value of "checkPointStale" is "TRUE" if the checkpoint file
+   differs from the state of the editor and source view. *)
 
 EXCEPTION OpenFailure;
 (* An attempt was made to open something other than a file *)
@@ -120,10 +120,10 @@ PROCEDURE MakeModAndCmd(w: Window; ts: VBT.TimeStamp; skipify: BOOLEAN) =
 CONST NoTimeStamp: VBT.TimeStamp = 0;
 
 PROCEDURE CompileEditor(
-    rt: View.Root; 
-    ed: Editor.T; 
+    rt: View.Root;
+    ed: Editor.T;
     time: VBT.TimeStamp;
-    scp: JunoScope.T; 
+    scp: JunoScope.T;
     VAR (*OUT*) modName: JunoAST.Id;
     VAR (*OUT*) entity: JunoScope.Mod;
     uniqueModName := TRUE): BOOLEAN =
@@ -227,8 +227,8 @@ PROCEDURE CompileModules(
    For each named file, the corresponding module name is shown in the
    "initModule" text field of the "startup" screen.
 
-   If an error occurs in any file, then "w.fileName" is changed to the 
-   name of the file containing the error, and the rest of the files 
+   If an error occurs in any file, then "w.fileName" is changed to the
+   name of the file containing the error, and the rest of the files
    are ignored. In these error cases, the name of the offending module
    is not appended to "modList".
 *)
@@ -258,7 +258,7 @@ PROCEDURE CompileModules(
           END;
           FormsVBT.PutText(startup, "initModule", modName);
           IF fromRsrc THEN
-            TRY 
+            TRY
               fileRd := RsrcOpen(fileName);
               IF NOT CompileModule(w, modName, fileRd, augment := builtin) THEN
                 Wr.PutText(Stdio.stderr, "Compiler error in bundled module "
@@ -273,7 +273,7 @@ PROCEDURE CompileModules(
               RETURN
             END
           ELSE
-            TRY 
+            TRY
               fileRd := FileRd.Open(fileName);
               IF NOT CompileModule(w, modName, fileRd, augment := builtin) THEN
                 w.fileName := fileName;
@@ -474,7 +474,7 @@ PROCEDURE WritePostScriptToFile(w: Window; fname: TEXT; showPage := TRUE) =
 (* Write PostScript for the current command associated with "w" to the file
    named "fname". If there is an error, display an error message in "w". *)
   BEGIN
-    TRY 
+    TRY
       WritePostScriptToWr(w, FileWr.Open(fname), showPage)
     EXCEPT OSError.E, Wr.Failure =>
       JunoError.Display(w, "Error opening/writing file:\n\""
@@ -566,8 +566,8 @@ PROCEDURE SaveCurrMod(w: Window; ts: VBT.TimeStamp): BOOLEAN =
         stat := w.stat
       END;
       FormsVBT.PopDown(w, "saveChangesWindow");
-      IF stat = SyncStat.Cancel THEN 
-        RETURN FALSE 
+      IF stat = SyncStat.Cancel THEN
+        RETURN FALSE
       ELSIF stat = SyncStat.Discard THEN
         TRY FS.DeleteFile(CheckpointName(w.fileName)) EXCEPT
           OSError.E => (*SKIP*)
@@ -581,7 +581,7 @@ PROCEDURE SaveCurrMod(w: Window; ts: VBT.TimeStamp): BOOLEAN =
   END SaveCurrMod;
 
 PROCEDURE GetFile(w: Window; name: TEXT; time: VBT.TimeStamp)
-  RAISES {OSError.E, OpenFailure} = 
+  RAISES {OSError.E, OpenFailure} =
 (* Opens the file named "name", or creates it if the file does not exist.
    Then reads the contents of this file into "w"'s editor, and makes
    those new contents. Raises "OSError.E" if the file cannot be opened for
@@ -653,7 +653,7 @@ PROCEDURE PutFile(w: Window; name: TEXT; ts: VBT.TimeStamp): BOOLEAN =
     END;
     TRY
       wr := FileWr.Open(name);
-      IF wr # NIL THEN 
+      IF wr # NIL THEN
 	Wr.PutText(wr, TextPort.GetText(w.root.editor));
         IF proc # NIL THEN
           JunoUnparse.Block(wr, proc, tokens := LAST(INTEGER),
@@ -752,7 +752,7 @@ VAR (* READONLY *)
 PROCEDURE FindSavedState(VAR (*OUT*) st: SaveState.T; nm: Pathname.T):
   BOOLEAN =
   VAR rd: Rd.T; BEGIN
-    TRY 
+    TRY
       rd := FileRd.Open(CheckpointName(nm));
       RETURN SaveState.Restore(st, rd)
     EXCEPT
@@ -1103,10 +1103,10 @@ PROCEDURE DoSaveAs(fv: FormsVBT.T; <*UNUSED*> event: TEXT;
     EXCEPT OSError.E =>
       (* file does not exist -- so save it directly *)
 (*
-      EVAL Thread.Fork(NEW(FileIOClosure, fv := fv, ts := ts, 
+      EVAL Thread.Fork(NEW(FileIOClosure, fv := fv, ts := ts,
 	fname := fname, apply := DoSaveAsWork))
 *)
-      EVAL DoSaveAsWork(NEW(FileIORec, fv := fv, ts := ts, 
+      EVAL DoSaveAsWork(NEW(FileIORec, fv := fv, ts := ts,
 	fname := fname))
     END;
   END DoSaveAs;
@@ -1118,10 +1118,10 @@ PROCEDURE DoSaveAsOverwrite(fv: FormsVBT.T; <*UNUSED*> event: TEXT;
    indeed like to overwrite the file. *)
   VAR fname := NARROW(fv, Window).saveAsFName; BEGIN
 (*
-      EVAL Thread.Fork(NEW(FileIOClosure, fv := fv, ts := ts, 
+      EVAL Thread.Fork(NEW(FileIOClosure, fv := fv, ts := ts,
 	fname := fname, apply := DoSaveAsWork))
 *)
-      EVAL DoSaveAsWork(NEW(FileIORec, fv := fv, ts := ts, 
+      EVAL DoSaveAsWork(NEW(FileIORec, fv := fv, ts := ts,
 	fname := fname))
   END DoSaveAsOverwrite;
 
@@ -1425,11 +1425,11 @@ PROCEDURE DoFoldDialogWork(cl: MenuRec): REFANY =
 
 PROCEDURE ToolTypeFromName(nm: TEXT): ToolType =
   BEGIN
-    IF Text.Equal(nm, "pointTool") THEN 
+    IF Text.Equal(nm, "pointTool") THEN
       RETURN ToolType.Point
-    ELSIF Text.Equal(nm, "noTool") THEN 
+    ELSIF Text.Equal(nm, "noTool") THEN
       RETURN ToolType.None
-    ELSE 
+    ELSE
       <* ASSERT FALSE *>
     END
   END ToolTypeFromName;
@@ -1441,7 +1441,7 @@ PROCEDURE ParseProcName(w: Window; nm: TEXT;
    Otherwise, pop up an error message over the window "w" and return FALSE. *)
   <* FATAL Rd.Failure *>
   BEGIN
-    TRY 
+    TRY
       VAR junk: CARDINAL; BEGIN
         JunoParse.FoldHeader(TextRd.New(FormsVBT.GetText(w, nm)), hdr, junk)
       END;
@@ -1463,7 +1463,7 @@ PROCEDURE ParseVarList(fv: FormsVBT.T; nm: TEXT;
    Otherwise, pop up an error message over the window "fv" and return FALSE.
 *)
   BEGIN
-    TRY 
+    TRY
       VAR junk: CARDINAL; BEGIN
         JunoParse.IdList(TextRd.New(FormsVBT.GetText(fv, nm)), pts, junk)
       END
@@ -1486,11 +1486,11 @@ PROCEDURE DoFoldWork(fv: FormsVBT.T; <*UNUSED*> event: TEXT;
     FormsVBT.PopDown(fv, "foldWindow");
     IF ParseProcName(fv, "declName", (*OUT*) hdr) THEN
       VAR
-    	foldKind: CurrCmd.FoldKind; 
+    	foldKind: CurrCmd.FoldKind;
     	kind := FormsVBT.GetChoice(fv, "typeRadio");
     	toolKind := ToolTypeFromName(FormsVBT.GetChoice(fv, "toolRadio"));
       BEGIN
-    	IF Text.Equal(kind, "predType") THEN 
+    	IF Text.Equal(kind, "predType") THEN
     	  foldKind := CurrCmd.FoldKind.Pred
     	ELSIF Text.Equal(kind, "procType") THEN
     	  foldKind := CurrCmd.FoldKind.Proc
@@ -1796,7 +1796,7 @@ PROCEDURE ScreenType(trsl: Trestle.T; id: Trestle.ScreenID): VBT.ScreenType
   VAR scrns := Trestle.GetScreens(trsl); i := 0; BEGIN
     WHILE scrns[i].id # id DO INC(i) END;
     RETURN scrns[i].type
-  END ScreenType; 
+  END ScreenType;
 
 PROCEDURE DoCloseToolbox(
     fv: FormsVBT.T;
@@ -1859,7 +1859,7 @@ PROCEDURE EditorModified(ev: EditorView) =
   END EditorModified;
 
 TYPE ModState = { Stale, UpToDate };
-  
+
 PROCEDURE SetModuleState(w: Window; modState: ModState) =
   CONST ModStateColor = ARRAY ModState OF TEXT{"LightRed", "LightGray"}; BEGIN
     w.fileStale := (modState = ModState.Stale);
@@ -1916,7 +1916,7 @@ TYPE CheckpointClosure = Thread.Closure OBJECT
     apply := MakeCheckpoint
   END;
 
-VAR 
+VAR
   checkpointThread: Thread.T;
 
 PROCEDURE CheckpointName(nm: Pathname.T): Pathname.T =
@@ -1931,8 +1931,8 @@ PROCEDURE MakeCheckpoint(self:CheckpointClosure): REFANY =
       LOCK VBT.mu DO
         IF w.fileStale AND w.checkpointStale THEN
           TRY
-            VAR 
-              wr := FileWr.Open(CheckpointName(w.fileName)); 
+            VAR
+              wr := FileWr.Open(CheckpointName(w.fileName));
               st: SaveState.T;
             BEGIN
               st.file := w.fileName;
@@ -2032,7 +2032,7 @@ BEGIN
     TRY
       (* initialize values from configuration file *)
       configFile := JunoConfig.Init(configFile);
-  
+
       (* change overrides from the command-line *)
       IF origin # -1 THEN
   	JunoConfig.origin := VAL(origin, JunoConfig.Origin)
@@ -2067,7 +2067,7 @@ BEGIN
     builtInScope := CompileFile(root, "BuiltIn.juno", parent:=NIL).public_scp;
     BuiltInSlots.Init(builtInScope);
     modScope := JunoScope.New(p := builtInScope, size := 50);
-    root := NEW(View.Root, ccmd := NIL, marquee := NIL, 
+    root := NEW(View.Root, ccmd := NIL, marquee := NIL,
       dTrue := TRUE, astTrue := TRUE, sTrue := FALSE, eTrue := FALSE);
     root.ccmd := CurrCmd.New(ast := JunoAST.SkipVal,
       scp := JunoScope.New(modScope));
@@ -2083,7 +2083,7 @@ BEGIN
     root.drawing := drawing;
     root.currView := drawing;
     root.editor := editor;
-  
+
     (* fill in generic windows in top-level form *)
     FormsVBT.PutGeneric(w, "toolbox", w.toolbox);
     FormsVBT.PutGeneric(w, "drawing", NEW(DblBufferVBT.T).init(drawing));
@@ -2139,7 +2139,7 @@ BEGIN
       FillBrowser(FormsVBT.GetVBT(w, "moduleBrowser"),
         TextListSort.SortD(modList));
     END;
-  
+
     (* Open the built-in modules *)
     LOCK VBT.mu DO
       OpenModule(w, "PS",     hasPrivate := FALSE);
@@ -2150,7 +2150,7 @@ BEGIN
       OpenModule(w, "Unit",   hasPrivate := FALSE, show := FALSE);
       OpenModule(w, "JunoUI", hasPrivate := FALSE, show := FALSE)
     END;
-  
+
     (* Switch TSplit to its first child (i.e, the Juno window) *)
     FormsVBT.PutText(w, "version", JunoVersion.Name);
     FormsVBT.PutGeneric(startup, "mainChild", w);
@@ -2166,7 +2166,7 @@ BEGIN
         Thread.Wait(w.mu, w.untilDone)
       END
     END;
-    
+
     (* Install animation window *)
     IF zeusOption THEN
       animObj := NEW(JunoZeus.T).init(w, w.root, JunoConfig.origin);
@@ -2175,7 +2175,7 @@ BEGIN
         NetObj.Export("JunoZeus", animObj)
       END
     END;
-  
+
     FVFilter.MakeActive(w, "background");
     IF NOT writepkl THEN
       checkpointThread := Thread.Fork(NEW(CheckpointClosure, w := w));
@@ -2188,7 +2188,7 @@ BEGIN
         Pickle.Write(wr, w);
         Wr.Flush(wr);
         Wr.Close(wr)
-      END 
+      END
     END
   EXCEPT
   | JunoWM.Error (txt) =>

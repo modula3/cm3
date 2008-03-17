@@ -12,7 +12,7 @@
 
 UNSAFE MODULE XInput;
 
-IMPORT XClient, XClientF, XEventQueue, XScrollQueue, X, 
+IMPORT XClient, XClientF, XEventQueue, XScrollQueue, X,
        Thread, Unix, SchedulerPosix, Word, Rect, Region,
        TrestleClass, VBTClass, VBT, Ctypes;
 

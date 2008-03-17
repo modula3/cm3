@@ -7,7 +7,7 @@
 
 MODULE SimpleWeb;
 
-IMPORT CIText, Fmt, IP, Rd, TextWr, Wr, RdCopy, RdUtils, 
+IMPORT CIText, Fmt, IP, Rd, TextWr, Wr, RdCopy, RdUtils,
        Thread, URLCache, Web, Text, Pathname, IO;
 
 CONST
@@ -71,12 +71,12 @@ PROCEDURE DoFetch (         url    : TEXT;
     IF reload OR NOT URLCache.Get (url, header, contents) THEN
       TRY
         TRY
-          IF Text.Length(url) >= 5 AND 
+          IF Text.Length(url) >= 5 AND
              Text.Equal("http:",Text.Sub(url,0,6)) THEN
             rd := Web.Get(url, header, forceCache := reload, server := server);
-          ELSIF Text.Length(url) >= 5 AND 
+          ELSIF Text.Length(url) >= 5 AND
              Text.Equal("file:",Text.Sub(url,0,5)) THEN
-            rd := FileGet(Text.Sub(url,5), header, forceCache := reload, 
+            rd := FileGet(Text.Sub(url,5), header, forceCache := reload,
                 server := server);
           ELSIF Text.Length(url) >= 1 AND Text.GetChar(url,0) = '/' THEN
             rd := FileGet(url, header, forceCache := reload, server := server);
@@ -123,22 +123,22 @@ PROCEDURE DoFetch (         url    : TEXT;
       END
     END;
 
-    IF header.location = NIL THEN 
+    IF header.location = NIL THEN
       (* if the document moved and we have called DoFetch recursively to find it,
          the server doesn't always fill in the Location field. do this explicitly
          so clients will know the real URL *)
-      header.location := url 
+      header.location := url
     END;
 
     RETURN NEW(Web.Page, header := header, contents := contents);
   END DoFetch;
 
-PROCEDURE FileGet(    url          : TEXT; 
+PROCEDURE FileGet(    url          : TEXT;
              VAR      header       : Web.Header;
   <*UNUSED*> READONLY requestFields: ARRAY OF TEXT := Web.DefaultRequestFields;
-  <*UNUSED*>          forceCache   : BOOLEAN       := FALSE; 
-  <*UNUSED*>          debug        : BOOLEAN       := FALSE; 
-  <*UNUSED*>          server       : Web.T         := NIL): Rd.T 
+  <*UNUSED*>          forceCache   : BOOLEAN       := FALSE;
+  <*UNUSED*>          debug        : BOOLEAN       := FALSE;
+  <*UNUSED*>          server       : Web.T         := NIL): Rd.T
     RAISES {Web.Error} =
   VAR
     rd := IO.OpenRead(url);

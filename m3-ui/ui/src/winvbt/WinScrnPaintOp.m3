@@ -8,7 +8,7 @@
 
 MODULE WinScrnPaintOp;
 
-IMPORT PaintOp, ScreenType, ScrnPaintOp, TrestleClass, VBTClass, WinDef, 
+IMPORT PaintOp, ScreenType, ScrnPaintOp, TrestleClass, VBTClass, WinDef,
        WinGDI, WinScreenType, WinScreenTypePrivate, Word;
 
 
@@ -27,7 +27,7 @@ TYPE
     swap        := Swap;
     transparent := Transparent;
     copy        := Copy;
-    builtIn     := BuiltIn;    
+    builtIn     := BuiltIn;
   END;
 
 
@@ -50,16 +50,16 @@ PROCEDURE Copy (self: Oracle): ScrnPaintOp.T =
 
 
 PROCEDURE Swap (self: Oracle; p, q: ScrnPaintOp.Pixel): ScrnPaintOp.T =
-  VAR 
+  VAR
     pix := Word.Xor(p, q);
 (*    pix := 16_00000000; *) (* expected behavior - no-op *)
 (*    pix := 16_00FFFFFF; *) (* white to black, red to green (but not cyan) *)
 (*    pix := 16_02FFFFFF; *) (* white turns green; red turns blue *)
   BEGIN
-    (* "p = q" is a special case, which can be handled 
+    (* "p = q" is a special case, which can be handled
        much more efficiently by calling "Transparent". *)
-    IF p = q THEN 
-      RETURN Transparent(self);  
+    IF p = q THEN
+      RETURN Transparent(self);
     END;
     RETURN NewPaintOp (self.st, Op {Mode.Swap, pix}, Op {Mode.Swap, pix});
   END Swap;
@@ -77,7 +77,7 @@ PROCEDURE BgFg (self: Oracle; bg, fg: ScrnPaintOp.T): ScrnPaintOp.T
     st := self.st;
   BEGIN
     LOCK st.trsl DO
-      IF bg.id < 0 OR bg.id >= st.opcount OR NOT IsTint(st.optable[bg.id]) OR 
+      IF bg.id < 0 OR bg.id >= st.opcount OR NOT IsTint(st.optable[bg.id]) OR
          fg.id < 0 OR fg.id >= st.opcount OR NOT IsTint(st.optable[fg.id]) THEN
         RAISE ScrnPaintOp.Failure;
       END;
@@ -87,7 +87,7 @@ PROCEDURE BgFg (self: Oracle; bg, fg: ScrnPaintOp.T): ScrnPaintOp.T
 
 
 PROCEDURE BuiltIn (self: Oracle; op: PaintOp.Predefined): ScrnPaintOp.T =
-  VAR 
+  VAR
     b    := self.st.bg;
     f    := self.st.fg;
     back := Op {Mode.Opaq, b};
@@ -137,14 +137,14 @@ PROCEDURE ToBinaryRasterOp (bop, fop: Op): INTEGER =
     | Mode.Opaq =>
       CASE fop.mode OF
       | Mode.Copy => RETURN WinGDI.R2_NOP;  (* illegal combination *)
-      | Mode.Tran => RETURN WinGDI.R2_NOP;  
+      | Mode.Tran => RETURN WinGDI.R2_NOP;
       | Mode.Opaq => RETURN WinGDI.R2_COPYPEN;
       | Mode.Swap => RETURN WinGDI.R2_XORPEN;
       END;
     | Mode.Swap =>
       CASE fop.mode OF
       | Mode.Copy => RETURN WinGDI.R2_NOP;  (* illegal combination *)
-      | Mode.Tran => RETURN WinGDI.R2_NOP;  
+      | Mode.Tran => RETURN WinGDI.R2_NOP;
       | Mode.Opaq => RETURN WinGDI.R2_COPYPEN;
       | Mode.Swap => RETURN WinGDI.R2_XORPEN;
       END;
@@ -182,7 +182,7 @@ PROCEDURE NewPaintOp (VAR      st  : WinScreenType.T;
                       READONLY bop : Op;
                       READONLY fop : Op;
                                pix := -1): ScrnPaintOp.T =
-  VAR 
+  VAR
     res := NEW(ScrnPaintOp.T, pix := pix);
     rec : OpRecord;
   BEGIN

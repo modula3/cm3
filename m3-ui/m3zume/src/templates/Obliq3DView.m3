@@ -9,7 +9,7 @@
 (*      modified on Tue Feb 16 16:31:40 PST 1993 by johnh   *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 
@@ -45,7 +45,7 @@ $ObLibOnline
 $#(_ALGNAME_)3DViewClass
 #(_IMPORTS_)
 
-CONST 
+CONST
   ViewName =  "#(_VIEWNAME_).obl";
 
 TYPE
@@ -72,7 +72,7 @@ TYPE
 #{_OUTPUT
 PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
   <* LL.sup < VBT.mu *>
-  BEGIN 
+  BEGIN
       Invoke (view, "#(_EVENT_)", ""
 #{
       & #(_ARGFMT_)(#(_ARGNAME_))
@@ -87,7 +87,7 @@ PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
 #{_UPDATE
 PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
   <* LL.sup = VBT.mu *>
-  BEGIN 
+  BEGIN
       Invoke (view, "#(_EVENT_)", ""
 #{
       & #(_ARGFMT_)(#(_ARGNAME_))
@@ -98,7 +98,7 @@ PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
   END #(_EVENT_);
 #}
 
-TYPE 
+TYPE
   Closure = Thread.SizedClosure BRANDED OBJECT
     view : T;
   OVERRIDES
@@ -108,9 +108,9 @@ TYPE
 
 PROCEDURE Apply (self : Closure) : REFANY =
 
-  PROCEDURE ParseRd (p: ObliqParser.T; name: TEXT; rd: Rd.T) : Obliq.Env 
+  PROCEDURE ParseRd (p: ObliqParser.T; name: TEXT; rd: Rd.T) : Obliq.Env
       RAISES {ObValue.Error, ObValue.Exception} =
-    VAR 
+    VAR
       env := Obliq.EmptyEnv ();
     BEGIN
       ObliqParser.ReadFrom (p, name, rd, TRUE);
@@ -135,11 +135,11 @@ PROCEDURE Apply (self : Closure) : REFANY =
           ObView3D.PairUp (view, obj);
         END;
       EXCEPT
-      | Rsrc.NotFound => 
+      | Rsrc.NotFound =>
         ZeusPanel.ReportError("cannot find '" & ViewName & "'");
-      | ObValue.Error (packet) => 
+      | ObValue.Error (packet) =>
         OblError(view, packet);
-      | ObValue.Exception (packet) => 
+      | ObValue.Exception (packet) =>
         OblException(view, packet);
       END;
 
@@ -236,8 +236,8 @@ BEGIN
   ObLib3D.PackageSetup();
   ObZeus3D.PackageSetup();
 
-  ZeusPanel.RegisterView (New, 
-                          "#(_VIEWNAME_).obl", 
-                          "#(_ALGNAME_)", 
+  ZeusPanel.RegisterView (New,
+                          "#(_VIEWNAME_).obl",
+                          "#(_ALGNAME_)",
                           sample := NEW(T));
 END #(_ALGNAME_)#(_VIEWNAME_)Obliq3DView.

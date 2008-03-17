@@ -16,7 +16,7 @@ FROM Stdio IMPORT stderr;
 <* FATAL Wr.Failure, Thread.Alerted *>
 
 VAR editorDisplay: TEXT;
-       
+
 PROCEDURE main ()
   RAISES {FormsVBT.Error, TrestleComm.Failure, XParam.Error} =
   VAR
@@ -51,7 +51,7 @@ PROCEDURE main ()
     EVAL eroot.init (frame, editorDisplay, editorGeo);
     EVAL Thread.Join (Thread.Fork (eroot))
   END main;
-  
+
 BEGIN
   editorDisplay := Env.Get ("TRUE_DISPLAY");
   IF editorDisplay = NIL THEN
@@ -76,4 +76,4 @@ BEGIN
       FOR i := 1 TO info.index DO Wr.PutChar (stderr, ' ') END;
       Wr.PutText (stderr, "^\n")
   END;
-END FormsEdit. 
+END FormsEdit.

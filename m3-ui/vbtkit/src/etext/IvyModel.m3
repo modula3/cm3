@@ -463,7 +463,7 @@ PROCEDURE Highlight (m  : T;
     | VTDef.Error (ec) => m.v.vterror (name, ec)
     END
   END Highlight;
-  
+
 
 VAR
   Map := ARRAY TextPort.SelectionType OF

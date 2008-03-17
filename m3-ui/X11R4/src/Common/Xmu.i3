@@ -40,12 +40,12 @@ UNSAFE INTERFACE Xmu;
  * Copyright 1988 by the Massachusetts Institute of Technology
  *
  * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose and without fee is hereby granted, provided 
- * that the above copyright notice appear in all copies and that both that 
- * copyright notice and this permission notice appear in supporting 
+ * documentation for any purpose and without fee is hereby granted, provided
+ * that the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
  * documentation, and that the name of M.I.T. not be used in advertising
- * or publicity pertaining to distribution of the software without specific, 
- * written prior permission. M.I.T. makes no representations about the 
+ * or publicity pertaining to distribution of the software without specific,
+ * written prior permission. M.I.T. makes no representations about the
  * suitability of this software for any purpose.  It is provided "as is"
  * without express or implied warranty.
  *
@@ -55,14 +55,14 @@ UNSAFE INTERFACE Xmu;
  * and are not part of the Xlib standard.
  *)
 
-FROM  Ctypes IMPORT char_star, char_star_star, int, int_star, 
-                    unsigned_int, unsigned_int_star, 
+FROM  Ctypes IMPORT char_star, char_star_star, int, int_star,
+                    unsigned_int, unsigned_int_star,
                     unsigned_long, unsigned_long_star;
 FROM  X      IMPORT Atom, AtomStar, Bool, Colormap,
                     DisplayStar, Drawable, Enumeration, GC,
-                    Pixmap, ScreenStar, Status, 
+                    Pixmap, ScreenStar, Status,
                     Time, VisualID, Window;
-FROM  Xt     IMPORT AppContext, Boolean, Cardinal, CardinalStar, Pixel, 
+FROM  Xt     IMPORT AppContext, Boolean, Cardinal, CardinalStar, Pixel,
                     StringStar, Widget;
 
 IMPORT X,Xrm;
@@ -182,18 +182,18 @@ TYPE
    ProcCloseHook = PROCEDURE (d: DisplayStar; arg: ADDRESS): Int;
 
 <* EXTERNAL XmuAddCloseDisplayHook *>
-   PROCEDURE AddCloseDisplayHook (d: DisplayStar; 
+   PROCEDURE AddCloseDisplayHook (d: DisplayStar;
                                   func: ProcCloseHook;
                                   arg: ADDRESS): Int;
 
 <* EXTERNAL XmuRemoveCloseDisplayHook *>
-   PROCEDURE AddRemoveDisplayHook (d: DisplayStar; 
+   PROCEDURE AddRemoveDisplayHook (d: DisplayStar;
                                    handle: CloseHook;
                                    func: ProcCloseHook;
                                    arg: ADDRESS): Int;
 
 <* EXTERNAL XmuLookupCloseDisplayHook *>
-   PROCEDURE AddLookupDisplayHook (d: DisplayStar; 
+   PROCEDURE AddLookupDisplayHook (d: DisplayStar;
                                    handle: CloseHook;
                                    func: ProcCloseHook;
                                    arg: ADDRESS): Int;
@@ -373,13 +373,13 @@ typedef struct _XmuCvtCache {
 
 (*
  *			      Public Entry Points
- * 
- * 
+ *
+ *
  * XmuDisplayQueue *XmuDQCreate (closefunc, freefunc, data)
  *     int ( *closefunc)();
  *     int ( *freefunc)();
  *     caddr_t data;
- * 
+ *
  *         Creates and returns a queue into which displays may be placed.  When
  *         the display is closed, the closefunc (if non-NULL) is upcalled with
  *         as follows:
@@ -394,12 +394,12 @@ typedef struct _XmuCvtCache {
  * Bool XmuDQDestroy (q, docallbacks)
  *     XmuDisplayQueue *q;
  *     Bool docallbacks;
- * 
+ *
  *         Releases all memory for the indicated display queue.  If docallbacks
- *         is true, then the closefunc (if non-NULL) is called for each 
+ *         is true, then the closefunc (if non-NULL) is called for each
  *         display.
- * 
- * 
+ *
+ *
  * XmuDisplayQueueEntry *XmuDQLookupDisplay (q, dpy)
  *     XmuDisplayQueue *q;
  *     Display *dpy;
@@ -407,7 +407,7 @@ typedef struct _XmuCvtCache {
  *         Returns the queue entry for the specified display or NULL if the
  *         display is not in the queue.
  *
- * 
+ *
  * XmuDisplayQueueEntry *XmuDQAddDisplay (q, dpy, data)
  *     XmuDisplayQueue *q;
  *     Display *dpy;
@@ -418,13 +418,13 @@ typedef struct _XmuCvtCache {
  *         caller to attach arbitrary data to this display in this queue.  The
  *         caller should use XmuDQLookupDisplay to make sure that the display
  *         hasn't already been added.
- * 
- * 
+ *
+ *
  * Bool XmuDQRemoveDisplay (q, dpy)
  *     XmuDisplayQueue *q;
  *     Display *dpy;
  *
- *         Removes the specified display from the given queue.  If the 
+ *         Removes the specified display from the given queue.  If the
  *         indicated display is not found on this queue, False is returned,
  *         otherwise True is returned.
  *)
@@ -580,7 +580,7 @@ TYPE
 <* EXTERNAL XmuGetColormapAllocation *>
    PROCEDURE GetColormapAllocation (vinfo: X.XVisualInfoStar;
                                     property: Atom;
-                                    red_max, green_max, blue_max: 
+                                    red_max, green_max, blue_max:
                                               unsigned_long_star): Status;
 
 <* EXTERNAL XmuLookupColormap *>
@@ -639,8 +639,8 @@ TYPE
    PROCEDURE ClientWindow (dpy: DisplayStar; win: Window): Window;
 
 <* EXTERNAL XmuUpdateMapHints *>
-   PROCEDURE UpdateMapHints (dpy: DisplayStar; 
-                             win: Window; 
+   PROCEDURE UpdateMapHints (dpy: DisplayStar;
+                             win: Window;
                              hints: X.XSizeHintsStar): Bool;
 
 <* EXTERNAL XmuScreenOfWindow *>

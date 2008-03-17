@@ -69,12 +69,12 @@ PROCEDURE P(
    constraints. Here is a picture of the organization of variables and
    constraints in the arrays "v" and "c":
 
-|	    v[]                
-|	  ________                   
-|	 |        |                  
-|	 |  True  |                  
-|	 |  Vars  |        c[]          
-|	 |________|    _____________ 
+|	    v[]
+|	  ________
+|	 |        |
+|	 |  True  |
+|	 |  Vars  |        c[]
+|	 |________|    _____________
 |   m -> |        |   |             |
 |	 |  Ghost |   |    Ghost    |
 |	 |  Vars  |   | Constraints |
@@ -84,7 +84,7 @@ PROCEDURE P(
 |	 |________|   | Constraints |
 |	 |        |   |_____________|
 |	 | Knowns |
-|	 |________|                  
+|	 |________|
 
    The running time of the solver is "O(n^3)", where "n" is the number of true
    variables. Hence, although the solver functions identically independent of

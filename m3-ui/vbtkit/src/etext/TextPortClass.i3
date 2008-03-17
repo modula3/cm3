@@ -122,16 +122,16 @@ TYPE
    commands that depend on context are the ``vertical'' commands that
    call "UpOneLine" and "DownOneLine". The column to which they move
    is stored in "v.wishCol".
-   
+
    "v.cur" holds the information needed to reverse or reinstate the
    effects of editing operations that change the text.
 
    "v.owns[vtype]" is "TRUE" when "v" owns the "VBT.Selection"
    corresponding to "vtype": keyboard focus, Source selection, or
    Target selection.
-   
+
    "v.lastNonEmptyWidth" is used by the "shape" and "reshape" methods.
-   
+
    "v.replace" tests "v.readOnly"; if that is "TRUE", then it
    returns the constant "TextPort.NotFound".  Otherwise it calls
    "v.unsafeReplace", which is the only routine that actually
@@ -166,7 +166,7 @@ TYPE
    ``compose character.'' The last link calls "v.filter(cd)", which
    calls "m.controlChord" or "m.optionChord" for ``command-keys'',
    or "m.arrowKey" for cursor-keys.
-   
+
    {\em Text-selections}
 
    As explained on page~\pageref{TextPortSelections}, the model
@@ -206,7 +206,7 @@ TYPE
    defined not merely in terms of the underlying text, but also in
    terms of the effects they have on the local and global selections.
    Indeed, they are not functions at all; Copy does not return a copy
-   of anything. 
+   of anything.
 
    \begin{description}
 
@@ -293,7 +293,7 @@ TYPE
    "m.close()" releases the "VBT" selections (Source, Target, and
    KBFocus) and deletes highlighting intervals.
 
-   "m.seek(position)" sets the type-in point. 
+   "m.seek(position)" sets the type-in point.
 
    The type "TextPort.T" overrides the "VBT" "mouse", "position",
    "misc", "read", and "write" methods with procedures that lock
@@ -419,7 +419,7 @@ PROCEDURE FindPrevWord (v: T): TextPort.Extent;
    All these procedures return an "Extent" indicating the range of
    characters that were deleted, or "TextPort.NotFound" if no
    characters were deleted. *)
- 
+
 PROCEDURE DeletePrevChar (v: T): TextPort.Extent;
 PROCEDURE DeleteNextChar (v: T): TextPort.Extent;
 

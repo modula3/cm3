@@ -58,7 +58,7 @@ PROCEDURE DefaultIsCompat (<*UNUSED*> v: T; alg: ZeusClass.T): BOOLEAN =
     RETURN ISTYPE(alg, Algorithm.T)
   END DefaultIsCompat;
 
-PROCEDURE DefaultInstall (v: T) = 
+PROCEDURE DefaultInstall (v: T) =
 <* LL = VBT.mu *>
   BEGIN
     v.reactivity(FALSE);
@@ -81,7 +81,7 @@ PROCEDURE WaiterThread (waiter: Waiter): REFANY RAISES {} =
   END WaiterThread;
 
 
-PROCEDURE DefaultDelete (v: T) = 
+PROCEDURE DefaultDelete (v: T) =
 <* LL = VBT.mu *>
   BEGIN
     Trestle.Delete (v);
@@ -154,13 +154,13 @@ PROCEDURE DefaultRestore (v: T; rd: Rd.T)
     END;
   END DefaultRestore;
 
-PROCEDURE DefaultStartrun (<*UNUSED*>v: T) = 
+PROCEDURE DefaultStartrun (<*UNUSED*>v: T) =
 <* LL = {} *>
   BEGIN
     (* should the default method repaint the VBT with the bg color? *)
   END DefaultStartrun;
 
-PROCEDURE DefaultEndrun (<*UNUSED*> v: T) = 
+PROCEDURE DefaultEndrun (<*UNUSED*> v: T) =
 <* LL = {} *>
   BEGIN
   END DefaultEndrun;

@@ -74,7 +74,7 @@ PROCEDURE NewParent (ch: VBT.T): T =
 PROCEDURE Rescreen(v: GrandChild; READONLY cd: VBT.RescreenRec) =
   BEGIN
     Palette.Init(cd.st);
-    HighlightVBT.T.rescreen(v, cd) 
+    HighlightVBT.T.rescreen(v, cd)
   END Rescreen;
 
 PROCEDURE Child (v: VBT.T): VBT.T =
@@ -95,7 +95,7 @@ PROCEDURE GCMisc(v: GrandChild; READONLY cd: VBT.MiscRec) =
     IF ch = NIL THEN RETURN END;
     IF cd.type = VBT.Deleted OR cd.type = VBT.Disconnected THEN
       VBTClass.Position(v, VBT.PositionRec{gone, 0, VBT.Modifiers{}});
-      VBTClass.Mouse(v, 
+      VBTClass.Mouse(v,
         VBT.MouseRec{button, 0, gone, VBT.Modifiers{},
           VBT.ClickType.LastUp, 0});
       IF v.proc # NIL THEN v.proc(ch) END;

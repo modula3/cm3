@@ -45,7 +45,7 @@ MODULE CompilerTest EXPORTS Main;
 IMPORT BackPtr;
 IMPORT JunoAST, JunoParse, JunoLex, JunoToken, JunoUnparse, JunoScope;
 IMPORT   JunoCompile, JunoCompileErr, JunoCompileRep, JunoChkBNF;
-IMPORT   JunoAssemble, StackTbl, JunoASTUtils; 
+IMPORT   JunoAssemble, StackTbl, JunoASTUtils;
 IMPORT JunoDisassem;
 IMPORT Atom, Text, Rd, Wr, TextRd, FileRd, Params, Process, OSError;
 FROM Stdio IMPORT stdin, stdout, stderr;
@@ -252,7 +252,7 @@ BEGIN
       JunoUnparse.Cmd(stdout, cmd, tokenCnt, debug := TRUE);
       Wr.PutText(stdout, "\n\n");
       Wr.Flush(stdout);
- 
+
       (* Print AST nodes with predecessors *)
       IF backpointers THEN BackPtr.ShowAll(cmd, stdout) END;
 
@@ -287,4 +287,4 @@ BEGIN
   IF NOT Rd.Intermittent(in) THEN Wr.PutText(stdout, "^D") END;
   Wr.PutChar(stdout, '\n');
   Wr.Flush(stdout)
-END CompilerTest. 
+END CompilerTest.

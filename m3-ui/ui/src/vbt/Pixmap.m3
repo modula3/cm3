@@ -52,5 +52,5 @@ PROCEDURE Crash() =
   BEGIN
     RAISE FatalError
   END Crash;
-  
+
 BEGIN END Pixmap.

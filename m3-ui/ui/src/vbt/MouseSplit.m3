@@ -37,7 +37,7 @@ REVEAL MouseRef = BRANDED REF RECORD
     (* For the free list *)
   END;
 
-(* If v.mouseRef=NIL, then mouseFocus, and current are NIL, and cache 
+(* If v.mouseRef=NIL, then mouseFocus, and current are NIL, and cache
     is VBT.GoneCage. *)
 
 VAR
@@ -52,7 +52,7 @@ VAR
 |        v.current.getcursor()
 |
 |   (Q3) v.mouseFocus = NIL AND v.current = NIL AND
-|        last delivered position isn't gone => 
+|        last delivered position isn't gone =>
 |        v..effectiveCursor = ScrnCursor.DontCare
 
    *)
@@ -75,7 +75,7 @@ PROCEDURE Setcursor(v: VBT.Split; ch: VBT.T) RAISES {} =
       WITH r = v.mouseRef DO
         IF r = NIL OR
            ch # r.mouseFocus AND
-            (ch # r.current OR r.mouseFocus # NIL) 
+            (ch # r.current OR r.mouseFocus # NIL)
         THEN
           RETURN
         END
@@ -84,9 +84,9 @@ PROCEDURE Setcursor(v: VBT.Split; ch: VBT.T) RAISES {} =
     cs := ch.getcursor();
     LOCK v DO
       WITH r = v.mouseRef DO
-        IF r # NIL AND 
-           (ch = r.mouseFocus OR 
-            ch = r.current AND r.mouseFocus = NIL) 
+        IF r # NIL AND
+           (ch = r.mouseFocus OR
+            ch = r.current AND r.mouseFocus = NIL)
         THEN
           SetCursor2(v, cs)
         END
@@ -97,7 +97,7 @@ PROCEDURE Setcursor(v: VBT.Split; ch: VBT.T) RAISES {} =
 <*INLINE*> PROCEDURE SetCursor2(v: VBT.Split; cs: ScrnCursor.T) RAISES {} =
   BEGIN (* LL=v *)
     IF cs # v.effectiveCursor THEN
-      v.effectiveCursor := cs; 
+      v.effectiveCursor := cs;
       IF v.parent # NIL THEN v.parent.setcursor(v) END
     END
   END SetCursor2;
@@ -110,22 +110,22 @@ PROCEDURE Setcursor(v: VBT.Split; ch: VBT.T) RAISES {} =
           LOCK v DO SetCursor2(v, cs) END
         END
       END
-    ELSE 
+    ELSE
       LOCK v DO SetCursor2(v, ScrnCursor.DontCare) END
     END
   END SetCursor3;
 
 (* Cage setting depends on the following invariants:
 
-   (R1) v's cage is contained in the intersection of its children's 
-        cages.  This guarantees that v will get a position whenever 
+   (R1) v's cage is contained in the intersection of its children's
+        cages.  This guarantees that v will get a position whenever
         any child is owed one.
 
-   (R2) v's cage is contained in v.cache.  This guarantees that v will 
+   (R2) v's cage is contained in v.cache.  This guarantees that v will
         get a position whenever "current" should be changed.
 
    (R3) v.tracking OR for each ch # v.mouseFocus AND ch # v.current,
-        ch.cage contains GoneCage.  
+        ch.cage contains GoneCage.
 
     When the parent receives a position its cage is set arbitrarily,
     so the invariants are destroyed.  It sets its cage to satisfy R2,
@@ -140,8 +140,8 @@ PROCEDURE Setcage(v: VBT.Split; ch: VBT.T) RAISES {} =
       WITH r = v.mouseRef, notCurrent = (r = NIL) OR (ch # r.current) DO
         IF NOT (notCurrent IN cg.inOut) THEN cg := VBT.EmptyCage END;
         cg.inOut := VBT.InOut{FALSE, TRUE};
-        IF notCurrent AND (r = NIL OR ch # r.mouseFocus) AND 
-          ((NOT Rect.Equal(cg.rect, Rect.Full)) OR (cg.screen # VBT.AllScreens)) 
+        IF notCurrent AND (r = NIL OR ch # r.mouseFocus) AND
+          ((NOT Rect.Equal(cg.rect, Rect.Full)) OR (cg.screen # VBT.AllScreens))
         THEN
            CreateMouseRef(r);
            r.tracking := TRUE
@@ -240,7 +240,7 @@ PROCEDURE BecomeMF(v: VBT.Split; mf: VBT.T) =
       SetCursor3(v, NIL)
     END
   END BecomeMF;
-  
+
 
 
 PROCEDURE Mouse(v: VBT.Split; READONLY cd: VBT.MouseRec) RAISES {} =
@@ -293,7 +293,7 @@ PROCEDURE InvalidateCache(v: VBT.Split) =
 
 <*INLINE*> PROCEDURE CheckMouseRef(VAR r: MouseRef) =
   BEGIN
-    IF r # NIL AND r.mouseFocus = NIL AND r.current = NIL 
+    IF r # NIL AND r.mouseFocus = NIL AND r.current = NIL
        AND (TRUE IN r.cache.inOut) AND NOT r.tracking
     THEN
       LOCK mu DO r.link := avail; avail := r END;
@@ -316,7 +316,7 @@ PROCEDURE InvalidateCache(v: VBT.Split) =
   END CreateMouseRef;
 
 BEGIN
-END MouseSplit.          
-          
+END MouseSplit.
+
 
 

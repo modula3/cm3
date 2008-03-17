@@ -124,14 +124,14 @@ PROCEDURE P(
     READONLY c: ARRAY OF Constraint): BOOLEAN =
 (*
 | ON ENTRY:
-| 
-|	    v[]                
-|	  ________                   
-|	 |        |                  
-|	 |  True  |                  
-|	 |  Vars  |                  
-|	 |        |        c[] 
-|	 |________|    _____________ 
+|
+|	    v[]
+|	  ________
+|	 |        |
+|	 |  True  |
+|	 |  Vars  |
+|	 |        |        c[]
+|	 |________|    _____________
 |  nn -> |        |   |             |
 |	 |        |   |             |
 |	 |  Ghost |   |    Ghost    |
@@ -148,13 +148,13 @@ PROCEDURE P(
 | MATRIX ORGANIZATION:
 |
 |		x[]
-|	____________________         __ 
+|	____________________         __
 |      |                    |       |..|
 |      |____________________|       |..| = unused
 |                                   |__|
 |      | <------ nn ------> |
-|    
-|    
+|
+|
 |	       a[][]             errorVec[]
 |       _______________________      __
 |  ^   |                    |  |    |..|
@@ -451,7 +451,7 @@ PROCEDURE P(
     EtpLogP0(true_cnt, nn, ghost_cnt);
     GrowArrays();
     IF debug >= 1 THEN ShowInput() END;
-    VAR 
+    VAR
       cnt := MaxIterations;
       error := EvalConstraints();
       prev_delta := MinDelta + 1.0; (* establish prev_delta > MinDelta *)

@@ -16,7 +16,7 @@ TYPE
 VAR stateIdle := ARRAY RunState OF BOOLEAN
             {TRUE, FALSE, FALSE, FALSE, TRUE, TRUE};
 
-CONST Log10: LONGREAL = 2.3025850930d0; 
+CONST Log10: LONGREAL = 2.3025850930d0;
 
 TYPE
   T = ROOT OBJECT
@@ -45,7 +45,7 @@ TYPE
         numActive : CARDINAL           := 0;
             (* numActive = number of sess IN sessions s.t. sess.active *)
         numRunning: CARDINAL           := 0;
-            (* numRunning = number of sessions s.t. sess.running.  
+            (* numRunning = number of sessions s.t. sess.running.
                A bug is possible here, if a session gets deleted, but keeps
                running, while panelThread is awakened and assumes that no
                sessions are running. *)

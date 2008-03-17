@@ -10,7 +10,7 @@ TYPE
   Row = ARRAY [0..5] OF INTEGER;
 
 
-CONST 
+CONST
   pat = Pat {Row{0,0,0,0,0,0},
              Row{0,1,0,0,0,0},
              Row{0,0,1,0,0,0},
@@ -25,7 +25,7 @@ VAR
 PROCEDURE InstallPixmap (): Pixmap.T =
   BEGIN
     WITH rect = Rect.T {1,7,1,7},
-         raw  = ScrnPixmap.NewRaw (1, rect) DO 
+         raw  = ScrnPixmap.NewRaw (1, rect) DO
       FOR h := rect.west TO rect.east - 1 DO
         FOR v := rect.north TO rect.south - 1 DO
           raw.set (Point.T {h, v}, pat[v - rect.north][h - rect.west]);
@@ -44,7 +44,7 @@ PROCEDURE Repaint (self: VBT.Leaf; <* UNUSED *> READONLY rgn: Region.T) =
 
 
 BEGIN
-  WITH v = NEW (VBT.Leaf, repaint := Repaint) DO 
+  WITH v = NEW (VBT.Leaf, repaint := Repaint) DO
     Trestle.Install(v);
     Trestle.AwaitDelete(v);
   END

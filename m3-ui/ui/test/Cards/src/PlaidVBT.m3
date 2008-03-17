@@ -85,10 +85,10 @@ PROCEDURE Animate(cl: PlaidClosure): REFANY RAISES {} =
     END;
     RETURN NIL
   END Animate;
-  
+
 PROCEDURE Mouse(v: T; READONLY cd: VBT.MouseRec) RAISES {} =
   BEGIN
-    IF cd.clickType = VBT.ClickType.FirstDown 
+    IF cd.clickType = VBT.ClickType.FirstDown
        AND cd.whatChanged # VBT.Modifier.MouseL THEN
       LOCK mu DO
         v.startOver := TRUE;
@@ -100,7 +100,7 @@ PROCEDURE Mouse(v: T; READONLY cd: VBT.MouseRec) RAISES {} =
       END
     END
   END Mouse;
-  
+
 PROCEDURE Repaint(v: T; <*UNUSED*>READONLY rgn: Region.T) RAISES {} =
   VAR
     dom:  Rect.T;
@@ -142,5 +142,5 @@ PROCEDURE Reshape(v: T; READONLY cd: VBT.ReshapeRec) RAISES {} =
       END
     END
   END Reshape;
-  
+
 BEGIN END PlaidVBT.

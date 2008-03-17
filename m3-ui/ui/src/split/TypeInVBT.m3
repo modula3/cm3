@@ -12,12 +12,12 @@
 
 MODULE TypeInVBT;
 
-IMPORT TextVBT, Text, VBT, Font, PaintOp, Latin1Key, KeyboardKey, 
+IMPORT TextVBT, Text, VBT, Font, PaintOp, Latin1Key, KeyboardKey,
   Rect, VBTClass, TextVBTClass, ComposeKey, Cursor;
 
 TYPE Selection = {KBFocus, Target, Source};
 
-VAR 
+VAR
   map := ARRAY Selection OF VBT.Selection
     {VBT.KBFocus, VBT.Target, VBT.Source};
 
@@ -113,18 +113,18 @@ PROCEDURE New(
   action: Proc := NIL;
   ref: REFANY := NIL;
   composer: ComposeKey.T): T =
-  BEGIN 
-    RETURN NEW(T).init(txt, halign, valign, hmargin, vmargin, fnt, op, 
-      action, ref, composer) 
+  BEGIN
+    RETURN NEW(T).init(txt, halign, valign, hmargin, vmargin, fnt, op,
+      action, ref, composer)
   END New;
 
-PROCEDURE HasFocus(v: T): BOOLEAN = 
+PROCEDURE HasFocus(v: T): BOOLEAN =
   BEGIN RETURN v.has[Selection.KBFocus] END HasFocus;
 
 PROCEDURE TakeSelection(v: T; t: VBT.TimeStamp; s: Selection): BOOLEAN =
   BEGIN
     IF NOT v.has[s] THEN
-      TRY 
+      TRY
         VBT.Acquire(v, map[s], t);
         v.has[s] := TRUE
       EXCEPT
@@ -136,8 +136,8 @@ PROCEDURE TakeSelection(v: T; t: VBT.TimeStamp; s: Selection): BOOLEAN =
 
 PROCEDURE TakeFocus(v: T; t: VBT.TimeStamp): BOOLEAN =
   BEGIN
-    RETURN TakeSelection(v, t, Selection.KBFocus) 
-       AND TakeSelection(v, t, Selection.Target) 
+    RETURN TakeSelection(v, t, Selection.KBFocus)
+       AND TakeSelection(v, t, Selection.Target)
   END TakeFocus;
 
 PROCEDURE MiscCode(v: T; READONLY cd: VBT.MiscRec) =
@@ -257,7 +257,7 @@ PROCEDURE SetAction(v: T; action: Proc) =
     v.action := action
   END SetAction;
 
-PROCEDURE Read(v: T; <*UNUSED*>s: VBT.Selection; tc: CARDINAL): VBT.Value 
+PROCEDURE Read(v: T; <*UNUSED*>s: VBT.Selection; tc: CARDINAL): VBT.Value
   RAISES {VBT.Error} =
   BEGIN
     IF tc = TYPECODE(TEXT) THEN
@@ -267,17 +267,17 @@ PROCEDURE Read(v: T; <*UNUSED*>s: VBT.Selection; tc: CARDINAL): VBT.Value
     END
   END Read;
 
-PROCEDURE Write(v: T; s: VBT.Selection; val: VBT.Value; tc: CARDINAL)  
+PROCEDURE Write(v: T; s: VBT.Selection; val: VBT.Value; tc: CARDINAL)
   RAISES {VBT.Error} =
   BEGIN
     IF tc = TYPECODE(TEXT) THEN
       TYPECASE val.toRef() OF
-        TEXT (t) => 
+        TEXT (t) =>
           IF s = VBT.Target THEN
             LOCK v DO v.text := v.text & t END
           ELSE
             LOCK v DO v.text := t END
-          END; 
+          END;
           VBT.Mark(v);
           RETURN
       ELSE (* skip *)

@@ -10,7 +10,7 @@ INTERFACE WinScreenType;
 
 IMPORT Rect, VBT, WinTrestle;
 
-TYPE 
+TYPE
   T <: Public;
   Public = VBT.ScreenType OBJECT
     trsl: WinTrestle.T;

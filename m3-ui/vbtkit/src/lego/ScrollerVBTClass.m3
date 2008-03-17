@@ -325,7 +325,7 @@ PROCEDURE PaintViewWithShadows (v: T) =
     VBT.PaintTint(v, r, v.shadow.bg);
   END PaintViewWithShadows;
 
-(*  
+(*
 PROCEDURE PaintViewWithShadows (v: T) =
   VAR
     dom   : Rect.T;
@@ -333,10 +333,10 @@ PROCEDURE PaintViewWithShadows (v: T) =
   BEGIN
     dom := VBT.Domain(v);
     stripe := ComputeStripe(v, dom);
-    
+
     (* paint scroll *)
     PaintShadow(v, dom, inwards := TRUE, raised := FALSE);
-    
+
     (* paint stripe *)
     PaintShadow(v, stripe, inwards := FALSE, raised := TRUE);
   END PaintViewWithShadows;
@@ -387,8 +387,8 @@ PROCEDURE PaintShadow (         v                : T;
                                          out.west, in.east), bottom);
     VBT.PaintTexture(v, in, front, Pixmap.Solid);
   END PaintShadow;
-*)  
-  
+*)
+
 PROCEDURE PaintViewAsBefore (v: T) =
   VAR
     dom:    Rect.T;
@@ -626,7 +626,7 @@ PROCEDURE Position (v: T; READONLY cd: VBT.PositionRec) RAISES {} =
             GetPartHeight(v, action.part, action.height);
 
         ELSE <* ASSERT FALSE *>
-        
+
         END;
 
         VBT.SetCursor(v, Cursors[v.state, v.axis])
@@ -803,7 +803,7 @@ VAR
   graphicsInited: BOOLEAN := FALSE;
   Cursors: ARRAY State, Axis.T OF Cursor.T;
   ScrollPixmap: ARRAY Axis.T OF Pixmap.T;
-  
+
 PROCEDURE InitGraphics () =
   BEGIN
     LOCK globalLock DO

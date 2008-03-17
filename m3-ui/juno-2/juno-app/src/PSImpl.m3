@@ -384,7 +384,7 @@ PROCEDURE WriteTime(wr: Wr.T; t: Time.T) RAISES {Wr.Failure} =
       "Jan", "Feb", "Mar", "Apr", "May", "Jun",
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     DayName = ARRAY OF TEXT{
-      "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}; 
+      "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
   VAR d: Date.T := Date.FromTime(t); BEGIN
     Wr.PutText(wr, DayName[ORD(d.weekDay)]); Wr.PutText(wr, ", ");
     Wr.PutText(wr, MonthName[ORD(d.month)]); Wr.PutChar(wr, ' ');

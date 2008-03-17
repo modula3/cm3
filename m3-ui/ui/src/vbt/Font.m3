@@ -58,5 +58,5 @@ PROCEDURE Apply(cl: Closure; st: ScreenType.T): ScrnFont.T =
     END;
     RETURN Palette.ResolveFont(st, BuiltIn)
   END Apply;
-  
+
 BEGIN END Font.

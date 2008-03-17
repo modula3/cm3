@@ -102,7 +102,7 @@ PROCEDURE GetIndex(ip: IterativeParse): INTEGER =
   BEGIN
     RETURN ip.la.s.lastPos
   END GetIndex;
-  
+
 CONST BlockSet = SET OF JunoToken.Kind
   { JunoToken.Kind.Module, JunoToken.Kind.UI, JunoToken.Kind.Private,
     JunoToken.Kind.Import, JunoToken.Kind.Comment,
@@ -399,7 +399,7 @@ PROCEDURE ConstDeclItem(
     VAR (*IO*) la: LookAhead;
     VAR (*OUT*) item: JunoAST.ConstDeclItem)
   RAISES {Error, JunoLex.Error, Rd.Failure} =
-(* 
+(*
 |  ConstDeclItem = Id "=" ConstExpr.
 *)
   VAR id: REFANY; BEGIN
@@ -1180,7 +1180,7 @@ PROCEDURE Expr2(
     VAR (*OUT*) ast: JunoAST.Expr;
     READONLY qid: JunoAST.QId := NIL)
   RAISES {Error, JunoLex.Error, Rd.Failure} =
-(* 
+(*
 |  Expr2    = Expr3 [ Expr2Tail ].
 |  Expr2QId = Expr4QId [ Expr2Tail ].
 *)
@@ -1620,7 +1620,7 @@ PROCEDURE QID(VAR (*IO*) la: LookAhead; VAR (*IO*) qid: JunoAST.QId)
    If the identifier is not qualified (i.e., no JunoToken.Kind.Dot appears in
    the token stream after the first identifier), then the single identifier is
    stored in "qid.id1", and "qid.id0" is set to the special value
-   "JunoAST.NilId". 
+   "JunoAST.NilId".
 
 |  QID = Id [ "." Id ].
 *)

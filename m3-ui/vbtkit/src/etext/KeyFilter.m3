@@ -306,12 +306,12 @@ PROCEDURE Set (a, b: CHAR; c: VBT.KeySym; bothCases, reversed: BOOLEAN) =
   END Set;
 
 (*
-    2/ a mode based entry method which is language specific. This 
-       should be settable through an environment variable (not LANG!, 
-       but a new one: KEYBOARD_MODE (values are American (default), 
+    2/ a mode based entry method which is language specific. This
+       should be settable through an environment variable (not LANG!,
+       but a new one: KEYBOARD_MODE (values are American (default),
        French, ...).
-    
-       For French, this mode defines a set of "non spacing diacritical 
+
+       For French, this mode defines a set of "non spacing diacritical
        marks" (mark for short):
            '    acute
            `    grave
@@ -319,12 +319,12 @@ PROCEDURE Set (a, b: CHAR; c: VBT.KeySym; bothCases, reversed: BOOLEAN) =
            "    diaeresis
            ~    tilde
            ,    cedilla
-           
-       any of those marks, followed by a vowel, n, or c, produces 
-       the corresponding accented character (or c cedilla)(not all 
-       combinations are legal, if the character cannot be accented, 
-       then the mark, followed by the character, are produced). The 
-       mark followed by a space produces the mark itself. 
+
+       any of those marks, followed by a vowel, n, or c, produces
+       the corresponding accented character (or c cedilla)(not all
+       combinations are legal, if the character cannot be accented,
+       then the mark, followed by the character, are produced). The
+       mark followed by a space produces the mark itself.
 *)
 
 PROCEDURE ApplyDiacritical (d: Diacritical; v: VBT.T; cd: VBT.KeyRec) =
@@ -437,4 +437,4 @@ BEGIN
       Set (r.c1, r.c2, r.keysym, r.caseInsensitive, r.c1 = r.c2)
     END
   END
-END KeyFilter. 
+END KeyFilter.

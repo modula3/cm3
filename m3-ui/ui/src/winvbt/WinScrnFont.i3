@@ -15,7 +15,7 @@ PROCEDURE NewOracle (): ScrnFont.Oracle;
 
 PROCEDURE FromFont (font: PaintPrivate.Font): WinDef.HFONT;
 
-PROCEDURE ListFonts (pat       : TEXT; 
+PROCEDURE ListFonts (pat       : TEXT;
                      maxResults: INTEGER): REF ARRAY OF TEXT;
 (* List all matching Windows fonts. *)
 

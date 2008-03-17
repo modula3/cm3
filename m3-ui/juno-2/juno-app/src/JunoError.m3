@@ -56,7 +56,7 @@ PROCEDURE MsgVBT(errmsg: TEXT): VBT.T =
   END MsgVBT;
 
 <* SPEC Display REQUIRES sup(LL) = VBT.mu *>
- 
+
 PROCEDURE Display(v: VBT.T; errmsg: TEXT) =
   BEGIN
     EVAL Filter.Replace(filter, MsgVBT(errmsg));
@@ -91,13 +91,13 @@ PROCEDURE DisplayPS(wr: Wr.T; errmsg: TEXT) RAISES {Wr.Failure} =
       Rd.Close(rd)
     END
   END DisplayPS;
-   
+
 PROCEDURE DoDismiss(
     <* UNUSED *> ch: ButtonVBT.T;
     <* UNUSED *> READONLY cd: VBT.MouseRec) =
   BEGIN
     Trestle.Delete(dialog)
   END DoDismiss;
-    
+
 BEGIN
 END JunoError.

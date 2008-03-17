@@ -16,7 +16,7 @@ MODULE ViewportVBT;
 Viewports have gotten kind of hairy, so I'll document them.
 
 A Viewport is a cross of an HVSplit and JoinedVBT with scroll bars
-and Multis thrown in.  
+and Multis thrown in.
 
 The structure is as follows:
 
@@ -26,15 +26,15 @@ of the Viewport filter.
 The child is wrapped in a JoinedVBT so that it can support multiple views
 (handled by the join's parents).
 
-The viewport consists of multiple views.  Each view consists of a 
+The viewport consists of multiple views.  Each view consists of a
 single join parent glued together with scroll bars.  Logically, each
 view is a filter for the join parent.
 
 A view's structure is as follows (depending on the scroll bars):
 
 horizontal and vertical scroll bars:
-(ViewRoot (HVSplitReshape (HSplit VScroller Bar) JoinParent) 
-          Bar 
+(ViewRoot (HVSplitReshape (HSplit VScroller Bar) JoinParent)
+          Bar
           (MyHSplit Reset Bar HScroller))
 
 horizontal scroll bars
@@ -362,7 +362,7 @@ PROCEDURE AddView (v: T; after: INTEGER := -1; split := TRUE): INTEGER =
         vv.joinParent := NEW(MyJoinParent, vp := v, view := iNew).init(v.join);
         vv.offsetVBT := NEW(MyOffset).init(vv.joinParent, bg:=v.shadow.bg);
       ELSE
-        vv.offsetVBT := NEW(MySimpleOffset, vp := v, 
+        vv.offsetVBT := NEW(MySimpleOffset, vp := v,
             view := iNew).init(v.join, bg:=v.shadow.bg);
       END;
 
@@ -416,7 +416,7 @@ PROCEDURE AddView (v: T; after: INTEGER := -1; split := TRUE): INTEGER =
           h2 := NewHSplit(vv.hscroller, Axis.T.Hor, flexReset,
               NewBar(v.shadow), vv.hscroller);
         ELSE
-          h2 := NewHSplit(vv.hscroller, Axis.T.Hor, vv.hscroller, 
+          h2 := NewHSplit(vv.hscroller, Axis.T.Hor, vv.hscroller,
               NewBar(v.shadow), flexReset);
         END;
 
@@ -798,7 +798,7 @@ TYPE
   MySimpleOffset = OffsetVBT.Simple OBJECT
       vp: T;
       view: View;
-    OVERRIDES 
+    OVERRIDES
       reshape := SimpleOffsetReshape;
     END;
 
@@ -808,7 +808,7 @@ PROCEDURE OffsetReshape (off: MyOffset; READONLY cd: VBT.ReshapeRec) =
     EVAL AdjustShape(off.ch);
   END OffsetReshape;
 
-PROCEDURE SimpleOffsetReshape (off: MySimpleOffset; READONLY cd: 
+PROCEDURE SimpleOffsetReshape (off: MySimpleOffset; READONLY cd:
     VBT.ReshapeRec) =
   BEGIN
     OffsetVBT.Simple.reshape(off, cd);

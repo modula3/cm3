@@ -18,7 +18,7 @@ PROCEDURE Init (<*UNUSED*> t            : T;
                 <*UNUSED*> mute         : BOOLEAN;
                 <*UNUSED*> ignoreMapping: BOOLEAN;
                 <*UNUSED*> volume       : Jva.Volume): T RAISES {OSError.E} =
-  VAR 
+  VAR
     msg := AtomList.List1 (Atom.FromText ("JVideo not supported"));
   BEGIN
     RAISE OSError.E (msg);

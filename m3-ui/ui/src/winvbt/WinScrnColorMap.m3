@@ -29,10 +29,10 @@ PROCEDURE FromRGB (<*UNUSED*> self: T;
                    <*UNUSED*> mode: ScrnColorMap.Mode ): ScrnColorMap.Pixel
     (** RAISES {ScrnColorMap.Failure} **) =
   BEGIN
-    (* This is an extremely naive implementation; it only utilizes 
-       the colors that come with the standard Windows palette. 
+    (* This is an extremely naive implementation; it only utilizes
+       the colors that come with the standard Windows palette.
 
-       Using "WinGDI.RGB" causes dithering, and two shades of red in the 
+       Using "WinGDI.RGB" causes dithering, and two shades of red in the
        solitaire cards. *)
 
     WITH r = ROUND (Math.pow(FLOAT(rgb.r,LONGREAL), GammaInverse) * 255.0D0),
@@ -84,7 +84,7 @@ PROCEDURE FreeCube (<*UNUSED*> self: T;
 (*****************************************************************************)
 
 TYPE
-  Oracle = ScrnColorMap.Oracle BRANDED OBJECT 
+  Oracle = ScrnColorMap.Oracle BRANDED OBJECT
   OVERRIDES
     standard := Standard;
     list     := List;
@@ -117,9 +117,9 @@ PROCEDURE Standard (<*UNUSED*> self: Oracle): ScrnColorMap.T =
 (*-----------------------------------------------------------------------------
    The spec in ScrnColormap.i3 states:
 
-       The method call "st.cmap.list(pat, maxResults)" returns the names of 
-       colormaps owned by "st" that match the pattern "pat".  The list of 
-       results may be truncated to length "maxResults".  A "*" matches any 
+       The method call "st.cmap.list(pat, maxResults)" returns the names of
+       colormaps owned by "st" that match the pattern "pat".  The list of
+       results may be truncated to length "maxResults".  A "*" matches any
        number of characters and a "?" matches any single character.
 
    However, the X version (XScrnCmap.ColorMapList) always returns NIL.
@@ -138,7 +138,7 @@ PROCEDURE List (<*UNUSED*> self      : Oracle;
 (*-----------------------------------------------------------------------------
    The spec in ScrnColormap.i3 states:
 
-       The method call "st.cmap.lookup(name)" returns the colormap owned by 
+       The method call "st.cmap.lookup(name)" returns the colormap owned by
        "st" with the given name, or "NIL" if no colormap has this name.
 
    However, the X version (XScrnCmap.ColorMapLookup always returns NIL.

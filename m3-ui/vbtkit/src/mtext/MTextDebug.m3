@@ -23,7 +23,7 @@ FROM Stdio IMPORT stderr;
 (* A generator for node i.d. numbers. These exist only to make structural
    printouts more readable, and are assigned only when the nodes are
    printed. *)
-   
+
 VAR idCounter: CARDINAL := 0;
 
 PROCEDURE Id (node: T): CARDINAL RAISES {} =

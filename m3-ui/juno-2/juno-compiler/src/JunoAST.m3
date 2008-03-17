@@ -87,7 +87,7 @@ TYPE
   END;
   AssignIter = FieldIter BRANDED "JunoAST.AssignIter" OBJECT
     ast: Assign
-  END; 
+  END;
   ProcCallIter = FieldIter BRANDED "JunoAST.ProcCallIter" OBJECT
     ast: ProcCall
   END;
@@ -441,7 +441,7 @@ PROCEDURE NearVarListNext(it: NVListIter; VAR (*OUT*) child: T): BOOLEAN =
     it.curr := it.curr.next;
     RETURN TRUE
   END NearVarListNext;
-      
+
 REVEAL
   Block = T BRANDED "JunoAST.Block" OBJECT END;
   Decl = DeclPublic BRANDED "JunoAST.Decl" OBJECT END;
@@ -453,7 +453,7 @@ REVEAL
 
 PROCEDURE Predecessor(ast: T): T =
   VAR node: T := ast; BEGIN
-    WHILE node # NIL AND node.bp # End DO node := node.bp END; 
+    WHILE node # NIL AND node.bp # End DO node := node.bp END;
     <* ASSERT node = NIL OR node.bp = End *>
     RETURN node
   END Predecessor;

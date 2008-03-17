@@ -46,11 +46,11 @@ END ComposeKey.
 | TYPE
 |   MyTextEditor =
 |     TextEditingVBT.T OBJECT
-|         comp: ComposeKey.T 
+|         comp: ComposeKey.T
 |       OVERRIDES
-|         key := Key 
+|         key := Key
 |       END;
-| 
+|
 | PROCEDURE Key (v: MyTextEditor; READONLY inputCd; VBT.KeyRec) =
 |   VAR cd := inputCd; BEGIN
 |     IF inputCd.wentDown AND cd.whatChanged # VBT.NoKey THEN
@@ -62,7 +62,7 @@ END ComposeKey.
 |       END
 |     END
 |   END Key;
-| 
+|
 | VAR editor :=
 |   NEW (MyTextEditor, comp := NEW (ComposeKey.T));
 
@@ -85,7 +85,7 @@ END ComposeKey.
    default, the "compose" method uses VT220-style composition of ISO
    Latin-1 characters.  A client can override the "compose" method to
    produce some other style of composition.
-  
+
    The default "compose" method ignores case where there is no
    ambiguity.  For example, "c" and "o" can be combined to produce the
    copyright symbol; so can "C" and "O", "c" and "O", or "C" and "o".
@@ -132,7 +132,7 @@ END ComposeKey.
 |  XO    CURRENCY SIGN [also g$]
 |  Y-    YEN SIGN [also y$, y=]
 |  ||    BROKEN BAR [also vb, |^]
-|  SO    SECTION SIGN [also SS (not ss!), s!] 
+|  SO    SECTION SIGN [also SS (not ss!), s!]
 |  ""    DIAERESIS
 |  co    COPYRIGHT SIGN
 |  a_    FEMININE ORDINAL INDICATOR [also sa]
@@ -165,25 +165,25 @@ END ComposeKey.
 |  A*    LATIN CAPITAL LETTER A WITH RING ABOVE [also oA]
 |  AE    CAPITAL DIPHTHONG AE
 |  C,    LATIN CAPITAL LETTER C WITH CEDILLA
-|  E`    LATIN CAPITAL LETTER E WITH GRAVE ACCENT 
-|  E'    LATIN CAPITAL LETTER E WITH ACUTE ACCENT 
+|  E`    LATIN CAPITAL LETTER E WITH GRAVE ACCENT
+|  E'    LATIN CAPITAL LETTER E WITH ACUTE ACCENT
 |  E^    LATIN CAPITAL LETTER E WITH CIRCUMFLEX ACCENT [also E>]
 |  E"    LATIN CAPITAL LETTER E WITH DIAERESIS
-|  I`    LATIN CAPITAL LETTER I WITH GRAVE ACCENT 
-|  I'    LATIN CAPITAL LETTER I WITH ACUTE ACCENT 
+|  I`    LATIN CAPITAL LETTER I WITH GRAVE ACCENT
+|  I'    LATIN CAPITAL LETTER I WITH ACUTE ACCENT
 |  I^    LATIN CAPITAL LETTER I WITH CIRCUMFLEX ACCENT [also I>]
 |  I"    LATIN CAPITAL LETTER I WITH DIAERESIS
 |  D-    CAPITAL ICELANDIC LETTER ETH
 |  N~    LATIN CAPITAL LETTER N WITH TILDE [also N-]
-|  O`    LATIN CAPITAL LETTER O WITH GRAVE ACCENT 
-|  O'    LATIN CAPITAL LETTER O WITH ACUTE ACCENT 
+|  O`    LATIN CAPITAL LETTER O WITH GRAVE ACCENT
+|  O'    LATIN CAPITAL LETTER O WITH ACUTE ACCENT
 |  O^    LATIN CAPITAL LETTER O WITH CIRCUMFLEX ACCENT [also O>]
 |  O~    LATIN CAPITAL LETTER O WITH TILDE [also O-]
 |  O"    LATIN CAPITAL LETTER O WITH DIAERESIS
 |  xx    MULTIPLICATION SIGN [also mu]
 |  O/    LATIN CAPITAL LETTER O WITH OBLIQUE STROKE
-|  U`    LATIN CAPITAL LETTER U WITH GRAVE ACCENT 
-|  U'    LATIN CAPITAL LETTER U WITH ACUTE ACCENT 
+|  U`    LATIN CAPITAL LETTER U WITH GRAVE ACCENT
+|  U'    LATIN CAPITAL LETTER U WITH ACUTE ACCENT
 |  U^    LATIN CAPITAL LETTER U WITH CIRCUMFLEX [also U>]
 |  U"    LATIN CAPITAL LETTER U WITH DIAERESIS
 |  Y'    LATIN CAPITAL LETTER Y WITH ACUTE ACCEN

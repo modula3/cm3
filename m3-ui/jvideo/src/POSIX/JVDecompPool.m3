@@ -82,7 +82,7 @@ PROCEDURE SearchList (         sourceHost: TEXT;
              AND cmap.id = curr.cmap.id
              AND cmap.nColors = curr.cmap.nColors
              AND cmap.monochrome = curr.cmap.monochrome
-             AND TextEqual(cmap.displayName, curr.cmap.displayName) 
+             AND TextEqual(cmap.displayName, curr.cmap.displayName)
 	     AND subtype = curr.subtype THEN
           EXIT;
         END;

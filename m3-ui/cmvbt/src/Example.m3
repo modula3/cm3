@@ -38,7 +38,7 @@ PROCEDURE DoIt () =
 
     passwd := NEW(TypeinVBT.T).init (font := PasswordFont.New ());
 
-    frames := HVSplit.Cons (Axis.T.Ver, 
+    frames := HVSplit.Cons (Axis.T.Ver,
                 FrameVBT.New(tabs, title := "Widget Factory", shadow := shadow),
                 FrameVBT.New(passwd, "Password", shadow := shadow),
                 FrameVBT.New(log, "Event Log", shadow := shadow),
@@ -77,7 +77,7 @@ PROCEDURE DoIt () =
   END DoIt;
 
 (*-------------------------------------------------a sorted table ----*)
-  
+
 TYPE
   LogVBT = SortedTableVBT.T OBJECT
     headings : ARRAY [0..1] OF TEXT;
@@ -89,9 +89,9 @@ TYPE
     heading := HeadingClick;
   END;
 
-TYPE 
+TYPE
   LogEntry = TextVBT.T OBJECT
-    count: CARDINAL; 
+    count: CARDINAL;
   END;
 
 PROCEDURE NewLogVBT (info: TextVBT.T): LogVBT =
@@ -103,8 +103,8 @@ PROCEDURE NewLogVBT (info: TextVBT.T): LogVBT =
     RETURN log;
   END NewLogVBT;
 
-PROCEDURE Note (v: LogVBT;  msg: TEXT) = 
-  VAR 
+PROCEDURE Note (v: LogVBT;  msg: TEXT) =
+  VAR
     v1 := TextVBT.New (msg);
     v2 := NEW (LogEntry, count := v.count).init(FmtTime.Long(Time.Now()));
   BEGIN
@@ -113,7 +113,7 @@ PROCEDURE Note (v: LogVBT;  msg: TEXT) =
   END Note;
 
 PROCEDURE Order (<*UNUSED*> v: SortedTableVBT.T;
-                 READONLY data: ARRAY OF VBT.T): INTEGER = 
+                 READONLY data: ARRAY OF VBT.T): INTEGER =
   VAR e: LogEntry := data[1];
   BEGIN
     RETURN e.count;
@@ -141,7 +141,7 @@ TYPE
     log  : LogVBT;
   END;
 
-PROCEDURE NewActiveVBT (msg: TEXT;  info: TextVBT.T;  log: LogVBT): ActiveVBT = 
+PROCEDURE NewActiveVBT (msg: TEXT;  info: TextVBT.T;  log: LogVBT): ActiveVBT =
   VAR v := NEW (ActiveVBT, info := info, log := log);
   BEGIN
     EVAL v.init (msg);
@@ -180,13 +180,13 @@ PROCEDURE IPHover (self: VBT.T;  <*UNUSED*> ref: REFANY) =
     TextVBT.Put (v.info, "Enter an IP Address.");
   END IPHover;
 
-PROCEDURE IPReturnAction (v: IPTypein; <*UNUSED*> READONLY cd: VBT.KeyRec) = 
+PROCEDURE IPReturnAction (v: IPTypein; <*UNUSED*> READONLY cd: VBT.KeyRec) =
   VAR
     addr := TextPort.GetText (v);
     desc := "IP Address: " & addr;
   BEGIN
     TextVBT.Put (v.info, "New IP entered: " & addr);
-    TRY 
+    TRY
       EVAL IPTypeinVBT.Get(v);
     EXCEPT
       IPTypeinVBT.InvalidAddress => desc := "Invalid " & desc;

@@ -5,12 +5,12 @@
 INTERFACE IPTypeinVBT;
 IMPORT IP, TypeinVBT;
 
-(* "IPTypeinVBT" is a type-in which allows 
-   input of dotted TCP/IP addresses, e.g., "127.0.0.1". 
+(* "IPTypeinVBT" is a type-in which allows
+   input of dotted TCP/IP addresses, e.g., "127.0.0.1".
    The user can enter the number itself; dots are
    inserted automatically upon the completion of each
-   3-character octet. The user cannot enter numbers 
-   greater than 255 for an octet, hence, the first digit 
+   3-character octet. The user cannot enter numbers
+   greater than 255 for an octet, hence, the first digit
    of the octet affects the number of octets allowed
    in the rest of that particular octet. *)
 

@@ -21,51 +21,51 @@ IMPORT Xm/VirtKeys;
 *)
 
 
-VAR   SCCSID:= "OSF/Motif: Xm.h	3.67 91/01/10"; 
+VAR   SCCSID:= "OSF/Motif: Xm.h	3.67 91/01/10";
 (******************************************************************************
 *******************************************************************************
 *
 *  (c) Copyright 1989, 1990, 1991 OPEN SOFTWARE FOUNDATION, INC.
 *  (c) Copyright 1987, 1988, 1989, 1990, HEWLETT-PACKARD COMPANY
 *  ALL RIGHTS RESERVED
-*  
+*
 *  	THIS SOFTWARE IS FURNISHED UNDER A LICENSE AND MAY BE USED
 *  AND COPIED ONLY IN ACCORDANCE WITH THE TERMS OF SUCH LICENSE AND
 *  WITH THE INCLUSION OF THE ABOVE COPYRIGHT NOTICE.  THIS SOFTWARE OR
 *  ANY OTHER COPIES THEREOF MAY NOT BE PROVIDED OR OTHERWISE MADE
 *  AVAILABLE TO ANY OTHER PERSON.  NO TITLE TO AND OWNERSHIP OF THE
 *  SOFTWARE IS HEREBY TRANSFERRED.
-*  
+*
 *  	THE INFORMATION IN THIS SOFTWARE IS SUBJECT TO CHANGE WITHOUT
 *  NOTICE AND SHOULD NOT BE CONSTRUED AS A COMMITMENT BY OPEN SOFTWARE
-*  FOUNDATION, INC. OR ITS THIRD PARTY SUPPLIERS  
-*  
+*  FOUNDATION, INC. OR ITS THIRD PARTY SUPPLIERS
+*
 *  	OPEN SOFTWARE FOUNDATION, INC. AND ITS THIRD PARTY SUPPLIERS,
 *  ASSUME NO RESPONSIBILITY FOR THE USE OR INABILITY TO USE ANY OF ITS
 *  SOFTWARE .   OSF SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
 *  KIND, AND OSF EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES, INCLUDING
 *  BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
 *  FITNESS FOR A PARTICULAR PURPOSE.
-*  
+*
 *  Notice:  Notwithstanding any other lease or license that may pertain to,
 *  or accompany the delivery of, this computer software, the rights of the
 *  Government regarding its use, reproduction and disclosure are as set
 *  forth in Section 52.227-19 of the FARS Computer Software-Restricted
 *  Rights clause.
-*  
+*
 *  (c) Copyright 1989, 1990, 1991 Open Software Foundation, Inc.  Unpublished - all
 *  rights reserved under the Copyright laws of the United States.
-*  
+*
 *  RESTRICTED RIGHTS NOTICE:  Use, duplication, or disclosure by the
 *  Government is subject to the restrictions as set forth in subparagraph
 *  (c)(1)(ii) of the Rights in Technical Data and Computer Software clause
 *  at DFARS 52.227-7013.
-*  
+*
 *  Open Software Foundation, Inc.
 *  11 Cambridge Center
 *  Cambridge, MA   02142
 *  (617)621-8700
-*  
+*
 *  RESTRICTED RIGHTS LEGEND:  This computer software is submitted with
 *  "restricted rights."  Use, duplication or disclosure is subject to the
 *  restrictions as set forth in NASA FAR SUP 18-52.227-79 (April 1985)
@@ -73,11 +73,11 @@ VAR   SCCSID:= "OSF/Motif: Xm.h	3.67 91/01/10";
 *  Software Foundation, Inc., 11 Cambridge Center, Cambridge, MA  02142.  If
 *  the contract contains the Clause at 18-52.227-74 "Rights in Data General"
 *  then the "Alternate III" clause applies.
-*  
+*
 *  (c) Copyright 1989, 1990, 1991 Open Software Foundation, Inc.
-*  ALL RIGHTS RESERVED 
-*  
-*  
+*  ALL RIGHTS RESERVED
+*
+*
 * Open Software Foundation is a trademark of The Open Software Foundation, Inc.
 * OSF is a trademark of Open Software Foundation, Inc.
 * OSF/Motif is a trademark of Open Software Foundation, Inc.
@@ -94,10 +94,10 @@ CONST VERSION = 1;
 CONST REVISION = 1;
 
 
-PROCEDURE Version():INTEGER; 
+PROCEDURE Version():INTEGER;
 
 
-VAR   xmUseVersion : INTEGER ; 
+VAR   xmUseVersion : INTEGER ;
 
 TYPE Cardinal = INTEGER;
 
@@ -112,7 +112,7 @@ VAR   FALLBACK_CHARSET:char_star;
 
 (****************
  *
- * XmString structure defines. These must be here (at the start of the file) 
+ * XmString structure defines. These must be here (at the start of the file)
  * becaused they are used later on.
  *
  ****************)
@@ -125,7 +125,7 @@ TYPE String = char_star; 		(* opaque to outside *)
 TYPE StringTable = UNTRACED REF  String; 		(* opaque to outside *)
 TYPE StringcharSet = UNTRACED REF  char; 	(* Null term string *)
 TYPE StringComponentType =  unsigned_char; 	(* component tags *)
-TYPE StringDirection =  unsigned_char; 
+TYPE StringDirection =  unsigned_char;
 
 TYPE FontList = UNTRACED ROOT;        (* opaque to outside *)
 TYPE uStringContext = UNTRACED ROOT;  (* opaque to outside *)
@@ -152,7 +152,7 @@ VAR   STRING_DEFAULT_CHARSET:char_star;
  ************************************************************************)
 
 
-(* Class types *) 
+(* Class types *)
 
 
 
@@ -252,34 +252,34 @@ CONST POINTER = 1;
 
 (*  Primitive widget class and record definitions  *)
 
-VAR   xmPrimitiveWidgetClass : Xt.WidgetClass ; 
+VAR   xmPrimitiveWidgetClass : Xt.WidgetClass ;
 
-TYPE PrimitiveWidgetClass = UNTRACED ROOT; 
-TYPE PrimitiveWidget = UNTRACED ROOT; 
+TYPE PrimitiveWidgetClass = UNTRACED ROOT;
+TYPE PrimitiveWidget = UNTRACED ROOT;
 
 
 (*  Gadget widget class and record definitions  *)
 
-VAR   xmGadgetClass : Xt.WidgetClass ; 
+VAR   xmGadgetClass : Xt.WidgetClass ;
 
-TYPE GadgetClass = UNTRACED ROOT; 
-TYPE Gadget = UNTRACED ROOT; 
+TYPE GadgetClass = UNTRACED ROOT;
+TYPE Gadget = UNTRACED ROOT;
 
 
 (*  Manager widger class and record definitions  *)
 
 
-VAR   xmManagerWidgetClass : Xt.WidgetClass ; 
+VAR   xmManagerWidgetClass : Xt.WidgetClass ;
 
-TYPE ManagerWidgetClass = UNTRACED ROOT; 
-TYPE ManagerWidget = UNTRACED ROOT; 
+TYPE ManagerWidgetClass = UNTRACED ROOT;
+TYPE ManagerWidget = UNTRACED ROOT;
 
 
 (************************************************************************
  *  Fast subclassing -- just do Xt.IsSubclass now.  To be replaced.
  ************************************************************************)
 
-CONST 
+CONST
   XmIsPrimitive=TRUE;
   XmIsGadget =TRUE;
   XmIsManager = TRUE;
@@ -332,7 +332,7 @@ CONST u100TH_FONT_UNITS = 4;
 
 
 (************************************************************************
- *  Navigation defines 
+ *  Navigation defines
  ************************************************************************)
 CONST NONE = 0;
 CONST TAB_GROUP = 1;
@@ -425,7 +425,7 @@ CONST RESIZE_ANY = 2	(*  for BulletinBoard, DrawingArea  *) ;
 
 
 (****************************************************************************
- *  Callback reasons 
+ *  Callback reasons
  ****************************************************************************)
 
 CONST CR_NONE = 0;
@@ -470,117 +470,117 @@ CONST CR_LOSE_PRIMARY = 42;
 
 
 (************************************************************************
- *  Callback structures 
+ *  Callback structures
  ************************************************************************)
 
-TYPE  AnyCallbackStruct = 
+TYPE  AnyCallbackStruct =
   RECORD
-         reason : INTEGER ; 
-         event : X.XEventStar ; 
+         reason : INTEGER ;
+         event : X.XEventStar ;
   END; (* AnyCallbackStruct*)
 
-TYPE  ArrowButtonCallbackStruct = 
+TYPE  ArrowButtonCallbackStruct =
   RECORD
-         reason : INTEGER ; 
-         event : X.XEventStar ; 
-    	 click_count : INTEGER ; 
+         reason : INTEGER ;
+         event : X.XEventStar ;
+    	 click_count : INTEGER ;
   END; (* ArrowButtonCallbackStruct*)
 
-TYPE  DrawingAreaCallbackStruct = 
+TYPE  DrawingAreaCallbackStruct =
   RECORD
-         reason : INTEGER ; 
-         event : X.XEventStar ; 
-         window : X.Window ; 
+         reason : INTEGER ;
+         event : X.XEventStar ;
+         window : X.Window ;
   END; (* DrawingAreaCallbackStruct*)
 
-TYPE  DrawnButtonCallbackStruct = 
+TYPE  DrawnButtonCallbackStruct =
   RECORD
-         reason : INTEGER ; 
-         event : X.XEventStar ; 
-         window : X.Window ; 
-    	 click_count : INTEGER ; 
+         reason : INTEGER ;
+         event : X.XEventStar ;
+         window : X.Window ;
+    	 click_count : INTEGER ;
   END; (* DrawnButtonCallbackStruct*)
 
-TYPE  PushButtonCallbackStruct = 
+TYPE  PushButtonCallbackStruct =
   RECORD
-         reason : INTEGER ; 
-         event : X.XEventStar ; 
-    	 click_count : INTEGER ; 
+         reason : INTEGER ;
+         event : X.XEventStar ;
+    	 click_count : INTEGER ;
   END; (* PushButtonCallbackStruct*)
 
-TYPE  RowColumnCallbackStruct = 
+TYPE  RowColumnCallbackStruct =
   RECORD
-         reason : INTEGER ; 
-         event : X.XEventStar ; 
-         widget : Xt.Widget ; 
-         data : char_star ; 
-         callbackstruct : char_star ; 
+         reason : INTEGER ;
+         event : X.XEventStar ;
+         widget : Xt.Widget ;
+         data : char_star ;
+         callbackstruct : char_star ;
   END; (* RowColumnCallbackStruct*)
 
-TYPE  ScrollBarCallbackStruct = 
+TYPE  ScrollBarCallbackStruct =
   RECORD
-     reason : INTEGER ; 
-     event : X.XEventStar ; 
-     value : INTEGER ; 
-     pixel : INTEGER ; 
+     reason : INTEGER ;
+     event : X.XEventStar ;
+     value : INTEGER ;
+     pixel : INTEGER ;
   END; (* ScrollBarCallbackStruct*)
 
-TYPE  ToggleButtonCallbackStruct = 
+TYPE  ToggleButtonCallbackStruct =
   RECORD
-     reason : INTEGER ; 
-     event : X.XEventStar ; 
-     set : INTEGER ; 
+     reason : INTEGER ;
+     event : X.XEventStar ;
+     set : INTEGER ;
   END; (* ToggleButtonCallbackStruct*)
 
-TYPE  ListCallbackStruct = 
+TYPE  ListCallbackStruct =
   RECORD
-     	reason : INTEGER ; 
-        event : X.XEventStar ; 
-        item : String ; 
-        item_length : INTEGER ; 
-        item_position : INTEGER ; 
-        selected_items : Xt.StringStar ; 
-        selected_item_count : INTEGER ; 
-        selected_item_positions : int_star; 
-        selection_type : char ; 
+     	reason : INTEGER ;
+        event : X.XEventStar ;
+        item : String ;
+        item_length : INTEGER ;
+        item_position : INTEGER ;
+        selected_items : Xt.StringStar ;
+        selected_item_count : INTEGER ;
+        selected_item_positions : int_star;
+        selection_type : char ;
   END; (* ListCallbackStruct*)
 
-TYPE  SelectionBoxCallbackStruct = 
+TYPE  SelectionBoxCallbackStruct =
   RECORD
-     reason : INTEGER ; 
-     event : X.XEventStar ; 
-     value : String ; 
-     length : INTEGER ; 
+     reason : INTEGER ;
+     event : X.XEventStar ;
+     value : String ;
+     length : INTEGER ;
   END; (* SelectionBoxCallbackStruct*)
 
-TYPE  CommandCallbackStruct = 
+TYPE  CommandCallbackStruct =
   RECORD
-     reason : INTEGER ; 
-     event : X.XEventStar ; 
-     value : String ; 
-     length : INTEGER ; 
+     reason : INTEGER ;
+     event : X.XEventStar ;
+     value : String ;
+     length : INTEGER ;
   END; (* CommandCallbackStruct*)
 
-TYPE   FileSelectionBoxCallbackStruct = 
+TYPE   FileSelectionBoxCallbackStruct =
   RECORD
-     	reason : INTEGER ; 
-    	event : X.XEventStar ; 
-    	value : String ; 
-    	length : INTEGER ; 
-    	mask : String ; 
-    	mask_length : INTEGER ; 
-    	dir  : String ; 
-    	dir_length  : INTEGER ; 
-        pattern  : String ; 
-    	pattern_length  : INTEGER ; 
+     	reason : INTEGER ;
+    	event : X.XEventStar ;
+    	value : String ;
+    	length : INTEGER ;
+    	mask : String ;
+    	mask_length : INTEGER ;
+    	dir  : String ;
+    	dir_length  : INTEGER ;
+        pattern  : String ;
+    	pattern_length  : INTEGER ;
   END; (* FileSelectionBoxCallbackStruct*)
 
 
-TYPE  ScaleCallbackStruct = 
+TYPE  ScaleCallbackStruct =
   RECORD
-     reason : INTEGER ; 
-     event : X.XEventStar ; 
-     value : INTEGER ; 
+     reason : INTEGER ;
+     event : X.XEventStar ;
+     value : INTEGER ;
   END; (* ScaleCallbackStruct*)
 
 
@@ -740,8 +740,8 @@ CONST COMMAND_BELOW_WORKSPACE = 1;
 CONST MULTI_LINE_EDIT = 0;
 CONST SINGLE_LINE_EDIT = 1;
 
-TYPE TextPosition =  long; 
-TYPE TextFormat =  X.Atom; 
+TYPE TextPosition =  long;
+TYPE TextFormat =  X.Atom;
 
 CONST FMT8BIT = Xatom.XA_STRING;
 CONST FMT16BIT= 2;
@@ -755,24 +755,24 @@ TYPE XmHighlightMode = {XmHIGHLIGHT_NORMAL, XmHIGHLIGHT_SELECTED,
 
 (* XmTextBlock's are used to pass text around. *)
 
-TYPE  
-  TextBlockRec = 
+TYPE
+  TextBlockRec =
   RECORD
-     ptr : char_star ; 
-     length : INTEGER ; 
-     format : TextFormat ; 
+     ptr : char_star ;
+     length : INTEGER ;
+     format : TextFormat ;
   END; (* TextBlockRec, *TextBlock*)
   TextBlock = UNTRACED REF TextBlockRec;
 
-TYPE  
-  TextVerifyCallbackStruct= 
+TYPE
+  TextVerifyCallbackStruct=
   RECORD
-     reason : INTEGER ; 
-     event : X.XEventStar ; 
-     doit : X.Bool ; 
-     currInsert, newInsert : long ; 
-     startPos, endPos : long ; 
-     text : TextBlock ; 
+     reason : INTEGER ;
+     event : X.XEventStar ;
+     doit : X.Bool ;
+     currInsert, newInsert : long ;
+     startPos, endPos : long ;
+     text : TextBlock ;
   END; (* TextVerifyCallbackStruct, *TextVerifyPtr*)
   TextVerifyPtr = UNTRACED REF TextVerifyCallbackStruct;
 
@@ -887,8 +887,8 @@ CONST TRAVERSE_RIGHT = 9;
  **********************************************************************)
 
 
-TYPE 
-  ColorProc = PROCEDURE ( 
+TYPE
+  ColorProc = PROCEDURE (
  	bg_color,fg_color,sel_color,ts_color,bs_color:UNTRACED REF X.XColor;
      );
 
@@ -914,7 +914,7 @@ PROCEDURE GetColors (screen:X.ScreenStar;
 <*EXTERNAL "_XmCvtStringToUnitType":C*>
 PROCEDURE CvtStringToUnitType(args:Xrm.ValuePtr;
 	                      num_args:int_star;
-			      from_val,to_val: UNTRACED REF Xrm.Value); 
+			      from_val,to_val: UNTRACED REF Xrm.Value);
 
 <*EXTERNAL "_XmSetFontUnit":C*>
 PROCEDURE SetFontUnit(display:X.DisplayStar;value:INTEGER);
@@ -943,10 +943,10 @@ PROCEDURE StringFree(str:String);
  * SimpleMenu declarations and definitions.
  *
  ***********************************************************************)
-TYPE ButtonType =  unsigned_char; 
-TYPE ButtonTypeTable = UNTRACED REF  ButtonType; 
-TYPE KeySymTable = UNTRACED REF  X.KeySym; 
-TYPE StringcharSetTable = UNTRACED REF  StringcharSet; 
+TYPE ButtonType =  unsigned_char;
+TYPE ButtonTypeTable = UNTRACED REF  ButtonType;
+TYPE KeySymTable = UNTRACED REF  X.KeySym;
+TYPE StringcharSetTable = UNTRACED REF  StringcharSet;
 
 CONST PUSHBUTTON = 1;
 CONST TOGGLEBUTTON = 2;
@@ -1008,50 +1008,50 @@ PROCEDURE CreateSimpleCheckBox(parent:Xt.Widget;
 <*EXTERNAL _XmVaCreateSimpleMenuBar:C*>
 PROCEDURE VaCreateSimpleMenuBar(Widget parent, String name, ...): Widget ;
 extern Widget XmVaCreateSimplePopupMenu (Widget parent, String name,
-VAR   callback, ...) : XtCallbackProc ; 
+VAR   callback, ...) : XtCallbackProc ;
 extern Widget XmVaCreateSimplePulldownMenu (Widget parent, String name,
                                      int post_from_button,
-VAR   callback, ...) : XtCallbackProc ; 
+VAR   callback, ...) : XtCallbackProc ;
 extern Widget XmVaCreateSimpleOptionMenu (Widget parent, String name,
                                    XmString option_label,
                                    KeySym option_mnemonic,
                                    int button_set,
-VAR   callback, ...) : XtCallbackProc ; 
+VAR   callback, ...) : XtCallbackProc ;
 extern Widget XmVaCreateSimpleRadioBox (Widget parent, String name,
-VAR   button_set, XtC.allbackProc callback, ...) : INTEGER ; 
+VAR   button_set, XtC.allbackProc callback, ...) : INTEGER ;
 extern Widget XmVaCreateSimpleCheckBox (Widget parent, String name,
-VAR   callback, ...) : XtCallbackProc ; 
+VAR   callback, ...) : XtCallbackProc ;
 
 *)
 
 (***********************************************************************
  *
  * 	Misc Declarations
- * 
+ *
  ***********************************************************************)
-TYPE ResourceBaseProc=  PROCEDURE(widget:Xt.Widget; 
-                                  client_data:Xt.Pointer):Xt.Pointer; 
+TYPE ResourceBaseProc=  PROCEDURE(widget:Xt.Widget;
+                                  client_data:Xt.Pointer):Xt.Pointer;
 
-TYPE SecondaryResourceDataRec = RECORD 
-       base_proc : ResourceBaseProc ; 
-       client_data : Xt.Pointer ; 
-       name : String ; 
-       res_class : String ; 
-       resources : Xt.ResourceList ; 
+TYPE SecondaryResourceDataRec = RECORD
+       base_proc : ResourceBaseProc ;
+       client_data : Xt.Pointer ;
+       name : String ;
+       res_class : String ;
+       resources : Xt.ResourceList ;
        num_resources : CARDINAL ;
-     END (*record*); 
+     END (*record*);
 
 TYPE SecondaryResourceDataRec_star = UNTRACED REF SecondaryResourceDataRec;
 
 (*???
 extern Cardinal XmGetSecondaryResourceData (WidgetClass wclass,
-VAR   **secondaryDataRtn) : SecondaryResourceData ; 
-extern Widget XmTrackingLocate (Widget widget, Cursor cursor, 
+VAR   **secondaryDataRtn) : SecondaryResourceData ;
+extern Widget XmTrackingLocate (Widget widget, Cursor cursor,
 #if NeedWidePrototypes
     int confineTo
 #else
     Boolean confineTo
-#endif 
+#endif
 );
 ???*)
 
@@ -1081,7 +1081,7 @@ PROCEDURE CvtToVerticalPixels(screen: X.ScreenStar;
 PROCEDURE CvtCTToXmString( text: char_star): String ;
 
 <*EXTERNAL XmCvtXmStringToCT:C*>
-PROCEDURE CvtXmStringToCT( string: String) : char_star ; 
+PROCEDURE CvtXmStringToCT( string: String) : char_star ;
 
 <*EXTERNAL XmCvtTextToXmString:C*>
 PROCEDURE CvtTextToXmString(display : X.DisplayStar;
@@ -1097,11 +1097,11 @@ PROCEDURE CvtXmStringToText(display : X.DisplayStar;
 			    num_args: Xt.CardinalStar;
 			    from_val: Xrm.ValuePtr;
 			    to_val: Xrm.ValuePtr;
-			    converter_data: Xt.Pointer): Xt.Boolean; 
+			    converter_data: Xt.Pointer): Xt.Boolean;
 
 
 
-TYPE NavigationType =  unsigned_char; 
+TYPE NavigationType =  unsigned_char;
 
 <*EXTERNAL XmAddTabGroup:C*>
 PROCEDURE AddTabGroup(tabGroup:Xt.Widget);
@@ -1133,8 +1133,8 @@ PROCEDURE GetDestination(Display *display): Widget ;
 #endif (* _NO_PROTO *)
 ??? *)
 
-TYPE Offset =  long; 
-TYPE OffsetPtr = UNTRACED REF  Offset; 
+TYPE Offset =  long;
+TYPE OffsetPtr = UNTRACED REF  Offset;
 TYPE OffsetPtr_star = UNTRACED REF OffsetPtr;
 
 <*EXTERNAL XmUpdateDisplay:C*>

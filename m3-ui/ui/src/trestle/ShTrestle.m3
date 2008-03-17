@@ -78,7 +78,7 @@ PROCEDURE Overlap (         t : ChildT;
                             id: Trestle.ScreenID;
                    READONLY nw: Point.T           ) RAISES {Failure} =
   BEGIN
-    
+
   END Overlap;
 
 PROCEDURE MoveNear (tr: ChildT; v, y: VBT.T) RAISES {Failure} =
@@ -308,6 +308,6 @@ PROCEDURE UpdateBuddies (ch: VBT.T) =
   BEGIN
     <* ASSERT FALSE *>
   END UpdateBuddies;
-  
+
 BEGIN
 END ShTrestle.

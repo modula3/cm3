@@ -7,8 +7,8 @@ MODULE TracedAlg;
 
 IMPORT Algorithm, List, Stdio, Thread, VBT, Wr, Zeus, ZeusClass, ZeusPanel;
 
-REVEAL 
-  T = Algorithm.T BRANDED OBJECT 
+REVEAL
+  T = Algorithm.T BRANDED OBJECT
   OVERRIDES
     install := Install;
     delete := Delete;
@@ -19,7 +19,7 @@ REVEAL
     endrun := Endrun;
     run := Run;
     data := Data;
-  END;   
+  END;
 
 PROCEDURE Install (<* UNUSED *> alg: T) =
   BEGIN Trace ("install") END Install;
@@ -34,8 +34,8 @@ PROCEDURE Restore (<* UNUSED *> alg: T; <* UNUSED *> l: List.T) =
   BEGIN Trace ("restore") END Restore;
 
 PROCEDURE Config (
-    <* UNUSED *> alg: T; 
-    <* UNUSED *> state: ZeusClass.StateChange; 
+    <* UNUSED *> alg: T;
+    <* UNUSED *> state: ZeusClass.StateChange;
     <* UNUSED *> o: ZeusClass.T) =
   BEGIN Trace ("config") END Config;
 
@@ -59,12 +59,12 @@ PROCEDURE Trace (t: TEXT) =
       Wr.Flush (Stdio.stdout);
     END
   END Trace;
- 
 
-PROCEDURE New (): Algorithm.T = 
+
+PROCEDURE New (): Algorithm.T =
   BEGIN RETURN NEW(T) END New;
 
 BEGIN
-  ZeusPanel.RegisterAlg (New, "Traced Alg")  
+  ZeusPanel.RegisterAlg (New, "Traced Alg")
 END TracedAlg.
- 
+

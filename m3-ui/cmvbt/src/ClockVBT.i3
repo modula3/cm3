@@ -9,12 +9,12 @@ IMPORT FmtTime, Time, Date;
 (* "ClockVBT" interface displays a text of the updating
    time. *)
 
-TYPE 
+TYPE
   T <: Public;
   Public = Private OBJECT METHODS
     init (font: Font.T := Font.BuiltIn;
           halign : REAL := 0.5;
-          bgFg: PaintOp.ColorQuad := NIL; 
+          bgFg: PaintOp.ColorQuad := NIL;
           proc: FmtProc := FmtTime.Long): T;
   END;
   Private <: VBT.Leaf;
@@ -31,6 +31,6 @@ TYPE
 (* "FmtProc" is the same signature as the time display
    routines in the "FmtTime" interface. *)
 
-  
+
 END ClockVBT.
 

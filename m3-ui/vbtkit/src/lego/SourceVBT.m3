@@ -118,7 +118,7 @@ PROCEDURE BeTarget (w: VBT.T; class: TargetClass) =
     VBT.PutProp (w, p);
     class.vbt := w
   END BeTarget;
-  
+
 PROCEDURE IsTarget (w: VBT.T): BOOLEAN =
   BEGIN
     RETURN VBT.GetProp(w, TYPECODE(Prop)) # NIL
@@ -220,7 +220,7 @@ PROCEDURE GetSource (w: Target): T =
 
 TYPE
   DefaultTC = TargetClass OBJECT
-                hl: HighlightVBT.T; 
+                hl: HighlightVBT.T;
                 op: PaintOp.T;
               OVERRIDES
                 normal  := Normal;
@@ -329,7 +329,7 @@ PROCEDURE Center (READONLY r: Rect.T; p: Point.T): Rect.T =
     IF Word.And(p.v, 1) = 1 THEN DEC(p.v) END;
     WITH
       h = p.h - ((r.west + r.east) DIV 2),
-      v = p.v - ((r.north + r.south) DIV 2) 
+      v = p.v - ((r.north + r.south) DIV 2)
     DO
       RETURN Rect.MoveHV(r, h, v)
     END
@@ -340,7 +340,7 @@ VAR
   rsrcInit               := FALSE;
   MovingCursor: Cursor.T;
   Grid: Pixmap.T;
-  
+
 PROCEDURE GetResources () =
   BEGIN
     LOCK rsrcMu DO

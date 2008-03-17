@@ -25,7 +25,7 @@ BEGIN
     src := Pixmap.FromBitmap (raw);
   END;
 
-  WITH v = NEW (VBT.Leaf, repaint := Repaint) DO 
+  WITH v = NEW (VBT.Leaf, repaint := Repaint) DO
     Trestle.Install(v);
     Trestle.AwaitDelete(v);
   END

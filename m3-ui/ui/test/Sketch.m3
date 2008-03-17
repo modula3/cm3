@@ -15,8 +15,8 @@ IMPORT VBT, Trestle, Point, Rect, Path, ButtonVBT, PaintOp,
 
 FROM VBT IMPORT ClickType;
 
-TYPE Elem = RECORD 
-    fill: BOOLEAN; 
+TYPE Elem = RECORD
+    fill: BOOLEAN;
     color: Pixmap.T;
     path: Path.T;
     width: CARDINAL
@@ -50,7 +50,7 @@ PROCEDURE Dot(v: DrawVBT; READONLY p: Point.T; READONLY clip: Rect.T) =
     Path.Reset(v.dotPath);
     Path.MoveTo(v.dotPath, p);
     VBT.Stroke(v, clip, v.dotPath, src := v.txtr, width := 5,
-      op := PaintOp.TransparentSwap);  
+      op := PaintOp.TransparentSwap);
   END Dot;
 
 PROCEDURE Repaint(v: DrawVBT; READONLY rgn: Region.T) =
@@ -73,7 +73,7 @@ PROCEDURE Reshape(v: DrawVBT; READONLY cd: VBT.ReshapeRec) =
   BEGIN
     InnerReshape(v, Rect.Middle(cd.new), Rect.Middle(cd.prev))
   END Reshape;
-  
+
 PROCEDURE InnerReshape(v: DrawVBT; READONLY new, old: Point.T) =
   VAR delta := Point.Sub(new, old); BEGIN
     FOR i := 0 TO v.m - 1 DO
@@ -135,7 +135,7 @@ PROCEDURE Key(v: DrawVBT; READONLY cd: VBT.KeyRec) =
     END
   END Key;
 
-PROCEDURE DoErase(<*UNUSED*>b: ButtonVBT.T; 
+PROCEDURE DoErase(<*UNUSED*>b: ButtonVBT.T;
   <*UNUSED*>READONLY cd: VBT.MouseRec) =
   BEGIN
     Path.Reset(drawVBT.path);
@@ -144,13 +144,13 @@ PROCEDURE DoErase(<*UNUSED*>b: ButtonVBT.T;
     Repaint(drawVBT, Region.Full)
   END DoErase;
 
-PROCEDURE DoExit(<*UNUSED*>b: ButtonVBT.T; 
+PROCEDURE DoExit(<*UNUSED*>b: ButtonVBT.T;
   <*UNUSED*>READONLY cd: VBT.MouseRec) =
   BEGIN
     Trestle.Delete(main);
   END DoExit;
 
-PROCEDURE ToggleStroke(b: ButtonVBT.T; 
+PROCEDURE ToggleStroke(b: ButtonVBT.T;
   <*UNUSED*>READONLY cd: VBT.MouseRec) =
   VAR current := TextVBT.Get(Filter.Child(b)); BEGIN
     IF Text.Equal(current, "Stroke") THEN
@@ -191,8 +191,8 @@ PROCEDURE ToggleWidth(b: ButtonVBT.T; <*UNUSED*>READONLY cd: VBT.MouseRec) =
     Highlight(drawVBT)
   END ToggleWidth;
 
-VAR 
-  drawVBT := NEW(DrawVBT, path := NEW(Path.T), dotPath := NEW(Path.T), 
+VAR
+  drawVBT := NEW(DrawVBT, path := NEW(Path.T), dotPath := NEW(Path.T),
     display := NEW(REF ARRAY OF Elem, 10));
   menuBar := ButtonVBT.MenuBar(
     ButtonVBT.New(TextVBT.New("Erase"), DoErase),
@@ -203,7 +203,7 @@ VAR
   main := HVSplit.Cons(Axis.T.Ver, menuBar, drawVBT, adjustable := FALSE);
 
 <*FATAL ANY*>
-BEGIN 
+BEGIN
   Trestle.Install(main);
   Trestle.AwaitDelete(main)
 END Sketch.

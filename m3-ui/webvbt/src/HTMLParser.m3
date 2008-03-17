@@ -76,7 +76,7 @@ BEGIN
              tagType = Element.T.Body THEN
              (* We ignore these tags. *)
           ELSE
-            (* This is bad HTML -- we got a </foo>, but we 
+            (* This is bad HTML -- we got a </foo>, but we
                were not parsing a sequence starting with <foo>.
                silently ignore this and hope for the best... *)
           END;
@@ -100,10 +100,10 @@ PROCEDURE SequenceEndCondition(tagType: Element.T;
 BEGIN
   CASE endCondition OF
 
-  | EndCondition.EOF => 
+  | EndCondition.EOF =>
       RETURN FALSE;
 
-  | EndCondition.EndTag => 
+  | EndCondition.EndTag =>
       RETURN tagType = endTag AND tok.end;
 
   | EndCondition.ListItem =>
@@ -366,7 +366,7 @@ VAR tags: CITextElementTbl.T;
  (* The HTML element tag table.  We use this table to store
     the element tags for quick (hashed) lookup during parsing. *)
 
-BEGIN 
+BEGIN
   tags := NEW(CITextElementTbl.Default).init(50);
   FOR i := FIRST(Element.T) TO LAST(Element.T) DO
     EVAL tags.put(Element.Strings[i], i);

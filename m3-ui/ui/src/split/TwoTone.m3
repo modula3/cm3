@@ -6,13 +6,13 @@
 <*PRAGMA LL*>
 
 MODULE TwoTone;
-IMPORT PaintOp, Pixmap, Point, Palette, Rect, 
+IMPORT PaintOp, Pixmap, Point, Palette, Rect,
        ScreenType, ScrnPaintOp, ScrnPixmap, VBT;
 
 TYPE
   PMClosure = Palette.PixmapClosure OBJECT
     pm: Pixmap.T
-  METHODS OVERRIDES 
+  METHODS OVERRIDES
     apply := PMApply
   END;
 

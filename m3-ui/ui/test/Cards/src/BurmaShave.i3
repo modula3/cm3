@@ -13,10 +13,10 @@ INTERFACE BurmaShave;
 IMPORT VBT;
 
 TYPE
-  T <: Public; 
-  Private <: VBT.Leaf; 
+  T <: Public;
+  Private <: VBT.Leaf;
   Public =  Private OBJECT METHODS init(): T END;
-  
+
 PROCEDURE New(): T RAISES {};
 
 END BurmaShave.

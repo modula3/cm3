@@ -14,12 +14,12 @@ PROCEDURE Equal(t, u: T): BOOLEAN =
     lu: CARDINAL := Text.Length(u);
     i: CARDINAL := 0;
   BEGIN
-    IF lt = lu THEN 
+    IF lt = lu THEN
       WHILE i<lt DO
-        IF ASCII.Upper[Text.GetChar(t, i)] # 
-           ASCII.Upper[Text.GetChar(u, i)] THEN 
-          RETURN FALSE 
-        ELSE INC(i) 
+        IF ASCII.Upper[Text.GetChar(t, i)] #
+           ASCII.Upper[Text.GetChar(u, i)] THEN
+          RETURN FALSE
+        ELSE INC(i)
         END;
       END;
       RETURN TRUE;
@@ -33,12 +33,12 @@ PROCEDURE Hash (t: T): Word.T =
     u   := Text8.Create(len);
   BEGIN
     u.contents[len] := '\000';
-    FOR i := 0 TO Text.Length(t) - 1 DO  
+    FOR i := 0 TO Text.Length(t) - 1 DO
       u.contents[i] := ASCII.Upper[Text.GetChar(t, i)]
     END;
     RETURN Text.Hash(u);
   END Hash;
 
-BEGIN 
+BEGIN
 END CIText.
 

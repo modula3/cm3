@@ -10,7 +10,7 @@ INTERFACE LargeCursor;
 
 IMPORT Cursor;
 
-VAR 
+VAR
   NWArrow: Cursor.T;
 
 END LargeCursor.

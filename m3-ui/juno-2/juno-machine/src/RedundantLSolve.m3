@@ -41,8 +41,8 @@ VAR
   Prec := 3;
   FieldWidth := Prec + 8;
 
-VAR 
-  c1 := 0.66; 
+VAR
+  c1 := 0.66;
   c2 := 0.5;
 
 (* The constants "c1" and "c2" are used in the Veach Heuristic. *)
@@ -364,8 +364,8 @@ PROCEDURE P(
      of the row that is required in order to get "c1" of the L1 norm
      of the residual. The procedure returns the number of rows to
      ignore. *)
-   VAR 
-     residnorm := 0.0; 
+   VAR
+     residnorm := 0.0;
      goal: REAL;
      numToUse: CARDINAL;
      pivtotal := 0.0;
@@ -384,7 +384,7 @@ PROCEDURE P(
        INC(numToUse)
      END;
      (* Now the sum of the residuals in the first "numToUse" rows is
-        at least "goal"; or else "numToUse=m".  Use any additional rows 
+        at least "goal"; or else "numToUse=m".  Use any additional rows
         whose pivots are not too small; that is, not smaller than "c2" times
         the average magnitude of one of the pivots in use: *)
      IF numToUse > 0 THEN
@@ -419,7 +419,7 @@ PROCEDURE P(
       maxRow, maxCol: CARDINAL;
     CONST
       Epsilon = 1.0E-6;
-      (* Pivots must have magnitude at least "Epsilon". *) 
+      (* Pivots must have magnitude at least "Epsilon". *)
     BEGIN
       WHILE rc < MIN(m, n) DO
         IF UseCompletePivoting THEN
@@ -451,13 +451,13 @@ PROCEDURE P(
       Wr.PutChar(logWr, '\n');
       ShowMatrix(m, n + 1, a, "Row-Echelon Matrix");
     END;
-    rc := VeachHeuristic();   
-    IF debug >= 2 THEN 
+    rc := VeachHeuristic();
+    IF debug >= 2 THEN
       LogT("number of rows to use: ");
       IO.PutInt(rc, logWr);
       LogT("\n")
     END;
-    IF rc = 0 THEN 
+    IF rc = 0 THEN
       FOR i := 0 TO n - 1 DO x[i] := 0.0 END
     END;
     (* Back-propagate solution values *)

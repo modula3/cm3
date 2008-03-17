@@ -74,7 +74,7 @@ BEGIN
 END BorderedFeedbackVBT.
 
 
-(* 
+(*
 MODULE BorderedFeedbackVBT;
 
 IMPORT BorderedVBT, FeedbackVBT, Filter, MultiClass, PaintOp,

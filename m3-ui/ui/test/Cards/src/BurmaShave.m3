@@ -11,28 +11,28 @@
 
 MODULE BurmaShave;
 
-IMPORT TextVBT, Filter, FilterClass, Thread, VBT, Rect, 
+IMPORT TextVBT, Filter, FilterClass, Thread, VBT, Rect,
 VBTClass;
 
-REVEAL 
+REVEAL
   Private = Filter.T BRANDED OBJECT END;
-  T = Public BRANDED OBJECT 
-    die, dead := TRUE; 
-  OVERRIDES 
-    reshape := Reshape; 
-    rescreen := Rescreen; 
-    init := Be 
+  T = Public BRANDED OBJECT
+    die, dead := TRUE;
+  OVERRIDES
+    reshape := Reshape;
+    rescreen := Rescreen;
+    init := Be
   END;
 
-TYPE AnimateClosure = Thread.SizedClosure OBJECT v: T 
+TYPE AnimateClosure = Thread.SizedClosure OBJECT v: T
   OVERRIDES apply := Animate END;
 
 PROCEDURE Reshape(v: T; READONLY cd: VBT.ReshapeRec) RAISES {} =
   BEGIN
     v.die := Rect.IsEmpty(cd.new);
-    IF v.dead AND NOT v.die THEN 
+    IF v.dead AND NOT v.die THEN
       v.dead := FALSE; EVAL Thread.Fork(NEW(AnimateClosure, v := v,
-        stackSize := 20000)) 
+        stackSize := 20000))
     END;
     Filter.T.reshape(v, cd);
   END Reshape;
@@ -54,7 +54,7 @@ PROCEDURE Animate(cl: AnimateClosure): REFANY RAISES {} =
       Thread.Pause(1.0d0)
     END
   END Animate;
-  
+
 PROCEDURE Rescreen(v: T; READONLY cd: VBT.RescreenRec) RAISES {} =
   BEGIN
     v.die := TRUE;
@@ -63,7 +63,7 @@ PROCEDURE Rescreen(v: T; READONLY cd: VBT.RescreenRec) RAISES {} =
 
 PROCEDURE New(): T = VAR t := NEW(T); BEGIN RETURN Be(t) END New;
 
-PROCEDURE Be(v: T): T = 
+PROCEDURE Be(v: T): T =
   BEGIN RETURN Filter.T.init(v, TextVBT.New("Burma")) END Be;
 
 BEGIN END BurmaShave.

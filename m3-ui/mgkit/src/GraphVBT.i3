@@ -40,7 +40,7 @@ INTERFACE GraphVBT;
 
    All positions and sizes are given in world coordinates.
 
-   The preferred size is the size of the graph vbt when it is first created.  
+   The preferred size is the size of the graph vbt when it is first created.
    Any changes by the user to the size of the window take precedence.
    The world coordinate system is automatically scaled to fit the current
    size of the window and all objects and fonts are scaled appropriately.
@@ -66,7 +66,7 @@ INTERFACE GraphVBT;
    size and colors of the vertex.  The vertex has an optional inset border
    of a specified size and color.
 
-   The actual point size of the font used to display the label is the 
+   The actual point size of the font used to display the label is the
    closest available font size to the scaled world size.
 
    Edges are painted as colored lines connecting the centers of their
@@ -140,7 +140,7 @@ INTERFACE GraphVBT;
    should be 0; for subsequent animations for the same event, t0 should be
    the previous animation's t1.
 
-   If t0 = t1, the animation appears to happen immediately. 
+   If t0 = t1, the animation appears to happen immediately.
 
    Animations may be aborted by a Thread.Alert on the thread that called
    graph.animate.  The animation checks for an alert at the end of each frame in
@@ -178,8 +178,8 @@ INTERFACE GraphVBT;
 
    Vertices' inset borders are drawn in fontColor, nor borderColor.
 
-   The verticesAt/edgesAt/vertexHighlightsAt/polygonsAt operations have an 
-   internal model distinct from the actual renderer's, and sometimes return 
+   The verticesAt/edgesAt/vertexHighlightsAt/polygonsAt operations have an
+   internal model distinct from the actual renderer's, and sometimes return
    the wrong answers near boundaries.
 
    GraphVBT must be used under Zeus. *)
@@ -305,7 +305,7 @@ TYPE
     END;
 
 TYPE
-  Slant = {Roman, Italic, Oblique, ReverseItalic, 
+  Slant = {Roman, Italic, Oblique, ReverseItalic,
     ReverseOblique, Other, Any};
 
 TYPE
@@ -326,7 +326,7 @@ TYPE
       (* READONLY after initialization: one of two MUST be initialized by
          client *)
       <* LL >= {SELF.graph.mu} *>
-      size := R2.T{0.0, 0.0};  (* the vertex's h and v siz.  
+      size := R2.T{0.0, 0.0};  (* the vertex's h and v siz.
                                   use "setSize" to update. *)
 
       (* READONLY after initialization: MAY be initialized by client *)
@@ -343,7 +343,7 @@ TYPE
                                              label (the default is white).
                                              use "setFontColor" to
                                              update. *)
-      border := 0.0;          (* the vertex's inset border size.  
+      border := 0.0;          (* the vertex's inset border size.
                                  use "setBorder" to  update. *)
       borderColor: PaintOp.T := PaintOp.Fg; (* the tint for the vertex's
                                                inset border (the default is
@@ -447,7 +447,7 @@ TYPE
 
 VAR (* CONST *)
   DefaultFont: WorldFont;
-  (* "DefaultFont" will appear as a 10pt helvetica font in the default 
+  (* "DefaultFont" will appear as a 10pt helvetica font in the default
       world configuration:
       self.world = {0, 1, 0, 1} and preferred size = {100, 100}.
 
@@ -510,7 +510,7 @@ TYPE
       <* LL.sup = SELF.graph.mu *>
       toFront (zOrder := ZOrder.Normal);
 
-      (* "toBack" moves the edge to the back of the other edges, the 
+      (* "toBack" moves the edge to the back of the other edges, the
          foreground or the background objects. *)
       <* LL.sup = SELF.graph.mu *>
       toBack (zOrder := ZOrder.Normal);
@@ -585,8 +585,8 @@ TYPE
     OBJECT
       (* READONLY after initialization: MUST be initialized by client *)
       <* LL >= {SELF.vertices.head.graph.mu} *>
-      vertices: RefList.T (* OF Vertex or List of 3 Vertices *);  
-        (* specifies the edges defining the polygon.  A vertex 
+      vertices: RefList.T (* OF Vertex or List of 3 Vertices *);
+        (* specifies the edges defining the polygon.  A vertex
            indicates a straight edge from the end point of the previous edge.
            A list of 3 vertices indicates a bezier edge.  The first 2
            vertices are the control vertices of the edge and the third vertex
@@ -607,7 +607,7 @@ TYPE
 
       (* "move" connects the polygon to new vertices in the same graph. *)
       <* LL.sup = RefList.First(SELF.vertices).graph.mu *>
-      move (vertices: RefList.T (* OF Vertex or List of 3 vertices *); 
+      move (vertices: RefList.T (* OF Vertex or List of 3 vertices *);
             animated: BOOLEAN := FALSE;
             start := 0.0; stop := 1.0); (* if animated, the timing of the animation *)
 
@@ -620,7 +620,7 @@ TYPE
       <* LL.sup = SELF.graph.mu *>
       toFront (zOrder := ZOrder.Normal);
 
-      (* "toBack" moves the polygon to the back of the other polygons, the 
+      (* "toBack" moves the polygon to the back of the other polygons, the
          foreground or the background objects. *)
       <* LL.sup = SELF.graph.mu *>
       toBack (zOrder := ZOrder.Normal);
@@ -651,7 +651,7 @@ TYPE
   (* An AnimationPath can specify the path a vertex takes when it is
      animated.  Its "pos" method maps a time between 0.0 and 1.0 onto a
      position in world coordinates. *)
-  AnimationPath = OBJECT 
+  AnimationPath = OBJECT
   METHODS
     <* LL.sup = {vertex.graph.mu, vertex.graph.mgv.mu *>
     pos (t: REAL): R2.T;

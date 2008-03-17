@@ -19,17 +19,17 @@ PROCEDURE Delete (path: TEXT) RAISES {FileError} =
     TRY
       FS.DeleteFile (path);
     EXCEPT
-      OSError.E (e) => 
+      OSError.E (e) =>
       RAISE FileError (AtomListToText (e));
     END;
   END Delete;
-  
+
 PROCEDURE MakeDir (path: TEXT) RAISES {FileError} =
   BEGIN
     TRY
       FS.CreateDirectory (path);
     EXCEPT
-      OSError.E (e) => 
+      OSError.E (e) =>
       RAISE FileError (AtomListToText (e));
     END;
   END MakeDir;

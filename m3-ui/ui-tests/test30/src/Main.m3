@@ -19,7 +19,7 @@ IMPORT Point, VBT, Rect, Axis, PaintOp, Region, Trestle, TrestleComm,
 
 
 PROCEDURE P(): Pixmap.T =
-  VAR 
+  VAR
     r := ScrnPixmap.NewRaw (1, Rect.FromSize(20, 20));
   BEGIN
     FOR v := 0 TO 19 DO

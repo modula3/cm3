@@ -11,7 +11,7 @@
 
 PROCEDURE SetNumericHints(READONLY c: ARRAY OF Constraint) =
 (* We say an equivalence class "ec" {\it occurs} in a constraint if "ec"
-   is unhinted and contains a variable appearing in the constraint. 
+   is unhinted and contains a variable appearing in the constraint.
 
    Q1: For each constraint in "c", "c.hintCnt" is the number of distinct
        equivalence classes occurring in "c". The constraints with "hintCnt" 1
@@ -55,7 +55,7 @@ PROCEDURE SetNumericHints(READONLY c: ARRAY OF Constraint) =
     WHILE hintReady # NIL DO
       IF hintReady.hintCnt = 0 THEN
         (* Skip over constraints on the queue whose constraints were 1 when
-           they were added, but have since been decremented to 0. *) 
+           they were added, but have since been decremented to 0. *)
         hintReady := hintReady.next
       ELSE
         <* ASSERT hintReady.hintCnt = 1 *>

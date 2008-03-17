@@ -12,7 +12,7 @@ INTERFACE WebVBT;
 
 IMPORT HTML, HTMLVBT, TextEditVBT, TextList, PixmapVBT, VBT, Web;
 
-CONST 
+CONST
   DefaultURL = "http://www.research.digital.com/SRC/home.html";
 
 TYPE
@@ -33,10 +33,10 @@ TYPE
                     reload   : BOOLEAN := FALSE;
                     server   : Web.T   := NIL;
                     scrollBar: BOOLEAN := TRUE);
-             fromText (contents      : TEXT; 
+             fromText (contents      : TEXT;
                        contentType   : Web.MIMEType := Web.MIMEType.Text;
                        contentSubType: TEXT         := "html";
-                       url           : TEXT         := "text:"; 
+                       url           : TEXT         := "text:";
                        style         : Style        := Style.Normal;
                        zippers       : BOOLEAN      := FALSE;
                        reload        : BOOLEAN      := FALSE;
@@ -122,7 +122,7 @@ TYPE
 
   Page = Web.Page OBJECT END;
 
-  TextPage = Page OBJECT 
+  TextPage = Page OBJECT
     vbt: TextEditVBT.T
   END;
 

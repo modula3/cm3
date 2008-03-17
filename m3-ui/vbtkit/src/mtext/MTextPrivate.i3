@@ -64,5 +64,5 @@ TYPE
     END;
 
 PROCEDURE Check (VAR start, end: CARDINAL; actualLength: CARDINAL);
-   
+
 END MTextPrivate.

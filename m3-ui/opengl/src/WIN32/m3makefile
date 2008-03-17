@@ -9,7 +9,7 @@
 /* Vendor-Independent:  gl.h glu.h glx.h                                     */
 /* Vendor-Dependent:    glxdecproto.h glxint.h glxmd.h glxproto.h            */
 
-import ("libm3") 
+import ("libm3")
 
 Interface ("GL")
 Interface ("GLu")

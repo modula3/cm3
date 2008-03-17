@@ -62,7 +62,7 @@ PROCEDURE UnparseDisplay (READONLY d: Display): TEXT =
     RETURN Fmt.F ("%s%s%s.%s", d.hostname, colons [d.DECnet],
                   Fmt.Int (d.display), Fmt.Int (d.screen))
   END UnparseDisplay;
-  
+
 PROCEDURE ParseGeometry (t: TEXT): Geometry RAISES {Error} =
   CONST
     VertexMap = ARRAY BOOLEAN, BOOLEAN OF
@@ -129,7 +129,7 @@ PROCEDURE UnparseGeometry (READONLY g: Geometry): TEXT =
              & Fmt.Int (ABS (g.dp.h)) & yplus [g.vertex]
              & Fmt.Int (ABS (g.dp.v))
   END UnparseGeometry;
-  
+
 PROCEDURE num (VAR i: CARDINAL; n: CARDINAL; buf: REF ARRAY OF CHAR):
   CARDINAL =
   CONST DIGITS = SET OF CHAR {'0'.. '9'};
@@ -154,13 +154,13 @@ PROCEDURE Position (         trsl: Trestle.T;
           WITH s = array[i].dom DO
             CASE g.vertex OF
             | Rect.Vertex.NW =>
-                RETURN Point.T{v := s.north + g.dp.v, 
+                RETURN Point.T{v := s.north + g.dp.v,
                                h := s.west + g.dp.h}
             | Rect.Vertex.SW =>
                 RETURN Point.T{v := s.south - g.size.v - g.dp.v,
                                h := s.west + g.dp.h}
             | Rect.Vertex.NE =>
-                RETURN Point.T{v := s.north + g.dp.v, 
+                RETURN Point.T{v := s.north + g.dp.v,
                                h := s.east - g.size.h - g.dp.h}
             | Rect.Vertex.SE =>
                 RETURN Point.T{v := s.south - g.size.v - g.dp.v,

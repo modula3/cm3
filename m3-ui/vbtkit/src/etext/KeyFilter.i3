@@ -33,7 +33,7 @@ PROCEDURE IsModifier (c: VBT.KeySym): BOOLEAN;
 | KeyboardKey.Shift_L <= c AND c <= KeyboardKey.Hyper_R
    *)
 
-END KeyFilter. 
+END KeyFilter.
 
 (* A "KeyFilter"'s "apply" method takes a "VBT.T" and a "VBT.KeyRec"
    and may pass them on to the "KeyFilter" in its "next" field,
@@ -104,13 +104,13 @@ END KeyFilter.
 |     TextEditingVBT.T OBJECT
 |         comp: KeyFilter.ComposeChar
 |       OVERRIDES
-|         key := Key 
+|         key := Key
 |       END;
 |   Parent = Keyfilter.T OBJECT
 |                OVERRIDES
 |                   apply := ApplyParent
 |                END;
-| 
+|
 | PROCEDURE Key (v: MyTextEditor; READONLY cd; VBT.KeyRec) =
 |   BEGIN
 |     IF cd.wentDown AND cd.whatChanged # VBT.NoKey THEN
@@ -118,8 +118,8 @@ END KeyFilter.
 |     END
 |   END Key;
 |
-| PROCEDURE ApplyParent (self : MyParent; 
-|                        v    : VBT.T; 
+| PROCEDURE ApplyParent (self : MyParent;
+|                        v    : VBT.T;
 |                        cd   : VBT.KeyRec) =
 |   BEGIN
 |     TextEditingVBT.T.key (v, cd)

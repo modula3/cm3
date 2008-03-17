@@ -51,7 +51,7 @@ PROCEDURE ProbeFile (path: TEXT; error: BOOLEAN): BOOLEAN RAISES {Error} =
     IF val = 0 THEN
       RETURN TRUE
     ELSIF error THEN
-      RaiseError (); 
+      RaiseError ();
       <* ASSERT FALSE *>
     ELSE
       RETURN FALSE
@@ -103,6 +103,6 @@ PROCEDURE Accessible (file: TEXT; modes := SET OF AccessMode {}): BOOLEAN =
     END;
     RETURN access (string, mode) # -1;
   END Accessible;
-  
-BEGIN 
+
+BEGIN
 END UnixUtils.

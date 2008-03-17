@@ -214,7 +214,7 @@ PROCEDURE UpdateDividers (vtext: T) RAISES {} =
       END;
     END;
   END UpdateDividers;
-  
+
 (* UTILITY *)
 
 PROCEDURE CopyOut (vtext: T; r: Region) RAISES {} =

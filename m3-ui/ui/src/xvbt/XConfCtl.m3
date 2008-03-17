@@ -9,7 +9,7 @@
 
 UNSAFE MODULE XConfCtl EXPORTS XConfCtl, TrestleConf;
 
-IMPORT VBT, Trestle, XClient, TrestleImpl, RefSeq, Text, X, TrestleOnX, 
+IMPORT VBT, Trestle, XClient, TrestleImpl, RefSeq, Text, X, TrestleOnX,
   XProperties, TrestleComm;
 
 REVEAL
@@ -225,5 +225,5 @@ PROCEDURE Process (v: VBT.T) =
   END Process;
 
 BEGIN
-END XConfCtl. 
+END XConfCtl.
 

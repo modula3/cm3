@@ -9,19 +9,19 @@
 
 UNSAFE INTERFACE ScreenPaint;
 
-(* The following painting procedures are like the corresponding 
-   procedures in VBT, except that (1) they use screen-dependent 
-   resources rather than screen-independent resources, and (2) it is 
-   an unchecked runtime error to call them without locking the VBT. 
+(* The following painting procedures are like the corresponding
+   procedures in VBT, except that (1) they use screen-dependent
+   resources rather than screen-independent resources, and (2) it is
+   an unchecked runtime error to call them without locking the VBT.
 
-   If the pixmap or paintop supplied for an operation is not suitable 
-   for the VBT's screentype, the effect is undefined, but limited to 
-   the clipping region.  The NIL source represents a bitmap of solid 
-   1's. 
-   
+   If the pixmap or paintop supplied for an operation is not suitable
+   for the VBT's screentype, the effect is undefined, but limited to
+   the clipping region.  The NIL source represents a bitmap of solid
+   1's.
+
    In all cases, LL = v. *)
 
-IMPORT Rect, ScrnPaintOp, ScrnPixmap, Point, Region, ScrnFont, 
+IMPORT Rect, ScrnPaintOp, ScrnPixmap, Point, Region, ScrnFont,
 VBT, Path, Trapezoid;
 
 PROCEDURE PaintTexture(

@@ -59,9 +59,9 @@ PROCEDURE AddChildArray(v: T; READONLY new: ARRAY OF VBT.T) =
 
 PROCEDURE AddChild(v: T;
   new0, new1, new2, new3, new4, new5, new6, new7, new8, new9: VBT.T := NIL) =
-  BEGIN 
-    AddChildArray(v, ARRAY OF VBT.T{new0, new1, new2, new3, new4, 
-      new5, new6, new7, new8, new9}) 
+  BEGIN
+    AddChildArray(v, ARRAY OF VBT.T{new0, new1, new2, new3, new4,
+      new5, new6, new7, new8, new9})
   END AddChild;
 
 PROCEDURE Succ(v: T; ch: VBT.T): VBT.T RAISES {NotAChild} =
@@ -82,14 +82,14 @@ PROCEDURE Nth(v: T; n: CARDINAL): VBT.T RAISES {} =
   END Nth;
 
 PROCEDURE NumChildren(v: T): CARDINAL RAISES {} =
-  BEGIN 
-    RETURN v.index(NIL) 
+  BEGIN
+    RETURN v.index(NIL)
   END NumChildren;
 
 PROCEDURE Index(v: T; ch: VBT.T): CARDINAL RAISES {NotAChild} =
   BEGIN
     IF ch # NIL AND ch.parent # v THEN RAISE NotAChild END;
-    RETURN v.index(ch) 
+    RETURN v.index(ch)
   END Index;
 
 PROCEDURE Locate(v: T; READONLY pt: Point.T): VBT.T RAISES {} =

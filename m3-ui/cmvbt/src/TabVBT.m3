@@ -64,7 +64,7 @@ PROCEDURE Init (self     : T;
        READONLY headings : ARRAY OF TEXT;
        READONLY contents : ARRAY OF VBT.T;
                 tabfnt   : Font.T;
-                shadow   : Shadow.T       ): T = 
+                shadow   : Shadow.T       ): T =
   <* FATAL Split.NotAChild *>
   VAR
     prev: VBT.T := NIL;
@@ -104,7 +104,7 @@ PROCEDURE Init (self     : T;
   END Init;
 
 
-PROCEDURE GetDomains (v: T;  VAR(*OUT*) dom, child: Rect.T) = 
+PROCEDURE GetDomains (v: T;  VAR(*OUT*) dom, child: Rect.T) =
   BEGIN
     dom := VBT.Domain (v);
     child := Rect.Change (dom, dn := v.tab_height + CW,
@@ -285,7 +285,7 @@ PROCEDURE PaintTabs (v: T;  READONLY clip: Rect.T) =
     END;
   END PaintTabs;
 
-PROCEDURE RepaintBorder (v: T; READONLY br: Rect.T) =  
+PROCEDURE RepaintBorder (v: T; READONLY br: Rect.T) =
   VAR  r := VBT.Domain (v);  p, q: Point.T;
   BEGIN
     r.north := r.north + v.tab_height;

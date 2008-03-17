@@ -71,7 +71,7 @@ PROCEDURE WriteKeyRec (wr: Wr.T; READONLY kr: VBT.KeyRec) =
     WriteTimeStamp (wr, kr.time);
     Wr.PutChar (wr, '}')
   END WriteKeyRec;
-  
+
 PROCEDURE WriteMouseRec (wr: Wr.T; READONLY cd: VBT.MouseRec) =
   CONST
     ButtonNames = ARRAY VBT.Button OF
@@ -141,7 +141,7 @@ PROCEDURE WriteCursorPosition (wr: Wr.T; READONLY cp: VBT.CursorPosition) =
                  Fmt.Int (cp.pt.h), Fmt.Int (cp.pt.v), Fmt.Int (cp.screen),
                  Not [cp.gone], Not [cp.offScreen]))
   END WriteCursorPosition;
-  
+
 PROCEDURE WriteTimeStamp (wr: Wr.T; t: VBT.TimeStamp) =
   BEGIN
     Wr.PutText (wr, Fmt.F ("{time %s}", Fmt.Unsigned (t, 10)))

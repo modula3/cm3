@@ -61,8 +61,8 @@ TYPE
    was not "NIL".
 
    Similarly, the method call "mc.insert(pred,new)" implements the
-   operation 
-| MultiSplit.Insert(mc.vbt, pred, new) 
+   operation
+| MultiSplit.Insert(mc.vbt, pred, new)
    Before calling the method, the generic code in "MultiSplit" checks
    that "pred" is a multi-child of "mc.vbt" and calls "BeChild(mc.vbt,
    new)".  If "new" is "NIL", "MultiSplit.Insert" raises a runtime
@@ -90,7 +90,7 @@ TYPE
    reallocating the screen layout of its children) that is not
    ``undone'' by the subsequent call to the "insert" method.
 
-   The method calls 
+   The method calls
 
 | mc.succ(ch)
 | mc.pred(ch)
@@ -144,7 +144,7 @@ PROCEDURE Resolve (v: VBT.T): T;
 PROCEDURE BeChild (v: VBT.T; ch: VBT.T);
 <* LL.sup < ch *>
 (* Make "ch" into one of "v"'s children that is exposed to the
-   client via the "MultiSplit" or "MultiFilter" interfaces.  
+   client via the "MultiSplit" or "MultiFilter" interfaces.
    It is possible for "ch" to
    be a child of more than one multi, and it is possible that
    "ch" is not related to "v" in the VBT hierarchy. *)

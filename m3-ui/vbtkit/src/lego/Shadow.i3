@@ -62,13 +62,13 @@
    VBTkit widgets that use 3-D borders for feedback (say, a button
    that gives the effect of lowering its contents when depressed) are
    implemented in such a way as to give feedback in a non-3-D manner
-   (e.g., the {\tt ShadowedFeedbackVBT} 
-   interface in Section~\ref{ShadowedFeedbackVBTSection}). 
+   (e.g., the {\tt ShadowedFeedbackVBT}
+   interface in Section~\ref{ShadowedFeedbackVBTSection}).
 
-   You can force VBTkit widgets to use a non-3-D style of 
+   You can force VBTkit widgets to use a non-3-D style of
    feedback by specifying a shadow size that is negative. Such widgets
    will draw borders and lines with 50\% of the absoluate value of
-   the shadow size. (You should also be sure to set the light and dark 
+   the shadow size. (You should also be sure to set the light and dark
    shadow to be the same as the foreground color.) *)
 
 
@@ -79,10 +79,10 @@ IMPORT PaintOp, VBT;
 TYPE
   T = PaintOp.ColorScheme OBJECT
         size: REAL;
-        light, dark, both, reversed: PaintOp.T; 
+        light, dark, both, reversed: PaintOp.T;
       END;
 
-TYPE 
+TYPE
   Style = {Flat, Raised, Lowered, Ridged, Chiseled};
 
 PROCEDURE New (size : REAL      := 0.5;

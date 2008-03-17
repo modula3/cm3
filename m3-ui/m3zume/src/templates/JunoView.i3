@@ -6,7 +6,7 @@
 (*      modified on Wed Jun  1 23:58:34 PDT 1994 by mhb     *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 

@@ -827,7 +827,7 @@ PROCEDURE MoveGeometry (frame: T): TEXT =
   VAR g := frame.egrec; d := VBT.Domain (frame.ed);
   BEGIN
     g.dp := Point.Add (g.dp, Displacement [g.vertex]);
-    g.size := Point.T {Rect.HorSize (d), Rect.VerSize (d)}; 
+    g.size := Point.T {Rect.HorSize (d), Rect.VerSize (d)};
     RETURN XParam.UnparseGeometry (g)
   END MoveGeometry;
 
@@ -881,7 +881,7 @@ PROCEDURE OpenDialog (<* UNUSED *> frame: T;
                       <* UNUSED *> time : VBT.TimeStamp) =
   <* LL = VBT.mu *>
   BEGIN
-    (* do nothing; keep the popup just as it was 
+    (* do nothing; keep the popup just as it was
        the last time it was displayed *)
   END OpenDialog;
 
@@ -950,7 +950,7 @@ PROCEDURE OpenInCurrentWindow (frame: T; filename: TEXT) =
     | Thread.Alerted =>
     END
   END OpenInCurrentWindow;
-  
+
 PROCEDURE SaveAndSwitch (frame: T; time: VBT.TimeStamp) =
   <* LL = VBT.mu *>
   VAR ed := frame.ed;
@@ -982,7 +982,7 @@ PROCEDURE EPortError (<* UNUSED *> p  : EPort;
     (* most of the errors are about grabbing focus, so we won't
        bother the user -- mhb 9/22/93: Gripe (p.ed, msg) *)
   END EPortError;
-   
+
 PROCEDURE Gripe (ed: Editor; fmt: TEXT; a, b, c, d, e: TEXT := NIL) =
   <* LL = VBT.mu *>
   BEGIN
@@ -1000,12 +1000,12 @@ PROCEDURE RemoveErrorWindow (cl: Edown): REFANY =
     LOCK VBT.mu DO FormsVBT.PopDown (cl.ed, "errorPopup") END;
     RETURN NIL
   END RemoveErrorWindow;
-      
+
 PROCEDURE LockNGripe (ed: Editor; fmt: TEXT; a, b, c, d, e: TEXT := NIL) =
   <* LL = 0 *>
   BEGIN
     LOCK VBT.mu DO Gripe (ed, fmt, a, b, c, d, e) END
-  END LockNGripe; 
+  END LockNGripe;
 
 PROCEDURE ClearError (ed: Editor) =
   <* LL = VBT.mu *>
@@ -1020,7 +1020,7 @@ PROCEDURE NoteModification (eport: EPort) =
   BEGIN
     SetModified (eport.ed, TRUE)
   END NoteModification;
-  
+
 PROCEDURE SetModified (ed: Editor; value: BOOLEAN) =
   <* LL = VBT.mu *>
   <* FATAL FormsVBT.Error *>
@@ -1192,7 +1192,7 @@ PROCEDURE SxPrintErrorText (ref: REFANY): TEXT =
       RETURN "Unknown Sx.PrintError"
     END
   END SxPrintErrorText;
-  
+
 (******************* Parse ("Do It") Command ******************************)
 
 PROCEDURE Parse (frame: T; <* UNUSED *> time: VBT.TimeStamp := 0) =
@@ -1278,7 +1278,7 @@ PROCEDURE FindRange (t: IntRefTbl.T; form: Sx.T): Range =
     END;
     RETURN NIL
   END FindRange;
-  
+
 PROCEDURE HighlightError (new: FormsVBT.T; frame: T) =
   <* LL = VBT.mu *>
   VAR
@@ -1482,7 +1482,7 @@ PROCEDURE Debug (t: TEXT) =
   BEGIN
     IF doDebug THEN IO.Put (t) END
   END Debug;
-  
+
 BEGIN
   HighlightOptions :=
     VText.MakeIntervalOptions (

@@ -15,9 +15,9 @@ REVEAL T = Public BRANDED OBJECT END; Private = BRANDED OBJECT END;
 
 PROCEDURE ConstructPlanewiseOp(
   pwo: PlaneWiseOracle;
-  READONLY bitOps: ARRAY OF BitOp): T 
+  READONLY bitOps: ARRAY OF BitOp): T
 RAISES {Failure, TrestleComm.Failure} =
-  VAR 
+  VAR
     res := pwo.transparent(); temp: T;
     mask := ARRAY [0..31] OF BOOLEAN {FALSE, ..};
     allones := Word.Minus(Word.Shift(1, NUMBER(bitOps)), 1);
@@ -38,14 +38,14 @@ RAISES {Failure, TrestleComm.Failure} =
       | BitOp.Or => temp := pwo.bgfg(trans,one)
       | BitOp.Nor => temp := pwo.bgfg(swap, zero)
       | BitOp.Equal => temp := pwo.bgfg(swap, trans)
-      | BitOp.Invert => temp := swap 
+      | BitOp.Invert => temp := swap
       | BitOp.NotOr => temp := pwo.bgfg(swap,one)
       | BitOp.NotSrc => temp := pwo.bgfg(one,zero)
-      | BitOp.OrNot => temp := pwo.bgfg(one,trans) 
-      | BitOp.Nand => temp := pwo.bgfg(one,swap) 
+      | BitOp.OrNot => temp := pwo.bgfg(one,trans)
+      | BitOp.Nand => temp := pwo.bgfg(one,swap)
       | BitOp.One => temp := one
       END;
-      IF res = trans THEN 
+      IF res = trans THEN
         res := temp
       ELSIF temp # trans THEN
         res := pwo.planewise(SUBARRAY(mask, 0, NUMBER(bitOps)), res, temp)

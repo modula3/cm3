@@ -42,9 +42,9 @@
    it will override the specified position as necessary to bring it
    into view. It is a checked runtime error to specify scaled
    coordinates (percentages) that are outside the range 0.0--1.0.
-   If the specified position is overriden, or if the subwindow is 
-   not entirely visible when the subwindow is first made visible, 
-   the implementation will also override the reshape method so that 
+   If the specified position is overriden, or if the subwindow is
+   not entirely visible when the subwindow is first made visible,
+   the implementation will also override the reshape method so that
    the subwindow will be repositioned using the information specified
    when it was initialized.
 
@@ -117,13 +117,13 @@ PROCEDURE Grew (v: VBT.T; w, h: INTEGER);
 (* Finally, here are a few "ZSplit" reshape controllers
    that are sometimes useful:  *)
 
-VAR (*CONST*) 
+VAR (*CONST*)
   Scaled: ZSplit.ReshapeControl;
   ScaledHFixed: ZSplit.ReshapeControl;
   ScaledVFixed: ZSplit.ReshapeControl;
   ScaledHVFixed: ZSplit.ReshapeControl;
 
-(* "Scaled" reshapes the child by 
+(* "Scaled" reshapes the child by
    scaling the old child domain to occupy the same relative position
    of the changing parent domain. "ScaledHFixed" does the same, and then
    insets the west and east edges so that the child's width is not

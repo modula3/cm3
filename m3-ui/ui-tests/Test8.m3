@@ -19,7 +19,7 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
     mid := dom.west + dom.east DIV 2;
   BEGIN
     VBT.PaintTint (self, Rect.Full, PaintOp.Bg);
-    VBT.PaintTint (self, 
+    VBT.PaintTint (self,
                    Rect.T{mid - 20, mid + 20, dom.north, dom.south},
                    PaintOp.Fg);
 
@@ -42,7 +42,7 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
     Sub (340, PaintOp.SwapBg, "SwapBg");
     Sub (360, PaintOp.SwapFg, "SwapFg");
     Sub (380, PaintOp.SwapTransparent, "SwapTransparent");
-  
+
     Sub (420, PaintOp.Copy, "Copy");
   END Repaint;
 

@@ -7,7 +7,7 @@
 (*      modified on Tue Jun  9 00:35:21 1992 by mhb         *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 
@@ -32,5 +32,5 @@ TYPE
         ue#(_EVENT_) (#(_ARGSTR_)) RAISES {Thread.Alerted};
 #}
       END;
-      
+
 END #(_ALGNAME_)ViewClass.

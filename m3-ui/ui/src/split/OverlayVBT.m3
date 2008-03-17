@@ -7,7 +7,7 @@
 
 MODULE OverlayVBT;
 
-IMPORT VBTClass, Region, VBT, Rect, ScrnPixmap, Batch, BatchUtil, Filter, 
+IMPORT VBTClass, Region, VBT, Rect, ScrnPixmap, Batch, BatchUtil, Filter,
        BatchRep;
 
 REVEAL

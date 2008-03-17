@@ -63,8 +63,8 @@ CONST
   FollowedColor   = "Purple";
   IsIndexBgColor  = "Pink";
   ErrorColor      = "Red";
- 
-  
+
+
 (********** spacing **********)
 
 CONST
@@ -76,17 +76,17 @@ CONST
 
 (********** fonts **********)
 
-TYPE 
-  FontFamily = {Normal, Fixed}; 
+TYPE
+  FontFamily = {Normal, Fixed};
   FontWeight = {Normal, Bold};
   FontSlant  = {Normal, Slanted};
   FontSize   = {Huge, LARGE, Large, Normal, Small, Tiny};
   FontStyle  = {Plain, Bold, Slanted, BoldSlanted};
-  
+
 CONST
   NormalFontNames = ARRAY FontStyle OF TEXT{
-                            "times_roman", 
-                            "times_bold", 
+                            "times_roman",
+                            "times_bold",
                             "times_italic",
                             "times_bolditalic"};
 
@@ -96,8 +96,8 @@ CONST
 
 
   FixedFontNames = ARRAY FontStyle OF TEXT{
-                            "courier", 
-                            "courier_bold", 
+                            "courier",
+                            "courier_bold",
                             "courier_oblique",
                             "courier_boldoblique"};
 
@@ -116,10 +116,10 @@ CONST
 
 (********** headings **********)
 
-TYPE 
-  HeadingInfo = RECORD 
+TYPE
+  HeadingInfo = RECORD
     preGlue: REAL;
-    postGlue: REAL; 
+    postGlue: REAL;
     fontSize: FontSize;
   END;
 
@@ -132,7 +132,7 @@ TYPE
     bgFg  : PaintOp.ColorQuad;
   END;
 
-CONST 
+CONST
   headingInfo = ARRAY[1..6] OF HeadingInfo {
     (* H1 *) HeadingInfo{10.0, 10.0, FontSize.Huge},
     (* H2 *) HeadingInfo{ 8.0,  8.0, FontSize.LARGE},

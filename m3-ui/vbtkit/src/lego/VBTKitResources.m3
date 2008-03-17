@@ -9,7 +9,7 @@ MODULE VBTKitResources;
 
 IMPORT Image, Pixmap, Rd, Rsrc, Thread, VBTKitBundle;
 
-VAR 
+VAR
   path := Rsrc.BuildPath("$VBTKITPATH", VBTKitBundle.Get());
 
 PROCEDURE Get (name: TEXT): TEXT =

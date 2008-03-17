@@ -64,17 +64,17 @@ PROCEDURE TranslateMove(self: TranslatePathClosure; READONLY pt: Point.T) =
   BEGIN
     Path.MoveTo(self.newPath, Point.Add(pt, self.delta));
   END TranslateMove;
-  
+
 PROCEDURE TranslateLine(self: TranslatePathClosure; <* UNUSED *> READONLY pt1: Point.T; READONLY pt2: Point.T) =
   BEGIN
     Path.LineTo(self.newPath, Point.Add(pt2, self.delta));
   END TranslateLine;
-  
+
 PROCEDURE TranslateClose(self: TranslatePathClosure; <* UNUSED *> READONLY pt1, pt2: Point.T) =
   BEGIN
     Path.Close(self.newPath);
   END TranslateClose;
-  
+
 PROCEDURE TranslateCurve(self: TranslatePathClosure; <* UNUSED *> READONLY pt1: Point.T; READONLY pt2, pt3, pt4: Point.T) =
   BEGIN
     Path.CurveTo(self.newPath, Point.Add(pt2, self.delta), Point.Add(pt3, self.delta), Point.Add(pt4, self.delta));
@@ -128,17 +128,17 @@ TYPE
 PROCEDURE CountMove(<* UNUSED *> self: CountSegmentsClosure; <* UNUSED *> READONLY pt: Point.T) =
   BEGIN
   END CountMove;
-  
+
 PROCEDURE CountLine(self: CountSegmentsClosure; <* UNUSED *> READONLY pt1, pt2: Point.T) =
   BEGIN
     INC(self.n);
   END CountLine;
-  
+
 PROCEDURE CountClose(self: CountSegmentsClosure; READONLY pt1, pt2: Point.T) =
   BEGIN
     CountLine(self, pt1, pt2);
   END CountClose;
-  
+
 PROCEDURE CountCurve(<* UNUSED *> self: CountSegmentsClosure; <* UNUSED *> READONLY pt1, pt2, pt3, pt4: Point.T) =
   BEGIN
   END CountCurve;
@@ -157,18 +157,18 @@ PROCEDURE PathBoundsMove(self: PathBoundsClosure; READONLY pt: Point.T) =
   BEGIN
     self.bounds := Rect.Extend(self.bounds, pt);
   END PathBoundsMove;
-  
+
 PROCEDURE PathBoundsLine(self: PathBoundsClosure; READONLY pt1, pt2: Point.T) =
   BEGIN
     self.bounds := Rect.Extend(self.bounds, pt1);
     self.bounds := Rect.Extend(self.bounds, pt2);
   END PathBoundsLine;
-  
+
 PROCEDURE PathBoundsClose(self: PathBoundsClosure; READONLY pt1, pt2: Point.T) =
   BEGIN
     PathBoundsLine(self, pt1, pt2);
   END PathBoundsClose;
-  
+
 PROCEDURE PathBoundsCurve(self: PathBoundsClosure; READONLY pt1, pt2, pt3, pt4: Point.T) =
   BEGIN
     self.bounds := Rect.Extend(self.bounds, pt1);
@@ -208,7 +208,7 @@ PROCEDURE CreateMove(self: CreateSegmentsClosure; READONLY pt: Point.T) =
 
     self.segments.subPaths[self.current_subpath] := SubPath{pt, NIL, FALSE};
   END CreateMove;
-  
+
 PROCEDURE CreateLine(self: CreateSegmentsClosure; READONLY pt1, pt2: Point.T) =
   VAR
     steps := MAX(ABS(pt1.h - pt2.h), ABS(pt1.v - pt2.v));
@@ -236,13 +236,13 @@ PROCEDURE CreateLine(self: CreateSegmentsClosure; READONLY pt1, pt2: Point.T) =
       END;
     END;
   END CreateLine;
-  
+
 PROCEDURE CreateClose(self: CreateSegmentsClosure; READONLY pt1, pt2: Point.T) =
   BEGIN
     CreateLine(self, pt1, pt2);
     INC(self.current_subpath);
   END CreateClose;
-  
+
 PROCEDURE CreateCurve(<* UNUSED *> self: CreateSegmentsClosure; <* UNUSED *> READONLY pt1, pt2, pt3, pt4: Point.T) =
   BEGIN
     (* Ignore---not present, we hope. *)
@@ -260,7 +260,7 @@ PROCEDURE MakeSegments(v: MG.V; READONLY path: Path.T): Segments =
     EXCEPT
     | Path.Malformed =>
     END;
-        
+
     segments.st := VBT.ScreenTypeOf(v);
 (* !!!
     segments.index := CreateIndex(segments);

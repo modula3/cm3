@@ -17,12 +17,12 @@ HighlightVBT, Split, VBTClass, TrestleComm;
 
 FROM VBT IMPORT ClickType;
 
-REVEAL 
+REVEAL
   T = Public BRANDED OBJECT
     n: CARDINAL;
     anchorParent: VBT.T := NIL;
     hfudge, vfudge: REAL
-  OVERRIDES 
+  OVERRIDES
     mouse := Mouse;
     position := Position;
     init := Be
@@ -30,10 +30,10 @@ REVEAL
 
 TYPE
   AnchorRef = REF RECORD activeAnchor: T END;
-  
+
 PROCEDURE Be(
   v: T;
-  ch: VBT.T; 
+  ch: VBT.T;
   menu: VBT.T;
   n: CARDINAL := 0;
   anchorParent: VBT.T := NIL;
@@ -47,10 +47,10 @@ PROCEDURE Be(
     v.vfudge := vfudge;
     EVAL ButtonVBT.T.init(v, ch, NIL, ref);
     RETURN v
-  END Be; 
-  
+  END Be;
+
 PROCEDURE New(
-  ch: VBT.T; 
+  ch: VBT.T;
   menu: VBT.T;
   n: CARDINAL := 0;
   anchorParent: VBT.T := NIL;
@@ -80,7 +80,7 @@ PROCEDURE Mouse(v: T; READONLY cd: VBT.MouseRec) RAISES {} =
   END Mouse;
 
 PROCEDURE GetAnchorRef(v: T): AnchorRef =
- VAR 
+ VAR
    ref: AnchorRef;
    parent: VBT.T;
  BEGIN
@@ -121,11 +121,11 @@ PROCEDURE GetZSplit(v: T): ZSplit.T =
       END;
       z := z.parent
     END
-  END GetZSplit; 
-    
+  END GetZSplit;
+
 PROCEDURE Activate(v: T; ref: AnchorRef) =
   VAR
-    pt := Point.MoveHV(Rect.SouthWest(VBT.Domain(v)), 
+    pt := Point.MoveHV(Rect.SouthWest(VBT.Domain(v)),
       ROUND(VBT.MMToPixels(v, v.hfudge, Axis.T.Hor)),
       ROUND(VBT.MMToPixels(v, v.vfudge, Axis.T.Ver)));
     z := GetZSplit(v);
@@ -167,9 +167,9 @@ PROCEDURE Shift(READONLY menu, parent: Rect.T): Rect.T =
 
 PROCEDURE MinRect(v: VBT.T; READONLY pt: Point.T): Rect.T =
   BEGIN
-    RETURN 
+    RETURN
       Rect.FromCorner(pt,
-        VBTClass.GetShape(v, Axis.T.Hor, 0).lo, 
+        VBTClass.GetShape(v, Axis.T.Hor, 0).lo,
         VBTClass.GetShape(v, Axis.T.Ver, 0).lo)
   END MinRect;
 
@@ -189,7 +189,7 @@ PROCEDURE Deactivate(v: T) =
       END
     END
   END Deactivate;
-        
+
 PROCEDURE IsActive(v: T): BOOLEAN =
   BEGIN
     IF VBT.Parent(v) = NIL THEN RETURN FALSE END;
@@ -199,21 +199,21 @@ PROCEDURE IsActive(v: T): BOOLEAN =
   END IsActive;
 
 PROCEDURE SetParent(v: T; p: VBT.T) =
-  BEGIN 
+  BEGIN
     IF IsActive(v) THEN Crash() END;
-    v.anchorParent := p 
+    v.anchorParent := p
   END SetParent;
 
 PROCEDURE GetParent(v: T): VBT.T =
   BEGIN RETURN v.anchorParent END GetParent;
-  
-PROCEDURE Set(v: T; n: CARDINAL; 
+
+PROCEDURE Set(v: T; n: CARDINAL;
   hfudge, vfudge: REAL) =
-  BEGIN 
+  BEGIN
     IF IsActive(v) THEN Crash() END;
     v.n := n; v.hfudge := hfudge; v.vfudge := vfudge
   END Set;
-  
+
 PROCEDURE Get(v: T; VAR n: CARDINAL; VAR hfudge, vfudge: REAL) =
   BEGIN
     n := v.n; hfudge := v.hfudge; vfudge := v.vfudge
@@ -228,4 +228,4 @@ PROCEDURE Crash () =
   END Crash;
 
 BEGIN END AnchorBtnVBT.
-    
+

@@ -23,7 +23,7 @@ BEGIN
   Trestle.AwaitDelete(v);
   Trestle.AwaitDelete(w)
   EXCEPT
-    TrestleComm.Failure => 
+    TrestleComm.Failure =>
       Wr.PutText(Stdio.stderr, "Can't contact trestle server")
   END
 END TypeInTest.

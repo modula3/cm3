@@ -8,7 +8,7 @@
 (*      modified on Tue Jun  9 00:35:35 1992 by mhb         *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 
@@ -35,7 +35,7 @@ REVEAL
         ue#(_EVENT_) := #(_EVENT_);
 #}
       END;
-      
+
 PROCEDURE IsCompat(<*UNUSED*> v: T; alg: ZeusClass.T): BOOLEAN =
   <* LL.sup = VBT.mu *>
   BEGIN
@@ -43,25 +43,25 @@ PROCEDURE IsCompat(<*UNUSED*> v: T; alg: ZeusClass.T): BOOLEAN =
   END IsCompat;
 
 #{_OUTPUT
-PROCEDURE #(_EVENT_) (view: T 
+PROCEDURE #(_EVENT_) (view: T
 #{
     ; <*UNUSED*> #(_ARGMODE_)#(_ARGNAME_): #(_ARGTYPE_)
 #}
 ) =
   <* LL.sup < VBT.mu *>
-  BEGIN 
+  BEGIN
     view.evtHandled := FALSE;
   END #(_EVENT_);
 #}
 
 #{_UPDATE
-PROCEDURE #(_EVENT_) (view: T 
+PROCEDURE #(_EVENT_) (view: T
 #{
     ; <*UNUSED*> #(_ARGMODE_)#(_ARGNAME_): #(_ARGTYPE_)
 #}
 ) =
   <* LL.sup = VBT.mu *>
-  BEGIN 
+  BEGIN
     view.evtHandled := FALSE;
   END #(_EVENT_);
 #}

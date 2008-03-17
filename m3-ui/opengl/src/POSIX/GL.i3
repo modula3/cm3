@@ -410,7 +410,7 @@ CONST
   GL_NICEST    = 16_1102;
 
   (* LightName *)
-    
+
   GL_LIGHT0 = 16_4000;
   GL_LIGHT1 = 16_4001;
   GL_LIGHT2 = 16_4002;
@@ -590,7 +590,7 @@ CONST
   GL_TEXTURE_WRAP_T     = 16_2803;
 
   (* TextureWrapMode *)
-  
+
   GL_CLAMP  = 16_2900;
   GL_REPEAT = 16_2901;
 
@@ -599,793 +599,793 @@ CONST
 (* Procedures                                                                *)
 (*****************************************************************************)
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glAccum (op: GLenum; value: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glAlphaFunc (func: GLenum; ref: GLclampf);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glBegin (mode: GLenum);
 
-<*EXTERNAL*> 
-PROCEDURE glBitmap (width : GLsizei; 
-                    height: GLsizei; 
-                    xorig : GLfloat; 
-                    yorig : GLfloat; 
-                    xmove : GLfloat; 
-                    ymove : GLfloat; 
+<*EXTERNAL*>
+PROCEDURE glBitmap (width : GLsizei;
+                    height: GLsizei;
+                    xorig : GLfloat;
+                    yorig : GLfloat;
+                    xmove : GLfloat;
+                    ymove : GLfloat;
                     bitmap: UNTRACED REF ARRAY OF GLubyte);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glBlendFunc (sfactor, dfactor: GLenum);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glCallList (list: GLuint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glCallLists (n: GLsizei; type: GLenum; lists: ADDRESS);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glClear (mask: GLbitfield);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glClearAccum (red, green, blue, alpha: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glClearColor (red, green, blue, alpha: GLclampf);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glClearDepth (depth: GLclampd);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glClearIndex (c: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glClearStencil (s: GLint);
 
-<*EXTERNAL*> 
-PROCEDURE glClipPlane (plane   : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glClipPlane (plane   : GLenum;
                        equation: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3b (red, green, blue: GLbyte);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3bv (v: UNTRACED REF ARRAY OF GLbyte);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3d (red, green, blue: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3dv (v: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3f (red, green, blue : GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3fv (v: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3i (red, green, blue: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3s (red, green, blue: GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3ub (red, green, blue: GLubyte);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3ubv (v: UNTRACED REF ARRAY OF GLubyte);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3ui (red, green, blue: GLuint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3uiv (v: UNTRACED REF ARRAY OF GLuint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3us (red, green, blue: GLushort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor3usv (v: UNTRACED REF ARRAY OF GLushort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4b (red, green, blue, alpha: GLbyte);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4bv (v: UNTRACED REF ARRAY OF GLbyte);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4d (red, green, blue, alpha: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4dv (v: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4f (red, green, blue, alpha: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4fv (v: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4i (red, green, blue, alpha: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4s (red, green, blue, alpha: GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4ub (red, green, blue, alpha: GLubyte);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4ubv (v: UNTRACED REF ARRAY OF GLubyte);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4ui (red, green, blue, alpha: GLuint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4uiv (v: UNTRACED REF ARRAY OF GLuint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4us (red, green, blue, alpha: GLushort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColor4usv (v: UNTRACED REF ARRAY OF GLushort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColorMask (red, green, blue, alpha: GLboolean);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glColorMaterial (face, mode: GLenum);
 
-<*EXTERNAL*> 
-PROCEDURE glCopyPixels (x, y         : GLint; 
-                        width, height: GLsizei; 
+<*EXTERNAL*>
+PROCEDURE glCopyPixels (x, y         : GLint;
+                        width, height: GLsizei;
                         type         : GLenum);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glCullFace (mode: GLenum);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glDeleteLists (list: GLuint; range: GLsizei);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glDepthFunc (func: GLenum);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glDepthMask (flag: GLboolean);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glDepthRange (near, far: GLclampd);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glDisable (cap : GLenum);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glDrawBuffer (mode : GLenum);
 
-<*EXTERNAL*> 
-PROCEDURE glDrawPixels (width, height: GLsizei; 
+<*EXTERNAL*>
+PROCEDURE glDrawPixels (width, height: GLsizei;
                         format, type : GLenum;
                         pixels       : ADDRESS);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEdgeFlag (flag: GLboolean);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEdgeFlagv (flag: UNTRACED REF ARRAY OF GLboolean);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEnable (cap : GLenum);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEnd ();
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEndList ();
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEvalCoord1d (u: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEvalCoord1dv (u: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEvalCoord1f (u: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEvalCoord1fv (u: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEvalCoord2d (u, v: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEvalCoord2dv (u: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEvalCoord2f (u, v: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEvalCoord2fv (u: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEvalMesh1 (mode: GLenum; i1, i2: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEvalMesh2 (mode : GLenum; i1, i2, j1, j2 : GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEvalPoint1 (i: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glEvalPoint2 (i, j: GLint);
 
-<*EXTERNAL*> 
-PROCEDURE glFeedbackBuffer (size  : GLsizei; 
-                            type  : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glFeedbackBuffer (size  : GLsizei;
+                            type  : GLenum;
                             buffer: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glFinish ();
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glFlush ();
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glFogf (pname: GLenum; param: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glFogfv (pname: GLenum; params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glFogi (pname: GLenum; param: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glFogiv (pname: GLenum; params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glFrontFace (mode: GLenum);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glFrustum (left, right, bottom, top, near, far: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glGenLists (range: GLsizei): GLuint;
 
-<*EXTERNAL*> 
-PROCEDURE glGetBooleanv (pname: GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetBooleanv (pname: GLenum;
                          params: UNTRACED REF ARRAY OF GLboolean);
 
-<*EXTERNAL*> 
-PROCEDURE glGetClipPlane (pname   : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetClipPlane (pname   : GLenum;
                           equation: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
-PROCEDURE glGetDoublev (pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetDoublev (pname : GLenum;
                         params: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glGetError (): GLenum;
 
-<*EXTERNAL*> 
-PROCEDURE glGetFloatv (pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetFloatv (pname : GLenum;
                        params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glGetIntegerv (pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetIntegerv (pname : GLenum;
                          params: UNTRACED REF ARRAY OF GLint);
 
 <*EXTERNAL*>
-PROCEDURE glGetLightfv (light : GLenum; 
-                        pname : GLenum; 
+PROCEDURE glGetLightfv (light : GLenum;
+                        pname : GLenum;
                         params: UNTRACED REF ARRAY OF GLfloat);
 
 <*EXTERNAL*>
-PROCEDURE glGetLightiv (light : GLenum; 
-                        pname : GLenum; 
+PROCEDURE glGetLightiv (light : GLenum;
+                        pname : GLenum;
                         params: UNTRACED REF ARRAY OF GLint);
 
 <*EXTERNAL*>
-PROCEDURE glGetMapdv (target: GLenum; 
-                      query : GLenum; 
+PROCEDURE glGetMapdv (target: GLenum;
+                      query : GLenum;
                       v     : UNTRACED REF ARRAY OF GLdouble);
 
 <*EXTERNAL*>
-PROCEDURE glGetMapfv (target: GLenum; 
-                      query : GLenum; 
+PROCEDURE glGetMapfv (target: GLenum;
+                      query : GLenum;
                       v     : UNTRACED REF ARRAY OF GLfloat);
 
 <*EXTERNAL*>
-PROCEDURE glGetMapiv (target: GLenum; 
-                      query : GLenum; 
+PROCEDURE glGetMapiv (target: GLenum;
+                      query : GLenum;
                       v     : UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
-PROCEDURE glGetMaterialfv (face  : GLenum; 
-                           pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetMaterialfv (face  : GLenum;
+                           pname : GLenum;
                            params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glGetMaterialiv (face  : GLenum; 
-                           pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetMaterialiv (face  : GLenum;
+                           pname : GLenum;
                            params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
-PROCEDURE glGetPixelMapfv (map   : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetPixelMapfv (map   : GLenum;
                            values: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glGetPixelMapuiv (map   : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetPixelMapuiv (map   : GLenum;
                             values: UNTRACED REF ARRAY OF GLuint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glGetPixelMapusv (map   : GLenum;
                             values: UNTRACED REF ARRAY OF GLushort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glGetPolygonStipple (mask: UNTRACED REF ARRAY OF GLubyte);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glGetString (name: GLenum): UNTRACED REF ARRAY OF GLubyte;
 
-<*EXTERNAL*> 
-PROCEDURE glGetTexEnvfv (target: GLenum; 
-                         pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetTexEnvfv (target: GLenum;
+                         pname : GLenum;
                          params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glGetTexEnviv (target: GLenum; 
-                         pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetTexEnviv (target: GLenum;
+                         pname : GLenum;
                          params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
-PROCEDURE glGetTexGendv (coord : GLenum; 
-                         pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetTexGendv (coord : GLenum;
+                         pname : GLenum;
                          params: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
-PROCEDURE glGetTexGenfv (coord : GLenum; 
-                         pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetTexGenfv (coord : GLenum;
+                         pname : GLenum;
                          params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glGetTexGeniv (coord : GLenum; 
-                         pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetTexGeniv (coord : GLenum;
+                         pname : GLenum;
                          params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glGetTexImage (target: GLenum;
                          level : GLint;
-                         format: GLenum; 
-                         type  : GLenum; 
+                         format: GLenum;
+                         type  : GLenum;
                          pixels: ADDRESS);
 
-<*EXTERNAL*> 
-PROCEDURE glGetTexLevelParameterfv (target: GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetTexLevelParameterfv (target: GLenum;
                                     level : GLint;
                                     pname : GLenum;
                                     params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glGetTexLevelParameteriv (target: GLenum; 
-                                    level : GLint; 
-                                    pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetTexLevelParameteriv (target: GLenum;
+                                    level : GLint;
+                                    pname : GLenum;
                                     params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
-PROCEDURE glGetTexParameterfv (target: GLenum; 
-                               pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetTexParameterfv (target: GLenum;
+                               pname : GLenum;
                                params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glGetTexParameteriv (target: GLenum; 
-                               pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glGetTexParameteriv (target: GLenum;
+                               pname : GLenum;
                                params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glHint (target: GLenum; mode: GLenum);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glIndexMask (mask: GLuint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glIndexd (c: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glIndexdv (c: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glIndexf (c: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glIndexfv (c: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glIndexi (c: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glIndexiv (c: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glIndexs (c: GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glIndexsv (c: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glInitNames ();
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glIsEnabled (cap: GLenum): GLboolean;
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glIsList (list: GLuint): GLboolean;
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glLightModelf (pname: GLenum; param: GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glLightModelfv (pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glLightModelfv (pname : GLenum;
                           params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glLightModeli (pname: GLenum; param: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glLightModeliv (pname: GLenum; params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glLightf (light: GLenum; pname: GLenum; param: GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glLightfv (light : GLenum; 
-                     pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glLightfv (light : GLenum;
+                     pname : GLenum;
                      params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glLighti (light: GLenum; pname: GLenum; param: GLint);
 
-<*EXTERNAL*> 
-PROCEDURE glLightiv (light : GLenum; 
-                     pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glLightiv (light : GLenum;
+                     pname : GLenum;
                      params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glLineStipple (factor: GLint; pattern: GLushort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glLineWidth (width: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glListBase (base: GLuint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glLoadIdentity ();
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glLoadMatrixd (m: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glLoadMatrixf (m: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glLoadName (name: GLuint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glLogicOp (opcode: GLenum);
 
-<*EXTERNAL*> 
-PROCEDURE glMap1d (target       : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glMap1d (target       : GLenum;
                    u1, u2       : GLdouble;
                    stride, order: GLint;
                    points       : UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
-PROCEDURE glMap1f (target       : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glMap1f (target       : GLenum;
                    u1, u2       : GLfloat;
                    stride, order: GLint;
                    points       : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glMap2d (target         : GLenum; 
-                   u1, u2         : GLdouble; 
+<*EXTERNAL*>
+PROCEDURE glMap2d (target         : GLenum;
+                   u1, u2         : GLdouble;
                    ustride, uorder: GLint;
-                   v1, v2         : GLdouble; 
+                   v1, v2         : GLdouble;
                    vstride, vorder: GLint;
                    points         : UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
-PROCEDURE glMap2f (target         : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glMap2f (target         : GLenum;
                    u1, u2         : GLfloat;
                    ustride, uorder: GLint;
-                   v1, v2         : GLfloat; 
+                   v1, v2         : GLfloat;
                    vstride, vorder: GLint;
                    points         : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glMapGrid1d (un: GLint; u1, u2: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glMapGrid1f (un: GLint; u1, u2: GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glMapGrid2d (un: GLint; u1, u2: GLdouble; 
+<*EXTERNAL*>
+PROCEDURE glMapGrid2d (un: GLint; u1, u2: GLdouble;
                        vn: GLint; v1, v2: GLdouble);
 
-<*EXTERNAL*> 
-PROCEDURE glMapGrid2f (un: GLint; u1, u2 : GLfloat; 
+<*EXTERNAL*>
+PROCEDURE glMapGrid2f (un: GLint; u1, u2 : GLfloat;
                        vn: GLint; v1, v2 : GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glMaterialf (face, pname: GLenum; param: GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glMaterialfv (face, pname: GLenum; 
+<*EXTERNAL*>
+PROCEDURE glMaterialfv (face, pname: GLenum;
                         params     : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glMateriali (face, pname: GLenum; param: GLint);
 
-<*EXTERNAL*> 
-PROCEDURE glMaterialiv (face, pname: GLenum; 
+<*EXTERNAL*>
+PROCEDURE glMaterialiv (face, pname: GLenum;
                         params     : UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glMatrixMode (mode: GLenum);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glMultMatrixd (m: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glMultMatrixf (m: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glNewList (list: GLuint; mode: GLenum);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glNormal3b (nx, ny, nz: GLbyte);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glNormal3bv (v: UNTRACED REF ARRAY OF GLbyte);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glNormal3d (nx, ny, nz: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glNormal3dv (v : UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glNormal3f (nx, ny, nz: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glNormal3fv (v : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glNormal3i (nx, ny, nz: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glNormal3iv (v : UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glNormal3s (nx, ny, nz: GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glNormal3sv (v : UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glOrtho (left, right, bottom, top, near, far: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPassThrough (token: GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glPixelMapfv (map    : GLenum; 
-                        mapsize: GLint; 
+<*EXTERNAL*>
+PROCEDURE glPixelMapfv (map    : GLenum;
+                        mapsize: GLint;
                         values : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glPixelMapuiv (map    : GLenum; 
-                         mapsize: GLint; 
+<*EXTERNAL*>
+PROCEDURE glPixelMapuiv (map    : GLenum;
+                         mapsize: GLint;
                          values : UNTRACED REF ARRAY OF GLuint);
 
-<*EXTERNAL*> 
-PROCEDURE glPixelMapusv (map    : GLenum; 
-                         mapsize: GLint; 
+<*EXTERNAL*>
+PROCEDURE glPixelMapusv (map    : GLenum;
+                         mapsize: GLint;
                          values : UNTRACED REF ARRAY OF GLushort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPixelStoref (pname: GLenum; param: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPixelStorei (pname: GLenum; param: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPixelTransferf (pname: GLenum; param: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPixelTransferi (pname: GLenum; param: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPixelZoom (xfactor: GLfloat; yfactor: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPointSize (size: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPolygonMode (face: GLenum; mode: GLenum);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPolygonStipple (mask: UNTRACED REF ARRAY OF GLubyte);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPopAttrib ();
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPopMatrix ();
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPopName ();
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPushAttrib (mask: GLbitfield);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPushMatrix ();
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glPushName (name: GLuint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos2d (x, y: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos2dv (v: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos2f (x, y: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos2fv (v: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos2i (x, y: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos2iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos2s (x, y: GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos2sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos3d (x, y, z: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos3dv (v: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos3f (x, y, z: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos3fv (v: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos3i (x, y, z: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos3iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos3s (x, y, z: GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos3sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos4d (x, y, z, w: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos4dv (v: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos4f (x, y, z, w: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos4fv (v: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos4i (x, y, z, w: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos4iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos4s (x, y, z, w: GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRasterPos4sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glReadBuffer (mode : GLenum);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glReadPixels (x     : GLint;
-                        y     : GLint; 
-                        width : GLsizei; 
-                        height: GLsizei; 
+                        y     : GLint;
+                        width : GLsizei;
+                        height: GLsizei;
                         format: GLenum;
-                        type  : GLenum; 
+                        type  : GLenum;
                         pixels: GLvoidStar);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRectd (x1, y1, x2, y2: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRectdv (v1, v2: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRectf (x1, y1, x2, y2: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRectfv (v1, v2: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRecti (x1, y1, x2, y2: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRectiv (v1, v2: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRects (x1, y1, x2, y2: GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRectsv (v1, v2: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRenderMode (mode: GLenum): GLint;
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRotated (angle, x, y, z: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glRotatef (angle, x, y, z : GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glScaled (x, y, z: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glScalef (x, y, z : GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glScissor (x, y: GLint; width, height: GLsizei);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glSelectBuffer (size: GLsizei; (*OUT*) buffer: UNTRACED REF GLuint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glShadeModel (mode : GLenum);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glStencilFunc (func: GLenum; ref: GLint; mask: GLuint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glStencilMask (mask: GLuint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glStencilOp (fail, zfail, zpass: GLenum);
 
 <*EXTERNAL*>
@@ -1484,167 +1484,167 @@ PROCEDURE glTexCoord4s (s, t, r, q: GLshort);
 <*EXTERNAL*>
 PROCEDURE glTexCoord4sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL*> 
-PROCEDURE glTexEnvf (target: GLenum; 
+<*EXTERNAL*>
+PROCEDURE glTexEnvf (target: GLenum;
                      pname : GLenum;
                      param : GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glTexEnvfv (target: GLenum; 
-                      pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glTexEnvfv (target: GLenum;
+                      pname : GLenum;
                       params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glTexEnvi (target: GLenum; 
+<*EXTERNAL*>
+PROCEDURE glTexEnvi (target: GLenum;
                      pname : GLenum;
                      param : GLint);
 
-<*EXTERNAL*> 
-PROCEDURE glTexEnviv (target: GLenum; 
-                      pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glTexEnviv (target: GLenum;
+                      pname : GLenum;
                       params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glTexGend (coord: GLenum; pname: GLenum; param: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glTexGendv (coord : GLenum;
                       pname : GLenum;
                       params: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glTexGenf (coord: GLenum; pname: GLenum; param: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glTexGenfv (coord : GLenum;
                       pname : GLenum;
                       params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glTexGeni (coord: GLenum; pname: GLenum; param: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glTexGeniv (coord : GLenum;
                       pname : GLenum;
                       params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
-PROCEDURE glTexImage1D (target    : GLenum; 
-                        level     : GLint; 
-                        components: GLint; 
-                        width     : GLsizei; 
-                        border    : GLint; 
-                        format    : GLenum; 
-                        type      : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glTexImage1D (target    : GLenum;
+                        level     : GLint;
+                        components: GLint;
+                        width     : GLsizei;
+                        border    : GLint;
+                        format    : GLenum;
+                        type      : GLenum;
                         pixels    : GLvoidStar);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glTexImage2D (taget             : GLenum;
                         level, components : GLint;
                         width, height     : GLsizei;
                         border            : GLint;
-                        format, type      : GLenum; 
+                        format, type      : GLenum;
                         pixels            : GLvoidStar);
 
-<*EXTERNAL*> 
-PROCEDURE glTexParameterf (target: GLenum; 
+<*EXTERNAL*>
+PROCEDURE glTexParameterf (target: GLenum;
                            pname : GLenum;
                            param : GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glTexParameterfv (target: GLenum; 
-                            pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glTexParameterfv (target: GLenum;
+                            pname : GLenum;
                             params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
-PROCEDURE glTexParameteri (target: GLenum; 
+<*EXTERNAL*>
+PROCEDURE glTexParameteri (target: GLenum;
                            pname : GLenum;
                            param : GLint);
 
-<*EXTERNAL*> 
-PROCEDURE glTexParameteriv (target: GLenum; 
-                            pname : GLenum; 
+<*EXTERNAL*>
+PROCEDURE glTexParameteriv (target: GLenum;
+                            pname : GLenum;
                             params: UNTRACED REF ARRAY OF GLint);
-  
-<*EXTERNAL*> 
+
+<*EXTERNAL*>
 PROCEDURE glTranslated (x, y, z: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glTranslatef (x, y, z : GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex2d (x, y: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex2dv (v : UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex2f (x, y: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex2fv (v : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex2i (x, y: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex2iv (v : UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex2s (x, y: GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex2sv (v : UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex3d (x, y, z: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex3dv (v : UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex3f (x, y, z: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex3fv (v : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex3i (x, y, z: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex3iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex3s (x, y, z: GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex3sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex4d (x, y, z, w: GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex4dv (v: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex4f (x, y, z, w: GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex4fv (v: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex4i (x, y, z, w: GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex4iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex4s (x, y, z, w: GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glVertex4sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 PROCEDURE glViewport (x, y : GLint; width, height : GLsizei);
 
 END GL.

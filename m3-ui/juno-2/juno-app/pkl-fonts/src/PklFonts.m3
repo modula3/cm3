@@ -122,7 +122,7 @@ PROCEDURE ReadCharMetrics(
 
    Each character metric line must have the form:
 
-|    <metrics>  ::= <metric> 
+|    <metrics>  ::= <metric>
 |                 | <metric> <metrics>
 |    <metric>   ::= "N" <charName> ";"
 |                 | "WX" <width> ";"

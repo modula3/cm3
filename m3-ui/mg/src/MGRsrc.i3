@@ -35,7 +35,7 @@ VAR
   defaultScaleable: Font.T;
 
 PROCEDURE ScaleFont(font: Font.T; scale: REAL);
-  (* if "font" is a scaleable font, then ScaleFont(font, scale) will 
+  (* if "font" is a scaleable font, then ScaleFont(font, scale) will
      adjust "font" to display in a font close to the scaled size of
      "font" *)
 

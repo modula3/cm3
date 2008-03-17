@@ -35,7 +35,7 @@ PROCEDURE Connect(
 
 PROCEDURE RegisterConnectClosure(cc: ConnectClosure) =
   BEGIN
-    LOCK mu DO 
+    LOCK mu DO
       cclist := NEW(CCList, cc := cc, link := cclist)
     END
   END RegisterConnectClosure;

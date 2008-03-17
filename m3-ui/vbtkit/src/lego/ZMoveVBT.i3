@@ -26,8 +26,8 @@ IMPORT Rect, SourceVBT;
 
 TYPE T <: SourceVBT.T;
 
-(* The following procedure is useful for subclasses, such as "ZGrowVBT", 
-   to control the shape of the outline of "v"'s subwindow as the 
+(* The following procedure is useful for subclasses, such as "ZGrowVBT",
+   to control the shape of the outline of "v"'s subwindow as the
    mouse is being dragged. *)
 
 PROCEDURE MoveAndHighlight (v: T; READONLY rect: Rect.T);
@@ -50,7 +50,7 @@ PROCEDURE MoveAndHighlight (v: T; READONLY rect: Rect.T);
    "SourceVBT.GetHighlighter(v)".  An appropriate paint op is
    constructed by examing the colors of the background child of
    the subwindow's parent.  Those colors are found using the
-   "VBTColors" interface; be sure to use that interface to 
+   "VBTColors" interface; be sure to use that interface to
    record the background child's primary foreground and background
    colors. *)
 

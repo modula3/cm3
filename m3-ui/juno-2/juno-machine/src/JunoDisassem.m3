@@ -121,7 +121,7 @@ PROCEDURE P(bs: RT.ByteStream; wr: Wr.T) RAISES {Wr.Failure, Thread.Alerted} =
           BC.MULTIPLY, BC.DIVIDE, BC.DIV_, BC.MOD_, BC.NEGATE, BC.ABS_,
           BC.FLOOR_, BC.CEILING_, BC.ROUND_, BC.MAX_, BC.MIN_, BC.ATAN,
           BC.SIN, BC.COS, BC.LN, BC.EXP, BC.REL, BC.CAR, BC.CDR, BC.CAR_CDR,
-          BC.CONCAT => 
+          BC.CONCAT =>
             Label(Marshal.ReadShort(a))
         | BC.CALL, BC.CALLEXT, BC.NEWCL, BC.NEWEXTCL =>
             Num(Marshal.ReadULong(a))

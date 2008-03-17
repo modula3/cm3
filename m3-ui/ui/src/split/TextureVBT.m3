@@ -24,9 +24,9 @@ REVEAL T = Public BRANDED OBJECT
   END;
 
 PROCEDURE Be(
-  v: T; 
-  op: PaintOp.T := PaintOp.BgFg; 
-  txt: Pixmap.T := Pixmap.Solid; 
+  v: T;
+  op: PaintOp.T := PaintOp.BgFg;
+  txt: Pixmap.T := Pixmap.Solid;
   nwAlign: BOOLEAN := FALSE): T =
   BEGIN
     v.op := op;
@@ -36,24 +36,24 @@ PROCEDURE Be(
   END Be;
 
 PROCEDURE New(
-  op: PaintOp.T  := PaintOp.BgFg; 
-  txt: Pixmap.T := Pixmap.Solid; 
+  op: PaintOp.T  := PaintOp.BgFg;
+  txt: Pixmap.T := Pixmap.Solid;
   nwAlign: BOOLEAN := FALSE): T RAISES {} =
   BEGIN
     RETURN Be(NEW(T), op, txt, nwAlign);
   END New;
 
 PROCEDURE Set(
-  v: T;   
-  op: PaintOp.T := PaintOp.BgFg; 
+  v: T;
+  op: PaintOp.T := PaintOp.BgFg;
   txt: Pixmap.T := Pixmap.Solid;
   nwAlign: BOOLEAN := FALSE)
   RAISES {} =
   BEGIN v.op := op; v.txt := txt; v.nwAlign := nwAlign; VBT.Mark(v) END Set;
 
 PROCEDURE Get(
-  v: T;   
-  VAR op: PaintOp.T; 
+  v: T;
+  VAR op: PaintOp.T;
   VAR txt: Pixmap.T;
   VAR nwAlign: BOOLEAN) =
   BEGIN op := v.op; txt := v.txt; nwAlign := v.nwAlign END Get;

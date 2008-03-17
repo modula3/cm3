@@ -5,9 +5,9 @@
 (* Last modified on Mon Feb 24 14:01:20 PST 1992 by muller                   *)
 <*PRAGMA LL*>
 
-(* A "Cursor.T" is a screen-independent specification of a cursor shape. 
+(* A "Cursor.T" is a screen-independent specification of a cursor shape.
    The call "VBT.SetCursor(v, cs)" sets the cursor of "v" to
-   be "cs". 
+   be "cs".
 
    The locking level is "LL.sup <= VBT.mu" for all of the procedures
    in this interface. *)
@@ -18,7 +18,7 @@ IMPORT Pixmap, Point;
 
 TYPE T = RECORD cs: INTEGER END; Predefined = [0..2];
 
-CONST 
+CONST
   DontCare = T{0};
   TextPointer = T{1};
   NotReady = T{2};
@@ -34,14 +34,14 @@ TYPE Raw = RECORD
     color1, color2, color3: RGB;
   END;
   BW = {UseBg, UseFg, UseIntensity};
-  RGB = RECORD 
-    r, g, b: REAL; 
-    gray := -1.0; 
-    bw := BW.UseIntensity 
+  RGB = RECORD
+    r, g, b: REAL;
+    gray := -1.0;
+    bw := BW.UseIntensity
   END;
 
-(* A "Raw" represents a cursor with explicit offset, 
-   bitmaps, and colors.    
+(* A "Raw" represents a cursor with explicit offset,
+   bitmaps, and colors.
 
    The "plane1" and "plane2" are depth-1 pixmaps.  They must
    have the same bounding rectangle, and the hotspot must lie
@@ -67,9 +67,9 @@ TYPE Raw = RECORD
    selection of cursor colors that the screentype supports.  If the
    screentype allows only two colors for the cursor, then the pixels that
    would have been "color3" will be "color1".  The "gray" and "bw"
-   values control the color on gray-scale and monochrome displays, 
+   values control the color on gray-scale and monochrome displays,
    according to the same rule used in "PaintOp.FromRGB".  *)
-     
+
 PROCEDURE FromRaw(READONLY r: Raw): T;
 (* Return a cursor that looks like "r" on all screens. *)
 
@@ -94,8 +94,8 @@ PROCEDURE FromName(READONLY names: ARRAY OF TEXT): T;
 
 | FromName(ARRAY OF TEXT{"XC_arrow"})
 
-   returns a cursor that behaves like the X arrow cursor on 
-   X screentypes, and like "DontCare" on screentypes 
+   returns a cursor that behaves like the X arrow cursor on
+   X screentypes, and like "DontCare" on screentypes
    that have no cursor named "XC_arrow".  *)
 
 END Cursor.

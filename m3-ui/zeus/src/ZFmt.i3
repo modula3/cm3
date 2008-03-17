@@ -8,7 +8,7 @@
 
 (* The procedure in the "ZFmt" interface are intended for use
    as the ``formatting functions'' in "m3zume" event-specification
-   files. The locking-level on all procedures in this interface 
+   files. The locking-level on all procedures in this interface
    is arbitrary. *)
 
 INTERFACE ZFmt;
@@ -23,11 +23,11 @@ PROCEDURE Char(c: CHAR): TEXT;
 (* "ZFmt.Char(c)" returns "Fmt.Char(c)" *)
 
 PROCEDURE Real (r: REAL): TEXT;
-(* "ZFmt.Real(r)" returns 
+(* "ZFmt.Real(r)" returns
      "Fmt.Real(r, style := Fmt.Style.Fix, literal := TRUE)" *)
 
 PROCEDURE LongReal (r: LONGREAL): TEXT;
-(* "ZFmt.LongReal(r)" returns 
+(* "ZFmt.LongReal(r)" returns
      "Fmt.LongReal(r, style := Fmt.Style.Fix, literal := TRUE)" *)
 
 PROCEDURE Text (t: TEXT): TEXT;

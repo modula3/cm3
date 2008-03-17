@@ -217,7 +217,7 @@ TYPE
   ErrorCode = {IsNil, IllegalIndex, IllegalRegion, IllegalCoord,
                 IllegalDividers, IllegalFont, Closed};
 
-(* 
+(*
    IsNil is raised if the vtext passed to a procedure is NIL.
    IllegalIndex indicates a range error (e.g., begin > end).
    IllegalRegion indicates a bad region number or too many regions.

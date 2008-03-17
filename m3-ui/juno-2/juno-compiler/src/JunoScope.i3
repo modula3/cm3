@@ -10,10 +10,10 @@ INTERFACE JunoScope;
 (* A Scope.T is a mapping that associates names with constants, variables,
    predicates, functions, procedures, interfaces, and modules (that is, with
    any of the things that a name can denote in Juno). When an abstract syntax
-   tree (or JunoAST.T) is decorated by the type checker, each node of the AST 
+   tree (or JunoAST.T) is decorated by the type checker, each node of the AST
    that introduces a scope is labelled with a Scope.T that records the
    bindings of the names introduced at that scope level.
-   
+
    Scopes are arranged in a tree structure that reflects their nesting in the
    program text; if a look-up on an identifier fails in a scope, the
    implementation continues by looking up the identifier in the parent scope,
@@ -49,7 +49,7 @@ TYPE
   T <: ROOT;
 
 PROCEDURE New(p: T; size: CARDINAL := 1): T;
-(* Return a new scope with parent scope "p" in which no names are bound. 
+(* Return a new scope with parent scope "p" in which no names are bound.
    If p is NIL, the new scope is a root scope. Initially, the scope is created
    with size "size", but it will grow dynamically to accommodate any number of
    bindings. *)
@@ -61,9 +61,9 @@ PROCEDURE SetParent(scp, parent: T);
 (* Set the parent scope of "scp" to "parent". *)
 
 PROCEDURE Lookup(scp: T; id: Atom.T; localOnly := FALSE): Entity;
-(* Return the entity associated with the name id in the scope scp.  
-   Returns NIL if id is unbound. If localOnly is FALSE, then all 
-   scopes on the path from scp to scp's root are searched in order; 
+(* Return the entity associated with the name id in the scope scp.
+   Returns NIL if id is unbound. If localOnly is FALSE, then all
+   scopes on the path from scp to scp's root are searched in order;
    otherwise only "scp" is searched. *)
 
 PROCEDURE LookupQId(
@@ -84,7 +84,7 @@ PROCEDURE LocalArgs(scp: T; kinds: SET OF ArgKind): JunoAST.IdList;
 EXCEPTION NameClash; NotFound;
 
 PROCEDURE Bind(scp: T; id: Atom.T; e: Entity) RAISES { NameClash };
-(* Bind "id" to "e" in "scp".  This creates a new binding in "scp"; it never 
+(* Bind "id" to "e" in "scp".  This creates a new binding in "scp"; it never
    affects "scp"'s ancestors.  Bind raises the exception "NameClash" if "id"
    is already bound to something in "scp". *)
 

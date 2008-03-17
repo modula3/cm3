@@ -11,8 +11,8 @@ IMPORT Rd;
 TYPE
   Token = OBJECT END;
   CommentToken = Token OBJECT END;
-  WordToken = Token OBJECT 
-    word: TEXT; 
+  WordToken = Token OBJECT
+    word: TEXT;
   END;
   ElementToken = Token OBJECT
     tag: TEXT;

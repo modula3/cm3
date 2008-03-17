@@ -13,7 +13,7 @@ FROM Stdio IMPORT stdin, stdout, stderr;
 <* FATAL Wr.Failure, Thread.Alerted *>
 
 (* SYNTAX
-  
+
    SolveTest
 
    DESCRIPTION
@@ -59,7 +59,7 @@ FROM Stdio IMPORT stdin, stdout, stderr;
    where "x", "y", and "z" are either variables named in one of the
    <var-init-i> lines or literal values as defined below.
 
-   A "literal" must be of the form: 
+   A "literal" must be of the form:
 
 |    <literal> ::= NIL | "text" | number | (<literal> <literal>)
 

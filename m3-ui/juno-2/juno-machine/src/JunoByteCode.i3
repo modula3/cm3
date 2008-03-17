@@ -128,12 +128,12 @@ INTERFACE JunoByteCode;
    "CONG", "PARA": Pop the top two items from the stack and perform a CONG or
    PARA, respectively, on them. If the two elements are the segments "(a, b)"
    and "(c, d)", where "a", "b", "c", and "d" are points, then set the machine
-   flag "cond" iff the two segments are congruent or parallel, respectively. 
+   flag "cond" iff the two segments are congruent or parallel, respectively.
 
    "HOR", "VER": Pop the top two items from the stack and perform a HOR or
    VER, respectively, on them. If the two elements are the points "(a, b)"
    and "(c, d)", where "a", "b", "c", and "d" are reals, then set the machine
-   flag "cond" iff the two segments are horizontal or vertical, respectively. 
+   flag "cond" iff the two segments are horizontal or vertical, respectively.
 
    "NEWCL p": Pushes a new closure value for the procedure in slot "p"
    taking 0 arguments.
@@ -175,7 +175,7 @@ INTERFACE JunoByteCode;
    stack, but leaves the INOUT parameters on the stack. The machine flag
    "cond" is set to TRUE iff the solve was successful.
 
-   "u3" is the total number of constraints to solve for; it must be positive. 
+   "u3" is the total number of constraints to solve for; it must be positive.
    Each constraint in the "constraints" bytes takes the following form:
 
 |    n, uX, [uY, [ uZ ]]

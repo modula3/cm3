@@ -11,10 +11,10 @@
 <*PRAGMA LL*>
 
 (* A "ScrnFont.T" is a handle on a typeface that is valid for some
-   particular screentype, called the {\it owner} of the handle.  All 
+   particular screentype, called the {\it owner} of the handle.  All
    handles have names, which are highly conventionalized strings
    encoding the size, style, and other properties of the typeface. *)
-   
+
 INTERFACE ScrnFont;
 
 IMPORT ScrnPixmap, Rect, TrestleComm, Font, Fingerprint;
@@ -27,7 +27,7 @@ TYPE
   Oracle = Private OBJECT
     METHODS
       <* LL.sup <= VBT.mu *>
-      list(pat: TEXT; maxResults := 1): 
+      list(pat: TEXT; maxResults := 1):
         REF ARRAY OF TEXT RAISES {TrestleComm.Failure};
       match(
         family: TEXT;
@@ -45,7 +45,7 @@ TYPE
         charsetRegistry: TEXT := "ISO8859";
         charsetEncoding: TEXT := "1")
       : REF ARRAY OF TEXT RAISES {TrestleComm.Failure};
-      lookup(name: TEXT): T 
+      lookup(name: TEXT): T
         RAISES {Failure, TrestleComm.Failure};
       builtIn(f: Font.Predefined): T;
     END;
@@ -64,8 +64,8 @@ TYPE
    character.
 
    The arguments to the "match" method specify various font attributes,
-   as explained below.  The method call 
-   
+   as explained below.  The method call
+
 | st.font.match(...)
 
    returns the names of all font handles owned by "st" that match the
@@ -77,21 +77,21 @@ TYPE
    also possible: a "*" matches any number of characters and "?" matches
    a single character.
 
-   The method call 
-   
+   The method call
+
 | st.font.lookup(name)
 
    returns the font handle owned by "st" with the given name.  Generally
    "name" should be one of the names returned by the "list" or
    "match" method.
 
-   The method call 
-   
+   The method call
+
 | st.font.builtIn(f)
 
    returns the screen-dependent font valid for "st" that corresponds
    to the predefined screen-independent font "Font.T{f}".
-   
+
    The locking level for all methods is "LL.sup <= VBT.mu". *)
 
 (* \subsubsection{Font attributes} *)
@@ -104,17 +104,17 @@ TYPE
 
    The argument "family" specifies the family of the typeface.  To find
    out what fonts your X server has, run the "xlsfonts" program.  Most
-   servers support the families "Courier", "Helvetica", and "Times", 
+   servers support the families "Courier", "Helvetica", and "Times",
    among others.
 
-   The argument "pointsize" is ten times the font's size in 
+   The argument "pointsize" is ten times the font's size in
    points; e.g., 120 for a standard 12-point font.
 
-   The argument "slant" is an element of the following enumeration 
+   The argument "slant" is an element of the following enumeration
    type: *)
 
 TYPE
-  Slant = {Roman, Italic, Oblique, ReverseItalic, 
+  Slant = {Roman, Italic, Oblique, ReverseItalic,
     ReverseOblique, Other, Any};
 
 (* whose elements have the following interpretations:
@@ -138,23 +138,23 @@ TYPE
 "Other": None of the above
 
 \medskip\nobulletitem
-"Any": Any of the above (including "Other").  
+"Any": Any of the above (including "Other").
 
 \medskip
 
 The argument "weightName" is the foundry's name for the font's weight;
-e.g.,  "Bold", "DemiBold", or "Medium". 
-       
+e.g.,  "Bold", "DemiBold", or "Medium".
+
 The argument "version" specifies the version of the {\it X Logical
 Font Description Conventions} that describes the format of a font's
 name.  If the argument is omitted, Version 1.3 is assumed.  (Version
 1.3 is the only version as these words are written.)
-   
+
 The argument "foundry" specifies the X registered name for the font's
 foundry, e.g., "Adobe", "B&H", "Bitstream", "DEC".
 
 The argument "width" specifies the foundry's name for the font's width; e.g., "Normal" or "Condensed".
-       
+
 The argument "pixelsize" specifies the size of the font in pixels.
 The size in points depends on the vertical resolution of the device:
 A pixelsize of 20 could represent a 20-point font at 75 pixels per
@@ -166,7 +166,7 @@ screen resolution for which the font is designed, in pixels per inch.
 The argument "spacing" is an element of the following enumeration:
 *)
 
-TYPE Spacing = 
+TYPE Spacing =
   {Proportional, Monospaced, CharCell, Any};
 
 (* whose elements have the following meaning:
@@ -184,7 +184,7 @@ the "VBT" interface.
 arithmetic mean of the widths of all glyphs in the font, measured in
 tenths of a pixel.
 
-The arguments "charsetRegistry" and "charsetEncoding" are the X names of the 
+The arguments "charsetRegistry" and "charsetEncoding" are the X names of the
 font's character set and encoding scheme;  e.g., "ISO8859" and "1" for
 ISO Latin-1 fonts.  See Appendix G of \cite{XSpec}. *)
 
@@ -200,7 +200,7 @@ CONST
    with the screentype that owns the font.  *)
 
 (* \subsubsection{Registering fonts} *)
-  
+
 (* Some screentypes allow the client to register fonts.  The client registers
    the font's strike (bits) and metrics (description) with the "StrikeOracle".
    The name of the font is implied by the attributes in the metrics, so
@@ -210,14 +210,14 @@ TYPE
   StrikeOracle = Oracle OBJECT
     METHODS
       <* LL.sup <= VBT.mu *>
-      load(strike: Strike; metrics: Metrics): T 
+      load(strike: Strike; metrics: Metrics): T
         RAISES {Failure, TrestleComm.Failure};
     END;
 
 (* The method call "st.font.load(strike, metrics)" creates a font
    owned by "st" with the given strike and metrics and returns a handle
    to it.
-   
+
    The "metrics" argument must define all of the initial fields of the
    font metrics record: "family", "pointSize", ..., "isAscii", and
    "defaultChar".  The values "minBounds" and "maxBounds" must be provided
@@ -225,11 +225,11 @@ TYPE
    "load" method will compute them from "charMetrics".  If any of
    the remaining fields have the value "AnyValue", the "load" method
    will compute them. *)
-         
+
 (* \subsubsection{The handle object}  *)
 
-TYPE 
-  T <: Public; 
+TYPE
+  T <: Public;
   Public = OBJECT (*CONST*)
     id: INTEGER;
     metrics: Metrics
@@ -238,7 +238,7 @@ TYPE
 TYPE StrikeFont = T OBJECT
   METHODS <* LL.sup <= VBT.mu *>
     strike(): Strike RAISES {TrestleComm.Failure}
-  END; 
+  END;
 
 TYPE Strike = OBJECT
   METHODS <* LL.sup <= VBT.mu *>
@@ -255,7 +255,7 @@ TYPE Strike = OBJECT
    the character "ch".  This will be empty except for characters in
    the range "[m.firstChar..m.lastChar]", where "m" is the metrics (see
    below) for the font of which "str" is the strike.  *)
-   
+
 PROCEDURE BoundingBox(txt: TEXT; fnt: T): Rect.T;
 <* LL arbitrary *>
 (* Return the smallest rectangle that contains the bounding boxes
@@ -263,13 +263,13 @@ PROCEDURE BoundingBox(txt: TEXT; fnt: T): Rect.T;
    "txt"'s reference point at the origin. *)
 
 PROCEDURE BoundingBoxSub(
-  READONLY txt: ARRAY OF CHAR; 
+  READONLY txt: ARRAY OF CHAR;
   fnt: T): Rect.T;
 <* LL arbitrary *>
 (* Like "BoundingBox" but takes an array instead of a "TEXT". *)
 
 PROCEDURE BoundingBoxSubValid(
-  READONLY txt: ARRAY OF CHAR; 
+  READONLY txt: ARRAY OF CHAR;
   fnt: T; VAR (*OUT*) valid: BOOLEAN): Rect.T;
 <* LL arbitrary *>
 (* Like "BoundingBoxSub" but indicates if all characters in "txt"
@@ -289,7 +289,7 @@ TYPE
     boundingBox: Rect.T;
   END;
   CharMetrics = REF ARRAY OF CharMetric;
-  
+
 (* The "printWidth" of a character is the displacement to the next
    character's reference point.
 
@@ -299,11 +299,11 @@ TYPE
 
 TYPE
   Metrics = OBJECT (*CONST*)
-    family: TEXT; 
+    family: TEXT;
     pointSize: INTEGER;
     slant: Slant;
-    weightName: TEXT; 
-    version: TEXT; 
+    weightName: TEXT;
+    version: TEXT;
     foundry: TEXT;
     width: TEXT;
     pixelsize: INTEGER;
@@ -332,28 +332,28 @@ TYPE
    specify the attributes that were defined for the "lookup" method.
    A value of "*" or "Any" in one of these fields means that the
    corresponding attribute is unknown.
-   
-   The integers "firstChar" and "lastChar" are the indices of the 
-   first and last characters defined in the font. 
-   
+
+   The integers "firstChar" and "lastChar" are the indices of the
+   first and last characters defined in the font.
+
    The array "charMetrics" specifies the metrics of the
-   individual characters.  The metrics for character "ch" 
-   are in "charMetrics[ch-firstChar]".  If all characters have 
+   individual characters.  The metrics for character "ch"
+   are in "charMetrics[ch-firstChar]".  If all characters have
    the same "printWidth" and "boundingBox", then these values
-   are stored in "minBounds" and "maxBounds" and the "charMetrics" 
-   field is "NIL". 
-       
+   are stored in "minBounds" and "maxBounds" and the "charMetrics"
+   field is "NIL".
+
    The flag "selfClearing" indicates whether the font is self-clearing,
    as defined in the "VBT" interface, and the two kerning flags indicate
    the present of right and left kerning in the font.
-       
+
    The flag "isAscii" indicates that character codes 32-126 (base 10)
    have their normal ASCII meanings.
-       
+
    The integer "defaultChar" is the code for the recommended character
    to display in the place of a character that isn't defined for the
    font.
-    
+
    The rectangles "minBounds.boundingBox" and "maxBounds.boundingBox"
    contain the meet and join, respectively, of the bounding boxes of
    all characters in the font when they are positioned with their

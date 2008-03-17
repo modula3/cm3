@@ -8,7 +8,7 @@
 INTERFACE FVFilter;
 
 (* Procedures for controlling the reactivity of FormsVBT "Filter"
-   components. *) 
+   components. *)
 
 IMPORT FormsVBT;
 

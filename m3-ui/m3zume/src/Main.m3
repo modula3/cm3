@@ -51,7 +51,7 @@ CONST
   Obliq_pieces = ARRAY OF TEXT { "ObliqView.i3", NIL, "ObliqView.m3", NIL };
   Obliq_3D_pieces = ARRAY OF TEXT { "Obliq3DView.i3",NIL,"Obliq3DView.m3",NIL};
   Juno_pieces = ARRAY OF TEXT { "JunoView.i3", NIL, "JunoView.m3", NIL };
-  
+
 VAR
   mode         : Mode := Mode.Modula_3;
   template_dir : TEXT := NIL;
@@ -124,7 +124,7 @@ PROCEDURE SetWorkList (READONLY x: ARRAY OF TEXT;   aux: TEXT) =
       IF (aux # NIL) THEN output := aux & output; END;
       work_list := TextList.Cons (output, work_list);
     END;
-    work_list := TextList.ReverseD (work_list);    
+    work_list := TextList.ReverseD (work_list);
   END SetWorkList;
 
 PROCEDURE ProcessFile (fname: TEXT) =

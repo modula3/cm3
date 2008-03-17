@@ -7,7 +7,7 @@
 
 (******************************************************************************
 
-This interface contains PEX definitions, derived from C header files. 
+This interface contains PEX definitions, derived from C header files.
 The following C header files went into the translation:
 
      PEX.h
@@ -21,10 +21,10 @@ The following C header files went into the translation:
      PEXocbuf.h
      MPEXlib.h
 
-The translation was done by hand. Not every definition in the C header files 
-is translated; and probably there are a few (lots of?) bugs.  Send a message 
+The translation was done by hand. Not every definition in the C header files
+is translated; and probably there are a few (lots of?) bugs.  Send a message
 to najork@src.dec.com if you need any definitions that are not yet translated,
-or if you trip over any bugs; I will patch things up on demand. 
+or if you trip over any bugs; I will patch things up on demand.
 
 Here are the copyright notices from the original C header files:
 
@@ -36,22 +36,22 @@ Copyright notice of PEX.h, PEXproto.h, PEXprotost.h:
 Copyright 1989, 1990, 1991 by Sun Microsystems, Inc. and the X Consortium.
 
                             All Rights Reserved
-    
-    Permission to use, copy, modify, and distribute this software and its 
-    documentation for any purpose and without fee is hereby granted, 
+
+    Permission to use, copy, modify, and distribute this software and its
+    documentation for any purpose and without fee is hereby granted,
     provided that the above copyright notice appear in all copies and that
-    both that copyright notice and this permission notice appear in 
+    both that copyright notice and this permission notice appear in
     supporting documentation, and that the names of Sun Microsystems,
-    the X Consortium, and MIT not be used in advertising or publicity 
-    pertaining to distribution of the software without specific, written 
-    prior permission.  
-    
-    SUN MICROSYSTEMS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, 
-    INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO 
-    EVENT SHALL SUN MICROSYSTEMS BE LIABLE FOR ANY SPECIAL, INDIRECT OR 
-    CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF 
-    USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR 
-    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR 
+    the X Consortium, and MIT not be used in advertising or publicity
+    pertaining to distribution of the software without specific, written
+    prior permission.
+
+    SUN MICROSYSTEMS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+    INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+    EVENT SHALL SUN MICROSYSTEMS BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+    CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+    USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
     PERFORMANCE OF THIS SOFTWARE.
 
 
@@ -60,9 +60,9 @@ Copyright notice of MPEX.h, MPEXproto.h, MPEXprotostr.h:
 
     Copyright 1989 by Digital Equipment Corporation, Maynard, Massachusetts,
     and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
-    
+
                             All Rights Reserved
-    
+
     Permission to use, copy, modify, and distribute this software and its
     documentation for any purpose and without fee is hereby granted,
     provided that the above copyright notice appear in all copies and that
@@ -70,7 +70,7 @@ Copyright notice of MPEX.h, MPEXproto.h, MPEXprotostr.h:
     supporting documentation, and that the names of Digital or MIT not be
     used in advertising or publicity pertaining to distribution of the
     software without specific, written prior permission.
-    
+
     DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
     ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
     DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
@@ -83,22 +83,22 @@ Copyright notice of MPEX.h, MPEXproto.h, MPEXprotostr.h:
 Copyright notice of PEXlib.h, PEXlibprotos.h, PEXocbuf.h, MPEXlib.h:
 --------------------------------------------------------------------
 
-    COPYRIGHT (c) 1988,1989,1990,1991     
-    by DIGITAL Equipment Corporation, Maynard, Mass.                        
-                                                                            
-    This software is furnished under a license and may be used and  copied  
-    only  in  accordance  with  the  terms  of  such  license and with the  
-    inclusion of the above copyright notice.  This software or  any  other  
-    copies  thereof may not be provided or otherwise made available to any  
-    other person.  No title to and ownership of  the  software  is  hereby  
-    transferred.                                                            
-                                                                            
-    The information in this software is subject to change  without  notice  
-    and  should  not  be  construed  as  a commitment by DIGITAL Equipment  
-    Corporation.                                                            
-                                                                            
-    DIGITAL assumes no responsibility for the use or  reliability  of  its  
-    software on equipment which is not supplied by DIGITAL.                 
+    COPYRIGHT (c) 1988,1989,1990,1991
+    by DIGITAL Equipment Corporation, Maynard, Mass.
+
+    This software is furnished under a license and may be used and  copied
+    only  in  accordance  with  the  terms  of  such  license and with the
+    inclusion of the above copyright notice.  This software or  any  other
+    copies  thereof may not be provided or otherwise made available to any
+    other person.  No title to and ownership of  the  software  is  hereby
+    transferred.
+
+    The information in this software is subject to change  without  notice
+    and  should  not  be  construed  as  a commitment by DIGITAL Equipment
+    Corporation.
+
+    DIGITAL assumes no responsibility for the use or  reliability  of  its
+    software on equipment which is not supplied by DIGITAL.
 
 ******************************************************************************)
 
@@ -114,18 +114,18 @@ TYPE
   XIDStar         = UNTRACED REF X.XID;
   DisplayStarStar = UNTRACED REF X.DisplayStar;
 
-  Drawable = CARD32;  
+  Drawable = CARD32;
   (* Note that X.Drawable = X.XID = Ctypes.unsigned_long
      So under AOSF, BYTESIZE (X.Drawable) = 8, and BYTESIZE (Drawable) = 4
-    
-     This appears strange, but is consistent with 
-     /usr/include/PEX/PEXproto.h (Revision 1.1.2.4 1993/03/23) and 
+
+     This appears strange, but is consistent with
+     /usr/include/PEX/PEXproto.h (Revision 1.1.2.4 1993/03/23) and
      /usr/include/PEX/MPEXproto.h (Revision 1.1.1.6 1993/06/03)
      from the AOSF Open3D kit.
 
      Also note that the pxlPhigsWksInfo record and all procedures
      use X.Drawable, not drawable. This is consistent with the definition
-     of Drawable in /usr/include/PEX/PEXlib.h and 
+     of Drawable in /usr/include/PEX/PEXlib.h and
      /usr/include/PEX/PEXlibprotos.h from the AOSF Open3D kit. *)
 
 (*****************************************************************************)
@@ -134,7 +134,7 @@ TYPE
 (* Performs only the definitions relevant for PEX.                           *)
 (*****************************************************************************)
 
-TYPE  
+TYPE
   INT8   = Ctypes.char;                       (*  8 bits *)
   INT16  = Ctypes.short;                      (* 16 bits *)
   INT32  = Ctypes.int;                        (* 32 bits *)
@@ -149,7 +149,7 @@ TYPE
 (* Should be complete!                                                       *)
 (*****************************************************************************)
 
-CONST 
+CONST
 
   (* Matches revision 5.0P *)
 
@@ -674,24 +674,24 @@ CONST
 (*****************************************************************************)
 
 (** To convert a bit index to a mask number and a mask value, assuming
- ** 32 bit wide words.  For example, a bitIndex of 5 will return 
+ ** 32 bit wide words.  For example, a bitIndex of 5 will return
  ** maskNum == 0 and maskValue == (1 << 5) = 32, while a bitIndex of 39
- ** will return maskNum == 1 and maskValue == (1 << 7) == 128 
+ ** will return maskNum == 1 and maskValue == (1 << 7) == 128
  **)
-PROCEDURE PEX_BITNUM_TO_BITMASK (bitIndex : Ctypes.int; 
-                                 VAR maskNum : Ctypes.int; 
+PROCEDURE PEX_BITNUM_TO_BITMASK (bitIndex : Ctypes.int;
+                                 VAR maskNum : Ctypes.int;
                                  VAR maskValue : Ctypes.int);
 PROCEDURE PEX_BITMASK (i : Ctypes.int) : Ctypes.int;
 
 PROCEDURE PEX_MASKIDX (i : Ctypes.int) : Ctypes.int;
 
-PROCEDURE PEX_MASKWORD (READONLY buf : ARRAY OF Ctypes.int ; 
+PROCEDURE PEX_MASKWORD (READONLY buf : ARRAY OF Ctypes.int ;
                         i : Ctypes.int) : Ctypes.int;
-PROCEDURE PEX_BITSET (VAR buf : ARRAY OF Ctypes.int ; 
+PROCEDURE PEX_BITSET (VAR buf : ARRAY OF Ctypes.int ;
                       i : Ctypes.int);
-PROCEDURE PEX_BITCLEAR (VAR buf : ARRAY OF Ctypes.int ; 
+PROCEDURE PEX_BITCLEAR (VAR buf : ARRAY OF Ctypes.int ;
                         i : Ctypes.int);
-PROCEDURE PEX_GETBIT (READONLY buf : ARRAY OF Ctypes.int ; 
+PROCEDURE PEX_GETBIT (READONLY buf : ARRAY OF Ctypes.int ;
                       i : Ctypes.int) : Ctypes.int;
 
 
@@ -1171,23 +1171,23 @@ CONST
  * This packet-construction scheme makes the following assumptions:
  *
  * 1. The compiler is able to generate code which addresses one- and two-byte
- * quantities.  In the worst case, this would be done with bit-fields.  If 
+ * quantities.  In the worst case, this would be done with bit-fields.  If
  * bit-fields are used it may be necessary to reorder the request fields in
  * this file, depending on the order in which the machine assigns bit fields
- * to machine words.  There may also be a problem with sign extension, as K+R 
+ * to machine words.  There may also be a problem with sign extension, as K+R
  * specify that bitfields are always unsigned.
  *
- * 2. 2- and 4-byte fields in packet structures must be ordered by hand such 
- * that they are naturally-aligned, so that no compiler will ever insert 
+ * 2. 2- and 4-byte fields in packet structures must be ordered by hand such
+ * that they are naturally-aligned, so that no compiler will ever insert
  * padding bytes.
  *
- * 3. All packets are hand-padded to a multiple of 4 bytes, for the same 
+ * 3. All packets are hand-padded to a multiple of 4 bytes, for the same
  * reason.
  *)
 
-(* In the following typedefs, comments appear that say 
- * "LISTof Foo( numItems )", "CLIST of Foo()", and "SINGLE Foo()".   
- * These are used when the protocol specifies that a request or reply 
+(* In the following typedefs, comments appear that say
+ * "LISTof Foo( numItems )", "CLIST of Foo()", and "SINGLE Foo()".
+ * These are used when the protocol specifies that a request or reply
  * contains a variable length list of (possibly variable types of) objects.
  *
  * A LISTof list is one for which we have already been given the length.
@@ -1243,7 +1243,7 @@ TYPE
     sequenceNumber : CARD16;
     length         : CARD32;	(* NOT 0; this is an extra-large reply*)
     numLists       : CARD32;
-    pad            : ARRAY [0 .. 19] OF BYTE;	
+    pad            : ARRAY [0 .. 19] OF BYTE;
 				(* lists of lists begin afterwards *)
     (* LISTof CLISTof pexEnumTypeDesc( numLists ) *)
     (* pad *)
@@ -1487,7 +1487,7 @@ TYPE
     what           : CARD8;			(* unused *)
     sequenceNumber : CARD16;
     length         : CARD32;			(* 4 + 76*fp/4 *)
-    viewUpdate     : CARD16;			(* Pending, NotPending *) 
+    viewUpdate     : CARD16;			(* Pending, NotPending *)
     pad            : ARRAY [0 .. 21] OF BYTE;
     (* SINGLE pexViewRep() 	requested *)
     (* SINGLE pexViewRep() 	current *)
@@ -1612,7 +1612,7 @@ TYPE
 
 
 (*****************************************************************
- *  Specific Requests 
+ *  Specific Requests
  *****************************************************************)
 
   pexGetExtensionInfoReq = RECORD
@@ -2150,7 +2150,7 @@ TYPE
     wks      : pexPhigsWks;
   END; (* pexGetViewRepReq *)
 
-  pexRedrawAllStructuresReq = pexResourceReq;	
+  pexRedrawAllStructuresReq = pexResourceReq;
 
   pexUpdateWorkstationReq = pexResourceReq;
 
@@ -2391,7 +2391,7 @@ TYPE
   END; (*  pexQueryTextExtentsReq *)
 
 (*****************************************************************
- * Output Commands 
+ * Output Commands
  *****************************************************************)
 
   pexMarkerType = RECORD
@@ -2695,7 +2695,7 @@ TYPE
     (* LISTof CARD8( numElements ) -- don't swap *)
     (* pad( numElements ) *)
   END; (* pexApplicationData *)
-    
+
   pexGse = RECORD
     head        : pexElementInfo;
     id          : CARD32;
@@ -2968,7 +2968,7 @@ TYPE
 
 (* Matches revision 5.0P *)
 
-TYPE 
+TYPE
 
   pexAsfAttribute      = CARD32;
   pexAsfValue          = CARD8;
@@ -3057,7 +3057,7 @@ TYPE
 (* Colour structures *)
 
   pexRgbFloatColour = RECORD
-    red   : Ctypes.float;   
+    red   : Ctypes.float;
     green : Ctypes.float;
     blue  : Ctypes.float;
   END; (* pexRgbFloatColour *)
@@ -3144,12 +3144,12 @@ TYPE
     z : Ctypes.float;
   END; (* pexDeviceCoord *)
 
-  pexDeviceCoord2D = RECORD 
+  pexDeviceCoord2D = RECORD
     x : INT16;
     y : INT16;
   END; (* pexDeviceCoord2D *)
 
-  pexDeviceRect = RECORD 
+  pexDeviceRect = RECORD
     xmin : INT16;
     ymin : INT16;
     xmax : INT16;
@@ -3322,7 +3322,7 @@ TYPE
   pexTableInfoStar = UNTRACED REF pexTableInfo;
   pexTableInfoStarStar = UNTRACED REF pexTableInfoStar;
 
-  pexLineBundleEntry = RECORD 
+  pexLineBundleEntry = RECORD
     lineType       : pexEnumTypeIndex;
     polylineInterp : pexEnumTypeIndex;
     curveApprox    : BITS BITSIZE (pexCurveApprox) FOR pexCurveApprox;
@@ -3331,7 +3331,7 @@ TYPE
     (* SINGLE COLOUR() *)
   END; (* pexLineBundleEntry *)
 
-  pexMarkerBundleEntry = RECORD 
+  pexMarkerBundleEntry = RECORD
     markerType   : pexEnumTypeIndex;
     unused       : INT16;
     markerScale  : Ctypes.float;
@@ -3339,7 +3339,7 @@ TYPE
     (* SINGLE COLOUR() *)
   END; (* pexMarkerBundleEntry *)
 
-  pexTextBundleEntry = RECORD 
+  pexTextBundleEntry = RECORD
     textFontIndex : CARD16;
     textPrecision : CARD16;
     charExpansion : Ctypes.float;
@@ -3350,7 +3350,7 @@ TYPE
 
 
 (*
-    Note that since an InteriorBundleEntry contains 4 embedded instances of 
+    Note that since an InteriorBundleEntry contains 4 embedded instances of
     pexColourSpecifier, a variable-sized item, a data structure cannot be
     defined for it.
 *)
@@ -3528,7 +3528,7 @@ TYPE
 (*****************************************************************************)
 
 (*
- * PEXlib constants  
+ * PEXlib constants
  *)
 
 (* for PEXRotationMatrix *)
@@ -3551,14 +3551,14 @@ TYPE
 
 (*
  * Following are the typedefs used in the PEXlib interface. pxlFooBar
- * definitions are always supersets of the pexFooBar protocol definitions. 
+ * definitions are always supersets of the pexFooBar protocol definitions.
  * Note that most pxlFooBar definitions are equivalent to the pexFooBar
  * protocol definitions.  However some of the definitions do have extra
- * fields. The extra fields are used to access data that would normally 
+ * fields. The extra fields are used to access data that would normally
  * follow a pexFooBar in the protocol.  pxlFooBar definitions should
  * *never* contain fields which are not required in the protocol.  This
- * means pexlib can copy pxlFooBar data into the protocol stream.  Sometimes 
- * the data which follows a pexFooBar is variable length.  For example 
+ * means pexlib can copy pxlFooBar data into the protocol stream.  Sometimes
+ * the data which follows a pexFooBar is variable length.  For example
  *
  *   	typedef struct pxlColourSpecifier
  *	{
@@ -3571,20 +3571,20 @@ TYPE
  *	{
  *    	    pexColourType       colourType;
  *    	    CARD16              unused;
- *    	    ( SINGLE COLOUR(colourType) ) 
+ *    	    ( SINGLE COLOUR(colourType) )
  *	} pexColourSpecifier;
  *
  * The pxlColorSpecifier has an extra field for accessing the colour data.
- * Note that the size of 'colour' depends on the colour type.  (ie: pxlColour 
+ * Note that the size of 'colour' depends on the colour type.  (ie: pxlColour
  * and pexColour are defined as a union of all possible colour types)
- * Using a pxlColourSpecifier provides the application easy access to the 
- * colour data.  However PEXlib must pack the colour data before sending it 
+ * Using a pxlColourSpecifier provides the application easy access to the
+ * colour data.  However PEXlib must pack the colour data before sending it
  * down to the pex server.
  *
  *)
 
 (*
- * PEXlib definitions used globally 
+ * PEXlib definitions used globally
  *)
 
 TYPE
@@ -3666,8 +3666,8 @@ TYPE
   pxlSearchContext 	      = X.XID;
   pxlPhigsWks 		      = pexPhigsWks;
 
-(* 
- * Coordinate definitions 
+(*
+ * Coordinate definitions
  *)
 
   pxlCoord2D 	   = pexCoord2D;
@@ -3701,8 +3701,8 @@ TYPE
     colour     : pxlColour;
   END; (* pxlColourSpecifier *)
 
-(* 
- * reflection attributes 
+(*
+ * reflection attributes
  *)
 
   pxlReflectionAttr = RECORD
@@ -3913,7 +3913,7 @@ TYPE
 
 (*
  * Definitions used for output commands
- * Note that these MUST match the equivalent DEC PHIGS structures 
+ * Note that these MUST match the equivalent DEC PHIGS structures
  *)
 
   pxlPhigsPointList23 = RECORD
@@ -3944,7 +3944,7 @@ TYPE
   pxlPhigsTrimListStar = UNTRACED REF pxlPhigsTrimList;
 
 (*
- * Definitions for lookup tables 
+ * Definitions for lookup tables
  *)
 
   pxlTableInfo = pexTableInfo;
@@ -4049,7 +4049,7 @@ TYPE
 
   pxlColourApproxEntry = pexColourApproxEntry;
 
-(*  
+(*
  * Definitions for fonts
  *)
 
@@ -4059,8 +4059,8 @@ TYPE
   pxlFontInfoStar = pexFontInfoStar;
   pxlFontInfoStarStar = pexFontInfoStarStar;
 
-(* 
- * Defintions for PEX extension info 
+(*
+ * Defintions for PEX extension info
  *)
 
   pxlInfo = RECORD
@@ -4074,8 +4074,8 @@ TYPE
   pxlInfoStarStar = UNTRACED REF pxlInfoStar;
 
 
-(* 
- * Definitions for enumerated type descriptions 
+(*
+ * Definitions for enumerated type descriptions
  *)
 
   pxlEnumTypeDescList = RECORD
@@ -4085,7 +4085,7 @@ TYPE
   pxlEnumTypeDescListStar     = UNTRACED REF pxlEnumTypeDescList;
   pxlEnumTypeDescListStarStar = UNTRACED REF pxlEnumTypeDescListStar;
 
-(* 
+(*
  * Definitions for pipeline context.
  *)
 
@@ -4118,12 +4118,12 @@ TYPE
     charHeight           : Ctypes.float;
     charUpVector         : BITS BITSIZE (pxlVector2D) FOR pxlVector2D;
     textPath             : Ctypes.unsigned_short;
-    textAlignment        : BITS BITSIZE (pxlTextAlignmentData) 
+    textAlignment        : BITS BITSIZE (pxlTextAlignmentData)
                                      FOR pxlTextAlignmentData;
     atextHeight          : Ctypes.float;
     atextUpVector        : pxlVector2D;
     atextPath            : Ctypes.unsigned_short;
-    atextAlignment       : BITS BITSIZE (pxlTextAlignmentData) 
+    atextAlignment       : BITS BITSIZE (pxlTextAlignmentData)
                                      FOR pxlTextAlignmentData;
     atextStyle           : Ctypes.short;
     textBundleIndex      : Ctypes.unsigned_short;
@@ -4141,7 +4141,7 @@ TYPE
     surfaceInterp        : Ctypes.short;
     bfInteriorStyle      : Ctypes.short;
     bfInteriorStyleIndex : Ctypes.unsigned_short;
-    bfSurfaceColour      : BITS BITSIZE (pxlColourSpecifier) 
+    bfSurfaceColour      : BITS BITSIZE (pxlColourSpecifier)
                                      FOR pxlColourSpecifier;
     bfReflectionAttr     : pxlReflectionAttr;
     bfReflectionModel    : Ctypes.short;
@@ -4158,7 +4158,7 @@ TYPE
     surfaceEdges         : Ctypes.unsigned_short;
     surfaceEdgeType      : Ctypes.short;
     surfaceEdgeWidth     : Ctypes.float;
-    surfaceEdgeColour    : BITS BITSIZE (pxlColourSpecifier) 
+    surfaceEdgeColour    : BITS BITSIZE (pxlColourSpecifier)
                                      FOR pxlColourSpecifier;
     edgeBundleIndex      : Ctypes.unsigned_short;
     localTransform       : pxlMatrix;
@@ -4183,11 +4183,11 @@ TYPE
 (* macro for setting bits in a PC value mask *)
 
 (* UNSAFE C MACRO TRANSLATION! *)
-PROCEDURE PEX_SetPCAttrMaskBit(VAR mask : ARRAY [0 .. 1] OF Ctypes.int; 
+PROCEDURE PEX_SetPCAttrMaskBit(VAR mask : ARRAY [0 .. 1] OF Ctypes.int;
                                attrNum : Ctypes.int);
 
-(* 
- * Definitions for structures 
+(*
+ * Definitions for structures
  *)
 
 TYPE
@@ -4297,8 +4297,8 @@ TYPE
     referenceModify    : Ctypes.unsigned_char;
   END; (* pxlPhigsWksDynamics *)
 
-(* 
- * Definitions for renderer 
+(*
+ * Definitions for renderer
  *)
 
   pxlClipList = RECORD
@@ -4353,13 +4353,13 @@ TYPE
     extOpcode           : Ctypes.char;  (* opcode for pex extension          *)
     pexOpcode           : Ctypes.char;  (* opcode for ROC or StoreElements   *)
     retainedOCBuffer    : Ctypes.short; (* for transient, 1 for retained     *)
-    target              : Ctypes.unsigned_long; 
+    target              : Ctypes.unsigned_long;
                                     (* renderer id or structure id           *)
-    basePtr             : Ctypes.unsigned_int_star; 
+    basePtr             : Ctypes.unsigned_int_star;
                                     (* points to start of current oc request *)
-    curPtr              : Ctypes.unsigned_int_star; 
+    curPtr              : Ctypes.unsigned_int_star;
                                       (* where to store next oc              *)
-    bufMax              : Ctypes.unsigned_int_star; 
+    bufMax              : Ctypes.unsigned_int_star;
                                       (* end of buffer containing oc request *)
     ocWordsLeft         : Ctypes.int; (* words left to copy to oc buffer,    *)
 	  			      (* words allocated via PEXInitOC       *)
@@ -4377,7 +4377,7 @@ TYPE
     GetOCBufFreeSpace   : PROCEDURE () : Ctypes.int;
     GetMaxOCChunkSize   : PROCEDURE () : Ctypes.int;
 (* DIFFERS FROM ORIGINAL C SOURCE !! *)
-    FlushOCBuf          : (PROCEDURE (ocbuf : pxlOCBufStar)); 
+    FlushOCBuf          : (PROCEDURE (ocbuf : pxlOCBufStar));
 (*    FlushOCBuf          : PROCEDURE (); *)
     SendOCBuf           : (PROCEDURE (ocbuf : pxlOCBufStar));
 (*    SendOCBuf           : PROCEDURE (); *)
@@ -4413,7 +4413,7 @@ TYPE
  *  Subsystem:
  *     pex
  *
- *  Version: 
+ *  Version:
  *     0.1
  *
  *  Abstract:
@@ -4437,7 +4437,7 @@ TYPE
  *	 6-May-91   AFV	    Change names of PEXPHIGS... routines
  *	11-Jul-91   STC	    Add Ellipse stuff
  *       9-Sep-91   SB      Added 2 new OC's MPEXGridRectangular MPEXGridRadial
- *       13-Sep-91  SB      Modified MPEXGridRectangular to take an Origin as 
+ *       13-Sep-91  SB      Modified MPEXGridRectangular to take an Origin as
  *			    input.
  *      25-Sep-91   SB      Added a new prototype MPEXReferToStructure
  *      10-Oct-91   DM      Added the new pipeline context requests
@@ -4449,19 +4449,19 @@ TYPE
  *)
 
 (*
- * ErrorFunctionType is used in 
- *     PEXAllocateRetainedOCBuffer 
- *     PEXAllocateTransientOCBuffer 
+ * ErrorFunctionType is used in
+ *     PEXAllocateRetainedOCBuffer
+ *     PEXAllocateTransientOCBuffer
  *     PEXAllocateOCBuffer
  * It is defined as "PROCEDURE ()" in the C source, but the above procedures
  * take PEXDefaultOCError as an argument, which has type
  *     PROCEDURE (ocbuf : pxlOCBufStar; value : Ctypes.int)
  *)
 
-TYPE 
+TYPE
   ErrorFunctionType = PROCEDURE (ocbuf : pxlOCBufStar ; value : Ctypes.int);
 
-(* 
+(*
  * Routines defined in pl_oc_buff.c
  *)
 
@@ -4496,7 +4496,7 @@ TYPE
 		(* IN-OUT *) ocbuf  : pxlOCBufStar;
 		(* INPUT  *) nBytes : Ctypes.int;
 		(* INPUT  *) buffer : Ctypes.char_star);
-			
+
 <*EXTERNAL*> PROCEDURE PEXInitOC (
 		(* IN-OUT *) ocbuf          : pxlOCBufStar;
 		(* INPUT  *) ocType         : Ctypes.int;
@@ -4553,9 +4553,9 @@ TYPE
 
 <*EXTERNAL*> PROCEDURE PEXClearOCOverflow ();
 
-(* 
+(*
  * Routines defined in pl_oc_attr.c
- *)	
+ *)
 
 <*EXTERNAL*> PROCEDURE PEXSetMarkerType (
 		(* IN-OUT *) ocbuf : pxlOCBufStar;
@@ -4572,7 +4572,7 @@ TYPE
 <*EXTERNAL*> PROCEDURE PEXSetMarkerColour (
 		(* IN-OUT *) ocbuf  : pxlOCBufStar;
 		(* INPUT  *) colour : pxlColourStar);
-	
+
 <*EXTERNAL*> PROCEDURE PEXSetMarkerBundleIndex (
 		(* IN-OUT *) ocbuf : pxlOCBufStar;
 		(* INPUT  *) index : Ctypes.int);
@@ -4584,7 +4584,7 @@ TYPE
 <*EXTERNAL*> PROCEDURE PEXSetTextPrecision (
 		(* IN-OUT *) ocbuf     : pxlOCBufStar;
 		(* INPUT  *) precision : Ctypes.int);
-	
+
 <*EXTERNAL*> PROCEDURE PEXSetCharExpansion (
 		(* IN-OUT *) ocbuf     : pxlOCBufStar;
 		(* INPUT  *) expansion : Ctypes.double);
@@ -4870,7 +4870,7 @@ TYPE
 		(* IN-OUT *) ocbuf    : pxlOCBufStar;
 		(* INPUT  *) names    : pxlNameStar;
 		(* INPUT  *) numNames : Ctypes.int);
-(* 
+(*
  * Routines defined in pl_oc_prim.c
  *)
 
@@ -5107,7 +5107,7 @@ TYPE
  		(* INPUT  *) colours          : Ctypes.int_star;
  		(* INPUT  *) numPolylines     : Ctypes.int;
  		(* INPUT  *) sizes            : Ctypes.int_star);
- 
+
 <*EXTERNAL*> PROCEDURE PEXEncodedTextUnpacked (
  		(* IN-OUT *) ocbuf             : pxlOCBufStar;
  		(* INPUT  *) origin            : pxlCoord3DStar;
@@ -5119,7 +5119,7 @@ TYPE
  		(* INPUT  *) encodingStateList : Ctypes.int_star;
  		(* INPUT  *) charStringsList   : pxlStringDataStar;
  		(* INPUT  *) highByteFirst     : Ctypes.int);
- 
+
 <*EXTERNAL*> PROCEDURE PEXEncodedText2DUnpacked (
 		(* IN-OUT *) ocbuf             : pxlOCBufStar;
 		(* INPUT  *) origin            : pxlCoord2DStar;
@@ -5277,7 +5277,7 @@ TYPE
 		(* INPUT  *) numNPoints   : Ctypes.int;
 		(* INPUT  *) trimList     : pxlPhigsTrimListStar;
 		(* INPUT  *) numTrimLoops : Ctypes.int);
-(* 
+(*
  * Routines declared in pl_font.c
  *)
 
@@ -5326,21 +5326,21 @@ TYPE
 		(* OUTPUT *) upperRightReturn : pxlCoord2DStar;
 		(* OUTPUT *) concatPtReturn   : pxlCoord2DStar) : X.Status;
 
-(* 
+(*
  * Routines defined in pl_free.c
  *)
 
 <*EXTERNAL*> PROCEDURE PEXFree (
 		(* INPUT  *) pch : Ctypes.char_star);
 
-(* 
+(*
  * Routines defined in pl_lut.c
  *)
 
 <*EXTERNAL*> PROCEDURE PEXCreateLookupTable (
 		(* INPUT  *) display : X.DisplayStar;
 		(* INPUT  *) d       : X.Drawable;
-		(* INPUT  *) type    : Ctypes.int) 
+		(* INPUT  *) type    : Ctypes.int)
 	     : pxlLookupTable;
 
 <*EXTERNAL*> PROCEDURE PEXFreeLookupTable (
@@ -5403,7 +5403,7 @@ TYPE
 		(* INPUT  *) start   : Ctypes.int;
 		(* INPUT  *) count   : Ctypes.int);
 
-(* 
+(*
  * Routines defined in pl_nameset.c
  *)
 
@@ -5432,7 +5432,7 @@ TYPE
 		(* INPUT  *) values    : pxlNameStar;
 		(* INPUT  *) numValues : Ctypes.int);
 
-(* 
+(*
  * Routines defined in pl_oc_struct.c
  *)
 
@@ -5455,7 +5455,7 @@ TYPE
 	(* INPUT  *) data     : Ctypes.char_star;
 	(* INPUT  *) numBytes : Ctypes.int);
 
-(* 
+(*
  * Routines defined in pl_pc.c
  *)
 
@@ -5482,7 +5482,7 @@ TYPE
 		(* INPUT  *) pc                 : pxlPipelineContext;
 		(* INPUT  *) valueMask          : Ctypes.unsigned_long_star;
     	                     (* version : INPUT unsigned long valueMask[2] *)
-		(* OUTPUT *) pcAttributesReturn : pxlPCAttributesStarStar) 
+		(* OUTPUT *) pcAttributesReturn : pxlPCAttributesStarStar)
              : X.Status;
 
 <*EXTERNAL*> PROCEDURE PEXChangePipelineContext (
@@ -5492,7 +5492,7 @@ TYPE
                              (* C version : INPUT unsigned long valueMask[2] *)
 		(* INPUT  *) pcAttributes : pxlPCAttributesStar);
 
-(* 
+(*
  * Routines defined in pl_rdr.c
  *)
 
@@ -5500,7 +5500,7 @@ TYPE
 		(* INPUT  *) display : X.DisplayStar;
 		(* INPUT  *) d : X.Drawable;
 		(* INPUT  *) valueMask : Ctypes.unsigned_long;
-		(* INPUT  *) values : pxlRendererAttributesStar) 
+		(* INPUT  *) values : pxlRendererAttributesStar)
 	     : pxlRenderer;
 
 <*EXTERNAL*> PROCEDURE PEXFreeRenderer (
@@ -5511,7 +5511,7 @@ TYPE
 		(* INPUT  *) display      : X.DisplayStar;
 		(* INPUT  *) renderer     : pxlRenderer;
 		(* INPUT  *) valueMask    : Ctypes.unsigned_long;
-		(* OUTPUT *) valuesReturn : pxlRendererAttributesStarStar) 
+		(* OUTPUT *) valuesReturn : pxlRendererAttributesStarStar)
              : X.Status;
 
 <*EXTERNAL*> PROCEDURE PEXGetRendererDynamics (
@@ -5519,7 +5519,7 @@ TYPE
 		(* INPUT  *) renderer         : pxlRenderer;
 		(* OUTPUT *) tablesReturn     : Ctypes.unsigned_long_star;
 		(* OUTPUT *) namesetsReturn   : Ctypes.unsigned_long_star;
-		(* OUTPUT *) attributesReturn : Ctypes.unsigned_long_star) 
+		(* OUTPUT *) attributesReturn : Ctypes.unsigned_long_star)
              : X.Status;
 
 <*EXTERNAL*> PROCEDURE PEXChangeRenderer (
@@ -5564,7 +5564,7 @@ TYPE
 		(* INPUT  *) renderer : pxlRenderer;
 		(* INPUT  *) flush    : X.Bool) : Ctypes.int;
 
-(* 
+(*
  * Routines defined in pl_startup.c
  *)
 
@@ -5606,7 +5606,7 @@ TYPE
 	(* INPUT  *) count        : Ctypes.int;
 	(* OUTPUT *) valuesReturn : Ctypes.unsigned_long_star) : X.Status;
 
-(* 
+(*
  * Routines defined in pl_struct.c
  *)
 
@@ -5738,14 +5738,14 @@ TYPE
 		(* INPUT  *) oldStructure : pxlStructure;
 		(* INPUT  *) newStructure : pxlStructure);
 
-(* 
+(*
  * Routines defined in pl_utl.c
  *)
 
 <*EXTERNAL*> PROCEDURE PEXRotationMatrix (
 		(* INPUT  *) axis         : Ctypes.int;
 		(* INPUT  *) angle        : Ctypes.double;
-		(* OUTPUT *) matrixReturn : pxlMatrixStar) 
+		(* OUTPUT *) matrixReturn : pxlMatrixStar)
                 (* was pxlMatrix (C vs Modula-3 Array passing problem) *)
 	     : X.Status;
 
@@ -5787,7 +5787,7 @@ TYPE
 
 <*EXTERNAL*> PROCEDURE PEXInvertMatrix (
 		(* INPUT  *) matrix        : pxlMatrixStar;
-		(* OUTPUT *) inverseReturn : pxlMatrixStar) 
+		(* OUTPUT *) inverseReturn : pxlMatrixStar)
                 (* was pxlMatrix (C vs Modula-3 Array passing problem) *)
              : X.Status;
 
@@ -5796,7 +5796,7 @@ TYPE
                 (* was pxlMatrix (C vs Modula-3 Array passing problem) *)
 		(* INPUT  *) pts       : pxlCoord3DStar;
 		(* INPUT  *) numPts    : Ctypes.int;
-		(* OUTPUT *) ptsReturn : pxlCoord3DStar) 
+		(* OUTPUT *) ptsReturn : pxlCoord3DStar)
              : X.Status;
 
 <*EXTERNAL*> PROCEDURE PEXTransform4dPoints (
@@ -5820,7 +5820,7 @@ TYPE
 		(* INPUT  *) azimuth   : Ctypes.double;
 		(* INPUT  *) altitude  : Ctypes.double;
 		(* INPUT  *) twist     : Ctypes.double;
-		(* OUTPUT *) matReturn : pxlMatrixStar) 
+		(* OUTPUT *) matReturn : pxlMatrixStar)
                 (* was pxlMatrix (C vs Modula-3 Array passing problem) *)
 	     : X.Status;
 
@@ -5829,7 +5829,7 @@ TYPE
 		(* INPUT  *) aspect    : Ctypes.double;
 		(* INPUT  *) near      : Ctypes.double;
 		(* INPUT  *) far       : Ctypes.double;
-		(* OUTPUT *) matReturn : pxlMatrixStar) 
+		(* OUTPUT *) matReturn : pxlMatrixStar)
                 (* was pxlMatrix (C vs Modula-3 Array passing problem) *)
 	     : X.Status;
 
@@ -5839,7 +5839,7 @@ TYPE
 		(* INPUT  *) aspect    : Ctypes.double;
 		(* INPUT  *) near      : Ctypes.double;
 		(* INPUT  *) far       : Ctypes.double;
-		(* OUTPUT *) matReturn : pxlMatrixStar) 
+		(* OUTPUT *) matReturn : pxlMatrixStar)
                 (* was pxlMatrix (C vs Modula-3 Array passing problem) *)
 	     : X.Status;
 
@@ -6081,11 +6081,11 @@ TYPE
 		(* OUTPUT *) xOffset     : Ctypes.int_star;
 		(* OUTPUT *) yOffset     : Ctypes.int_star) : X.Status;
 
-(* 
+(*
  * Routines from pl_oc_parse.c
  *)
 
-(* 
+(*
  * <*EXTERNAL*> PROCEDURE PEXDumpOCBufHeader  (
  * 	(* IN-OUT *) oc          : pxlOCBufStar;
  * 	(* IN-OUT *) output_file : UNTRACED REF Cstdio.iobuf);
@@ -6097,7 +6097,7 @@ TYPE
 		(* INPUT  *) routine : PROCEDURE ();
 		(* INPUT  *) arg     : Ctypes.unsigned_long);
 
-(* 
+(*
  * Routines defined in pl_sc.c
  *)
 
@@ -6106,43 +6106,43 @@ TYPE
  * 	/* INPUT  */ Ctypes.unsigned_long	valueMask,
  * 	/* INPUT  */ pxlSCAttributesStar	values
  * 	) : pxlSearchContext;
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXFreeSearchContext (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlSearchContext	sc
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXCopySearchContext (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ Ctypes.unsigned_long	valueMask,
  * 	/* INPUT  */ pxlSearchContext	srcSc,
  * 	/* INPUT  */ pxlSearchContext	destSc
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXGetSearchContext (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlSearchContext	sc,
  * 	/* INPUT  */ Ctypes.unsigned_long	valueMask,
  * 	/* OUTPUT */ pxlSCAttributesStarStar	scAttributesReturn
  * 	) : X.Status;
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXChangeSearchContext (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlSearchContext	sc,
  * 	/* INPUT  */ Ctypes.unsigned_long	valueMask,
  * 	/* OUTPUT */ pxlSCAttributesStar	values
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXSearchNetwork (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlSearchContext	sc,
  * 	/* OUTPUT */ pxlStructurePathStarStar	pathReturn
  * 	) : X.Status;
- * 
- * /* 
+ *
+ * /*
  *  * Routined defined in pl_wks.c
  *  */
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXCreatePhigsWks (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ Drawable		d,
@@ -6162,25 +6162,25 @@ TYPE
  * 	/* INPUT  */ pxlNameSet	invisibilityIncl,
  * 	/* INPUT  */ pxlNameSet	invisibilityExcl
  * 	) : pxlPhigsWks;
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXFreePhigsWks (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks	wks
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXGetWksInfo (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks	wks,
  * 	/* INPUT  */ Ctypes.unsigned_long	valueMask,
  * 	/* OUTPUT */ pxlPhigsWksInfoStarStar	wksAttributesReturn
  * 	) : X.Status;
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXGetWksDynamics (
  * 	/* INPUT  */ X.DisplayStar			display,
  * 	/* INPUT  */ Drawable			d,
  * 	/* OUTPUT */ pxlPhigsWksDynamicsStarStar	wksDynamicsReturn
  * 	) : X.Status;
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXGetWksViewRep (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks	wks,
@@ -6189,13 +6189,13 @@ TYPE
  * 	/* OUTPUT */ pxlViewEntryStarStar	reqViewReturn,
  * 	/* OUTPUT */ pxlViewEntryStarStar	curViewReturn
  * 	) : X.Status;
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXGetWksPostings (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlStructure	structure,
  * 	/* OUTPUT */ pxlPhigsWksStarStar	wksReturn
  * 	) : X.Status;
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXSetWksViewPriority (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks	wks,
@@ -6203,53 +6203,53 @@ TYPE
  * 	/* INPUT  */ Ctypes.UnsignedInt	index2,
  * 	/* INPUT  */ Ctypes.int		priority
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXSetWksDrawableUpdate (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks	wks,
  * 	/* INPUT  */ Ctypes.int		drawableUpdate
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXSetWksViewRep (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks	wks,
  * 	/* INPUT  */ Ctypes.UnsignedInt	viewIndex,
  * 	/* INPUT  */ pxlViewEntryStar	viewRep
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXSetWksNpcSubvolume (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks	wks,
  * 	/* INPUT  */ pxlNpcSubvolumeStar	npcSubvolume
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXSetWksViewport (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks	wks,
  * 	/* INPUT  */ pxlViewportStar	viewport
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXSetWksHlhsrMode (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks		wks,
  * 	/* INPUT  */ Ctypes.UnsignedInt		hlhsrMode
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXRedrawStructures (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks		wks
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXUpdatePhigsWks (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks		wks
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXExecuteDeferredActions (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks		wks
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXMapDCtoWC (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks		wks,
@@ -6258,7 +6258,7 @@ TYPE
  * 	/* OUTPUT */ pxlCoord3DStar		wcPointsReturn,
  * 	/* OUTPUT */ Ctypes.unsigned_int_star	viewIndexReturn
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXMapWCtoDC (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks		wks,
@@ -6267,20 +6267,20 @@ TYPE
  * 	/* INPUT  */ Ctypes.UnsignedInt		viewIndex,
  * 	/* OUTPUT */ pxlDeviceCoordStar		dcPointsReturn
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXPostStructure (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks		wks,
  * 	/* INPUT  */ pxlStructure		structure,
  * 	/* INPUT  */ Ctypes.unsigned_long	priority
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXUnpostStructure (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks		wks,
  * 	/* INPUT  */ pxlStructure		structure
  * 	);
- * 
+ *
  * <*EXTERNAL*> PROCEDURE PEXUnpostAllStructures (
  * 	/* INPUT  */ X.DisplayStar		display,
  * 	/* INPUT  */ pxlPhigsWks		wks
@@ -6294,7 +6294,7 @@ TYPE
 (*****************************************************************************)
 
 (*
- * typedefs for referencing fields in oc requests 
+ * typedefs for referencing fields in oc requests
  *)
 
 (* typedef struct pexRequestHeader
@@ -6303,7 +6303,7 @@ TYPE
  *     unsigned char       pexOpcode;
  *     unsigned short      reqLength;
  * } pexRequestHeader;
- * 
+ *
  * typedef struct pexOCRequestHeader
  * {
  *     unsigned char       extOpcode;
@@ -6314,16 +6314,16 @@ TYPE
  *     unsigned long       target;
  *     unsigned long       numCommands;
  * } pexOCRequestHeader;
- * 
+ *
  * typedef pexElementInfo pexOCListHeader;
- * 
+ *
  * typedef struct pexOCcListHeader
  * {
  *     pexElementInfo      head;
  *     unsigned short      length;
  *     unsigned short      pad;
  * } pexOCcListHeader;
- * 
+ *
  * 
  * #define STORE_ELEMENT_INFO(_reqPtr_,_ocType_,_ocLength_) \
  * { \
@@ -6337,7 +6337,7 @@ PROCEDURE PEXAllocateOCBuffer(display : X.DisplayStar;
                               target  : X.XID;
                               bufTyp  : PROCEDURE () : Ctypes.int;
                               errorFn : ErrorFunctionType;
-                              initSize: Ctypes.int) 
+                              initSize: Ctypes.int)
           : pxlOCBufStar;
 
 (*
@@ -6382,7 +6382,7 @@ PROCEDURE PEXAllocateOCBuffer(display : X.DisplayStar;
  *      pxlOCBuf 	*ocbuf;
  *
  * ARGUMENTS:
- *      ocbuf           The OC buffer to be emptied 
+ *      ocbuf           The OC buffer to be emptied
  *
  * RETURNS:
  *      None
@@ -6391,7 +6391,7 @@ PROCEDURE PEXAllocateOCBuffer(display : X.DisplayStar;
  *      This routine empties all ocs in the oc buffer.  If the oc
  *	buffer is retained then all the ocs currently stored in the buffer
  *	will be deleted.  If the oc buffer is transient then the next
- *	oc will start a new request in the transport buffer. 
+ *	oc will start a new request in the transport buffer.
  *
  * ERRORS:
  *      None
@@ -6465,7 +6465,7 @@ PROCEDURE PEXAllocateOCBuffer(display : X.DisplayStar;
 
 
 
-(* 
+(*
  * NAME:
  *      PEXSetOCBufferTarget
  *
@@ -6493,10 +6493,10 @@ PROCEDURE PEXAllocateOCBuffer(display : X.DisplayStar;
  *      If the buffer type is `pxlAddToStructure', `target' is the resource
  *      identifier of the structure to which the output commands will be sent.
  *
- *      For retained oc buffers this routine will modify the target 
+ *      For retained oc buffers this routine will modify the target
  *      associated with the output commands currently stored in the oc
  *      buffer.  For transient oc buffers this routine will modify the
- *	target of subsequent output commands.  This routine will `not` 
+ *	target of subsequent output commands.  This routine will `not`
  *	flush the current contents of `ocbuf'.
  *
  * ERRORS:
@@ -6508,7 +6508,7 @@ PROCEDURE PEXAllocateOCBuffer(display : X.DisplayStar;
  *
  *)
 
-(* 
+(*
  * #define PEXSetOCBufferTarget(_ocbuf_, _target_) \
  * 	( *(_ocbuf_)->SetOCBufTarget)(_ocbuf_,_target_)
  *)
@@ -6565,7 +6565,7 @@ PROCEDURE PEXAllocateOCBuffer(display : X.DisplayStar;
  *   ( *(_ocbuf_)->GetOCBufType)(_ocbuf_,_displayReturn_,_typeReturn_,_targetReturn_)
  *)
 
-(* 
+(*
  * NAME:
  * 	PEXGetOCBufferFreeSpace
  *
@@ -6637,7 +6637,7 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  *  *      INIT_OC
  *  *
  *  * DESCRIPTION:
- *  *	Macro to start an oc. Calls PEXInitOC. 
+ *  *	Macro to start an oc. Calls PEXInitOC.
  *  */
  * #define INIT_OC(_ocbuf_,_ocType_,_ocDataLength_,_pReq_) \
  *     PEXInitOC(_ocbuf_,OC/**/_ocType_,LENOF( pex/**/_ocType_),_ocDataLength_,\
@@ -6652,20 +6652,20 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  *  *	pxlOCBuf        *ocbuf;
  *  *
  *  * ARGUMENTS:
- *  *      ocbuf           The OC buffer to which the oc was sent 
+ *  *      ocbuf           The OC buffer to which the oc was sent
  *  *
  *  * RETURNS:
  *  *      None
  *  *
  *  * DESCRIPTION:
- *  *	Called after all the data for the oc has been sent.  
- *  *	`PEXCopyBytesToOC", `PEXCopyWordsToOC" or `PEXGetOCWords" may be 
+ *  *	Called after all the data for the oc has been sent.
+ *  *	`PEXCopyBytesToOC", `PEXCopyWordsToOC" or `PEXGetOCWords" may be
  *  *	called between `PEXInitOC" and `PEXFinishOC" pairs.  Note that
  *  *	calling `PEXFinishOC" without first calling `PEXInitOC" successfully
  *  *	can have severe consequences since pexlib does not check for this.
  *  *
  *  * ERRORS:
- *  * 	None	
+ *  * 	None
  *  *
  *  * SEE ALSO:
  *  *      `PEXGetOCWords",`PEXCopyWordsToOC",`PEXCopyBytesToOC"
@@ -6684,7 +6684,7 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  *  *      pxlElementInfo  *ocList;
  *  *
  *  * ARGUMENTS:
- *  *      ocbuf           The OC buffer to store the ocs in 
+ *  *      ocbuf           The OC buffer to store the ocs in
  *  *	numElements	The number of ocs to store
  *  *	ocList		list of ocs to store
  *  *
@@ -6692,8 +6692,8 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  *  *      None
  *  *
  *  * DESCRIPTION:
- *  *	Copies the list of output commands to the specified oc buffer. 
- *  *	The registered error function will be called if a memory alloc 
+ *  *	Copies the list of output commands to the specified oc buffer.
+ *  *	The registered error function will be called if a memory alloc
  *  *	error occurs.
  *  *
  *  * ERRORS:
@@ -6701,7 +6701,7 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  *  *
  *  * SEE ALSO:
  *  *	`PEXAllocateRetainedOCBuffer", `PEXAllocateTransientOCBuffer",
- *  *      `PEXSendOCBuffer",`PEXFlushOCBuffer" 
+ *  *      `PEXSendOCBuffer",`PEXFlushOCBuffer"
  *  */
  * #define PEXStoreOCList(_ocbuf_,_numElements_,_ocList_) 			\
  * 	( *(_ocbuf_)->StoreOCList)( _ocbuf_,_numElements_,_ocList_)
@@ -6721,18 +6721,18 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  *  *	nWords		The number of words to reserve
  *  *
  *  * RETURNS:
- *  *      Pointer to 'nWords' of data 
+ *  *      Pointer to 'nWords' of data
  *  *
  *  * DESCRIPTION:
- *  *	Return a pointer to 'nWords' of data located in the output command 
- *  *	which is currently in progress.  'PEXInitOC" must be called prior 
- *  *	to this.   NULL will be returned if an attempt is made to grab more 
- *  *	words than were reserved when `PEXInitOC" was called or if an attempt 
- *  *	is made to grab more words than specified in 'PEXGetMaxOCChunkSize". 
+ *  *	Return a pointer to 'nWords' of data located in the output command
+ *  *	which is currently in progress.  'PEXInitOC" must be called prior
+ *  *	to this.   NULL will be returned if an attempt is made to grab more
+ *  *	words than were reserved when `PEXInitOC" was called or if an attempt
+ *  *	is made to grab more words than specified in 'PEXGetMaxOCChunkSize".
  *  *
  *  *      The code below is implemented as a macro since it will be called
- *  *	often and it is critical that it performs well.  The basic 
- *  *	algorithm is 
+ *  *	often and it is critical that it performs well.  The basic
+ *  *	algorithm is
  *  *
  *  *    	    if ( (A && B) || C )
  *  *        	return ( (curPtr += nWords) - nWords);
@@ -6742,18 +6742,18 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  *  * where A =
  *  * 	(the words requested dont overflow the request which is being built)
  *  *
- *  * B = 
- *  *  	(there is room in the current Xlib buffer) OR 
+ *  * B =
+ *  *  	(there is room in the current Xlib buffer) OR
  *  * 	(we can get room in the current Xlib buffer)
  *  *
  *  * C =
- *  *  	(the current request is a large request) AND 
- *  *  	(the words requested dont overflow the large request) AND 
+ *  *  	(the current request is a large request) AND
+ *  *  	(the words requested dont overflow the large request) AND
  *  *  	(a new large request packet was successfully started )
- *  *	 
+ *  *
  *  *
  *  * ERRORS:
- *  * 	None	
+ *  * 	None
  *  *
  *  * SEE ALSO:
  *  *      `PEXInitOC", `PEXFinishOC"
@@ -6761,16 +6761,16 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  *  */
  * #define RoomInThisRequest(_oc_,_nWords_)			\
  *  ( ((_oc_)->ocWordsLeft -= (_nWords_)) >= 0 )
- * 
+ *
  * #define RoomInXBuffer(_oc_,_nWords_) 				\
  *  ( ((_nWords_) <= ((_oc_)->bufMax - (_oc_)->curPtr)) ||		\
  *    (( *(_oc_)->GetOCWords)((_oc_), (_nWords_))) )
- * 
+ *
  * #define NewLargeRequestPacket(_oc_,_nWords_)			\
  *  ( ((_oc_)->lrSequenceNum) &&  					\
  *    (((_oc_)->lrBufferLeft -= (_nWords_)) >= 0) && 		\
  *    (((_oc_)->ocWordsLeft= ( *(_oc_)->StartLargeRequest)(_oc_)-(_nWords_)) >= 0) )
- * 
+ *
  * #define PEXGetOCWords(_oc_,_nWords_) 				\
  *  ( (( RoomInThisRequest(_oc_,_nWords_) && RoomInXBuffer(_oc_,_nWords_) ) || \
  *     NewLargeRequestPacket(_oc_,_nWords_)) ?			\
@@ -6837,7 +6837,7 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  *  *	`PEXAllocateRetainedOCBuffer", `PEXAllocateTransientOCBuffer"
  *  *
  *  */
- * 
+ *
  * #define PEXAddOC(_ocbuf_,_ocType_,_size_,_OCData_)		\
  * {								\
  *     int _ocLength = ((_size_) + Pad(_size_) + sizeof(pexElementInfo))>>2;\
@@ -6855,12 +6855,12 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  * #endif /* DEBUG not defined */
  * 
  * #ifndef DEBUG
- * /*+ 
+ * /*+
  *  * NAME:
  *  *	PEXAddListOC
  *  *
  *  * FORMAT:
- *  *	void PEXAddListOC (ocbuf, ocType, countNeeded, count, elementSize, 
+ *  *	void PEXAddListOC (ocbuf, ocType, countNeeded, count, elementSize,
  *  *			   elementList)
  *  *	pxlOCBuf	*ocbuf;
  *  *	unsigned int	ocType;
@@ -6873,11 +6873,11 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  *  *	ocbuf		The OC buffer to which the output command is to be
  *  *			added.
  *  *
- *  *	ocType		The type of output command to be added to the OC 
+ *  *	ocType		The type of output command to be added to the OC
  *  *			buffer.
  *  *
  *  *	countNeeded     True if the list to be added requires a count to
- *  *			precede it; False otherwise 
+ *  *			precede it; False otherwise
  *  *
  *  *	count		The number of items in the list to be placed
  *  *			in the output command.
@@ -6894,9 +6894,9 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  *  *	buffer.  The `PEX.h' include file contains possible values of `ocType'.
  *  *
  *  *	The last part of the command is a list of `count' items.  Each item is
- *  *	`elementSize' bytes long.  The list is padded if necessary.  If 
- *  *	`countNeeded`  is True the list created in `ocbuf' is preceded by a 
- *  *	count.  `elementList' points to the data for the list.  
+ *  *	`elementSize' bytes long.  The list is padded if necessary.  If
+ *  *	`countNeeded`  is True the list created in `ocbuf' is preceded by a
+ *  *	count.  `elementList' points to the data for the list.
  *  *
  *  * ERRORS:
  *  *	Renderer		Specified renderer resource identifier is
@@ -6929,7 +6929,7 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  *     PEXCopyBytesToOC(_ocbuf_, _ocListSize, _elList_);	\
  *     PEXFinishOC(_ocbuf_);				\
  * }
- * 
+ *
  *)
 
 (*****************************************************************************)
@@ -6939,35 +6939,35 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
 (*
  * /* Definitions for Digital Pick/Echo/Z PEX extension likely to be used by
  * applications */
- * 
+ *
  * #define MPEX_REQ	0x00000080 /* reqType is CARD8 */
  * #define MPEX_EVENT	0x00000000 /* offset from base event num from XInitExt */
  * #define MPEX_OC		0x00008000 /* elementType is CARD16 */
  * #define MPEX_ENUM	0x00008000 /* enum types are CARD16 */
  * #define MPEX_TABLE	0x00008000 /* pexTableType is CARD16 */
- * 
+ *
  * /*** Enumerated Types ***/
  * #define MPEXETHighlightMethod	(MPEX_ENUM+0)
  * #define MPEXETEchoMethod		(MPEX_ENUM+1)
  * #define MPEXETOverlapMode		(MPEX_ENUM+2)
  * #define MPEXETLogicalOp		(MPEX_ENUM+3)
- * 
+ *
  * #define FirstMPEXEnumType	(MPEX_ENUM+0)
  * #define LastMPEXEnumType	(MPEX_ENUM+3)
- * 
+ *
  * /*** MPEXHighlightLUT and Echo Methods ***/
  * #define MPEXChangeAllColors		0
  * #define MPEXChangeEdgeColor		1
  * #define MPEXChangeInteriorColor	2
- * 
+ *
  * /*** additional Hlhsr mode ***/
  * #define MPEXHlhsrZBufferId		-2
- * 
+ *
  * /*** Overlap Mode Values ***/
  * #define MPEXAnyPrim		0
  * #define MPEXFirstPrim	1
  * #define MPEXLastPrim	2
- * 
+ *
  * /*** Logical Operations ***/
  * #define MPEXOpClear		0x0
  * #define MPEXOpAnd		0x1
@@ -6985,31 +6985,31 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  * #define MPEXOpOrInverted	0xD
  * #define MPEXOpNand		0xE
  * #define MPEXOpSet		0xF
- * 
+ *
  * /*** Lookup Table Types ***/
  * #define MPEXHighlightLUT	(MPEX_TABLE+0)
  * #define MPEXEchoLUT	(MPEX_TABLE+1)
  * #define MPEXPixmapLUT	(MPEX_TABLE+2)
  * #define MPEXTextureLUT	(MPEX_TABLE+3)
- * 
+ *
  * #define maxMPEXTableType	(MPEX_TABLE+4)
  * #define FirstMPEXTableType	(MPEX_TABLE+0)
  * #define LastMPEXTableType	(MPEX_TABLE+3)
- * 
+ *
  * /*** Renderer State ***/
  * #define MPEXPicking			2
  * #define	MPEXTransparencyOpaque	3
  * #define	MPEXTransparency		4
- * 
+ *
  * /*** Which Element to Pick ***/
  * #define MPEXPickClosest	0
  * #define MPEXPickLast	1
- * 
+ *
  * /*** Values for "more picks" ***/
  * #define MPEXNoMorePicks		0
  * #define MPEXMorePicks		1
  * #define MPEXMaybeMorePicks		2
- * 
+ *
  * /*** user-settable Dash Patterns ***/
  * #define MPEXDashPattern1	-1
  * #define MPEXDashPattern2	-2
@@ -7027,7 +7027,7 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  * #define MPEXDashPattern14	-14
  * #define MPEXDashPattern15	-15
  * #define MPEXDashPattern16	-16
- * 
+ *
  * /*** user-settable Marker Glyphs ***/
  * #define MPEXMarkerGlyph1	-1
  * #define MPEXMarkerGlyph2	-2
@@ -7045,7 +7045,7 @@ PROCEDURE PEXSendOCBuffer (ocbuf : pxlOCBufStar);
  * #define MPEXMarkerGlyph14	-14
  * #define MPEXMarkerGlyph15	-15
  * #define MPEXMarkerGlyph16	-16
- * 
+ *
  * /*** Bit Numbers for Change/Get/CopyNewPipelineContext ***/
  * #define MPEXNPCHighlightIndex		0
  * #define MPEXNPCEchoIndex		1
@@ -7123,14 +7123,14 @@ CONST
  * #define MPEXOCReferToStructure          (MPEX_OC+15)
  * #define MPEXOCFFTextureMapIndex         (MPEX_OC+16)
  * #define MPEXOCBFTextureMapIndex         (MPEX_OC+17)
- * 
+ *
  * #define MaxMPEXOC			(MPEX_OC+18)
  * #define FirstMPEXOC			(MPEX_OC+0)
  * #define LastMPEXOC			(MPEX_OC+17)
- * 
+ *
  * /*** Events ***/
  * #define MPEXMaxHitsReached	        (MPEX_EVENT+0)
- * 
+ *
  * /*** Requests ***/
  * #define MPEX_ChangeNewRenderer		(MPEX_REQ+0)
  * #define MPEX_GetNewRendererAttributes	(MPEX_REQ+1)
@@ -7153,26 +7153,26 @@ CONST
  * #define MPEX_CopyNewPipelineContext	(MPEX_REQ+18)
  * #define MPEX_GetNewPipelineContext	(MPEX_REQ+19)
  * #define MPEX_ChangeNewPipelineContext	(MPEX_REQ+20)
- * 
+ *
  * #define MaxMPEXCommand		(MPEX_REQ+21)
  * #define FirstMPEXCommand	(MPEX_REQ+0)
  * #define LastMPEXCommand		(MPEX_REQ+20)
- * 
+ *
  * /* dummied in because Pete doesn't know any better (used in pl_startup.c) */
- * 
+ *
  * #define	PEXMinError	0
- * 
+ *
  * #define Texture Information */
- * 
+ *
  * #define MPEXGATexture    0x0008
  * #define MPEXInteriorStyleTexture 6
- *  
+ *
  * /* Texture Mapping Definition */
- * 
+ *
  * #define MPEXTextureMapWrap      0
  * #define MPEXTextureMapClamp     1
  * #define MPEXTextureMapNone      2
- * 
+ *
  * #endif /* MPEX_H */
  *)
 
@@ -7197,7 +7197,7 @@ CONST
  * definitions are always supersets of the mpexFooBar protocol definitions.
  * Note that most mpxlFooBar definitions are equivalent to the mpexFooBar
  * protocol definitions.  However, some of the definitions do have extra
- * fields. See documentation in PEXlib.h for more details. 
+ * fields. See documentation in PEXlib.h for more details.
  *)
 
 (*
@@ -7239,8 +7239,8 @@ TYPE
 
   mpxlPixmapEntry = mpexPixmapEntry;
 
-(* 
- * pick path returned by pick all 
+(*
+ * pick path returned by pick all
  *)
 
   mpxlPickAllPath = RECORD
@@ -7250,8 +7250,8 @@ TYPE
   mpxlPickAllPathStar     = UNTRACED REF mpxlPickAllPath;
   mpxlPickAllPathStarStar = UNTRACED REF mpxlPickAllPathStar;
 
-(* 
- * Definition for MPEX Pipeline Context Attributes.  Defines are in MPEX.h. 
+(*
+ * Definition for MPEX Pipeline Context Attributes.  Defines are in MPEX.h.
  *)
 
   mpxlPCAttributes = RECORD
@@ -7267,16 +7267,16 @@ TYPE
 
 (*** macro for setting bits in a new PC value mask ***)
 
-(* 
+(*
  * #define MPEX_SetPCAttrMaskBit(mask, attrNum) \
  *     mask |= 1L << ( ((attrNum)) & 0x1F)
- *) 
-
-(* 
- * Definition for MPEX Renderer Attributes.  Defines are in MPEX.h. 
  *)
 
-TYPE 
+(*
+ * Definition for MPEX Renderer Attributes.  Defines are in MPEX.h.
+ *)
+
+TYPE
   mpxlRendererAttributes = RECORD
     logicalOp       : Ctypes.short;
     overlapMode     : Ctypes.short;
@@ -7339,7 +7339,7 @@ TYPE
  *     BYTE		pad[24];
  *     /* SINGLE NewRendererAttributes(itemMask) */
  * } mpexGetNewRendererAttributesReply;
- * 
+ *
  * typedef struct
  * {
  *     BYTE		type;	/* X_Reply */
@@ -7350,9 +7350,9 @@ TYPE
  *     BYTE		pad[20];
  *     /* LISTof PickElementRef(numRefs) */
  * } mpexEndPickOneReply;
- * 
+ *
  * typedef mpexEndPickOneReply mpexPickOneReply;
- * 
+ *
  * typedef struct
  * {
  *     BYTE		type;	/* X_Reply */
@@ -7364,9 +7364,9 @@ TYPE
  *     BYTE		pad[19];
  *     /* LISTof CLISTof PickElementRef(numPicks) */
  * } mpexEndPickAllReply;
- * 
+ *
  * typedef mpexEndPickAllReply mpexPickAllReply;
- * 
+ *
  * typedef struct
  * {
  *     BYTE		type;	/* X_Reply */
@@ -7376,7 +7376,7 @@ TYPE
  *     CARD32		pattern B32;
  *     BYTE		pad[20];
  * } mpexGetDashPatternReply;
- * 
+ *
  * typedef struct
  * {
  *     BYTE		type;	/* X_Reply */
@@ -7388,8 +7388,8 @@ TYPE
  *     BYTE		pad[20];
  *     CARD16		glyph[16];
  * } mpexGetMarkerGlyphReply;
- * 
- * 
+ *
+ *
  * typedef struct
  * {
  *     BYTE		type;	/* X_Reply */
@@ -7399,12 +7399,12 @@ TYPE
  *     BYTE		requireAnotherPass;
  *     BYTE		pad[23];
  * } mpexEndTransparencyRenderingReply;
- * 
- * 
+ *
+ *
  * /****************************************************************
  *  *		EVENTS						*
  *  ****************************************************************/
- * 
+ *
  * typedef struct
  * {
  *     BYTE		type;
@@ -7413,11 +7413,11 @@ TYPE
  *     pexRenderer		rdr B32;
  *     BYTE		pad[24];
  * } mpexMaxHitsReachedEvent;
- * 
+ *
  * /****************************************************************
  *  *		REQUESTS					*
  *  ****************************************************************/
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7429,7 +7429,7 @@ TYPE
  *     pexBitmask		itemMask B32;
  *     /* SINGLE NewRendererAttributes(itemMask) */
  * } mpexChangeNewRendererReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7440,7 +7440,7 @@ TYPE
  *     pexRenderer		rdr B32;
  *     pexBitmask		itemMask B32;
  * } mpexGetNewRendererAttributesReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7450,7 +7450,7 @@ TYPE
  *     pexStructure	sid B32;
  *     pexElementRange	range;
  * } mpexRenderElementsReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7460,7 +7460,7 @@ TYPE
  *     CARD32		numRefs B32;
  *     /* LISTof ElementRef(numRefs) */
  * } mpexAccumulateStateReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7472,9 +7472,9 @@ TYPE
  *     CARD8		which;
  *     BYTE		pad[3];
  * } mpexBeginPickOneReq;
- * 
+ *
  * typedef pexResourceReq mpexEndPickOneReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7486,7 +7486,7 @@ TYPE
  *     CARD8		which;
  *     BYTE		pad[3];
  * } mpexPickOneReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7498,9 +7498,9 @@ TYPE
  *     CARD8		sendEvent;
  *     BYTE		pad[3];
  * } mpexBeginPickAllReq;
- * 
+ *
  * typedef pexResourceReq mpexEndPickAllReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7509,7 +7509,7 @@ TYPE
  *     pexRenderer		rdr B32;
  *     Drawable		drawable B32;
  * } mpexPickAllReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7519,7 +7519,7 @@ TYPE
  *     CARD32		pickid B32;
  *     INT32		offset B32;
  * } mpexSetElementPointerAtPickIdReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7530,7 +7530,7 @@ TYPE
  *     CARD16		pad B16;
  *     CARD32		pattern B32;
  * } mpexSetDashPatternReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7540,7 +7540,7 @@ TYPE
  *     INT16		patternNum B16;
  *     CARD16		pad B16;
  * } mpexGetDashPatternReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7553,7 +7553,7 @@ TYPE
  *     INT16		yOffset B16;
  *     CARD16		glyph[16];
  * } mpexSetMarkerGlyphReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7563,7 +7563,7 @@ TYPE
  *     INT16		glyphNum B16;
  *     CARD16		pad B16;
  * } mpexGetMarkerGlyphReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8		reqType;
@@ -7573,7 +7573,7 @@ TYPE
  *     CARD16		totalNum B16;
  *     CARD32		totalLength B32;
  * } mpexLargeRequestReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8	reqType;
@@ -7584,7 +7584,7 @@ TYPE
  *     CARD8	firstPass;
  *     BYTE	pad[3];
  * } mpexBeginTransparencyRenderingReq;
- * 
+ *
  * typedef struct
  * {
  *     CARD8	reqType;
@@ -7599,7 +7599,7 @@ TYPE
 (*****************************************************************
  * Output Commands
  *****************************************************************)
- 
+
 TYPE
   mpexAnnoPixmap = RECORD
     head   : pexElementInfo;
@@ -7708,7 +7708,7 @@ TYPE
  * From MPEXprotostr.h
  *)
 
-(* Definitions for Digital Pick/Echo/Z PEX extension likely to be used by 
+(* Definitions for Digital Pick/Echo/Z PEX extension likely to be used by
    applications *)
 
 (* Typedefs for lookup tables *)
@@ -7725,7 +7725,7 @@ TYPE
     pad    : CARD16;
     colour : pexColourSpecifier;
   END;
-    
+
   mpexPixmapEntry = RECORD
     pixmapId : CARD32;               (* used to be X.Pixmap *)
     xOffset  : INT16;

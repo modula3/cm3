@@ -9,7 +9,7 @@ PROCEDURE ToText (msg: INTEGER): TEXT =
   VAR
     lo   : CARDINAL := 0;
     hi   : CARDINAL := NUMBER (Desc);
-    mid  : CARDINAL; 
+    mid  : CARDINAL;
   BEGIN
     WHILE (lo < hi) DO
       mid := (lo + hi) DIV 2;

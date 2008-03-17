@@ -49,7 +49,7 @@ PROCEDURE Init(
   BEGIN
     jz.fv := fv;
     jz.rt := rt;
-    rt.animView := NEW(PSImpl.T).init(NEW(AnimChild).init(origin), rt); 
+    rt.animView := NEW(PSImpl.T).init(NEW(AnimChild).init(origin), rt);
     jz.w := NEW(DblBufferVBT.T).init(rt.animView);
     RETURN jz
   END Init;
@@ -76,7 +76,7 @@ PROCEDURE Event(jz: T; tFactor: REAL; nm, args: TEXT)
   BEGIN
     TYPECASE ent OF
       NULL => RAISE RemoteView.Error("Unknown event procedure \"" & nm & "\"")
-    | JunoScope.Proc (p) => 
+    | JunoScope.Proc (p) =>
         VAR argList: RefList.T; len: CARDINAL; BEGIN
           TRY argList := Sx.Read(TextRd.New(args)) EXCEPT
             Sx.ReadError, Rd.EndOfFile =>

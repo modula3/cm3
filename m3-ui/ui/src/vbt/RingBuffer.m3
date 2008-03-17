@@ -16,14 +16,14 @@ CONST NormalQSize = Elem.QueueSize;
 
 PROCEDURE Insert(VAR rb: T; READONLY e: Elem.T) =
   BEGIN
-    IF rb.buff = NIL THEN 
+    IF rb.buff = NIL THEN
        rb.buff := NEW(REF ARRAY OF Elem.T, NormalQSize)
     END;
     rb.buff[rb.hi] := e;
     INC(rb.hi);
     WITH n = NUMBER(rb.buff^) DO
       IF rb.hi = n THEN rb.hi := 0 END;
-      IF rb.hi = rb.lo THEN 
+      IF rb.hi = rb.lo THEN
         WITH new = NEW(REF ARRAY OF Elem.T, 2 * n) DO
           FOR i := rb.lo TO n - 1 DO
             new[i] := rb.buff[i]
@@ -56,5 +56,5 @@ PROCEDURE Peek(VAR rb: T): Elem.T RAISES {Exhausted} =
     IF rb.lo = rb.hi THEN RAISE Exhausted END;
     RETURN rb.buff[rb.lo];
   END Peek;
-  
-BEGIN END RingBuffer. 
+
+BEGIN END RingBuffer.

@@ -586,7 +586,7 @@ PROCEDURE TraceUndo (v: T) =
     END;
     Wr.PutText (Stdio.stderr, "-------------------\n")
   END TraceUndo;
-  
+
 PROCEDURE Undo (v: T) =
   BEGIN
     IF v.cur.prev # NIL THEN v.cur := v.cur.prev; Exchange (v) END
@@ -595,7 +595,7 @@ PROCEDURE Undo (v: T) =
 PROCEDURE Redo (v: T) =
   BEGIN
     IF v.cur.next # NIL THEN Exchange (v); v.cur := v.cur.next END
-  END Redo; 
+  END Redo;
 
 PROCEDURE UndoCount (v: T): CARDINAL =
   <* LL < v.mu *>
@@ -732,8 +732,8 @@ PROCEDURE Write (         m   : Model;
                           t   : TEXT           ) RAISES {VBT.Error} =
   BEGIN
     VBT.Write (m.v, s, time, VBT.FromRef (t))
-  END Write; 
-  
+  END Write;
+
 PROCEDURE Seek (m: Model; position: CARDINAL) =
   CONST name = "Seek";
   BEGIN
@@ -817,7 +817,7 @@ PROCEDURE Highlight (m: Model; rec: SelectionRecord; READONLY r: IRange) =
     | VTDef.Error (ec) => m.v.vterror (name, ec)
     END
   END Highlight;
-  
+
 PROCEDURE TakeSelection (         m   : Model;
                          READONLY sel : VBT.Selection;
                                   type: TextPort.SelectionType;
@@ -951,7 +951,7 @@ VAR
   cursors := ARRAY BOOLEAN OF
                Cursor.T {Cursor.TextPointer,
                          Cursor.FromName (ARRAY OF TEXT {"XC_exchange"})};
-    
+
 PROCEDURE Feedback (<* UNUSED *> c: Composer; v: VBT.T; composing: BOOLEAN) =
   BEGIN
     VBT.SetCursor (v, cursors [composing])

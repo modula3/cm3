@@ -11,9 +11,9 @@ VAR
   fname: Pathname.T := NIL;
 
 
-PROCEDURE CheckParams() = 
+PROCEDURE CheckParams() =
   BEGIN
-    CASE Params.Count OF 
+    CASE Params.Count OF
     | 2 => fname := Params.Get(1);
     | 3 => WITH viewtext = Params.Get(1) DO
              IF NOT Text.Equal(viewtext, noview) THEN
@@ -27,7 +27,7 @@ PROCEDURE CheckParams() =
     END;
   END CheckParams;
 
-PROCEDURE Fatal(t: TEXT) = 
+PROCEDURE Fatal(t: TEXT) =
   BEGIN
     IO.Put ("error: ");
     IO.Put (t);
@@ -39,9 +39,9 @@ BEGIN
   CheckParams();
   TRY
     VAR form := FormsVBT.NewFromFile(fname);
-    BEGIN 
+    BEGIN
       IF view THEN Trestle.Install(form); Trestle.AwaitDelete(form) END;
-    END; 
+    END;
   EXCEPT
     | Rd.Failure  => Fatal ("reading from the input file");
     | FormsVBT.Error (t) =>  Fatal(t);

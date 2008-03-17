@@ -42,7 +42,7 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
       Path.LineTo (path, Point.T {210,90});
       Path.LineTo (path, Point.T {220,70});
       Path.Close (path);
-      VBT.Stroke (self, Rect.Full, path, width := 5, 
+      VBT.Stroke (self, Rect.Full, path, width := 5,
                   join := VBT.JoinStyle.Miter);
     END;
   END Repaint;

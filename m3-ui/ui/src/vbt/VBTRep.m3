@@ -101,7 +101,7 @@ VAR
 
 PROCEDURE CheckMisc(v: VBT.T) =
   VAR miscRef := v.miscRef;
-  BEGIN 
+  BEGIN
     IF (miscRef # NIL) AND (miscRef.badRgn.r.west >= miscRef.badRgn.r.east)
          (* i.e. Rect.IsEmpty(miscRef.badRgn.r) *)
        AND (miscRef.oldDomain.west >= miscRef.oldDomain.east)
@@ -117,7 +117,7 @@ PROCEDURE CheckMisc(v: VBT.T) =
   END CheckMisc;
 
 PROCEDURE CreateMisc(v: VBT.T) =
-  BEGIN 
+  BEGIN
     IF v.miscRef = NIL THEN
       LOCK mu DO
         IF avail # NIL THEN
@@ -166,21 +166,21 @@ READONLY clipP:    Rect.T;
     END;
     len := (middle - first) DIV ADRSIZE(Word.T);
     IF batch.clipped = BatchUtil.ClipState.Unclipped THEN
-      batch.clip := BatchRep.ClipSubAndTighten(batch.clip, 
+      batch.clip := BatchRep.ClipSubAndTighten(batch.clip,
         batch.b^, 0, len, batch.scrollSource);
       batch.clipped := BatchUtil.ClipState.Tight
     END;
     IF clippedP = BatchUtil.ClipState.Unclipped THEN
-      batch.clip := Rect.Join(batch.clip, 
-         BatchRep.ClipSubAndTighten(clipP, 
+      batch.clip := Rect.Join(batch.clip,
+         BatchRep.ClipSubAndTighten(clipP,
            batch.b^, len, (batch.next - middle) DIV ADRSIZE(Word.T),
            scrollSourceP))
         (* clippedP is now tight, so don't downgrade clipped *)
     ELSE
       batch.clip := Rect.Join(batch.clip, clipP);
         (* downgrade clipped if needed *)
-      IF clippedP = BatchUtil.ClipState.Clipped THEN 
-        batch.clipped := BatchUtil.ClipState.Clipped 
+      IF clippedP = BatchUtil.ClipState.Clipped THEN
+        batch.clipped := BatchUtil.ClipState.Clipped
       END
     END;
     batch.scrollSource := Rect.Join(batch.scrollSource, scrollSourceP)
@@ -296,7 +296,7 @@ PROCEDURE ExpandBadRect(w: VBT.T; READONLY clp: Rect.T; ba: Batch.T) =
     br := Region.Empty;
     b  := FALSE;
     IF Prop.Reshaping IN w.props THEN b := ExpandBR(w, clp, br) END;
-    brPres := (w.miscRef # NIL) AND 
+    brPres := (w.miscRef # NIL) AND
       (w.miscRef.badRgn.r.west < w.miscRef.badRgn.r.east);
     IF NOT Rect.IsEmpty(ba.scrollSource) THEN
       start  := 0;
@@ -324,7 +324,7 @@ PROCEDURE ExpandBadRect(w: VBT.T; READONLY clp: Rect.T; ba: Batch.T) =
 
 PROCEDURE ForceBatch(v: VBT.T) =
   VAR clipP: Rect.T; clipPed: BOOLEAN;
-  BEGIN 
+  BEGIN
     IF v.parent = NIL THEN CancelBatch(v) END;
     IF v.batch = NIL THEN RETURN END;
     v.remaining := 0;
@@ -353,7 +353,7 @@ PROCEDURE ForceBatch(v: VBT.T) =
       IF v.batch.firstSingle # v.batch.next THEN
         IF Prop.Reshaping IN v.props THEN
           MergeBatch(v.batch, v.batch.firstSingle,
-            Rect.Join(v.domain, v.miscRef.oldDomain), 
+            Rect.Join(v.domain, v.miscRef.oldDomain),
             BatchUtil.ClipState.Unclipped, v.batch.scrollSource)
         ELSE
           MergeBatch(v.batch, v.batch.firstSingle, v.domain,
@@ -371,14 +371,14 @@ PROCEDURE ForceBatch(v: VBT.T) =
         END
       END
     END;
-    IF (Prop.Reshaping IN v.props) OR 
+    IF (Prop.Reshaping IN v.props) OR
        NOT Rect.IsEmpty(v.batch.scrollSource) THEN
       IF NOT clipPed THEN clipP := v.batch.clip END;
       ExpandBadRect(v, clipP, v.batch)
     END;
-    IF v.batch.clip.west >= v.batch.clip.east THEN 
-      Batch.Free(v.batch); 
-      RETURN 
+    IF v.batch.clip.west >= v.batch.clip.east THEN
+      Batch.Free(v.batch);
+      RETURN
     END;
     IF Prop.ShortCircuit IN v.props THEN
       VBTClass.PaintBatch(v.parent, v.batch);
@@ -450,7 +450,7 @@ PROCEDURE MeterMaid(<*UNUSED*>self: Thread.Closure): REFANY RAISES {} =
           mustSignal := todo # NIL;
           IF mustSignal AND (qth = numWorkers)
              AND (numWorkers < maxWorkers) THEN
-            EVAL Thread.Fork(NEW(Thread.SizedClosure, apply := MeterMaid, 
+            EVAL Thread.Fork(NEW(Thread.SizedClosure, apply := MeterMaid,
               stackSize := 20000));
             INC(numWorkers)
           END
@@ -549,7 +549,7 @@ PROCEDURE ExtendBatch (v: VBT.T; VAR ba: Batch.T) =
     Batch.Free(ba)
   END ExtendBatch;
 
-TYPE 
+TYPE
   RedisplayRec = RECORD v: VBT.T; depth: INTEGER END;
   RedisplayList = REF ARRAY OF RedisplayRec;
 
@@ -561,12 +561,12 @@ VAR
      locking level of muRedisplayList is greater than the locking level
      of all VBT's. *)
   rdClosure := NEW(Thread.SizedClosure, stackSize := 20000, apply := RdApply);
-  
+
 CONST
   InitialRdSize = 8;
-  
+
 PROCEDURE Mark(v: VBT.T) RAISES {} =
-  BEGIN 
+  BEGIN
     IF NOT Prop.Marked IN v.props THEN
       v.props := v.props + Props{Prop.Marked};
       IF v.st = NIL THEN RETURN END;
@@ -590,17 +590,17 @@ PROCEDURE Mark(v: VBT.T) RAISES {} =
     END
   END Mark;
 
-PROCEDURE CoverRedisplay() = 
+PROCEDURE CoverRedisplay() =
   BEGIN
-    LOCK rdMu DO INC(rdCoverage) END 
+    LOCK rdMu DO INC(rdCoverage) END
   END CoverRedisplay;
 
-PROCEDURE UncoverRedisplay() = 
+PROCEDURE UncoverRedisplay() =
   VAR zero: BOOLEAN; BEGIN
     LOCK rdMu DO DEC(rdCoverage); zero := rdCoverage = 0 END;
     IF zero THEN Redisplay() END
   END UncoverRedisplay;
-  
+
 PROCEDURE RdApply(<*UNUSED*> self: Thread.Closure): REFANY RAISES {} =
   BEGIN
     LOCK VBT.mu DO UncoverRedisplay() END; RETURN NIL
@@ -614,7 +614,7 @@ PROCEDURE Redisplay() RAISES {} =
     list: RedisplayList;
     dcount: DepthArray;
     n: INTEGER;
-  BEGIN 
+  BEGIN
     LOOP
       list := GetRedisplayList();
       IF list = NIL THEN RETURN END;
@@ -635,7 +635,7 @@ PROCEDURE Redisplay() RAISES {} =
       (* n = number of VBTs in list *)
       (* All d: dcount[d].n = # VBTs in list with depth d. *)
       IF n = 0 THEN RETURN END;
-      FOR d := 1 TO LAST(dcount^) DO 
+      FOR d := 1 TO LAST(dcount^) DO
         INC(dcount[d].n, dcount[d-1].n)
       END;
       (* All d: dcount[d].n = # VBTs in list with depth at most d. *)
@@ -684,7 +684,7 @@ PROCEDURE MaxRepeat(v: VBT.T): CARDINAL =
 
 PROCEDURE PaintRepeat( v: VBT.T; READONLY clip: ARRAY OF Rect.T) =
   VAR pRep: PaintPrivate.RepeatPtr;
-  BEGIN 
+  BEGIN
     IF NUMBER(clip) = 0 THEN RETURN END;
     IF NUMBER(clip) > MaxRepeat(v) THEN Crash() END;
     pRep := v.batch.next;
@@ -696,7 +696,7 @@ PROCEDURE PaintRepeat( v: VBT.T; READONLY clip: ARRAY OF Rect.T) =
     v.batch.next := pRep;
     DEC(v.remaining, NUMBER(clip) * ADRSIZE(PaintPrivate.CommandRec));
   END PaintRepeat;
-  
+
 PROCEDURE PaintSingle (         v   : VBT.T;
                        READONLY clip: Rect.T;
                                 com : PaintPrivate.CommandPtr) =
@@ -732,7 +732,7 @@ PROCEDURE PaintSingle (         v   : VBT.T;
       DEC(v.remaining, lenb)
     END
   END PaintSingle;
-  
+
 PROCEDURE Scroll (         v   : VBT.T;
                   READONLY clip: Rect.T;
                            com : PaintPrivate.ScrollPtr) =
@@ -745,7 +745,7 @@ PROCEDURE Scroll (         v   : VBT.T;
       Rect.Join(v.batch.scrollSource, Rect.Move(clip, com.delta));
     PaintSingle(v, clip, LOOPHOLE(com, PaintPrivate.CommandPtr));
   END Scroll;
-  
+
 PROCEDURE MouseCrash (<*UNUSED*>          v : VBT.T;
                       <*UNUSED*> READONLY cd: VBT.MouseRec) =
   BEGIN
@@ -831,7 +831,7 @@ PROCEDURE Crash () =
 BEGIN
   LOCK qmu DO
     IF numWorkers = 0 THEN
-      EVAL Thread.Fork(NEW(Thread.SizedClosure, apply := MeterMaid, 
+      EVAL Thread.Fork(NEW(Thread.SizedClosure, apply := MeterMaid,
         stackSize := 20000));
       INC(numWorkers)
     END

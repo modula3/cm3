@@ -16,8 +16,8 @@
 
 INTERFACE VBTRep;
 
-IMPORT Batch, Cursor, PropertyV, Rect, Region, 
-  ScreenType, ScrnPaintOp, ScrnCursor, ScrnPixmap, 
+IMPORT Batch, Cursor, PropertyV, Rect, Region,
+  ScreenType, ScrnPaintOp, ScrnCursor, ScrnPixmap,
   ScrnFont, VBT, VBTClass, Word, PaintPrivate, Axis, Palette,
   PaintOp, Font, Pixmap;
 
@@ -33,15 +33,15 @@ TYPE
     link: MiscRef := NIL
   END;
 
-(* To save space in a "VBT", the "cage", "badRgn", "rpseqno", and 
-   "oldDomain" fields are only stored if at least one of them has an 
-   ``unusual'' value.  This is achieved by including a "MiscRef" in the 
+(* To save space in a "VBT", the "cage", "badRgn", "rpseqno", and
+   "oldDomain" fields are only stored if at least one of them has an
+   ``unusual'' value.  This is achieved by including a "MiscRef" in the
    "VBT" object.  If the "MiscRef" is "NIL", then the "badRgn" and "oldDomain"
    are empty, the "rpseqno" is irrelevant, and the cage is determined
    from the "cagetype" field as follows: if the "cagetype" is
    "VBT.CageType.Rectangle", then the cage rectangle is assumed to be
    "Rect.Empty"; otherwise the rectangle is irrelevant.
-   
+
    The "rpseqno" field is the {\it repainting sequence number}.  It is
    incremented whenever the "badRgn" is expanded and recorded before
    activating a "repaint" method.  Thus when the repaint method returns,
@@ -52,8 +52,8 @@ TYPE
 
 TYPE
   Prop =
-    {EscapePending, Reshaping, RepaintPending, OnQ, 
-     Covered, Combiner, ShortCircuit, CageCovered, 
+    {EscapePending, Reshaping, RepaintPending, OnQ,
+     Covered, Combiner, ShortCircuit, CageCovered,
      Marked, ExcessBegins, HasNewShape, BlockNewShape,
      EscapeCovered};
   Props = SET OF Prop;
@@ -88,27 +88,27 @@ CONST
    many small batches across "RPC".
 
    "ShortCircuit":  Set on a "VBT" when painting on the VBT can be
-   implemented by clipping to the "VBT"'s domain and painting on its 
+   implemented by clipping to the "VBT"'s domain and painting on its
    parent.
 
    "Marked": set by "VBT.Mark".
 
-   "CageCovered": "VBTClass.PutPosition" sets this bit on a "VBT" before 
-   calling its position method; after calling the position method, 
-   the procedure relays the child's cage to the parent and clears 
-   the bit.  "VBTClass.SetCage" notices the bit and omits relaying the 
-   cage to the parent.  
+   "CageCovered": "VBTClass.PutPosition" sets this bit on a "VBT" before
+   calling its position method; after calling the position method,
+   the procedure relays the child's cage to the parent and clears
+   the bit.  "VBTClass.SetCage" notices the bit and omits relaying the
+   cage to the parent.
 
    "ExcessBegins": Set when "excessBegins > 0".
 
    "HasNewShape" is set when "VBT.NewShape" is called, and cleared by
-   a call to "VBTClass.HasNewShape" or "VBTClass.GetShape". 
+   a call to "VBTClass.HasNewShape" or "VBTClass.GetShape".
 
    If "BlockNewShape" is set, "VBT.NewShape" calls will not be relayed
    to the parent of the "VBT".
  *)
 
-REVEAL VBT.Prefix = 
+REVEAL VBT.Prefix =
   VBTClass.Prefix BRANDED OBJECT
     <* LL >= {SELF} *>
     cursor := Cursor.DontCare;
@@ -116,7 +116,7 @@ REVEAL VBT.Prefix =
       := VBTClass.VBTCageType.Gone;
     props: (*BITS 16 FOR*) Props := NoProps;
     batch: Batch.T := NIL;
-    remaining: INTEGER := 0; 
+    remaining: INTEGER := 0;
     propset: PropertyV.Set := NIL;
     miscRef: MiscRef := NIL;
   OVERRIDES
@@ -132,7 +132,7 @@ REVEAL VBT.Prefix =
 
 REVEAL VBT.ScreenType <: STPub;
 
-TYPE STPub = 
+TYPE STPub =
   ScreenType.Public OBJECT
     ops: REF ARRAY OF ScrnPaintOp.T;
     cursors: REF ARRAY OF ScrnCursor.T;
@@ -156,7 +156,7 @@ TYPE STPub =
    resource is built-in.  The default values for these return the result of
    invoking the closure or the built-in method; your procedure must not
    return NIL when invoked on a built-in. *)
-   
+
 TYPE OffscreenType = VBT.ScreenType OBJECT st: VBT.ScreenType END;
 
 (* An "OffscreenType" "s", is a screen type that is derived from the screen
@@ -176,7 +176,7 @@ PROCEDURE DestroyMisc(v: VBT.T);
 <* LL >= {v, v.parent} *>
 (* Set "v"'s misc to "NIL", clearing "Reshaping" from "v.props". *)
 
-PROCEDURE NewBatch(v: VBT.T; len: INTEGER := -1); 
+PROCEDURE NewBatch(v: VBT.T; len: INTEGER := -1);
 <* LL.sup = v *>
 (* Force "v"'s batch if it is non-nil and allocate a new batch for it
    of size at least "len", or of size "VBTTuning.BatchSize" if "len=-1".  *)
@@ -197,7 +197,7 @@ PROCEDURE GetcursorDefault(v: VBT.Prefix): ScrnCursor.T;
 PROCEDURE AxisOrderDefault(v: VBT.Prefix): Axis.T;
 (* Return "Axis.T.Hor". *)
 
-PROCEDURE ExpandBadRect(w: VBT.T; 
+PROCEDURE ExpandBadRect(w: VBT.T;
   READONLY clp: Rect.T; ba: Batch.T);
 <* LL.sup = w *>
 (* Expand "w"'s bad region for "ba". *)
@@ -207,7 +207,7 @@ PROCEDURE ExpandBadRect(w: VBT.T;
    expansion is caused by (a) using out-of-domain bits as source (b)
    painting into the old domain (c) scrolling an existing bad rectangle.
    *)
-     
+
 PROCEDURE ExtendBatch(v: VBT.T; VAR ba: Batch.T);
 (* Extend "v"'s batch to include the painting operations in "ba", and free
    "ba". It is assumed that "v" has a non-empty batch which has room for
@@ -218,7 +218,7 @@ PROCEDURE MaxRepeat(v: VBT.T): CARDINAL;
 (* Return the number of RepeatRec's that can fit in "v"'s current batch.
    *)
 
-PROCEDURE PaintRepeat(v: VBT.T; 
+PROCEDURE PaintRepeat(v: VBT.T;
   READONLY clip: ARRAY OF Rect.T);
 <* LL.sup = v *>
 (* Add a "RepeatRec" to "v"'s batch for each rectangle in "clip". *)
@@ -227,7 +227,7 @@ PROCEDURE PaintRepeat(v: VBT.T;
    in "v"'s batch.  Calling "PaintRepeat" does not call
    "Enqueue(v)". *)
 
-PROCEDURE PaintSingle(v: VBT.T; READONLY clip: Rect.T; 
+PROCEDURE PaintSingle(v: VBT.T; READONLY clip: Rect.T;
   com: PaintPrivate.CommandPtr); <* LL.sup = v *>
 (* Add the paint operation referenced by "com" to "v"'s batch, but
    use the clipping rectangle "clip" instead of the one in "com". *)
@@ -236,7 +236,7 @@ PROCEDURE PaintSingle(v: VBT.T; READONLY clip: Rect.T;
    one.  It does not call "Enqueue(v)".  The command "com" must not be a
    scroll command.  *)
 
-PROCEDURE Scroll(v: VBT.T; READONLY clip: Rect.T; 
+PROCEDURE Scroll(v: VBT.T; READONLY clip: Rect.T;
   com: PaintPrivate.ScrollPtr); <* LL.sup = v *>
 (* Like "PaintSingle", but "com" must be a scroll command. *)
 
@@ -252,10 +252,10 @@ PROCEDURE Redisplay(); <* LL.sup = VBT.mu *>
 |   WITH m = `an array containing all marked windows` DO
 |     IF NUMBER(m) = 0 THEN EXIT END;
 |     `Sort "m" in order of non-decreasing depth`;
-|     FOR i := 0 TO LAST(m) DO 
+|     FOR i := 0 TO LAST(m) DO
 |       IF IsMarked(m[i]) AND m[i].st # NIL THEN
 |          Unmark(m[i]);
-|          m[i].redisplay() 
+|          m[i].redisplay()
 |       END
 |     END
 |   END
@@ -267,7 +267,7 @@ PROCEDURE Redisplay(); <* LL.sup = VBT.mu *>
     is that redisplaying an ancestor window often reshapes its
     descendants, and if a descendant is going to be reshaped it would
     be wasteful to redisplay it in its old position.
-    
+
    Ordinarily when a window is marked, a thread is forked that will
    call "Redisplay".  This is wasteful if "Redisplay" will be called
    soon anyway.  Therefore, if you know that "Redisplay" will be called
@@ -277,7 +277,7 @@ PROCEDURE Redisplay(); <* LL.sup = VBT.mu *>
    acquire the obligation to ensure that "Redisplay" will be called
    soon.  Calling "UncoverRedisplay" decrements the counter and calls
    "Redisplay" if the result is zero.  *)
-    
+
 PROCEDURE CoverRedisplay(); <* LL.sup = VBT.mu *>
 (* Increment the redisplay coverage counter. *)
 
