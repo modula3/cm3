@@ -594,8 +594,4 @@ PROCEDURE ProcessMethods (h: Handle; m: SeqM3AST_AS_Method.T):
   END ProcessMethods;
 
 BEGIN
-
-
 END AstToType.
-
-
