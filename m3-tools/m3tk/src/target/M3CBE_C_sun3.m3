@@ -22,7 +22,7 @@ MODULE M3CBE_C_sun3;
 IMPORT M3CBackEnd_C_cc;
 FROM M3CBackEnd_C_cc IMPORT a32, a64, a16, a8, minAlignment, recAlignment,
   arrayAlignment, ptrA, ptrS, realA, realS, longRealA, longRealS, intA, intS,
-  target;
+  longintS, longintA, wideCharA, wideCharS, target;
 
 CONST
   sun3 = "sun3";
@@ -31,8 +31,10 @@ PROCEDURE Init() RAISES {}=
   BEGIN
     a64 := 16; a32 := 16; a16 := 16; a8 := 8;
     minAlignment := 8; recAlignment := 16; arrayAlignment := 16;
-    ptrA := a32; realA := a32; longRealA := a64; intA := a32;
-    ptrS := 32; realS := 32; longRealS := 64; intS := 32;
+    ptrA := a32; realA := a32; longRealA := a64;
+    wideCharA := a16; intA := a32; longintA := a64;
+    ptrS := 32; realS := 32; longRealS := 64;
+    wideCharS := 16; intS := 32; longintS := 64;
     target := sun3;
   END Init;
 
