@@ -16,7 +16,7 @@
 
 INTERFACE Fmt;
 
-IMPORT Word, Real AS R, LongReal AS LR, Extended AS ER;
+IMPORT Word, Long, Real AS R, LongReal AS LR, Extended AS ER;
 
 PROCEDURE Bool(b: BOOLEAN): TEXT;
 (* Format "b" as {\tt \char'42TRUE\char'42} or  {\tt \char'42FALSE\char'42}. *)
@@ -36,9 +36,16 @@ PROCEDURE Unsigned(n: Word.T; base: Base := 16): TEXT;
    legal Modula-3 literal, you must write something like:
 | "16_" & Fmt.Unsigned(N, 16)
 *)
+
 PROCEDURE LongInt(n: LONGINT; base: Base := 10): TEXT;
-(* Return value of "LongInt" never contains trailing "L" and it never
-   starts with an explicit base and underscore.
+PROCEDURE LongUnsigned(n: Long.T; base: Base := 16): TEXT;
+(* Format the signed or unsigned number "n" in the specified base. *)
+
+(* The value returned by "LongInt" or "LongUnsigned" never contains upper-case
+   letters, never starts with an explicit base and underscore, and never ends
+   with a trailing "L".  For example, to render an unsigned number "N" in
+   hexadecimal as a legal Modula-3 literal, you must write something like:
+| "16_" & Fmt.Unsigned(N, 16) & "L"
 *)
 
 TYPE Style = {Sci, Fix, Auto};
