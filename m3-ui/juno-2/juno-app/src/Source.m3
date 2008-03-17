@@ -281,14 +281,14 @@ PROCEDURE Make(s: T; time: VBT.TimeStamp; skipify: BOOLEAN): BOOLEAN =
   END Make;
 
 PROCEDURE GetText(s: T): TEXT =
-  BEGIN 
-    RETURN TextPort.GetText(s.port) 
+  BEGIN
+    RETURN TextPort.GetText(s.port)
   END GetText;
 
 PROCEDURE SetText(s:T; txt: TEXT) =
   BEGIN
     TextPort.SetText(s.port, txt)
   END SetText;
-  
+
 BEGIN
 END Source.

@@ -19,7 +19,7 @@ IMPORT Axis, Filter, FilterClass, MouseSplit, PaintOp, Pixmap, Point,
        ScrnPixmap, VBTRep;
 
 TYPE
-  Prefix = TPublic OBJECT 
+  Prefix = TPublic OBJECT
     delta: Point.T;
     (* child coord + delta = parent coord. *)
     (* v.delta is protected both by v and by VBT.mu.
@@ -118,10 +118,10 @@ PROCEDURE Init (v: T; ch: VBT.T; north, west: REAL; bg: PaintOp.T): TPublic =
 
 PROCEDURE BeChild(v: Prefix; ch: VBT.T) RAISES {} =
   BEGIN
-    Filter.T.beChild(v, ch); 
+    Filter.T.beChild(v, ch);
     VBTClass.ClearShortCircuit(ch)
   END BeChild;
-    
+
 PROCEDURE Repaint (prnt: T; READONLY rgn: Region.T) RAISES {} =
   BEGIN                          (* LL = VBT.mu *)
     IF prnt.ch # NIL THEN
@@ -207,8 +207,8 @@ PROCEDURE ScreenOf(
   END ScreenOf;
 
 PROCEDURE Capture(
-    prnt: T; 
-    <*UNUSED*> ch: VBT.T; 
+    prnt: T;
+    <*UNUSED*> ch: VBT.T;
     READONLY rect: Rect.T;
     VAR (*out*) br: Region.T)
     : ScrnPixmap.T RAISES {} =
@@ -261,7 +261,7 @@ PROCEDURE Setcursor(v: T; ch: VBT.T) RAISES {} =
     LOCK v DO
       WITH r = v DO
         IF ch # r.mouseFocus AND
-            (ch # r.current OR r.mouseFocus # NIL) 
+            (ch # r.current OR r.mouseFocus # NIL)
         THEN
           RETURN
         END
@@ -270,8 +270,8 @@ PROCEDURE Setcursor(v: T; ch: VBT.T) RAISES {} =
     cs := ch.getcursor();
     LOCK v DO
       WITH r = v DO
-        IF (ch = r.mouseFocus OR 
-            ch = r.current AND r.mouseFocus = NIL) 
+        IF (ch = r.mouseFocus OR
+            ch = r.current AND r.mouseFocus = NIL)
         THEN
           SetCursor2(v, cs)
         END
@@ -282,7 +282,7 @@ PROCEDURE Setcursor(v: T; ch: VBT.T) RAISES {} =
 <*INLINE*> PROCEDURE SetCursor2(v: T; cs: ScrnCursor.T) RAISES {} =
   BEGIN (* LL=v *)
     IF cs # v.effectiveCursor THEN
-      v.effectiveCursor := cs; 
+      v.effectiveCursor := cs;
       IF v.parent # NIL THEN v.parent.setcursor(v) END
     END
   END SetCursor2;
@@ -295,22 +295,22 @@ PROCEDURE Setcursor(v: T; ch: VBT.T) RAISES {} =
           LOCK v DO SetCursor2(v, cs) END
         END
       END
-    ELSE 
+    ELSE
       LOCK v DO SetCursor2(v, ScrnCursor.DontCare) END
     END
   END SetCursor3;
 
 (* Cage setting depends on the following invariants:
 
-   (R1) v's cage is contained in the intersection of its children's 
-        cages.  This guarantees that v will get a position whenever 
+   (R1) v's cage is contained in the intersection of its children's
+        cages.  This guarantees that v will get a position whenever
         any child is owed one.
 
-   (R2) v's cage is contained in v.cache.  This guarantees that v will 
+   (R2) v's cage is contained in v.cache.  This guarantees that v will
         get a position whenever "current" should be changed.
 
    (R3) v.tracking OR for each ch # v.mouseFocus AND ch # v.current,
-        ch.cage contains GoneCage.  
+        ch.cage contains GoneCage.
 
     When the parent receives a position its cage is set arbitrarily,
     so the invariants are destroyed.  It sets its cage to satisfy R2,
@@ -506,7 +506,7 @@ PROCEDURE Locate (v: T; READONLY pt: Point.T; VAR (*OUT*) rect: Rect.T):
     RETURN NIL
   END Locate;
 
-PROCEDURE SimpleInit (v: Simple; ch: VBT.T; north, west: REAL; 
+PROCEDURE SimpleInit (v: Simple; ch: VBT.T; north, west: REAL;
     bg: PaintOp.T): TPublic =
   BEGIN
     LOCK v DO
@@ -515,8 +515,8 @@ PROCEDURE SimpleInit (v: Simple; ch: VBT.T; north, west: REAL;
       v.delta := Point.T{0,0};
       v.bg := bg;
       IF v.st # NIL THEN
-        v.delta := Point.T{ 
-            v.domain.west - 
+        v.delta := Point.T{
+            v.domain.west -
             ROUND(VBT.MMToPixels(v, v.west, Axis.T.Hor)),
             v.domain.north -
             ROUND(VBT.MMToPixels(v, v.north, Axis.T.Ver))};
@@ -526,7 +526,7 @@ PROCEDURE SimpleInit (v: Simple; ch: VBT.T; north, west: REAL;
     RETURN v
   END SimpleInit;
 
-PROCEDURE SimplePaintBatch(prnt: Simple; <*UNUSED*> ch: VBT.T; ba: Batch.T) 
+PROCEDURE SimplePaintBatch(prnt: Simple; <*UNUSED*> ch: VBT.T; ba: Batch.T)
     RAISES {} =
   BEGIN
     BatchUtil.Clip(ba);
@@ -538,7 +538,7 @@ PROCEDURE SimplePaintBatch(prnt: Simple; <*UNUSED*> ch: VBT.T; ba: Batch.T)
     IF prnt.ch # NIL THEN
       (* reshape child to preferred size *)
       WITH szs = VBTClass.GetShapes(prnt.ch),
-           dom = Rect.Add(Rect.FromSize(szs[Axis.T.Hor].pref, 
+           dom = Rect.Add(Rect.FromSize(szs[Axis.T.Hor].pref,
                szs[Axis.T.Ver].pref),prnt.delta) DO
         IF NOT Rect.Equal(prnt.ch.domain, dom) THEN
           VBTClass.Reshape(prnt.ch, dom, Rect.Empty);
@@ -551,13 +551,13 @@ PROCEDURE SimplePaintBatch(prnt: Simple; <*UNUSED*> ch: VBT.T; ba: Batch.T)
 PROCEDURE SimpleReshape (prnt: Simple; READONLY cd: VBT.ReshapeRec) RAISES {} =
   BEGIN
     IF prnt.ch # NIL THEN
-      prnt.delta := Point.T{ 
-          prnt.domain.west - 
+      prnt.delta := Point.T{
+          prnt.domain.west -
           ROUND(VBT.MMToPixels(prnt, prnt.west, Axis.T.Hor)),
           prnt.domain.north -
           ROUND(VBT.MMToPixels(prnt, prnt.north, Axis.T.Ver))};
       WITH szs = VBTClass.GetShapes(prnt.ch),
-           dom = Rect.Add(Rect.FromSize(szs[Axis.T.Hor].pref, 
+           dom = Rect.Add(Rect.FromSize(szs[Axis.T.Hor].pref,
                szs[Axis.T.Ver].pref),prnt.delta) DO
         VBTClass.Reshape(prnt.ch, dom, cd.saved);
         SimplePaintWhite(prnt, VBT.Domain(prnt));
@@ -586,19 +586,19 @@ PROCEDURE SimplePaintWhite (prnt: Simple; READONLY r: Rect.T) =
 
 PROCEDURE SimpleMove (prnt: Simple; north, west: REAL) =
   BEGIN
-    LOCK prnt DO 
-      prnt.north := north; 
-      prnt.west := west; 
+    LOCK prnt DO
+      prnt.north := north;
+      prnt.west := west;
     END;
 
     IF prnt.ch # NIL THEN
-      prnt.delta := Point.T{ 
-          prnt.domain.west - 
+      prnt.delta := Point.T{
+          prnt.domain.west -
           ROUND(VBT.MMToPixels(prnt, prnt.west, Axis.T.Hor)),
           prnt.domain.north -
           ROUND(VBT.MMToPixels(prnt, prnt.north, Axis.T.Ver))};
       WITH szs = VBTClass.GetShapes(prnt.ch),
-           dom = Rect.Add(Rect.FromSize(szs[Axis.T.Hor].pref, 
+           dom = Rect.Add(Rect.FromSize(szs[Axis.T.Hor].pref,
                szs[Axis.T.Ver].pref),prnt.delta) DO
         IF NOT Rect.Equal(prnt.ch.domain, dom) THEN
           VBTClass.Reshape(prnt.ch, dom, prnt.ch.domain);
@@ -610,8 +610,8 @@ PROCEDURE SimpleMove (prnt: Simple; north, west: REAL) =
 (*    VBTClass.Reshape(prnt, prnt.domain, prnt.domain);
 
     IF prnt.ch # NIL THEN
-      delta := Point.T{ 
-          prnt.domain.west - 
+      delta := Point.T{
+          prnt.domain.west -
           ROUND(VBT.MMToPixels(prnt, prnt.west, Axis.T.Hor)),
           prnt.domain.north -
           ROUND(VBT.MMToPixels(prnt, prnt.north, Axis.T.Ver))};

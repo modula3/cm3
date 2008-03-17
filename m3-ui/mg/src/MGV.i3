@@ -12,7 +12,7 @@ INTERFACE MGV;
 <* PRAGMA LL *>
 
 IMPORT Axis, IntRefTbl, R2, Rect, Region, Thread, VBT;
-  
+
 TYPE
   V <: VPublic;
   VPublic =
@@ -144,7 +144,7 @@ VAR
      to "pos" *)
 
 (* ------------------------------------------------------------------
-    See the TypeSelector interface for generating some types of selectors 
+    See the TypeSelector interface for generating some types of selectors
 ------------------------------------------------------------------ *)
 
 TYPE
@@ -155,22 +155,22 @@ TYPE
       select(v: V; t: MGT; READONLY cd: VBT.MouseRec);
       (*  v.selectee.select is called synchronously in VBT event time with the
          result of calling v.selector.select.  It may perform any action
-         on t or any other element.  
+         on t or any other element.
       *)
     END;
 
-(*| Here are 2 potential Shape methods.  ShapeStretchy is the default 
+(*| Here are 2 potential Shape methods.  ShapeStretchy is the default
     for an MGV.T
 
    ShapeFixed returns a size range of {pref, pref, pref + 1}
 
-   ShapeStretchy returns a size range of 
+   ShapeStretchy returns a size range of
      {0, pref, MAX(pref + 1, VBT.DefaultShape.hi)}
  *)
 PROCEDURE ShapeFixed(v: V; ax: Axis.T; n: CARDINAL): VBT.SizeRange;
 PROCEDURE ShapeStretchy(v: V; ax: Axis.T; n: CARDINAL): VBT.SizeRange;
 
-(* Here are 2 potential Reshape methods.  ReshapeSWOrigin is the 
+(* Here are 2 potential Reshape methods.  ReshapeSWOrigin is the
    default for an MGV.T.
 
    ReshapeSWOrigin moves the MG graphical origin to the south west
@@ -179,7 +179,7 @@ PROCEDURE ShapeStretchy(v: V; ax: Axis.T; n: CARDINAL): VBT.SizeRange;
    ReshapeLeaveOrigin leaves the MG graphical origin alone when
    "v" is reshaped.  It leaves the v.nw value unchanged so
    that views that display themselves relative to the NW corner
-   of the window or which set v.nw should use this reshape 
+   of the window or which set v.nw should use this reshape
    method.
 *)
 PROCEDURE ReshapeSWOrigin(v: V; READONLY cd: VBT.ReshapeRec);
@@ -197,7 +197,7 @@ PROCEDURE AddAnimationLocked (v: V; animation: AnimateT; mg: MGT);
 
 PROCEDURE Animation(v: V; duration := 1.0) RAISES {Thread.Alerted};
 <* LL < v.mu *>
-(* Play the pending animations on "v" in duration seconds. If 
+(* Play the pending animations on "v" in duration seconds. If
    "duration" = 0.0 then the animation will occur in a single
    update.  *)
 

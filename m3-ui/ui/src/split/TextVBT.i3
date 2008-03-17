@@ -33,7 +33,7 @@ TYPE
       bgFg: PaintOp.ColorQuad := NIL): T
   END;
 
-(* The call "v.init(...)" initializes "v" as a "TextVBT" that displays the 
+(* The call "v.init(...)" initializes "v" as a "TextVBT" that displays the
    text "txt" in the font "fnt", and returns "v".
 
    The text will be painted with "bgFg"'s foreground; the background
@@ -47,8 +47,8 @@ TYPE
    for other values of "halign", the horizontal position of the text
    is computed by linear interpolation.  In particular, "halign = 0.5"
    centers the text horizontally.  The vertical position is determined
-   by "vmargin" and "valign" in a similar way.  
-   
+   by "vmargin" and "valign" in a similar way.
+
    Control-left-click in the text sets the source selection to be a
    readonly version of the text.  Thus you can copy the text out of
    any "TextVBT".  *)
@@ -70,17 +70,17 @@ PROCEDURE Get(v: T): TEXT; <* LL.sup < v *>
 (* Return the text displayed by v. *)
 
 PROCEDURE SetFont(
-  v: T; 
-  fnt: Font.T; 
+  v: T;
+  fnt: Font.T;
   bgFg : PaintOp.ColorQuad := NIL);
 <* LL.sup = VBT.mu *>
-(* Set "v"'s "font" and "bgFg" to the given values and mark "v" 
+(* Set "v"'s "font" and "bgFg" to the given values and mark "v"
    for redisplay. If "bgFg" is defaulted, "PaintOp.bgFg" is used. *)
 
 PROCEDURE GetFont(v: T): Font.T; <* LL.sup = VBT.mu *>
 (* Return "v"'s font. *)
 
-PROCEDURE GetQuad(v: T): PaintOp.ColorQuad; 
+PROCEDURE GetQuad(v: T): PaintOp.ColorQuad;
 <* LL.sup = VBT.mu *>
 (* Return "v"'s color quad. *)
 

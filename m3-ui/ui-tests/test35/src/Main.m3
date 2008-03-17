@@ -1,6 +1,6 @@
 MODULE Main;
 
-IMPORT Axis, PaintOp, Pixmap, Point, Rect, Region, ScrnPixmap, Text, Trestle, 
+IMPORT Axis, PaintOp, Pixmap, Point, Rect, Region, ScrnPixmap, Text, Trestle,
        Word, VBT;
 
 PROCEDURE Pmap(): Pixmap.T =
@@ -13,7 +13,7 @@ PROCEDURE Pmap(): Pixmap.T =
       ELSE <* ASSERT FALSE *>
       END;
     END CharToInt;
-    
+
   PROCEDURE NextByte(): Word.T =
     BEGIN
       WITH hi = Text.GetChar (text[i], 0), lo = Text.GetChar (text[i], 1) DO
@@ -49,7 +49,7 @@ PROCEDURE Pmap(): Pixmap.T =
            "fc","c9","9d","8c","f9","7b","f8","ff","86","90","fb","0f",
            "fc","67","b6","b6","f9","78","fe","d7","32","a6","fd","0e",
            "cf","cf","82","a0","f9","7e","d8","ef","de","bd","fb","0d"};
-  VAR 
+  VAR
     r := ScrnPixmap.NewRaw(1, Rect.FromSize(width, height));
     i := 0;
     word: Word.T;
@@ -80,11 +80,11 @@ PROCEDURE Shape (<*UNUSED*> ch: VBT.T;
 
 PROCEDURE PaintTile (v: VBT.Leaf; op: PaintOp.T; nw: Point.T) =
   BEGIN
-    VBT.PaintTint (v, 
-                   Rect.T {nw.h + 2, nw.h + 75, nw.v + 2, nw.v + 148}, 
+    VBT.PaintTint (v,
+                   Rect.T {nw.h + 2, nw.h + 75, nw.v + 2, nw.v + 148},
                    PaintOp.FromRGB(1.0,0.0,0.0));
-    VBT.PaintTint (v, 
-                   Rect.T {nw.h + 75, nw.h + 148, nw.v + 2, nw.v + 148}, 
+    VBT.PaintTint (v,
+                   Rect.T {nw.h + 75, nw.h + 148, nw.v + 2, nw.v + 148},
                    PaintOp.FromRGB(0.0,1.0,0.0));
     VBT.PaintTexture (v,
                       Rect.T {nw.h + 10, nw.h + 140, nw.v + 10, nw.v + 140},
@@ -96,7 +96,7 @@ PROCEDURE PaintTile (v: VBT.Leaf; op: PaintOp.T; nw: Point.T) =
 PROCEDURE Repaint (v: VBT.Leaf; <*UNUSED*> READONLY bad: Region.T) =
   BEGIN
     VBT.PaintTint (v, Rect.Full, PaintOp.Bg);
-    VBT.PaintText (v, pt := Point.T{100,10}, 
+    VBT.PaintText (v, pt := Point.T{100,10},
                    t := "Testing VBT.PaintTexture for the 16 basic PaintOps");
     PaintTile (v, PaintOp.BgBg,                   Point.T { 10, 20});
     PaintTile (v, PaintOp.BgFg,                   Point.T { 10,170});

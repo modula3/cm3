@@ -13,7 +13,7 @@ TYPE
   T <: TextPortClass.Model;
   EscapeMetaFilter <: KeyFilter.T;
 
-END EmacsModel. 
+END EmacsModel.
 
 (* In the Emacs model, there is only a Primary selection. It is not
    an alias for either Source or Target.

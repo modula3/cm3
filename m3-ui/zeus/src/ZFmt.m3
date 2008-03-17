@@ -12,8 +12,8 @@ MODULE ZFmt;
 IMPORT Fmt, TextConv;
 
 PROCEDURE Int (n : INTEGER) : TEXT =
-  BEGIN 
-    RETURN Fmt.Int (n) 
+  BEGIN
+    RETURN Fmt.Int (n)
   END Int;
 
 PROCEDURE Bool (b : BOOLEAN) : TEXT =
@@ -22,8 +22,8 @@ PROCEDURE Bool (b : BOOLEAN) : TEXT =
   END Bool;
 
 PROCEDURE Char (c : CHAR) : TEXT =
-  BEGIN 
-    RETURN Fmt.Char (c) 
+  BEGIN
+    RETURN Fmt.Char (c)
   END Char;
 
 PROCEDURE Real (r : REAL) : TEXT =
@@ -36,7 +36,7 @@ PROCEDURE LongReal (r : LONGREAL) : TEXT =
     RETURN Fmt.LongReal (r, style := Fmt.Style.Fix, literal := TRUE);
   END LongReal;
 
-PROCEDURE Text (t: TEXT): TEXT = 
+PROCEDURE Text (t: TEXT): TEXT =
   BEGIN
     RETURN TextConv.Encode (t)
   END Text;

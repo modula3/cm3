@@ -33,7 +33,7 @@ PROCEDURE FromXBM (bits: TEXT): Pixmap.T
 
 (* This simple version of GetPixmap doesn't use pipes, which means that the
    bits get fondled an extra time as they go into a TEXT after being
-   converted into pbm format. On the other hand, there isn't any thread 
+   converted into pbm format. On the other hand, there isn't any thread
    creation, and the version with pipes seems fragile (crashes with a
    "Thread.Alerted not handled") so perhaps this is the version to use. --mhb 7/22/95 *)
 PROCEDURE GetPixmap (bits: TEXT; format: Format): Pixmap.T
@@ -133,7 +133,7 @@ PROCEDURE CloseRd (rd: Rd.T) RAISES {Thread.Alerted} =
 
 
 
-VAR 
+VAR
   mu := NEW(MUTEX);
   cache := NEW(TextRefTbl.Default).init();
 

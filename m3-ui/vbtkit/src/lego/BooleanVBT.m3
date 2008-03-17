@@ -25,7 +25,7 @@ TYPE
        OVERRIDES
          replace := Replace;
          succ    := Succ
-       END; 
+       END;
 
 PROCEDURE Init (v: T; btn: ButtonVBT.T): T =
   BEGIN
@@ -75,7 +75,7 @@ PROCEDURE Replace (m: MC; <* UNUSED *> ch: VBT.T; new: VBT.T) =
       EVAL MultiFilter.Replace(btn, new)
     END
   END Replace;
-    
+
 PROCEDURE Succ (m: MC; ch: VBT.T): VBT.T =
   <* FATAL MultiSplit.NotAChild *>
   BEGIN
@@ -84,6 +84,6 @@ PROCEDURE Succ (m: MC; ch: VBT.T): VBT.T =
       RETURN MultiSplit.Succ(btn, ch)
     END
   END Succ;
-    
+
 BEGIN
 END BooleanVBT.

@@ -1,6 +1,6 @@
 MODULE Main;
 
-IMPORT Axis, PaintOp, Path, Pixmap, Point, Rect, Region, ScrnPixmap, Text, 
+IMPORT Axis, PaintOp, Path, Pixmap, Point, Rect, Region, ScrnPixmap, Text,
        Trestle, Word, VBT;
 
 PROCEDURE Pmap(): Pixmap.T =
@@ -13,7 +13,7 @@ PROCEDURE Pmap(): Pixmap.T =
       ELSE <* ASSERT FALSE *>
       END;
     END CharToInt;
-    
+
   PROCEDURE NextByte(): Word.T =
     BEGIN
       WITH hi = Text.GetChar (text[i], 0), lo = Text.GetChar (text[i], 1) DO
@@ -49,7 +49,7 @@ PROCEDURE Pmap(): Pixmap.T =
            "fc","c9","9d","8c","f9","7b","f8","ff","86","90","fb","0f",
            "fc","67","b6","b6","f9","78","fe","d7","32","a6","fd","0e",
            "cf","cf","82","a0","f9","7e","d8","ef","de","bd","fb","0d"};
-  VAR 
+  VAR
     r := ScrnPixmap.NewRaw(1, Rect.FromSize(width, height));
     i := 0;
     word: Word.T;
@@ -81,7 +81,7 @@ PROCEDURE Shape (<*UNUSED*> ch: VBT.T;
 PROCEDURE PaintTile (v: VBT.Leaf; op: PaintOp.T; nw: Point.T) =
   BEGIN
     VBT.PaintTint (v, Rect.T {nw.h + 2, nw.h + 75, nw.v + 2, nw.v + 148}, Red);
-    VBT.PaintTint (v, Rect.T {nw.h + 75, nw.h + 148, nw.v + 2, nw.v + 148}, 
+    VBT.PaintTint (v, Rect.T {nw.h + 75, nw.h + 148, nw.v + 2, nw.v + 148},
                    Green);
     VBT.PaintPixmap(v, Rect.Full, op, p, Point.T{nw.h + 52, nw.v + 5});
     VBT.PaintText (v,
@@ -114,7 +114,7 @@ PROCEDURE PaintTile (v: VBT.Leaf; op: PaintOp.T; nw: Point.T) =
 TYPE
   A = ARRAY [0 .. 3] OF PaintOp.T;
 
-VAR 
+VAR
   Red    := PaintOp.FromRGB(0.5,0.0,0.0);
   Green  := PaintOp.FromRGB(0.0,0.5,0.0);
   Blue   := PaintOp.FromRGB(0.0,0.0,1.0);
@@ -123,7 +123,7 @@ VAR
   po     := ARRAY [0 .. 3] OF A {
                 A {cs.bg, cs.bgFg, cs.bgTransparent, cs.bgSwap},
                 A {cs.fgBg, cs.fg, cs.fgTransparent, cs.fgSwap},
-                A {cs.transparentBg, cs.transparentFg, 
+                A {cs.transparentBg, cs.transparentFg,
                    PaintOp.Transparent, cs.transparentSwap},
                 A {cs.swapBg, cs.swapFg, cs.swapTransparent, cs.swap}};
 

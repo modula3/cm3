@@ -31,7 +31,7 @@ PROCEDURE Init (v     : T;
                 ch    : VBT.T;
                 title : TEXT;
                 fnt   : Font.T;
-                shadow: Shadow.T := NIL): T = 
+                shadow: Shadow.T := NIL): T =
   BEGIN
     IF (shadow = NIL) THEN shadow := Shadow.None; END;
     v.title  := title;
@@ -48,7 +48,7 @@ PROCEDURE RepaintBorder (v: T; READONLY clip: Rect.T) =
     dh      := v.bSize[Axis.T.Hor] DIV 2;
     dv      := v.bSize[Axis.T.Ver] DIV 2;
     bbox    := VBT.BoundingBox (v, v.title, v.font);
-    pt      := Point.Add (Rect.NorthWest (dom), 
+    pt      := Point.Add (Rect.NorthWest (dom),
                           Point.T {h := 3 * dh, v := dv + dv - bbox.south});
     bkgnd   := Rect.Change (Rect.Move (bbox, pt), -2, +2, 0, 0);
     chisout := Rect.Change (dom, dw := dh+Z, de := -dh-Z, ds := -dv-Z, dn := dv+Z);

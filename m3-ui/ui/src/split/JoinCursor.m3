@@ -75,7 +75,7 @@ PROCEDURE Localize (cs: T): ScrnCursor.Raw
   END Localize;
 *)
 
-(*  
+(*
 PROCEDURE Register (         orc: Oracle;
                     READONLY c  : ScrnCursor.Raw;
                              nm : TEXT             := NIL): ScrnCursor.T

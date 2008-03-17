@@ -6,24 +6,24 @@
 (*      modified on Mon Feb 24 13:52:16 PST 1992 by muller                   *)
 <*PRAGMA LL*>
 
-(* An "AnchorBtnVBT.T "is a button that activates a pull-down menu when 
-   you click on it or roll into it from another anchor button. 
+(* An "AnchorBtnVBT.T "is a button that activates a pull-down menu when
+   you click on it or roll into it from another anchor button.
 
-   Associated with each anchor button "b" is 
-   
-   \medskip\bulletitem "b.menu", the menu to be activated, 
-   
+   Associated with each anchor button "b" is
+
+   \medskip\bulletitem "b.menu", the menu to be activated,
+
    \medskip\bulletitem "b.hfudge" and "b.vfudge", dimensions in millimeters
    that control where the menu is popped up,
-   
+
    \medskip\bulletitem "b.n", a count of the number of "ZSplit" ancestors
    of "b" to skip when looking for the "ZSplit" to insert the
    menu into.
 
-   \medskip\noindent A down click on an anchor button "b" {\it activates} 
-   it by: 
-   
-   \medskip\bulletitem  calling the method "b.pre()", and then   
+   \medskip\noindent A down click on an anchor button "b" {\it activates}
+   it by:
+
+   \medskip\bulletitem  calling the method "b.pre()", and then
 
    \medskip\bulletitem inserting the window "b.menu" so that its
    northwest corner is "b.hfudge" millimeters to the right and
@@ -41,7 +41,7 @@
    if it is "NIL", then the normal parent is used as the anchor parent.
    When an anchor button is deactivated, its cancel method is called
    and its menu is deleted from its "ZSplit".
-   
+
    The default "pre" method highlights the anchor button; the default
    "cancel" method unhighlights it.
 
@@ -51,9 +51,9 @@
    action, and then will be delivered to the anchor button (since the
    anchor button has the mouse focus), which will delete the menu.
 
-   A "HighlightVBT" is automatically inserted over the menu when it is 
+   A "HighlightVBT" is automatically inserted over the menu when it is
    inserted, and discarded when the menu is deleted.  This allows the
-   menu items to highlight themselves without interfering with the 
+   menu items to highlight themselves without interfering with the
    highlighting of the anchor button.
 
    The "action" procedure and "post" method of an anchor button are never
@@ -70,28 +70,28 @@ INTERFACE AnchorBtnVBT;
 
 IMPORT ButtonVBT, VBT;
 
-TYPE 
+TYPE
   T <: Public;
-  Public = ButtonVBT.T OBJECT 
-    menu: VBT.T 
+  Public = ButtonVBT.T OBJECT
+    menu: VBT.T
   METHODS <* LL.sup <= VBT.mu *>
-    init(ch: VBT.T; 
+    init(ch: VBT.T;
       menu: VBT.T;
       n: CARDINAL := 0;
       anchorParent: VBT.T := NIL;
       hfudge, vfudge := 0.0;
       ref: REFANY := NIL): T
   END;
-  
+
 (* The call "v.init(...)" initializes the button with the given
    attributes, and adds "ref" to "v"'s property set if it is not "NIL".
-   This includes a call to "ButtonVBT.T.init(v, ch)". 
-   
+   This includes a call to "ButtonVBT.T.init(v, ch)".
+
    You must not change the menu while the "AnchorBtnVBT" is active.*)
 
 
 PROCEDURE New(
-  ch: VBT.T; 
+  ch: VBT.T;
   menu: VBT.T;
   n: CARDINAL := 0;
   anchorParent: VBT.T := NIL;
@@ -99,27 +99,27 @@ PROCEDURE New(
   ref: REFANY := NIL): T; <* LL.sup <= VBT.mu *>
 (* "New(...)" is equivalent to "NEW(T).init(...)". *)
 
-PROCEDURE SetParent(v: T; p: VBT.T); 
+PROCEDURE SetParent(v: T; p: VBT.T);
 <* LL.sup = VBT.mu *>
-(* Set the anchor parent of "v" to be "p".  If "v" is active, this is a 
+(* Set the anchor parent of "v" to be "p".  If "v" is active, this is a
    checked runtime error. *)
 
 PROCEDURE GetParent(v: T): VBT.T; <* LL.sup = VBT.mu *>
 (* Return the anchor parent of "v". *)
 
-PROCEDURE Set(v: T;  n: CARDINAL; hfudge, vfudge: REAL); 
+PROCEDURE Set(v: T;  n: CARDINAL; hfudge, vfudge: REAL);
 <* LL.sup = VBT.mu *>
-(* Set the attributes of "v".  If "v" is active, this is a 
+(* Set the attributes of "v".  If "v" is active, this is a
    checked runtime error. *)
 
-PROCEDURE Get(v: T; VAR n: CARDINAL; 
+PROCEDURE Get(v: T; VAR n: CARDINAL;
   VAR hfudge, vfudge: REAL); <* LL.sup = VBT.mu *>
 (* Fetch the attributes of "v". *)
- 
+
 PROCEDURE IsActive(v: T): BOOLEAN; <* LL.sup = VBT.mu *>
 (* Return "TRUE" if and only if "v" is active. *)
 
 END AnchorBtnVBT.
 
 
- 
+

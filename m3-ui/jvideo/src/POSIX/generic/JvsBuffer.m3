@@ -68,7 +68,7 @@ VAR
    We also assume that shmids are not reused during the run of the
    program *)
 
-PROCEDURE AllocateBuffer (jvs: Jvs.T; type: Jvs.BufferType; 
+PROCEDURE AllocateBuffer (jvs: Jvs.T; type: Jvs.BufferType;
   <* UNUSED *> wait := TRUE): Jvs.ShmBufId
   RAISES {OSError.E, Thread.Alerted} =
   BEGIN

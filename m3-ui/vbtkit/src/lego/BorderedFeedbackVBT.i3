@@ -23,8 +23,8 @@ TYPE
     METHODS
       <* LL <= VBT.mu *>
       init (
-        ch: VBT.T; 
-        size: REAL := 0.5; 
+        ch: VBT.T;
+        size: REAL := 0.5;
         op: PaintOp.T := PaintOp.BgFg): T
     END;
 

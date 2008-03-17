@@ -63,7 +63,7 @@ TYPE
    options with which the viewport was created.  Be sure to use the
    "MultiFilter" interface to get at the child. *)
 
-TYPE 
+TYPE
   View = INTEGER;
 
 (* A "View" is an internal ID for a view.  The value is valid for
@@ -77,11 +77,11 @@ TYPE
 
 TYPE
   ScrollStyle =
-    {HorAndVer, 
+    {HorAndVer,
      HorOnly,
-     VerOnly, 
-     NoScroll, 
-     AlaViewport, 
+     VerOnly,
+     NoScroll,
+     AlaViewport,
      Auto};
 
 (* \noindent The styles are as follows:
@@ -109,7 +109,7 @@ TYPE
    \end{itemize}
 
    The location of the scrollbar is further controlled by the environment
-   variable "SCROLLBARMODEL"; see the "VBTKitEnv" interface. 
+   variable "SCROLLBARMODEL"; see the "VBTKitEnv" interface.
 
    *)
 

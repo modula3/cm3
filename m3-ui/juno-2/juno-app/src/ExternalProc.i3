@@ -20,7 +20,7 @@ TYPE
 PROCEDURE SetupBind(mod: JunoAST.Id; scp: JunoScope.T; rt: View.Root := NIL);
 (* This module maintains a current root, a current module name, and a current
    scope to be used by the "Bind" procedure below. Set the current root to
-   "rt", the current module name to "mod", and the current scope to "scp". *) 
+   "rt", the current module name to "mod", and the current scope to "scp". *)
 
 PROCEDURE Bind(name: JunoAST.Id; cl: Closure; in, out := 0);
 (* Allocate a slot in the external code table for the procedure named

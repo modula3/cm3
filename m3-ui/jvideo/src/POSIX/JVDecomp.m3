@@ -193,7 +193,7 @@ PROCEDURE Apply (cl: Closure): REFANY =
           t.server.decompress(inbuf.shmid, outbuf.shmid, inbuf.frameLength);
           IF w1^ = 16_DEAD AND w2^ = 16_BEEF THEN RETURN END
 	EXCEPT
-	  OSError.E(e) => 
+	  OSError.E(e) =>
 	    IF DecompressError(e) THEN RETURN END;
 	    RAISE OSError.E (e)
 	END;

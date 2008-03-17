@@ -25,7 +25,7 @@ TYPE
                    model := TextPort.Model.Default): T;
            END;
 
-END TypeinVBT. 
+END TypeinVBT.
 
 (* "TypeinVBT" overrides the "returnAction", "tabAction", "key", and
    "shape" methods.

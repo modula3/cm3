@@ -255,7 +255,7 @@ PROCEDURE RegionWithLabel (t: T; v: V; READONLY rect: Rect.T): Region.T =
       RETURN Region.FromRect(Rect.Join(rect, LabelRect(t, v, rect)));
     END
   END RegionWithLabel;
-  
+
 PROCEDURE LabelPoint (              t   : T;
                                     v   : V;
                       READONLY      rect: Rect.T;

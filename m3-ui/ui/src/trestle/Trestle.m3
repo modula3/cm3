@@ -20,9 +20,9 @@ IMPORT Thread, Env, TrestleClass, VBT, TrestleComm, Params, VBTClass,
 
 FROM TrestleClass IMPORT InstallRef, Decoration;
 
-REVEAL 
+REVEAL
   TrestleClass.RootVBT = ProperSplit.T BRANDED OBJECT END;
-  
+
 (*EXCEPTION Unimplemented;*)
 
 REVEAL User = TrestleConf.User BRANDED OBJECT trsl: T END;
@@ -70,7 +70,7 @@ PROCEDURE Init() =
       END
     END
   END Init;
-  
+
 PROCEDURE DeleteHook (ch: VBT.T) =
   VAR ir: InstallRef := VBT.GetProp(ch, TYPECODE(InstallRef));
   BEGIN
@@ -103,10 +103,10 @@ PROCEDURE Install(
   BEGIN
     PreAttach(v, trsl);
     Fork(NEW(InstallObject, trsl := trsl, v := v,
-             dec := NEW(Decoration, 
+             dec := NEW(Decoration,
                applName := applName, inst := inst,
                windowTitle := windowTitle, iconTitle := iconTitle,
-               bgColorR := bgColorR, bgColorG := bgColorG, 
+               bgColorR := bgColorR, bgColorG := bgColorG,
                bgColorB := bgColorB, iconWindow := iconWindow)))
   END Install;
 
@@ -322,7 +322,7 @@ PROCEDURE NoConfDestroy(a: App) =
   BEGIN
     a.suspend(a.primary);
     a.delete(a.primary)
-  END NoConfDestroy; 
+  END NoConfDestroy;
 
 TYPE
   IParent = InstalledVBT.T OBJECT
@@ -364,7 +364,7 @@ PROCEDURE IParentRescreen (v: IParent; READONLY cd: VBT.RescreenRec) =
     InstalledVBT.T.rescreen(v, cd)
   END IParentRescreen;
 
-PROCEDURE InnerAttach(v: VBT.T; trsl: T) 
+PROCEDURE InnerAttach(v: VBT.T; trsl: T)
   RAISES {TrestleComm.Failure} <* LL = {VBT.mu} *> =
   VAR app: App; join := NEW(Join);
   BEGIN
@@ -554,14 +554,14 @@ PROCEDURE ActivateApp (a: App; cuser: TrestleConf.User) =
     END;
   END ActivateApp;
 
-PROCEDURE ScreenOf(  
+PROCEDURE ScreenOf(
   v: VBT.T;
   READONLY pt: Point.T): ScreenOfRec RAISES {} =
   BEGIN
     LOCK v DO
       WITH p = v.parent DO
-        IF p = NIL THEN 
-          RETURN ScreenOfRec{id := NoScreen, q := pt, 
+        IF p = NIL THEN
+          RETURN ScreenOfRec{id := NoScreen, q := pt,
                    trsl := NIL, dom := Rect.Empty}
         ELSE
           RETURN p.screenOf(v, pt)
@@ -763,8 +763,8 @@ PROCEDURE InstallOffscreen(
     END;
     trsl.installOffscreen(ch, width, height, st)
   END InstallOffscreen;
- 
-VAR 
+
+VAR
   mu := NEW(MUTEX);
   c := NEW(Thread.Condition);
   workQ := InstallQueue.Empty;
@@ -782,13 +782,13 @@ PROCEDURE Fork(cl: Closure) =
     LOCK mu DO
       mustSignal := InstallQueue.IsEmpty(workQ);
       InstallQueue.Insert(workQ, cl);
-      IF worker = NIL THEN 
-        worker := Thread.Fork(NEW(Thread.SizedClosure, apply := Work, 
-          stackSize := 20000)) 
+      IF worker = NIL THEN
+        worker := Thread.Fork(NEW(Thread.SizedClosure, apply := Work,
+          stackSize := 20000))
       END;
-      IF pinger = NIL THEN 
-        pinger := Thread.Fork(NEW(Thread.SizedClosure, apply := Ping, 
-          stackSize := 20000)) 
+      IF pinger = NIL THEN
+        pinger := Thread.Fork(NEW(Thread.SizedClosure, apply := Ping,
+          stackSize := 20000))
       END
     END;
     IF mustSignal THEN Thread.Signal(c) END
@@ -801,11 +801,11 @@ PROCEDURE Work(<*UNUSED*>self: Thread.Closure): REFANY RAISES {} =
     LOOP
       live := 2;
       LOCK mu DO
-        WHILE InstallQueue.IsEmpty(workQ) AND live # 0 DO 
+        WHILE InstallQueue.IsEmpty(workQ) AND live # 0 DO
           Thread.Wait(mu, c); DEC(live)
         END;
         IF InstallQueue.IsEmpty(workQ) THEN worker := NIL; RETURN NIL END;
-        cl := InstallQueue.Remove(workQ); 
+        cl := InstallQueue.Remove(workQ);
       END;
       LOCK VBT.mu DO cl.apply() END
     END
@@ -849,7 +849,7 @@ PROCEDURE Connect(inst: TEXT := NIL): T RAISES {TrestleComm.Failure} =
   VAR res: T;
   BEGIN
     Init();
-    IF inst = NIL THEN 
+    IF inst = NIL THEN
       RETURN Default()
     ELSE
       res := TrestleClass.Connect(inst);
@@ -875,7 +875,7 @@ PROCEDURE CreateUser (user, display: TEXT): TrestleConf.User =
     END
   END CreateUser;
 
-PROCEDURE AwaitDelete(v: VBT.T) = 
+PROCEDURE AwaitDelete(v: VBT.T) =
   VAR ir: InstallRef;
   BEGIN
     LOCK VBT.mu DO
@@ -884,9 +884,9 @@ PROCEDURE AwaitDelete(v: VBT.T) =
       WHILE ir.installCount > 0 DO Thread.Wait(VBT.mu, ir.c) END
     END
   END AwaitDelete;
-  
+
 <* UNUSED *>
-PROCEDURE SetColorMap(v: VBT.T; cm: ScrnColorMap.T) RAISES {} = 
+PROCEDURE SetColorMap(v: VBT.T; cm: ScrnColorMap.T) RAISES {} =
   VAR trsl: T; ch: VBT.T; BEGIN
     IF RootChild(v, trsl, ch) THEN trsl.setColorMap(ch, cm) END
   END SetColorMap;
@@ -897,28 +897,28 @@ PROCEDURE Capture(
     VAR  br: Region.T;
     trsl: T := NIL)
     : ScrnPixmap.T
-  RAISES {TrestleComm.Failure} = BEGIN 
+  RAISES {TrestleComm.Failure} = BEGIN
     IF trsl = NIL THEN trsl := Default() END;
     RETURN trsl.captureScreen(id, clip, br)
   END Capture;
 
 PROCEDURE GetScreens(trsl: T := NIL): ScreenArray RAISES {TrestleComm.Failure} =
-  BEGIN 
+  BEGIN
     IF trsl = NIL THEN trsl := Default() END;
-    RETURN trsl.getScreens() 
+    RETURN trsl.getScreens()
   END GetScreens;
 
-PROCEDURE AllCeded(trsl: T := NIL): BOOLEAN RAISES {TrestleComm.Failure} = 
-  BEGIN 
+PROCEDURE AllCeded(trsl: T := NIL): BOOLEAN RAISES {TrestleComm.Failure} =
+  BEGIN
     IF trsl = NIL THEN trsl := Default() END;
-    RETURN trsl.allCeded() 
+    RETURN trsl.allCeded()
   END AllCeded;
 
-PROCEDURE TickTime(trsl: T := NIL): INTEGER = 
-  BEGIN 
+PROCEDURE TickTime(trsl: T := NIL): INTEGER =
+  BEGIN
     TRY
       IF trsl = NIL THEN trsl := Default() END;
-      RETURN trsl.tickTime() 
+      RETURN trsl.tickTime()
     EXCEPT
       TrestleComm.Failure => RETURN 1
     END
@@ -990,7 +990,7 @@ PROCEDURE UpdateBuddies (ch: VBT.T) =
     ELSE
     END
   END UpdateBuddies;
-  
+
 EXCEPTION FatalError;
 
 PROCEDURE Crash() =
@@ -1007,7 +1007,7 @@ PROCEDURE Crash() =
 
 (* PROCEDURE Swap(v, w: VBT.T) RAISES {TrestleComm.Failure, Unimplemented} = BEGIN RAISE Unimplemented END Swap; *)
 
-(* PROCEDURE GetName(v: VBT.T): TEXT RAISES {TrestleComm.Failure} = 
+(* PROCEDURE GetName(v: VBT.T): TEXT RAISES {TrestleComm.Failure} =
   BEGIN RAISE Unimplemented END GetName; *)
 
 (* PROCEDURE NameList(
@@ -1016,13 +1016,13 @@ PROCEDURE Crash() =
     : REF ARRAY OF TEXT
   RAISES {TrestleComm.Failure} = BEGIN RAISE Unimplemented END NameList; *)
 
-(* PROCEDURE MoveNearByName(v: VBT.T; nm: TEXT) RAISES {TrestleComm.Failure} = 
+(* PROCEDURE MoveNearByName(v: VBT.T; nm: TEXT) RAISES {TrestleComm.Failure} =
   BEGIN RAISE Unimplemented END MoveNearByName; *)
 
 (* PROCEDURE SwapByName(
     v: VBT.T;
     nm: TEXT)
-  RAISES {TrestleComm.Failure, Unimplemented} = 
+  RAISES {TrestleComm.Failure, Unimplemented} =
   BEGIN RAISE Unimplemented END SwapByName; *)
 
 (* PROCEDURE DeleteByName(nm: TEXT; trsl: T := NIL) RAISES {TrestleComm.Failure} = BEGIN RAISE Unimplemented END DeleteByName; *)
@@ -1031,23 +1031,23 @@ PROCEDURE Crash() =
     id: ScreenID;
     v: VBT.T;
     trsl: T := NIL)
-  RAISES {TrestleComm.Failure, Unimplemented} = 
+  RAISES {TrestleComm.Failure, Unimplemented} =
   BEGIN RAISE Unimplemented END TakeOver; *)
 
 (* PROCEDURE Restore(
     id: ScreenID;
     v: VBT.T)
-  RAISES {TrestleComm.Failure, Unimplemented} = 
+  RAISES {TrestleComm.Failure, Unimplemented} =
   BEGIN RAISE Unimplemented END Restore; *)
 
 (* PROCEDURE TakeOverMouse(
     id: ScreenID;
     v: VBT.T;
     trsl: T := NIL)
-  RAISES {TrestleComm.Failure} = 
+  RAISES {TrestleComm.Failure} =
   BEGIN RAISE Unimplemented END TakeOverMouse; *)
 
-(* PROCEDURE ReleaseMouse(id: ScreenID; v: VBT.T) RAISES {TrestleComm.Failure} = 
+(* PROCEDURE ReleaseMouse(id: ScreenID; v: VBT.T) RAISES {TrestleComm.Failure} =
   BEGIN RAISE Unimplemented END ReleaseMouse; *)
 
 (* PROCEDURE SetHighlight(
@@ -1061,14 +1061,14 @@ PROCEDURE Crash() =
     prnt: VBT.T;
     id: ScreenID;
     trsl: T := NIL)
-  RAISES {TrestleComm.Failure, Unimplemented} = 
+  RAISES {TrestleComm.Failure, Unimplemented} =
   BEGIN RAISE Unimplemented END AddParent; *)
 
 (* PROCEDURE RemParent(
     prnt: VBT.T;
     id: ScreenID;
     trsl: T := NIL)
-  RAISES {TrestleComm.Failure, Unimplemented} = 
+  RAISES {TrestleComm.Failure, Unimplemented} =
   BEGIN RAISE Unimplemented END RemParent; *)
 
 (* PROCEDURE WarpCursor(
@@ -1080,10 +1080,10 @@ PROCEDURE Crash() =
 (* PROCEDURE LastCeded(
     trsl: T := NIL)
     : VBT.TimeStamp
-  RAISES {TrestleComm.Failure, Unimplemented} = 
+  RAISES {TrestleComm.Failure, Unimplemented} =
   BEGIN RAISE Unimplemented END LastCeded; *)
 
-(* PROCEDURE GetParameters(trsl: T := NIL): Parameters 
+(* PROCEDURE GetParameters(trsl: T := NIL): Parameters
   RAISES {TrestleComm.Failure} = BEGIN RAISE Unimplemented END GetParameters; *)
 
 (* PROCEDURE SetParameters(

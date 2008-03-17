@@ -44,4 +44,4 @@ VAR
                        (i.e. BitAnd (c, 037B)), else c
     *)
 
-END ISOChar. 
+END ISOChar.

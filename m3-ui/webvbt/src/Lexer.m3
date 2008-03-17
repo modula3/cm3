@@ -103,7 +103,7 @@ PROCEDURE Get (s: Rd.T; obeyBlanks: BOOLEAN := FALSE): Token =
       WITH t = Lex.Scan(s, AllChars - StartElement) DO
         IF NOT Text.Empty(t) THEN
           RETURN NEW(WordToken, word := Unquote(t))
-        ELSIF Rd.EOF(s) THEN 
+        ELSIF Rd.EOF(s) THEN
           RETURN NIL
         ELSE
           EVAL Rd.GetChar(s);    (* must be the '<' *)
@@ -298,7 +298,7 @@ PROCEDURE FindEntity(name: TEXT; VAR car: CHAR): BOOLEAN =
   END FindEntity;
 
 PROCEDURE Scan (rd: Rd.T; wr: Wr.T; READONLY cs: SET OF CHAR): BOOLEAN =
-  (* Read the longest prefix of "rd" composed of characters in "cs", 
+  (* Read the longest prefix of "rd" composed of characters in "cs",
      and write that prefix into "wr". Returns FALSE at EOF. *)
   VAR c: CHAR;
   BEGIN
@@ -310,5 +310,5 @@ PROCEDURE Scan (rd: Rd.T; wr: Wr.T; READONLY cs: SET OF CHAR): BOOLEAN =
     RETURN FALSE;
   END Scan;
 
-BEGIN 
+BEGIN
 END Lexer.

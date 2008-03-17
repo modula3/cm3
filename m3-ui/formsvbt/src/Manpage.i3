@@ -54,7 +54,7 @@ END Manpage.
    If the name of the Boolean (helpcase) or popup (notfound) is NIL,
    then there will be no attachment; the Boolean defaults to being
    case-insensitive.
-   
+
    If the named buttons are missing, then Init will raise an exception.  All
    errors that occur in the thread that reads the file, or during the search,
    are signaled by calling "er.apply" with VBT.mu locked.  An unsuccessful

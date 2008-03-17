@@ -7,7 +7,7 @@
 (*      modified on Wed Feb 17 16:47:18 PST 1993 by johnh   *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 

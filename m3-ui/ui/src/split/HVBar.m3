@@ -111,7 +111,7 @@ PROCEDURE Mouse(v: T; READONLY cd: VBT.MouseRec) =
     ELSE
       IF v.adjusting THEN
         v.adjusting := FALSE;
-        adjust := (cd.clickType = VBT.ClickType.LastUp) AND 
+        adjust := (cd.clickType = VBT.ClickType.LastUp) AND
           NOT Rect.Equal(v.barOutline, dom);
         IF adjust THEN
           IF hv = Axis.T.Hor THEN
@@ -150,7 +150,7 @@ PROCEDURE Position2(v: T; READONLY cp: VBT.CursorPosition) =
       VBT.SetCage(v, VBT.EverywhereCage)
     END
   END Position2;
-  
+
 PROCEDURE PreDefault(v: T; <*UNUSED*> READONLY cd: VBT.MouseRec) RAISES {} =
   BEGIN
     v.highlighter := HighlightVBT.Find(v);
@@ -167,14 +167,14 @@ CONST BorderThickness = 2;
 
 PROCEDURE DuringDefault(v: T; <*UNUSED*> lo: INTEGER) RAISES {} =
   BEGIN
-    HighlightVBT.SetRect(v.highlighter, Rect.Meet(VBT.Domain(VBT.Parent(v)), 
+    HighlightVBT.SetRect(v.highlighter, Rect.Meet(VBT.Domain(VBT.Parent(v)),
       Rect.Inset(v.barOutline, -BorderThickness)), BorderThickness)
   END DuringDefault;
 
 VAR cursors: ARRAY Axis.T OF Cursor.T;
 
-BEGIN 
-  cursors[Axis.T.Hor] := 
+BEGIN
+  cursors[Axis.T.Hor] :=
     Cursor.FromName(ARRAY OF TEXT {"XC_sb_h_double_arrow"});
   cursors[Axis.T.Ver] :=
     Cursor.FromName(ARRAY OF TEXT {"XC_sb_v_double_arrow"})

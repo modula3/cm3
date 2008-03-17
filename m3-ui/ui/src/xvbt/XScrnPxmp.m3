@@ -144,7 +144,7 @@ PROCEDURE FinishCapture (st: XScreenType.T; pmId: INTEGER; xpm: X.Pixmap) =
       st.pmtable[pmId].isLazy := FALSE;
       st.pmtable[pmId].pixmap := xpm
     END
-  END FinishCapture; 
+  END FinishCapture;
 
 PROCEDURE NewPixmap (         st : XScreenType.T;
                      rec: XScrnTpRep.PixmapRecord): XPixmap
@@ -254,7 +254,7 @@ PROCEDURE PixmapFromRaw (st: XScreenType.T; pm: ScrnPixmap.Raw): X.Pixmap
                    pm.bounds.west MOD (BITSIZE(ScrnPixmap.PixWord) DIV pm.bitsPerPixel),
                    LOOPHOLE(ADR(pm.pixels[pm.offset]), Ctypes.char_star),
                    width, height,
-                   BITSIZE(ScrnPixmap.PixWord), 
+                   BITSIZE(ScrnPixmap.PixWord),
                    BYTESIZE(ScrnPixmap.PixWord) * pm.wordsPerRow);
           TRY
             IF pm.pixelOrder = ScrnPixmap.ByteOrder.LSBFirst THEN
@@ -427,7 +427,7 @@ PROCEDURE PixmapFree (pm: XPixmap) RAISES {TrestleComm.Failure} =
 
 EXCEPTION FatalError;
 
-PROCEDURE Crash() =        
+PROCEDURE Crash() =
   <* FATAL FatalError *>
   BEGIN
     RAISE FatalError
@@ -438,7 +438,7 @@ VAR
   gp                         : Word.T         := 5;
   i                                           := 4;
 
-BEGIN 
+BEGIN
   rawSolid := ScrnPixmap.NewRaw(1, Rect.FromSize(1, 1));
   IF FIRST(ScrnPixmap.PixWord) < 0 THEN
     rawSolid.pixels[rawSolid.offset] := FIRST(ScrnPixmap.PixWord);
@@ -457,7 +457,7 @@ BEGIN
     rawGray.pixels[rawGray.offset + rawGray.wordsPerRow] :=
       Word.Not(gp)
   ELSE
-    rawGray.pixels[rawGray.offset + rawGray.wordsPerRow] := 
+    rawGray.pixels[rawGray.offset + rawGray.wordsPerRow] :=
       Word.And(LAST(ScrnPixmap.PixWord), Word.Not(gp));
   END
 END XScrnPxmp.

@@ -212,7 +212,7 @@ PROCEDURE TimerRoot (t: Timer): REFANY =
 
         IF x # NIL THEN MakeCallback (t, x); END;
       END;
-      
+
     END;
   END TimerRoot;
 

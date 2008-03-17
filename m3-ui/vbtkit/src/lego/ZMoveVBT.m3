@@ -10,7 +10,7 @@
 MODULE ZMoveVBT;
 
 IMPORT Axis, BtnVBTClass, HighlightVBT, PaintOp, Pixmap, Point,
-       Rect, SourceVBT, Split, VBT, VBTColors, ZChildVBT, 
+       Rect, SourceVBT, Split, VBT, VBTColors, ZChildVBT,
        ZSplit, ZSplitUtils;
 
 REVEAL

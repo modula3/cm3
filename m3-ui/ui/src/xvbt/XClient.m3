@@ -79,7 +79,7 @@ PROCEDURE TrestleID (t: T; v: VBT.T): TEXT =
           RETURN t.fullinst & "." & Fmt.Int(xst.screenID)
       ELSE
       END;
-      RETURN t.fullinst & "." & Fmt.Int(X.XDefaultScreen(t.dpy)) 
+      RETURN t.fullinst & "." & Fmt.Int(X.XDefaultScreen(t.dpy))
     END
   END TrestleID;
 
@@ -1511,7 +1511,7 @@ PROCEDURE DoConnect (self     : TrestleClass.ConnectClosure;
 
 EXCEPTION FatalError;
 
-PROCEDURE Crash() =        
+PROCEDURE Crash() =
   <* FATAL FatalError *>
   BEGIN
     RAISE FatalError

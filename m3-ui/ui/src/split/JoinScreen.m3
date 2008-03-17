@@ -35,7 +35,7 @@ REVEAL
         succ         := Succ;
       END;                      (* object *)
 
-TYPE 
+TYPE
   ScreenArray = REF ARRAY OF RECORD st: ScreenType.T; cnt: INTEGER END;
 
 PROCEDURE Succ (self: T; st: VBT.ScreenType; VAR hint: INTEGER):
@@ -287,7 +287,7 @@ PROCEDURE MungeBatch (ba: Batch.T; st, cst: ScreenType.T) =
       cptr := BatchUtil.Succ(ba, cptr)
     END
   END MungeBatch;
-  
+
 PROCEDURE PaintBatch (v, ch: VBT.T; ba: Batch.T) =
   VAR
     pst      : ScreenType.T;

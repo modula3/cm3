@@ -120,7 +120,7 @@ PROCEDURE ApplyMacFilter (self: MacFilter;
       self.next.apply (v, cd)
     END
   END ApplyMacFilter;
- 
+
 CONST
   OptionE = ARRAY OF
               f {f {'a', Latin1Key.aacute}, f {'A', Latin1Key.Aacute},

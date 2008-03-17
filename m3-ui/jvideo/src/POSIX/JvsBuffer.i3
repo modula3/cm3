@@ -36,7 +36,7 @@ TYPE
 
 (*
   No longer exported
-  
+
 PROCEDURE AllocateBuffer (jvs: Jvs.T; type: Jvs.BufferType; wait := TRUE):
   Jvs.ShmBufId RAISES {OSError.E, Thread.Alerted};
 (* find or create a shared memory buffer of the given buffer type and

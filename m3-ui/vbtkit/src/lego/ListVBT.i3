@@ -15,7 +15,7 @@
    column, with a scrollbar. The location of the scrollbar is
    governed by the environment variable "SCROLLBARLOC", described
    in the "VBTKitEnv" interface.
- 
+
    The "ListVBT" itself deals with the details of being a VBT,
    maintains a table that maps a cell-number to a cell-value, and
    maintains the {\em selection}, a distinguished subset of the
@@ -58,7 +58,7 @@
    internal mutex held.  "Painter" methods must not call any of the
    "ListVBT.T" methods; their locking level is such that "LL.sup =
    list".
-   
+
    The "TextPainter" class uses its own internal lock for font
    information; \linebreak "TextPainter.setFont(v,font)" has "LL.sup < v".
 
@@ -94,7 +94,7 @@ TYPE
              getFirstSelected (VAR this: Cell): BOOLEAN;
              scrollTo         (this: Cell);
              scrollToShow     (this: Cell);
-             reportVisible    (first: Cell; num: CARDINAL); 
+             reportVisible    (first: Cell; num: CARDINAL);
            END;
 
 (* In the following descriptions, "v" is an object of type
@@ -181,8 +181,8 @@ TYPE
    at the top of "v"'s domain.
 
    The call "v.scrollToShow(this)" adjusts the list's scrolling
-   position to make "this" visible. 
-   
+   position to make "this" visible.
+
    The "ListVBT" will call "v.reportVisible(first, num)" whenever
    the set of visible cells changes (either because of scrolling
    or because of reshaping).  (A cell is ``visible'' if it
@@ -232,14 +232,14 @@ TYPE
    the list's screen changes.
 
    The call "p.paint(v, r, value, index, select, bad)" paints the cell
-   with the given index and value in the given rectangle (whose height 
-   will equal that returned  by "p.height()", and some part of which will be 
+   with the given index and value in the given rectangle (whose height
+   will equal that returned  by "p.height()", and some part of which will be
    visible).  If "selected" is "TRUE", highlight the painted cell to indicate
    that it is in the set of selected cells.  "bad" is the subset
    of "r" that actually needs to be painted; "bad" is wholly
    contained in "r".
 
-   The call "p.select(v, r, value, index, selected)" changes the 
+   The call "p.select(v, r, value, index, selected)" changes the
    highlight of the cell with the given index and value,
    according to "selected", to show whether it is
    in the set of selected cells.  The cell has previously been
@@ -332,7 +332,7 @@ TYPE
    removes any previous selection and then selects this cell.  Its
    other methods do nothing.  Here is its declaration: *)
 
-TYPE 
+TYPE
   UniSelector <: Selector;
 
 (* The other common class of "Selector" is "MultiSelector".  It

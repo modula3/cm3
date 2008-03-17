@@ -11,7 +11,7 @@ MODULE WebVBT;
 IMPORT CIText, Filter, Fmt, Font, HTML, HTMLVBT, HTMLVBTText, HTMLVBTG,
        Images, MultiClass, MultiSplit, Pixmap, PixmapVBT, Point,
        RefList, SimpleWeb, Split, TextExtras, TextList, TextEditVBT,
-       TextPort, TextureVBT, TextVBT, Thread, URLCache, VBT, Web, Image, 
+       TextPort, TextureVBT, TextVBT, Thread, URLCache, VBT, Web, Image,
        Rd, TextRd, PaintOp;
 
 REVEAL Private = Filter.T BRANDED OBJECT END;
@@ -44,7 +44,7 @@ PROCEDURE FromText (v             : T;
                     contents      : TEXT;
                     contentType   : Web.MIMEType := Web.MIMEType.Text;
                     contentSubType: TEXT         := "html";
-                    url           : TEXT         := "text:"; 
+                    url           : TEXT         := "text:";
                     style         : Style        := Style.Normal;
                     zippers       : BOOLEAN      := FALSE;
                     reload        : BOOLEAN      := FALSE;
@@ -61,7 +61,7 @@ PROCEDURE FromText (v             : T;
     v.t :=
       Thread.Fork(NEW(FromTextClosure, v := v, webpage := webpage,
                       url := url, style := style, zippers := zippers,
-                      reload := reload, server := server, 
+                      reload := reload, server := server,
                       scrollBar := scrollBar))
   END FromText;
 
@@ -102,7 +102,7 @@ PROCEDURE Fetch (v        : T;
     v.stop();
     v.t := Thread.Fork(
              NEW(FetchClosure, v := v, url := url, style := style,
-                 zippers := zippers, reload := reload, server := server, 
+                 zippers := zippers, reload := reload, server := server,
                  scrollBar := scrollBar))
   END Fetch;
 
@@ -117,11 +117,11 @@ PROCEDURE FetchWrapper (cl: FetchClosure): REFANY =
   VAR webpage: Web.Page; base: TEXT;
   BEGIN
     TRY
-      webpage := 
+      webpage :=
           SimpleWeb.Fetch(cl.url, reload := cl.reload, server := cl.server);
-      base := webpage.header.location;  
+      base := webpage.header.location;
                    (* SimpleWeb.Fetch always fills in header.location *)
-      Display(webpage, cl.v, base, cl.style, cl.zippers, cl.reload, cl.server, 
+      Display(webpage, cl.v, base, cl.style, cl.zippers, cl.reload, cl.server,
               cl.scrollBar);
     EXCEPT
       Thread.Alerted =>
@@ -192,7 +192,7 @@ PROCEDURE Display (webpage  : Web.Page;
     END NewHTMLPage;
 
   PROCEDURE NewImagePage (pm: Pixmap.T) RAISES {Thread.Alerted} =
-    VAR 
+    VAR
       page := NEW(ImagePage);
       (* op := PaintOp.BgFg; *)
       op := PaintOp.Copy;
@@ -243,7 +243,7 @@ PROCEDURE Display (webpage  : Web.Page;
               NewTextPage("cannot handle '" & hdr.contentSubType & "'");
             END
           EXCEPT
-            Rd.Failure, Image.Error, Images.Error => 
+            Rd.Failure, Image.Error, Images.Error =>
                 NewTextPage("cannot display image");
           END
         END
@@ -309,7 +309,7 @@ PROCEDURE HTMLVBTHotlink (         ch : HTMLVBT.T;
   BEGIN
     TYPECASE ch OF
     | GraphicsHTMLVBT (v) => v.parent.hotlink(url, cd)
-    ELSE 
+    ELSE
     END
   END HTMLVBTHotlink;
 
@@ -341,7 +341,7 @@ PROCEDURE Stop (self: T) =
     IF self.t # NIL THEN Thread.Alert(self.t) END
   END Stop;
 
-PROCEDURE Hotlink (<* UNUSED *> self: T; 
+PROCEDURE Hotlink (<* UNUSED *> self: T;
                    <* UNUSED *> link: TEXT;
                    <* UNUSED *> READONLY cd: VBT.MouseRec) =
   BEGIN
@@ -416,7 +416,7 @@ PROCEDURE SearchVBTTree (v: VBT.T; pattern: TEXT): BOOLEAN =
       END
     END;
   END SearchVBTTree;
-  
+
 PROCEDURE TextSearch (text, pattern: TEXT): BOOLEAN =
   VAR index: CARDINAL := 0;
   BEGIN

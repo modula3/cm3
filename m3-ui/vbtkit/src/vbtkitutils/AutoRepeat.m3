@@ -19,7 +19,7 @@ IMPORT Time, Thread;
    advantage of two features of the current interface:
 
    1) The repeat method can be called by the timer thread rather
-   than from a thread forked by the timer thread. 
+   than from a thread forked by the timer thread.
 
    2) The Start and Continue are no-ops if ar is already running.
    (The code was written when Start and Continue tried to change
@@ -65,7 +65,7 @@ PROCEDURE Init (cl       : T;
     END;
     RETURN cl
   END Init;
-     
+
 PROCEDURE CanRepeat(<* UNUSED *> cl: T): BOOLEAN =
   BEGIN RETURN TRUE END CanRepeat;
 

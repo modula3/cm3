@@ -16,7 +16,7 @@ INTERFACE JunoUnparse;
    "width" characters. Those procedures taking a "tokens" argument unparse at
    most the specified number of tokens. In all cases, the writer is left
    positioned just after the last character of the last token written; no
-   new-line is appended. 
+   new-line is appended.
 
    Those procedures that take a "private" argument will supress the unparsing
    of public predicate, function, and procedure bodies when "private = FALSE".

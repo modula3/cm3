@@ -503,7 +503,7 @@ PROCEDURE ToCmd(
      function; set "newF" to the result of replacing the predicate or function
      in "f" by its definition and return "FALSE".
 
-     Requires "f" is not a near constraint. 
+     Requires "f" is not a near constraint.
 
      Raises "Error" if "f" is an invalid application of a function, predicate,
      or compound formula (i.e., "OR" or "NOT") in a constraint. *)
@@ -646,11 +646,11 @@ PROCEDURE ToCmd(
 	RETURN f.normal_form
       END
     END GetFunc;
-  
+
   PROCEDURE GetPred(r: JunoAST.Relation): JunoAST.NormalForm RAISES {Error} =
   (* Return the normal form bound in "scp" to the built-in relation "r".
      Requires that "r" is not the equality relation.
-  
+
      Raises "Error" if "r" is an invalid predicate in a constraint. *)
     VAR name: JunoAST.QId; BEGIN
       TYPECASE r OF
@@ -906,7 +906,7 @@ PROCEDURE ToCmd(
       END;
       RETURN res
     END PreQueryCmd;
-  
+
   PROCEDURE C2q2(pred: JunoAST.Formula): JunoAST.Cmd RAISES {Error} =
   (* This procedure works like "JunoCompile.C2q", but with the following
      exceptions:

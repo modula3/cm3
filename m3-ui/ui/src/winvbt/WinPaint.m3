@@ -7,18 +7,18 @@
 
 UNSAFE MODULE WinPaint;
 
-IMPORT Batch, BatchRep, BatchUtil, Ctypes, M3toC, OSWin32, PaintExt, 
-       PaintPrivate, Path, PathPrivate, Point, PolyRegion, Rect, Region, 
-       ScrnFont, Trapezoid, Trestle, TrestleImpl, VBT, VBTRep, WinContext, 
-       WinDef, WinGDI, WinScreenType, WinScreenTypePrivate, WinScrnFont, 
+IMPORT Batch, BatchRep, BatchUtil, Ctypes, M3toC, OSWin32, PaintExt,
+       PaintPrivate, Path, PathPrivate, Point, PolyRegion, Rect, Region,
+       ScrnFont, Trapezoid, Trestle, TrestleImpl, VBT, VBTRep, WinContext,
+       WinDef, WinGDI, WinScreenType, WinScreenTypePrivate, WinScrnFont,
        WinScrnPaintOp, WinScrnPixmap, WinUser, Word;
 
-TYPE 
+TYPE
   PC = PaintPrivate.PaintCommand;
 
 CONST
   False = 0;  (* Win32 BOOL return value *)
-  
+
   ComSize = ADRSIZE (PaintPrivate.CommandRec);
 
 VAR
@@ -43,21 +43,21 @@ PROCEDURE PaintBatch (self: Trestle.T; v: VBT.T; ba: Batch.T;
     LOCK self DO
       WHILE cmdP < endP DO
         CASE cmdP.command OF
-        | PC.TintCom => 
+        | PC.TintCom =>
           cmdP := TintCom (cmdP, endP, hdc, st);
-        | PC.TextureCom => 
+        | PC.TextureCom =>
           cmdP := TextureCom (cmdP, endP, hdc, st, buf);
-        | PC.PixmapCom => 
+        | PC.PixmapCom =>
           cmdP := PixmapCom (cmdP, endP, hdc, st, buf);
-        | PC.ScrollCom => 
+        | PC.ScrollCom =>
           cmdP := ScrollCom (cmdP, hdc, st, badR);
-        | PC.TrapCom => 
+        | PC.TrapCom =>
           cmdP := TrapCom (cmdP, endP, hdc, st);
-        | PC.TextCom => 
+        | PC.TextCom =>
           cmdP := TextCom (cmdP, cmdP, endP, hdc, st);
         | PC.ExtensionCom =>
           cmdP := ExtensionCom (cmdP, endP, hdc, self, st);
-        | PC.RepeatCom => 
+        | PC.RepeatCom =>
           INC (cmdP, ComSize);
         ELSE
           EXIT;
@@ -118,7 +118,7 @@ PROCEDURE TextureCom (cmdP, endP: PaintPrivate.CommandPtr;
                       hdc       : WinDef.HDC;
                       st        : WinScreenType.T;
                   VAR buf       : RGBSpace): PaintPrivate.CommandPtr =
-  
+
   PROCEDURE TileWithBitmap (hdc  : WinDef.HDC;
                             clip : Rect.T;
                             hbmp : WinDef.HBITMAP;
@@ -140,79 +140,79 @@ PROCEDURE TextureCom (cmdP, endP: PaintPrivate.CommandPtr;
       IF brop = 0 AND frop = 0 THEN
         RETURN;
       END;
-      
+
       (* Create a compatible device context *)
       comdc := WinGDI.CreateCompatibleDC (hdc);
       (* Create a bitmap that can hold the rectangle covered by clip *)
-      bitmap := WinGDI.CreateCompatibleBitmap (hdc, 
-                                               clip.east - clip.west, 
+      bitmap := WinGDI.CreateCompatibleBitmap (hdc,
+                                               clip.east - clip.west,
                                                clip.south - clip.north);
       (* Select the bitmap into "comdc". *)
       oldBitmap := WinGDI.SelectObject (comdc, bitmap);
-      
-      (* Map point ("clip.west","clip.north") of page space to point (0,0) of 
-         device space. Since the device is a bitmap of width 
-         "clip.east - clip.west" and height "clip.south - clip.north", the 
+
+      (* Map point ("clip.west","clip.north") of page space to point (0,0) of
+         device space. Since the device is a bitmap of width
+         "clip.east - clip.west" and height "clip.south - clip.north", the
          rectangle "clip" of page space is mapped onto the device. *)
       status := WinGDI.SetWindowOrgEx (comdc, clip.west, clip.north, NIL);
       <* ASSERT status # False *>
       status := WinGDI.SetViewportOrgEx (comdc, 0, 0, NIL);
       <* ASSERT status # False *>
-      
-      (* I dabbled a bit around with "SetWorldTransform", but could not get it 
-         to work. Anyways, "SetWordTransform" is supported under Windows NT, 
+
+      (* I dabbled a bit around with "SetWorldTransform", but could not get it
+         to work. Anyways, "SetWordTransform" is supported under Windows NT,
          but not under Windows 95. *)
-      
-      (* Set the pattern brush origin. The Windows way to do this is confusing 
-         in two respects: (1) One has to set the origin BEFORE selecting the 
-         brush into the device context, and (2) the origin is specified in 
+
+      (* Set the pattern brush origin. The Windows way to do this is confusing
+         in two respects: (1) One has to set the origin BEFORE selecting the
+         brush into the device context, and (2) the origin is specified in
          device space, not in world/page space. *)
-      
+
       IF hbmp # NIL THEN
         (* Select the pixmap into a pattern brush *)
         brush := WinGDI.CreatePatternBrush (hbmp);
         <* ASSERT brush # NIL *>
-        
-        status := WinGDI.SetBrushOrgEx (comdc, 
-                                        delta.h - clip.west, 
-                                        delta.v - clip.north, 
-                                        NIL); 
+
+        status := WinGDI.SetBrushOrgEx (comdc,
+                                        delta.h - clip.west,
+                                        delta.v - clip.north,
+                                        NIL);
         <* ASSERT status # False *>
-        
+
         oldBrush := WinGDI.SelectObject (comdc, brush);
         <* ASSERT oldBrush # NIL *>
-        
-        (* Draw the pixels which are 0 in the bitmap of the pattern brush as 
-           black (all 0s), and the pixels which are 1 as white (all 1s) into 
+
+        (* Draw the pixels which are 0 in the bitmap of the pattern brush as
+           black (all 0s), and the pixels which are 1 as white (all 1s) into
            "comdc". *)
-        
+
         (* Setting the colors of comdc seems to have no effect. *)
         color := WinGDI.SetTextColor (comdc, WinGDI.RGB(0,0,0));
         <* ASSERT color # WinGDI.CLR_INVALID *>
         color := WinGDI.SetBkColor (comdc, WinGDI.RGB(255,255,255));
         <* ASSERT color # WinGDI.CLR_INVALID *>
-        
+
         (* Fill comdc, using the pattern brush *)
         FillRect (comdc, clip);
-        
+
         (* Remove "brush" from "comdc". *)
         oldBrush := WinGDI.SelectObject (comdc, oldBrush);
         <* ASSERT oldBrush = brush *>
-        
+
         status := WinGDI.DeleteObject (brush);
         <* ASSERT status # False *>
       END;
-      
+
       BitBltFill (hdc, pat0, brop, clip, comdc);
       BitBltFill (hdc, pat1, frop, clip, comdc);
-      
+
       status := WinGDI.DeleteDC (comdc);
       <* ASSERT status # False *>
       status := WinGDI.DeleteObject (bitmap);
       <* ASSERT status # False *>
     END TileWithBitmap;
-    
-    
+
+
   PROCEDURE BitBltFill (hdc   : WinDef.HDC;
                         col   : WinDef.COLORREF;
                         rop   : WinDef.DWORD;
@@ -228,20 +228,20 @@ PROCEDURE TextureCom (cmdP, endP: PaintPrivate.CommandPtr;
         <* ASSERT solBrush # NIL *>
         oldBrush := WinGDI.SelectObject (hdc, solBrush);
         <* ASSERT oldBrush # NIL *>
-        
+
         status := WinGDI.BitBlt (hdc, rect.west, rect.north,
-                                 rect.east - rect.west, 
-                                 rect.south - rect.north, 
+                                 rect.east - rect.west,
+                                 rect.south - rect.north,
                                  comdc, rect.west, rect.north, rop);
         <* ASSERT status # False *>
-        
+
         oldBrush := WinGDI.SelectObject (hdc, oldBrush);
         <* ASSERT oldBrush = solBrush *>
         status := WinGDI.DeleteObject (solBrush);
         <* ASSERT status # False *>
       END;
     END BitBltFill;
-    
+
   VAR
     fastPath : BOOLEAN;
     pm       : PaintPrivate.Pixmap;
@@ -260,7 +260,7 @@ PROCEDURE TextureCom (cmdP, endP: PaintPrivate.CommandPtr;
         RETURN ChicagoTextureCom (cmdP, endP, hdc, st, buf);
       END;
 
-      (* First, determine if we can use a fast path.  
+      (* First, determine if we can use a fast path.
          The fast path is to fill the rectangle directly using a pattern brush.
          The slow path is to copy the texture onto a memory device context, and
          then to repeatedly bit-blit this memory device context onto "hdc". *)
@@ -296,14 +296,14 @@ PROCEDURE TextureCom (cmdP, endP: PaintPrivate.CommandPtr;
 
             hbmp := pst.pmtable[pm].hbmp;
 
-            (* In Windows, '0' pixels of the bitmap in the pattern brush are 
-               drawn in the current text color, so the text color should be 
-               "tbl.bop.col". '1' pixels are drawn in the current background 
-               color, so this color should be "tbl.fop.col". Counterintuive? 
+            (* In Windows, '0' pixels of the bitmap in the pattern brush are
+               drawn in the current text color, so the text color should be
+               "tbl.bop.col". '1' pixels are drawn in the current background
+               color, so this color should be "tbl.fop.col". Counterintuive?
                Well, after all, this is Windows! *)
-            
-            (* Draw the pixels which are 0 in "pst.pmtable[pm].hbmp" as black 
-               (all 0's), and the pixels which are 1 as white (all 1's) into 
+
+            (* Draw the pixels which are 0 in "pst.pmtable[pm].hbmp" as black
+               (all 0's), and the pixels which are 1 as white (all 1's) into
                "comdc". *)
 
             color := WinGDI.SetTextColor (hdc, WinGDI.RGB(0,0,0));
@@ -346,7 +346,7 @@ PROCEDURE TextureCom (cmdP, endP: PaintPrivate.CommandPtr;
 
       END;
     END;
-        
+
     RETURN cmdP;
   END TextureCom;
 
@@ -374,9 +374,9 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
         <* ASSERT solBrush # NIL *>
         oldBrush := WinGDI.SelectObject (hdc, solBrush);
         <* ASSERT oldBrush # NIL *>
-        
-        (* This code seems to work, but I have not convinced myself in any 
-           rigorous way that it indeed matches the Trestle specification 
+
+        (* This code seems to work, but I have not convinced myself in any
+           rigorous way that it indeed matches the Trestle specification
            precisely. *)
 
         WITH west = rect.west - (rect.west - delta.h) MOD width,
@@ -384,13 +384,13 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
           FOR x := west TO rect.east - 1 BY width DO
             FOR y := north TO rect.south - 1 BY height DO
 
-              status := WinGDI.BitBlt (hdc, x, y, width, height, 
+              status := WinGDI.BitBlt (hdc, x, y, width, height,
                                        comdc, 0, 0, rop);
               <* ASSERT status # False *>
             END;
           END;
         END;
-        
+
         oldBrush := WinGDI.SelectObject (hdc, oldBrush);
         <* ASSERT oldBrush = solBrush *>
         status := WinGDI.DeleteObject (solBrush);
@@ -444,23 +444,23 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
             h.biCompression := WinGDI.BI_RGB;
           END;
 
-          status := WinGDI.GetDIBits (comdc, 
-                                      spm.hbmp,      
+          status := WinGDI.GetDIBits (comdc,
+                                      spm.hbmp,
                                       0,             (* start at scan line 0 *)
                                       height,        (* copy "height" lines *)
                                       pixels,        (* into "pixels" *)
                                       ADR (bmi),
                                       WinGDI.DIB_RGB_COLORS);
           <* ASSERT status = height *>
-        
-          (* Use "SetDIBits" to copy "pixels" into "hbmp". Note that the 
-             specification of "SetDIBits" says that "hbmp" must not be 
+
+          (* Use "SetDIBits" to copy "pixels" into "hbmp". Note that the
+             specification of "SetDIBits" says that "hbmp" must not be
              selected into "comdc". *)
 
           status := WinGDI.SetDIBits (comdc,
                                       hbmp,
-                                      0,      
-                                      height, 
+                                      0,
+                                      height,
                                       pixels,
                                       ADR (bmi),
                                       WinGDI.DIB_RGB_COLORS);
@@ -468,10 +468,10 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
 
           oldBmp := WinGDI.SelectObject (comdc, hbmp);
           <* ASSERT oldBmp # NIL *>
-            
-          BitBlt (hdc, tbl.bop.col, tbl.brop3, rect, delta, 
+
+          BitBlt (hdc, tbl.bop.col, tbl.brop3, rect, delta,
                   comdc, width, height);
-          BitBlt (hdc, tbl.fop.col, tbl.frop3, rect, delta, 
+          BitBlt (hdc, tbl.fop.col, tbl.frop3, rect, delta,
                   comdc, width, height);
 
           status := WinGDI.DeleteDC (comdc);
@@ -531,14 +531,14 @@ PROCEDURE ChicagoTextureCom (cmdP, endP: PaintPrivate.CommandPtr;
 (* Painting pixmaps                                                          *)
 (*****************************************************************************)
 
-(* This code has been tested on Windows 95 and Windows NT 4.0 using the 
+(* This code has been tested on Windows 95 and Windows NT 4.0 using the
    test program "PixmapComTest".  I have done pretty exhaustive testing for
    pixmaps of depth 1 and for the 16 basic paint-ops (excluding PaintOp.Copy).
-   For what it's worth, so far I have not seen any problems with higher-depth 
+   For what it's worth, so far I have not seen any problems with higher-depth
    pixmaps. I have not tested whether RepeatComs work.
 
    Note that the Win32 specification states that WinGDI.SetBrushOrgEx works
-   only for x and y coordinates between 0 and 7, and that I assume it to 
+   only for x and y coordinates between 0 and 7, and that I assume it to
    work for arbitrary coordinates. Under NT, this seems to be ok, but there
    is no guarantee that it will work under Windows 95. *)
 
@@ -581,13 +581,13 @@ PROCEDURE PixmapCom (cmdP, endP: PaintPrivate.CommandPtr;
       <* ASSERT solBrush # NIL *>
       oldBrush := WinGDI.SelectObject (hdc, solBrush);
       <* ASSERT oldBrush # NIL *>
-            
-      status := WinGDI.BitBlt (hdc, 
-                               rect.west, rect.north, 
+
+      status := WinGDI.BitBlt (hdc,
+                               rect.west, rect.north,
                                rect.east - rect.west, rect.south - rect.north,
                                comdc, 0, 0, rop);
       <* ASSERT status # False *>
-            
+
       oldBrush := WinGDI.SelectObject (hdc, oldBrush);
       <* ASSERT oldBrush = solBrush *>
       status := WinGDI.DeleteObject (solBrush);
@@ -619,8 +619,8 @@ PROCEDURE PixmapCom (cmdP, endP: PaintPrivate.CommandPtr;
 
         (* Create a bitmap that can hold the rectangle covered by the pixmap *)
         WITH dom = WinScrnPixmap.PixmapDomain (st, op.pm) DO
-          bitmap := WinGDI.CreateCompatibleBitmap (hdc, 
-                                                   dom.east - dom.west, 
+          bitmap := WinGDI.CreateCompatibleBitmap (hdc,
+                                                   dom.east - dom.west,
                                                    dom.south - dom.north);
           pmRect := Rect.Add (dom, op.delta);
         END;
@@ -640,30 +640,30 @@ PROCEDURE PixmapCom (cmdP, endP: PaintPrivate.CommandPtr;
         IF op.op >= 0 AND st.optable # NIL AND op.op < NUMBER(st.optable^) AND
           pst.pmtable # NIL AND pm < NUMBER (pst.pmtable^) THEN
           WITH tbl = st.optable[op.op] DO
-            
+
             brush := WinGDI.CreatePatternBrush (pst.pmtable[pm].hbmp);
             <* ASSERT brush # NIL *>
-            
+
             auxBrush := WinGDI.SelectObject (comdc, brush);
             <* ASSERT auxBrush # NIL *>
-            
-            (* In Windows, '0' pixels of the bitmap in the pattern brush are 
-               drawn in the current text color, so the text color should be 
-               "tbl.bop.col". '1' pixels are drawn in the current background 
-               color, so this color should be "tbl.fop.col". Counterintuive? 
+
+            (* In Windows, '0' pixels of the bitmap in the pattern brush are
+               drawn in the current text color, so the text color should be
+               "tbl.bop.col". '1' pixels are drawn in the current background
+               color, so this color should be "tbl.fop.col". Counterintuive?
                Well, after all, this is Windows! *)
-            
-            (* Draw the pixels which are 0 in "pst.pmtable[pm].hbmp" as black 
-               (all 0's), and the pixels which are 1 as white (all 1's) into 
+
+            (* Draw the pixels which are 0 in "pst.pmtable[pm].hbmp" as black
+               (all 0's), and the pixels which are 1 as white (all 1's) into
                "comdc". *)
-            
+
             (* Setting the colors of comdc seems to have no effect. *)
             color := WinGDI.SetTextColor (comdc, WinGDI.RGB(0,0,0));
             <* ASSERT color # WinGDI.CLR_INVALID *>
             color := WinGDI.SetBkColor (comdc, WinGDI.RGB(255,255,255));
             <* ASSERT color # WinGDI.CLR_INVALID *>
-           
-            color := WinGDI.SetTextColor (hdc, WinGDI.RGB(0,0,0)); 
+
+            color := WinGDI.SetTextColor (hdc, WinGDI.RGB(0,0,0));
             <* ASSERT color # WinGDI.CLR_INVALID *>
             color := WinGDI.SetBkColor (hdc, WinGDI.RGB(255,255,255));
             <* ASSERT color # WinGDI.CLR_INVALID *>
@@ -694,7 +694,7 @@ PROCEDURE PixmapCom (cmdP, endP: PaintPrivate.CommandPtr;
           BitBltFill (hdc, pat1, frop, pmRect, comdc);
           INC (cmdP, ComSize);
         END;
-        
+
         (* Clean up. *)
         DisableClipping (hdc);
 
@@ -702,12 +702,12 @@ PROCEDURE PixmapCom (cmdP, endP: PaintPrivate.CommandPtr;
         <* ASSERT brush # NIL *>
         status := WinGDI.DeleteObject (brush);
         <* ASSERT status # False *>
-        
+
         status := WinGDI.DeleteDC (comdc);
         <* ASSERT status # False *>
         status := WinGDI.DeleteObject (bitmap);
         <* ASSERT status # False *>
-        
+
       ELSE (* fastPath = TRUE *)
         WITH ctxt = WinContext.PushPixmap (hdc, st, op.op, op.pm, op.delta) DO
           FillRect (hdc, op.clip);
@@ -748,14 +748,14 @@ PROCEDURE ChicagoPixmapCom (
         <* ASSERT solBrush # NIL *>
         oldBrush := WinGDI.SelectObject (hdc, solBrush);
         <* ASSERT oldBrush # NIL *>
-        
+
         (* This branch is taken for PixmapComs.  This code matches the
            Trestle specification precisely. *)
 
         status := WinGDI.BitBlt (hdc, rect.west, rect.north, width, height,
                                  comdc, 0, 0, rop);
         <* ASSERT status # False *>
-        
+
         oldBrush := WinGDI.SelectObject (hdc, oldBrush);
         <* ASSERT oldBrush = solBrush *>
         status := WinGDI.DeleteObject (solBrush);
@@ -808,23 +808,23 @@ PROCEDURE ChicagoFill (hdc  : WinDef.HDC;
           h.biCompression := WinGDI.BI_RGB;
         END;
 
-        status := WinGDI.GetDIBits (comdc, 
-                                    spm.hbmp,      
+        status := WinGDI.GetDIBits (comdc,
+                                    spm.hbmp,
                                     0,             (* start at scan line 0 *)
                                     height,        (* copy "height" lines *)
                                     pixels,        (* into "pixels" *)
                                     ADR (bmi),
                                     WinGDI.DIB_RGB_COLORS);
         <* ASSERT status = height *>
-        
-        (* Use "SetDIBits" to copy "pixels" into "hbmp". Note that the 
-           specification of "SetDIBits" says that "hbmp" must not be 
+
+        (* Use "SetDIBits" to copy "pixels" into "hbmp". Note that the
+           specification of "SetDIBits" says that "hbmp" must not be
            selected into "comdc". *)
 
         status := WinGDI.SetDIBits (comdc,
                                     hbmp,
-                                    0,      
-                                    height, 
+                                    0,
+                                    height,
                                     pixels,
                                     ADR (bmi),
                                     WinGDI.DIB_RGB_COLORS);
@@ -832,7 +832,7 @@ PROCEDURE ChicagoFill (hdc  : WinDef.HDC;
 
         oldBmp := WinGDI.SelectObject (comdc, hbmp);
         <* ASSERT oldBmp # NIL *>
-            
+
         BitBlt (hdc, tbl.bop.col, tbl.brop3, rect, comdc, width, height);
         BitBlt (hdc, tbl.fop.col, tbl.frop3, rect, comdc, width, height);
 
@@ -875,8 +875,8 @@ PROCEDURE ChicagoFill (hdc  : WinDef.HDC;
 
 
 (* So far, I only handle "cmdP.op = Paint.Copy".  I'm not quite sure what
- * it means to apply general paint ops to a source whose depth is typically 
- * not 1. 
+ * it means to apply general paint ops to a source whose depth is typically
+ * not 1.
  *)
 
 PROCEDURE ScrollCom (cmdP : PaintPrivate.CommandPtr;
@@ -925,7 +925,7 @@ PROCEDURE ScrollCom (cmdP : PaintPrivate.CommandPtr;
 
     (* locate the source bits *)
     src := Rect.Sub (dest, delta);
-      
+
     (* if any of them are already bad, then the
        corresponding destination bits will be bad too. *)
     IF Region.OverlapRect (src, badR) AND NOT Region.SubsetRect (src, badR) THEN
@@ -1101,13 +1101,13 @@ PROCEDURE Trap (         hdc : WinDef.HDC;
     vlo, vhi, hw1, hw2, hf1, hf2, mw1, mw2, mf1, mf2, lft, rit: INTEGER;
     empty                                                     : BOOLEAN;
   BEGIN
-    IF clip.west >= clip.east THEN 
+    IF clip.west >= clip.east THEN
       RETURN;
     END;
     vlo := clip.north;
     vhi := clip.south;
     IF tr.m1.d = 0 AND tr.m2.d = 0 THEN
-      FillRect (hdc, 
+      FillRect (hdc,
                 Rect.Meet (clip, Rect.FromEdges (tr.p1.h, tr.p2.h, vlo, vhi)));
       RETURN;
     END;
@@ -1133,7 +1133,7 @@ PROCEDURE Trap (         hdc : WinDef.HDC;
         FillRect (hdc, Rect.FromEdges (lft, rit, vlo, vlo + 1));
         empty := FALSE;
       ELSIF lft > rit AND NOT empty THEN
-        (* Generated some painting and then found [lft ..  rit) empty by more 
+        (* Generated some painting and then found [lft ..  rit) empty by more
            than one pixel; hence all the remaining lines will be empty, hence:
          *)
         RETURN;
@@ -1142,14 +1142,14 @@ PROCEDURE Trap (         hdc : WinDef.HDC;
       INC (vlo);
       INC (hw1, mw1);
       DEC (hf1, mf1);
-      IF hf1 < 0 THEN 
-        INC (hf1, tr.m1.n); 
-        INC (hw1) 
+      IF hf1 < 0 THEN
+        INC (hf1, tr.m1.n);
+        INC (hw1)
       END;
       INC (hw2, mw2);
       DEC (hf2, mf2);
-      IF hf2 < 0 THEN 
-        INC (hf2, tr.m2.n); 
+      IF hf2 < 0 THEN
+        INC (hf2, tr.m2.n);
         INC (hw2);
       END;
     END;
@@ -1171,7 +1171,7 @@ PROCEDURE TextCom (cmd       : PaintPrivate.CommandPtr;
     pr        : PolyRegion.T;
     brush, oldBrush : WinDef.HBRUSH;
     oldFont   : WinDef.HFONT;
-    oldColor  : WinDef.COLORREF; 
+    oldColor  : WinDef.COLORREF;
     oldBgColor: WinDef.COLORREF;
     oldBgMode : Ctypes.int;
     mode      : Mode;
@@ -1179,9 +1179,9 @@ PROCEDURE TextCom (cmd       : PaintPrivate.CommandPtr;
   BEGIN
     WITH op      = LOOPHOLE (cmd, PaintPrivate.TextPtr),
          clipped = PaintPrivate.Prop.Clipped IN op.props DO
-      
+
       (* This chunk of code replaces XGC.ResolveTextGC.
-       * Unresolved: 
+       * Unresolved:
        *   - mode determination: In xvbt, the mode depends on the "fill_style"
        *     of the XScrnTpRep.OpRecord: "X.FillOpaqueStippled" sets the mode
        *     to "UseImageString" (ie "PaintBackground"), otherwise it is
@@ -1200,7 +1200,7 @@ PROCEDURE TextCom (cmd       : PaintPrivate.CommandPtr;
           <* ASSERT oldBrush # NIL *>
           oldColor := WinGDI.SetTextColor (hdc, tbl.fop.col);
           <* ASSERT oldColor # WinGDI.CLR_INVALID *>
-          
+
           IF FALSE THEN
             oldBgColor := WinGDI.SetBkColor (hdc, tbl.bop.col);
             <* ASSERT oldBgColor # WinGDI.CLR_INVALID *>
@@ -1216,13 +1216,13 @@ PROCEDURE TextCom (cmd       : PaintPrivate.CommandPtr;
       ELSE
         (* don't draw anything *)
       END;
-      
+
       WITH subbed = (mode = Mode.PaintBackground)
            AND PaintPrivate.Prop.FontSub IN op.props DO
         INC (pAdr, op.szOfRec * ADRSIZE(Word.T));
         IF NOT clipped THEN
           IF op.clip.west < op.clip.east THEN
-            IF subbed THEN 
+            IF subbed THEN
               FillRect (hdc, op.clip)
             END;
             PaintString(hdc, st, op)
@@ -1235,8 +1235,8 @@ PROCEDURE TextCom (cmd       : PaintPrivate.CommandPtr;
               WITH rgn = PolyRegion.ToRegion (pr) DO
                 IF NOT Region.IsEmpty (rgn) THEN
                   ClipToRegion (hdc, rgn);
-                  IF subbed THEN 
-                    FillRect (hdc, rgn.r) 
+                  IF subbed THEN
+                    FillRect (hdc, rgn.r)
                   END;
                   PaintString (hdc, st, op);
                   DisableClipping (hdc);
@@ -1249,9 +1249,9 @@ PROCEDURE TextCom (cmd       : PaintPrivate.CommandPtr;
           END;
           WITH rgn = PolyRegion.ToRegion (pr) DO
             IF NOT Region.IsEmpty (rgn) THEN
-              ClipToRegion (hdc, rgn); 
-              IF subbed THEN 
-                FillRect (hdc, rgn.r) 
+              ClipToRegion (hdc, rgn);
+              IF subbed THEN
+                FillRect (hdc, rgn.r)
               END;
               PaintString (hdc, st, op);
               DisableClipping (hdc);
@@ -1281,7 +1281,7 @@ CONST
                      south := 32768};
 
 
-PROCEDURE PaintString (hdc: WinDef.HDC; 
+PROCEDURE PaintString (hdc: WinDef.HDC;
                        st : WinScreenType.T;
                        op : PaintPrivate.TextPtr) =
 
@@ -1292,31 +1292,31 @@ PROCEDURE PaintString (hdc: WinDef.HDC;
           IF fnt # NIL AND fnt.id = id THEN RETURN fnt; END;
         END;
       END;
-      <* ASSERT FALSE *>  
+      <* ASSERT FALSE *>
     END FontIdToScrnFont;
 
   VAR
     i     := 0;
     newi  : INTEGER;
-    dlp   : UNTRACED REF VBT.Displacement := 
+    dlp   : UNTRACED REF VBT.Displacement :=
                                      op + ADRSIZE(PaintPrivate.TextRec);
-    endp  : UNTRACED REF VBT.Displacement := 
+    endp  : UNTRACED REF VBT.Displacement :=
                                      dlp + ADRSIZE(VBT.Displacement) * op.dlsz;
     txtp  := LOOPHOLE (endp, Ctypes.char_star);
     blank := M3toC.FlatTtoS(" ");
     delta : Ctypes.int;
     status: Ctypes.int;
   BEGIN
-    WITH sz = op.txtsz, 
+    WITH sz = op.txtsz,
          ascent = FontIdToScrnFont (st, op.fnt).metrics.ascent,
          pt = Point.T {op.refpt.h, op.refpt.v - ascent} DO
 
       (* If the string is empty, or the text is of-screen, exit *)
-      IF sz = 0 OR NOT Rect.Member (pt, ValidRect) THEN 
+      IF sz = 0 OR NOT Rect.Member (pt, ValidRect) THEN
         RETURN;
       END;
 
-      (* Set the current position, and tell windows to move the current 
+      (* Set the current position, and tell windows to move the current
          position upon each call to "TextOut" and "ExtTextOut". *)
       status := WinGDI.SetTextAlign (hdc, WinGDI.TA_UPDATECP);
       <* ASSERT status # WinGDI.GDI_ERROR *>
@@ -1381,7 +1381,7 @@ PROCEDURE ExtensionCom (cmdP, endP: PaintPrivate.CommandPtr;
         IF op.subCommand = PaintExt.LineCommand THEN
           ctxt := WinContext.PushStroke (
                       hdc, st, op.op, op.pm,
-                      Point.Add(op.delta, lineP.delta), 
+                      Point.Add(op.delta, lineP.delta),
                       lineP.width, lineP.end, VBT.JoinStyle.Round);
           IF op.delta # Point.Origin THEN
             lineP.p := Point.Add(lineP.p, op.delta);
@@ -1392,7 +1392,7 @@ PROCEDURE ExtensionCom (cmdP, endP: PaintPrivate.CommandPtr;
             pathP := ADR(fillP.path);
             ctxt := WinContext.PushFill (
                         hdc, st, op.op, op.pm,
-                        Point.Add(op.delta, fillP.delta), 
+                        Point.Add(op.delta, fillP.delta),
                         fillP.wind);
           ELSIF op.subCommand = PaintExt.StrokeCommand THEN
             pathP := ADR(strokeP.path);
@@ -1410,7 +1410,7 @@ PROCEDURE ExtensionCom (cmdP, endP: PaintPrivate.CommandPtr;
           IF op.delta # Point.Origin THEN
             path := Path.Translate(path, op.delta);
           END;
-          IF path.curveCount # 0 THEN 
+          IF path.curveCount # 0 THEN
             path := Path.Flatten(path);
           END;
         END;
@@ -1468,7 +1468,7 @@ PROCEDURE ExtensionCom (cmdP, endP: PaintPrivate.CommandPtr;
 (* This function could move into a module "WinWrap" *)
 
 PROCEDURE DrawLine (hdc: WinDef.HDC; a, b: Point.T) =
-  VAR 
+  VAR
     points := ARRAY [0..1] OF WinDef.POINT {
                                   WinDef.POINT {a.h, a.v},
                                   WinDef.POINT {b.h, b.v}};
@@ -1499,8 +1499,8 @@ PROCEDURE StrokePath (trsl: Trestle.T; hdc: WinDef.HDC; path: Path.T) =
     <*FATAL Path.Malformed*>
   BEGIN
     Path.Map (path, sm);
-    IF sm.n # 0 THEN 
-      EmitStroke (sm) 
+    IF sm.n # 0 THEN
+      EmitStroke (sm)
     END;
     DISPOSE (sm.a);
   END StrokePath;
@@ -1508,8 +1508,8 @@ PROCEDURE StrokePath (trsl: Trestle.T; hdc: WinDef.HDC; path: Path.T) =
 
 PROCEDURE StrokeMove (self: StrokeMap; READONLY p: Point.T) =
   BEGIN
-    IF self.n # 0 THEN 
-      EmitStroke (self) 
+    IF self.n # 0 THEN
+      EmitStroke (self)
     END;
     self.a[0].x := p.h;
     self.a[0].y := p.v;
@@ -1520,11 +1520,11 @@ PROCEDURE StrokeMove (self: StrokeMap; READONLY p: Point.T) =
 PROCEDURE StrokeLine (                    self: StrokeMap;
                       <*UNUSED*> READONLY p   : Point.T;
                                  READONLY q   : Point.T    ) =
-  VAR 
+  VAR
     m := NUMBER(self.a^);
   BEGIN
     IF self.n = m THEN
-      VAR 
+      VAR
         newa := NEW(Points, 2 * m);
       BEGIN
         SUBARRAY (newa^, 0, m) := self.a^;
@@ -1542,9 +1542,9 @@ PROCEDURE EmitStroke (sm: StrokeMap) =
   VAR
     status: WinDef.BOOL;
   BEGIN
-    IF sm.n = 1 THEN 
-      sm.a[1] := sm.a[0]; 
-      sm.n := 2 
+    IF sm.n = 1 THEN
+      sm.a[1] := sm.a[0];
+      sm.n := 2
     END;
     status := WinGDI.Polyline (sm.hdc, ADR(sm.a[0]), sm.n);
     <* ASSERT status # False *>
@@ -1567,7 +1567,7 @@ TYPE
 
 PROCEDURE FillPath (trsl: Trestle.T; hdc: WinDef.HDC; path: Path.T) =
   <*FATAL Path.Malformed*>
-  VAR 
+  VAR
     sm := NEW(FillMap, trsl := trsl, a := NEW(Points, 50));
     status: WinDef.BOOL;
   BEGIN
@@ -1602,11 +1602,11 @@ PROCEDURE FillMove (self: FillMap; READONLY p: Point.T) =
 PROCEDURE FillLine (                    self: FillMap;
                     <*UNUSED*> READONLY p   : Point.T;
                                READONLY q   : Point.T  ) =
-  VAR 
+  VAR
     m := NUMBER(self.a^);
   BEGIN
     IF self.n = m THEN
-      VAR 
+      VAR
         newa := NEW (Points, 2 * m);
       BEGIN
         SUBARRAY (newa^, 0, m) := self.a^;
@@ -1636,14 +1636,14 @@ PROCEDURE FillRect (hdc: WinDef.HDC; READONLY r: Rect.T) =
       rc := FromRect(r);
 
       (*
-       * One would assume that 
+       * One would assume that
        *     EVAL WinUser.FillRect (hdc, ADR(rc), hbr);
        * should be sufficient here. However, "WinUser.FillRect" ignores the
        * current raster operation mode for some reason.
        *)
 
       (* Load an invisible pen into the DC *)
-      oldPen := WinGDI.SelectObject (hdc, 
+      oldPen := WinGDI.SelectObject (hdc,
                                      WinGDI.GetStockObject (WinGDI.NULL_PEN));
       <* ASSERT oldPen # NIL *>
 
@@ -1671,10 +1671,10 @@ PROCEDURE StrokeRect (hdc: WinDef.HDC; READONLY r: Rect.T) =
     IF r.west < r.east THEN
       rc := FromRect(r);
 
-      oldPen := WinGDI.SelectObject (hdc, 
+      oldPen := WinGDI.SelectObject (hdc,
                                      WinGDI.GetStockObject (WinGDI.BLACK_PEN));
       <* ASSERT oldPen # NIL *>
-      oldBr := WinGDI.SelectObject (hdc, 
+      oldBr := WinGDI.SelectObject (hdc,
                                     WinGDI.GetStockObject (WinGDI.NULL_BRUSH));
       <* ASSERT oldBr # NIL *>
       (* "WinGDI.Rectangle" uses both the current pen and the current brush *)
@@ -1695,7 +1695,7 @@ PROCEDURE MarkPoint (hdc: WinDef.HDC; READONLY a: Point.T) =
   VAR
     oldPen: WinDef.HGDIOBJ;
   BEGIN
-    oldPen := WinGDI.SelectObject (hdc, 
+    oldPen := WinGDI.SelectObject (hdc,
                                    WinGDI.GetStockObject (WinGDI.BLACK_PEN));
     <* ASSERT oldPen # NIL *>
     DrawLine(hdc, Point.T{a.h - 2, a.v}, Point.T{a.h + 2, a.v});
@@ -1776,7 +1776,7 @@ PROCEDURE ClipToRect (hdc: WinDef.HDC; clip: Rect.T) =
     hrgn  : WinDef.HRGN;
     status: WinDef.BOOL;
   BEGIN
-    hrgn := WinGDI.CreateRectRgn (clip.west, clip.north, 
+    hrgn := WinGDI.CreateRectRgn (clip.west, clip.north,
                                   clip.east, clip.south);
     <* ASSERT hrgn # NIL *>
 

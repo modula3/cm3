@@ -76,7 +76,7 @@ BEGIN
         TtoS("menubar"),NIL,0);
 
   (*---runbutton---*)
-  str1:=Xm.StringCreateSimple(TtoS("Run"));  
+  str1:=Xm.StringCreateSimple(TtoS("Run"));
   runbutton:=XtVaCreateManagedWidget(TtoS("button1"),
         Xmw.xmPushButtonWidgetClass,menubar,
         XmN.labelString,str1,
@@ -84,7 +84,7 @@ BEGIN
   Xm.StringFree(str1);
   Xt.AddCallback(runbutton,
                  callback_name:=XmN.activateCallback,
-                 callback:=runbutton_cb); 
+                 callback:=runbutton_cb);
 
   (*---manage menubar---*)
   Xt.ManageChild(menubar);
@@ -94,7 +94,7 @@ BEGIN
         Xmw.xmTextFieldWidgetClass,mainw,
         XmN.columns,IntVal(15));
   XtVaSetValues(mainw,
-                XmN.workWindow,textfield);  
+                XmN.workWindow,textfield);
 
 END MakeWidgets;
 
@@ -108,7 +108,7 @@ VAR str:char_star;
 BEGIN
   debug(1,ftn,"begin\n");
 
-  
+
   (*---use Hello's txt as str to put in field---*)
   str:=TtoS(global_txt);
   Xmw.TextFieldSetString(textfield,str);
@@ -140,12 +140,12 @@ PROCEDURE Init(str:TEXT) =
                XtN.y,IntVal(50),
                XtN.width,IntVal(400),
                XtN.height,IntVal(200));
-     
+
     MakeWidgets(str);
     Xt.RealizeWidget(topLevel);
     display:=Xt.Display(topLevel);
-    
-    Xt.AppMainLoop(appContext);    
+
+    Xt.AppMainLoop(appContext);
   END Init;
 
 (*-----------------*)

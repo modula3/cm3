@@ -40,14 +40,14 @@ REVEAL
     init := Be
   END;
 
-PROCEDURE Be(v: T; ch: VBT.T): Filter.T = BEGIN 
+PROCEDURE Be(v: T; ch: VBT.T): Filter.T = BEGIN
   v.owners := NEW(SelArray, 0);
   EVAL Filter.T.init(v, ch);
   RETURN v
 END Be;
 
-PROCEDURE New(ch: VBT.T): T = 
-  BEGIN 
+PROCEDURE New(ch: VBT.T): T =
+  BEGIN
     RETURN Be(NEW(T), ch)
   END New;
 
@@ -59,7 +59,7 @@ TYPE LostClosure = Thread.SizedClosure OBJECT
 
 PROCEDURE DeliverLost(self: LostClosure): REFANY RAISES {} =
   <*FATAL SelectQueue.Exhausted*>
-  VAR v := self.v; rec: SelectQueue.Elem; 
+  VAR v := self.v; rec: SelectQueue.Elem;
   BEGIN
     LOCK VBT.mu DO
       LOOP
@@ -79,13 +79,13 @@ PROCEDURE GetSel(v: T; sel: VBT.Selection): SelectionRec =
     ExtendSel(v.owners, sel);
     RETURN v.owners[sel.sel]
   END GetSel;
-  
+
 PROCEDURE Lose(v: T; sel: VBT.Selection): BOOLEAN <* LL.sup = v *> =
   (* Enqueue a lost code to the owner of sel, if any *)
   VAR ch := GetSel(v, sel).v; BEGIN
     IF ch = NIL THEN RETURN FALSE END;
     v.owners[sel.sel].v := NIL;
-    SelectQueue.Insert(v.lost, SelectQueue.Elem{ch, 
+    SelectQueue.Insert(v.lost, SelectQueue.Elem{ch,
       VBT.MiscRec{VBT.Lost, VBT.NullDetail, 0, sel}});
     IF NOT v.forked AND NOT v.covered THEN
       v.forked := TRUE;
@@ -95,23 +95,23 @@ PROCEDURE Lose(v: T; sel: VBT.Selection): BOOLEAN <* LL.sup = v *> =
   END Lose;
 
 PROCEDURE CompareTimeStamp(t1, t2: VBT.TimeStamp): INTEGER =
-(* Return something <, =, or > zero according as t1 < t2, 
+(* Return something <, =, or > zero according as t1 < t2,
    t1 = t2, t1 > t2. *)
   BEGIN
-    RETURN Word.Minus(t1, t2) 
+    RETURN Word.Minus(t1, t2)
   END CompareTimeStamp;
 
 PROCEDURE Acquire(
-  v: T; 
-  <*UNUSED*>ch:VBT.T; w: VBT.T; 
-  s: VBT.Selection; 
-  ts: VBT.TimeStamp) 
+  v: T;
+  <*UNUSED*>ch:VBT.T; w: VBT.T;
+  s: VBT.Selection;
+  ts: VBT.TimeStamp)
   RAISES {VBT.Error} =
   BEGIN (* LL < v *)
     LOCK v DO
-      IF v.parent = NIL THEN 
+      IF v.parent = NIL THEN
         RAISE VBT.Error(VBT.ErrorCode.Uninstalled)
-      ELSIF GetSel(v, s).v # NIL 
+      ELSIF GetSel(v, s).v # NIL
         AND CompareTimeStamp(v.owners[s.sel].ts, ts) > 0
         OR ts = 0
       THEN
@@ -125,43 +125,43 @@ PROCEDURE Acquire(
   END Acquire;
 
 PROCEDURE Release(
-  v: T; 
-  <*UNUSED*>ch:VBT.T; w: VBT.T; 
+  v: T;
+  <*UNUSED*>ch:VBT.T; w: VBT.T;
   s: VBT.Selection) RAISES {} =
   BEGIN (* LL < v *)
     LOCK v DO
       IF v.parent # NIL AND w = GetSel(v,s).v AND Lose(v, s) THEN
-        v.parent.release(v, v, s) 
+        v.parent.release(v, v, s)
       END
     END
   END Release;
 
 PROCEDURE Forge(
-  v: T; 
-  <*UNUSED*>ch:VBT.T; w: VBT.T; 
+  v: T;
+  <*UNUSED*>ch:VBT.T; w: VBT.T;
   type: VBT.MiscCodeType;
   READONLY detail: ARRAY [0..1] OF INTEGER)
   RAISES {VBT.Error} =
   BEGIN (* LL < v *)
     LOCK v DO
-      IF v.parent = NIL THEN 
+      IF v.parent = NIL THEN
         RAISE VBT.Error(VBT.ErrorCode.Uninstalled)
       ELSE
         v.parent.forge(v, v, VBT.TrestleInternal, VBT.NullDetail);
-        SelectQueue.Insert(v.forgery, SelectQueue.Elem{w, 
+        SelectQueue.Insert(v.forgery, SelectQueue.Elem{w,
           VBT.MiscRec{type, detail, 0, VBT.Forgery}})
       END
     END
   END Forge;
 
 PROCEDURE Read(
-  v: T; 
-  s: VBT.Selection; 
+  v: T;
+  s: VBT.Selection;
   tc: CARDINAL)
   : VBT.Value RAISES {VBT.Error}  =
-  VAR owner: VBT.T; BEGIN 
+  VAR owner: VBT.T; BEGIN
     LOCK v DO owner := GetSel(v, s).v END;
-    IF owner = NIL THEN 
+    IF owner = NIL THEN
       RAISE VBT.Error(VBT.ErrorCode.UnownedSelection)
     ELSE
       RETURN owner.read(s, tc)
@@ -169,14 +169,14 @@ PROCEDURE Read(
   END Read;
 
 PROCEDURE Write(
-  v: T; 
-  s: VBT.Selection; 
+  v: T;
+  s: VBT.Selection;
   val: VBT.Value;
-  tc: CARDINAL) 
+  tc: CARDINAL)
   RAISES {VBT.Error} =
-  VAR owner: VBT.T; BEGIN 
+  VAR owner: VBT.T; BEGIN
     LOCK v DO owner := GetSel(v, s).v END;
-    IF owner = NIL THEN 
+    IF owner = NIL THEN
       RAISE VBT.Error(VBT.ErrorCode.UnownedSelection)
     ELSE
       owner.write(s, val, tc)
@@ -184,42 +184,42 @@ PROCEDURE Write(
   END Write;
 
 PROCEDURE ReadUp(
-  v: T; 
-  <*UNUSED*> ch, w: VBT.T; 
-  s: VBT.Selection; 
-  ts: VBT.TimeStamp; 
+  v: T;
+  <*UNUSED*> ch, w: VBT.T;
+  s: VBT.Selection;
+  ts: VBT.TimeStamp;
   tc: CARDINAL)
   : VBT.Value RAISES {VBT.Error}  =
-  VAR p: VBT.Split; owner: VBT.T; 
-  BEGIN 
+  VAR p: VBT.Split; owner: VBT.T;
+  BEGIN
     LOCK v DO p := v.parent; owner := GetSel(v,s).v END;
-    IF owner # NIL THEN 
+    IF owner # NIL THEN
       RETURN owner.read(s, tc)
     ELSIF p = NIL THEN
       RAISE VBT.Error(VBT.ErrorCode.Uninstalled)
     ELSE
       RETURN p.readUp(v, v, s, ts, tc)
-    END 
+    END
   END ReadUp;
 
 PROCEDURE WriteUp(
-  v: T; 
-  <*UNUSED*> ch, w: VBT.T; 
-  s: VBT.Selection; 
-  ts: VBT.TimeStamp; 
+  v: T;
+  <*UNUSED*> ch, w: VBT.T;
+  s: VBT.Selection;
+  ts: VBT.TimeStamp;
   val: VBT.Value;
-  tc: CARDINAL) 
+  tc: CARDINAL)
   RAISES {VBT.Error} =
   VAR p: VBT.Split; owner: VBT.T;
-  BEGIN 
+  BEGIN
     LOCK v DO p := v.parent; owner := GetSel(v,s).v END;
-    IF owner # NIL THEN 
+    IF owner # NIL THEN
       owner.write(s, val, tc)
     ELSIF p = NIL THEN
       RAISE VBT.Error(VBT.ErrorCode.Uninstalled)
     ELSE
       p.writeUp(v, v, s, ts, val, tc)
-    END 
+    END
   END WriteUp;
 
 
@@ -237,17 +237,17 @@ PROCEDURE FlushQueue(v: T; VAR q: SelectQueue.T) =
 
 PROCEDURE MiscCode(v: T; READONLY cd: VBT.MiscRec) =
   <*FATAL SelectQueue.Exhausted*>
-  VAR elem: SelectQueue.Elem; 
+  VAR elem: SelectQueue.Elem;
   BEGIN
     LOCK v DO v.covered := TRUE END;
     TRY
       FlushQueue(v, v.lost);
       IF cd.selection = VBT.Forgery
-         AND cd.type = VBT.TrestleInternal 
+         AND cd.type = VBT.TrestleInternal
       THEN
-        LOCK v DO 
+        LOCK v DO
           IF SelectQueue.IsEmpty(v.forgery) THEN RETURN END;
-          elem := SelectQueue.Remove(v.forgery) 
+          elem := SelectQueue.Remove(v.forgery)
         END;
         elem.cd.time := cd.time;
         VBTClass.Misc(elem.v, elem.cd)
@@ -257,7 +257,7 @@ PROCEDURE MiscCode(v: T; READONLY cd: VBT.MiscRec) =
       ELSIF cd.type = VBT.Lost THEN
         EVAL Lose(v, cd.selection)
       ELSE
-        Filter.T.misc(v, cd) 
+        Filter.T.misc(v, cd)
       END
     FINALLY
       LOCK v DO v.covered := FALSE END;
@@ -277,7 +277,7 @@ PROCEDURE ReleaseSelections (v: T) =
 PROCEDURE ExtendSel(VAR sa: SelArray; s: VBT.Selection) =
   VAR n := NUMBER(sa^); na: SelArray; BEGIN
     IF s.sel > LAST(sa^) THEN
-      na := NEW(SelArray, MAX(2*n, s.sel+1)); 
+      na := NEW(SelArray, MAX(2*n, s.sel+1));
       SUBARRAY(na^, 0, n) := sa^;
       FOR i := n TO LAST(na^) DO na[i] := SelectionRec{NIL, 0} END;
       sa := na
@@ -287,10 +287,10 @@ PROCEDURE ExtendSel(VAR sa: SelArray; s: VBT.Selection) =
 PROCEDURE KeyCode(v: T; READONLY cd: VBT.KeyRec) =
   VAR owner: VBT.T; BEGIN
     FlushQueue(v, v.lost);
-    LOCK v DO 
+    LOCK v DO
       v.covered := TRUE;
       ExtendSel(v.owners, VBT.KBFocus);
-      owner := v.owners[VBT.KBFocus.sel].v 
+      owner := v.owners[VBT.KBFocus.sel].v
     END;
     IF owner # NIL THEN VBTClass.Key(owner, cd) END;
     LOCK v DO v.covered := FALSE END;
@@ -311,7 +311,7 @@ PROCEDURE Put(
         IF ts = 0 OR CompareTimeStamp(ts, v.owners[s.sel].ts) < 0 THEN
           RAISE VBT.Error(VBT.ErrorCode.EventNotCurrent)
         END;
-        SelectQueue.Insert(v.lost, SelectQueue.Elem{v.owners[s.sel].v, 
+        SelectQueue.Insert(v.lost, SelectQueue.Elem{v.owners[s.sel].v,
           VBT.MiscRec{type, detail, ts, s}});
         IF NOT v.forked AND NOT v.covered THEN
           v.forked := TRUE;

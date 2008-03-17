@@ -11,34 +11,34 @@
 
 (* The "Palette" interface allows you to implement your own
    screen-independent resources by registering a closure to
-   produce an appropriate screen-dependent resource for any given 
+   produce an appropriate screen-dependent resource for any given
    screentype.  *)
 
 INTERFACE Palette;
 
-IMPORT VBT, PaintOp, Cursor, Pixmap, Font, 
+IMPORT VBT, PaintOp, Cursor, Pixmap, Font,
   ScrnPaintOp, ScrnCursor, ScrnPixmap, ScrnFont;
 
 (* Translating a screen-independent resource into its screen-dependent
-   form is called {\it resolving} the resource.  Here are the closure 
+   form is called {\it resolving} the resource.  Here are the closure
    types for resolving resources: *)
 
-TYPE 
+TYPE
   OpClosure = OBJECT METHODS
     <* LL.sup <= VBT.mu *>
     apply(st: VBT.ScreenType): ScrnPaintOp.T;
   END;
-  
+
   CursorClosure = OBJECT METHODS
     <* LL.sup <= VBT.mu *>
     apply(st: VBT.ScreenType): ScrnCursor.T;
   END;
-  
+
   PixmapClosure = OBJECT METHODS
     <* LL.sup <= VBT.mu *>
     apply(st: VBT.ScreenType): ScrnPixmap.T;
   END;
-  
+
   FontClosure = OBJECT METHODS
     <* LL.sup <= VBT.mu *>
     apply(st: VBT.ScreenType): ScrnFont.T;
@@ -51,7 +51,7 @@ TYPE
 
   The following procedures produce screen-independent resources
   from closures: *)
-   
+
 PROCEDURE FromOpClosure(cl: OpClosure): PaintOp.T;
 <* LL.sup <= VBT.mu *>
 (* Return a "PaintOp.T" that behaves like "cl.apply(st)" on "st". *)
@@ -71,26 +71,26 @@ PROCEDURE FromFontClosure(cl: FontClosure): Font.T;
 (* If your apply method that resolves a resource needs to resolve some
    other resource, you should use one of the following procedures to
    do so.  In all cases, "st" must be non-"NIL". *)
-   
+
 PROCEDURE ResolveOp(st: VBT.ScreenType; op: PaintOp.T)
   : ScrnPaintOp.T;
 (* Resolve "op" for "st". *)
 
-PROCEDURE ResolveCursor(st: VBT.ScreenType; 
+PROCEDURE ResolveCursor(st: VBT.ScreenType;
   cursor: Cursor.T): ScrnCursor.T;
 (* Resolve "cursor" for "st". *)
-   
-PROCEDURE ResolvePixmap(st: VBT.ScreenType; 
+
+PROCEDURE ResolvePixmap(st: VBT.ScreenType;
   pixmap: Pixmap.T): ScrnPixmap.T;
 (* Resolve "pixmap" for "st". *)
-   
+
 PROCEDURE ResolveFont(st: VBT.ScreenType; font: Font.T)
   : ScrnFont.T;
 (* Resolve "font" for "st". *)
-   
-(* If you create a cycle of screen-independent resources each of which 
-   tries to resolve the next resource in the cycle, then the program 
-   will deadlock. 
+
+(* If you create a cycle of screen-independent resources each of which
+   tries to resolve the next resource in the cycle, then the program
+   will deadlock.
 
    To implement screen-independent resources, every screentype includes
    a {\it palette}, which is a table of screen-dependent resources
@@ -105,6 +105,6 @@ PROCEDURE Init(st: VBT.ScreenType);
 (* Initialize "st"'s palette, if it is not already initialized,
    by resolving all screen-independent resources for "st" and
    storing the results.  *)
-   
+
 END Palette.
 

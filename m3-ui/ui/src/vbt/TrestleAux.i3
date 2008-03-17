@@ -8,14 +8,14 @@ INTERFACE TrestleAux;
 
 IMPORT Trestle, VBT, TrestleComm, Rect, Point;
 
-FROM Trestle IMPORT ScreenID, Unimplemented, 
+FROM Trestle IMPORT ScreenID, Unimplemented,
 
 EXCEPTION Unimplemented;
 
 PROCEDURE SetColorMap(v: VBT.T; cm: ScrnColorMap.T);
 <* LL.sup = VBT.mu *>
-(* Tell the window manager that "cm" is the preferred color map for 
-   the installed window "v".  This is a no-op if "cm" is inappropriate 
+(* Tell the window manager that "cm" is the preferred color map for
+   the installed window "v".  This is a no-op if "cm" is inappropriate
    for "v"'s screentype. *)
 
 PROCEDURE SetScreens(
@@ -151,7 +151,7 @@ PROCEDURE SetConfig(
 
 PROCEDURE Swap(v, w: VBT.T) RAISES {TrestleComm.Failure, Unimplemented};
 <* LL arbitrary *>
-(* Exchange the positions of the two windows "v" and "w". This is a noop 
+(* Exchange the positions of the two windows "v" and "w". This is a noop
    unless "v" and "w" are both installed on the same window system. *)
 
 PROCEDURE SwapByName(
@@ -214,7 +214,7 @@ TYPE
       autorepeat: BOOLEAN;
     END;
 
-(* Associated with every window system is a "Parameters" record 
+(* Associated with every window system is a "Parameters" record
    whose fields are defined as follows:
 
    The flag "peekABooCursor" is "TRUE" if the window system hides the
@@ -228,17 +228,17 @@ TYPE
    client to respond to an event, assuming it has not responded promptly
    to its last event.
 
-   If "flashNever" is set, then when a window does not respond to 
+   If "flashNever" is set, then when a window does not respond to
    an event promptly, Trestle stops waiting for it without any
    indication to the user that this has happened.  Otherwise,
    if  "flashOnce" is set, Trestle flickers the window when it
    exceeds its "slowTimeout".  Otherwise, Trestle flickers the
-   window whenever it exceeds either the "fastTimeOut" or the 
+   window whenever it exceeds either the "fastTimeOut" or the
    "slowTimeout".
 
-   The value "doubleClickInterval" is the maximum number of "VBT.TimeStamp" 
-   intervals allowed between two mouse transitions that can be 
-   counted as part of a multiple click. 
+   The value "doubleClickInterval" is the maximum number of "VBT.TimeStamp"
+   intervals allowed between two mouse transitions that can be
+   counted as part of a multiple click.
 
    The value "safetyRadius" is the maximum motion allowed between two mouse
    transitions that can be counted as part of a mulitiple click.  The
@@ -251,9 +251,9 @@ TYPE
     the excess is scaled by "mouseMultiplier".  This applies separately
     in each coordinate.
 
-    The value "autorepeat" is "TRUE" if the window system uses 
+    The value "autorepeat" is "TRUE" if the window system uses
     auto-repeat mode for (some) keys that are held down long enough.  *)
-         
+
 PROCEDURE GetParameters(trsl: T := NIL): Parameters RAISES {TrestleComm.Failure};
 <* LL.sup <= VBT.mu *>
 (* Retrieve the current settings of all parameters. *)

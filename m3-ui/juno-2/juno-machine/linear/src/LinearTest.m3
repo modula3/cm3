@@ -4,7 +4,7 @@
 (*                                                                           *)
 (* Last modified on Tue Apr  8 14:45:02 PDT 1997 by heydon                   *)
 
-MODULE LinearTest EXPORTS Main; 
+MODULE LinearTest EXPORTS Main;
 
 (* Application to test the Gaussian elimination solver implemented in
    juno-machine/src/RedundantLSolve.m3.

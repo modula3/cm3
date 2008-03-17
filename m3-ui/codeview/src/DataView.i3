@@ -8,7 +8,7 @@ INTERFACE DataView;
 
 (*
     A DataView.T provides simple display of variables.
-    It is intended for - but not limited to - use with Zeus and the 
+    It is intended for - but not limited to - use with Zeus and the
     Modula-3 compiler's TRACE pragma.
 
     The compiler will generate calls to user-specified trace routines
@@ -46,8 +46,8 @@ INTERFACE DataView;
           WITH  alias = x DO  INC(alias) END
 
     will not generate any tracing.
-    
-    Here is an example of a traced Zeus algorithm procedure:    
+
+    Here is an example of a traced Zeus algorithm procedure:
 
         PROCEDURE Run (alg: T) RAISES {Thread.Alerted} =
           VAR
@@ -64,16 +64,16 @@ INTERFACE DataView;
             BinpackIE.Setup(alg, B, N);
             bins := NEW(Bins, B);
             FOR b := 0 TO B-1 DO bins[b] := 0.0 END;
-            FOR i := 1 TO N DO 
+            FOR i := 1 TO N DO
               wt := Random.Real();
               BinpackIE.NewWeight (alg, wt);
-              bin := 0; 
+              bin := 0;
               WHILE (bin < B) AND (bins[bin] + wt > 1.0) DO INC(bin) END;
-              IF bin = B THEN 
+              IF bin = B THEN
                 BinpackIE.Ignore(alg);
-              ELSE  
+              ELSE
                 bins[bin] := bins[bin] + wt;
-                BinpackIE.Pack(alg, bin, bins[bin]) 
+                BinpackIE.Pack(alg, bin, bins[bin])
               END
             END
           END Run;
@@ -95,16 +95,16 @@ INTERFACE DataView;
                 (TextArea ReadOnly %N)
                 (TextArea ReadOnly %wt)
                 (TextArea ReadOnly %bin))))
-    
-    If using a DataView within Zeus, all you need to do is to 
-    set the "varRsrc" field on the Algorithm.T to name a resource 
+
+    If using a DataView within Zeus, all you need to do is to
+    set the "varRsrc" field on the Algorithm.T to name a resource
     containing a valid FormsVBT s-expression.
 
 *)
 
 IMPORT FormsVBT;
 
-(* Basic types.  If you need something that isn't here, 
+(* Basic types.  If you need something that isn't here,
    don't hesitate to add it. *)
 
 TYPE

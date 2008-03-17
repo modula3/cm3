@@ -33,8 +33,8 @@ TYPE
 
    The northwest corner of the parent's domain is positioned at
    point "(north, west)" in "Joined"'s domain; this will be
-   maintained as the parent is reshaped or rescreened. 
-   
+   maintained as the parent is reshaped or rescreened.
+
 *)
 
 PROCEDURE New (v: JoinedVBT.T): T;

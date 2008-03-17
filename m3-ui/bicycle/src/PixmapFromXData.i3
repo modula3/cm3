@@ -11,7 +11,7 @@ IMPORT Pixmap;
 TYPE T = RECORD width, height: CARDINAL; t: TEXT END;
 
 PROCEDURE P(t: T; halftone := FALSE): Pixmap.T;
-(* t should be the text for the X bitmap of the given width and height, 
+(* t should be the text for the X bitmap of the given width and height,
    optionally with all of the 0x and commas removed. *)
 
 PROCEDURE Flip(t: T; halftone := FALSE): Pixmap.T;

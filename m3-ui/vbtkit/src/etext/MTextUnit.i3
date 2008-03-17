@@ -118,7 +118,7 @@ PROCEDURE IsEndOfRun (t    : T;
 
 (* \subsubsection{Lines} *)
 
-TYPE LineOption = 
+TYPE LineOption =
   {ExcludeBlanks, IncludeBlanks, IncludeNewline};
 
 (* A {\it line} is a sequence of characters delimited by newlines
@@ -162,7 +162,7 @@ TYPE
    and "right = rightEnd + 1", i.e., the "left" of the next line,
    but there are exceptions.  On a line consisting entirely of
    blanks (at least one),
-   
+
 | left < leftMargin = rightMargin = rightEnd
 
    On the last line of the file (following the last newline),

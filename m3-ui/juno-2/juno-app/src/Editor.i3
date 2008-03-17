@@ -38,7 +38,7 @@ TYPE
 
    The "txtModified" method is called whenever the text of the editor has been
    modified since the last time the TextPort's modified bit was reset. The
-   default "txtModified" method is a no-op. 
+   default "txtModified" method is a no-op.
 
    The call "ed.getToolType(nm, type)" sets "type" to "PointToolSym",
    "TextToolSym", "TemplToolSym", or "SetToolSym" and returns "TRUE" if "nm"
@@ -99,7 +99,7 @@ PROCEDURE PopCurrCmd(te: T; VAR (*OUT*) nm: JunoAST.Id): JunoAST.Cmd;
    and set "nm" to the name of this procedure. If the body is of the form "IF
    VAR ... IN ... END FI", then the outer "IF ... FI" is stripped off the
    result. Returns NIL if the stack is empty or if the editor is not valid.
-   In this case, the value of "nm" is undefined. *) 
+   In this case, the value of "nm" is undefined. *)
 
 PROCEDURE Width(tp: TextPort.T): CARDINAL;
 (* Return the width in characters of "tp". *)
@@ -128,7 +128,7 @@ PROCEDURE Compile(
    appear in "scp".
 
    This procedure does not pretty-print the contents of "e" or process
-   the UI declarations in "e".  See "Unparse" and "EditorUI.CompileUI". 
+   the UI declarations in "e".  See "Unparse" and "EditorUI.CompileUI".
 
    If successful, this procedure also has a side-effect on the Juno machine:
    it stores compiled versions of the predicates, functions and procedures

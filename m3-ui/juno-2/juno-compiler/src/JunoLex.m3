@@ -230,11 +230,11 @@ PROCEDURE GetNextToken(s: Stream) RAISES {Error, Rd.EndOfFile, Rd.Failure} =
       Rd.EndOfFile => s.c := Space (* EOF encountered after a legal token *)
     END
   END GetNextToken;
-  
+
 PROCEDURE FlushBuf(
     prefix: TEXT;
     READONLY buf: ARRAY OF CHAR;
-    VAR (*INOUT*) pos: CARDINAL) 
+    VAR (*INOUT*) pos: CARDINAL)
   : TEXT =
 (* Return "Text.FromChars(SUBARRAY(buf, 0, pos))" appended to "prefix", and
    set "pos" to 0. *)

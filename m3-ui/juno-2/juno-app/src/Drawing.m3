@@ -221,11 +221,11 @@ PROCEDURE Mouse(ch: Child; READONLY cd: VBT.MouseRec) =
     IF cd.clickType = VBT.ClickType.FirstDown THEN
       AcquireKBFocus(ch, cd.time)
     END;
-    (* Don't allow manipulations to drawing unless the AST is up to date 
+    (* Don't allow manipulations to drawing unless the AST is up to date
        and we are not in the process of entering text. *)
-    IF NOT d.root.astTrue THEN 
+    IF NOT d.root.astTrue THEN
       JunoError.Display(ch, "Oops! You forgot to click Run.");
-      RETURN 
+      RETURN
     ELSIF d.txt # NIL THEN
       RETURN
     END;
@@ -409,7 +409,7 @@ PROCEDURE Key(ch: Child; READONLY cd: VBT.KeyRec) =
       END
     ELSE
       (* user is not typing a text argument *)
-      IF cd.whatChanged = Latin1Key.space THEN 
+      IF cd.whatChanged = Latin1Key.space THEN
 	IF cd.wentDown THEN
 	  IF d.tool = NIL OR (d.stackSize >= d.prevStackSize) THEN
 	    JunoError.Display(d, "No previous argument to copy");
@@ -750,7 +750,7 @@ PROCEDURE PaintBBox(d: T) =
       Path.LineTo(path, HVPoint(bbox.west, bbox.north));
       Path.Close(path)
     END;
-    VBT.Stroke(ch, Rect.Full, path, width := 1, end := VBT.EndStyle.Butt, 
+    VBT.Stroke(ch, Rect.Full, path, width := 1, end := VBT.EndStyle.Butt,
       join := VBT.JoinStyle.Miter, src := Pixmap.Gray)
   END PaintBBox;
 
@@ -885,7 +885,7 @@ PROCEDURE ArrayToList(READONLY arg: ARRAY OF Arg; byVal := FALSE):
 PROCEDURE FindBreak(t: TEXT): CARDINAL =
 (* Return the index of the character after the last run of newlines not
    counting a run of newlines that terminates "t", or 0 if "t" contains no
-   non-terminal newlines. *) 
+   non-terminal newlines. *)
   VAR i := Text.Length(t) - 1; BEGIN
     WHILE i >= 0 AND Text.GetChar(t, i) = '\n' DO DEC(i) END;
     RETURN Text.FindCharR(t, '\n', start := i) + 1
@@ -937,8 +937,8 @@ PROCEDURE MakeEqConstraint(tl: FuncTool; READONLY arg: ARRAY OF Arg):
   END MakeEqConstraint;
 
 PROCEDURE MakeCommand(
-    tl: ProcTool; 
-    READONLY arg: ARRAY OF Arg; 
+    tl: ProcTool;
+    READONLY arg: ARRAY OF Arg;
     byVal := FALSE): JunoAST.ProcCall =
 (* Return a procedure call to the procedure "tl.name" with the arguments
    stored in "arg". *)
@@ -995,7 +995,7 @@ PROCEDURE SelectTool(d: T; t: Tool; time: VBT.TimeStamp) =
       END;
       Sync(Filter.Child(d))
     END;
-    IF t # NIL AND NUMBER(t.argType^) = 0 THEN 
+    IF t # NIL AND NUMBER(t.argType^) = 0 THEN
       (* attempt to apply a tool with 0 user-supplied arguments;
          this includes set tools *)
       IF d.root.astTrue THEN (* AST must be up-to-date *)
@@ -1121,7 +1121,7 @@ PROCEDURE IncrRunCmd(d: T; cmd: JunoAST.Cmd) =
     execRes: JunoRT.ExecRes;
   BEGIN
     execRes := JunoRT.ExecFromSlot(slot);
-    IF execRes.trapCode # JunoRT.TrapCode.NormalHalt THEN 
+    IF execRes.trapCode # JunoRT.TrapCode.NormalHalt THEN
       JunoError.Display(d, JunoRT.TrapMessage(execRes))
     END;
     PaintPath(d);
@@ -1206,7 +1206,7 @@ PROCEDURE NewAdjustTool(): ArgTool =
   BEGIN
     RETURN NEW(ArgTool, argType := NewArgArray(1, ArgType.Drag),
       apply := ApplyAdjust);
-  END NewAdjustTool; 
+  END NewAdjustTool;
 
 PROCEDURE RoundToGrid(d: T; p: JunoPt.T): JunoPt.T =
 (* If "d"'s grid is not active, return "p". Otherwise, return the grid point
@@ -1335,7 +1335,7 @@ PROCEDURE UnqualifyQId(ex: JunoAST.Expr; mod: Atom.T): JunoAST.Expr =
     END;
     RETURN ex
   END UnqualifyQId;
-  
+
 (*
 PROCEDURE PopupMarquee(m: T) =
   BEGIN

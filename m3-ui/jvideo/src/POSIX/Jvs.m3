@@ -252,7 +252,7 @@ PROCEDURE Colormap (t: T; VAR info: ColormapInfo): BOOLEAN
           req.nColors := info.nColors;
           req.id := info.id;
           req.monochrome := BoolToInt[info.monochrome];
-          
+
           LOOP
             Jv.Send(t, ADR(req), BYTESIZE(req));
             Jv.Recv(t, ADR(rep), BYTESIZE(rep));

@@ -16,10 +16,10 @@
    make use of the user interfaces.
 
    The locking level for any procedure in this interface that may
-   alter an installed "VBT" is "LL.sup = VBT.mu". (See the 
+   alter an installed "VBT" is "LL.sup = VBT.mu". (See the
    {\it Trestle Reference Manual\/} for a complete description
-   of locking levels~\cite{TrestleTutorial}.) Most applications 
-   don't need to worry about "VBT.mu" because their event-handlers 
+   of locking levels~\cite{TrestleTutorial}.) Most applications
+   don't need to worry about "VBT.mu" because their event-handlers
    don't fork any threads that call FormsVBT. *)
 
 INTERFACE FormsVBT;
@@ -307,14 +307,14 @@ PROCEDURE AddUniqueSymbol (fv: T): TEXT;
    component that does not have a value.
 
    \subsection{Access to the {\tt Main} and {\tt Value} properties}
-*) 
+*)
 
 PROCEDURE GetText (fv: T; name: TEXT): TEXT
   RAISES {Error, Unimplemented};
 (* This is implemented for "Browser", "FileBrowser", "Numeric",
    "Text", "Typescript", and the text-interactors: "TextEdit",
    "TypeIn", and "TextArea". *)
-   
+
 PROCEDURE PutText (fv: T; name: TEXT; t: TEXT; append := FALSE)
   RAISES {Error, Unimplemented};
 (* This is implemented for "Browser", "FileBrowser", "Pixmap", "Text",
@@ -352,7 +352,7 @@ PROCEDURE PutBoolean (fv: T; name: TEXT; val: BOOLEAN)
    to retrieve that value, or
 | PutIntegerProperty(fv, name, "Min", 6)
    to change the value to 6.
- 
+
    \vspace {5mm}
   {\bf WARNING: The current implementation provides access
    only to the inherited properties, and even that access is limited.}
@@ -366,11 +366,11 @@ PROCEDURE GetTextProperty (fv: T; name, propertyName: TEXT): TEXT
 (* This is implemented for the "Font" and "LabelFont" properties for
    all components, as well as the "Items" and "Select" properties of "Browser"s,
    and the "ActiveTarget" property of "Source"s. *)
-  
+
 PROCEDURE PutTextProperty (fv: T; name, propertyName: TEXT; value: TEXT)
   RAISES {Error, Unimplemented};
 (* This is implemented for the "Color", "BgColor", "Font", and
-   "LabelFont" properties for all components, as well as the "Items" and "Select" 
+   "LabelFont" properties for all components, as well as the "Items" and "Select"
    properties of "Browser"s. *)
 
 PROCEDURE GetIntegerProperty (fv: T; name, propertyName: TEXT):
@@ -471,16 +471,16 @@ PROCEDURE PutGeneric (fv: T; genericName: TEXT; vbt: VBT.T)
    are ``grayed out.'' Dormant is often to be preferred over Passive,
    because it provide additional feedback to the user.  In the
    Vanished state, the component becomes unreactive and disappears
-   entirely. 
+   entirely.
 
    A cursor is specified when the state is set, and the name is interpretted
    by the Trestle implementation. An empty string (the default value)
-   indicates that you don't care about the cursor shape. 
-   
+   indicates that you don't care about the cursor shape.
+
    Standard X screentypes support the cursors named in {\it X Window
    System} by Scheifler et.  al. \cite{XSpec} Appendix B. Therefore, for
-   example, "XC_arrow" returns a cursor that behaves like the X arrow 
-   cursor on X screentypes, and like the default cursor on screentypes 
+   example, "XC_arrow" returns a cursor that behaves like the X arrow
+   cursor on X screentypes, and like the default cursor on screentypes
    that have no cursor named "XC_arrow". *)
 
 
@@ -489,7 +489,7 @@ PROCEDURE MakePassive (fv: T; name: TEXT; cursor:= "") RAISES {Error};
 PROCEDURE MakeDormant (fv: T; name: TEXT; cursor:= "") RAISES {Error};
 PROCEDURE MakeVanish  (fv: T; name: TEXT; cursor:= "") RAISES {Error};
 (* Find the nearest ancestor of the named component that is of
-   type "FVFilter", and set its state and cursor as indicated. 
+   type "FVFilter", and set its state and cursor as indicated.
    The exception is raised if no such ancestor can be found. *)
 
 PROCEDURE IsActive   (fv: T; name: TEXT): BOOLEAN RAISES {Error};
@@ -537,7 +537,7 @@ PROCEDURE PopDown (fv: T; name: TEXT) RAISES {Error};
    focus to be lost.)  The exception is raised if "name" is not
    the name of an element of "fv". *)
 
-(* \subsection{Special controls for text-interactors} *) 
+(* \subsection{Special controls for text-interactors} *)
 
 PROCEDURE TakeFocus (fv       : T;
                      name     : TEXT;
@@ -555,7 +555,7 @@ PROCEDURE TakeFocus (fv       : T;
 
 (* FormsVBT allows clients
    to save and restore the entire state of a
-   form. 
+   form.
 
    A {\em snapshot\/} is an S-expression that captures the state of components
    in a form.  The call "fv.snapshot(wr)" writes a snapshot of "fv" to the
@@ -768,7 +768,7 @@ END FormsVBT.
 | TYPE
 |   MyForm = FormsVBT.T OBJECT
 |               OVERRIDES realize := Realize END;
-| 
+|
 | PROCEDURE Realize (fv: MyForm; type, name: TEXT): VBT.T
 |   RAISES {FormsVBT.Error} =
 |   BEGIN

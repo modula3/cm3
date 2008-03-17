@@ -410,7 +410,7 @@ CONST
   GL_NICEST    = 16_1102;
 
   (* LightName *)
-    
+
   GL_LIGHT0 = 16_4000;
   GL_LIGHT1 = 16_4001;
   GL_LIGHT2 = 16_4002;
@@ -590,7 +590,7 @@ CONST
   GL_TEXTURE_WRAP_T     = 16_2803;
 
   (* TextureWrapMode *)
-  
+
   GL_CLAMP  = 16_2900;
   GL_REPEAT = 16_2901;
 
@@ -599,793 +599,793 @@ CONST
 (* Procedures                                                                *)
 (*****************************************************************************)
 
-<*EXTERNAL glAccum:WINAPI*> 
+<*EXTERNAL glAccum:WINAPI*>
 PROCEDURE glAccum (op: GLenum; value: GLfloat);
 
-<*EXTERNAL glAlphaFunc:WINAPI*> 
+<*EXTERNAL glAlphaFunc:WINAPI*>
 PROCEDURE glAlphaFunc (func: GLenum; ref: GLclampf);
 
-<*EXTERNAL glBegin:WINAPI*> 
+<*EXTERNAL glBegin:WINAPI*>
 PROCEDURE glBegin (mode: GLenum);
 
-<*EXTERNAL glBitmap:WINAPI*> 
-PROCEDURE glBitmap (width : GLsizei; 
-                    height: GLsizei; 
-                    xorig : GLfloat; 
-                    yorig : GLfloat; 
-                    xmove : GLfloat; 
-                    ymove : GLfloat; 
+<*EXTERNAL glBitmap:WINAPI*>
+PROCEDURE glBitmap (width : GLsizei;
+                    height: GLsizei;
+                    xorig : GLfloat;
+                    yorig : GLfloat;
+                    xmove : GLfloat;
+                    ymove : GLfloat;
                     bitmap: UNTRACED REF ARRAY OF GLubyte);
 
-<*EXTERNAL glBlendFunc:WINAPI*> 
+<*EXTERNAL glBlendFunc:WINAPI*>
 PROCEDURE glBlendFunc (sfactor, dfactor: GLenum);
 
-<*EXTERNAL glCallList:WINAPI*> 
+<*EXTERNAL glCallList:WINAPI*>
 PROCEDURE glCallList (list: GLuint);
 
-<*EXTERNAL glCallLists:WINAPI*> 
+<*EXTERNAL glCallLists:WINAPI*>
 PROCEDURE glCallLists (n: GLsizei; type: GLenum; lists: ADDRESS);
 
-<*EXTERNAL glClear:WINAPI*> 
+<*EXTERNAL glClear:WINAPI*>
 PROCEDURE glClear (mask: GLbitfield);
 
-<*EXTERNAL glClearAccum:WINAPI*> 
+<*EXTERNAL glClearAccum:WINAPI*>
 PROCEDURE glClearAccum (red, green, blue, alpha: GLfloat);
 
-<*EXTERNAL glClearColor:WINAPI*> 
+<*EXTERNAL glClearColor:WINAPI*>
 PROCEDURE glClearColor (red, green, blue, alpha: GLclampf);
 
-<*EXTERNAL glClearDepth:WINAPI*> 
+<*EXTERNAL glClearDepth:WINAPI*>
 PROCEDURE glClearDepth (depth: GLclampd);
 
-<*EXTERNAL glClearIndex:WINAPI*> 
+<*EXTERNAL glClearIndex:WINAPI*>
 PROCEDURE glClearIndex (c: GLfloat);
 
-<*EXTERNAL glClearStencil:WINAPI*> 
+<*EXTERNAL glClearStencil:WINAPI*>
 PROCEDURE glClearStencil (s: GLint);
 
-<*EXTERNAL glClipPlane:WINAPI*> 
-PROCEDURE glClipPlane (plane   : GLenum; 
+<*EXTERNAL glClipPlane:WINAPI*>
+PROCEDURE glClipPlane (plane   : GLenum;
                        equation: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glColor3b:WINAPI*> 
+<*EXTERNAL glColor3b:WINAPI*>
 PROCEDURE glColor3b (red, green, blue: GLbyte);
 
-<*EXTERNAL glColor3bv:WINAPI*> 
+<*EXTERNAL glColor3bv:WINAPI*>
 PROCEDURE glColor3bv (v: UNTRACED REF ARRAY OF GLbyte);
 
-<*EXTERNAL glColor3d:WINAPI*> 
+<*EXTERNAL glColor3d:WINAPI*>
 PROCEDURE glColor3d (red, green, blue: GLdouble);
 
-<*EXTERNAL glColor3dv:WINAPI*> 
+<*EXTERNAL glColor3dv:WINAPI*>
 PROCEDURE glColor3dv (v: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glColor3f:WINAPI*> 
+<*EXTERNAL glColor3f:WINAPI*>
 PROCEDURE glColor3f (red, green, blue : GLfloat);
 
-<*EXTERNAL glColor3fv:WINAPI*> 
+<*EXTERNAL glColor3fv:WINAPI*>
 PROCEDURE glColor3fv (v: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glColor3i:WINAPI*> 
+<*EXTERNAL glColor3i:WINAPI*>
 PROCEDURE glColor3i (red, green, blue: GLint);
 
-<*EXTERNAL glColor3iv:WINAPI*> 
+<*EXTERNAL glColor3iv:WINAPI*>
 PROCEDURE glColor3iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glColor3s:WINAPI*> 
+<*EXTERNAL glColor3s:WINAPI*>
 PROCEDURE glColor3s (red, green, blue: GLshort);
 
-<*EXTERNAL glColor3sv:WINAPI*> 
+<*EXTERNAL glColor3sv:WINAPI*>
 PROCEDURE glColor3sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL glColor3ub:WINAPI*> 
+<*EXTERNAL glColor3ub:WINAPI*>
 PROCEDURE glColor3ub (red, green, blue: GLubyte);
 
-<*EXTERNAL glColor3ubv:WINAPI*> 
+<*EXTERNAL glColor3ubv:WINAPI*>
 PROCEDURE glColor3ubv (v: UNTRACED REF ARRAY OF GLubyte);
 
-<*EXTERNAL glColor3ui:WINAPI*> 
+<*EXTERNAL glColor3ui:WINAPI*>
 PROCEDURE glColor3ui (red, green, blue: GLuint);
 
-<*EXTERNAL glColor3uiv:WINAPI*> 
+<*EXTERNAL glColor3uiv:WINAPI*>
 PROCEDURE glColor3uiv (v: UNTRACED REF ARRAY OF GLuint);
 
-<*EXTERNAL glColor3us:WINAPI*> 
+<*EXTERNAL glColor3us:WINAPI*>
 PROCEDURE glColor3us (red, green, blue: GLushort);
 
-<*EXTERNAL glColor3usv:WINAPI*> 
+<*EXTERNAL glColor3usv:WINAPI*>
 PROCEDURE glColor3usv (v: UNTRACED REF ARRAY OF GLushort);
 
-<*EXTERNAL glColor4b:WINAPI*> 
+<*EXTERNAL glColor4b:WINAPI*>
 PROCEDURE glColor4b (red, green, blue, alpha: GLbyte);
 
-<*EXTERNAL glColor4bv:WINAPI*> 
+<*EXTERNAL glColor4bv:WINAPI*>
 PROCEDURE glColor4bv (v: UNTRACED REF ARRAY OF GLbyte);
 
-<*EXTERNAL glColor4d:WINAPI*> 
+<*EXTERNAL glColor4d:WINAPI*>
 PROCEDURE glColor4d (red, green, blue, alpha: GLdouble);
 
-<*EXTERNAL glColor4dv:WINAPI*> 
+<*EXTERNAL glColor4dv:WINAPI*>
 PROCEDURE glColor4dv (v: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glColor4f:WINAPI*> 
+<*EXTERNAL glColor4f:WINAPI*>
 PROCEDURE glColor4f (red, green, blue, alpha: GLfloat);
 
-<*EXTERNAL glColor4fv:WINAPI*> 
+<*EXTERNAL glColor4fv:WINAPI*>
 PROCEDURE glColor4fv (v: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glColor4i:WINAPI*> 
+<*EXTERNAL glColor4i:WINAPI*>
 PROCEDURE glColor4i (red, green, blue, alpha: GLint);
 
-<*EXTERNAL glColor4iv:WINAPI*> 
+<*EXTERNAL glColor4iv:WINAPI*>
 PROCEDURE glColor4iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glColor4s:WINAPI*> 
+<*EXTERNAL glColor4s:WINAPI*>
 PROCEDURE glColor4s (red, green, blue, alpha: GLshort);
 
-<*EXTERNAL glColor4sv:WINAPI*> 
+<*EXTERNAL glColor4sv:WINAPI*>
 PROCEDURE glColor4sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL glColor4ub:WINAPI*> 
+<*EXTERNAL glColor4ub:WINAPI*>
 PROCEDURE glColor4ub (red, green, blue, alpha: GLubyte);
 
-<*EXTERNAL glColor4ubv:WINAPI*> 
+<*EXTERNAL glColor4ubv:WINAPI*>
 PROCEDURE glColor4ubv (v: UNTRACED REF ARRAY OF GLubyte);
 
-<*EXTERNAL glColor4ui:WINAPI*> 
+<*EXTERNAL glColor4ui:WINAPI*>
 PROCEDURE glColor4ui (red, green, blue, alpha: GLuint);
 
-<*EXTERNAL glColor4uiv:WINAPI*> 
+<*EXTERNAL glColor4uiv:WINAPI*>
 PROCEDURE glColor4uiv (v: UNTRACED REF ARRAY OF GLuint);
 
-<*EXTERNAL glColor4us:WINAPI*> 
+<*EXTERNAL glColor4us:WINAPI*>
 PROCEDURE glColor4us (red, green, blue, alpha: GLushort);
 
-<*EXTERNAL glColor4usv:WINAPI*> 
+<*EXTERNAL glColor4usv:WINAPI*>
 PROCEDURE glColor4usv (v: UNTRACED REF ARRAY OF GLushort);
 
-<*EXTERNAL glColorMask:WINAPI*> 
+<*EXTERNAL glColorMask:WINAPI*>
 PROCEDURE glColorMask (red, green, blue, alpha: GLboolean);
 
-<*EXTERNAL glColorMaterial:WINAPI*> 
+<*EXTERNAL glColorMaterial:WINAPI*>
 PROCEDURE glColorMaterial (face, mode: GLenum);
 
-<*EXTERNAL glCopyPixels:WINAPI*> 
-PROCEDURE glCopyPixels (x, y         : GLint; 
-                        width, height: GLsizei; 
+<*EXTERNAL glCopyPixels:WINAPI*>
+PROCEDURE glCopyPixels (x, y         : GLint;
+                        width, height: GLsizei;
                         type         : GLenum);
 
-<*EXTERNAL glCullFace:WINAPI*> 
+<*EXTERNAL glCullFace:WINAPI*>
 PROCEDURE glCullFace (mode: GLenum);
 
-<*EXTERNAL glDeleteLists:WINAPI*> 
+<*EXTERNAL glDeleteLists:WINAPI*>
 PROCEDURE glDeleteLists (list: GLuint; range: GLsizei);
 
-<*EXTERNAL glDepthFunc:WINAPI*> 
+<*EXTERNAL glDepthFunc:WINAPI*>
 PROCEDURE glDepthFunc (func: GLenum);
 
-<*EXTERNAL glDepthMask:WINAPI*> 
+<*EXTERNAL glDepthMask:WINAPI*>
 PROCEDURE glDepthMask (flag: GLboolean);
 
-<*EXTERNAL glDepthRange:WINAPI*> 
+<*EXTERNAL glDepthRange:WINAPI*>
 PROCEDURE glDepthRange (near, far: GLclampd);
 
-<*EXTERNAL glDisable:WINAPI*> 
+<*EXTERNAL glDisable:WINAPI*>
 PROCEDURE glDisable (cap : GLenum);
 
-<*EXTERNAL glDrawBuffer:WINAPI*> 
+<*EXTERNAL glDrawBuffer:WINAPI*>
 PROCEDURE glDrawBuffer (mode : GLenum);
 
-<*EXTERNAL glDrawPixels:WINAPI*> 
-PROCEDURE glDrawPixels (width, height: GLsizei; 
+<*EXTERNAL glDrawPixels:WINAPI*>
+PROCEDURE glDrawPixels (width, height: GLsizei;
                         format, type : GLenum;
                         pixels       : ADDRESS);
 
-<*EXTERNAL glEdgeFlag:WINAPI*> 
+<*EXTERNAL glEdgeFlag:WINAPI*>
 PROCEDURE glEdgeFlag (flag: GLboolean);
 
-<*EXTERNAL glEdgeFlagv:WINAPI*> 
+<*EXTERNAL glEdgeFlagv:WINAPI*>
 PROCEDURE glEdgeFlagv (flag: UNTRACED REF ARRAY OF GLboolean);
 
-<*EXTERNAL glEnable:WINAPI*> 
+<*EXTERNAL glEnable:WINAPI*>
 PROCEDURE glEnable (cap : GLenum);
 
-<*EXTERNAL glEnd:WINAPI*> 
+<*EXTERNAL glEnd:WINAPI*>
 PROCEDURE glEnd ();
 
-<*EXTERNAL glEndList:WINAPI*> 
+<*EXTERNAL glEndList:WINAPI*>
 PROCEDURE glEndList ();
 
-<*EXTERNAL glEvalCoord1d:WINAPI*> 
+<*EXTERNAL glEvalCoord1d:WINAPI*>
 PROCEDURE glEvalCoord1d (u: GLdouble);
 
-<*EXTERNAL glEvalCoord1dv:WINAPI*> 
+<*EXTERNAL glEvalCoord1dv:WINAPI*>
 PROCEDURE glEvalCoord1dv (u: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glEvalCoord1f:WINAPI*> 
+<*EXTERNAL glEvalCoord1f:WINAPI*>
 PROCEDURE glEvalCoord1f (u: GLfloat);
 
-<*EXTERNAL glEvalCoord1fv:WINAPI*> 
+<*EXTERNAL glEvalCoord1fv:WINAPI*>
 PROCEDURE glEvalCoord1fv (u: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glEvalCoord2d:WINAPI*> 
+<*EXTERNAL glEvalCoord2d:WINAPI*>
 PROCEDURE glEvalCoord2d (u, v: GLdouble);
 
-<*EXTERNAL glEvalCoord2dv:WINAPI*> 
+<*EXTERNAL glEvalCoord2dv:WINAPI*>
 PROCEDURE glEvalCoord2dv (u: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glEvalCoord2f:WINAPI*> 
+<*EXTERNAL glEvalCoord2f:WINAPI*>
 PROCEDURE glEvalCoord2f (u, v: GLfloat);
 
-<*EXTERNAL glEvalCoord2fv:WINAPI*> 
+<*EXTERNAL glEvalCoord2fv:WINAPI*>
 PROCEDURE glEvalCoord2fv (u: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glEvalMesh1:WINAPI*> 
+<*EXTERNAL glEvalMesh1:WINAPI*>
 PROCEDURE glEvalMesh1 (mode: GLenum; i1, i2: GLint);
 
-<*EXTERNAL glEvalMesh2:WINAPI*> 
+<*EXTERNAL glEvalMesh2:WINAPI*>
 PROCEDURE glEvalMesh2 (mode : GLenum; i1, i2, j1, j2 : GLint);
 
-<*EXTERNAL glEvalPoint1:WINAPI*> 
+<*EXTERNAL glEvalPoint1:WINAPI*>
 PROCEDURE glEvalPoint1 (i: GLint);
 
-<*EXTERNAL glEvalPoint2:WINAPI*> 
+<*EXTERNAL glEvalPoint2:WINAPI*>
 PROCEDURE glEvalPoint2 (i, j: GLint);
 
-<*EXTERNAL glFeedbackBuffer:WINAPI*> 
-PROCEDURE glFeedbackBuffer (size  : GLsizei; 
-                            type  : GLenum; 
+<*EXTERNAL glFeedbackBuffer:WINAPI*>
+PROCEDURE glFeedbackBuffer (size  : GLsizei;
+                            type  : GLenum;
                             buffer: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glFinish:WINAPI*> 
+<*EXTERNAL glFinish:WINAPI*>
 PROCEDURE glFinish ();
 
-<*EXTERNAL glFlush:WINAPI*> 
+<*EXTERNAL glFlush:WINAPI*>
 PROCEDURE glFlush ();
 
-<*EXTERNAL glFogf:WINAPI*> 
+<*EXTERNAL glFogf:WINAPI*>
 PROCEDURE glFogf (pname: GLenum; param: GLfloat);
 
-<*EXTERNAL glFogfv:WINAPI*> 
+<*EXTERNAL glFogfv:WINAPI*>
 PROCEDURE glFogfv (pname: GLenum; params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glFogi:WINAPI*> 
+<*EXTERNAL glFogi:WINAPI*>
 PROCEDURE glFogi (pname: GLenum; param: GLint);
 
-<*EXTERNAL glFogiv:WINAPI*> 
+<*EXTERNAL glFogiv:WINAPI*>
 PROCEDURE glFogiv (pname: GLenum; params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glFrontFace:WINAPI*> 
+<*EXTERNAL glFrontFace:WINAPI*>
 PROCEDURE glFrontFace (mode: GLenum);
 
-<*EXTERNAL glFrustum:WINAPI*> 
+<*EXTERNAL glFrustum:WINAPI*>
 PROCEDURE glFrustum (left, right, bottom, top, near, far: GLdouble);
 
-<*EXTERNAL glGenLists:WINAPI*> 
+<*EXTERNAL glGenLists:WINAPI*>
 PROCEDURE glGenLists (range: GLsizei): GLuint;
 
-<*EXTERNAL glGetBooleanv:WINAPI*> 
-PROCEDURE glGetBooleanv (pname: GLenum; 
+<*EXTERNAL glGetBooleanv:WINAPI*>
+PROCEDURE glGetBooleanv (pname: GLenum;
                          params: UNTRACED REF ARRAY OF GLboolean);
 
-<*EXTERNAL glGetClipPlane:WINAPI*> 
-PROCEDURE glGetClipPlane (pname   : GLenum; 
+<*EXTERNAL glGetClipPlane:WINAPI*>
+PROCEDURE glGetClipPlane (pname   : GLenum;
                           equation: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glGetDoublev:WINAPI*> 
-PROCEDURE glGetDoublev (pname : GLenum; 
+<*EXTERNAL glGetDoublev:WINAPI*>
+PROCEDURE glGetDoublev (pname : GLenum;
                         params: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glGetError:WINAPI*> 
+<*EXTERNAL glGetError:WINAPI*>
 PROCEDURE glGetError (): GLenum;
 
-<*EXTERNAL glGetFloatv:WINAPI*> 
-PROCEDURE glGetFloatv (pname : GLenum; 
+<*EXTERNAL glGetFloatv:WINAPI*>
+PROCEDURE glGetFloatv (pname : GLenum;
                        params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glGetIntegerv:WINAPI*> 
-PROCEDURE glGetIntegerv (pname : GLenum; 
+<*EXTERNAL glGetIntegerv:WINAPI*>
+PROCEDURE glGetIntegerv (pname : GLenum;
                          params: UNTRACED REF ARRAY OF GLint);
 
 <*EXTERNAL glGetLightfv:WINAPI*>
-PROCEDURE glGetLightfv (light : GLenum; 
-                        pname : GLenum; 
+PROCEDURE glGetLightfv (light : GLenum;
+                        pname : GLenum;
                         params: UNTRACED REF ARRAY OF GLfloat);
 
 <*EXTERNAL glGetLightiv:WINAPI*>
-PROCEDURE glGetLightiv (light : GLenum; 
-                        pname : GLenum; 
+PROCEDURE glGetLightiv (light : GLenum;
+                        pname : GLenum;
                         params: UNTRACED REF ARRAY OF GLint);
 
 <*EXTERNAL glGetMapdv:WINAPI*>
-PROCEDURE glGetMapdv (target: GLenum; 
-                      query : GLenum; 
+PROCEDURE glGetMapdv (target: GLenum;
+                      query : GLenum;
                       v     : UNTRACED REF ARRAY OF GLdouble);
 
 <*EXTERNAL glGetMapfv:WINAPI*>
-PROCEDURE glGetMapfv (target: GLenum; 
-                      query : GLenum; 
+PROCEDURE glGetMapfv (target: GLenum;
+                      query : GLenum;
                       v     : UNTRACED REF ARRAY OF GLfloat);
 
 <*EXTERNAL glGetMapiv:WINAPI*>
-PROCEDURE glGetMapiv (target: GLenum; 
-                      query : GLenum; 
+PROCEDURE glGetMapiv (target: GLenum;
+                      query : GLenum;
                       v     : UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glGetMaterialfv:WINAPI*> 
-PROCEDURE glGetMaterialfv (face  : GLenum; 
-                           pname : GLenum; 
+<*EXTERNAL glGetMaterialfv:WINAPI*>
+PROCEDURE glGetMaterialfv (face  : GLenum;
+                           pname : GLenum;
                            params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glGetMaterialiv:WINAPI*> 
-PROCEDURE glGetMaterialiv (face  : GLenum; 
-                           pname : GLenum; 
+<*EXTERNAL glGetMaterialiv:WINAPI*>
+PROCEDURE glGetMaterialiv (face  : GLenum;
+                           pname : GLenum;
                            params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glGetPixelMapfv:WINAPI*> 
-PROCEDURE glGetPixelMapfv (map   : GLenum; 
+<*EXTERNAL glGetPixelMapfv:WINAPI*>
+PROCEDURE glGetPixelMapfv (map   : GLenum;
                            values: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glGetPixelMapuiv:WINAPI*> 
-PROCEDURE glGetPixelMapuiv (map   : GLenum; 
+<*EXTERNAL glGetPixelMapuiv:WINAPI*>
+PROCEDURE glGetPixelMapuiv (map   : GLenum;
                             values: UNTRACED REF ARRAY OF GLuint);
 
-<*EXTERNAL glGetPixelMapusv:WINAPI*> 
+<*EXTERNAL glGetPixelMapusv:WINAPI*>
 PROCEDURE glGetPixelMapusv (map   : GLenum;
                             values: UNTRACED REF ARRAY OF GLushort);
 
-<*EXTERNAL glGetPolygonStipple:WINAPI*> 
+<*EXTERNAL glGetPolygonStipple:WINAPI*>
 PROCEDURE glGetPolygonStipple (mask: UNTRACED REF ARRAY OF GLubyte);
 
-<*EXTERNAL glGetString:WINAPI*> 
+<*EXTERNAL glGetString:WINAPI*>
 PROCEDURE glGetString (name: GLenum): UNTRACED REF ARRAY OF GLubyte;
 
-<*EXTERNAL glGetTexEnvfv:WINAPI*> 
-PROCEDURE glGetTexEnvfv (target: GLenum; 
-                         pname : GLenum; 
+<*EXTERNAL glGetTexEnvfv:WINAPI*>
+PROCEDURE glGetTexEnvfv (target: GLenum;
+                         pname : GLenum;
                          params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glGetTexEnviv:WINAPI*> 
-PROCEDURE glGetTexEnviv (target: GLenum; 
-                         pname : GLenum; 
+<*EXTERNAL glGetTexEnviv:WINAPI*>
+PROCEDURE glGetTexEnviv (target: GLenum;
+                         pname : GLenum;
                          params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glGetTexGendv:WINAPI*> 
-PROCEDURE glGetTexGendv (coord : GLenum; 
-                         pname : GLenum; 
+<*EXTERNAL glGetTexGendv:WINAPI*>
+PROCEDURE glGetTexGendv (coord : GLenum;
+                         pname : GLenum;
                          params: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glGetTexGenfv:WINAPI*> 
-PROCEDURE glGetTexGenfv (coord : GLenum; 
-                         pname : GLenum; 
+<*EXTERNAL glGetTexGenfv:WINAPI*>
+PROCEDURE glGetTexGenfv (coord : GLenum;
+                         pname : GLenum;
                          params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glGetTexGeniv:WINAPI*> 
-PROCEDURE glGetTexGeniv (coord : GLenum; 
-                         pname : GLenum; 
+<*EXTERNAL glGetTexGeniv:WINAPI*>
+PROCEDURE glGetTexGeniv (coord : GLenum;
+                         pname : GLenum;
                          params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glGetTexImage:WINAPI*> 
+<*EXTERNAL glGetTexImage:WINAPI*>
 PROCEDURE glGetTexImage (target: GLenum;
                          level : GLint;
-                         format: GLenum; 
-                         type  : GLenum; 
+                         format: GLenum;
+                         type  : GLenum;
                          pixels: ADDRESS);
 
-<*EXTERNAL glGetTexLevelParameterfv:WINAPI*> 
-PROCEDURE glGetTexLevelParameterfv (target: GLenum; 
+<*EXTERNAL glGetTexLevelParameterfv:WINAPI*>
+PROCEDURE glGetTexLevelParameterfv (target: GLenum;
                                     level : GLint;
                                     pname : GLenum;
                                     params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glGetTexLevelParameteriv:WINAPI*> 
-PROCEDURE glGetTexLevelParameteriv (target: GLenum; 
-                                    level : GLint; 
-                                    pname : GLenum; 
+<*EXTERNAL glGetTexLevelParameteriv:WINAPI*>
+PROCEDURE glGetTexLevelParameteriv (target: GLenum;
+                                    level : GLint;
+                                    pname : GLenum;
                                     params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glGetTexParameterfv:WINAPI*> 
-PROCEDURE glGetTexParameterfv (target: GLenum; 
-                               pname : GLenum; 
+<*EXTERNAL glGetTexParameterfv:WINAPI*>
+PROCEDURE glGetTexParameterfv (target: GLenum;
+                               pname : GLenum;
                                params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glGetTexParameteriv:WINAPI*> 
-PROCEDURE glGetTexParameteriv (target: GLenum; 
-                               pname : GLenum; 
+<*EXTERNAL glGetTexParameteriv:WINAPI*>
+PROCEDURE glGetTexParameteriv (target: GLenum;
+                               pname : GLenum;
                                params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glHint:WINAPI*> 
+<*EXTERNAL glHint:WINAPI*>
 PROCEDURE glHint (target: GLenum; mode: GLenum);
 
-<*EXTERNAL glIndexMask:WINAPI*> 
+<*EXTERNAL glIndexMask:WINAPI*>
 PROCEDURE glIndexMask (mask: GLuint);
 
-<*EXTERNAL glIndexd:WINAPI*> 
+<*EXTERNAL glIndexd:WINAPI*>
 PROCEDURE glIndexd (c: GLdouble);
 
-<*EXTERNAL glIndexdv:WINAPI*> 
+<*EXTERNAL glIndexdv:WINAPI*>
 PROCEDURE glIndexdv (c: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glIndexf:WINAPI*> 
+<*EXTERNAL glIndexf:WINAPI*>
 PROCEDURE glIndexf (c: GLfloat);
 
-<*EXTERNAL glIndexfv:WINAPI*> 
+<*EXTERNAL glIndexfv:WINAPI*>
 PROCEDURE glIndexfv (c: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glIndexi:WINAPI*> 
+<*EXTERNAL glIndexi:WINAPI*>
 PROCEDURE glIndexi (c: GLint);
 
-<*EXTERNAL glIndexiv:WINAPI*> 
+<*EXTERNAL glIndexiv:WINAPI*>
 PROCEDURE glIndexiv (c: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glIndexs:WINAPI*> 
+<*EXTERNAL glIndexs:WINAPI*>
 PROCEDURE glIndexs (c: GLshort);
 
-<*EXTERNAL glIndexsv:WINAPI*> 
+<*EXTERNAL glIndexsv:WINAPI*>
 PROCEDURE glIndexsv (c: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL glInitNames:WINAPI*> 
+<*EXTERNAL glInitNames:WINAPI*>
 PROCEDURE glInitNames ();
 
-<*EXTERNAL glIsEnabled:WINAPI*> 
+<*EXTERNAL glIsEnabled:WINAPI*>
 PROCEDURE glIsEnabled (cap: GLenum): GLboolean;
 
-<*EXTERNAL glIsList:WINAPI*> 
+<*EXTERNAL glIsList:WINAPI*>
 PROCEDURE glIsList (list: GLuint): GLboolean;
 
-<*EXTERNAL glLightModelf:WINAPI*> 
+<*EXTERNAL glLightModelf:WINAPI*>
 PROCEDURE glLightModelf (pname: GLenum; param: GLfloat);
 
-<*EXTERNAL glLightModelfv:WINAPI*> 
-PROCEDURE glLightModelfv (pname : GLenum; 
+<*EXTERNAL glLightModelfv:WINAPI*>
+PROCEDURE glLightModelfv (pname : GLenum;
                           params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glLightModeli:WINAPI*> 
+<*EXTERNAL glLightModeli:WINAPI*>
 PROCEDURE glLightModeli (pname: GLenum; param: GLint);
 
-<*EXTERNAL glLightModeliv:WINAPI*> 
+<*EXTERNAL glLightModeliv:WINAPI*>
 PROCEDURE glLightModeliv (pname: GLenum; params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glLightf:WINAPI*> 
+<*EXTERNAL glLightf:WINAPI*>
 PROCEDURE glLightf (light: GLenum; pname: GLenum; param: GLfloat);
 
-<*EXTERNAL glLightfv:WINAPI*> 
-PROCEDURE glLightfv (light : GLenum; 
-                     pname : GLenum; 
+<*EXTERNAL glLightfv:WINAPI*>
+PROCEDURE glLightfv (light : GLenum;
+                     pname : GLenum;
                      params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glLighti:WINAPI*> 
+<*EXTERNAL glLighti:WINAPI*>
 PROCEDURE glLighti (light: GLenum; pname: GLenum; param: GLint);
 
-<*EXTERNAL glLightiv:WINAPI*> 
-PROCEDURE glLightiv (light : GLenum; 
-                     pname : GLenum; 
+<*EXTERNAL glLightiv:WINAPI*>
+PROCEDURE glLightiv (light : GLenum;
+                     pname : GLenum;
                      params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glLineStipple:WINAPI*> 
+<*EXTERNAL glLineStipple:WINAPI*>
 PROCEDURE glLineStipple (factor: GLint; pattern: GLushort);
 
-<*EXTERNAL glLineWidth:WINAPI*> 
+<*EXTERNAL glLineWidth:WINAPI*>
 PROCEDURE glLineWidth (width: GLfloat);
 
-<*EXTERNAL glListBase:WINAPI*> 
+<*EXTERNAL glListBase:WINAPI*>
 PROCEDURE glListBase (base: GLuint);
 
-<*EXTERNAL glLoadIdentity:WINAPI*> 
+<*EXTERNAL glLoadIdentity:WINAPI*>
 PROCEDURE glLoadIdentity ();
 
-<*EXTERNAL glLoadMatrixd:WINAPI*> 
+<*EXTERNAL glLoadMatrixd:WINAPI*>
 PROCEDURE glLoadMatrixd (m: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glLoadMatrixf:WINAPI*> 
+<*EXTERNAL glLoadMatrixf:WINAPI*>
 PROCEDURE glLoadMatrixf (m: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glLoadName:WINAPI*> 
+<*EXTERNAL glLoadName:WINAPI*>
 PROCEDURE glLoadName (name: GLuint);
 
-<*EXTERNAL glLogicOp:WINAPI*> 
+<*EXTERNAL glLogicOp:WINAPI*>
 PROCEDURE glLogicOp (opcode: GLenum);
 
-<*EXTERNAL glMap1d:WINAPI*> 
-PROCEDURE glMap1d (target       : GLenum; 
+<*EXTERNAL glMap1d:WINAPI*>
+PROCEDURE glMap1d (target       : GLenum;
                    u1, u2       : GLdouble;
                    stride, order: GLint;
                    points       : UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glMap1f:WINAPI*> 
-PROCEDURE glMap1f (target       : GLenum; 
+<*EXTERNAL glMap1f:WINAPI*>
+PROCEDURE glMap1f (target       : GLenum;
                    u1, u2       : GLfloat;
                    stride, order: GLint;
                    points       : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glMap2d:WINAPI*> 
-PROCEDURE glMap2d (target         : GLenum; 
-                   u1, u2         : GLdouble; 
+<*EXTERNAL glMap2d:WINAPI*>
+PROCEDURE glMap2d (target         : GLenum;
+                   u1, u2         : GLdouble;
                    ustride, uorder: GLint;
-                   v1, v2         : GLdouble; 
+                   v1, v2         : GLdouble;
                    vstride, vorder: GLint;
                    points         : UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glMap2f:WINAPI*> 
-PROCEDURE glMap2f (target         : GLenum; 
+<*EXTERNAL glMap2f:WINAPI*>
+PROCEDURE glMap2f (target         : GLenum;
                    u1, u2         : GLfloat;
                    ustride, uorder: GLint;
-                   v1, v2         : GLfloat; 
+                   v1, v2         : GLfloat;
                    vstride, vorder: GLint;
                    points         : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glMapGrid1d:WINAPI*> 
+<*EXTERNAL glMapGrid1d:WINAPI*>
 PROCEDURE glMapGrid1d (un: GLint; u1, u2: GLdouble);
 
-<*EXTERNAL glMapGrid1f:WINAPI*> 
+<*EXTERNAL glMapGrid1f:WINAPI*>
 PROCEDURE glMapGrid1f (un: GLint; u1, u2: GLfloat);
 
-<*EXTERNAL glMapGrid2d:WINAPI*> 
-PROCEDURE glMapGrid2d (un: GLint; u1, u2: GLdouble; 
+<*EXTERNAL glMapGrid2d:WINAPI*>
+PROCEDURE glMapGrid2d (un: GLint; u1, u2: GLdouble;
                        vn: GLint; v1, v2: GLdouble);
 
-<*EXTERNAL glMapGrid2f:WINAPI*> 
-PROCEDURE glMapGrid2f (un: GLint; u1, u2 : GLfloat; 
+<*EXTERNAL glMapGrid2f:WINAPI*>
+PROCEDURE glMapGrid2f (un: GLint; u1, u2 : GLfloat;
                                     vn: GLint; v1, v2 : GLfloat);
 
-<*EXTERNAL glMaterialf:WINAPI*> 
+<*EXTERNAL glMaterialf:WINAPI*>
 PROCEDURE glMaterialf (face, pname: GLenum; param: GLfloat);
 
-<*EXTERNAL glMaterialfv:WINAPI*> 
-PROCEDURE glMaterialfv (face, pname: GLenum; 
+<*EXTERNAL glMaterialfv:WINAPI*>
+PROCEDURE glMaterialfv (face, pname: GLenum;
                         params     : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glMateriali:WINAPI*> 
+<*EXTERNAL glMateriali:WINAPI*>
 PROCEDURE glMateriali (face, pname: GLenum; param: GLint);
 
-<*EXTERNAL glMaterialiv:WINAPI*> 
-PROCEDURE glMaterialiv (face, pname: GLenum; 
+<*EXTERNAL glMaterialiv:WINAPI*>
+PROCEDURE glMaterialiv (face, pname: GLenum;
                         params     : UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glMatrixMode:WINAPI*> 
+<*EXTERNAL glMatrixMode:WINAPI*>
 PROCEDURE glMatrixMode (mode: GLenum);
 
-<*EXTERNAL glMultMatrixd:WINAPI*> 
+<*EXTERNAL glMultMatrixd:WINAPI*>
 PROCEDURE glMultMatrixd (m: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glMultMatrixf:WINAPI*> 
+<*EXTERNAL glMultMatrixf:WINAPI*>
 PROCEDURE glMultMatrixf (m: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glNewList:WINAPI*> 
+<*EXTERNAL glNewList:WINAPI*>
 PROCEDURE glNewList (list: GLuint; mode: GLenum);
 
-<*EXTERNAL glNormal3b:WINAPI*> 
+<*EXTERNAL glNormal3b:WINAPI*>
 PROCEDURE glNormal3b (nx, ny, nz: GLbyte);
 
-<*EXTERNAL glNormal3bv:WINAPI*> 
+<*EXTERNAL glNormal3bv:WINAPI*>
 PROCEDURE glNormal3bv (v: UNTRACED REF ARRAY OF GLbyte);
 
-<*EXTERNAL glNormal3d:WINAPI*> 
+<*EXTERNAL glNormal3d:WINAPI*>
 PROCEDURE glNormal3d (nx, ny, nz: GLdouble);
 
-<*EXTERNAL glNormal3dv:WINAPI*> 
+<*EXTERNAL glNormal3dv:WINAPI*>
 PROCEDURE glNormal3dv (v : UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glNormal3f:WINAPI*> 
+<*EXTERNAL glNormal3f:WINAPI*>
 PROCEDURE glNormal3f (nx, ny, nz: GLfloat);
 
-<*EXTERNAL glNormal3fv:WINAPI*> 
+<*EXTERNAL glNormal3fv:WINAPI*>
 PROCEDURE glNormal3fv (v : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glNormal3i:WINAPI*> 
+<*EXTERNAL glNormal3i:WINAPI*>
 PROCEDURE glNormal3i (nx, ny, nz: GLint);
 
-<*EXTERNAL glNormal3iv:WINAPI*> 
+<*EXTERNAL glNormal3iv:WINAPI*>
 PROCEDURE glNormal3iv (v : UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glNormal3s:WINAPI*> 
+<*EXTERNAL glNormal3s:WINAPI*>
 PROCEDURE glNormal3s (nx, ny, nz: GLshort);
 
-<*EXTERNAL glNormal3sv:WINAPI*> 
+<*EXTERNAL glNormal3sv:WINAPI*>
 PROCEDURE glNormal3sv (v : UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL glOrtho:WINAPI*> 
+<*EXTERNAL glOrtho:WINAPI*>
 PROCEDURE glOrtho (left, right, bottom, top, near, far: GLdouble);
 
-<*EXTERNAL glPassThrough:WINAPI*> 
+<*EXTERNAL glPassThrough:WINAPI*>
 PROCEDURE glPassThrough (token: GLfloat);
 
-<*EXTERNAL glPixelMapfv:WINAPI*> 
-PROCEDURE glPixelMapfv (map    : GLenum; 
-                        mapsize: GLint; 
+<*EXTERNAL glPixelMapfv:WINAPI*>
+PROCEDURE glPixelMapfv (map    : GLenum;
+                        mapsize: GLint;
                         values : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glPixelMapuiv:WINAPI*> 
-PROCEDURE glPixelMapuiv (map    : GLenum; 
-                         mapsize: GLint; 
+<*EXTERNAL glPixelMapuiv:WINAPI*>
+PROCEDURE glPixelMapuiv (map    : GLenum;
+                         mapsize: GLint;
                          values : UNTRACED REF ARRAY OF GLuint);
 
-<*EXTERNAL glPixelMapusv:WINAPI*> 
-PROCEDURE glPixelMapusv (map    : GLenum; 
-                         mapsize: GLint; 
+<*EXTERNAL glPixelMapusv:WINAPI*>
+PROCEDURE glPixelMapusv (map    : GLenum;
+                         mapsize: GLint;
                          values : UNTRACED REF ARRAY OF GLushort);
 
-<*EXTERNAL glPixelStoref:WINAPI*> 
+<*EXTERNAL glPixelStoref:WINAPI*>
 PROCEDURE glPixelStoref (pname: GLenum; param: GLfloat);
 
-<*EXTERNAL glPixelStorei:WINAPI*> 
+<*EXTERNAL glPixelStorei:WINAPI*>
 PROCEDURE glPixelStorei (pname: GLenum; param: GLint);
 
-<*EXTERNAL glPixelTransferf:WINAPI*> 
+<*EXTERNAL glPixelTransferf:WINAPI*>
 PROCEDURE glPixelTransferf (pname: GLenum; param: GLfloat);
 
-<*EXTERNAL glPixelTransferi:WINAPI*> 
+<*EXTERNAL glPixelTransferi:WINAPI*>
 PROCEDURE glPixelTransferi (pname: GLenum; param: GLint);
 
-<*EXTERNAL glPixelZoom:WINAPI*> 
+<*EXTERNAL glPixelZoom:WINAPI*>
 PROCEDURE glPixelZoom (xfactor: GLfloat; yfactor: GLfloat);
 
-<*EXTERNAL glPointSize:WINAPI*> 
+<*EXTERNAL glPointSize:WINAPI*>
 PROCEDURE glPointSize (size: GLfloat);
 
-<*EXTERNAL glPolygonMode:WINAPI*> 
+<*EXTERNAL glPolygonMode:WINAPI*>
 PROCEDURE glPolygonMode (face: GLenum; mode: GLenum);
 
-<*EXTERNAL glPolygonStipple:WINAPI*> 
+<*EXTERNAL glPolygonStipple:WINAPI*>
 PROCEDURE glPolygonStipple (mask: UNTRACED REF ARRAY OF GLubyte);
 
-<*EXTERNAL glPopAttrib:WINAPI*> 
+<*EXTERNAL glPopAttrib:WINAPI*>
 PROCEDURE glPopAttrib ();
 
-<*EXTERNAL glPopMatrix:WINAPI*> 
+<*EXTERNAL glPopMatrix:WINAPI*>
 PROCEDURE glPopMatrix ();
 
-<*EXTERNAL glPopName:WINAPI*> 
+<*EXTERNAL glPopName:WINAPI*>
 PROCEDURE glPopName ();
 
-<*EXTERNAL glPushAttrib:WINAPI*> 
+<*EXTERNAL glPushAttrib:WINAPI*>
 PROCEDURE glPushAttrib (mask: GLbitfield);
 
-<*EXTERNAL glPushMatrix:WINAPI*> 
+<*EXTERNAL glPushMatrix:WINAPI*>
 PROCEDURE glPushMatrix ();
 
-<*EXTERNAL glPushName:WINAPI*> 
+<*EXTERNAL glPushName:WINAPI*>
 PROCEDURE glPushName (name: GLuint);
 
-<*EXTERNAL glRasterPos2d:WINAPI*> 
+<*EXTERNAL glRasterPos2d:WINAPI*>
 PROCEDURE glRasterPos2d (x, y: GLdouble);
 
-<*EXTERNAL glRasterPos2dv:WINAPI*> 
+<*EXTERNAL glRasterPos2dv:WINAPI*>
 PROCEDURE glRasterPos2dv (v: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glRasterPos2f:WINAPI*> 
+<*EXTERNAL glRasterPos2f:WINAPI*>
 PROCEDURE glRasterPos2f (x, y: GLfloat);
 
-<*EXTERNAL glRasterPos2fv:WINAPI*> 
+<*EXTERNAL glRasterPos2fv:WINAPI*>
 PROCEDURE glRasterPos2fv (v: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glRasterPos2i:WINAPI*> 
+<*EXTERNAL glRasterPos2i:WINAPI*>
 PROCEDURE glRasterPos2i (x, y: GLint);
 
-<*EXTERNAL glRasterPos2iv:WINAPI*> 
+<*EXTERNAL glRasterPos2iv:WINAPI*>
 PROCEDURE glRasterPos2iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glRasterPos2s:WINAPI*> 
+<*EXTERNAL glRasterPos2s:WINAPI*>
 PROCEDURE glRasterPos2s (x, y: GLshort);
 
-<*EXTERNAL glRasterPos2sv:WINAPI*> 
+<*EXTERNAL glRasterPos2sv:WINAPI*>
 PROCEDURE glRasterPos2sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL glRasterPos3d:WINAPI*> 
+<*EXTERNAL glRasterPos3d:WINAPI*>
 PROCEDURE glRasterPos3d (x, y, z: GLdouble);
 
-<*EXTERNAL glRasterPos3dv:WINAPI*> 
+<*EXTERNAL glRasterPos3dv:WINAPI*>
 PROCEDURE glRasterPos3dv (v: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glRasterPos3f:WINAPI*> 
+<*EXTERNAL glRasterPos3f:WINAPI*>
 PROCEDURE glRasterPos3f (x, y, z: GLfloat);
 
-<*EXTERNAL glRasterPos3fv:WINAPI*> 
+<*EXTERNAL glRasterPos3fv:WINAPI*>
 PROCEDURE glRasterPos3fv (v: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glRasterPos3i:WINAPI*> 
+<*EXTERNAL glRasterPos3i:WINAPI*>
 PROCEDURE glRasterPos3i (x, y, z: GLint);
 
-<*EXTERNAL glRasterPos3iv:WINAPI*> 
+<*EXTERNAL glRasterPos3iv:WINAPI*>
 PROCEDURE glRasterPos3iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glRasterPos3s:WINAPI*> 
+<*EXTERNAL glRasterPos3s:WINAPI*>
 PROCEDURE glRasterPos3s (x, y, z: GLshort);
 
-<*EXTERNAL glRasterPos3sv:WINAPI*> 
+<*EXTERNAL glRasterPos3sv:WINAPI*>
 PROCEDURE glRasterPos3sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL glRasterPos4d:WINAPI*> 
+<*EXTERNAL glRasterPos4d:WINAPI*>
 PROCEDURE glRasterPos4d (x, y, z, w: GLdouble);
 
-<*EXTERNAL glRasterPos4dv:WINAPI*> 
+<*EXTERNAL glRasterPos4dv:WINAPI*>
 PROCEDURE glRasterPos4dv (v: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glRasterPos4f:WINAPI*> 
+<*EXTERNAL glRasterPos4f:WINAPI*>
 PROCEDURE glRasterPos4f (x, y, z, w: GLfloat);
 
-<*EXTERNAL glRasterPos4fv:WINAPI*> 
+<*EXTERNAL glRasterPos4fv:WINAPI*>
 PROCEDURE glRasterPos4fv (v: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glRasterPos4i:WINAPI*> 
+<*EXTERNAL glRasterPos4i:WINAPI*>
 PROCEDURE glRasterPos4i (x, y, z, w: GLint);
 
-<*EXTERNAL glRasterPos4iv:WINAPI*> 
+<*EXTERNAL glRasterPos4iv:WINAPI*>
 PROCEDURE glRasterPos4iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glRasterPos4s:WINAPI*> 
+<*EXTERNAL glRasterPos4s:WINAPI*>
 PROCEDURE glRasterPos4s (x, y, z, w: GLshort);
 
-<*EXTERNAL glRasterPos4sv:WINAPI*> 
+<*EXTERNAL glRasterPos4sv:WINAPI*>
 PROCEDURE glRasterPos4sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL glReadBuffer:WINAPI*> 
+<*EXTERNAL glReadBuffer:WINAPI*>
 PROCEDURE glReadBuffer (mode : GLenum);
 
-<*EXTERNAL glReadPixels:WINAPI*> 
+<*EXTERNAL glReadPixels:WINAPI*>
 PROCEDURE glReadPixels (x     : GLint;
-                        y     : GLint; 
-                        width : GLsizei; 
-                        height: GLsizei; 
+                        y     : GLint;
+                        width : GLsizei;
+                        height: GLsizei;
                         format: GLenum;
-                        type  : GLenum; 
+                        type  : GLenum;
                         pixels: GLvoidStar);
 
-<*EXTERNAL glRectd:WINAPI*> 
+<*EXTERNAL glRectd:WINAPI*>
 PROCEDURE glRectd (x1, y1, x2, y2: GLdouble);
 
-<*EXTERNAL glRectdv:WINAPI*> 
+<*EXTERNAL glRectdv:WINAPI*>
 PROCEDURE glRectdv (v1, v2: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glRectf:WINAPI*> 
+<*EXTERNAL glRectf:WINAPI*>
 PROCEDURE glRectf (x1, y1, x2, y2: GLfloat);
 
-<*EXTERNAL glRectfv:WINAPI*> 
+<*EXTERNAL glRectfv:WINAPI*>
 PROCEDURE glRectfv (v1, v2: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glRecti:WINAPI*> 
+<*EXTERNAL glRecti:WINAPI*>
 PROCEDURE glRecti (x1, y1, x2, y2: GLint);
 
-<*EXTERNAL glRectiv:WINAPI*> 
+<*EXTERNAL glRectiv:WINAPI*>
 PROCEDURE glRectiv (v1, v2: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glRects:WINAPI*> 
+<*EXTERNAL glRects:WINAPI*>
 PROCEDURE glRects (x1, y1, x2, y2: GLshort);
 
-<*EXTERNAL glRectsv:WINAPI*> 
+<*EXTERNAL glRectsv:WINAPI*>
 PROCEDURE glRectsv (v1, v2: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL glRenderMode:WINAPI*> 
+<*EXTERNAL glRenderMode:WINAPI*>
 PROCEDURE glRenderMode (mode: GLenum): GLint;
 
-<*EXTERNAL glRotated:WINAPI*> 
+<*EXTERNAL glRotated:WINAPI*>
 PROCEDURE glRotated (angle, x, y, z: GLdouble);
 
-<*EXTERNAL glRotatef:WINAPI*> 
+<*EXTERNAL glRotatef:WINAPI*>
 PROCEDURE glRotatef (angle, x, y, z : GLfloat);
 
-<*EXTERNAL glScaled:WINAPI*> 
+<*EXTERNAL glScaled:WINAPI*>
 PROCEDURE glScaled (x, y, z: GLdouble);
 
-<*EXTERNAL glScalef:WINAPI*> 
+<*EXTERNAL glScalef:WINAPI*>
 PROCEDURE glScalef (x, y, z : GLfloat);
 
-<*EXTERNAL glScissor:WINAPI*> 
+<*EXTERNAL glScissor:WINAPI*>
 PROCEDURE glScissor (x, y: GLint; width, height: GLsizei);
 
-<*EXTERNAL glSelectBuffer:WINAPI*> 
+<*EXTERNAL glSelectBuffer:WINAPI*>
 PROCEDURE glSelectBuffer (size: GLsizei; (*OUT*) buffer: UNTRACED REF GLuint);
 
-<*EXTERNAL glShadeModel:WINAPI*> 
+<*EXTERNAL glShadeModel:WINAPI*>
 PROCEDURE glShadeModel (mode : GLenum);
 
-<*EXTERNAL glStencilFunc:WINAPI*> 
+<*EXTERNAL glStencilFunc:WINAPI*>
 PROCEDURE glStencilFunc (func: GLenum; ref: GLint; mask: GLuint);
 
-<*EXTERNAL glStencilMask:WINAPI*> 
+<*EXTERNAL glStencilMask:WINAPI*>
 PROCEDURE glStencilMask (mask: GLuint);
 
-<*EXTERNAL glStencilOp:WINAPI*> 
+<*EXTERNAL glStencilOp:WINAPI*>
 PROCEDURE glStencilOp (fail, zfail, zpass: GLenum);
 
 <*EXTERNAL glTexCoord1d:WINAPI*>
@@ -1484,167 +1484,167 @@ PROCEDURE glTexCoord4s (s, t, r, q: GLshort);
 <*EXTERNAL glTexCoord4sv:WINAPI*>
 PROCEDURE glTexCoord4sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL glTexEnvf:WINAPI*> 
-PROCEDURE glTexEnvf (target: GLenum; 
+<*EXTERNAL glTexEnvf:WINAPI*>
+PROCEDURE glTexEnvf (target: GLenum;
                      pname : GLenum;
                      param : GLfloat);
 
-<*EXTERNAL glTexEnvfv:WINAPI*> 
-PROCEDURE glTexEnvfv (target: GLenum; 
-                      pname : GLenum; 
+<*EXTERNAL glTexEnvfv:WINAPI*>
+PROCEDURE glTexEnvfv (target: GLenum;
+                      pname : GLenum;
                       params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glTexEnvi:WINAPI*> 
-PROCEDURE glTexEnvi (target: GLenum; 
+<*EXTERNAL glTexEnvi:WINAPI*>
+PROCEDURE glTexEnvi (target: GLenum;
                      pname : GLenum;
                      param : GLint);
 
-<*EXTERNAL glTexEnviv:WINAPI*> 
-PROCEDURE glTexEnviv (target: GLenum; 
-                      pname : GLenum; 
+<*EXTERNAL glTexEnviv:WINAPI*>
+PROCEDURE glTexEnviv (target: GLenum;
+                      pname : GLenum;
                       params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glTexGend:WINAPI*> 
+<*EXTERNAL glTexGend:WINAPI*>
 PROCEDURE glTexGend (coord: GLenum; pname: GLenum; param: GLdouble);
 
-<*EXTERNAL glTexGendv:WINAPI*> 
+<*EXTERNAL glTexGendv:WINAPI*>
 PROCEDURE glTexGendv (coord : GLenum;
                       pname : GLenum;
                       params: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glTexGenf:WINAPI*> 
+<*EXTERNAL glTexGenf:WINAPI*>
 PROCEDURE glTexGenf (coord: GLenum; pname: GLenum; param: GLfloat);
 
-<*EXTERNAL glTexGenfv:WINAPI*> 
+<*EXTERNAL glTexGenfv:WINAPI*>
 PROCEDURE glTexGenfv (coord : GLenum;
                       pname : GLenum;
                       params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glTexGeni:WINAPI*> 
+<*EXTERNAL glTexGeni:WINAPI*>
 PROCEDURE glTexGeni (coord: GLenum; pname: GLenum; param: GLint);
 
-<*EXTERNAL glTexGeniv:WINAPI*> 
+<*EXTERNAL glTexGeniv:WINAPI*>
 PROCEDURE glTexGeniv (coord : GLenum;
                       pname : GLenum;
                       params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glTexImage1D:WINAPI*> 
-PROCEDURE glTexImage1D (target    : GLenum; 
-                        level     : GLint; 
-                        components: GLint; 
-                        width     : GLsizei; 
-                        border    : GLint; 
-                        format    : GLenum; 
-                        type      : GLenum; 
+<*EXTERNAL glTexImage1D:WINAPI*>
+PROCEDURE glTexImage1D (target    : GLenum;
+                        level     : GLint;
+                        components: GLint;
+                        width     : GLsizei;
+                        border    : GLint;
+                        format    : GLenum;
+                        type      : GLenum;
                         pixels    : GLvoidStar);
 
-<*EXTERNAL glTexImage2D:WINAPI*> 
+<*EXTERNAL glTexImage2D:WINAPI*>
 PROCEDURE glTexImage2D (taget             : GLenum;
                         level, components : GLint;
                         width, height     : GLsizei;
                         border            : GLint;
-                        format, type      : GLenum; 
+                        format, type      : GLenum;
                         pixels            : GLvoidStar);
 
-<*EXTERNAL glTexParameterf:WINAPI*> 
-PROCEDURE glTexParameterf (target: GLenum; 
+<*EXTERNAL glTexParameterf:WINAPI*>
+PROCEDURE glTexParameterf (target: GLenum;
                            pname : GLenum;
                            param : GLfloat);
 
-<*EXTERNAL glTexParameterfv:WINAPI*> 
-PROCEDURE glTexParameterfv (target: GLenum; 
-                            pname : GLenum; 
+<*EXTERNAL glTexParameterfv:WINAPI*>
+PROCEDURE glTexParameterfv (target: GLenum;
+                            pname : GLenum;
                             params: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glTexParameteri:WINAPI*> 
-PROCEDURE glTexParameteri (target: GLenum; 
+<*EXTERNAL glTexParameteri:WINAPI*>
+PROCEDURE glTexParameteri (target: GLenum;
                            pname : GLenum;
                            param : GLint);
 
-<*EXTERNAL glTexParameteriv:WINAPI*> 
-PROCEDURE glTexParameteriv (target: GLenum; 
-                            pname : GLenum; 
+<*EXTERNAL glTexParameteriv:WINAPI*>
+PROCEDURE glTexParameteriv (target: GLenum;
+                            pname : GLenum;
                             params: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glTranslated:WINAPI*> 
+<*EXTERNAL glTranslated:WINAPI*>
 PROCEDURE glTranslated (x, y, z: GLdouble);
 
-<*EXTERNAL glTranslatef:WINAPI*> 
+<*EXTERNAL glTranslatef:WINAPI*>
 PROCEDURE glTranslatef (x, y, z : GLfloat);
 
-<*EXTERNAL glVertex2d:WINAPI*> 
+<*EXTERNAL glVertex2d:WINAPI*>
 PROCEDURE glVertex2d (x, y: GLdouble);
 
-<*EXTERNAL glVertex2dv:WINAPI*> 
+<*EXTERNAL glVertex2dv:WINAPI*>
 PROCEDURE glVertex2dv (v : UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glVertex2f:WINAPI*> 
+<*EXTERNAL glVertex2f:WINAPI*>
 PROCEDURE glVertex2f (x, y: GLfloat);
 
-<*EXTERNAL glVertex2fv:WINAPI*> 
+<*EXTERNAL glVertex2fv:WINAPI*>
 PROCEDURE glVertex2fv (v : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glVertex2i:WINAPI*> 
+<*EXTERNAL glVertex2i:WINAPI*>
 PROCEDURE glVertex2i (x, y: GLint);
 
-<*EXTERNAL glVertex2iv:WINAPI*> 
+<*EXTERNAL glVertex2iv:WINAPI*>
 PROCEDURE glVertex2iv (v : UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glVertex2s:WINAPI*> 
+<*EXTERNAL glVertex2s:WINAPI*>
 PROCEDURE glVertex2s (x, y: GLshort);
 
-<*EXTERNAL glVertex2sv:WINAPI*> 
+<*EXTERNAL glVertex2sv:WINAPI*>
 PROCEDURE glVertex2sv (v : UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL glVertex3d:WINAPI*> 
+<*EXTERNAL glVertex3d:WINAPI*>
 PROCEDURE glVertex3d (x, y, z: GLdouble);
 
-<*EXTERNAL glVertex3dv:WINAPI*> 
+<*EXTERNAL glVertex3dv:WINAPI*>
 PROCEDURE glVertex3dv (v : UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glVertex3f:WINAPI*> 
+<*EXTERNAL glVertex3f:WINAPI*>
 PROCEDURE glVertex3f (x, y, z: GLfloat);
 
-<*EXTERNAL glVertex3fv:WINAPI*> 
+<*EXTERNAL glVertex3fv:WINAPI*>
 PROCEDURE glVertex3fv (v : UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glVertex3i:WINAPI*> 
+<*EXTERNAL glVertex3i:WINAPI*>
 PROCEDURE glVertex3i (x, y, z: GLint);
 
-<*EXTERNAL glVertex3iv:WINAPI*> 
+<*EXTERNAL glVertex3iv:WINAPI*>
 PROCEDURE glVertex3iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glVertex3s:WINAPI*> 
+<*EXTERNAL glVertex3s:WINAPI*>
 PROCEDURE glVertex3s (x, y, z: GLshort);
 
-<*EXTERNAL glVertex3sv:WINAPI*> 
+<*EXTERNAL glVertex3sv:WINAPI*>
 PROCEDURE glVertex3sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL glVertex4d:WINAPI*> 
+<*EXTERNAL glVertex4d:WINAPI*>
 PROCEDURE glVertex4d (x, y, z, w: GLdouble);
 
-<*EXTERNAL glVertex4dv:WINAPI*> 
+<*EXTERNAL glVertex4dv:WINAPI*>
 PROCEDURE glVertex4dv (v: UNTRACED REF ARRAY OF GLdouble);
 
-<*EXTERNAL glVertex4f:WINAPI*> 
+<*EXTERNAL glVertex4f:WINAPI*>
 PROCEDURE glVertex4f (x, y, z, w: GLfloat);
 
-<*EXTERNAL glVertex4fv:WINAPI*> 
+<*EXTERNAL glVertex4fv:WINAPI*>
 PROCEDURE glVertex4fv (v: UNTRACED REF ARRAY OF GLfloat);
 
-<*EXTERNAL glVertex4i:WINAPI*> 
+<*EXTERNAL glVertex4i:WINAPI*>
 PROCEDURE glVertex4i (x, y, z, w: GLint);
 
-<*EXTERNAL glVertex4iv:WINAPI*> 
+<*EXTERNAL glVertex4iv:WINAPI*>
 PROCEDURE glVertex4iv (v: UNTRACED REF ARRAY OF GLint);
 
-<*EXTERNAL glVertex4s:WINAPI*> 
+<*EXTERNAL glVertex4s:WINAPI*>
 PROCEDURE glVertex4s (x, y, z, w: GLshort);
 
-<*EXTERNAL glVertex4sv:WINAPI*> 
+<*EXTERNAL glVertex4sv:WINAPI*>
 PROCEDURE glVertex4sv (v: UNTRACED REF ARRAY OF GLshort);
 
-<*EXTERNAL glViewport:WINAPI*> 
+<*EXTERNAL glViewport:WINAPI*>
 PROCEDURE glViewport (x, y : GLint; width, height : GLsizei);
 
 END GL.

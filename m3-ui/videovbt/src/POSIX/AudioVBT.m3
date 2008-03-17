@@ -81,9 +81,9 @@ PROCEDURE Discard (t: T) =
 PROCEDURE SetMute (t: T; mute: BOOLEAN) RAISES {Thread.Alerted} =
   BEGIN
     IF mute = t.mute THEN RETURN; END;
-    LOCK t DO 
-      t.mute := mute; 
-      DoMute(t, "AudioVBT: SetMute"); 
+    LOCK t DO
+      t.mute := mute;
+      DoMute(t, "AudioVBT: SetMute");
     END;
   END SetMute;
 

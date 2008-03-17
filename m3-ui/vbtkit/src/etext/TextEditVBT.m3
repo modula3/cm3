@@ -35,8 +35,8 @@ REVEAL
               END;
 
 PROCEDURE Init (v: T; scrollable := TRUE): T =
-  VAR 
-    colors: PaintOp.ColorScheme; 
+  VAR
+    colors: PaintOp.ColorScheme;
     pred, texture: VBT.T := NIL;
   BEGIN
     TRY

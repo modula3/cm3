@@ -34,7 +34,7 @@ TYPE
            END;
 
 (* The call "v.init(...)" initializes "v" as an "AnchorHelpSplit".
-   The parameters, "n", "hfudge", and "vfudge" are the same as in 
+   The parameters, "n", "hfudge", and "vfudge" are the same as in
    "AnchorHelpVBT". *)
 
 

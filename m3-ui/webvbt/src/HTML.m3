@@ -269,7 +269,7 @@ PROCEDURE GetLinks (html: T): TextList.T =
 
         | BlockQuote (quote) => LinksInSequence(quote.content);
 
-        | Image (<*NOWARN*> image ) => 
+        | Image (<*NOWARN*> image ) =>
           (* links := TextList.Cons(image.source, links); *)
         | Oblet =>
         ELSE
@@ -282,6 +282,6 @@ PROCEDURE GetLinks (html: T): TextList.T =
     LinksInSequence(html.body);
     RETURN TextList.ReverseD(links);
   END GetLinks;
- 
+
 BEGIN
 END HTML.

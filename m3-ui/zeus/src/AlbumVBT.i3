@@ -3,7 +3,7 @@
 (* See the file COPYRIGHT for a full description.             *)
 (* Last modified on Tue Jan 26 09:20:57 PST 1993 by mhb      *)
 (*      modified on Thu Sep 24 11:51:56 PDT 1992 by steveg   *)
-<* PRAGMA LL *> 
+<* PRAGMA LL *>
 
 (* "AlbumVBT" manages a photo album of snapshots of VBTs.  The
    snapshots are taken by "Image.FromVBT". *)

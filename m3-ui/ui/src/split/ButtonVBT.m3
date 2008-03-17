@@ -10,15 +10,15 @@
 
 MODULE ButtonVBT;
 
-IMPORT VBT, Filter, Rect, HighlightVBT, BtnVBTClass, Split, 
+IMPORT VBT, Filter, Rect, HighlightVBT, BtnVBTClass, Split,
   VBTClass, Axis, PackSplit, PaintOp;
 
 FROM VBT IMPORT ClickType;
 
-REVEAL 
+REVEAL
   T = BtnVBTClass.T BRANDED OBJECT
     highlighter: HighlightVBT.T := NIL
-  OVERRIDES 
+  OVERRIDES
     mouse := Mouse;
     position := Position;
     shape := Shape;
@@ -27,7 +27,7 @@ REVEAL
     cancel := Post; (*sic*)
     init := Be
   END;
-  
+
 PROCEDURE Be(v: T; ch: VBT.T; p: Proc; ref: REFANY := NIL): T RAISES {} =
   BEGIN
     v.action := p;
@@ -37,13 +37,13 @@ PROCEDURE Be(v: T; ch: VBT.T; p: Proc; ref: REFANY := NIL): T RAISES {} =
   END Be;
 
 PROCEDURE New(
-    ch: VBT.T; 
-    action: Proc; 
+    ch: VBT.T;
+    action: Proc;
     ref: REFANY := NIL): T RAISES {} =
   BEGIN
     RETURN Be(NEW(T), ch, action, ref)
   END New;
-  
+
 PROCEDURE Mouse(v: T; READONLY cd: VBT.MouseRec) RAISES {} =
   BEGIN
     Filter.T.mouse(v, cd);
@@ -127,4 +127,4 @@ PROCEDURE BarShape(v: Bar; ax: Axis.T; n: CARDINAL): VBT.SizeRange RAISES {} =
 TYPE Bar = PackSplit.T OBJECT OVERRIDES shape := BarShape END;
 
 BEGIN END ButtonVBT.
-    
+

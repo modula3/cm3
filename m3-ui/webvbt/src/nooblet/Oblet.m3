@@ -20,8 +20,8 @@ TYPE
 
   RigidPixmapVBT = HTMLVBTG.RigidPixmapVBT;
 
-REVEAL 
-  ObletInfo = HTMLVBTG.PublicObletInfo BRANDED OBJECT 
+REVEAL
+  ObletInfo = HTMLVBTG.PublicObletInfo BRANDED OBJECT
     filter: Filter.T;
   END;
 

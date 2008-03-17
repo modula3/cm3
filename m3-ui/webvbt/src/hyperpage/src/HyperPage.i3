@@ -6,7 +6,7 @@
 
 (* A "HyperPage.T" is the in-memory representation of an HTML page.
    Each page has the following properties:
-   
+
 |     an underlying body of HTML
 |     a line breaking width specified in pixels
 |     a set of display "looks"
@@ -99,7 +99,7 @@ TYPE
 
    "p.getTitle()" returns "p"'s title string.   "NIL" is returned if no
    title was specified in "p"'s underlying HTML.
-   
+
    "p.locateAnchor (n)" returns the location in "p"'s coordinate system
    that corresponds to the anchor named "n".  If there is no such anchor,
    "(-1,-1)" is returned.
@@ -158,6 +158,6 @@ TYPE
 |        at offset "o" relative to the map's northwest corner.
 |    "(Other, t, o)" means that "p" is somewhere else.
 *)
-   
+
 
 END HyperPage.

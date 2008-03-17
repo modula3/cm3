@@ -62,7 +62,7 @@ TYPE
 (* The call "v.init(ch)" initializes "v" as a "JoinedVBT" with
      child "ch", and returns "v". *)
 
-PROCEDURE New (ch: VBT.T): T;   
+PROCEDURE New (ch: VBT.T): T;
 <* LL.sup <= VBT.mu *>
 (* "New(...)" is equivalent to "NEW(T).init(...)". *)
 

@@ -700,7 +700,7 @@ PROCEDURE ReadLGMData(t: T;
           data := NEW(REF ARRAY OF CHAR, dataLength);
           t.data := data;
         END;
-        EVAL Rd.GetSub(t.rd, SUBARRAY(data^, 0, dataLength));      
+        EVAL Rd.GetSub(t.rd, SUBARRAY(data^, 0, dataLength));
       EXCEPT
       | Rd.EndOfFile => RAISE Images.Error("Unexpected end-of-file in LGM file")
       END;
@@ -1046,7 +1046,7 @@ PROCEDURE lgm(t: T; bodyStart, width, height: INTEGER;
                 END;
                 (* Pixel group, first in l.s. *)
                 FOR j := 1 TO pixelsPerGroup DO
-                  raw.set(Point.T{h,v}, 
+                  raw.set(Point.T{h,v},
                           srcToPixel[(ORD(c) DIV factors[j]) MOD (maxVal+1)]);
                   INC(h);
                 END;
@@ -1159,9 +1159,9 @@ PROCEDURE GetRaw(t: T; st: VBT.ScreenType) RAISES { Thread.Alerted,
         CASE format OF
         | Format.PBM =>
             t.raw := pbm(t, bodyStart, width, height, binary);
-        | Format.PGM => 
+        | Format.PGM =>
             t.raw := pgm(t, bodyStart, width, height, binary);
-        | Format.PPM => 
+        | Format.PPM =>
             t.raw := ppm(t, bodyStart, width, height, binary);
         | Format.LGM =>
             t.raw := lgm(t, bodyStart, width, height, hasMap)

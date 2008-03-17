@@ -36,7 +36,7 @@ PROCEDURE Init (v: T; btn: ButtonVBT.T; group: Group): T =
     LOCK group DO group.members := RefList.Cons (v, group.members) END;
     RETURN v
   END Init;
-  
+
 PROCEDURE Discard (v: T) =
   PROCEDURE remove (VAR list: RefList.T) =
     BEGIN
@@ -92,7 +92,7 @@ PROCEDURE Selection (group: Group): T =
   END Selection;
 
 (* This procedure used to be exported, but I couldn't find any
-   clients. No surprise. 
+   clients. No surprise.
 PROCEDURE Member (group: Group): T =
   BEGIN
     LOCK group DO

@@ -13,7 +13,7 @@ INTERFACE EyesVBT;
 IMPORT VBT;
 
 TYPE T <: VBT.Leaf;
-  
+
 (* A newly allocated "EyesVBT" needs no further initialization. *)
 
 END EyesVBT.

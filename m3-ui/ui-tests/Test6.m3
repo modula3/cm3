@@ -9,7 +9,7 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
     path := NEW (Path.T);
   BEGIN
     VBT.PaintTint (self, Rect.Full, PaintOp.Bg);
-    VBT.PaintText (self, pt := Point.T {20, 20}, 
+    VBT.PaintText (self, pt := Point.T {20, 20},
                    t := "Trestle EndStyles and JoinStyles for stroking paths");
 
     VBT.PaintText (self, pt := Point.T {10, 105}, t := "end = Round");
@@ -21,7 +21,7 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
       Path.MoveTo (path, Point.T {30,90});
       Path.LineTo (path, Point.T {50,50});
       Path.LineTo (path, Point.T {50,90});
-      VBT.Stroke (self, Rect.Full, path, width := w, 
+      VBT.Stroke (self, Rect.Full, path, width := w,
                   end := VBT.EndStyle.Round, join := VBT.JoinStyle.Round);
     END;
 
@@ -34,7 +34,7 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
       Path.MoveTo (path, Point.T {130,90});
       Path.LineTo (path, Point.T {150,50});
       Path.LineTo (path, Point.T {150,90});
-      VBT.Stroke (self, Rect.Full, path, width := w, 
+      VBT.Stroke (self, Rect.Full, path, width := w,
                   end := VBT.EndStyle.Butt, join := VBT.JoinStyle.Round);
     END;
 
@@ -47,7 +47,7 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
       Path.MoveTo (path, Point.T {230,90});
       Path.LineTo (path, Point.T {250,50});
       Path.LineTo (path, Point.T {250,90});
-      VBT.Stroke (self, Rect.Full, path, width := w, 
+      VBT.Stroke (self, Rect.Full, path, width := w,
                   end := VBT.EndStyle.Square, join := VBT.JoinStyle.Round);
     END;
 
@@ -60,7 +60,7 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
       Path.MoveTo (path, Point.T {30,190});
       Path.LineTo (path, Point.T {50,150});
       Path.LineTo (path, Point.T {50,190});
-      VBT.Stroke (self, Rect.Full, path, width := w, 
+      VBT.Stroke (self, Rect.Full, path, width := w,
                   end := VBT.EndStyle.Round, join := VBT.JoinStyle.Bevel);
     END;
 
@@ -73,7 +73,7 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
       Path.MoveTo (path, Point.T {130,190});
       Path.LineTo (path, Point.T {150,150});
       Path.LineTo (path, Point.T {150,190});
-      VBT.Stroke (self, Rect.Full, path, width := w, 
+      VBT.Stroke (self, Rect.Full, path, width := w,
                   end := VBT.EndStyle.Butt, join := VBT.JoinStyle.Bevel);
     END;
 
@@ -86,7 +86,7 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
       Path.MoveTo (path, Point.T {230,190});
       Path.LineTo (path, Point.T {250,150});
       Path.LineTo (path, Point.T {250,190});
-      VBT.Stroke (self, Rect.Full, path, width := w, 
+      VBT.Stroke (self, Rect.Full, path, width := w,
                   end := VBT.EndStyle.Square, join := VBT.JoinStyle.Bevel);
     END;
 
@@ -99,7 +99,7 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
       Path.MoveTo (path, Point.T {30,290});
       Path.LineTo (path, Point.T {50,250});
       Path.LineTo (path, Point.T {50,290});
-      VBT.Stroke (self, Rect.Full, path, width := w, 
+      VBT.Stroke (self, Rect.Full, path, width := w,
                   end := VBT.EndStyle.Round, join := VBT.JoinStyle.Miter);
     END;
 
@@ -112,7 +112,7 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
       Path.MoveTo (path, Point.T {130,290});
       Path.LineTo (path, Point.T {150,250});
       Path.LineTo (path, Point.T {150,290});
-      VBT.Stroke (self, Rect.Full, path, width := w, 
+      VBT.Stroke (self, Rect.Full, path, width := w,
                   end := VBT.EndStyle.Butt, join := VBT.JoinStyle.Miter);
     END;
 
@@ -125,7 +125,7 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
       Path.MoveTo (path, Point.T {230,290});
       Path.LineTo (path, Point.T {250,250});
       Path.LineTo (path, Point.T {250,290});
-      VBT.Stroke (self, Rect.Full, path, width := w, 
+      VBT.Stroke (self, Rect.Full, path, width := w,
                   end := VBT.EndStyle.Square, join := VBT.JoinStyle.Miter);
     END;
   END Repaint;

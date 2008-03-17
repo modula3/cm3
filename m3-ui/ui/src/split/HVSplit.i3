@@ -14,16 +14,16 @@
    row or column of child windows, depending on the {\it axis} of
    the split.
 
-   If the axis is horizontal, "Split.Succ" enumerates the children 
-   from west to east; if the axis is vertical, it enumerates them 
+   If the axis is horizontal, "Split.Succ" enumerates the children
+   from west to east; if the axis is vertical, it enumerates them
    from north to south.
 
-   An "HVSplit" can be {\it adjustable} or {\it unadjustable}, a 
-   property that affects the way its space is divided between its children.    
+   An "HVSplit" can be {\it adjustable} or {\it unadjustable}, a
+   property that affects the way its space is divided between its children.
 
-   The {\it size} of a child is the extent of its domain in the 
-   axis of split, the {\it cross-size} is its extent in the other axis.  
-   For example, for a vertical split, a child's size is its height 
+   The {\it size} of a child is the extent of its domain in the
+   axis of split, the {\it cross-size} is its extent in the other axis.
+   For example, for a vertical split, a child's size is its height
    and its cross-size is its width.
 
    The children of an "HVSplit" all have the same cross-size as the
@@ -79,7 +79,7 @@
 
    A split is {\it infeasible} if it is overfull or underfull, and {\it
    feasible} otherwise.
-    
+
    The shape of an "HVSplit" is computed as follows: its maximum,
    minimum, and preferred sizes are obtained by adding up the
    corresponding values of its children.  The cross-size range is the
@@ -89,7 +89,7 @@
    cross-size of "v" is the maximum of the preferred cross-sizes
    of its children, projected into "v"'s cross-size range.  *)
 
-   
+
 INTERFACE HVSplit;
 
 IMPORT VBT, Split, Axis, Interval;
@@ -105,7 +105,7 @@ TYPE
       adjustable := TRUE): T
   END;
 
-(* The call "v.init(...)" initializes "v" as an "HVSplit" with axis 
+(* The call "v.init(...)" initializes "v" as an "HVSplit" with axis
    "hv" and no children.
 
    If "saveBits" is "TRUE", the implementation will try to save the
@@ -125,23 +125,23 @@ PROCEDURE New(
 (* "New(...)" is equivalent to "NEW(T).init(...)". *)
 
 
-PROCEDURE AxisOf(v: T): Axis.T; 
+PROCEDURE AxisOf(v: T): Axis.T;
 <* LL.sup = VBT.mu *>
 (* Return the axis of "v". *)
 
 (* \subsubsection{Inserting children} *)
 
-(* See the "Split" interface to insert and reorder children. *) 
+(* See the "Split" interface to insert and reorder children. *)
 
 PROCEDURE Cons(
     hv: Axis.T;
-    ch0, ch1, ch2, ch3, ch4, 
+    ch0, ch1, ch2, ch3, ch4,
       ch5, ch6, ch7, ch8, ch9: VBT.T := NIL;
     saveBits := FALSE;
     parlim := -1;
     adjustable := TRUE): T; <* LL.sup = VBT.mu *>
- (* Create an "HVSplit" with axis "hv" and children "ch0", "ch1", .... *) 
- 
+ (* Create an "HVSplit" with axis "hv" and children "ch0", "ch1", .... *)
+
 (* "Cons" is equivalent to the following:
 
 | result := New(hv, saveBits, parlim, adjustable);
@@ -173,9 +173,9 @@ PROCEDURE ConsArray(
 
 (* The {\it division point after a child} is the sum of the sizes of
    all children up to and including the child. *)
-   
 
-PROCEDURE Adjust(v: T; ch: VBT.T; totsz: INTEGER) 
+
+PROCEDURE Adjust(v: T; ch: VBT.T; totsz: INTEGER)
 RAISES {Split.NotAChild}; <* LL.sup = VBT.mu *>
 (* Change the sizes of the children of "v" so that the division point
    after "ch" is as close to "totsz" as possible, and mark "v" for
@@ -191,19 +191,19 @@ RAISES {Split.NotAChild}; <* LL.sup = VBT.mu *>
    "Adjust" is a no-op if the split is infeasible or non-adjustable. *)
 
 
-PROCEDURE FeasibleRange(v: T; ch: VBT.T): Interval.T 
+PROCEDURE FeasibleRange(v: T; ch: VBT.T): Interval.T
 RAISES {Split.NotAChild}; <* LL.sup = VBT.mu *>
 (* Return the interval of feasible positions for the division point
    after "ch". *)
-   
+
 
 PROCEDURE AvailSize(v: T): CARDINAL;
 <* LL.sup = VBT.mu *>
 (* Return the largest size of a child that can be inserted into "v"
    without making "v" infeasible. *)
 
-(* If the split is infeasible, "AvailSize" returns 0 and "FeasibleRange" 
-   returns the empty interval.  Both procedures assume the 
+(* If the split is infeasible, "AvailSize" returns 0 and "FeasibleRange"
+   returns the empty interval.  Both procedures assume the
    total size available is the total of all child sizes. *)
 
 

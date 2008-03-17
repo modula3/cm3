@@ -12,14 +12,14 @@
    particular screentype, called the {\it owner} of the handle. Some
    handles have names; others are anonymous.  A named handle is valid
    forever.  The colormap referenced by an anonymous handle will be
-   garbage-collected when all handles to it have been dropped. 
+   garbage-collected when all handles to it have been dropped.
 
    Every colormap has a {\it depth}; the pixel values defined by the
    color map are in the range "[0..(2^depth)-1]".  Every color-mapped
    screentype defines a set of {\it preferred} colors that cover the
    spectrum reasonably densely.  Some preferred colors are designated
    as {\it stable}.
-   
+
    Clients can allocate pixels out of a color map as read-only shared
    entries or as writable exclusive entries.  The implementation
    maintains reference counts on the read-only entries so that an entry
@@ -36,9 +36,9 @@ TYPE
     METHODS
       <* LL.sup <= VBT.mu *>
       standard(): T RAISES {TrestleComm.Failure};
-      new(name: TEXT := NIL; preLoaded := TRUE): T 
+      new(name: TEXT := NIL; preLoaded := TRUE): T
         RAISES {TrestleComm.Failure, Failure};
-      lookup(name: TEXT): T 
+      lookup(name: TEXT): T
         RAISES {TrestleComm.Failure};
       list(pat: TEXT; maxResults: CARDINAL := 1)
         : REF ARRAY OF TEXT RAISES {TrestleComm.Failure}
@@ -46,11 +46,11 @@ TYPE
   Private <: ROOT;
 
 EXCEPTION Failure;
- 
+
 (* Every color-mapped screentype "st" contains a field "st.cmap" of
    type "Oracle", which hands out colormaps owned by "st":
 
-   The method call 
+   The method call
 
 | st.cmap.standard()
 
@@ -58,50 +58,50 @@ EXCEPTION Failure;
    that a top-level window will initially have when it is rescreened
    to "st". Initially, the stable colors are allocated read-only with
    a reference count of one.
-    
-   The method call 
-   
+
+   The method call
+
 | st.cmap.new(name, preLoaded)
 
    creates and returns a new colormap owned by "st" with the given name.
    If "preLoaded" is true, the stable colors are initially allocated
    read-only; otherwise nothing is allocated initially.
 
-   The method call 
-   
+   The method call
+
 | st.cmap.lookup(name)
 
    returns the colormap owned by "st" with the given name, or "NIL"
    if no colormap has this name.
-   
-   The method call 
-   
+
+   The method call
+
 | st.cmap.list(pat, maxResults)
 
    returns the names of colormaps owned by "st" that match the pattern
    "pat".  The list of results may be truncated to length "maxResults".
    A "*" matches any number of characters and a "?" matches any single
    character. *)
-   
+
 (* \subsubsection{The handle object} *)
-   
+
 TYPE
-  T <: Public; 
+  T <: Public;
   Public = OBJECT (*CONST*)
       depth: INTEGER;
       readOnly: BOOLEAN;
       ramp: Ramp;
     METHODS
       <* LL.sup <= VBT.mu *>
-      fromRGB(rgb: RGB; mode := Mode.Normal): Pixel 
+      fromRGB(rgb: RGB; mode := Mode.Normal): Pixel
         RAISES {Failure, TrestleComm.Failure};
       read(VAR res: ARRAY OF Entry)
-        RAISES {TrestleComm.Failure}; 
-      write(READONLY new: ARRAY OF Entry) 
+        RAISES {TrestleComm.Failure};
+      write(READONLY new: ARRAY OF Entry)
         RAISES {Failure, TrestleComm.Failure};
-      new(dim: CARDINAL): Cube RAISES 
+      new(dim: CARDINAL): Cube RAISES
         {Failure, TrestleComm.Failure};
-      free(READONLY cb: Cube) 
+      free(READONLY cb: Cube)
         RAISES {TrestleComm.Failure};
     END;
   Mode = {Stable, Normal, Accurate};
@@ -111,7 +111,7 @@ TYPE
   END;
   Primary = {Red, Green, Blue};
   Cube = RECORD lo, hi: Pixel END;
-  Pixel = INTEGER; 
+  Pixel = INTEGER;
   RGB = RECORD r, g, b: REAL END;
   Entry = RECORD pix: Pixel; rgb: RGB END;
 
@@ -128,15 +128,15 @@ TYPE
 
    represents the color "(r/last[Red], g/last[Green], b/last[Blue])", for "r"
    in the range "[0..last[Red]]", "g" in the range "[0..last[Green]]", and
-   "b" in the range "[0..last[Blue]]".  
-    
+   "b" in the range "[0..last[Blue]]".
+
    \medskip An "RGB" represents the color with the given blend of red,
    green, and blue.  Each of the numbers is in the range "[0.0..1.0]";
    thus the triple "(0.0, 0.0, 0.0)" specifies black.  In case of a gray scale
    display, only the "r" component is relevant.
-   
-   The method call 
-   
+
+   The method call
+
 | cm.fromRGB(rgb, mode)
 
    extends the read-only portion of "cm" with a new entry whose value
@@ -151,22 +151,22 @@ TYPE
    supports.  The method raises "Failure" if a new entry is
    required but the colormap is full.
 
-   For each entry "e" in the array "res", the method call 
-   
+   For each entry "e" in the array "res", the method call
+
 | cm.read(res)
 
-   sets "e.rgb" to the color in "cm" of the pixel "e.pixel". 
+   sets "e.rgb" to the color in "cm" of the pixel "e.pixel".
 
-   The method call 
-   
+   The method call
+
 | cm.write(new)
 
    changes the value of "cm" at "p" to be "rgb", for each pair "(p, rgb)"
    in the array "new", assuming all these pixels are writable.  Otherwise
    the method raises "Failure".  The array "new" must be sorted.
-   
-   The method call 
-   
+
+   The method call
+
 | cm.new(dim)
 
    extends the writable portion of "cm" with a set of $2^{"dim"}$ new
@@ -175,8 +175,8 @@ TYPE
    a cube of the given dimension.
 
    A "Cube" "cb" represents a set of pixels by the following rule:
-   a pixel "p" is in "cb" if "Word.And(lo, pix) = lo" and 
-   "Word.Or(hi, pix) = hi". 
+   a pixel "p" is in "cb" if "Word.And(lo, pix) = lo" and
+   "Word.Or(hi, pix) = hi".
 
    The method call "cm.free(cb)" deallocates from the writable portion
    of "cm" each entry whose pixel is in the cube "cb", assuming all

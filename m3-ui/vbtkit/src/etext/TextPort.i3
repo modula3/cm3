@@ -12,10 +12,10 @@
 (* A textport is a "VBT" that allows the user to type and edit text.
 
    The methods and procedures in this interface fall into several categories,
-   each dealing with different aspects of the text-editor. 
+   each dealing with different aspects of the text-editor.
 
    \begin{description}
-   
+
    \item[Appearance] The client can choose the font, colors, margins,
    and whether long lines should be clipped or wrapped. The fonts and
    colors can be changed dynamically.
@@ -105,7 +105,7 @@ TYPE
    {\it delete}, and so on should be understood as having the
    restriction that "v" is not read-only.
 
-   If "model" is "Model.Default", then the default model (see below) 
+   If "model" is "Model.Default", then the default model (see below)
    will be used.
 
    "v.getModel()" returns the name of the current model; note that the
@@ -147,7 +147,7 @@ TYPE
 
 
 (* \subsubsection{Access to the text}
-   
+
    The textport's initial read-only status depends on the "readOnly"
    parameter to the "init" method. The "getReadOnly" method returns
    it; the "setReadOnly" method sets it.
@@ -214,7 +214,7 @@ TYPE
   SpecificModel = [Model.Ivy .. Model.Xterm];
 
 VAR
-   DefaultModel: SpecificModel; 
+   DefaultModel: SpecificModel;
 
 (* The default editing model, "DefaultModel", is initialized to the
    environment variable named "TEXTPORTMODEL";\index{TEXTPORTMODEL} if that

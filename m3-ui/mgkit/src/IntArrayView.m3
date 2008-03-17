@@ -78,7 +78,7 @@ PROCEDURE ClearValue(v: V; elem: CARDINAL) =
     END;
   END ClearValue;
 
-   
+
 BEGIN
 END IntArrayView.
 

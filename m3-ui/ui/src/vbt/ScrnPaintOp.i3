@@ -23,11 +23,11 @@ IMPORT TrestleComm, PaintOp;
    for one-bit deep sources that can be used with "st".) For example,
    in a copy operation, "s" has type "st", while in painting a bitmap,
    "s" has type "st.bits".
-   
-   A "ScrnPaintOp.Oracle" is meaningful only as the "op" field of some 
+
+   A "ScrnPaintOp.Oracle" is meaningful only as the "op" field of some
    screentype "st".  It provides methods to generate "ScreenPaintOp.T"s
-   that are valid for "st". 
-   
+   that are valid for "st".
+
    A {\it tint} is a paintop that is independent of "s".  If "op" is
    a tint, we write "op(d)" instead of "op(d, s)".  (Even in the case
    of a tint, the type of "s" must be "st.bits"; otherwise the result
@@ -35,40 +35,40 @@ IMPORT TrestleComm, PaintOp;
 
 (* \subsubsection{Obtaining handles from the oracle}  *)
 
-TYPE 
+TYPE
   Pixel = INTEGER;
   Oracle = Private OBJECT
     METHODS
       <* LL.sup <= VBT.mu *>
-      opaque(pix: Pixel): T 
+      opaque(pix: Pixel): T
         RAISES {Failure, TrestleComm.Failure};
-      bgfg(bg, fg: T): T 
+      bgfg(bg, fg: T): T
         RAISES {Failure, TrestleComm.Failure};
-      swap(p,q: Pixel): T 
+      swap(p,q: Pixel): T
         RAISES {Failure, TrestleComm.Failure};
-      transparent(): T 
+      transparent(): T
         RAISES {Failure, TrestleComm.Failure};
-      copy(): T 
-        RAISES {Failure, TrestleComm.Failure}; 
+      copy(): T
+        RAISES {Failure, TrestleComm.Failure};
       builtIn(op: PaintOp.Predefined): T;
     END;
     Private <: ROOT;
-  
-EXCEPTION Failure; 
+
+EXCEPTION Failure;
 
 (* For a screentype "st", the field "st.op" is an "Oracle" whose methods
    satisfy the following specifications:
-   
-   The method call 
+
+   The method call
 
 | op := st.op.opaque(pix)
 
    sets "op" to a tint such that "op(p) = pix" for any "p". The method call
-   
+
 | op := st.op.bgfg(bg, fg)
 
    sets "op" to a tint such that "op(p, 0) = bg(p)" and "op(p, 1)
-   = fg(p)", for any "p", if "bg" and "fg" are tints. The method call 
+   = fg(p)", for any "p", if "bg" and "fg" are tints. The method call
 
 | op := st.op.swap(p, q)
 
@@ -77,21 +77,21 @@ EXCEPTION Failure;
 
 | op := st.op.transparent()
 
-   sets "op" to a tint such that "op(p) = p" for any "p". The method call 
+   sets "op" to a tint such that "op(p) = p" for any "p". The method call
 
 | op := st.op.copy()
 
    sets "op" to a painting operation such that "op(p, q) = q" for any
-   "p" and "q". The method call 
+   "p" and "q". The method call
 
 | st.op.builtIn(op)
 
    returns the operation valid for "st" that corresponds to the
    predefined screen-independent operation "PaintOp.T{op}".
 
-   The exception "Failure" is raised if the screentype cannot provide the 
+   The exception "Failure" is raised if the screentype cannot provide the
    requested painting operation. For all the methods, "LL.sup <= VBT.mu". *)
-      
+
 TYPE
   PlaneWiseOracle = Oracle OBJECT
     METHODS <* LL.sup <= VBT.mu *>
@@ -110,7 +110,7 @@ TYPE
 | op := st.op.planewise(mask, bitOps)
 
 sets "op" so that for "d" and "s" of screentype "st" and "i" in
-"[0..st.depth-1]", 
+"[0..st.depth-1]",
 
 | IF mask[i] THEN
 |    op(d, s)[i] = op1(d[i], s[i])
@@ -118,7 +118,7 @@ sets "op" so that for "d" and "s" of screentype "st" and "i" in
 |    op(d, s)[i] = op2(d[i], s[i])
 | END
 
-The method may raise "Failure" if it does not support a particular 
+The method may raise "Failure" if it does not support a particular
 combination of "op1", "op2", and "mask".
 
 The convenience procedure "ConstructPlanewiseOp" can be used to construct a painting operation from an array of boolean functions represented by the
@@ -145,15 +145,15 @@ TYPE
 
 PROCEDURE ConstructPlanewiseOp(
   pwo: PlaneWiseOracle;
-  READONLY bitOps: ARRAY OF BitOp): T 
-RAISES {Failure, TrestleComm.Failure}; 
+  READONLY bitOps: ARRAY OF BitOp): T
+RAISES {Failure, TrestleComm.Failure};
 <* LL.sup <= VBT.mu *>
 (* Return the painting operation that applies "bitOp[i]" to plane "i" of
    the source and destination. *)
-   
+
 (* If "NUMBER(bitOps) = st.depth" then "ConstructPlanewiseOp" uses "pwo" to
 construct and return an operation "op" such that for "s" and
-"d" of screentype "st" and "i" in "[0 .. st.depth-1]", 
+"d" of screentype "st" and "i" in "[0 .. st.depth-1]",
 
 |  op(d, s)[i] = bitOps[i](d[i], s[i])
 
@@ -162,8 +162,8 @@ a particular array "bitOps". *)
 
 (* \subsubsection{The handle object} *)
 
-TYPE 
-  T <: Public; 
+TYPE
+  T <: Public;
   Public = OBJECT id: INTEGER; pix: Pixel := -1 END;
 
 (* If "p" is a "T", then "p.id" is an identifier whose interpretation
@@ -172,5 +172,5 @@ TYPE
 
 END ScrnPaintOp.
 
-          
-    
+
+

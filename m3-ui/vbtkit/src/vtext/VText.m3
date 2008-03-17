@@ -20,7 +20,7 @@ IMPORT Font, MText, Point, Rd, Rect, Thread, VBT, VT, VTBase, VTCaret, VTDef,
 TYPE
   LineNo = VTDef.LineNo;
   VirtualStart = VTDef.VirtualStart;
-  
+
 (************************************************************************)
 (*			        Creation 				*)
 (************************************************************************)
@@ -192,7 +192,7 @@ PROCEDURE Close (vtext: T) RAISES {VTDef.Error} =
       vtext.closed := TRUE;
     END;
   END Close;
-  
+
 (************************************************************************)
 (*				 Regions				*)
 (************************************************************************)
@@ -369,7 +369,7 @@ PROCEDURE Invalidate (vtext: T; begin, oldEnd, newEnd: Index)
       VT.Invalidate(vtext.vt, begin, oldEnd, newEnd - begin);
     END;
   END Invalidate;
-  
+
 (************************************************************************)
 (* The Caret *)
 (************************************************************************)
@@ -407,7 +407,7 @@ PROCEDURE CaretIndex (vtext: T): Index RAISES {VTDef.Error} =
       RETURN vtext.vt.caret.index;
     END;
   END CaretIndex;
-  
+
 (************************************************************************)
 (* Intervals *)
 (************************************************************************)

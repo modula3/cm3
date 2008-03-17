@@ -11,7 +11,7 @@ PROCEDURE Repaint (self: VBT.Leaf; <* UNUSED *> READONLY rgn: Region.T) =
   END Repaint;
 
 BEGIN
-  WITH v = NEW (VBT.Leaf, repaint := Repaint) DO 
+  WITH v = NEW (VBT.Leaf, repaint := Repaint) DO
     Trestle.Install(v);
     Trestle.AwaitDelete(v);
   END

@@ -21,14 +21,14 @@
    position.  If the user tries to move the bar outside the range of
    positions that are consistent with the size constraints of the
    children of the parent "HVSplit", the highlighted bar will not
-   follow the cursor.  If the user chords while dragging, then adjusting 
+   follow the cursor.  If the user chords while dragging, then adjusting
    mode is cancelled.
 
    The bar has methods that you can override that are called each
    time the bar is moved, or continuously during adjustment.
 
    In order for the bar to highlight correctly, some ancestor of the
-   "HVSplit" on which it is installed must be a "HighlightVBT". 
+   "HVSplit" on which it is installed must be a "HighlightVBT".
    Since "Trestle.Install" automatically inserts a "HighlightVBT"
    over top-level windows, you usually don't have to worry about this.
    *)
@@ -38,11 +38,11 @@ INTERFACE HVBar;
 IMPORT VBT, PaintOp, Pixmap, TextureVBT;
 
 TYPE
-  T <: Public; 
+  T <: Public;
   Public = TextureVBT.T OBJECT METHODS
     <* LL = VBT.mu *>
-    pre(READONLY cd: VBT.MouseRec); 
-    post(READONLY cd: VBT.MouseRec); 
+    pre(READONLY cd: VBT.MouseRec);
+    post(READONLY cd: VBT.MouseRec);
     during(n: INTEGER);
     <* LL <= VBT.mu *>
     init(size: REAL := DefaultSize;
@@ -53,21 +53,21 @@ TYPE
 (* The call "v.init(...)" initializes "v" as an "HVBar" with
    the given properties and returns "v".  This includes
    calling  "TextureVBT.T.init(v, op, txt)".
-    
+
    The argument "size" gives the number of millimeters that the bar
-   will occupy in the parent "HVSplit".  
+   will occupy in the parent "HVSplit".
 
    An adjusting bar "b" calls "b.pre(cd)" when it begins adjusting
    in response to a mouse click "cd".  It calls "b.during(k)" each
-   time the mouse moves during dragging, where "k" is the coordinate that 
-   the "lo" (i.e., west or north) edge of the bar would move to if 
+   time the mouse moves during dragging, where "k" is the coordinate that
+   the "lo" (i.e., west or north) edge of the bar would move to if
    dragging were stopped at that instant.  Finally, the bar calls
    "b.post(cd)" when it stops adjusting in response to an upclick
    or chord "cd".  The "HVSplit" will be adjusted (but not redisplayed)
-   before "b.post(cd)" is called. 
+   before "b.post(cd)" is called.
 
    The default "pre" and "during" methods highlight the position the
-   bar would move to if dragging were stopped.  The default "post" 
+   bar would move to if dragging were stopped.  The default "post"
    method removes the highlighting.  *)
 
 CONST

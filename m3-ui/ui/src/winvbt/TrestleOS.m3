@@ -17,9 +17,9 @@ PROCEDURE Init () =
   BEGIN
     LOCK mu DO
       IF NOT inited THEN
-        WinTrestle.Init(); 
-        inited := TRUE 
-      END 
+        WinTrestle.Init();
+        inited := TRUE
+      END
     END
   END Init;
 

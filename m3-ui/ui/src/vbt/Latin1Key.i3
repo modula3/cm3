@@ -12,7 +12,7 @@ INTERFACE Latin1Key;
 
 (* Define constants for the ISO-Latin-1 keyboard symbols.  *)
 
-CONST 
+CONST
   space = 16_020;
   exclam = 16_021;
   quotedbl = 16_022;

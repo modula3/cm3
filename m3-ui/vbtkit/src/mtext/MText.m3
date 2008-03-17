@@ -216,7 +216,7 @@ PROCEDURE DeleteNodes (VAR (* inout*) firstN: Node;
     END;
     IF firstI # lastI THEN MTextDs.Delete(firstN, firstI, lastI) END
   END DeleteNodes;
-  
+
 (*********************************************************************)
 (* Extracting Text and Information *)
 (*********************************************************************)

@@ -10,12 +10,12 @@
 <*PRAGMA LL*>
 
 MODULE BadBricks EXPORTS Main;
-IMPORT AnchorBtnVBT, Axis, BorderedVBT, ButtonVBT, BtnVBTClass, 
+IMPORT AnchorBtnVBT, Axis, BorderedVBT, ButtonVBT, BtnVBTClass,
   Fmt, Font, HighlightVBT, HVSplit, MenuBtnVBT, PaintOp, Palette,
-  Pixmap, Random, ScrnPixmap, ScreenType, Split, Stdio, 
+  Pixmap, Random, ScrnPixmap, ScreenType, Split, Stdio,
   TextureVBT, TextVBT, Trestle, VBT, VBTClass, Wr, TrestleComm, Thread;
 
-CONST 
+CONST
   XSize = 10;
   YSize = 30;
   BrickSizeV = 16;
@@ -27,10 +27,10 @@ TYPE
   RefDifficulty = OBJECT difficulty: Difficulty END;
   Range = {Short, Long};
 CONST
-  DifficultyProbability = 
+  DifficultyProbability =
     ARRAY Difficulty OF INTEGER {15, 20, 25, 30, 40, 50};
-  DifficultyName = 
-    ARRAY Difficulty OF TEXT 
+  DifficultyName =
+    ARRAY Difficulty OF TEXT
       {"Easy", "Normal", "Hard", "Desperate", "Ridiculous", "Absurd"};
 
 TYPE
@@ -42,10 +42,10 @@ CONST
   OKState = -1;
 
 TYPE
-  Position = 
+  Position =
     RECORD x,y: INTEGER END;
 
-  Brick = 
+  Brick =
     ButtonVBT.T OBJECT
       wall: Wall;
       p: Position;
@@ -55,7 +55,7 @@ TYPE
       shown := FALSE;
       state: State;
     METHODS
-      EnumerateNeighbors(no: NeighborEnumerator; range: Range) := 
+      EnumerateNeighbors(no: NeighborEnumerator; range: Range) :=
         EnumerateNeighbors;
       Show() := Show;
       ShowAndFlood() := ShowAndFlood;
@@ -72,34 +72,34 @@ TYPE
     METHODS
       proc(neighbor: Brick);
     END;
-    
-VAR 
-  brickPaintOp := 
+
+VAR
+  brickPaintOp :=
 (*    PaintOp.FromRGB(0.808590, 0.329671, 0.060822, *)
 (*    PaintOp.FromRGB(0.907576, 0.272571, 0.062211, *)
-    PaintOp.FromRGB(0.970077, 0.291340, 0.066498, 
+    PaintOp.FromRGB(0.970077, 0.291340, 0.066498,
       mode:=PaintOp.Mode.Accurate, bw := PaintOp.BW.UseFg);
-  markPaintOp := 
+  markPaintOp :=
     PaintOp.FromRGB(1.0, 1.0, 0.0,
       mode:=PaintOp.Mode.Accurate);
-  darkLinesPaintOp := 
+  darkLinesPaintOp :=
     PaintOp.Pair(PaintOp.Bg,
       PaintOp.FromRGB(0.2, 0.2, 0.2,
       mode:=PaintOp.Mode.Accurate, bw := PaintOp.BW.UseFg));
-  darkLinesPaintOpForOK := 
+  darkLinesPaintOpForOK :=
     PaintOp.FromRGB(0.2, 0.2, 0.2,
       mode:=PaintOp.Mode.Accurate, bw := PaintOp.BW.UseFg);
-  lightLinesPaintOp := 
+  lightLinesPaintOp :=
     PaintOp.Pair(PaintOp.Bg,
       PaintOp.FromRGB(0.7, 0.7, 0.7,
         mode:=PaintOp.Mode.Accurate, bw := PaintOp.BW.UseFg));
-  highlightLinesPaintOp := 
+  highlightLinesPaintOp :=
     PaintOp.FromRGB(0.0, 1.0, 1.0,
       mode:=PaintOp.Mode.Accurate);
-  concretePaintOp := 
+  concretePaintOp :=
     PaintOp.FromRGB(0.8, 0.8, 0.8,
       mode:=PaintOp.Mode.Accurate);
-  brickTextPaintOp := 
+  brickTextPaintOp :=
     PaintOp.FromRGB(0.0, 0.0, 0.0,
       mode:=PaintOp.Mode.Accurate, bw := PaintOp.BW.UseBg);
   brickColorQuad :=
@@ -127,7 +127,7 @@ TYPE TTClosure = Palette.PixmapClosure OBJECT
 
 PROCEDURE TTApply(cl: TTClosure; st: ScreenType.T): ScrnPixmap.T =
   BEGIN
-    IF st.depth = 1 THEN 
+    IF st.depth = 1 THEN
       RETURN Palette.ResolvePixmap(st, cl.pm)
     ELSE
       RETURN Palette.ResolvePixmap(st, Pixmap.Solid)
@@ -137,14 +137,14 @@ PROCEDURE TTApply(cl: TTClosure; st: ScreenType.T): ScrnPixmap.T =
 PROCEDURE NewBrick(wall: Wall; x,y: CARDINAL): Brick =
   VAR brick: Brick; icon: TextVBT.T; border: BorderedVBT.T;
   BEGIN
-    icon := 
+    icon :=
       TextVBT.New("", bgFg:=brickColorQuad);
-    border := BorderedVBT.New(icon, op:=darkLinesPaintOp, 
+    border := BorderedVBT.New(icon, op:=darkLinesPaintOp,
       txt := borderTexture);
     brick :=
       NEW(Brick, wall:=wall, p:=Position{x:=x, y:=y}, state := UnknownState,
         icon:=icon, border:=border,
-        pre:=BrickHighlightOn, 
+        pre:=BrickHighlightOn,
         cancel:=BrickHighlightOff, post:=BrickHighlightOff);
     EVAL ButtonVBT.T.init(brick, border, BrickAction);
     RETURN brick;
@@ -160,14 +160,14 @@ PROCEDURE NewNoBrick(wall: Wall): Brick =
   END NewNoBrick;
 
 TYPE
-  NeighborCounter = NeighborEnumerator OBJECT 
-    cnt: INTEGER; 
+  NeighborCounter = NeighborEnumerator OBJECT
+    cnt: INTEGER;
   END;
-  
+
 VAR
   highlightOn := NEW(NeighborEnumerator, proc := HighlightOnProc);
   highlightOff := NEW(NeighborEnumerator, proc := HighlightOffProc);
-  neighborCountGood := 
+  neighborCountGood :=
     NEW(NeighborCounter, proc := NeighborCountGood);
 
 PROCEDURE HighlightOnProc(<*UNUSED*>enm: NeighborEnumerator; brick: Brick) =
@@ -177,13 +177,13 @@ PROCEDURE HighlightOffProc(<*UNUSED*>enm: NeighborEnumerator; brick: Brick) =
   BEGIN brick.HighlightOff() END HighlightOffProc;
 
 PROCEDURE NeighborCountGood(enm: NeighborCounter; brick: Brick) =
-  BEGIN 
+  BEGIN
     IF brick.good THEN INC(enm.cnt) END;
   END NeighborCountGood;
-  
+
 PROCEDURE EnumerateNeighbors(
-  self: Brick; 
-  no: NeighborEnumerator; 
+  self: Brick;
+  no: NeighborEnumerator;
   range: Range) =
   VAR wall: Wall; p: Position;
   BEGIN
@@ -212,8 +212,8 @@ PROCEDURE EnumerateNeighbors(
   END EnumerateNeighbors;
 
 PROCEDURE BrickHighlightOn(self: Brick) RAISES {} =
-  VAR 
-    range: Range; 
+  VAR
+    range: Range;
     bad, ok, unknown, good: INTEGER;
   BEGIN
     IF NOT self.wall.gameOver AND self.shown THEN
@@ -223,7 +223,7 @@ PROCEDURE BrickHighlightOn(self: Brick) RAISES {} =
         self.EnumerateNeighbors(neighborCountGood, Range.Long);
         TextVBT.Put(self.icon, Fmt.Int(neighborCountGood.cnt));
       END;
-      
+
       range := self.wall.range;
       bad := NeighborBadCount(self, range);
       ok := NeighborOKCount(self, range);
@@ -239,7 +239,7 @@ PROCEDURE BrickHighlightOn(self: Brick) RAISES {} =
       self.wall.GameStatus(good - ok, unknown);
     END;
   END BrickHighlightOn;
-  
+
 PROCEDURE BrickHighlightOff(self: Brick) RAISES {} =
   BEGIN
     IF self.shown THEN
@@ -271,7 +271,7 @@ PROCEDURE HighlightOff(self: Brick) RAISES {} =
 VAR
   neighborBadCount := NEW(NeighborCounter, proc := BadCount);
   neighborOKCount := NEW(NeighborCounter, proc := OKCount);
-  
+
 PROCEDURE BadCount(enm: NeighborCounter; brick: Brick )  =
 BEGIN
   IF (brick.state = NoBrickState) OR (brick.state >= 0) THEN
@@ -303,7 +303,7 @@ PROCEDURE NeighborOKCount(self: Brick; range: Range): INTEGER =
 VAR
   markBad := NEW(NeighborEnumerator, proc := MarkBad);
   markGood := NEW(NeighborEnumerator, proc := MarkGood);
-  
+
 PROCEDURE MarkGood(<*UNUSED*>enm: NeighborEnumerator; brick: Brick ) RAISES {} =
 BEGIN
   IF brick.state = UnknownState THEN
@@ -352,7 +352,7 @@ PROCEDURE BrickAction(self: ButtonVBT.T; READONLY cd: VBT.MouseRec) RAISES {} =
   BEGIN
     brick := NARROW(self, Brick);
     IF brick.wall.gameOver THEN RETURN END;
-    IF (cd.whatChanged = VBT.Modifier.MouseR) 
+    IF (cd.whatChanged = VBT.Modifier.MouseR)
         OR (VBT.Modifier.Shift IN cd.modifiers) THEN
       ToggleMarking(brick);
     ELSIF brick.state # OKState THEN
@@ -361,7 +361,7 @@ PROCEDURE BrickAction(self: ButtonVBT.T; READONLY cd: VBT.MouseRec) RAISES {} =
         IF brick.state = UnknownState THEN
           brick.ShowAndFlood();
         ELSE
-          IF (cd.whatChanged = VBT.Modifier.MouseL) OR 
+          IF (cd.whatChanged = VBT.Modifier.MouseL) OR
              (brick.wall.difficulty < Difficulty.Hard) THEN
             AutoBrick( brick, Range.Short);
           ELSE
@@ -379,7 +379,7 @@ PROCEDURE ToggleMarking(brick: Brick) =
     IF brick.state = UnknownState THEN
       brick.state := OKState;
       TextVBT.Put(brick.icon, "ok");
-       BorderedVBT.SetColor(brick.border, darkLinesPaintOpForOK, 
+       BorderedVBT.SetColor(brick.border, darkLinesPaintOpForOK,
          borderTexture);
       TextVBT.SetFont(brick.icon, Font.BuiltIn, markColorQuad);
     ELSIF brick.state = OKState THEN
@@ -394,9 +394,9 @@ PROCEDURE BrickShape(<*UNUSED*>self: VBT.T; ax: Axis.T; <*UNUSED*>n: CARDINAL): 
   VAR range: VBT.SizeRange;
   BEGIN
     CASE ax OF
-    | Axis.T.Hor => 
+    | Axis.T.Hor =>
         range.lo:=BrickSizeH; range.hi:=range.lo+1; range.pref:=range.lo;
-    | Axis.T.Ver => 
+    | Axis.T.Ver =>
         range.lo:=BrickSizeV; range.hi:=range.lo+1; range.pref:=range.lo;
     END;
     RETURN range;
@@ -405,14 +405,14 @@ PROCEDURE BrickShape(<*UNUSED*>self: VBT.T; ax: Axis.T; <*UNUSED*>n: CARDINAL): 
 PROCEDURE BrickMouse(v: Brick; READONLY cd: VBT.MouseRec) RAISES {} =
   BEGIN
     IF cd.clickType = VBT.ClickType.FirstDown THEN
-      IF (v.wall.difficulty < Difficulty.Desperate) OR 
+      IF (v.wall.difficulty < Difficulty.Desperate) OR
          (cd.whatChanged = VBT.Modifier.MouseL) THEN
         v.wall.range := Range.Short;
       ELSIF cd.whatChanged = VBT.Modifier.MouseM THEN
         v.wall.range := Range.Long;
       END;
     END;
-    
+
     ButtonVBT.T.mouse(v, cd);
     IF cd.clickType = VBT.ClickType.FirstDown THEN
       v.ready := TRUE;
@@ -433,7 +433,7 @@ PROCEDURE BrickMouse(v: Brick; READONLY cd: VBT.MouseRec) RAISES {} =
 PROCEDURE BrickNewShape(<*UNUSED*>self: VBT.T; <*UNUSED*>ch: VBT.T) RAISES {} =
   BEGIN
   END BrickNewShape;
-  
+
 PROCEDURE WestOf(p: Position): Position =
   BEGIN
     RETURN Position{x:=p.x-1, y:=p.y};
@@ -482,7 +482,7 @@ PROCEDURE GameStatus(self: Wall; good, unknown: INTEGER) =
     ELSE
       TextVBT.Put(self.msgArea, Fmt.F(
       "%s Game:  %s out of %s unknown neighbors are good;   %s bad bricks left",
-        DifficultyName[self.difficulty], Fmt.Int(good), Fmt.Int(unknown), 
+        DifficultyName[self.difficulty], Fmt.Int(good), Fmt.Int(unknown),
         Fmt.Int(self.badBricks)));
     END;
   END GameStatus;
@@ -552,16 +552,16 @@ PROCEDURE BrickSpaceShape(<*UNUSED*>self: VBT.T; ax: Axis.T; <*UNUSED*>n: CARDIN
   VAR range: VBT.SizeRange;
   BEGIN
     CASE ax OF
-    | Axis.T.Hor => 
+    | Axis.T.Hor =>
         range.lo:=BrickSizeH DIV 2; range.hi:=range.lo+1; range.pref:=range.lo;
-    | Axis.T.Ver => 
+    | Axis.T.Ver =>
         range.lo:=BrickSizeV; range.hi:=range.lo+1; range.pref:=range.lo;
     END;
     RETURN range;
   END BrickSpaceShape;
 
 TYPE
-  Wall = 
+  Wall =
     OBJECT
       brick: REF ARRAY OF ARRAY OF Brick;
       noBrick: Brick;
@@ -622,8 +622,8 @@ PROCEDURE StartGame(self: Wall; difficulty: Difficulty) =
     ELSE
       self.range := Range.Short;
     END;
-    TextVBT.Put(self.msgArea, 
-     "ClickLeft: remove bad bricks. " & 
+    TextVBT.Put(self.msgArea,
+     "ClickLeft: remove bad bricks. " &
      "ClickRight or ShiftClickLeft: mark/unmark bricks.");
     FOR y:=0 TO self.ySize-1 DO
       FOR x:=0 TO self.xSize-1 DO
@@ -648,7 +648,7 @@ PROCEDURE StartGame(self: Wall; difficulty: Difficulty) =
         IF ((rx>=SafeZone) OR (ry>=SafeZone)) AND (NOT self.brick^[rx,ry].good) THEN
           self.brick^[rx,ry].good := TRUE;
           DEC(self.badBricks);
-          INC(i); 
+          INC(i);
         END;
       END;
       self.brick^[0,0].ShowAndFlood();
@@ -668,12 +668,12 @@ PROCEDURE GameLost(self: Wall) =
 
 PROCEDURE GameWon(self: Wall) =
   BEGIN
-    TextVBT.Put(self.msgArea, 
+    TextVBT.Put(self.msgArea,
       "NO BAD BRICKS LEFT! Skateboarding is now safe.");
     self.gameOver := TRUE;
   END GameWon;
 
-VAR 
+VAR
   wall0: Wall;
   main, menuBar: VBT.T;
   sensorMenuTitle: TextVBT.T;
@@ -687,7 +687,7 @@ PROCEDURE DoGame(b: ButtonVBT.T; <*UNUSED*>READONLY cd: VBT.MouseRec) =
       TextVBT.Put(sensorMenuTitle, "  Sensor");
     ELSE
       TextVBT.Put(sensorMenuTitle, "");
-    END; 
+    END;
   END DoGame;
 
 PROCEDURE DoShortRange(<*UNUSED*>b: ButtonVBT.T; <*UNUSED*>READONLY cd: VBT.MouseRec) =
@@ -713,7 +713,7 @@ PROCEDURE GameMenu(): HVSplit.T =
     menu := HVSplit.New(Axis.T.Ver, adjustable := FALSE);
     FOR difficulty:=FIRST(Difficulty) TO LAST(Difficulty) DO
       Split.AddChild(menu,
-        MenuBtnVBT.TextItem(DifficultyName[difficulty], DoGame, 
+        MenuBtnVBT.TextItem(DifficultyName[difficulty], DoGame,
           NEW(RefDifficulty, difficulty:=difficulty)));
     END;
     Split.AddChild(menu,

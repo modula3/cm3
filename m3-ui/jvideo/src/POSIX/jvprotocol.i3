@@ -85,7 +85,7 @@ CONST
   JVP_VIDEO_UDP_REQUEST  = 13;
   JVP_VIDEO_UDP_RESPONSE = 14;
   JVP_VIDEO_UDP_DATA     = 15;
-  JVP_LastEvent          = JVP_VIDEO_UDP_DATA; 
+  JVP_LastEvent          = JVP_VIDEO_UDP_DATA;
 
 TYPE TypeCode = BITS BITSIZE(int) FOR [JVP_FirstEvent .. JVP_LastEvent];
 
@@ -244,7 +244,7 @@ TYPE
 
 CONST
   MaxHdrSize = MaxHdrBytes DIV BYTESIZE(CHAR);
-  MaxHdrBytes = 
+  MaxHdrBytes =
     MAX( BYTESIZE(ARRAY [0 .. 63] OF CHAR),
     MAX( BYTESIZE(AnyHeader),
     MAX( HdrSizes[JVP_VIDEO],

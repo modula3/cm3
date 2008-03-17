@@ -37,8 +37,8 @@ PROCEDURE New(ch: VBT.T; sh: Shape): T =
   BEGIN RETURN Be(NEW(T), ch, sh) END New;
 
 PROCEDURE FromHV(
-  ch: VBT.T; 
-  h, v: REAL; 
+  ch: VBT.T;
+  h, v: REAL;
   hMax, vMax, hPref, vPref: REAL := -1.0)
   : T RAISES {} =
   BEGIN
@@ -50,13 +50,13 @@ PROCEDURE FromHV(
       SizeRange{lo := v, pref := vPref, hi := vMax}})
   END FromHV;
 
-PROCEDURE NewShape(<*UNUSED*>v: T; <*UNUSED*>ch: VBT.T) RAISES {} = 
+PROCEDURE NewShape(<*UNUSED*>v: T; <*UNUSED*>ch: VBT.T) RAISES {} =
   BEGIN END NewShape;
 
 PROCEDURE ShapeDefault(v: T; ax: Axis.T; <*UNUSED*> n: CARDINAL): VBT.SizeRange =
   VAR
     s := v.sh[ax];
-    lo := ROUND(VBT.MMToPixels(v, s.lo, ax)); 
+    lo := ROUND(VBT.MMToPixels(v, s.lo, ax));
     hi := ROUND(VBT.MMToPixels(v, s.hi, ax)) + 1;
     pref := ROUND(VBT.MMToPixels(v, s.pref, ax));
   BEGIN

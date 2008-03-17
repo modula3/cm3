@@ -58,7 +58,7 @@ TYPE
 <* FATAL ColorName.NotFound *>
 VAR
   replaceTags: BOOLEAN := FALSE;       (* JK, 07-JUN-96 *)
-	
+
   highlightStyle := VText.MakeIntervalOptions (
                       VText.IntervalStyle.InverseStyle,
                       PaintOp.MakeColorScheme (

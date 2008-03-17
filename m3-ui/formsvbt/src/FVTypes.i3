@@ -19,7 +19,7 @@ IMPORT AudioVBT, AnchorSplit, AnchorHelpSplit, BooleanVBT, BorderedVBT, ChoiceVB
        GuardedBtnVBT, HVSplit, HighlightVBT, ListVBT,
        MenuSwitchVBT, NumericVBT, PackSplit, PaintOp, PixmapVBT,
        ProperSplit, ReactivityVBT, ScaleFilter, ScrollerVBT, Shadow,
-       ShadowedVBT, ShadowedBarVBT, SourceVBT, 
+       ShadowedVBT, ShadowedBarVBT, SourceVBT,
        SplitterVBT, StableVBT, SwitchVBT, TSplit, TextEditVBT,
        TextPort, TextureVBT, TextVBT, TrillSwitchVBT, TypeinVBT,
        TypescriptVBT, VBT, VideoVBT, ViewportVBT, ZChassisVBT,

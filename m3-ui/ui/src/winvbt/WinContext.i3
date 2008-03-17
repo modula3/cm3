@@ -12,14 +12,14 @@ IMPORT Ctypes, PaintPrivate, Point, VBT, WinDef, WinScreenType;
 
 (* This module provides procedures for modifying device context, and for
    undoing those modifications.  These procedures fall into two categories:
-   "PushMumble(hdc, ...)" changes the device context "hdc" to be appropriate 
-   for subsequent mumble operations; "Pop(ctxt)" reverts the device context 
-   back to its prior state. 
+   "PushMumble(hdc, ...)" changes the device context "hdc" to be appropriate
+   for subsequent mumble operations; "Pop(ctxt)" reverts the device context
+   back to its prior state.
 
    Push and pop operations must always be paired. The push operation returns
-   a context record, which must be passed as a parameter to the corresponding 
+   a context record, which must be passed as a parameter to the corresponding
    pop operation.  The context record contains the information needed to
-   restore the original device context. Using a record type instead of an 
+   restore the original device context. Using a record type instead of an
    object type avoids heap allocations.
 
    A possible further optimization would be to pass a caller-allocated context
@@ -34,7 +34,7 @@ TYPE
     pen  : WinDef.HPEN   := NIL;
     brush: WinDef.HBRUSH := NIL;
   END;
-  (* The following aspects of a device context are not saved 
+  (* The following aspects of a device context are not saved
      (and therefore not restored either):
      FillStyle, Text Color, Background Color, ... *)
 
@@ -42,7 +42,7 @@ TYPE
 PROCEDURE PushTint (hdc: WinDef.HDC;
                     st : WinScreenType.T;
                     op : PaintPrivate.PaintOp): T;
-(* Modify "hdc" to be suitable for tint painting. This procedure 
+(* Modify "hdc" to be suitable for tint painting. This procedure
    is the moral equivalent of "XGC.ResolveTintGC" in xvbt. *)
 
 
@@ -51,7 +51,7 @@ PROCEDURE PushTexture (hdc  : WinDef.HDC;
                        op   : PaintPrivate.PaintOp;
                        pm   : PaintPrivate.Pixmap;
                        delta: Point.T): T;
-(* Modify "hdc" to be suitable for texture painting. This procedure 
+(* Modify "hdc" to be suitable for texture painting. This procedure
    is the moral equivalent of "XGC.ResolveTextureGC" in xvbt. *)
 
 
@@ -60,7 +60,7 @@ PROCEDURE PushPixmap (hdc  : WinDef.HDC;
                       op   : PaintPrivate.PaintOp;
                       pm   : PaintPrivate.Pixmap;
                       delta: Point.T): T;
-(* Modify "hdc" to be suitable for pixmap painting. This procedure 
+(* Modify "hdc" to be suitable for pixmap painting. This procedure
    is the moral equivalent of "XGC.ResolvePixmapGC" in xvbt. *)
 
 
@@ -70,7 +70,7 @@ PROCEDURE PushFill (hdc  : WinDef.HDC;
                     pm   : PaintPrivate.Pixmap;
                     delta: Point.T;
                     wind : VBT.WindingCondition): T;
-(* Modify "hdc" to be suitable for filling polygons. This procedure 
+(* Modify "hdc" to be suitable for filling polygons. This procedure
    is the moral equivalent of "XGC.ResolveFillGC" in xvbt. *)
 
 
@@ -82,7 +82,7 @@ PROCEDURE PushStroke (hdc  : WinDef.HDC;
                       width: CARDINAL;
                       end  : VBT.EndStyle;
                       join : VBT.JoinStyle): T;
-(* Modify "hdc" to be suitable for stroking lines. This procedure 
+(* Modify "hdc" to be suitable for stroking lines. This procedure
    is the moral equivalent of "XGC.ResolveStrokeGC" in xvbt. *)
 
 

@@ -12,7 +12,7 @@ IMPORT AnchorBtnVBT, FeedbackVBT, Multi, MultiClass, VBT;
 
 REVEAL
   T = Public BRANDED "AnchorSwitchVBT.T" OBJECT OVERRIDES init := Init END;
-            
+
 PROCEDURE Init (v             : T;
                 f             : FeedbackVBT.T;
                 menu          : VBT.T;

@@ -19,10 +19,10 @@ VAR
 
 (*-------------------*)
 PROCEDURE Init(str:TEXT);
-(* 
+(*
 bring up a run button, which when
 pushed makes "str" come up in a text
-field.  
+field.
 *)
 
 END HelloGUI.

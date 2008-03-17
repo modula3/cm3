@@ -13,7 +13,7 @@ INTERFACE PlaidVBT;
 IMPORT VBT;
 
 TYPE T <: VBT.Leaf;
-  
+
 (* A newly allocated "PlaidVBT" needs no further initialization. *)
 
 END PlaidVBT.

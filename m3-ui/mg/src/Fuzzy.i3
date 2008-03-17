@@ -26,7 +26,7 @@ INTERFACE Fuzzy;
 
 TYPE
   T = RECORD lo, hi: REAL END;
-     (* 
+     (*
        Represents the set of real numbers between "lo" and "hi", inclusive;
        or the empty set if "lo > hi". *)
 

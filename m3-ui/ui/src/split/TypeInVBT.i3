@@ -13,7 +13,7 @@
 INTERFACE TypeInVBT;
 
 (* A "TypeInVBT.T" is a "VBT" into which the user can type a one-line
-   text string using ISO-Latin 1 keycodes.   
+   text string using ISO-Latin 1 keycodes.
 
    A "TypeInVBT" acquires the keyboard focus when the user clicks on it
    with the mouse, or whenever the program directs it to by
@@ -21,13 +21,13 @@ INTERFACE TypeInVBT;
    acquires the primary selection, and primary-selects the text string in
    the "VBT".
 
-   When it has the keyboard focus, the user can append to the text by 
+   When it has the keyboard focus, the user can append to the text by
    typing graphic characters, and can backspace by typing the key
-   labelled "<X]".  Associated with every TypeInVBT is an action 
+   labelled "<X]".  Associated with every TypeInVBT is an action
    procedure that is called whenever the user types
    a non-graphic character (such as "RETURN").
 
-   When a "TypeInVBT" it has the keyboard focus, it responds to 
+   When a "TypeInVBT" it has the keyboard focus, it responds to
    the following editing commands:
      control-q deletes the entire text (primary selection);
      control-w copies the secondary selection to the end of the text;
@@ -56,7 +56,7 @@ TYPE T <: Public; Public = TextVBT.T OBJECT
       action: Proc := NIL;
       ref: REFANY := NIL;
       composer: ComposeKey.T := NIL): T
-  END; 
+  END;
 
 (* The call "v.init(...)" initializes "v" as a "TypeInVBT".  This
    includes initializing "v" as a "TextVBT", using the first seven
@@ -88,7 +88,7 @@ PROCEDURE New(
   op: PaintOp.ColorQuad := NIL;
   action: Proc := NIL;
   ref: REFANY := NIL;
-  composer: ComposeKey.T := NIL): T; 
+  composer: ComposeKey.T := NIL): T;
 (* "New(args)" is short for "NEW(T).init(args)". *)
 
 PROCEDURE TakeFocus(v: T; t: VBT.TimeStamp): BOOLEAN;

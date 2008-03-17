@@ -65,7 +65,7 @@ PROCEDURE Get (v: T): T;
 PROCEDURE Put (v: T);
 <* LL.sup = VBT.mu *>
 (* Equivalent to "selection(group(v)) := v" *)
-   
+
 PROCEDURE Clear (v: T);
 <* LL.sup = VBT.mu *>
 (* Equivalent to "selection(group(v)) := NIL" *)

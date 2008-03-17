@@ -3,7 +3,7 @@
 (* See the file COPYRIGHT for a full description.		*)
 
 (* File: Xrm.i3							*)
-(* Last modified on Fri May  7 16:16:27 PDT 1993 by mjordan     *) 
+(* Last modified on Fri May  7 16:16:27 PDT 1993 by mjordan     *)
 (*      modified on Thu Mar 14 02:34:50 1991 by muller		*)
 (*      modified on Wed Apr 25 10:31:12 1990 by jerome		*)
 
@@ -19,7 +19,7 @@ UNSAFE INTERFACE Xrm;
 
 
 FROM X		IMPORT	Bool, Enumeration;
-FROM Ctypes	IMPORT	const_char_star, char_star, char_star_star, int, 
+FROM Ctypes	IMPORT	const_char_star, char_star, char_star_star, int,
 			int_star, unsigned_int;
 
 
@@ -31,13 +31,13 @@ and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the names of Digital or MIT not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -49,7 +49,7 @@ SOFTWARE.
 
 ******************************************************************)
 
-(* 
+(*
     Size of a "regular" List of objects
 *)
 
@@ -112,7 +112,7 @@ CONST
  ****************************************************************)
 
 
-TYPE 
+TYPE
   Binding     = Enumeration;
   BindingList = UNTRACED REF ARRAY [0..MaxSizeList] OF Binding;
 
@@ -319,7 +319,7 @@ CONST
   optionResArg	   = 4;	(* Resource and value in next argument in argv      *)
   optionSkipArg	   = 5;	(* Ignore this option and the next argument in argv *)
   optionSkipLine   = 6;	(* Ignore this option and the rest of argv	    *)
-  optionSkipNArgs  = 7;	(* Ignore this option and the next 
+  optionSkipNArgs  = 7;	(* Ignore this option and the next
 			   OptionDescRes.value arguments in argv *)
 
 TYPE

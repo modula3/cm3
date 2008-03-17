@@ -16,14 +16,14 @@ CONST NormalQSize = 2;
 
 PROCEDURE Insert(VAR rb: T; READONLY e: Elem) =
   BEGIN
-    IF rb.buff = NIL THEN 
+    IF rb.buff = NIL THEN
        rb.buff := NEW(REF ARRAY OF Elem, NormalQSize)
     END;
     rb.buff[rb.hi] := e;
     INC(rb.hi);
     WITH n = NUMBER(rb.buff^) DO
       IF rb.hi = n THEN rb.hi := 0 END;
-      IF rb.hi = rb.lo THEN 
+      IF rb.hi = rb.lo THEN
         WITH new = NEW(REF ARRAY OF Elem, 2 * n) DO
           FOR i := rb.lo TO n - 1 DO
             new[i] := rb.buff[i]
@@ -51,4 +51,4 @@ PROCEDURE Remove(VAR rb: T): Elem RAISES {Exhausted} =
     RETURN res
   END Remove;
 
-BEGIN END SelectQueue. 
+BEGIN END SelectQueue.

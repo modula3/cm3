@@ -126,9 +126,9 @@ PROCEDURE GetDecomp (<*UNUSED*> v: T): JVDecomp.T =
 
 PROCEDURE GetSize (v: T; VAR width, height: CARDINAL) =
   BEGIN
-    LOCK v DO 
-      width  := v.width; 
-      height := v.height; 
+    LOCK v DO
+      width  := v.width;
+      height := v.height;
     END;
   END GetSize;
 
@@ -153,8 +153,8 @@ PROCEDURE StartStats (t: T) =
 
 PROCEDURE StopStats (t: T) =
   BEGIN
-    LOCK t DO 
-      t.statistics := NIL; 
+    LOCK t DO
+      t.statistics := NIL;
     END;
   END StopStats;
 

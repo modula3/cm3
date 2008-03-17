@@ -334,7 +334,7 @@ PROCEDURE WriteVars(
   END WriteVars;
 
 PROCEDURE WriteConstraints(
-    READONLY nm: ARRAY OF Atom.T; 
+    READONLY nm: ARRAY OF Atom.T;
     READONLY v: ARRAY OF T;
     READONLY c: ARRAY OF RedundantSolve.Constraint) =
   VAR n := NUMBER(nm);			 (* number of variables *)

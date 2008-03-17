@@ -3,7 +3,7 @@
 (* See the file COPYRIGHT for a full description.		*)
 
 (* File: XtC.i3							*)
-(* Last modified on Fri May  7 15:08:58 PDT 1993 by mjordan     *)  
+(* Last modified on Fri May  7 15:08:58 PDT 1993 by mjordan     *)
 (*      modified on Fri Apr 13 14:08:45 1990 by jerome		*)
 (*      modified on Sat Feb 24 02:18:46 1990 by muller		*)
 

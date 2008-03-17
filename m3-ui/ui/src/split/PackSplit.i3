@@ -63,13 +63,13 @@ TYPE
     <* LL.sup <= VBT.mu *>
     init(hv := Axis.T.Hor;
       hgap, vgap := 1.5;
-      txt: Pixmap.T := Pixmap.Solid; 
-      op: PaintOp.T := PaintOp.Bg; 
+      txt: Pixmap.T := Pixmap.Solid;
+      op: PaintOp.T := PaintOp.Bg;
       nwAlign := FALSE;
       saveBits := FALSE): T
   END;
 
-(* The call "v.init(...)" initializes "v" as an empty packsplit with 
+(* The call "v.init(...)" initializes "v" as an empty packsplit with
    axis "hv". *)
 
 (* For a horizontal "PackSplit", "hgap" is the gap to leave between
@@ -91,22 +91,22 @@ TYPE
 PROCEDURE New(
   hv := Axis.T.Hor;
   hgap, vgap := 1.5;
-  txt: Pixmap.T := Pixmap.Solid; 
-  op: PaintOp.T := PaintOp.Bg; 
+  txt: Pixmap.T := Pixmap.Solid;
+  op: PaintOp.T := PaintOp.Bg;
   nwAlign := FALSE;
   saveBits := FALSE): T; <* LL.sup <= VBT.mu *>
 (* "New(...)" is equivalent to "NEW(T).init(...)". *)
 
 PROCEDURE Set(
-  v: T;   
-  txt: Pixmap.T; 
+  v: T;
+  txt: Pixmap.T;
   op: PaintOp.T := PaintOp.BgFg;
   nwAlign := FALSE); <* LL.sup = VBT.mu *>
 (* Change the texture displayed by "v" and mark "v" for redisplay. *)
 
 PROCEDURE Get(
-  v: T;   
-  VAR txt: Pixmap.T; 
+  v: T;
+  VAR txt: Pixmap.T;
   VAR op: PaintOp.T;
   VAR nwAlign: BOOLEAN
   ); <* LL.sup = VBT.mu *>

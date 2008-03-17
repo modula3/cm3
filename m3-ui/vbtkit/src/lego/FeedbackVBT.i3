@@ -65,7 +65,7 @@ PROCEDURE SetState (v: T; state: BOOLEAN);
 
 PROCEDURE GetState (v: T): BOOLEAN;
 <* LL.sup = VBT.mu *>
-(* Return the value of the most recent call to "SetState". 
+(* Return the value of the most recent call to "SetState".
    The initial state is "FALSE". *)
 
 END FeedbackVBT.

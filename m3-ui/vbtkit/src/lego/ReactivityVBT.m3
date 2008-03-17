@@ -55,7 +55,7 @@ PROCEDURE Init (v: T; ch: VBT.T; colors: PaintOp.ColorScheme := NIL): T =
     RETURN v
   END Init;
 
-PROCEDURE PaintDormant (v: T; r: Rect.T; colors: PaintOp.ColorScheme) = 
+PROCEDURE PaintDormant (v: T; r: Rect.T; colors: PaintOp.ColorScheme) =
   BEGIN
     VBT.PaintTexture (v, r, colors.transparentBg, Pixmap.Gray, Point.Origin)
   END PaintDormant;
@@ -215,12 +215,12 @@ PROCEDURE Key (v: T; READONLY cd: VBT.KeyRec) =
     IF v.state = State.Active THEN ETAgent.T.key (v, cd) END
   END Key;
 
-PROCEDURE Acquire(v: T; ch: VBT.T; w: VBT.T; 
-  s: VBT.Selection; ts: VBT.TimeStamp) 
+PROCEDURE Acquire(v: T; ch: VBT.T; w: VBT.T;
+  s: VBT.Selection; ts: VBT.TimeStamp)
   RAISES {VBT.Error} = <* LL.sup = ch *>
   BEGIN
     ETAgent.T.acquire(v, ch, w, s, ts);
-    IF s = VBT.KBFocus THEN 
+    IF s = VBT.KBFocus THEN
       LOCK v DO v.lastFocus := w END
     END
   END Acquire;

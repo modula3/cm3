@@ -18,7 +18,7 @@ INTERFACE Marquee;
 
 IMPORT VBT, Font;
 
-TYPE 
+TYPE
   T <: Public;
   Public = Private OBJECT METHODS
     init(height := 8; nameWidth := 10; argWidth := 12; font := Font.BuiltIn): T;
@@ -36,7 +36,7 @@ TYPE
    a new blank one.
 
    The call "m.putName(nm)" requires that "m" be at the beginning
-   of a line; it adds the name "nm".  
+   of a line; it adds the name "nm".
 
    The call "m.putArg(nm)" adds the argument "nm" to the current
    line; it requires that the current line have a name.
@@ -48,10 +48,10 @@ TYPE
    the width allowed for the name part, and the width allowed
    for the argument part.  The units of the dimensions are
    the widths of a character in the specified font, which is
-   assumed to be fixed-width. 
-   
+   assumed to be fixed-width.
+
    It is required that height be at least two. *)
 
 END Marquee.
-   
-    
+
+

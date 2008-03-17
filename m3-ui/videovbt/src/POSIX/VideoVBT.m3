@@ -161,7 +161,7 @@ PROCEDURE FMake (f: Factory; wait := TRUE; subtype: CARDINAL): JVBuffer.T
     LOCK fmu DO
       cur := bufList;
       WHILE cur # NIL AND (cur.st # f.st OR cur.width # f.width
-                             OR cur.height # f.height 
+                             OR cur.height # f.height
 			     OR f.subtype # cur.subtype) DO
         prev := cur;
         cur := cur.next

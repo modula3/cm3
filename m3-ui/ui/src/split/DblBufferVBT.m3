@@ -39,8 +39,8 @@ IMPORT Filter, FilterClass, VBTClass, VBT, VBTRep, Point, Rect, Region,
    congruent to "v"'s domain.
 *)
 
-REVEAL 
-  T = Filter.T BRANDED OBJECT 
+REVEAL
+  T = Filter.T BRANDED OBJECT
     <* LL >= { VBT.mu.SELF, SELF } *>
     delta := Point.Origin;          (* child coord + delta = parent coord. *)
     screenId: VBT.ScreenID := -1;
@@ -81,7 +81,7 @@ VAR showSyncRect := FALSE;
 PROCEDURE BeChild(v: T; ch: VBT.T) RAISES {} =
   <* LL >= {VBT.mu, v, ch} *>
   BEGIN
-    Filter.T.beChild(v, ch); 
+    Filter.T.beChild(v, ch);
     VBTClass.ClearShortCircuit(ch)
   END BeChild;
 
@@ -178,7 +178,7 @@ PROCEDURE SetCage(prnt: T; ch: VBT.T) RAISES {} =
   <* LL.sup = ch *>
   VAR cg := VBTClass.Cage(ch); BEGIN
     LOCK prnt DO
-      IF cg.rect # Rect.Full AND prnt.screenId = cg.screen THEN 
+      IF cg.rect # Rect.Full AND prnt.screenId = cg.screen THEN
         cg.rect := Rect.Add(cg.rect, prnt.delta)
       END;
       VBTClass.SetCage(prnt, cg)
@@ -219,8 +219,8 @@ PROCEDURE Sync(prnt: T; <*UNUSED*> ch: VBT.T; wait: BOOLEAN) =
   END Sync;
 
 PROCEDURE Capture(
-    prnt: T; 
-    <*UNUSED*> ch: VBT.T; 
+    prnt: T;
+    <*UNUSED*> ch: VBT.T;
     READONLY rect: Rect.T;
     VAR (*OUT*) br: Region.T)
     : ScrnPixmap.T RAISES {} =

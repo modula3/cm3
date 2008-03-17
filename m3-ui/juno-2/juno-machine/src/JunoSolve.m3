@@ -481,7 +481,7 @@ PROCEDURE Fix(v: Var; known: BOOLEAN; val: RTVal.T) RAISES {Equiv.Forbidden} =
 PROCEDURE UnifyClose() RAISES {Equiv.Forbidden} =
   BEGIN
     WHILE unifyList.size() # 0 DO
-      VAR 
+      VAR
         y: EC := unifyList.remhi();
         x: EC := unifyList.remhi();
       BEGIN
@@ -533,7 +533,7 @@ PROCEDURE NumericSolve(READONLY c: ARRAY OF Constraint) RAISES { Unsolvable } =
    Q7: The variable "hvl" is the list of hinted unlabeled variables (possibly
        containing some variables which have become labeled), and "uvl" is the
        list of unhinted, unlabeled variables (also possible containing some
-       variables which have become labeled). 
+       variables which have become labeled).
 
    Q8: numeric_cnt <= NUMBER(numeric_con).
 
@@ -553,7 +553,7 @@ PROCEDURE NumericSolve(READONLY c: ARRAY OF Constraint) RAISES { Unsolvable } =
 
 | DURING VARIABLE PROCESSING:
 |
-|             numeric_vars[]           __ 
+|             numeric_vars[]           __
 |                ________	      |..|
 |               |        |	      |..| = unused
 |               |  True  |	      |__|
@@ -569,9 +569,9 @@ PROCEDURE NumericSolve(READONLY c: ARRAY OF Constraint) RAISES { Unsolvable } =
 |    var_cnt -> |........|   |.............| <- c_lo
 |               |........|   |.............|
 | next_const -> |________|   |_____________| <- c_hi
-|               |        |   |             |        
-|               | Consts |   |     True    |        
-|               |________|   | Constraints |        
+|               |        |   |             |
+|               | Consts |   |     True    |
+|               |________|   | Constraints |
 |			     |_____________|
 |                            |.............| <- numeric_cnt
 |                            |.............|
@@ -579,13 +579,13 @@ PROCEDURE NumericSolve(READONLY c: ARRAY OF Constraint) RAISES { Unsolvable } =
 |
 | AFTER VARIABLE PROCESSING:
 |
-|             numeric_vars[] numeric_vals[]                
-|                ________       ________                   
-|               |        |     |        |                  
-|               |  True  |     |  True  |                  
-|               |  Vars  |     |  Vals  |                  
-|               |        |     |        |    numeric_con[] 
-|         hi -> |________|     |________|    _____________ 
+|             numeric_vars[] numeric_vals[]
+|                ________       ________
+|               |        |     |        |
+|               |  True  |     |  True  |
+|               |  Vars  |     |  Vals  |
+|               |        |     |        |    numeric_con[]
+|         hi -> |________|     |________|    _____________
 |         lo -> |        |     |        |   |             |
 |               |        |     |        |   |    Ghost    |
 |               |        |     |        |   | Constraints |

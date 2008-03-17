@@ -16,7 +16,7 @@ PROCEDURE Apply (<*UNUSED*> self: Thread.Closure): REFANY =
       EVAL NEW (REF INTEGER);
     END;
   END Apply;
-    
+
 
 VAR v := TextVBT.New ("Memory hog");
 

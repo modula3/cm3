@@ -33,7 +33,7 @@ PROCEDURE FromRaw (READONLY r: Raw): T =
   END FromRaw;
 
 PROCEDURE FixRGB(VAR c: RGB) =
-(* adjust c.gray so that it is in [0..1], and c.bw so 
+(* adjust c.gray so that it is in [0..1], and c.bw so
    that it is not UseIntensity. *)
   BEGIN
     IF c.gray < 0.0 THEN
@@ -109,5 +109,5 @@ PROCEDURE NameApply(cl: NameClosure; st: ScreenType.T): ScrnCursor.T =
     END;
     RETURN Palette.ResolveCursor(st, DontCare)
   END NameApply;
-  
+
  BEGIN END Cursor.

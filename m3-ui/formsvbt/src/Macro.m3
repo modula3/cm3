@@ -243,7 +243,7 @@ PROCEDURE Fault (typeName: TEXT; arg: REFANY): REFANY RAISES {FormsVBT.Error} =
     RAISE FormsVBT.Error (
             Fmt.F ("A %s was required here: %s", typeName, ToText (arg)))
   END Fault;
-  
+
 PROCEDURE Apply (m: T; actuals: RefList.T): REFANY RAISES {FormsVBT.Error} =
   PROCEDURE err (msg: TEXT; actuals: REFANY := "") RAISES {FormsVBT.Error} =
     BEGIN
@@ -392,7 +392,7 @@ PROCEDURE Check (TCwanted, TCgonnaGet       : INTEGER;
       RAISE FormsVBT.Error ("Invalid type")
     END
   END Check;
-  
+
 PROCEDURE CompileQuote (<* UNUSED *> self   : Compiler;
                                      args   : RefList.T;
                         <* UNUSED *> formals: RefList.T;
@@ -403,7 +403,7 @@ PROCEDURE CompileQuote (<* UNUSED *> self   : Compiler;
     Check (tc, actualTC);
     RETURN NEW (Op, args := args, tc := actualTC, eval := EvalQuote)
   END CompileQuote;
-    
+
 PROCEDURE EvalQuote (x: Op; <* UNUSED *> d: Display): REFANY =
   BEGIN
     RETURN x.args.head
@@ -648,7 +648,7 @@ PROCEDURE CompileOr (<* UNUSED *> self   : Compiler;
       args := args.tail
     END;
     RETURN res
-  END CompileOr; 
+  END CompileOr;
 
 PROCEDURE EvalOr (x: Op; d: Display): REFANY RAISES {FormsVBT.Error} =
   BEGIN
@@ -667,7 +667,7 @@ PROCEDURE CompileNot (<* UNUSED *> self   : Compiler;
   BEGIN
     args.head := Compile (args.head, formals, BooleanTC);
     RETURN res
-  END CompileNot; 
+  END CompileNot;
 
 PROCEDURE EvalNot (x: Op; d: Display): REFANY RAISES {FormsVBT.Error} =
   BEGIN
@@ -769,7 +769,7 @@ PROCEDURE Combine (car, cdr: REFANY): REFANY =
                 Push (cdr.tail, car);
                 RETURN cdr
               END
-          ELSE <* ASSERT FALSE *>    
+          ELSE <* ASSERT FALSE *>
           END
         END
     ELSE
@@ -1156,13 +1156,13 @@ PROCEDURE GetBoolean (ref: REFANY): BOOLEAN RAISES {FormsVBT.Error} =
       <* ASSERT FALSE *>
     END
   END GetBoolean;
-  
+
 PROCEDURE GetRefInteger (ref: REFANY): REF INTEGER RAISES {FormsVBT.Error} =
   BEGIN
     TYPECASE ref OF | NULL => | REF INTEGER (t) => RETURN t ELSE END;
     RETURN Fault ("integer", ref)
   END GetRefInteger;
-  
+
 PROCEDURE GetRefCardinal (ref: REFANY): REF INTEGER RAISES {FormsVBT.Error} =
   BEGIN
     TYPECASE ref OF
@@ -1173,13 +1173,13 @@ PROCEDURE GetRefCardinal (ref: REFANY): REF INTEGER RAISES {FormsVBT.Error} =
     END;
     RETURN Fault ("integer", ref)
   END GetRefCardinal;
-  
+
 PROCEDURE GetRefReal (ref: REFANY): REF REAL RAISES {FormsVBT.Error} =
   BEGIN
     TYPECASE ref OF | NULL => | REF REAL (t) => RETURN t ELSE END;
     RETURN Fault ("real", ref)
   END GetRefReal;
-  
+
 PROCEDURE GetList (ref: REFANY): RefList.T RAISES {FormsVBT.Error} =
   BEGIN
     TYPECASE ref OF
@@ -1194,7 +1194,7 @@ PROCEDURE GetSymbol (ref: REFANY): Atom.T RAISES {FormsVBT.Error} =
     TYPECASE ref OF | NULL => | Atom.T (t) => RETURN t ELSE END;
     RETURN Fault ("symbol", ref)
   END GetSymbol;
-  
+
 PROCEDURE Position (list: RefList.T; item: REFANY): [-1 .. LAST (CARDINAL)] =
   VAR i: CARDINAL := 0;
   BEGIN
@@ -1226,7 +1226,7 @@ PROCEDURE ReadEqual (<* UNUSED *> rm    : Sx.ReadMacro;
     | Rd.EndOfFile => RAISE Sx.ReadError ("Premature EOF")
     END
   END ReadEqual;
-          
+
 PROCEDURE ReadPercent (<* UNUSED *> rm    : Sx.ReadMacro;
                                     rd    : Rd.T;
                                     syntax: Sx.Syntax     ): RefList.T
@@ -1238,7 +1238,7 @@ PROCEDURE ReadPercent (<* UNUSED *> rm    : Sx.ReadMacro;
     | Rd.EndOfFile => RAISE Sx.ReadError ("Premature EOF")
     END
   END ReadPercent;
-          
+
 PROCEDURE ReadQuote (<* UNUSED *> rm    : Sx.ReadMacro;
                                   rd    : Rd.T;
                                   syntax: Sx.Syntax     ): RefList.T
@@ -1250,7 +1250,7 @@ PROCEDURE ReadQuote (<* UNUSED *> rm    : Sx.ReadMacro;
     | Rd.EndOfFile => RAISE Sx.ReadError ("Premature EOF")
     END
   END ReadQuote;
-          
+
 PROCEDURE ReadBackquote (rm: ReadMacro; rd: Rd.T; syntax: Sx.Syntax):
   RefList.T RAISES {Sx.ReadError, Thread.Alerted} =
   BEGIN
@@ -1266,7 +1266,7 @@ PROCEDURE ReadBackquote (rm: ReadMacro; rd: Rd.T; syntax: Sx.Syntax):
     | Rd.EndOfFile => RAISE Sx.ReadError ("Premature EOF")
     END
   END ReadBackquote;
-          
+
 PROCEDURE ReadComma (rm: ReadMacro; rd: Rd.T; syntax: Sx.Syntax): RefList.T
   RAISES {Sx.ReadError, Thread.Alerted} =
   BEGIN

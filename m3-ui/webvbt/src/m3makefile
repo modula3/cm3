@@ -2,8 +2,8 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 %
-% Last modified on Fri Apr 12 08:17:04 PDT 1996 by mhb      
-%      modified on Wed Jan 17 14:42:47 PST 1996 by najork   
+% Last modified on Fri Apr 12 08:17:04 PDT 1996 by mhb
+%      modified on Wed Jan 17 14:42:47 PST 1996 by najork
 
 import ("libm3")
 import ("formsvbt")

@@ -341,7 +341,7 @@ PROCEDURE PopText(VAR (*INOUT*) err: BOOLEAN): TEXT =
     err := TRUE;
     RETURN NIL
   END PopText;
-  
+
 PROCEDURE PopPair(VAR (*INOUT*) err: BOOLEAN): RTVal.Pair =
   BEGIN
     DEC(sp);
@@ -354,7 +354,7 @@ PROCEDURE PopPair(VAR (*INOUT*) err: BOOLEAN): RTVal.Pair =
     RETURN NIL
   END PopPair;
 
-PROCEDURE InsertList(l: RTVal.T; lSz, numBelow: CARDINAL) 
+PROCEDURE InsertList(l: RTVal.T; lSz, numBelow: CARDINAL)
   RAISES {StackOverflow} =
 (* Insert the "lSz" values of "l" onto the stack in order under the top
    "numBelow" elements. *)
@@ -649,7 +649,7 @@ PROCEDURE Exec(): ExecRes =
     VAR res := Atom.ToText(n); BEGIN
       IF m # NIL THEN res := Atom.ToText(m) & "." & res END;
       RETURN res
-    END MkName; 
+    END MkName;
 
   PROCEDURE MakeClosure(s: INTEGER) RAISES {StackOverflow}=
   (* Push an empty closure for slot "s" *)
@@ -949,7 +949,7 @@ PROCEDURE Exec(): ExecRes =
             offset := JunoMarshal.ReadShort(a);
             VAR t2, t1 := Pop(); p: Point; s: Segment; BEGIN
               IF ExtractPoint(t1, p) OR ExtractSegment(t2, s) THEN
-                a_ut := a_init; 
+                a_ut := a_init;
                 INC(a, offset)
               ELSE
                 WITH a = s.a, b = s.b DO
@@ -997,7 +997,7 @@ PROCEDURE Exec(): ExecRes =
         | BC.LIST =>
             Push(PopList(JunoMarshal.ReadUShort(a)))
         | BC.CONCAT =>
-            offset := JunoMarshal.ReadShort(a); 
+            offset := JunoMarshal.ReadShort(a);
             VAR err := FALSE; t2, t1 := PopText(err); BEGIN
               IF NOT err
                 THEN Push(RTVal.FromText(t1 & t2))
@@ -1201,7 +1201,7 @@ PROCEDURE AttrsToProcName(READONLY p: ProcAttr): TEXT =
     IF p.modName # NIL THEN res := Atom.ToText(p.modName) & "." & res END;
     RETURN res
   END AttrsToProcName;
-  
+
 PROCEDURE PCToProcName(READONLY pc: PC): TEXT =
   BEGIN RETURN AttrsToProcName(procAttrs[pc.proc]) END PCToProcName;
 
@@ -1303,10 +1303,10 @@ VAR csAvail: CallState := NIL;
 
 PROCEDURE MakeCallState(pc: PC; fp: CARDINAL): CallState =
   VAR res: CallState; BEGIN
-    IF csAvail = NIL THEN 
-      res := NEW(CallState) 
-    ELSE 
-      res := csAvail; 
+    IF csAvail = NIL THEN
+      res := NEW(CallState)
+    ELSE
+      res := csAvail;
       csAvail := csAvail.nextAvail
     END;
     res.pc := pc;

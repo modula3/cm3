@@ -37,7 +37,7 @@ TYPE
     alt     : [0..16_FFFFFF] := XX;
     altgr   : [0..16_FFFFFF] := XX;
   END;
-  
+
 VAR
   Map := ARRAY [0..255] OF KD {
   (* 00 *) KD{ 16_00,           XX,              XX               },
@@ -158,7 +158,7 @@ VAR
   (* 6D *) KD{ WU.VK_SUBTRACT,  KK.KP_Subtract,  KK.KP_Subtract   },
   (* 6E *) KD{ WU.VK_DECIMAL,   KK.KP_Decimal,   KK.KP_Decimal    },
   (* 6F *) KD{ WU.VK_DIVIDE,    KK.KP_Divide,    KK.KP_Divide     },
-        
+
   (* 70 *) KD{ WU.VK_F1,        KK.F1,           KK.F1            },
   (* 71 *) KD{ WU.VK_F2,        KK.F2,           KK.F2            },
   (* 72 *) KD{ WU.VK_F3,        KK.F3,           KK.F3            },
@@ -322,13 +322,13 @@ PROCEDURE MapChar(c: [0..255]) =
     (* get the virtual key data *)
     data := WU.VkKeyScan (VAL (c, CHAR));
     IF data = 16_FFFF THEN RETURN; END; (* 'c' can't be entered on Keyboard *)
-  
+
     (* extract the interesting fields *)
     vk      := Word.And (data, 16_00FF);
     shift   := Word.And (data, 16_0100) # 0;
     control := Word.And (data, 16_0200) # 0;
     alt     := Word.And (data, 16_0400) # 0;
-  
+
     (* store the characters data in the map *)
     IF    alt AND control THEN Map[vk].altgr   := c;
     ELSIF alt             THEN Map[vk].alt     := c;
@@ -341,7 +341,7 @@ PROCEDURE MapChar(c: [0..255]) =
 BEGIN
   (* get key codes / shift modes for standard printable ASCII chars *)
   FOR c :=  32 TO 127 DO  MapChar(c);  END;
-    
+
   (* get key codes / shift modes for printable international chars *)
   FOR c := 160 TO 255 DO  MapChar(c);  END;
 

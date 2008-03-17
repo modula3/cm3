@@ -10,14 +10,14 @@ INTERFACE JVDecomp;
 
 IMPORT Tick;
 
-TYPE 
+TYPE
   T = MUTEX OBJECT END;                               (* used in VideoVBT.i3 *)
 
 TYPE
   Statistics = OBJECT                                 (* used in VideoVBT.i3 *)
-    framesStarted  : CARDINAL; 
-    framesProcessed: CARDINAL; 
-    timesBlocked   : CARDINAL; 
+    framesStarted  : CARDINAL;
+    framesProcessed: CARDINAL;
+    timesBlocked   : CARDINAL;
     cumLatency     : Tick.T;
   END;
 

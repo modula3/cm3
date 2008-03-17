@@ -183,7 +183,7 @@ PROCEDURE SetIntegerPair (t: T; var: TEXT; READONLY val: IntegerPair) =
     IF VBT.Parent (t) # NIL THEN Stuff (t, var, FmtIntegerPair (val)); END;
   END SetIntegerPair;
 
-PROCEDURE SetIntegerPairArray (t: T; 
+PROCEDURE SetIntegerPairArray (t: T;
     var: TEXT; READONLY val: IntegerPairArray) =
   BEGIN
     IF VBT.Parent (t) # NIL THEN
@@ -198,7 +198,7 @@ PROCEDURE SetIntegerTriple (t: T; var: TEXT; READONLY val: IntegerTriple) =
     END;
   END SetIntegerTriple;
 
-PROCEDURE SetIntegerTripleArray (t: T; 
+PROCEDURE SetIntegerTripleArray (t: T;
     var: TEXT; READONLY val: IntegerTripleArray) =
   BEGIN
     IF VBT.Parent (t) # NIL THEN
@@ -211,7 +211,7 @@ PROCEDURE SetIntegerList (t: T; var: TEXT; val: IntegerList) =
     IF VBT.Parent (t) # NIL THEN Stuff (t, var, FmtIntegerList (val)); END;
   END SetIntegerList;
 
-PROCEDURE SetIntegerListArray (t: T; 
+PROCEDURE SetIntegerListArray (t: T;
     var: TEXT; READONLY val: IntegerListArray) =
   BEGIN
     IF VBT.Parent (t) # NIL THEN
@@ -374,7 +374,7 @@ PROCEDURE SetIntegerTripleL (t: T; var: TEXT; READONLY val: IntegerTriple) =
     END;
   END SetIntegerTripleL;
 
-PROCEDURE SetIntegerTripleArrayL (t: T; 
+PROCEDURE SetIntegerTripleArrayL (t: T;
     var: TEXT; READONLY val: IntegerTripleArray) =
   BEGIN
     IF VBT.Parent (t) # NIL THEN

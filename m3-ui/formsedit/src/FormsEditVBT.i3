@@ -7,7 +7,7 @@
 <* PRAGMA LL *>
 
 (* {\bf WARNING:} This interface is very tentative. It is likely
-   to change quite soon. 
+   to change quite soon.
 
    A "FormsEditVBT" is a filter whose child is a "FormsVBT".  When
    you initialize a "FormsEditVBT" with a file or other

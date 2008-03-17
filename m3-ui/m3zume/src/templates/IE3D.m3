@@ -8,7 +8,7 @@
 (*      modified on Tue Jun  9 00:41:25 1992 by mhb         *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 
@@ -50,7 +50,7 @@ PROCEDURE OEDispatcher(v: ZeusClass.T; evt: REFANY) RAISES {Thread.Alerted} =
     | #(_ALGNAME_)ViewClass.T (view) =>
       TYPECASE evt OF
 #{_OUTPUT
-      | #(_EVENT_)Args(var#(_EVENT_)Args) => 
+      | #(_EVENT_)Args(var#(_EVENT_)Args) =>
           view.oe#(_EVENT_) (
 #{
               var#(_EVENT_)Args.#(_ARGNAME_)
@@ -60,7 +60,7 @@ PROCEDURE OEDispatcher(v: ZeusClass.T; evt: REFANY) RAISES {Thread.Alerted} =
               )
 #}
 #{_UPDATE
-      | #(_EVENT_)Args(var#(_EVENT_)Args) => 
+      | #(_EVENT_)Args(var#(_EVENT_)Args) =>
           view.ue#(_EVENT_) (
 #{
               var#(_EVENT_)Args.#(_ARGNAME_)
@@ -74,7 +74,7 @@ PROCEDURE OEDispatcher(v: ZeusClass.T; evt: REFANY) RAISES {Thread.Alerted} =
     | #(_ALGNAME_)3DViewClass.T (view) =>
       TYPECASE evt OF
 #{_OUTPUT
-      | #(_EVENT_)Args(var#(_EVENT_)Args) => 
+      | #(_EVENT_)Args(var#(_EVENT_)Args) =>
           view.oe#(_EVENT_) (
 #{
               var#(_EVENT_)Args.#(_ARGNAME_)
@@ -84,7 +84,7 @@ PROCEDURE OEDispatcher(v: ZeusClass.T; evt: REFANY) RAISES {Thread.Alerted} =
               )
 #}
 #{_UPDATE
-      | #(_EVENT_)Args(var#(_EVENT_)Args) => 
+      | #(_EVENT_)Args(var#(_EVENT_)Args) =>
           view.ue#(_EVENT_) (
 #{
               var#(_EVENT_)Args.#(_ARGNAME_)
@@ -107,7 +107,7 @@ PROCEDURE FEDispatcher(v: ZeusClass.T; evt: REFANY) =
     | #(_ALGNAME_)AlgClass.T (alg) =>
       TYPECASE evt OF
 #{_FEEDBACK
-      | #(_EVENT_)Args(var#(_EVENT_)Args) => 
+      | #(_EVENT_)Args(var#(_EVENT_)Args) =>
           alg.fe#(_EVENT_) (
 #{
               var#(_EVENT_)Args.#(_ARGNAME_)
@@ -125,11 +125,11 @@ PROCEDURE FEDispatcher(v: ZeusClass.T; evt: REFANY) =
 
 #{_OUTPUT
 PROCEDURE #(_EVENT_) (
-      initiator: Algorithm.T; 
-      #(_ARGSTR_) 
+      initiator: Algorithm.T;
+      #(_ARGSTR_)
     ) RAISES {Thread.Alerted} =
   <* LL = {} *>
-  VAR zumeArgRec := NEW(#(_EVENT_)Args 
+  VAR zumeArgRec := NEW(#(_EVENT_)Args
 #{
                , #(_ARGNAME_) := #(_ARGNAME_)
 #}
@@ -148,17 +148,17 @@ PROCEDURE #(_EVENT_) (
 #}
 #{_UPDATE
 PROCEDURE #(_EVENT_) (
-      initiator: Algorithm.T; 
-      #(_ARGSTR_) 
+      initiator: Algorithm.T;
+      #(_ARGSTR_)
     ) RAISES {Thread.Alerted} =
   <* LL = VBT.mu *>
-  VAR zumeArgRec := NEW(#(_EVENT_)Args 
+  VAR zumeArgRec := NEW(#(_EVENT_)Args
 #{
                , #(_ARGNAME_) := #(_ARGNAME_)
 #}
       );
   BEGIN
-    Zeus.Dispatch(initiator, Zeus.EventStyle.Update, #(_EVENTPRIO_), 
+    Zeus.Dispatch(initiator, Zeus.EventStyle.Update, #(_EVENTPRIO_),
                   "#(_EVENT_)", OEDispatcher, zumeArgRec);
   END #(_EVENT_);
 
@@ -166,17 +166,17 @@ PROCEDURE #(_EVENT_) (
 
 #{_FEEDBACK
 PROCEDURE #(_EVENT_) (
-      initiator: View.T; 
-      #(_ARGSTR_) 
+      initiator: View.T;
+      #(_ARGSTR_)
     ) RAISES {Thread.Alerted} =
   <* LL = VBT.mu *>
-  VAR zumeArgRec := NEW(#(_EVENT_)Args 
+  VAR zumeArgRec := NEW(#(_EVENT_)Args
 #{
                , #(_ARGNAME_) := #(_ARGNAME_)
 #}
       );
   BEGIN
-    Zeus.Dispatch(initiator, Zeus.EventStyle.Notify, #(_EVENTPRIO_), 
+    Zeus.Dispatch(initiator, Zeus.EventStyle.Notify, #(_EVENTPRIO_),
                   "#(_EVENT_)", FEDispatcher, zumeArgRec);
   END #(_EVENT_);
 

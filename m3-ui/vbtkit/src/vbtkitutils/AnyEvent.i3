@@ -19,7 +19,7 @@
    "callback" method as an "AnyEvent.T", and the "callback"
    method can then use a "TYPECASE" to differentiate button clicks
    from carriage returns, and to retrieve the data specific to
-   each type of event. 
+   each type of event.
 
    The locking level is arbitrary for all procedures in this interface. *)
 

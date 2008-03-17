@@ -8,7 +8,7 @@ INTERFACE CIText;
 
 IMPORT Word;
 
-CONST 
+CONST
   Brand = "CIText";
 
 TYPE

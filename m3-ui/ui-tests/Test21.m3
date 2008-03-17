@@ -13,7 +13,7 @@ MODULE Test21 EXPORTS Main;
 IMPORT VBT, Trestle, TextVBT, Fmt, Region, Path, Rect;
 
 TYPE
-  TrackVBT = TextVBT.T OBJECT 
+  TrackVBT = TextVBT.T OBJECT
   METHODS
     init(): TrackVBT := Init
   OVERRIDES
@@ -22,7 +22,7 @@ TYPE
     position  := Position;
     mouse     := Mouse;
   END;
-  
+
 PROCEDURE Init(v: TrackVBT): TrackVBT =
   BEGIN
     EVAL TextVBT.T.init(v, "Cursor gone");

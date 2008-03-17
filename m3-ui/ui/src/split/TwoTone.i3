@@ -25,6 +25,6 @@ PROCEDURE Paint (         v    : VBT.Leaf;
                  READONLY tone : T;
                  READONLY delta             := Point.Origin); <* LL.sup < v *>
 (* Paint the rectangle "clip" with the texture "tone.txt+delta" using
-   the operation "tone.op". *) 
+   the operation "tone.op". *)
 
 END TwoTone.

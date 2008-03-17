@@ -11,7 +11,7 @@ IMPORT HVSplit, Split, TextVBT, Text, Font, Axis;
 
 <* FATAL Split.NotAChild *>
 
-REVEAL 
+REVEAL
   Private = HVSplit.T BRANDED "Marquee.Private" OBJECT END;
   T = Public BRANDED "Marquee.T" OBJECT
     nameWidth, argWidth, width: INTEGER;
@@ -32,7 +32,7 @@ PROCEDURE TextFromLen(n: INTEGER) : TEXT =
     RETURN Text.FromChars(SUBARRAY(Blanks, 0, MAX(0, n)))
   END TextFromLen;
 
-PROCEDURE Init(m: T; height := 8; nameWidth := 10; 
+PROCEDURE Init(m: T; height := 8; nameWidth := 10;
     argWidth := 12; font := Font.BuiltIn): T =
   BEGIN
     EVAL HVSplit.T.init(m, Axis.T.Ver, adjustable := FALSE);
@@ -53,12 +53,12 @@ PROCEDURE Erase(m: T) =
   END Erase;
 
 PROCEDURE Newline(m: T) =
-  VAR 
-    v := Split.Succ(m, NIL);  
+  VAR
+    v := Split.Succ(m, NIL);
     last := Split.Pred(m, NIL);
-    lastLine := TextVBT.Get(last); 
+    lastLine := TextVBT.Get(last);
   BEGIN
-    TextVBT.Put(last, 
+    TextVBT.Put(last,
       lastLine & TextFromLen(m.width - Text.Length(lastLine)));
     Split.Delete(m, v);
     TextVBT.Put(v, "");
@@ -76,7 +76,7 @@ PROCEDURE PutArg(m: T; nm: TEXT) =
   END PutArg;
 
 PROCEDURE RemArg(m:T) =
-  VAR 
+  VAR
     last := Split.Pred(m, NIL);
     lastLine := TextVBT.Get(last);
     i := Text.Length(lastLine) - 1;
@@ -84,7 +84,7 @@ PROCEDURE RemArg(m:T) =
     WHILE Text.GetChar(lastLine, i) # ' ' DO DEC(i) END;
     TextVBT.Put(last, Text.Sub(lastLine, 0, i))
   END RemArg;
-  
+
 BEGIN
 END Marquee.
-   
+

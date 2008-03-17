@@ -18,12 +18,12 @@ IMPORT Color, ISOChar, Text, TextList, TextSub, TextListSort, TextIntTbl,
 
 FROM ColorNameTable IMPORT Basic;
 
-TYPE 
-  FrEntry = RECORD name: TEXT; val: REAL END;   
+TYPE
+  FrEntry = RECORD name: TEXT; val: REAL END;
   (* Entry of fraction table *)
 
 CONST Fraction = ARRAY OF FrEntry{
-  
+
     (* Fraction prefixes: *)
     (* Note: if A is a prefix of B, then A must come after B. *)
     (* Also the last prefix must be "" *)
@@ -56,7 +56,7 @@ PROCEDURE IsPrefix (a, b: TEXT; VAR (*OUT*) rest: TEXT): BOOLEAN =
         RETURN FALSE
       ELSE
         FOR i := 0 TO al - 1 DO
-          IF ISOChar.Lower [Text.GetChar(a,i)] # 
+          IF ISOChar.Lower [Text.GetChar(a,i)] #
             ISOChar.Lower [Text.GetChar(b,i)] THEN RETURN FALSE END
         END;
         rest := TextSub.New (b, al, bl - al);

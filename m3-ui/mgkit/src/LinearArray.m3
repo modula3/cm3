@@ -96,7 +96,7 @@ REVEAL
    Each element is a group containing (in painting order - low to high)
    linkToNext, linkToPrev, graphic, next
 
-   If no list or a one element list, then labels will be adjacent. 
+   If no list or a one element list, then labels will be adjacent.
 
    each element is allocated a "slot" of size v.width x v.height.
    adjacent slots are separated by v.dx or v.dy
@@ -352,7 +352,7 @@ PROCEDURE FixLabelLink (v: V; ht: HT) =
     IF v.labelLinks THEN
       CASE ht OF
       | HT.Head => from := v.headLabel; to := v.head;
-      | HT.Tail => from := v.tailLabel; to := v.tail; 
+      | HT.Tail => from := v.tailLabel; to := v.tail;
       END;
       SetLabelLink(v, from, to);
     END;
@@ -585,8 +585,8 @@ PROCEDURE DeleteList(v: V; t: T) =
     V.delete(v, t);
   END DeleteList;
 
-REVEAL 
-  DoublyLinkedList = DoublyLinkedListPublic BRANDED OBJECT 
+REVEAL
+  DoublyLinkedList = DoublyLinkedListPublic BRANDED OBJECT
   OVERRIDES
     insert := InsertDList;
     delete := DeleteDList;
@@ -683,7 +683,7 @@ PROCEDURE Pop(v: QSB) =
     MGV.Animation(v);
   END Pop;
 
-REVEAL Queue = QSB BRANDED OBJECT 
+REVEAL Queue = QSB BRANDED OBJECT
   OVERRIDES
     push := PushQueue;
     pop := PopQueue;
@@ -702,7 +702,7 @@ PROCEDURE PopQueue(v: QSB): T =
     RETURN t;
   END PopQueue;
 
-REVEAL Stack = QSB BRANDED OBJECT 
+REVEAL Stack = QSB BRANDED OBJECT
   OVERRIDES
     push := PushStack;
     pop := PopStack;
@@ -882,7 +882,7 @@ PROCEDURE GrowBuffer(v: Buffer; size: INTEGER) =
     AdjustLabels(v);
     MGV.Animation(v);
   END GrowBuffer;
-    
+
 PROCEDURE LinkerNewDefault (<* UNUSED *> l       : Linker;
                                          v       : V;
                                          from, to: T;

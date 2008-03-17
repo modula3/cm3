@@ -7,7 +7,7 @@
 (*      modified on Tue Feb 16 16:31:40 PST 1993 by johnh *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 
@@ -82,31 +82,31 @@ PROCEDURE TViewInstall (view: T) =
 
 PROCEDURE TViewDelete (view: T) =
   <* LL = VBT.mu *>
-  BEGIN 
+  BEGIN
     TViewZTrace (view, "delete");
     #(_ALGNAME_)ViewClass.T.delete (view);
    END TViewDelete;
 
 PROCEDURE TViewSnapshot (view: T; wr: Wr.T) RAISES {ZeusClass.Error} =
   <* LL = VBT.mu *>
-  BEGIN 
+  BEGIN
     TViewZTrace (view, "snapshot");
     #(_ALGNAME_)ViewClass.T.snapshot (view, wr);
    END TViewSnapshot;
 
 PROCEDURE TViewRestore (view: T; rd: Rd.T) RAISES {ZeusClass.Error} =
   <* LL = VBT.mu *>
-  BEGIN 
+  BEGIN
     TViewZTrace (view, "restore");
     #(_ALGNAME_)ViewClass.T.restore (view, rd);
    END TViewRestore;
 
 PROCEDURE TViewConfig (
-    view: T; 
-    state: ZeusClass.StateChange; 
+    view: T;
+    state: ZeusClass.StateChange;
     o: ZeusClass.T) =
   <* LL = VBT.mu *>
-  BEGIN 
+  BEGIN
     TViewZTrace (view, "config");
     #(_ALGNAME_)ViewClass.T.config (view, state, o);
    END TViewConfig;
@@ -120,14 +120,14 @@ PROCEDURE TViewReactivity (view: T; <*UNUSED*> on: BOOLEAN) =
 
 PROCEDURE TViewStartrun (view: T) =
   <* LL = {} *>
-  BEGIN 
+  BEGIN
     TViewZTrace (view, "startrun");
     #(_ALGNAME_)ViewClass.T.startrun (view);
    END TViewStartrun;
 
 PROCEDURE TViewEndrun (view: T) =
   <* LL = {} *>
-  BEGIN 
+  BEGIN
     TViewZTrace (view, "endrun");
     #(_ALGNAME_)ViewClass.T.endrun (view);
   END TViewEndrun;
@@ -138,13 +138,13 @@ PROCEDURE TViewEndrun (view: T) =
 #{_OUTPUT
 PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
   <* LL = {} *>
-  BEGIN 
+  BEGIN
     LOCK VBT.mu DO
     IF FormsVBT.GetBoolean(view.fv, "alg") THEN
        IF NOT FormsVBT.GetBoolean(view.fv, "args") THEN
           TViewTrace (view, "#(_EVENT_) ...")
        ELSE
-          TViewTrace (view, "#(_EVENT_) " 
+          TViewTrace (view, "#(_EVENT_) "
 #{
           & #(_ARGFMT_)(#(_ARGNAME_))
 #|
@@ -162,12 +162,12 @@ PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
 #{_UPDATE
 PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
   <* LL = VBT.mu *>
-  BEGIN 
+  BEGIN
     IF FormsVBT.GetBoolean(view.fv, "alg") THEN
        IF NOT FormsVBT.GetBoolean(view.fv, "args") THEN
           TViewTrace (view, "#(_EVENT_) ...")
        ELSE
-          TViewTrace (view, "#(_EVENT_) " 
+          TViewTrace (view, "#(_EVENT_) "
 #{
             & #(_ARGFMT_)(#(_ARGNAME_))
 #|
@@ -205,6 +205,6 @@ PROCEDURE TViewNew (): View.T =
 
 
 BEGIN
-  ZeusPanel.RegisterView 
-      (TViewNew, "#(_ALGNAME_) Transcript View", "#(_ALGNAME_)"); 
+  ZeusPanel.RegisterView
+      (TViewNew, "#(_ALGNAME_) Transcript View", "#(_ALGNAME_)");
 END #(_ALGNAME_)TranscriptView.

@@ -14,7 +14,7 @@
    parallel to the coordinate axes.  The directions of the screen are
    named after the compass points, with north at the top.  A rectangle
    "rect" contains a point "pt" if
-   
+
    | pt.h `is in` [rect.west .. rect.east - 1]  AND
    | pt.v `is in` [rect.north .. rect.south - 1]
 
@@ -42,9 +42,9 @@ PROCEDURE FromEdges(w, e, n, s: REAL): T;
 (* If "w >= e" or "n >= s" return "Empty", else return "T{w,e,n,s}". *)
 
 PROCEDURE FromAbsEdges(h1, h2, v1, v2: REAL): T;
-(* Return 
+(* Return
 
-| FromEdges(MIN(h1,h2), MAX(h1,h2), 
+| FromEdges(MIN(h1,h2), MAX(h1,h2),
 |           MIN(v1,v2), MAX(v1,v2))
 
 *)
@@ -56,7 +56,7 @@ PROCEDURE FromCorners(READONLY p, q: R2.T): T;
 (* Return "FromAbsEdges(p.h,q.h,p.v,q.v)". *)
 
 PROCEDURE FromCorner(
-  READONLY p: R2.T; 
+  READONLY p: R2.T;
   hor, ver: CARDINAL): T;
 (* Return "FromEdges(p.h, p.h+hor, p.v, p.v+ver)". *)
 
@@ -112,7 +112,7 @@ PROCEDURE PickEdge (READONLY r: T; READONLY p: Point.T): Edge;
 PROCEDURE PickVertex (READONLY r: T; READONLY p: Point.T): Vertex;
 (* Return the vertex of r closest to p (one of them if not unique) *)
 
-PROCEDURE Project(READONLY r: T; 
+PROCEDURE Project(READONLY r: T;
   READONLY p: Point.T): Point.T;
 (* Return the element of "r" that is closest to "p". This is a
    checked runtime error if "r" is empty. *)
@@ -122,7 +122,7 @@ PROCEDURE Project(READONLY r: T;
 PROCEDURE Add(READONLY r: T; READONLY p: Point.T): T;
 (* Return
 
-| FromEdges(r.west+p.h, r.east+p.h, 
+| FromEdges(r.west+p.h, r.east+p.h,
 |           r.north+p.v,r.south+p.v)
 
 *)
@@ -154,7 +154,7 @@ PROCEDURE Inset(READONLY r: T; n: INTEGER): T;
 (* Return "Change(r, n, -n, n, -n)". *)
 
 PROCEDURE Transpose(READONLY r: T; ax := Axis.T.Ver): T;
-(* If "r" is empty or if "ax = Axis.Hor", then return 
+(* If "r" is empty or if "ax = Axis.Hor", then return
    "r", else return "T{r.north, r.south, r.west, r.east}". *)
 
 PROCEDURE MoveEdge (READONLY r: T; e: Edge; dn: INTEGER): T;
@@ -187,8 +187,8 @@ PROCEDURE Chop (hv: Axis.T; READONLY r: T; n: INTEGER; VAR (*out*) s, t: T)
 TYPE Partition = ARRAY [0..4] OF T;
 
 PROCEDURE Factor(
-  READONLY r, s: T; 
-  VAR (*out*) f: Partition; 
+  READONLY r, s: T;
+  VAR (*out*) f: Partition;
   dh, dv: INTEGER) ;
 (* Partition "r" into "5" pieces "f[0]..f[4]" where "f[2] = Meet(r,s)",
    and the other rectangles in "f" partition the set difference "r-s". *)
@@ -197,10 +197,10 @@ PROCEDURE Factor(
    any positive multiple of "(dh,dv)" doesn't intersect "f[j]".  (Only
    the signs of "dh" and "dv" affect the order, not their magnitude.)  *)
 
-PROCEDURE Mod(READONLY p: Point.T; 
+PROCEDURE Mod(READONLY p: Point.T;
   READONLY r: T): Point.T;
 (* Return the element of "r" whose distance from "p" in each axis is a
-   multiple of the size of "r" in that axis. This is a checked runtime 
+   multiple of the size of "r" in that axis. This is a checked runtime
    error if "r" is empty. *)
 
 (* --- Test --- *)
@@ -211,7 +211,7 @@ PROCEDURE Equal (READONLY r, s: T): BOOLEAN;
 PROCEDURE IsEmpty(READONLY r: T): BOOLEAN;
 (* Return whether "r" is empty. *)
 
-PROCEDURE Member(READONLY p: Point.T; 
+PROCEDURE Member(READONLY p: Point.T;
   READONLY r: T): BOOLEAN;
 (* Return whether p is in r. *)
 

@@ -42,7 +42,7 @@ PROCEDURE ColorMapDefault (<* UNUSED *> orc: Oracle): ScrnColorMap.T
     (* IF orc.st.sts = NIL THEN Crash(); END; RETURN
        orc.st.sts[0].cmap.standard(); *)
   END ColorMapDefault;
-  
+
 PROCEDURE ColorMapList (<* UNUSED *> orc       : Oracle;
                         <* UNUSED *> pat       : TEXT;
                         <* UNUSED *> maxResults: CARDINAL):
@@ -52,7 +52,7 @@ PROCEDURE ColorMapList (<* UNUSED *> orc       : Oracle;
     (* IF orc.st.sts = NIL THEN Crash(); END; RETURN
        orc.st.sts[0].cmap.list(pat, maxResults); *)
   END ColorMapList;
-  
+
 PROCEDURE ColorMapLookup (<* UNUSED *> orc: Oracle; <* UNUSED *> pat: TEXT):
   ScrnColorMap.T RAISES {} =
   BEGIN
@@ -68,7 +68,7 @@ PROCEDURE Crash () =
   BEGIN
     RAISE FatalError
   END Crash;
-  
+
 BEGIN
 END JoinCMap.
 

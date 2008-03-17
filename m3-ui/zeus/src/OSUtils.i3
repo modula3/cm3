@@ -24,5 +24,5 @@ PROCEDURE Delete(path: TEXT) RAISES { FileError };
 PROCEDURE MakeDir(path: TEXT) RAISES { FileError };
   (* Creates the directory.  File system errors are reported by raising
      "FileError" with a human-sensible description of the error. *)
- 
+
 END OSUtils.

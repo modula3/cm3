@@ -27,7 +27,7 @@ END IsXXX;
 
 ========================*)
 
- 
+
 (*----------------*)
 PROCEDURE IsArrowButton(w:Xt.Widget):Xt.Boolean =
 BEGIN

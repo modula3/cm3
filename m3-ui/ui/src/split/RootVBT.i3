@@ -20,7 +20,7 @@ INTERFACE RootVBT;
 
 IMPORT Filter, Split, VBT;
 
-TYPE 
+TYPE
   T <: Split.T;
   Child <: Filter.T;
 

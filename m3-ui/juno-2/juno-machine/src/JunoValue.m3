@@ -217,7 +217,7 @@ PROCEDURE ListLen(t: T): INTEGER =
 
 PROCEDURE NullWrite (
     <*UNUSED*> sp: Pickle.Special;
-    <*UNUSED*> r: REFANY; 
+    <*UNUSED*> r: REFANY;
     <*UNUSED*> writer: Pickle.Writer) =
   BEGIN
   END NullWrite;

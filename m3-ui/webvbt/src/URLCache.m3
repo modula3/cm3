@@ -13,13 +13,13 @@ MODULE URLCache;
 IMPORT HTML, TextRefTbl, Web;
 
 
-TYPE    
+TYPE
   Info = REF RECORD
     header: Web.Header;
     contents: TEXT;
   END;
 
-VAR 
+VAR
   urlCacheMu := NEW(MUTEX);
   urlCacheEnabled := TRUE;
   urlCache := NEW(TextRefTbl.Default).init();
@@ -70,7 +70,7 @@ PROCEDURE Flush () =
   END Flush;
 
 
-VAR 
+VAR
   htmlCacheMu := NEW(MUTEX);
   htmlCacheEnabled := TRUE;
   htmlCache := NEW(TextRefTbl.Default).init();

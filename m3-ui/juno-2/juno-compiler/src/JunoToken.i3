@@ -47,7 +47,7 @@ TYPE
 (* A token "t" has a kind and an optional value. The value "t.val" is
    meaningful if and only if "t.kind" is "Kind.LitText", "Kind.Id", or
    "Kind.Comment". The value "t.num" is meaningful if and only if "t.kind"
-   is "Kind.LitReal". There are 8 token classes: literal reals, 
+   is "Kind.LitReal". There are 8 token classes: literal reals,
    literal texts, identifiers, operators, keywords, reserved identifiers,
    comments, and end-of-stream. A token "t" is classified according to the
    following table:

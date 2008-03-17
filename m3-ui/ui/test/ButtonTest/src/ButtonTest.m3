@@ -10,8 +10,8 @@
 
 MODULE ButtonTest EXPORTS Main;
 
-IMPORT ButtonVBT, VBT, TextVBT, Filter, ZSplit, TextureVBT, 
-  QuickBtnVBT, AnchorBtnVBT, BorderedVBT, HVSplit, MenuBtnVBT, 
+IMPORT ButtonVBT, VBT, TextVBT, Filter, ZSplit, TextureVBT,
+  QuickBtnVBT, AnchorBtnVBT, BorderedVBT, HVSplit, MenuBtnVBT,
   Trestle, PaintOp, Axis, Text, HighlightVBT, Pixmap;
 
 <*FATAL ANY*>
@@ -26,7 +26,7 @@ PROCEDURE Flip(b: ButtonVBT.T; <*UNUSED*> READONLY cd: VBT.MouseRec) RAISES {}=
       END
     END
   END Flip;
-  
+
 VAR
  menuBar := ButtonVBT.MenuBar(
    ButtonVBT.New(TextVBT.New("Alpha"), Flip),

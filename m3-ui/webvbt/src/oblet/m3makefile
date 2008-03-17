@@ -2,7 +2,7 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 %
-% Last modified on Fri Apr 12 07:37:49 PDT 1996 by mhb      
+% Last modified on Fri Apr 12 07:37:49 PDT 1996 by mhb
 
 import ("obliqlibm3")
 import ("obliqlibui")

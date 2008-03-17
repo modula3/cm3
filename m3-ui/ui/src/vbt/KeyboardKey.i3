@@ -12,7 +12,7 @@ INTERFACE KeyboardKey;
 
 (* Define constants for common keyboard symbols.  *)
 
-CONST 
+CONST
   VoidSymbol = 16_FFFFFF;	(* void symbol *)
   BackSpace = 16_FF08;	(* back space, back char *)
   Tab = 16_FF09;

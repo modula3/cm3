@@ -13,7 +13,7 @@ MODULE ScrnPixmap;
 
 IMPORT Rect, Point, PaintPrivate, Word, Pixmap;
 
-REVEAL 
+REVEAL
   Private = BRANDED OBJECT END;
   Pixmap.Raw = Raw_Public BRANDED OBJECT END;
   T = Public BRANDED OBJECT END;
@@ -42,11 +42,11 @@ CONST WordSize = BITSIZE(PixWord);
 
 PROCEDURE Get1(raw: Raw1; READONLY pt: Point.T): Pixel RAISES {} =
   BEGIN
-    WITH 
+    WITH
       relH = pt.h - raw.westRounded,
-      relV = pt.v - raw.bounds.north, 
+      relV = pt.v - raw.bounds.north,
       ix = raw.offset + relV * raw.wordsPerRow + relH DIV WordSize,
-      word = raw.pixels[ix] 
+      word = raw.pixels[ix]
     DO
       IF raw.pixelOrder = ByteOrder.LSBFirst THEN
         RETURN Word.Extract(word, relH MOD WordSize, 1)
@@ -55,14 +55,14 @@ PROCEDURE Get1(raw: Raw1; READONLY pt: Point.T): Pixel RAISES {} =
       END
     END
   END Get1;
-  
+
 PROCEDURE Set1(raw: Raw1; READONLY pt: Point.T; pix: Pixel) RAISES {} =
   BEGIN
-    WITH 
+    WITH
       relH = pt.h - raw.westRounded,
-      relV = pt.v - raw.bounds.north, 
+      relV = pt.v - raw.bounds.north,
       ix = raw.offset + relH DIV WordSize + relV * raw.wordsPerRow,
-      word = raw.pixels[ix] 
+      word = raw.pixels[ix]
     DO
       IF raw.pixelOrder = ByteOrder.LSBFirst THEN
         word := Word.Insert(word, pix, relH MOD WordSize, 1)
@@ -75,11 +75,11 @@ PROCEDURE Set1(raw: Raw1; READONLY pt: Point.T; pix: Pixel) RAISES {} =
 PROCEDURE Get8(raw: Raw8; READONLY pt: Point.T): Pixel RAISES {} =
   CONST PixPerWord = WordSize DIV 8;
   BEGIN
-    WITH 
+    WITH
       relH = pt.h - raw.westRounded,
-      relV = pt.v - raw.bounds.north, 
+      relV = pt.v - raw.bounds.north,
       ix = raw.offset + relH DIV PixPerWord + relV * raw.wordsPerRow,
-      word = raw.pixels[ix] 
+      word = raw.pixels[ix]
     DO
       IF raw.pixelOrder = ByteOrder.LSBFirst THEN
         RETURN Word.Extract(word, 8*(relH MOD PixPerWord), 8)
@@ -88,15 +88,15 @@ PROCEDURE Get8(raw: Raw8; READONLY pt: Point.T): Pixel RAISES {} =
       END
     END
   END Get8;
-  
+
 PROCEDURE Set8(raw: Raw8; READONLY pt: Point.T; pix: Pixel) RAISES {} =
   CONST PixPerWord = WordSize DIV 8;
   BEGIN
-    WITH 
+    WITH
       relH = pt.h - raw.westRounded,
-      relV = pt.v - raw.bounds.north, 
+      relV = pt.v - raw.bounds.north,
       ix = raw.offset + relH DIV PixPerWord + relV * raw.wordsPerRow,
-      word = raw.pixels[ix] 
+      word = raw.pixels[ix]
     DO
       IF raw.pixelOrder = ByteOrder.LSBFirst THEN
         word := Word.Insert(word, pix, 8*(relH MOD PixPerWord), 8)
@@ -108,13 +108,13 @@ PROCEDURE Set8(raw: Raw8; READONLY pt: Point.T; pix: Pixel) RAISES {} =
 
 PROCEDURE GetN(raw: Raw; READONLY pt: Point.T): Pixel RAISES {} =
   BEGIN
-    WITH 
+    WITH
       bpp = raw.bitsPerPixel,
       pixPerWord = WordSize DIV bpp,
       relH = pt.h - raw.westRounded,
-      relV = pt.v - raw.bounds.north, 
+      relV = pt.v - raw.bounds.north,
       ix = raw.offset + relH DIV pixPerWord + relV * raw.wordsPerRow,
-      word = raw.pixels[ix] 
+      word = raw.pixels[ix]
     DO
       IF raw.pixelOrder = ByteOrder.LSBFirst THEN
         RETURN Word.Extract(word, bpp * (relH MOD pixPerWord), bpp)
@@ -123,16 +123,16 @@ PROCEDURE GetN(raw: Raw; READONLY pt: Point.T): Pixel RAISES {} =
       END
     END
   END GetN;
-  
+
 PROCEDURE SetN(raw: Raw; READONLY pt: Point.T; pix: Pixel) RAISES {} =
   BEGIN
-    WITH 
+    WITH
       bpp = raw.bitsPerPixel,
       pixPerWord = WordSize DIV bpp,
       relH = pt.h - raw.westRounded,
-      relV = pt.v - raw.bounds.north, 
+      relV = pt.v - raw.bounds.north,
       ix = raw.offset + relH DIV pixPerWord + relV * raw.wordsPerRow,
-      word = raw.pixels[ix] 
+      word = raw.pixels[ix]
     DO
       IF raw.pixelOrder = ByteOrder.LSBFirst THEN
         word := Word.Insert(word, pix, bpp * (relH MOD pixPerWord), bpp)
@@ -144,12 +144,12 @@ PROCEDURE SetN(raw: Raw; READONLY pt: Point.T; pix: Pixel) RAISES {} =
 
 PROCEDURE SubN(raw: Raw; READONLY rect: Rect.T): Raw RAISES {} =
   BEGIN
-    WITH 
+    WITH
       bpp = raw.bitsPerPixel,
       pixPerWord = WordSize DIV bpp,
       dom = Rect.Meet(rect, raw.bounds),
       relH = dom.west - raw.westRounded,
-      relV = dom.north - raw.bounds.north, 
+      relV = dom.north - raw.bounds.north,
       ix = raw.offset + relH DIV pixPerWord + relV * raw.wordsPerRow
     DO
       RETURN

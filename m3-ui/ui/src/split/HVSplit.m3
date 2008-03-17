@@ -16,13 +16,13 @@ MODULE HVSplit;
 IMPORT VBT, Split, Axis, Rect, Interval, ProperSplit, VBTClass,
   VBTTuning, Word;
 
-TYPE SizeCache = 
-  RECORD 
+TYPE SizeCache =
+  RECORD
     lastQuery := -1;
     lastRes: VBT.SizeRange
   END;
 
-REVEAL 
+REVEAL
   Private = ProperSplit.T BRANDED OBJECT END;
   T = Public BRANDED OBJECT
     hv: Axis.T;
@@ -43,7 +43,7 @@ REVEAL
     init := Be
   END;
 
-TYPE 
+TYPE
   Child = ProperSplit.Child OBJECT size: INTEGER END;
   (* size < 0 iff the old size was Word.Not(size) and the size has
      changed.  *)
@@ -84,8 +84,8 @@ PROCEDURE Cons(
     : T RAISES {} =
   BEGIN
     RETURN
-      ConsArray(hv, 
-        ARRAY OF VBT.T{ch0, ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8, ch9}, 
+      ConsArray(hv,
+        ARRAY OF VBT.T{ch0, ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8, ch9},
         saveBits, parlim, adjustable);
   END Cons;
 
@@ -109,7 +109,7 @@ PROCEDURE InvalidateCache(v: T) RAISES {} =
     END;
     VBT.NewShape(v)
   END InvalidateCache;
-  
+
 PROCEDURE Insert(v: T; pred, ch: VBT.T) =
   BEGIN
     Public.insert(v, pred, ch);
@@ -193,16 +193,16 @@ PROCEDURE Adjust(v: T; ch: VBT.T; totsz: INTEGER) RAISES {Split.NotAChild} =
   END Adjust;
 
 PROCEDURE ResetSize(
-    VAR size: INTEGER; 
-    sh: VBT.SizeRange; 
+    VAR size: INTEGER;
+    sh: VBT.SizeRange;
     adjustable: BOOLEAN) =
   BEGIN
-    IF size < 0 THEN 
+    IF size < 0 THEN
       WITH sz = Word.Not(size) DO
         IF adjustable AND sh.lo <= sz AND sz < sh.hi THEN
           size := sz
         ELSIF NOT adjustable OR size = FIRST(INTEGER) THEN
-          size := sh.pref 
+          size := sh.pref
         ELSIF sz < sh.lo THEN
           size := sh.lo
         ELSE
@@ -267,7 +267,7 @@ PROCEDURE AvailSize(v: T): CARDINAL RAISES {} =
     END;
     RETURN MAX(0, totsz-totmin)
   END AvailSize;
-  
+
 PROCEDURE AxisOf(v: T): Axis.T RAISES {} =
   BEGIN
     IF v = NIL THEN RETURN Axis.T.Hor ELSE RETURN v.hv END
@@ -351,7 +351,7 @@ PROCEDURE Scale(v: T) RAISES {} =
       w := v.succ(w)
     END
   END ScaleUp;
-  
+
   <* INLINE *> PROCEDURE ScaleDown(delta: CARDINAL) RAISES {} =
   VAR w := v.succ(NIL); sz: CARDINAL;
   BEGIN
@@ -372,9 +372,9 @@ PROCEDURE Scale(v: T) RAISES {} =
       w := v.succ(w)
     END
   END ScaleDown;
-  
+
   BEGIN
-    IF totsz = 0 THEN 
+    IF totsz = 0 THEN
       WHILE w # NIL DO
         WITH p = NARROW(w.upRef, Child) DO
           IF p.size < 0 THEN
@@ -383,7 +383,7 @@ PROCEDURE Scale(v: T) RAISES {} =
         END;
         w := v.succ(w)
       END;
-      RETURN 
+      RETURN
     END;
     WHILE w # NIL DO
       WITH
@@ -392,8 +392,8 @@ PROCEDURE Scale(v: T) RAISES {} =
       DO
         IF p.size < 0 THEN
           ResetSize(p.size, sh, v.adjustable)
-        ELSIF NOT v.adjustable THEN 
-          p.size := sh.pref 
+        ELSIF NOT v.adjustable THEN
+          p.size := sh.pref
         END;
         sz := MAX(sh.lo, p.size);
         sz := MIN(sh.hi-1, sz);
@@ -474,12 +474,12 @@ PROCEDURE Shape(v: T; ax: Axis.T; n: CARDINAL): VBT.SizeRange RAISES {} =
     END
   END Shape;
 
-PROCEDURE AxisOrder(v: T): Axis.T = 
+PROCEDURE AxisOrder(v: T): Axis.T =
   BEGIN RETURN Axis.Other[v.hv] END AxisOrder;
-  
+
 PROCEDURE NewShape(v: T; ch: VBT.T) RAISES {} =
   BEGIN
-    WITH 
+    WITH
       p = NARROW(ch.upRef, Child)
     DO
       IF p.size >= 0 THEN p.size := Word.Not(p.size) END;

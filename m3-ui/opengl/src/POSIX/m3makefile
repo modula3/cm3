@@ -9,7 +9,7 @@
 /* Vendor-Independent:  gl.h glu.h glx.h                                     */
 /* Vendor-Dependent:    glxdecproto.h glxint.h glxmd.h glxproto.h            */
 
-import ("X11R4") 
+import ("X11R4")
 
 Interface ("GL")
 Interface ("GLX")

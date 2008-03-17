@@ -13,7 +13,7 @@ IMPORT Axis, Point, Rect, Region, Trestle, TrestleComm, VBT;
 <* FATAL TrestleComm.Failure *>
 
 
-VAR 
+VAR
   r := Rect.T {0, 200, 0, 200};
 
 
@@ -53,8 +53,8 @@ PROCEDURE Repaint (self: VBT.Leaf; <* UNUSED *> READONLY rgn: Region.T) =
 
 
 BEGIN
-  WITH v = NEW (VBT.Leaf, repaint  := Repaint, 
-                          shape    := Shape, 
+  WITH v = NEW (VBT.Leaf, repaint  := Repaint,
+                          shape    := Shape,
                           position := Position) DO
     Trestle.Install (v);
     Trestle.AwaitDelete (v);

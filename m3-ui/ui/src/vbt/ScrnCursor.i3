@@ -26,7 +26,7 @@ VAR DontCare: T;
 
 TYPE Raw = Cursor.Raw;
 
-(* See the "Cursor" interface for the raw representation of a cursor 
+(* See the "Cursor" interface for the raw representation of a cursor
    shape as a pair of bitmaps, color information, and hotspot offset.
 
 \subsubsection{Obtaining handles from the oracle} *)
@@ -36,10 +36,10 @@ TYPE
     width, height: INTEGER;
   METHODS
     <* LL.sup <= VBT.mu *>
-    load(READONLY r: Raw; nm: TEXT := NIL): T 
+    load(READONLY r: Raw; nm: TEXT := NIL): T
       RAISES {TrestleComm.Failure};
     list(pat: TEXT; maxResults: CARDINAL := 1)
-      : REF ARRAY OF TEXT 
+      : REF ARRAY OF TEXT
       RAISES {TrestleComm.Failure};
     lookup(name: TEXT): T RAISES {TrestleComm.Failure};
     builtIn(cs: Cursor.Predefined): T;
@@ -49,11 +49,11 @@ TYPE
 (* For a screentype "st", the field "st.cursor" is an "Oracle" that
    produces cursors owned by "st":
 
-   The integers "st.cursor.width" and "st.cursor.height" are the 
-   dimensions in pixels of the largest cursor image that the screentype "st" 
+   The integers "st.cursor.width" and "st.cursor.height" are the
+   dimensions in pixels of the largest cursor image that the screentype "st"
    supports. Larger images will be cropped; smaller images will be padded.
-   
-   The method call 
+
+   The method call
 
 | st.cursor.load(r, nm)
 
@@ -62,7 +62,7 @@ TYPE
    "nm", and any cursor handle owned by "st" that previously had the
    name "nm" becomes anonymous.
 
-   The method call 
+   The method call
 
 | st.cursor.list(pat, maxResults)
 
@@ -71,8 +71,8 @@ TYPE
    A "*" matches any number of characters and a "?" matches a single
    character.
 
-   The method call 
-   
+   The method call
+
 | st.cursor.lookup(name)
 
    return the cursor handle owned by "st" with the given name, or "NIL"
@@ -84,18 +84,18 @@ TYPE
 
    returns the screen-dependent cursor valid for "st" that corresponds
    to the predefined screen-independent cursor "Cursor.T{cs}" .
-   
+
    The locking level for all methods is "LL.sup <= VBT.mu". *)
 
 (* \subsubsection{The handle object} *)
 
 TYPE
-  T <: Public; 
-  Public = OBJECT (*CONST*) 
-    id: INTEGER 
-  METHODS 
+  T <: Public;
+  Public = OBJECT (*CONST*)
+    id: INTEGER
+  METHODS
     <* LL.sup <= VBT.mu *>
-    localize(): Raw 
+    localize(): Raw
       RAISES {TrestleComm.Failure, Failure};
     unload() RAISES {TrestleComm.Failure};
   END;

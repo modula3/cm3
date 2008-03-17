@@ -226,7 +226,7 @@ PROCEDURE ParseArgs (VAR s: State;  e: Event) RAISES {Error} =
       a := c;
     END;
     e.args := b;
-    
+
   END ParseArgs;
 
 PROCEDURE ParseErr (VAR s: State;  expected: TEXT) RAISES {Error} =
@@ -298,7 +298,7 @@ PROCEDURE GetToken (VAR s: State) RAISES {Error} =
              THEN SkipComment (s);
              ELSE s.tok := TK.L_paren; EXIT;
            END;
-         
+
       | ')' => s.tok := TK.R_paren;    GetCh (s);  EXIT;
       | '[' => s.tok := TK.L_bracket;  GetCh (s);  EXIT;
       | ']' => s.tok := TK.R_bracket;  GetCh (s);  EXIT;

@@ -9,7 +9,7 @@ MODULE AlbumVBT;
 
 (* Like a photograph album of VBT snapshots *)
 
-IMPORT Axis, Image, PackSplit, PaintOp, Pixmap, PixmapVBT, Split, 
+IMPORT Axis, Image, PackSplit, PaintOp, Pixmap, PixmapVBT, Split,
   TrestleComm, VBT;
 
 REVEAL

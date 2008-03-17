@@ -39,7 +39,7 @@ PROCEDURE Enter (alg: Algorithm.T; procedureName: TEXT; pauseTime := -1)
    window to pop up containing the source for the procedure with the header
    highlighted. *)
 
-PROCEDURE Exit (alg: Algorithm.T; pauseTime := -1) 
+PROCEDURE Exit (alg: Algorithm.T; pauseTime := -1)
   RAISES {Thread.Alerted};
 <* LL = {} *>
 (* Indicates that the current procedure is about to exit.  Its source

@@ -24,4 +24,3 @@ PROCEDURE Restore(VAR st: T; rd: Rd.T): BOOLEAN;
    Return "FALSE" if "rd" does not contain a properly saved state. *)
 
 END SaveState.
-  

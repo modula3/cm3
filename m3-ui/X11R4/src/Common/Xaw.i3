@@ -2,7 +2,7 @@
 (* All rights reserved.						*)
 (* See the file COPYRIGHT for a full description.		*)
 
-(* Last modified on Fri May  7 16:20:32 PDT 1993 by mjordan     *)  
+(* Last modified on Fri May  7 16:20:32 PDT 1993 by mjordan     *)
 (*      modified on Tue Feb 11 17:33:16 PST 1992 by muller      *)
 (*      modified on Tue Apr 24 17:41:54 1990 by jerome		*)
 
@@ -51,14 +51,14 @@ UNSAFE INTERFACE Xaw;
 
 
 FROM Ctypes  	IMPORT char_star_star, int_star, long, unsigned_long_star;
-FROM X  	IMPORT Atom, AtomStar, Enumeration, 
+FROM X  	IMPORT Atom, AtomStar, Enumeration,
                        XEventStar, XRectangleStar;
-FROM Xt 	IMPORT AppContext, Boolean, CallbackProc, Cardinal, 
-                       Dimension,  Position, String, StringStar, 
+FROM Xt 	IMPORT AppContext, Boolean, CallbackProc, Cardinal,
+                       Dimension,  Position, String, StringStar,
                        Widget, WidgetClass;
 IMPORT Xmu;
 
-(* 
+(*
     Size of a "regular" List of objects
 *)
 
@@ -72,13 +72,13 @@ and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the names of Digital or MIT not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -120,7 +120,7 @@ SOFTWARE.
 (* #define XtCVisual "Visual"                                  in XtC.i3 *)
 (* #define XtNtitleEncoding "titleEncoding"                    in XtN.i3 *)
 (* #define XtCTitleEncoding "TitleEncoding"                    in XtC.i3 *)
- 
+
 (* #define XtNsaveUnder "saveUnder"                            in XtN.i3 *)
 (* #define XtCSaveUnder "SaveUnder"                            in XtC.i3 *)
 (* #define XtNtransient "transient"                            in XtN.i3 *)
@@ -143,8 +143,8 @@ SOFTWARE.
 
 (* #define XtRAtom "Atom"                                      in XtR.i3 *)
 
-(* 
- * The following are only used at creation and can not be changed via 
+(*
+ * The following are only used at creation and can not be changed via
  * SetValues.
  *)
 
@@ -263,7 +263,7 @@ SOFTWARE.
 (* #define XtEstring "string"                                  in XtE.i3 *)
 (* #define XtEfile "file"                                      in XtE.i3 *)
 
-TYPE 
+TYPE
   AsciiType = Enumeration;
 CONST
   AsciiFile	= 0;
@@ -271,7 +271,7 @@ CONST
 
 (************************************************************
  *
- * Public routines 
+ * Public routines
  *
  ************************************************************)
 
@@ -282,7 +282,7 @@ CONST
  *	Returns: none.
  *)
 
-<* EXTERNAL XawAsciiSourceFreeString *> 
+<* EXTERNAL XawAsciiSourceFreeString *>
    PROCEDURE AsciiSourceFreeString(w: Widget);
 
 (*	Function Name: Xaw.AsciiSave
@@ -315,7 +315,7 @@ CONST
 
 
 (*================================================================
- * $XConsortium: AsciiText.h,v 1.15 89/07/06 16:00:35 kit Exp $ 
+ * $XConsortium: AsciiText.h,v 1.15 89/07/06 16:00:35 kit Exp $
  *================================================================*)
 
 (****************************************************************
@@ -530,7 +530,7 @@ CONST
 
 
 (*==================================================================
- * $XConsortium: Dialog.h,v 1.20 89/11/12 14:02:57 kit Exp $ 
+ * $XConsortium: Dialog.h,v 1.20 89/11/12 14:02:57 kit Exp $
  *==================================================================*)
 
 (***********************************************************************
@@ -567,7 +567,7 @@ CONST
    dialogWidgetClass: WidgetClass;
 
 <* EXTERNAL XawDialogAddButton *>
-   PROCEDURE DialogAddButton (parent: Widget; name: String; 
+   PROCEDURE DialogAddButton (parent: Widget; name: String;
                               function: CallbackProc; param: ADDRESS);
 
 <* EXTERNAL XawDialogGetValueString *>
@@ -575,7 +575,7 @@ CONST
 
 
 (*============================================================
- * $XConsortium: Form.h,v 1.22 89/07/21 01:51:26 kit Exp $ 
+ * $XConsortium: Form.h,v 1.22 89/07/21 01:51:26 kit Exp $
  *============================================================*)
 
 (***********************************************************************
@@ -666,7 +666,7 @@ CONST
 
 (***************************************************************************
  *
- * Grip Widget 
+ * Grip Widget
  *
  **************************************************************************)
 
@@ -750,7 +750,7 @@ TYPE
 (* #define XtNinternalHeight "internalHeight"                  in XtN.i3 *)
 (* #define XtNresize "resize"                                  in XtN.i3 *)
 (* #define XtCResize "Resize"                                  in XtC.i3 *)
- 
+
 (* #define XtCBitmap "Bitmap"                                  in XtC.i3 *)
 
 (* Class record constants *)
@@ -764,7 +764,7 @@ TYPE
  *============================================================*)
 
 (*  This is the List widget, it is useful to display a list, without the
- *  overhead of having a widget for each item in the list.  It allows 
+ *  overhead of having a widget for each item in the list.  It allows
  *  the user to select an item in a list and notifies the application through
  *  a callback function.
  *
@@ -790,7 +790,7 @@ TYPE
  columnSpacing       Spacing            Dimension       6
  cursor		     Cursor		Cursor		left_ptr
  defaultColumns      Columns            int             2          **5
- destroyCallback     Callback		Pointer		NULL 
+ destroyCallback     Callback		Pointer		NULL
  font		     Font		XFontStruct*	XtDefaultFont
  forceColumns        Columns            Boolean         False      **5
  foreground	     Foreground		Pixel		XtDefaultForeground
@@ -814,35 +814,35 @@ TYPE
        is set to the minimum size necessay to fit the entire list.
 
        If both Width and Height are zero then they are adjusted to fit the
-       entire list that is created width the number of default columns 
+       entire list that is created width the number of default columns
        specified in the defaultColumns resource.
 
  **2 - This is an array of strings the specify elements of the list.
-       This resource must be specified. 
+       This resource must be specified.
        (What good is a list widget without a list??  :-)
 
  **3 - Longest is the length of the widest string in pixels.
 
  **4 - If either of these values are zero (0) then the list widget calculates
-       the correct value. 
+       the correct value.
 
-       (This allows you to make startup faster if you already have 
+       (This allows you to make startup faster if you already have
         this information calculated)
 
-       NOTE: If the numberStrings value is zero the list must 
+       NOTE: If the numberStrings value is zero the list must
              be NULL terminated.
 
  **5 - By setting the List.Columns resource you can force the application to
-       have a given number of columns.	     
-        
- **6 - This returns the name and index of the item selected in an 
+       have a given number of columns.
+
+ **6 - This returns the name and index of the item selected in an
        XawListReturnStruct that is pointed to by the client_data
        in the CallbackProc.
 
 *)
 
 (*
- * Value returned when there are no highlighted objects. 
+ * Value returned when there are no highlighted objects.
  *)
 
 CONST
@@ -864,7 +864,7 @@ CONST
 (* #define XtNpasteBuffer "pasteBuffer"                        in XtN.i3 *)
 (* #define XtNrowSpacing "rowSpacing"                          in XtN.i3 *)
 (* #define XtNverticalList "verticalList"                      in XtN.i3 *)
- 
+
 (* Class record constants *)
 
 <* EXTERNAL *> VAR
@@ -897,7 +897,7 @@ TYPE
  *)
 
 <* EXTERNAL XawListChange *>
-   PROCEDURE ListChange (w: Widget; list: char_star_star; 
+   PROCEDURE ListChange (w: Widget; list: char_star_star;
                          nitems, longest: INTEGER; resize: Boolean);
 
 (*	Function Name: Xaw.ListUnhighlight
@@ -1011,7 +1011,7 @@ TYPE
  * Date:    May 2, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  *)
 
@@ -1165,7 +1165,7 @@ CONST
 
 (************************************************************
  *
- *  Public Procedures 
+ *  Public Procedures
  *
  ************************************************************)
 
@@ -1190,7 +1190,7 @@ CONST
    PROCEDURE PanedGetMinMax (widget: Widget; min, max: int_star);
 
 (*	Function Name: Xaw.PanedSetRefigureMode
- *	Description: Allows a flag to be set the will inhibit 
+ *	Description: Allows a flag to be set the will inhibit
  *                   the paned widgets relayout routine.
  *	Arguments: w - the paned widget.
  *                 mode - if FALSE then inhibit refigure.
@@ -1263,8 +1263,8 @@ CONST
 
 *)
 
-(* 
- * Most things we need are in StringDefs.h 
+(*
+ * Most things we need are in StringDefs.h
  *)
 
 (* #define XtCMinimumThumb "MinimumThumb"                      in XtC.i3 *)
@@ -1335,7 +1335,7 @@ CONST
  * Date:    April 3, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  *)
 
@@ -1404,7 +1404,7 @@ CONST
 
 <* EXTERNAL XawSimpleMenuAddGlobalActions *>
    PROCEDURE SimpleMenuAddGlobalActions (app_con: AppContext);
- 
+
 (*	Function Name: Xaw.SimpleMenuGetActiveEntry
  *	Description: Gets the currently active (set) entry.
  *	Arguments: w - the smw widget.
@@ -1432,12 +1432,12 @@ CONST
  * Sme.h - Public Header file for Sme object.
  *
  * This is the public header file for the Athena Sme object.
- * It is intended to be used with the simple menu widget.  
+ * It is intended to be used with the simple menu widget.
  *
  * Date:    April 3, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  *)
 
@@ -1478,7 +1478,7 @@ CONST
  * Date:    April 3, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  *)
 
@@ -1521,12 +1521,12 @@ CONST
  * SmeLine.h - Public Header file for SmeLine object.
  *
  * This is the public header file for the Athena SmeLine object.
- * It is intended to be used with the simple menu widget.  
+ * It is intended to be used with the simple menu widget.
  *
  * Date:    April 3, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  *)
 
@@ -1605,13 +1605,13 @@ CONST
 (* #define XtNscale "scale"                                    in XtN.i3 *)
 (* #define XtNupdate "update"                                  in XtN.i3 *)
 (* #define XtNvmunix "vmunix"                                  in XtN.i3 *)
- 
+
 <* EXTERNAL *> VAR
    stripChartWidgetClass: WidgetClass;
 
 
 (*===================================================================
- * $XConsortium: Template.h,v 1.4 89/07/21 01:41:49 kit Exp $ 
+ * $XConsortium: Template.h,v 1.4 89/07/21 01:41:49 kit Exp $
  *===================================================================*)
 
 (****************************************************************
@@ -1735,12 +1735,12 @@ CONST
   EditError          = 1;
   PositionError      = 2;
 
-<* EXTERNAL *> 
+<* EXTERNAL *>
    VAR FMT8BIT: Atom;
 
 (* Class record constants *)
 
-<* EXTERNAL *> 
+<* EXTERNAL *>
    VAR textWidgetClass: WidgetClass;
 
 (* other stuff *)
@@ -1845,7 +1845,7 @@ TYPE
    PROCEDURE TextGetSource (w: Widget): Widget;
 
 <* EXTERNAL XawTextSearch *>
-   PROCEDURE TextSearch (w: Widget; dir: TextScanDirection; 
+   PROCEDURE TextSearch (w: Widget; dir: TextScanDirection;
                          text: TextBlockStar): TextPosition;
 
 
@@ -1868,7 +1868,7 @@ TYPE
  background          Background      Pixel              XtDefaultBackground
 
 *)
- 
+
 (* Class record constants *)
 
 <* EXTERNAL *> VAR
@@ -1887,7 +1887,7 @@ CONST
  ************************************************************)
 
 (*	Function Name: Xaw.TextSinkDisplayText
- *	Description: Stub function that in subclasses will display text. 
+ *	Description: Stub function that in subclasses will display text.
  *	Arguments: w - the TextSink Object.
  *                 x, y - location to start drawing text.
  *                 pos1, pos2 - location of starting and ending points
@@ -1900,9 +1900,9 @@ CONST
  *)
 
 <* EXTERNAL XawTextSinkDisplayText *>
-   PROCEDURE TextSinkDisplayText (w: Widget; 
-                                  x, y: Position; 
-                                  pos1, pos2: TextPosition; 
+   PROCEDURE TextSinkDisplayText (w: Widget;
+                                  x, y: Position;
+                                  pos1, pos2: TextPosition;
                                   highlight: Boolean);
 
 (*	Function Name: Xaw.TextSinkInsertCursor
@@ -1917,8 +1917,8 @@ CONST
  *)
 
 <* EXTERNAL XawTextSinkInsertCursor *>
-   PROCEDURE TextSinkInsertCursor (w: Widget; 
-                                   x, y: Position; 
+   PROCEDURE TextSinkInsertCursor (w: Widget;
+                                   x, y: Position;
                                    state: TextInsertState);
 
 (*	Function Name: Xaw.TextSinkClearToBackground
@@ -1933,8 +1933,8 @@ CONST
  *)
 
 <* EXTERNAL XawTextSinkClearToBackground  *>
-   PROCEDURE TextSinkClearToBackground  (w: Widget; 
-                                         x, y: Position; 
+   PROCEDURE TextSinkClearToBackground  (w: Widget;
+                                         x, y: Position;
                                          width, height: Dimension);
 
 (*	Function Name: Xaw.TextSinkFindPosition
@@ -1951,10 +1951,10 @@ CONST
  *)
 
 <* EXTERNAL XawTextSinkFindPosition *>
-   PROCEDURE TextSinkFindPosition (w: Widget; 
-                                   fromPos: TextPosition; 
+   PROCEDURE TextSinkFindPosition (w: Widget;
+                                   fromPos: TextPosition;
                                    fromx, width: INTEGER;
-                                   stopAtWordBreak: Boolean; 
+                                   stopAtWordBreak: Boolean;
                                    resPos: TextPositionStar;
                                    resWidth, resHeight: int_star);
 
@@ -1971,11 +1971,11 @@ CONST
  *)
 
 <* EXTERNAL XawTextSinkFindDistance  *>
-   PROCEDURE TextSinkFindDistance  (w: Widget; 
-                                    fromPos: TextPosition; 
+   PROCEDURE TextSinkFindDistance  (w: Widget;
+                                    fromPos: TextPosition;
                                     fromx: INTEGER;
-				    toPos: TextPosition; 
-                                    resPos: TextPositionStar; 
+				    toPos: TextPosition;
+                                    resPos: TextPositionStar;
                                     resHeight: int_star);
 
 (*	Function Name: Xaw.TextSinkResolve
@@ -1989,8 +1989,8 @@ CONST
  *)
 
 <* EXTERNAL XawTextSinkResolve *>
-   PROCEDURE TextSinkResolve (w: Widget; 
-                              pos: TextPosition; 
+   PROCEDURE TextSinkResolve (w: Widget;
+                              pos: TextPosition;
                               fromx, width: INTEGER;
                               resPos: TextPositionStar);
 
@@ -2006,7 +2006,7 @@ CONST
    PROCEDURE TextSinkMaxLines (w: Widget; height: Dimension): INTEGER;
 
 (*	Function Name: Xaw.TextSinkMaxHeight
- *	Description: Finds the Minium height that will contain a given number 
+ *	Description: Finds the Minium height that will contain a given number
  *                   lines.
  *	Arguments: w - the TextSink Object.
  *                 lines - the number of lines.
@@ -2026,7 +2026,7 @@ CONST
 
 <* EXTERNAL XawTextSinkSetTabs *>
    PROCEDURE TextSinkSetTabs (w: Widget; tab_count: INTEGER; tabs: int_star);
-						  
+
 (*	Function Name: Xaw.TextSinkGetCursorBounds
  *	Description: Finds the bounding box for the insert curor (caret).
  *	Arguments: w - the TextSinkObject.
@@ -2055,7 +2055,7 @@ CONST
  editType	     EditType		XawTextEditType	XawtextRead
 
 *)
- 
+
 (* Class record constants *)
 
 <* EXTERNAL *> VAR
@@ -2117,8 +2117,8 @@ CONST
  *)
 
 <* EXTERNAL XawTextSourceRead *>
-   PROCEDURE TextSourceRead (w: Widget; pos: TextPosition; 
-                             text: TextBlockStar; 
+   PROCEDURE TextSourceRead (w: Widget; pos: TextPosition;
+                             text: TextBlockStar;
                              length: INTEGER): TextPosition;
 
 (*	Function Name: Xaw.TextSourceReplace.
@@ -2142,15 +2142,15 @@ CONST
  *                 dir - direction to scan.
  *                 count - which occurance if this thing to search for.
  *                 include - whether or not to include the character found in
- *                           the position that is returned. 
+ *                           the position that is returned.
  *	Returns: The position of the text.
  *
  *)
 
 <* EXTERNAL XawTextSourceScan *>
-   PROCEDURE TextSourceScan (w: Widget; position: TextPosition; 
+   PROCEDURE TextSourceScan (w: Widget; position: TextPosition;
                              type: TextScanType;
-                             dir: TextScanDirection; count: INTEGER; 
+                             dir: TextScanDirection; count: INTEGER;
                              include: Boolean): TextPosition;
 
 (*	Function Name: Xaw.TextSourceSearch
@@ -2164,8 +2164,8 @@ CONST
  *)
 
 <* EXTERNAL XawTextSourceSearch *>
-   PROCEDURE TextSourceSearch (w: Widget;  position: TextPosition; 
-                               dir: TextScanDirection; 
+   PROCEDURE TextSourceSearch (w: Widget;  position: TextPosition;
+                               dir: TextScanDirection;
                                text: TextBlockStar): TextPosition;
 
 (*	Function Name: Xaw.TextSourceConvertSelection
@@ -2181,9 +2181,9 @@ CONST
  *)
 
 <* EXTERNAL XawTextSourceConvertSelection *>
-   PROCEDURE TextSourceConvertSelection (w: Widget; 
+   PROCEDURE TextSourceConvertSelection (w: Widget;
                                          selection, target, type: AtomStar;
-                                         value: ADDRESS; 
+                                         value: ADDRESS;
                                          length: unsigned_long_star;
                                          format: int_star): Boolean;
 
@@ -2196,8 +2196,8 @@ CONST
  *)
 
 <* EXTERNAL XawTextSourceSetSelection *>
-   PROCEDURE TextSourceSetSelection (w: Widget; 
-                                     left, right: TextPosition; 
+   PROCEDURE TextSourceSetSelection (w: Widget;
+                                     left, right: TextPosition;
                                      selection: Atom);
 
 
@@ -2270,11 +2270,11 @@ CONST
    toggleWidgetClass: WidgetClass;
 
 (************************************************************
- * 
+ *
  * Public Functions
  *
  ************************************************************)
-   
+
 (*	Function Name: Xaw.ToggleChangeRadioGroup
  *	Description: Allows a toggle widget to change radio lists.
  *	Arguments: w - The toggle widget to change lists.
@@ -2305,7 +2305,7 @@ CONST
 
 <* EXTERNAL XawToggleSetCurrent *>
    PROCEDURE ToggleSetCurrent (radio_group: Widget; radio_data: ADDRESS);
- 
+
 (*	Function Name: Xaw.ToggleUnsetCurrent
  *	Description: Unsets all Toggles in the radio_group specified.
  *	Arguments: radio_group - any toggle widget in the toggle list.

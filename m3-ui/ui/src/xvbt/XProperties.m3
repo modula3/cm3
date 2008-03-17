@@ -631,7 +631,7 @@ PROCEDURE GetProp (            v     : XClient.T;
 
 EXCEPTION FatalError;
 
-PROCEDURE Crash() =        
+PROCEDURE Crash() =
   <* FATAL FatalError *>
   BEGIN
     RAISE FatalError

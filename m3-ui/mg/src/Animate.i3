@@ -188,7 +188,7 @@ TYPE
 
 PROCEDURE Do(t: T; mg: MG.T; v: MG.V; duration := 1.0) RAISES {Thread.Alerted};
   (* call t.doStep(t.tf.map(time), v, mg) where time increases (roughly linearly)
-     from 0.0 to 1.0 so that the animation takes duration seconds.  If 
+     from 0.0 to 1.0 so that the animation takes duration seconds.  If
      "duration" = 0.0 then only the last scene (time = 1.0) of the animation
      occurs. t.start is called at the start of the animation and t.end is called
      at the end.  Thread.Alerted may be called before or after any frame
@@ -205,7 +205,7 @@ PROCEDURE Undo(t: T; mg: MG.T; v: MG.V; duration := 1.0) RAISES {Thread.Alerted}
 
 
 (* Animations are kept semi-synchronous by maintaining a global "animation
-   time" based on real time.  Animation time is the real time that has 
+   time" based on real time.  Animation time is the real time that has
    taken place, scaled by the current animation speed.  Each active animation
    calls "ATime" to determine the current time of the animation to display.
 

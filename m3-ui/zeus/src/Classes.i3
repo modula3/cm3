@@ -6,7 +6,7 @@
 INTERFACE Classes;
 
 (* Maintains lists of algorithm and view classes for ZeusPanel.  This
-   module does its own internal locking to prevent simultaneous access.  
+   module does its own internal locking to prevent simultaneous access.
    LL of all procedures is arbitrary. *)
 
 (* The "Sample" procedures return an internally-held copy of the requested

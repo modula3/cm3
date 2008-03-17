@@ -29,7 +29,7 @@ REVEAL
     redisplay := Redisplay;
   END;
 
-TYPE 
+TYPE
   ZChild = ProperSplit.Child OBJECT
     (* Protection level VBT.mu *)
     shapeChanged, mapped := FALSE;
@@ -38,9 +38,9 @@ TYPE
        has been called and therefore its shape method will be called
        in order to possibly change the dimensions of the child.  *)
     dom: ZDom := NIL;
-    (* If zc.upRef.dom is non-NIL, then zc.upRef.dom.r is the 
+    (* If zc.upRef.dom is non-NIL, then zc.upRef.dom.r is the
        rectangle to which zc will be reshaped the next time
-       zc.parent is redisplayed non-empty and zc is mapped. Also, 
+       zc.parent is redisplayed non-empty and zc is mapped. Also,
        zc.upRef.dom.checked is set if the domain has been
        clipped into zc's shape range. *)
     reshapeControl: ZSplit.ReshapeControl := NIL;
@@ -60,11 +60,11 @@ TYPE
   END;
   ZClip = REF RECORD cache: Rect.T := Rect.Empty; rgn: Region.T END;
   ZDom = REF RECORD r: Rect.T; checked, replacement := FALSE END;
-  
+
 PROCEDURE New(
     bg: VBT.T := NIL;
     saveBits := FALSE;
-    parlim: INTEGER := -1): T = 
+    parlim: INTEGER := -1): T =
   BEGIN
     RETURN Be(NEW(T), bg, saveBits, parlim)
   END New;
@@ -72,11 +72,11 @@ PROCEDURE New(
 PROCEDURE BeChild(v: T; ch: VBT.T) RAISES {} =
 VAR  ur: Child;
   BEGIN
-    IF ch.upRef = NIL THEN 
-      ur := NEW(Child); 
+    IF ch.upRef = NIL THEN
+      ur := NEW(Child);
       ch.upRef := ur
     ELSE
-      ur := ch.upRef 
+      ur := ch.upRef
     END;
     ZSplit.T.beChild(v, ch)
   END BeChild;
@@ -107,8 +107,8 @@ PROCEDURE Reshape(v: T; READONLY cd: VBT.ReshapeRec) RAISES {} =
     IF Rect.IsEmpty(cd.new) THEN
       v.oldDom := NEW(REF Rect.T);
       v.oldDom^ := cd.prev
-    ELSIF v.oldDom = NIL THEN 
-      old := cd.prev 
+    ELSIF v.oldDom = NIL THEN
+      old := cd.prev
     ELSE
       old := v.oldDom^;
       v.oldDom := NIL
@@ -124,14 +124,14 @@ PROCEDURE Reshape(v: T; READONLY cd: VBT.ReshapeRec) RAISES {} =
             ur.dom.checked := FALSE;
             ur.shapeChanged := FALSE;
             VBTClass.ClearNewShape(ch)
-          ELSIF ur.dom.checked THEN 
+          ELSIF ur.dom.checked THEN
             ur.dom.checked := Congruent(prev, ur.dom.r);
 	    IF ur.dom.checked THEN
 	      IF ur.regionControl # NIL THEN
 	        ur.reg := ur.regionControl.apply(ch, ur.dom.r)
 	      END
 	    END
-          END 
+          END
         END;
         ch := v.succ(ch)
       END
@@ -146,10 +146,10 @@ PROCEDURE Reshape(v: T; READONLY cd: VBT.ReshapeRec) RAISES {} =
 
 PROCEDURE Redisplay(v: T) RAISES {} =
   BEGIN Redisplay2(v, FALSE, FALSE, v.domain, Point.Origin) END Redisplay;
-  
+
  TYPE
    ChildRec = RECORD ch: VBT.T; ur: Child; clip: Clip; winner: BOOLEAN END;
- 
+
 PROCEDURE Redisplay2(v: T; inReshape, translation: BOOLEAN; READONLY
 saved: Rect.T; READONLY delta: Point.T)
   RAISES {} =
@@ -164,7 +164,7 @@ saved: Rect.T; READONLY delta: Point.T)
         WITH ur = NARROW(ch.upRef, Child) DO
           RememberDomain(ch, ur);
           IF ur.clip # NIL THEN LOCK ch DO ur.clip := NIL END END
-        END; 
+        END;
         IF NOT Rect.IsEmpty(ch.domain) THEN
           VBTClass.Reshape(ch, Rect.Empty, Rect.Empty)
         END;
@@ -229,7 +229,7 @@ saved: Rect.T; READONLY delta: Point.T)
       END;
       ch := v.succ(ch)
     END;
-    IF inReshape OR replacement OR NOT Rect.IsEmpty(v.affected.r) THEN 
+    IF inReshape OR replacement OR NOT Rect.IsEmpty(v.affected.r) THEN
       IF numch <= NUMBER(a1) THEN
         Redisplay3(v, a1, inReshape, translation, saved, delta)
       ELSE
@@ -240,14 +240,14 @@ saved: Rect.T; READONLY delta: Point.T)
   END Redisplay2;
 
 PROCEDURE ComputeClip(
-  READONLY affected: Region.T; 
+  READONLY affected: Region.T;
   VAR covered: PolyRegion.T;
-  READONLY dom, pdom: Rect.T; 
+  READONLY dom, pdom: Rect.T;
   inReshape: BOOLEAN;
-  oclip: Clip): Clip = 
+  oclip: Clip): Clip =
   VAR cl, oc: Region.T; obs := PolyRegion.OverlapRect(covered, dom);
   BEGIN
-    IF NOT obs AND Rect.Subset(dom, pdom) AND 
+    IF NOT obs AND Rect.Subset(dom, pdom) AND
       ((oclip = NIL) OR inReshape OR Region.SubsetRect(dom, affected))
     THEN
       PolyRegion.JoinRect(covered, dom);
@@ -288,18 +288,18 @@ PROCEDURE ComputeClip(
   END ComputeClip;
 
 <*INLINE*> PROCEDURE RegionEqRect(
-    READONLY rect: Rect.T; 
+    READONLY rect: Rect.T;
     READONLY rgn: Region.T): BOOLEAN =
   BEGIN
     RETURN (rgn.p = NIL) AND Rect.Equal(rect, rgn.r)
   END RegionEqRect;
-              
+
 PROCEDURE ApplyClip(
-  v: T; 
-  VAR el: ChildRec; 
+  v: T;
+  VAR el: ChildRec;
   READONLY dom: Rect.T;
-  inReshape: BOOLEAN; 
-  READONLY saved: Rect.T; 
+  inReshape: BOOLEAN;
+  READONLY saved: Rect.T;
   VAR secure:PolyRegion.T) =
   VAR nc: Clip;
   BEGIN
@@ -308,7 +308,7 @@ PROCEDURE ApplyClip(
         (* set ch's clip to be meet of old and new clip, to
            prevent it from painting on windows that we are
            going to reshape. *)
-        IF (el.clip = NIL) OR (ur.clip = EmptyClip) 
+        IF (el.clip = NIL) OR (ur.clip = EmptyClip)
            OR (ur.clip = el.clip) THEN
           nc := ur.clip
         ELSIF (ur.clip = NIL) OR (el.clip = EmptyClip) THEN
@@ -318,11 +318,11 @@ PROCEDURE ApplyClip(
         END;
         IF inReshape AND (nc = NIL) AND NOT Rect.Subset(dom, saved) THEN
           nc := NEW(Clip, rgn := Region.FromRect(Rect.Meet(dom, saved)))
-        ELSIF inReshape AND (nc # NIL) AND 
+        ELSIF inReshape AND (nc # NIL) AND
               NOT Rect.Subset(nc.rgn.r, saved) THEN
           nc := NEW(Clip, rgn := Region.MeetRect(saved, nc.rgn))
         END;
-        el.winner := FALSE  
+        el.winner := FALSE
       ELSIF v.saveBits AND (el.clip = NIL) AND (ur.clip = NIL)
         AND NOT Rect.IsEmpty(el.ch.domain) AND
         NOT PolyRegion.OverlapRect(secure, el.ch.domain) THEN
@@ -335,14 +335,14 @@ PROCEDURE ApplyClip(
       END;
       (* ch.clip := nc *)
       IF ur.clip # nc THEN
-        LOCK el.ch DO 
+        LOCK el.ch DO
           ur.clip := nc;
           VBTClass.ClearShortCircuit(el.ch)
         END
       END
     END
   END ApplyClip;
-              
+
 PROCEDURE Redisplay3(v: T; VAR a: ARRAY OF ChildRec; inReshape, translation:
   BOOLEAN; READONLY saved: Rect.T; READONLY delta: Point.T) =
   VAR ch := v.succ(NIL);
@@ -354,12 +354,12 @@ PROCEDURE Redisplay3(v: T; VAR a: ARRAY OF ChildRec; inReshape, translation:
       affected := PolyRegion.ToRegion(v.affected)
     END;
     v.affected := PolyRegion.Empty;
-    (* Compute new regions. Find movers that don't get old domain, and 
-       throttle them; also restrict painting on windows that get more 
+    (* Compute new regions. Find movers that don't get old domain, and
+       throttle them; also restrict painting on windows that get more
        obscured. *)
     WHILE ch # NIL DO
       WITH ur = NARROW(ch.upRef, Child), nd = Domain(ch, ur) DO
-        IF ur.mapped AND (inReshape OR (ur.dom # NIL) OR 
+        IF ur.mapped AND (inReshape OR (ur.dom # NIL) OR
             Region.OverlapRect(nd, affected))
         THEN
           WITH el = a[nch] DO
@@ -372,8 +372,8 @@ PROCEDURE Redisplay3(v: T; VAR a: ARRAY OF ChildRec; inReshape, translation:
                   cache := Rect.Add(ur.clip.cache, delta))
               END
             ELSE
-              el.clip := 
-                ComputeClip(affected, covered, nd, v.domain, inReshape, 
+              el.clip :=
+                ComputeClip(affected, covered, nd, v.domain, inReshape,
 		  ur.clip)
             END;
             IF (ur.dom # NIL) OR (el.clip # ur.clip) OR
@@ -434,7 +434,7 @@ PROCEDURE GetDomain(ch: VBT.T): Region.T =
   BEGIN
     WITH ur = NARROW(ch.upRef, Child), r = Domain(ch, ur) DO
       IF ur.shapeChanged OR (ur.dom # NIL) AND NOT ur.dom.checked THEN
-        WITH 
+        WITH
           s = VBTClass.GetShapes(ch, ur.shapeChanged),
           hor = s[Axis.T.Hor], ver = s[Axis.T.Ver]
         DO
@@ -445,7 +445,7 @@ PROCEDURE GetDomain(ch: VBT.T): Region.T =
 	      RETURN ur.regionControl.apply(ch,
 	        Rect.FromCorner(Rect.NorthWest(r.r), hor.pref, ver.pref))
           ELSE
-            WITH hsize= Rect.HorSize(r.r), vsize = Rect.VerSize(r.r),  
+            WITH hsize= Rect.HorSize(r.r), vsize = Rect.VerSize(r.r),
               width = MIN(hor.hi-1, MAX(hor.lo, hsize)),
               height = MIN(ver.hi-1, MAX(ver.lo, vsize))
             DO
@@ -475,9 +475,9 @@ PROCEDURE GetDomain(ch: VBT.T): Region.T =
     IF ur.regionControl = NIL THEN RETURN r END;
     IF NOT ur.checked THEN
       rg := ur.regionControl.apply(ch, r);
-      ur.translation := 
-        Region.Equal(rg, 
-	  Region.Move(ur.reg, 
+      ur.translation :=
+        Region.Equal(rg,
+	  Region.Move(ur.reg,
 	    Point.Sub(Rect.NorthWest(rg.r), Rect.NorthWest(ur.reg.r))));
       ur.reg := rg
     END;
@@ -485,12 +485,12 @@ PROCEDURE GetDomain(ch: VBT.T): Region.T =
   END Domain;
 
 <*INLINE*> PROCEDURE Congruent(READONLY r1, r2: Rect.T): BOOLEAN =
-  BEGIN 
-    RETURN 
+  BEGIN
+    RETURN
       Rect.HorSize(r1) = Rect.HorSize(r2) AND
-      Rect.VerSize(r1) = Rect.VerSize(r2) 
-  END Congruent;  
-    
+      Rect.VerSize(r1) = Rect.VerSize(r2)
+  END Congruent;
+
 PROCEDURE SetReshapeControl(
     ch: VBT.T;
     rc: ReshapeControl) =

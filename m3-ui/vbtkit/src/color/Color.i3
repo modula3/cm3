@@ -18,14 +18,14 @@
    gray levels.  RGB triples outside the unit cube cannot be
    displayed on typical color monitors, but are still legal as
    far as this interface is concerned, make perfect physical
-   sense, and are useful in some color computations. 
+   sense, and are useful in some color computations.
 
-   This interface also provides routines to convert colors between 
+   This interface also provides routines to convert colors between
    the HSV (Hue, Saturation, Value) and RGB color models. *)
 
 INTERFACE Color;
 
-TYPE 
+TYPE
   T = RECORD r, g, b: REAL;  END;
 
 CONST
@@ -69,7 +69,7 @@ PROCEDURE Brightness (READONLY rgb: T): REAL;
    value=1, whereas grey levels have saturation=0,
    value=brightness, and indeterminate hue. *)
 
-TYPE 
+TYPE
   HSV = RECORD h, s, v: REAL END;
 
 (* The following procedures convert between RGB and HSV color

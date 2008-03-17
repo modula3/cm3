@@ -20,11 +20,11 @@ PROCEDURE CommandLength(cptr: CommandPtr): INTEGER =
       END
     END
   END CommandLength;
-  
-VAR 
+
+VAR
   x := 1;
   p := LOOPHOLE(ADR(x), UNTRACED REF CHAR);
-  
+
 BEGIN
   HostByteOrder := VAL(ORD(p^), ByteOrder)
 END PaintPrivate.

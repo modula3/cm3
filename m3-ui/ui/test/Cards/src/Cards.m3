@@ -10,7 +10,7 @@
 
 MODULE Cards EXPORTS Main;
 
-IMPORT PaintOp, RigidVBT, TextureVBT, BorderedVBT, VBT, ZSplit, Rect, 
+IMPORT PaintOp, RigidVBT, TextureVBT, BorderedVBT, VBT, ZSplit, Rect,
     Point, Trestle, Filter, VBTClass, HighlightVBT, PlaidVBT, Pixmap,
     MouseSplit, EyesVBT, ButtonVBT, HVSplit, AnchorBtnVBT,
     TextVBT, Axis, Text, Split, MenuBtnVBT, BurmaShave, TrestleComm;
@@ -52,7 +52,7 @@ PROCEDURE Mouse(ch: Card; READONLY cd: VBT.MouseRec) =
   VAR p : Parent := VBT.Parent(ch);
   BEGIN
     (* BorderedVBT.T.mouse *) MouseSplit.Mouse(ch, cd);
-    IF cd.clickType = VBT.ClickType.FirstDown AND 
+    IF cd.clickType = VBT.ClickType.FirstDown AND
        cd.whatChanged = VBT.Modifier.MouseL THEN
       p.dragChild := ch;
       p.rect := VBT.Domain(ch);
@@ -95,10 +95,10 @@ VAR clr := ARRAY [0..7] OF ClrRec {
   NewCR(1.0, 1.0, 0.0, "yellow"),
   NewCR(1.0, 0.0, 1.0, "magenta")};
 
-PROCEDURE NewCR(r, g, b: REAL; name: TEXT) : ClrRec = 
+PROCEDURE NewCR(r, g, b: REAL; name: TEXT) : ClrRec =
   BEGIN
     RETURN ClrRec{
-      PaintOp.MakeColorQuad(PaintOp.FromRGB(r,g,b), PaintOp.Fg), 
+      PaintOp.MakeColorQuad(PaintOp.FromRGB(r,g,b), PaintOp.Fg),
       name}
   END NewCR;
 
@@ -118,11 +118,11 @@ PROCEDURE DoNewChild(b: ButtonVBT.T; <*UNUSED*> READONLY cd: VBT.MouseRec) =
         END
       END
     END;
-    ZSplit.InsertAt(zSplit, card, 
+    ZSplit.InsertAt(zSplit, card,
       Point.Add(Rect.NorthWest(VBT.Domain(zSplit)),
                 Point.T{75, 5}))
   END DoNewChild;
-    
+
 PROCEDURE DoErase(<*UNUSED*>b: ButtonVBT.T; <*UNUSED*>READONLY cd: VBT.MouseRec) =
   <* FATAL Split.NotAChild *>
   VAR ch := Split.Succ(zSplit, NIL); BEGIN
@@ -136,19 +136,19 @@ PROCEDURE DoErase(<*UNUSED*>b: ButtonVBT.T; <*UNUSED*>READONLY cd: VBT.MouseRec)
     END
   END DoErase;
 
-PROCEDURE Menu1(): HVSplit.T = 
+PROCEDURE Menu1(): HVSplit.T =
   VAR res := HVSplit.New(Axis.T.Ver); BEGIN
     FOR i := FIRST(clr) TO LAST(clr) DO
       Split.AddChild(res,
         MenuBtnVBT.TextItem(clr[i].name, DoNewChild))
     END;
-    Split.AddChild(res, 
+    Split.AddChild(res,
         MenuBtnVBT.TextItem("plaid", DoNewChild));
-    Split.AddChild(res, 
+    Split.AddChild(res,
         MenuBtnVBT.TextItem("eye", DoNewChild));
-    Split.AddChild(res, 
+    Split.AddChild(res,
         MenuBtnVBT.TextItem("shave", DoNewChild));
-    Split.AddChild(res, 
+    Split.AddChild(res,
         MenuBtnVBT.TextItem("erase", DoErase));
     RETURN res
   END Menu1;

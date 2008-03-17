@@ -15,7 +15,7 @@
    named handle is valid forever; the pixmap referenced by an anonymous
    handle will be garbage-collected when all handles to it have been
    dropped.  *)
-   
+
 INTERFACE ScrnPixmap;
 
 IMPORT Point, Rect, Word, TrestleComm, Pixmap, BasicCtypes;
@@ -24,16 +24,16 @@ EXCEPTION Failure;
 
 TYPE Raw = Pixmap.Raw;
 
-(* The raw representation of a pixmap is revealed at the end of this 
-   interface. 
+(* The raw representation of a pixmap is revealed at the end of this
+   interface.
 
 \subsubsection{Obtaining handles from the oracle} *)
 
 TYPE
   Oracle = Private OBJECT
-  METHODS 
+  METHODS
     <* LL.sup <= VBT.mu *>
-    load(READONLY r: Raw; nm: TEXT := NIL): T 
+    load(READONLY r: Raw; nm: TEXT := NIL): T
       RAISES {TrestleComm.Failure};
     list(pat: TEXT; maxResults: CARDINAL := 1)
       : REF ARRAY OF TEXT RAISES {TrestleComm.Failure};
@@ -42,7 +42,7 @@ TYPE
   END;
   Private <: ROOT;
 
-(* For a screentype "st", the field "st.pixmap" is an "Oracle" that 
+(* For a screentype "st", the field "st.pixmap" is an "Oracle" that
    produces pixmaps owned by "st".
 
    The method call "st.pixmap.load(r, nm)" allocates and returns
@@ -63,20 +63,20 @@ TYPE
    The method call "st.pixmap.builtIn(pm)" returns the screen-dependent
    pixmap valid for "st" that corresponds to the predefined
    screen-independent "Pixmap.T{pm}".
-   
+
    The locking level for all methods is "LL.sup <= VBT.mu". *)
 
 (* \subsubsection{The handle object} *)
 
 TYPE
-  T <: Public; 
+  T <: Public;
   Public = OBJECT (*CONST*)
     id: INTEGER;
     depth: INTEGER;
     bounds: Rect.T
   METHODS
     <* LL.sup <= VBT.mu *>
-    localize(READONLY rect: Rect.T): Raw 
+    localize(READONLY rect: Rect.T): Raw
       RAISES {TrestleComm.Failure};
     unload() RAISES {TrestleComm.Failure};
     free() RAISES {TrestleComm.Failure}
@@ -86,12 +86,12 @@ TYPE
    interpretation depends on the screentype that owns "pm".  The field
    "pm.depth" is the number of bits in each pixel of "pm", and
    "pm.bounds" is the rectangular extent of "pm".
-    
+
    The method call "pm.localize(rect)" returns a raw pixmap equal to
    a rectangualr subpixmap of the one on which "pm" is a handle.  The
    bounds of the raw pixmap returned by "localize" is "Rect.Meet(rect,
    pm.bounds)".
-    
+
    The method call "pm.unload()" causes "pm" to become anonymous.
 
    Pixmaps consume large amounts of memory.  The method call "pm.free()"
@@ -105,25 +105,25 @@ TYPE
    A raw pixmap allows the client to directly locate and modify the
    bits of the pixmap.  The following procedure produces a new raw
    pixmap: *)
-      
-PROCEDURE NewRaw(dpth: INTEGER; 
+
+PROCEDURE NewRaw(dpth: INTEGER;
   READONLY bnds: Rect.T): Raw;
 <* LL arbitrary *>
 (* Allocate and return a raw pixmap with the given depth and bounds. *)
-  
+
 (* The initial contents of the pixmap returned by "NewRaw" are undefined.
 
    Here is the representation of a raw pixmap: *)
 
 REVEAL Pixmap.Raw <: Raw_Public;
-       
+
 TYPE
   Raw_Public = OBJECT
-    depth: INTEGER; 
-    bounds: Rect.T; 
+    depth: INTEGER;
+    bounds: Rect.T;
     pixels: REF ARRAY OF PixWord;
     offset: INTEGER;
-    bitsPerPixel: INTEGER; 
+    bitsPerPixel: INTEGER;
     wordsPerRow: INTEGER;
     pixelOrder: ByteOrder;
     westRounded: INTEGER;
@@ -132,7 +132,7 @@ TYPE
     set(READONLY pt: Point.T; pix: Pixel);
     sub(READONLY rect: Rect.T): Raw;
   END;
-  
+
   PixWord = BasicCtypes.unsigned_int;
   Pixel = Word.T;
   ByteOrder = {MSBFirst, LSBFirst};
@@ -140,22 +140,22 @@ TYPE
 (* The methods provide the easiest way to operate on a raw pixmap, and
    we will explain them first.  Let "pm" be a "ScrnPixmap.Raw", then:
 
-   The method call 
+   The method call
 
 | pm.get(pt)
 
    returns the pixel value at the point "pt" in the pixmap.  The result
    is undefined if "pt" is not in "pm.bounds".
 
-   The method call 
+   The method call
 
 | pm.set(pt, pix)
 
    sets the pixel value at the point "pt" of the pixmap "pm" to the
    value "pix".  It is a noop if "pt" is not in "pm.bounds".
 
-   The method call 
-   
+   The method call
+
 | pm.sub(rect)
 
    returns a pixmap whose bounds are "Rect.Meet(rect, pm.bounds)" and
@@ -164,7 +164,7 @@ TYPE
    It is also possible to bypass the methods and access the
    data in the raw pixmap directly. Here is the specification
    for the internal layout of pixels in a raw pixmap:
-   
+
    A value "pm" of type "Pixmap.Raw" is a rectangular subregion of a
    larger rectangular pixmap, which we shall call the {\it surround}.
    The surround is a word-aligned pixmap, stored in raster-scan order
@@ -179,7 +179,7 @@ TYPE
    that are needed to store one row of the surround.
 
    The value "pm.bitsPerPixel" might be greater than "pm.depth"; for
-   example, a twelve-bit deep pixmap might be stored with 
+   example, a twelve-bit deep pixmap might be stored with
    sixteen bits per pixel.
 
    The pixels of the surround are stored in the array "pm.pixels".  Each
@@ -201,8 +201,8 @@ TYPE
 | `pixel "1":  bits` bpp..2*bpp-1
 | ...
 | `pixel "i":  bits` i*bpp..(i+1)*bpp-1
-   
-   If "pm.pixelOrder = MSBFirst", the pixels are stored in reverse order, 
+
+   If "pm.pixelOrder = MSBFirst", the pixels are stored in reverse order,
    so that pixel "i" occupies the same bits as pixel "pixelsPerWord-i-1"
    occupies for "LSBFirst".
 
@@ -210,7 +210,7 @@ TYPE
    gives the pixel's value.  If the word size does not contain an
    integral number of pixels, the unused bits in the word have
    undefined values.
-   
+
    The pixmap "pm" itself is a rectangular region selected from the surround;
    the value "pm.bounds", of type "Rect.T", specifies the domain of "pm".  The
    value "pm.offset" specifies where in "pm.pixels" the words containing the
@@ -219,15 +219,15 @@ TYPE
 
 | h = pm.bounds.west `and` v = pm.bounds.north,
 
-   is stored in word "pm.pixels[pm.offset]".  The pixel is the 
-   "(pm.bounds.west MOD pixelsPerWord)"'th pixel of the word.  
+   is stored in word "pm.pixels[pm.offset]".  The pixel is the
+   "(pm.bounds.west MOD pixelsPerWord)"'th pixel of the word.
    Its bits can be found by the earlier formulas.
 
-   The general formula for the word containing the pixel with position 
+   The general formula for the word containing the pixel with position
    "h, v" is
 
 | pm.pixels[
-|  (v - pm.bounds.north) * pm.wordsPerRow + 
+|  (v - pm.bounds.north) * pm.wordsPerRow +
 |  (h - pm.westRounded) DIV pixelsPerWord) + pm.offset].
 
    Here is another useful formula.  The surround rectangle must be at
@@ -236,8 +236,8 @@ TYPE
    boundary and rounded the east edge of "pm.bounds" eastward to the next
    word boundary.  As a result, we have the inequality:
 
-|  pm.wordsPerRow >= 
-|    ((pm.bounds.east - 1) DIV pixelsPerWord) - 
+|  pm.wordsPerRow >=
+|    ((pm.bounds.east - 1) DIV pixelsPerWord) -
 |    (pm.bounds.west DIV pixelsPerWord) + 1
 
 

@@ -116,7 +116,7 @@ TYPE
 PROCEDURE NewTool(): Drawing.ArgTool =
   VAR args := Drawing.NewArgArray(1, Drawing.ArgType.Drag); BEGIN
     RETURN NEW(DraggingTool, argType := args)
-  END NewTool; 
+  END NewTool;
 
 (* Drag Tool Pre, Post, During, Apply methods ------------------------------ *)
 
@@ -234,7 +234,7 @@ PROCEDURE CompileDrag(d: Drawing.T; p: JunoAST.QId; ts: VBT.TimeStamp):
 |     IF
 |     	VAR nv IN
 |     	  VAR _newpt, _oldpt IN
-|     	    _newpt := JunoUI._DRAG(p) 
+|     	    _newpt := JunoUI._DRAG(p)
 |     	  ; DO _newpt # NIL ->
 |     	      _oldpt := p
 |     	    ; p := _newpt                             ***

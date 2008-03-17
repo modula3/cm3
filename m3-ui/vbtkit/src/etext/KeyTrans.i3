@@ -30,7 +30,7 @@ PROCEDURE Latin1 (key: VBT.KeySym): CHAR;
    corresponding character.
 
    \medskip\bulletitem Otherwise return "NullKey" *)
-   
+
 PROCEDURE TTY (READONLY cd: VBT.KeyRec): CHAR;
 (* Similar to "Latin1", but if this is a control key, then clear
    the ``high-order bits'' from the character code.  For example,

@@ -35,7 +35,7 @@
 
 INTERFACE AutoRepeat;
 
-TYPE 
+TYPE
   Milliseconds = CARDINAL;
 
 CONST

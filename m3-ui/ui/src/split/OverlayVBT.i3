@@ -32,7 +32,7 @@ TYPE
    will be the subset of the region that needs to be repaired.  Clients
    may want to override the reshape method to set an appropriate region. *)
 
-REVEAL VBT.Split <: VBT.Leaf; 
+REVEAL VBT.Split <: VBT.Leaf;
 (* So that painting on a T is known to be legit. *)
 
 END OverlayVBT.

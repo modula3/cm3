@@ -29,7 +29,7 @@ PROCEDURE Paint (         v        : VBT.Leaf;
     p: PaintExt.PicturePtr;
     completion := PictureRep.MakeCompletion(src).init(
                     1, freeProc, freeParam);
-  BEGIN    
+  BEGIN
     LOCK v DO
       IF v.remaining < bsize THEN
         IF v.st = NIL THEN RETURN END;

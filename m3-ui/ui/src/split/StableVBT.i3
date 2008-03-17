@@ -15,7 +15,7 @@
    satisfies its max and min size, then its preferred size is its own
    size, otherwise its preferred size is its child's preference,
    unless the filter is projecting, in which case the preferred size
-   is the projection of the VBTs own size into the child's size range.  Its 
+   is the projection of the VBTs own size into the child's size range.  Its
    "own size" is its current size if this is non-empty, or its last non-empty
    size otherwise, unless. SetShape has been called the next calls to the
    shape procedures use the values set.
@@ -23,7 +23,7 @@
    Thus when the child changes its preferred shape, the parent generally
    does not.  To allow a new preferred shape of a child to get through
    the filter, the filter can be temporarily disabled.
-   
+
    *)
 
 INTERFACE StableVBT;
@@ -47,7 +47,7 @@ PROCEDURE Disable(v: VBT.T); <* LL.sup < v *>
 (* Temporarily disable the lowest (possibly improper) ancestor of "v"
    that is a "StableVBT.T", if any.  *)
 
-(* While disabled, the filter reports its preferred size as the 
+(* While disabled, the filter reports its preferred size as the
    child's preferred size.  The filter will be reenabled as soon
    as it is reshaped to a non-empty domain. *)
 
@@ -62,4 +62,4 @@ PROCEDURE SetProjecting(v: VBT.T; project: BOOLEAN); <* LL.sup < v *>
 (* Set the lowest "StableVBT.T" ancestor of "v" to be projecting *)
 
 END StableVBT.
-  
+

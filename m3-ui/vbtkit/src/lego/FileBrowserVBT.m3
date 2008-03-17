@@ -168,7 +168,7 @@ PROCEDURE InsertCells (v: T; at: ListVBT.Cell; n: CARDINAL) =
       SUBARRAY (v.isDir^, first, count - first);
     FOR i := first TO first + n - 1 DO v.isDir [i] := FALSE END
   END InsertCells;
-    
+
 PROCEDURE RemoveCells (v: T; at: ListVBT.Cell; n: CARDINAL) =
   (* Delete (shift) the "isDir" bits, too. *)
   VAR
@@ -618,7 +618,7 @@ PROCEDURE DoStats (cl: StatCl): REFANY =
     END;                         (* TRY *)
     RETURN NIL
   END DoStats;
-           
+
 PROCEDURE InitDirMenuButton (dmb: DirMenuButton; text: TEXT): DirMenuButton =
   VAR
     textvbt := TextVBT.New (text, fnt := dmb.dm.font, bgFg := dmb.dm.shadow,
@@ -666,7 +666,7 @@ PROCEDURE DirMenuButtonCallback (         dmb: DirMenuButton;
 
     TRY
       Set(dmb.dm.filebrowser, pn, cd.time)
-    EXCEPT Error (e) => 
+    EXCEPT Error (e) =>
       dmb.dm.filebrowser.error(e)
     END;
   END DirMenuButtonCallback;
@@ -824,7 +824,7 @@ PROCEDURE ShowDirInMenu (v: T) =
     vbox := dm.vbox;
     arcs := Pathname.Decompose (v.dir);
     WITH curr = arcs.remhi () DO
-      IF curr = NIL THEN 
+      IF curr = NIL THEN
         TextVBT.Put (dm.top, "????")
       ELSE
         TextVBT.Put (dm.top, curr)
@@ -877,7 +877,7 @@ PROCEDURE HelperReturn (hp: Helper; READONLY event: VBT.KeyRec) =
       END;
       Set (v, text, event.time);
       text := TextPort.GetText(hp);
-      IF NOT Text.Empty (text) THEN 
+      IF NOT Text.Empty (text) THEN
         v.activateFile(text, AnyEvent.FromKey(event))
       END
     EXCEPT

@@ -14,19 +14,19 @@ INTERFACE TrestleGoo;
 IMPORT VBT;
 
 PROCEDURE PutProp(v: VBT.T; ref: REFANY); <* LL.sup < v *>
-(* Add "ref" to "v"'s property set, replacing any existing reference of 
-   the same type as "ref".  This is a checked runtime error if "ref" is 
+(* Add "ref" to "v"'s property set, replacing any existing reference of
+   the same type as "ref".  This is a checked runtime error if "ref" is
    "NIL". *)
 
 
 PROCEDURE GetProp(v: VBT.T; tc: INTEGER): REFANY;
 <* LL.sup < v *>
-(* Return the element of "v"'s property set with typecode "tc", or  
+(* Return the element of "v"'s property set with typecode "tc", or
    "NIL" if no such element exists. *)
 
 
 PROCEDURE RemProp(v: VBT.T; tc: INTEGER); <* LL.sup < v *>
-(* Remove the element with typecode "tc" from "v"'s property set, if one 
+(* Remove the element with typecode "tc" from "v"'s property set, if one
    exists. *)
 
 TYPE Enum <: REFANY;

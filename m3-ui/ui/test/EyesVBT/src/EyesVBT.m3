@@ -24,7 +24,7 @@ REVEAL T = VBT.Leaf BRANDED OBJECT
     shape := Shape;
   END;
 
-CONST 
+CONST
   EyeRadius = 10.5; Border = 2; MinSize = 2 * (Border + CEILING(EyeRadius));
 
 PROCEDURE NewPixmap(): Pixmap.T =
@@ -32,7 +32,7 @@ PROCEDURE NewPixmap(): Pixmap.T =
     RETURN Palette.FromPixmapClosure(NEW(MyPixmapClosure))
   END NewPixmap;
 
-TYPE MyPixmapClosure = Palette.PixmapClosure 
+TYPE MyPixmapClosure = Palette.PixmapClosure
   OBJECT OVERRIDES apply := MyPixmapApply END;
 
 PROCEDURE MyPixmapApply(<*UNUSED*>cl: MyPixmapClosure; st: ScreenType.T): ScrnPixmap.T =
@@ -40,14 +40,14 @@ PROCEDURE MyPixmapApply(<*UNUSED*>cl: MyPixmapClosure; st: ScreenType.T): ScrnPi
     TRY
       RETURN st.pixmap.load(Circle(EyeRadius))
     EXCEPT
-      TrestleComm.Failure => 
+      TrestleComm.Failure =>
         RETURN Palette.ResolvePixmap(st, Pixmap.Empty)
     END
   END MyPixmapApply;
 
 PROCEDURE Circle(r: REAL): ScrnPixmap.Raw =
   VAR rf := FLOOR(-r); rc := FLOOR(r)+1;
-   res := ScrnPixmap.NewRaw(1, Rect.FromEdges(rf, rc, rf, rc)); 
+   res := ScrnPixmap.NewRaw(1, Rect.FromEdges(rf, rc, rf, rc));
    r2 := FLOOR(r*r); h2: INTEGER;
   BEGIN
     FOR h := rf TO rc-1 DO
@@ -63,14 +63,14 @@ PROCEDURE Circle(r: REAL): ScrnPixmap.Raw =
     RETURN res
   END Circle;
 
-PROCEDURE Shape(<*UNUSED*>v: T; <*UNUSED*>ax: Axis.T; 
+PROCEDURE Shape(<*UNUSED*>v: T; <*UNUSED*>ax: Axis.T;
   <*UNUSED*>n: CARDINAL): VBT.SizeRange =
   BEGIN
     RETURN VBT.SizeRange{lo := MinSize, pref := MinSize, hi := 999999}
   END Shape;
 
 PROCEDURE Position(v: T; READONLY cd: VBT.PositionRec) RAISES {} =
-  VAR dom := Rect.Inset(VBT.Domain(v), FLOOR(EyeRadius) + Border); 
+  VAR dom := Rect.Inset(VBT.Domain(v), FLOOR(EyeRadius) + Border);
     newbox: Rect.T; a: Rect.Partition; BEGIN
     IF Rect.IsEmpty(dom) THEN RETURN END;
     IF NOT cd.cp.offScreen THEN
@@ -89,11 +89,11 @@ PROCEDURE Position(v: T; READONLY cd: VBT.PositionRec) RAISES {} =
     END;
     VBT.SetCage(v, VBT.CageFromPosition(cd.cp, TRUE, FALSE))
   END Position;
-  
+
 PROCEDURE Repaint(v: T; READONLY rgn: Region.T) RAISES {} =
   BEGIN
     VBT.PaintRegion(v, rgn, PaintOp.Bg);
-    VBT.PaintPixmap(v, Rect.Meet(rgn.r, v.eyebox), PaintOp.BgFg, 
+    VBT.PaintPixmap(v, Rect.Meet(rgn.r, v.eyebox), PaintOp.BgFg,
       eyeball, v.pupil)
   END Repaint;
 
@@ -108,7 +108,7 @@ PROCEDURE Reshape(v: T; READONLY cd: VBT.ReshapeRec) RAISES {} =
       VBT.PaintTint(v, cd.new, PaintOp.Bg)
     END
   END Reshape;
-  
+
 VAR eyeball := NewPixmap();
 
 BEGIN END EyesVBT.

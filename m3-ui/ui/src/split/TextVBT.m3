@@ -49,10 +49,10 @@ PROCEDURE Misc(v: T; READONLY cd: VBT.MiscRec) =
     END
   END Misc;
 
-PROCEDURE Read(v: T; sel: VBT.Selection; tc: CARDINAL): VBT.Value 
+PROCEDURE Read(v: T; sel: VBT.Selection; tc: CARDINAL): VBT.Value
   RAISES {VBT.Error} =
   BEGIN
-    IF sel # VBT.Source THEN 
+    IF sel # VBT.Source THEN
       RAISE VBT.Error(VBT.ErrorCode.Unreadable)
     ELSIF tc # TYPECODE(TEXT) THEN
       RAISE VBT.Error(VBT.ErrorCode.WrongType)
@@ -63,8 +63,8 @@ PROCEDURE Read(v: T; sel: VBT.Selection; tc: CARDINAL): VBT.Value
 
 PROCEDURE Mouse(v: T; READONLY cd: VBT.MouseRec) =
   BEGIN
-    IF cd.clickType = VBT.ClickType.FirstDown AND 
-      VBT.Modifier.Control IN cd.modifiers AND 
+    IF cd.clickType = VBT.ClickType.FirstDown AND
+      VBT.Modifier.Control IN cd.modifiers AND
       cd.whatChanged = VBT.Modifier.MouseL AND
       NOT v.hasFocus THEN
       TRY
@@ -127,17 +127,17 @@ PROCEDURE SetAndAlign(v: T) =
     WITH bb = VBT.BoundingBox(v, txt, v.font), tr = v.textRect DO
       IF Rect.HorSize(tr) # Rect.HorSize(bb) OR
          Rect.VerSize(tr) # Rect.VerSize(bb) THEN
-        VBT.NewShape(v) 
+        VBT.NewShape(v)
       END;
       v.textRect := bb;
       v.refpt := Point.Origin
     END;
     VAR st := VBT.ScreenTypeOf(v); BEGIN
-      IF st = NIL THEN 
+      IF st = NIL THEN
         v.selfClearing := TRUE
       ELSE
         VAR sf := Palette.ResolveFont(st, v.font); BEGIN
-          v.selfClearing := sf # NIL AND sf.metrics # NIL 
+          v.selfClearing := sf # NIL AND sf.metrics # NIL
           AND NOT emptyText AND sf.metrics.selfClearing
         END
       END
@@ -148,7 +148,7 @@ PROCEDURE SetAndAlign(v: T) =
 PROCEDURE Align(v: T) =
   (* Translate v.txtRect and v.refpt within v.domain to satisfy the
      alignment properties of v. LL = VBT.mu *)
-  VAR delta: Point.T; 
+  VAR delta: Point.T;
   BEGIN
     IF VBT.ScreenTypeOf(v) = NIL THEN RETURN END;
     WITH dom = VBT.Domain(v) DO
@@ -182,7 +182,7 @@ PROCEDURE New(
     : T =
   BEGIN
     IF vmarginMM = -1.0 THEN vmarginMM := hmarginMM END;
-    RETURN Be(NEW(T), txt, halign, valign, 
+    RETURN Be(NEW(T), txt, halign, valign,
       hmarginMM, vmarginMM, fnt, paintScheme)
   END New;
 
@@ -210,11 +210,11 @@ PROCEDURE Repaint (v: T; READONLY rgn: Region.T) RAISES {} =
 
 PROCEDURE Reshape(v: T; READONLY cd: VBT.ReshapeRec) RAISES {} =
   BEGIN
-    IF cd.marked THEN 
-      SetAndAlign(v); 
-      v.displayingFocus := v.hasFocus 
-    ELSE 
-      Align(v) 
+    IF cd.marked THEN
+      SetAndAlign(v);
+      v.displayingFocus := v.hasFocus
+    ELSE
+      Align(v)
     END;
     IF NOT Rect.IsEmpty(cd.new) THEN Repaint(v, Region.Full) END
     (* Or, as a test for oldomains:

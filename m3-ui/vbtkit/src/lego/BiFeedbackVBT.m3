@@ -62,7 +62,7 @@ PROCEDURE Excited (v: T) =
     FeedbackVBT.SetState(f2, FeedbackVBT.GetState(v));
     FeedbackVBT.Excited(f2)
   END Excited;
-  
+
 PROCEDURE Replace (m: MC; <* UNUSED *> ch: VBT.T; new: VBT.T) =
   VAR
     v : T             := m.vbt;

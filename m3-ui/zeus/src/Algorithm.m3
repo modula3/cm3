@@ -24,7 +24,7 @@ REVEAL
 EXCEPTION FatalError;
 <*FATAL FatalError*>
 
-PROCEDURE DefaultRun (<*UNUSED*> v: T) = 
+PROCEDURE DefaultRun (<*UNUSED*> v: T) =
 <* LL = {} *>
   BEGIN
     RAISE FatalError
@@ -101,6 +101,6 @@ PROCEDURE DefaultUpdateCts (<*UNUSED*> v: T; <*UNUSED*> reset: BOOLEAN) =
   <* LL = VBT.mu *>
   BEGIN
   END DefaultUpdateCts;
-  
+
 BEGIN END Algorithm.
 

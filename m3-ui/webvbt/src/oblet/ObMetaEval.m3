@@ -7,7 +7,7 @@
 
 MODULE ObMetaEval;
 
-IMPORT Fmt, ObCommand, ObLib, ObLibOnline, ObValue, Obliq, ObliqParser, 
+IMPORT Fmt, ObCommand, ObLib, ObLibOnline, ObValue, Obliq, ObliqParser,
        SynLocation, SynParse, SynScan, SynWr, Text, TextRd;
 
 
@@ -15,10 +15,10 @@ CONST
   pkgname = "Meta";
 
 
-TYPE 
+TYPE
   OpCode = ObLib.OpCode BRANDED OBJECT END;
-    
-  Package = ObLib.T BRANDED OBJECT 
+
+  Package = ObLib.T BRANDED OBJECT
   OVERRIDES
     Eval := DoEval;
   END;
@@ -48,8 +48,8 @@ PROCEDURE SetupPackage () =
 PROCEDURE Help (self : ObCommand.T; arg : TEXT; <* UNUSED *> data : REFANY) =
   BEGIN
     IF Text.Equal (arg, "!") THEN
-      SynWr.Text (SynWr.out, 
-                  "  " & Fmt.Pad (pkgname, 18, ' ', Fmt.Align.Left) & 
+      SynWr.Text (SynWr.out,
+                  "  " & Fmt.Pad (pkgname, 18, ' ', Fmt.Align.Left) &
                   "(meta-level procedures)\n");
     ELSIF Text.Equal (arg, "?") THEN
       SynWr.Text (SynWr.out, "  Meta_Eval(code: Text): Ok");
@@ -61,7 +61,7 @@ PROCEDURE Help (self : ObCommand.T; arg : TEXT; <* UNUSED *> data : REFANY) =
   END Help;
 
 
-PROCEDURE Load (code : TEXT): ObValue.Val 
+PROCEDURE Load (code : TEXT): ObValue.Val
     RAISES {ObValue.Error, ObValue.Exception } =
   VAR
     val : ObValue.Val;
@@ -88,18 +88,18 @@ PROCEDURE Load (code : TEXT): ObValue.Val
   END Load;
 
 
-PROCEDURE DoEval (self         : Package; 
-                  opCode       : ObLib.OpCode; 
-     <* UNUSED *> arity        : ObLib.OpArity; 
-                  READONLY args: ObValue.ArgArray; 
+PROCEDURE DoEval (self         : Package;
+                  opCode       : ObLib.OpCode;
+     <* UNUSED *> arity        : ObLib.OpArity;
+                  READONLY args: ObValue.ArgArray;
      <* UNUSED *> temp         : BOOLEAN;
-                  loc          : SynLocation.T) : ObValue.Val 
+                  loc          : SynLocation.T) : ObValue.Val
     RAISES {ObValue.Error, ObValue.Exception} =
   BEGIN
     TYPECASE args[1] OF
-      ObValue.ValText (node) => 
+      ObValue.ValText (node) =>
       RETURN Load (node.text);
-    ELSE 
+    ELSE
       ObValue.BadArgType (1, "text", self.name, opCode.name, loc);
       <* ASSERT FALSE *>
     END;

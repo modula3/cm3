@@ -41,12 +41,12 @@ PROCEDURE gluOrtho2D (left, right, bottom, top: GL.GLdouble);
 PROCEDURE gluPerspective (fovy, aspect, zNear, zFar: GL.GLdouble);
 
 <*EXTERNAL gluPickMatrix:WINAPI*>
-PROCEDURE gluPickMatrix (x, y, width, height: GL.GLdouble; 
+PROCEDURE gluPickMatrix (x, y, width, height: GL.GLdouble;
                          viewport: UNTRACED REF ARRAY [1..4] OF GL.GLint);
 
 <*EXTERNAL gluLookAt:WINAPI*>
-PROCEDURE gluLookAt (eyex,    eyey,    eyez   : GL.GLdouble; 
-                     centerx, centery, centerz: GL.GLdouble; 
+PROCEDURE gluLookAt (eyex,    eyey,    eyez   : GL.GLdouble;
+                     centerx, centery, centerz: GL.GLdouble;
                      upx,     upy,     upz    : GL.GLdouble);
 
 <*EXTERNAL gluProject:WINAPI*>
@@ -62,34 +62,34 @@ PROCEDURE gluUnProject (
     winx, winy, winz: GL.GLdouble;
     modelMatrix     : UNTRACED REF ARRAY [1..16] OF GL.GLdouble;
     projMatrix      : UNTRACED REF ARRAY [1..16] OF GL.GLdouble;
-    viewport        : UNTRACED REF ARRAY [1..4] OF GL.GLint; 
+    viewport        : UNTRACED REF ARRAY [1..4] OF GL.GLint;
     objx, objy, objz: GL.GLdoubleStar): Ctypes.int;
 
 <*EXTERNAL gluScaleImage:WINAPI*>
-PROCEDURE gluScaleImage (format   : GL.GLenum; 
-                         widthin  : GL.GLint; 
+PROCEDURE gluScaleImage (format   : GL.GLenum;
+                         widthin  : GL.GLint;
                          heightin : GL.GLint;
-                         typein   : GL.GLenum; 
-                         datain   : Ctypes.void_star; 
-                         widthout : GL.GLint; 
-                         heightout: GL.GLint; 
-                         typeout  : GL.GLenum; 
+                         typein   : GL.GLenum;
+                         datain   : Ctypes.void_star;
+                         widthout : GL.GLint;
+                         heightout: GL.GLint;
+                         typeout  : GL.GLenum;
                          dataout  : Ctypes.void_star): Ctypes.int;
 
 <*EXTERNAL gluBuild1DMipmaps:WINAPI*>
 PROCEDURE gluBuild1DMipmaps (target    : GL.GLenum;
-                             components: GL.GLint; 
-                             width     : GL.GLint; 
-                             format    : GL.GLenum; 
-                             type      : GL.GLenum; 
+                             components: GL.GLint;
+                             width     : GL.GLint;
+                             format    : GL.GLenum;
+                             type      : GL.GLenum;
                              data      : Ctypes.void_star): Ctypes.int;
 
 <*EXTERNAL gluBuild2DMipmaps:WINAPI*>
 PROCEDURE gluBuild2DMipmaps (target    : GL.GLenum;
-                             components: GL.GLint; 
-                             width     : GL.GLint; 
-                             format    : GL.GLenum; 
-                             type      : GL.GLenum; 
+                             components: GL.GLint;
+                             width     : GL.GLint;
+                             format    : GL.GLenum;
+                             type      : GL.GLenum;
                              data      : Ctypes.void_star): Ctypes.int;
 
 <*EXTERNAL gluNewQuadric:WINAPI*>
@@ -99,53 +99,53 @@ PROCEDURE gluNewQuadric (): GLUquadricObjStar;
 PROCEDURE gluDeleteQuadric (state: GLUquadricObjStar);
 
 <*EXTERNAL gluQuadricNormals:WINAPI*>
-PROCEDURE gluQuadricNormals (qobj   : GLUquadricObjStar; 
+PROCEDURE gluQuadricNormals (qobj   : GLUquadricObjStar;
                              normals: GL.GLenum);
 
 <*EXTERNAL gluQuadricTexture:WINAPI*>
-PROCEDURE gluQuadricTexture (qobj         : GLUquadricObjStar; 
+PROCEDURE gluQuadricTexture (qobj         : GLUquadricObjStar;
                              textureCoords: GL.GLboolean);
 
 <*EXTERNAL gluQuadricOrientation:WINAPI*>
-PROCEDURE gluQuadricOrientation (qobj       : GLUquadricObjStar; 
+PROCEDURE gluQuadricOrientation (qobj       : GLUquadricObjStar;
                                  orientation: GL.GLenum);
 
 <*EXTERNAL gluQuadricDrawStyle:WINAPI*>
-PROCEDURE gluQuadricDrawStyle (qobj     : GLUquadricObjStar; 
+PROCEDURE gluQuadricDrawStyle (qobj     : GLUquadricObjStar;
                                drawStyle: GL.GLenum);
 
 <*EXTERNAL gluCylinder:WINAPI*>
-PROCEDURE gluCylinder (qobj      : GLUquadricObjStar; 
+PROCEDURE gluCylinder (qobj      : GLUquadricObjStar;
                        baseRadius: GL.GLdouble;
-                       topRadius : GL.GLdouble; 
-                       height    : GL.GLdouble; 
-                       slices    : GL.GLint; 
+                       topRadius : GL.GLdouble;
+                       height    : GL.GLdouble;
+                       slices    : GL.GLint;
                        stacks    : GL.GLint);
 
 <*EXTERNAL gluDisk:WINAPI*>
-PROCEDURE gluDisk (qobj       : GLUquadricObjStar; 
-                   innerRadius: GL.GLdouble; 
+PROCEDURE gluDisk (qobj       : GLUquadricObjStar;
+                   innerRadius: GL.GLdouble;
                    outerRadius: GL.GLdouble;
-                   slices     : GL.GLint; 
+                   slices     : GL.GLint;
                    loops      : GL.GLint);
 
 <*EXTERNAL gluPartialDisk:WINAPI*>
-PROCEDURE gluPartialDisk (qobj       : GLUquadricObjStar; 
-                          innerRadius: GL.GLdouble; 
+PROCEDURE gluPartialDisk (qobj       : GLUquadricObjStar;
+                          innerRadius: GL.GLdouble;
                           outerRadius: GL.GLdouble;
-                          slices     : GL.GLint; 
+                          slices     : GL.GLint;
                           loops      : GL.GLint;
-                          startAngle : GL.GLdouble; 
+                          startAngle : GL.GLdouble;
                           sweepAngle : GL.GLdouble);
 
 <*EXTERNAL gluSphere:WINAPI*>
-PROCEDURE gluSphere (qobj  : GLUquadricObjStar; 
-                     radius: GL.GLdouble; 
-                     slices: GL.GLint; 
+PROCEDURE gluSphere (qobj  : GLUquadricObjStar;
+                     radius: GL.GLdouble;
+                     slices: GL.GLint;
                      stacks: GL.GLint);
 
 <*EXTERNAL gluQuadricCallback:WINAPI*>
-PROCEDURE gluQuadricCallback (qobj : GLUquadricObjStar; 
+PROCEDURE gluQuadricCallback (qobj : GLUquadricObjStar;
                               which: GL.GLenum;
                               fn   : GLUquadricErrorProc);
 
@@ -153,7 +153,7 @@ PROCEDURE gluQuadricCallback (qobj : GLUquadricObjStar;
 PROCEDURE gluNewTess (): GLUtriangulatorObjStar;
 
 <*EXTERNAL gluTessCallback:WINAPI*>
-PROCEDURE gluTessCallback (tobj : GLUtriangulatorObjStar; 
+PROCEDURE gluTessCallback (tobj : GLUtriangulatorObjStar;
                            which: GL.GLenum;
                            fn   : GLUtessAnyProc);
 
@@ -167,12 +167,12 @@ PROCEDURE gluBeginPolygon (tobj: GLUtriangulatorObjStar);
 PROCEDURE gluEndPolygon (tobj: GLUtriangulatorObjStar);
 
 <*EXTERNAL gluNextContour:WINAPI*>
-PROCEDURE gluNextContour (tobj: GLUtriangulatorObjStar; 
+PROCEDURE gluNextContour (tobj: GLUtriangulatorObjStar;
                           type: GL.GLenum);
 
 <*EXTERNAL gluTessVertex:WINAPI*>
-PROCEDURE gluTessVertex (tobj: GLUtriangulatorObjStar; 
-                         v   : UNTRACED REF ARRAY [1 .. 3] OF GL.GLdouble; 
+PROCEDURE gluTessVertex (tobj: GLUtriangulatorObjStar;
+                         v   : UNTRACED REF ARRAY [1 .. 3] OF GL.GLdouble;
                          data: GL.GLvoidStar);
 
 <*EXTERNAL gluNewNurbsRenderer:WINAPI*>
@@ -201,52 +201,52 @@ PROCEDURE gluEndTrim (nobj: GLUnurbsObjStar);
 
 <*EXTERNAL gluPwlCurve:WINAPI*>
 PROCEDURE gluPwlCurve (nobj  : GLUnurbsObjStar;
-                       count : GL.GLint; 
-                       array : UNTRACED REF ARRAY OF GL.GLfloat; 
-                       stride: GL.GLint; 
+                       count : GL.GLint;
+                       array : UNTRACED REF ARRAY OF GL.GLfloat;
+                       stride: GL.GLint;
                        type  : GL.GLenum);
 
 <*EXTERNAL gluNurbsCurve:WINAPI*>
 PROCEDURE gluNurbsCurve (nobj    : GLUnurbsObjStar;
-                         nknots  : GL.GLint; 
-                         knot    : UNTRACED REF ARRAY OF GL.GLfloat; 
-                         stride  : GL.GLint; 
-                         ctlarray: UNTRACED REF ARRAY OF GL.GLfloat; 
-                         order   : GL.GLint; 
+                         nknots  : GL.GLint;
+                         knot    : UNTRACED REF ARRAY OF GL.GLfloat;
+                         stride  : GL.GLint;
+                         ctlarray: UNTRACED REF ARRAY OF GL.GLfloat;
+                         order   : GL.GLint;
                          type    : GL.GLenum);
 
 <*EXTERNAL gluNurbsSurface:WINAPI*>
-PROCEDURE gluNurbsSurface (nobj       : GLUnurbsObjStar; 
-                           uknot_count: GL.GLint; 
-                           uknot      : UNTRACED REF ARRAY OF GL.GLfloat; 
-                           vknot_count: GL.GLint; 
-                           vknot      : UNTRACED REF ARRAY OF GL.GLfloat; 
-                           u_stride   : GL.GLint; 
-                           v_stride   : GL.GLint; 
-                           ctlarray   : UNTRACED REF ARRAY OF GL.GLfloat; 
-                           uorder     : GL.GLint; 
-                           vorder     : GL.GLint; 
+PROCEDURE gluNurbsSurface (nobj       : GLUnurbsObjStar;
+                           uknot_count: GL.GLint;
+                           uknot      : UNTRACED REF ARRAY OF GL.GLfloat;
+                           vknot_count: GL.GLint;
+                           vknot      : UNTRACED REF ARRAY OF GL.GLfloat;
+                           u_stride   : GL.GLint;
+                           v_stride   : GL.GLint;
+                           ctlarray   : UNTRACED REF ARRAY OF GL.GLfloat;
+                           uorder     : GL.GLint;
+                           vorder     : GL.GLint;
                            type       : GL.GLenum);
 
 <*EXTERNAL gluLoadSamplingMatrices:WINAPI*>
 PROCEDURE gluLoadSamplingMatrices (
-    nobj       : GLUnurbsObjStar; 
+    nobj       : GLUnurbsObjStar;
     modelMatrix: UNTRACED REF ARRAY [1..16] OF GL.GLfloat;
     projMatrix : UNTRACED REF ARRAY [1..16] OF GL.GLfloat;
-    viewport   : UNTRACED REF ARRAY [1..4] OF GL.GLint);  
-	
+    viewport   : UNTRACED REF ARRAY [1..4] OF GL.GLint);
+
 <*EXTERNAL gluNurbsProperty:WINAPI*>
-PROCEDURE gluNurbsProperty (nobj    : GLUnurbsObjStar; 
-                            property: GL.GLenum; 
+PROCEDURE gluNurbsProperty (nobj    : GLUnurbsObjStar;
+                            property: GL.GLenum;
                             value   : GL.GLfloat);
 
 <*EXTERNAL gluGetNurbsProperty:WINAPI*>
-PROCEDURE gluGetNurbsProperty (nobj    : GLUnurbsObjStar; 
+PROCEDURE gluGetNurbsProperty (nobj    : GLUnurbsObjStar;
                                property: GL.GLenum;
                                value   : UNTRACED REF GL.GLfloat);
 
 <*EXTERNAL gluNurbsCallback:WINAPI*>
-PROCEDURE gluNurbsCallback (nobj : GLUnurbsObjStar; 
+PROCEDURE gluNurbsCallback (nobj : GLUnurbsObjStar;
                             which: GL.GLenum;
                             fn   : GLUnurbsErrorProc);
 
@@ -289,11 +289,11 @@ CONST
 
 (* Callback types: *)
 
-  GLU_BEGIN     = 100100;	
-  GLU_VERTEX    = 100101;	
-  GLU_END       = 100102;	
-  GLU_ERROR     = 100103;	
-  GLU_EDGE_FLAG = 100104;	
+  GLU_BEGIN     = 100100;
+  GLU_VERTEX    = 100101;
+  GLU_END       = 100102;
+  GLU_ERROR     = 100103;
+  GLU_EDGE_FLAG = 100104;
 
 (* Contours types: *)
 

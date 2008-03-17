@@ -75,9 +75,9 @@ REVEAL
       END;
 
 (*
-PROCEDURE PixmapRegister(orc: PixmapOracle; 
-                         READONLY pm: ScrnPixmap.Raw; 
-                         nm: TEXT := NIL): ScrnPixmap.T 
+PROCEDURE PixmapRegister(orc: PixmapOracle;
+                         READONLY pm: ScrnPixmap.Raw;
+                         nm: TEXT := NIL): ScrnPixmap.T
     RAISES {TrestleComm.Failure} =
   BEGIN
     IF orc.st.sts = NIL THEN Crash(); END;
@@ -85,7 +85,7 @@ PROCEDURE PixmapRegister(orc: PixmapOracle;
   END PixmapRegister;
 
 PROCEDURE PixmapList(orc: PixmapOracle;  pat: TEXT;
-                     maxResults: CARDINAL := 1) : REF ARRAY OF TEXT 
+                     maxResults: CARDINAL := 1) : REF ARRAY OF TEXT
     RAISES {TrestleComm.Failure} =
   BEGIN
     IF orc.st.sts = NIL THEN Crash(); END;
@@ -99,7 +99,7 @@ PROCEDURE PixmapLookup(orc: PixmapOracle;
     IF orc.st.sts = NIL THEN Crash(); END;
     RETURN orc.st.sts[0].pixmap.lookup(name);
   END PixmapLookup;
-  
+
 PROCEDURE PixmapBuiltIn(orc: PixmapOracle;
                         pm: Pixmap.Predefined): ScrnPixmap.T =
   BEGIN
