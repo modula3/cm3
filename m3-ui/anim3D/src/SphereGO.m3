@@ -8,7 +8,7 @@
 
 MODULE SphereGO EXPORTS SphereGO, SphereGOProxy;
 
-IMPORT GO, GOPrivate, GraphicsBase, GraphicsBasePrivate, Matrix4, Point3, 
+IMPORT GO, GOPrivate, GraphicsBase, GraphicsBasePrivate, Matrix4, Point3,
        PointProp, PointPropPrivate, Prop, RealProp, RealPropPrivate;
 
 REVEAL
@@ -31,7 +31,7 @@ PROCEDURE Init(self : T; prec : INTEGER) : T =
     self.matrix := Matrix4.Id;
     self.center := Point3.Origin;
     self.radius := 1.0;
- 
+
    IF MkProxyT # NIL AND self.proxy = NIL THEN
       MkProxyT (self);
     END;
@@ -58,7 +58,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
         self.center := center;
         self.radius := radius;
         self.matrix := Matrix4.Scale (Matrix4.Id, radius, radius, radius);
-        self.matrix := Matrix4.Translate (self.matrix, 
+        self.matrix := Matrix4.Translate (self.matrix,
                                           center.x, center.y, center.z);
       END;
 

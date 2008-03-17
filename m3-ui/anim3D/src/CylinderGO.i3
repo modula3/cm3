@@ -20,7 +20,7 @@ TYPE
   END;
 (* "cyl.init(prec)"  initializes a new cylinder "cyl", whose
    surface is composed of "prec" rectangles, and returns it.
-   The location and radius of the cylinder is determined by the 
+   The location and radius of the cylinder is determined by the
    three properties "Point1", "Point2", and "Radius". *)
 
 
@@ -29,26 +29,26 @@ VAR
   Point2 : PointProp.Name;
   Radius : RealProp.Name;
 (* In addition to the properties observed by all \type{GO}{T}'s and
-   \type{SurfaceGO}{T}'s, there are three additional properties that 
+   \type{SurfaceGO}{T}'s, there are three additional properties that
    are observed by "CylinderGO.T"'s:
 
-   "Point1" is the name of a property that describes the first endpoint 
-   of the cylinder. It associates with a \type{PointProp}{Val}. If no "Point1" 
+   "Point1" is the name of a property that describes the first endpoint
+   of the cylinder. It associates with a \type{PointProp}{Val}. If no "Point1"
    property is specified, the cylinder starts at the origin.
 
-   "Point2" is the name of a property that describes the second endpoint 
-   of the cylinder. It associates with a \type{PointProp}{Val}. If no "Point2" 
+   "Point2" is the name of a property that describes the second endpoint
+   of the cylinder. It associates with a \type{PointProp}{Val}. If no "Point2"
    property is specified, the cylinder ends at point (1,0,0).
 
-   "Radius" is the name of a property that describes the radius of the 
+   "Radius" is the name of a property that describes the radius of the
    cylinder. It associates with a \type{RealProp}{Val}. If no "Radius" property
-   is specified, the cylinder has a radius of 1. 
+   is specified, the cylinder has a radius of 1.
 
-   Assume that in a given context and at a given point in time, the property 
-   mapping is such that "Point1" maps to a point property value which 
-   evaluates to "p1", "Point2" maps to a point property value which evaluates 
-   to "p2", and "Radius" maps to a real property value which evaluates to "r". 
-   "p1", "p2", and "r" define the position and shape of the cylinder 
+   Assume that in a given context and at a given point in time, the property
+   mapping is such that "Point1" maps to a point property value which
+   evaluates to "p1", "Point2" maps to a point property value which evaluates
+   to "p2", and "Radius" maps to a real property value which evaluates to "r".
+   "p1", "p2", and "r" define the position and shape of the cylinder
    in this context and at this time as shown below:
    \begin{center}
    \begin{tabular}{c}
@@ -58,8 +58,8 @@ VAR
 *)
 
 PROCEDURE New (p1, p2 : Point3.T; r : REAL; prec := 30) : T;
-(* "New(p1,p2,r,prec)"  creates a new cylinder, whose surface is composed 
-   of "prec" rectangles, and returns it. It also attaches the following 
+(* "New(p1,p2,r,prec)"  creates a new cylinder, whose surface is composed
+   of "prec" rectangles, and returns it. It also attaches the following
    properties to the new cylinder:
    \begin{verbatim}
      (Point1,PointProp.NewConst(p1))
@@ -67,9 +67,9 @@ PROCEDURE New (p1, p2 : Point3.T; r : REAL; prec := 30) : T;
      (Radius,RealProp.NewConst(r))
    \end{verbatim}
 *)
-  
-(* The following three procedures provide sugaring to attach 
-   "Point1", "Point2", and "Radius" properties with non-animated 
+
+(* The following three procedures provide sugaring to attach
+   "Point1", "Point2", and "Radius" properties with non-animated
    property values to geometric objects: *)
 
 PROCEDURE SetPoint1 (o : GO.T; p : Point3.T);

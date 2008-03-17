@@ -8,8 +8,8 @@
 
 MODULE AnimServer;
 
-IMPORT Anim3D, AnimHandle, AnimHandlePrivate, Axis, Fmt, GO, GOPrivate, 
-       GraphicsBasePrivate, HVSplit, ParseParams, RootGO, RootGOPrivate, 
+IMPORT Anim3D, AnimHandle, AnimHandlePrivate, Axis, Fmt, GO, GOPrivate,
+       GraphicsBasePrivate, HVSplit, ParseParams, RootGO, RootGOPrivate,
        Stdio, TextVBT, Thread, Time, Trestle, TrestleComm, WeakRef, Wr;
 
 TYPE
@@ -43,7 +43,7 @@ PROCEDURE IsServer(): BOOLEAN =
   END IsServer;
 
 
-(* "Apply" is the main procedure of the animation server thread. 
+(* "Apply" is the main procedure of the animation server thread.
    This thread terminates only when the program terminates. *)
 PROCEDURE Apply (<* UNUSED *> self : Closure) : REFANY =
 
@@ -61,7 +61,7 @@ PROCEDURE Apply (<* UNUSED *> self : Closure) : REFANY =
         END;
       END;
     END SignalExpiredHandles;
-    
+
   VAR
     now      : LONGREAL;
     damaged  : BOOLEAN;
@@ -93,11 +93,11 @@ PROCEDURE Apply (<* UNUSED *> self : Closure) : REFANY =
           END;
 
           IF SolverHook # NIL THEN
-            TRY 
+            TRY
               IF NOT SolverHook (now) THEN
                 ReportError ("Could not solve constraint system");
               END;
-            EXCEPT 
+            EXCEPT
               SolverError (msg) => ReportError(msg);
             END;
           END;
@@ -127,7 +127,7 @@ PROCEDURE Apply (<* UNUSED *> self : Closure) : REFANY =
       LOCK handles_lock DO
         SignalExpiredHandles (handles, now);
       END;
-      
+
       IF NOT damaged THEN
         Thread.Pause (0.1d0);
       END;
@@ -188,7 +188,7 @@ PROCEDURE FreeDisplayList (<*UNUSED*> READONLY wr: WeakRef.T; r: REFANY) =
         tmpRoots := tmpRoots.tail;
       END;
     END;
-  END FreeDisplayList;      
+  END FreeDisplayList;
 
 
 PROCEDURE PauseAnimHandle (ah : AnimHandle.T) =
@@ -213,7 +213,7 @@ PROCEDURE ReportError (msg : TEXT) =
   END ReportError;
 
 
-VAR 
+VAR
   animerr : Wr.T;
 
 TYPE
@@ -253,19 +253,19 @@ PROCEDURE InitTimer (self : Timer) : Timer =
 
 PROCEDURE ClickTimer (self : Timer) =
   BEGIN
-    WITH fc    = self.framecounter, 
+    WITH fc    = self.framecounter,
          geom  = self.geomAvg,
          now   = Time.Now(),
          total = (now - self.serverstart) / fc DO
       fc := fc + 1.0d0;
       geom := (geom + (now - self.now)) * 0.5d0;
       self.now := now;
-      TextVBT.Put (self.text1, 
+      TextVBT.Put (self.text1,
                    "Total Avg: " & Fmt.LongReal(total) & " sec/frame");
-      TextVBT.Put (self.text2, 
+      TextVBT.Put (self.text2,
                    "Geom. Avg: " & Fmt.LongReal(geom) & " sec/frame");
     END;
- END ClickTimer;    
+ END ClickTimer;
 
 
 BEGIN
@@ -278,6 +278,6 @@ BEGIN
   internalLock := NEW (MUTEX);
   externalLock := NEW (MUTEX);
 
-  EVAL Thread.Fork (NEW (Closure, stackSize := 20000));  
+  EVAL Thread.Fork (NEW (Closure, stackSize := 20000));
                                           (* start animation server thread *)
 END AnimServer.

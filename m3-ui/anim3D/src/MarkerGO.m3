@@ -8,9 +8,9 @@
 
 MODULE MarkerGO EXPORTS MarkerGO, MarkerGOProxy;
 
-IMPORT Color, ColorProp, ColorPropPrivate, GO, GOPrivate, GraphicsBase, 
-       GraphicsBasePrivate, MarkerTypeProp, MarkerTypePropPrivate, Prop, 
-       PropPrivate, Point3, PointProp, PointPropPrivate, RealProp, 
+IMPORT Color, ColorProp, ColorPropPrivate, GO, GOPrivate, GraphicsBase,
+       GraphicsBasePrivate, MarkerTypeProp, MarkerTypePropPrivate, Prop,
+       PropPrivate, Point3, PointProp, PointPropPrivate, RealProp,
        RealPropPrivate;
 
 REVEAL
@@ -55,7 +55,7 @@ PROCEDURE DamageIfDependent (self : T; pn : Prop.Name) =
   END DamageIfDependent;
 
 
-PROCEDURE NeedsTransparency(<* UNUSED *> self : T; 
+PROCEDURE NeedsTransparency(<* UNUSED *> self : T;
                             <* UNUSED *> t    : REAL) : BOOLEAN =
   BEGIN
     RETURN FALSE;
@@ -90,8 +90,8 @@ PROCEDURE DamageColour (<* UNUSED *> self : Colour_PN; caller : GO.T) =
   END DamageColour;
 
 
-PROCEDURE PushColour (self  : Colour_PN; 
-                      state : GraphicsBase.T; 
+PROCEDURE PushColour (self  : Colour_PN;
+                      state : GraphicsBase.T;
                       pv    : Prop.Val) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], ColorPropPrivate.Stack),
@@ -131,8 +131,8 @@ PROCEDURE DamageScale (<* UNUSED *> self : Scale_PN; caller : GO.T) =
   END DamageScale;
 
 
-PROCEDURE PushScale (self  : Scale_PN; 
-                     state : GraphicsBase.T; 
+PROCEDURE PushScale (self  : Scale_PN;
+                     state : GraphicsBase.T;
                      pv    : Prop.Val) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], RealPropPrivate.Stack),
@@ -172,8 +172,8 @@ PROCEDURE DamageType (<* UNUSED *> self : Type_PN; caller : GO.T) =
   END DamageType;
 
 
-PROCEDURE PushType (self  : Type_PN; 
-                    state : GraphicsBase.T; 
+PROCEDURE PushType (self  : Type_PN;
+                    state : GraphicsBase.T;
                     pv    : Prop.Val) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], MarkerTypePropPrivate.Stack),

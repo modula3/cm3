@@ -14,7 +14,7 @@ IMPORT GO, GOPrivate, GraphicsBase, GraphicsBasePrivate, Matrix4, Mth, Point3,
 
 REVEAL
   T = Public BRANDED OBJECT
-    prec   : INTEGER; 
+    prec   : INTEGER;
     p1, p2 : Point3.T;       (* endpoints achieved through matrix *)
     radius : REAL;           (* radius achieved through matrix *)
     matrix : Matrix4.T;      (* transforms unit cyl. into desired cyl. *)
@@ -53,7 +53,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
   BEGIN
     state.push (self);
     WITH point1 = Point1.getState (state),
-         point2 = Point2.getState (state), 
+         point2 = Point2.getState (state),
          radius = Radius.getState (state) DO
 
       IF point1 # self.p1 OR point2 # self.p2 OR radius # self.radius THEN
@@ -80,7 +80,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
       END;
 
     END;
-      
+
     state.pop (self);
   END Draw;
 
@@ -91,7 +91,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
 
 
 PROCEDURE New (p1, p2 : Point3.T; r : REAL; prec : INTEGER) : T =
-  VAR 
+  VAR
     cyl := NEW (T).init (prec);
   BEGIN
     SetPoint1 (cyl, p1);

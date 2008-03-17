@@ -8,7 +8,7 @@
 
 MODULE CameraGO EXPORTS CameraGO, CameraGOPrivate;
 
-IMPORT GO, GOPrivate, Point3, PointProp, PointPropPrivate, RealProp, 
+IMPORT GO, GOPrivate, Point3, PointProp, PointPropPrivate, RealProp,
        RealPropPrivate;
 
 
@@ -28,7 +28,7 @@ PROCEDURE Init (self : T) : T =
   END Init;
 
 
-PROCEDURE NeedsTransparency (<* UNUSED *> self : T; 
+PROCEDURE NeedsTransparency (<* UNUSED *> self : T;
                              <* UNUSED *> t    : REAL) : BOOLEAN =
   BEGIN
     RETURN FALSE;
@@ -57,7 +57,7 @@ PROCEDURE SetUp (o : GO.T; p: Point3.T) =
     o.setProp(Up.bind(PointProp.NewConst(p)));
   END SetUp;
 
-PROCEDURE SetAspect (o : GO.T; r: REAL) = 
+PROCEDURE SetAspect (o : GO.T; r: REAL) =
   BEGIN
     o.setProp(Aspect.bind(RealProp.NewConst(r)));
   END SetAspect;

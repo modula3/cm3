@@ -10,10 +10,10 @@ INTERFACE X_PEX_BaseProxy;
 
 FROM X_PEX_Base IMPORT T;
 
-(* The Proxy Maker (PM) procedure for X_PEX_Base.T is 
+(* The Proxy Maker (PM) procedure for X_PEX_Base.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END X_PEX_BaseProxy.

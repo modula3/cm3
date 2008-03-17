@@ -8,10 +8,10 @@
 
 MODULE LightGO;
 
-IMPORT BooleanProp, BooleanPropPrivate, Color, ColorProp, ColorPropPrivate, 
+IMPORT BooleanProp, BooleanPropPrivate, Color, ColorProp, ColorPropPrivate,
        GO, GOPrivate;
 
-REVEAL 
+REVEAL
   T = GO.T BRANDED OBJECT
   OVERRIDES
     needsTransparency := NeedsTransparency;
@@ -19,7 +19,7 @@ REVEAL
 
 
 
-PROCEDURE NeedsTransparency (<* UNUSED *> self : T; 
+PROCEDURE NeedsTransparency (<* UNUSED *> self : T;
                              <* UNUSED *> t    : REAL) : BOOLEAN =
   BEGIN
     RETURN FALSE;

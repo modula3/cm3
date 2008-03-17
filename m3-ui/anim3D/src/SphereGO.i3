@@ -19,8 +19,8 @@ TYPE
     init (prec := 30) : T;
   END;
 (* "sph.init(prec)" initializes a new sphere "sph", whose surface is composed
-   of "prec" strips of "prec" triangles,  and returns it. The location and 
-   radius of the sphere are determined by the two properties "Center" and 
+   of "prec" strips of "prec" triangles,  and returns it. The location and
+   radius of the sphere are determined by the two properties "Center" and
    "Radius". *)
 
 VAR
@@ -28,7 +28,7 @@ VAR
   Radius : RealProp.Name;
 
 (* In addition to the properties observed by all \type{GO}{T}'s and
-   \type{SurfaceGO}{T}'s, there are two additional properties that 
+   \type{SurfaceGO}{T}'s, there are two additional properties that
    are observed by "SphereGO.T"'s:
 
    "Center" is the name of a property that describes the center of the sphere.
@@ -42,7 +42,7 @@ VAR
 
 PROCEDURE New (center : Point3.T; radius : REAL; prec := 30) : T;
 (* "New(center,radius,prec)" creates a new sphere, whose surface is composed of
-   "prec" strips of "prec" triangles, and returns it. It also attaches the 
+   "prec" strips of "prec" triangles, and returns it. It also attaches the
    following properties to the new sphere:
    \begin{verbatim}
      (Center,PointProp.NewConst(center))
@@ -50,8 +50,8 @@ PROCEDURE New (center : Point3.T; radius : REAL; prec := 30) : T;
    \end{verbatim}
 *)
 
-(* The following two procedures provide sugaring to attach 
-   "Center" and "Radius" properties with non-animated 
+(* The following two procedures provide sugaring to attach
+   "Center" and "Radius" properties with non-animated
    property values to geometric objects: *)
 
 PROCEDURE SetCenter (o : GO.T; center : Point3.T);

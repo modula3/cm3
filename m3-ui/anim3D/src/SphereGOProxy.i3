@@ -10,10 +10,10 @@ INTERFACE SphereGOProxy;
 
 FROM SphereGO IMPORT T;
 
-(* The Proxy Maker (PM) procedure for SphereGO.T is 
+(* The Proxy Maker (PM) procedure for SphereGO.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END SphereGOProxy.

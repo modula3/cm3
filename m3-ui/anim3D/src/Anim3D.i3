@@ -7,9 +7,9 @@
 
 
 (* This interface provides access to the ``animation clock'', the clock that
-   is used to drive animations. Clients can inquire the current time, and can 
+   is used to drive animations. Clients can inquire the current time, and can
    change the clock that is used. The default animation clock is a real-time
-   clock; one particular alternative is "ZeusClock.T", a clock that is 
+   clock; one particular alternative is "ZeusClock.T", a clock that is
    controlled by the Zeus algorithm animation system. *)
 
 INTERFACE Anim3D;
@@ -20,7 +20,7 @@ PROCEDURE Now () : LONGREAL;
 (* Return the current value of the animation clock. *)
 
 PROCEDURE ChangeClock (clock : Clock.T);
-(* Let "clock" be the new animation clock. This procedure should not be 
+(* Let "clock" be the new animation clock. This procedure should not be
    called while an animation is in progress; terrible things might happen. *)
 
 PROCEDURE SetErrorWr (wr : Wr.T);
@@ -28,9 +28,9 @@ PROCEDURE SetErrorWr (wr : Wr.T);
    be "wr". By default, error messages are written to "Stdio.stderr". *)
 
 VAR lock : MUTEX;
-(* A client that wants to prevent the animation server from rendering an 
-   inconsistent scene should protect the critical section during which 
-   the scene is inconsistent by acquiring "lock". Not acquiring "lock" 
+(* A client that wants to prevent the animation server from rendering an
+   inconsistent scene should protect the critical section during which
+   the scene is inconsistent by acquiring "lock". Not acquiring "lock"
    will never crash a program. "lock" may not be held when "ah.animate()"
    is called for some animation handle "ah". *)
 

@@ -10,7 +10,7 @@ MODULE AnimRequestQueue EXPORTS AnimRequestQueue, AnimRequestQueuePrivate;
 
 IMPORT AnimHandle, AnimHandlePrivate, Prop;
 
-REVEAL 
+REVEAL
   T = Private BRANDED OBJECT
   OVERRIDES
     init     := Init;
@@ -48,26 +48,26 @@ PROCEDURE Insert (self : T; req : Prop.Request) RAISES {Prop.BadInterval} =
   END Insert;
 
 
-(* Returns TRUE if interval1 is before interval2, 
+(* Returns TRUE if interval1 is before interval2,
            FALSE if interval1 is after interval2,
    raises Prop.BadInterval if they overlap. *)
-PROCEDURE Before (start1, dur1, start2, dur2 : REAL) : BOOLEAN 
+PROCEDURE Before (start1, dur1, start2, dur2 : REAL) : BOOLEAN
     RAISES {Prop.BadInterval} =
   BEGIN
     IF dur1 = 0.0 AND dur2 = 0.0 THEN
-      IF    start1 < start2 THEN 
+      IF    start1 < start2 THEN
         RETURN TRUE;
-      ELSIF start1 > start2 THEN 
+      ELSIF start1 > start2 THEN
         RETURN FALSE;
-      ELSE 
+      ELSE
         RAISE Prop.BadInterval;
       END;
     ELSE
-      IF start1 + dur1 <= start2 THEN 
+      IF start1 + dur1 <= start2 THEN
         RETURN TRUE;
-      ELSIF start2 + dur2 <= start1 THEN 
+      ELSIF start2 + dur2 <= start1 THEN
         RETURN FALSE;
-      ELSE 
+      ELSE
         RAISE Prop.BadInterval;
       END;
     END;

@@ -10,10 +10,10 @@ INTERFACE QuadMeshGOProxy;
 
 FROM QuadMeshGO IMPORT T;
 
-(* The Proxy Maker (PM) procedure for QuadMeshGO.T is 
+(* The Proxy Maker (PM) procedure for QuadMeshGO.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END QuadMeshGOProxy.

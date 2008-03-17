@@ -9,9 +9,9 @@
 MODULE SurfaceGO;
 
 IMPORT BooleanProp, BooleanPropPrivate, Color, ColorProp, ColorPropPrivate,
-       GO, GOPrivate, GraphicsBase, GraphicsBasePrivate, LineTypeProp, 
-       LineTypePropPrivate, Prop, PropPrivate, RasterModeProp, 
-       RasterModePropPrivate, RealProp, RealPropPrivate, ShadingProp, 
+       GO, GOPrivate, GraphicsBase, GraphicsBasePrivate, LineTypeProp,
+       LineTypePropPrivate, Prop, PropPrivate, RasterModeProp,
+       RasterModePropPrivate, RealProp, RealPropPrivate, ShadingProp,
        ShadingPropPrivate;
 
 REVEAL
@@ -43,14 +43,14 @@ TYPE
   END;
 
 
-PROCEDURE DamageDistinguishFacets (<* UNUSED *> self   : DistinguishFacets_PN; 
+PROCEDURE DamageDistinguishFacets (<* UNUSED *> self   : DistinguishFacets_PN;
                                                 caller : GO.T) =
   BEGIN
     caller.damaged := TRUE;
   END DamageDistinguishFacets;
 
 
-PROCEDURE PushDistinguishFacets (self  : DistinguishFacets_PN; 
+PROCEDURE PushDistinguishFacets (self  : DistinguishFacets_PN;
                                  state : GraphicsBase.T;
                                  pv    : Prop.Val) =
   BEGIN
@@ -64,7 +64,7 @@ PROCEDURE PushDistinguishFacets (self  : DistinguishFacets_PN;
   END PushDistinguishFacets;
 
 
-PROCEDURE PopDistinguishFacets (self  : DistinguishFacets_PN; 
+PROCEDURE PopDistinguishFacets (self  : DistinguishFacets_PN;
                                 state : GraphicsBase.T) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], BooleanPropPrivate.Stack) DO
@@ -92,7 +92,7 @@ PROCEDURE DamageColour (<* UNUSED *> self : Colour_PN; caller : GO.T) =
   END DamageColour;
 
 
-PROCEDURE PushColour (self  : Colour_PN; 
+PROCEDURE PushColour (self  : Colour_PN;
                       state : GraphicsBase.T;
                       pv    : Prop.Val) =
   BEGIN
@@ -106,7 +106,7 @@ PROCEDURE PushColour (self  : Colour_PN;
   END PushColour;
 
 
-PROCEDURE PopColour (self  : Colour_PN; 
+PROCEDURE PopColour (self  : Colour_PN;
                      state : GraphicsBase.T) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], ColorPropPrivate.Stack) DO
@@ -134,7 +134,7 @@ PROCEDURE DamageBackColour (<* UNUSED *> self : BackColour_PN; caller : GO.T) =
   END DamageBackColour;
 
 
-PROCEDURE PushBackColour (self  : BackColour_PN; 
+PROCEDURE PushBackColour (self  : BackColour_PN;
                           state : GraphicsBase.T;
                           pv    : Prop.Val) =
   BEGIN
@@ -148,7 +148,7 @@ PROCEDURE PushBackColour (self  : BackColour_PN;
   END PushBackColour;
 
 
-PROCEDURE PopBackColour (self  : BackColour_PN; 
+PROCEDURE PopBackColour (self  : BackColour_PN;
                          state : GraphicsBase.T) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], ColorPropPrivate.Stack) DO
@@ -170,14 +170,14 @@ TYPE
   END;
 
 
-PROCEDURE DamageRasterMode (<* UNUSED *> self   : RasterMode_PN; 
+PROCEDURE DamageRasterMode (<* UNUSED *> self   : RasterMode_PN;
                                          caller : GO.T) =
   BEGIN
     caller.damaged := TRUE;
   END DamageRasterMode;
 
 
-PROCEDURE PushRasterMode (self  : RasterMode_PN; 
+PROCEDURE PushRasterMode (self  : RasterMode_PN;
                           state : GraphicsBase.T;
                           pv    : Prop.Val) =
   BEGIN
@@ -191,7 +191,7 @@ PROCEDURE PushRasterMode (self  : RasterMode_PN;
   END PushRasterMode;
 
 
-PROCEDURE PopRasterMode (self  : RasterMode_PN; 
+PROCEDURE PopRasterMode (self  : RasterMode_PN;
                          state : GraphicsBase.T) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], RasterModePropPrivate.Stack) DO
@@ -214,14 +214,14 @@ TYPE
 
 
 PROCEDURE DamageAmbientReflectionCoeff (
-    <* UNUSED *> self   : AmbientReflectionCoeff_PN; 
+    <* UNUSED *> self   : AmbientReflectionCoeff_PN;
                  caller : GO.T) =
   BEGIN
     caller.damaged := TRUE;
   END DamageAmbientReflectionCoeff;
 
 
-PROCEDURE PushAmbientReflectionCoeff (self  : AmbientReflectionCoeff_PN; 
+PROCEDURE PushAmbientReflectionCoeff (self  : AmbientReflectionCoeff_PN;
                                       state : GraphicsBase.T;
                                       pv    : Prop.Val) =
   BEGIN
@@ -235,7 +235,7 @@ PROCEDURE PushAmbientReflectionCoeff (self  : AmbientReflectionCoeff_PN;
   END PushAmbientReflectionCoeff;
 
 
-PROCEDURE PopAmbientReflectionCoeff (self  : AmbientReflectionCoeff_PN; 
+PROCEDURE PopAmbientReflectionCoeff (self  : AmbientReflectionCoeff_PN;
                                      state : GraphicsBase.T) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], RealPropPrivate.Stack) DO
@@ -258,14 +258,14 @@ TYPE
 
 
 PROCEDURE DamageDiffuseReflectionCoeff (
-    <* UNUSED *> self   : DiffuseReflectionCoeff_PN; 
+    <* UNUSED *> self   : DiffuseReflectionCoeff_PN;
                  caller : GO.T) =
   BEGIN
     caller.damaged := TRUE;
   END DamageDiffuseReflectionCoeff;
 
 
-PROCEDURE PushDiffuseReflectionCoeff (self  : DiffuseReflectionCoeff_PN; 
+PROCEDURE PushDiffuseReflectionCoeff (self  : DiffuseReflectionCoeff_PN;
                                       state : GraphicsBase.T;
                                       pv    : Prop.Val) =
   BEGIN
@@ -279,7 +279,7 @@ PROCEDURE PushDiffuseReflectionCoeff (self  : DiffuseReflectionCoeff_PN;
   END PushDiffuseReflectionCoeff;
 
 
-PROCEDURE PopDiffuseReflectionCoeff (self  : DiffuseReflectionCoeff_PN; 
+PROCEDURE PopDiffuseReflectionCoeff (self  : DiffuseReflectionCoeff_PN;
                                      state : GraphicsBase.T) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], RealPropPrivate.Stack) DO
@@ -302,14 +302,14 @@ TYPE
 
 
 PROCEDURE DamageSpecularReflectionCoeff (
-    <* UNUSED *> self   : SpecularReflectionCoeff_PN; 
+    <* UNUSED *> self   : SpecularReflectionCoeff_PN;
                  caller : GO.T) =
   BEGIN
     caller.damaged := TRUE;
   END DamageSpecularReflectionCoeff;
 
 
-PROCEDURE PushSpecularReflectionCoeff (self  : SpecularReflectionCoeff_PN; 
+PROCEDURE PushSpecularReflectionCoeff (self  : SpecularReflectionCoeff_PN;
                                        state : GraphicsBase.T;
                                        pv    : Prop.Val) =
   BEGIN
@@ -323,7 +323,7 @@ PROCEDURE PushSpecularReflectionCoeff (self  : SpecularReflectionCoeff_PN;
   END PushSpecularReflectionCoeff;
 
 
-PROCEDURE PopSpecularReflectionCoeff (self  : SpecularReflectionCoeff_PN; 
+PROCEDURE PopSpecularReflectionCoeff (self  : SpecularReflectionCoeff_PN;
                                       state : GraphicsBase.T) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], RealPropPrivate.Stack) DO
@@ -346,14 +346,14 @@ TYPE
 
 
 PROCEDURE DamageSpecularReflectionConc (
-    <* UNUSED *> self   : SpecularReflectionConcPN; 
+    <* UNUSED *> self   : SpecularReflectionConcPN;
                  caller : GO.T) =
   BEGIN
     caller.damaged := TRUE;
   END DamageSpecularReflectionConc;
 
 
-PROCEDURE PushSpecularReflectionConc (self  : SpecularReflectionConcPN; 
+PROCEDURE PushSpecularReflectionConc (self  : SpecularReflectionConcPN;
                                       state : GraphicsBase.T;
                                       pv    : Prop.Val) =
   BEGIN
@@ -367,7 +367,7 @@ PROCEDURE PushSpecularReflectionConc (self  : SpecularReflectionConcPN;
   END PushSpecularReflectionConc;
 
 
-PROCEDURE PopSpecularReflectionConc (self  : SpecularReflectionConcPN; 
+PROCEDURE PopSpecularReflectionConc (self  : SpecularReflectionConcPN;
                                      state : GraphicsBase.T) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], RealPropPrivate.Stack) DO
@@ -390,14 +390,14 @@ TYPE
 
 
 PROCEDURE DamageTransmissionCoeff (
-    <* UNUSED *> self   : TransmissionCoeff_PN; 
+    <* UNUSED *> self   : TransmissionCoeff_PN;
                  caller : GO.T) =
   BEGIN
     caller.damaged := TRUE;
   END DamageTransmissionCoeff;
 
 
-PROCEDURE PushTransmissionCoeff (self  : TransmissionCoeff_PN; 
+PROCEDURE PushTransmissionCoeff (self  : TransmissionCoeff_PN;
                                  state : GraphicsBase.T;
                                  pv    : Prop.Val) =
   BEGIN
@@ -411,7 +411,7 @@ PROCEDURE PushTransmissionCoeff (self  : TransmissionCoeff_PN;
   END PushTransmissionCoeff;
 
 
-PROCEDURE PopTransmissionCoeff (self  : TransmissionCoeff_PN; 
+PROCEDURE PopTransmissionCoeff (self  : TransmissionCoeff_PN;
                                 state : GraphicsBase.T) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], RealPropPrivate.Stack) DO
@@ -434,14 +434,14 @@ TYPE
 
 
 PROCEDURE DamageSpecularReflectionColour (
-    <* UNUSED *> self   : SpecularReflectionColour_PN; 
+    <* UNUSED *> self   : SpecularReflectionColour_PN;
                  caller : GO.T) =
   BEGIN
     caller.damaged := TRUE;
   END DamageSpecularReflectionColour;
 
 
-PROCEDURE PushSpecularReflectionColour (self  : SpecularReflectionColour_PN; 
+PROCEDURE PushSpecularReflectionColour (self  : SpecularReflectionColour_PN;
                                         state : GraphicsBase.T;
                                         pv    : Prop.Val) =
   BEGIN
@@ -455,7 +455,7 @@ PROCEDURE PushSpecularReflectionColour (self  : SpecularReflectionColour_PN;
   END PushSpecularReflectionColour;
 
 
-PROCEDURE PopSpecularReflectionColour (self  : SpecularReflectionColour_PN; 
+PROCEDURE PopSpecularReflectionColour (self  : SpecularReflectionColour_PN;
                                        state : GraphicsBase.T) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], ColorPropPrivate.Stack) DO
@@ -477,14 +477,14 @@ TYPE
   END;
 
 
-PROCEDURE DamageLighting (<* UNUSED *> self   : Lighting_PN; 
+PROCEDURE DamageLighting (<* UNUSED *> self   : Lighting_PN;
                                               caller : GO.T) =
   BEGIN
     caller.damaged := TRUE;
   END DamageLighting;
 
 
-PROCEDURE PushLighting (self  : Lighting_PN; 
+PROCEDURE PushLighting (self  : Lighting_PN;
                                state : GraphicsBase.T;
                                pv    : Prop.Val) =
   BEGIN
@@ -498,7 +498,7 @@ PROCEDURE PushLighting (self  : Lighting_PN;
   END PushLighting;
 
 
-PROCEDURE PopLighting (self  : Lighting_PN; 
+PROCEDURE PopLighting (self  : Lighting_PN;
                               state : GraphicsBase.T) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], BooleanPropPrivate.Stack) DO
@@ -526,7 +526,7 @@ PROCEDURE DamageShading (<* UNUSED *> self : Shading_PN; caller : GO.T) =
   END DamageShading;
 
 
-PROCEDURE PushShading (self  : Shading_PN; 
+PROCEDURE PushShading (self  : Shading_PN;
                        state : GraphicsBase.T;
                        pv    : Prop.Val) =
   BEGIN
@@ -561,14 +561,14 @@ TYPE
   END;
 
 
-PROCEDURE DamageEdgeVisibility (<* UNUSED *> self   : EdgeVisibility_PN; 
+PROCEDURE DamageEdgeVisibility (<* UNUSED *> self   : EdgeVisibility_PN;
                                              caller : GO.T) =
   BEGIN
     caller.damaged := TRUE;
   END DamageEdgeVisibility;
 
 
-PROCEDURE PushEdgeVisibility (self  : EdgeVisibility_PN; 
+PROCEDURE PushEdgeVisibility (self  : EdgeVisibility_PN;
                               state : GraphicsBase.T;
                               pv    : Prop.Val) =
   BEGIN
@@ -582,7 +582,7 @@ PROCEDURE PushEdgeVisibility (self  : EdgeVisibility_PN;
   END PushEdgeVisibility;
 
 
-PROCEDURE PopEdgeVisibility (self  : EdgeVisibility_PN; 
+PROCEDURE PopEdgeVisibility (self  : EdgeVisibility_PN;
                              state : GraphicsBase.T) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], BooleanPropPrivate.Stack) DO
@@ -605,15 +605,15 @@ TYPE
   END;
 
 
-PROCEDURE DamageEdgeColour (<* UNUSED *> self   : EdgeColour_PN; 
+PROCEDURE DamageEdgeColour (<* UNUSED *> self   : EdgeColour_PN;
                                          caller : GO.T) =
   BEGIN
     caller.damaged := TRUE;
   END DamageEdgeColour;
 
 
-PROCEDURE PushEdgeColour (self  : EdgeColour_PN; 
-                          state : GraphicsBase.T; 
+PROCEDURE PushEdgeColour (self  : EdgeColour_PN;
+                          state : GraphicsBase.T;
                           pv    : Prop.Val) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], ColorPropPrivate.Stack),
@@ -647,15 +647,15 @@ TYPE
   END;
 
 
-PROCEDURE DamageEdgeType (<* UNUSED *> self   : EdgeType_PN; 
+PROCEDURE DamageEdgeType (<* UNUSED *> self   : EdgeType_PN;
                                        caller : GO.T) =
   BEGIN
     caller.damaged := TRUE;
   END DamageEdgeType;
 
 
-PROCEDURE PushEdgeType (self  : EdgeType_PN; 
-                        state : GraphicsBase.T; 
+PROCEDURE PushEdgeType (self  : EdgeType_PN;
+                        state : GraphicsBase.T;
                         pv    : Prop.Val) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], LineTypePropPrivate.Stack),
@@ -689,15 +689,15 @@ TYPE
   END;
 
 
-PROCEDURE DamageEdgeWidth (<* UNUSED *> self   : EdgeWidth_PN; 
+PROCEDURE DamageEdgeWidth (<* UNUSED *> self   : EdgeWidth_PN;
                                         caller : GO.T) =
   BEGIN
     caller.damaged := TRUE;
   END DamageEdgeWidth;
 
 
-PROCEDURE PushEdgeWidth (self  : EdgeWidth_PN; 
-                         state : GraphicsBase.T; 
+PROCEDURE PushEdgeWidth (self  : EdgeWidth_PN;
+                         state : GraphicsBase.T;
                          pv    : Prop.Val) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], RealPropPrivate.Stack),
@@ -823,36 +823,36 @@ PROCEDURE SetEdgeWidth (o : GO.T; v : REAL) =
 (*****************************************************************************)
 
 BEGIN
-  DistinguishFacets := 
+  DistinguishFacets :=
       NEW (DistinguishFacets_PN).init (FALSE);
-  Colour := 
+  Colour :=
       NEW (Colour_PN).init (Color.White);
-  BackColour := 
+  BackColour :=
       NEW (BackColour_PN).init (GraphicsBasePrivate.VoidColor);
-  RasterMode := 
+  RasterMode :=
       NEW (RasterMode_PN).init (RasterModeProp.Kind.Solid);
-  AmbientReflectionCoeff := 
+  AmbientReflectionCoeff :=
       NEW (AmbientReflectionCoeff_PN).init (0.5);
-  DiffuseReflectionCoeff := 
+  DiffuseReflectionCoeff :=
       NEW (DiffuseReflectionCoeff_PN).init (1.0);
-  SpecularReflectionCoeff := 
+  SpecularReflectionCoeff :=
       NEW (SpecularReflectionCoeff_PN).init (0.0);
-  SpecularReflectionConc := 
+  SpecularReflectionConc :=
       NEW (SpecularReflectionConcPN).init (0.0);
-  TransmissionCoeff := 
+  TransmissionCoeff :=
       NEW (TransmissionCoeff_PN).init (0.0);        (* DIFFERS FROM MANUAL *)
-  SpecularReflectionColour := 
+  SpecularReflectionColour :=
       NEW (SpecularReflectionColour_PN).init (Color.White);
-  Lighting := 
+  Lighting :=
       NEW (Lighting_PN).init (TRUE);
-  Shading := 
+  Shading :=
       NEW (Shading_PN).init (ShadingProp.Kind.Flat);
-  EdgeVisibility := 
+  EdgeVisibility :=
       NEW (EdgeVisibility_PN).init (FALSE);
-  EdgeColour := 
+  EdgeColour :=
       NEW (EdgeColour_PN).init (Color.White);
-  EdgeType := 
+  EdgeType :=
       NEW (EdgeType_PN).init (LineTypeProp.Kind.Solid);
-  EdgeWidth := 
+  EdgeWidth :=
       NEW (EdgeWidth_PN).init (1.0);
 END SurfaceGO.

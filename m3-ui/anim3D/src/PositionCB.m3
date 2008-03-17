@@ -10,8 +10,8 @@ MODULE PositionCB EXPORTS PositionCB, PositionCBProxy;
 
 IMPORT CB;
 
-REVEAL 
-  T = Public BRANDED OBJECT 
+REVEAL
+  T = Public BRANDED OBJECT
   OVERRIDES
     init   := Init;
     invoke := Invoke;

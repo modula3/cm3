@@ -26,9 +26,9 @@ PROCEDURE New (c : Color.T) : T;
 (* "New (c)" creates a new ambient light source "l" and returns it.
    It also attaches the following properties to "l":
    \begin{verbatim}
-      "(LightGO.Colour,ColorProp.NewConst(c))" 
+      "(LightGO.Colour,ColorProp.NewConst(c))"
       "(LightGO.Switch","BooleanProp.NewConst(TRUE))"
-   \end{verbatim} 
+   \end{verbatim}
 *)
 
 END AmbientLightGO.

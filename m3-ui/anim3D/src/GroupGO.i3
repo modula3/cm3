@@ -10,27 +10,27 @@
 
    Groups serve two purposes: They allow the user to group indiviual
    geometric objects together, and they provide a mechanism for property
-   inheritance. 
+   inheritance.
 
-   Groups allow the user to organize individual geometric objects into 
-   a graph structure. A {\em scene} is described by a {\em root node} 
-   (a \type{RootGO}{T}, which is a subtype of "GroupGO.T"), and contains 
-   all the geometric objects reacheable from the root. Usually, this 
-   structure forms a tree. However, geometric objects may occur in more 
-   than one group, so in general, the objects in a scene form a DAG 
-   (the rendering process does not terminate for cyclic graphs). 
+   Groups allow the user to organize individual geometric objects into
+   a graph structure. A {\em scene} is described by a {\em root node}
+   (a \type{RootGO}{T}, which is a subtype of "GroupGO.T"), and contains
+   all the geometric objects reacheable from the root. Usually, this
+   structure forms a tree. However, geometric objects may occur in more
+   than one group, so in general, the objects in a scene form a DAG
+   (the rendering process does not terminate for cyclic graphs).
 
-   During rendering, the DAG is travered in a depth-first fashion. Whenever 
-   a node "o" is visited, there is a unique traversal path between "o" and 
-   the root. We call the nodes on this path the {\em ancestors} of "o". 
+   During rendering, the DAG is travered in a depth-first fashion. Whenever
+   a node "o" is visited, there is a unique traversal path between "o" and
+   the root. We call the nodes on this path the {\em ancestors} of "o".
 
    Associated with each geometric object "o" is a property mapping $M_o$,
    a partial function from property names $n$ to property values $n$
-   (see the \interface{GO} interface for details). 
+   (see the \interface{GO} interface for details).
    When the scene is traversed, the property mappings of the nodes on the
-   traversal path are composed together. Composition of property mappings 
+   traversal path are composed together. Composition of property mappings
    is defined as follows:
-   \[ (M_i \circ M_{i+1})(n) = 
+   \[ (M_i \circ M_{i+1})(n) =
      \left\{
       \begin{array}{ll}
        M_i(n) & \mbox{if $M_{i+1}(n)$ is undefined} \\
@@ -40,16 +40,16 @@
      \right.
    \]
    $\oplus$ is the {\em property value composition operator}. Its semantics
-   depends of the type of the property values. At the moment, for all 
+   depends of the type of the property values. At the moment, for all
    properties except transformation properties, $v \oplus v' = v'$.
    A transformation property value $v$ is internally described by a $4\times4$
-   matrix $A_v$. For transformation property values, 
+   matrix $A_v$. For transformation property values,
    $v \oplus v' = v''$ where $A_{v''} = A_v A_{v'}$.
-   
+
    Here is an example of how this property inheritance mechanism works:
    \begin{center}
    \begin{tabular}{c}
-   \psfig{figure=images/PropInheritance.ps,width=4in,silent=} 
+   \psfig{figure=images/PropInheritance.ps,width=4in,silent=}
    \end{tabular}
    \end{center}
    The actual scene contains three objects, a sphere, a box, and a cone.
@@ -80,10 +80,10 @@ TYPE
 
    "g.add(o)" adds a new geometric object "o" to the group "g".
 
-   "g.remove(o)" removes the geometric object "o" from the group "g". If "o" 
+   "g.remove(o)" removes the geometric object "o" from the group "g". If "o"
    is not contained in "g", the exception "BadElement" is raised.
 
-   "g.flush()" removes all geometric objects from "g". 
+   "g.flush()" removes all geometric objects from "g".
 
    "g.content()" returns an array containing all the elements of "g".
 *)

@@ -14,9 +14,9 @@
    or of one of its ancestors in the scene changes, the light source
    moves.
 
-   Light sources affect all geometric objects of type \type{SurfaceGO}{T} 
-   in the scene, by illuminating their surfaces. However, they are invisible 
-   themselves. 
+   Light sources affect all geometric objects of type \type{SurfaceGO}{T}
+   in the scene, by illuminating their surfaces. However, they are invisible
+   themselves.
 
    "LightGO.T" is the abstract class of all light sources. *)
 
@@ -27,30 +27,30 @@ IMPORT BooleanProp, ColorProp, Color, GO;
 
 TYPE
   T <: GO.T;
-(* "LightGO.T" is a subtype of \type{GO}{T}. No additional fiels or methods 
+(* "LightGO.T" is a subtype of \type{GO}{T}. No additional fiels or methods
    are defined. *)
 
 VAR
   Colour : ColorProp.Name;
   Switch : BooleanProp.Name;
 (* In addition to the properties observed by all \type{GO}{T}'s, there are two
-   additional properties that are observed by all "LightGO.T"'s. 
-   "Colour" is the name of a property that determines the colour of the light 
-   emitted by the "LightGO.T"; it associates with a property value of type 
+   additional properties that are observed by all "LightGO.T"'s.
+   "Colour" is the name of a property that determines the colour of the light
+   emitted by the "LightGO.T"; it associates with a property value of type
    \type{ColourProp}{Val}.
-   "Switch" is the name of a property that determines if the light source 
-   is on or off; it associates with a property value of type 
+   "Switch" is the name of a property that determines if the light source
+   is on or off; it associates with a property value of type
    \type{BooleanProp}{Val}. *)
 
 (* The following two procedures make it more convenient to modify the
    "Colour" and "Switch" properties of a light: *)
 
 PROCEDURE SetColour (o : GO.T; c : Color.T);
-(* The expression "SetColour(o,c)" is equivalent to 
+(* The expression "SetColour(o,c)" is equivalent to
    "o.setProp(Colour.bind(ColorProp.NewConst(c)))". *)
 
 PROCEDURE SetSwitch (o : GO.T; switch : BOOLEAN);
-(* The expression "SetSwitch(o,b)" is equivalent to 
+(* The expression "SetSwitch(o,b)" is equivalent to
    "o.setProp(Switch.bind(BooleanProp.NewConst(b)))". *)
 
 END LightGO.

@@ -8,8 +8,8 @@
 
 MODULE PointLightGO EXPORTS PointLightGO, PointLightGOProxy;
 
-IMPORT BooleanPropPrivate, Color, ColorPropPrivate, GO, GOPrivate, 
-       GraphicsBase, GraphicsBasePrivate, LightGO, Point3, PointProp, 
+IMPORT BooleanPropPrivate, Color, ColorPropPrivate, GO, GOPrivate,
+       GraphicsBase, GraphicsBasePrivate, LightGO, Point3, PointProp,
        PointPropPrivate, Prop, RealProp, RealPropPrivate;
 
 

@@ -18,9 +18,9 @@ TYPE
   METHODS
     init (prec := 10) : T;
   END;
-(* "disk.init(prec)"  initializes a new disk "disk", whose surface is 
+(* "disk.init(prec)"  initializes a new disk "disk", whose surface is
    approximated by a polygon with "prec" edges, and returns it. The location,
-   orientation, and radius of the disk is determined by the three properties 
+   orientation, and radius of the disk is determined by the three properties
    "Center", "Normal", and "Radius". *)
 
 
@@ -29,26 +29,26 @@ VAR
   Normal : PointProp.Name;
   Radius : RealProp.Name;
 (* In addition to the properties observed by all \type{GO}{T}'s and
-   \type{SurfaceGO}{T}'s, there are three additional properties that 
+   \type{SurfaceGO}{T}'s, there are three additional properties that
    are observed by "DiskGO.T"'s:
 
-   "Center" is the name of a property that describes the center  
-   of the disk. It associates with a \type{PointProp}{Val}. If no "Center" 
+   "Center" is the name of a property that describes the center
+   of the disk. It associates with a \type{PointProp}{Val}. If no "Center"
    property is specified, the disk is centered around the origin.
 
-   "Normal" is the name of a property that describes the normal vector 
-   of the disk. It associates with a \type{PointProp}{Val}. If no "Normal" 
+   "Normal" is the name of a property that describes the normal vector
+   of the disk. It associates with a \type{PointProp}{Val}. If no "Normal"
    property is specified, the normal vector is taken to be (0,0,1).
 
-   "Radius" is the name of a property that describes the radius of the 
+   "Radius" is the name of a property that describes the radius of the
    disk. It associates with a \type{RealProp}{Val}. If no "Radius" property
-   is specified, the disk has a radius of 1. 
+   is specified, the disk has a radius of 1.
 
-   Assume that in a given context and at a given point in time, the property 
-   mapping is such that "Center" maps to a point property value which 
-   evaluates to "p", "Normal" maps to a point property value which evaluates 
+   Assume that in a given context and at a given point in time, the property
+   mapping is such that "Center" maps to a point property value which
+   evaluates to "p", "Normal" maps to a point property value which evaluates
    to "n", and "Radius" maps to a real property value which evaluates to "r".
-   "p", "n", and "r" define the position and shape of the disk 
+   "p", "n", and "r" define the position and shape of the disk
    in this context and at this time as shown below:
    \begin{center}
    \begin{tabular}{c}
@@ -59,8 +59,8 @@ VAR
 
 
 PROCEDURE New (p : Point3.T; n : Point3.T; r : REAL; prec := 10) : T;
-(* "New(p,n,r,prec)" creates a new disk, whose surface is approximated by a 
-   polygon with "prec" edges, and returns it. It also attaches the following 
+(* "New(p,n,r,prec)" creates a new disk, whose surface is approximated by a
+   polygon with "prec" edges, and returns it. It also attaches the following
    properties to the new cone:
     \begin{verbatim}
      (Center,PointProp.NewConst(p))
@@ -68,10 +68,10 @@ PROCEDURE New (p : Point3.T; n : Point3.T; r : REAL; prec := 10) : T;
      (Radius,RealProp.NewConst(r))
    \end{verbatim}
 *)
-   
 
-(* The following three procedures provide sugaring to attach 
-   "Center", "Normal", and "Radius" properties with non-animated 
+
+(* The following three procedures provide sugaring to attach
+   "Center", "Normal", and "Radius" properties with non-animated
    property values to geometric objects: *)
 
 PROCEDURE SetCenter (o : GO.T; p : Point3.T);

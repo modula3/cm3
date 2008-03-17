@@ -10,8 +10,8 @@ MODULE KeyCB EXPORTS KeyCB, KeyCBProxy;
 
 IMPORT CB;
 
-REVEAL 
-  T = Public BRANDED OBJECT 
+REVEAL
+  T = Public BRANDED OBJECT
   OVERRIDES
     init   := Init;
     invoke := Invoke;

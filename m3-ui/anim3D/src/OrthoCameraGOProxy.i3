@@ -10,10 +10,10 @@ INTERFACE OrthoCameraGOProxy;
 
 FROM OrthoCameraGO IMPORT T;
 
-(* The Proxy Maker (PM) procedure for OrthoCameraGO.T is 
+(* The Proxy Maker (PM) procedure for OrthoCameraGO.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END OrthoCameraGOProxy.

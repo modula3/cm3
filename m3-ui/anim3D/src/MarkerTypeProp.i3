@@ -12,11 +12,11 @@ IMPORT AnimHandle, Prop;
 
 TYPE
   Kind = {Dot, Cross, Asterisk, Circle, X};
-(* "Kind" enumerates the five possible ways a marker can be drawn: as a dot, 
-   a cross, an asterisk, a circle, or an X. These are the five marker types 
-   that are supported by PEX. OpenGL does not have a marker concept. However, 
-   we could build them up from lines and dots (however, this would not be a 
-   perfect approximation, as PEX markers always orient themselves towards 
+(* "Kind" enumerates the five possible ways a marker can be drawn: as a dot,
+   a cross, an asterisk, a circle, or an X. These are the five marker types
+   that are supported by PEX. OpenGL does not have a marker concept. However,
+   we could build them up from lines and dots (however, this would not be a
+   perfect approximation, as PEX markers always orient themselves towards
    the camera). *)
 
 TYPE
@@ -36,7 +36,7 @@ TYPE
   END;
 
   Beh <: PublicBeh;
-  PublicBeh = Prop.Beh OBJECT 
+  PublicBeh = Prop.Beh OBJECT
   METHODS
     init () : Beh;
   END;
@@ -72,7 +72,7 @@ TYPE
   END;
 
   Request <: PublicRequest;
-  PublicRequest = Prop.Request OBJECT 
+  PublicRequest = Prop.Request OBJECT
   METHODS
     init (start, dur : REAL) : Request;
     value (startkind : Kind; reltime : REAL) : Kind RAISES {Prop.BadMethod};

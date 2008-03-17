@@ -15,7 +15,7 @@ FROM AnimRequestQueue IMPORT T, Public;
 REVEAL
   T <: Private;
 
-TYPE 
+TYPE
   Private = Public OBJECT
     list : List;
     ah   : AnimHandle.T;

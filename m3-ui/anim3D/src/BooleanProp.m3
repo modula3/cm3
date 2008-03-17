@@ -8,8 +8,8 @@
 
 MODULE BooleanProp EXPORTS BooleanProp, BooleanPropPrivate, BooleanPropProxy;
 
-IMPORT Anim3D, AnimHandle, AnimHandlePrivate, AnimRequestQueue, 
-       AnimRequestQueuePrivate, AnimServer, GraphicsBase, 
+IMPORT Anim3D, AnimHandle, AnimHandlePrivate, AnimRequestQueue,
+       AnimRequestQueuePrivate, AnimServer, GraphicsBase,
        GraphicsBasePrivate, Prop, PropPrivate;
 
 (*****************************************************************************)
@@ -86,9 +86,9 @@ PROCEDURE GetState (self: Name; base : GraphicsBase.T) : Base =
 (* Type "Val"                                                                *)
 (*****************************************************************************)
 
-REVEAL 
+REVEAL
   Val = PrivateVal BRANDED OBJECT
-  OVERRIDES 
+  OVERRIDES
     init   := InitVal;
     get    := GetVal;
     value  := ValueVal;
@@ -114,7 +114,7 @@ PROCEDURE GetVal (self : Val) : Base RAISES {Prop.BadMethod} =
   END GetVal;
 
 
-PROCEDURE ValueVal (self : Val; time : LONGREAL) : Base 
+PROCEDURE ValueVal (self : Val; time : LONGREAL) : Base
     RAISES {Prop.BadMethod} =
   BEGIN
     IF time = self.time THEN
@@ -125,7 +125,7 @@ PROCEDURE ValueVal (self : Val; time : LONGREAL) : Base
   END ValueVal;
 
 
-PROCEDURE AdjustVal (self : Val; time : LONGREAL) : BOOLEAN 
+PROCEDURE AdjustVal (self : Val; time : LONGREAL) : BOOLEAN
     RAISES {Prop.BadMethod} =
   BEGIN
     IF time # self.time THEN
@@ -143,8 +143,8 @@ PROCEDURE AdjustVal (self : Val; time : LONGREAL) : BOOLEAN
 (* Type "Beh"                                                                *)
 (*****************************************************************************)
 
-REVEAL 
-  Beh = PrivateBeh BRANDED OBJECT 
+REVEAL
+  Beh = PrivateBeh BRANDED OBJECT
   OVERRIDES
     init := InitBeh;
   END;
@@ -187,7 +187,7 @@ PROCEDURE SetConstBeh (self : ConstBeh; b : Base) =
   END SetConstBeh;
 
 
-PROCEDURE ValueConstBeh (             self : ConstBeh; 
+PROCEDURE ValueConstBeh (             self : ConstBeh;
                          <* UNUSED *> time : LONGREAL) : Base =
   BEGIN
     RETURN self.b;
@@ -223,14 +223,14 @@ PROCEDURE InitAsyncBeh (self : AsyncBeh) : AsyncBeh =
   END InitAsyncBeh;
 
 
-PROCEDURE ValueAsyncBeh (self : AsyncBeh; time : LONGREAL) : Base 
+PROCEDURE ValueAsyncBeh (self : AsyncBeh; time : LONGREAL) : Base
     RAISES {Prop.BadMethod} =
   BEGIN
     RETURN self.compute (time);
   END ValueAsyncBeh;
 
 
-PROCEDURE ComputeAsyncBeh (self : AsyncBeh; time : LONGREAL) : Base 
+PROCEDURE ComputeAsyncBeh (self : AsyncBeh; time : LONGREAL) : Base
     RAISES {Prop.BadMethod} =
   BEGIN
     IF self.proxy # NIL THEN
@@ -239,7 +239,7 @@ PROCEDURE ComputeAsyncBeh (self : AsyncBeh; time : LONGREAL) : Base
       RAISE Prop.BadMethod("BooleanProp.AsyncBeh.compute method is undefined");
     END;
   END ComputeAsyncBeh;
-    
+
 
 PROCEDURE NewAsync (b : AsyncBeh) : Val =
   BEGIN
@@ -272,12 +272,12 @@ PROCEDURE InitDepBeh (self : DepBeh) : DepBeh =
   END InitDepBeh;
 
 
-PROCEDURE ValueDepBeh (self : DepBeh; time : LONGREAL) : Base 
+PROCEDURE ValueDepBeh (self : DepBeh; time : LONGREAL) : Base
     RAISES {Prop.BadMethod} =
   BEGIN
-    (* "hot" is set to true while the value of the behavior is computed. 
-       So, if "hot" is currently true, we have cyclic dependencies. 
-       If unchecked, this would lead to an infinite recursion. 
+    (* "hot" is set to true while the value of the behavior is computed.
+       So, if "hot" is currently true, we have cyclic dependencies.
+       If unchecked, this would lead to an infinite recursion.
        We raise an exception instead. *)
     IF self.hot THEN
       RAISE Prop.BadMethod("BooleanProp.DepBeh occurs in a dependency cycle");
@@ -292,7 +292,7 @@ PROCEDURE ValueDepBeh (self : DepBeh; time : LONGREAL) : Base
   END ValueDepBeh;
 
 
-PROCEDURE ComputeDepBeh (self : DepBeh; time : LONGREAL) : Base 
+PROCEDURE ComputeDepBeh (self : DepBeh; time : LONGREAL) : Base
     RAISES {Prop.BadMethod} =
   BEGIN
     IF self.proxy # NIL THEN
@@ -313,7 +313,7 @@ PROCEDURE NewDep (b : DepBeh) : Val =
 (* Type "SyncBeh"                                                            *)
 (*****************************************************************************)
 
-REVEAL 
+REVEAL
   SyncBeh = PublicSyncBeh BRANDED OBJECT
     queue : MyAnimRequestQueue;
   OVERRIDES
@@ -324,9 +324,9 @@ REVEAL
   END;
 
 
-PROCEDURE InitSyncBeh (self : SyncBeh; 
+PROCEDURE InitSyncBeh (self : SyncBeh;
                        ah   : AnimHandle.T;
-                       b    : Base) : SyncBeh = 
+                       b    : Base) : SyncBeh =
   BEGIN
     EVAL Beh.init (self);
     self.queue := NEW (MyAnimRequestQueue).init (ah, b);
@@ -338,7 +338,7 @@ PROCEDURE InitSyncBeh (self : SyncBeh;
   END InitSyncBeh;
 
 
-PROCEDURE ValueSyncBeh (self : SyncBeh; time : LONGREAL) : Base 
+PROCEDURE ValueSyncBeh (self : SyncBeh; time : LONGREAL) : Base
     RAISES {Prop.BadMethod} =
   BEGIN
     RETURN self.queue.value (time);
@@ -351,7 +351,7 @@ PROCEDURE AddRequest (self : SyncBeh; r : Request) RAISES {Prop.BadInterval} =
   END AddRequest;
 
 
-PROCEDURE Change (self : SyncBeh; b : Base; start : REAL) 
+PROCEDURE Change (self : SyncBeh; b : Base; start : REAL)
     RAISES {Prop.BadInterval} =
   BEGIN
     self.queue.insert (NEW (ChangeReq).init (start, 0.0, b));
@@ -369,8 +369,8 @@ PROCEDURE NewSync (ah : AnimHandle.T; b : Base) : Val =
 (*****************************************************************************)
 
 
-REVEAL 
-  Request = PublicRequest BRANDED OBJECT 
+REVEAL
+  Request = PublicRequest BRANDED OBJECT
   OVERRIDES
     init  := InitRequest;
     value := ValueRequest;
@@ -387,8 +387,8 @@ PROCEDURE InitRequest (self : Request; start, dur : REAL) : Request =
   END InitRequest;
 
 
-PROCEDURE ValueRequest (self     : Request; 
-                        startval : Base; 
+PROCEDURE ValueRequest (self     : Request;
+                        startval : Base;
                         reltime  : REAL) : Base RAISES {Prop.BadMethod} =
   BEGIN
     IF self.proxy # NIL THEN
@@ -399,19 +399,19 @@ PROCEDURE ValueRequest (self     : Request;
   END ValueRequest;
 
 
-TYPE 
+TYPE
   ChangeReq = Request BRANDED OBJECT
     b : Base;
   METHODS
     init (start, dur : REAL; b : Base) : ChangeReq := InitChangeReq;
-  OVERRIDES 
+  OVERRIDES
     value := ChangeReqValue;
   END;
 
 
-PROCEDURE InitChangeReq (self  : ChangeReq; 
+PROCEDURE InitChangeReq (self  : ChangeReq;
                          start : REAL;
-                         dur   : REAL; 
+                         dur   : REAL;
                          b     : Base) : ChangeReq =
   BEGIN
     EVAL Request.init (self, start, dur);
@@ -420,8 +420,8 @@ PROCEDURE InitChangeReq (self  : ChangeReq;
   END InitChangeReq;
 
 
-PROCEDURE ChangeReqValue (self      : ChangeReq; 
-             <* UNUSED *> startbool : Base; 
+PROCEDURE ChangeReqValue (self      : ChangeReq;
+             <* UNUSED *> startbool : Base;
                           reltime   : REAL) : Base =
   BEGIN
     <* ASSERT reltime >= self.start AND reltime <= self.start + self.dur *>
@@ -434,11 +434,11 @@ PROCEDURE ChangeReqValue (self      : ChangeReq;
 (*****************************************************************************)
 
 
-TYPE 
+TYPE
   MyAnimRequestQueue = AnimRequestQueue.T BRANDED OBJECT
     b : Base;  (* The initial value of the pv *)
   METHODS
-    init (ah : AnimHandle.T; b : Base) : MyAnimRequestQueue 
+    init (ah : AnimHandle.T; b : Base) : MyAnimRequestQueue
       := MyAnimRequestQueue_Init;
     value (time : LONGREAL) : Base RAISES {Prop.BadMethod}
       := MyAnimRequestQueue_Value;
@@ -447,7 +447,7 @@ TYPE
   END;
 
 
-PROCEDURE MyAnimRequestQueue_Init (self : MyAnimRequestQueue; 
+PROCEDURE MyAnimRequestQueue_Init (self : MyAnimRequestQueue;
                                    ah   : AnimHandle.T;
                                    b    : Base) : MyAnimRequestQueue =
   BEGIN
@@ -457,9 +457,9 @@ PROCEDURE MyAnimRequestQueue_Init (self : MyAnimRequestQueue;
   END MyAnimRequestQueue_Init;
 
 
-PROCEDURE MyAnimRequestQueue_Value (self : MyAnimRequestQueue; 
-                                    time : LONGREAL) : Base 
-    RAISES {Prop.BadMethod} = 
+PROCEDURE MyAnimRequestQueue_Value (self : MyAnimRequestQueue;
+                                    time : LONGREAL) : Base
+    RAISES {Prop.BadMethod} =
   VAR
     l       := self.list;
     req     : Request;
@@ -547,7 +547,7 @@ PROCEDURE PopStack (self : Stack) : Base =
     DEC (self.cnt);
     self.top := self.vals[self.cnt];
     RETURN self.top;
-  END PopStack;    
+  END PopStack;
 
 
 BEGIN

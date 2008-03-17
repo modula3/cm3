@@ -10,10 +10,10 @@ INTERFACE PolygonGOProxy;
 
 FROM PolygonGO IMPORT T;
 
-(* The Proxy Maker (PM) procedure for PolygonGO.T is 
+(* The Proxy Maker (PM) procedure for PolygonGO.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END PolygonGOProxy.

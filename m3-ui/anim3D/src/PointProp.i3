@@ -29,7 +29,7 @@ TYPE
   END;
 
   Beh <: PublicBeh;
-  PublicBeh = Prop.Beh OBJECT 
+  PublicBeh = Prop.Beh OBJECT
   METHODS
     init () : Beh;
   END;
@@ -47,9 +47,9 @@ TYPE
     init (ah : AnimHandle.T; p : Base) : SyncBeh;
     addRequest (r : Request) RAISES {Prop.BadInterval};
   (* shortcuts for particular instances of "addRequest" *)
-    linMoveTo (p : Base; start := 0.0; dur := 0.0) 
+    linMoveTo (p : Base; start := 0.0; dur := 0.0)
         RAISES {Prop.BadInterval};
-    linMoveBy (p : Base; start := 0.0; dur := 0.0) 
+    linMoveBy (p : Base; start := 0.0; dur := 0.0)
         RAISES {Prop.BadInterval};
   END;
 
@@ -68,10 +68,10 @@ TYPE
   END;
 
   Request <: PublicRequest;
-  PublicRequest = Prop.Request OBJECT 
+  PublicRequest = Prop.Request OBJECT
   METHODS
     init (start, dur : REAL) : Request;
-    value (startpoint : Base; reltime : REAL) : Base 
+    value (startpoint : Base; reltime : REAL) : Base
         RAISES {Prop.BadMethod};
   END;
 
@@ -80,9 +80,9 @@ PROCEDURE NewSync (ah : AnimHandle.T; p : Base) : Val;
 PROCEDURE NewAsync (b : AsyncBeh) : Val;
 PROCEDURE NewDep (b : DepBeh) : Val;
 
-PROCEDURE BecomeSync (ah : AnimHandle.T; pv : Val) : SyncBeh 
+PROCEDURE BecomeSync (ah : AnimHandle.T; pv : Val) : SyncBeh
     RAISES {Prop.BadMethod};
-(* Replaces "pv.beh" by "NEW(SyncBeh).init(pv.get(),ah)", 
+(* Replaces "pv.beh" by "NEW(SyncBeh).init(pv.get(),ah)",
    and returns the new behavior. *)
 
 END PointProp.

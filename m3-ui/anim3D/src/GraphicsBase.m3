@@ -38,7 +38,7 @@ PROCEDURE GrowBoundingVolume (self : T; center : Point3.T; radius : REAL) =
     WITH A       = GO.Transform.getState(self),
          center1 = Matrix4.TransformPoint3 (A, center),
          radius1 = radius * Matrix4.UnitSphereMaxSquishFactor (A),
-         min     = self.b_vol_min, 
+         min     = self.b_vol_min,
          max     = self.b_vol_max DO
 
       min := Point3.T {MIN (min.x, center1.x - radius1),
@@ -55,13 +55,13 @@ PROCEDURE GetBoundingVolume (self : T) : BSphere.T =
   BEGIN
     WITH min = self.b_vol_min, max = self.b_vol_max DO
       IF min = Point3.Max AND max = Point3.Min THEN
-        (* There are no objects with nonempty bounding boxes in the root, 
+        (* There are no objects with nonempty bounding boxes in the root,
            so we set the bounding sphere to a default value. *)
         RETURN BSphere.T {Point3.Origin, 0.0};
       ELSE
         (* We put a (conservative) bounding sphere around the bounding box. *)
 
-        RETURN BSphere.T {Point3.MidPoint (min, max), 
+        RETURN BSphere.T {Point3.MidPoint (min, max),
                           Point3.Distance (min, max) / 2.0};
       END;
     END;

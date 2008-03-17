@@ -8,17 +8,17 @@
 
 MODULE BoxGO EXPORTS BoxGO, BoxGOProxy;
 
-IMPORT GO, GOPrivate, GraphicsBase, GraphicsBasePrivate, Point3, PointProp, 
+IMPORT GO, GOPrivate, GraphicsBase, GraphicsBasePrivate, Point3, PointProp,
        PointPropPrivate, Prop;
 
-REVEAL 
+REVEAL
   T = Public BRANDED OBJECT
     a,b : Point3.T;
     v   : ARRAY [1 .. 6] OF ARRAY [1 .. 4] OF Point3.T;
   OVERRIDES
     init              := Init;
     draw              := Draw;
-    damageIfDependent := DamageIfDependent; 
+    damageIfDependent := DamageIfDependent;
   END;
 
 
@@ -94,7 +94,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
     state.drawPolygon (self.v[5], GO.Shape.Convex);
     state.drawPolygon (self.v[6], GO.Shape.Convex);
 
-    state.growBoundingVolume (Point3.MidPoint (self.a, self.b), 
+    state.growBoundingVolume (Point3.MidPoint (self.a, self.b),
                               Point3.Distance (self.a, self.b) / 2.0);
 
     state.pop (self);
@@ -102,7 +102,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
 
 
 PROCEDURE New (a, b : Point3.T) : T =
-  VAR 
+  VAR
     box := NEW (T).init ();
   BEGIN
     SetCorner1 (box, a);

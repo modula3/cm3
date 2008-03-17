@@ -29,7 +29,7 @@ TYPE
   END;
 
   Beh <: PublicBeh;
-  PublicBeh = Prop.Beh OBJECT 
+  PublicBeh = Prop.Beh OBJECT
   METHODS
     init () : Beh;
   END;
@@ -56,9 +56,9 @@ TYPE
     addRequest (r : Request) RAISES {Prop.BadInterval};
   (* shortcuts for particular instances of "addRequest" *)
     reset (start := 0.0) RAISES {Prop.BadInterval};
-    changeTo (READONLY m : Base; start := 0.0; dur := 0.0) 
+    changeTo (READONLY m : Base; start := 0.0; dur := 0.0)
         RAISES {Prop.BadInterval};
-    translate (x, y, z : REAL; start := 0.0; dur := 0.0) 
+    translate (x, y, z : REAL; start := 0.0; dur := 0.0)
         RAISES {Prop.BadInterval};
     scale (x, y, z : REAL; start := 0.0; dur := 0.0) RAISES {Prop.BadInterval};
     rotateX (a : REAL; start := 0.0; dur := 0.0) RAISES {Prop.BadInterval};
@@ -81,7 +81,7 @@ TYPE
   END;
 
   Request <: PublicRequest;
-  PublicRequest = Prop.Request OBJECT 
+  PublicRequest = Prop.Request OBJECT
   METHODS
     init (start, dur : REAL) : Request;
     value (READONLY startval : Base; reltime : REAL) : Base

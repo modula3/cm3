@@ -8,8 +8,8 @@
 
 MODULE VectorLightGO EXPORTS VectorLightGO, VectorLightGOProxy;
 
-IMPORT BooleanPropPrivate, Color, ColorPropPrivate, GO, GOPrivate, 
-       GraphicsBase, GraphicsBasePrivate, LightGO, Point3, PointProp, 
+IMPORT BooleanPropPrivate, Color, ColorPropPrivate, GO, GOPrivate,
+       GraphicsBase, GraphicsBasePrivate, LightGO, Point3, PointProp,
        PointPropPrivate, Prop;
 
 
@@ -47,7 +47,7 @@ PROCEDURE Init (self : T) : T =
 
 PROCEDURE DamageIfDependent (self : T; pn : Prop.Name) =
   BEGIN
-    IF pn = LightGO.Switch OR pn = LightGO.Colour OR 
+    IF pn = LightGO.Switch OR pn = LightGO.Colour OR
        pn = Direction OR pn = GO.Transform THEN
       self.damaged := TRUE;
     END;
@@ -59,7 +59,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
     state.push (self);
 
     IF LightGO.Switch.getState (state) THEN
-      state.addVectorLight (LightGO.Colour.getState (state), 
+      state.addVectorLight (LightGO.Colour.getState (state),
                             Direction.getState (state));
     END;
 

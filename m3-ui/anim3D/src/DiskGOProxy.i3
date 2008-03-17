@@ -10,10 +10,10 @@ INTERFACE DiskGOProxy;
 
 FROM DiskGO IMPORT T;
 
-(* The Proxy Maker (PM) procedure for DiskGO.T is 
+(* The Proxy Maker (PM) procedure for DiskGO.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END DiskGOProxy.

@@ -40,8 +40,8 @@ PROCEDURE TransformUnitCube (p, a, b, c : Point3.T) : T;
    TransformPoint3(M,Point3.T{0.0,0.0,1.0}) = c
 \end{verbatim}
 
-   The above 4 equations over points define a system of linear equations, 
-   which can be solved statically (i.e.\ no gaussian elimination is needed 
+   The above 4 equations over points define a system of linear equations,
+   which can be solved statically (i.e.\ no gaussian elimination is needed
    at run time). So, calls to "TransformUnitCube" are very cheap.
 *)
 
@@ -50,15 +50,15 @@ PROCEDURE UnitSphereMaxSquishFactor (READONLY M : T) : REAL;
 EXCEPTION Error;
 
 PROCEDURE Decomp (M : T; VAR tx, ty, tz, s : REAL) : T RAISES {Error};
-(* "Decompose(M,tx,ty,tz,s,angX,angY,angZ)" takes a matrix "M", which must 
+(* "Decompose(M,tx,ty,tz,s,angX,angY,angZ)" takes a matrix "M", which must
    have been constructed by using only translations, rotations, and uniform(!)
-   scalings, and returns values "tx", "ty", "tz", "s", and "R" such that 
-   "M = T(tx,ty,tz) S(s) R" holds. If the initial matrix "M" was indeed 
+   scalings, and returns values "tx", "ty", "tz", "s", and "R" such that
+   "M = T(tx,ty,tz) S(s) R" holds. If the initial matrix "M" was indeed
    valid, then "R" is an orthogonal matrix. If "M" was not valid, then
    "Error" is raised. *)
 
 PROCEDURE Transpose (READONLY M : T) : T;
-(* "Transpose(M)" takes a matrix "M" and returns its transpose. Note that 
+(* "Transpose(M)" takes a matrix "M" and returns its transpose. Note that
    for an orthonormal matrix, its transpose is also its inverse. *)
 
 PROCEDURE Invert (A : T) : T RAISES {Error};
@@ -79,13 +79,13 @@ PROCEDURE PerspProjMatrix (fovy, distance, aspect, near, far: REAL): T;
 (* Returns a projection matrix for a perspective projection. *)
 
 PROCEDURE LookatViewMatrix (from, to, up: Point3.T): T;
-(* Returns a viewing transformation matrix.  We place three 
+(* Returns a viewing transformation matrix.  We place three
    (pretty reasonable) restrictions on the arguments:
      (1) "from" differs from "to"
      (2) "up" is non-zero
      (3) "(from - to)" and "up" are not collinear
 
-   "LookatViewMatrix" is similar to Digital PEXlib's "PEXLookatViewMatrix" 
+   "LookatViewMatrix" is similar to Digital PEXlib's "PEXLookatViewMatrix"
    function and to OpenGL's "gluLookAt" function. *)
 
 

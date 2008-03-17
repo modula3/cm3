@@ -8,10 +8,10 @@
 
 UNSAFE MODULE X_PEX_Base EXPORTS X_PEX_Base, X_PEX_BaseProxy;
 
-IMPORT AnimServer, AuxG, Color, ColorPropPrivate, Ctypes, GO, GOPrivate, 
-       GraphicsBase, GraphicsBasePrivate, IntRefTbl, KeyCB, KeyboardKey, 
-       LineGO, LineTypeProp, MarkerGO, MarkerTypeProp, Matrix4, M3toC, Math, 
-       MouseCB, Mth, PEX, Point, Point3, PositionCB, Process, PropPrivate, 
+IMPORT AnimServer, AuxG, Color, ColorPropPrivate, Ctypes, GO, GOPrivate,
+       GraphicsBase, GraphicsBasePrivate, IntRefTbl, KeyCB, KeyboardKey,
+       LineGO, LineTypeProp, MarkerGO, MarkerTypeProp, Matrix4, M3toC, Math,
+       MouseCB, Mth, PEX, Point, Point3, PositionCB, Process, PropPrivate,
        RasterModeProp, RealPropPrivate, RootGOPrivate, ShadingProp, SurfaceGO,
        Text, Thread, TransformPropPrivate, VBT, Word, X, Xatom, Xmbuf;
 
@@ -26,11 +26,11 @@ REVEAL
     xmbBuffers          : ARRAY BOOLEAN OF X.XID;
     curBuf              := FALSE;
     rd                  : PEX.pexRenderer;
-    viewLut             : PEX.pxlLookupTable; 
-    depthCueLut         : PEX.pxlLookupTable; 
+    viewLut             : PEX.pxlLookupTable;
+    depthCueLut         : PEX.pxlLookupTable;
     lightLut            : PEX.pxlLookupTable;
-    oc                  : PEX.pxlOCBufStar; 
-    camOcBuf            : PEX.pxlOCBufStar;   
+    oc                  : PEX.pxlOCBufStar;
+    camOcBuf            : PEX.pxlOCBufStar;
     lightOcBuf          : PEX.pxlOCBufStar;
     matrixOcBuf         : PEX.pxlOCBufStar;
     transflag           : BOOLEAN;           (* transparent parts in scene? *)
@@ -51,7 +51,7 @@ REVEAL
     height              : REAL;
     camTrans            : Matrix4.T := Matrix4.Id;
   (*** Things associated with light sources ***)
-    lia           : REF ARRAY OF PEX.pxlTableIndex; 
+    lia           : REF ARRAY OF PEX.pxlTableIndex;
                              (* The "light index array" *)
     lastLightSlot : INTEGER; (* The last slot used during a particular draw *)
     maxLights     : INTEGER; (* The highest used index into lightLut *)
@@ -144,9 +144,9 @@ REVEAL
 TYPE ProjType = {Persp, Ortho};
 
 
-PROCEDURE Init (self  : T; 
-                title : TEXT; 
-                win_x, win_y, win_w, win_h : INTEGER) : T 
+PROCEDURE Init (self  : T;
+                title : TEXT;
+                win_x, win_y, win_w, win_h : INTEGER) : T
     RAISES {GraphicsBase.Failure} =
   CONST
     ocsize   = 8192;
@@ -173,7 +173,7 @@ PROCEDURE Init (self  : T;
     (*** Initialize the display list table ***)
     self.dlTable := NEW (IntRefTbl.Default).init ();
 
-    WITH disp = man.disp, window = self.window, xmbBuffers = self.xmbBuffers, 
+    WITH disp = man.disp, window = self.window, xmbBuffers = self.xmbBuffers,
          curBuf = self.curBuf, rd = self.rd DO
       LOCK man DO
 
@@ -187,7 +187,7 @@ PROCEDURE Init (self  : T;
         self.capx_info := capx_info;
 
         (*** create and initialize a window ***)
-    
+
         (* Create the output window. *)
         wmask := 0;
 
@@ -202,17 +202,17 @@ PROCEDURE Init (self  : T;
 
         window := X.XCreateWindow (disp, X.XRootWindow (disp, visual.screen),
                                    win_x, win_y, win_w, win_h, bw,
-                                   visual.depth, X.InputOutput, 
+                                   visual.depth, X.InputOutput,
                                    visual.visual, wmask, ADR (wattrs));
 
-        IF NOT TestEnumAvailable (self, 
-                                  PEX.PEXETColourType, 
+        IF NOT TestEnumAvailable (self,
+                                  PEX.PEXETColourType,
                                   PEX.PEXRgbFloatColour) THEN
           RAISE GraphicsBase.Failure;
         END;
 
         X.XSelectInput(
-                    disp, window, 
+                    disp, window,
                     Word.Or(X.ExposureMask,
                      Word.Or(X.StructureNotifyMask,
                       Word.Or(X.KeyPressMask,
@@ -220,69 +220,69 @@ PROCEDURE Init (self  : T;
                         Word.Or(X.ButtonPressMask,
                          Word.Or(X.ButtonReleaseMask,
                                  X.PointerMotionMask)))))));
-  
+
         (*** set the window's title ***)
-  
+
         X.XChangeProperty(disp, window, Xatom.XA_WM_NAME, Xatom.XA_STRING, 8,
                           X.PropModeReplace,
-                          LOOPHOLE (M3toC.TtoS (title), 
+                          LOOPHOLE (M3toC.TtoS (title),
                                     Ctypes.unsigned_char_star),
                           Text.Length (title));
-  
+
         (*** ask the WM to send ClientMessage events when f.kill is chosen ***)
-  
+
         EVAL X.XSetWMProtocols (disp, window, ADR (man.wm_delete_window), 1);
-  
+
         (*** map the window ***)
-  
+
         X.XMapWindow(disp, window);
-      
+
         (*** create a pixmap for double buffering ***)
-  
+
         EVAL Xmbuf.XmbufCreateBuffers(disp, window, 2,
                                       Xmbuf.MultibufferActionCopied,
                                       Xmbuf.MultibufferHintFrequent,
                                       ADR (xmbBuffers));
         curBuf := FALSE;
-  
+
         (*** create the lookup tables ***)
-  
-        self.viewLut := 
+
+        self.viewLut :=
                     PEX.PEXCreateLookupTable(disp, window, PEX.PEXViewLUT);
-        self.lightLut := 
+        self.lightLut :=
                     PEX.PEXCreateLookupTable(disp, window, PEX.PEXLightLUT);
-        self.depthCueLut := 
+        self.depthCueLut :=
                     PEX.PEXCreateLookupTable(disp, window, PEX.PEXDepthCueLUT);
-  
+
         (*** create the renderer ***)
-        
+
         rmask := PEX.PEXRDClipList;
-    
-        attribs.hlhsrMode := PEX.PEXHlhsrZBuffer; 
+
+        attribs.hlhsrMode := PEX.PEXHlhsrZBuffer;
         rmask := Word.Or (rmask, PEX.PEXRDHlhsrMode);
-    
+
         attribs.viewTable := self.viewLut;
         rmask := Word.Or (rmask, PEX.PEXRDViewTable);
-    
+
         attribs.lightTable := self.lightLut;
         rmask := Word.Or (rmask, PEX.PEXRDLightTable);
-    
+
         attribs.depthCueTable := self.depthCueLut;
         rmask := Word.Or (rmask, PEX.PEXRDDepthCueTable);
-        
-        (* Create a color approximation table and set the default entry, 
+
+        (* Create a color approximation table and set the default entry,
            entry 0, to the colormap approximation specified. *)
 
         rmask := Word.Or (rmask, PEX.PEXRDColourApproxTable);
-        attribs.colourApproxTable := 
+        attribs.colourApproxTable :=
             PEX.PEXCreateLookupTable (disp, window, PEX.PEXColourApproxLUT);
-        PEX.PEXSetTableEntries (disp, attribs.colourApproxTable, 
+        PEX.PEXSetTableEntries (disp, attribs.colourApproxTable,
                                 PEX.PEXColourApproxLUT, 0, 1, ADR (capx_info));
 
         rd := PEX.PEXCreateRenderer (disp, window, rmask, ADR (attribs));
-  
+
         (********** crucial for MIT double buffering **********)
-  
+
         mpexRA.backgroundPixel := X.XBlackPixel (disp, X.XDefaultScreen(disp));
         mpexRA.clearI := PEX.PEXOn;
         mpexRA.clearZ := PEX.PEXOn;
@@ -291,9 +291,9 @@ PROCEDURE Init (self  : T;
                                     Word.Or(PEX.MPEXNRAClearZ,
                                             PEX.MPEXNRABackgroundPixel)),
                                    ADR(mpexRA));
-  
+
         (*** create the output command buffers ***)
-  
+
         self.oc         := PEX.PEXAllocateRetainedOCBuffer(
                                disp,PEX.pxlRenderImmediate,
                                rd, PEX.PEXDefaultOCError, ocsize);
@@ -303,19 +303,19 @@ PROCEDURE Init (self  : T;
         self.camOcBuf  := PEX.PEXAllocateRetainedOCBuffer(
                               disp,PEX.pxlRenderImmediate,
                               rd, PEX.PEXDefaultOCError, ocsize);
-        
+
         self.stacks := PropPrivate.NewStacks ();
         self.stateSize := NUMBER (self.stacks^);
 
-        self.surfRefl.ambient := 
+        self.surfRefl.ambient :=
             SurfaceGO.AmbientReflectionCoeff.getState (self);
-        self.surfRefl.diffuse := 
+        self.surfRefl.diffuse :=
             SurfaceGO.DiffuseReflectionCoeff.getState (self);
-        self.surfRefl.specular := 
+        self.surfRefl.specular :=
             SurfaceGO.SpecularReflectionCoeff.getState (self);
-        self.surfRefl.specularConc := 
+        self.surfRefl.specularConc :=
             SurfaceGO.SpecularReflectionConc.getState (self);
-        self.surfRefl.transmission := 
+        self.surfRefl.transmission :=
             SurfaceGO.TransmissionCoeff.getState (self);
         WITH val = SurfaceGO.SpecularReflectionColour.getState (self) DO
           self.surfRefl.specularColour := PexColourSpecifier (val);
@@ -330,14 +330,14 @@ PROCEDURE Init (self  : T;
 
         InitDisplayListManagement (self);
         InitMatrixStack (self);
-  
+
         self.matrixOcBuf := PEX.PEXAllocateRetainedOCBuffer(
                                    disp,PEX.pxlRenderImmediate,
                                    rd, PEX.PEXDefaultOCError, ocsize);
-  
+
         (*** initialize depth cueing with default values ***)
         self.setDepthcueing (FALSE, 1.0, 0.0, 1.0, 0.0, Color.Black);
-  
+
       END; (* release the display lock *)
     END;
 
@@ -363,7 +363,7 @@ PROCEDURE Init (self  : T;
 PROCEDURE LargeCursor (self : T) =
   VAR
     pm := X.XCreatePixmap (man.disp, self.window, 64, 64, 1);
-    fg, bg : X.XColor; 
+    fg, bg : X.XColor;
     hot : X.XPoint;
     pts : REF ARRAY OF X.XPoint;
     bg_gcv, fg_gcv : X.XGCValues;
@@ -373,7 +373,7 @@ PROCEDURE LargeCursor (self : T) =
     bg_gc := X.XCreateGC(man.disp, pm, X.GCFunction, ADR(bg_gcv));
     fg_gcv.function := X.GXset;
     fg_gc := X.XCreateGC(man.disp, pm, X.GCFunction, ADR(fg_gcv));
-    
+
     TRY
       WITH rd = FileRd.Open("cursordata"),
            n  = Lex.Int(rd) DO
@@ -399,13 +399,13 @@ PROCEDURE LargeCursor (self : T) =
       fg.red := 65535; fg.green := 0; fg.blue := 0; (* red *)
       bg.red := 0;     bg.green := 0; bg.blue := 0; (* black *)
     END;
-    
+
     X.XFillRectangle (man.disp, pm, bg_gc, 0, 0, 64, 64);
-    X.XFillPolygon (man.disp, pm, fg_gc, 
-                    ADR(pts[0]), NUMBER(pts^), 
+    X.XFillPolygon (man.disp, pm, fg_gc,
+                    ADR(pts[0]), NUMBER(pts^),
                     X.Nonconvex,  X.CoordModeOrigin);
-    WITH cursor = X.XCreatePixmapCursor(man.disp, pm, pm, 
-                                        ADR(fg), ADR(bg), 
+    WITH cursor = X.XCreatePixmapCursor(man.disp, pm, pm,
+                                        ADR(fg), ADR(bg),
                                         hot.x, hot.y) DO
       X.XDefineCursor (man.disp, self.window, cursor);
     END;
@@ -415,13 +415,13 @@ PROCEDURE LargeCursor (self : T) =
 PROCEDURE ChangeTitle (self: T; title : TEXT) =
   BEGIN
     LOCK man DO
-      X.XChangeProperty (man.disp, 
-                         self.window, 
-                         Xatom.XA_WM_NAME, 
-                         Xatom.XA_STRING, 
+      X.XChangeProperty (man.disp,
+                         self.window,
+                         Xatom.XA_WM_NAME,
+                         Xatom.XA_STRING,
                          8,
                          X.PropModeReplace,
-                         LOOPHOLE (M3toC.TtoS (title), 
+                         LOOPHOLE (M3toC.TtoS (title),
                                    Ctypes.unsigned_char_star),
                          Text.Length (title));
     END;
@@ -456,7 +456,7 @@ PROCEDURE Unmap (self : T) =
     Thread.Broadcast (self.awaitDeleteCV);
   END Unmap;
 
-      
+
 PROCEDURE Available () : BOOLEAN =
   BEGIN
     IF man = NIL THEN
@@ -490,18 +490,18 @@ PROCEDURE ShowWindow (self : T) =
         PEX.PEXSendOCBuffer (self.camOcBuf);
         PEX.PEXSendOCBuffer (self.lightOcBuf);
         PEX.PEXSendOCBuffer (self.oc);
-        PEX.PEXEndRendering (disp, rd, X.True); 
+        PEX.PEXEndRendering (disp, rd, X.True);
       END;
       Xmbuf.XmbufDisplayBuffers(disp, 1, ADR(pixmap), 0, 0);
       self.curBuf := NOT self.curBuf;
-      
+
       X.XSync (disp, X.False);
 
     END;
   END ShowWindow;
 
 
-PROCEDURE TestEnumAvailable (self : T; 
+PROCEDURE TestEnumAvailable (self : T;
                              enumType : Ctypes.int;
                              enumVal  : Ctypes.short) : BOOLEAN =
   TYPE
@@ -511,12 +511,12 @@ PROCEDURE TestEnumAvailable (self : T;
     values : PEX.pxlEnumTypeDescListStar;
     count  : Ctypes.int;
   BEGIN
-    status := PEX.PEXGetEnumTypeInfo (man.disp, self.window, 
+    status := PEX.PEXGetEnumTypeInfo (man.disp, self.window,
                                       enumType, PEX.PEXETIndex,
                                       ADR (values), ADR (count));
     <* ASSERT status = 0 *>
     WITH v = LOOPHOLE (values, T) DO
-      FOR i := 0 TO count - 1 DO 
+      FOR i := 0 TO count - 1 DO
         IF v[i].enumVal = enumVal THEN
           RETURN TRUE;
         END;
@@ -527,7 +527,7 @@ PROCEDURE TestEnumAvailable (self : T;
 
 
 PROCEDURE Setup (self : T) =
-  VAR 
+  VAR
     pexrep : PEX.pexRgbFloatColour;
   BEGIN
     <* ASSERT AnimServer.IsServer() *>
@@ -622,11 +622,11 @@ PROCEDURE AddLight (self : T; READONLY light : PEX.pxlLightEntry) =
 
     INC (self.lastLightSlot);
     self.maxLights := MAX (self.maxLights, self.lastLightSlot);
-    PEX.PEXSetTableEntries (man.disp, 
-                            self.lightLut, 
-                            PEX.PEXLightLUT, 
+    PEX.PEXSetTableEntries (man.disp,
+                            self.lightLut,
+                            PEX.PEXLightLUT,
                             self.lastLightSlot,
-                            1, 
+                            1,
                             ADR (light));
 
     (*** Check if we need to grow the light index array ***)
@@ -661,7 +661,7 @@ PROCEDURE AddVectorLight (self: T; color: Color.T; d: Point3.T) =
     (* Get the current transformation matrix. *)
     A := GO.Transform.getState (self);
 
-    <* ASSERT A[3][0] = 0.0 AND A[3][1] = 0.0 AND 
+    <* ASSERT A[3][0] = 0.0 AND A[3][1] = 0.0 AND
               A[3][2] = 0.0 AND A[3][3] = 1.0 *>
 
     (* Transform dir into world coordinate space. Mask out any translations.
@@ -681,19 +681,19 @@ PROCEDURE AddVectorLight (self: T; color: Color.T; d: Point3.T) =
   END AddVectorLight;
 
 
-PROCEDURE AddPointLight (self      : T; 
-                         color     : Color.T; 
-                         p         : Point3.T; 
+PROCEDURE AddPointLight (self      : T;
+                         color     : Color.T;
+                         p         : Point3.T;
                          att0, att1: REAL) =
   VAR
     light : PEX.pxlLightEntry;
     A     : Matrix4.T;
     point : Point3.T;
   BEGIN
-    (* Get the current value of the transformation property. *) 
+    (* Get the current value of the transformation property. *)
     A := GO.Transform.getState (self);
 
-    <* ASSERT A[3][0] = 0.0 AND A[3][1] = 0.0 AND 
+    <* ASSERT A[3][0] = 0.0 AND A[3][1] = 0.0 AND
               A[3][2] = 0.0 AND A[3][3] = 1.0 *>
 
     (* Transform the origin into world coordinate space. *)
@@ -714,7 +714,7 @@ PROCEDURE AddPointLight (self      : T;
   END AddPointLight;
 
 
-PROCEDURE AddSpotLight (self: T; color: Color.T; p, d: Point3.T; 
+PROCEDURE AddSpotLight (self: T; color: Color.T; p, d: Point3.T;
                         conc, spread, att0, att1: REAL) =
   VAR
     light : PEX.pxlLightEntry;
@@ -722,10 +722,10 @@ PROCEDURE AddSpotLight (self: T; color: Color.T; p, d: Point3.T;
     point : Point3.T;
     dir   : Point3.T;
   BEGIN
-    (* Get the current value of the transformation property. *) 
+    (* Get the current value of the transformation property. *)
     A := GO.Transform.getState (self);
 
-    <* ASSERT A[3][0] = 0.0 AND A[3][1] = 0.0 AND 
+    <* ASSERT A[3][0] = 0.0 AND A[3][1] = 0.0 AND
               A[3][2] = 0.0 AND A[3][3] = 1.0 *>
 
     (* Transform origin and direction into world coordinate space. *)
@@ -757,10 +757,10 @@ PROCEDURE EstablishLights (self : T) =
   BEGIN
     <* ASSERT AnimServer.IsServer() *>
 
-    PEX.PEXSetLightSourceState (self.lightOcBuf, 
-                                ADR (self.lia [0]), 
-                                self.lastLightSlot, 
-                                ADR (self.lia [self.lastLightSlot]), 
+    PEX.PEXSetLightSourceState (self.lightOcBuf,
+                                ADR (self.lia [0]),
+                                self.lastLightSlot,
+                                ADR (self.lia [self.lastLightSlot]),
                                 self.maxLights - self.lastLightSlot);
   END EstablishLights;
 
@@ -794,7 +794,7 @@ VAR
 
 
 PROCEDURE InitDisplayListManagement (self : T) =
-  BEGIN  
+  BEGIN
     (*** Create an initial output command buffer stack ***)
     self.ocbufStackPtr := 0;
     self.ocbufStack := NEW (OcbufStack, 10);
@@ -819,7 +819,7 @@ PROCEDURE OpenDisplayList (self : T; go : GO.T) =
       dl := NewDisplayList (self);
       EVAL self.dlTable.put (go.dl, dl);
     END;
-    
+
     (*** Push the oc-buffer stack ***)
     WITH s = self.ocbufStack, p = self.ocbufStackPtr, n = NUMBER (s^) DO
       IF p >= n THEN
@@ -831,15 +831,15 @@ PROCEDURE OpenDisplayList (self : T; go : GO.T) =
       INC (p);
     END;
 
-    (*** I assume that deleting elements is cheaper than creating a new 
+    (*** I assume that deleting elements is cheaper than creating a new
       structure. ***)
-    PEX.PEXDeleteElements (man.disp, dl.structure, 
+    PEX.PEXDeleteElements (man.disp, dl.structure,
                            PEX.PEXBeginning, 0, PEX.PEXEnd, 0);
 
     (*** Activate the oc-buffer that leads into the structure ***)
     self.oc := dl.ocbuf;
 
-    (*** Push an identity matrix onto the matrix stack, reflecting the 
+    (*** Push an identity matrix onto the matrix stack, reflecting the
          semantics of PEXExecuteStructure, which maintains ints own
          matrix stack. ***)
     WITH s = self.matrixStack, n = NUMBER (s^), top = self.matrixStackTop DO
@@ -857,7 +857,7 @@ PROCEDURE OpenDisplayList (self : T; go : GO.T) =
 
 PROCEDURE CloseDisplayList (self : T) =
   BEGIN
-    (*** pop the oc-buffer stack ***)    
+    (*** pop the oc-buffer stack ***)
     WITH s = self.ocbufStack, p = self.ocbufStackPtr DO
       DEC (p);
       self.oc := s[p];
@@ -866,7 +866,7 @@ PROCEDURE CloseDisplayList (self : T) =
     (*** pop the identity matrix from the matrix stack ***)
     DEC (self.matrixStackTop);
   END CloseDisplayList;
-        
+
 
 PROCEDURE CallDisplayList (self : T; go : GO.T) =
   VAR
@@ -891,8 +891,8 @@ PROCEDURE FreeDisplayList (self: T; go: GO.T) =
     ref: REFANY;
   BEGIN
     IF self.dlTable.delete (go.dl, ref) THEN
-      dl_pool := NEW (DisplayListPool, 
-                      dl := NARROW (ref, DisplayList), 
+      dl_pool := NEW (DisplayListPool,
+                      dl := NARROW (ref, DisplayList),
                       next := dl_pool);
     END;
   END FreeDisplayList;
@@ -913,13 +913,13 @@ PROCEDURE NewDisplayList (<*UNUSED*> self : T) : DisplayList =
       dl := NEW (DisplayList);
       dl.structure := PEX.PEXCreateStructure (man.disp);
       dl.ocbuf := PEX.PEXAllocateTransientOCBuffer (
-                              man.disp, 
-                              PEX.pxlAddToStructure, 
-                              dl.structure, 
+                              man.disp,
+                              PEX.pxlAddToStructure,
+                              dl.structure,
                               PEX.PEXDefaultOCError, 0);
       (*** I tried 0 and 8192, seems to not make much difference ***)
     END;
-    
+
     RETURN dl;
   END NewDisplayList;
 
@@ -1013,18 +1013,18 @@ PROCEDURE SetupCamera (self: T) =
     projTrans : Matrix4.T;
     s         : X.Status;
   BEGIN
-    s := PEX.PEXLookatViewMatrix (ADR(self.from), ADR(self.to), ADR(self.up), 
+    s := PEX.PEXLookatViewMatrix (ADR(self.from), ADR(self.to), ADR(self.up),
                                   ADR (viewTrans));
     <* ASSERT s = 0 *>
 
     WITH bs = self.getBoundingVolume(),
          M = viewTrans,
          center = Point3.T {
-                      M[0][0] * bs.center.x + M[0][1] * bs.center.y + 
+                      M[0][0] * bs.center.x + M[0][1] * bs.center.y +
                       M[0][2] * bs.center.z + M[0][3],
-                      M[1][0] * bs.center.x + M[1][1] * bs.center.y + 
+                      M[1][0] * bs.center.x + M[1][1] * bs.center.y +
                       M[1][2] * bs.center.z + M[1][3],
-                      M[2][0] * bs.center.x + M[2][1] * bs.center.y + 
+                      M[2][0] * bs.center.x + M[2][1] * bs.center.y +
                       M[2][2] * bs.center.z + M[2][3]},
          radius = bs.radius * Mth.sqrt (M[0][0] * M[0][0] +
                                         M[1][0] * M[1][0] +
@@ -1044,10 +1044,10 @@ PROCEDURE SetupCamera (self: T) =
       IF near <= far THEN
         far := near - 0.1;
       END;
-      s := PEX.PEXPerspProjMatrix (FLOAT (self.fovy, LONGREAL), 
-                                   FLOAT (distance, LONGREAL), 
-                                   FLOAT (self.aspect, LONGREAL), 
-                                   FLOAT (near, LONGREAL), 
+      s := PEX.PEXPerspProjMatrix (FLOAT (self.fovy, LONGREAL),
+                                   FLOAT (distance, LONGREAL),
+                                   FLOAT (self.aspect, LONGREAL),
+                                   FLOAT (near, LONGREAL),
                                    FLOAT (far, LONGREAL),
                                    ADR (projTrans));
       <* ASSERT s = 0 *>
@@ -1057,18 +1057,18 @@ PROCEDURE SetupCamera (self: T) =
         near := near + 0.01;
         far  := far  - 0.01;
       END;
-      s := PEX.PEXOrthoProjMatrix (FLOAT (self.height, LONGREAL), 
-                                   FLOAT (self.aspect, LONGREAL), 
-                                   FLOAT (near, LONGREAL), 
-                                   FLOAT (far, LONGREAL), 
+      s := PEX.PEXOrthoProjMatrix (FLOAT (self.height, LONGREAL),
+                                   FLOAT (self.aspect, LONGREAL),
+                                   FLOAT (near, LONGREAL),
+                                   FLOAT (far, LONGREAL),
                                    ADR (projTrans));
       <* ASSERT s = 0 *>
     END;
 
-    viewEntry.clipFlags   := 0; 
+    viewEntry.clipFlags   := 0;
     viewEntry.orientation := viewTrans;
     viewEntry.mapping     := projTrans;
-    PEX.PEXSetTableEntries (man.disp, self.viewLut, PEX.PEXViewLUT, 1, 1, 
+    PEX.PEXSetTableEntries (man.disp, self.viewLut, PEX.PEXViewLUT, 1, 1,
                             ADR (viewEntry));
     PEX.PEXSetViewIndex (self.camOcBuf, 1);
 
@@ -1103,7 +1103,7 @@ PROCEDURE SetBackgroundColor (self : T; color : Color.T) =
   VAR
     mpexRA : PEX.mpxlRendererAttributes;
   BEGIN
-    WITH ca = self.capx_info, 
+    WITH ca = self.capx_info,
          r = ca.mult1 * ROUND (FLOAT (ca.max1) * color.r),
          g = ca.mult2 * ROUND (FLOAT (ca.max2) * color.g),
          b = ca.mult3 * ROUND (FLOAT (ca.max3) * color.b) DO
@@ -1118,7 +1118,7 @@ PROCEDURE SetDepthcueing (self       : T;
                           switch     : BOOLEAN;
                           frontPlane : REAL;
                           backPlane  : REAL;
-                          frontScale : REAL; 
+                          frontScale : REAL;
                           backScale  : REAL;
                           color      : Color.T) =
   VAR
@@ -1136,7 +1136,7 @@ PROCEDURE SetDepthcueing (self       : T;
     dc.backScaling := backScale;
     dc.depthCueColour := PexColourSpecifier (color);
 
-    PEX.PEXSetTableEntries (man.disp, self.depthCueLut, PEX.PEXDepthCueLUT, 
+    PEX.PEXSetTableEntries (man.disp, self.depthCueLut, PEX.PEXDepthCueLUT,
                             1, 1, ADR (dc));
   END SetDepthcueing;
 
@@ -1277,9 +1277,9 @@ PROCEDURE SetShading (self : T; val : ShadingProp.Kind) =
     <* ASSERT AnimServer.IsServer() *>
 
     CASE val OF
-    | ShadingProp.Kind.Flat => 
+    | ShadingProp.Kind.Flat =>
       PEX.PEXSetSurfaceInterpMethod (self.oc, PEX.PEXSurfaceInterpNone);
-    | ShadingProp.Kind.Gouraud => 
+    | ShadingProp.Kind.Gouraud =>
       PEX.PEXSetSurfaceInterpMethod (self.oc, PEX.PEXSurfaceInterpColour);
     END;
   END SetShading;
@@ -1397,9 +1397,9 @@ PROCEDURE DrawLine (self : T; p1, p2 : Point3.T) =
   END DrawLine;
 
 
-PROCEDURE DrawPolygon (self         : T; 
-                       READONLY pts : ARRAY OF Point3.T; 
-                       shape        : GO.Shape) = 
+PROCEDURE DrawPolygon (self         : T;
+                       READONLY pts : ARRAY OF Point3.T;
+                       shape        : GO.Shape) =
   VAR
     pexrep : Ctypes.int;
   BEGIN
@@ -1415,8 +1415,8 @@ PROCEDURE DrawPolygon (self         : T;
   END DrawPolygon;
 
 
-PROCEDURE DrawQuadMesh (self         : T; 
-                        READONLY pts : ARRAY OF ARRAY OF Point3.T; 
+PROCEDURE DrawQuadMesh (self         : T;
+                        READONLY pts : ARRAY OF ARRAY OF Point3.T;
                         shape        : GO.Shape) =
   VAR
     pexrep : Ctypes.int;
@@ -1429,12 +1429,12 @@ PROCEDURE DrawQuadMesh (self         : T;
     | GO.Shape.Convex    => pexrep := PEX.PEXConvex;
     | GO.Shape.Unknown   => pexrep := PEX.PEXUnknownShape;
     END;
-    PEX.PEXQuadMesh (self.oc, pexrep, 0, 0, NIL, ADR(pts[0][0]), 
+    PEX.PEXQuadMesh (self.oc, pexrep, 0, 0, NIL, ADR(pts[0][0]),
                      NUMBER (pts), NUMBER (pts[0]));
   END DrawQuadMesh;
 
 
-PROCEDURE DrawColoredQuadMesh (         self  : T; 
+PROCEDURE DrawColoredQuadMesh (         self  : T;
                                READONLY points: ARRAY OF ARRAY OF Point3.T;
                                READONLY colors: ARRAY OF ARRAY OF Color.T;
                                         shape : GO.Shape) =
@@ -1449,7 +1449,7 @@ PROCEDURE DrawColoredQuadMesh (         self  : T;
     | GO.Shape.Convex    => pexrep := PEX.PEXConvex;
     | GO.Shape.Unknown   => pexrep := PEX.PEXUnknownShape;
     END;
-    PEX.PEXQuadMesh (self.oc, pexrep, PEX.PEXGAColour, 0, 
+    PEX.PEXQuadMesh (self.oc, pexrep, PEX.PEXGAColour, 0,
                      ADR(colors[0][0]), ADR(points[0][0]),
                      NUMBER(points), NUMBER(points[0]));
   END DrawColoredQuadMesh;
@@ -1483,13 +1483,13 @@ PROCEDURE DrawProtoSphere (self : T; prec : INTEGER) =
     dl := NewDisplayList (self);
     WITH verts = ComputeUnitSphere (prec) DO
       FOR i := FIRST (verts^) TO LAST (verts^) DO
-        PEX.PEXTriangleStrip (dl.ocbuf, 0, PEX.PEXGANormal, NIL, 
+        PEX.PEXTriangleStrip (dl.ocbuf, 0, PEX.PEXGANormal, NIL,
                               ADR (verts[i][0]), NUMBER(verts[i]));
       END;
     END;
-    self.sphereStructures := NEW (StructureList, 
-                                  prec := prec, 
-                                  dl   := dl, 
+    self.sphereStructures := NEW (StructureList,
+                                  prec := prec,
+                                  dl   := dl,
                                   next := self.sphereStructures);
     PEX.PEXExecuteStructure (self.oc, dl.structure);
   END DrawProtoSphere;
@@ -1584,9 +1584,9 @@ PROCEDURE DrawProtoCone (self : T; prec : INTEGER) =
       PEX.PEXQuadMesh (dl.ocbuf, PEX.PEXConvex, 0, PEX.PEXGANormal, NIL,
                        ADR (verts[0][1]), NUMBER (verts^), 2);
     END;
-    self.coneStructures := NEW (StructureList, 
-                                prec := prec, 
-                                dl   := dl, 
+    self.coneStructures := NEW (StructureList,
+                                prec := prec,
+                                dl   := dl,
                                 next := self.coneStructures);
     PEX.PEXExecuteStructure (self.oc, dl.structure);
   END DrawProtoCone;
@@ -1638,9 +1638,9 @@ PROCEDURE DrawProtoCylinder (self : T; prec : INTEGER) =
       PEX.PEXQuadMesh (dl.ocbuf, PEX.PEXConvex, 0, PEX.PEXGANormal, NIL,
                        ADR (verts[0][1]), NUMBER (verts^), 2);
     END;
-    self.cylinderStructures := NEW (StructureList, 
-                                    prec := prec, 
-                                    dl   := dl, 
+    self.cylinderStructures := NEW (StructureList,
+                                    prec := prec,
+                                    dl   := dl,
                                     next := self.cylinderStructures);
     PEX.PEXExecuteStructure (self.oc, dl.structure);
   END DrawProtoCylinder;
@@ -1686,9 +1686,9 @@ PROCEDURE DrawProtoDisk (self : T; prec : INTEGER) =
     WITH pts = AuxG.GetUnitCirclePoints (prec) DO
       PEX.PEXFillArea (dl.ocbuf, PEX.PEXConvex, X.False, ADR (pts[0]), prec);
     END;
-    self.diskStructures := NEW (StructureList, 
-                                prec := prec, 
-                                dl   := dl, 
+    self.diskStructures := NEW (StructureList,
+                                prec := prec,
+                                dl   := dl,
                                 next := self.diskStructures);
     PEX.PEXExecuteStructure (self.oc, dl.structure);
   END DrawProtoDisk;
@@ -1720,7 +1720,7 @@ PROCEDURE DrawProtoTorus (self : T; prec : INTEGER; radiusRatio : REAL ) =
       FOR i := 1 TO t.last DO
         IF t.elem[i].prec = prec AND t.elem[i].radiusRatio = radiusRatio THEN
           PEX.PEXExecuteStructure (self.oc, t.elem[i].dl.structure);
-          VAR 
+          VAR
             tmp := t.elem[i];
           BEGIN
             SUBARRAY (t.elem, 1, i-1) := SUBARRAY (t.elem, 0, i-1);
@@ -1730,15 +1730,15 @@ PROCEDURE DrawProtoTorus (self : T; prec : INTEGER; radiusRatio : REAL ) =
         END;
       END;
 
-      (* The cache does not contain a matching element. We shift all elements 
-         one position back, and put a new element in the most-recently-used 
-         position.  If the cache is full, we discard the least-recently used 
+      (* The cache does not contain a matching element. We shift all elements
+         one position back, and put a new element in the most-recently-used
+         position.  If the cache is full, we discard the least-recently used
          element, and recycle its display list. *)
 
       IF t.last := LAST(t.elem) THEN
         (* use the display list of the least-recently-used element *)
         dl := t.elem[t.last];
-        PEX.PEXDeleteElements (man.disp, dl.structure, 
+        PEX.PEXDeleteElements (man.disp, dl.structure,
                                PEX.PEXBeginning, 0, PEX.PEXEnd, 0);
       ELSE
         dl := NewDisplayList (self);
@@ -1746,11 +1746,11 @@ PROCEDURE DrawProtoTorus (self : T; prec : INTEGER; radiusRatio : REAL ) =
 
       WITH verts = ComputeUnitTorus (prec, radiusRatio),
            last  = MIN (t.last, LAST(t.elem) - 1) DO
-        PEX.PEXQuadMesh (dl.ocbuf, PEX.PEXConvex, 0, PEX.PEXGANormal, 
-                         NIL, ADR (verts[0][0]), 
+        PEX.PEXQuadMesh (dl.ocbuf, PEX.PEXConvex, 0, PEX.PEXGANormal,
+                         NIL, ADR (verts[0][0]),
                          NUMBER (verts^), NUMBER(verts[0]));
         PEX.PEXExecuteStructure (self.oc, dl.structure);
-        
+
         SUBARRAY (t.elem, 1, last) := SUBARRAY (t.elem, 0, last);
         t.elem[1] := TorusStructure{prec, radiusRatio, dl};
         t.last := last + 1;
@@ -1758,14 +1758,14 @@ PROCEDURE DrawProtoTorus (self : T; prec : INTEGER; radiusRatio : REAL ) =
     END;
 ***)
     WITH verts = ComputeUnitTorus (prec, radiusRatio) DO
-      PEX.PEXQuadMesh (self.oc, PEX.PEXConvex, 0, PEX.PEXGANormal, 
-                       NIL, ADR (verts[0][0]), 
+      PEX.PEXQuadMesh (self.oc, PEX.PEXConvex, 0, PEX.PEXGANormal,
+                       NIL, ADR (verts[0][0]),
                        NUMBER (verts^), NUMBER(verts[0]));
     END;
   END DrawProtoTorus;
 
 
-(* ComputeUnitTorus is called once for each (state,precision,radiusRatio) 
+(* ComputeUnitTorus is called once for each (state,precision,radiusRatio)
    triple. The constant parameters are:
      center  = (0,0,0)
      normal  = (1,0,0)
@@ -1776,7 +1776,7 @@ PROCEDURE ComputeUnitTorus (prec : INTEGER; radius2 : REAL) : TorusVertices =
   VAR
     verts : TorusVertices := NEW (TorusVertices, prec+1, prec+1);
   BEGIN
-    WITH u = AuxG.GetUnitCirclePoints (prec),   
+    WITH u = AuxG.GetUnitCirclePoints (prec),
              (* normal of unit circle is z-axis *)
          normal = Point3.T {0.0, 0.0, 1.0} DO
       FOR i := 0 TO prec DO
@@ -1821,7 +1821,7 @@ PROCEDURE PexColourSpecifier (c : Color.T) : PEX.pxlColourSpecifier =
 PROCEDURE ProcessEvents (self : T) =
 
   PROCEDURE CheckTypedWindowEvent (self : T;
-                                   type : Ctypes.int; 
+                                   type : Ctypes.int;
                                    VAR event : X.XEvent) : X.Bool =
     BEGIN
       LOCK man DO
@@ -1830,7 +1830,7 @@ PROCEDURE ProcessEvents (self : T) =
     END CheckTypedWindowEvent;
 
   PROCEDURE CheckWindowEvent (self : T;
-                              mask : Ctypes.long; 
+                              mask : Ctypes.long;
                               VAR event : X.XEvent) : X.Bool =
     BEGIN
       LOCK man DO
@@ -1903,7 +1903,7 @@ PROCEDURE ProcessEvents (self : T) =
           | X.Button1 => button := VBT.Modifier.MouseL;
           | X.Button2 => button := VBT.Modifier.MouseM;
           | X.Button3 => button := VBT.Modifier.MouseR;
-          ELSE 
+          ELSE
             Process.Crash ("G.WaitForEvent: Unknown button event");
           END;
           IF self.buttonDownCount = 0 THEN
@@ -1926,7 +1926,7 @@ PROCEDURE ProcessEvents (self : T) =
           | X.Button1 => button := VBT.Modifier.MouseL;
           | X.Button2 => button := VBT.Modifier.MouseM;
           | X.Button3 => button := VBT.Modifier.MouseR;
-          ELSE 
+          ELSE
             Process.Crash ("G.WaitForEvent: Unknown button event");
           END;
           DEC (self.buttonDownCount);
@@ -1965,7 +1965,7 @@ PROCEDURE ProcessEvents (self : T) =
         (* some other X event *)
       END;
 
-    END;  
+    END;
 
   END ProcessEvents;
 
@@ -1975,7 +1975,7 @@ PROCEDURE KeySymToModifierSet (keysym : VBT.KeySym) : VBT.Modifiers =
     CASE keysym OF
     | KeyboardKey.Shift_L, KeyboardKey.Shift_R =>
       RETURN VBT.Modifiers {VBT.Modifier.Shift};
-    | KeyboardKey.Shift_Lock => 
+    | KeyboardKey.Shift_Lock =>
       RETURN VBT.Modifiers {VBT.Modifier.Lock};
     | KeyboardKey.Control_L, KeyboardKey.Control_R =>
       RETURN VBT.Modifiers {VBT.Modifier.Control};
@@ -2025,7 +2025,7 @@ PROCEDURE Repair (self : T; VAR damaged : BOOLEAN) =
     BEGIN
       LOCK man DO
           (*** determine the object's current transparency ***)
-          self.transflag := self.root.needsTransparency(0.0);  
+          self.transflag := self.root.needsTransparency(0.0);
                                    (* 0.0 is the default transmission coeff *)
 
           (*** set up the rendering pipeline for a new round ***)
@@ -2065,7 +2065,7 @@ PROCEDURE Repair (self : T; VAR damaged : BOOLEAN) =
 (*****************************************************************************)
 
 
-TYPE 
+TYPE
   Manager = MUTEX OBJECT              (* mutex synchronizes access to disp *)
     disp             : X.DisplayStar;
     avail            : BOOLEAN;
@@ -2089,16 +2089,16 @@ PROCEDURE InitManager (self : Manager) : Manager =
 
     (*** "internalize" some X atoms ***)
 
-    self.wm_protocols := 
+    self.wm_protocols :=
        X.XInternAtom(self.disp,M3toC.TtoS ("WM_PROTOCOLS"), X.False);
-    self.wm_delete_window := 
+    self.wm_delete_window :=
        X.XInternAtom(self.disp,M3toC.TtoS ("WM_DELETE_WINDOW"), X.False);
 
     (* Check whether the "X3D-PEX" extension is available, and perform some
        PEX initializations that don't depend on a connection. *)
-    
+
     self.avail := PEX.PEXInitialize (self.disp, ADR (pexinfo)) = 0;
-    PEX.PEXSetColourType (PEX.PEXRgbFloatColour); 
+    PEX.PEXSetColourType (PEX.PEXRgbFloatColour);
 
     RETURN self;
   END InitManager;
@@ -2106,7 +2106,7 @@ PROCEDURE InitManager (self : Manager) : Manager =
 
 (******************************************************************************
  The following procedures are based on the C functions accompanying the
- "PEXlib Programming Manual" by O'Reilly & Associates. Here is their copyright 
+ "PEXlib Programming Manual" by O'Reilly & Associates. Here is their copyright
  notice:
 
     Copyright 1992, 1993 O'Reilly and Associates, Inc.  Permission to
@@ -2119,7 +2119,7 @@ PROCEDURE InitManager (self : Manager) : Manager =
 
 (*
  * Find the best visual. The best visual is the visual that supports the most
- * colors. If two visuals support the same number of colors, we prefer 
+ * colors. If two visuals support the same number of colors, we prefer
  * TrueColor over DirectColor over PseudoColor over StaticColor over GrayScale
  * over StaticGray.
  *)
@@ -2165,16 +2165,16 @@ PROCEDURE FindBestVisual (dpy : X.DisplayStar) : X.XVisualInfo =
   BEGIN
     (* Get all the visuals for the screen. *)
     vis_templ.screen := X.XDefaultScreen (dpy);
-    WITH 
-      visListPtr = X.XGetVisualInfo (dpy, X.VisualScreenMask, 
+    WITH
+      visListPtr = X.XGetVisualInfo (dpy, X.VisualScreenMask,
                                      (* IN *)  ADR (vis_templ),
                                      (* OUT *) ADR (numVisuals)),
-      visListRef = LOOPHOLE (visListPtr, 
+      visListRef = LOOPHOLE (visListPtr,
                              UNTRACED REF ARRAY [1 .. 1000] OF X.XVisualInfo),
       visuals = SUBARRAY (visListRef^, 0, numVisuals) DO
 
       (* Determine the max. depth of all the visuals. *)
-      FOR i := FIRST (visuals) TO LAST (visuals) DO 
+      FOR i := FIRST (visuals) TO LAST (visuals) DO
         maxDepth := MAX (maxDepth, visuals[i].depth);
       END;
 
@@ -2182,12 +2182,12 @@ PROCEDURE FindBestVisual (dpy : X.DisplayStar) : X.XVisualInfo =
       (* one with the most colors and highest capabilities. *)
       bestSize := 0;
       bestVisual.class := -1;
-      FOR i := FIRST (visuals) TO LAST (visuals) DO 
+      FOR i := FIRST (visuals) TO LAST (visuals) DO
         (* Determine the number of colors supported by visuals[i] *)
         CASE visuals[i].class OF
         | X.TrueColor, X.DirectColor =>
-          size := Word.Or (visuals[i].red_mask, 
-                           Word.Or (visuals[i].green_mask, 
+          size := Word.Or (visuals[i].red_mask,
+                           Word.Or (visuals[i].green_mask,
                                     visuals[i].blue_mask)) + 1;
         ELSE
           size := visuals[i].colormap_size;
@@ -2222,9 +2222,9 @@ EXCEPTION CmapAllocError;
 PROCEDURE CreateColorMap (dpy                     : X.DisplayStar;
                           READONLY visual         : X.XVisualInfo;
                           (* OUT *) VAR cmap_info : X.XStandardColormap;
-                          (* OUT *) VAR capx_info : PEX.pexColourApproxEntry) 
+                          (* OUT *) VAR capx_info : PEX.pexColourApproxEntry)
     RAISES {CmapAllocError} =
-  BEGIN 
+  BEGIN
     CASE visual.class OF
     | X.DirectColor =>
       (* Create the largest possible equal-length ramps. *)
@@ -2232,13 +2232,13 @@ PROCEDURE CreateColorMap (dpy                     : X.DisplayStar;
     | X.PseudoColor =>
       (* Create the largest NxNxN color sampling. *)
       WITH n = TRUNC (Math.pow (FLOAT (visual.colormap_size - 1, LONGREAL),
-                                1.0d0 / 3.0d0)) DO 
+                                1.0d0 / 3.0d0)) DO
         CreatePseudoMap (dpy, visual, n, n, n, cmap_info, capx_info);
       END;
     | X.GrayScale =>
       (* Create a GrayScale colormap with max number of grays. *)
       (* (but leave one empty spot for the background color.) *)
-      CreateGrayMap (dpy, visual, visual.colormap_size - 1, 
+      CreateGrayMap (dpy, visual, visual.colormap_size - 1,
                      cmap_info, capx_info);
     | X.TrueColor, X.StaticColor, X.StaticGray =>
       CreateReadOnlyMap (dpy, visual, cmap_info, capx_info );
@@ -2251,7 +2251,7 @@ PROCEDURE CreateColorMap (dpy                     : X.DisplayStar;
 PROCEDURE CreateDirectMap (dpy                     : X.DisplayStar;
                            READONLY visual         : X.XVisualInfo;
                            (* OUT *) VAR cmap_info : X.XStandardColormap;
-                           (* OUT *) VAR capx_info : PEX.pexColourApproxEntry) 
+                           (* OUT *) VAR capx_info : PEX.pexColourApproxEntry)
     RAISES {CmapAllocError} =
   VAR
     red_planes, green_planes, blue_planes       : Ctypes.int;
@@ -2263,14 +2263,14 @@ PROCEDURE CreateDirectMap (dpy                     : X.DisplayStar;
     (* Create the colormap. *)
     cmap_info.visualid := visual.visualid;
     cmap_info.colormap := X.XCreateColormap (
-                              dpy, 
-                              X.XRootWindow (dpy, X.XDefaultScreen (dpy)), 
-                              visual.visual, 
+                              dpy,
+                              X.XRootWindow (dpy, X.XDefaultScreen (dpy)),
+                              visual.visual,
                               X.AllocNone );
 
     (* Determine the number of red, green, and blue planes and the *)
     (* maximum possible number of color values for each. *)
-    red_planes := 0; 
+    red_planes := 0;
     num_reds := 1;
     i := visual.red_mask;
     WHILE i > 0 DO
@@ -2282,7 +2282,7 @@ PROCEDURE CreateDirectMap (dpy                     : X.DisplayStar;
     END;
     cmap_info.red_max := num_reds - 1;
 
-    green_planes := 0; 
+    green_planes := 0;
     num_greens := 1;
     i := visual.green_mask;
     WHILE i > 0 DO
@@ -2294,7 +2294,7 @@ PROCEDURE CreateDirectMap (dpy                     : X.DisplayStar;
     END;
     cmap_info.green_max := num_greens - 1;
 
-    blue_planes := 0; 
+    blue_planes := 0;
     num_blues := 1;
     i := visual.blue_mask;
     WHILE i > 0 DO
@@ -2314,9 +2314,9 @@ PROCEDURE CreateDirectMap (dpy                     : X.DisplayStar;
       RAISE CmapAllocError;
     END;
 
-    (* Determine the red, green, and blue multipliers by finding the first 
+    (* Determine the red, green, and blue multipliers by finding the first
        bit set in each mask. *)
-    
+
     rshift := 0;
     WHILE Word.And (rmask, Word.LeftShift (1, rshift)) = 0 DO
       INC (rshift);
@@ -2328,7 +2328,7 @@ PROCEDURE CreateDirectMap (dpy                     : X.DisplayStar;
       INC (gshift);
     END;
     cmap_info.green_mult := Word.LeftShift (1, gshift);
-    
+
     bshift := 0;
     WHILE Word.And (rmask, Word.LeftShift (1, bshift)) = 0 DO
       INC (bshift);
@@ -2361,7 +2361,7 @@ PROCEDURE CreateDirectMap (dpy                     : X.DisplayStar;
       END;
       X.XStoreColors (dpy, cmap_info.colormap, ADR (colors[0]), num_colors );
     END;
-    
+
     (* Fill in the color approximation information. *)
     capx_info.approxType  := PEX.PEXColourSpace;
     capx_info.approxModel := PEX.PEXColourApproxRGB;
@@ -2383,7 +2383,7 @@ PROCEDURE CreatePseudoMap (dpy                     : X.DisplayStar;
                            READONLY visual         : X.XVisualInfo;
                            nr, ng, nb              : INTEGER;
                            (* OUT *) VAR cmap_info : X.XStandardColormap;
-                           (* OUT *) VAR capx_info : PEX.pexColourApproxEntry) 
+                           (* OUT *) VAR capx_info : PEX.pexColourApproxEntry)
     RAISES {CmapAllocError} =
   VAR
     num_colors, idx, p : INTEGER;
@@ -2392,7 +2392,7 @@ PROCEDURE CreatePseudoMap (dpy                     : X.DisplayStar;
     cmap_info.colormap := X.XCreateColormap (
                                dpy,
                                X.XRootWindow (dpy, X.XDefaultScreen (dpy)),
-                               visual.visual, 
+                               visual.visual,
                                X.AllocNone);
     cmap_info.visualid := visual.visualid;
     cmap_info.blue_max := nb - 1;
@@ -2431,7 +2431,7 @@ PROCEDURE CreatePseudoMap (dpy                     : X.DisplayStar;
       END;
       X.XStoreColors (dpy, cmap_info.colormap, ADR (colors[0]), num_colors);
     END;
-    
+
     (* Fill in the color approximation information. *)
     capx_info.approxType  := PEX.PEXColourSpace;
     capx_info.approxModel := PEX.PEXColourApproxRGB;
@@ -2453,7 +2453,7 @@ PROCEDURE CreateGrayMap (dpy                     : X.DisplayStar;
                          READONLY visual         : X.XVisualInfo;
                          num_grays               : INTEGER;
                          (* OUT *) VAR cmap_info : X.XStandardColormap;
-                         (* OUT *) VAR capx_info : PEX.pexColourApproxEntry) 
+                         (* OUT *) VAR capx_info : PEX.pexColourApproxEntry)
     RAISES {CmapAllocError} =
   VAR
     p : Ctypes.unsigned_long;
@@ -2462,7 +2462,7 @@ PROCEDURE CreateGrayMap (dpy                     : X.DisplayStar;
     cmap_info.colormap := X.XCreateColormap (
                               dpy,
                               X.XRootWindow (dpy, X.XDefaultScreen (dpy)),
-                              visual.visual, 
+                              visual.visual,
                               X.AllocNone);
     cmap_info.red_max  := num_grays - 1;
     cmap_info.red_mult := 1;
@@ -2472,7 +2472,7 @@ PROCEDURE CreateGrayMap (dpy                     : X.DisplayStar;
                              NIL, 0, ADR (pixels[0]), num_grays) = 0 THEN
         RAISE CmapAllocError;
       END;
-      cmap_info.base_pixel := pixels[0];                    
+      cmap_info.base_pixel := pixels[0];
     END;
 
     (* Fill in the RGB color values. *)
@@ -2491,7 +2491,7 @@ PROCEDURE CreateGrayMap (dpy                     : X.DisplayStar;
       END;
       X.XStoreColors (dpy, cmap_info.colormap, ADR (colors[0]), num_grays);
     END;
-    
+
     (* Fill in the color approximation information. *)
     capx_info.approxType  := PEX.PEXColourRange;
     capx_info.approxModel := PEX.PEXColourApproxRGB;
@@ -2520,11 +2520,11 @@ PROCEDURE CreateReadOnlyMap (dpy                     : X.DisplayStar;
                               dpy,
                               X.XRootWindow (dpy, X.XDefaultScreen (dpy)),
                               visual.visual, X.AllocNone);
-    
+
     (* Set up the colormap and color approximation info. *)
     cmap_info.base_pixel := 0;
     cmap_info.visualid := visual.visualid;
-    
+
 
     (* The rest depends on the visual class. *)
     CASE visual.class OF
@@ -2574,7 +2574,7 @@ PROCEDURE CreateReadOnlyMap (dpy                     : X.DisplayStar;
       capx_info.max2        := 0; (* not used by PEXColorRange *)
       capx_info.max3        := 0; (* not used by PEXColorRange *)
       (* Give the weights the NTSC intensity coefficients. *)
-      capx_info.weight1     := 0.299; 
+      capx_info.weight1     := 0.299;
       capx_info.weight2     := 0.587;
       capx_info.weight3     := 0.114;
       capx_info.mult1       := cmap_info.red_mult;
