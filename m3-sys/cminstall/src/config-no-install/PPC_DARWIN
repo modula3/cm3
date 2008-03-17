@@ -4,7 +4,7 @@
 % derived originally from the FreeBSD configuration
 %
 
-% $Id: PPC_DARWIN,v 1.10 2008-02-14 12:40:36 jkrell Exp $
+% $Id: PPC_DARWIN,v 1.11 2008-03-17 05:18:44 jkrell Exp $
 
 %-------------------------------------------------- compilation environment ---
 
@@ -102,7 +102,7 @@ SYSTEM_LIBS = {
   "LEX-YACC"   : [ "-ll" ],
   "FLEX-BISON" : [ "-lfl" ],
 % not present by default, but this is the default install location
-  "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
+% "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
   "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
   "ODBC"       : [ "-liodbc", ],
 % "MOTIF"      : [ "-lXm" ],
