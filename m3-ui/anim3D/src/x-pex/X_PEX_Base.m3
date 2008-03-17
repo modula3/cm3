@@ -152,7 +152,7 @@ PROCEDURE Init (self  : T;
     ocsize   = 8192;
     bw       = 1;                               (* window border width *)
   VAR
-    attribs   : PEX.pxlRendererAttributes;	(* renderer attributes *)
+    attribs   : PEX.pxlRendererAttributes;      (* renderer attributes *)
     rmask     : Ctypes.unsigned_int;            (* renderer attribute mask *)
     mpexRA    : PEX.mpxlRendererAttributes;
     visual    : X.XVisualInfo;
@@ -2281,7 +2281,7 @@ PROCEDURE CreateDirectMap (dpy                     : X.DisplayStar;
       i := Word.RightShift (i, 1);
     END;
     cmap_info.red_max := num_reds - 1;
-	
+
     green_planes := 0; 
     num_greens := 1;
     i := visual.green_mask;
@@ -2293,7 +2293,7 @@ PROCEDURE CreateDirectMap (dpy                     : X.DisplayStar;
       i := Word.RightShift (i, 1);
     END;
     cmap_info.green_max := num_greens - 1;
-	
+
     blue_planes := 0; 
     num_blues := 1;
     i := visual.blue_mask;
@@ -2305,7 +2305,7 @@ PROCEDURE CreateDirectMap (dpy                     : X.DisplayStar;
       i := Word.RightShift (i, 1);
     END;
     cmap_info.blue_max := num_blues - 1;
-	
+
     (* Allocate the planes. *)
     IF X.XAllocColorPlanes (dpy, cmap_info.colormap, X.True,
                             ADR (cmap_info.base_pixel), 1,
@@ -2395,11 +2395,11 @@ PROCEDURE CreatePseudoMap (dpy                     : X.DisplayStar;
                                visual.visual, 
                                X.AllocNone);
     cmap_info.visualid := visual.visualid;
-    cmap_info.blue_max := nb - 1;	
+    cmap_info.blue_max := nb - 1;
     cmap_info.blue_mult := 1;
-    cmap_info.green_max := ng - 1;	
+    cmap_info.green_max := ng - 1;
     cmap_info.green_mult := nb;
-    cmap_info.red_max := nr - 1;	
+    cmap_info.red_max := nr - 1;
     cmap_info.red_mult := nb * ng;
 
     num_colors := nr * ng * nb;
@@ -2474,7 +2474,7 @@ PROCEDURE CreateGrayMap (dpy                     : X.DisplayStar;
       END;
       cmap_info.base_pixel := pixels[0];                    
     END;
-	
+
     (* Fill in the RGB color values. *)
     WITH colors = NEW (REF ARRAY OF X.XColor, num_grays)^ DO
       p := cmap_info.base_pixel;
@@ -2487,8 +2487,8 @@ PROCEDURE CreateGrayMap (dpy                     : X.DisplayStar;
           color.red := (i * 65535) DIV (num_grays - 1);
           color.green := color.red;
           color.blue  := color.red;
-	END;
-      END;    
+        END;
+      END;
       X.XStoreColors (dpy, cmap_info.colormap, ADR (colors[0]), num_grays);
     END;
     
@@ -2544,7 +2544,7 @@ PROCEDURE CreateReadOnlyMap (dpy                     : X.DisplayStar;
       cmap_info.blue_max := visual.blue_mask;
       cmap_info.blue_mult := 1;
       WHILE Word.And (cmap_info.blue_max, 1) = 0 DO
-	cmap_info.blue_max := Word.RightShift (cmap_info.blue_max, 1);
+        cmap_info.blue_max := Word.RightShift (cmap_info.blue_max, 1);
         cmap_info.blue_mult := Word.LeftShift (cmap_info.blue_mult, 1);
       END;
 
@@ -2565,7 +2565,7 @@ PROCEDURE CreateReadOnlyMap (dpy                     : X.DisplayStar;
     | X.StaticGray =>
       cmap_info.red_max  := visual.colormap_size - 1;
       cmap_info.red_mult := 1;
-	
+
       capx_info.approxType  := PEX.PEXColourRange;
       capx_info.approxModel := PEX.PEXColourApproxRGB;
       capx_info.dither      := PEX.PEXOn;

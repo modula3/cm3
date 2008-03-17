@@ -448,11 +448,11 @@ PROCEDURE Update(v: T; wait := TRUE) =
     END;
     IF offScreen # NIL AND screenDiff # Rect.Empty THEN
       VAR transScreenDiff := Rect.Add(screenDiff, delta); BEGIN
-      	PaintVBTtoVBT(v, transScreenDiff, offScreen, delta, wait);
-      	IF showSyncRect THEN
+        PaintVBTtoVBT(v, transScreenDiff, offScreen, delta, wait);
+        IF showSyncRect THEN
           HighlightVBT.SetRect(v, transScreenDiff);
           VBT.Sync(v)
-      	END
+        END
       END;
       LogBadRectArea(Rect.HorSize(screenDiff) * Rect.VerSize(screenDiff));
       LOCK v DO v.screenDiff := Rect.Empty END

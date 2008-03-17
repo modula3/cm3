@@ -41,7 +41,7 @@ PROCEDURE Init (v: T; ch: JoinedVBT.T; enabled: BOOLEAN): T =
         AddDisplay := VBT.GetMiscCodeType("AddDisplay");
         inited := TRUE;
         fn := Env.Get("PA_NEW_DISPLAY");
-	IF fn = NIL THEN fn := DefaultFile END;
+        IF fn = NIL THEN fn := DefaultFile END;
         TRY
           (* !!! fn := Filename.ExpandTilde(fn); *)
           VAR rd := FileRd.Open(fn);
