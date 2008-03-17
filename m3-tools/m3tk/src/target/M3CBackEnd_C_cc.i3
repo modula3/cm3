@@ -26,7 +26,7 @@ INTERFACE M3CBackEnd_C_cc;
 VAR
   (* alignment of generic things of the given size with typical defaults *)
 
-  a64: INTEGER; (* := 32 *)
+  a64: INTEGER; (* := 64 *)
   a32: INTEGER; (* := 32 *)
   a16: INTEGER; (* := 16 *)
   a8: INTEGER;  (* := 8 *)

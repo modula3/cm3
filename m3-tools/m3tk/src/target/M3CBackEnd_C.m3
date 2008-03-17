@@ -132,7 +132,6 @@ PROCEDURE MayBeExactBitSizeAndAlign(ts: M3AST_AS.TYPE_SPEC;
   VAR
     array_element, array_index: M3AST_SM.TYPE_SPEC_UNSET;
     size, align: INTEGER;
-    s1, s2: INTEGER;
     isopen: BOOLEAN;
   BEGIN
     size := 0; align := 0;
@@ -169,31 +168,55 @@ PROCEDURE MayBeExactBitSizeAndAlign(ts: M3AST_AS.TYPE_SPEC;
         align := longRealA;
 
     | M3AST_AS.Enumeration_type(t) =>
-        size := BitsForOrd(t.sm_num_elements-1, exact);
+        size := BitsForInt(t.sm_num_elements-1, exact);
         align := OrdAlign(size);
 
     | M3AST_AS.Subrange_type(t) =>
-        WITH range = t.as_range DO
-          s1 := NARROW(range.as_exp1.sm_exp_value, Integer_value).sm_value;
-          s2 := NARROW(range.as_exp2.sm_exp_value, Integer_value).sm_value;
-        END;
-        IF s1 <= s2 THEN
-          IF s1 >= 0 THEN
-            size := BitsForOrd(s2, exact);
-          ELSE
-            IF s2 < 0 THEN s2 := 0; END;
-            size := 1 + MAX(BitsForOrd(-(s1+1), TRUE), BitsForOrd(s2, TRUE));
-            IF NOT exact THEN size := ChooseByteHalfFull(size); END;
+        TYPECASE t.sm_base_type_spec OF
+        | M3AST_AS.Longint_type =>
+          WITH range = t.as_range,
+               s1 = NARROW(range.as_exp1.sm_exp_value, Longint_value).sm_value,
+               s2 = NARROW(range.as_exp1.sm_exp_value, Longint_value).sm_value
+           DO
+            IF s1 <= s2 THEN
+              IF s1 >= 0L THEN
+                size := BitsForLongint(s2, exact);
+              ELSE
+                IF s2 < 0L THEN s2 := 0L; END;
+                size := 1 + MAX(BitsForLongint(-(s1+1L), TRUE),
+                                BitsForLongint(s2, TRUE));
+                IF NOT exact THEN size := ChooseByteHalfFull(size); END;
+              END;
+            END; (* if *)
+            align := OrdAlign(size);
           END;
-        END; (* if *)
-        align := OrdAlign(size);
+        ELSE
+          WITH range = t.as_range,
+               s1 = NARROW(range.as_exp1.sm_exp_value, Integer_value).sm_value,
+               s2 = NARROW(range.as_exp2.sm_exp_value, Integer_value).sm_value
+           DO
+            IF s1 <= s2 THEN
+              IF s1 >= 0 THEN
+                size := BitsForInt(s2, exact);
+              ELSE
+                IF s2 < 0 THEN s2 := 0; END;
+                size := 1 + MAX(BitsForInt(-(s1+1), TRUE),
+                                BitsForInt(s2, TRUE));
+                IF NOT exact THEN size := ChooseByteHalfFull(size); END;
+              END;
+            END; (* if *)
+            align := OrdAlign(size);
+          END;
+        END;
 
     | M3AST_AS.Set_type(t) =>
+      VAR s1, s2: INTEGER; BEGIN
         GetSetBounds(t, s1, s2);
         IF s1 <= s2 THEN
           size := 1 + s2 - s1;
         END; (* if *)
         align := SetAlign(size, exact);
+      END;
 
     | M3AST_AS.Packed_type(t) =>
         (* the check for legality is done elsewhere *)
@@ -523,7 +546,7 @@ PROCEDURE ConstructorOriginal_C(
 
 PROCEDURE IsOrdinal_C(e: M3AST_SM.Exp_value): BOOLEAN RAISES {}=
   BEGIN
-    RETURN e # NIL AND ISTYPE(e, Integer_value);
+    RETURN e # NIL AND (ISTYPE(e, Integer_value) OR ISTYPE(e, Longint_value));
   END IsOrdinal_C;
 
 
@@ -534,11 +557,14 @@ PROCEDURE Val_C(n: INTEGER;
     (* ORD(n) = n for all types *)
     TYPECASE ts OF
     | M3AST_AS.Longint_type =>
-        er := M3CBackEnd_Int_Longint.New_value(VAL(n, LONGINT));
+      er := M3CBackEnd_Int_Longint.New_value(VAL(n, LONGINT));
+      RETURN M3CBackEnd.NumStatus.Valid;
+    | M3AST_AS.Subrange_type(subrange) =>
+      RETURN Val_C(n, subrange.sm_base_type_spec, er);
     ELSE
-        er := M3CBackEnd_Int_Integer.New_value(VAL(n, INTEGER));
+      er := M3CBackEnd_Int_Integer.New_value(VAL(n, INTEGER));
+      RETURN M3CBackEnd.NumStatus.Valid;
     END;
-    RETURN M3CBackEnd.NumStatus.Valid;
   END Val_C;
 
 
@@ -552,18 +578,48 @@ PROCEDURE Ord_C(
     | Integer_value(iv) => 
         i := iv.sm_value; 
         RETURN M3CBackEnd.NumStatus.Valid;
+    | Longint_value(iv) =>
+        IF iv.sm_value < VAL(FIRST(INTEGER), LONGINT) THEN
+          RETURN M3CBackEnd.NumStatus.Overflow;
+        END;
+        IF iv.sm_value > VAL(LAST(INTEGER), LONGINT) THEN
+          RETURN M3CBackEnd.NumStatus.Overflow;
+        END;
+        i := ORD(iv.sm_value);
+        RETURN M3CBackEnd.NumStatus.Valid;
     END;
   END Ord_C;
 
 
 PROCEDURE ConvertOrdinal_C(
     e: M3AST_SM.Exp_value;
-    <*UNUSED*> ts: M3AST_AS.TYPE_SPEC;
+    ts: M3AST_AS.TYPE_SPEC;
     VAR (* out *) er: M3AST_SM.Exp_value)
     : M3CBackEnd.NumStatus
     RAISES {}=
   BEGIN
-    er := e;
+    TYPECASE ts OF
+    | M3AST_AS.Longint_type =>
+      TYPECASE e OF <*NOWARN*>
+      | Integer_value(iv) =>
+        er := M3CBackEnd_Int_Longint.New_value(VAL(iv.sm_value, LONGINT));
+      | Longint_value => er := e;
+      END;
+    | M3AST_AS.Subrange_type(subrange) =>
+      RETURN ConvertOrdinal_C(e, subrange.sm_base_type_spec, er);
+    ELSE
+      TYPECASE e OF <*NOWARN*>
+      | Integer_value => er := e;
+      | Longint_value(iv) =>
+        IF iv.sm_value < VAL(FIRST(INTEGER), LONGINT) THEN
+          RETURN M3CBackEnd.NumStatus.Overflow;
+        END;
+        IF iv.sm_value > VAL(LAST(INTEGER), LONGINT) THEN
+          RETURN M3CBackEnd.NumStatus.Overflow;
+        END;
+        er := M3CBackEnd_Int_Integer.New_value(ORD(iv.sm_value));
+      END;
+    END;
     RETURN M3CBackEnd.NumStatus.Valid;
   END ConvertOrdinal_C;
 
@@ -895,7 +951,7 @@ PROCEDURE AlignTo(size, align: CARDINAL): INTEGER RAISES {}=
     END; (* if *)
   END AlignTo;
 
-PROCEDURE BitsForOrd(n: INTEGER; exact := FALSE): CARDINAL RAISES {}=
+PROCEDURE BitsForInt(n: INTEGER; exact := FALSE): CARDINAL RAISES {}=
   VAR i, c: CARDINAL;
   BEGIN
     IF n <= 0 THEN RETURN 0 END;
@@ -908,7 +964,21 @@ PROCEDURE BitsForOrd(n: INTEGER; exact := FALSE): CARDINAL RAISES {}=
       i := ChooseByteHalfFull(i);
     END;
     RETURN i;
-  END BitsForOrd;
+  END BitsForInt;
+
+PROCEDURE BitsForLongint(n: LONGINT; exact := FALSE): CARDINAL RAISES {}=
+  VAR i: CARDINAL;
+  BEGIN
+    IF n <= 0L THEN RETURN 0 END;
+    i := 0;
+    WHILE n # 0L DO
+      INC(i); n := n DIV 2L;
+    END; (* while *)
+    IF NOT exact THEN
+      i := ChooseByteHalfFull(i);
+    END;
+    RETURN i;
+  END BitsForLongint;
 
 PROCEDURE ChooseByteHalfFull(i: INTEGER): INTEGER=
   BEGIN
@@ -942,6 +1012,20 @@ PROCEDURE Compare_C(e1, e2: M3AST_SM.Exp_value): INTEGER RAISES {}=
     | Integer_value(eiv1) =>
         TYPECASE e2 OF
         | Integer_value(eiv2) =>
+            IF eiv1.sm_value = eiv2.sm_value THEN
+              RETURN 0
+            ELSIF eiv1.sm_value < eiv2.sm_value THEN
+              RETURN -1
+            ELSE
+              RETURN 1
+            END; (* if *)
+        ELSE
+          RETURN 1;
+        END;
+
+    | Longint_value(eiv1) =>
+        TYPECASE e2 OF
+        | Longint_value(eiv2) =>
             IF eiv1.sm_value = eiv2.sm_value THEN
               RETURN 0
             ELSIF eiv1.sm_value < eiv2.sm_value THEN
@@ -1035,6 +1119,7 @@ CONST
   RealCh = 'r';      RealText = "r";
   TextCh = 't';      TextText = "t";
   ProcCh = 'p';      ProcText = "p";
+  LongintCh = 'i';   LongintText = "i";
   (* Integer values, hopefully the most common, are just hex numbers *)
 
 PROCEDURE ExpValueToText_C(e: M3AST_SM.Exp_value): TEXT RAISES {}=
@@ -1042,6 +1127,8 @@ PROCEDURE ExpValueToText_C(e: M3AST_SM.Exp_value): TEXT RAISES {}=
     TYPECASE e OF <*NOWARN*>
     | Integer_value(intValue) =>
         RETURN Fmt.Int(intValue.sm_value, 16);
+    | Longint_value(intValue) =>
+        RETURN LongintText & Fmt.LongInt(intValue.sm_value, 16);
     | Set_constructor_value(setValue) =>
         VAR
           s := TextWr.New();
@@ -1100,6 +1187,12 @@ PROCEDURE TextToExpValue_C(t: TEXT): M3AST_SM.Exp_value RAISES {}=
         RETURN NEW(Proc_value, sm_value := Text.Sub(t, 1, length - 1));
     | TextCh =>
         RETURN NEW(Text_value, sm_value := Text.Sub(t, 1, length - 1));
+    | LongintCh =>
+      VAR new := NEW(Longint_value);
+      BEGIN
+        IF NOT TextTo_Longint(t, new.sm_value, 16) THEN RAISE Fatal END;
+        RETURN new;
+      END;
     ELSE
       VAR
         new := NEW(Integer_value);
