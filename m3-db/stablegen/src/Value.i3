@@ -15,11 +15,12 @@ INTERFACE Value;
 
 TYPE 
   T <: ROOT;
-  (* Ordinal | Float | LongFloat | Extended | Array | Set | Record | 
+  (* Integer | Longint | Float | LongFloat | Extended | Array | Set | Record | 
      Text | Null *)
 
-    Ordinal = T OBJECT ord: INTEGER END;
-    (* ORD(the value) *)
+    Integer = T OBJECT val: INTEGER END;
+
+    Longint = T OBJECT val: LONGINT END;
 
     Float = T OBJECT val: REAL END;
 
