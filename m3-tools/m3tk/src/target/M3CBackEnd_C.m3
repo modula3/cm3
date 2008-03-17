@@ -533,10 +533,10 @@ PROCEDURE Val_C(n: INTEGER;
   BEGIN
     (* ORD(n) = n for all types *)
     TYPECASE ts OF <*NOWARN*>
-    | M3AST_AS.Integer_type =>
-        er := M3CBackEnd_Int_Integer.New_value(VAL(n, INTEGER));
     | M3AST_AS.Longint_type =>
         er := M3CBackEnd_Int_Longint.New_value(VAL(n, LONGINT));
+    ELSE
+        er := M3CBackEnd_Int_Integer.New_value(VAL(n, INTEGER));
     END;
     RETURN M3CBackEnd.NumStatus.Valid;
   END Val_C;
