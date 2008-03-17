@@ -14,7 +14,9 @@ PROCEDURE ProcessExp(
   BEGIN
     TYPECASE exp.sm_exp_value OF
       |  M3CBackEnd_C.Integer_value (int) =>
-           RETURN NEW(Value.Ordinal, ord := int.sm_value)
+           RETURN NEW(Value.Integer, val := int.sm_value)
+      |  M3CBackEnd_C.Longint_value (int) =>
+           RETURN NEW(Value.Longint, val := int.sm_value)
       |  M3CBackEnd_C.Text_value (txt) => 
            RETURN NEW(Value.Txt, val := txt.sm_value)
       |  M3CBackEnd_C.Real_value (real) => 
@@ -23,11 +25,11 @@ PROCEDURE ProcessExp(
            RETURN NEW(Value.LongFloat, val := lreal.sm_value);
       |  M3CBackEnd_C.Extended_value (ereal) => 
            RETURN NEW(Value.Extended, val := ereal.sm_value);
-      (*
+(*
       |  M3CBackEnd_C.Set_constructor_value => 
       |  M3CBackEnd_C.Array_or_record_constructor_value => 
       |  M3CBackEnd_C.Proc_value => 
-      *)
+*)
       ELSE RAISE SOxCodeUtils.Error("Runtime error -- shouldn't occur ")
     END;
   END ProcessExp;

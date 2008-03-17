@@ -16,11 +16,44 @@
  * Update Count    : 40
  * 
  * $Source: /opt/cvs/cm3/m3-comm/sharedobjgen/src/SOxIntfProxyCode.m3,v $
- * $Date: 2001-12-03 17:23:37 $
- * $Author: wagner $
- * $Revision: 1.2 $
+ * $Date: 2008-03-17 16:36:44 $
+ * $Author: hosking $
+ * $Revision: 1.3 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2001/12/03 17:23:37  wagner
+ * add copyright notes and overrides
+ *
+ * added: sharedobjgen/COPYRIGHT
+ * added: sharedobjgen/COPYRIGHT-COLUMBIA
+ * added: sharedobjgen/src/COPYRIGHT-COLUMBIA
+ * added: sharedobjgen/src/m3overrides
+ * modified: sharedobjgen/src/SOxCodeFiles.i3
+ * modified: sharedobjgen/src/SOxCodeFiles.m3
+ * modified: sharedobjgen/src/SOxCodeGenError.i3
+ * modified: sharedobjgen/src/SOxCodeGenError.m3
+ * modified: sharedobjgen/src/SOxCodeUtils.i3
+ * modified: sharedobjgen/src/SOxCodeUtils.m3
+ * modified: sharedobjgen/src/SOxCoder.i3
+ * modified: sharedobjgen/src/SOxDummyCode.i3
+ * modified: sharedobjgen/src/SOxDummyCode.m3
+ * modified: sharedobjgen/src/SOxIntfCBCode.i3
+ * modified: sharedobjgen/src/SOxIntfCBCode.m3
+ * modified: sharedobjgen/src/SOxIntfCBProxyCode.i3
+ * modified: sharedobjgen/src/SOxIntfCBProxyCode.m3
+ * modified: sharedobjgen/src/SOxIntfPklCode.i3
+ * modified: sharedobjgen/src/SOxIntfPklCode.m3
+ * modified: sharedobjgen/src/SOxIntfProxyCode.i3
+ * modified: sharedobjgen/src/SOxIntfProxyCode.m3
+ * modified: sharedobjgen/src/SOxModuleCBCode.i3
+ * modified: sharedobjgen/src/SOxModuleCBCode.m3
+ * modified: sharedobjgen/src/SOxModuleProxyCode.i3
+ * modified: sharedobjgen/src/SOxModuleProxyCode.m3
+ * modified: sharedobjgen/src/SOxModuleSOCode.i3
+ * modified: sharedobjgen/src/SOxModuleSOCode.m3
+ * modified: sharedobjgen/src/StubGenTool.i3
+ * modified: sharedobjgen/src/StubGenTool.m3
+ *
  * Revision 1.1.1.1  2001/12/02 13:15:54  wagner
  * Blair MacIntyre's sharedobjgen package
  *
@@ -139,11 +172,11 @@ PROCEDURE decls(<*UNUSED*>self: T;
       PutLine(wr, "MkProxy" & identfTxt & " : PROCEDURE(x: " &
         typTxt & ") := NIL;");  
 
-      (*
+(*
       PutLine(wr, "MkProxy" & identfTxt & "CB : PROCEDURE(x: " &
         SOxCodeUtils.FileName(self.basename, SOxCodeFiles.T.CB_I3) & "." &
         identfTxt & ") := NIL;");        
-      *)
+*)
       EndTab(wr);
     END
  END decls;
