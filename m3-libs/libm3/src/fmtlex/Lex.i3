@@ -14,7 +14,7 @@
 
 INTERFACE Lex;
 
-IMPORT FloatMode, Rd, Word;
+IMPORT FloatMode, Rd, Word, Long;
 FROM Thread IMPORT Alerted;
 
 EXCEPTION Error;
@@ -66,6 +66,10 @@ PROCEDURE Int(rd: Rd.T; defaultBase: [2..16] := 10)
   : INTEGER RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted};
 PROCEDURE Unsigned(rd: Rd.T; defaultBase: [2..16] := 16)
   : Word.T RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted};
+PROCEDURE LongInt(rd: Rd.T; defaultBase: [2..16] := 10)
+  : LONGINT RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted};
+PROCEDURE LongUnsigned(rd: Rd.T; defaultBase: [2..16] := 16)
+  : Long.T RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted};
 (* Read a number from "rd" and return its value. *)
 
 (* Each procedure skips blanks, then reads the longest prefix of "rd"
