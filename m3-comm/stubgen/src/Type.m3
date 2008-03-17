@@ -13,126 +13,132 @@ MODULE Type;
 
 IMPORT Atom, Fmt, StubUtils, Text, Value, ValueProc;
 
-TYPE Foo = OBJECT name: Qid; visited := FALSE; brandsOK := TRUE; END;
+TYPE
+  Foo = OBJECT
+          name    : Qid;
+          visited         := FALSE;
+          brandsOK        := TRUE;
+        END;
 
 REVEAL T =  Foo BRANDED OBJECT END;
 
-PROCEDURE ToText(t: T; byName: BOOLEAN := TRUE): Text.T =
+PROCEDURE ToText (t: T; byName: BOOLEAN := TRUE): Text.T =
   VAR text: Text.T;
   BEGIN
     IF t = NIL THEN RETURN "" END;
     IF t.name # NIL AND byName THEN RETURN QidToText(t.name); END;
-    TYPECASE t OF 
-      | Char => RETURN "CHAR"
-      | WideChar => RETURN "WIDECHAR"
-      | UserDefined (ud) => 
-          IF NUMBER(ud.elts^) = 0 THEN text := "";
-          ELSE 
-            text := Atom.ToText(ud.elts[0]);
-            FOR i := 1 TO LAST(ud.elts^) DO
-              text := text & ", " & Atom.ToText(ud.elts[i]);
-            END;
+    TYPECASE t OF
+    | Char => RETURN "CHAR"
+    | WideChar => RETURN "WIDECHAR"
+    | UserDefined (ud) =>
+      IF NUMBER(ud.elts^) = 0 THEN text := "";
+      ELSE 
+        text := Atom.ToText(ud.elts[0]);
+        FOR i := 1 TO LAST(ud.elts^) DO
+          text := text & ", " & Atom.ToText(ud.elts[i]);
+        END;
+      END;
+      RETURN "{" & text & "}";
+    | Enumeration (enum) =>
+      IF enum = boolean THEN RETURN "BOOLEAN"; END;
+      StubUtils.Die("Type.ToText: unsupported enumeration type");
+    | Subrange (sub) =>
+      VAR
+        min, max: INTEGER;
+        ud      : UserDefined;
+      BEGIN
+        IF sub = integer THEN RETURN "INTEGER" END;
+        IF sub = longint THEN RETURN "LONGINT" END;
+        IF sub.base = longint THEN
+          WITH min = NARROW(sub.min, Value.Longint).val,
+               max = NARROW(sub.max, Value.Longint).val DO
+            RETURN "[" & Fmt.LongInt(min) & "L.." & Fmt.LongInt(max) & "L]";
           END;
-          RETURN "{" & text & "}";
-      | Enumeration (enum) =>
-          IF enum = boolean THEN RETURN "BOOLEAN"; END;
-          StubUtils.Die("Type.ToText: unsupported enumeration type");
-      | Subrange (sub) => 
-          VAR min, max: INTEGER;
-              ud: UserDefined;
-          BEGIN
-            IF sub = integer THEN RETURN "INTEGER" END;
-            IF sub = longint THEN RETURN "LONGINT" END;
-            IF sub.base = longint THEN
-              WITH min = NARROW(sub.min, Value.Longint).val,
-                   max = NARROW(sub.max, Value.Longint).val DO RETURN
-               "[" & Fmt.LongInt(min) &  "L.." & Fmt.LongInt(max) &"L]"
-              END;
-            END;
-            min := NARROW(sub.min, Value.Integer).val;
-            max := NARROW(sub.max, Value.Integer).val;
-            IF sub.base = integer THEN RETURN
-               "[" & Fmt.Int(min) &  ".." & Fmt.Int(max) &"]"
-            END;
-            IF sub.base = char THEN RETURN
-               "[VAL(" & Fmt.Int(min) &  ", CHAR) .. VAL(" & 
-                     Fmt.Int(max) & ", CHAR)]"
-            END;
-            IF sub.base = widechar THEN RETURN
-               "[VAL(" & Fmt.Int(min) &  ", WIDECHAR) .. VAL(" & 
-                     Fmt.Int(max) & ", WIDECHAR)]"
-            END;
-            ud := NARROW(sub.base, UserDefined);
-            RETURN "[" & ToText(sub.base) & "." & Atom.ToText(ud.elts[min]) & 
-                    ".." & ToText(sub.base) & "." & Atom.ToText(ud.elts[max]) & 
-                     "]";
-          END;
-      | Real => RETURN "REAL";
-      | LongReal => RETURN "LONGREAL";
-      | Extended => RETURN "EXTENDED";
-      | Reference (ref) =>
-          TYPECASE ref OF
-          | Opaque (o) => 
-            (* Type can only be displayed by name *)
-            RETURN "***Error*** Opaque type only printed by name: "
-                    & "supertype " & ToText(o.revealedSuperType);
-            (* RETURN Atom.ToText(t.name.intf) & "." & Atom.ToText(t.name.item)*)
-          | Object, Ref =>
-            IF ref.brand # NIL THEN 
-              text := "BRANDED \"" &  Atom.ToText(ref.brand) & "\" ";
-            ELSE 
-              text := ""
-            END;
-            TYPECASE ref OF
-            | Object(o) => 
-              RETURN ToText(o.super) & " " & text & "OBJECT\n" &
-                   FieldsToText(o.fields) &
-                  "\nMETHODS\n" & MethodsToText(o.methods) & "\nEND";
-            | Ref (r) => 
-              IF NOT r.traced THEN text := "UNTRACED " & text END;
-              RETURN text & "REF " & ToText(r.target, TRUE);
-            ELSE StubUtils.Die("Type.ToText: unsupported reference type");
-            END;
-          ELSE StubUtils.Die("Type.ToText: unsupported reference type");
-          END;
-      | Array (arr) =>
-          IF arr.index = NIL THEN
-            text := "";
-          ELSE
-            text := ToText(arr.index);
-          END;
-          RETURN "ARRAY " & text & " OF " & ToText(arr.element);
-      | Packed (p) => 
-          RETURN "BITS " & Fmt.Int(p.size) & "FORF " & ToText(p.base);
-      | Record (rec) => 
-            RETURN "RECORD " & FieldsToText(rec.fields) & " END";
-      | Set (set) =>
-          RETURN "SET OF " & ToText(set.range);
-      | Procedure (proc) =>
-          RETURN "PROCEDURE" & SigToText(proc.sig);
-      ELSE  StubUtils.Die("Type.ToText: unsupported type");
+        END;
+        min := NARROW(sub.min, Value.Integer).val;
+        max := NARROW(sub.max, Value.Integer).val;
+        IF sub.base = integer THEN
+          RETURN "[" & Fmt.Int(min) & ".." & Fmt.Int(max) & "]"
+        END;
+        IF sub.base = char THEN RETURN
+          "[VAL(" & Fmt.Int(min) &  ", CHAR) .. VAL(" &
+            Fmt.Int(max) & ", CHAR)]"
+        END;
+        IF sub.base = widechar THEN RETURN
+          "[VAL(" & Fmt.Int(min) &  ", WIDECHAR) .. VAL(" & 
+            Fmt.Int(max) & ", WIDECHAR)]"
+        END;
+        ud := NARROW(sub.base, UserDefined);
+        RETURN "[" & ToText(sub.base) & "." & Atom.ToText(ud.elts[min]) & 
+               ".." & ToText(sub.base) & "." & Atom.ToText(ud.elts[max]) & 
+               "]";
+      END;
+    | Real => RETURN "REAL";
+    | LongReal => RETURN "LONGREAL";
+    | Extended => RETURN "EXTENDED";
+    | Reference (ref) =>
+      TYPECASE ref OF
+      | Opaque (o) =>
+        (* Type can only be displayed by name *)
+        RETURN "***Error*** Opaque type only printed by name: "
+        & "supertype " & ToText(o.revealedSuperType);
+        (* RETURN Atom.ToText(t.name.intf) & "." & Atom.ToText(t.name.item)*)
+      | Object, Ref =>
+        IF ref.brand # NIL THEN
+          text := "BRANDED \"" & Atom.ToText(ref.brand) & "\" ";
+        ELSE
+          text := ""
+        END;
+        TYPECASE ref OF
+        | Object(o) => 
+          RETURN ToText(o.super) & " " & text & "OBJECT\n" &
+                 FieldsToText(o.fields) &
+                 "\nMETHODS\n" & MethodsToText(o.methods) & "\nEND";
+        | Ref (r) => 
+          IF NOT r.traced THEN text := "UNTRACED " & text END;
+          RETURN text & "REF " & ToText(r.target, TRUE);
+        ELSE
+          StubUtils.Die("Type.ToText: unsupported reference type");
+        END;
+      ELSE
+        StubUtils.Die("Type.ToText: unsupported reference type");
+      END;
+    | Array (arr) =>
+      IF arr.index = NIL THEN
+        text := "";
+      ELSE
+        text := ToText(arr.index);
+      END;
+      RETURN "ARRAY " & text & " OF " & ToText(arr.element);
+    | Packed (p) => RETURN "BITS " & Fmt.Int(p.size) & "FORF " & ToText(p.base);
+    | Record (rec) => RETURN "RECORD " & FieldsToText(rec.fields) & " END";
+    | Set (set) => RETURN "SET OF " & ToText(set.range);
+    | Procedure (proc) => RETURN "PROCEDURE" & SigToText(proc.sig);
+    ELSE
+      StubUtils.Die("Type.ToText: unsupported type");
     END;
 
     RETURN NIL;
   END ToText;
 
-PROCEDURE QidToText(qid: Qid): TEXT =
+PROCEDURE QidToText (qid: Qid): TEXT =
   BEGIN
     IF qid.intf = nullAtm THEN RETURN Atom.ToText(qid.item)
     ELSE RETURN Atom.ToText(qid.intf) & "." & Atom.ToText(qid.item) 
     END;
   END QidToText;
 
-PROCEDURE SigToText(sig: Signature): TEXT =
-  VAR result: TEXT;
-      raises: TEXT;
+PROCEDURE SigToText (sig: Signature): TEXT =
+  VAR
+    result: TEXT;
+    raises: TEXT;
   BEGIN
     IF sig.result # NIL THEN
       result := ": " & ToText(sig.result);
     ELSE
       result := "";
     END;
-    IF sig.raises = NIL THEN 
+    IF sig.raises = NIL THEN
       raises := " RAISES ANY"
     ELSIF NUMBER(sig.raises^) = 0 THEN
       raises := "";
@@ -146,15 +152,15 @@ PROCEDURE SigToText(sig: Signature): TEXT =
     RETURN "(" & FormalsToText(sig.formals) & ")" & result & raises;
   END SigToText;
 
-PROCEDURE FieldsToText(f: REF ARRAY OF Field): TEXT =
-  VAR notFirst := FALSE;
-      text := "";
+PROCEDURE FieldsToText (f: REF ARRAY OF Field): TEXT =
+  VAR
+    notFirst := FALSE;
+    text     := "";
   BEGIN
     FOR i := 0 TO LAST(f^) DO
       IF notFirst THEN text := text & "; "; END;
       notFirst := TRUE;
-      text := text & Atom.ToText(f[i].name) & ": " & 
-                ToText(f[i].type);
+      text := text & Atom.ToText(f[i].name) & ": " & ToText(f[i].type);
       IF f[i].default # NIL THEN
         text := text & ":= " & ValueProc.ToText(f[i].default, f[i].type);
       END;
@@ -162,39 +168,44 @@ PROCEDURE FieldsToText(f: REF ARRAY OF Field): TEXT =
     RETURN text;
   END FieldsToText;
 
-PROCEDURE MethodsToText(m: REF ARRAY OF Method): TEXT =
-  VAR notFirst := FALSE;
-      text := "";
+PROCEDURE MethodsToText (m: REF ARRAY OF Method): TEXT =
+  VAR
+    notFirst := FALSE;
+    text     := "";
   BEGIN
     FOR i := 0 TO LAST(m^) DO
       IF notFirst THEN text := text & ";\n"; END;
       notFirst := TRUE;
       text := text & Atom.ToText(m[i].name) & SigToText(m[i].sig);
       IF m[i].default # NIL THEN
-        text := text & ":= " ;
+        text := text & ":= ";
         TYPECASE m[i].default OF
-          MethodDefault1 (md1) => text := text & QidToText(md1.qid);
-        | MethodDefault2 (md2) => text := text & ToText(md2.obType) &
-                                 "." & Atom.ToText(md2.method);
-        ELSE StubUtils.Die("Type.MethodsToText: unrecognized method value");
+        | MethodDefault1 (md1) =>
+          text := text & QidToText(md1.qid);
+        | MethodDefault2 (md2) =>
+          text := text & ToText(md2.obType) & "." & Atom.ToText(md2.method);
+        ELSE
+          StubUtils.Die("Type.MethodsToText: unrecognized method value");
         END;
       END;
     END;
     RETURN text;
   END MethodsToText;
 
-PROCEDURE FormalsToText(f: REF ARRAY OF Formal): TEXT =
-  VAR notFirst := FALSE;
-      text := "";
-      modeName := ARRAY Mode OF TEXT {"", "VAR ", "READONLY "};
-      outPrag: TEXT;
+PROCEDURE FormalsToText (f: REF ARRAY OF Formal): TEXT =
+  VAR
+    notFirst       := FALSE;
+    text           := "";
+    modeName       := ARRAY Mode OF TEXT{"", "VAR ", "READONLY "};
+    outPrag : TEXT;
   BEGIN
     FOR i := 0 TO LAST(f^) DO
       IF notFirst THEN text := text & "; "; END;
       notFirst := TRUE;
       IF f[i].outOnly THEN outPrag := "<*OUT*> " ELSE outPrag := "" END;
-      text := text & modeName[f[i].mode] & " " & outPrag & 
-                Atom.ToText(f[i].name) & ": " & ToText(f[i].type);
+      text :=
+          text & modeName[f[i].mode] & " " & outPrag &
+          Atom.ToText(f[i].name) & ": " & ToText(f[i].type);
       IF f[i].default # NIL THEN
         text := text & ":= " & ValueProc.ToText(f[i].default, f[i].type);
       END;
@@ -202,7 +213,7 @@ PROCEDURE FormalsToText(f: REF ARRAY OF Formal): TEXT =
     RETURN text;
   END FormalsToText;
 
-PROCEDURE MayBeRefAny(t: T): BOOLEAN =
+PROCEDURE MayBeRefAny (t: T): BOOLEAN =
   BEGIN
     IF t = refany THEN RETURN TRUE; END;
     TYPECASE t OF
@@ -212,37 +223,37 @@ PROCEDURE MayBeRefAny(t: T): BOOLEAN =
     END;
   END MayBeRefAny;
 
-PROCEDURE NamedType(t: T): BOOLEAN =
+PROCEDURE NamedType (t: T): BOOLEAN =
   BEGIN
     RETURN t.name # NIL;
   END NamedType;
 
 (*
-PROCEDURE Size (t: T): INTEGER = 
+PROCEDURE Size (t: T): INTEGER =
   BEGIN
   END Size;
 
-PROCEDURE MinSize (t: T): INTEGER = 
+PROCEDURE MinSize (t: T): INTEGER =
   BEGIN
   END MinSize;
 
-PROCEDURE Alignment (t: T): INTEGER = 
+PROCEDURE Alignment (t: T): INTEGER =
   BEGIN
   END Alignment;
 
-PROCEDURE Bounds (t: T): Interval.T = 
+PROCEDURE Bounds (t: T): Interval.T =
   BEGIN
   END Bounds;
 
-PROCEDURE Base (t: T): T = 
+PROCEDURE Base (t: T): T =
   BEGIN
   END Base;
 
-PROCEDURE IsTraced (t: T): BOOLEAN = 
+PROCEDURE IsTraced (t: T): BOOLEAN =
   BEGIN
   END IsTraced;
 
-PROCEDURE IsEmpty (t: T): BOOLEAN = 
+PROCEDURE IsEmpty (t: T): BOOLEAN =
   BEGIN
   END IsEmpty;
 
@@ -252,63 +263,60 @@ VAR nullAtm: Atom.T;
 
 BEGIN
   nullAtm := Atom.FromText("");
-  integer := NEW(Subrange, 
-                name := NEW(Qid, intf := nullAtm, item := Atom.FromText("INTEGER")),
-                min := NEW(Value.Integer, val:=FIRST(INTEGER)), 
-                max := NEW(Value.Integer, val:=LAST(INTEGER)));
+  integer := NEW(Subrange, name := NEW(Qid, intf := nullAtm,
+                                       item := Atom.FromText("INTEGER")),
+                 min := NEW(Value.Integer, val := FIRST(INTEGER)),
+                 max := NEW(Value.Integer, val := LAST(INTEGER)));
   integer.base := integer;
-
-  longint := NEW(Subrange,
-                name := NEW(Qid, intf := nullAtm, item := Atom.FromText("LONGINT")),
-                min := NEW(Value.Longint, val:=FIRST(LONGINT)), 
-                max := NEW(Value.Longint, val:=LAST(LONGINT)));
+  longint := NEW(Subrange, name := NEW(Qid, intf := nullAtm,
+                                       item := Atom.FromText("LONGINT")),
+                 min := NEW(Value.Longint, val := FIRST(LONGINT)),
+                 max := NEW(Value.Longint, val := LAST(LONGINT)));
   longint.base := longint;
 
-  cardinal := NEW(Subrange,
-               name := NEW(Qid, intf := nullAtm, item := Atom.FromText("CARDINAL")),
-               base := integer, 
-               min := NEW(Value.Integer, val:=0), 
-               max := integer.max);
+  cardinal := NEW(Subrange, name := NEW(Qid, intf := nullAtm,
+                                        item := Atom.FromText("CARDINAL")),
+                  base := integer, min := NEW(Value.Integer, val := 0),
+                  max := integer.max);
 
-  boolean := NEW(UserDefined,  
-               name := NEW(Qid, intf := nullAtm, item := Atom.FromText("BOOLEAN")));
+  boolean := NEW(
+               UserDefined, name := NEW(Qid, intf := nullAtm,
+                                        item := Atom.FromText("BOOLEAN")));
   boolean.elts := NEW(REF ARRAY OF Atom.T, 2);
   boolean.elts[0] := Atom.FromText("FALSE");
   boolean.elts[1] := Atom.FromText("TRUE");
 
-  char :=    NEW(Char, 
-               name := NEW(Qid, intf := nullAtm, item := Atom.FromText("CHAR")));
-  widechar := NEW(WideChar, 
-               name := NEW(Qid, intf := nullAtm, item := Atom.FromText("WIDECHAR")));
-  real    := NEW(Real, 
-               name := NEW(Qid, intf := nullAtm, item := Atom.FromText("REAL")));
-  longreal := NEW(LongReal, name := 
-               NEW(Qid, intf := nullAtm, item := Atom.FromText("LONGREAL")));
-  extended := NEW(Extended, name := 
-               NEW(Qid, intf := nullAtm, item := Atom.FromText("EXTENDED")));
-  refany  := NEW(Reference,
-               name := NEW(Qid, intf := nullAtm, item := Atom.FromText("REFANY")),
-               traced := TRUE);
-  address := NEW(Reference, 
-               name := NEW(Qid, intf := nullAtm, item := Atom.FromText("ADDRESS")),
-               traced := FALSE);
-  root    := NEW(Object, 
-                 name := NEW(Qid, intf := nullAtm, item := Atom.FromText("ROOT")),
-                 traced := TRUE, 
-                 fields := NEW(REF ARRAY OF Field, 0),
-                 methods := NEW(REF ARRAY OF Method, 0));
-  untracedRoot := NEW(Object, 
-                      name := NEW(Qid, intf := nullAtm,
-                                  item := Atom.FromText("UNTRACED ROOT")),
-                      traced := FALSE,
-                      fields := NEW(REF ARRAY OF Field, 0),
-                      methods := NEW(REF ARRAY OF Method, 0));
-  null          := NEW(Reference,
-                 name := NEW(Qid, intf := nullAtm, item := Atom.FromText("NULL")));
-  text          := NEW(Opaque,
-                 name := NEW(Qid, intf := nullAtm, item := Atom.FromText("TEXT")),
-                 revealedSuperType := refany); 
-  mutex         := NEW(Opaque,
-                 name := NEW(Qid, intf := nullAtm, item := Atom.FromText("MUTEX")),
-                 revealedSuperType := root);
+  char := NEW(Char, name := NEW(Qid, intf := nullAtm,
+                                item := Atom.FromText("CHAR")));
+  real := NEW(Real, name := NEW(Qid, intf := nullAtm,
+                                item := Atom.FromText("REAL")));
+  longreal :=
+    NEW(LongReal, name := NEW(Qid, intf := nullAtm,
+                              item := Atom.FromText("LONGREAL")));
+  extended :=
+    NEW(Extended, name := NEW(Qid, intf := nullAtm,
+                              item := Atom.FromText("EXTENDED")));
+  refany := NEW(Reference, name := NEW(Qid, intf := nullAtm,
+                                       item := Atom.FromText("REFANY")),
+                traced := TRUE);
+  address := NEW(Reference, name := NEW(Qid, intf := nullAtm,
+                                        item := Atom.FromText("ADDRESS")),
+                 traced := FALSE);
+  root := NEW(Object, name := NEW(Qid, intf := nullAtm,
+                                  item := Atom.FromText("ROOT")),
+              traced := TRUE, fields := NEW(REF ARRAY OF Field, 0),
+              methods := NEW(REF ARRAY OF Method, 0));
+  untracedRoot :=
+    NEW(Object, name := NEW(Qid, intf := nullAtm,
+                            item := Atom.FromText("UNTRACED ROOT")),
+        traced := FALSE, fields := NEW(REF ARRAY OF Field, 0),
+        methods := NEW(REF ARRAY OF Method, 0));
+  null := NEW(Reference, name := NEW(Qid, intf := nullAtm,
+                                     item := Atom.FromText("NULL")));
+  text := NEW(Opaque, name := NEW(Qid, intf := nullAtm,
+                                  item := Atom.FromText("TEXT")),
+              revealedSuperType := refany);
+  mutex := NEW(Opaque, name := NEW(Qid, intf := nullAtm,
+                                   item := Atom.FromText("MUTEX")),
+               revealedSuperType := root);
 END Type.

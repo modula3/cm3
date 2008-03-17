@@ -20,98 +20,98 @@ PROCEDURE ToText (t: Type.T; byName: BOOLEAN := TRUE): Text.T =
     IF t = NIL THEN RETURN "" END;
     IF t.name # NIL AND byName THEN RETURN QidToText(t.name); END;
     TYPECASE t OF
-      | Type.Char => RETURN "CHAR"
-      | Type.WideChar => RETURN "WIDECHAR"
-      | Type.UserDefined (ud) =>
-          IF NUMBER(ud.elts^) = 0 THEN text := "";
-          ELSE
-            text := Atom.ToText(ud.elts[0]);
-            FOR i := 1 TO LAST(ud.elts^) DO
-              text := text & ", " & Atom.ToText(ud.elts[i]);
-            END;
+    | Type.Char => RETURN "CHAR"
+    | Type.WideChar => RETURN "WIDECHAR"
+    | Type.UserDefined (ud) =>
+      IF NUMBER(ud.elts^) = 0 THEN text := "";
+      ELSE
+        text := Atom.ToText(ud.elts[0]);
+        FOR i := 1 TO LAST(ud.elts^) DO
+          text := text & ", " & Atom.ToText(ud.elts[i]);
+        END;
+      END;
+      RETURN "{" & text & "}";
+    | Type.Enumeration (enum) =>
+      IF enum = Type.boolean THEN RETURN "BOOLEAN"; END;
+      StubUtils.Die("CodeForType.ToText: unsupported enumeration type");
+    | Type.Subrange (sub) =>
+      VAR
+        min, max: INTEGER;
+        ud      : Type.UserDefined;
+      BEGIN
+        IF sub = Type.integer THEN RETURN "INTEGER" END;
+        IF sub = Type.longint THEN RETURN "LONGINT" END;
+        IF sub.base = Type.longint THEN
+          WITH min = NARROW(sub.min, Value.Longint).val,
+               max = NARROW(sub.max, Value.Longint).val DO
+            RETURN "[" & Fmt.LongInt(min) & "L.." & Fmt.LongInt(max) & "L]";
           END;
-          RETURN "{" & text & "}";
-      | Type.Enumeration (enum) =>
-          IF enum = Type.boolean THEN RETURN "BOOLEAN"; END;
-          StubUtils.Die("CodeForType.ToText: unsupported enumeration type");
-      | Type.Subrange (sub) =>
-          VAR min, max: INTEGER;
-              ud: Type.UserDefined;
-          BEGIN
-            IF sub = Type.integer THEN RETURN "INTEGER" END;
-            IF sub = Type.longint THEN RETURN "LONGINT" END;
-            IF sub.base = Type.longint THEN
-              WITH min = NARROW(sub.min, Value.Longint).val,
-                   max = NARROW(sub.max, Value.Longint).val DO
-                RETURN "[" & Fmt.LongInt(min) & "L.." & Fmt.LongInt(max) & "L]";
-              END;
-            END;
-            min := NARROW(sub.min, Value.Integer).val;
-            max := NARROW(sub.max, Value.Integer).val;
-            IF sub.base = Type.integer OR sub.base = Type.cardinal THEN RETURN
-               "[" & Fmt.Int(min) &  ".." & Fmt.Int(max) &"]"
-            END;
-            IF sub.base = Type.char THEN RETURN
-               "[VAL(" & Fmt.Int(min) &  ", CHAR) .. VAL(" &
-                     Fmt.Int(max) & ", CHAR)]"
-            END;
-            ud := NARROW(sub.base, Type.UserDefined);
-            RETURN "[" & ToText(sub.base) & "." & Atom.ToText(ud.elts[min]) &
-                    ".." & ToText(sub.base) & "." & Atom.ToText(ud.elts[max]) &
-                     "]";
-          END;
-      | Type.Real => RETURN "REAL";
-      | Type.LongReal => RETURN "LONGREAL";
-      | Type.Extended => RETURN "EXTENDED";
-      | Type.Reference (ref) =>
-          TYPECASE ref OF
-          | Type.Opaque (o) =>
-            (* Type can only be displayed by name *)
-            RETURN "***Error*** Opaque type only printed by name: "
-                    & "supertype " & ToText(o.revealedSuperType);
-            (* RETURN Atom.ToText(t.name.intf) & "." & Atom.ToText(t.name.item)*)
-          | Type.Object, Type.Ref =>
-            IF ref.brand # NIL THEN
-              text := "BRANDED \"" &  Atom.ToText(ref.brand) & "\" ";
-            ELSE
-              text := ""
-            END;
-            TYPECASE ref OF
-            | Type.Object(o) =>
-              RETURN ToText(o.super) & " " & text & "OBJECT" & Wr.EOL &
-                     FieldsToText(o.fields) & Wr.EOL
-                  & "METHODS" & Wr.EOL
-                  & MethodsToText(o.methods) & Wr.EOL
-                  & "END";
-            | Type.Ref (r) =>
-              IF NOT r.traced THEN text := "UNTRACED " & text END;
-              RETURN text & "REF " & ToText(r.target, TRUE);
-            ELSE StubUtils.Die("CodeForType.ToText: unsupported reference type");
-            END;
-          ELSE StubUtils.Die("CodeForType.ToText: unsupported reference type");
-          END;
-      | Type.Array (arr) =>
-          IF arr.index = NIL THEN
-            text := "";
-          ELSE
-            text := ToText(arr.index);
-          END;
-          RETURN "ARRAY " & text & " OF " & ToText(arr.element);
-      | Type.Packed (p) =>
-          RETURN "BITS " & Fmt.Int(p.size) & "FORF " & ToText(p.base);
-      | Type.Record (rec) =>
-            RETURN "RECORD " & FieldsToText(rec.fields) & " END";
-      | Type.Set (set) =>
-          RETURN "SET OF " & ToText(set.range);
-      | Type.Procedure  =>
-          RETURN "PROCEDURE" (* & SigToText(proc.sig);*)
-      ELSE StubUtils.Die("CodeForType.ToText: unsupported type");
+        END;
+        min := NARROW(sub.min, Value.Integer).val;
+        max := NARROW(sub.max, Value.Integer).val;
+        IF sub.base = Type.integer OR sub.base = Type.cardinal THEN RETURN
+          "[" & Fmt.Int(min) &  ".." & Fmt.Int(max) &"]"
+        END;
+        IF sub.base = Type.char THEN RETURN
+          "[VAL(" & Fmt.Int(min) &  ", CHAR) .. VAL(" &
+            Fmt.Int(max) & ", CHAR)]"
+        END;
+        ud := NARROW(sub.base, Type.UserDefined);
+        RETURN "[" & ToText(sub.base) & "." & Atom.ToText(ud.elts[min]) &
+               ".." & ToText(sub.base) & "." & Atom.ToText(ud.elts[max]) &
+               "]";
+      END;
+    | Type.Real => RETURN "REAL";
+    | Type.LongReal => RETURN "LONGREAL";
+    | Type.Extended => RETURN "EXTENDED";
+    | Type.Reference (ref) =>
+      TYPECASE ref OF
+      | Type.Opaque (o) =>
+        (* Type can only be displayed by name *)
+        RETURN "***Error*** Opaque type only printed by name: "
+        & "supertype " & ToText(o.revealedSuperType);
+        (* RETURN Atom.ToText(t.name.intf) & "." & Atom.ToText(t.name.item)*)
+      | Type.Object, Type.Ref =>
+        IF ref.brand # NIL THEN
+          text := "BRANDED \"" & Atom.ToText(ref.brand) & "\" ";
+        ELSE
+          text := ""
+        END;
+        TYPECASE ref OF
+        | Type.Object(o) =>
+          RETURN ToText(o.super) & " " & text & "OBJECT" & Wr.EOL &
+                 FieldsToText(o.fields) & Wr.EOL
+          & "METHODS" & Wr.EOL
+          & MethodsToText(o.methods) & Wr.EOL
+          & "END";
+        | Type.Ref (r) =>
+          IF NOT r.traced THEN text := "UNTRACED " & text END;
+          RETURN text & "REF " & ToText(r.target, TRUE);
+        ELSE StubUtils.Die("CodeForType.ToText: unsupported reference type");
+        END;
+      ELSE StubUtils.Die("CodeForType.ToText: unsupported reference type");
+      END;
+    | Type.Array (arr) =>
+      IF arr.index = NIL THEN
+        text := "";
+      ELSE
+        text := ToText(arr.index);
+      END;
+      RETURN "ARRAY " & text & " OF " & ToText(arr.element);
+    | Type.Packed (p) =>
+      RETURN "BITS " & Fmt.Int(p.size) & "FORF " & ToText(p.base);
+    | Type.Record (rec) =>
+      RETURN "RECORD " & FieldsToText(rec.fields) & " END";
+    | Type.Set (set) => RETURN "SET OF " & ToText(set.range);
+    | Type.Procedure => RETURN "PROCEDURE" (* & SigToText(proc.sig);*)
+    ELSE
+      StubUtils.Die("CodeForType.ToText: unsupported type");
     END;
 
     RETURN NIL;
   END ToText;
 
-PROCEDURE QidToText(qid: Type.Qid): TEXT =
+PROCEDURE QidToText (qid: Type.Qid): TEXT =
   BEGIN
     IF qid.intf = nullAtm THEN
       RETURN Atom.ToText(qid.item)
@@ -120,19 +120,18 @@ PROCEDURE QidToText(qid: Type.Qid): TEXT =
     END;
   END QidToText;
 
-
-PROCEDURE ProcHeader(f: Formatter.T;
-                     objType: Type.Object;
-                     procName: TEXT;
-                     sig: Type.Signature;
-                     argPragmas: REF ARRAY OF TEXT := NIL;
-                     suffix := "") =
+PROCEDURE ProcHeader (f         : Formatter.T;
+                      objType   : Type.Object;
+                      procName  : TEXT;
+                      sig       : Type.Signature;
+                      argPragmas: REF ARRAY OF TEXT := NIL;
+                      suffix := "") =
   VAR exceptList:= NEW(AtomRefTbl.Default).init();
       ename: TEXT;
       firstException := TRUE;
   BEGIN
-    Formatter.Begin(f,4);
-    Formatter.Begin(f,4);
+    Formatter.Begin(f, 4);
+    Formatter.Begin(f, 4);
     Formatter.PutText(f, "PROCEDURE " & procName & "(");
     Formatter.UnitedBreak(f);
     Formatter.PutText(f, "self: " & QidToText(objType.name));
@@ -165,8 +164,9 @@ PROCEDURE ProcHeader(f: Formatter.T;
   END ProcHeader;
 
 PROCEDURE FieldsToText (f: REF ARRAY OF Type.Field): TEXT =
-  VAR notFirst := FALSE;
-      text := "";
+  VAR
+    notFirst := FALSE;
+    text     := "";
   BEGIN
     FOR i := 0 TO LAST(f^) DO
       IF notFirst THEN text := text & "; "; END;
@@ -180,15 +180,16 @@ PROCEDURE FieldsToText (f: REF ARRAY OF Type.Field): TEXT =
   END FieldsToText;
 
 PROCEDURE MethodsToText (m: REF ARRAY OF Type.Method): TEXT =
-  VAR notFirst := FALSE;
-      text := "";
+  VAR
+    notFirst := FALSE;
+    text     := "";
   BEGIN
     FOR i := 0 TO LAST(m^) DO
       IF notFirst THEN text := text & ";" & Wr.EOL; END;
       notFirst := TRUE;
       text := text & Atom.ToText(m[i].name) (*& SigToText(m[i].sig);*);
       IF m[i].default # NIL THEN
-        text := text & ":= " ;
+        text := text & ":= ";
 (*
         TYPECASE m[i].default OF
           MethodDefault1 (md1) => text := text & QidToText(md1.qid);
@@ -201,12 +202,13 @@ PROCEDURE MethodsToText (m: REF ARRAY OF Type.Method): TEXT =
     RETURN text;
   END MethodsToText;
 
-PROCEDURE Formals(fmtr: Formatter.T;
-                  f: REF ARRAY OF Type.Formal;
-                  argPragmas: REF ARRAY OF TEXT;
-                  suffix := "") =
-  VAR notFirst := FALSE;
-      modeName := ARRAY Type.Mode OF TEXT {"", "VAR ", "READONLY "};
+PROCEDURE Formals (fmtr      : Formatter.T;
+                   f         : REF ARRAY OF Type.Formal;
+                   argPragmas: REF ARRAY OF TEXT;
+                   suffix                                 := "") =
+  VAR
+    notFirst := FALSE;
+    modeName := ARRAY Type.Mode OF TEXT{"", "VAR ", "READONLY "};
   BEGIN
     FOR i := 0 TO LAST(f^) DO
       Formatter.PutText(fmtr, "; ");
@@ -218,9 +220,9 @@ PROCEDURE Formals(fmtr: Formatter.T;
       Formatter.PutText(fmtr, modeName[f[i].mode] &
         Atom.ToText(f[i].name) & suffix & ": " & ToText(f[i].type));
 (*
-        IF f[i].default # NIL THEN
-          text := text & ":= " & ValueProc.ToText(f[i].default, f[i].type);
-        END;
+      IF f[i].default # NIL THEN
+        text := text & ":= " & ValueProc.ToText(f[i].default, f[i].type);
+      END;
 *)
     END;
   END Formals;

@@ -45,6 +45,7 @@ PROCEDURE InitAstTable (astTable: RefRefTbl.T) =
     EVAL astTable.put(M3CStdTypes.Root(), Type.root);
     EVAL astTable.put(M3CStdTypes.Untraced_Root(), Type.untracedRoot);
     EVAL astTable.put(M3CStdTypes.Char(), Type.char);
+    EVAL astTable.put(M3CStdTypes.WideChar(), Type.widechar);
     EVAL astTable.put(M3CStdTypes.Text(), Type.text);
     EVAL astTable.put(M3CStdTypes.Cardinal(), Type.cardinal);
     EVAL astTable.put(M3CStdTypes.Boolean(), Type.boolean);
@@ -87,6 +88,7 @@ PROCEDURE ProcessTypeSpec (astMap: RefRefTbl.T;
       | M3AST_AS.Extended_type => t := Type.extended;
       | M3AST_AS.Integer_type => t := Type.integer;
       | M3AST_AS.Longint_type => t := Type.longint;
+      | M3AST_AS.WideChar_type => t := Type.widechar;
       | M3AST_AS.Null_type => t := Type.null;
       | M3AST_AS.RefAny_type => t := Type.refany;
       | M3AST_AS.Address_type => t := Type.address;
@@ -437,4 +439,3 @@ PROCEDURE AddToTable (astMap: RefRefTbl.T;
 
 BEGIN
 END AstToType.
-
