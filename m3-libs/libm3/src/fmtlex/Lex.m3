@@ -8,7 +8,7 @@
 (*      modified on Thu Apr 29 16:40:03 PDT 1993 by muller                   *)
 
 MODULE Lex;
-IMPORT IEEESpecial, FloatMode, Rd, Word, Text;
+IMPORT IEEESpecial, FloatMode, Rd, Word, Long, Text;
 IMPORT RealFloat, LongFloat, ExtendedFloat;
 FROM Thread IMPORT Alerted;
 
@@ -240,6 +240,122 @@ PROCEDURE Int(rd: Rd.T; defaultBase: [2..16] := 10): INTEGER
 PROCEDURE Unsigned(rd: Rd.T; defaultBase: [2..16] := 16): Word.T
     RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted} =
   BEGIN RETURN ReadNumber(rd, defaultBase, signed := FALSE) END Unsigned;
+
+PROCEDURE ReadLongUnsigned(rd: Rd.T; c: CHAR; base: [2..16];
+                           noBasedInt := FALSE):
+    Long.T RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted} =
+(* Read an unsigned integer of the form "SmallBaseNum" or "BigBaseNum" (see
+   the specification for "Lex.Integer") as "base" is at most 10 or exceeds 10,
+   respectively. If "noBasedInt", then don't allow an explicit base prefix
+   (i.e., read an unsigned integer of the form "DecVal" or "HexVal" as "base"
+   is at most 10 or exceeds 10, respectively).
+
+   Raises "Error" if no legal digits were read, or if some digit in the stream
+   is not a legal digit in the chosen base. Raises "FloatMode.Trap" with
+   argument "FloatMode.Flag.IntOverflow" if the value exceeds the largest
+   value representable by a "Word.T". *)
+  CONST
+    MaxWord = Long.Not(0L);
+  VAR
+    digit: [0..15];
+    digitsSeen, specBase: CARDINAL := 0;
+    seenUnderscore := noBasedInt;
+    badDigit, overflow := FALSE;
+    fastUB := Long.Divide(Long.Minus(MaxWord, VAL(base, LONGINT)-1L),
+                          VAL(base, LONGINT));
+    slowUB := Long.Divide(MaxWord, VAL(base, LONGINT));
+    res: Long.T := 0L;
+  BEGIN
+    LOOP
+      CASE c OF
+        '0'..'9' =>
+          digit := ORD(c) - ORD('0');
+          IF digitsSeen < 2 THEN specBase := specBase * 10 + digit END
+      | 'a'..'f' =>
+          IF base <= 10 THEN Rd.UnGetChar(rd); EXIT END;
+          digit := ORD(c) - ORD('a') + 10;
+      | 'A'..'F' =>
+          IF base <= 10 THEN Rd.UnGetChar(rd); EXIT END;
+          digit := ORD(c) - ORD('A') + 10;
+      | '_' =>
+          (* finish if the preceeding base is not one of "2", "3", ..., "16" *)
+          IF seenUnderscore OR digitsSeen > 2
+             OR specBase < 2 OR specBase > 16
+             OR (digitsSeen > 1 AND specBase < 10) THEN
+            Rd.UnGetChar(rd); EXIT
+          END;
+          seenUnderscore := TRUE;
+          (* reinitialize state for new base*)
+          base := specBase;
+          fastUB := Long.Divide(Long.Minus(MaxWord, VAL(base, LONGINT)-1L),
+                                VAL(base, LONGINT));
+          slowUB := Long.Divide(MaxWord, VAL(base, LONGINT));
+          digitsSeen := 0;
+          badDigit := FALSE;
+          overflow := FALSE;
+          res := 0L;
+      ELSE Rd.UnGetChar(rd); EXIT
+      END;
+      IF c # '_' THEN
+	INC(digitsSeen);
+	IF digit >= base THEN
+	  badDigit := TRUE
+	ELSIF Long.LE(res, fastUB) THEN
+          (* fast path *)
+	  res := Long.Plus(Long.Times(res, VAL(base, LONGINT)),
+                           VAL(digit, LONGINT))
+        ELSIF Long.LE(res, slowUB) THEN
+          (* slow path *)
+          res := Long.Times(res, VAL(base, LONGINT));
+          IF VAL(digit, LONGINT) <= Long.Minus(MaxWord, res)
+            THEN res := Long.Plus(res, VAL(digit, LONGINT))
+            ELSE overflow := TRUE
+          END
+        ELSE
+	  overflow := TRUE
+	END
+      END;
+      TRY c := Rd.GetChar(rd) EXCEPT Rd.EndOfFile => EXIT END
+    END;
+    IF digitsSeen = 0 OR badDigit THEN RAISE Error END;
+    IF overflow THEN RAISE FloatMode.Trap(FloatMode.Flag.IntOverflow) END;
+    RETURN res
+  END ReadLongUnsigned;
+
+PROCEDURE ReadLongNumber(rd: Rd.T; defaultBase: [2..16]; signed: BOOLEAN):
+    Long.T RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted} =
+(* Raises "FloatMode.Trap(FloatMode.Flag.IntOverflow)" if the read number
+   exceeds a "Word.T" or if "signed = TRUE" and the read number exceeds
+   "LAST(LONGINT)" when the sign is positive or exceeds "-FIRST(LONGINT)" when
+   the sign is negative. *)
+  VAR c: CHAR; sign: [0..1]; res: Long.T; BEGIN
+    Skip(rd, Blanks);
+    TRY
+      c := Rd.GetChar(rd);
+      IF signed
+        THEN sign := ReadSign(rd, c)
+        ELSE sign := 0
+      END
+    EXCEPT
+      Rd.EndOfFile => RAISE Error
+    END;
+    res := ReadLongUnsigned(rd, c, defaultBase);
+    IF signed AND
+       ((sign = 0 AND Long.GT(res, LAST(LONGINT))) OR
+        (sign = 1 AND Long.GT(res, -FIRST(LONGINT)))) THEN
+      RAISE FloatMode.Trap(FloatMode.Flag.IntOverflow)
+    END;
+    IF sign = 1 THEN res := - res END;
+    RETURN res
+  END ReadLongNumber;
+
+PROCEDURE LongInt(rd: Rd.T; defaultBase: [2..16] := 10): LONGINT
+    RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted} =
+  BEGIN RETURN ReadLongNumber(rd, defaultBase, signed := TRUE) END LongInt;
+
+PROCEDURE LongUnsigned(rd: Rd.T; defaultBase: [2..16] := 16): Long.T
+    RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted} =
+  BEGIN RETURN ReadLongNumber(rd, defaultBase, signed := FALSE) END LongUnsigned;
 
 CONST
   DigitBufSz = 40;
