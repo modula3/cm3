@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.70 2008-03-16 23:11:47 jkrell Exp $
+# $Id: pylib.py,v 1.71 2008-03-17 04:38:55 jkrell Exp $
 
 import os
 from os import getenv
@@ -1388,6 +1388,7 @@ GenericCommand:
 
     for p in PackageDirectories:
         print("== package %(p)s ==" % vars())
+        print("")
         ExitCode = _Run(NoAction, ActionCommands, p)
         if ExitCode != 0:
             Success = False
