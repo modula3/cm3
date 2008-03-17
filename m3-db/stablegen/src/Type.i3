@@ -172,6 +172,7 @@ TYPE
 
 VAR (* READONLY *)
   integer       : Subrange;
+  longint       : Subrange;
   cardinal      : Subrange;
   boolean       : UserDefined;
   char          : Char;

@@ -517,15 +517,19 @@ PROCEDURE MarshalTypedVal (fmtWr     : Formatter.T;
       | Type.Subrange (sub) =>
           IF t = Type.integer THEN
             StableLogCall(fmtWr, "Integer", varName, d);
+          ELSIF t = Type.longint THEN
+            StableLogCall(fmtWr, "Longint", varName, d);
           ELSIF t = Type.cardinal THEN
             StableLogCall(fmtWr, "Cardinal", varName, d);
           ELSIF d = Direction.Log THEN       (* no value range check
                                                 when writing *)
-            StableLogCall(fmtWr, "Integer", varName, d);
+            IF sub.base = Type.longint THEN
+              StableLogCall(fmtWr, "Longint", varName, d);
+            ELSE
+              StableLogCall(fmtWr, "Integer", varName, d);
+            END
           ELSE
-            SubRange(
-              fmtWr, varName, t, d, NARROW(sub.min, Value.Ordinal).ord,
-              NARROW(sub.max, Value.Ordinal).ord);
+            SubRange(fmtWr, varName, t, d, sub.min, sub.max);
           END;
       | Type.Real => StableLogCall(fmtWr, "Real", varName, d);
       | Type.LongReal =>
@@ -598,37 +602,28 @@ PROCEDURE SubRange (fmtWr   : Formatter.T;
                     varName : TEXT;
                     t       : Type.Subrange;
                     d       : Direction;
-                    min, max: INTEGER        ) =
+                    min, max: Value.T) =
   BEGIN
-    IF t.base = Type.integer OR t.base = t THEN
-      (* To prevent the overflow in integer literals when
-         attempting to write FIRST(INTERGER) as a literal
-         (remember that you will have to write -(LAST(INTEGER)+1))
-
-         In order to be able to compile code that explicitly declares
-         32 bit integers on both ALPHAs and MIPs I do not use
-         FIRST(INTEGER) but the literal value of FIRST(INTEGER) on
-         32 bit machines. This will not harm on the 64 bit machine
-         and will work on the 32 bit machine. If someone compiles
-         a subrange spanning over more than 32 bits on an 64 bit
-         machine, this will not be detected and lead to an error
-         when compiling for a 32 bit machine.
-      *)
-      IF min = -16_7FFFFFFF-1 THEN
-        StableLogCall(
-            fmtWr, "Integer", varName, d,
-            ", -16_7FFFFFFF-1, " & Fmt.Int(max));
-      ELSE
-        StableLogCall(
-            fmtWr, "Integer", varName, d,
-            ", " & Fmt.Int(min) & ", " & Fmt.Int(max));
+    IF t = Type.longint OR t.base = Type.longint THEN
+      WITH min = NARROW(min, Value.Longint).val,
+           max = NARROW(max, Value.Longint).val DO
+        StableLogCall(fmtWr, "Longint", varName, d,
+                      ", " & Fmt.LongInt(min) & ", " & Fmt.LongInt(max));
+      END
+    ELSIF t = Type.integer OR t.base = Type.integer THEN
+      WITH min = NARROW(min, Value.Integer).val,
+           max = NARROW(max, Value.Integer).val DO
+        StableLogCall(fmtWr, "Integer", varName, d,
+                      ", " & Fmt.Int(min) & ", " & Fmt.Int(max));
       END
     ELSE
       TYPECASE t.base OF
       | Type.Enumeration =>
+        WITH min = NARROW(min, Value.Integer).val,
+             max = NARROW(max, Value.Integer).val DO
           Enumeration(fmtWr, varName, t.base, d, min, max);
-      | Type.Subrange =>
-          SubRange(fmtWr, varName, t.base, d, min, max);
+        END
+      | Type.Subrange => SubRange(fmtWr, varName, t.base, d, min, max);
       ELSE
         StablegenError.Fatal("runtime error in GenModuleCode");
       END (*TYPECASE*)
