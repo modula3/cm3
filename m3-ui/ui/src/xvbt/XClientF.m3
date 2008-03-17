@@ -465,7 +465,7 @@ PROCEDURE Connect (inst: TEXT; trsl: T := NIL): Trestle.T
         TRY
           LOCK openMu DO
             IF firstTime THEN
-	      TrslOnXF.Init();
+              TrslOnXF.Init();
               firstTime := FALSE;
               EVAL Thread.Fork(NEW(InitClosure))
             END;

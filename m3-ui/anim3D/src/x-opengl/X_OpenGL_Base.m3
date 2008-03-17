@@ -309,7 +309,7 @@ PROCEDURE Init (self: T; title: TEXT; x, y, w, h: INTEGER): T
                              LOOPHOLE (cstr,
                                        Ctypes.unsigned_char_star),
                              Text.Length (title));
-	  M3toC.FreeSharedS(title, cstr);
+          M3toC.FreeSharedS(title, cstr);
           (* ask the WM to send ClientMessage events when f.kill is chosen *)
           EVAL X.XSetWMProtocols (dpy, window, ADR (conn.wm_delete_window), 1);
 
