@@ -9,7 +9,7 @@
 
 UNSAFE MODULE Fmt;
 
-IMPORT Text, Text8, Text8Short, (**Text8Literal,**) Word, Convert, FmtBuf, FmtBufF;
+IMPORT Text, Text8, Text8Short, Word, Long, Convert, FmtBuf, FmtBufF;
 IMPORT Real AS R, LongReal AS LR, Extended AS ER;
 IMPORT RealFloat, LongFloat, ExtendedFloat;
 
@@ -48,21 +48,6 @@ CONST
      "100"
   };
 
-PROCEDURE LongInt(n: LONGINT; base: Base := 10): TEXT =
-  BEGIN
-    IF VAL(FIRST(SmallInts), LONGINT) <= n AND n <= VAL(LAST(SmallInts), LONGINT) AND base = 10
-      THEN RETURN SmallInts[ORD(n)]
-      ELSE RETURN AnyLongInt(n, base)
-    END
-  END LongInt;
-
-PROCEDURE AnyLongInt (n: LONGINT; base: Base := 10): TEXT =
-  <* FATAL Convert.Failed *>
-  VAR chars: ARRAY [0..BITSIZE(LONGINT)] OF CHAR; used: INTEGER; BEGIN
-    used := Convert.FromLongInt(chars, n, base, prefix := FALSE);
-    RETURN Text.FromChars(SUBARRAY(chars, 0, used))
-  END AnyLongInt;
-
 PROCEDURE Int (n: INTEGER; base: Base := 10): TEXT =
   BEGIN
     IF FIRST(SmallInts) <= n AND n <= LAST(SmallInts) AND base = 10
@@ -92,6 +77,36 @@ PROCEDURE AnyUnsigned (n: Word.T; base: Base := 10): TEXT =
     used := Convert.FromUnsigned (chars, n, base, prefix := FALSE);
     RETURN Text.FromChars(SUBARRAY(chars, 0, used))
   END AnyUnsigned;
+
+PROCEDURE LongInt(n: LONGINT; base: Base := 10): TEXT =
+  BEGIN
+    IF VAL(FIRST(SmallInts), LONGINT) <= n AND n <= VAL(LAST(SmallInts), LONGINT) AND base = 10
+      THEN RETURN SmallInts[ORD(n)]
+      ELSE RETURN AnyLongInt(n, base)
+    END
+  END LongInt;
+
+PROCEDURE AnyLongInt (n: LONGINT; base: Base := 10): TEXT =
+  <* FATAL Convert.Failed *>
+  VAR chars: ARRAY [0..BITSIZE(LONGINT)] OF CHAR; used: INTEGER; BEGIN
+    used := Convert.FromLongInt(chars, n, base, prefix := FALSE);
+    RETURN Text.FromChars(SUBARRAY(chars, 0, used))
+  END AnyLongInt;
+
+PROCEDURE LongUnsigned (n: Long.T; base: Base := 10): TEXT =
+  BEGIN
+    IF 0L <= n AND n <= VAL(LAST(SmallInts), LONGINT) AND base = 10
+      THEN RETURN SmallInts[ORD(n)]
+      ELSE RETURN AnyLongUnsigned (n, base)
+    END
+  END LongUnsigned;
+
+PROCEDURE AnyLongUnsigned (n: Long.T; base: Base := 10): TEXT =
+  <* FATAL Convert.Failed *>
+  VAR chars: ARRAY [0..BITSIZE(LONGINT)-1] OF CHAR; used: INTEGER; BEGIN
+    used := Convert.FromLongUnsigned (chars, n, base, prefix := FALSE);
+    RETURN Text.FromChars(SUBARRAY(chars, 0, used))
+  END AnyLongUnsigned;
 
 (* Floating-point values --------------------------------------------------- *)
 
