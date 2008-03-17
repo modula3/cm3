@@ -16,7 +16,7 @@ PROCEDURE Equal (a, b : T) : BOOLEAN =
     RETURN a.n = b.n AND a.v = b.v;
   END Equal;
 
-REVEAL 
+REVEAL
   T = PrivateT BRANDED OBJECT
   OVERRIDES
     init          := InitT;
@@ -52,7 +52,7 @@ PROCEDURE AdjustT (self : T; time : LONGREAL; caller : GO.T) =
 (* Type "Name"                                                               *)
 (*****************************************************************************)
 
-REVEAL 
+REVEAL
   Name = PrivateName BRANDED OBJECT
   OVERRIDES
     init   := InitName;
@@ -82,7 +82,7 @@ PROCEDURE DamageName (self : Name; caller : GO.T) =
 (*****************************************************************************)
 
 
-REVEAL 
+REVEAL
   Val = PrivateVal BRANDED OBJECT END;
 
 
@@ -94,7 +94,7 @@ REVEAL
   Beh = ProxiedObj.T BRANDED OBJECT END;
 
 
-REVEAL 
+REVEAL
   Request = PublicRequest BRANDED OBJECT
   OVERRIDES
     init := InitRequest;
@@ -123,8 +123,8 @@ REVEAL
 (*****************************************************************************)
 
 
-TYPE 
-  NameList = REF RECORD 
+TYPE
+  NameList = REF RECORD
     this : Name;
     next : NameList;
   END;

@@ -8,12 +8,12 @@
 
 MODULE SpotLightGO EXPORTS SpotLightGO, SpotLightGOProxy;
 
-IMPORT BooleanPropPrivate, Color, ColorPropPrivate, GO, GOPrivate, 
-       GraphicsBase, GraphicsBasePrivate, LightGO, Point3, PointProp, 
+IMPORT BooleanPropPrivate, Color, ColorPropPrivate, GO, GOPrivate,
+       GraphicsBase, GraphicsBasePrivate, LightGO, Point3, PointProp,
        PointPropPrivate, Prop, RealProp, RealPropPrivate;
 
 
-PROCEDURE New (c : Color.T; orig, dir : Point3.T; 
+PROCEDURE New (c : Color.T; orig, dir : Point3.T;
                conc, spread, att0, att1 : REAL) : T =
   VAR
     light := NEW (T).init ();
@@ -54,7 +54,7 @@ PROCEDURE Init (self : T) : T =
 PROCEDURE DamageIfDependent (self : T; pn : Prop.Name) =
   BEGIN
     IF pn = LightGO.Switch OR pn = LightGO.Colour OR pn = GO.Transform OR
-       pn = Origin OR pn = Direction OR pn = Concentration OR 
+       pn = Origin OR pn = Direction OR pn = Concentration OR
        pn = SpreadAngle OR pn = Attenuation0 OR pn = Attenuation1 THEN
       self.damaged := TRUE;
     END;
@@ -72,7 +72,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
            conc   = Concentration.getState (state),
            spread = SpreadAngle.getState (state),
            att0   = Attenuation0.getState (state),
-           att1   = Attenuation1.getState (state) DO 
+           att1   = Attenuation1.getState (state) DO
         state.addSpotLight (color, orig, dir, conc, spread, att0, att1);
       END;
     END;

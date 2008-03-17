@@ -8,7 +8,7 @@
 
 MODULE TorusGO EXPORTS TorusGO, TorusGOProxy;
 
-IMPORT GO, GOPrivate, GraphicsBase, GraphicsBasePrivate, Matrix4, Point3, 
+IMPORT GO, GOPrivate, GraphicsBase, GraphicsBasePrivate, Matrix4, Point3,
        PointProp, PointPropPrivate, Prop, RealProp, RealPropPrivate;
 
 
@@ -56,11 +56,11 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
     state.push (self);
 
     WITH center  = Center.getState (state),
-         normal  = Normal.getState (state), 
+         normal  = Normal.getState (state),
          radius1 = Radius1.getState (state),
          radius2 = Radius2.getState (state) DO
 
-    
+
       IF center # self.center OR normal # self.normal OR radius1 # self.radius1
       THEN
         self.center  := center;
@@ -91,8 +91,8 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
 (*****************************************************************************)
 
 
-PROCEDURE New (center, normal   : Point3.T; 
-               radius1, radius2 : REAL; 
+PROCEDURE New (center, normal   : Point3.T;
+               radius1, radius2 : REAL;
                prec : INTEGER)  : T =
   VAR
     torus := NEW (T).init (prec);

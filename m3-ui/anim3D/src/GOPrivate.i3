@@ -37,13 +37,13 @@ TYPE
     undamage();
   END;
 
-(* "go.damageIfDependent(pn)" leaves a damage trail from "go" to all 
-   descendants of "go" (including "go") that depend on "pn". 
+(* "go.damageIfDependent(pn)" leaves a damage trail from "go" to all
+   descendants of "go" (including "go") that depend on "pn".
 
    "go.adjust(time)" reevaluates all property values attached to "go" and
-   its descendants, based on the given time. It also might add damages to 
+   its descendants, based on the given time. It also might add damages to
    the scene, either to "go" or to some of its children. Damaging a node
-   causes damage to all its ancestors as well. 
+   causes damage to all its ancestors as well.
 
    "go.undamage" erases the damage-flags of "go" and its descendents. *)
 

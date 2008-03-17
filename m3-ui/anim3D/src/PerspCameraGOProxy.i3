@@ -10,10 +10,10 @@ INTERFACE PerspCameraGOProxy;
 
 FROM PerspCameraGO IMPORT T;
 
-(* The Proxy Maker (PM) procedure for PerspCameraGO.T is 
+(* The Proxy Maker (PM) procedure for PerspCameraGO.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END PerspCameraGOProxy.

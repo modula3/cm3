@@ -29,7 +29,7 @@ TYPE
   END;
 
   Beh <: PublicBeh;
-  PublicBeh = Prop.Beh OBJECT 
+  PublicBeh = Prop.Beh OBJECT
   METHODS
     init () : Beh;
   END;
@@ -47,9 +47,9 @@ TYPE
     init (ah : AnimHandle.T; r : Base) : SyncBeh;
     addRequest (r : Request) RAISES {Prop.BadInterval};
   (* shortcuts for particular instances of "addRequest" *)
-    linChangeTo (r : Base; start := 0.0; dur := 0.0) 
+    linChangeTo (r : Base; start := 0.0; dur := 0.0)
         RAISES {Prop.BadInterval};
-    linChangeBy (r : Base; start := 0.0; dur := 0.0) 
+    linChangeBy (r : Base; start := 0.0; dur := 0.0)
         RAISES {Prop.BadInterval};
   END;
 
@@ -68,7 +68,7 @@ TYPE
   END;
 
   Request <: PublicRequest;
-  PublicRequest = Prop.Request OBJECT 
+  PublicRequest = Prop.Request OBJECT
   METHODS
     init (start, dur : REAL) : Request;
     value (startval : Base; reltime : REAL) : Base RAISES {Prop.BadMethod};

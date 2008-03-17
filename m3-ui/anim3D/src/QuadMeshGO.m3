@@ -8,14 +8,14 @@
 
 MODULE QuadMeshGO EXPORTS QuadMeshGO, QuadMeshGOProxy;
 
-IMPORT BSphere, Color, GO, GOPrivate, GraphicsBase, GraphicsBasePrivate, 
+IMPORT BSphere, Color, GO, GOPrivate, GraphicsBase, GraphicsBasePrivate,
        Point3;
 
-REVEAL 
+REVEAL
   T = Public BRANDED OBJECT
-    pts   : REF ARRAY OF ARRAY OF Point3.T; 
+    pts   : REF ARRAY OF ARRAY OF Point3.T;
     shape : GO.Shape;
-    cols  : REF ARRAY OF ARRAY OF Color.T; 
+    cols  : REF ARRAY OF ARRAY OF Color.T;
     bs    : BSphere.T;
   OVERRIDES
     init              := Init;
@@ -25,21 +25,21 @@ REVEAL
   END;
 
 
-PROCEDURE Init (self : T; 
-                READONLY pts : ARRAY OF ARRAY OF Point3.T; 
+PROCEDURE Init (self : T;
+                READONLY pts : ARRAY OF ARRAY OF Point3.T;
                 s : GO.Shape) : T =
   VAR
     min, max : Point3.T;
   BEGIN
     EVAL GO.T.init (self);
-    self.pts := NEW (REF ARRAY OF ARRAY OF Point3.T, 
-                     NUMBER(pts), NUMBER(pts[0])); 
+    self.pts := NEW (REF ARRAY OF ARRAY OF Point3.T,
+                     NUMBER(pts), NUMBER(pts[0]));
     self.pts^ := pts;
-    self.shape := s; 
+    self.shape := s;
     self.cols := NIL;
 
-    (* Compute a bounding sphere. Precision is not that relevant, as long as 
-       our guess is conservative (i.e. the sphere indeed contains the entire 
+    (* Compute a bounding sphere. Precision is not that relevant, as long as
+       our guess is conservative (i.e. the sphere indeed contains the entire
        quad-mesh). *)
 
     (* First, compute a bounding box containing all points of the quadmesh. *)
@@ -80,7 +80,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
         state.growBoundingVolume (self.bs.center, self.bs.radius);
       END;
 
-      IF self.cols = NIL THEN 
+      IF self.cols = NIL THEN
         state.drawQuadMesh (self.pts^, self.shape);
       ELSE
         state.drawColoredQuadMesh (self.pts^, self.cols^, self.shape);
@@ -90,7 +90,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
       state.closeDisplayList ();
     ELSE
       (* Even if we can used the cached quad mesh, we have to grow the
-         global bounding volume. In order to do so, we have to push the 
+         global bounding volume. In order to do so, we have to push the
          state (since "growBoundingVolume" uses the current transformation
          to map the bounding sphere into world coordinates). *)
       IF NUMBER (self.pts^) > 0 AND NUMBER (self.pts[0]) > 0 THEN
@@ -108,7 +108,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
       state.growBoundingVolume (self.bs.center, self.bs.radius);
     END;
 
-    IF self.cols = NIL THEN 
+    IF self.cols = NIL THEN
       state.drawQuadMesh (self.pts^, self.shape);
     ELSE
       state.drawColoredQuadMesh (self.pts^, self.cols^, self.shape);
@@ -119,7 +119,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
   END Draw;
 
 
-PROCEDURE AddFacetColors (self : T; READONLY cols : ARRAY OF ARRAY OF Color.T) 
+PROCEDURE AddFacetColors (self : T; READONLY cols : ARRAY OF ARRAY OF Color.T)
     RAISES {BadSize} =
   BEGIN
     self.damaged := TRUE;
@@ -133,8 +133,8 @@ PROCEDURE AddFacetColors (self : T; READONLY cols : ARRAY OF ARRAY OF Color.T)
   END AddFacetColors;
 
 
-PROCEDURE SetColorOfFacet (self : T; i, j : INTEGER; c : Color.T) 
-    RAISES {ColorsUndefined} = 
+PROCEDURE SetColorOfFacet (self : T; i, j : INTEGER; c : Color.T)
+    RAISES {ColorsUndefined} =
   BEGIN
     self.damaged := TRUE;
     IF self.cols = NIL THEN

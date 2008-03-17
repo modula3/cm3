@@ -10,10 +10,10 @@ INTERFACE GroupGOProxy;
 
 FROM GroupGO IMPORT T;
 
-(* The Proxy Maker (PM) procedure for GroupGO.T is 
+(* The Proxy Maker (PM) procedure for GroupGO.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END GroupGOProxy.

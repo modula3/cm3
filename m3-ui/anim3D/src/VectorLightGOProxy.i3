@@ -10,10 +10,10 @@ INTERFACE VectorLightGOProxy;
 
 FROM VectorLightGO IMPORT T;
 
-(* The Proxy Maker (PM) procedure for VectorLightGO.T is 
+(* The Proxy Maker (PM) procedure for VectorLightGO.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END VectorLightGOProxy.

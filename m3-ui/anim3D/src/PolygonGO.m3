@@ -8,7 +8,7 @@
 
 MODULE PolygonGO EXPORTS PolygonGO, PolygonGOProxy;
 
-IMPORT AnimServer, BSphere, GO, GOPrivate, GraphicsBase, GraphicsBasePrivate, 
+IMPORT AnimServer, BSphere, GO, GOPrivate, GraphicsBase, GraphicsBasePrivate,
        Point3, PointProp, PointPropPrivate, Prop, PropPrivate, SurfaceGO;
 
 REVEAL T = SurfaceGO.T BRANDED "PolygonGO.T" OBJECT END;
@@ -23,15 +23,15 @@ TYPE
     shape  : GO.Shape;
     bs     : BSphere.T;
   METHODS
-    init (READONLY pts : ARRAY OF Point3.T; s : GO.Shape) : Static 
+    init (READONLY pts : ARRAY OF Point3.T; s : GO.Shape) : Static
       := InitStatic;
   OVERRIDES
     draw := DrawStatic;
   END;
 
 
-PROCEDURE InitStatic (self         : Static; 
-                      READONLY pts : ARRAY OF Point3.T; 
+PROCEDURE InitStatic (self         : Static;
+                      READONLY pts : ARRAY OF Point3.T;
                       s            : GO.Shape) : Static =
   VAR
     min, max : Point3.T;
@@ -41,8 +41,8 @@ PROCEDURE InitStatic (self         : Static;
     self.pts^ := pts;
     self.shape := s;
 
-    (* Compute a bounding sphere. Precision is not that relevant, as long as 
-       our guess is conservative (i.e. the sphere indeed contains the entire 
+    (* Compute a bounding sphere. Precision is not that relevant, as long as
+       our guess is conservative (i.e. the sphere indeed contains the entire
        polygon). *)
 
     (* First, compute a bounding box containing all points of the polygon. *)
@@ -84,7 +84,7 @@ PROCEDURE DrawStatic (self : Static; state : GraphicsBase.T) =
   END DrawStatic;
 
 
-PROCEDURE NewStatic (READONLY pts : ARRAY OF Point3.T; 
+PROCEDURE NewStatic (READONLY pts : ARRAY OF Point3.T;
                      s := GO.Shape.Unknown) : T =
   BEGIN
     RETURN NEW (Static).init (pts, s);
@@ -102,7 +102,7 @@ TYPE
     pts   : REF ARRAY OF Point3.T;
     shape : GO.Shape;
   METHODS
-    init (READONLY pvs : ARRAY OF PointProp.Val; s : GO.Shape) : Dynamic 
+    init (READONLY pvs : ARRAY OF PointProp.Val; s : GO.Shape) : Dynamic
       := InitDynamic;
   OVERRIDES
     adjust := AdjustDynamic;
@@ -110,8 +110,8 @@ TYPE
   END;
 
 
-PROCEDURE InitDynamic (self         : Dynamic; 
-                       READONLY pvs : ARRAY OF PointProp.Val; 
+PROCEDURE InitDynamic (self         : Dynamic;
+                       READONLY pvs : ARRAY OF PointProp.Val;
                        s            : GO.Shape) : Dynamic =
   BEGIN
     EVAL GO.T.init (self);
@@ -154,8 +154,8 @@ PROCEDURE DrawDynamic (self : Dynamic; state : GraphicsBase.T) =
   BEGIN
     state.push (self);
 
-    (* Compute a bounding sphere. Precision is not that relevant, as long as 
-       our guess is conservative (i.e. the sphere indeed contains the entire 
+    (* Compute a bounding sphere. Precision is not that relevant, as long as
+       our guess is conservative (i.e. the sphere indeed contains the entire
        polygon). *)
 
     (* First, compute a bounding box containing all points of the polygon. *)
@@ -184,7 +184,7 @@ PROCEDURE DrawDynamic (self : Dynamic; state : GraphicsBase.T) =
   END DrawDynamic;
 
 
-PROCEDURE New (READONLY pts : ARRAY OF PointProp.Val; 
+PROCEDURE New (READONLY pts : ARRAY OF PointProp.Val;
                s := GO.Shape.Unknown) : T =
   BEGIN
     RETURN NEW (Dynamic).init (pts, s);

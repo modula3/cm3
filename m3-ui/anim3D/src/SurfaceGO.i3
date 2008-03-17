@@ -7,7 +7,7 @@
 
 
 (* A "SurfaceGO.T" is a geometric objects which is composed of surfaces
-   (as opposed to lines). Surfaces differ from non-surfaces in a number of 
+   (as opposed to lines). Surfaces differ from non-surfaces in a number of
    ways:
    \begin{itemize}
    \item Surfaces interact with light sources, non-surfaces don't
@@ -17,11 +17,11 @@
 
 INTERFACE SurfaceGO;
 
-IMPORT BooleanProp, Color, ColorProp, GO, LineTypeProp, RasterModeProp, 
+IMPORT BooleanProp, Color, ColorProp, GO, LineTypeProp, RasterModeProp,
        RealProp, ShadingProp;
 
 TYPE T <: GO.T;
-(* A "SurfaceGO.T" is a subtype of \type{GO}{T}. No additional fields or 
+(* A "SurfaceGO.T" is a subtype of \type{GO}{T}. No additional fields or
    methods are revealed to the user. *)
 
 VAR
@@ -42,74 +42,74 @@ VAR
   EdgeType                 : LineTypeProp.Name;
   EdgeWidth                : RealProp.Name;
 
-(* In addition to the properties observed by all \type{GO}{T}'s, there are 
+(* In addition to the properties observed by all \type{GO}{T}'s, there are
    various additional properties that are observed by "SurfaceGO.T"'s:
 
-   "DistinguishFacets" is the name of a boolean property that decides whether 
+   "DistinguishFacets" is the name of a boolean property that decides whether
    front- and back-faces of surfaces should be distinguished. If this property
-   is not specified, front- and back-faces are not distinguished. 
+   is not specified, front- and back-faces are not distinguished.
 
    {\em NOTE: In order for this property to make sense, I should introduce
    other surface-related properties: All properties from "Colour" to
    "Shading" could have backface analogs.}
 
-   "Color" is the name of a color property that specifies the color of the 
+   "Color" is the name of a color property that specifies the color of the
    surface. If this property is not specified, the surface is drawn in white.
 
-   "RasterMode" is the name of an raster mode property that specifies what 
-   rasterization technique is used to draw the surface (solid, hollow, or 
+   "RasterMode" is the name of an raster mode property that specifies what
+   rasterization technique is used to draw the surface (solid, hollow, or
    empty). If this property is not specified, the surface is drawn solid.
 
    "AmbientReflectionCoeff" is the name of a real property that specifies the
-   ambient reflection coefficient of the surface. If this property is not 
+   ambient reflection coefficient of the surface. If this property is not
    specified, the ambient reflection coefficient is taken to be 0.5.
 
    "DiffuseReflectionCoeff" is the name of a real property that specifies the
-   diffuse reflection coefficient of the surface. If this property is not 
+   diffuse reflection coefficient of the surface. If this property is not
    specified, the diffuse reflection coefficient is taken to be 1.
 
    "SpecularReflectionCoeff" is the name of a real property that specifies the
-   specular reflection coefficient of the surface. If this property is not 
+   specular reflection coefficient of the surface. If this property is not
    specified, the specular reflection coefficient is taken to be 0.
 
-   "SpecularReflectionConc" is the name of a real property that specifies the 
+   "SpecularReflectionConc" is the name of a real property that specifies the
    specular reflection concentration of the surface. If this property is not
    specified, the specular reflection concentration is taken to be 0.
 
-   "TransmissionCoeff" is the name of a real property that specifies the 
-   transparency of the surface (with 0 being completely opaque and 1 being 
-   completely transparent). If this property is not specified, the 
+   "TransmissionCoeff" is the name of a real property that specifies the
+   transparency of the surface (with 0 being completely opaque and 1 being
+   completely transparent). If this property is not specified, the
    transmission coefficient is taken to be 0.
 
-   "SpecularReflectionColour" is the name of a color property that specifies 
-   the color of specular reflected light. If this property is not specified, 
+   "SpecularReflectionColour" is the name of a color property that specifies
+   the color of specular reflected light. If this property is not specified,
    the specular reflection color is taken to be white.
 
-   "Lighting" is the name of a boolean property that decides whether or not 
-   lighting and shading computations shall be performed. If this property is 
+   "Lighting" is the name of a boolean property that decides whether or not
+   lighting and shading computations shall be performed. If this property is
    not specified, lighting and shading computations are performed.
 
-   "Shading" is the name of a shading property that specifies what shading 
-   method shall be used. If this property is not specified, flat shading is 
+   "Shading" is the name of a shading property that specifies what shading
+   method shall be used. If this property is not specified, flat shading is
    used.
 
    "EdgeVisibility" is the name of a boolean property that specifies whether
-   or not the edges of the individual polygons of the surface shall be 
+   or not the edges of the individual polygons of the surface shall be
    outlined. If this property is not specified, no surface edges will be drawn.
 
    "EdgeColour" is the name of a color property that determines the color
-   of the surface edges (if they are visible). If this property is not 
+   of the surface edges (if they are visible). If this property is not
    specified and edges are visible, they are drawn in white.
 
    "EdgeType" is the name of a line type property that determines the line
-   type of the surface edges (provided they are visible). If this property 
+   type of the surface edges (provided they are visible). If this property
    is not specified and edges are visible, they are drawn solid.
 
-   "EdgeWidth" is the name of a real property that determines the width of the 
+   "EdgeWidth" is the name of a real property that determines the width of the
    surface edges (provided they are visible). If this property is not specified
-   and edges are visible, they are drawn with a width of 1. 
+   and edges are visible, they are drawn with a width of 1.
 
-   The following procedures provide sugaring to attach surface-related 
+   The following procedures provide sugaring to attach surface-related
    properties to geometric objects: *)
 
 PROCEDURE SetDistinguishFacets (o : GO.T; v : BOOLEAN);

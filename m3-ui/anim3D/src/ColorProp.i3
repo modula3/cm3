@@ -29,7 +29,7 @@ TYPE
   END;
 
   Beh <: PublicBeh;
-  PublicBeh = Prop.Beh OBJECT 
+  PublicBeh = Prop.Beh OBJECT
   METHODS
     init () : Beh;
   END;
@@ -47,7 +47,7 @@ TYPE
     init (ah : AnimHandle.T; p : Base) : SyncBeh;
     addRequest (r : Request) RAISES {Prop.BadInterval};
   (* shortcuts for particular instances of "addRequest" *)
-    rgbLinChangeTo (p : Base; start := 0.0; dur := 0.0) 
+    rgbLinChangeTo (p : Base; start := 0.0; dur := 0.0)
         RAISES {Prop.BadInterval};
   END;
 
@@ -66,10 +66,10 @@ TYPE
   END;
 
   Request <: PublicRequest;
-  PublicRequest = Prop.Request OBJECT 
+  PublicRequest = Prop.Request OBJECT
   METHODS
     init (start, dur : REAL) : Request;
-    value (startcolor : Base; reltime : REAL) : Base 
+    value (startcolor : Base; reltime : REAL) : Base
         RAISES {Prop.BadMethod};
   END;
 

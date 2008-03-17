@@ -10,37 +10,37 @@ INTERFACE MarkerTypePropPrivate;
 
 IMPORT GraphicsBase, Prop, PropPrivate;
 
-FROM MarkerTypeProp IMPORT 
+FROM MarkerTypeProp IMPORT
   Kind, Name, PublicName, Val, PublicVal, Beh, PublicBeh;
 
-REVEAL 
+REVEAL
   Name <: PrivateName;
 
-TYPE 
+TYPE
   PrivateName = PublicName OBJECT
   METHODS
     init (default : Kind) : Name;
     getState (base : GraphicsBase.T) : Kind;
   END;
 
-REVEAL 
+REVEAL
   Val <: PrivateVal;
 
-TYPE 
+TYPE
   PrivateVal = PublicVal OBJECT
     val : Kind;        (* The cache is updated by calling "adjust". *)
   END;
 
-REVEAL 
+REVEAL
   Beh <: PrivateBeh;
 
-TYPE 
+TYPE
   PrivateBeh = PublicBeh OBJECT
-  METHODS 
+  METHODS
     value (time : LONGREAL) : Kind RAISES {Prop.BadMethod};
   END;
 
-TYPE 
+TYPE
   Stack <: PublicStack;
   PublicStack = PropPrivate.Stack OBJECT
     top : Kind;

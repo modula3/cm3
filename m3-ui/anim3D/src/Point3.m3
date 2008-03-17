@@ -47,9 +47,9 @@ PROCEDURE Distance (a, b : T) : REAL =
 
 PROCEDURE ToText (a : T) : TEXT =
   BEGIN
-    RETURN "(" & Fmt.Real (a.x) & 
-           "," & Fmt.Real (a.y) & 
-           "," & Fmt.Real (a.z) & 
+    RETURN "(" & Fmt.Real (a.x) &
+           "," & Fmt.Real (a.y) &
+           "," & Fmt.Real (a.z) &
            ")";
   END ToText;
 
@@ -77,11 +77,11 @@ PROCEDURE CrossProduct (a, b : T) : T =
 PROCEDURE OrthoVector (n : T) : T =
   (* We are looking for a unit vector "m" that is orthogonal to "n". So, we
      have the following two equations to start with:
-     (1) "m" orthogonal "n", so "DotProduct(m,n)" = 0, 
+     (1) "m" orthogonal "n", so "DotProduct(m,n)" = 0,
          so m.x * n.x + m.y * n.y + m.z * n.z = 0
      (2) "m" is a unit vector, so sqrt(m.x^2 + m.y^2 + m.z^2) = 1
      So we have 3 unknowns (m.x, m.y, and m.z) and 3 equations, leaving us
-     with one degree of freedom. 
+     with one degree of freedom.
      If n.x # 0, and we set m.z to 0, we can solve the system to:
         m.xx = 1 / sqrt(1 + (n.x^2 / n.y^2))
         m.y = - (n.x / n.y) / sqrt(1 + (n.x^2 / n.y^2))

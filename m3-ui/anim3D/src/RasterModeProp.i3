@@ -12,16 +12,16 @@ IMPORT AnimHandle, Prop;
 
 TYPE
   Kind = {Hollow, Solid, Empty};
-(* "Kind" enumerates the three possible ways a surface can be shown: 
+(* "Kind" enumerates the three possible ways a surface can be shown:
    "Solid", which means that the surface is filled with the surface color,
-   "Hollow", which means that only the edges of the polygons forming the 
-   surface are drawn, again in the surface colour, and "Empty", which means 
+   "Hollow", which means that only the edges of the polygons forming the
+   surface are drawn, again in the surface colour, and "Empty", which means
    that the surface is not drawn at all.
 
-   PEX 5.0 defines these three rasterization modes (or ``Interior Style'' 
-   in PEX terminology) for surfaces, plus two more, "Pattern" and "Hatch". 
+   PEX 5.0 defines these three rasterization modes (or ``Interior Style''
+   in PEX terminology) for surfaces, plus two more, "Pattern" and "Hatch".
    However, Digital's implementation of PEX does not support those two styles,
-   so we don't support them either. 
+   so we don't support them either.
 
    OpenGL has a more general way of defining rasterization modes (or ``Polygon
    Modes'' in OpenGL terminology). Therefore, it is likely that we will extend
@@ -44,7 +44,7 @@ TYPE
   END;
 
   Beh <: PublicBeh;
-  PublicBeh = Prop.Beh OBJECT 
+  PublicBeh = Prop.Beh OBJECT
   METHODS
     init () : Beh;
   END;
@@ -80,7 +80,7 @@ TYPE
   END;
 
   Request <: PublicRequest;
-  PublicRequest = Prop.Request OBJECT 
+  PublicRequest = Prop.Request OBJECT
   METHODS
     init (start, dur : REAL) : Request;
     value (startkind : Kind; reltime : REAL) : Kind RAISES {Prop.BadMethod};

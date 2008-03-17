@@ -10,10 +10,10 @@ INTERFACE AnimHandleProxy;
 
 FROM AnimHandle IMPORT T;
 
-(* The Proxy Maker (PM) procedure for AnimHandle.T is 
+(* The Proxy Maker (PM) procedure for AnimHandle.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END AnimHandleProxy.

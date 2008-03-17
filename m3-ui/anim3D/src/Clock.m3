@@ -10,7 +10,7 @@ MODULE Clock;
 
 FROM Time IMPORT Now;
 
-REVEAL 
+REVEAL
   T = Public BRANDED OBJECT
   OVERRIDES
     init := Init;
@@ -29,7 +29,7 @@ PROCEDURE Time (<* UNUSED *> self : T) : LONGREAL =
     RETURN Now () - clockstart;
   END Time;
 
-VAR 
+VAR
   clockstart := Now ();
 
 BEGIN

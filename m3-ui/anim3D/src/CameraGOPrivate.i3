@@ -14,7 +14,7 @@ FROM CameraGO IMPORT T;
 
 REVEAL T <: Private;
 
-TYPE 
+TYPE
   Private = GO.T BRANDED OBJECT
     flag : BOOLEAN;   (* TRUE if camera has been drawn *)
   METHODS

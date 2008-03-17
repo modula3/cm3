@@ -8,7 +8,7 @@
 
 MODULE DiskGO EXPORTS DiskGO, DiskGOProxy;
 
-IMPORT GO, GOPrivate, GraphicsBase, GraphicsBasePrivate, Matrix4, Point3, 
+IMPORT GO, GOPrivate, GraphicsBase, GraphicsBasePrivate, Matrix4, Point3,
        PointProp, PointPropPrivate, Prop, RealProp, RealPropPrivate;
 
 
@@ -55,7 +55,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
   BEGIN
     state.push (self);
     WITH center = Center.getState (state),
-         normal = Normal.getState (state), 
+         normal = Normal.getState (state),
          radius = Radius.getState (state) DO
 
       IF center # self.center OR normal # self.normal OR radius # self.radius THEN

@@ -31,13 +31,13 @@ VAR
 (* Locking Order: "externalLock" must be acquired before "internalLock". *)
 
 PROCEDURE IsServer(): BOOLEAN;
-(* Debugging procedure. Access to the X display connection must be 
-   single-threaded. One way to ensure that is through a locking scheme 
-   (Trestle does it that way); another way is by designating a single 
-   thread to be the only one allowed to access the X connection. 
-   We chose the second approach. The animation server thread is the 
-   only thread allowed to call X and PEX proceures. We can ensure proper 
-   calling patterns by inserting <* ASSERT AnimServer.IsServer() *> 
+(* Debugging procedure. Access to the X display connection must be
+   single-threaded. One way to ensure that is through a locking scheme
+   (Trestle does it that way); another way is by designating a single
+   thread to be the only one allowed to access the X connection.
+   We chose the second approach. The animation server thread is the
+   only thread allowed to call X and PEX proceures. We can ensure proper
+   calling patterns by inserting <* ASSERT AnimServer.IsServer() *>
    pragmas before every X/PEX call. *)
 
 PROCEDURE NewDisplayList (go: GO.T): INTEGER;
@@ -45,10 +45,10 @@ PROCEDURE NewDisplayList (go: GO.T): INTEGER;
 
 EXCEPTION SolverError (TEXT);
 
-VAR 
+VAR
   SolverHook: PROCEDURE (time: LONGREAL): BOOLEAN RAISES {SolverError} := NIL;
 (* If "SolverHook" is non-NIL, it will be called by the animation server after
-   events have been processed and before property values are adjusted.  
+   events have been processed and before property values are adjusted.
    The newest version of Obliq-3D uses "SolverHook" to interface with the
    Juno-2 constraint solver. *)
 

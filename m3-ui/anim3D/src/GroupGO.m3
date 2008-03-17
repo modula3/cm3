@@ -56,7 +56,7 @@ PROCEDURE Add (self : T; o : GO.T) =
       self.damaged := TRUE;
       INC (self.last);
       IF self.last > LAST (self.children^) THEN
-        WITH n   = NUMBER (self.children^), 
+        WITH n   = NUMBER (self.children^),
              tmp = NEW (REF ARRAY OF GO.T, 2 * n) DO
           SUBARRAY (tmp^, 0, n) := self.children^;
           self.children := tmp;
@@ -112,7 +112,7 @@ PROCEDURE Content (self : T) : REF ARRAY OF GO.T =
 
 PROCEDURE FindName (self : T; name : TEXT) : GO.T =
   BEGIN
-    (* No interference with the animation server. Possible interference with 
+    (* No interference with the animation server. Possible interference with
        other client threads; client code has to provide adequate protection. *)
     IF GO.T.findName (self, name) # NIL THEN
       RETURN self;
@@ -154,7 +154,7 @@ PROCEDURE NeedsTransparency (self : T; t : REAL) : BOOLEAN =
     IF self.trans # FIRST(REAL) THEN
       t := self.trans;
     END;
-    
+
     FOR i := 0 TO self.last DO
       IF self.children[i].needsTransparency (t) THEN
         RETURN TRUE;
@@ -164,11 +164,11 @@ PROCEDURE NeedsTransparency (self : T; t : REAL) : BOOLEAN =
   END NeedsTransparency;
 
 
-PROCEDURE Adjust (self : T; time : LONGREAL) = 
+PROCEDURE Adjust (self : T; time : LONGREAL) =
   BEGIN
     (*** adjust properties of self ***)
     GO.T.adjust (self, time);
-    
+
     FOR i := 0 TO self.last DO
       self.children[i].adjust (time);
       IF self.children[i].damaged THEN

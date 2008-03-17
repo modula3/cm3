@@ -13,7 +13,7 @@ IMPORT AnimServer, CB, GraphicsBase, GraphicsBasePrivate,
        PositionCBStack, Prop, PropList, PropPrivate, RealProp,
        RealPropPrivate, SurfaceGO, Text, TransformProp, TransformPropPrivate;
 
-REVEAL 
+REVEAL
   T = Private BRANDED OBJECT
   OVERRIDES
     init := Init;
@@ -103,7 +103,7 @@ PROCEDURE UnsetProp (self : T; pn : Prop.Name) RAISES {PropUndefined} =
         plist := plist.tail;
       ELSE
         Unset (plist.tail);
-      END;  
+      END;
     END Unset;
 
   BEGIN
@@ -123,12 +123,12 @@ PROCEDURE UnsetProp (self : T; pn : Prop.Name) RAISES {PropUndefined} =
   END UnsetProp;
 
 
-PROCEDURE GetProp (self : T; pn : Prop.Name) : Prop.Val 
+PROCEDURE GetProp (self : T; pn : Prop.Name) : Prop.Val
     RAISES {PropUndefined} =
   VAR
     tmp : PropList.T;
   BEGIN
-    (* No interference with the animation server. Possible interference with 
+    (* No interference with the animation server. Possible interference with
        other client threads; client code has to provide adequate protection. *)
 
     tmp := self.props;
@@ -168,7 +168,7 @@ PROCEDURE FindName (self : T; name : TEXT) : T =
     END;
   END FindName;
 
-      
+
 (*****************************************************************************)
 (* Callback-related methods                                                  *)
 (*****************************************************************************)
@@ -263,7 +263,7 @@ PROCEDURE InvokeKeyCB (self : T; kr : KeyCB.Rec) =
 (*****************************************************************************)
 
 
-PROCEDURE DamageIfDependent (<* UNUSED *> self : T; 
+PROCEDURE DamageIfDependent (<* UNUSED *> self : T;
                              <* UNUSED *> pn   : Prop.Name) =
   BEGIN
     (* by default, a GO is not interested in anything *)
@@ -292,13 +292,13 @@ PROCEDURE Undamage (self: T) =
   BEGIN
     self.damaged := FALSE;
   END Undamage;
-    
+
 
 (*****************************************************************************)
 (* TransformPN                                                               *)
 (*****************************************************************************)
 
-TYPE 
+TYPE
   Transform_PN = TransformProp.Name OBJECT
   OVERRIDES
     damage  := DamageTransform;
@@ -314,8 +314,8 @@ PROCEDURE DamageTransform (self : Transform_PN; caller : T) =
   END DamageTransform;
 
 
-PROCEDURE PushTransform (self  : Transform_PN; 
-                         state : GraphicsBase.T; 
+PROCEDURE PushTransform (self  : Transform_PN;
+                         state : GraphicsBase.T;
                          pv    : Prop.Val) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], TransformPropPrivate.Stack),
@@ -325,7 +325,7 @@ PROCEDURE PushTransform (self  : Transform_PN;
       state.pushMatrix (m);
 
       (* Push the composite transformation matrix onto the state stack.
-         This matrix differs from the local transformation matrix on top 
+         This matrix differs from the local transformation matrix on top
          of the PEX matrix stack. *)
       stack.push (Matrix4.Multiply (stack.top, m));
     END;

@@ -10,10 +10,10 @@ INTERFACE CylinderGOProxy;
 
 FROM CylinderGO IMPORT T;
 
-(* The Proxy Maker (PM) procedure for CylinderGO.T is 
+(* The Proxy Maker (PM) procedure for CylinderGO.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END CylinderGOProxy.

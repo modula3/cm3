@@ -29,7 +29,7 @@ TYPE
   END;
 
   Beh <: PublicBeh;
-  PublicBeh = Prop.Beh OBJECT 
+  PublicBeh = Prop.Beh OBJECT
   METHODS
     init () : Beh;
   END;
@@ -65,10 +65,10 @@ TYPE
   END;
 
   Request <: PublicRequest;
-  PublicRequest = Prop.Request OBJECT 
+  PublicRequest = Prop.Request OBJECT
   METHODS
     init (start, dur : REAL) : Request;
-    value (startbool : Base; reltime : REAL) : Base 
+    value (startbool : Base; reltime : REAL) : Base
         RAISES {Prop.BadMethod} ;
   END;
 

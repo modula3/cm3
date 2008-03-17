@@ -18,9 +18,9 @@ REVEAL
   END;
 
 
-PROCEDURE Init (<*UNUSED*> self      : T; 
-                <*UNUSED*> title     : TEXT; 
-                <*UNUSED*> x, y, w, h: INTEGER): T 
+PROCEDURE Init (<*UNUSED*> self      : T;
+                <*UNUSED*> title     : TEXT;
+                <*UNUSED*> x, y, w, h: INTEGER): T
     RAISES {GraphicsBase.Failure} =
   BEGIN
     RAISE GraphicsBase.Failure;

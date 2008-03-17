@@ -13,23 +13,23 @@ IMPORT AnimHandle, Prop;
 TYPE
   Kind = {Flat, Gouraud};
 
-(* "Kind" enumerates the supported shading methods. Here is what they do, 
+(* "Kind" enumerates the supported shading methods. Here is what they do,
    straight from the PEX manual:
 
    "Flat": The color resulting from a single light source computation
    is used for the entire surface. No interpolation will be preformed
-   across surface interiors or edges. In PEXlib, this is called 
+   across surface interiors or edges. In PEXlib, this is called
    PEXSurfaceInterpNone; in OpenGL, it is called GL_FLAT.
 
    "Gouraud": The colors are computed at the vertices of the surface according
-   to the current reflection model. These color values are then interpolated 
-   across the interior of the surface or edges. In PEXlib, this is called 
+   to the current reflection model. These color values are then interpolated
+   across the interior of the surface or edges. In PEXlib, this is called
    PEXSurfaceInterpColour; in OpenGL, it is called GL_SMOOTH.
 
    The PEX 5.0 standard provides two more shading methods, dot-product shading
    (PEXSurfaceInterpDotProduct) and Phong shading (PEXSurfaceInterpNormal).
    However, most existing implementations of PEX (including the ones available
-   at SRC) do not support these two methods, and OpenGL does not provide them 
+   at SRC) do not support these two methods, and OpenGL does not provide them
    at all. So, we chose not to include them into Anim3D. *)
 
 
@@ -50,7 +50,7 @@ TYPE
   END;
 
   Beh <: PublicBeh;
-  PublicBeh = Prop.Beh OBJECT 
+  PublicBeh = Prop.Beh OBJECT
   METHODS
     init () : Beh;
   END;
@@ -86,7 +86,7 @@ TYPE
   END;
 
   Request <: PublicRequest;
-  PublicRequest = Prop.Request OBJECT 
+  PublicRequest = Prop.Request OBJECT
   METHODS
     init (start, dur : REAL) : Request;
     value (startkind : Kind; reltime : REAL) : Kind RAISES {Prop.BadMethod};

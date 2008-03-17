@@ -12,34 +12,34 @@ IMPORT GraphicsBase, Prop, PropPrivate;
 
 FROM TransformProp IMPORT Base, Name, PublicName, Val, PublicVal, Beh, PublicBeh;
 
-REVEAL 
+REVEAL
   Name <: PrivateName;
 
-TYPE 
+TYPE
   PrivateName = PublicName OBJECT
   METHODS
     init (READONLY default : Base) : Name;
     getState (base : GraphicsBase.T) : Base;
   END;
 
-REVEAL 
+REVEAL
   Val <: PrivateVal;
 
-TYPE 
+TYPE
   PrivateVal = PublicVal OBJECT
     val : Base;     (* The cache is updated by calling "adjust". *)
   END;
 
-REVEAL 
+REVEAL
   Beh <: PrivateBeh;
 
-TYPE 
+TYPE
   PrivateBeh = PublicBeh OBJECT
-  METHODS 
+  METHODS
     value (time : LONGREAL) : Base RAISES {Prop.BadMethod};
   END;
 
-TYPE 
+TYPE
   Stack <: PublicStack;
   PublicStack = PropPrivate.Stack OBJECT
     top : Base;

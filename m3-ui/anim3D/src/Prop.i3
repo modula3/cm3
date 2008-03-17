@@ -14,7 +14,7 @@ IMPORT ProxiedObj;
 CONST
   Brand = "Prop";
 
-TYPE 
+TYPE
   T    <: ProxiedObj.T;
   Name <: ProxiedObj.T;
   Val  <: ProxiedObj.T;

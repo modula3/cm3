@@ -22,22 +22,22 @@ TYPE
 
 (* "root.repair(damaged)" redraws the scene rooted at "root". Only those
    nodes that were marked as damaged are re-rendered, for the other nodes,
-   cached values are used. 
+   cached values are used.
 
-   Nodes can be damaged in two ways: 
+   Nodes can be damaged in two ways:
    \begin{enumerate}
    \item By operations that change the scene DAG (i.e.\ the group operations
          "add", "remove", and "flush").
-   \item By changes in the value of an attached property. 
+   \item By changes in the value of an attached property.
    \end{enumerate}
 
-   Calling "root.adjust(time)" serves two purposes: It reevaluates all the 
-   properties attached to all descendants of "root", and damages those nodes 
+   Calling "root.adjust(time)" serves two purposes: It reevaluates all the
+   properties attached to all descendants of "root", and damages those nodes
    whose properties have changed since the last round of rendering. It also
    propagates damages up the scene DAGs.
        "
-   "root.repair(damaged)" is called after all roots have been adjusted. The 
-   VAR parameter "damaged" is set to TRUE if there were any damages in the 
+   "root.repair(damaged)" is called after all roots have been adjusted. The
+   VAR parameter "damaged" is set to TRUE if there were any damages in the
    scene, otherwise, it remains unchanged. *)
 
 END RootGOPrivate.

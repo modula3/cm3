@@ -6,7 +6,7 @@
 (*       Created on Fri Feb 18 09:53:07 PST 1994 by najork                   *)
 
 
-(* In accordance with the terminology used by Trestle, we refer to key 
+(* In accordance with the terminology used by Trestle, we refer to key
    transitions as to {\em key events}. A key event is represented
    by a record "KeyCB.Rec".
 
@@ -24,13 +24,13 @@ IMPORT CB, ProxiedObj, VBT;
 
 TYPE
   T <: Public;
-  Public = ProxiedObj.T OBJECT 
+  Public = ProxiedObj.T OBJECT
   METHODS
     init () : T;
     invoke (kr : Rec) RAISES {CB.BadMethod};
   END;
-(* "KeyCB.T" is the abstract class of key callback objects. If "o" is a 
-   geometric object, "c" is the top object in its key callback stack, and 
+(* "KeyCB.T" is the abstract class of key callback objects. If "o" is a
+   geometric object, "c" is the top object in its key callback stack, and
    a key event "kr" gets relayed to "o", then "cb.invoke(kr)" will be called.
    It is up to the user to create subclasses of "KeyCB.T" that handle
    key events in a given context appropriately. *)
@@ -41,9 +41,9 @@ TYPE
     modifiers   : VBT.Modifiers;
   END;
 (* "KeyCB.Rec" is a record type containing information about a key event.
-   "whatChanged" is the key that went up or down, "wentDown" indicates 
+   "whatChanged" is the key that went up or down, "wentDown" indicates
    whether it went down or up.
-   "modifiers" is the set of modifiers (Shift, Control, Mouse Buttons, etc.) 
+   "modifiers" is the set of modifiers (Shift, Control, Mouse Buttons, etc.)
    that was active when the transition took place.
 
    {\em NOTE: There is a fair chance that I will add other fields to "Rec",

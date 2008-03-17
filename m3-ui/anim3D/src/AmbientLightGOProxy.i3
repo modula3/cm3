@@ -10,10 +10,10 @@ INTERFACE AmbientLightGOProxy;
 
 FROM AmbientLightGO IMPORT T;
 
-(* The Proxy Maker (PM) procedure for AmbientLightGO.T is 
+(* The Proxy Maker (PM) procedure for AmbientLightGO.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END AmbientLightGOProxy.

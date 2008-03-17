@@ -10,10 +10,10 @@ INTERFACE RootGOProxy;
 
 FROM RootGO IMPORT T;
 
-(* The Proxy Maker (PM) procedure for RootGO.T is 
+(* The Proxy Maker (PM) procedure for RootGO.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END RootGOProxy.

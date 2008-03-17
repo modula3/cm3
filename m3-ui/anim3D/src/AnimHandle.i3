@@ -7,25 +7,25 @@
 
 
 (* The 3D animation library supports two kinds of animations: synchronous
-   and asynchronous ones. 
+   and asynchronous ones.
 
    An asynchronous animation is performed by attaching an {\em unsynchronized
-   time-variant property value} "pv" to a geometric object "go". Attaching 
-   "pv" to "go" immediately starts to animate "go" in some fashion, the 
-   animation ends once "pv" is again detached. 
-   
+   time-variant property value} "pv" to a geometric object "go". Attaching
+   "pv" to "go" immediately starts to animate "go" in some fashion, the
+   animation ends once "pv" is again detached.
+
    A synchronous animation, on the other hand, is performed by attaching a
    {\em synchronized time-variant property value} "pv" to a geometric object
-   "go", and then issuing an animation request to "pv". Associated with each 
-   synchronous property value is an "AnimHandle.T". However, "pv" will not 
-   immediately start to change. 
+   "go", and then issuing an animation request to "pv". Associated with each
+   synchronous property value is an "AnimHandle.T". However, "pv" will not
+   immediately start to change.
 
-   The message "ah.animate()" will start to animate all time-varying property 
-   values tied to "ah". The call to "ah.animate()" will return only after 
-   these animations are completed. 
+   The message "ah.animate()" will start to animate all time-varying property
+   values tied to "ah". The call to "ah.animate()" will return only after
+   these animations are completed.
 
    Animation handles are monitored: only one thread can call "animate" at any
-   given time, and no thread can insert requests into the request queue of a 
+   given time, and no thread can insert requests into the request queue of a
    synchronous property value while "animate" is in progress.
 *)
 
@@ -33,19 +33,19 @@ INTERFACE AnimHandle;
 
 IMPORT ProxiedObj;
 
-TYPE 
+TYPE
   T <: Public;
   Public = ProxiedObj.T OBJECT
   METHODS
     init () : T;
     animate ();
   END;
-(* "ah.init()" initializes a new animation handle "ah" and returns it. 
+(* "ah.init()" initializes a new animation handle "ah" and returns it.
    "ah.animate()" triggers the animation of all synchronous property values
    that are tied to "ah". It returns when the animation is completed. *)
 
 PROCEDURE New () : T;
-(* "New" is a convenience procedure. The expression "New()" is equivalent 
+(* "New" is a convenience procedure. The expression "New()" is equivalent
    to "NEW(T).init()" *)
 
 END AnimHandle.

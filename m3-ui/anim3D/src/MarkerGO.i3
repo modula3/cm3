@@ -18,35 +18,35 @@ TYPE
   METHODS
     init () : T;
   END;
-(* "m.init()" initializes "m", and returns it. The location of the marker 
+(* "m.init()" initializes "m", and returns it. The location of the marker
    is determined by the property "Center". *)
 
-VAR 
+VAR
   Center : PointProp.Name;
   Colour : ColorProp.Name;
   Scale  : RealProp.Name;
   Type   : MarkerTypeProp.Name;
 
-(* In addition to the properties observed by all \type{GO}{T}'s, there are 
+(* In addition to the properties observed by all \type{GO}{T}'s, there are
    some additional properties that are observed by "MarkerGO.T"'s:
 
    "Center" is the name of a point property that describes the point indicated
    by the marker. If no "Center" property is specified, the marker is drawn at
-   the origin. 
+   the origin.
 
-   "Colour" is the name of a color property that describes the color of the 
+   "Colour" is the name of a color property that describes the color of the
    marker. If no "Colour" property is specified, the marker is drawn in white.
 
-   "Scale" is the name of a real property that describes the scale of the 
-   marker. If no "Scale" property is specified, the marker is drawn with 
+   "Scale" is the name of a real property that describes the scale of the
+   marker. If no "Scale" property is specified, the marker is drawn with
    scale 1.
 
-   "Type" is the name of a marker type property that describes the type of 
+   "Type" is the name of a marker type property that describes the type of
    the marker (dot, cross, circle, asterisk, or X). If no "Type" property
    is specified, the marker is drawn as an asterisk. *)
 
 PROCEDURE New (p : Point3.T) : T;
-(* "New(p)" creates a new marker and returns it. It also attaches the 
+(* "New(p)" creates a new marker and returns it. It also attaches the
    property "(Center,PointProp.NewConst(p))" to the new marker. *)
 
 (* The following four procedures provide sugaring to attach the

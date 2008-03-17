@@ -21,32 +21,32 @@ TYPE
 (* "l.init()" initializes "l" and returns it. The start- and endpoints of
    the line are determined by the properties "Point1" and "Point2". *)
 
-VAR 
+VAR
   Point1 : PointProp.Name;
   Point2 : PointProp.Name;
   Colour : ColorProp.Name;
   Width  : RealProp.Name;
   Type   : LineTypeProp.Name;
 
-(* In addition to the properties observed by all \type{GO}{T}'s, there are 
+(* In addition to the properties observed by all \type{GO}{T}'s, there are
    some additional properties that are observed by "LineGO.T"'s:
 
    "Point1" and "Point2" are the names of two point properties that describe
    the endpoints of the line. If "Point1" is not specified, the line starts
    at (0,0,0). If "Point2" is not specified, the line ends at (1,0,0).
 
-   "Colour" is the name of a color property that describes the color of 
+   "Colour" is the name of a color property that describes the color of
    the line. If no "Colour" property is specified, the line is drawn in white.
 
-   "Width" is the name of a real property that describes the width of the 
+   "Width" is the name of a real property that describes the width of the
    line. If no "Width" property is specified, the line is drawn with width 1.
 
-   "Type" is the name of a line type property that describes the type of 
+   "Type" is the name of a line type property that describes the type of
    the line (solid, dashed, dotted, or alternatingly dashed and dotted).
    If no "Type" property is specified, the line is drawn solid. *)
 
 PROCEDURE New (p1, p2 : Point3.T) : T;
-(* "New(p1,p2)" creates a new line and returns it. It also attaches the 
+(* "New(p1,p2)" creates a new line and returns it. It also attaches the
    following properties to the new line:
    \begin{verbatim}
      (Point1,PointProp.NewConst(p1))

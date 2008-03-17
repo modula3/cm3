@@ -5,7 +5,7 @@
 (* Created by Marc Najork                                                    *)
 (* Last modified on Thu Jul 14 10:33:29 PDT 1994 by najork                   *)
 
-(* A "Point3.T" is a point in 3-space. It is represented as a record 
+(* A "Point3.T" is a point in 3-space. It is represented as a record
    with three components, "x", "y", and "z", all holding real values. *)
 
 INTERFACE Point3;
@@ -19,7 +19,7 @@ CONST
   Origin = T {0.0, 0.0, 0.0};
   Min    = T {FIRST(REAL), FIRST(REAL), FIRST(REAL)};
   Max    = T {LAST (REAL), LAST (REAL), LAST (REAL)};
-(* "Origin" is the origin of the coordinate system. "Min" and "Max" are used 
+(* "Origin" is the origin of the coordinate system. "Min" and "Max" are used
    in bounding box calculations to represent imaginary smallest and largest
    points. *)
 
@@ -30,7 +30,7 @@ PROCEDURE Minus (a, b : T) : T;
 (* "Minus(a,b)" returns the difference between "a" and "b". *)
 
 PROCEDURE TimesScalar (a : T; x : REAL) : T;
-(* "TimesScalar(a,s)" returns "a" with each component 
+(* "TimesScalar(a,s)" returns "a" with each component
    multiplied with the scalar value "s". *)
 
 PROCEDURE MidPoint (a, b : T) : T;
@@ -50,11 +50,11 @@ PROCEDURE Length (a : T) : REAL;
 (* "Length(a)" returns the length of the vector "a". *)
 
 PROCEDURE DotProduct (a, b : T) : REAL;
-(* Returns the dot product of "a" and "b". See [Foley] p. 1094ff for an 
+(* Returns the dot product of "a" and "b". See [Foley] p. 1094ff for an
    explanation of the geometric significance of dot products. *)
 
 PROCEDURE CrossProduct (a, b : T) : T;
-(* Returns the cross product of "a" and "b". See [Foley] p. 1104ff for an 
+(* Returns the cross product of "a" and "b". See [Foley] p. 1104ff for an
    explanation of the geometric significance of cross products. One important
    property is that $a \times b$ is orthogonal to the plane described by the
    vectors "a" and "b". *)

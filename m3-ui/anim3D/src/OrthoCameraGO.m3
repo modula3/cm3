@@ -8,7 +8,7 @@
 
 MODULE OrthoCameraGO EXPORTS OrthoCameraGO, OrthoCameraGOProxy;
 
-IMPORT CameraGO, CameraGOPrivate, GO, GOPrivate, GraphicsBase, 
+IMPORT CameraGO, CameraGOPrivate, GO, GOPrivate, GraphicsBase,
        GraphicsBasePrivate, Matrix4, Point3, PointProp, PointPropPrivate, Prop,
        RealProp, RealPropPrivate, TransformPropPrivate;
 
@@ -48,7 +48,7 @@ PROCEDURE Init (self : T) : T =
 
 PROCEDURE DamageIfDependent (self : T; pn : Prop.Name) =
   BEGIN
-    IF pn = CameraGO.From OR pn = CameraGO.To OR pn = CameraGO.Up OR 
+    IF pn = CameraGO.From OR pn = CameraGO.To OR pn = CameraGO.Up OR
        pn = CameraGO.Aspect OR pn = Height OR pn = GO.Transform THEN
       self.damaged := TRUE;
     END;
@@ -57,7 +57,7 @@ PROCEDURE DamageIfDependent (self : T; pn : Prop.Name) =
 
 PROCEDURE Draw (self : T; state : GraphicsBase.T) =
   BEGIN
-    IF self.damaged THEN 
+    IF self.damaged THEN
       state.push (self);
 
       WITH tm   = GO.Transform.getState (state),
