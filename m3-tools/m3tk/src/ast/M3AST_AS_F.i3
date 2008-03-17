@@ -594,6 +594,7 @@ REVEAL
   M3AST_LX.LITERAL <: LITERAL;
   M3AST_AS.NUMERIC_LITERAL <: NUMERIC_LITERAL;
   M3AST_AS.Integer_literal <: Integer_literal;
+  M3AST_AS.Longint_literal <: Longint_literal;
   M3AST_AS.Real_literal <: Real_literal;
   M3AST_AS.LongReal_literal <: LongReal_literal;
   M3AST_AS.Extended_literal <: Extended_literal;

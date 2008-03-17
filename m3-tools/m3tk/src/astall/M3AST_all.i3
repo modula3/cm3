@@ -173,6 +173,7 @@ REVEAL
   M3AST_AS.EXP = Last_View.EXP BRANDED OBJECT END;
   M3AST_AS.NUMERIC_LITERAL = Last_View.NUMERIC_LITERAL BRANDED OBJECT END;
   M3AST_AS.Integer_literal = Last_View.Integer_literal BRANDED OBJECT END;
+  M3AST_AS.Longint_literal = Last_View.Longint_literal BRANDED OBJECT END;
   M3AST_AS.Real_literal = Last_View.Real_literal BRANDED OBJECT END;
   M3AST_AS.LongReal_literal = Last_View.LongReal_literal BRANDED OBJECT END;
   M3AST_AS.Extended_literal = Last_View.Extended_literal BRANDED OBJECT END;
