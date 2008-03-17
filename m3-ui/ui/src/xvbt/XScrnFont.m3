@@ -565,7 +565,7 @@ PROCEDURE DeepInitFontOracle (orc: DeepFontOracle; st: XScreenType.T):
 
 EXCEPTION FatalError;
 
-PROCEDURE Crash() =        
+PROCEDURE Crash() =
   <* FATAL FatalError *>
   BEGIN
     RAISE FatalError

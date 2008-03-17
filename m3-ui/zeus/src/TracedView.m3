@@ -5,11 +5,11 @@
 
 MODULE TracedView;
 
-IMPORT Filter, List, Stdio, TextVBT, Thread, View, Wr, 
+IMPORT Filter, List, Stdio, TextVBT, Thread, View, Wr,
     Zeus, ZeusClass, ZeusPanel;
 
-REVEAL 
-  T = View.T BRANDED OBJECT 
+REVEAL
+  T = View.T BRANDED OBJECT
   OVERRIDES
     install := Install;
     delete := Delete;
@@ -18,53 +18,53 @@ REVEAL
     config := Config;
     startrun := Startrun;
     endrun := Endrun;
-  END;   
+  END;
 
 PROCEDURE New (): View.T =
   BEGIN RETURN NEW(T) END New;
 
 PROCEDURE Install (view: T) =
-  BEGIN 
-    Trace ("install");  
+  BEGIN
+    Trace ("install");
     EVAL Filter.Replace(view, TextVBT.New("See stdout"));
     View.T.install(view);
   END Install;
 
 PROCEDURE Delete (view: T) =
-  BEGIN 
+  BEGIN
     Trace ("delete");
     View.T.delete (view);
    END Delete;
 
 PROCEDURE Snapshot (view: T; wr: Wr.T) =
-  BEGIN 
+  BEGIN
     Trace ("snapshot");
     View.T.snapshot (view, wr);
    END Snapshot;
 
 PROCEDURE Restore (view: T; l: List.T) =
-  BEGIN 
+  BEGIN
     Trace ("restore");
     View.T.restore (view, l);
    END Restore;
 
 PROCEDURE Config (
-    view: T; 
-    state: ZeusClass.StateChange; 
+    view: T;
+    state: ZeusClass.StateChange;
     o: ZeusClass.T) =
-  BEGIN 
+  BEGIN
     Trace ("config");
     View.T.config (view, state, o);
    END Config;
 
 PROCEDURE Startrun (view: T) =
-  BEGIN 
+  BEGIN
     Trace ("startrun");
     View.T.startrun (view);
    END Startrun;
 
 PROCEDURE Endrun (view: T) =
-  BEGIN 
+  BEGIN
     Trace ("endrun");
     View.T.endrun (view);
   END Endrun;
@@ -80,8 +80,8 @@ PROCEDURE Trace (t: TEXT) =
       END;
     END
   END Trace;
- 
+
 BEGIN
-  ZeusPanel.RegisterView (New, "Traced View")  
+  ZeusPanel.RegisterView (New, "Traced View")
 END TracedView.
- 
+

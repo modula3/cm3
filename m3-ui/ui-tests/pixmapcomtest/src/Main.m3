@@ -7,7 +7,7 @@
 
 MODULE Main;
 
-IMPORT FormsVBT, MyBundle, PaintOp, Path, Pixmap, Point, 
+IMPORT FormsVBT, MyBundle, PaintOp, Path, Pixmap, Point,
        Rect, Region, Rsrc, ScrnPixmap, Text, Trestle, VBT;
 
 
@@ -57,7 +57,7 @@ PROCEDURE Init (v: Leaf): Leaf =
 
       v.src := Pixmap.FromBitmap (raw);
     END;
-          
+
     v.rect := ClipRect;
     v.delta := Rect.NorthWest (ClipRect);
     v.op := PaintOp.BgFg;
@@ -130,7 +130,7 @@ PROCEDURE FormUpdated (           fv       : FormsVBT.T;
       form.v.rect.north := FormsVBT.GetInteger (form, "clipnorth");
       form.v.rect.south := FormsVBT.GetInteger (form, "clipsouth");
       VBT.Mark (form.v);
-    END;      
+    END;
   END FormUpdated;
 
 
@@ -164,7 +164,7 @@ PROCEDURE Install () =
   <* FATAL FormsVBT.Error, FormsVBT.Unimplemented *>
   VAR
     v  := NEW (Leaf).init ();
-    fv := NEW (Form, v := v).initFromRsrc ("form.fv", 
+    fv := NEW (Form, v := v).initFromRsrc ("form.fv",
                                            Rsrc.BuildPath (MyBundle.Get ()));
   BEGIN
     FormsVBT.PutChoice (fv, "Op1", "X0");

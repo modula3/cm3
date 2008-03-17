@@ -36,7 +36,7 @@ TYPE
     overlap(v: VBT.T; id: ScreenID; READONLY nw: Point.T)
       RAISES {Failure};
     moveNear(v, w: VBT.T) RAISES {Failure};
-    installOffscreen(v: VBT.T; width, height: CARDINAL; 
+    installOffscreen(v: VBT.T; width, height: CARDINAL;
       preferredScreenType: VBT.ScreenType) RAISES {Failure};
     setColorMap(v: VBT.T; cm: ScrnColorMap.T);
     getScreens(): Trestle.ScreenArray RAISES {Failure};
@@ -68,7 +68,7 @@ TYPE
     addParent(prnt: VBT.T; id: ScreenID) RAISES {Failure};
     remParent(prnt: VBT.T; id: ScreenID) RAISES {Failure};
     warpCursor(id: ScreenID; READONLY pt: Point.T) RAISES {Failure};
-    (* getConfig(id: ScreenID; p: Trestle.ConfigClosure) 
+    (* getConfig(id: ScreenID; p: Trestle.ConfigClosure)
       RAISES {Failure};
     setConfig(id: ScreenID; c: Trestle.Config) RAISES {Failure}; *)
     lastCeded(): VBT.TimeStamp RAISES {Failure};
@@ -103,8 +103,8 @@ TYPE
    registers a ConnectClosure; these are tried in turn by
    Trestle.Connect. *)
 
-TYPE ConnectClosure = 
-  OBJECT METHODS 
+TYPE ConnectClosure =
+  OBJECT METHODS
     <* LL.sup <= TrestleClass.connectMu *>
     apply(inst: TEXT; localOnly: BOOLEAN; VAR (*OUT*) t: Trestle.T): BOOLEAN
   END;
@@ -124,5 +124,5 @@ PROCEDURE Connect(
     : Trestle.T
   RAISES {Failure}; <* LL.sup <= TrestleClass.connectMu *>
   (* Implements Trestle.Connect. *)
-  
+
 END TrestleClass.

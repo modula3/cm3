@@ -15,14 +15,14 @@ MODULE PackSplit EXPORTS PackSplit;
 IMPORT VBT, PaintOp, Pixmap, Axis, Point, Rect, ProperSplit, VBTClass,
   Region, PolyRegion, Split;
 
-REVEAL 
+REVEAL
   Private = ProperSplit.T BRANDED OBJECT END;
   T = Public BRANDED OBJECT
     ax: Axis.T;
     hgap, vgap: REAL;
     hg, vg: CARDINAL;
-    txt : Pixmap.T; 
-    op : PaintOp.T; 
+    txt : Pixmap.T;
+    op : PaintOp.T;
     nwAlign, saveBits : BOOLEAN;
     bgChanged := TRUE;
     numCh : CARDINAL := 0;
@@ -55,8 +55,8 @@ PROCEDURE Be(
     v:     T;
     major := Axis.T.Hor;
     hgap, vgap := 1.5;
-    txt: Pixmap.T := Pixmap.Solid; 
-    op: PaintOp.T := PaintOp.Bg; 
+    txt: Pixmap.T := Pixmap.Solid;
+    op: PaintOp.T := PaintOp.Bg;
     nwAlign := FALSE;
     saveBits := FALSE): T RAISES {} =
   BEGIN
@@ -84,14 +84,14 @@ PROCEDURE BeChild(v: T; ch: VBT.T) RAISES {} =
 PROCEDURE New(
     major := Axis.T.Hor;
     hgap, vgap := 1.5;
-    txt: Pixmap.T := Pixmap.Solid; 
-    op: PaintOp.T := PaintOp.Bg; 
+    txt: Pixmap.T := Pixmap.Solid;
+    op: PaintOp.T := PaintOp.Bg;
     nwAlign := FALSE;
     saveBits := FALSE): T RAISES {} =
   BEGIN
     RETURN Be(NEW(T), major, hgap, vgap, txt, op, nwAlign, saveBits)
   END New;
-    
+
 PROCEDURE AxisOf(v: T): Axis.T =
   BEGIN RETURN v.ax END AxisOf;
 
@@ -115,10 +115,10 @@ PROCEDURE Move (v: T; pred, ch: VBT.T) =
     VBT.NewShape(v);
     v.shapeAsked := FALSE
   END Move;
-  
+
 PROCEDURE Set(
-  v: T;   
-  txt: Pixmap.T; 
+  v: T;
+  txt: Pixmap.T;
   op: PaintOp.T := PaintOp.BgFg;
   nwAlign := FALSE)
   RAISES {} =
@@ -133,8 +133,8 @@ PROCEDURE Set(
   END Set;
 
 PROCEDURE Get(
-  v: T;   
-  VAR txt: Pixmap.T; 
+  v: T;
+  VAR txt: Pixmap.T;
   VAR op: PaintOp.T;
   VAR nwAlign: BOOLEAN) =
   BEGIN
@@ -180,9 +180,9 @@ PROCEDURE Repaint(v: T; READONLY br: Region.T) RAISES {} =
       VBTClass.Repaint(ch, br);
       ch := v.succ(ch)
     END;
-    IF v.nwAlign THEN 
-      delta := Rect.NorthWest(v.domain) 
-    ELSE 
+    IF v.nwAlign THEN
+      delta := Rect.NorthWest(v.domain)
+    ELSE
       delta := Point.Origin
     END;
     VBT.PaintRegion(v, Region.Meet(v.bgRegion, br), v.op, v.txt, delta)
@@ -335,7 +335,7 @@ PROCEDURE LessThan(READONLY p1, p2: Point.T; ax: Axis.T): BOOLEAN =
 PROCEDURE Redisplay3(v:T; READONLY saved, prev: Rect.T; VAR a: ARRAY OF
  SeqRec) RAISES {} =
   VAR j,k,len,hd,tl: CARDINAL; w: VBT.T := NIL; used := PolyRegion.Empty;
-    useSaved := v.txt = Pixmap.Solid OR 
+    useSaved := v.txt = Pixmap.Solid OR
       Point.Equal(Rect.NorthWest(prev), Rect.NorthWest(v.domain));
   BEGIN
     EVAL ComputeNewDomains(v, a, v.domain, TRUE);
@@ -390,7 +390,7 @@ PROCEDURE Redisplay3(v:T; READONLY saved, prev: Rect.T; VAR a: ARRAY OF
     WHILE w # NIL DO
       IF w = a[j].ch THEN
         j := a[j].succ
-      ELSE 
+      ELSE
         VBTClass.Reshape(w, Rect.Empty, Rect.Empty)
       END;
       w := v.succ(w)
@@ -401,7 +401,7 @@ PROCEDURE Redisplay3(v:T; READONLY saved, prev: Rect.T; VAR a: ARRAY OF
     tl := 0;
     (* Here, j, hd, and tl are lists of children linked by
        the succ field.  The proper order consists of the reverse of
-       hd, followed by the proper order of j, followed by tl. 
+       hd, followed by the proper order of j, followed by tl.
        used is the join of the old domains of elements of tl; nothing
        on tl can have a new domain which overlaps the old domain of
        anything later on tl *)
@@ -457,9 +457,9 @@ PROCEDURE Redisplay3(v:T; READONLY saved, prev: Rect.T; VAR a: ARRAY OF
 PROCEDURE RedisplayBkg(v: T; READONLY saved: Rect.T; useSaved: BOOLEAN) =
   (* redisplay the background of v.  LL = VBT.mu *)
   VAR
-    pr := PolyRegion.Empty; 
-    ch := v.succ(NIL); 
-    delta: Point.T;    
+    pr := PolyRegion.Empty;
+    ch := v.succ(NIL);
+    delta: Point.T;
     rgn:   Region.T;
   BEGIN
     WHILE ch # NIL DO
@@ -539,7 +539,7 @@ PROCEDURE AxisOrder (v: T): Axis.T =
   BEGIN
     RETURN v.ax
   END AxisOrder;
-  
+
 PROCEDURE NewShape (v: T; ch: VBT.T) RAISES {} =
   VAR child := NARROW(ch.upRef, Child);
   BEGIN
@@ -548,6 +548,6 @@ PROCEDURE NewShape (v: T; ch: VBT.T) RAISES {} =
     VBT.NewShape(v);
     v.shapeAsked := FALSE
   END NewShape;
-  
+
 BEGIN
 END PackSplit.

@@ -9,7 +9,7 @@
 UNSAFE INTERFACE Xmacro;
 
 IMPORT Xt;
-FROM Ctypes IMPORT 
+FROM Ctypes IMPORT
   char_star,short,unsigned_short;
 
 <*EXTERNAL"XtVaSetValues"*>

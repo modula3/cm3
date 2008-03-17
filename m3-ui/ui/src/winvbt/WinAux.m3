@@ -14,8 +14,8 @@ PROCEDURE WindowHandle (v: VBT.T): WinDef.HWND =
   BEGIN
     WHILE v # NIL DO
       TYPECASE v.upRef OF
-      | WinTrestle.Child (ch) => 
-          IF ch # NIL THEN 
+      | WinTrestle.Child (ch) =>
+          IF ch # NIL THEN
             RETURN ch.hwnd
           END
       ELSE

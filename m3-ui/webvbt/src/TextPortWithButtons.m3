@@ -113,14 +113,14 @@ PROCEDURE Mouse(self: T; READONLY cd: VBT.MouseRec) =
       CASE cd.clickType OF
       | VBT.ClickType.FirstDown =>
         VText.ChangeIntervalOptions(button.interval, self.highlight);
-        TRY VText.Update(vtext) EXCEPT Rd.Failure, Rd.EndOfFile, Thread.Alerted => 
-          (* skip *) 
+        TRY VText.Update(vtext) EXCEPT Rd.Failure, Rd.EndOfFile, Thread.Alerted =>
+          (* skip *)
         END;
       | VBT.ClickType.LastUp =>
         VText.ChangeIntervalOptions(button.interval, self.regular);
         button.callback(cd);
-        TRY VText.Update(vtext) EXCEPT Rd.Failure, Rd.EndOfFile, Thread.Alerted => 
-          (* skip *) 
+        TRY VText.Update(vtext) EXCEPT Rd.Failure, Rd.EndOfFile, Thread.Alerted =>
+          (* skip *)
         END;
       ELSE (* skip *)
       END;

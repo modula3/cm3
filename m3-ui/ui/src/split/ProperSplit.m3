@@ -13,9 +13,9 @@ IMPORT VBT, VBTClass, Split, VBTRep;
 
 REVEAL T = Public BRANDED OBJECT
   OVERRIDES
-    succ := Succ; 
-    pred := Pred; 
-    nth := Nth; 
+    succ := Succ;
+    pred := Pred;
+    nth := Nth;
     index := Index;
     beChild := BeChild;
     replace := ReplaceDefault;
@@ -36,19 +36,19 @@ PROCEDURE MoveDefault (v: T; pred, ch: VBT.T) =
     IF pred # NIL THEN predCh := pred.upRef ELSE predCh := NIL END;
     LOCK v DO Move(v, predCh, ch.upRef) END
   END MoveDefault;
-  
+
 PROCEDURE ReplaceDefault (v: T; ch, new: VBT.T) RAISES {} =
   BEGIN
     IF new # NIL THEN InsertDefault(v, ch, new) END;
     Delete(v, ch.upRef)
   END ReplaceDefault;
-  
-PROCEDURE PreInsert(v: T; pred, ch: VBT.T): Child 
+
+PROCEDURE PreInsert(v: T; pred, ch: VBT.T): Child
   RAISES {Split.NotAChild} =
   VAR predCh: Child;
   BEGIN
     IF ch.parent # NIL THEN Crash() END;
-    IF pred # NIL THEN 
+    IF pred # NIL THEN
       IF pred.parent # v THEN RAISE Split.NotAChild END;
       predCh := pred.upRef
     ELSE
@@ -68,14 +68,14 @@ PROCEDURE BeChild(v: VBT.Split; ch: VBT.T) RAISES {} =
 PROCEDURE Succ(v: T; ch: VBT.T): VBT.T RAISES {} =
   BEGIN
     IF ch = NIL THEN
-      IF v.lastChild = NIL THEN 
-        RETURN NIL 
-      ELSE 
-        RETURN v.lastChild.succ.ch 
+      IF v.lastChild = NIL THEN
+        RETURN NIL
+      ELSE
+        RETURN v.lastChild.succ.ch
       END
     ELSE
       WITH ur = NARROW(ch.upRef, Child) DO
-        IF ur = v.lastChild THEN 
+        IF ur = v.lastChild THEN
           RETURN NIL
         ELSE
           RETURN ur.succ.ch
@@ -87,10 +87,10 @@ PROCEDURE Succ(v: T; ch: VBT.T): VBT.T RAISES {} =
 PROCEDURE Pred(v: T; ch: VBT.T): VBT.T RAISES {} =
   BEGIN
     IF ch = NIL THEN
-      IF v.lastChild = NIL THEN 
-        RETURN NIL 
-      ELSE 
-        RETURN v.lastChild.ch 
+      IF v.lastChild = NIL THEN
+        RETURN NIL
+      ELSE
+        RETURN v.lastChild.ch
       END
     ELSE
       WITH ur = NARROW(ch.upRef, Child) DO
@@ -100,7 +100,7 @@ PROCEDURE Pred(v: T; ch: VBT.T): VBT.T RAISES {} =
   END Pred;
 
 PROCEDURE Nth(v: T; n: CARDINAL): VBT.T RAISES {} =
-  VAR ur, lc := v.lastChild;   
+  VAR ur, lc := v.lastChild;
   BEGIN
     IF ur = NIL THEN RETURN NIL END;
     ur := ur.succ;
@@ -145,7 +145,7 @@ PROCEDURE InsertInternal(v: T; pred, ur: Child) RAISES {} =
 PROCEDURE Move(v: T; pred, ch: Child) RAISES {} =
   BEGIN
     IF pred = ch THEN Crash() END;
-    IF ch.pred # pred THEN 
+    IF ch.pred # pred THEN
       VBTRep.Mark(v);
       DeleteInternal(v, ch);
       InsertInternal(v, pred, ch)
@@ -165,14 +165,14 @@ PROCEDURE Delete(v: T; ch: Child) RAISES {} =
 
 PROCEDURE DeleteInternal(v: T; ch: Child) RAISES {} =
   BEGIN
-    IF ch.pred = NIL THEN 
-      v.lastChild.succ := ch.succ 
-    ELSE 
-      ch.pred.succ := ch.succ 
+    IF ch.pred = NIL THEN
+      v.lastChild.succ := ch.succ
+    ELSE
+      ch.pred.succ := ch.succ
     END;
     IF v.lastChild = ch THEN
-      v.lastChild := ch.pred 
-    ELSE 
+      v.lastChild := ch.pred
+    ELSE
       ch.succ.pred := ch.pred
     END;
   END DeleteInternal;

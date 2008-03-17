@@ -9,7 +9,7 @@ INTERFACE Oblet;
 
 IMPORT HTMLVBTG, HTML, VBT;
 
-PROCEDURE DisplayOblet (v: HTMLVBTG.T; vsplit: VBT.T; s: HTMLVBTG.State; 
+PROCEDURE DisplayOblet (v: HTMLVBTG.T; vsplit: VBT.T; s: HTMLVBTG.State;
     oblet: HTML.Oblet);
 
 END Oblet.

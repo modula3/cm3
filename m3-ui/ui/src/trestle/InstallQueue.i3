@@ -9,11 +9,11 @@
 
 INTERFACE InstallQueue; (* = RingBuffer(Closure) *)
 
-TYPE Closure = OBJECT METHODS apply() END; 
+TYPE Closure = OBJECT METHODS apply() END;
 
-TYPE T = 
-  RECORD 
-    lo, hi: CARDINAL := 0; 
+TYPE T =
+  RECORD
+    lo, hi: CARDINAL := 0;
     buff: REF ARRAY OF Closure := NIL
   END;
   (* buff[lo..hi-1] circularly are the active entries;
@@ -33,5 +33,5 @@ PROCEDURE Remove(VAR rb: T): Closure RAISES {Exhausted};
 (* Raise the exception if br is empty, else remove the
    oldest element of rb and return it. *)
 
-END InstallQueue. 
+END InstallQueue.
 

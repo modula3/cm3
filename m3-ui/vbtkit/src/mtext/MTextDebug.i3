@@ -20,6 +20,6 @@ PROCEDURE Verify (wr: Wr.T; node: MTextPrivate.Node; msg: TEXT);
    hold for this particular mtext. In case of failure, prints an error
    message, along with the identifying message msg, and aborts the
    program. *)
-   
+
 END MTextDebug.
 

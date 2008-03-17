@@ -83,13 +83,13 @@ PROCEDURE Reshape(v: Filter.T; READONLY cd: VBT.ReshapeRec) RAISES {} =
   BEGIN
     IF v.ch # NIL THEN VBTClass.Reshape(v.ch, cd.new, cd.saved) END
   END Reshape;
-  
+
 PROCEDURE Replace(v: Filter.T; ch, new: VBT.T) RAISES {} =
   BEGIN
     IF ch = NIL THEN ch := v.ch END;
-    IF new # NIL THEN 
+    IF new # NIL THEN
       LOCK new DO LOCK v DO v.beChild(new) END END
-    ELSE 
+    ELSE
       LOCK v DO v.ch := NIL END
     END;
     VBTClass.LocateChanged(v);
@@ -99,9 +99,9 @@ PROCEDURE Replace(v: Filter.T; ch, new: VBT.T) RAISES {} =
 PROCEDURE InsertAfter(v: Filter.T; ch, new: VBT.T) RAISES {} =
   BEGIN
     IF ch = NIL THEN ch := v.ch END;
-    IF new # NIL THEN 
+    IF new # NIL THEN
       LOCK new DO LOCK v DO v.beChild(new) END END
-    ELSE 
+    ELSE
       LOCK v DO v.ch := NIL END
     END;
     VBTClass.LocateChanged(v);
@@ -121,8 +121,8 @@ PROCEDURE Shape(v: Filter.T; ax: Axis.T; n: CARDINAL): VBT.SizeRange =
   END Shape;
 
 PROCEDURE AxisOrder(v: Filter.T): Axis.T =
-  BEGIN 
-    IF v.ch = NIL THEN 
+  BEGIN
+    IF v.ch = NIL THEN
       RETURN Axis.T.Hor
       (* Split.T.axisOrder(v) *)
     ELSE
@@ -131,13 +131,13 @@ PROCEDURE AxisOrder(v: Filter.T): Axis.T =
   END AxisOrder;
 
 PROCEDURE Read(
-  v: Filter.T; 
-  s: VBT.Selection; 
+  v: Filter.T;
+  s: VBT.Selection;
   tc: CARDINAL)
   : VBT.Value RAISES {VBT.Error}  =
-  VAR owner: VBT.T; BEGIN 
+  VAR owner: VBT.T; BEGIN
     LOCK v DO owner := v.ch END;
-    IF owner = NIL THEN 
+    IF owner = NIL THEN
       RAISE VBT.Error(VBT.ErrorCode.UnownedSelection)
     ELSE
       RETURN owner.read(s, tc)
@@ -145,14 +145,14 @@ PROCEDURE Read(
   END Read;
 
 PROCEDURE Write(
-  v: Filter.T; 
-  s: VBT.Selection; 
+  v: Filter.T;
+  s: VBT.Selection;
   val: VBT.Value;
-  tc: CARDINAL) 
+  tc: CARDINAL)
   RAISES {VBT.Error} =
-  VAR owner: VBT.T; BEGIN 
+  VAR owner: VBT.T; BEGIN
     LOCK v DO owner := v.ch END;
-    IF owner = NIL THEN 
+    IF owner = NIL THEN
       RAISE VBT.Error(VBT.ErrorCode.UnownedSelection)
     ELSE
       owner.write(s, val, tc)

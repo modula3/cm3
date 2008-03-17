@@ -10,7 +10,7 @@ IMPORT Pixmap, ShadowedFeedbackVBT, PaintOp, Shadow, SwitchVBT;
 IMPORT Rect, Point, Cursor;
 IMPORT Split, ShadowedBarVBT, HighlightVBT, VBTClass;
 
-REVEAL 
+REVEAL
   Private = HVSplit.T BRANDED OBJECT END;
 
   T = Public BRANDED OBJECT
@@ -50,14 +50,14 @@ TYPE
 
   State = {None, RowResize, Select};
 
-PROCEDURE DefaultHeading (<*UNUSED*>v: T; 
+PROCEDURE DefaultHeading (<*UNUSED*>v: T;
                            <*UNUSED*>r: CARDINAL;
                            <*UNUSED*>READONLY cd: VBT.MouseRec) =
   BEGIN
     (* Empty body *)
   END DefaultHeading;
 
-PROCEDURE DefaultContent (<*UNUSED*>v: T; 
+PROCEDURE DefaultContent (<*UNUSED*>v: T;
                            <*UNUSED*>r: CARDINAL;
                            <*UNUSED*>READONLY cd: VBT.MouseRec) =
   BEGIN
@@ -76,7 +76,7 @@ TYPE
     which: CARDINAL;
     owner: T;
   OVERRIDES
-    callback := Callback;    
+    callback := Callback;
   END;
 
 
@@ -85,23 +85,23 @@ BEGIN
   self.owner.heading(self.which, cd);
 END Callback;
 
-PROCEDURE Contents(v: T): GridSplit.T = 
+PROCEDURE Contents(v: T): GridSplit.T =
   BEGIN
     RETURN v.grid;
   END Contents;
 
-PROCEDURE ContentReshape(v: Content; READONLY cd: VBT.ReshapeRec) RAISES {} = 
+PROCEDURE ContentReshape(v: Content; READONLY cd: VBT.ReshapeRec) RAISES {} =
   VAR
     r: Rect.T;
   BEGIN
-    IF v.loc.row >= 0 AND v.loc.pl = GridSplit.Placement.InsideCell THEN 
+    IF v.loc.row >= 0 AND v.loc.pl = GridSplit.Placement.InsideCell THEN
       r := GridSplit.GetCoord (v, top := v.loc.row, bottom := v.loc.row);
       HighlightVBT.SetRect(v, r, inset := LAST(CARDINAL));
     END;
     GridSplit.T.reshape(v, cd);
   END ContentReshape;
 
-PROCEDURE Position (v: Heading; READONLY cd: VBT.PositionRec) =  
+PROCEDURE Position (v: Heading; READONLY cd: VBT.PositionRec) =
   VAR
     loc: GridSplit.Location;
   BEGIN
@@ -109,13 +109,13 @@ PROCEDURE Position (v: Heading; READONLY cd: VBT.PositionRec) =
       loc := GridSplit.Locate (v, cd.cp.pt);
       VBT.SetCage (v, VBT.CageFromPosition(cd.cp));
       IF loc.pl = GridSplit.Placement.VerMargin THEN
-        VBT.SetCursor (v, hresize); 
+        VBT.SetCursor (v, hresize);
       ELSE
         VBT.SetCursor (v, Cursor.DontCare);
       END;
     ELSIF cd.cp.gone THEN
       VBT.SetCursor (v, hresize);
-      VBT.SetCage (v, VBT.GoneCage); 
+      VBT.SetCage (v, VBT.GoneCage);
     ELSE
       VBT.SetCage (v, VBT.CageFromPosition(cd.cp));
     END;
@@ -125,7 +125,7 @@ PROCEDURE Mouse(v: Heading; READONLY cd: VBT.MouseRec) RAISES {} =
   VAR
     loc := GridSplit.Locate (v, cd.cp.pt);
   BEGIN
-    CASE cd.clickType OF 
+    CASE cd.clickType OF
     | VBT.ClickType.FirstDown =>
       VBT.SetCage (v, VBT.CageFromPosition(cd.cp));
       IF loc.row > 0 THEN
@@ -139,26 +139,26 @@ PROCEDURE Mouse(v: Heading; READONLY cd: VBT.MouseRec) RAISES {} =
         GridSplit.T.mouse (v, cd);
       END;
     | VBT.ClickType.LastUp =>
-      VBT.SetCursor (v, Cursor.DontCare); 
+      VBT.SetCursor (v, Cursor.DontCare);
       IF loc.col > -1 AND loc.row = 0 AND v.state = State.RowResize THEN
         VAR
           delta := cd.cp.pt.h - v.lmp.h;
           which := v.which;
           newsize: INTEGER;
         BEGIN
-          IF which < 0 THEN 
+          IF which < 0 THEN
             which := 0;
             delta := -delta;
           END;
 
-          newsize := GridSplit.GetColWidth(v, which) + delta; 
+          newsize := GridSplit.GetColWidth(v, which) + delta;
 
           IF newsize > 0 THEN
             GridSplit.SetColWidth (v, which, newsize);
             GridSplit.SetColWidth (v.grid, which, newsize);
           END;
         END;
-      ELSE 
+      ELSE
         GridSplit.T.mouse(v, cd);
       END;
       v.state := State.None;
@@ -173,9 +173,9 @@ PROCEDURE ContentMouse(v: Content; READONLY cd: VBT.MouseRec) RAISES {} =
     r: Rect.T;
   BEGIN
     v.loc := GridSplit.Locate (v, cd.cp.pt);
-    CASE cd.clickType OF 
+    CASE cd.clickType OF
     | VBT.ClickType.FirstDown =>
-      IF v.loc.row >= 0 AND v.loc.pl = GridSplit.Placement.InsideCell THEN 
+      IF v.loc.row >= 0 AND v.loc.pl = GridSplit.Placement.InsideCell THEN
         r := GridSplit.GetCoord (v, top := v.loc.row, bottom := v.loc.row);
         HighlightVBT.Invert (v, r, inset := LAST(CARDINAL));
         v.parent.content(v.loc.row, cd);
@@ -243,7 +243,7 @@ BEGIN
                                  fnt := font, bgFg := cq,
                                  halign := 0.0),
                                  shadow := shadow),
-         btn = NEW(Header, 
+         btn = NEW(Header,
                    owner := v,
                    which := i).init (inside) DO
 
@@ -262,12 +262,12 @@ BEGIN
   RETURN v;
 END Init;
 
-PROCEDURE NumRows(v: T): CARDINAL = 
+PROCEDURE NumRows(v: T): CARDINAL =
   BEGIN
     RETURN GridSplit.NumRows(v.grid);
   END NumRows;
 
-PROCEDURE DefaultInsert(v: T; row: CARDINAL; READONLY data: ARRAY OF VBT.T) =  
+PROCEDURE DefaultInsert(v: T; row: CARDINAL; READONLY data: ARRAY OF VBT.T) =
   VAR
     numrows := GridSplit.NumRows(v.grid);
   BEGIN
@@ -285,7 +285,7 @@ PROCEDURE DefaultDelete(v: T; row: CARDINAL; VAR data: ARRAY OF VBT.T) =
 VAR
   hresize :=  Cursor.FromName (ARRAY OF TEXT {"XC_sb_h_double_arrow"});
 
-<*UNUSED*> VAR  
+<*UNUSED*> VAR
   vresize :=  Cursor.FromName (ARRAY OF TEXT {"XC_sb_v_double_arrow"});
 
 BEGIN

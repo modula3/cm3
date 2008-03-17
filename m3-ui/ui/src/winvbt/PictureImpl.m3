@@ -11,8 +11,8 @@ MODULE PictureImpl EXPORTS Picture, PictureRep;
 IMPORT Completion, Ctypes, VBT;
 
 
-PROCEDURE New (<*UNUSED*> st    : VBT.ScreenType; 
-               <*UNUSED*> width : CARDINAL; 
+PROCEDURE New (<*UNUSED*> st    : VBT.ScreenType;
+               <*UNUSED*> width : CARDINAL;
                <*UNUSED*> height: CARDINAL): T
     RAISES {ScreenTypeNotSupported} =
   BEGIN
@@ -20,7 +20,7 @@ PROCEDURE New (<*UNUSED*> st    : VBT.ScreenType;
   END New;
 
 
-PROCEDURE Supported (<*UNUSED*> st       : VBT.ScreenType; 
+PROCEDURE Supported (<*UNUSED*> st       : VBT.ScreenType;
                      <*UNUSED*> sharedMem: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN FALSE;

@@ -18,10 +18,10 @@ REVEAL
 
 (* A Child object serves as the mediator between a top-level VBT.T and
    a Trestle.T.  Calling "trsl.beChild(v)" creates a "Child" object which
-   contains Windows-specific data for the top-level VBT.T (such as its 
+   contains Windows-specific data for the top-level VBT.T (such as its
    window handle). The "Child" object is stored in "v.upRef". *)
 
-TYPE 
+TYPE
   Child <: ProperSplit.Child;   (* created by WinTrestle.BeChild *)
 
 PROCEDURE WindowHandle (v: VBT.T): WinDef.HWND;

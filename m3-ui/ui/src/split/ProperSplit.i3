@@ -14,21 +14,21 @@
 (* A "ProperSplit.T" is a type of "VBT.Split" that contains a
    circularly-linked list of its children.  All of Trestle's built-in
    splits that are not filters are subclasses of "ProperSplit".  *)
-   
+
 INTERFACE ProperSplit;
 
 IMPORT VBT, Split;
 
-TYPE 
+TYPE
   T <: Public;
-  Public = VBT.Split OBJECT 
+  Public = VBT.Split OBJECT
     <* LL >= {SELF, VBT.mu} *>
     lastChild: Child := NIL
   END;
-  Child = OBJECT 
+  Child = OBJECT
     <* LL >= {SELF.ch.parent, VBT.mu} *>
-    pred, succ: Child := NIL; 
-    ch: VBT.T 
+    pred, succ: Child := NIL;
+    ch: VBT.T
   END;
 
 (* If "ch" is a child of a "ProperSplit.T", then "ch.upRef" must be of
@@ -37,20 +37,20 @@ TYPE
    children.  The "succ" links are circular; the "pred" links are
    linear.  The parent's "lastChild" field is is "NIL" if there are
    no children; otherwise it points to the last child in "succ" order.
-   
+
    The locking level comments imply that to write any of the links,
    a thread must have both "VBT.mu" and the parent locked.
-   
+
    If "v" is a "T", the call "v.beChild(ch)" sets "ch.upref"
    to "NEW(Child)" if it is "NIL".  In any case it sets
-   "ch.upref.ch := ch" and calls "VBT.Split.beChild(v, ch)". 
+   "ch.upref.ch := ch" and calls "VBT.Split.beChild(v, ch)".
 
    A "T" provides replace, insert, and move methods that preserve the linked
    list structure of children, but allocates no screen space or event
    dispatching to the children.  These methods use the procedures below;
    the replace method uses the default insert method to add the new child,
    which may be inappropriate for some class layout policies. *)
-   
+
 (* The following procedures are useful for implementing subtypes
    of "ProperSplit.T": *)
 
@@ -64,13 +64,13 @@ PROCEDURE Insert(v: T; pred: Child; newch: VBT.T);
    insertion at the head of the list. "Insert" calls the "beChild"
    method of "newCh".  *)
 
-PROCEDURE PreInsert(v: T; pred, ch: VBT.T): Child 
+PROCEDURE PreInsert(v: T; pred, ch: VBT.T): Child
   RAISES {Split.NotAChild}; <* LL.sup = VBT.mu *>
 (* Rescreen "ch" to have "v"'s screentype (if necessary), cause a checked
    runtime error if "ch" is attached, raise "Split.NotAChild" if "pred"
    is non-nil and not a child of "v", and finally return "pred.upRef", or
    "NIL" if "pred" is "NIL".  *)
-   
+
 PROCEDURE Move(v: T; pred, ch: Child);
 <* LL >= {VBT.mu, v} *>
 (* Move "ch" in the list of children so that it follows "pred" and

@@ -21,7 +21,7 @@
    coordinate system mapped to the entire VBT domain, optionally
    with a margin of some number of points.
 
-   A "RectsVBT" in internally syncrhonized; it can safely be called 
+   A "RectsVBT" in internally syncrhonized; it can safely be called
    from mulitple threads. Each procedure has "LL.sup < rects".
    In addition, "VBT.mu < rects" for any "rects: RectsVBT.T". *)
 

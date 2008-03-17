@@ -4,5 +4,5 @@
 (*                                                           *)
 (* Last modified on Thu Nov 11 10:46:07 PST 1993 by kalsow   *)
 
-UNSAFE MODULE XSharedFree EXPORTS XSharedMem = FreeList(XSharedMem) 
+UNSAFE MODULE XSharedFree EXPORTS XSharedMem = FreeList(XSharedMem)
 END XSharedFree.

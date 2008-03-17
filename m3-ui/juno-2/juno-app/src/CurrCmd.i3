@@ -55,7 +55,7 @@ TYPE
 (* If "t: T", the boolean "t.codeValid" is "TRUE" iff the compiled code in the
    global code table reflects "t"'s AST and "t.skipify". If "t.codeValid" is
    "TRUE", then "slot" is the index of the compiled code in "JunoRT.code_tbl"
-   for the current command. *) 
+   for the current command. *)
 
 (* ----------------- Creation / Replacement / Accessors -------------------- *)
 

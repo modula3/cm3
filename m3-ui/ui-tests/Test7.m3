@@ -79,9 +79,9 @@ PROCEDURE Repaint (self: VBT.Leaf; READONLY rgn: Region.T) =
                      pt := Point.T {hmid - 100, 380},
                      t  := "Testing PaintText with PaintOp.SwapTransparent",
                      op := PaintOp.SwapTransparent);
-  
-      VBT.PaintText (self, 
-                     pt := Point.T {hmid - 100, 420}, 
+
+      VBT.PaintText (self,
+                     pt := Point.T {hmid - 100, 420},
                      t  := "Testing PaintText with PaintOp.Copy",
                      op := PaintOp.Copy);
     END;

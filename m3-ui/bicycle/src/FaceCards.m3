@@ -14,7 +14,7 @@ IMPORT Pixmap, PixmapFromXData, Point, CardSuit;
 
 FROM Card IMPORT Suit, Value;
 
-VAR 
+VAR
   mu := NEW(MUTEX);
   inited := FALSE;
   pix: ARRAY Suit OF ARRAY FaceRank OF Pixmap.T;
@@ -678,7 +678,7 @@ CONST
   Hearts   = SuitData{HeartJack,   HeartQueen,   HeartKing};
   Spades   = SuitData{SpadeJack,   SpadeQueen,   SpadeKing};
   Data     = ARRAY Suit OF SuitData{Spades, Hearts, Diamonds, Clubs};
-  
+
 CONST
   ClubDelta = SuitDelta{Pt{1,1}, Pt{1,1}, Pt{1,1}};
   DiamondDelta = ClubDelta;

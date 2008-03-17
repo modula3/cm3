@@ -7,7 +7,7 @@
 (*      modified on Thu Sep 24 10:59:20 PDT 1992 by mhb     *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 
@@ -44,7 +44,7 @@ REVEAL
 #}
       END;
 
-PROCEDURE #(_ALGNAME_)DefaultInit (v: T): Algorithm.T = 
+PROCEDURE #(_ALGNAME_)DefaultInit (v: T): Algorithm.T =
   <* LL = VBT.mu *>
   PROCEDURE Attach (id: TEXT; proc: FormsVBT.Proc) =
     BEGIN
@@ -68,7 +68,7 @@ PROCEDURE #(_ALGNAME_)DoIt (           fv : FormsVBT.T;
                            arg: REFANY;
                 <*UNUSED*> t  : VBT.TimeStamp) =
   <* LL = VBT.mu *>
-  BEGIN 
+  BEGIN
     IF Text.Equal(e, "stopatCodeEvents") THEN
       NARROW(arg, T).stopatCodeEvents :=
           FormsVBT.GetBoolean(fv, "stopatCodeEvents");
@@ -101,7 +101,7 @@ PROCEDURE #(_ALGNAME_)RefreshCts (
 
 PROCEDURE FromFV (fv : FormsVBT.T; alg: T) =
   <* LL = VBT.mu *>
-  BEGIN 
+  BEGIN
     alg.stopatCodeEvents :=
         FormsVBT.GetBoolean(fv, "stopatCodeEvents");
     alg.waitatCodeEvents :=
@@ -114,16 +114,16 @@ PROCEDURE FromFV (fv : FormsVBT.T; alg: T) =
 #}
   END FromFV;
 
-<*UNUSED*> 
+<*UNUSED*>
 PROCEDURE ToFV (fv : FormsVBT.T; alg: T) =
   <* LL = VBT.mu *>
-  BEGIN 
+  BEGIN
     FormsVBT.PutBoolean(fv, "stopatCodeEvents", alg.stopatCodeEvents);
     FormsVBT.PutInteger(fv, "waitatCodeEvents", alg.waitatCodeEvents);
 #{_OUTPUT
-    FormsVBT.PutBoolean(fv, "stopAt#(_EVENT_)", 
+    FormsVBT.PutBoolean(fv, "stopAt#(_EVENT_)",
                         alg.eventDataRec.stopAt#(_EVENT_));
-    FormsVBT.PutInteger(fv, "waitAt#(_EVENT_)", 
+    FormsVBT.PutInteger(fv, "waitAt#(_EVENT_)",
                         alg.eventDataRec.waitAt#(_EVENT_));
 #}
     CountsToFV (fv, alg);
@@ -131,9 +131,9 @@ PROCEDURE ToFV (fv : FormsVBT.T; alg: T) =
 
 PROCEDURE CountsToFV (fv : FormsVBT.T; alg: T) =
   <* LL = VBT.mu *>
-  BEGIN 
+  BEGIN
 #{_OUTPUT
-    FormsVBT.PutText(fv, "ctOf#(_EVENT_)", 
+    FormsVBT.PutText(fv, "ctOf#(_EVENT_)",
                         Fmt.Int(alg.eventDataRec.ctOf#(_EVENT_)));
 #}
   END CountsToFV;
@@ -150,7 +150,7 @@ PROCEDURE #(_ALGNAME_)DefaultUpdateCts ( v: T; reset: BOOLEAN) =
   END #(_ALGNAME_)DefaultUpdateCts;
 
 
-PROCEDURE #(_ALGNAME_)DefaultSnapshot (v: T; wr: Wr.T) 
+PROCEDURE #(_ALGNAME_)DefaultSnapshot (v: T; wr: Wr.T)
   RAISES {ZeusClass.Error} =
   <* LL = VBT.mu *>
   BEGIN
@@ -163,7 +163,7 @@ PROCEDURE #(_ALGNAME_)DefaultSnapshot (v: T; wr: Wr.T)
     END;
     IF v.eventData = NIL THEN
       RAISE ZeusClass.Error(
-          "#(_ALGNAME_)AlgClass.#(_ALGNAME_)DefaultSnapshot: " & 
+          "#(_ALGNAME_)AlgClass.#(_ALGNAME_)DefaultSnapshot: " &
           "eventData not set!");
     END;
     TRY
@@ -171,7 +171,7 @@ PROCEDURE #(_ALGNAME_)DefaultSnapshot (v: T; wr: Wr.T)
     EXCEPT
       FormsVBT.Error (msg) =>
         RAISE ZeusClass.Error(
-          "#(_ALGNAME_)AlgClass.#(_ALGNAME_)DefaultSnapshot FV error: " 
+          "#(_ALGNAME_)AlgClass.#(_ALGNAME_)DefaultSnapshot FV error: "
           & msg);
     ELSE
       RAISE ZeusClass.Error(
@@ -188,7 +188,7 @@ PROCEDURE #(_ALGNAME_)DefaultSnapshot (v: T; wr: Wr.T)
   END #(_ALGNAME_)DefaultSnapshot;
 
 
-PROCEDURE #(_ALGNAME_)DefaultRestore (v: T; rd: Rd.T) 
+PROCEDURE #(_ALGNAME_)DefaultRestore (v: T; rd: Rd.T)
   RAISES {ZeusClass.Error} =
   <* LL = VBT.mu *>
   BEGIN
@@ -199,7 +199,7 @@ PROCEDURE #(_ALGNAME_)DefaultRestore (v: T; rd: Rd.T)
     END;
     IF v.eventData = NIL THEN
       RAISE ZeusClass.Error(
-          "#(_ALGNAME_)AlgClass.#(_ALGNAME_)DefaultRestore: " & 
+          "#(_ALGNAME_)AlgClass.#(_ALGNAME_)DefaultRestore: " &
           "eventData not set!");
     END;
     TRY

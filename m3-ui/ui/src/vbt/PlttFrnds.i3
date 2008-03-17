@@ -15,11 +15,11 @@ INTERFACE PlttFrnds;
 (* Each entry in a palette can be NIL, or a distinguished value to indicate
    that it is under evaluation.  Each palette will be allocated large enough
    to contain every entry, even if it isn't resolved. *)
-   
+
 IMPORT ScrnPaintOp, ScrnFont, ScrnCursor, ScrnPixmap, Palette, PaintOp, Font,
        Pixmap, Cursor;
 
-TYPE 
+TYPE
   Context = MUTEX OBJECT
     ops: REF ARRAY OF Palette.OpClosure := NIL;
     nextOp := NUMBER(PaintOp.Predefined);

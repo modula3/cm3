@@ -63,4 +63,4 @@ PROCEDURE IntProc(<*UNUSED*> cl: Closure): BOOLEAN =
 BEGIN
 END RandomImpl.
 
-      
+

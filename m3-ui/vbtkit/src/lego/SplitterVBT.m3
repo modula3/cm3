@@ -48,7 +48,7 @@ PROCEDURE Init (v       : T;
     RETURN v
   END Init;
 
-PROCEDURE Insert (m: MC; pred, ch: VBT.T) = 
+PROCEDURE Insert (m: MC; pred, ch: VBT.T) =
   <* FATAL MultiSplit.NotAChild *>
   <* FATAL Split.NotAChild *>
   VAR
@@ -127,7 +127,7 @@ PROCEDURE ReplaceT (m: MCTargets; ch, new: VBT.T) =
       Split.Delete(v, ch);
     END
   END ReplaceT;
-        
+
 *)
 
 PROCEDURE NewBar (v: T): HVBar.T =

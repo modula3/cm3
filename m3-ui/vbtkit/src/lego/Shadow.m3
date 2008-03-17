@@ -15,7 +15,7 @@ PROCEDURE New (size : REAL      := 0.5;
                fg   : PaintOp.T := PaintOp.Fg;
                light: PaintOp.T := PaintOp.Fg;
                dark : PaintOp.T := PaintOp.Fg  ): T =
-  VAR 
+  VAR
     shadow := NEW(T);
     cs := PaintOp.MakeColorScheme(bg, fg);
   BEGIN

@@ -194,7 +194,7 @@ Module    ("SpotLightGO")
 Interface ("SpotLightGOProxy")
 
 Module    ("CameraGO")
-Interface ("CameraGOPrivate")	
+Interface ("CameraGOPrivate")
 
 Module    ("OrthoCameraGO")
 Interface ("OrthoCameraGOProxy")

@@ -32,7 +32,7 @@ TYPE
       autoScroll := AutoScroll;
       thumb := Thumb;
     END;
-    
+
   Bar = TextureVBT.T OBJECT
       size: REAL := 0.25
     OVERRIDES
@@ -68,7 +68,7 @@ TYPE
         (* LL.sup = list *)
         (* Fixup the firstVisible invariant, and update the screen for cells
            [ MIN(at, at+delta), ... ).  The pixels at cell positions [at, ...)
-           are suitable for cells [at+delta, ...).  Delta might be negative. 
+           are suitable for cells [at+delta, ...).  Delta might be negative.
            Also calls updateScroller. *)
       paintCells(at:Cell; n: INTEGER; bad: Rect.T) := PaintCells;
         (* LL.sup = list *)
@@ -424,12 +424,12 @@ PROCEDURE TRedisplay(list: T) =
   END TRedisplay;
 
 PROCEDURE ReportVisible(
-   <*UNUSED*>list: T; 
-   <*UNUSED*>first: Cell; 
+   <*UNUSED*>list: T;
+   <*UNUSED*>first: Cell;
    <*UNUSED*>num: CARDINAL) =
   BEGIN
   END ReportVisible;
-  
+
 PROCEDURE UpdateScroller(list: T) =
   (* LL.sup = list *)
   BEGIN
@@ -438,7 +438,7 @@ PROCEDURE UpdateScroller(list: T) =
                          MIN(list.firstVisible+list.nVisible, list.nCells),
                          list.nCells);
     END;
-    list.reportVisible(list.firstVisible, 
+    list.reportVisible(list.firstVisible,
       MIN(list.nVisible, list.nCells - list.firstVisible))
   END UpdateScroller;
 
@@ -669,7 +669,7 @@ PROCEDURE MoveCells(contents: Contents; at: Cell; delta: INTEGER) =
   (* LL.sup = list *)
         (* Fixup the firstVisible invariant, and update the screen for cells
            [ MIN(at, at+delta), ... ).  The pixels at cell positions [at, ...)
-           are suitable for cells [at+delta, ...).  Delta might be negative. 
+           are suitable for cells [at+delta, ...).  Delta might be negative.
            Also calls updateScroller. *)
   VAR
     oldFirst, adjustment, boundedFirst, boundedDelta: INTEGER;

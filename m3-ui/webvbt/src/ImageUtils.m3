@@ -12,8 +12,8 @@ TYPE Format = {GIF, JPEG, XBM};
 
 VAR
   Filters := ARRAY Format OF TEXT{
-       (* GIF *) "giftoppm|ppmtopgm|pgmtopbm", 
-       (* JPEG *) "djpeg -g|pgmtopbm", 
+       (* GIF *) "giftoppm|ppmtopgm|pgmtopbm",
+       (* JPEG *) "djpeg -g|pgmtopbm",
        (* XBM *)"xbmtopbm"};
 
 PROCEDURE SetupGIF(filter: TEXT) =
@@ -33,7 +33,7 @@ PROCEDURE SetupXBM(filter: TEXT) =
 
 PROCEDURE giftopbm (source: Rd.T; dest: Wr.T)
   RAISES {Error, Thread.Alerted} =
-  BEGIN 
+  BEGIN
    ToPBM(source, dest, Format.GIF);
   END giftopbm;
 
@@ -103,7 +103,7 @@ PROCEDURE PumpBits (cl: Closure): REFANY =
       EVAL RdCopy.ToWriter(cl.rd, cl.wr);
       CloseWr(cl.wr);
     EXCEPT
-      Rd.Failure, Wr.Failure, Thread.Alerted => 
+      Rd.Failure, Wr.Failure, Thread.Alerted =>
     END;
     RETURN NIL;
   END PumpBits;

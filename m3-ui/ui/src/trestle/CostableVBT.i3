@@ -39,7 +39,7 @@ PROCEDURE Disable(v: VBT.T); <* LL.sup < v *>
 (* Temporarily disable the lowest (possibly improper) ancestor of "v"
    that is a "CostableVBT.T", if any, and all linked VBTs.  *)
 
-(* While disabled, the filter reports its preferred size as the 
+(* While disabled, the filter reports its preferred size as the
    child's preferred size.  The filter will be reenabled as soon
    as it is reshaped to a non-empty domain. *)
 
@@ -54,4 +54,4 @@ PROCEDURE SetProjecting(v: VBT.T; project: BOOLEAN); <* LL.sup < v *>
 (* Set the lowest "CostableVBT.T" ancestor of "v" to be projecting *)
 
 END CoStableVBT.
-  
+

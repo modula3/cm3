@@ -60,7 +60,7 @@ TYPE
    was created. Be sure to use the "MultiFilter" interface to get at the
    child.  *)
 
-TYPE 
+TYPE
   View = INTEGER;
 
 (* A "View" is an internal ID for a view.  The value is valid for
@@ -74,11 +74,11 @@ TYPE
 
 TYPE
   ScrollStyle =
-    {HorAndVer, 
+    {HorAndVer,
      HorOnly,
-     VerOnly, 
-     NoScroll, 
-     AlaViewport, 
+     VerOnly,
+     NoScroll,
+     AlaViewport,
      Auto};
 
 (* \noindent The styles are as follows:

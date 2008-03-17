@@ -5,7 +5,7 @@
 (* Last modified on Mon Feb 24 14:01:18 PST 1992 by muller                   *)
 <*PRAGMA LL*>
 
-(* A "Pixmap.T" is a screen-independent specification of a pixmap.  
+(* A "Pixmap.T" is a screen-independent specification of a pixmap.
    Many procedures interpret "Pixmap.Ts" as textures, by tiling the
    plane with translated copies of the pixmap. There are three
    predefined pixmaps:
@@ -17,18 +17,18 @@ INTERFACE Pixmap;
 
 TYPE T = RECORD pm: INTEGER END; Predefined = [0..2];
 
-CONST 
+CONST
   Solid = T{0};
   Empty = T{1};
-  Gray = T{2}; 
-  
-(* "Solid" represents a pixmap of all ones. 
-   "Empty" represents a pixmap of all zeros. 
-   "Gray" represents a checkerboard of ones and zeros. 
-   
+  Gray = T{2};
+
+(* "Solid" represents a pixmap of all ones.
+   "Empty" represents a pixmap of all zeros.
+   "Gray" represents a checkerboard of ones and zeros.
+
    The domains of these pixmaps may vary from screentype to
    screentype, but they will always be non-empty.
-   
+
    When used on a screentype "st", they will have type "st.bits"
    (see the "PaintOp" interface). *)
 
@@ -40,7 +40,7 @@ TYPE Raw <: ROOT;
 PROCEDURE FromBitmap(bits: Raw): T;
 (* Return a pixmap that looks like "bits" on all screens. *)
 
-(* "FromBitmap" causes a checked runtime error if the depth of 
+(* "FromBitmap" causes a checked runtime error if the depth of
    "bits" is not one.  On a screentype "st", it will have type
    "st.bits". *)
 

@@ -11,8 +11,8 @@ IMPORT Pixmap, Point, Rect, ScrnPixmap;
 TYPE
   A3 = ARRAY [0..2] OF [0..9];
 CONST
-  Intense3 = ARRAY [0..2] OF A3 {A3 {7, 9, 5}, 
-                                 A3 {2, 1, 4}, 
+  Intense3 = ARRAY [0..2] OF A3 {A3 {7, 9, 5},
+                                 A3 {2, 1, 4},
                                  A3 {6, 3, 8}};
 
 PROCEDURE New3x3(intensity:[0..9]):Pixmap.T =
@@ -34,8 +34,8 @@ END New3x3;
 TYPE
   A4 = ARRAY [0..3] OF [0..16];
 CONST
-  Intense4 = ARRAY [0..3] OF A4 {A4 { 1,  9,  3, 11}, 
-                                 A4 {13,  5, 15,  7}, 
+  Intense4 = ARRAY [0..3] OF A4 {A4 { 1,  9,  3, 11},
+                                 A4 {13,  5, 15,  7},
                                  A4 { 4, 12,  2, 10},
                                  A4 {16,  8, 14,  6}};
 

@@ -14,11 +14,11 @@ IMPORT Axis, Color, Fmt, IntIntTbl, Math, Palette, Pixmap, Point,
        Rd, Rect, ScreenType, ScrnColorMap, ScrnPixmap, Thread,
        TrestleComm, VBT, Word, Wr;
 
-IMPORT (* for FromVBT *) 
+IMPORT (* for FromVBT *)
   Region, RigidVBT, ScaleFilter, Filter, Split, Trestle,
   VBTClass;
 
-TYPE 
+TYPE
   PixelMap = ARRAY [0 .. 255] OF INTEGER;
   ColorsArray = ARRAY [0..255] OF RGB;
   Colors = REF ARRAY OF RGB;
@@ -68,14 +68,14 @@ PROCEDURE ApplyScaled1 (cl: Closure; st: ScreenType.T):
    and
       ABS(error) < tolerance
    where
-      error = 
+      error =
         (<screen resolution> - scale * <resolution(raw[i])>) / <screen resolution>
 
    If no "i" satisfies the tolerance, then the "i" is chosen to give the
    smallest error.
 
    Intention of tolerance is to give some preference to scalings which give
-      very good approximations to the screen resolution over smaller 
+      very good approximations to the screen resolution over smaller
       scalings which give unacceptable errors.
 
       ex: screen resolution = 300
@@ -87,7 +87,7 @@ PROCEDURE ApplyScaled1 (cl: Closure; st: ScreenType.T):
 
       ex: screen resolution = 300
           pixmap resolutions of 50 and 200
-          if maxScale <= 4 then 200 will be chosen over 50 
+          if maxScale <= 4 then 200 will be chosen over 50
           (even if tolerance is < 1/3 )
  *)
 
@@ -95,7 +95,7 @@ PROCEDURE ApplyScaled1 (cl: Closure; st: ScreenType.T):
 PROCEDURE ScaledN (
     READONLY raws: ARRAY OF Raw;
     tolerance: REAL := 0.25;
-    maxScale: CARDINAL := 4): T = 
+    maxScale: CARDINAL := 4): T =
   VAR new := NEW(REF ARRAY OF Raw, NUMBER(raws));
   BEGIN
     new^ := raws;
@@ -487,7 +487,7 @@ PROCEDURE SetPixmapCMap (raw : ImPixmapCMap;
 **
 ***************************************************************************)
 
-PROCEDURE FromVBT (v: VBT.T; width, height: REAL): Raw 
+PROCEDURE FromVBT (v: VBT.T; width, height: REAL): Raw
   RAISES { TrestleComm.Failure } =
   VAR
     trsl          := Trestle.ScreenOf(v, Point.Origin).trsl;

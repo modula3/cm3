@@ -21,17 +21,17 @@ IMPORT ButtonVBT, VBT;
 
 TYPE T <: ButtonVBT.T;
 
-(* The call "v.init(ch, action, ref)" initializes "v" as a menu button 
+(* The call "v.init(ch, action, ref)" initializes "v" as a menu button
    with child "ch" and action procedure "action", and adds "ref" to
    "v"'s property set if it is not "NIL". *)
 
 PROCEDURE New(
-  ch: VBT.T; action: ButtonVBT.Proc; 
+  ch: VBT.T; action: ButtonVBT.Proc;
   ref: REFANY := NIL): T; <* LL.sup = VBT.mu *>
 (* "New(...)" is equivalent to "NEW(T).init(...)". *)
 
 PROCEDURE TextItem(
-  name: TEXT; action: ButtonVBT.Proc; 
+  name: TEXT; action: ButtonVBT.Proc;
   ref: REFANY := NIL): T; <* LL.sup = VBT.mu *>
 (* Return a menu button that displays the text "name". *)
 
@@ -40,7 +40,7 @@ PROCEDURE TextItem(
    suitable for stacking into a menu using a vertical "HVSplit".  More
    precisely, "TextItem" is equivalent to:
 
-| New(TextVBT.New(name, 0.0, 0.5, 3.0, 0.5), 
+| New(TextVBT.New(name, 0.0, 0.5, 3.0, 0.5),
 |     action, ref)
 
 *)

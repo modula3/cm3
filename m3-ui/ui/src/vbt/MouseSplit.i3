@@ -10,10 +10,10 @@
 
 INTERFACE MouseSplit;
 
-(* The procedures in this interface implement the semantics described 
-   in the VBT interface for delivering mouseclicks and positions to 
-   split children, and for setting the cursor and cage of a split 
-   parent.  *) 
+(* The procedures in this interface implement the semantics described
+   in the VBT interface for delivering mouseclicks and positions to
+   split children, and for setting the cursor and cage of a split
+   parent.  *)
 
 IMPORT VBT, ScrnCursor, VBTClass;
 
@@ -39,8 +39,8 @@ PROCEDURE Setcursor(v: VBT.Split; ch: VBT.T);
 PROCEDURE Getcursor(v: VBT.Split): ScrnCursor.T;
 
 PROCEDURE InvalidateCache(v: VBT.Split);
-(* Clear any cached results of the child locate method.  If v's methods 
-   come from this interface, you must call this procedure whenever 
+(* Clear any cached results of the child locate method.  If v's methods
+   come from this interface, you must call this procedure whenever
    the geometry of v changes.  *)
 
 END MouseSplit.

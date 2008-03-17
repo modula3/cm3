@@ -62,7 +62,7 @@ VAR cleanState: State;            (* CONST *)
 
 
 (*************************** Creation *******************************)
-  
+
 PROCEDURE NewFromFile (filename: TEXT; raw := FALSE; path: Rsrc.Path := NIL): T
   RAISES {Error, Rd.Failure, Thread.Alerted} =
   BEGIN
@@ -127,7 +127,7 @@ TYPE
                     apply := Read
                   END;
   ErrType = {ReadError, EndOfFile, Failure, Alerted};
- 
+
 PROCEDURE Read (rc: ReaderClosure): REFANY =
   VAR
     exp  : REFANY;
@@ -151,7 +151,7 @@ PROCEDURE Read (rc: ReaderClosure): REFANY =
     (* If there's an error, we return the ReaderClosure itself. *)
     RETURN rc
   END Read;
-               
+
 PROCEDURE InitFromRsrc (fv: T; name: TEXT; path: Rsrc.Path; raw := FALSE): T
   RAISES {Error, Rd.Failure, Rsrc.NotFound, Thread.Alerted} =
   VAR rd: Rd.T;
@@ -294,7 +294,7 @@ PROCEDURE Insert (fv         : T;
     | Thread.Alerted => RAISE Error ("Thread.Alerted")
     END
   END Insert;
-  
+
 PROCEDURE InsertFromFile (fv      : T;
                           parent  : TEXT;
                           filename: Pathname.T;
@@ -508,7 +508,7 @@ PROCEDURE Attach (fv: T; name: TEXT; cl: Closure) RAISES {Error} =
 
 PROCEDURE MouseProc (self: VBT.T; READONLY cd: VBT.MouseRec) =
   (* This is the callback, directly or indirectly, for all the components that
-     generate events (see Attach) except TypeIn, TextEdit, and Numeric, 
+     generate events (see Attach) except TypeIn, TextEdit, and Numeric,
      which handle attachment directly and using KeyProc. *)
   VAR
     cr: ClosureRef := VBT.GetProp (self, TYPECODE (ClosureRef));
@@ -560,7 +560,7 @@ TYPE
                OVERRIDES
                  apply := OldApply
                END;
-                    
+
 PROCEDURE AttachProc (fv: T; name: TEXT; proc: Proc; cl: REFANY := NIL)
   RAISES {Error} =
   BEGIN
@@ -570,7 +570,7 @@ PROCEDURE AttachProc (fv: T; name: TEXT; proc: Proc; cl: REFANY := NIL)
       Attach (fv, name, NIL)
     END
   END AttachProc;
-  
+
 PROCEDURE OldApply (oc: OldClosure; fv: T; name: TEXT; time: VBT.TimeStamp) =
   BEGIN
     oc.proc (fv, name, oc.ref, time)
@@ -638,7 +638,7 @@ PROCEDURE AttachEditOps (fv        : T;
     IF findPrev # NIL THEN
       Attach (fv, findPrev, NEW (C, port := port, op := Op.prev))
     END;
-  END AttachEditOps; 
+  END AttachEditOps;
 
 PROCEDURE ApplyEditOp (             cl  : C;
                        <* UNUSED *> fv  : T;
@@ -654,7 +654,7 @@ PROCEDURE ApplyEditOp (             cl  : C;
       | Op.copy => m.copy (time)
       | Op.paste => m.paste (time)
       | Op.clear => m.clear ()
-      | Op.selectAll => 
+      | Op.selectAll =>
             m.select (time, 0, LAST (CARDINAL), replaceMode := TRUE)
       | Op.undo => TextPortClass.Undo (port)
       | Op.redo => TextPortClass.Redo (port)
@@ -786,7 +786,7 @@ PROCEDURE GetTheEventTime (fv: T): VBT.TimeStamp RAISES {Error} =
 
 (************************ Text edit-widget callback ************************)
 
-REVEAL 
+REVEAL
   Port = PublicPort BRANDED OBJECT
     textedit: FVTextEdit;
     reportKeys: BOOLEAN;
@@ -796,12 +796,12 @@ REVEAL
   END;
 
 PROCEDURE PortInit (v: Port;
-    textedit: FVTextEdit; 
+    textedit: FVTextEdit;
     reportKeys: BOOLEAN;
     font: Font.T;
     colorScheme: PaintOp.ColorScheme;
-    wrap, readOnly: BOOLEAN; 
-    turnMargin: REAL): Port = 
+    wrap, readOnly: BOOLEAN;
+    turnMargin: REAL): Port =
   BEGIN
     v.textedit := textedit;
     v.reportKeys := reportKeys;
@@ -810,7 +810,7 @@ PROCEDURE PortInit (v: Port;
                 turnMargin := turnMargin)
   END PortInit;
 
-PROCEDURE PortFilter (v: Port; cd: VBT.KeyRec) = 
+PROCEDURE PortFilter (v: Port; cd: VBT.KeyRec) =
   BEGIN
     IF NOT v.reportKeys THEN
       TextPort.T.filter (v, cd)
@@ -841,11 +841,11 @@ PROCEDURE DeliverText (typein: TypeinVBT.T; READONLY cd: VBT.KeyRec) =
       KeyProc (typein, cd)
     END
   END DeliverText;
-  
+
 
 (* ====================== Pixmap ===================== *)
 
-REVEAL 
+REVEAL
   FVImage = PrivateImage BRANDED OBJECT
     OVERRIDES
       shape := ImageShape;
@@ -1045,7 +1045,7 @@ REVEAL
     SwitchVBT.T BRANDED OBJECT OVERRIDES callback := PopButtonProc END;
   FVPopMButton =
     MenuSwitchVBT.T BRANDED OBJECT OVERRIDES callback := PopButtonProc END;
-    
+
 TYPE
   Callback = OBJECT METHODS apply (time: VBT.TimeStamp) END;
   PopTarget =
@@ -1203,7 +1203,7 @@ PROCEDURE SetLinkTarget (source: ButtonVBT.T; target: VBT.T) =
   BEGIN
     VBT.PutProp (source, NEW (LinkTarget, Tchild := target,
                               Tparent := VBT.Parent (target)))
-  END SetLinkTarget; 
+  END SetLinkTarget;
 
 PROCEDURE LinkButtonProc (self: VBT.T; READONLY cd: VBT.MouseRec) =
   VAR lt: LinkTarget := VBT.GetProp (self, TYPECODE (LinkTarget));
@@ -1268,7 +1268,7 @@ PROCEDURE HVSplitShape (v: HVSplit.T; ax: Axis.T; n: CARDINAL):
       RETURN HVSplit.T.shape (v, ax, n)
     END
   END HVSplitShape;
-    
+
 (* ============================= HTile, VTile ============================== *)
 
 REVEAL
@@ -1284,13 +1284,13 @@ PROCEDURE HVTileShape (v: SplitterVBT.T; ax: Axis.T; n: CARDINAL):
       RETURN SplitterVBT.T.shape (v, ax, n)
     END
   END HVTileShape;
-        
+
 (* ============================= Numeric ============================== *)
 
 REVEAL
   FVNumeric =
     NumericVBT.T BRANDED OBJECT OVERRIDES callback := NumericProc END;
-    
+
 PROCEDURE NumericProc (self: FVNumeric; event: AnyEvent.T) =
   BEGIN
     TYPECASE event OF
@@ -1322,7 +1322,7 @@ PROCEDURE PreMenu (v: AnchorSplit.T) =
 (* ============================= Help ============================== *)
 
 REVEAL FVHelp = AnchorHelpSplit.T BRANDED OBJECT END;
-  
+
 
 (* ============================= IntApply ============================ *)
 
@@ -1477,7 +1477,7 @@ PROCEDURE PutText (fv: T; name: TEXT; text: TEXT; append := FALSE)
             RAISE Error (Fmt.F ("Error for %s: %s", e.path, e.text))
         END
     | FVPixmap (t) => PixmapVBT.Put (t, GetPixmap (text, fv.path, NIL))
-    | FVImage (t) => 
+    | FVImage (t) =>
         VAR pm: ImageRd.T; len: INTEGER; BEGIN
         TRY Rd.Close (t.rd); t.rd := NIL EXCEPT
         | Rd.Failure (ref) => RAISE Error (RdUtils.FailureText (ref))
@@ -1577,13 +1577,13 @@ PROCEDURE GetIntegerProperty (fv: T; name, propertyName: TEXT): INTEGER
   VAR
     fvbt := GetVBT (fv, name);
   BEGIN
-    IF Text.Equal(propertyName, "NorthEdge") THEN 
+    IF Text.Equal(propertyName, "NorthEdge") THEN
       RETURN ROUND(FLOAT(VBT.Domain(fvbt).north)/ Pts.ToPixels(fvbt, 1.0, Axis.T.Ver));
-    ELSIF Text.Equal(propertyName, "SouthEdge") THEN 
+    ELSIF Text.Equal(propertyName, "SouthEdge") THEN
       RETURN ROUND(FLOAT(VBT.Domain(fvbt).south)/ Pts.ToPixels(fvbt, 1.0, Axis.T.Ver));
-   ELSIF Text.Equal(propertyName, "EastEdge") THEN 
+   ELSIF Text.Equal(propertyName, "EastEdge") THEN
      RETURN ROUND(FLOAT(VBT.Domain(fvbt).east)/ Pts.ToPixels(fvbt, 1.0, Axis.T.Hor));
-   ELSIF Text.Equal(propertyName, "WestEdge") THEN 
+   ELSIF Text.Equal(propertyName, "WestEdge") THEN
      RETURN ROUND(FLOAT(VBT.Domain(fvbt).west)/ Pts.ToPixels(fvbt, 1.0, Axis.T.Hor));
    ELSE
     TYPECASE fvbt  OF
@@ -1591,8 +1591,8 @@ PROCEDURE GetIntegerProperty (fv: T; name, propertyName: TEXT): INTEGER
       IF Text.Equal(propertyName, "Position") THEN
         RETURN TextPort.Index(v.tp)
       ELSIF Text.Equal(propertyName, "Length") THEN
-        RETURN TextPort.Length(v.tp) 
-      END    
+        RETURN TextPort.Length(v.tp)
+      END
     | FVNumeric (v) =>
         IF Text.Equal (propertyName, "Min") THEN
           RETURN NumericVBT.GetMin (v)
@@ -1993,7 +1993,7 @@ PROCEDURE DeleteVBT (fv: T; parent: TEXT; at: CARDINAL; count: CARDINAL := 1)
 
 PROCEDURE LeafVBT (v: VBT.T): BOOLEAN =
   BEGIN
-    RETURN NOT ISTYPE(v, VBT.Split) AND MultiClass.Resolve(v) = NIL 
+    RETURN NOT ISTYPE(v, VBT.Split) AND MultiClass.Resolve(v) = NIL
   END LeafVBT;
 
 
@@ -2033,9 +2033,9 @@ PROCEDURE GetTextProperty (fv: T; name, prop: TEXT): TEXT
     IF Text.Equal (prop, "Select") THEN
       TYPECASE vbt OF
       | FVBrowser, FVMultiBrowser =>
-          VAR 
-            v := NARROW(vbt, ListVBT.T); 
-            cells := v.getAllSelected(); 
+          VAR
+            v := NARROW(vbt, ListVBT.T);
+            cells := v.getAllSelected();
             sel: TEXT;
           BEGIN
             IF NUMBER(cells^) # 0 THEN
@@ -2054,8 +2054,8 @@ PROCEDURE GetTextProperty (fv: T; name, prop: TEXT): TEXT
     ELSIF Text.Equal(prop, "Items") THEN
       TYPECASE vbt OF
       | FVBrowser, FVMultiBrowser =>
-          VAR 
-            v := NARROW (vbt, ListVBT.T); 
+          VAR
+            v := NARROW (vbt, ListVBT.T);
             stringRep := "";
           BEGIN
             IF v.count() # 0 THEN
@@ -2065,14 +2065,14 @@ PROCEDURE GetTextProperty (fv: T; name, prop: TEXT): TEXT
               END;
             END;
             RETURN stringRep
-          END 
+          END
        ELSE
          RAISE Unimplemented
        END
     ELSIF Text.Equal(prop, "ActiveTarget") THEN
       TYPECASE vbt OF
-      | FVSource (v) => 
-         WITH target = SourceVBT.GetTarget(v) DO 
+      | FVSource (v) =>
+         WITH target = SourceVBT.GetTarget(v) DO
             IF target = NIL THEN RAISE Error ("No active target") END;
             RETURN GetName (target);
          END
@@ -2089,7 +2089,7 @@ PROCEDURE GetTextProperty (fv: T; name, prop: TEXT): TEXT
       RAISE Unimplemented
     END
   END GetTextProperty;
-                       
+
 PROCEDURE PutTextProperty (fv: T; name, property: TEXT; t: TEXT)
   RAISES {Error, Unimplemented} =
   VAR
@@ -2108,30 +2108,30 @@ PROCEDURE PutTextProperty (fv: T; name, property: TEXT; t: TEXT)
     IF Text.Equal (property, "Select") THEN
       TYPECASE vbt OF
       | FVBrowser, FVMultiBrowser =>
-          VAR 
-            v := NARROW(vbt, ListVBT.T); 
+          VAR
+            v := NARROW(vbt, ListVBT.T);
           BEGIN
             FOR this := 0 TO v.count () - 1 DO
               IF Text.Equal (v.getValue (this), t) THEN
                 v.selectOnly (this);   (* turn off previous selection if any *)
                 RETURN
-                END (* IF *)   
+                END (* IF *)
             END;
             v.selectNone ();
             RETURN
             END (* BEGIN *)
       ELSE
-      END (* TYPECASE *)  
+      END (* TYPECASE *)
     ELSIF Text.Equal (property, "SelectAlso") AND   ISTYPE(vbt, FVMultiBrowser) THEN
       (* Selects t if present, else noop *)
-      VAR 
-        v := NARROW(vbt, ListVBT.T); 
+      VAR
+        v := NARROW(vbt, ListVBT.T);
       BEGIN
          FOR this := 0 TO v.count () - 1 DO
               IF Text.Equal (v.getValue (this), t) THEN
                 v.select (this, TRUE);   (* turn off previous selection if any *)
                 RETURN
-                END 
+                END
             END;
          RETURN;
        END (* BEGIN *)
@@ -2139,26 +2139,26 @@ PROCEDURE PutTextProperty (fv: T; name, property: TEXT; t: TEXT)
       (* Scrolls to first occurrence of specified item. Noop if not present *)
       TYPECASE vbt OF
       | FVBrowser, FVMultiBrowser =>
-          VAR 
-            v := NARROW(vbt, ListVBT.T); 
+          VAR
+            v := NARROW(vbt, ListVBT.T);
           BEGIN
             FOR this := 0 TO v.count () - 1 DO
               IF Text.Equal (v.getValue (this), t) THEN
-                v.scrollToShow(this);   
+                v.scrollToShow(this);
                 RETURN
                 END
             END;
             RETURN
-            END (* BEGIN *) 
+            END (* BEGIN *)
       ELSE
-      END (* TYPECASE *) 
+      END (* TYPECASE *)
     ELSIF Text.Equal (property, "Items") THEN
       TYPECASE vbt OF
       | FVBrowser, FVMultiBrowser =>
         (* FVBrowser and  FVMultiBrowser are ListVBTs - interpret t as a sequence of cells
            demarcated by '\n'. Insert appropriately *)
-          VAR 
-            v := NARROW(vbt, ListVBT.T); 
+          VAR
+            v := NARROW(vbt, ListVBT.T);
           BEGIN
             v.removeCells(0, v.count()); (* empty listVBT *)
             indx := Text.FindChar(t, '\n', 0); from := 0; ct := 0;
@@ -2168,8 +2168,8 @@ PROCEDURE PutTextProperty (fv: T; name, property: TEXT; t: TEXT)
               from := indx+1;
               INC(ct);
               IF from < Text.Length(t) THEN
-                indx := Text.FindChar(t, '\n', from);    
-              ELSE 
+                indx := Text.FindChar(t, '\n', from);
+              ELSE
                 indx := -1
               END
             END;
@@ -2181,7 +2181,7 @@ PROCEDURE PutTextProperty (fv: T; name, property: TEXT; t: TEXT)
             RETURN
             END (* BEGIN *)
       ELSE
-      END (* TYPECASE *) 
+      END (* TYPECASE *)
     ELSIF stateRef = NIL THEN
       RAISE Error (Fmt.F ("The form named \"%s\" has no properties", name))
     ELSIF Text.Equal (property, "Color") OR Text.Equal (property, "BgColor") THEN
@@ -2249,7 +2249,7 @@ PROCEDURE PutColorProperty (         fv            : T;
       stateRef.fgOp :=
         PaintOp.FromRGB (color.r, color.g, color.b, PaintOp.Mode.Accurate);
       TYPECASE vbt OF
-      | TextureVBT.T (v) => 
+      | TextureVBT.T (v) =>
            VAR op: PaintOp.T; txt: Pixmap.T; nwAlign: BOOLEAN; BEGIN
              TextureVBT.Get(v, op, txt, nwAlign);
              TextureVBT.Set (v, PaintOp.Pair(stateRef.bgOp, stateRef.fgOp), txt, nwAlign)
@@ -2260,7 +2260,7 @@ PROCEDURE PutColorProperty (         fv            : T;
       | TextEditVBT.T (v) => setColor (v.tp)
       | NumericVBT.T (v) => setColor (v.typein)
       | PixmapVBT.T (v) =>
-          PixmapVBT.SetColors (v, 
+          PixmapVBT.SetColors (v,
             PaintOp.Pair (stateRef.bgOp, stateRef.fgOp), stateRef.bgOp);
       | FVText (v) =>
           TextVBT.SetFont (
@@ -2285,7 +2285,7 @@ PROCEDURE PutColorProperty (         fv            : T;
       | TextEditVBT.T (v) => setColor (v.tp)
       | NumericVBT.T (v) => setColor (v.typein)
       | PixmapVBT.T (v) =>
-          PixmapVBT.SetColors (v, 
+          PixmapVBT.SetColors (v,
             PaintOp.Pair (stateRef.bgOp, stateRef.fgOp), stateRef.bgOp);
       | FVText (v) =>
           TextVBT.SetFont (
@@ -2328,13 +2328,13 @@ PROCEDURE MakePassive (fv: T; name: TEXT; cursor := "")
   BEGIN
     SetReactivity(fv, name, ReactivityVBT.State.Passive, cursor);
   END MakePassive;
-  
+
 PROCEDURE MakeDormant (fv: T; name: TEXT; cursor := "")
   RAISES {Error} =
   BEGIN
     SetReactivity(fv, name, ReactivityVBT.State.Dormant, cursor);
   END MakeDormant;
-  
+
 PROCEDURE MakeVanish(fv: T; name: TEXT; cursor:= "") RAISES {Error} =
   BEGIN
      SetReactivity(fv, name, ReactivityVBT.State.Vanish, cursor);
@@ -2455,7 +2455,7 @@ PROCEDURE PutGeneric (fv: T; genericName: TEXT; vbt: VBT.T)
       RAISE Error ("No Generic named " & genericName)
     END
   END PutGeneric;
-    
+
 PROCEDURE GetGeneric (fv: T; genericName: TEXT): VBT.T RAISES {Error} =
   BEGIN
     TYPECASE GetVBT (fv, genericName) OF
@@ -2498,7 +2498,7 @@ PROCEDURE NamedVBTs (t: T): RefList.T =
     WHILE iter.next (name, vbt) DO Push (res, RefList.List2 (name, vbt)) END;
     RETURN res
   END NamedVBTs;
-  
+
 <*UNUSED *> (* except during debugging! *)
 PROCEDURE DumpTable (fv: T) =
   VAR
@@ -2553,14 +2553,14 @@ PROCEDURE InitRuntime () =
     MakeEventSelection := VBT.GetSelection ("FVRuntime.MakeEvent");
     cleanState.fgOp :=
       PaintOp.FromRGB (
-        cleanState.fgRGB.r, 
+        cleanState.fgRGB.r,
         cleanState.fgRGB.g,
         cleanState.fgRGB.b,
         PaintOp.Mode.Accurate, bw := PaintOp.BW.UseFg);
     cleanState.bgOp :=
       PaintOp.FromRGB (
         cleanState.bgRGB.r,
-        cleanState.bgRGB.g, 
+        cleanState.bgRGB.g,
         cleanState.bgRGB.b,
         PaintOp.Mode.Accurate, bw := PaintOp.BW.UseBg);
     cleanState.lightOp :=
@@ -2575,22 +2575,22 @@ PROCEDURE InitRuntime () =
         cleanState.darkRGB.g,
         cleanState.darkRGB.b,
         PaintOp.Mode.Accurate, bw := PaintOp.BW.UseFg);
-        
+
     cleanState.fontMetrics := DefaultFontMetrics;
     cleanState.fontName := MetricsToName (cleanState.fontMetrics);
     cleanState.font := Font.FromName (ARRAY OF TEXT {cleanState.fontName});
-    
+
     cleanState.labelFontMetrics := DefaultLabelFontMetrics;
     cleanState.labelFontName := MetricsToName (cleanState.labelFontMetrics);
     cleanState.labelFont :=
       Font.FromName (ARRAY OF TEXT {cleanState.labelFontName});
-      
+
     cleanState.shadow :=
-      Shadow.New (cleanState.shadowSz, 
+      Shadow.New (cleanState.shadowSz,
                   cleanState.bgOp, cleanState.fgOp,
                   cleanState.lightOp, cleanState.darkOp);
     (* Initial state.zsplit are set in Init. *)
-    
+
   END InitRuntime;
 
 BEGIN

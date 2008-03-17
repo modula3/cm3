@@ -305,7 +305,7 @@ PROCEDURE Encage (             view: View;
     END;
     RETURN whichEnd
   END Encage;
-  
+
 VAR wordCodes: ARRAY CHAR OF WordCode;
 
 BEGIN

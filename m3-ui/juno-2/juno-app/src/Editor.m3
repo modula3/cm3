@@ -48,14 +48,14 @@ REVEAL
 
   (* An "Editor.T" is an editor for a Juno module. If "t: T", then "t.trees"
      is the list of parse trees for the top-level blocks of the module.
-     "t.trees" holds the truth iff "t.treesValid".  
-     
-     The value of "currentTree" points at the tree containing the 
-     top line of the textport; it is set by Parse and maintained 
+     "t.trees" holds the truth iff "t.treesValid".
+
+     The value of "currentTree" points at the tree containing the
+     top line of the textport; it is set by Parse and maintained
      by Unparse, and is valid only if "treesValid" is true.  It
      is used to prevent the textport from scrolling undesirably
-     when the user reshapes the editor or remakes it by clicking "Run". 
-     
+     when the user reshapes the editor or remakes it by clicking "Run".
+
      The boolean "t.textPretty" is TRUE iff
      the editor contains the result of unparsing "t.trees"; note that
      "t.textPretty => t.treesValid". Hence there are 3 combinations for the
@@ -113,7 +113,7 @@ PROCEDURE ScrollToCurrentTree(tp: T) =
   END ScrollToCurrentTree;
 
 PROCEDURE SetCurrentTree(tp: T) =
-  VAR 
+  VAR
     cpos := EditorXtra.TopLineIndex(tp);
     f := tp.trees;
   BEGIN
@@ -251,7 +251,7 @@ PROCEDURE Parse2(tp: T; time: VBT.TimeStamp): BOOLEAN =
       	HandleLexErr(err, rd, wr, start, finish);
       	ip := NIL
     END;
-    tp.trees := NIL; 
+    tp.trees := NIL;
     tp.lastTree := NIL;
     tp.currentTree := NIL;
     tp.maxCurrCmd := -1;
@@ -779,7 +779,7 @@ PROCEDURE Pass3(forest: Forest; scp: JunoScope.T) RAISES {Error} =
       forest := forest.next
     END
   END Pass3;
-    
+
 PROCEDURE Compile(
     te: T;
     time: VBT.TimeStamp;
@@ -867,7 +867,7 @@ PROCEDURE Pass4(rt: View.Root; ed: T; scp: JunoScope.T) RAISES {Error} =
               END
             END
           ELSIF ui.name = ParamSym THEN
-            VAR 
+            VAR
               nm := FirstName(ui, argCnt := 2);
               ent := CheckEnt(nm, scp);
               valueAST := ui.args.head.next.expr;
@@ -906,7 +906,7 @@ PROCEDURE Pass4(rt: View.Root; ed: T; scp: JunoScope.T) RAISES {Error} =
                 buttonName := TextWr.ToText(twr)
               END;
               button :=
-                NEW(ToolBox.SetButton).init(rt, buttonName, 
+                NEW(ToolBox.SetButton).init(rt, buttonName,
                   Drawing.NewSetTool(Qualify(nm, mod), valueAST));
               IF NOT ed.setMenus.get(nm.id1, menuRef) THEN
                 menu := NEW(HVSplit.T).init(Axis.T.Ver);
@@ -924,7 +924,7 @@ PROCEDURE Pass4(rt: View.Root; ed: T; scp: JunoScope.T) RAISES {Error} =
       forest := forest.next
     END
   END Pass4;
-  
+
 PROCEDURE Qualify(qid: JunoAST.QId; mod: Atom.T): JunoAST.QId =
 (* If "qid" is unqualified and "mod # NIL", return "mod . qid.id1", else
    return "qid". *)

@@ -29,7 +29,7 @@ REVEAL
         cancel := SwitchVBT.Cancel;
       END;
 
-TYPE 
+TYPE
   MC = MultiClass.Split OBJECT
     OVERRIDES
       replace := Replace;

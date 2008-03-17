@@ -12,7 +12,7 @@ IMPORT Wr, Thread;
 
 <* FATAL Wr.Failure, Thread.Alerted *>
 
-PROCEDURE ShowAll(ast: JunoAST.T; wr: Wr.T) = 
+PROCEDURE ShowAll(ast: JunoAST.T; wr: Wr.T) =
   PROCEDURE Show(ast: JunoAST.T) =
   (* Unparse "ast" and its predecessor to "wr". *)
     VAR node: JunoAST.T := JunoAST.Predecessor(ast); BEGIN

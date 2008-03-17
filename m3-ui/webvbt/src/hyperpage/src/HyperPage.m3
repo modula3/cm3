@@ -97,7 +97,7 @@ TYPE
 
 PROCEDURE Init (t: T;  src: Rd.T;  width: CARDINAL;
                 looks: Looks;  delayedImages: BOOLEAN): T =
-  VAR 
+  VAR
   BEGIN
     IF (looks = NIL) THEN looks := DefaultLooks (); END;
     t.looks := looks;

@@ -22,11 +22,11 @@ TYPE
 
 REVEAL Child = ETAgent.T BRANDED OBJECT END;
 
-PROCEDURE NewChild(ch: VBT.T; p: DeleteProc): Child = 
+PROCEDURE NewChild(ch: VBT.T; p: DeleteProc): Child =
   VAR grandChild := NEW(GrandChild, proc := p); res := NEW(Child); BEGIN
     EVAL HighlightVBT.T.init(grandChild, ch);
     EVAL ETAgent.T.init(res, grandChild);
-    LOCK res DO 
+    LOCK res DO
       res.props := res.props + VBTRep.Props{VBTRep.Prop.Combiner}
     END;
     RETURN res
@@ -35,7 +35,7 @@ PROCEDURE NewChild(ch: VBT.T; p: DeleteProc): Child =
 PROCEDURE Rescreen(v: Child; READONLY cd: VBT.RescreenRec) =
   BEGIN
     Palette.Init(cd.st);
-    HighlightVBT.T.rescreen(v, cd) 
+    HighlightVBT.T.rescreen(v, cd)
   END Rescreen;
 
 PROCEDURE Misc(v: GrandChild; READONLY cd: VBT.MiscRec) =
@@ -45,7 +45,7 @@ PROCEDURE Misc(v: GrandChild; READONLY cd: VBT.MiscRec) =
     IF ch = NIL THEN RETURN END;
     IF cd.type = VBT.Deleted OR cd.type = VBT.Disconnected THEN
       VBTClass.Position(v, VBT.PositionRec{gone, 0, VBT.Modifiers{}});
-      VBTClass.Mouse(v, 
+      VBTClass.Mouse(v,
         VBT.MouseRec{button, 0, gone, VBT.Modifiers{},
           VBT.ClickType.LastUp, 0});
       IF v.proc # NIL THEN v.proc(ch) END;

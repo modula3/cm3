@@ -46,17 +46,17 @@ PROCEDURE NextByte(rd: Rd.T): Word.T =
   END NextByte;
 
 PROCEDURE P(t: T; halftone: BOOLEAN): Pixmap.T =
-  VAR 
+  VAR
     r := ScrnPixmap.NewRaw(1, Rect.FromSize(t.width, t.height));
     rd := TextRd.New(t.t);
     word, mask: Word.T;
     res: Pixmap.T;
   BEGIN
     FOR v := 0 TO t.height - 1 DO
-      IF halftone THEN 
-        IF v MOD 2 = 0 THEN 
+      IF halftone THEN
+        IF v MOD 2 = 0 THEN
           mask := 16_EE
-        ELSE 
+        ELSE
           mask := 16_BB
         END
       END;
@@ -79,17 +79,17 @@ PROCEDURE P(t: T; halftone: BOOLEAN): Pixmap.T =
   END P;
 
 PROCEDURE Flip(t: T; halftone: BOOLEAN): Pixmap.T =
-  VAR 
+  VAR
     r := ScrnPixmap.NewRaw(1, Rect.FromSize(t.width, t.height));
     rd := TextRd.New(t.t);
     word, mask: Word.T;
     res: Pixmap.T;
   BEGIN
     FOR v := 0 TO t.height - 1 DO
-      IF halftone THEN 
-        IF v MOD 2 = 0 THEN 
+      IF halftone THEN
+        IF v MOD 2 = 0 THEN
           mask := 16_EE
-        ELSE 
+        ELSE
           mask := 16_BB
         END
       END;
@@ -126,7 +126,7 @@ TYPE TTClosure = Palette.PixmapClosure OBJECT
 
 PROCEDURE TTApply(cl: TTClosure; st: ScreenType.T): ScrnPixmap.T =
   BEGIN
-    IF st.depth = 1 THEN 
+    IF st.depth = 1 THEN
       RETURN Palette.ResolvePixmap(st, cl.bw)
     ELSE
       RETURN Palette.ResolvePixmap(st, cl.color)

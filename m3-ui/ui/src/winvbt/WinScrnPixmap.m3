@@ -8,7 +8,7 @@
 
 UNSAFE MODULE WinScrnPixmap;
 
-IMPORT Axis, Palette, Pixmap, Point, Rect, ScrnPixmap, TrestleImpl, VBTRep, 
+IMPORT Axis, Palette, Pixmap, Point, Rect, ScrnPixmap, TrestleImpl, VBTRep,
        WinDef, WinGDI, WinScreenType, WinScreenTypePrivate, WinUser;
 
 IMPORT Ctypes, Fmt, IO;
@@ -22,7 +22,7 @@ EXCEPTION FatalError;
 <* FATAL FatalError *>
 
 TYPE
-  T = ScrnPixmap.T BRANDED OBJECT 
+  T = ScrnPixmap.T BRANDED OBJECT
     st: WinScreenType.T;
   OVERRIDES
     localize := Localize;
@@ -49,7 +49,7 @@ PROCEDURE Localize (self: T; READONLY rect: Rect.T): ScrnPixmap.Raw =
     r := Rect.Meet(rect, self.bounds);
     IF Rect.IsEmpty (r) THEN RETURN NIL END;
 
-    IF id < 0 THEN 
+    IF id < 0 THEN
       id := SolidPixmap - id;
       st := st.bits;
     END;
@@ -73,8 +73,8 @@ PROCEDURE Localize (self: T; READONLY rect: Rect.T): ScrnPixmap.Raw =
          bmih   = bmi.bmiHeader DO
       bmi.bmiHeader.biSize := BYTESIZE(WinGDI.BITMAPINFOHEADER);
       bmi.bmiHeader.biBitCount := 0;
-      status := WinGDI.GetDIBits (hdc, 
-                                  hbmp,      
+      status := WinGDI.GetDIBits (hdc,
+                                  hbmp,
                                   0,          (* start at scan line 0 *)
                                   height,     (* copy "height" lines *)
                                   NIL,        (* ... that is, don't copy *)
@@ -88,15 +88,15 @@ PROCEDURE Localize (self: T; READONLY rect: Rect.T): ScrnPixmap.Raw =
       IF bmih.biBitCount = 1 THEN
         res := ScrnPixmap.NewRaw (1, r);
       ELSE
-        res := ScrnPixmap.NewRaw (BITSIZE (WinDef.COLORREF), r); 
+        res := ScrnPixmap.NewRaw (BITSIZE (WinDef.COLORREF), r);
       END;
 
       bmih.biBitCount := 32;
       bmih.biCompression := WinGDI.BI_RGB;
 
       pixels := NEW (REF ARRAY OF WinGDI.RGBQUAD, height * width);
-      status := WinGDI.GetDIBits (hdc, 
-                                  hbmp,      
+      status := WinGDI.GetDIBits (hdc,
+                                  hbmp,
                                   0,             (* start at scan line 0 *)
                                   height,        (* copy "height" lines *)
                                   ADR(pixels[0]),(* into "pixels" *)
@@ -144,7 +144,7 @@ PROCEDURE Localize (self: T; READONLY rect: Rect.T): ScrnPixmap.Raw =
 
        The method call "pm.unload()" causes "pm" to become anonymous.
 
-   The X version (XScrnPxmp.Unregister) doesn't do anything. 
+   The X version (XScrnPxmp.Unregister) doesn't do anything.
    So, we do the same.
 -----------------------------------------------------------------------------*)
 
@@ -162,7 +162,7 @@ PROCEDURE Free (self: T) =
     status : WinDef.BOOL;
   BEGIN
     IF id = SolidPixmap THEN RETURN; END;
-    IF id < 0 THEN 
+    IF id < 0 THEN
       id := SolidPixmap - id;
       st := st.bits;
     END;
@@ -264,10 +264,10 @@ PROCEDURE DumpRaw (pm: ScrnPixmap.Raw) =
 
 PROCEDURE Fmt_Rect (r: Rect.T): TEXT =
   BEGIN
-    RETURN "Rect.T{" & 
-           Fmt.Int(r.west) & "," & 
-           Fmt.Int(r.east) & "," & 
-           Fmt.Int(r.north) & "," & 
+    RETURN "Rect.T{" &
+           Fmt.Int(r.west) & "," &
+           Fmt.Int(r.east) & "," &
+           Fmt.Int(r.north) & "," &
            Fmt.Int(r.south) & "}";
   END Fmt_Rect;
 
@@ -288,7 +288,7 @@ PROCEDURE Fmt_Addr (a: ADDRESS): TEXT =
        any number of characters and a "?" matches any single character.
 
    The X version (XScrnPxmp.PixmapList), however, simply always returns NIL.
-   For now, I do the same ... 
+   For now, I do the same ...
 -----------------------------------------------------------------------------*)
 
 PROCEDURE List (<*UNUSED*> self      : Oracle;
@@ -306,10 +306,10 @@ PROCEDURE List (<*UNUSED*> self      : Oracle;
        given name, or "NIL" if no pixmap has this name.
 
    The X version (XScrnPxmp.PixmapLookup), however, simply always returns NIL.
-   For now, I do the same ... 
+   For now, I do the same ...
 -----------------------------------------------------------------------------*)
 
-PROCEDURE Lookup (<*UNUSED*> self: Oracle; 
+PROCEDURE Lookup (<*UNUSED*> self: Oracle;
                   <*UNUSED*> name: TEXT): ScrnPixmap.T =
   BEGIN
     RETURN NIL;
@@ -363,22 +363,22 @@ PROCEDURE PixmapDomain (st: WinScreenType.T; pmId: INTEGER): Rect.T =
 (*
  * The xvbt version of this function is quite a hack: The actual image data
  * of a "ScrnPixmap.Raw" is stored in a field "pixels". It just so happens
- * that the memory layout of "pixels" is identical to the layout expected by 
+ * that the memory layout of "pixels" is identical to the layout expected by
  * the "data" field of an "X.XImage" record.  So, the xvbt version simply
  * creates an XImage, loopholes the "pixels" field into the "data" field,
  * then creates an "X.Pixmap", paints the "X.XImage" onto the "X.Pixmap",
  * and returns the X pixmap.
  *
- * The Windows version currently deals only with monochrome bitmaps 
+ * The Windows version currently deals only with monochrome bitmaps
  * (which makes sense, since I didn't implement colors yet either)
  *)
 
-PROCEDURE PixmapFromRaw (st: WinScreenType.T; 
+PROCEDURE PixmapFromRaw (st: WinScreenType.T;
                          pm: ScrnPixmap.Raw): WinDef.HBITMAP =
-  <* LL.sup = st.trsl *> 
+  <* LL.sup = st.trsl *>
 
   PROCEDURE ConvertMonochrome (pm: ScrnPixmap.Raw): WinDef.HBITMAP =
-    TYPE 
+    TYPE
       WinWord = Ctypes.unsigned_short;
       Bit     = BITS 1 FOR [0..1];
       Byte    = BITS 8 FOR ARRAY [0..7] OF Bit;
@@ -415,7 +415,7 @@ PROCEDURE PixmapFromRaw (st: WinScreenType.T;
     END ConvertMonochrome;
 
 
-  PROCEDURE ConvertColor (st: WinScreenType.T; 
+  PROCEDURE ConvertColor (st: WinScreenType.T;
                           pm: ScrnPixmap.Raw): WinDef.HBITMAP =
     VAR
       hwnd   : WinDef.HWND;
@@ -430,9 +430,9 @@ PROCEDURE PixmapFromRaw (st: WinScreenType.T;
       <* ASSERT hwnd # NIL *>
       hdc := WinUser.GetDC (hwnd);
       <* ASSERT hdc # NIL *>
-      
+
       pixels := NEW (REF ARRAY OF WinGDI.RGBQUAD,
-                     (pm.bounds.south - pm.bounds.north) * 
+                     (pm.bounds.south - pm.bounds.north) *
                      (pm.bounds.east - pm.bounds.west));
       k := 0;
       FOR i := pm.bounds.south - 1 TO pm.bounds.north BY -1 DO
@@ -451,8 +451,8 @@ PROCEDURE PixmapFromRaw (st: WinScreenType.T;
         bmih.biSize          := BYTESIZE(WinGDI.BITMAPINFOHEADER);
         bmih.biWidth         := pm.bounds.east - pm.bounds.west;
         (* Windows NT bug: According to the doc, a negative value for
-           biHeight indicates a top-down bitmap, that is, a bitmap that 
-           starts in the upper-left corner. However, if I actually pass 
+           biHeight indicates a top-down bitmap, that is, a bitmap that
+           starts in the upper-left corner. However, if I actually pass
            a negative value, the bitmap comes out solid black most of the
            time (although at some point, it came out ok ...) *)
         bmih.biHeight        := pm.bounds.south - pm.bounds.north;
@@ -464,11 +464,11 @@ PROCEDURE PixmapFromRaw (st: WinScreenType.T;
         bmih.biYPelsPerMeter := ROUND (st.res[Axis.T.Ver] * 1000.0);
         bmih.biClrUsed       := 0;   (* bitmap uses all the colors *)
         bmih.biClrImportant  := 0;   (* all colors are important *)
-        
-        hbmp := WinGDI.CreateDIBitmap (hdc, 
-                                       ADR(bmih), 
-                                       WinGDI.CBM_INIT, 
-                                       LOOPHOLE (ADR (pixels[0]), 
+
+        hbmp := WinGDI.CreateDIBitmap (hdc,
+                                       ADR(bmih),
+                                       WinGDI.CBM_INIT,
+                                       LOOPHOLE (ADR (pixels[0]),
                                                  WinDef.LPVOID),
                                        ADR (bmi),
                                        WinGDI.DIB_RGB_COLORS);
@@ -480,7 +480,7 @@ PROCEDURE PixmapFromRaw (st: WinScreenType.T;
     END ConvertColor;
 
   BEGIN
-    IF Rect.IsEmpty (pm.bounds) THEN 
+    IF Rect.IsEmpty (pm.bounds) THEN
       RETURN NIL ;
     ELSIF pm.depth = 1 AND pm.bitsPerPixel = 1 THEN
       RETURN ConvertMonochrome (pm);
@@ -499,7 +499,7 @@ PROCEDURE NewPixmap (         st    : WinScreenType.T;
                               hbmp  : WinDef.HBITMAP;
                      READONLY domain: Rect.T;
                               depth : INTEGER): ScrnPixmap.T =
-  <* LL.sup = st.trsl *> 
+  <* LL.sup = st.trsl *>
   VAR id, slot: INTEGER;
   BEGIN
     IF depth = 1 THEN st := st.bits END;
@@ -546,7 +546,7 @@ PROCEDURE InitPredefRaws () =
           END;
         END;
       END;
-    END;    
+    END;
   END InitPredefRaws;
 
 

@@ -82,7 +82,7 @@ END ZChassisVBT.
    In the current implementation, a chassis has the following general
    structure (using FormsVBT notation):
 
-|  (Stable 
+|  (Stable
 |    (Border
 |      (VBox
 |        (HBox (CloseButton "C")
@@ -91,7 +91,7 @@ END ZChassisVBT.
 |        (Frame `{\it ch}`)))))
 
    See Figure~\ref{fig:zchassis}.
-   
+
    However, don't try to traverse the VBT tree directly; it is subject
    to change.  To retrieve the contents of a chassis "v", use
    "MultiFilter.Child(v)".

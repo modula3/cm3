@@ -8,11 +8,11 @@
 
 <*PRAGMA LL*>
 
-(* The Split interface provides the functionality that is common 
-   to all splits; for example, enumerating and deleting children.  
-   
+(* The Split interface provides the functionality that is common
+   to all splits; for example, enumerating and deleting children.
+
    This interface is for clients of splits; see the "VBTClass" and
-   "ProperSplit" interfaces for information about implementing your own 
+   "ProperSplit" interfaces for information about implementing your own
    split classes.  *)
 
 INTERFACE Split;
@@ -23,12 +23,12 @@ TYPE T = VBT.Split;
 
 EXCEPTION NotAChild;
 
-(* A "Split.T" is a "VBT" that divides its screen up between one or more 
-   child "VBTs".  
+(* A "Split.T" is a "VBT" that divides its screen up between one or more
+   child "VBTs".
    The children of a split are ordered; they can be enumerated
    with the "Succ" and "Pred" procedures: *)
 
-PROCEDURE Succ(v: T; ch: VBT.T): VBT.T 
+PROCEDURE Succ(v: T; ch: VBT.T): VBT.T
 RAISES {NotAChild}; <* LL >= {VBT.mu} *>
 (* Return the child of "v" that follows the child "ch". *)
 
@@ -38,7 +38,7 @@ RAISES {NotAChild}; <* LL >= {VBT.mu} *>
    of "v".  *)
 
 
-PROCEDURE Pred(v: T; ch: VBT.T): VBT.T 
+PROCEDURE Pred(v: T; ch: VBT.T): VBT.T
 RAISES {NotAChild}; <* LL >= {VBT.mu} *>
 (* Return the child of "v" that precedes the child "ch". *)
 
@@ -65,15 +65,15 @@ PROCEDURE Index(v: T; ch: VBT.T): CARDINAL
 RAISES {NotAChild}; <* LL >= {VBT.mu} *>
 (* Return the index of "v"'s child "ch". *)
 
-(* "Index(v, ch)" is the value "n" such that "Nth(v, n) = ch".  
+(* "Index(v, ch)" is the value "n" such that "Nth(v, n) = ch".
    "Index(v, NIL)" equals "NumChildren(v)".  *)
 
 
 PROCEDURE Locate(v: T; READONLY pt: Point.T): VBT.T;
 <* LL.sup = VBT.mu *>
-(* Return the child of "v" that controls the point "pt", 
+(* Return the child of "v" that controls the point "pt",
    or "NIL" if there is no such child. *)
-   
+
 PROCEDURE Delete(v: T; ch: VBT.T) RAISES {NotAChild};
 <* LL.sup = VBT.mu *>
 (* Delete the child "ch" of the split "v", detach "ch", and mark "v"
@@ -99,17 +99,17 @@ RAISES {NotAChild}; <* LL.sup = VBT.mu *>
 
 PROCEDURE Move(v: T; pred, ch: VBT.T)
 RAISES {NotAChild}; <* LL.sup = VBT.mu *>
-(* Move child "ch" of "v" to follow "pred".  Both "ch" and (if non-"NIL") 
+(* Move child "ch" of "v" to follow "pred".  Both "ch" and (if non-"NIL")
    "pred" must be children of "v".  *)
 
-PROCEDURE AddChildArray(v: T; 
+PROCEDURE AddChildArray(v: T;
   READONLY new: ARRAY OF VBT.T);
 <* LL.sup = VBT.mu *>
-(* Insert the non-"NIL" elements of "new" at the end of the "v"'s 
+(* Insert the non-"NIL" elements of "new" at the end of the "v"'s
    list of children.  *)
 
 (* "AddChildArray" is equivalent to
-   
+
 |  pred := Pred(v, NIL);
 |  FOR i := 0 TO LAST(new) DO
 |    IF new[i] # NIL THEN
@@ -124,8 +124,8 @@ PROCEDURE AddChild(v: T;
 <* LL.sup = VBT.mu *>
 (* Add the given children to "v". *)
 
-(* "AddChild" is equivalent to 
-|  AddChildArray(v, 
+(* "AddChild" is equivalent to
+|  AddChildArray(v,
 |    ARRAY OF VBT.T{v0, v1, ..., v9})
 *)
 

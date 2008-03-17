@@ -30,7 +30,7 @@ TYPE
        will be repeatedly called to change the color of T *)
   END;
 
-  
+
   Animation = OBJECT
   METHODS
     rgb(time: REAL): RGB;

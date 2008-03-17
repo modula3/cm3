@@ -48,10 +48,10 @@ PROCEDURE Cmd(
      Generate a branch to label "t" if "pred" evaluates true, and to label "f"
      if "pred" evaluates false. Only generate a branch to "t" at the *end* of
      the stream if "tBranch" is "TRUE".
-  
+
      The code generated to evaluate a predicate must restore the stack to its
      original state before branching to "t" or "f".
-  
+
      NOTE: We do not need to handle the "JunoAST" cases "False", "And", "Or",
      "Not", "Exists", or "Differs", since those are eliminated by the
      compilation procedure "JunoCompile.Cmd.C2q". *)
@@ -255,16 +255,16 @@ PROCEDURE Cmd(
       | JunoAST.QId (e) =>
 	  <* ASSERT e.index # 0 *>
 	  CASE e.type OF <* NOWARN *>
-	  | JunoAST.IdType.Local => 
-	      PushByte(BC.PUSHL); 
+	  | JunoAST.IdType.Local =>
+	      PushByte(BC.PUSHL);
 	      PushShort(e.index)
-	  | JunoAST.IdType.Const, JunoAST.IdType.Var => 
+	  | JunoAST.IdType.Const, JunoAST.IdType.Var =>
 	      PushByte(BC.PUSHG);
 	      PushULong(e.index)
-          | JunoAST.IdType.Proc => 
+          | JunoAST.IdType.Proc =>
               PushByte(BC.NEWCL);
               PushULong(e.index)
-          | JunoAST.IdType.ExtProc => 
+          | JunoAST.IdType.ExtProc =>
               PushByte(BC.NEWEXTCL);
               PushULong(e.index)
 	  END
@@ -280,7 +280,7 @@ PROCEDURE Cmd(
       | JunoAST.Ln (e)      => UnaryFunc(e, BC.LN)
       | JunoAST.Car (e)     => UnaryFunc(e, BC.CAR)
       | JunoAST.Cdr (e)     => UnaryFunc(e, BC.CDR)
-      | JunoAST.Plus (e)    => BinaryFunc(e, BC.ADD) 
+      | JunoAST.Plus (e)    => BinaryFunc(e, BC.ADD)
       | JunoAST.Minus (e)   => BinaryFunc(e, BC.SUBTRACT)
       | JunoAST.Concat (e)  => BinaryFunc(e, BC.CONCAT)
       | JunoAST.Times (e)   => BinaryFunc(e, BC.MULTIPLY)
@@ -346,7 +346,7 @@ PROCEDURE Cmd(
       END;
       l.end := loc
     END QIdList;
-  
+
   PROCEDURE ExprList(l: JunoAST.ExprList; u: CARDINAL; level: CARDINAL := 0) =
   (* Generate code to push the expressions in the list "l" onto the stack,
      branching to label "u" if any of them are undefined. In this case, the
@@ -373,7 +373,7 @@ PROCEDURE Cmd(
      stack pointer for each expression. This procedure preserves the size of
      "labelsSeq"; we could add code to assert that here, but instead, we
      simply assert at the end of "JunoAssemble.Cmd" the the size of the
-     sequence is 0. *) 
+     sequence is 0. *)
     VAR newLabels := FALSE; pop: INTEGER; stackSz := 0; BEGIN
       (* Push expressions *)
       WHILE l # NIL DO
@@ -413,7 +413,7 @@ PROCEDURE Cmd(
         END
       END
     END ExprListTail;
-  
+
   PROCEDURE Cmd0(
       cmd: JunoAST.Cmd;
       h, g, u: CARDINAL;

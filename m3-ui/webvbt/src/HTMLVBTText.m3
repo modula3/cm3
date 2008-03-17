@@ -6,7 +6,7 @@
 
 MODULE HTMLVBTText;
 
-IMPORT Filter, Font, HTML, HTMLVBT, Text, TextEditVBT, TextPort, 
+IMPORT Filter, Font, HTML, HTMLVBT, Text, TextEditVBT, TextPort,
   TextPortButton, TextPortWithButtons, VBT;
 
 CONST
@@ -23,7 +23,7 @@ REVEAL
 
 TYPE
  URLButton = TextPortButton.T OBJECT
-    v: T; 
+    v: T;
     url: TEXT;
   OVERRIDES
     callback := URLButtonCallback;
@@ -43,7 +43,7 @@ PROCEDURE Init (v: T; html: HTML.T): T =
     RETURN v
   END Init;
 
-PROCEDURE HotLink (<* UNUSED *> self: T; 
+PROCEDURE HotLink (<* UNUSED *> self: T;
                    <* UNUSED *> url: TEXT;
                    <* UNUSED *> READONLY cd: VBT.MouseRec) =
   BEGIN
@@ -96,7 +96,7 @@ PROCEDURE WalkSequence (seq: HTML.Sequence; info: REF WalkInfo):
 
       TYPECASE seq OF
       | NULL => RETURN "";
-      | HTML.Word (word) => 
+      | HTML.Word (word) =>
           this := Consume(info, word.word);
       | HTML.Paragraph =>
           this := Consume(info, "\n\n" & Spaces(info.indent));
@@ -108,7 +108,7 @@ PROCEDURE WalkSequence (seq: HTML.Sequence; info: REF WalkInfo):
               & Spaces(info.indent);
       | HTML.Glossary (glossary) =>
           this := WalkGlossary(glossary, info);
-      | HTML.List (list) => 
+      | HTML.List (list) =>
           this := WalkList(list, info);
       | HTML.Preformatted (pre) =>
           this := WalkSequence(pre.content, info);
@@ -150,22 +150,22 @@ PROCEDURE WalkSequence (seq: HTML.Sequence; info: REF WalkInfo):
                     & WalkSequence(quote.content, info)
                     & Consume(info, "\n");
           DEC(info.indent, IndentAmount);
-      | HTML.Image (image) => 
+      | HTML.Image (image) =>
            VAR alt := image.alternate; BEGIN
               IF alt = NIL THEN alt := "<<IMAGE>>" END;
               this := Consume(info, alt);
            END;
-      | HTML.Oblet (oblet) => 
-           this := Consume(info, "\n\nThis view cannot display oblets; sorry. [" 
+      | HTML.Oblet (oblet) =>
+           this := Consume(info, "\n\nThis view cannot display oblets; sorry. ["
                      & oblet.source & "]\n\n");
       ELSE
         this := Consume(info, "????");
       END;
-      
+
       returnVal := returnVal & this;
-      IF (ISTYPE(seq, HTML.Word) OR ISTYPE(seq,HTML.Image)) AND seq.next # NIL AND 
-         (ISTYPE(seq.next, HTML.Word) OR ISTYPE(seq.next, HTML.Image)) THEN 
-        returnVal := returnVal & Consume(info, " ") 
+      IF (ISTYPE(seq, HTML.Word) OR ISTYPE(seq,HTML.Image)) AND seq.next # NIL AND
+         (ISTYPE(seq.next, HTML.Word) OR ISTYPE(seq.next, HTML.Image)) THEN
+        returnVal := returnVal & Consume(info, " ")
       END;
       seq := seq.next;
     END;                         (* WHILE *)
@@ -173,19 +173,19 @@ PROCEDURE WalkSequence (seq: HTML.Sequence; info: REF WalkInfo):
   END WalkSequence;
 
 PROCEDURE Spaces (num: INTEGER): TEXT =
-  CONST 
+  CONST
     Indent0 = "";
     Indent4 = "    ";
     Indent8  = Indent4  & Indent4;
     Indent12 = Indent8  & Indent4;
     Indent16 = Indent12 & Indent4;
-  VAR 
+  VAR
     this := "";
   BEGIN
-    IF num = 0 THEN RETURN Indent0 
+    IF num = 0 THEN RETURN Indent0
     ELSIF num = 4 THEN RETURN Indent4
-    ELSIF num = 8 THEN RETURN Indent8 
-    ELSIF num = 12 THEN RETURN Indent12 
+    ELSIF num = 8 THEN RETURN Indent8
+    ELSIF num = 12 THEN RETURN Indent12
     ELSIF num = 16 THEN RETURN Indent16
     END;
     FOR i := 1 TO num DO this := this & " "; END;
@@ -196,7 +196,7 @@ PROCEDURE WalkHeading (heading: HTML.Heading; info: REF WalkInfo):
   TEXT =
   VAR nl: TEXT;
   BEGIN
-    IF Text.Empty(TextPort.GetText(info.tp)) THEN nl := "" 
+    IF Text.Empty(TextPort.GetText(info.tp)) THEN nl := ""
     ELSE nl := "\n" END;
     CASE heading.level OF
     | 1 =>

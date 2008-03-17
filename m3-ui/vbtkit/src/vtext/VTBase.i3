@@ -97,6 +97,6 @@ PROCEDURE UnsafeLocatePoint (             view : View;
    called only when the "virtual" structure is not dirty, hence its name.
    If "off" is zero, UnsafeLocatePoint returns the right edge of the
    character instead of the left. *)
-   
+
 END VTBase.
 

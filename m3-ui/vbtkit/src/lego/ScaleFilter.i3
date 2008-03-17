@@ -27,15 +27,15 @@ TYPE
            END;
 
 (* The call "v.init(ch)" initializes "v" as a "ScaleFilter" with
-   multi-child "ch" and with horizontal and vertical scale factors 
+   multi-child "ch" and with horizontal and vertical scale factors
    both equal to 1.0. *)
 
 (* There are two ways you can use a "ScaleFilter": Procedure "Scale" allows
    you to explicitly set a horizontal and vertical scale factor.
-   Procedure "AutoScale" looks at the preferred size of the child and 
-   dynamically sets the scale factors such that the child's preferred 
+   Procedure "AutoScale" looks at the preferred size of the child and
+   dynamically sets the scale factors such that the child's preferred
    size always fills its domain. *)
- 
+
 PROCEDURE Scale (v: T; hscale, vscale: REAL);
 <* LL.sup = VBT.mu.v *>
 (* Set "v"'s horizontal and vertical scale factors to be "hscale"
@@ -43,7 +43,7 @@ PROCEDURE Scale (v: T; hscale, vscale: REAL);
 
 (* Thus, if the "v" has resolution of "px" and "py" horizontally
    and vertically, then the resolution of "v"'s multi-child will
-   be "hscale*px" and "vscale*py". 
+   be "hscale*px" and "vscale*py".
 
    Note that the locking level of "Scale" does not
    require the full share of "VBT.mu".  Therefore, it can be

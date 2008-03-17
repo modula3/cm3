@@ -53,7 +53,7 @@ PROCEDURE Put (v: T; pm: Pixmap.T) =
     VBT.Mark(v);
   END Put;
 
-PROCEDURE SetColors (v: T; op: PaintOp.T; bg: PaintOp.T := PaintOp.Bg) = 
+PROCEDURE SetColors (v: T; op: PaintOp.T; bg: PaintOp.T := PaintOp.Bg) =
   BEGIN
     v.op := op;
     v.bg := bg;

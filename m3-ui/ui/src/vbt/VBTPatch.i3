@@ -31,7 +31,7 @@ PROCEDURE PaintPatch(
    anywhere in "deltaArray"; the parameter "start" is the index of the first
    relevant delta pair. Finally, "vhi" is the index of the first scan line
    that passes below the patch. *)
-   
+
 (*  More precisely,
 
 |   `for each pair of points "p", "q" such that`
@@ -41,7 +41,7 @@ PROCEDURE PaintPatch(
 |       v[p] := op(v[p], src[Rect.Mod(q, domain(src))]).
 
    The patch contains "p" if:
-   
+
 |       p.v IN [vlo .. vhi) AND p.h IN [hl + DL .. hr + DR)
 |   `where`
 |       DL = `sum of` deltaArray[start + i - vlo].dl `and`

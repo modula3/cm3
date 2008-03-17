@@ -60,7 +60,7 @@ TYPE
    The coordinate system used by "Rd.Seek" is consistent with "Rd.Index".
 
    If the underlying "MText" is modified, the reader is invalid and should be
-   re-initialized.   
+   re-initialized.
 
    "rd.init" calls "Rd.Seek(rd, rd.cur)", which can raise "Rd.Failure" or
    "Thread.Alerted".

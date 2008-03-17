@@ -9,7 +9,7 @@
 (******************************************************************************
 
 This module contains the Modula-3 equivalent of #define C macro definitions
-done in PEX.h, PEXlib.h and PEXocbuf.h.  Here are the copyright notices from 
+done in PEX.h, PEXlib.h and PEXocbuf.h.  Here are the copyright notices from
 the original C header files:
 
 
@@ -19,22 +19,22 @@ Copyright notice of PEX.h:
 Copyright 1989, 1990, 1991 by Sun Microsystems, Inc. and the X Consortium.
 
                             All Rights Reserved
-    
-    Permission to use, copy, modify, and distribute this software and its 
-    documentation for any purpose and without fee is hereby granted, 
+
+    Permission to use, copy, modify, and distribute this software and its
+    documentation for any purpose and without fee is hereby granted,
     provided that the above copyright notice appear in all copies and that
-    both that copyright notice and this permission notice appear in 
+    both that copyright notice and this permission notice appear in
     supporting documentation, and that the names of Sun Microsystems,
-    the X Consortium, and MIT not be used in advertising or publicity 
-    pertaining to distribution of the software without specific, written 
-    prior permission.  
-    
-    SUN MICROSYSTEMS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, 
-    INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO 
-    EVENT SHALL SUN MICROSYSTEMS BE LIABLE FOR ANY SPECIAL, INDIRECT OR 
-    CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF 
-    USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR 
-    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR 
+    the X Consortium, and MIT not be used in advertising or publicity
+    pertaining to distribution of the software without specific, written
+    prior permission.
+
+    SUN MICROSYSTEMS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+    INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+    EVENT SHALL SUN MICROSYSTEMS BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+    CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+    USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
     PERFORMANCE OF THIS SOFTWARE.
 
 
@@ -42,22 +42,22 @@ Copyright 1989, 1990, 1991 by Sun Microsystems, Inc. and the X Consortium.
 Copyright notice of PEXlib.h and PEXocbuf.h:
 --------------------------------------------
 
-  COPYRIGHT (c) 1988,1989,1990,1991     
-  by DIGITAL Equipment Corporation, Maynard, Mass.                        
-                                                                          
-  This software is furnished under a license and may be used and  copied  
-  only  in  accordance  with  the  terms  of  such  license and with the  
-  inclusion of the above copyright notice.  This software or  any  other  
-  copies  thereof may not be provided or otherwise made available to any  
-  other person.  No title to and ownership of  the  software  is  hereby  
-  transferred.                                                            
-                                                                          
-  The information in this software is subject to change  without  notice  
-  and  should  not  be  construed  as  a commitment by DIGITAL Equipment  
-  Corporation.                                                            
-                                                                          
-  DIGITAL assumes no responsibility for the use or  reliability  of  its  
-  software on equipment which is not supplied by DIGITAL.                 
+  COPYRIGHT (c) 1988,1989,1990,1991
+  by DIGITAL Equipment Corporation, Maynard, Mass.
+
+  This software is furnished under a license and may be used and  copied
+  only  in  accordance  with  the  terms  of  such  license and with the
+  inclusion of the above copyright notice.  This software or  any  other
+  copies  thereof may not be provided or otherwise made available to any
+  other person.  No title to and ownership of  the  software  is  hereby
+  transferred.
+
+  The information in this software is subject to change  without  notice
+  and  should  not  be  construed  as  a commitment by DIGITAL Equipment
+  Corporation.
+
+  DIGITAL assumes no responsibility for the use or  reliability  of  its
+  software on equipment which is not supplied by DIGITAL.
 
 ******************************************************************************)
 
@@ -95,8 +95,8 @@ PROCEDURE PEX_BITNUM_TO_BITMASK(bitIndex : Ctypes.int;
     maskValue	:= Word.LeftShift(1,bitIndex MOD 32);
   END PEX_BITNUM_TO_BITMASK;
 
-(* 
- * This is not a function, but just a stub of code (an if-statement with 
+(*
+ * This is not a function, but just a stub of code (an if-statement with
  * the condition, but where the then- and else part are missing).
  *
  * #define CHECK_BITMASK_ARRAY(mask,bitIndex) \
@@ -122,7 +122,7 @@ PROCEDURE PEX_MASKIDX(i : Ctypes.int) : Ctypes.int =
 (*
  * #define PEX_MASKWORD(buf, i) buf[PEX_MASKIDX(i)]
  *)
-PROCEDURE PEX_MASKWORD (READONLY buf : ARRAY OF Ctypes.int ; 
+PROCEDURE PEX_MASKWORD (READONLY buf : ARRAY OF Ctypes.int ;
                         i : Ctypes.int) : Ctypes.int =
   BEGIN
     RETURN buf[PEX_MASKIDX(i)];
@@ -132,7 +132,7 @@ PROCEDURE PEX_MASKWORD (READONLY buf : ARRAY OF Ctypes.int ;
  * #define PEX_BITSET(buf, i) PEX_MASKWORD(buf, i) |= PEX_BITMASK(i)
  *)
 PROCEDURE PEX_BITSET(VAR buf : ARRAY OF Ctypes.int ; i : Ctypes.int) =
-  BEGIN 
+  BEGIN
     buf[PEX_MASKIDX(i)] := Word.Or (buf[PEX_MASKIDX(i)], PEX_BITMASK(i));
   END PEX_BITSET;
 
@@ -140,17 +140,17 @@ PROCEDURE PEX_BITSET(VAR buf : ARRAY OF Ctypes.int ; i : Ctypes.int) =
  * #define PEX_BITCLEAR(buf, i) PEX_MASKWORD(buf, i) &= ~PEX_BITMASK(i)
  *)
 PROCEDURE PEX_BITCLEAR(VAR buf : ARRAY OF Ctypes.int ; i : Ctypes.int) =
-  BEGIN 
-     buf[PEX_MASKIDX(i)] := 
+  BEGIN
+     buf[PEX_MASKIDX(i)] :=
              Word.And (buf[PEX_MASKIDX(i)], Word.Not (PEX_BITMASK(i)));
   END PEX_BITCLEAR;
 
 (*
  * #define PEX_GETBIT(buf, i) (PEX_MASKWORD(buf, i) & PEX_BITMASK(i))
  *)
-PROCEDURE PEX_GETBIT (READONLY buf : ARRAY OF Ctypes.int ; i : Ctypes.int) : 
+PROCEDURE PEX_GETBIT (READONLY buf : ARRAY OF Ctypes.int ; i : Ctypes.int) :
   Ctypes.int =
-  BEGIN 
+  BEGIN
     RETURN Word.And (PEX_MASKWORD(buf, i), PEX_BITMASK(i));
   END PEX_GETBIT;
 
@@ -160,10 +160,10 @@ PROCEDURE PEX_GETBIT (READONLY buf : ARRAY OF Ctypes.int ; i : Ctypes.int) :
  * #define PEX_SetPCAttrMaskBit(mask, attrNum) \
  *    mask[((attrNum)) >> 5] |= 1L << ( ((attrNum)) & 0x1F)
  *)
-PROCEDURE PEX_SetPCAttrMaskBit(VAR mask : ARRAY [0 .. 1] OF Ctypes.int; 
+PROCEDURE PEX_SetPCAttrMaskBit(VAR mask : ARRAY [0 .. 1] OF Ctypes.int;
                                attrNum : Ctypes.int) =
   BEGIN
-    mask[Word.RightShift(attrNum,5)] := 
+    mask[Word.RightShift(attrNum,5)] :=
       Word.Or(mask[Word.RightShift(attrNum,5)],
               Word.LeftShift(1,Word.And(attrNum,16_1F)));
   END PEX_SetPCAttrMaskBit;
@@ -181,8 +181,8 @@ PROCEDURE PEXAllocateOCBuffer(display : X.DisplayStar;
                               target  : X.XID;
                               bufTyp  : PROCEDURE () : Ctypes.int;
                               errorFn : ErrorFunctionType;
-                              initSize: Ctypes.int) 
-          : pxlOCBufStar = 
+                              initSize: Ctypes.int)
+          : pxlOCBufStar =
   BEGIN
     IF bufTyp = PEXDefaultTransientOCBuffer THEN
       RETURN PEXAllocateTransientOCBuffer(display,type,target,errorFn,initSize)

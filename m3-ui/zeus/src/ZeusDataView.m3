@@ -41,7 +41,7 @@ PROCEDURE Startrun (view: T) =
          before Zeus calls Startrun, it NILs alg.varView.  Thus,
          only the first data view whose Startrun executes will
          actually install the varRsrc form. *)
-      IF alg.varRsrc = NIL THEN 
+      IF alg.varRsrc = NIL THEN
         (*
         TextVBT.Put(view.slate,
           "No variable-view form specified in this algorithm.");
@@ -66,8 +66,8 @@ PROCEDURE Startrun (view: T) =
   END Startrun;
 
 CONST
-  DefaultShape = 
-     VBT.SizeRange{lo   := VBT.DefaultShape.lo, 
+  DefaultShape =
+     VBT.SizeRange{lo   := VBT.DefaultShape.lo,
                    pref := 300,
                    hi   := VBT.DefaultShape.hi};
 

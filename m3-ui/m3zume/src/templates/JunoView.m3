@@ -7,7 +7,7 @@
 (*      modified on Sun Jun  5 16:47:33 PDT 1994 by heydon  *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 
@@ -81,7 +81,7 @@ PROCEDURE Endrun(view: T) =
 PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
   <* LL.sup < VBT.mu *>
   CONST EventName = "#(_EVENT_)";
-  VAR tfactor: REAL; BEGIN 
+  VAR tfactor: REAL; BEGIN
     IF view.jz = NIL THEN RETURN END;
     LOCK VBT.mu DO
       tfactor := ZeusPanel.GetAnimationTime()
@@ -106,7 +106,7 @@ PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
 PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
   <* LL.sup = VBT.mu *>
   CONST EventName = "#(_EVENT_)";
-  VAR tfactor: REAL; BEGIN 
+  VAR tfactor: REAL; BEGIN
     IF view.jz = NIL THEN RETURN END;
     tfactor := ZeusPanel.GetAnimationTime();
     TRY
@@ -177,8 +177,8 @@ PROCEDURE ReportError(nm, msg: TEXT) =
   END ReportError;
 
 PROCEDURE RegisterView () =
-  BEGIN 
-    ZeusPanel.RegisterView(New, "#(_VIEWNAME_)", "#(_ALGNAME_)")   
+  BEGIN
+    ZeusPanel.RegisterView(New, "#(_VIEWNAME_)", "#(_ALGNAME_)")
   END RegisterView;
 
 BEGIN

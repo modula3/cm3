@@ -15,7 +15,7 @@
    The parent screen is obtained from the child screen by
    texturing an outline inset in a rectangle, using an inverting
    painting operation.
-    
+
    The parent keeps its screen correct as the child paints.  Since the
    parent screen is always correct, it never needs to mark itself
    for redisplay.  *)
@@ -28,23 +28,23 @@ TYPE
   T <: Public;
   Public = Filter.T OBJECT METHODS
     <* LL.sup <= VBT.mu *>
-    init(ch: VBT.T; 
+    init(ch: VBT.T;
       op: PaintOp.T := PaintOp.TransparentSwap;
       txt: Pixmap.T := Pixmap.Gray;
       READONLY delta := Point.T{h := 0, v := 1}): T
   END;
 
-(* The call "v.init(ch, ...)" initializes "v" as a "HighlightVBT" with 
+(* The call "v.init(ch, ...)" initializes "v" as a "HighlightVBT" with
    child "ch" and the given parameters, and returns "v".
 
-   The highlight rectangle is initially empty.  The filter brings up 
-   the highlight by calling 
-   
+   The highlight rectangle is initially empty.  The filter brings up
+   the highlight by calling
+
 | VBT.PaintTexture(v, `highlight region`, op, txt, delta)
 
-   and brings down the highlight the same way; therefore the painting 
+   and brings down the highlight the same way; therefore the painting
    operation must be its own inverse for the filter to work correctly.
-   
+
    The default values for the texture and delta are such that the
    highlight will be visible over white, black, or the standard gray
    texture.  (If delta were "(0,0)" instead of "(0,1)", the highlight
@@ -54,7 +54,7 @@ TYPE
 PROCEDURE New(
   ch: VBT.T;
   op := PaintOp.TransparentSwap;
-  txt: Pixmap.T := Pixmap.Gray; 
+  txt: Pixmap.T := Pixmap.Gray;
   READONLY delta := Point.T{h := 0, v := 1}) : T ;
 <* LL.sup <= VBT.mu *>
 (* "New(...)" is equivalent to "NEW(T).init(...)". *)
@@ -64,8 +64,8 @@ PROCEDURE Find(v: VBT.T): T; <* LL.sup = VBT.mu *>
    "HighlightVBT.T" or "NIL" if there isn't one. *)
 
 PROCEDURE SetRect(
-  v: VBT.T; 
-  READONLY rect: Rect.T; 
+  v: VBT.T;
+  READONLY rect: Rect.T;
   inset: CARDINAL := 2);
  <* LL.sup = VBT.mu *>
 (* Set the rectangle and inset of "Find(v)" to the given values. *)
@@ -73,12 +73,12 @@ PROCEDURE SetRect(
 (* The inset is given in pixels, not in millimeters. *)
 
 PROCEDURE SetTexture(
-  v: VBT.T; 
-  txt: Pixmap.T; 
+  v: VBT.T;
+  txt: Pixmap.T;
   READONLY delta := Point.Origin;
   op := PaintOp.TransparentSwap);
  <* LL.sup = VBT.mu *>
-(* Set the "txt", "delta", and "op" of "Find(v)" to the given 
+(* Set the "txt", "delta", and "op" of "Find(v)" to the given
    values.  *)
 
 PROCEDURE Get(
@@ -91,12 +91,12 @@ PROCEDURE Get(
 (* Fetch the parameters for the "HighlightVBT" above "v", and return "TRUE".
    If "v" has no such ancestor, return "FALSE". *)
 
-PROCEDURE Invert(v: VBT.T; 
-  READONLY r: Rect.T; 
+PROCEDURE Invert(v: VBT.T;
+  READONLY r: Rect.T;
   inset: CARDINAL); <* LL.sup = VBT.mu *>
 (*  Highlight the outline inset into the rectangle "r" with width
     "inset", using a solid texture. *)
-    
+
 (* "Invert" operates on "Find(v)".  It is equivalent to:
 
   | SetTexture(v, Pixmap.Solid);

@@ -19,7 +19,7 @@ PROCEDURE CompileUI(
     time: VBT.TimeStamp;
     scp: JunoScope.T;
     ): BOOLEAN;
-(* Should be called immediately after "Editor.Compile(e, ts, scp, nm, ent)" 
+(* Should be called immediately after "Editor.Compile(e, ts, scp, nm, ent)"
    returns TRUE, and should be called with "scp := ent.scp".  Processes the
    "UI" declarations in "e" and creates and installs the appropriate buttons
    and  menus and returns "TRUE", or displays an error to the user and returns

@@ -46,5 +46,5 @@ PROCEDURE Form (<* UNUSED *> self: T) =
   BEGIN
   END Form;
 
-BEGIN 
+BEGIN
 END HTMLVBT.

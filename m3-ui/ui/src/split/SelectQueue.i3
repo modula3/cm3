@@ -13,9 +13,9 @@ IMPORT VBT;
 
 TYPE Elem = RECORD v: VBT.T; cd: VBT.MiscRec END;
 
-TYPE T = 
-  RECORD 
-    lo, hi: CARDINAL := 0; 
+TYPE T =
+  RECORD
+    lo, hi: CARDINAL := 0;
     buff: REF ARRAY OF Elem := NIL
   END;
   (* buff[lo..hi-1] circularly are the active entries;
@@ -35,5 +35,5 @@ PROCEDURE Remove(VAR rb: T): Elem RAISES {Exhausted};
 (* Raise the exception if br is empty, else remove the
    oldest element of rb and return it. *)
 
-END SelectQueue. 
+END SelectQueue.
 

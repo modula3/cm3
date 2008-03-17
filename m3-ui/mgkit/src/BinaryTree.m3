@@ -94,7 +94,7 @@ PROCEDURE RemoveChild (node: T; v: GV; ch: GST) =
     GenericTree.GenericTree.removeChild(node, v, ch);
   END RemoveChild;
 
-PROCEDURE Set(node: T; v: V; lr: LR; new: T)= 
+PROCEDURE Set(node: T; v: V; lr: LR; new: T)=
   BEGIN
     IF lr = LR.Left THEN
       IF node.l # NIL THEN node.removeChild(v, node.l) END;

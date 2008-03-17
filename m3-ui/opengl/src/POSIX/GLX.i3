@@ -42,7 +42,7 @@ CONST
   GLX_ACCUM_ALPHA_SIZE = 17;       (* number of alpha accum bits *)
 
 
-(* Error return values from glXGetConfig.  
+(* Error return values from glXGetConfig.
    Success is indicated by a value of 0. *)
 
 CONST
@@ -56,63 +56,63 @@ CONST
 (*****************************************************************************)
 
 <*EXTERNAL*> PROCEDURE glXChooseVisual (
-                               dpy        : X.DisplayStar; 
-                               screen     : Ctypes.int; 
+                               dpy        : X.DisplayStar;
+                               screen     : Ctypes.int;
                                attribList : UNTRACED REF ARRAY OF Ctypes.int
                          ) : X.XVisualInfoStar;
 
-<*EXTERNAL*> PROCEDURE glXCopyContext (dpy : X.DisplayStar; 
-                                       src : GLXContext; 
-                                       dst : GLXContext; 
+<*EXTERNAL*> PROCEDURE glXCopyContext (dpy : X.DisplayStar;
+                                       src : GLXContext;
+                                       dst : GLXContext;
                                        mask: GL.GLuint);
 
 <*EXTERNAL*> PROCEDURE glXCreateContext (dpy      : X.DisplayStar;
                                          vis      : X.XVisualInfoStar;
-                                         shareList: GLXContext; 
+                                         shareList: GLXContext;
                                          direct   : X.Bool) : GLXContext;
 
 <*EXTERNAL*> PROCEDURE glXCreateGLXPixmap (dpy   : X.DisplayStar;
                                            vis   : X.XVisualInfoStar;
                                            pixmap: X.Pixmap): GLXPixmap;
 
-<*EXTERNAL*> PROCEDURE glXDestroyContext (dpy: X.DisplayStar; 
+<*EXTERNAL*> PROCEDURE glXDestroyContext (dpy: X.DisplayStar;
                                           ctx: GLXContext);
 
-<*EXTERNAL*> PROCEDURE glXDestroyGLXPixmap (dpy: X.DisplayStar; 
+<*EXTERNAL*> PROCEDURE glXDestroyGLXPixmap (dpy: X.DisplayStar;
                                             pix: GLXPixmap);
 
 <*EXTERNAL*> PROCEDURE glXGetConfig (dpy   : X.DisplayStar;
                                      vis   : X.XVisualInfoStar;
-                                     attrib: Ctypes.int; 
+                                     attrib: Ctypes.int;
                            (* OUT *) value : Ctypes.int_star): Ctypes.int;
 
 <*EXTERNAL*> PROCEDURE glXGetCurrentContext (): GLXContext;
 
 <*EXTERNAL*> PROCEDURE glXGetCurrentDrawable (): GLXDrawable;
 
-<*EXTERNAL*> PROCEDURE glXIsDirect (dpy: X.DisplayStar; 
+<*EXTERNAL*> PROCEDURE glXIsDirect (dpy: X.DisplayStar;
                                     ctx: GLXContext): X.Bool;
 
-<*EXTERNAL*> PROCEDURE glXMakeCurrent (dpy     : X.DisplayStar; 
-                                       drawable: GLXDrawable; 
+<*EXTERNAL*> PROCEDURE glXMakeCurrent (dpy     : X.DisplayStar;
+                                       drawable: GLXDrawable;
                                        ctx     : GLXContext): X.Bool;
 
 <*EXTERNAL*> PROCEDURE glXQueryExtension (
-                              dpy       : X.DisplayStar; 
+                              dpy       : X.DisplayStar;
                       (*OUT*) errorBase : Ctypes.int_star;
                       (*OUT*) eventBase : Ctypes.int_star) : X.Bool;
 
 <*EXTERNAL*> PROCEDURE glXQueryVersion (
-                              dpy  : X.DisplayStar; 
-                      (*OUT*) major: Ctypes.int_star; 
+                              dpy  : X.DisplayStar;
+                      (*OUT*) major: Ctypes.int_star;
                       (*OUT*) minor: Ctypes.int_star): X.Bool;
 
-<*EXTERNAL*> PROCEDURE glXSwapBuffers (dpy     : X.DisplayStar; 
+<*EXTERNAL*> PROCEDURE glXSwapBuffers (dpy     : X.DisplayStar;
                                        drawable: GLXDrawable);
 
-<*EXTERNAL*> PROCEDURE glXUseXFont (font    : X.Font; 
-                                    first   : Ctypes.int; 
-                                    count   : Ctypes.int; 
+<*EXTERNAL*> PROCEDURE glXUseXFont (font    : X.Font;
+                                    first   : Ctypes.int;
+                                    count   : Ctypes.int;
                                     listBase: Ctypes.int);
 
 <*EXTERNAL*> PROCEDURE glXWaitGL ();

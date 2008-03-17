@@ -5,10 +5,10 @@ INTERFACE HoverVBT;
 
 (* A "HoverVBT" is a filter that can notify its descendants if
    the mouse is sitting over them. *)
-   
+
 IMPORT Filter, Time, VBT;
 
-TYPE 
+TYPE
   T <: Filter.T;
 
 TYPE

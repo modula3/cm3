@@ -34,7 +34,7 @@ CONST
   DefaultShadowSizePts: Points = 1.5;
   DefaultShadowSize: Millimeters = DefaultShadowSizePts * 25.4 / 72.0;
 
-PROCEDURE SetFirstFocus (widget: VBT.T); 
+PROCEDURE SetFirstFocus (widget: VBT.T);
 PROCEDURE SetPopTarget (source: ButtonVBT.T; target: ZChildVBT.T);
 PROCEDURE SetLinkTarget (source: ButtonVBT.T; target: VBT.T);
 PROCEDURE SetPageTarget (source: ButtonVBT.T; target: FVTypes.FVTSplit);
@@ -47,7 +47,7 @@ PROCEDURE SetVBT (fv: FormsVBT.T; name: TEXT; vbt: VBT.T)
 PROCEDURE Open (name: TEXT; path: Rsrc.Path; baseURL: TEXT): Rd.T
   RAISES {FormsVBT.Error};
 (* If baseURL # NIL, then try to open "name" as a URL, relative
-   to baseURL. If not Otherwise, open "name" as a Rsrc, passing in 
+   to baseURL. If not Otherwise, open "name" as a Rsrc, passing in
    path. *)
 
 
@@ -114,7 +114,7 @@ PROCEDURE MetricsToName (metrics: RefList.T): TEXT;
 (* Convert a metrics-list into a font-name. *)
 
 REVEAL FVTypes.FVImage <: PrivateImage;
-TYPE 
+TYPE
   PrivateImage = ImageVBT.T OBJECT
     op: PaintOp.T; (* to paint the image *)
     bg: PaintOp.T; (* to paint empty space in VBT *)
@@ -150,7 +150,7 @@ TYPE
                     radio: FVTypes.FVRadio;
                     name : TEXT
                   END;
-                  
+
 VAR
   FVSyntax: Sx.Syntax; (* The syntax used by the parser. *)
 

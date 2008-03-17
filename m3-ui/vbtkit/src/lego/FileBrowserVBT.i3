@@ -139,13 +139,13 @@ TYPE
 
 TYPE Selector <: ListVBT.MultiSelector;
 
-(* \subsubsection{The Helper} 
-   
+(* \subsubsection{The Helper}
+
    The FileBrowser's helper (see page \pageref{FBHelper}) is a
    "TypeinVBT".  Once the user types in the helper, any selected items
    in the browser are unselected.  If the user types Return in the
    browser, that will activate the name in the Helper.
-   
+
    If an error occurs during the activation, the "error" method of the
    filebrowser to which the helper is attached will be invoked. *)
 

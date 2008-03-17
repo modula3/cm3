@@ -113,7 +113,7 @@ PROCEDURE IsEmpty (v: T): BOOLEAN;
    not "TRUE" when "v" was initialized, this procedure will always
    return "FALSE". *)
 
-PROCEDURE TakeFocus (v          : T; 
+PROCEDURE TakeFocus (v          : T;
                      time       : VBT.TimeStamp;
                      alsoSelect : BOOLEAN       := TRUE):
   BOOLEAN;

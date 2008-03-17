@@ -11,17 +11,17 @@ INTERFACE Filter;
 
 IMPORT Split, VBT;
 
-TYPE 
-  T <: Public; 
+TYPE
+  T <: Public;
   Public = Split.T OBJECT METHODS
-     <* LL.sup <= VBT.mu *> 
-     init(ch: VBT.T): T 
+     <* LL.sup <= VBT.mu *>
+     init(ch: VBT.T): T
    END;
 
-(* The call "v.init(ch)" initializes "v" as a filter with 
+(* The call "v.init(ch)" initializes "v" as a filter with
    child "ch" and returns "v". *)
 
-(* "Split.Move" on a filter is a noop.  "Split.Insert" replaces the child, 
+(* "Split.Move" on a filter is a noop.  "Split.Insert" replaces the child,
    if any, and detaches it. *)
 
 PROCEDURE Child(v: T): VBT.T;
@@ -34,7 +34,7 @@ PROCEDURE Replace(v: T; ch: VBT.T): VBT.T;
 <* LL.sup = VBT.mu *>
 (* Replace "v"'s child by "ch", detach and return "v"'s old child, and
    mark "v" for redisplay.  *)
-   
+
 (* "Filter.Replace" is similar to "Split.Replace", except that it
    returns the old child instead of taking the old child as an argument,
    and if "ch" is "NIL" it is similar to "Split.Delete".  *)

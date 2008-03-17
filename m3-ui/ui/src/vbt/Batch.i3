@@ -21,7 +21,7 @@ TYPE T <: ADDRESS;
 
 PROCEDURE New(len: INTEGER := -1): T;
 (* Allocate a batch containing at least "len" "Word.Ts". *)
- 
+
 (* If "len = -1", the number of "Word.T"s in the result will be
    "VBTTuning.BatchSize".  Initially the clip and scroll source are
    "Rect.Empty".  *)

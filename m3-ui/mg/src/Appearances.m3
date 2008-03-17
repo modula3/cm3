@@ -56,7 +56,7 @@ PROCEDURE DSBB(app: DropShadow; t: T; v: V): R2Box.T =
   END DSBB;
 
 PROCEDURE DSRegion(app: DropShadow; t: T; v: V): Region.T =
-  VAR 
+  VAR
     rgn := Appearance.region(app, t, v);
     delta := MG.MGCToScreenPoint(v, app.delta);
   BEGIN

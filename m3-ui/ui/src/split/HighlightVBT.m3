@@ -14,7 +14,7 @@ IMPORT Batch, BatchUtil, BatchRep, FilterClass,
   PaintOp, Pixmap, Point, Rect, Region, ScrnPixmap,
   VBT, VBTClass, Filter;
 
-REVEAL T = Public BRANDED OBJECT 
+REVEAL T = Public BRANDED OBJECT
     txt: Pixmap.T;
     op: PaintOp.T;
     delta: Point.T;
@@ -61,7 +61,7 @@ PROCEDURE Reshape(v: T; READONLY cd: VBT.ReshapeRec) RAISES {} =
          generating bad rectangles, so: *)
       cdP.saved := Rect.Meet(cd.new, cd.saved)
     END;
-    Filter.T.reshape(v, cdP) 
+    Filter.T.reshape(v, cdP)
   END Reshape;
 
 PROCEDURE Capture(
@@ -81,8 +81,8 @@ PROCEDURE Capture(
 
 PROCEDURE InvertHighlight(v: T; READONLY clip: Rect.T) =
   (* Invert all highlighted bits contained in clip.  LL = v.ch *)
-  VAR a: Rect.Partition; 
-      rect := Rect.Meet(v.rect, clip); 
+  VAR a: Rect.Partition;
+      rect := Rect.Meet(v.rect, clip);
       inset := Rect.Inset(v.rect, v.border);
   BEGIN
     IF Rect.Subset(rect, inset) THEN RETURN END;
@@ -99,7 +99,7 @@ PROCEDURE PaintBatch(v: T; <*UNUSED*> ch: VBT.T; ba: Batch.T) RAISES {} =
       VBTClass.PaintBatch(v, ba)
     ELSE
       VAR
-        rect: Rect.T; 
+        rect: Rect.T;
         inset := Rect.Inset(v.rect, v.border);
         a: Rect.Partition;
       BEGIN
@@ -121,14 +121,14 @@ PROCEDURE PaintBatch(v: T; <*UNUSED*> ch: VBT.T; ba: Batch.T) RAISES {} =
   END PaintBatch;
 
 PROCEDURE SetTexture(
-  w: VBT.T; 
-  txt: Pixmap.T; 
+  w: VBT.T;
+  txt: Pixmap.T;
   READONLY delta := Point.Origin;
   op := PaintOp.TransparentSwap) =
   VAR v := Find(w); BEGIN
     IF v = NIL OR (v.txt = txt) AND Point.Equal(v.delta, delta)
-    AND op = v.op THEN 
-      RETURN 
+    AND op = v.op THEN
+      RETURN
     ELSIF v.ch = NIL THEN
       v.txt := txt;
       v.delta := delta;
@@ -146,8 +146,8 @@ PROCEDURE SetTexture(
 
 PROCEDURE SetRect(w: VBT.T; READONLY r: Rect.T; border: CARDINAL) =
   VAR v := Find(w); BEGIN
-    IF v = NIL OR Rect.Equal(v.rect, r) AND v.border = border THEN 
-      RETURN 
+    IF v = NIL OR Rect.Equal(v.rect, r) AND v.border = border THEN
+      RETURN
     ELSIF v.ch = NIL THEN
       v.rect := r;
       v.border := border
@@ -173,7 +173,7 @@ PROCEDURE Get(
     RETURN TRUE
   END Get;
 
-PROCEDURE Find(v: VBT.T): T = 
+PROCEDURE Find(v: VBT.T): T =
   BEGIN
     LOOP
       TYPECASE v OF

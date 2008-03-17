@@ -34,7 +34,7 @@ PROCEDURE ModifierToText (m: VBT.Modifier): TEXT =
 
 
 PROCEDURE ModifiersToText (mods: VBT.Modifiers): TEXT =
-  VAR 
+  VAR
     res := "";
   BEGIN
     FOR m := FIRST (VBT.Modifier) TO LAST (VBT.Modifier) DO
@@ -48,23 +48,23 @@ PROCEDURE ModifiersToText (mods: VBT.Modifiers): TEXT =
 
 
 PROCEDURE Key (v: VBT.T; READONLY cd: VBT.KeyRec) =
-  VAR 
+  VAR
     msg : TEXT;
   BEGIN
     msg := "whatChanged = "  & Fmt.Int (cd.whatChanged) &
-           "  wentDown = "   & Fmt.Bool (cd.wentDown) & 
+           "  wentDown = "   & Fmt.Bool (cd.wentDown) &
            "  modifiers = {" & ModifiersToText(cd.modifiers) & "}";
     TextVBT.Put (v, msg);
   END Key;
 
 
-PROCEDURE Misc (v: VBT.T; READONLY cd: VBT.MiscRec) = 
-  BEGIN    
+PROCEDURE Misc (v: VBT.T; READONLY cd: VBT.MiscRec) =
+  BEGIN
     IF cd.type = VBT.TakeSelection AND cd.selection = VBT.KBFocus THEN
       VBT.Acquire (v, VBT.KBFocus, cd.time);
     END;
   END Misc;
-    
+
 
 VAR v := NEW (TextVBT.T, key := Key, misc := Misc).init ("");
 

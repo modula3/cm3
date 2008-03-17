@@ -8,8 +8,8 @@
 
 UNSAFE MODULE WinScrnCursor;
 
-IMPORT Cursor, Point, Rect, ScrnCursor, ScrnPixmap, Text, TrestleComm, 
-       TrestleImpl, VBTClass, WinDef, WinGDI, WinNT, WinScreenType, 
+IMPORT Cursor, Point, Rect, ScrnCursor, ScrnPixmap, Text, TrestleComm,
+       TrestleImpl, VBTClass, WinDef, WinGDI, WinNT, WinScreenType,
        WinScrnPixmap, WinUser;
 
 CONST
@@ -32,15 +32,15 @@ TYPE
        interpretation depends on the screentype that owns "cs".  The method
        call "cs.localize()" returns a raw cursor equal to the one on which
        "cs" is a handle, and the method call "cs.unload()" causes "cs"
-       to become anonymous.  
+       to become anonymous.
 
-   However, the X version of "localize" (XScrnCrsr.CursorLocalize) always 
+   However, the X version of "localize" (XScrnCrsr.CursorLocalize) always
    raises "Failure", and the X version of "unload" (XScrnCrsr.CursorUnregister)
    is a no-op. For now, we do the same ...
 -----------------------------------------------------------------------------*)
 
 
-PROCEDURE Localize (<*UNUSED*> self: T): ScrnCursor.Raw 
+PROCEDURE Localize (<*UNUSED*> self: T): ScrnCursor.Raw
     RAISES {ScrnCursor.Failure} =
   BEGIN
     RAISE ScrnCursor.Failure;
@@ -84,8 +84,8 @@ PROCEDURE Load (                      self: Oracle;
     andRaw  : ScrnPixmap.Raw;
     colRaw  : ScrnPixmap.Raw;
   BEGIN
-    IF c.plane1 = NIL OR c.plane2 = NIL OR 
-       c.plane1.depth # 1 OR c.plane2.depth # 1 OR 
+    IF c.plane1 = NIL OR c.plane2 = NIL OR
+       c.plane1.depth # 1 OR c.plane2.depth # 1 OR
        Rect.IsEmpty (c.plane1.bounds) OR c.plane1.bounds # c.plane2.bounds THEN
       RETURN ScrnCursor.DontCare;
     END;
@@ -142,10 +142,10 @@ PROCEDURE Load (                      self: Oracle;
                           yHotspot := c.hotspot.v,
                           hbmMask  := hbmMask,
                           hbmColor := hbmColor};
-            
+
           hcursor := WinUser.CreateIconIndirect (ADR (iconInfo));
           <* ASSERT hcursor # NIL *>
-          
+
           status := WinGDI.DeleteObject (hbmMask);
           <* ASSERT status = True *>
           status := WinGDI.DeleteObject (hbmColor);
@@ -161,9 +161,9 @@ PROCEDURE Load (                      self: Oracle;
 (*-----------------------------------------------------------------------------
    The spec in ScrnCursor.i3 states:
 
-       The method call "st.cursor.list(pat, maxResults)" returns the names 
-       of all cursors owned by "st" that match the pattern "pat".  The list 
-       of results may be truncated to length "maxResults". A "*" matches 
+       The method call "st.cursor.list(pat, maxResults)" returns the names
+       of all cursors owned by "st" that match the pattern "pat".  The list
+       of results may be truncated to length "maxResults". A "*" matches
        any number of characters and a "?" matches a single character.
 
    However, the X version (XScrnCrsr.CursorList) always returns NIL.
@@ -178,9 +178,9 @@ PROCEDURE List (<* UNUSED *> self      : Oracle;
   END List;
 
 
-TYPE 
-  NamedCursor = RECORD 
-    name: TEXT; 
+TYPE
+  NamedCursor = RECORD
+    name: TEXT;
     crsr: WinNT.LPCTSTR;
   END;
 
@@ -229,13 +229,13 @@ PROCEDURE BuiltIn (self: Oracle; cs: Cursor.Predefined): ScrnCursor.T =
           RETURN LoadCursor (WinUser.IDC_WAIT);
         END;
       END;
-    EXCEPT 
+    EXCEPT
       TrestleComm.Failure =>  RETURN ScrnCursor.DontCare;
     END;
   END BuiltIn;
 
 
-PROCEDURE LoadCursor (lpszCursor: WinNT.LPCTSTR): ScrnCursor.T 
+PROCEDURE LoadCursor (lpszCursor: WinNT.LPCTSTR): ScrnCursor.T
     RAISES {TrestleComm.Failure} =
   BEGIN
     WITH hcursor = WinUser.LoadCursor (NIL, lpszCursor) DO
@@ -252,12 +252,12 @@ PROCEDURE SetCursor (cs: ScrnCursor.T) =
   VAR
     hcursor: WinDef.HCURSOR;
   BEGIN
-    (* In xvbt, a value of "ScrnCursor.DontCare" means that the cursor is 
-       "undefined", that is, its appearance is the same as that of the parent 
-       window (which is always the root window, since xvbt does not build up 
+    (* In xvbt, a value of "ScrnCursor.DontCare" means that the cursor is
+       "undefined", that is, its appearance is the same as that of the parent
+       window (which is always the root window, since xvbt does not build up
        trees of X windows.
-             
-       For simplicity, I assume that the cursor of the desktop window 
+
+       For simplicity, I assume that the cursor of the desktop window
        is always "IDC_ARROW". So, undefining the cursor allociated with
        a "Child" means setting it to "IDC_ARROW". *)
 

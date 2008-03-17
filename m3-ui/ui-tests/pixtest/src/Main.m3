@@ -6,7 +6,7 @@
 
 MODULE Main;
 
-IMPORT Axis, PaintOp, Pixmap, Point, Rect, Region, ScrnPixmap, Text, Trestle, 
+IMPORT Axis, PaintOp, Pixmap, Point, Rect, Region, ScrnPixmap, Text, Trestle,
        Word, VBT;
 
 PROCEDURE Pmap(): Pixmap.T =
@@ -19,7 +19,7 @@ PROCEDURE Pmap(): Pixmap.T =
       ELSE <* ASSERT FALSE *>
       END;
     END CharToInt;
-    
+
   PROCEDURE NextByte(): Word.T =
     BEGIN
       WITH hi = Text.GetChar (text[i], 0), lo = Text.GetChar (text[i], 1) DO
@@ -55,7 +55,7 @@ PROCEDURE Pmap(): Pixmap.T =
            "fc","c9","9d","8c","f9","7b","f8","ff","86","90","fb","0f",
            "fc","67","b6","b6","f9","78","fe","d7","32","a6","fd","0e",
            "cf","cf","82","a0","f9","7e","d8","ef","de","bd","fb","0d"};
-  VAR 
+  VAR
     r := ScrnPixmap.NewRaw(1, Rect.FromSize(width, height));
     i := 0;
     word: Word.T;
@@ -86,7 +86,7 @@ PROCEDURE Shape (<*UNUSED*> ch: VBT.T;
 
 PROCEDURE Repaint (v: VBT.Leaf; READONLY bad: Region.T) =
   VAR
-    nw := Point.Sub(Rect.Middle(VBT.Domain(v)), 
+    nw := Point.Sub(Rect.Middle(VBT.Domain(v)),
                     Rect.Middle(VBT.PixmapDomain(v, pix)));
   BEGIN
     VBT.PaintTint (v, bad.r, PaintOp.Bg);
@@ -100,4 +100,4 @@ BEGIN
     Trestle.AwaitDelete(res);
   END;
 END Main.
- 
+

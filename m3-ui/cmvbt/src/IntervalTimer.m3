@@ -5,9 +5,9 @@
 MODULE IntervalTimer;
 IMPORT Time, Boolean, Thread;
 
-REVEAL 
+REVEAL
   Private = Thread.Closure BRANDED OBJECT END;
-  T = Public BRANDED OBJECT 
+  T = Public BRANDED OBJECT
     duration: Time.T;
     mu:       MUTEX;
     thr:      Thread.T;
@@ -42,7 +42,7 @@ PROCEDURE Apply(self: T): REFANY =
         TRY
           Thread.AlertPause (self.duration);
         EXCEPT
-          Thread.Alerted => 
+          Thread.Alerted =>
             IF self.dead THEN self.dead := FALSE; END;
             RETURN NIL;
         END;
@@ -51,5 +51,5 @@ PROCEDURE Apply(self: T): REFANY =
     END;
   END Apply;
 
-BEGIN 
+BEGIN
 END IntervalTimer.

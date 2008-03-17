@@ -26,12 +26,12 @@ REVEAL Path.T = BRANDED OBJECT
 (* The current data for the path is packed in [start^..next^),
    and the space [next^..end^) is available for additional segments.
 
-   If "points # NIL", then the space between start and end is 
+   If "points # NIL", then the space between start and end is
    contained in the array points^.  If "points = NIL", then
    the path is read-only.
-   
+
    The value of "current" is the record for the "MoveTo" that
-   started the last subpath, if it is open, and equal to "next" 
+   started the last subpath, if it is open, and equal to "next"
    otherwise. *)
 
 TYPE Lock = UNTRACED REF Word.T;
@@ -39,7 +39,7 @@ TYPE Lock = UNTRACED REF Word.T;
 PROCEDURE Freeze(path: Path.T): Lock;
 PROCEDURE Thaw(l: Lock);
 
-(* To read the address fields of a path, you must first call "Freeze", 
+(* To read the address fields of a path, you must first call "Freeze",
    preventing the allocator from moving the data in points.  You must
    then call "Thaw", passing the result of the call to "Freeze" when you
    no longer need the pointers to be maintained correctly. *)
@@ -56,5 +56,5 @@ TYPE
      field is either Line, Move, or Close.   If "ct" is "Close",
      then "p" is the startpoint of the subpath that it closes.  *)
 
-  
+
 END PathPrivate.

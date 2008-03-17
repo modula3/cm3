@@ -35,7 +35,7 @@ FROM Ctypes IMPORT char_star, int, int_star, int_star_star;
 (*-------------------*)
 (* XXX       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmXXXWidgetClass:Xt.WidgetClass;
 
 TYPE XXXWidgetClass = UNTRACED ROOT;
@@ -56,7 +56,7 @@ PROCEDURE CreateXXX( parent:Xt.Widget;
 (*-------------------*)
 (* ArrowButton       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmArrowButtonWidgetClass:Xt.WidgetClass;
 
 TYPE ArrowButtonWidgetClass = UNTRACED ROOT;
@@ -73,7 +73,7 @@ PROCEDURE CreateArrowButton( parent:Xt.Widget;
 (*-------------------*)
 (* BulletinBoard       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmBulletinBoardWidgetClass:Xt.WidgetClass;
 
 TYPE BulletinBoardWidgetClass = UNTRACED ROOT;
@@ -97,10 +97,10 @@ PROCEDURE CreateBulletinBoardDialog( parent:Xt.Widget;
 (*-------------------*)
 (* CascadeButton       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmCascadeButtonWidgetClass:Xt.WidgetClass;
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmCascadeButtonGadgetClass:Xt.WidgetClass;
 
 TYPE CascadeButtonWidgetClass = UNTRACED ROOT;
@@ -125,7 +125,7 @@ PROCEDURE CascadeButtonHighlight(w:Xt.Widget;
 (*-------------------*)
 (* DialogShell       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmDialogShellWidgetClass:Xt.WidgetClass;
 
 TYPE DialogShellWidgetClass = UNTRACED ROOT;
@@ -142,7 +142,7 @@ PROCEDURE CreateDialogShell( parent:Xt.Widget;
 (*-------------------*)
 (* DrawingArea       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmDrawingAreaWidgetClass:Xt.WidgetClass;
 
 TYPE DrawingAreaWidgetClass = UNTRACED ROOT;
@@ -159,7 +159,7 @@ PROCEDURE CreateDrawingArea( parent:Xt.Widget;
 (*-------------------*)
 (* DrawnButton       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmDrawnButtonWidgetClass:Xt.WidgetClass;
 
 TYPE DrawnButtonWidgetClass = UNTRACED ROOT;
@@ -176,7 +176,7 @@ PROCEDURE CreateDrawnButton( parent:Xt.Widget;
 (*-------------------*)
 (* Form              *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmFormWidgetClass:Xt.WidgetClass;
 
 TYPE FormWidgetClass = UNTRACED ROOT;
@@ -199,7 +199,7 @@ PROCEDURE CreateFormDialog( parent:Xt.Widget;
 (*-------------------*)
 (* Frame             *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmFrameWidgetClass:Xt.WidgetClass;
 
 TYPE FrameWidgetClass = UNTRACED ROOT;
@@ -216,7 +216,7 @@ PROCEDURE CreateFrame( parent:Xt.Widget;
 (*-------------------*)
 (* Label             *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmLabelWidgetClass:Xt.WidgetClass;
 
 TYPE LabelWidgetClass = UNTRACED ROOT;
@@ -233,7 +233,7 @@ PROCEDURE CreateLabel( parent:Xt.Widget;
 (*-------------------*)
 (* List              *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmListWidgetClass:Xt.WidgetClass;
 
 CONST
@@ -368,7 +368,7 @@ PROCEDURE ListSetHorizPos(w: Xt.Widget;
 (*-------------------*)
 (* MainWindow        *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmMainWindowWidgetClass:Xt.WidgetClass;
 
 TYPE MainWindowWidgetClass = UNTRACED ROOT;
@@ -400,7 +400,7 @@ PROCEDURE MainWindowSep3(w: Xt.Widget): Xt.Widget;
 (*-------------------*)
 (* MenuShell       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmMenuShellWidgetClass:Xt.WidgetClass;
 
 TYPE MenuShellWidgetClass = UNTRACED ROOT;
@@ -417,7 +417,7 @@ PROCEDURE CreateMenuShell( parent:Xt.Widget;
 (*-------------------*)
 (* MessageBox       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmMessageBoxWidgetClass:Xt.WidgetClass;
 
 TYPE MessageBoxWidgetClass = UNTRACED ROOT;
@@ -478,7 +478,7 @@ PROCEDURE MessageBoxGetChild( parent:Xt.Widget;
 (*-------------------*)
 (* PanedWindow       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmPanedWindowWidgetClass:Xt.WidgetClass;
 
 TYPE PanedWindowWidgetClass = UNTRACED ROOT;
@@ -494,10 +494,10 @@ PROCEDURE CreatePanedWindow( parent:Xt.Widget;
 (*-------------------*)
 (* PushButton       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmPushButtonWidgetClass:Xt.WidgetClass;
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmPushButtonGadgetClass:Xt.WidgetClass;
 
 TYPE PushButtonWidgetClass = UNTRACED ROOT;
@@ -517,7 +517,7 @@ PROCEDURE CreatePushButton( parent:Xt.Widget;
 (*-------------------*)
 (* RowColumn       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmRowColumnWidgetClass:Xt.WidgetClass;
 
 TYPE RowColumnWidgetClass = UNTRACED ROOT;
@@ -583,7 +583,7 @@ PROCEDURE GetPostedFromWidget(w:Xt.Widget):Xt.Widget;
 (*-------------------*)
 (* Scale       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmScaleWidgetClass:Xt.WidgetClass;
 
 TYPE ScaleWidgetClass = UNTRACED ROOT;
@@ -611,7 +611,7 @@ PROCEDURE ScaleSetValue(w: Xt.Widget;
 (*-------------------*)
 (* ScrollBar       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmScrollBarWidgetClass:Xt.WidgetClass;
 
 TYPE ScrollBarWidgetClass = UNTRACED ROOT;
@@ -641,13 +641,13 @@ PROCEDURE ScrollBarSetValues(w: Xt.Widget;
 			 notify: Xt.Boolean);
 
 <*EXTERNAL "_XmSetEtchedSlider":C *>
-PROCEDURE SetEtchedSlider(w:ScrollBarWidget); 
+PROCEDURE SetEtchedSlider(w:ScrollBarWidget);
 
 
 (*-------------------*)
 (* ScrolledWindow       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmScrolledWindowWidgetClass:Xt.WidgetClass;
 
 TYPE ScrolledWindowWidgetClass = UNTRACED ROOT;
@@ -673,7 +673,7 @@ PROCEDURE ScrolledWindowSetAreas(w: Xt.Widget;
 (*-------------------*)
 (* SelectionBox       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmSelectionBoxWidgetClass:Xt.WidgetClass;
 
 TYPE SelectionBoxWidgetClass = UNTRACED ROOT;
@@ -707,10 +707,10 @@ PROCEDURE SelectionBoxGetChild(w:Xt.Widget;
 (*-------------------*)
 (* Separator       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmSeparatorWidgetClass:Xt.WidgetClass;
 
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmSeparatorGadgetClass:Xt.WidgetClass;
 
 TYPE SeparatorWidgetClass = UNTRACED ROOT;
@@ -733,7 +733,7 @@ PROCEDURE CreateSeparator( parent:Xt.Widget;
 (*-------------------*)
 (* Text ???? Incomplete???      *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmTextWidgetClass:Xt.WidgetClass;
 
 TYPE TextWidgetClass = UNTRACED ROOT;
@@ -751,7 +751,7 @@ PROCEDURE CreateText( parent:Xt.Widget;
 (*-------------------*)
 (* TextField         *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmTextFieldWidgetClass:Xt.WidgetClass;
 
 TYPE TextFieldWidgetClass = UNTRACED ROOT;
@@ -767,7 +767,7 @@ PROCEDURE CreateTextField( parent:Xt.Widget;
 
 <*EXTERNAL "XmTextFieldGetString":C *>
 PROCEDURE TextFieldGetString(w:Xt.Widget): char_star;
-	                 
+
 <*EXTERNAL "XmTextFieldGetLastPosition":C *>
 PROCEDURE TextFieldGetLastPosition(w:Xt.Widget): Xm.TextPosition;
 
@@ -777,24 +777,24 @@ PROCEDURE TextFieldSetString(w:Xt.Widget;
 
 <*EXTERNAL "XmTextFieldReplace":C *>
 PROCEDURE TextFieldReplace(w:Xt.Widget;
-	                 from_pos,to_pos: Xm.TextPosition;                 
+	                 from_pos,to_pos: Xm.TextPosition;
 			 value: char_star);
 
 <*EXTERNAL "XmTextFieldInsert":C *>
 PROCEDURE TextFieldInsert(w:Xt.Widget;
-	                 pos: Xm.TextPosition;                 
+	                 pos: Xm.TextPosition;
 			 value: char_star);
 
 <*EXTERNAL "XmTextFieldSetAddMode":C *>
 PROCEDURE TextFieldSetAddMode(w:Xt.Widget;
 	                 state: Xt.Boolean);
-                    
+
 <*EXTERNAL "XmTextFieldGetAddMode":C *>
 PROCEDURE TextFieldGetAddMode(w:Xt.Widget):Xt.Boolean;
-                    
+
 <*EXTERNAL "XmTextFieldGetEditable":C *>
 PROCEDURE TextFieldGetEditable(w:Xt.Widget):Xt.Boolean;
-                    
+
 <*EXTERNAL "XmTextFieldSetEditable":C *>
 PROCEDURE TextFieldSetEditable(w:Xt.Widget;
 	                 state: Xt.Boolean);
@@ -824,7 +824,7 @@ PROCEDURE TextFieldSetInsertionPosition(w:Xt.Widget;
 PROCEDURE TextFieldGetSelectionPosition(w:Xt.Widget):Xm.TextPosition;
 
 <*EXTERNAL "XmTextFieldSetSelectionPosition":C *>
-PROCEDURE TextFieldSetSelectionPosition(w:Xt.Widget;                 
+PROCEDURE TextFieldSetSelectionPosition(w:Xt.Widget;
 			 left,right: UNTRACED REF Xm.TextPosition): Xt.Boolean;
 
 <*EXTERNAL "XmTextFieldGetSelection":C *>
@@ -878,7 +878,7 @@ PROCEDURE TextFieldGetBaseline(w:Xt.Widget): int;
 (*-------------------*)
 (* ToggleButton       *)
 (*-------------------*)
-<*EXTERNAL*> 
+<*EXTERNAL*>
 VAR xmToggleButtonWidgetClass:Xt.WidgetClass;
 
 TYPE ToggleButtonWidgetClass = UNTRACED ROOT;

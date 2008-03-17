@@ -25,7 +25,7 @@ IMPORT XClient, TrestleOnX, TrestleClass, Trestle, Rect, ProperSplit,
        XAtomQueue, XScreenType, VBT, Ctypes, TrestleComm, Fmt, XProperties,
        RTParams, KeyboardKey, RTHeapRep,
        VBTClass, Env, M3toC, XInput, XMessenger, Split, Text,
-       IP, ASCII, XExtensions, IntIntTbl, XClientExt, TrslOnXF; 
+       IP, ASCII, XExtensions, IntIntTbl, XClientExt, TrslOnXF;
 
 FROM XClient IMPORT T;
 
@@ -216,7 +216,7 @@ PROCEDURE FindWaiter (trsl: T; READONLY ev: X.XEvent): WaitFor =
           RETURN NIL;
         END;
       ELSE
-        IF trsl.awaitCountExt = NIL OR 
+        IF trsl.awaitCountExt = NIL OR
           NOT trsl.awaitCountExt.get(e.type, count) OR
           count = 0 THEN
           RETURN NIL;

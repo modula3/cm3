@@ -10,7 +10,7 @@
 (* An "OffsetVBT.T" is a filter that maintains a translation
    between the coordinate systems of the child and parent.
    The parent's domain has its northwest corner at an arbitrary
-   offset from the child's. The child's domain width and height 
+   offset from the child's. The child's domain width and height
    correspond to the child's preferred size.
 
    The parent's domain may be a different size than the child's.
@@ -19,7 +19,7 @@
    show a portion of the child, displays in a background color.
 
    For "Simple", there is no restriction on the coordinates
-   of the northwest corner. For "T", the child's domain has its 
+   of the northwest corner. For "T", the child's domain has its
    northwest corner at (0, 0); this is used when a child
    is connected to several JoinParent which are viewing the
    same child at several locations on the scree.
@@ -46,7 +46,7 @@ TYPE
 
 (* The call "v.init(ch)" initializes "v" as an "OffsetVBT" with
    child "ch".  And the northwest corner of the parent is aligned
-   at co-ordinate ("north", "west") mm in the child domain. 
+   at co-ordinate ("north", "west") mm in the child domain.
 
    The call "v.move(north, west)" adjusts the co-ordinate system
    so that the "v"s northwest corner is positioned at co-ordinate

@@ -33,7 +33,7 @@ IMPORT Algorithm, AlgorithmClass, Atom, Classes, Env, Fmt, File,
        ZeusPrivate, ZeusUtil;
 IMPORT Process, Stdio;
 
-<*FATAL FormsVBT.Error, FormsVBT.Unimplemented, 
+<*FATAL FormsVBT.Error, FormsVBT.Unimplemented,
         TrestleComm.Failure, Thread.Alerted, Wr.Failure *>
 
 
@@ -266,7 +266,7 @@ PROCEDURE ViewsToWr (           wr   : Wr.T;
     END;
   END ViewsToWr;
 
- 
+
 EXCEPTION
   BadSnapshot( TEXT );
 
@@ -358,10 +358,10 @@ PROCEDURE PrivateRestoreFromList (panel: ZeusPanelPrivate.T; list: RefList.T)
       Sx.Print(wr, l);
       panel.fv.restore(TextRd.New(TextWr.ToText(wr)));
     EXCEPT
-      Sx.PrintError, FormsVBT.Mismatch => 
+      Sx.PrintError, FormsVBT.Mismatch =>
     END;
     ZeusPanelPrivate.LoadFromPanel(panel);
-    
+
     WHILE (list # NIL) DO
       IF (NOT ISTYPE(list.head, RefList.T)) OR (list.head = NIL) THEN
         RAISE BadSnapshot("Not a valid snapshot");
@@ -685,7 +685,7 @@ PROCEDURE RestoreData(panel: ZeusPanelPrivate.T; list: RefList.T) =
         Sx.Print(wr, l);
         panel.fv.restore(TextRd.New(TextWr.ToText(wr)));
       EXCEPT
-        Sx.PrintError, FormsVBT.Mismatch => 
+        Sx.PrintError, FormsVBT.Mismatch =>
           RAISE BadSnapshot("Bad format (2)");
       END;
       ZeusPanelPrivate.LoadFromPanel(panel);
@@ -756,9 +756,9 @@ PROCEDURE StateDirFile (file: TEXT): Pathname.T =
   VAR home := Env.Get (HomeDir);
   BEGIN
     IF home = NIL THEN
-      Wr.PutText (Stdio.stderr, 
+      Wr.PutText (Stdio.stderr,
         "Error: the HOME environment variable is undefined.\n");
-      Wr.PutText (Stdio.stderr, 
+      Wr.PutText (Stdio.stderr,
         "Please set it to the path of your home directory and try again.\n");
       Process.Exit (0);
     END;

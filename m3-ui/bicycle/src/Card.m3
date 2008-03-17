@@ -238,7 +238,7 @@ TYPE
 
 PROCEDURE LumenApply (self: Lumen): REFANY =
   VAR timer: LONGREAL; BEGIN
-    IF NOT self.quick THEN 
+    IF NOT self.quick THEN
       LOCK VBT.mu DO timer := FLOAT(chainTime, LONGREAL) * 0.01D0 END;
       IF timer < 0.0D0 THEN RETURN NIL END;
       Thread.Pause(timer)

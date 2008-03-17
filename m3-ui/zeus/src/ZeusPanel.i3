@@ -54,11 +54,11 @@ PROCEDURE GetAnimationTime (): REAL;
    amount of time that a ``one-second animation'' should take.
    By convention, each event takes one second. *)
 
-PROCEDURE ReportError (text: TEXT); 
+PROCEDURE ReportError (text: TEXT);
 <* LL = VBT.mu *>
 (* Display the specified text as an error message in the control panel. *)
 
-PROCEDURE ReportErrorC (report: BOOLEAN; text: TEXT); 
+PROCEDURE ReportErrorC (report: BOOLEAN; text: TEXT);
 <* LL = VBT.mu *>
 (* IF report THEN ReportError(t) *)
 
@@ -92,7 +92,7 @@ PROCEDURE RegisterView (proc          : NewViewProc;
                         name, sessName: TEXT;
                         alertable     : BOOLEAN       := FALSE;
                         sample        : View.T        := NIL    );
-<* LL=0 *> 
+<* LL=0 *>
 (* Register a view.  "name" is the name of the view, and
    "sessName" is the name of the session to which the algorithm
    belongs, that is, the basename of the ".evt" file.  It is a
@@ -113,7 +113,7 @@ PROCEDURE RegisterView (proc          : NewViewProc;
    instance of the view, e.g., if "proc" has side effects like
    creating windows. *)
 
-PROCEDURE SetSessTitle (sessName, sessTitle: TEXT); 
+PROCEDURE SetSessTitle (sessName, sessTitle: TEXT);
 <* LL=0 *>
 (* The default title under which a session is listed in the "Sessions" menu
    is its name, that is, the basename of the .evt file.  Use this procedure
@@ -129,7 +129,7 @@ PROCEDURE Pause (alg: Algorithm.T; msg: TEXT := NIL)
    aborted).  The "msg", if non-"NIL", is displayed in the
    control panel's status area. *)
 
-PROCEDURE Abort();  
+PROCEDURE Abort();
 <* LL=VBT.mu *>
 (* This procedure acts as if the user had pressed the "Abort" button.
    Be careful: calling this procedure does not cause the algorithms to
@@ -154,8 +154,8 @@ PROCEDURE StartFeedback (alg: Algorithm.T) RAISES {Thread.Alerted};
 
 PROCEDURE EndFeedback(alg: Algorithm.T) RAISES {Thread.Alerted};
 <* LL=VBT.mu, S=Paused *>
-(* This procedure signals a previous call to StartFeedback to return. 
-   This procedure is typically called from an algorithm's Feedback 
-   method. *) 
+(* This procedure signals a previous call to StartFeedback to return.
+   This procedure is typically called from an algorithm's Feedback
+   method. *)
 
 END ZeusPanel.

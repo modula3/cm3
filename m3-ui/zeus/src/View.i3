@@ -12,7 +12,7 @@ IMPORT ReactivityVBT, VBT, ZeusClass;
 
 (* init(ch) inserts the "ch" argument as the child of the View.T (which is
    a ReactivityVBT.T), sets the reactivity to Passive, and returns the
-   View.T. If "ch" is "NIL", then a child is created that displays 
+   View.T. If "ch" is "NIL", then a child is created that displays
    the background. The init() method should be called just after the View.T is
    created.  Any user-supplied override to the init method must invoke the
    init method of the supertype. *)
@@ -64,7 +64,7 @@ IMPORT ReactivityVBT, VBT, ZeusClass;
 
 REVEAL
    ZeusClass.Private <: ReactivityVBT.T;
-   
+
 TYPE
   T <: Public;
   Public = ZeusClass.T OBJECT

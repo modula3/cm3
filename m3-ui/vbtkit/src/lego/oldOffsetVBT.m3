@@ -18,8 +18,8 @@ IMPORT Axis, Filter, FilterClass, MouseSplit, PaintOp, Pixmap, Point,
        VBTClass, VBT, Rect, Region, Trestle, Batch, BatchUtil, ScrnCursor,
        ScrnPixmap, VBTRep;
 
-REVEAL 
-  T = TPublic BRANDED OBJECT 
+REVEAL
+  T = TPublic BRANDED OBJECT
     delta: Point.T;
     (* child coord + delta = parent coord. *)
     (* v.delta is protected both by v and by VBT.mu.
@@ -92,10 +92,10 @@ PROCEDURE Init (v: T; ch: VBT.T; north, west: REAL; bg: PaintOp.T): T =
 
 PROCEDURE BeChild(v: T; ch: VBT.T) RAISES {} =
   BEGIN
-    Filter.T.beChild(v, ch); 
+    Filter.T.beChild(v, ch);
     VBTClass.ClearShortCircuit(ch)
   END BeChild;
-    
+
 PROCEDURE Repaint (prnt: T; READONLY rgn: Region.T) RAISES {} =
   BEGIN                          (* LL = VBT.mu *)
     IF prnt.ch # NIL THEN
@@ -181,8 +181,8 @@ PROCEDURE ScreenOf(
   END ScreenOf;
 
 PROCEDURE Capture(
-    prnt: T; 
-    <*UNUSED*> ch: VBT.T; 
+    prnt: T;
+    <*UNUSED*> ch: VBT.T;
     READONLY rect: Rect.T;
     VAR (*out*) br: Region.T)
     : ScrnPixmap.T RAISES {} =
@@ -235,7 +235,7 @@ PROCEDURE Setcursor(v: T; ch: VBT.T) RAISES {} =
     LOCK v DO
       WITH r = v DO
         IF ch # r.mouseFocus AND
-            (ch # r.current OR r.mouseFocus # NIL) 
+            (ch # r.current OR r.mouseFocus # NIL)
         THEN
           RETURN
         END
@@ -244,8 +244,8 @@ PROCEDURE Setcursor(v: T; ch: VBT.T) RAISES {} =
     cs := ch.getcursor();
     LOCK v DO
       WITH r = v DO
-        IF (ch = r.mouseFocus OR 
-            ch = r.current AND r.mouseFocus = NIL) 
+        IF (ch = r.mouseFocus OR
+            ch = r.current AND r.mouseFocus = NIL)
         THEN
           SetCursor2(v, cs)
         END
@@ -256,7 +256,7 @@ PROCEDURE Setcursor(v: T; ch: VBT.T) RAISES {} =
 <*INLINE*> PROCEDURE SetCursor2(v: T; cs: ScrnCursor.T) RAISES {} =
   BEGIN (* LL=v *)
     IF cs # v.effectiveCursor THEN
-      v.effectiveCursor := cs; 
+      v.effectiveCursor := cs;
       IF v.parent # NIL THEN v.parent.setcursor(v) END
     END
   END SetCursor2;
@@ -269,22 +269,22 @@ PROCEDURE Setcursor(v: T; ch: VBT.T) RAISES {} =
           LOCK v DO SetCursor2(v, cs) END
         END
       END
-    ELSE 
+    ELSE
       LOCK v DO SetCursor2(v, ScrnCursor.DontCare) END
     END
   END SetCursor3;
 
 (* Cage setting depends on the following invariants:
 
-   (R1) v's cage is contained in the intersection of its children's 
-        cages.  This guarantees that v will get a position whenever 
+   (R1) v's cage is contained in the intersection of its children's
+        cages.  This guarantees that v will get a position whenever
         any child is owed one.
 
-   (R2) v's cage is contained in v.cache.  This guarantees that v will 
+   (R2) v's cage is contained in v.cache.  This guarantees that v will
         get a position whenever "current" should be changed.
 
    (R3) v.tracking OR for each ch # v.mouseFocus AND ch # v.current,
-        ch.cage contains GoneCage.  
+        ch.cage contains GoneCage.
 
     When the parent receives a position its cage is set arbitrarily,
     so the invariants are destroyed.  It sets its cage to satisfy R2,

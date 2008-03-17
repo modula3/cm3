@@ -99,38 +99,38 @@ BEGIN
     (* Add bindings to top-level scopes *)
     JunoScope.Bind(top_pub, Atom.FromText("Foo"), foo_ent);
     JunoScope.Bind(top_pub, Atom.FromText("Bar"), bar_ent);
-    
+
     (* Add bindings to Foo public scope *)
     JunoScope.Bind(foo_pub, Atom.FromText("Pi"),     foo_pi);
     JunoScope.Bind(foo_pub, Atom.FromText("Syntax"), foo_syntax);
     JunoScope.Bind(foo_pub, Atom.FromText("Pred"),   foo_pred_ent);
     JunoScope.Bind(foo_pub, Atom.FromText("Func"),   foo_func_ent);
     JunoScope.Bind(foo_pub, Atom.FromText("Proc"),   foo_proc_ent);
-    
+
     (* Add bindings to Foo private scope *)
     JunoScope.Bind(foo_mod, Atom.FromText("Pi"),      foo_pi);
     JunoScope.Bind(foo_mod, Atom.FromText("Syntax"),  foo_syntax);
     JunoScope.Bind(foo_mod, Atom.FromText("Private"), foo_private);
     JunoScope.Bind(foo_mod, Atom.FromText("Func"),    foo_func_ent);
     JunoScope.Bind(foo_mod, Atom.FromText("Proc"),    foo_proc_ent);
-    
+
     (* Add bindings to Bar public/private scope *)
     JunoScope.Bind(bar_mod, Atom.FromText("Pi"),      foo_pi);
-    
+
     (* Add bindings to Foo.Pred *)
     JunoScope.Bind(foo_pred, Atom.FromText("a"), pred_1);
     JunoScope.Bind(foo_pred, Atom.FromText("b"), pred_2);
-    
+
     (* Add bindings to Foo.Func *)
     JunoScope.Bind(foo_func, Atom.FromText("y"), func_1);
     JunoScope.Bind(foo_func, Atom.FromText("x"), func_2);
-    
+
     (* Add bindings to Foo.Proc *)
     JunoScope.Bind(foo_proc, Atom.FromText("c"), proc_1);
     JunoScope.Bind(foo_proc, Atom.FromText("d"), proc_2);
     JunoScope.Bind(foo_proc, Atom.FromText("b"), proc_3);
     JunoScope.Bind(foo_proc, Atom.FromText("a"), proc_4);
-    
+
     (* Add bindings to Foo.Proc projection scopes *)
     JunoScope.Bind(foo_proc_1, Atom.FromText("x"), proc_5);
     JunoScope.Bind(foo_proc_1, Atom.FromText("y"), proc_6);

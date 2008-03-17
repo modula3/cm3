@@ -12,7 +12,7 @@
    passive, dormant, and invisible.  The {\em active\/} state does
    nothing; mouse and keyboard events are relayed to child. The {\em
    passive\/} state doesn't allow mouse or keyboard events to go to
-   the child. 
+   the child.
    The {\em dormant\/} state doesn't send mouse or keyboard events to
    the child; it also grays out the child.  The {\em vanish\/} state
    also doesn't send mouse or keyboard events to go to the child; in
@@ -20,7 +20,7 @@
    making it invisible.
 
    When the state of a "ReactivityVBT" is set, the caller also
-   specifies a cursor to be used. 
+   specifies a cursor to be used.
 
    If a VBT-descendant of a "ReactivityVBT" is painted, it will appear
    correctly.  For example, if the "ReactivityVBT" is in the vanished
@@ -51,7 +51,7 @@ TYPE
 (* The call "v.init(..)" initializes "v" as a "ReactivityVBT"
    with child "ch" and with an initial state of "Active".  If
    "colors" is "NIL", then "PaintOp.bgFg" is used instead.  The
-   "colors" are used to draw the vanished and dormant states. 
+   "colors" are used to draw the vanished and dormant states.
 
    The implementation calls "v.paintDormant(r, colors)" to paint
    the part of "ch" bounded by rectangle "r" when "v"'s state

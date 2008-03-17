@@ -12,7 +12,7 @@ IMPORT Pixmap, PixmapFromXData;
 
 FROM Card IMPORT Suit, Family;
 
-VAR 
+VAR
   mu := NEW(MUTEX);
   inited := FALSE;
   acepix, rankpix, pippix, rankxip, pipxip: ARRAY Suit OF Pixmap.T;
@@ -142,7 +142,7 @@ CONST Diamond = PixmapFromXData.T{13, 19,
 CONST SmallDiamond = PixmapFromXData.T{7, 12,
   "08 08 1c 1c 3e 7f 3e 1c 1c 08 08 00 "};
 
-BEGIN 
+BEGIN
   PixWidth[Family.Spades] := Spade.width;
   PixWidth[Family.Hearts] := Heart.width;
   PixWidth[Family.Diamonds] := Diamond.width;

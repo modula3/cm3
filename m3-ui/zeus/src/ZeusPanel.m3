@@ -26,10 +26,10 @@ VAR
 
 VAR ControlPanel: T;
 
-<*FATAL FormsVBT.Error, FormsVBT.Unimplemented, 
-        TrestleComm.Failure, 
-        Zeus.Error, Zeus.Locked, 
-        Thread.Alerted, 
+<*FATAL FormsVBT.Error, FormsVBT.Unimplemented,
+        TrestleComm.Failure,
+        Zeus.Error, Zeus.Locked,
+        Thread.Alerted,
         OSError.E, Wr.Failure, Rd.Failure *>
 
 VAR trace := FALSE;
@@ -411,7 +411,7 @@ PROCEDURE AlgsP (           fv : FormsVBT.T;
       END;
     END;
   END AlgsP;
-  
+
 PROCEDURE ViewsP (           fv : FormsVBT.T;
                              e  : TEXT;
                              arg: REFANY;
@@ -600,7 +600,7 @@ PROCEDURE OverrideRestore(panel: T) =
   END OverrideRestore;
 
 
-<*UNUSED*> 
+<*UNUSED*>
 PROCEDURE AlgReady (alg: Algorithm.T; ready: BOOLEAN) =
   (* Enable or disable the GO and STEP buttons.  The buttons are enabled
      whenever the user changes the algorithm.  This procedure is useful
@@ -1274,7 +1274,7 @@ PROCEDURE NewCodeView (sess: Session; which: TEXT): ZeusCodeView.T =
     TRY
       view := ZeusCodeView.New(which, Rsrc.Open(fn, path), sess.alg, twr);
     EXCEPT
-    Rsrc.NotFound => 
+    Rsrc.NotFound =>
         ReportError("Cannot find file " & fn);
         RETURN NIL;
     END;
@@ -1317,7 +1317,7 @@ PROCEDURE Startrun(sess: Session) =
     Zeus.Dispatch(sess.alg, Zeus.EventStyle.Broadcast, Zeus.MaxPriority,
                   "ZeusClass.Startrun", DispatchStartrun, NIL);
   END Startrun;
-  
+
 PROCEDURE DispatchStartrun (v: ZeusClass.T; <*UNUSED*> args: REFANY) =
   <* LL = {} *>
   (* Must test type of v, since Broadcast events go to both. *)
@@ -1334,7 +1334,7 @@ PROCEDURE Endrun(sess: Session) =
     Zeus.Dispatch(sess.alg, Zeus.EventStyle.Broadcast, Zeus.MaxPriority,
                   "ZeusClass.Endrun", DispatchEndrun, NIL);
   END Endrun;
-  
+
 PROCEDURE DispatchEndrun (v: ZeusClass.T; <*UNUSED*> args: REFANY) =
   <* LL = {} *>
   (* Must test type of v, since Broadcast events go to both. *)
@@ -1407,7 +1407,7 @@ PROCEDURE PanelThread (pc: PanelClosure): REFANY =
           l := panel.sessions;
           WHILE l # NIL DO
             sess := l.head;
-            IF sess.active AND (sess.waitUntil <= panel.clock) THEN 
+            IF sess.active AND (sess.waitUntil <= panel.clock) THEN
 	      sess.running := TRUE;
 	      INC(panel.numRunning);
 	      Thread.Broadcast(sess.runCond);
@@ -1416,7 +1416,7 @@ PROCEDURE PanelThread (pc: PanelClosure): REFANY =
 	    END;
             l := l.tail;
           END;
-          IF panel.numRunning = 0 THEN 
+          IF panel.numRunning = 0 THEN
 (* IF debugP THEN DebugWrite("Pb "); END;*)
             INC(panel.clock);
             panel.subclock := 0;
@@ -1449,7 +1449,7 @@ PROCEDURE PanelThreadPlayback(panel: T; frameStart: BOOLEAN) =
 (* IF debugP THEN DebugWrite("ptp "); END;*)
     Thread.Release(panel.mu);
     TRY
-      LOCK VBT.mu DO 
+      LOCK VBT.mu DO
         IF frameStart THEN FlushFramePlayback() END;
         DoNextPlayback(panel);
       END;
@@ -1506,7 +1506,7 @@ PROCEDURE AlgThread (ac: AlgClosure): REFANY =
   BEGIN                         (* LL = {} *)
     WITH panel = ac.panel,
          sess  = ac.sess,
-         alg = sess.alg   
+         alg = sess.alg
      DO
 (* DebugWrite("A-id = " & Fmt.Ref(Thread.Self()) & "\n");*)
       sess.algThread := Thread.Self();
@@ -1524,7 +1524,7 @@ PROCEDURE AlgThread (ac: AlgClosure): REFANY =
         LOCK VBT.mu DO AttachViews(sess); END;
         IF alg.varPath = NIL THEN alg.varPath := GetPath() END;
         alg.varView := NIL;
-        Startrun(sess); 
+        Startrun(sess);
         IF alg.varView = NIL THEN alg.varView := NullDataView END;
         finalState := RunState.Done;
         TRY
@@ -1547,7 +1547,7 @@ PROCEDURE AlgThread (ac: AlgClosure): REFANY =
      so we can now unregister from the panel's group of alg threads: *)
 (* IF debugP THEN DebugWrite("Aq "); END;*)
         IF NOT sess.quit THEN (* test unnecessary? *)
-          LOCK VBT.mu DO FormsVBT.MakeDormant(sess.fv, "abort"); END 
+          LOCK VBT.mu DO FormsVBT.MakeDormant(sess.fv, "abort"); END
         END;
         LOCK panel.mu DO
           ChangeSessActive(sess, panel, FALSE);
@@ -1585,7 +1585,7 @@ PROCEDURE ChangeSessActive(sess: Session; panel: T; act: BOOLEAN) =
                              (scripting # ScriptingState.Off);
     END;
   END ChangeSessActive;
-      
+
 
 PROCEDURE Go (panel: T; eventTime: VBT.TimeStamp) =
   BEGIN                         (* LL = VBT.mu *)
@@ -1613,7 +1613,7 @@ PROCEDURE Step (panel: T; eventTime: VBT.TimeStamp) =
     Thread.Broadcast(panel.runCond);
   END Step;
 
-  
+
 
 PROCEDURE AbortInternal (panel: T; eventTime: VBT.TimeStamp) =
   (* LL < panel.mu *)
@@ -1652,7 +1652,7 @@ PROCEDURE PreEventCallback (<*UNUSED*> sess     : Session;
                             <*UNUSED*> initiator: ZeusClass.T;
                             <*UNUSED*> style    : Zeus.EventStyle;
                             <*UNUSED*> priority : INTEGER;
-                            <*UNUSED*> eventName: TEXT             ) 
+                            <*UNUSED*> eventName: TEXT             )
   RAISES {Thread.Alerted} =
   BEGIN                         (* LL = arbitrary *)
     IF Thread.TestAlert() THEN RAISE Thread.Alerted END;
@@ -2366,7 +2366,7 @@ PROCEDURE DoNextPlayback(panel: T) =
     END;
   END DoNextPlayback;
 
-      
+
 PROCEDURE FlushFramePlayback() =
   <* LL=VBT.mu *>
   (* Delete all ScriptRecs up to the next one for time (0,0) *)
@@ -2383,7 +2383,7 @@ PROCEDURE FlushFramePlayback() =
     END;
     IF scriptIn = NIL THEN StopPlayback(); END;
   END FlushFramePlayback;
-    
+
 
 PROCEDURE Playback(panel: T; rec: ScriptRec):  BOOLEAN =
   (* Return TRUE if playback may continue, FALSE if algorithm should

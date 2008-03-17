@@ -9,7 +9,7 @@
 
 MODULE ZChildVBT;
 
-IMPORT Axis, FilterClass, HighlightVBT, Interval, 
+IMPORT Axis, FilterClass, HighlightVBT, Interval,
        Point, Rect, Split, VBT, VBTClass, ZSplit;
 
 TYPE
@@ -79,7 +79,7 @@ PROCEDURE InitFromEdges (v         : T;
     EVAL HighlightVBT.T.init (v, ch);
     v.open := open;
     IF type = CoordType.Absolute THEN
-      v.at := NEW (ByEdges, 
+      v.at := NEW (ByEdges,
                    nw := NEW (AbsCoord, x := w, y := n),
                    se := NEW (AbsCoord, x := e, y := s))
     ELSIF Pct (w) AND Pct (e) AND Pct (n) AND Pct (s) THEN
@@ -105,7 +105,7 @@ PROCEDURE Pct (x: REAL): BOOLEAN =
 PROCEDURE Shape (v: T; ax: Axis.T; n: CARDINAL): VBT.SizeRange =
   VAR sr := VBTClass.GetShape (v.ch, ax, n);
   BEGIN
-    IF NOT v.useAt AND v.size[ax] # 0 THEN  
+    IF NOT v.useAt AND v.size[ax] # 0 THEN
       sr.pref := MIN (MAX (sr.lo, v.size [ax]), sr.hi - 1)
 (*
       sr.pref := v.size [ax];
@@ -129,9 +129,9 @@ PROCEDURE Rescreen (v: T; READONLY cd: VBT.RescreenRec) =
 
 PROCEDURE Moved (vbt: VBT.T) =
   BEGIN
-    TYPECASE vbt OF T (v) => 
-      v.touched := TRUE 
-    ELSE 
+    TYPECASE vbt OF T (v) =>
+      v.touched := TRUE
+    ELSE
     END
   END Moved;
 
@@ -140,16 +140,16 @@ PROCEDURE Grew (vbt: VBT.T; w, h: INTEGER) =
     TYPECASE vbt OF T(v) =>
       v.touched := TRUE;
       RecordSize (v, Rect.FromSize (w, h));
-    ELSE 
+    ELSE
     END
   END Grew;
 
 PROCEDURE InitiallyMapped (vbt: VBT.T): BOOLEAN =
   BEGIN
-    TYPECASE vbt OF T (v) => 
+    TYPECASE vbt OF T (v) =>
       RETURN v.open
-    ELSE 
-      RETURN TRUE 
+    ELSE
+      RETURN TRUE
     END
   END InitiallyMapped;
 
@@ -207,7 +207,7 @@ PROCEDURE ZChildReshape (<* UNUSED *> self: ZSplit.ReshapeControl;
       r := GetZRect (newParentDomain, v);
     ELSE
       (* do what the client specified in the init call *)
-      r := v.shaper.apply (v, 
+      r := v.shaper.apply (v,
               oldParentDomain, newParentDomain, oldChildDomain);
     END;
     RecordSize (v, r);
@@ -222,7 +222,7 @@ PROCEDURE Scale(num, den, lo, hi, idelta, odelta: INTEGER): Interval.T =
     RETURN Interval.FromBounds(
       ((lo+idelta)*num + den DIV 2) DIV den + odelta,
       ((hi+idelta)*num + den DIV 2) DIV den + odelta)
-  END Scale; 
+  END Scale;
 
 PROCEDURE DoScaledReshape(
     READONLY op, np, oc: Rect.T;
@@ -230,16 +230,16 @@ PROCEDURE DoScaledReshape(
   VAR hor, ver: Interval.T;
   BEGIN
     IF Rect.IsEmpty(op) THEN RETURN oc END;
-    hor := Scale(Rect.HorSize(np), Rect.HorSize(op), 
+    hor := Scale(Rect.HorSize(np), Rect.HorSize(op),
       oc.west, oc.east, -op.west, np.west);
-    IF fixedH THEN 
-      hor := Interval.Center (Interval.FromSize(Rect.HorSize(oc)), 
+    IF fixedH THEN
+      hor := Interval.Center (Interval.FromSize(Rect.HorSize(oc)),
                               Interval.Middle (hor));
     END;
-    ver := Scale(Rect.VerSize(np), Rect.VerSize(op), 
+    ver := Scale(Rect.VerSize(np), Rect.VerSize(op),
       oc.north, oc.south, -op.north, np.north);
-    IF fixedV THEN 
-      ver := Interval.Center (Interval.FromSize(Rect.VerSize(oc)), 
+    IF fixedV THEN
+      ver := Interval.Center (Interval.FromSize(Rect.VerSize(oc)),
                               Interval.Middle (ver));
     END;
     RETURN Rect.FromIntervals(hor, ver)
@@ -247,7 +247,7 @@ PROCEDURE DoScaledReshape(
 
 PROCEDURE ScaledReshape(
     <* UNUSED *> self: ZSplit.ReshapeControl;
-    <* UNUSED *> ch: VBT.T; 
+    <* UNUSED *> ch: VBT.T;
     READONLY op, np, oc: Rect.T): Rect.T =
   BEGIN
     RETURN DoScaledReshape (op, np, oc, FALSE, FALSE)
@@ -255,7 +255,7 @@ PROCEDURE ScaledReshape(
 
 PROCEDURE ScaledHReshape(
     <* UNUSED *> self: ZSplit.ReshapeControl;
-    <* UNUSED *> ch: VBT.T; 
+    <* UNUSED *> ch: VBT.T;
     READONLY op, np, oc: Rect.T): Rect.T =
   BEGIN
     RETURN DoScaledReshape (op, np, oc, TRUE, FALSE)
@@ -263,7 +263,7 @@ PROCEDURE ScaledHReshape(
 
 PROCEDURE ScaledVReshape(
     <* UNUSED *> self: ZSplit.ReshapeControl;
-    <* UNUSED *> ch: VBT.T; 
+    <* UNUSED *> ch: VBT.T;
     READONLY op, np, oc: Rect.T): Rect.T =
   BEGIN
     RETURN DoScaledReshape (op, np, oc, FALSE, TRUE)
@@ -271,7 +271,7 @@ PROCEDURE ScaledVReshape(
 
 PROCEDURE ScaledHVReshape(
     <* UNUSED *> self: ZSplit.ReshapeControl;
-    <* UNUSED *> ch: VBT.T; 
+    <* UNUSED *> ch: VBT.T;
     READONLY op, np, oc: Rect.T): Rect.T =
   BEGIN
     RETURN DoScaledReshape (op, np, oc, TRUE, TRUE)
@@ -279,7 +279,7 @@ PROCEDURE ScaledHVReshape(
 
 PROCEDURE RecordSize (v: T; READONLY r: Rect.T) =
   BEGIN
-   IF NOT Rect.IsEmpty (r) THEN 
+   IF NOT Rect.IsEmpty (r) THEN
     v.size [Axis.T.Hor] := Rect.HorSize(r);
     v.size [Axis.T.Ver] := Rect.VerSize(r);
     v.sizeMM [Axis.T.Hor] :=
@@ -319,7 +319,7 @@ PROCEDURE GetZRect (dom: Rect.T; ch: T): Rect.T =
           ELSE <* ASSERT FALSE *>
           END;
           r := PlaceRect (pref, p, atPt.hot);
-  
+
       | ByEdges (atEdges) =>
 
         TYPECASE atEdges.nw OF
@@ -339,12 +339,12 @@ PROCEDURE GetZRect (dom: Rect.T; ch: T): Rect.T =
             r.east := map (rc.x, dom.west, dom.east);
             r.south := map (rc.y, dom.north, dom.south)
         ELSE <* ASSERT FALSE *>
-        END; 
+        END;
 
       ELSE <* ASSERT FALSE *>
       END;
     END;
-    IF Rect.Subset (r, dom) THEN 
+    IF Rect.Subset (r, dom) THEN
       ch.useAt := FALSE
     ELSE
       r := Project (r, dom)

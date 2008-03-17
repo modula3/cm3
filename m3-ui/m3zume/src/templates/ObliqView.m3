@@ -9,7 +9,7 @@
 (*      modified on Tue Feb 16 16:31:40 PST 1993 by johnh   *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 
@@ -38,7 +38,7 @@ $ZFmt
 $#(_ALGNAME_)ViewClass
 #(_IMPORTS_)
 
-CONST 
+CONST
   ViewName =  "#(_VIEWNAME_).obl";
 
 TYPE
@@ -66,7 +66,7 @@ TYPE
 #{_OUTPUT
 PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
   <* LL.sup < VBT.mu *>
-  BEGIN 
+  BEGIN
     IF FieldDefined(view.object, "#(_EVENT_)") THEN
       Invoke (view, "#(_EVENT_)", ""
 #{
@@ -82,7 +82,7 @@ PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
 #{_UPDATE
 PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
   <* LL = VBT.mu *>
-  BEGIN 
+  BEGIN
     IF FieldDefined(view.object, "#(_EVENT_)") THEN
       Invoke (view, "#(_EVENT_)", ""
 #{
@@ -96,8 +96,8 @@ PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
 #}
 
 PROCEDURE RegisterView () =
-  BEGIN 
-    ZeusPanel.RegisterView(New, "#(_VIEWNAME_).obl", "#(_ALGNAME_)")   
+  BEGIN
+    ZeusPanel.RegisterView(New, "#(_VIEWNAME_).obl", "#(_ALGNAME_)")
   END RegisterView;
 
 PROCEDURE New (): View.T =
@@ -105,7 +105,7 @@ PROCEDURE New (): View.T =
     RETURN NEW(T).init(NIL)
   END New;
 
-CONST 
+CONST
   ObliqStackSizeMultiplier = 8;
 
 TYPE

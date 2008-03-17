@@ -13,7 +13,7 @@
 
 MODULE Palette;
 
-IMPORT VBT, VBTRep, PaintOp, Font, Cursor, Pixmap, 
+IMPORT VBT, VBTRep, PaintOp, Font, Cursor, Pixmap,
   ScrnPixmap, ScrnCursor, ScrnFont, ScrnPaintOp, Thread;
 
 FROM PlttFrnds IMPORT con, noOp, noFont, noCursor, noPixmap;
@@ -60,7 +60,7 @@ PROCEDURE ExtendOps (st: VBT.ScreenType) =
       END
     END
   END ExtendOps;
-    
+
 PROCEDURE ResolveOp(st: VBT.ScreenType; pop: PaintOp.T): ScrnPaintOp.T =
   VAR res: ScrnPaintOp.T; cl: OpClosure := NIL; op := pop.op;
   BEGIN
@@ -84,7 +84,7 @@ PROCEDURE ResolveOp(st: VBT.ScreenType; pop: PaintOp.T): ScrnPaintOp.T =
     Thread.Broadcast(c);
     RETURN res
   END ResolveOp;
-   
+
 PROCEDURE FromFontClosure(cl: FontClosure): Font.T =
   VAR res: Font.T; BEGIN
     LOCK con DO
@@ -304,7 +304,7 @@ PROCEDURE RoundUp(sz: CARDINAL): CARDINAL =
     RETURN i
   END RoundUp;
 
-PROCEDURE Init(st: VBT.ScreenType) = 
+PROCEDURE Init(st: VBT.ScreenType) =
   BEGIN
     IF st = NIL THEN RETURN END;
     FOR i := FIRST(Font.Predefined) TO LAST(Font.Predefined) DO

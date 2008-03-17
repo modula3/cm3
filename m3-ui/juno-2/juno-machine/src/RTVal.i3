@@ -8,7 +8,7 @@
 (* An "RTVal.T" represents a "JunoValue.T".  "RTVals" are used in the Juno
    machine while it is running.  The procedure "Dispose" reclaims the space
    for all RTVals. *)
-   
+
 INTERFACE RTVal;
 
 IMPORT JunoValue;
@@ -17,7 +17,7 @@ TYPE T = ROOT BRANDED "RTVal" OBJECT END;
 
 TYPE Real = JunoValue.Real;
 
-TYPE 
+TYPE
   Null = T BRANDED "Null" OBJECT END;
   Number <: NumberPublic; NumberPublic = T OBJECT val: Real END;
   Text <: TextPublic; TextPublic = T OBJECT val: TEXT END;
@@ -26,7 +26,7 @@ TYPE
 (* Invariant: The "val" field of a "Text" and the "car" and "cdr" fields of a
    "Pair" are required to be non-NIL. For Juno NIL, use the global variable
    "nil": *)
-  
+
 VAR (* READONLY *) nil: Null;
 
 PROCEDURE FromReal(r: Real): Number;

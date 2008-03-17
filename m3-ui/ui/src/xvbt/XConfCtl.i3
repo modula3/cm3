@@ -16,6 +16,6 @@ IMPORT VBT;
 PROCEDURE Process(v: VBT.T);
   (* Fetch the conference control property on v's X window, and set v's app
      state accordingly. *)
-  
-END XConfCtl. 
+
+END XConfCtl.
 

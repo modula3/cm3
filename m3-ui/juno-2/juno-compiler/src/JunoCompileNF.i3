@@ -33,7 +33,7 @@ PROCEDURE Normalize(p: JunoAST.Formula; tbl: StackTbl.T): JunoAST.NormalForm;
    This is a purely syntactic transformation. The "tbl" is used to annotate
    new variables as they are introduced in "E" quantifications. New variables
    are not added to "tbl". The variables in the result are all unhinted, and
-   they all have their "evar" bits set. 
+   they all have their "evar" bits set.
 
    Requires that all existentially quantified variables are distinct, and that
    every use of any of the existentially quantified variables occurs within

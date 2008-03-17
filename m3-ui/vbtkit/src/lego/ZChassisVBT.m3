@@ -25,9 +25,9 @@ REVEAL
       END;
 
 TYPE
-  MC = MultiClass.Filter OBJECT 
-       OVERRIDES 
-         replace := Replace; 
+  MC = MultiClass.Filter OBJECT
+       OVERRIDES
+         replace := Replace;
        END;
 
 PROCEDURE Init (z       : T;
@@ -60,7 +60,7 @@ PROCEDURE InitFromEdges (v         : T;
                          shaper: ZSplit.ReshapeControl := NIL): T =
   VAR interior := CommonInit (v, ch, title, shadow, closable);
   BEGIN
-    EVAL ZChildVBT.T.initFromEdges (v, interior, 
+    EVAL ZChildVBT.T.initFromEdges (v, interior,
            w, e, n, s, type, shaper, open);
     MultiClass.Be (v, NEW (MC));
     MultiClass.BeChild (v, ch);

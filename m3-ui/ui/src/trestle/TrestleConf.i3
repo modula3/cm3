@@ -28,7 +28,7 @@ TYPE
     register()
   END;
 
-(* User instantiates the register method; all Users must be registered 
+(* User instantiates the register method; all Users must be registered
    before use. *)
 
 TYPE <* LL = VBT.mu *>
@@ -57,7 +57,7 @@ TYPE
   END;
 
   (* App implements the init method; clients should create Apps, and init
-     them.  The application is added to the current conference for the user. 
+     them.  The application is added to the current conference for the user.
      The destroy method is invoked when the application wants to destroy
      itself.
      The remaining calls are to be implemented by the client of this interface;

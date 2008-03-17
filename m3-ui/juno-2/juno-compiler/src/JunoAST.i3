@@ -9,13 +9,13 @@ INTERFACE JunoAST;
 
 (* Juno Abstract Syntax Trees
 
-   This interface defines a data structure for Juno parse trees. 
+   This interface defines a data structure for Juno parse trees.
 
    An AST.T (or "node") represents a syntactically valid sequence of tokens
    from a Juno program or program fragment.  This interface reveals enough
    information to reconstruct the sequence of tokens in the concrete syntax
    that corresponds to an abstract tree, except that the tree reflects only
-   the values of literals; not the source that produced them. 
+   the values of literals; not the source that produced them.
 
    The remainder of this interface consists mostly of declarations for various
    node types (see the end of this file for a summary of the type hierarchy).
@@ -266,7 +266,7 @@ TYPE
     args: ExprList := NIL
   END;
   (* Id "(" [ ExprList ] ")" *)
-    
+
   Decl <: DeclPublic;			 (* class node only; do not NEW *)
   DeclPublic = Block BRANDED "JunoAST.DeclPublic" OBJECT
     private: BOOLEAN := FALSE
@@ -551,7 +551,7 @@ TYPE
 
   QId = AtomicExpr BRANDED "JunoAST.QId" OBJECT
     id0: Id := NIL;			 (* may be NilId *)
-    id1: Id := NIL;			 
+    id1: Id := NIL;
     type := IdType.None;		 (* set by JunoCompile.AnnotateAtoms *)
     index: INTEGER := 0;		 (* set by JunoCompile.AnnotateAtoms *)
   END;

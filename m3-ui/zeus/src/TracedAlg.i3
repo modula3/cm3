@@ -8,11 +8,11 @@ INTERFACE TracedAlg;
 IMPORT Algorithm;
 
 (* A "TracedAlg.T" is an "Algorithm.T" subclass that is useful for
-   debugging. It outputs to stdout each time that one of its methods 
+   debugging. It outputs to stdout each time that one of its methods
    is invoked. *)
 
 TYPE
   T <: Algorithm.T;
 
 END TracedAlg.
- 
+

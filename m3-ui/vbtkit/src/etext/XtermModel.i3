@@ -30,7 +30,7 @@ END XtermModel.
 
    Middle-click pastes the current source selection at the insertion
    point, which need not be at the end of the text (as it would be for
-   a ``typescript'').  
+   a ``typescript'').
 
    Right-click extends the current selection, re-highlighting it if
    needed.
@@ -50,7 +50,7 @@ option-LongKeyName \= This is just a tab-setting line. \kill
               \> to the beginning of the line \\
  control-z    \> {\bf Undo} \\
  control-shift-z    \> {\bf Redo} \\
- meta-x       \> {\bf Cut} \\ 
+ meta-x       \> {\bf Cut} \\
  meta-c       \> {\bf Copy} \\
  meta-v       \> {\bf Paste}
 

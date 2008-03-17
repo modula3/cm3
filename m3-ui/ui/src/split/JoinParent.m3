@@ -188,7 +188,7 @@ PROCEDURE SetCage (v: ChildT; ch: VBT.T) =
   BEGIN
     VBT.SetCage(v, VBTClass.Cage(ch))
   END SetCage;
- 
+
 PROCEDURE ChSetCursor (v: ChildT; ch: VBT.T) =
   VAR cs := ch.getcursor();
   BEGIN
@@ -364,7 +364,7 @@ PROCEDURE Discard (prntP: T) =
   BEGIN
     IF prntP.cl # NIL THEN Rem(prntP) END
   END Discard;
-  
+
 PROCEDURE Repaint (v: T; READONLY br: Region.T) =
   VAR
     cl              := v.cl;

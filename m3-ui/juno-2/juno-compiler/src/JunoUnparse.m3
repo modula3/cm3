@@ -19,7 +19,7 @@ CONST
   IdIndent = 2;                    (* indentation for identifiers *)
   CmdIndent = 2;                   (* indentation for decl commands *)
   PredIndent = 2;		   (* indentation for decl predicates *)
-  
+
 PROCEDURE Block(
     wr: Wr.T;
     ast: AST.Block;
@@ -915,7 +915,7 @@ PROCEDURE Unparse(
   PROCEDURE Op(t: TEXT; united := FALSE) RAISES {TokenLimit, Wr.Failure} =
   (* Introduces an ordinary operation into the stream, with spaces on either
      side.  A break is introduced before the op so that the resulting output
-     looks like 
+     looks like
 |         A
 |      op B
      if the operation is broken or

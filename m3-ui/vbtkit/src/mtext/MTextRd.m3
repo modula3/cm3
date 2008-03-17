@@ -154,10 +154,10 @@ PROCEDURE RevSeek (rd: T; n: CARDINAL; <* UNUSED *> dontBlock: BOOLEAN):
     END RevCopy;
   PROCEDURE RevCopyText (READONLY t: TEXT) =
     BEGIN
-      FOR i := 1 TO count DO rd.buff [count - i] := 
+      FOR i := 1 TO count DO rd.buff [count - i] :=
                    Text.GetChar(t,first + i - 1)
       END;
-    END RevCopyText; 
+    END RevCopyText;
   BEGIN
     MTextDs.Locate (rd.m, rd.last + 1 - n, beginN, beginI);
     count := MIN (MIN (beginI, BufferSize), rd.len - n);

@@ -135,7 +135,7 @@ PROCEDURE SetAnchorBtnPre(btn: SetAnchorBtn) =
     IF btn.menu = NIL THEN
       btn.menu := BorderedVBT.New(menu)
     ELSIF menu # Filter.Child(btn.menu) THEN
-      EVAL Filter.Replace(btn.menu, menu) 
+      EVAL Filter.Replace(btn.menu, menu)
     END;
     AnchorBtnVBT.T.pre(btn)
   END SetAnchorBtnPre;
@@ -349,7 +349,7 @@ PROCEDURE NewProcBtn(
         ButtonText(txtName), menu := NIL, hfudge := 10.0, n := 999)
     ELSE
       VAR res: Button; BEGIN
-        IF type = Editor.TextToolSym THEN 
+        IF type = Editor.TextToolSym THEN
           res := NEW(TextButton)
         ELSIF type = Editor.PointToolSym THEN
           res := NEW(PointButton)
@@ -357,7 +357,7 @@ PROCEDURE NewProcBtn(
           res := NEW(TemplButton, cmd := StripIFProj(p.body))
         ELSE
           <* ASSERT FALSE *>
-        END;        
+        END;
         RETURN res.init(rt, txtName,
           Drawing.NewProcTool(JunoASTUtils.QIdFromIds(mod, hd.name),
             hd.ins.size, hd.outs.size, hd.inouts.size,

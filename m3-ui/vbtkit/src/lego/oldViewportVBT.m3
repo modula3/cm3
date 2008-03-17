@@ -16,7 +16,7 @@ MODULE ViewportVBT;
 Viewports have gotten kind of hairy, so I'll document them.
 
 A Viewport is a cross of an HVSplit and JoinedVBT with scroll bars
-and Multis thrown in.  
+and Multis thrown in.
 
 The structure is as follows:
 
@@ -26,15 +26,15 @@ of the Viewport filter.
 The child is wrapped in a JoinedVBT so that it can support multiple views
 (handled by the join's parents).
 
-The viewport consists of multiple views.  Each view consists of a 
+The viewport consists of multiple views.  Each view consists of a
 single join parent glued together with scroll bars.  Logically, each
 view is a filter for the join parent.
 
 A view's structure is as follows (depending on the scroll bars):
 
 horizontal and vertical scroll bars:
-(ViewRoot (HVSplitReshape (HSplit VScroller Bar) JoinParent) 
-          Bar 
+(ViewRoot (HVSplitReshape (HSplit VScroller Bar) JoinParent)
+          Bar
           (MyHSplit Reset Bar HScroller))
 
 horizontal scroll bars
@@ -99,7 +99,7 @@ PROCEDURE Init (v              : T;
                 step           : CARDINAL := 10;
                 adjustableViews           := TRUE;
                 scrollStyle     := ScrollStyle.AlaViewport;
-                shapeStyle      := ShapeStyle.Related): T = 
+                shapeStyle      := ShapeStyle.Related): T =
   BEGIN
     IF shadow = NIL THEN shadow := Shadow.None END;
     MultiClass.Be (v, NEW(MC));

@@ -12,7 +12,7 @@ MODULE Animate;
 
 <* PRAGMA LL *>
 
-IMPORT Axis, RefList, Math, MG, Pts, R2, R2Box, RefListUtils, Region, 
+IMPORT Axis, RefList, Math, MG, Pts, R2, R2Box, RefListUtils, Region,
   Thread, Time;
 
 VAR
@@ -34,9 +34,9 @@ PROCEDURE ResetATime () =
 
 PROCEDURE SetDuration (seconds: REAL) =
   BEGIN
-    LOCK etMu DO 
+    LOCK etMu DO
       IF seconds = 0.0 THEN etScale := 1.0D0
-      ELSE etScale := FLOAT(MIN(1000000.0, 1.0 / seconds), LONGREAL) 
+      ELSE etScale := FLOAT(MIN(1000000.0, 1.0 / seconds), LONGREAL)
       END
     END
   END SetDuration;
@@ -258,10 +258,10 @@ PROCEDURE GroupIterate (group: Group; iter: GroupIterator): BOOLEAN =
   BEGIN
     WHILE f # NIL DO
       WITH comp = NARROW(f.head, Composite) DO
-        IF NOT iter.proc(comp) THEN RETURN FALSE; END; 
+        IF NOT iter.proc(comp) THEN RETURN FALSE; END;
       END;
       f := f.tail;
-    END;  
+    END;
     RETURN TRUE
   END GroupIterate;
 

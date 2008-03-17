@@ -49,15 +49,15 @@ TYPE
   Flavor = {Check, Box, Bullet};
   OnOff = BOOLEAN;
   NE = {Normal, Excited};
-  
-VAR 
+
+VAR
   mu := NEW(MUTEX);
   inited := ARRAY Flavor OF BOOLEAN {FALSE, FALSE, FALSE};
-  
+
   pixmaps  : ARRAY Flavor, OnOff, NE OF Pixmap.T;
   styles   : ARRAY Flavor, OnOff, NE OF Shadow.Style;
   textures : ARRAY Flavor, OnOff, NE OF Pixmap.T;
- 
+
 TYPE
   TWithPixmaps = T OBJECT
                    flavor: Flavor;
@@ -266,7 +266,7 @@ PROCEDURE BlotVBTRepaint (v: BlotVBT; READONLY rgn: Region.T) =
       BlotVBTRepaint2 (v, rgn)
     END
   END BlotVBTRepaint;
-  
+
 PROCEDURE BlotVBTRepaint2 (v: BlotVBT; READONLY clip: Region.T) =
   VAR dom, inner, outer: Rect.T; a: Rect.Partition;
   BEGIN
@@ -275,7 +275,7 @@ PROCEDURE BlotVBTRepaint2 (v: BlotVBT; READONLY clip: Region.T) =
       dh = ROUND(VBT.MMToPixels(v, v.inset, Axis.T.Hor)),
       dv = ROUND(VBT.MMToPixels(v, v.inset, Axis.T.Ver)),
       bounds = Rect.Change(VBT.PixmapDomain(v, v.pm), dh, -dh, dv, -dv),
-      delta = Point.Sub(Rect.Middle(dom), Rect.Middle(bounds)) 
+      delta = Point.Sub(Rect.Middle(dom), Rect.Middle(bounds))
     DO
       (* Now midpoint(v.pm) + delta = midpoint(dom) *)
       outer := Rect.Move(bounds, delta)
@@ -287,7 +287,7 @@ PROCEDURE BlotVBTRepaint2 (v: BlotVBT; READONLY clip: Region.T) =
       ELSE (* i = 2 *)
         WITH
           dh = ROUND(VBT.MMToPixels(v, ABS(v.shadow.size), Axis.T.Hor)),
-          dv = ROUND(VBT.MMToPixels(v, ABS(v.shadow.size), Axis.T.Ver)) 
+          dv = ROUND(VBT.MMToPixels(v, ABS(v.shadow.size), Axis.T.Ver))
         DO
           inner := Rect.Change(outer, dh, -dh, dv, -dv)
         END;

@@ -294,7 +294,7 @@ PROCEDURE IsRelHint(hint: JunoAST.Expr;
 	  TYPECASE p.e2 OF JunoAST.QId (p2) =>
             IF p1.id0 = JunoAST.NilId AND
                p2.id0 = JunoAST.NilId AND
-               IsNumericPoint(rel.e1) 
+               IsNumericPoint(rel.e1)
             THEN
               a := p1.id1;
               b := p2.id1;
@@ -315,11 +315,11 @@ PROCEDURE IsRel1Hint(hint: JunoAST.Expr; VAR (*OUT*) a: JunoAST.Id): BOOLEAN =
 (* If "hint" is of the form "R2.Plus(p, (num, num))", for "Id" "p",
    set "a := p" and return "TRUE"; else return "FALSE". *)
   BEGIN
-    TYPECASE hint OF 
+    TYPECASE hint OF
       NULL => (*SKIP*)
     | JunoAST.Call (call) =>
       IF call.ins.size = 2 THEN
-        TYPECASE call.ins.head.expr OF 
+        TYPECASE call.ins.head.expr OF
           JunoAST.QId (arg0) =>
             IF arg0.id0 = JunoAST.NilId AND
                JunoASTUtils.EqualQIds(call.name, R2DotPlus) AND
@@ -353,7 +353,7 @@ PROCEDURE DoRel1(cc: T; c, a: JunoAST.Id) =
     END
   END DoRel1;
 
-PROCEDURE MkRelHint(cc: T; c: JunoAST.Id; 
+PROCEDURE MkRelHint(cc: T; c: JunoAST.Id;
   a: JunoAST.Id; ax, ay: Real;
   b: JunoAST.Id; bx, by: Real;
   else: JunoAST.Expr): JunoAST.Expr =
@@ -367,10 +367,10 @@ PROCEDURE MkRelHint(cc: T; c: JunoAST.Id;
 	e1 := JunoASTUtils.NewPoint(x, y),
 	e2 := NEW(JunoAST.Pair, bp := JunoAST.End,
 	  e1 := JunoASTUtils.QIdFromIds(JunoAST.NilId, a),
-	  e2 := JunoASTUtils.QIdFromIds(JunoAST.NilId, b)))  
+	  e2 := JunoASTUtils.QIdFromIds(JunoAST.NilId, b)))
   END MkRelHint;
 
-PROCEDURE MkRel1Hint(cc: T; c: JunoAST.Id; 
+PROCEDURE MkRel1Hint(cc: T; c: JunoAST.Id;
   a: JunoAST.Id; ax, ay: Real; else: JunoAST.Expr): JunoAST.Expr =
 (* Return "c"'s position relative to "a". *)
   VAR x, y, cx, cy: Real; BEGIN
@@ -514,7 +514,7 @@ PROCEDURE MovePoint1(
         VAR ax, ay, bx, by, x2, y2: Real; BEGIN
           IF PointLocation(cc, aa, ax, ay) AND
       	     PointLocation(cc, bb, bx, by) AND
-      	     JunoPt.RelVal(x, y, ax, ay, bx, by, x2, y2) 
+      	     JunoPt.RelVal(x, y, ax, ay, bx, by, x2, y2)
       	  THEN
             VAR r: JunoAST.Rel := v.hint; p1: JunoAST.Pair := r.e1; BEGIN
               IF DiffNumericPair(p1, x2, y2) THEN
@@ -675,8 +675,8 @@ TYPE RelToArray = ARRAY [0..1] OF RECORD id: JunoAST.Id; x,y: Real END;
    computed. *)
 
 PROCEDURE SetUpRelTo(
-    cc: T; 
-    args: JunoAST.IdList; 
+    cc: T;
+    args: JunoAST.IdList;
     VAR (*OUT*) rt: RelToArray;
     VAR (*OUT*) i: INTEGER) =
 (* Find up to "NUMBER(rt)" elements of "args" whose values are points, store
@@ -729,7 +729,7 @@ PROCEDURE CheckFoldArgs(ids: JunoAST.IdList; locals: JunoAST.NearVarList)
       curr := curr.next
     END
   END CheckFoldArgs;
-    
+
 PROCEDURE MkLocals(cc: T; args: JunoAST.IdList;
   args2: JunoAST.IdList := NIL): JunoAST.NearVarList
   RAISES {BadFoldArg} =
@@ -763,8 +763,8 @@ PROCEDURE MkLocals(cc: T; args: JunoAST.IdList;
             0 => (* SKIP *)
           | 1 => nv.hint :=
               MkRel1Hint(cc, nv.id, rt[0].id, rt[0].x, rt[0].y, nv.hint)
-          | 2 => nv.hint := 
-              MkRelHint(cc, nv.id, rt[0].id, rt[0].x, 
+          | 2 => nv.hint :=
+              MkRelHint(cc, nv.id, rt[0].id, rt[0].x,
                 rt[0].y, rt[1].id, rt[1].x, rt[1].y, nv.hint)
           END
         END;
@@ -785,7 +785,7 @@ PROCEDURE MkLocals(cc: T; args: JunoAST.IdList;
 PROCEDURE FoldByHeader(cc: T; hdr: JunoAST.PredHeader; kind: FoldKind):
   JunoAST.Decl RAISES {BadFoldArg} =
   BEGIN
-    IF kind = FoldKind.ProcNoArgs THEN 
+    IF kind = FoldKind.ProcNoArgs THEN
       RETURN FoldNoArgs(cc, hdr.name)
     END;
     <* ASSERT hdr.ins # NIL *>
@@ -968,7 +968,7 @@ PROCEDURE PrependVar(id: JunoAST.Id; hint: JunoAST.Expr;
     l.head := link;
     RETURN l
   END PrependVar;
-    
+
 PROCEDURE FoldAnimCmd(cc: T; args: JunoAST.IdList; animProcNm: JunoAST.Id):
     JunoAST.Cmd =
 (* Produce an animation command of the form:

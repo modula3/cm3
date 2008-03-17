@@ -1,6 +1,6 @@
 MODULE Main;
 
-IMPORT Math, PaintOp, Pixmap, Point, Rect, Region, ScrnPixmap, Trestle, 
+IMPORT Math, PaintOp, Pixmap, Point, Rect, Region, ScrnPixmap, Trestle,
        TrestleComm, VBT;
 
 <* FATAL TrestleComm.Failure *>
@@ -42,7 +42,7 @@ PROCEDURE Bullseye (): Pixmap.T =
 
 
 BEGIN
-  WITH v = NEW (VBT.Leaf, repaint := Repaint) DO 
+  WITH v = NEW (VBT.Leaf, repaint := Repaint) DO
     Trestle.Install(v);
     Trestle.AwaitDelete(v);
   END

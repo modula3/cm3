@@ -5,7 +5,7 @@
 INTERFACE TableVBT;
 
 (* "TableVBT" manages a table of VBTs, with proper
-   headings, and highlighting, similar to a spread sheet. 
+   headings, and highlighting, similar to a spread sheet.
    Each table uses two grid splits, one for its headings,
    and another for the contents. *)
 
@@ -13,7 +13,7 @@ IMPORT Font, VBT, PaintOp, Pixmap;
 IMPORT GridSplit;
 
 TYPE
-  T <: Public; 
+  T <: Public;
   Public = Private OBJECT METHODS
     init(READONLY colnames: ARRAY OF TEXT;
          READONLY colsizes: ARRAY OF CARDINAL;
@@ -30,10 +30,10 @@ TYPE
 
     numrows(): CARDINAL;
 
-    insert(row: CARDINAL := LAST(CARDINAL); 
+    insert(row: CARDINAL := LAST(CARDINAL);
            READONLY data: ARRAY OF VBT.T);
 
-    delete(row: CARDINAL; 
+    delete(row: CARDINAL;
            VAR      data: ARRAY OF VBT.T);
 
   END;
@@ -42,18 +42,18 @@ TYPE
   (* A call to "v.init" initializes "v" with
      column names and sizes "colnames" and "colsizes",
      with "fnt" as the font and with "nrows".
-     Row height and column width are set to 
+     Row height and column width are set to
      "rowheight", "colwidth". Finally, "op" and
      "txt" provide the usual painting operations.
-     It is a checked runtime error if 
+     It is a checked runtime error if
      "NUMBER(colsizes) # NUMBER(colnames)".
-     
 
-     "v.contents" returns the grid split 
+
+     "v.contents" returns the grid split
      for the "v". "v.heading" and "v.content"
-     are callbacks which are called when 
+     are callbacks which are called when
      the user clicks on a column in the heading
-     or a column in the contents. 
+     or a column in the contents.
 
      "v.numrows" returns the number of rows.
 

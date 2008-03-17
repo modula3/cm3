@@ -14,7 +14,7 @@ VAR (* Hack to stop drifting snapshot/restore *)
   YDRIFT: INTEGER := 24;
 
 VAR
-  (* READONLY *) whichAlg, whichView: TEXT; 
+  (* READONLY *) whichAlg, whichView: TEXT;
   (* When the New procedure for an algorithm or view, "whichAlg" or "whichView"
      is set to the name of the selected algorithm or view.  These variables
      are only valid during a call on the New procedure *)

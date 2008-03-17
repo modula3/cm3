@@ -157,7 +157,7 @@ TYPE
 PROCEDURE SetRoot(root: SubTree; v: V);
 <* LL < v.mu *>
 (*| equivalent to:
-    LOCK v.mu 
+    LOCK v.mu
       v.setRoot(root);
       RelayoutAncestors(root);
     END;
@@ -168,8 +168,8 @@ PROCEDURE SetRoot(root: SubTree; v: V);
 PROCEDURE AddChild(node: SubTree; v: V; pred, new: SubTree);
 <* LL < v.mu *>
 (*| equivalent to:
-    LOCK v.mu 
-      node.addChild(v, pred, new); 
+    LOCK v.mu
+      node.addChild(v, pred, new);
       RelayoutAncestors(node, v);
     END;
     VBT.NewShape(v);
@@ -179,8 +179,8 @@ PROCEDURE AddChild(node: SubTree; v: V; pred, new: SubTree);
 PROCEDURE RemoveChild(node: SubTree; v: V; child: SubTree);
 <* LL < v.mu *>
 (*| equivalent to:
-    LOCK v.mu 
-      node.removeChild(v, child); 
+    LOCK v.mu
+      node.removeChild(v, child);
       RelayoutAncestors(node, v);
     END;
     VBT.NewShape(v);

@@ -17,20 +17,20 @@ MODULE AnchorHelpVBT;
 IMPORT VBT, Filter, ZSplit, Point, Rect, Trestle, Axis,
 Split, VBTClass, TrestleComm, Time, Thread;
 
-REVEAL 
+REVEAL
   T = Public BRANDED OBJECT
     n: CARDINAL;            (* number of ZSplit to skip *)
     hfudge, vfudge: REAL;   (* where to pop the help window *)
     active: BOOLEAN;        (* help window popped *)
     in: BOOLEAN;            (* position is inside *)
-  OVERRIDES 
+  OVERRIDES
     position := Position;
     init := Be
   END;
 
 PROCEDURE Be(
   v: T;
-  ch: VBT.T; 
+  ch: VBT.T;
   help: VBT.T;
   n: CARDINAL := 0;
   hfudge := 0.0;
@@ -45,10 +45,10 @@ PROCEDURE Be(
     EVAL Filter.T.init(v, ch);
     VBT.SetCage(v, VBT.GoneCage);
     RETURN v;
-  END Be; 
-  
+  END Be;
+
 PROCEDURE New(
-  ch: VBT.T; 
+  ch: VBT.T;
   help: VBT.T;
   n: CARDINAL := 0;
   hfudge := 0.0;
@@ -64,7 +64,7 @@ PROCEDURE New(
 
 PROCEDURE Position(v: T; READONLY cd: VBT.PositionRec) RAISES {} =
   BEGIN
-    IF cd.cp.gone THEN 
+    IF cd.cp.gone THEN
       Leave(v);
       VBT.SetCage(v, VBT.GoneCage);
     ELSE
@@ -82,7 +82,7 @@ PROCEDURE Position(v: T; READONLY cd: VBT.PositionRec) RAISES {} =
    be shared. *)
 
 PROCEDURE GetZSplit(v: T): ZSplit.T =
-  VAR m := v.n; z := v.parent;  
+  VAR m := v.n; z := v.parent;
   BEGIN
     LOOP
       IF z = NIL THEN RETURN NIL END;
@@ -91,13 +91,13 @@ PROCEDURE GetZSplit(v: T): ZSplit.T =
       END;
       z := z.parent;
     END;
-  END GetZSplit; 
+  END GetZSplit;
 
-(* Pop up the help window and remember that it is active. *)    
+(* Pop up the help window and remember that it is active. *)
 
 PROCEDURE Activate(v: T) =
   VAR
-    pt := Point.MoveHV(Rect.SouthWest(VBT.Domain(v)), 
+    pt := Point.MoveHV(Rect.SouthWest(VBT.Domain(v)),
       ROUND(VBT.MMToPixels(v, v.hfudge, Axis.T.Hor)),
       ROUND(VBT.MMToPixels(v, v.vfudge, Axis.T.Ver)));
     z := GetZSplit(v);
@@ -143,9 +143,9 @@ PROCEDURE Shift(READONLY menu, parent: Rect.T): Rect.T =
 
 PROCEDURE MinRect(v: VBT.T; READONLY pt: Point.T): Rect.T =
   BEGIN
-    RETURN 
+    RETURN
       Rect.FromCorner(pt,
-        VBTClass.GetShape(v, Axis.T.Hor, 0).lo, 
+        VBTClass.GetShape(v, Axis.T.Hor, 0).lo,
         VBTClass.GetShape(v, Axis.T.Ver, 0).lo)
   END MinRect;
 
@@ -165,20 +165,20 @@ PROCEDURE Deactivate(v: T) =
       END;
     END;
   END Deactivate;
-        
+
 PROCEDURE IsActive(v: T): BOOLEAN =
   BEGIN
     IF VBT.Parent(v) = NIL THEN RETURN FALSE END;
     RETURN v.active;
   END IsActive;
 
-PROCEDURE Set(v: T; n: CARDINAL; 
+PROCEDURE Set(v: T; n: CARDINAL;
   hfudge, vfudge: REAL) =
-  BEGIN 
+  BEGIN
     IF IsActive(v) THEN Crash() END;
     v.n := n; v.hfudge := hfudge; v.vfudge := vfudge;
   END Set;
-  
+
 PROCEDURE Get(v: T; VAR n: CARDINAL; VAR hfudge, vfudge: REAL) =
   BEGIN
     n := v.n; hfudge := v.hfudge; vfudge := v.vfudge;
@@ -317,7 +317,7 @@ PROCEDURE Enter(v: T) =
         (* A T was just entered after being out for more than outDelay,
            the timer is started to enter help mode in inDelay. *)
 
-        IF timer.inHelp = 0 AND 
+        IF timer.inHelp = 0 AND
            ((now - timer.outHelpTime) > timer.outDelay) THEN
           timer.inHelpTime := now;
         END;
@@ -392,4 +392,4 @@ PROCEDURE Crash () =
   END Crash;
 
 BEGIN END AnchorHelpVBT.
-    
+

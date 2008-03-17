@@ -59,6 +59,6 @@ PROCEDURE Free (VAR ba: T) =
     END;
     ba := NIL
   END Free;
-        
+
 BEGIN
 END Batch.

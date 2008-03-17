@@ -8,14 +8,14 @@
 
 UNSAFE MODULE WinScreenType EXPORTS WinScreenType, WinScreenTypePrivate;
 
-IMPORT Axis, Ctypes, PaintOp, Pixmap, Rect, TrestleImpl, VBTRep, 
-       WinGDI, WinScrnColorMap, WinScrnCursor, WinScrnFont, WinScrnPaintOp, 
+IMPORT Axis, Ctypes, PaintOp, Pixmap, Rect, TrestleImpl, VBTRep,
+       WinGDI, WinScrnColorMap, WinScrnCursor, WinScrnFont, WinScrnPaintOp,
        WinScrnPixmap, WinTrestle, WinUser;
 
 REVEAL
   T = Private BRANDED OBJECT END;
 
-(* New returns a new color screen type of a depth corresponding to the number 
+(* New returns a new color screen type of a depth corresponding to the number
    of planes supported by the current Windows desktop.
    It is supposed to fill in the following fields:
      depth, color, bg, fg, bits, font, cmap
@@ -79,9 +79,9 @@ PROCEDURE InnerNew ((* IN-OUT *) res: T) =
     res.pixmaps := NIL;
     res.fonts := NIL;
 
-    res.optable := NEW (REF ARRAY OF WinScrnPaintOp.OpRecord, 
+    res.optable := NEW (REF ARRAY OF WinScrnPaintOp.OpRecord,
                         NUMBER (PaintOp.Predefined));
-    res.pmtable := NEW (REF ARRAY OF WinScrnPixmap.PixmapRecord, 
+    res.pmtable := NEW (REF ARRAY OF WinScrnPixmap.PixmapRecord,
                         NUMBER (Pixmap.Predefined));
     res.font  := WinScrnFont.NewOracle ();
   END InnerNew;

@@ -26,7 +26,7 @@ REVEAL
         init   := Init;
       END;
 
-TYPE 
+TYPE
   MC = MultiClass.Split OBJECT
     OVERRIDES
       replace := Replace;

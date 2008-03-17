@@ -33,25 +33,25 @@ TYPE
    this intersection is empty, the children's maxsizes are increased
    until the intersection is non-empty). The preferred size of "v" is
    the the maximum of the preferred sizes of its children, projected
-   into "v"'s size range.  If "v" has no children, its shape is a 
+   into "v"'s size range.  If "v" has no children, its shape is a
    "VBT"'s default shape.  *)
 
 
-PROCEDURE SetCurrent(v: T; ch: VBT.T) 
+PROCEDURE SetCurrent(v: T; ch: VBT.T)
 RAISES {Split.NotAChild}; <* LL.sup = VBT.mu *>
 (* Set the current child of "v" to be "ch" and mark "v" for redisplay. *)
 
 PROCEDURE GetCurrent(v: T): VBT.T; <* LL.sup = VBT.mu *>
 (* Return the current child of "v". *)
 
-PROCEDURE Cons(ch0, ch1, ch2, ch3, ch4: VBT.T := NIL; 
+PROCEDURE Cons(ch0, ch1, ch2, ch3, ch4: VBT.T := NIL;
   fickle := TRUE): T; <* LL.sup = VBT.mu *>
 (* Create a "TSplit" with children "ch0", "ch1", .... *)
 
 (* "Cons" is equivalent to
 
 | v := NEW(T).init(fickle);
-| Split.AddChild(v, ch0, ch1, ch2, ch3, ch4);  
+| Split.AddChild(v, ch0, ch1, ch2, ch3, ch4);
 | IF ch0 # NIL THEN SetCurrent(v, ch0) END;
 | RETURN v
 

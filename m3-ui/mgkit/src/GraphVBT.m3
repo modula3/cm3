@@ -36,7 +36,7 @@ REVEAL
                                    polygons *)
       fgGroup, bgGroup: MG.Group; (* all the MG.Group objects for objects
                                      who have been "toFront" or "toBack"
-                                     with a "ZOrder" of "Foreground" or 
+                                     with a "ZOrder" of "Foreground" or
                                      "Background" *)
       animations := 0;          (* number of animations in progress *)
       needRefresh := FALSE;     (* if objects moved or screen resolution
@@ -294,7 +294,7 @@ PROCEDURE Reshape (graph: T; READONLY cd: VBT.ReshapeRec) =
           IF graph.rect.south = graph.rect.north THEN
             graph.rect.south := graph.rect.south + 1;
           END;
-          
+
           LOCK graph.mgv.mu DO
             RefreshGraph(graph);
           END;
@@ -2426,7 +2426,7 @@ PROCEDURE SetPolygonColor (polygon: Polygon; color: PaintOp.T) =
 PROCEDURE MovePolygon (polygon : Polygon;
                        vertices: RefList.T (* OF Vertex *);
                        animated: BOOLEAN := FALSE;
-                       <* UNUSED *> start := 0.0; 
+                       <* UNUSED *> start := 0.0;
                        <* UNUSED *> stop := 1.0) =
   BEGIN
     WITH graph = polygon.graph DO
@@ -2831,9 +2831,9 @@ PROCEDURE ArrowPos (edge: Edge):
     END;
     RETURN new;
   END ArrowPos;
-  
+
 <* LL.sup >= edge.vertex0.graph.mu, edge.vertex0.graph.mgv.mu *>
-  
+
 PROCEDURE ComputeArrowTip (            edge      : Edge;
                                        forward   : BOOLEAN;
                            VAR (*OUT*) tip, delta: R2.T     ) =
@@ -2917,7 +2917,7 @@ PROCEDURE ComputeArrowTipOfBezier (            edge      : Edge;
         cpos0 := edge.cpos[1];
         cpos1 := edge.cpos[0];
       END;
-      VAR 
+      VAR
         t : REAL;
         x1     := cpos0[0] - pos0[0];
         x2     := cpos1[0] - pos0[0];

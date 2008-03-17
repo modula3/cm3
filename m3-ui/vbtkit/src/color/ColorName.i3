@@ -9,8 +9,8 @@
 
 (* The "ColorName" interface provides a standard mapping between color
    names and linear RGB triples. The implementation recognizes
-   the following names, based on those found in 
-   "/usr/lib/X11/rgb.txt": 
+   the following names, based on those found in
+   "/usr/lib/X11/rgb.txt":
 
     \begin{center}
     \begin{tt}
@@ -48,67 +48,67 @@
     The dagger (\dag) indicates that the implementation recognizes
     a name along with the suffixes "1"--"4"; e.g., "Red", "Red1", "Red2",
     "Red3", and "Red4".
-    
-   The double dagger (\ddag) indicates that the 
-   implementation also recognizes the names with the 
+
+   The double dagger (\ddag) indicates that the
+   implementation also recognizes the names with the
    suffixes "0" through "100". That is, "Gray0", "Gray1", \dots,
    "Gray100", as well as "Grey0", "Grey1", \dots, "Grey100".
-   
+
    In addition, the name of a color $C$ from this list
    can be prefixed by one or more of the following modifiers:
 
 
 \begin{center}
 \begin{tabular}{l|l}
-% 
+%
   \it Term & \it Meaning\\ \hline
 
-  \strut\begin{tabular}[c]{l} 
-  "Light" \\ 
-  "Pale" 
-  \end{tabular} 
+  \strut\begin{tabular}[c]{l}
+  "Light" \\
+  "Pale"
+  \end{tabular}
     &  1/3 of the way from $C$ to white \\ \hline
 
-  \strut\begin{tabular}[c]{l} 
-  "Dark" \\ 
-  "Dim" 
-  \end{tabular} 
+  \strut\begin{tabular}[c]{l}
+  "Dark" \\
+  "Dim"
+  \end{tabular}
     &  1/3 of the way from $C$ to black \\ \hline
 
-  \strut\begin{tabular}[c]{l} 
-  "Drab" \\ 
-  "Weak" \\ 
-  "Dull" 
-  \end{tabular} 
+  \strut\begin{tabular}[c]{l}
+  "Drab" \\
+  "Weak" \\
+  "Dull"
+  \end{tabular}
     & $\vcenter{\hbox{ 1/3 of the way from $C$ to the gray\strut}
                \hbox{with the same brightness as $C$\strut}}$ \\ \hline
 
-  \strut\begin{tabular}[c]{l} 
-  "Vivid" \\ 
-  "Strong" \\ 
-  "Bright" 
-  \end{tabular} 
+  \strut\begin{tabular}[c]{l}
+  "Vivid" \\
+  "Strong" \\
+  "Bright"
+  \end{tabular}
     & $\vcenter{\hbox{1/3 of the way from $C$ to the purest color\strut}
                \hbox{with the same hue as $C$\strut}}$ \\ \hline
 
-  \strut\begin{tabular}[c]{l} 
-  "Reddish" 
-  \end{tabular}  
+  \strut\begin{tabular}[c]{l}
+  "Reddish"
+  \end{tabular}
      &  1/3 of the way from $C$ to red \\ \hline
 
-  \strut\begin{tabular}[c]{l} 
-  "Greenish" 
-  \end{tabular}  
+  \strut\begin{tabular}[c]{l}
+  "Greenish"
+  \end{tabular}
     &  1/3 of the way from $C$ to green \\ \hline
 
-  \strut\begin{tabular}[c]{l} 
-  "Bluish" 
-  \end{tabular}  
+  \strut\begin{tabular}[c]{l}
+  "Bluish"
+  \end{tabular}
     &  1/3 of the way from $C$ to blue \\ \hline
 
-  \strut\begin{tabular}[c]{l} 
-  "Yellowish" 
-  \end{tabular}  
+  \strut\begin{tabular}[c]{l}
+  "Yellowish"
+  \end{tabular}
     &  1/3 of the way from $C$ to yellow \\
 %
 \end{tabular}
@@ -123,8 +123,8 @@
       "VeryVerySlightly"   & 1/16 of the way   &  6\% \\
       "VerySlightly"       & 1/8 of the way    & 13\% \\
       "Slightly"           & 1/4 of the way    & 25\% \\
-      "Somewhat"           & 3/8 of the way    & 38\% \\ 
-      "Rather"             & 1/2 of the way    & 50\% \\ 
+      "Somewhat"           & 3/8 of the way    & 38\% \\
+      "Rather"             & 1/2 of the way    & 50\% \\
       "Quite"              & 5/8 of the way    & 63\% \\
       "Very"               & 3/4 of the way    & 75\% \\
       "VeryVery"           & 7/8 of the way    & 88\% \\

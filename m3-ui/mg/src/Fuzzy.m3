@@ -153,7 +153,7 @@ PROCEDURE ClipLo (READONLY a: T; lo: REAL): T =
   END ClipLo;
 
 PROCEDURE Inset(READONLY a: T; amount: REAL): T =
-  VAR b: T; 
+  VAR b: T;
   BEGIN
     IF a.lo > a.hi THEN RETURN Empty END;
     b.lo := a.lo + amount;
@@ -161,14 +161,14 @@ PROCEDURE Inset(READONLY a: T; amount: REAL): T =
     IF b.lo > b.hi THEN RETURN Empty END;
     RETURN b
   END Inset;
-  
+
 PROCEDURE InsetPair(READONLY a: Pair; amount: REAL): Pair =
   BEGIN
     RETURN Pair{Inset(a[0], amount), Inset(a[1], amount)}
   END InsetPair;
 
 PROCEDURE Fudge (READONLY a: T; f: REAL := 0.0001): T =
-  VAR d: REAL; 
+  VAR d: REAL;
       b: T;
   BEGIN
     IF a.lo > a.hi THEN RETURN Empty END;
@@ -183,7 +183,7 @@ PROCEDURE Fudge (READONLY a: T; f: REAL := 0.0001): T =
 
 PROCEDURE Join (READONLY a, b: T): T =
   BEGIN
-    IF a.lo > a.hi THEN 
+    IF a.lo > a.hi THEN
       RETURN b
     ELSIF b.lo > b.hi THEN
       RETURN a
@@ -197,7 +197,7 @@ PROCEDURE Meet (READONLY a, b: T): T =
   BEGIN
     t.lo := MAX(a.lo, b.lo);
     t.hi := MIN(a.hi, b.hi);
-    IF t.lo > t.hi THEN 
+    IF t.lo > t.hi THEN
       RETURN Empty
     ELSE
       RETURN t

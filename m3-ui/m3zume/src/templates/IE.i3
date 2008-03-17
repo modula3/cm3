@@ -7,7 +7,7 @@
 (*      modified on Wed Feb 17 16:46:35 PST 1993 by johnh   *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 
@@ -25,24 +25,24 @@ $View
 
 #{_OUTPUT
 PROCEDURE #(_EVENT_) (
-      initiator: Algorithm.T; 
-      #(_ARGSTR_) 
+      initiator: Algorithm.T;
+      #(_ARGSTR_)
     ) RAISES {Thread.Alerted};
     <* LL = {} *>
 
 #}
 #{_FEEDBACK
 PROCEDURE #(_EVENT_) (
-      initiator: View.T; 
-      #(_ARGSTR_) 
+      initiator: View.T;
+      #(_ARGSTR_)
     ) RAISES {Thread.Alerted};
     <* LL = VBT.mu *>
 
 #}
 #{_UPDATE
 PROCEDURE #(_EVENT_) (
-      initiator: Algorithm.T; 
-      #(_ARGSTR_) 
+      initiator: Algorithm.T;
+      #(_ARGSTR_)
     ) RAISES {Thread.Alerted};
     <* LL = VBT.mu *>
 

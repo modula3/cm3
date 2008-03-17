@@ -11,12 +11,12 @@ IMPORT Env, Text;
 BEGIN
   WITH s = Env.Get ("SCROLLBARLOC") DO
     IF s # NIL THEN
-      IF Text.Equal (s, "north") OR 
-         Text.Equal (s, "northeast") OR 
+      IF Text.Equal (s, "north") OR
+         Text.Equal (s, "northeast") OR
          Text.Equal (s, "northwest")THEN ScrollbarSouth := FALSE
       END;
-      IF Text.Equal (s, "east") OR 
-         Text.Equal (s, "northeast") OR 
+      IF Text.Equal (s, "east") OR
+         Text.Equal (s, "northeast") OR
          Text.Equal (s, "southeast")THEN ScrollbarWest := FALSE
       END
     END
@@ -24,8 +24,8 @@ BEGIN
 
   WITH s = Env.Get ("TEXTPORTMODEL") DO
     IF s # NIL THEN
-      IF Text.Equal (s, "ivy") THEN TextPortModel := "ivy" 
-      ELSIF Text.Equal (s, "mac") THEN TextPortModel := "mac" 
+      IF Text.Equal (s, "ivy") THEN TextPortModel := "ivy"
+      ELSIF Text.Equal (s, "mac") THEN TextPortModel := "mac"
       ELSIF Text.Equal (s, "xterm") THEN TextPortModel := "xterm"
       END
     END

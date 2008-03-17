@@ -10,7 +10,7 @@ INTERFACE WinScrnPixmap;
 
 IMPORT PaintPrivate, Rect, ScrnPixmap, WinDef, WinScreenType;
 
-(* The moral equivalent of "PixmapRecord" in xvbt world is 
+(* The moral equivalent of "PixmapRecord" in xvbt world is
    "XScrnTpRep.PixmapRec". *)
 
 TYPE
@@ -19,7 +19,7 @@ TYPE
     domain : Rect.T;  (* domain.north is used to link free records *)
   END;
 
-CONST 
+CONST
   SolidPixmap: PaintPrivate.Pixmap = -1;
 
 
@@ -33,7 +33,7 @@ PROCEDURE NewPixmap (         st   : WinScreenType.T;
 PROCEDURE PixmapDomain (st: WinScreenType.T; pmId: INTEGER): Rect.T;
 
 
-PROCEDURE PixmapFromRaw (st: WinScreenType.T; 
+PROCEDURE PixmapFromRaw (st: WinScreenType.T;
                          pm: ScrnPixmap.Raw): WinDef.HBITMAP;
 
 (*

@@ -154,7 +154,7 @@ TYPE
     END;
 
 (* ------------------------------------------------------------------
-    See the Appearances interface for some predefined appearances 
+    See the Appearances interface for some predefined appearances
 ------------------------------------------------------------------ *)
 
 TYPE
@@ -249,7 +249,7 @@ TYPE
      Only the "from" end of a line repaints it.
 
      This is useful for creating a group affecting only one endpoint of
-     the line. 
+     the line.
 
      (Uses standard init method)
    *)
@@ -290,8 +290,8 @@ TYPE
       reshape (v: V; READONLY corner1, corner2: R2.T);
     END;
     (* The ellipse is painted in the background color of the color scheme.
-       The weight is interpreted as the thickness of an 
-       inset border around the ellipse.  The color of the border is the 
+       The weight is interpreted as the thickness of an
+       inset border around the ellipse.  The color of the border is the
        foreground color of the color scheme. *)
 
 
@@ -357,7 +357,7 @@ PROCEDURE MGCToScreenRect (v: V; READONLY corner1, corner2: R2.T):
   Rect.T;
 (* MGCToScreenRect will produce Rect.Empty if the screen points of corner1 and corner2
    coincide.  Use:
-     Rect.Join(Rect.FromPoint(MGCToScreenPoint(corner1)), 
+     Rect.Join(Rect.FromPoint(MGCToScreenPoint(corner1)),
                Rect.FromPoint(MGCScreenPoint(corner2)))
    if you need a non-empty rectangle *)
 

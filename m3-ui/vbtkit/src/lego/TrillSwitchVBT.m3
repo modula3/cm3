@@ -56,7 +56,7 @@ PROCEDURE Callback (<* UNUSED *>          v : T;
   END Callback;
 
 PROCEDURE Action(
-    <* UNUSED *> selfAsButtonVBT: ButtonVBT.T; 
+    <* UNUSED *> selfAsButtonVBT: ButtonVBT.T;
     <* UNUSED *> READONLY cd: VBT.MouseRec) =
   BEGIN
   END Action;
@@ -93,7 +93,7 @@ PROCEDURE CanRepeat (r: Repeater): BOOLEAN =
         ELSE
          (* an installed vbt; continue trilling as long
            as there are no pending mouse clicks or keystrokes
-           on their way to any top-level window installed by 
+           on their way to any top-level window installed by
            the trsl in wich v is installed. *)
           RETURN Trestle.AllCeded(trsl)
         END

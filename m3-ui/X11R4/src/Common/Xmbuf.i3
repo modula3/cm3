@@ -15,7 +15,7 @@ UNSAFE INTERFACE Xmbuf;
 
 IMPORT Ctypes, X;
 
-FROM Ctypes IMPORT char, int, int_star, long_int, short, 
+FROM Ctypes IMPORT char, int, int_star, long_int, short,
                    unsigned_int, unsigned_long;
 
 CONST
@@ -211,7 +211,7 @@ TYPE
                     count     : Ctypes.int;
                     xmbBuffer : MultibufferStar;
                     min_delay : Ctypes.int;
-                    max_delay : Ctypes.int);	
+                    max_delay : Ctypes.int);
 
 
 (*** get extension window attrs ***)
@@ -266,7 +266,7 @@ TYPE
                     border_width : unsigned_int;
                     depth        : int;
                     class        : unsigned_int; (* InputOutput, InputOnly *)
-                    visual       : X.VisualStar; 
+                    visual       : X.VisualStar;
                     valuemask    : unsigned_long;
                     attributes   : X.XSetWindowAttributes;
                     left_return  : MultibufferStar;

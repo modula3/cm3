@@ -14,7 +14,7 @@ CONST
   NoPref = ARRAY Axis.T OF INTEGER {-1, ..};
   BigPref = ARRAY Axis.T OF INTEGER{VBT.DefaultShape.hi, ..};
 
-REVEAL Link = LinkPublic BRANDED OBJECT 
+REVEAL Link = LinkPublic BRANDED OBJECT
     c: Thread.Condition;
   END;
 

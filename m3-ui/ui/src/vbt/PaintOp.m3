@@ -11,7 +11,7 @@
 
 MODULE PaintOp;
 
-IMPORT Palette, PlttFrnds, VBT, ScrnPaintOp, ScreenType, ScrnColorMap, 
+IMPORT Palette, PlttFrnds, VBT, ScrnPaintOp, ScreenType, ScrnColorMap,
   TrestleComm;
 
 TYPE RGBClosure = Palette.OpClosure OBJECT
@@ -64,7 +64,7 @@ PROCEDURE RGBApply(cl: RGBClosure; st: VBT.ScreenType): ScrnPaintOp.T =
     TRY
       IF st.cmap # NIL AND st.depth # 1 THEN
         VAR rgb := cl.rgb; gray := cl.gray; pix: ScrnColorMap.Pixel; BEGIN
-          IF NOT st.color THEN 
+          IF NOT st.color THEN
             rgb := ScrnColorMap.RGB{gray, gray, gray}
           END;
           TRY
@@ -74,7 +74,7 @@ PROCEDURE RGBApply(cl: RGBClosure; st: VBT.ScreenType): ScrnPaintOp.T =
               TRY
                 pix := st.cmap.standard().fromRGB(rgb, Mode.Normal)
               EXCEPT
-                ScrnColorMap.Failure => 
+                ScrnColorMap.Failure =>
                   IF cl.bw = BW.UseBg THEN
                     RETURN Palette.ResolveOp(st, Bg)
                   ELSE
@@ -95,8 +95,8 @@ PROCEDURE RGBApply(cl: RGBClosure; st: VBT.ScreenType): ScrnPaintOp.T =
       TrestleComm.Failure => RETURN Palette.ResolveOp(st, Fg)
     END;
   END RGBApply;
-        
-TYPE 
+
+TYPE
   PairClosure = Palette.OpClosure OBJECT
     op0, op1: T
   OVERRIDES
@@ -121,17 +121,17 @@ PROCEDURE Pair (op0, op1: T): T =
   END Pair;
 
 PROCEDURE ApplyPair(cl: PairClosure; st: VBT.ScreenType): ScrnPaintOp.T =
-  VAR sop0 := Palette.ResolveOp(st, cl.op0); 
+  VAR sop0 := Palette.ResolveOp(st, cl.op0);
     sop1 := Palette.ResolveOp(st, cl.op1);
   BEGIN
     TRY
       RETURN st.op.bgfg(sop0, sop1)
     EXCEPT
-      ScrnPaintOp.Failure, TrestleComm.Failure => 
+      ScrnPaintOp.Failure, TrestleComm.Failure =>
         RETURN Palette.ResolveOp(st, Transparent)
     END
   END ApplyPair;
-  
+
 TYPE SwapClosure = Palette.OpClosure OBJECT
     fg, bg: T;
   OVERRIDES
@@ -139,17 +139,17 @@ TYPE SwapClosure = Palette.OpClosure OBJECT
   END;
 
 PROCEDURE ApplySwap(cl: SwapClosure; st: VBT.ScreenType): ScrnPaintOp.T =
-  VAR 
-    fg := Palette.ResolveOp(st, cl.fg).pix; 
+  VAR
+    fg := Palette.ResolveOp(st, cl.fg).pix;
     bg := Palette.ResolveOp(st, cl.bg).pix;
   BEGIN
-    IF fg = -1 OR bg = -1 OR bg = fg THEN 
+    IF fg = -1 OR bg = -1 OR bg = fg THEN
       RETURN Palette.ResolveOp(st, Transparent)
     ELSE
       TRY
         RETURN st.op.swap(bg, fg)
       EXCEPT
-        ScrnPaintOp.Failure, TrestleComm.Failure => 
+        ScrnPaintOp.Failure, TrestleComm.Failure =>
           RETURN Palette.ResolveOp(st, Transparent)
       END
     END

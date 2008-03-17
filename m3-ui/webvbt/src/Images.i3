@@ -8,7 +8,7 @@ INTERFACE Images;
 
 IMPORT Pixmap, Thread;
 
-EXCEPTION Error; 
+EXCEPTION Error;
 
 PROCEDURE FromJPEG (bits: TEXT): Pixmap.T
   RAISES {Error, Thread.Alerted};

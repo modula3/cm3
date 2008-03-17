@@ -18,7 +18,7 @@ TYPE Cache = MUTEX OBJECT table: TextRefTbl.T END;
 
 VAR nameCache: Cache;
 (* cache of normalized names that have been looked up: *)
-  
+
 PROCEDURE NormalizeName (a: TEXT): TEXT;
 (* Deletes all whitespace in "a" and converts to lower case *)
 

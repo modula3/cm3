@@ -380,7 +380,7 @@ PROCEDURE Classify (tmp: TEXT;  cur: INTEGER;
       nx   := 0;
       tx   := cur;
       IF (NOT full) OR (cur = 0) OR (Text.GetChar(tmp,cur-1) = '\n') THEN
-        WHILE (nx < nlen) AND (tx < tlen) AND 
+        WHILE (nx < nlen) AND (tx < tlen) AND
               (Text.GetChar(tmp,tx) = Text.GetChar(nm,nx)) DO
           INC (tx); INC (nx);
         END;
@@ -389,7 +389,7 @@ PROCEDURE Classify (tmp: TEXT;  cur: INTEGER;
           IF full THEN
             (* scan to the beginning of the next line *)
             WHILE (tx < tlen) AND (Text.GetChar(tmp,tx) # '\n') DO
-              INC (tx); 
+              INC (tx);
             END;
             INC (tx);
           END;
@@ -458,7 +458,7 @@ PROCEDURE EmitImports (VAR buf: OutBuf)
     len     : INTEGER;
   BEGIN
     (* revert to "pass thru" mode *)
-    buf.imports := NIL;  
+    buf.imports := NIL;
     buf.len := 0;
 
     WHILE iter.next (intf, txt) DO

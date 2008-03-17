@@ -59,9 +59,8 @@ PROCEDURE Restore(VAR st: T; rd: Rd.T): BOOLEAN =
           RETURN FALSE
     END
   END Restore;
-  
+
 (* Read a saved state from "rd", store the result in "st", and return "TRUE".
    Return "FALSE" if "rd" does not contain a properly saved state. *)
 
 BEGIN END SaveState.
-  

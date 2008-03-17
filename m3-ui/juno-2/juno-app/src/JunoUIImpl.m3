@@ -45,10 +45,10 @@ PROCEDURE DragNameProc(cl: Closure): BOOLEAN =
 
 PROCEDURE DragLocProc(cl: Closure): BOOLEAN =
   VAR drag: Drag.T := cl.rt.drawing; val: RTVal.T; BEGIN
-    IF drag.dragging THEN 
-      VAR 
+    IF drag.dragging THEN
+      VAR
         child: Drawing.Child := Filter.Child(cl.rt.drawing);
-        xypt := JunoPt.FromHV(drag.draggee, child.xform); 
+        xypt := JunoPt.FromHV(drag.draggee, child.xform);
       BEGIN
         val := RTVal.FromPair(RTVal.FromReal(xypt.x), RTVal.FromReal(xypt.y))
       END

@@ -9,14 +9,14 @@ INTERFACE R2;
 
 (* Real pairs.
 
-   This interface implements the 2-dimensional vector space R^2. 
-   It defines the basic linear operations on real pairs (arrays 
-   with 2 REAL components).  See R2x2.i3 and R2IO.i3 for 
-   additional operations.  
-   
-   Index: vectors; reals, vectors of; 
+   This interface implements the 2-dimensional vector space R^2.
+   It defines the basic linear operations on real pairs (arrays
+   with 2 REAL components).  See R2x2.i3 and R2IO.i3 for
+   additional operations.
+
+   Index: vectors; reals, vectors of;
    points; geometry; linear algebra; numerical routines
-   
+
 *)
 
 (********************************************************************)
@@ -40,7 +40,7 @@ CONST
 PROCEDURE Unit(i: Axis): T;
   (* The unit vector on the i-th axis. *)
 
-PROCEDURE Equal(READONLY x, y: T): BOOLEAN; 
+PROCEDURE Equal(READONLY x, y: T): BOOLEAN;
   (* Equality *)
 
 PROCEDURE IsZero(READONLY x: T): BOOLEAN;
@@ -87,8 +87,8 @@ PROCEDURE LInfDist(READONLY x, y: T): REAL;
 PROCEDURE RelDist(READONLY x, y: T; eps: REAL := 1.0e-37): REAL;
   (* Relative distance between two points, useful in convergence tests.
   The /eps/ parameter specifies the magnitude of the (additive) noise
-  in each coordinate. 
-  The value of RelDist is defined as   max_i rdist(x[i], y[i])  where 
+  in each coordinate.
+  The value of RelDist is defined as   max_i rdist(x[i], y[i])  where
 |
 |    rdist(u,v) =  max(|u-v|-eps, 0) / max(|u|, |v|, eps)
 |
@@ -104,16 +104,16 @@ PROCEDURE Cos (READONLY x, y: T): REAL;
 PROCEDURE Det(READONLY p0, p1: T): REAL;
   (* Determinant of the matrix with given points as rows *)
 
-PROCEDURE Add(READONLY x, y: T): T; 
+PROCEDURE Add(READONLY x, y: T): T;
   (* Vector sum x + y. *)
 
-PROCEDURE Sub(READONLY x, y: T): T; 
+PROCEDURE Sub(READONLY x, y: T): T;
   (* Vector difference x - y. *)
 
-PROCEDURE Minus(READONLY x: T): T; 
+PROCEDURE Minus(READONLY x: T): T;
   (* Negation of all coordinates. *)
 
-PROCEDURE Scale(alpha: REAL; READONLY x: T): T; 
+PROCEDURE Scale(alpha: REAL; READONLY x: T): T;
   (* Scalar multiplication alpha * x.  *)
 
 PROCEDURE Shift(READONLY x: T; delta: REAL): T;
@@ -130,7 +130,7 @@ TYPE Function = PROCEDURE (x: REAL): REAL;
 PROCEDURE FMap (READONLY x: T; F: Function): T;
   (* Returns z such that z[i] = F(x[i]). *)
 
-PROCEDURE Direction(READONLY x: T): T; 
+PROCEDURE Direction(READONLY x: T): T;
   (* Divides x by Length(x). An error if x = (0 0). *)
 
 PROCEDURE Cross(READONLY p1: T): T;
@@ -144,4 +144,4 @@ PROCEDURE Throw(lo, hi: REAL; src: Random.T := NIL): T;
 PROCEDURE ToText(READONLY x: T): TEXT;
 
 END R2.
- 
+

@@ -15,19 +15,19 @@ INTERFACE SimpleWeb;
 IMPORT Thread, Web;
 
 TYPE
-  ExtensionType = 
-    RECORD 
+  ExtensionType =
+    RECORD
       ext: TEXT;
       type: Web.MIMEType;
       subType: TEXT;
     END;
 
-CONST 
+CONST
   DefaultAccepts = ARRAY OF TEXT {(* no wild cards; sorry *)
-                     "text/html",  
-                     "text/plain", 
-                     "image/x-xbitmap", 
-                     "image/gif", 
+                     "text/html",
+                     "text/plain",
+                     "image/x-xbitmap",
+                     "image/gif",
                      "image/jpeg",
                      "image/ppm",
                      "image/pbm",

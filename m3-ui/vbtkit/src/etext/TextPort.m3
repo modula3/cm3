@@ -270,7 +270,7 @@ PROCEDURE SetFont (v: T; font: Font.T) =
       END;
     END
   END SetFont;
-      
+
 PROCEDURE GetColorScheme (v: T): PaintOp.ColorScheme  =
   BEGIN
     LOCK v.mu DO
@@ -317,7 +317,7 @@ PROCEDURE GetModel (v: T): [Model.Ivy .. Model.Xterm] =
 PROCEDURE SetModel (v: T; model: Model) =
   BEGIN
     LOCK v.mu DO LockedSetModel (v, model) END
-  END SetModel; 
+  END SetModel;
 
 TYPE
   StandardKeyFilter =
@@ -403,7 +403,7 @@ PROCEDURE SetFontDimensions (v: T) =
     END
   END SetFontDimensions;
 
-(* UNUSED 
+(* UNUSED
 PROCEDURE Width (v: T): CARDINAL =
    (* Return the number of characters that will fit on a line, given the current
    size of "v".  If "v" has no width (because its window is iconic, for
@@ -418,7 +418,7 @@ PROCEDURE Width (v: T): CARDINAL =
     END
   END Width;
 *)
-      
+
 (* UNUSED
 PROCEDURE Height (v: T): CARDINAL =
   BEGIN
@@ -629,7 +629,7 @@ PROCEDURE UnsafeInsert (v: T; t: TEXT) =
     rec.anchor.l := p;
     rec.anchor.r := p
   END UnsafeInsert;
-  
+
 (************************  Shape of current text  *************************)
 
 
@@ -870,7 +870,7 @@ PROCEDURE Redisplay (v: T) =
       LOCK v.mu DO
         VText.Update (v.vtext);
         IF v.scrollbar # NIL THEN v.scrollbar.update () END
-      END 
+      END
     EXCEPT
     | VTDef.Error (ec) => v.vterror (name, ec)
     | Rd.EndOfFile => v.rdeoferror (name)
@@ -890,8 +890,8 @@ PROCEDURE UnlockedReturnAction (v: T; READONLY event: VBT.KeyRec) =
   BEGIN
     Thread.Release (v.mu);
     TRY v.returnAction (event) FINALLY Thread.Acquire (v.mu) END
-  END UnlockedReturnAction; 
-  
+  END UnlockedReturnAction;
+
 PROCEDURE Insert4spaces (v: T; <* UNUSED *> READONLY event: VBT.KeyRec) =
   BEGIN
     LOCK v.mu DO v.insert ("    ") END
@@ -901,8 +901,8 @@ PROCEDURE UnlockedTabAction (v: T; READONLY event: VBT.KeyRec) =
   BEGIN
     Thread.Release (v.mu);
     TRY v.tabAction (event) FINALLY Thread.Acquire (v.mu) END
-  END UnlockedTabAction; 
-  
+  END UnlockedTabAction;
+
 (*************************  Miscellany  ************************)
 
 <* EXPORTED *>
@@ -1052,7 +1052,7 @@ PROCEDURE vterror (v: T; msg: TEXT; ec: VTDef.ErrorCode) =
 PROCEDURE rdfailure (v: T; msg: TEXT; ref: REFANY) =
   BEGIN
     v.ULerror (msg & ": " & RdUtils.FailureText (ref))
-  END rdfailure; 
+  END rdfailure;
 
 PROCEDURE rdeoferror (v: T; msg: TEXT) =
   BEGIN

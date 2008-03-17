@@ -29,13 +29,13 @@ and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the names of Digital or MIT not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -48,10 +48,10 @@ SOFTWARE.
 ******************************************************************)
 
 FROM Ctypes IMPORT char, char_star, char_star_star, char_star_star_star,
-                   const_char_star, const_unsigned_char_star, 
+                   const_char_star, const_unsigned_char_star,
                    int, int_star, long, long_star, short,
                    unsigned_char, unsigned_char_star, unsigned_char_star_star,
-                   unsigned_int, unsigned_int_star, unsigned_long, 
+                   unsigned_int, unsigned_int_star, unsigned_long,
                    unsigned_long_star, unsigned_short, void_star;
 IMPORT Word, XMachine;
 
@@ -141,8 +141,8 @@ CONST
   CurrentTime  =                0;      (* special Time *)
   NoSymbol  =                   0;      (* special KeySym *)
 
-(***************************************************************** 
- * EVENT DEFINITIONS 
+(*****************************************************************
+ * EVENT DEFINITIONS
  *****************************************************************)
 
 (* Input Event Masks. Used as event-mask window attribute and as arguments
@@ -271,7 +271,7 @@ are reserved in the protocol for errors and replies. *)
   NotifyWhileGrabbed =          3;
 
   NotifyHint =                  1;      (* for MotionNotify events *)
-                       
+
 (* Notify detail *)
 
   NotifyAncestor =              0;
@@ -342,7 +342,7 @@ are reserved in the protocol for errors and replies. *)
   RevertToParent =              2;
 
 (*****************************************************************
- * ERROR CODES 
+ * ERROR CODES
  *****************************************************************)
 
   Success =                     0;      (* everything's okay *)
@@ -357,9 +357,9 @@ are reserved in the protocol for errors and replies. *)
   BadDrawable =                 9;      (* parameter not a Pixmap or Window *)
   BadAccess =                   10;     (* depending on context:
                                          - key/button already grabbed
-                                         - attempt to free an illegal 
-                                           cmap entry 
-                                        - attempt to store into a read-only 
+                                         - attempt to free an illegal
+                                           cmap entry
+                                        - attempt to store into a read-only
                                            color map entry.
                                         - attempt to modify the access control
                                            list from other than the local host.
@@ -376,7 +376,7 @@ are reserved in the protocol for errors and replies. *)
   LastExtensionError =          255;
 
 (*****************************************************************
- * WINDOW DEFINITIONS 
+ * WINDOW DEFINITIONS
  *****************************************************************)
 
 (* Window classes used by CreateWindow *)
@@ -568,7 +568,7 @@ are reserved in the protocol for errors and replies. *)
   GCCapStyle =                  Word.Shift (1, 6);
   GCJoinStyle =                 Word.Shift (1, 7);
   GCFillStyle =                 Word.Shift (1, 8);
-  GCFillRule =                  Word.Shift (1, 9); 
+  GCFillRule =                  Word.Shift (1, 9);
   GCTile =                      Word.Shift (1, 10);
   GCStipple =                   Word.Shift (1, 11);
   GCTileStipXOrigin =           Word.Shift (1, 12);
@@ -586,7 +586,7 @@ are reserved in the protocol for errors and replies. *)
   GCLastBit =                   22;
 
 (*****************************************************************
- * FONTS 
+ * FONTS
  *****************************************************************)
 
 (* used in QueryFont -- draw direction *)
@@ -597,7 +597,7 @@ are reserved in the protocol for errors and replies. *)
   FontChange =                  255;
 
 (*****************************************************************
- *  IMAGING 
+ *  IMAGING
  *****************************************************************)
 
 (* ImageFormat -- PutImage, GetImage *)
@@ -607,7 +607,7 @@ are reserved in the protocol for errors and replies. *)
   ZPixmap =                     2;      (* depth == drawable depth *)
 
 (*****************************************************************
- *  COLOR MAP STUFF 
+ *  COLOR MAP STUFF
  *****************************************************************)
 
 (* For CreateColormap *)
@@ -632,7 +632,7 @@ are reserved in the protocol for errors and replies. *)
   TileShape =                   1;      (* size tiled fastest *)
   StippleShape =                2;      (* size stippled fastest *)
 
-(***************************************************************** 
+(*****************************************************************
  * KEYBOARD/POINTER STUFF
  *****************************************************************)
 
@@ -663,7 +663,7 @@ are reserved in the protocol for errors and replies. *)
   MappingPointer =              2;
 
 (*****************************************************************
- * SCREEN SAVER STUFF 
+ * SCREEN SAVER STUFF
  *****************************************************************)
 
   DontPreferBlanking =          0;
@@ -693,10 +693,10 @@ are reserved in the protocol for errors and replies. *)
 
 (* for ChangeAccessControl *)
 
-  EnableAccess =                1;      
+  EnableAccess =                1;
   DisableAccess =               0;
 
-(* Display classes  used in opening the connection 
+(* Display classes  used in opening the connection
  * Note that the statically allocated ones are even numbered and the
  * dynamically changeable ones are odd numbered *)
 
@@ -726,16 +726,16 @@ are reserved in the protocol for errors and replies. *)
  ***************************************************************)
 
 (* $XConsortium: Xlib.h,v 11.179 89/12/12 13:57:19 jim Exp $ *)
-(* 
+(*
  * Copyright 1985, 1986, 1987 by the Massachusetts Institute of Technology
  *
  * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose and without fee is hereby granted, provided 
- * that the above copyright notice appear in all copies and that both that 
- * copyright notice and this permission notice appear in supporting 
+ * documentation for any purpose and without fee is hereby granted, provided
+ * that the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
  * documentation, and that the name of M.I.T. not be used in advertising
- * or publicity pertaining to distribution of the software without specific, 
- * written prior permission. M.I.T. makes no representations about the 
+ * or publicity pertaining to distribution of the software without specific,
+ * written prior permission. M.I.T. makes no representations about the
  * suitability of this software for any purpose.  It is provided "as is"
  * without express or implied warranty.
  *
@@ -878,7 +878,7 @@ TYPE
     depth: Int;
     bits_per_pixel: Int;
     scanline_pad: Int;
-  END;    
+  END;
   XPixmapFormatValuesStar  =  UNTRACED REF XPixmapFormatValues;
 
 
@@ -893,10 +893,10 @@ TYPE
         background: unsigned_long;(* background pixel *)
         line_width: Int;         (* line width *)
         line_style: Int;         (* LineSolid, LineOnOffDash, LineDoubleDash *)
-        cap_style: Int;          (* CapNotLast, CapButt, 
+        cap_style: Int;          (* CapNotLast, CapButt,
                                    CapRound, CapProjecting *)
         join_style: Int;         (* JoinMiter, JoinRound, JoinBevel *)
-        fill_style: Int;         (* FillSolid, FillTiled, 
+        fill_style: Int;         (* FillSolid, FillTiled,
                                    FillStippled, FillOpaeueStippled *)
         fill_rule: Int;          (* EvenOddRule, WindingRule *)
         arc_mode: Int;           (* ArcChord, ArcPieSlice *)
@@ -921,7 +921,7 @@ TYPE
  * Graphics context.  All Xlib routines deal in this rather than
  * in raw protocol GContext ID's.  This is so that the library can keep
  * a "shadow" set of values, and thus avoid passing values over the
- * wire which are not in fact changing. 
+ * wire which are not in fact changing.
  *)
 
 TYPE
@@ -952,7 +952,7 @@ TYPE
 
 (*
  * Depth structure; contains information for each possible depth.
- *)     
+ *)
 
 TYPE
   Depth = RECORD
@@ -983,7 +983,7 @@ TYPE Screen = RECORD
         black_pixel: unsigned_long; (* White and Black pixel values *)
         max_maps, min_maps: Int; (* max and min color maps *)
         backing_store: Int;      (* Never, WhenMapped, Always *)
-        save_unders: Bool;       
+        save_unders: Bool;
         root_input_mask: Long;   (* initial root input mask *)
   END;
   ScreenStar    =  UNTRACED REF Screen;
@@ -1075,7 +1075,7 @@ TYPE
   DestroyImageProc = PROCEDURE (i: XImageStar): Int;
   GetPixelProc = PROCEDURE (i: XImageStar; x, y: Int): unsigned_long;
   PutPixelProc = PROCEDURE (i: XImageStar; x, y: Int; p: unsigned_long): Int;
-  SubImageProc = PROCEDURE (i: XImageStar; 
+  SubImageProc = PROCEDURE (i: XImageStar;
                             x, y: Int; w, h: unsigned_int): XImageStar;
   AddPixelProc = PROCEDURE(i: XImageStar): Int;
 
@@ -1106,7 +1106,7 @@ TYPE
   END;
   XImageStar  =  UNTRACED REF XImage;
 
-(* 
+(*
  * Data structure for XReconfigureWindow
  *)
 
@@ -1133,7 +1133,7 @@ TYPE
   END;
   XColorStar = UNTRACED REF XColor;
 
-(* 
+(*
  * Data structures for graphics operations.  On most machines, these are
  * congruent with the wire protocol structures, so reformatting the data
  * can be avoided on these architectures.
@@ -1150,7 +1150,7 @@ TYPE
     x, y: Short;
   END;
   XPoint_star = UNTRACED REF XPoint;
-    
+
   XRectangle = RECORD
     x, y: Short;
     width, height: unsigned_short;
@@ -1282,7 +1282,7 @@ TYPE
         ext_procs: XExtensionStar; (* extensions initialized on this display *)
         (*
          * the following can be fixed size, as the protocol defines how
-         * much address space is available. 
+         * much address space is available.
          * While this could be done using the extension vector, there
          * may be MANY events processed, so a search through the extension
          * list to find the right procedure for each event might be
@@ -1312,14 +1312,14 @@ TYPE
 
 
 (*
- * A "XEvent" structure always  has type as the first entry.  This 
+ * A "XEvent" structure always  has type as the first entry.  This
  * uniquely identifies what  kind of event it is.  The second entry
  * is always a pointer to the display the event was read from.
  * The third entry is always a window of one type or another,
  * carefully selected to be useful to toolkit dispatchers.  (Except
  * for keymap events, which have no window.) You
  * must not change the order of the three elements or toolkits will
- * break! The pointer to the generic event must be cast before use to 
+ * break! The pointer to the generic event must be cast before use to
  * access any other information in the structure.
  *)
 
@@ -1408,7 +1408,7 @@ TYPE
      mode: Int;                (* NotifyNormal, NotifyGrab, NotifyUngrab *)
      detail: Int;
     (*
-     * NotifyAncestor, NotifyVirtual, NotifyInferior, 
+     * NotifyAncestor, NotifyVirtual, NotifyInferior,
      * NotifyNonLinear,NotifyNonLinearVirtual
      *)
      same_screen: Bool;        (* same screen flag *)
@@ -1432,9 +1432,9 @@ TYPE
      mode: Int;                (* NotifyNormal, NotifyGrab, NotifyUngrab *)
      detail: Int
     (*
-     * NotifyAncestor, NotifyVirtual, NotifyInferior, 
+     * NotifyAncestor, NotifyVirtual, NotifyInferior,
      * NotifyNonLinear,NotifyNonLinearVirtual, NotifyPointer,
-     * NotifyPointerRoot, NotifyDetailNone 
+     * NotifyPointerRoot, NotifyDetailNone
      *)
   END;
 
@@ -1848,7 +1848,7 @@ TYPE
  * event structure internally, to avoid memory fragmentation.
  *)
 
-CONST XEventSize = 
+CONST XEventSize =
   MAX (BYTESIZE (Int),
   MAX (BYTESIZE (XAnyEvent),
   MAX (BYTESIZE (XKeyEvent),
@@ -2067,7 +2067,7 @@ TYPE
         dest_y:           Int
 ): XImageStar RAISES {Error};
 
-(* 
+(*
  * X function declarations.
  *)
 
@@ -2239,7 +2239,7 @@ TYPE
         visual:           VisualStar;
         valuemask:        unsigned_long;
         attributes:       XSetWindowAttributesStar
-): Window RAISES {Error}; 
+): Window RAISES {Error};
 
 <*EXTERNAL*> PROCEDURE XListInstalledColormaps(
         display:          DisplayStar;
@@ -4157,7 +4157,7 @@ TYPE XIfEventProc = PROCEDURE (
  ***************************************************************)
 
 
-(* 
+(*
  * Bitmask returned by XParseGeometry().  Each bit tells if the corresponding
  * value (x, y, width, height) was found in the parsed string.
  *)
@@ -4261,7 +4261,7 @@ CONST
 
 
 (*
- * new structure for manipulating TEXT properties; used with WM_NAME, 
+ * new structure for manipulating TEXT properties; used with WM_NAME,
  * WM_ICON_NAME, WM_CLIENT_MACHINE, and WM_COMMAND.
  *)
 TYPE
@@ -4278,10 +4278,10 @@ TYPE
     max_width, max_height: Int;
    width_inc, height_inc: Int
   END;
-  XIconSizeStar     = UNTRACED REF XIconSize; 
-  XIconSizeStarStar = UNTRACED REF XIconSizeStar; 
+  XIconSizeStar     = UNTRACED REF XIconSize;
+  XIconSizeStarStar = UNTRACED REF XIconSizeStar;
 
-  XClassHint = RECORD  
+  XClassHint = RECORD
     res_name: char_star;
     res_class: char_star
   END;
@@ -4341,21 +4341,21 @@ TYPE
   (((unsigned)(keysym) >= XK_Shift_L)  && ((unsigned)(keysym) <= XK_Hyper_R))
 
 (*
- * opaque reference to Region data type 
+ * opaque reference to Region data type
  *)
-typedef struct _XRegion *Region; 
+typedef struct _XRegion *Region;
 ?!?!? *)
 
 TYPE
   Region = ADDRESS;
 
 (* Return values from XRectInRegion() *)
- 
+
 CONST
   RectangleOut = 0;
   RectangleIn =  1;
   RectanglePart = 2;
- 
+
 
 (*
  * Information used by the visual utility routines to find desired visual

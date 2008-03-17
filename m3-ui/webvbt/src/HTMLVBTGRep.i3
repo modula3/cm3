@@ -23,7 +23,7 @@ REVEAL
         page: Split.T;
         hsplit  : VBT.T;
         ulDepth : INTEGER;
-        verbatim: BOOLEAN;        
+        verbatim: BOOLEAN;
       END;
 
 END HTMLVBTGRep.

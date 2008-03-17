@@ -11,8 +11,8 @@ INTERFACE BtnVBTClass;
 
 IMPORT ButtonVBT;
 
-TYPE T = ButtonVBT.Public BRANDED OBJECT 
-  ready, armed := FALSE 
+TYPE T = ButtonVBT.Public BRANDED OBJECT
+  ready, armed := FALSE
 END;
 
 (* The "ready" boolean is set if the "pre" method has been called.
@@ -20,6 +20,6 @@ END;
    would cause the action procedure to be called. *)
 
 REVEAL ButtonVBT.T <: T;
-  
+
 END BtnVBTClass.
 

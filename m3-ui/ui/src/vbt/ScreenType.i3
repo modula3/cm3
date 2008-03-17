@@ -10,8 +10,8 @@
 
 (* A "ScreenType.T" represents a class of screens that have a common
    pixel depth, a common set of operations on the pixels, and common
-   repositories for cursors, pixmaps, and fonts.  
-   
+   repositories for cursors, pixmaps, and fonts.
+
    When the screentype of a "VBT" changes, any screen-dependent
    resources for the old screentype become useless.  The application
    must use the new screentype's {\it oracles} to look up resources
@@ -23,7 +23,7 @@
 
 INTERFACE ScreenType;
 
-IMPORT ScrnCursor, VBT, ScrnColorMap, ScrnFont, 
+IMPORT ScrnCursor, VBT, ScrnColorMap, ScrnFont,
   ScrnPaintOp, ScrnPixmap;
 
 TYPE T = VBT.ScreenType;
@@ -55,7 +55,7 @@ TYPE
 
    The oracles "st.op", "st.font", "st.cursor", and "st.pixmap"
    contains methods that provide screen-dependent resources appropriate
-   for "st"---for example, "st.font" has a method that will look up 
+   for "st"---for example, "st.font" has a method that will look up
    fonts by name.
 
    If "st.cmap # NIL", "st" is a color-mapped screen, which means that

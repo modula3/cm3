@@ -14,19 +14,19 @@
 MODULE TrestleConf;
 
 PROCEDURE Init (<*UNUSED*> createUser: UserProc) =
-  BEGIN 
+  BEGIN
   END Init;
 
 
 REVEAL
-  User = UserPublic BRANDED OBJECT 
-  OVERRIDES 
-    register := Register 
+  User = UserPublic BRANDED OBJECT
+  OVERRIDES
+    register := Register
   END;
 
 
 PROCEDURE Register(<*UNUSED*> user: User) =
-  BEGIN     
+  BEGIN
   END Register;
 
 

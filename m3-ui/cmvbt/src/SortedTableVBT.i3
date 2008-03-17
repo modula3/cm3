@@ -8,7 +8,7 @@ IMPORT TableVBT, VBT;
 
 TYPE
   T <: Public;
-  Public = Private OBJECT 
+  Public = Private OBJECT
     order: Order := DefaultOrder;
   METHODS
     insert_sorted (READONLY data: ARRAY OF VBT.T): CARDINAL;

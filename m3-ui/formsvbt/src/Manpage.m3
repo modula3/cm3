@@ -200,7 +200,7 @@ PROCEDURE PopDownNotFound (cl: PDNF): REFANY =
     END;
     RETURN NIL
   END PopDownNotFound;
-  
+
 
 PROCEDURE TextReverse (t: TEXT): TEXT =
   VAR

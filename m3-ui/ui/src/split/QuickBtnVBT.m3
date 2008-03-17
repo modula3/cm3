@@ -12,7 +12,7 @@ MODULE QuickBtnVBT;
 
 IMPORT ButtonVBT, BtnVBTClass, VBT, Filter;
 
-REVEAL T = ButtonVBT.T BRANDED OBJECT 
+REVEAL T = ButtonVBT.T BRANDED OBJECT
   OVERRIDES
     mouse := Mouse;
     pre := Pre;
@@ -20,8 +20,8 @@ REVEAL T = ButtonVBT.T BRANDED OBJECT
   END;
 
 PROCEDURE New(
-  ch: VBT.T; 
-  action: ButtonVBT.Proc; 
+  ch: VBT.T;
+  action: ButtonVBT.Proc;
   ref: REFANY := NIL): T RAISES {} =
   BEGIN
     RETURN NEW(T).init(ch, action, ref)
@@ -38,5 +38,5 @@ PROCEDURE Mouse(v: T; READONLY cd: VBT.MouseRec) =
   END Mouse;
 
 PROCEDURE Pre(<*UNUSED*> v: T) = BEGIN END Pre;
-  
+
 BEGIN END QuickBtnVBT.

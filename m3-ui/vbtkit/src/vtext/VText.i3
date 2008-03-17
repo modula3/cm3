@@ -100,7 +100,7 @@ TYPE
 
 EXCEPTION
   Error (ErrorCode);
-  
+
 (************************************************************************)
 (*				 Creation				*)
 (************************************************************************)
@@ -186,7 +186,7 @@ PROCEDURE ChangeVOptions (vtext: T; READONLY vOptions: VOptions)
 PROCEDURE Close (vtext: T) RAISES {VTDef.Error};
 (* Destroy a VText. This vtext will not paint in its vbt any more. The
    display of the text is not erased. *)
-   
+
 (************************************************************************)
 (*				 Regions				*)
 (************************************************************************)

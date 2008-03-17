@@ -12,7 +12,7 @@ IMPORT Pixmap, PixmapFromXData;
 
 FROM Card IMPORT Rank;
 
-VAR 
+VAR
   mu := NEW(MUTEX);
   inited := FALSE;
   pix: ARRAY Rank OF Pixmap.T;

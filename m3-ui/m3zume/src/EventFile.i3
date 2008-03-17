@@ -49,7 +49,7 @@ TYPE
     type    : TEXT;
     printer : TEXT;
   END;
-  
+
 PROCEDURE Parse (rd: Rd.T;  VAR(*OUT*) t: T): TEXT;
 (* Parse the event file contained in "rd" and leave it's AST
    in "t".  If everything went well, return "NIL".  Otherwise,

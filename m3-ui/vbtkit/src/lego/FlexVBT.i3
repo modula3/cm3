@@ -81,21 +81,21 @@ CONST
   Default  = Shape{DefaultRange, DefaultRange};
   DefaultRange =
     SizeRange {natural := Missing,
-               shrink  := Missing, 
+               shrink  := Missing,
                stretch := Missing};
 
   Fixed   = Shape{FixedRange, FixedRange};
   FixedRange =
-    SizeRange {natural := Missing, 
-               shrink  := 0.0, 
+    SizeRange {natural := Missing,
+               shrink  := 0.0,
                stretch := 0.0};
 
   Stretchy = Shape{StretchyRange, StretchyRange};
-  StretchyRange = 
+  StretchyRange =
     SizeRange {natural := Missing,
-               shrink  := Missing, 
+               shrink  := Missing,
                stretch := Infinity};
-               
+
 PROCEDURE RigidRange (natural: REAL): SizeRange;
 <* LL = arbitrary *>
 (* Return a "SizeRange" with the specified natural amount and

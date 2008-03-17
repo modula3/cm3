@@ -202,11 +202,11 @@ TYPE
 (* The "state" data structure, about 132 bytes, could be made
    much more efficient. Currently, a copy of the data structure is
    made each time that a component is encountered. (Further, a copy from
-   the heap is made on each component that has a name, so that the 
-   inheritable props can be changed at runtime.) 
+   the heap is made on each component that has a name, so that the
+   inheritable props can be changed at runtime.)
 
-   For instance, a copy of the entire data structure isn't needed, 
-   just those variables that have actually changed. Other (more) 
+   For instance, a copy of the entire data structure isn't needed,
+   just those variables that have actually changed. Other (more)
    efficient schemes are possible. --mhb 1/24/94 *)
 
 
@@ -277,7 +277,7 @@ PROCEDURE MacroFunction (sym: Atom.T; READONLY state: State): Macro.T =
       IF pair # NIL THEN RETURN pair.tail.head ELSE RETURN NIL END
     END
   END MacroFunction;
-      
+
 PROCEDURE ParseSymbolComponent (cl: ParseClosure; sym: Atom.T; READONLY state: State):
   VBT.T RAISES {Error} =
   BEGIN
@@ -1410,13 +1410,13 @@ PROCEDURE pHVTile (         cl  : ParseClosure;
     RETURN res
   END pHVTile;
 
-PROCEDURE pHPackSplit (cl: ParseClosure; 
+PROCEDURE pHPackSplit (cl: ParseClosure;
     VAR list: RefList.T; READONLY state: State): VBT.T RAISES {Error} =
   BEGIN
     RETURN pHVPackSplit (cl, list, state, Axis.T.Hor)
   END pHPackSplit;
 
-PROCEDURE pVPackSplit (cl: ParseClosure; 
+PROCEDURE pVPackSplit (cl: ParseClosure;
     VAR list: RefList.T; READONLY state: State): VBT.T RAISES {Error} =
   BEGIN
     RETURN pHVPackSplit (cl, list, state, Axis.T.Ver)
@@ -1573,7 +1573,7 @@ PROCEDURE SuffixesFromList (list: RefList.T): TEXT =
       Wr.PutChar (wr, ' ')
     END
   END SuffixesFromList;
-      
+
 PROCEDURE pHelper (         cl  : ParseClosure;
                    VAR      list: RefList.T;
                    READONLY s   : State         ): VBT.T
@@ -1762,7 +1762,7 @@ PROCEDURE SetValues (v: ListVBT.T; new: RefList.T) =
     END;
     FOR j := 0 TO newCount - 1 DO v.setValue (j, Pop (new)) END
   END SetValues;
-  
+
 PROCEDURE ListVBTPosition (v: ListVBT.T; item: TEXT):
   [-1 .. LAST (CARDINAL)] =
   BEGIN
@@ -1771,7 +1771,7 @@ PROCEDURE ListVBTPosition (v: ListVBT.T; item: TEXT):
     END;
     RETURN -1
   END ListVBTPosition;
-  
+
 PROCEDURE ItemsFromFile (name: TEXT; cl: ParseClosure): RefList.T
   RAISES {Error} =
   VAR tl: RefList.T := NIL;
@@ -1956,7 +1956,7 @@ PROCEDURE pImage (<*UNUSED*>          cl  : ParseClosure;
     accurate            := NEW(BooleanPP, name := "Accurate");
     gamma               := NEW(BooleanPP, name := "NeedsGamma");
     res     : FVImage;
-    len: INTEGER; 
+    len: INTEGER;
 *****************)
   BEGIN
     RAISE Error ("Image not currently supported.");
@@ -2777,13 +2777,13 @@ PROCEDURE pMacro (list: RefList.T; VAR state: State) RAISES {Error} =
    Likewise, the DarkShadow should be computed by multiplying the BgColor
    values by 0.5.  The values in an RGB will be "gamma-corrected"
    by Trestle, so we use "true RGB" values here. *)
-   
+
 CONST
-  rgb155      = 155.0 / 255.0; 
+  rgb155      = 155.0 / 255.0;
   rgb175      = 175.0 / 255.0;
   scaleLight  = 0.95 / rgb175;
   scaleDark   = 0.5;
-    
+
 PROCEDURE pBgColor (list: RefList.T; VAR state: State)
   RAISES {Error} =
   VAR
@@ -2853,7 +2853,7 @@ TYPE RgbOp = RECORD rgb: Color.T; op: PaintOp.T END;
 VAR
   qRGB := Atom.FromText ("RGB");
   qHSV := Atom.FromText ("HSV");
-  
+
 PROCEDURE ColorRGB (list: RefList.T; bw := PaintOp.BW.UseFg): RgbOp
   RAISES {Error} =
   VAR
@@ -2959,7 +2959,7 @@ PROCEDURE MetricsToName (metrics: RefList.T): TEXT =
     END;
     RETURN TextWr.ToText (wr)
   END MetricsToName;
-    
+
 PROCEDURE ParseFont (alist, metrics, default: RefList.T): RefList.T
   RAISES {Error} =
   VAR n: INTEGER;
@@ -3234,8 +3234,8 @@ TYPE
     PP OBJECT val: CARDINAL := 0 OVERRIDES set := SetCardinalPP END;
   CardinalListPP =
     PP OBJECT val: RefList.T := NIL OVERRIDES set := SetCardinalListPP END;
-  ChainsPP = 
-    PP OBJECT 
+  ChainsPP =
+    PP OBJECT
       shaper: ZSplit.ReshapeControl;
     OVERRIDES
       set := SetChainsPP
@@ -3365,7 +3365,7 @@ PROCEDURE SetAtSpecPP (pp: AtSpecPP; form: RefList.T)
         pp.val.type := ZChildVBT.CoordType.Absolute;
         IF pp.val.edges THEN
            IF ispct(pp.val.w) AND ispct(pp.val.e) AND
-              ispct(pp.val.n) AND ispct(pp.val.s) THEN 
+              ispct(pp.val.n) AND ispct(pp.val.s) THEN
                 pp.val.type := ZChildVBT.CoordType.Scaled
            END
         ELSE
@@ -3458,7 +3458,7 @@ VAR
                              Atom.FromText ("SW"),
                              Atom.FromText ("SE"),
                              Atom.FromText ("Center")};
-                                      
+
 PROCEDURE GetLocation (s: Atom.T; VAR loc: ZChildVBT.Location):
   BOOLEAN =
   BEGIN
@@ -3490,12 +3490,12 @@ PROCEDURE GetCoordType (x: REFANY; VAR type: ZChildVBT.CoordType):
 
 PROCEDURE SetChainsPP (pp: ChainsPP; form: RefList.T) RAISES {Error} =
   BEGIN
-    pp.shaper := NEW(ZSplit.ChainReshapeControl, chains := ChainSet (form)); 
+    pp.shaper := NEW(ZSplit.ChainReshapeControl, chains := ChainSet (form));
   END SetChainsPP;
 
 PROCEDURE ChainSet (VAR list: RefList.T): ZSplit.ChainSet
     RAISES {Error} =
-  VAR chain: ZSplit.Ch; 
+  VAR chain: ZSplit.Ch;
     chainSet := ZSplit.ChainSet{};
   BEGIN
     WHILE RefList.Length (list) # 0 DO
@@ -3514,7 +3514,7 @@ VAR
                              Atom.FromText ("E"),
                              Atom.FromText ("N"),
                              Atom.FromText ("S")};
-                                      
+
 PROCEDURE GetChain (s: Atom.T; VAR ch: ZSplit.Ch):
   BOOLEAN =
   BEGIN
@@ -3922,7 +3922,7 @@ VAR
                         mp {"Encoding", mText, "1", "1", NIL}};
 (* The 14 metrics-components must be in this order, so that we can generate
    the strings easily.  I have no idea what "AdStyle" is. *)
-   
+
 VAR StateNameTable, ComponentNameTable, MetricsNameTable: AtomIntTbl.T;
 
 PROCEDURE InitParser () =
@@ -3954,6 +3954,6 @@ PROCEDURE InitParser () =
     END
   END InitParser;
 
-BEGIN 
+BEGIN
 END FormsVBT.
 

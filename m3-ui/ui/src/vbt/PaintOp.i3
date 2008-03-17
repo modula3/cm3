@@ -8,16 +8,16 @@
 (*      modified on Thu Apr 12 10:37:26 PDT 1990 by steveg   *)
 <*PRAGMA LL*>
 
-(* A "PaintOp.T" is a screen-independent painting operation. 
+(* A "PaintOp.T" is a screen-independent painting operation.
 
 A painting operation "op" takes a source pixel "s" and a destination
 pixel "d" and produces a new value "op(d, s)" for the destination pixel.
 
-A painting operation that ignores the source pixel is called a {\it tint}.  
+A painting operation that ignores the source pixel is called a {\it tint}.
 If "op" is a tint, we just write "op(d)" instead of "op(d, s)".
 If the effect of a tint is to set the destination pixel to
-some fixed value independent of its initial value, then the 
-tint is said to be {\it opaque}. 
+some fixed value independent of its initial value, then the
+tint is said to be {\it opaque}.
 
 The locking level is "LL.sup <= VBT.mu" for all of the procedures
 in this interface. *)
@@ -26,17 +26,17 @@ INTERFACE PaintOp;
 
 TYPE
   T = RECORD op:INTEGER END; Predefined = [0..16];
-  
+
 CONST
-  Bg = T{0};                        
-  Fg = T{1};                        
-  Transparent = T{2};               
+  Bg = T{0};
+  Fg = T{1};
+  Transparent = T{2};
   Swap = T{3};
 
   Copy = T{4};
 
 (* "Bg", "Fg", "Transparent", and "Swap" are Trestle's four basic tints.
-   
+
    "Bg" sets the destination pixel to the screen's background color;
    "Fg" sets it to the screen's foreground color; "Transparent" is the
    identity function; "Swap" is a self-inverting operation that
@@ -66,9 +66,9 @@ the screen).  *)
 
 CONST
   BgBg = Bg;
-  BgFg = T{5};                      
-  BgTransparent = T{6}; 
-  BgSwap = T{7};    
+  BgFg = T{5};
+  BgTransparent = T{6};
+  BgSwap = T{7};
 
   FgFg = Fg;
   FgBg = T{8};
@@ -84,16 +84,16 @@ CONST
   SwapBg = T{14};
   SwapFg = T{15};
   SwapTransparent = T{16};
-  
+
 (* The sixteen operations above all have names of the form "XY",
    where "X" and "Y" are one of the four basic tints.
    They are defined by the rule:
 
-| XY(dest, source) = 
+| XY(dest, source) =
 |   IF source = 0 THEN X(dest) ELSE Y(dest) END
 
-   For example, "BgFg" can be used to paint a one bit deep source 
-   interpreting zeros as background and ones as foreground. 
+   For example, "BgFg" can be used to paint a one bit deep source
+   interpreting zeros as background and ones as foreground.
 
    Obviously these sixteen painting operations should be used only with
    one-bit deep sources.  However, not all one-bit deep sources are
@@ -107,15 +107,15 @@ CONST
    with screentype "st", the source must have type "st.bits".  You will
    be happy to recall that this will be taken care of automatically
    if you use screen-independent bitmaps and fonts.
-   
+
    Next there is a procedure for generating colored painting operations. *)
 
-TYPE 
+TYPE
   Mode = {Stable, Normal, Accurate};
   BW = {UseBg, UseFg, UseIntensity};
 
 PROCEDURE FromRGB(
-   r, g, b: REAL; 
+   r, g, b: REAL;
    mode := Mode.Normal;
    gray := -1.0;
    bw := BW.UseIntensity): T;
@@ -140,8 +140,8 @@ PROCEDURE FromRGB(
    When the total number of pixel colors desired by all of the
    applications that are running exceeds the number of available colors,
    then some applications' colors will change (usually in an
-   unpleasantly random way).  
-   
+   unpleasantly random way).
+
    To reduce the likelihood that your color will change randomly (at
    the cost of fidelity), set "mode" to "Stable".  To increase the
    fidelity of the pixel to the specified intensities (at the cost of
@@ -152,18 +152,18 @@ PROCEDURE FromRGB(
 PROCEDURE Pair(op0, op1: T): T;
 (* Return an operation "op" such that "op(d,0) = op0(d)" and
    "op(d,1) = op1(d)". *)
-   
-(* For example, 
+
+(* For example,
 
 | Pair(FromRGB(1.0,1.0,1.0), FromRGB(1.0,0.0,0.0))
 
    will paint a bitmap with zeros as white and ones as red. *)
-   
+
 PROCEDURE SwapPair(op0, op1: T): T;
 (* Return an operation that swaps the pixels painted by "op0" and "op1". *)
 
 (* "SwapPair" requires that "op0" and "op1" be opaque, that is,
-   they must set the destination to particular pixels (say, "pix0" 
+   they must set the destination to particular pixels (say, "pix0"
    and "pix1"). Then the tint "op" returned by "SwapPair" satisfies:
 
 | op(pix0) = pix1
@@ -172,19 +172,19 @@ PROCEDURE SwapPair(op0, op1: T): T;
 
 For example, "Swap = SwapPair(Bg, Fg)". *)
 
-(* Sometimes it is handy to collect several related painting 
+(* Sometimes it is handy to collect several related painting
    operations into a single object: *)
 
-TYPE 
-  ColorQuad = OBJECT 
-    bg, fg, bgFg, transparentFg: T 
+TYPE
+  ColorQuad = OBJECT
+    bg, fg, bgFg, transparentFg: T
   END;
 
 PROCEDURE MakeColorQuad(bg, fg: T): ColorQuad;
 (* Return "ColorQuad{bg,fg,Pair(bg,fg),Pair(Transparent,fg)}". *)
 
 TYPE
-  ColorScheme = ColorQuad OBJECT 
+  ColorScheme = ColorQuad OBJECT
     swap, bgTransparent, bgSwap, fgBg, fgTransparent,
       fgSwap, transparentBg, transparentSwap,
       swapBg, swapFg, swapTransparent: T;
@@ -194,11 +194,11 @@ PROCEDURE MakeColorScheme(bg, fg: T): ColorScheme;
 (* Return the fifteen painting operations other than "Transparent" that
     can be made by combining "bg", "fg", and "Transparent", using
     "SwapPair" and "Pair".  *)
-    
-(* In "MakeColorQuad" and "MakeColorScheme", "bg" and "fg" should be 
+
+(* In "MakeColorQuad" and "MakeColorScheme", "bg" and "fg" should be
    tints. *)
 
-VAR (*CONST*) bgFg: ColorScheme; 
+VAR (*CONST*) bgFg: ColorScheme;
 
 (* This ``variable'' is really a constant for "MakeColorScheme(Bg, Fg)". *)
 

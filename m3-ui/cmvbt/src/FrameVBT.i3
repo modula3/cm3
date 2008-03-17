@@ -20,9 +20,9 @@ TYPE
           shadow : Shadow.T := NIL          ): T;
   END;
   (* The call "v.init(ch, title, fnt, shadow)" initializes
-     "v" as a frame named "title" with font "fnt", 
-     around its child "ch". The colors in "shadow" 
-     are used for the painting of the frame with 
+     "v" as a frame named "title" with font "fnt",
+     around its child "ch". The colors in "shadow"
+     are used for the painting of the frame with
      the style "Shadow.Style.Chiseled". *)
 
 PROCEDURE New (ch: VBT.T;  title: TEXT;  fnt: Font.T := Font.BuiltIn;

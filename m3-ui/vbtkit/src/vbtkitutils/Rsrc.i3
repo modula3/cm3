@@ -24,7 +24,7 @@ TYPE Path = RefList.T; (* of Pathname.T or Bundle.T *)
 
 EXCEPTION NotFound;
 
-PROCEDURE Open (name: TEXT; path: Path): Rd.T 
+PROCEDURE Open (name: TEXT; path: Path): Rd.T
   RAISES {NotFound};
 (* If "name" is an absolute pathname, then look for "name" in the
    file system: A reader is returned if

@@ -25,15 +25,15 @@ TYPE
 (* In a paint batch, "PaintOps", "Pixmaps", and "Fonts" are represented
    by integers in a screentype-dependent way.  During rescreening an
    old batch might find its way to a screen of the wrong type, causing
-   garbage to be painted; but the garbage will be painted over with 
+   garbage to be painted; but the garbage will be painted over with
    the correct pixels promptly.  *)
-  
+
 TYPE
-  PaintCommand = {RepeatCom, TintCom, TextureCom, 
-    PixmapCom, ScrollCom, TrapCom, TextCom, 
+  PaintCommand = {RepeatCom, TintCom, TextureCom,
+    PixmapCom, ScrollCom, TrapCom, TextCom,
     ExtensionCom};
   PackedCommand = PaintCommand;
-  FixedSzCommand = 
+  FixedSzCommand =
     [PaintCommand.RepeatCom..PaintCommand.TrapCom];
   ByteOrder = {MSBFirst, LSBFirst};
   PackedByteOrder = ByteOrder;
@@ -41,10 +41,10 @@ TYPE
 VAR (*CONST*)
   HostByteOrder: ByteOrder;
 
-(* There are eight types of entries; each of which begins with a word 
+(* There are eight types of entries; each of which begins with a word
    containing a "PaintCommand" that indicates which type of entry it is.
 
-   Entries of type "TintCom", "TextureCom", "PixmapCom", "ScrollCom", 
+   Entries of type "TintCom", "TextureCom", "PixmapCom", "ScrollCom",
    "TrapCom", and "TextCom" are used to implement the "VBT" operations
    "PaintTint", "PaintTexture", "PaintPixmap", "Scroll", "PaintTrapezoid",
    and "PaintText/PaintSub".
@@ -56,15 +56,15 @@ VAR (*CONST*)
    are some restrictions on where "RepeatCom" entries can occur.
 
    "ExtensionCom" entries can be used to implement additional painting
-   operations beyond those that are built into Trestle. 
+   operations beyond those that are built into Trestle.
 
    Some of the entries are fixed size; that is, the size of the entry
    is determined by their type.  The following array gives the sizes
    of the fixed-size commands: *)
-   
+
 CONST
   WS = BYTESIZE(Word.T);
-  ComSize = 
+  ComSize =
     ARRAY FixedSzCommand OF INTEGER
     {(BYTESIZE(CommandRec) + WS-1) DIV WS,
      (BYTESIZE(TintRec) + WS-1) DIV WS,
@@ -75,45 +75,45 @@ CONST
 
 (* "ComSize[c]" equals the size in "Word.T"s of a paint batch entry for
    the command "c". *)
-     
+
 TYPE
-  CommandRec = 
+  CommandRec =
     RECORD command: PackedCommand; clip: Rect.T END;
   CommandPtr = UNTRACED REF CommandRec;
   RepeatPtr = CommandPtr;
 
   (* We define a "Rec" and a "Ptr" type for each kind of batch entry.
-     
+
      Every batch entry is a ``pseudo-subtype'' of a "Command", in the
      sense that its record type has "CommandRec" as a prefix.
 
      A repeat command has no other fields besides the command identifier
      itself and the clipping rectangle.  Hence a "RepeatPtr" is simply
-     a pointer to a "CommandRec".  
-     
+     a pointer to a "CommandRec".
+
      All of the batch entries that are not repeat commands contain
      a "PaintOp".  They are all pseudo-subtypes of the following
      "Rec" and "Ptr" types: *)
-     
-  PaintRec = RECORD 
-    command: PackedCommand; 
-    clip: Rect.T; 
+
+  PaintRec = RECORD
+    command: PackedCommand;
+    clip: Rect.T;
     op: PaintOp
   END;
   PaintPtr = UNTRACED REF PaintRec;
 
 (* The following four entry types correspond to "PaintTint", "PaintPixmap",
    "Scroll", and "PaintTrapezoid" operations.  *)
-   
-  TintRec = RECORD 
+
+  TintRec = RECORD
     command: PackedCommand;
-    clip: Rect.T; 
-    op: PaintOp 
+    clip: Rect.T;
+    op: PaintOp
   END;
   TintPtr = UNTRACED REF TintRec;
 
   PixmapRec = RECORD
-    command: PackedCommand; 
+    command: PackedCommand;
     clip: Rect.T;
     op: PaintOp;
     delta: Point.T;
@@ -139,7 +139,7 @@ TYPE
     op: PaintOp;
     delta: Point.T;
     pm: Pixmap;
-    p1, p2: Point.T; 
+    p1, p2: Point.T;
     m1, m2: Trapezoid.Rational;
   END;
   TrapPtr = UNTRACED REF TrapRec;
@@ -150,20 +150,20 @@ TYPE
    The slopes are given as "(delta v) / (delta h)".  A zero denominator
    represents an infinite slope; i.e., a vertical edge.  A zero
    numerator is illegal.  *)
-       
+
 (* The entries that are not fixed-size are pseudo-subtypes of
    "VarSzRec", which contains a "size" field with the number of
    "Word.T"'s in the entire entry.  *)
- 
-  VarSzRec = RECORD 
-    command: PackedCommand; 
-    clip: Rect.T; 
+
+  VarSzRec = RECORD
+    command: PackedCommand;
+    clip: Rect.T;
     op: PaintOp;
     szOfRec: INTEGER;
   END;
   VarSzPtr = UNTRACED REF VarSzRec;
 
-(* "PaintText" and "PaintSub" operations result in the following entry 
+(* "PaintText" and "PaintSub" operations result in the following entry
    type, in which "command" will equal "TextCom": *)
 
 TYPE Prop = {Clipped, FontSub};
@@ -181,7 +181,7 @@ TYPE Prop = {Clipped, FontSub};
     txtsz, dlsz: INTEGER;
 
 (*
-| (* dl: ARRAY [0..dlsz-1] OF VBT.Displacement *) 
+| (* dl: ARRAY [0..dlsz-1] OF VBT.Displacement *)
 | (* chars: ARRAY [0..txtsz-1] OF CHAR *)
 *)
 
@@ -203,7 +203,7 @@ TYPE Prop = {Clipped, FontSub};
    paint batches can be transported across address spaces and merged,
    the byte order could be different for different records in a paint
    batch.) *)
-   
+
   ExtensionRec = RECORD
     command: PackedCommand;
     clip: Rect.T;
@@ -213,7 +213,7 @@ TYPE Prop = {Clipped, FontSub};
     pm: Pixmap;
     fnt: Font;
     subCommand: INTEGER;
-    
+
 (*
 | (* extensionData: ARRAY OF CHAR *)
 *)

@@ -14,7 +14,7 @@ INTERFACE PaletteRep;
 (* Each entry in a palette can be NIL, or a distinguished value to indicate
    that it is under evaluation.  Each palette will be allocated large enough
    to contain every entry, even if it isn't resolved. *)
-   
+
 IMPORT ScrnPaintOp, ScrnFont, ScrnCursor, ScrnPixmap;
 
 VAR

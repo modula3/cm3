@@ -61,23 +61,23 @@ PROCEDURE GetVarIndex(md, nm: Atom.T): CARDINAL;
    or allocate and return a value index for that QID if one has not been
    allocated for it previously. *)
 
-TYPE 
+TYPE
   ProcAttr = RECORD modName, name: Atom.T; sig: Sig END;
   Sig = RECORD outs, inouts, ins: CARDINAL END;
 
 (* If "p: ProcAttr", "p.name" must be non-NIL, but "p.modName" may be
    NIL to indicate an anonymous module. *)
-   
+
 PROCEDURE GetCodeIndex(READONLY pa: ProcAttr): CARDINAL;
 (* Return the code index previously allocated to the internal procedure
-   with the name in "pa", or allocate and return an index 
-   for that procedure if one has not been allocated for it previously. 
+   with the name in "pa", or allocate and return an index
+   for that procedure if one has not been allocated for it previously.
    Requires that "pa" be valid. *)
 
 PROCEDURE GetExtCodeIndex(READONLY pa: ProcAttr): CARDINAL;
 (* Return the code index previously allocated to the external procedure
-   with the name in "pa", or allocate and return an index 
-   for that procedure if one has not been allocated for it previously. 
+   with the name in "pa", or allocate and return an index
+   for that procedure if one has not been allocated for it previously.
    Requires that "pa" be valid. *)
 
 PROCEDURE GetProcAttr(s: CARDINAL): ProcAttr;

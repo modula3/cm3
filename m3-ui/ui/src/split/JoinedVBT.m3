@@ -38,7 +38,7 @@ REVEAL
 
 TYPE
   ParentList = JoinParent.T;
-   
+
 PROCEDURE PaintBatch (v: T; <* UNUSED *> ch: VBT.T; ba: Batch.T) =
   VAR saved, pl: ParentList;
   bb: Batch.T;
@@ -77,8 +77,8 @@ PROCEDURE Capture (                         v   : T;
     LOCK v DO
       pl := v.parents;
       IF pl = NIL THEN br := Region.FromRect(clip); RETURN NIL END;
-      IF pl.link = NIL OR NOT ISTYPE(v.st, JoinScreen.T) THEN 
-        RETURN VBT.Capture(pl.ch, clip, br) 
+      IF pl.link = NIL OR NOT ISTYPE(v.st, JoinScreen.T) THEN
+        RETURN VBT.Capture(pl.ch, clip, br)
       END;
       br := Region.Empty;
       res := JoinPixmap.Create(v.st, clip);

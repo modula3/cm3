@@ -66,7 +66,7 @@ TYPE
       END;
 
 (*
-PROCEDURE FontMatch(orc: FontOracle; 
+PROCEDURE FontMatch(orc: FontOracle;
                     family: TEXT;
                     pointSize: INTEGER;
                     slant: ScrnFont.Slant;
@@ -89,7 +89,7 @@ PROCEDURE FontMatch(orc: FontOracle;
                              pixelsize, hres, vres, spacing,
                              averageWidth, charsetRegistry, charsetEncoding);
   END FontMatch;
-                    
+
 PROCEDURE FontBuiltIn(orc: FontOracle; id: Font.Predefined): ScrnFont.T =
   BEGIN
     IF orc.st.sts = NIL THEN Crash(); END;

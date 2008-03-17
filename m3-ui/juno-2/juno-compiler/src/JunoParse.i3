@@ -96,7 +96,7 @@ PROCEDURE IdList(
 
 TYPE
   ErrorRec = REF RECORD
-    found: JunoToken.T;	
+    found: JunoToken.T;
     expected: JunoToken.Kind;   (* may be "JunoToken.Kind.Unknown" *)
     additional: TEXT;
   END;

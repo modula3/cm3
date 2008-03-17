@@ -13,9 +13,9 @@ MODULE TSplit;
 IMPORT VBT, Split, ProperSplit, VBTClass, Point, Rect,
   Axis, Region;
 
-REVEAL 
+REVEAL
   Private = ProperSplit.T BRANDED OBJECT END;
-  T = Public BRANDED OBJECT 
+  T = Public BRANDED OBJECT
     current: VBT.T := NIL;
     fickle: BOOLEAN;
   OVERRIDES
@@ -31,20 +31,20 @@ REVEAL
     init := Be
   END;
 
-PROCEDURE Be(v: T; fickle: BOOLEAN): T = 
+PROCEDURE Be(v: T; fickle: BOOLEAN): T =
   BEGIN v.fickle := fickle; RETURN v END Be;
 
 PROCEDURE Shape(v: T; ax: Axis.T; n: CARDINAL): VBT.SizeRange RAISES {} =
   BEGIN
-    IF (v.fickle AND v.current = NIL) OR v.succ(NIL) = NIL THEN 
+    IF (v.fickle AND v.current = NIL) OR v.succ(NIL) = NIL THEN
       RETURN VBT.DefaultShape
     ELSIF v.fickle THEN
       RETURN VBTClass.GetShape(v.current, ax, n)
     ELSE
-      VAR 
-        ch := v.succ(NIL); 
-        sh := VBT.SizeRange{lo := 0, pref := 0, hi := LAST(INTEGER)}; 
-      BEGIN 
+      VAR
+        ch := v.succ(NIL);
+        sh := VBT.SizeRange{lo := 0, pref := 0, hi := LAST(INTEGER)};
+      BEGIN
         WHILE ch # NIL DO
           VAR shP := VBTClass.GetShape(ch, ax, n); BEGIN
             sh.lo := MAX(sh.lo, shP.lo);
@@ -88,7 +88,7 @@ PROCEDURE SetCurrent(v: T; ch: VBT.T) RAISES {Split.NotAChild} =
       THEN
         VBT.NewShape(v)
       END
-    ELSIF ch # NIL AND AxisOrder(v) # ch.axisOrder() 
+    ELSIF ch # NIL AND AxisOrder(v) # ch.axisOrder()
        OR ch = NIL AND AxisOrder(v) # ProperSplit.T.axisOrder(v) THEN
       VBT.NewShape(v)
     END;
@@ -124,7 +124,7 @@ PROCEDURE Replace (v: T; ch, new: VBT.T) RAISES {} =
       VBT.NewShape(v)
     END
   END Replace;
-  
+
 PROCEDURE Reshape(v: T; READONLY cd: VBT.ReshapeRec) RAISES {} =
   BEGIN
     IF v.current # NIL THEN
@@ -158,14 +158,14 @@ PROCEDURE NewShape(v: T; ch: VBT.T) RAISES {} =
     IF NOT v.fickle OR v.current = ch THEN VBT.NewShape(v) END
   END NewShape;
 
-PROCEDURE AxisOrder(v: T): Axis.T = 
+PROCEDURE AxisOrder(v: T): Axis.T =
   BEGIN
-    IF v.current = NIL THEN 
+    IF v.current = NIL THEN
       RETURN ProperSplit.T.axisOrder(v)
     ELSE
       RETURN v.current.axisOrder()
     END
   END AxisOrder;
-  
+
 BEGIN
 END TSplit.

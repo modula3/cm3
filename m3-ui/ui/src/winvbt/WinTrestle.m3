@@ -10,11 +10,11 @@
 UNSAFE MODULE WinTrestle;
 
 IMPORT Axis, Batch, Cstring, Ctypes, Env, Fmt, M3toC, Point, ProperSplit,
-       Rect, Region, RTHeapRep, RTParams, RTLinker, 
+       Rect, Region, RTHeapRep, RTParams, RTLinker,
        ScrnColorMap, ScrnCursor, ScrnPixmap, Split, Text, Thread,
-       Trestle, TrestleClass, TrestleImpl, VBT, VBTClass, VBTRep, WinBase, 
+       Trestle, TrestleClass, TrestleImpl, VBT, VBTClass, VBTRep, WinBase,
        WinDef, WinGDI, WinKey, WinMsg, WinPaint, WinScreenType,
-       WinScreenTypePrivate, WinScrnColorMap, WinScrnCursor, WinScrnPixmap, 
+       WinScreenTypePrivate, WinScrnColorMap, WinScrnCursor, WinScrnPixmap,
        WinUser, Word;
 
 IMPORT RTIO;
@@ -28,16 +28,16 @@ CONST
 CONST
   DesktopID = 0; (* The ScreenID of the Windows desktop. *)
 
-REVEAL 
+REVEAL
   T = Trestle.T BRANDED "WinTrestle.T" OBJECT
-    screen    : WinScreenType.T; 
+    screen    : WinScreenType.T;
     coverage  : CARDINAL := 0;
     current   : VBT.T    := NIL;  (* The child that is touched by the pointer,
                                      or NIL if there is no such child. *)
     mouseFocus: VBT.T    := NIL;  (* The child that has received a FirstDown
                                      but no corresponding LastUp, or NIL if
                                      there is no such child. *)
-    hwnd       : WinDef.HWND;   
+    hwnd       : WinDef.HWND;
     timerId    : WinDef.UINT;
     lastPos    := WinDef.POINT {-1, -1};
     n_cages    := 0;
@@ -82,7 +82,7 @@ REVEAL
   Child = ProperSplit.Child BRANDED "WinTrestle.Child" OBJECT
     uid         := 0;     (* index of this child in the "roots" array *)
     offScreen   := FALSE; (* TRUE for an off-screen window *)
-    cageCovered := FALSE; (* TRUE during delivery of a button click, 
+    cageCovered := FALSE; (* TRUE during delivery of a button click,
                               to avoid setting the cage twice. *)
     decorated   := FALSE; (* TRUE if the window is normal, FALSE if
                              override-redirect; only valid after w is
@@ -100,7 +100,7 @@ REVEAL
     hwnd         : WinDef.HWND := NIL;       (* the window handle *)
     hdc          : WinDef.HDC := NIL;        (* the device context *)
     sh, sv       : VBT.SizeRange;            (* hor. and vert. window sizes *)
-    trsl         : T := NIL;                 (* the Trestle on which the window is 
+    trsl         : T := NIL;                 (* the Trestle on which the window is
                                                 installed *)
   END;
   (* The fields of a child record are only modified via WindowProc()
@@ -140,14 +140,14 @@ PROCEDURE SetShape (trsl: T; v: VBT.T) =
     (* If the window is not yet installed, bail out ... *)
     IF ur.hwnd = NIL THEN RETURN; END;
     IF NOT new_shape THEN RETURN; END;
-        
+
     LOCK trsl DO
       (* Determine the current size of the window. *)
       status := WinUser.GetClientRect (ur.hwnd, ADR(rect));
       <* ASSERT status = True *>
     END;
 
-    sizeChange := width # rect.right - rect.left OR 
+    sizeChange := width # rect.right - rect.left OR
                   height # rect.bottom - rect.top;
 
     (*********
@@ -155,7 +155,7 @@ PROCEDURE SetShape (trsl: T; v: VBT.T) =
       DEBUG ("size change:  target size: "
               & Fmt.Int (width) & " x " & Fmt.Int (height)
               & "  current size: "
-              & Fmt.Int (rect.right - rect.left) & " x " 
+              & Fmt.Int (rect.right - rect.left) & " x "
               & Fmt.Int (rect.bottom - rect.top) & "\n");
     END;
     **********)
@@ -273,9 +273,9 @@ PROCEDURE PaintBatch (self: T;  v: VBT.T;  ba: Batch.T) =
     END;
 
     (*
-     * Commenting out these two lines breaks "Fours" (the Trstle version 
+     * Commenting out these two lines breaks "Fours" (the Trstle version
      * of Tetris) for unknown reasons. "hdc" is a private DC, and according
-     * to the Win32 documentation, ReleaseDC "has no effect on class or 
+     * to the Win32 documentation, ReleaseDC "has no effect on class or
      * private DC's".
      *)
     IF (hwnd # NIL) THEN
@@ -289,8 +289,8 @@ PROCEDURE PaintBatch (self: T;  v: VBT.T;  ba: Batch.T) =
 ************************************)
 
 (* Windows maintains batches of paint requests on a per-thread (as opposed to
-   per-window) basis.  Batches are flushed by calling "GdiFlush".  Since 
-   "Sync" can be called by a thread different from the ones that do the 
+   per-window) basis.  Batches are flushed by calling "GdiFlush".  Since
+   "Sync" can be called by a thread different from the ones that do the
    painting (WindowProc), it is not sufficient for "Sync" to call "GdiFlush".
    Instead, we ask the WindowProc thread to call "GdiFlush" and then
    flush the current thread's batch.
@@ -305,14 +305,14 @@ PROCEDURE Sync (<*UNUSED*> self: T;  v: VBT.T;  <*UNUSED*> wait: BOOLEAN) =
   END Sync;
 
 
-(* "Capture" combines "XPaint.Capture" and "XPaint.CapturePM". The X code 
-   does some pretty elaborate stuff to determine a ``bad region'' "br". 
-   I don't do any of that.  I guess that the sticky point is what happens 
+(* "Capture" combines "XPaint.Capture" and "XPaint.CapturePM". The X code
+   does some pretty elaborate stuff to determine a ``bad region'' "br".
+   I don't do any of that.  I guess that the sticky point is what happens
    if I try to capture a minimized window. *)
 
-PROCEDURE Capture (            self: T; 
-                               v   : VBT.T; 
-                   READONLY    rect: Rect.T; 
+PROCEDURE Capture (            self: T;
+                               v   : VBT.T;
+                   READONLY    rect: Rect.T;
                    VAR (*out*) br  : Region.T): ScrnPixmap.T =
   VAR
     ur    : Child := v.upRef;
@@ -333,7 +333,7 @@ PROCEDURE Capture (            self: T;
       dstDc := WinGDI.CreateCompatibleDC (ur.hdc);
       <* ASSERT dstDc # NIL *>
 
-      dstBmp := WinGDI.CreateCompatibleBitmap (ur.hdc, 
+      dstBmp := WinGDI.CreateCompatibleBitmap (ur.hdc,
                                                rect.east - rect.west,
                                                rect.south - rect.north);
       <* ASSERT dstBmp # NIL *>
@@ -341,13 +341,13 @@ PROCEDURE Capture (            self: T;
       oldBmp := WinGDI.SelectObject (dstDc, dstBmp);
       <* ASSERT oldBmp # NIL *>
 
-      status := WinGDI.BitBlt ((* hdcDest *) dstDc, 
-                               (* nXDest  *) 0, 
-                               (* nYDest  *) 0, 
-                               (* nWidth  *) rect.east - rect.west, 
-                               (* nHeight *) rect.south - rect.north, 
-                               (* hdcSrc  *) ur.hdc, 
-                               (* nXSrc   *) rect.west, 
+      status := WinGDI.BitBlt ((* hdcDest *) dstDc,
+                               (* nXDest  *) 0,
+                               (* nYDest  *) 0,
+                               (* nWidth  *) rect.east - rect.west,
+                               (* nHeight *) rect.south - rect.north,
+                               (* hdcSrc  *) ur.hdc,
+                               (* nXSrc   *) rect.west,
                                (* nYSrc   *) rect.north,
                                (* dwRop   *) WinGDI.SRCCOPY);
       <* ASSERT status = True *>
@@ -360,8 +360,8 @@ PROCEDURE Capture (            self: T;
   END Capture;
 
 
-PROCEDURE ScreenOf (         self: T; 
-                             v   : VBT.T; 
+PROCEDURE ScreenOf (         self: T;
+                             v   : VBT.T;
                     READONLY pt  : Point.T): Trestle.ScreenOfRec =
   VAR
     ur : Child               := v.upRef;
@@ -406,10 +406,10 @@ PROCEDURE Fmt_Selection (s: VBT.Selection): TEXT =
   END Fmt_Selection;
 
 
-PROCEDURE Acquire (<*UNUSED*> self: T; 
-                              v   : VBT.T; 
-                   <*UNUSED*> w   : VBT.T; 
-                              s   : VBT.Selection; 
+PROCEDURE Acquire (<*UNUSED*> self: T;
+                              v   : VBT.T;
+                   <*UNUSED*> w   : VBT.T;
+                              s   : VBT.Selection;
                               ts  : VBT.TimeStamp)
     (** RAISES {VBT.Error}**) =
 
@@ -448,7 +448,7 @@ PROCEDURE Acquire (<*UNUSED*> self: T;
     ELSIF s = VBT.Target THEN
       (* do nothing *)
     ELSE
-      DEBUG ("Called WinTrestle.Acquire:  s = " & Fmt_Selection (s) & 
+      DEBUG ("Called WinTrestle.Acquire:  s = " & Fmt_Selection (s) &
             "  ts= " & Fmt.Int (ts) & "\n");
     END;
   END Acquire;
@@ -528,10 +528,10 @@ PROCEDURE ReadUp(<*UNUSED*> self: T;
           RAISE VBT.Error (VBT.ErrorCode.WrongType);
         ELSE
           (* Convert the ANSI C string into a VBT.Value. *)
-          lptstr := WinBase.GlobalLock(hglb); 
+          lptstr := WinBase.GlobalLock(hglb);
           IF lptstr # NIL THEN
             res := M3toC.CopyStoT (lptstr);
-            EVAL WinBase.GlobalUnlock(hglb); 
+            EVAL WinBase.GlobalUnlock(hglb);
             RETURN res;
           ELSE
             RAISE VBT.Error (VBT.ErrorCode.Unreadable);
@@ -547,7 +547,7 @@ PROCEDURE ReadUp(<*UNUSED*> self: T;
   BEGIN
     IF s = VBT.Source THEN
       RETURN VBT.FromRef(GetClipboard(ch));
-    ELSE 
+    ELSE
       RAISE VBT.Error (VBT.ErrorCode.Unreadable);
     END;
   END ReadUp;
@@ -567,15 +567,15 @@ PROCEDURE WriteUp (<*UNUSED*> self: T;
 
 PROCEDURE Attach (self: T; v: VBT.T) =
   BEGIN
-    LOCK v DO 
-      LOCK self DO 
+    LOCK v DO
+      LOCK self DO
         ProperSplit.Insert (self, NIL, v);
       END;
     END;
   END Attach;
 
 (*-----------------------------------------------------------------------------
-   The "decorate" method is introduced by "TrestleClass.Public". 
+   The "decorate" method is introduced by "TrestleClass.Public".
    It is called when the decoration of "v" has changed from "old" to "new".
    There is no specification.
 -----------------------------------------------------------------------------*)
@@ -620,8 +620,8 @@ PROCEDURE MoveNear (self: T; v, w: VBT.T) =
     st  : WinScreenType.T;
     nw  := Point.T {50, 50};
   BEGIN
-    (* The beginning of this procedure is a bit different from its 
-       counterpart in xvbt. The xvbt version has a (pretty mysterious) 
+    (* The beginning of this procedure is a bit different from its
+       counterpart in xvbt. The xvbt version has a (pretty mysterious)
        loop here. *)
 
     IF w # NIL THEN
@@ -650,7 +650,7 @@ PROCEDURE MoveNear (self: T; v, w: VBT.T) =
         nw := Point.Add (nw, NorthWest (ch));
       END;
     END;
-    
+
     InnerOverlap (v, nw, w # NIL);
   END MoveNear;
 
@@ -664,9 +664,9 @@ PROCEDURE InnerOverlap (v: VBT.T;  READONLY nw: Point.T;  knownPos: BOOLEAN) =
     EVAL WinGDI.GdiFlush (); (* encourage WinProc to hurry up *)
   END InnerOverlap;
 
-PROCEDURE InstallOffScreen (self          : T; 
-                            v             : VBT.T; 
-                            width, height : CARDINAL; 
+PROCEDURE InstallOffScreen (self          : T;
+                            v             : VBT.T;
+                            width, height : CARDINAL;
                             prefst        : VBT.ScreenType) =
   VAR st : WinScreenType.T;  (** a: Arg; **)
   BEGIN
@@ -699,7 +699,7 @@ PROCEDURE InstallOffScreen (self          : T;
 
 
 (*-----------------------------------------------------------------------------
-   TrestleClass.Public introduces a method "setColorMap". There is no 
+   TrestleClass.Public introduces a method "setColorMap". There is no
    specification for this method. The X version of Trestle binds a procedure
    XClient.SetColorMap to the method.
 
@@ -746,7 +746,7 @@ PROCEDURE CaptureScreen (              self: T;
   BEGIN
     br := Region.Difference (Region.FromRect (clip), Region.FromRect (rect));
 
-    IF rect.west >= rect.east THEN 
+    IF rect.west >= rect.east THEN
       RETURN NIL;
     END;
 
@@ -759,7 +759,7 @@ PROCEDURE CaptureScreen (              self: T;
       dstDc := WinGDI.CreateCompatibleDC (srcDc);
       <* ASSERT dstDc # NIL *>
 
-      dstBmp := WinGDI.CreateCompatibleBitmap (srcDc, 
+      dstBmp := WinGDI.CreateCompatibleBitmap (srcDc,
                                                rect.east - rect.west,
                                                rect.south - rect.north);
       <* ASSERT dstBmp # NIL *>
@@ -767,13 +767,13 @@ PROCEDURE CaptureScreen (              self: T;
       oldBmp := WinGDI.SelectObject (dstDc, dstBmp);
       <* ASSERT oldBmp # NIL *>
 
-      status := WinGDI.BitBlt ((* hdcDest *) dstDc, 
-                               (* nXDest  *) 0, 
-                               (* nYDest  *) 0, 
-                               (* nWidth  *) rect.east - rect.west, 
-                               (* nHeight *) rect.south - rect.north, 
-                               (* hdcSrc  *) srcDc, 
-                               (* nXSrc   *) rect.west, 
+      status := WinGDI.BitBlt ((* hdcDest *) dstDc,
+                               (* nXDest  *) 0,
+                               (* nYDest  *) 0,
+                               (* nWidth  *) rect.east - rect.west,
+                               (* nHeight *) rect.south - rect.north,
+                               (* hdcSrc  *) srcDc,
+                               (* nXSrc   *) rect.west,
                                (* nYSrc   *) rect.north,
                                (* dwRop   *) WinGDI.SRCCOPY);
       <* ASSERT status = True *>
@@ -803,7 +803,7 @@ PROCEDURE TrestleID (<*UNUSED*> self: T;  <*UNUSED*> v: VBT.T): TEXT =
     RETURN "Default Trestle"
   END TrestleID;
 
-PROCEDURE WindowID (<*UNUSED*> self: T;  v: VBT.T): TEXT = 
+PROCEDURE WindowID (<*UNUSED*> self: T;  v: VBT.T): TEXT =
   VAR num := LOOPHOLE (WindowHandle (v), Ctypes.int);
   BEGIN
     RETURN Fmt.Unsigned (num, base := 16);
@@ -825,7 +825,7 @@ PROCEDURE WindowHandle (v: VBT.T): WinDef.HWND =
 
 (*-----------------------------------------------------------------------------
    These methods are used by Shared Trestle. According to msm, we can make
-   them no-ops in Windows world,where we don't have network transparency, 
+   them no-ops in Windows world,where we don't have network transparency,
    much less sharing.
 -----------------------------------------------------------------------------*)
 
@@ -837,8 +837,8 @@ PROCEDURE UpdateChalk (<*UNUSED*> t: T;
   END UpdateChalk;
 
 
-PROCEDURE UpdateBuddies (<*UNUSED*>          self      : T; 
-                         <*UNUSED*>          v         : VBT.T; 
+PROCEDURE UpdateBuddies (<*UNUSED*>          self      : T;
+                         <*UNUSED*>          v         : VBT.T;
                          <*UNUSED*> READONLY trsls, ids: ARRAY OF TEXT) =
   BEGIN
     (* do nothing *)
@@ -846,7 +846,7 @@ PROCEDURE UpdateBuddies (<*UNUSED*>          self      : T;
 
 (*****************************************************************************)
 
-VAR 
+VAR
   trsl : T  := NIL;
   trslThread: Thread.T;  (* for debugging purposes ... *)
 
@@ -910,12 +910,12 @@ PROCEDURE SetSizeHints (ur: Child;  VAR width, height: CARDINAL): BOOLEAN =
 
 
 (* "NorthWest" serves a similar purpose as the "ValidateNW" function in the
-   X version. The X counterpart of "WinTrestle.T" maintains a cache "nw" for 
-   the northwest corner), and a flag "nwValid" that indicates whether the 
+   X version. The X counterpart of "WinTrestle.T" maintains a cache "nw" for
+   the northwest corner), and a flag "nwValid" that indicates whether the
    cache entry is valid. "ValidateNW" will contact the X server only if the
    cache entry is stale.
 
-   I assume that the call to "GetWindowRect" is cheap enough to use it 
+   I assume that the call to "GetWindowRect" is cheap enough to use it
    liberally. Given that, the code gets a lot simpler. *)
 
 PROCEDURE NorthWest (ch: Child): Point.T =
@@ -1069,7 +1069,7 @@ PROCEDURE RecycleArg (a: Arg) =
    Similarly, we don't bother locking around updates to Child records.
    They are updated by the single Modula-3/WindowProc thread.
 *)
-   
+
 VAR
   hInst           : WinDef.HINSTANCE;
   hAccelTable     : WinDef.HANDLE;
@@ -1081,13 +1081,13 @@ VAR
     task bar is at the bottom of the screen or not!  If it is, we'll
     be tricked into thinking the titlebar is about twice as big as it
     should be...   -- WKK 6/24/97
-  titlebar_y  := WinUser.GetSystemMetrics (WinUser.SM_CYSCREEN) - 
+  titlebar_y  := WinUser.GetSystemMetrics (WinUser.SM_CYSCREEN) -
                  WinUser.GetSystemMetrics (WinUser.SM_CYFULLSCREEN) - 1;
   ******)
   nonclient_x := 2 * WinUser.GetSystemMetrics (WinUser.SM_CXFRAME);
   nonclient_y := 2 * WinUser.GetSystemMetrics (WinUser.SM_CYFRAME) +
                      titlebar_y;
-  screen_x    := 2 * WinUser.GetSystemMetrics (WinUser.SM_CXFRAME) + 
+  screen_x    := 2 * WinUser.GetSystemMetrics (WinUser.SM_CXFRAME) +
                      WinUser.GetSystemMetrics (WinUser.SM_CXSCREEN);
   screen_y    := 2 * WinUser.GetSystemMetrics (WinUser.SM_CYFRAME) +
                      WinUser.GetSystemMetrics (WinUser.SM_CYSCREEN);
@@ -1140,11 +1140,11 @@ PROCEDURE WindowProc (hwnd   : WinDef.HWND;
         a := GetArg (lParam);
         RetitleVBT (a.ch, a.old_dec, a.new_dec);
 
-    | WinMsg.DELETE_VBT => 
+    | WinMsg.DELETE_VBT =>
         a := GetArg (lParam);
         DeleteVBT (a.ch);
 
-    | WinMsg.PAINTBATCH_VBT => 
+    | WinMsg.PAINTBATCH_VBT =>
         a := GetArg (lParam);
         PaintBatchVBT (a.ch, a.trsl, a.vbt, a.batch);
 
@@ -1214,7 +1214,7 @@ PROCEDURE WindowProc (hwnd   : WinDef.HWND;
         RealizeClipboard (hwnd);
 
     | WinUser.WM_RENDERFORMAT =>
-        IF wParam # WinUser.CF_TEXT THEN RETURN 1 END;  
+        IF wParam # WinUser.CF_TEXT THEN RETURN 1 END;
         RealizeClipboard (hwnd);
 
     ELSE
@@ -1244,7 +1244,7 @@ PROCEDURE CreateVBT (ur: Child;  st: WinScreenType.T;
   CONST
     DefaultWidth  = 133.0;  (* millimeters *)
     DefaultHeight = 100.0;
-  VAR 
+  VAR
     v      : VBT.T           := ur.ch;
     dec    : TrestleClass.Decoration;
     width  : CARDINAL;
@@ -1267,7 +1267,7 @@ PROCEDURE CreateVBT (ur: Child;  st: WinScreenType.T;
     create_height := height;
     IF dec = NIL THEN
       ur.title_string := NIL;
-      ur.hwnd := WinUser.CreateWindowEx (WinUser.WS_EX_TOPMOST, 
+      ur.hwnd := WinUser.CreateWindowEx (WinUser.WS_EX_TOPMOST,
                    windowclassName, NIL, WinUser.WS_POPUP,
                    nw.h, nw.v, width, height, NIL, NIL, hInst, NIL);
     ELSE
@@ -1285,7 +1285,7 @@ PROCEDURE CreateVBT (ur: Child;  st: WinScreenType.T;
     create_child := NIL;
     <* ASSERT ur.hwnd # NIL *>
 
-    (* Cache the device context in the "Child" record. Note that we 
+    (* Cache the device context in the "Child" record. Note that we
        can do this only because we declared the device context to be
        private ("CS_OWNDC"). *)
     ur.hdc := WinUser.GetDC (ur.hwnd);
@@ -1295,9 +1295,9 @@ PROCEDURE CreateVBT (ur: Child;  st: WinScreenType.T;
 
     ur.decorated := dec # NIL;
     RetitleVBT (ur, NIL, dec);
-        
+
     EVAL WinUser.ShowWindow (ur.hwnd, WinUser.SW_SHOWDEFAULT);
-        
+
 (***** -- didn't the preceding ShowWindow do this??  - WKK 5/17/96
     (* Update the window (repaint its client area) *)
     status := WinUser.UpdateWindow (ur.hwnd);
@@ -1325,7 +1325,7 @@ PROCEDURE CreateMemoryDC (width, height: INTEGER): WinDef.HDC =
     oldHbmp  : WinDef.HBITMAP;
   BEGIN
     deskHwnd := WinUser.GetDesktopWindow ();
-    
+
     deskHdc := WinUser.GetDC (deskHwnd);
     <* ASSERT deskHdc # NIL *>
 
@@ -1416,7 +1416,7 @@ PROCEDURE FreeGDIObjects (ur: Child) =
     END;
 
     IF (ur.hpal # NIL) THEN
-      (**** WinScrnColorMap.DefaultPalette returns a single global one... 
+      (**** WinScrnColorMap.DefaultPalette returns a single global one...
       status := WinGDI.DeleteObject (ur.hpal);
       <* ASSERT status = True *>
       ******************************************************************)
@@ -1427,9 +1427,9 @@ PROCEDURE FreeGDIObjects (ur: Child) =
 PROCEDURE ForgeVBTEvent (ur: Child) =
   BEGIN
     LOCK VBT.mu DO
-      VBTClass.Misc (ur.ch, VBT.MiscRec {VBT.TrestleInternal, 
-                                         VBT.NullDetail, 
-                                         WinBase.GetTickCount (), 
+      VBTClass.Misc (ur.ch, VBT.MiscRec {VBT.TrestleInternal,
+                                         VBT.NullDetail,
+                                         WinBase.GetTickCount (),
                                          VBT.Forgery});
     END;
   END ForgeVBTEvent;
@@ -1470,7 +1470,7 @@ PROCEDURE RetitleVBT (ur: Child;  old, new: TrestleClass.Decoration) =
   BEGIN
     IF new = NIL OR ur.hwnd = NIL THEN RETURN; END;
 
-    IF WinUser.IsIconic (ur.hwnd) = 0 THEN  
+    IF WinUser.IsIconic (ur.hwnd) = 0 THEN
       (* window is not iconized *)
       IF old = NIL OR NOT Text.Equal (old.windowTitle, new.windowTitle) THEN
         SetWindowText (ur, new.windowTitle);
@@ -1495,20 +1495,20 @@ PROCEDURE SetWindowText (ur: Child; title: TEXT) =
 PROCEDURE GetVBTSize (hwnd   : WinDef.HWND;
                       lParam : WinDef.LPARAM) =
   (* LL = 0 *)
-  (* This code is taken almost verbatim from Steve. It determines the 
-     shape of the VBT corresponding to hwnd, and tells Windows to 
+  (* This code is taken almost verbatim from Steve. It determines the
+     shape of the VBT corresponding to hwnd, and tells Windows to
      constrain the window accordingly. *)
   VAR
     v    : VBT.T;
     sizes: ARRAY Axis.T OF VBT.SizeRange;
     got_sizes := FALSE;
     info := LOOPHOLE (lParam, WinUser.LPMINMAXINFO);
-    (* lParam points to a windows structure. So, assigning to this 
+    (* lParam points to a windows structure. So, assigning to this
        structure changes a Windows data structure. In effect, lParam
        is an OUT parameter. *)
   BEGIN
-    (* If "trsl.hwnd" is NIL, then we are right now in the process of 
-       creating the "null window" that represents the Trestle. In this 
+    (* If "trsl.hwnd" is NIL, then we are right now in the process of
+       creating the "null window" that represents the Trestle. In this
        case, we simply return. *)
     IF trsl.hwnd = NIL THEN RETURN; END;
 
@@ -1662,7 +1662,7 @@ PROCEDURE MoveVBT (hwnd: WinDef.HWND) =
   END MoveVBT;
 
 PROCEDURE ActivateVBT (hwnd: WinDef.HWND;  wParam: WinDef.WPARAM) =
-  (* This is derived from "XMessenger.EnterLeave".  The original 
+  (* This is derived from "XMessenger.EnterLeave".  The original
      procedure does a lot more ... *)
   VAR
     v    := GetVBT (hwnd);
@@ -1681,7 +1681,7 @@ PROCEDURE ActivateVBT (hwnd: WinDef.HWND;  wParam: WinDef.WPARAM) =
                                      time, VBT.KBFocus});
       END;
     END;
-  END ActivateVBT; 
+  END ActivateVBT;
 
 PROCEDURE SetVBTCursor (hwnd: WinDef.HWND) =
   VAR v := GetVBT (hwnd);  cs: ScrnCursor.T;
@@ -1747,10 +1747,10 @@ PROCEDURE VBTCharPress (hwnd: WinDef.HWND;  wParam: WinDef.WPARAM) =
     (* ------ uncomment to debug character input ---------
     IF keysym < 256 THEN
       DEBUG("WM_CHAR: code = " & Fmt.Int(keysym) & " char = " &
-            Text.FromChar(VAL(keysym, CHAR)) & 
+            Text.FromChar(VAL(keysym, CHAR)) &
             ModifiersToText(modifiers) & "\n");
     ELSE
-      DEBUG("WM_CHAR: code = " & Fmt.Int(keysym) & 
+      DEBUG("WM_CHAR: code = " & Fmt.Int(keysym) &
             ModifiersToText(modifiers) & "\n");
     END;
        ------ *)
@@ -1772,25 +1772,25 @@ PROCEDURE ModifiersToText(m : VBT.Modifiers) : TEXT = <*NOWARN*>
   BEGIN
     IF VBT.Modifier.Shift IN m THEN
       res := res & " shift";
-    END; 
+    END;
     IF VBT.Modifier.Lock IN m THEN
       res := res & " lock";
-    END; 
+    END;
     IF VBT.Modifier.Control IN m THEN
       res := res & " control";
-    END; 
+    END;
     IF VBT.Modifier.Option IN m THEN
       res := res & " option";
-    END; 
+    END;
     IF VBT.Modifier.Mod0 IN m THEN
       res := res & " mod0";
-    END; 
+    END;
     IF VBT.Modifier.Mod1 IN m THEN
       res := res & " mod1";
-    END; 
+    END;
     IF VBT.Modifier.Mod2 IN m THEN
       res := res & " mod2";
-    END; 
+    END;
     IF VBT.Modifier.Mod3 IN m THEN
       res := res & " mod3";
     END;
@@ -1809,7 +1809,7 @@ TYPE
            doubleClickInterval : CARDINAL    := 500;
          END;
 (* last.{x,y} = position of last mouseclick; last.time = time of last mouseClick;
-   last.clickCount = clickcount of last mouseclick, as defined in the VBT 
+   last.clickCount = clickcount of last mouseclick, as defined in the VBT
    interface; last.button = button that last went up or down. *)
 
 PROCEDURE ButtonEvent (hwnd  : WinDef.HWND;
@@ -1817,7 +1817,7 @@ PROCEDURE ButtonEvent (hwnd  : WinDef.HWND;
                        wParam: WinDef.WPARAM;
                        button: Button;
                        trans : Transition) =
-  VAR 
+  VAR
     oldFocus  := trsl.mouseFocus;
     time      := WinUser.GetMessageTime ();
     clientPos := WinDef.POINT {WinDef.LOWORD (lParam), WinDef.HIWORD (lParam)};
@@ -1833,11 +1833,11 @@ PROCEDURE ButtonEvent (hwnd  : WinDef.HWND;
   BEGIN
     status := WinUser.ClientToScreen (hwnd, ADR (screenPos));
     <* ASSERT status = True *>
-    
+
     (* If "hwnd" refers to the window that has captured the mouse (as opposed
-       to the topmost window beneath the mouse cursor), we determine what 
+       to the topmost window beneath the mouse cursor), we determine what
        window (if any) is below the cursor. If there is one, we set "hwnd"
-       to be the window handle of this window, and translate "clientPos" to 
+       to be the window handle of this window, and translate "clientPos" to
        be in the coordinate space of this window. *)
     IF trsl.mouseFocus # NIL THEN
       WITH topHwnd = WinUser.WindowFromPoint (screenPos) DO
@@ -1850,7 +1850,7 @@ PROCEDURE ButtonEvent (hwnd  : WinDef.HWND;
       END;
     END;
     v := GetVBT (hwnd);
-    
+
     (* Determine "cd.button", "cd.modifiers", and "cd.clickType". *)
     cd.modifiers := ExtractModifiers (wParam);
     CASE button OF
@@ -1881,7 +1881,7 @@ PROCEDURE ButtonEvent (hwnd  : WinDef.HWND;
       END;
       cd.modifiers := cd.modifiers + VBT.Modifiers{cd.whatChanged};
     END;
-    
+
     cd.time := time;
 
     IF v # NIL THEN
@@ -1898,7 +1898,7 @@ PROCEDURE ButtonEvent (hwnd  : WinDef.HWND;
         ur.last.button     := button
       END;
       ur.last.time := time;
-      
+
       SetCursorPosition (clientPos.x, clientPos.y, hwnd, cd.cp);
       cd.clickCount := ur.last.clickCount;
 
@@ -1949,28 +1949,28 @@ PROCEDURE ButtonEvent (hwnd  : WinDef.HWND;
 (* "ExtractModifiers" takes a "WinDef.WPARAM" that was typically delivered by
    a Windows Mouse Input Message (e.g. WM_MOUSEMOVE or WM_LBUTTONDOWN), and
    converts it into a Trestle "VBT.Modifiers", that is, into a set of modifier
-   keys and buttons. 
+   keys and buttons.
 
-   Note: I handle only 5 out of 12 modifiers. In particular, I don't handle 
+   Note: I handle only 5 out of 12 modifiers. In particular, I don't handle
    "Option" and "Shift Lock". *)
 
 PROCEDURE ExtractModifiers (wParam: WinDef.WPARAM): VBT.Modifiers =
   VAR mods := VBT.Modifiers {};
   BEGIN
-    IF Word.And (wParam, WinUser.MK_SHIFT) # 0 THEN 
-      mods := mods + VBT.Modifiers {VBT.Modifier.Shift}; 
+    IF Word.And (wParam, WinUser.MK_SHIFT) # 0 THEN
+      mods := mods + VBT.Modifiers {VBT.Modifier.Shift};
     END;
-    IF Word.And (wParam, WinUser.MK_CONTROL) # 0 THEN 
-      mods := mods + VBT.Modifiers {VBT.Modifier.Control}; 
+    IF Word.And (wParam, WinUser.MK_CONTROL) # 0 THEN
+      mods := mods + VBT.Modifiers {VBT.Modifier.Control};
     END;
-    IF Word.And (wParam, WinUser.MK_LBUTTON) # 0 THEN 
-      mods := mods + VBT.Modifiers {VBT.Modifier.MouseL}; 
+    IF Word.And (wParam, WinUser.MK_LBUTTON) # 0 THEN
+      mods := mods + VBT.Modifiers {VBT.Modifier.MouseL};
     END;
-    IF Word.And (wParam, WinUser.MK_MBUTTON) # 0 THEN 
-      mods := mods + VBT.Modifiers {VBT.Modifier.MouseM}; 
+    IF Word.And (wParam, WinUser.MK_MBUTTON) # 0 THEN
+      mods := mods + VBT.Modifiers {VBT.Modifier.MouseM};
     END;
-    IF Word.And (wParam, WinUser.MK_RBUTTON) # 0 THEN 
-      mods := mods + VBT.Modifiers {VBT.Modifier.MouseR}; 
+    IF Word.And (wParam, WinUser.MK_RBUTTON) # 0 THEN
+      mods := mods + VBT.Modifiers {VBT.Modifier.MouseR};
     END;
     IF Word.And (WinUser.GetKeyState (WinUser.VK_LMENU),16_8000) # 0 THEN
       mods := mods + VBT.Modifiers {VBT.Modifier.Option};
@@ -2009,7 +2009,7 @@ PROCEDURE GetModifiers (): VBT.Modifiers =
   END GetModifiers;
 
 PROCEDURE SetCursorPosition (x, y: INTEGER;  hwnd: WinDef.HWND;
-                            VAR(*OUT*) cp: VBT.CursorPosition) = 
+                            VAR(*OUT*) cp: VBT.CursorPosition) =
   VAR
     r      : WinDef.RECT;
     status := WinUser.GetClientRect (hwnd, ADR (r));
@@ -2057,7 +2057,7 @@ PROCEDURE RealizeClipboard (hwnd: WinDef.HWND) =
     txt   : TEXT;
   BEGIN
     LOCK VBT.mu DO
-      TRY 
+      TRY
         txt := NARROW (v.read (VBT.Source, tc).toRef(), TEXT);
       EXCEPT VBT.Error =>
         RETURN; (* things went badly ... ignore *)
@@ -2068,7 +2068,7 @@ PROCEDURE RealizeClipboard (hwnd: WinDef.HWND) =
          already owns the clipboard and therefore it's an error to
          reopen it.  --- So, I guess we won't... *)
 
-      hglb := WinBase.GlobalAlloc (WinBase.GMEM_MOVEABLE+WinBase.GMEM_DDESHARE, 
+      hglb := WinBase.GlobalAlloc (WinBase.GMEM_MOVEABLE+WinBase.GMEM_DDESHARE,
                                          Text.Length (txt) + 1);
       <* ASSERT hglb # NIL *>
 
@@ -2103,7 +2103,7 @@ PROCEDURE DeliverMousePos (hwnd  : WinDef.HWND;
       status := WinUser.ClientToScreen (hwnd, ADR (screenPos));
       <* ASSERT status = True *>
     END;
-    
+
     LOCK trsl DO
       IF (trsl.lastPos = screenPos) AND (trsl.n_cages <= 0) THEN
         (* the mouse didn't move and nobody cares... *)
@@ -2133,7 +2133,7 @@ PROCEDURE DeliverMousePos (hwnd  : WinDef.HWND;
   END DeliverMousePos;
 
 (* Note: This procedure may not be called with trsl being held, since the call
-   to "VBTClass.Position" might lead to a call back into "WinTrestle" and an 
+   to "VBTClass.Position" might lead to a call back into "WinTrestle" and an
    attempt to acquire "trsl". *)
 
 PROCEDURE MouseMotion (hwnd     : WinDef.HWND;
@@ -2178,8 +2178,8 @@ PROCEDURE MouseMotion (hwnd     : WinDef.HWND;
 
 PROCEDURE ToRect (READONLY r: WinDef.RECT): Rect.T =
   BEGIN
-    RETURN Rect.T{west  := r.left, 
-                  east  := r.right, 
+    RETURN Rect.T{west  := r.left,
+                  east  := r.right,
                   north := r.top,
                   south := r.bottom}
   END ToRect;
@@ -2252,7 +2252,7 @@ PROCEDURE GetVBT (hwnd: WinDef.HWND): VBT.T =
     END;
 
     (*****
-    DEBUG ("Could not map window handle " & 
+    DEBUG ("Could not map window handle " &
            Fmt.Unsigned (LOOPHOLE (hwnd, INTEGER)));
     IF (ch = NIL)
       THEN DEBUG (" to a WinTrestle.Child ...\n");
@@ -2296,8 +2296,8 @@ PROCEDURE RecycleCopy (copy: RootList) =
 
 VAR
   showGC := RTParams.IsPresent("StarTrek");
-(* If showGC is TRUE, the cursor of every installed window will change to the 
-   Star Trek cursor whenever the garbage collector is running.  At runtime, 
+(* If showGC is TRUE, the cursor of every installed window will change to the
+   Star Trek cursor whenever the garbage collector is running.  At runtime,
    you can force the StarTrek cursor by running your program @M3StarTrek. *)
 
 TYPE
@@ -2310,8 +2310,8 @@ TYPE
 
 PROCEDURE DoHackInit (trsl: T) =
   BEGIN
-    IF showGC THEN 
-      RTHeapRep.RegisterMonitor(NEW(GCClosure, trsl := trsl)) 
+    IF showGC THEN
+      RTHeapRep.RegisterMonitor(NEW(GCClosure, trsl := trsl))
     END;
   END DoHackInit;
 
@@ -2324,14 +2324,14 @@ PROCEDURE HackOn (cl: GCClosure) =
 
 PROCEDURE HackOff (cl: GCClosure) =
   BEGIN
-    IF hacking THEN 
-      HackToggle(cl.trsl, FALSE); 
-      hacking := FALSE 
+    IF hacking THEN
+      HackToggle(cl.trsl, FALSE);
+      hacking := FALSE
     END
   END HackOff;
 
 
-VAR 
+VAR
   hacking   := FALSE;
   (** oldCursor : WinDef.HCURSOR; **)
   (** gcCursor  : WinDef.HCURSOR; **)
@@ -2416,7 +2416,7 @@ PROCEDURE MessengerApply (<*UNUSED*> cl: Thread.Closure): REFANY =
     trsl.hwnd := WinUser.CreateWindow(
                     class, NIL, WinUser.WS_DISABLED,
                     WinUser.CW_USEDEFAULT, WinUser.CW_USEDEFAULT,
-                    WinUser.CW_USEDEFAULT, WinUser.CW_USEDEFAULT, 
+                    WinUser.CW_USEDEFAULT, WinUser.CW_USEDEFAULT,
                     NIL, NIL, hInst, NIL);
     <* ASSERT trsl.hwnd # NIL *>
 
@@ -2524,8 +2524,8 @@ PROCEDURE PrintMessageType (message: WinDef.UINT;  debug_id: INTEGER): INTEGER =
     INC (msg_uid);
     RETURN msg_uid;
   END PrintMessageType;
-        
-(************* 
+
+(*************
 PROCEDURE DumpSystemPalette (hdc : WinDef.HDC) =
   TYPE
     PaletteList = REF ARRAY OF WinGDI.PALETTEENTRY;
@@ -2543,8 +2543,8 @@ PROCEDURE DumpSystemPalette (hdc : WinDef.HDC) =
     <* ASSERT num2 = num1 *>
 
     FOR i := 0 TO num2 - 1 DO
-      DEBUG ("entry[" & Fmt.Int (i) &"] = {" & 
-              Fmt.Int (entries[i].peRed) & "," & 
+      DEBUG ("entry[" & Fmt.Int (i) &"] = {" &
+              Fmt.Int (entries[i].peRed) & "," &
               Fmt.Int (entries[i].peGreen) & "," &
               Fmt.Int (entries[i].peBlue) & "," &
               Fmt.Int (entries[i].peFlags) & "}\n");
@@ -2554,7 +2554,7 @@ PROCEDURE DumpSystemPalette (hdc : WinDef.HDC) =
 
 (*-------------------------------------------------------- initialization ---*)
 
-VAR 
+VAR
   useEvent_WM_CHAR := FALSE;
 BEGIN
   WITH v = Env.Get("USE_EVENT_WM_CHAR") DO

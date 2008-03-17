@@ -7,7 +7,7 @@
 (*      modified on Wed Feb 17 16:46:47 PST 1993 by johnh   *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 
@@ -98,11 +98,11 @@ TYPE
 
 #{_OUTPUT
 PROCEDURE #(_EVENT_) (
-      initiator: Algorithm.T; 
-      #(_ARGSTR_) 
+      initiator: Algorithm.T;
+      #(_ARGSTR_)
     ) RAISES {Thread.Alerted} =
   <* LL = {} *>
-  VAR zumeArgRec := NEW(#(_EVENT_)Args 
+  VAR zumeArgRec := NEW(#(_EVENT_)Args
 #{
                , #(_ARGNAME_) := #(_ARGNAME_)
 #}
@@ -121,17 +121,17 @@ PROCEDURE #(_EVENT_) (
 #}
 #{_UPDATE
 PROCEDURE #(_EVENT_) (
-      initiator: Algorithm.T; 
-      #(_ARGSTR_) 
+      initiator: Algorithm.T;
+      #(_ARGSTR_)
     ) RAISES {Thread.Alerted} =
   <* LL = VBT.mu *>
-  VAR zumeArgRec := NEW(#(_EVENT_)Args 
+  VAR zumeArgRec := NEW(#(_EVENT_)Args
 #{
                , #(_ARGNAME_) := #(_ARGNAME_)
 #}
       );
   BEGIN
-    Zeus.Dispatch(initiator, Zeus.EventStyle.Update, #(_EVENTPRIO_), 
+    Zeus.Dispatch(initiator, Zeus.EventStyle.Update, #(_EVENTPRIO_),
                   "#(_EVENT_)", OEDispatcher, zumeArgRec);
   END #(_EVENT_);
 
@@ -139,17 +139,17 @@ PROCEDURE #(_EVENT_) (
 
 #{_FEEDBACK
 PROCEDURE #(_EVENT_) (
-      initiator: View.T; 
-      #(_ARGSTR_) 
+      initiator: View.T;
+      #(_ARGSTR_)
     ) RAISES {Thread.Alerted} =
   <* LL = VBT.mu *>
-  VAR zumeArgRec := NEW(#(_EVENT_)Args 
+  VAR zumeArgRec := NEW(#(_EVENT_)Args
 #{
                , #(_ARGNAME_) := #(_ARGNAME_)
 #}
       );
   BEGIN
-    Zeus.Dispatch(initiator, Zeus.EventStyle.Notify, #(_EVENTPRIO_), 
+    Zeus.Dispatch(initiator, Zeus.EventStyle.Notify, #(_EVENTPRIO_),
                   "#(_EVENT_)", FEDispatcher, zumeArgRec);
   END #(_EVENT_);
 

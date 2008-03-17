@@ -84,8 +84,8 @@ VAR
 BEGIN
   len:=Cstring.strlen(str);
   newstr:=LOOPHOLE(Xt.Malloc(len+1),char_star);
-  EVAL Cstring.strncpy(newstr,str,len);  
-  RETURN newstr;  
+  EVAL Cstring.strncpy(newstr,str,len);
+  RETURN newstr;
 END XtNewString;
 
 (*-----------------*)

@@ -18,11 +18,11 @@ TYPE
     mode: Mode;
     col : ScrnPaintOp.Pixel;
   END;
-    
+
   OpRecord = RECORD
     bop : Op;
     fop : Op;
-  (* The raster operations can be derived from "bop" and "fop". 
+  (* The raster operations can be derived from "bop" and "fop".
      They are included into the record simply for caching purposes. *)
     rop2 : Ctypes.int;         (* binary raster operation *)
     brop3: WinDef.DWORD;       (* foreground ternary raster operation *)

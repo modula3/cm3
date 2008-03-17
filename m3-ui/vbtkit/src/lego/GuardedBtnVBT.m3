@@ -11,7 +11,7 @@ MODULE GuardedBtnVBT;
 IMPORT BtnVBTClass, ButtonVBT, Cursor, Filter, MultiClass, PaintOp,
        Pixmap, Point, ReactivityVBT, Rect, SwitchVBT, VBT,
        VBTClass, VBTKitResources;
-         
+
 VAR
   guardTexture           : Pixmap.T;
   guardTextureInitialized           := FALSE;
@@ -31,7 +31,7 @@ REVEAL
 
 PROCEDURE Init (v         : T;
                 ch        : VBT.T;
-                colors    : PaintOp.ColorScheme := NIL): T= 
+                colors    : PaintOp.ColorScheme := NIL): T=
   VAR
     feedback := NEW (ReactivityVBT.T,
                      paintDormant := PaintDormant).init (
@@ -44,7 +44,7 @@ PROCEDURE Init (v         : T;
     RETURN v
   END Init;
 
-PROCEDURE Callback ( <* UNUSED *> v: T;  
+PROCEDURE Callback ( <* UNUSED *> v: T;
                      <* UNUSED *> READONLY cd: VBT.MouseRec) =
   BEGIN
   END Callback;
@@ -57,7 +57,7 @@ PROCEDURE Action (selfAsButtonVBT: ButtonVBT.T; READONLY cd: VBT.MouseRec) =
 PROCEDURE Pre (v: T) =
   BEGIN
     v.guardedOnPre := v.guarded;
-    SetGuard (v, FALSE); 
+    SetGuard (v, FALSE);
   END Pre;
 
 PROCEDURE Post (v: T) =
@@ -87,7 +87,7 @@ PROCEDURE SetGuard (v: T; fg: BOOLEAN) =
   VAR newState: ReactivityVBT.State;
   BEGIN
     v.guarded := fg;
-    IF fg THEN 
+    IF fg THEN
       newState := ReactivityVBT.State.Dormant
     ELSE
       newState := ReactivityVBT.State.Active

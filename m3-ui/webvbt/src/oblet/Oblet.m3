@@ -23,8 +23,8 @@ TYPE
 
   RigidPixmapVBT = HTMLVBTG.RigidPixmapVBT;
 
-REVEAL 
-  ObletInfo = HTMLVBTG.PublicObletInfo BRANDED OBJECT 
+REVEAL
+  ObletInfo = HTMLVBTG.PublicObletInfo BRANDED OBJECT
     filter: Filter.T;
   OVERRIDES
     load := LoadOblet;
@@ -53,15 +53,15 @@ PROCEDURE DisplayOblet (v: T; vsplit: VBT.T; s: State; oblet: HTML.Oblet) =
     ELSE
       VAR
         pmVBT := NEW(RigidPixmapVBT).init(
-                   pm := HTMLVBTG.EmptyImage, 
+                   pm := HTMLVBTG.EmptyImage,
                    op := HTMLVBTG.RegularColors.bgFg,
                    bg := HTMLVBTG.RegularColors.bg);
         border := BorderedVBT.New(
                     pmVBT, size := Pts.ToMM(0.5), op := s.bgFg.fg);
         url: TEXT;
       BEGIN
-        IF s.bgFg # HTMLVBTG.AnchorColors THEN 
-          BorderedVBT.SetSize(border, 0.0) 
+        IF s.bgFg # HTMLVBTG.AnchorColors THEN
+          BorderedVBT.SetSize(border, 0.0)
         END;
         Split.AddChild(v.hsplit, border);
         url := Web.AbsoluteURL(oblet.source, v.baseURL);
@@ -104,7 +104,7 @@ PROCEDURE LoadOblet (                      info  : ObletInfo; page: Web.Page)
           WITH p = Filter.Child(info.filter) DO
             PixmapVBT.Put(p, HTMLVBTG.ErrorImage);
             PixmapVBT.SetColors(
-              p, op := HTMLVBTG.ErrorColors.bgFg, 
+              p, op := HTMLVBTG.ErrorColors.bgFg,
               bg := HTMLVBTG.ErrorColors.bg)
           END
         END

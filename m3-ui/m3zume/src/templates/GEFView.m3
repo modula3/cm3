@@ -8,7 +8,7 @@
 (*      modified on Tue Feb 16 16:31:40 PST 1993 by johnh   *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 
@@ -37,7 +37,7 @@ $#(_ALGNAME_)ViewClass
 
 TYPE
   T = #(_ALGNAME_)ViewClass.T BRANDED OBJECT
-        name := "#(_VIEWNAME_).gef"; 
+        name := "#(_VIEWNAME_).gef";
       OVERRIDES
         <* LL = VBT.mu *>
         install  := Install;
@@ -77,7 +77,7 @@ PROCEDURE Startrun(v: T) =
   END Startrun;
 
 PROCEDURE New (): View.T =
-  VAR g := NEW(GraphVBT.T).init(); 
+  VAR g := NEW(GraphVBT.T).init();
   BEGIN
     RETURN NEW(T).init(g)
   END New;
@@ -110,5 +110,5 @@ PROCEDURE #(_EVENT_) (view: T; #(_ARGSTR_)) =
 #}
 
 BEGIN
-  ZeusPanel.RegisterView(New, "#(_VIEWNAME_).gef", "#(_ALGNAME_)"); 
+  ZeusPanel.RegisterView(New, "#(_VIEWNAME_).gef", "#(_ALGNAME_)");
 END #(_ALGNAME_)#(_VIEWNAME_)GEFView.

@@ -20,7 +20,7 @@ REVEAL
         cancel   := SwitchVBT.Cancel;
       END;
 
-TYPE 
+TYPE
   MC = SwitchVBT.MC BRANDED OBJECT END;
 
 PROCEDURE Init (v: T; f: FeedbackVBT.T): T =

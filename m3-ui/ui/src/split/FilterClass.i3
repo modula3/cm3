@@ -12,7 +12,7 @@
 
 (* The "FilterClass" interface reveals the representation
    of a filter.   If you are implementing a subtype of "Filter.T",
-   you can import "FilterClass" to gain access to the 
+   you can import "FilterClass" to gain access to the
    child field. *)
 
 INTERFACE FilterClass;
@@ -21,13 +21,13 @@ IMPORT Filter, VBT;
 
 REVEAL Filter.T <: Public;
 
-TYPE Public = 
+TYPE Public =
   Filter.Public OBJECT <* LL >= {SELF, VBT.mu} *>
     ch: VBT.T
   END;
 
 (* A filter "f" is a split with the single child "f.ch", or
-   with no children if "f.ch=NIL".  
+   with no children if "f.ch=NIL".
 
    The "beChild" method initializes "ch" and calls "Split.T.beChild".
    The "succ", "pred", "nth", "index", and "locate" methods use the

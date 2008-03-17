@@ -8,7 +8,7 @@
 
 UNSAFE MODULE ObLibWeb;
 
-IMPORT ObLib, ObLibUI, ObValue, Obliq, SynLocation, SynWr, TextList, VBT, 
+IMPORT ObLib, ObLibUI, ObValue, Obliq, SynLocation, SynWr, TextList, VBT,
        Web, WebVBT;
 
 VAR setupDone := FALSE;
@@ -32,13 +32,13 @@ TYPE
   ValWebVBT = ObLibUI.ValVBT BRANDED OBJECT END;
 
   WebCode = {Failure, New, Fetch, Stop, GetLinks, GetTitle, Search,
-             AttachReadyProc, AttachHotlinkProc, AttachIsMapProc, 
+             AttachReadyProc, AttachHotlinkProc, AttachIsMapProc,
              AttachIsIndexProc, AbsoluteURL};
 
   WebOpCode = ObLib.OpCode OBJECT
     code: WebCode;
   END;
-    
+
   PackageWeb = ObLib.T OBJECT
   OVERRIDES
     Eval := EvalWeb;
@@ -54,16 +54,16 @@ PROCEDURE SetupWeb() =
       RETURN NEW (WebOpCode, name := name, arity := arity, code := code);
     END NewWebOC;
 
-  TYPE 
+  TYPE
     OpCodes = ARRAY OF ObLib.OpCode;
-  VAR 
+  VAR
     opCodes: REF OpCodes;
   BEGIN
     opCodes := NEW (REF OpCodes, NUMBER (WebCode));
-    opCodes^ := 
-        OpCodes{NewWebOC("failure",          -1, WebCode.Failure), 
-                NewWebOC("new",               0, WebCode.New), 
-                NewWebOC("fetch",             2, WebCode.Fetch), 
+    opCodes^ :=
+        OpCodes{NewWebOC("failure",          -1, WebCode.Failure),
+                NewWebOC("new",               0, WebCode.New),
+                NewWebOC("fetch",             2, WebCode.Fetch),
                 NewWebOC("stop",              1, WebCode.Stop),
                 NewWebOC("getLinks",          1, WebCode.GetLinks),
                 NewWebOC("getTitle",          1, WebCode.GetTitle),
@@ -79,34 +79,34 @@ PROCEDURE SetupWeb() =
   END SetupWeb;
 
 
-PROCEDURE EvalWeb(                    self  : PackageWeb; 
-                                      opCode: ObLib.OpCode; 
-                  <*UNUSED*>          arity : ObLib.OpArity; 
-                             READONLY args  : ObValue.ArgArray; 
-                  <*UNUSED*>          temp  : BOOLEAN; 
-                                      loc   : SynLocation.T): ObValue.Val 
+PROCEDURE EvalWeb(                    self  : PackageWeb;
+                                      opCode: ObLib.OpCode;
+                  <*UNUSED*>          arity : ObLib.OpArity;
+                             READONLY args  : ObValue.ArgArray;
+                  <*UNUSED*>          temp  : BOOLEAN;
+                                      loc   : SynLocation.T): ObValue.Val
   RAISES {ObValue.Error} =
-  VAR 
+  VAR
     webvbt      : MyWebVBT;
-    text1, text2: TEXT; 
+    text1, text2: TEXT;
   BEGIN
     CASE NARROW(opCode, WebOpCode).code OF
-    | WebCode.Failure => 
+    | WebCode.Failure =>
         RETURN webFailureException;
-    | WebCode.New => 
+    | WebCode.New =>
       WITH val = NEW (ValWebVBT, what := "<a WebVBT.T>"),
            vbt = NEW (MyWebVBT, val:=val, loc:=loc).init () DO
         val.vbt := vbt;
         RETURN val;
       END;
-    | WebCode.Fetch => 
+    | WebCode.Fetch =>
       TYPECASE args[1] OF | ValWebVBT (node) => webvbt := node.vbt;
       ELSE ObValue.BadArgType (1, "web", self.name, opCode.name, loc); END;
       TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
       ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
       webvbt.fetch (text1);
       RETURN ObValue.valOk;
-    | WebCode.Stop => 
+    | WebCode.Stop =>
       TYPECASE args[1] OF | ValWebVBT (node) => webvbt := node.vbt;
       ELSE ObValue.BadArgType (1, "web", self.name, opCode.name, loc); END;
       webvbt.stop ();
@@ -115,7 +115,7 @@ PROCEDURE EvalWeb(                    self  : PackageWeb;
       TYPECASE args[1] OF | ValWebVBT (node) => webvbt := node.vbt;
       ELSE ObValue.BadArgType (1, "web", self.name, opCode.name, loc); END;
       WITH links = webvbt.getLinks () DO
-        IF links = NIL THEN 
+        IF links = NIL THEN
           RETURN Obliq.NewArray (Obliq.Vals {});
         ELSE
           WITH n = TextList.Length (links),
@@ -131,9 +131,9 @@ PROCEDURE EvalWeb(                    self  : PackageWeb;
       TYPECASE args[1] OF | ValWebVBT (node) => webvbt := node.vbt;
       ELSE ObValue.BadArgType (1, "web", self.name, opCode.name, loc); END;
       TYPECASE webvbt.page OF
-      | NULL => 
+      | NULL =>
         RETURN Obliq.NewText ("");
-      | WebVBT.HTMLPage (page) => 
+      | WebVBT.HTMLPage (page) =>
         RETURN Obliq.NewText (page.html.title);
       ELSE
         RETURN Obliq.NewText ("<Untitled>");
@@ -144,12 +144,12 @@ PROCEDURE EvalWeb(                    self  : PackageWeb;
       TYPECASE args[2] OF | ObValue.ValText(node) => text1:=node.text;
       ELSE ObValue.BadArgType(2, "text", self.name, opCode.name, loc); END;
       RETURN Obliq.NewBool (webvbt.search(text1));
-    | WebCode.AttachReadyProc => 
+    | WebCode.AttachReadyProc =>
       TYPECASE args[1] OF | ValWebVBT (node) => webvbt := node.vbt;
       ELSE ObValue.BadArgType (1, "web", self.name, opCode.name, loc); END;
       webvbt.readyProc := args[2];
       RETURN ObValue.valOk;
-    | WebCode.AttachHotlinkProc => 
+    | WebCode.AttachHotlinkProc =>
       TYPECASE args[1] OF | ValWebVBT (node) => webvbt := node.vbt;
       ELSE ObValue.BadArgType (1, "web", self.name, opCode.name, loc); END;
       webvbt.hotLinkProc := args[2];
@@ -194,7 +194,7 @@ TYPE
 
 
 PROCEDURE Ready (self: MyWebVBT; remImages: CARDINAL) =
-  VAR 
+  VAR
     args: ARRAY [1..2] OF ObValue.Val;
   BEGIN
     args[1] := self.val;
@@ -204,13 +204,13 @@ PROCEDURE Ready (self: MyWebVBT; remImages: CARDINAL) =
         EVAL Obliq.Call (self.readyProc, args, self.loc);
       END;
     EXCEPT
-    | ObValue.Error (packet) => 
+    | ObValue.Error (packet) =>
       SynWr.Text (SynWr.out,
            "*** A Modula3 callback to Obliq caused an Obliq error: ***\n");
       ObValue.ErrorMsg (SynWr.out, packet);
       SynWr.Flush (SynWr.out);
-    | ObValue.Exception (packet) => 
-      SynWr.Text(SynWr.out, 
+    | ObValue.Exception (packet) =>
+      SynWr.Text(SynWr.out,
            "*** A Modula3 callback to Obliq caused an Obliq exception: ***\n");
       ObValue.ExceptionMsg (SynWr.out, packet);
       SynWr.Flush (SynWr.out);
@@ -218,10 +218,10 @@ PROCEDURE Ready (self: MyWebVBT; remImages: CARDINAL) =
   END Ready;
 
 
-PROCEDURE Hotlink (                    self: MyWebVBT; 
-                                       link: TEXT; 
+PROCEDURE Hotlink (                    self: MyWebVBT;
+                                       link: TEXT;
                    <*UNUSED*> READONLY cd  : VBT.MouseRec) =
-  VAR 
+  VAR
     args: ARRAY [1..2] OF ObValue.Val;
   BEGIN
     args[1] := self.val;
@@ -231,13 +231,13 @@ PROCEDURE Hotlink (                    self: MyWebVBT;
         EVAL Obliq.Call (self.hotLinkProc, args, self.loc);
       END;
     EXCEPT
-    | ObValue.Error (packet) => 
+    | ObValue.Error (packet) =>
       SynWr.Text (SynWr.out,
            "*** A Modula3 callback to Obliq caused an Obliq error: ***\n");
       ObValue.ErrorMsg (SynWr.out, packet);
       SynWr.Flush (SynWr.out);
-    | ObValue.Exception (packet) => 
-      SynWr.Text(SynWr.out, 
+    | ObValue.Exception (packet) =>
+      SynWr.Text(SynWr.out,
            "*** A Modula3 callback to Obliq caused an Obliq exception: ***\n");
       ObValue.ExceptionMsg (SynWr.out, packet);
       SynWr.Flush (SynWr.out);
@@ -245,10 +245,10 @@ PROCEDURE Hotlink (                    self: MyWebVBT;
   END Hotlink;
 
 
-PROCEDURE IsMap(                    self: MyWebVBT; 
-                                    link: TEXT; 
+PROCEDURE IsMap(                    self: MyWebVBT;
+                                    link: TEXT;
                 <*UNUSED*> READONLY cd  : VBT.MouseRec) =
-  VAR 
+  VAR
     args: ARRAY [1..2] OF ObValue.Val;
   BEGIN
     args[1] := self.val;
@@ -258,13 +258,13 @@ PROCEDURE IsMap(                    self: MyWebVBT;
         EVAL Obliq.Call (self.isMapProc, args, self.loc);
       END;
     EXCEPT
-    | ObValue.Error (packet) => 
+    | ObValue.Error (packet) =>
       SynWr.Text (SynWr.out,
            "*** A Modula3 callback to Obliq caused an Obliq error: ***\n");
       ObValue.ErrorMsg (SynWr.out, packet);
       SynWr.Flush (SynWr.out);
-    | ObValue.Exception (packet) => 
-      SynWr.Text(SynWr.out, 
+    | ObValue.Exception (packet) =>
+      SynWr.Text(SynWr.out,
            "*** A Modula3 callback to Obliq caused an Obliq exception: ***\n");
       ObValue.ExceptionMsg (SynWr.out, packet);
       SynWr.Flush (SynWr.out);
@@ -273,7 +273,7 @@ PROCEDURE IsMap(                    self: MyWebVBT;
 
 
 PROCEDURE IsIndex (self: MyWebVBT; typein: TEXT) =
-    VAR 
+    VAR
     args: ARRAY [1..2] OF ObValue.Val;
   BEGIN
     args[1] := self.val;
@@ -283,13 +283,13 @@ PROCEDURE IsIndex (self: MyWebVBT; typein: TEXT) =
         EVAL Obliq.Call (self.isIndexProc, args, self.loc);
       END;
     EXCEPT
-    | ObValue.Error (packet) => 
+    | ObValue.Error (packet) =>
       SynWr.Text (SynWr.out,
            "*** A Modula3 callback to Obliq caused an Obliq error: ***\n");
       ObValue.ErrorMsg (SynWr.out, packet);
       SynWr.Flush (SynWr.out);
-    | ObValue.Exception (packet) => 
-      SynWr.Text(SynWr.out, 
+    | ObValue.Exception (packet) =>
+      SynWr.Text(SynWr.out,
            "*** A Modula3 callback to Obliq caused an Obliq exception: ***\n");
       ObValue.ExceptionMsg (SynWr.out, packet);
       SynWr.Flush (SynWr.out);

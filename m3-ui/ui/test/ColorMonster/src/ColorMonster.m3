@@ -10,7 +10,7 @@
 
 MODULE ColorMonster EXPORTS Main;
 IMPORT Trestle, HVSplit, Axis, HVBar, VBT, HighlightVBT,
-  BorderedVBT, Pixmap, PaintOp, ScrnPaintOp, 
+  BorderedVBT, Pixmap, PaintOp, ScrnPaintOp,
   Palette, ScreenType, Word, TrestleComm, Fmt, TextVBT;
 
 <*FATAL ANY*>
@@ -20,7 +20,7 @@ PROCEDURE NewOp(pix: INTEGER): PaintOp.T =
     RETURN Palette.FromOpClosure(NEW(MyOpClosure, pix := pix))
   END NewOp;
 
-TYPE MyOpClosure = Palette.OpClosure 
+TYPE MyOpClosure = Palette.OpClosure
   OBJECT pix: INTEGER
   OVERRIDES apply := MyOpApply END;
 
@@ -30,7 +30,7 @@ PROCEDURE MyOpApply(cl: MyOpClosure; st: ScreenType.T): ScrnPaintOp.T =
     TRY
       RETURN st.op.opaque(pix)
     EXCEPT
-      ScrnPaintOp.Failure, TrestleComm.Failure => 
+      ScrnPaintOp.Failure, TrestleComm.Failure =>
         RETURN Palette.ResolveOp(st, PaintOp.Bg)
     END
   END MyOpApply;
@@ -38,7 +38,7 @@ PROCEDURE MyOpApply(cl: MyOpClosure; st: ScreenType.T): ScrnPaintOp.T =
 PROCEDURE New(lo, hi: INTEGER; hv: Axis.T): VBT.T =
   BEGIN
     IF hi - lo = 1 THEN
-      RETURN BorderedVBT.New(TextVBT.New(Fmt.Int(lo), 
+      RETURN BorderedVBT.New(TextVBT.New(Fmt.Int(lo),
         bgFg := PaintOp.MakeColorQuad(NewOp(lo), PaintOp.Fg)))
     ELSE
       WITH vh = Axis.Other[hv], mid = (lo + hi) DIV 2 DO
@@ -49,9 +49,9 @@ PROCEDURE New(lo, hi: INTEGER; hv: Axis.T): VBT.T =
       END
     END
   END New;
-  
+
 VAR count := 256;
-    v := BorderedVBT.New(HighlightVBT.New(New(0, count, Axis.T.Hor)), 
+    v := BorderedVBT.New(HighlightVBT.New(New(0, count, Axis.T.Hor)),
       BorderedVBT.Default, PaintOp.BgFg, Pixmap.Gray);
 
 BEGIN

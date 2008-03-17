@@ -6,7 +6,7 @@
 (*      modified on Tue Jul 13 10:40:26 PDT 1993 by mhb     *)
 
 (*********************************************************************
-|*  NOTE: This file is generated automatically from the event 
+|*  NOTE: This file is generated automatically from the event
 |*        definition file #(_ALGNAME_).evt.
 |*********************************************************************)
 
@@ -16,7 +16,7 @@ IMPORT ZeusDataView, ZeusPanel;
 
 BEGIN
   ZeusPanel.RegisterView (
-    ZeusDataView.New, 
-    "#(_ALGNAME_) Data View", 
-    "#(_ALGNAME_)"); 
+    ZeusDataView.New,
+    "#(_ALGNAME_) Data View",
+    "#(_ALGNAME_)");
 END #(_ALGNAME_)DataView.

@@ -14,9 +14,9 @@ GENERIC INTERFACE RingBuffer(Elem);
 (* A RingBuffer.T represents an unmonitored indefinitely expandible
    FIFO queue. *)
 
-TYPE T = 
-  RECORD 
-    lo, hi: CARDINAL := 0; 
+TYPE T =
+  RECORD
+    lo, hi: CARDINAL := 0;
     buff: REF ARRAY OF Elem.T := NIL
   END;
   (* buff[lo..hi-1] circularly are the active entries;
@@ -39,5 +39,5 @@ PROCEDURE Remove(VAR rb: T): Elem.T RAISES {Exhausted};
 PROCEDURE Peek(VAR rb: T): Elem.T RAISES {Exhausted};
 (* Like Remove, but leave the returned element at the head of the queue. *)
 
-END RingBuffer. 
+END RingBuffer.
 

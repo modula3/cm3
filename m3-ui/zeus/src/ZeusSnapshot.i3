@@ -14,7 +14,7 @@ IMPORT RefList, Rd, Wr, ZeusPanelPrivate;
 
 CONST
   HomeDir = "HOME";
-  StateDir = ".zeusState"; 
+  StateDir = ".zeusState";
   FinalState = "Final_State";   (* filename for state at "Quit" *)
 
 PROCEDURE SessionToStateDir (sess  : ZeusPanelPrivate.Session;

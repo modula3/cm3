@@ -83,7 +83,7 @@ VAR
   RoundFudge := FLOAT(16.0, JunoValue.Real);
 
 (* A constraint is considered satisfied if its error is at most "RoundFudge"
-   times the estimated round-off error involved in computing it. 
+   times the estimated round-off error involved in computing it.
 
    A change to a coordinate of the solution that has relative value less than
    "MinDelta" is considered tiny.  When all changes are tiny, the iteration
@@ -129,11 +129,11 @@ PROCEDURE EtpLogP0(<*UNUSED*> true_cnt, nn, ghost_cnt, iterations: CARDINAL) =
   BEGIN END EtpLogP0;
 
 PROCEDURE EvalRHS(
-   c: Constraint; 
-   READONLY v: ARRAY OF T; 
+   c: Constraint;
+   READONLY v: ARRAY OF T;
    READONLY errb: ARRAY OF T;
    n: CARDINAL;
-   VAR (*OUT*) res: T; 
+   VAR (*OUT*) res: T;
    VAR (*OUT*) err: T;
    supressNewline := FALSE) =
  (* Set "res" and "err" to the value and estimated round-off error of the
@@ -143,7 +143,7 @@ PROCEDURE EvalRHS(
     occur in the right side of "c", and "err" may be aliased to an element of
     "errb" that doesn't occur in the right side of "c". *)
  BEGIN
-   WITH 
+   WITH
      arg = c.arg,
      y = v[arg[1]],
      x = v[arg[2]],
@@ -152,39 +152,39 @@ PROCEDURE EvalRHS(
    DO
      (* res := c.type(y,x) *)
      CASE c.type OF <*NOWARN*>
-     | ConType.Plus =>  
+     | ConType.Plus =>
          res := y + x;
-         err := dely + delx 
-     | ConType.Minus =>  
+         err := dely + delx
+     | ConType.Minus =>
          res := y - x;
-         err := dely + delx 
-     | ConType.Halve =>  
+         err := dely + delx
+     | ConType.Halve =>
          res := y * 0.5;
-         err := dely * 0.5 
-     | ConType.Times =>  
+         err := dely * 0.5
+     | ConType.Times =>
          res := y * x;
-         err := dely * ABS(x) + delx * ABS(y) 
-     | ConType.Atan =>   
+         err := dely * ABS(x) + delx * ABS(y)
+     | ConType.Atan =>
          res := JunoValue.Atan(y, x);
-         err := (delx * ABS(y) + dely * ABS(x)) / ABS(x*x+y*y) 
-     | ConType.Sin =>    
+         err := (delx * ABS(y) + dely * ABS(x)) / ABS(x*x+y*y)
+     | ConType.Sin =>
          res := JunoValue.Sin(y);
-         err := ABS(JunoValue.Cos(y)) * dely 
-     | ConType.Cos =>    
+         err := ABS(JunoValue.Cos(y)) * dely
+     | ConType.Cos =>
          res := JunoValue.Cos(y);
-         err := ABS(JunoValue.Sin(y)) * dely 
+         err := ABS(JunoValue.Sin(y)) * dely
      | ConType.MultTan =>
-         WITH 
+         WITH
            tanx = JunoValue.Tan(x),
            cosx = JunoValue.Cos(x)
          DO
            res := y * tanx;
            err := dely * ABS(tanx) + delx / (cosx * cosx)
          END
-     | ConType.Exp => 
+     | ConType.Exp =>
          WITH
            expy = JunoValue.Exp(y)
-         DO   
+         DO
            res := expy;
            err := expy * dely
          END
@@ -252,14 +252,14 @@ PROCEDURE P(
     READONLY c: ARRAY OF Constraint): BOOLEAN =
 (*
 | ON ENTRY:
-| 
-|	    v[]                
-|	  ________                   
-|	 |        |                  
-|	 |  True  |                  
-|	 |  Vars  |                  
-|	 |        |        c[] 
-|	 |________|    _____________ 
+|
+|	    v[]
+|	  ________
+|	 |        |
+|	 |  True  |
+|	 |  Vars  |
+|	 |        |        c[]
+|	 |________|    _____________
 |  nn -> |        |   |             |
 |	 |        |   |             |
 |	 |  Ghost |   |    Ghost    |
@@ -276,13 +276,13 @@ PROCEDURE P(
 | MATRIX ORGANIZATION:
 |
 |		x[]
-|	____________________         __ 
+|	____________________         __
 |      |                    |       |..|
 |      |____________________|       |..| = unused
 |                                   |__|
 |      | <------ nn ------> |
-|    
-|    
+|
+|
 |	       a[][]             errorVec[]
 |       _______________________      __
 |  ^   |                    |  |    |..|
@@ -519,7 +519,7 @@ PROCEDURE P(
 	END
       END;
       IF NUMBER(v) > NUMBER(errb^) THEN
-        VAR 
+        VAR
           n2 := MAX(NUMBER(v), 2 * NUMBER(errb^));
         BEGIN
           errb := NEW(REF RedundantLSolve.Vector, n2)
@@ -529,7 +529,7 @@ PROCEDURE P(
 
   (* PROCEDURE P *)
   BEGIN
-    IF logWr = NIL AND debug > 0 THEN 
+    IF logWr = NIL AND debug > 0 THEN
       IF logFileName # NIL
         THEN logWr := IO.OpenWrite(logFileName)
         ELSE logWr := Stdio.stdout
@@ -539,7 +539,7 @@ PROCEDURE P(
     <* ASSERT NUMBER(errorVec^) = NUMBER(a^) *>
     GrowArrays();
     IF debug >= 1 THEN ShowInput() END;
-    VAR 
+    VAR
       cnt := MaxIterations;
       error := EvalConstraints();
     BEGIN

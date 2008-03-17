@@ -9,7 +9,7 @@
 <*PRAGMA LL*>
 
 (* A "TextureVBT.T" is a "VBT" that displays a texture, possibly
-   colored.  Its preferred and minimum sizes are zero and its maximum 
+   colored.  Its preferred and minimum sizes are zero and its maximum
    size is very large, in each axis.  *)
 
 INTERFACE TextureVBT;
@@ -20,12 +20,12 @@ TYPE
   T <: Public;
   Public = VBT.Leaf OBJECT METHODS
     <* LL.sup <= VBT.mu *>
-    init(op: PaintOp.T := PaintOp.BgFg; 
-      txt: Pixmap.T := Pixmap.Solid; 
+    init(op: PaintOp.T := PaintOp.BgFg;
+      txt: Pixmap.T := Pixmap.Solid;
       nwAlign: BOOLEAN := FALSE): T
   END;
 
-(* The call "v.init(...)" initializes "v" as a "TextureVBT" 
+(* The call "v.init(...)" initializes "v" as a "TextureVBT"
    displaying "txt" with the painting operation "op".
 
    The domain of "v" will be painted using the painting operation "op"
@@ -34,22 +34,22 @@ TYPE
    the northwest corner of "v".  *)
 
 PROCEDURE New(
-  op: PaintOp.T := PaintOp.BgFg; 
-  txt: Pixmap.T := Pixmap.Solid; 
+  op: PaintOp.T := PaintOp.BgFg;
+  txt: Pixmap.T := Pixmap.Solid;
   nwAlign: BOOLEAN := FALSE): T;  <* LL.sup <= VBT.mu *>
 (* "New(...)" is equivalent to "NEW(T).init(...)". *)
 
 PROCEDURE Set(
-  v: T;   
-  op: PaintOp.T := PaintOp.BgFg; 
+  v: T;
+  op: PaintOp.T := PaintOp.BgFg;
   txt: Pixmap.T := Pixmap.Solid;
   nwAlign: BOOLEAN := FALSE);
 <* LL.sup = VBT.mu *>
 (* Change "v"'s texture and mark it for redisplay. *)
 
 PROCEDURE Get(
-  v: T;   
-  VAR op: PaintOp.T; 
+  v: T;
+  VAR op: PaintOp.T;
   VAR txt: Pixmap.T;
   VAR nwAlign: BOOLEAN); <* LL.sup = VBT.mu *>
 (* Fetch "v"'s texture. *)

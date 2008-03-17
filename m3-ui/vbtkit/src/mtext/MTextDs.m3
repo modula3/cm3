@@ -372,7 +372,7 @@ PROCEDURE Free (node: Node) =
       node.right := NIL
     END
   END Free;
-  
+
 (************************)
 (* leaf node operations *)
 (************************)

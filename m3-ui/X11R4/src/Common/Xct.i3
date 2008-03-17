@@ -3,7 +3,7 @@
 (* See the file COPYRIGHT for a full description.		*)
 
 (* File: Xct.i3							*)
-(* Last modified on Fri May  7 16:28:51 PDT 1993 by mjordan     *) 
+(* Last modified on Fri May  7 16:28:51 PDT 1993 by mjordan     *)
 (*      modified on Sat Feb 24 02:18:21 1990 by muller		*)
 (*      modified on Tue Feb 13 10:43:34 1990 by jerome		*)
 
@@ -23,12 +23,12 @@ INTERFACE Xct;
  * Copyright 1988 by the Massachusetts Institute of Technology
  *
  * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose and without fee is hereby granted, provided 
- * that the above copyright notice appear in all copies and that both that 
- * copyright notice and this permission notice appear in supporting 
+ * documentation for any purpose and without fee is hereby granted, provided
+ * that the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
  * documentation, and that the name of M.I.T. not be used in advertising
- * or publicity pertaining to distribution of the software without specific, 
- * written prior permission. M.I.T. makes no representations about the 
+ * or publicity pertaining to distribution of the software without specific,
+ * written prior permission. M.I.T. makes no representations about the
  * suitability of this software for any purpose.  It is provided "as is"
  * without express or implied warranty.
  *
@@ -134,7 +134,7 @@ CONST
 
 
 TYPE
-  Data = RECORD  
+  Data = RECORD
     total_string: String;	(* as given to Xct.Create *)
     total_length: Int;		(* as given to Xct.Create *)
     flags: Flags;		(* as given to Xct.Create *)

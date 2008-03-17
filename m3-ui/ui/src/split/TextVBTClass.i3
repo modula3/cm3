@@ -14,7 +14,7 @@ IMPORT TextVBT;
 
 REVEAL TextVBT.T <: T;
 
-TYPE T = TextVBT.Public OBJECT 
+TYPE T = TextVBT.Public OBJECT
   <* LL >= {SELF} *>
   text: TEXT
   END;

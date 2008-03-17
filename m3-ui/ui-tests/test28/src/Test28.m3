@@ -8,7 +8,7 @@
 
 MODULE Test28 EXPORTS Main;
 
-IMPORT Image, Palette, PaintOp, Path, Pixmap, Point, Rd, Rect, Region, Rsrc, 
+IMPORT Image, Palette, PaintOp, Path, Pixmap, Point, Rd, Rect, Region, Rsrc,
        ScreenType, TestBundle, Trestle, VBT;
 
 <* FATAL ANY *>
@@ -20,7 +20,7 @@ PROCEDURE Repaint (self: VBT.Leaf; <* UNUSED *> READONLY bad: Region.T) =
     org1 = Point.T {20, 40};
   BEGIN
     VBT.PaintTint (self, Rect.Full, PaintOp.Bg);
-    VBT.PaintText (self, pt := Point.T {20, 20}, 
+    VBT.PaintText (self, pt := Point.T {20, 20},
                    t := "This program tests ScrnPixmap.T.localize");
 
     WITH st  = VBT.ScreenTypeOf (self),

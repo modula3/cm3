@@ -14,12 +14,12 @@ IMPORT Wr, Fmt, Stdio, Thread;
 <* FATAL Wr.Failure, Thread.Alerted *>
 VAR debug := FALSE;
 
-REVEAL 
+REVEAL
   Number = NumberPublic BRANDED "RTVal.Number" OBJECT link: Number END;
   Text = TextPublic BRANDED "RTVal.Text" OBJECT link: Text END;
   Pair = PairPublic BRANDED "RTVal.Pair" OBJECT link: Pair END;
 
-VAR 
+VAR
   markStack := NEW(InUseRecSeq.T).init();
   numAvail, numInUse: Number := NIL;
   textAvail, textInUse: Text := NIL;
@@ -53,8 +53,8 @@ PROCEDURE FromText(txt: TEXT): Text =
   VAR res := textAvail; BEGIN
     <* ASSERT txt # NIL *>
     IF res = NIL
-      THEN res := NEW(Text) 
-      ELSE textAvail := textAvail.link 
+      THEN res := NEW(Text)
+      ELSE textAvail := textAvail.link
     END;
     res.val := txt;
     res.link := textInUse;
@@ -75,7 +75,7 @@ PROCEDURE FromPair(car, cdr: T): Pair =
     pairInUse := res;
     RETURN res
   END FromPair;
-  
+
 PROCEDURE FromJV(jv: JunoValue.T): T =
   BEGIN
     TYPECASE jv OF <*NOWARN*>
@@ -189,7 +189,7 @@ PROCEDURE EqualPair(p1: Pair; p2: Pair): BOOLEAN =
             NULL => RETURN FALSE
           | Pair (newP2) => p1 := newP1; p2 := newP2
           ELSE RETURN FALSE
-          END    
+          END
       ELSE EXIT
       END
     END;
@@ -270,7 +270,7 @@ PROCEDURE DisposePair(VAR deletedAny: BOOLEAN) =
       Wr.PutText(Stdio.stderr, " pair(s)\n"); Wr.Flush(Stdio.stderr)
     END
   END DisposePair;
-  
+
 BEGIN
   nil := NEW(Null)
 END RTVal.

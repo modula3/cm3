@@ -22,9 +22,9 @@ PROCEDURE SetupBind(mod: JunoAST.Id; scp: JunoScope.T; rt: View.Root) =
 
 PROCEDURE Bind(name: JunoAST.Id; cl: Closure; in, out := 0) =
   <* FATAL JunoScope.NameClash *>
-  VAR 
+  VAR
     slot := JunoRT.GetExtCodeIndex(
-      JunoRT.ProcAttr{modName, name, JunoRT.Sig{out,0,in}}); 
+      JunoRT.ProcAttr{modName, name, JunoRT.Sig{out,0,in}});
   BEGIN
     cl.rt := root;
     JunoRT.ext_code_tbl[slot] := cl;

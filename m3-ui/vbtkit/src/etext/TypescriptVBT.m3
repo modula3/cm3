@@ -18,7 +18,7 @@
 
    I was having trouble with calls to ClearHistory getting a checked
    runtime error on the DEC() call.  After looking at the code, it
-   seems that the typeinStart and outputEnd fields are not being 
+   seems that the typeinStart and outputEnd fields are not being
    properly protected to ensure they are updated/used in sync with
    one another in a multithreaded environment.  I patched the code
    to move lines that modified typeinStart to be inside the lock of
@@ -215,8 +215,8 @@ PROCEDURE Interrupt (v: T; time: VBT.TimeStamp) =
   BEGIN
     TextPort.Seek (v.tp, length);
     TextPort.Insert (v.tp, "^C");
-    LOCK v.mu DO (* flush all pending typein *) 
-      v.outputEnd := length + 2; 
+    LOCK v.mu DO (* flush all pending typein *)
+      v.outputEnd := length + 2;
       v.tp.typeinStart := length + 2; (* moved this line to be inside the LOCK -RCC *)
     END;
     v.handleInterrupt (time)
@@ -240,12 +240,12 @@ PROCEDURE GetWr (v: T): Writer =
   END GetWr;
 
 PROCEDURE RdTypescript (r: Reader): T =
-  BEGIN 
+  BEGIN
     RETURN r.v
   END RdTypescript;
 
 PROCEDURE WrTypescript (r: Writer): T =
-  BEGIN 
+  BEGIN
     RETURN r.v
   END WrTypescript;
 

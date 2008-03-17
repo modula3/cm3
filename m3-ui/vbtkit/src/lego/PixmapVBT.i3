@@ -7,7 +7,7 @@
 (*      modified on Tue Jun 16 13:08:31 PDT 1992 by muller     *)
 <*PRAGMA LL*>
 
-(* A "PixmapVBT.T" is a VBT that displays a pixmap. 
+(* A "PixmapVBT.T" is a VBT that displays a pixmap.
 
    The minimum size of a "PixmapVBT" is just large enough to display
    its pixmap (surrounded by any margins that were supplied when the
@@ -32,7 +32,7 @@ TYPE
     END;
 
 (* The call "v.init(...)" initializes "v" as a "PixmapVBT" displaying
-   pixmap "pm" using the paint op "op", and returns "v".  
+   pixmap "pm" using the paint op "op", and returns "v".
 
    If "halign = 0.0", the west boundary of the pixmap will be indented
    by the given "hmargin" (in millimeters) from the west boundary of
@@ -41,7 +41,7 @@ TYPE
    for other values of "halign", the horizontal position of the text
    is computed by linear interpolation.  In particular, "halign = 0.5"
    centers the pixmap horizontally.  The vertical position is determined
-   by "vmargin" and "valign" in a similar way.  
+   by "vmargin" and "valign" in a similar way.
 
    If the domain of "v" is larger than the pixmap, the background is
    painted using the tint "bg".

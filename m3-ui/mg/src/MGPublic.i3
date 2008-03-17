@@ -13,12 +13,12 @@ INTERFACE MGPublic;
 
 (* This interface provides the convenience routines for manipulating MG
    elements *)
-   
+
 IMPORT Color, Font, Matrix2D, MG, PaintOp, R2, R2Box, VBT, R2Path;
 
 <* LL < v.mu for all procedures *>
 <* INLINE *> PROCEDURE Pos(t: MG.T; v: MG.V): R2.T;
-(* Return the position of t.  Exact interpretation depends on the 
+(* Return the position of t.  Exact interpretation depends on the
    subtype.  Logically it returns t.m * R2.Origin *)
 
 <* INLINE *> PROCEDURE LineFrom(line: MG.Line; v: MG.V): R2.T;
