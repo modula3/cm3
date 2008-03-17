@@ -1388,6 +1388,7 @@ GenericCommand:
 
     for p in PackageDirectories:
         print("== package %(p)s ==" % vars())
+        print("")
         ExitCode = _Run(NoAction, ActionCommands, p)
         if ExitCode != 0:
             Success = False
