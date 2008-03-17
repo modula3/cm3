@@ -532,7 +532,7 @@ PROCEDURE Val_C(n: INTEGER;
     VAR (*out*) er: M3AST_SM.Exp_value): M3CBackEnd.NumStatus RAISES {}=
   BEGIN
     (* ORD(n) = n for all types *)
-    TYPECASE ts OF <*NOWARN*>
+    TYPECASE ts OF
     | M3AST_AS.Longint_type =>
         er := M3CBackEnd_Int_Longint.New_value(VAL(n, LONGINT));
     ELSE
