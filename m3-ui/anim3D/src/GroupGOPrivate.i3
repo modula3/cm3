@@ -12,8 +12,8 @@ IMPORT GO;
 
 FROM GroupGO IMPORT T, Public;
 
-REVEAL 
-  T <: Private; 
+REVEAL
+  T <: Private;
 
 TYPE
   Private = Public BRANDED OBJECT

@@ -14,7 +14,7 @@ FROM Prop IMPORT T, Name, Val, BadMethod;
 
 REVEAL T <: PrivateT;
 
-TYPE 
+TYPE
   PrivateT = ProxiedObj.T OBJECT
     n : Name;
     v : Val;
@@ -25,12 +25,12 @@ TYPE
 
 (* "p.adjust(time)" reevaluates the value of the property based on the given
    time. If the property value got damaged since the last adjustment, the
-   property name is called upon to perform the appropriate damages to the 
+   property name is called upon to perform the appropriate damages to the
    caller and/or its descendants. *)
 
 REVEAL Name <: PrivateName;
 
-TYPE 
+TYPE
   PrivateName = ProxiedObj.T OBJECT
     id : INTEGER;
   METHODS
@@ -49,7 +49,7 @@ TYPE
    Subclasses of "Name" can override the "damage" method to perform the
    appropriate damages to "caller" and/or its descendants. *)
 
-REVEAL 
+REVEAL
   Val <: PrivateVal;
 
 TYPE
@@ -57,19 +57,19 @@ TYPE
     time    : LONGREAL;    (* Subclasses cache value at time "time".         *)
     damaged : BOOLEAN;     (* Did the value change since the last rendering? *)
   METHODS
-    adjust (time : LONGREAL) : BOOLEAN 
+    adjust (time : LONGREAL) : BOOLEAN
         RAISES {BadMethod};
   END;
 
-(* "pv.adjust(now)" does two things: it updates the cached information 
+(* "pv.adjust(now)" does two things: it updates the cached information
    (time, value, and damage since last rendering cycle), and it returns
-   if the property value is damaged, i.e. if it has changed since the last 
-   rendering. Note that this technique relied on the fact that there is 
-   a single, system-wide animation server, and that all roots get redrawn 
+   if the property value is damaged, i.e. if it has changed since the last
+   rendering. Note that this technique relied on the fact that there is
+   a single, system-wide animation server, and that all roots get redrawn
    at the same time. *)
 
 
-TYPE 
+TYPE
   Stack <: ROOT;
 
 

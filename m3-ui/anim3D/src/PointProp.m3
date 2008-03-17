@@ -8,8 +8,8 @@
 
 MODULE PointProp EXPORTS PointProp, PointPropPrivate, PointPropProxy;
 
-IMPORT Anim3D, AnimHandle, AnimHandlePrivate, AnimRequestQueue, 
-       AnimRequestQueuePrivate, AnimServer, GraphicsBase, 
+IMPORT Anim3D, AnimHandle, AnimHandlePrivate, AnimRequestQueue,
+       AnimRequestQueuePrivate, AnimServer, GraphicsBase,
        GraphicsBasePrivate, Point3, Prop, PropPrivate;
 
 (*****************************************************************************)
@@ -86,9 +86,9 @@ PROCEDURE GetState (self : Name; state : GraphicsBase.T) : Base =
 (* Type "Val"                                                                *)
 (*****************************************************************************)
 
-REVEAL 
+REVEAL
   Val = PrivateVal BRANDED OBJECT
-  OVERRIDES 
+  OVERRIDES
     init     := InitVal;
     get      := GetVal;
     value    := ValueVal;
@@ -143,8 +143,8 @@ PROCEDURE AdjustVal (self : Val; time : LONGREAL) : BOOLEAN
 (* Type "Beh"                                                                *)
 (*****************************************************************************)
 
-REVEAL 
-  Beh = PrivateBeh BRANDED OBJECT 
+REVEAL
+  Beh = PrivateBeh BRANDED OBJECT
   OVERRIDES
     init := InitBeh;
   END;
@@ -187,7 +187,7 @@ PROCEDURE SetConstBeh (self : ConstBeh; p : Base) =
   END SetConstBeh;
 
 
-PROCEDURE ValueConstBeh (             self : ConstBeh; 
+PROCEDURE ValueConstBeh (             self : ConstBeh;
                          <* UNUSED *> time : LONGREAL) : Base =
   BEGIN
     RETURN self.p;
@@ -223,14 +223,14 @@ PROCEDURE InitAsyncBeh (self : AsyncBeh) : AsyncBeh =
   END InitAsyncBeh;
 
 
-PROCEDURE ValueAsyncBeh (self : AsyncBeh; time : LONGREAL) : Base 
+PROCEDURE ValueAsyncBeh (self : AsyncBeh; time : LONGREAL) : Base
     RAISES {Prop.BadMethod} =
   BEGIN
     RETURN self.compute (time);
   END ValueAsyncBeh;
 
 
-PROCEDURE ComputeAsyncBeh (self : AsyncBeh; time : LONGREAL) : Base 
+PROCEDURE ComputeAsyncBeh (self : AsyncBeh; time : LONGREAL) : Base
     RAISES {Prop.BadMethod} =
   BEGIN
     IF self.proxy # NIL THEN
@@ -239,7 +239,7 @@ PROCEDURE ComputeAsyncBeh (self : AsyncBeh; time : LONGREAL) : Base
       RAISE Prop.BadMethod("PointProp.AsyncBeh.compute method is undefined");
     END;
   END ComputeAsyncBeh;
-    
+
 
 PROCEDURE NewAsync (b : AsyncBeh) : Val =
   BEGIN
@@ -272,12 +272,12 @@ PROCEDURE InitDepBeh (self : DepBeh) : DepBeh =
   END InitDepBeh;
 
 
-PROCEDURE ValueDepBeh (self : DepBeh; time : LONGREAL) : Base 
+PROCEDURE ValueDepBeh (self : DepBeh; time : LONGREAL) : Base
     RAISES {Prop.BadMethod} =
   BEGIN
-    (* "hot" is set to true while the value of the behavior is computed. 
-       So, if "hot" is currently true, we have cyclic dependencies. 
-       If unchecked, this would lead to an infinite recursion. 
+    (* "hot" is set to true while the value of the behavior is computed.
+       So, if "hot" is currently true, we have cyclic dependencies.
+       If unchecked, this would lead to an infinite recursion.
        We raise an exception instead. *)
     IF self.hot THEN
       RAISE Prop.BadMethod("PointProp.DepBeh occurs in a dependency cycle");
@@ -292,7 +292,7 @@ PROCEDURE ValueDepBeh (self : DepBeh; time : LONGREAL) : Base
   END ValueDepBeh;
 
 
-PROCEDURE ComputeDepBeh (self : DepBeh; time : LONGREAL) : Base 
+PROCEDURE ComputeDepBeh (self : DepBeh; time : LONGREAL) : Base
     RAISES {Prop.BadMethod} =
   BEGIN
     IF self.proxy # NIL THEN
@@ -313,7 +313,7 @@ PROCEDURE NewDep (b : DepBeh) : Val =
 (* Type "SyncBeh"                                                            *)
 (*****************************************************************************)
 
-REVEAL 
+REVEAL
   SyncBeh = PublicSyncBeh BRANDED OBJECT
     queue : MyAnimRequestQueue;
   OVERRIDES
@@ -325,9 +325,9 @@ REVEAL
   END;
 
 
-PROCEDURE InitSyncBeh (self : SyncBeh; 
+PROCEDURE InitSyncBeh (self : SyncBeh;
                        ah   : AnimHandle.T;
-                       p    : Base) : SyncBeh = 
+                       p    : Base) : SyncBeh =
   BEGIN
     EVAL Beh.init (self);
     self.queue := NEW (MyAnimRequestQueue).init (ah, p);
@@ -339,7 +339,7 @@ PROCEDURE InitSyncBeh (self : SyncBeh;
   END InitSyncBeh;
 
 
-PROCEDURE ValueSyncBeh (self : SyncBeh; time : LONGREAL) : Base 
+PROCEDURE ValueSyncBeh (self : SyncBeh; time : LONGREAL) : Base
     RAISES {Prop.BadMethod} =
   BEGIN
     RETURN self.queue.value (time);
@@ -352,14 +352,14 @@ PROCEDURE AddRequest (self : SyncBeh; r : Request) RAISES {Prop.BadInterval} =
   END AddRequest;
 
 
-PROCEDURE LinMoveTo (self : SyncBeh; p : Base; start : REAL; dur : REAL) 
+PROCEDURE LinMoveTo (self : SyncBeh; p : Base; start : REAL; dur : REAL)
     RAISES {Prop.BadInterval} =
   BEGIN
     self.queue.insert (NEW (LinMoveToReq).init (start, dur, p));
   END LinMoveTo;
 
 
-PROCEDURE LinMoveBy (self : SyncBeh; p : Base; start : REAL; dur : REAL) 
+PROCEDURE LinMoveBy (self : SyncBeh; p : Base; start : REAL; dur : REAL)
     RAISES {Prop.BadInterval} =
   BEGIN
     self.queue.insert (NEW (LinMoveByReq).init (start, dur, p));
@@ -372,7 +372,7 @@ PROCEDURE NewSync (ah : AnimHandle.T; p : Base) : Val =
   END NewSync;
 
 
-PROCEDURE BecomeSync (ah : AnimHandle.T; pv : Val) : SyncBeh 
+PROCEDURE BecomeSync (ah : AnimHandle.T; pv : Val) : SyncBeh
     RAISES {Prop.BadMethod} =
   BEGIN
     WITH beh = NEW (SyncBeh).init (ah, pv.get()) DO
@@ -387,8 +387,8 @@ PROCEDURE BecomeSync (ah : AnimHandle.T; pv : Val) : SyncBeh
 (*****************************************************************************)
 
 
-REVEAL 
-  Request = PublicRequest BRANDED OBJECT 
+REVEAL
+  Request = PublicRequest BRANDED OBJECT
   OVERRIDES
     init  := InitRequest;
     value := ValueRequest;
@@ -405,8 +405,8 @@ PROCEDURE InitRequest (self : Request; start, dur : REAL) : Request =
   END InitRequest;
 
 
-PROCEDURE ValueRequest (self     : Request; 
-                        startval : Base; 
+PROCEDURE ValueRequest (self     : Request;
+                        startval : Base;
                         reltime  : REAL) : Base RAISES {Prop.BadMethod} =
   BEGIN
     IF self.proxy # NIL THEN
@@ -417,17 +417,17 @@ PROCEDURE ValueRequest (self     : Request;
   END ValueRequest;
 
 
-TYPE 
+TYPE
   LinMoveToReq = Request BRANDED OBJECT
     p : Base;
   METHODS
     init (start, dur : REAL; val : Base) : LinMoveToReq := LinMoveToInit;
-  OVERRIDES 
+  OVERRIDES
     value := LinMoveToValue;
   END;
 
 
-PROCEDURE LinMoveToInit (self       : LinMoveToReq; 
+PROCEDURE LinMoveToInit (self       : LinMoveToReq;
                          start, dur : REAL;
                          val        : Base) : LinMoveToReq =
   BEGIN
@@ -437,8 +437,8 @@ PROCEDURE LinMoveToInit (self       : LinMoveToReq;
   END LinMoveToInit;
 
 
-PROCEDURE LinMoveToValue (self       : LinMoveToReq; 
-                          startpoint : Base; 
+PROCEDURE LinMoveToValue (self       : LinMoveToReq;
+                          startpoint : Base;
                           reltime    : REAL) : Base =
   VAR
     fraction : REAL;
@@ -448,23 +448,23 @@ PROCEDURE LinMoveToValue (self       : LinMoveToReq;
     ELSE
       fraction := 1.0;
     END;
-    RETURN Point3.Plus (startpoint, 
+    RETURN Point3.Plus (startpoint,
                         Point3.TimesScalar (Point3.Minus (self.p, startpoint),
                                             fraction));
   END LinMoveToValue;
 
 
-TYPE 
+TYPE
   LinMoveByReq = Request BRANDED OBJECT
     p : Base;
   METHODS
     init (start, dur : REAL; val : Base) : LinMoveByReq := LinMoveByInit;
-  OVERRIDES 
+  OVERRIDES
     value := LinMoveByValue;
   END;
 
 
-PROCEDURE LinMoveByInit (self       : LinMoveByReq; 
+PROCEDURE LinMoveByInit (self       : LinMoveByReq;
                          start, dur : REAL;
                          val        : Base) : LinMoveByReq =
   BEGIN
@@ -474,8 +474,8 @@ PROCEDURE LinMoveByInit (self       : LinMoveByReq;
   END LinMoveByInit;
 
 
-PROCEDURE LinMoveByValue (self       : LinMoveByReq; 
-                          startpoint : Base; 
+PROCEDURE LinMoveByValue (self       : LinMoveByReq;
+                          startpoint : Base;
                           reltime    : REAL) : Base =
   VAR
     fraction : REAL;
@@ -494,20 +494,20 @@ PROCEDURE LinMoveByValue (self       : LinMoveByReq;
 (*****************************************************************************)
 
 
-TYPE 
+TYPE
   MyAnimRequestQueue = AnimRequestQueue.T BRANDED OBJECT
     p : Base;  (* The initial value of the pv *)
   METHODS
-    init (ah : AnimHandle.T; p : Base) : MyAnimRequestQueue 
+    init (ah : AnimHandle.T; p : Base) : MyAnimRequestQueue
       := MyAnimRequestQueue_Init;
-    value (time : LONGREAL) : Base RAISES {Prop.BadMethod} 
+    value (time : LONGREAL) : Base RAISES {Prop.BadMethod}
       := MyAnimRequestQueue_Value;
   OVERRIDES
     flush := MyAnimRequestQueue_Flush;
   END;
 
 
-PROCEDURE MyAnimRequestQueue_Init (self : MyAnimRequestQueue; 
+PROCEDURE MyAnimRequestQueue_Init (self : MyAnimRequestQueue;
                                    ah   : AnimHandle.T;
                                    p    : Base) : MyAnimRequestQueue =
   BEGIN
@@ -517,9 +517,9 @@ PROCEDURE MyAnimRequestQueue_Init (self : MyAnimRequestQueue;
   END MyAnimRequestQueue_Init;
 
 
-PROCEDURE MyAnimRequestQueue_Value (self : MyAnimRequestQueue; 
-                                    time : LONGREAL) : Base 
-    RAISES {Prop.BadMethod} = 
+PROCEDURE MyAnimRequestQueue_Value (self : MyAnimRequestQueue;
+                                    time : LONGREAL) : Base
+    RAISES {Prop.BadMethod} =
   VAR
     l       := self.list;
     req     : Request;
@@ -607,7 +607,7 @@ PROCEDURE PopStack (self : Stack) : Base =
     DEC (self.cnt);
     self.top := self.vals[self.cnt];
     RETURN self.top;
-  END PopStack;    
+  END PopStack;
 
 
 BEGIN

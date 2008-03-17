@@ -21,7 +21,7 @@ TYPE
   END;
 
 (* "box.init()"  initializes a new parallelopiped "box" and returns it.
-   The sides of the parallelopiped are axis-aligned, its corners are 
+   The sides of the parallelopiped are axis-aligned, its corners are
    determined by the "Corner1" and "Corner2" properties. *)
 
 VAR
@@ -29,12 +29,12 @@ VAR
   Corner2 : PointProp.Name;
 
 (* In addition to the properties observed by all \type{GO}{T}'s and
-   \type{SurfaceGO}{T}'s, there are two additional properties that 
+   \type{SurfaceGO}{T}'s, there are two additional properties that
    are observed by "BoxGO.T"'s:
 
-   "Corner1" and "Corner2" are the names of two point properties that 
-   describe the two cornerpoints of the box. They associate with 
-   \type{PointProp}{Val}s. If they are not specified, (0,0,0) and (1,1,1) 
+   "Corner1" and "Corner2" are the names of two point properties that
+   describe the two cornerpoints of the box. They associate with
+   \type{PointProp}{Val}s. If they are not specified, (0,0,0) and (1,1,1)
    are used as cornerpoints. *)
 
 PROCEDURE New (a, b : Point3.T) : T;
@@ -47,8 +47,8 @@ PROCEDURE New (a, b : Point3.T) : T;
 *)
 
 
-(* The following two procedures provide sugaring to attach "Corner1" and 
-   "Corner2" properties with non-animated property values to geometric 
+(* The following two procedures provide sugaring to attach "Corner1" and
+   "Corner2" properties with non-animated property values to geometric
    objects: *)
 
 PROCEDURE SetCorner1 (o : GO.T; p : Point3.T);

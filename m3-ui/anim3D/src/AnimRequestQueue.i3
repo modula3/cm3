@@ -10,10 +10,10 @@ INTERFACE AnimRequestQueue;
 
 IMPORT AnimHandle, Prop;
 
-TYPE 
+TYPE
   T <: Public;
   Public = OBJECT
-  METHODS 
+  METHODS
     init (ah : AnimHandle.T) : T;
     insert (req : Prop.Request) RAISES {Prop.BadInterval};
     duration () : REAL;

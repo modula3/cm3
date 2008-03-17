@@ -10,10 +10,10 @@ INTERFACE TorusGOProxy;
 
 FROM TorusGO IMPORT T;
 
-(* The Proxy Maker (PM) procedure for TorusGO.T is 
+(* The Proxy Maker (PM) procedure for TorusGO.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END TorusGOProxy.

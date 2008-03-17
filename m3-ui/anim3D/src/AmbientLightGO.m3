@@ -8,7 +8,7 @@
 
 MODULE AmbientLightGO EXPORTS AmbientLightGO, AmbientLightGOProxy;
 
-IMPORT BooleanPropPrivate, Color, ColorPropPrivate, GO, GOPrivate, 
+IMPORT BooleanPropPrivate, Color, ColorPropPrivate, GO, GOPrivate,
        GraphicsBase, GraphicsBasePrivate, LightGO, Prop;
 
 

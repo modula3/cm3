@@ -7,23 +7,23 @@
 
 (* Limitations:
 
-     drawPolygon, drawQuadMesh, drawColoredQuadMesh methods: 
+     drawPolygon, drawQuadMesh, drawColoredQuadMesh methods:
          surface edges have slight artifacts
 
-     drawMarker method: 
+     drawMarker method:
          marker types are ignored; markers are drawn as dots
 
      setDistinguishFacetsFlag method:
          not implemented
 
-     pushMatrix, popMatrix methods: 
-         I use the native OpenGL matrix stack, which allows only for a fixed 
-         number of matrices to be pushed. This number is guaranteed to be at 
-         least 32. 
+     pushMatrix, popMatrix methods:
+         I use the native OpenGL matrix stack, which allows only for a fixed
+         number of matrices to be pushed. This number is guaranteed to be at
+         least 32.
 
-     setDepthCueing method: 
-         The arguments "frontScale" and "backScale" are ignored, since OpenGL 
-         does not have the concept of a fog scaling factor. 
+     setDepthCueing method:
+         The arguments "frontScale" and "backScale" are ignored, since OpenGL
+         does not have the concept of a fog scaling factor.
 
    Bugs:
 
@@ -34,12 +34,12 @@
 
 UNSAFE MODULE Win_OpenGL_Base EXPORTS Win_OpenGL_Base, Win_OpenGL_BaseProxy;
 
-IMPORT AuxG, AnimServer, Color, ColorPropPrivate, Ctypes, GL, GLu, GO, 
-       GOPrivate, GraphicsBase, GraphicsBasePrivate, IntIntTbl, IntRefTbl, 
-       KeyCB, KeyboardKey, Latin1Key, LineTypeProp, M3toC, MarkerGO, 
-       MarkerTypeProp, MarkerTypePropPrivate, Math, Matrix4, MouseCB, Mth, 
-       ParseParams, Point, Point3, PositionCB, PropPrivate, RTLinker, 
-       RasterModeProp, RealPropPrivate, RootGOPrivate, ShadingProp, Stdio, 
+IMPORT AuxG, AnimServer, Color, ColorPropPrivate, Ctypes, GL, GLu, GO,
+       GOPrivate, GraphicsBase, GraphicsBasePrivate, IntIntTbl, IntRefTbl,
+       KeyCB, KeyboardKey, Latin1Key, LineTypeProp, M3toC, MarkerGO,
+       MarkerTypeProp, MarkerTypePropPrivate, Math, Matrix4, MouseCB, Mth,
+       ParseParams, Point, Point3, PositionCB, PropPrivate, RTLinker,
+       RasterModeProp, RealPropPrivate, RootGOPrivate, ShadingProp, Stdio,
        SurfaceGO, Thread, VBT, WinDef, WinGDI, WinUser, Word;
 
 IMPORT IO, Fmt;
@@ -206,14 +206,14 @@ CONST
   False = 0;  <*NOWARN*>
   True  = 1;
 
-CONST 
+CONST
   Solid   = 2_1111111111111111;
   Dashed  = 2_1111000011110000;
   Dotted  = 2_1010101010101010;
   DashDot = 2_1110010011100100;
 
 
-PROCEDURE Init (self: T; title: TEXT; x, y, w, h: INTEGER): T 
+PROCEDURE Init (self: T; title: TEXT; x, y, w, h: INTEGER): T
     RAISES {GraphicsBase.Failure} =
   VAR
   BEGIN
@@ -243,7 +243,7 @@ PROCEDURE Init (self: T; title: TEXT; x, y, w, h: INTEGER): T
     (* Initialize the state variables *)
     self.setSpecularReflConc (
         SurfaceGO.SpecularReflectionConc.getState (self));
-         
+
     self.setMarkerColor (MarkerGO.Colour.getState (self));
     self.setMarkerScale (MarkerGO.Scale.getState (self));
     self.setMarkerType  (MarkerGO.Type.getState (self));
@@ -315,7 +315,7 @@ PROCEDURE Unmap (self : T) =
     status := WinGDI.wglDeleteContext (self.hglrc);
     <* ASSERT status = True *>
 
-    (* Windows can be destroyed only by the thread that created them. 
+    (* Windows can be destroyed only by the thread that created them.
        So, ask the "window thread" to destroy "self.hwnd". *)
     EVAL WinUser.SendMessage(self.hwnd, WM_INITIATE_DESTROY, 0, 0);
 
@@ -328,12 +328,12 @@ PROCEDURE Unmap (self : T) =
 
 PROCEDURE Available () : BOOLEAN =
   BEGIN
-    (* This procedure is supposed to determine whether OpenGL is available. 
+    (* This procedure is supposed to determine whether OpenGL is available.
        This is straightforward under X (use "glXQueryExtension"), but it's not
        clear how it should be done under Windows.  The Microsoft documentation
        suggests to use "GetVersion", but does not say which versions of Windows
-       support OpenGL.  I assume that OpenGL is supported if OPENGL32.DLL is 
-       around. If OPENGL32.DLL is not around, the application will fail upon 
+       support OpenGL.  I assume that OpenGL is supported if OPENGL32.DLL is
+       around. If OPENGL32.DLL is not around, the application will fail upon
        startup. So, I simply cross my fingers and return TRUE. *)
 
     RETURN TRUE;
@@ -404,10 +404,10 @@ PROCEDURE AddVectorLight (self: T; color: Color.T; d: Point3.T) =
         GL.glLightfv (l, GL.GL_POSITION, ADR (pos));
 
         (* Since this is a directional light source, attenuation is disabled,
-           so we don't need to specify "GL_CONSTANT_ATTENUATION", 
-           "GL_LINEAR_ATTENUATION", and "GL_QUADRATIC_ATTENUATION".  On the 
-           other hand, we have to specify "GL_SPOT_CUTOFF" and 
-           "GL_SPOT_EXPONENT", since OpenGL allows for directional spotlights 
+           so we don't need to specify "GL_CONSTANT_ATTENUATION",
+           "GL_LINEAR_ATTENUATION", and "GL_QUADRATIC_ATTENUATION".  On the
+           other hand, we have to specify "GL_SPOT_CUTOFF" and
+           "GL_SPOT_EXPONENT", since OpenGL allows for directional spotlights
            (with their effect being undefined). We initialize them for uniform
            light distribution. Since "GL_SPOT_CUTOFF" is 180 degrees, we don't
            need to specify "GL_SPOT_DIRECTION". *)
@@ -421,9 +421,9 @@ PROCEDURE AddVectorLight (self: T; color: Color.T; d: Point3.T) =
   END AddVectorLight;
 
 
-PROCEDURE AddPointLight (self      : T; 
-                         color     : Color.T; 
-                         p         : Point3.T; 
+PROCEDURE AddPointLight (self      : T;
+                         color     : Color.T;
+                         p         : Point3.T;
                          att0, att1: REAL) =
   VAR
     pos := GLpoint4f {p.x, p.y, p.z, 1.0};
@@ -453,7 +453,7 @@ PROCEDURE AddPointLight (self      : T;
   END AddPointLight;
 
 
-PROCEDURE AddSpotLight (self: T; color: Color.T; p, d: Point3.T; 
+PROCEDURE AddSpotLight (self: T; color: Color.T; p, d: Point3.T;
                         conc, spread, att0, att1: REAL) =
   VAR
     pos := GLpoint4f {p.x, p.y, p.z, 1.0};
@@ -535,7 +535,7 @@ PROCEDURE OpenDisplayList (self : T; go : GO.T) =
         <* ASSERT dl # 0 *>
         EVAL self.dlTable.put (go.dl, dl);
       END;
-    
+
       (*** Open the OpenGL display list ***)
       GL.glNewList (dl, GL.GL_COMPILE);
     END;
@@ -605,18 +605,18 @@ PROCEDURE PopMatrix (<*UNUSED*> self : T) =
 
 PROCEDURE FromMatrix4 (READONLY M: Matrix4.T): GLmatrixf =
   BEGIN
-    RETURN GLmatrixf {M[0][0], M[1][0], M[2][0], M[3][0], 
-                      M[0][1], M[1][1], M[2][1], M[3][1], 
-                      M[0][2], M[1][2], M[2][2], M[3][2], 
+    RETURN GLmatrixf {M[0][0], M[1][0], M[2][0], M[3][0],
+                      M[0][1], M[1][1], M[2][1], M[3][1],
+                      M[0][2], M[1][2], M[2][2], M[3][2],
                       M[0][3], M[1][3], M[2][3], M[3][3]};
   END FromMatrix4;
 
 
 PROCEDURE ToMatrix4 (READONLY M: GLmatrixf): Matrix4.T =
   BEGIN
-    RETURN Matrix4.T {Matrix4.Row {M[0], M[4], M[ 8], M[12]}, 
-                      Matrix4.Row {M[1], M[5], M[ 9], M[13]}, 
-                      Matrix4.Row {M[2], M[6], M[10], M[14]}, 
+    RETURN Matrix4.T {Matrix4.Row {M[0], M[4], M[ 8], M[12]},
+                      Matrix4.Row {M[1], M[5], M[ 9], M[13]},
+                      Matrix4.Row {M[2], M[6], M[10], M[14]},
                       Matrix4.Row {M[3], M[7], M[11], M[15]}};
   END ToMatrix4;
 
@@ -641,15 +641,15 @@ PROCEDURE SetupCamera (self: T) =
                    FLOAT (self.up.z,   LONGREAL));
 
     GL.glGetFloatv (GL.GL_MODELVIEW_MATRIX, ADR (V[0]));
-    
+
     WITH bs = self.getBoundingVolume(),
          M = ToMatrix4 (V),
          center = Point3.T {
-                      M[0][0] * bs.center.x + M[0][1] * bs.center.y + 
+                      M[0][0] * bs.center.x + M[0][1] * bs.center.y +
                       M[0][2] * bs.center.z + M[0][3],
-                      M[1][0] * bs.center.x + M[1][1] * bs.center.y + 
+                      M[1][0] * bs.center.x + M[1][1] * bs.center.y +
                       M[1][2] * bs.center.z + M[1][3],
-                      M[2][0] * bs.center.x + M[2][1] * bs.center.y + 
+                      M[2][0] * bs.center.x + M[2][1] * bs.center.y +
                       M[2][2] * bs.center.z + M[2][3]},
          radius = bs.radius * Mth.sqrt (M[0][0] * M[0][0] +
                                         M[1][0] * M[1][0] +
@@ -659,21 +659,21 @@ PROCEDURE SetupCamera (self: T) =
     END;
 
     GL.glMatrixMode (GL.GL_PROJECTION);
-    GL.glLoadIdentity (); 
+    GL.glLoadIdentity ();
 
     WITH aspect = self.aspect * FLOAT(self.winWidth) / FLOAT(self.winHeight) DO
       CASE self.projType OF
       | ProjType.Persp =>
-        GLu.gluPerspective (FLOAT (self.fovy, LONGREAL) / Math.Degree, 
-                            FLOAT (aspect, LONGREAL), 
-                            FLOAT (self.near, LONGREAL), 
+        GLu.gluPerspective (FLOAT (self.fovy, LONGREAL) / Math.Degree,
+                            FLOAT (aspect, LONGREAL),
+                            FLOAT (self.near, LONGREAL),
                             FLOAT (self.far, LONGREAL));
       | ProjType.Ortho =>
-        GL.glOrtho (FLOAT (-self.height * aspect * 0.5, LONGREAL), 
-                    FLOAT ( self.height * aspect * 0.5, LONGREAL), 
-                    FLOAT (-self.height          * 0.5, LONGREAL), 
-                    FLOAT ( self.height          * 0.5, LONGREAL), 
-                    FLOAT (self.near, LONGREAL), 
+        GL.glOrtho (FLOAT (-self.height * aspect * 0.5, LONGREAL),
+                    FLOAT ( self.height * aspect * 0.5, LONGREAL),
+                    FLOAT (-self.height          * 0.5, LONGREAL),
+                    FLOAT ( self.height          * 0.5, LONGREAL),
+                    FLOAT (self.near, LONGREAL),
                     FLOAT (self.far, LONGREAL));
       END;
     END;
@@ -700,7 +700,7 @@ PROCEDURE ScreenToWorld (self: T; pos: Point.T; zpos: REAL): Point3.T =
     WITH x = FLOAT (pos.h, LONGREAL),
          y = FLOAT (self.winHeight - 1 - pos.v, LONGREAL),
          z = FLOAT (zpos, LONGREAL) DO
-      status := GLu.gluUnProject (x, y, z, 
+      status := GLu.gluUnProject (x, y, z,
                                   ADR (modelMatrix[0]),
                                   ADR (projMatrix[0]),
                                   ADR (viewPort[0]),
@@ -724,7 +724,7 @@ PROCEDURE SetDepthcueing (           self       : T;
                                      switch     : BOOLEAN;
                                      frontPlane : REAL;
                                      backPlane  : REAL;
-                          <*UNUSED*> frontScale : REAL; 
+                          <*UNUSED*> frontScale : REAL;
                           <*UNUSED*> backScale  : REAL;
                                      color      : Color.T) =
   VAR
@@ -740,8 +740,8 @@ PROCEDURE SetDepthcueing (           self       : T;
           GL.glFogf (GL.GL_FOG_END, end);
           GL.glFogfv (GL.GL_FOG_COLOR, ADR (rgba));
           (* OpenGL does not have the concept of fog scaling factors. Hence,
-             we have to ignore "frontScale" and "backScale". Conversely, 
-             we don't need to specify values for "GL.GL_FOG_INDEX", as we are 
+             we have to ignore "frontScale" and "backScale". Conversely,
+             we don't need to specify values for "GL.GL_FOG_INDEX", as we are
              in RGBA mode, and for "GL.GL_FOG_DENSITY", since we use the
              linear fog equation. *)
         END;
@@ -811,7 +811,7 @@ PROCEDURE SetRasterMode (self : T; val : RasterModeProp.Kind) =
   END SetRasterMode;
 
 
-PROCEDURE SetDistinguishFacetsFlag (<*UNUSED*> self : T; 
+PROCEDURE SetDistinguishFacetsFlag (<*UNUSED*> self : T;
                                     <*UNUSED*> val : BOOLEAN) =
   BEGIN
     IO.Put ("### SetDistinguishFacetsFlag not implemented \n");
@@ -888,8 +888,8 @@ PROCEDURE SetSpecularReflCoeff (self : T; val : REAL) =
 PROCEDURE SetSpecularReflConc (self : T; val : REAL) =
   BEGIN
     (* I try to make the "GL_SHININESS" value to look as much as possible like
-       the "specularConc" component for "PEXSetReflectionAttributes". 
-       This formula is taken essentially out of thin air, but seems to produce 
+       the "specularConc" component for "PEXSetReflectionAttributes".
+       This formula is taken essentially out of thin air, but seems to produce
        reasonably similar images. *)
     self.specularReflConc := MIN (MAX (val * 2.0 + 4.0, 0.0), 128.0);
   END SetSpecularReflConc;
@@ -949,11 +949,11 @@ PROCEDURE DrawLine (self: T; p1, p2: Point3.T) =
   END DrawLine;
 
 
-PROCEDURE DrawPolygon (self         : T; 
-                       READONLY pts : ARRAY OF Point3.T; 
-                       shape        : GO.Shape) = 
+PROCEDURE DrawPolygon (self         : T;
+                       READONLY pts : ARRAY OF Point3.T;
+                       shape        : GO.Shape) =
 
-  PROCEDURE DrawHollowPolygon () = 
+  PROCEDURE DrawHollowPolygon () =
     BEGIN
       (*** Draw a line-loop around the contour of the polygon ***)
       GL.glBegin (GL.GL_LINE_LOOP);
@@ -969,13 +969,13 @@ PROCEDURE DrawPolygon (self         : T;
     BEGIN
       GL.glBegin (GL.GL_POLYGON);
 
-      (* If the polygon is non-degenerate, take the first 3 vertices, 
+      (* If the polygon is non-degenerate, take the first 3 vertices,
          compute the normal vector, and set it.  We don't scale the normal
          vector to unit length (presumably, OpenGL can do it more efficiently),
          and we cannot determine which side of the polygon is the "front". *)
 
       IF NUMBER (pts) >= 3 THEN
-        n := Point3.CrossProduct (Point3.Minus (pts[1], pts[0]), 
+        n := Point3.CrossProduct (Point3.Minus (pts[1], pts[0]),
                                   Point3.Minus (pts[2], pts[0]));
         GL.glNormal3fv (ADR (n));
       END;
@@ -992,11 +992,11 @@ PROCEDURE DrawPolygon (self         : T;
       WITH tess = GLu.gluNewTess () DO
         <* ASSERT tess # NIL *>
 
-        GLu.gluTessCallback (tess, GLu.GLU_BEGIN, 
+        GLu.gluTessCallback (tess, GLu.GLU_BEGIN,
                              LOOPHOLE (GL.glBegin, GLu.GLUtessAnyProc));
-        GLu.gluTessCallback (tess, GLu.GLU_VERTEX, 
+        GLu.gluTessCallback (tess, GLu.GLU_VERTEX,
                              LOOPHOLE (GL.glVertex3dv, GLu.GLUtessAnyProc));
-        GLu.gluTessCallback (tess, GLu.GLU_END, 
+        GLu.gluTessCallback (tess, GLu.GLU_END,
                              LOOPHOLE (GL.glEnd, GLu.GLUtessAnyProc));
 
         GLu.gluBeginPolygon (tess);
@@ -1030,19 +1030,19 @@ PROCEDURE DrawPolygon (self         : T;
       GL.glClear (GL.GL_STENCIL_BUFFER_BIT);
 
       (* If the polygon is non-degenerate, take the first 3 vertices, and
-         compute the normal vector.  We don't scale the normal vector to unit 
+         compute the normal vector.  We don't scale the normal vector to unit
          length (presumably, OpenGL can do it more efficiently), and we cannot
          determine which side of the polygon is the "front". *)
 
       IF NUMBER (pts) >= 3 THEN
-        n := Point3.CrossProduct (Point3.Minus (pts[1], pts[0]), 
+        n := Point3.CrossProduct (Point3.Minus (pts[1], pts[0]),
                                   Point3.Minus (pts[2], pts[0]));
       END;
       (* (p2 - p0) x (p1 - p0)  ->  Lower side is dark *)
       (* (p1 - p0) x (p2 - p0)  ->  Upper side is dark *)
 
-      (*** Enable the stencil test. For each fragment of the triangles to 
-           come, invert the corresponding stencil buffer entry, but leave 
+      (*** Enable the stencil test. For each fragment of the triangles to
+           come, invert the corresponding stencil buffer entry, but leave
            the frame buffer entry unchanged. ***)
       GL.glStencilFunc (GL.GL_NEVER, 0, 0);
       GL.glStencilOp (GL.GL_INVERT, GL.GL_KEEP, GL.GL_KEEP);
@@ -1061,12 +1061,12 @@ PROCEDURE DrawPolygon (self         : T;
       GL.glStencilFunc (GL.GL_EQUAL, 1, 1);
       GL.glStencilOp (GL.GL_KEEP, GL.GL_KEEP, GL.GL_KEEP);
 
-      (* Draw series of triangles (affecting frame buffer). Note that we have 
+      (* Draw series of triangles (affecting frame buffer). Note that we have
          to specify a normal vector, and that OpenGL will invert the normal of
          polygons that are specified through clockwise vertices *)
       FOR i := 1 TO LAST (pts) - 1 DO
         GL.glBegin (GL.GL_TRIANGLES);
-        n := Point3.CrossProduct (Point3.Minus (pts[i],   pts[0]), 
+        n := Point3.CrossProduct (Point3.Minus (pts[i],   pts[0]),
                                   Point3.Minus (pts[i+1], pts[0]));
         GL.glNormal3fv (ADR (n));
         GL.glVertex3fv (ADR (pts[0]));
@@ -1081,7 +1081,7 @@ PROCEDURE DrawPolygon (self         : T;
     END DrawSolidComplexPolygon;
 
 
-  PROCEDURE DrawSolidPolygon () = 
+  PROCEDURE DrawSolidPolygon () =
     BEGIN
       CASE shape OF
       | GO.Shape.Convex    => DrawSolidConvexPolygon();
@@ -1118,8 +1118,8 @@ PROCEDURE DrawPolygon (self         : T;
   END DrawPolygon;
 
 
-PROCEDURE DrawQuadMesh (self         : T; 
-                        READONLY pts : ARRAY OF ARRAY OF Point3.T; 
+PROCEDURE DrawQuadMesh (self         : T;
+                        READONLY pts : ARRAY OF ARRAY OF Point3.T;
                         shape        : GO.Shape) =
 
   PROCEDURE DrawHollowQuadMesh () =
@@ -1185,9 +1185,9 @@ PROCEDURE DrawQuadMesh (self         : T;
       FOR i := 0 TO LAST (pts) - 1 DO
         WITH line1 = pts[i], line2 = pts[i+1] DO
           FOR j := 0 TO LAST(line1) - 1 DO
-            WITH quad = ARRAY OF Point3.T {line1[j], 
-                                           line2[j], 
-                                           line2[j+1], 
+            WITH quad = ARRAY OF Point3.T {line1[j],
+                                           line2[j],
+                                           line2[j+1],
                                            line1[j+1]} DO
               DrawPolygon (self, quad, shape);
             END;
@@ -1212,7 +1212,7 @@ PROCEDURE DrawQuadMesh (self         : T;
   END DrawQuadMesh;
 
 
-PROCEDURE DrawColoredQuadMesh (         self  : T; 
+PROCEDURE DrawColoredQuadMesh (         self  : T;
                                READONLY points: ARRAY OF ARRAY OF Point3.T;
                                READONLY colors: ARRAY OF ARRAY OF Color.T;
                                         shape : GO.Shape) =
@@ -1224,7 +1224,7 @@ PROCEDURE DrawColoredQuadMesh (         self  : T;
         rgba : GLrgba;
         n    : Point3.T;
       BEGIN
-        WITH x = MIN (i, LAST(colors)), 
+        WITH x = MIN (i, LAST(colors)),
              y = MIN (j, LAST(colors[x])),
              c = colors [x][y] DO
 
@@ -1256,7 +1256,7 @@ PROCEDURE DrawColoredQuadMesh (         self  : T;
           GL.glMaterialfv (GL.GL_FRONT_AND_BACK, GL.GL_SPECULAR, ADR (rgba));
 
           (*** Set the color -- no idea why I have to do it ... ***)
-          GL.glColor3fv (ADR (c)); 
+          GL.glColor3fv (ADR (c));
 
           (*** Emit the vertex ***)
           GL.glVertex3fv (ADR (points[i][j]));
@@ -1338,9 +1338,9 @@ PROCEDURE DrawColoredQuadMesh (         self  : T;
       FOR i := 0 TO LAST (points) - 1 DO
         WITH line1 = points[i], line2 = points[i+1] DO
           FOR j := 0 TO LAST(line1) - 1 DO
-            WITH quad = ARRAY OF Point3.T {line1[j], 
-                                           line2[j], 
-                                           line2[j+1], 
+            WITH quad = ARRAY OF Point3.T {line1[j],
+                                           line2[j],
+                                           line2[j+1],
                                            line1[j+1]} DO
               fc := self.frontColor;
               bc := self.backColor;
@@ -1373,20 +1373,20 @@ PROCEDURE SetSurfaceMaterial (self: T) =
     rgba : GLrgba;
   BEGIN
     IF self.transmission < 1.0 THEN
-      (* If the sphere is transparent, disable depth buffer writing (so 
-         transparent fragments won't mask out opaque ones behind them), 
+      (* If the sphere is transparent, disable depth buffer writing (so
+         transparent fragments won't mask out opaque ones behind them),
          enable blending, and set up the blending function *)
       GL.glDepthMask (GL.GL_FALSE);
       GL.glEnable (GL.GL_BLEND);
       GL.glBlendFunc (GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
     END;
 
-    (* We could keep track of the color value set by the last call to 
+    (* We could keep track of the color value set by the last call to
        "glColor", and call it only if there is a change.  For now, I use
        the conservative (aka brute force) approach -- always call it! *)
 
     (* If "GL_LIGHTING" is disabled, the color of a polygon is set through
-       "glColor"; otherwise, it is set through "glMaterial". It seems that 
+       "glColor"; otherwise, it is set through "glMaterial". It seems that
        "glColor" does not distinguish between front faces and back faces. *)
     GL.glColor3fv (ADR (self.frontColor));
 
@@ -1408,7 +1408,7 @@ PROCEDURE SetSurfaceMaterial (self: T) =
                     self.transmission};
     GL.glMaterialfv (GL.GL_FRONT_AND_BACK, GL.GL_SPECULAR, ADR (rgba));
 
-    GL.glMaterialf (GL.GL_FRONT_AND_BACK, GL.GL_SHININESS, 
+    GL.glMaterialf (GL.GL_FRONT_AND_BACK, GL.GL_SHININESS,
                     self.specularReflConc);
   END SetSurfaceMaterial;
 
@@ -1419,10 +1419,10 @@ PROCEDURE UnsetSurfaceMaterial (self: T) =
       GL.glDepthMask (GL.GL_TRUE);
       GL.glDisable (GL.GL_BLEND);
     END;
-  END UnsetSurfaceMaterial; 
+  END UnsetSurfaceMaterial;
 
 
-CONST 
+CONST
   NoList = 0;
 TYPE
   StructureList = REF RECORD
@@ -1438,11 +1438,11 @@ PROCEDURE DrawProtoSphere (self: T; prec: INTEGER) =
   TYPE Kind = {Line, Fill};
 
   PROCEDURE Draw (kind: Kind) =
-    VAR 
+    VAR
       list : StructureList := self.sphereStructures;
       prev : StructureList := NIL;
     BEGIN
-      (* Iterate over "list" until we find a cell with the right precision, 
+      (* Iterate over "list" until we find a cell with the right precision,
          or fall off the back of the list. *)
       WHILE list # NIL AND list.prec # prec DO
         prev := list;
@@ -1459,57 +1459,57 @@ PROCEDURE DrawProtoSphere (self: T; prec: INTEGER) =
         list.next := self.sphereStructures;
         self.sphereStructures := list;
       ELSIF prev # NIL THEN
-        (* Found in "self.sphereStructures" (not at head). 
+        (* Found in "self.sphereStructures" (not at head).
            Move cell to head. *)
         prev.next := list.next;
         list.next := self.sphereStructures;
         self.sphereStructures := list;
       END;
-      (* At this point, "list" is non-NIL, and point to a cell "c" such that 
-         "c.prec = prec". "c.fillId" and "c.lineId" contain either "NoList" 
+      (* At this point, "list" is non-NIL, and point to a cell "c" such that
+         "c.prec = prec". "c.fillId" and "c.lineId" contain either "NoList"
          or a valid display list. *)
 
       (* If we have the right display lists cached, call them and return. *)
-      CASE kind OF 
-      | Kind.Fill => 
+      CASE kind OF
+      | Kind.Fill =>
         IF list.fillId # NoList THEN
           GL.glCallList (list.fillId);
           RETURN;
         END;
-      | Kind.Line => 
+      | Kind.Line =>
         IF list.lineId # NoList THEN
           GL.glCallList (list.lineId);
           RETURN;
         END;
       END;
-  
+
       (* Did not find a matching sphere in the cache -- need to create one *)
       WITH dlid = GL.glGenLists (1) DO
-  
+
         IF dlid # NoList THEN
           GL.glNewList (dlid, GL.GL_COMPILE_AND_EXECUTE);
         END;
-  
+
         WITH quad = GLu.gluNewQuadric () DO
           <* ASSERT quad # NIL *>
 
           CASE kind OF
-          | Kind.Fill => 
+          | Kind.Fill =>
             GLu.gluQuadricDrawStyle (quad, GLu.GLU_FILL);
             GLu.gluSphere (quad, 1.0d0, prec, prec);
             list.fillId := dlid;
-          | Kind.Line => 
+          | Kind.Line =>
             GLu.gluQuadricDrawStyle (quad, GLu.GLU_LINE);
             GLu.gluSphere (quad, 1.005d0, prec, prec);     (* 0.5 % larger *)
             list.lineId := dlid;
           END;
 
         END;
-  
+
         IF dlid # NoList THEN
           GL.glEndList ();
         END;
-  
+
       END;
 
     END Draw;
@@ -1548,11 +1548,11 @@ PROCEDURE DrawProtoCone (self: T; prec: INTEGER) =
   TYPE Kind = {Line, Fill};
 
   PROCEDURE Draw (kind: Kind) =
-    VAR 
+    VAR
       list : StructureList := self.coneStructures;
       prev : StructureList := NIL;
     BEGIN
-      (* Iterate over "list" until we find a cell with the right precision, 
+      (* Iterate over "list" until we find a cell with the right precision,
          or fall off the back of the list. *)
       WHILE list # NIL AND list.prec # prec DO
         prev := list;
@@ -1569,57 +1569,57 @@ PROCEDURE DrawProtoCone (self: T; prec: INTEGER) =
         list.next := self.coneStructures;
         self.coneStructures := list;
       ELSIF prev # NIL THEN
-        (* Found in "self.coneStructures" (not at head). 
+        (* Found in "self.coneStructures" (not at head).
            Move cell to head. *)
         prev.next := list.next;
         list.next := self.coneStructures;
         self.coneStructures := list;
       END;
-      (* At this point, "list" is non-NIL, and point to a cell "c" such that 
-         "c.prec = prec". "c.fillId" and "c.lineId" contain either "NoList" 
+      (* At this point, "list" is non-NIL, and point to a cell "c" such that
+         "c.prec = prec". "c.fillId" and "c.lineId" contain either "NoList"
          or a valid display list. *)
 
       (* If we have the right display lists cached, call them and return. *)
-      CASE kind OF 
-      | Kind.Fill => 
+      CASE kind OF
+      | Kind.Fill =>
         IF list.fillId # NoList THEN
           GL.glCallList (list.fillId);
           RETURN;
         END;
-      | Kind.Line => 
+      | Kind.Line =>
         IF list.lineId # NoList THEN
           GL.glCallList (list.lineId);
           RETURN;
         END;
       END;
-  
+
       (* Did not find a matching cone in the cache -- need to create one *)
       WITH dlid = GL.glGenLists (1) DO
-  
+
         IF dlid # NoList THEN
           GL.glNewList (dlid, GL.GL_COMPILE_AND_EXECUTE);
         END;
-  
+
         WITH quad = GLu.gluNewQuadric () DO
           <* ASSERT quad # NIL *>
 
           CASE kind OF
-          | Kind.Fill => 
+          | Kind.Fill =>
             GLu.gluQuadricDrawStyle (quad, GLu.GLU_FILL);
             GLu.gluCylinder (quad, 1.0d0, 0.0d0, 1.0d0, prec, prec);
             list.fillId := dlid;
-          | Kind.Line => 
+          | Kind.Line =>
             GLu.gluQuadricDrawStyle (quad, GLu.GLU_LINE);
             GLu.gluCylinder (quad, 1.005d0, 0.0d0, 1.005d0, prec, prec);
             list.lineId := dlid;
           END;
 
         END;
-  
+
         IF dlid # NoList THEN
           GL.glEndList ();
         END;
-  
+
       END;
 
     END Draw;
@@ -1657,11 +1657,11 @@ PROCEDURE DrawProtoCylinder (self: T; prec: INTEGER) =
   TYPE Kind = {Line, Fill};
 
   PROCEDURE Draw (kind: Kind) =
-    VAR 
+    VAR
       list : StructureList := self.cylinderStructures;
       prev : StructureList := NIL;
     BEGIN
-      (* Iterate over "list" until we find a cell with the right precision, 
+      (* Iterate over "list" until we find a cell with the right precision,
          or fall off the back of the list. *)
       WHILE list # NIL AND list.prec # prec DO
         prev := list;
@@ -1678,57 +1678,57 @@ PROCEDURE DrawProtoCylinder (self: T; prec: INTEGER) =
         list.next := self.cylinderStructures;
         self.cylinderStructures := list;
       ELSIF prev # NIL THEN
-        (* Found in "self.cylinderStructures" (not at head). 
+        (* Found in "self.cylinderStructures" (not at head).
            Move cell to head. *)
         prev.next := list.next;
         list.next := self.cylinderStructures;
         self.cylinderStructures := list;
       END;
-      (* At this point, "list" is non-NIL, and point to a cell "c" such that 
-         "c.prec = prec". "c.fillId" and "c.lineId" contain either "NoList" 
+      (* At this point, "list" is non-NIL, and point to a cell "c" such that
+         "c.prec = prec". "c.fillId" and "c.lineId" contain either "NoList"
          or a valid display list. *)
 
       (* If we have the right display lists cached, call them and return. *)
-      CASE kind OF 
-      | Kind.Fill => 
+      CASE kind OF
+      | Kind.Fill =>
         IF list.fillId # NoList THEN
           GL.glCallList (list.fillId);
           RETURN;
         END;
-      | Kind.Line => 
+      | Kind.Line =>
         IF list.lineId # NoList THEN
           GL.glCallList (list.lineId);
           RETURN;
         END;
       END;
-  
+
       (* Did not find a matching cylinder in the cache -- need to create one *)
       WITH dlid = GL.glGenLists (1) DO
-  
+
         IF dlid # NoList THEN
           GL.glNewList (dlid, GL.GL_COMPILE_AND_EXECUTE);
         END;
-  
+
         WITH quad = GLu.gluNewQuadric () DO
           <* ASSERT quad # NIL *>
 
           CASE kind OF
-          | Kind.Fill => 
+          | Kind.Fill =>
             GLu.gluQuadricDrawStyle (quad, GLu.GLU_FILL);
             GLu.gluCylinder (quad, 1.0d0, 1.0d0, 1.0d0, prec, prec);
             list.fillId := dlid;
-          | Kind.Line => 
+          | Kind.Line =>
             GLu.gluQuadricDrawStyle (quad, GLu.GLU_LINE);
             GLu.gluCylinder (quad, 1.005d0, 1.005d0, 1.0d0, prec, prec);
             list.lineId := dlid;
           END;
 
         END;
-  
+
         IF dlid # NoList THEN
           GL.glEndList ();
         END;
-  
+
       END;
 
     END Draw;
@@ -1766,11 +1766,11 @@ PROCEDURE DrawProtoDisk (self: T; prec: INTEGER) =
   TYPE Kind = {Line, Fill};
 
   PROCEDURE Draw (kind: Kind) =
-    VAR 
+    VAR
       list : StructureList := self.diskStructures;
       prev : StructureList := NIL;
     BEGIN
-      (* Iterate over "list" until we find a cell with the right precision, 
+      (* Iterate over "list" until we find a cell with the right precision,
          or fall off the back of the list. *)
       WHILE list # NIL AND list.prec # prec DO
         prev := list;
@@ -1787,58 +1787,58 @@ PROCEDURE DrawProtoDisk (self: T; prec: INTEGER) =
         list.next := self.diskStructures;
         self.diskStructures := list;
       ELSIF prev # NIL THEN
-        (* Found in "self.diskStructures" (not at head). 
+        (* Found in "self.diskStructures" (not at head).
            Move cell to head. *)
         prev.next := list.next;
         list.next := self.diskStructures;
         self.diskStructures := list;
       END;
-      (* At this point, "list" is non-NIL, and point to a cell "c" such that 
-         "c.prec = prec". "c.fillId" and "c.lineId" contain either "NoList" 
+      (* At this point, "list" is non-NIL, and point to a cell "c" such that
+         "c.prec = prec". "c.fillId" and "c.lineId" contain either "NoList"
          or a valid display list. *)
 
       (* If we have the right display lists cached, call them and return. *)
-      CASE kind OF 
-      | Kind.Fill => 
+      CASE kind OF
+      | Kind.Fill =>
         IF list.fillId # NoList THEN
           GL.glCallList (list.fillId);
           RETURN;
         END;
-      | Kind.Line => 
+      | Kind.Line =>
         IF list.lineId # NoList THEN
           GL.glCallList (list.lineId);
           RETURN;
         END;
       END;
-  
+
       (* Did not find a matching disk in the cache -- need to create one *)
       WITH dlid = GL.glGenLists (1) DO
-  
+
         IF dlid # NoList THEN
           GL.glNewList (dlid, GL.GL_COMPILE_AND_EXECUTE);
         END;
-  
+
         WITH quad = GLu.gluNewQuadric () DO
           <* ASSERT quad # NIL *>
 
           CASE kind OF
-          | Kind.Fill => 
+          | Kind.Fill =>
             GLu.gluQuadricDrawStyle (quad, GLu.GLU_FILL);
             GLu.gluDisk (quad, 0.0d0, 1.0d0, prec, prec);
             list.fillId := dlid;
-          | Kind.Line => 
+          | Kind.Line =>
             GLu.gluQuadricDrawStyle (quad, GLu.GLU_LINE);
-            GLu.gluDisk (quad, 0.0d0, 1.0d0, prec, prec);  
+            GLu.gluDisk (quad, 0.0d0, 1.0d0, prec, prec);
               (* lies in same plane ==>  surface edges have slight artifacts *)
             list.lineId := dlid;
           END;
 
         END;
-  
+
         IF dlid # NoList THEN
           GL.glEndList ();
         END;
-  
+
       END;
 
     END Draw;
@@ -1849,7 +1849,7 @@ PROCEDURE DrawProtoDisk (self: T; prec: INTEGER) =
       IF self.edgeFlag THEN
         (*** SRC 129 says that lines are not affected by lighting ... ***)
         GL.glDisable (GL.GL_LIGHTING);
-        
+
         (* Set up edge color, width, and type ("stipple" in OpenGL) *)
         GL.glColor3fv (ADR (self.edgeColor));
         GL.glLineWidth (self.edgeWidth);
@@ -1871,8 +1871,8 @@ PROCEDURE DrawProtoDisk (self: T; prec: INTEGER) =
         (*** Reset GL lighting to its previous state ***)
         SetLighting (self, self.lighting);
 
-        (* Set up the stencil test: Draw any future fragment only if the 
-           corresponding stencil buffer entry is 0.  In other words, mask out 
+        (* Set up the stencil test: Draw any future fragment only if the
+           corresponding stencil buffer entry is 0.  In other words, mask out
            the surface edges. *)
         GL.glStencilFunc (GL.GL_EQUAL, 0, 1);
       END;
@@ -1905,7 +1905,7 @@ TYPE
 PROCEDURE DrawProtoTorus (self : T; prec : INTEGER; radiusRatio : REAL ) =
 
   PROCEDURE DrawHollowTorus () =
-    BEGIN 
+    BEGIN
       WITH verts = ComputeUnitTorus (prec, radiusRatio * 1.005) DO
         FOR i := 0 TO LAST (verts^) DO
           GL.glBegin (GL.GL_LINE_STRIP);
@@ -1978,7 +1978,7 @@ PROCEDURE ComputeUnitTorus (prec : INTEGER; radius2 : REAL) : TorusVertices =
   VAR
     verts : TorusVertices := NEW (TorusVertices, prec+1, prec+1);
   BEGIN
-    WITH u = AuxG.GetUnitCirclePoints (prec),   
+    WITH u = AuxG.GetUnitCirclePoints (prec),
              (* normal of unit circle is z-axis *)
          normal = Point3.T {0.0, 0.0, 1.0} DO
       FOR i := 0 TO prec DO
@@ -2042,12 +2042,12 @@ PROCEDURE Apply (self: Closure): REFANY =
       base.hwnd := WinUser.CreateWindow (
                        conn.windowclassName,
                        M3toC.CopyTtoS (base.title),
-                       WinUser.WS_OVERLAPPEDWINDOW 
-                         + WinUser.WS_CLIPSIBLINGS  
+                       WinUser.WS_OVERLAPPEDWINDOW
+                         + WinUser.WS_CLIPSIBLINGS
                          + WinUser.WS_CLIPCHILDREN,
-                       base.origin.h, 
+                       base.origin.h,
                        base.origin.v,
-                       base.dimen.h + conn.nonclient.h, 
+                       base.dimen.h + conn.nonclient.h,
                        base.dimen.v + conn.nonclient.v,
                        NIL, NIL, conn.hInst,
                        ADR (cs));
@@ -2060,12 +2060,12 @@ PROCEDURE Apply (self: Closure): REFANY =
 
       (* map the window *)
       EVAL WinUser.ShowWindow (base.hwnd, WinUser.SW_SHOWDEFAULT);
-            
+
       (* update the window (repaint its client area) *)
       status := WinUser.UpdateWindow (base.hwnd);
       <* ASSERT status = True *>
 
-      (* Cache the device context in "base.hdc". Note that we can do this only 
+      (* Cache the device context in "base.hdc". Note that we can do this only
          because we declared the device context to be private ("CS_OWNDC"). *)
       base.hdc := WinUser.GetDC (base.hwnd);
       <* ASSERT base.hdc # NIL *>
@@ -2091,7 +2091,7 @@ PROCEDURE Apply (self: Closure): REFANY =
       pfd.cStencilBits := 1;                     (* need 1-bit stencil buffer*)
       pfd.cAuxBuffers  := 0;                     (* don't need aux. buffers  *)
       pfd.iLayerType   := WinGDI.PFD_MAIN_PLANE; (* only supported value ... *)
-  
+
       pf := WinGDI.ChoosePixelFormat (base.hdc, ADR (pfd));
       <* ASSERT pf > 0 *>
 (*
@@ -2155,7 +2155,7 @@ PROCEDURE Apply (self: Closure): REFANY =
       IF base.lightList = 0 THEN
         RAISE GraphicsBase.Failure;
       END;
-            
+
       (* Select flat shading and auto-normalization of normal vectors *)
       GL.glShadeModel (GL.GL_FLAT);
       GL.glEnable (GL.GL_NORMALIZE);
@@ -2164,8 +2164,8 @@ PROCEDURE Apply (self: Closure): REFANY =
       GL.glLineStipple (1, Solid);
 
       (* In Windows, an OpenGL rendering context can be current to at most
-         one thread at a time.  So, this thread (the window thread) must 
-         release "base.hglrc" for the animation server thread to make it 
+         one thread at a time.  So, this thread (the window thread) must
+         release "base.hglrc" for the animation server thread to make it
          current. *)
       status := WinGDI.wglMakeCurrent (base.hdc, NIL);
       <* ASSERT status = True *>
@@ -2204,7 +2204,7 @@ PROCEDURE DumpPixelFormats (hdc: WinDef.HDC) =
     FOR i := 1 TO n DO
       status := WinGDI.DescribePixelFormat (hdc, i, BYTESIZE (pfd), ADR (pfd));
       <* ASSERT status # 0 *>
-        IO.Put ("PF " & Fmt.Int (i) & "\n"); 
+        IO.Put ("PF " & Fmt.Int (i) & "\n");
         IO.Put ("  flags : " & Fmt.Int (pfd.dwFlags) & " (");
         WITH f = pfd.dwFlags DO
           IF Word.And (f, WinGDI.PFD_DOUBLEBUFFER) # 0 THEN
@@ -2245,10 +2245,10 @@ PROCEDURE DumpPixelFormats (hdc: WinDef.HDC) =
           IO.Put ("unknown");
         END;
         IO.Put ("\n");
-        IO.Put ("  color bits   : " & Fmt.Int (pfd.cColorBits) & "\n"); 
-        IO.Put ("  alpha bits   : " & Fmt.Int (pfd.cAlphaBits) & "\n"); 
-        IO.Put ("  depth bits   : " & Fmt.Int (pfd.cDepthBits) & "\n"); 
-        IO.Put ("  stencil bits : " & Fmt.Int (pfd.cStencilBits) & "\n"); 
+        IO.Put ("  color bits   : " & Fmt.Int (pfd.cColorBits) & "\n");
+        IO.Put ("  alpha bits   : " & Fmt.Int (pfd.cAlphaBits) & "\n");
+        IO.Put ("  depth bits   : " & Fmt.Int (pfd.cDepthBits) & "\n");
+        IO.Put ("  stencil bits : " & Fmt.Int (pfd.cStencilBits) & "\n");
     END;
   END DumpPixelFormats;
 
@@ -2261,13 +2261,13 @@ PROCEDURE GetBase (hwnd: WinDef.HWND): T =
     (* Find the graphics base that correspend to the window handle. Normally,
        this is done by looking up the handle in the table "conn.hwndMap".
        However, the handle can be  entered into the table only after it is
-       returned by "CreateWindow".  So, if the window is currently being 
-       created, the handle will not be found.  In this case, we use the 
+       returned by "CreateWindow".  So, if the window is currently being
+       created, the handle will not be found.  In this case, we use the
        base that is cached in "conn.currBase". *)
   VAR
     ref: REFANY;
   BEGIN
-    IF conn.hwndMap.get (LOOPHOLE (hwnd, INTEGER), 
+    IF conn.hwndMap.get (LOOPHOLE (hwnd, INTEGER),
                          LOOPHOLE (ref, REFANY)) THEN
       RETURN ref;
     ELSIF conn.currBase # NIL THEN
@@ -2283,8 +2283,8 @@ CONST
 
 
 <*CALLBACK*> PROCEDURE WindowProc (hwnd   : WinDef.HWND;
-                                   message: WinDef.UINT; 
-                                   wParam : WinDef.WPARAM; 
+                                   message: WinDef.UINT;
+                                   wParam : WinDef.WPARAM;
                                    lParam : WinDef.LPARAM  ): WinDef.LRESULT =
   BEGIN
     CASE message OF
@@ -2300,12 +2300,12 @@ CONST
       RETURN 0;
     | WinUser.WM_PAINT =>
       WITH base = GetBase (hwnd) DO
-        base.eventQueue.put (NEW (ExposeEvent)); 
+        base.eventQueue.put (NEW (ExposeEvent));
       END;
       RETURN 0;
     | WinUser.WM_CLOSE =>
       WITH base = GetBase (hwnd) DO
-        base.eventQueue.put (NEW (DestroyEvent)); 
+        base.eventQueue.put (NEW (DestroyEvent));
       END;
       RETURN 0;
     | WinUser.WM_SIZE =>
@@ -2313,27 +2313,27 @@ CONST
            w = WinDef.LOWORD (lParam),
            h = WinDef.HIWORD (lParam),
            e = NEW (ReshapeEvent, width := w, height := h) DO
-        base.eventQueue.put (e); 
+        base.eventQueue.put (e);
       END;
       RETURN 0;
     | WinUser.WM_KEYDOWN =>
       WITH base = GetBase (hwnd),
-           key  = VirtualKeyToKeySym (wParam), 
+           key  = VirtualKeyToKeySym (wParam),
            e = NEW (KeyEvent, key := key, down := TRUE) DO
-        base.eventQueue.put (e); 
+        base.eventQueue.put (e);
       END;
       RETURN 0;
     | WinUser.WM_KEYUP =>
       WITH base = GetBase (hwnd),
-           key  = VirtualKeyToKeySym (wParam), 
+           key  = VirtualKeyToKeySym (wParam),
            e = NEW (KeyEvent, key := key, down := FALSE) DO
-        base.eventQueue.put (e); 
+        base.eventQueue.put (e);
       END;
       RETURN 0;
     | WinUser.WM_LBUTTONDOWN, WinUser.WM_MBUTTONDOWN, WinUser.WM_RBUTTONDOWN =>
-      VAR 
+      VAR
         button: VBT.Button;
-      BEGIN 
+      BEGIN
         CASE message OF
         | WinUser.WM_LBUTTONDOWN => button := VBT.Modifier.MouseL;
         | WinUser.WM_MBUTTONDOWN => button := VBT.Modifier.MouseM;
@@ -2343,14 +2343,14 @@ CONST
         WITH base = GetBase (hwnd),
              pos  = Point.T {WinDef.LOWORD (lParam), WinDef.HIWORD (lParam)},
              e    = NEW (ButtonDownEvent, button := button, pos := pos) DO
-           base.eventQueue.put (e); 
-        END; 
+           base.eventQueue.put (e);
+        END;
       END;
       RETURN 0;
     | WinUser.WM_LBUTTONUP, WinUser.WM_MBUTTONUP, WinUser.WM_RBUTTONUP =>
-      VAR 
+      VAR
         button: VBT.Button;
-      BEGIN 
+      BEGIN
         CASE message OF
         | WinUser.WM_LBUTTONUP => button := VBT.Modifier.MouseL;
         | WinUser.WM_MBUTTONUP => button := VBT.Modifier.MouseM;
@@ -2360,15 +2360,15 @@ CONST
         WITH base = GetBase (hwnd),
              pos  = Point.T {WinDef.LOWORD (lParam), WinDef.HIWORD (lParam)},
              e    = NEW (ButtonUpEvent, button := button, pos := pos) DO
-           base.eventQueue.put (e); 
-        END; 
+           base.eventQueue.put (e);
+        END;
       END;
       RETURN 0;
     | WinUser.WM_MOUSEMOVE =>
       WITH base = GetBase (hwnd),
            pos  = Point.T {WinDef.LOWORD (lParam), WinDef.HIWORD (lParam)},
            e = NEW (MotionEvent, pos := pos) DO
-        base.eventQueue.put (e); 
+        base.eventQueue.put (e);
       END;
       RETURN 0;
     ELSE
@@ -2470,7 +2470,7 @@ PROCEDURE VirtualKeyToKeySym (vk: [0 .. 255]): VBT.KeySym =
       | (* 6D *) WinUser.VK_SUBTRACT  => RETURN KeyboardKey.KP_Subtract;
       | (* 6E *) WinUser.VK_DECIMAL   => RETURN KeyboardKey.KP_Decimal;
       | (* 6F *) WinUser.VK_DIVIDE    => RETURN KeyboardKey.KP_Divide;
-        
+
       | (* 70 *) WinUser.VK_F1        => RETURN KeyboardKey.F1;
       | (* 71 *) WinUser.VK_F2        => RETURN KeyboardKey.F2;
       | (* 72 *) WinUser.VK_F3        => RETURN KeyboardKey.F3;
@@ -2624,7 +2624,7 @@ PROCEDURE VirtualKeyToKeySym (vk: [0 .. 255]): VBT.KeySym =
       | (* 6D *) WinUser.VK_SUBTRACT  => RETURN KeyboardKey.KP_Subtract;
       | (* 6E *) WinUser.VK_DECIMAL   => RETURN KeyboardKey.KP_Decimal;
       | (* 6F *) WinUser.VK_DIVIDE    => RETURN KeyboardKey.KP_Divide;
-        
+
       | (* 70 *) WinUser.VK_F1        => RETURN KeyboardKey.F1;
       | (* 71 *) WinUser.VK_F2        => RETURN KeyboardKey.F2;
       | (* 72 *) WinUser.VK_F3        => RETURN KeyboardKey.F3;
@@ -2860,12 +2860,12 @@ PROCEDURE PrintMessageType (message: WinDef.UINT) =
 (* The event queue data structure. I chose a sentinel-based implementation.  *)
 (*****************************************************************************)
 
-(* The following invariant is maintained:             
- *  <* ASSERT self.front # NIL AND self.end # NIL 
+(* The following invariant is maintained:
+ *  <* ASSERT self.front # NIL AND self.end # NIL
  *        AND self.end.head = NIL AND self.end.tail = NIL *>
  *)
 
-TYPE 
+TYPE
   EventList = REF RECORD
     head: Event;
     tail: EventList;
@@ -2885,7 +2885,7 @@ PROCEDURE InitEQ (self: EventQueue): EventQueue =
     (* Enter sentinel element *)
     self.front := NEW (EventList, head := NIL, tail := NIL);
     self.end := self.front;
-    <* ASSERT self.front # NIL AND self.end # NIL 
+    <* ASSERT self.front # NIL AND self.end # NIL
           AND self.end.head = NIL AND self.end.tail = NIL *>
     RETURN self;
   END InitEQ;
@@ -2894,12 +2894,12 @@ PROCEDURE InitEQ (self: EventQueue): EventQueue =
 PROCEDURE PutEQ (self: EventQueue; e: Event) =
   BEGIN
     LOCK self DO
-      <* ASSERT self.front # NIL AND self.end # NIL 
+      <* ASSERT self.front # NIL AND self.end # NIL
             AND self.end.head = NIL AND self.end.tail = NIL *>
       self.end.head := e;
       self.end.tail := NEW (EventList, head := NIL, tail := NIL);
       self.end := self.end.tail;
-      <* ASSERT self.front # NIL AND self.end # NIL 
+      <* ASSERT self.front # NIL AND self.end # NIL
             AND self.end.head = NIL AND self.end.tail = NIL *>
     END;
   END PutEQ;
@@ -2908,13 +2908,13 @@ PROCEDURE PutEQ (self: EventQueue; e: Event) =
 PROCEDURE DrainEQ (self: EventQueue; base: T) =
   BEGIN
     LOCK self DO
-      <* ASSERT self.front # NIL AND self.end # NIL 
+      <* ASSERT self.front # NIL AND self.end # NIL
             AND self.end.head = NIL AND self.end.tail = NIL *>
       WHILE self.front # self.end DO
         self.front.head.process (base);
         self.front := self.front.tail;
       END;
-      <* ASSERT self.front # NIL AND self.end # NIL 
+      <* ASSERT self.front # NIL AND self.end # NIL
             AND self.end.head = NIL AND self.end.tail = NIL *>
     END;
   END DrainEQ;
@@ -2924,7 +2924,7 @@ PROCEDURE DrainEQ (self: EventQueue; base: T) =
 (* Event types                                                               *)
 (*****************************************************************************)
 
-TYPE 
+TYPE
   Event = OBJECT
   METHODS
     process (base: T);
@@ -2940,7 +2940,7 @@ TYPE
 
 PROCEDURE ProcessMotion (self: MotionEvent; base: T) =
   BEGIN
-    WITH posrec = PositionCB.Rec {pos2D := self.pos, 
+    WITH posrec = PositionCB.Rec {pos2D := self.pos,
                                   modifiers := base.modifiers} DO
       base.root.invokePositionCB (posrec);
     END;
@@ -3018,7 +3018,7 @@ PROCEDURE ProcessKey (self: KeyEvent; base: T) =
       CASE keysym OF
       | KeyboardKey.Shift_L, KeyboardKey.Shift_R =>
         RETURN VBT.Modifiers {VBT.Modifier.Shift};
-      | KeyboardKey.Shift_Lock => 
+      | KeyboardKey.Shift_Lock =>
         RETURN VBT.Modifiers {VBT.Modifier.Lock};
       | KeyboardKey.Control_L, KeyboardKey.Control_R =>
         RETURN VBT.Modifiers {VBT.Modifier.Control};
@@ -3058,7 +3058,7 @@ PROCEDURE ProcessExpose (<*UNUSED*> self: ExposeEvent; base: T) =
   END ProcessExpose;
 
 
-TYPE 
+TYPE
   ReshapeEvent = Event BRANDED OBJECT
     width, height: INTEGER;
   OVERRIDES
@@ -3077,7 +3077,7 @@ PROCEDURE ProcessReshape (self: ReshapeEvent; base: T) =
     END;
   END ProcessReshape;
 
-TYPE 
+TYPE
   DestroyEvent = Event BRANDED OBJECT
   OVERRIDES
     process := ProcessDestroy;
@@ -3107,7 +3107,7 @@ PROCEDURE Setup (self: T) =
 
 
 PROCEDURE Repair (self : T; VAR damaged : BOOLEAN) =
-  VAR 
+  VAR
     status : WinDef.BOOL;
   BEGIN
     (*** Redraw the scene only if there is one and it was damaged ***)
@@ -3120,7 +3120,7 @@ PROCEDURE Repair (self : T; VAR damaged : BOOLEAN) =
           EVAL Thread.Fork (NEW (Closure, base := self));
           Thread.Wait (conn, self.windowThreadCV);
         END;
-        
+
         (*** determine the object's current transparency ***)
         self.transflag := self.root.needsTransparency(0.0);
                                    (* 0.0 is the default transmission coeff *)
@@ -3157,7 +3157,7 @@ PROCEDURE Repair (self : T; VAR damaged : BOOLEAN) =
         (*** Then draw everything else ***)
         self.phase := 2;
         self.root.draw (self);
-        
+
         (*** Finally, swap the buffers to update the display ***)
         status := WinGDI.SwapBuffers (self.hdc);
         <* ASSERT status = True *>
@@ -3174,7 +3174,7 @@ PROCEDURE Repair (self : T; VAR damaged : BOOLEAN) =
 VAR conn := NEW (Connection).init ();
 
 
-TYPE 
+TYPE
   Connection = MUTEX OBJECT       (* mutex protects fields *)
     currBase        : T;
     hwndMap         : IntRefTbl.T;
@@ -3198,7 +3198,7 @@ PROCEDURE InitConnection (self : Connection) : Connection =
     self.windowclassName := M3toC.CopyTtoS("Anim3D Window");
     self.nonclient.h := 2 * WinUser.GetSystemMetrics (WinUser.SM_CXFRAME);
     self.nonclient.v := 2 * WinUser.GetSystemMetrics (WinUser.SM_CYFRAME) +
-                        WinUser.GetSystemMetrics (WinUser.SM_CYSCREEN) - 
+                        WinUser.GetSystemMetrics (WinUser.SM_CYSCREEN) -
                         WinUser.GetSystemMetrics (WinUser.SM_CYFULLSCREEN) - 1;
 
     (* Register the window class *)
@@ -3208,7 +3208,7 @@ PROCEDURE InitConnection (self : Connection) : Connection =
     wc.cbWndExtra := 0;
     wc.hInstance := self.hInst;
     wc.hIcon := WinUser.LoadIcon (NIL, WinUser.IDI_APPLICATION);
-    wc.hCursor := WinUser.LoadCursor (NIL, WinUser.IDC_ARROW); 
+    wc.hCursor := WinUser.LoadCursor (NIL, WinUser.IDC_ARROW);
     wc.hbrBackground := NIL;
     wc.lpszMenuName := NIL;
     wc.lpszClassName := self.windowclassName;

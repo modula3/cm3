@@ -43,8 +43,8 @@ PROCEDURE GetUnitCirclePoints (prec : INTEGER) : REF ARRAY OF Point3.T =
         ang := ang + Dang;
       END;
       v[prec] := v[0];
-      circleCache := NEW (CircleCache, 
-                          prec  := prec, 
+      circleCache := NEW (CircleCache,
+                          prec  := prec,
                           verts := v,
                           next  := circleCache);
       RETURN v;

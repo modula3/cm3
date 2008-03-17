@@ -19,7 +19,7 @@ PROCEDURE Identity () : T =
 
 (***
 PROCEDURE Translate (READONLY M : T; x, y, z : REAL) : T =
-  VAR 
+  VAR
     N := T {Row {1.0, 0.0, 0.0, x},
             Row {0.0, 1.0, 0.0, y},
             Row {0.0, 0.0, 1.0, z},
@@ -46,7 +46,7 @@ PROCEDURE Translate (READONLY M : T; x, y, z : REAL) : T =
 
 
 PROCEDURE Scale (READONLY M : T; x, y, z : REAL) : T =
-  VAR 
+  VAR
     N := T {Row {  x, 0.0, 0.0, 0.0},
             Row {0.0,   y, 0.0, 0.0},
             Row {0.0, 0.0,   z, 0.0},
@@ -57,7 +57,7 @@ PROCEDURE Scale (READONLY M : T; x, y, z : REAL) : T =
 
 
 PROCEDURE RotateX (READONLY M : T; theta : REAL) : T =
-  VAR 
+  VAR
     a := Mth.sin (theta);
     b := Mth.cos (theta);
     N := T {Row {1.0, 0.0, 0.0, 0.0},
@@ -70,7 +70,7 @@ PROCEDURE RotateX (READONLY M : T; theta : REAL) : T =
 
 
 PROCEDURE RotateY (READONLY M : T; theta : REAL) : T =
-  VAR 
+  VAR
     a := Mth.sin (theta);
     b := Mth.cos (theta);
     N := T {Row {  b, 0.0,   a, 0.0},
@@ -81,9 +81,9 @@ PROCEDURE RotateY (READONLY M : T; theta : REAL) : T =
     RETURN Multiply (N, M);
   END RotateY;
 
-  
+
 PROCEDURE RotateZ (READONLY M : T; theta : REAL) : T =
-  VAR 
+  VAR
     a := Mth.sin (theta);
     b := Mth.cos (theta);
     N := T {Row {  b,  -a, 0.0, 0.0},
@@ -95,7 +95,7 @@ PROCEDURE RotateZ (READONLY M : T; theta : REAL) : T =
   END RotateZ;
 
 
-(**** 
+(****
 PROCEDURE TransformPoint3 (READONLY M : T; READONLY p : Point3.T) : Point3.T =
   BEGIN
     RETURN Point3.T {M[0][0] * p.x + M[0][1] * p.y + M[0][2] * p.z + M[0][3],
@@ -142,8 +142,8 @@ PROCEDURE Invert (<*NOWARN*> A : T) : T RAISES {Error} =
     p : ARRAY [0 .. 3] OF INTEGER;
     B : T;
 
-  (* 
-   * LUP_Solve is taken pretty directly from 
+  (*
+   * LUP_Solve is taken pretty directly from
    * [Cormen, Leiserson, Rivest, p. 753]
    *)
   PROCEDURE LUP_Solve (READONLY b : Row) : Row =
@@ -153,13 +153,13 @@ PROCEDURE Invert (<*NOWARN*> A : T) : T RAISES {Error} =
     BEGIN
       FOR i := 0 TO 3 DO
         y[i] := b[p[i]];
-        FOR j := 0 TO i-1 DO 
+        FOR j := 0 TO i-1 DO
           y[i] := y[i] - A[i][j] * y[j];
         END;
       END;
-      FOR i := 3 TO 0 BY -1 DO 
+      FOR i := 3 TO 0 BY -1 DO
         x[i] := y[i];
-        FOR j := i+1 TO 3 DO 
+        FOR j := i+1 TO 3 DO
           x[i] := x[i] - A[i][j] * x[j];
         END;
         x[i] := x[i] / A[i][i];
@@ -210,7 +210,7 @@ PROCEDURE Invert (<*NOWARN*> A : T) : T RAISES {Error} =
    *)
   BEGIN
     LUP_Decomposition ();
-    WITH v0 = LUP_Solve (Row {1.0, 0.0, 0.0, 0.0}), 
+    WITH v0 = LUP_Solve (Row {1.0, 0.0, 0.0, 0.0}),
          v1 = LUP_Solve (Row {0.0, 1.0, 0.0, 0.0}),
          v2 = LUP_Solve (Row {0.0, 0.0, 1.0, 0.0}),
          v3 = LUP_Solve (Row {0.0, 0.0, 0.0, 1.0}) DO
@@ -222,13 +222,13 @@ PROCEDURE Invert (<*NOWARN*> A : T) : T RAISES {Error} =
   END Invert;
 
 
-(* 
-   In the old version of "TransformUnitCube", I computed the result matrix "M" 
-   by using trigonometric functions (and I would be very embarrassed to tell 
-   just how long it took me to get this function right). This approach was 
-   of course motivated by the geometric interpretation on the function 
-   (projecting the unit cube through scaling, rotations, and translation 
-   onto the cube with corners "p0","a0","b0","c0"). 
+(*
+   In the old version of "TransformUnitCube", I computed the result matrix "M"
+   by using trigonometric functions (and I would be very embarrassed to tell
+   just how long it took me to get this function right). This approach was
+   of course motivated by the geometric interpretation on the function
+   (projecting the unit cube through scaling, rotations, and translation
+   onto the cube with corners "p0","a0","b0","c0").
 *)
 
 (*
@@ -248,13 +248,13 @@ PROCEDURE TransformUnitCube (p0, a0, b0, c0 : Point3.T) : T =
     c := TransformPoint3 (M, c0);
 
     M := Identity ();
-    (* We want to rotate vector "a" around the y axis such that it falls into 
+    (* We want to rotate vector "a" around the y axis such that it falls into
        the x-y plane. So, we need to find the angle "angle1" between the
        projection of "a" onto the x-z plane and the x axis. *)
     IF a.z = 0.0 THEN
       (* If "a.z" = 0, then "a" is already in the x-y plane. *)
       angle1 := 0.0;
-    ELSE 
+    ELSE
       (* a.z # 0, hence Length ( (a.x, 0, a.z) ) > 0 *)
       angle1 := Mth.asin (a.z / Point3.Length (Point3.T {a.x, 0.0, a.z}));
     END;
@@ -268,7 +268,7 @@ PROCEDURE TransformUnitCube (p0, a0, b0, c0 : Point3.T) : T =
     c := TransformPoint3 (M, c);
 
     M := Identity ();
-    (* We want to rotate vector "a" around the z axis such that it falls onto 
+    (* We want to rotate vector "a" around the z axis such that it falls onto
        the x axis. So, we need to find the angle "angle2" between "a" and the
        x axis. Note that the previous rotation moved "a" into the x-y plane,
        hence "a.z" is 0, hence we do not need to project "a" onto any plane.
@@ -284,9 +284,9 @@ PROCEDURE TransformUnitCube (p0, a0, b0, c0 : Point3.T) : T =
     c := TransformPoint3 (M, c);
 
     M := Identity ();
-    (* At this point, "a" should be lying on the positive half of x axis, 
-       and "b" and "c" should both be lying in the y-z plane. We want to 
-       rotate "b" around the x axis so that it lies on the positive half 
+    (* At this point, "a" should be lying on the positive half of x axis,
+       and "b" and "c" should both be lying in the y-z plane. We want to
+       rotate "b" around the x axis so that it lies on the positive half
        of the y axis. *)
     angle3 := -Mth.asin (b.z / Point3.Length (b));
     IF b.y < 0.0 THEN
@@ -326,12 +326,12 @@ PROCEDURE TransformUnitCube (p, a, b, c : Point3.T) : T =
 PROCEDURE UnitSphereMaxSquishFactor (READONLY M : T) : REAL =
 
   (* Given a vector v, DecomposeVector returns a unit vector u parallel to v
-     and the length l of v. In other words, u = Point3.Scale (v, 1.0) and 
+     and the length l of v. In other words, u = Point3.Scale (v, 1.0) and
      l = Point3.Length (v). *)
 
   PROCEDURE Iterate (READONLY AAt : T;
-                     v            : Point3.T; 
-                     VAR u        : Point3.T; 
+                     v            : Point3.T;
+                     VAR u        : Point3.T;
                      VAR l        : REAL) =
     BEGIN
       v := TransformPoint3 (AAt, v);
@@ -341,7 +341,7 @@ PROCEDURE UnitSphereMaxSquishFactor (READONLY M : T) : REAL =
 
   CONST
     eps = 0.05;
-  VAR 
+  VAR
     A, At, AAt    : T;
     v1, v2, v3, v : Point3.T;
     s1, s2, s3, s : REAL;
@@ -395,7 +395,7 @@ PROCEDURE UnitSphereMaxSquishFactor (READONLY M : T) : REAL =
    (2) s > 0
 *)
 (*
-PROCEDURE Decompose ((* in *)  <*NOWARN*> M : T; 
+PROCEDURE Decompose ((* in *)  <*NOWARN*> M : T;
                      (* out *) VAR tx, ty, tz, s, angX, angY, angZ : REAL) =
   VAR
     a, b, c: Point3.T;
@@ -421,7 +421,7 @@ PROCEDURE Decompose ((* in *)  <*NOWARN*> M : T;
       s := Point3.Length (p1);
     END;
 
-    (* Also, for a uniform scaling S, SM = MS for any matrix M. 
+    (* Also, for a uniform scaling S, SM = MS for any matrix M.
        So, we can remove S easily. *)
     FOR i := 0 TO 2 DO
       FOR j := 0 TO 2 DO
@@ -439,13 +439,13 @@ PROCEDURE Decompose ((* in *)  <*NOWARN*> M : T;
     b := TransformPoint3 (M, b);
     c := TransformPoint3 (M, c);
 
-    (* We want to rotate vector "a" around the z axis such that it falls into 
+    (* We want to rotate vector "a" around the z axis such that it falls into
        the x-z plane. So, we need to find the angle "angZ" between the
        projection of "a" onto the x-y plane and the z axis. *)
     IF a.y = 0.0 THEN
       (* If "a.y" = 0, then "a" is already in the x-z plane. *)
       angZ := 0.0;
-    ELSE 
+    ELSE
       (* a.y # 0, hence Length ( (a.x, 0, a.y) ) > 0 *)
       angZ := - Mth.asin (a.y / Point3.Length (Point3.T {a.x, a.y, 0.0}));
     END;
@@ -458,7 +458,7 @@ PROCEDURE Decompose ((* in *)  <*NOWARN*> M : T;
       c := TransformPoint3 (N, c);
     END;
 
-    (* We want to rotate vector "a" around the y axis such that it falls onto 
+    (* We want to rotate vector "a" around the y axis such that it falls onto
        the x axis. So, we need to find the angle "angY" between "a" and the
        x axis. Note that the previous rotation moved "a" into the x-z plane,
        hence "a.y" is 0, hence we do not need to project "a" onto any plane.
@@ -473,9 +473,9 @@ PROCEDURE Decompose ((* in *)  <*NOWARN*> M : T;
       c := TransformPoint3 (N, c);
     END;
 
-    (* At this point, "a" should be lying on the positive half of x axis, 
-       and "b" and "c" should both be lying in the y-z plane. We want to 
-       rotate "b" around the x axis so that it lies on the positive half 
+    (* At this point, "a" should be lying on the positive half of x axis,
+       and "b" and "c" should both be lying in the y-z plane. We want to
+       rotate "b" around the x axis so that it lies on the positive half
        of the y axis. *)
     angX := - Mth.asin (b.z / Point3.Length (b));
     IF b.y < 0.0 THEN
@@ -498,7 +498,7 @@ PROCEDURE Decompose ((* in *)  <*NOWARN*> M : T;
        uniform(!) scalings.
    (2) s > 0
 *)
-PROCEDURE Decomp (<*NOWARN*> M : T; 
+PROCEDURE Decomp (<*NOWARN*> M : T;
                   VAR tx, ty, tz, s : REAL) : T RAISES {Error} =
   BEGIN
     <* ASSERT M[3][0] = 0.0 *>
@@ -522,7 +522,7 @@ PROCEDURE Decomp (<*NOWARN*> M : T;
       s := Point3.Length (p1);
     END;
 
-    (* Also, for a uniform scaling S, SM = MS for any matrix M. 
+    (* Also, for a uniform scaling S, SM = MS for any matrix M.
        So, we can remove S easily. *)
     FOR i := 0 TO 2 DO
       FOR j := 0 TO 2 DO
@@ -596,11 +596,11 @@ PROCEDURE Orthonormal (READONLY U : T) : BOOLEAN =
          d23 = DotProduct (u2, u3),
          d33 = DotProduct (u3, u3) DO
       RETURN One (d00) AND One (d11) AND One (d22) AND One (d33) AND
-             Zero (d01) AND Zero (d02) AND Zero (d03) AND 
+             Zero (d01) AND Zero (d02) AND Zero (d03) AND
              Zero (d12) AND Zero (d13) AND Zero (d23);
     END;
   END Orthonormal;
-      
+
 
 PROCEDURE OrthoProjMatrix (height, aspect, near, far: REAL): T =
   VAR
@@ -632,21 +632,21 @@ PROCEDURE PerspProjMatrix (fovy, distance, aspect, near, far: REAL): T =
   END PerspProjMatrix;
 
 
-(* The matrix returned by this function can be thought of as having 2 parts.  
-   The first part (next to the coordinate point when it is being transformed) 
-   moves the "to" point to the origin.  The second part performs the rotation 
+(* The matrix returned by this function can be thought of as having 2 parts.
+   The first part (next to the coordinate point when it is being transformed)
+   moves the "to" point to the origin.  The second part performs the rotation
    of the data.
 
    The three basis vectors of the rotation are obtained as follows:
 
    - The Z basis vector "b" is determined by subtracting "from" from "to" and
-     normalizing it to unit length.  
-   - The Y basis vector "e" is determined by calculating the vector 
+     normalizing it to unit length.
+   - The Y basis vector "e" is determined by calculating the vector
      perpendicular to "b" and in the plane defined by the Z basis vector
-     and the "up" vector and then normalizing it.  
+     and the "up" vector and then normalizing it.
    - The X basis vector "f" is calculated by "e CROSS b".
 
-   This method is called the "Gram-Schmidt process". 
+   This method is called the "Gram-Schmidt process".
    See Foley/van Dam/Feiner/Hughes pages 1102f and 1112 for details.
 
    The resulting matrix looks like this:
@@ -660,7 +660,7 @@ PROCEDURE PerspProjMatrix (fovy, distance, aspect, near, far: REAL): T =
 PROCEDURE LookatViewMatrix (from, to, up: Point3.T): T =
   BEGIN
     WITH b  = Point3.ScaleToLen (Point3.Minus (from, to), 1.0),
-         e  = Point3.ScaleToLen (Point3.Minus (up, 
+         e  = Point3.ScaleToLen (Point3.Minus (up,
                    Point3.TimesScalar (b, Point3.DotProduct (b, up))), 1.0),
          f  = Point3.CrossProduct (e, b) DO
       RETURN T {Row {f.x, f.y, f.z, -Point3.DotProduct (to, f)},

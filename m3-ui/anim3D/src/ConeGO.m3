@@ -54,7 +54,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
   BEGIN
     state.push (self);
     WITH base   = Base.getState (state),
-         tip    = Tip.getState (state), 
+         tip    = Tip.getState (state),
          radius = Radius.getState (state) DO
 
       IF base # self.base OR tip # self.tip OR radius # self.radius THEN
@@ -62,7 +62,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
         self.tip    := tip;
         self.radius := radius;
 
-        (* Compute a transformation matrix that transforms the prototypical 
+        (* Compute a transformation matrix that transforms the prototypical
            cone into the desired one. *)
         WITH n = Point3.Minus (tip, base),
              s = Point3.OrthoVector (n),
@@ -73,7 +73,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
         END;
 
       END;
-      
+
       state.pushMatrix (self.matrix);
       state.drawProtoCone (self.prec);
       state.popMatrix ();
@@ -102,7 +102,7 @@ PROCEDURE New (base, tip : Point3.T; r : REAL; prec := 30) : T =
     SetRadius (cone, r);
     RETURN cone;
   END New;
-    
+
 
 PROCEDURE SetBase (o : GO.T; v : Point3.T) =
   BEGIN

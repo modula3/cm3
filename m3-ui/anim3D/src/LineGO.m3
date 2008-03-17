@@ -8,12 +8,12 @@
 
 MODULE LineGO EXPORTS LineGO, LineGOProxy;
 
-IMPORT Color, ColorProp, ColorPropPrivate, GO, GOPrivate, GraphicsBase, 
-       GraphicsBasePrivate, LineTypeProp, LineTypePropPrivate, 
-       Point3, PointProp, PointPropPrivate, Prop, PropPrivate, RealProp, 
+IMPORT Color, ColorProp, ColorPropPrivate, GO, GOPrivate, GraphicsBase,
+       GraphicsBasePrivate, LineTypeProp, LineTypePropPrivate,
+       Point3, PointProp, PointPropPrivate, Prop, PropPrivate, RealProp,
        RealPropPrivate;
 
-REVEAL 
+REVEAL
   T = Public BRANDED OBJECT
   OVERRIDES
     init              := Init;
@@ -23,7 +23,7 @@ REVEAL
   END;
 
 
-PROCEDURE Init (self : T) : T = 
+PROCEDURE Init (self : T) : T =
   BEGIN
     EVAL GO.T.init (self);
 
@@ -41,7 +41,7 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
     WITH p1 = Point1.getState (state),
          p2 = Point2.getState (state) DO
       state.drawLine (p1, p2);
-      state.growBoundingVolume (Point3.MidPoint (p1, p2), 
+      state.growBoundingVolume (Point3.MidPoint (p1, p2),
                                 Point3.Distance (p1, p2) / 2.0);
     END;
     state.pop (self);
@@ -56,7 +56,7 @@ PROCEDURE DamageIfDependent (self : T; pn : Prop.Name) =
   END DamageIfDependent;
 
 
-PROCEDURE NeedsTransparency (<* UNUSED *> self : T; 
+PROCEDURE NeedsTransparency (<* UNUSED *> self : T;
                              <* UNUSED *> t    : REAL) : BOOLEAN =
   BEGIN
     RETURN FALSE;
@@ -93,7 +93,7 @@ PROCEDURE DamageColour (<* UNUSED *> self : Colour_PN; caller : GO.T) =
 
 
 PROCEDURE PushColour (self  : Colour_PN;
-                      state : GraphicsBase.T; 
+                      state : GraphicsBase.T;
                       pv    : Prop.Val) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], ColorPropPrivate.Stack),
@@ -112,7 +112,7 @@ PROCEDURE PopColour (self : Colour_PN; state : GraphicsBase.T) =
       state.setLineColor (stack.pop ());
     END;
   END PopColour;
-    
+
 
 (*****************************************************************************)
 (* Width_PN                                                                  *)
@@ -133,8 +133,8 @@ PROCEDURE DamageWidth (<* UNUSED *> self : Width_PN; caller : GO.T) =
   END DamageWidth;
 
 
-PROCEDURE PushWidth (self  : Width_PN; 
-                     state : GraphicsBase.T; 
+PROCEDURE PushWidth (self  : Width_PN;
+                     state : GraphicsBase.T;
                      pv    : Prop.Val) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], RealPropPrivate.Stack),
@@ -174,8 +174,8 @@ PROCEDURE DamageType (<* UNUSED *> self : Type_PN; caller : GO.T) =
   END DamageType;
 
 
-PROCEDURE PushType (self  : Type_PN; 
-                    state : GraphicsBase.T; 
+PROCEDURE PushType (self  : Type_PN;
+                    state : GraphicsBase.T;
                     pv    : Prop.Val) =
   BEGIN
     WITH stack = NARROW (state.stacks[self.id], LineTypePropPrivate.Stack),

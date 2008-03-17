@@ -10,10 +10,10 @@ INTERFACE ConeGOProxy;
 
 FROM ConeGO IMPORT T;
 
-(* The Proxy Maker (PM) procedure for ConeGO.T is 
+(* The Proxy Maker (PM) procedure for ConeGO.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END ConeGOProxy.

@@ -6,12 +6,12 @@
 (*       Created on Sun May 22 12:22:36 PDT 1994 by najork                   *)
 
 
-MODULE TransformProp EXPORTS TransformProp, 
-                             TransformPropPrivate, 
+MODULE TransformProp EXPORTS TransformProp,
+                             TransformPropPrivate,
                              TransformPropProxy;
 
-IMPORT Anim3D, AnimHandle, AnimHandlePrivate, AnimRequestQueue, 
-       AnimRequestQueuePrivate, AnimServer, GraphicsBase, 
+IMPORT Anim3D, AnimHandle, AnimHandlePrivate, AnimRequestQueue,
+       AnimRequestQueuePrivate, AnimServer, GraphicsBase,
        GraphicsBasePrivate, Matrix4, Prop, PropPrivate, Quaternion;
 
 (*****************************************************************************)
@@ -88,9 +88,9 @@ PROCEDURE GetState (self : Name; state : GraphicsBase.T) : Base =
 (* Type "Val"                                                                *)
 (*****************************************************************************)
 
-REVEAL 
+REVEAL
   Val = PrivateVal BRANDED OBJECT
-  OVERRIDES 
+  OVERRIDES
     init   := InitVal;
     get    := GetVal;
     value  := ValueVal;
@@ -146,8 +146,8 @@ PROCEDURE AdjustVal (self : Val; time : LONGREAL) : BOOLEAN
 (* Type "Beh"                                                                *)
 (*****************************************************************************)
 
-REVEAL 
-  Beh = PrivateBeh BRANDED OBJECT 
+REVEAL
+  Beh = PrivateBeh BRANDED OBJECT
   OVERRIDES
     init := InitBeh;
   END;
@@ -180,7 +180,7 @@ REVEAL
   END;
 
 
-PROCEDURE InitConstBeh (         self : ConstBeh; 
+PROCEDURE InitConstBeh (         self : ConstBeh;
                         READONLY matrix : Matrix4.T) : ConstBeh =
   BEGIN
     EVAL Beh.init (self);
@@ -192,7 +192,7 @@ PROCEDURE InitConstBeh (         self : ConstBeh;
   END InitConstBeh;
 
 
-PROCEDURE ValueConstBeh (             self : ConstBeh; 
+PROCEDURE ValueConstBeh (             self : ConstBeh;
                          <* UNUSED *> time : LONGREAL) : Matrix4.T =
   BEGIN
     RETURN self.matrix;
@@ -229,19 +229,19 @@ PROCEDURE ScaleConstBeh (self : ConstBeh; x, y, z : REAL) =
   END ScaleConstBeh;
 
 
-PROCEDURE RotateXConstBeh (self : ConstBeh; a : REAL) = 
+PROCEDURE RotateXConstBeh (self : ConstBeh; a : REAL) =
   BEGIN
     self.matrix := Matrix4.RotateX (self.matrix, a);
   END RotateXConstBeh;
 
 
-PROCEDURE RotateYConstBeh (self : ConstBeh; a : REAL) = 
+PROCEDURE RotateYConstBeh (self : ConstBeh; a : REAL) =
   BEGIN
     self.matrix := Matrix4.RotateY (self.matrix, a);
   END RotateYConstBeh;
 
 
-PROCEDURE RotateZConstBeh (self : ConstBeh; a : REAL) = 
+PROCEDURE RotateZConstBeh (self : ConstBeh; a : REAL) =
   BEGIN
     self.matrix := Matrix4.RotateZ (self.matrix, a);
   END RotateZConstBeh;
@@ -276,14 +276,14 @@ PROCEDURE InitAsyncBeh (self : AsyncBeh) : AsyncBeh =
   END InitAsyncBeh;
 
 
-PROCEDURE ValueAsyncBeh (self : AsyncBeh; time : LONGREAL) : Matrix4.T 
+PROCEDURE ValueAsyncBeh (self : AsyncBeh; time : LONGREAL) : Matrix4.T
     RAISES {Prop.BadMethod} =
   BEGIN
     RETURN self.compute (time);
   END ValueAsyncBeh;
 
 
-PROCEDURE ComputeAsyncBeh (self : AsyncBeh; time : LONGREAL) : Matrix4.T 
+PROCEDURE ComputeAsyncBeh (self : AsyncBeh; time : LONGREAL) : Matrix4.T
     RAISES {Prop.BadMethod} =
   BEGIN
     IF self.proxy # NIL THEN
@@ -292,7 +292,7 @@ PROCEDURE ComputeAsyncBeh (self : AsyncBeh; time : LONGREAL) : Matrix4.T
       RAISE Prop.BadMethod("TransformProp.AsyncBeh.compute method is undefined");
     END;
   END ComputeAsyncBeh;
-    
+
 
 PROCEDURE NewAsync (b : AsyncBeh) : Val =
   BEGIN
@@ -325,12 +325,12 @@ PROCEDURE InitDepBeh (self : DepBeh) : DepBeh =
   END InitDepBeh;
 
 
-PROCEDURE ValueDepBeh (self : DepBeh; time : LONGREAL) : Matrix4.T 
+PROCEDURE ValueDepBeh (self : DepBeh; time : LONGREAL) : Matrix4.T
     RAISES {Prop.BadMethod} =
   BEGIN
-    (* "hot" is set to true while the value of the behavior is computed. 
-       So, if "hot" is currently true, we have cyclic dependencies. 
-       If unchecked, this would lead to an infinite recursion. 
+    (* "hot" is set to true while the value of the behavior is computed.
+       So, if "hot" is currently true, we have cyclic dependencies.
+       If unchecked, this would lead to an infinite recursion.
        We raise an exception instead. *)
     IF self.hot THEN
       RAISE Prop.BadMethod("TransformProp.DepBeh occurs in a dependency cycle");
@@ -345,7 +345,7 @@ PROCEDURE ValueDepBeh (self : DepBeh; time : LONGREAL) : Matrix4.T
   END ValueDepBeh;
 
 
-PROCEDURE ComputeDepBeh (self : DepBeh; time : LONGREAL) : Matrix4.T 
+PROCEDURE ComputeDepBeh (self : DepBeh; time : LONGREAL) : Matrix4.T
     RAISES {Prop.BadMethod} =
   BEGIN
     IF self.proxy # NIL THEN
@@ -366,7 +366,7 @@ PROCEDURE NewDep (b : DepBeh) : Val =
 (* Type "SyncBeh"                                                            *)
 (*****************************************************************************)
 
-REVEAL 
+REVEAL
   SyncBeh = PublicSyncBeh BRANDED OBJECT
     queue  : MyAnimRequestQueue;
   OVERRIDES
@@ -383,9 +383,9 @@ REVEAL
   END;
 
 
-PROCEDURE InitSyncBeh (self            : SyncBeh; 
+PROCEDURE InitSyncBeh (self            : SyncBeh;
                        ah              : AnimHandle.T;
-                       READONLY matrix : Matrix4.T) : SyncBeh = 
+                       READONLY matrix : Matrix4.T) : SyncBeh =
   BEGIN
     EVAL Beh.init (self);
     self.queue  := NEW (MyAnimRequestQueue).init (ah, matrix);
@@ -397,7 +397,7 @@ PROCEDURE InitSyncBeh (self            : SyncBeh;
   END InitSyncBeh;
 
 
-PROCEDURE ValueSyncBeh (self : SyncBeh; time : LONGREAL) : Matrix4.T 
+PROCEDURE ValueSyncBeh (self : SyncBeh; time : LONGREAL) : Matrix4.T
     RAISES {Prop.BadMethod}=
   BEGIN
     RETURN self.queue.value (time);
@@ -410,51 +410,51 @@ PROCEDURE AddRequest (self : SyncBeh; r : Request) RAISES {Prop.BadInterval} =
   END AddRequest;
 
 
-PROCEDURE ResetSyncBeh (self : SyncBeh; start : REAL) 
+PROCEDURE ResetSyncBeh (self : SyncBeh; start : REAL)
     RAISES {Prop.BadInterval} =
   BEGIN
     self.queue.insert (NEW (ResetReq).init (start, 0.0));
   END ResetSyncBeh;
 
 
-PROCEDURE ChangeToSyncBeh (self       : SyncBeh; 
-                           READONLY m : Matrix4.T; 
-                           start, dur : REAL) 
+PROCEDURE ChangeToSyncBeh (self       : SyncBeh;
+                           READONLY m : Matrix4.T;
+                           start, dur : REAL)
     RAISES {Prop.BadInterval} =
   BEGIN
     self.queue.insert (NEW (ChangeToReq).init (start, dur, m));
   END ChangeToSyncBeh;
 
 
-PROCEDURE TranslateSyncBeh (self : SyncBeh; x, y, z : REAL; start, dur : REAL) 
+PROCEDURE TranslateSyncBeh (self : SyncBeh; x, y, z : REAL; start, dur : REAL)
         RAISES {Prop.BadInterval} =
   BEGIN
     self.queue.insert (NEW (TranslateReq).init (start, dur, x, y, z));
   END TranslateSyncBeh;
 
 
-PROCEDURE ScaleSyncBeh (self : SyncBeh; x, y, z : REAL; start, dur : REAL) 
+PROCEDURE ScaleSyncBeh (self : SyncBeh; x, y, z : REAL; start, dur : REAL)
         RAISES {Prop.BadInterval} =
   BEGIN
     self.queue.insert (NEW (ScaleReq).init (start, dur, x, y, z));
   END ScaleSyncBeh;
 
 
-PROCEDURE RotateXSyncBeh (self : SyncBeh; a : REAL; start, dur : REAL) 
+PROCEDURE RotateXSyncBeh (self : SyncBeh; a : REAL; start, dur : REAL)
         RAISES {Prop.BadInterval} =
   BEGIN
     self.queue.insert (NEW (RotateXReq).init (start, dur, a));
   END RotateXSyncBeh;
 
 
-PROCEDURE RotateYSyncBeh (self : SyncBeh; a : REAL; start, dur : REAL) 
+PROCEDURE RotateYSyncBeh (self : SyncBeh; a : REAL; start, dur : REAL)
         RAISES {Prop.BadInterval} =
   BEGIN
     self.queue.insert (NEW (RotateYReq).init (start, dur, a));
   END RotateYSyncBeh;
 
 
-PROCEDURE RotateZSyncBeh (self : SyncBeh; a : REAL; start, dur : REAL) 
+PROCEDURE RotateZSyncBeh (self : SyncBeh; a : REAL; start, dur : REAL)
         RAISES {Prop.BadInterval} =
   BEGIN
     self.queue.insert (NEW (RotateZReq).init (start, dur, a));
@@ -472,8 +472,8 @@ PROCEDURE NewSync (ah : AnimHandle.T; READONLY matrix : Matrix4.T) : Val =
 (*****************************************************************************)
 
 
-REVEAL 
-  Request = PublicRequest BRANDED OBJECT 
+REVEAL
+  Request = PublicRequest BRANDED OBJECT
   OVERRIDES
     init  := InitRequest;
     value := ValueRequest;
@@ -490,9 +490,9 @@ PROCEDURE InitRequest (self : Request; start, dur : REAL) : Request =
   END InitRequest;
 
 
-PROCEDURE ValueRequest (self              : Request; 
-                        READONLY startval : Matrix4.T; 
-                        reltime           : REAL) : Matrix4.T 
+PROCEDURE ValueRequest (self              : Request;
+                        READONLY startval : Matrix4.T;
+                        reltime           : REAL) : Matrix4.T
     RAISES {Prop.BadMethod} =
   BEGIN
     IF self.proxy # NIL THEN
@@ -503,11 +503,11 @@ PROCEDURE ValueRequest (self              : Request;
   END ValueRequest;
 
 
-TYPE 
+TYPE
   ResetReq = Request BRANDED OBJECT
   METHODS
     init (start, dur : REAL) : ResetReq := ResetReqInit;
-  OVERRIDES 
+  OVERRIDES
     value := ResetReqValue;
   END;
 
@@ -519,7 +519,7 @@ PROCEDURE ResetReqInit (self : ResetReq; start, dur : REAL) : ResetReq =
   END ResetReqInit;
 
 
-PROCEDURE ResetReqValue (                      self     : ResetReq; 
+PROCEDURE ResetReqValue (                      self     : ResetReq;
                          <* UNUSED *> READONLY startval : Matrix4.T;
                                                reltime  : REAL) : Matrix4.T =
   BEGIN
@@ -528,7 +528,7 @@ PROCEDURE ResetReqValue (                      self     : ResetReq;
   END ResetReqValue;
 
 (*
-TYPE 
+TYPE
   ChangeToReq = Request BRANDED OBJECT
     validcache := FALSE;
     tx0, ty0, tz0, s0, ax0, ay0, az0 : REAL;
@@ -540,7 +540,7 @@ TYPE
   END;
 
 
-PROCEDURE ChangeToReqValue (self              : ChangeToReq; 
+PROCEDURE ChangeToReqValue (self              : ChangeToReq;
                             READONLY startval : Matrix4.T;
                             reltime           : REAL) : Matrix4.T =
 
@@ -561,9 +561,9 @@ PROCEDURE ChangeToReqValue (self              : ChangeToReq;
   BEGIN
     IF NOT self.validcache THEN
       self.validcache := TRUE;
-      Matrix4.Decompose (startval, self.tx0, self.ty0, self.tz0, self.s0, 
+      Matrix4.Decompose (startval, self.tx0, self.ty0, self.tz0, self.s0,
                          self.ax0, self.ay0, self.az0);
-      Matrix4.Decompose (self.m, self.tx1, self.ty1, self.tz1, self.s1, 
+      Matrix4.Decompose (self.m, self.tx1, self.ty1, self.tz1, self.s1,
                          self.ax1, self.ay1, self.az1);
       self.delta_ax := NormalizeAngle (self.ax1 - self.ax0);
       self.delta_ay := NormalizeAngle (self.ay1 - self.ay0);
@@ -593,7 +593,7 @@ PROCEDURE ChangeToReqValue (self              : ChangeToReq;
   END ChangeToReqValue;
 *)
 
-TYPE 
+TYPE
   ChangeToReq = Request BRANDED OBJECT
     m : Matrix4.T;
   (*** the rest gets filled in upon the first call to "self.value" ***)
@@ -603,14 +603,14 @@ TYPE
     q : Quaternion.T;
     A : Matrix4.T;
   METHODS
-    init (start, dur : REAL; READONLY m : Matrix4.T) : ChangeToReq := 
+    init (start, dur : REAL; READONLY m : Matrix4.T) : ChangeToReq :=
         ChangeToReqInit;
   OVERRIDES
     value := ChangeToReqValue;
   END;
 
 
-PROCEDURE ChangeToReqInit (self         : ChangeToReq; 
+PROCEDURE ChangeToReqInit (self         : ChangeToReq;
                            start, dur   : REAL;
                            READONLY val : Matrix4.T) : ChangeToReq =
   BEGIN
@@ -620,7 +620,7 @@ PROCEDURE ChangeToReqInit (self         : ChangeToReq;
   END ChangeToReqInit;
 
 
-PROCEDURE ChangeToReqValue (self              : ChangeToReq; 
+PROCEDURE ChangeToReqValue (self              : ChangeToReq;
                             READONLY startval : Matrix4.T;
                             reltime           : REAL) : Matrix4.T =
   VAR
@@ -631,8 +631,8 @@ PROCEDURE ChangeToReqValue (self              : ChangeToReq;
       IF NOT self.validcache THEN
         WITH A = Matrix4.Decomp(startval,self.tx0,self.ty0,self.tz0,self.s0),
              B = Matrix4.Decomp(self.m,  self.tx1,self.ty1,self.tz1,self.s1),
-                (* We use the fact that "A" is an orthogonal matrix, 
-                   and that for orthogonal matrices, inverse and transpose 
+                (* We use the fact that "A" is an orthogonal matrix,
+                   and that for orthogonal matrices, inverse and transpose
                    are the same. *)
              R = Matrix4.Multiply (B, Matrix4.Transpose (A)) DO
           self.A := A;
@@ -646,7 +646,7 @@ PROCEDURE ChangeToReqValue (self              : ChangeToReq;
       ELSE
         f := 1.0;
       END;
-    
+
       WITH tx = self.tx0 + (self.tx1 - self.tx0) * f,
            ty = self.ty0 + (self.ty1 - self.ty0) * f,
            tz = self.tz0 + (self.tz1 - self.tz0) * f,
@@ -666,11 +666,11 @@ PROCEDURE ChangeToReqValue (self              : ChangeToReq;
   END ChangeToReqValue;
 
 
-TYPE 
+TYPE
   TranslateReq = Request BRANDED OBJECT
     x, y, z : REAL;
-  METHODS 
-    init (start, dur : REAL; x, y, z : REAL) : TranslateReq := 
+  METHODS
+    init (start, dur : REAL; x, y, z : REAL) : TranslateReq :=
         TranslateReqInit;
   OVERRIDES
     value := TranslateReqValue;
@@ -689,7 +689,7 @@ PROCEDURE TranslateReqInit (self       : TranslateReq;
   END TranslateReqInit;
 
 
-PROCEDURE TranslateReqValue (self              : TranslateReq; 
+PROCEDURE TranslateReqValue (self              : TranslateReq;
                              READONLY startval : Matrix4.T;
                              reltime           : REAL) : Matrix4.T =
   VAR
@@ -704,10 +704,10 @@ PROCEDURE TranslateReqValue (self              : TranslateReq;
   END TranslateReqValue;
 
 
-TYPE 
+TYPE
   ScaleReq = Request BRANDED OBJECT
     x, y, z : REAL;
-  METHODS 
+  METHODS
     init (start, dur : REAL; x, y, z : REAL) : ScaleReq := ScaleReqInit;
   OVERRIDES
     value := ScaleReqValue;
@@ -726,7 +726,7 @@ PROCEDURE ScaleReqInit (self       : ScaleReq;
   END ScaleReqInit;
 
 
-PROCEDURE ScaleReqValue (self              : ScaleReq; 
+PROCEDURE ScaleReqValue (self              : ScaleReq;
                          READONLY startval : Matrix4.T;
                          reltime           : REAL) : Matrix4.T =
   VAR
@@ -737,16 +737,16 @@ PROCEDURE ScaleReqValue (self              : ScaleReq;
     ELSE
       f := 1.0;
     END;
-    RETURN Matrix4.Scale (startval, 1.0 + (self.x - 1.0) * f, 
-                                    1.0 + (self.y - 1.0) * f, 
+    RETURN Matrix4.Scale (startval, 1.0 + (self.x - 1.0) * f,
+                                    1.0 + (self.y - 1.0) * f,
                                     1.0 + (self.z - 1.0) * f);
   END ScaleReqValue;
 
 
-TYPE 
+TYPE
   RotateRequest = Request BRANDED OBJECT
     a : REAL;
-  METHODS 
+  METHODS
     init (start, dur : REAL; a : REAL) : RotateRequest := RotateRequestInit;
   END;
 
@@ -761,14 +761,14 @@ PROCEDURE RotateRequestInit (self       : RotateRequest;
   END RotateRequestInit;
 
 
-TYPE 
+TYPE
   RotateXReq = RotateRequest BRANDED OBJECT
   OVERRIDES
     value := RotateXReqValue;
   END;
 
 
-PROCEDURE RotateXReqValue (self              : RotateXReq; 
+PROCEDURE RotateXReqValue (self              : RotateXReq;
                            READONLY startval : Matrix4.T;
                            reltime           : REAL) : Matrix4.T =
   VAR
@@ -783,7 +783,7 @@ PROCEDURE RotateXReqValue (self              : RotateXReq;
   END RotateXReqValue;
 
 
-TYPE 
+TYPE
   RotateYReq = RotateRequest BRANDED OBJECT
   OVERRIDES
     value := RotateYReqValue;
@@ -805,7 +805,7 @@ PROCEDURE RotateYReqValue (self              : RotateYReq;
   END RotateYReqValue;
 
 
-TYPE 
+TYPE
   RotateZReq = RotateRequest BRANDED OBJECT
   OVERRIDES
     value := RotateZReqValue;
@@ -832,11 +832,11 @@ PROCEDURE RotateZReqValue (self              : RotateZReq;
 (*****************************************************************************)
 
 
-TYPE 
+TYPE
   MyAnimRequestQueue = AnimRequestQueue.T BRANDED OBJECT
     matrix : Matrix4.T;  (* The initial value of the pv *)
   METHODS
-    init (ah : AnimHandle.T; READONLY matrix : Matrix4.T) : MyAnimRequestQueue 
+    init (ah : AnimHandle.T; READONLY matrix : Matrix4.T) : MyAnimRequestQueue
       := MyAnimRequestQueue_Init;
     value (time : LONGREAL) : Matrix4.T RAISES {Prop.BadMethod}
       := MyAnimRequestQueue_Value;
@@ -845,7 +845,7 @@ TYPE
   END;
 
 
-PROCEDURE MyAnimRequestQueue_Init (self            : MyAnimRequestQueue; 
+PROCEDURE MyAnimRequestQueue_Init (self            : MyAnimRequestQueue;
                                    ah              : AnimHandle.T;
                                    READONLY matrix : Matrix4.T) : MyAnimRequestQueue =
   BEGIN
@@ -855,9 +855,9 @@ PROCEDURE MyAnimRequestQueue_Init (self            : MyAnimRequestQueue;
   END MyAnimRequestQueue_Init;
 
 
-PROCEDURE MyAnimRequestQueue_Value (self : MyAnimRequestQueue; 
+PROCEDURE MyAnimRequestQueue_Value (self : MyAnimRequestQueue;
                                     time : LONGREAL) : Matrix4.T
-    RAISES {Prop.BadMethod} = 
+    RAISES {Prop.BadMethod} =
   VAR
     l       := self.list;
     req     : Request;
@@ -945,7 +945,7 @@ PROCEDURE PopStack (self : Stack) : Base =
     DEC (self.cnt);
     self.top := self.vals[self.cnt];
     RETURN self.top;
-  END PopStack;    
+  END PopStack;
 
 
 BEGIN

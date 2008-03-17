@@ -15,8 +15,8 @@ IMPORT FloatMode, Matrix4, Mth, RealFloat;
 
 PROCEDURE ToMatrix4 (q : T) : Matrix4.T =
   BEGIN
-    WITH aa = q.a * q.a, ab = q.a * q.b, ac = q.a * q.c, ad = q.a * q.d, 
-         bb = q.b * q.b, bc = q.b * q.c, bd = q.b * q.d, 
+    WITH aa = q.a * q.a, ab = q.a * q.b, ac = q.a * q.c, ad = q.a * q.d,
+         bb = q.b * q.b, bc = q.b * q.c, bd = q.b * q.d,
          cc = q.c * q.c, cd = q.c * q.d,
          dd = q.d * q.d DO
       RETURN Matrix4.T {
@@ -37,9 +37,9 @@ PROCEDURE FromMatrix4 (READONLY M : Matrix4.T) : T =
          cc4 = - M[0][0] - M[1][1] + M[2][2] + M[3][3],
          dd4 =   M[0][0] + M[1][1] + M[2][2] + M[3][3],
          max = MAX (aa4, MAX (bb4, MAX (cc4, dd4))) DO
-      (* aa4 stands for 4.0 * q.a * q.a, where q is the quaternion we are 
-         looking for; similar for bb4, cc4, and dd4. At this point, 
-         0 <= aa4 <= 1, or M was invalid. We are using the largest of 
+      (* aa4 stands for 4.0 * q.a * q.a, where q is the quaternion we are
+         looking for; similar for bb4, cc4, and dd4. At this point,
+         0 <= aa4 <= 1, or M was invalid. We are using the largest of
          aa4, bb4, cc4, dd4 to guarantee numeric stability. *)
       IF aa4 = max THEN
         WITH a  = RealFloat.Sqrt (aa4 / 4.0),

@@ -12,10 +12,10 @@ IMPORT AnimHandle, Prop;
 
 TYPE
   Kind = {Solid, Dashed, Dotted, DashDot};
-(* "Kind" enumerates the four possible ways a line can be stroked: solid, 
-   dashed, dotted, or alternatingly dashed and dotted. These are the four 
-   stroking styles that are supported by PEX; OpenGL has a more general way 
-   of defining stroke styles. Therefore, it is possible that we will extend 
+(* "Kind" enumerates the four possible ways a line can be stroked: solid,
+   dashed, dotted, or alternatingly dashed and dotted. These are the four
+   stroking styles that are supported by PEX; OpenGL has a more general way
+   of defining stroke styles. Therefore, it is possible that we will extend
    this interface once OpenGL is available to us. *)
 
 TYPE
@@ -35,7 +35,7 @@ TYPE
   END;
 
   Beh <: PublicBeh;
-  PublicBeh = Prop.Beh OBJECT 
+  PublicBeh = Prop.Beh OBJECT
   METHODS
     init () : Beh;
   END;
@@ -71,7 +71,7 @@ TYPE
   END;
 
   Request <: PublicRequest;
-  PublicRequest = Prop.Request OBJECT 
+  PublicRequest = Prop.Request OBJECT
   METHODS
     init (start, dur : REAL) : Request;
     value (startkind : Kind; reltime : REAL) : Kind RAISES {Prop.BadMethod};

@@ -12,10 +12,10 @@ IMPORT CB, ProxiedObj;
 
 FROM PositionCB IMPORT T, Rec;
 
-(* The Proxy Maker (PM) procedure for PositionCB.T is 
+(* The Proxy Maker (PM) procedure for PositionCB.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 TYPE

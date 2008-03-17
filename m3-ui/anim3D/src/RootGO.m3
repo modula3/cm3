@@ -8,11 +8,11 @@
 
 MODULE RootGO EXPORTS RootGO, RootGOPrivate, RootGOProxy;
 
-IMPORT AmbientLightGO, AnimServer, BooleanProp, BooleanPropPrivate, CameraGO, 
+IMPORT AmbientLightGO, AnimServer, BooleanProp, BooleanPropPrivate, CameraGO,
        CameraGOPrivate, Color, ColorProp, ColorPropPrivate, Env, GO, GOPrivate,
-       GraphicsBase, GraphicsBasePrivate, GroupGO, GroupGOPrivate, MouseCB, 
-       ParseParams, PerspCameraGO, Point, Point3, PositionCB, Prop, RealProp, 
-       RealPropPrivate, Stdio, Text, TransformProp, VBT, VectorLightGO, 
+       GraphicsBase, GraphicsBasePrivate, GroupGO, GroupGOPrivate, MouseCB,
+       ParseParams, PerspCameraGO, Point, Point3, PositionCB, Prop, RealProp,
+       RealPropPrivate, Stdio, Text, TransformProp, VBT, VectorLightGO,
        Win_OpenGL_Base, X_OpenGL_Base, X_PEX_Base;
 
 
@@ -82,7 +82,7 @@ PROCEDURE FindName (self : T; name : TEXT) : GO.T =
   END FindName;
 
 
-PROCEDURE Adjust (self : T; time : LONGREAL) = 
+PROCEDURE Adjust (self : T; time : LONGREAL) =
   BEGIN
     (*** Adjust self like any other root ... ***)
     GroupGO.T.adjust (self, time);
@@ -169,9 +169,9 @@ PROCEDURE New (cam : CameraGO.T; base : GraphicsBase.T) : T =
 
 PROCEDURE NewStd (base : GraphicsBase.T) : T RAISES {GraphicsBase.Failure} =
 
-  PROCEDURE NewBase (title: TEXT) : GraphicsBase.T 
+  PROCEDURE NewBase (title: TEXT) : GraphicsBase.T
       RAISES {GraphicsBase.Failure} =
-    TYPE 
+    TYPE
       Pref = {None, X_PEX, X_OpenGL};
     VAR
       pref := Pref.None;
@@ -204,11 +204,11 @@ PROCEDURE NewStd (base : GraphicsBase.T) : T RAISES {GraphicsBase.Failure} =
         END;
       END;
 
-      (* Try to create the preferred base. 
+      (* Try to create the preferred base.
          If this does not succeed, create any base. *)
-      TRY 
+      TRY
         CASE pref OF
-        | Pref.None     => 
+        | Pref.None     =>
         | Pref.X_PEX    => RETURN NEW (X_PEX_Base.T).init (title);
         | Pref.X_OpenGL => RETURN NEW (X_OpenGL_Base.T).init (title);
         END;
@@ -216,25 +216,25 @@ PROCEDURE NewStd (base : GraphicsBase.T) : T RAISES {GraphicsBase.Failure} =
         GraphicsBase.Failure =>
       END;
 
-      TRY 
+      TRY
         RETURN NEW (X_PEX_Base.T).init (title);
       EXCEPT
         GraphicsBase.Failure =>
       END;
-      TRY 
+      TRY
         RETURN NEW (X_OpenGL_Base.T).init (title);
       EXCEPT
         GraphicsBase.Failure =>
       END;
-      TRY 
+      TRY
         RETURN NEW (Win_OpenGL_Base.T).init (title);
       EXCEPT
         GraphicsBase.Failure =>
       END;
-      
+
       RAISE GraphicsBase.Failure;
     END NewBase;
-      
+
   VAR
     root : T;
     cam := PerspCameraGO.New (from := Point3.T{0.0, 0.0, 100.0},
@@ -266,7 +266,7 @@ PROCEDURE NewStd (base : GraphicsBase.T) : T RAISES {GraphicsBase.Failure} =
   END NewStd;
 
 
-TYPE 
+TYPE
   MyPositionCB = PositionCB.T OBJECT
     go  : T;
     pos : Point.T;
@@ -285,8 +285,8 @@ TYPE
 PROCEDURE PositionInvoke (self : MyPositionCB; pr : PositionCB.Rec) =
   <* FATAL GO.PropUndefined *>
   BEGIN
-    WITH d   = Point.Sub (pr.pos2D, self.pos), 
-         dx  = FLOAT (d.h), dy = FLOAT (d.v), 
+    WITH d   = Point.Sub (pr.pos2D, self.pos),
+         dx  = FLOAT (d.h), dy = FLOAT (d.v),
          beh = NARROW (GO.GetTransform(self.go).beh, TransformProp.ConstBeh) DO
       IF VBT.Modifier.Shift IN pr.modifiers THEN
         CASE  self.but OF
@@ -316,8 +316,8 @@ PROCEDURE MouseInvoke (self : MyMouseCB; mr : MouseCB.Rec) =
   <* FATAL GO.StackError *>
   BEGIN
     IF mr.clickType = VBT.ClickType.FirstDown THEN
-      self.go.pushPositionCB (NEW (MyPositionCB, 
-                                   go  := self.go, 
+      self.go.pushPositionCB (NEW (MyPositionCB,
+                                   go  := self.go,
                                    pos := mr.pos2D,
                                    but := mr.whatChanged).init());
     ELSIF mr.clickType = VBT.ClickType.LastUp THEN

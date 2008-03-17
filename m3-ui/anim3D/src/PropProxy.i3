@@ -10,10 +10,10 @@ INTERFACE PropProxy;
 
 FROM Prop IMPORT T;
 
-(* The Proxy Maker (PM) procedure for Prop.T is 
+(* The Proxy Maker (PM) procedure for Prop.T is
    registered by assigning it to MkProxyT. *)
 
-VAR 
+VAR
   MkProxyT : PROCEDURE (x : T) := NIL;
 
 END PropProxy.

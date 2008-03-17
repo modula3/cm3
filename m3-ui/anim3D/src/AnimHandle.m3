@@ -36,7 +36,7 @@ PROCEDURE Init (self : T) : T =
     IF MkProxyT # NIL THEN
       MkProxyT (self);
     END;
-      
+
     RETURN self;
   END Init;
 
@@ -55,7 +55,7 @@ PROCEDURE Attach (self : T; q : AnimRequestQueue.T) =
         list := NEW (List, head := q, tail := list);
       ELSIF list.head # q THEN
         AddIfNew (list.tail);
-      END;  
+      END;
     END AddIfNew;
 
   BEGIN
@@ -77,12 +77,12 @@ PROCEDURE Animate (self : T) =
         tmp := tmp.tail;
       END;
       self.endtime := self.starttime + FLOAT (max, LONGREAL);
-      
+
       AnimServer.PauseAnimHandle (self);
-      
+
       self.activated := FALSE;
-      
-      (* Flush all the animation request queues attached 
+
+      (* Flush all the animation request queues attached
          to the animation handle. *)
       tmp := self.list;
       WHILE tmp # NIL DO
@@ -91,7 +91,7 @@ PROCEDURE Animate (self : T) =
       END;
     END;
   END Animate;
-  
+
 
 BEGIN
 END AnimHandle.

@@ -8,7 +8,7 @@
 
 MODULE PerspCameraGO EXPORTS PerspCameraGO, PerspCameraGOProxy;
 
-IMPORT CameraGO, CameraGOPrivate, GO, GOPrivate, GraphicsBase, 
+IMPORT CameraGO, CameraGOPrivate, GO, GOPrivate, GraphicsBase,
        GraphicsBasePrivate, Matrix4, Point3, PointProp, PointPropPrivate, Prop,
        RealProp, RealPropPrivate, TransformPropPrivate;
 
@@ -23,7 +23,7 @@ PROCEDURE New (from, to, up : Point3.T; fovy : REAL) : T =
     cam.setProp (Fovy.bind (RealProp.NewConst (fovy)));
     RETURN cam;
   END New;
-    
+
 
 REVEAL
   T = Public BRANDED OBJECT
@@ -48,7 +48,7 @@ PROCEDURE Init (self : T) : T =
 
 PROCEDURE DamageIfDependent (self : T; pn : Prop.Name) =
   BEGIN
-    IF pn = CameraGO.From OR pn = CameraGO.To OR pn = CameraGO.Up OR 
+    IF pn = CameraGO.From OR pn = CameraGO.To OR pn = CameraGO.Up OR
        pn = CameraGO.Aspect OR pn = Fovy OR pn = GO.Transform THEN
       self.damaged := TRUE;
     END;
@@ -84,6 +84,6 @@ PROCEDURE Draw (self : T; state : GraphicsBase.T) =
 (*****************************************************************************)
 
 
-BEGIN 
+BEGIN
   Fovy := NEW (RealProp.Name).init (0.1);
 END PerspCameraGO.
