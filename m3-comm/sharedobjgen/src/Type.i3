@@ -29,9 +29,10 @@ TYPE
 
   Ordinal =  T BRANDED OBJECT END; (* Enumeration | Subrange *)
 
-  Enumeration = Ordinal BRANDED OBJECT END; (* Char | UserDefined *)
+  Enumeration = Ordinal BRANDED OBJECT END; (* Char | WideChar | UserDefined *)
 
   Char = Enumeration BRANDED OBJECT END;
+  WideChar = Enumeration BRANDED OBJECT END;
 
   UserDefined = Enumeration OBJECT
     elts : REF ARRAY OF Atom.T;
@@ -45,6 +46,9 @@ TYPE
 
   (* INTEGER is represented by a Subrange p with p.base = p,
      p.min = FIRST(INTEGER) and p.max = LAST(INTEGER). *)
+
+  (* LONGINT is represented by a Subrange p with p.base = p,
+     p.min = FIRST(LONGINT) and p.max = LAST(LONGINT). *)
 
   Real = T BRANDED OBJECT END;
 
@@ -171,9 +175,11 @@ TYPE
 
 VAR (* READONLY *)
   integer       : Subrange;
+  longint       : Subrange;
   cardinal      : Subrange;
   boolean       : UserDefined;
   char          : Char;
+  widechar      : WideChar;
   real          : Real;
   longreal      : LongReal;
   extended      : Extended;
@@ -187,42 +193,18 @@ VAR (* READONLY *)
 
 PROCEDURE ToText(t: T; byName: BOOLEAN := TRUE): Text.T;
 (* Return a textual representation of the type.  If 
-   byName AND t.name # NIL, the text for t.name is returned.  
+   "byName AND t.name # NIL", the text for "t.name" is returned.  
    Otherwise the returned value is composed from the type of T and its 
-   component values.  Note that even if byName = TRUE, names
-   within the definition of T will not be expanded.  An opqaue
-   type can only be represented by name; if T is an opaque type and
-   byName = FALSE, the returned text is meaningless (it contains
+   component values.  Note that even if "byName=TRUE", names
+   within the definition of "T" will not be expanded.  An opqaue
+   type can only be represented by name; if "t" is an opaque type and
+   "byName=FALSE", the returned text is meaningless (it contains
    a warning). *)
 
 PROCEDURE MayBeRefAny(t: T): BOOLEAN;
-(* Returns "TRUE" if t is or may be revealed to be REFANY *)
+(* Returns "TRUE" if "t" is or may be revealed to be "REFANY" *)
  
 PROCEDURE NamedType(t: T): BOOLEAN;
-(* Returns "TRUE" if t has a name, i.e. t.name # NIL *)
+(* Returns "TRUE" if "t" has a name, i.e. "t.name#NIL" *)
 
 END Type.
-
-
-(*
-PROCEDURE Size (t: T): INTEGER;
-(* return the size in bits of values of type t;  -1 if variable sized *)
-
-PROCEDURE MinSize (t: T): INTEGER;
-(* return the minimum size allowed for values of type t *)
-
-PROCEDURE Alignment (t: T): INTEGER;
-(* return the required bit alignment for values of type t *)
-
-PROCEDURE Bounds (t: T): Interval.T;
-(* return the bounds of an ordinal type, [0,-1] for non-ordinal types *)
-
-PROCEDURE Base (t: T): T;
-(* return the base type (strip packing & subranges) *)
-
-PROCEDURE IsTraced (t: T): BOOLEAN;
-(* TRUE iff t is a traced ref, or contains a traced ref *)
-
-PROCEDURE IsEmpty (t: T): BOOLEAN;
-(* TRUE iff t is an empty type *)
-*)

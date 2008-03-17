@@ -21,6 +21,39 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.2  2001/12/03 17:23:37  wagner
+ * add copyright notes and overrides
+ *
+ * added: sharedobjgen/COPYRIGHT
+ * added: sharedobjgen/COPYRIGHT-COLUMBIA
+ * added: sharedobjgen/src/COPYRIGHT-COLUMBIA
+ * added: sharedobjgen/src/m3overrides
+ * modified: sharedobjgen/src/SOxCodeFiles.i3
+ * modified: sharedobjgen/src/SOxCodeFiles.m3
+ * modified: sharedobjgen/src/SOxCodeGenError.i3
+ * modified: sharedobjgen/src/SOxCodeGenError.m3
+ * modified: sharedobjgen/src/SOxCodeUtils.i3
+ * modified: sharedobjgen/src/SOxCodeUtils.m3
+ * modified: sharedobjgen/src/SOxCoder.i3
+ * modified: sharedobjgen/src/SOxDummyCode.i3
+ * modified: sharedobjgen/src/SOxDummyCode.m3
+ * modified: sharedobjgen/src/SOxIntfCBCode.i3
+ * modified: sharedobjgen/src/SOxIntfCBCode.m3
+ * modified: sharedobjgen/src/SOxIntfCBProxyCode.i3
+ * modified: sharedobjgen/src/SOxIntfCBProxyCode.m3
+ * modified: sharedobjgen/src/SOxIntfPklCode.i3
+ * modified: sharedobjgen/src/SOxIntfPklCode.m3
+ * modified: sharedobjgen/src/SOxIntfProxyCode.i3
+ * modified: sharedobjgen/src/SOxIntfProxyCode.m3
+ * modified: sharedobjgen/src/SOxModuleCBCode.i3
+ * modified: sharedobjgen/src/SOxModuleCBCode.m3
+ * modified: sharedobjgen/src/SOxModuleProxyCode.i3
+ * modified: sharedobjgen/src/SOxModuleProxyCode.m3
+ * modified: sharedobjgen/src/SOxModuleSOCode.i3
+ * modified: sharedobjgen/src/SOxModuleSOCode.m3
+ * modified: sharedobjgen/src/StubGenTool.i3
+ * modified: sharedobjgen/src/StubGenTool.m3
+ *
  * Revision 1.1.1.1  2001/12/02 13:15:54  wagner
  * Blair MacIntyre's sharedobjgen package
  *
@@ -89,10 +122,10 @@ VAR
                     Atom.FromText("EmbProxiedObj"), 
                     Atom.FromText("PickleStubs"), 
                     Atom.FromText("ObjectSpace")
-                    (*
+(*
                     Atom.FromText("Time"), Atom.FromText("Fmt"),
                     Atom.FromText("IO")
-                    *)
+*)
                     };
 PROCEDURE initImports (<*UNUSED*> self    : T;
                                   basename: TEXT;
@@ -434,17 +467,17 @@ PROCEDURE Surrogates (self: T;
           PutLine(wr, "id := ThreadF.MyId();");
           EndLine(wr, "dataPresent: BOOLEAN; <* NOWARN *>");
           (* PutLine(wr, "stubProt: StubLib.StubProtocol;"); *)
-          (*
-            IF methods[i].sig.result # NIL THEN
-              PutLine(wr, "res: " &
-                CodeForType.ToText(methods[i].sig.result) & ";");
-            END;
-          *)
-          (*
-            IF StubUtils.perfMon THEN
-              PutLine(wr, "wridx, rdidx: INTEGER;" & PerfComment);
-            END;
-          *)
+(*
+          IF methods[i].sig.result # NIL THEN
+            PutLine(wr, "res: " &
+              CodeForType.ToText(methods[i].sig.result) & ";");
+          END;
+*)
+(*
+          IF StubUtils.perfMon THEN
+            PutLine(wr, "wridx, rdidx: INTEGER;" & PerfComment);
+          END;
+*)
         END;
         Tab(wr, 2);
         PutLine(wr, "BEGIN");
@@ -493,24 +526,24 @@ PROCEDURE Surrogates (self: T;
 
           Tab(wr, 2);
           PutLine(wr, "TRY");
-          (*
-            IF StubUtils.perfMon THEN
+(*
+          IF StubUtils.perfMon THEN
             PutLine(wr, "IF NetObjPerf.enabled THEN" & PerfComment);
             PutLine(wr, "  NetObjPerf.StartCall(PerfUtil.ThreadId(), " &
               Fmt.Int(NUMBER(methods[i].sig.formals^)) & ");");
             PutLine(wr, "END;");
-            END;
-          *)
+          END;
+*)
           PutLine(wr, "out := SharedObjStubLib.StartCall(self);");
           Tab(wr, 2);
           PutLine(wr, "IF SharedObjStubLib.MarshalArgs(out) THEN");
           PutLine(wr, "SharedObjStubLib.OutInt32(out, ORD(" &
             identfTxt & "_SOMethods." & Atom.ToText(methods[i].name) & "));");
-          (*
-            IF StubUtils.perfMon THEN
-              PutLine(wr, "wridx := Wr.Index(c.wr);" & PerfComment);
-            END;
-          *)
+(*
+          IF StubUtils.perfMon THEN
+            PutLine(wr, "wridx := Wr.Index(c.wr);" & PerfComment);
+          END;
+*)
           FOR j := 0 TO LAST(methods[i].sig.formals^) DO
             WITH f = methods[i].sig.formals[j] DO
               MarshalTypedVal(wr, Atom.ToText(f.name) & "_arg",
@@ -518,11 +551,11 @@ PROCEDURE Surrogates (self: T;
                               calling := TRUE, maySuppress := TRUE);
             END;
           END;
-          (*
-            IF StubUtils.perfMon THEN
-              PutLine(wr, "wridx := Wr.Index(c.wr) - wridx;" & PerfComment);
-            END;
-          *)
+(*
+          IF StubUtils.perfMon THEN
+            PutLine(wr, "wridx := Wr.Index(c.wr) - wridx;" & PerfComment);
+          END;
+*)
           EndTab(wr);
           PutLine(wr, "END;");
           PutLine(wr, "SharedObjStubLib.SequenceCall(out, SharedObj_Protocol);");
@@ -585,11 +618,11 @@ PROCEDURE Surrogates (self: T;
           END;
           EndLine(wr, "END;");
 
-          (*
-            IF StubUtils.perfMon THEN
-              PutLine(wr, "rdidx := Rd.Index(c.rd);" & PerfComment);
-            END;
-          *)
+(*
+          IF StubUtils.perfMon THEN
+            PutLine(wr, "rdidx := Rd.Index(c.rd);" & PerfComment);
+          END;
+*)
         ELSE
           Tab(wr, 2);
           PutLine(wr, "TRY");
@@ -742,10 +775,10 @@ PROCEDURE Callbacks (self: T;
             CodeForType.PrintSig(wr, sig, NIL, suffix := "_arg",
                                 exports := SOexports);
             EndLine(wr, ") =");
-            (*
+(*
             CodeForType.ProcHeader(wr, t, procedureName, sig,
                                    suffix := "_arg", exports := SOexports); 
-            *)
+*)
             PutLine(wr, "VAR cbs := self.callbacks;");
             Tab(wr, 2);
             PutLine(wr, "BEGIN");
@@ -895,10 +928,10 @@ PROCEDURE Picklers (self: T;
       Tab(wr, 2);
       PutLine(wr, "BEGIN");
 
-      (*
+(*
       PutLine(wr, "IO.Put(\"Pickle.Special for " & 
         self.basename & "." & identfsTxt & "\\n\");");
-      *)
+*)
       Tab(wr, 2);
       PutLine(wr, "IF tc # TYPECODE(" & identfsTxt & 
         ") AND tc # TYPECODE(" & identfTxt & ") THEN");
@@ -907,10 +940,10 @@ PROCEDURE Picklers (self: T;
       PutLine(wr, "END;");
       PutLine(wr, "obj := NARROW(ref, " & identfsTxt & ");");
       PutLine(wr, "out.writeType(tc);");
-      (*
+(*
       PutLine(wr, "IO.Put(\"Pickle.Special.wr for " & 
         self.basename & "." & identfsTxt & ": writing shared obj\\n\");");
-      *)
+*)
       PutLine(wr, "SharedObjStubLib.StartWritePickle(obj, out);");
       Tab(wr,2);
       PutLine(wr, "LOCK sp" & identfTxt & ".mu DO");
@@ -919,10 +952,10 @@ PROCEDURE Picklers (self: T;
       PutLine(wr, "sp.write(obj, out);");
 
       EndLine(wr, "SharedObjStubLib.EndWritePickle(obj, out);");
-      (*
+(*
       EndLine(wr, "IO.Put(\"Pickle.Special.wr for " & 
         self.basename & "." & identfsTxt & ": wrote shared obj\\n\");");
-      *)
+*)
       EndLine(wr, "END " & procedureName & ";");
       Nl(wr, freshLine := FALSE);
 
@@ -1006,17 +1039,17 @@ PROCEDURE Picklers (self: T;
       PutLine(wr, "BEGIN");
       Tab(wr, 2);
       PutLine(wr, "IF tc = TYPECODE(" & identfTxt & ") THEN");
-      (*
+(*
       PutLine(wr, "IO.Put(\"Pickle.Special.rd for " & 
         self.basename & "." & identfsTxt & ": shared obj\\n\");");
-      *)
+*)
       EndLine(wr, "obj := NEW(" & identfTxt & ");");
       Tab(wr, 2);
       PutLine(wr, "ELSIF tc = TYPECODE(" & identfsTxt & ") THEN");
-      (*
+(*
       PutLine(wr, "IO.Put(\"Pickle.Special.rd for " & 
         self.basename & "." & identfsTxt & ": non-shared obj\\n\");");
-      *)
+*)
       EndLine(wr, "obj := NEW(" & identfsTxt & ");");
       Tab(wr, 2);
       PutLine(wr, "ELSE");
@@ -1024,15 +1057,15 @@ PROCEDURE Picklers (self: T;
         self.basename & "." & identfTxt & "\");");
       PutLine(wr, "END;");
 
-      (*
+(*
       PutLine(wr, "IO.Put(\"Pickle.Special.rd for " & 
         self.basename & "." & identfsTxt & ": reading space\\n\");");
-      *)
+*)
       PutLine(wr, "space := in.read();");
-      (*
+(*
       PutLine(wr, "IO.Put(\"Pickle.Special.rd for " & 
         self.basename & "." & identfsTxt & ": reading shared obj\\n\");");
-      *)
+*)
       PutLine(wr, "SharedObjStubLib.StartReadPickle(obj, in, space);");
 
       Tab(wr,2);
@@ -1043,10 +1076,10 @@ PROCEDURE Picklers (self: T;
 
       Tab(wr, 2);
       PutLine(wr, "IF tc = TYPECODE(" & identfTxt & ") THEN");
-      (*
+(*
       PutLine(wr, "IO.Put(\"Pickle.Special.rd for " & 
         self.basename & "." & identfsTxt & ": setup shared obj\\n\");");
-      *)
+*)
       PutLine(wr, "obj := SharedObjStubLib.SetupNewCopy(obj, in, id, space);");
       PutLine(wr, "proxy := PickleStubs.InRef(in);");
       Tab(wr, 2);
@@ -1060,10 +1093,10 @@ PROCEDURE Picklers (self: T;
       EndLine(wr, "obj.proxy := PickleStubs.InRef(in);");
       PutLine(wr, "END;");
 
-      (* 
+(* 
       PutLine(wr, "IO.Put(\"Pickle.Special.rd for " & 
         self.basename & "." & identfsTxt & ": done\\n\");");
-      *)
+*)
       EndLine(wr, "RETURN obj;");
       EndLine(wr, "END " & procedureName & ";");
       Nl(wr, freshLine := FALSE);
@@ -1135,10 +1168,10 @@ PROCEDURE MarshalTypedVal (fmtWr      : Formatter.T;
     | Type.Subrange (sub) =>
         IF t = Type.integer THEN
           StubLibCall(fmtWr, "Integer", varName, libName, d);
+        ELSIF t = Type.longint THEN
+          StubLibCall(fmtWr, "Longint", varName, libName, d);
         ELSE
-          SubRange(fmtWr, varName, libName, t, d,
-                   NARROW(sub.min, Value.Ordinal).ord,
-                   NARROW(sub.max, Value.Ordinal).ord);
+          SubRange(fmtWr, varName, libName, t, d, sub.min, sub.max);
         END;
     | Type.Real => StubLibCall(fmtWr, "Real", varName, libName, d);
     | Type.LongReal => StubLibCall(fmtWr, "Longreal", varName, libName, d);
@@ -1216,17 +1249,29 @@ PROCEDURE SubRange (fmtWr   : Formatter.T;
                     libName : TEXT;
                     t       : Type.Subrange;
                     d       : Direction;
-                    min, max: INTEGER        ) RAISES {SOxCodeGenError.E}=
+                    min, max: Value.T) RAISES {SOxCodeGenError.E}=
   BEGIN
-    IF t.base = Type.integer OR t.base = t THEN
-      StubLibCall(fmtWr, "Integer", varName, libName, d,
-                  ", " & Fmt.Int(min) & ", " & Fmt.Int(max));
+    IF t = Type.longint OR t.base = Type.longint THEN
+      WITH min = NARROW(min, Value.Longint).val,
+           max = NARROW(max, Value.Longint).val DO
+        StubLibCall(fmtWr, "Longint", varName, libName, d,
+                    ", " & Fmt.LongInt(min) & ", " & Fmt.LongInt(max));
+      END;
+    ELSIF t = Type.integer OR t.base = Type.integer THEN
+      WITH min = NARROW(min, Value.Integer).val,
+           max = NARROW(max, Value.Integer).val DO
+        StubLibCall(fmtWr, "Integer", varName, libName, d,
+                    ", " & Fmt.Int(min) & ", " & Fmt.Int(max));
+      END;
     ELSE
       TYPECASE t.base OF
       | Type.Enumeration =>
+        WITH min = NARROW(min, Value.Integer).val,
+             max = NARROW(max, Value.Integer).val DO
           Enumeration(fmtWr, varName, libName, t.base, d, min, max);
+        END;
       | Type.Subrange =>
-          SubRange(fmtWr, varName, libName, t.base, d, min, max);
+        SubRange(fmtWr, varName, libName, t.base, d, min, max);
       ELSE
         RAISE SOxCodeGenError.E("Run time error -- shouldn't occur");
       END;

@@ -138,8 +138,7 @@ PROCEDURE GenCode(basename: TEXT;
           END;
         END;          
 
-        (* CodeForType.AddModuleImports(imports, methods,
-           lastNewMethod); *)
+        (* CodeForType.AddModuleImports(imports, methods, lastNewMethod); *)
 
       EXCEPT
         SOxCodeGenError.E => 

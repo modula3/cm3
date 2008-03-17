@@ -21,6 +21,39 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.2  2001/12/03 17:23:37  wagner
+ * add copyright notes and overrides
+ *
+ * added: sharedobjgen/COPYRIGHT
+ * added: sharedobjgen/COPYRIGHT-COLUMBIA
+ * added: sharedobjgen/src/COPYRIGHT-COLUMBIA
+ * added: sharedobjgen/src/m3overrides
+ * modified: sharedobjgen/src/SOxCodeFiles.i3
+ * modified: sharedobjgen/src/SOxCodeFiles.m3
+ * modified: sharedobjgen/src/SOxCodeGenError.i3
+ * modified: sharedobjgen/src/SOxCodeGenError.m3
+ * modified: sharedobjgen/src/SOxCodeUtils.i3
+ * modified: sharedobjgen/src/SOxCodeUtils.m3
+ * modified: sharedobjgen/src/SOxCoder.i3
+ * modified: sharedobjgen/src/SOxDummyCode.i3
+ * modified: sharedobjgen/src/SOxDummyCode.m3
+ * modified: sharedobjgen/src/SOxIntfCBCode.i3
+ * modified: sharedobjgen/src/SOxIntfCBCode.m3
+ * modified: sharedobjgen/src/SOxIntfCBProxyCode.i3
+ * modified: sharedobjgen/src/SOxIntfCBProxyCode.m3
+ * modified: sharedobjgen/src/SOxIntfPklCode.i3
+ * modified: sharedobjgen/src/SOxIntfPklCode.m3
+ * modified: sharedobjgen/src/SOxIntfProxyCode.i3
+ * modified: sharedobjgen/src/SOxIntfProxyCode.m3
+ * modified: sharedobjgen/src/SOxModuleCBCode.i3
+ * modified: sharedobjgen/src/SOxModuleCBCode.m3
+ * modified: sharedobjgen/src/SOxModuleProxyCode.i3
+ * modified: sharedobjgen/src/SOxModuleProxyCode.m3
+ * modified: sharedobjgen/src/SOxModuleSOCode.i3
+ * modified: sharedobjgen/src/SOxModuleSOCode.m3
+ * modified: sharedobjgen/src/StubGenTool.i3
+ * modified: sharedobjgen/src/StubGenTool.m3
+ *
  * Revision 1.1.1.1  2001/12/02 13:15:54  wagner
  * Blair MacIntyre's sharedobjgen package
  *
@@ -80,16 +113,16 @@ PROCEDURE initImports (<*UNUSED*> self    : T;
                        <*UNUSED*> basename: TEXT;
                                   imports : ImportList.T) =
   VAR
-    (*
+(*
     imp := ARRAY [1 .. 1] OF
              Atom.T{Atom.FromText(SOxCodeUtils.FileName(
                                     basename, SOxCodeFiles.T.CB_I3))};
-    *)
+*)
   BEGIN
     CodeForType.AugmentImportList(imports, extraImports);
-    (*
+(*
     CodeForType.AugmentImportList(imports, imp);
-    *)
+*)
   END initImports;
 
 PROCEDURE import (<*UNUSED*> self    : T;
