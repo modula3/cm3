@@ -201,8 +201,8 @@ readonly SYSTEM_CC  = BEGIN_CONFIG
 END_CONFIG % C compiler
 readonly SYSTEM_LIBTOOL  = BEGIN_CONFIG
   "Where is your library archiver tool?"
-    0 "libtool"
     6 "/usr/bin"       "libtool"
+    0 "libtool"
     6 "/bin"           "libtool"
     6 "/usr/local"     "libtool"
     6 "/usr/local/bin" "libtool"
@@ -433,7 +433,7 @@ M3_SPLIT_LIBNAMES = TRUE
 % --- pass "-R" flags to the linker too...
 
 % M3_BOOTSTRAP = TRUE
-% --- generate bootstrap code (assembly) instead of finaly object code
+% --- generate bootstrap code (assembly) instead of final object code
 
 % M3_COMPILE_ONCE = TRUE
 % --- don't recompile code to improve opaque object references
@@ -450,7 +450,7 @@ M3_SPLIT_LIBNAMES = TRUE
 X11_WITH_SHARED_MEM = TRUE
 % --- X11 libraries include the shared memory extensions (XShm...)
 
-%M3_NEED_STANDALONE_LINKS = TRUE
+% M3_NEED_STANDALONE_LINKS = TRUE
 % --- linker is broken and we need to build a directory of symbolic
 %     links pointing to the non-shared libraries.
 
@@ -474,5 +474,5 @@ end
 %
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-O2 -g"
+GNU_CFLAGS = "-g"
 GNU_MAKE   = "make"
