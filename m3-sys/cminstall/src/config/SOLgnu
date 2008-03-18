@@ -18,10 +18,6 @@ end
 readonly OS_TYPE      = "POSIX"               % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"              % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "sparc-sun-solaris2"  % "cpu-vendor-os" string for GNU
-%readonly INSTALL_KEY  = BEGIN_CONFIG
-%  "What is your installation key?"
-%    14 %-- user specified key
-%END_CONFIG
 
 readonly NAMING_CONVENTIONS = "0"
 %                                        object files       libraries
@@ -40,91 +36,44 @@ proc set_config_options () is
   M3_OPTIONS += "-w1"  %-- produce "level 1" warnings
 end
 
-%--------------------------------------------------------- Reactor defaults ---
-% The first time a user runs Reactor, it will configure itself to use
-% the executables defined below.
-
-%INITIAL_REACTOR_BROWSER = BEGIN_CONFIG
-%  "What should be the default World-Wide Web browser for new Reactor users?"
-%     0  "netscape"
-%     6 "/usr/local/bin"           "netscape"
-%     6 "/usr/local/netscape/bin"  "netscape"
-%     6 "/usr/local/netscape/bin"  "netscape-3"
-%     6 "/usr/local/netscape/bin"  "netscape-2"
-%     6 "/usr/local/netscape"      "netscape"
-%     6 "/usr/local/mosaic"        "mosaic"
-%     6 "/usr/local/moasic"        "Xmosaic"
-%END_CONFIG
-% A World-Wide Web browser.  Reactor passes it an initial URL
-% its first command-line argument.
-
-INITIAL_REACTOR_EDITOR = BEGIN_CONFIG
-  "What should be the default text editor for new Reactor users?"
-    10 "EDITOR"
-     0 "emacsclient"
-     0 "emacs"
-     0 "gnuclient"
-     0 "xemacs"
-     0 "vi"
-     0 "textedit"
-     0 "xedit"
-     6 "/usr/local/emacs/bin"  "emacsclient"
-     6 "/usr/local/bin"        "emacsclient"
-     6 "/usr/local/xemacs/bin" "gnuclient"
-     6 "/usr/local/bin"        "gnuclient"
-     6 "/usr/local/emacs/bin"  "emacs"
-     6 "/usr/local/bin"        "emacs"
-     6 "/usr/local/xemacs/bin" "xemacs"
-     6 "/usr/local/bin"        "xemacs"
-     6 "/usr/bin"              "vi"
-     6 "/usr/local/X11R5/bin"  "xedit"
-     6 "/usr/openwin/bin"      "textedit"
-     6 "/usr/openwin/bin"      "xedit"
-     6 "/usr/X11/bin"          "xedit"
-     6 "/usr/bin/X11"          "xedit"
-END_CONFIG
-% A text editor.  Reactor passes it "<file> +<line>" on the
-% command-line when it wants to edit <file> initially positioned
-% at <line>.
-
 %------------------------------------------------------------- export paths ---
-% During the installation, destination directories that do not exists 
+% During the installation, destination directories that do not exist
 % will be created. You need the necessary permissions to do so; otherwise,
-% the installation will fail, but can be restarted after you have 
+% the installation will fail, but can be restarted after you have
 % fixed the permissions.
 
 INSTALL_ROOT = BEGIN_CONFIG
-  "Where should Reactor be installed?"
+  "Where should CM3 be installed?"
     7 %-- user specified install root
 END_CONFIG
 
-BIN_INSTALL   = INSTALL_ROOT & "/bin"        % executables
-if M3_PROFILING 
-  LIB_INSTALL   = INSTALL_ROOT & "/libp"       % libraries
+BIN_INSTALL   = INSTALL_ROOT & "/bin"       % executables
+if M3_PROFILING
+  LIB_INSTALL   = INSTALL_ROOT & "/libp"    % libraries
 else
-  LIB_INSTALL   = INSTALL_ROOT & "/lib"        % libraries
+  LIB_INSTALL   = INSTALL_ROOT & "/lib"     % libraries
 end
-PKG_INSTALL   = INSTALL_ROOT & "/pkg"        % packages
-DOC_INSTALL   = INSTALL_ROOT & "/doc"        % documents
-EMACS_INSTALL = INSTALL_ROOT & "/elisp"      % emacs lisp code
-MAN_INSTALL   = INSTALL_ROOT & "/man"        % man pages
-HTML_INSTALL  = INSTALL_ROOT & "/www"        % public hypertext
+PKG_INSTALL   = INSTALL_ROOT & "/pkg"       % packages
+DOC_INSTALL   = INSTALL_ROOT & "/doc"       % documents
+EMACS_INSTALL = INSTALL_ROOT & "/elisp"     % emacs lisp code
+MAN_INSTALL   = INSTALL_ROOT & "/man"       % man pages
+HTML_INSTALL  = INSTALL_ROOT & "/www"       % public hypertext
 
 % On some systems (e.g. AFS) you must install public files in a different
 % place from where you use them.  If that is the case for your system,
 % specify the "use" location here, otherwise leave them alone.
 %
 USE_ROOT  = INSTALL_ROOT
-BIN_USE   = BIN_INSTALL       % executables
-LIB_USE   = LIB_INSTALL       % libraries
-PKG_USE   = PKG_INSTALL       % packages
+BIN_USE   = BIN_INSTALL     % executables
+LIB_USE   = LIB_INSTALL     % libraries
+PKG_USE   = PKG_INSTALL     % packages
 
 readonly INSTALL_IMPLS = TRUE
 % TRUE
 %    => save all source files during the install
 %    => makes debugging easier and browsing more fruitful
 % FALSE
-%    => save only the exported interfaces and templates 
+%    => save only the exported interfaces and templates
 %    => makes the installed system slightly smaller.
 
 %------------------------------------------------ external system libraries ---
@@ -153,10 +102,11 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-ll" ],
   "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the flex/bison libraries?"
-                       11 "libfl.a"
+                       11 "libfl.so"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
+                       12 "/opt/csw/lib"
                        13 "/usr/lib"
                    END_CONFIG, "-lfl" ],
   "POSTGRES95" : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
@@ -165,6 +115,7 @@ SYSTEM_LIBS = {
                        12 "/usr/local/pgsql/lib"
                        12 "/usr/local/postgres95/lib"
                        12 "/usr/local/lib"
+                       12 "/opt/csw/postgresql/lib"
                        12 "/usr/lib"
                        13 "/usr/lib"
                    END_CONFIG, "-lpq" ],
@@ -180,13 +131,14 @@ SYSTEM_LIBS = {
                        13 "/usr/lib"
                    END_CONFIG,
                       "-lGLU", "-lGL", "-lXext" ],
-  "ODBC"       : [ BEGIN_CONFIG
+  "ODBC"       : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
                      "Where are the ODBC libraries?"
                        11 "libodbc.so"
                        12 "/usr/local/lib"
                        12 "/usr/lib"
                        12 "/usr/local/pgsql/lib"
                        12 "/usr/local/postgres95/lib"
+		       12 "/opt/csw/lib"
                        13 "/usr/local/lib"
                    END_CONFIG, "-lodbc" ],
   "MOTIF"      : [ "-Xlinker", "-Bdynamic", BEGIN_CONFIG
@@ -220,13 +172,24 @@ SYSTEM_LIBS = {
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
 % scanned by the linker.
 
-SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
-                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
+SYSTEM_LIBORDER =
+[
+    "OPENGL",
+    "DECPEX",
+    "MOTIF",
+    "X11",
+    "TCP",
+    "ODBC",
+    "POSTGRES95",
+    "FLEX-BISON",
+    "LEX-YACC",
+    "LIBC"
+]
 
 %---------------------------------------------------------- system programs ---
 
 readonly SYSTEM_CC  = BEGIN_CONFIG
-  "Where is your gcc compiler?"
+  "Where is your C compiler?"
     0 "gcc"
     6 "/bin"           "gcc"
     6 "/usr/bin"       "gcc"
@@ -274,7 +237,7 @@ M3_USE_STACK_WALKER = TRUE
 
 proc m3_backend (source, object, optimize, debug) is
   local args = [ "-quiet", "-fPIC", source, "-o", object ]
-  if optimize  args += "-O"  end
+  if optimize  args += "-O3"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
   return try_exec (m3back, args)
@@ -421,7 +384,7 @@ M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 % --- library linked in programs compiled with "-Z" coverage option
 
 M3_SPLIT_LIBNAMES = TRUE
-% --- split library names and pass -L/-l arguments to the linker
+% --- split shared library names and pass -L/-l arguments to the linker
 
 M3_SHARED_LIB_ARG = "-R"
 % --- pass "-R" flags to the linker too...
@@ -470,4 +433,3 @@ end
 GNU_CC     = "gcc"
 GNU_CFLAGS = "-gstabs"
 GNU_MAKE   = "gmake"
-
