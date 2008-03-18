@@ -11,10 +11,6 @@ readonly BUILD_DIR    = TARGET                % directory for results
 readonly OS_TYPE      = "POSIX"               % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"              % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "sparc-sun-solaris2"  % "cpu-vendor-os" string for GNU
-%readonly INSTALL_KEY  = BEGIN_CONFIG
-%  "What is your installation key?"
-%    14 %-- user specified key
-%END_CONFIG
 
 readonly NAMING_CONVENTIONS = "0"
 %                                        object files       libraries
@@ -33,55 +29,14 @@ proc set_config_options () is
   M3_OPTIONS += "-w1"  %-- produce "level 1" warnings
 end
 
-%--------------------------------------------------------- Reactor defaults ---
-% The first time a user runs Reactor, it will configure itself to use
-% the executables defined below.
-
-%INITIAL_REACTOR_BROWSER = BEGIN_CONFIG
-%  "What should be the default World-Wide Web browser for new Reactor users?"
-%     0  "netscape"
-%     6 "/usr/local/bin"           "netscape"
-%     6 "/usr/local/netscape/bin"  "netscape"
-%     6 "/usr/local/netscape/bin"  "netscape-3"
-%     6 "/usr/local/netscape/bin"  "netscape-2"
-%     6 "/usr/local/netscape"      "netscape"
-%     6 "/usr/local/mosaic"        "mosaic"
-%     6 "/usr/local/moasic"        "Xmosaic"
-%END_CONFIG
-% A World-Wide Web browser.  Reactor passes it an initial URL
-% its first command-line argument.
-
-INITIAL_REACTOR_EDITOR = BEGIN_CONFIG
-  "What should be the default text editor for new Reactor users?"
-    10 "EDITOR"
-     0 "emacsclient"
-     0 "emacs"
-     0 "vi"
-     0 "textedit"
-     0 "xedit"
-     6 "/usr/local/emacs/bin" "emacsclient"
-     6 "/usr/local/bin"       "emacsclient"
-     6 "/usr/local/emacs/bin" "emacs"
-     6 "/usr/local/bin"       "emacs"
-     6 "/usr/bin"             "vi"
-     6 "/usr/local/X11R5/bin" "xedit"
-     6 "/usr/openwin/bin"     "textedit"
-     6 "/usr/openwin/bin"     "xedit"
-     6 "/usr/X11/bin"         "xedit"
-     6 "/usr/bin/X11"         "xedit"
-END_CONFIG
-% A text editor.  Reactor passes it "<file> +<line>" on the
-% command-line when it wants to edit <file> initially positioned
-% at <line>.
-
 %------------------------------------------------------------- export paths ---
-% During the installation, destination directories that do not exists 
+% During the installation, destination directories that do not exist
 % will be created. You need the necessary permissions to do so; otherwise,
-% the installation will fail, but can be restarted after you have 
+% the installation will fail, but can be restarted after you have
 % fixed the permissions.
 
 INSTALL_ROOT = BEGIN_CONFIG
-  "Where should Reactor be installed?"
+  "Where should CM3 be installed?"
     7 %-- user specified install root
 END_CONFIG
 
@@ -98,16 +53,16 @@ HTML_INSTALL  = INSTALL_ROOT & "/www"        % public hypertext
 % specify the "use" location here, otherwise leave them alone.
 %
 USE_ROOT  = INSTALL_ROOT
-BIN_USE   = BIN_INSTALL       % executables
-LIB_USE   = LIB_INSTALL       % libraries
-PKG_USE   = PKG_INSTALL       % packages
+BIN_USE   = BIN_INSTALL     % executables
+LIB_USE   = LIB_INSTALL     % libraries
+PKG_USE   = PKG_INSTALL     % packages
 
 readonly INSTALL_IMPLS = TRUE
 % TRUE
 %    => save all source files during the install
 %    => makes debugging easier and browsing more fruitful
 % FALSE
-%    => save only the exported interfaces and templates 
+%    => save only the exported interfaces and templates
 %    => makes the installed system slightly smaller.
 
 %------------------------------------------------ external system libraries ---
@@ -128,7 +83,7 @@ SYSTEM_LIBS = {
                      "-ldl" ],   % dynamic loader support
   "LEX-YACC"   : [ "-Bdynamic", BEGIN_CONFIG
                      "Where are the lex/yacc libraries?"
-                       11 "libl.a"
+                       11 "libl.so"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
@@ -136,24 +91,27 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-ll" ],
   "FLEX-BISON" : [ "-Bdynamic", BEGIN_CONFIG
                      "Where are the flex/bison libraries?"
-                       11 "libfl.a"
+                       11 "libfl.so"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
                        12 "/usr/local/gnu/lib"
+                       12 "/opt/csw/lib"
                        13 "/usr/lib"
                    END_CONFIG, "-lfl" ],
   "POSTGRES95" : [ "-Bdynamic", BEGIN_CONFIG
                      "Where are the Postgres95 libraries?"
-                       11 "libpq.a"
+                       11 "libpq.so"
+                       12 "/usr/local/pgsql/lib"
                        12 "/usr/local/postgres95/lib"
                        12 "/usr/local/lib"
+                       12 "/opt/csw/postgresql/lib"
                        12 "/usr/lib"
                        13 "/usr/lib"
                    END_CONFIG, "-lpq" ],
   "OPENGL"     : [ "-Bdynamic", BEGIN_CONFIG
                      "Where are the OpenGL libraries?"
-                       11 "libGLU.a"
-                       11 "libGL.a"
+                       11 "libGLU.so"
+                       11 "libGL.so"
                        12 "/usr/openwin/lib"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
@@ -162,18 +120,19 @@ SYSTEM_LIBS = {
                        13 "/usr/lib"
                    END_CONFIG,
                      "-lGLU", "-lGL", "-lXext" ],
-  "ODBC"       : [ BEGIN_CONFIG
+  "ODBC"       : [ "-Bdynamic", BEGIN_CONFIG
                      "Where are the ODBC libraries?"
-                       11 "libodbc.a"
+                       11 "libodbc.so"
                        12 "/usr/local/lib"
                        12 "/usr/lib"
                        12 "/usr/local/pgsql/lib"
                        12 "/usr/local/postgres95/lib"
+		       12 "/opt/csw/lib"
                        13 "/usr/local/lib"
                    END_CONFIG, "-lodbc" ],
   "MOTIF"      : [ "-Bdynamic", BEGIN_CONFIG
                      "Where are the Motif libraries?"
-                       11 "libXm.a"
+                       11 "libXm.so"
                        12 "/usr/dt/lib"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
@@ -183,11 +142,11 @@ SYSTEM_LIBS = {
                    END_CONFIG, "-lXm" ],
   "X11"        : [ "-Bdynamic", BEGIN_CONFIG
                      "Where are the X11 libraries?"
-                       11 "libXaw.a"
-                       11 "libXmu.a"
-                       11 "libXext.a"
-                       11 "libXt.a"
-                       11 "libX11.a"
+                       11 "libXaw.so"
+                       11 "libXmu.so"
+                       11 "libXext.so"
+                       11 "libXt.so"
+                       11 "libX11.so"
                        12 "/usr/openwin/lib"
                        12 "/usr/lib"
                        12 "/usr/local/lib"
@@ -195,15 +154,26 @@ SYSTEM_LIBS = {
                        13 "/usr/openwin/lib"
                        13 "/usr/lib"
                    END_CONFIG,
-                     "-lXaw", "-lXmu", "-lXext", "-lXt", "-lX11" ],
+                      "-lXaw", "-lXmu", "-lXext", "-lXt", "-lX11" ],
   "TCP"        : [ ]
 }
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
 % scanned by the linker.
 
-SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
-                    "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
+SYSTEM_LIBORDER =
+[
+    "OPENGL",
+    "DECPEX",
+    "MOTIF",
+    "X11",
+    "TCP",
+    "ODBC",
+    "POSTGRES95",
+    "FLEX-BISON",
+    "LEX-YACC",
+    "LIBC"
+]
 
 %---------------------------------------------------------- system programs ---
 
@@ -257,7 +227,7 @@ M3_USE_STACK_WALKER = TRUE
 
 proc m3_backend (source, object, optimize, debug) is
   local args = [ "-quiet", "-fPIC", source, "-o", object ]
-  if optimize  args += "-O"  end
+  if optimize  args += "-O3"  end
   if debug     args += "-gstabs"  end
   return try_exec (m3back, args)
 end
@@ -403,7 +373,7 @@ M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 % --- library linked in programs compiled with "-Z" coverage option
 
 M3_SPLIT_LIBNAMES = TRUE
-% --- split library names and pass -L/-l arguments to the linker
+% --- split shared library names and pass -L/-l arguments to the linker
 
 M3_SHARED_LIB_ARG = "-R"
 % --- pass "-R" flags to the linker too...
@@ -451,5 +421,4 @@ end
 
 GNU_CC     = "gcc"
 GNU_CFLAGS = "-gstabs"
-GNU_MAKE   = "make"
-
+GNU_MAKE   = "gmake"
