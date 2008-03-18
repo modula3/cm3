@@ -1429,52 +1429,38 @@ PROCEDURE ExecEcho (t: T;  b: BOOLEAN): BOOLEAN =
     RETURN old;
   END ExecEcho;
 
-TYPE
-  ExecInfo = RECORD
-    command       : TEXT;
-    exit_code     : INTEGER;
-    ignore_errors : BOOLEAN;
-  END;
-
 PROCEDURE DoExec (t: T;  n_args: INTEGER)
   RAISES {Error, Thread.Alerted} =
-  VAR info := ExecCommand (t, n_args);
   BEGIN
-    IF (info.exit_code # 0) AND NOT info.ignore_errors THEN
-      Err (t, Fmt.F("exit %s: %s", Fmt.Int(info.exit_code), info.command));
-    END;
+    ExecCommand (t, n_args, onlyTry := FALSE);
   END DoExec;
 
 PROCEDURE DoTryExec (t: T;  n_args: INTEGER)
   RAISES {Error, Thread.Alerted} =
+(* uncomment this incorrect code for internal compiler errors
   VAR info := ExecCommand (t, n_args);
+*)
   BEGIN
-    IF (info.ignore_errors) THEN info.exit_code := 0; END;
-    PushInt (t, info.exit_code);
+    ExecCommand (t, n_args, onlyTry := TRUE);
   END DoTryExec;
 
 PROCEDURE DoCm3Exec (t: T;  n_args: INTEGER)
   RAISES {Error, Thread.Alerted} =
-  VAR info := ExecCommand (t, n_args, mergeStdinStdout := TRUE);
   BEGIN
-    IF (info.exit_code # 0) AND NOT info.ignore_errors THEN
-      Err (t, Fmt.F("exit %s: %s", Fmt.Int(info.exit_code), info.command));
-    END;
+    ExecCommand (t, n_args, mergeStdoutStderr := TRUE, onlyTry := FALSE);
   END DoCm3Exec;
 
 PROCEDURE DoTryCm3Exec (t: T;  n_args: INTEGER)
   RAISES {Error, Thread.Alerted} =
-  VAR info := ExecCommand (t, n_args, mergeStdinStdout := TRUE);
   BEGIN
-    IF (info.ignore_errors) THEN info.exit_code := 0; END;
-    PushInt (t, info.exit_code);
+    ExecCommand (t, n_args, mergeStdoutStderr := TRUE, onlyTry := TRUE);
   END DoTryCm3Exec;
 
 PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
-                       mergeStdinStdout := FALSE): ExecInfo
+                       mergeStdoutStderr := FALSE;
+                       onlyTry := FALSE;)
   RAISES {Error, Thread.Alerted} =
   VAR
-    info         : ExecInfo;
     echo         := TRUE;
     first        := TRUE;
     n            : INTEGER;
@@ -1487,94 +1473,110 @@ PROCEDURE ExecCommand (t: T;  n_args: INTEGER;
     quake_in     : Pipe.T;
     process_out  : Pipe.T;
     inbuf        : ARRAY [0..255] OF CHAR;
+    command      := "";
+    exit_code    := 0;
+    ignore_errors := FALSE;
+    len          : INTEGER;
   BEGIN
-    info.command := "";
-    info.exit_code := 0;
-    info.ignore_errors := FALSE;
-    IF (n_args <= 0) THEN RETURN info; END;
+    IF n_args > 0 THEN
 
-    (* pack the arguments into a single string & pop the stack *)
-    buf   := GetBuf (t);
-    FOR i := t.reg.sp - n_args TO t.reg.sp - 1 DO
-      IF (first) THEN first := FALSE;  ELSE  M3Buf.PutChar (buf, ' ');  END;
-      QVal.ToBuf (t, t.stack[i], buf);
-      t.stack[i].ref := NIL;
-    END;
-    t.reg.sp := t.reg.sp - n_args;
-    info.command := M3Buf.ToText (buf);
-    FreeBuf (t,  buf);
-
-    (* strip the leading magic characters *)
-    n := 0;
-    WHILE n < Text.Length (info.command) DO
-      CASE Text.GetChar (info.command, n) OF
-      | '@' => echo := FALSE;
-      | '-' => info.ignore_errors := TRUE;
-      ELSE EXIT;
+      (* pack the arguments into a single string & pop the stack *)
+      buf   := GetBuf (t);
+      FOR i := t.reg.sp - n_args TO t.reg.sp - 1 DO
+        IF (first) THEN first := FALSE;  ELSE  M3Buf.PutChar (buf, ' ');  END;
+        QVal.ToBuf (t, t.stack[i], buf);
+        t.stack[i].ref := NIL;
       END;
-      INC (n);
-    END;
-    info.command := Text.Sub (info.command, n);
+      t.reg.sp := t.reg.sp - n_args;
+      command := M3Buf.ToText (buf);
+      FreeBuf (t,  buf);
 
-    (* echo the command & flush any pending output *)
-    TRY
-      IF echo OR t.do_echo THEN
-        Wr.PutText (wr, info.command);
-        Wr.PutText (wr, Wr.EOL);
-      END;
-      FlushIO ();
-    EXCEPT Wr.Failure (ec) =>
-      Err (t, "write failed" & OSErr (ec));
-    END;
-
-    args [0] := t.sh_option;
-    args [1] := info.command;
-    n_shell_args := 2;
-
-    (* finally, execute the command *)
-    TRY
-      IF mergeStdinStdout THEN
-        Process.GetStandardFileHandles (stdin, stdout, stderr);
-        Pipe.Open (hr := quake_in, hw := process_out);
-        TRY
-          (* fire up the subprocess *)
-          handle := Process.Create (t.shell, SUBARRAY (args, 0, n_shell_args),
-                                    stdin := stdin, stdout := process_out,
-                                    stderr := process_out);
-          (* close our copy of the writing end of the output pipe *)
-          process_out.close ();
-          LOOP 
-            (* send anything coming through the pipe to the quake output file *)
-            n := M3File.Read (quake_in, inbuf, NUMBER (inbuf));
-            IF (n <= 0) THEN EXIT; END;
-            Wr.PutString (wr, SUBARRAY (inbuf, 0, n));
-          END;
-        FINALLY
-          quake_in.close ();
-          FlushIO ();
+      (* strip the leading magic characters *)
+      n := 0;
+      len := Text.Length (command);
+      WHILE n < len DO
+        CASE Text.GetChar (command, n) OF
+        | '@' => echo := FALSE;
+        | '-' => ignore_errors := TRUE;
+        ELSE EXIT;
         END;
-      ELSE
-        FlushIO ();
-        Process.GetStandardFileHandles (stdin, stdout, stderr);
-        handle := Process.Create (t.shell, SUBARRAY (args, 0, n_shell_args),
-                                  stdin := stdin, stdout := stdout,
-                                  stderr := stderr);
+        INC (n);
       END;
-    EXCEPT
-    | Thread.Alerted =>
-        KillProcess (handle);
-        RAISE Thread.Alerted;
-    | Wr.Failure (ec) =>
-        KillProcess (handle);
+      IF n # 0 THEN
+        command := Text.Sub (command, n);
+      END;
+
+      (* echo the command & flush any pending output *)
+      TRY
+        IF echo OR t.do_echo THEN
+          Wr.PutText (wr, command);
+          Wr.PutText (wr, Wr.EOL);
+        END;
+        FlushIO ();
+      EXCEPT Wr.Failure (ec) =>
         Err (t, "write failed" & OSErr (ec));
-    | OSError.E (ec) =>
-        KillProcess (handle);
-        Err (t, Fmt.F ("exec failed%s *** %s", OSErr (ec), info.command));
+      END;
+
+      args [0] := t.sh_option;
+      args [1] := command;
+      n_shell_args := 2;
+
+      (* finally, execute the command *)
+      TRY
+        IF mergeStdoutStderr THEN
+          Process.GetStandardFileHandles (stdin, stdout, stderr);
+          Pipe.Open (hr := quake_in, hw := process_out);
+          TRY
+            (* fire up the subprocess *)
+            handle := Process.Create (t.shell, SUBARRAY (args, 0, n_shell_args),
+                                      stdin := stdin, stdout := process_out,
+                                      stderr := process_out);
+            (* close our copy of the writing end of the output pipe *)
+            process_out.close ();
+            LOOP 
+              (* send anything coming through the pipe to the quake output file *)
+              n := M3File.Read (quake_in, inbuf, NUMBER (inbuf));
+              IF (n <= 0) THEN EXIT; END;
+              Wr.PutString (wr, SUBARRAY (inbuf, 0, n));
+            END;
+          FINALLY
+            quake_in.close ();
+            FlushIO ();
+          END;
+        ELSE
+          FlushIO ();
+          Process.GetStandardFileHandles (stdin, stdout, stderr);
+          handle := Process.Create (t.shell, SUBARRAY (args, 0, n_shell_args),
+                                    stdin := stdin, stdout := stdout,
+                                    stderr := stderr);
+        END;
+      EXCEPT
+      | Thread.Alerted =>
+          KillProcess (handle);
+          RAISE Thread.Alerted;
+      | Wr.Failure (ec) =>
+          KillProcess (handle);
+          Err (t, "write failed" & OSErr (ec));
+      | OSError.E (ec) =>
+          KillProcess (handle);
+          Err (t, Fmt.F ("exec failed%s *** %s", OSErr (ec), command));
+      END;
+
+      (* wait for everything to shutdown... *)
+      exit_code := Process.Wait (handle);
     END;
 
-    (* wait for everything to shutdown... *)
-    info.exit_code := Process.Wait (handle);
-    RETURN info;
+    IF onlyTry THEN
+      IF ignore_errors THEN
+        exit_code := 0;
+      END;
+      PushInt (t, exit_code);
+    ELSE
+      IF (exit_code # 0) AND NOT ignore_errors THEN
+        Err (t, Fmt.F("exit %s: %s", Fmt.Int(exit_code), command));
+      END;
+    END;
+
   END ExecCommand;
 
 PROCEDURE KillProcess (handle: Process.T) =
