@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.71 2008-03-17 04:38:55 jkrell Exp $
+# $Id: pylib.py,v 1.72 2008-03-18 12:57:30 jkrell Exp $
 
 import os
 from os import getenv
@@ -258,7 +258,6 @@ if (UName.startswith("windows")
         or UNameCommand.startswith("mingw")
         or UNameCommand.startswith("cygwin")):
 
-    EXE = ".exe"
     Q = ""
     HAVE_SERIAL = True
     GMAKE = getenv("GMAKE") or "make"
@@ -293,6 +292,7 @@ if (UName.startswith("windows")
         Config = "NT386MINGNU"
         OSType = "WIN32"
         GCC_BACKEND = True
+        EXE = ".exe"
 
     elif ((not Target.startswith("NT386MINGNU"))
         and (not Target.startswith("NT386GNU"))
@@ -303,6 +303,7 @@ if (UName.startswith("windows")
         Config = "NT386"
         OSType = "WIN32"
         GCC_BACKEND = False
+        EXE = ".exe"
 
     else:
 
@@ -411,6 +412,11 @@ def _ConvertToCygwinPath(a):
 
 if IsCygwinBinary(Cm3FullPath):
     #print(Cm3FullPath + " is a Cygwin binary")
+
+    # replace sh with cmd to speed up builds by 3% to 15%
+    os.environ["QUAKE_SHELL"] = "cmd"
+    os.environ["QUAKE_SHELL_OPTION"] = "/c"
+
     def ConvertToCygwinPath(a):
         return _ConvertToCygwinPath(a)
 else:
