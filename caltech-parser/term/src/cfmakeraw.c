@@ -51,9 +51,6 @@ void
 cfmakeraw(t)
 	struct termios *t;
 {
-
-	_DIAGASSERT(t != NULL);
-
 	t->c_iflag &= ~(IMAXBEL|IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
 	t->c_oflag &= ~OPOST;
 	t->c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
