@@ -608,13 +608,13 @@ PROCEDURE SubRange (fmtWr   : Formatter.T;
       WITH min = NARROW(min, Value.Longint).val,
            max = NARROW(max, Value.Longint).val DO
         StableLogCall(fmtWr, "Longint", varName, d,
-                      ", " & Fmt.LongInt(min) & ", " & Fmt.LongInt(max));
+                      ", 16_" & Fmt.LongUnsigned(min) & ", 16_" & Fmt.LongUnsigned(max));
       END
     ELSIF t = Type.integer OR t.base = Type.integer THEN
       WITH min = NARROW(min, Value.Integer).val,
            max = NARROW(max, Value.Integer).val DO
         StableLogCall(fmtWr, "Integer", varName, d,
-                      ", " & Fmt.Int(min) & ", " & Fmt.Int(max));
+                      ", 16_" & Fmt.Unsigned(min) & ", 16_" & Fmt.Unsigned(max));
       END
     ELSE
       TYPECASE t.base OF
