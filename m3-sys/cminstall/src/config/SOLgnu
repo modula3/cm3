@@ -240,6 +240,7 @@ proc m3_backend (source, object, optimize, debug) is
   if optimize  args += "-O3"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
+  args += "-fno-reorder-blocks" % avoid warnings with -O3
   return try_exec (m3back, args)
 end
 
