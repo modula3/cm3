@@ -13,17 +13,8 @@
 #define IEEE_8087
 #endif
 
+#define MULTIPLE_THREADS
+#define ACQUIRE_DTOA_LOCK(n) RTOS__LockHeap()
+#define FREE_DTOA_LOCK(n) RTOS__UnlockHeap()
+
 #include "dtoa.h"
-
-/* Apparently libc defines both "__dtoa" and "dtoa".  ???  */
-
-char * __dtoa       
-#ifdef KR_headers
-        (d, mode, ndigits, decpt, sign, rve)
-        double d; int mode, ndigits, *decpt, *sign; char **rve;
-#else 
-        (double d, int mode, int ndigits, int *decpt, int *sign, char **rve)
-#endif
-{
-  return dtoa(d, mode, ndigits, decpt, sign, rve);
-}
