@@ -9,6 +9,7 @@ REM v1.01--08/18/2003 by RCC
 REM v1.10--08/29/2003 by RCC, completed nested PROJ capability
 REM v1.11--06/10/2004 by RCC, fixed problem with FATAL errors not terminating during embedded calls to processDirective
 REM v1.12--01/21/2008 by RCC, don't check for TAR & GZIP in bin folder unless ARCSRC command is given.
+REM v1.13--03/20/2008 by RCC, fixed crash problem when CD path had embedded spaces.
 REM ===========================================================================
 REM PURPOSE:
 REM    This Windows batch/command file aids users is building, shipping, 
@@ -39,7 +40,7 @@ REM    CM3_ROOT is the root of the CM3 installation, default is "C:\cm3"
 REM    CM3_BIN is where the CM3 binaries are kept, typically "C:\cm3\bin"
 REM    CM3_PKG is the location of the public repository, typically "C:\cm3\pkg"
 REM
-REM    CM3P_Answer, CM3P_Archive, CM3P_cm3Opts, CM3P_DefaultInstallRoot, 
+REM    CM3P_Answer, CM3P_Archive, CM3P_CD, CM3P_cm3Opts, CM3P_DefaultInstallRoot, 
 REM    CM3P_Fatal, CM3P_File, CM3P_List, CM3P_Make, CM3P_Nest, CM3P_Pause, 
 REM    CM3P_PriorFolder, CM3P_ProjName, CM3P_ProjRoot, and CM3P_SavePrompt are
 REM    temporary env vars used internally.
@@ -76,7 +77,7 @@ rem fall thru to Begin
 :Begin
 :-----
 echo ===============================================================================
-echo cm3Proj.CMD, written by R.C.Coleburn 08/13/2003, v1.12 01/21/2008 by RCC
+echo cm3Proj.CMD, written by R.C.Coleburn 08/13/2003, v1.13 03/20/2008 by RCC
 echo ===============================================================================
 
 :Params1
@@ -137,9 +138,12 @@ for /F %%I in ("%1") do set CM3P_ProjName=%%~nI
 rem
 rem extract drive and path (omit filename)
 for /F %%I in ("%1") do set CM3P_ProjRoot=%%~dpI
+call :FN_MakeShort CM3P_ProjRoot "%CM3P_ProjRoot%"
 rem
 set CM3P_File=%CM3P_ProjRoot%%CM3P_ProjName%.CM3P
-if /I (%2)==(Make) if not (%CD%\)==(%CM3P_ProjRoot%) goto CheckRoot
+set CM3P_CD=%CD%
+call :FN_MakeShort CM3P_CD "%CM3P_CD%"
+if /I (%2)==(Make) if not ("%CM3P_CD%\")==("%CM3P_ProjRoot%") goto CheckRoot
 rem fall thru to Params4
 
 :Params4
@@ -169,7 +173,7 @@ echo WARNING:  When making a new project file, the current folder is considered 
 echo           project root.  The current folder is "%CD%\",
 echo           but you've specified to store the project file in folder 
 echo           "%CM3P_ProjRoot%".  
-call :FN_GetYesNo CM3P_Answer "Would you like to change the project root to be this folder"
+call :FN_GetYesNo CM3P_Answer "Would you like to change the project root to be the folder you named"
 if %CM3P_Answer%==1 goto Params4
 set CM3P_ProjRoot=%CD%\
 goto Params5
@@ -251,7 +255,7 @@ echo.
 echo Project File "%CM3P_File%" contains:
 echo -------------------------------------------------------------------------------
 if defined CM3P_Pause more /e <"%CM3P_File%"
-if not defined CM3P_Pause type %CM3P_File%
+if not defined CM3P_Pause type "%CM3P_File%"
 goto :EOF
 
 :doCM3command
@@ -697,6 +701,9 @@ goto :EOF
 rem Function (MakeShort)
 rem params:  1=env var name, 2=long path surrounded by quotes
 rem result:  env var (1) is set to the mangled short equiv of long path (2)
+rem          unless (2) does not contain spaces in which case no action taken
+echo %2|find " ">NUL:
+if errorlevel 1 goto :EOF
 set %1=%~s2
 goto :EOF
 
@@ -735,6 +742,7 @@ rem Clean-up before exit
 if (%CM3P_Fatal%)==(TRUE) if defined CM3P_Nest if defined CM3P_Pause pause
 set CM3P_Answer=
 set CM3P_Archive=
+set CM3P_CD=
 set CM3P_cm3Opts=
 set CM3P_DefaultInstallRoot=
 set CM3P_File=
@@ -743,7 +751,7 @@ set CM3P_Make=
 set CM3P_Pause=
 set CM3P_ProjName=
 set CM3P_ProjRoot=
-if defined CM3P_PriorFolder cd /d %CM3P_PriorFolder%
+if defined CM3P_PriorFolder cd /d "%CM3P_PriorFolder%"
 set CM3P_PriorFolder=
 if defined CM3P_SavePrompt prompt %CM3P_SavePrompt%
 set CM3P_SavePrompt=
