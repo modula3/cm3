@@ -5,10 +5,6 @@
 /* Last modified on Mon Oct 12 13:50:54 PDT 1992 by muller                   */
 
 
-#ifndef KR_headers
-#define KR_headers
-#endif
-
 #ifndef IEEE_MC68k
 #define IEEE_MC68k
 #endif
@@ -17,9 +13,8 @@
 #undef  IEEE_8087
 #endif
 
-/* FIXME: why? */
-#if 0
-#define strtod m3_strtod
-#endif
+#define MULTIPLE_THREADS
+#define ACQUIRE_DTOA_LOCK(n) RTOS__LockHeap()
+#define FREE_DTOA_LOCK(n) RTOS__UnlockHeap()
 
 #include "dtoa.h"

@@ -20,7 +20,7 @@ PROCEDURE strtod (nptr: ADDRESS; VAR eptr: ADDRESS): LONGREAL;
    by the IEEE round-even rule.  Otherwise ties are broken by biased
    rounding (add half and chop).  *)
 
-<* EXTERNAL m3_dtoa*>
+<* EXTERNAL m3_dtoa *>
 PROCEDURE dtoa (d: double;  mode: int;  ndigits: int;  decpt: int_star;
                 sign: int_star;  rve: char_star_star): char_star;
 (* Converts a C double to an ASCII string. *)
@@ -37,20 +37,21 @@ PROCEDURE dtoa (d: double;  mode: int;  ndigits: int;  decpt: int_star;
      1 ==> like 0, but with Steele & White stopping rule;
            e.g. with IEEE P754 arithmetic , mode 0 gives
            1e23 whereas mode 1 gives 9.999999999999999e22.
-     2 ==> ndigits significant digits.  This gives a return
-           value similar to that of ecvt, except that
-           trailing zeros are suppressed.
+     2 ==> max(1,ndigits) significant digits.  This gives a
+           return value similar to that of ecvt, except
+           that trailing zeros are suppressed.
      3 ==> through ndigits past the decimal point.  This
            gives a return value similar to that from fcvt,
-           except that trailing zeros are suppressed.
-     4-9 should give the same return values as 2-3, i.e.,
-           4 <= mode <= 9 ==> same return as mode
-           2 + (mode & 1).  These modes are mainly for
-           debugging; often they run slower but sometimes
-           faster than modes 2-3.
-     4,5,8,9 ==> left-to-right digit generation.
-     6-9 ==> don't try fast floating-point estimate
-           (if applicable).
+           except that trailing zeros are suppressed, and
+           ndigits can be negative.
+     4,5 ==> similar to 2 and 3, respectively, but (in
+           round-nearest mode) with the tests of mode 0 to
+           possibly return a shorter string that rounds to d.
+           With IEEE arithmetic and compilation with
+           -DHonor_FLT_ROUNDS, modes 4 and 5 behave the same
+           as modes 2 and 3 when FLT_ROUNDS != 1.
+     6-9 ==> Debugging modes similar to mode - 4:  don't try
+           fast floating-point estimate (if applicable).
 
      Values of mode other than 0-9 are treated as mode 0.
 
