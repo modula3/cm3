@@ -89,7 +89,7 @@ SYSTEM_LIBS = {
   "LIBC"       : [ "-lm" ],
 % "LEX-YACC"   : [ BEGIN_CONFIG
 %                    "Where are the lex/yacc libraries?"
-%                      11 "libl.dylib"
+%                      11 "libl.a"
 %                      12 "/usr/lib"
 %                      12 "/usr/local/lib"
 %                      12 "/usr/local/gnu/lib"
