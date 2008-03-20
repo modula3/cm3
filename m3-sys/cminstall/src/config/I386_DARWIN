@@ -138,6 +138,7 @@ SYSTEM_LIBS = {
   "MOTIF"      : [ BEGIN_CONFIG
                      "Where are the Motif libraries?"
                        11 "libXm.dylib"
+		       12 "/sw/lib"
                        12 "/usr/X11R6/lib"
                        12 "/usr/X11/lib"
                        12 "/usr/lib"
