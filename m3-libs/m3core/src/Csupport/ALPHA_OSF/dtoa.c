@@ -13,8 +13,10 @@
 #define IEEE_8087
 #endif
 
-#define Int_32 int
+#define Long int
 
+#define MULTIPLE_THREADS
+#define ACQUIRE_DTOA_LOCK(n) RTOS__LockHeap()
+#define FREE_DTOA_LOCK(n) RTOS__UnlockHeap()
 
-#include "../Common/dtoa.h"
-
+#include "dtoa.h"

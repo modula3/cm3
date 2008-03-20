@@ -12,4 +12,8 @@
 #define VAX
 #endif
 
+#define MULTIPLE_THREADS
+#define ACQUIRE_DTOA_LOCK(n) RTOS__LockHeap()
+#define FREE_DTOA_LOCK(n) RTOS__UnlockHeap()
+
 #include "dtoa.h"
