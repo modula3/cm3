@@ -1,5 +1,0 @@
-module TrackerPositionCBWrap for TrackerPositionCB;
-
-let TProto = EmbProxiedObj_TProto.extend({}, ok);
-
-end module;

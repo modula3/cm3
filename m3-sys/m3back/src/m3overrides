@@ -1,5 +1,0 @@
-WORKDIR = ROOT & "/m3-sys"
-override ("m3middle",  WORKDIR)
-override ("m3objfile", WORKDIR)
-WORKDIR = ROOT & "/m3-libs"
-override ("libm3",  WORKDIR)

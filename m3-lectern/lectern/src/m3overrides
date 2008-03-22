@@ -1,6 +1,0 @@
-override ("formsvbt", ROOT & "/m3-ui")
-override ("images", ROOT & "/m3-ui")
-override ("tempfiles", ROOT & "/m3-libs")
-override ("lecternclient", ROOT & "/m3-lectern")
-override ("lecterndoc", ROOT & "/m3-lectern")
-override ("mtex", ROOT & "/m3-tools")
