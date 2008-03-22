@@ -1957,14 +1957,21 @@ PROCEDURE DoQExec (t: T;  n_args: INTEGER) RAISES {Error} =
   VAR 
     val: QValue.T;
     res: INTEGER;
+    cmd: TEXT;
   BEGIN
     <*ASSERT n_args = 1 *>
     Pop (t, val);
     TRY
-      res := System.ExecuteList (QVal.ToText (t, val));
+      cmd := QVal.ToText (t, val);
+      IF t.do_echo THEN
+        Wr.PutText(CurWr(t), cmd & Wr.EOL);
+      END;
+      res := System.ExecuteList (cmd);
     EXCEPT
       System.ExecuteError(msg) => Err (t, "execution failed: " & msg);
     | Thread.Alerted => Err (t, "interrupted");
+    | Wr.Failure(al) => Err (t, "execution failed: " & 
+                             System.AtomListToText(al));
     END;
     PushInt (t, res);
   END DoQExec;
@@ -1975,12 +1982,17 @@ PROCEDURE DoQExecPut (t: T;  n_args: INTEGER) RAISES {Error} =
     inputWr: Wr.T;
     p: Process.T;
     res: INTEGER;
+    cmd: TEXT;
   BEGIN
     <*ASSERT n_args = 2 *>
     Pop (t, val2);
     Pop (t, val1);
     TRY
-      p := System.PipeTo (QVal.ToText (t, val1), inputWr);
+      cmd := QVal.ToText (t, val1);
+      IF t.do_echo THEN
+        Wr.PutText(CurWr(t), cmd & Wr.EOL);
+      END;
+      p := System.PipeTo (cmd, inputWr);
       Wr.PutText( inputWr, (QVal.ToText (t, val2)));
       Wr.Close (inputWr);
       res := System.Wait (p);
@@ -2003,11 +2015,16 @@ PROCEDURE DoQExecGet (t: T;  n_args: INTEGER) RAISES {Error} =
     p: Process.T;
     ret: INTEGER;
     arr: QVSeq.T;
+    cmd: TEXT;
   BEGIN
     <*ASSERT n_args = 1 *>
     Pop (t, val);
     TRY
-      p := System.RdExecute (QVal.ToText (t, val), outputRd);
+      cmd := QVal.ToText (t, val);
+      IF t.do_echo THEN
+        Wr.PutText(CurWr(t), cmd & Wr.EOL);
+      END;
+      p := System.RdExecute (cmd, outputRd);
       outText := Rd.GetText (outputRd, LAST(CARDINAL));
       ret := System.Wait (p);
       Rd.Close (outputRd);
@@ -2016,6 +2033,8 @@ PROCEDURE DoQExecGet (t: T;  n_args: INTEGER) RAISES {Error} =
     | Thread.Alerted => Err (t, "interrupted");
     | System.Error(msg) => Err (t, "execution failed: " & msg);
     | Rd.Failure(al) => Err (t, "execution failed: " & 
+                             System.AtomListToText(al));
+    | Wr.Failure(al) => Err (t, "execution failed: " & 
                              System.AtomListToText(al));
     END;
     arr := NEW (QVSeq.T).init();
