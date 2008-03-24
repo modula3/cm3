@@ -4,7 +4,7 @@
 % derived originally from the FreeBSD configuration
 %
 
-% $Id: PPC_DARWIN,v 1.11 2008-03-17 05:18:44 jkrell Exp $
+% $Id: PPC_DARWIN,v 1.12 2008-03-24 17:02:19 jkrell Exp $
 
 %-------------------------------------------------- compilation environment ---
 
@@ -133,7 +133,7 @@ SYSTEM_LIBORDER =
 %   "POSTGRES95",
     "FLEX-BISON",
     "LEX-YACC",
-    "LIBC",
+    "LIBC"
 ]
 
 %---------------------------------------------------------- system programs ---
@@ -158,8 +158,9 @@ proc m3_backend (source, object, optimize, debug) is
     % fPIC really is needed here, despite man gcc saying it is the default.
     % This is because man gcc is about Apple's gcc but m3cg is
     % built from FSF source.
-    "-fPIC",
+    "-fPIC"
   ]
+  args += "-fno-reorder-blocks"
   if optimize  args += "-O3"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
@@ -369,7 +370,7 @@ end
 % --- pass "-R" flags to the linker too...
 
 % M3_BOOTSTRAP = TRUE
-% --- generate bootstrap code (assembly) instead of finaly object code
+% --- generate bootstrap code (assembly) instead of final object code
 
 % M3_COMPILE_ONCE = TRUE
 % --- don't recompile code to improve opaque object references
@@ -386,7 +387,7 @@ end
 X11_WITH_SHARED_MEM = TRUE
 % --- X11 libraries include the shared memory extensions (XShm...)
 
-%M3_NEED_STANDALONE_LINKS = TRUE
+% M3_NEED_STANDALONE_LINKS = TRUE
 % --- linker is broken and we need to build a directory of symbolic
 %     links pointing to the non-shared libraries.
 
@@ -410,5 +411,5 @@ end
 %
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-O2 -g"
+GNU_CFLAGS = "-g"
 GNU_MAKE   = "make"
