@@ -18,13 +18,6 @@ CONST
   NoFileDescriptor: INTEGER = -1;
   (* A non-existent file descriptor *)
 
-VAR (*CONST*)
-  Sh := M3toC.FlatTtoS("sh");
-  wdCacheMutex := NEW(MUTEX);
-  wdCache: Pathname.T := NIL; (* NIL => unknown *)
-(* The main purpose for this cache is speeding up FS.Iterate when it
-   is called with a relative pathname. *)
-
 (* Posix Create just calls this; Cygwin only sometimes. *)
 PROCEDURE Create_ForkExec(
     cmd: Pathname.T;
@@ -228,6 +221,9 @@ PROCEDURE FreeEnv(VAR envx: ArrCStr) =
     DISPOSE(envx)
   END FreeEnv;
 
+VAR (*CONST*)
+  Sh := M3toC.FlatTtoS("sh");
+
 PROCEDURE ExecChild(
     argx: ArrCStr; (* see "AllocArgs" for layout *)
     envp: Ctypes.char_star_star;
@@ -312,6 +308,12 @@ PROCEDURE GetStandardFileHandles(VAR stdin, stdout, stderr: File.T) =
   BEGIN
     stdin := stdin_g; stdout := stdout_g; stderr := stderr_g
   END GetStandardFileHandles;
+
+VAR
+  wdCacheMutex := NEW(MUTEX);
+  wdCache: Pathname.T := NIL; (* NIL => unknown *)
+(* The main purpose for this cache is speeding up FS.Iterate when it
+   is called with a relative pathname. *)
 
 PROCEDURE GetWorkingDirectory(): Pathname.T RAISES {OSError.E} =
   VAR
