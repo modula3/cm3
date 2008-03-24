@@ -1,5 +1,5 @@
 %
-% $Id: NT386,v 1.56 2008-03-24 13:17:02 jkrell Exp $
+% $Id: NT386,v 1.57 2008-03-24 14:08:56 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -41,6 +41,9 @@ if not defined("M3_BACKEND_MODE")
 %  "2"  -- call m3_backend, it produces object code
 %  "3"  -- call m3_backend, it produces assembly code
 end
+
+% for bootstrapping from older tools
+readonly NAMING_CONVENTIONS = "2"
 
 %
 % "MS" cl

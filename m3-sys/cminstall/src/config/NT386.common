@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.27 2008-03-24 13:17:02 jkrell Exp $
+% $Id: NT386.common,v 1.28 2008-03-24 14:10:47 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -114,6 +114,16 @@ readonly FormatExe = { "WIN32" : "%s.exe", "POSIX" : "%s"      }{OS_TYPE} % aka 
 readonly FormatLib = { "WIN32" : "%s.lib", "POSIX" : "lib%s.a" }{OS_TYPE} % aka TARGET_NAMING
 readonly FormatDll = { "WIN32" : "%s.dll", "POSIX" : "lib%s.so"}{OS_TYPE} % aka TARGET_NAMING
 % readonly FormatStandaloneLib = { "WIN32" : "%s.lib.sa", "POSIX" : "lib%s.a"}{OS_TYPE} % aka TARGET_NAMING
+
+%------------------------------------------------------------------------------
+
+if not defined("q_exec")
+
+readonly proc q_exec(a) is
+    return try_exec(a)
+end
+
+end
 
 %------------------------------------------------------------------------------
 
