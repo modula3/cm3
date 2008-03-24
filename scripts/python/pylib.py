@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.73 2008-03-24 11:32:54 jkrell Exp $
+# $Id: pylib.py,v 1.74 2008-03-24 13:18:35 jkrell Exp $
 
 import os
 from os import getenv
@@ -416,8 +416,8 @@ if IsCygwinBinary(Cm3FullPath):
     #print(Cm3FullPath + " is a Cygwin binary")
 
     # replace sh with cmd to speed up builds by 3% to 15%
-    os.environ["QUAKE_SHELL"] = "cmd"
-    os.environ["QUAKE_SHELL_OPTION"] = "/c"
+    # os.environ["QUAKE_SHELL"] = "cmd"
+    # os.environ["QUAKE_SHELL_OPTION"] = "/c"
 
     def ConvertToCygwinPath(a):
         return _ConvertToCygwinPath(a)
