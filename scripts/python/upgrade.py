@@ -11,7 +11,7 @@ argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 def _CleanupEnvironment():
     # pylib.py figures these out correctly and in particular
     # their forms have to change if we upgrade from NT386
-    # to NT3866GNU or vice versa; reloading pylib.py
+    # to NT386GNU or vice versa; reloading pylib.py
     # handles that
     for a in ["M3CONFIG", "CM3_INSTALL", "CM3_ROOT"]:
         if os.environ.get(a):
