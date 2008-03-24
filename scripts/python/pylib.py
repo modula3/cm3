@@ -398,8 +398,6 @@ def SetEnvironmentVariable(Name, Value):
 def IsCygwinBinary(a):
     if env_OS != "Windows_NT":
         return False
-    if os.path.isfile(a + ".exe"):
-        a += ".exe"
     a = a.replace("/", "\\")
     #print("a is " + a)
     return (os.system("findstr 2>&1 >nul /m cygwin1.dll \"" + a + "\"") == 0)
