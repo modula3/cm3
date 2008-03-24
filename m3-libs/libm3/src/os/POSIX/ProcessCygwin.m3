@@ -58,28 +58,11 @@ PROCEDURE Create(
     wd: Pathname.T := NIL; 
     stdin, stdout, stderr: File.T := NIL)
   : Process.T RAISES {OSError.E} =
-  VAR
-    len := 0;
-    ch0 := 'a';
-    ch1 := 'a';
-    ch2 := 'a';
   BEGIN
-    (* commands that go "cd foo && bar" need a sh wrapper *)
-    IF cmd # NIL THEN
-      len := Text.Length (cmd);
-      IF len > 3 THEN
-        ch0 := Text.GetChar (cmd, 0);
-        ch1 := Text.GetChar (cmd, 1);
-        ch2 := Text.GetChar (cmd, 2);
-      END;
-    END;
     IF (wd # NIL)
         OR (stdin # NIL AND stdin.fd # stdin_g.fd)
         OR (stdout # NIL AND stdout_g.fd # stdout_g.fd)
-        OR (stderr # NIL AND stderr_g.fd # stderr_g.fd)
-        OR (ch0 # 'c')
-        OR (ch1 # 'd')
-        OR (ch2 # ' ') THEN
+        OR (stderr # NIL AND stderr_g.fd # stderr_g.fd) THEN
       RETURN Create_ForkExec(cmd, params, env, wd, stdin, stdout, stderr);
     ELSE
       RETURN Create_Spawn(cmd, params, env);
