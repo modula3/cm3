@@ -1439,6 +1439,7 @@ GenericCommand:
 
 def DeleteFile(a):
     if os.path.isfile(a):
+        os.chmod(a, ~0)
         os.remove(a)
 
 def CreateDirectory(a):
