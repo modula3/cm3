@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.26 2008-02-25 16:57:40 jkrell Exp $
+% $Id: NT386.common,v 1.27 2008-03-24 13:17:02 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -9,6 +9,8 @@
 %-------------------------------------------------- compilation environment ---
 
 readonly WORD_SIZE    = "32BITS"            % { "32BITS" or "64BITS" }
+
+%------------------------------------------------------------------------------
 
 %
 % These are usually NOT needed.
@@ -61,6 +63,8 @@ end
 
 CM3SetInstallRoot()
 
+%------------------------------------------------------------------------------
+
 readonly BIN_INSTALL    = INSTALL_ROOT & SL & "bin"     % executables
 readonly LIB_INSTALL    = INSTALL_ROOT & SL & "lib" & PROFILING_P   % libraries
 readonly PKG_INSTALL    = INSTALL_ROOT & SL & "pkg"     % packages
@@ -93,18 +97,25 @@ readonly INSTALL_IMPLS = FALSE
 % If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
 % that the library is not available.
 
-readonly LibInPrefix  = { "MS" : "",          "GNU" : "-l"  }{LINKER} % aka NAMING_CONVENTIONS
-readonly LibInSuffix  = { "MS" : ".lib",      "GNU" : ""    }{LINKER} % aka NAMING_CONVENTIONS
+readonly TARGET_NAMING = {"WIN32" : "2", "POSIX" : "0" }{OS_TYPE}
+%                                        object files       libraries
+%  0=Unix                          =>  .o   .io    .mo       libXX.a
+%  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
+%  2=Windows NT or Windows 95      =>  .obj .io    .mo       XX.lib
+
+readonly LibInPrefix  = { "MS" : "",          "GNU" : "-l"  }{LINKER} % aka TARGET_NAMING or OS_TYPE
+readonly LibInSuffix  = { "MS" : ".lib",      "GNU" : ""    }{LINKER} % aka TARGET_NAMING or OS_TYPE
 readonly LibPath      = { "MS" : "-libpath:", "GNU" : "-L"  }{LINKER}
-readonly LibOutPrefix = { "WIN32" : "",     "POSIX" : "lib" }{"WIN32"} % OS_TYPE or NAMING_CONVENTIONS
-readonly LibOutSuffix = { "WIN32" : ".lib", "POSIX" : ".a"  }{"WIN32"} % OS_TYPE or NAMING_CONVENTIONS
-readonly Obj          = { "WIN32" : ".obj", "POSIX" : ".o"  }{"WIN32"} % OS_TYPE or NAMING_CONVENTIONS
+readonly LibOutPrefix = { "WIN32" : "",     "POSIX" : "lib" }{OS_TYPE} % aka TARGET_NAMING
+readonly LibOutSuffix = { "WIN32" : ".lib", "POSIX" : ".a"  }{OS_TYPE} % aka TARGET_NAMING
+readonly Obj          = { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE} % aka TARGET_NAMING
 
-% readonly FormatLib = { "2" : "%s.lib", "0" : "lib%s.a"}{NAMING_CONVENTIONS}
-% readonly FormatDll = { "2" : "%s.dll", "0" : "lib%s.so"}{NAMING_CONVENTIONS}
-% readonly FormatStandaloneLib = { "2" : "%s.lib.sa", "0" : "lib%s.a"}{NAMING_CONVENTIONS}
-readonly FormatDll = { "WIN32" : "%s.dll", "POSIX" : "%s.so"}{OS_TYPE}
+readonly FormatExe = { "WIN32" : "%s.exe", "POSIX" : "%s"      }{OS_TYPE} % aka TARGET_NAMING
+readonly FormatLib = { "WIN32" : "%s.lib", "POSIX" : "lib%s.a" }{OS_TYPE} % aka TARGET_NAMING
+readonly FormatDll = { "WIN32" : "%s.dll", "POSIX" : "lib%s.so"}{OS_TYPE} % aka TARGET_NAMING
+% readonly FormatStandaloneLib = { "WIN32" : "%s.lib.sa", "POSIX" : "lib%s.a"}{OS_TYPE} % aka TARGET_NAMING
 
+%------------------------------------------------------------------------------
 
 local
 readonly
@@ -116,6 +127,8 @@ is
     return LibOutPrefix & a & LibOutSuffix
 end
 
+%------------------------------------------------------------------------------
+
 local
 readonly
 proc
@@ -125,6 +138,8 @@ LibIn(
 is
     return LibInPrefix & a & LibInSuffix
 end
+
+%------------------------------------------------------------------------------
 
 %
 % more unification is desirable here
@@ -147,6 +162,8 @@ SYSTEM_LIBS_MS =
     "OPENGL" : [LibIn("opengl32"), LibIn("glu32")],
     "TCP" : [ ],
 }
+
+%------------------------------------------------------------------------------
 
 SYSTEM_LIBS_GNU =
 {
@@ -189,6 +206,8 @@ SYSTEM_LIBS_GNU =
 }
 
 SYSTEM_LIBS = { "MS" : SYSTEM_LIBS_MS, "GNU" : SYSTEM_LIBS_GNU }{LINKER}
+
+%------------------------------------------------------------------------------
 
 if equal(OS_TYPE, "WIN32")
 
@@ -255,7 +274,7 @@ end
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
-m3back = "@cm3cg"
+m3back = "cm3cg"
 m3back_options = [ ]
 
 %
@@ -289,6 +308,8 @@ m3back_optimize += "-O"
 %
 m3back_optimize += "-Wuninitialized"
 
+%------------------------------------------------------------------------------
+
 proc
 m3_backend(
     source,
@@ -311,7 +332,7 @@ is
     if M3_PROFILING
         args += "-p"
     end
-    return try_exec(m3back, args)
+    return q_exec([m3back, args])
 end
 
 %------------------------------------------------------------------------------
@@ -344,6 +365,7 @@ MoveFile(
     b,
     )
 is
+    local ret = 0
     if defined("fs_cp")
         fs_cp(a, b)
         DeleteFile(a)
@@ -352,9 +374,9 @@ is
         % The check of OS_TYPE confuses host and target.
         %
         if equal(OS, "Windows_NT") and not equal (OS_TYPE, "POSIX")
-            exec("@cmd", "/c", "move", "\"" & a & "\"", "\"" & b & "\"")
+            ret = q_exec(["cmd", "/c", "move", "\"" & a & "\"", "\"" & b & "\""])
         else
-            exec("@mv", a, b)
+            ret = q_exec(["mv", a, b])
         end
     end
 end
@@ -424,6 +446,8 @@ is
     return try_exec("cl", [escape(args), "-c", escape(source)])
 end
 
+%------------------------------------------------------------------------------
+
 proc
 compile_c_gnu(
     source,
@@ -434,9 +458,14 @@ compile_c_gnu(
     )
 is
     local args = options
-    if optimize
-        args += "-O"
-    end
+    %
+    % There's very little C in the system, and dtoa.h is crashing,
+    % when compiling m3core Real*, LongReal*, Extended* (not every one).
+    %
+    %if optimize
+    %    args += "-O"
+    %end
+    %args += "-Os"
     if debug
         % -g provides a little more information than -gstabs
         % -g is the same as -gstabs+
@@ -479,7 +508,7 @@ assemble_ms(
     )
 is
     local args = arglist("@", ["-Ml", "-t", "-z", source & "," & object & ";"])
-    return try_exec("masm386", args)
+    return q_exec("masm386", args)
 end
 
 proc
@@ -488,7 +517,7 @@ assemble_gnu(
     object,
     )
 is
-    return try_exec("@as", source, "-o", object)
+    return q_exec(["as", source, "-o", object])
 end
 
 proc
@@ -636,6 +665,7 @@ ManifestTool(
     ResourceId,
     )
 is
+    local ret = 0
     %
     % http://msdn2.microsoft.com/en-us/library/ms235591.aspx
     %
@@ -646,13 +676,10 @@ is
             % the whole command and send it to cmd.
             Command = "cmd /c \"" & Command & "\""
         end
-        ret_code = try_exec(Command)
-        if not equal(ret_code, 0)
-            return ret_code
-        end
+        ret = q_exec(Command)
         DeleteFile(ManifestFile)
     end
-    return 0
+    return ret
 end
 
 %------------------------------------------------------------------------------
@@ -750,6 +777,8 @@ is
         )
 end
 
+%------------------------------------------------------------------------------
+
 proc
 make_dll_gnu(
     options,
@@ -793,6 +822,8 @@ is
             )
 end
 
+%------------------------------------------------------------------------------
+
 proc
 make_lib(
     lib,
@@ -804,7 +835,7 @@ make_lib(
 is
     local ret_code = 0
 
-    local readonly lib_file = lib & ".lib"
+    local readonly lib_file = format(FormatLib, lib)
     local readonly lib0_file = lib_file & ".sa"
     local readonly def_file = lib & ".def"
     local readonly dll_file = format(FormatDll, lib)
@@ -944,7 +975,7 @@ skip_lib(
     shared,
     )
 is
-    local readonly lib_file = lib & ".lib"
+    local readonly lib_file = format(FormatLib, lib)
     local readonly lib0_file = lib_file & ".sa"
     local def_file  = lib & ".def"
     local readonly dll_file = format(FormatDll, lib)
@@ -996,7 +1027,7 @@ m3_link_flags =
 %
 % Cutting the C runtime dependency from Modula-3 may be desirable.
 %
-	"-nodefaultlib",
+    "-nodefaultlib",
 %
 % Generate a .pdb for debugging.
 %
@@ -1095,6 +1126,8 @@ is
         )
 end
 
+%------------------------------------------------------------------------------
+
 proc
 m3_link_gnu(
     prog,
@@ -1144,6 +1177,8 @@ is
             )
 end
 
+%------------------------------------------------------------------------------
+
 proc
 m3_link(
     prog,
@@ -1154,7 +1189,7 @@ m3_link(
     )
 is
     local ret_code = 0
-    local readonly pgm_file = prog & ".exe"
+    local readonly pgm_file = format(FormatExe, prog)
     local readonly manifest_file = pgm_file & ".manifest"
     local readonly pdb_file = prog & ".pdb"
     local readonly listing  = prog & ".lst"
@@ -1236,7 +1271,7 @@ skip_link(
     shared,
     )
 is
-    local readonly pgm_file = prog & ".exe"
+    local readonly pgm_file = format(FormatExe, prog)
     local readonly manifest_file = pgm_file & ".manifest"
     local readonly pdb_file = prog & ".pdb"
     local readonly listing  = prog & ".lst"
@@ -1326,5 +1361,5 @@ emacs_compile(
     el,
     )
 is
-    exec("emacs -batch -f batch-byte-compile", el)
+    return q_exec("emacs -batch -f batch-byte-compile", el)
 end
