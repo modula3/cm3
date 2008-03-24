@@ -70,9 +70,26 @@ CONST
 
 <*EXTERNAL*> PROCEDURE dup2 (oldd, newd: int): int;
 
+(* process.h *)
+
 (*** execve - execute a file ***)
 
 <*EXTERNAL*> PROCEDURE execve (name: const_char_star; 
+                           argv, envp: char_star_star): int;
+
+(*** spawnve - efficent fork + exec
+     spawnvpe - efficent fork + exec with path search
+***)
+CONST
+    (* for mode parameter to spawn *)
+    (* P_WAIT = 1; returns exit code (like system) *)
+    P_NOWAIT = 2; (* returns pid, get exit code with waitpid *)
+
+<*EXTERNAL*> PROCEDURE spawnve (mode: int; name: const_char_star; 
+                           argv, envp: char_star_star): int;
+
+(* same as spawnve but does the work of finding what to run *)
+<*EXTERNAL*> PROCEDURE spawnvpe (mode: int; name: const_char_star; 
                            argv, envp: char_star_star): int;
 
 (*** exit - terminate a process ***)
@@ -237,7 +254,8 @@ CONST
 <*EXTERNAL*> PROCEDURE utimes (file: const_char_star;
                     tvp: UNTRACED REF ARRAY [0..1] OF struct_timeval): int;
 
-(*** vfork - spawn new process in a virtual memory efficient way ***)
+(*** vfork - spawn new process in a virtual memory efficient way
+This is actually NOT efficient on Cygwin. See spawn*. ***)
 
 <*EXTERNAL*> PROCEDURE vfork (): int;
 
