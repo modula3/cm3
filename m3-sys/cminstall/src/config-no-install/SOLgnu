@@ -163,13 +163,8 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-pthreads", "-fPIC", options ]
-  if optimize  args += "-O"  end
-  if debug     args += "-gstabs"  end
-  if M3_PROFILING args += "-pg" end
   touch (object)
   return 0
-  return try_exec ("@" & SYSTEM_CC, args, "-c", source)
 end
 
 %---------------------------------------------------------------- assembler ---
@@ -180,7 +175,6 @@ end
 proc assemble (source, object) is
   touch (object)
   return 0
-  return try_exec ("@" & SYSTEM_ASM, "-s", "-K", "PIC", source, "-o", object)
 end
 
 %--------------------------------------------------------- library creation ---
