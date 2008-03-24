@@ -1,5 +1,5 @@
 %
-% $Id: NT386GNU,v 1.27 2008-03-24 13:17:02 jkrell Exp $
+% $Id: NT386GNU,v 1.28 2008-03-24 14:08:56 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -37,6 +37,9 @@ readonly M3_BACKEND_MODE = "3"
 %  "1"  -- don't call m3_backend, M3CG produces assembly code
 %  "2"  -- call m3_backend, it produces object code
 %  "3"  -- call m3_backend, it produces assembly code
+
+% for bootstrapping from older tools
+readonly NAMING_CONVENTIONS = "0"
 
 %
 % "MS" cl
