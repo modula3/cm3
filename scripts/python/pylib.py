@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.75 2008-03-24 13:49:23 jkrell Exp $
+# $Id: pylib.py,v 1.76 2008-03-24 13:51:28 jkrell Exp $
 
 import os
 from os import getenv
@@ -379,6 +379,12 @@ Config = Config or Target
 
 # print("Target is " + Target)
 
+def FatalError(a = ""):
+    # logs don't work yet
+    #print("ERROR: see " + Logs)
+    print("fatal error " + a)
+    sys.exit(1)
+
 def GetConfigForDistribution(Target):
 #
 # Favor the config-no-install directory, else fallback to config.
@@ -396,6 +402,8 @@ def SetEnvironmentVariable(Name, Value):
         print("set " + Name + "=" + Value);
 
 def IsCygwinBinary(a):
+    if not os.path.isfile(a):
+        FatalError(a + " does not exist")
     if env_OS != "Windows_NT":
         return False
     a = a.replace("/", "\\")
@@ -1722,12 +1730,6 @@ def SetupEnvironment():
             ["gcc", "as", "ld"],
             os.path.join(SystemDrive, "cygwin", "bin"))
 
-def FatalError(a = ""):
-    # logs don't work yet
-    #print("ERROR: see " + Logs)
-    print("fatal error " + a)
-    sys.exit(1)
-    
 if __name__ == "__main__":
     #
     # run test code if module run directly
