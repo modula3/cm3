@@ -98,11 +98,11 @@ PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
     len := Text.Length (a);
     IF (len <= NUMBER (buf)) THEN
       Text.SetChars (buf, a);
-      RETURN OldFixPath (SUBARRAY (buf, 0, len));
+      RETURN FixPath (SUBARRAY (buf, 0, len));
     ELSE
       ref := NEW (REF ARRAY OF CHAR, len);
       Text.SetChars (ref^, a);
-      RETURN OldFixPath (ref^);
+      RETURN FixPath (ref^);
     END;
   END New;
 
@@ -141,7 +141,7 @@ PROCEDURE Join (dir, base: TEXT;  k: Kind;  <*UNUSED*>host: BOOLEAN): TEXT =
         len := Append (buf, len, pre, pre_len);
         len := Append (buf, len, base, base_len);
         len := Append (buf, len, ext, ext_len);
-        RETURN OldFixPath (SUBARRAY (buf, 0, len));
+        RETURN FixPath (SUBARRAY (buf, 0, len));
       END DoJoin;
 
   BEGIN (* Join *)
@@ -389,15 +389,6 @@ PROCEDURE MakeRelative (VAR path: TEXT;  full, rel: TEXT): BOOLEAN =
     END;
   END MakeRelative;
 
-TYPE
-  SepInfo = RECORD
-    d_sep : CHAR;
-    v_sep : CHAR;
-    dots  : BOOLEAN;
-    cnt   : INTEGER;
-    loc   : ARRAY [0..31] OF INTEGER;
-  END;
-
 PROCEDURE Reverse (VAR p: ARRAY OF CHAR) =
   VAR
     len := NUMBER (p);
@@ -537,6 +528,7 @@ PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: INTEGER; VAR len
   END PathRemoveDots;
 
 PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
+  (* remove redundant "/arc/../" and "/./" segments
   VAR
     d_sep := DirSep [host_os];
     start := 0;
@@ -557,107 +549,6 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
     END;
     RETURN Text.FromChars (SUBARRAY (p, start, len));
   END FixPath;
-
-PROCEDURE OldFixPath (VAR p: ARRAY OF CHAR): TEXT =
-  (* remove redundant "/arc/../" and "/./" segments
-   This function should be rewritten as follows:
-     reverse the string
-     walk through once copying back
-     if see .., increment counter
-     skip elements until counter back to zero
-     reverse the string at end
-     Present algorithm:
-       uses larger fixed amount of memory
-       handled only limited input
-       frequently restarts
-     Proposed algorithm:
-       uses smaller fixed amount of memory
-       handles unlimited input
-       never restarts
-    *)
-  VAR os := host_os;  len, x, s0, s1, s2: INTEGER;  info: SepInfo;
-      d_sep := DirSep [os];
-  BEGIN
-    info.d_sep := d_sep;
-    info.v_sep := VolSep [os];
-
-    len := NUMBER (p);
-    FindSeps (p, len, info);  x := 1;
-    WHILE (info.dots) AND (x < info.cnt-1) DO
-      s0 := info.loc[x-1];
-      s1 := info.loc[x];
-      s2 := info.loc[x+1];
-      IF (s1 - s0 = 2) AND (p[s0+1] = '.') AND IsDirSep (p[s1], d_sep) THEN
-        (* found a /./ arc  => remove it *)
-        CutSection (p, s0+1, s1, len);
-        FindSeps (p, len, info);  x := 1;  (* restart the scan *)
-      ELSIF (s2 - s1 = 3)
-        AND (p[s1+1] = '.') AND (p[s1+2] = '.')
-        AND (IsDirSep (p[s1], d_sep))
-        AND (s1 # 0)
-        (* One would expect a possible need to check s1 # 1 here also
-        however I am unable to construct a case that crashes without that check.
-        The suspected reasons are subtle. If s1 = 1, then either the previous
-        character is not a dot and the expression ends before using s1 - 2,
-        or the previous character was a dot and already got removed.
-
-        Also, normally the previous element is never "..", because
-        we are working left to right, removing them, and restarting
-        for every change. However, there could be a ".." element
-        here because we didn't have "room" to remove it.
-        This occurs for example with "../..".
-        ../.. should not be changed.
-        However if we have "a../..", that should be collapsed.
-        *)
-        AND (((s1 - s0) # 3) OR (p[s1-1] # '.') OR (p[s1-2] # '.')) THEN
-        (* found a /<foo>/../ segment => remove it *)
-        CutSection (p, s0+1, s2, len);
-        FindSeps (p, len, info);  x := 1;  (* restart the scan *)
-      ELSE
-        (* found nothing... *)
-        INC (x);
-      END;
-    END;
-
-    (* remove trailing slashs *)
-    WHILE (len > 0) AND IsDirSep (p[len-1], d_sep) DO DEC (len); END;
-    IF len <= 0 THEN RETURN "."; END;
-    RETURN Text.FromChars (SUBARRAY (p, 0, len));
-  END OldFixPath;
-
-PROCEDURE FindSeps (READONLY buf: ARRAY OF CHAR;  len: INTEGER;
-                    VAR(*IN/OUT*) info: SepInfo) =
-  VAR c: CHAR;
-      d_sep := info.d_sep;
-      v_sep := info.v_sep;
-  BEGIN
-    info.dots := FALSE;
-    info.loc[0] := -1;  info.cnt := 1;  (* initial marker *)
-    FOR i := 0 TO len-1 DO
-      c := buf[i];
-      IF IsDirSep (c, d_sep) OR (c = v_sep) THEN
-        IF (info.cnt >= LAST (info.loc)) THEN EXIT; (*give up*) END;
-        info.loc[info.cnt] := i;  INC (info.cnt);
-      ELSIF (c = '.') THEN
-        info.dots := TRUE;
-      END;
-    END;
-    info.loc[info.cnt] := len;  INC (info.cnt);  (* final marker *)
-  END FindSeps;
-
-PROCEDURE CutSection (VAR buf: ARRAY OF CHAR;  start, stop: INTEGER;
-                      VAR(*IN/OUT*) len: INTEGER) =
-  VAR chop, tail: INTEGER;
-  BEGIN
-    start := MAX (0, MIN (start, len));
-    stop  := MAX (0, MIN (stop+1, len));
-    chop  := stop - start;
-    tail  := len - stop;
-    IF (tail > 0) THEN
-      SUBARRAY (buf, start, tail) := SUBARRAY (buf, stop, tail);
-    END;
-    DEC (len, chop);
-  END CutSection;
 
 PROCEDURE Test () =
   CONST
@@ -704,7 +595,6 @@ PROCEDURE Test () =
   VAR
     buf : ARRAY [0..255] OF CHAR;
     t1 : TEXT;
-    t2 : TEXT;
   BEGIN
 
     SetOS (OSKind.Win32, TRUE);
@@ -712,16 +602,10 @@ PROCEDURE Test () =
 
     FOR i := 0 TO LAST(data) DO
       Text.SetChars (buf, data[i]);
-      t1 := Convert (OldFixPath (SUBARRAY (buf, 0, Text.Length (data[i]))), TRUE);
+      t1 := Convert (FixPath (SUBARRAY (buf, 0, Text.Length (data[i]))), TRUE);
       Text.SetChars (buf, data[i]);
-      t2 := Convert (FixPath (SUBARRAY (buf, 0, Text.Length (data[i]))), TRUE);
-      IF NOT Text.Equal (t1, t2) THEN
-        RTIO.PutInt (i);
-        RTIO.PutText (" different result for " & data[i] & " => " & t1 & ", " & t2 & "\n");
-      ELSE
-        RTIO.PutInt (i);
-        RTIO.PutText (" same result for " & data[i] & " => " & t2 & "\n");
-      END;
+      RTIO.PutInt (i);
+      RTIO.PutText (" result for " & data[i] & " => " & t1 & "\n");
     END;
     RTIO.Flush ();
     Process.Exit (1);
