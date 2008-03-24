@@ -686,7 +686,7 @@ is
             % the whole command and send it to cmd.
             Command = "cmd /c \"" & Command & "\""
         end
-        ret = q_exec(Command)
+        ret = try_exec(Command)
         DeleteFile(ManifestFile)
     end
     return ret
