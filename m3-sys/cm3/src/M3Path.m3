@@ -9,7 +9,7 @@
 
 MODULE M3Path;
 
-IMPORT Pathname, Text, Env;
+IMPORT Pathname, Text;
 IMPORT RTIO, Process;
 
 CONST
@@ -114,11 +114,12 @@ PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
 
 PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
   VAR
-    os       := os_map [host];
-    pre      := Prefix [os][k];
-    ext      := Suffix [os][k];
-    d_sep    := DirSep [os];
-    v_sep    := VolSep [os];
+    host_os  := os_map [host];
+    target_os := os_map [FALSE];
+    pre      := Prefix [target_os][k];
+    ext      := Suffix [target_os][k];
+    d_sep    := DirSep [host_os];
+    v_sep    := VolSep [host_os];
     ch       : CHAR;
     buf      : ARRAY [0..255] OF CHAR;
     dir_len  := 0;
@@ -191,9 +192,10 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR;  host: BOOLEAN): T =
     d_index := -1;
     v_index := -1;
     start   := 0;
-    os      := os_map [host];
-    d_sep   := DirSep [os];
-    v_sep   := VolSep [os];
+    host_os := os_map [host];
+    target_os := os_map [FALSE];
+    d_sep   := DirSep [host_os];
+    v_sep   := VolSep [host_os];
     ext     : TEXT;
     ext_len : INTEGER;
     pre     : TEXT;
@@ -222,7 +224,7 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR;  host: BOOLEAN): T =
       t.dir := Text.FromChars (SUBARRAY (nm, 0, v_index+1));
       start := v_index + 1;
     ELSIF (d_index = 0) THEN
-      t.dir := DirSepText [os];
+      t.dir := DirSepText [host_os];
       start := 1;
     ELSE
       t.dir := Text.FromChars (SUBARRAY (nm, 0, d_index));
@@ -234,8 +236,8 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR;  host: BOOLEAN): T =
     t.kind := Kind.Unknown;
     ext_len := 0;
     FOR k := FIRST (Kind) TO LAST (Kind) DO
-      ext := Suffix [os][k];
-      IF ExtMatch (nm_txt, ext, os) THEN
+      ext := Suffix [target_os][k];
+      IF ExtMatch (nm_txt, ext, host_os) THEN
         ext_len := Text.Length (ext);
         t.kind := k;
         EXIT;
@@ -245,8 +247,8 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR;  host: BOOLEAN): T =
     (* extract the base component *)
     t.base := Text.FromChars (SUBARRAY (nm, start, base_len - ext_len));
 
-    pre := Prefix[os][t.kind];
-    IF (Text.Length (pre) > 0) AND PrefixMatch (t.base, pre, os) THEN
+    pre := Prefix[target_os][t.kind];
+    IF (Text.Length (pre) > 0) AND PrefixMatch (t.base, pre, host_os) THEN
       t.base := Text.Sub (t.base, Text.Length (pre));
     END;
 
@@ -321,17 +323,21 @@ PROCEDURE EndOfArc (path: TEXT;  xx: CARDINAL;  d_sep: CHAR): BOOLEAN =
 
 PROCEDURE DefaultProgram (host: BOOLEAN): TEXT =
   BEGIN
+    host := FALSE;
     RETURN Default_pgm [os_map [host]];
   END DefaultProgram;
 
 PROCEDURE ProgramName (base: TEXT;  host: BOOLEAN): TEXT =
   BEGIN
+    host := FALSE;
     RETURN base & Suffix[os_map [host]][Kind.PGM];
   END ProgramName;
 
 PROCEDURE LibraryName (base: TEXT;  host: BOOLEAN): TEXT =
   VAR os := os_map [host];
   BEGIN
+    host := FALSE;
+    os := os_map [host];
     RETURN Prefix[os][Kind.LIB] & base & Suffix[os][Kind.LIB];
   END LibraryName;
 
@@ -764,19 +770,8 @@ BEGIN
     lcase[i] := VAL (ORD (i) - ORD ('A') + ORD ('a'), CHAR);
   END;
 
- (* OSKind is determined from "naming conventions"
-    which are mostly about foo.lib vs. libfoo.a, foo.dll vs. libfoo.so, foo vs. foo.exe.
-    "Naming conventions" also determines the slash, however NT386GNU uses
-    Win32 "naming conventions" (currently) but forward slashes. In reality,
-    forward slashes work almost anywhere, but at this time we are not pushing
-    through the change to use forward slashes more on regular NT386.
-    What we do here is probe our runtime for its slash as was already being
-    done to set the Quake SL variable, but applying the result to more code.
-
-    In general this run-time/compile-time determinations probably need better abstraction.
-    At least in other places, where the way time works is used to determine if the runtime is Unix.
-    In this case, the slash could be fed in at build time, or set in Quake, however
-    how to get his data from Quake efficiently (and early enough?), is to be determined.
+ (* Probe the host for what slash it uses, and default host and
+    target "naming conventions" based on that.
   *)
   IF Text.GetChar (Pathname.Join ("a", "b"), 1) = BackSlash THEN
 
@@ -788,21 +783,6 @@ BEGIN
 
     lcase [Slash] := BackSlash;
 
-  ELSE
-
-    WITH OS = Env.Get("OS") DO
-      IF OS # NIL AND Text.Equal (OS, "Windows_NT") THEN
-
-        (* NT386GNU uses foo.lib instead of libfoo.a (at least for now), and forward slashes. *)
-
-        os_map [TRUE]  := OSKind.Win32;
-        os_map [FALSE] := OSKind.Win32;
-        DirSep [OSKind.Win32] := DirSep [OSKind.Unix]; (* Slash *)
-        DirSepText [OSKind.Win32] := DirSepText [OSKind.Unix]; (* "//" *)
-        VolSep [OSKind.Win32] := VolSep [OSKind.Unix]; (* Null *)
-
-     END;
-    END;
   END;
 
   (* Test (); *)
