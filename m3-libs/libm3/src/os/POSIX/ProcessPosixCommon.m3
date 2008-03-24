@@ -5,29 +5,34 @@
 (*      modified on Wed Jun 22 16:45:37 PDT 1994 by kalsow     *)
 (*      modified on Mon Feb 22 11:41:21 PST 1993 by mjordan    *)
 
-UNSAFE MODULE ProcessPosix EXPORTS Process;
+(* common code for Posix and Cygwin *)
+
+UNSAFE MODULE ProcessPosixCommon EXPORTS ProcessPosixCommon, Process;
 
 IMPORT Atom, AtomList, Cerrno, Ctypes, Env, File, FilePosix, M3toC, OSError,
   OSErrorPosix, Pathname, RTLinker, RTProcess, RTSignal,
   Scheduler, Text, SchedulerPosix, Unix, Uerror, Uexec, Uprocess, Ustat,
-  Utime, Uugid, Word;
- 
-REVEAL T = BRANDED REF RECORD
-    pid: INTEGER;
-    waitOk := TRUE
-  END;
+  Utime, Uugid, Word, Process;
 
 CONST
   NoFileDescriptor: INTEGER = -1;
   (* A non-existent file descriptor *)
 
-PROCEDURE Create(
+VAR (*CONST*)
+  Sh := M3toC.FlatTtoS("sh");
+  wdCacheMutex := NEW(MUTEX);
+  wdCache: Pathname.T := NIL; (* NIL => unknown *)
+(* The main purpose for this cache is speeding up FS.Iterate when it
+   is called with a relative pathname. *)
+
+(* Posix Create just calls this; Cygwin only sometimes. *)
+PROCEDURE Create_ForkExec(
     cmd: Pathname.T;
     READONLY params: ARRAY OF TEXT; 
     env: REF ARRAY OF TEXT := NIL;
     wd: Pathname.T := NIL; 
     stdin, stdout, stderr: File.T := NIL)
-  : T RAISES {OSError.E} =
+  : Process.T RAISES {OSError.E} =
   VAR
     argx: ArrCStr;
     envx: ArrCStr;
@@ -117,10 +122,8 @@ PROCEDURE Create(
       OSErrorPosix.Raise0(execErrno)
     END;
 
-    RETURN NEW(T, pid := forkResult)
-  END Create;
-
-TYPE ArrCStr = UNTRACED REF ARRAY OF Ctypes.char_star;
+    RETURN NEW(Process.T, pid := forkResult)
+  END Create_ForkExec;
 
 PROCEDURE GetPathToExec(pn: Pathname.T): Pathname.T RAISES {OSError.E} =
 (* Return the filename to execute given "base" and the value of the "PATH"
@@ -225,10 +228,6 @@ PROCEDURE FreeEnv(VAR envx: ArrCStr) =
     DISPOSE(envx)
   END FreeEnv;
 
-VAR (*CONST*)
-  BinSh := M3toC.FlatTtoS("/bin/sh");
-  Sh := M3toC.FlatTtoS("sh");
-
 PROCEDURE ExecChild(
     argx: ArrCStr; (* see "AllocArgs" for layout *)
     envp: Ctypes.char_star_star;
@@ -314,12 +313,6 @@ PROCEDURE GetStandardFileHandles(VAR stdin, stdout, stderr: File.T) =
     stdin := stdin_g; stdout := stdout_g; stderr := stderr_g
   END GetStandardFileHandles;
 
-VAR
-  wdCacheMutex := NEW(MUTEX);
-  wdCache: Pathname.T := NIL; (* NIL => unknown *)
-(* The main purpose for this cache is speeding up FS.Iterate when it
-   is called with a relative pathname. *)
-
 PROCEDURE GetWorkingDirectory(): Pathname.T RAISES {OSError.E} =
   VAR
     buffer: ARRAY [0..Unix.MaxPathLen] OF Ctypes.char;
@@ -367,10 +360,9 @@ PROCEDURE GetFileHandle(fd: INTEGER; ds: FilePosix.DirectionSet): File.T =
     RETURN f
   END GetFileHandle;
 
-VAR stdin_g, stdout_g, stderr_g: File.T;
-
 BEGIN
+  BinSh := M3toC.FlatTtoS("/bin/sh");
   stdin_g := GetFileHandle(0, FilePosix.Read);
   stdout_g := GetFileHandle(1, FilePosix.Write);
   stderr_g := GetFileHandle(2, FilePosix.Write)
-END ProcessPosix.
+END ProcessPosixCommon.
