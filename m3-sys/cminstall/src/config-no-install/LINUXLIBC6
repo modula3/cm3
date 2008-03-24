@@ -152,6 +152,8 @@ readonly SYSTEM_ASM = "as" % Assembler
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend(source, object, optimize, debug) is
+    return 0
+
     local args =
     [
         "-quiet",
@@ -187,6 +189,7 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c(source, object, options, optimize, debug) is
+    return 0
     local args =
     [
         "-m32",
@@ -211,6 +214,7 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble(source, object) is
+    return 0
   return try_exec("@" & SYSTEM_ASM, "--32", source, "-o", object)
 end
 
@@ -335,6 +339,7 @@ end
 % a library.
 
 proc make_lib(lib, options, objects, imported_libs, shared) is
+    return 0
     local ret_code = 0
     local lib_a    = format("lib%s.a", lib)
     local lib_so   = format("lib%s.so", lib)
@@ -411,6 +416,7 @@ end
 % "m3_link" is called to produce a final executable.
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
+    return 0
     % The parameter order here is not faithful to the original.
     % Does it matter?
     local args = [ ]
