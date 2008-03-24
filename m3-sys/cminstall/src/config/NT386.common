@@ -117,6 +117,16 @@ readonly FormatDll = { "WIN32" : "%s.dll", "POSIX" : "lib%s.so"}{OS_TYPE} % aka 
 
 %------------------------------------------------------------------------------
 
+if not defined("q_exec")
+
+readonly proc q_exec(a) is
+    return try_exec(a)
+end
+
+end
+
+%------------------------------------------------------------------------------
+
 local
 readonly
 proc

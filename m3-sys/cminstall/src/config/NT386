@@ -42,6 +42,9 @@ if not defined("M3_BACKEND_MODE")
 %  "3"  -- call m3_backend, it produces assembly code
 end
 
+% for bootstrapping from older tools
+readonly NAMING_CONVENTIONS = "2"
+
 %
 % "MS" cl
 % "GNU" gcc
