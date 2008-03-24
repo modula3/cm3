@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.76 2008-03-24 13:51:28 jkrell Exp $
+# $Id: pylib.py,v 1.77 2008-03-24 14:13:16 jkrell Exp $
 
 import os
 from os import getenv
@@ -41,9 +41,9 @@ if env_OS == "Windows_NT":
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
     pathext = getenv("PATHEXT");
     if pathext and not "." in pathext.split(";"):
-        pathext = ".;" + pathext
+        pathext = pathext + ";."
         os.environ["PATHEXT"] = pathext
-        print("set PATHEXT=.;%PATHEXT%")
+        print("set PATHEXT=%PATHEXT%;.")
 else:
     from os import uname
 
@@ -93,12 +93,6 @@ BuildAll = getenv("CM3_ALL") or False
 # THIS IS MOSTLY NOT INTERESTING AS THE DEFAULTS AND PROBING ARE GOOD.
 #
 Variables = [
-
-    #
-    # an empty string for Posix, ".exe" for Win32
-    # appended to executable paths to form actual file paths
-    #
-    "EXE",
 
     #
     # True or False -- should we build m3gdb.
