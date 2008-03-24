@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.74 2008-03-24 13:18:35 jkrell Exp $
+# $Id: pylib.py,v 1.75 2008-03-24 13:49:23 jkrell Exp $
 
 import os
 from os import getenv
@@ -398,8 +398,6 @@ def SetEnvironmentVariable(Name, Value):
 def IsCygwinBinary(a):
     if env_OS != "Windows_NT":
         return False
-    if os.path.isfile(a + ".exe"):
-        a += ".exe"
     a = a.replace("/", "\\")
     #print("a is " + a)
     return (os.system("findstr 2>&1 >nul /m cygwin1.dll \"" + a + "\"") == 0)
