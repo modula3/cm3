@@ -12,6 +12,7 @@ IMPORT Mx, MxMerge, MxCheck, MxGen, MxIn, MxOut, MxVS;
 IMPORT Msg, Arg, Utils, M3Path, M3Backend, M3Compiler;
 IMPORT Quake, QMachine, QValue, QVal, QVSeq;
 IMPORT M3Loc, M3Unit, M3Options, MxConfig AS M3Config;
+IMPORT QIdent;
 FROM Target IMPORT M3BackendMode_t, BackendAssembly;
 
 TYPE
@@ -101,8 +102,7 @@ TYPE
     main          : M3ID.T;             (* "Main" *)
     m3env         : Env;                (* the compiler's environment closure *)
     target        : TEXT;               (* target machine *)
-    host_os       : M3Path.OSKind;      (* host system *)
-    target_os     : M3Path.OSKind;      (* target os *)
+    target_os    := M3Path.OSKind.Unix; (* target os *)
     m3backend_mode: M3BackendMode_t;    (* tells how to turn M3CG -> object *)
     m3backend     : ConfigProc;         (* translate M3CG -> ASM or OBJ *)
     c_compiler    : ConfigProc;         (* compile C code *)
@@ -139,15 +139,28 @@ TYPE
   END;
 
 PROCEDURE SetupNamingConventionsInternal (VAR s : State; mach : Quake.Machine) =
+  VAR
+    value : QValue.Binding;
   BEGIN
     s.machine       := mach;
-    s.host_os := GetOSType (s, "NAMING_CONVENTIONS");
-    IF (GetDefn (s, "TARGET_NAMING") = NIL)
-      THEN s.target_os := s.host_os;
-      ELSE s.target_os := GetOSType (s, "TARGET_NAMING");
+
+    value := GetDefn (s, "NAMING_CONVENTIONS");
+    IF value # NIL THEN
+      WITH host_os = GetOSType (s, value) DO
+        s.target_os := host_os;
+        M3Path.SetOS (host_os, host := TRUE);
+        M3Path.SetOS (host_os, host := FALSE);
+      END;
     END;
-    M3Path.SetOS (s.host_os, host := TRUE);
-    M3Path.SetOS (s.target_os, host := FALSE);
+
+    value := GetDefn (s, "TARGET_NAMING");
+    IF value # NIL THEN
+      WITH target_os = GetOSType (s, value) DO
+        s.target_os := target_os;
+        M3Path.SetOS (target_os, host := FALSE);
+      END;
+    END;
+
   END SetupNamingConventionsInternal;
 
 PROCEDURE SetupNamingConventions (mach : Quake.Machine) =
@@ -230,32 +243,40 @@ PROCEDURE CompileUnits (main     : TEXT;
     RETURN s;
   END CompileUnits;
 
-PROCEDURE GetOSType (s: State;  sym: TEXT): M3Path.OSKind =
-  VAR val := GetConfigItem (s, sym);
+PROCEDURE GetOSType (s: State; bind: QValue.Binding): M3Path.OSKind =
+  VAR val := BindingToText (s, bind);
   BEGIN
-    IF    Text.Equal (val, "0")   THEN RETURN M3Path.OSKind.Unix;
-    ELSIF Text.Equal (val, "1")   THEN RETURN M3Path.OSKind.GrumpyUnix;
-    ELSIF Text.Equal (val, "2")   THEN RETURN M3Path.OSKind.Win32;
+    IF Text.Length (val) = 1 THEN
+      CASE (Text.GetChar (val, 0)) OF
+        | '0' => RETURN M3Path.OSKind.Unix;
+        | '1' => RETURN M3Path.OSKind.GrumpyUnix;
+        | '2' => RETURN M3Path.OSKind.Win32;
+        ELSE
+      END;
     END;
-    ConfigErr (s, sym, "unrecognized naming convention: " & val);
+    ConfigErr (s, s.machine.map.id2txt(bind.name), "unrecognized naming convention: " & val);
     RETURN M3Path.OSKind.Unix;
   END GetOSType;
 
-PROCEDURE GetConfigItem (s: State;  symbol: TEXT; default: TEXT := NIL): TEXT =
-  VAR bind := GetDefn (s, symbol);
+PROCEDURE BindingToText (s: State; bind: QValue.Binding; default: TEXT := NIL): TEXT =
   BEGIN
     IF bind = NIL THEN
       IF default # NIL THEN
         RETURN default;
       END;
+      ConfigErr (s, s.machine.map.id2txt(bind.name), "not defined");
     END;
-    IF (bind = NIL) THEN ConfigErr (s, symbol, "not defined"); END;
     TRY
       RETURN QVal.ToText (s.machine, bind.value);
     EXCEPT Quake.Error (msg) =>
-      ConfigErr (s, symbol, msg);
+      ConfigErr (s, s.machine.map.id2txt(bind.name), msg);
     END;
     RETURN NIL;
+  END BindingToText;
+
+PROCEDURE GetConfigItem (s: State;  symbol: TEXT; default: TEXT := NIL): TEXT =
+  BEGIN
+    RETURN BindingToText (s, GetDefn (s, symbol), default);
   END GetConfigItem;
 
 PROCEDURE GetConfigProc (s: State;  symbol: TEXT;
