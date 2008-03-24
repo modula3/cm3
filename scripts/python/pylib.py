@@ -20,7 +20,7 @@ import shutil
 #    probed with $OS and uname
 #
 # CM3_OSTYPE
-#    follows from Target
+#    follows mostly from Target, except CM3_TARGET can be WIN32 or POSIX
 #
 # CM3_ROOT
 #    the root of the source, computed from the path to this file
@@ -431,6 +431,7 @@ if IsCygwinBinary(CM3):
     #print(CM3 + " is a Cygwin binary")
 
     # replace sh with cmd to speed up builds by 3% to 15%
+    # This should not matter any longer -- use q_exec instead of exec.
     # os.environ["QUAKE_SHELL"] = "cmd"
     # os.environ["QUAKE_SHELL_OPTION"] = "/c"
 
@@ -448,6 +449,7 @@ else:
         return _ConvertFromCygwinPath(a)
 
 def ConvertPath(a):
+    # This isn't "roundtrip", this is one (or both) is a nop.
     return ConvertFromCygwinPath(ConvertToCygwinPath(a))
 
 SetEnvironmentVariable("CM3_TARGET", Target);
@@ -794,9 +796,7 @@ def _FilterPackage(Package):
         "udp": BuildAll or OSType == "POSIX",
         "tapi": BuildAll or OSType == "WIN32",
         "serial": BuildAll or HAVE_SERIAL,
-
         "X11R4": BuildAll or OSType != "WIN32",
-
         "m3cc": GCC_BACKEND and not OMIT_GCC,
     }
     return PackageConditions.get(Package, True)
