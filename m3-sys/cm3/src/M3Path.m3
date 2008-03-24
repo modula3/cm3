@@ -17,11 +17,9 @@ CONST
   Colon     = ':';
   Slash     = '/';
   BackSlash = '\\';
-
-VAR
-  DirSep := ARRAY OSKind OF CHAR { Slash,  Slash,  BackSlash };
-  VolSep := ARRAY OSKind OF CHAR { Null,   Null,   Colon  };
-  DirSepText := ARRAY OSKind OF TEXT { "/",  "/",  "\\" };
+  DirSep = ARRAY OSKind OF CHAR { Slash,  Slash,  BackSlash };
+  VolSep = ARRAY OSKind OF CHAR { Null,   Null,   Colon  };
+  DirSepText = ARRAY OSKind OF TEXT { "/",  "/",  "\\" };
 
 TYPE
   SMap = ARRAY Kind OF TEXT;
@@ -42,7 +40,6 @@ CONST
                           ".obj",".lib",".lib",".m3x",".exe",".mx",".tmpl" }
   };
 
-CONST
   Prefix = ARRAY OSKind OF SMap {
   (* Unix *)       SMap { "", "", "", "", "",
                           "", "", "", "",
@@ -58,21 +55,23 @@ CONST
                           "", "", "", "","", "","" }
   };
 
-CONST
   Default_pgm = ARRAY OSKind OF TEXT { "a.out", "a.out", "NONAME.EXE" };
 
 VAR
-  os_map := ARRAY BOOLEAN OF OSKind { OSKind.Unix, OSKind.Unix };
+  host_os := OSKind.Unix;
+  target_os := OSKind.Unix;
   lcase  : ARRAY CHAR OF CHAR;
 
 PROCEDURE SetOS (kind: OSKind;  host: BOOLEAN) =
   BEGIN
-    os_map [host] := kind;
+    IF host THEN
+      host_os := kind;
+    ELSE
+      target_os := kind;
+    END;
   END SetOS;
 
-(* New is split into New and NewInternal so that test code can pass host := FALSE *)
-
-PROCEDURE NewInternal (a, b, c, d: TEXT; host: BOOLEAN): TEXT =
+PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
   VAR len: INTEGER;  buf: ARRAY [0..255] OF CHAR;  ref: REF ARRAY OF CHAR;
   BEGIN
     IF (b # NIL) THEN
@@ -99,23 +98,16 @@ PROCEDURE NewInternal (a, b, c, d: TEXT; host: BOOLEAN): TEXT =
     len := Text.Length (a);
     IF (len <= NUMBER (buf)) THEN
       Text.SetChars (buf, a);
-      RETURN OldFixPath (SUBARRAY (buf, 0, len), host);
+      RETURN OldFixPath (SUBARRAY (buf, 0, len));
     ELSE
       ref := NEW (REF ARRAY OF CHAR, len);
       Text.SetChars (ref^, a);
-      RETURN OldFixPath (ref^, host);
+      RETURN OldFixPath (ref^);
     END;
-  END NewInternal;
-
-PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
-  BEGIN
-    RETURN NewInternal (a, b, c, d, host := TRUE);
   END New;
 
-PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
+PROCEDURE Join (dir, base: TEXT;  k: Kind;  <*UNUSED*>host: BOOLEAN): TEXT =
   VAR
-    host_os  := os_map [host];
-    target_os := os_map [FALSE];
     pre      := Prefix [target_os][k];
     ext      := Suffix [target_os][k];
     d_sep    := DirSep [host_os];
@@ -149,10 +141,11 @@ PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
         len := Append (buf, len, pre, pre_len);
         len := Append (buf, len, base, base_len);
         len := Append (buf, len, ext, ext_len);
-        RETURN OldFixPath (SUBARRAY (buf, 0, len), host);
+        RETURN OldFixPath (SUBARRAY (buf, 0, len));
       END DoJoin;
 
   BEGIN (* Join *)
+
     (* find out how much space we need *)
     IF (dir # NIL) THEN
       dir_len := Text.Length (dir);
@@ -175,16 +168,16 @@ PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT =
     END;
   END Join;
 
-PROCEDURE Parse (nm: TEXT;  host: BOOLEAN): T =
+PROCEDURE Parse (nm: TEXT;  <*UNUSED*>host: BOOLEAN): T =
   VAR len := Text.Length (nm);   buf: ARRAY [0..255] OF CHAR;
   BEGIN
     IF (len <= NUMBER (buf))
-      THEN RETURN DoParse (nm, SUBARRAY (buf, 0, len), host);
-      ELSE RETURN DoParse (nm, NEW (REF ARRAY OF CHAR, len)^, host);
+      THEN RETURN DoParse (nm, SUBARRAY (buf, 0, len));
+      ELSE RETURN DoParse (nm, NEW (REF ARRAY OF CHAR, len)^);
     END;
   END Parse;
 
-PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR;  host: BOOLEAN): T =
+PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR): T =
   VAR
     t       : T;
     len     := NUMBER (nm);
@@ -192,8 +185,6 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR;  host: BOOLEAN): T =
     d_index := -1;
     v_index := -1;
     start   := 0;
-    host_os := os_map [host];
-    target_os := os_map [FALSE];
     d_sep   := DirSep [host_os];
     v_sep   := VolSep [host_os];
     ext     : TEXT;
@@ -258,7 +249,7 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR;  host: BOOLEAN): T =
 PROCEDURE IsEqual (a, b: TEXT): BOOLEAN =
   BEGIN
     RETURN RegionMatch (a, 0, b, 0, MAX (Text.Length (a), Text.Length (b)),
-                        ignore_case := (os_map [TRUE(*HOST*)] = OSKind.Win32));
+                        ignore_case := (host_os = OSKind.Win32));
   END IsEqual;
 
 PROCEDURE ExtMatch (nm, ext: TEXT;  os: OSKind): BOOLEAN =
@@ -321,53 +312,26 @@ PROCEDURE EndOfArc (path: TEXT;  xx: CARDINAL;  d_sep: CHAR): BOOLEAN =
     RETURN (len = xx) OR ((len > xx) AND IsDirSep (Text.GetChar (path, xx), d_sep));
   END EndOfArc;
 
-PROCEDURE DefaultProgram (host: BOOLEAN): TEXT =
+PROCEDURE DefaultProgram (<*UNUSED*>host: BOOLEAN): TEXT =
   BEGIN
-    host := FALSE;
-    RETURN Default_pgm [os_map [host]];
+    RETURN Default_pgm [target_os];
   END DefaultProgram;
 
-PROCEDURE ProgramName (base: TEXT;  host: BOOLEAN): TEXT =
+PROCEDURE ProgramName (base: TEXT;  <*UNUSED*>host: BOOLEAN): TEXT =
   BEGIN
-    host := FALSE;
-    RETURN base & Suffix[os_map [host]][Kind.PGM];
+    RETURN base & Suffix[target_os][Kind.PGM];
   END ProgramName;
 
-PROCEDURE LibraryName (base: TEXT;  host: BOOLEAN): TEXT =
-  VAR os := os_map [host];
+PROCEDURE LibraryName (base: TEXT;  <*UNUSED*>host: BOOLEAN): TEXT =
+  VAR os := target_os;
   BEGIN
-    host := FALSE;
-    os := os_map [host];
     RETURN Prefix[os][Kind.LIB] & base & Suffix[os][Kind.LIB];
   END LibraryName;
 
-PROCEDURE Convert (nm: TEXT;  host: BOOLEAN): TEXT =
-  VAR len := Text.Length (nm);  buf: ARRAY [0..255] OF CHAR;
-      good := DirSep [os_map [host]];
-      bad  := DirSep [os_map [NOT host]];
+PROCEDURE Convert (nm: TEXT; <*UNUSED*>host: BOOLEAN): TEXT =
   BEGIN
-    IF good = bad THEN
-      RETURN nm;
-    END;
-    IF (len <= NUMBER (buf))
-      THEN RETURN DoConvert (nm, len, host, buf);
-      ELSE RETURN DoConvert (nm, len, host, NEW (REF ARRAY OF CHAR, len)^);
-    END;
+    RETURN nm;
   END Convert;
-
-PROCEDURE DoConvert (nm: TEXT;  len: INTEGER;  host: BOOLEAN;
-                     VAR buf: ARRAY OF CHAR): TEXT =
-  VAR good := DirSep [os_map [host]];
-      bad  := DirSep [os_map [NOT host]];
-      cnt  := 0;
-  BEGIN
-    Text.SetChars (buf, nm);
-    FOR i := 0 TO len-1 DO
-      IF (buf[i] = bad) THEN  buf[i] := good;  INC (cnt);  END;
-    END;
-    IF (cnt = 0) THEN RETURN nm; END;
-    RETURN Text.FromChars (SUBARRAY (buf, 0, len));
-  END DoConvert;
 
 PROCEDURE Escape (nm: TEXT): TEXT =
   VAR len: INTEGER;   buf: ARRAY [0..255] OF CHAR;
@@ -405,7 +369,7 @@ PROCEDURE IsDirSep (ch: CHAR; d_sep: CHAR): BOOLEAN =
 
 PROCEDURE MakeRelative (VAR path: TEXT;  full, rel: TEXT): BOOLEAN =
   VAR
-    os := os_map[TRUE];
+    os := host_os;
     d_sep := DirSep[os];
   BEGIN
     IF PrefixMatch (path, full, os)
@@ -464,10 +428,10 @@ PROCEDURE PathAnyDots (READONLY p: ARRAY OF CHAR; READONLY start: INTEGER; READO
     RETURN FALSE;
   END PathAnyDots;
 
-PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: INTEGER; VAR len: CARDINAL; READONLY host: BOOLEAN) =
+PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: INTEGER; VAR len: CARDINAL) =
   (* remove redundant "/arc/../" and "/./" segments *)
   VAR
-    os    := os_map [host];
+    os    := host_os;
     d_sep := DirSep [os];
     v_sep := VolSep [os];
     level := 0;
@@ -572,10 +536,9 @@ PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: INTEGER; VAR len
 
   END PathRemoveDots;
 
-PROCEDURE FixPath (VAR p: ARRAY OF CHAR; host := TRUE): TEXT =
+PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
   VAR
-    os := os_map [host];
-    d_sep := DirSep [os];
+    d_sep := DirSep [host_os];
     start := 0;
     len := NUMBER (p);
   BEGIN
@@ -588,14 +551,14 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR; host := TRUE): TEXT =
       INC (start);
       DEC (len);
     END;
-    PathRemoveDots (p, start, len, host);
+    PathRemoveDots (p, start, len);
     IF len = 0 THEN
       RETURN ".";
     END;
     RETURN Text.FromChars (SUBARRAY (p, start, len));
   END FixPath;
 
-PROCEDURE OldFixPath (VAR p: ARRAY OF CHAR;  host := TRUE): TEXT =
+PROCEDURE OldFixPath (VAR p: ARRAY OF CHAR): TEXT =
   (* remove redundant "/arc/../" and "/./" segments
    This function should be rewritten as follows:
      reverse the string
@@ -612,7 +575,7 @@ PROCEDURE OldFixPath (VAR p: ARRAY OF CHAR;  host := TRUE): TEXT =
        handles unlimited input
        never restarts
     *)
-  VAR os := os_map [host];  len, x, s0, s1, s2: INTEGER;  info: SepInfo;
+  VAR os := host_os;  len, x, s0, s1, s2: INTEGER;  info: SepInfo;
       d_sep := DirSep [os];
   BEGIN
     info.d_sep := d_sep;
@@ -744,8 +707,8 @@ PROCEDURE Test () =
     t2 : TEXT;
   BEGIN
 
-    os_map [TRUE]  := OSKind.Win32;
-    os_map [FALSE] := OSKind.Unix;
+    SetOS (OSKind.Win32, TRUE);
+    SetOS (OSKind.Unix, FALSE);
 
     FOR i := 0 TO LAST(data) DO
       Text.SetChars (buf, data[i]);
@@ -776,8 +739,8 @@ BEGIN
   IF Text.GetChar (Pathname.Join ("a", "b"), 1) = BackSlash THEN
 
     SlashText := "\\";
-    os_map [TRUE]  := OSKind.Win32;
-    os_map [FALSE] := OSKind.Win32;
+    SetOS (OSKind.Win32, TRUE);
+    SetOS (OSKind.Win32, FALSE);
 
     (* forward and backward slash compare equal *)
 

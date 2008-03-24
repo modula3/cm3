@@ -102,6 +102,7 @@ TYPE
     main          : M3ID.T;             (* "Main" *)
     m3env         : Env;                (* the compiler's environment closure *)
     target        : TEXT;               (* target machine *)
+    (* target_os is misused; needs work *)
     target_os    := M3Path.OSKind.Unix; (* target os *)
     m3backend_mode: M3BackendMode_t;    (* tells how to turn M3CG -> object *)
     m3backend     : ConfigProc;         (* translate M3CG -> ASM or OBJ *)
@@ -143,14 +144,21 @@ PROCEDURE SetupNamingConventionsInternal (VAR s : State; mach : Quake.Machine) =
     value : QValue.Binding;
   BEGIN
     s.machine       := mach;
+    
 
+    (* This area seems to always been messed up, and more work is needed.
+    In particular NAMING_CONVENTIONS and TARGET_NAMING seem to have been confused.
+    Really, neither one should be configurable in Quake.
+    The host's naming conventions are not relevant. It only cares about slashes.
+    The target's naming conventions should map directly from what the target is.
+    Granted, how to form linker commands is not clearly a host or target decision.
+    The host has always been probed correctly, and the Quake variables were not
+    checked at the right time. Host and target naming conventions rarely varied.
+    Current uses of target_os need attention.
+    *)
     value := GetDefn (s, "NAMING_CONVENTIONS");
     IF value # NIL THEN
-      WITH host_os = GetOSType (s, value) DO
-        s.target_os := host_os;
-        M3Path.SetOS (host_os, host := TRUE);
-        M3Path.SetOS (host_os, host := FALSE);
-      END;
+      M3Path.SetOS (GetOSType (s, value), host := FALSE);
     END;
 
     value := GetDefn (s, "TARGET_NAMING");
@@ -1887,6 +1895,7 @@ PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
     Msg.Commands ("generate ", init_code);
     wr := Utils.OpenWriter (init_code, fatal := TRUE);
     MxGen.GenerateMain (s.link_base, wr, NIL, Msg.level >= Msg.Level.Debug,
+                       (* Use of target_os needs work: NT386GNU can generate Windowed apps. *)
                         s.gui AND (s.target_os = M3Path.OSKind.Win32),
                         s.lazy_init);
     Utils.CloseWriter (wr, init_code);
@@ -1986,6 +1995,7 @@ PROCEDURE GenCGMain (s: State;  object: TEXT) =
     cg := M3Backend.Open (wr, object, s.m3backend_mode);
     IF (cg # NIL) THEN
       MxGen.GenerateMain (s.link_base, NIL, cg, Msg.level >= Msg.Level.Debug,
+                         (* Use of target_os needs work: NT386GNU can generate Windowed apps. *)
                           s.gui AND (s.target_os = M3Path.OSKind.Win32), 
                           s.lazy_init);
       M3Backend.Close(cg);
@@ -2224,6 +2234,7 @@ PROCEDURE WriteProgramDesc (s: State;  desc_file, main_o: TEXT) =
 
   PROCEDURE Emit (wr: Wr.T) RAISES {Wr.Failure, Thread.Alerted} =
     BEGIN
+      (* Use of target_os needs work. *)
       IF (s.target_os = M3Path.OSKind.Win32) THEN
         Wr.PutText (wr, "-out:");
         Wr.PutText (wr, s.result_name);
@@ -2306,7 +2317,8 @@ PROCEDURE BuildBootProgram (s: State) =
   PROCEDURE EmitMain (wr: Wr.T) RAISES {} =
     BEGIN
       MxGen.GenerateMain (s.link_base, wr, NIL, Msg.level >=Msg.Level.Debug,
-                          s.gui AND (s.target_os = M3Path.OSKind.Win32), 
+                         (* Use of target_os needs work: NT386GNU can generate Windowed apps. *)
+                          s.gui AND (s.target_os = M3Path.OSKind.Win32),
                           s.lazy_init);
     END EmitMain;
 
