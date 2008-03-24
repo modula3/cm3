@@ -38,13 +38,6 @@ readonly M3_BACKEND_MODE = "3"
 %  "2"  -- call m3_backend, it produces object code
 %  "3"  -- call m3_backend, it produces assembly code
 
-readonly NAMING_CONVENTIONS = "2"
-readonly TARGET_NAMING = "2"
-%                                        object files       libraries
-%  0=Unix                          =>  .o   .io    .mo       libXX.a
-%  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
-%  2=Windows NT or Windows 95      =>  .obj .io    .mo       XX.lib
-
 %
 % "MS" cl
 % "GNU" gcc
@@ -61,7 +54,9 @@ readonly LINKER = "GNU"
 % "MS" Win32 kernel threads
 % "PTHREADS" Cygwin pthreads
 %
-readonly THREAD_LIBRARY = "PTHREADS"
+% This is currently ignored, but a reasonable idea.
+%
+readonly THREAD_LIBRARY = "MS"
 
 %
 % "MS"
