@@ -15,6 +15,12 @@ Module("FilePosix")
 implementation("FSPosix")
 implementation("PipePosix")
 implementation("PathnamePosix")
-implementation("ProcessPosix")
 implementation("SocketPosix")
 implementation("OSConfigPosix")
+
+module("ProcessPosixCommon")
+if equal (TARGET, "NT386")
+    implementation("ProcessCygwin")
+else
+    implementation("ProcessPosix")
+end
