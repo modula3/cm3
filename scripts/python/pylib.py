@@ -41,9 +41,9 @@ if env_OS == "Windows_NT":
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
     pathext = getenv("PATHEXT");
     if pathext and not "." in pathext.split(";"):
-        pathext = pathext + ";."
+        pathext = ".;" + pathext
         os.environ["PATHEXT"] = pathext
-        print("set PATHEXT=%PATHEXT%;.")
+        print("set PATHEXT=.;%PATHEXT%")
 else:
     from os import uname
 
@@ -69,14 +69,38 @@ def SearchPath(name, paths = getenv("PATH")):
             if os.path.isfile(candidate):
                 return os.path.abspath(candidate)
 
+#-----------------------------------------------------------------------------
+#
+# very important -- what operating system/processor architecture
+# we are building for
+#
+Target = getenv("CM3_TARGET") or ""
+OSType = getenv("CM3_OSTYPE") or ""
+Config = Target
+EXE = "" # executable extension, ".exe" or empty
+UNameCommand = os.popen("uname").read().lower()
+UNameTuple = uname()
+UName = UNameTuple[0].lower()
+UNameArchP = platform.processor().lower()
+UNameArchM = UNameTuple[4].lower()
+UNameRevision = UNameTuple[2].lower()
+
+if ((UName.startswith("windows")
+    or Target.startswith("NT386")
+    or UNameCommand.startswith("mingw")
+    or UNameCommand.startswith("cygwin"))
+        and (not Target.startswith("NT386MINGNU"))
+        and (not Target.startswith("NT386GNU"))
+        and (OSType != "POSIX")):
+
+    EXE = ".exe"
+
 #
 # the root of the installation
 #
-CM3 = getenv("CM3") or "cm3" # to invoke
-# print("CM3 is " + CM3)
-Cm3FullPath = SearchPath(CM3) # a file that can be opened/copied
-# print("Cm3FullPath is " + Cm3FullPath)
-InstallRoot = os.path.dirname(os.path.dirname(Cm3FullPath))
+CM3 = getenv("CM3") or "cm3"
+CM3 = SearchPath(CM3 + EXE) or SearchPath(CM3)
+InstallRoot = os.path.dirname(os.path.dirname(CM3))
 
 #
 # the root of the source tree
@@ -168,15 +192,6 @@ def header(a):
     print("----------------------------------------------------------------------------")
     print("")
 
-UNameTuple = uname()
-UNameCommand = os.popen("uname").read().lower()
-UName = UNameTuple[0].lower()
-UNameArchP = platform.processor().lower()
-UNameArchM = UNameTuple[4].lower()
-UNameRevision = UNameTuple[2].lower()
-# print("UName is " + UName)
-# print("UNameArchM is " + UNameArchM)
-
 #-----------------------------------------------------------------------------
 # set some defaults
 
@@ -235,19 +250,10 @@ CM3_GDB = False
 
 M3Build = getenv("M3BUILD") or "m3build"
 M3Ship = getenv("M3SHIP") or "m3ship"
-EXE = "" # executable extension, ".exe" or empty
 Q = "'"
 
 #-----------------------------------------------------------------------------
 # evaluate uname information
-
-#
-# very important -- what operating system/processor architecture
-# we are building for
-#
-Target = getenv("CM3_TARGET") or ""
-OSType = getenv("CM3_OSTYPE") or ""
-Config = Target
 
 if (UName.startswith("windows")
         or Target.startswith("NT386")
@@ -288,7 +294,6 @@ if (UName.startswith("windows")
         Config = "NT386MINGNU"
         OSType = "WIN32"
         GCC_BACKEND = True
-        EXE = ".exe"
 
     elif ((not Target.startswith("NT386MINGNU"))
         and (not Target.startswith("NT386GNU"))
@@ -299,7 +304,6 @@ if (UName.startswith("windows")
         Config = "NT386"
         OSType = "WIN32"
         GCC_BACKEND = False
-        EXE = ".exe"
 
     else:
 
@@ -400,6 +404,7 @@ def IsCygwinBinary(a):
         FatalError(a + " does not exist")
     if env_OS != "Windows_NT":
         return False
+    a = a.replace("/cygdrive/c/", "c:\\")
     a = a.replace("/", "\\")
     #print("a is " + a)
     return (os.system("findstr 2>&1 >nul /m cygwin1.dll \"" + a + "\"") == 0)
@@ -412,8 +417,14 @@ def _ConvertToCygwinPath(a):
         a = "/cygdrive/" + a[0:1] + a[2:]
     return a
 
-if IsCygwinBinary(Cm3FullPath):
-    #print(Cm3FullPath + " is a Cygwin binary")
+def _ConvertFromCygwinPath(a):
+    a = a.replace("/", "\\")
+    if (a.find("\\cygdrive\\") == 0):
+        a = a[10] + ":" + a[11:]
+    return a
+
+if IsCygwinBinary(CM3):
+    #print(CM3 + " is a Cygwin binary")
 
     # replace sh with cmd to speed up builds by 3% to 15%
     # os.environ["QUAKE_SHELL"] = "cmd"
@@ -421,18 +432,28 @@ if IsCygwinBinary(Cm3FullPath):
 
     def ConvertToCygwinPath(a):
         return _ConvertToCygwinPath(a)
+
+    def ConvertFromCygwinPath(a):
+        return a
+
 else:
     def ConvertToCygwinPath(a):
         return a
 
+    def ConvertFromCygwinPath(a):
+        return _ConvertFromCygwinPath(a)
+
+def ConvertPath(a):
+    return ConvertFromCygwinPath(ConvertToCygwinPath(a))
+
 SetEnvironmentVariable("CM3_TARGET", Target);
-SetEnvironmentVariable("CM3_INSTALL", ConvertToCygwinPath(InstallRoot));
+SetEnvironmentVariable("CM3_INSTALL", ConvertPath(InstallRoot));
 ConfigFile = os.environ.get("M3CONFIG")
 if not ConfigFile:
     ConfigFile = GetConfigForDistribution(Config)
-    SetEnvironmentVariable("M3CONFIG", ConvertToCygwinPath(ConfigFile))
+    SetEnvironmentVariable("M3CONFIG", ConvertPath(ConfigFile))
 NativeRoot = Root
-Root = ConvertToCygwinPath(Root).replace("\\", "\\\\")
+Root = ConvertPath(Root).replace("\\", "\\\\")
 SetEnvironmentVariable("CM3_ROOT", Root);
 Root = NativeRoot
 
@@ -464,7 +485,7 @@ DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
 DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
 DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
 
-Root = ConvertToCygwinPath(Root).replace("\\", "\\\\")
+Root = ConvertPath(Root).replace("\\", "\\\\")
 DEFS = (DEFS % vars())
 Root = NativeRoot
 
@@ -1430,8 +1451,12 @@ MakeTempDir()
 def CopyFile(From, To):
     if os.path.isdir(To):
         To = os.path.join(To, os.path.basename(From))
+    # Cygwin says foo exists when only foo.exe exists, and then remove fails.
     if os.path.isfile(To):
-        os.remove(To)
+        try:
+            os.remove(To)
+        except:
+            pass
     CopyCommand = "copy"
     if os.name != "nt":
         CopyCommand = "cp -Pv"
@@ -1728,6 +1753,10 @@ if __name__ == "__main__":
     #
     # run test code if module run directly
     #
+    
+    print(_ConvertFromCygwinPath("\\cygdrive/c/foo"))
+    print(_ConvertFromCygwinPath("//foo"))
+    sys.exit(1)
 
     print(SearchPath("juno"));
     sys.exit(1)
