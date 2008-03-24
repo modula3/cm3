@@ -10,7 +10,6 @@
 MODULE M3Path;
 
 IMPORT Pathname, Text;
-IMPORT RTIO, Process;
 
 CONST
   Null      = '\000';
@@ -528,7 +527,7 @@ PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: INTEGER; VAR len
   END PathRemoveDots;
 
 PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
-  (* remove redundant "/arc/../" and "/./" segments
+  (* remove redundant "/arc/../" and "/./" segments *)
   VAR
     d_sep := DirSep [host_os];
     start := 0;
@@ -550,67 +549,6 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
     RETURN Text.FromChars (SUBARRAY (p, start, len));
   END FixPath;
 
-PROCEDURE Test () =
-  CONST
-    data = ARRAY OF TEXT {
-        "abc",
-        "def",
-        "////c../..b/a..////",
-        "////..c/..b/a..////",
-        "////../..b/a..////",
-        "////../b../a..////",
-        "////../../a..////",
-        "////../../..////",
-        "../../..////",
-        "../../../a///",
-        "../../a/..////",
-        ".",
-        "./",
-        "/.",
-        "/./",
-        "/./.",
-        "/././",
-        "././.",
-        "./././",
-        "./.",
-        "a/./b",
-        "a/../b",
-        "a/b/../c/d",
-        "a/b/../c.",
-        "a/b/../../c.",
-        "a/b/../../../c.",
-        ".a/b/../../../c.",
-        "/.a/b/../../../c.",
-        "a/..",
-        "a/../",
-        "a/../../..",
-        "/../",
-        "/../a",
-        "c:\\b",
-        "c:.\\b",
-        "c:.\\b\\c",
-        "c:.\\b\\..\\c",
-        "c:\\b\\..\\c"
-        };
-  VAR
-    buf : ARRAY [0..255] OF CHAR;
-    t1 : TEXT;
-  BEGIN
-
-    SetOS (OSKind.Win32, TRUE);
-    SetOS (OSKind.Unix, FALSE);
-
-    FOR i := 0 TO LAST(data) DO
-      Text.SetChars (buf, data[i]);
-      t1 := Convert (FixPath (SUBARRAY (buf, 0, Text.Length (data[i]))), TRUE);
-      Text.SetChars (buf, data[i]);
-      RTIO.PutInt (i);
-      RTIO.PutText (" result for " & data[i] & " => " & t1 & "\n");
-    END;
-    RTIO.Flush ();
-    Process.Exit (1);
-  END Test;
-
 BEGIN
   FOR i := FIRST (lcase) TO LAST (lcase) DO lcase[i] := i; END;
   FOR i := 'A' TO 'Z' DO
@@ -631,7 +569,5 @@ BEGIN
     lcase [Slash] := BackSlash;
 
   END;
-
-  (* Test (); *)
 
 END M3Path.
