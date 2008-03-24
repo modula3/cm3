@@ -1,0 +1,30 @@
+/* winRes.tmpl template, R. C. Coleburn */
+
+/*****************************************************************************/
+/* The purpose of this template is to permit adding Microsoft Windows        */
+/* resources, such as icons, to a compiled program.  If the target platform  */
+/* is not Windows, no action is taken.  So, you can simply put the following */
+/* lines in your program's m3makefile:                                       */
+/*   if equal (OS_TYPE, "WIN32")                                             */
+/*      import ("windowsResources")                                          */
+/*      WindowsResource("MyProgramIconResourceFile")                         */
+/*   end                                                                     */
+/*****************************************************************************/
+
+readonly proc WindowsResource (file) is
+   local src = path_of (file & ".rc")
+   local res = file & ".res"
+   local obj = file & ".obj"
+   local out = "/out:" & obj
+   
+   if equal (OS_TYPE, "WIN32")
+      if defined ("_all")
+         if stale (obj, src)
+            exec ("rc -DWIN32 -i", path_of(""), "-fo", res, src)
+            exec ("cvtres /verbose /machine:x86", out, res)
+         end
+      end
+      pgm_source (obj)
+      deriveds ("", [res, obj])
+   end
+end
