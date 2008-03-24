@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.80 2008-03-24 17:31:20 jkrell Exp $
+# $Id: pylib.py,v 1.81 2008-03-24 20:46:27 jkrell Exp $
 
 import os
 from os import getenv
@@ -1439,6 +1439,7 @@ GenericCommand:
 
 def DeleteFile(a):
     if os.path.isfile(a):
+        os.chmod(a, ~0)
         os.remove(a)
 
 def CreateDirectory(a):
