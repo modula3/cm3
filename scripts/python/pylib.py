@@ -400,16 +400,18 @@ def SetEnvironmentVariable(Name, Value):
         print("set " + Name + "=" + Value);
 
 def IsCygwinBinary(a):
-    if not os.path.isfile(a):
-        FatalError(a + " does not exist")
     if env_OS != "Windows_NT":
         return False
+    if not os.path.isfile(a):
+        FatalError(a + " does not exist")
     a = a.replace("/cygdrive/c/", "c:\\")
     a = a.replace("/", "\\")
     #print("a is " + a)
     return (os.system("findstr 2>&1 >nul /m cygwin1.dll \"" + a + "\"") == 0)
 
 def _ConvertToCygwinPath(a):
+    if env_OS != "Windows_NT":
+        return a
     if (a.find('\\') == -1) and (a.find(':') == -1):
         return a
     a = a.replace("\\", "/")
@@ -418,6 +420,8 @@ def _ConvertToCygwinPath(a):
     return a
 
 def _ConvertFromCygwinPath(a):
+    if env_OS != "Windows_NT":
+        return a
     a = a.replace("/", "\\")
     if (a.find("\\cygdrive\\") == 0):
         a = a[10] + ":" + a[11:]
