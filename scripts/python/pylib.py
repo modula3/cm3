@@ -61,6 +61,8 @@ def SearchPath(name, paths = getenv("PATH")):
     if not exts:
         exts = (getenv("PATHEXT") or "").lower()
     for ext in exts.split(";"):
+        if ext == ".":
+            ext = ""
         name = (base + ext)
         for path in paths.split(os.path.pathsep):
             candidate = os.path.join(path, name)
