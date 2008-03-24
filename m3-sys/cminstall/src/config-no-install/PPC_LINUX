@@ -400,5 +400,5 @@ end
 %
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-O"
+GNU_CFLAGS = "-g"
 GNU_MAKE   = "make"
