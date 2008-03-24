@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.72 2008-03-18 12:57:30 jkrell Exp $
+# $Id: pylib.py,v 1.73 2008-03-24 11:32:54 jkrell Exp $
 
 import os
 from os import getenv
@@ -61,6 +61,8 @@ def SearchPath(name, paths = getenv("PATH")):
     if not exts:
         exts = (getenv("PATHEXT") or "").lower()
     for ext in exts.split(";"):
+        if ext == ".":
+            ext = ""
         name = (base + ext)
         for path in paths.split(os.path.pathsep):
             candidate = os.path.join(path, name)
