@@ -365,8 +365,7 @@ else:
 Echo("build standard packages with new compiler")
 # ----------------------------------------------------------------------------------------------------------------------------------
 
-if True:
-#if Config == "NT386GNU":
+if False:
 
     print("skipping..")
 
