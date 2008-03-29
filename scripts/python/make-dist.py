@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.28 2008-02-23 17:28:13 jkrell Exp $
+# $Id: make-dist.py,v 1.29 2008-03-29 18:36:43 jkrell Exp $
 
 import sys
 import os.path
@@ -365,8 +365,7 @@ else:
 Echo("build standard packages with new compiler")
 # ----------------------------------------------------------------------------------------------------------------------------------
 
-if True:
-#if Config == "NT386GNU":
+if False:
 
     print("skipping..")
 
