@@ -254,7 +254,7 @@ call :set_if_empty M3BUILD m3build
 call :set_if_empty M3SHIP m3ship
 
 call :set_if_empty CM3         cm3
-call :set_if_empty PKGSDB      %ROOT%\scripts\win\PKGS
+call :set_if_empty PKGSDB      %ROOT%\scripts\PKGS
 call :set_if_empty M3GDB       no
 call :set_if_empty M3OSTYPE    WIN32
 call :set_if_empty TARGET      NT386

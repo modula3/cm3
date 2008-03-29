@@ -371,7 +371,7 @@ else:
 
 M3GDB = (M3GDB or CM3_GDB)
 OSType = (OSType or "POSIX")
-PKGSDB = (getenv("PKGSDB") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
+PKGSDB = (getenv("PKGSDB") or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "PKGS"))
 GMAKE = (GMAKE or "gmake")
 Config = Config or Target
 
