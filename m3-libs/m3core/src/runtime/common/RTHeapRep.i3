@@ -178,7 +178,6 @@ TYPE
     desc       : Desc;           (* descriptor for new pages in this pool *)
     notAfter   : Notes;          (* if possible avoid following these pages *)
     page       : Page    := Nil; (* current allocation page of the pool *)
-    stack      : Page    := Nil; (* linked list of new pages from this pool *)
     next       : ADDRESS := NIL; (* address of next available byte *)
     limit      : ADDRESS := NIL; (* address of first unavailable byte *)
     filePage   : Page    := Nil; (* page last filed *)
@@ -216,13 +215,6 @@ TYPE
     inCritical: INTEGER := 0;
     newPool := NewPool;
   END;
-
-(****** MODULE OBJECTS ******)
-
-(* A Modula-3 object is appears to the collector like any other object.
-   The first word of its body is a pointer to its method list. *)
-
-CONST MethodListOffset = 0;      (* byte offset in the object's body *)
 
 (* RegisterFinalCleanup is available for low-level cleanup by the thread
    package.  If "r" is registered for cleanup, then just before "r" is
