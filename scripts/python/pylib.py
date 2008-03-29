@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.82 2008-03-29 17:32:04 jkrell Exp $
+# $Id: pylib.py,v 1.83 2008-03-29 17:43:49 jkrell Exp $
 
 import os
 from os import getenv
@@ -1527,24 +1527,39 @@ def _CopyCompiler(From, To):
 
     from_cm3 = os.path.join(From, "cm3")
     from_cm3exe = os.path.join(From, "cm3.exe")
-    if not FileExists(from_cm3) and not FileExists(from_cm3exe):
-        FatalError("neither " + from_cm3 + " nor " + from_cm3exe + " exist")
 
-    # important to delete cm3.exe first, since if only cm3 exists Cygwin says both
-    # exist but delete cm3 fails
-    DeleteFile(os.path.join(To, "cm3.exe"))
-    DeleteFile(os.path.join(To, "cm3"))
+    #
+    # check .exe first to avoid being fooled by Cygwin
+    #
     if FileExists(from_cm3exe):
         from_cm3 = from_cm3exe
+    elif FileExists(from_cm3):
+        pass
+    else:
+        FatalError("neither " + from_cm3 + " nor " + from_cm3exe + " exist")
+
+    #
+    # delete .exe first to avoid being fooled by Cygwin
+    #
+    DeleteFile(os.path.join(To, "cm3.exe"))
+    DeleteFile(os.path.join(To, "cm3"))
     CopyFile(from_cm3, To) or FatalError("3")
 
     from_cm3cg = os.path.join(From, "cm3cg")
     from_cm3cgexe = os.path.join(From, "cm3cg.exe")
-    if FileExists(from_cm3cg) or FileExists(from_cm3cgexe):
+    if FileExists(from_cm3cgexe):
+        from_cm3cg = from_cm3cgexe
+    elif FileExists(from_cm3cg):
+        pass
+    else:
+        from_cm3cg = None
+        from_cm3cgexe = None
+    if from_cm3cg:
+        #
+        # delete .exe first to avoid being fooled by Cygwin
+        #
         DeleteFile(os.path.join(To, "cm3cg.exe"))
         DeleteFile(os.path.join(To, "cm3cg"))
-        if FileExists(from_cm3cgexe):
-            from_cm3cg = from_cm3cgexe
         CopyFile(from_cm3cg, To) or FatalError("4")
 
     CopyFileIfExist(os.path.join(From, "cm3.pdb"), To) or FatalError("5")
@@ -1566,10 +1581,22 @@ def CopyMklib(From, To):
     From = os.path.join(From, "bin")
     To = os.path.join(To, "bin")
     CreateDirectory(To)
-    if Target == "NT386":
-        CopyFile(os.path.join(From, "mklib" + EXE), To) or FatalError("6")
+
+    mklib = os.path.join(From, "mklib")
+    mklibexe = os.path.join(From, "mklib.exe")
+    if FileExists(mklibexe):
+        mklib = mklibexe
+    elif FileExists(mklib):
+        pass
     else:
-        CopyFileIfExist(os.path.join(From, "mklib" + EXE), To) or FatalError("7")
+        FatalError("neither " + mklib + " nor " + mklibexe + " exist")
+
+    # important to delete mklib.exe ahead of mklib for Cygwin
+    DeleteFile(os.path.join(To, "mklib.exe"))
+    DeleteFile(os.path.join(To, "mklib"))
+
+    CopyFile(mklib, To) or FatalError("6")
+
     CopyFileIfExist(os.path.join(From, "mklib.pdb"), To) or FatalError("8")
     return True
 
