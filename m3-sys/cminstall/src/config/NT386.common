@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.29 2008-03-24 14:13:58 jkrell Exp $
+% $Id: NT386.common,v 1.30 2008-03-29 19:14:05 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -97,15 +97,21 @@ readonly INSTALL_IMPLS = FALSE
 % If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
 % that the library is not available.
 
+%
+% These are for the .libs that ship with the tools and thus not our choice.
+%
+readonly LibInPrefix  = { "MS" : "",          "GNU" : "-l"  }{LINKER} % aka TARGET_NAMING or OS_TYPE
+readonly LibInSuffix  = { "MS" : ".lib",      "GNU" : ""    }{LINKER} % aka TARGET_NAMING or OS_TYPE
+readonly LibPath      = { "MS" : "-libpath:", "GNU" : "-L"  }{LINKER}
+
+if FALSE % If you want a Unixy file names for Cygwin
+
 readonly TARGET_NAMING = {"WIN32" : "2", "POSIX" : "0" }{OS_TYPE}
 %                                        object files       libraries
 %  0=Unix                          =>  .o   .io    .mo       libXX.a
 %  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
 %  2=Windows NT or Windows 95      =>  .obj .io    .mo       XX.lib
 
-readonly LibInPrefix  = { "MS" : "",          "GNU" : "-l"  }{LINKER} % aka TARGET_NAMING or OS_TYPE
-readonly LibInSuffix  = { "MS" : ".lib",      "GNU" : ""    }{LINKER} % aka TARGET_NAMING or OS_TYPE
-readonly LibPath      = { "MS" : "-libpath:", "GNU" : "-L"  }{LINKER}
 readonly LibOutPrefix = { "WIN32" : "",     "POSIX" : "lib" }{OS_TYPE} % aka TARGET_NAMING
 readonly LibOutSuffix = { "WIN32" : ".lib", "POSIX" : ".a"  }{OS_TYPE} % aka TARGET_NAMING
 readonly Obj          = { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE} % aka TARGET_NAMING
@@ -113,6 +119,23 @@ readonly Obj          = { "WIN32" : ".obj", "POSIX" : ".o"  }{OS_TYPE} % aka TAR
 readonly FormatExe = { "WIN32" : "%s.exe", "POSIX" : "%s"      }{OS_TYPE} % aka TARGET_NAMING
 readonly FormatLib = { "WIN32" : "%s.lib", "POSIX" : "lib%s.a" }{OS_TYPE} % aka TARGET_NAMING
 readonly FormatDll = { "WIN32" : "%s.dll", "POSIX" : "lib%s.so"}{OS_TYPE} % aka TARGET_NAMING
+% readonly FormatStandaloneLib = { "WIN32" : "%s.lib.sa", "POSIX" : "lib%s.a"}{OS_TYPE} % aka TARGET_NAMING
+
+end
+
+readonly TARGET_NAMING = "2"
+%                                        object files       libraries
+%  0=Unix                          =>  .o   .io    .mo       libXX.a
+%  1=Unix with a grumpy C compiler =>  .o   _i.o   _m.o      libXX.a
+%  2=Windows NT or Windows 95      =>  .obj .io    .mo       XX.lib
+
+readonly LibOutPrefix = ""
+readonly LibOutSuffix = ".lib"
+readonly Obj          = ".obj"
+
+readonly FormatExe = "%s.exe"
+readonly FormatLib = "%s.lib"
+readonly FormatDll = "%s.dll"
 % readonly FormatStandaloneLib = { "WIN32" : "%s.lib.sa", "POSIX" : "lib%s.a"}{OS_TYPE} % aka TARGET_NAMING
 
 %------------------------------------------------------------------------------
