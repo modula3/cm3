@@ -39,11 +39,11 @@ if env_OS == "Windows_NT":
     def uname():
         PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
-    pathext = getenv("PATHEXT");
-    if pathext and not "." in pathext.split(";"):
-        pathext = ".;" + pathext
-        os.environ["PATHEXT"] = pathext
-        print("set PATHEXT=.;%PATHEXT%")
+    #pathext = getenv("PATHEXT");
+    #if pathext and not "." in pathext.split(";"):
+    #    pathext = ".;" + pathext
+    #    os.environ["PATHEXT"] = pathext
+    #    print("set PATHEXT=.;%PATHEXT%")
 else:
     from os import uname
 
