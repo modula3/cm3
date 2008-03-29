@@ -9,7 +9,7 @@ IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError,  RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched, Usem, Usignal,
-       Uucontext, Uerror, WeakRef, Uexec;
+       Uucontext, Uerror, Uexec;
 FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t, pthread_mutex_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER;
@@ -110,7 +110,7 @@ PROCEDURE SetState (act: Activation;  state: ActState) =
 
 (*----------------------------------------------------------------- Mutex ---*)
 
-PROCEDURE CleanMutex (<*UNUSED*> READONLY wr: WeakRef.T; r: REFANY) =
+PROCEDURE CleanMutex (r: REFANY) =
   VAR m := NARROW(r, Mutex);
   BEGIN
     WITH r = Upthread.mutex_destroy (m.mutex^) DO <*ASSERT r=0*> END;
@@ -129,7 +129,7 @@ PROCEDURE InitMutex (m: Mutex) =
     FINALLY
       WITH r = Upthread.mutex_unlock(initMu) DO <*ASSERT r=0*> END;
     END;
-    EVAL WeakRef.FromRef (m, CleanMutex);
+    RTHeapRep.RegisterFinalCleanup (m, CleanMutex);
   END InitMutex;
 
 PROCEDURE Acquire (m: Mutex) =
@@ -166,7 +166,7 @@ PROCEDURE Release (m: Mutex) =
 
 (*---------------------------------------- Condition variables and Alerts ---*)
 
-PROCEDURE CleanCondition (<*UNUSED*> READONLY wr: WeakRef.T; r: REFANY) =
+PROCEDURE CleanCondition (r: REFANY) =
   VAR c := NARROW(r, Condition);
   BEGIN
     WITH r = Upthread.mutex_destroy (c.mutex^) DO <*ASSERT r=0*> END;
@@ -185,7 +185,7 @@ PROCEDURE InitCondition (c: Condition) =
     FINALLY
       WITH r = Upthread.mutex_unlock(initMu) DO <*ASSERT r=0*> END;
     END;
-    EVAL WeakRef.FromRef (c, CleanCondition);
+    RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
   END InitCondition;
 
 PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
