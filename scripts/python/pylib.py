@@ -1453,6 +1453,9 @@ def MakeTempDir():
 
 MakeTempDir()
 
+def FileExists(a):
+    return os.path.isfile(a)
+
 def CopyFile(From, To):
     if os.path.isdir(To):
         To = os.path.join(To, os.path.basename(From))
@@ -1519,10 +1522,33 @@ def CopyConfigForDistribution(To):
     return True
 
 def _CopyCompiler(From, To):
+
     CreateDirectory(To)
-    CopyFile(os.path.join(From, "cm3" + EXE), To) or FatalError("3")
-    CopyFileIfExist(os.path.join(From, "cm3cg" + EXE), To) or FatalError("4")
+
+    from_cm3 = os.path.join(From, "cm3")
+    from_cm3exe = os.path.join(From, "cm3.exe")
+    if not FileExists(from_cm3) and not FileExists(from_cm3exe):
+        FatalError("neither " + from_cm3 + " nor " + from_cm3exe + " exist")
+
+    # important to delete cm3.exe first, since if only cm3 exists Cygwin says both
+    # exist but delete cm3 fails
+    DeleteFile(os.path.join(To, "cm3.exe"))
+    DeleteFile(os.path.join(To, "cm3"))
+    if FileExists(from_cm3exe):
+        from_cm3 = from_cm3exe
+    CopyFile(from_cm3, To) or FatalError("3")
+
+    from_cm3cg = os.path.join(From, "cm3cg")
+    from_cm3cgexe = os.path.join(From, "cm3cg.exe")
+    if FileExists(from_cm3cg) or FileExists(from_cm3cgexe):
+        DeleteFile(os.path.join(To, "cm3cg.exe"))
+        DeleteFile(os.path.join(To, "cm3cg"))
+        if FileExists(from_cm3cgexe):
+            from_cm3cg = from_cm3cgexe
+        CopyFile(from_cm3cg, To) or FatalError("4")
+
     CopyFileIfExist(os.path.join(From, "cm3.pdb"), To) or FatalError("5")
+
     return True
 
 def ShipCompiler():
