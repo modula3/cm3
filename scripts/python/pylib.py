@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.83 2008-03-29 17:43:49 jkrell Exp $
+# $Id: pylib.py,v 1.84 2008-03-29 19:14:05 jkrell Exp $
 
 import os
 from os import getenv
@@ -39,11 +39,11 @@ if env_OS == "Windows_NT":
     def uname():
         PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
-    pathext = getenv("PATHEXT");
-    if pathext and not "." in pathext.split(";"):
-        pathext = ".;" + pathext
-        os.environ["PATHEXT"] = pathext
-        print("set PATHEXT=.;%PATHEXT%")
+    #pathext = getenv("PATHEXT");
+    #if pathext and not "." in pathext.split(";"):
+    #    pathext = ".;" + pathext
+    #    os.environ["PATHEXT"] = pathext
+    #    print("set PATHEXT=.;%PATHEXT%")
 else:
     from os import uname
 
