@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.84 2008-03-29 19:14:05 jkrell Exp $
+# $Id: pylib.py,v 1.85 2008-03-29 19:34:56 jkrell Exp $
 
 import os
 from os import getenv
@@ -371,7 +371,7 @@ else:
 
 M3GDB = (M3GDB or CM3_GDB)
 OSType = (OSType or "POSIX")
-PKGSDB = (getenv("PKGSDB") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "PKGS"))
+PKGSDB = (getenv("PKGSDB") or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "PKGS"))
 GMAKE = (GMAKE or "gmake")
 Config = Config or Target
 
