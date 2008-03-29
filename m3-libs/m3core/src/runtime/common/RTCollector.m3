@@ -405,9 +405,11 @@ PROCEDURE Move (<*UNUSED*> self: Mover;  cp: ADDRESS) =
     IF p + 1 < p1 AND desc[p - p0 + 1].continued THEN
       (* if this is a large object, just promote the pages *)
       VAR def := RTType.Get (hdr.typecode); BEGIN
-        IF (def.gc_map = NIL) AND (def.kind # ORD(TK.Obj))
-          THEN PromotePage(p, PromoteReason.LargePure,   pureCopy);
-          ELSE PromotePage(p, PromoteReason.LargeImpure, impureCopy);
+        IF (def.gc_map = NIL) AND (def.kind # ORD(TK.Obj)) THEN
+          PromotePage(p, PromoteReason.LargePure);
+        ELSE
+          PromotePage(p, PromoteReason.LargeImpure);
+          PushPage(p);
         END;
       END;
       RETURN;
@@ -494,9 +496,10 @@ PROCEDURE NoteStackLocations (start, stop: ADDRESS) =
         WITH pd = desc[pp - p0] DO
           IF pd.space = Space.Previous THEN
             IF pd.continued THEN pp := FirstPage(pp); END;
-            IF pd.pure
-             THEN PromotePage(pp, PromoteReason.AmbiguousPure,   pureCopy);
-             ELSE PromotePage(pp, PromoteReason.AmbiguousImpure, impureCopy);
+            IF pd.pure THEN
+              PromotePage(pp, PromoteReason.AmbiguousPure);
+            ELSE
+              PromotePage(pp, PromoteReason.AmbiguousImpure);
             END;
           END;
         END;
@@ -543,12 +546,14 @@ CONST
       note := Note.AmbiguousRoot, continued := FALSE, clean := FALSE }
   };
 
-PROCEDURE PromotePage (p: Page;  r: PromoteReason;  VAR pool: AllocPool) =
+VAR promoteGeneration: Generation;
+
+PROCEDURE PromotePage (p: Page;  r: PromoteReason) =
   VAR
     d := PromoteDesc [r];
     n_pages := PageCount(p);
   BEGIN
-    d.generation := pool.desc.generation;
+    d.generation := promoteGeneration;
 
     WITH pd = desc[p - p0] DO
       <* ASSERT pd.space = Space.Previous *>
@@ -561,8 +566,6 @@ PROCEDURE PromotePage (p: Page;  r: PromoteReason;  VAR pool: AllocPool) =
       END;
 
       pd := d;
-      pd.link := pool.stack;
-      pool.stack := p;
     END;
 
     IF n_pages > 1 THEN
@@ -602,7 +605,6 @@ PROCEDURE ClosePool (VAR pool: AllocPool) =
     pool.limit := NIL;
     IF pool.page # Nil AND RTAllocCnts.countsOn THEN BumpCnts(pool.page) END;
     pool.page := Nil;
-    pool.stack := Nil;
     RTOS.UnlockHeap();
   END ClosePool;
 
@@ -764,6 +766,7 @@ PROCEDURE CollectSomeInStateZero () =
 
     (* make generational decisions *)
     IF generational AND RTLinker.generational THEN
+      promoteGeneration := Generation.Older;
       pureCopy.desc.generation   := Generation.Older;
       impureCopy.desc.generation := Generation.Older;
       partialCollection := partialCollectionNext AND cycleL < cycleLength;
@@ -775,6 +778,7 @@ PROCEDURE CollectSomeInStateZero () =
         END;
       END;
     ELSE
+      promoteGeneration := Generation.Younger;
       pureCopy.desc.generation   := Generation.Younger;
       impureCopy.desc.generation := Generation.Younger;
       partialCollection := FALSE;
@@ -824,7 +828,7 @@ PROCEDURE CollectSomeInStateZero () =
     (* Note: we must scan thread stacks before promoting old
        pages, because we want to make sure that old, impure, dirty
        pages referenced by threads are marked as ambiguous roots.
-       Otherwise, these pages won't get cleaned by "FinishThreadPages". *)
+       Otherwise, these pages won't get cleaned by "CleanThreadPages". *)
     ThreadF.ProcessStacks(NoteStackLocations);
     (* Now, nothing in previous space is referenced by a thread. *)
 
@@ -837,11 +841,12 @@ PROCEDURE CollectSomeInStateZero () =
               IF pd.clean THEN
                 <*ASSERT NOT pd.pure*>
                 (* no need to scan *)
-                PromotePage(p, PromoteReason.OldClean,  pureCopy);
+                PromotePage(p, PromoteReason.OldClean);
               ELSIF pd.pure THEN
-                PromotePage(p, PromoteReason.OldPure,   pureCopy);
+                PromotePage(p, PromoteReason.OldPure);
               ELSE
-                PromotePage(p, PromoteReason.OldImpure, impureCopy);
+                PromotePage(p, PromoteReason.OldImpure);
+                PushPage(p);
               END;
             END;
           ELSE
@@ -881,14 +886,16 @@ PROCEDURE CollectSomeInStateZero () =
        dirty.  We must preserve this invariant after initiating GC to make
        sure such pages are left dirty.
 
-       In both cases, CleanPage, called from FinishThreadPages, will do the
+       In both cases, CleanPage, called from CleanThreadPages, will do the
        right thing based on the page descriptors (clean/dirty,
        Older/Younger).
     *)
 
     IF generational AND RTLinker.generational
       OR incremental AND RTLinker.incremental THEN
-      FinishThreadPages ();
+      CleanThreadPages ();
+    ELSE
+      PushThreadPages();
     END;
 
     (* Scan the global variables for possible pointers *)
@@ -902,23 +909,35 @@ PROCEDURE CollectSomeInStateZero () =
     ThreadF.ResumeOthers ();
   END CollectSomeInStateZero;
 
-PROCEDURE FinishThreadPages () =
+PROCEDURE CleanThreadPages () =
   (* Clean any pages referenced from the threads. *)
-  VAR
-    p      : Page := impureCopy.stack;
-    next_p : Page;
+  VAR d: Desc;
   BEGIN
-    WHILE (p # Nil) DO
-      WITH pd = desc[p - p0] DO
-        next_p := pd.link;
-        IF pd.gray AND pd.note = Note.AmbiguousRoot THEN
-          <*ASSERT NOT pd.clean*>
+    FOR p := p0 TO p1 - 1 DO
+      d := desc[p - p0];
+      IF d.space = Space.Current AND NOT d.continued THEN
+        IF d.gray AND d.note = Note.AmbiguousRoot THEN
+          <*ASSERT NOT d.clean*>
           CleanPage(p);
+        END
+      END
+    END
+  END CleanThreadPages;
+
+PROCEDURE PushThreadPages () =
+  (* Push any pages referenced from the threads *)
+  VAR d: Desc;
+  BEGIN
+    FOR p := p0 TO p1 - 1 DO
+      d := desc[p - p0];
+      IF d.space = Space.Current AND NOT d.continued THEN
+        IF d.gray AND d.note = Note.AmbiguousRoot THEN
+          <*ASSERT NOT d.clean*>
+          PushPage(p);
         END;
       END;
-      p := next_p;
     END;
-  END FinishThreadPages;
+  END PushThreadPages;
 
 (* Clean gray nodes *)
 
@@ -994,10 +1013,9 @@ PROCEDURE CollectSomeInStateFive () =
       IF perfOn THEN PerfChange(impureCopy.page, 1); END;
       impureCopy.page := Nil;
     END;
-    <* ASSERT impureCopy.stack = Nil *>
+    <* ASSERT PopPage() = Nil *>
 
     pureCopy.page  := Nil;    impureCopy.page  := Nil;
-    pureCopy.stack := Nil;    impureCopy.stack := Nil;
     pureCopy.next  := NIL;    impureCopy.next  := NIL;
     pureCopy.limit := NIL;    impureCopy.limit := NIL;
 
@@ -1031,6 +1049,21 @@ PROCEDURE CollectSomeInStateFive () =
    (ie. "WITH pd = desc[p - p0]") MUST NOT be saved across "CopySome",
    "CleanPage", or "CleanBetween" calls. *)
 
+VAR impureCopyStack: Page := Nil;
+
+PROCEDURE PushPage (p: Page) =
+  BEGIN
+    desc[p - p0].link := impureCopyStack;
+    impureCopyStack := p;
+  END PushPage;
+
+PROCEDURE PopPage (): Page =
+  VAR p := impureCopyStack;
+  BEGIN
+    IF p # Nil THEN impureCopyStack := desc[p - p0].link END;
+    RETURN p;
+  END PopPage;
+
 PROCEDURE CopySome (): BOOLEAN =
   VAR
     originalPage  := impureCopy.page;
@@ -1045,13 +1078,9 @@ PROCEDURE CopySome (): BOOLEAN =
           cleanTo := ptr;
         END;
       ELSE
-        IF impureCopy.stack = Nil THEN RETURN FALSE; END;
-        VAR p := impureCopy.stack;
-        BEGIN
-          WITH pd = desc[p - p0] DO
-            impureCopy.stack := pd.link;
-            IF pd.gray THEN CleanPage(p); END;
-          END;
+        WITH p = PopPage() DO
+          IF p = Nil THEN RETURN FALSE END;
+          IF desc[p - p0].gray THEN CleanPage(p) END;
         END;
       END;
       IF impureCopy.page # originalPage THEN EXIT; END;
@@ -1481,6 +1510,9 @@ PROCEDURE AllocCopy (dataSize, dataAlignment: CARDINAL;
       n_bytes := RTMisc.Upper(ADRSIZE(Header), dataAlignment) + dataSize;
       n_pages := (n_bytes + BytesPerPage - 1) DIV BytesPerPage;
       res := LongAlloc (n_pages, dataSize, dataAlignment, pool);
+      IF NOT pool.desc.pure THEN
+        IF pool.filePage # Nil THEN PushPage(pool.filePage) END;
+      END;
       INC(n_copied, n_pages);
       RETURN res;
     END;
@@ -1550,10 +1582,6 @@ PROCEDURE LongAlloc (n_pages, dataSize, dataAlignment: CARDINAL;
       filePage := newPage;
     END;
     pool.filePage := filePage;
-    IF filePage # Nil THEN
-      desc[filePage - p0].link := pool.stack;
-      pool.stack := filePage;
-    END;
 
     RETURN res;
   END LongAlloc;
@@ -2202,7 +2230,7 @@ PROCEDURE WeakRefToRef (READONLY t: WeakRef): REFANY =
     RETURN r;
   END WeakRefToRef;
 
-(* This is RTHeapRef.RegisterFinalCleanup, which registers final cleanup
+(* This is RTHeapRep.RegisterFinalCleanup, which registers final cleanup
    for a heap object. *)
 
 PROCEDURE RegisterFinalCleanup (r: REFANY; p: PROCEDURE (r: REFANY)) =
