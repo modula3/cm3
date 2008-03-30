@@ -34,13 +34,21 @@ proc summary() is
   write( nko, " tests failed:", CR, kos, CR )
 end
 
-proc check( id, code, expected ) is
+%
+% some tests have two acceptable outputs
+%
+proc check2( id, code, expected, expected2 ) is
   header( id )
-  write( "quake(", quote(code), ")", CR, "expected: ", 
-         sub(quote(expected), 0, 68), CR)
+  if equal (expected, expected2)
+    write( "quake(", quote(code), ")", CR, "expected: ", 
+           sub(quote(expected), 0, 68), CR)
+  else
+    write( "quake(", quote(code), ")", CR, "expected: ", sub(quote(expected), 0, 68), CR,
+           "or expected: ", sub(quote(expected2), 0, 68), CR)
+  end
   quake( code )
   write( "result:   " & sub(quote(res), 0, 68), CR )
-  if equal( res & "", expected & "")
+  if equal( res & "", expected & "") or equal( res & "", expected2 & "")
     write( "==> OK", CR )
     oks += id
     %return "T"
@@ -49,6 +57,10 @@ proc check( id, code, expected ) is
     kos += id
     %return ""
   end
+end
+
+proc check( id, code, expected ) is
+  check2 (id, code, expected, expected )
 end
 
 proc checkExec( id, code ) is
@@ -419,7 +431,13 @@ more = findexe( "more" )
 f = "res = fs_executable( more )"
 check( "f012", f, "TRUE" )
 
-f = "res = fs_writable( more )"
+% readonly is a Quake reserved word.
+onlyread = "onlyread"
+fs_rmfile( onlyread )
+> onlyread in
+end
+exec( "chmod -w onlyread" )
+f = "res = fs_writable( onlyread )"
 check( "f013", f, "" )
 
 f = "res = fs_writable(\"..\" & SL & \"src\" & SL & \"m3makefile\")"
@@ -515,7 +533,7 @@ f = "fs_cp( orange, apple2 )  res = fs_contents( apple2 )"
 check( "f035", f, data )
 
 f = "res = fs_lsfiles( \"a\", \"T\" )"
-check( "f036", f, "b apple" )
+check2( "f036", f, "b apple", "apple b" )
 
 f = "fs_rmfile(apple2) res = fs_lsfiles( \"a\", \"T\" )"
 check( "f037", f, "b" )
@@ -558,7 +576,7 @@ checkExec( "e016", "res = q_exec( \"echo 1 && echo 2 && echo 10 && echo 20\" )" 
 checkExec( "e017", "res = q_exec( \"echo 1 x 2 x 10 x 20\" )" )
 checkExec( "e018", "res = q_exec( \"echo 1>x && echo 2>>x\" )" )
 checkExec( "e019", "res = q_exec( \"echo 11 22 33 1>x\" ) x = fs_contents(\"x\") if not equal(x, \"11 22 33\n\") res = 99 end" )
-checkExec( "e020", "res = q_exec( \"echo 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16>x\" ) x = fs_contents(\"x\") if not equal(x, \"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16\n\") res = 99 end" )
+checkExec( "e020", "res = q_exec( \"echo 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16>y\" ) y = fs_contents(\"y\") if not equal(y, \"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16\n\") res = 99 end" )
 
 
 %-----------------------------------------------------------------------------
@@ -577,7 +595,7 @@ t = "cd( base ) wd = getwd() res = subst( base, wd, \"\", 1 )"
 check( "d003", t, SL )
 
 t = "popd() wd = getwd() res = subst( wd, base, \"\", 1 )"
-check( "d004", t, TARGET )
+check( "d004", t, BUILD_DIR )
 
 %-----------------------------------------------------------------------------
 section( "miscellanoues tests" )
