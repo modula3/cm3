@@ -61,8 +61,8 @@ PROCEDURE Create(
   BEGIN
     IF (wd # NIL)
         OR (stdin # NIL AND stdin.fd # stdin_g.fd)
-        OR (stdout # NIL AND stdout_g.fd # stdout_g.fd)
-        OR (stderr # NIL AND stderr_g.fd # stderr_g.fd) THEN
+        OR (stdout # NIL AND stdout.fd # stdout_g.fd)
+        OR (stderr # NIL AND stderr.fd # stderr_g.fd) THEN
       RETURN Create_ForkExec(cmd, params, env, wd, stdin, stdout, stderr);
     ELSE
       RETURN Create_Spawn(cmd, params, env);
