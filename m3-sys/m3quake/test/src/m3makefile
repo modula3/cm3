@@ -576,7 +576,7 @@ checkExec( "e016", "res = q_exec( \"echo 1 && echo 2 && echo 10 && echo 20\" )" 
 checkExec( "e017", "res = q_exec( \"echo 1 x 2 x 10 x 20\" )" )
 checkExec( "e018", "res = q_exec( \"echo 1>x && echo 2>>x\" )" )
 checkExec( "e019", "res = q_exec( \"echo 11 22 33 1>x\" ) x = fs_contents(\"x\") if not equal(x, \"11 22 33\n\") res = 99 end" )
-checkExec( "e020", "res = q_exec( \"echo 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16>y\" ) y = fs_contents(\"y\") if not equal(y, \"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16\n\") res = 99 end" )
+checkExec( "e020", "res = q_exec( \"echo 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16>x\" ) x = fs_contents(\"x\") if not equal(x, \"1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16\n\") res = 99 end" )
 
 
 %-----------------------------------------------------------------------------
