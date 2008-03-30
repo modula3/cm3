@@ -11,7 +11,7 @@
 
 %readonly m3mkdir = format ("@%s%sm3mkdir", LIB_USE, SL)
 
-if equal ($OS, "Windows_NT")
+if equal ($OS, "Windows_NT") and equal (SL, "\\")
   readonly rm_dir  = "@-rmdir 2>nul /s /q"
   readonly diff    = "@-fc"
   readonly head    = ""
@@ -248,7 +248,7 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     %write ("dir: ", dir, CR)
     exec (rm_dir, dir)
     exec (m3mkdir, dir, "> /dev/null")
-    if equal ($OS, "Windows_NT")
+    if equal ($OS, "Windows_NT") and equal (SL, "\\")
         % exec ("cd")
         % write("dir is " & dir & CR)
         exec ("xcopy /iy", path_of (dir), dir & "\\src")
