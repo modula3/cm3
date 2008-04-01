@@ -123,6 +123,10 @@ PROCEDURE New(typecode: INTEGER; from: RTPacking.T; local: RTPacking.T;
 TYPE
   Kind = {Copy, Swap, Copy32to64, Copy64to32, Swap32to64, Swap64to32};
 
-PROCEDURE GetKind(from: RTPacking.T; local: RTPacking.T): Kind;
+PROCEDURE GetWordKind(from: RTPacking.T; local: RTPacking.T): Kind;
+(* The result is good for all ordinal types except LONGINT. *) 
+
+PROCEDURE GetLongintKind(from: RTPacking.T; local: RTPacking.T): Kind;
+(* The result is good only for LONGINT. *) 
 
 END ConvertPacking.

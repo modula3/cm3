@@ -123,10 +123,6 @@ PROCEDURE Check (p: P) =
 PROCEDURE CheckAlign (p: P;  offset: INTEGER): BOOLEAN =
   VAR z0: INTEGER;  info: Type.Info;  sz: INTEGER;
   BEGIN
-    IF p.info.lazyAligned THEN
-      z0 := offset DIV 8 * 8;
-      RETURN (offset + sz) <= (z0 + Target.Integer.size);
-    END;
     EVAL Type.CheckInfo (p.baseType, info);
     sz := GetSize (p);
     IF (info.size = sz) THEN

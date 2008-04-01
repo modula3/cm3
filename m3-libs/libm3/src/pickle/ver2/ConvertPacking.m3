@@ -20,7 +20,8 @@ REVEAL WriteVisitor = WVPublic BRANDED "Packing Write Visitor 1.0" OBJECT END;
 
 REVEAL T = Public BRANDED "ConvertPacking 1.0" OBJECT
       prog: PklActionSeq.T;
-      kind: Kind;
+      wordKind: Kind;
+      longKind: Kind;
       fromOffset: INTEGER := 0;
       toOffset: INTEGER := 0;
       fromSize: INTEGER := 0;
@@ -41,7 +42,9 @@ REVEAL T = Public BRANDED "ConvertPacking 1.0" OBJECT
 
       addCopy(length: INTEGER) := AddCopy;
       addCopy32to64(length: INTEGER; signed: BOOLEAN) := AddCopy32to64;
-      addCopy64to32(length: INTEGER) := AddCopy64to32;
+      (* ^PRE: length MOD 32 = 0 *) 
+      addCopy64to32(length: INTEGER; signed: BOOLEAN) := AddCopy64to32;
+      (* ^PRE: length MOD 64 = 0 *) 
 
       addPackedSwapFirstField(fieldsize: INTEGER) :=
           AddPackedSwapFirstField;
@@ -55,10 +58,15 @@ REVEAL T = Public BRANDED "ConvertPacking 1.0" OBJECT
       addSkipOrCopy(length: INTEGER) := AddSkipOrCopy;
       addSkip(fromDiff, toDiff: INTEGER) := AddSkip;
       addSwap16(length: INTEGER) := AddSwap16;
+      (* ^PRE: length MOD 16 = 0 *) 
       addSwap32(length: INTEGER) := AddSwap32;
+      (* ^PRE: length MOD 32 = 0 *) 
       addSwap64(length: INTEGER) := AddSwap64;
+      (* ^PRE: length MOD 64 = 0 *) 
       addSwap32to64(length: INTEGER; signed: BOOLEAN) := AddSwap32to64;
-      addSwap64to32(length: INTEGER) := AddSwap64to32;
+      (* ^PRE: length MOD 32 = 0 *) 
+      addSwap64to32(length: INTEGER; signed: BOOLEAN) := AddSwap64to32;
+      (* ^PRE: length MOD 64 = 0 *) 
       addRef(type: RefType) := AddRef;
       addDone() := AddDone;
 
@@ -153,11 +161,19 @@ PROCEDURE ReadData(v: ReadVisitor;  dest: ADDRESS; len: INTEGER)
     END;
   END ReadData;
 
+TYPE Int32Rec = RECORD v : Swap.Int32 END; 
+(* We need v to be inside a record.  Otherwise, the language would allow
+   a compiler to actually allocate more than the BITS 32 for a value of
+   type Swap.Int32.
+*) 
+VAR Int32RecVar : Int32Rec; 
+VAR CheckInt32 : [ 0 .. 0 ] := ADR(Int32RecVar) - ADR(Int32RecVar.v); 
+
 PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor; 
                   number: INTEGER := 1): ADDRESS RAISES 
           {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
   VAR t: ARRAY [0..7] OF CHAR;
-      repetition: INTEGER := 1;
+      repetition: INTEGER := 1; 
 
   BEGIN
     IF self.prog.size() = 2 THEN
@@ -251,8 +267,8 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
           | PklAction.Kind.Swap32 =>
             ReadData(v, dest, length*4);
             FOR i := 1 TO length DO
-              WITH int32 = LOOPHOLE(dest, UNTRACED REF Swap.Int32) DO
-                int32^ := Swap.Swap4(int32^);
+              WITH int32 = LOOPHOLE(dest, UNTRACED REF Int32Rec)^.v DO
+                int32 := Swap.Swap4(int32);
               END;
               INC(dest, 4);
             END;
@@ -268,7 +284,7 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
             WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
               FOR i := 1 TO length DO
                 v.readData(SUBARRAY(t, 0, 4));
-                WITH int32 = LOOPHOLE(ADR(t[0]), UNTRACED REF Swap.Int32)^,
+                WITH int32 = LOOPHOLE(ADR(t[0]), UNTRACED REF Int32Rec)^.v,
                      int64 = LOOPHOLE(dest, UNTRACED REF Swap.Int64On32) DO
                   (* First, put it in a 64 bit word appropriate to the 
                      sending machine. *)
@@ -296,30 +312,32 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
               END;
             END;
           | PklAction.Kind.Copy64to32, PklAction.Kind.Swap64to32 =>
-            FOR i := 1 TO length DO
-              v.readData(t);
-              WITH int64 = LOOPHOLE(ADR(t[0]), UNTRACED REF Swap.Int64On32)^,
-                   int32 = LOOPHOLE(dest, UNTRACED REF Swap.Int32) DO
-                (* First, get the lower 32 bits as perceived on the the 
-                   sending machine. *)
-                IF self.from.little_endian THEN
-                  int32^ := int64.a;
-                  IF int64.b # 0 AND int64.b # -1 THEN
-                    RAISE Error("Data value too big.");
+            WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
+              FOR i := 1 TO length DO
+                v.readData(t);
+                WITH int64 = LOOPHOLE(ADR(t[0]), UNTRACED REF Swap.Int64On32)^,
+                     int32 = LOOPHOLE(dest, UNTRACED REF Int32Rec)^.v DO
+                  (* First, get the lower 32 bits as perceived on the the 
+                     sending machine. *)
+                  IF self.from.little_endian THEN
+                    int32 := int64.a;
+                    IF int64.b # 0 AND (NOT nelem.signed OR int64.b # -1) THEN
+                      RAISE Error("Data value too big.");
+                    END;
+                  ELSE
+                    int32 := int64.b;
+                    IF int64.a # 0 AND (NOT nelem.signed OR int64.a # -1) THEN
+                      RAISE Error("Data value too big.");
+                    END;
                   END;
-                ELSE
-                  int32^ := int64.b;
-                  IF int64.a # 0 AND int64.a # -1 THEN
-                    RAISE Error("Data value too big.");
-                  END;
-                END;
 
-                (* Now, swap it if need be. *)
-                IF elem.kind = PklAction.Kind.Swap64to32 THEN
-                  int32^ := Swap.Swap4(int32^);
+                  (* Now, swap it if need be. *)
+                  IF elem.kind = PklAction.Kind.Swap64to32 THEN
+                    int32 := Swap.Swap4(int32);
+                  END;
                 END;
+                INC(dest, 4);
               END;
-              INC(dest, 4);
             END;
           | PklAction.Kind.ReadRef =>
             WITH nelem = NARROW(elem, PklAction.Ref) DO
@@ -465,13 +483,16 @@ PROCEDURE AppendProg(self: T; other: T) RAISES {Error} =
           INC(self.toOffset, elem.length*64);
         | PklAction.Kind.Copy32to64, PklAction.Kind.Swap32to64 =>
           WITH t = NARROW(elem, PklAction.Copy32to64) DO
-            nelem := NEW(PklAction.Copy32to64, kind := t.kind, length := t.length,
-                         signed := t.signed);
+            nelem := NEW(PklAction.Copy32to64, kind := t.kind, 
+                         length := t.length, signed := t.signed);
           END;
           INC(self.fromOffset, elem.length*32);
           INC(self.toOffset, elem.length*64);
         | PklAction.Kind.Copy64to32, PklAction.Kind.Swap64to32 =>
-          nelem := NEW(PklAction.T, kind := elem.kind, length := elem.length);
+          WITH t = NARROW(elem, PklAction.Copy32to64) DO
+            nelem := NEW(PklAction.Copy32to64, kind := t.kind, 
+                         length := t.length, signed := t.signed);
+          END;
           INC(self.fromOffset, elem.length*64);
           INC(self.toOffset, elem.length*32);
         | PklAction.Kind.ReadRef =>
@@ -632,6 +653,7 @@ PROCEDURE AddPackedSwapArray(self: T; length: INTEGER;
   END AddPackedSwapArray; 
 
 PROCEDURE AddCopy32to64(self: T; length: INTEGER; signed: BOOLEAN) =
+(* PRE: length MOD 32 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
     INC(self.fromOffset, length);
@@ -648,15 +670,20 @@ PROCEDURE AddCopy32to64(self: T; length: INTEGER; signed: BOOLEAN) =
                         length := length DIV 32, signed := signed));
   END AddCopy32to64;
 
-PROCEDURE AddCopy64to32(self: T; length: INTEGER) =
+PROCEDURE AddCopy64to32(self: T; length: INTEGER; signed: BOOLEAN) =
+(* PRE: length MOD 64 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
     INC(self.fromOffset, length);
     <* ASSERT length MOD 2 = 0 *>
     INC(self.toOffset, length DIV 2);
     IF GetHiKind(self.prog, PklAction.Kind.Copy64to32, elem) THEN
-      INC(elem.length, length DIV 64);
-      RETURN;
+      WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
+        IF nelem.signed = signed THEN
+          INC(elem.length, length DIV 64);
+          RETURN;
+        END;
+      END;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.Kind.Copy64to32,
                         length := length DIV 64));
@@ -726,6 +753,7 @@ PROCEDURE AddSkip(self: T; fromDiff, toDiff: INTEGER) =
   END AddSkip;
 
 PROCEDURE AddSwap16(self: T; length: INTEGER) =
+(* PRE: length MOD 16 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
     INC(self.fromOffset, length);
@@ -739,6 +767,7 @@ PROCEDURE AddSwap16(self: T; length: INTEGER) =
   END AddSwap16;
 
 PROCEDURE AddSwap32(self: T; length: INTEGER) =
+(* PRE: length MOD 32 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
     INC(self.fromOffset, length);
@@ -752,6 +781,7 @@ PROCEDURE AddSwap32(self: T; length: INTEGER) =
   END AddSwap32;
 
 PROCEDURE AddSwap64(self: T; length: INTEGER) =
+(* PRE: length MOD 64 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
     INC(self.fromOffset, length);
@@ -765,6 +795,7 @@ PROCEDURE AddSwap64(self: T; length: INTEGER) =
   END AddSwap64;
 
 PROCEDURE AddSwap32to64(self: T; length: INTEGER; signed: BOOLEAN) =
+(* PRE: length MOD 32 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
     INC(self.fromOffset, length);
@@ -781,15 +812,20 @@ PROCEDURE AddSwap32to64(self: T; length: INTEGER; signed: BOOLEAN) =
                         length := length DIV 32, signed := signed));
   END AddSwap32to64;
 
-PROCEDURE AddSwap64to32(self: T; length: INTEGER) =
+PROCEDURE AddSwap64to32(self: T; length: INTEGER; signed: BOOLEAN) =
+(* PRE: length MOD 64 = 0 *) 
   VAR elem: PklAction.T;
   BEGIN
     INC(self.fromOffset, length);
-    <* ASSERT length MOD 2 = 0 *>
+    <* ASSERT length MOD 64 = 0 *>
     INC(self.toOffset, length DIV 2);
     IF GetHiKind(self.prog, PklAction.Kind.Swap64to32, elem) THEN
-      INC(elem.length, length DIV 64);
-      RETURN;
+      WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
+        IF nelem.signed = signed THEN
+          INC(elem.length, length DIV 64);
+          RETURN;
+        END;
+      END;
     END;
     self.prog.addhi(NEW(PklAction.T, kind := PklAction.Kind.Swap64to32, 
                         length := length DIV 64));
@@ -914,7 +950,8 @@ PROCEDURE Init(self: T; typecode: INTEGER; from: RTPacking.T;
     self.to := to;
     self.prog := NEW(PklActionSeq.T).init();
 
-    self.kind := GetKind(from, to);
+    self.wordKind := GetWordKind(from, to);
+    self.longKind := GetLongintKind(from, to);
 
     (* Build the tipe conversion for the top level  *)
     self.buildOne(self.fromTipe, self.toTipe);
@@ -988,7 +1025,8 @@ PROCEDURE Init(self: T; typecode: INTEGER; from: RTPacking.T;
     RETURN self;
   END Init;
 
-PROCEDURE GetKind(from: RTPacking.T; to: RTPacking.T): Kind =
+PROCEDURE GetWordKind(from: RTPacking.T; to: RTPacking.T): Kind =
+(* The result is good for all ordinal types except LONGINT. *) 
   BEGIN
     IF from.word_size = to.word_size THEN
       IF from.little_endian = to.little_endian THEN
@@ -1011,7 +1049,33 @@ PROCEDURE GetKind(from: RTPacking.T; to: RTPacking.T): Kind =
         END;
       END;
     END;
-  END GetKind;
+  END GetWordKind;
+
+PROCEDURE GetLongintKind(from: RTPacking.T; to: RTPacking.T): Kind =
+(* The result is good only for LONGINT. *) 
+  BEGIN
+    IF from.longint_size = to.longint_size THEN
+      IF from.little_endian = to.little_endian THEN
+        RETURN Kind.Copy;
+      ELSE
+        RETURN Kind.Swap;
+      END;
+    ELSE
+      IF from.little_endian = to.little_endian THEN
+        IF from.longint_size = 32 THEN
+          RETURN Kind.Copy32to64;
+        ELSE
+          RETURN Kind.Copy64to32;
+        END;
+      ELSE
+        IF from.longint_size = 32 THEN
+          RETURN Kind.Swap32to64;
+        ELSE
+          RETURN Kind.Swap64to32;
+        END;
+      END;
+    END;
+  END GetLongintKind;
 
 PROCEDURE BuildSuper(self: T; typecode: INTEGER; 
                      VAR fromSize, fromAlign, toSize, toAlign: INTEGER)
@@ -1049,6 +1113,67 @@ PROCEDURE BuildSuper(self: T; typecode: INTEGER;
     toAlign := superToTipe.field_align;
   END BuildSuper; 
 
+PROCEDURE BuildOrdinal(self: T; fromTipe: RTTipe.T; 
+                       toTipe: RTTipe.T; convKind: Kind; signed: BOOLEAN) 
+          RAISES {Error} =
+  BEGIN   
+    CASE convKind OF
+    | Kind.Copy =>
+      <* ASSERT fromTipe.size = toTipe.size *>
+      self.addCopy(fromTipe.size);
+    | Kind.Swap =>
+      <* ASSERT fromTipe.size = toTipe.size *>
+      CASE fromTipe.size OF
+      | 8 => self.addCopy(8);
+      | 16 => self.addSwap16(16);
+      | 32 => self.addSwap32(32);
+      | 64 => self.addSwap64(64);
+      ELSE
+        RAISE Error("Should not get here: 2");
+      END;
+    | Kind.Copy32to64 =>
+      IF fromTipe.size = toTipe.size THEN
+        self.addCopy(fromTipe.size);
+      ELSE
+        <* ASSERT fromTipe.size = 32 *> 
+	<* ASSERT toTipe.size = 64 *> 
+        self.addCopy32to64(32, signed);
+      END;
+    | Kind.Copy64to32 =>
+      IF fromTipe.size = toTipe.size THEN
+        self.addCopy(fromTipe.size);
+      ELSE
+        <* ASSERT fromTipe.size = 64 *> 
+	<* ASSERT toTipe.size = 32 *> 
+        self.addCopy64to32(64, signed);
+      END;
+    | Kind.Swap32to64 =>
+      CASE fromTipe.size OF
+      | 8 => <* ASSERT toTipe.size = 8 *> self.addCopy(8);
+      | 16 => <* ASSERT toTipe.size = 16 *> self.addSwap16(16);
+      | 32 => 
+        IF toTipe.size = 32 THEN
+          self.addSwap32(32);
+        ELSE
+          <* ASSERT toTipe.size = 64 *> 
+          self.addSwap32to64(32, signed);
+        END;
+      | 64 => RAISE Error("Should not get here: 1");
+      ELSE
+        RAISE Error("Should not get here: 3");
+      END;
+    | Kind.Swap64to32 =>
+      CASE fromTipe.size OF
+      | 8 => <* ASSERT toTipe.size = 8 *> self.addCopy(8);
+      | 16 => <* ASSERT toTipe.size = 16 *> self.addSwap16(16);
+      | 32 => <* ASSERT toTipe.size = 32 *> self.addSwap32(32);
+      | 64 => <* ASSERT toTipe.size = 32 *> self.addSwap64to32(64, signed);
+      ELSE
+        RAISE Error("Should not get here: 4");
+      END;
+    END;
+  END BuildOrdinal; 
+
 PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T; 
                    toTipe: RTTipe.T) RAISES {Error} =
   BEGIN
@@ -1058,7 +1183,7 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
     (* Check some obvious conditions. *)
     <* ASSERT fromTipe.kind = toTipe.kind *>
 
-    (* In fact, these next two aren' always correct because of the
+    (* In fact, these next two aren't always correct because of the
        weird way objects are laid out. *)
     (* ASSERT self.fromOffset MOD fromTipe.align = 0 *)
     (* ASSERT self.toOffset MOD toTipe.align = 0 *)
@@ -1070,80 +1195,33 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
       | RTTipe.Kind.Proc => self.addRef(RefType.Proc);
       | RTTipe.Kind.Refany => self.addRef(RefType.Ref);
       | RTTipe.Kind.Null => 
-        CASE self.kind OF
+        (* No need to actually swap, since the only value of type NULL  is NIL,
+            and it is always represented as zero.
+        *) 
+        CASE self.wordKind OF
 	| Kind.Copy, Kind.Swap =>
 	  <* ASSERT fromTipe.size = toTipe.size *>
 	  self.addCopy(fromTipe.size);
 	| Kind.Copy32to64, Kind.Swap32to64 =>
 	  <* ASSERT fromTipe.size = 32 *> 
 	  <* ASSERT toTipe.size = 64 *> 
-	  self.addCopy32to64(32, FALSE);
+	  self.addCopy32to64(32, signed := FALSE);
 	| Kind.Copy64to32, Kind.Swap64to32 =>
 	  <* ASSERT fromTipe.size = 64 *> 
 	  <* ASSERT toTipe.size = 32 *> 
-	  self.addCopy64to32(64);
+	  self.addCopy64to32(64, signed := FALSE);
 	END;
-      | RTTipe.Kind.Integer, RTTipe.Kind.Boolean, RTTipe.Kind.Cardinal,
-        RTTipe.Kind.Char, RTTipe.Kind.Enum, RTTipe.Kind.Set,
-        RTTipe.Kind.Subrange, RTTipe.Kind.Longint => 
-        WITH signed = (fromTipe.kind = RTTipe.Kind.Integer) OR
-            (fromTipe.kind = RTTipe.Kind.Longint) DO
-	  CASE self.kind OF
-	  | Kind.Copy =>
-	    <* ASSERT fromTipe.size = toTipe.size *>
-	    self.addCopy(fromTipe.size);
-	  | Kind.Swap =>
-	    <* ASSERT fromTipe.size = toTipe.size *>
-	    CASE fromTipe.size OF
-	    | 8 => self.addCopy(8);
-	    | 16 => self.addSwap16(16);
-	    | 32 => self.addSwap32(32);
-	    | 64 => self.addSwap64(64);
-            ELSE
-              RAISE Error("Should not get here: 2");
-	    END;
-	  | Kind.Copy32to64 =>
-	    IF fromTipe.size = toTipe.size THEN
-	      self.addCopy(fromTipe.size);
-	    ELSE
-	      self.addCopy32to64(32, signed);
-	    END;
-	  | Kind.Copy64to32 =>
-            IF fromTipe.size = toTipe.size THEN
-	      self.addCopy(fromTipe.size);
-	    ELSE
-	      self.addCopy64to32(64);
-	    END;
-	  | Kind.Swap32to64 =>
-	    CASE fromTipe.size OF
-	    | 8 => <* ASSERT toTipe.size = 8 *> self.addCopy(8);
-	    | 16 => <* ASSERT toTipe.size = 16 *> self.addSwap16(16);
-	    | 32 => 
-	      <* ASSERT toTipe.size >= 32 *> 
-	      IF toTipe.size = 32 THEN
-		self.addSwap32(32);
-	      ELSE
-		self.addSwap32to64(32, signed);
-	      END;
-	    | 64 => RAISE Error("Should not get here: 1");
-            ELSE
-              RAISE Error("Should not get here: 3");
-	    END;
-	  | Kind.Swap64to32 =>
-	    CASE fromTipe.size OF
-	    | 8 => <* ASSERT toTipe.size = 8 *> self.addCopy(8);
-	    | 16 => <* ASSERT toTipe.size = 16 *> self.addSwap16(16);
-	    | 32 => <* ASSERT toTipe.size = 32 *> self.addSwap32(32);
-	    | 64 => <* ASSERT toTipe.size = 32 *> self.addSwap64to32(64);
-            ELSE
-              RAISE Error("Should not get here: 4");
-	    END;
-	  END;
-        END;
+      | RTTipe.Kind.Boolean, RTTipe.Kind.Char, RTTipe.Kind.Enum, 
+        RTTipe.Kind.Set, RTTipe.Kind.Subrange, RTTipe.Kind.Cardinal => 
+        BuildOrdinal(self, fromTipe, toTipe, self.wordKind, signed:=FALSE);  
+      | RTTipe.Kind.Integer =>  
+        BuildOrdinal(self, fromTipe, toTipe, self.wordKind, signed:=TRUE);  
+      | RTTipe.Kind.Longint =>  
+        BuildOrdinal(self, fromTipe, toTipe, self.longKind, signed:=TRUE);  
       | RTTipe.Kind.Extended, RTTipe.Kind.Longreal =>
         <* ASSERT toTipe.size = 64 *> 
         <* ASSERT fromTipe.size = 64 *> 
-        CASE self.kind OF
+        CASE self.wordKind OF
 	| Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
 	  self.addCopy(64);
 	| Kind.Swap, Kind.Swap32to64, Kind.Swap64to32 =>
@@ -1152,7 +1230,7 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
       | RTTipe.Kind.Real => 
         <* ASSERT toTipe.size = 32 *> 
         <* ASSERT fromTipe.size = 32 *> 
-        CASE self.kind OF
+        CASE self.wordKind OF
 	| Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
 	  self.addCopy(32);
 	| Kind.Swap, Kind.Swap32to64, Kind.Swap64to32 =>
@@ -1168,7 +1246,7 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
          We can ignore the parent type and just create a single entry
          packedswap or a byte copy. *)
       <* ASSERT fromTipe.size = toTipe.size *> 
-      CASE self.kind OF
+      CASE self.wordKind OF
       | Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
         WITH bytesNeeded = RoundUp(p.size, 8) DO
           self.addCopy(bytesNeeded);
@@ -1186,7 +1264,7 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
             self.addCopy(a.size);
           ELSE
             (* On same endian machines, we can just copy these bytes. *)
-            CASE self.kind OF
+            CASE self.wordKind OF
             | Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
               self.addCopy(a.size);
             | Kind.Swap =>
@@ -1302,7 +1380,7 @@ PROCEDURE BuildFields(self: T;
           (* A data difference < 0 is ok if this field is packed *)
           <* ASSERT fromField.type.kind = RTTipe.Kind.Packed *>
           <* ASSERT toField.type.kind = RTTipe.Kind.Packed *>
-          CASE self.kind OF
+          CASE self.wordKind OF
           | Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
             (* If this field overflows the current packed byte, copy
                the next ones as required. *)
@@ -1327,7 +1405,7 @@ PROCEDURE BuildFields(self: T;
                machines, so no conversion is required. *)
             <* ASSERT fromField.type.size = toField.type.size *>
             <* ASSERT toField.type.kind = RTTipe.Kind.Packed *>
-            CASE self.kind OF
+            CASE self.wordKind OF
             | Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
               WITH bytesNeeded = RoundUp(fromField.type.size, 8) DO
                 self.addCopy(bytesNeeded);
@@ -1434,6 +1512,20 @@ PROCEDURE FieldsToText(f: RTTipe.Field; pre: TEXT;
       f := f.next;
     END;
   END FieldsToText;
+
+CONST HexDigits = 2*ADRSIZE(INTEGER); 
+
+PROCEDURE DoubleIntToText(Val: RTTipe.DoubleInt):TEXT = 
+  BEGIN (* Just do it in hex--it's easier. *) 
+    IF Val.Lo >= 0 AND Val.Hi # 0 OR Val.Lo < 0 AND Val.Hi # -1 
+    THEN (* Hi is not just a sign extension. *) 
+      RETURN "16_" 
+             & Fmt.Pad(Fmt.Unsigned(Val.Hi,16),HexDigits,'0') 
+             & Fmt.Pad(Fmt.Unsigned(Val.Lo,16),HexDigits,'0');
+    ELSE 
+      RETURN "16_" & Fmt.Pad(Fmt.Unsigned(Val.Lo,16),HexDigits,'0');
+    END;  
+  END DoubleIntToText; 
   
 PROCEDURE TipeToText(tipe: RTTipe.T; pre: TEXT; packing: RTPacking.T) =
   BEGIN
@@ -1488,7 +1580,9 @@ PROCEDURE TipeToText(tipe: RTTipe.T; pre: TEXT; packing: RTPacking.T) =
     | RTTipe.Set(s) =>
       IO.Put(" of " & Fmt.Int(s.n_elts) & " elements");
     | RTTipe.Subrange(s) =>
-      IO.Put(" from " & Fmt.Int(s.min) & " to " & Fmt.Int(s.max));
+      IO.Put(" from " & DoubleIntToText(s.min) 
+             & " to " & DoubleIntToText(s.max)
+            );
     ELSE
     END;
   END TipeToText; 
@@ -1565,17 +1659,39 @@ PROCEDURE PrintProgram(self: T) =
           INC(fromSize, elem.length*4);
           INC(toSize, elem.length*8);
         | PklAction.Kind.Copy64to32 =>
-          IO.Put(" Copy " & Fmt.Int(elem.length) & " 64 to 32-bit word(s).\n");
+          IO.Put(" Copy " & Fmt.Int(elem.length) & " 64 to 32-bit ");
+          WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
+            IF nelem.signed THEN
+              IO.Put("signed ");
+            ELSE
+              IO.Put("unsigned ");
+            END;
+          END;
+          IO.Put("word(s).\n");
           INC(fromSize, elem.length*8);
           INC(toSize, elem.length*4);
         | PklAction.Kind.Swap32to64 =>
-          IO.Put(" Copy and Swap " & Fmt.Int(elem.length) & 
-            " 32 to 64-bit words.\n");
+          IO.Put(" Copy and Swap " & Fmt.Int(elem.length) & " 32 to 64-bit ");
+          WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
+            IF nelem.signed THEN
+              IO.Put("signed ");
+            ELSE
+              IO.Put("unsigned ");
+            END;
+          END;
+          IO.Put("word(s).\n");
           INC(fromSize, elem.length*4);
           INC(toSize, elem.length*8);
         | PklAction.Kind.Swap64to32 =>
-          IO.Put(" Copy and Swap " & Fmt.Int(elem.length) & 
-            " 64 to 32-bit words.\n"); 
+          IO.Put(" Copy and Swap " & Fmt.Int(elem.length) & " 64 to 32-bit "); 
+          WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
+            IF nelem.signed THEN
+              IO.Put("signed ");
+            ELSE
+              IO.Put("unsigned ");
+            END;
+          END;
+          IO.Put("word(s).\n");
           INC(fromSize, elem.length*8);
           INC(toSize, elem.length*4);
         | PklAction.Kind.ReadRef =>
