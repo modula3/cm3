@@ -105,7 +105,7 @@ PROCEDURE AddI (i: INTEGER) =
     ELSE (* i < 0 *)
       IF    (i >= -16_3f)        THEN Stuff (16_80-i);
       ELSIF (i >= -16_ff)        THEN Stuff (16_c1); Stuff (i);
-      ELSIF (i = 16_80000000)    THEN Stuff (16_fe);
+      ELSIF (i = -16_7fffffff-1) THEN Stuff (16_fe);
       ELSIF (i = FIRST(INTEGER)) THEN Stuff (16_ff);
       ELSE  AddBigInt (i);
       END;

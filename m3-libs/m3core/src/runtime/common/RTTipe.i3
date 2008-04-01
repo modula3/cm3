@@ -24,7 +24,8 @@ CONST
     Kind.Refany
   };
 
-TYPE
+TYPE 
+  DoubleInt = RECORD Lo , Hi : INTEGER END; (* Two-word integer. *) 
   Builtin   = T OBJECT END;
   Array     = T OBJECT n_elts: INTEGER; element: T; elt_pack: INTEGER; END;
   Enum      = T OBJECT n_elts: INTEGER; END;
@@ -35,7 +36,7 @@ TYPE
   Record    = T OBJECT fields: Field;  END;
   Ref       = T OBJECT traced: BOOLEAN; uid: INTEGER; self: RT0.TypeDefn; END;
   Set       = T OBJECT n_elts: INTEGER; END;
-  Subrange  = T OBJECT min, max: INTEGER; END;
+  Subrange  = T OBJECT min, max: DoubleInt; END;
 
   Field = REF RECORD type: T;  next: Field;  offset: INTEGER := 0; END;
 

@@ -35,7 +35,7 @@ IMPORT Target, M3;
   
    
 
-TYPE
+TYPE (* This must be kept in sync with type RTTipe.m3.Op, in runtime. *) 
   Op = {
   (* opcode         -- op  --- operands ------------------- *)
      Address,       (* 00                                   *)
@@ -60,6 +60,10 @@ TYPE
      Set,           (* 13, #elements: INT                   *)
      Subrange,      (* 14, min, max: INT                    *)
      UntracedRef,   (* 15, self id: UID                     *)
+  (* Widechar is denoted as Enum, with #elements = 2^16.    
+     This could be fixed by a coordinated change, here, in 
+     Enumtype.m3, and RTTipe.m3, but would invalidate 
+     compiled code.                                         *)
      OldN,          (* 16, node #: INT                      *)
      Old0           (* 17                                   *)
   };(* Old1, Old2, ... Old(255-ORD(Old0)) *)

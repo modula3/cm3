@@ -607,7 +607,10 @@ PROCEDURE StartRead (reader: Reader)
 
       reader.packingCode := GetPacking(hdr);
       reader.packing := RTPacking.Decode(reader.packingCode);
-      reader.conversion := ConvertPacking.GetKind(reader.packing, myPacking);
+      reader.wordConvKind 
+        := ConvertPacking.GetWordKind(reader.packing, myPacking);
+      reader.longConvKind 
+        := ConvertPacking.GetLongintKind(reader.packing, myPacking);
       IF reader.packing.float # myPacking.float THEN
         RAISE Error("Can't read pickle (REAL rep)")
       END;
