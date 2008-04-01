@@ -150,7 +150,7 @@ readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend (source, object, optimize, debug) is
   local args = [ "-quiet", source, "-o", object, "-fPIC", "-m32", "-fno-reorder-blocks" ]
-  if optimize  args += "-O2"  end
+  if optimize  args += "-O3"  end
   if debug     args += "-gstabs+"  end
   if M3_PROFILING args += "-p" end
   return try_exec (m3back, args)
@@ -169,7 +169,7 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-fPIC", options ]
+  local args = [ "-m32", "-fPIC", options ]
   if optimize  args += "-O"  end
   if debug     args += "-gstabs+"  end
   if M3_PROFILING args += "-pg" end
@@ -182,14 +182,12 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble (source, object) is
-  return try_exec ("@" & SYSTEM_ASM, source, "-o", object)
+  return try_exec ("@" & SYSTEM_ASM, "--32", source, "-o", object)
 end
 
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
-
-%GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
 
 proc make_lib (lib, options, objects, imported_libs, shared) is
   local ret_code = 0
@@ -204,11 +202,11 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if shared
     % build the shared library
     if M3_PROFILING 
-      ret_code = try_exec ("@" & SYSTEM_CC, "-pg -shared " &  
+      ret_code = try_exec ("@" & SYSTEM_CC, "-pg -shared -m32 " &  
                            "-Wl,-soname," & lib_sox,
                            "-o", lib_sox, objects)
     else
-      ret_code = try_exec ("@" & SYSTEM_CC, "-shared " &  
+      ret_code = try_exec ("@" & SYSTEM_CC, "-shared -m32 " &  
                            "-Wl,-soname," & lib_sox,
                            "-o", lib_sox, objects)
     end
@@ -263,7 +261,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   if shared
     return try_exec ("@" & SYSTEM_CC, args )
   else
-    return try_exec ("@" & SYSTEM_CC, args )
+    return try_exec ("@" & SYSTEM_CC, "-static", args )
     %%% -- see M3_NEED_STANDALONE_LINKS  below
     %%%return try_exec ("@" & SYSTEM_CC, args)
   end
