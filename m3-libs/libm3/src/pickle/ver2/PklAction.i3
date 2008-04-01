@@ -39,11 +39,13 @@ TYPE
      Swap32,                        (* Copy N 32 bit words, swapping. *)
      Swap64,                        (* Copy N 64 bit words, swapping. *)
 
-     (* For moving data between different size, different endian *)
+     (* For moving data between different size, same endian *)
      Copy32to64,                    (* Copy N 32 bit words to 64
                                        bit words. *)
      Copy64to32,                    (* Copy N 64 bit words to 32
                                        bit words. *)
+
+     (* For moving data between different size, different endian *)
      Swap32to64,		    (* Copy N 32 bit words to 64
                                        bit words, swapping. *)
      Swap64to32,		    (* Copy N 64 bit words to 32

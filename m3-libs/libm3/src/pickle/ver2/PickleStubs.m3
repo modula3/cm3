@@ -74,7 +74,7 @@ PROCEDURE InWideChars(reader: Pickle.Reader; VAR arr: ARRAY OF WIDECHAR)
       END;
       INC(p, ADRSIZE(p^));  DEC(cnt, NUMBER(p^));
     END;
-    CASE reader.conversion OF
+    CASE reader.wordConvKind OF
     | Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =>
         (* ok *)
     | Kind.Swap, Kind.Swap32to64, Kind.Swap64to32 =>
@@ -131,7 +131,7 @@ PROCEDURE InInteger(reader: Pickle.Reader;
     RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
   VAR i: INTEGER;
   BEGIN
-    CASE reader.conversion OF
+    CASE reader.wordConvKind OF
     | Kind.Copy, Kind.Swap =>
       VAR c := LOOPHOLE(ADR(i), 
                         UNTRACED REF ARRAY [1..BYTESIZE(INTEGER)] OF CHAR);
@@ -139,7 +139,7 @@ PROCEDURE InInteger(reader: Pickle.Reader;
         IF reader.rd.getSub(c^) # NUMBER(c^) THEN
           RaiseUnmarshalFailure();
         END;
-        IF reader.conversion = Kind.Swap THEN
+        IF reader.wordConvKind = Kind.Swap THEN
           CASE myPacking.word_size OF
           | 32 => i := Swap.Swap4(i);
           | 64 => 
@@ -162,7 +162,7 @@ PROCEDURE InInteger(reader: Pickle.Reader;
 	IF reader.rd.getSub(c32^) # NUMBER(c32^) THEN
 	  RaiseUnmarshalFailure();
 	END;
-	IF reader.conversion = Kind.Swap32to64 THEN
+	IF reader.wordConvKind = Kind.Swap32to64 THEN
 	  i32 := Swap.Swap4(i32);
 	END;
 	i := i32;
@@ -188,7 +188,7 @@ PROCEDURE InInteger(reader: Pickle.Reader;
 	END;
   
 	(* Now, swap it if need be. *)
-	IF reader.conversion = Kind.Swap64to32 THEN
+	IF reader.wordConvKind = Kind.Swap64to32 THEN
 	  i := Swap.Swap4(i);
 	END;
       END;
@@ -208,7 +208,7 @@ PROCEDURE InInt32(reader: Pickle.Reader;
     IF reader.rd.getSub(c32^) # NUMBER(c32^) THEN
       RaiseUnmarshalFailure();
     END;
-    CASE reader.conversion OF
+    CASE reader.wordConvKind OF
     | Kind.Swap, Kind.Swap64to32, Kind.Swap32to64 =>
       i32 := Swap.Swap4(i32);
     | Kind.Copy, Kind.Copy64to32, Kind.Copy32to64 =>
