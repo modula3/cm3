@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.87 2008-04-03 14:32:41 jkrell Exp $
+# $Id: pylib.py,v 1.88 2008-04-03 14:34:08 jkrell Exp $
 
 import os
 from os import getenv
@@ -1695,6 +1695,8 @@ def SetupEnvironment():
 
     #
     # Do this earlier so that its link isn't a problem.
+    # Looking in the registry HKEY_LOCAL_MACHINE\SOFTWARE\Cygnus Solutions\Cygwin\mounts v2
+    # would be reasonable here.
     #
     if HostIsCygwin:
         _SetupEnvironmentVariableAll(
