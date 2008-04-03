@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.89 2008-04-03 14:46:00 jkrell Exp $
+# $Id: pylib.py,v 1.90 2008-04-03 16:20:09 jkrell Exp $
 
 import os
 from os import getenv
@@ -1685,9 +1685,9 @@ def _ClearEnvironmentVariable(Name):
 def SetupEnvironment():
     SystemDrive = os.environ.get("SystemDrive", "")
     if os.environ.get("OS") == "Windows_NT":
-        NT = True
+        HostIsNT = True
     else:
-        NT = False
+        HostIsNT = False
 
     SystemDrive = os.environ.get("SYSTEMDRIVE")
     if SystemDrive:
@@ -1707,7 +1707,7 @@ def SetupEnvironment():
     #
     # some host/target confusion here..
     #
-    if Target == "NT386" and NT and Config == "NT386" and (not GCC_BACKEND) and OSType == "WIN32":
+    if Target == "NT386" and HostIsNT and Config == "NT386" and (not GCC_BACKEND) and OSType == "WIN32":
 
         VCBin = ""
         VCInc = ""
@@ -1733,9 +1733,19 @@ def SetupEnvironment():
         VCInstallDir = os.environ.get("VCINSTALLDIR") # E:\Program Files\Microsoft Visual Studio 8\VC
 
         #
-        # untested prototype..
+        # This is not yet finished.
+        #
+        # Probe the partly version-specific less-polluting environment variables,
+        # from newest to oldest.
+        # That is, having setup alter PATH, INCLUDE, and LIB system-wide is not
+        # a great idea, but having setup set DevEnvDir, VSINSTALLDIR, VS80COMNTOOLS, etc.
+        # isn't so bad and we can temporarily establish the first set from the second
+        # set.
         #
         if VSInstallDir:
+            #
+            # Visual C++ 2005/8.0, at least the Express Edition, free download
+            #
             if not VCInstallDir:
                 VCInstallDir = os.path.join(VSInstallDir, "VC")
             if not DevEnvDir:
@@ -1744,20 +1754,31 @@ def SetupEnvironment():
             MspdbDir = DevEnvDir
 
         elif VCToolkitInstallDir:
+            #
+            # free download Visual C++ 2003; no longer available
+            #
             VCInstallDir = VCToolkitInstallDir
-            MspdbDir = os.path.join(VCInstallDir, "bin")
 
-        elif MSVCDir:
+        elif MSVCDir and MSDevDir:
+            #
+            # Visual C++ 5.0
+            #
             pass # do more research
+            # VCInstallDir = MSVCDir
 
         elif MSDevDir:
+            #
+            # Visual C++ 4.0, 5.0
+            #
             pass # do more research
+            # VCInstallDir = MSDevDir
 
         else:
             #
-            # what really happens on my machine for 8.0
-            # need to guide pylib.py to other versions.
-            # (setting the environment ahead of time should make it leave it alone)
+            # This is what really happens on my machine, for 8.0.
+            # It might be good to guide pylib.py to other versions,
+            # however setting things up manually suffices and I have, um,
+            # well automated.
             #
             Msdev = os.path.join(SystemDrive, "msdev", "80")
             VCInstallDir = os.path.join(Msdev, "VC")
@@ -1770,6 +1791,8 @@ def SetupEnvironment():
 
         if DevEnvDir:
             MspdbDir = DevEnvDir
+        #elif VCBin:
+        #    MspdbDir = VCBin
 
         _SetupEnvironmentVariableAll("INCLUDE", ["errno.h"], VCInc)
 
@@ -1778,12 +1801,15 @@ def SetupEnvironment():
             ["kernel32.lib", "libcmt.lib"],
             VCLib + os.path.pathsep + os.path.join(InstallRoot, "lib"))
 
+        #
+        # Do this before mspdb*dll because it sometimes gets it in the path.
+        #
+        _SetupEnvironmentVariableAll("PATH", ["cl", "link"], VCBin)
+
         _SetupEnvironmentVariableAny(
             "PATH",
-            ["mspdb80.dll", "mspdb71.dll", "mspdb70.dll", "mspdb60.dll", "mspdb50.dll", "mspdb40.dll", "dbi.dll"],
+            ["mspdb80.dll", "mspdb71.dll", "mspdb70.dll", "mspdb60.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
             MspdbDir)
-
-        _SetupEnvironmentVariableAll("PATH", ["cl", "link"], VCBin)
 
         #
         # The free Visual C++ 2003 has neither delayimp.lib nor msvcrt.lib.
@@ -1793,6 +1819,7 @@ def SetupEnvironment():
         Lib = os.environ.get("LIB")
         if not SearchPath("delayimp.lib", Lib):
             os.environ["USE_DELAYLOAD"] = "0"
+
         if not SearchPath("msvcrt.lib", Lib):
             os.environ["USE_MSVCRT"] = "0"
 
@@ -1809,9 +1836,24 @@ def SetupEnvironment():
             ["gcc", "as", "ld"],
             os.path.join(SystemDrive, "mingw", "bin"))
 
+        #
+        # need to probe for ld that accepts response files.
+        # For example, this version does not:
+        # C:\dev2\cm3\scripts\python>ld -v
+        # GNU ld version 2.15.91 20040904
+        # This comes with Qt I think (free Windows version)
+        #
+        # This version works:
+        # C:\dev2\cm3\scripts\python>ld -v
+        # GNU ld version 2.17.50 20060824
 
-        # ensure msys make is ahead of mingwin make
-
+        #
+        # Ensure msys make is ahead of mingwin make, by adding
+        # msys to the start of the path after adding mingw to the
+        # start of the path. Modula-3 does not generally use
+        # make, but this might matter when building m3cg, and
+        # is usually the right thing.
+        #
         _SetupEnvironmentVariableAll(
             "PATH",
             ["sh", "sed", "gawk", "make"],
@@ -1825,10 +1867,11 @@ def SetupEnvironment():
         #_ClearEnvironmentVariable("LIB")
         #_ClearEnvironmentVariable("INCLUDE")
 
-        _SetupEnvironmentVariableAll(
-            "PATH",
-            ["cygX11-6.dll"],
-            os.path.join(SystemDrive, "cygwin", "usr", "X11R6", "bin"))
+        if HostIsNT:
+            _SetupEnvironmentVariableAll(
+                "PATH",
+                ["cygX11-6.dll"],
+                os.path.join(SystemDrive, "cygwin", "usr", "X11R6", "bin"))
 
         _SetupEnvironmentVariableAll(
             "PATH",
