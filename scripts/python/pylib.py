@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.85 2008-03-29 19:34:56 jkrell Exp $
+# $Id: pylib.py,v 1.86 2008-04-03 06:00:33 jkrell Exp $
 
 import os
 from os import getenv
@@ -100,7 +100,7 @@ if ((UName.startswith("windows")
 #
 CM3 = getenv("CM3") or "cm3"
 CM3 = SearchPath(CM3 + EXE) or SearchPath(CM3)
-InstallRoot = os.path.dirname(os.path.dirname(CM3))
+InstallRoot = getenv("CM3_INSTALL") or os.path.dirname(os.path.dirname(CM3))
 
 #
 # the root of the source tree
@@ -395,7 +395,7 @@ def GetConfigForDistribution(Target):
     return b
 
 def SetEnvironmentVariable(Name, Value):
-    if not os.environ.get(Name):
+    if not os.environ.get(Name) or (os.environ[Name] != Value):
         os.environ[Name] = Value
         print("set " + Name + "=" + Value);
 
@@ -428,13 +428,6 @@ def _ConvertFromCygwinPath(a):
     return a
 
 if IsCygwinBinary(CM3):
-    #print(CM3 + " is a Cygwin binary")
-
-    # replace sh with cmd to speed up builds by 3% to 15%
-    # This should not matter any longer -- use q_exec instead of exec.
-    # os.environ["QUAKE_SHELL"] = "cmd"
-    # os.environ["QUAKE_SHELL_OPTION"] = "/c"
-
     def ConvertToCygwinPath(a):
         return _ConvertToCygwinPath(a)
 
@@ -453,15 +446,9 @@ def ConvertPath(a):
     return ConvertFromCygwinPath(ConvertToCygwinPath(a))
 
 SetEnvironmentVariable("CM3_TARGET", Target);
-SetEnvironmentVariable("CM3_INSTALL", ConvertPath(InstallRoot));
-ConfigFile = os.environ.get("M3CONFIG")
-if not ConfigFile:
-    ConfigFile = GetConfigForDistribution(Config)
-    SetEnvironmentVariable("M3CONFIG", ConvertPath(ConfigFile))
-NativeRoot = Root
-Root = ConvertPath(Root).replace("\\", "\\\\")
-SetEnvironmentVariable("CM3_ROOT", Root);
-Root = NativeRoot
+SetEnvironmentVariable("CM3_INSTALL", ConvertPath(InstallRoot))
+SetEnvironmentVariable("M3CONFIG", ConvertPath(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
+SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "\\\\"))
 
 #-----------------------------------------------------------------------------
 # elego customizations
@@ -491,6 +478,7 @@ DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
 DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
 DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
 
+NativeRoot = Root
 Root = ConvertPath(Root).replace("\\", "\\\\")
 DEFS = (DEFS % vars())
 Root = NativeRoot
