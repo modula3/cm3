@@ -68,10 +68,14 @@ def MakeArchive(PackageSetName, Command, Extension):
                 shutil.move(os.path.join(Directory, Name), SymbolsRoot)
             elif (Extension == ".m3"
                     or Extension == ".m3web"
-                    # Can be useful for bootstrapping standalone cm3.exe in future.
-                    #or Extension == ".sa
+                    or Extension == ".sa
                     ):
-                DeleteFile(os.path.join(Directory, Name))
+                #
+                # Keep libm3.lib.sa and m3core.lib.sa for bootstrapping of cm3.
+                # This check is loose to allow for multiple naming schemes.
+                #
+                if (Name.find("m3core") == -1) and (Name.find("libm3") == -1):
+                    DeleteFile(os.path.join(Directory, Name))
 
     CreateDirectory(SymbolsRoot)
     os.path.walk(InstallRoot, Callback, None)
@@ -105,7 +109,7 @@ def TarBzip2(PackageSetName):
     MakeArchive(PackageSetName, "tar cfvj", "tar.bz2")
 
 def MakeArchives():
-    for PackageSetName in ["min", "std", "core", "base"]:
+    for PackageSetName in ["min", "std"]:
         if (Config != "NT386GNU" or PackageSetName != "std"):
             if Config == "NT386":
                 Zip(PackageSetName)
@@ -177,14 +181,10 @@ def FormArchiveName(PackageSetName, Suffix):
 
 InstallRoot_Min = FormInstallRoot("min")
 InstallRoot_Standard = FormInstallRoot("std")
-InstallRoot_Core = FormInstallRoot("core")
-InstallRoot_Base = FormInstallRoot("base")
 
 InstallRoots = [
     InstallRoot_Min,
     InstallRoot_Standard,
-    InstallRoot_Core,
-    InstallRoot_Base,
    ]
 
 OriginalLIB = os.getenv("LIB")
@@ -328,38 +328,6 @@ Packages = pylib.PackageSets["min"]
 #RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
 #RealClean(Packages) or FatalError()
-
-# ----------------------------------------------------------------------------------------------------------------------------------
-Echo("build core packages with new compiler")
-# ----------------------------------------------------------------------------------------------------------------------------------
-
-if True:
-
-    print("skipping..")
-
-else:
-
-    Setup(InstallRoot_CompilerWithSelf, InstallRoot_Core)
-    Packages = pylib.PackageSets["core"]
-    #RealClean(Packages) or FatalError()
-    BuildShip(Packages) or FatalError()
-    #RealClean(Packages) or FatalError()
-
-# ----------------------------------------------------------------------------------------------------------------------------------
-Echo("build base packages with new compiler")
-# ----------------------------------------------------------------------------------------------------------------------------------
-
-if True:
-
-    print("skipping..")
-
-else:
-
-    Setup(InstallRoot_CompilerWithSelf, InstallRoot_Base)
-    Packages = pylib.PackageSets["base"]
-    #RealClean(Packages) or FatalError()
-    BuildShip(Packages) or FatalError()
-    #RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
 Echo("build standard packages with new compiler")
