@@ -71,10 +71,12 @@ def MakeArchive(PackageSetName, Command, Extension):
                     or Extension == ".sa
                     ):
                 #
-                # Keep libm3.lib.sa and m3core.lib.sa for bootstrapping of cm3.
+                # Keep libm3.lib.sa, m3core.lib.sa, sysutils.lib.sa for bootstrapping of cm3.
                 # This check is loose to allow for multiple naming schemes.
                 #
-                if (Name.find("m3core") == -1) and (Name.find("libm3") == -1):
+                if ((Name.find("m3core") == -1)
+                        and (Name.find("libm3") == -1):
+                        and (Name.find("sysutils") == -1)):
                     DeleteFile(os.path.join(Directory, Name))
 
     CreateDirectory(SymbolsRoot)
