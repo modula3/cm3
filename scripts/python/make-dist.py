@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.31 2008-04-03 15:50:17 jkrell Exp $
+# $Id: make-dist.py,v 1.32 2008-04-03 15:51:16 jkrell Exp $
 
 import sys
 import os.path
@@ -68,14 +68,14 @@ def MakeArchive(PackageSetName, Command, Extension):
                 shutil.move(os.path.join(Directory, Name), SymbolsRoot)
             elif (Extension == ".m3"
                     or Extension == ".m3web"
-                    or Extension == ".sa
+                    or Extension == ".sa"
                     ):
                 #
                 # Keep libm3.lib.sa, m3core.lib.sa, sysutils.lib.sa for bootstrapping of cm3.
                 # This check is loose to allow for multiple naming schemes.
                 #
                 if ((Name.find("m3core") == -1)
-                        and (Name.find("libm3") == -1):
+                        and (Name.find("libm3") == -1)
                         and (Name.find("sysutils") == -1)):
                     DeleteFile(os.path.join(Directory, Name))
 
