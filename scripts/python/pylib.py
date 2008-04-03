@@ -20,7 +20,7 @@ import shutil
 #    probed with $OS and uname
 #
 # CM3_OSTYPE
-#    follows mostly from Target, except CM3_TARGET can be WIN32 or POSIX
+#    follows mostly from Target, except CM3_TARGET=NT386 can be WIN32 or POSIX
 #
 # CM3_ROOT
 #    the root of the source, computed from the path to this file
@@ -39,6 +39,11 @@ if env_OS == "Windows_NT":
     def uname():
         PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
         return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
+    #
+    # cmd can run extensionless executables if this code is enabled.
+    # This can be useful for example with NT386GNU following more Posix-ish
+    # naming styles than even Cygwin usually does.
+    #
     #pathext = getenv("PATHEXT");
     #if pathext and not "." in pathext.split(";"):
     #    pathext = ".;" + pathext
@@ -85,13 +90,19 @@ UNameArchP = platform.processor().lower()
 UNameArchM = UNameTuple[4].lower()
 UNameRevision = UNameTuple[2].lower()
 
+#
+# NT386GNU produces "foo.exe" instead of "foo".
+# That is changable however. This code should
+# adapt if so.
+#
 if ((UName.startswith("windows")
     or Target.startswith("NT386")
     or UNameCommand.startswith("mingw")
     or UNameCommand.startswith("cygwin"))
-        and (not Target.startswith("NT386MINGNU"))
-        and (not Target.startswith("NT386GNU"))
-        and (OSType != "POSIX")):
+#        and (not Target.startswith("NT386MINGNU"))
+#        and (not Target.startswith("NT386GNU"))
+#        and (OSType != "POSIX")
+        ):
 
     EXE = ".exe"
 
@@ -428,6 +439,9 @@ def _ConvertFromCygwinPath(a):
     return a
 
 if IsCygwinBinary(CM3):
+
+    HostIsCygwin = True
+
     def ConvertToCygwinPath(a):
         return _ConvertToCygwinPath(a)
 
@@ -435,6 +449,9 @@ if IsCygwinBinary(CM3):
         return a
 
 else:
+
+    HostIsCygwin = False
+
     def ConvertToCygwinPath(a):
         return a
 
@@ -1677,6 +1694,15 @@ def SetupEnvironment():
         SystemDrive += os.path.sep
 
     #
+    # Do this earlier so that its link isn't a problem.
+    #
+    if HostIsCygwin:
+        _SetupEnvironmentVariableAll(
+            "PATH",
+            ["cygwin1.dll"],
+            os.path.join(SystemDrive, "cygwin", "bin"))
+
+    #
     # some host/target confusion here..
     #
     if Target == "NT386" and NT and Config == "NT386" and (not GCC_BACKEND) and OSType == "WIN32":
@@ -1716,7 +1742,12 @@ def SetupEnvironment():
             MspdbDir = DevEnvDir
 
         elif VCToolkitInstallDir:
-            pass # do more research
+            VCInstallDir = VCToolkitInstallDir
+            MspdbDir = os.path.join(VCInstallDir, "bin")
+
+            # no delayimp.lib, no msvcrt.lib
+            os.environ["USE_DELAYLOAD"] = "0"
+            os.environ["USE_MSVCRT"] = "0"
 
         elif MSVCDir:
             pass # do more research
