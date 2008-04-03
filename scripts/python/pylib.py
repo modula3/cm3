@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.88 2008-04-03 14:34:08 jkrell Exp $
+# $Id: pylib.py,v 1.89 2008-04-03 14:46:00 jkrell Exp $
 
 import os
 from os import getenv
@@ -1664,7 +1664,7 @@ def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt):
             else:
                 print(Name + "=" + NewValue)
             return
-    print("ERROR: " + _FormatEnvironmentVariable(Name) + " does not have any of " + RequiredFiles)
+    print("ERROR: " + _FormatEnvironmentVariable(Name) + " does not have any of " + " ".join(RequiredFiles))
     sys.exit(1)
 
 def _ClearEnvironmentVariable(Name):
@@ -1747,10 +1747,6 @@ def SetupEnvironment():
             VCInstallDir = VCToolkitInstallDir
             MspdbDir = os.path.join(VCInstallDir, "bin")
 
-            # no delayimp.lib, no msvcrt.lib
-            os.environ["USE_DELAYLOAD"] = "0"
-            os.environ["USE_MSVCRT"] = "0"
-
         elif MSVCDir:
             pass # do more research
 
@@ -1788,6 +1784,17 @@ def SetupEnvironment():
             MspdbDir)
 
         _SetupEnvironmentVariableAll("PATH", ["cl", "link"], VCBin)
+
+        #
+        # The free Visual C++ 2003 has neither delayimp.lib nor msvcrt.lib.
+        # Very old toolsets have no delayimp.lib.
+        # The Quake config file checks these environment variables.
+        #
+        Lib = os.environ.get("LIB")
+        if not SearchPath("delayimp.lib", Lib):
+            os.environ["USE_DELAYLOAD"] = "0"
+        if not SearchPath("msvcrt.lib", Lib):
+            os.environ["USE_MSVCRT"] = "0"
 
     #
     # some host/target confusion here..
