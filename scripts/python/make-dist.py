@@ -68,14 +68,14 @@ def MakeArchive(PackageSetName, Command, Extension):
                 shutil.move(os.path.join(Directory, Name), SymbolsRoot)
             elif (Extension == ".m3"
                     or Extension == ".m3web"
-                    or Extension == ".sa
+                    or Extension == ".sa"
                     ):
                 #
                 # Keep libm3.lib.sa, m3core.lib.sa, sysutils.lib.sa for bootstrapping of cm3.
                 # This check is loose to allow for multiple naming schemes.
                 #
                 if ((Name.find("m3core") == -1)
-                        and (Name.find("libm3") == -1):
+                        and (Name.find("libm3") == -1)
                         and (Name.find("sysutils") == -1)):
                     DeleteFile(os.path.join(Directory, Name))
 
