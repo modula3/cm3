@@ -1695,6 +1695,8 @@ def SetupEnvironment():
 
     #
     # Do this earlier so that its link isn't a problem.
+    # Looking in the registry HKEY_LOCAL_MACHINE\SOFTWARE\Cygnus Solutions\Cygwin\mounts v2
+    # would be reasonable here.
     #
     if HostIsCygwin:
         _SetupEnvironmentVariableAll(
