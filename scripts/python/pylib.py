@@ -1811,6 +1811,11 @@ def SetupEnvironment():
             ["mspdb80.dll", "mspdb71.dll", "mspdb70.dll", "mspdb60.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
             MspdbDir)
 
+        _SetupEnvironmentVariableAny(
+            "PATH",
+            ["msobj80.dll", "msobj71.dll", "msobj10.dll", "msobj10.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
+            MspdbDir)
+
         #
         # The free Visual C++ 2003 has neither delayimp.lib nor msvcrt.lib.
         # Very old toolsets have no delayimp.lib.
