@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.90 2008-04-03 16:20:09 jkrell Exp $
+# $Id: pylib.py,v 1.91 2008-04-05 22:54:18 jkrell Exp $
 
 import os
 from os import getenv
@@ -1809,6 +1809,11 @@ def SetupEnvironment():
         _SetupEnvironmentVariableAny(
             "PATH",
             ["mspdb80.dll", "mspdb71.dll", "mspdb70.dll", "mspdb60.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
+            MspdbDir)
+
+        _SetupEnvironmentVariableAny(
+            "PATH",
+            ["msobj80.dll", "msobj71.dll", "msobj10.dll", "msobj10.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
             MspdbDir)
 
         #
