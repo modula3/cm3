@@ -23,7 +23,7 @@ MODULE SGML EXPORTS SGML, SGMLRep;
 
 IMPORT SGML, SGMLC, SGMLCScanner, Text, RefSeq, TextRefTbl, TextTextTbl, Atom,
     ASCII, FileRd, TextRd, Pathname, FS, Process, OSError, 
-    IO, Rd, FSM, Fmt, M3Config, Wr;
+    IO, Rd, FSM, Fmt, M3Config;
 
 REVEAL
 
