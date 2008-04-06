@@ -678,7 +678,7 @@ def ReadPackageDB():
     global PackageDB
     PackageDB = (PackageDB or
             map(
-                lambda(a): a.replace("\n", "").replace('\\', '/'),
+                lambda(a): a.replace("\n", "").replace('\\', '/').replace("\r", ""),
                 open(PKGSDB)
                 ))
 
