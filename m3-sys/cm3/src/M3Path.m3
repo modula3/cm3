@@ -104,7 +104,7 @@ PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
     END;
   END New;
 
-PROCEDURE Join (dir, base: TEXT;  k: Kind;  <*UNUSED*>host: BOOLEAN): TEXT =
+PROCEDURE Join (dir, base: TEXT;  k: Kind): TEXT =
   VAR
     pre      := Prefix [target_os][k];
     ext      := Suffix [target_os][k];
@@ -166,7 +166,7 @@ PROCEDURE Join (dir, base: TEXT;  k: Kind;  <*UNUSED*>host: BOOLEAN): TEXT =
     END;
   END Join;
 
-PROCEDURE Parse (nm: TEXT;  <*UNUSED*>host: BOOLEAN): T =
+PROCEDURE Parse (nm: TEXT): T =
   VAR len := Text.Length (nm);   buf: ARRAY [0..255] OF CHAR;
   BEGIN
     IF (len <= NUMBER (buf))
@@ -318,23 +318,23 @@ PROCEDURE EndOfArc (path: TEXT;  xx: CARDINAL;  d_sep: CHAR): BOOLEAN =
     RETURN (len = xx) OR ((len > xx) AND IsDirSep (Text.GetChar (path, xx), d_sep));
   END EndOfArc;
 
-PROCEDURE DefaultProgram (<*UNUSED*>host: BOOLEAN): TEXT =
+PROCEDURE DefaultProgram (): TEXT =
   BEGIN
     RETURN Default_pgm [target_os];
   END DefaultProgram;
 
-PROCEDURE ProgramName (base: TEXT;  <*UNUSED*>host: BOOLEAN): TEXT =
+PROCEDURE ProgramName (base: TEXT): TEXT =
   BEGIN
     RETURN base & Suffix[target_os][Kind.PGM];
   END ProgramName;
 
-PROCEDURE LibraryName (base: TEXT;  <*UNUSED*>host: BOOLEAN): TEXT =
+PROCEDURE LibraryName (base: TEXT): TEXT =
   VAR os := target_os;
   BEGIN
     RETURN Prefix[os][Kind.LIB] & base & Suffix[os][Kind.LIB];
   END LibraryName;
 
-PROCEDURE Convert (nm: TEXT; <*UNUSED*>host: BOOLEAN): TEXT =
+PROCEDURE Convert (nm: TEXT): TEXT =
   BEGIN
     RETURN nm;
   END Convert;
