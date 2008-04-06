@@ -76,7 +76,7 @@ BEGIN
   RETURN FALSE;
 END CopierSeen;
 
-PROCEDURE CopierSpecial(this: Copier; ref: REFANY; VAR copy: REFANY): BOOLEAN =
+PROCEDURE CopierSpecial(<*UNUSED*> this: Copier; ref: REFANY; VAR copy: REFANY): BOOLEAN =
 VAR
   s: REFANY;
 BEGIN
@@ -108,7 +108,7 @@ END RegisterSpecial;
 
 (* Atom Special Methods *)
 
-PROCEDURE AtomSpecCopy(this: AtomSpec; from: REFANY): REFANY =
+PROCEDURE AtomSpecCopy(<*UNUSED*> this: AtomSpec; from: REFANY): REFANY =
 BEGIN
   RETURN Atom.FromText(Atom.ToText(from));
 END AtomSpecCopy;
