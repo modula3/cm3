@@ -371,14 +371,13 @@ PROCEDURE NoteSourceFile (VAR s: State;  dir, name: TEXT;  cmd_line: BOOLEAN)
   RAISES {Wr.Failure, Thread.Alerted} =
   VAR
     file := M3Path.New (dir, name);
-    info := M3Path.Parse (file, host := TRUE);
+    info := M3Path.Parse (file);
     tag  : TEXT;
   BEGIN
     Msg.Debug ("  file ", file, Wr.EOL);
 
     IF (M3Options.major_mode = MM.Find) AND (cmd_line) THEN
-      Out (s.wr, "M3_FIND_UNITS += \"", M3Path.Join (NIL, info.base, info.kind,
-                                             host := TRUE), "\"");
+      Out (s.wr, "M3_FIND_UNITS += \"", M3Path.Join (NIL, info.base, info.kind), "\"");
       s.found_work := TRUE;
       RETURN;
     END;

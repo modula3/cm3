@@ -32,8 +32,8 @@ VAR
 PROCEDURE Update (file, info: TEXT) =
   VAR
     x  := NEW (InfoEntry);
-    nm := M3Path.Parse (file, host := TRUE);
-    id := M3ID.Add (M3Path.Join (NIL, nm.base, nm.kind, host := FALSE));
+    nm := M3Path.Parse (file);
+    id := M3ID.Add (M3Path.Join (NIL, nm.base, nm.kind));
   BEGIN
     x.next  := new_info;  new_info := x;
     x.file  := id;

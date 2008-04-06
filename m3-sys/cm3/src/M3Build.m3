@@ -121,8 +121,7 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     (* some more config dependent backward compatibility hacks... *)
     Quake.Define (t, "M3SEARCH_TABLES", "-T" & M3TFile);
     Quake.Define (t, "DEFAULT_BUILD_DIR", GetConfig (t, "BUILD_DIR"));
-    Quake.Define (t, "M3", M3Path.New (GetConfig (t, "BIN_USE"),
-                              M3Path.ProgramName ("cm3", host := TRUE)));
+    Quake.Define (t, "M3", M3Path.New (GetConfig (t, "BIN_USE"), "cm3"));
     Quake.Define (t, "PACKAGE_DIR", pkg);
 
     t.build_pkg       := M3ID.Add (Pathname.Last (pkg));
@@ -675,14 +674,14 @@ PROCEDURE DoProgramName (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
   VAR t := Self (m);
   BEGIN
-    PushText (t, M3Path.ProgramName (PopText (t), host := TRUE));
+    PushText (t, M3Path.ProgramName (PopText (t)));
   END DoProgramName;
 
 PROCEDURE DoLibraryName (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
   VAR t := Self (m);
   BEGIN
-    PushText (t, M3Path.LibraryName (PopText (t), host := TRUE));
+    PushText (t, M3Path.LibraryName (PopText (t)));
   END DoLibraryName;
 
 (*------------------------------------- calls used in generated files only --*)
@@ -784,7 +783,7 @@ PROCEDURE MapSource (t: T;  kind: UK)
     pkg    := PopID (t);
     name   := PopID (t);
     loc    := Location (t, pkg, subdir);
-    zz     := M3Path.Parse (M3ID.ToText (name), host := TRUE);
+    zz     := M3Path.Parse (M3ID.ToText (name));
     IF (zz.kind # kind) THEN
       Msg.FatalError (NIL, "imported file extension doesn't match expected type: ",
                       M3ID.ToText (name));
@@ -1054,7 +1053,7 @@ PROCEDURE DoPgmSource (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     nm   := PopID (t);
     name := M3ID.ToText (nm);
     dir  := M3Path.New (PkgSubdir (t), Pathname.Prefix (name));
-    zz   := M3Path.Parse (Pathname.Last (name), host := TRUE);
+    zz   := M3Path.Parse (Pathname.Last (name));
     base := M3ID.Add (zz.base);
     loc  := Location (t, t.cur_pkg, M3ID.Add (dir));
     unit := M3Unit.New (base, zz.kind, loc, hidden := TRUE, imported := FALSE);
@@ -1282,7 +1281,7 @@ PROCEDURE SetVis (t: T;  nm: M3ID.T;  kind: UK;  hidden: BOOLEAN) =
       u.hidden := hidden;
     ELSE
       Msg.FatalError (NIL, "set_visibility of unknown unit: ",
-                      M3Path.Join (NIL, M3ID.ToText (nm), kind, host := TRUE));
+                      M3Path.Join (NIL, M3ID.ToText (nm), kind));
     END;
   END SetVis;
 
@@ -1347,7 +1346,7 @@ PROCEDURE DoTemplate (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   VAR t := Self (m);  nm := PopID (t);
   BEGIN
     AddSource (t, nm, UK.TMPL, hidden := FALSE);
-    Include (t, M3Path.Join (NIL, M3ID.ToText (nm), UK.TMPL, host := TRUE));
+    Include (t, M3Path.Join (NIL, M3ID.ToText (nm), UK.TMPL));
   END DoTemplate;
 
 (*------------------------------------------------------- library building --*)
@@ -1359,8 +1358,8 @@ PROCEDURE DoLibrary (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     nm := PopID (t);  name := M3ID.ToText (nm);
     AddDerived (t, nm, UK.M3LIB, hidden := TRUE);
     GenM3Exports (t, "_define_lib(\"" & name & QRPCR);
-    lib_a   := M3Path.Join (NIL, name, UK.M3LIB, host := TRUE);
-    lib_m3x := M3Path.Join (NIL, name, UK.LIBX,   host := TRUE);
+    lib_a   := M3Path.Join (NIL, name, UK.M3LIB);
+    lib_m3x := M3Path.Join (NIL, name, UK.LIBX);
     IF (t.mode = MM.Build) THEN
       Builder.BuildLib (name, t.units, SysLibs (t), t.build_shared, t);
       InstallDerived (t, lib_a);
@@ -1388,7 +1387,7 @@ PROCEDURE DoProgram (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   VAR
     t    := Self (m);
     nm   := PopID (t);
-    prog := M3Path.ProgramName (M3ID.ToText (nm), host := TRUE);
+    prog := M3Path.ProgramName (M3ID.ToText (nm));
   BEGIN
     BuildProgram (t, nm);
     IF (t.mode = MM.Build) THEN  InstallDerived (t, prog);  END;
@@ -1399,7 +1398,7 @@ PROCEDURE DoProgramX (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   VAR
     t    := Self (m);
     nm   := PopID (t);
-    prog := M3Path.ProgramName (M3ID.ToText (nm), host := TRUE);
+    prog := M3Path.ProgramName (M3ID.ToText (nm));
   BEGIN
     BuildProgram (t, nm);
     BindExport (t, prog);
@@ -1424,8 +1423,8 @@ PROCEDURE BuildProgram (t: T;  nm: M3ID.T)
       Builder.EmitPkgImports (t.units);
       done := TRUE;
     END;
-    DeleteDeriveds (t, M3Path.ProgramName (name, host := TRUE), NoExtension);
-    DeleteDeriveds (t, M3Path.Join (NIL, name, UK.PGMX, host := TRUE), 
+    DeleteDeriveds (t, M3Path.ProgramName (name), NoExtension);
+    DeleteDeriveds (t, M3Path.Join (NIL, name, UK.PGMX), 
                     NoExtension);
     DeleteDeriveds (t, M3Web, NoExtension);
     DeleteDeriveds (t, name, Junk);
@@ -1446,7 +1445,7 @@ PROCEDURE DoCProgram (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
       Builder.EmitPkgImports (t.units);
       done := TRUE;
     END;
-    DeleteDeriveds (t, M3Path.ProgramName (name, host := TRUE), NoExtension);
+    DeleteDeriveds (t, M3Path.ProgramName (name), NoExtension);
     InitGlobals (t);  (* forget about the accumulated sources... *)
   END DoCProgram;
 
@@ -1463,7 +1462,7 @@ PROCEDURE DoCProgramX (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
       Builder.EmitPkgImports (t.units);
       done := TRUE;
     END;
-    prog := M3Path.ProgramName (name, host := TRUE);
+    prog := M3Path.ProgramName (name);
     BindExport (t, prog);
     DeleteDeriveds (t, prog, NoExtension);
     InitGlobals (t);  (* forget about the accumulated sources... *)
@@ -1572,7 +1571,7 @@ PROCEDURE FindUnit (t: T;  unit: TEXT;  any_unit: BOOLEAN) =
     name : M3Path.T;
     base : M3ID.T;
   BEGIN
-    name := M3Path.Parse (unit, host := TRUE);
+    name := M3Path.Parse (unit);
     base := M3ID.Add (name.base);
     
     u := t.units.head;

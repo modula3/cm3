@@ -182,7 +182,7 @@ PROCEDURE CompileUnits (main     : TEXT;
                         sys_libs : Arg.List;
                         info_kind: UK;
                         mach     : Quake.Machine): State =
-  VAR s := NEW (State);  nm := M3Path.Parse (main, host := TRUE);
+  VAR s := NEW (State);  nm := M3Path.Parse (main);
   BEGIN
     DumpUnits (units);
     ETimer.ResetAll ();
@@ -209,7 +209,7 @@ PROCEDURE CompileUnits (main     : TEXT;
     Target.Has_stack_walker := GetConfigBool(s, "M3_USE_STACK_WALKER",
                                              Target.Has_stack_walker);
 
-    s.info_name   := M3Path.Join (NIL, nm.base, info_kind, host := TRUE);
+    s.info_name   := M3Path.Join (NIL, nm.base, info_kind);
     s.m3backend   := GetConfigProc (s, "m3_backend", 4);
     s.c_compiler  := GetConfigProc (s, "compile_c", 5);
     s.assembler   := GetConfigProc (s, "assemble", 2);
@@ -1329,7 +1329,7 @@ PROCEDURE FindGeneric (s: State;  name: TEXT;  interface: BOOLEAN): INTEGER =
   BEGIN
     IF (unit = NIL) THEN
       Msg.FatalError (NIL, "cannot find generic source: ",
-                      M3Path.Join (NIL, name, kind, host := TRUE));
+                      M3Path.Join (NIL, name, kind));
       RETURN Utils.NO_TIME;
     ELSE
       RETURN Utils.ModificationTime (UnitPath (unit));
@@ -1554,7 +1554,7 @@ PROCEDURE Pass0_Open (env: Env;  name: M3ID.T;
       file.name := UnitPath (unit);
       file.contents := Utils.OpenReader (file.name, fatal := TRUE);
     ELSE
-      file.name := M3Path.Join (NIL, M3ID.ToText (name), kind, host := TRUE);
+      file.name := M3Path.Join (NIL, M3ID.ToText (name), kind);
       file.contents := NIL;
     END;
     RETURN file;
@@ -1872,7 +1872,7 @@ CONST
 
 PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
   VAR
-    Main_C   := M3Path.Join (NIL, M3Main, UK.C, host := FALSE);
+    Main_C   := M3Path.Join (NIL, M3Main, UK.C);
     Main_XX  := M3Main & ".new";
     init_code: TEXT := NIL;
     time_O   : INTEGER;
@@ -1921,8 +1921,8 @@ PROCEDURE GenerateCMain (s: State;  Main_O: TEXT) =
 
 PROCEDURE GenerateCGMain (s: State;  Main_O: TEXT) =
   VAR
-    Main_MC  := M3Path.Join (NIL, M3Main, UK.MC, host := FALSE);
-    Main_MS  := M3Path.Join (NIL, M3Main, UK.MS, host := FALSE);
+    Main_MC  := M3Path.Join (NIL, M3Main, UK.MC);
+    Main_MS  := M3Path.Join (NIL, M3Main, UK.MS);
     Main_XX  := M3Main & ".new";
     init_code: TEXT := NIL;
     time_O   : INTEGER;
@@ -2011,8 +2011,8 @@ PROCEDURE GenCGMain (s: State;  object: TEXT) =
 
 PROCEDURE BuildCProgram (s: State;  shared: BOOLEAN) =
   VAR
-    name        := M3Path.Parse (s.result_name, host := FALSE);
-    pgm_file    := M3Path.ProgramName (name.base, host := FALSE);
+    name        := M3Path.Parse (s.result_name);
+    pgm_file    := M3Path.ProgramName (name.base);
     pgmTime     : INTEGER;
     pgmValid    : BOOLEAN;
     pgm_objects : Arg.List;
@@ -2069,13 +2069,13 @@ PROCEDURE BuildCProgram (s: State;  shared: BOOLEAN) =
 PROCEDURE BuildProgram (s: State;  shared: BOOLEAN) =
   CONST Desc_file = ".M3LINK";
   VAR
-    name        := M3Path.Parse (s.result_name, host := FALSE);
-    pgm_file    := M3Path.ProgramName (name.base, host := FALSE);
+    name        := M3Path.Parse (s.result_name);
+    pgm_file    := M3Path.ProgramName (name.base);
     pgmTime     : INTEGER;
     pgmValid    : BOOLEAN;
     pgm_objects : Arg.List;
     import_libs : Arg.List;
-    Main_O      := M3Path.Join (NIL, M3Main, UK.O, host := FALSE);
+    Main_O      := M3Path.Join (NIL, M3Main, UK.O);
   BEGIN
     <*ASSERT NOT s.bootstrap_mode *>
 
@@ -2304,7 +2304,7 @@ PROCEDURE BuildBootProgram (s: State) =
       Wr.PutText (wr, "# objects for program " & s.result_name);
       Wr.PutText (wr, Target.EOL);
       Wr.PutText (wr, Target.EOL);
-      GenObjectList (s, wr, M3Path.Join (NIL, "_m3main", UK.O, host := FALSE));
+      GenObjectList (s, wr, M3Path.Join (NIL, "_m3main", UK.O));
       Wr.PutText (wr, Target.EOL);
 
       Wr.PutText (wr, "# libraries for program " & s.result_name);
@@ -2340,7 +2340,7 @@ PROCEDURE BuildBootProgram (s: State) =
 
     (* produce the module init list *)
     ETimer.Push (M3Timers.genMain);
-    Main_C := M3Path.Join (NIL, "_m3main", UK.C, host := FALSE);
+    Main_C := M3Path.Join (NIL, "_m3main", UK.C);
     Msg.Commands ("generate ", Main_C);
     Utils.WriteFile (Main_C, EmitMain, append := FALSE);
     ETimer.Pop ();
@@ -2367,8 +2367,7 @@ PROCEDURE GenLibraryList (s: State;  wr: Wr.T)
           Wr.PutText (wr, M3Path.Escape (
                             M3Path.Convert (
                               M3Path.Join (u.loc.path, M3ID.ToText (u.name),
-                                          u.kind, host := FALSE),
-                              host := FALSE)));
+                                          u.kind))));
         END;
         IF (u.next # NIL) OR (s.sys_libs.cnt > 0) THEN
           Wr.PutText (wr, "\134");
@@ -2396,8 +2395,8 @@ PROCEDURE GenLibraryList (s: State;  wr: Wr.T)
 
 PROCEDURE BuildLibrary (s: State;  shared: BOOLEAN) =
   VAR
-    name        := M3Path.Parse (s.result_name, host := FALSE);
-    lib_file    := M3Path.LibraryName (name.base, host := FALSE);
+    name        := M3Path.Parse (s.result_name);
+    lib_file    := M3Path.LibraryName (name.base);
     lib_time    : INTEGER;
     libValid    : BOOLEAN;
     lib_objects : Arg.List;
@@ -2596,7 +2595,7 @@ PROCEDURE GetUnitLinkInfo (u: M3Unit.T;  imported: BOOLEAN): Mx.UnitList =
     | UK.PGM, UK.PGMX   =>  kind := UK.PGMX;
     ELSE Msg.FatalError (NIL, "Builder.GetUnitLinkInfo:  mysterious unit type");
     END;
-    info := M3Path.Join (u.loc.path, M3ID.ToText (u.name), kind, host := TRUE);
+    info := M3Path.Join (u.loc.path, M3ID.ToText (u.name), kind);
     RETURN GetLinkUnits (info, UnitPath (u), imported);
   END GetUnitLinkInfo;
 
@@ -2680,7 +2679,7 @@ PROCEDURE MergeUnit (s: State;  u: Mx.Unit;  optional := TRUE): BOOLEAN =
         IF (NOT optional) THEN
           Msg.FatalError (NIL, "bad version stamps: ",
                           M3Path.Join (NIL, M3ID.ToText (x.name),
-                                       kind, host := FALSE));
+                                       kind));
         END;
         ok := FALSE
       END;
@@ -2721,7 +2720,7 @@ PROCEDURE TempCName (u: M3Unit.T): TEXT =
     | UK.MS        => ext := UK.MS;
     ELSE <* ASSERT FALSE *>
     END;
-    RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext, host := FALSE);
+    RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext);
   END TempCName;
 
 PROCEDURE TempSName (u: M3Unit.T): TEXT =
@@ -2732,7 +2731,7 @@ PROCEDURE TempSName (u: M3Unit.T): TEXT =
     | UK.M3, UK.MC => ext := UK.MS;
     ELSE <* ASSERT FALSE *>
     END;
-    RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext, host := TRUE);
+    RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext);
   END TempSName;
 
 PROCEDURE ObjectName (s: State;  u: M3Unit.T): TEXT =
@@ -2770,7 +2769,7 @@ PROCEDURE ObjectName (s: State;  u: M3Unit.T): TEXT =
 
     END;
 
-    RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext, host := FALSE);
+    RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext);
   END ObjectName;
 
 (*------------------------------------------------------------------ misc ---*)
@@ -2889,10 +2888,10 @@ PROCEDURE FName (u: M3Unit.T): TEXT =
     ELSIF (M3Unit.FileName (u) # NIL) THEN
       RETURN M3Unit.FileName (u);
     ELSIF (u.library # NIL) THEN
-      RETURN M3Path.Join (u.loc.path, M3ID.ToText (u.name), u.kind, host := TRUE) 
+      RETURN M3Path.Join (u.loc.path, M3ID.ToText (u.name), u.kind) 
              & " in library " & M3Unit.FullPath (u.library);
     ELSIF (M3ID.ToText (u.name) # NIL) THEN
-      RETURN M3Path.Join (u.loc.path, M3ID.ToText (u.name), u.kind, host := TRUE) 
+      RETURN M3Path.Join (u.loc.path, M3ID.ToText (u.name), u.kind) 
     ELSE
       RETURN "???";
     END;
