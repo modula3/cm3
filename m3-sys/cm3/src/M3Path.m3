@@ -180,27 +180,26 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR): T =
     t       : T;
     len     := NUMBER (nm);
     base_len:= 0;
-    d_index := -1;
-    v_index := -1;
+    d_index : INTEGER;
+    v_index : INTEGER;
     start   := 0;
     d_sep   := DirSep [host_os];
     v_sep   := VolSep [host_os];
     ext     : TEXT;
     ext_len : INTEGER;
     pre     : TEXT;
-    ch      : CHAR;
   BEGIN
     Text.SetChars (nm, nm_txt);
 
     (* find the last instance of each separator *)
-    FOR i := 0 TO len-1 DO
-      ch := nm[i];
-      IF (ch = v_sep) THEN
-        v_index := i;
-      END;
-      IF IsDirSep (ch, d_sep) THEN
-        d_index := i;
-      END;
+    IF v_sep = Null THEN
+      v_index := -1;
+    ELSE
+      v_index := Text.FindCharR (nm_txt, v_sep);
+    END;
+    d_index := Text.FindCharR (nm_txt, '/');
+    IF d_sep # '/' THEN
+      d_index := MAX (d_index, Text.FindCharR (nm_txt, d_sep));
     END;
 
     (* extract the prefix *)
