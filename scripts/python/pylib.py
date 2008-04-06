@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.92 2008-04-06 21:58:10 jkrell Exp $
+# $Id: pylib.py,v 1.93 2008-04-06 22:05:28 jkrell Exp $
 
 import os
 from os import getenv
@@ -33,6 +33,10 @@ import shutil
 #
 
 # print("loading pylib..")
+
+if os.environ.get("M3CONFIG", "").lower().find("m3-syscminstallsrcconfig") != -1:
+    print("backslash problem; environment variable M3CONFIG is " + getenv("M3CONFIG"))
+    sys.exit(1)
 
 env_OS = getenv("OS")
 if env_OS == "Windows_NT":
