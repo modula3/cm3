@@ -77,13 +77,13 @@ PROCEDURE AddNew (VAR x: Set;  nm: M3ID.T;  k: Kind;  loc: M3Loc.T;
 PROCEDURE FileName (t: T): TEXT =
   VAR nm := M3ID.ToText (t.name);
   BEGIN
-    RETURN M3Path.Join (NIL, nm, t.kind, host := TRUE);
+    RETURN M3Path.Join (NIL, nm, t.kind);
   END FileName;
 
 PROCEDURE FullPath (t: T): TEXT =
   VAR nm := M3ID.ToText (t.name);
   BEGIN
-    RETURN M3Path.Join (t.loc.path, nm, t.kind, host := TRUE);
+    RETURN M3Path.Join (t.loc.path, nm, t.kind);
   END FullPath;
 
 BEGIN

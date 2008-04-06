@@ -29,23 +29,23 @@ PROCEDURE SetOS (os: OSKind;  host: BOOLEAN);
 PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT;
 (* Return "a/b/c/d" using the host naming conventions *)
 
-PROCEDURE Join (dir, base: TEXT;  k: Kind;  host: BOOLEAN): TEXT;
+PROCEDURE Join (dir, base: TEXT;  k: Kind): TEXT;
 (* Build and return the full path name. *)
 
-PROCEDURE Parse (nm: TEXT;  host: BOOLEAN): T;
-(* Parse 'nm' into its pieces using the specified platform's conventions. *)
+PROCEDURE Parse (nm: TEXT): T;
+(* Parse 'nm' into its pieces using the target platform's conventions. *)
 
-PROCEDURE DefaultProgram (host: BOOLEAN): TEXT;
-(* Return the default program name for the specified platform. *)
+PROCEDURE DefaultProgram (): TEXT;
+(* Return the default program name for the target platform. *)
 
-PROCEDURE ProgramName (base: TEXT;  host: BOOLEAN): TEXT;
-(* Return "base" as a program name on the specified platform. *)
+PROCEDURE ProgramName (base: TEXT): TEXT;
+(* Return "base" as a program name on the target platform. *)
 
-PROCEDURE LibraryName (base: TEXT;  host: BOOLEAN): TEXT;
-(* Return "base" as a library name on the specified platform. *)
+PROCEDURE LibraryName (base: TEXT): TEXT;
+(* Return "base" as a library name on the target platform. *)
 
-PROCEDURE Convert (nm: TEXT;  host: BOOLEAN): TEXT;
-(* Convert the slashes in 'nm' to match the specified platform. *)
+PROCEDURE Convert (nm: TEXT): TEXT;
+(* Return nm unchanged. *)
 
 PROCEDURE Escape (nm: TEXT): TEXT;
 (* Return 'nm' with and embedded backslashes doubled. *)
