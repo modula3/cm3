@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.91 2008-04-05 22:54:18 jkrell Exp $
+# $Id: pylib.py,v 1.92 2008-04-06 21:58:10 jkrell Exp $
 
 import os
 from os import getenv
@@ -678,7 +678,7 @@ def ReadPackageDB():
     global PackageDB
     PackageDB = (PackageDB or
             map(
-                lambda(a): a.replace("\n", "").replace('\\', '/'),
+                lambda(a): a.replace("\n", "").replace('\\', '/').replace("\r", ""),
                 open(PKGSDB)
                 ))
 
