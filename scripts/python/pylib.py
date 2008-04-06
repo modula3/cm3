@@ -34,6 +34,10 @@ import shutil
 
 # print("loading pylib..")
 
+if os.environ.get("M3CONFIG", "").lower().find("m3-syscminstallsrcconfig") != -1:
+    print("backslash problem; environment variable M3CONFIG is " + getenv("M3CONFIG"))
+    sys.exit(1)
+
 env_OS = getenv("OS")
 if env_OS == "Windows_NT":
     def uname():
