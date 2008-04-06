@@ -154,7 +154,7 @@ BEGIN
   p.errDist := 0
 END SynError ;
 
-PROCEDURE Get(p : Parser) =
+PROCEDURE Get(p : Parser) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   p.cur := p.next ;
   REPEAT
@@ -171,7 +171,7 @@ BEGIN
   INC(p.errDist)
 END Get ;
 
-PROCEDURE Expect(p : Parser ; sym : Symbol) =
+PROCEDURE Expect(p : Parser ; sym : Symbol) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   IF (p.next.sym = sym) THEN
     Get(p)
@@ -180,6 +180,8 @@ BEGIN
                   "', got '" & SymbolName[p.next.sym] & "'")
   END
 END Expect ;
+
+(*
 
 PROCEDURE ExpectWeak(p : Parser ; sym : Symbol ; follow : SymSetRange) =
 BEGIN
@@ -215,13 +217,15 @@ BEGIN
   END
 END WeakSeparator ;
 
-PROCEDURE ParseNDataDecl(p : Parser ; VAR name: TEXT) =
+*)
+
+PROCEDURE ParseNDataDecl(p : Parser ; VAR name: TEXT) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   Expect(p, Symbol.NDATAkw) ;
   ParseName(p, name) ;
 END ParseNDataDecl ;
 
-PROCEDURE ParseEntityDef(p : Parser ; parser: SGML.Parser; e: REF SGML.Entity) =
+PROCEDURE ParseEntityDef(p : Parser ; parser: SGML.Parser; e: REF SGML.Entity) RAISES { Rd.Failure, Thread.Alerted } =
   VAR name, t1, t2: TEXT := NIL; public := FALSE;
 BEGIN
   IF (p.next.sym = Symbol.DQuote) OR
@@ -246,7 +250,7 @@ BEGIN
   END ;
 END ParseEntityDef ;
 
-PROCEDURE ParseIgnoreSect(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseIgnoreSect(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
   VAR t, s := ""; startPos, nb := 0;
 BEGIN
   Expect(p, Symbol.IGNOREkw) ;
@@ -279,7 +283,7 @@ BEGIN
    ;
 END ParseIgnoreSect ;
 
-PROCEDURE ParseIncludeSect(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseIncludeSect(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   Expect(p, Symbol.INCLUDEkw) ;
   IF NOT parser.markup THEN
@@ -313,7 +317,7 @@ BEGIN
    ;
 END ParseIncludeSect ;
 
-PROCEDURE ParseEnumeration(p : Parser ; VAR r: REFANY) =
+PROCEDURE ParseEnumeration(p : Parser ; VAR r: REFANY) RAISES { Rd.Failure, Thread.Alerted } =
   VAR t: TEXT; s := NEW(SGMLRep.Enumeration).init();
 BEGIN
   Expect(p, Symbol.LP) ;
@@ -339,7 +343,7 @@ BEGIN
   Expect(p, Symbol.RP) ;
 END ParseEnumeration ;
 
-PROCEDURE ParseNotationType(p : Parser ; VAR r: REFANY) =
+PROCEDURE ParseNotationType(p : Parser ; VAR r: REFANY) RAISES { Rd.Failure, Thread.Alerted } =
   VAR t: TEXT; s := NEW(SGMLRep.NotationType).init();
 BEGIN
   Expect(p, Symbol.NOTATIONkw) ;
@@ -354,7 +358,7 @@ BEGIN
   Expect(p, Symbol.RP) ;
 END ParseNotationType ;
 
-PROCEDURE ParseEnumeratedType(p : Parser ; VAR r: REFANY) =
+PROCEDURE ParseEnumeratedType(p : Parser ; VAR r: REFANY) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   IF (p.next.sym = Symbol.NOTATIONkw) THEN
     ParseNotationType(p, r) ;
@@ -364,7 +368,7 @@ BEGIN
   END ;
 END ParseEnumeratedType ;
 
-PROCEDURE ParseTokenizedType(p : Parser ; VAR r: REFANY) =
+PROCEDURE ParseTokenizedType(p : Parser ; VAR r: REFANY) RAISES { Rd.Failure, Thread.Alerted } =
   VAR t: TEXT;
 BEGIN
   CASE p.next.sym OF
@@ -406,13 +410,13 @@ BEGIN
   r:= Atom.FromText(t) ;
 END ParseTokenizedType ;
 
-PROCEDURE ParseStringType(p : Parser ; VAR r: REFANY) =
+PROCEDURE ParseStringType(p : Parser ; VAR r: REFANY) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   Expect(p, Symbol.CDATAkw) ;
   r := Atom.FromText(p.string()) ;
 END ParseStringType ;
 
-PROCEDURE ParseDefault(p : Parser ; parser: SGML.Parser; a: SGMLRep.AttributeDesc) =
+PROCEDURE ParseDefault(p : Parser ; parser: SGML.Parser; a: SGMLRep.AttributeDesc) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   IF (p.next.sym = Symbol.DashRequired) THEN
     Get(p) ;
@@ -433,7 +437,7 @@ BEGIN
   END ;
 END ParseDefault ;
 
-PROCEDURE ParseAttType(p : Parser ; VAR r: REFANY) =
+PROCEDURE ParseAttType(p : Parser ; VAR r: REFANY) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   IF (p.next.sym = Symbol.CDATAkw) THEN
     ParseStringType(p, r) ;
@@ -446,7 +450,7 @@ BEGIN
   END ;
 END ParseAttType ;
 
-PROCEDURE ParseAttDef(p : Parser ; parser: SGML.Parser; a: SGMLRep.AttributeDesc) =
+PROCEDURE ParseAttDef(p : Parser ; parser: SGML.Parser; a: SGMLRep.AttributeDesc) RAISES { Rd.Failure, Thread.Alerted } =
   VAR t: TEXT; type: REFANY;
 BEGIN
   ParseCIName(p, t) ;
@@ -455,7 +459,7 @@ BEGIN
   a.name := t; a.content := type ;
 END ParseAttDef ;
 
-PROCEDURE ParseCP(p : Parser ; VAR r: REFANY; VAR m: FSM.T;) =
+PROCEDURE ParseCP(p : Parser ; VAR r: REFANY; VAR m: FSM.T;) RAISES { Rd.Failure, Thread.Alerted } =
   VAR t: TEXT; m1, m2: FSM.T;
 BEGIN
   IF (p.next.sym IN SymSet[3]) THEN
@@ -492,7 +496,7 @@ BEGIN
   END ;
 END ParseCP ;
 
-PROCEDURE ParseChoiceSeq(p : Parser ; VAR r: REFANY; VAR m: FSM.T) =
+PROCEDURE ParseChoiceSeq(p : Parser ; VAR r: REFANY; VAR m: FSM.T) RAISES { Rd.Failure, Thread.Alerted } =
   VAR r1, r2, r3: REFANY; s: RefSeq.T; m1, m2: FSM.T;
 BEGIN
   Expect(p, Symbol.LP) ;
@@ -534,7 +538,7 @@ BEGIN
   END ;
 END ParseChoiceSeq ;
 
-PROCEDURE ParseElements(p : Parser ; VAR r: REFANY; VAR m: FSM.T;) =
+PROCEDURE ParseElements(p : Parser ; VAR r: REFANY; VAR m: FSM.T;) RAISES { Rd.Failure, Thread.Alerted } =
   VAR m1, m2: FSM.T;
 BEGIN
   ParseChoiceSeq(p, r,m) ;
@@ -562,7 +566,7 @@ BEGIN
   END ;
 END ParseElements ;
 
-PROCEDURE ParseContentSpec(p : Parser ; VAR r: REFANY; VAR m: FSM.T;) =
+PROCEDURE ParseContentSpec(p : Parser ; VAR r: REFANY; VAR m: FSM.T;) RAISES { Rd.Failure, Thread.Alerted } =
   VAR t: TEXT; m1: FSM.T;
 BEGIN
   IF (p.next.sym = Symbol.EMPTYkw) THEN
@@ -596,7 +600,7 @@ BEGIN
   END ;
 END ParseContentSpec ;
 
-PROCEDURE ParseNameChoice(p : Parser ; VAR c: REFANY) =
+PROCEDURE ParseNameChoice(p : Parser ; VAR c: REFANY) RAISES { Rd.Failure, Thread.Alerted } =
   VAR t: TEXT; s: TextSeq.T;
 BEGIN
   IF (p.next.sym IN SymSet[3]) THEN
@@ -616,7 +620,7 @@ BEGIN
   END ;
 END ParseNameChoice ;
 
-PROCEDURE ParseStartElement(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseStartElement(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
   VAR name: TEXT; e: SGML.StartElementEvent;
 BEGIN
   Expect(p, Symbol.StartElementTag) ;
@@ -654,7 +658,7 @@ BEGIN
   END ;
 END ParseStartElement ;
 
-PROCEDURE ParseEndElement(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseEndElement(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
   VAR name: TEXT;
 BEGIN
   Expect(p, Symbol.EndElementTag) ;
@@ -666,7 +670,7 @@ BEGIN
    ;
 END ParseEndElement ;
 
-PROCEDURE ParseAttribute(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseAttribute(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
   VAR name: TEXT;
 BEGIN
   ParseCIName(p, name) ;
@@ -685,7 +689,7 @@ BEGIN
    ;
 END ParseAttribute ;
 
-PROCEDURE ParseNotationDecl(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseNotationDecl(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
   VAR name, t1, t2: TEXT := NIL; public := FALSE;
 BEGIN
   Expect(p, Symbol.NotationTag) ;
@@ -697,7 +701,7 @@ BEGIN
    ;
 END ParseNotationDecl ;
 
-PROCEDURE ParseEntityDecl(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseEntityDecl(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
   VAR e := NEW(REF SGML.Entity); name: TEXT;
 BEGIN
   Expect(p, Symbol.EntityTag) ;
@@ -721,7 +725,7 @@ BEGIN
   Expect(p, Symbol.RB) ;
 END ParseEntityDecl ;
 
-PROCEDURE ParseAttListDecl(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseAttListDecl(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
   VAR
   names: REFANY;
   name: TEXT;
@@ -751,7 +755,7 @@ BEGIN
    ;
 END ParseAttListDecl ;
 
-PROCEDURE ParseElementDecl(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseElementDecl(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
   VAR c, r: REFANY; name: TEXT; s: TextSeq.T; omitS, omitE := FALSE;
   m: FSM.T;
 BEGIN
@@ -796,7 +800,7 @@ BEGIN
    ;
 END ParseElementDecl ;
 
-PROCEDURE ParseExternalId(p : Parser ; VAR public: BOOLEAN; VAR t1, t2: TEXT) =
+PROCEDURE ParseExternalId(p : Parser ; VAR public: BOOLEAN; VAR t1, t2: TEXT) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   IF (p.next.sym = Symbol.SYSTEMkw) THEN
     Get(p) ;
@@ -814,7 +818,7 @@ BEGIN
   END ;
 END ParseExternalId ;
 
-PROCEDURE ParseMarkupDecl(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseMarkupDecl(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   IF (p.next.sym = Symbol.ElementTag) THEN
     IF NOT parser.markup THEN
@@ -833,7 +837,7 @@ BEGIN
   END ;
 END ParseMarkupDecl ;
 
-PROCEDURE ParseConditionalSect(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseConditionalSect(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   Expect(p, Symbol.StartCSect) ;
   IF (p.next.sym = Symbol.INCLUDEkw) THEN
@@ -844,7 +848,7 @@ BEGIN
   END ;
 END ParseConditionalSect ;
 
-PROCEDURE ParseContent(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseContent(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
   VAR t: TEXT; r: SGMLRep.RefType; e: REF SGML.Entity;
   sdata: SGML.SdataEvent;
 BEGIN
@@ -915,7 +919,7 @@ BEGIN
   END ;
 END ParseContent ;
 
-PROCEDURE ParseDocTypeDecl(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseDocTypeDecl(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
   VAR name: TEXT;
   public: BOOLEAN := FALSE; t1, t2: TEXT := NIL;
   e: REF SGML.Entity;
@@ -963,7 +967,7 @@ BEGIN
   Expect(p, Symbol.RB) ;
 END ParseDocTypeDecl ;
 
-PROCEDURE ParseSGMLC(p : Parser) =
+PROCEDURE ParseSGMLC(p : Parser) RAISES { Rd.Failure, Thread.Alerted } =
   VAR parser := NARROW(p,SGMLRep.ParserPlus).parser;
 BEGIN
   WHILE (p.next.sym = Symbol.Commenttk) OR
@@ -1021,7 +1025,7 @@ BEGIN
    ;
 END ParseSGMLC ;
 
-PROCEDURE ParseMisc(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseMisc(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   IF (p.next.sym = Symbol.Commenttk) THEN
     ParseComment(p, parser) ;
@@ -1039,14 +1043,14 @@ BEGIN
   END ;
 END ParseMisc ;
 
-PROCEDURE ParsePI(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParsePI(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   Expect(p, Symbol.PItk) ;
   parser.application.pi(SGML.PiEvent{parser.p.cur.offset,
   p.string(),NIL}) ;
 END ParsePI ;
 
-PROCEDURE ParseComment(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseComment(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
   VAR c := NEW(REF ARRAY OF TEXT,1);
 BEGIN
   Expect(p, Symbol.Commenttk) ;
@@ -1058,7 +1062,7 @@ BEGIN
    ;
 END ParseComment ;
 
-PROCEDURE ParseAttValue(p : Parser ; parser: SGML.Parser) =
+PROCEDURE ParseAttValue(p : Parser ; parser: SGML.Parser) RAISES { Rd.Failure, Thread.Alerted } =
   VAR t: TEXT; r: SGMLRep.RefType; e: REF SGML.Entity;
 BEGIN
   parser.nbData := 0 ;
@@ -1124,7 +1128,7 @@ BEGIN
   END ;
 END ParseAttValue ;
 
-PROCEDURE ParseEntityValue(p : Parser ; parser: SGML.Parser; VAR v: TEXT) =
+PROCEDURE ParseEntityValue(p : Parser ; parser: SGML.Parser; VAR v: TEXT) RAISES { Rd.Failure, Thread.Alerted } =
   VAR t: TEXT; r: SGMLRep.RefType; e: REF SGML.Entity;
 BEGIN
   v := "" ;
@@ -1172,7 +1176,7 @@ BEGIN
   END ;
 END ParseEntityValue ;
 
-PROCEDURE ParseReference(p : Parser ; VAR name: TEXT; VAR type: SGMLRep.RefType) =
+PROCEDURE ParseReference(p : Parser ; VAR name: TEXT; VAR type: SGMLRep.RefType) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   IF (p.next.sym = Symbol.CharRef) THEN
     Get(p) ;
@@ -1187,7 +1191,7 @@ BEGIN
   END ;
 END ParseReference ;
 
-PROCEDURE ParsePubidLiteral(p : Parser ; VAR v: TEXT) =
+PROCEDURE ParsePubidLiteral(p : Parser ; VAR v: TEXT) RAISES { Rd.Failure, Thread.Alerted } =
   VAR t: TEXT; r: SGMLRep.RefType;
 BEGIN
   v := "" ;
@@ -1221,7 +1225,7 @@ BEGIN
   END ;
 END ParsePubidLiteral ;
 
-PROCEDURE ParseCIName(p : Parser ; VAR t: TEXT) =
+PROCEDURE ParseCIName(p : Parser ; VAR t: TEXT) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   CASE p.next.sym OF
     Symbol.NonKeywordName =>
@@ -1303,7 +1307,7 @@ BEGIN
   END ;
 END ParseCIName ;
 
-PROCEDURE ParseName(p : Parser ; VAR t: TEXT) =
+PROCEDURE ParseName(p : Parser ; VAR t: TEXT) RAISES { Rd.Failure, Thread.Alerted } =
 BEGIN
   CASE p.next.sym OF
     Symbol.NonKeywordName =>

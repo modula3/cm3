@@ -21,7 +21,7 @@
 
 MODULE FSM;
 
-IMPORT RefSeq, Atom, AtomRefTbl, DeepCopy, TextRd, TextWr;
+IMPORT RefSeq, Atom, AtomRefTbl, DeepCopy;
 
 (* IMPORT AtomPkl; <*NOWARN*>  It is used for its side effect *)
 
