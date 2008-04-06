@@ -70,7 +70,7 @@ PROCEDURE SetOS (kind: OSKind;  host: BOOLEAN) =
   END SetOS;
 
 PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
-  VAR len: INTEGER;  buf: ARRAY [0..255] OF CHAR;  ref: REF ARRAY OF CHAR;
+  VAR len: CARDINAL;  buf: ARRAY [0..255] OF CHAR;  ref: REF ARRAY OF CHAR;
   BEGIN
     IF (b # NIL) THEN
       IF Pathname.Absolute (b) THEN
@@ -112,14 +112,14 @@ PROCEDURE Join (dir, base: TEXT;  k: Kind): TEXT =
     v_sep    := VolSep [host_os];
     ch       : CHAR;
     buf      : ARRAY [0..255] OF CHAR;
-    dir_len  := 0;
+    dir_len  : CARDINAL := 0;
     pre_len  := Text.Length (pre);
     base_len := Text.Length (base);
     ext_len  := Text.Length (ext);
     add_sep  := FALSE;
     len      := (pre_len + base_len + ext_len);
 
-    PROCEDURE Append (VAR a: ARRAY OF CHAR;  start: INTEGER;  b: TEXT; len: INTEGER): INTEGER =
+    PROCEDURE Append (VAR a: ARRAY OF CHAR;  start: CARDINAL;  b: TEXT; len: CARDINAL): CARDINAL =
       BEGIN
         Text.SetChars (SUBARRAY (a, start, len), b);
         RETURN start + len;
@@ -127,7 +127,7 @@ PROCEDURE Join (dir, base: TEXT;  k: Kind): TEXT =
 
     PROCEDURE DoJoin (VAR buf: ARRAY OF CHAR): TEXT =
       VAR
-        len := 0;
+        len : CARDINAL := 0;
       BEGIN
         IF dir_len # 0 THEN
           len := Append (buf, len, dir, dir_len);
@@ -170,23 +170,22 @@ PROCEDURE Parse (nm: TEXT): T =
   VAR len := Text.Length (nm);   buf: ARRAY [0..255] OF CHAR;
   BEGIN
     IF (len <= NUMBER (buf))
-      THEN RETURN DoParse (nm, SUBARRAY (buf, 0, len));
-      ELSE RETURN DoParse (nm, NEW (REF ARRAY OF CHAR, len)^);
+      THEN RETURN DoParse (nm, len, SUBARRAY (buf, 0, len));
+      ELSE RETURN DoParse (nm, len, NEW (REF ARRAY OF CHAR, len)^);
     END;
   END Parse;
 
-PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR): T =
+PROCEDURE DoParse (nm_txt: TEXT; len: CARDINAL; VAR nm: ARRAY OF CHAR): T =
   VAR
     t       : T;
-    len     := NUMBER (nm);
-    base_len:= 0;
+    base_len: CARDINAL;
     d_index : INTEGER;
     v_index : INTEGER;
-    start   := 0;
+    start   : CARDINAL;
     d_sep   := DirSep [host_os];
     v_sep   := VolSep [host_os];
     ext     : TEXT;
-    ext_len : INTEGER;
+    ext_len : CARDINAL;
     pre     : TEXT;
   BEGIN
     Text.SetChars (nm, nm_txt);
@@ -225,10 +224,14 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR): T =
     ext_len := 0;
     FOR k := FIRST (Kind) TO LAST (Kind) DO
       ext := Suffix [target_os][k];
-      IF ExtMatch (nm_txt, ext) THEN
-        ext_len := Text.Length (ext);
+      ext_len := Text.Length (ext);
+      IF (ext_len # 0)
+          AND (len >= ext_len)
+          AND RegionMatch (nm_txt, (len - ext_len), ext, 0, ext_len) THEN
         t.kind := k;
         EXIT;
+      ELSE
+        ext_len := 0;
       END;
     END;
 
@@ -248,43 +251,36 @@ PROCEDURE IsEqual (a, b: TEXT): BOOLEAN =
     RETURN RegionMatch (a, 0, b, 0, MAX (Text.Length (a), Text.Length (b)));
   END IsEqual;
 
-PROCEDURE ExtMatch (nm, ext: TEXT): BOOLEAN =
-  VAR nm_len := Text.Length (nm);  ext_len := Text.Length (ext);
-  BEGIN
-    RETURN (ext_len > 0)
-       AND RegionMatch (nm, nm_len - ext_len, ext, 0, ext_len);
-  END ExtMatch;
-
 PROCEDURE PrefixMatch (nm, pre: TEXT): BOOLEAN =
   BEGIN
     RETURN RegionMatch (nm, 0, pre, 0, Text.Length (pre));
   END PrefixMatch;
 
-PROCEDURE RegionMatch (a: TEXT;  start_a: INTEGER;
-                       b: TEXT;  start_b: INTEGER;
-                       len: INTEGER): BOOLEAN =
+PROCEDURE RegionMatch (a: TEXT;  start_a: CARDINAL;
+                       b: TEXT;  start_b: CARDINAL;
+                       len: CARDINAL): BOOLEAN =
   CONST N = 128;
   VAR
     ignore_case := (host_os = OSKind.Win32);
-    len_a : INTEGER;
-    len_b : INTEGER;
+    len_a : CARDINAL;
+    len_b : CARDINAL;
     buf_a, buf_b : ARRAY [0..N-1] OF CHAR;
     cha : CHAR;
     chb : CHAR;
+    j : CARDINAL;
   BEGIN
-    IF (start_a < 0) OR (start_b < 0) THEN RETURN FALSE; END;
-
     len_a := Text.Length (a);
     IF (start_a + len > len_a) THEN RETURN FALSE; END;
 
     len_b := Text.Length (b);
     IF (start_b + len > len_b) THEN RETURN FALSE; END;
 
-    WHILE (len > 0) DO
+    WHILE len # 0 DO
       Text.SetChars (buf_a, a, start_a);
       Text.SetChars (buf_b, b, start_b);
+      j := MIN (N, len);
       IF ignore_case THEN
-        FOR i := 0 TO MIN (N, len) - 1 DO
+        FOR i := 0 TO j - 1 DO
           cha := buf_a[i];
           chb := buf_b[i];
           IF cha # chb THEN
@@ -300,11 +296,13 @@ PROCEDURE RegionMatch (a: TEXT;  start_a: INTEGER;
           END;
         END;
       ELSE
-        FOR i := 0 TO MIN (N, len) - 1 DO
+        FOR i := 0 TO j - 1 DO
           IF buf_a[i] # buf_b[i] THEN RETURN FALSE; END;
         END;
       END;
-      DEC (len, N);  INC (start_a, N);  INC (start_a, N);
+      DEC (len, j);
+      INC (start_a, j);
+      INC (start_a, j);
     END;
     RETURN TRUE;
   END RegionMatch;
@@ -332,18 +330,22 @@ PROCEDURE LibraryName (base: TEXT): TEXT =
   END LibraryName;
 
 PROCEDURE Escape (nm: TEXT): TEXT =
-  VAR len: INTEGER;   buf: ARRAY [0..255] OF CHAR;
+  VAR len: CARDINAL := 0; buf: ARRAY [0..255] OF CHAR;
   BEGIN
-    IF (nm = NIL) THEN RETURN NIL; END;
-    len := Text.Length (nm);
+    IF nm # NIL THEN
+      len := Text.Length (nm);
+    END;
+    IF len = 0 THEN
+      RETURN nm;
+    END;
     IF (len + len <= NUMBER (buf))
       THEN RETURN DoEscape (nm, len, buf);
       ELSE RETURN DoEscape (nm, len, NEW (REF ARRAY OF CHAR, len + len)^);
     END;
   END Escape;
 
-PROCEDURE DoEscape (nm: TEXT;  len: INTEGER;  VAR buf: ARRAY OF CHAR): TEXT =
-  VAR n_escapes := 0;  src, dest: INTEGER;  c: CHAR;
+PROCEDURE DoEscape (nm: TEXT;  len: CARDINAL;  VAR buf: ARRAY OF CHAR): TEXT =
+  VAR n_escapes : CARDINAL := 0;  src, dest: CARDINAL;  c: CHAR;
   BEGIN
     Text.SetChars (buf, nm);
     FOR i := 0 TO len-1 DO
@@ -352,7 +354,7 @@ PROCEDURE DoEscape (nm: TEXT;  len: INTEGER;  VAR buf: ARRAY OF CHAR): TEXT =
     IF (n_escapes = 0) THEN RETURN nm; END;
     src  := len - 1;
     dest := src + n_escapes;
-    WHILE (src > 0) DO
+    WHILE src # 0 DO
       c := buf[src];  DEC (src);
       buf[dest] := c;  DEC (dest);
       IF (c = BackSlash) THEN  buf[dest] := BackSlash;  DEC (dest);  END;
@@ -390,8 +392,8 @@ PROCEDURE Reverse (VAR p: ARRAY OF CHAR) =
   VAR
     len := NUMBER (p);
     ch: CHAR;
-    i : INTEGER;
-    j : INTEGER;
+    i : CARDINAL;
+    j : CARDINAL;
   BEGIN
     IF len > 1 THEN
       i := 0;
@@ -406,7 +408,7 @@ PROCEDURE Reverse (VAR p: ARRAY OF CHAR) =
     END;
   END Reverse;
 
-PROCEDURE PathAnyDots (READONLY p: ARRAY OF CHAR; READONLY start: INTEGER; READONLY len: CARDINAL): BOOLEAN =
+PROCEDURE PathAnyDots (READONLY p: ARRAY OF CHAR; READONLY start: CARDINAL; READONLY len: CARDINAL): BOOLEAN =
   BEGIN
     FOR i := start TO (start + len - 1) DO
       IF p[i] = '.' THEN
@@ -416,13 +418,13 @@ PROCEDURE PathAnyDots (READONLY p: ARRAY OF CHAR; READONLY start: INTEGER; READO
     RETURN FALSE;
   END PathAnyDots;
 
-PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: INTEGER; VAR len: CARDINAL) =
+PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: CARDINAL; VAR len: CARDINAL) =
   (* remove redundant "/arc/../" and "/./" segments *)
   VAR
     os    := host_os;
     d_sep := DirSep [os];
     v_sep := VolSep [os];
-    level := 0;
+    level : CARDINAL := 0;
     end   := (start + len);
     from  := start;
     to    := start;
@@ -528,7 +530,7 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
   (* remove redundant "/arc/../" and "/./" segments *)
   VAR
     d_sep := DirSep [host_os];
-    start := 0;
+    start : CARDINAL := 0;
     len := NUMBER (p);
   BEGIN
     (* remove trailing slashes, leaving at most one
