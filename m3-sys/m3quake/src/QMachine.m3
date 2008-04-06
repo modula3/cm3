@@ -2979,16 +2979,25 @@ PROCEDURE StripPrefix (t: T;  prefix, path: Pathname.Arcs): Pathname.Arcs
   END StripPrefix;
 
 PROCEDURE PathEqual (a, b: TEXT): BOOLEAN =
+  VAR len: CARDINAL;
   BEGIN
+    len := Text.Length (a);
+    IF len # Text.Length (b) THEN
+      RETURN FALSE;
+    END;
     IF Text.Equal (a, b) THEN RETURN TRUE; END;
     IF OnUnix THEN RETURN FALSE; END;
-    RETURN CIEqual (a, b);
-  
+    RETURN CIEqual (a, b, len);  
   END PathEqual;
 
-PROCEDURE CIEqual (a, b: TEXT): BOOLEAN =
-  (* on Win32, try a case-insensitive match... *)
-  VAR len, nxt: INTEGER;  buf_a, buf_b: ARRAY [0..127] OF CHAR;
+PROCEDURE CIEqual (a, b: TEXT; len: CARDINAL): BOOLEAN =
+  (* on Win32, try a case-insensitive match.
+  already known:
+    Text.Length (a) = len
+    Text.Length (b) = len
+    NOT Text.Equal (a, b) *)
+  VAR nxt: CARDINAL;  buf_a, buf_b: ARRAY [0..127] OF CHAR;
+      cha, chb: CHAR;
   BEGIN
     len := Text.Length (a);
     IF (len # Text.Length (b)) THEN RETURN FALSE; END;
@@ -2997,7 +3006,11 @@ PROCEDURE CIEqual (a, b: TEXT): BOOLEAN =
       Text.SetChars (buf_a, a, nxt);
       Text.SetChars (buf_b, b, nxt);
       FOR i := 0 TO MIN (NUMBER (buf_a), len-nxt) - 1 DO
-        IF lcase[buf_a[i]] # lcase[buf_b[i]] THEN RETURN FALSE; END;
+        cha := buf_a[i];
+        chb := buf_b[i];
+        IF (cha # chb) AND (ASCII.Lower[cha] # ASCII.Lower[chb]) THEN
+          RETURN FALSE;
+        END;
       END;
       INC (nxt, NUMBER (buf_a));
     END;
@@ -3040,10 +3053,5 @@ PROCEDURE FlushIO ()
 
 VAR
   strict_variables := NOT RTParams.IsPresent ("oldquake");
-  lcase : ARRAY CHAR OF CHAR;
 BEGIN
-  FOR c := FIRST (lcase) TO LAST (lcase) DO lcase[c] := c; END;
-  FOR c := 'A' TO 'Z' DO
-    lcase[c] := VAL (ORD (c) - ORD ('A') + ORD ('a'), CHAR);
-  END;
 END QMachine.

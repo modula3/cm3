@@ -9,7 +9,7 @@
 
 MODULE M3Path;
 
-IMPORT Pathname, Text;
+IMPORT Pathname, Text, ASCII;
 
 CONST
   Null      = '\000';
@@ -59,7 +59,6 @@ CONST
 VAR
   host_os := OSKind.Unix;
   target_os := OSKind.Unix;
-  lcase  : ARRAY CHAR OF CHAR;
 
 PROCEDURE SetOS (kind: OSKind;  host: BOOLEAN) =
   BEGIN
@@ -291,8 +290,16 @@ PROCEDURE RegionMatch (a: TEXT;  start_a: INTEGER;
         FOR i := 0 TO MIN (N, len) - 1 DO
           cha := buf_a[i];
           chb := buf_b[i];
-          IF (cha # chb) AND (lcase [cha] # lcase [chb]) THEN
-            RETURN FALSE;
+          IF cha # chb THEN
+            IF cha = '/' THEN
+              cha := '\\';
+            END;
+            IF chb = '/' THEN
+              chb := '\\';
+            END;
+            IF (cha # chb) AND (ASCII.Lower [cha] # ASCII.Lower [chb]) THEN
+              RETURN FALSE;
+            END;
           END;
         END;
       ELSE
@@ -550,24 +557,13 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
   END FixPath;
 
 BEGIN
-  FOR i := FIRST (lcase) TO LAST (lcase) DO lcase[i] := i; END;
-  FOR i := 'A' TO 'Z' DO
-    lcase[i] := VAL (ORD (i) - ORD ('A') + ORD ('a'), CHAR);
-  END;
-
  (* Probe the host for what slash it uses, and default host and
     target "naming conventions" based on that.
   *)
   IF Text.GetChar (Pathname.Join ("a", "b"), 1) = BackSlash THEN
-
     SlashText := "\\";
     SetOS (OSKind.Win32, TRUE);
     SetOS (OSKind.Win32, FALSE);
-
-    (* forward and backward slash compare equal *)
-
-    lcase [Slash] := BackSlash;
-
   END;
 
 END M3Path.
