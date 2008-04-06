@@ -334,11 +334,6 @@ PROCEDURE LibraryName (base: TEXT): TEXT =
     RETURN Prefix[os][Kind.LIB] & base & Suffix[os][Kind.LIB];
   END LibraryName;
 
-PROCEDURE Convert (nm: TEXT): TEXT =
-  BEGIN
-    RETURN nm;
-  END Convert;
-
 PROCEDURE Escape (nm: TEXT): TEXT =
   VAR len: INTEGER;   buf: ARRAY [0..255] OF CHAR;
   BEGIN
