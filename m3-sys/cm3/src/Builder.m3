@@ -2365,9 +2365,8 @@ PROCEDURE GenLibraryList (s: State;  wr: Wr.T)
           Wr.PutText (wr, "-l" & M3ID.ToText (u.name));
         ELSE
           Wr.PutText (wr, M3Path.Escape (
-                            M3Path.Convert (
-                              M3Path.Join (u.loc.path, M3ID.ToText (u.name),
-                                          u.kind))));
+                            M3Path.Join (u.loc.path, M3ID.ToText (u.name),
+                                        u.kind)));
         END;
         IF (u.next # NIL) OR (s.sys_libs.cnt > 0) THEN
           Wr.PutText (wr, "\134");

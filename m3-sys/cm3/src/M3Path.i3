@@ -44,9 +44,6 @@ PROCEDURE ProgramName (base: TEXT): TEXT;
 PROCEDURE LibraryName (base: TEXT): TEXT;
 (* Return "base" as a library name on the target platform. *)
 
-PROCEDURE Convert (nm: TEXT): TEXT;
-(* Return nm unchanged. *)
-
 PROCEDURE Escape (nm: TEXT): TEXT;
 (* Return 'nm' with and embedded backslashes doubled. *)
 
