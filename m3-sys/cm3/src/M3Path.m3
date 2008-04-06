@@ -532,7 +532,14 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
     start := 0;
     len := NUMBER (p);
   BEGIN
-    (* remove trailing slashes, leaving at most one *)
+    (* remove trailing slashes, leaving at most one
+    check for len > 2 to avoid encroaching on leading slashes
+    causes problems currently around making directories with trailing slashes
+    WHILE (len > 2) AND IsDirSep (p[start + len - 1], d_sep) AND IsDirSep (p[start + len - 2], d_sep) DO
+      DEC (len);
+    END;
+    *)
+    (* remove all trailing slashes *)
     WHILE (len > 1) AND IsDirSep (p[start + len - 1], d_sep) DO
       DEC (len);
     END;
