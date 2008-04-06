@@ -226,7 +226,7 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR): T =
     ext_len := 0;
     FOR k := FIRST (Kind) TO LAST (Kind) DO
       ext := Suffix [target_os][k];
-      IF ExtMatch (nm_txt, ext, host_os) THEN
+      IF ExtMatch (nm_txt, ext) THEN
         ext_len := Text.Length (ext);
         t.kind := k;
         EXIT;
@@ -237,7 +237,7 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR): T =
     t.base := Text.FromChars (SUBARRAY (nm, start, base_len - ext_len));
 
     pre := Prefix[target_os][t.kind];
-    IF (Text.Length (pre) > 0) AND PrefixMatch (t.base, pre, host_os) THEN
+    IF (Text.Length (pre) > 0) AND PrefixMatch (t.base, pre) THEN
       t.base := Text.Sub (t.base, Text.Length (pre));
     END;
 
@@ -246,29 +246,27 @@ PROCEDURE DoParse (nm_txt: TEXT;  VAR nm: ARRAY OF CHAR): T =
 
 PROCEDURE IsEqual (a, b: TEXT): BOOLEAN =
   BEGIN
-    RETURN RegionMatch (a, 0, b, 0, MAX (Text.Length (a), Text.Length (b)),
-                        ignore_case := (host_os = OSKind.Win32));
+    RETURN RegionMatch (a, 0, b, 0, MAX (Text.Length (a), Text.Length (b)));
   END IsEqual;
 
-PROCEDURE ExtMatch (nm, ext: TEXT;  os: OSKind): BOOLEAN =
+PROCEDURE ExtMatch (nm, ext: TEXT): BOOLEAN =
   VAR nm_len := Text.Length (nm);  ext_len := Text.Length (ext);
   BEGIN
     RETURN (ext_len > 0)
-       AND RegionMatch (nm, nm_len - ext_len, ext, 0, ext_len,
-                        ignore_case := (os = OSKind.Win32));
+       AND RegionMatch (nm, nm_len - ext_len, ext, 0, ext_len);
   END ExtMatch;
 
-PROCEDURE PrefixMatch (nm, pre: TEXT;  os: OSKind): BOOLEAN =
+PROCEDURE PrefixMatch (nm, pre: TEXT): BOOLEAN =
   BEGIN
-    RETURN RegionMatch (nm, 0, pre, 0, Text.Length (pre),
-                        ignore_case := (os = OSKind.Win32));
+    RETURN RegionMatch (nm, 0, pre, 0, Text.Length (pre));
   END PrefixMatch;
 
 PROCEDURE RegionMatch (a: TEXT;  start_a: INTEGER;
                        b: TEXT;  start_b: INTEGER;
-                       len: INTEGER;  ignore_case: BOOLEAN): BOOLEAN =
+                       len: INTEGER): BOOLEAN =
   CONST N = 128;
   VAR
+    ignore_case := (host_os = OSKind.Win32);
     len_a : INTEGER;
     len_b : INTEGER;
     buf_a, buf_b : ARRAY [0..N-1] OF CHAR;
@@ -370,10 +368,9 @@ PROCEDURE IsDirSep (ch: CHAR; d_sep: CHAR): BOOLEAN =
 
 PROCEDURE MakeRelative (VAR path: TEXT;  full, rel: TEXT): BOOLEAN =
   VAR
-    os := host_os;
-    d_sep := DirSep[os];
+    d_sep := DirSep[host_os];
   BEGIN
-    IF PrefixMatch (path, full, os)
+    IF PrefixMatch (path, full)
       AND EndOfArc (path, Text.Length (full), d_sep) THEN
       VAR
         p := Text.Length(full);
