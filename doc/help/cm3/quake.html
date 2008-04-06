@@ -492,7 +492,7 @@ Same as the above, but imitating the old implementation which merged
 stdout and stderr streams.
 </p></dd>
 
-<dt>quake( code ) <span class="ann">since CM3 d5.6.0</dt>
+<dt>quake( code ) <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Executes the quake code passed as a text.
 </p></dd>
@@ -516,7 +516,7 @@ Same as the above, but imitating the old implementation which merged
 stdout and stderr streams.
 </p></dd>
 
-<dt>q_exec( cmd ) --&gt; int <span class="ann">since CM3 d5.6.0</dt>
+<dt>q_exec( cmd ) --&gt; int <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Executes the passed command or command list which may contain the
 following input/output redirections:</p>
@@ -544,7 +544,7 @@ Token may be grouped by single or double quotes.
 The exit code of the command list is returned.
 </p></dd>
 
-<dt>q_exec_put( cmd, text ) --&gt; int <span class="ann">since CM3 d5.6.0</dt>
+<dt>q_exec_put( cmd, text ) --&gt; int <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Executes the given single command and pipe <code>text</code> to its standard
 input. No other redirections are performed.
@@ -553,7 +553,7 @@ input. No other redirections are performed.
 The exit code of the command list is returned.
 </p></dd>
 
-<dt>q_exec_get( cmd ) --&gt; [int, text] <span class="ann">since CM3 d5.6.0</dt>
+<dt>q_exec_get( cmd ) --&gt; [int, text] <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Executes the given single command and captures its stdout and stderr
 output in <code>text</code>
@@ -576,39 +576,39 @@ or <code>dest</code> is missing, copy <code>src</code> to
 <code>dest</code>.
 </p></dd>
 
-<dt>fs_touch( pn ) <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_touch( pn ) <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Touches file <code>pn</code>, i.e. sets its access time to the current
 time. If the files doesn't exist, it is created.
 </p></dd>
 
-<dt>fs_rmfile( pn ) <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_rmfile( pn ) <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Removes file <code>pn</code> if it exists.
 </p></dd>
 
-<dt>fs_rmdir( pn ) <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_rmdir( pn ) <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Removes directory <code>pn</code> if it exists and is empty.
 </p></dd>
 
-<dt>fs_rmrec( pn ) <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_rmrec( pn ) <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Removes the complete directory hierarchy at <code>pn</code>.
 </p></dd>
 
-<dt>fs_mkdir( pn ) <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_mkdir( pn ) <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Creates all non-existing elements of pathname <code>pn</code> as
 directories.
 </p></dd>
 
-<dt>fs_cp( pn, pn2 ) <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_cp( pn, pn2 ) <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Copies file <code>pn</code> to <code>pn2</code>.
 </p></dd>
 
-<dt>fs_putfile( pn, text ) <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_putfile( pn, text ) <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Replaces the contents of file <code>pn</code> with
 <code>text</code>. If the files does not exist, it is created.
@@ -632,40 +632,40 @@ Deletes the file <code>f</code>. Returns "TRUE" in case of success, else "".
 Returns the directory of the currently executing file as a string.
 </p></dd>
 
-<dt>fs_exists( pn ) --&gt; bool <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_exists( pn ) --&gt; bool <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns "TRUE" if <code>pn</code> exists as a file system object, else
 "" (false).
 </p></dd>
 
-<dt>fs_readable( pn ) --&gt; bool <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_readable( pn ) --&gt; bool <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns "TRUE" if <code>pn</code> is readable, else "" (false).
 </p></dd>
 
-<dt>fs_writable( pn ) --&gt; bool <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_writable( pn ) --&gt; bool <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns "TRUE" if <code>pn</code> is writable, else "" (false).
 </p></dd>
 
-<dt>fs_executable( pn ) --&gt; bool <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_executable( pn ) --&gt; bool <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns "TRUE" if <code>pn</code> is considered to be executable, else
 "" (false).
 </p></dd>
 
-<dt>fs_isdir( pn ) --&gt; bool <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_isdir( pn ) --&gt; bool <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns "TRUE" if <code>pn</code> is a directory, else "" (false).
 </p></dd>
 
-<dt>fs_isfile( pn ) --&gt; bool <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_isfile( pn ) --&gt; bool <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns "TRUE" if <code>pn</code> is an ordinary file, else "" (false).
 </p></dd>
 
 <dt>fs_lsdirs( pn, baseonly ) --&gt; text[] <span class="ann">since CM3
-d5.6.0</dt>
+d5.6.0</span></dt>
 <dd><p>
 Returns an array of all subdirectories of <code>pn</code>. If
 <code>baseonly</code> is "" (false), only the basenames are returned,
@@ -673,14 +673,14 @@ else pathnames are returned.
 </p></dd>
 
 <dt>fs_lsfiles( pn, baseonly ) --&gt; text[] <span class="ann">since CM3
-d5.6.0</dt>
+d5.6.0</span></dt>
 <dd><p>
 Returns an array of all ordinary files in directory <code>pn</code>. If
 <code>baseonly</code> is "" (false), only the basenames are returned,
 else pathnames are returned.
 </p></dd>
 
-<dt>fs_contents( pn ) --&gt; text <span class="ann">since CM3 d5.6.0</dt>
+<dt>fs_contents( pn ) --&gt; text <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns the contents of file <code>pn</code> as a text.
 </p></dd>
@@ -841,76 +841,76 @@ returns the path from directory <code>p</code> to file
 <code>q</code>. Otherwise, returns <code>q</code>.
 </p></dd>
 
-<dt>split( text, seps ) --&gt; text[] <span class="ann">since CM3 d5.6.0</dt>
+<dt>split( text, seps ) --&gt; text[] <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Splits the text into an array at every occurence of a character in
 <code>seps</code>.
 </p></dd>
 
-<dt>sub( text, off, len ) --&gt; text <span class="ann">since CM3 d5.6.0</dt>
+<dt>sub( text, off, len ) --&gt; text <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns the subtext of <code>text</code> starting at position
 <code>off</code> of length <code>len</code>.
 </p></dd>
 
-<dt>skipl( text ) --&gt; text <span class="ann">since CM3 d5.6.0</dt>
+<dt>skipl( text ) --&gt; text <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Removes all white space at the left of the text.
 </p></dd>
 
-<dt>skipr( text ) --&gt; text <span class="ann">since CM3 d5.6.0</dt>
+<dt>skipr( text ) --&gt; text <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Removes all white space at the right of the text.
 </p></dd>
 
-<dt>compress( text ) --&gt; text <span class="ann">since CM3 d5.6.0</dt>
+<dt>compress( text ) --&gt; text <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Removes all white space at the start and end of text.
 </p></dd>
 
-<dt>squeeze( text ) --&gt; text <span class="ann">since CM3 d5.6.0</dt>
+<dt>squeeze( text ) --&gt; text <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Removes multiple empty lines within <code>text</code>.
 </p></dd>
 
-<dt>pos( text, sub ) --&gt; int <span class="ann">since CM3 d5.6.0</dt>
+<dt>pos( text, sub ) --&gt; int <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns the position of <code>sub</code> within <code>text</code> or
 -1 if <code>sub</code> is not found.
 </p></dd>
 
-<dt>contains( text, sub ) --&gt; bool <span class="ann">since CM3 d5.6.0</dt>
+<dt>contains( text, sub ) --&gt; bool <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns true if <code>sub</code> is contained in <code>text</code>.
 </p></dd>
 
-<dt>bool( text ) --&gt; bool <span class="ann">since CM3 d5.6.0</dt>
+<dt>bool( text ) --&gt; bool <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns "TRUE" for "true", "TRUE", "T", "yes", "YES", "1", otherwise
 "" (false).
 </p></dd>
 
 <dt>subst_chars( text, a, b ) --&gt; text <span class="ann">since CM3
-d5.6.0</dt>
+d5.6.0</span></dt>
 <dd><p>
 Returns <code>text</code> in which every character of <code>a</code>
 is replaced with the character at the same position of <code>b</code>.
 <code>a</code> and <code>b</code> must be of the same length.
 </p></dd>
 
-<dt>del_chars( text, a ) --&gt; text <span class="ann">since CM3 d5.6.0</dt>
+<dt>del_chars( text, a ) --&gt; text <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns <code>text</code> in which every occurence of characters from
 <code>a</code> is removed.
 </p></dd>
 
-<dt>subst( text, a, b, n ) --&gt; text <span class="ann">since CM3 d5.6.0</dt>
+<dt>subst( text, a, b, n ) --&gt; text <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns <code>text</code> in which the subtext <code>a</code> is
 replaced by subtext <code>b</code> for at most <code>n</code> times.
 </p></dd>
 
-<dt>subst_env( text ) --&gt; text <span class="ann">since CM3 d5.6.0</dt>
+<dt>subst_env( text ) --&gt; text <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns <code>text</code> in which all environment varialbes with the
 denotation <code>${name}</code> or <code>$name</code> are replaced by
@@ -918,14 +918,14 @@ the values of the current process execution environment.
 </p></dd>
 
 <dt>add_prefix( text[], pre ) --&gt; text[] <span class="ann">since CM3
-d5.6.0</dt>
+d5.6.0</span></dt>
 <dd><p>
 Returns an array of <code>text</code> where each element is prefixed
 with <code>pre</code>.
 </p></dd>
 
 <dt>add_suffix( text[], suf ) --&gt; text[]
- <span class="ann">since CM3 d5.6.0</dt>
+ <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns an array of <code>text</code> where each element is suffixed
 with <code>suf</code>.
@@ -938,24 +938,24 @@ with <code>suf</code>.
 
 <dl>
 
-<dt>pushd( dir ) <span class="ann">since CM3 d5.6.0</dt>
+<dt>pushd( dir ) <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Pushes the current directory onto the stack and changes the working
 directory of the quake process to <code>dir</code>.
 </p></dd>
 
-<dt>popd() <span class="ann">since CM3 d5.6.0</dt>
+<dt>popd() <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Pops the topmost directory from the directory stack and makes it the
 working directory of the quake process.
 </p></dd>
 
-<dt>cd( dir ) <span class="ann">since CM3 d5.6.0</dt>
+<dt>cd( dir ) <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Changes the current directory of the quake process to <code>dir</code>.
 </p></dd>
 
-<dt>getwd() --&gt; text <span class="ann">since CM3 d5.6.0</dt>
+<dt>getwd() --&gt; text <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns the current working directory of the quake process.
 </p></dd>
@@ -968,22 +968,22 @@ Returns the current working directory of the quake process.
 
 <dl>
 
-<dt>hostname() --&gt; text <span class="ann">since CM3 d5.6.0</dt>
+<dt>hostname() --&gt; text <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns the hostname of the computer quake is running on.
 </p></dd>
 
-<dt>date() --&gt; text <span class="ann">since CM3 d5.6.0</dt>
+<dt>date() --&gt; text <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns the current date in ISO format: YYYY-MM-DD.
 </p></dd>
 
-<dt>datetime() --&gt; text <span class="ann">since CM3 d5.6.0</dt>
+<dt>datetime() --&gt; text <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns the current date and time in ISO format: YYYY-MM-DD hh:mm:ss.
 </p></dd>
 
-<dt>datestamp() --&gt; <span class="ann">since CM3 d5.6.0</dt>
+<dt>datestamp() --&gt; <span class="ann">since CM3 d5.6.0</span></dt>
 <dd><p>
 Returns the current date and time in this format: YYYY-MM-DD-hh-mm-ss.
 </p></dd>
