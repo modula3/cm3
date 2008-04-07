@@ -44,7 +44,6 @@ IMPORT RT0;
 <*EXTERNAL*> PROCEDURE RTTypeFP_I3        (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RTTypeMap_I3       (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RTTypeSRC_I3       (mode: INTEGER): RT0.ModulePtr;
-<*EXTERNAL*> PROCEDURE RTVM_I3            (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RTWeakRef_I3       (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE RTutils_I3         (mode: INTEGER): RT0.ModulePtr;
 <*EXTERNAL*> PROCEDURE ThreadF_I3         (mode: INTEGER): RT0.ModulePtr;
