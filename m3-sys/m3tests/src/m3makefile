@@ -12,11 +12,12 @@
 %readonly m3mkdir = format ("@%s%sm3mkdir", LIB_USE, SL)
 
 if equal ($OS, "Windows_NT") and equal (SL, "\\")
-  readonly rm_dir  = "@-rmdir 2>nul /s /q"
-  readonly diff    = "@-fc"
+  readonly rm_dir  = "-rmdir 2>nul /s /q"
+  readonly diff    = "-fc"
   readonly head    = ""
-  readonly cat     = "@-type"
-  readonly m3mkdir = "@-mkdir"
+  readonly cat     = "-type"
+  readonly m3mkdir = "-mkdir"
+  readonly devnull = "nul"
 else
   readonly rm_dir  = "@-rm -rf"
   readonly diff    = "@-diff -u"
@@ -219,9 +220,9 @@ if stale ("TESTARGS", path_of ("m3makefile"))
     write ("  program(\"pgm\")", CR)
     write ("  local f = program_name (\"pgm\")", CR)
     write ("  if not stale (f, f)", CR)
-    write ("    exec (\"@-.\" & SL & f & \" >.." & SL & "stdout.pgm 2>.." & SL & "stderr.pgm\")", CR)
-    %local err = PACKAGE_DIR & SL & TARGET & SL & "all.stderr"
-    %write ("    exec (\"" & cat & " .." & SL & "stderr.pgm >> " & err & "\")", CR)
+    write ("    exec (\"@-.\" & SL & f & \" >..\" & SL & \"stdout.pgm 2>..\" & SL & \"stderr.pgm\")", CR)
+    %local err = escape(PACKAGE_DIR & SL & TARGET & SL & "all.stderr")
+    %write ("    exec (cat & \" ..\" & SL & \"stderr.pgm >> \" & err)", CR)
     write ("  end", CR)
     write ("end", CR)
     %write ("RegisterCleanUp (RunTest)", CR) 
@@ -247,7 +248,7 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     %exec ("pwd")
     %write ("dir: ", dir, CR)
     exec (rm_dir, dir)
-    exec (m3mkdir, dir, "> /dev/null")
+    exec (m3mkdir, dir, "> " & devnull)
     if equal ($OS, "Windows_NT") and equal (SL, "\\")
         % exec ("cd")
         % write("dir is " & dir & CR)
