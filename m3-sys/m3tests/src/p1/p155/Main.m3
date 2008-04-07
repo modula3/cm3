@@ -32,7 +32,7 @@ PROCEDURE m( s: TEXT ) =
   END m;
 
 BEGIN
-  m ("check set relations");
+  (* check basic set relations on constant sets *)
 
   Test.checkM ((Set{Elt.a} # Set{Elt.b}), "ab #");
   Test.checkM (NOT (Set{Elt.a} = Set{Elt.b}), "ab =");
