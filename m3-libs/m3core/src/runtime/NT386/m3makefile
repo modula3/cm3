@@ -9,5 +9,4 @@
 Interface      ("RTMachine")
 implementation ("RTSignal")
 Module         ("RTMachInfo")
-c_source       ("RTVM")
 
