@@ -135,6 +135,13 @@ BEGIN
   Test.checkM (NOT (p > x), "check (NOT (p > x))");
   Test.checkM (NOT (p <= x), "check (NOT (p <= x))");
   Test.checkM (NOT (p >= x), "check (NOT (p >= x))");
+  Test.checkM (x # p, "check (x # p)");
+  Test.checkM (NOT (x = p), "check (NOT (x = p))");
+  Test.checkM (NOT (x < p), "check (NOT (x < p))");
+  Test.checkM (NOT (x > p), "check (NOT (x > p))");
+  Test.checkM (NOT (x <= p), "check (NOT (x <= p))");
+  Test.checkM (NOT (x >= p), "check (NOT (x >= p))");
+
   Test.checkM (x = r + Set{Elt.e}, "check (x = r + Set{Elt.e})");
   Test.done ();
 END Main.
