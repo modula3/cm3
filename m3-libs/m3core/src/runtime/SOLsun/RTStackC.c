@@ -90,7 +90,6 @@ char* RTStack__ProcName (Frame* f)
   return 0;
 }
 
-void (*RTHeapDep_Fault)();
 void (*RTProcedureSRC_FromPC) (void *pc, void **p, char **file, char **name);
 
 void RTStack__PrevFrame (Frame* callee, Frame* caller)
