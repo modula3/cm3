@@ -32,6 +32,44 @@ PROCEDURE m( s: TEXT ) =
   END m;
 
 BEGIN
+  m ("check set relations");
+
+  Test.checkM ((Set{Elt.a} # Set{Elt.b}), "ab #");
+  Test.checkM (NOT (Set{Elt.a} = Set{Elt.b}), "ab =");
+  Test.checkM (NOT (Set{Elt.a} < Set{Elt.b}), "ab <");
+  Test.checkM (NOT (Set{Elt.a} > Set{Elt.b}), "ab >");
+  Test.checkM (NOT (Set{Elt.a} <= Set{Elt.b}), "ab <=");
+  Test.checkM (NOT (Set{Elt.a} >= Set{Elt.b}), "ab >=");
+
+  Test.checkM ((Set{Elt.b} # Set{Elt.a}), "ba #");
+  Test.checkM (NOT (Set{Elt.b} = Set{Elt.a}), "ba =");
+  Test.checkM (NOT (Set{Elt.b} < Set{Elt.a}), "ba <");
+  Test.checkM (NOT (Set{Elt.b} > Set{Elt.a}), "ba >");
+  Test.checkM (NOT (Set{Elt.b} <= Set{Elt.a}), "ba <=");
+  Test.checkM (NOT (Set{Elt.b} >= Set{Elt.a}), "ba >=");
+
+  Test.checkM (NOT (Set{Elt.a} # Set{Elt.a}), "aa #");
+  Test.checkM ((Set{Elt.a} = Set{Elt.a}), "aa =");
+  Test.checkM (NOT (Set{Elt.a} < Set{Elt.a}), "aa <");
+  Test.checkM (NOT (Set{Elt.a} > Set{Elt.a}), "aa >");
+  Test.checkM ((Set{Elt.a} <= Set{Elt.a}), "aa <=");
+  Test.checkM ((Set{Elt.a} >= Set{Elt.a}), "aa >=");
+
+  Test.checkM (NOT (Set{Elt.b} # Set{Elt.b}), "bb #");
+  Test.checkM ((Set{Elt.b} = Set{Elt.b}), "bb =");
+  Test.checkM (NOT (Set{Elt.b} < Set{Elt.b}), "bb <");
+  Test.checkM (NOT (Set{Elt.b} > Set{Elt.b}), "bb >");
+  Test.checkM ((Set{Elt.b} <= Set{Elt.b}), "bb <=");
+  Test.checkM ((Set{Elt.b} >= Set{Elt.b}), "bb >=");
+
+  Test.checkM ((Set{Elt.a, Elt.c, Elt.e} # Set{Elt.a, Elt.b, Elt.e}), "ace,abe #");
+  Test.checkM (NOT (Set{Elt.a, Elt.c, Elt.e} = Set{Elt.a, Elt.b, Elt.e}), "ace,abe =");
+  Test.checkM (NOT (Set{Elt.a, Elt.c, Elt.e} < Set{Elt.a, Elt.b, Elt.e}), "ace,abe <");
+  Test.checkM (NOT (Set{Elt.a, Elt.c, Elt.e} > Set{Elt.a, Elt.b, Elt.e}), "ace,abe >");
+  Test.checkM (NOT (Set{Elt.a, Elt.c, Elt.e} <= Set{Elt.a, Elt.b, Elt.e}), "ace,abe <=");
+  Test.checkM (NOT (Set{Elt.a, Elt.c, Elt.e} >= Set{Elt.a, Elt.b, Elt.e}), "ace,abe >=");
+
+
   m ("check set p = {a, c, e}");
   Test.checkM (Elt.a IN p, "Elt.a IN p");
   Test.checkM (NOT (Elt.b IN p), "NOT (Elt.b IN p)");
@@ -91,6 +129,10 @@ BEGIN
   Test.checkM (NOT (Elt.c IN x), "NOT (Elt.c IN x)");
   Test.checkM (NOT (Elt.d IN x), "NOT (Elt.d IN x)");
   Test.checkM (Elt.e IN x, "Elt.e IN x");
+  Test.checkM (p # x, "check (p # x)");
+  Test.checkM (NOT (p = x), "check (NOT (p = x))");
+  Test.checkM (NOT (p < x), "check (NOT (p < x))");
+  Test.checkM (NOT (p > x), "check (NOT (p > x))");
   Test.checkM (NOT (p <= x), "check (NOT (p <= x))");
   Test.checkM (NOT (p >= x), "check (NOT (p >= x))");
   Test.checkM (x = r + Set{Elt.e}, "check (x = r + Set{Elt.e})");
