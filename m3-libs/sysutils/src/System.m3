@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: System.m3,v 1.4 2008-03-04 22:02:19 wagner Exp $ *)
+ * $Id: System.m3,v 1.5 2008-04-09 13:11:46 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 MODULE System EXPORTS System;
@@ -176,8 +176,9 @@ PROCEDURE ExecNW(VAR estdin: File.T;
     stdin := NIL; stdout := NIL; stderr := NIL;
     i := 0;
     WHILE i < psize DO
-      WITH arg = params.get(i) DO
-        IF Text.Equal(arg, "<") THEN
+      WITH arg = params.get(i),
+           arglen = Text.Length(arg) DO
+        IF (arglen = 1) AND Text.Equal(arg, "<") THEN
           INC(i);
           IF i = psize THEN 
             RAISE ExecuteError("missing redirection argument");
@@ -196,7 +197,7 @@ PROCEDURE ExecNW(VAR estdin: File.T;
                 pn & ": " & AtomListToText(list));
             END;
           END;
-        ELSIF Text.Equal(arg, ">") OR Text.Equal(arg, "1>") THEN
+        ELSIF (arglen < 3) AND (Text.Equal(arg, ">") OR Text.Equal(arg, "1>")) THEN
           INC(i);
           IF i = psize THEN 
             RAISE ExecuteError("missing redirection argument");
@@ -215,7 +216,7 @@ PROCEDURE ExecNW(VAR estdin: File.T;
                 pn & ": " & AtomListToText(list));
             END;
           END;
-        ELSIF Text.Equal(arg, ">>") OR Text.Equal(arg, "1>>") THEN
+        ELSIF (arglen < 4) AND (Text.Equal(arg, ">>") OR Text.Equal(arg, "1>>")) THEN
           INC(i);
           IF i = psize THEN 
             RAISE ExecuteError("missing redirection argument");
@@ -235,7 +236,7 @@ PROCEDURE ExecNW(VAR estdin: File.T;
                 pn & ": " & AtomListToText(list));
             END;
           END;
-        ELSIF Text.Equal(arg, "2>") THEN
+        ELSIF (arglen = 2) AND Text.Equal(arg, "2>") THEN
           INC(i);
           IF i = psize THEN 
             RAISE ExecuteError("missing redirection argument");
@@ -250,11 +251,11 @@ PROCEDURE ExecNW(VAR estdin: File.T;
               stderr := FS.OpenFile(pn, truncate := TRUE,
                                     create := FS.CreateOption.Ok);
             EXCEPT
-            | OSError.E(list) => RAISE ExecuteError("open failed on " &
-                pn & ": " & AtomListToText(list));
+              | OSError.E(list) => RAISE ExecuteError("open failed on " &
+                    pn & ": " & AtomListToText(list));
             END;
           END;
-        ELSIF Text.Equal(arg, "2>>") THEN
+        ELSIF (arglen = 3) AND Text.Equal(arg, "2>>") THEN
           INC(i);
           IF i = psize THEN 
             RAISE ExecuteError("missing redirection argument");
@@ -271,10 +272,10 @@ PROCEDURE ExecNW(VAR estdin: File.T;
               EVAL stderr.seek(RegularFile.Origin.End, 0);
             EXCEPT
               OSError.E(list) => RAISE ExecuteError("open failed on " &
-                pn & ": " & AtomListToText(list));
+                    pn & ": " & AtomListToText(list));
             END;
           END;
-        ELSIF Text.Equal(arg, "&>") THEN
+        ELSIF (arglen = 2) AND Text.Equal(arg, "&>") THEN
           INC(i);
           IF i = psize THEN 
             RAISE ExecuteError("missing redirection argument");
@@ -290,11 +291,11 @@ PROCEDURE ExecNW(VAR estdin: File.T;
                                     create := FS.CreateOption.Ok);
             EXCEPT
               OSError.E(list) => RAISE ExecuteError("open failed on " &
-                pn & ": " & AtomListToText(list));
+                    pn & ": " & AtomListToText(list));
             END;
           END;
           stderr := stdout;
-        ELSIF Text.Equal(arg, "&>>") THEN
+        ELSIF (arglen = 3) AND Text.Equal(arg, "&>>") THEN
           INC(i);
           IF i = psize THEN 
             RAISE ExecuteError("missing redirection argument");
@@ -315,44 +316,43 @@ PROCEDURE ExecNW(VAR estdin: File.T;
             END;
           END;
           stderr := stdout;
-        ELSIF Text.Equal(arg, "$<") THEN (* file contents substitution *)
+        ELSIF (arglen = 2) AND Text.Equal(arg, "$<") THEN (* file contents substitution *)
           INC(i);
           WHILE i < psize AND NOT Text.Equal(params.get(i), ">") DO
-	    VAR
-	      rd    :  FileRd.T;
-	      token :  TEXT;
+            VAR
+              rd    :  FileRd.T;
+              token :  TEXT;
               fn    := MakeAbsolute(params.get(i));
-	    BEGIN
-	      TRY
-		rd := FileRd.Open(fn);
-	      EXCEPT
-		OSError.E => RAISE ExecuteError("cannot open file " & fn);
-	      END;
-	      TRY
-		WHILE NOT Rd.EOF(rd) DO
-		  token := TextReadingUtils.GetTokenOrString(rd);
-		  args.addhi(token);
-		END;
-	      EXCEPT
-		Rd.Failure, 
-		Thread.Alerted => RAISE ExecuteError("cannot read file " & 
-                                                        fn);
-	      | Rd.EndOfFile => (* skip *)
-	      END;
-	      TRY
-		Rd.Close(rd);
-	      EXCEPT
-		Rd.Failure, 
-		Thread.Alerted => RAISE ExecuteError("cannot close file " &
-							fn);
-	      END;
-	    END;
+            BEGIN
+              TRY
+                rd := FileRd.Open(fn);
+              EXCEPT
+                OSError.E => RAISE ExecuteError("cannot open file " & fn);
+              END;
+              TRY
+                WHILE NOT Rd.EOF(rd) DO
+                  token := TextReadingUtils.GetTokenOrString(rd);
+                  args.addhi(token);
+                END;
+              EXCEPT
+                Rd.Failure,
+                Thread.Alerted => RAISE ExecuteError("cannot read file " & 
+                                                          fn);
+                | Rd.EndOfFile => (* skip *)
+              END;
+              TRY
+                Rd.Close(rd);
+              EXCEPT
+                Rd.Failure, 
+                Thread.Alerted => RAISE ExecuteError("cannot close file " & fn);
+              END;
+            END;
             INC(i);
           END;
           IF i = psize THEN 
             RAISE ExecuteError("missing file contents closing `>' ");
           END;
-        ELSIF Text.Equal(arg, "$(") THEN (* command substitution *)
+        ELSIF (arglen = 2) AND Text.Equal(arg, "$(") THEN (* command substitution *)
           RAISE ExecuteError("Sorry, command substitution not yet " &
                 "implemented. ");
         ELSE
@@ -502,6 +502,7 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
   VAR
     rd := TextRd.New(cmd);
     token : TEXT;
+    tokenLength : CARDINAL;
     token2: TEXT;
     pgm   : TEXT := NIL;
     args  : TextSeq.T := NIL;
@@ -573,8 +574,10 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
     END CloseFiles;
 
     PROCEDURE CheckOp( token: TEXT ) RAISES {ExecuteError} =
+      VAR len := Text.Length(token);
       BEGIN
-        IF NOT Text.Equal(token, "<") AND
+        IF (len = 0) OR (len > 3) OR (
+           NOT Text.Equal(token, "<") AND
            NOT Text.Equal(token, ">") AND
            NOT Text.Equal(token, "1>") AND
            NOT Text.Equal(token, "2>") AND
@@ -586,7 +589,7 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
            NOT Text.Equal(token, ";") AND
            NOT Text.Equal(token, "|") AND
            NOT Text.Equal(token, "||") AND
-           NOT Text.Equal(token, "&&") THEN
+           NOT Text.Equal(token, "&&")) THEN
           RAISE ExecuteError("operator syntax error: " & token);
         END;
       END CheckOp;
@@ -637,8 +640,9 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
             token := TextReadingUtils.GetToken(rd, terminate := IDEND,
                                                unget := TRUE);
           END;
+          tokenLength := Text.Length( token );
           (* MsgX.D(msgif, " token = " & token); *)
-          IF Text.Equal(token, ";") THEN
+          IF (tokenLength = 1) AND Text.Equal(token, ";") THEN
             IF childRd = NIL THEN
               ret := Exec(pgm, args, env, msgif, wd);
             ELSE
@@ -653,7 +657,7 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
               childRd := NIL;
             END;
             done := TRUE;
-          ELSIF Text.Equal(token, "&&") THEN
+          ELSIF (tokenLength = 2) AND Text.Equal(token, "&&") THEN
             IF childRd = NIL THEN
               ret := Exec(pgm, args, env, msgif, wd);
             ELSE
@@ -671,7 +675,7 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
               RETURN ret;
             END;
             done := TRUE;
-          ELSIF Text.Equal(token, "||") THEN
+          ELSIF (tokenLength = 2) AND Text.Equal(token, "||") THEN
             IF childRd = NIL THEN
               ret := Exec(pgm, args, env, msgif, wd);
             ELSE
@@ -689,7 +693,7 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
               RETURN ret;
             END;
             done := TRUE;
-          ELSIF Text.Equal(token, "|") THEN
+          ELSIF (tokenLength = 1) AND Text.Equal(token, "|") THEN
             VAR
               lastChildRd := childRd;
             BEGIN
