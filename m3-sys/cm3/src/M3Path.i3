@@ -55,4 +55,32 @@ PROCEDURE MakeRelative (VAR path: TEXT;  full, rel: TEXT): BOOLEAN;
 (* If "full" is a prefix of "path", replace "full" with "rel" and
    return "TRUE".  Otherwise, return "FALSE". *)
 
+PROCEDURE PathLooselyConvertUserInputToHost_ArrayToText (VAR p: ARRAY OF CHAR) : TEXT;
+
+PROCEDURE PathLooselyConvertUserInputToHost_TextToText (text: TEXT) : TEXT;
+
+(* Is a in PathVariableNames? *)
+PROCEDURE IsPathVariableName(a: TEXT): BOOLEAN;
+
+(* Ideally this would hide behind a function but that cannot be done efficiently.
+These are Quake and Environment variables that we allow to be specified in
+either Win32 or Unix and we loosely interpret the value and convert to the host form.
+This way users of NT386 and NT386GNU can pick one form of them. *)
+
+CONST PathVariableNames = ARRAY OF TEXT {
+(* not all of these presently have meaning but they are suggested synonyms *)
+(*      0123456789012345 *)
+(* 8*) "CM3_ROOT",   (* root of source tree *)
+(* 8*) "M3CONFIG",
+(*10*) "CM3_CONFIG", (* new unimplemented synonym for M3CONFIG *)
+(*11*) "CM3_INSTALL",
+(*11*) "INSTALLROOT",
+(*12*) "INSTALL_ROOT",
+(*14*) "CM3_SOURCEROOT",  (* new unimplemented synonym for CM3_ROOT *)
+(*15*) "CM3_INSTALLROOT",
+(*15*) "CM3_SOURCE_ROOT", (* new unimplemented synonym for CM3_ROOT *)
+(*16*) "CM3_INSTALL_ROOT"
+(*      0123456789012345 *)
+};
+
 END M3Path.

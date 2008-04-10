@@ -48,4 +48,13 @@ PROCEDURE PopText (t: T): TEXT       RAISES {Error};
 PROCEDURE PopInt  (t: T): INTEGER    RAISES {Error};
 PROCEDURE PopID   (t: T): ID         RAISES {Error};
 
+PROCEDURE GetEnv (default, v0, v1, v2, v3, v4: TEXT := NIL): TEXT;
+
+(* an upward dependency until cm3/M3Path is moved to m3-quake/QPath *)
+
+VAR PathLooselyConvertUserInputToHost_TextToText : PROCEDURE (p: TEXT) : TEXT;
+VAR IsPathVariableName : PROCEDURE (a: TEXT): BOOLEAN;
+
+VAR lcase : ARRAY CHAR OF CHAR;
+
 END QMachine.

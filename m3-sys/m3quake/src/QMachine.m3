@@ -214,7 +214,7 @@ PROCEDURE Eval (t: T)
           val2.ref := NIL;
 
       | Op.GetEnv =>
-          PushText (t, Env.Get (t.map.id2txt (arg)));
+          PushText (t, GetEnv (NIL, t.map.id2txt (arg)));
 
       | Op.PushProc =>
           val.kind := QK.Proc;
@@ -1087,6 +1087,9 @@ PROCEDURE GetEnv (default, v0, v1, v2, v3, v4: TEXT := NIL): TEXT =
     IF val = NIL AND v3 # NIL THEN val := Env.Get(v3) END;
     IF val = NIL AND v4 # NIL THEN val := Env.Get(v4) END;
     IF val = NIL THEN val := default; END;
+    IF val # NIL AND IsPathVariableName(v0) THEN
+      val := PathLooselyConvertUserInputToHost_TextToText(val);
+    END;
     RETURN val;
   END GetEnv;
 
@@ -2902,7 +2905,8 @@ PROCEDURE OSErr (args: AtomList.T): TEXT =
   END OSErr;
 
 PROCEDURE CanonicalizePath (path: Pathname.Arcs): Pathname.Arcs =
-  (* Remove '..' and '.' components from "path". *)
+  (* Remove '..' and '.' components from "path".
+  See also cm3/M3Path.m3/PathRemoveDots. *)
   VAR found := FALSE;  arc: TEXT;  new: Pathname.Arcs;  pending: INTEGER;
   BEGIN
     FOR i := 0 TO path.size () - 1 DO
