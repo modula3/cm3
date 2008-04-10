@@ -180,36 +180,25 @@ PROCEDURE DoParse (nm_txt: TEXT; len: CARDINAL; VAR nm: ARRAY OF CHAR): T =
     t       : T;
     base_len: CARDINAL;
     d_index : INTEGER;
-    v_index : INTEGER;
     start   : CARDINAL;
     d_sep   := DirSep [host_os];
-    v_sep   := VolSep [host_os];
     ext     : TEXT;
     ext_len : CARDINAL;
     pre     : TEXT;
   BEGIN
     Text.SetChars (nm, nm_txt);
 
-    (* find the last instance of each separator *)
-    IF v_sep = Null THEN
-      v_index := -1;
-    ELSE
-      v_index := Text.FindCharR (nm_txt, v_sep);
-    END;
+    (* find the last directory separator *)
     d_index := Text.FindCharR (nm_txt, '/');
     IF d_sep # '/' THEN
       d_index := MAX (d_index, Text.FindCharR (nm_txt, d_sep));
     END;
 
     (* extract the prefix *)
-    IF (v_index = -1) AND (d_index = -1) THEN
+    IF d_index = -1 THEN
       (* no separators *)
       t.dir := NIL;
       start := 0;
-    ELSIF (d_index = -1) THEN
-      (* no directory separator, only a volume separator *)
-      t.dir := Text.FromChars (SUBARRAY (nm, 0, v_index+1));
-      start := v_index + 1;
     ELSIF (d_index = 0) THEN
       t.dir := DirSepText [host_os];
       start := 1;
