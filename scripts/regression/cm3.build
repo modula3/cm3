@@ -42,9 +42,9 @@ if [ -f ~/cm3/`hostname`.conf ]; then
 fi
 
 # checkout the current cm3 regression script and source it
-(echo $CVSROOT | grep @m3.elegosoft.com:/usr/cvs > /dev/null) || CVSROOT=":ext:modula3.elegosoft.com:/usr/cvs"
+CVSROOT=${CVSROOT:-":ext:modula3.elegosoft.com:/usr/cvs"}
 
-cvs -d $CVSROOT checkout -A \
+cvs -d ${CVSROOT} checkout -A \
   -d ${REGRESSION_SCRIPTS_DIR} cm3/scripts/regression/defs.sh
 
 test -r ${REGRESSION_SCRIPTS_DIR}/defs.sh || exit 10
