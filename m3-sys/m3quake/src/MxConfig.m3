@@ -4,6 +4,7 @@
 MODULE MxConfig;
 
 IMPORT Env, Params, Pathname, M3File, M3ID, Quake, Text, Thread;
+IMPORT QMachine;
 
 VAR
   mu     : MUTEX         := NEW (MUTEX);
@@ -49,7 +50,7 @@ PROCEDURE FindConfig () =
     IF TryConfig ("..", "src", Filename) THEN RETURN END;
 
     (* try the M3CONFIG environment variable *)
-    txt := Env.Get ("M3CONFIG");
+    txt := QMachine.GetEnv (NIL, "M3CONFIG");
     IF (txt # NIL) THEN
       IF TryConfig (txt) THEN RETURN END;
       IF TryConfig (txt, Filename) THEN RETURN END;
@@ -125,4 +126,3 @@ PROCEDURE ID2Txt (i: Quake.ID): TEXT =
 
 BEGIN
 END MxConfig.
-

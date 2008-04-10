@@ -9,6 +9,7 @@ IMPORT RTCollector, RTParams, RTutils, Thread, Wr;
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
 IMPORT MxConfig AS M3Config(*, CMKey, CMCurrent *);
 (* IMPORT Fmt, Time; only needed for key and expiration check *)
+IMPORT M3Path;
 
 VAR
   config    : TEXT          := NIL;
@@ -44,6 +45,9 @@ PROCEDURE DoIt () =
           iter := defs.iterate();
         BEGIN
           WHILE iter.next(name, val) DO
+            IF M3Path.IsPathVariableName (name) THEN
+              val := M3Path.PathLooselyConvertUserInputToHost_TextToText (val);
+            END;
             Quake.Define(mach, name, val);
           END;
         END;
