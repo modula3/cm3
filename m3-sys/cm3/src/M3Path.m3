@@ -352,12 +352,17 @@ PROCEDURE DoEscape (nm: TEXT;  len: CARDINAL;  VAR buf: ARRAY OF CHAR): TEXT =
       IF (buf[i] = BackSlash) THEN INC (n_escapes); END;
     END;
     IF (n_escapes = 0) THEN RETURN nm; END;
-    src  := len - 1;
+    src  := len;
     dest := src + n_escapes;
     WHILE src # 0 DO
-      c := buf[src];  DEC (src);
-      buf[dest] := c;  DEC (dest);
-      IF (c = BackSlash) THEN  buf[dest] := BackSlash;  DEC (dest);  END;
+      DEC (src);
+      DEC (dest);
+      c := buf[src];
+      buf[dest] := c;
+      IF (c = BackSlash) THEN
+        DEC (dest);
+        buf[dest] := BackSlash;
+      END;
     END;
     RETURN Text.FromChars (SUBARRAY (buf, 0, len + n_escapes));
   END DoEscape;
