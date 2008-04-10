@@ -75,7 +75,7 @@ proc version_impl(name) is
         NOW = "not available"
     end
 
-    if equal(SL, "\\")
+    if equal ($OS, "Windows_NT") and equal (SL, "\\")
 
         % why two names for these?
         local readonly Map =
