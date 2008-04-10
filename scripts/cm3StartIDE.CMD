@@ -10,6 +10,7 @@ REM v1.13--08/29/2003 by RCC, adjusted for v1.30 of cm3SetupCmdEnv
 REM v2.00--01/20/2008 by RCC, renamed startReactor to cm3StartIDE, adjusted to 
 REM                           find the IDE, e.g. Reactor, CM3_IDE, Catalyst and
 REM                           to be compatible with v1.40 of cm3SetupCmdEnv.CMD
+REM v2.01--04/10/2008 by RCC, change default search names for CM3-IDE (Olaf likes lower case, e.g. cm3ide)
 REM ===========================================================================
 REM PURPOSE:
 REM    This Windows batch/command file sets up the environment for using cm3
@@ -108,7 +109,7 @@ REM ===========================================================================
 REM Change the defaults below, if desired
 REM ===========================================================================
 set CM3_IDE_DefaultInstallRoot=C:\cm3
-if not defined CM3_IDE_EXE set CM3_IDE_EXE=Catalyst
+if not defined CM3_IDE_EXE set CM3_IDE_EXE=cm3ide
 REM ===========================================================================
 REM
 REM !=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!=!
@@ -120,7 +121,7 @@ REM fall thru to Begin
 :-----
 echo.
 echo -------------------------------------------------------------------------------
-echo cm3StartIDE.CMD, written by R.C.Coleburn 08/13/2003, rev 2.00 01/20/2008 by RCC
+echo cm3StartIDE.CMD, written by R.C.Coleburn 08/13/2003, rev 2.01 04/10/2008 by RCC
 echo -------------------------------------------------------------------------------
 echo.
 
@@ -191,14 +192,15 @@ if not defined CM3_BIN goto FATAL_Env
 if not exist "%CM3_ROOT%" goto FATAL_Env
 if not exist "%CM3_BIN%\cm3.exe" goto FATAL_Env
 if not exist "%CM3_BIN%\cm3SetupCmdEnv.CMD" goto FATAL_Env
-if not defined CM3_IDE_EXE set CM3_IDE_EXE=Catalyst
+if not defined CM3_IDE_EXE set CM3_IDE_EXE=cm3ide
 REM
 REM Now, try to locate the IDE
 REM the default search order is as shown below.  To change it, just reorder the lines
 REM
-if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" set CM3_IDE_EXE=Catalyst
+if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" set CM3_IDE_EXE=cm3ide
 if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" set CM3_IDE_EXE=CM3IDE
 if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" set CM3_IDE_EXE=CM3_IDE
+if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" set CM3_IDE_EXE=Catalyst
 if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" set CM3_IDE_EXE=Reactor
 if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" goto FATAL_Env
 goto StartIDE
