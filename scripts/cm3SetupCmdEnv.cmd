@@ -11,6 +11,7 @@ REM                           revamped argument handling
 REM v1.31--12/06/2006 by RCC, added CM3Setup_DefaultSDKSetup
 REM v1.40--01/20/2008 by RCC, added IDE option, added SHOW option, misc enhance
 REM v1.41--01/24/2008 by RCC, set Visual Studio defaults to match 2008 Express
+REM v1.42--04/10/2008 by RCC, change default search names for CM3-IDE (Olaf likes lower case, e.g. cm3ide)
 REM ===========================================================================
 REM PURPOSE:
 REM    This Windows batch/command file sets up the environment for using cm3.
@@ -185,7 +186,7 @@ REM fall thru to Begin
 :-----
 echo.
 echo -------------------------------------------------------------------------------
-echo cm3SetupCmdEnv.CMD, written by R.C.Coleburn 08/12/2003, v1.41 01/24/2008 by RCC
+echo cm3SetupCmdEnv.CMD, written by R.C.Coleburn 08/12/2003, v1.42 04/10/2008 by RCC
 echo -------------------------------------------------------------------------------
 echo.
 REM fall thru to Args1
@@ -359,13 +360,14 @@ REM following code will not change it, unless of course the program can't be
 REM found, or unless the user specified a change via the optional IDE argument.
 REM
 if not (%CM3Setup_IDE%)==((NO_RESET)) set CM3_IDE_EXE=%CM3Setup_IDE%
-if not defined CM3_IDE_EXE set CM3_IDE_EXE=Catalyst
+if not defined CM3_IDE_EXE set CM3_IDE_EXE=cm3ide
 REM
 REM the default search order is as shown below.  To change it, just reorder the lines
 REM
-if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" set CM3_IDE_EXE=Catalyst
+if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" set CM3_IDE_EXE=cm3ide
 if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" set CM3_IDE_EXE=CM3IDE
 if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" set CM3_IDE_EXE=CM3_IDE
+if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" set CM3_IDE_EXE=Catalyst
 if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" set CM3_IDE_EXE=Reactor
 if not exist "%CM3_BIN%\%CM3_IDE_EXE%.exe" set CM3_IDE_EXE=
 REM
