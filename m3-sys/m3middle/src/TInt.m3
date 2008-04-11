@@ -37,10 +37,12 @@ PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
 TYPE Sign = {Bad, Neg, Pos};
 
 PROCEDURE CheckSign (READONLY r: Int;  n: CARDINAL): Sign =
-  VAR j := 0;
+  VAR j := 0; neg: BOOLEAN; 
   BEGIN
     <*ASSERT n # 0*>
-    IF And (r.x[r.n-1], SignMask) # 0 THEN j := Mask END;
+    neg := And (r.x[r.n-1], SignMask) # 0;
+    IF neg # ( And (r.x[n-1], SignMask) # 0 ) THEN RETURN Sign.Bad END; 
+    IF neg THEN j := Mask END;
     FOR i := n TO r.n-1 DO
       IF r.x[i] # j THEN RETURN Sign.Bad END;
     END;
