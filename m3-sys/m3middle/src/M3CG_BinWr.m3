@@ -254,14 +254,6 @@ PROCEDURE TInt (u: U;  READONLY i: Target.Int) =
   VAR x: INTEGER;
   BEGIN
     IF TargetInt.ToInt (i, x)
-       AND (i.n <= BITSIZE (INTEGER) DIV BITSIZE (Target.IByte) OR x >= 0) 
-(* ^This hack prevents a 64-bit target int with a 1 in the sign position of
-   a 32-bit value (but zeros in all higher bits) from being incorrectly
-   written as negative, and then sign-extended to 64 bits when read.
-   Calls on TargetInt.ToInt need to be reviewed to see if more, or all of
-   then need this fix too.  If so, ToInt can just use the actual number
-   of bytes in the Target.Int to pass to CheckSign.
-*) 
       THEN OutI (u, x);
       ELSE AddBigX (u, i);
     END;
