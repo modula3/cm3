@@ -11,6 +11,7 @@
 readonly Platform_info = {
   "AIX386"    : "i486-ibm-aix",
   "ALPHA_OSF" : "alpha-dec-osf1",
+  "AMD64_DARWIN" : "i686-apple-darwin8.7.1",
   "AP3000"    : "apollo68-bsd",
   "ARM"       : "arm--riscos",
   "BSDI4"     : "i386-unknown-freebsdelf",
@@ -60,6 +61,7 @@ readonly m3cc_config = {
 
   "PPC_DARWIN" : "--disable-multilib",
   "I386_DARWIN" : "--disable-multilib",
+  "AMD64_DARWIN" : "--disable-multilib",
   "SOLgnu" : "--disable-multilib",
   "SOLsun" : "--disable-multilib",
 

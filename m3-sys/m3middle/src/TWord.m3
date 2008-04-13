@@ -136,7 +136,7 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
     quo_est : INTEGER;
     num_hi  : INTEGER;
     x1,x2,x3: INTEGER;
-    num, den: ARRAY [0..NUMBER (IBytes)] OF INTEGER;
+    num, den: ARRAY [0..NUMBER (IBytes)+1] OF INTEGER;
     n := MIN (x.n, y.n);
   BEGIN
     <*ASSERT n # 0*>

@@ -100,8 +100,8 @@ PROCEDURE Quit (<*UNUSED*> sig: int; sip: SigInfo; scp: SigContext) =
   VAR pc := 0;
   BEGIN
     IF (sip # NIL AND scp # NIL)
-     AND sip.si_addr = LOOPHOLE(scp.uc_mcontext.ss.eip, ADDRESS) THEN
-      pc := scp.uc_mcontext.ss.eip;
+     AND sip.si_addr = LOOPHOLE(scp.uc_mcontext.ss.rip, ADDRESS) THEN
+      pc := LOOPHOLE(scp.uc_mcontext.ss.rip, INTEGER);
     END;
     RTError.MsgPC (pc, "aborted");
   END Quit;
@@ -110,8 +110,8 @@ PROCEDURE SegV (<*UNUSED*> sig: int; sip: SigInfo; scp: SigContext) =
   VAR pc := 0;
   BEGIN
     IF (sip # NIL AND scp # NIL)
-     AND sip.si_addr = LOOPHOLE(scp.uc_mcontext.ss.eip, ADDRESS) THEN
-      pc := scp.uc_mcontext.ss.eip;
+     AND sip.si_addr = LOOPHOLE(scp.uc_mcontext.ss.rip, ADDRESS) THEN
+      pc := LOOPHOLE(scp.uc_mcontext.ss.rip, INTEGER);
     END;
     RTError.MsgPC (pc,
       "Segmentation violation - possible attempt to dereference NIL");

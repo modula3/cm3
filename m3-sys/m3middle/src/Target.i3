@@ -30,7 +30,7 @@ TYPE
     SPARC, SUN3, SUN386, UMAX, VAX, FreeBSD3,
     FreeBSD4, FBSD_ALPHA, LINUXLIBC6, I386_DARWIN,
     PPC_DARWIN, BSDI4, NT386GNU, PPC_LINUX, NetBSD2_i386,
-    Undefined
+    AMD64_DARWIN, Undefined
   };
 
 CONST
@@ -70,7 +70,8 @@ CONST
     (* 32 *) "BSDI4",
     (* 33 *) "NT386GNU",
     (* 34 *) "PPC_LINUX",
-    (* 35 *) "NetBSD2_i386"
+    (* 35 *) "NetBSD2_i386",
+    (* 36 *) "AMD64_DARWIN"
   };
 
 CONST
