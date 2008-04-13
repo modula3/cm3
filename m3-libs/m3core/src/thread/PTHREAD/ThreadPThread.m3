@@ -833,17 +833,24 @@ PROCEDURE UTimeFromTime (time: Time.T): UTime =
   END UTimeFromTime;
 
 PROCEDURE WaitProcess (pid: int): int =
-(* ThreadPThread.m3 and ThreadPosix.m3 are very similar. *)
+  (* ThreadPThread.m3 and ThreadPosix.m3 are very similar. *)
   VAR
     statusT: Uexec.w_T;
-    result := Uexec.waitpid(pid, ADR(statusT), 0);
-    statusM3 := Uexec.w_M3 { w_Filler := 0,
-                             w_Coredump := statusT.w_Coredump,
-                             w_Termsig := statusT.w_Termsig,
-                             w_Retcode := statusT.w_Retcode };
+    statusM3: Uexec.w_M3;
   BEGIN
-    <* ASSERT result > 0 *>
-    RETURN LOOPHOLE(statusM3, Uexec.w_A);
+    LOOP
+      WITH r = Uexec.waitpid(pid, ADR(statusT), 0) DO
+        IF r > 0 THEN
+          statusM3 := Uexec.w_M3 { w_Filler := 0,
+                                   w_Coredump := statusT.w_Coredump,
+                                   w_Termsig := statusT.w_Termsig,
+                                   w_Retcode := statusT.w_Retcode };
+          RETURN LOOPHOLE(statusM3, Uexec.w_A);
+        END;
+        <*ASSERT r < 0*>
+      END;
+      <*ASSERT Cerrno.GetErrno() = Uerror.EINTR*>
+    END;
   END WaitProcess;
 
 (*--------------------------------------------------- Stack size controls ---*)
@@ -940,7 +947,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
   VAR
     me := GetActivation();
     act: Activation;
-    acks: INTEGER;
+    acks: int;
     wait, remaining: Utime.struct_timespec;
   BEGIN
     WITH r = Upthread.mutex_lock(activeMu) DO <*ASSERT r=0*> END;
@@ -1088,7 +1095,8 @@ PROCEDURE StopWorld () =
   VAR
     me := GetActivation();
     act: Activation;
-    acks, nLive, newlySent: INTEGER;
+    acks: int;
+    nLive, newlySent: INTEGER;
     retry: BOOLEAN;
     wait_nsecs := RETRY_INTERVAL;
     wait, remaining: Utime.struct_timespec;
@@ -1179,7 +1187,8 @@ PROCEDURE StartWorld () =
   VAR
     me := GetActivation();
     act: Activation;
-    acks, nDead, newlySent: INTEGER;
+    acks: int;
+    nDead, newlySent: INTEGER;
     retry: BOOLEAN;
     wait_nsecs := RETRY_INTERVAL;
     wait, remaining: Utime.struct_timespec;
