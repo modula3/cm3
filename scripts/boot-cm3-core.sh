@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: boot-cm3-core.sh,v 1.8 2008-01-22 16:36:01 jkrell Exp $
+# $Id: boot-cm3-core.sh,v 1.9 2008-04-13 18:22:32 hosking Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -36,6 +36,7 @@ export M3CONFIG BUILDARGS
 P=""
 P="${P} m3core"
 P="${P} libm3"
+P="${P} sysutils"
 P="${P} m3middle"
 P="${P} m3objfile"
 P="${P} m3linker"
