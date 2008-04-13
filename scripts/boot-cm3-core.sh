@@ -36,6 +36,7 @@ export M3CONFIG BUILDARGS
 P=""
 P="${P} m3core"
 P="${P} libm3"
+P="${P} sysutils"
 P="${P} m3middle"
 P="${P} m3objfile"
 P="${P} m3linker"
