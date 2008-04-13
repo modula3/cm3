@@ -13,7 +13,7 @@ FROM Usignal IMPORT SignalAction;
 
 TYPE
   SigInfo = Usignal.struct_siginfo_star;
-  SigContext = Uucontext.struct_ucontext_star;
+  SigContext = Uucontext.ucontext_t_star;
 
 VAR
   DefaultHandler   : SignalAction;

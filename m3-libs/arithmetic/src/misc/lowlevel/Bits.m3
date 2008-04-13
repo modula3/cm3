@@ -5,7 +5,7 @@ UNSAFE MODULE Bits;
 
    2/17/96 Harry George Initial version *)
 
-IMPORT Word, Fmt AS F;
+IMPORT Word, Fmt AS F, Integer32;
 FROM Word IMPORT And, Xor, Not, LeftShift, RightShift;
 (*
 FROM Arithmetic IMPORT Debug;
@@ -18,7 +18,7 @@ PROCEDURE WhichEndian (): [-1 .. +1] =
   CONST
     ftn = Module & "WhichEndian";
   VAR
-    datum            := 16_40ACB139;
+    datum: Integer32.T := 16_40ACB139;
     any  : AnyEndian;
   BEGIN
     (*---need to check---*)

@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.34 2008-03-16 18:05:43 wagner Exp $
+% $Id: m3makefile,v 1.35 2008-04-13 20:38:53 hosking Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -11,6 +11,7 @@
 readonly Platform_info = {
   "AIX386"    : "i486-ibm-aix",
   "ALPHA_OSF" : "alpha-dec-osf1",
+  "AMD64_DARWIN" : "i686-apple-darwin8.7.1",
   "AP3000"    : "apollo68-bsd",
   "ARM"       : "arm--riscos",
   "BSDI4"     : "i386-unknown-freebsdelf",
@@ -60,6 +61,7 @@ readonly m3cc_config = {
 
   "PPC_DARWIN" : "--disable-multilib",
   "I386_DARWIN" : "--disable-multilib",
+  "AMD64_DARWIN" : "--disable-multilib",
   "SOLgnu" : "--disable-multilib",
   "SOLsun" : "--disable-multilib",
 

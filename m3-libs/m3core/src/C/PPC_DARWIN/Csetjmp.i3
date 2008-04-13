@@ -6,7 +6,7 @@ INTERFACE Csetjmp;		(* for PPC_DARWIN *)
 FROM Ctypes IMPORT int;
 
 CONST
-  JBLEN = 26 + 36 + 129 + 1;
+  JBLEN = 26 + 18*2 + 129 + 1;
 
 TYPE 
   sigjmp_buf = ARRAY [0..JBLEN] OF int;

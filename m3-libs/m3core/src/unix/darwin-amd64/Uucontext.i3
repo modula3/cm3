@@ -375,5 +375,5 @@ TYPE
   END;
   struct_ucontext64_star = UNTRACED REF struct_ucontext64;
 
-  ucontext_t_star = struct_ucontext32_star;
+  ucontext_t_star = struct_ucontext64_star;
 END Uucontext.

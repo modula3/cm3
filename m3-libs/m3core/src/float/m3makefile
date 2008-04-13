@@ -12,6 +12,7 @@ readonly _float_be = [ "IEEE", "IEEE-be", "IEEE-default" ]
 readonly _FloatPieces = {
   "ALPHA_OSF"  : _float_le,
   "AIX386"     : _float_le,
+  "AMD64_DARWIN": _float_le,
   "AP3000"     : _float_le,
   "ARM"        : _float_le,
   "DS3100"     : [ "IEEE", "IEEE-le", "DS3100" ],

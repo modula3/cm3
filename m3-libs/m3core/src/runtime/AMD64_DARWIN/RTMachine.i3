@@ -7,7 +7,7 @@ INTERFACE RTMachine;
 
 IMPORT Csetjmp;
 FROM Upthread IMPORT pthread_t;
-FROM Uucontext IMPORT x86_thread_state32_t;
+FROM Uucontext IMPORT x86_thread_state64_t;
 
 (*--------------------------------------------------------- thread state ---*)
 
@@ -67,7 +67,7 @@ TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
 
 (*------------------------------------------------------ pthreads support ---*)
 
-TYPE ThreadState = x86_thread_state32_t;
+TYPE ThreadState = x86_thread_state64_t;
 
 CONST
   SIG_SUSPEND = 0;
