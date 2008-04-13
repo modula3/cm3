@@ -251,6 +251,7 @@ PROCEDURE Error (<*UNUSED*> VAR s: State;  a, b, c: TEXT := NIL) =
     IF (c # NIL) THEN msg := msg & c END;
     msg := msg & " **" & Target.EOL;
     Wr.PutText (Stdio.stdout, msg);
+    Wr.Flush(Stdio.stdout);
   END Error;
 
 (*--------------------------------------------------------------- parsing ---*)
