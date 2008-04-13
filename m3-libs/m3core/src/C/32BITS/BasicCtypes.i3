@@ -11,11 +11,11 @@ IMPORT Word, Long;
 
 TYPE
   (* the four signed integer types *)
-  signed_char        = [-16_80 .. 16_7f];
-  short_int          = [-16_8000 .. 16_7fff];
-  int                = INTEGER;
-  long_int           = int;
-  long_long          = LONGINT;
+  signed_char        = [-16_7f-1 .. 16_7f];
+  short_int          = [-16_7fff-1 .. 16_7fff];
+  int                = [-16_7fffffff-1 .. 16_7fffffff];
+  long_int           = [-16_7fffffff-1 .. 16_7fffffff];
+  long_long          = [-16_7fffffffffffffffL-1L .. 16_7fffffffffffffffL];
 
   (* the four unsigned integer types *)
   unsigned_char      = [16_0 .. 16_ff];
