@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: install-cm3-compiler.sh,v 1.5 2005-08-31 20:31:58 wagner Exp $
+# $Id: install-cm3-compiler.sh,v 1.6 2008-04-13 21:57:39 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -58,6 +58,12 @@ usage()
   echo ""
 }
 
+if [ "${TARGET}" = "NT386" -o "${TARGET}" = "NT386GNU" ]; then
+  ext=".exe"
+else
+  ext=""
+fi
+
 exit_if()
 {
   if [ "${NOACTION}" = yes ] ; then
@@ -69,9 +75,9 @@ exit_if()
 
 do_cp()
 {
-  echo cp "$1" "$2"
+  echo cp "$1${ext}" "$2${ext}"
   if [ "${NOACTION}" != yes ] ; then
-    if cp "$1" "$2"; then
+    if cp "$1${ext}" "$2${ext}"; then
       true
     else
       exit_if 1
@@ -81,17 +87,17 @@ do_cp()
 
 cp_if()
 {
-  if [ ! -r "$1" ] ; then
+  if [ ! -r "$1${ext}" ] ; then
     echo "cp_if: source does not exist: $1" 1>&2 
     exit_if 1
   fi
-  if [ -r "$2" ] ; then
+  if [ -r "$2${ext}" ] ; then
     # destination exists
-    if cmp "$1" "$2" >/dev/null 2>&1; then
+    if cmp "$1${ext}" "$2${ext}" >/dev/null 2>&1; then
       echo "cp_if: $1 and $2 identical" 1>&2
       true
     else
-      if [ -w "$2" ] ; then
+      if [ -w "$2${ext}" ] ; then
         do_cp "$1" "$2"
       else
         echo "cp_if: cannot write $2" 1>&2
@@ -105,7 +111,7 @@ cp_if()
 
 getversion()
 {
-  if [ -x "$1" ] ; then
+  if [ -x "$1${ext}" ] ; then
     "$1" -version | grep version | awk '{print $5}'
   else
     echo "$1 is not executable" 1>&2
@@ -138,9 +144,9 @@ backup_old()
 rm_curent()
 {
   if [ "${NOACTION}" != yes ] ; then
-    rm -f "${FRONTEND}"
+    rm -f "${FRONTEND}${ext}"
     if [ "${GCC_BACKEND}" = yes ] ; then
-      rm -f "${BACKEND}"
+      rm -f "${BACKEND}${ext}"
     fi
   fi
 }
