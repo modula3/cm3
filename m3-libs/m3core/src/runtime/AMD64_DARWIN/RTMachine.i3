@@ -41,7 +41,7 @@ CONST
 (*--------------------------------------------------------- thread stacks ---*)
 
 CONST
-  PointerAlignment = 4;
+  PointerAlignment = 8;
   (* The C compiler allocates all pointers on 'PointerAlignment'-byte
      boundaries.  The garbage collector scans thread stacks, but only
      looks at these possible pointer locations.  Setting this value
