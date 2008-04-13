@@ -12,13 +12,19 @@ FROM Ctypes IMPORT
 
 TYPE
   int8_t    = char;
-  u_int8_t  = unsigned_char;
   int16_t   = short;
-  u_int16_t = unsigned_short;
   int32_t   = int;
-  u_int32_t = unsigned_int;
   int64_t   = long_long;
+
+  u_int8_t  = unsigned_char;
+  u_int16_t = unsigned_short;
+  u_int32_t = unsigned_int;
   u_int64_t = unsigned_long_long;
+
+  uint8_t   = unsigned_char;
+  uint16_t  = unsigned_short;
+  uint32_t  = unsigned_int;
+  uint64_t  = unsigned_long_long;
 
 (*** <sys/types.h> ***)
 

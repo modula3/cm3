@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.10 2008-01-28 16:06:46 jkrell Exp $
+% $Id: m3makefile,v 1.11 2008-04-13 20:38:53 hosking Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -15,6 +15,7 @@
 readonly Platform_info = {
   "AIX386"    : "i486-ibm-aix",
   "ALPHA_OSF" : "alpha-dec-osf1",
+  "AMD64_DARWIN" : "i686-apple-darwin8.7.1",
   "AP3000"    : "apollo68-bsd",
   "ARM"       : "arm--riscos",
   "BSDI4"     : "i386-unknown-freebsdelf",

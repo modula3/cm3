@@ -106,6 +106,7 @@ CONST
    (* NT386GNU	 *)  "Cygwin",
    (* PPC_LINUX	 *)  "Linux",
    (* NetBSD2_i386 *)  "NetBSD",
+   (* AMD64_DARWIN *) "AMD64_DARWIN",
    ..
   };
 
@@ -147,6 +148,7 @@ CONST
    (* NT386GNU	 *)  "i486",
    (* PPC_LINUX	 *)  "ppc",
    (* NetBSD2_i386 *)  "i386",
+   (* AMD64_DARWIN *) "AMD64",
    ..
   };
 

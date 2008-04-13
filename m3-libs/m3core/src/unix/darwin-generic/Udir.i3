@@ -36,7 +36,7 @@ TYPE
     d_type:     u_int8_t;		 (* file type, see below *)
     d_namelen:  u_int8_t;		 (* length of string in d_name *)
     d_name:     ARRAY [0..MAXNAMLEN] OF char;
-					 (* name must be no longer than his *)
+					 (* name must be no longer than this *)
   END;
   struct_dirent_star = UNTRACED REF struct_dirent;
 
@@ -52,6 +52,7 @@ CONST
   DT_REG     =      8;
   DT_LNK     =     10;
   DT_SOCK    =     12;
+  DT_WHT     =     14;
 
 (*** <dirent.h> ***)
 
@@ -59,8 +60,7 @@ CONST
   DIRBLKSIZ = 1024;
 
 TYPE
-  DIR = void_star;
-  DIR_star = UNTRACED REF DIR;
+  DIR_star = void_star;
 
 <*EXTERNAL*> PROCEDURE opendir (filename: char_star): DIR_star;
 <*EXTERNAL*> PROCEDURE readdir (dirp: DIR_star): struct_dirent_star;

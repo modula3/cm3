@@ -14,6 +14,7 @@
 readonly _UnixPieces = {
   "ALPHA_OSF"  : [ "osf-1.generic", "osf-1.ALPHA_OSF" ],
   "AIX386"     : [ "aix-ps2-1-2" ],
+  "AMD64_DARWIN": [ "darwin-generic", "darwin-amd64" ],
   "AP3000"     : [ "ultrix-3-1.generic", "ultrix-3-1.AP3000" ],
   "ARM"        : [ "ultrix-3-1.generic", "ultrix-3-1.ARM" ],
   "DS3100"     : [ "ultrix-3-1.generic", "ultrix-3-1.DS3100" ],

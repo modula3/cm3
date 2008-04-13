@@ -9,15 +9,15 @@
 %M3_PROFILING = TRUE  % set by cm3 since 5.1.2
 %M3_PROFILING = FALSE
 
-readonly TARGET       = "I386_DARWIN"   % code generation target
+readonly TARGET       = "AMD64_DARWIN"   % code generation target
 if M3_PROFILING
   readonly BUILD_DIR  = TARGET & "p"    % code generation target
 else
   readonly BUILD_DIR  = TARGET          % directory for results
 end
 readonly OS_TYPE      = "POSIX"         % { "WIN32" or "POSIX" }
-readonly WORD_SIZE    = "32BITS"        % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "i386-apple-darwin9.2.0"
+readonly WORD_SIZE    = "64BITS"        % { "32BITS" or "64BITS" }
+readonly GNU_PLATFORM = "i686-apple-darwin9.2.0"
                                         % "cpu-vendor-os" string for GNU
 
 readonly NAMING_CONVENTIONS = "0"
@@ -229,7 +229,7 @@ readonly m3back = "@" & BIN_USE & "/cm3cg"
 proc m3_backend (source, object, optimize, debug) is
   local args =
   [
-    "-m32",
+    "-m64",
     "-quiet",
     source,
     "-o",
@@ -262,7 +262,7 @@ proc compile_c (source, object, options, optimize, debug) is
   % fPIC is not usually needed here.
   % It is the default for Apple gcc and left
   % here in case user is using a self-built FSF gcc.
-  local args = [ "-m32", "-fPIC", options ]
+  local args = [ "-m64", "-fPIC", options ]
   if optimize  args += "-O"  end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-pg" end
@@ -275,7 +275,7 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble (source, object) is
-  return try_exec ("@" & SYSTEM_ASM, "-arch", "i386", "-q", source, "-o", object)
+  return try_exec ("@" & SYSTEM_ASM, "-arch", "x86_64", "-q", source, "-o", object)
 end
 
 %--------------------------------------------------------- library creation ---
@@ -294,13 +294,13 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local lib_pn   = LIB_INSTALL & "/" & lib_soxx
 
   % first, build the non-shared library
-  ret_code = try_exec ("@" & SYSTEM_LIBTOOL, "-arch_only", "i386", "-static", "-o", lib_a, objects)
+  ret_code = try_exec ("@" & SYSTEM_LIBTOOL, "-arch_only", "x86_64", "-static", "-o", lib_a, objects)
   if not equal (ret_code, 0) return ret_code end
 
   if shared
     % build the shared library
     ret_code = try_exec (
-        "@" & SYSTEM_CC, "-m32", "-dynamiclib",
+        "@" & SYSTEM_CC, "-m64", "-dynamiclib",
         "-multiply_defined suppress",
         "-twolevel_namespace",
         "-compatibility_version", vmaj,
@@ -374,7 +374,7 @@ end
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local args =
   [
-    "-m32",
+    "-m64",
     "-o",
     prog,
     % -fPIC is the default in Apple tools but may be

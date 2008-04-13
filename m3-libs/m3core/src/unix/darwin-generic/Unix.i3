@@ -881,7 +881,7 @@ TYPE
                               times: struct_timeval_star): int;
 
 (*** vfork - spawn new process in a virtual memory efficient way ***)
-<*EXTERNAL*> PROCEDURE vfork (): int;
+<*EXTERNAL*> PROCEDURE vfork (): pid_t;
 
 (*** isatty(3) ***)
 <*EXTERNAL*> PROCEDURE isatty (filedes: int): int;

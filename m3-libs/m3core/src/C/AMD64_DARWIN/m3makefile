@@ -6,4 +6,6 @@ Interface ("Csignal")
 Interface ("Cstring")
 Module ("Cstdio")
 
-%c_source ("CstdioC")
+c_source ("CstdioC")
+
+

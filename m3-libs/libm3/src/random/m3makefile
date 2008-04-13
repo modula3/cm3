@@ -16,6 +16,7 @@ readonly _VAX = "VAX"
 readonly _RandomPieces = {
   "ALPHA_OSF"  : [ _LittleEndian ],
   "AIX386"     : [ _LittleEndian ],
+  "AMD64_DARWIN": [ _LittleEndian ],
   "AP3000"     : [ _LittleEndian ],
   "ARM"        : [ _LittleEndian ],
   "BSDI4"      : [ _LittleEndian ],

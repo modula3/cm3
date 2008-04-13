@@ -9,7 +9,7 @@
 INTERFACE Uin;
 
 FROM Ctypes IMPORT char;
-FROM Utypes IMPORT u_char, u_short, u_long;
+FROM Utypes IMPORT u_char, u_short, u_long, uint16_t, uint32_t, in_addr_t;
 IMPORT Word;
 
 (* Constants and structures defined by the internet system,
@@ -80,7 +80,7 @@ CONST
 
 TYPE
   struct_in_addr =   RECORD
-                       s_addr: u_long; END;
+                       s_addr: in_addr_t; END;
   struct_in_addr_b = RECORD
                        s_b1, s_b2, s_b3, s_b4: u_char; END;
   struct_in_addr_w = RECORD
@@ -144,9 +144,9 @@ CONST
   IP_OPTIONS = 1;		(* set/get IP per-packet options *)
 
 (* Procedures for number representation conversion. *)
-PROCEDURE ntohl(x: u_long): u_long;
-PROCEDURE ntohs(x: u_short): u_short;
-PROCEDURE htonl(x: u_long): u_long;
-PROCEDURE htons(x: u_short): u_short;
+PROCEDURE ntohl(x: uint32_t): uint32_t;
+PROCEDURE ntohs(x: uint16_t): uint16_t;
+PROCEDURE htonl(x: uint32_t): uint32_t;
+PROCEDURE htons(x: uint16_t): uint16_t;
 
 END Uin.

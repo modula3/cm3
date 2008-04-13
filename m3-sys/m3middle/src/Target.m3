@@ -469,6 +469,22 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Setjmp                    := "setjmp";
                  Global_handler_stack      := FALSE; (* may use pthreads *)
 
+    |  Systems.AMD64_DARWIN =>
+                 Integer := Int64;
+                 Word    := Word64;
+                 Address := Word64;   Address.cg_type := CGType.Addr;
+
+                 max_align                 := 64;
+                 Little_endian             := TRUE;
+                 PCC_bitfield_type_matters := TRUE;
+                 Structure_size_boundary   := 8;
+                 First_readable_addr       := 4096 * Char.size;
+                 Jumpbuf_size              := 19 * Address.size;
+                 Fixed_frame_size          := 8 * Address.size;
+                 Guard_page_size           := 0 * Char.size;
+                 Setjmp                    := "setjmp";
+                 Global_handler_stack      := FALSE; (* may use pthreads *)
+
     |  Systems.PPC_DARWIN =>
                  max_align                 := 64;
                  Little_endian             := FALSE;
@@ -496,7 +512,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Setjmp                    := "_setjmp";
 
     |  Systems.PPC_LINUX => 
-      (* FIXME: preliminary assumptions bound to change *)
                  max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
