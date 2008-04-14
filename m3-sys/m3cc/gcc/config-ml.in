@@ -1,8 +1,8 @@
 # Configure fragment invoked in the post-target section for subdirs
 # wanting multilib support.
 #
-# Copyright (C) 1995, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
-#   Free Software Foundation, Inc.
+# Copyright (C) 1995, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
+# 2005, 2006, 2007  Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -382,28 +382,6 @@ mips*-*-*)
 	    esac
 	  done
 	fi
-	case " $multidirs " in
-	*" mabi=64 "*)
-	  # We will not be able to create libraries with -mabi=64 if
-	  # we cannot even link a trivial program.  It usually
-	  # indicates the 64bit libraries are missing.
-	  if echo 'main() {}' > conftest.c &&
-	     ${CC-gcc} -mabi=64 conftest.c -o conftest; then
-	    :
-	  else
-	    echo Could not link program with -mabi=64, disabling it.
-	    old_multidirs="${multidirs}"
-	    multidirs=""
-	    for x in ${old_multidirs}; do
-	      case "$x" in
-	      *mabi=64* ) : ;;
-	      *) multidirs="${multidirs} ${x}" ;;
-	      esac
-	    done
-	  fi
-	  rm -f conftest.c conftest
-	  ;;
-	esac
 	;;
 powerpc*-*-* | rs6000*-*-*)
 	if [ x$enable_aix64 = xno ]
@@ -495,30 +473,6 @@ powerpc*-*-* | rs6000*-*-*)
 	  done
 	fi
 	;;
-sparc*-*-*)
-	case " $multidirs " in
-	*" m64 "*)
-	  # We will not be able to create libraries with -m64 if
-	  # we cannot even link a trivial program.  It usually
-	  # indicates the 64bit libraries are missing.
-	  if echo 'main() {}' > conftest.c &&
-	     ${CC-gcc} -m64 conftest.c -o conftest; then
-	    :
-	  else
-	    echo Could not link program with -m64, disabling it.
-	    old_multidirs="${multidirs}"
-	    multidirs=""
-	    for x in ${old_multidirs}; do
-	      case "$x" in
-	      *m64* ) : ;;
-	      *) multidirs="${multidirs} ${x}" ;;
-	      esac
-	    done
-	  fi
-	  rm -f conftest.c conftest
-	  ;;
-	esac
-	;;
 esac
 
 # Remove extraneous blanks from multidirs.
@@ -540,7 +494,7 @@ multi-do:
 	else \
 	  rootpre=`${PWD_COMMAND}`/; export rootpre; \
 	  srcrootpre=`cd $(srcdir); ${PWD_COMMAND}`/; export srcrootpre; \
-	  lib=`echo $${rootpre} | sed -e 's,^.*/\([^/][^/]*\)/$$,\1,'`; \
+	  lib=`echo "$${rootpre}" | sed -e 's,^.*/\([^/][^/]*\)/$$,\1,'`; \
 	  compiler="$(CC)"; \
 	  for i in `$${compiler} --print-multi-lib 2>/dev/null`; do \
 	    dir=`echo $$i | sed -e 's/;.*$$//'`; \
@@ -551,6 +505,7 @@ multi-do:
 		flags=`echo $$i | sed -e 's/^[^;]*;//' -e 's/@/ -/g'`; \
 		if (cd ../$${dir}/$${lib}; $(MAKE) $(FLAGS_TO_PASS) \
 				CFLAGS="$(CFLAGS) $${flags}" \
+				CCASFLAGS="$(CCASFLAGS) $${flags}" \
 				FCFLAGS="$(FCFLAGS) $${flags}" \
 				FFLAGS="$(FFLAGS) $${flags}" \
 				ADAFLAGS="$(ADAFLAGS) $${flags}" \
@@ -585,8 +540,13 @@ multi-clean:
 	  true; \
 	else \
 	  lib=`${PWD_COMMAND} | sed -e 's,^.*/\([^/][^/]*\)$$,\1,'`; \
-	  for dir in Makefile $(MULTIDIRS); do \
-	    if [ -f ../$${dir}/$${lib}/Makefile ]; then \
+	  for dir in : $(MULTIDIRS); do \
+	    test $$dir != : || continue; \
+EOF
+cat >>Multi.tem <<EOF
+	    if [ -f ../\$\${dir}/\$\${lib}/${Makefile} ]; then \\
+EOF
+cat >>Multi.tem <<\EOF
 	      if (cd ../$${dir}/$${lib}; $(MAKE) $(FLAGS_TO_PASS) $(DO)); \
 	      then true; \
 	      else exit 1; \
@@ -604,7 +564,7 @@ mv Makefile.tem ${Makefile}
 fi # ${ml_toplevel_p} = yes
 
 if [ "${ml_verbose}" = --verbose ]; then
-  echo "Adding multilib support to Makefile in ${ml_realsrcdir}"
+  echo "Adding multilib support to ${Makefile} in ${ml_realsrcdir}"
   if [ "${ml_toplevel_p}" = yes ]; then
     echo "multidirs=${multidirs}"
   fi
@@ -695,7 +655,7 @@ if [ -n "${multidirs}" ] && [ -z "${ml_norecursion}" ]; then
   fi
 
   ml_origdir=`${PWDCMD-pwd}`
-  ml_libdir=`echo $ml_origdir | sed -e 's,^.*/,,'`
+  ml_libdir=`echo "$ml_origdir" | sed -e 's,^.*/,,'`
   # cd to top-level-build-dir/${with_target_subdir}
   cd ..
 
@@ -731,7 +691,7 @@ if [ -n "${multidirs}" ] && [ -z "${ml_norecursion}" ]; then
 
     case ${srcdir} in
     ".")
-      echo Building symlink tree in `${PWDCMD-pwd}`/${ml_dir}/${ml_libdir}
+      echo "Building symlink tree in `${PWDCMD-pwd}`/${ml_dir}/${ml_libdir}"
       if [ "${with_target_subdir}" != "." ]; then
 	ml_unsubdir="../"
       else
@@ -739,7 +699,7 @@ if [ -n "${multidirs}" ] && [ -z "${ml_norecursion}" ]; then
       fi
       (cd ${ml_dir}/${ml_libdir};
        ../${dotdot}${ml_unsubdir}symlink-tree ../${dotdot}${ml_unsubdir}${ml_libdir} "")
-      if [ -f ${ml_dir}/${ml_libdir}/Makefile ]; then
+      if [ -f ${ml_dir}/${ml_libdir}/${Makefile} ]; then
 	if [ x"${MAKE}" = x ]; then
 	  (cd ${ml_dir}/${ml_libdir}; make distclean)
 	else
@@ -796,7 +756,7 @@ if [ -n "${multidirs}" ] && [ -z "${ml_norecursion}" ]; then
     else
 	# Create a regular expression that matches any string as long
 	# as ML_POPDIR.
-	popdir_rx=`echo ${ML_POPDIR} | sed 's,.,.,g'`
+	popdir_rx=`echo "${ML_POPDIR}" | sed 's,.,.,g'`
 	CC_=
 	for arg in ${CC}; do
 	  case $arg in
@@ -894,17 +854,17 @@ if [ -n "${multidirs}" ] && [ -z "${ml_norecursion}" ]; then
 
     if eval ${ml_config_env} ${ml_config_shell} ${ml_recprog} \
 	--with-multisubdir=${ml_dir} --with-multisrctop=${multisrctop} \
-	${ac_configure_args} ${ml_srcdiroption} ; then
+	${ac_configure_args} ${ml_config_env} ${ml_srcdiroption} ; then
       true
     else
       exit 1
     fi
 
-    cd ${ML_POPDIR}
+    cd "${ML_POPDIR}"
 
   done
 
-  cd ${ml_origdir}
+  cd "${ml_origdir}"
 fi
 
 fi # ${ml_toplevel_p} = yes
