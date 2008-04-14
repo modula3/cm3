@@ -1,12 +1,12 @@
 /* Communication between reload.c and reload1.c.
    Copyright (C) 1987, 1991, 1992, 1993, 1994, 1995, 1997, 1998,
-   1999, 2000, 2001, 2003, 2004 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2003, 2004, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 
 /* If secondary reloads are the same for inputs and outputs, define those
@@ -30,19 +29,10 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
   SECONDARY_RELOAD_CLASS (CLASS, MODE, X)
 #endif
 
-/* If either macro is defined, show that we need secondary reloads.  */
-#if defined(SECONDARY_INPUT_RELOAD_CLASS) || defined(SECONDARY_OUTPUT_RELOAD_CLASS)
-#define HAVE_SECONDARY_RELOADS
-#endif
-
 /* If MEMORY_MOVE_COST isn't defined, give it a default here.  */
 #ifndef MEMORY_MOVE_COST
-#ifdef HAVE_SECONDARY_RELOADS
 #define MEMORY_MOVE_COST(MODE,CLASS,IN) \
   (4 + memory_move_secondary_cost ((MODE), (CLASS), (IN)))
-#else
-#define MEMORY_MOVE_COST(MODE,CLASS,IN) 4
-#endif
 #endif
 extern int memory_move_secondary_cost (enum machine_mode, enum reg_class, int);
 
@@ -164,12 +154,13 @@ extern struct reload rld[MAX_RELOADS];
 extern int n_reloads;
 #endif
 
-extern GTY (()) struct varray_head_tag *reg_equiv_memory_loc_varray;
+extern GTY (()) VEC(rtx,gc) *reg_equiv_memory_loc_vec;
 extern rtx *reg_equiv_constant;
 extern rtx *reg_equiv_invariant;
 extern rtx *reg_equiv_memory_loc;
 extern rtx *reg_equiv_address;
 extern rtx *reg_equiv_mem;
+extern rtx *reg_equiv_alt_mem_list;
 
 /* Element N is the list of insns that initialized reg N from its equivalent
    constant or memory slot.  */
@@ -252,6 +243,13 @@ extern void compute_use_by_pseudos (HARD_REG_SET *, regset);
 #endif
 
 /* Functions from reload.c:  */
+
+extern enum reg_class secondary_reload_class (bool, enum reg_class,
+					      enum machine_mode, rtx);
+
+#ifdef GCC_INSN_CODES_H
+extern enum reg_class scratch_reload_class (enum insn_code);
+#endif
 
 /* Return a memory location that will be used to copy X in mode MODE.
    If we haven't already made a location for this mode in this insn,
@@ -343,6 +341,7 @@ extern void mark_home_live (int);
 /* Scan X and replace any eliminable registers (such as fp) with a
    replacement (such as sp), plus an offset.  */
 extern rtx eliminate_regs (rtx, enum machine_mode, rtx);
+extern bool elimination_target_reg_p (rtx);
 
 /* Deallocate the reload register used by reload number R.  */
 extern void deallocate_reload_reg (int r);

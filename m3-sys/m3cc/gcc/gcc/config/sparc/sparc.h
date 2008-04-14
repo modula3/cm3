@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler, for Sun SPARC.
    Copyright (C) 1987, 1988, 1989, 1992, 1994, 1995, 1996, 1997, 1998, 1999
-   2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com).
    64-bit SPARC-V9 support by Michael Tiemann, Jim Wilson, and Doug Evans,
    at Cygnus Support.
@@ -9,7 +9,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -18,9 +18,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
+
+#include "config/vxworks-dummy.h"
 
 /* Note that some other tm.h files include this one and then override
    whatever definitions are necessary.  */
@@ -206,7 +207,8 @@ extern enum cmodel sparc_cmodel;
    which requires the following macro to be true if enabled.  Prior to V9,
    there are no instructions to even talk about memory synchronization.
    Note that the UltraSPARC III processors don't implement RMO, unlike the
-   UltraSPARC II processors.
+   UltraSPARC II processors.  Niagara and Niagara-2 do not implement RMO
+   either.
 
    Default to false; for example, Solaris never enables RMO, only ever uses
    total memory ordering (TMO).  */
@@ -238,10 +240,14 @@ extern enum cmodel sparc_cmodel;
 #define TARGET_CPU_sparc64	7	/* alias */
 #define TARGET_CPU_ultrasparc	8
 #define TARGET_CPU_ultrasparc3	9
+#define TARGET_CPU_niagara	10
+#define TARGET_CPU_niagara2	11
 
 #if TARGET_CPU_DEFAULT == TARGET_CPU_v9 \
  || TARGET_CPU_DEFAULT == TARGET_CPU_ultrasparc \
- || TARGET_CPU_DEFAULT == TARGET_CPU_ultrasparc3
+ || TARGET_CPU_DEFAULT == TARGET_CPU_ultrasparc3 \
+ || TARGET_CPU_DEFAULT == TARGET_CPU_niagara \
+ || TARGET_CPU_DEFAULT == TARGET_CPU_niagara2
 
 #define CPP_CPU32_DEFAULT_SPEC ""
 #define ASM_CPU32_DEFAULT_SPEC ""
@@ -259,6 +265,14 @@ extern enum cmodel sparc_cmodel;
 #define ASM_CPU64_DEFAULT_SPEC "-Av9a"
 #endif
 #if TARGET_CPU_DEFAULT == TARGET_CPU_ultrasparc3
+#define CPP_CPU64_DEFAULT_SPEC "-D__sparc_v9__"
+#define ASM_CPU64_DEFAULT_SPEC "-Av9b"
+#endif
+#if TARGET_CPU_DEFAULT == TARGET_CPU_niagara
+#define CPP_CPU64_DEFAULT_SPEC "-D__sparc_v9__"
+#define ASM_CPU64_DEFAULT_SPEC "-Av9b"
+#endif
+#if TARGET_CPU_DEFAULT == TARGET_CPU_niagara2
 #define CPP_CPU64_DEFAULT_SPEC "-D__sparc_v9__"
 #define ASM_CPU64_DEFAULT_SPEC "-Av9b"
 #endif
@@ -352,6 +366,8 @@ extern enum cmodel sparc_cmodel;
 %{mcpu=v9:-D__sparc_v9__} \
 %{mcpu=ultrasparc:-D__sparc_v9__} \
 %{mcpu=ultrasparc3:-D__sparc_v9__} \
+%{mcpu=niagara:-D__sparc_v9__} \
+%{mcpu=niagara2:-D__sparc_v9__} \
 %{!mcpu*:%{!mcypress:%{!msparclite:%{!mf930:%{!mf934:%{!mv8:%{!msupersparc:%(cpp_cpu_default)}}}}}}} \
 "
 #define CPP_ARCH32_SPEC ""
@@ -401,6 +417,8 @@ extern enum cmodel sparc_cmodel;
 %{mcpu=v9:-Av9} \
 %{mcpu=ultrasparc:%{!mv8plus:-Av9a}} \
 %{mcpu=ultrasparc3:%{!mv8plus:-Av9b}} \
+%{mcpu=niagara:%{!mv8plus:-Av9b}} \
+%{mcpu=niagara2:%{!mv8plus:-Av9b}} \
 %{!mcpu*:%{!mcypress:%{!msparclite:%{!mf930:%{!mf934:%{!mv8:%{!msupersparc:%(asm_cpu_default)}}}}}}} \
 "
 
@@ -492,7 +510,7 @@ extern enum cmodel sparc_cmodel;
 /* TARGET_HARD_MUL: Use hardware multiply instructions but not %y.
    TARGET_HARD_MUL32: Use hardware multiply instructions with rd %y
    to get high 32 bits.  False in V8+ or V9 because multiply stores
-   a 64 bit result in a register.  */
+   a 64-bit result in a register.  */
 
 #define TARGET_HARD_MUL32				\
   ((TARGET_V8 || TARGET_SPARCLITE			\
@@ -524,7 +542,9 @@ enum processor_type {
   PROCESSOR_TSC701,
   PROCESSOR_V9,
   PROCESSOR_ULTRASPARC,
-  PROCESSOR_ULTRASPARC3
+  PROCESSOR_ULTRASPARC3,
+  PROCESSOR_NIAGARA,
+  PROCESSOR_NIAGARA2
 };
 
 /* This is set from -m{cpu,tune}=xxx.  */
@@ -681,6 +701,9 @@ if (TARGET_ARCH64				\
    && TYPE_MODE (TREE_TYPE (TYPE)) == QImode	\
    && (ALIGN) < FASTEST_ALIGNMENT ? FASTEST_ALIGNMENT : (ALIGN))
 
+/* Make local arrays of chars word-aligned for the same reasons.  */
+#define LOCAL_ALIGNMENT(TYPE, ALIGN) DATA_ALIGNMENT (TYPE, ALIGN)
+
 /* Set this nonzero if move instructions will actually fail to work
    when given unaligned data.  */
 #define STRICT_ALIGNMENT 1
@@ -699,7 +722,7 @@ if (TARGET_ARCH64				\
    even those that are not normally considered general registers.
 
    SPARC has 32 integer registers and 32 floating point registers.
-   64 bit SPARC has 32 additional fp regs, but the odd numbered ones are not
+   64-bit SPARC has 32 additional fp regs, but the odd numbered ones are not
    accessible.  We still account for them to simplify register computations
    (e.g.: in CLASS_MAX_NREGS).  There are also 4 fp condition code registers, so
    32+32+32+4 == 100.
@@ -1677,10 +1700,6 @@ do {									\
     else							\
       sparc_initialize_trampoline (TRAMP, FNADDR, CXT)
 
-/* Implement `va_start' for varargs and stdarg.  */
-#define EXPAND_BUILTIN_VA_START(valist, nextarg) \
-  sparc_va_start (valist, nextarg)
-
 /* Generate RTL to flush the register windows so as to make arbitrary frames
    available.  */
 #define SETUP_FRAME_ADDRESSES()		\
@@ -1691,6 +1710,10 @@ do {									\
    that holds the dynamic chain--the previous frame's address.  */
 #define DYNAMIC_CHAIN_ADDRESS(frame)	\
   plus_constant (frame, 14 * UNITS_PER_WORD + SPARC_STACK_BIAS)
+
+/* Given an rtx for the frame pointer,
+   return an rtx for the address of the frame.  */
+#define FRAME_ADDR_RTX(frame) plus_constant (frame, SPARC_STACK_BIAS)
 
 /* The return address isn't on the stack, it is in a register, so we can't
    access it from the current frame pointer.  We can access it from the
@@ -2137,7 +2160,9 @@ do {                                                                    \
     || (GENERAL_OR_I64 (CLASS1) && FP_REG_CLASS_P (CLASS2)) \
     || (CLASS1) == FPCC_REGS || (CLASS2) == FPCC_REGS)		\
    ? ((sparc_cpu == PROCESSOR_ULTRASPARC \
-       || sparc_cpu == PROCESSOR_ULTRASPARC3) ? 12 : 6) : 2)
+       || sparc_cpu == PROCESSOR_ULTRASPARC3 \
+       || sparc_cpu == PROCESSOR_NIAGARA \
+       || sparc_cpu == PROCESSOR_NIAGARA2) ? 12 : 6) : 2)
 
 /* Provide the cost of a branch.  For pre-v9 processors we use
    a value of 3 to take into account the potential annulling of
@@ -2147,25 +2172,25 @@ do {                                                                    \
 
    On v9 and later, which have branch prediction facilities, we set
    it to the depth of the pipeline as that is the cost of a
-   mispredicted branch.  */
+   mispredicted branch.
+
+   On Niagara, normal branches insert 3 bubbles into the pipe
+   and annulled branches insert 4 bubbles.
+
+   On Niagara-2, a not-taken branch costs 1 cycle whereas a taken
+   branch costs 6 cycles.  */
 
 #define BRANCH_COST \
 	((sparc_cpu == PROCESSOR_V9 \
 	  || sparc_cpu == PROCESSOR_ULTRASPARC) \
 	 ? 7 \
          : (sparc_cpu == PROCESSOR_ULTRASPARC3 \
-            ? 9 : 3))
-
-#define PREFETCH_BLOCK \
-	((sparc_cpu == PROCESSOR_ULTRASPARC \
-          || sparc_cpu == PROCESSOR_ULTRASPARC3) \
-         ? 64 : 32)
-
-#define SIMULTANEOUS_PREFETCHES \
-	((sparc_cpu == PROCESSOR_ULTRASPARC) \
-         ? 2 \
-         : (sparc_cpu == PROCESSOR_ULTRASPARC3 \
-            ? 8 : 3))
+            ? 9 \
+	 : (sparc_cpu == PROCESSOR_NIAGARA \
+	    ? 4 \
+	 : (sparc_cpu == PROCESSOR_NIAGARA2 \
+	    ? 5 \
+	 : 3))))
 
 /* Control the assembler format that we output.  */
 
@@ -2400,6 +2425,7 @@ extern int sparc_indent_opcode;
 	  else if (GET_CODE (index) == REG)			\
 	    fprintf (FILE, "+%s", reg_names[REGNO (index)]);	\
 	  else if (GET_CODE (index) == SYMBOL_REF		\
+		   || GET_CODE (index) == LABEL_REF		\
 		   || GET_CODE (index) == CONST)		\
 	    fputc ('+', FILE), output_addr_const (FILE, index);	\
 	  else gcc_unreachable ();				\

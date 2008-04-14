@@ -86,11 +86,16 @@ call_ ## FUNC (void)					\
 }
 #endif
 
-#if defined(OBJECT_FORMAT_ELF) && defined(HAVE_LD_EH_FRAME_HDR) \
+#if defined(OBJECT_FORMAT_ELF) \
+    && !defined(OBJECT_FORMAT_FLAT) \
+    && defined(HAVE_LD_EH_FRAME_HDR) \
     && !defined(inhibit_libc) && !defined(CRTSTUFFT_O) \
     && defined(__GLIBC__) && __GLIBC__ >= 2
 #include <link.h>
-# if (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 2) \
+/* uClibc pretends to be glibc 2.2 and DT_CONFIG is defined in its link.h.
+   But it doesn't use PT_GNU_EH_FRAME ELF segment currently.  */
+# if !defined(__UCLIBC__) \
+     && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 2) \
      || (__GLIBC__ == 2 && __GLIBC_MINOR__ == 2 && defined(DT_CONFIG)))
 #  define USE_PT_GNU_EH_FRAME
 # endif
@@ -102,6 +107,11 @@ call_ ## FUNC (void)					\
 # define EH_FRAME_SECTION_CONST const
 #else
 # define EH_FRAME_SECTION_CONST
+#endif
+
+#if !defined(DTOR_LIST_END) && defined(OBJECT_FORMAT_ELF) \
+    && defined(HAVE_GAS_HIDDEN) && !defined(FINI_ARRAY_SECTION_ASM_OP)
+# define HIDDEN_DTOR_LIST_END
 #endif
 
 /* We do not want to add the weak attribute to the declarations of these
@@ -225,6 +235,9 @@ STATIC void *__JCR_LIST__[]
    in one DSO or the main program is not used in another object.  The
    dynamic linker takes care of this.  */
 
+#ifdef TARGET_LIBGCC_SDATA_SECTION
+extern void *__dso_handle __attribute__ ((__section__ (TARGET_LIBGCC_SDATA_SECTION)));
+#endif
 #ifdef HAVE_GAS_HIDDEN
 extern void *__dso_handle __attribute__ ((__visibility__ ("hidden")));
 #endif
@@ -260,10 +273,6 @@ extern void __cxa_finalize (void *) TARGET_ATTRIBUTE_WEAK;
 static void __attribute__((used))
 __do_global_dtors_aux (void)
 {
-#ifndef FINI_ARRAY_SECTION_ASM_OP
-  static func_ptr *p = __DTOR_LIST__ + 1;
-  func_ptr f;
-#endif /* !defined(FINI_ARRAY_SECTION_ASM_OP)  */
   static _Bool completed;
 
   if (__builtin_expect (completed, 0))
@@ -277,12 +286,32 @@ __do_global_dtors_aux (void)
 #ifdef FINI_ARRAY_SECTION_ASM_OP
   /* If we are using .fini_array then destructors will be run via that
      mechanism.  */
+#elif defined(HIDDEN_DTOR_LIST_END)
+  {
+    /* Safer version that makes sure only .dtors function pointers are
+       called even if the static variable is maliciously changed.  */
+    extern func_ptr __DTOR_END__[] __attribute__((visibility ("hidden")));
+    static size_t dtor_idx;
+    const size_t max_idx = __DTOR_END__ - __DTOR_LIST__ - 1;
+    func_ptr f;
+
+    while (dtor_idx < max_idx)
+      {
+	f = __DTOR_LIST__[++dtor_idx];
+	f ();
+      }
+  }
 #else /* !defined (FINI_ARRAY_SECTION_ASM_OP) */
-  while ((f = *p))
-    {
-      p++;
-      f ();
-    }
+  {
+    static func_ptr *p = __DTOR_LIST__ + 1;
+    func_ptr f;
+
+    while ((f = *p))
+      {
+	p++;
+	f ();
+      }
+  }
 #endif /* !defined(FINI_ARRAY_SECTION_ASM_OP) */
 
 #ifdef USE_EH_FRAME_REGISTRY
@@ -466,6 +495,17 @@ STATIC func_ptr __CTOR_END__[1]
 
 #ifdef DTOR_LIST_END
 DTOR_LIST_END;
+#elif defined(HIDDEN_DTOR_LIST_END)
+#ifdef DTORS_SECTION_ASM_OP
+asm (DTORS_SECTION_ASM_OP);
+#endif
+func_ptr __DTOR_END__[1]
+  __attribute__ ((unused,
+#ifndef DTORS_SECTION_ASM_OP
+		  section(".dtors"),
+#endif
+		  aligned(sizeof(func_ptr)), visibility ("hidden")))
+  = { (func_ptr) 0 };
 #elif defined(DTORS_SECTION_ASM_OP)
 asm (DTORS_SECTION_ASM_OP);
 STATIC func_ptr __DTOR_END__[1]

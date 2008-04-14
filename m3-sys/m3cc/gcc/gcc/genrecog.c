@@ -1,12 +1,13 @@
 /* Generate code from machine description to recognize rtl as insns.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1997, 1998,
-   1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007
+   Free Software Foundation, Inc.
 
    This file is part of GCC.
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
+   the Free Software Foundation; either version 3, or (at your option)
    any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -15,9 +16,8 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 
 /* This program is used to produce insn-recog.c, which contains a
@@ -60,10 +60,6 @@
 
 #define OUTPUT_LABEL(INDENT_STRING, LABEL_NUMBER) \
   printf("%sL%d: ATTRIBUTE_UNUSED_LABEL\n", (INDENT_STRING), (LABEL_NUMBER))
-
-/* Holds an array of names indexed by insn_code_number.  */
-static char **insn_name_ptr = 0;
-static int insn_name_ptr_size = 0;
 
 /* A listhead of decision trees.  The alternatives to a node are kept
    in a doubly-linked list so we can easily add nodes to the proper
@@ -175,7 +171,7 @@ static int pattern_lineno;
 /* Count of errors.  */
 static int error_count;
 
-/* Predicate handling. 
+/* Predicate handling.
 
    We construct from the machine description a table mapping each
    predicate to a list of the rtl codes it can possibly match.  The
@@ -263,7 +259,7 @@ compute_predicate_codes (rtx exp, char codes[NUM_RTX_CODE])
       break;
 
     case IF_THEN_ELSE:
-      /* a ? b : c  accepts the same codes as (a & b) | (!a & c).  */ 
+      /* a ? b : c  accepts the same codes as (a & b) | (!a & c).  */
       compute_predicate_codes (XEXP (exp, 0), op0_codes);
       compute_predicate_codes (XEXP (exp, 1), op1_codes);
       compute_predicate_codes (XEXP (exp, 2), op2_codes);
@@ -274,7 +270,15 @@ compute_predicate_codes (rtx exp, char codes[NUM_RTX_CODE])
       break;
 
     case MATCH_CODE:
-      /* MATCH_CODE allows a specified list of codes.  */
+      /* MATCH_CODE allows a specified list of codes.  However, if it
+	 does not apply to the top level of the expression, it does not
+	 constrain the set of codes for the top level.  */
+      if (XSTR (exp, 1)[0] != '\0')
+	{
+	  memset (codes, Y, NUM_RTX_CODE);
+	  break;
+	}
+
       memset (codes, N, NUM_RTX_CODE);
       {
 	const char *next_code = XSTR (exp, 0);
@@ -291,7 +295,7 @@ compute_predicate_codes (rtx exp, char codes[NUM_RTX_CODE])
 	  {
 	    size_t n = next_code - code;
 	    int found_it = 0;
-	    
+
 	    for (i = 0; i < NUM_RTX_CODE; i++)
 	      if (!strncmp (code, GET_RTX_NAME (i), n)
 		  && GET_RTX_NAME (i)[n] == '\0')
@@ -473,9 +477,6 @@ static struct decision_head make_insn_sequence
 static void process_tree
   (struct decision_head *, enum routine_type);
 
-static void record_insn_name
-  (int, const char *);
-
 static void debug_decision_0
   (struct decision *, int, int);
 static void debug_decision_1
@@ -510,7 +511,7 @@ new_decision_test (enum decision_type type, struct decision_test ***pplace)
   struct decision_test **place = *pplace;
   struct decision_test *test;
 
-  test = xmalloc (sizeof (*test));
+  test = XNEW (struct decision_test);
   test->next = *place;
   test->type = type;
   *place = test;
@@ -1087,7 +1088,7 @@ add_to_sequence (rtx pattern, struct decision_head *last, const char *position,
       if (fmt[i] == 'i')
 	{
 	  gcc_assert (i < 2);
-	  
+
 	  if (!i)
 	    {
 	      test = new_decision_test (DT_elt_zero_int, &place);
@@ -2189,7 +2190,7 @@ write_action (struct decision *p, struct decision_test *test,
 		    indent, test->u.insn.num_clobbers_to_add);
 	  printf ("%sreturn %d;  /* %s */\n", indent,
 		  test->u.insn.code_number,
-		  insn_name_ptr[test->u.insn.code_number]);
+		  get_insn_name (test->u.insn.code_number));
 	  break;
 
 	case SPLIT:
@@ -2495,6 +2496,8 @@ write_header (void)
 #include \"resource.h\"\n\
 #include \"toplev.h\"\n\
 #include \"reload.h\"\n\
+#include \"regs.h\"\n\
+#include \"tm-constrs.h\"\n\
 \n");
 
   puts ("\n\
@@ -2547,8 +2550,6 @@ make_insn_sequence (rtx insn, enum routine_type type)
 
   /* We should never see an insn whose C test is false at compile time.  */
   gcc_assert (truth);
-
-  record_insn_name (next_insn_code, (type == RECOG ? XSTR (insn, 0) : NULL));
 
   c_test_pos[0] = '\0';
   if (type == PEEPHOLE2)
@@ -2796,47 +2797,6 @@ main (int argc, char **argv)
 
   fflush (stdout);
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
-}
-
-/* Define this so we can link with print-rtl.o to get debug_rtx function.  */
-const char *
-get_insn_name (int code)
-{
-  if (code < insn_name_ptr_size)
-    return insn_name_ptr[code];
-  else
-    return NULL;
-}
-
-static void
-record_insn_name (int code, const char *name)
-{
-  static const char *last_real_name = "insn";
-  static int last_real_code = 0;
-  char *new;
-
-  if (insn_name_ptr_size <= code)
-    {
-      int new_size;
-      new_size = (insn_name_ptr_size ? insn_name_ptr_size * 2 : 512);
-      insn_name_ptr = xrealloc (insn_name_ptr, sizeof(char *) * new_size);
-      memset (insn_name_ptr + insn_name_ptr_size, 0,
-	      sizeof(char *) * (new_size - insn_name_ptr_size));
-      insn_name_ptr_size = new_size;
-    }
-
-  if (!name || name[0] == '\0')
-    {
-      new = xmalloc (strlen (last_real_name) + 10);
-      sprintf (new, "%s+%d", last_real_name, code - last_real_code);
-    }
-  else
-    {
-      last_real_name = new = xstrdup (name);
-      last_real_code = code;
-    }
-
-  insn_name_ptr[code] = new;
 }
 
 static void

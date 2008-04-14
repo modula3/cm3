@@ -1,10 +1,10 @@
-/* Copyright (C) 1999, 2003, 2004 Free Software Foundation, Inc.
+/* Copyright (C) 1999, 2003, 2004, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -13,18 +13,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
-
-#undef  EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_sdata, in_sbss
-
-#undef  EXTRA_SECTION_FUNCTIONS
-#define EXTRA_SECTION_FUNCTIONS                                            \
-  SECTION_FUNCTION_TEMPLATE(sdata_section, in_sdata, SDATA_SECTION_ASM_OP) \
-  SECTION_FUNCTION_TEMPLATE(sbss_section, in_sbss, SBSS_SECTION_ASM_OP)
-
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #undef  TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (MIPS, VxWorks syntax)");
@@ -55,23 +45,49 @@ Boston, MA 02110-1301, USA.  */
 #define LINK_SPEC "\
 %(endian_spec) \
 %{!G:-G 0} %{G*} %{mips1} %{mips2} %{mips3} %{mips4} %{mips32} %{mips64} \
-%{bestGnum}"
+%{bestGnum}" \
+VXWORKS_LINK_SPEC
+
+#undef  LIB_SPEC
+#define LIB_SPEC VXWORKS_LIB_SPEC
+#undef  STARTFILE_SPEC
+#define STARTFILE_SPEC VXWORKS_STARTFILE_SPEC
+#undef  ENDFILE_SPEC
+#define ENDFILE_SPEC VXWORKS_ENDFILE_SPEC
 
 #define TARGET_OS_CPP_BUILTINS()                        \
   do                                                    \
     {                                                   \
-      builtin_define ("__vxworks");                     \
-      builtin_assert ("system=unix");                   \
+      if (TARGET_64BIT)					\
+	builtin_define ("CPU=MIPS64");			\
+      else						\
+	builtin_define ("CPU=MIPS32");			\
+      if (TARGET_BIG_ENDIAN)				\
+	builtin_define ("MIPSEB");			\
+      else						\
+	builtin_define ("MIPSEL");			\
+      if (TARGET_SOFT_FLOAT)				\
+	builtin_define ("SOFT_FLOAT");			\
+      VXWORKS_OS_CPP_BUILTINS ();			\
     }                                                   \
   while (0)
 
 #undef SUBTARGET_CPP_SPEC
-#define SUBTARGET_CPP_SPEC \
-"%{!DCPU=*: %{mips3|mips4|mips64:-DCPU=MIPS64;:-DCPU=MIPS32}} \
-  %{EL|mel:-DMIPSEL;:-DMIPSEB} \
-  %{msoft-float:-DSOFT_FLOAT} \
-  %{mips1:-D_WRS_R3K_EXC_SUPPORT}"
+#define SUBTARGET_CPP_SPEC VXWORKS_ADDITIONAL_CPP_SPEC
 
 /* No sdata.  */
 #undef MIPS_DEFAULT_GVALUE
 #define MIPS_DEFAULT_GVALUE 0
+
+/* Other formats are already disabled in config/vxworks.h.  */
+#undef MIPS_DEBUGGING_INFO
+
+/* No _mcount profiling on VxWorks.  */
+#undef FUNCTION_PROFILER
+#define FUNCTION_PROFILER VXWORKS_FUNCTION_PROFILER
+
+#undef SUBTARGET_ASM_SPEC
+#define SUBTARGET_ASM_SPEC "%{mrtp:%{fPIC|fpic:-mvxworks-pic}}"
+
+#undef SUBTARGET_OVERRIDE_OPTIONS
+#define SUBTARGET_OVERRIDE_OPTIONS VXWORKS_OVERRIDE_OPTIONS

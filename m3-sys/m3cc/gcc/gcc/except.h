@@ -1,13 +1,13 @@
 /* Exception Handling interface routines.
-   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005
-   Free Software Foundation, Inc.
+   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
+   2007  Free Software Foundation, Inc.
    Contributed by Mike Stump <mrs@cygnus.com>.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -16,9 +16,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 
 struct function;
@@ -47,12 +46,12 @@ extern void for_each_eh_region (void (*) (struct eh_region *));
 
 /* Determine if the given INSN can throw an exception.  */
 extern bool can_throw_internal_1 (int, bool);
-extern bool can_throw_internal (rtx);
+extern bool can_throw_internal (const_rtx);
 extern bool can_throw_external_1 (int, bool);
-extern bool can_throw_external (rtx);
+extern bool can_throw_external (const_rtx);
 
 /* Set TREE_NOTHROW and cfun->all_throwers_are_sibcalls.  */
-extern void set_nothrow_function_flags (void);
+extern unsigned int set_nothrow_function_flags (void);
 
 /* After initial rtl generation, call back to finish generating
    exception support code.  */
@@ -65,10 +64,10 @@ extern rtx reachable_handlers (rtx);
 extern void maybe_remove_eh_handler (rtx);
 
 extern void convert_from_eh_region_ranges (void);
-extern void convert_to_eh_region_ranges (void);
+extern unsigned int convert_to_eh_region_ranges (void);
 extern void find_exception_handler_labels (void);
 extern bool current_function_has_exception_handlers (void);
-extern void output_function_exception_table (void);
+extern void output_function_exception_table (const char *);
 
 extern void expand_builtin_unwind_init (void);
 extern rtx expand_builtin_eh_return_data_regno (tree);
@@ -82,7 +81,8 @@ extern rtx expand_builtin_extend_pointer (tree);
 extern rtx get_exception_pointer (struct function *);
 extern rtx get_exception_filter (struct function *);
 typedef tree (*duplicate_eh_regions_map) (tree, void *);
-extern int duplicate_eh_regions (struct function *, duplicate_eh_regions_map, void *, int);
+extern int duplicate_eh_regions (struct function *, duplicate_eh_regions_map,
+				 void *, int, int);
 
 extern void sjlj_emit_function_exit_after (rtx);
 extern void default_init_unwind_resume_libfunc (void);
@@ -106,12 +106,14 @@ extern void collect_eh_region_array (void);
 extern void expand_resx_expr (tree);
 extern void verify_eh_tree (struct function *);
 extern void dump_eh_tree (FILE *, struct function *);
+extern bool eh_region_outer_p (struct function *, int, int);
+extern int eh_region_outermost (struct function *, int, int);
 
 /* tree-eh.c */
 extern void add_stmt_to_eh_region_fn (struct function *, tree, int);
 extern bool remove_stmt_from_eh_region_fn (struct function *, tree);
-extern int lookup_stmt_eh_region_fn (struct function *, tree);
-extern int lookup_stmt_eh_region (tree);
+extern int lookup_stmt_eh_region_fn (struct function *, const_tree);
+extern int lookup_stmt_eh_region (const_tree);
 extern bool verify_eh_edges (tree);
 
 /* If non-NULL, this is a function that returns an expression to be

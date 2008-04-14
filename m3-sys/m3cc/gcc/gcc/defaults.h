@@ -1,6 +1,6 @@
 /* Definitions of various defaults for tm.h macros.
    Copyright (C) 1992, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-   2005
+   2005, 2007, 2008
    Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@monkeys.com)
 
@@ -8,7 +8,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -17,9 +17,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #ifndef GCC_DEFAULTS_H
 #define GCC_DEFAULTS_H
@@ -112,6 +111,18 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 	fprintf (FILE, "\n");						\
   } while (0)
 #endif
+#endif
+
+#if defined (HAVE_AS_TLS) && !defined (ASM_OUTPUT_TLS_COMMON)
+#define ASM_OUTPUT_TLS_COMMON(FILE, DECL, NAME, SIZE)			\
+  do									\
+    {									\
+      fprintf ((FILE), "\t.tls_common\t");				\
+      assemble_name ((FILE), (NAME));					\
+      fprintf ((FILE), ","HOST_WIDE_INT_PRINT_UNSIGNED",%u\n",		\
+	       (SIZE), DECL_ALIGN (DECL) / BITS_PER_UNIT);		\
+    }									\
+  while (0)
 #endif
 
 /* Decide whether to defer emitting the assembler output for an equate
@@ -310,7 +321,8 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 
 /* If we have a definition of INCOMING_RETURN_ADDR_RTX, assume that
    the rest of the DWARF 2 frame unwind support is also provided.  */
-#if !defined (DWARF2_UNWIND_INFO) && defined (INCOMING_RETURN_ADDR_RTX)
+#if !defined (DWARF2_UNWIND_INFO) && defined (INCOMING_RETURN_ADDR_RTX) \
+    && !defined (TARGET_UNWIND_INFO)
 #define DWARF2_UNWIND_INFO 1
 #endif
 
@@ -429,6 +441,50 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 
 #ifndef LONG_DOUBLE_TYPE_SIZE
 #define LONG_DOUBLE_TYPE_SIZE (BITS_PER_WORD * 2)
+#endif
+
+#ifndef DECIMAL32_TYPE_SIZE
+#define DECIMAL32_TYPE_SIZE 32
+#endif 
+
+#ifndef DECIMAL64_TYPE_SIZE 
+#define DECIMAL64_TYPE_SIZE 64
+#endif 
+
+#ifndef DECIMAL128_TYPE_SIZE
+#define DECIMAL128_TYPE_SIZE 128
+#endif
+
+#ifndef SHORT_FRACT_TYPE_SIZE
+#define SHORT_FRACT_TYPE_SIZE BITS_PER_UNIT
+#endif
+
+#ifndef FRACT_TYPE_SIZE
+#define FRACT_TYPE_SIZE (BITS_PER_UNIT * 2)
+#endif
+
+#ifndef LONG_FRACT_TYPE_SIZE
+#define LONG_FRACT_TYPE_SIZE (BITS_PER_UNIT * 4)
+#endif
+
+#ifndef LONG_LONG_FRACT_TYPE_SIZE
+#define LONG_LONG_FRACT_TYPE_SIZE (BITS_PER_UNIT * 8)
+#endif
+
+#ifndef SHORT_ACCUM_TYPE_SIZE
+#define SHORT_ACCUM_TYPE_SIZE (SHORT_FRACT_TYPE_SIZE * 2)
+#endif
+
+#ifndef ACCUM_TYPE_SIZE
+#define ACCUM_TYPE_SIZE (FRACT_TYPE_SIZE * 2)
+#endif
+
+#ifndef LONG_ACCUM_TYPE_SIZE
+#define LONG_ACCUM_TYPE_SIZE (LONG_FRACT_TYPE_SIZE * 2)
+#endif
+
+#ifndef LONG_LONG_ACCUM_TYPE_SIZE
+#define LONG_LONG_ACCUM_TYPE_SIZE (LONG_LONG_FRACT_TYPE_SIZE * 2)
 #endif
 
 /* Width in bits of a pointer.  Mind the value of the macro `Pmode'.  */
@@ -599,46 +655,10 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #define UNKNOWN_FLOAT_FORMAT 0
 #define IEEE_FLOAT_FORMAT 1
 #define VAX_FLOAT_FORMAT 2
-#define IBM_FLOAT_FORMAT 3
-#define C4X_FLOAT_FORMAT 4
 
 /* Default to IEEE float if not specified.  Nearly all machines use it.  */
 #ifndef TARGET_FLOAT_FORMAT
 #define	TARGET_FLOAT_FORMAT	IEEE_FLOAT_FORMAT
-#endif
-
-/* Some macros can be defined by the backend in either a mode-dependent
-   or mode-independent form.  The compiler proper should only use the
-   mode-dependent form, providing VOIDmode when the mode is unknown.
-   We can't poison the macros because the backend may reference them.  */
-
-#ifndef REGNO_MODE_OK_FOR_BASE_P
-#define REGNO_MODE_OK_FOR_BASE_P(REGNO, MODE) REGNO_OK_FOR_BASE_P (REGNO)
-#endif
-
-#ifndef REG_MODE_OK_FOR_BASE_P
-#define REG_MODE_OK_FOR_BASE_P(REG, MODE) REG_OK_FOR_BASE_P (REG)
-#endif
-
-/* Determine the register class for registers suitable to be the base
-   address register in a MEM.  Allow the choice to be dependent upon
-   the mode of the memory access.  */
-#ifndef MODE_BASE_REG_CLASS
-#define MODE_BASE_REG_CLASS(MODE) BASE_REG_CLASS
-#endif
-
-/* Some machines require a different base register class if the index
-   is a register.  By default, assume that a base register is acceptable.  */
-#ifndef MODE_BASE_REG_REG_CLASS
-#define MODE_BASE_REG_REG_CLASS(MODE) MODE_BASE_REG_CLASS(MODE)
-#endif
-
-#ifndef REGNO_MODE_OK_FOR_REG_BASE_P
-#define REGNO_MODE_OK_FOR_REG_BASE_P(REGNO, MODE) REGNO_MODE_OK_FOR_BASE_P (REGNO, MODE)
-#endif
-
-#ifndef REG_MODE_OK_FOR_REG_BASE_P
-#define REG_MODE_OK_FOR_REG_BASE_P(REGNO, MODE) REG_MODE_OK_FOR_BASE_P (REGNO, MODE)
 #endif
 
 #ifndef LARGEST_EXPONENT_IS_NORMAL
@@ -696,6 +716,10 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #define TARGET_FLT_EVAL_METHOD 0
 #endif
 
+#ifndef TARGET_DEC_EVAL_METHOD
+#define TARGET_DEC_EVAL_METHOD 2
+#endif
+
 #ifndef HOT_TEXT_SECTION_NAME
 #define HOT_TEXT_SECTION_NAME ".text.hot"
 #endif
@@ -723,6 +747,33 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #ifndef DEFAULT_USE_CXA_ATEXIT
 #define DEFAULT_USE_CXA_ATEXIT 0
 #endif
+
+/* If none of these macros are defined, the port must use the new
+   technique of defining constraints in the machine description.
+   tm_p.h will define those macros that machine-independent code
+   still uses.  */
+#if  !defined CONSTRAINT_LEN			\
+  && !defined REG_CLASS_FROM_LETTER		\
+  && !defined REG_CLASS_FROM_CONSTRAINT		\
+  && !defined CONST_OK_FOR_LETTER_P		\
+  && !defined CONST_OK_FOR_CONSTRAINT_P		\
+  && !defined CONST_DOUBLE_OK_FOR_LETTER_P	\
+  && !defined CONST_DOUBLE_OK_FOR_CONSTRAINT_P  \
+  && !defined EXTRA_CONSTRAINT			\
+  && !defined EXTRA_CONSTRAINT_STR		\
+  && !defined EXTRA_MEMORY_CONSTRAINT		\
+  && !defined EXTRA_ADDRESS_CONSTRAINT
+
+#define USE_MD_CONSTRAINTS
+
+#if GCC_VERSION >= 3000 && defined IN_GCC
+/* These old constraint macros shouldn't appear anywhere in a
+   configuration using MD constraint definitions.  */
+#pragma GCC poison REG_CLASS_FROM_LETTER CONST_OK_FOR_LETTER_P \
+                   CONST_DOUBLE_OK_FOR_LETTER_P EXTRA_CONSTRAINT
+#endif
+
+#else /* old constraint mechanism in use */
 
 /* Determine whether extra constraint letter should be handled
    via address reload (like 'o').  */
@@ -763,6 +814,8 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #define EXTRA_CONSTRAINT_STR(OP, C,STR) EXTRA_CONSTRAINT (OP, C)
 #endif
 
+#endif /* old constraint mechanism in use */
+
 #ifndef REGISTER_MOVE_COST
 #define REGISTER_MOVE_COST(m, x, y) 2
 #endif
@@ -771,6 +824,12 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
    is present in the runtime library.  */
 #ifndef TARGET_C99_FUNCTIONS
 #define TARGET_C99_FUNCTIONS 0
+#endif
+
+/* Determine whether the target runtime library has
+   a sincos implementation following the GNU extension.  */
+#ifndef TARGET_HAS_SINCOS
+#define TARGET_HAS_SINCOS 0
 #endif
 
 /* Indicate that CLZ and CTZ are undefined at zero.  */
@@ -861,10 +920,24 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #define ARG_POINTER_CFA_OFFSET(FNDECL) FIRST_PARM_OFFSET (FNDECL)
 #endif
 
+/* On most machines, we use the CFA as DW_AT_frame_base.  */
+#ifndef CFA_FRAME_BASE_OFFSET
+#define CFA_FRAME_BASE_OFFSET(FNDECL) 0
+#endif
+
 /* The offset from the incoming value of %sp to the top of the stack frame
    for the current function.  */
 #ifndef INCOMING_FRAME_SP_OFFSET
 #define INCOMING_FRAME_SP_OFFSET 0
+#endif
+
+#ifndef HARD_REGNO_NREGS_HAS_PADDING
+#define HARD_REGNO_NREGS_HAS_PADDING(REGNO, MODE) 0
+#define HARD_REGNO_NREGS_WITH_PADDING(REGNO, MODE) -1
+#endif
+
+#ifndef OUTGOING_REG_PARM_STACK_SPACE
+#define OUTGOING_REG_PARM_STACK_SPACE 0
 #endif
 
 #endif  /* ! GCC_DEFAULTS_H */

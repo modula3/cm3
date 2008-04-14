@@ -1,12 +1,12 @@
 /* Subroutines used for code generation on the Renesas M32R cpu.
    Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-   2005 Free Software Foundation, Inc.
+   2005, 2007 Free Software Foundation, Inc.
 
    This file is part of GCC.
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published
-   by the Free Software Foundation; either version 2, or (at your
+   by the Free Software Foundation; either version 3, or (at your
    option) any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -15,9 +15,8 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -42,6 +41,7 @@
 #include "tm_p.h"
 #include "target.h"
 #include "target-def.h"
+#include "tm-constrs.h"
 
 /* Save the operands last given to a compare for use when we
    generate a scc or bcc insn.  */
@@ -80,14 +80,14 @@ static int    m32r_adjust_priority (rtx, int);
 static int    m32r_issue_rate (void);
 
 static void m32r_encode_section_info (tree, rtx, int);
-static bool m32r_in_small_data_p (tree);
-static bool m32r_return_in_memory (tree, tree);
+static bool m32r_in_small_data_p (const_tree);
+static bool m32r_return_in_memory (const_tree, const_tree);
 static void m32r_setup_incoming_varargs (CUMULATIVE_ARGS *, enum machine_mode,
 					 tree, int *, int);
 static void init_idents (void);
 static bool m32r_rtx_costs (rtx, int, int, int *);
 static bool m32r_pass_by_reference (CUMULATIVE_ARGS *, enum machine_mode,
-				    tree, bool);
+				    const_tree, bool);
 static int m32r_arg_partial_bytes (CUMULATIVE_ARGS *, enum machine_mode,
 				   tree, bool);
 
@@ -129,7 +129,7 @@ static int m32r_arg_partial_bytes (CUMULATIVE_ARGS *, enum machine_mode,
 #define TARGET_ADDRESS_COST hook_int_rtx_0
 
 #undef  TARGET_PROMOTE_PROTOTYPES
-#define TARGET_PROMOTE_PROTOTYPES hook_bool_tree_true
+#define TARGET_PROMOTE_PROTOTYPES hook_bool_const_tree_true
 #undef  TARGET_RETURN_IN_MEMORY
 #define TARGET_RETURN_IN_MEMORY m32r_return_in_memory
 #undef  TARGET_SETUP_INCOMING_VARARGS
@@ -215,7 +215,7 @@ m32r_init (void)
    indexed by hard register number, and one indexed by mode.  */
 
 /* The purpose of m32r_mode_class is to shrink the range of modes so that
-   they all fit (as bit numbers) in a 32 bit word (again).  Each real mode is
+   they all fit (as bit numbers) in a 32-bit word (again).  Each real mode is
    mapped into one m32r_mode_class mode.  */
 
 enum m32r_mode_class
@@ -273,7 +273,7 @@ init_reg_tables (void)
 	    m32r_mode_class[i] = 1 << (int) T_MODE;
 	  else if (GET_MODE_SIZE (i) == 32)
 	    m32r_mode_class[i] = 1 << (int) O_MODE;
-	  else 
+	  else
 	    m32r_mode_class[i] = 0;
 	  break;
 	case MODE_FLOAT:
@@ -286,7 +286,7 @@ init_reg_tables (void)
 	    m32r_mode_class[i] = 1 << (int) TF_MODE;
 	  else if (GET_MODE_SIZE (i) == 32)
 	    m32r_mode_class[i] = 1 << (int) OF_MODE;
-	  else 
+	  else
 	    m32r_mode_class[i] = 0;
 	  break;
 	case MODE_CC:
@@ -445,9 +445,9 @@ m32r_encode_section_info (tree decl, rtx rtl, int first)
    the object doesn't fit the linker will give an error.  */
 
 static bool
-m32r_in_small_data_p (tree decl)
+m32r_in_small_data_p (const_tree decl)
 {
-  tree section;
+  const_tree section;
 
   if (TREE_CODE (decl) != VAR_DECL)
     return false;
@@ -458,7 +458,7 @@ m32r_in_small_data_p (tree decl)
   section = DECL_SECTION_NAME (decl);
   if (section)
     {
-      char *name = (char *) TREE_STRING_POINTER (section);
+      const char *const name = TREE_STRING_POINTER (section);
       if (strcmp (name, ".sdata") == 0 || strcmp (name, ".sbss") == 0)
 	return true;
     }
@@ -508,14 +508,13 @@ small_data_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
   if (GET_CODE (op) == CONST
       && GET_CODE (XEXP (op, 0)) == PLUS
       && GET_CODE (XEXP (XEXP (op, 0), 0)) == SYMBOL_REF
-      && GET_CODE (XEXP (XEXP (op, 0), 1)) == CONST_INT
-      && INT16_P (INTVAL (XEXP (XEXP (op, 0), 1))))
+      && satisfies_constraint_J (XEXP (XEXP (op, 0), 1)))
     return SYMBOL_REF_SMALL_P (XEXP (XEXP (op, 0), 0));
 
   return 0;
 }
 
-/* Return 1 if OP is a symbol that can use 24 bit addressing.  */
+/* Return 1 if OP is a symbol that can use 24-bit addressing.  */
 
 int
 addr24_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
@@ -533,8 +532,7 @@ addr24_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
   else if (GET_CODE (op) == CONST
 	   && GET_CODE (XEXP (op, 0)) == PLUS
 	   && GET_CODE (XEXP (XEXP (op, 0), 0)) == SYMBOL_REF
-	   && GET_CODE (XEXP (XEXP (op, 0), 1)) == CONST_INT
-	   && UINT24_P (INTVAL (XEXP (XEXP (op, 0), 1))))
+	   && satisfies_constraint_M (XEXP (XEXP (op, 0), 1)))
     sym = XEXP (XEXP (op, 0), 0);
   else
     return 0;
@@ -550,7 +548,7 @@ addr24_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
   return 0;
 }
 
-/* Return 1 if OP is a symbol that needs 32 bit addressing.  */
+/* Return 1 if OP is a symbol that needs 32-bit addressing.  */
 
 int
 addr32_operand (rtx op, enum machine_mode mode)
@@ -602,7 +600,7 @@ easy_di_const (rtx op)
   split_double (op, &high_rtx, &low_rtx);
   high = INTVAL (high_rtx);
   low = INTVAL (low_rtx);
-  /* Pick constants loadable with 2 16 bit `ldi' insns.  */
+  /* Pick constants loadable with 2 16-bit `ldi' insns.  */
   if (high >= -128 && high <= 127
       && low >= -128 && low <= 127)
     return 1;
@@ -641,7 +639,7 @@ memreg_operand (rtx op, enum machine_mode mode ATTRIBUTE_UNUSED)
 
 static bool
 m32r_pass_by_reference (CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED,
-			enum machine_mode mode, tree type,
+			enum machine_mode mode, const_tree type,
 			bool named ATTRIBUTE_UNUSED)
 {
   int size;
@@ -691,12 +689,11 @@ gen_compare (enum rtx_code code, rtx x, rtx y, int need_compare)
       switch (compare_code)
 	{
 	case EQ:
-	  if (GET_CODE (y) == CONST_INT
-	      && CMP_INT16_P (INTVAL (y))		/* Reg equal to small const.  */
+	  if (satisfies_constraint_P (y)		/* Reg equal to small const.  */
 	      && y != const0_rtx)
 	    {
-	      rtx tmp = gen_reg_rtx (SImode);		
-	      
+	      rtx tmp = gen_reg_rtx (SImode);
+
 	      emit_insn (gen_addsi3 (tmp, x, GEN_INT (-INTVAL (y))));
 	      x = tmp;
 	      y = const0_rtx;
@@ -711,17 +708,17 @@ gen_compare (enum rtx_code code, rtx x, rtx y, int need_compare)
 	      || y == const0_rtx) 	   		/* Reg equal to zero.  */
 	    {
 	      emit_insn (gen_cmp_eqsi_insn (x, y));
-		
+
 	      return gen_rtx_fmt_ee (code, CCmode, cc_reg, const0_rtx);
 	    }
 	  break;
-      
+
 	case LT:
 	  if (register_operand (y, SImode)
-	      || (GET_CODE (y) == CONST_INT && CMP_INT16_P (INTVAL (y))))
+	      || satisfies_constraint_P (y))
 	    {
 	      rtx tmp = gen_reg_rtx (SImode);	      /* Reg compared to reg.  */
-	      
+
 	      switch (code)
 		{
 		case LT:
@@ -751,17 +748,17 @@ gen_compare (enum rtx_code code, rtx x, rtx y, int need_compare)
 		default:
 		  gcc_unreachable ();
 		}
-	      
+
 	      return gen_rtx_fmt_ee (code, CCmode, cc_reg, const0_rtx);
 	    }
 	  break;
-	  
+
 	case LTU:
 	  if (register_operand (y, SImode)
-	      || (GET_CODE (y) == CONST_INT && CMP_INT16_P (INTVAL (y))))
+	      || satisfies_constraint_P (y))
 	    {
 	      rtx tmp = gen_reg_rtx (SImode);	      /* Reg (unsigned) compared to reg.  */
-	      
+
 	      switch (code)
 		{
 		case LTU:
@@ -791,7 +788,7 @@ gen_compare (enum rtx_code code, rtx x, rtx y, int need_compare)
 		default:
 		  gcc_unreachable ();
 		}
-	      
+
 	      return gen_rtx_fmt_ee (code, CCmode, cc_reg, const0_rtx);
 	    }
 	  break;
@@ -806,23 +803,22 @@ gen_compare (enum rtx_code code, rtx x, rtx y, int need_compare)
       if (compare_code == EQ
 	  && register_operand (y, SImode))
 	return gen_rtx_fmt_ee (code, CCmode, x, y);
-      
+
       /* Reg/zero signed comparison.  */
       if ((compare_code == EQ || compare_code == LT)
 	  && y == const0_rtx)
 	return gen_rtx_fmt_ee (code, CCmode, x, y);
-      
+
       /* Reg/smallconst equal comparison.  */
       if (compare_code == EQ
-	  && GET_CODE (y) == CONST_INT
-	  && CMP_INT16_P (INTVAL (y)))
+	  && satisfies_constraint_P (y))
 	{
 	  rtx tmp = gen_reg_rtx (SImode);
 
 	  emit_insn (gen_addsi3 (tmp, x, GEN_INT (-INTVAL (y))));
 	  return gen_rtx_fmt_ee (code, CCmode, tmp, const0_rtx);
 	}
-      
+
       /* Reg/const equal comparison.  */
       if (compare_code == EQ
 	  && CONSTANT_P (y))
@@ -1010,7 +1006,7 @@ m32r_arg_partial_bytes (CUMULATIVE_ARGS *cum, enum machine_mode mode,
 /* Worker function for TARGET_RETURN_IN_MEMORY.  */
 
 static bool
-m32r_return_in_memory (tree type, tree fntype ATTRIBUTE_UNUSED)
+m32r_return_in_memory (const_tree type, const_tree fntype ATTRIBUTE_UNUSED)
 {
   return m32r_pass_by_reference (NULL, TYPE_MODE (type), type, false);
 }
@@ -1045,9 +1041,9 @@ m32r_setup_incoming_varargs (CUMULATIVE_ARGS *cum, enum machine_mode mode,
       int size = M32R_MAX_PARM_REGS - first_reg_offset;
       rtx regblock;
 
-      regblock = gen_rtx_MEM (BLKmode,
-			      plus_constant (arg_pointer_rtx,
-					     FIRST_PARM_OFFSET (0)));
+      regblock = gen_frame_mem (BLKmode,
+				plus_constant (arg_pointer_rtx,
+					       FIRST_PARM_OFFSET (0)));
       set_mem_alias_set (regblock, get_varargs_alias_set ());
       move_block_from_reg (first_reg_offset, regblock, size);
 
@@ -1191,30 +1187,30 @@ m32r_compute_function_type (tree decl)
         |                       |       |                       |
   SP+0->+-----------------------+       +-----------------------+
                                         |  reg parm save area,  |
-                                        |  only created for     |    
-                                        |  variable argument    |    
-                                        |  functions            |    
+                                        |  only created for     |
+                                        |  variable argument    |
+                                        |  functions            |
 					+-----------------------+
                                         |   previous frame ptr  |
-                                        +-----------------------+    
-                                        |                       |    
-                                        |  register save area   |    
-                                        |                       |    
+                                        +-----------------------+
+                                        |                       |
+                                        |  register save area   |
+                                        |                       |
 					+-----------------------+
-                                        |    return address     |    
-                                        +-----------------------+    
-                                        |                       |    
-                                        |  local variables      |    
-                                        |                       |    
-                                        +-----------------------+    
-                                        |                       |    
-                                        |  alloca allocations   |    
-                                        |                       |    
-                                        +-----------------------+    
-                                        |                       |    
-   low                                  |  arguments on stack   |    
-   memory                               |                       |    
-                                  SP+0->+-----------------------+    
+                                        |    return address     |
+                                        +-----------------------+
+                                        |                       |
+                                        |  local variables      |
+                                        |                       |
+                                        +-----------------------+
+                                        |                       |
+                                        |  alloca allocations   |
+                                        |                       |
+                                        +-----------------------+
+                                        |                       |
+   low                                  |  arguments on stack   |
+   memory                               |                       |
+                                  SP+0->+-----------------------+
 
 Notes:
 1) The "reg parm save area" does not exist for non variable argument fns.
@@ -1254,10 +1250,10 @@ static struct m32r_frame_info zero_frame_info;
    Don't consider them here.  */
 #define MUST_SAVE_REGISTER(regno, interrupt_p) \
   ((regno) != RETURN_ADDR_REGNUM && (regno) != FRAME_POINTER_REGNUM \
-  && (regs_ever_live[regno] && (!call_really_used_regs[regno] || interrupt_p)))
+   && (df_regs_ever_live_p (regno) && (!call_really_used_regs[regno] || interrupt_p)))
 
-#define MUST_SAVE_FRAME_POINTER (regs_ever_live[FRAME_POINTER_REGNUM])
-#define MUST_SAVE_RETURN_ADDR   (regs_ever_live[RETURN_ADDR_REGNUM] || current_function_profile)
+#define MUST_SAVE_FRAME_POINTER (df_regs_ever_live_p (FRAME_POINTER_REGNUM))
+#define MUST_SAVE_RETURN_ADDR   (df_regs_ever_live_p (RETURN_ADDR_REGNUM) || current_function_profile)
 
 #define SHORT_INSN_SIZE 2	/* Size of small instructions.  */
 #define LONG_INSN_SIZE 4	/* Size of long instructions.  */
@@ -1270,7 +1266,7 @@ static struct m32r_frame_info zero_frame_info;
 unsigned int
 m32r_compute_frame_size (int size)	/* # of var. bytes allocated.  */
 {
-  int regno;
+  unsigned int regno;
   unsigned int total_size, var_size, args_size, pretend_size, extra_size;
   unsigned int reg_size, frame_size;
   unsigned int gmask;
@@ -1332,25 +1328,25 @@ m32r_compute_frame_size (int size)	/* # of var. bytes allocated.  */
 
 /* The table we use to reference PIC data.  */
 static rtx global_offset_table;
-                                                                                
+
 static void
 m32r_reload_lr (rtx sp, int size)
 {
   rtx lr = gen_rtx_REG (Pmode, RETURN_ADDR_REGNUM);
 
   if (size == 0)
-    emit_insn (gen_movsi (lr, gen_rtx_MEM (Pmode, sp)));
+    emit_insn (gen_movsi (lr, gen_frame_mem (Pmode, sp)));
   else if (size < 32768)
-    emit_insn (gen_movsi (lr, gen_rtx_MEM (Pmode,
-					   gen_rtx_PLUS (Pmode, sp,
-							 GEN_INT (size)))));
+    emit_insn (gen_movsi (lr, gen_frame_mem (Pmode,
+					     gen_rtx_PLUS (Pmode, sp,
+							   GEN_INT (size)))));
   else
-    {   
+    {
       rtx tmp = gen_rtx_REG (Pmode, PROLOGUE_TMP_REGNUM);
 
       emit_insn (gen_movsi (tmp, GEN_INT (size)));
       emit_insn (gen_addsi3 (tmp, tmp, sp));
-      emit_insn (gen_movsi (lr, gen_rtx_MEM (Pmode, tmp)));
+      emit_insn (gen_movsi (lr, gen_frame_mem (Pmode, tmp)));
     }
 
   emit_insn (gen_rtx_USE (VOIDmode, lr));
@@ -1362,7 +1358,7 @@ m32r_load_pic_register (void)
   global_offset_table = gen_rtx_SYMBOL_REF (Pmode, "_GLOBAL_OFFSET_TABLE_");
   emit_insn (gen_get_pc (pic_offset_table_rtx, global_offset_table,
                          GEN_INT (TARGET_MODEL_SMALL)));
-                                                                                
+
   /* Need to emit this whether or not we obey regdecls,
      since setjmp/longjmp can cause life info to screw up.  */
   emit_insn (gen_rtx_USE (VOIDmode, pic_offset_table_rtx));
@@ -1442,7 +1438,7 @@ m32r_expand_prologue (void)
     /* Push lr for mcount (form_pc, x).  */
     emit_insn (gen_movsi_push (stack_pointer_rtx,
                                gen_rtx_REG (Pmode, RETURN_ADDR_REGNUM)));
-                                                                                
+
   if (pic_reg_used)
     {
       m32r_load_pic_register ();
@@ -1481,19 +1477,27 @@ m32r_output_function_prologue (FILE * file, HOST_WIDE_INT size)
 	   current_frame_info.extra_size);
 }
 
-/* Do any necessary cleanup after a function to restore stack, frame,
-   and regs.  */
+/* Output RTL to pop register REGNO from the stack.  */
 
 static void
-m32r_output_function_epilogue (FILE * file, HOST_WIDE_INT size ATTRIBUTE_UNUSED)
+pop (int regno)
+{
+  rtx x;
+
+  x = emit_insn (gen_movsi_pop (gen_rtx_REG (Pmode, regno),
+				stack_pointer_rtx));
+  REG_NOTES (x)
+    = gen_rtx_EXPR_LIST (REG_INC, stack_pointer_rtx, 0);
+}
+
+/* Expand the m32r epilogue as a series of insns.  */
+
+void
+m32r_expand_epilogue (void)
 {
   int regno;
   int noepilogue = FALSE;
   int total_size;
-  enum m32r_function_type fn_type = m32r_compute_function_type (current_function_decl);
-
-  /* This is only for the human reader.  */
-  fprintf (file, "\t%s EPILOGUE\n", ASM_COMMENT_START);
 
   gcc_assert (current_frame_info.initialized);
   total_size = current_frame_info.total_size;
@@ -1504,7 +1508,7 @@ m32r_output_function_epilogue (FILE * file, HOST_WIDE_INT size ATTRIBUTE_UNUSED)
 
       /* If the last insn was a BARRIER, we don't have to write any code
 	 because a jump (aka return) was put there.  */
-      if (GET_CODE (insn) == NOTE)
+      if (insn && GET_CODE (insn) == NOTE)
 	insn = prev_nonnote_insn (insn);
       if (insn && GET_CODE (insn) == BARRIER)
 	noepilogue = TRUE;
@@ -1516,88 +1520,82 @@ m32r_output_function_epilogue (FILE * file, HOST_WIDE_INT size ATTRIBUTE_UNUSED)
       unsigned int args_size = current_frame_info.args_size;
       unsigned int gmask = current_frame_info.gmask;
       int can_trust_sp_p = !current_function_calls_alloca;
-      const char * sp_str = reg_names[STACK_POINTER_REGNUM];
-      const char * fp_str = reg_names[FRAME_POINTER_REGNUM];
+
+      if (flag_exceptions)
+        emit_insn (gen_blockage ());
 
       /* The first thing to do is point the sp at the bottom of the register
 	 save area.  */
       if (can_trust_sp_p)
 	{
 	  unsigned int reg_offset = var_size + args_size;
+
 	  if (reg_offset == 0)
 	    ; /* Nothing to do.  */
-	  else if (reg_offset < 128)
-	    fprintf (file, "\taddi %s,%s%d\n",
-		     sp_str, IMMEDIATE_PREFIX, reg_offset);
 	  else if (reg_offset < 32768)
-	    fprintf (file, "\tadd3 %s,%s,%s%d\n",
-		     sp_str, sp_str, IMMEDIATE_PREFIX, reg_offset);
-	  else if (reg_offset < (1 << 24))
-	    fprintf (file, "\tld24 %s,%s%d\n\tadd %s,%s\n",
-		     reg_names[PROLOGUE_TMP_REGNUM],
-		     IMMEDIATE_PREFIX, reg_offset,
-		     sp_str, reg_names[PROLOGUE_TMP_REGNUM]);
+	    emit_insn (gen_addsi3 (stack_pointer_rtx, stack_pointer_rtx,
+			   GEN_INT (reg_offset)));
 	  else
-	    fprintf (file, "\tseth %s,%s%d\n\tor3 %s,%s,%s%d\n\tadd %s,%s\n",
-		     reg_names[PROLOGUE_TMP_REGNUM],
-		     IMMEDIATE_PREFIX, reg_offset >> 16,
-		     reg_names[PROLOGUE_TMP_REGNUM],
-		     reg_names[PROLOGUE_TMP_REGNUM],
-		     IMMEDIATE_PREFIX, reg_offset & 0xffff,
-		     sp_str, reg_names[PROLOGUE_TMP_REGNUM]);
+	    {
+	      rtx tmp = gen_rtx_REG (Pmode, PROLOGUE_TMP_REGNUM);
+
+	      emit_insn (gen_movsi (tmp, GEN_INT (reg_offset)));
+	      emit_insn (gen_addsi3 (stack_pointer_rtx, stack_pointer_rtx,
+				     tmp));
+	    }
 	}
       else if (frame_pointer_needed)
 	{
 	  unsigned int reg_offset = var_size + args_size;
 
 	  if (reg_offset == 0)
-	    fprintf (file, "\tmv %s,%s\n", sp_str, fp_str);
+	    emit_insn (gen_movsi (stack_pointer_rtx, frame_pointer_rtx));
 	  else if (reg_offset < 32768)
-	    fprintf (file, "\tadd3 %s,%s,%s%d\n",
-		     sp_str, fp_str, IMMEDIATE_PREFIX, reg_offset);
-	  else if (reg_offset < (1 << 24))
-	    fprintf (file, "\tld24 %s,%s%d\n\tadd %s,%s\n",
-		     reg_names[PROLOGUE_TMP_REGNUM],
-		     IMMEDIATE_PREFIX, reg_offset,
-		     sp_str, reg_names[PROLOGUE_TMP_REGNUM]);
+	    emit_insn (gen_addsi3 (stack_pointer_rtx, frame_pointer_rtx,
+			   GEN_INT (reg_offset)));
 	  else
-	    fprintf (file, "\tseth %s,%s%d\n\tor3 %s,%s,%s%d\n\tadd %s,%s\n",
-		     reg_names[PROLOGUE_TMP_REGNUM],
-		     IMMEDIATE_PREFIX, reg_offset >> 16,
-		     reg_names[PROLOGUE_TMP_REGNUM],
-		     reg_names[PROLOGUE_TMP_REGNUM],
-		     IMMEDIATE_PREFIX, reg_offset & 0xffff,
-		     sp_str, reg_names[PROLOGUE_TMP_REGNUM]);
+	    {
+	      rtx tmp = gen_rtx_REG (Pmode, PROLOGUE_TMP_REGNUM);
+
+	      emit_insn (gen_movsi (tmp, GEN_INT (reg_offset)));
+	      emit_insn (gen_movsi (stack_pointer_rtx, frame_pointer_rtx));
+	      emit_insn (gen_addsi3 (stack_pointer_rtx, stack_pointer_rtx,
+				     tmp));
+	    }
 	}
       else
 	gcc_unreachable ();
 
       if (current_frame_info.save_lr)
-	fprintf (file, "\tpop %s\n", reg_names[RETURN_ADDR_REGNUM]);
+	pop (RETURN_ADDR_REGNUM);
 
       /* Restore any saved registers, in reverse order of course.  */
       gmask &= ~(FRAME_POINTER_MASK | RETURN_ADDR_MASK);
       for (regno = M32R_MAX_INT_REGS - 1; regno >= 0; --regno)
 	{
 	  if ((gmask & (1L << regno)) != 0)
-	    fprintf (file, "\tpop %s\n", reg_names[regno]);
+	    pop (regno);
 	}
 
       if (current_frame_info.save_fp)
-	fprintf (file, "\tpop %s\n", fp_str);
+	pop (FRAME_POINTER_REGNUM);
 
       /* Remove varargs area if present.  */
       if (current_frame_info.pretend_size != 0)
-	fprintf (file, "\taddi %s,%s%d\n",
-		 sp_str, IMMEDIATE_PREFIX, current_frame_info.pretend_size);
-	
-      /* Emit the return instruction.  */
-      if (M32R_INTERRUPT_P (fn_type))
-	fprintf (file, "\trte\n");
-      else
-	fprintf (file, "\tjmp %s\n", reg_names[RETURN_ADDR_REGNUM]);
-    }
+	emit_insn (gen_addsi3 (stack_pointer_rtx, stack_pointer_rtx,
+			       GEN_INT (current_frame_info.pretend_size)));
 
+      emit_insn (gen_blockage ());
+    }
+}
+
+/* Do any necessary cleanup after a function to restore stack, frame,
+   and regs.  */
+
+static void
+m32r_output_function_epilogue (FILE * file ATTRIBUTE_UNUSED,
+			       HOST_WIDE_INT size ATTRIBUTE_UNUSED)
+{
   /* Reset state info for each function.  */
   current_frame_info = zero_frame_info;
   m32r_compute_function_type (NULL_TREE);
@@ -1612,10 +1610,13 @@ direct_return (void)
   if (!reload_completed)
     return FALSE;
 
+  if (M32R_INTERRUPT_P (m32r_compute_function_type (current_function_decl)))
+    return FALSE;
+
   if (! current_frame_info.initialized)
     m32r_compute_frame_size (get_frame_size ());
 
-   return current_frame_info.total_size == 0;
+  return current_frame_info.total_size == 0;
 }
 
 
@@ -1626,14 +1627,14 @@ m32r_legitimate_pic_operand_p (rtx x)
 {
   if (GET_CODE (x) == SYMBOL_REF || GET_CODE (x) == LABEL_REF)
     return 0;
-                                                                                
+
   if (GET_CODE (x) == CONST
       && GET_CODE (XEXP (x, 0)) == PLUS
       && (GET_CODE (XEXP (XEXP (x, 0), 0)) == SYMBOL_REF
           || GET_CODE (XEXP (XEXP (x, 0), 0)) == LABEL_REF)
       && (GET_CODE (XEXP (XEXP (x, 0), 1)) == CONST_INT))
     return 0;
-                                                                                
+
   return 1;
 }
 
@@ -1681,8 +1682,7 @@ m32r_legitimize_pic_address (rtx orig, rtx reg)
 #if 0
       /* Put a REG_EQUAL note on this insn, so that it can be optimized
          by loop.  */
-      REG_NOTES (insn) = gen_rtx_EXPR_LIST (REG_EQUAL, orig,
-                  REG_NOTES (insn));
+      set_unique_reg_note (insn, REG_EQUAL, orig);
 #endif
       return reg;
     }
@@ -1774,7 +1774,7 @@ m32r_print_operand (FILE * file, rtx x, int code)
       else
 	output_operand_lossage ("invalid operand to %%s code");
       return;
-      
+
     case 'p':
       if (GET_CODE (x) == REG)
 	fprintf (file, "@%s+", reg_names [REGNO (x)]);
@@ -1848,7 +1848,7 @@ m32r_print_operand (FILE * file, rtx x, int code)
 	 Bottom halves.  For symbols output arguments to a seth/add3 pair to
 	 set Top and Bottom halves.  The difference exists because for
 	 constants seth/or3 is more readable but for symbols we need to use
-	 the same scheme as `ld' and `st' insns (16 bit addend is signed).  */
+	 the same scheme as `ld' and `st' insns (16-bit addend is signed).  */
       switch (GET_CODE (x))
 	{
 	case CONST_INT :
@@ -2097,14 +2097,14 @@ emit_cond_move (rtx * operands, rtx insn ATTRIBUTE_UNUSED)
 {
   static char buffer [100];
   const char * dest = reg_names [REGNO (operands [0])];
-  
+
   buffer [0] = 0;
-  
+
   /* Destination must be a register.  */
   gcc_assert (GET_CODE (operands [0]) == REG);
   gcc_assert (conditional_move_operand (operands [2], SImode));
   gcc_assert (conditional_move_operand (operands [3], SImode));
-      
+
   /* Check to see if the test is reversed.  */
   if (GET_CODE (operands [1]) == NE)
     {
@@ -2131,19 +2131,19 @@ m32r_not_same_reg (rtx a, rtx b)
 {
   int reg_a = -1;
   int reg_b = -2;
-  
+
   while (GET_CODE (a) == SUBREG)
     a = SUBREG_REG (a);
-  
+
   if (GET_CODE (a) == REG)
     reg_a = REGNO (a);
-  
+
   while (GET_CODE (b) == SUBREG)
     b = SUBREG_REG (b);
-  
+
   if (GET_CODE (b) == REG)
     reg_b = REGNO (b);
-  
+
   return reg_a != reg_b;
 }
 
@@ -2164,7 +2164,7 @@ m32r_function_symbol (const char *name)
   else
     gcc_unreachable (); /* Shouldn't happen.  */
   extra_flags |= model << SYMBOL_FLAG_MODEL_SHIFT;
-                                                                                
+
   if (extra_flags)
     SYMBOL_REF_FLAGS (sym) |= extra_flags;
 
@@ -2177,7 +2177,7 @@ static void
 block_move_call (rtx dest_reg, rtx src_reg, rtx bytes_rtx)
 {
   /* We want to pass the size as Pmode, which will normally be SImode
-     but will be DImode if we are using 64 bit longs and pointers.  */
+     but will be DImode if we are using 64-bit longs and pointers.  */
   if (GET_MODE (bytes_rtx) != VOIDmode
       && GET_MODE (bytes_rtx) != Pmode)
     bytes_rtx = convert_to_mode (Pmode, bytes_rtx, 1);
@@ -2233,7 +2233,7 @@ m32r_expand_block_move (rtx operands[])
 
   leftover = bytes % MAX_MOVE_BYTES;
   bytes   -= leftover;
-  
+
   /* If necessary, generate a loop to handle the bulk of the copy.  */
   if (bytes)
     {
@@ -2273,7 +2273,7 @@ m32r_expand_block_move (rtx operands[])
       emit_move_insn (dst_reg, new_dst_reg);
       emit_move_insn (src_reg, new_src_reg);
       emit_insn (gen_addsi3 (dst_reg, dst_reg, GEN_INT (4)));
-      
+
       if (bytes > MAX_MOVE_BYTES)
 	{
 	  emit_insn (gen_cmpsi (src_reg, final_src));
@@ -2289,7 +2289,7 @@ m32r_expand_block_move (rtx operands[])
 }
 
 
-/* Emit load/stores for a small constant word aligned block_move. 
+/* Emit load/stores for a small constant word aligned block_move.
 
    operands[0] is the memory address of the destination.
    operands[1] is the memory address of the source.
@@ -2303,17 +2303,17 @@ m32r_output_block_move (rtx insn ATTRIBUTE_UNUSED, rtx operands[])
   HOST_WIDE_INT bytes = INTVAL (operands[2]);
   int		first_time;
   int		got_extra = 0;
-  
+
   gcc_assert (bytes >= 1 && bytes <= MAX_MOVE_BYTES);
-  
+
   /* We do not have a post-increment store available, so the first set of
      stores are done without any increment, then the remaining ones can use
      the pre-increment addressing mode.
-     
+
      Note: expand_block_move() also relies upon this behavior when building
      loops to copy large blocks.  */
   first_time = 1;
-  
+
   while (bytes > 0)
     {
       if (bytes >= 8)
@@ -2339,12 +2339,12 @@ m32r_output_block_move (rtx insn ATTRIBUTE_UNUSED, rtx operands[])
 	{
 	  if (bytes > 4)
 	    got_extra = 1;
-	  
+
 	  output_asm_insn ("ld\t%5, %p1", operands);
-	  
+
 	  if (got_extra)
 	    output_asm_insn ("ld\t%6, %p1", operands);
-		
+
 	  if (first_time)
 	    output_asm_insn ("st\t%5, @%0", operands);
 	  else
@@ -2352,7 +2352,7 @@ m32r_output_block_move (rtx insn ATTRIBUTE_UNUSED, rtx operands[])
 
 	  bytes -= 4;
 	}
-      else 
+      else
 	{
 	  /* Get the entire next word, even though we do not want all of it.
 	     The saves us from doing several smaller loads, and we assume that
@@ -2382,7 +2382,7 @@ m32r_output_block_move (rtx insn ATTRIBUTE_UNUSED, rtx operands[])
 	      my_operands[1] = GEN_INT (dst_offset);
 	      my_operands[2] = operands[0];
 	      output_asm_insn ("sth\t%0, @(%1,%2)", my_operands);
-	      
+
 	      /* If there is a byte left to store then increment the
 		 destination address and shift the contents of the source
 		 register down by 8 bits.  We could not do the address
@@ -2418,7 +2418,7 @@ m32r_output_block_move (rtx insn ATTRIBUTE_UNUSED, rtx operands[])
 	      my_operands[1] = GEN_INT (dst_inc_amount);
 	      output_asm_insn ("addi\t%0, #%1", my_operands);
 	    }
-	  
+
 	  /* Update the source pointer if needed.  We have to do this
 	     so that the patterns matches what we output in this
 	     function.  */
@@ -2429,7 +2429,7 @@ m32r_output_block_move (rtx insn ATTRIBUTE_UNUSED, rtx operands[])
 	      my_operands[1] = GEN_INT (src_inc_amount);
 	      output_asm_insn ("addi\t%0, #%1", my_operands);
 	    }
-	  
+
 	  bytes = 0;
 	}
 
@@ -2445,12 +2445,7 @@ m32r_hard_regno_rename_ok (unsigned int old_reg ATTRIBUTE_UNUSED,
 {
   /* Interrupt routines can't clobber any register that isn't already used.  */
   if (lookup_attribute ("interrupt", DECL_ATTRIBUTES (current_function_decl))
-      && !regs_ever_live[new_reg])
-    return 0;
-
-  /* We currently emit epilogues as text, not rtl, so the liveness
-     of the return address register isn't visible.  */
-  if (current_function_is_leaf && new_reg == RETURN_ADDR_REGNUM)
+      && !df_regs_ever_live_p (new_reg))
     return 0;
 
   return 1;
@@ -2461,6 +2456,6 @@ m32r_return_addr (int count)
 {
   if (count != 0)
     return const0_rtx;
-  
+
   return get_hard_reg_initial_val (Pmode, RETURN_ADDR_REGNUM);
 }

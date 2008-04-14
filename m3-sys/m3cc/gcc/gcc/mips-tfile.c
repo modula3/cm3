@@ -3,14 +3,14 @@
    in the form of comments (the mips assembler does not support
    assembly access to debug information).
    Copyright (C) 1991, 1993, 1994, 1995, 1997, 1998, 1999, 2000, 2001,
-   2002, 2003, 2004, 2005, 2006 Free Software Foundation, Inc.
+   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
    Contributed by Michael Meissner (meissner@cygnus.com).
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -19,9 +19,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 
 /* Here is a brief description of the MIPS ECOFF symbol table.  The
@@ -667,11 +666,11 @@ main (void)
 
 #include <signal.h>
 
-#ifndef CROSS_COMPILE
+#ifndef CROSS_DIRECTORY_STRUCTURE
 #include <a.out.h>
 #else
 #include "mips/a.out.h"
-#endif /* CROSS_COMPILE */
+#endif /* CROSS_DIRECTORY_STRUCTURE */
 
 #include "gstab.h"
 
@@ -2352,15 +2351,28 @@ add_procedure (const char *func_start,  /* 1st byte of func name */
 STATIC void
 initialize_init_file (void)
 {
+  union {
+    unsigned char c[4];
+    int i;
+  } endian_test;
+
   memset (&init_file, 0, sizeof (init_file));
 
   init_file.fdr.lang = langC;
   init_file.fdr.fMerge = 1;
   init_file.fdr.glevel = GLEVEL_2;
 
-#ifdef WORDS_BIG_ENDIAN
-  init_file.fdr.fBigendian = 1;
-#endif
+  /* mips-tfile doesn't attempt to perform byte swapping and always writes
+     out integers in its native ordering.  For cross-compilers, this need
+     not be the same as either the host or the target.  The simplest thing
+     to do is skip the configury and perform an introspective test.  */
+  /* ??? Despite the name, mips-tfile is currently only used on alpha/Tru64
+     and would/may require significant work to be used in cross-compiler
+     configurations, so we could simply admit defeat and hard code this as
+     little-endian, i.e. init_file.fdr.fBigendian = 0.  */
+  endian_test.i = 1;
+  if (endian_test.c[3])
+    init_file.fdr.fBigendian = 1;
 
   INITIALIZE_VARRAY (&init_file.strings, char);
   INITIALIZE_VARRAY (&init_file.symbols, SYMR);
@@ -4363,7 +4375,7 @@ copy_object (void)
 
 
   /* Read in each of the sections if they exist in the object file.
-     We read things in in the order the mips assembler creates the
+     We read things in the order the mips assembler creates the
      sections, so in theory no extra seeks are done.
 
      For simplicity sake, round each read up to a page boundary,
@@ -4766,8 +4778,8 @@ main (int argc, char **argv)
 
   if (version)
     {
-      printf (_("mips-tfile (GCC) %s\n"), version_string);
-      fputs ("Copyright (C) 2006 Free Software Foundation, Inc.\n", stdout);
+      printf (_("mips-tfile %s%s\n"), pkgversion_string, version_string);
+      fputs ("Copyright (C) 2008 Free Software Foundation, Inc.\n", stdout);
       fputs (_("This is free software; see the source for copying conditions.  There is NO\n\
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"),
 	     stdout);

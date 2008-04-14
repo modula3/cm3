@@ -1,11 +1,11 @@
 /* Specific flags and argument handling of the C front-end.
-   Copyright (C) 1999, 2001, 2003 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2001, 2003, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -14,9 +14,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -30,7 +29,10 @@ lang_specific_driver (int *in_argc ATTRIBUTE_UNUSED,
 		      const char *const **in_argv ATTRIBUTE_UNUSED,
 		      int *in_added_libraries ATTRIBUTE_UNUSED)
 {
-#ifdef ENABLE_SHARED_LIBGCC
+  /* Systems which use the NeXT runtime by default should arrange
+     for the shared libgcc to be used when -fgnu-runtime is passed
+     through specs.  */
+#if defined(ENABLE_SHARED_LIBGCC) && ! defined(NEXT_OBJC_RUNTIME)
   int i;
 
   /* The new argument list will be contained in this.  */
@@ -73,7 +75,7 @@ lang_specific_driver (int *in_argc ATTRIBUTE_UNUSED,
   if  (shared_libgcc)
     {
       /* Make sure to have room for the trailing NULL argument.  */
-      arglist = xmalloc ((argc+2) * sizeof (char *));
+      arglist = XNEWVEC (const char *, argc + 2);
 
       i = 0;
       do
@@ -102,9 +104,3 @@ lang_specific_pre_link (void)
 
 /* Number of extra output files that lang_specific_pre_link may generate.  */
 int lang_specific_extra_outfiles = 0;  /* Not used for C.  */
-
-/* Table of language-specific spec functions.  */
-const struct spec_function lang_specific_spec_functions[] =
-{
-  { 0, 0 }
-};

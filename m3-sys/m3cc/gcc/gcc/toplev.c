@@ -1,13 +1,13 @@
 /* Top level of GCC compilers (cc1, cc1plus, etc.)
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006
+   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
    Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -16,9 +16,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* This is the top level of cc1/c++.
    It parses command args, opens files, invokes the various passes
@@ -82,6 +81,7 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #include "value-prof.h"
 #include "alloc-pool.h"
 #include "tree-mudflap.h"
+#include "tree-pass.h"
 
 #if defined (DWARF2_UNWIND_INFO) || defined (DWARF2_DEBUGGING_INFO)
 #include "dwarf2out.h"
@@ -111,12 +111,6 @@ static void finalize (void);
 static void crash_signal (int) ATTRIBUTE_NORETURN;
 static void setup_core_dumping (void);
 static void compile_file (void);
-
-static int print_single_switch (FILE *, int, int, const char *,
-				const char *, const char *,
-				const char *, const char *);
-static void print_switch_values (FILE *, int, int, const char *,
-				 const char *, const char *);
 
 /* Nonzero to dump debug info whilst parsing (-dy option).  */
 static int set_yydebug;
@@ -152,10 +146,7 @@ location_t unknown_location = { NULL, 0 };
 
 location_t input_location;
 
-struct line_maps line_table;
-
-/* Nonzero if it is unsafe to create any new pseudo registers.  */
-int no_new_pseudos;
+struct line_maps *line_table;
 
 /* Stack of currently pending input files.  */
 
@@ -164,6 +155,16 @@ struct file_stack *input_file_stack;
 /* Incremented on each change to input_file_stack.  */
 int input_file_stack_tick;
 
+/* Record of input_file_stack at each tick.  */
+typedef struct file_stack *fs_p;
+DEF_VEC_P(fs_p);
+DEF_VEC_ALLOC_P(fs_p,heap);
+static VEC(fs_p,heap) *input_file_stack_history;
+
+/* Whether input_file_stack has been restored to a previous state (in
+   which case there should be no more pushing).  */
+static bool input_file_stack_restored;
+
 /* Name to use as base of names for dump output files.  */
 
 const char *dump_base_name;
@@ -171,12 +172,6 @@ const char *dump_base_name;
 /* Name to use as a base for auxiliary output files.  */
 
 const char *aux_base_name;
-
-/* Bit flags that specify the machine subtype we are compiling for.
-   Bits are tested using macros TARGET_... defined in the tm.h file
-   and set by `-m...' switches.  Must be defined in rtlanal.c.  */
-
-extern int target_flags;
 
 /* A mask of target_flags that includes bit X if X was set or cleared
    on the command line.  */
@@ -235,7 +230,7 @@ int in_system_header = 0;
 int flag_detailed_statistics = 0;
 
 /* A random sequence of characters, unless overridden by user.  */
-const char *flag_random_seed;
+static const char *flag_random_seed;
 
 /* A local time stamp derived from the time of compilation. It will be
    zero if the system cannot provide a time.  It will be -1u, if the
@@ -329,11 +324,6 @@ int flag_dump_rtl_in_asm = 0;
    the support provided depends on the backend.  */
 rtx stack_limit_rtx;
 
-/* If one, renumber instruction UIDs to reduce the number of
-   unused UIDs if there are a lot of instructions.  If greater than
-   one, unconditionally renumber instruction UIDs.  */
-int flag_renumber_insns = 1;
-
 /* Nonzero if we should track variables.  When
    flag_var_tracking == AUTODETECT_VALUE it will be set according
    to optimize, debug_info_level and debug_hooks in process_options ().  */
@@ -357,10 +347,6 @@ int align_labels_log;
 int align_labels_max_skip;
 int align_functions_log;
 
-/* Like align_functions_log above, but used by front-ends to force the
-   minimum function alignment.  Zero means no alignment is forced.  */
-int force_align_functions_log;
-
 typedef struct
 {
   const char *const string;
@@ -377,10 +363,10 @@ const char *user_label_prefix;
 
 static const param_info lang_independent_params[] = {
 #define DEFPARAM(ENUM, OPTION, HELP, DEFAULT, MIN, MAX) \
-  { OPTION, DEFAULT, MIN, MAX, HELP },
+  { OPTION, DEFAULT, false, MIN, MAX, HELP },
 #include "params.def"
 #undef DEFPARAM
-  { NULL, 0, 0, 0, NULL }
+  { NULL, 0, false, 0, 0, NULL }
 };
 
 /* Output files for assembler code (real compiler output)
@@ -448,27 +434,24 @@ announce_function (tree decl)
 	fprintf (stderr, " %s", lang_hooks.decl_printable_name (decl, 2));
       fflush (stderr);
       pp_needs_newline (global_dc->printer) = true;
-      diagnostic_set_last_function (global_dc);
+      diagnostic_set_last_function (global_dc, (diagnostic_info *) NULL);
     }
 }
 
-/* Set up a default flag_random_seed and local_tick, unless the user
-   already specified one.  */
+/* Initialize local_tick with the time of day, or -1 if
+   flag_random_seed is set.  */
 
 static void
-randomize (void)
+init_local_tick (void)
 {
   if (!flag_random_seed)
     {
-      unsigned HOST_WIDE_INT value;
-      static char random_seed[HOST_BITS_PER_WIDE_INT / 4 + 3];
-
       /* Get some more or less random data.  */
 #ifdef HAVE_GETTIMEOFDAY
       {
- 	struct timeval tv;
+	struct timeval tv;
 
- 	gettimeofday (&tv, NULL);
+	gettimeofday (&tv, NULL);
 	local_tick = tv.tv_sec * 1000 + tv.tv_usec / 1000;
       }
 #else
@@ -479,15 +462,47 @@ randomize (void)
 	  local_tick = (unsigned) now;
       }
 #endif
-      value = local_tick ^ getpid ();
-
-      sprintf (random_seed, HOST_WIDE_INT_PRINT_HEX, value);
-      flag_random_seed = random_seed;
     }
-  else if (!local_tick)
+  else
     local_tick = -1;
 }
 
+/* Set up a default flag_random_seed and local_tick, unless the user
+   already specified one.  Must be called after init_local_tick.  */
+
+static void
+init_random_seed (void)
+{
+  unsigned HOST_WIDE_INT value;
+  static char random_seed[HOST_BITS_PER_WIDE_INT / 4 + 3];
+
+  value = local_tick ^ getpid ();
+
+  sprintf (random_seed, HOST_WIDE_INT_PRINT_HEX, value);
+  flag_random_seed = random_seed;
+}
+
+/* Obtain the random_seed string.  Unless NOINIT, initialize it if
+   it's not provided in the command line.  */
+
+const char *
+get_random_seed (bool noinit)
+{
+  if (!flag_random_seed && !noinit)
+    init_random_seed ();
+  return flag_random_seed;
+}
+
+/* Modify the random_seed string to VAL.  Return its previous
+   value.  */
+
+const char *
+set_random_seed (const char *val)
+{
+  const char *old = flag_random_seed;
+  flag_random_seed = val;
+  return old;
+}
 
 /* Decode the string P as an integral parameter.
    If the string is indeed an integer return its numeric value else
@@ -516,6 +531,12 @@ read_integral_parameter (const char *p, const char *pname, const int  defval)
 
   return atoi (p);
 }
+
+/* When compiling with a recent enough GCC, we use the GNU C "extern inline"
+   for floor_log2 and exact_log2; see toplev.h.  That construct, however,
+   conflicts with the ISO C++ One Definition Rule.   */
+
+#if GCC_VERSION < 3004 || !defined (__cplusplus)
 
 /* Given X, an unsigned number, return the largest int Y such that 2**Y <= X.
    If X is 0, return -1.  */
@@ -566,6 +587,8 @@ exact_log2 (unsigned HOST_WIDE_INT x)
   return floor_log2 (x);
 #endif
 }
+
+#endif /*  GCC_VERSION < 3004 || !defined (__cplusplus)  */
 
 /* Handler for fatal signals, such as SIGSEGV.  These are transformed
    into ICE messages, which is much more user friendly.  In case the
@@ -665,6 +688,8 @@ output_file_directive (FILE *asm_file, const char *input_name)
 
   if (input_name == NULL)
     input_name = "<stdin>";
+  else
+    input_name = remap_debug_filename (input_name);
 
   len = strlen (input_name);
   na = input_name + len;
@@ -739,9 +764,9 @@ wrapup_global_declaration_2 (tree decl)
 
   if (TREE_CODE (decl) == VAR_DECL && TREE_STATIC (decl))
     {
-      struct cgraph_varpool_node *node;
+      struct varpool_node *node;
       bool needed = true;
-      node = cgraph_varpool_node (decl);
+      node = varpool_node (decl);
 
       if (node->finalized)
 	needed = false;
@@ -821,7 +846,7 @@ check_global_declaration_1 (tree decl)
       if (TREE_SYMBOL_REFERENCED (DECL_ASSEMBLER_NAME (decl)))
 	pedwarn ("%q+F used but never defined", decl);
       else
-	warning (0, "%q+F declared %<static%> but never defined", decl);
+	warning (OPT_Wunused_function, "%q+F declared %<static%> but never defined", decl);
       /* This symbol is effectively an "extern" declaration now.  */
       TREE_PUBLIC (decl) = 1;
       assemble_external (decl);
@@ -846,7 +871,10 @@ check_global_declaration_1 (tree decl)
       && ! (TREE_CODE (decl) == VAR_DECL && DECL_REGISTER (decl))
       /* Otherwise, ask the language.  */
       && lang_hooks.decls.warn_unused_global (decl))
-    warning (0, "%q+D defined but not used", decl);
+    warning ((TREE_CODE (decl) == FUNCTION_DECL) 
+	     ? OPT_Wunused_function 
+             : OPT_Wunused_variable, 
+	     "%q+D defined but not used", decl);
 }
 
 /* Issue appropriate warnings for the global declarations in VEC (of
@@ -889,9 +917,8 @@ warn_deprecated_use (tree node)
     {
       expanded_location xloc = expand_location (DECL_SOURCE_LOCATION (node));
       warning (OPT_Wdeprecated_declarations,
-	       "%qs is deprecated (declared at %s:%d)",
-	       IDENTIFIER_POINTER (DECL_NAME (node)),
-	       xloc.file, xloc.line);
+	       "%qD is deprecated (declared at %s:%d)",
+	       node, xloc.file, xloc.line);
     }
   else if (TYPE_P (node))
     {
@@ -943,7 +970,11 @@ push_srcloc (const char *file, int line)
 {
   struct file_stack *fs;
 
-  fs = xmalloc (sizeof (struct file_stack));
+  gcc_assert (!input_file_stack_restored);
+  if (input_file_stack_tick == (int) ((1U << INPUT_FILE_STACK_BITS) - 1))
+    sorry ("GCC supports only %d input file changes", input_file_stack_tick);
+
+  fs = XNEW (struct file_stack);
   fs->location = input_location;
   fs->next = input_file_stack;
 #ifdef USE_MAPPED_LOCATION
@@ -954,6 +985,7 @@ push_srcloc (const char *file, int line)
 #endif
   input_file_stack = fs;
   input_file_stack_tick++;
+  VEC_safe_push (fs_p, heap, input_file_stack_history, input_file_stack);
 }
 
 /* Pop the top entry off the stack of presently open source files.
@@ -965,11 +997,30 @@ pop_srcloc (void)
 {
   struct file_stack *fs;
 
+  gcc_assert (!input_file_stack_restored);
+  if (input_file_stack_tick == (int) ((1U << INPUT_FILE_STACK_BITS) - 1))
+    sorry ("GCC supports only %d input file changes", input_file_stack_tick);
+
   fs = input_file_stack;
   input_location = fs->location;
   input_file_stack = fs->next;
-  free (fs);
   input_file_stack_tick++;
+  VEC_safe_push (fs_p, heap, input_file_stack_history, input_file_stack);
+}
+
+/* Restore the input file stack to its state as of TICK, for the sake
+   of diagnostics after processing the whole input.  Once this has
+   been called, push_srcloc and pop_srcloc may no longer be
+   called.  */
+void
+restore_input_file_stack (int tick)
+{
+  if (tick == 0)
+    input_file_stack = NULL;
+  else
+    input_file_stack = VEC_index (fs_p, input_file_stack_history, tick - 1);
+  input_file_stack_tick = tick;
+  input_file_stack_restored = true;
 }
 
 /* Compile an entire translation unit.  Write a file of assembly
@@ -1002,7 +1053,11 @@ compile_file (void)
     return;
 
   lang_hooks.decls.final_write_globals ();
-  cgraph_varpool_assemble_pending_decls ();
+
+  if (errorcount || sorrycount)
+    return;
+
+  varpool_assemble_pending_decls ();
   finish_aliases_2 ();
 
   /* This must occur after the loop to output deferred functions.
@@ -1014,8 +1069,14 @@ compile_file (void)
   if (flag_mudflap)
     mudflap_finish_file ();
 
-  /* Write out any pending weak symbol declarations.  */
+  /* Likewise for emulated thread-local storage.  */
+  if (!targetm.have_tls)
+    emutls_finish ();
 
+  output_shared_constant_pool ();
+  output_object_blocks ();
+
+  /* Write out any pending weak symbol declarations.  */
   weak_finish ();
 
   /* Do dbx symbols.  */
@@ -1033,9 +1094,7 @@ compile_file (void)
 
   dw2_output_indirect_constants ();
 
-  /* Flush any pending external directives.  cgraph did this for
-     assemble_external calls from the front end, but the RTL
-     expander can also generate them.  */
+  /* Flush any pending external directives.  */
   process_pending_assemble_externals ();
 
   /* Attach a special .ident directive to the end of the file to identify
@@ -1043,8 +1102,14 @@ compile_file (void)
      string is patterned after the ones produced by native SVR4 compilers.  */
 #ifdef IDENT_ASM_OP
   if (!flag_no_ident)
-    fprintf (asm_out_file, "%s\"GCC: (GNU) %s\"\n",
-	     IDENT_ASM_OP, version_string);
+    {
+      const char *pkg_version = "(GNU) ";
+
+      if (strcmp ("(GCC) ", pkgversion_string))
+	pkg_version = pkgversion_string;
+      fprintf (asm_out_file, "%s\"GCC: %s%s\"\n",
+	       IDENT_ASM_OP, pkg_version, version_string);
+    }
 #endif
 
   /* This must be at the end.  Some target ports emit end of file directives
@@ -1112,12 +1177,16 @@ print_version (FILE *file, const char *indent)
 {
   static const char fmt1[] =
 #ifdef __GNUC__
-    N_("%s%s%s version %s (%s)\n%s\tcompiled by GNU C version %s.\n")
+    N_("%s%s%s %sversion %s (%s)\n%s\tcompiled by GNU C version %s, ")
 #else
-    N_("%s%s%s version %s (%s) compiled by CC.\n")
+    N_("%s%s%s %sversion %s (%s) compiled by CC, ")
 #endif
     ;
   static const char fmt2[] =
+    N_("GMP version %s, MPFR version %s.\n");
+  static const char fmt3[] =
+    N_("%s%swarning: %s header version %s differs from library version %s.\n");
+  static const char fmt4[] =
     N_("%s%sGGC heuristics: --param ggc-min-expand=%d --param ggc-min-heapsize=%d\n");
 #ifndef __VERSION__
 #define __VERSION__ "[?]"
@@ -1125,99 +1194,194 @@ print_version (FILE *file, const char *indent)
   fprintf (file,
 	   file == stderr ? _(fmt1) : fmt1,
 	   indent, *indent != 0 ? " " : "",
-	   lang_hooks.name, version_string, TARGET_NAME,
+	   lang_hooks.name, pkgversion_string, version_string, TARGET_NAME,
 	   indent, __VERSION__);
+
+  /* We need to stringify the GMP macro values.  Ugh, gmp_version has
+     two string formats, "i.j.k" and "i.j" when k is zero.  */
+#define GCC_GMP_STRINGIFY_VERSION3(X) #X
+#define GCC_GMP_STRINGIFY_VERSION2(X) GCC_GMP_STRINGIFY_VERSION3(X)
+#if __GNU_MP_VERSION_PATCHLEVEL == 0
+#define GCC_GMP_STRINGIFY_VERSION GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION) "." \
+  GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_MINOR)
+#else
+#define GCC_GMP_STRINGIFY_VERSION GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION) "." \
+  GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_MINOR) "." \
+  GCC_GMP_STRINGIFY_VERSION2(__GNU_MP_VERSION_PATCHLEVEL)
+#endif
   fprintf (file,
 	   file == stderr ? _(fmt2) : fmt2,
+	   GCC_GMP_STRINGIFY_VERSION, MPFR_VERSION_STRING);
+  if (strcmp (GCC_GMP_STRINGIFY_VERSION, gmp_version))
+    fprintf (file,
+	     file == stderr ? _(fmt3) : fmt3,
+	     indent, *indent != 0 ? " " : "",
+	     "GMP", GCC_GMP_STRINGIFY_VERSION, gmp_version);
+  if (strcmp (MPFR_VERSION_STRING, mpfr_get_version ()))
+    fprintf (file,
+	     file == stderr ? _(fmt3) : fmt3,
+	     indent, *indent != 0 ? " " : "",
+	     "MPFR", MPFR_VERSION_STRING, mpfr_get_version ());
+  fprintf (file,
+	   file == stderr ? _(fmt4) : fmt4,
 	   indent, *indent != 0 ? " " : "",
 	   PARAM_VALUE (GGC_MIN_EXPAND), PARAM_VALUE (GGC_MIN_HEAPSIZE));
 }
 
-/* Print an option value and return the adjusted position in the line.
-   ??? We don't handle error returns from fprintf (disk full); presumably
-   other code will catch a disk full though.  */
+#ifdef ASM_COMMENT_START
+static int
+print_to_asm_out_file (print_switch_type type, const char * text)
+{
+  bool prepend_sep = true;
+
+  switch (type)
+    {
+    case SWITCH_TYPE_LINE_END:
+      putc ('\n', asm_out_file);
+      return 1;
+
+    case SWITCH_TYPE_LINE_START:
+      fputs (ASM_COMMENT_START, asm_out_file);
+      return strlen (ASM_COMMENT_START);
+
+    case SWITCH_TYPE_DESCRIPTIVE:
+      if (ASM_COMMENT_START[0] == 0)
+	prepend_sep = false;
+      /* Drop through.  */
+    case SWITCH_TYPE_PASSED:
+    case SWITCH_TYPE_ENABLED:
+      if (prepend_sep)
+	fputc (' ', asm_out_file);
+      fprintf (asm_out_file, text);
+      /* No need to return the length here as
+	 print_single_switch has already done it.  */
+      return 0;
+
+    default:
+      return -1;
+    }
+}
+#endif
 
 static int
-print_single_switch (FILE *file, int pos, int max,
-		     const char *indent, const char *sep, const char *term,
-		     const char *type, const char *name)
+print_to_stderr (print_switch_type type, const char * text)
 {
-  /* The ultrix fprintf returns 0 on success, so compute the result we want
-     here since we need it for the following test.  */
-  int len = strlen (sep) + strlen (type) + strlen (name);
+  switch (type)
+    {
+    case SWITCH_TYPE_LINE_END:
+      putc ('\n', stderr);
+      return 1;
 
-  if (pos != 0
-      && pos + len > max)
-    {
-      fprintf (file, "%s", term);
-      pos = 0;
+    case SWITCH_TYPE_LINE_START:
+      return 0;
+      
+    case SWITCH_TYPE_PASSED:
+    case SWITCH_TYPE_ENABLED:
+      fputc (' ', stderr);
+      /* Drop through.  */
+
+    case SWITCH_TYPE_DESCRIPTIVE:
+      fprintf (stderr, text);
+      /* No need to return the length here as
+	 print_single_switch has already done it.  */
+      return 0;
+
+    default:
+      return -1;
     }
-  if (pos == 0)
-    {
-      fprintf (file, "%s", indent);
-      pos = strlen (indent);
-    }
-  fprintf (file, "%s%s%s", sep, type, name);
-  pos += len;
-  return pos;
 }
 
-/* Print active target switches to FILE.
+/* Print an option value and return the adjusted position in the line.
+   ??? print_fn doesn't handle errors, eg disk full; presumably other
+   code will catch a disk full though.  */
+
+static int
+print_single_switch (print_switch_fn_type print_fn,
+		     int pos,
+		     print_switch_type type,
+		     const char * text)
+{
+  /* The ultrix fprintf returns 0 on success, so compute the result
+     we want here since we need it for the following test.  The +1
+     is for the separator character that will probably be emitted.  */
+  int len = strlen (text) + 1;
+
+  if (pos != 0
+      && pos + len > MAX_LINE)
+    {
+      print_fn (SWITCH_TYPE_LINE_END, NULL);
+      pos = 0;
+    }
+
+  if (pos == 0)
+    pos += print_fn (SWITCH_TYPE_LINE_START, NULL);
+
+  print_fn (type, text);
+  return pos + len;
+}
+
+/* Print active target switches using PRINT_FN.
    POS is the current cursor position and MAX is the size of a "line".
    Each line begins with INDENT and ends with TERM.
    Each switch is separated from the next by SEP.  */
 
 static void
-print_switch_values (FILE *file, int pos, int max,
-		     const char *indent, const char *sep, const char *term)
+print_switch_values (print_switch_fn_type print_fn)
 {
+  int pos = 0;
   size_t j;
   const char **p;
 
   /* Fill in the -frandom-seed option, if the user didn't pass it, so
      that it can be printed below.  This helps reproducibility.  */
-  randomize ();
+  if (!flag_random_seed)
+    init_random_seed ();
 
   /* Print the options as passed.  */
-  pos = print_single_switch (file, pos, max, indent, *indent ? " " : "", term,
-			     _("options passed: "), "");
+  pos = print_single_switch (print_fn, pos,
+			     SWITCH_TYPE_DESCRIPTIVE, _("options passed: "));
 
   for (p = &save_argv[1]; *p != NULL; p++)
-    if (**p == '-')
-      {
-	/* Ignore these.  */
-	if (strcmp (*p, "-o") == 0)
-	  {
-	    if (p[1] != NULL)
-	      p++;
-	    continue;
-	  }
-	if (strcmp (*p, "-quiet") == 0)
-	  continue;
-	if (strcmp (*p, "-version") == 0)
-	  continue;
-	if ((*p)[1] == 'd')
-	  continue;
+    {
+      if (**p == '-')
+	{
+	  /* Ignore these.  */
+	  if (strcmp (*p, "-o") == 0
+	      || strcmp (*p, "-dumpbase") == 0
+	      || strcmp (*p, "-auxbase") == 0)
+	    {
+	      if (p[1] != NULL)
+		p++;
+	      continue;
+	    }
 
-	pos = print_single_switch (file, pos, max, indent, sep, term, *p, "");
-      }
+	  if (strcmp (*p, "-quiet") == 0
+	      || strcmp (*p, "-version") == 0)
+	    continue;
+
+	  if ((*p)[1] == 'd')
+	    continue;
+	}
+
+      pos = print_single_switch (print_fn, pos, SWITCH_TYPE_PASSED, *p);
+    }
+
   if (pos > 0)
-    fprintf (file, "%s", term);
+    print_fn (SWITCH_TYPE_LINE_END, NULL);
 
   /* Print the -f and -m options that have been enabled.
      We don't handle language specific options but printing argv
      should suffice.  */
-
-  pos = print_single_switch (file, 0, max, indent, *indent ? " " : "", term,
-			     _("options enabled: "), "");
+  pos = print_single_switch (print_fn, 0,
+			     SWITCH_TYPE_DESCRIPTIVE, _("options enabled: "));
 
   for (j = 0; j < cl_options_count; j++)
     if ((cl_options[j].flags & CL_REPORT)
 	&& option_enabled (j) > 0)
-      pos = print_single_switch (file, pos, max, indent, sep, term,
-				 "", cl_options[j].opt_text);
+      pos = print_single_switch (print_fn, pos,
+				 SWITCH_TYPE_ENABLED, cl_options[j].opt_text);
 
-  fprintf (file, "%s", term);
+  print_fn (SWITCH_TYPE_LINE_END, NULL);
 }
 
 /* Open assembly code output file.  Do this even if -fsyntax-only is
@@ -1234,7 +1398,8 @@ init_asm_output (const char *name)
       if (asm_file_name == 0)
 	{
 	  int len = strlen (dump_base_name);
-	  char *dumpname = xmalloc (len + 6);
+	  char *dumpname = XNEWVEC (char, len + 6);
+
 	  memcpy (dumpname, dump_base_name, len + 1);
 	  strip_off_ending (dumpname, len);
 	  strcat (dumpname, ".s");
@@ -1252,15 +1417,30 @@ init_asm_output (const char *name)
     {
       targetm.asm_out.file_start ();
 
+      if (flag_record_gcc_switches)
+	{
+	  if (targetm.asm_out.record_gcc_switches)
+	    {
+	      /* Let the target know that we are about to start recording.  */
+	      targetm.asm_out.record_gcc_switches (SWITCH_TYPE_DESCRIPTIVE,
+						   NULL);
+	      /* Now record the switches.  */
+	      print_switch_values (targetm.asm_out.record_gcc_switches);
+	      /* Let the target know that the recording is over.  */
+	      targetm.asm_out.record_gcc_switches (SWITCH_TYPE_DESCRIPTIVE,
+						   NULL);
+	    }
+	  else
+	    inform ("-frecord-gcc-switches is not supported by the current target");
+	}
+
 #ifdef ASM_COMMENT_START
       if (flag_verbose_asm)
 	{
-	  /* Print the list of options in effect.  */
+	  /* Print the list of switches in effect
+	     into the assembler file as comments.  */
 	  print_version (asm_out_file, ASM_COMMENT_START);
-	  print_switch_values (asm_out_file, 0, MAX_LINE,
-			       ASM_COMMENT_START, " ", "\n");
-	  /* Add a blank line here so it appears in assembler output but not
-	     screen output.  */
+	  print_switch_values (print_to_asm_out_file);
 	  fprintf (asm_out_file, "\n");
 	}
 #endif
@@ -1300,7 +1480,7 @@ default_get_pch_validity (size_t *len)
     if (option_affects_pch_p (i, &state))
       *len += state.size;
 
-  result = r = xmalloc (*len);
+  result = r = XNEWVEC (char, *len);
   r[0] = flag_pic;
   r[1] = flag_pie;
   r += 2;
@@ -1415,9 +1595,17 @@ default_tree_printer (pretty_printer * pp, text_info *text, const char *spec,
       pp_string (pp, n);
     }
   else
-    dump_generic_node (pp, t, 0, 0, 0);
+    dump_generic_node (pp, t, 0, TDF_DIAGNOSTIC, 0);
 
   return true;
+}
+
+/* A helper function; used as the reallocator function for cpp's line
+   table.  */
+static void *
+realloc_for_line_map (void *ptr, size_t len)
+{
+  return ggc_realloc (ptr, len);
 }
 
 /* Initialization of the front end environment, before command line
@@ -1476,7 +1664,9 @@ general_init (const char *argv0)
      table.  */
   init_ggc ();
   init_stringpool ();
-  linemap_init (&line_table);
+  line_table = GGC_NEW (struct line_maps);
+  linemap_init (line_table);
+  line_table->reallocator = realloc_for_line_map;
   init_ttree ();
 
   /* Initialize register usage now so switches may override.  */
@@ -1488,6 +1678,45 @@ general_init (const char *argv0)
   /* This must be done after add_params but before argument processing.  */
   init_ggc_heuristics();
   init_optimization_passes ();
+}
+
+/* Return true if the current target supports -fsection-anchors.  */
+
+static bool
+target_supports_section_anchors_p (void)
+{
+  if (targetm.min_anchor_offset == 0 && targetm.max_anchor_offset == 0)
+    return false;
+
+  if (targetm.asm_out.output_anchor == NULL)
+    return false;
+
+  return true;
+}
+
+/* Default the align_* variables to 1 if they're still unset, and
+   set up the align_*_log variables.  */
+static void
+init_alignments (void)
+{
+  if (align_loops <= 0)
+    align_loops = 1;
+  if (align_loops_max_skip > align_loops)
+    align_loops_max_skip = align_loops - 1;
+  align_loops_log = floor_log2 (align_loops * 2 - 1);
+  if (align_jumps <= 0)
+    align_jumps = 1;
+  if (align_jumps_max_skip > align_jumps)
+    align_jumps_max_skip = align_jumps - 1;
+  align_jumps_log = floor_log2 (align_jumps * 2 - 1);
+  if (align_labels <= 0)
+    align_labels = 1;
+  align_labels_log = floor_log2 (align_labels * 2 - 1);
+  if (align_labels_max_skip > align_labels)
+    align_labels_max_skip = align_labels - 1;
+  if (align_functions <= 0)
+    align_functions = 1;
+  align_functions_log = floor_log2 (align_functions * 2 - 1);
 }
 
 /* Process the options that have been parsed.  */
@@ -1512,6 +1741,13 @@ process_options (void)
   OVERRIDE_OPTIONS;
 #endif
 
+  if (flag_section_anchors && !target_supports_section_anchors_p ())
+    {
+      warning (OPT_fsection_anchors,
+	       "this target does not support %qs", "-fsection-anchors");
+      flag_section_anchors = 0;
+    }
+
   if (flag_short_enums == 2)
     flag_short_enums = targetm.default_short_enums ();
 
@@ -1528,23 +1764,6 @@ process_options (void)
   else
     aux_base_name = "gccaux";
 
-  /* Set up the align_*_log variables, defaulting them to 1 if they
-     were still unset.  */
-  if (align_loops <= 0) align_loops = 1;
-  if (align_loops_max_skip > align_loops || !align_loops)
-    align_loops_max_skip = align_loops - 1;
-  align_loops_log = floor_log2 (align_loops * 2 - 1);
-  if (align_jumps <= 0) align_jumps = 1;
-  if (align_jumps_max_skip > align_jumps || !align_jumps)
-    align_jumps_max_skip = align_jumps - 1;
-  align_jumps_log = floor_log2 (align_jumps * 2 - 1);
-  if (align_labels <= 0) align_labels = 1;
-  align_labels_log = floor_log2 (align_labels * 2 - 1);
-  if (align_labels_max_skip > align_labels || !align_labels)
-    align_labels_max_skip = align_labels - 1;
-  if (align_functions <= 0) align_functions = 1;
-  align_functions_log = floor_log2 (align_functions * 2 - 1);
-
   /* Unrolling all loops implies that standard loop unrolling must also
      be done.  */
   if (flag_unroll_all_loops)
@@ -1560,28 +1779,13 @@ process_options (void)
   if (flag_rename_registers == AUTODETECT_VALUE)
     flag_rename_registers = flag_unroll_loops || flag_peel_loops;
 
-  /* If explicitly asked to run new loop optimizer, switch off the old
-     one.  */
-  if (flag_loop_optimize2)
-    flag_loop_optimize = 0;
-
-  /* Enable new loop optimizer pass if any of its optimizations is called.  */
-  if (flag_move_loop_invariants
-      || flag_unswitch_loops
-      || flag_peel_loops
-      || flag_unroll_loops
-      || flag_branch_on_count_reg)
-    flag_loop_optimize2 = 1;
-
   if (flag_non_call_exceptions)
     flag_asynchronous_unwind_tables = 1;
   if (flag_asynchronous_unwind_tables)
     flag_unwind_tables = 1;
 
-  /* Disable unit-at-a-time mode for frontends not supporting callgraph
-     interface.  */
-  if (flag_unit_at_a_time && ! lang_hooks.callgraph.expand_function)
-    flag_unit_at_a_time = 0;
+  if (!flag_unit_at_a_time)
+    flag_section_anchors = 0;
 
   if (flag_value_profile_transformations)
     flag_profile_values = 1;
@@ -1617,7 +1821,7 @@ process_options (void)
     {
       print_version (stderr, "");
       if (! quiet_flag)
-	print_switch_values (stderr, 0, MAX_LINE, "", " ", "\n");
+	print_switch_values (print_to_stderr);
     }
 
   if (flag_syntax_only)
@@ -1689,7 +1893,8 @@ process_options (void)
   if (debug_info_level < DINFO_LEVEL_NORMAL
       || debug_hooks->var_location == do_nothing_debug_hooks.var_location)
     {
-      if (flag_var_tracking == 1)
+      if (flag_var_tracking == 1
+	  || flag_var_tracking_uninit == 1)
         {
 	  if (debug_info_level < DINFO_LEVEL_NORMAL)
 	    warning (0, "variable tracking requested, but useless unless "
@@ -1699,6 +1904,7 @@ process_options (void)
 		     "by this debug format");
 	}
       flag_var_tracking = 0;
+      flag_var_tracking_uninit = 0;
     }
 
   if (flag_rename_registers == AUTODETECT_VALUE)
@@ -1707,6 +1913,19 @@ process_options (void)
 
   if (flag_var_tracking == AUTODETECT_VALUE)
     flag_var_tracking = optimize >= 1;
+
+  if (flag_tree_cselim == AUTODETECT_VALUE)
+#ifdef HAVE_conditional_move
+    flag_tree_cselim = 1;
+#else
+    flag_tree_cselim = 0;
+#endif
+
+  /* If the user specifically requested variable tracking with tagging
+     uninitialized variables, we need to turn on variable tracking.
+     (We already determined above that variable tracking is feasible.)  */
+  if (flag_var_tracking_uninit)
+    flag_var_tracking = 1;
 
   /* If auxiliary info generation is desired, open the output file.
      This goes in the same directory as the source file--unlike
@@ -1761,13 +1980,22 @@ process_options (void)
     }
 
 #ifndef OBJECT_FORMAT_ELF
+#ifndef OBJECT_FORMAT_MACHO
   if (flag_function_sections && write_symbols != NO_DEBUG)
     warning (0, "-ffunction-sections may affect debugging on some targets");
+#endif
 #endif
 
   /* The presence of IEEE signaling NaNs, implies all math can trap.  */
   if (flag_signaling_nans)
     flag_trapping_math = 1;
+
+  /* We cannot reassociate if we want traps or signed zeros.  */
+  if (flag_associative_math && (flag_trapping_math || flag_signed_zeros))
+    {
+      warning (0, "-fassociative-math disabled; other options take precedence");
+      flag_associative_math = 0;
+    }
 
   /* With -fcx-limited-range, we do cheap and quick complex arithmetic.  */
   if (flag_cx_limited_range)
@@ -1790,13 +2018,56 @@ process_options (void)
   if (flag_unwind_tables && !ACCUMULATE_OUTGOING_ARGS
       && flag_omit_frame_pointer)
     {
-      warning (0, "unwind tables currently requires a frame pointer "
+      warning (0, "unwind tables currently require a frame pointer "
 	       "for correctness");
       flag_omit_frame_pointer = 0;
     }
 }
 
-/* Initialize the compiler back end.  */
+/* This function can be called multiple times to reinitialize the compiler
+   back end when register classes or instruction sets have changed,
+   before each function.  */
+static void
+backend_init_target (void)
+{
+  /* Initialize alignment variables.  */
+  init_alignments ();
+
+  /* This reinitializes hard_frame_pointer, and calls init_reg_modes_target()
+     to initialize reg_raw_mode[].  */
+  init_emit_regs ();
+
+  /* This invokes target hooks to set fixed_reg[] etc, which is
+     mode-dependent.  */
+  init_regs ();
+
+  /* This depends on stack_pointer_rtx.  */
+  init_fake_stack_mems ();
+
+  /* Sets static_base_value[HARD_FRAME_POINTER_REGNUM], which is
+     mode-dependent.  */
+  init_alias_target ();
+
+  /* Depends on HARD_FRAME_POINTER_REGNUM.  */
+  init_reload ();
+
+  /* The following initialization functions need to generate rtl, so
+     provide a dummy function context for them.  */
+  init_dummy_function_start ();
+
+  /* rtx_cost is mode-dependent, so cached values need to be recomputed
+     on a mode change.  */
+  init_expmed ();
+
+  /* We may need to recompute regno_save_code[] and regno_restore_code[]
+     after a mode change as well.  */
+  if (flag_caller_saves)
+    init_caller_save ();
+  expand_dummy_function_end ();
+}
+
+/* Initialize the compiler back end.  This function is called only once,
+   when starting the compiler.  */
 static void
 backend_init (void)
 {
@@ -1809,19 +2080,35 @@ backend_init (void)
 		    || flag_test_coverage);
 
   init_rtlanal ();
-  init_regs ();
-  init_fake_stack_mems ();
-  init_alias_once ();
-  init_loop ();
-  init_reload ();
+  init_inline_once ();
   init_varasm_once ();
+  save_register_info ();
+
+  /* Initialize the target-specific back end pieces.  */
+  backend_init_target ();
+}
+
+/* Initialize things that are both lang-dependent and target-dependent.
+   This function can be called more than once if target parameters change.  */
+static void
+lang_dependent_init_target (void)
+{
+  /* This creates various _DECL nodes, so needs to be called after the
+     front end is initialized.  It also depends on the HAVE_xxx macros
+     generated from the target machine description.  */
+  init_optabs ();
 
   /* The following initialization functions need to generate rtl, so
      provide a dummy function context for them.  */
   init_dummy_function_start ();
-  init_expmed ();
-  if (flag_caller_saves)
-    init_caller_save ();
+
+  /* Do the target-specific parts of expr initialization.  */
+  init_expr_target ();
+
+  /* Although the actions of init_set_costs are language-independent,
+     it uses optabs, so we cannot call it from backend_init.  */
+  init_set_costs ();
+
   expand_dummy_function_end ();
 }
 
@@ -1846,16 +2133,12 @@ lang_dependent_init (const char *name)
 
   init_asm_output (name);
 
-  /* These create various _DECL nodes, so need to be called after the
+  /* This creates various _DECL nodes, so needs to be called after the
      front end is initialized.  */
   init_eh ();
-  init_optabs ();
 
-  /* The following initialization functions need to generate rtl, so
-     provide a dummy function context for them.  */
-  init_dummy_function_start ();
-  init_expr_once ();
-  expand_dummy_function_end ();
+  /* Do the target-specific parts of the initialization.  */
+  lang_dependent_init_target ();
 
   /* If dbx symbol table desired, initialize writing it and output the
      predefined types.  */
@@ -1873,6 +2156,32 @@ lang_dependent_init (const char *name)
   timevar_pop (TV_SYMOUT);
 
   return 1;
+}
+
+
+/* Reinitialize everything when target parameters, such as register usage,
+   have changed.  */
+void
+target_reinit (void)
+{
+  /* Reinitialize RTL backend.  */
+  backend_init_target ();
+
+  /* Reinitialize lang-dependent parts.  */
+  lang_dependent_init_target ();
+}
+
+void
+dump_memory_report (bool final)
+{
+  ggc_print_statistics ();
+  stringpool_statistics ();
+  dump_tree_statistics ();
+  dump_rtx_statistics ();
+  dump_varray_statistics ();
+  dump_alloc_pool_statistics ();
+  dump_bitmap_statistics ();
+  dump_ggc_loc_statistics (final);
 }
 
 /* Clean up: close opened files, etc.  */
@@ -1903,18 +2212,7 @@ finalize (void)
   finish_optimization_passes ();
 
   if (mem_report)
-    {
-      ggc_print_statistics ();
-      stringpool_statistics ();
-      dump_tree_statistics ();
-      dump_rtx_statistics ();
-      dump_varray_statistics ();
-      dump_alloc_pool_statistics ();
-      dump_ggc_loc_statistics ();
-    }
-
-  /* Free up memory for the benefit of leak detectors.  */
-  free_reg_info ();
+    dump_memory_report (true);
 
   /* Language-specific end of compilation actions.  */
   lang_hooks.finish ();
@@ -1974,7 +2272,7 @@ toplev_main (unsigned int argc, const char **argv)
      enough to default flags appropriately.  */
   decode_options (argc, argv);
 
-  randomize ();
+  init_local_tick ();
 
   /* Exit early if we can (e.g. -help).  */
   if (!exit_after_options)
