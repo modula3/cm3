@@ -359,6 +359,9 @@ typedef struct {
   __gthread_recursive_mutex_init_function
 #define __GTHREAD_RECURSIVE_MUTEX_INIT_DEFAULT {-1, 0, 0, 0}
 
+#define __GTHREAD_MUTEX_DESTROY_FUNCTION \
+  __gthread_mutex_destroy_function
+
 #if __MINGW32_MAJOR_VERSION >= 1 || \
   (__MINGW32_MAJOR_VERSION == 0 && __MINGW32_MINOR_VERSION > 2)
 #define MINGW32_SUPPORTS_MT_EH 1
@@ -562,7 +565,8 @@ __gthread_once (__gthread_once_t *once, void (*func) (void))
    leaks, especially in threaded applications making extensive use of
    C++ EH. Mingw uses a thread-support DLL to work-around this problem.  */
 static inline int
-__gthread_key_create (__gthread_key_t *key, void (*dtor) (void *))
+__gthread_key_create (__gthread_key_t *key,
+		      void (*dtor) (void *) __attribute__((unused)))
 {
   int status = 0;
   DWORD tls_index = TlsAlloc ();
@@ -612,6 +616,12 @@ __gthread_mutex_init_function (__gthread_mutex_t *mutex)
 {
   mutex->counter = -1;
   mutex->sema = CreateSemaphore (NULL, 0, 65535, NULL);
+}
+
+static inline void
+__gthread_mutex_destroy_function (__gthread_mutex_t *mutex)
+{
+  CloseHandle ((HANDLE) mutex->sema);
 }
 
 static inline int

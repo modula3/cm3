@@ -1,12 +1,12 @@
 /* v850 specific, C compiler specific functions.
-   Copyright (C) 2000 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2007 Free Software Foundation, Inc.
    Contributed by Jeff Law (law@cygnus.com).
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -15,9 +15,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -125,7 +124,7 @@ ghs_pragma_section (cpp_reader * pfile ATTRIBUTE_UNUSED)
       const char *sect, *alias;
       enum GHS_section_kind kind;
       
-      type = c_lex (&x);
+      type = pragma_lex (&x);
       
       if (type == CPP_EOF && !repeat)
 	goto reset;
@@ -135,14 +134,14 @@ ghs_pragma_section (cpp_reader * pfile ATTRIBUTE_UNUSED)
 	goto bad;
       repeat = 0;
       
-      if (c_lex (&x) != CPP_EQ)
+      if (pragma_lex (&x) != CPP_EQ)
 	goto bad;
-      if (c_lex (&x) != CPP_NAME)
+      if (pragma_lex (&x) != CPP_NAME)
 	goto bad;
       
       alias = IDENTIFIER_POINTER (x);
       
-      type = c_lex (&x);
+      type = pragma_lex (&x);
       if (type == CPP_COMMA)
 	repeat = 1;
       else if (type != CPP_EOF)
@@ -196,7 +195,7 @@ ghs_pragma_interrupt (cpp_reader * pfile ATTRIBUTE_UNUSED)
 {
   tree x;
   
-  if (c_lex (&x) != CPP_EOF)
+  if (pragma_lex (&x) != CPP_EOF)
     warning (OPT_Wpragmas, "junk at end of #pragma ghs interrupt");
   
   mark_current_function_as_interrupt ();
@@ -207,7 +206,7 @@ ghs_pragma_starttda (cpp_reader * pfile ATTRIBUTE_UNUSED)
 {
   tree x;
   
-  if (c_lex (&x) != CPP_EOF)
+  if (pragma_lex (&x) != CPP_EOF)
     warning (OPT_Wpragmas, "junk at end of #pragma ghs starttda");
   
   push_data_area (DATA_AREA_TDA);
@@ -218,7 +217,7 @@ ghs_pragma_startsda (cpp_reader * pfile ATTRIBUTE_UNUSED)
 {
   tree x;
   
-  if (c_lex (&x) != CPP_EOF)
+  if (pragma_lex (&x) != CPP_EOF)
     warning (OPT_Wpragmas, "junk at end of #pragma ghs startsda");
   
   push_data_area (DATA_AREA_SDA);
@@ -229,7 +228,7 @@ ghs_pragma_startzda (cpp_reader * pfile ATTRIBUTE_UNUSED)
 {
   tree x;
   
-  if (c_lex (&x) != CPP_EOF)
+  if (pragma_lex (&x) != CPP_EOF)
     warning (OPT_Wpragmas, "junk at end of #pragma ghs startzda");
   
   push_data_area (DATA_AREA_ZDA);
@@ -240,7 +239,7 @@ ghs_pragma_endtda (cpp_reader * pfile ATTRIBUTE_UNUSED)
 {
   tree x;
   
-  if (c_lex (&x) != CPP_EOF)
+  if (pragma_lex (&x) != CPP_EOF)
     warning (OPT_Wpragmas, "junk at end of #pragma ghs endtda");
   
   pop_data_area (DATA_AREA_TDA);
@@ -251,7 +250,7 @@ ghs_pragma_endsda (cpp_reader * pfile ATTRIBUTE_UNUSED)
 {
   tree x;
   
-  if (c_lex (&x) != CPP_EOF)
+  if (pragma_lex (&x) != CPP_EOF)
     warning (OPT_Wpragmas, "junk at end of #pragma ghs endsda");
   
   pop_data_area (DATA_AREA_SDA);
@@ -262,7 +261,7 @@ ghs_pragma_endzda (cpp_reader * pfile ATTRIBUTE_UNUSED)
 {
   tree x;
   
-  if (c_lex (&x) != CPP_EOF)
+  if (pragma_lex (&x) != CPP_EOF)
     warning (OPT_Wpragmas, "junk at end of #pragma ghs endzda");
   
   pop_data_area (DATA_AREA_ZDA);

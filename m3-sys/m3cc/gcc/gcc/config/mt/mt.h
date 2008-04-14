@@ -1,12 +1,12 @@
 /* Target Definitions for MorphoRISC1
-   Copyright (C) 2005 Free Software Foundation, Inc.
+   Copyright (C) 2005, 2006, 2007 Free Software Foundation, Inc.
    Contributed by Red Hat, Inc.
 
    This file is part of GCC.
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published
-   by the Free Software Foundation; either version 2, or (at your
+   by the Free Software Foundation; either version 3, or (at your
    option) any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -15,9 +15,8 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 extern struct rtx_def * mt_ucmpsi3_libcall;
 
@@ -38,6 +37,11 @@ enum epilogue_type
 extern enum processor_type mt_cpu;
 
 
+/* Support for a compile-time default CPU, et cetera.  The rules are:
+   --with-arch is ignored if -march is specified.  */
+#define OPTION_DEFAULT_SPECS \
+  {"arch", "%{!march=*:-march=%(VALUE)}" }
+
 /* A C string constant that tells the GCC driver program options to pass to
    the assembler.  */
 #undef  ASM_SPEC
@@ -231,10 +235,13 @@ march=ms2:exit-ms2.o%s; \
 					   seen  by the caller */
 #define GPR_INTERRUPT_LINK 15		/* hold return addres for interrupts */
 
+#define LOOP_FIRST         (GPR_LAST + 1)
+#define LOOP_LAST	   (LOOP_FIRST + 3)
+
 /* Argument register that is eliminated in favor of the frame and/or stack
    pointer.  Also add register to point to where the return address is
    stored.  */
-#define SPECIAL_REG_FIRST		(GPR_LAST + 1)
+#define SPECIAL_REG_FIRST		(LOOP_LAST + 1)
 #define SPECIAL_REG_LAST		(SPECIAL_REG_FIRST)
 #define ARG_POINTER_REGNUM		(SPECIAL_REG_FIRST + 0)
 #define SPECIAL_REG_P(R)		((R) == SPECIAL_REG_FIRST)
@@ -246,7 +253,7 @@ march=ms2:exit-ms2.o%s; \
 /* The register used to hold functions return value */
 #define RETVAL_REGNUM		11
 
-#define FIRST_PSEUDO_REGISTER (GPR_FIRST + 17)
+#define FIRST_PSEUDO_REGISTER (SPECIAL_REG_LAST + 1)
 
 #define IS_PSEUDO_P(R)	(REGNO (R) >= FIRST_PSEUDO_REGISTER)
 
@@ -258,7 +265,7 @@ march=ms2:exit-ms2.o%s; \
    R15	IRA	interrupt return address.  */
 #define FIXED_REGISTERS { 1, 0, 0, 0, 0, 0, 0, 0, \
 			  0, 0, 0, 0, 1, 1, 1, 1, \
-			  1			  \
+			  1, 1, 1, 1, 1		  \
 			 }
 
 /* Like `FIXED_REGISTERS' but has 1 for each register that is clobbered (in
@@ -267,7 +274,7 @@ march=ms2:exit-ms2.o%s; \
    allocation of values that must live across function calls.  */
 #define CALL_USED_REGISTERS	{ 1, 1, 1, 1, 1, 0, 0, 1, \
 				  1, 1, 1, 1, 1, 1, 1, 1, \
-				  1			  \
+				  1, 1, 1, 1, 1		  \
 				}
 
 
@@ -298,9 +305,9 @@ enum reg_class
 #define REG_CLASS_NAMES {"NO_REGS", "ALL_REGS" }
 
 #define REG_CLASS_CONTENTS \
-   {									\
-     { 0x0, 0x0 },							\
-     { (((1 << (GPR_LAST + 1)) - 1) & ~(1 << GPR_FIRST)), 0x0 },	\
+   {								\
+     { 0x0 },							\
+     { 0x000fffff },						\
    }
 
 /* A C expression whose value is a register class containing hard register
@@ -338,12 +345,12 @@ enum reg_class
 /* For MorphoRISC1:
 
    `I'	is used for the range of constants an arithmetic insn can
-	actually contain (16 bits signed integers).
+	actually contain (16-bit signed integers).
 
    `J'	is used for the range which is just zero (ie, $r0).
 
    `K'	is used for the range of constants a logical insn can actually
-	contain (16 bit zero-extended integers).
+	contain (16-bit zero-extended integers).
 
    `L'	is used for the range of constants that be loaded with lui
 	(ie, the bottom 16 bits are zero).
@@ -351,11 +358,11 @@ enum reg_class
    `M'	is used for the range of constants that take two words to load
 	(ie, not matched by `I', `K', and `L').
 
-   `N'	is used for negative 16 bit constants other than -65536.
+   `N'	is used for negative 16-bit constants other than -65536.
 
-   `O'	is a 15 bit signed integer.
+   `O'	is a 15-bit signed integer.
 
-   `P'	is used for positive 16 bit constants.  */
+   `P'	is used for positive 16-bit constants.  */
 
 #define SMALL_INT(X) ((unsigned HOST_WIDE_INT) (INTVAL (X) + 0x8000) < 0x10000)
 #define SMALL_INT_UNSIGNED(X) ((unsigned HOST_WIDE_INT) (INTVAL (X)) < 0x10000)
@@ -406,11 +413,11 @@ enum save_direction
    && (regno) != GPR_FP		  				\
    && (regno) != GPR_SP		  				\
    && (regno) != GPR_R0		  				\
-   &&   (( regs_ever_live [regno] && ! call_used_regs [regno] ) \
+      &&   (( df_regs_ever_live_p (regno) && ! call_used_regs[regno] ) \
        /* Save ira register in an interrupt handler.  */	\
 	|| (interrupt_handler && (regno) == GPR_INTERRUPT_LINK)	\
        /* Save any register used in an interrupt handler.  */	\
-	|| (interrupt_handler && regs_ever_live [regno])	\
+	|| (interrupt_handler && df_regs_ever_live_p (regno))	\
        /* Save call clobbered registers in non-leaf interrupt	\
 	  handlers.  */						\
 	|| (interrupt_handler && call_used_regs[regno] 		\
@@ -504,7 +511,7 @@ extern struct mt_frame_info current_frame_info;
   {FRAME_POINTER_REGNUM, STACK_POINTER_REGNUM}				\
 }
 
-/* A C expression that returns non-zero if the compiler is allowed to try to
+/* A C expression that returns nonzero if the compiler is allowed to try to
    replace register number FROM with register number TO.  */
 #define CAN_ELIMINATE(FROM, TO)						\
  ((FROM) == ARG_POINTER_REGNUM && (TO) == STACK_POINTER_REGNUM		\
@@ -525,7 +532,7 @@ extern struct mt_frame_info current_frame_info;
 
 /* Define this if it is the responsibility of the caller to
    allocate the area reserved for arguments passed in registers.  */
-#define OUTGOING_REG_PARM_STACK_SPACE
+#define OUTGOING_REG_PARM_STACK_SPACE 1
 
 /* The number of register assigned to holding function arguments.  */
 #define MT_NUM_ARG_REGS        4
@@ -721,7 +728,7 @@ extern struct mt_frame_info current_frame_info;
 #define REGISTER_NAMES							\
 { "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7",			\
   "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15",			\
-  "ap" }
+  "LOOP1", "LOOP2", "LOOP3", "LOOP4", "ap" }
 
 /* If defined, a C initializer for an array of structures containing a name and
    a register number.  This macro defines additional names for hard registers,

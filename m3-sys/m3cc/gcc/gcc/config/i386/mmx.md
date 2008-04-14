@@ -1,12 +1,12 @@
 ;; GCC machine description for MMX and 3dNOW! instructions
-;; Copyright (C) 2005
+;; Copyright (C) 2005, 2007
 ;; Free Software Foundation, Inc.
 ;;
 ;; This file is part of GCC.
 ;;
 ;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 ;;
 ;; GCC is distributed in the hope that it will be useful,
@@ -15,15 +15,14 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 ;; The MMX and 3dNOW! patterns are in the same file because they use
 ;; the same register file, and 3dNOW! adds a number of extensions to
 ;; the base integer MMX isa.
 
-;; Note!  Except for the basic move instructions, *all* of these 
+;; Note!  Except for the basic move instructions, *all* of these
 ;; patterns are outside the normal optabs namespace.  This is because
 ;; use of these registers requires the insertion of emms or femms
 ;; instructions to return to normal fpu mode.  The compiler doesn't
@@ -32,14 +31,14 @@
 ;; direction of the user via a builtin.
 
 ;; 8 byte integral modes handled by MMX (and by extension, SSE)
-(define_mode_macro MMXMODEI [V8QI V4HI V2SI])
+(define_mode_iterator MMXMODEI [V8QI V4HI V2SI])
 
 ;; All 8-byte vector modes handled by MMX
-(define_mode_macro MMXMODE [V8QI V4HI V2SI V2SF])
+(define_mode_iterator MMXMODE [V8QI V4HI V2SI V2SF])
 
 ;; Mix-n-match
-(define_mode_macro MMXMODE12 [V8QI V4HI])
-(define_mode_macro MMXMODE24 [V4HI V2SI])
+(define_mode_iterator MMXMODE12 [V8QI V4HI])
+(define_mode_iterator MMXMODE24 [V4HI V2SI])
 
 ;; Mapping from integer vector mode to mnemonic suffix
 (define_mode_attr mmxvecsize [(V8QI "b") (V4HI "w") (V2SI "d") (DI "q")])
@@ -64,14 +63,14 @@
 
 (define_insn "*mov<mode>_internal_rex64"
   [(set (match_operand:MMXMODEI 0 "nonimmediate_operand"
-				"=rm,r,*y,*y ,m ,*y,Y ,x,x ,m,r,x")
+				"=rm,r,*y,*y ,m ,*y,Y2,x,x ,m,r,x")
 	(match_operand:MMXMODEI 1 "vector_move_operand"
-				"Cr ,m,C ,*ym,*y,Y ,*y,C,xm,x,x,r"))]
+				"Cr ,m,C ,*ym,*y,Y2,*y,C,xm,x,x,r"))]
   "TARGET_64BIT && TARGET_MMX
-   && (GET_CODE (operands[0]) != MEM || GET_CODE (operands[1]) != MEM)"
+   && !(MEM_P (operands[0]) && MEM_P (operands[1]))"
   "@
-    movq\t{%1, %0|%0, %1}
-    movq\t{%1, %0|%0, %1}
+    mov{q}\t{%1, %0|%0, %1}
+    mov{q}\t{%1, %0|%0, %1}
     pxor\t%0, %0
     movq\t{%1, %0|%0, %1}
     movq\t{%1, %0|%0, %1}
@@ -82,17 +81,17 @@
     movq\t{%1, %0|%0, %1}
     movd\t{%1, %0|%0, %1}
     movd\t{%1, %0|%0, %1}"
-  [(set_attr "type" "imov,imov,mmxmov,mmxmov,mmxmov,ssecvt,ssecvt,ssemov,ssemov,ssemov,ssemov,ssemov")
+  [(set_attr "type" "imov,imov,mmx,mmxmov,mmxmov,ssecvt,ssecvt,sselog1,ssemov,ssemov,ssemov,ssemov")
    (set_attr "unit" "*,*,*,*,*,mmx,mmx,*,*,*,*,*")
    (set_attr "mode" "DI")])
 
 (define_insn "*mov<mode>_internal"
   [(set (match_operand:MMXMODEI 0 "nonimmediate_operand"
-			"=*y,*y ,m ,*y,*Y,*Y,*Y ,m ,*x,*x,*x,m ,?r ,?m")
+			"=*y,*y ,m ,*y ,*Y2,*Y2,*Y2 ,m  ,*x,*x,*x,m ,?r ,?m")
 	(match_operand:MMXMODEI 1 "vector_move_operand"
-			"C  ,*ym,*y,*Y,*y,C ,*Ym,*Y,C ,*x,m ,*x,irm,r"))]
+			"C  ,*ym,*y,*Y2,*y ,C  ,*Y2m,*Y2,C ,*x,m ,*x,irm,r"))]
   "TARGET_MMX
-   && (GET_CODE (operands[0]) != MEM || GET_CODE (operands[1]) != MEM)"
+   && !(MEM_P (operands[0]) && MEM_P (operands[1]))"
   "@
     pxor\t%0, %0
     movq\t{%1, %0|%0, %1}
@@ -108,7 +107,7 @@
     movlps\t{%1, %0|%0, %1}
     #
     #"
-  [(set_attr "type" "mmxmov,mmxmov,mmxmov,ssecvt,ssecvt,ssemov,ssemov,ssemov,ssemov,ssemov,ssemov,ssemov,*,*")
+  [(set_attr "type" "mmx,mmxmov,mmxmov,ssecvt,ssecvt,sselog1,ssemov,ssemov,sselog1,ssemov,ssemov,ssemov,*,*")
    (set_attr "unit" "*,*,*,mmx,mmx,*,*,*,*,*,*,*,*,*")
    (set_attr "mode" "DI,DI,DI,DI,DI,TI,DI,DI,V4SF,V4SF,V2SF,V2SF,DI,DI")])
 
@@ -123,14 +122,14 @@
 
 (define_insn "*movv2sf_internal_rex64"
   [(set (match_operand:V2SF 0 "nonimmediate_operand"
-				"=rm,r,*y ,*y ,m ,*y,Y ,x,x,x,m,r,x")
+				"=rm,r,*y ,*y ,m ,*y,Y2,x,x,x,m,r,x")
         (match_operand:V2SF 1 "vector_move_operand"
-				"Cr ,m ,C ,*ym,*y,Y ,*y,C,x,m,x,x,r"))]
+				"Cr ,m ,C ,*ym,*y,Y2,*y,C,x,m,x,x,r"))]
   "TARGET_64BIT && TARGET_MMX
-   && (GET_CODE (operands[0]) != MEM || GET_CODE (operands[1]) != MEM)"
+   && !(MEM_P (operands[0]) && MEM_P (operands[1]))"
   "@
-    movq\t{%1, %0|%0, %1}
-    movq\t{%1, %0|%0, %1}
+    mov{q}\t{%1, %0|%0, %1}
+    mov{q}\t{%1, %0|%0, %1}
     pxor\t%0, %0
     movq\t{%1, %0|%0, %1}
     movq\t{%1, %0|%0, %1}
@@ -142,17 +141,17 @@
     movlps\t{%1, %0|%0, %1}
     movd\t{%1, %0|%0, %1}
     movd\t{%1, %0|%0, %1}"
-  [(set_attr "type" "imov,imov,mmxmov,mmxmov,mmxmov,ssecvt,ssecvt,ssemov,ssemov,ssemov,ssemov,ssemov,ssemov")
+  [(set_attr "type" "imov,imov,mmx,mmxmov,mmxmov,ssecvt,ssecvt,ssemov,sselog1,ssemov,ssemov,ssemov,ssemov")
    (set_attr "unit" "*,*,*,*,*,mmx,mmx,*,*,*,*,*,*")
    (set_attr "mode" "DI,DI,DI,DI,DI,DI,DI,V4SF,V4SF,V2SF,V2SF,DI,DI")])
 
 (define_insn "*movv2sf_internal"
   [(set (match_operand:V2SF 0 "nonimmediate_operand"
-					"=*y,*y ,m,*y,*Y,*x,*x,*x,m ,?r ,?m")
+			"=*y,*y ,m,*y ,*Y2,*x,*x,*x,m ,?r ,?m")
         (match_operand:V2SF 1 "vector_move_operand"
-					"C ,*ym,*y,*Y,*y,C ,*x,m ,*x,irm,r"))]
+			"C ,*ym,*y,*Y2,*y ,C ,*x,m ,*x,irm,r"))]
   "TARGET_MMX
-   && (GET_CODE (operands[0]) != MEM || GET_CODE (operands[1]) != MEM)"
+   && !(MEM_P (operands[0]) && MEM_P (operands[1]))"
   "@
     pxor\t%0, %0
     movq\t{%1, %0|%0, %1}
@@ -165,7 +164,7 @@
     movlps\t{%1, %0|%0, %1}
     #
     #"
-  [(set_attr "type" "mmxmov,mmxmov,mmxmov,ssecvt,ssecvt,ssemov,ssemov,ssemov,ssemov,*,*")
+  [(set_attr "type" "mmx,mmxmov,mmxmov,ssecvt,ssecvt,sselog1,ssemov,ssemov,ssemov,*,*")
    (set_attr "unit" "*,*,*,mmx,mmx,*,*,*,*,*,*")
    (set_attr "mode" "DI,DI,DI,DI,DI,V4SF,V4SF,V2SF,V2SF,DI,DI")])
 
@@ -302,7 +301,7 @@
   "pfrsqrt\\t{%1, %0|%0, %1}"
   [(set_attr "type" "mmx")
    (set_attr "mode" "V2SF")])
-		
+
 (define_insn "mmx_rsqit1v2sf3"
   [(set (match_operand:V2SF 0 "register_operand" "=y")
 	(unspec:V2SF [(match_operand:V2SF 1 "register_operand" "0")
@@ -573,7 +572,7 @@
 	 [(plus:DI (match_operand:DI 1 "nonimmediate_operand" "%0")
 		   (match_operand:DI 2 "nonimmediate_operand" "ym"))]
 	 UNSPEC_NOP))]
-  "TARGET_MMX && ix86_binary_operator_ok (PLUS, DImode, operands)"
+  "TARGET_SSE2 && ix86_binary_operator_ok (PLUS, DImode, operands)"
   "paddq\t{%2, %0|%0, %2}"
   [(set_attr "type" "mmxadd")
    (set_attr "mode" "DI")])
@@ -614,7 +613,7 @@
 	 [(minus:DI (match_operand:DI 1 "register_operand" "0")
 		    (match_operand:DI 2 "nonimmediate_operand" "ym"))]
 	 UNSPEC_NOP))]
-  "TARGET_MMX"
+  "TARGET_SSE2"
   "psubq\t{%2, %0|%0, %2}"
   [(set_attr "type" "mmxadd")
    (set_attr "mode" "DI")])
@@ -1172,9 +1171,9 @@
 })
 
 (define_insn "*vec_extractv2si_1"
-  [(set (match_operand:SI 0 "nonimmediate_operand"     "=y,Y,Y,x,frxy")
+  [(set (match_operand:SI 0 "nonimmediate_operand"     "=y,Y2,Y2,x,frxy")
 	(vec_select:SI
-	  (match_operand:V2SI 1 "nonimmediate_operand" " 0,0,Y,0,o")
+	  (match_operand:V2SI 1 "nonimmediate_operand" " 0,0 ,Y2,0,o")
 	  (parallel [(const_int 1)])))]
   "TARGET_MMX && !(MEM_P (operands[0]) && MEM_P (operands[1]))"
   "@
@@ -1355,8 +1354,8 @@
 
 (define_expand "mmx_maskmovq"
   [(set (match_operand:V8QI 0 "memory_operand" "")
-	(unspec:V8QI [(match_operand:V8QI 1 "register_operand" "y")
-		      (match_operand:V8QI 2 "register_operand" "y")
+	(unspec:V8QI [(match_operand:V8QI 1 "register_operand" "")
+		      (match_operand:V8QI 2 "register_operand" "")
 		      (match_dup 0)]
 		     UNSPEC_MASKMOV))]
   "TARGET_SSE || TARGET_3DNOW_A"
@@ -1430,4 +1429,4 @@
   "TARGET_3DNOW"
   "femms"
   [(set_attr "type" "mmx")
-   (set_attr "memory" "none")]) 
+   (set_attr "memory" "none")])

@@ -1,7 +1,7 @@
 /* Definitions of target machine for GNU compiler,
    for m68k (including m68010) NetBSD platforms using the
    ELF object format.
-   Copyright (C) 2002, 2003, 2004 Free Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2004, 2006, 2007 Free Software Foundation, Inc.
    Contributed by Wasabi Systems. Inc.
 
    This file is derived from <m68k/m68kv4.h>, <m68k/m68kelf.h>,
@@ -11,7 +11,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -20,9 +20,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #define TARGET_OS_CPP_BUILTINS()		\
   do						\
@@ -31,60 +30,33 @@ Boston, MA 02110-1301, USA.  */
       builtin_define ("__m68k__");		\
       builtin_define ("__SVR4_ABI__");		\
       builtin_define ("__motorola__");		\
+      if (TARGET_HARD_FLOAT)			\
+	builtin_define ("__HAVE_FPU__");	\
     }						\
   while (0)
 
-/* Default target comes from config.gcc */
-#undef TARGET_DEFAULT
-#define TARGET_DEFAULT TARGET_CPU_DEFAULT
-
-
 /* Don't try using XFmode on the 68010.  */ 
 #undef LONG_DOUBLE_TYPE_SIZE
-#define LONG_DOUBLE_TYPE_SIZE			\
-  ((TARGET_68020 || TARGET_68040 || TARGET_68040_ONLY || \
-    TARGET_68060) ? 80 : 64)
+#define LONG_DOUBLE_TYPE_SIZE (TARGET_68020 ? 80 : 64)
 
+#undef LIBGCC2_LONG_DOUBLE_TYPE_SIZE
 #ifdef __mc68010__
 #define LIBGCC2_LONG_DOUBLE_TYPE_SIZE 64
 #else
 #define LIBGCC2_LONG_DOUBLE_TYPE_SIZE 80
 #endif
 
-#define EXTRA_SPECS \
-  { "cpp_cpu_default_spec", CPP_CPU_DEFAULT_SPEC }, \
-  { "cpp_cpu_spec",         CPP_CPU_SPEC }, \
-  { "cpp_fpu_spec",         CPP_FPU_SPEC }, \
-  { "asm_default_spec",     ASM_DEFAULT_SPEC }, \
-  { "netbsd_cpp_spec",      NETBSD_CPP_SPEC }, \
+#undef SUBTARGET_EXTRA_SPECS
+#define SUBTARGET_EXTRA_SPECS \
   { "netbsd_entry_point",   NETBSD_ENTRY_POINT },
 
 
-#define CPP_CPU_SPEC \
-  "%{m68010:-D__mc68010__} \
-   %{m68020:-D__mc68020__} \
-   %{m68030:-D__mc68030__} \
-   %{m68040:-D__mc68040__} \
-   %(cpp_cpu_default_spec)"
-
-
 #undef TARGET_VERSION
-#if TARGET_DEFAULT & MASK_68020
-#define TARGET_VERSION fprintf (stderr, " (NetBSD/m68k ELF)");
-#define CPP_CPU_DEFAULT_SPEC "%{!m680*:-D__mc68020__}"
-#define ASM_DEFAULT_SPEC "%{!m680*:-m68020}"
-#else
-#define TARGET_VERSION fprintf (stderr, " (NetBSD/68010 ELF)");
-#define CPP_CPU_DEFAULT_SPEC "%{!m680*:-D__mc68010__}"
-#define ASM_DEFAULT_SPEC "%{!m680*:-m68010}"
-#endif
-
-
-#if TARGET_DEFAULT & MASK_68881
-#define CPP_FPU_SPEC "%{!msoft-float:-D__HAVE_68881__ -D__HAVE_FPU__}"
-#else
-#define CPP_FPU_SPEC "%{m68881:-D__HAVE_68881__ -D__HAVE_FPU__}"
-#endif
+#define TARGET_VERSION			\
+  fprintf (stderr,			\
+	   TARGET_68010			\
+	   ? " (NetBSD/68010 ELF)"	\
+	   : " (NetBSD/m68k ELF)");
 
 
 /* Provide a CPP_SPEC appropriate for NetBSD m68k targets.  Currently we
@@ -92,18 +64,14 @@ Boston, MA 02110-1301, USA.  */
    whether or not use of the FPU is allowed.  */
 
 #undef CPP_SPEC
-#define CPP_SPEC \
-  "%(netbsd_cpp_spec) %(cpp_cpu_spec) %(cpp_fpu_spec)"
+#define CPP_SPEC NETBSD_CPP_SPEC
 
 
-/* Provide an ASM_SPEC appropriate for NetBSD m68k ELF targets.  We pass
-   on some CPU options, as well as PIC code generation options.  */
+/* Provide an ASM_SPEC appropriate for NetBSD m68k ELF targets.  We need
+   to pass PIC code generation options.  */
 
 #undef ASM_SPEC
-#define ASM_SPEC \
-  "%(asm_default_spec) \
-    %{m68010} %{m68020} %{m68030} %{m68040} %{m68060} \
-    %{fpic|fpie:-k} %{fPIC|fPIE:-k -K}"
+#define ASM_SPEC "%(asm_cpu_spec) %{fpic|fpie:-k} %{fPIC|fPIE:-k -K}"
 
 #define AS_NEEDS_DASH_FOR_PIPED_INPUT
 
@@ -163,12 +131,6 @@ while (0)
 
 #undef USER_LABEL_PREFIX
 #define USER_LABEL_PREFIX ""
-
-
-/* The prefix for immediate operands.  */
-
-#undef IMMEDIATE_PREFIX
-#define IMMEDIATE_PREFIX "#"
 
 
 #undef ASM_COMMENT_START
@@ -261,7 +223,7 @@ while (0)
    function.  The default in m68k.h is a1.  For m68k/SVR4 it is a0. */
 
 #undef M68K_STRUCT_VALUE_REGNUM
-#define M68K_STRUCT_VALUE_REGNUM 8
+#define M68K_STRUCT_VALUE_REGNUM A0_REG
 
 
 /* Register in which static-chain is passed to a function.  The
@@ -269,7 +231,9 @@ while (0)
    regnum.  Make it a1 instead.  */
 
 #undef STATIC_CHAIN_REGNUM
-#define STATIC_CHAIN_REGNUM 9
+#define STATIC_CHAIN_REGNUM A1_REG
+#undef M68K_STATIC_CHAIN_REG_NAME
+#define M68K_STATIC_CHAIN_REG_NAME REGISTER_PREFIX "a1"
 
 
 /* Now to renumber registers for dbx and gdb.
@@ -288,7 +252,7 @@ while (0)
 
 #undef FUNCTION_VALUE_REGNO_P
 #define FUNCTION_VALUE_REGNO_P(N)					\
-  ((N) == 0 || (N) == 8 || (TARGET_68881 && (N) == 16))
+  ((N) == D0_REG || (N) == A0_REG || (TARGET_68881 && (N) == FP0_REG))
 
 
 /* Define this to be true when FUNCTION_VALUE_REGNO_P is true for
@@ -307,29 +271,7 @@ while (0)
 
 #undef FUNCTION_VALUE
 #define FUNCTION_VALUE(VALTYPE, FUNC)					\
-  (TREE_CODE (VALTYPE) == REAL_TYPE && TARGET_68881			\
-   ? gen_rtx_REG (TYPE_MODE (VALTYPE), 16)				\
-   : (POINTER_TYPE_P (VALTYPE)						\
-      ? gen_rtx_REG (TYPE_MODE (VALTYPE), 8)				\
-      : gen_rtx_REG (TYPE_MODE (VALTYPE), 0)))
-
-
-/* For compatibility with the large body of existing code which does
-   not always properly declare external functions returning pointer
-   types, the m68k/SVR4 convention is to copy the value returned for
-   pointer functions from a0 to d0 in the function epilogue, so that
-   callers that have neglected to properly declare the callee can
-   still find the correct return value.  */
-
-extern int current_function_returns_pointer;
-#define FUNCTION_EXTRA_EPILOGUE(FILE, SIZE) 				\
-do									\
-  {									\
-    if (current_function_returns_pointer				\
-	&& ! find_equiv_reg (0, get_last_insn (), 0, 0, 0, 8, Pmode))	\
-      asm_fprintf (FILE, "\tmove.l %Ra0,%Rd0\n");			\
-  }									\
-while (0)
+  m68k_function_value (VALTYPE, FUNC)
 
 
 /* Define how to find the value returned by a library function
@@ -339,10 +281,7 @@ while (0)
 
 #undef LIBCALL_VALUE
 #define LIBCALL_VALUE(MODE)						\
-  ((((MODE) == SFmode || (MODE) == DFmode || (MODE) == XFmode)		\
-    && TARGET_68881)							\
-   ? gen_rtx_REG (MODE, 16)						\
-   : gen_rtx_REG (MODE, 0))
+  m68k_libcall_value (MODE)
 
 
 /* Boundary (in *bits*) on which stack pointer should be aligned.
@@ -365,12 +304,6 @@ while (0)
 
 #undef BIGGEST_ALIGNMENT
 #define BIGGEST_ALIGNMENT 64
-
-
-/* For m68k SVR4, structures are returned using the reentrant
-   technique.  */
-
-#undef PCC_STATIC_STRUCT_RETURN
 
 
 /* The svr4 ABI for the m68k says that records and unions are returned

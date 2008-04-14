@@ -3,11 +3,33 @@
 # Generate HTML documentation from GCC Texinfo docs.
 # This version is for GCC 3.1 and later versions.
 
+set -e
+
 # Run this from /tmp.
 SVNROOT=${SVNROOT:-"file:///svn/gcc"}
 export SVNROOT
 
 PATH=/usr/local/bin:$PATH
+
+MANUALS="cpp
+  cppinternals
+  fastjar
+  gcc
+  gccint
+  gcj
+  g77
+  gfortran
+  gfc-internals
+  gnat_ug_unx
+  gnat_ug_vms
+  gnat_ug_vxw
+  gnat_ug_wnt
+  gnat_ugn_unw
+  gnat-style
+  gnat_rm
+  libgomp
+  libiberty
+  porting"
 
 WWWBASE=/www/gcc/htdocs
 WWWBASE_PREFORMATTED=/www/gcc/htdocs-preformatted
@@ -78,42 +100,27 @@ fi
 
 WORKDIR=/tmp/gcc-doc-update.$$
 
-/bin/rm -rf $WORKDIR
-/bin/mkdir $WORKDIR
+rm -rf $WORKDIR
+mkdir $WORKDIR
 cd $WORKDIR
-# Find all the texi files in the repository, except those in directories
-# we do not care about (texinfo, etc).
 if [ "$RELEASE" = "trunk" ]; then
-  svn ls -R $SVNROOT/$RELEASE/gcc | grep "\.texi$" |fgrep -v -f/home/gccadmin/scripts/doc_exclude > FILES
-  # SVN export doesn't function like CVS, in that it doesn't create an entire empty path structure
-  # Thus, it's easiest to just export the entire tree
   svn -q export $SVNROOT/$RELEASE gcc
-#  # Checkout all the texi files.
-#  for i in `cat FILES`; do
-#    svn -q export $SVNROOT/$RELEASE/gcc/$i
-#  done
-#  svn -q export $SVNROOT/$RELEASE/gcc/doc/install.texi2html 
-#  svn -q export $SVNROOT/$RELEASE/gcc/doc/include/texinfo.tex 
-#  svn -q export $SVNROOT/$RELEASE/gcc/ada/xgnatugn.adb 
-#  svn -q export $SVNROOT/$RELEASE/gcc/ada/ug_words
-#  svn -q export $SVNROOT/$RELEASE/gcc/BASE-VER
-#  svn -q export $SVNROOT/$RELEASE/gcc/DEV-PHASE
 else
-  svn ls -R $SVNROOT/tags/$RELEASE/gcc | grep "\.texi$" |fgrep -v -f/home/gccadmin/scripts/doc_exclude > FILES
-  # SVN export doesn't function like CVS, in that it doesn't create an entire empty path structure
-  # Thus, it's easiest to just export the entire tree
   svn -q export $SVNROOT/tags/$RELEASE gcc
-#  # Checkout all the texi files.
-#  for i in `cat FILES`; do
-#    svn -q export $SVNROOT/tags/$RELEASE/gcc/$i
-#  done
-#  svn -q export $SVNROOT/tags/$RELEASE/gcc/doc/install.texi2html 
-#  svn -q export $SVNROOT/tags/$RELEASE/gcc/doc/include/texinfo.tex 
-#  svn -q export $SVNROOT/tags/$RELEASE/gcc/ada/xgnatugn.adb 
-#  svn -q export $SVNROOT/tags/$RELEASE/gcc/ada/ug_words
-#  svn -q export $SVNROOT/tags/$RELEASE/gcc/BASE-VER
-#  svn -q export $SVNROOT/tags/$RELEASE/gcc/DEV-PHASE
 fi
+
+# Remove all unwanted files.  This is needed (a) to build the Ada
+# generator programs with the installed library, not the new one and
+# (b) to avoid packaging all the sources instead of only documentation
+# sources.
+find gcc -type f \( -name '*.texi' \
+  -o -path gcc/gcc/doc/install.texi2html \
+  -o -path gcc/gcc/doc/include/texinfo.tex \
+  -o -path gcc/gcc/ada/xgnatugn.adb \
+  -o -path gcc/gcc/ada/ug_words \
+  -o -path gcc/gcc/BASE-VER \
+  -o -path gcc/gcc/DEV-PHASE \
+  -o -print0 \) | xargs -0 rm -f
 
 # Build a tarball of the sources.
 tar cf docs-sources.tar gcc
@@ -121,8 +128,6 @@ tar cf docs-sources.tar gcc
 # The directory to pass to -I; this is the one with texinfo.tex
 # and fdl.texi.
 includedir=gcc/gcc/doc/include
-
-MANUALS="cpp cppinternals fastjar gcc gccint gcj g77 gfortran gnat_ug_unx gnat_ug_vms gnat_ug_vxw gnat_ug_wnt gnat_ugn_unw gnat-style gnat_rm libiberty porting"
 
 # Generate gnat_ugn_unw
 
@@ -140,16 +145,19 @@ fi
    else
       echo "@clear DEVELOPMENT"
    fi
+   echo "@set srcdir $WORKDIR/gcc/gcc"
+   echo "@set VERSION_PACKAGE (GCC)"
+   echo "@set BUGURL @uref{http://gcc.gnu.org/bugs.html}"
 ) > $includedir/gcc-vers.texi
 
 # Now convert the relevant files from texi to HTML, PDF and PostScript.
 for file in $MANUALS; do
   filename=`find . -name ${file}.texi`
   if [ "${filename}" ]; then
-    makeinfo --html -I ${includedir} -I `dirname ${filename}` ${filename}
+    makeinfo --html -I ${includedir} -I `dirname ${filename}` -o ${file} ${filename}
     tar cf ${file}-html.tar ${file}/*.html
-    texi2dvi -I ${includedir} ${filename} </dev/null && dvips -o ${file}.ps ${file}.dvi
-    texi2pdf -I ${includedir} ${filename} </dev/null
+    texi2dvi -I ${includedir} -o ${file}.dvi ${filename} </dev/null && dvips -o ${file}.ps ${file}.dvi
+    texi2pdf -I ${includedir} -o ${file}.pdf ${filename} </dev/null
     mkdir -p $DOCSDIR/$file
   fi
 done
@@ -165,15 +173,17 @@ today=`date +%d`
 if test $today = 15; then
   find $DOCSDIR -type f -maxdepth 1 -print | grep -v index.html | xargs rm
   for m in $MANUALS; do
-    rm $DOCSDIR/$m/*.html $DOCSDIR/$m/*.html.gz
+    rm -f $DOCSDIR/$m/*.html $DOCSDIR/$m/*.html.gz
   done
 fi
 
 # And copy the resulting files to the web server
 for file in */*.html *.ps *.pdf *.tar; do
-  cat $DOCSDIR/$file | 
-    sed -e '/^<meta name=generator/d' \
-        -e '/^%DVIPSSource:/d' > file1
+  if [ -f $DOCSDIR/$file ]; then
+    cat $DOCSDIR/$file | 
+      sed -e '/^<meta name=generator/d' \
+          -e '/^%DVIPSSource:/d' > file1
+  fi
   cat $file |
     sed -e '/^<meta name=generator/d' \
         -e '/^%DVIPSSource:/d' > file2

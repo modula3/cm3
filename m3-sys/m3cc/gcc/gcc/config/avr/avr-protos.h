@@ -1,13 +1,14 @@
 /* Prototypes for exported functions defined in avr.c
    
-   Copyright (C) 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2001, 2002, 2003, 2004, 2006, 2007
+   Free Software Foundation, Inc.
    Contributed by Denis Chertykov (denisc@overta.ru)
 
    This file is part of GCC.
 
    GCC is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
+   the Free Software Foundation; either version 3, or (at your option)
    any later version.
 
    GCC is distributed in the hope that it will be useful,
@@ -16,9 +17,8 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 
 extern int function_arg_regno_p (int r);
@@ -35,8 +35,6 @@ extern void asm_globalize_label (FILE *file, const char *name);
 extern void order_regs_for_local_alloc (void);
 extern int initial_elimination_offset (int from, int to);
 extern int avr_simple_epilogue (void);
-extern void progmem_section (void);
-extern int mask_one_bit_p (HOST_WIDE_INT mask);
 extern void gas_output_limited_string (FILE *file, const char *str);
 extern void gas_output_ascii (FILE *file, const char *str, size_t length);
 
@@ -45,7 +43,7 @@ extern void asm_output_external (FILE *file, tree decl, char *name);
 extern int avr_progmem_p (tree decl, tree attributes);
 
 #ifdef RTX_CODE /* inside TREE_CODE */
-extern rtx avr_function_value (tree type, tree func);
+extern rtx avr_function_value (const_tree type, const_tree func);
 extern void init_cumulative_args (CUMULATIVE_ARGS *cum, tree fntype,
 				  rtx libname, tree fndecl);
 extern rtx function_arg (CUMULATIVE_ARGS *cum, enum machine_mode mode,
@@ -88,12 +86,16 @@ extern const char *lshrqi3_out (rtx insn, rtx operands[], int *len);
 extern const char *lshrhi3_out (rtx insn, rtx operands[], int *len);
 extern const char *lshrsi3_out (rtx insn, rtx operands[], int *len);
 
+extern void expand_prologue (void);
+extern void expand_epilogue (void);
+extern int avr_epilogue_uses (int regno);
+
 extern void avr_output_bld (rtx operands[], int bit_nr);
 extern void avr_output_addr_vec_elt (FILE *stream, int value);
 extern const char *avr_out_sbxx_branch (rtx insn, rtx operands[]);
 
 extern enum reg_class preferred_reload_class (rtx x, enum reg_class class);
-extern int extra_constraint (rtx x, int c);
+extern int extra_constraint_Q (rtx x);
 extern rtx legitimize_address (rtx x, rtx oldx, enum machine_mode mode);
 extern int adjust_insn_length (rtx insn, int len);
 extern rtx avr_libcall_value (enum machine_mode mode);
@@ -113,7 +115,6 @@ extern int test_hard_reg_class (enum reg_class class, rtx x);
 extern int jump_over_one_insn_p (rtx insn, rtx dest);
 
 extern int avr_hard_regno_mode_ok (int regno, enum machine_mode mode);
-extern int call_insn_operand (rtx op, enum machine_mode mode);
 extern void final_prescan_insn (rtx insn, rtx *operand, int num_operands);
 extern int avr_simplify_comparison_p (enum machine_mode mode,
 				      RTX_CODE operator, rtx x);
@@ -122,7 +123,6 @@ extern int compare_eq_p (rtx insn);
 extern void out_shift_with_cnt (const char *template, rtx insn,
 				rtx operands[], int *len, int t_len);
 extern int avr_io_address_p (rtx x, int size);
-extern int const_int_pow2_p (rtx x);
 extern int avr_peep2_scratch_safe (rtx reg_rtx);
 #endif /* RTX_CODE */
 

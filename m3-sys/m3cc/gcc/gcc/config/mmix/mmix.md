@@ -1,5 +1,5 @@
 ;; GCC machine description for MMIX
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005
+;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2007
 ;; Free Software Foundation, Inc.
 ;; Contributed by Hans-Peter Nilsson (hp@bitrange.com)
 
@@ -7,7 +7,7 @@
 
 ;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 ;; The original PO technology requires these to be ordered by speed,
 ;; so that assigner will pick the fastest.
@@ -482,7 +481,8 @@ DIVU %1,%1,%2\;GET %0,:rR\;NEGU %2,0,%0\;CSNN %0,$255,%2")
 	 (const_int 0)))]
   ;; FIXME: Can we test equivalence any other way?
   ;; FIXME: Can we fold any other way?
-  "REGNO (operands[1]) == REGNO (operands[0])"
+  "REG_P (operands[0]) && REG_P (operands[1])
+   && REGNO (operands[1]) == REGNO (operands[0])"
   "%% folded: cmp %0,%1,0")
 
 (define_insn "*cmpcc"

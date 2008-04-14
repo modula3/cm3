@@ -1,11 +1,11 @@
 /* Base configuration file for all FreeBSD targets.
-   Copyright (C) 1999, 2000, 2001, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2004, 2005, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* Common FreeBSD configuration. 
    All FreeBSD architectures should include this file, which will specify
@@ -51,22 +50,7 @@ Boston, MA 02110-1301, USA.  */
 #define FBSD_TARGET_OS_CPP_BUILTINS()					\
   do									\
     {									\
-	if (FBSD_MAJOR == 9)						\
-	  builtin_define ("__FreeBSD__=9");			       	\
-	else if (FBSD_MAJOR == 8)					\
-	  builtin_define ("__FreeBSD__=8");			       	\
-	if (FBSD_MAJOR == 7)						\
-	  builtin_define ("__FreeBSD__=7");			       	\
-	else if (FBSD_MAJOR == 6)					\
-	  builtin_define ("__FreeBSD__=6");			       	\
-	else if (FBSD_MAJOR == 5)	       				\
-	  builtin_define ("__FreeBSD__=5");			       	\
-	else if (FBSD_MAJOR == 4)			       		\
-	  builtin_define ("__FreeBSD__=4");			       	\
-	else if (FBSD_MAJOR == 3)	       				\
-	  builtin_define ("__FreeBSD__=3");			       	\
-	else								\
-	  builtin_define ("__FreeBSD__");			       	\
+	builtin_define_with_int_value ("__FreeBSD__", FBSD_MAJOR);	\
 	builtin_define_std ("unix");					\
 	builtin_define ("__KPRINTF_ATTRIBUTE__");		       	\
 	builtin_assert ("system=unix");					\
@@ -85,7 +69,6 @@ Boston, MA 02110-1301, USA.  */
 #define FBSD_CPP_SPEC "							\
   %(cpp_cpu)								\
   %(cpp_arch)								\
-  %{fPIC|fpic|fPIE|fpie:-D__PIC__ -D__pic__}				\
   %{posix:-D_POSIX_SOURCE}"
 
 /* Provide a STARTFILE_SPEC appropriate for FreeBSD.  Here we add

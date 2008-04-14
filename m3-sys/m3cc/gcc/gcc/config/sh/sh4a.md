@@ -1,11 +1,11 @@
 ;; Scheduling description for Renesas SH4a
-;; Copyright (C) 2003, 2004 Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2004, 2006, 2007 Free Software Foundation, Inc.
 ;;
 ;; This file is part of GCC.
 ;;
 ;; GNU CC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 ;;
 ;; GNU CC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU CC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 ;; The following description models the SH4A pipeline
 ;; using the DFA based scheduler.
@@ -98,9 +97,11 @@
 ;; MOV
 ;; Group: MT
 ;; Latency: 0
+;; ??? not sure if movi8 belongs here, but that's where it was
+;; effectively before.
 (define_insn_reservation "sh4a_mov" 0
   (and (eq_attr "cpu" "sh4a")
-       (eq_attr "type" "move"))
+       (eq_attr "type" "move,movi8,gp_mac"))
   "ID_or")
 
 ;; Load
@@ -108,7 +109,7 @@
 ;; Latency: 3
 (define_insn_reservation "sh4a_load" 3
   (and (eq_attr "cpu" "sh4a")
-       (eq_attr "type" "load,pcload"))
+       (eq_attr "type" "load,pcload,mem_mac"))
   "sh4a_ls+sh4a_memory")
 
 (define_insn_reservation "sh4a_load_si" 3
@@ -121,7 +122,7 @@
 ;; Latency: 0
 (define_insn_reservation "sh4a_store" 0
   (and (eq_attr "cpu" "sh4a")
-       (eq_attr "type" "store"))
+       (eq_attr "type" "store,fstore,mac_mem"))
   "sh4a_ls+sh4a_memory")
 
 ;; CWB TYPE
@@ -177,7 +178,7 @@
 ;; Latency: 	3
 (define_insn_reservation "sh4a_fp_arith"  3
   (and (eq_attr "cpu" "sh4a")
-       (eq_attr "type" "fp"))
+       (eq_attr "type" "fp,fp_cmp,fpscr_toggle"))
   "ID_or,sh4a_fex")
 
 (define_insn_reservation "sh4a_fp_arith_ftrc"  3
@@ -207,7 +208,7 @@
 ;; Latency: 	5
 (define_insn_reservation "sh4a_fp_double_arith" 5
   (and (eq_attr "cpu" "sh4a")
-       (eq_attr "type" "dfp_arith"))
+       (eq_attr "type" "dfp_arith,dfp_mul"))
   "ID_or,sh4a_fex*3")
 
 ;; Double precision FDIV/SQRT

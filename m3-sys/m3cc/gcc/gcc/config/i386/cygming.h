@@ -1,14 +1,14 @@
 /* Operating system specific defines to be used when targeting GCC for
    hosting on Windows32, using a Unix style C library and tools.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-   2004, 2005
+   2004, 2005, 2007, 2008
    Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -17,33 +17,49 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #define DBX_DEBUGGING_INFO 1
 #define SDB_DEBUGGING_INFO 1
-#undef PREFERRED_DEBUGGING_TYPE
-#define PREFERRED_DEBUGGING_TYPE DBX_DEBUG
-
-#ifdef HAVE_GAS_PE_SECREL32_RELOC
+#if TARGET_64BIT_DEFAULT || defined (HAVE_GAS_PE_SECREL32_RELOC)
 #define DWARF2_DEBUGGING_INFO 1
+#endif
+
+#undef PREFERRED_DEBUGGING_TYPE
+#if (DWARF2_DEBUGGING_INFO)
+#define PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
+#else
+#define PREFERRED_DEBUGGING_TYPE DBX_DEBUG
+#endif
+
+#undef TARGET_64BIT_MS_ABI
+#define TARGET_64BIT_MS_ABI TARGET_64BIT
 
 #undef DBX_REGISTER_NUMBER
-#define DBX_REGISTER_NUMBER(n) (write_symbols == DWARF2_DEBUG   \
-                                ? svr4_dbx_register_map[n]      \
-                                : dbx_register_map[n])
+#define DBX_REGISTER_NUMBER(n)				\
+  (TARGET_64BIT ? dbx64_register_map[n]			\
+   : (write_symbols == DWARF2_DEBUG			\
+      ? svr4_dbx_register_map[n] : dbx_register_map[n]))
 
+/* Map gcc register number to DWARF 2 CFA column number. For 32 bit
+   target, always use the svr4_dbx_register_map for DWARF .eh_frame
+   even if we don't use DWARF .debug_frame. */
+#undef DWARF_FRAME_REGNUM
+#define DWARF_FRAME_REGNUM(n) TARGET_64BIT \
+	? dbx64_register_map[(n)] : svr4_dbx_register_map[(n)] 
+
+#ifdef HAVE_GAS_PE_SECREL32_RELOC
 /* Use section relative relocations for debugging offsets.  Unlike
    other targets that fake this by putting the section VMA at 0, PE
    won't allow it.  */
-#define ASM_OUTPUT_DWARF_OFFSET(FILE, SIZE, LABEL)    \
-  do {                                                \
-    if (SIZE != 4)                                    \
-      abort ();                                       \
-                                                      \
-    fputs ("\t.secrel32\t", FILE);                    \
-    assemble_name (FILE, LABEL);                      \
+#define ASM_OUTPUT_DWARF_OFFSET(FILE, SIZE, LABEL, SECTION)	\
+  do {								\
+    if (SIZE != 4)						\
+      abort ();							\
+								\
+    fputs ("\t.secrel32\t", FILE);				\
+    assemble_name (FILE, LABEL);				\
   } while (0)
 #endif
 
@@ -70,6 +86,7 @@ Boston, MA 02110-1301, USA.  */
 	/* Even though linkonce works with static libs, this is needed 	\
 	    to compare typeinfo symbols across dll boundaries.  */	\
 	builtin_define ("__GXX_MERGED_TYPEINFO_NAMES=0");		\
+	builtin_define ("__GXX_TYPEINFO_EQUALITY_INLINE=0");		\
 	MAYBE_UWIN_CPP_BUILTINS ();					\
 	EXTRA_OS_CPP_BUILTINS ();					\
   }									\
@@ -96,64 +113,43 @@ Boston, MA 02110-1301, USA.  */
 #undef MATH_LIBRARY
 #define MATH_LIBRARY ""
 
-#define SIZE_TYPE "unsigned int"
-#define PTRDIFF_TYPE "int"
+#define SIZE_TYPE (TARGET_64BIT ? "long long unsigned int" : "unsigned int")
+#define PTRDIFF_TYPE (TARGET_64BIT ? "long long int" : "int")
+
 #define WCHAR_TYPE_SIZE 16
 #define WCHAR_TYPE "short unsigned int"
 
+/* Windows64 continues to use a 32-bit long type.  */
+#undef LONG_TYPE_SIZE
+#define LONG_TYPE_SIZE 32
+
+#undef REG_PARM_STACK_SPACE
+#define REG_PARM_STACK_SPACE(FNDECL) (TARGET_64BIT_MS_ABI ? 32 : 0)
+
+#undef OUTGOING_REG_PARM_STACK_SPACE
+#define OUTGOING_REG_PARM_STACK_SPACE (TARGET_64BIT_MS_ABI ? 1 : 0)
+
+#undef REGPARM_MAX
+#define REGPARM_MAX (TARGET_64BIT_MS_ABI ? 4 : 3)
+
+#undef SSE_REGPARM_MAX
+#define SSE_REGPARM_MAX (TARGET_64BIT_MS_ABI ? 4 : TARGET_SSE ? 3 : 0)
 
 /* Enable parsing of #pragma pack(push,<n>) and #pragma pack(pop).  */
 #define HANDLE_PRAGMA_PACK_PUSH_POP 1
+/* Enable push_macro & pop_macro */
+#define HANDLE_PRAGMA_PUSH_POP_MACRO 1
 
 union tree_node;
 #define TREE union tree_node *
 
-#undef EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_drectve
-
-#undef EXTRA_SECTION_FUNCTIONS
-#define EXTRA_SECTION_FUNCTIONS					\
-  DRECTVE_SECTION_FUNCTION					\
-  SWITCH_TO_SECTION_FUNCTION
-
-#define DRECTVE_SECTION_FUNCTION \
-void									\
-drectve_section (void)							\
-{									\
-  if (in_section != in_drectve)						\
-    {									\
-      fprintf (asm_out_file, "%s\n", "\t.section .drectve\n");		\
-      in_section = in_drectve;						\
-    }									\
-}
-void drectve_section (void);
+#define drectve_section() \
+  (fprintf (asm_out_file, "\t.section .drectve\n"), \
+   in_section = NULL)
 
 /* Older versions of gas don't handle 'r' as data.
    Explicitly set data flag with 'd'.  */  
 #define READONLY_DATA_SECTION_ASM_OP "\t.section .rdata,\"dr\""
-
-/* Switch to SECTION (an `enum in_section').
-
-   ??? This facility should be provided by GCC proper.
-   The problem is that we want to temporarily switch sections in
-   ASM_DECLARE_OBJECT_NAME and then switch back to the original section
-   afterwards.  */
-#define SWITCH_TO_SECTION_FUNCTION				\
-void switch_to_section (enum in_section, tree);			\
-void								\
-switch_to_section (enum in_section section, tree decl)		\
-{								\
-  switch (section)						\
-    {								\
-      case in_text: text_section (); break;			\
-      case in_unlikely_executed_text: unlikely_text_section (); break; \
-      case in_data: data_section (); break;			\
-      case in_readonly_data: readonly_data_section (); break;	\
-      case in_named: named_section (decl, NULL, 0); break;	\
-      case in_drectve: drectve_section (); break;		\
-      default: abort (); break;				\
-    }								\
-}
 
 /* Don't allow flag_pic to propagate since gas may produce invalid code
    otherwise.  */
@@ -186,47 +182,39 @@ do {									\
    section and we need to set DECL_SECTION_NAME so we do that here.
    Note that we can be called twice on the same decl.  */
 
-#undef SUBTARGET_ENCODE_SECTION_INFO
 #define SUBTARGET_ENCODE_SECTION_INFO  i386_pe_encode_section_info
-#undef  TARGET_STRIP_NAME_ENCODING
-#define TARGET_STRIP_NAME_ENCODING  i386_pe_strip_name_encoding_full
-
-/* Output a reference to a label.  */
-#undef ASM_OUTPUT_LABELREF
-#define ASM_OUTPUT_LABELREF  i386_pe_output_labelref
-
-#undef  COMMON_ASM_OP
-#define COMMON_ASM_OP	"\t.comm\t"
 
 /* Output a common block.  */
-#undef ASM_OUTPUT_COMMON
-#define ASM_OUTPUT_COMMON(STREAM, NAME, SIZE, ROUNDED)	\
-do {							\
-  if (i386_pe_dllexport_name_p (NAME))			\
-    i386_pe_record_exported_symbol (NAME, 1);		\
-  if (! i386_pe_dllimport_name_p (NAME))		\
-    {							\
-      fprintf ((STREAM), "\t.comm\t");			\
-      assemble_name ((STREAM), (NAME));			\
-      fprintf ((STREAM), ", %d\t%s %d\n",		\
-	       (int)(ROUNDED), ASM_COMMENT_START, (int)(SIZE));	\
-    }							\
-} while (0)
+#undef ASM_OUTPUT_ALIGNED_DECL_COMMON
+#define ASM_OUTPUT_ALIGNED_DECL_COMMON \
+  i386_pe_asm_output_aligned_decl_common
 
 /* Output the label for an initialized variable.  */
 #undef ASM_DECLARE_OBJECT_NAME
 #define ASM_DECLARE_OBJECT_NAME(STREAM, NAME, DECL)	\
 do {							\
-  if (i386_pe_dllexport_name_p (NAME))			\
-    i386_pe_record_exported_symbol (NAME, 1);		\
+  i386_pe_maybe_record_exported_symbol (DECL, NAME, 1);	\
   ASM_OUTPUT_LABEL ((STREAM), (NAME));			\
 } while (0)
 
-
-/* Emit code to check the stack when allocating more that 4000
-   bytes in one go.  */
+/* Output a reference to a label. Fastcall function symbols
+   keep their '@' prefix, while other symbols are prefixed
+   with USER_LABEL_PREFIX.  */
+#undef ASM_OUTPUT_LABELREF
+#define  ASM_OUTPUT_LABELREF(STREAM, NAME)	\
+do {						\
+  if ((NAME)[0] != FASTCALL_PREFIX)		\
+    fputs (USER_LABEL_PREFIX, (STREAM));	\
+  fputs ((NAME), (STREAM));			\
+} while (0)
 
+
+/* Emit code to check the stack when allocating more than 4000
+   bytes in one go.  */
 #define CHECK_STACK_LIMIT 4000
+
+#undef STACK_BOUNDARY
+#define STACK_BOUNDARY	(TARGET_64BIT_MS_ABI ? 128 : BITS_PER_WORD)
 
 /* By default, target has a 80387, uses IEEE compatible arithmetic,
    returns float values in the 387 and needs stack probes.
@@ -234,8 +222,8 @@ do {							\
 
 #undef TARGET_SUBTARGET_DEFAULT
 #define TARGET_SUBTARGET_DEFAULT \
-   (MASK_80387 | MASK_IEEE_FP | MASK_FLOAT_RETURNS | MASK_STACK_PROBE \
-    | MASK_ALIGN_DOUBLE)
+	(MASK_80387 | MASK_IEEE_FP | MASK_FLOAT_RETURNS \
+	 | MASK_STACK_PROBE | MASK_ALIGN_DOUBLE)
 
 /* This is how to output an assembler line
    that says to advance the location counter
@@ -248,7 +236,6 @@ do {							\
 /* Windows uses explicit import from shared libraries.  */
 #define MULTIPLE_SYMBOL_SPACES 1
 
-extern void i386_pe_unique_section (TREE, int);
 #define TARGET_ASM_UNIQUE_SECTION i386_pe_unique_section
 #define TARGET_ASM_FUNCTION_RODATA_SECTION default_no_function_rodata_section
 
@@ -267,8 +254,7 @@ extern void i386_pe_unique_section (TREE, int);
 #define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL)			\
   do									\
     {									\
-      if (i386_pe_dllexport_name_p (NAME))				\
-	i386_pe_record_exported_symbol (NAME, 0);			\
+      i386_pe_maybe_record_exported_symbol (DECL, NAME, 0);		\
       if (write_symbols != SDB_DEBUG)					\
 	i386_pe_declare_function_type (FILE, NAME, TREE_PUBLIC (DECL));	\
       ASM_OUTPUT_LABEL (FILE, NAME);					\
@@ -301,10 +287,15 @@ extern void i386_pe_unique_section (TREE, int);
 #undef ASM_COMMENT_START
 #define ASM_COMMENT_START " #"
 
-/* DWARF2 Unwinding doesn't work with exception handling yet.  To make
-   it work, we need to build a libgcc_s.dll, and dcrt0.o should be
-   changed to call __register_frame_info/__deregister_frame_info.  */
+#ifndef DWARF2_UNWIND_INFO
+/* If configured with --disable-sjlj-exceptions, use DWARF2, else
+   default to SJLJ.  */
+#if  (defined (CONFIG_SJLJ_EXCEPTIONS) && !CONFIG_SJLJ_EXCEPTIONS)
+#define DWARF2_UNWIND_INFO 1
+#else
 #define DWARF2_UNWIND_INFO 0
+#endif
+#endif
 
 /* Don't assume anything about the header files.  */
 #define NO_IMPLICIT_EXTERN_C
@@ -327,15 +318,6 @@ extern void i386_pe_unique_section (TREE, int);
 			       build_tree_list (get_identifier ("stdcall"),   \
 						NULL))
 
-/* External function declarations.  */
-
-extern void i386_pe_record_external_function (tree, const char *);
-extern void i386_pe_declare_function_type (FILE *, const char *, int);
-extern void i386_pe_record_exported_symbol (const char *, int);
-extern void i386_pe_file_end (void);
-extern int i386_pe_dllexport_name_p (const char *);
-extern int i386_pe_dllimport_name_p (const char *);
-
 /* For Win32 ABI compatibility */
 #undef DEFAULT_PCC_STRUCT_RETURN
 #define DEFAULT_PCC_STRUCT_RETURN 0
@@ -349,9 +331,23 @@ extern int i386_pe_dllimport_name_p (const char *);
 #undef	BIGGEST_ALIGNMENT
 #define BIGGEST_ALIGNMENT 128
 
-/* Native complier aligns internal doubles in structures on dword boundaries.  */
+/* Biggest alignment supported by the object file format of this
+   machine.  Use this macro to limit the alignment which can be
+   specified using the `__attribute__ ((aligned (N)))' construct.  If
+   not defined, the default value is `BIGGEST_ALIGNMENT'.  */
+/* IMAGE_SCN_ALIGN_8192BYTES is the largest section alignment flag
+   specified in the PECOFF60 spec.  Native MS compiler also limits
+   user-specified alignment to 8192 bytes.  */
+#undef MAX_OFILE_ALIGNMENT
+#define MAX_OFILE_ALIGNMENT (8192 * 8)
+
+/* BIGGEST_FIELD_ALIGNMENT macro is used directly by libobjc, There, we
+   align internal doubles in structures on dword boundaries. Otherwise,
+   support vector modes using ADJUST_FIELD_ALIGN, defined in i386.h.  */
+#ifdef IN_TARGET_LIBS
 #undef	BIGGEST_FIELD_ALIGNMENT
 #define BIGGEST_FIELD_ALIGNMENT 64
+#endif
 
 /* A bit-field declared as `int' forces `int' alignment for the struct.  */
 #undef PCC_BITFIELD_TYPE_MATTERS
@@ -362,18 +358,15 @@ extern int i386_pe_dllimport_name_p (const char *);
 #ifndef SET_ASM_OP
 #define SET_ASM_OP "\t.set\t"
 #endif
+
 /* This implements the `alias' attribute, keeping any stdcall or
    fastcall decoration.  */
 #undef	ASM_OUTPUT_DEF_FROM_DECLS
-#define	ASM_OUTPUT_DEF_FROM_DECLS(STREAM, DECL, TARGET) 		\
+#define	ASM_OUTPUT_DEF_FROM_DECLS(STREAM, DECL, TARGET)			\
   do									\
     {									\
-      const char *alias;						\
-      rtx rtlname = XEXP (DECL_RTL (DECL), 0);				\
-      if (GET_CODE (rtlname) == SYMBOL_REF)				\
-	alias = XSTR (rtlname, 0);					\
-      else								\
-	abort ();							\
+      const char *alias							\
+	= IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (DECL));		\
       if (TREE_CODE (DECL) == FUNCTION_DECL)				\
 	i386_pe_declare_function_type (STREAM, alias,			\
 				       TREE_PUBLIC (DECL));		\
@@ -403,8 +396,8 @@ extern int i386_pe_dllimport_name_p (const char *);
 #define TARGET_USE_LOCAL_THUNK_ALIAS_P(DECL) (!DECL_ONE_ONLY (DECL))
 
 #define SUBTARGET_ATTRIBUTE_TABLE \
-  /* { name, min_len, max_len, decl_req, type_req, fn_type_req, handler } */ \
   { "selectany", 0, 0, true, false, false, ix86_handle_selectany_attribute }
+  /* { name, min_len, max_len, decl_req, type_req, fn_type_req, handler } */
 
 /*  mcount() does not need a counter variable.  */
 #undef NO_PROFILE_COUNTERS
@@ -412,6 +405,7 @@ extern int i386_pe_dllimport_name_p (const char *);
 
 #define TARGET_VALID_DLLIMPORT_ATTRIBUTE_P i386_pe_valid_dllimport_attribute_p
 #define TARGET_CXX_ADJUST_CLASS_AT_DEFINITION i386_pe_adjust_class_at_definition
+#define TARGET_MANGLE_DECL_ASSEMBLER_NAME i386_pe_mangle_decl_assembler_name
 
 #undef TREE
 

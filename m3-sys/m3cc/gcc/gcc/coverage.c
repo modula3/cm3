@@ -1,6 +1,6 @@
 /* Read and write coverage files, and associated functionality.
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1996, 1997, 1998, 1999,
-   2000, 2001, 2003, 2004, 2005 Free Software Foundation, Inc.
+   2000, 2001, 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
    Contributed by James E. Wilson, UC Berkeley/Cygnus Support;
    based on some ideas from Dain Samples of UC Berkeley.
    Further mangling by Bob Manson, Cygnus Support.
@@ -10,7 +10,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -19,9 +19,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 
 #define GCOV_LINKAGE
@@ -262,12 +261,12 @@ read_counts_file (void)
 	  entry = *slot;
 	  if (!entry)
 	    {
-	      *slot = entry = xcalloc (1, sizeof (counts_entry_t));
+	      *slot = entry = XCNEW (counts_entry_t);
 	      entry->ident = elt.ident;
 	      entry->ctr = elt.ctr;
 	      entry->checksum = checksum;
 	      entry->summary.num = n_counts;
-	      entry->counts = xcalloc (n_counts, sizeof (gcov_type));
+	      entry->counts = XCNEWVEC (gcov_type, n_counts);
 	    }
 	  else if (entry->checksum != checksum)
 	    {
@@ -347,25 +346,46 @@ get_coverage_counts (unsigned counter, unsigned expected,
     {
       warning (0, "no coverage for function %qs found", IDENTIFIER_POINTER
 	       (DECL_ASSEMBLER_NAME (current_function_decl)));
-      return 0;
+      return NULL;
     }
 
   checksum = compute_checksum ();
-  if (entry->checksum != checksum)
+  if (entry->checksum != checksum
+      || entry->summary.num != expected)
     {
-      error ("coverage mismatch for function %qs while reading counter %qs",
-	     IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (current_function_decl)),
-	     ctr_names[counter]);
-      error ("checksum is %x instead of %x", entry->checksum, checksum);
-      return 0;
-    }
-  else if (entry->summary.num != expected)
-    {
-      error ("coverage mismatch for function %qs while reading counter %qs",
-	     IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME (current_function_decl)),
-	     ctr_names[counter]);
-      error ("number of counters is %d instead of %d", entry->summary.num, expected);
-      return 0;
+      static int warned = 0;
+      const char *id = IDENTIFIER_POINTER (DECL_ASSEMBLER_NAME
+			 (current_function_decl));
+
+      if (warn_coverage_mismatch)
+	warning (OPT_Wcoverage_mismatch, "coverage mismatch for function "
+		 "%qs while reading counter %qs", id, ctr_names[counter]);
+      else
+	error ("coverage mismatch for function %qs while reading counter %qs",
+	       id, ctr_names[counter]);
+
+      if (!inhibit_warnings)
+	{
+	  if (entry->checksum != checksum)
+	    inform ("checksum is %x instead of %x", entry->checksum, checksum);
+	  else
+	    inform ("number of counters is %d instead of %d",
+		    entry->summary.num, expected);
+	}
+
+      if (warn_coverage_mismatch
+	  && !inhibit_warnings
+	  && !warned++)
+	{
+	  inform ("coverage mismatch ignored due to -Wcoverage-mismatch");
+	  inform (flag_guess_branch_prob
+		  ? "execution counts estimated"
+		  : "execution counts assumed to be zero");
+	  if (!flag_guess_branch_prob)
+	    inform ("this can result in poorly optimized code");
+	}
+
+      return NULL;
     }
 
   if (summary)
@@ -388,15 +408,13 @@ coverage_counter_alloc (unsigned counter, unsigned num)
 
   if (!tree_ctr_tables[counter])
     {
-      /* Generate and save a copy of this so it can be shared.  */
-      /* We don't know the size yet; make it big enough that nobody
-	 will make any clever transformation on it.  */
+      /* Generate and save a copy of this so it can be shared.  Leave
+	 the index type unspecified for now; it will be set after all
+	 functions have been compiled.  */
       char buf[20];
       tree gcov_type_node = get_gcov_type ();
-      tree domain_tree
-        = build_index_type (build_int_cst (NULL_TREE, 1000)); /* replaced later */
       tree gcov_type_array_type
-        = build_array_type (gcov_type_node, domain_tree);
+        = build_array_type (gcov_type_node, NULL_TREE);
       tree_ctr_tables[counter]
         = build_decl (VAR_DECL, NULL_TREE, gcov_type_array_type);
       TREE_STATIC (tree_ctr_tables[counter]) = 1;
@@ -416,18 +434,13 @@ tree
 tree_coverage_counter_ref (unsigned counter, unsigned no)
 {
   tree gcov_type_node = get_gcov_type ();
-  tree domain_type = TYPE_DOMAIN (TREE_TYPE (tree_ctr_tables[counter]));
 
   gcc_assert (no < fn_n_ctrs[counter] - fn_b_ctrs[counter]);
   no += prg_n_ctrs[counter] + fn_b_ctrs[counter];
 
   /* "no" here is an array index, scaled to bytes later.  */
   return build4 (ARRAY_REF, gcov_type_node, tree_ctr_tables[counter],
-		 fold_convert (domain_type,
-			       build_int_cst (NULL_TREE, no)),
-		 TYPE_MIN_VALUE (domain_type),
-		 size_binop (EXACT_DIV_EXPR, TYPE_SIZE_UNIT (gcov_type_node),
-			     size_int (TYPE_ALIGN_UNIT (gcov_type_node))));
+		 build_int_cst (NULL_TREE, no), NULL, NULL);
 }
 
 /* Generate a checksum for a string.  CHKSUM is the current
@@ -440,7 +453,7 @@ coverage_checksum_string (unsigned chksum, const char *string)
   char *dup = NULL;
 
   /* Look for everything that looks if it were produced by
-     get_file_function_name_long and zero out the second part
+     get_file_function_name and zero out the second part
      that may result from flag_random_seed.  This is not critical
      as the checksums are used only for sanity checking.  */
   for (i = 0; string[i]; i++)
@@ -457,30 +470,31 @@ coverage_checksum_string (unsigned chksum, const char *string)
        to be no better chance then walk all possible offsets looking
        for magicnuber.  */
       if (offset)
-        for (;string[offset]; offset++)
-        for (i = i + offset; string[i]; i++)
-          if (string[i]=='_')
-            {
-              int y;
+	{
+	  for (i = i + offset; string[i]; i++)
+	    if (string[i]=='_')
+	      {
+		int y;
 
-              for (y = 1; y < 9; y++)
-                if (!(string[i + y] >= '0' && string[i + y] <= '9')
-                    && !(string[i + y] >= 'A' && string[i + y] <= 'F'))
-                  break;
-              if (y != 9 || string[i + 9] != '_')
-                continue;
-              for (y = 10; y < 18; y++)
-                if (!(string[i + y] >= '0' && string[i + y] <= '9')
-                    && !(string[i + y] >= 'A' && string[i + y] <= 'F'))
-                  break;
-              if (y != 18)
-                continue;
-              if (!dup)
-                string = dup = xstrdup (string);
-              for (y = 10; y < 18; y++)
-                dup[i + y] = '0';
-            }
-        break;
+		for (y = 1; y < 9; y++)
+		  if (!(string[i + y] >= '0' && string[i + y] <= '9')
+		      && !(string[i + y] >= 'A' && string[i + y] <= 'F'))
+		    break;
+		if (y != 9 || string[i + 9] != '_')
+		  continue;
+		for (y = 10; y < 18; y++)
+		  if (!(string[i + y] >= '0' && string[i + y] <= '9')
+		      && !(string[i + y] >= 'A' && string[i + y] <= 'F'))
+		    break;
+		if (y != 18)
+		  continue;
+		if (!dup)
+		  string = dup = xstrdup (string);
+		for (y = 10; y < 18; y++)
+		  dup[i + y] = '0';
+	      }
+	  break;
+	}
     }
 
   chksum = crc32_string (chksum, string);
@@ -569,7 +583,7 @@ coverage_end_function (void)
     {
       struct function_list *item;
 
-      item = xmalloc (sizeof (struct function_list));
+      item = XNEW (struct function_list);
 
       *functions_tail = item;
       functions_tail = &item->next;
@@ -608,7 +622,7 @@ build_fn_info_type (unsigned int counters)
 
   array_type = build_int_cst (NULL_TREE, counters - 1);
   array_type = build_index_type (array_type);
-  array_type = build_array_type (unsigned_type_node, array_type);
+  array_type = build_array_type (get_gcov_unsigned_t (), array_type);
 
   /* counters */
   field = build_decl (FIELD_DECL, NULL_TREE, array_type);
@@ -646,7 +660,7 @@ build_fn_info_value (const struct function_list *function, tree type)
   for (ix = 0; ix != GCOV_COUNTERS; ix++)
     if (prg_ctr_mask & (1 << ix))
       {
-	tree counters = build_int_cstu (unsigned_type_node,
+	tree counters = build_int_cstu (get_gcov_unsigned_t (),
 					function->n_ctrs[ix]);
 
 	array_value = tree_cons (NULL_TREE, counters, array_value);
@@ -686,7 +700,7 @@ build_ctr_info_type (void)
   /* merge */
   gcov_merge_fn_type =
     build_function_type_list (void_type_node,
-			      gcov_ptr_type, unsigned_type_node,
+			      gcov_ptr_type, get_gcov_unsigned_t (),
 			      NULL_TREE);
   field = build_decl (FIELD_DECL, NULL_TREE,
 		      build_pointer_type (gcov_merge_fn_type));
@@ -720,7 +734,7 @@ build_ctr_info_value (unsigned int counter, tree type)
     {
       tree array_type;
 
-      array_type = build_int_cstu (unsigned_type_node,
+      array_type = build_int_cstu (get_gcov_unsigned_t (),
 				   prg_n_ctrs[counter] - 1);
       array_type = build_index_type (array_type);
       array_type = build_array_type (TREE_TYPE (TREE_TYPE (fields)),
@@ -849,11 +863,11 @@ build_gcov_info (void)
     fn_info_value = null_pointer_node;
 
   /* number of functions */
-  field = build_decl (FIELD_DECL, NULL_TREE, unsigned_type_node);
+  field = build_decl (FIELD_DECL, NULL_TREE, get_gcov_unsigned_t ());
   TREE_CHAIN (field) = fields;
   fields = field;
   value = tree_cons (field,
-		     build_int_cstu (unsigned_type_node, n_fns),
+		     build_int_cstu (get_gcov_unsigned_t (), n_fns),
 		     value);
 
   /* fn_info table */
@@ -863,11 +877,11 @@ build_gcov_info (void)
   value = tree_cons (field, fn_info_value, value);
 
   /* counter_mask */
-  field = build_decl (FIELD_DECL, NULL_TREE, unsigned_type_node);
+  field = build_decl (FIELD_DECL, NULL_TREE, get_gcov_unsigned_t ());
   TREE_CHAIN (field) = fields;
   fields = field;
   value = tree_cons (field,
-		     build_int_cstu (unsigned_type_node, prg_ctr_mask),
+		     build_int_cstu (get_gcov_unsigned_t (), prg_ctr_mask),
 		     value);
 
   /* counters */
@@ -934,8 +948,7 @@ create_coverage (void)
   /* Generate a call to __gcov_init(&gcov_info).  */
   body = NULL;
   t = build_fold_addr_expr (gcov_info);
-  t = tree_cons (NULL, t, NULL);
-  t = build_function_call_expr (gcov_init, t);
+  t = build_call_expr (gcov_init, 1, t);
   append_to_statement_list (t, &body);
 
   /* Generate a constructor to run it.  */
@@ -951,12 +964,12 @@ coverage_init (const char *filename)
   int len = strlen (filename);
 
   /* Name of da file.  */
-  da_file_name = xmalloc (len + strlen (GCOV_DATA_SUFFIX) + 1);
+  da_file_name = XNEWVEC (char, len + strlen (GCOV_DATA_SUFFIX) + 1);
   strcpy (da_file_name, filename);
   strcat (da_file_name, GCOV_DATA_SUFFIX);
 
   /* Name of bbg file.  */
-  bbg_file_name = xmalloc (len + strlen (GCOV_NOTE_SUFFIX) + 1);
+  bbg_file_name = XNEWVEC (char, len + strlen (GCOV_NOTE_SUFFIX) + 1);
   strcpy (bbg_file_name, filename);
   strcat (bbg_file_name, GCOV_NOTE_SUFFIX);
 

@@ -1,5 +1,5 @@
 @c Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-@c 1999, 2000, 2001, 2003, 2004 Free Software Foundation, Inc.
+@c 1999, 2000, 2001, 2003, 2004, 2007 Free Software Foundation, Inc.
 @c This is part of the GCC manual.
 @c For copying conditions, see the file gcc.texi.
 
@@ -88,7 +88,4 @@ suggestions for improvement of GCC are welcome in any case.
 @section How and where to Report Bugs
 @cindex compiler bugs, reporting
 
-Bugs should be reported to the GCC bug database.  Please refer to
-@uref{http://gcc.gnu.org/bugs.html} for up-to-date instructions how to
-submit bug reports.  Copies of this file in HTML (@file{bugs.html}) and
-plain text (@file{BUGS}) are also part of GCC releases.
+Bugs should be reported to the bug database at @value{BUGURL}.

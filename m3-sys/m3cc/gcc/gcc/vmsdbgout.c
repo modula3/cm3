@@ -1,6 +1,7 @@
 /* Output VMS debug format symbol table information from GCC.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007
+   Free Software Foundation, Inc.
    Contributed by Douglas B. Rupp (rupp@gnat.com).
    Updated by Bernard W. Giroud (bgiroud@users.sourceforge.net).
 
@@ -8,7 +9,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -17,9 +18,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -149,13 +149,13 @@ static char *full_name (const char *);
 static unsigned int lookup_filename (const char *);
 static void addr_const_to_string (char *, rtx);
 static int write_debug_header (DST_HEADER *, const char *, int);
-static int write_debug_addr (char *, const char *, int);
+static int write_debug_addr (const char *, const char *, int);
 static int write_debug_data1 (unsigned int, const char *, int);
 static int write_debug_data2 (unsigned int, const char *, int);
 static int write_debug_data4 (unsigned long, const char *, int);
 static int write_debug_data8 (unsigned long long, const char *, int);
-static int write_debug_delta4 (char *, char *, const char *, int);
-static int write_debug_string (char *, const char *, int);
+static int write_debug_delta4 (const char *, const char *, const char *, int);
+static int write_debug_string (const char *, const char *, int);
 static int write_modbeg (int);
 static int write_modend (int);
 static int write_rtnbeg (int, int);
@@ -172,7 +172,7 @@ static void vmsdbgout_start_source_file (unsigned int, const char *);
 static void vmsdbgout_end_source_file (unsigned int);
 static void vmsdbgout_begin_block (unsigned int, unsigned int);
 static void vmsdbgout_end_block (unsigned int, unsigned int);
-static bool vmsdbgout_ignore_block (tree);
+static bool vmsdbgout_ignore_block (const_tree);
 static void vmsdbgout_source_line (unsigned int, const char *);
 static void vmsdbgout_begin_prologue (unsigned int, const char *);
 static void vmsdbgout_end_prologue (unsigned int, const char *);
@@ -381,7 +381,7 @@ static char text_end_label[MAX_ARTIFICIAL_LABEL_BYTES];
   do						\
     {						\
       register int slen = strlen(P);		\
-      register char *p = (P);			\
+      register const char *p = (P);		\
       register int i;				\
       fprintf (FILE, "\t.ascii \"");		\
       for (i = 0; i < slen; i++)		\
@@ -579,7 +579,7 @@ write_debug_header (DST_HEADER *header, const char *comment, int dosizeonly)
    nonzero.  */
 
 static int
-write_debug_addr (char *symbol, const char *comment, int dosizeonly)
+write_debug_addr (const char *symbol, const char *comment, int dosizeonly)
 {
   if (!dosizeonly)
     {
@@ -668,8 +668,8 @@ write_debug_data8 (unsigned long long data8, const char *comment,
    DOSIZEONLY is nonzero.  */
 
 static int
-write_debug_delta4 (char *label1, char *label2, const char *comment,
-		    int dosizeonly)
+write_debug_delta4 (const char *label1, const char *label2,
+		    const char *comment, int dosizeonly)
 {
   if (!dosizeonly)
     {
@@ -687,7 +687,7 @@ write_debug_delta4 (char *label1, char *label2, const char *comment,
    nonzero.  */
 
 static int
-write_debug_string (char *string, const char *comment, int dosizeonly)
+write_debug_string (const char *string, const char *comment, int dosizeonly)
 {
   if (!dosizeonly)
     {
@@ -788,7 +788,7 @@ write_modend (int dosizeonly)
 static int
 write_rtnbeg (int rtnnum, int dosizeonly)
 {
-  char *rtnname;
+  const char *rtnname;
   int rtnnamelen;
   char *rtnentryname;
   int totsize = 0;
@@ -797,7 +797,7 @@ write_rtnbeg (int rtnnum, int dosizeonly)
   DST_PROLOG prolog;
   vms_func_ref fde = &func_table[rtnnum];
 
-  rtnname = (char *)fde->vms_func_name;
+  rtnname = fde->vms_func_name;
   rtnnamelen = strlen (rtnname);
   rtnentryname = concat (rtnname, "..en", NULL);
 
@@ -825,7 +825,7 @@ write_rtnbeg (int rtnnum, int dosizeonly)
 				   dosizeonly);
       totsize += write_debug_data1 (strlen (go), "length of main_name",
 				    dosizeonly);
-      totsize += write_debug_string ((char *) go, "main name", dosizeonly);
+      totsize += write_debug_string (go, "main name", dosizeonly);
     }
 
   /* The header length never includes the length byte.  */
@@ -1150,7 +1150,8 @@ write_srccorr (int fileid, dst_file_info_entry file_info_entry,
     (src_command.dst_a_src_cmd_fields.dst_a_src_decl_src.dst_b_src_df_filename,
      "source_corr (filename length)", dosizeonly);
 
-  totsize += write_debug_string (file_info_entry.file_name,
+  totsize += write_debug_string (remap_debug_filename (
+				    file_info_entry.file_name),
 				 "source file name", dosizeonly);
   totsize += write_debug_data1 (src_cmdtrlr.dst_b_src_df_libmodname,
 				"source_corr (libmodname)", dosizeonly);
@@ -1362,7 +1363,7 @@ vmsdbgout_end_block (register unsigned line, register unsigned blocknum)
 /* Not implemented in VMS Debug.  */
 
 static bool
-vmsdbgout_ignore_block (tree block)
+vmsdbgout_ignore_block (const_tree block)
 {
   bool retval = 0;
 
@@ -1440,7 +1441,7 @@ lookup_filename (const char *file_name)
   static unsigned int last_file_lookup_index = 0;
   register char *fn;
   register unsigned i;
-  char *fnam;
+  const char *fnam;
   long long cdt;
   long ebk;
   short ffb;
@@ -1479,7 +1480,7 @@ lookup_filename (const char *file_name)
       ebk = 0;
       ffb = 0;
       rfo = 0;
-      fnam = (char *) "";
+      fnam = "";
       flen = 0;
     }
 
@@ -1697,13 +1698,13 @@ vmsdbgout_finish (const char *main_input_filename ATTRIBUTE_UNUSED)
     return;
 
   /* Output a terminator label for the .text section.  */
-  text_section ();
+  switch_to_section (text_section);
   targetm.asm_out.internal_label (asm_out_file, TEXT_END_LABEL, 0);
 
   /* Output debugging information.
      Warning! Do not change the name of the .vmsdebug section without
      changing it in the assembler also.  */
-  named_section (NULL_TREE, ".vmsdebug", 0);
+  switch_to_section (get_named_section (NULL, ".vmsdebug", 0));
   ASM_OUTPUT_ALIGN (asm_out_file, 0);
 
   totsize = write_modbeg (1);

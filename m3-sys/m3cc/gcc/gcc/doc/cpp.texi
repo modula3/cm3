@@ -11,7 +11,7 @@
 @copying
 @c man begin COPYRIGHT
 Copyright @copyright{} 1987, 1989, 1991, 1992, 1993, 1994, 1995, 1996,
-1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005
+1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
 Free Software Foundation, Inc.
 
 Permission is granted to copy, distribute and/or modify this document
@@ -50,7 +50,7 @@ This manual contains no Invariant Sections.  The Front-Cover Texts are
 @set cppmanual
 
 @ifinfo
-@dircategory Programming
+@dircategory Software development
 @direntry
 * Cpp: (cpp).		       The GNU C preprocessor.
 @end direntry
@@ -58,9 +58,8 @@ This manual contains no Invariant Sections.  The Front-Cover Texts are
 
 @titlepage
 @title The C Preprocessor
-@subtitle for GCC version @value{version-GCC}
-@author Richard M. Stallman
-@author Zachary Weinberg
+@versionsubtitle
+@author Richard M. Stallman, Zachary Weinberg
 @page
 @c There is a fill at the bottom of the page, so we need a filll to
 @c override it.
@@ -251,12 +250,8 @@ processing.  That set is what the C standard calls the @dfn{source}
 character set.  It must be isomorphic with ISO 10646, also known as
 Unicode.  CPP uses the UTF-8 encoding of Unicode.
 
-At present, GNU CPP does not implement conversion from arbitrary file
-encodings to the source character set.  Use of any encoding other than
-plain ASCII or UTF-8, except in comments, will cause errors.  Use of
-encodings that are not strict supersets of ASCII, such as Shift JIS,
-may cause errors even if non-ASCII characters appear only in comments.
-We plan to fix this in the near future.
+The character sets of the input files are specified using the
+@option{-finput-charset=} option.
 
 All preprocessing work (the subject of the rest of this manual) is
 carried out in the source character set.  If you request textual
@@ -1917,16 +1912,26 @@ language.
 
 The common predefined macros are GNU C extensions.  They are available
 with the same meanings regardless of the machine or operating system on
-which you are using GNU C@.  Their names all start with double
-underscores.
+which you are using GNU C or GNU Fortran.  Their names all start with
+double underscores.
 
 @table @code
+
+@item __COUNTER__
+This macro expands to sequential integral values starting from 0.  In
+conjunction with the @code{##} operator, this provides a convenient means to
+generate unique identifiers.  Care must be taken to ensure that
+@code{__COUNTER__} is not expanded prior to inclusion of precompiled headers
+which use it.  Otherwise, the precompiled headers will not be used.
+
+@item __GFORTRAN__
+The GNU Fortran compiler defines this. 
 
 @item __GNUC__
 @itemx __GNUC_MINOR__
 @itemx __GNUC_PATCHLEVEL__
 These macros are defined by all GNU compilers that use the C
-preprocessor: C, C++, and Objective-C@.  Their values are the major
+preprocessor: C, C++, Objective-C and Fortran.  Their values are the major
 version, minor version, and patch level of the compiler, as integer
 constants.  For example, GCC 3.2.1 will define @code{__GNUC__} to 3,
 @code{__GNUC_MINOR__} to 2, and @code{__GNUC_PATCHLEVEL__} to 1.  These
@@ -1991,7 +1996,7 @@ on the command line of the preprocessor or C compiler.
 This macro expands to a decimal integer constant that represents the
 depth of nesting in include files.  The value of this macro is
 incremented on every @samp{#include} directive and decremented at the
-end of every included file.  It starts out at 0, it's value within the
+end of every included file.  It starts out at 0, its value within the
 base file specified on the command line.
 
 @item __ELF__
@@ -2018,6 +2023,27 @@ definitions, using macros or inline functions, of system library
 functions.  You should not use these macros in any way unless you make
 sure that programs will execute with the same effect whether or not they
 are defined.  If they are defined, their value is 1.
+
+@item __GNUC_GNU_INLINE__
+GCC defines this macro if functions declared @code{inline} will be
+handled in GCC's traditional gnu89 mode.  Object files will contain
+externally visible definitions of all functions declared @code{inline}
+without @code{extern} or @code{static}.  They will not contain any
+definitions of any functions declared @code{extern inline}.
+
+@item __GNUC_STDC_INLINE__
+GCC defines this macro if functions declared @code{inline} will be
+handled according to the ISO C99 standard.  Object files will contain
+externally visible definitions of all functions declared @code{extern
+inline}.  They will not contain definitions of any functions declared
+@code{inline} without @code{extern}.
+
+If this macro is defined, GCC supports the @code{gnu_inline} function
+attribute as a way to always get the gnu89 behavior.  Support for
+this and @code{__GNUC_GNU_INLINE__} was added in GCC 4.1.3.  If
+neither macro is defined, an older version of GCC is being used:
+@code{inline} functions will be compiled in gnu89 mode, and the
+@code{gnu_inline} function attribute will not be recognized.
 
 @item __CHAR_UNSIGNED__
 GCC defines this macro if and only if the data type @code{char} is
@@ -2083,6 +2109,23 @@ respectively.  They exist to make the standard header given numerical limits
 work correctly.  You should not use these macros directly; instead, include
 the appropriate headers.
 
+@item __SIZEOF_INT__
+@itemx __SIZEOF_LONG__
+@itemx __SIZEOF_LONG_LONG__
+@itemx __SIZEOF_SHORT__
+@itemx __SIZEOF_POINTER__
+@itemx __SIZEOF_FLOAT__
+@itemx __SIZEOF_DOUBLE__
+@itemx __SIZEOF_LONG_DOUBLE__
+@itemx __SIZEOF_SIZE_T__
+@itemx __SIZEOF_WCHAR_T__
+@itemx __SIZEOF_WINT_T__
+@itemx __SIZEOF_PTRDIFF_T__
+Defined to the number of bytes of the C standard data types: @code{int},
+@code{long}, @code{long long}, @code{short}, @code{void *}, @code{float},
+@code{double}, @code{long double}, @code{size_t}, @code{wchar_t}, @code{wint_t}
+and @code{ptrdiff_t}.
+
 @item __DEPRECATED
 This macro is defined, with value 1, when compiling a C++ source file
 with warnings about deprecated constructs enabled.  These warnings are
@@ -2090,13 +2133,25 @@ enabled by default, but can be disabled with @option{-Wno-deprecated}.
 
 @item __EXCEPTIONS
 This macro is defined, with value 1, when compiling a C++ source file
-with exceptions enabled.  If @option{-fno-exceptions} was used when
-compiling the file, then this macro will not be defined.
+with exceptions enabled.  If @option{-fno-exceptions} is used when
+compiling the file, then this macro is not defined.
+
+@item __GXX_RTTI
+This macro is defined, with value 1, when compiling a C++ source file
+with runtime type identification enabled.  If @option{-fno-rtti} is
+used when compiling the file, then this macro is not defined.
 
 @item __USING_SJLJ_EXCEPTIONS__
 This macro is defined, with value 1, if the compiler uses the old
 mechanism based on @code{setjmp} and @code{longjmp} for exception
 handling.
+
+@item __GXX_EXPERIMENTAL_CXX0X__
+This macro is defined when compiling a C++ source file with the option
+@option{-std=c++0x} or @option{-std=gnu++0x}. It indicates that some
+features likely to be included in C++0x are available. Note that these
+features are experimental, and may change or be removed in future
+versions of GCC.
 
 @item __GXX_WEAK__
 This macro is defined when compiling a C++ source file.  It has the
@@ -2127,6 +2182,25 @@ use.
 @item __SSP_ALL__
 This macro is defined, with value 2, when @option{-fstack-protector-all} is
 in use.
+
+@item __TIMESTAMP__
+This macro expands to a string constant that describes the date and time
+of the last modification of the current source file. The string constant
+contains abbreviated day of the week, month, day of the month, time in
+hh:mm:ss form, year and looks like @code{@w{"Sun Sep 16 01:03:52 1973"}}.
+If the day of the month is less than 10, it is padded with a space on the left.
+
+If GCC cannot determine the current date, it will emit a warning message
+(once per compilation) and @code{__TIMESTAMP__} will expand to
+@code{@w{"??? ??? ?? ??:??:?? ????"}}.
+
+@item __GCC_HAVE_SYNC_COMPARE_AND_SWAP_1
+@itemx __GCC_HAVE_SYNC_COMPARE_AND_SWAP_2
+@itemx __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
+@itemx __GCC_HAVE_SYNC_COMPARE_AND_SWAP_8
+@itemx __GCC_HAVE_SYNC_COMPARE_AND_SWAP_16
+These macros are defined when the target processor supports atomic compare
+and swap operations on operands 1, 2, 4, 8 or 16 bytes in length, respectively.
 
 @end table
 
@@ -3785,7 +3859,7 @@ execution character set.
 
 Currently, CPP requires its input to be ASCII or UTF-8.  The execution
 character set may be controlled by the user, with the
-@option{-ftarget-charset} and @option{-ftarget-wide-charset} options.
+@option{-fexec-charset} and @option{-fwide-exec-charset} options.
 
 @item Identifier characters.
 @anchor{Identifier characters}

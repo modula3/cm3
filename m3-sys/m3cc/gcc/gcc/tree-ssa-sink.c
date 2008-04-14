@@ -1,12 +1,12 @@
 /* Code sinking for trees
-   Copyright (C) 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002, 2003, 2004, 2007 Free Software Foundation, Inc.
    Contributed by Daniel Berlin <dan@dberlin.org>
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -15,9 +15,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -131,7 +130,7 @@ all_immediate_uses_same_place (tree stmt)
   return true;
 }
 
-/* Some global stores don't necessarily have V_MAY_DEF's of global variables,
+/* Some global stores don't necessarily have VDEF's of global variables,
    but we still must avoid moving them around.  */
 
 bool
@@ -144,7 +143,7 @@ is_hidden_global_store (tree stmt)
     {
       tree lhs;
 
-      gcc_assert (TREE_CODE (stmt) == MODIFY_EXPR);
+      gcc_assert (TREE_CODE (stmt) == GIMPLE_MODIFY_STMT);
 
       /* Note that we must not check the individual virtual operands
 	 here.  In particular, if this is an aliased store, we could
@@ -156,7 +155,7 @@ is_hidden_global_store (tree stmt)
 		  int x;
 		  p_1 = (i_2 > 3) ? &x : p;
 
-		  # x_4 = V_MAY_DEF <x_3>
+		  # x_4 = VDEF <x_3>
 		  *p_1 = 5;
 
 		  return 2;
@@ -168,10 +167,10 @@ is_hidden_global_store (tree stmt)
 	 variable.
 
 	 Therefore, we check the base address of the LHS.  If the
-	 address is a pointer, we check if its name tag or type tag is
+	 address is a pointer, we check if its name tag or symbol tag is
 	 a global variable.  Otherwise, we check if the base variable
 	 is a global.  */
-      lhs = TREE_OPERAND (stmt, 0);
+      lhs = GIMPLE_STMT_OPERAND (stmt, 0);
       if (REFERENCE_CLASS_P (lhs))
 	lhs = get_base_address (lhs);
 
@@ -194,12 +193,12 @@ is_hidden_global_store (tree stmt)
 	  tree ptr = TREE_OPERAND (lhs, 0);
 	  struct ptr_info_def *pi = SSA_NAME_PTR_INFO (ptr);
 	  tree nmt = (pi) ? pi->name_mem_tag : NULL_TREE;
-	  tree tmt = var_ann (SSA_NAME_VAR (ptr))->type_mem_tag;
+	  tree smt = symbol_mem_tag (SSA_NAME_VAR (ptr));
 
-	  /* If either the name tag or the type tag for PTR is a
+	  /* If either the name tag or the symbol tag for PTR is a
 	     global variable, then the store is necessary.  */
 	  if ((nmt && is_global_var (nmt))
-	      || (tmt && is_global_var (tmt)))
+	      || (smt && is_global_var (smt)))
 	    {
 	      return true;
 	    }
@@ -207,6 +206,7 @@ is_hidden_global_store (tree stmt)
       else
 	gcc_unreachable ();
     }
+
   return false;
 }
 
@@ -262,11 +262,13 @@ nearest_common_dominator_of_uses (tree stmt)
 
 /* Given a statement (STMT) and the basic block it is currently in (FROMBB), 
    determine the location to sink the statement to, if any.
-   Return the basic block to sink it to, or NULL if we should not sink
-   it.  */
+   Returns true if there is such location; in that case, TOBB is set to the
+   basic block of the location, and TOBSI points to the statement before
+   that STMT should be moved.  */
 
-static tree
-statement_sink_location (tree stmt, basic_block frombb)
+static bool
+statement_sink_location (tree stmt, basic_block frombb, basic_block *tobb,
+			 block_stmt_iterator *tobsi)
 {
   tree use, def;
   use_operand_p one_use = NULL_USE_OPERAND_P;
@@ -290,11 +292,11 @@ statement_sink_location (tree stmt, basic_block frombb)
 
   /* Return if there are no immediate uses of this stmt.  */
   if (one_use == NULL_USE_OPERAND_P)
-    return NULL;
+    return false;
 
-  if (TREE_CODE (stmt) != MODIFY_EXPR)
-    return NULL;
-  rhs = TREE_OPERAND (stmt, 1);
+  if (TREE_CODE (stmt) != GIMPLE_MODIFY_STMT)
+    return false;
+  rhs = GIMPLE_STMT_OPERAND (stmt, 1);
 
   /* There are a few classes of things we can't or don't move, some because we
      don't have code to handle it, some because it's not profitable and some
@@ -324,21 +326,21 @@ statement_sink_location (tree stmt, basic_block frombb)
       || is_hidden_global_store (stmt)
       || ann->has_volatile_ops
       || !ZERO_SSA_OPERANDS (stmt, SSA_OP_VUSE))
-    return NULL;
+    return false;
   
   FOR_EACH_SSA_DEF_OPERAND (def_p, stmt, iter, SSA_OP_ALL_DEFS)
     {
       tree def = DEF_FROM_PTR (def_p);
       if (is_global_var (SSA_NAME_VAR (def))
 	  || SSA_NAME_OCCURS_IN_ABNORMAL_PHI (def))
-	return NULL;
+	return false;
     }
     
   FOR_EACH_SSA_USE_OPERAND (use_p, stmt, iter, SSA_OP_ALL_USES)
     {
       tree use = USE_FROM_PTR (use_p);
       if (SSA_NAME_OCCURS_IN_ABNORMAL_PHI (use))
-	return NULL;
+	return false;
     }
   
   /* If all the immediate uses are not in the same place, find the nearest
@@ -350,13 +352,13 @@ statement_sink_location (tree stmt, basic_block frombb)
       basic_block commondom = nearest_common_dominator_of_uses (stmt);
      
       if (commondom == frombb)
-	return NULL;
+	return false;
 
       /* Our common dominator has to be dominated by frombb in order to be a
 	 trivially safe place to put this statement, since it has multiple
 	 uses.  */     
       if (!dominated_by_p (CDI_DOMINATORS, commondom, frombb))
-	return NULL;
+	return false;
       
       /* It doesn't make sense to move to a dominator that post-dominates
 	 frombb, because it means we've just moved it into a path that always
@@ -366,17 +368,19 @@ statement_sink_location (tree stmt, basic_block frombb)
 	{
 	  if (dump_file && (dump_flags & TDF_DETAILS))
 	    fprintf (dump_file, "Not moving store, common dominator post-dominates from block.\n");
-	  return NULL;
+	  return false;
 	}
 
       if (commondom == frombb || commondom->loop_depth > frombb->loop_depth)
-	return NULL;
+	return false;
       if (dump_file && (dump_flags & TDF_DETAILS))
 	{
 	  fprintf (dump_file, "Common dominator of all uses is %d\n",
 		   commondom->index);
 	}
-      return first_stmt (commondom);
+      *tobb = commondom;
+      *tobsi = bsi_after_labels (commondom);
+      return true;
     }
 
   use = USE_STMT (one_use);
@@ -385,8 +389,10 @@ statement_sink_location (tree stmt, basic_block frombb)
       sinkbb = bb_for_stmt (use);
       if (sinkbb == frombb || sinkbb->loop_depth > frombb->loop_depth
 	  || sinkbb->loop_father != frombb->loop_father)
-	return NULL;      
-      return use;
+	return false;
+      *tobb = sinkbb;
+      *tobsi = bsi_for_stmt (use);
+      return true;
     }
 
   /* Note that at this point, all uses must be in the same statement, so it
@@ -394,26 +400,28 @@ statement_sink_location (tree stmt, basic_block frombb)
   FOR_EACH_SSA_TREE_OPERAND (def, stmt, iter, SSA_OP_ALL_DEFS)
     break;
 
-  
   sinkbb = find_bb_for_arg (use, def);
   if (!sinkbb)
-    return NULL;
+    return false;
 
   /* This will happen when you have
      a_3 = PHI <a_13, a_26>
        
-     a_26 = V_MAY_DEF <a_3> 
+     a_26 = VDEF <a_3> 
 
      If the use is a phi, and is in the same bb as the def, 
      we can't sink it.  */
 
   if (bb_for_stmt (use) == frombb)
-    return NULL;
+    return false;
   if (sinkbb == frombb || sinkbb->loop_depth > frombb->loop_depth
       || sinkbb->loop_father != frombb->loop_father)
-    return NULL;
+    return false;
 
-  return first_stmt (sinkbb);
+  *tobb = sinkbb;
+  *tobsi = bsi_after_labels (sinkbb);
+
+  return true;
 }
 
 /* Perform code sinking on BB */
@@ -425,6 +433,7 @@ sink_code_in_bb (basic_block bb)
   block_stmt_iterator bsi;
   edge_iterator ei;
   edge e;
+  bool last = true;
   
   /* If this block doesn't dominate anything, there can't be any place to sink
      the statements to.  */
@@ -440,13 +449,13 @@ sink_code_in_bb (basic_block bb)
     {
       tree stmt = bsi_stmt (bsi);	
       block_stmt_iterator tobsi;
-      tree sinkstmt;
-      
-      sinkstmt = statement_sink_location (stmt, bb);
-      if (!sinkstmt)
+      basic_block tobb;
+
+      if (!statement_sink_location (stmt, bb, &tobb, &tobsi))
 	{
 	  if (!bsi_end_p (bsi))
 	    bsi_prev (&bsi);
+	  last = false;
 	  continue;
 	}      
       if (dump_file)
@@ -454,22 +463,30 @@ sink_code_in_bb (basic_block bb)
 	  fprintf (dump_file, "Sinking ");
 	  print_generic_expr (dump_file, stmt, TDF_VOPS);
 	  fprintf (dump_file, " from bb %d to bb %d\n",
-		   bb->index, bb_for_stmt (sinkstmt)->index);
+		   bb->index, tobb->index);
 	}
-      tobsi = bsi_for_stmt (sinkstmt);
-      /* Find the first non-label.  */
-      while (!bsi_end_p (tobsi)
-             && TREE_CODE (bsi_stmt (tobsi)) == LABEL_EXPR)
-        bsi_next (&tobsi);
       
       /* If this is the end of the basic block, we need to insert at the end
          of the basic block.  */
       if (bsi_end_p (tobsi))
-	bsi_move_to_bb_end (&bsi, bb_for_stmt (sinkstmt));
+	bsi_move_to_bb_end (&bsi, tobb);
       else
 	bsi_move_before (&bsi, &tobsi);
 
       sink_stats.sunk++;
+
+      /* If we've just removed the last statement of the BB, the
+	 bsi_end_p() test below would fail, but bsi_prev() would have
+	 succeeded, and we want it to succeed.  So we keep track of
+	 whether we're at the last statement and pick up the new last
+	 statement.  */
+      if (last)
+	{
+	  bsi = bsi_last (bb);
+	  continue;
+	}
+
+      last = false;
       if (!bsi_end_p (bsi))
 	bsi_prev (&bsi);
       
@@ -522,24 +539,27 @@ sink_code_in_bb (basic_block bb)
 static void
 execute_sink_code (void)
 {
-  struct loops *loops = loop_optimizer_init (dump_file);
+  loop_optimizer_init (LOOPS_NORMAL);
+
   connect_infinite_loops_to_exit ();
   memset (&sink_stats, 0, sizeof (sink_stats));
-  calculate_dominance_info (CDI_DOMINATORS | CDI_POST_DOMINATORS);
+  calculate_dominance_info (CDI_DOMINATORS);
+  calculate_dominance_info (CDI_POST_DOMINATORS);
   sink_code_in_bb (EXIT_BLOCK_PTR); 
   if (dump_file && (dump_flags & TDF_STATS))
     fprintf (dump_file, "Sunk statements:%d\n", sink_stats.sunk);
   free_dominance_info (CDI_POST_DOMINATORS);
   remove_fake_exit_edges ();
-  loop_optimizer_finalize (loops, dump_file);
+  loop_optimizer_finalize ();
 }
 
 /* Gate and execute functions for PRE.  */
 
-static void
+static unsigned int
 do_sink (void)
 {
   execute_sink_code ();
+  return 0;
 }
 
 static bool

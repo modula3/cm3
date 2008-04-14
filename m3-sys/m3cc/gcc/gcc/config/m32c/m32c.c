@@ -1,5 +1,5 @@
 /* Target Code for R8C/M16C/M32C
-   Copyright (C) 2005
+   Copyright (C) 2005, 2006, 2007
    Free Software Foundation, Inc.
    Contributed by Red Hat.
 
@@ -7,7 +7,7 @@
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published
-   by the Free Software Foundation; either version 2, or (at your
+   by the Free Software Foundation; either version 3, or (at your
    option) any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -16,9 +16,8 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -49,6 +48,7 @@
 #include "tm_p.h"
 #include "langhooks.h"
 #include "tree-gimple.h"
+#include "df.h"
 
 /* Prototypes */
 
@@ -61,20 +61,24 @@ typedef enum
 } Push_Pop_Type;
 
 static tree interrupt_handler (tree *, tree, tree, int, bool *);
+static tree function_vector_handler (tree *, tree, tree, int, bool *);
 static int interrupt_p (tree node);
 static bool m32c_asm_integer (rtx, unsigned int, int);
-static int m32c_comp_type_attributes (tree, tree);
+static int m32c_comp_type_attributes (const_tree, const_tree);
 static bool m32c_fixed_condition_code_regs (unsigned int *, unsigned int *);
 static struct machine_function *m32c_init_machine_status (void);
 static void m32c_insert_attributes (tree, tree *);
 static bool m32c_pass_by_reference (CUMULATIVE_ARGS *, enum machine_mode,
-				    tree, bool);
-static bool m32c_promote_prototypes (tree);
+				    const_tree, bool);
+static bool m32c_promote_prototypes (const_tree);
 static int m32c_pushm_popm (Push_Pop_Type);
 static bool m32c_strict_argument_naming (CUMULATIVE_ARGS *);
 static rtx m32c_struct_value_rtx (tree, int);
 static rtx m32c_subreg (enum machine_mode, rtx, enum machine_mode, int);
 static int need_to_save (int);
+int current_function_special_page_vector (rtx);
+
+#define SYMBOL_FLAG_FUNCVEC_FUNCTION    (SYMBOL_FLAG_MACH_DEP << 0)
 
 #define streq(a,b) (strcmp ((a), (b)) == 0)
 
@@ -412,7 +416,7 @@ m32c_override_options (void)
 	error ("invalid target memregs value '%d'", target_memregs);
     }
   else
-    target_memregs = "16";
+    target_memregs = 16;
 }
 
 /* Defining data structures for per-function information */
@@ -441,7 +445,7 @@ m32c_init_expanders (void)
 #undef TARGET_PROMOTE_FUNCTION_RETURN
 #define TARGET_PROMOTE_FUNCTION_RETURN m32c_promote_function_return
 bool
-m32c_promote_function_return (tree fntype ATTRIBUTE_UNUSED)
+m32c_promote_function_return (const_tree fntype ATTRIBUTE_UNUSED)
 {
   return false;
 }
@@ -490,7 +494,6 @@ static struct
 void
 m32c_conditional_register_usage (void)
 {
-  int memregs;
   int i;
 
   if (0 <= target_memregs && target_memregs <= 16)
@@ -520,8 +523,8 @@ m32c_conditional_register_usage (void)
 /* Implements HARD_REGNO_NREGS.  This is complicated by the fact that
    different registers are different sizes from each other, *and* may
    be different sizes in different chip families.  */
-int
-m32c_hard_regno_nregs (int regno, enum machine_mode mode)
+static int
+m32c_hard_regno_nregs_1 (int regno, enum machine_mode mode)
 {
   if (regno == FLG_REGNO && mode == CCmode)
     return 1;
@@ -546,12 +549,19 @@ m32c_hard_regno_nregs (int regno, enum machine_mode mode)
   return 0;
 }
 
+int
+m32c_hard_regno_nregs (int regno, enum machine_mode mode)
+{
+  int rv = m32c_hard_regno_nregs_1 (regno, mode);
+  return rv ? rv : 1;
+}
+
 /* Implements HARD_REGNO_MODE_OK.  The above function does the work
    already; just test its return value.  */
 int
 m32c_hard_regno_ok (int regno, enum machine_mode mode)
 {
-  return m32c_hard_regno_nregs (regno, mode) != 0;
+  return m32c_hard_regno_nregs_1 (regno, mode) != 0;
 }
 
 /* Implements MODES_TIEABLE_P.  In general, modes aren't tieable since
@@ -564,8 +574,10 @@ m32c_modes_tieable_p (enum machine_mode m1, enum machine_mode m2)
   if (GET_MODE_SIZE (m1) == GET_MODE_SIZE (m2))
     return 1;
 
+#if 0
   if (m1 == QImode || m2 == QImode)
     return 0;
+#endif
 
   return 1;
 }
@@ -615,10 +627,10 @@ m32c_reg_class_from_constraint (char c ATTRIBUTE_UNUSED, const char *s)
     return FB_REGS;
   if (memcmp (s, "Rsb", 3) == 0)
     return SB_REGS;
-  if (memcmp (s, "Rcr", 3) == 0 && TARGET_A16)
-    return CR_REGS;
-  if (memcmp (s, "Rcl", 3) == 0 && TARGET_A24)
-    return CR_REGS;
+  if (memcmp (s, "Rcr", 3) == 0)
+    return TARGET_A16 ? CR_REGS : NO_REGS;
+  if (memcmp (s, "Rcl", 3) == 0)
+    return TARGET_A24 ? CR_REGS : NO_REGS;
   if (memcmp (s, "R0w", 3) == 0)
     return R0_REGS;
   if (memcmp (s, "R1w", 3) == 0)
@@ -637,12 +649,16 @@ m32c_reg_class_from_constraint (char c ATTRIBUTE_UNUSED, const char *s)
     return HL_REGS;
   if (memcmp (s, "R23", 3) == 0)
     return R23_REGS;
+  if (memcmp (s, "Ra0", 3) == 0)
+    return A0_REGS;
+  if (memcmp (s, "Ra1", 3) == 0)
+    return A1_REGS;
   if (memcmp (s, "Raa", 3) == 0)
     return A_REGS;
-  if (memcmp (s, "Raw", 3) == 0 && TARGET_A16)
-    return A_REGS;
-  if (memcmp (s, "Ral", 3) == 0 && TARGET_A24)
-    return A_REGS;
+  if (memcmp (s, "Raw", 3) == 0)
+    return TARGET_A16 ? A_REGS : NO_REGS;
+  if (memcmp (s, "Ral", 3) == 0)
+    return TARGET_A24 ? A_REGS : NO_REGS;
   if (memcmp (s, "Rqi", 3) == 0)
     return QI_REGS;
   if (memcmp (s, "Rad", 3) == 0)
@@ -676,6 +692,12 @@ m32c_reg_class_from_constraint (char c ATTRIBUTE_UNUSED, const char *s)
   /* We handle this one as an EXTRA_CONSTRAINT.  */
   if (memcmp (s, "Rpa", 3) == 0)
     return NO_REGS;
+
+  if (*s == 'R')
+    {
+      fprintf(stderr, "unrecognized R constraint: %.3s\n", s);
+      gcc_unreachable();
+    }
 
   return NO_REGS;
 }
@@ -835,10 +857,18 @@ int
 m32c_cannot_change_mode_class (enum machine_mode from,
 			       enum machine_mode to, int rclass)
 {
+  int rn;
 #if DEBUG0
   fprintf (stderr, "cannot change from %s to %s in %s\n",
 	   mode_name[from], mode_name[to], class_names[rclass]);
 #endif
+
+  /* If the larger mode isn't allowed in any of these registers, we
+     can't allow the change.  */
+  for (rn = 0; rn < FIRST_PSEUDO_REGISTER; rn++)
+    if (class_contents[rclass][0] & (1 << rn))
+      if (! m32c_hard_regno_ok (rn, to))
+	return 1;
 
   if (to == QImode)
     return (class_contents[rclass][0] & 0x1ffa);
@@ -901,6 +931,10 @@ m32c_const_ok_for_constraint_p (HOST_WIDE_INT value,
     {
       return (-16 <= value && value && value <= 16);
     }
+  if (memcmp (str, "In6", 3) == 0)
+    {
+      return (-32 <= value && value && value <= 32);
+    }
   if (memcmp (str, "IM2", 3) == 0)
     {
       return (-65536 <= value && value && value <= -1);
@@ -908,12 +942,26 @@ m32c_const_ok_for_constraint_p (HOST_WIDE_INT value,
   if (memcmp (str, "Ilb", 3) == 0)
     {
       int b = exact_log2 (value);
-      return (b >= 1 && b <= 8);
+      return (b >= 0 && b <= 7);
+    }
+  if (memcmp (str, "Imb", 3) == 0)
+    {
+      int b = exact_log2 ((value ^ 0xff) & 0xff);
+      return (b >= 0 && b <= 7);
     }
   if (memcmp (str, "Ilw", 3) == 0)
     {
       int b = exact_log2 (value);
-      return (b >= 1 && b <= 16);
+      return (b >= 0 && b <= 15);
+    }
+  if (memcmp (str, "Imw", 3) == 0)
+    {
+      int b = exact_log2 ((value ^ 0xffff) & 0xffff);
+      return (b >= 0 && b <= 15);
+    }
+  if (memcmp (str, "I00", 3) == 0)
+    {
+      return (value == 0);
     }
   return 0;
 }
@@ -933,6 +981,12 @@ m32c_extra_constraint_p2 (rtx value, char c ATTRIBUTE_UNUSED, const char *str)
 	return 1;
       if (RTX_IS ("ms") || RTX_IS ("m+si"))
 	return 1;
+      if (RTX_IS ("m++rii"))
+	{
+	  if (REGNO (patternr[3]) == FB_REGNO
+	      && INTVAL (patternr[4]) == 0)
+	    return 1;
+	}
       if (RTX_IS ("mr"))
 	r = patternr[1];
       else if (RTX_IS ("m+ri") || RTX_IS ("m+rs") || RTX_IS ("m+r+si"))
@@ -975,6 +1029,12 @@ m32c_extra_constraint_p2 (rtx value, char c ATTRIBUTE_UNUSED, const char *str)
       return ((RTX_IS ("mr")
 	       && (IS_REG (patternr[1], SB_REGNO)))
 	      || (RTX_IS ("m+ri") && (IS_REG (patternr[2], SB_REGNO))));
+    }
+  else if (memcmp (str, "Sp", 2) == 0)
+    {
+      /* Absolute addresses 0..0x1fff used for bit addressing (I/O ports) */
+      return (RTX_IS ("mi")
+	      && !(INTVAL (patternr[1]) & ~0x1fff));
     }
   else if (memcmp (str, "S1", 2) == 0)
     {
@@ -1074,7 +1134,10 @@ m32c_eh_return_data_regno (int n)
     case 0:
       return A0_REGNO;
     case 1:
-      return A1_REGNO;
+      if (TARGET_A16)
+	return R3_REGNO;
+      else
+	return R1_REGNO;
     default:
       return INVALID_REGNUM;
     }
@@ -1089,7 +1152,7 @@ m32c_eh_return_stackadj_rtx (void)
     {
       rtx sa;
 
-      sa = gen_reg_rtx (Pmode);
+      sa = gen_rtx_REG (Pmode, R0_REGNO);
       cfun->machine->eh_stack_adjust = sa;
     }
   return cfun->machine->eh_stack_adjust;
@@ -1163,15 +1226,15 @@ static struct
   int a24_bytes;
 } pushm_info[] =
 {
-  /* These are in push order.  */
-  { FB_REGNO, 0x01, 2, 4 },
-  { SB_REGNO, 0x02, 2, 4 },
-  { A1_REGNO, 0x04, 2, 4 },
-  { A0_REGNO, 0x08, 2, 4 },
-  { R3_REGNO, 0x10, 2, 2 },
-  { R2_REGNO, 0x20, 2, 2 },
+  /* These are in reverse push (nearest-to-sp) order.  */
+  { R0_REGNO, 0x80, 2, 2 },
   { R1_REGNO, 0x40, 2, 2 },
-  { R0_REGNO, 0x80, 2, 2 }
+  { R2_REGNO, 0x20, 2, 2 },
+  { R3_REGNO, 0x10, 2, 2 },
+  { A0_REGNO, 0x08, 2, 4 },
+  { A1_REGNO, 0x04, 2, 4 },
+  { SB_REGNO, 0x02, 2, 4 },
+  { FB_REGNO, 0x01, 2, 4 }
 };
 
 #define PUSHM_N (sizeof(pushm_info)/sizeof(pushm_info[0]))
@@ -1182,7 +1245,7 @@ static struct
    calls something else (because we don't know what *that* function
    might do), but try to be a bit smarter if the handler is a leaf
    function.  We always save $a0, though, because we use that in the
-   epilog to copy $fb to $sp.  */
+   epilogue to copy $fb to $sp.  */
 static int
 need_to_save (int regno)
 {
@@ -1195,7 +1258,7 @@ need_to_save (int regno)
   if (cfun->machine->is_interrupt
       && (!cfun->machine->is_leaf || regno == A0_REGNO))
     return 1;
-  if (regs_ever_live[regno]
+  if (df_regs_ever_live_p (regno)
       && (!call_used_regs[regno] || cfun->machine->is_interrupt))
     return 1;
   return 0;
@@ -1374,7 +1437,7 @@ m32c_initial_elimination_offset (int from, int to)
 #undef TARGET_PROMOTE_PROTOTYPES
 #define TARGET_PROMOTE_PROTOTYPES m32c_promote_prototypes
 static bool
-m32c_promote_prototypes (tree fntype ATTRIBUTE_UNUSED)
+m32c_promote_prototypes (const_tree fntype ATTRIBUTE_UNUSED)
 {
   return 0;
 }
@@ -1434,6 +1497,9 @@ m32c_function_arg (CUMULATIVE_ARGS * ca,
   if (type && INTEGRAL_TYPE_P (type) && POINTER_TYPE_P (type))
     return NULL_RTX;
 
+  if (type && AGGREGATE_TYPE_P (type))
+    return NULL_RTX;
+
   switch (ca->parm_num)
     {
     case 1:
@@ -1458,7 +1524,7 @@ m32c_function_arg (CUMULATIVE_ARGS * ca,
 static bool
 m32c_pass_by_reference (CUMULATIVE_ARGS * ca ATTRIBUTE_UNUSED,
 			enum machine_mode mode ATTRIBUTE_UNUSED,
-			tree type ATTRIBUTE_UNUSED,
+			const_tree type ATTRIBUTE_UNUSED,
 			bool named ATTRIBUTE_UNUSED)
 {
   return 0;
@@ -1467,12 +1533,15 @@ m32c_pass_by_reference (CUMULATIVE_ARGS * ca ATTRIBUTE_UNUSED,
 /* Implements INIT_CUMULATIVE_ARGS.  */
 void
 m32c_init_cumulative_args (CUMULATIVE_ARGS * ca,
-			   tree fntype ATTRIBUTE_UNUSED,
+			   tree fntype,
 			   rtx libname ATTRIBUTE_UNUSED,
-			   tree fndecl ATTRIBUTE_UNUSED,
+			   tree fndecl,
 			   int n_named_args ATTRIBUTE_UNUSED)
 {
-  ca->force_mem = 0;
+  if (fntype && aggregate_value_p (TREE_TYPE (fntype), fndecl))
+    ca->force_mem = 1;
+  else
+    ca->force_mem = 0;
   ca->parm_num = 1;
 }
 
@@ -1488,7 +1557,8 @@ m32c_function_arg_advance (CUMULATIVE_ARGS * ca,
 {
   if (ca->force_mem)
     ca->force_mem = 0;
-  ca->parm_num++;
+  else
+    ca->parm_num++;
 }
 
 /* Implements FUNCTION_ARG_REGNO_P.  */
@@ -1501,11 +1571,11 @@ m32c_function_arg_regno_p (int r)
 }
 
 /* HImode and PSImode are the two "native" modes as far as GCC is
-   concerned, but the chips also support a 32 bit mode which is used
+   concerned, but the chips also support a 32-bit mode which is used
    for some opcodes in R8C/M16C and for reset vectors and such.  */
 #undef TARGET_VALID_POINTER_MODE
 #define TARGET_VALID_POINTER_MODE m32c_valid_pointer_mode
-bool
+static bool
 m32c_valid_pointer_mode (enum machine_mode mode)
 {
   if (mode == HImode
@@ -1579,10 +1649,10 @@ m32c_libcall_value (enum machine_mode mode)
 /* Implements FUNCTION_VALUE.  Functions and libcalls have the same
    conventions.  */
 rtx
-m32c_function_value (tree valtype, tree func ATTRIBUTE_UNUSED)
+m32c_function_value (const_tree valtype, const_tree func ATTRIBUTE_UNUSED)
 {
   /* return reg or parallel */
-  enum machine_mode mode = TYPE_MODE (valtype);
+  const enum machine_mode mode = TYPE_MODE (valtype);
   return m32c_libcall_value (mode);
 }
 
@@ -1661,8 +1731,8 @@ m32c_initialize_trampoline (rtx tramp, rtx function, rtx chainval)
       emit_move_insn (A0 (HImode, 0), GEN_INT (0xc475 - 0x10000));
       emit_move_insn (A0 (HImode, 2), chainval);
       emit_move_insn (A0 (QImode, 4), GEN_INT (0xfc - 0x100));
-      /* We use 16 bit addresses here, but store the zero to turn it
-	 into a 24 bit offset.  */
+      /* We use 16-bit addresses here, but store the zero to turn it
+	 into a 24-bit offset.  */
       emit_move_insn (A0 (HImode, 5), function);
       emit_move_insn (A0 (QImode, 7), GEN_INT (0x00));
     }
@@ -1677,6 +1747,32 @@ m32c_initialize_trampoline (rtx tramp, rtx function, rtx chainval)
       emit_move_insn (A0 (PSImode, 5), function);
     }
 #undef A0
+}
+
+/* Implicit Calls to Library Routines */
+
+#undef TARGET_INIT_LIBFUNCS
+#define TARGET_INIT_LIBFUNCS m32c_init_libfuncs
+static void
+m32c_init_libfuncs (void)
+{
+  if (TARGET_A24)
+    {
+      /* We do this because the M32C has an HImode operand, but the
+	 M16C has an 8-bit operand.  Since gcc looks at the match data
+	 and not the expanded rtl, we have to reset the array so that
+	 the right modes are found. */
+      setcc_gen_code[EQ] = CODE_FOR_seq_24;
+      setcc_gen_code[NE] = CODE_FOR_sne_24;
+      setcc_gen_code[GT] = CODE_FOR_sgt_24;
+      setcc_gen_code[GE] = CODE_FOR_sge_24;
+      setcc_gen_code[LT] = CODE_FOR_slt_24;
+      setcc_gen_code[LE] = CODE_FOR_sle_24;
+      setcc_gen_code[GTU] = CODE_FOR_sgtu_24;
+      setcc_gen_code[GEU] = CODE_FOR_sgeu_24;
+      setcc_gen_code[LTU] = CODE_FOR_sltu_24;
+      setcc_gen_code[LEU] = CODE_FOR_sleu_24;
+    }
 }
 
 /* Addressing Modes */
@@ -1822,6 +1918,31 @@ m32c_reg_ok_for_base_p (rtx x, int strict)
     }
 }
 
+/* We have three choices for choosing fb->aN offsets.  If we choose -128,
+   we need one MOVA -128[fb],aN opcode and 16-bit aN displacements,
+   like this:
+       EB 4B FF    mova    -128[$fb],$a0
+       D8 0C FF FF mov.w:Q #0,-1[$a0]
+
+   Alternately, we subtract the frame size, and hopefully use 8-bit aN
+   displacements:
+       7B F4       stc $fb,$a0
+       77 54 00 01 sub #256,$a0
+       D8 08 01    mov.w:Q #0,1[$a0]
+
+   If we don't offset (i.e. offset by zero), we end up with:
+       7B F4       stc $fb,$a0
+       D8 0C 00 FF mov.w:Q #0,-256[$a0]
+
+   We have to subtract *something* so that we have a PLUS rtx to mark
+   that we've done this reload.  The -128 offset will never result in
+   an 8-bit aN offset, and the payoff for the second case is five
+   loads *if* those loads are within 256 bytes of the other end of the
+   frame, so the third case seems best.  Note that we subtract the
+   zero, but detect that in the addhi3 pattern.  */
+
+#define BIG_FB_ADJ 0
+
 /* Implements LEGITIMIZE_ADDRESS.  The only address we really have to
    worry about is frame base offsets, as $fb has a limited
    displacement range.  We deal with this by attempting to reload $fb
@@ -1846,10 +1967,9 @@ m32c_legitimize_address (rtx * x ATTRIBUTE_UNUSED,
 	  || INTVAL (XEXP (*x, 1)) > (128 - GET_MODE_SIZE (mode))))
     {
       /* reload FB to A_REGS */
-      rtx foo;
       rtx temp = gen_reg_rtx (Pmode);
       *x = copy_rtx (*x);
-      foo = emit_insn (gen_rtx_SET (VOIDmode, temp, XEXP (*x, 0)));
+      emit_insn (gen_rtx_SET (VOIDmode, temp, XEXP (*x, 0)));
       XEXP (*x, 0) = temp;
       return 1;
     }
@@ -1875,17 +1995,48 @@ m32c_legitimize_reload_address (rtx * x,
      *also* still trying to reload the whole address, and we'd run out
      of address registers.  So we let gcc do the naive (but safe)
      reload instead, when the above function doesn't handle it for
-     us.  */
+     us.
 
-  return 0;
-}
+     The code below is a second attempt at the above.  */
 
-/* Used in GO_IF_MODE_DEPENDENT_ADDRESS.  */
-int
-m32c_mode_dependent_address (rtx addr)
-{
-  if (GET_CODE (addr) == POST_INC || GET_CODE (addr) == PRE_DEC)
-    return 1;
+  if (GET_CODE (*x) == PLUS
+      && GET_CODE (XEXP (*x, 0)) == REG
+      && REGNO (XEXP (*x, 0)) == FB_REGNO
+      && GET_CODE (XEXP (*x, 1)) == CONST_INT
+      && (INTVAL (XEXP (*x, 1)) < -128
+	  || INTVAL (XEXP (*x, 1)) > (128 - GET_MODE_SIZE (mode))))
+    {
+      rtx sum;
+      int offset = INTVAL (XEXP (*x, 1));
+      int adjustment = -BIG_FB_ADJ;
+
+      sum = gen_rtx_PLUS (Pmode, XEXP (*x, 0),
+			  GEN_INT (adjustment));
+      *x = gen_rtx_PLUS (Pmode, sum, GEN_INT (offset - adjustment));
+      if (type == RELOAD_OTHER)
+	type = RELOAD_FOR_OTHER_ADDRESS;
+      push_reload (sum, NULL_RTX, &XEXP (*x, 0), NULL,
+		   A_REGS, Pmode, VOIDmode, 0, 0, opnum,
+		   type);
+      return 1;
+    }
+
+  if (GET_CODE (*x) == PLUS
+      && GET_CODE (XEXP (*x, 0)) == PLUS
+      && GET_CODE (XEXP (XEXP (*x, 0), 0)) == REG
+      && REGNO (XEXP (XEXP (*x, 0), 0)) == FB_REGNO
+      && GET_CODE (XEXP (XEXP (*x, 0), 1)) == CONST_INT
+      && GET_CODE (XEXP (*x, 1)) == CONST_INT
+      )
+    {
+      if (type == RELOAD_OTHER)
+	type = RELOAD_FOR_OTHER_ADDRESS;
+      push_reload (XEXP (*x, 0), NULL_RTX, &XEXP (*x, 0), NULL,
+		   A_REGS, Pmode, VOIDmode, 0, 0, opnum,
+		   type);
+      return 1;
+    }
+
   return 0;
 }
 
@@ -1960,6 +2111,107 @@ m32c_memory_move_cost (enum machine_mode mode ATTRIBUTE_UNUSED,
 {
   /* FIXME: pick real values.  */
   return COSTS_N_INSNS (10);
+}
+
+/* Here we try to describe when we use multiple opcodes for one RTX so
+   that gcc knows when to use them.  */
+#undef TARGET_RTX_COSTS
+#define TARGET_RTX_COSTS m32c_rtx_costs
+static bool
+m32c_rtx_costs (rtx x, int code, int outer_code, int *total)
+{
+  switch (code)
+    {
+    case REG:
+      if (REGNO (x) >= MEM0_REGNO && REGNO (x) <= MEM7_REGNO)
+	*total += COSTS_N_INSNS (500);
+      else
+	*total += COSTS_N_INSNS (1);
+      return true;
+
+    case ASHIFT:
+    case LSHIFTRT:
+    case ASHIFTRT:
+      if (GET_CODE (XEXP (x, 1)) != CONST_INT)
+	{
+	  /* mov.b r1l, r1h */
+	  *total +=  COSTS_N_INSNS (1);
+	  return true;
+	}
+      if (INTVAL (XEXP (x, 1)) > 8
+	  || INTVAL (XEXP (x, 1)) < -8)
+	{
+	  /* mov.b #N, r1l */
+	  /* mov.b r1l, r1h */
+	  *total +=  COSTS_N_INSNS (2);
+	  return true;
+	}
+      return true;
+
+    case LE:
+    case LEU:
+    case LT:
+    case LTU:
+    case GT:
+    case GTU:
+    case GE:
+    case GEU:
+    case NE:
+    case EQ:
+      if (outer_code == SET)
+	{
+	  *total += COSTS_N_INSNS (2);
+	  return true;
+	}
+      break;
+
+    case ZERO_EXTRACT:
+      {
+	rtx dest = XEXP (x, 0);
+	rtx addr = XEXP (dest, 0);
+	switch (GET_CODE (addr))
+	  {
+	  case CONST_INT:
+	    *total += COSTS_N_INSNS (1);
+	    break;
+	  case SYMBOL_REF:
+	    *total += COSTS_N_INSNS (3);
+	    break;
+	  default:
+	    *total += COSTS_N_INSNS (2);
+	    break;
+	  }
+	return true;
+      }
+      break;
+
+    default:
+      /* Reasonable default.  */
+      if (TARGET_A16 && GET_MODE(x) == SImode)
+	*total += COSTS_N_INSNS (2);
+      break;
+    }
+  return false;
+}
+
+#undef TARGET_ADDRESS_COST
+#define TARGET_ADDRESS_COST m32c_address_cost
+static int
+m32c_address_cost (rtx addr)
+{
+  /*  fprintf(stderr, "\naddress_cost\n");
+      debug_rtx(addr);*/
+  switch (GET_CODE (addr))
+    {
+    case CONST_INT:
+      return COSTS_N_INSNS(1);
+    case SYMBOL_REF:
+      return COSTS_N_INSNS(3);
+    case REG:
+      return COSTS_N_INSNS(2);
+    default:
+      return 0;
+    }
 }
 
 /* Defining the Output Assembler Language */
@@ -2043,6 +2295,7 @@ const conversions[] = {
   { 'X', "i", "#0" },
   { 'm', "i", "#0" },
   { 'b', "i", "#0" },
+  { 'B', "i", "0" },
   { 'p', "i", "0" },
 
   { 0, 0, 0 }
@@ -2061,6 +2314,7 @@ m32c_print_operand (FILE * file, rtx x, int code)
   const char *comma;
   HOST_WIDE_INT ival;
   int unsigned_const = 0;
+  int force_sign;
 
   /* Multiplies; constants are converted to sign-extended format but
    we need unsigned, so 'u' and 'U' tell us what size unsigned we
@@ -2185,11 +2439,45 @@ m32c_print_operand (FILE * file, rtx x, int code)
       x = m32c_subreg (HImode, x, SImode, 2);
       code = 0;
     }
+  if (code == 'h' && GET_MODE (x) == HImode)
+    {
+      x = m32c_subreg (QImode, x, HImode, 0);
+      code = 0;
+    }
+  if (code == 'H' && GET_MODE (x) == HImode)
+    {
+      /* We can't actually represent this as an rtx.  Do it here.  */
+      if (GET_CODE (x) == REG)
+	{
+	  switch (REGNO (x))
+	    {
+	    case R0_REGNO:
+	      fputs ("r0h", file);
+	      return;
+	    case R1_REGNO:
+	      fputs ("r1h", file);
+	      return;
+	    default:
+	      gcc_unreachable();
+	    }
+	}
+      /* This should be a MEM.  */
+      x = m32c_subreg (QImode, x, HImode, 1);
+      code = 0;
+    }
+  /* This is for BMcond, which always wants word register names.  */
+  if (code == 'h' && GET_MODE (x) == QImode)
+    {
+      if (GET_CODE (x) == REG)
+	x = gen_rtx_REG (HImode, REGNO (x));
+      code = 0;
+    }
   /* 'x' and 'X' need to be ignored for non-immediates.  */
   if ((code == 'x' || code == 'X') && GET_CODE (x) != CONST_INT)
     code = 0;
 
   encode_pattern (x);
+  force_sign = 0;
   for (i = 0; conversions[i].pattern; i++)
     if (conversions[i].code == code
 	&& streq (conversions[i].pattern, pattern))
@@ -2216,8 +2504,17 @@ m32c_print_operand (FILE * file, rtx x, int code)
 		  switch (code)
 		    {
 		    case 'b':
-		      /* Bit position.  */
-		      fprintf (file, "%d", (int) exact_log2 (INTVAL (r)));
+		    case 'B':
+		      {
+			int v = INTVAL (r);
+			int i = (int) exact_log2 (v);
+			if (i == -1)
+			  i = (int) exact_log2 ((v ^ 0xffff) & 0xffff);
+			if (i == -1)
+			  i = (int) exact_log2 ((v ^ 0xff) & 0xff);
+			/* Bit position.  */
+			fprintf (file, "%d", i);
+		      }
 		      break;
 		    case 'x':
 		      /* Unsigned byte.  */
@@ -2294,6 +2591,8 @@ m32c_print_operand (FILE * file, rtx x, int code)
 			  /* Integers used as addresses are unsigned.  */
 			  ival &= (TARGET_A24 ? 0xffffff : 0xffff);
 			}
+		      if (force_sign && ival >= 0)
+			fputc ('+', file);
 		      fprintf (file, HOST_WIDE_INT_PRINT_DEC, ival);
 		      break;
 		    }
@@ -2338,13 +2637,14 @@ m32c_print_operand (FILE * file, rtx x, int code)
 	      /* Signed displacements off symbols need to have signs
 		 blended cleanly.  */
 	      if (conversions[i].format[j] == '+'
-		  && (!code || code == 'I')
+		  && (!code || code == 'D' || code == 'd')
 		  && ISDIGIT (conversions[i].format[j + 1])
-		  && GET_CODE (patternr[conversions[i].format[j + 1] - '0'])
-		  == CONST_INT
-		  && INTVAL (patternr[conversions[i].format[j + 1] - '0']) <
-		  0)
-		continue;
+		  && (GET_CODE (patternr[conversions[i].format[j + 1] - '0'])
+		      == CONST_INT))
+		{
+		  force_sign = 1;
+		  continue;
+		}
 	      fputc (conversions[i].format[j], file);
 	    }
 	break;
@@ -2386,7 +2686,7 @@ m32c_output_reg_push (FILE * s, int regno)
   if (regno == FLG_REGNO)
     fprintf (s, "\tpushc\tflg\n");
   else
-    fprintf (s, "\tpush.%c\t%s",
+    fprintf (s, "\tpush.%c\t%s\n",
 	     " bwll"[reg_push_size (regno)], reg_names[regno]);
 }
 
@@ -2397,7 +2697,7 @@ m32c_output_reg_pop (FILE * s, int regno)
   if (regno == FLG_REGNO)
     fprintf (s, "\tpopc\tflg\n");
   else
-    fprintf (s, "\tpop.%c\t%s",
+    fprintf (s, "\tpop.%c\t%s\n",
 	     " bwll"[reg_push_size (regno)], reg_names[regno]);
 }
 
@@ -2435,18 +2735,112 @@ interrupt_handler (tree * node ATTRIBUTE_UNUSED,
   return NULL_TREE;
 }
 
+/* Returns TRUE if given tree has the "function_vector" attribute. */
+int
+m32c_special_page_vector_p (tree func)
+{
+  if (TREE_CODE (func) != FUNCTION_DECL)
+    return 0;
+
+  tree list = M32C_ATTRIBUTES (func);
+  while (list)
+    {
+      if (is_attribute_p ("function_vector", TREE_PURPOSE (list)))
+        return 1;
+      list = TREE_CHAIN (list);
+    }
+  return 0;
+}
+
+static tree
+function_vector_handler (tree * node ATTRIBUTE_UNUSED,
+                         tree name ATTRIBUTE_UNUSED,
+                         tree args ATTRIBUTE_UNUSED,
+                         int flags ATTRIBUTE_UNUSED,
+                         bool * no_add_attrs ATTRIBUTE_UNUSED)
+{
+  if (TARGET_R8C)
+    {
+      /* The attribute is not supported for R8C target.  */
+      warning (OPT_Wattributes,
+                "`%s' attribute is not supported for R8C target",
+                IDENTIFIER_POINTER (name));
+      *no_add_attrs = true;
+    }
+  else if (TREE_CODE (*node) != FUNCTION_DECL)
+    {
+      /* The attribute must be applied to functions only.  */
+      warning (OPT_Wattributes,
+                "`%s' attribute applies only to functions",
+                IDENTIFIER_POINTER (name));
+      *no_add_attrs = true;
+    }
+  else if (TREE_CODE (TREE_VALUE (args)) != INTEGER_CST)
+    {
+      /* The argument must be a constant integer.  */
+      warning (OPT_Wattributes,
+                "`%s' attribute argument not an integer constant",
+                IDENTIFIER_POINTER (name));
+      *no_add_attrs = true;
+    }
+  else if (TREE_INT_CST_LOW (TREE_VALUE (args)) < 18
+           || TREE_INT_CST_LOW (TREE_VALUE (args)) > 255)
+    {
+      /* The argument value must be between 18 to 255.  */
+      warning (OPT_Wattributes,
+                "`%s' attribute argument should be between 18 to 255",
+                IDENTIFIER_POINTER (name));
+      *no_add_attrs = true;
+    }
+  return NULL_TREE;
+}
+
+/* If the function is assigned the attribute 'function_vector', it
+   returns the function vector number, otherwise returns zero.  */
+int
+current_function_special_page_vector (rtx x)
+{
+  int num;
+
+  if ((GET_CODE(x) == SYMBOL_REF)
+      && (SYMBOL_REF_FLAGS (x) & SYMBOL_FLAG_FUNCVEC_FUNCTION))
+    {
+      tree t = SYMBOL_REF_DECL (x);
+
+      if (TREE_CODE (t) != FUNCTION_DECL)
+        return 0;
+
+      tree list = M32C_ATTRIBUTES (t);
+      while (list)
+        {
+          if (is_attribute_p ("function_vector", TREE_PURPOSE (list)))
+            {
+              num = TREE_INT_CST_LOW (TREE_VALUE (TREE_VALUE (list)));
+              return num;
+            }
+
+          list = TREE_CHAIN (list);
+        }
+
+      return 0;
+    }
+  else
+    return 0;
+}
+
 #undef TARGET_ATTRIBUTE_TABLE
 #define TARGET_ATTRIBUTE_TABLE m32c_attribute_table
 static const struct attribute_spec m32c_attribute_table[] = {
   {"interrupt", 0, 0, false, false, false, interrupt_handler},
+  {"function_vector", 1, 1, true,  false, false, function_vector_handler},
   {0, 0, 0, 0, 0, 0, 0}
 };
 
 #undef TARGET_COMP_TYPE_ATTRIBUTES
 #define TARGET_COMP_TYPE_ATTRIBUTES m32c_comp_type_attributes
 static int
-m32c_comp_type_attributes (tree type1 ATTRIBUTE_UNUSED,
-			   tree type2 ATTRIBUTE_UNUSED)
+m32c_comp_type_attributes (const_tree type1 ATTRIBUTE_UNUSED,
+			   const_tree type2 ATTRIBUTE_UNUSED)
 {
   /* 0=incompatible 1=compatible 2=warning */
   return 1;
@@ -2462,6 +2856,80 @@ m32c_insert_attributes (tree node ATTRIBUTE_UNUSED,
 }
 
 /* Predicates */
+
+/* This is a list of legal subregs of hard regs.  */
+static const struct {
+  unsigned char outer_mode_size;
+  unsigned char inner_mode_size;
+  unsigned char byte_mask;
+  unsigned char legal_when;
+  unsigned int regno;
+} legal_subregs[] = {
+  {1, 2, 0x03, 1, R0_REGNO}, /* r0h r0l */
+  {1, 2, 0x03, 1, R1_REGNO}, /* r1h r1l */
+  {1, 2, 0x01, 1, A0_REGNO},
+  {1, 2, 0x01, 1, A1_REGNO},
+
+  {1, 4, 0x01, 1, A0_REGNO},
+  {1, 4, 0x01, 1, A1_REGNO},
+
+  {2, 4, 0x05, 1, R0_REGNO}, /* r2 r0 */
+  {2, 4, 0x05, 1, R1_REGNO}, /* r3 r1 */
+  {2, 4, 0x05, 16, A0_REGNO}, /* a1 a0 */
+  {2, 4, 0x01, 24, A0_REGNO}, /* a1 a0 */
+  {2, 4, 0x01, 24, A1_REGNO}, /* a1 a0 */
+
+  {4, 8, 0x55, 1, R0_REGNO}, /* r3 r1 r2 r0 */
+};
+
+/* Returns TRUE if OP is a subreg of a hard reg which we don't
+   support.  */
+bool
+m32c_illegal_subreg_p (rtx op)
+{
+  int offset;
+  unsigned int i;
+  int src_mode, dest_mode;
+
+  if (GET_CODE (op) != SUBREG)
+    return false;
+
+  dest_mode = GET_MODE (op);
+  offset = SUBREG_BYTE (op);
+  op = SUBREG_REG (op);
+  src_mode = GET_MODE (op);
+
+  if (GET_MODE_SIZE (dest_mode) == GET_MODE_SIZE (src_mode))
+    return false;
+  if (GET_CODE (op) != REG)
+    return false;
+  if (REGNO (op) >= MEM0_REGNO)
+    return false;
+
+  offset = (1 << offset);
+
+  for (i = 0; i < ARRAY_SIZE (legal_subregs); i ++)
+    if (legal_subregs[i].outer_mode_size == GET_MODE_SIZE (dest_mode)
+	&& legal_subregs[i].regno == REGNO (op)
+	&& legal_subregs[i].inner_mode_size == GET_MODE_SIZE (src_mode)
+	&& legal_subregs[i].byte_mask & offset)
+      {
+	switch (legal_subregs[i].legal_when)
+	  {
+	  case 1:
+	    return false;
+	  case 16:
+	    if (TARGET_A16)
+	      return false;
+	    break;
+	  case 24:
+	    if (TARGET_A24)
+	      return false;
+	    break;
+	  }
+      }
+  return true;
+}
 
 /* Returns TRUE if we support a move between the first two operands.
    At the moment, we just want to discourage mem to mem moves until
@@ -2504,6 +2972,102 @@ m32c_mov_ok (rtx * operands, enum machine_mode mode ATTRIBUTE_UNUSED)
 #endif
   return true;
 }
+
+/* Returns TRUE if two consecutive HImode mov instructions, generated
+   for moving an immediate double data to a double data type variable
+   location, can be combined into single SImode mov instruction.  */
+bool
+m32c_immd_dbl_mov (rtx * operands, 
+		   enum machine_mode mode ATTRIBUTE_UNUSED)
+{
+  int flag = 0, okflag = 0, offset1 = 0, offset2 = 0, offsetsign = 0;
+  const char *str1;
+  const char *str2;
+
+  if (GET_CODE (XEXP (operands[0], 0)) == SYMBOL_REF
+      && MEM_SCALAR_P (operands[0])
+      && !MEM_IN_STRUCT_P (operands[0])
+      && GET_CODE (XEXP (operands[2], 0)) == CONST
+      && GET_CODE (XEXP (XEXP (operands[2], 0), 0)) == PLUS
+      && GET_CODE (XEXP (XEXP (XEXP (operands[2], 0), 0), 0)) == SYMBOL_REF
+      && GET_CODE (XEXP (XEXP (XEXP (operands[2], 0), 0), 1)) == CONST_INT
+      && MEM_SCALAR_P (operands[2])
+      && !MEM_IN_STRUCT_P (operands[2]))
+    flag = 1; 
+
+  else if (GET_CODE (XEXP (operands[0], 0)) == CONST
+           && GET_CODE (XEXP (XEXP (operands[0], 0), 0)) == PLUS
+           && GET_CODE (XEXP (XEXP (XEXP (operands[0], 0), 0), 0)) == SYMBOL_REF
+           && MEM_SCALAR_P (operands[0])
+           && !MEM_IN_STRUCT_P (operands[0])
+           && !(INTVAL (XEXP (XEXP (XEXP (operands[0], 0), 0), 1)) %4)
+           && GET_CODE (XEXP (operands[2], 0)) == CONST
+           && GET_CODE (XEXP (XEXP (operands[2], 0), 0)) == PLUS
+           && GET_CODE (XEXP (XEXP (XEXP (operands[2], 0), 0), 0)) == SYMBOL_REF
+           && MEM_SCALAR_P (operands[2])
+           && !MEM_IN_STRUCT_P (operands[2]))
+    flag = 2; 
+
+  else if (GET_CODE (XEXP (operands[0], 0)) == PLUS
+           &&  GET_CODE (XEXP (XEXP (operands[0], 0), 0)) == REG
+           &&  REGNO (XEXP (XEXP (operands[0], 0), 0)) == FB_REGNO 
+           &&  GET_CODE (XEXP (XEXP (operands[0], 0), 1)) == CONST_INT
+           &&  MEM_SCALAR_P (operands[0])
+           &&  !MEM_IN_STRUCT_P (operands[0])
+           &&  !(INTVAL (XEXP (XEXP (operands[0], 0), 1)) %4)
+           &&  REGNO (XEXP (XEXP (operands[2], 0), 0)) == FB_REGNO 
+           &&  GET_CODE (XEXP (XEXP (operands[2], 0), 1)) == CONST_INT
+           &&  MEM_SCALAR_P (operands[2])
+           &&  !MEM_IN_STRUCT_P (operands[2]))
+    flag = 3; 
+
+  else
+    return false;
+
+  switch (flag)
+    {
+    case 1:
+      str1 = XSTR (XEXP (operands[0], 0), 0);
+      str2 = XSTR (XEXP (XEXP (XEXP (operands[2], 0), 0), 0), 0);
+      if (strcmp (str1, str2) == 0)
+	okflag = 1; 
+      else
+	okflag = 0; 
+      break;
+    case 2:
+      str1 = XSTR (XEXP (XEXP (XEXP (operands[0], 0), 0), 0), 0);
+      str2 = XSTR (XEXP (XEXP (XEXP (operands[2], 0), 0), 0), 0);
+      if (strcmp(str1,str2) == 0)
+	okflag = 1; 
+      else
+	okflag = 0; 
+      break; 
+    case 3:
+      offset1 = INTVAL (XEXP (XEXP (operands[0], 0), 1));
+      offset2 = INTVAL (XEXP (XEXP (operands[2], 0), 1));
+      offsetsign = offset1 >> ((sizeof (offset1) * 8) -1);
+      if (((offset2-offset1) == 2) && offsetsign != 0)
+	okflag = 1;
+      else 
+	okflag = 0; 
+      break; 
+    default:
+      okflag = 0; 
+    } 
+      
+  if (okflag == 1)
+    {
+      HOST_WIDE_INT val;
+      operands[4] = gen_rtx_MEM (SImode, XEXP (operands[0], 0));
+
+      val = (INTVAL (operands[3]) << 16) + (INTVAL (operands[1]) & 0xFFFF);
+      operands[5] = gen_rtx_CONST_INT (VOIDmode, val);
+     
+      return true;
+    }
+
+  return false;
+}  
 
 /* Expanders */
 
@@ -2600,7 +3164,7 @@ m32c_prepare_move (rtx * operands, enum machine_mode mode)
       emit_insn (gen_rtx_SET (Pmode, dest_reg, dest_mod));
       operands[0] = gen_rtx_MEM (mode, dest_reg);
     }
-  if (!no_new_pseudos && MEM_P (operands[0]) && MEM_P (operands[1]))
+  if (can_create_pseudo_p () && MEM_P (operands[0]) && MEM_P (operands[1]))
     operands[1] = copy_to_mode_reg (mode, operands[1]);
   return 0;
 }
@@ -2665,7 +3229,7 @@ m32c_split_move (rtx * operands, enum machine_mode mode, int split_all)
 
   /* Before splitting mem-mem moves, force one operand into a
      register.  */
-  if (!no_new_pseudos && MEM_P (operands[0]) && MEM_P (operands[1]))
+  if (can_create_pseudo_p () && MEM_P (operands[0]) && MEM_P (operands[1]))
     {
 #if DEBUG0
       fprintf (stderr, "force_reg...\n");
@@ -2680,7 +3244,8 @@ m32c_split_move (rtx * operands, enum machine_mode mode, int split_all)
   parts = 2;
 
 #if DEBUG_SPLIT
-  fprintf (stderr, "\nsplit_move %d all=%d\n", no_new_pseudos, split_all);
+  fprintf (stderr, "\nsplit_move %d all=%d\n", !can_create_pseudo_p (),
+	   split_all);
   debug_rtx (operands[0]);
   debug_rtx (operands[1]);
 #endif
@@ -2770,35 +3335,547 @@ m32c_split_move (rtx * operands, enum machine_mode mode, int split_all)
   return rv;
 }
 
+/* The m32c has a number of opcodes that act like memcpy, strcmp, and
+   the like.  For the R8C they expect one of the addresses to be in
+   R1L:An so we need to arrange for that.  Otherwise, it's just a
+   matter of picking out the operands we want and emitting the right
+   pattern for them.  All these expanders, which correspond to
+   patterns in blkmov.md, must return nonzero if they expand the insn,
+   or zero if they should FAIL.  */
+
+/* This is a memset() opcode.  All operands are implied, so we need to
+   arrange for them to be in the right registers.  The opcode wants
+   addresses, not [mem] syntax.  $0 is the destination (MEM:BLK), $1
+   the count (HI), and $2 the value (QI).  */
+int
+m32c_expand_setmemhi(rtx *operands)
+{
+  rtx desta, count, val;
+  rtx desto, counto;
+
+  desta = XEXP (operands[0], 0);
+  count = operands[1];
+  val = operands[2];
+
+  desto = gen_reg_rtx (Pmode);
+  counto = gen_reg_rtx (HImode);
+
+  if (GET_CODE (desta) != REG
+      || REGNO (desta) < FIRST_PSEUDO_REGISTER)
+    desta = copy_to_mode_reg (Pmode, desta);
+
+  /* This looks like an arbitrary restriction, but this is by far the
+     most common case.  For counts 8..14 this actually results in
+     smaller code with no speed penalty because the half-sized
+     constant can be loaded with a shorter opcode.  */
+  if (GET_CODE (count) == CONST_INT
+      && GET_CODE (val) == CONST_INT
+      && ! (INTVAL (count) & 1)
+      && (INTVAL (count) > 1)
+      && (INTVAL (val) <= 7 && INTVAL (val) >= -8))
+    {
+      unsigned v = INTVAL (val) & 0xff;
+      v = v | (v << 8);
+      count = copy_to_mode_reg (HImode, GEN_INT (INTVAL (count) / 2));
+      val = copy_to_mode_reg (HImode, GEN_INT (v));
+      if (TARGET_A16)
+	emit_insn (gen_setmemhi_whi_op (desto, counto, val, desta, count));
+      else
+	emit_insn (gen_setmemhi_wpsi_op (desto, counto, val, desta, count));
+      return 1;
+    }
+
+  /* This is the generalized memset() case.  */
+  if (GET_CODE (val) != REG
+      || REGNO (val) < FIRST_PSEUDO_REGISTER)
+    val = copy_to_mode_reg (QImode, val);
+
+  if (GET_CODE (count) != REG
+      || REGNO (count) < FIRST_PSEUDO_REGISTER)
+    count = copy_to_mode_reg (HImode, count);
+
+  if (TARGET_A16)
+    emit_insn (gen_setmemhi_bhi_op (desto, counto, val, desta, count));
+  else
+    emit_insn (gen_setmemhi_bpsi_op (desto, counto, val, desta, count));
+
+  return 1;
+}
+
+/* This is a memcpy() opcode.  All operands are implied, so we need to
+   arrange for them to be in the right registers.  The opcode wants
+   addresses, not [mem] syntax.  $0 is the destination (MEM:BLK), $1
+   is the source (MEM:BLK), and $2 the count (HI).  */
+int
+m32c_expand_movmemhi(rtx *operands)
+{
+  rtx desta, srca, count;
+  rtx desto, srco, counto;
+
+  desta = XEXP (operands[0], 0);
+  srca = XEXP (operands[1], 0);
+  count = operands[2];
+
+  desto = gen_reg_rtx (Pmode);
+  srco = gen_reg_rtx (Pmode);
+  counto = gen_reg_rtx (HImode);
+
+  if (GET_CODE (desta) != REG
+      || REGNO (desta) < FIRST_PSEUDO_REGISTER)
+    desta = copy_to_mode_reg (Pmode, desta);
+
+  if (GET_CODE (srca) != REG
+      || REGNO (srca) < FIRST_PSEUDO_REGISTER)
+    srca = copy_to_mode_reg (Pmode, srca);
+
+  /* Similar to setmem, but we don't need to check the value.  */
+  if (GET_CODE (count) == CONST_INT
+      && ! (INTVAL (count) & 1)
+      && (INTVAL (count) > 1))
+    {
+      count = copy_to_mode_reg (HImode, GEN_INT (INTVAL (count) / 2));
+      if (TARGET_A16)
+	emit_insn (gen_movmemhi_whi_op (desto, srco, counto, desta, srca, count));
+      else
+	emit_insn (gen_movmemhi_wpsi_op (desto, srco, counto, desta, srca, count));
+      return 1;
+    }
+
+  /* This is the generalized memset() case.  */
+  if (GET_CODE (count) != REG
+      || REGNO (count) < FIRST_PSEUDO_REGISTER)
+    count = copy_to_mode_reg (HImode, count);
+
+  if (TARGET_A16)
+    emit_insn (gen_movmemhi_bhi_op (desto, srco, counto, desta, srca, count));
+  else
+    emit_insn (gen_movmemhi_bpsi_op (desto, srco, counto, desta, srca, count));
+
+  return 1;
+}
+
+/* This is a stpcpy() opcode.  $0 is the destination (MEM:BLK) after
+   the copy, which should point to the NUL at the end of the string,
+   $1 is the destination (MEM:BLK), and $2 is the source (MEM:BLK).
+   Since our opcode leaves the destination pointing *after* the NUL,
+   we must emit an adjustment.  */
+int
+m32c_expand_movstr(rtx *operands)
+{
+  rtx desta, srca;
+  rtx desto, srco;
+
+  desta = XEXP (operands[1], 0);
+  srca = XEXP (operands[2], 0);
+
+  desto = gen_reg_rtx (Pmode);
+  srco = gen_reg_rtx (Pmode);
+
+  if (GET_CODE (desta) != REG
+      || REGNO (desta) < FIRST_PSEUDO_REGISTER)
+    desta = copy_to_mode_reg (Pmode, desta);
+
+  if (GET_CODE (srca) != REG
+      || REGNO (srca) < FIRST_PSEUDO_REGISTER)
+    srca = copy_to_mode_reg (Pmode, srca);
+
+  emit_insn (gen_movstr_op (desto, srco, desta, srca));
+  /* desto ends up being a1, which allows this type of add through MOVA.  */
+  emit_insn (gen_addpsi3 (operands[0], desto, GEN_INT (-1)));
+
+  return 1;
+}
+
+/* This is a strcmp() opcode.  $0 is the destination (HI) which holds
+   <=>0 depending on the comparison, $1 is one string (MEM:BLK), and
+   $2 is the other (MEM:BLK).  We must do the comparison, and then
+   convert the flags to a signed integer result.  */
+int
+m32c_expand_cmpstr(rtx *operands)
+{
+  rtx src1a, src2a;
+
+  src1a = XEXP (operands[1], 0);
+  src2a = XEXP (operands[2], 0);
+
+  if (GET_CODE (src1a) != REG
+      || REGNO (src1a) < FIRST_PSEUDO_REGISTER)
+    src1a = copy_to_mode_reg (Pmode, src1a);
+
+  if (GET_CODE (src2a) != REG
+      || REGNO (src2a) < FIRST_PSEUDO_REGISTER)
+    src2a = copy_to_mode_reg (Pmode, src2a);
+
+  emit_insn (gen_cmpstrhi_op (src1a, src2a, src1a, src2a));
+  emit_insn (gen_cond_to_int (operands[0]));
+
+  return 1;
+}
+
+
+typedef rtx (*shift_gen_func)(rtx, rtx, rtx);
+
+static shift_gen_func
+shift_gen_func_for (int mode, int code)
+{
+#define GFF(m,c,f) if (mode == m && code == c) return f
+  GFF(QImode,  ASHIFT,   gen_ashlqi3_i);
+  GFF(QImode,  ASHIFTRT, gen_ashrqi3_i);
+  GFF(QImode,  LSHIFTRT, gen_lshrqi3_i);
+  GFF(HImode,  ASHIFT,   gen_ashlhi3_i);
+  GFF(HImode,  ASHIFTRT, gen_ashrhi3_i);
+  GFF(HImode,  LSHIFTRT, gen_lshrhi3_i);
+  GFF(PSImode, ASHIFT,   gen_ashlpsi3_i);
+  GFF(PSImode, ASHIFTRT, gen_ashrpsi3_i);
+  GFF(PSImode, LSHIFTRT, gen_lshrpsi3_i);
+  GFF(SImode,  ASHIFT,   TARGET_A16 ? gen_ashlsi3_16 : gen_ashlsi3_24);
+  GFF(SImode,  ASHIFTRT, TARGET_A16 ? gen_ashrsi3_16 : gen_ashrsi3_24);
+  GFF(SImode,  LSHIFTRT, TARGET_A16 ? gen_lshrsi3_16 : gen_lshrsi3_24);
+#undef GFF
+  gcc_unreachable ();
+}
+
 /* The m32c only has one shift, but it takes a signed count.  GCC
    doesn't want this, so we fake it by negating any shift count when
-   we're pretending to shift the other way.  */
+   we're pretending to shift the other way.  Also, the shift count is
+   limited to -8..8.  It's slightly better to use two shifts for 9..15
+   than to load the count into r1h, so we do that too.  */
 int
-m32c_prepare_shift (rtx * operands, int scale, int bits)
+m32c_prepare_shift (rtx * operands, int scale, int shift_code)
 {
+  enum machine_mode mode = GET_MODE (operands[0]);
+  shift_gen_func func = shift_gen_func_for (mode, shift_code);
   rtx temp;
-  if (GET_CODE (operands[2]) == CONST_INT
-      && INTVAL (operands[2]) <= (1 << (bits - 1))
-      && INTVAL (operands[2]) >= -(1 << (bits - 1)))
+
+  if (GET_CODE (operands[2]) == CONST_INT)
     {
-      operands[2] = GEN_INT (scale * INTVAL (operands[2]));
-      return 0;
+      int maxc = TARGET_A24 && (mode == PSImode || mode == SImode) ? 32 : 8;
+      int count = INTVAL (operands[2]) * scale;
+
+      while (count > maxc)
+	{
+	  temp = gen_reg_rtx (mode);
+	  emit_insn (func (temp, operands[1], GEN_INT (maxc)));
+	  operands[1] = temp;
+	  count -= maxc;
+	}
+      while (count < -maxc)
+	{
+	  temp = gen_reg_rtx (mode);
+	  emit_insn (func (temp, operands[1], GEN_INT (-maxc)));
+	  operands[1] = temp;
+	  count += maxc;
+	}
+      emit_insn (func (operands[0], operands[1], GEN_INT (count)));
+      return 1;
     }
+
+  temp = gen_reg_rtx (QImode);
   if (scale < 0)
-    {
-      temp = gen_reg_rtx (QImode);
-      if (GET_CODE (operands[2]) == CONST_INT)
-	temp = GEN_INT (-INTVAL (operands[2]));
-      else
-	emit_move_insn (temp, gen_rtx_NEG (QImode, operands[2]));
-    }
+    /* The pattern has a NEG that corresponds to this. */
+    emit_move_insn (temp, gen_rtx_NEG (QImode, operands[2]));
+  else if (TARGET_A16 && mode == SImode)
+    /* We do this because the code below may modify this, we don't
+       want to modify the origin of this value.  */
+    emit_move_insn (temp, operands[2]);
   else
+    /* We'll only use it for the shift, no point emitting a move.  */
     temp = operands[2];
+
+  if (TARGET_A16 && GET_MODE_SIZE (mode) == 4)
+    {
+      /* The m16c has a limit of -16..16 for SI shifts, even when the
+	 shift count is in a register.  Since there are so many targets
+	 of these shifts, it's better to expand the RTL here than to
+	 call a helper function.
+
+	 The resulting code looks something like this:
+
+		cmp.b	r1h,-16
+		jge.b	1f
+		shl.l	-16,dest
+		add.b	r1h,16
+	1f:	cmp.b	r1h,16
+		jle.b	1f
+		shl.l	16,dest
+		sub.b	r1h,16
+	1f:	shl.l	r1h,dest
+
+	 We take advantage of the fact that "negative" shifts are
+	 undefined to skip one of the comparisons.  */
+
+      rtx count;
+      rtx label, lref, insn, tempvar;
+
+      emit_move_insn (operands[0], operands[1]);
+
+      count = temp;
+      label = gen_label_rtx ();
+      lref = gen_rtx_LABEL_REF (VOIDmode, label);
+      LABEL_NUSES (label) ++;
+
+      tempvar = gen_reg_rtx (mode);
+
+      if (shift_code == ASHIFT)
+	{
+	  /* This is a left shift.  We only need check positive counts.  */
+	  emit_jump_insn (gen_cbranchqi4 (gen_rtx_LE (VOIDmode, 0, 0),
+					  count, GEN_INT (16), label));
+	  emit_insn (func (tempvar, operands[0], GEN_INT (8)));
+	  emit_insn (func (operands[0], tempvar, GEN_INT (8)));
+	  insn = emit_insn (gen_addqi3 (count, count, GEN_INT (-16)));
+	  emit_label_after (label, insn);
+	}
+      else
+	{
+	  /* This is a right shift.  We only need check negative counts.  */
+	  emit_jump_insn (gen_cbranchqi4 (gen_rtx_GE (VOIDmode, 0, 0),
+					  count, GEN_INT (-16), label));
+	  emit_insn (func (tempvar, operands[0], GEN_INT (-8)));
+	  emit_insn (func (operands[0], tempvar, GEN_INT (-8)));
+	  insn = emit_insn (gen_addqi3 (count, count, GEN_INT (16)));
+	  emit_label_after (label, insn);
+	}
+      operands[1] = operands[0];
+      emit_insn (func (operands[0], operands[0], count));
+      return 1;
+    }
+
   operands[2] = temp;
   return 0;
 }
 
+/* The m32c has a limited range of operations that work on PSImode
+   values; we have to expand to SI, do the math, and truncate back to
+   PSI.  Yes, this is expensive, but hopefully gcc will learn to avoid
+   those cases.  */
+void
+m32c_expand_neg_mulpsi3 (rtx * operands)
+{
+  /* operands: a = b * i */
+  rtx temp1; /* b as SI */
+  rtx scale /* i as SI */;
+  rtx temp2; /* a*b as SI */
+
+  temp1 = gen_reg_rtx (SImode);
+  temp2 = gen_reg_rtx (SImode);
+  if (GET_CODE (operands[2]) != CONST_INT)
+    {
+      scale = gen_reg_rtx (SImode);
+      emit_insn (gen_zero_extendpsisi2 (scale, operands[2]));
+    }
+  else
+    scale = copy_to_mode_reg (SImode, operands[2]);
+
+  emit_insn (gen_zero_extendpsisi2 (temp1, operands[1]));
+  temp2 = expand_simple_binop (SImode, MULT, temp1, scale, temp2, 1, OPTAB_LIB);
+  emit_insn (gen_truncsipsi2 (operands[0], temp2));
+}
+
+static rtx compare_op0, compare_op1;
+
+void
+m32c_pend_compare (rtx *operands)
+{
+  compare_op0 = operands[0];
+  compare_op1 = operands[1];
+}
+
+void
+m32c_unpend_compare (void)
+{
+  switch (GET_MODE (compare_op0))
+    {
+    case QImode:
+      emit_insn (gen_cmpqi_op (compare_op0, compare_op1));
+    case HImode:
+      emit_insn (gen_cmphi_op (compare_op0, compare_op1));
+    case PSImode:
+      emit_insn (gen_cmppsi_op (compare_op0, compare_op1));
+    default:
+      /* Just to silence the "missing case" warnings.  */ ;
+    }
+}
+
+void
+m32c_expand_scc (int code, rtx *operands)
+{
+  enum machine_mode mode = TARGET_A16 ? QImode : HImode;
+
+  emit_insn (gen_rtx_SET (mode,
+			  operands[0],
+			  gen_rtx_fmt_ee (code,
+					  mode,
+					  compare_op0,
+					  compare_op1)));
+}
+
 /* Pattern Output Functions */
+
+/* Returns a (OP (reg:CC FLG_REGNO) (const_int 0)) from some other
+   match_operand rtx's OP.  */
+rtx
+m32c_cmp_flg_0 (rtx cmp)
+{
+  return gen_rtx_fmt_ee (GET_CODE (cmp),
+			 GET_MODE (cmp),
+			 gen_rtx_REG (CCmode, FLG_REGNO),
+			 GEN_INT (0));
+}
+
+int
+m32c_expand_movcc (rtx *operands)
+{
+  rtx rel = operands[1];
+  rtx cmp;
+
+  if (GET_CODE (rel) != EQ && GET_CODE (rel) != NE)
+    return 1;
+  if (GET_CODE (operands[2]) != CONST_INT
+      || GET_CODE (operands[3]) != CONST_INT)
+    return 1;
+  emit_insn (gen_cmpqi(XEXP (rel, 0), XEXP (rel, 1)));
+  if (GET_CODE (rel) == NE)
+    {
+      rtx tmp = operands[2];
+      operands[2] = operands[3];
+      operands[3] = tmp;
+    }
+
+  cmp = gen_rtx_fmt_ee (GET_CODE (rel),
+			GET_MODE (rel),
+			compare_op0,
+			compare_op1);
+
+  emit_move_insn (operands[0],
+		  gen_rtx_IF_THEN_ELSE (GET_MODE (operands[0]),
+					cmp,
+					operands[2],
+					operands[3]));
+  return 0;
+}
+
+/* Used for the "insv" pattern.  Return nonzero to fail, else done.  */
+int
+m32c_expand_insv (rtx *operands)
+{
+  rtx op0, src0, p;
+  int mask;
+
+  if (INTVAL (operands[1]) != 1)
+    return 1;
+
+  /* Our insv opcode (bset, bclr) can only insert a one-bit constant.  */
+  if (GET_CODE (operands[3]) != CONST_INT)
+    return 1;
+  if (INTVAL (operands[3]) != 0
+      && INTVAL (operands[3]) != 1
+      && INTVAL (operands[3]) != -1)
+    return 1;
+
+  mask = 1 << INTVAL (operands[2]);
+
+  op0 = operands[0];
+  if (GET_CODE (op0) == SUBREG
+      && SUBREG_BYTE (op0) == 0)
+    {
+      rtx sub = SUBREG_REG (op0);
+      if (GET_MODE (sub) == HImode || GET_MODE (sub) == QImode)
+	op0 = sub;
+    }
+
+  if (!can_create_pseudo_p ()
+      || (GET_CODE (op0) == MEM && MEM_VOLATILE_P (op0)))
+    src0 = op0;
+  else
+    {
+      src0 = gen_reg_rtx (GET_MODE (op0));
+      emit_move_insn (src0, op0);
+    }
+
+  if (GET_MODE (op0) == HImode
+      && INTVAL (operands[2]) >= 8
+      && GET_MODE (op0) == MEM)
+    {
+      /* We are little endian.  */
+      rtx new_mem = gen_rtx_MEM (QImode, plus_constant (XEXP (op0, 0), 1));
+      MEM_COPY_ATTRIBUTES (new_mem, op0);
+      mask >>= 8;
+    }
+
+  /* First, we generate a mask with the correct polarity.  If we are
+     storing a zero, we want an AND mask, so invert it.  */
+  if (INTVAL (operands[3]) == 0)
+    {
+      /* Storing a zero, use an AND mask */
+      if (GET_MODE (op0) == HImode)
+	mask ^= 0xffff;
+      else
+	mask ^= 0xff;
+    }
+  /* Now we need to properly sign-extend the mask in case we need to
+     fall back to an AND or OR opcode.  */
+  if (GET_MODE (op0) == HImode)
+    {
+      if (mask & 0x8000)
+	mask -= 0x10000;
+    }
+  else
+    {
+      if (mask & 0x80)
+	mask -= 0x100;
+    }
+
+  switch (  (INTVAL (operands[3]) ? 4 : 0)
+	  + ((GET_MODE (op0) == HImode) ? 2 : 0)
+	  + (TARGET_A24 ? 1 : 0))
+    {
+    case 0: p = gen_andqi3_16 (op0, src0, GEN_INT (mask)); break;
+    case 1: p = gen_andqi3_24 (op0, src0, GEN_INT (mask)); break;
+    case 2: p = gen_andhi3_16 (op0, src0, GEN_INT (mask)); break;
+    case 3: p = gen_andhi3_24 (op0, src0, GEN_INT (mask)); break;
+    case 4: p = gen_iorqi3_16 (op0, src0, GEN_INT (mask)); break;
+    case 5: p = gen_iorqi3_24 (op0, src0, GEN_INT (mask)); break;
+    case 6: p = gen_iorhi3_16 (op0, src0, GEN_INT (mask)); break;
+    case 7: p = gen_iorhi3_24 (op0, src0, GEN_INT (mask)); break;
+    }
+
+  emit_insn (p);
+  return 0;
+}
+
+const char *
+m32c_scc_pattern(rtx *operands, RTX_CODE code)
+{
+  static char buf[30];
+  if (GET_CODE (operands[0]) == REG
+      && REGNO (operands[0]) == R0_REGNO)
+    {
+      if (code == EQ)
+	return "stzx\t#1,#0,r0l";
+      if (code == NE)
+	return "stzx\t#0,#1,r0l";
+    }
+  sprintf(buf, "bm%s\t0,%%h0\n\tand.b\t#1,%%0", GET_RTX_NAME (code));
+  return buf;
+}
+
+/* Encode symbol attributes of a SYMBOL_REF into its
+   SYMBOL_REF_FLAGS. */
+static void
+m32c_encode_section_info (tree decl, rtx rtl, int first)
+{
+  int extra_flags = 0;
+
+  default_encode_section_info (decl, rtl, first);
+  if (TREE_CODE (decl) == FUNCTION_DECL
+      && m32c_special_page_vector_p (decl))
+
+    extra_flags = SYMBOL_FLAG_FUNCVEC_FUNCTION;
+
+  if (extra_flags)
+    SYMBOL_REF_FLAGS (XEXP (rtl, 0)) |= extra_flags;
+}
 
 /* Returns TRUE if the current function is a leaf, and thus we can
    determine which registers an interrupt function really needs to
@@ -2911,8 +3988,8 @@ m32c_emit_prologue (void)
   if (cfun->machine->use_rts == 0)
     F (emit_insn (m32c_all_frame_related
 		  (TARGET_A16
-		   ? gen_prologue_enter_16 (GEN_INT (frame_size))
-		   : gen_prologue_enter_24 (GEN_INT (frame_size)))));
+		   ? gen_prologue_enter_16 (GEN_INT (frame_size + 2))
+		   : gen_prologue_enter_24 (GEN_INT (frame_size + 4)))));
 
   if (extra_frame_size)
     {
@@ -2959,12 +4036,17 @@ m32c_emit_epilogue (void)
       else
 	emit_insn (gen_poppsi (gen_rtx_REG (PSImode, FP_REGNO)));
       emit_insn (gen_popm (GEN_INT (cfun->machine->intr_pushm)));
-      emit_jump_insn (gen_epilogue_reit (GEN_INT (TARGET_A16 ? 4 : 6)));
+      if (TARGET_A16)
+	emit_jump_insn (gen_epilogue_reit_16 ());
+      else
+	emit_jump_insn (gen_epilogue_reit_24 ());
     }
   else if (cfun->machine->use_rts)
     emit_jump_insn (gen_epilogue_rts ());
+  else if (TARGET_A16)
+    emit_jump_insn (gen_epilogue_exitd_16 ());
   else
-    emit_jump_insn (gen_epilogue_exitd (GEN_INT (TARGET_A16 ? 2 : 4)));
+    emit_jump_insn (gen_epilogue_exitd_24 ());
   emit_barrier ();
 }
 
@@ -2979,6 +4061,242 @@ m32c_emit_eh_epilogue (rtx ret_addr)
   /*  emit_insn (gen_rtx_CLOBBER (HImode, gen_rtx_REG (HImode, R0L_REGNO))); */
   emit_barrier ();
 }
+
+/* Indicate which flags must be properly set for a given conditional.  */
+static int
+flags_needed_for_conditional (rtx cond)
+{
+  switch (GET_CODE (cond))
+    {
+    case LE:
+    case GT:
+      return FLAGS_OSZ;
+    case LEU:
+    case GTU:
+      return FLAGS_ZC;
+    case LT:
+    case GE:
+      return FLAGS_OS;
+    case LTU:
+    case GEU:
+      return FLAGS_C;
+    case EQ:
+    case NE:
+      return FLAGS_Z;
+    default:
+      return FLAGS_N;
+    }
+}
+
+#define DEBUG_CMP 0
+
+/* Returns true if a compare insn is redundant because it would only
+   set flags that are already set correctly.  */
+static bool
+m32c_compare_redundant (rtx cmp, rtx *operands)
+{
+  int flags_needed;
+  int pflags;
+  rtx prev, pp, next;
+  rtx op0, op1, op2;
+#if DEBUG_CMP
+  int prev_icode, i;
+#endif
+
+  op0 = operands[0];
+  op1 = operands[1];
+  op2 = operands[2];
+
+#if DEBUG_CMP
+  fprintf(stderr, "\n\033[32mm32c_compare_redundant\033[0m\n");
+  debug_rtx(cmp);
+  for (i=0; i<2; i++)
+    {
+      fprintf(stderr, "operands[%d] = ", i);
+      debug_rtx(operands[i]);
+    }
+#endif
+
+  next = next_nonnote_insn (cmp);
+  if (!next || !INSN_P (next))
+    {
+#if DEBUG_CMP
+      fprintf(stderr, "compare not followed by insn\n");
+      debug_rtx(next);
+#endif
+      return false;
+    }
+  if (GET_CODE (PATTERN (next)) == SET
+      && GET_CODE (XEXP ( PATTERN (next), 1)) == IF_THEN_ELSE)
+    {
+      next = XEXP (XEXP (PATTERN (next), 1), 0);
+    }
+  else if (GET_CODE (PATTERN (next)) == SET)
+    {
+      /* If this is a conditional, flags_needed will be something
+	 other than FLAGS_N, which we test below.  */
+      next = XEXP (PATTERN (next), 1);
+    }
+  else
+    {
+#if DEBUG_CMP
+      fprintf(stderr, "compare not followed by conditional\n");
+      debug_rtx(next);
+#endif
+      return false;
+    }
+#if DEBUG_CMP
+  fprintf(stderr, "conditional is: ");
+  debug_rtx(next);
+#endif
+
+  flags_needed = flags_needed_for_conditional (next);
+  if (flags_needed == FLAGS_N)
+    {
+#if DEBUG_CMP
+      fprintf(stderr, "compare not followed by conditional\n");
+      debug_rtx(next);
+#endif
+      return false;
+    }
+
+  /* Compare doesn't set overflow and carry the same way that
+     arithmetic instructions do, so we can't replace those.  */
+  if (flags_needed & FLAGS_OC)
+    return false;
+
+  prev = cmp;
+  do {
+    prev = prev_nonnote_insn (prev);
+    if (!prev)
+      {
+#if DEBUG_CMP
+	fprintf(stderr, "No previous insn.\n");
+#endif
+	return false;
+      }
+    if (!INSN_P (prev))
+      {
+#if DEBUG_CMP
+	fprintf(stderr, "Previous insn is a non-insn.\n");
+#endif
+	return false;
+      }
+    pp = PATTERN (prev);
+    if (GET_CODE (pp) != SET)
+      {
+#if DEBUG_CMP
+	fprintf(stderr, "Previous insn is not a SET.\n");
+#endif
+	return false;
+      }
+    pflags = get_attr_flags (prev);
+
+    /* Looking up attributes of previous insns corrupted the recog
+       tables.  */
+    INSN_UID (cmp) = -1;
+    recog (PATTERN (cmp), cmp, 0);
+
+    if (pflags == FLAGS_N
+	&& reg_mentioned_p (op0, pp))
+      {
+#if DEBUG_CMP
+	fprintf(stderr, "intermediate non-flags insn uses op:\n");
+	debug_rtx(prev);
+#endif
+	return false;
+      }
+  } while (pflags == FLAGS_N);
+#if DEBUG_CMP
+  fprintf(stderr, "previous flag-setting insn:\n");
+  debug_rtx(prev);
+  debug_rtx(pp);
+#endif
+
+  if (GET_CODE (pp) == SET
+      && GET_CODE (XEXP (pp, 0)) == REG
+      && REGNO (XEXP (pp, 0)) == FLG_REGNO
+      && GET_CODE (XEXP (pp, 1)) == COMPARE)
+    {
+      /* Adjacent cbranches must have the same operands to be
+	 redundant.  */
+      rtx pop0 = XEXP (XEXP (pp, 1), 0);
+      rtx pop1 = XEXP (XEXP (pp, 1), 1);
+#if DEBUG_CMP
+      fprintf(stderr, "adjacent cbranches\n");
+      debug_rtx(pop0);
+      debug_rtx(pop1);
+#endif
+      if (rtx_equal_p (op0, pop0)
+	  && rtx_equal_p (op1, pop1))
+	return true;
+#if DEBUG_CMP
+      fprintf(stderr, "prev cmp not same\n");
+#endif
+      return false;
+    }
+
+  /* Else the previous insn must be a SET, with either the source or
+     dest equal to operands[0], and operands[1] must be zero.  */
+
+  if (!rtx_equal_p (op1, const0_rtx))
+    {
+#if DEBUG_CMP
+      fprintf(stderr, "operands[1] not const0_rtx\n");
+#endif
+      return false;
+    }
+  if (GET_CODE (pp) != SET)
+    {
+#if DEBUG_CMP
+      fprintf (stderr, "pp not set\n");
+#endif
+      return false;
+    }
+  if (!rtx_equal_p (op0, SET_SRC (pp))
+      && !rtx_equal_p (op0, SET_DEST (pp)))
+    {
+#if DEBUG_CMP
+      fprintf(stderr, "operands[0] not found in set\n");
+#endif
+      return false;
+    }
+
+#if DEBUG_CMP
+  fprintf(stderr, "cmp flags %x prev flags %x\n", flags_needed, pflags);
+#endif
+  if ((pflags & flags_needed) == flags_needed)
+    return true;
+
+  return false;
+}
+
+/* Return the pattern for a compare.  This will be commented out if
+   the compare is redundant, else a normal pattern is returned.  Thus,
+   the assembler output says where the compare would have been.  */
+char *
+m32c_output_compare (rtx insn, rtx *operands)
+{
+  static char template[] = ";cmp.b\t%1,%0";
+  /*                             ^ 5  */
+
+  template[5] = " bwll"[GET_MODE_SIZE(GET_MODE(operands[0]))];
+  if (m32c_compare_redundant (insn, operands))
+    {
+#if DEBUG_CMP
+      fprintf(stderr, "cbranch: cmp not needed\n");
+#endif
+      return template;
+    }
+
+#if DEBUG_CMP
+  fprintf(stderr, "cbranch: cmp needed: `%s'\n", template);
+#endif
+  return template + 1;
+}
+
+#undef TARGET_ENCODE_SECTION_INFO
+#define TARGET_ENCODE_SECTION_INFO m32c_encode_section_info
 
 /* The Global `targetm' Variable. */
 

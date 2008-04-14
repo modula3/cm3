@@ -74,8 +74,22 @@ dnl # amount to a lot more with autoconf 2.5x.
 AC_DEFUN([GCC_TOPLEV_SUBDIRS],
 [AC_REQUIRE([_GCC_TOPLEV_NONCANONICAL_TARGET]) []dnl
 AC_REQUIRE([_GCC_TOPLEV_NONCANONICAL_BUILD]) []dnl
+
+# post-stage1 host modules use a different CC_FOR_BUILD so, in order to
+# have matching libraries, they should use host libraries: Makefile.tpl
+# arranges to pass --with-build-libsubdir=$(HOST_SUBDIR).
+# However, they still use the build modules, because the corresponding
+# host modules (e.g. bison) are only built for the host when bootstrap
+# finishes. So:
+# - build_subdir is where we find build modules, and never changes.
+# - build_libsubdir is where we find build libraries, and can be overridden.
+
 # Prefix 'build-' so this never conflicts with target_subdir.
 build_subdir="build-${build_noncanonical}"
+AC_ARG_WITH(build-libsubdir,
+[  --with-build-libsubdir=[DIR]  Directory where to find libraries for build system],
+build_libsubdir="$withval",
+build_libsubdir="$build_subdir")
 # --srcdir=. covers the toplevel, while "test -d" covers the subdirectories
 if ( test $srcdir = . && test -d gcc ) \
    || test -d $srcdir/../host-${host_noncanonical}; then
@@ -85,6 +99,7 @@ else
 fi
 # No prefix.
 target_subdir=${target_noncanonical}
+AC_SUBST([build_libsubdir]) []dnl
 AC_SUBST([build_subdir]) []dnl
 AC_SUBST([host_subdir]) []dnl
 AC_SUBST([target_subdir]) []dnl
@@ -104,10 +119,24 @@ test -n "$target_alias" && ncn_target_tool_prefix=$target_alias-
 
 ####
 # NCN_STRICT_CHECK_TOOLS(variable, progs-to-check-for,[value-if-not-found],[path])
-# Like plain AC_CHECK_TOOLS, but require prefix if build!=target.
+# Like plain AC_CHECK_TOOLS, but require prefix if build!=host.
 
 AC_DEFUN([NCN_STRICT_CHECK_TOOLS],
 [AC_REQUIRE([_NCN_TOOL_PREFIXES]) []dnl
+AC_ARG_VAR([$1], [$1 for the host])
+
+if test -n "[$]$1"; then
+  ac_cv_prog_$1=[$]$1
+elif test -n "$ac_cv_prog_$1"; then
+  $1=$ac_cv_prog_$1
+fi
+
+if test -n "$ac_cv_prog_$1"; then
+  for ncn_progname in $2; do
+    AC_CHECK_PROG([$1], [${ncn_progname}], [${ncn_progname}], , [$4])
+  done
+fi
+
 for ncn_progname in $2; do
   if test -n "$ncn_tool_prefix"; then
     AC_CHECK_PROG([$1], [${ncn_tool_prefix}${ncn_progname}], 
@@ -135,17 +164,46 @@ fi
 
 AC_DEFUN([NCN_STRICT_CHECK_TARGET_TOOLS],
 [AC_REQUIRE([_NCN_TOOL_PREFIXES]) []dnl
-for ncn_progname in $2; do
-  if test -n "$ncn_target_tool_prefix"; then
-    AC_CHECK_PROG([$1], [${ncn_target_tool_prefix}${ncn_progname}], 
-                  [${ncn_target_tool_prefix}${ncn_progname}], , [$4])
-  fi
-  if test -z "$ac_cv_prog_$1" && test $build = $target ; then
-    AC_CHECK_PROG([$1], [${ncn_progname}], [${ncn_progname}], , [$4]) 
-  fi
-  test -n "$ac_cv_prog_$1" && break
-done
+AC_ARG_VAR([$1], patsubst([$1], [_FOR_TARGET$], [])[ for the target])
 
+if test -n "[$]$1"; then
+  ac_cv_prog_$1=[$]$1
+elif test -n "$ac_cv_prog_$1"; then
+  $1=$ac_cv_prog_$1
+fi
+
+if test -n "$ac_cv_prog_$1"; then
+  for ncn_progname in $2; do
+    AC_CHECK_PROG([$1], [${ncn_progname}], [${ncn_progname}], , [$4])
+  done
+fi
+
+if test -z "$ac_cv_prog_$1" && test -n "$with_build_time_tools"; then
+  for ncn_progname in $2; do
+    AC_MSG_CHECKING([for ${ncn_progname} in $with_build_time_tools])
+    if test -x $with_build_time_tools/${ncn_progname}; then
+      ac_cv_prog_$1=$with_build_time_tools/${ncn_progname}
+      AC_MSG_RESULT(yes)
+      break
+    else
+      AC_MSG_RESULT(no)
+    fi
+  done
+fi
+
+if test -z "$ac_cv_prog_$1"; then
+  for ncn_progname in $2; do
+    if test -n "$ncn_target_tool_prefix"; then
+      AC_CHECK_PROG([$1], [${ncn_target_tool_prefix}${ncn_progname}], 
+                    [${ncn_target_tool_prefix}${ncn_progname}], , [$4])
+    fi
+    if test -z "$ac_cv_prog_$1" && test $build = $target ; then
+      AC_CHECK_PROG([$1], [${ncn_progname}], [${ncn_progname}], , [$4]) 
+    fi
+    test -n "$ac_cv_prog_$1" && break
+  done
+fi
+  
 if test -z "$ac_cv_prog_$1" ; then
   ifelse([$3],[], [set dummy $2
   if test $build = $target ; then
@@ -153,8 +211,134 @@ if test -z "$ac_cv_prog_$1" ; then
   else
     $1="${ncn_target_tool_prefix}[$]2"
   fi], [$1="$3"])
+else
+  $1="$ac_cv_prog_$1"
 fi
 ]) []dnl # NCN_STRICT_CHECK_TARGET_TOOLS
+  
+
+# Backported from Autoconf 2.5x; can go away when and if
+# we switch.  Put the OS path separator in $PATH_SEPARATOR.
+AC_DEFUN([ACX_PATH_SEP], [
+# The user is always right.
+if test "${PATH_SEPARATOR+set}" != set; then
+  echo "#! /bin/sh" >conf$$.sh
+  echo  "exit 0"   >>conf$$.sh
+  chmod +x conf$$.sh
+  if (PATH="/nonexistent;."; conf$$.sh) >/dev/null 2>&1; then
+    PATH_SEPARATOR=';'
+  else
+    PATH_SEPARATOR=: 
+  fi
+  rm -f conf$$.sh
+fi
+])
+
+
+AC_DEFUN([ACX_TOOL_DIRS], [
+AC_REQUIRE([ACX_PATH_SEP])
+if test "x$exec_prefix" = xNONE; then
+        if test "x$prefix" = xNONE; then
+                gcc_cv_tool_prefix=$ac_default_prefix
+        else
+                gcc_cv_tool_prefix=$prefix
+        fi
+else
+        gcc_cv_tool_prefix=$exec_prefix
+fi
+
+# If there is no compiler in the tree, use the PATH only.  In any
+# case, if there is no compiler in the tree nobody should use
+# AS_FOR_TARGET and LD_FOR_TARGET.
+if test x$host = x$build && test -f $srcdir/gcc/BASE-VER; then
+    gcc_version=`cat $srcdir/gcc/BASE-VER`
+    gcc_cv_tool_dirs="$gcc_cv_tool_prefix/libexec/gcc/$target_noncanonical/$gcc_version$PATH_SEPARATOR"
+    gcc_cv_tool_dirs="$gcc_cv_tool_dirs$gcc_cv_tool_prefix/libexec/gcc/$target_noncanonical$PATH_SEPARATOR"
+    gcc_cv_tool_dirs="$gcc_cv_tool_dirs/usr/lib/gcc/$target_noncanonical/$gcc_version$PATH_SEPARATOR"
+    gcc_cv_tool_dirs="$gcc_cv_tool_dirs/usr/lib/gcc/$target_noncanonical$PATH_SEPARATOR"
+    gcc_cv_tool_dirs="$gcc_cv_tool_dirs$gcc_cv_tool_prefix/$target_noncanonical/bin/$target_noncanonical/$gcc_version$PATH_SEPARATOR"
+    gcc_cv_tool_dirs="$gcc_cv_tool_dirs$gcc_cv_tool_prefix/$target_noncanonical/bin$PATH_SEPARATOR"
+else
+    gcc_cv_tool_dirs=
+fi
+
+if test x$build = x$target && test -n "$md_exec_prefix"; then
+        gcc_cv_tool_dirs="$gcc_cv_tool_dirs$md_exec_prefix$PATH_SEPARATOR"
+fi
+
+]) []dnl # ACX_TOOL_DIRS
+
+# ACX_HAVE_GCC_FOR_TARGET
+# Check if the variable GCC_FOR_TARGET really points to a GCC binary.
+AC_DEFUN([ACX_HAVE_GCC_FOR_TARGET], [
+cat > conftest.c << \EOF
+#ifdef __GNUC__
+  gcc_yay;
+#endif
+EOF
+if ($GCC_FOR_TARGET -E conftest.c | grep gcc_yay) > /dev/null 2>&1; then
+  have_gcc_for_target=yes
+else
+  GCC_FOR_TARGET=${ncn_target_tool_prefix}gcc
+  have_gcc_for_target=no
+fi
+rm conftest.c
+])
+
+# ACX_CHECK_INSTALLED_TARGET_TOOL(VAR, PROG)
+# Searching for installed target binutils.  We need to take extra care,
+# else we may find the wrong assembler, linker, etc., and lose.
+#
+# First try --with-build-time-tools, if specified.
+#
+# For build != host, we ask the installed GCC for the name of the tool it
+# uses, and accept it if it is an absolute path.  This is because the
+# only good choice for a compiler is the same GCC version that is being
+# installed (or we couldn't make target libraries), and we assume that
+# on the host system we'll have not only the same GCC version, but also
+# the same binutils version.
+#
+# For build == host, search the same directories that the installed
+# compiler will search.  We used to do this for the assembler, linker,
+# and nm only; for simplicity of configuration, however, we extend this
+# criterion to tools (such as ar and ranlib) that are never invoked by
+# the compiler, to avoid mismatches.
+#
+# Also note we have to check MD_EXEC_PREFIX before checking the user's path
+# if build == target.  This makes the most sense only when bootstrapping,
+# but we also do so when build != host.  In this case, we hope that the
+# build and host systems will have similar contents of MD_EXEC_PREFIX.
+#
+# If we do not find a suitable binary, then try the user's path.
+
+AC_DEFUN([ACX_CHECK_INSTALLED_TARGET_TOOL], [
+AC_REQUIRE([ACX_TOOL_DIRS])
+AC_REQUIRE([ACX_HAVE_GCC_FOR_TARGET])
+if test -z "$ac_cv_path_$1" ; then
+  if test -n "$with_build_time_tools"; then
+    AC_MSG_CHECKING([for $2 in $with_build_time_tools])
+    if test -x $with_build_time_tools/$2; then
+      $1=`cd $with_build_time_tools && pwd`/$2
+      ac_cv_path_$1=[$]$1
+      AC_MSG_RESULT([$ac_cv_path_$1])
+    else
+      AC_MSG_RESULT(no)
+    fi
+  elif test $build != $host && test $have_gcc_for_target = yes; then
+    $1=`$GCC_FOR_TARGET --print-prog-name=$2`
+    test [$]$1 = $2 && $1=
+    test -n "[$]$1" && ac_cv_path_$1=[$]$1
+  fi
+fi
+if test -z "$ac_cv_path_$1" && test -n "$gcc_cv_tool_dirs"; then
+  AC_PATH_PROG([$1], [$2], [], [$gcc_cv_tool_dirs])
+fi
+if test -z "$ac_cv_path_$1" ; then
+  NCN_STRICT_CHECK_TARGET_TOOLS([$1], [$2])
+else
+  $1=$ac_cv_path_$1
+fi
+]) []dnl # ACX_CHECK_INSTALLED_TARGET_TOOL
 
 ###
 # AC_PROG_CPP_WERROR
@@ -176,11 +360,12 @@ ac_c_preproc_warn_flag=yes])# AC_PROG_CPP_WERROR
 # understands Ada.  We use the user's CC setting, already found.
 #
 # Sets the shell variable have_gnat to yes or no as appropriate, and
-# substitutes GNATBIND.
+# substitutes GNATBIND and GNATMAKE.
 AC_DEFUN([ACX_PROG_GNAT],
 [AC_REQUIRE([AC_CHECK_TOOL_PREFIX])
 AC_REQUIRE([AC_PROG_CC])
 AC_CHECK_TOOL(GNATBIND, gnatbind, no)
+AC_CHECK_TOOL(GNATMAKE, gnatmake, no)
 AC_CACHE_CHECK([whether compiler driver understands Ada],
 		 acx_cv_cc_gcc_supports_ada,
 [cat >conftest.adb <<EOF
@@ -201,7 +386,7 @@ if test x"$errors" = x && test -f conftest.$ac_objext; then
 fi
 rm -f conftest.*])
 
-if test x$GNATBIND != xno && test x$acx_cv_cc_gcc_supports_ada != xno; then
+if test x$GNATBIND != xno && test x$GNATMAKE != xno && test x$acx_cv_cc_gcc_supports_ada != xno; then
   have_gnat=yes
 else
   have_gnat=no
@@ -300,8 +485,14 @@ dnl GCC_TARGET_TOOL(PROGRAM, TARGET-VAR, HOST-VAR, IN-TREE-TOOL, LANGUAGE)
 AC_DEFUN([GCC_TARGET_TOOL],
 [AC_MSG_CHECKING(where to find the target $1)
 if test "x${build}" != "x${host}" ; then
-  # Canadian cross, just use what we found
-  AC_MSG_RESULT(pre-installed)
+  if expr "x[$]$2" : "x/" > /dev/null; then
+    # We already found the complete path
+    ac_dir=`dirname [$]$2`
+    AC_MSG_RESULT(pre-installed in $ac_dir)
+  else
+    # Canadian cross, just use what we found
+    AC_MSG_RESULT(pre-installed)
+  fi
 else
   ifelse([$4],,,
   [ok=yes
@@ -318,7 +509,11 @@ else
     # An in-tree tool is available and we can use it
     $2='$$r/$(HOST_SUBDIR)/$4'
     AC_MSG_RESULT(just compiled)
-  el])if test "x$target" = "x$host"; then
+  el])if expr "x[$]$2" : "x/" > /dev/null; then
+    # We already found the complete path
+    ac_dir=`dirname [$]$2`
+    AC_MSG_RESULT(pre-installed in $ac_dir)
+  elif test "x$target" = "x$host"; then
     # We can use an host tool
     $2='$($3)'
     AC_MSG_RESULT(host tool)
@@ -326,4 +521,77 @@ else
     # We need a cross tool
     AC_MSG_RESULT(pre-installed)
   fi
-fi])
+fi
+AC_SUBST($2)])
+
+
+dnl Locate a program and check that its version is acceptable.
+dnl ACX_PROG_CHECK_VER(var, name, version-switch,
+dnl                    version-extract-regexp, version-glob)
+AC_DEFUN([ACX_CHECK_PROG_VER],[
+  AC_CHECK_PROG([$1], [$2], [$2])
+  if test -n "[$]$1"; then
+    # Found it, now check the version.
+    AC_CACHE_CHECK([for modern $2],
+                   [gcc_cv_prog_$2_modern],
+                   [ac_prog_version=`eval [$]$1 $3 2>&1 |
+                                     sed -n 's/^.*patsubst([[$4]],/,\/).*$/\1/p'`
+
+                    [case $ac_prog_version in
+                      '')  gcc_cv_prog_$2_modern=no;;
+                      $5)  gcc_cv_prog_$2_modern=yes;;
+                      *)   gcc_cv_prog_$2_modern=no;;
+                    esac]
+                   ])
+  else
+    gcc_cv_prog_$2_modern=no
+  fi
+  if test $gcc_cv_prog_$2_modern = no; then
+    $1="${CONFIG_SHELL-/bin/sh} $ac_aux_dir/missing $2"
+  fi
+])
+
+dnl Support the --with-pkgversion configure option.
+dnl ACX_PKGVERSION(default-pkgversion)
+AC_DEFUN([ACX_PKGVERSION],[
+  AC_ARG_WITH(pkgversion,
+    AS_HELP_STRING([--with-pkgversion=PKG],
+                   [Use PKG in the version string in place of "$1"]),
+    [case "$withval" in
+      yes) AC_MSG_ERROR([package version not specified]) ;;
+      no)  PKGVERSION= ;;
+      *)   PKGVERSION="($withval) " ;;
+     esac],
+    PKGVERSION="($1) "
+  )
+  AC_SUBST(PKGVERSION)
+])
+
+dnl Support the --with-bugurl configure option.
+dnl ACX_BUGURL(default-bugurl)
+AC_DEFUN([ACX_BUGURL],[
+  AC_ARG_WITH(bugurl,
+    AS_HELP_STRING([--with-bugurl=URL],
+                   [Direct users to URL to report a bug]),
+    [case "$withval" in
+      yes) AC_MSG_ERROR([bug URL not specified]) ;;
+      no)  BUGURL=
+	   ;;
+      *)   BUGURL="$withval"
+	   ;;
+     esac],
+     BUGURL="$1"
+  )
+  case ${BUGURL} in
+  "")
+    REPORT_BUGS_TO=
+    REPORT_BUGS_TEXI=
+    ;;
+  *)
+    REPORT_BUGS_TO="<$BUGURL>"
+    REPORT_BUGS_TEXI=@uref{`echo "$BUGURL" | sed 's/@/@@/g'`}
+    ;;
+  esac;
+  AC_SUBST(REPORT_BUGS_TO)
+  AC_SUBST(REPORT_BUGS_TEXI)
+])

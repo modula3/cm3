@@ -1,5 +1,5 @@
 ;; Machine Descriptions for R8C/M16C/M32C
-;; Copyright (C) 2005
+;; Copyright (C) 2005, 2007
 ;; Free Software Foundation, Inc.
 ;; Contributed by Red Hat.
 ;;
@@ -7,7 +7,7 @@
 ;;
 ;; GCC is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published
-;; by the Free Software Foundation; either version 2, or (at your
+;; by the Free Software Foundation; either version 3, or (at your
 ;; option) any later version.
 ;;
 ;; GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -16,9 +16,8 @@
 ;; License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to the Free
-;; Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-;; 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 ;; Prologue and epilogue patterns
 
@@ -33,7 +32,7 @@
 
 ; We assume dwarf2out will process each set in sequence.
 (define_insn "prologue_enter_16"
-  [(set (mem:HI (pre_dec:HI (reg:HI SP_REGNO)))
+  [(set (mem:HI (plus:HI (reg:HI SP_REGNO) (const_int -2)))
 	(reg:HI FB_REGNO))
    (set (reg:HI FB_REGNO)
 	(reg:HI SP_REGNO))
@@ -42,11 +41,17 @@
 	           (match_operand 0 "const_int_operand" "i")))
    ]
   "TARGET_A16"
-  "enter\t%0"
+  {
+    /* This is due to binutils bug gas/4659.  */
+    if (INTVAL (operands[0]) == 2)
+      return "enter\t#0";
+    return "enter\t%0-2";
+  }
+  [(set_attr "flags" "x")]
   )
 
 (define_insn "prologue_enter_24"
-  [(set (mem:SI (pre_dec:PSI (reg:PSI SP_REGNO)))
+  [(set (mem:SI (plus:PSI (reg:PSI SP_REGNO) (const_int -4)))
 	(reg:SI FB_REGNO))
    (set (reg:PSI FB_REGNO)
 	(reg:PSI SP_REGNO))
@@ -55,7 +60,13 @@
 	           (match_operand 0 "const_int_operand" "i")))
    ]
   "TARGET_A24"
-  "enter\t%0"
+  {
+    /* This is due to binutils bug gas/4659.  */
+    if (INTVAL (operands[0]) == 4)
+      return "enter\t#0";
+    return "enter\t%0-4";
+  }
+  [(set_attr "flags" "x")]
   )
 
 ; Just a comment, for debugging the assembler output.
@@ -63,6 +74,7 @@
   [(unspec_volatile [(const_int 0)] UNS_PROLOGUE_END)]
   ""
   "; end of prologue"
+  [(set_attr "flags" "n")]
   )
 
 
@@ -86,30 +98,55 @@
 			  ] UNS_EH_EPILOGUE))]
   ""
   "jmp.a\t__m32c_eh_return"
+  [(set_attr "flags" "x")]
   )
 
-(define_insn "epilogue_exitd"
-  [(set (reg:PSI SP_REGNO)
-	(reg:PSI FB_REGNO))
-   (set (reg:PSI FB_REGNO)
-	(mem:PSI (reg:PSI SP_REGNO)))
-   (set (reg:PSI SP_REGNO)
-	(plus:PSI (reg:PSI SP_REGNO)
-	      (match_operand 0 "const_int_operand" "i")))
+(define_insn "epilogue_exitd_16"
+  [(set (reg:HI SP_REGNO)
+	(plus:HI (reg:HI FB_REGNO)
+	      (const_int 2)))
+   (set (reg:HI FB_REGNO)
+	(mem:HI (reg:HI FB_REGNO)))
    (return)
    ]
-  ""
+  "TARGET_A16"
   "exitd"
+  [(set_attr "flags" "x")]
   )
 
-(define_insn "epilogue_reit"
-  [(set (reg:PSI SP_REGNO)
-	(plus:PSI (reg:PSI SP_REGNO)
-	      (match_operand 0 "const_int_operand" "i")))
+(define_insn "epilogue_reit_16"
+  [(set (reg:HI SP_REGNO)
+	(plus:HI (reg:HI SP_REGNO)
+	      (const_int 4)))
    (return)
    ]
-  ""
+  "TARGET_A16"
   "reit"
+  [(set_attr "flags" "x")]
+  )
+
+(define_insn "epilogue_exitd_24"
+  [(set (reg:PSI SP_REGNO)
+	(plus:PSI (reg:PSI FB_REGNO)
+	      (const_int 4)))
+   (set (reg:PSI FB_REGNO)
+	(mem:PSI (reg:PSI FB_REGNO)))
+   (return)
+   ]
+  "TARGET_A24"
+  "exitd"
+  [(set_attr "flags" "x")]
+  )
+
+(define_insn "epilogue_reit_24"
+  [(set (reg:PSI SP_REGNO)
+	(plus:PSI (reg:PSI SP_REGNO)
+	      (const_int 6)))
+   (return)
+   ]
+  "TARGET_A24"
+  "reit"
+  [(set_attr "flags" "x")]
   )
 
 (define_insn "epilogue_rts"
@@ -117,12 +154,14 @@
    ]
   ""
   "rts"
+  [(set_attr "flags" "x")]
   )
 
 (define_insn "epilogue_start"
   [(unspec_volatile [(const_int 0)] UNS_EPILOGUE_START)]
   ""
   "; start of epilogue"
+  [(set_attr "flags" "n")]
   )
 
 
@@ -131,9 +170,13 @@
 (define_insn "pushm"
   [(unspec [(match_operand 0 "const_int_operand" "i")] UNS_PUSHM)]
   ""
-  "pushm\t%p0")
+  "pushm\t%p0"
+  [(set_attr "flags" "n")]
+  )
 
 (define_insn "popm"
   [(unspec [(match_operand 0 "const_int_operand" "i")] UNS_POPM)]
   ""
-  "popm\t%p0")
+  "popm\t%p0"
+  [(set_attr "flags" "n")]
+  )

@@ -23,24 +23,6 @@ SHLIB_MAPFILES += $(srcdir)/config/ia64/libgcc-ia64.ver
 # Effectively disable the crtbegin/end rules using crtstuff.c
 T = disable
 
-# Assemble startup files.
-crtbegin.o: $(srcdir)/config/ia64/crtbegin.asm $(GCC_PASSES)
-	$(GCC_FOR_TARGET) -I. -c -o crtbegin.o -x assembler-with-cpp \
-		$(srcdir)/config/ia64/crtbegin.asm
-crtend.o: $(srcdir)/config/ia64/crtend.asm $(GCC_PASSES)
-	$(GCC_FOR_TARGET) -I. -c -o crtend.o -x assembler-with-cpp \
-		$(srcdir)/config/ia64/crtend.asm
-crtbeginS.o: $(srcdir)/config/ia64/crtbegin.asm $(GCC_PASSES)
-	$(GCC_FOR_TARGET) -I. -DSHARED -c -o crtbeginS.o \
-		-x assembler-with-cpp \
-		$(srcdir)/config/ia64/crtbegin.asm
-crtendS.o: $(srcdir)/config/ia64/crtend.asm $(GCC_PASSES)
-	$(GCC_FOR_TARGET) -I. -DSHARED -c -o crtendS.o -x assembler-with-cpp \
-		$(srcdir)/config/ia64/crtend.asm
-crtfastmath.o: $(srcdir)/config/ia64/crtfastmath.c $(GCC_PASSES)
-	$(GCC_FOR_TARGET) $(LIBGCC2_CFLAGS) -c -o crtfastmath.o \
-		$(srcdir)/config/ia64/crtfastmath.c
-
 LIB2ADDEH = $(srcdir)/config/ia64/unwind-ia64.c $(srcdir)/unwind-sjlj.c \
   $(srcdir)/unwind-c.c
 
@@ -51,4 +33,4 @@ ia64-c.o: $(srcdir)/config/ia64/ia64-c.c $(CONFIG_H) $(SYSTEM_H) \
 # genattrtab generates very long string literals.
 insn-attrtab.o-warn = -Wno-error
 
-ia64.o: debug.h
+ia64.o: debug.h $(PARAMS_H)

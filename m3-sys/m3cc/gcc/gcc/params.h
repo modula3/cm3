@@ -1,12 +1,12 @@
 /* params.h - Run-time parameters.
-   Copyright (C) 2001, 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
    Written by Mark Mitchell <mark@codesourcery.com>.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,11 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.
-
-*/
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* This module provides a means for setting integral parameters
    dynamically.  Instead of encoding magic numbers in various places,
@@ -48,6 +45,9 @@ typedef struct param_info
   const char *const option;
   /* The associated value.  */
   int value;
+
+  /* True if the parameter was explicitly set.  */
+  bool set;
 
   /* Minimum acceptable value.  */
   int min_value;
@@ -88,15 +88,23 @@ typedef enum compiler_param
 #define PARAM_VALUE(ENUM) \
   (compiler_params[(int) ENUM].value)
 
+/* True if the value of the parameter was explicitly changed.  */
+#define PARAM_SET_P(ENUM) \
+  (compiler_params[(int) ENUM].set)
+
 /* Macros for the various parameters.  */
 #define SALIAS_MAX_IMPLICIT_FIELDS \
   PARAM_VALUE (PARAM_SALIAS_MAX_IMPLICIT_FIELDS)
+#define SALIAS_MAX_ARRAY_ELEMENTS \
+  PARAM_VALUE (PARAM_SALIAS_MAX_ARRAY_ELEMENTS)
 #define SRA_MAX_STRUCTURE_SIZE \
   PARAM_VALUE (PARAM_SRA_MAX_STRUCTURE_SIZE)
 #define SRA_MAX_STRUCTURE_COUNT \
   PARAM_VALUE (PARAM_SRA_MAX_STRUCTURE_COUNT)
 #define SRA_FIELD_STRUCTURE_RATIO \
   PARAM_VALUE (PARAM_SRA_FIELD_STRUCTURE_RATIO)
+#define STRUCT_REORG_COLD_STRUCT_RATIO \
+  PARAM_VALUE (PARAM_STRUCT_REORG_COLD_STRUCT_RATIO)
 #define MAX_INLINE_INSNS_SINGLE \
   PARAM_VALUE (PARAM_MAX_INLINE_INSNS_SINGLE)
 #define MAX_INLINE_INSNS \
@@ -109,6 +117,8 @@ typedef enum compiler_param
   PARAM_VALUE (PARAM_MAX_INLINE_INSNS_AUTO)
 #define MAX_VARIABLE_EXPANSIONS \
   PARAM_VALUE (PARAM_MAX_VARIABLE_EXPANSIONS)
+#define MIN_VECT_LOOP_BOUND \
+  PARAM_VALUE (PARAM_MIN_VECT_LOOP_BOUND)
 #define MAX_DELAY_SLOT_INSN_SEARCH \
   PARAM_VALUE (PARAM_MAX_DELAY_SLOT_INSN_SEARCH)
 #define MAX_DELAY_SLOT_LIVE_SEARCH \
@@ -133,10 +143,10 @@ typedef enum compiler_param
   PARAM_VALUE (PARAM_SMS_DFA_HISTORY)
 #define SMS_LOOP_AVERAGE_COUNT_THRESHOLD \
   PARAM_VALUE (PARAM_SMS_LOOP_AVERAGE_COUNT_THRESHOLD)
-#define GLOBAL_VAR_THRESHOLD \
-  PARAM_VALUE (PARAM_GLOBAL_VAR_THRESHOLD)
 #define MAX_ALIASED_VOPS \
   PARAM_VALUE (PARAM_MAX_ALIASED_VOPS)
+#define AVG_ALIASED_VOPS \
+  PARAM_VALUE (PARAM_AVG_ALIASED_VOPS)
 #define INTEGER_SHARE_LIMIT \
   PARAM_VALUE (PARAM_INTEGER_SHARE_LIMIT)
 #define MAX_LAST_VALUE_RTL \
@@ -147,4 +157,18 @@ typedef enum compiler_param
   PARAM_VALUE (PARAM_VIRTUAL_MAPPINGS_TO_SYMS_RATIO)
 #define MAX_FIELDS_FOR_FIELD_SENSITIVE \
   ((size_t) PARAM_VALUE (PARAM_MAX_FIELDS_FOR_FIELD_SENSITIVE))
+#define MAX_SCHED_READY_INSNS \
+  PARAM_VALUE (PARAM_MAX_SCHED_READY_INSNS)
+#define PREFETCH_LATENCY \
+  PARAM_VALUE (PARAM_PREFETCH_LATENCY)
+#define SIMULTANEOUS_PREFETCHES \
+  PARAM_VALUE (PARAM_SIMULTANEOUS_PREFETCHES)
+#define L1_CACHE_SIZE \
+  PARAM_VALUE (PARAM_L1_CACHE_SIZE)
+#define L1_CACHE_LINE_SIZE \
+  PARAM_VALUE (PARAM_L1_CACHE_LINE_SIZE)
+#define L2_CACHE_SIZE \
+  PARAM_VALUE (PARAM_L2_CACHE_SIZE)
+#define USE_CANONICAL_TYPES \
+  PARAM_VALUE (PARAM_USE_CANONICAL_TYPES)
 #endif /* ! GCC_PARAMS_H */

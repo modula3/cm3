@@ -1,5 +1,5 @@
 /* Definitions of target machine GNU compiler.  IA-64 version.
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005
+   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007
    Free Software Foundation, Inc.
    Contributed by Steve Ellcey <sje@cup.hp.com> and
                   Reva Cuthbertson <reva@cup.hp.com>
@@ -8,7 +8,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -17,9 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* This macro is a C statement to print on `stderr' a string describing the
    particular machine description choice.  */
@@ -53,6 +52,7 @@ do {							\
 	    builtin_define("_HPUX_SOURCE");		\
 	    builtin_define("__STDC_EXT__");		\
 	    builtin_define("__STDCPP__");		\
+	    builtin_define("_INCLUDE__STDC_A1_SOURCE");	\
 	  }						\
 	if (TARGET_ILP32)				\
 	  builtin_define("_ILP32");			\
@@ -71,7 +71,9 @@ do {							\
 #undef ENDFILE_SPEC
 
 #undef STARTFILE_SPEC
-#define STARTFILE_SPEC "%{!shared:%{static:crt0%O%s}}"
+#define STARTFILE_SPEC "%{!shared:%{static:crt0%O%s} \
+			  %{mlp64:/usr/lib/hpux64/unix98%O%s} \
+			  %{!mlp64:/usr/lib/hpux32/unix98%O%s}}"
 
 #undef LINK_SPEC
 #define LINK_SPEC \
@@ -141,10 +143,6 @@ do {								\
    definitions, so do not use them in gthr-posix.h.  */
 #define GTHREAD_USE_WEAK 0
 
-/* Put out the needed function declarations at the end.  */
-
-#define TARGET_ASM_FILE_END ia64_hpux_file_end
-
 #undef CTORS_SECTION_ASM_OP
 #define CTORS_SECTION_ASM_OP  "\t.section\t.init_array,\t\"aw\",\"init_array\""
 
@@ -175,13 +173,8 @@ do {								\
 
 /* It is illegal to have relocations in shared segments on HPUX.
    Pretend flag_pic is always set.  */
-#undef  TARGET_ASM_SELECT_SECTION
-#define TARGET_ASM_SELECT_SECTION  ia64_rwreloc_select_section
-#undef  TARGET_ASM_UNIQUE_SECTION
-#define TARGET_ASM_UNIQUE_SECTION  ia64_rwreloc_unique_section
-#undef  TARGET_ASM_SELECT_RTX_SECTION
-#define TARGET_ASM_SELECT_RTX_SECTION  ia64_rwreloc_select_rtx_section
-#define TARGET_RWRELOC  true
+#undef  TARGET_ASM_RELOC_RW_MASK
+#define TARGET_ASM_RELOC_RW_MASK  ia64_hpux_reloc_rw_mask
 
 /* ia64 HPUX has the float and long double forms of math functions.  */
 #undef TARGET_C99_FUNCTIONS
@@ -195,10 +188,12 @@ do {								\
 /* Put all *xf routines in libgcc, regardless of long double size.  */
 #undef LIBGCC2_HAS_XF_MODE
 #define LIBGCC2_HAS_XF_MODE 1
+#define XF_SIZE 64
 
 /* Put all *tf routines in libgcc, regardless of long double size.  */
 #undef LIBGCC2_HAS_TF_MODE
 #define LIBGCC2_HAS_TF_MODE 1
+#define TF_SIZE 113
 
 /* HP-UX headers are C++-compatible.  */
 #define NO_IMPLICIT_EXTERN_C
@@ -217,3 +212,6 @@ do {								\
 
 #undef NO_PROFILE_COUNTERS
 #define NO_PROFILE_COUNTERS 0
+
+#undef HANDLE_PRAGMA_PACK_PUSH_POP
+#define HANDLE_PRAGMA_PACK_PUSH_POP

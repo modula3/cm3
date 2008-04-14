@@ -29,7 +29,8 @@
 
 /* This is derived from the C++ ABI for IA-64.  Where we diverge
    for cross-architecture compatibility are noted with "@@@".  
-   This file is included from unwind-dw2.c or unwind-ia64.c.  */
+   This file is included from unwind-dw2.c, unwind-sjlj.c or
+   unwind-ia64.c.  */
 
 /* Subroutine of _Unwind_RaiseException also invoked from _Unwind_Resume. 
 
@@ -82,7 +83,7 @@ _Unwind_RaiseException_Phase2(struct _Unwind_Exception *exc,
 
 /* Raise an exception, passing along the given exception object.  */
 
-_Unwind_Reason_Code
+_Unwind_Reason_Code LIBGCC2_UNWIND_ATTRIBUTE
 _Unwind_RaiseException(struct _Unwind_Exception *exc)
 {
   struct _Unwind_Context this_context, cur_context;
@@ -195,7 +196,7 @@ _Unwind_ForcedUnwind_Phase2 (struct _Unwind_Exception *exc,
 
 /* Raise an exception for forced unwinding.  */
 
-_Unwind_Reason_Code
+_Unwind_Reason_Code LIBGCC2_UNWIND_ATTRIBUTE
 _Unwind_ForcedUnwind (struct _Unwind_Exception *exc,
 		      _Unwind_Stop_Fn stop, void * stop_argument)
 {
@@ -219,7 +220,7 @@ _Unwind_ForcedUnwind (struct _Unwind_Exception *exc,
 /* Resume propagation of an existing exception.  This is used after
    e.g. executing cleanup code, and not to implement rethrowing.  */
 
-void
+void LIBGCC2_UNWIND_ATTRIBUTE
 _Unwind_Resume (struct _Unwind_Exception *exc)
 {
   struct _Unwind_Context this_context, cur_context;
@@ -244,7 +245,7 @@ _Unwind_Resume (struct _Unwind_Exception *exc)
 /* Resume propagation of an FORCE_UNWIND exception, or to rethrow
    a normal exception that was handled.  */
 
-_Unwind_Reason_Code
+_Unwind_Reason_Code LIBGCC2_UNWIND_ATTRIBUTE
 _Unwind_Resume_or_Rethrow (struct _Unwind_Exception *exc)
 {
   struct _Unwind_Context this_context, cur_context;
@@ -278,7 +279,7 @@ _Unwind_DeleteException (struct _Unwind_Exception *exc)
 
 /* Perform stack backtrace through unwind data.  */
 
-_Unwind_Reason_Code
+_Unwind_Reason_Code LIBGCC2_UNWIND_ATTRIBUTE
 _Unwind_Backtrace(_Unwind_Trace_Fn trace, void * trace_argument)
 {
   struct _Unwind_Context context;

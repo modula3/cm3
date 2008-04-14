@@ -1,14 +1,14 @@
-This is doc/cppinternals.info, produced by makeinfo version 4.8 from
-/scratch/mitchell/gcc-releases/gcc-4.1.1/gcc-4.1.1/gcc/doc/cppinternals.texi.
-
-INFO-DIR-SECTION Programming
+INFO-DIR-SECTION Software development
 START-INFO-DIR-ENTRY
+This is doc/cppinternals.info, produced by makeinfo version 4.11 from /usr/src/gcc-4.3.0/gcc-4.3.0/gcc-4.3.0/gcc/doc/cppinternals.texi.
+
 * Cpplib: (cppinternals).      Cpplib internals.
 END-INFO-DIR-ENTRY
 
    This file documents the internals of the GNU C Preprocessor.
 
-   Copyright 2000, 2001, 2002, 2004, 2005 Free Software Foundation, Inc.
+   Copyright 2000, 2001, 2002, 2004, 2005, 2006, 2007 Free Software
+Foundation, Inc.
 
    Permission is granted to make and distribute verbatim copies of this
 manual provided the copyright notice and this permission notice are
@@ -894,7 +894,7 @@ no `#else' or `#elif' for it to survive and be copied to `mi_cmacro' by
 conditional block for the optimization to be on.
 
    Note that whilst we are inside the conditional block, `mi_valid' is
-likely to be reset to `false', but this does not matter since the the
+likely to be reset to `false', but this does not matter since the
 closing `#endif' restores it to `true' if appropriate.
 
    Finally, since `_cpp_lex_direct' pops the file off the buffer stack
@@ -1019,17 +1019,17 @@ Concept Index
 
 
 Tag Table:
-Node: Top977
-Node: Conventions2662
-Node: Lexer3604
-Ref: Invalid identifiers11517
-Ref: Lexing a line13466
-Node: Hash Nodes18239
-Node: Macro Expansion21118
-Node: Token Spacing30065
-Node: Line Numbering35925
-Node: Guard Macros40010
-Node: Files44805
-Node: Concept Index48271
+Node: Top987
+Node: Conventions2672
+Node: Lexer3614
+Ref: Invalid identifiers11527
+Ref: Lexing a line13476
+Node: Hash Nodes18249
+Node: Macro Expansion21128
+Node: Token Spacing30075
+Node: Line Numbering35935
+Node: Guard Macros40020
+Node: Files44811
+Node: Concept Index48277
 
 End Tag Table

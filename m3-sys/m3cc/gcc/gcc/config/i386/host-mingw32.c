@@ -1,11 +1,11 @@
 /* mingw32 host-specific hook definitions.
-   Copyright (C) 2004 Free Software Foundation, Inc.
+   Copyright (C) 2004, 2007 Free Software Foundation, Inc.
 
    This file is part of GCC.
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published
-   by the Free Software Foundation; either version 2, or (at your
+   by the Free Software Foundation; either version 3, or (at your
    option) any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -14,9 +14,8 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to the
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -87,11 +86,11 @@ mingw32_gt_pch_get_address (size_t size, int fd  ATTRIBUTE_UNUSED)
 
   /* FIXME: We let system determine base by setting first arg to NULL.
      Allocating at top of available address space avoids unnecessary
-     fragmentation of "ordinary" (malloc's)  address space but may not be safe
-     with delayed load of system dll's. Preferred addresses for NT system
-     dlls is in 0x70000000 to 0x78000000 range.
-     If we allocate at bottom we need to reserve the address as early as possible
-     and at the same point in each invocation. */
+     fragmentation of "ordinary" (malloc's)  address space but may not
+     be safe  with delayed load of system dll's. Preferred addresses
+     for NT system dlls is in 0x70000000 to 0x78000000 range.
+     If we allocate at bottom we need to reserve the address as early
+     as possible and at the same point in each invocation. */
  
   res = VirtualAlloc (NULL, pch_VA_max_size,
 		      MEM_RESERVE | MEM_TOP_DOWN,
@@ -115,19 +114,36 @@ mingw32_gt_pch_use_address (void *addr, size_t size, int fd,
 			    size_t offset)
 {
   void * mmap_addr;
-  static HANDLE mmap_handle;
+  HANDLE mmap_handle;
 
-  if (size == 0)
-    return 0;
+  /* Apparently, MS Vista puts unnamed file mapping objects into Global
+     namespace when running an application in a Terminal Server
+     session.  This causes failure since, by default, applications 
+     don't get SeCreateGlobalPrivilege. We don't need global
+     memory sharing so explicitly put object into Local namespace.  */
+   const char object_name[] = "Local\\MinGWGCCPCH";
+
+  /* However, the documentation for CreateFileMapping says that on NT4
+     and earlier, backslashes are invalid in object name.  So, we need
+     to check if we are on Windows2000 or higher.  */
+  OSVERSIONINFO version_info;
   
+  if (size == 0)
+    return 0; 
+
   /* Offset must be also be a multiple of allocation granularity for
      this to work.  We can't change the offset. */ 
   if ((offset & (va_granularity - 1)) != 0 || size > pch_VA_max_size)
     return -1;
 
-  mmap_handle = CreateFileMapping ((HANDLE) _get_osfhandle (fd),
-				   NULL, PAGE_WRITECOPY | SEC_COMMIT,
-				   0, 0,  NULL);
+  /* Determine the version of Windows we are running on.  */
+  version_info.dwOSVersionInfoSize = sizeof (version_info);
+  GetVersionEx (&version_info);
+
+  mmap_handle = CreateFileMappingA ((HANDLE) _get_osfhandle (fd), NULL,
+				    PAGE_WRITECOPY | SEC_COMMIT, 0, 0,
+				    version_info.dwMajorVersion > 4
+				    ? object_name : NULL);
   if (mmap_handle == NULL)
     {
       w32_error (__FUNCTION__,  __FILE__, __LINE__, "CreateFileMapping");

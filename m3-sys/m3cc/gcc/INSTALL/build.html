@@ -3,12 +3,12 @@
 <title>Installing GCC: Building</title>
 <meta http-equiv="Content-Type" content="text/html">
 <meta name="description" content="Installing GCC: Building">
-<meta name="generator" content="makeinfo 4.8">
+<meta name="generator" content="makeinfo 4.11">
 <link title="Top" rel="top" href="#Top">
 <link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
 <!--
 Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2 or
@@ -74,31 +74,44 @@ that type mismatches occur, this could be the cause.
 
    <p>The solution is not to use such a directory for building GCC.
 
-   <p>When building from SVN or snapshots, or if you modify parser sources,
-you need the Bison parser generator installed.  If you do not modify
-parser sources, releases contain the Bison-generated files and you do
-not need Bison installed to build them.
+   <p>When building from SVN or snapshots and enabling the <code>treelang</code>
+front end, or if you modify <samp><span class="file">*.y</span></samp> files, you need the Bison parser
+generator installed.  If you do not modify <samp><span class="file">*.y</span></samp> files, releases
+contain the Bison-generated files and you do not need Bison installed
+to build them.  Note that most front ends now use hand-written parsers,
+which can be modified with no need for Bison.
+
+   <p>Similarly, when building from SVN or snapshots, or if you modify
+<samp><span class="file">*.l</span></samp> files, you need the Flex lexical analyzer generator installed. 
+There is still one Flex-based lexical analyzer (part of the build
+machinery, not of GCC itself) that is used even if you only build the
+C front end.
 
    <p>When building from SVN or snapshots, or if you modify Texinfo
-documentation, you need version 4.2 or later of Texinfo installed if you
+documentation, you need version 4.4 or later of Texinfo installed if you
 want Info documentation to be regenerated.  Releases contain Info
 documentation pre-built for the unmodified documentation in the release.
 
 <h3 class="section"><a name="TOC0"></a>0.1 Building a native compiler</h3>
 
-<p>For a native build issue the command `<samp><span class="samp">make bootstrap</span></samp>'.  This
-will build the entire GCC system, which includes the following steps:
+<p>For a native build, the default configuration is to perform
+a 3-stage bootstrap of the compiler when &lsquo;<samp><span class="samp">make</span></samp>&rsquo; is invoked. 
+This will build the entire GCC system and ensure that it compiles
+itself correctly.  It can be disabled with the <samp><span class="option">--disable-bootstrap</span></samp>
+parameter to &lsquo;<samp><span class="samp">configure</span></samp>&rsquo;, but bootstrapping is suggested because
+the compiler will be tested more completely and could also have
+better performance.
+
+   <p>The bootstrapping process will complete the following steps:
 
      <ul>
-<li>Build host tools necessary to build the compiler such as texinfo, bison,
-gperf.
+<li>Build tools necessary to build the compiler.
 
-     <li>Build target tools for use by the compiler such as binutils (bfd,
-binutils, gas, gprof, ld, and opcodes)
-if they have been individually linked
-or moved into the top level GCC source tree before configuring.
-
-     <li>Perform a 3-stage bootstrap of the compiler.
+     <li>Perform a 3-stage bootstrap of the compiler.  This includes building
+three times the target tools for use by the compiler such as binutils
+(bfd, binutils, gas, gprof, ld, and opcodes) if they have been
+individually linked or moved into the top level GCC source tree before
+configuring.
 
      <li>Perform a comparison test of the stage2 and stage3 compilers.
 
@@ -106,9 +119,9 @@ or moved into the top level GCC source tree before configuring.
 
    </ul>
 
-   <p>If you are short on disk space you might consider `<samp><span class="samp">make
-bootstrap-lean</span></samp>' instead.  This is identical to `<samp><span class="samp">make
-bootstrap</span></samp>' except that object files from the stage1 and
+   <p>If you are short on disk space you might consider &lsquo;<samp><span class="samp">make
+bootstrap-lean</span></samp>&rsquo; instead.  The sequence of compilation is the
+same described above, but object files from the stage1 and
 stage2 of the 3-stage bootstrap of the compiler are deleted as
 soon as they are no longer needed.
 
@@ -123,25 +136,25 @@ roughly 40% of disk space both for the bootstrap and the final installation.
 </pre>
    <p>If you wish to use non-default GCC flags when compiling the stage2 and
 stage3 compilers, set <code>BOOT_CFLAGS</code> on the command line when doing
-`<samp><span class="samp">make bootstrap</span></samp>'.  Non-default optimization flags are less well
-tested here than the default of `<samp><span class="samp">-g -O2</span></samp>', but should still work. 
+&lsquo;<samp><span class="samp">make</span></samp>&rsquo;.  Non-default optimization flags are less well
+tested here than the default of &lsquo;<samp><span class="samp">-g -O2</span></samp>&rsquo;, but should still work. 
 In a few cases, you may find that you need to specify special flags such
 as <samp><span class="option">-msoft-float</span></samp> here to complete the bootstrap; or, if the
 native compiler miscompiles the stage1 compiler, you may need to work
 around this, by choosing <code>BOOT_CFLAGS</code> to avoid the parts of the
-stage1 compiler that were miscompiled, or by using `<samp><span class="samp">make
-bootstrap4</span></samp>' to increase the number of stages of bootstrap.
+stage1 compiler that were miscompiled, or by using &lsquo;<samp><span class="samp">make
+bootstrap4</span></samp>&rsquo; to increase the number of stages of bootstrap.
 
-   <p>Note that using non-standard <code>CFLAGS</code> can cause bootstrap to fail in
-<samp><span class="file">libiberty</span></samp>, if these trigger a warning with the new compiler.  For
-example using `<samp><span class="samp">-O2 -g -mcpu=i686</span></samp>' on <code>i686-pc-linux-gnu</code> will
-cause bootstrap failure as <samp><span class="option">-mcpu=</span></samp> is deprecated in 3.4.0 and above.
+   <p>Note that using non-standard <code>CFLAGS</code> can cause bootstrap to fail
+if these trigger a warning with the new compiler.  For example using
+&lsquo;<samp><span class="samp">-O2 -g -mcpu=i686</span></samp>&rsquo; on <code>i686-pc-linux-gnu</code> will cause bootstrap
+failure as <samp><span class="option">-mcpu=</span></samp> is deprecated in 3.4.0 and above.
 
    <p>If you used the flag <samp><span class="option">--enable-languages=...</span></samp> to restrict
 the compilers to be built, only those you've actually enabled will be
 built.  This will of course only build those runtime libraries, for
 which the particular compiler has been built.  Please note,
-that re-defining <samp><span class="env">LANGUAGES</span></samp> when calling `<samp><span class="samp">make bootstrap</span></samp>'
+that re-defining <samp><span class="env">LANGUAGES</span></samp> when calling &lsquo;<samp><span class="samp">make</span></samp>&rsquo;
 <strong>does not</strong> work anymore!
 
    <p>If the comparison of stage2 and stage3 fails, this normally indicates
@@ -150,6 +163,14 @@ a potentially serious bug which you should investigate and report.  (On
 a few systems, meaningful comparison of object files is impossible; they
 always appear &ldquo;different&rdquo;.  If you encounter this problem, you will
 need to disable comparison in the <samp><span class="file">Makefile</span></samp>.)
+
+   <p>If you do not want to bootstrap your compiler, you can configure with
+<samp><span class="option">--disable-bootstrap</span></samp>.  In particular cases, you may want to
+bootstrap your compiler even if the target system is not the same as
+the one you are building on: for example, you could build a
+<code>powerpc-unknown-linux-gnu</code> toolchain on a
+<code>powerpc64-unknown-linux-gnu</code> host.  In this case, pass
+<samp><span class="option">--enable-bootstrap</span></samp> to the configure script.
 
 <h3 class="section"><a name="TOC1"></a>0.2 Building a cross compiler</h3>
 
@@ -161,6 +182,13 @@ as parts of GCC can only be built with GCC.
 native compiler.  You can then use the native GCC compiler to build the
 cross compiler.  The installed native compiler needs to be GCC version
 2.95 or later.
+
+   <p>If the cross compiler is to be built with support for the Java
+programming language and the ability to compile .java source files is
+desired, the installed native compiler used to build the cross
+compiler needs to be the same GCC version as the cross compiler.  In
+addition the cross compiler needs to be configured with
+<samp><span class="option">--with-ecj-jar=...</span></samp>.
 
    <p>Assuming you have already installed a native copy of GCC and configured
 your cross compiler, issue the command <samp><span class="command">make</span></samp>, which performs the
@@ -222,41 +250,51 @@ compilation options.  Check your target's definition of
 
 <h3 class="section"><a name="TOC2"></a>0.3 Building in parallel</h3>
 
-<p>You can use `<samp><span class="samp">make bootstrap MAKE="make -j 2" -j 2</span></samp>', or just
-`<samp><span class="samp">make -j 2 bootstrap</span></samp>' for GNU Make 3.79 and above, instead of
-`<samp><span class="samp">make bootstrap</span></samp>' to build GCC in parallel. 
-You can also specify a bigger number, and in most cases using a value
-greater than the number of processors in your machine will result in
-fewer and shorter I/O latency hits, thus improving overall throughput;
-this is especially true for slow drives and network filesystems.
+<p>GNU Make 3.79 and above, which is necessary to build GCC, support
+building in parallel.  To activate this, you can use &lsquo;<samp><span class="samp">make -j 2</span></samp>&rsquo;
+instead of &lsquo;<samp><span class="samp">make</span></samp>&rsquo;.  You can also specify a bigger number, and
+in most cases using a value greater than the number of processors in
+your machine will result in fewer and shorter I/O latency hits, thus
+improving overall throughput; this is especially true for slow drives
+and network filesystems.
 
 <h3 class="section"><a name="TOC3"></a>0.4 Building the Ada compiler</h3>
 
 <p>In order to build GNAT, the Ada compiler, you need a working GNAT
-compiler (GNAT version 3.14 or later, or GCC version 3.1 or later),
-including GNAT tools such as <samp><span class="command">gnatmake</span></samp> and <samp><span class="command">gnatlink</span></samp>,
-since the Ada front end is written in Ada (with some
-GNAT-specific extensions), and GNU make.
+compiler (GNAT version 3.14 or later, or GCC version 3.1 or later). 
+This includes GNAT tools such as <samp><span class="command">gnatmake</span></samp> and
+<samp><span class="command">gnatlink</span></samp>, since the Ada front end is written in Ada and
+uses some GNAT-specific extensions.
+
+   <p>In order to build a cross compiler, it is suggested to install
+the new compiler as native first, and then use it to build the cross
+compiler.
 
    <p><samp><span class="command">configure</span></samp> does not test whether the GNAT installation works
 and has a sufficiently recent version; if too old a GNAT version is
 installed, the build will fail unless <samp><span class="option">--enable-languages</span></samp> is
 used to disable building the Ada front end.
 
+   <p><samp><span class="env">ADA_INCLUDE_PATH</span></samp> and <samp><span class="env">ADA_OBJECT_PATH</span></samp> environment variables
+must not be set when building the Ada compiler, the Ada tools, or the
+Ada runtime libraries. You can check that your build environment is clean
+by verifying that &lsquo;<samp><span class="samp">gnatls -v</span></samp>&rsquo; lists only one explicit path in each
+section.
+
 <h3 class="section"><a name="TOC4"></a>0.5 Building with profile feedback</h3>
 
 <p>It is possible to use profile feedback to optimize the compiler itself.  This
 should result in a faster compiler binary.  Experiments done on x86 using gcc
 3.3 showed approximately 7 percent speedup on compiling C programs.  To
-bootstrap compiler with profile feedback, use <code>make profiledbootstrap</code>.
+bootstrap the compiler with profile feedback, use <code>make profiledbootstrap</code>.
 
-   <p>When `<samp><span class="samp">make profiledbootstrap</span></samp>' is run, it will first build a <code>stage1</code>
+   <p>When &lsquo;<samp><span class="samp">make profiledbootstrap</span></samp>&rsquo; is run, it will first build a <code>stage1</code>
 compiler.  This compiler is used to build a <code>stageprofile</code> compiler
 instrumented to collect execution counts of instruction and branch
 probabilities.  Then runtime libraries are compiled with profile collected. 
 Finally a <code>stagefeedback</code> compiler is built using the information collected.
 
-   <p>Unlike `<samp><span class="samp">make bootstrap</span></samp>' several additional restrictions apply.  The
+   <p>Unlike standard bootstrap, several additional restrictions apply.  The
 compiler used to build <code>stage1</code> needs to support a 64-bit integral type. 
 It is recommended to only use GCC for this.  Also parallel make is currently
 not supported since collisions in profile collecting may occur.

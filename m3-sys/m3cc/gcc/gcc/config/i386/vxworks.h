@@ -1,12 +1,12 @@
 /* IA32 VxWorks target definitions for GNU compiler.
-   Copyright (C) 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
    Updated by CodeSourcery, LLC.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -15,9 +15,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #define HANDLE_SYSV_PRAGMA 1
 
@@ -27,9 +26,10 @@ Boston, MA 02110-1301, USA.  */
 #undef  ASM_SPEC
 #define ASM_SPEC "%{v:-v} %{Qy:} %{n} %{T} %{Ym,*} %{Yd,*} %{Wa,*:%*}"
 
-#define VXWORKS_CPU_DEFINE()				\
+#define TARGET_OS_CPP_BUILTINS()			\
   do							\
     {							\
+      VXWORKS_OS_CPP_BUILTINS ();			\
       if (TARGET_386)					\
         builtin_define ("CPU=I80386");			\
       else if (TARGET_486)				\
@@ -49,18 +49,7 @@ Boston, MA 02110-1301, USA.  */
           builtin_define ("CPU=PENTIUM4");		\
           builtin_define ("CPU_VARIANT=PENTIUM4");	\
         }						\
-    }  							\
-  while (0)
-
-#define TARGET_OS_CPP_BUILTINS()		\
-  do						\
-    {						\
-      builtin_define ("__vxworks");		\
-      builtin_define ("__VXWORKS__");		\
-      builtin_assert ("system=unix");		\
-						\
-      VXWORKS_CPU_DEFINE();			\
-    }						\
+    }							\
   while (0)
 
 #undef  CPP_SPEC
@@ -83,3 +72,7 @@ Boston, MA 02110-1301, USA.  */
 /* No _mcount profiling on VxWorks.  */
 #undef FUNCTION_PROFILER
 #define FUNCTION_PROFILER(FILE,LABELNO) VXWORKS_FUNCTION_PROFILER(FILE,LABELNO)
+
+/* We cannot use PC-relative accesses for VxWorks PIC because there is no
+   fixed gap between segments.  */
+#undef ASM_PREFERRED_EH_DATA_FORMAT

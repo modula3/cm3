@@ -1,12 +1,12 @@
 /* Timing variables for measuring compiler performance.
-   Copyright (C) 2000, 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
    Contributed by Alex Samuel <samuel@codesourcery.com>
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -293,7 +292,7 @@ timevar_push_1 (timevar_id_t timevar)
       unused_stack_instances = unused_stack_instances->next;
     }
   else
-    context = xmalloc (sizeof (struct timevar_stack_def));
+    context = XNEW (struct timevar_stack_def);
 
   /* Fill it in and put it on the stack.  */
   context->timevar = tv;
@@ -481,7 +480,11 @@ timevar_print (FILE *fp)
 
 #ifdef ENABLE_CHECKING
   fprintf (fp, "Extra diagnostic checks enabled; compiler may run slowly.\n");
-  fprintf (fp, "Configure with --disable-checking to disable checks.\n");
+  fprintf (fp, "Configure with --enable-checking=release to disable checks.\n");
+#endif
+#ifndef ENABLE_ASSERT_CHECKING
+  fprintf (fp, "Internal checks disabled; compiler is not suited for release.\n");
+  fprintf (fp, "Configure with --enable-checking=release to enable checks.\n");
 #endif
 
 #endif /* defined (HAVE_USER_TIME) || defined (HAVE_SYS_TIME)

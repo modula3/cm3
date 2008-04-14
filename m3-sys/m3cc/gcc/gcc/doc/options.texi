@@ -1,11 +1,11 @@
-@c Copyright (C) 2003, 2004, 2005 Free Software Foundation, Inc.
+@c Copyright (C) 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
 @c This is part of the GCC manual.
 @c For copying conditions, see the file gcc.texi.
 
 @node Options
 @chapter Option specification files
 @cindex option specification files
-@cindex @samp{opts.sh}
+@cindex @samp{optc-gen.awk}
 
 Most GCC command-line options are described by special option
 definition files, the names of which conventionally end in
@@ -100,6 +100,12 @@ The option does not have a ``no-'' form.  All options beginning with
 ``f'', ``W'' or ``m'' are assumed to have a ``no-'' form unless this
 property is used.
 
+@item Negative(@var{othername})
+The option will turn off another option @var{othername}, which is the
+the option name with the leading ``-'' removed.  This chain action will
+propagate through the @code{Negative} property of the option to be
+turned off.
+
 @item Joined
 @itemx Separate
 The option takes a mandatory argument.  @code{Joined} indicates
@@ -163,8 +169,8 @@ The variable specified by the @code{Var} property already exists.
 No definition should be added to @file{options.c} in response to
 this option record.
 
-You should use this property if an earlier option has already declared
-the variable or if the variable is declared outside @file{options.c}.
+You should use this property only if the variable is declared outside
+@file{options.c}.
 
 @item Init(@var{value})
 The variable specified by the @code{Var} property should be statically

@@ -1,11 +1,11 @@
 ;; Scheduling description for IBM POWER5 processor.
-;;   Copyright (C) 2003, 2004 Free Software Foundation, Inc.
+;;   Copyright (C) 2003, 2004, 2007 Free Software Foundation, Inc.
 ;;
 ;; This file is part of GCC.
 ;;
 ;; GCC is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published
-;; by the Free Software Foundation; either version 2, or (at your
+;; by the Free Software Foundation; either version 3, or (at your
 ;; option) any later version.
 ;;
 ;; GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -14,9 +14,8 @@
 ;; License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to the
-;; Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
-;; MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 ;; Sources: IBM Red Book and White Paper on POWER5
 
@@ -144,7 +143,8 @@
 
 ; Integer latency is 2 cycles
 (define_insn_reservation "power5-integer" 2
-  (and (eq_attr "type" "integer")
+  (and (eq_attr "type" "integer,insert_dword,shift,trap,\
+                        var_shift_rotate,cntlz,exts")
        (eq_attr "cpu" "power5"))
   "iq_power5")
 
@@ -179,7 +179,7 @@
   "iq_power5")
 
 (define_insn_reservation "power5-compare" 2
-  (and (eq_attr "type" "compare,delayed_compare")
+  (and (eq_attr "type" "compare,delayed_compare,var_delayed_compare")
        (eq_attr "cpu" "power5"))
   "du1_power5+du2_power5,iu1_power5,iu2_power5")
 
