@@ -1,10 +1,100 @@
-2006-05-24  Release Manager
+2008-03-05  Release Manager
 
-	* GCC 4.1.1 released.
+	* GCC 4.3.0 released.
 
-2006-02-28  Release Manager
+2008-01-28  Joseph Myers  <joseph@codesourcery.com>
 
-	* GCC 4.1.0 released.
+	* gcc_release (build_sources): Pass --disable-multilib to
+	gcc_build.
+	(SVN): Don't use full path.
+
+2008-01-21  Jonathan Wakely  <jwakely.gcc@gmail.com>
+
+	* update_web_docs_libstdcxx_svn: "docs" dir moved to "doc".
+
+2007-10-01  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* gcc_release: Do not include copies of faq.html in releases,
+	and remove all the explicit support code to pull in web pages.
+
+2007-08-21  Paul Brook  <paul@codesourcery.com>
+	    Nathan Sidwell  <nathan@codesourcery.com>
+	    Mark Mitchell  <mark@codesourcery.com>
+	    Joseph Myers  <joseph@codesourcery.com>
+
+	* gcc_release: Do not include copies of bugs.html in releases.
+	* update_web_docs_svn: Set VERSION_PACKAGE and BUGURL in
+	gcc-vers.texi.
+
+2007-07-06  Joseph Myers  <joseph@codesourcery.com>
+
+	* update_web_docs_svn: Use -o with makeinfo, texi2dvi and texi2pdf
+	commands.
+
+2007-06-28  Mike Stump  <mrs@apple.com>
+
+	* gcc_release: Update for Objective-C++.
+
+2007-05-28  Mark Mitchell  <mark@codesourcery.com>
+
+	* gcc_release: Adjust placement of release candidates.
+
+2007-04-01  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* update_web_docs_svn (MANUALS): Move towards the top of the
+	script.  Reformat for easier editing/diffing.
+
+2006-03-31  Tobias Burnus  <burnus@net-b.de>
+
+	* update_web_docs_svn: Build also gfc-internals.
+
+2007-02-25  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* update_version_svn (IGNORE_BRANCHES): Add 4_0-branch.
+
+2007-01-29  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* crontab: No longer build snapshots for 4.0.x.
+
+2007-01-21  Tobias Burnus  <burnus@net-b.de>
+
+	* update_web_docs_svn: Build also libgomp documentation.
+
+2007-01-05  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* crontab: Spread snapshots more evenly throughout the week, and
+	in "ascending" order.  Build all at the same time of the day.
+
+2006-10-20  Mark Mitchell  <mark@codesourcery.com>
+
+	* crontab: Add 4.2 branch.  Set trunk to 4.3.
+
+2006-09-17  Gerald Pfeifer  <gerald@pfeifer.com>
+
+	* gcc_release (LC_ALL): Default to C.
+
+2006-03-11  Gabriel Dos Reis  <gdr@integrable-solutions.net>
+
+	* crontab: Don't build snapshot for 3.4.x anymore.
+	* update_version_svn (IGNORE_BRANCHES): Add 3_4-branch.
+
+2006-01-12  Ben Elliston  <bje@au.ibm.com>
+
+	* update_version_svn (ADD_BRANCHES): Remove dfp-branch.
+
+2005-12-16  Joseph S. Myers  <joseph@codesourcery.com>
+
+	* update_web_docs_svn: Remove unnecessary files from source tree.
+	Use set -e.
+	* doc_exclude, update_web_docs, update_web_docs_libstdcxx: Remove.
+
+2005-12-16  Mark Mitchell  <mark@codesourcery.com>
+
+	* update_web_docs_svn: Set @srcdir in gcc-vers.texi. 
+	
+2005-11-18  Mark Mitchell  <mark@codesourcery.com>
+
+	* crontab: Add 4.1 branch entry.
 
 2005-11-06  Joseph S. Myers  <joseph@codesourcery.com>
 

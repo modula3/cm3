@@ -1,12 +1,12 @@
 ;; Machine description for PowerPC synchronization instructions.
-;; Copyright (C) 2005 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2007 Free Software Foundation, Inc.
 ;; Contributed by Geoffrey Keating.
 
 ;; This file is part of GCC.
 
 ;; GCC is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published
-;; by the Free Software Foundation; either version 2, or (at your
+;; by the Free Software Foundation; either version 3, or (at your
 ;; option) any later version.
 
 ;; GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -15,14 +15,13 @@
 ;; License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to the
-;; Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
-;; MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 (define_mode_attr larx [(SI "lwarx") (DI "ldarx")])
 (define_mode_attr stcx [(SI "stwcx.") (DI "stdcx.")])
 
-(define_code_macro FETCHOP [plus minus ior xor and])
+(define_code_iterator FETCHOP [plus minus ior xor and])
 (define_code_attr fetchop_name
   [(plus "add") (minus "sub") (ior "ior") (xor "xor") (and "and")])
 (define_code_attr fetchop_pred
@@ -83,6 +82,52 @@
 {
   rs6000_split_compare_and_swap (operands[0], operands[1], operands[2],
 				 operands[3], operands[4]);
+  DONE;
+})
+
+(define_expand "sync_compare_and_swaphi"
+  [(match_operand:HI 0 "gpc_reg_operand" "")
+   (match_operand:HI 1 "memory_operand" "")
+   (match_operand:HI 2 "gpc_reg_operand" "")
+   (match_operand:HI 3 "gpc_reg_operand" "")]
+  "TARGET_POWERPC"
+{
+  rs6000_expand_compare_and_swapqhi (operands[0], operands[1],
+				     operands[2], operands[3]);
+  DONE;
+})
+
+(define_expand "sync_compare_and_swapqi"
+  [(match_operand:QI 0 "gpc_reg_operand" "")
+   (match_operand:QI 1 "memory_operand" "")
+   (match_operand:QI 2 "gpc_reg_operand" "")
+   (match_operand:QI 3 "gpc_reg_operand" "")]
+  "TARGET_POWERPC"
+{
+  rs6000_expand_compare_and_swapqhi (operands[0], operands[1],
+				     operands[2], operands[3]);
+  DONE;
+})
+
+(define_insn_and_split "sync_compare_and_swapqhi_internal"
+  [(set (match_operand:SI 0 "gpc_reg_operand" "=&r")
+	(match_operand:SI 4 "memory_operand" "+Z"))
+   (set (match_dup 4)
+        (unspec:SI
+          [(match_operand:SI 1 "gpc_reg_operand" "r")
+           (match_operand:SI 2 "gpc_reg_operand" "r")
+           (match_operand:SI 3 "gpc_reg_operand" "r")]
+          UNSPEC_CMPXCHG))
+   (clobber (match_scratch:SI 5 "=&r"))
+   (clobber (match_scratch:CC 6 "=&x"))]
+  "TARGET_POWERPC"
+  "#"
+  "&& reload_completed"
+  [(const_int 0)]
+{
+  rs6000_split_compare_and_swapqhi (operands[0], operands[1],
+				    operands[2], operands[3], operands[4],
+				    operands[5]);
   DONE;
 })
 
@@ -569,6 +614,11 @@
   [(set (mem:BLK (match_scratch 0 "X"))
 	(unspec_volatile:BLK [(mem:BLK (match_scratch 1 "X"))] UNSPEC_LWSYNC))]
   ""
-  ".long 0x7c2004ac"
+{
+  if (TARGET_NO_LWSYNC)
+    return "sync";
+  else
+    return ".long 0x7c2004ac";
+}
   [(set_attr "type" "sync")])
 

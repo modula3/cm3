@@ -1,11 +1,11 @@
 /* Global, SSA-based optimizations using mathematical identities.
-   Copyright (C) 2005 Free Software Foundation, Inc.
+   Copyright (C) 2005, 2006, 2007 Free Software Foundation, Inc.
    
 This file is part of GCC.
    
 GCC is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
-Free Software Foundation; either version 2, or (at your option) any
+Free Software Foundation; either version 3, or (at your option) any
 later version.
    
 GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -14,9 +14,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
    
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* Currently, the only mini-pass in this file tries to CSE reciprocal
    operations.  These are common in sequences such as this one:
@@ -111,7 +110,7 @@ struct occurrence {
      inserted in BB.  */
   tree recip_def;
 
-  /* If non-NULL, the MODIFY_EXPR for a reciprocal computation that
+  /* If non-NULL, the GIMPLE_MODIFY_STMT for a reciprocal computation that
      was inserted in BB.  */
   tree recip_def_stmt;
 
@@ -151,7 +150,7 @@ occ_new (basic_block bb, struct occurrence *children)
 {
   struct occurrence *occ;
 
-  occ = bb->aux = pool_alloc (occ_pool);
+  bb->aux = occ = (struct occurrence *) pool_alloc (occ_pool);
   memset (occ, 0, sizeof (struct occurrence));
 
   occ->bb = bb;
@@ -274,38 +273,13 @@ compute_merit (struct occurrence *occ)
 static inline bool
 is_division_by (tree use_stmt, tree def)
 {
-  return TREE_CODE (use_stmt) == MODIFY_EXPR
-	 && TREE_CODE (TREE_OPERAND (use_stmt, 1)) == RDIV_EXPR
-	 && TREE_OPERAND (TREE_OPERAND (use_stmt, 1), 1) == def;
-}
-
-/* Return the LHS of a RDIV_EXPR that computes a reciprocal in type TYPE.  */
-static tree
-get_constant_one (tree type)
-{
-  tree scalar, cst;
-  int i;
-
-  gcc_assert (FLOAT_TYPE_P (type));
-  switch (TREE_CODE (type))
-    {
-    case REAL_TYPE:
-      return build_real (type, dconst1);
-
-    case VECTOR_TYPE:
-      scalar = build_real (TREE_TYPE (type), dconst1);
-
-      /* Create 'vect_cst_ = {cst,cst,...,cst}'  */
-      cst = NULL_TREE;
-      for (i = TYPE_VECTOR_SUBPARTS (type); --i >= 0; )
-        cst = tree_cons (NULL_TREE, scalar, cst);
-
-      return build_vector (type, cst);
-
-    default:
-      /* Complex operations have been split already.  */
-      gcc_unreachable ();
-    }
+  return TREE_CODE (use_stmt) == GIMPLE_MODIFY_STMT
+	 && TREE_CODE (GIMPLE_STMT_OPERAND (use_stmt, 1)) == RDIV_EXPR
+	 && TREE_OPERAND (GIMPLE_STMT_OPERAND (use_stmt, 1), 1) == def
+	 /* Do not recognize x / x as valid division, as we are getting
+	    confused later by replacing all immediate uses x in such
+	    a stmt.  */
+	 && TREE_OPERAND (GIMPLE_STMT_OPERAND (use_stmt, 1), 0) != def;
 }
 
 /* Walk the subset of the dominator tree rooted at OCC, setting the
@@ -332,9 +306,10 @@ insert_reciprocals (block_stmt_iterator *def_bsi, struct occurrence *occ,
       /* Make a variable with the replacement and substitute it.  */
       type = TREE_TYPE (def);
       recip_def = make_rename_temp (type, "reciptmp");
-      new_stmt = build2 (MODIFY_EXPR, void_type_node, recip_def,
-		         fold_build2 (RDIV_EXPR, type, get_constant_one (type),
-				      def));
+      new_stmt = build_gimple_modify_stmt (recip_def,
+					   fold_build2 (RDIV_EXPR, type,
+							build_one_cst (type),
+							def));
   
   
       if (occ->bb_has_division)
@@ -382,7 +357,7 @@ replace_reciprocal (use_operand_p use_p)
 
   if (occ->recip_def && use_stmt != occ->recip_def_stmt)
     {
-      TREE_SET_CODE (TREE_OPERAND (use_stmt, 1), MULT_EXPR);
+      TREE_SET_CODE (GIMPLE_STMT_OPERAND (use_stmt, 1), MULT_EXPR);
       SET_USE (use_p, occ->recip_def);
       fold_stmt_inplace (use_stmt);
       update_stmt (use_stmt);
@@ -446,17 +421,20 @@ execute_cse_reciprocals_1 (block_stmt_iterator *def_bsi, tree def)
   threshold = targetm.min_divisions_for_recip_mul (TYPE_MODE (TREE_TYPE (def)));
   if (count >= threshold)
     {
+      tree use_stmt;
       for (occ = occ_head; occ; occ = occ->next)
 	{
 	  compute_merit (occ);
 	  insert_reciprocals (def_bsi, occ, def, NULL, threshold);
 	}
 
-      FOR_EACH_IMM_USE_SAFE (use_p, use_iter, def)
+      FOR_EACH_IMM_USE_STMT (use_stmt, use_iter, def)
 	{
-	  tree use_stmt = USE_STMT (use_p);
 	  if (is_division_by (use_stmt, def))
-	    replace_reciprocal (use_p);
+	    {
+	      FOR_EACH_IMM_USE_ON_STMT (use_p, use_iter)
+		replace_reciprocal (use_p);
+	    }
 	}
     }
 
@@ -466,17 +444,15 @@ execute_cse_reciprocals_1 (block_stmt_iterator *def_bsi, tree def)
   occ_head = NULL;
 }
 
-
 static bool
 gate_cse_reciprocals (void)
 {
-  return optimize && !optimize_size && flag_unsafe_math_optimizations;
+  return optimize && !optimize_size && flag_reciprocal_math;
 }
-
 
 /* Go through all the floating-point SSA_NAMEs, and call
    execute_cse_reciprocals_1 on each of them.  */
-static void
+static unsigned int
 execute_cse_reciprocals (void)
 {
   basic_block bb;
@@ -486,7 +462,8 @@ execute_cse_reciprocals (void)
 				sizeof (struct occurrence),
 				n_basic_blocks / 3 + 1);
 
-  calculate_dominance_info (CDI_DOMINATORS | CDI_POST_DOMINATORS);
+  calculate_dominance_info (CDI_DOMINATORS);
+  calculate_dominance_info (CDI_POST_DOMINATORS);
 
 #ifdef ENABLE_CHECKING
   FOR_EACH_BB (bb)
@@ -494,10 +471,10 @@ execute_cse_reciprocals (void)
 #endif
 
   for (arg = DECL_ARGUMENTS (cfun->decl); arg; arg = TREE_CHAIN (arg))
-    if (default_def (arg)
+    if (gimple_default_def (cfun, arg)
 	&& FLOAT_TYPE_P (TREE_TYPE (arg))
 	&& is_gimple_reg (arg))
-      execute_cse_reciprocals_1 (NULL, default_def (arg));
+      execute_cse_reciprocals_1 (NULL, gimple_default_def (cfun, arg));
 
   FOR_EACH_BB (bb)
     {
@@ -515,16 +492,67 @@ execute_cse_reciprocals (void)
       for (bsi = bsi_after_labels (bb); !bsi_end_p (bsi); bsi_next (&bsi))
         {
 	  tree stmt = bsi_stmt (bsi);
-	  if (TREE_CODE (stmt) == MODIFY_EXPR
+
+	  if (TREE_CODE (stmt) == GIMPLE_MODIFY_STMT
 	      && (def = SINGLE_SSA_TREE_OPERAND (stmt, SSA_OP_DEF)) != NULL
 	      && FLOAT_TYPE_P (TREE_TYPE (def))
 	      && TREE_CODE (def) == SSA_NAME)
 	    execute_cse_reciprocals_1 (&bsi, def);
 	}
+
+      /* Scan for a/func(b) and convert it to reciprocal a*rfunc(b).  */
+      for (bsi = bsi_after_labels (bb); !bsi_end_p (bsi); bsi_next (&bsi))
+        {
+	  tree stmt = bsi_stmt (bsi);
+	  tree fndecl;
+
+	  if (TREE_CODE (stmt) == GIMPLE_MODIFY_STMT
+	      && TREE_CODE (GIMPLE_STMT_OPERAND (stmt, 1)) == RDIV_EXPR)
+	    {
+	      tree arg1 = TREE_OPERAND (GIMPLE_STMT_OPERAND (stmt, 1), 1);
+	      tree stmt1;
+
+	      if (TREE_CODE (arg1) != SSA_NAME)
+		continue;
+
+	      stmt1 = SSA_NAME_DEF_STMT (arg1);
+
+	      if (TREE_CODE (stmt1) == GIMPLE_MODIFY_STMT
+		  && TREE_CODE (GIMPLE_STMT_OPERAND (stmt1, 1)) == CALL_EXPR
+		  && (fndecl
+		      = get_callee_fndecl (GIMPLE_STMT_OPERAND (stmt1, 1)))
+		  && (DECL_BUILT_IN_CLASS (fndecl) == BUILT_IN_NORMAL
+		      || DECL_BUILT_IN_CLASS (fndecl) == BUILT_IN_MD))
+		{
+		  enum built_in_function code;
+		  bool md_code;
+		  tree arg10;
+		  tree tmp;
+
+		  code = DECL_FUNCTION_CODE (fndecl);
+		  md_code = DECL_BUILT_IN_CLASS (fndecl) == BUILT_IN_MD;
+
+		  fndecl = targetm.builtin_reciprocal (code, md_code, false);
+		  if (!fndecl)
+		    continue;
+
+		  arg10 = CALL_EXPR_ARG (GIMPLE_STMT_OPERAND (stmt1, 1), 0);
+		  tmp = build_call_expr (fndecl, 1, arg10);
+		  GIMPLE_STMT_OPERAND (stmt1, 1) = tmp;
+		  update_stmt (stmt1);
+
+		  TREE_SET_CODE (GIMPLE_STMT_OPERAND (stmt, 1), MULT_EXPR);
+		  fold_stmt_inplace (stmt);
+		  update_stmt (stmt);
+		}
+	    }
+	}
     }
 
-  free_dominance_info (CDI_DOMINATORS | CDI_POST_DOMINATORS);
+  free_dominance_info (CDI_DOMINATORS);
+  free_dominance_info (CDI_POST_DOMINATORS);
   free_alloc_pool (occ_pool);
+  return 0;
 }
 
 struct tree_opt_pass pass_cse_reciprocals =
@@ -532,6 +560,304 @@ struct tree_opt_pass pass_cse_reciprocals =
   "recip",				/* name */
   gate_cse_reciprocals,			/* gate */
   execute_cse_reciprocals,		/* execute */
+  NULL,					/* sub */
+  NULL,					/* next */
+  0,					/* static_pass_number */
+  0,					/* tv_id */
+  PROP_ssa,				/* properties_required */
+  0,					/* properties_provided */
+  0,					/* properties_destroyed */
+  0,					/* todo_flags_start */
+  TODO_dump_func | TODO_update_ssa | TODO_verify_ssa
+    | TODO_verify_stmts,                /* todo_flags_finish */
+  0				        /* letter */
+};
+
+/* Records an occurrence at statement USE_STMT in the vector of trees
+   STMTS if it is dominated by *TOP_BB or dominates it or this basic block
+   is not yet initialized.  Returns true if the occurrence was pushed on
+   the vector.  Adjusts *TOP_BB to be the basic block dominating all
+   statements in the vector.  */
+
+static bool
+maybe_record_sincos (VEC(tree, heap) **stmts,
+		     basic_block *top_bb, tree use_stmt)
+{
+  basic_block use_bb = bb_for_stmt (use_stmt);
+  if (*top_bb
+      && (*top_bb == use_bb
+	  || dominated_by_p (CDI_DOMINATORS, use_bb, *top_bb)))
+    VEC_safe_push (tree, heap, *stmts, use_stmt);
+  else if (!*top_bb
+	   || dominated_by_p (CDI_DOMINATORS, *top_bb, use_bb))
+    {
+      VEC_safe_push (tree, heap, *stmts, use_stmt);
+      *top_bb = use_bb;
+    }
+  else
+    return false;
+
+  return true;
+}
+
+/* Look for sin, cos and cexpi calls with the same argument NAME and
+   create a single call to cexpi CSEing the result in this case.
+   We first walk over all immediate uses of the argument collecting
+   statements that we can CSE in a vector and in a second pass replace
+   the statement rhs with a REALPART or IMAGPART expression on the
+   result of the cexpi call we insert before the use statement that
+   dominates all other candidates.  */
+
+static void
+execute_cse_sincos_1 (tree name)
+{
+  block_stmt_iterator bsi;
+  imm_use_iterator use_iter;
+  tree def_stmt, use_stmt, fndecl, res, call, stmt, type;
+  int seen_cos = 0, seen_sin = 0, seen_cexpi = 0;
+  VEC(tree, heap) *stmts = NULL;
+  basic_block top_bb = NULL;
+  int i;
+
+  type = TREE_TYPE (name);
+  FOR_EACH_IMM_USE_STMT (use_stmt, use_iter, name)
+    {
+      if (TREE_CODE (use_stmt) != GIMPLE_MODIFY_STMT
+	  || TREE_CODE (GIMPLE_STMT_OPERAND (use_stmt, 1)) != CALL_EXPR
+	  || !(fndecl = get_callee_fndecl (GIMPLE_STMT_OPERAND (use_stmt, 1)))
+	  || DECL_BUILT_IN_CLASS (fndecl) != BUILT_IN_NORMAL)
+	continue;
+
+      switch (DECL_FUNCTION_CODE (fndecl))
+	{
+	CASE_FLT_FN (BUILT_IN_COS):
+	  seen_cos |= maybe_record_sincos (&stmts, &top_bb, use_stmt) ? 1 : 0;
+	  break;
+
+	CASE_FLT_FN (BUILT_IN_SIN):
+	  seen_sin |= maybe_record_sincos (&stmts, &top_bb, use_stmt) ? 1 : 0;
+	  break;
+
+	CASE_FLT_FN (BUILT_IN_CEXPI):
+	  seen_cexpi |= maybe_record_sincos (&stmts, &top_bb, use_stmt) ? 1 : 0;
+	  break;
+
+	default:;
+	}
+    }
+
+  if (seen_cos + seen_sin + seen_cexpi <= 1)
+    {
+      VEC_free(tree, heap, stmts);
+      return;
+    }
+
+  /* Simply insert cexpi at the beginning of top_bb but not earlier than
+     the name def statement.  */
+  fndecl = mathfn_built_in (type, BUILT_IN_CEXPI);
+  if (!fndecl)
+    return;
+  res = make_rename_temp (TREE_TYPE (TREE_TYPE (fndecl)), "sincostmp");
+  call = build_call_expr (fndecl, 1, name);
+  stmt = build_gimple_modify_stmt (res, call);
+  def_stmt = SSA_NAME_DEF_STMT (name);
+  if (!SSA_NAME_IS_DEFAULT_DEF (name)
+      && TREE_CODE (def_stmt) != PHI_NODE
+      && bb_for_stmt (def_stmt) == top_bb)
+    {
+      bsi = bsi_for_stmt (def_stmt);
+      bsi_insert_after (&bsi, stmt, BSI_SAME_STMT);
+    }
+  else
+    {
+      bsi = bsi_after_labels (top_bb);
+      bsi_insert_before (&bsi, stmt, BSI_SAME_STMT);
+    }
+  update_stmt (stmt);
+
+  /* And adjust the recorded old call sites.  */
+  for (i = 0; VEC_iterate(tree, stmts, i, use_stmt); ++i)
+    {
+      fndecl = get_callee_fndecl (GIMPLE_STMT_OPERAND (use_stmt, 1));
+      switch (DECL_FUNCTION_CODE (fndecl))
+	{
+	CASE_FLT_FN (BUILT_IN_COS):
+	  GIMPLE_STMT_OPERAND (use_stmt, 1) = fold_build1 (REALPART_EXPR,
+							   type, res);
+	  break;
+
+	CASE_FLT_FN (BUILT_IN_SIN):
+	  GIMPLE_STMT_OPERAND (use_stmt, 1) = fold_build1 (IMAGPART_EXPR,
+							   type, res);
+	  break;
+
+	CASE_FLT_FN (BUILT_IN_CEXPI):
+	  GIMPLE_STMT_OPERAND (use_stmt, 1) = res;
+	  break;
+
+	default:;
+	  gcc_unreachable ();
+	}
+
+	update_stmt (use_stmt);
+    }
+
+  VEC_free(tree, heap, stmts);
+}
+
+/* Go through all calls to sin, cos and cexpi and call execute_cse_sincos_1
+   on the SSA_NAME argument of each of them.  */
+
+static unsigned int
+execute_cse_sincos (void)
+{
+  basic_block bb;
+
+  calculate_dominance_info (CDI_DOMINATORS);
+
+  FOR_EACH_BB (bb)
+    {
+      block_stmt_iterator bsi;
+
+      for (bsi = bsi_after_labels (bb); !bsi_end_p (bsi); bsi_next (&bsi))
+        {
+	  tree stmt = bsi_stmt (bsi);
+	  tree fndecl;
+
+	  if (TREE_CODE (stmt) == GIMPLE_MODIFY_STMT
+	      && TREE_CODE (GIMPLE_STMT_OPERAND (stmt, 1)) == CALL_EXPR
+	      && (fndecl = get_callee_fndecl (GIMPLE_STMT_OPERAND (stmt, 1)))
+	      && DECL_BUILT_IN_CLASS (fndecl) == BUILT_IN_NORMAL)
+	    {
+	      tree arg;
+
+	      switch (DECL_FUNCTION_CODE (fndecl))
+		{
+		CASE_FLT_FN (BUILT_IN_COS):
+		CASE_FLT_FN (BUILT_IN_SIN):
+		CASE_FLT_FN (BUILT_IN_CEXPI):
+		  arg = GIMPLE_STMT_OPERAND (stmt, 1);
+		  arg = CALL_EXPR_ARG (arg, 0);
+		  if (TREE_CODE (arg) == SSA_NAME)
+		    execute_cse_sincos_1 (arg);
+		  break;
+
+		default:;
+		}
+	    }
+	}
+    }
+
+  free_dominance_info (CDI_DOMINATORS);
+  return 0;
+}
+
+static bool
+gate_cse_sincos (void)
+{
+  /* Make sure we have either sincos or cexp.  */
+  return (TARGET_HAS_SINCOS
+	  || TARGET_C99_FUNCTIONS)
+	 && optimize;
+}
+
+struct tree_opt_pass pass_cse_sincos =
+{
+  "sincos",				/* name */
+  gate_cse_sincos,			/* gate */
+  execute_cse_sincos,			/* execute */
+  NULL,					/* sub */
+  NULL,					/* next */
+  0,					/* static_pass_number */
+  0,					/* tv_id */
+  PROP_ssa,				/* properties_required */
+  0,					/* properties_provided */
+  0,					/* properties_destroyed */
+  0,					/* todo_flags_start */
+  TODO_dump_func | TODO_update_ssa | TODO_verify_ssa
+    | TODO_verify_stmts,                /* todo_flags_finish */
+  0				        /* letter */
+};
+
+/* Find all expressions in the form of sqrt(a/b) and
+   convert them to rsqrt(b/a).  */
+
+static unsigned int
+execute_convert_to_rsqrt (void)
+{
+  basic_block bb;
+
+  FOR_EACH_BB (bb)
+    {
+      block_stmt_iterator bsi;
+
+      for (bsi = bsi_after_labels (bb); !bsi_end_p (bsi); bsi_next (&bsi))
+        {
+	  tree stmt = bsi_stmt (bsi);
+	  tree fndecl;
+
+	  if (TREE_CODE (stmt) == GIMPLE_MODIFY_STMT
+	      && TREE_CODE (GIMPLE_STMT_OPERAND (stmt, 1)) == CALL_EXPR
+	      && (fndecl = get_callee_fndecl (GIMPLE_STMT_OPERAND (stmt, 1)))
+	      && (DECL_BUILT_IN_CLASS (fndecl) == BUILT_IN_NORMAL
+		  || DECL_BUILT_IN_CLASS (fndecl) == BUILT_IN_MD))
+	    {
+	      enum built_in_function code;
+	      bool md_code;
+	      tree arg1;
+	      tree stmt1;
+
+	      code = DECL_FUNCTION_CODE (fndecl);
+	      md_code = DECL_BUILT_IN_CLASS (fndecl) == BUILT_IN_MD;
+
+	      fndecl = targetm.builtin_reciprocal (code, md_code, true);
+	      if (!fndecl)
+		continue;
+
+	      arg1 = CALL_EXPR_ARG (GIMPLE_STMT_OPERAND (stmt, 1), 0);
+
+	      if (TREE_CODE (arg1) != SSA_NAME)
+		continue;
+
+	      stmt1 = SSA_NAME_DEF_STMT (arg1);
+
+	      if (TREE_CODE (stmt1) == GIMPLE_MODIFY_STMT
+		  && TREE_CODE (GIMPLE_STMT_OPERAND (stmt1, 1)) == RDIV_EXPR)
+		{
+		  tree arg10, arg11;
+		  tree tmp;
+
+		  arg10 = TREE_OPERAND (GIMPLE_STMT_OPERAND (stmt1, 1), 0);
+		  arg11 = TREE_OPERAND (GIMPLE_STMT_OPERAND (stmt1, 1), 1);
+
+		  /* Swap operands of RDIV_EXPR.  */
+		  TREE_OPERAND (GIMPLE_STMT_OPERAND (stmt1, 1), 0) = arg11;
+		  TREE_OPERAND (GIMPLE_STMT_OPERAND (stmt1, 1), 1) = arg10;
+		  fold_stmt_inplace (stmt1);
+		  update_stmt (stmt1);
+
+		  tmp = build_call_expr (fndecl, 1, arg1);
+		  GIMPLE_STMT_OPERAND (stmt, 1) = tmp;
+		  update_stmt (stmt);
+		}
+	    }
+	}
+    }
+
+  return 0;
+}
+
+static bool
+gate_convert_to_rsqrt (void)
+{
+  return flag_unsafe_math_optimizations && optimize;
+}
+
+struct tree_opt_pass pass_convert_to_rsqrt =
+{
+  "rsqrt",				/* name */
+  gate_convert_to_rsqrt,		/* gate */
+  execute_convert_to_rsqrt,		/* execute */
   NULL,					/* sub */
   NULL,					/* next */
   0,					/* static_pass_number */

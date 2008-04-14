@@ -1,5 +1,5 @@
 /* Configuration file for ARM BPABI targets.
-   Copyright (C) 2004, 2005
+   Copyright (C) 2004, 2005, 2007
    Free Software Foundation, Inc.
    Contributed by CodeSourcery, LLC   
 
@@ -7,7 +7,7 @@
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published
-   by the Free Software Foundation; either version 2, or (at your
+   by the Free Software Foundation; either version 3, or (at your
    option) any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -16,9 +16,8 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 /* Use the AAPCS ABI by default.  */
 #define ARM_DEFAULT_ABI ARM_ABI_AAPCS
@@ -30,12 +29,20 @@
 #define TARGET_UNWIND_INFO 1
 
 /* Section 4.1 of the AAPCS requires the use of VFP format.  */
-#undef FPUTYPE_DEFAULT
+#undef  FPUTYPE_DEFAULT
 #define FPUTYPE_DEFAULT FPUTYPE_VFP
 
+/* TARGET_BIG_ENDIAN_DEFAULT is set in
+   config.gcc for big endian configurations.  */
+#if TARGET_BIG_ENDIAN_DEFAULT
+#define TARGET_ENDIAN_DEFAULT MASK_BIG_END
+#else
+#define TARGET_ENDIAN_DEFAULT 0
+#endif
+
 /* EABI targets should enable interworking by default.  */
-#undef TARGET_DEFAULT
-#define TARGET_DEFAULT MASK_INTERWORK
+#undef  TARGET_DEFAULT
+#define TARGET_DEFAULT (MASK_INTERWORK | TARGET_ENDIAN_DEFAULT)
 
 /* The ARM BPABI functions return a boolean; they use no special
    calling convention.  */
@@ -45,11 +52,11 @@
 #define TARGET_LIB_INT_CMP_BIASED !TARGET_BPABI
 
 /* Tell the assembler to build BPABI binaries.  */
-#undef SUBTARGET_EXTRA_ASM_SPEC
+#undef  SUBTARGET_EXTRA_ASM_SPEC
 #define SUBTARGET_EXTRA_ASM_SPEC "%{mabi=apcs-gnu|mabi=atpcs:-meabi=gnu;:-meabi=4}"
 
 /* The generic link spec in elf.h does not support shared libraries.  */
-#undef LINK_SPEC
+#undef  LINK_SPEC
 #define LINK_SPEC "%{mbig-endian:-EB} %{mlittle-endian:-EL} "		\
   "%{static:-Bstatic} %{shared:-shared} %{symbolic:-Bsymbolic} "	\
   "-X"
@@ -102,7 +109,7 @@
 #define TARGET_BPABI_CPP_BUILTINS()			\
   do							\
     {							\
-      builtin_define ("__GXX_MERGED_TYPEINFO_NAMES=0");	\
+      builtin_define ("__GXX_TYPEINFO_EQUALITY_INLINE=0");	\
     }							\
   while (false)
 

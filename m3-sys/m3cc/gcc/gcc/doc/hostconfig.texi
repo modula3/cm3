@@ -1,5 +1,5 @@
 @c Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-@c 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+@c 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
 @c This is part of the GCC manual.
 @c For copying conditions, see the file gccint.texi.
 
@@ -207,11 +207,6 @@ initialization when @code{collect2} is being initialized.
 @item GCC_DRIVER_HOST_INITIALIZATION
 If defined, a C statement (sans semicolon) that performs host-dependent
 initialization when a compilation driver is being initialized.
-
-@item SMALL_ARG_MAX
-Define this macro if the host system has a small limit on the total
-size of an argument vector.  This causes the driver to take more care
-not to pass unnecessary arguments to subprocesses.
 
 @item HOST_LONG_LONG_FORMAT
 If defined, the string used to indicate an argument of type @code{long

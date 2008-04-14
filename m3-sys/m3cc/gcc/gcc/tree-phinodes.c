@@ -1,11 +1,11 @@
 /* Generic routines for manipulating PHIs
-   Copyright (C) 2003, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2003, 2005, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -218,7 +217,6 @@ make_phi_node (tree var, int len)
   TREE_SET_CODE (phi, PHI_NODE);
   PHI_NUM_ARGS (phi) = len;
   PHI_ARG_CAPACITY (phi) = capacity;
-  TREE_TYPE (phi) = TREE_TYPE (var);
   if (TREE_CODE (var) == SSA_NAME)
     SET_PHI_RESULT (phi, var);
   else
@@ -233,6 +231,7 @@ make_phi_node (tree var, int len)
       imm->next = NULL;
       imm->stmt = phi;
     }
+
   return phi;
 }
 
@@ -301,7 +300,6 @@ resize_phi_node (tree *phi, int len)
       imm->stmt = new_phi;
     }
 
-
   *phi = new_phi;
 }
 
@@ -314,7 +312,7 @@ reserve_phi_args_for_new_edge (basic_block bb)
   int len = EDGE_COUNT (bb->preds);
   int cap = ideal_phi_node_len (len + 4);
 
-  for (loc = &(bb->phi_nodes);
+  for (loc = phi_nodes_ptr (bb);
        *loc;
        loc = &PHI_CHAIN (*loc))
     {
@@ -343,6 +341,7 @@ reserve_phi_args_for_new_edge (basic_block bb)
     }
 }
 
+
 /* Create a new PHI node for variable VAR at basic block BB.  */
 
 tree
@@ -354,13 +353,14 @@ create_phi_node (tree var, basic_block bb)
 
   /* Add the new PHI node to the list of PHI nodes for block BB.  */
   PHI_CHAIN (phi) = phi_nodes (bb);
-  bb->phi_nodes = phi;
+  set_phi_nodes (bb, phi);
 
   /* Associate BB to the PHI node.  */
   set_bb_for_stmt (phi, bb);
 
   return phi;
 }
+
 
 /* Add a new argument to PHI node PHI.  DEF is the incoming reaching
    definition and E is the edge through which DEF reaches PHI.  The new
@@ -392,8 +392,8 @@ add_phi_arg (tree phi, tree def, edge e)
     }
 
   SET_PHI_ARG_DEF (phi, e->dest_idx, def);
-  PHI_ARG_NONZERO (phi, e->dest_idx) = false;
 }
+
 
 /* Remove the Ith argument from PHI's argument list.  This routine
    implements removal by swapping the last alternative with the
@@ -407,23 +407,27 @@ remove_phi_arg_num (tree phi, int i)
 
   gcc_assert (i < num_elem);
 
-  /* Delink the last item, which is being removed.  */
-  delink_imm_use (&(PHI_ARG_IMM_USE_NODE (phi, num_elem - 1)));
+  /* Delink the item which is being removed.  */
+  delink_imm_use (&(PHI_ARG_IMM_USE_NODE (phi, i)));
 
-  /* If we are not at the last element, switch the last element
-     with the element we want to delete.  */
+  /* If it is not the last element, move the last element
+     to the element we want to delete, resetting all the links. */
   if (i != num_elem - 1)
     {
-      SET_PHI_ARG_DEF (phi, i, PHI_ARG_DEF (phi, num_elem - 1));
-      PHI_ARG_NONZERO (phi, i) = PHI_ARG_NONZERO (phi, num_elem - 1);
+      use_operand_p old_p, new_p;
+      old_p = &PHI_ARG_IMM_USE_NODE (phi, num_elem - 1);
+      new_p = &PHI_ARG_IMM_USE_NODE (phi, i);
+      /* Set use on new node, and link into last element's place.  */
+      *(new_p->use) = *(old_p->use);
+      relink_imm_use (new_p, old_p);
     }
 
   /* Shrink the vector and return.  Note that we do not have to clear
-     PHI_ARG_DEF or PHI_ARG_NONZERO because the garbage collector will
-     not look at those elements beyond the first PHI_NUM_ARGS elements
-     of the array.  */
+     PHI_ARG_DEF because the garbage collector will not look at those
+     elements beyond the first PHI_NUM_ARGS elements of the array.  */
   PHI_NUM_ARGS (phi)--;
 }
+
 
 /* Remove all PHI arguments associated with edge E.  */
 
@@ -436,11 +440,14 @@ remove_phi_args (edge e)
     remove_phi_arg_num (phi, e->dest_idx);
 }
 
+
 /* Remove PHI node PHI from basic block BB.  If PREV is non-NULL, it is
-   used as the node immediately before PHI in the linked list.  */
+   used as the node immediately before PHI in the linked list.  If
+   RELEASE_LHS_P is true, the LHS of this PHI node is released into
+   the free pool of SSA names.  */
 
 void
-remove_phi_node (tree phi, tree prev)
+remove_phi_node (tree phi, tree prev, bool release_lhs_p)
 {
   tree *loc;
 
@@ -450,7 +457,7 @@ remove_phi_node (tree phi, tree prev)
     }
   else
     {
-      for (loc = &(bb_for_stmt (phi)->phi_nodes);
+      for (loc = phi_nodes_ptr (bb_for_stmt (phi));
 	   *loc != phi;
 	   loc = &PHI_CHAIN (*loc))
 	;
@@ -462,7 +469,8 @@ remove_phi_node (tree phi, tree prev)
   /* If we are deleting the PHI node, then we should release the
      SSA_NAME node so that it can be reused.  */
   release_phi_node (phi);
-  release_ssa_name (PHI_RESULT (phi));
+  if (release_lhs_p)
+    release_ssa_name (PHI_RESULT (phi));
 }
 
 

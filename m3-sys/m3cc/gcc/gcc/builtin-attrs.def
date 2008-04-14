@@ -1,11 +1,11 @@
-/* Copyright (C) 2001, 2002, 2004, 2005 Free Software Foundation, Inc.
+/* Copyright (C) 2001, 2002, 2004, 2005, 2007 Free Software Foundation, Inc.
    Contributed by Joseph Myers <jsm28@cam.ac.uk>.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -14,9 +14,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* This header provides a declarative way of describing the attributes
    that are applied to some functions by default.
@@ -94,6 +93,7 @@ DEF_ATTR_IDENT (ATTR_SCANF, "scanf")
 DEF_ATTR_IDENT (ATTR_SENTINEL, "sentinel")
 DEF_ATTR_IDENT (ATTR_STRFMON, "strfmon")
 DEF_ATTR_IDENT (ATTR_STRFTIME, "strftime")
+DEF_ATTR_IDENT (ATTR_TYPEGENERIC, "type generic")
 
 DEF_ATTR_TREE_LIST (ATTR_NOVOPS_LIST, ATTR_NOVOPS, ATTR_NULL, ATTR_NULL)
 
@@ -118,6 +118,8 @@ DEF_ATTR_TREE_LIST (ATTR_NONNULL_LIST, ATTR_NONNULL, ATTR_NULL, ATTR_NULL)
 DEF_ATTR_TREE_LIST (ATTR_NONNULL_1, ATTR_NONNULL, ATTR_LIST_1, ATTR_NULL)
 /* Functions whose second parameter is a nonnull pointer.  */
 DEF_ATTR_TREE_LIST (ATTR_NONNULL_2, ATTR_NONNULL, ATTR_LIST_2, ATTR_NULL)
+/* Functions whose third parameter is a nonnull pointer.  */
+DEF_ATTR_TREE_LIST (ATTR_NONNULL_3, ATTR_NONNULL, ATTR_LIST_3, ATTR_NULL)
 /* Nothrow functions with the sentinel(1) attribute. */
 DEF_ATTR_TREE_LIST (ATTR_NOTHROW_SENTINEL_1, ATTR_SENTINEL, ATTR_LIST_1, \
 			ATTR_NOTHROW_LIST)
@@ -142,6 +144,9 @@ DEF_ATTR_TREE_LIST (ATTR_NOTHROW_NONNULL_5, ATTR_NONNULL, ATTR_LIST_5, \
 /* Nothrow const functions whose pointer parameter(s) are all nonnull.  */
 DEF_ATTR_TREE_LIST (ATTR_CONST_NOTHROW_NONNULL, ATTR_CONST, ATTR_NULL, \
 			ATTR_NOTHROW_NONNULL)
+/* Nothrow const functions which are type-generic.  */
+DEF_ATTR_TREE_LIST (ATTR_CONST_NOTHROW_TYPEGENERIC, ATTR_TYPEGENERIC, ATTR_NULL, \
+			ATTR_CONST_NOTHROW_LIST)
 /* Nothrow pure functions whose pointer parameter(s) are all nonnull.  */
 DEF_ATTR_TREE_LIST (ATTR_PURE_NOTHROW_NONNULL, ATTR_PURE, ATTR_NULL, \
 			ATTR_NOTHROW_NONNULL)
@@ -154,24 +159,38 @@ DEF_ATTR_TREE_LIST (ATTR_MALLOC_NOTHROW_NONNULL, ATTR_MALLOC, ATTR_NULL, \
   DEF_ATTR_TREE_LIST (ATTR_##TYPE##_##VALUES, ATTR_NULL,		 \
 		      ATTR_##TYPE, ATTR_LIST_##VALUES)			 \
   DEF_ATTR_TREE_LIST (ATTR_FORMAT_##TYPE##_##VALUES, ATTR_FORMAT,	 \
+		      ATTR_##TYPE##_##VALUES, ATTR_NONNULL_##FA)
+#define DEF_FORMAT_ATTRIBUTE_NOTHROW(TYPE, FA, VALUES)			 \
+  DEF_ATTR_TREE_LIST (ATTR_##TYPE##_##VALUES, ATTR_NULL,		 \
+		      ATTR_##TYPE, ATTR_LIST_##VALUES)			 \
+  DEF_ATTR_TREE_LIST (ATTR_FORMAT_##TYPE##_NOTHROW_##VALUES, ATTR_FORMAT,\
+		      ATTR_##TYPE##_##VALUES, ATTR_NOTHROW_NONNULL_##FA)
+#define DEF_FORMAT_ATTRIBUTE_BOTH(TYPE, FA, VALUES)			 \
+  DEF_ATTR_TREE_LIST (ATTR_##TYPE##_##VALUES, ATTR_NULL,		 \
+		      ATTR_##TYPE, ATTR_LIST_##VALUES)			 \
+  DEF_ATTR_TREE_LIST (ATTR_FORMAT_##TYPE##_##VALUES, ATTR_FORMAT,	 \
+		      ATTR_##TYPE##_##VALUES, ATTR_NONNULL_##FA)	 \
+  DEF_ATTR_TREE_LIST (ATTR_FORMAT_##TYPE##_NOTHROW_##VALUES, ATTR_FORMAT,\
 		      ATTR_##TYPE##_##VALUES, ATTR_NOTHROW_NONNULL_##FA)
 DEF_FORMAT_ATTRIBUTE(PRINTF,1,1_0)
 DEF_FORMAT_ATTRIBUTE(PRINTF,1,1_2)
-DEF_FORMAT_ATTRIBUTE(PRINTF,2,2_0)
-DEF_FORMAT_ATTRIBUTE(PRINTF,2,2_3)
-DEF_FORMAT_ATTRIBUTE(PRINTF,3,3_0)
-DEF_FORMAT_ATTRIBUTE(PRINTF,3,3_4)
-DEF_FORMAT_ATTRIBUTE(PRINTF,4,4_0)
-DEF_FORMAT_ATTRIBUTE(PRINTF,4,4_5)
-DEF_FORMAT_ATTRIBUTE(PRINTF,5,5_0)
-DEF_FORMAT_ATTRIBUTE(PRINTF,5,5_6)
+DEF_FORMAT_ATTRIBUTE_BOTH(PRINTF,2,2_0)
+DEF_FORMAT_ATTRIBUTE_BOTH(PRINTF,2,2_3)
+DEF_FORMAT_ATTRIBUTE_BOTH(PRINTF,3,3_0)
+DEF_FORMAT_ATTRIBUTE_BOTH(PRINTF,3,3_4)
+DEF_FORMAT_ATTRIBUTE_NOTHROW(PRINTF,4,4_0)
+DEF_FORMAT_ATTRIBUTE_NOTHROW(PRINTF,4,4_5)
+DEF_FORMAT_ATTRIBUTE_NOTHROW(PRINTF,5,5_0)
+DEF_FORMAT_ATTRIBUTE_NOTHROW(PRINTF,5,5_6)
 DEF_FORMAT_ATTRIBUTE(SCANF,1,1_0)
 DEF_FORMAT_ATTRIBUTE(SCANF,1,1_2)
-DEF_FORMAT_ATTRIBUTE(SCANF,2,2_0)
-DEF_FORMAT_ATTRIBUTE(SCANF,2,2_3)
-DEF_FORMAT_ATTRIBUTE(STRFTIME,3,3_0)
-DEF_FORMAT_ATTRIBUTE(STRFMON,3,3_4)
+DEF_FORMAT_ATTRIBUTE_BOTH(SCANF,2,2_0)
+DEF_FORMAT_ATTRIBUTE_BOTH(SCANF,2,2_3)
+DEF_FORMAT_ATTRIBUTE_NOTHROW(STRFTIME,3,3_0)
+DEF_FORMAT_ATTRIBUTE_NOTHROW(STRFMON,3,3_4)
 #undef DEF_FORMAT_ATTRIBUTE
+#undef DEF_FORMAT_ATTRIBUTE_NOTHROW
+#undef DEF_FORMAT_ATTRIBUTE_BOTH
 
 /* Construct a tree for a format_arg attribute.  */
 #define DEF_FORMAT_ARG_ATTRIBUTE(FA)					\

@@ -1,6 +1,6 @@
 /* Relative (relocatable) prefix support.
    Copyright (C) 1987, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000, 2001, 2002 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002, 2006 Free Software Foundation, Inc.
 
 This file is part of libiberty.
 
@@ -201,10 +201,13 @@ free_split_directories (char **dirs)
 {
   int i = 0;
 
-  while (dirs[i] != NULL)
-    free (dirs[i++]);
+  if (dirs != NULL)
+    {
+      while (dirs[i] != NULL)
+	free (dirs[i++]);
 
-  free ((char *) dirs);
+      free ((char *) dirs);
+    }
 }
 
 /* Given three strings PROGNAME, BIN_PREFIX, PREFIX, return a string that gets
@@ -217,15 +220,15 @@ free_split_directories (char **dirs)
 
    If no relative prefix can be found, return NULL.  */
 
-char *
-make_relative_prefix (const char *progname,
-                      const char *bin_prefix, const char *prefix)
+static char *
+make_relative_prefix_1 (const char *progname, const char *bin_prefix,
+			const char *prefix, const int resolve_links)
 {
-  char **prog_dirs, **bin_dirs, **prefix_dirs;
+  char **prog_dirs = NULL, **bin_dirs = NULL, **prefix_dirs = NULL;
   int prog_num, bin_num, prefix_num;
   int i, n, common;
   int needed_len;
-  char *ret, *ptr, *full_progname = NULL;
+  char *ret = NULL, *ptr, *full_progname;
 
   if (progname == NULL || bin_prefix == NULL || prefix == NULL)
     return NULL;
@@ -289,15 +292,23 @@ make_relative_prefix (const char *progname,
 	}
     }
 
-  full_progname = lrealpath (progname);
-  if (full_progname == NULL)
-    return NULL;
+  if ( resolve_links )
+    {
+      full_progname = lrealpath (progname);
+      if (full_progname == NULL)
+	return NULL;
+    }
+  else
+    full_progname = strdup(progname);
 
   prog_dirs = split_directories (full_progname, &prog_num);
-  bin_dirs = split_directories (bin_prefix, &bin_num);
   free (full_progname);
-  if (bin_dirs == NULL || prog_dirs == NULL)
+  if (prog_dirs == NULL)
     return NULL;
+
+  bin_dirs = split_directories (bin_prefix, &bin_num);
+  if (bin_dirs == NULL)
+    goto bailout;
 
   /* Remove the program name from comparison of directory names.  */
   prog_num--;
@@ -315,21 +326,12 @@ make_relative_prefix (const char *progname,
 	}
 
       if (prog_num <= 0 || i == bin_num)
-	{
-	  free_split_directories (prog_dirs);
-	  free_split_directories (bin_dirs);
-	  prog_dirs = bin_dirs = (char **) 0;
-	  return NULL;
-	}
+	goto bailout;
     }
 
   prefix_dirs = split_directories (prefix, &prefix_num);
   if (prefix_dirs == NULL)
-    {
-      free_split_directories (prog_dirs);
-      free_split_directories (bin_dirs);
-      return NULL;
-    }
+    goto bailout;
 
   /* Find how many directories are in common between bin_prefix & prefix.  */
   n = (prefix_num < bin_num) ? prefix_num : bin_num;
@@ -341,12 +343,7 @@ make_relative_prefix (const char *progname,
 
   /* If there are no common directories, there can be no relative prefix.  */
   if (common == 0)
-    {
-      free_split_directories (prog_dirs);
-      free_split_directories (bin_dirs);
-      free_split_directories (prefix_dirs);
-      return NULL;
-    }
+    goto bailout;
 
   /* Two passes: first figure out the size of the result string, and
      then construct it.  */
@@ -360,7 +357,7 @@ make_relative_prefix (const char *progname,
 
   ret = (char *) malloc (needed_len);
   if (ret == NULL)
-    return NULL;
+    goto bailout;
 
   /* Build up the pathnames in argv[0].  */
   *ret = '\0';
@@ -381,9 +378,37 @@ make_relative_prefix (const char *progname,
   for (i = common; i < prefix_num; i++)
     strcat (ret, prefix_dirs[i]);
 
+ bailout:
   free_split_directories (prog_dirs);
   free_split_directories (bin_dirs);
   free_split_directories (prefix_dirs);
 
   return ret;
 }
+
+
+/* Do the full job, including symlink resolution.
+   This path will find files installed in the same place as the
+   program even when a soft link has been made to the program
+   from somwhere else. */
+
+char *
+make_relative_prefix (const char *progname, const char *bin_prefix,
+		      const char *prefix)
+{
+  return make_relative_prefix_1 (progname, bin_prefix, prefix, 1);
+}
+
+/* Make the relative pathname without attempting to resolve any links.
+   '..' etc may also be left in the pathname.
+   This will find the files the user meant the program to find if the
+   installation is patched together with soft links. */
+
+char *
+make_relative_prefix_ignore_links (const char *progname,
+				   const char *bin_prefix,
+				   const char *prefix)
+{
+  return make_relative_prefix_1 (progname, bin_prefix, prefix, 0);
+}
+

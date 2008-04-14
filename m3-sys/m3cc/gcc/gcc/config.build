@@ -1,12 +1,12 @@
 # GCC build-specific configuration file.
-# Copyright 1997, 1998, 1999, 2000, 2001, 2002, 2003
+# Copyright 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2007, 2008
 # Free Software Foundation, Inc.
 
 #This file is part of GCC.
 
 #GCC is free software; you can redistribute it and/or modify it under
 #the terms of the GNU General Public License as published by the Free
-#Software Foundation; either version 2, or (at your option) any later
+#Software Foundation; either version 3, or (at your option) any later
 #version.
 
 #GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -15,9 +15,8 @@
 #for more details.
 
 #You should have received a copy of the GNU General Public License
-#along with GCC; see the file COPYING.  If not, write to the Free
-#Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-#02110-1301, USA.
+#along with GCC; see the file COPYING3.  If not see
+#<http://www.gnu.org/licenses/>.
 
 # This is the GCC build-specific configuration file
 # where a configuration type is mapped to different system-specific
@@ -48,6 +47,7 @@ build_xm_file=
 build_xm_defines=
 build_exeext=
 build_install_headers_dir=install-headers-tar
+build_file_translate=
 
 # System-specific settings.
 case $build in
@@ -77,9 +77,14 @@ case $build in
     build_xm_file=i386/xm-cygwin.h
     build_exeext=.exe
     ;;
-  i[34567]86-*-mingw32*)
+  i[34567]86-*-mingw32* | x86_64-*-mingw*)
     build_xm_file=i386/xm-mingw32.h
     build_exeext=.exe
+    t=`(CMD //c echo /c) 2>/dev/null`
+    case $t in ?:*)
+      build_file_translate="CMD //c"
+      ;;
+    esac
     ;;
   i[34567]86-pc-msdosdjgpp*)
     build_xm_file=i386/xm-djgpp.h
@@ -90,15 +95,10 @@ case $build in
     build_install_headers_dir=install-headers-cpio
     ;;
   i[34567]86-sequent-ptx4* | i[34567]86-sequent-sysv4* )
-    build_xm_defines="SMALL_ARG_MAX"
     build_install_headers_dir=install-headers-cpio
-    ;;
-  i[34567]86-*-solaris2*)
-    build_xm_defines="SMALL_ARG_MAX"
     ;;
   i[34567]86-*-sysv4*) 
     # Intel x86 running system V r4
-    build_xm_defines="SMALL_ARG_MAX"
     build_install_headers_dir=install-headers-cpio
     ;;
   i[34567]86-*-udk*) 

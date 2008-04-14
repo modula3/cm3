@@ -1,5 +1,5 @@
 ;; XSTORMY16 Machine description template
-;; Copyright (C) 1997, 1998, 1999, 2001, 2002, 2003, 2004, 2005
+;; Copyright (C) 1997, 1998, 1999, 2001, 2002, 2003, 2004, 2005, 2007, 2008
 ;; Free Software Foundation, Inc.
 ;; Contributed by Red Hat, Inc.
 
@@ -7,7 +7,7 @@
 
 ;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 ;;- See file "rtl.def" for documentation on define_insn, match_*, et. al.
 
@@ -186,7 +185,7 @@
 
 (define_insn "movhi_internal"
   [(set (match_operand:HI 0 "nonimmediate_nonstack_operand" "=r,m,e,e,T,r,S,W,r")
-	(match_operand:HI 1 "xs_hi_general_operand"       "r,e,m,L,L,i,i,ir,W"))]
+	(match_operand:HI 1 "xs_hi_general_operand"          "r,e,m,L,L,i,i,ie,W"))]
   ""
   "@
    mov %0,%1
@@ -300,16 +299,13 @@
 
 ;; ::::::::::::::::::::
 ;; ::
-;; :: 16 bit Integer arithmetic
+;; :: 16-bit Integer arithmetic
 ;; ::
 ;; ::::::::::::::::::::
 
 ;; Addition
-; Operand 3 is marked earlyclobber because that helps reload
-; to generate better code---this pattern will never need the
-; carry register as an input, and some output reloads or input
-; reloads might need to use it.  In fact, without the '&' reload
-; will fail in some cases.
+; Note - the early clobber modifier is no longer needed on operand 3
+; and in fact can cause some reload spill failures if it is present.
 ; Note that the 'Z' constraint matches "add $reg,0", which reload
 ; will occasionally emit.  We avoid the "add $reg,imm" match because
 ; it clobbers the carry.
@@ -317,7 +313,7 @@
   [(set (match_operand:HI 0 "register_operand" "=r,r,r,T,T,r,r,r")
 	(plus:HI (match_operand:HI 1 "register_operand" "%0,0,0,0,0,0,0,0")
 		 (match_operand:HI 2 "xs_hi_nonmemory_operand" "O,P,Z,L,M,Ir,N,i")))
-   (clobber (match_scratch:BI 3 "=X,X,X,&y,&y,&y,&y,&y"))]
+   (clobber (match_scratch:BI 3 "=X,X,X,y,y,y,y,y"))]
   ""
   "@
    inc %0,%o2
@@ -449,7 +445,7 @@
   "mul"
   [(set_attr "psw_operand" "nop")])
 
-;; Unsigned multiplication producing 64 bit results from 32 bit inputs
+;; Unsigned multiplication producing 64-bit results from 32-bit inputs
 ; The constraint on operand 0 is 't' because it is actually two regs
 ; long, and both regs must match the constraint.
 (define_insn "umulhisi3"
@@ -522,7 +518,7 @@
 
 ;; ::::::::::::::::::::
 ;; ::
-;; :: 16 bit Integer Shifts and Rotates
+;; :: 16-bit Integer Shifts and Rotates
 ;; ::
 ;; ::::::::::::::::::::
 
@@ -556,11 +552,11 @@
 
 ;; ::::::::::::::::::::
 ;; ::
-;; :: 16 Bit Integer Logical operations
+;; :: 16-Bit Integer Logical operations
 ;; ::
 ;; ::::::::::::::::::::
 
-;; Logical AND, 16 bit integers
+;; Logical AND, 16-bit integers
 (define_insn "andhi3"
   [(set (match_operand:HI 0 "xstormy16_splittable_below100_or_register" "=T,r,r,r,W")
 	(and:HI (match_operand:HI 1 "xstormy16_below100_or_register" "%0,0,0,0,0")
@@ -590,7 +586,7 @@
    }
 ")
 
-;; Inclusive OR, 16 bit integers
+;; Inclusive OR, 16-bit integers
 (define_insn "iorhi3"
   [(set (match_operand:HI 0 "xstormy16_splittable_below100_or_register" "=T,r,r,r,W")
 	(ior:HI (match_operand:HI 1 "xstormy16_below100_or_register" "%0,0,0,0,0")
@@ -620,7 +616,7 @@
    }
 ")
 
-;; Exclusive OR, 16 bit integers
+;; Exclusive OR, 16-bit integers
 (define_insn "xorhi3"
   [(set (match_operand:HI 0 "register_operand" "=T,r,r")
 	(xor:HI (match_operand:HI 1 "register_operand" "%0,0,0")
@@ -632,7 +628,7 @@
    xor %0,%2"
   [(set_attr "length" "2,2,4")])
 
-;; One's complement, 16 bit integers
+;; One's complement, 16-bit integers
 (define_insn "one_cmplhi2"
   [(set (match_operand:HI 0 "register_operand" "=r")
 	(not:HI (match_operand:HI 1 "register_operand" "0")))]
@@ -642,7 +638,7 @@
 
 ;; ::::::::::::::::::::
 ;; ::
-;; :: 32 bit Integer arithmetic
+;; :: 32-bit Integer arithmetic
 ;; ::
 ;; ::::::::::::::::::::
 
@@ -695,7 +691,7 @@
 
 ;; ::::::::::::::::::::
 ;; ::
-;; :: 32 bit Integer Shifts and Rotates
+;; :: 32-bit Integer Shifts and Rotates
 ;; ::
 ;; ::::::::::::::::::::
 
@@ -884,11 +880,7 @@
 				       (const_int 0)])
 		      (label_ref (match_operand 0 "" ""))
 		      (pc)))
-;; Although I would greatly like the 'match_dup' in the following line
-;; to actually be a register constraint, there is (at the time of writing) no
-;; way for reload to insert an output reload on the edges out of a branch.
-;; If reload is fixed to use insert_insn_on_edge, this can be changed.
-   (clobber (match_dup 2))]
+   (clobber (match_operand:SI 3 "register_operand" "=2"))]
   ""
   "*
 {
@@ -906,15 +898,7 @@
 							 "ri")])
 		      (label_ref (match_operand 0 "" ""))
 		      (pc)))
-;; Although I would greatly like the 'match_dup' in the following line
-;; to actually be a register constraint, there is (at the time of writing) no
-;; way for reload to insert an output reload on the edges out of a branch.
-;; If reload is fixed to use insert_insn_on_edge, this can be changed,
-;; preferably to a 'minus' operand that explains the actual operation, like:
-; (set (match_operand 5 "register_operand" "=2")
-;      (minus:SI (match_operand 6 "register_operand" "2")
-;		 (match_operand 7 "register_operand" "3")))
-   (clobber (match_dup 2))
+   (clobber (match_operand:SI 5 "register_operand" "=2"))
    (clobber (match_operand:BI 4 "" "=&y"))]
   ""
   "#"

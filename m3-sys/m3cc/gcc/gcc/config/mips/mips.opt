@@ -1,12 +1,12 @@
 ; Options for the MIPS port of the compiler
 ;
-; Copyright (C) 2005 Free Software Foundation, Inc.
+; Copyright (C) 2005, 2007 Free Software Foundation, Inc.
 ;
 ; This file is part of GCC.
 ;
 ; GCC is free software; you can redistribute it and/or modify it under
 ; the terms of the GNU General Public License as published by the Free
-; Software Foundation; either version 2, or (at your option) any later
+; Software Foundation; either version 3, or (at your option) any later
 ; version.
 ;
 ; GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -15,9 +15,8 @@
 ; License for more details.
 ;
 ; You should have received a copy of the GNU General Public License
-; along with GCC; see the file COPYING.  If not, write to the Free
-; Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-; 02110-1301, USA.
+; along with GCC; see the file COPYING3.  If not see
+; <http://www.gnu.org/licenses/>.
 
 mabi=
 Target RejectNegative Joined
@@ -25,7 +24,7 @@ Target RejectNegative Joined
 
 mabicalls
 Target Report Mask(ABICALLS)
-Use SVR4-style PIC
+Generate code that can be used in SVR4-style dynamic objects
 
 mad
 Target Report Var(TARGET_MAD)
@@ -35,13 +34,25 @@ march=
 Target RejectNegative Joined Var(mips_arch_string)
 -march=ISA	Generate code for the given ISA
 
+mbranch-cost=
+Target RejectNegative Joined UInteger Var(mips_branch_cost)
+-mbranch-cost=COST	Set the cost of branches to roughly COST instructions
+
 mbranch-likely
 Target Report Mask(BRANCHLIKELY)
 Use Branch Likely instructions, overriding the architecture default
 
+mflip-mips16
+Target Report Var(TARGET_FLIP_MIPS16)
+Switch on/off MIPS16 ASE on alternating functions for compiler testing
+
 mcheck-zero-division
 Target Report Mask(CHECK_ZERO_DIV)
 Trap on integer divide by zero
+
+mcode-readable=
+Target RejectNegative Joined
+-mcode-readable=SETTING	Specify when instructions are allowed to access code
 
 mdivide-breaks
 Target Report RejectNegative Mask(DIVIDE_BREAKS)
@@ -51,6 +62,10 @@ mdivide-traps
 Target Report RejectNegative InverseMask(DIVIDE_BREAKS, DIVIDE_TRAPS)
 Use trap instructions to check for integer divide by zero
 
+mdmx
+Target Report RejectNegative Var(TARGET_MDMX)
+Allow the use of MDMX instructions
+
 mdouble-float
 Target Report RejectNegative InverseMask(SINGLE_FLOAT, DOUBLE_FLOAT)
 Allow hardware floating-point instructions to cover both 32-bit and 64-bit operations
@@ -58,6 +73,10 @@ Allow hardware floating-point instructions to cover both 32-bit and 64-bit opera
 mdsp
 Target Report Mask(DSP)
 Use MIPS-DSP instructions
+
+mdspr2
+Target Report Mask(DSPR2)
+Use MIPS-DSP REV 2 instructions
 
 mdebug
 Target Var(TARGET_DEBUG_MODE) Undocumented
@@ -80,6 +99,10 @@ Use ROM instead of RAM
 mexplicit-relocs
 Target Report Mask(EXPLICIT_RELOCS)
 Use NewABI-style %reloc() assembly operators
+
+mextern-sdata
+Target Report Var(TARGET_EXTERN_SDATA) Init(1)
+Use -G for data that is not defined by the current object
 
 mfix-r4000
 Target Report Mask(FIX_R4000)
@@ -133,9 +156,17 @@ mgp64
 Target Report RejectNegative Mask(64BIT)
 Use 64-bit general registers
 
+mgpopt
+Target Report Var(TARGET_GPOPT) Init(1)
+Use GP-relative addressing to access small data
+
 mhard-float
-Target Report RejectNegative InverseMask(SOFT_FLOAT, HARD_FLOAT)
-Allow the use of hardware floating-point instructions
+Target Report RejectNegative InverseMask(SOFT_FLOAT_ABI, HARD_FLOAT_ABI)
+Allow the use of hardware floating-point ABI and instructions
+
+minterlink-mips16
+Target Report Var(TARGET_INTERLINK_MIPS16) Init(0)
+Generate code that can be safely linked with MIPS16 code.
 
 mips
 Target RejectNegative Joined
@@ -143,11 +174,19 @@ Target RejectNegative Joined
 
 mips16
 Target Report RejectNegative Mask(MIPS16)
-Generate mips16 code
+Generate MIPS16 code
 
 mips3d
 Target Report RejectNegative Mask(MIPS3D)
 Use MIPS-3D instructions
+
+mllsc
+Target Report Mask(LLSC)
+Use ll, sc and sync instructions
+
+mlocal-sdata
+Target Report Var(TARGET_LOCAL_SDATA) Init(1)
+Use -G for object-local data
 
 mlong-calls
 Target Report Var(TARGET_LONG_CALLS)
@@ -162,16 +201,24 @@ Target Report RejectNegative Mask(LONG64)
 Use a 64-bit long type
 
 mmemcpy
-Target Report Var(TARGET_MEMCPY)
+Target Report Mask(MEMCPY)
 Don't optimize block moves
 
 mmips-tfile
 Target
 Use the mips-tfile postpass
 
+mmt
+Target Report Var(TARGET_MT)
+Allow the use of MT instructions
+
 mno-flush-func
 Target RejectNegative
 Do not use a cache-flushing function before calling stack trampolines
+
+mno-mdmx
+Target Report RejectNegative InverseVar(MDMX)
+Do not use MDMX instructions
 
 mno-mips16
 Target Report RejectNegative InverseMask(MIPS16)
@@ -185,12 +232,20 @@ mpaired-single
 Target Report Mask(PAIRED_SINGLE_FLOAT)
 Use paired-single floating-point instructions
 
+mshared
+Target Report Var(TARGET_SHARED) Init(1)
+When generating -mabicalls code, make the code suitable for use in shared libraries
+
 msingle-float
 Target Report RejectNegative Mask(SINGLE_FLOAT)
 Restrict the use of hardware floating-point instructions to 32-bit operations
 
+msmartmips
+Target Report RejectNegative Mask(SMARTMIPS)
+Use SmartMIPS instructions
+
 msoft-float
-Target Report RejectNegative Mask(SOFT_FLOAT)
+Target Report RejectNegative Mask(SOFT_FLOAT_ABI)
 Prevent the use of all hardware floating-point instructions
 
 msplit-addresses

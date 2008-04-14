@@ -1,12 +1,12 @@
 /* Various declarations for language-independent pretty-print subroutines.
-   Copyright (C) 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
    Contributed by Gabriel Dos Reis <gdr@integrable-solutions.net>
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #undef FLOAT /* This is for hpux. They should change hpux.  */
@@ -188,6 +187,7 @@ pp_base_indent (pretty_printer *pp)
    %Ns: likewise, but length specified as constant in the format string.
    %H: location_t.
    %J: a decl tree, from which DECL_SOURCE_LOCATION will be recorded.
+   %K: a statement, from which EXPR_LOCATION and TREE_BLOCK will be recorded.
    Flag 'q': quote formatted text (must come immediately after '%').
 
    Arguments can be used sequentially, or through %N$ resp. *N$
@@ -487,6 +487,33 @@ pp_base_format (pretty_printer *pp, text_info *text)
 	  }
 	  break;
 
+	case 'K':
+	  {
+	    tree t = va_arg (*text->args_ptr, tree), block;
+	    gcc_assert (text->locus != NULL);
+	    *text->locus = EXPR_LOCATION (t);
+	    gcc_assert (text->abstract_origin != NULL);
+	    block = TREE_BLOCK (t);
+	    *text->abstract_origin = NULL;
+	    while (block
+		   && TREE_CODE (block) == BLOCK
+		   && BLOCK_ABSTRACT_ORIGIN (block))
+	      {
+		tree ao = BLOCK_ABSTRACT_ORIGIN (block);
+
+		while (TREE_CODE (ao) == BLOCK && BLOCK_ABSTRACT_ORIGIN (ao))
+		  ao = BLOCK_ABSTRACT_ORIGIN (ao);
+
+		if (TREE_CODE (ao) == FUNCTION_DECL)
+		  {
+		    *text->abstract_origin = block;
+		    break;
+		  }
+		block = BLOCK_SUPERCONTEXT (block);
+	      }
+	  }
+	  break;
+
 	case '.':
 	  {
 	    int n;
@@ -634,7 +661,7 @@ pp_base_destroy_prefix (pretty_printer *pp)
 {
   if (pp->prefix != NULL)
     {
-      free ((char *) pp->prefix);
+      free (CONST_CAST (char *, pp->prefix));
       pp->prefix = NULL;
     }
 }
@@ -677,7 +704,7 @@ void
 pp_construct (pretty_printer *pp, const char *prefix, int maximum_length)
 {
   memset (pp, 0, sizeof (pretty_printer));
-  pp->buffer = xcalloc (1, sizeof (output_buffer));
+  pp->buffer = XCNEW (output_buffer);
   obstack_init (&pp->buffer->chunk_obstack);
   obstack_init (&pp->buffer->formatted_obstack);
   pp->buffer->obstack = &pp->buffer->formatted_obstack;

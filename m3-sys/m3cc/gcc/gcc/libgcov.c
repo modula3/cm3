@@ -218,7 +218,7 @@ gcov_exit (void)
     prefix_length = 0;
   
   /* Allocate and initialize the filename scratch space.  */
-  gi_filename = alloca (prefix_length + gcov_max_filename + 1);
+  gi_filename = (char *) alloca (prefix_length + gcov_max_filename + 1);
   if (prefix_length)
     memcpy (gi_filename, gcov_prefix, prefix_length);
   gi_filename_up = gi_filename + prefix_length;
@@ -614,6 +614,18 @@ __gcov_merge_add (gcov_type *counters, unsigned n_counters)
 }
 #endif /* L_gcov_merge_add */
 
+#ifdef L_gcov_merge_ior
+/* The profile merging function that just adds the counters.  It is given
+   an array COUNTERS of N_COUNTERS old counters and it reads the same number
+   of counters from the gcov file.  */
+void
+__gcov_merge_ior (gcov_type *counters, unsigned n_counters)
+{
+  for (; n_counters; counters++, n_counters--)
+    *counters |= gcov_read_counter ();
+}
+#endif
+
 #ifdef L_gcov_merge_single
 /* The profile merging function for choosing the most common value.
    It is given an array COUNTERS of N_COUNTERS old counters and it
@@ -726,7 +738,6 @@ __gcov_pow2_profiler (gcov_type *counters, gcov_type value)
 }
 #endif
 
-#ifdef L_gcov_one_value_profiler
 /* Tries to determine the most common value among its inputs.  Checks if the
    value stored in COUNTERS[0] matches VALUE.  If this is the case, COUNTERS[1]
    is incremented.  If this is not the case and COUNTERS[1] is not zero,
@@ -737,8 +748,8 @@ __gcov_pow2_profiler (gcov_type *counters, gcov_type value)
 
    In any case, COUNTERS[2] is incremented.  */
 
-void
-__gcov_one_value_profiler (gcov_type *counters, gcov_type value)
+static inline void
+__gcov_one_value_profiler_body (gcov_type *counters, gcov_type value)
 {
   if (value == counters[0])
     counters[1]++;
@@ -750,6 +761,48 @@ __gcov_one_value_profiler (gcov_type *counters, gcov_type value)
   else
     counters[1]--;
   counters[2]++;
+}
+
+#ifdef L_gcov_one_value_profiler
+void
+__gcov_one_value_profiler (gcov_type *counters, gcov_type value)
+{
+  __gcov_one_value_profiler_body (counters, value);
+}
+#endif
+
+#ifdef L_gcov_indirect_call_profiler
+/* Tries to determine the most common value among its inputs. */
+void
+__gcov_indirect_call_profiler (gcov_type* counter, gcov_type value, 
+			       void* cur_func, void* callee_func)
+{
+  if (cur_func == callee_func)
+    __gcov_one_value_profiler_body (counter, value);
+}
+#endif
+
+
+#ifdef L_gcov_average_profiler
+/* Increase corresponding COUNTER by VALUE.  FIXME: Perhaps we want
+   to saturate up.  */
+
+void
+__gcov_average_profiler (gcov_type *counters, gcov_type value)
+{
+  counters[0] += value;
+  counters[1] ++;
+}
+#endif
+
+#ifdef L_gcov_ior_profiler
+/* Increase corresponding COUNTER by VALUE.  FIXME: Perhaps we want
+   to saturate up.  */
+
+void
+__gcov_ior_profiler (gcov_type *counters, gcov_type value)
+{
+  *counters |= value;
 }
 #endif
 
@@ -786,7 +839,7 @@ __gcov_execl (const char *path, const char *arg, ...)
     length++;
   va_end (ap);
 
-  args = alloca (length * sizeof (void *));
+  args = (char **) alloca (length * sizeof (void *));
   args[0] = (char *) arg;
   for (i = 1; i < length; i++)
     args[i] = va_arg (aq, char *);
@@ -817,7 +870,7 @@ __gcov_execlp (const char *path, const char *arg, ...)
     length++;
   va_end (ap);
 
-  args = alloca (length * sizeof (void *));
+  args = (char **) alloca (length * sizeof (void *));
   args[0] = (char *) arg;
   for (i = 1; i < length; i++)
     args[i] = va_arg (aq, char *);
@@ -849,7 +902,7 @@ __gcov_execle (const char *path, const char *arg, ...)
     length++;
   va_end (ap);
 
-  args = alloca (length * sizeof (void *));
+  args = (char **) alloca (length * sizeof (void *));
   args[0] = (char *) arg;
   for (i = 1; i < length; i++)
     args[i] = va_arg (aq, char *);

@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler, for DEC Alpha on Cray
    T3E running Unicos/Mk.
-   Copyright (C) 2001, 2002, 2004, 2005
+   Copyright (C) 2001, 2002, 2004, 2005, 2007
    Free Software Foundation, Inc.
    Contributed by Roman Lechtchinsky (rl@cs.tu-berlin.de)
 
@@ -8,7 +8,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -17,9 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #undef TARGET_ABI_UNICOSMK
 #define TARGET_ABI_UNICOSMK 1
@@ -116,7 +115,7 @@ Boston, MA 02110-1301, USA.  */
    in registers) are allocated.  */
 
 #define REG_PARM_STACK_SPACE(DECL) 48
-#define OUTGOING_REG_PARM_STACK_SPACE
+#define OUTGOING_REG_PARM_STACK_SPACE 1
 
 /* If an argument can't be passed in registers even though not all argument
    registers have been used yet, it is passed on the stack in the space 
@@ -244,51 +243,9 @@ do { fprintf (FILE, "\tbr $1,0\n");			\
 /* Define this as 1 if `char' should by default be signed; else as 0.  */
 /* #define DEFAULT_SIGNED_CHAR 1 */
 
-/* The Cray assembler is really weird with respect to sections. It has only
-   named sections and you can't reopen a section once it has been closed.
-   This means that we have to generate unique names whenever we want to
-   reenter the text or the data section. The following is a rather bad hack
-   as TEXT_SECTION_ASM_OP and DATA_SECTION_ASM_OP are supposed to be
-   constants.  */
-
-#undef TEXT_SECTION_ASM_OP
-#define TEXT_SECTION_ASM_OP unicosmk_text_section ()
-
-#undef DATA_SECTION_ASM_OP
-#define DATA_SECTION_ASM_OP unicosmk_data_section ()
-
 /* There are no read-only sections on Unicos/Mk.  */
 
 #undef READONLY_DATA_SECTION_ASM_OP
-#define READONLY_DATA_SECTION data_section
-
-/* Define extra sections for common data and SSIBs (static subroutine
-   information blocks). The actual section header is output by the callers
-   of these functions.  */
-
-#undef EXTRA_SECTIONS
-#undef EXTRA_SECTION_FUNCTIONS
-
-#define EXTRA_SECTIONS in_common, in_ssib
-#define EXTRA_SECTION_FUNCTIONS	\
-COMMON_SECTION			\
-SSIB_SECTION	
-
-extern void common_section (void);
-#define COMMON_SECTION		\
-void				\
-common_section (void)		\
-{				\
-  in_section = in_common;	\
-}
-
-extern void ssib_section (void);
-#define SSIB_SECTION		\
-void				\
-ssib_section (void)		\
-{				\
-  in_section = in_ssib;		\
-}
 
 /* We take care of this in unicosmk_file_start.  */
 
@@ -413,7 +370,7 @@ ssib_section (void)		\
 
 #undef ASM_OUTPUT_LOCAL
 #define ASM_OUTPUT_ALIGNED_LOCAL(FILE, NAME, SIZE, ALIGN) \
-  do { data_section ();					\
+  do { switch_to_section (data_section);		\
        fprintf (FILE, "\t.align\t%d\n", floor_log2 ((ALIGN) / BITS_PER_UNIT));\
        ASM_OUTPUT_LABEL ((FILE), (NAME));		\
        fprintf (FILE, "\t.byte 0:"HOST_WIDE_INT_PRINT_UNSIGNED"\n",(SIZE));\
@@ -449,6 +406,7 @@ ssib_section (void)		\
 
 /* Switch into a generic section.  */
 #define TARGET_ASM_NAMED_SECTION unicosmk_asm_named_section
+#define TARGET_ASM_INIT_SECTIONS unicosmk_init_sections
 
 #undef ASM_OUTPUT_MAX_SKIP_ALIGN
 #define ASM_OUTPUT_MAX_SKIP_ALIGN(STREAM,POWER,MAXSKIP)
@@ -476,7 +434,5 @@ ssib_section (void)		\
    ??? The Craylibs directory should be autoconfed.  */
 #undef LIB_SPEC
 #define LIB_SPEC "-L/opt/ctl/craylibs/craylibs -lu -lm -lc -lsma"
-
-#undef EXPAND_BUILTIN_VA_START
 
 #define EH_FRAME_IN_DATA_SECTION 1

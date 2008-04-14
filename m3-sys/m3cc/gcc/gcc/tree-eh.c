@@ -1,11 +1,11 @@
 /* Exception handling semantics and decomposition for trees.
-   Copyright (C) 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -37,6 +36,7 @@ Boston, MA 02110-1301, USA.  */
 #include "langhooks.h"
 #include "ggc.h"
 #include "toplev.h"
+#include "pointer-set.h"
 
 
 /* Nonzero if we are using EH to handle cleanups.  */
@@ -57,15 +57,15 @@ using_eh_for_cleanups (void)
 static int
 struct_ptr_eq (const void *a, const void *b)
 {
-  const void * const * x = a;
-  const void * const * y = b;
+  const void * const * x = (const void * const *) a;
+  const void * const * y = (const void * const *) b;
   return *x == *y;
 }
 
 static hashval_t
 struct_ptr_hash (const void *a)
 {
-  const void * const * x = a;
+  const void * const * x = (const void * const *) a;
   return (size_t)*x >> 4;
 }
 
@@ -100,7 +100,7 @@ add_stmt_to_eh_region_fn (struct function *ifun, tree t, int num)
   gcc_assert (num >= 0);
   gcc_assert (TREE_CODE (t) != RESX_EXPR);
 
-  n = ggc_alloc (sizeof (*n));
+  n = GGC_NEW (struct throw_stmt_node);
   n->stmt = t;
   n->region_nr = num;
 
@@ -112,12 +112,6 @@ add_stmt_to_eh_region_fn (struct function *ifun, tree t, int num)
   slot = htab_find_slot (get_eh_throw_stmt_table (ifun), n, INSERT);
   gcc_assert (!*slot);
   *slot = n;
-  /* ??? For the benefit of calls.c, converting all this to rtl,
-     we need to record the call expression, not just the outer
-     modify statement.  */
-  if (TREE_CODE (t) == MODIFY_EXPR
-      && (t = get_call_expr_in (t)))
-    add_stmt_to_eh_region_fn (ifun, t, num);
 }
 
 void
@@ -141,12 +135,6 @@ remove_stmt_from_eh_region_fn (struct function *ifun, tree t)
   if (slot)
     {
       htab_clear_slot (get_eh_throw_stmt_table (ifun), slot);
-      /* ??? For the benefit of calls.c, converting all this to rtl,
-	 we need to record the call expression, not just the outer
-	 modify statement.  */
-      if (TREE_CODE (t) == MODIFY_EXPR
-	  && (t = get_call_expr_in (t)))
-	remove_stmt_from_eh_region_fn (ifun, t);
       return true;
     }
   else
@@ -160,21 +148,24 @@ remove_stmt_from_eh_region (tree t)
 }
 
 int
-lookup_stmt_eh_region_fn (struct function *ifun, tree t)
+lookup_stmt_eh_region_fn (struct function *ifun, const_tree t)
 {
   struct throw_stmt_node *p, n;
 
   if (!get_eh_throw_stmt_table (ifun))
     return -2;
 
-  n.stmt = t;
-  p = htab_find (get_eh_throw_stmt_table (ifun), &n);
+  /* The CONST_CAST is okay because we don't modify n.stmt throughout
+     its scope, or the scope of p.  */
+  n.stmt = CONST_CAST_TREE (t);
+  p = (struct throw_stmt_node *) htab_find (get_eh_throw_stmt_table (ifun),
+                                            &n);
 
   return (p ? p->region_nr : -1);
 }
 
 int
-lookup_stmt_eh_region (tree t)
+lookup_stmt_eh_region (const_tree t)
 {
   /* We can get called from initialized data when -fnon-call-exceptions
      is on; prevent crash.  */
@@ -202,7 +193,7 @@ record_in_finally_tree (tree child, tree parent)
   struct finally_tree_node *n;
   void **slot;
 
-  n = xmalloc (sizeof (*n));
+  n = XNEW (struct finally_tree_node);
   n->child = child;
   n->parent = parent;
 
@@ -266,7 +257,7 @@ outside_finally_tree (tree start, tree target)
   do
     {
       n.child = start;
-      p = htab_find (finally_tree, &n);
+      p = (struct finally_tree_node *) htab_find (finally_tree, &n);
       if (!p)
 	return true;
       start = p->parent;
@@ -323,6 +314,9 @@ struct leh_tf_state
   size_t goto_queue_size;
   size_t goto_queue_active;
 
+  /* Pointer map to help in searching qoto_queue when it is large.  */
+  struct pointer_map_t *goto_queue_map;
+
   /* The set of unique labels seen as entries in the goto queue.  */
   VEC(tree,heap) *dest_array;
 
@@ -350,28 +344,44 @@ struct leh_tf_state
 static void lower_eh_filter (struct leh_state *, tree *);
 static void lower_eh_constructs_1 (struct leh_state *, tree *);
 
-/* Comparison function for qsort/bsearch.  We're interested in
-   searching goto queue elements for source statements.  */
-
-static int
-goto_queue_cmp (const void *x, const void *y)
-{
-  tree a = ((const struct goto_queue_node *)x)->stmt;
-  tree b = ((const struct goto_queue_node *)y)->stmt;
-  return (a == b ? 0 : a < b ? -1 : 1);
-}
-
 /* Search for STMT in the goto queue.  Return the replacement,
    or null if the statement isn't in the queue.  */
+
+#define LARGE_GOTO_QUEUE 20
 
 static tree
 find_goto_replacement (struct leh_tf_state *tf, tree stmt)
 {
-  struct goto_queue_node tmp, *ret;
-  tmp.stmt = stmt;
-  ret = bsearch (&tmp, tf->goto_queue, tf->goto_queue_active,
-		 sizeof (struct goto_queue_node), goto_queue_cmp);
-  return (ret ? ret->repl_stmt : NULL);
+  unsigned int i;
+  void **slot;
+
+  if (tf->goto_queue_active < LARGE_GOTO_QUEUE)
+    {
+      for (i = 0; i < tf->goto_queue_active; i++)
+	if (tf->goto_queue[i].stmt == stmt)
+	  return tf->goto_queue[i].repl_stmt;
+      return NULL;
+    }
+
+  /* If we have a large number of entries in the goto_queue, create a
+     pointer map and use that for searching.  */
+
+  if (!tf->goto_queue_map)
+    {
+      tf->goto_queue_map = pointer_map_create ();
+      for (i = 0; i < tf->goto_queue_active; i++)
+	{
+	  slot = pointer_map_insert (tf->goto_queue_map, tf->goto_queue[i].stmt);
+          gcc_assert (*slot == NULL);
+	  *slot = (void *) &tf->goto_queue[i];
+	}
+    }
+
+  slot = pointer_map_contains (tf->goto_queue_map, stmt);
+  if (slot != NULL)
+    return (((struct goto_queue_node *) *slot)->repl_stmt);
+
+  return NULL;
 }
 
 /* A subroutine of replace_goto_queue_1.  Handles the sub-clauses of a
@@ -530,6 +540,8 @@ maybe_record_in_goto_queue (struct leh_state *state, tree stmt)
       gcc_unreachable ();
     }
 
+  gcc_assert (!tf->goto_queue_map);
+
   active = tf->goto_queue_active;
   size = tf->goto_queue_size;
   if (active >= size)
@@ -537,7 +549,7 @@ maybe_record_in_goto_queue (struct leh_state *state, tree stmt)
       size = (size ? size * 2 : 32);
       tf->goto_queue_size = size;
       tf->goto_queue
-	= xrealloc (tf->goto_queue, size * sizeof (struct goto_queue_node));
+         = XRESIZEVEC (struct goto_queue_node, tf->goto_queue, size);
     }
 
   q = &tf->goto_queue[active];
@@ -622,10 +634,10 @@ do_return_redirection (struct goto_queue_node *q, tree finlab, tree mod,
 	  q->cont_stmt = q->stmt;
 	  break;
 
-	case MODIFY_EXPR:
+	case GIMPLE_MODIFY_STMT:
 	  {
-	    tree result = TREE_OPERAND (ret_expr, 0);
-	    tree new, old = TREE_OPERAND (ret_expr, 1);
+	    tree result = GIMPLE_STMT_OPERAND (ret_expr, 0);
+	    tree new, old = GIMPLE_STMT_OPERAND (ret_expr, 1);
 
 	    if (!*return_value_p)
 	      {
@@ -644,13 +656,13 @@ do_return_redirection (struct goto_queue_node *q, tree finlab, tree mod,
 	    else
 	      new = *return_value_p;
 
-	    x = build (MODIFY_EXPR, TREE_TYPE (new), new, old);
+	    x = build_gimple_modify_stmt (new, old);
 	    append_to_statement_list (x, &q->repl_stmt);
 
 	    if (new == result)
 	      x = result;
 	    else
-	      x = build (MODIFY_EXPR, TREE_TYPE (result), result, new);
+	      x = build_gimple_modify_stmt (result, new);
 	    q->cont_stmt = build1 (RETURN_EXPR, void_type_node, x);
 	  }
 
@@ -828,6 +840,23 @@ honor_protect_cleanup_actions (struct leh_state *outer_state,
   if (this_state)
     finally = lower_try_finally_dup_block (finally, outer_state);
 
+  /* If this cleanup consists of a TRY_CATCH_EXPR with TRY_CATCH_IS_CLEANUP
+     set, the handler of the TRY_CATCH_EXPR is another cleanup which ought
+     to be in an enclosing scope, but needs to be implemented at this level
+     to avoid a nesting violation (see wrap_temporary_cleanups in
+     cp/decl.c).  Since it's logically at an outer level, we should call
+     terminate before we get to it, so strip it away before adding the
+     MUST_NOT_THROW filter.  */
+  i = tsi_start (finally);
+  x = tsi_stmt (i);
+  if (protect_cleanup_actions
+      && TREE_CODE (x) == TRY_CATCH_EXPR
+      && TRY_CATCH_IS_CLEANUP (x))
+    {
+      tsi_link_before (&i, TREE_OPERAND (x, 0), TSI_SAME_STMT);
+      tsi_delink (&i);
+    }
+
   /* Resume execution after the exception.  Adding this now lets
      lower_eh_filter not add unnecessary gotos, as it is clear that
      we never fallthru from this copy of the finally block.  */
@@ -839,21 +868,21 @@ honor_protect_cleanup_actions (struct leh_state *outer_state,
       save_filt = create_tmp_var (integer_type_node, "save_filt");
 
       i = tsi_start (finally);
-      x = build (EXC_PTR_EXPR, ptr_type_node);
-      x = build (MODIFY_EXPR, void_type_node, save_eptr, x);
+      x = build0 (EXC_PTR_EXPR, ptr_type_node);
+      x = build_gimple_modify_stmt (save_eptr, x);
       tsi_link_before (&i, x, TSI_CONTINUE_LINKING);
 
-      x = build (FILTER_EXPR, integer_type_node);
-      x = build (MODIFY_EXPR, void_type_node, save_filt, x);
+      x = build0 (FILTER_EXPR, integer_type_node);
+      x = build_gimple_modify_stmt (save_filt, x);
       tsi_link_before (&i, x, TSI_CONTINUE_LINKING);
 
       i = tsi_last (finally);
-      x = build (EXC_PTR_EXPR, ptr_type_node);
-      x = build (MODIFY_EXPR, void_type_node, x, save_eptr);
+      x = build0 (EXC_PTR_EXPR, ptr_type_node);
+      x = build_gimple_modify_stmt (x, save_eptr);
       tsi_link_after (&i, x, TSI_CONTINUE_LINKING);
 
-      x = build (FILTER_EXPR, integer_type_node);
-      x = build (MODIFY_EXPR, void_type_node, x, save_filt);
+      x = build0 (FILTER_EXPR, integer_type_node);
+      x = build_gimple_modify_stmt (x, save_filt);
       tsi_link_after (&i, x, TSI_CONTINUE_LINKING);
 
       x = build_resx (get_eh_region_number (tf->region));
@@ -863,10 +892,10 @@ honor_protect_cleanup_actions (struct leh_state *outer_state,
   /* Wrap the block with protect_cleanup_actions as the action.  */
   if (protect_cleanup_actions)
     {
-      x = build (EH_FILTER_EXPR, void_type_node, NULL, NULL);
+      x = build2 (EH_FILTER_EXPR, void_type_node, NULL, NULL);
       append_to_statement_list (protect_cleanup_actions, &EH_FILTER_FAILURE (x));
       EH_FILTER_MUST_NOT_THROW (x) = 1;
-      finally = build (TRY_CATCH_EXPR, void_type_node, finally, x);
+      finally = build2 (TRY_CATCH_EXPR, void_type_node, finally, x);
       lower_eh_filter (outer_state, &finally);
     }
   else
@@ -1010,6 +1039,9 @@ lower_try_finally_onedest (struct leh_state *state, struct leh_tf_state *tf)
 	}
     }
 
+  /* Reset the locus of the goto since we're moving 
+     goto to a different block which might be on a different line. */
+  SET_EXPR_LOCUS (tf->goto_queue[0].cont_stmt, NULL);
   append_to_statement_list (tf->goto_queue[0].cont_stmt, tf->top_p);
   maybe_record_in_goto_queue (state, tf->goto_queue[0].cont_stmt);
 }
@@ -1058,14 +1090,14 @@ lower_try_finally_copy (struct leh_state *state, struct leh_tf_state *tf)
       struct goto_queue_node *q, *qe;
       tree return_val = NULL;
       int return_index, index;
-      struct
+      struct labels_s
       {
 	struct goto_queue_node *q;
 	tree label;
       } *labels;
 
       return_index = VEC_length (tree, tf->dest_array);
-      labels = xcalloc (sizeof (*labels), return_index + 1);
+      labels = XCNEWVEC (struct labels_s, return_index + 1);
 
       q = tf->goto_queue;
       qe = q + tf->goto_queue_active;
@@ -1163,8 +1195,8 @@ lower_try_finally_switch (struct leh_state *state, struct leh_tf_state *tf)
   finally_label = create_artificial_label ();
 
   case_label_vec = make_tree_vec (ndests);
-  switch_stmt = build (SWITCH_EXPR, integer_type_node, finally_tmp,
-		       NULL_TREE, case_label_vec);
+  switch_stmt = build3 (SWITCH_EXPR, integer_type_node, finally_tmp,
+		        NULL_TREE, case_label_vec);
   switch_body = NULL;
   last_case = NULL;
   last_case_index = 0;
@@ -1175,8 +1207,9 @@ lower_try_finally_switch (struct leh_state *state, struct leh_tf_state *tf)
 
   if (tf->may_fallthru)
     {
-      x = build (MODIFY_EXPR, void_type_node, finally_tmp,
-		 build_int_cst (NULL_TREE, fallthru_index));
+      x = build_gimple_modify_stmt (finally_tmp,
+				    build_int_cst (integer_type_node,
+						   fallthru_index));
       append_to_statement_list (x, tf->top_p);
 
       if (tf->may_throw)
@@ -1186,13 +1219,13 @@ lower_try_finally_switch (struct leh_state *state, struct leh_tf_state *tf)
 	}
 
 
-      last_case = build (CASE_LABEL_EXPR, void_type_node,
-			 build_int_cst (NULL_TREE, fallthru_index), NULL,
-			 create_artificial_label ());
+      last_case = build3 (CASE_LABEL_EXPR, void_type_node,
+			  build_int_cst (NULL_TREE, fallthru_index), NULL,
+			  create_artificial_label ());
       TREE_VEC_ELT (case_label_vec, last_case_index) = last_case;
       last_case_index++;
 
-      x = build (LABEL_EXPR, void_type_node, CASE_LABEL (last_case));
+      x = build1 (LABEL_EXPR, void_type_node, CASE_LABEL (last_case));
       append_to_statement_list (x, &switch_body);
 
       x = lower_try_finally_fallthru_label (tf);
@@ -1205,17 +1238,18 @@ lower_try_finally_switch (struct leh_state *state, struct leh_tf_state *tf)
       x = build1 (LABEL_EXPR, void_type_node, tf->eh_label);
       append_to_statement_list (x, tf->top_p);
 
-      x = build (MODIFY_EXPR, void_type_node, finally_tmp,
-		 build_int_cst (NULL_TREE, eh_index));
+      x = build_gimple_modify_stmt (finally_tmp,
+				    build_int_cst (integer_type_node,
+						   eh_index));
       append_to_statement_list (x, tf->top_p);
 
-      last_case = build (CASE_LABEL_EXPR, void_type_node,
-			 build_int_cst (NULL_TREE, eh_index), NULL,
-			 create_artificial_label ());
+      last_case = build3 (CASE_LABEL_EXPR, void_type_node,
+			  build_int_cst (NULL_TREE, eh_index), NULL,
+			  create_artificial_label ());
       TREE_VEC_ELT (case_label_vec, last_case_index) = last_case;
       last_case_index++;
 
-      x = build (LABEL_EXPR, void_type_node, CASE_LABEL (last_case));
+      x = build1 (LABEL_EXPR, void_type_node, CASE_LABEL (last_case));
       append_to_statement_list (x, &switch_body);
       x = build_resx (get_eh_region_number (tf->region));
       append_to_statement_list (x, &switch_body);
@@ -1237,15 +1271,17 @@ lower_try_finally_switch (struct leh_state *state, struct leh_tf_state *tf)
 
       if (q->index < 0)
 	{
-	  mod = build (MODIFY_EXPR, void_type_node, finally_tmp,
-		       build_int_cst (NULL_TREE, return_index));
+	  mod = build_gimple_modify_stmt (finally_tmp,
+					  build_int_cst (integer_type_node,
+							 return_index));
 	  do_return_redirection (q, finally_label, mod, &return_val);
 	  switch_id = return_index;
 	}
       else
 	{
-	  mod = build (MODIFY_EXPR, void_type_node, finally_tmp,
-		       build_int_cst (NULL_TREE, q->index));
+	  mod = build_gimple_modify_stmt (finally_tmp,
+					  build_int_cst (integer_type_node,
+							 q->index));
 	  do_goto_redirection (q, finally_label, mod);
 	  switch_id = q->index;
 	}
@@ -1253,15 +1289,15 @@ lower_try_finally_switch (struct leh_state *state, struct leh_tf_state *tf)
       case_index = j + q->index;
       if (!TREE_VEC_ELT (case_label_vec, case_index))
 	TREE_VEC_ELT (case_label_vec, case_index)
-	  = build (CASE_LABEL_EXPR, void_type_node,
-		   build_int_cst (NULL_TREE, switch_id), NULL,
-		   /* We store the cont_stmt in the
-		      CASE_LABEL, so that we can recover it
-		      in the loop below.  We don't create
-		      the new label while walking the
-		      goto_queue because pointers don't
-		      offer a stable order.  */
-		   q->cont_stmt);
+	  = build3 (CASE_LABEL_EXPR, void_type_node,
+		    build_int_cst (NULL_TREE, switch_id), NULL,
+		    /* We store the cont_stmt in the
+		       CASE_LABEL, so that we can recover it
+		       in the loop below.  We don't create
+		       the new label while walking the
+		       goto_queue because pointers don't
+		       offer a stable order.  */
+		    q->cont_stmt);
     }
   for (j = last_case_index; j < last_case_index + nlabels; j++)
     {
@@ -1277,7 +1313,7 @@ lower_try_finally_switch (struct leh_state *state, struct leh_tf_state *tf)
       label = create_artificial_label ();
       CASE_LABEL (last_case) = label;
 
-      x = build (LABEL_EXPR, void_type_node, label);
+      x = build1 (LABEL_EXPR, void_type_node, label);
       append_to_statement_list (x, &switch_body);
       append_to_statement_list (cont_stmt, &switch_body);
       maybe_record_in_goto_queue (state, cont_stmt);
@@ -1318,7 +1354,7 @@ decide_copy_try_finally (int ndests, tree finally)
     return false;
 
   /* Finally estimate N times, plus N gotos.  */
-  f_estimate = estimate_num_insns (finally);
+  f_estimate = estimate_num_insns (finally, &eni_size_weights);
   f_estimate = (f_estimate + 1) * ndests;
 
   /* Switch statement (cost 10), N variable assignments, N gotos.  */
@@ -1378,11 +1414,6 @@ lower_try_finally (struct leh_state *state, tree *tp)
       honor_protect_cleanup_actions (state, &this_state, &this_tf);
     }
 
-  /* Sort the goto queue for efficient searching later.  */
-  if (this_tf.goto_queue_active > 1)
-    qsort (this_tf.goto_queue, this_tf.goto_queue_active,
-	   sizeof (struct goto_queue_node), goto_queue_cmp);
-
   /* Determine how many edges (still) reach the finally block.  Or rather,
      how many destinations are reached by the finally block.  Use this to
      determine how we process the finally block itself.  */
@@ -1422,6 +1453,8 @@ lower_try_finally (struct leh_state *state, tree *tp)
   VEC_free (tree, heap, this_tf.dest_array);
   if (this_tf.goto_queue)
     free (this_tf.goto_queue);
+  if (this_tf.goto_queue_map)
+    pointer_map_destroy (this_tf.goto_queue_map);
 }
 
 /* A subroutine of lower_eh_constructs_1.  Lower a TRY_CATCH_EXPR with a
@@ -1503,6 +1536,10 @@ lower_eh_filter (struct leh_state *state, tree *tp)
 					 EH_FILTER_TYPES (inner));
   this_state = *state;
   this_state.cur_region = this_region;
+  /* For must not throw regions any cleanup regions inside it
+     can't reach outer catch regions.  */
+  if (EH_FILTER_MUST_NOT_THROW (inner))
+    this_state.prev_try = NULL;
 
   lower_eh_constructs_1 (&this_state, &TREE_OPERAND (*tp, 0));
 
@@ -1610,7 +1647,7 @@ lower_eh_constructs_1 (struct leh_state *state, tree *tp)
 	}
       break;
 
-    case MODIFY_EXPR:
+    case GIMPLE_MODIFY_STMT:
       /* Look for things that can throw exceptions, and record them.  */
       if (state->cur_region && tree_could_throw_p (t))
 	{
@@ -1669,7 +1706,7 @@ lower_eh_constructs_1 (struct leh_state *state, tree *tp)
     }
 }
 
-static void
+static unsigned int
 lower_eh_constructs (void)
 {
   struct leh_state null_state;
@@ -1685,6 +1722,7 @@ lower_eh_constructs (void)
   htab_delete (finally_tree);
 
   collect_eh_region_array ();
+  return 0;
 }
 
 struct tree_opt_pass pass_lower_eh =
@@ -1698,7 +1736,7 @@ struct tree_opt_pass pass_lower_eh =
   TV_TREE_EH,				/* tv_id */
   PROP_gimple_lcf,			/* properties_required */
   PROP_gimple_leh,			/* properties_provided */
-  PROP_gimple_lcf,			/* properties_destroyed */
+  0,					/* properties_destroyed */
   0,					/* todo_flags_start */
   TODO_dump_func,			/* todo_flags_finish */
   0					/* letter */
@@ -1713,7 +1751,7 @@ make_eh_edge (struct eh_region *region, void *data)
   tree stmt, lab;
   basic_block src, dst;
 
-  stmt = data;
+  stmt = (tree) data;
   lab = get_eh_region_tree_label (region);
 
   src = bb_for_stmt (stmt);
@@ -1755,7 +1793,7 @@ mark_eh_edge (struct eh_region *region, void *data)
   basic_block src, dst;
   edge e;
 
-  stmt = data;
+  stmt = (tree) data;
   lab = get_eh_region_tree_label (region);
 
   src = bb_for_stmt (stmt);
@@ -1862,7 +1900,7 @@ tree_could_trap_p (tree expr)
 	  honor_nans = flag_trapping_math && !flag_finite_math_only;
 	  honor_snans = flag_signaling_nans != 0;
 	}
-      else if (INTEGRAL_TYPE_P (t) && TYPE_TRAP_SIGNED (t))
+      else if (INTEGRAL_TYPE_P (t) && TYPE_OVERFLOW_TRAPS (t))
 	honor_trapv = true;
     }
 
@@ -1880,19 +1918,21 @@ tree_could_trap_p (tree expr)
     case REALPART_EXPR:
     case IMAGPART_EXPR:
     case BIT_FIELD_REF:
+    case VIEW_CONVERT_EXPR:
     case WITH_SIZE_EXPR:
       expr = TREE_OPERAND (expr, 0);
       code = TREE_CODE (expr);
       goto restart;
 
     case ARRAY_RANGE_REF:
-      /* Let us be conservative here for now.  We might be checking bounds of
-	 the access similarly to the case below.  */
-      if (!TREE_THIS_NOTRAP (expr))
+      base = TREE_OPERAND (expr, 0);
+      if (tree_could_trap_p (base))
 	return true;
 
-      base = TREE_OPERAND (expr, 0);
-      return tree_could_trap_p (base);
+      if (TREE_THIS_NOTRAP (expr))
+	return false;
+
+      return !range_in_array_bounds_p (expr);
 
     case ARRAY_REF:
       base = TREE_OPERAND (expr, 0);
@@ -1952,9 +1992,6 @@ tree_could_trap_p (tree expr)
 
     case CONVERT_EXPR:
     case FIX_TRUNC_EXPR:
-    case FIX_CEIL_EXPR:
-    case FIX_FLOOR_EXPR:
-    case FIX_ROUND_EXPR:
       /* Conversion of floating point might trap.  */
       return honor_nans;
 
@@ -1996,12 +2033,12 @@ tree_could_throw_p (tree t)
 {
   if (!flag_exceptions)
     return false;
-  if (TREE_CODE (t) == MODIFY_EXPR)
+  if (TREE_CODE (t) == GIMPLE_MODIFY_STMT)
     {
       if (flag_non_call_exceptions
-	  && tree_could_trap_p (TREE_OPERAND (t, 0)))
+	  && tree_could_trap_p (GIMPLE_STMT_OPERAND (t, 0)))
 	return true;
-      t = TREE_OPERAND (t, 1);
+      t = GIMPLE_STMT_OPERAND (t, 1);
     }
 
   if (TREE_CODE (t) == WITH_SIZE_EXPR)
@@ -2014,7 +2051,7 @@ tree_could_throw_p (tree t)
 }
 
 bool
-tree_can_throw_internal (tree stmt)
+tree_can_throw_internal (const_tree stmt)
 {
   int region_nr;
   bool is_resx = false;
@@ -2073,3 +2110,153 @@ maybe_clean_or_replace_eh_stmt (tree old_stmt, tree new_stmt)
 
   return false;
 }
+
+/* Returns TRUE if oneh and twoh are exception handlers (op 1 of
+   TRY_CATCH_EXPR or TRY_FINALLY_EXPR that are similar enough to be
+   considered the same.  Currently this only handles handlers consisting of
+   a single call, as that's the important case for C++: a destructor call
+   for a particular object showing up in multiple handlers.  */
+
+static bool
+same_handler_p (tree oneh, tree twoh)
+{
+  tree_stmt_iterator i;
+  tree ones, twos;
+  int ai;
+
+  i = tsi_start (oneh);
+  if (!tsi_one_before_end_p (i))
+    return false;
+  ones = tsi_stmt (i);
+
+  i = tsi_start (twoh);
+  if (!tsi_one_before_end_p (i))
+    return false;
+  twos = tsi_stmt (i);
+
+  if (TREE_CODE (ones) != CALL_EXPR
+      || TREE_CODE (twos) != CALL_EXPR
+      || !operand_equal_p (CALL_EXPR_FN (ones), CALL_EXPR_FN (twos), 0)
+      || call_expr_nargs (ones) != call_expr_nargs (twos))
+    return false;
+
+  for (ai = 0; ai < call_expr_nargs (ones); ++ai)
+    if (!operand_equal_p (CALL_EXPR_ARG (ones, ai),
+			  CALL_EXPR_ARG (twos, ai), 0))
+      return false;
+
+  return true;
+}
+
+/* Optimize
+    try { A() } finally { try { ~B() } catch { ~A() } }
+    try { ... } finally { ~A() }
+   into
+    try { A() } catch { ~B() }
+    try { ~B() ... } finally { ~A() }
+
+   This occurs frequently in C++, where A is a local variable and B is a
+   temporary used in the initializer for A.  */
+
+static void
+optimize_double_finally (tree one, tree two)
+{
+  tree oneh;
+  tree_stmt_iterator i;
+
+  i = tsi_start (TREE_OPERAND (one, 1));
+  if (!tsi_one_before_end_p (i))
+    return;
+
+  oneh = tsi_stmt (i);
+  if (TREE_CODE (oneh) != TRY_CATCH_EXPR)
+    return;
+
+  if (same_handler_p (TREE_OPERAND (oneh, 1), TREE_OPERAND (two, 1)))
+    {
+      tree b = TREE_OPERAND (oneh, 0);
+      TREE_OPERAND (one, 1) = b;
+      TREE_SET_CODE (one, TRY_CATCH_EXPR);
+
+      i = tsi_start (TREE_OPERAND (two, 0));
+      tsi_link_before (&i, unsave_expr_now (b), TSI_SAME_STMT);
+    }
+}
+
+/* Perform EH refactoring optimizations that are simpler to do when code
+   flow has been lowered but EH structures haven't.  */
+
+static void
+refactor_eh_r (tree t)
+{
+ tailrecurse:
+  switch (TREE_CODE (t))
+    {
+    case TRY_FINALLY_EXPR:
+    case TRY_CATCH_EXPR:
+      refactor_eh_r (TREE_OPERAND (t, 0));
+      t = TREE_OPERAND (t, 1);
+      goto tailrecurse;
+
+    case CATCH_EXPR:
+      t = CATCH_BODY (t);
+      goto tailrecurse;
+
+    case EH_FILTER_EXPR:
+      t = EH_FILTER_FAILURE (t);
+      goto tailrecurse;
+
+    case STATEMENT_LIST:
+      {
+	tree_stmt_iterator i;
+	tree one = NULL_TREE, two = NULL_TREE;
+	/* Try to refactor double try/finally.  */
+	for (i = tsi_start (t); !tsi_end_p (i); tsi_next (&i))
+	  {
+	    one = two;
+	    two = tsi_stmt (i);
+	    if (one && two
+		&& TREE_CODE (one) == TRY_FINALLY_EXPR
+		&& TREE_CODE (two) == TRY_FINALLY_EXPR)
+	      optimize_double_finally (one, two);
+	    if (one)
+	      refactor_eh_r (one);
+	  }
+	if (two)
+	  {
+	    t = two;
+	    goto tailrecurse;
+	  }
+      }
+      break;
+
+    default:
+      /* A type, a decl, or some kind of statement that we're not
+	 interested in.  Don't walk them.  */
+      break;
+    }
+}
+
+static unsigned
+refactor_eh (void)
+{
+  refactor_eh_r (DECL_SAVED_TREE (current_function_decl));
+  return 0;
+}
+
+struct tree_opt_pass pass_refactor_eh =
+{
+  "ehopt",				/* name */
+  NULL,					/* gate */
+  refactor_eh,				/* execute */
+  NULL,					/* sub */
+  NULL,					/* next */
+  0,					/* static_pass_number */
+  TV_TREE_EH,				/* tv_id */
+  PROP_gimple_lcf,			/* properties_required */
+  0,					/* properties_provided */
+  0,					/* properties_destroyed */
+  0,					/* todo_flags_start */
+  TODO_dump_func,			/* todo_flags_finish */
+  0					/* letter */
+};

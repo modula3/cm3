@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2002 Free Software Foundation, Inc.
+# Copyright (C) 2002, 2007 Free Software Foundation, Inc.
 
 #This file is part of GCC.
 
@@ -32,7 +32,7 @@ done
 export VERBOSE
 
 if [ x$1 = x--help ] ; then
-    echo "Usage: mkheaders [options] [prefix]"
+    echo "Usage: mkheaders [options] [prefix [isysroot]]"
     echo "Options:"
     echo "  -v        Print more output (may be repeated for even more output)"
     echo "  --help    This help"
@@ -42,7 +42,7 @@ fi
 
 if [ x$1 = x--version ] ; then
     echo "mkheaders (GCC) version $version"
-    echo "Copyright 2002 Free Software Foundation, Inc."
+    echo "Copyright 2002, 2007 Free Software Foundation, Inc."
     echo "This program is free software; you may redistribute it under the"
     echo "terms of the GNU General Public License.  This program has"
     echo "absolutely no warranty."
@@ -52,9 +52,19 @@ fi
 # Common prefix for installation directories.
 if [ x$1 != x ] ; then
   prefix=$1
+  shift
 else
   prefix=@prefix@
 fi
+
+# Allow for alternate isysroot in which to find headers
+if [ x$1 != x ] ; then
+  isysroot=$1
+  shift
+else
+  isysroot=
+fi
+
 # Directory in which to put host dependent programs and libraries
 exec_prefix=@exec_prefix@
 # Directory in which to put the directories used by the compiler.
@@ -67,30 +77,34 @@ libexecsubdir=${libexecdir}/gcc/${target_noncanonical}/${version}
 
 itoolsdir=${libexecsubdir}/install-tools
 itoolsdatadir=${libsubdir}/install-tools
-incdir=${libsubdir}/include
-
-. ${itoolsdatadir}/mkheaders.conf
+incdir=${libsubdir}/include-fixed
+mkinstalldirs="@SHELL@ ${itoolsdir}/mkinstalldirs"
 
 cd ${itoolsdir}
 rm -rf ${incdir}/*
 
-if [ x${STMP_FIXINC} != x ] ; then
+for ml in `cat ${itoolsdatadir}/fixinc_list`; do
+  sysroot_headers_suffix=`echo ${ml} | sed -e 's/;.*$//'`
+  multi_dir=`echo ${ml} | sed -e 's/^[^;]*;//'`
+  subincdir=${incdir}${multi_dir}
+  . ${itoolsdatadir}/mkheaders.conf
+  if [ x${STMP_FIXINC} != x ] ; then
 	TARGET_MACHINE="${target}" target_canonical="${target}" \
 	    MACRO_LIST="${itoolsdatadir}/macro_list" \
-	    @SHELL@ ./fixinc.sh ${incdir} \
-	    ${SYSTEM_HEADER_DIR} ${OTHER_FIXINCLUDES_DIRS}
-	rm -f ${incdir}/syslimits.h
-	if [ -f ${incdir}/limits.h ]; then
-	  mv ${incdir}/limits.h ${incdir}/syslimits.h
+	    @SHELL@ ./fixinc.sh ${subincdir} \
+	    ${isysroot}${SYSTEM_HEADER_DIR} ${OTHER_FIXINCLUDES_DIRS}
+	rm -f ${subincdir}/syslimits.h
+	if [ -f ${subincdir}/limits.h ]; then
+	  mv ${subincdir}/limits.h ${subincdir}/syslimits.h
 	else
-	  cp ${itoolsdatadir}/gsyslimits.h ${incdir}/syslimits.h
+	  cp ${itoolsdatadir}/gsyslimits.h ${subincdir}/syslimits.h
 	fi
-fi
+  fi
 
-cp ${itoolsdatadir}/include/* ${incdir}
+  cp ${itoolsdatadir}/include${multi_dir}/limits.h ${subincdir}
 
-if [ x${STMP_FIXPROTO} != x ] ; then
-  mkinstalldirs="@SHELL@ ${itoolsdir}/mkinstalldirs"
-  export FIXPROTO_DEFINES mkinstalldirs
-  @SHELL@ fixproto ${incdir} ${incdir} ${SYSTEM_HEADER_DIR} || exit 1
-fi
+  if [ x${STMP_FIXPROTO} != x ] ; then
+    export FIXPROTO_DEFINES mkinstalldirs
+    @SHELL@ fixproto ${subincdir} ${subincdir} ${isysroot}${SYSTEM_HEADER_DIR} || exit 1
+  fi
+done

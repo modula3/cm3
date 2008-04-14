@@ -1,11 +1,11 @@
 ;; Predicate definitions for Renesas / SuperH SH.
-;; Copyright (C) 2005 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2006, 2007 Free Software Foundation, Inc.
 ;;
 ;; This file is part of GCC.
 ;;
 ;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 ;;
 ;; GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 ;; TODO: Add a comment here.
 
@@ -40,13 +39,13 @@
   if (GET_CODE (cond) == CONST)
     {
       cond = XEXP (cond, 0);
-      if (!EXTRA_CONSTRAINT_Csy (tar))
+      if (!satisfies_constraint_Csy (tar))
 	return 0;
       if (GET_CODE (tar) == CONST)
 	tar = XEXP (tar, 0);
     }
   else if (!arith_reg_operand (tar, VOIDmode)
-	   && ! EXTRA_CONSTRAINT_Csy (tar))
+	   && ! satisfies_constraint_Csy (tar))
     return 0;
   if (GET_CODE (cond) != EQ)
     return 0;
@@ -70,8 +69,7 @@
   /* Check mshflo.l / mshflhi.l opportunities.  */
   if (TARGET_SHMEDIA
       && mode == DImode
-      && GET_CODE (op) == CONST_INT
-      && CONST_OK_FOR_J16 (INTVAL (op)))
+      && satisfies_constraint_J16 (op))
     return 1;
 
   return 0;
@@ -106,12 +104,12 @@
   if (TARGET_SHMEDIA)
     {
       /* FIXME: We should be checking whether the CONST_INT fits in a
-	 CONST_OK_FOR_I16 here, but this causes reload_cse to crash when
+	 signed 16-bit here, but this causes reload_cse to crash when
 	 attempting to transform a sequence of two 64-bit sets of the
 	 same register from literal constants into a set and an add,
 	 when the difference is too wide for an add.  */
       if (GET_CODE (op) == CONST_INT
-	  || EXTRA_CONSTRAINT_C16 (op))
+	  || satisfies_constraint_Css (op))
 	return 1;
       else if (GET_CODE (op) == TRUNCATE
 	       && ! system_reg_operand (XEXP (op, 0), VOIDmode)
@@ -124,7 +122,7 @@
       else
 	return 0;
     }
-  else if (GET_CODE (op) == CONST_INT && CONST_OK_FOR_I08 (INTVAL (op)))
+  else if (satisfies_constraint_I08 (op))
     return 1;
 
   return 0;
@@ -198,7 +196,7 @@
   if (arith_reg_operand (op, mode))
     return 1;
 
-  if (EXTRA_CONSTRAINT_Z (op))
+  if (satisfies_constraint_Z (op))
     return 1;
 
   return 0;
@@ -207,45 +205,19 @@
 ;; TODO: Add a comment here.
 
 (define_predicate "binary_float_operator"
-  (match_code "plus,minus,mult,div")
-{
-  if (GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case PLUS:
-    case MINUS:
-    case MULT:
-    case DIV:
-      return 1;
-    default:
-      break;
-    }
-  return 0;
-})
+  (and (match_code "plus,minus,mult,div")
+       (match_test "GET_MODE (op) == mode")))
 
 ;; TODO: Add a comment here.
 
 (define_predicate "binary_logical_operator"
-  (match_code "and,ior,xor")
-{
-  if (GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case IOR:
-    case AND:
-    case XOR:
-      return 1;
-    default:
-      break;
-    }
-  return 0;
-})
+  (and (match_code "and,ior,xor")
+       (match_test "GET_MODE (op) == mode")))
 
-;; TODO: Add a comment here.
+;; Return 1 of OP is an address suitable for a cache manipulation operation.
+;; MODE has the meaning as in address_operand.
 
-(define_predicate "cache_address_operand"
+(define_special_predicate "cache_address_operand"
   (match_code "plus,reg")
 {
   if (GET_CODE (op) == PLUS)
@@ -266,7 +238,7 @@
 (define_predicate "cmp_operand"
   (match_code "subreg,reg,const_int")
 {
-  if (GET_CODE (op) == CONST_INT && CONST_OK_FOR_N (INTVAL (op)))
+  if (satisfies_constraint_N (op))
     return 1;
   if (TARGET_SHMEDIA
       && mode != DImode && GET_CODE (op) == SUBREG
@@ -290,29 +262,13 @@
 ;; TODO: Add a comment here.
 
 (define_predicate "commutative_float_operator"
-  (match_code "plus,mult")
-{
-  if (GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case PLUS:
-    case MULT:
-      return 1;
-    default:
-      break;
-    }
-  return 0;
-})
+  (and (match_code "plus,mult")
+       (match_test "GET_MODE (op) == mode")))
 
 ;; TODO: Add a comment here.
 
 (define_predicate "equality_comparison_operator"
-  (match_code "eq,ne")
-{
-  return ((mode == VOIDmode || GET_MODE (op) == mode)
-	  && (GET_CODE (op) == EQ || GET_CODE (op) == NE));
-})
+  (match_code "eq,ne"))
 
 ;; TODO: Add a comment here.
 
@@ -494,21 +450,7 @@
 ;; TODO: Add a comment here.
 
 (define_predicate "greater_comparison_operator"
-  (match_code "gt,ge,gtu,geu")
-{
-  if (mode != VOIDmode && GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case GT:
-    case GE:
-    case GTU:
-    case GEU:
-      return 1;
-    default:
-      return 0;
-    }
-})
+  (match_code "gt,ge,gtu,geu"))
 
 ;; TODO: Add a comment here.
 
@@ -541,21 +483,7 @@
 ;; TODO: Add a comment here.
 
 (define_predicate "less_comparison_operator"
-  (match_code "lt,le,ltu,leu")
-{
-  if (mode != VOIDmode && GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case LT:
-    case LE:
-    case LTU:
-    case LEU:
-      return 1;
-    default:
-      return 0;
-    }
-})
+  (match_code "lt,le,ltu,leu"))
 
 ;; Returns 1 if OP is a valid source operand for a logical operation.
 
@@ -572,12 +500,12 @@
 
   if (TARGET_SHMEDIA)
     {
-      if (GET_CODE (op) == CONST_INT && CONST_OK_FOR_I10 (INTVAL (op)))
+      if (satisfies_constraint_I10 (op))
 	return 1;
       else
 	return 0;
     }
-  else if (GET_CODE (op) == CONST_INT && CONST_OK_FOR_K08 (INTVAL (op)))
+  else if (satisfies_constraint_K08 (op))
     return 1;
 
   return 0;
@@ -586,20 +514,7 @@
 ;; TODO: Add a comment here.
 
 (define_predicate "logical_operator"
-  (match_code "and,ior,xor")
-{
-  if (mode != VOIDmode && GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case AND:
-    case IOR:
-    case XOR:
-      return 1;
-    default:
-      return 0;
-    }
-})
+  (match_code "and,ior,xor"))
 
 ;; Like arith_reg_operand, but for register source operands of narrow
 ;; logical SHMEDIA operations: forbid subregs of DImode / TImode regs.
@@ -639,20 +554,8 @@
 ;; TODO: Add a comment here.
 
 (define_predicate "noncommutative_float_operator"
-  (match_code "minus,div")
-{
-  if (GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case MINUS:
-    case DIV:
-      return 1;
-    default:
-      break;
-    }
-  return 0;
-})
+  (and (match_code "minus,div")
+       (match_test "GET_MODE (op) == mode")))
 
 ;; TODO: Add a comment here.
 
@@ -710,7 +613,7 @@
 ;; the constant zero like a general register.
 
 (define_predicate "sh_register_operand"
-  (match_code "reg,subreg,const_int")
+  (match_code "reg,subreg,const_int,const_double")
 {
   if (op == CONST0_RTX (mode) && TARGET_SHMEDIA)
     return 1;
@@ -720,7 +623,7 @@
 ;; TODO: Add a comment here.
 
 (define_predicate "sh_rep_vec"
-  (match_code "const_vector")
+  (match_code "const_vector,parallel")
 {
   int i;
   rtx x, y;
@@ -783,28 +686,12 @@
 ;; TODO: Add a comment here.
 
 (define_predicate "shift_operator"
-  (match_code "ashift,ashiftrt,lshiftrt")
-{
-  if (mode != VOIDmode && GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case ASHIFT:
-    case ASHIFTRT:
-    case LSHIFTRT:
-      return 1;
-    default:
-      return 0;
-    }
-})
+  (match_code "ashift,ashiftrt,lshiftrt"))
 
 ;; TODO: Add a comment here.
 
 (define_predicate "symbol_ref_operand"
-  (match_code "symbol_ref")
-{
-  return (GET_CODE (op) == SYMBOL_REF);
-})
+  (match_code "symbol_ref"))
 
 ;; Same as target_reg_operand, except that label_refs and symbol_refs
 ;; are accepted before reload.
@@ -816,7 +703,7 @@
     return 0;
 
   if ((GET_MODE (op) == Pmode || GET_MODE (op) == VOIDmode)
-      && EXTRA_CONSTRAINT_Csy (op))
+      && satisfies_constraint_Csy (op))
     return ! reload_completed;
 
   return target_reg_operand (op, mode);
@@ -861,14 +748,13 @@
   return extend_reg_operand (op, mode);
 })
 
-;; TODO: Add a comment here.
+;; Return 1 of OP is an address suitable for an unaligned access instruction.
 
-(define_predicate "ua_address_operand"
+(define_special_predicate "ua_address_operand"
   (match_code "subreg,reg,plus")
 {
   if (GET_CODE (op) == PLUS
-      && (GET_CODE (XEXP (op, 1)) != CONST_INT
-	  || ! CONST_OK_FOR_I06 (INTVAL (XEXP (op, 1)))))
+      && (! satisfies_constraint_I06 (XEXP (op, 1))))
     return 0;
   return address_operand (op, QImode);
 })
@@ -878,27 +764,14 @@
 (define_predicate "ua_offset"
   (match_code "const_int")
 {
-  return GET_CODE (op) == CONST_INT && CONST_OK_FOR_I06 (INTVAL (op));
+  return satisfies_constraint_I06 (op);
 })
 
 ;; TODO: Add a comment here.
 
 (define_predicate "unary_float_operator"
-  (match_code "abs,neg,sqrt")
-{
-  if (GET_MODE (op) != mode)
-    return 0;
-  switch (GET_CODE (op))
-    {
-    case ABS:
-    case NEG:
-    case SQRT:
-      return 1;
-    default:
-      break;
-    }
-  return 0;
-})
+  (and (match_code "abs,neg,sqrt")
+       (match_test "GET_MODE (op) == mode")))
 
 ;; Return 1 if OP is a valid source operand for xor.
 
@@ -907,9 +780,9 @@
 {
   if (GET_CODE (op) == CONST_INT)
     return (TARGET_SHMEDIA
-	    ? (CONST_OK_FOR_I06 (INTVAL (op))
-	       || (no_new_pseudos && INTVAL (op) == 0xff))
-	    : CONST_OK_FOR_K08 (INTVAL (op)));
+	    ? (satisfies_constraint_I06 (op)
+	       || (!can_create_pseudo_p () && INTVAL (op) == 0xff))
+	    : satisfies_constraint_K08 (op));
   if (TARGET_SHMEDIA
       && mode != DImode && GET_CODE (op) == SUBREG
       && GET_MODE_SIZE (GET_MODE (SUBREG_REG (op))) > 4)

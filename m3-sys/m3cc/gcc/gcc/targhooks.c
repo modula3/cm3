@@ -1,11 +1,11 @@
 /* Default target hook functions.
-   Copyright (C) 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -14,9 +14,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* The migration of target macros to target hooks works as follows:
 
@@ -63,6 +62,9 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #include "target-def.h"
 #include "ggc.h"
 #include "hard-reg-set.h"
+#include "reload.h"
+#include "optabs.h"
+#include "recog.h"
 
 
 void
@@ -71,6 +73,26 @@ default_external_libcall (rtx fun ATTRIBUTE_UNUSED)
 #ifdef ASM_OUTPUT_EXTERNAL_LIBCALL
   ASM_OUTPUT_EXTERNAL_LIBCALL(asm_out_file, fun);
 #endif
+}
+
+int
+default_unspec_may_trap_p (const_rtx x, unsigned flags)
+{
+  int i;
+
+  if (GET_CODE (x) == UNSPEC_VOLATILE
+      /* Any floating arithmetic may trap.  */
+      || (SCALAR_FLOAT_MODE_P (GET_MODE (x))
+	  && flag_trapping_math))
+    return 1;
+
+  for (i = 0; i < XVECLEN (x, 0); ++i)
+    {
+      if (may_trap_p_1 (XVECEXP (x, 0, i), flags))
+	return 1;
+    }
+
+  return 0;
 }
 
 enum machine_mode
@@ -82,8 +104,8 @@ default_cc_modes_compatible (enum machine_mode m1, enum machine_mode m2)
 }
 
 bool
-default_return_in_memory (tree type,
-			  tree fntype ATTRIBUTE_UNUSED)
+default_return_in_memory (const_tree type,
+			  const_tree fntype ATTRIBUTE_UNUSED)
 {
 #ifndef RETURN_IN_MEMORY
   return (TYPE_MODE (type) == BLKmode);
@@ -137,6 +159,18 @@ default_eh_return_filter_mode (void)
   return word_mode;
 }
 
+enum machine_mode
+default_libgcc_cmp_return_mode (void)
+{
+  return word_mode;
+}
+
+enum machine_mode
+default_libgcc_shift_count_mode (void)
+{
+  return word_mode;
+}
+
 /* The default implementation of TARGET_SHIFT_TRUNCATION_MASK.  */
 
 unsigned HOST_WIDE_INT
@@ -153,6 +187,15 @@ default_min_divisions_for_recip_mul (enum machine_mode mode ATTRIBUTE_UNUSED)
   return have_insn_for (DIV, mode) ? 3 : 2;
 }
 
+/* The default implementation of TARGET_MODE_REP_EXTENDED.  */
+
+int
+default_mode_rep_extended (enum machine_mode mode ATTRIBUTE_UNUSED,
+			   enum machine_mode mode_rep ATTRIBUTE_UNUSED)
+{
+  return UNKNOWN;
+}
+
 /* Generic hook that takes a CUMULATIVE_ARGS pointer and returns true.  */
 
 bool
@@ -161,6 +204,13 @@ hook_bool_CUMULATIVE_ARGS_true (CUMULATIVE_ARGS * a ATTRIBUTE_UNUSED)
   return true;
 }
 
+/* Return machine mode for non-standard suffix
+   or VOIDmode if non-standard suffixes are unsupported.  */
+enum machine_mode
+default_mode_for_suffix (char suffix ATTRIBUTE_UNUSED)
+{
+  return VOIDmode;
+}
 
 /* The generic C++ ABI specifies this is a 64-bit value.  */
 tree
@@ -199,7 +249,7 @@ default_cxx_get_cookie_size (tree type)
 
 bool
 hook_pass_by_reference_must_pass_in_stack (CUMULATIVE_ARGS *c ATTRIBUTE_UNUSED,
-	enum machine_mode mode ATTRIBUTE_UNUSED, tree type ATTRIBUTE_UNUSED,
+	enum machine_mode mode ATTRIBUTE_UNUSED, const_tree type ATTRIBUTE_UNUSED,
 	bool named_arg ATTRIBUTE_UNUSED)
 {
   return targetm.calls.must_pass_in_stack (mode, type);
@@ -211,7 +261,7 @@ hook_pass_by_reference_must_pass_in_stack (CUMULATIVE_ARGS *c ATTRIBUTE_UNUSED,
 bool
 hook_callee_copies_named (CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED,
 			  enum machine_mode mode ATTRIBUTE_UNUSED,
-			  tree type ATTRIBUTE_UNUSED, bool named)
+			  const_tree type ATTRIBUTE_UNUSED, bool named)
 {
   return named;
 }
@@ -267,9 +317,32 @@ default_scalar_mode_supported_p (enum machine_mode mode)
 	return true;
       return false;
 
+    case MODE_DECIMAL_FLOAT:
+    case MODE_FRACT:
+    case MODE_UFRACT:
+    case MODE_ACCUM:
+    case MODE_UACCUM:
+      return false;
+
     default:
       gcc_unreachable ();
     }
+}
+
+/* True if the target supports decimal floating point.  */
+
+bool
+default_decimal_float_supported_p (void)
+{
+  return ENABLE_DECIMAL_FLOAT;
+}
+
+/* True if the target supports fixed-point arithmetic.  */
+
+bool
+default_fixed_point_supported_p (void)
+{
+  return ENABLE_FIXED_POINT;
 }
 
 /* NULL if INSN insn is valid within a low-overhead loop, otherwise returns
@@ -283,7 +356,7 @@ default_scalar_mode_supported_p (enum machine_mode mode)
    these cases.  */
 
 const char *
-default_invalid_within_doloop (rtx insn)
+default_invalid_within_doloop (const_rtx insn)
 {
   if (CALL_P (insn))
     return "Function call in loop.";
@@ -296,11 +369,40 @@ default_invalid_within_doloop (rtx insn)
   return NULL;
 }
 
+/* Mapping of builtin functions to vectorized variants.  */
+
+tree
+default_builtin_vectorized_function (enum built_in_function fn ATTRIBUTE_UNUSED,
+				     tree type_out ATTRIBUTE_UNUSED,
+				     tree type_in ATTRIBUTE_UNUSED)
+{
+  return NULL_TREE;
+}
+
+/* Vectorized conversion.  */
+
+tree
+default_builtin_vectorized_conversion (enum tree_code code ATTRIBUTE_UNUSED,
+				       tree type ATTRIBUTE_UNUSED)
+{
+  return NULL_TREE;
+}
+
+/* Reciprocal.  */
+
+tree
+default_builtin_reciprocal (enum built_in_function fn ATTRIBUTE_UNUSED,
+			    bool md_fn ATTRIBUTE_UNUSED,
+			    bool sqrt ATTRIBUTE_UNUSED)
+{
+  return NULL_TREE;
+}
+
 bool
 hook_bool_CUMULATIVE_ARGS_mode_tree_bool_false (
 	CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED,
 	enum machine_mode mode ATTRIBUTE_UNUSED,
-	tree type ATTRIBUTE_UNUSED, bool named ATTRIBUTE_UNUSED)
+	const_tree type ATTRIBUTE_UNUSED, bool named ATTRIBUTE_UNUSED)
 {
   return false;
 }
@@ -309,7 +411,7 @@ bool
 hook_bool_CUMULATIVE_ARGS_mode_tree_bool_true (
 	CUMULATIVE_ARGS *ca ATTRIBUTE_UNUSED,
 	enum machine_mode mode ATTRIBUTE_UNUSED,
-	tree type ATTRIBUTE_UNUSED, bool named ATTRIBUTE_UNUSED)
+	const_tree type ATTRIBUTE_UNUSED, bool named ATTRIBUTE_UNUSED)
 {
   return true;
 }
@@ -323,11 +425,16 @@ hook_int_CUMULATIVE_ARGS_mode_tree_bool_0 (
   return 0;
 }
 
+void 
+hook_void_bitmap (bitmap regs ATTRIBUTE_UNUSED)
+{
+}
+
 const char *
 hook_invalid_arg_for_unprototyped_fn (
-	tree typelist ATTRIBUTE_UNUSED,
-	tree funcdecl ATTRIBUTE_UNUSED,
-	tree val ATTRIBUTE_UNUSED)
+	const_tree typelist ATTRIBUTE_UNUSED,
+	const_tree funcdecl ATTRIBUTE_UNUSED,
+	const_tree val ATTRIBUTE_UNUSED)
 {
   return NULL;
 }
@@ -385,7 +492,7 @@ default_external_stack_protect_fail (void)
       stack_chk_fail_decl = t;
     }
 
-  return build_function_call_expr (t, NULL_TREE);
+  return build_call_expr (t, 0);
 }
 
 tree
@@ -418,19 +525,20 @@ default_hidden_stack_protect_fail (void)
       stack_chk_fail_decl = t;
     }
 
-  return build_function_call_expr (t, NULL_TREE);
+  return build_call_expr (t, 0);
 #endif
 }
 
 bool
-hook_bool_rtx_commutative_p (rtx x, int outer_code ATTRIBUTE_UNUSED)
+hook_bool_const_rtx_commutative_p (const_rtx x,
+				   int outer_code ATTRIBUTE_UNUSED)
 {
   return COMMUTATIVE_P (x);
 }
 
 rtx
-default_function_value (tree ret_type ATTRIBUTE_UNUSED,
-			tree fn_decl_or_type,
+default_function_value (const_tree ret_type ATTRIBUTE_UNUSED,
+			const_tree fn_decl_or_type,
 			bool outgoing ATTRIBUTE_UNUSED)
 {
   /* The old interface doesn't handle receiving the function type.  */
@@ -463,6 +571,134 @@ default_internal_arg_pointer (void)
     return copy_to_reg (virtual_incoming_args_rtx);
   else
     return virtual_incoming_args_rtx;
+}
+
+enum reg_class
+default_secondary_reload (bool in_p ATTRIBUTE_UNUSED, rtx x ATTRIBUTE_UNUSED,
+			  enum reg_class reload_class ATTRIBUTE_UNUSED,
+			  enum machine_mode reload_mode ATTRIBUTE_UNUSED,
+			  secondary_reload_info *sri)
+{
+  enum reg_class class = NO_REGS;
+
+  if (sri->prev_sri && sri->prev_sri->t_icode != CODE_FOR_nothing)
+    {
+      sri->icode = sri->prev_sri->t_icode;
+      return NO_REGS;
+    }
+#ifdef SECONDARY_INPUT_RELOAD_CLASS
+  if (in_p)
+    class = SECONDARY_INPUT_RELOAD_CLASS (reload_class, reload_mode, x);
+#endif
+#ifdef SECONDARY_OUTPUT_RELOAD_CLASS
+  if (! in_p)
+    class = SECONDARY_OUTPUT_RELOAD_CLASS (reload_class, reload_mode, x);
+#endif
+  if (class != NO_REGS)
+    {
+      enum insn_code icode = (in_p ? reload_in_optab[(int) reload_mode]
+			      : reload_out_optab[(int) reload_mode]);
+
+      if (icode != CODE_FOR_nothing
+	  && insn_data[(int) icode].operand[in_p].predicate
+	  && ! insn_data[(int) icode].operand[in_p].predicate (x, reload_mode))
+	icode = CODE_FOR_nothing;
+      else if (icode != CODE_FOR_nothing)
+	{
+	  const char *insn_constraint, *scratch_constraint;
+	  char insn_letter, scratch_letter;
+	  enum reg_class insn_class, scratch_class;
+
+	  gcc_assert (insn_data[(int) icode].n_operands == 3);
+	  insn_constraint = insn_data[(int) icode].operand[!in_p].constraint;
+	  if (!*insn_constraint)
+	    insn_class = ALL_REGS;
+	  else
+	    {
+	      if (in_p)
+		{
+		  gcc_assert (*insn_constraint == '=');
+		  insn_constraint++;
+		}
+	      insn_letter = *insn_constraint;
+	      insn_class
+		= (insn_letter == 'r' ? GENERAL_REGS
+		   : REG_CLASS_FROM_CONSTRAINT ((unsigned char) insn_letter,
+						insn_constraint));
+	      gcc_assert (insn_class != NO_REGS);
+	    }
+
+	  scratch_constraint = insn_data[(int) icode].operand[2].constraint;
+	  /* The scratch register's constraint must start with "=&",
+	     except for an input reload, where only "=" is necessary,
+	     and where it might be beneficial to re-use registers from
+	     the input.  */
+	  gcc_assert (scratch_constraint[0] == '='
+		      && (in_p || scratch_constraint[1] == '&'));
+	  scratch_constraint++;
+	  if (*scratch_constraint == '&')
+	    scratch_constraint++;
+	  scratch_letter = *scratch_constraint;
+	  scratch_class
+	    = (scratch_letter == 'r' ? GENERAL_REGS
+	       : REG_CLASS_FROM_CONSTRAINT ((unsigned char) scratch_letter,
+					    scratch_constraint));
+
+	  if (reg_class_subset_p (reload_class, insn_class))
+	    {
+	      gcc_assert (scratch_class == class);
+	      class = NO_REGS;
+	    }
+	  else
+	    class = insn_class;
+
+        }
+      if (class == NO_REGS)
+	sri->icode = icode;
+      else
+	sri->t_icode = icode;
+    }
+  return class;
+}
+
+bool
+default_handle_c_option (size_t code ATTRIBUTE_UNUSED,
+			 const char *arg ATTRIBUTE_UNUSED,
+			 int value ATTRIBUTE_UNUSED)
+{
+  return false;
+}
+
+/* By default, if flag_pic is true, then neither local nor global relocs
+   should be placed in readonly memory.  */
+
+int
+default_reloc_rw_mask (void)
+{
+  return flag_pic ? 3 : 0;
+}
+
+/* By default, do no modification. */
+tree default_mangle_decl_assembler_name (tree decl ATTRIBUTE_UNUSED,
+					 tree id)
+{
+   return id;
+}
+
+bool
+default_builtin_vector_alignment_reachable (const_tree type, bool is_packed)
+{
+  if (is_packed)
+    return false;
+
+  /* Assuming that types whose size is > pointer-size are not guaranteed to be
+     naturally aligned.  */
+  if (tree_int_cst_compare (TYPE_SIZE (type), bitsize_int (POINTER_SIZE)) > 0)
+    return false;
+
+  /* Assuming that types whose size is <= pointer-size
+     are naturally aligned.  */
+  return true;
 }
 
 #include "gt-targhooks.h"

@@ -1,10 +1,11 @@
 # Process this file with autoconf to produce a configure script, like so:
-# aclocal && autoconf && autoheader && automake
+# aclocal -I .. -I ../config && autoconf && autoheader && automake
 
 AC_PREREQ(2.59)
 AC_INIT(libmudflap, 1.0)
 AC_CONFIG_SRCDIR(mf-runtime.c)
 AC_CANONICAL_SYSTEM
+ACX_NONCANONICAL_TARGET
 
 AM_INIT_AUTOMAKE
 
@@ -74,6 +75,7 @@ AC_CHECK_FUNCS(getservent getservbyname getservbyport getaddrinfo gai_strerror)
 AC_CHECK_FUNCS(getprotoent getprotobyname getprotobynumber)
 AC_CHECK_FUNCS(getmntent setmntent addmntent)
 AC_CHECK_FUNCS(inet_ntoa mmap munmap)
+AC_CHECK_FUNCS(__libc_freeres)
 
 AC_TRY_COMPILE([#include <sys/types.h>
 #include <sys/ipc.h>
@@ -174,6 +176,9 @@ case ${version_specific_libs} in
 esac
 AC_SUBST(toolexecdir)
 AC_SUBST(toolexeclibdir)
+
+includedir=${toolexecdir}/include
+AC_SUBST(includedir)
 
 pthread_create_version='""'
 if test "x$enable_shared" = "xyes" && test "x$posix_threads" != "x"; then

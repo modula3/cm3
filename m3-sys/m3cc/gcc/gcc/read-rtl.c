@@ -1,13 +1,13 @@
 /* RTL reader for GCC.
    Copyright (C) 1987, 1988, 1991, 1994, 1997, 1998, 1999, 2000, 2001, 2002,
-   2003, 2004, 2005
+   2003, 2004, 2005, 2007
    Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -16,13 +16,12 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "bconfig.h"
 
-/* Disable rtl checking; it conflicts with the macro handling.  */
+/* Disable rtl checking; it conflicts with the iterator handling.  */
 #undef ENABLE_RTL_CHECKING
 
 #include "system.h"
@@ -31,6 +30,7 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #include "rtl.h"
 #include "obstack.h"
 #include "hashtab.h"
+#include "gensupport.h"
 
 static htab_t md_constants;
 
@@ -41,17 +41,17 @@ struct map_value {
   const char *string;
 };
 
-/* Maps a macro or attribute name to a list of (integer, string) pairs.
+/* Maps an iterator or attribute name to a list of (integer, string) pairs.
    The integers are mode or code values; the strings are either C conditions
    or attribute values.  */
 struct mapping {
-  /* The name of the macro or attribute.  */
+  /* The name of the iterator or attribute.  */
   const char *name;
 
-  /* The group (modes or codes) to which the macro or attribute belongs.  */
-  struct macro_group *group;
+  /* The group (modes or codes) to which the iterator or attribute belongs.  */
+  struct iterator_group *group;
 
-  /* Gives a unique number to the attribute or macro.  Numbers are
+  /* Gives a unique number to the attribute or iterator.  Numbers are
      allocated consecutively, starting at 0.  */
   int index;
 
@@ -59,13 +59,13 @@ struct mapping {
   struct map_value *values;
 };
 
-/* A structure for abstracting the common parts of code and mode macros.  */
-struct macro_group {
-  /* Tables of "mapping" structures, one for attributes and one for macros.  */
-  htab_t attrs, macros;
+/* A structure for abstracting the common parts of code and mode iterators.  */
+struct iterator_group {
+  /* Tables of "mapping" structures, one for attributes and one for iterators.  */
+  htab_t attrs, iterators;
 
   /* The number of "real" modes or codes (and by extension, the first
-     number available for use as a macro placeholder).  */
+     number available for use as an iterator placeholder).  */
   int num_builtins;
 
   /* Treat the given string as the name of a standard mode or code and
@@ -73,10 +73,10 @@ struct macro_group {
   int (*find_builtin) (const char *, FILE *);
 
   /* Return true if the given rtx uses the given mode or code.  */
-  bool (*uses_macro_p) (rtx, int);
+  bool (*uses_iterator_p) (rtx, int);
 
   /* Make the given rtx use the given mode or code.  */
-  void (*apply_macro) (rtx, int);
+  void (*apply_iterator) (rtx, int);
 };
 
 /* Associates PTR (which can be a string, etc.) with the file location
@@ -87,9 +87,9 @@ struct ptr_loc {
   int lineno;
 };
 
-/* A structure used to pass data from read_rtx to apply_macro_traverse
+/* A structure used to pass data from read_rtx to apply_iterator_traverse
    via htab_traverse.  */
-struct macro_traverse_data {
+struct iterator_traverse_data {
   /* Instruction queue.  */
   rtx queue;
   /* Attributes seen for modes.  */
@@ -100,7 +100,7 @@ struct macro_traverse_data {
   const char *unknown_mode_attr;
 };
 
-/* If CODE is the number of a code macro, return a real rtx code that
+/* If CODE is the number of a code iterator, return a real rtx code that
    has the same format.  Return CODE otherwise.  */
 #define BELLWETHER_CODE(CODE) \
   ((CODE) < NUM_RTX_CODE ? CODE : bellwether_codes[CODE - NUM_RTX_CODE])
@@ -109,23 +109,23 @@ static void fatal_with_file_and_line (FILE *, const char *, ...)
   ATTRIBUTE_PRINTF_2 ATTRIBUTE_NORETURN;
 static void fatal_expected_char (FILE *, int, int) ATTRIBUTE_NORETURN;
 static int find_mode (const char *, FILE *);
-static bool uses_mode_macro_p (rtx, int);
-static void apply_mode_macro (rtx, int);
+static bool uses_mode_iterator_p (rtx, int);
+static void apply_mode_iterator (rtx, int);
 static int find_code (const char *, FILE *);
-static bool uses_code_macro_p (rtx, int);
-static void apply_code_macro (rtx, int);
-static const char *apply_macro_to_string (const char *, struct mapping *, int);
-static rtx apply_macro_to_rtx (rtx, struct mapping *, int,
-			       struct map_value *, FILE *, const char **);
-static bool uses_macro_p (rtx, struct mapping *);
+static bool uses_code_iterator_p (rtx, int);
+static void apply_code_iterator (rtx, int);
+static const char *apply_iterator_to_string (const char *, struct mapping *, int);
+static rtx apply_iterator_to_rtx (rtx, struct mapping *, int,
+				  struct map_value *, FILE *, const char **);
+static bool uses_iterator_p (rtx, struct mapping *);
 static const char *add_condition_to_string (const char *, const char *);
 static void add_condition_to_rtx (rtx, const char *);
-static int apply_macro_traverse (void **, void *);
-static struct mapping *add_mapping (struct macro_group *, htab_t t,
+static int apply_iterator_traverse (void **, void *);
+static struct mapping *add_mapping (struct iterator_group *, htab_t t,
 				    const char *, FILE *);
 static struct map_value **add_map_value (struct map_value **,
 					 int, const char *);
-static void initialize_macros (void);
+static void initialize_iterators (void);
 static void read_name (char *, FILE *);
 static hashval_t leading_ptr_hash (const void *);
 static int leading_ptr_eq_p (const void *, const void *);
@@ -138,14 +138,16 @@ static void read_escape (FILE *);
 static hashval_t def_hash (const void *);
 static int def_name_eq_p (const void *, const void *);
 static void read_constants (FILE *infile, char *tmp_char);
+static void read_conditions (FILE *infile, char *tmp_char);
 static void validate_const_int (FILE *, const char *);
-static int find_macro (struct macro_group *, const char *, FILE *);
-static struct mapping *read_mapping (struct macro_group *, htab_t, FILE *);
-static void check_code_macro (struct mapping *, FILE *);
+static int find_iterator (struct iterator_group *, const char *, FILE *);
+static struct mapping *read_mapping (struct iterator_group *, htab_t, FILE *);
+static void check_code_iterator (struct mapping *, FILE *);
 static rtx read_rtx_1 (FILE *, struct map_value **);
+static rtx read_rtx_variadic (FILE *, struct map_value **, rtx);
 
-/* The mode and code macro structures.  */
-static struct macro_group modes, codes;
+/* The mode and code iterator structures.  */
+static struct iterator_group modes, codes;
 
 /* Index I is the value of BELLWETHER_CODE (I + NUM_RTX_CODE).  */
 static enum rtx_code *bellwether_codes;
@@ -216,11 +218,15 @@ fatal_with_file_and_line (FILE *infile, const char *msg, ...)
 static void
 fatal_expected_char (FILE *infile, int expected_c, int actual_c)
 {
-  fatal_with_file_and_line (infile, "expected character `%c', found `%c'",
-			    expected_c, actual_c);
+  if (actual_c == EOF)
+    fatal_with_file_and_line (infile, "expected character `%c', found EOF",
+			      expected_c);
+  else
+    fatal_with_file_and_line (infile, "expected character `%c', found `%c'",
+			      expected_c, actual_c);
 }
 
-/* Implementations of the macro_group callbacks for modes.  */
+/* Implementations of the iterator_group callbacks for modes.  */
 
 static int
 find_mode (const char *name, FILE *infile)
@@ -235,18 +241,18 @@ find_mode (const char *name, FILE *infile)
 }
 
 static bool
-uses_mode_macro_p (rtx x, int mode)
+uses_mode_iterator_p (rtx x, int mode)
 {
   return (int) GET_MODE (x) == mode;
 }
 
 static void
-apply_mode_macro (rtx x, int mode)
+apply_mode_iterator (rtx x, int mode)
 {
   PUT_MODE (x, (enum machine_mode) mode);
 }
 
-/* Implementations of the macro_group callbacks for codes.  */
+/* Implementations of the iterator_group callbacks for codes.  */
 
 static int
 find_code (const char *name, FILE *infile)
@@ -261,42 +267,42 @@ find_code (const char *name, FILE *infile)
 }
 
 static bool
-uses_code_macro_p (rtx x, int code)
+uses_code_iterator_p (rtx x, int code)
 {
   return (int) GET_CODE (x) == code;
 }
 
 static void
-apply_code_macro (rtx x, int code)
+apply_code_iterator (rtx x, int code)
 {
   PUT_CODE (x, (enum rtx_code) code);
 }
 
 /* Map a code or mode attribute string P to the underlying string for
-   MACRO and VALUE.  */
+   ITERATOR and VALUE.  */
 
 static struct map_value *
-map_attr_string (const char *p, struct mapping *macro, int value)
+map_attr_string (const char *p, struct mapping *iterator, int value)
 {
   const char *attr;
   struct mapping *m;
   struct map_value *v;
 
-  /* If there's a "macro:" prefix, check whether the macro name matches.
+  /* If there's a "iterator:" prefix, check whether the iterator name matches.
      Set ATTR to the start of the attribute name.  */
   attr = strchr (p, ':');
   if (attr == 0)
     attr = p;
   else
     {
-      if (strncmp (p, macro->name, attr - p) != 0
-	  || macro->name[attr - p] != 0)
+      if (strncmp (p, iterator->name, attr - p) != 0
+	  || iterator->name[attr - p] != 0)
 	return 0;
       attr++;
     }
 
   /* Find the attribute specification.  */
-  m = (struct mapping *) htab_find (macro->group->attrs, &attr);
+  m = (struct mapping *) htab_find (iterator->group->attrs, &attr);
   if (m == 0)
     return 0;
 
@@ -310,7 +316,7 @@ map_attr_string (const char *p, struct mapping *macro, int value)
 
 /* Given an attribute string used as a machine mode, return an index
    to store in the machine mode to be translated by
-   apply_macro_to_rtx.  */
+   apply_iterator_to_rtx.  */
 
 static unsigned int
 mode_attr_index (struct map_value **mode_maps, const char *string)
@@ -330,27 +336,27 @@ mode_attr_index (struct map_value **mode_maps, const char *string)
   *mode_maps = mv;
 
   /* We return a code which we can map back into this string: the
-     number of machine modes + the number of mode macros + the index
+     number of machine modes + the number of mode iterators + the index
      we just used.  */
-  return MAX_MACHINE_MODE + htab_elements (modes.macros) + mv->number;
+  return MAX_MACHINE_MODE + htab_elements (modes.iterators) + mv->number;
 }
 
 /* Apply MODE_MAPS to the top level of X, expanding cases where an
-   attribute is used for a mode.  MACRO is the current macro we are
+   attribute is used for a mode.  ITERATOR is the current iterator we are
    expanding, and VALUE is the value to which we are expanding it.
    INFILE is used for error messages.  This sets *UNKNOWN to true if
    we find a mode attribute which has not yet been defined, and does
    not change it otherwise.  */
 
 static void
-apply_mode_maps (rtx x, struct map_value *mode_maps, struct mapping *macro,
+apply_mode_maps (rtx x, struct map_value *mode_maps, struct mapping *iterator,
 		 int value, FILE *infile, const char **unknown)
 {
   unsigned int offset;
   int indx;
   struct map_value *pm;
 
-  offset = MAX_MACHINE_MODE + htab_elements (modes.macros);
+  offset = MAX_MACHINE_MODE + htab_elements (modes.iterators);
   if (GET_MODE (x) < offset)
     return;
 
@@ -361,7 +367,7 @@ apply_mode_maps (rtx x, struct map_value *mode_maps, struct mapping *macro,
 	{
 	  struct map_value *v;
 
-	  v = map_attr_string (pm->string, macro, value);
+	  v = map_attr_string (pm->string, iterator, value);
 	  if (v)
 	    PUT_MODE (x, (enum machine_mode) find_mode (v->string, infile));
 	  else
@@ -371,12 +377,12 @@ apply_mode_maps (rtx x, struct map_value *mode_maps, struct mapping *macro,
     }
 }
 
-/* Given that MACRO is being expanded as VALUE, apply the appropriate
+/* Given that ITERATOR is being expanded as VALUE, apply the appropriate
    string substitutions to STRING.  Return the new string if any changes
    were needed, otherwise return STRING itself.  */
 
 static const char *
-apply_macro_to_string (const char *string, struct mapping *macro, int value)
+apply_iterator_to_string (const char *string, struct mapping *iterator, int value)
 {
   char *base, *copy, *p, *start, *end;
   struct map_value *v;
@@ -390,7 +396,7 @@ apply_macro_to_string (const char *string, struct mapping *macro, int value)
       p = start + 1;
 
       *end = 0;
-      v = map_attr_string (p, macro, value);
+      v = map_attr_string (p, iterator, value);
       *end = '>';
       if (v == 0)
 	continue;
@@ -411,18 +417,18 @@ apply_macro_to_string (const char *string, struct mapping *macro, int value)
   return string;
 }
 
-/* Return a copy of ORIGINAL in which all uses of MACRO have been
+/* Return a copy of ORIGINAL in which all uses of ITERATOR have been
    replaced by VALUE.  MODE_MAPS holds information about attribute
    strings used for modes.  INFILE is used for error messages.  This
    sets *UNKNOWN_MODE_ATTR to the value of an unknown mode attribute,
    and does not change it otherwise.  */
 
 static rtx
-apply_macro_to_rtx (rtx original, struct mapping *macro, int value,
-		    struct map_value *mode_maps, FILE *infile,
-		    const char **unknown_mode_attr)
+apply_iterator_to_rtx (rtx original, struct mapping *iterator, int value,
+		       struct map_value *mode_maps, FILE *infile,
+		       const char **unknown_mode_attr)
 {
-  struct macro_group *group;
+  struct iterator_group *group;
   const char *format_ptr;
   int i, j;
   rtx x;
@@ -434,15 +440,15 @@ apply_macro_to_rtx (rtx original, struct mapping *macro, int value,
   /* Create a shallow copy of ORIGINAL.  */
   bellwether_code = BELLWETHER_CODE (GET_CODE (original));
   x = rtx_alloc (bellwether_code);
-  memcpy (x, original, RTX_SIZE (bellwether_code));
+  memcpy (x, original, RTX_CODE_SIZE (bellwether_code));
 
   /* Change the mode or code itself.  */
-  group = macro->group;
-  if (group->uses_macro_p (x, macro->index + group->num_builtins))
-    group->apply_macro (x, value);
+  group = iterator->group;
+  if (group->uses_iterator_p (x, iterator->index + group->num_builtins))
+    group->apply_iterator (x, value);
 
   if (mode_maps)
-    apply_mode_maps (x, mode_maps, macro, value, infile, unknown_mode_attr);
+    apply_mode_maps (x, mode_maps, iterator, value, infile, unknown_mode_attr);
 
   /* Change each string and recursively change each rtx.  */
   format_ptr = GET_RTX_FORMAT (bellwether_code);
@@ -450,18 +456,18 @@ apply_macro_to_rtx (rtx original, struct mapping *macro, int value,
     switch (format_ptr[i])
       {
       case 'T':
-	XTMPL (x, i) = apply_macro_to_string (XTMPL (x, i), macro, value);
+	XTMPL (x, i) = apply_iterator_to_string (XTMPL (x, i), iterator, value);
 	break;
 
       case 'S':
       case 's':
-	XSTR (x, i) = apply_macro_to_string (XSTR (x, i), macro, value);
+	XSTR (x, i) = apply_iterator_to_string (XSTR (x, i), iterator, value);
 	break;
 
       case 'e':
-	XEXP (x, i) = apply_macro_to_rtx (XEXP (x, i), macro, value,
-					  mode_maps, infile,
-					  unknown_mode_attr);
+	XEXP (x, i) = apply_iterator_to_rtx (XEXP (x, i), iterator, value,
+					     mode_maps, infile,
+					     unknown_mode_attr);
 	break;
 
       case 'V':
@@ -470,10 +476,10 @@ apply_macro_to_rtx (rtx original, struct mapping *macro, int value,
 	  {
 	    XVEC (x, i) = rtvec_alloc (XVECLEN (original, i));
 	    for (j = 0; j < XVECLEN (x, i); j++)
-	      XVECEXP (x, i, j) = apply_macro_to_rtx (XVECEXP (original, i, j),
-						      macro, value, mode_maps,
-						      infile,
-						      unknown_mode_attr);
+	      XVECEXP (x, i, j) = apply_iterator_to_rtx (XVECEXP (original, i, j),
+							 iterator, value, mode_maps,
+							 infile,
+							 unknown_mode_attr);
 	  }
 	break;
 
@@ -483,20 +489,20 @@ apply_macro_to_rtx (rtx original, struct mapping *macro, int value,
   return x;
 }
 
-/* Return true if X (or some subexpression of X) uses macro MACRO.  */
+/* Return true if X (or some subexpression of X) uses iterator ITERATOR.  */
 
 static bool
-uses_macro_p (rtx x, struct mapping *macro)
+uses_iterator_p (rtx x, struct mapping *iterator)
 {
-  struct macro_group *group;
+  struct iterator_group *group;
   const char *format_ptr;
   int i, j;
 
   if (x == 0)
     return false;
 
-  group = macro->group;
-  if (group->uses_macro_p (x, macro->index + group->num_builtins))
+  group = iterator->group;
+  if (group->uses_iterator_p (x, iterator->index + group->num_builtins))
     return true;
 
   format_ptr = GET_RTX_FORMAT (BELLWETHER_CODE (GET_CODE (x)));
@@ -504,7 +510,7 @@ uses_macro_p (rtx x, struct mapping *macro)
     switch (format_ptr[i])
       {
       case 'e':
-	if (uses_macro_p (XEXP (x, i), macro))
+	if (uses_iterator_p (XEXP (x, i), iterator))
 	  return true;
 	break;
 
@@ -512,7 +518,7 @@ uses_macro_p (rtx x, struct mapping *macro)
       case 'E':
 	if (XVEC (x, i))
 	  for (j = 0; j < XVECLEN (x, i); j++)
-	    if (uses_macro_p (XVECEXP (x, i, j), macro))
+	    if (uses_iterator_p (XVECEXP (x, i, j), iterator))
 	      return true;
 	break;
 
@@ -564,37 +570,37 @@ add_condition_to_rtx (rtx x, const char *extra)
 }
 
 /* A htab_traverse callback.  Search the EXPR_LIST given by DATA
-   for rtxes that use the macro in *SLOT.  Replace each such rtx
+   for rtxes that use the iterator in *SLOT.  Replace each such rtx
    with a list of expansions.  */
 
 static int
-apply_macro_traverse (void **slot, void *data)
+apply_iterator_traverse (void **slot, void *data)
 {
-  struct macro_traverse_data *mtd = (struct macro_traverse_data *) data;
-  struct mapping *macro;
+  struct iterator_traverse_data *mtd = (struct iterator_traverse_data *) data;
+  struct mapping *iterator;
   struct map_value *v;
   rtx elem, new_elem, original, x;
 
-  macro = (struct mapping *) *slot;
+  iterator = (struct mapping *) *slot;
   for (elem = mtd->queue; elem != 0; elem = XEXP (elem, 1))
-    if (uses_macro_p (XEXP (elem, 0), macro))
+    if (uses_iterator_p (XEXP (elem, 0), iterator))
       {
-	/* For each macro we expand, we set UNKNOWN_MODE_ATTR to NULL.
-	   If apply_macro_rtx finds an unknown attribute for a mode,
+	/* For each iterator we expand, we set UNKNOWN_MODE_ATTR to NULL.
+	   If apply_iterator_rtx finds an unknown attribute for a mode,
 	   it will set it to the attribute.  We want to know whether
 	   the attribute is unknown after we have expanded all
-	   possible macros, so setting it to NULL here gives us the
+	   possible iterators, so setting it to NULL here gives us the
 	   right result when the hash table traversal is complete.  */
 	mtd->unknown_mode_attr = NULL;
 
 	original = XEXP (elem, 0);
-	for (v = macro->values; v != 0; v = v->next)
+	for (v = iterator->values; v != 0; v = v->next)
 	  {
-	    x = apply_macro_to_rtx (original, macro, v->number,
-				    mtd->mode_maps, mtd->infile,
-				    &mtd->unknown_mode_attr);
+	    x = apply_iterator_to_rtx (original, iterator, v->number,
+				       mtd->mode_maps, mtd->infile,
+				       &mtd->unknown_mode_attr);
 	    add_condition_to_rtx (x, v->string);
-	    if (v != macro->values)
+	    if (v != iterator->values)
 	      {
 		/* Insert a new EXPR_LIST node after ELEM and put the
 		   new expansion there.  */
@@ -614,7 +620,7 @@ apply_macro_traverse (void **slot, void *data)
    is the file that defined the mapping.  */
 
 static struct mapping *
-add_mapping (struct macro_group *group, htab_t table,
+add_mapping (struct iterator_group *group, htab_t table,
 	     const char *name, FILE *infile)
 {
   struct mapping *m;
@@ -655,7 +661,7 @@ add_map_value (struct map_value **end_ptr, int number, const char *string)
 /* Do one-time initialization of the mode and code attributes.  */
 
 static void
-initialize_macros (void)
+initialize_iterators (void)
 {
   struct mapping *lower, *upper;
   struct map_value **lower_ptr, **upper_ptr;
@@ -663,18 +669,18 @@ initialize_macros (void)
   int i;
 
   modes.attrs = htab_create (13, def_hash, def_name_eq_p, 0);
-  modes.macros = htab_create (13, def_hash, def_name_eq_p, 0);
+  modes.iterators = htab_create (13, def_hash, def_name_eq_p, 0);
   modes.num_builtins = MAX_MACHINE_MODE;
   modes.find_builtin = find_mode;
-  modes.uses_macro_p = uses_mode_macro_p;
-  modes.apply_macro = apply_mode_macro;
+  modes.uses_iterator_p = uses_mode_iterator_p;
+  modes.apply_iterator = apply_mode_iterator;
 
   codes.attrs = htab_create (13, def_hash, def_name_eq_p, 0);
-  codes.macros = htab_create (13, def_hash, def_name_eq_p, 0);
+  codes.iterators = htab_create (13, def_hash, def_name_eq_p, 0);
   codes.num_builtins = NUM_RTX_CODE;
   codes.find_builtin = find_code;
-  codes.uses_macro_p = uses_code_macro_p;
-  codes.apply_macro = apply_code_macro;
+  codes.uses_iterator_p = uses_code_iterator_p;
+  codes.apply_iterator = apply_code_iterator;
 
   lower = add_mapping (&modes, modes.attrs, "mode", 0);
   upper = add_mapping (&modes, modes.attrs, "MODE", 0);
@@ -883,7 +889,7 @@ read_name (char *str, FILE *infile)
   p = str;
   while (1)
     {
-      if (c == ' ' || c == '\n' || c == '\t' || c == '\f' || c == '\r')
+      if (c == ' ' || c == '\n' || c == '\t' || c == '\f' || c == '\r' || c == EOF)
 	break;
       if (c == ':' || c == ')' || c == ']' || c == '"' || c == '/'
 	  || c == '(' || c == '[')
@@ -1205,6 +1211,58 @@ traverse_md_constants (htab_trav callback, void *info)
   if (md_constants)
     htab_traverse (md_constants, callback, info);
 }
+
+/* INFILE is a FILE pointer to read text from.  TMP_CHAR is a buffer
+   suitable to read a name or number into.  Process a
+   define_conditions directive, starting with the optional space after
+   the "define_conditions".  The directive looks like this:
+
+     (define_conditions [
+        (number "string")
+        (number "string")
+        ...
+     ])
+
+   It's not intended to appear in machine descriptions.  It is
+   generated by (the program generated by) genconditions.c, and
+   slipped in at the beginning of the sequence of MD files read by
+   most of the other generators.  */
+static void
+read_conditions (FILE *infile, char *tmp_char)
+{
+  int c;
+
+  c = read_skip_spaces (infile);
+  if (c != '[')
+    fatal_expected_char (infile, '[', c);
+
+  while ( (c = read_skip_spaces (infile)) != ']')
+    {
+      char *expr;
+      int value;
+
+      if (c != '(')
+	fatal_expected_char (infile, '(', c);
+
+      read_name (tmp_char, infile);
+      validate_const_int (infile, tmp_char);
+      value = atoi (tmp_char);
+
+      c = read_skip_spaces (infile);
+      if (c != '"')
+	fatal_expected_char (infile, '"', c);
+      expr = read_quoted_string (infile);
+
+      c = read_skip_spaces (infile);
+      if (c != ')')
+	fatal_expected_char (infile, ')', c);
+
+      add_c_test (expr, value);
+    }
+  c = read_skip_spaces (infile);
+  if (c != ')')
+    fatal_expected_char (infile, ')', c);
+}
 
 static void
 validate_const_int (FILE *infile, const char *string)
@@ -1230,11 +1288,11 @@ validate_const_int (FILE *infile, const char *string)
    identifier.  INFILE is the file that contained NAME.  */
 
 static int
-find_macro (struct macro_group *group, const char *name, FILE *infile)
+find_iterator (struct iterator_group *group, const char *name, FILE *infile)
 {
   struct mapping *m;
 
-  m = (struct mapping *) htab_find (group->macros, &name);
+  m = (struct mapping *) htab_find (group->iterators, &name);
   if (m != 0)
     return m->index + group->num_builtins;
   return group->find_builtin (name, infile);
@@ -1251,7 +1309,7 @@ find_macro (struct macro_group *group, const char *name, FILE *infile)
    (which belongs to GROUP) and return it.  */
 
 static struct mapping *
-read_mapping (struct macro_group *group, htab_t table, FILE *infile)
+read_mapping (struct iterator_group *group, htab_t table, FILE *infile)
 {
   char tmp_char[256];
   struct mapping *m;
@@ -1302,24 +1360,24 @@ read_mapping (struct macro_group *group, htab_t table, FILE *infile)
   return m;
 }
 
-/* Check newly-created code macro MACRO to see whether every code has the
-   same format.  Initialize the macro's entry in bellwether_codes.  */
+/* Check newly-created code iterator ITERATOR to see whether every code has the
+   same format.  Initialize the iterator's entry in bellwether_codes.  */
 
 static void
-check_code_macro (struct mapping *macro, FILE *infile)
+check_code_iterator (struct mapping *iterator, FILE *infile)
 {
   struct map_value *v;
   enum rtx_code bellwether;
 
-  bellwether = (enum rtx_code) macro->values->number;
-  for (v = macro->values->next; v != 0; v = v->next)
+  bellwether = (enum rtx_code) iterator->values->number;
+  for (v = iterator->values->next; v != 0; v = v->next)
     if (strcmp (GET_RTX_FORMAT (bellwether), GET_RTX_FORMAT (v->number)) != 0)
-      fatal_with_file_and_line (infile, "code macro `%s' combines "
-				"different rtx formats", macro->name);
+      fatal_with_file_and_line (infile, "code iterator `%s' combines "
+				"different rtx formats", iterator->name);
 
   bellwether_codes = XRESIZEVEC (enum rtx_code, bellwether_codes,
-				 macro->index + 1);
-  bellwether_codes[macro->index] = bellwether;
+				 iterator->index + 1);
+  bellwether_codes[iterator->index] = bellwether;
 }
 
 /* Read an rtx in printed representation from INFILE and store its
@@ -1340,7 +1398,7 @@ read_rtx (FILE *infile, rtx *x, int *lineno)
   /* Do one-time initialization.  */
   if (queue_head == 0)
     {
-      initialize_macros ();
+      initialize_iterators ();
       obstack_init (&string_obstack);
       queue_head = rtx_alloc (EXPR_LIST);
       ptr_locs = htab_create (161, leading_ptr_hash, leading_ptr_eq_p, 0);
@@ -1353,25 +1411,32 @@ read_rtx (FILE *infile, rtx *x, int *lineno)
   if (queue_next == 0)
     {
       struct map_value *mode_maps;
-      struct macro_traverse_data mtd;
+      struct iterator_traverse_data mtd;
+      rtx from_file;
 
       c = read_skip_spaces (infile);
       if (c == EOF)
 	return false;
       ungetc (c, infile);
 
-      queue_next = queue_head;
       queue_lineno = read_rtx_lineno;
       mode_maps = 0;
-      XEXP (queue_next, 0) = read_rtx_1 (infile, &mode_maps);
+      from_file = read_rtx_1 (infile, &mode_maps);
+      if (from_file == 0)
+	return false;  /* This confuses a top level (nil) with end of
+			  file, but a top level (nil) would have
+			  crashed our caller anyway.  */
+
+      queue_next = queue_head;
+      XEXP (queue_next, 0) = from_file;
       XEXP (queue_next, 1) = 0;
 
       mtd.queue = queue_next;
       mtd.mode_maps = mode_maps;
       mtd.infile = infile;
       mtd.unknown_mode_attr = mode_maps ? mode_maps->string : NULL;
-      htab_traverse (modes.macros, apply_macro_traverse, &mtd);
-      htab_traverse (codes.macros, apply_macro_traverse, &mtd);
+      htab_traverse (modes.iterators, apply_iterator_traverse, &mtd);
+      htab_traverse (codes.iterators, apply_iterator_traverse, &mtd);
       if (mtd.unknown_mode_attr)
 	fatal_with_file_and_line (infile,
 				  "undefined attribute '%s' used for mode",
@@ -1386,7 +1451,7 @@ read_rtx (FILE *infile, rtx *x, int *lineno)
 }
 
 /* Subroutine of read_rtx that reads one construct from INFILE but
-   doesn't apply any macros.  */
+   doesn't apply any iterators.  */
 
 static rtx
 read_rtx_1 (FILE *infile, struct map_value **mode_maps)
@@ -1412,6 +1477,10 @@ read_rtx_1 (FILE *infile, struct map_value **mode_maps)
 
  again:
   c = read_skip_spaces (infile); /* Should be open paren.  */
+
+  if (c == EOF)
+    return 0;
+  
   if (c != '(')
     fatal_expected_char (infile, '(', c);
 
@@ -1429,14 +1498,19 @@ read_rtx_1 (FILE *infile, struct map_value **mode_maps)
       read_constants (infile, tmp_char);
       goto again;
     }
+  if (strcmp (tmp_char, "define_conditions") == 0)
+    {
+      read_conditions (infile, tmp_char);
+      goto again;
+    }
   if (strcmp (tmp_char, "define_mode_attr") == 0)
     {
       read_mapping (&modes, modes.attrs, infile);
       goto again;
     }
-  if (strcmp (tmp_char, "define_mode_macro") == 0)
+  if (strcmp (tmp_char, "define_mode_iterator") == 0)
     {
-      read_mapping (&modes, modes.macros, infile);
+      read_mapping (&modes, modes.iterators, infile);
       goto again;
     }
   if (strcmp (tmp_char, "define_code_attr") == 0)
@@ -1444,12 +1518,13 @@ read_rtx_1 (FILE *infile, struct map_value **mode_maps)
       read_mapping (&codes, codes.attrs, infile);
       goto again;
     }
-  if (strcmp (tmp_char, "define_code_macro") == 0)
+  if (strcmp (tmp_char, "define_code_iterator") == 0)
     {
-      check_code_macro (read_mapping (&codes, codes.macros, infile), infile);
+      check_code_iterator (read_mapping (&codes, codes.iterators, infile),
+			   infile);
       goto again;
     }
-  real_code = (enum rtx_code) find_macro (&codes, tmp_char, infile);
+  real_code = (enum rtx_code) find_iterator (&codes, tmp_char, infile);
   bellwether_code = BELLWETHER_CODE (real_code);
 
   /* If we end up with an insn expression then we free this space below.  */
@@ -1467,7 +1542,7 @@ read_rtx_1 (FILE *infile, struct map_value **mode_maps)
 
       read_name (tmp_char, infile);
       if (tmp_char[0] != '<' || tmp_char[strlen (tmp_char) - 1] != '>')
-	mode = find_macro (&modes, tmp_char, infile);
+	mode = find_iterator (&modes, tmp_char, infile);
       else
 	mode = mode_attr_index (mode_maps, tmp_char);
       PUT_MODE (return_rtx, (enum machine_mode) mode);
@@ -1626,7 +1701,49 @@ read_rtx_1 (FILE *infile, struct map_value **mode_maps)
 
   c = read_skip_spaces (infile);
   if (c != ')')
-    fatal_expected_char (infile, ')', c);
+    {
+      /* Syntactic sugar for AND and IOR, allowing Lisp-like
+	 arbitrary number of arguments for them.  */
+      if (c == '(' && (GET_CODE (return_rtx) == AND
+		       || GET_CODE (return_rtx) == IOR))
+	return read_rtx_variadic (infile, mode_maps, return_rtx);
+      else
+	fatal_expected_char (infile, ')', c);
+    }
 
   return return_rtx;
+}
+
+/* Mutually recursive subroutine of read_rtx which reads
+   (thing x1 x2 x3 ...) and produces RTL as if
+   (thing x1 (thing x2 (thing x3 ...)))  had been written.
+   When called, FORM is (thing x1 x2), and the file position
+   is just past the leading parenthesis of x3.  Only works
+   for THINGs which are dyadic expressions, e.g. AND, IOR.  */
+static rtx
+read_rtx_variadic (FILE *infile, struct map_value **mode_maps, rtx form)
+{
+  char c = '(';
+  rtx p = form, q;
+
+  do
+    {
+      ungetc (c, infile);
+
+      q = rtx_alloc (GET_CODE (p));
+      PUT_MODE (q, GET_MODE (p));
+
+      XEXP (q, 0) = XEXP (p, 1);
+      XEXP (q, 1) = read_rtx_1 (infile, mode_maps);
+      
+      XEXP (p, 1) = q;
+      p = q;
+      c = read_skip_spaces (infile);
+    }
+  while (c == '(');
+
+  if (c != ')')
+    fatal_expected_char (infile, ')', c);
+
+  return form;
 }

@@ -1,5 +1,5 @@
 /* Fallback frame-state unwinder for Darwin.
-   Copyright (C) 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2004, 2005, 2007 Free Software Foundation, Inc.
 
    This file is part of GCC.
 
@@ -27,6 +27,8 @@
    Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
    02110-1301, USA.  */
 
+#ifdef __ppc__
+
 #include "tconfig.h"
 #include "tsystem.h"
 #include "coretypes.h"
@@ -38,6 +40,15 @@
 #include <stdbool.h>
 #include <sys/types.h>
 #include <signal.h>
+
+#define R_LR		65
+#define R_CTR		66
+#define R_CR2		70
+#define R_XER		76
+#define R_VR0		77
+#define R_VRSAVE	109
+#define R_VSCR		110
+#define R_SPEFSCR	112
 
 typedef unsigned long reg_unit;
 
@@ -61,7 +72,7 @@ interpret_libc (reg_unit gprs[32], struct _Unwind_Context *context)
   gprs[1] = _Unwind_GetCFA (context);
   for (; i < 32; i++)
     gprs[i] = _Unwind_GetGR (context, i);
-  cr = _Unwind_GetGR (context, CR2_REGNO);
+  cr = _Unwind_GetGR (context, R_CR2);
 
   /* For each supported Libc, we have to track the code flow
      all the way back into the kernel.
@@ -327,9 +338,9 @@ handle_syscall (_Unwind_FrameState *fs, const reg_unit gprs[32],
   static _Unwind_Ptr return_addr;
   
   /* Yay!  We're in a Libc that we understand, and it's made a
-     system call.  It'll be one of two kinds: either a Jaguar-style
-     SYS_sigreturn, or a Panther-style 'syscall' call with 184, which 
-     is also SYS_sigreturn.  */
+     system call.  In Jaguar, this is a direct system call with value 103;
+     in Panther and Tiger it is a SYS_syscall call for system call number 184,
+     and in Leopard it is a direct syscall with number 184.  */
   
   if (gprs[0] == 0x67 /* SYS_SIGRETURN */)
     {
@@ -339,10 +350,19 @@ handle_syscall (_Unwind_FrameState *fs, const reg_unit gprs[32],
       is_64 = (uctx->mcsize == UC_FLAVOR64_VEC_SIZE
 	       || uctx->mcsize == UC_FLAVOR64_SIZE);
     }
-  else if (gprs[0] == 0 && gprs[3] == 184)
+  else if (gprs[0] == 0 /* SYS_syscall */ && gprs[3] == 184)
     {
       int ctxstyle = gprs[5];
       uctx = (struct gcc_ucontext *) gprs[4];
+      is_vector = (ctxstyle == UC_FLAVOR_VEC || ctxstyle == UC_FLAVOR64_VEC
+		   || ctxstyle == UC_TRAD_VEC || ctxstyle == UC_TRAD64_VEC);
+      is_64 = (ctxstyle == UC_FLAVOR64_VEC || ctxstyle == UC_TRAD64_VEC
+	       || ctxstyle == UC_FLAVOR64 || ctxstyle == UC_TRAD64);
+    }
+  else if (gprs[0] == 184 /* SYS_sigreturn */)
+    {
+      int ctxstyle = gprs[4];
+      uctx = (struct gcc_ucontext *) gprs[3];
       is_vector = (ctxstyle == UC_FLAVOR_VEC || ctxstyle == UC_FLAVOR64_VEC
 		   || ctxstyle == UC_TRAD_VEC || ctxstyle == UC_TRAD64_VEC);
       is_64 = (ctxstyle == UC_FLAVOR64_VEC || ctxstyle == UC_TRAD64_VEC
@@ -372,14 +392,14 @@ handle_syscall (_Unwind_FrameState *fs, const reg_unit gprs[32],
 
       new_cfa = m64->gpr[1][1];
       
-      set_offset (CR2_REGNO, &m64->cr);
+      set_offset (R_CR2, &m64->cr);
       for (i = 0; i < 32; i++)
 	set_offset (i, m64->gpr[i] + 1);
-      set_offset (XER_REGNO, m64->xer + 1);
-      set_offset (LINK_REGISTER_REGNUM, m64->lr + 1);
-      set_offset (COUNT_REGISTER_REGNUM, m64->ctr + 1);
+      set_offset (R_XER, m64->xer + 1);
+      set_offset (R_LR, m64->lr + 1);
+      set_offset (R_CTR, m64->ctr + 1);
       if (is_vector)
-	set_offset (VRSAVE_REGNO, &m64->vrsave);
+	set_offset (R_VRSAVE, &m64->vrsave);
       
       /* Sometimes, srr0 points to the instruction that caused the exception,
 	 and sometimes to the next instruction to be executed; we want
@@ -400,15 +420,15 @@ handle_syscall (_Unwind_FrameState *fs, const reg_unit gprs[32],
       
       new_cfa = m->gpr[1];
 
-      set_offset (CR2_REGNO, &m->cr);
+      set_offset (R_CR2, &m->cr);
       for (i = 0; i < 32; i++)
 	set_offset (i, m->gpr + i);
-      set_offset (XER_REGNO, &m->xer);
-      set_offset (LINK_REGISTER_REGNUM, &m->lr);
-      set_offset (COUNT_REGISTER_REGNUM, &m->ctr);
+      set_offset (R_XER, &m->xer);
+      set_offset (R_LR, &m->lr);
+      set_offset (R_CTR, &m->ctr);
 
       if (is_vector)
-	set_offset (VRSAVE_REGNO, &m->vrsave);
+	set_offset (R_VRSAVE, &m->vrsave);
 
       /* Sometimes, srr0 points to the instruction that caused the exception,
 	 and sometimes to the next instruction to be executed; we want
@@ -421,9 +441,9 @@ handle_syscall (_Unwind_FrameState *fs, const reg_unit gprs[32],
 	return_addr = m->srr0;
     }
 
-  fs->cfa_how = CFA_REG_OFFSET;
-  fs->cfa_reg = STACK_POINTER_REGNUM;
-  fs->cfa_offset = new_cfa - old_cfa;;
+  fs->regs.cfa_how = CFA_REG_OFFSET;
+  fs->regs.cfa_reg = STACK_POINTER_REGNUM;
+  fs->regs.cfa_offset = new_cfa - old_cfa;;
   
   /* The choice of column for the return address is somewhat tricky.
      Fortunately, the actual choice is private to this file, and
@@ -438,13 +458,13 @@ handle_syscall (_Unwind_FrameState *fs, const reg_unit gprs[32],
 
   for (i = 0; i < 32; i++)
     set_offset (32 + i, float_vector_state->fpregs + i);
-  set_offset (SPEFSCR_REGNO, &float_vector_state->fpscr);
+  set_offset (R_SPEFSCR, &float_vector_state->fpscr);
   
   if (is_vector)
     {
       for (i = 0; i < 32; i++)
-	set_offset (FIRST_ALTIVEC_REGNO + i, float_vector_state->save_vr + i);
-      set_offset (VSCR_REGNO, float_vector_state->save_vscr);
+	set_offset (R_VR0 + i, float_vector_state->save_vr + i);
+      set_offset (R_VSCR, float_vector_state->save_vscr);
     }
 
   return true;
@@ -469,3 +489,4 @@ _Unwind_fallback_frame_state_for (struct _Unwind_Context *context,
     return false;
   return handle_syscall (fs, gprs, _Unwind_GetCFA (context));
 }
+#endif

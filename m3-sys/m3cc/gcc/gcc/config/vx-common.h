@@ -1,12 +1,12 @@
 /* Target-independent configuration for VxWorks and VxWorks AE.   
-   Copyright (C) 2005 Free Software Foundation, Inc.
-   Contributed by by CodeSourcery, LLC.
+   Copyright (C) 2005, 2007 Free Software Foundation, Inc.
+   Contributed by CodeSourcery, LLC.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* VxWorks headers are C++-aware.  */
 #undef  NO_IMPLICIT_EXTERN_C
@@ -56,7 +55,14 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #undef WCHAR_TYPE_SIZE
 #define WCHAR_TYPE_SIZE 16
 
+/* Likewise wint_t.  */
+#undef WINT_TYPE
+#define WINT_TYPE "short unsigned int"
+#undef WINT_TYPE_SIZE
+#define WINT_TYPE_SIZE 16
+
 /* Dwarf2 unwind info is not supported.  */
+#undef DWARF2_UNWIND_INFO
 #define DWARF2_UNWIND_INFO 0
 
 /* VxWorks uses DWARF2.  */
@@ -82,17 +88,6 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 {							\
   sorry ("profiler support for VxWorks");		\
 } while (0)
-
-/* This section either contains dynamic relocations, or contains
-   PC-rel indirections to stubs in the data section which contain dynamic
-   relocations.  General dynamic relocations are not processed
-   for shared libraries' text segments, and PC-relative displacements
-   from the text segment to the data segment don't work.  So force
-   it to .gcc_except_section, which the linker will place in .data.  */
-
-void vxworks_exception_section (void);
-#undef TARGET_ASM_EXCEPTION_SECTION
-#define TARGET_ASM_EXCEPTION_SECTION default_exception_section
 
 /* We occasionally need to distinguish between the VxWorks variants.  */
 #define VXWORKS_KIND_NORMAL  1

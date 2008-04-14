@@ -1,11 +1,11 @@
 ;; Operand and operator predicates for the GCC CRIS port.
-;; Copyright (C) 2005 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2007 Free Software Foundation, Inc.
 
 ;; This file is part of GCC.
 ;;
 ;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 ;;
 ;; GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 
 ;; Operator predicates.
@@ -64,7 +63,7 @@
 (define_predicate "cris_bdap_const_operand"
   (and (match_code "label_ref, symbol_ref, const_int, const_double, const")
        (ior (not (match_test "flag_pic"))
-	    (match_test "cris_valid_pic_const (op)"))))
+	    (match_test "cris_valid_pic_const (op, true)"))))
 
 (define_predicate "cris_simple_address_operand"
   (ior (match_operand:SI 0 "register_operand")
@@ -79,10 +78,13 @@
 
 ;; The caller needs to use :SI.
 (define_predicate "cris_bdap_sign_extend_operand"
-  (and (match_code "sign_extend")
-       (and (match_test "MEM_P (XEXP (op, 0))")
-	    (match_test "cris_simple_address_operand (XEXP (XEXP (op, 0), 0),
-						      Pmode)"))))
+; Disabled until <URL:http://gcc.gnu.org/ml/gcc-patches/2005-10/msg01376.html>
+; or <URL:http://gcc.gnu.org/ml/gcc-patches/2005-10/msg00940.html> is committed.
+  (match_test "0"))
+;  (and (match_code "sign_extend")
+;       (and (match_test "MEM_P (XEXP (op, 0))")
+;	    (match_test "cris_simple_address_operand (XEXP (XEXP (op, 0), 0),
+;						      Pmode)"))))
 
 ;; FIXME: Should not have to test for 1.
 (define_predicate "cris_scale_int_operand"
@@ -138,15 +140,26 @@
        	    ; The following test is actually just an assertion.
 	    (match_test "cris_pic_symbol_type_of (op) != cris_no_symbol"))))
 
+;; A predicate for the anon movsi expansion, one that fits a PCREL
+;; operand as well as general_operand.
+
+(define_special_predicate "cris_general_operand_or_pic_source"
+  (ior (match_operand 0 "general_operand")
+       (and (match_test "flag_pic")
+	    (match_test "cris_valid_pic_const (op, false)"))))
+
 ;; Since a PLT symbol is not a general_operand, we have to have a
 ;; predicate that matches it when we need it.  We use this in the expanded
 ;; "call" and "call_value" anonymous patterns.
 
-(define_predicate "cris_general_operand_or_plt_symbol"
-  (ior (match_operand 0 "general_operand")
+(define_predicate "cris_nonmemory_operand_or_callable_symbol"
+  (ior (match_operand 0 "nonmemory_operand")
        (and (match_code "const")
-	    (and (match_test "GET_CODE (XEXP (op, 0)) == UNSPEC")
-		 (not (match_test "TARGET_AVOID_GOTPLT"))))))
+	    (and
+	     (match_test "GET_CODE (XEXP (op, 0)) == UNSPEC")
+	     (ior
+	      (match_test "XINT (XEXP (op, 0), 1) == CRIS_UNSPEC_PLT_PCREL")
+	      (match_test "XINT (XEXP (op, 0), 1) == CRIS_UNSPEC_PCREL"))))))
 
 ;; This matches a (MEM (general_operand)) or
 ;; (MEM (cris_general_operand_or_symbol)).  The second one isn't a valid

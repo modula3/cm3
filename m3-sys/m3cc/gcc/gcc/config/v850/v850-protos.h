@@ -1,11 +1,12 @@
 /* Prototypes for v850.c functions used in the md file & elsewhere.
-   Copyright (C) 1999, 2000, 2002, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2002, 2004, 2005, 2007
+   Free Software Foundation, Inc.
 
    This file is part of GCC.
 
    GCC is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
+   the Free Software Foundation; either version 3, or (at your option)
    any later version.
 
    GCC is distributed in the hope that it will be useful,
@@ -14,9 +15,8 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 /* Function prototypes that cannot exist in v850.h due to dependency
    complications.  */
@@ -27,13 +27,6 @@
 
 extern void   expand_prologue               (void);
 extern void   expand_epilogue               (void);
-extern void   sdata_section                 (void);
-extern void   rosdata_section               (void);
-extern void   sbss_section                  (void);
-extern void   tdata_section                 (void);
-extern void   zdata_section                 (void);
-extern void   rozdata_section               (void);
-extern void   zbss_section                  (void);
 extern int    v850_handle_pragma            (int (*)(void), void (*)(int), char *);
 extern int    compute_register_save_size    (long *);
 extern int    compute_frame_size            (int, long *);
@@ -44,7 +37,6 @@ extern int    v850_output_addr_const_extra  (FILE *, rtx);
 extern rtx    v850_return_addr              (int);
 extern void   print_operand                 (FILE *, rtx, int );
 extern void   print_operand_address         (FILE *, rtx);
-extern const char *output_move_double       (rtx *);
 extern const char *output_move_single       (rtx *);
 extern void   notice_update_cc              (rtx, rtx);
 extern char * construct_save_jarl           (rtx);
