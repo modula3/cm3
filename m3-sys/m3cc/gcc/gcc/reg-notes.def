@@ -1,11 +1,11 @@
 /* Register note definitions.
-   Copyright (C) 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -14,9 +14,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* This file defines all the codes that may appear on individual
    EXPR_LIST rtxes in the REG_NOTES chain of an insn.  The codes are
@@ -26,10 +25,10 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 /* Shorthand.  */
 #define REG_NOTE(NAME) DEF_REG_NOTE (REG_##NAME)
 
-/* REG_DEP_TRUE is used in LOG_LINKS to represent a read-after-write
-   dependency (i.e. a true data dependency).  This is here, not
-   grouped with REG_DEP_ANTI and REG_DEP_OUTPUT, because some passes
-   use a literal 0 for it.  */
+/* REG_DEP_TRUE is used in scheduler dependencies lists to represent a
+   read-after-write dependency (i.e. a true data dependency).  This is
+   here, not grouped with REG_DEP_ANTI and REG_DEP_OUTPUT, because some
+   passes use a literal 0 for it.  */
 REG_NOTE (DEP_TRUE)
 
 /* The value in REG dies in this insn (i.e., it is not needed past
@@ -53,7 +52,9 @@ REG_NOTE (EQUIV)
 
 /* Like REG_EQUIV except that the destination is only momentarily
    equal to the specified rtx.  Therefore, it cannot be used for
-   substitution; but it can be used for cse.  */
+   substitution; but it can be used for cse.  Together with a
+   REG_RETVAL note, it means that the insn sets the full contents of
+   the libcall value.  */
 REG_NOTE (EQUAL)
 
 /* This insn copies the return-value of a library call out of the hard
@@ -92,15 +93,22 @@ REG_NOTE (UNUSED)
 REG_NOTE (CC_SETTER)
 REG_NOTE (CC_USER)
 
-/* Points to a CODE_LABEL.  Used by non-JUMP_INSNs to say that the
-   CODE_LABEL contained in the REG_LABEL note is used by the insn.
-   This note is an INSN_LIST.  */
-REG_NOTE (LABEL)
+/* Points to a CODE_LABEL.  Used by JUMP_INSNs to say that the CODE_LABEL
+   contained in the REG_LABEL_TARGET note is a possible jump target of
+   this insn.  This note is an INSN_LIST.  */
+REG_NOTE (LABEL_TARGET)
 
-/* REG_DEP_ANTI and REG_DEP_OUTPUT are used in LOG_LINKS to represent
-   write-after-read and write-after-write dependencies respectively.  */
-REG_NOTE (DEP_ANTI)
+/* Points to a CODE_LABEL.  Used by any insn to say that the CODE_LABEL
+   contained in the REG_LABEL_OPERAND note is used by the insn, but as an
+   operand, not as a jump target (though it may indirectly be a jump
+   target for a later jump insn).  This note is an INSN_LIST.  */
+REG_NOTE (LABEL_OPERAND)
+
+/* REG_DEP_OUTPUT and REG_DEP_ANTI are used in scheduler dependencies lists
+   to represent write-after-write and write-after-read dependencies
+   respectively.  */
 REG_NOTE (DEP_OUTPUT)
+REG_NOTE (DEP_ANTI)
 
 /* REG_BR_PROB is attached to JUMP_INSNs and CALL_INSNs.  It has an
    integer value.  For jumps, it is the probability that this is a
@@ -141,12 +149,6 @@ REG_NOTE (EH_REGION)
 
 /* Used by haifa-sched to save NOTE_INSN notes across scheduling.  */
 REG_NOTE (SAVE_NOTE)
-
-/* Indicates that this insn (which is part of the prologue) computes a
-   value which might not be used later, and if so it's OK to delete
-   the insn.  Normally, deleting any insn in the prologue is an error.
-   At present the parameter is unused and set to (const_int 0).  */
-REG_NOTE (MAYBE_DEAD)
 
 /* Indicates that a call does not return.  */
 REG_NOTE (NORETURN)

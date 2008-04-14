@@ -1,10 +1,124 @@
-2006-05-24  Release Manager
+2008-03-05  Release Manager
 
-	* GCC 4.1.1 released.
+	* GCC 4.3.0 released.
 
-2006-02-28  Release Manager
+2008-02-11  Bob Wilson  <bob.wilson@acm.org>
 
-	* GCC 4.1.0 released.
+	* xtensa-config.h (XCHAL_HAVE_THREADPTR): Redefine to zero.
+	(XCHAL_NUM_AREGS, XCHAL_MAX_INSTRUCTION_SIZE): New.
+
+2008-01-26  David Daney  <ddaney@avtrex.com>
+
+	* demangle.h (demangle_component_type):  Add
+	DEMANGLE_COMPONENT_JAVA_RESOURCE,
+	DEMANGLE_COMPONENT_COMPOUND_NAME, and
+	DEMANGLE_COMPONENT_CHARACTER as new enum values.
+	(demangle_component): Add struct s_character to union u.
+
+2007-11-07  Joseph Myers  <joseph@codesourcery.com>
+	    Daniel Jacobowitz  <dan@codesourcery.com>
+
+	* floatformat.h (struct floatformat): Add split_half field.
+	(floatformat_ibm_long_double): New.
+
+2007-09-06  Tom Tromey  <tromey@redhat.com>
+
+	* libiberty.h (pex_free): Document process killing.
+
+2007-08-31  Douglas Gregor  <doug.gregor@gmail.com>
+	
+	* demangle.h (enum demangle_component_type): Add
+	DEMANGLE_COMPONENT_RVALUE_REFERENCE. 
+
+2007-07-25  Ben Elliston  <bje@au.ibm.com>
+
+	* ternary.h: Remove.
+
+2007-07-18  Bob Wilson  <bob.wilson@acm.org>
+	
+	* xtensa-config.h (XCHAL_HAVE_THREADPTR): New.
+	(XCHAL_HAVE_RELEASE_SYNC, XCHAL_HAVE_S32C1I): New.
+	
+2007-07-17  Nick Clifton  <nickc@redhat.com>
+
+	* COPYING3: New file.  Contains version 3 of the GNU General
+	Public License.
+
+2007-07-12  Kai Tietz   <kai.tietz@onevision.com>
+
+	* splay-tree.h (libi_uhostptr_t, libi_shostptr_t): New types,
+	needed for WIN64 when a long is not wide enough for a pointer.
+        (splay_tree_key, splay_tree_value): Use the new types.
+
+2007-05-07  Nathan Froyd  <froydnj@codesourcery.com>
+
+	* libiberty.h (writeargv): Declare.
+
+2007-04-25  Mark Mitchell  <mark@codesourcery.com>
+
+	* demangle.h: Change license to LGPL + exception.
+
+2007-03-29  Joel Brobecker  <brobecker@adacore.com>
+
+	* filenames.h (FILENAME_CMP): Adjust define to call filename_cmp
+	regardless of the type of file system.
+
+2007-03-06  Jan Hubicka  <jh@suse.cz>
+	
+	* ansidecl.h (ATTRIBUTE_COLD, ATTRIBUTE_HOT): New.
+
+2007-02-09  Joseph S. Myers  <joseph@codesourcery.com>
+
+	* libiberty.h (pex_write_input): Remove prototype.
+
+2007-01-31  Vladimir Prus  <vladimir@codesourcery.com>
+	
+	* libiberty.h (PEX_STDERR_TO_PIPE): New define.
+	(PEX_BINARY_ERROR): New define.
+	(pex_read_err): New function.
+
+2007-01-29  Simon Baldwin <simonb@google.com>
+
+	* demangle.h: New cplus_demangle_print_callback,
+	cplus_demangle_v3_callback, and java_demangle_v3_callback function
+	prototypes, and demangle_callbackref type definition.
+
+2006-12-06  Nick Clifton  <nickc@redhat.com>
+
+	* ansidecl.h (ATTRIBUTE_PACKED): Define.
+
+2006-11-30  Andrew Stubbs  <andrew.stubbs@st.com>
+            J"orn Rennecke <joern.rennecke@st.com>
+
+	PR driver/29931
+	* libiberty.h (make_relative_prefix_ignore_links): Declare.
+
+2006-11-27  Bob Wilson  <bob.wilson@acm.org>
+
+	* xtensa-config.h (XSHAL_ABI): New.
+	(XTHAL_ABI_WINDOWED, XTHAL_ABI_CALL0): New.
+
+2006-04-11  Jim Blandy  <jimb@codesourcery.com>
+
+	* libiberty.h (pex_input_file, pex_input_pipe): New declarations.
+
+2006-01-18  DJ Delorie  <dj@redhat.com>
+
+	* md5.h: Include ansidecl.h
+
+2006-01-09  Bob Wilson  <bob.wilson@acm.org>
+
+	* xtensa-config.h (XCHAL_HAVE_MUL32_HIGH): Define.
+
+2005-12-30  Bob Wilson  <bob.wilson@acm.org>
+
+	* xtensa-config.h (XCHAL_HAVE_WIDE_BRANCHES): New.
+
+2005-12-10  Terry Laurenzo  <tlaurenzo@gmail.com>
+
+	PR java/9861
+	* demangle.h : Add DMGL_RET_POSTFIX define to enable alternative
+	output format for return types
 
 2005-10-31  Mark Kettenis  <kettenis@gnu.org>
 

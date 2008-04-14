@@ -64,17 +64,16 @@ ___divsi3:
 .type ___modsi3, STT_FUNC;
 
 ___modsi3:
-        [--SP] = RETS;
-	/* P1 and P2 are preserved by divsi3 and udivsi3.  */
-	P1 = R0;
-	P2 = R1;
-        CALL ___divsi3;
-	R1 = P1;
-	R2 = P2;
+	[--SP] = RETS;
+	[--SP] = R0;
+	[--SP] = R1;
+	CALL ___divsi3;
+	R2 = [SP++];
+	R1 = [SP++];
 	R2 *= R0;
 	R0 = R1 - R2;
 	RETS = [SP++];
-        RTS; 
+	RTS; 
 #endif
 
 #ifdef L_udivsi3
@@ -118,3 +117,33 @@ ___umodsi3:
 	RTS;
 #endif
 
+#ifdef L_umulsi3_highpart
+.align 2
+.global ___umulsi3_highpart;
+.type ___umulsi3_highpart, STT_FUNC;
+
+___umulsi3_highpart:
+	A1 = R1.L * R0.L (FU);
+	A1 = A1 >> 16;
+	A0 = R1.H * R0.H, A1 += R1.L * R0.H (FU);
+	A1 += R0.L * R1.H (FU);
+	A1 = A1 >> 16;
+	A0 += A1;
+	R0 = A0 (FU);
+	RTS;
+#endif
+
+#ifdef L_smulsi3_highpart
+.align 2
+.global ___smulsi3_highpart;
+.type ___smulsi3_highpart, STT_FUNC;
+
+___smulsi3_highpart:
+	A1 = R1.L * R0.L (FU);
+	A1 = A1 >> 16;
+	A0 = R0.H * R1.H, A1 += R0.H * R1.L (IS,M);
+	A1 += R1.H * R0.L (IS,M);
+	A1 = A1 >>> 16;
+	R0 = (A0 += A1);
+	RTS;
+#endif

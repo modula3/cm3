@@ -1,6 +1,6 @@
 /* Subroutines for insn-output.c for Renesas H8/300.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-   2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
    Contributed by Steve Chamberlain (sac@cygnus.com),
    Jim Wilson (wilson@cygnus.com), and Doug Evans (dje@cygnus.com).
 
@@ -8,7 +8,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -17,9 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -83,8 +82,8 @@ static int h8300_interrupt_function_p (tree);
 static int h8300_saveall_function_p (tree);
 static int h8300_monitor_function_p (tree);
 static int h8300_os_task_function_p (tree);
-static void h8300_emit_stack_adjustment (int, unsigned int);
-static int round_frame_size (int);
+static void h8300_emit_stack_adjustment (int, HOST_WIDE_INT);
+static HOST_WIDE_INT round_frame_size (HOST_WIDE_INT);
 static unsigned int compute_saved_regs (void);
 static void push (int);
 static void pop (int);
@@ -494,12 +493,12 @@ byte_reg (rtx x, int b)
    && ! TREE_THIS_VOLATILE (current_function_decl)			\
    && (h8300_saveall_function_p (current_function_decl)			\
        /* Save any call saved register that was used.  */		\
-       || (regs_ever_live[regno] && !call_used_regs[regno])		\
+       || (df_regs_ever_live_p (regno) && !call_used_regs[regno])	\
        /* Save the frame pointer if it was used.  */			\
-       || (regno == HARD_FRAME_POINTER_REGNUM && regs_ever_live[regno])	\
+       || (regno == HARD_FRAME_POINTER_REGNUM && df_regs_ever_live_p (regno)) \
        /* Save any register used in an interrupt handler.  */		\
        || (h8300_current_function_interrupt_function_p ()		\
-	   && regs_ever_live[regno])					\
+	   && df_regs_ever_live_p (regno))				\
        /* Save call clobbered registers in non-leaf interrupt		\
 	  handlers.  */							\
        || (h8300_current_function_interrupt_function_p ()		\
@@ -510,7 +509,7 @@ byte_reg (rtx x, int b)
    SIZE to adjust the stack pointer.  */
 
 static void
-h8300_emit_stack_adjustment (int sign, unsigned int size)
+h8300_emit_stack_adjustment (int sign, HOST_WIDE_INT size)
 {
   /* If the frame size is 0, we don't have anything to do.  */
   if (size == 0)
@@ -546,8 +545,8 @@ h8300_emit_stack_adjustment (int sign, unsigned int size)
 
 /* Round up frame size SIZE.  */
 
-static int
-round_frame_size (int size)
+static HOST_WIDE_INT
+round_frame_size (HOST_WIDE_INT size)
 {
   return ((size + STACK_BOUNDARY / BITS_PER_UNIT - 1)
 	  & -STACK_BOUNDARY / BITS_PER_UNIT);
@@ -931,7 +930,7 @@ h8300_expand_epilogue (void)
     }
 
   if (!returned_p)
-    emit_insn (gen_rtx_RETURN (VOIDmode));
+    emit_jump_insn (gen_rtx_RETURN (VOIDmode));
 }
 
 /* Return nonzero if the current function is an interrupt
@@ -1321,20 +1320,20 @@ h8300_rtx_costs (rtx x, int code, int outer_code, int *total)
        If this operand isn't a register, fall back to 'R' handling.
    'Z' print int & 7.
    'c' print the opcode corresponding to rtl
-   'e' first word of 32 bit value - if reg, then least reg. if mem
+   'e' first word of 32-bit value - if reg, then least reg. if mem
        then least. if const then most sig word
-   'f' second word of 32 bit value - if reg, then biggest reg. if mem
+   'f' second word of 32-bit value - if reg, then biggest reg. if mem
        then +2. if const then least sig word
    'j' print operand as condition code.
    'k' print operand as reverse condition code.
    'm' convert an integer operand to a size suffix (.b, .w or .l)
    'o' print an integer without a leading '#'
-   's' print as low byte of 16 bit value
-   't' print as high byte of 16 bit value
-   'w' print as low byte of 32 bit value
-   'x' print as 2nd byte of 32 bit value
-   'y' print as 3rd byte of 32 bit value
-   'z' print as msb of 32 bit value
+   's' print as low byte of 16-bit value
+   't' print as high byte of 16-bit value
+   'w' print as low byte of 32-bit value
+   'x' print as 2nd byte of 32-bit value
+   'y' print as 3rd byte of 32-bit value
+   'z' print as msb of 32-bit value
 */
 
 /* Return assembly language string which identifies a comparison type.  */
@@ -1760,7 +1759,7 @@ print_operand_address (FILE *file, rtx addr)
 
     case CONST_INT:
       {
-	/* Since the H8/300 only has 16 bit pointers, negative values are also
+	/* Since the H8/300 only has 16-bit pointers, negative values are also
 	   those >= 32768.  This happens for example with pointer minus a
 	   constant.  We don't want to turn (char *p - 2) into
 	   (char *p + 65534) because loop unrolling can build upon this
@@ -5607,7 +5606,7 @@ h8300_hard_regno_rename_ok (unsigned int old_reg ATTRIBUTE_UNUSED,
      call-clobbered.  */
 
   if (h8300_current_function_interrupt_function_p ()
-      && !regs_ever_live[new_reg])
+      && !df_regs_ever_live_p (new_reg))
     return 0;
 
   return 1;
@@ -5707,7 +5706,7 @@ h8300_init_libfuncs (void)
 /* Worker function for TARGET_RETURN_IN_MEMORY.  */
 
 static bool
-h8300_return_in_memory (tree type, tree fntype ATTRIBUTE_UNUSED)
+h8300_return_in_memory (const_tree type, const_tree fntype ATTRIBUTE_UNUSED)
 {
   return (TYPE_MODE (type) == BLKmode
 	  || GET_MODE_SIZE (TYPE_MODE (type)) > (TARGET_H8300 ? 4 : 8));
@@ -5745,5 +5744,8 @@ h8300_return_in_memory (tree type, tree fntype ATTRIBUTE_UNUSED)
 
 #undef  TARGET_MACHINE_DEPENDENT_REORG
 #define TARGET_MACHINE_DEPENDENT_REORG h8300_reorg
+
+#undef TARGET_DEFAULT_TARGET_FLAGS
+#define TARGET_DEFAULT_TARGET_FLAGS TARGET_DEFAULT
 
 struct gcc_target targetm = TARGET_INITIALIZER;

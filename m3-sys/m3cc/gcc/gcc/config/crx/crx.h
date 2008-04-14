@@ -1,12 +1,12 @@
 /* Definitions of target machine for GNU compiler, for CRX.
    Copyright (C) 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-   2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+   2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
 
    This file is part of GCC.
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published
-   by the Free Software Foundation; either version 2, or (at your
+   by the Free Software Foundation; either version 3, or (at your
    option) any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -15,9 +15,8 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 #ifndef GCC_CRX_H
 #define GCC_CRX_H
@@ -165,7 +164,7 @@ do {								\
 /* Interrupt functions can only use registers that have already been saved by
  * the prologue, even if they would normally be call-clobbered. */
 #define HARD_REGNO_RENAME_OK(SRC, DEST)	\
-	(!crx_interrupt_function_p () || regs_ever_live[DEST])
+  (!crx_interrupt_function_p () || df_regs_ever_live_p (DEST))
 
 #define MODES_TIEABLE_P(MODE1, MODE2)  1
 
@@ -405,11 +404,7 @@ struct cumulative_args
 }
 #endif /* REG_OK_STRICT */
 
-#define GO_IF_MODE_DEPENDENT_ADDRESS(ADDR, LABEL)			\
-{									\
-  if (GET_CODE (ADDR) == POST_INC || GET_CODE (ADDR) == POST_DEC)	\
-    goto LABEL;								\
-}
+#define GO_IF_MODE_DEPENDENT_ADDRESS(ADDR, LABEL)
 
 #define LEGITIMATE_CONSTANT_P(X)  1
 

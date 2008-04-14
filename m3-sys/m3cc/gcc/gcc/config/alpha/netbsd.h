@@ -1,12 +1,13 @@
 /* Definitions of target machine for GNU compiler,
    for Alpha NetBSD systems.
-   Copyright (C) 1998, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 1998, 2002, 2003, 2004, 2005, 2007
+   Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -15,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #undef TARGET_DEFAULT
 #define TARGET_DEFAULT (MASK_FPREGS | MASK_GAS)
@@ -38,14 +38,14 @@ Boston, MA 02110-1301, USA.  */
 #define TARGET_PROFILING_NEEDS_GP 1
 
 
-/* Provide a CPP_SUBTARGET_SPEC appropriate for NetBSD/alpha.  We use
+/* Provide a CPP_SPEC appropriate for NetBSD/alpha.  We use
    this to pull in CPP specs that all NetBSD configurations need.  */
 
-#undef CPP_SUBTARGET_SPEC
-#define CPP_SUBTARGET_SPEC NETBSD_CPP_SPEC
+#undef CPP_SPEC
+#define CPP_SPEC NETBSD_CPP_SPEC
 
-#undef SUBTARGET_EXTRA_SPECS
-#define SUBTARGET_EXTRA_SPECS			\
+#undef EXTRA_SPECS
+#define EXTRA_SPECS			\
   { "netbsd_link_spec", NETBSD_LINK_SPEC_ELF },	\
   { "netbsd_entry_point", NETBSD_ENTRY_POINT },	\
   { "netbsd_endfile_spec", NETBSD_ENDFILE_SPEC },

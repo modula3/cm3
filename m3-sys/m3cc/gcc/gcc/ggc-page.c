@@ -1,12 +1,12 @@
 /* "Bag-of-pages" garbage collector for the GNU compiler.
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005
+   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007
    Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -186,11 +185,20 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 
 static const size_t extra_order_size_table[] = {
   sizeof (struct stmt_ann_d),
+  sizeof (struct var_ann_d),
   sizeof (struct tree_decl_non_common),
   sizeof (struct tree_field_decl),
   sizeof (struct tree_parm_decl),
   sizeof (struct tree_var_decl),
   sizeof (struct tree_list),
+  sizeof (struct tree_ssa_name),
+  sizeof (struct function),
+  sizeof (struct basic_block_def),
+  sizeof (bitmap_element),
+  sizeof (bitmap_head),
+  /* PHI nodes with one to three arguments are already covered by the
+     above sizes.  */
+  sizeof (struct tree_phi_node) + sizeof (struct phi_arg_d) * 3,
   TREE_EXP_SIZE (2),
   RTL_SIZE (2),			/* MEM, PLUS, etc.  */
   RTL_SIZE (9),			/* INSN */
@@ -628,7 +636,7 @@ found:
   L2 = LOOKUP_L2 (p);
 
   if (base[L1] == NULL)
-    base[L1] = xcalloc (PAGE_L2_SIZE, sizeof (page_entry *));
+    base[L1] = XCNEWVEC (page_entry *, PAGE_L2_SIZE);
 
   base[L1][L2] = entry;
 }
@@ -1021,8 +1029,8 @@ release_pages (void)
 
 /* This table provides a fast way to determine ceil(log_2(size)) for
    allocation requests.  The minimum allocation size is eight bytes.  */
-
-static unsigned char size_lookup[257] =
+#define NUM_SIZE_LOOKUP 512
+static unsigned char size_lookup[NUM_SIZE_LOOKUP] =
 {
   3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4,
   4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
@@ -1040,7 +1048,22 @@ static unsigned char size_lookup[257] =
   8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
   8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
   8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-  8
+  8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+  9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9
 };
 
 /* Typed allocation function.  Does nothing special in this collector.  */
@@ -1061,14 +1084,14 @@ ggc_alloc_stat (size_t size MEM_STAT_DECL)
   struct page_entry *entry;
   void *result;
 
-  if (size <= 256)
+  if (size < NUM_SIZE_LOOKUP)
     {
       order = size_lookup[size];
       object_size = OBJECT_SIZE (order);
     }
   else
     {
-      order = 9;
+      order = 10;
       while (size > (object_size = OBJECT_SIZE (order)))
 	order++;
     }
@@ -1346,7 +1369,7 @@ ggc_free (void *p)
      the data, but instead verify that the data is *actually* not 
      reachable the next time we collect.  */
   {
-    struct free_object *fo = xmalloc (sizeof (struct free_object));
+    struct free_object *fo = XNEW (struct free_object);
     fo->object = p;
     fo->next = G.free_object_list;
     G.free_object_list = fo;
@@ -1472,7 +1495,7 @@ init_ggc (void)
       }
 
     /* We have a good page, might as well hold onto it...  */
-    e = xcalloc (1, sizeof (struct page_entry));
+    e = XCNEW (struct page_entry);
     e->bytes = G.pagesize;
     e->page = p;
     e->next = G.free_pages;
@@ -1511,19 +1534,22 @@ init_ggc (void)
       int o;
       int i;
 
-      o = size_lookup[OBJECT_SIZE (order)];
-      for (i = OBJECT_SIZE (order); size_lookup [i] == o; --i)
+      i = OBJECT_SIZE (order);
+      if (i >= NUM_SIZE_LOOKUP)
+	continue;
+
+      for (o = size_lookup[i]; o == size_lookup [i]; --i)
 	size_lookup[i] = order;
     }
 
   G.depth_in_use = 0;
   G.depth_max = 10;
-  G.depth = xmalloc (G.depth_max * sizeof (unsigned int));
+  G.depth = XNEWVEC (unsigned int, G.depth_max);
 
   G.by_depth_in_use = 0;
   G.by_depth_max = INITIAL_PTE_COUNT;
-  G.by_depth = xmalloc (G.by_depth_max * sizeof (page_entry *));
-  G.save_in_use = xmalloc (G.by_depth_max * sizeof (unsigned long *));
+  G.by_depth = XNEWVEC (page_entry *, G.by_depth_max);
+  G.save_in_use = XNEWVEC (unsigned long *, G.by_depth_max);
 }
 
 /* Start a new GGC zone.  */
@@ -1991,10 +2017,12 @@ ggc_print_statistics (void)
     for (i = 0; i < NUM_ORDERS; i++)
       if (G.stats.total_allocated_per_order[i])
         {
-          fprintf (stderr, "Total Overhead  page size %7d:     %10lld\n",
-                   OBJECT_SIZE (i), G.stats.total_overhead_per_order[i]);
-          fprintf (stderr, "Total Allocated page size %7d:     %10lld\n",
-                   OBJECT_SIZE (i), G.stats.total_allocated_per_order[i]);
+          fprintf (stderr, "Total Overhead  page size %7lu:     %10lld\n",
+                   (unsigned long) OBJECT_SIZE (i),
+		   G.stats.total_overhead_per_order[i]);
+          fprintf (stderr, "Total Allocated page size %7lu:     %10lld\n",
+                   (unsigned long) OBJECT_SIZE (i),
+		   G.stats.total_allocated_per_order[i]);
         }
   }
 #endif
@@ -2013,7 +2041,7 @@ struct ggc_pch_data
 struct ggc_pch_data *
 init_ggc_pch (void)
 {
-  return xcalloc (sizeof (struct ggc_pch_data), 1);
+  return XCNEW (struct ggc_pch_data);
 }
 
 void
@@ -2023,11 +2051,11 @@ ggc_pch_count_object (struct ggc_pch_data *d, void *x ATTRIBUTE_UNUSED,
 {
   unsigned order;
 
-  if (size <= 256)
+  if (size < NUM_SIZE_LOOKUP)
     order = size_lookup[size];
   else
     {
-      order = 9;
+      order = 10;
       while (size > OBJECT_SIZE (order))
 	order++;
     }
@@ -2068,11 +2096,11 @@ ggc_pch_alloc_object (struct ggc_pch_data *d, void *x ATTRIBUTE_UNUSED,
   unsigned order;
   char *result;
 
-  if (size <= 256)
+  if (size < NUM_SIZE_LOOKUP)
     order = size_lookup[size];
   else
     {
-      order = 9;
+      order = 10;
       while (size > OBJECT_SIZE (order))
 	order++;
     }
@@ -2097,11 +2125,11 @@ ggc_pch_write_object (struct ggc_pch_data *d ATTRIBUTE_UNUSED,
   unsigned order;
   static const char emptyBytes[256];
 
-  if (size <= 256)
+  if (size < NUM_SIZE_LOOKUP)
     order = size_lookup[size];
   else
     {
-      order = 9;
+      order = 10;
       while (size > OBJECT_SIZE (order))
 	order++;
     }
@@ -2161,8 +2189,8 @@ move_ptes_to_front (int count_old_page_tables, int count_new_page_tables)
   page_entry **new_by_depth;
   unsigned long **new_save_in_use;
 
-  new_by_depth = xmalloc (G.by_depth_max * sizeof (page_entry *));
-  new_save_in_use = xmalloc (G.by_depth_max * sizeof (unsigned long *));
+  new_by_depth = XNEWVEC (page_entry *, G.by_depth_max);
+  new_save_in_use = XNEWVEC (unsigned long *, G.by_depth_max);
 
   memcpy (&new_by_depth[0],
 	  &G.by_depth[count_old_page_tables],
@@ -2216,6 +2244,9 @@ ggc_pch_read (FILE *f, void *addr)
 #ifdef ENABLE_GC_CHECKING
   poison_pages ();
 #endif
+  /* Since we free all the allocated objects, the free list becomes
+     useless.  Validate it now, which will also clear it.  */
+  validate_free_objects();
 
   /* No object read from a PCH file should ever be freed.  So, set the
      context depth to 1, and set the depth of all the currently-allocated

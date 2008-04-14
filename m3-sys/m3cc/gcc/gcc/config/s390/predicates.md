@@ -1,5 +1,5 @@
 ;; Predicate definitions for S/390 and zSeries.
-;; Copyright (C) 2005 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2007 Free Software Foundation, Inc.
 ;; Contributed by Hartmut Penner (hpenner@de.ibm.com) and
 ;;                Ulrich Weigand (uweigand@de.ibm.com).
 ;;
@@ -7,7 +7,7 @@
 ;;
 ;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 ;;
 ;; GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 ;; OP is the current operation.
 ;; MODE is the current operation mode.
@@ -62,7 +61,8 @@
 ;; Allow SYMBOL_REFs and @PLT stubs.
 
 (define_special_predicate "bras_sym_operand"
-  (ior (match_code "symbol_ref")
+  (ior (and (match_code "symbol_ref")
+	    (match_test "!flag_pic || SYMBOL_REF_LOCAL_P (op)"))
        (and (match_code "const")
 	    (and (match_test "GET_CODE (XEXP (op, 0)) == UNSPEC")
 		 (match_test "XINT (XEXP (op, 0), 1) == UNSPEC_PLT")))))
@@ -125,8 +125,8 @@
       if (GET_CODE (XEXP (op, 1)) != CONST_INT
           || (INTVAL (XEXP (op, 1)) & 1) != 0)
         return false;
-      if (INTVAL (XEXP (op, 1)) >= (HOST_WIDE_INT)1 << 32
-	  || INTVAL (XEXP (op, 1)) < -((HOST_WIDE_INT)1 << 32))
+      if (INTVAL (XEXP (op, 1)) >= (HOST_WIDE_INT)1 << 31
+	  || INTVAL (XEXP (op, 1)) < -((HOST_WIDE_INT)1 << 31))
         return false;
       op = XEXP (op, 0);
     }

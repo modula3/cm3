@@ -1,12 +1,12 @@
 /* Various declarations for the C and C++ pretty-printers.
-   Copyright (C) 2002, 2003, 2004 Free Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2004, 2007 Free Software Foundation, Inc.
    Contributed by Gabriel Dos Reis <gdr@integrable-solutions.net>
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #ifndef GCC_C_PRETTY_PRINTER
 #define GCC_C_PRETTY_PRINTER
@@ -30,7 +29,7 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 typedef enum
   {
      pp_c_flag_abstract = 1 << 1,
-     pp_c_flag_last_bit = 2    
+     pp_c_flag_last_bit = 2
   } pp_c_pretty_print_flags;
 
 
@@ -60,7 +59,7 @@ struct c_pretty_print_info
   int *offset_list;
 
   pp_flags flags;
-   
+
   /* These must be overridden by each of the C and C++ front-end to
      reflect their understanding of syntactic productions when they differ.  */
   c_pretty_print_fn declaration;
@@ -80,6 +79,7 @@ struct c_pretty_print_info
 
   c_pretty_print_fn statement;
 
+  c_pretty_print_fn constant;
   c_pretty_print_fn id_expression;
   c_pretty_print_fn primary_expression;
   c_pretty_print_fn postfix_expression;
@@ -129,6 +129,8 @@ struct c_pretty_print_info
 #define pp_statement(PPI, S)                      \
   pp_c_base (PPI)->statement (pp_c_base (PPI), S)
 
+#define pp_constant(PP, E) \
+  pp_c_base (PP)->constant (pp_c_base (PP), E)
 #define pp_id_expression(PP, E)  \
   pp_c_base (PP)->id_expression (pp_c_base (PP), E)
 #define pp_primary_expression(PPI, E)             \

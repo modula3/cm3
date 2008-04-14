@@ -1,11 +1,11 @@
 /* Configuration for GCC-compiler for PA-RISC.
-   Copyright (C) 1999, 2000, 2003, 2004 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2003, 2004, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* Standard register usage.
 
@@ -31,7 +30,7 @@ Boston, MA 02110-1301, USA.  */
    HP-PA 2.0w has 32 fullword registers and 32 floating point
    registers. However, the floating point registers behave
    differently: the left and right halves of registers are addressable
-   as 32 bit registers.
+   as 32-bit registers.
 
    Due to limitations within GCC itself, we do not expose the left/right
    half addressability when in wide mode.  This is not a major performance
@@ -157,8 +156,7 @@ Boston, MA 02110-1301, USA.  */
 #define VALID_FP_MODE_P(MODE)						\
   ((MODE) == SFmode || (MODE) == DFmode					\
    || (MODE) == SCmode || (MODE) == DCmode				\
-   || (MODE) == QImode || (MODE) == HImode || (MODE) == SImode		\
-   || (MODE) == DImode)
+   || (MODE) == SImode || (MODE) == DImode)
 
 /* Value is 1 if hard register REGNO can hold a value of machine-mode MODE.
    On the HP-PA, the cpu registers can hold any mode.  We
@@ -243,17 +241,10 @@ enum reg_class { NO_REGS, R1_REGS, GENERAL_REGS, FPUPPER_REGS, FP_REGS,
   {0x00000000, 0x10000000},	/* SHIFT_REGS */		\
   {0xfffffffe, 0x1fffffff}}	/* ALL_REGS */
 
-/* Defines invalid mode changes.
+/* Defines invalid mode changes.  */
 
-   SImode loads to floating-point registers are not zero-extended.
-   The definition for LOAD_EXTEND_OP specifies that integer loads
-   narrower than BITS_PER_WORD will be zero-extended.  As a result,
-   we inhibit changes from SImode unless they are to a mode that is
-   identical in size.  */
-
-#define CANNOT_CHANGE_MODE_CLASS(FROM, TO, CLASS)		\
-  ((FROM) == SImode && GET_MODE_SIZE (FROM) != GET_MODE_SIZE (TO)       \
-   ? reg_classes_intersect_p (CLASS, FP_REGS) : 0)
+#define CANNOT_CHANGE_MODE_CLASS(FROM, TO, CLASS) \
+  pa_cannot_change_mode_class (FROM, TO, CLASS)
 
 /* Return the class number of the smallest class containing
    reg number REGNO.  This could be a conditional expression
@@ -265,18 +256,6 @@ enum reg_class { NO_REGS, R1_REGS, GENERAL_REGS, FPUPPER_REGS, FP_REGS,
    : (REGNO) < 32 ? GENERAL_REGS					\
    : (REGNO) < 60 ? FP_REGS						\
    : SHIFT_REGS)
-
-
-/* Get reg_class from a letter such as appears in the machine description.  */
-/* Keep 'x' for backward compatibility with user asm.  */
-#define REG_CLASS_FROM_LETTER(C) \
-  ((C) == 'f' ? FP_REGS :					\
-   (C) == 'y' ? FP_REGS :					\
-   (C) == 'x' ? FP_REGS :					\
-   (C) == 'q' ? SHIFT_REGS :					\
-   (C) == 'a' ? R1_REGS :					\
-   (C) == 'Z' ? ALL_REGS : NO_REGS)
-
 
 /* Return the maximum number of consecutive registers
    needed to represent mode MODE in a register of class CLASS.  */

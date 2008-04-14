@@ -3,12 +3,12 @@
 <title>Installing GCC: Final installation</title>
 <meta http-equiv="Content-Type" content="text/html">
 <meta name="description" content="Installing GCC: Final installation">
-<meta name="generator" content="makeinfo 4.8">
+<meta name="generator" content="makeinfo 4.11">
 <link title="Top" rel="top" href="#Top">
 <link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
 <!--
 Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2 or
@@ -45,7 +45,10 @@ Now that GCC has been built (and optionally tested), you can install it with
 <pre class="smallexample">     cd <var>objdir</var>; make install
 </pre>
    <p>We strongly recommend to install into a target directory where there is
-no previous version of GCC present.
+no previous version of GCC present.  Also, the GNAT runtime should not
+be stripped, as this would break certain features of the debugger that
+depend on this debugging information (catching Ada exceptions for
+instance).
 
    <p>That step completes the installation of GCC; user level binaries can
 be found in <samp><var>prefix</var><span class="file">/bin</span></samp> where <var>prefix</var> is the value
@@ -79,14 +82,14 @@ need not exist yet; it will be created if necessary.
 
    <p>There is a subtle point with tooldirs and <code>DESTDIR</code>:
 If you relocate a cross-compiler installation with
-e.g. `<samp><span class="samp">DESTDIR=</span><var>rootdir</var></samp>', then the directory
+e.g. &lsquo;<samp><span class="samp">DESTDIR=</span><var>rootdir</var></samp>&rsquo;, then the directory
 <samp><var>rootdir</var><span class="file">/</span><var>exec-prefix</var><span class="file">/</span><var>target-alias</var><span class="file">/bin</span></samp> will
 be filled with duplicated GCC executables only if it already exists,
 it will not be created otherwise.  This is regarded as a feature,
 not as a bug, because it gives slightly more control to the packagers
 using the <code>DESTDIR</code> feature.
 
-   <p>If you built a released version of GCC using `<samp><span class="samp">make bootstrap</span></samp>' then please
+   <p>If you are bootstrapping a released version of GCC then please
 quickly review the build status page for your release, available from
 <a href="http://gcc.gnu.org/buildstat.html">http://gcc.gnu.org/buildstat.html</a>. 
 If your system is not listed for the version of GCC that you built,
@@ -99,13 +102,13 @@ Include the following information:
 <li>Output from running <samp><var>srcdir</var><span class="file">/config.guess</span></samp>.  Do not send
 that file itself, just the one-line output from running it.
 
-     <li>The output of `<samp><span class="samp">gcc -v</span></samp>' for your newly installed <samp><span class="command">gcc</span></samp>. 
+     <li>The output of &lsquo;<samp><span class="samp">gcc -v</span></samp>&rsquo; for your newly installed <samp><span class="command">gcc</span></samp>. 
 This tells us which version of GCC you built and the options you passed to
 configure.
 
      <li>Whether you enabled all languages or a subset of them.  If you used a
 full distribution then this information is part of the configure
-options in the output of `<samp><span class="samp">gcc -v</span></samp>', but if you downloaded the
+options in the output of &lsquo;<samp><span class="samp">gcc -v</span></samp>&rsquo;, but if you downloaded the
 &ldquo;core&rdquo; compiler plus additional front ends then it isn't apparent
 which ones you built unless you tell us about it.
 
@@ -114,12 +117,12 @@ which ones you built unless you tell us about it.
 <li>The distribution name and version (e.g., Red Hat 7.1 or Debian 2.2.3);
 this information should be available from <samp><span class="file">/etc/issue</span></samp>.
 
-          <li>The version of the Linux kernel, available from `<samp><span class="samp">uname --version</span></samp>'
-or `<samp><span class="samp">uname -a</span></samp>'.
+          <li>The version of the Linux kernel, available from &lsquo;<samp><span class="samp">uname --version</span></samp>&rsquo;
+or &lsquo;<samp><span class="samp">uname -a</span></samp>&rsquo;.
 
           <li>The version of glibc you used; for RPM-based systems like Red Hat,
-Mandrake, and SuSE type `<samp><span class="samp">rpm -q glibc</span></samp>' to get the glibc version,
-and on systems like Debian and Progeny use `<samp><span class="samp">dpkg -l libc6</span></samp>'. 
+Mandrake, and SuSE type &lsquo;<samp><span class="samp">rpm -q glibc</span></samp>&rsquo; to get the glibc version,
+and on systems like Debian and Progeny use &lsquo;<samp><span class="samp">dpkg -l libc6</span></samp>&rsquo;. 
 </ul>
      For other systems, you can include similar information if you think it is
 relevant.
@@ -138,16 +141,19 @@ incomplete or out of date.  Send a note to
    <p>If you find a bug, please report it following the
 <a href="../bugs.html">bug reporting guidelines</a>.
 
-   <p>If you want to print the GCC manuals, do `<samp><span class="samp">cd </span><var>objdir</var><span class="samp">; make
-dvi</span></samp>'.  You will need to have <samp><span class="command">texi2dvi</span></samp> (version at least 4.2)
+   <p>If you want to print the GCC manuals, do &lsquo;<samp><span class="samp">cd </span><var>objdir</var><span class="samp">; make
+dvi</span></samp>&rsquo;.  You will need to have <samp><span class="command">texi2dvi</span></samp> (version at least 4.4)
 and TeX installed.  This creates a number of <samp><span class="file">.dvi</span></samp> files in
 subdirectories of <samp><var>objdir</var></samp>; these may be converted for
-printing with programs such as <samp><span class="command">dvips</span></samp>.  You can also
+printing with programs such as <samp><span class="command">dvips</span></samp>.  Alternately, by using
+&lsquo;<samp><span class="samp">make pdf</span></samp>&rsquo; in place of &lsquo;<samp><span class="samp">make dvi</span></samp>&rsquo;, you can create documentation
+in the form of <samp><span class="file">.pdf</span></samp> files; this requires <samp><span class="command">texi2pdf</span></samp>, which
+is included with Texinfo version 4.8 and later.  You can also
 <a href="http://www.gnu.org/order/order.html">buy printed manuals from the Free Software Foundation</a>, though such manuals may not be for the most
 recent version of GCC.
 
-   <p>If you would like to generate online HTML documentation, do `<samp><span class="samp">cd
-</span><var>objdir</var><span class="samp">; make html</span></samp>' and HTML will be generated for the gcc manuals in
+   <p>If you would like to generate online HTML documentation, do &lsquo;<samp><span class="samp">cd
+</span><var>objdir</var><span class="samp">; make html</span></samp>&rsquo; and HTML will be generated for the gcc manuals in
 <samp><var>objdir</var><span class="file">/gcc/HTML</span></samp>.
 
    <p><hr />

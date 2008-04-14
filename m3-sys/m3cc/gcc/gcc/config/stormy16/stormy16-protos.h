@@ -1,12 +1,12 @@
 /* Prototypes for exported functions defined in xstormy16.c
-   Copyright (C) 2000, 2001, 2003, 2004 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2001, 2003, 2004, 2007 Free Software Foundation, Inc.
    Contributed by Red Hat, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -15,9 +15,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 
 
@@ -29,7 +28,6 @@ extern int direct_return (void);
 extern int xstormy16_interrupt_function_p (void);
 extern int xstormy16_epilogue_uses (int);
 extern void xstormy16_function_profiler (void);
-extern void bss100_section (void);
 
 #if defined (TREE_CODE)
 extern void xstormy16_asm_output_aligned_common (FILE *, tree, const char *,
@@ -44,9 +42,8 @@ extern rtx xstormy16_function_arg
 #endif
 
 #if defined (TREE_CODE) && defined (RTX_CODE)
-extern void xstormy16_expand_builtin_va_start (tree, rtx);
 extern void xstormy16_initialize_trampoline (rtx, rtx, rtx);
-extern rtx xstormy16_function_value (tree, tree);
+extern rtx xstormy16_function_value (const_tree, const_tree);
 #endif
 
 #ifdef RTX_CODE
@@ -72,9 +69,6 @@ extern int  short_memory_operand (rtx, enum machine_mode);
 extern int  nonimmediate_nonstack_operand (rtx, enum machine_mode);
 extern enum reg_class xstormy16_secondary_reload_class 
  (enum reg_class, enum machine_mode, rtx);
-extern int  xstormy16_carry_plus_operand (rtx, enum machine_mode);
-extern int  xs_hi_general_operand (rtx, enum machine_mode);
-extern int  xs_hi_nonmemory_operand (rtx, enum machine_mode);
 extern enum reg_class xstormy16_preferred_reload_class (rtx, enum reg_class);
 extern int xstormy16_legitimate_address_p (enum machine_mode, rtx, int);
 extern void xstormy16_split_move (enum machine_mode, rtx, rtx);

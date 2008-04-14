@@ -1,11 +1,11 @@
 /* Exported functions from alias.c
-   Copyright (C) 2004 Free Software Foundation, Inc.
+   Copyright (C) 2004, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -14,23 +14,25 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #ifndef GCC_ALIAS_H
 #define GCC_ALIAS_H
 
-extern HOST_WIDE_INT new_alias_set (void);
-extern HOST_WIDE_INT get_varargs_alias_set (void);
-extern HOST_WIDE_INT get_frame_alias_set (void);
-extern void record_base_value (unsigned int, rtx, int);
-extern bool component_uses_parent_alias_set (tree);
+/* The type of an alias set.  */
+typedef HOST_WIDE_INT alias_set_type;
+
+extern alias_set_type new_alias_set (void);
+extern alias_set_type get_varargs_alias_set (void);
+extern alias_set_type get_frame_alias_set (void);
+extern bool component_uses_parent_alias_set (const_tree);
+extern bool alias_set_subset_of (alias_set_type, alias_set_type);
 
 /* This alias set can be used to force a memory to conflict with all
    other memories, creating a barrier across which no memory reference
    can move.  Note that there are other legacy ways to create such
    memory barriers, including an address of SCRATCH.  */
-#define ALIAS_SET_MEMORY_BARRIER	((HOST_WIDE_INT) -1)
+#define ALIAS_SET_MEMORY_BARRIER	((alias_set_type) -1)
 
 #endif /* GCC_ALIAS_H */

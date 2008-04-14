@@ -1,11 +1,11 @@
 /* Routines for discovering and unpropagating edge equivalences.
-   Copyright (C) 2005 Free Software Foundation, Inc.
+   Copyright (C) 2005, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -95,12 +94,12 @@ associate_equivalences_with_edges (void)
 	  if (TREE_CODE (cond) == SSA_NAME
 	      && !SSA_NAME_OCCURS_IN_ABNORMAL_PHI (cond))
 	    {
-	      equivalency = xmalloc (sizeof (struct edge_equivalency));
+	      equivalency = XNEW (struct edge_equivalency);
 	      equivalency->rhs = constant_boolean_node (1, TREE_TYPE (cond));
 	      equivalency->lhs = cond;
 	      true_edge->aux = equivalency;
 
-	      equivalency = xmalloc (sizeof (struct edge_equivalency));
+	      equivalency = XNEW (struct edge_equivalency);
 	      equivalency->rhs = constant_boolean_node (0, TREE_TYPE (cond));
 	      equivalency->lhs = cond;
 	      false_edge->aux = equivalency;
@@ -121,14 +120,14 @@ associate_equivalences_with_edges (void)
 		{
 		  if (TREE_CODE (cond) == EQ_EXPR)
 		    {
-		      equivalency = xmalloc (sizeof (struct edge_equivalency));
+		      equivalency = XNEW (struct edge_equivalency);
 		      equivalency->lhs = op0;
 		      equivalency->rhs = (integer_zerop (op1)
 					  ? boolean_false_node
 					  : boolean_true_node);
 		      true_edge->aux = equivalency;
 
-		      equivalency = xmalloc (sizeof (struct edge_equivalency));
+		      equivalency = XNEW (struct edge_equivalency);
 		      equivalency->lhs = op0;
 		      equivalency->rhs = (integer_zerop (op1)
 					  ? boolean_true_node
@@ -137,14 +136,14 @@ associate_equivalences_with_edges (void)
 		    }
 		  else
 		    {
-		      equivalency = xmalloc (sizeof (struct edge_equivalency));
+		      equivalency = XNEW (struct edge_equivalency);
 		      equivalency->lhs = op0;
 		      equivalency->rhs = (integer_zerop (op1)
 					  ? boolean_true_node
 					  : boolean_false_node);
 		      true_edge->aux = equivalency;
 
-		      equivalency = xmalloc (sizeof (struct edge_equivalency));
+		      equivalency = XNEW (struct edge_equivalency);
 		      equivalency->lhs = op0;
 		      equivalency->rhs = (integer_zerop (op1)
 					  ? boolean_false_node
@@ -168,7 +167,7 @@ associate_equivalences_with_edges (void)
 			  || REAL_VALUES_EQUAL (dconst0, TREE_REAL_CST (op1))))
 		    continue;
 
-		  equivalency = xmalloc (sizeof (struct edge_equivalency));
+		  equivalency = XNEW (struct edge_equivalency);
 		  equivalency->lhs = op0;
 		  equivalency->rhs = op1;
 		  if (TREE_CODE (cond) == EQ_EXPR)
@@ -194,7 +193,7 @@ associate_equivalences_with_edges (void)
 	    {
 	      tree labels = SWITCH_LABELS (stmt);
 	      int i, n_labels = TREE_VEC_LENGTH (labels);
-	      tree *info = xcalloc (n_basic_blocks, sizeof (tree));
+	      tree *info = XCNEWVEC (tree, n_basic_blocks);
 
 	      /* Walk over the case label vector.  Record blocks
 		 which are reached by a single case label which represents
@@ -227,7 +226,7 @@ associate_equivalences_with_edges (void)
 
 		      /* Record an equivalency on the edge from BB to basic
 			 block I.  */
-		      equivalency = xmalloc (sizeof (struct edge_equivalency));
+		      equivalency = XNEW (struct edge_equivalency);
 		      equivalency->rhs = x;
 		      equivalency->lhs = cond;
 		      find_edge (bb, BASIC_BLOCK (i))->aux = equivalency;
@@ -316,15 +315,15 @@ static void uncprop_into_successor_phis (struct dom_walk_data *, basic_block);
 static hashval_t
 equiv_hash (const void *p)
 {
-  tree value = ((struct equiv_hash_elt *)p)->value;
+  tree const value = ((const struct equiv_hash_elt *)p)->value;
   return iterative_hash_expr (value, 0);
 }
 
 static int
 equiv_eq (const void *p1, const void *p2)
 {
-  tree value1 = ((struct equiv_hash_elt *)p1)->value;
-  tree value2 = ((struct equiv_hash_elt *)p2)->value;
+  tree value1 = ((const struct equiv_hash_elt *)p1)->value;
+  tree value2 = ((const struct equiv_hash_elt *)p2)->value;
 
   return operand_equal_p (value1, value2, 0);
 }
@@ -364,7 +363,7 @@ record_equiv (tree value, tree equivalence)
   struct equiv_hash_elt *equiv_hash_elt;
   void **slot;
 
-  equiv_hash_elt = xmalloc (sizeof (struct equiv_hash_elt));
+  equiv_hash_elt = XNEW (struct equiv_hash_elt);
   equiv_hash_elt->value = value;
   equiv_hash_elt->equivalences = NULL;
 
@@ -382,7 +381,7 @@ record_equiv (tree value, tree equivalence)
 
 /* Main driver for un-cprop.  */
 
-static void
+static unsigned int
 tree_ssa_uncprop (void)
 {
   struct dom_walk_data walk_data;
@@ -441,7 +440,7 @@ tree_ssa_uncprop (void)
 	    }
 	}
     }
-
+  return 0;
 }
 
 
@@ -486,7 +485,7 @@ uncprop_into_successor_phis (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
       /* Record any equivalency associated with E.  */
       if (e->aux)
 	{
-	  struct edge_equivalency *equiv = e->aux;
+	  struct edge_equivalency *equiv = (struct edge_equivalency *) e->aux;
 	  record_equiv (equiv->rhs, equiv->lhs);
 	}
 
@@ -512,7 +511,7 @@ uncprop_into_successor_phis (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
 
 	  if (slot)
 	    {
-	      struct equiv_hash_elt *elt = *slot;
+	      struct equiv_hash_elt *elt = (struct equiv_hash_elt *) *slot;
 	      int j;
 
 	      /* Walk every equivalence with the same value.  If we find
@@ -536,7 +535,7 @@ uncprop_into_successor_phis (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
       /* If we had an equivalence associated with this edge, remove it.  */
       if (e->aux)
 	{
-	  struct edge_equivalency *equiv = e->aux;
+	  struct edge_equivalency *equiv = (struct edge_equivalency *) e->aux;
 	  remove_equivalence (equiv->rhs);
 	}
     }
@@ -589,7 +588,7 @@ uncprop_initialize_block (struct dom_walk_data *walk_data ATTRIBUTE_UNUSED,
 
       if (e && e->src == parent && e->aux)
 	{
-	  struct edge_equivalency *equiv = e->aux;
+	  struct edge_equivalency *equiv = (struct edge_equivalency *) e->aux;
 
 	  record_equiv (equiv->rhs, equiv->lhs);
 	  VEC_safe_push (tree, heap, equiv_stack, equiv->rhs);

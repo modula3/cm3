@@ -110,10 +110,10 @@ compatible with any other profiling or test coverage mechanism.
 @c man end
 
 @node Invoking Gcov
-@section Invoking gcov
+@section Invoking @command{gcov}
 
 @smallexample
-gcov @r{[}@var{options}@r{]} @var{sourcefile}
+gcov @r{[}@var{options}@r{]} @var{sourcefiles}
 @end smallexample
 
 @command{gcov} accepts the following options:
@@ -128,7 +128,7 @@ gcov [@option{-v}|@option{--version}] [@option{-h}|@option{--help}]
      [@option{-l}|@option{--long-file-names}]
      [@option{-p}|@option{--preserve-paths}]
      [@option{-f}|@option{--function-summaries}]
-     [@option{-o}|@option{--object-directory} @var{directory|file}] @var{sourcefile}
+     [@option{-o}|@option{--object-directory} @var{directory|file}] @var{sourcefiles}
      [@option{-u}|@option{--unconditional-branches}]
 @c man end
 @c man begin SEEALSO
@@ -428,7 +428,7 @@ message ``never executed'' is printed.
 For a call, if it was executed at least once, then a percentage
 indicating the number of times the call returned divided by the number
 of times the call was executed will be printed.  This will usually be
-100%, but may be less for functions call @code{exit} or @code{longjmp},
+100%, but may be less for functions that call @code{exit} or @code{longjmp},
 and thus may not return every time they are called.
 
 The execution counts are cumulative.  If the example program were

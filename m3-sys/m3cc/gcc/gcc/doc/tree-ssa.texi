@@ -1,4 +1,4 @@
-@c Copyright (c) 2004, 2005 Free Software Foundation, Inc.
+@c Copyright (c) 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
 @c Free Software Foundation, Inc.
 @c This is part of the GCC manual.
 @c For copying conditions, see the file gcc.texi.
@@ -132,6 +132,11 @@ convert the front end trees to GIMPLE@.  Usually such a hook will involve
 much of the same code for expanding front end trees to RTL@.  This function
 can return fully lowered GIMPLE, or it can return GENERIC trees and let the
 main gimplifier lower them the rest of the way; this is often simpler.
+GIMPLE that is not fully lowered is known as ``high GIMPLE'' and
+consists of the IL before the pass @code{pass_lower_cf}.  High GIMPLE
+still contains lexical scopes and nested expressions, while low GIMPLE
+exposes all of the implicit jumps for control expressions like
+@code{COND_EXPR}.
 
 The C and C++ front ends currently convert directly from front end
 trees to GIMPLE, and hand that off to the back end rather than first
@@ -394,10 +399,10 @@ Other jumps are expressed by either @code{GOTO_EXPR} or @code{RETURN_EXPR}.
 The operand of a @code{GOTO_EXPR} must be either a label or a variable
 containing the address to jump to.
 
-The operand of a @code{RETURN_EXPR} is either @code{NULL_TREE} or a
-@code{MODIFY_EXPR} which sets the return value.  It would be nice to
-move the @code{MODIFY_EXPR} into a separate statement, but the special
-return semantics in @code{expand_return} make that difficult.  It may
+The operand of a @code{RETURN_EXPR} is either @code{NULL_TREE},
+@code{RESULT_DECL}, or a @code{MODIFY_EXPR} which sets the return value.  It
+would be nice to move the @code{MODIFY_EXPR} into a separate statement, but the
+special return semantics in @code{expand_return} make that difficult.  It may
 still happen in the future, perhaps by moving most of that logic into
 @code{expand_assignment}.
 
@@ -675,7 +680,7 @@ void f()
    bitfieldref  : BIT_FIELD_REF
                         op0 -> inner-compref
                         op1 -> CONST
-                        op2 -> var
+                        op2 -> val
 
    compref      : inner-compref
                 | TARGET_MEM_REF
@@ -713,6 +718,8 @@ void f()
                         op1 -> val
 
    val          : ID
+                | invariant ADDR_EXPR
+                        op0 -> addr-expr-arg
                 | CONST
 
    rhs          : lhs
@@ -821,7 +828,7 @@ instance, given
 @{
   int a, b, *p;
 
-  if (...)
+  if (@dots{})
     p = &a;
   else
     p = &b;
@@ -843,12 +850,12 @@ operands, use the @option{-vops} option to @option{-fdump-tree}:
 @{
   int a, b, *p;
 
-  if (...)
+  if (@dots{})
     p = &a;
   else
     p = &b;
-  # a = V_MAY_DEF <a>
-  # b = V_MAY_DEF <b>
+  # a = VDEF <a>
+  # b = VDEF <b>
   *p = 5;
 
   # VUSE <a>
@@ -857,11 +864,11 @@ operands, use the @option{-vops} option to @option{-fdump-tree}:
 @}
 @end smallexample
 
-Notice that @code{V_MAY_DEF} operands have two copies of the referenced
+Notice that @code{VDEF} operands have two copies of the referenced
 variable.  This indicates that this is not a killing definition of
 that variable.  In this case we refer to it as a @dfn{may definition}
 or @dfn{aliased store}.  The presence of the second copy of the
-variable in the @code{V_MAY_DEF} operand will become important when the
+variable in the @code{VDEF} operand will become important when the
 function is converted into SSA form.  This will be used to link all
 the non-killing definitions to prevent optimizations from making
 incorrect assumptions about them.
@@ -869,7 +876,7 @@ incorrect assumptions about them.
 Operands are updated as soon as the statement is finished via a call
 to @code{update_stmt}.  If statement elements are changed via
 @code{SET_USE} or @code{SET_DEF}, then no further action is required
-(ie, those macros take care of updating the statement).  If changes
+(i.e., those macros take care of updating the statement).  If changes
 are made by manipulating the statement's tree directly, then a call
 must be made to @code{update_stmt} when complete.  Calling one of the
 @code{bsi_insert} routines or @code{bsi_replace} performs an implicit
@@ -958,13 +965,12 @@ tree            FOR_EACH_SSA_TREE_OPERAND
 #define SSA_OP_USE              0x01    /* @r{Real USE operands.}  */
 #define SSA_OP_DEF              0x02    /* @r{Real DEF operands.}  */
 #define SSA_OP_VUSE             0x04    /* @r{VUSE operands.}  */
-#define SSA_OP_VMAYUSE          0x08    /* @r{USE portion of V_MAY_DEFS.}  */
-#define SSA_OP_VMAYDEF          0x10    /* @r{DEF portion of V_MAY_DEFS.}  */
-#define SSA_OP_VMUSTDEF         0x20    /* @r{V_MUST_DEF definitions.}  */
+#define SSA_OP_VMAYUSE          0x08    /* @r{USE portion of VDEFS.}  */
+#define SSA_OP_VDEF             0x10    /* @r{DEF portion of VDEFS.}  */
 
 /* @r{These are commonly grouped operand flags.}  */
 #define SSA_OP_VIRTUAL_USES     (SSA_OP_VUSE | SSA_OP_VMAYUSE)
-#define SSA_OP_VIRTUAL_DEFS     (SSA_OP_VMAYDEF | SSA_OP_VMUSTDEF)
+#define SSA_OP_VIRTUAL_DEFS     (SSA_OP_VDEF)
 #define SSA_OP_ALL_USES         (SSA_OP_VIRTUAL_USES | SSA_OP_USE)
 #define SSA_OP_ALL_DEFS         (SSA_OP_VIRTUAL_DEFS | SSA_OP_DEF)
 #define SSA_OP_ALL_OPERANDS     (SSA_OP_ALL_USES | SSA_OP_ALL_DEFS)
@@ -993,18 +999,18 @@ aren't using operand pointers, use and defs flags can be mixed.
   tree var;
   ssa_op_iter iter;
 
-  FOR_EACH_SSA_TREE_OPERAND (var, stmt, iter, SSA_OP_VUSE | SSA_OP_VMUSTDEF)
+  FOR_EACH_SSA_TREE_OPERAND (var, stmt, iter, SSA_OP_VUSE)
     @{
        print_generic_expr (stderr, var, TDF_SLIM);
     @}
 @end smallexample
 
-@code{V_MAY_DEF}s are broken into two flags, one for the
-@code{DEF} portion (@code{SSA_OP_VMAYDEF}) and one for the USE portion
+@code{VDEF}s are broken into two flags, one for the
+@code{DEF} portion (@code{SSA_OP_VDEF}) and one for the USE portion
 (@code{SSA_OP_VMAYUSE}).  If all you want to look at are the
-@code{V_MAY_DEF}s together, there is a fourth iterator macro for this,
+@code{VDEF}s together, there is a fourth iterator macro for this,
 which returns both a def_operand_p and a use_operand_p for each
-@code{V_MAY_DEF} in the statement.  Note that you don't need any flags for
+@code{VDEF} in the statement.  Note that you don't need any flags for
 this one.
 
 @smallexample
@@ -1017,26 +1023,6 @@ this one.
       my_code;
     @}
 @end smallexample
-
-@code{V_MUST_DEF}s are broken into two flags, one for the
-@code{DEF} portion (@code{SSA_OP_VMUSTDEF}) and one for the kill portion
-(@code{SSA_OP_VMUSTKILL}).  If all you want to look at are the
-@code{V_MUST_DEF}s together, there is a fourth iterator macro for this,
-which returns both a def_operand_p and a use_operand_p for each
-@code{V_MUST_DEF} in the statement.  Note that you don't need any flags for
-this one.
-
-@smallexample
-  use_operand_p kill_p;
-  def_operand_p def_p;
-  ssa_op_iter iter;
-
-  FOR_EACH_SSA_MUSTDEF_OPERAND (def_p, kill_p, stmt, iter)
-    @{
-      my_code;
-    @}
-@end smallexample
-
 
 There are many examples in the code as well, as well as the
 documentation in @file{tree-ssa-operands.h}.
@@ -1087,37 +1073,48 @@ FOR_EACH_PHI_OR_STMT_DEF (def_operand_p, phi, iter, flags)
 
 Immediate use information is now always available.  Using the immediate use 
 iterators, you may examine every use of any @code{SSA_NAME}. For instance,
-to change each use of @code{ssa_var} to @code{ssa_var2}:
+to change each use of @code{ssa_var} to @code{ssa_var2} and call fold_stmt on
+each stmt after that is done:
 
 @smallexample
   use_operand_p imm_use_p;
   imm_use_iterator iterator;
-  tree ssa_var
+  tree ssa_var, stmt;
 
-  FOR_EACH_IMM_USE_SAFE (imm_use_p, iterator, ssa_var)
-    SET_USE (imm_use_p, ssa_var_2);
+
+  FOR_EACH_IMM_USE_STMT (stmt, iterator, ssa_var)
+    @{
+      FOR_EACH_IMM_USE_ON_STMT (imm_use_p, iterator)
+        SET_USE (imm_use_p, ssa_var_2);
+      fold_stmt (stmt);
+    @}
 @end smallexample
 
-There are 2 iterators which can be used. @code{FOR_EACH_IMM_USE_FAST} is used 
-when the immediate uses are not changed, ie. you are looking at the uses, but 
-not setting them.  
+There are 2 iterators which can be used. @code{FOR_EACH_IMM_USE_FAST} is
+used when the immediate uses are not changed, i.e., you are looking at the
+uses, but not setting them.  
 
 If they do get changed, then care must be taken that things are not changed 
-under the iterators, so use the @code{FOR_EACH_IMM_USE_SAFE} iterator.  It 
-attempts to preserve the sanity of the use list by moving an iterator element
-through the use list, preventing insertions and deletions in the list from
-resulting in invalid pointers.  This is a little slower since it adds a
-placeholder element and moves it through the list.  This element must be 
-also be removed if the loop is terminated early.  A macro 
-(@code{BREAK_FROM SAFE_IMM_USE}) is provided for this:
+under the iterators, so use the @code{FOR_EACH_IMM_USE_STMT} and 
+@code{FOR_EACH_IMM_USE_ON_STMT} iterators.  They attempt to preserve the 
+sanity of the use list by moving all the uses for a statement into 
+a controlled position, and then iterating over those uses.  Then the 
+optimization can manipulate the stmt when all the uses have been
+processed.  This is a little slower than the FAST version since it adds a 
+placeholder element and must sort through the list a bit for each statement.  
+This placeholder element must be also be removed if the loop is 
+terminated early.  The macro @code{BREAK_FROM_IMM_USE_SAFE} is provided 
+to do this :
 
 @smallexample
-  FOR_EACH_IMM_USE_SAFE (use_p, iter, var)
+  FOR_EACH_IMM_USE_STMT (stmt, iterator, ssa_var)
     @{
-      if (var == last_var)
+      if (stmt == last_stmt)
         BREAK_FROM_SAFE_IMM_USE (iter);
-      else
-        SET_USE (use_p, var2);
+
+      FOR_EACH_IMM_USE_ON_STMT (imm_use_p, iterator)
+        SET_USE (imm_use_p, ssa_var_2);
+      fold_stmt (stmt);
     @}
 @end smallexample
 
@@ -1201,7 +1198,8 @@ the version number and the statement that created the
 @code{SSA_NAME}.  Only definitions and virtual definitions may
 create new @code{SSA_NAME} nodes.
 
-Sometimes, flow of control makes it impossible to determine what is the
+@cindex PHI nodes
+Sometimes, flow of control makes it impossible to determine the
 most recent version of a variable.  In these cases, the compiler
 inserts an artificial definition for that variable called
 @dfn{PHI function} or @dfn{PHI node}.  This new definition merges
@@ -1209,9 +1207,9 @@ all the incoming versions of the variable to create a new name
 for it.  For instance,
 
 @smallexample
-if (...)
+if (@dots{})
   a_1 = 5;
-else if (...)
+else if (@dots{})
   a_2 = 2;
 else
   a_3 = 13;
@@ -1296,11 +1294,11 @@ Suppose that we insert new names @code{x_10} and @code{x_11} (lines
      1	L0:
      2	x_1 = PHI (0, x_5)
      3	if (x_1 < 10)
-     4	  x_10 = ...
+     4	  x_10 = @dots{}
      5	  if (x_1 > 7)
      6	    y_2 = 0
      7	  else
-     8	    x_11 = ...
+     8	    x_11 = @dots{}
      9	    y_3 = x_1 + x_7
      10	  endif
      11	  x_5 = x_1 + 1
@@ -1379,6 +1377,39 @@ There are several @code{TODO} flags that control the behavior of
       renaming are processed@.
 @end itemize
 
+@subsection Preserving the virtual SSA form
+@cindex preserving virtual SSA form
+
+The virtual SSA form is harder to preserve than the non-virtual SSA form
+mainly because the set of virtual operands for a statement may change at
+what some would consider unexpected times.  In general, statement
+modifications should be bracketed between calls to
+@code{push_stmt_changes} and @code{pop_stmt_changes}.  For example,
+
+@smallexample
+    munge_stmt (tree stmt)
+    @{
+       push_stmt_changes (&stmt);
+       @dots{} rewrite STMT @dots{}
+       pop_stmt_changes (&stmt);
+    @}
+@end smallexample
+
+The call to @code{push_stmt_changes} saves the current state of the
+statement operands and the call to @code{pop_stmt_changes} compares
+the saved state with the current one and does the appropriate symbol
+marking for the SSA renamer.
+
+It is possible to modify several statements at a time, provided that
+@code{push_stmt_changes} and @code{pop_stmt_changes} are called in
+LIFO order, as when processing a stack of statements.
+
+Additionally, if the pass discovers that it did not need to make
+changes to the statement after calling @code{push_stmt_changes}, it
+can simply discard the topmost change buffer by calling
+@code{discard_stmt_changes}.  This will avoid the expensive operand
+re-scan operation and the buffer comparison that determines if symbols
+need to be marked for renaming.
 
 @subsection Examining @code{SSA_NAME} nodes
 @cindex examining SSA_NAMEs
@@ -1486,9 +1517,9 @@ struct foo temp;
 int bar (void)
 @{
   int tmp1, tmp2, tmp3;
-  SFT.0_2 = V_MUST_DEF <SFT.0_1>
+  SFT.0_2 = VDEF <SFT.0_1>
   temp.a = 5;
-  SFT.1_4 = V_MUST_DEF <SFT.1_3>
+  SFT.1_4 = VDEF <SFT.1_3>
   temp.b = 6;
   
   VUSE <SFT.1_4>
@@ -1501,7 +1532,7 @@ int bar (void)
 @}
 @end smallexample
 
-If you copy the type tag for a variable for some reason, you probably
+If you copy the symbol tag for a variable for some reason, you probably
 also want to copy the subvariables for that variable.
 
 @item	Points-to and escape analysis.
@@ -1535,12 +1566,12 @@ the variables pointed-to by P_i (and its memory tag) also escape.
 
 We have two classes of memory tags.  Memory tags associated with
 the pointed-to data type of the pointers in the program.  These
-tags are called ``type memory tag'' (TMT)@.  The other class are
+tags are called ``symbol memory tag'' (SMT)@.  The other class are
 those associated with SSA_NAMEs, called ``name memory tag'' (NMT)@.
 The basic idea is that when adding operands for an INDIRECT_REF
 *P_i, we will first check whether P_i has a name tag, if it does
 we use it, because that will have more precise aliasing
-information.  Otherwise, we use the standard type tag.
+information.  Otherwise, we use the standard symbol tag.
 
 In this phase, we go through all the pointers we found in
 points-to analysis and create alias sets for the name memory tags
@@ -1550,11 +1581,17 @@ call-clobbered the variables it points to and its tag.
 
 @item	Compute flow-insensitive aliases
 
-This pass will compare the alias set of every type memory tag and
-every addressable variable found in the program.  Given a type
-memory tag TMT and an addressable variable V@.  If the alias sets
-of TMT and V conflict (as computed by may_alias_p), then V is
-marked as an alias tag and added to the alias set of TMT@.
+This pass will compare the alias set of every symbol memory tag and
+every addressable variable found in the program.  Given a symbol
+memory tag SMT and an addressable variable V@.  If the alias sets
+of SMT and V conflict (as computed by may_alias_p), then V is
+marked as an alias tag and added to the alias set of SMT@.
+
+Every language that wishes to perform language-specific alias analysis
+should define a function that computes, given a @code{tree}
+node, an alias set for the node.  Nodes in different alias sets are not
+allowed to alias.  For an example, see the C front-end function
+@code{c_get_alias_set}.
 @end enumerate
 
 For instance, consider the following function:
@@ -1576,7 +1613,7 @@ foo (int i)
 @}
 @end smallexample
 
-After aliasing analysis has finished, the type memory tag for
+After aliasing analysis has finished, the symbol memory tag for
 pointer @code{p} will have two aliases, namely variables @code{a} and
 @code{b}.
 Every time pointer @code{p} is dereferenced, we want to mark the
@@ -1593,11 +1630,11 @@ foo (int i)
     p_6 = &b;
   # p_1 = PHI <p_4(1), p_6(2)>;
 
-  # a_7 = V_MAY_DEF <a_3>;
-  # b_8 = V_MAY_DEF <b_5>;
+  # a_7 = VDEF <a_3>;
+  # b_8 = VDEF <b_5>;
   *p_1 = 3;
 
-  # a_9 = V_MAY_DEF <a_7>
+  # a_9 = VDEF <a_7>
   # VUSE <b_8>
   a_9 = b_8 + 2;
 
@@ -1629,7 +1666,7 @@ T, we add Vi to the may-aliases set for T@.  Meaning that
 after alias analysis, we will have:
 
 @smallexample
-may-aliases(T) = @{ V1, V2, V3, ..., Vn @}
+may-aliases(T) = @{ V1, V2, V3, @dots{}, Vn @}
 @end smallexample
 
 This means that every statement that references T, will get
@@ -1640,7 +1677,7 @@ to the alias set of all the Vi variables:
 @smallexample
 may-aliases(V1) = @{ T @}
 may-aliases(V2) = @{ T @}
-...
+@dots{}
 may-aliases(Vn) = @{ T @}
 @end smallexample
 

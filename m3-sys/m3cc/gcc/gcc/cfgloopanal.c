@@ -1,11 +1,11 @@
 /* Natural loop analysis code for GNU compiler.
-   Copyright (C) 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -14,9 +14,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -29,11 +28,12 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #include "cfgloop.h"
 #include "expr.h"
 #include "output.h"
+#include "graphds.h"
 
 /* Checks whether BB is executed exactly once in each LOOP iteration.  */
 
 bool
-just_once_each_iteration_p (const struct loop *loop, basic_block bb)
+just_once_each_iteration_p (const struct loop *loop, const_basic_block bb)
 {
   /* It must be executed at least once each iteration.  */
   if (!dominated_by_p (CDI_DOMINATORS, loop->latch, bb))
@@ -50,162 +50,13 @@ just_once_each_iteration_p (const struct loop *loop, basic_block bb)
   return true;
 }
 
-/* Structure representing edge of a graph.  */
-
-struct edge
-{
-  int src, dest;	/* Source and destination.  */
-  struct edge *pred_next, *succ_next;
-			/* Next edge in predecessor and successor lists.  */
-  void *data;		/* Data attached to the edge.  */
-};
-
-/* Structure representing vertex of a graph.  */
-
-struct vertex
-{
-  struct edge *pred, *succ;
-			/* Lists of predecessors and successors.  */
-  int component;	/* Number of dfs restarts before reaching the
-			   vertex.  */
-  int post;		/* Postorder number.  */
-};
-
-/* Structure representing a graph.  */
-
-struct graph
-{
-  int n_vertices;	/* Number of vertices.  */
-  struct vertex *vertices;
-			/* The vertices.  */
-};
-
-/* Dumps graph G into F.  */
-
-extern void dump_graph (FILE *, struct graph *);
-void dump_graph (FILE *f, struct graph *g)
-{
-  int i;
-  struct edge *e;
-
-  for (i = 0; i < g->n_vertices; i++)
-    {
-      if (!g->vertices[i].pred
-	  && !g->vertices[i].succ)
-	continue;
-
-      fprintf (f, "%d (%d)\t<-", i, g->vertices[i].component);
-      for (e = g->vertices[i].pred; e; e = e->pred_next)
-	fprintf (f, " %d", e->src);
-      fprintf (f, "\n");
-
-      fprintf (f, "\t->");
-      for (e = g->vertices[i].succ; e; e = e->succ_next)
-	fprintf (f, " %d", e->dest);
-      fprintf (f, "\n");
-    }
-}
-
-/* Creates a new graph with N_VERTICES vertices.  */
-
-static struct graph *
-new_graph (int n_vertices)
-{
-  struct graph *g = xmalloc (sizeof (struct graph));
-
-  g->n_vertices = n_vertices;
-  g->vertices = xcalloc (n_vertices, sizeof (struct vertex));
-
-  return g;
-}
-
-/* Adds an edge from F to T to graph G, with DATA attached.  */
-
-static void
-add_edge (struct graph *g, int f, int t, void *data)
-{
-  struct edge *e = xmalloc (sizeof (struct edge));
-
-  e->src = f;
-  e->dest = t;
-  e->data = data;
-
-  e->pred_next = g->vertices[t].pred;
-  g->vertices[t].pred = e;
-
-  e->succ_next = g->vertices[f].succ;
-  g->vertices[f].succ = e;
-}
-
-/* Runs dfs search over vertices of G, from NQ vertices in queue QS.
-   The vertices in postorder are stored into QT.  If FORWARD is false,
-   backward dfs is run.  */
-
-static void
-dfs (struct graph *g, int *qs, int nq, int *qt, bool forward)
-{
-  int i, tick = 0, v, comp = 0, top;
-  struct edge *e;
-  struct edge **stack = xmalloc (sizeof (struct edge *) * g->n_vertices);
-
-  for (i = 0; i < g->n_vertices; i++)
-    {
-      g->vertices[i].component = -1;
-      g->vertices[i].post = -1;
-    }
-
-#define FST_EDGE(V) (forward ? g->vertices[(V)].succ : g->vertices[(V)].pred)
-#define NEXT_EDGE(E) (forward ? (E)->succ_next : (E)->pred_next)
-#define EDGE_SRC(E) (forward ? (E)->src : (E)->dest)
-#define EDGE_DEST(E) (forward ? (E)->dest : (E)->src)
-
-  for (i = 0; i < nq; i++)
-    {
-      v = qs[i];
-      if (g->vertices[v].post != -1)
-	continue;
-
-      g->vertices[v].component = comp++;
-      e = FST_EDGE (v);
-      top = 0;
-
-      while (1)
-	{
-	  while (e && g->vertices[EDGE_DEST (e)].component != -1)
-	    e = NEXT_EDGE (e);
-
-	  if (!e)
-	    {
-	      if (qt)
-		qt[tick] = v;
- 	      g->vertices[v].post = tick++;
-
-	      if (!top)
-		break;
-
-	      e = stack[--top];
-	      v = EDGE_SRC (e);
-	      e = NEXT_EDGE (e);
-	      continue;
-	    }
-
-	  stack[top++] = e;
-	  v = EDGE_DEST (e);
-	  e = FST_EDGE (v);
-	  g->vertices[v].component = comp - 1;
-	}
-    }
-
-  free (stack);
-}
-
 /* Marks the edge E in graph G irreducible if it connects two vertices in the
    same scc.  */
 
 static void
-check_irred (struct graph *g, struct edge *e)
+check_irred (struct graph *g, struct graph_edge *e)
 {
-  edge real = e->data;
+  edge real = (edge) e->data;
 
   /* All edges should lead from a component with higher number to the
      one with lower one.  */
@@ -219,62 +70,31 @@ check_irred (struct graph *g, struct edge *e)
     real->src->flags |= BB_IRREDUCIBLE_LOOP;
 }
 
-/* Runs CALLBACK for all edges in G.  */
-
-static void
-for_each_edge (struct graph *g,
-	       void (callback) (struct graph *, struct edge *))
-{
-  struct edge *e;
-  int i;
-
-  for (i = 0; i < g->n_vertices; i++)
-    for (e = g->vertices[i].succ; e; e = e->succ_next)
-      callback (g, e);
-}
-
-/* Releases the memory occupied by G.  */
-
-static void
-free_graph (struct graph *g)
-{
-  struct edge *e, *n;
-  int i;
-
-  for (i = 0; i < g->n_vertices; i++)
-    for (e = g->vertices[i].succ; e; e = n)
-      {
-	n = e->succ_next;
-	free (e);
-      }
-  free (g->vertices);
-  free (g);
-}
-
 /* Marks blocks and edges that are part of non-recognized loops; i.e. we
    throw away all latch edges and mark blocks inside any remaining cycle.
    Everything is a bit complicated due to fact we do not want to do this
    for parts of cycles that only "pass" through some loop -- i.e. for
    each cycle, we want to mark blocks that belong directly to innermost
    loop containing the whole cycle.
-   
+
    LOOPS is the loop tree.  */
 
 #define LOOP_REPR(LOOP) ((LOOP)->num + last_basic_block)
 #define BB_REPR(BB) ((BB)->index + 1)
 
 void
-mark_irreducible_loops (struct loops *loops)
+mark_irreducible_loops (void)
 {
   basic_block act;
   edge e;
   edge_iterator ei;
-  int i, src, dest;
+  int src, dest;
+  unsigned depth;
   struct graph *g;
-  int *queue1 = xmalloc ((last_basic_block + loops->num) * sizeof (int));
-  int *queue2 = xmalloc ((last_basic_block + loops->num) * sizeof (int));
-  int nq, depth;
+  int num = number_of_loops ();
   struct loop *cloop;
+
+  gcc_assert (current_loops != NULL);
 
   /* Reset the flags.  */
   FOR_BB_BETWEEN (act, ENTRY_BLOCK_PTR, EXIT_BLOCK_PTR, next_bb)
@@ -285,16 +105,19 @@ mark_irreducible_loops (struct loops *loops)
     }
 
   /* Create the edge lists.  */
-  g = new_graph (last_basic_block + loops->num);
+  g = new_graph (last_basic_block + num);
 
   FOR_BB_BETWEEN (act, ENTRY_BLOCK_PTR, EXIT_BLOCK_PTR, next_bb)
     FOR_EACH_EDGE (e, ei, act->succs)
       {
-        /* Ignore edges to exit.  */
-        if (e->dest == EXIT_BLOCK_PTR)
+	/* Ignore edges to exit.  */
+	if (e->dest == EXIT_BLOCK_PTR)
 	  continue;
 
-	/* And latch edges.  */
+	src = BB_REPR (act);
+	dest = BB_REPR (e->dest);
+
+	/* Ignore latch edges.  */
 	if (e->dest->loop_father->header == e->dest
 	    && e->dest->loop_father->latch == act)
 	  continue;
@@ -307,57 +130,38 @@ mark_irreducible_loops (struct loops *loops)
 	   of the son of nearest common ancestor of the loops in that
 	   act lays.  */
 
-	src = BB_REPR (act);
-	dest = BB_REPR (e->dest);
-
 	if (e->dest->loop_father->header == e->dest)
 	  dest = LOOP_REPR (e->dest->loop_father);
 
 	if (!flow_bb_inside_loop_p (act->loop_father, e->dest))
 	  {
-	    depth = find_common_loop (act->loop_father,
-				      e->dest->loop_father)->depth + 1;
-	    if (depth == act->loop_father->depth)
+	    depth = 1 + loop_depth (find_common_loop (act->loop_father,
+						      e->dest->loop_father));
+	    if (depth == loop_depth (act->loop_father))
 	      cloop = act->loop_father;
 	    else
-	      cloop = act->loop_father->pred[depth];
+	      cloop = VEC_index (loop_p, act->loop_father->superloops, depth);
 
 	    src = LOOP_REPR (cloop);
 	  }
 
-	add_edge (g, src, dest, e);
+	add_edge (g, src, dest)->data = e;
       }
 
-  /* Find the strongly connected components.  Use the algorithm of Tarjan --
-     first determine the postorder dfs numbering in reversed graph, then
-     run the dfs on the original graph in the order given by decreasing
-     numbers assigned by the previous pass.  */
-  nq = 0;
-  FOR_BB_BETWEEN (act, ENTRY_BLOCK_PTR, EXIT_BLOCK_PTR, next_bb)
-    {
-      queue1[nq++] = BB_REPR (act);
-    }
-  for (i = 1; i < (int) loops->num; i++)
-    if (loops->parray[i])
-      queue1[nq++] = LOOP_REPR (loops->parray[i]);
-  dfs (g, queue1, nq, queue2, false);
-  for (i = 0; i < nq; i++)
-    queue1[i] = queue2[nq - i - 1];
-  dfs (g, queue1, nq, NULL, true);
+  /* Find the strongly connected components.  */
+  graphds_scc (g, NULL);
 
   /* Mark the irreducible loops.  */
   for_each_edge (g, check_irred);
 
   free_graph (g);
-  free (queue1);
-  free (queue2);
 
-  loops->state |= LOOPS_HAVE_MARKED_IRREDUCIBLE_REGIONS;
+  loops_state_set (LOOPS_HAVE_MARKED_IRREDUCIBLE_REGIONS);
 }
 
 /* Counts number of insns inside LOOP.  */
 int
-num_loop_insns (struct loop *loop)
+num_loop_insns (const struct loop *loop)
 {
   basic_block *bbs, bb;
   unsigned i, ninsns = 0;
@@ -379,7 +183,7 @@ num_loop_insns (struct loop *loop)
 
 /* Counts number of insns executed on average per iteration LOOP.  */
 int
-average_num_loop_insns (struct loop *loop)
+average_num_loop_insns (const struct loop *loop)
 {
   basic_block *bbs, bb;
   unsigned i, binsns, ninsns, ratio;
@@ -410,11 +214,12 @@ average_num_loop_insns (struct loop *loop)
   return ninsns;
 }
 
-/* Returns expected number of LOOP iterations.
-   Compute upper bound on number of iterations in case they do not fit integer
-   to help loop peeling heuristics.  Use exact counts if at all possible.  */
-unsigned
-expected_loop_iterations (const struct loop *loop)
+/* Returns expected number of iterations of LOOP, according to
+   measured or guessed profile.  No bounding is done on the
+   value.  */
+
+gcov_type
+expected_loop_iterations_unbounded (const struct loop *loop)
 {
   edge e;
   edge_iterator ei;
@@ -433,12 +238,11 @@ expected_loop_iterations (const struct loop *loop)
 	  count_in += e->count;
 
       if (count_in == 0)
-        expected = count_latch * 2;
+	expected = count_latch * 2;
       else
-        expected = (count_latch + count_in - 1) / count_in;
+	expected = (count_latch + count_in - 1) / count_in;
 
-      /* Avoid overflows.  */
-      return (expected > REG_BR_PROB_BASE ? REG_BR_PROB_BASE : expected);
+      return expected;
     }
   else
     {
@@ -458,6 +262,16 @@ expected_loop_iterations (const struct loop *loop)
 
       return (freq_latch + freq_in - 1) / freq_in;
     }
+}
+
+/* Returns expected number of LOOP iterations.  The returned value is bounded
+   by REG_BR_PROB_BASE.  */
+
+unsigned
+expected_loop_iterations (const struct loop *loop)
+{
+  gcov_type expected = expected_loop_iterations_unbounded (loop);
+  return (expected > REG_BR_PROB_BASE ? REG_BR_PROB_BASE : expected);
 }
 
 /* Returns the maximum level of nesting of subloops of LOOP.  */
@@ -480,7 +294,7 @@ get_loop_level (const struct loop *loop)
 /* Returns estimate on cost of computing SEQ.  */
 
 static unsigned
-seq_cost (rtx seq)
+seq_cost (const_rtx seq)
 {
   unsigned cost = 0;
   rtx set;
@@ -500,11 +314,13 @@ seq_cost (rtx seq)
 /* The properties of the target.  */
 
 unsigned target_avail_regs;	/* Number of available registers.  */
-unsigned target_res_regs;	/* Number of reserved registers.  */
-unsigned target_small_cost;	/* The cost for register when there is a free one.  */
-unsigned target_pres_cost;	/* The cost for register when there are not too many
-				   free ones.  */
-unsigned target_spill_cost;	/* The cost for register when we need to spill.  */
+unsigned target_res_regs;	/* Number of registers reserved for temporary
+				   expressions.  */
+unsigned target_reg_cost;	/* The cost for register when there still
+				   is some reserve, but we are approaching
+				   the number of available registers.  */
+unsigned target_spill_cost;	/* The cost for register when we need
+				   to spill.  */
 
 /* Initialize the constants for computing set costs.  */
 
@@ -518,6 +334,7 @@ init_set_costs (void)
   rtx mem = validize_mem (gen_rtx_MEM (SImode, addr));
   unsigned i;
 
+  target_avail_regs = 0;
   for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
     if (TEST_HARD_REG_BIT (reg_class_contents[GENERAL_REGS], i)
 	&& !fixed_regs[i])
@@ -525,14 +342,20 @@ init_set_costs (void)
 
   target_res_regs = 3;
 
-  /* These are really just heuristic values.  */
-  
+  /* Set up the costs for using extra registers:
+
+     1) If not many free registers remain, we should prefer having an
+	additional move to decreasing the number of available registers.
+	(TARGET_REG_COST).
+     2) If no registers are available, we need to spill, which may require
+	storing the old value to memory and loading it back
+	(TARGET_SPILL_COST).  */
+
   start_sequence ();
   emit_move_insn (reg1, reg2);
   seq = get_insns ();
   end_sequence ();
-  target_small_cost = seq_cost (seq);
-  target_pres_cost = 2 * target_small_cost;
+  target_reg_cost = seq_cost (seq);
 
   start_sequence ();
   emit_move_insn (mem, reg1);
@@ -542,38 +365,37 @@ init_set_costs (void)
   target_spill_cost = seq_cost (seq);
 }
 
-/* Calculates cost for having SIZE new loop global variables.  REGS_USED is the
-   number of global registers used in loop.  N_USES is the number of relevant
-   variable uses.  */
+/* Estimates cost of increased register pressure caused by making N_NEW new
+   registers live around the loop.  N_OLD is the number of registers live
+   around the loop.  */
 
 unsigned
-global_cost_for_size (unsigned size, unsigned regs_used, unsigned n_uses)
+estimate_reg_pressure_cost (unsigned n_new, unsigned n_old)
 {
-  unsigned regs_needed = regs_used + size;
-  unsigned cost = 0;
+  unsigned regs_needed = n_new + n_old;
 
+  /* If we have enough registers, we should use them and not restrict
+     the transformations unnecessarily.  */
   if (regs_needed + target_res_regs <= target_avail_regs)
-    cost += target_small_cost * size;
-  else if (regs_needed <= target_avail_regs)
-    cost += target_pres_cost * size;
-  else
-    {
-      cost += target_pres_cost * size;
-      cost += target_spill_cost * n_uses * (regs_needed - target_avail_regs) / regs_needed;
-    }
+    return 0;
 
-  return cost;
+  /* If we are close to running out of registers, try to preserve them.  */
+  if (regs_needed <= target_avail_regs)
+    return target_reg_cost * n_new;
+  
+  /* If we run out of registers, it is very expensive to add another one.  */
+  return target_spill_cost * n_new;
 }
 
-/* Sets EDGE_LOOP_EXIT flag for all exits of LOOPS.  */
+/* Sets EDGE_LOOP_EXIT flag for all loop exits.  */
 
 void
-mark_loop_exit_edges (struct loops *loops)
+mark_loop_exit_edges (void)
 {
   basic_block bb;
   edge e;
- 
-  if (loops->num <= 1)
+
+  if (number_of_loops () <= 1)
     return;
 
   FOR_EACH_BB (bb)
@@ -582,7 +404,7 @@ mark_loop_exit_edges (struct loops *loops)
 
       FOR_EACH_EDGE (e, ei, bb->succs)
 	{
-	  if (bb->loop_father->outer
+	  if (loop_outer (bb->loop_father)
 	      && loop_exit_edge_p (bb->loop_father, e))
 	    e->flags |= EDGE_LOOP_EXIT;
 	  else

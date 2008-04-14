@@ -1,12 +1,13 @@
 /* Top level of GCC compilers (cc1, cc1plus, etc.)
    Copyright (C) 1987, 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+   Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +16,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* This is the top level of cc1/c++.
    It parses command args, opens files, invokes the various passes
@@ -82,6 +82,8 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #include "tree-flow.h"
 #include "tree-pass.h"
 #include "tree-dump.h"
+#include "df.h"
+#include "predict.h"
 
 #if defined (DWARF2_UNWIND_INFO) || defined (DWARF2_DEBUGGING_INFO)
 #include "dwarf2out.h"
@@ -100,9 +102,37 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 				   declarations for e.g. AIX 4.x.  */
 #endif
 
+/* This is used for debugging.  It allows the current pass to printed
+   from anywhere in compilation.  */
+struct tree_opt_pass *current_pass;
+
+/* Call from anywhere to find out what pass this is.  Useful for
+   printing out debugging information deep inside an service
+   routine.  */
+void
+print_current_pass (FILE *file)
+{
+  if (current_pass)
+    fprintf (file, "current pass = %s (%d)\n", 
+	     current_pass->name, current_pass->static_pass_number);
+  else
+    fprintf (file, "no current pass.\n");
+}
+
+
+/* Call from the debugger to get the current pass name.  */
+void
+debug_pass (void)
+{
+  print_current_pass (stderr);
+} 
+
+
+
 /* Global variables used to communicate with passes.  */
 int dump_flags;
 bool in_gimple_form;
+bool first_pass_instance;
 
 
 /* This is called from various places for FUNCTION_DECL, VAR_DECL,
@@ -159,7 +189,7 @@ rest_of_decl_compilation (tree decl,
 	  && !DECL_EXTERNAL (decl))
 	{
 	  if (TREE_CODE (decl) != FUNCTION_DECL)
-	    cgraph_varpool_finalize_decl (decl);
+	    varpool_finalize_decl (decl);
 	  else
 	    assemble_variable (decl, top_level, at_end, 0);
 	}
@@ -186,7 +216,7 @@ rest_of_decl_compilation (tree decl,
 
   /* Let cgraph know about the existence of variables.  */
   if (TREE_CODE (decl) == VAR_DECL && !DECL_EXTERNAL (decl))
-    cgraph_varpool_node (decl);
+    varpool_node (decl);
 }
 
 /* Called after finishing a record, union or enumeral type.  */
@@ -216,10 +246,10 @@ finish_optimization_passes (void)
   timevar_push (TV_DUMP);
   if (profile_arc_flag || flag_test_coverage || flag_branch_probabilities)
     {
-      dump_file = dump_begin (pass_branch_prob.static_pass_number, NULL);
+      dump_file = dump_begin (pass_profile.static_pass_number, NULL);
       end_branch_prob ();
       if (dump_file)
-	dump_end (pass_branch_prob.static_pass_number, dump_file);
+	dump_end (pass_profile.static_pass_number, dump_file);
     }
 
   if (optimize > 0)
@@ -290,7 +320,7 @@ struct tree_opt_pass pass_postreload =
   0,                                    /* properties_provided */
   0,                                    /* properties_destroyed */
   0,                                    /* todo_flags_start */
-  TODO_ggc_collect,                     /* todo_flags_finish */
+  TODO_ggc_collect | TODO_verify_rtl_sharing, /* todo_flags_finish */
   0					/* letter */
 };
 
@@ -304,10 +334,12 @@ struct tree_opt_pass *all_passes, *all_ipa_passes, *all_lowering_passes;
    enabled or not.  */
 
 static void
-register_one_dump_file (struct tree_opt_pass *pass, bool ipa, int n)
+register_one_dump_file (struct tree_opt_pass *pass, bool ipa, int properties)
 {
   char *dot_name, *flag_name, *glob_name;
+  const char *prefix;
   char num[10];
+  int flags;
 
   /* See below in next_pass_1.  */
   num[0] = '\0';
@@ -317,52 +349,34 @@ register_one_dump_file (struct tree_opt_pass *pass, bool ipa, int n)
 
   dot_name = concat (".", pass->name, num, NULL);
   if (ipa)
-    {
-      flag_name = concat ("ipa-", pass->name, num, NULL);
-      glob_name = concat ("ipa-", pass->name, NULL);
-      /* First IPA dump is cgraph that is dumped via separate channels.  */
-      pass->static_pass_number = dump_register (dot_name, flag_name, glob_name,
-                                                TDF_IPA, n + 1, 0);
-    }
-  else if (pass->properties_provided & PROP_trees)
-    {
-      flag_name = concat ("tree-", pass->name, num, NULL);
-      glob_name = concat ("tree-", pass->name, NULL);
-      pass->static_pass_number = dump_register (dot_name, flag_name, glob_name,
-                                                TDF_TREE, n + TDI_tree_all, 0);
-    }
+    prefix = "ipa-", flags = TDF_IPA;
+  else if (properties & PROP_trees)
+    prefix = "tree-", flags = TDF_TREE;
   else
-    {
-      flag_name = concat ("rtl-", pass->name, num, NULL);
-      glob_name = concat ("rtl-", pass->name, NULL);
-      pass->static_pass_number = dump_register (dot_name, flag_name, glob_name,
-                                                TDF_RTL, n, pass->letter);
-    }
+    prefix = "rtl-", flags = TDF_RTL;
+
+  flag_name = concat (prefix, pass->name, num, NULL);
+  glob_name = concat (prefix, pass->name, NULL);
+  pass->static_pass_number = dump_register (dot_name, flag_name, glob_name,
+                                            flags, pass->letter);
 }
 
+/* Recursive worker function for register_dump_files.  */
+
 static int 
-register_dump_files (struct tree_opt_pass *pass, bool ipa, int properties)
+register_dump_files_1 (struct tree_opt_pass *pass, bool ipa, int properties)
 {
-  static int n = 0;
   do
     {
-      int new_properties;
-      int pass_number;
+      int new_properties = (properties | pass->properties_provided)
+			   & ~pass->properties_destroyed;
 
-      pass->properties_required = properties;
-      new_properties =
-        (properties | pass->properties_provided) & ~pass->properties_destroyed;
-
-      /* Reset the counter when we reach RTL-based passes.  */
-      if ((new_properties ^ pass->properties_required) & PROP_rtl)
-        n = 0;
-
-      pass_number = n;
       if (pass->name)
-        n++;
+        register_one_dump_file (pass, ipa, new_properties);
 
       if (pass->sub)
-        new_properties = register_dump_files (pass->sub, false, new_properties);
+        new_properties = register_dump_files_1 (pass->sub, false,
+						new_properties);
 
       /* If we have a gate, combine the properties that we could have with
          and without the pass being examined.  */
@@ -371,15 +385,23 @@ register_dump_files (struct tree_opt_pass *pass, bool ipa, int properties)
       else
         properties = new_properties;
 
-      pass->properties_provided = properties;
-      if (pass->name)
-        register_one_dump_file (pass, ipa, pass_number);
-
       pass = pass->next;
     }
   while (pass);
 
   return properties;
+}
+
+/* Register the dump files for the pipeline starting at PASS.  IPA is
+   true if the pass is inter-procedural, and PROPERTIES reflects the
+   properties that are guaranteed to be available at the beginning of
+   the pipeline.  */
+
+static void 
+register_dump_files (struct tree_opt_pass *pass, bool ipa, int properties)
+{
+  pass->properties_required |= properties;
+  register_dump_files_1 (pass, ipa, properties);
 }
 
 /* Add a pass to the pass list. Duplicate the pass if it's already
@@ -388,7 +410,6 @@ register_dump_files (struct tree_opt_pass *pass, bool ipa, int properties)
 static struct tree_opt_pass **
 next_pass_1 (struct tree_opt_pass **list, struct tree_opt_pass *pass)
 {
-
   /* A nonzero static_pass_number indicates that the
      pass is already in the list.  */
   if (pass->static_pass_number)
@@ -397,6 +418,9 @@ next_pass_1 (struct tree_opt_pass **list, struct tree_opt_pass *pass)
 
       new = xmalloc (sizeof (*new));
       memcpy (new, pass, sizeof (*new));
+      new->next = NULL;
+
+      new->todo_flags_start &= ~TODO_mark_first_instance;
 
       /* Indicate to register_dump_files that this pass has duplicates,
          and so it should rename the dump file.  The first instance will
@@ -412,6 +436,7 @@ next_pass_1 (struct tree_opt_pass **list, struct tree_opt_pass *pass)
     }
   else
     {
+      pass->todo_flags_start |= TODO_mark_first_instance;
       pass->static_pass_number = -1;
       *list = pass;
     }  
@@ -420,7 +445,24 @@ next_pass_1 (struct tree_opt_pass **list, struct tree_opt_pass *pass)
           
 }
 
-/* Construct the pass tree.  */
+
+/* Construct the pass tree.  The sequencing of passes is driven by
+   the cgraph routines:
+
+   cgraph_finalize_compilation_unit ()
+       for each node N in the cgraph
+	   cgraph_analyze_function (N)
+	       cgraph_lower_function (N) -> all_lowering_passes
+
+   If we are optimizing, cgraph_optimize is then invoked:
+
+   cgraph_optimize ()
+       ipa_passes () 			-> all_ipa_passes
+       cgraph_expand_all_functions ()
+           for each node N in the cgraph
+	       cgraph_expand_function (N)
+		  tree_rest_of_compilation (DECL (N))  -> all_passes
+*/
 
 void
 init_optimization_passes (void)
@@ -428,282 +470,427 @@ init_optimization_passes (void)
   struct tree_opt_pass **p;
 
 #define NEXT_PASS(PASS)  (p = next_pass_1 (p, &PASS))
-  /* Interprocedural optimization passes.  */
-  p = &all_ipa_passes;
-  NEXT_PASS (pass_early_ipa_inline);
-  NEXT_PASS (pass_early_local_passes);
-  NEXT_PASS (pass_ipa_cp);
-  NEXT_PASS (pass_ipa_inline);
-  NEXT_PASS (pass_ipa_reference);
-  NEXT_PASS (pass_ipa_pure_const); 
-  NEXT_PASS (pass_ipa_type_escape);
-  *p = NULL;
 
-  /* All passes needed to lower the function into shape optimizers can operate
-     on.  These passes are performed before interprocedural passes, unlike rest
-     of local passes (all_passes).  */
+ /* All passes needed to lower the function into shape optimizers can
+    operate on.  These passes are always run first on the function, but
+    backend might produce already lowered functions that are not processed
+    by these passes.  */
   p = &all_lowering_passes;
   NEXT_PASS (pass_remove_useless_stmts);
   NEXT_PASS (pass_mudflap_1);
+  NEXT_PASS (pass_lower_omp);
   NEXT_PASS (pass_lower_cf);
+  NEXT_PASS (pass_refactor_eh);
   NEXT_PASS (pass_lower_eh);
   NEXT_PASS (pass_build_cfg);
   NEXT_PASS (pass_lower_complex_O0);
   NEXT_PASS (pass_lower_vector);
   NEXT_PASS (pass_warn_function_return);
-  NEXT_PASS (pass_early_tree_profile);
+  NEXT_PASS (pass_build_cgraph_edges);
+  NEXT_PASS (pass_inline_parameters);
   *p = NULL;
 
-  p = &pass_early_local_passes.sub;
-  NEXT_PASS (pass_tree_profile);
-  NEXT_PASS (pass_cleanup_cfg);
-  NEXT_PASS (pass_rebuild_cgraph_edges);
+  /* Interprocedural optimization passes. 
+     All these passes are ignored in -fno-unit-at-a-time
+     except for subpasses of early_local_passes.  */
+  p = &all_ipa_passes;
+  NEXT_PASS (pass_ipa_function_and_variable_visibility);
+  NEXT_PASS (pass_ipa_early_inline);
+    {
+      struct tree_opt_pass **p = &pass_ipa_early_inline.sub;
+      NEXT_PASS (pass_early_inline);
+      NEXT_PASS (pass_inline_parameters);
+      NEXT_PASS (pass_rebuild_cgraph_edges);
+    }
+  NEXT_PASS (pass_early_local_passes);
+    {
+      struct tree_opt_pass **p = &pass_early_local_passes.sub;
+      NEXT_PASS (pass_tree_profile);
+      NEXT_PASS (pass_cleanup_cfg);
+      NEXT_PASS (pass_init_datastructures);
+      NEXT_PASS (pass_expand_omp);
+      NEXT_PASS (pass_all_early_optimizations);
+	{
+	  struct tree_opt_pass **p = &pass_all_early_optimizations.sub;
+	  NEXT_PASS (pass_referenced_vars);
+	  NEXT_PASS (pass_reset_cc_flags);
+	  NEXT_PASS (pass_build_ssa);
+	  NEXT_PASS (pass_expand_omp_ssa);
+	  NEXT_PASS (pass_early_warn_uninitialized);
+	  NEXT_PASS (pass_rebuild_cgraph_edges);
+	  NEXT_PASS (pass_early_inline);
+	  NEXT_PASS (pass_cleanup_cfg);
+	  NEXT_PASS (pass_rename_ssa_copies);
+	  NEXT_PASS (pass_ccp);
+	  NEXT_PASS (pass_forwprop);
+	  NEXT_PASS (pass_update_address_taken);
+	  NEXT_PASS (pass_simple_dse);
+	  NEXT_PASS (pass_sra_early);
+	  NEXT_PASS (pass_copy_prop);
+	  NEXT_PASS (pass_merge_phi);
+	  NEXT_PASS (pass_dce);
+	  NEXT_PASS (pass_update_address_taken);
+	  NEXT_PASS (pass_simple_dse);
+	  NEXT_PASS (pass_tail_recursion);
+          NEXT_PASS (pass_profile);
+	  NEXT_PASS (pass_release_ssa_names);
+	}
+      NEXT_PASS (pass_rebuild_cgraph_edges);
+      NEXT_PASS (pass_inline_parameters);
+    }
+  NEXT_PASS (pass_ipa_increase_alignment);
+  NEXT_PASS (pass_ipa_matrix_reorg);
+  NEXT_PASS (pass_ipa_cp);
+  NEXT_PASS (pass_ipa_inline);
+  NEXT_PASS (pass_ipa_reference);
+  NEXT_PASS (pass_ipa_pure_const); 
+  NEXT_PASS (pass_ipa_type_escape);
+  NEXT_PASS (pass_ipa_pta);
+  NEXT_PASS (pass_ipa_struct_reorg);  
   *p = NULL;
 
+  /* These passes are run after IPA passes on every function that is being
+     output to the assembler file.  */
   p = &all_passes;
-  NEXT_PASS (pass_fixup_cfg);
-  NEXT_PASS (pass_init_datastructures);
+  NEXT_PASS (pass_apply_inline);
   NEXT_PASS (pass_all_optimizations);
+    {
+      struct tree_opt_pass **p = &pass_all_optimizations.sub;
+      NEXT_PASS (pass_create_structure_vars);
+      /* ??? pass_build_alias is a dummy pass that ensures that we
+	 execute TODO_rebuild_alias at this point even if
+	 pass_create_structure_vars was disabled.  */
+      NEXT_PASS (pass_build_alias);
+      NEXT_PASS (pass_return_slot);
+      NEXT_PASS (pass_rename_ssa_copies);
+
+      /* Initial scalar cleanups.  */
+      NEXT_PASS (pass_ccp);
+      NEXT_PASS (pass_phiprop);
+      NEXT_PASS (pass_fre);
+      NEXT_PASS (pass_dce);
+      NEXT_PASS (pass_forwprop);
+      NEXT_PASS (pass_copy_prop);
+      NEXT_PASS (pass_merge_phi);
+      NEXT_PASS (pass_vrp);
+      NEXT_PASS (pass_dce);
+      NEXT_PASS (pass_cselim);
+      NEXT_PASS (pass_dominator);
+      /* The only const/copy propagation opportunities left after
+	 DOM should be due to degenerate PHI nodes.  So rather than
+	 run the full propagators, run a specialized pass which
+	 only examines PHIs to discover const/copy propagation
+	 opportunities.  */
+      NEXT_PASS (pass_phi_only_cprop);
+      NEXT_PASS (pass_tree_ifcombine);
+      NEXT_PASS (pass_phiopt);
+      NEXT_PASS (pass_tail_recursion);
+      NEXT_PASS (pass_ch);
+      NEXT_PASS (pass_stdarg);
+      NEXT_PASS (pass_lower_complex);
+      NEXT_PASS (pass_sra);
+      NEXT_PASS (pass_rename_ssa_copies);
+      NEXT_PASS (pass_dominator);
+
+      /* The only const/copy propagation opportunities left after
+	 DOM should be due to degenerate PHI nodes.  So rather than
+	 run the full propagators, run a specialized pass which
+	 only examines PHIs to discover const/copy propagation
+	 opportunities.  */
+      NEXT_PASS (pass_phi_only_cprop);
+
+      NEXT_PASS (pass_reassoc);
+      NEXT_PASS (pass_dce);
+      NEXT_PASS (pass_dse);
+      NEXT_PASS (pass_forwprop);
+      NEXT_PASS (pass_phiopt);
+      NEXT_PASS (pass_object_sizes);
+      NEXT_PASS (pass_store_ccp);
+      NEXT_PASS (pass_copy_prop);
+      NEXT_PASS (pass_fold_builtins);
+      NEXT_PASS (pass_cse_sincos);
+      NEXT_PASS (pass_split_crit_edges);
+      NEXT_PASS (pass_pre);
+      NEXT_PASS (pass_sink_code);
+      NEXT_PASS (pass_tree_loop);
+	{
+	  struct tree_opt_pass **p = &pass_tree_loop.sub;
+	  NEXT_PASS (pass_tree_loop_init);
+	  NEXT_PASS (pass_copy_prop);
+	  NEXT_PASS (pass_dce_loop);
+	  NEXT_PASS (pass_lim);
+	  NEXT_PASS (pass_predcom);
+	  NEXT_PASS (pass_tree_unswitch);
+	  NEXT_PASS (pass_scev_cprop);
+	  NEXT_PASS (pass_empty_loop);
+	  NEXT_PASS (pass_record_bounds);
+	  NEXT_PASS (pass_check_data_deps);
+	  NEXT_PASS (pass_linear_transform);
+	  NEXT_PASS (pass_iv_canon);
+	  NEXT_PASS (pass_if_conversion);
+	  NEXT_PASS (pass_vectorize);
+	    {
+	      struct tree_opt_pass **p = &pass_vectorize.sub;
+	      NEXT_PASS (pass_lower_vector_ssa);
+	      NEXT_PASS (pass_dce_loop);
+	    }
+	  NEXT_PASS (pass_complete_unroll);
+	  NEXT_PASS (pass_parallelize_loops);
+	  NEXT_PASS (pass_loop_prefetch);
+	  NEXT_PASS (pass_iv_optimize);
+	  NEXT_PASS (pass_tree_loop_done);
+	}
+      NEXT_PASS (pass_cse_reciprocals);
+      NEXT_PASS (pass_convert_to_rsqrt);
+      NEXT_PASS (pass_reassoc);
+      NEXT_PASS (pass_vrp);
+      NEXT_PASS (pass_dominator);
+      
+      /* The only const/copy propagation opportunities left after
+	 DOM should be due to degenerate PHI nodes.  So rather than
+	 run the full propagators, run a specialized pass which
+	 only examines PHIs to discover const/copy propagation
+	 opportunities.  */
+      NEXT_PASS (pass_phi_only_cprop);
+
+      NEXT_PASS (pass_cd_dce);
+      NEXT_PASS (pass_tracer);
+
+      /* FIXME: If DCE is not run before checking for uninitialized uses,
+	 we may get false warnings (e.g., testsuite/gcc.dg/uninit-5.c).
+	 However, this also causes us to misdiagnose cases that should be
+	 real warnings (e.g., testsuite/gcc.dg/pr18501.c).
+	 
+	 To fix the false positives in uninit-5.c, we would have to
+	 account for the predicates protecting the set and the use of each
+	 variable.  Using a representation like Gated Single Assignment
+	 may help.  */
+      NEXT_PASS (pass_late_warn_uninitialized);
+      NEXT_PASS (pass_dse);
+      NEXT_PASS (pass_forwprop);
+      NEXT_PASS (pass_phiopt);
+      NEXT_PASS (pass_tail_calls);
+      NEXT_PASS (pass_rename_ssa_copies);
+      NEXT_PASS (pass_uncprop);
+      NEXT_PASS (pass_del_ssa);
+      NEXT_PASS (pass_nrv);
+      NEXT_PASS (pass_mark_used_blocks);
+      NEXT_PASS (pass_cleanup_cfg_post_optimizing);
+    }
   NEXT_PASS (pass_warn_function_noreturn);
-  NEXT_PASS (pass_mudflap_2);
   NEXT_PASS (pass_free_datastructures);
+  NEXT_PASS (pass_mudflap_2);
   NEXT_PASS (pass_free_cfg_annotations);
   NEXT_PASS (pass_expand);
   NEXT_PASS (pass_rest_of_compilation);
+    {
+      struct tree_opt_pass **p = &pass_rest_of_compilation.sub;
+      NEXT_PASS (pass_init_function);
+      NEXT_PASS (pass_jump);
+      NEXT_PASS (pass_rtl_eh);
+      NEXT_PASS (pass_initial_value_sets);
+      NEXT_PASS (pass_unshare_all_rtl);
+      NEXT_PASS (pass_instantiate_virtual_regs);
+      NEXT_PASS (pass_into_cfg_layout_mode);
+      NEXT_PASS (pass_jump2);
+      NEXT_PASS (pass_lower_subreg);
+      NEXT_PASS (pass_df_initialize_opt);
+      NEXT_PASS (pass_cse);
+      NEXT_PASS (pass_rtl_fwprop);
+      NEXT_PASS (pass_gcse);
+      NEXT_PASS (pass_rtl_ifcvt);
+      /* Perform loop optimizations.  It might be better to do them a bit
+	 sooner, but we want the profile feedback to work more
+	 efficiently.  */
+      NEXT_PASS (pass_loop2);
+	{
+	  struct tree_opt_pass **p = &pass_loop2.sub;
+	  NEXT_PASS (pass_rtl_loop_init);
+	  NEXT_PASS (pass_rtl_move_loop_invariants);
+	  NEXT_PASS (pass_rtl_unswitch);
+	  NEXT_PASS (pass_rtl_unroll_and_peel_loops);
+	  NEXT_PASS (pass_rtl_doloop);
+	  NEXT_PASS (pass_rtl_loop_done);
+	  *p = NULL;
+	}
+      NEXT_PASS (pass_web);
+      NEXT_PASS (pass_jump_bypass);
+      NEXT_PASS (pass_cse2);
+      NEXT_PASS (pass_rtl_dse1);
+      NEXT_PASS (pass_rtl_fwprop_addr);
+      NEXT_PASS (pass_regclass_init);
+      NEXT_PASS (pass_inc_dec);
+      NEXT_PASS (pass_initialize_regs);
+      NEXT_PASS (pass_outof_cfg_layout_mode);
+      NEXT_PASS (pass_ud_rtl_dce);
+      NEXT_PASS (pass_combine);
+      NEXT_PASS (pass_if_after_combine);
+      NEXT_PASS (pass_partition_blocks);
+      NEXT_PASS (pass_regmove);
+      NEXT_PASS (pass_split_all_insns);
+      NEXT_PASS (pass_lower_subreg2);
+      NEXT_PASS (pass_df_initialize_no_opt);
+      NEXT_PASS (pass_stack_ptr_mod);
+      NEXT_PASS (pass_mode_switching);
+      NEXT_PASS (pass_see);
+      NEXT_PASS (pass_match_asm_constraints);
+      NEXT_PASS (pass_sms);
+      NEXT_PASS (pass_sched);
+      NEXT_PASS (pass_subregs_of_mode_init);
+      NEXT_PASS (pass_local_alloc);
+      NEXT_PASS (pass_global_alloc);
+      NEXT_PASS (pass_subregs_of_mode_finish);
+      NEXT_PASS (pass_postreload);
+	{
+	  struct tree_opt_pass **p = &pass_postreload.sub;
+	  NEXT_PASS (pass_postreload_cse);
+	  NEXT_PASS (pass_gcse2);
+	  NEXT_PASS (pass_split_after_reload);
+	  NEXT_PASS (pass_branch_target_load_optimize1);
+	  NEXT_PASS (pass_thread_prologue_and_epilogue);
+	  NEXT_PASS (pass_rtl_dse2);
+	  NEXT_PASS (pass_rtl_seqabstr);
+	  NEXT_PASS (pass_stack_adjustments);
+	  NEXT_PASS (pass_peephole2);
+	  NEXT_PASS (pass_if_after_reload);
+	  NEXT_PASS (pass_regrename);
+	  NEXT_PASS (pass_cprop_hardreg);
+	  NEXT_PASS (pass_fast_rtl_dce);
+	  NEXT_PASS (pass_reorder_blocks);
+	  NEXT_PASS (pass_branch_target_load_optimize2);
+	  NEXT_PASS (pass_leaf_regs);
+	  NEXT_PASS (pass_split_before_sched2);
+	  NEXT_PASS (pass_sched2);
+	  NEXT_PASS (pass_stack_regs);
+	    {
+	      struct tree_opt_pass **p = &pass_stack_regs.sub;
+	      NEXT_PASS (pass_split_before_regstack);
+	      NEXT_PASS (pass_stack_regs_run);
+	    }
+	  NEXT_PASS (pass_compute_alignments);
+	  NEXT_PASS (pass_duplicate_computed_gotos);
+	  NEXT_PASS (pass_variable_tracking);
+	  NEXT_PASS (pass_free_cfg);
+	  NEXT_PASS (pass_machine_reorg);
+	  NEXT_PASS (pass_cleanup_barriers);
+	  NEXT_PASS (pass_delay_slots);
+	  NEXT_PASS (pass_split_for_shorten_branches);
+	  NEXT_PASS (pass_convert_to_eh_region_ranges);
+	  NEXT_PASS (pass_shorten_branches);
+	  NEXT_PASS (pass_set_nothrow_function_flags);
+	  NEXT_PASS (pass_final);
+	}
+      NEXT_PASS (pass_df_finish);
+    }
   NEXT_PASS (pass_clean_state);
-  *p = NULL;
-
-  p = &pass_all_optimizations.sub;
-  NEXT_PASS (pass_referenced_vars);
-  NEXT_PASS (pass_create_structure_vars);
-  NEXT_PASS (pass_build_ssa);
-  NEXT_PASS (pass_may_alias);
-  NEXT_PASS (pass_return_slot);
-  NEXT_PASS (pass_rename_ssa_copies);
-  NEXT_PASS (pass_early_warn_uninitialized);
-  NEXT_PASS (pass_eliminate_useless_stores);
-
-  /* Initial scalar cleanups.  */
-  NEXT_PASS (pass_ccp);
-  NEXT_PASS (pass_fre);
-  NEXT_PASS (pass_dce);
-  NEXT_PASS (pass_forwprop);
-  NEXT_PASS (pass_copy_prop);
-  NEXT_PASS (pass_vrp);
-  NEXT_PASS (pass_dce);
-  NEXT_PASS (pass_merge_phi);
-  NEXT_PASS (pass_dominator);
-
-  /* The only copy propagation opportunities left after DOM
-     should be due to degenerate PHI nodes.  So rather than
-     run the full copy propagator, just discover and copy
-     propagate away the degenerate PHI nodes.  */
-  NEXT_PASS (pass_phi_only_copy_prop);
-
-  NEXT_PASS (pass_phiopt);
-  NEXT_PASS (pass_may_alias);
-  NEXT_PASS (pass_tail_recursion);
-  NEXT_PASS (pass_profile);
-  NEXT_PASS (pass_ch);
-  NEXT_PASS (pass_stdarg);
-  NEXT_PASS (pass_lower_complex);
-  NEXT_PASS (pass_sra);
-  /* FIXME: SRA may generate arbitrary gimple code, exposing new
-     aliased and call-clobbered variables.  As mentioned below,
-     pass_may_alias should be a TODO item.  */
-  NEXT_PASS (pass_may_alias);
-  NEXT_PASS (pass_rename_ssa_copies);
-  NEXT_PASS (pass_dominator);
-
-  /* The only copy propagation opportunities left after DOM
-     should be due to degenerate PHI nodes.  So rather than
-     run the full copy propagator, just discover and copy
-     propagate away the degenerate PHI nodes.  */
-  NEXT_PASS (pass_phi_only_copy_prop);
-
-  NEXT_PASS (pass_dce);
-  NEXT_PASS (pass_dse);
-  NEXT_PASS (pass_may_alias);
-  NEXT_PASS (pass_forwprop);
-  NEXT_PASS (pass_phiopt);
-  NEXT_PASS (pass_object_sizes);
-  NEXT_PASS (pass_store_ccp);
-  NEXT_PASS (pass_store_copy_prop);
-  NEXT_PASS (pass_fold_builtins);
-  /* FIXME: May alias should a TODO but for 4.0.0,
-     we add may_alias right after fold builtins
-     which can create arbitrary GIMPLE.  */
-  NEXT_PASS (pass_may_alias);
-  NEXT_PASS (pass_split_crit_edges);
-  NEXT_PASS (pass_reassoc);
-  NEXT_PASS (pass_pre);
-  NEXT_PASS (pass_sink_code);
-  NEXT_PASS (pass_tree_loop);
-  NEXT_PASS (pass_cse_reciprocals);
-  NEXT_PASS (pass_dominator);
-
-  /* The only copy propagation opportunities left after DOM
-     should be due to degenerate PHI nodes.  So rather than
-     run the full copy propagator, just discover and copy
-     propagate away the degenerate PHI nodes.  */
-  NEXT_PASS (pass_phi_only_copy_prop);
-
-  NEXT_PASS (pass_cd_dce);
-
-  /* FIXME: If DCE is not run before checking for uninitialized uses,
-     we may get false warnings (e.g., testsuite/gcc.dg/uninit-5.c).
-     However, this also causes us to misdiagnose cases that should be
-     real warnings (e.g., testsuite/gcc.dg/pr18501.c).
-     
-     To fix the false positives in uninit-5.c, we would have to
-     account for the predicates protecting the set and the use of each
-     variable.  Using a representation like Gated Single Assignment
-     may help.  */
-  NEXT_PASS (pass_late_warn_uninitialized);
-  NEXT_PASS (pass_dse);
-  NEXT_PASS (pass_forwprop);
-  NEXT_PASS (pass_phiopt);
-  NEXT_PASS (pass_tail_calls);
-  NEXT_PASS (pass_rename_ssa_copies);
-  NEXT_PASS (pass_uncprop);
-  NEXT_PASS (pass_del_ssa);
-  NEXT_PASS (pass_nrv);
-  NEXT_PASS (pass_remove_useless_vars);
-  NEXT_PASS (pass_mark_used_blocks);
-  NEXT_PASS (pass_cleanup_cfg_post_optimizing);
-  *p = NULL;
-
-  p = &pass_tree_loop.sub;
-  NEXT_PASS (pass_tree_loop_init);
-  NEXT_PASS (pass_copy_prop);
-  NEXT_PASS (pass_lim);
-  NEXT_PASS (pass_tree_unswitch);
-  NEXT_PASS (pass_scev_cprop);
-  NEXT_PASS (pass_empty_loop);
-  NEXT_PASS (pass_record_bounds);
-  NEXT_PASS (pass_linear_transform);
-  NEXT_PASS (pass_iv_canon);
-  NEXT_PASS (pass_if_conversion);
-  NEXT_PASS (pass_vectorize);
-  /* NEXT_PASS (pass_may_alias) cannot be done again because the
-     vectorizer creates alias relations that are not supported by
-     pass_may_alias.  */
-  NEXT_PASS (pass_complete_unroll);
-  NEXT_PASS (pass_iv_optimize);
-  NEXT_PASS (pass_tree_loop_done);
-  *p = NULL;
-
-  p = &pass_vectorize.sub;
-  NEXT_PASS (pass_lower_vector_ssa);
-  NEXT_PASS (pass_dce_loop);
-  *p = NULL;
-
-  p = &pass_loop2.sub;
-  NEXT_PASS (pass_rtl_loop_init);
-  NEXT_PASS (pass_rtl_move_loop_invariants);
-  NEXT_PASS (pass_rtl_unswitch);
-  NEXT_PASS (pass_rtl_unroll_and_peel_loops);
-  NEXT_PASS (pass_rtl_doloop);
-  NEXT_PASS (pass_rtl_loop_done);
-  *p = NULL;
-  
-  p = &pass_rest_of_compilation.sub;
-  NEXT_PASS (pass_remove_unnecessary_notes);
-  NEXT_PASS (pass_init_function);
-  NEXT_PASS (pass_jump);
-  NEXT_PASS (pass_insn_locators_initialize);
-  NEXT_PASS (pass_rtl_eh);
-  NEXT_PASS (pass_initial_value_sets);
-  NEXT_PASS (pass_unshare_all_rtl);
-  NEXT_PASS (pass_instantiate_virtual_regs);
-  NEXT_PASS (pass_jump2);
-  NEXT_PASS (pass_cse);
-  NEXT_PASS (pass_gcse);
-  NEXT_PASS (pass_loop_optimize);
-  NEXT_PASS (pass_jump_bypass);
-  NEXT_PASS (pass_cfg);
-  NEXT_PASS (pass_branch_prob);
-  NEXT_PASS (pass_rtl_ifcvt);
-  NEXT_PASS (pass_tracer);
-  /* Perform loop optimizations.  It might be better to do them a bit
-     sooner, but we want the profile feedback to work more
-     efficiently.  */
-  NEXT_PASS (pass_loop2);
-  NEXT_PASS (pass_web);
-  NEXT_PASS (pass_cse2);
-  NEXT_PASS (pass_life);
-  NEXT_PASS (pass_combine);
-  NEXT_PASS (pass_if_after_combine);
-  NEXT_PASS (pass_partition_blocks);
-  NEXT_PASS (pass_regmove);
-  NEXT_PASS (pass_split_all_insns);
-  NEXT_PASS (pass_mode_switching);
-  NEXT_PASS (pass_recompute_reg_usage);
-  NEXT_PASS (pass_sms);
-  NEXT_PASS (pass_sched);
-  NEXT_PASS (pass_local_alloc);
-  NEXT_PASS (pass_global_alloc);
-  NEXT_PASS (pass_postreload);
-  *p = NULL;
-
-  p = &pass_postreload.sub;
-  NEXT_PASS (pass_postreload_cse);
-  NEXT_PASS (pass_gcse2);
-  NEXT_PASS (pass_flow2);
-  NEXT_PASS (pass_stack_adjustments);
-  NEXT_PASS (pass_peephole2);
-  NEXT_PASS (pass_if_after_reload);
-  NEXT_PASS (pass_regrename);
-  NEXT_PASS (pass_reorder_blocks);
-  NEXT_PASS (pass_branch_target_load_optimize);
-  NEXT_PASS (pass_leaf_regs);
-  NEXT_PASS (pass_sched2);
-  NEXT_PASS (pass_split_before_regstack);
-  NEXT_PASS (pass_stack_regs);
-  NEXT_PASS (pass_compute_alignments);
-  NEXT_PASS (pass_duplicate_computed_gotos);
-  NEXT_PASS (pass_variable_tracking);
-  NEXT_PASS (pass_free_cfg);
-  NEXT_PASS (pass_machine_reorg);
-  NEXT_PASS (pass_purge_lineno_notes);
-  NEXT_PASS (pass_cleanup_barriers);
-  NEXT_PASS (pass_delay_slots);
-  NEXT_PASS (pass_split_for_shorten_branches);
-  NEXT_PASS (pass_convert_to_eh_region_ranges);
-  NEXT_PASS (pass_shorten_branches);
-  NEXT_PASS (pass_set_nothrow_function_flags);
-  NEXT_PASS (pass_final);
   *p = NULL;
 
 #undef NEXT_PASS
 
   /* Register the passes with the tree dump code.  */
-  register_dump_files (all_ipa_passes, true, PROP_gimple_leh | PROP_cfg);
   register_dump_files (all_lowering_passes, false, PROP_gimple_any);
-  register_dump_files (all_passes, false, PROP_gimple_leh | PROP_cfg);
+  all_lowering_passes->todo_flags_start |= TODO_set_props;
+  register_dump_files (all_ipa_passes, true,
+		       PROP_gimple_any | PROP_gimple_lcf | PROP_gimple_leh
+		       | PROP_cfg);
+  register_dump_files (all_passes, false,
+		       PROP_gimple_any | PROP_gimple_lcf | PROP_gimple_leh
+		       | PROP_cfg);
 }
 
-static unsigned int last_verified;
+/* If we are in IPA mode (i.e., current_function_decl is NULL), call
+   function CALLBACK for every function in the call graph.  Otherwise,
+   call CALLBACK on the current function.  */ 
 
 static void
-execute_todo (struct tree_opt_pass *pass, unsigned int flags, bool use_required)
+do_per_function (void (*callback) (void *data), void *data)
 {
-  int properties 
-    = use_required ? pass->properties_required : pass->properties_provided;
+  if (current_function_decl)
+    callback (data);
+  else
+    {
+      struct cgraph_node *node;
+      for (node = cgraph_nodes; node; node = node->next)
+	if (node->analyzed)
+	  {
+	    push_cfun (DECL_STRUCT_FUNCTION (node->decl));
+	    current_function_decl = node->decl;
+	    callback (data);
+	    free_dominance_info (CDI_DOMINATORS);
+	    free_dominance_info (CDI_POST_DOMINATORS);
+	    current_function_decl = NULL;
+	    pop_cfun ();
+	    ggc_collect ();
+	  }
+    }
+}
 
-#if defined ENABLE_CHECKING
-  if (need_ssa_update_p ())
-    gcc_assert (flags & TODO_update_ssa_any);
-#endif
+/* Because inlining might remove no-longer reachable nodes, we need to
+   keep the array visible to garbage collector to avoid reading collected
+   out nodes.  */
+static int nnodes;
+static GTY ((length ("nnodes"))) struct cgraph_node **order;
 
-  /* Always cleanup the CFG before doing anything else.  */
+/* If we are in IPA mode (i.e., current_function_decl is NULL), call
+   function CALLBACK for every function in the call graph.  Otherwise,
+   call CALLBACK on the current function.  */ 
+
+static void
+do_per_function_toporder (void (*callback) (void *data), void *data)
+{
+  int i;
+
+  if (current_function_decl)
+    callback (data);
+  else
+    {
+      gcc_assert (!order);
+      order = ggc_alloc (sizeof (*order) * cgraph_n_nodes);
+      nnodes = cgraph_postorder (order);
+      for (i = nnodes - 1; i >= 0; i--)
+	{
+	  struct cgraph_node *node = order[i];
+
+	  /* Allow possibly removed nodes to be garbage collected.  */
+	  order[i] = NULL;
+	  if (node->analyzed && (node->needed || node->reachable))
+	    {
+	      push_cfun (DECL_STRUCT_FUNCTION (node->decl));
+	      current_function_decl = node->decl;
+	      callback (data);
+	      free_dominance_info (CDI_DOMINATORS);
+	      free_dominance_info (CDI_POST_DOMINATORS);
+	      current_function_decl = NULL;
+	      pop_cfun ();
+	      ggc_collect ();
+	    }
+	}
+    }
+  ggc_free (order);
+  order = NULL;
+  nnodes = 0;
+}
+
+/* Perform all TODO actions that ought to be done on each function.  */
+
+static void
+execute_function_todo (void *data)
+{
+  unsigned int flags = (size_t)data;
+  if (cfun->curr_properties & PROP_ssa)
+    flags |= TODO_verify_ssa;
+  flags &= ~cfun->last_verified;
+  if (!flags)
+    return;
+  
+  /* Always cleanup the CFG before trying to update SSA.  */
   if (flags & TODO_cleanup_cfg)
     {
-      if (current_loops)
-	cleanup_tree_cfg_loop ();
-      else
-	cleanup_tree_cfg ();
+      bool cleanup = cleanup_tree_cfg ();
 
+      if (cleanup && (cfun->curr_properties & PROP_ssa))
+	flags |= TODO_remove_unused_locals;
+	
       /* When cleanup_tree_cfg merges consecutive blocks, it may
 	 perform some simplistic propagation when removing single
 	 valued PHI nodes.  This propagation may, in turn, cause the
@@ -718,29 +905,100 @@ execute_todo (struct tree_opt_pass *pass, unsigned int flags, bool use_required)
     {
       unsigned update_flags = flags & TODO_update_ssa_any;
       update_ssa (update_flags);
+      cfun->last_verified &= ~TODO_verify_ssa;
     }
+  
+  if (flags & TODO_rebuild_alias)
+    {
+      compute_may_aliases ();
+      cfun->curr_properties |= PROP_alias;
+    }
+  
+  if (flags & TODO_remove_unused_locals)
+    remove_unused_locals ();
 
   if ((flags & TODO_dump_func)
       && dump_file && current_function_decl)
     {
-      if (properties & PROP_trees)
+      if (cfun->curr_properties & PROP_trees)
         dump_function_to_file (current_function_decl,
                                dump_file, dump_flags);
-      else if (properties & PROP_cfg)
+      else
 	{
-	  print_rtl_with_bb (dump_file, get_insns ());
+	  if (dump_flags & TDF_SLIM)
+	    print_rtl_slim_with_bb (dump_file, get_insns (), dump_flags);
+	  else if ((cfun->curr_properties & PROP_cfg)
+		   && (dump_flags & TDF_BLOCKS))
+	    print_rtl_with_bb (dump_file, get_insns ());
+          else
+	    print_rtl (dump_file, get_insns ());
 
-	  if (graph_dump_format != no_graph
+	  if (cfun->curr_properties & PROP_cfg
+	      && graph_dump_format != no_graph
 	      && (dump_flags & TDF_GRAPH))
 	    print_rtl_graph_with_bb (dump_file_name, get_insns ());
 	}
-      else
-        print_rtl (dump_file, get_insns ());
 
       /* Flush the file.  If verification fails, we won't be able to
 	 close the file before aborting.  */
       fflush (dump_file);
     }
+
+  if (flags & TODO_rebuild_frequencies)
+    {
+      if (profile_status == PROFILE_GUESSED)
+	{
+	  loop_optimizer_init (0);
+	  add_noreturn_fake_exit_edges ();
+	  mark_irreducible_loops ();
+	  connect_infinite_loops_to_exit ();
+	  estimate_bb_frequencies ();
+	  remove_fake_exit_edges ();
+	  loop_optimizer_finalize ();
+	}
+      else if (profile_status == PROFILE_READ)
+	counts_to_freqs ();
+      else
+	gcc_unreachable ();
+    }
+
+#if defined ENABLE_CHECKING
+  if (flags & TODO_verify_ssa)
+    verify_ssa (true);
+  if (flags & TODO_verify_flow)
+    verify_flow_info ();
+  if (flags & TODO_verify_stmts)
+    verify_stmts ();
+  if (flags & TODO_verify_loops)
+    verify_loop_closed_ssa ();
+  if (flags & TODO_verify_rtl_sharing)
+    verify_rtl_sharing ();
+#endif
+
+  cfun->last_verified = flags & TODO_verify_all;
+}
+
+/* Perform all TODO actions.  */
+static void
+execute_todo (unsigned int flags)
+{
+#if defined ENABLE_CHECKING
+  if (need_ssa_update_p ())
+    gcc_assert (flags & TODO_update_ssa_any);
+#endif
+
+  /* Inform the pass whether it is the first time it is run.  */
+  first_pass_instance = (flags & TODO_mark_first_instance) != 0;
+
+  do_per_function (execute_function_todo, (void *)(size_t) flags);
+
+  /* Always remove functions just as before inlining: IPA passes might be
+     interested to see bodies of extern inline functions that are not inlined
+     to analyze side effects.  The full removal is done just at the end
+     of IPA pass queue.  */
+  if (flags & TODO_remove_functions)
+    cgraph_remove_unreachable_nodes (true, dump_file);
+
   if ((flags & TODO_dump_cgraph)
       && dump_file && !current_function_decl)
     {
@@ -755,41 +1013,86 @@ execute_todo (struct tree_opt_pass *pass, unsigned int flags, bool use_required)
       ggc_collect ();
     }
 
-#if defined ENABLE_CHECKING
-  if ((pass->properties_required & PROP_ssa)
-      && !(pass->properties_destroyed & PROP_ssa))
-    verify_ssa (true);
-  if (flags & TODO_verify_flow)
-    verify_flow_info ();
-  if (flags & TODO_verify_stmts)
-    verify_stmts ();
-  if (flags & TODO_verify_loops)
-    verify_loop_closed_ssa ();
+  /* Now that the dumping has been done, we can get rid of the optional 
+     df problems.  */
+  if (flags & TODO_df_finish)
+    df_finish_pass ((flags & TODO_df_verify) != 0);
+}
+
+/* Verify invariants that should hold between passes.  This is a place
+   to put simple sanity checks.  */
+
+static void
+verify_interpass_invariants (void)
+{
+#ifdef ENABLE_CHECKING
+  gcc_assert (!fold_deferring_overflow_warnings_p ());
 #endif
+}
+
+/* Clear the last verified flag.  */
+
+static void
+clear_last_verified (void *data ATTRIBUTE_UNUSED)
+{
+  cfun->last_verified = 0;
+}
+
+/* Helper function. Verify that the properties has been turn into the
+   properties expected by the pass.  */
+
+#ifdef ENABLE_CHECKING
+static void
+verify_curr_properties (void *data)
+{
+  unsigned int props = (size_t)data;
+  gcc_assert ((cfun->curr_properties & props) == props);
+}
+#endif
+
+/* After executing the pass, apply expected changes to the function
+   properties. */
+static void
+update_properties_after_pass (void *data)
+{
+  struct tree_opt_pass *pass = data;
+  cfun->curr_properties = (cfun->curr_properties | pass->properties_provided)
+		           & ~pass->properties_destroyed;
 }
 
 static bool
 execute_one_pass (struct tree_opt_pass *pass)
 {
-  unsigned int todo; 
+  bool initializing_dump;
+  unsigned int todo_after = 0;
 
+  current_pass = pass;
   /* See if we're supposed to run this pass.  */
   if (pass->gate && !pass->gate ())
     return false;
 
+  if (!quiet_flag && !cfun)
+    fprintf (stderr, " <%s>", pass->name ? pass->name : "");
+
+  if (pass->todo_flags_start & TODO_set_props)
+    cfun->curr_properties = pass->properties_required;
+
   /* Note that the folders should only create gimple expressions.
      This is a hack until the new folder is ready.  */
-  in_gimple_form = (pass->properties_provided & PROP_trees) != 0;
+  in_gimple_form = (cfun && (cfun->curr_properties & PROP_trees)) != 0;
 
   /* Run pre-pass verification.  */
-  todo = pass->todo_flags_start & ~last_verified;
-  if (todo)
-    execute_todo (pass, todo, true);
+  execute_todo (pass->todo_flags_start);
+
+#ifdef ENABLE_CHECKING
+  do_per_function (verify_curr_properties,
+		   (void *)(size_t)pass->properties_required);
+#endif
 
   /* If a dump file name is present, open it if enabled.  */
   if (pass->static_pass_number != -1)
     {
-      bool initializing_dump = !dump_initialized_p (pass->static_pass_number);
+      initializing_dump = !dump_initialized_p (pass->static_pass_number);
       dump_file_name = get_dump_file_name (pass->static_pass_number);
       dump_file = dump_begin (pass->static_pass_number, &dump_flags);
       if (dump_file && current_function_decl)
@@ -805,18 +1108,9 @@ execute_one_pass (struct tree_opt_pass *pass)
 	     ? " (unlikely executed)"
 	     : "");
 	}
-
-      if (initializing_dump
-	  && dump_file
-	  && graph_dump_format != no_graph
-	  && (pass->properties_provided & (PROP_cfg | PROP_rtl))
-	      == (PROP_cfg | PROP_rtl))
-	{
-	  get_dump_file_info (pass->static_pass_number)->flags |= TDF_GRAPH;
-	  dump_flags |= TDF_GRAPH;
-	  clean_graph_dump_file (dump_file_name);
-	}
     }
+  else
+    initializing_dump = false;
 
   /* If a timevar is present, start it.  */
   if (pass->tv_id)
@@ -824,29 +1118,51 @@ execute_one_pass (struct tree_opt_pass *pass)
 
   /* Do it!  */
   if (pass->execute)
-    pass->execute ();
+    {
+      todo_after = pass->execute ();
+      do_per_function (clear_last_verified, NULL);
+    }
 
   /* Stop timevar.  */
   if (pass->tv_id)
     timevar_pop (pass->tv_id);
 
+  do_per_function (update_properties_after_pass, pass);
+
+  if (initializing_dump
+      && dump_file
+      && graph_dump_format != no_graph
+      && (cfun->curr_properties & (PROP_cfg | PROP_rtl))
+	  == (PROP_cfg | PROP_rtl))
+    {
+      get_dump_file_info (pass->static_pass_number)->flags |= TDF_GRAPH;
+      dump_flags |= TDF_GRAPH;
+      clean_graph_dump_file (dump_file_name);
+    }
+
   /* Run post-pass cleanup and verification.  */
-  todo = pass->todo_flags_finish;
-  last_verified = todo & TODO_verify_all;
-  if (todo)
-    execute_todo (pass, todo, false);
+  execute_todo (todo_after | pass->todo_flags_finish);
+  verify_interpass_invariants ();
+
+  if (!current_function_decl)
+    cgraph_process_new_functions ();
 
   /* Flush and close dump file.  */
   if (dump_file_name)
     {
-      free ((char *) dump_file_name);
+      free (CONST_CAST (char *, dump_file_name));
       dump_file_name = NULL;
     }
+
   if (dump_file)
     {
       dump_end (pass->static_pass_number, dump_file);
       dump_file = NULL;
     }
+
+  current_pass = NULL;
+  /* Reset in_gimple_form to not break non-unit-at-a-time mode.  */
+  in_gimple_form = false;
 
   return true;
 }
@@ -870,23 +1186,15 @@ execute_ipa_pass_list (struct tree_opt_pass *pass)
 {
   do
     {
+      gcc_assert (!current_function_decl);
+      gcc_assert (!cfun);
       if (execute_one_pass (pass) && pass->sub)
-	{
-	  struct cgraph_node *node;
-	  for (node = cgraph_nodes; node; node = node->next)
-	    if (node->analyzed)
-	      {
-		push_cfun (DECL_STRUCT_FUNCTION (node->decl));
-		current_function_decl = node->decl;
-		execute_pass_list (pass->sub);
-		free_dominance_info (CDI_DOMINATORS);
-		free_dominance_info (CDI_POST_DOMINATORS);
-		current_function_decl = NULL;
-		pop_cfun ();
-		ggc_collect ();
-	      }
-	}
+	do_per_function_toporder ((void (*)(void *))execute_pass_list,
+				  pass->sub);
+      if (!current_function_decl)
+	cgraph_process_new_functions ();
       pass = pass->next;
     }
   while (pass);
 }
+#include "gt-passes.h"

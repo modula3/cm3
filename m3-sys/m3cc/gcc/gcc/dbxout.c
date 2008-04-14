@@ -1,12 +1,13 @@
 /* Output dbx-format symbol table information from GNU compiler.
    Copyright (C) 1987, 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+   Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +16,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 
 /* Output dbx-format symbol table data.
@@ -269,7 +269,7 @@ static int pending_bincls = 0;
 static const char *base_input_file;
 
 #ifdef DEBUG_SYMS_TEXT
-#define FORCE_TEXT current_function_section (current_function_decl);
+#define FORCE_TEXT switch_to_section (current_function_section ())
 #else
 #define FORCE_TEXT
 #endif
@@ -326,7 +326,6 @@ static void dbxout_type_name (tree);
 static void dbxout_class_name_qualifiers (tree);
 static int dbxout_symbol_location (tree, tree, const char *, rtx);
 static void dbxout_symbol_name (tree, const char *, int);
-static void dbxout_block (tree, int, tree);
 static void dbxout_global_decl (tree);
 static void dbxout_type_decl (tree, int);
 static void dbxout_handle_pch (unsigned);
@@ -353,7 +352,7 @@ const struct gcc_debug_hooks dbx_debug_hooks =
   dbxout_end_source_file,
   dbxout_begin_block,
   dbxout_end_block,
-  debug_true_tree,		         /* ignore_block */
+  debug_true_const_tree,	         /* ignore_block */
   dbxout_source_line,		         /* source_line */
   dbxout_begin_prologue,	         /* begin_prologue */
   debug_nothing_int_charstar,	         /* end_prologue */
@@ -389,7 +388,7 @@ const struct gcc_debug_hooks xcoff_debug_hooks =
   dbxout_end_source_file,
   xcoffout_begin_block,
   xcoffout_end_block,
-  debug_true_tree,		         /* ignore_block */
+  debug_true_const_tree,	         /* ignore_block */
   xcoffout_source_line,
   xcoffout_begin_prologue,	         /* begin_prologue */
   debug_nothing_int_charstar,	         /* end_prologue */
@@ -907,14 +906,13 @@ dbxout_function_end (tree decl)
 
   /* The Lscope label must be emitted even if we aren't doing anything
      else; dbxout_block needs it.  */
-  function_section (current_function_decl);
+  switch_to_section (function_section (current_function_decl));
   
   /* Convert Lscope into the appropriate format for local labels in case
      the system doesn't insert underscores in front of user generated
      labels.  */
   ASM_GENERATE_INTERNAL_LABEL (lscope_label_name, "Lscope", scope_labelno);
   targetm.asm_out.internal_label (asm_out_file, "Lscope", scope_labelno);
-  scope_labelno++;
 
   /* The N_FUN tag at the end of the function is a GNU extension,
      which may be undesirable, and is unnecessary if we do not have
@@ -927,9 +925,6 @@ dbxout_function_end (tree decl)
 
   /* By convention, GCC will mark the end of a function with an N_FUN
      symbol and an empty string.  */
-#ifdef DBX_OUTPUT_NFUN
-  DBX_OUTPUT_NFUN (asm_out_file, lscope_label_name, current_function_decl);
-#else
   if (flag_reorder_blocks_and_partition)
     {
       dbxout_begin_empty_stabs (N_FUN);
@@ -941,13 +936,12 @@ dbxout_function_end (tree decl)
     }
   else
     {
+      char begin_label[20];
+      /* Reference current function start using LFBB.  */
+      ASM_GENERATE_INTERNAL_LABEL (begin_label, "LFBB", scope_labelno);
       dbxout_begin_empty_stabs (N_FUN);
-      dbxout_stab_value_label_diff (lscope_label_name,
-				    XSTR (XEXP (DECL_RTL (current_function_decl), 
-						0), 0));
+      dbxout_stab_value_label_diff (lscope_label_name, begin_label);
     }
-				
-#endif
 
   if (!NO_DBX_BNSYM_ENSYM && !flag_debug_only_used_symbols)
     dbxout_stabd (N_ENSYM, 0);
@@ -988,6 +982,7 @@ dbxout_init (const char *input_file_name)
   char ltext_label_name[100];
   bool used_ltext_label_name = false;
   tree syms = lang_hooks.decls.getdecls ();
+  const char *mapped_name;
 
   typevec_len = 100;
   typevec = ggc_calloc (typevec_len, sizeof typevec[0]);
@@ -1013,6 +1008,7 @@ dbxout_init (const char *input_file_name)
 	    cwd = "/";
 	  else if (!IS_DIR_SEPARATOR (cwd[strlen (cwd) - 1]))
 	    cwd = concat (cwd, "/", NULL);
+	  cwd = remap_debug_filename (cwd);
 	}
 #ifdef DBX_OUTPUT_MAIN_SOURCE_DIRECTORY
       DBX_OUTPUT_MAIN_SOURCE_DIRECTORY (asm_out_file, cwd);
@@ -1023,17 +1019,18 @@ dbxout_init (const char *input_file_name)
 #endif /* no DBX_OUTPUT_MAIN_SOURCE_DIRECTORY */
     }
 
+  mapped_name = remap_debug_filename (input_file_name);
 #ifdef DBX_OUTPUT_MAIN_SOURCE_FILENAME
-  DBX_OUTPUT_MAIN_SOURCE_FILENAME (asm_out_file, input_file_name);
+  DBX_OUTPUT_MAIN_SOURCE_FILENAME (asm_out_file, mapped_name);
 #else
-  dbxout_begin_simple_stabs_desc (input_file_name, N_SO, get_lang_number ());
+  dbxout_begin_simple_stabs_desc (mapped_name, N_SO, get_lang_number ());
   dbxout_stab_value_label (ltext_label_name);
   used_ltext_label_name = true;
 #endif
 
   if (used_ltext_label_name)
     {
-      text_section ();
+      switch_to_section (text_section);
       targetm.asm_out.internal_label (asm_out_file, "Ltext", 0);
     }
 
@@ -1049,7 +1046,7 @@ dbxout_init (const char *input_file_name)
   next_type_number = 1;
 
 #ifdef DBX_USE_BINCL
-  current_file = xmalloc (sizeof *current_file);
+  current_file = XNEW (struct dbx_file);
   current_file->next = NULL;
   current_file->file_number = 0;
   current_file->next_type_number = 1;
@@ -1158,7 +1155,7 @@ dbxout_start_source_file (unsigned int line ATTRIBUTE_UNUSED,
 			  const char *filename ATTRIBUTE_UNUSED)
 {
 #ifdef DBX_USE_BINCL
-  struct dbx_file *n = xmalloc (sizeof *n);
+  struct dbx_file *n = XNEW (struct dbx_file);
 
   n->next = current_file;
   n->next_type_number = 1;
@@ -1168,7 +1165,7 @@ dbxout_start_source_file (unsigned int line ATTRIBUTE_UNUSED,
   n->prev = NULL;
   current_file->prev = n;
   n->bincl_status = BINCL_PENDING;
-  n->pending_bincl_name = filename;
+  n->pending_bincl_name = remap_debug_filename (filename);
   pending_bincls = 1;
   current_file = n;
 #endif
@@ -1217,6 +1214,9 @@ dbxout_handle_pch (unsigned at_end)
 }
 
 #if defined (DBX_DEBUGGING_INFO)
+
+static void dbxout_block (tree, int, tree);
+
 /* Output debugging info to FILE to switch to sourcefile FILENAME.  */
 
 static void
@@ -1232,15 +1232,16 @@ dbxout_source_file (const char *filename)
     {
       /* Don't change section amid function.  */
       if (current_function_decl == NULL_TREE)
-	text_section ();
+	switch_to_section (text_section);
 
-      dbxout_begin_simple_stabs (filename, N_SOL);
+      dbxout_begin_simple_stabs (remap_debug_filename (filename), N_SOL);
       dbxout_stab_value_internal_label ("Ltext", &source_label_number);
       lastfile = filename;
     }
 }
 
-/* Output N_BNSYM and line number symbol entry.  */
+/* Output N_BNSYM, line number symbol entry, and local symbol at 
+   function scope  */
 
 static void
 dbxout_begin_prologue (unsigned int lineno, const char *filename)
@@ -1251,7 +1252,14 @@ dbxout_begin_prologue (unsigned int lineno, const char *filename)
       && !flag_debug_only_used_symbols)
     dbxout_stabd (N_BNSYM, 0);
 
+  /* pre-increment the scope counter */
+  scope_labelno++;
+
   dbxout_source_line (lineno, filename);
+  /* Output function begin block at function scope, referenced 
+     by dbxout_block, dbxout_source_line and dbxout_function_end.  */
+  emit_pending_bincls_if_required ();
+  targetm.asm_out.internal_label (asm_out_file, "LFBB", scope_labelno);
 }
 
 /* Output a line number symbol entry for source file FILENAME and line
@@ -1267,11 +1275,12 @@ dbxout_source_line (unsigned int lineno, const char *filename)
 #else
   if (DBX_LINES_FUNCTION_RELATIVE)
     {
-      rtx begin_label = XEXP (DECL_RTL (current_function_decl), 0);
+      char begin_label[20];
       dbxout_begin_stabn_sline (lineno);
+      /* Reference current function start using LFBB.  */
+      ASM_GENERATE_INTERNAL_LABEL (begin_label, "LFBB", scope_labelno); 
       dbxout_stab_value_internal_label_diff ("LM", &dbxout_source_line_counter,
-					     XSTR (begin_label, 0));
-
+					     begin_label);
     }
   else
     dbxout_stabd (N_SLINE, lineno);
@@ -1347,7 +1356,7 @@ dbxout_finish (const char *filename ATTRIBUTE_UNUSED)
   DBX_OUTPUT_MAIN_SOURCE_FILE_END (asm_out_file, filename);
 #elif defined DBX_OUTPUT_NULL_N_SO_AT_MAIN_SOURCE_FILE_END
  {
-   text_section ();
+   switch_to_section (text_section);
    dbxout_begin_empty_stabs (N_SO);
    dbxout_stab_value_internal_label ("Letext", 0);
  }
@@ -1902,6 +1911,7 @@ dbxout_type (tree type, int full)
       break;
 
     case REAL_TYPE:
+    case FIXED_POINT_TYPE:
       /* This used to say `r1' and we used to take care
 	 to make sure that `int' was type number 1.  */
       stabstr_C ('r');
@@ -1909,23 +1919,6 @@ dbxout_type (tree type, int full)
       stabstr_C (';');
       stabstr_D (int_size_in_bytes (type));
       stabstr_S (";0;");
-      break;
-
-    case CHAR_TYPE:
-      if (use_gnu_debug_info_extensions)
-	{
-	  stabstr_S ("@s");
-	  stabstr_D (BITS_PER_UNIT * int_size_in_bytes (type));
-	  stabstr_S (";-20;");
-	}
-      else
-	{
-	  /* Output the type `char' as a subrange of itself.
-	     That is what pcc seems to do.  */
-	  stabstr_C ('r');
-	  dbxout_type_index (char_type_node);
-	  stabstr_S (TYPE_UNSIGNED (type) ? ";0;255;" : ";0;127;");
-	}
       break;
 
     case BOOLEAN_TYPE:
@@ -2036,7 +2029,11 @@ dbxout_type (tree type, int full)
 	       another type's definition; instead, output an xref
 	       and let the definition come when the name is defined.  */
 	    stabstr_S ((TREE_CODE (type) == RECORD_TYPE) ? "xs" : "xu");
-	    if (TYPE_NAME (type) != 0)
+	    if (TYPE_NAME (type) != 0
+		/* The C frontend creates for anonymous variable length
+		   records/unions TYPE_NAME with DECL_NAME NULL.  */
+		&& (TREE_CODE (TYPE_NAME (type)) != TYPE_DECL
+		    || DECL_NAME (TYPE_NAME (type))))
 	      dbxout_type_name (type);
 	    else
 	      {
@@ -2381,6 +2378,83 @@ dbxout_expand_expr (tree expr)
     }
 }
 
+/* Helper function for output_used_types.  Queue one entry from the
+   used types hash to be output.  */
+
+static int
+output_used_types_helper (void **slot, void *data)
+{
+  tree type = *slot;
+  VEC(tree, heap) **types_p = data;
+
+  if ((TREE_CODE (type) == RECORD_TYPE
+       || TREE_CODE (type) == UNION_TYPE
+       || TREE_CODE (type) == QUAL_UNION_TYPE
+       || TREE_CODE (type) == ENUMERAL_TYPE)
+      && TYPE_STUB_DECL (type)
+      && DECL_P (TYPE_STUB_DECL (type))
+      && ! DECL_IGNORED_P (TYPE_STUB_DECL (type)))
+    VEC_quick_push (tree, *types_p, TYPE_STUB_DECL (type));
+  else if (TYPE_NAME (type)
+	   && TREE_CODE (TYPE_NAME (type)) == TYPE_DECL)
+    VEC_quick_push (tree, *types_p, TYPE_NAME (type));
+
+  return 1;
+}
+
+/* This is a qsort callback which sorts types and declarations into a
+   predictable order (types, then declarations, sorted by UID
+   within).  */
+
+static int
+output_types_sort (const void *pa, const void *pb)
+{
+  const tree lhs = *((const tree *)pa);
+  const tree rhs = *((const tree *)pb);
+
+  if (TYPE_P (lhs))
+    {
+      if (TYPE_P (rhs))
+	return TYPE_UID (lhs) - TYPE_UID (rhs);
+      else
+	return 1;
+    }
+  else
+    {
+      if (TYPE_P (rhs))
+	return -1;
+      else
+	return DECL_UID (lhs) - DECL_UID (rhs);
+    }
+}
+
+
+/* Force all types used by this function to be output in debug
+   information.  */
+
+static void
+output_used_types (void)
+{
+  if (cfun && cfun->used_types_hash)
+    {
+      VEC(tree, heap) *types;
+      int i;
+      tree type;
+
+      types = VEC_alloc (tree, heap, htab_elements (cfun->used_types_hash));
+      htab_traverse (cfun->used_types_hash, output_used_types_helper, &types);
+
+      /* Sort by UID to prevent dependence on hash table ordering.  */
+      qsort (VEC_address (tree, types), VEC_length (tree, types),
+	     sizeof (tree), output_types_sort);
+
+      for (i = 0; VEC_iterate (tree, types, i, type); i++)
+	debug_queue_symbol (type);
+
+      VEC_free (tree, heap, types);
+    }
+}
+
 /* Output a .stabs for the symbol defined by DECL,
    which must be a ..._DECL node in the normal namespace.
    It may be a CONST_DECL, a FUNCTION_DECL, a PARM_DECL or a VAR_DECL.
@@ -2493,6 +2567,9 @@ dbxout_symbol (tree decl, int local ATTRIBUTE_UNUSED)
       if (!MEM_P (decl_rtl)
 	  || GET_CODE (XEXP (decl_rtl, 0)) != SYMBOL_REF)
 	break;
+
+      if (flag_debug_only_used_symbols)
+	output_used_types ();
 
       dbxout_begin_complex_stabs ();
       stabstr_I (DECL_ASSEMBLER_NAME (decl));
@@ -2838,7 +2915,7 @@ dbxout_symbol_location (tree decl, tree type, const char *suffix, rtx home)
 	    {
 	      /* Ultrix `as' seems to need this.  */
 #ifdef DBX_STATIC_STAB_DATA_SECTION
-	      data_section ();
+	      switch_to_section (data_section);
 #endif
 	      code = N_STSYM;
 	    }
@@ -3272,6 +3349,8 @@ dbxout_args (tree args)
     }
 }
 
+#if defined (DBX_DEBUGGING_INFO)
+
 /* Subroutine of dbxout_block.  Emit an N_LBRAC stab referencing LABEL.
    BEGIN_LABEL is the name of the beginning of the function, which may
    be required.  */
@@ -3279,15 +3358,11 @@ static void
 dbx_output_lbrac (const char *label,
 		  const char *begin_label ATTRIBUTE_UNUSED)
 {
-#ifdef DBX_OUTPUT_LBRAC
-  DBX_OUTPUT_LBRAC (asm_out_file, label);
-#else
   dbxout_begin_stabn (N_LBRAC);
   if (DBX_BLOCKS_FUNCTION_RELATIVE)
     dbxout_stab_value_label_diff (label, begin_label);
   else
     dbxout_stab_value_label (label);
-#endif
 }
 
 /* Subroutine of dbxout_block.  Emit an N_RBRAC stab referencing LABEL.
@@ -3297,15 +3372,11 @@ static void
 dbx_output_rbrac (const char *label,
 		  const char *begin_label ATTRIBUTE_UNUSED)
 {
-#ifdef DBX_OUTPUT_RBRAC
-  DBX_OUTPUT_RBRAC (asm_out_file, label);
-#else
   dbxout_begin_stabn (N_RBRAC);
   if (DBX_BLOCKS_FUNCTION_RELATIVE)
     dbxout_stab_value_label_diff (label, begin_label);
   else
     dbxout_stab_value_label (label);
-#endif
 }
 
 /* Output everything about a symbol block (a BLOCK node
@@ -3328,8 +3399,9 @@ dbx_output_rbrac (const char *label,
 static void
 dbxout_block (tree block, int depth, tree args)
 {
-  const char *begin_label
-    = XSTR (XEXP (DECL_RTL (current_function_decl), 0), 0);
+  char begin_label[20];
+  /* Reference current function start using LFBB.  */
+  ASM_GENERATE_INTERNAL_LABEL (begin_label, "LFBB", scope_labelno);
 
   while (block)
     {
@@ -3358,7 +3430,7 @@ dbxout_block (tree block, int depth, tree args)
 
 	      if (depth == 0)
 		/* The outermost block doesn't get LBB labels; use
-		   the function symbol.  */
+		   the LFBB local symbol emitted by dbxout_begin_prologue.  */
 		scope_start = begin_label;
 	      else
 		{
@@ -3409,7 +3481,6 @@ dbxout_block (tree block, int depth, tree args)
    Usually this follows the function's code,
    but on some systems, it comes before.  */
 
-#if defined (DBX_DEBUGGING_INFO)
 static void
 dbxout_begin_function (tree decl)
 {

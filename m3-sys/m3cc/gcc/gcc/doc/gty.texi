@@ -1,4 +1,4 @@
-@c Copyright (C) 2002, 2003, 2004
+@c Copyright (C) 2002, 2003, 2004, 2007, 2008
 @c Free Software Foundation, Inc.
 @c This is part of the GCC manual.
 @c For copying conditions, see the file gcc.texi.
@@ -96,14 +96,14 @@ The structure that immediately contains the current structure.
 @item %0
 The outermost structure that contains the current structure.
 @item %a
-A partial expression of the form @code{[i1][i2]...} that indexes
+A partial expression of the form @code{[i1][i2]@dots{}} that indexes
 the array item currently being marked.
 @end table
 
 For instance, suppose that you have a structure of the form
 @smallexample
 struct A @{
-  ...
+  @dots{}
 @};
 struct B @{
   struct A foo[12];
@@ -282,6 +282,16 @@ The routine @code{ggc_marked_p} can be used to determine if an element
 has been marked already; in fact, the usual case is to use
 @code{if_marked ("ggc_marked_p")}.
 
+@findex mark_hook
+@item mark_hook ("@var{hook-routine-name}")
+
+If provided for a structure or union type, the given
+@var{hook-routine-name} (between double-quotes) is the name of a
+routine called when the garbage collector has just marked the data as
+reachable. This routine should not change the data, or call any ggc
+routine. Its only argument is a pointer to the just marked (const)
+structure or union.
+
 @findex maybe_undef
 @item maybe_undef
 
@@ -429,16 +439,8 @@ generated header file should be included after everything else in the
 source file.  Don't forget to mention this file as a dependency in the
 @file{Makefile}!
 
-@item
-If a new @file{gt-@var{path}.h} file is needed, you need to arrange to
-add a @file{Makefile} rule that will ensure this file can be built.
-This is done by making it a dependency of @code{s-gtype}, like this:
-@verbatim
-gt-path.h : s-gtype ; @true
-@end verbatim
 @end enumerate
 
 For language frontends, there is another file that needs to be included
 somewhere.  It will be called @file{gtype-@var{lang}.h}, where
 @var{lang} is the name of the subdirectory the language is contained in.
-It will need @file{Makefile} rules just like the other generated files.

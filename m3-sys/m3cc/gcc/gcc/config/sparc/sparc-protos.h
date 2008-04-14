@@ -1,5 +1,5 @@
 /* Prototypes of target machine for SPARC.
-   Copyright (C) 1999, 2000, 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
    Contributed by Michael Tiemann (tiemann@cygnus.com).
    64-bit SPARC-V9 support by Michael Tiemann, Jim Wilson, and Doug Evans,
    at Cygnus Support.
@@ -8,7 +8,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -17,27 +17,25 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #ifndef __SPARC_PROTOS_H__
 #define __SPARC_PROTOS_H__
 
 #ifdef TREE_CODE
-extern struct rtx_def *function_value (tree, enum machine_mode, int);
+extern struct rtx_def *function_value (const_tree, enum machine_mode, int);
 extern void function_arg_advance (CUMULATIVE_ARGS *,
 				  enum machine_mode, tree, int);
 extern struct rtx_def *function_arg (const CUMULATIVE_ARGS *,
 				     enum machine_mode, tree, int, int);
 #ifdef RTX_CODE
 extern void init_cumulative_args (CUMULATIVE_ARGS *, tree, rtx, tree);
-extern void sparc_va_start (tree, rtx);
 #endif
 extern unsigned long sparc_type_code (tree);
 #ifdef ARGS_SIZE_RTX
 /* expr.h defines ARGS_SIZE_RTX and `enum direction' */
-extern enum direction function_arg_padding (enum machine_mode, tree);
+extern enum direction function_arg_padding (enum machine_mode, const_tree);
 #endif /* ARGS_SIZE_RTX */
 #endif /* TREE_CODE */
 
@@ -55,7 +53,7 @@ extern void sparc_output_scratch_registers (FILE *);
 #ifdef RTX_CODE
 extern enum machine_mode select_cc_mode (enum rtx_code, rtx, rtx);
 /* Define the function that build the compare insn for scc and bcc.  */
-extern rtx gen_compare_reg (enum rtx_code code, rtx, rtx);
+extern rtx gen_compare_reg (enum rtx_code code);
 extern void sparc_emit_float_lib_cmp (rtx, rtx, enum rtx_code);
 extern void sparc_emit_floatunsdi (rtx [2], enum machine_mode);
 extern void sparc_emit_fixunsdi (rtx [2], enum machine_mode);
@@ -73,6 +71,7 @@ extern int legitimate_address_p (enum machine_mode, rtx, int);
 extern rtx legitimize_pic_address (rtx, enum machine_mode, rtx);
 extern rtx legitimize_tls_address (rtx);
 extern rtx legitimize_address (rtx, rtx, enum machine_mode);
+extern void sparc_emit_call_insn (rtx, rtx);
 extern void sparc_defer_case_vector (rtx, rtx, int);
 extern bool sparc_expand_move (enum machine_mode, rtx *);
 extern void sparc_emit_set_const32 (rtx, rtx);
@@ -114,6 +113,7 @@ extern int v9_regcmp_p (enum rtx_code);
 extern int sparc_check_64 (rtx, rtx);
 extern rtx gen_df_reg (rtx, int);
 extern int sparc_extra_constraint_check (rtx, int, int);
+extern void sparc_expand_compare_and_swap_12 (rtx, rtx, rtx, rtx);
 #endif /* RTX_CODE */
 
 #endif /* __SPARC_PROTOS_H__ */

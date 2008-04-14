@@ -81,6 +81,9 @@ gcc/java/keyword.h: gcc/java/keyword.gperf
 # testsuite
 # Without this, _Pragma3.c can have a false negative.
 gcc/testsuite/gcc.dg/cpp/_Pragma3.c: gcc/testsuite/gcc.dg/cpp/mi1c.h
+# Similarly, without this, you will see:
+# direct2s.c:35: warning: current file is older than direct2.c
+gcc/testsuite/gcc.dg/cpp/direct2s.c: gcc/testsuite/gcc.dg/cpp/direct2.c
 # And libraries, at last
 libbanshee/configure: libbanshee/configure.ac
 libmudflap/configure: libmudflap/configure.ac
@@ -112,9 +115,14 @@ libjava/libltdl/config-h.in: libjava/libltdl/configure.ac libjava/libltdl/acloca
 libcpp/aclocal.m4: libcpp/configure.ac
 libcpp/Makefile.in: libcpp/configure.ac libcpp/aclocal.m4
 libcpp/configure: libcpp/configure.ac libcpp/aclocal.m4
+libgomp/aclocal.m4: libgomp/configure.ac libgomp/acinclude.m4
+libgomp/Makefile.in: libgomp/Makefile.am libgomp/aclocal.m4
+libgomp/testsuite/Makefile.in: libgomp/Makefile.am libgomp/aclocal.m4
+libgomp/configure: libgomp/configure.ac libgomp/aclocal.m4
+libgomp/config.h.in: libgomp/configure.ac libgomp/aclocal.m4
 # Top level
 Makefile.in: Makefile.tpl Makefile.def
-configure: configure.in config/acx.m4
+configure: configure.ac config/acx.m4
 EOF
 }
 
@@ -250,8 +258,20 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+rm -f LAST_UPDATED gcc/REVISION
+
+revision=`svn info | awk '/Revision:/ { print $2 }'`
+branch=`svn info | sed -ne "/URL:/ {
+s,.*/trunk,trunk,
+s,.*/branches/,,
+s,.*/tags/,,
+p
+}"`
 {
   date
-  echo "`TZ=UTC date` (revision `svnversion .`)"
+  echo "`TZ=UTC date` (revision $revision)"
 } > LAST_UPDATED
+
+echo "[$branch revision $revision]" > gcc/REVISION
+
 touch_files_reexec

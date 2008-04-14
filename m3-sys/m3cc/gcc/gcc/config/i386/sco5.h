@@ -1,13 +1,13 @@
 /* Definitions for Intel 386 running SCO Unix System V 3.2 Version 5.
-   Copyright (C) 1992, 1995, 1996, 1997, 1998, 1999, 2000, 2002, 2003, 2004
-   Free Software Foundation, Inc.
+   Copyright (C) 1992, 1995, 1996, 1997, 1998, 1999, 2000, 2002, 2003, 2004,
+   2007 Free Software Foundation, Inc.
    Contributed by Kean Johnston (jkj@sco.com)
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #undef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (i386, SCO OpenServer 5 Syntax)");
@@ -221,11 +220,6 @@ Boston, MA 02110-1301, USA.  */
 	builtin_assert ("system=svr3");				\
 	if (flag_iso)						\
 	  cpp_define (pfile, "_STRICT_ANSI");			\
-	if (flag_pic)						\
-	  {							\
-	    builtin_define ("__PIC__");				\
-	    builtin_define ("__pic__");				\
-	  }							\
     }								\
   while (0)
 
@@ -306,11 +300,12 @@ Boston, MA 02110-1301, USA.  */
 #define CRT_GET_RFIB_DATA(BASE)						\
   __asm__ ("call\t.LPR%=\n"						\
 	   ".LPR%=:\n\t"						\
-	   "popl\t%0\n\t"						\
+	   "pop{l}\t%0\n\t"						\
 	   /* Due to a GAS bug, this cannot use EAX.  That encodes	\
 	      smaller than the traditional EBX, which results in the	\
 	      offset being off by one.  */				\
-	   "addl\t$_GLOBAL_OFFSET_TABLE_+[.-.LPR%=],%0"			\
+	   "add{l}\t{$_GLOBAL_OFFSET_TABLE_+[.-.LPR%=],%0"		\
+		   "|%0,_GLOBAL_OFFSET_TABLE_+(.-.LPR%=)}"		\
 	   : "=d"(BASE))
 #endif
 

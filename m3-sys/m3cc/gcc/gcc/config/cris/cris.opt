@@ -1,12 +1,12 @@
 ; Options for the CRIS port of the compiler.
 
-; Copyright (C) 2005 Free Software Foundation, Inc.
+; Copyright (C) 2005, 2007 Free Software Foundation, Inc.
 ;
 ; This file is part of GCC.
 ;
 ; GCC is free software; you can redistribute it and/or modify it under
 ; the terms of the GNU General Public License as published by the Free
-; Software Foundation; either version 2, or (at your option) any later
+; Software Foundation; either version 3, or (at your option) any later
 ; version.
 ;
 ; GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@
 ; for more details.
 ;
 ; You should have received a copy of the GNU General Public License
-; along with GCC; see the file COPYING.  If not, write to the Free
-; Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-; 02110-1301, USA.
+; along with GCC; see the file COPYING3.  If not see
+; <http://www.gnu.org/licenses/>.
 
 ; TARGET_MUL_BUG: Whether or not to work around multiplication
 ; instruction hardware bug when generating code for models where
@@ -46,7 +45,7 @@ Target Report Mask(MUL_BUG)
 Work around bug in multiplication instruction
 
 ; TARGET_ETRAX4_ADD: Instruction-set additions from Etrax 4 and up.
-; (Just "lz", which we don't really generate from GCC -- yet).
+; (Just "lz".)
 metrax4
 Target Report Mask(ETRAX4_ADD)
 Compile for ETRAX 4 (CRIS v3)
@@ -162,7 +161,7 @@ mcpu=
 Target Report RejectNegative Joined Undocumented Var(cris_cpu_str)
 
 march=
-Target Report RejectNegative Joined Var(cris_cpu_str) VarExists
+Target Report RejectNegative Joined Var(cris_cpu_str)
 -march=ARCH	Generate code for the specified chip or CPU version
 
 mtune=
@@ -174,7 +173,7 @@ Target Report RejectNegative Joined Var(cris_max_stackframe_str)
 -mmax-stackframe=SIZE	Warn when a stackframe is larger than the specified size
 
 max-stackframe=
-Target Report RejectNegative Joined Undocumented Var(cris_max_stackframe_str) VarExists
+Target Report RejectNegative Joined Undocumented Var(cris_max_stackframe_str)
 
 ; TARGET_SVINTO: Currently this just affects alignment.  FIXME:
 ; Redundant with TARGET_ALIGN_BY_32, or put machine stuff here?

@@ -1,13 +1,51 @@
-2006-05-24  Release Manager
+2008-03-05  Release Manager
 
-	* GCC 4.1.1 released.
+	* GCC 4.3.0 released.
 
-2006-02-28  Release Manager
+2008-01-24  David Edelsohn  <edelsohn@gnu.org>
 
-	* GCC 4.1.0 released.
+	* configure: Regenerate.
+
+2007-07-05  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* aclocal.m4: Regenerated.
+
+2007-06-02  Paolo Bonzini  <bonzini@gnu.org>
+
+	* configure: Regenerate.
+
+2007-05-23  Steve Ellcey  <sje@cup.hp.com>
+
+	* Makefile.in: Regenerate.
+	* configure: Regenerate.
+	* aclocal.m4: Regenerate.
+
+2007-03-01  Brooks Moses  <brooks.moses@codesourcery.com>
+
+	* Makefile.am: Add dummy install-pdf target.
+	* Makefile.in: Regenerate
+
+2006-10-14  Geoffrey Keating  <geoffk@apple.com>
+
+	* aclocal.m4: Regenerate.
+	* configure: Regenerate.
+
+2006-09-29  Joseph S. Myers  <joseph@codesourcery.com>
+
+	PR other/25035
+	* configure.ac (AC_EXEEXT): Remove.
+	(GCC_NO_EXECUTABLES): Call.
+	(ssp_use_symver): Default to no if unable to link.
+	(AC_CHECK_FUNCS): Hardwire results if unable to link.
+	* aclocal.m4, configure, Makefile.in: Regenerate.
+
+2006-05-23  Carlos O'Donell  <carlos@codesourcery.com>
+
+	* Makefile.am: Add install-html target. Add install-html to .PHONY
+	* Makefile.in: Regenerate.
 
 2006-02-27  Mark Mitchell  <mark@codesourcery.com>
-
+	
 	PR 26473
 	* configure.ac (ACX_NONCANONICAL_TARGET): Use it.
 	* Makefile.am (target_noncanonical): Define.
@@ -18,7 +56,7 @@
 	* Makefile.in: Likewise.
 	* aclocal.m4: Regenerated.
 
-2006-01-23  Richard Guenther  <rguenther@suse.de>
+2006-01-20  Richard Guenther  <rguenther@suse.de>
 
 	* configure.ac: Use -fPIC for symbol versioning test.
 	* configure: Regenerate.

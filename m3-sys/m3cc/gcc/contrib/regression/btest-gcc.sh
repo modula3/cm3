@@ -21,15 +21,20 @@
 # btest <options> <target> <source> <prefix> <state> <build>
 
 add_passes_despite_regression=0
+dashj=''
 
 # <options> can be
 # --add-passes-despite-regression:
 #  Add new "PASSes" despite there being some regressions.
+# -j<n>:
+#  Pass '-j<n>' to make.
 
 case "$1" in
  --add-passes-despite-regression)
   add_passes_despite_regression=1; shift;;
- --*) echo "Invalid option: $1"; exit 2;;
+ -j*)
+  dashj=$1; shift;;
+ -*) echo "Invalid option: $1"; exit 2;;
 esac
 
 # TARGET is the target triplet.  It should be the same one as used in
@@ -111,16 +116,17 @@ H_REAL_TARGET=`$SOURCE/config.sub $H_TARGET || exit 1`
 # look at.
 TESTLOGS="gcc/testsuite/gcc/gcc.sum
 gcc/testsuite/g++/g++.sum
+gcc/testsuite/gfortran/gfortran.sum
 gcc/testsuite/objc/objc.sum"
 
 # Build.
 echo build > $RESULT
 if [ $H_HOST = $H_TARGET ] ; then
   $SOURCE/configure --prefix=$PREFIX --target=$H_TARGET || exit 1
-  if ! make bootstrap ; then
-    [ -s gcc/.bad_compare ] || exit 1
-    cat gcc/.bad_compare >> $REGRESS || exit 1
-    make all || exit 1
+  if ! make $dashj bootstrap ; then
+    [ -s .bad_compare ] || exit 1
+    cat .bad_compare >> $REGRESS || exit 1
+    make $dashj all || exit 1
   fi
 else
   withopt="--with-gnu-ld --with-gnu-as"
@@ -129,29 +135,27 @@ else
     *) withopt="$withopt --with-newlib";;
   esac
   $SOURCE/configure --prefix=$PREFIX --target=$H_TARGET $withopt || exit 1
-  make || exit 1
+  make $dashj || exit 1
 fi
 echo error > $RESULT || exit 1
 
 # Test GCC against its internal testsuite.
-make -k check-gcc
+make $dashj -k check
 
-# Test libstd++-v3
-make check-target-libstdc++-v3
 if [ -f $BUILD/$H_TARGET/libstdc++-v3/testsuite/libstdc++.sum ] ; then
   TESTLOGS="$TESTLOGS $H_TARGET/libstdc++-v3/testsuite/libstdc++.sum"
 fi
 
-# Test libffi
-make check-target-libffi
 if [ -f $BUILD/$H_TARGET/libffi/testsuite/libffi.sum ] ; then
   TESTLOGS="$TESTLOGS $H_TARGET/libffi/testsuite/libffi.sum"
 fi
 
-# Test libjava
-make check-target-libjava
 if [ -f $BUILD/$H_TARGET/libjava/testsuite/libjava.sum ] ; then
   TESTLOGS="$TESTLOGS $H_TARGET/libjava/testsuite/libjava.sum"
+fi
+
+if [ -f $BUILD/$H_TARGET/libgomp/testsuite/libgomp.sum ] ; then
+  TESTLOGS="$TESTLOGS $H_TARGET/libgomp/testsuite/libgomp.sum"
 fi
 
 # Test the just-built GCC with the GDB testsuite.

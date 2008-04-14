@@ -1,11 +1,11 @@
 ;; MIPS Paired-Single Floating and MIPS-3D Instructions.
-;; Copyright (C) 2004 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2007 Free Software Foundation, Inc.
 ;;
 ;; This file is part of GCC.
 ;;
 ;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 ;;
 ;; GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 (define_insn "*movcc_v2sf_<mode>"
   [(set (match_operand:V2SF 0 "register_operand" "=f,f")
@@ -26,7 +25,7 @@
 			  (const_int 0)])
 	 (match_operand:V2SF 2 "register_operand" "f,0")
 	 (match_operand:V2SF 3 "register_operand" "0,f")))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "@
     mov%T4.ps\t%0,%2,%1
     mov%t4.ps\t%0,%3,%1"
@@ -39,7 +38,7 @@
 		      (match_operand:V2SF 2 "register_operand" "0,f")
 		      (match_operand:CCV2 3 "register_operand" "z,z")]
 		     UNSPEC_MOVE_TF_PS))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "@
     movt.ps\t%0,%1,%3
     movf.ps\t%0,%2,%3"
@@ -52,7 +51,7 @@
 	(if_then_else:V2SF (match_dup 5)
 			   (match_operand:V2SF 2 "register_operand")
 			   (match_operand:V2SF 3 "register_operand")))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
 {
   /* We can only support MOVN.PS and MOVZ.PS.
      NOTE: MOVT.PS and MOVF.PS have different semantics from MOVN.PS and 
@@ -62,7 +61,7 @@
   if (GET_MODE_CLASS (GET_MODE (cmp_operands[0])) != MODE_INT)
     FAIL;
 
-  gen_conditional_move (operands);
+  mips_expand_conditional_move (operands);
   DONE;
 })
 
@@ -73,7 +72,7 @@
 	 (match_operand:V2SF 1 "register_operand" "f")
 	 (match_operand:V2SF 2 "register_operand" "f")
 	 (const_int 2)))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "pul.ps\t%0,%1,%2"
   [(set_attr "type" "fmove")
    (set_attr "mode" "SF")])
@@ -87,7 +86,7 @@
 			  (parallel [(const_int 1)
 				     (const_int 0)]))
 	 (const_int 2)))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "puu.ps\t%0,%1,%2"
   [(set_attr "type" "fmove")
    (set_attr "mode" "SF")])
@@ -101,7 +100,7 @@
 				     (const_int 0)]))
 	 (match_operand:V2SF 2 "register_operand" "f")
 	 (const_int 2)))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "pll.ps\t%0,%1,%2"
   [(set_attr "type" "fmove")
    (set_attr "mode" "SF")])
@@ -117,7 +116,7 @@
 			  (parallel [(const_int 1)
 				     (const_int 0)]))
 	 (const_int 2)))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "plu.ps\t%0,%1,%2"
   [(set_attr "type" "fmove")
    (set_attr "mode" "SF")])
@@ -126,7 +125,7 @@
 (define_expand "vec_initv2sf"
   [(match_operand:V2SF 0 "register_operand")
    (match_operand:V2SF 1 "")]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
 {
   rtx op0 = force_reg (SFmode, XVECEXP (operands[1], 0, 0));
   rtx op1 = force_reg (SFmode, XVECEXP (operands[1], 0, 1));
@@ -139,7 +138,7 @@
 	(vec_concat:V2SF
 	 (match_operand:SF 1 "register_operand" "f")
 	 (match_operand:SF 2 "register_operand" "f")))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
 {
   if (BYTES_BIG_ENDIAN)
     return "cvt.ps.s\t%0,%1,%2";
@@ -158,7 +157,7 @@
 	(vec_select:SF (match_operand:V2SF 1 "register_operand" "f")
 		       (parallel
 			[(match_operand 2 "const_0_or_1_operand" "")])))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
 {
   if (INTVAL (operands[2]) == !BYTES_BIG_ENDIAN)
     return "cvt.s.pu\t%0,%1";
@@ -175,7 +174,7 @@
   [(match_operand:V2SF 0 "register_operand")
    (match_operand:SF 1 "register_operand")
    (match_operand 2 "const_0_or_1_operand")]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
 {
   rtx temp;
 
@@ -195,7 +194,7 @@
   [(match_operand:V2SF 0 "register_operand")
    (match_operand:SF 1 "register_operand")
    (match_operand:SF 2 "register_operand")]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
 {
   if (BYTES_BIG_ENDIAN)
     emit_insn (gen_vec_initv2sf_internal (operands[0], operands[1],
@@ -211,7 +210,7 @@
   [(set (match_operand:SF 0 "register_operand")
 	(vec_select:SF (match_operand:V2SF 1 "register_operand")
 		       (parallel [(match_dup 2)])))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   { operands[2] = GEN_INT (BYTES_BIG_ENDIAN); })
 
 ; cvt.s.pu - Floating Point Convert Pair Upper to Single Floating Point
@@ -219,7 +218,7 @@
   [(set (match_operand:SF 0 "register_operand")
 	(vec_select:SF (match_operand:V2SF 1 "register_operand")
 		       (parallel [(match_dup 2)])))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   { operands[2] = GEN_INT (!BYTES_BIG_ENDIAN); })
 
 ; alnv.ps - Floating Point Align Variable
@@ -229,7 +228,7 @@
 		      (match_operand:V2SF 2 "register_operand" "f")
 		      (match_operand:SI 3 "register_operand" "d")]
 		     UNSPEC_ALNV_PS))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "alnv.ps\t%0,%1,%2,%3"
   [(set_attr "type" "fmove")
    (set_attr "mode" "SF")])
@@ -240,7 +239,7 @@
 	(unspec:V2SF [(match_operand:V2SF 1 "register_operand" "f")
 		      (match_operand:V2SF 2 "register_operand" "f")]
 		     UNSPEC_ADDR_PS))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "addr.ps\t%0,%1,%2"
   [(set_attr "type" "fadd")
    (set_attr "mode" "SF")])
@@ -250,7 +249,7 @@
   [(set (match_operand:V2SF 0 "register_operand" "=f")
 	(unspec:V2SF [(match_operand:V2SF 1 "register_operand" "f")]
 		     UNSPEC_CVT_PW_PS))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "cvt.pw.ps\t%0,%1"
   [(set_attr "type" "fcvt")
    (set_attr "mode" "SF")])
@@ -260,7 +259,7 @@
   [(set (match_operand:V2SF 0 "register_operand" "=f")
 	(unspec:V2SF [(match_operand:V2SF 1 "register_operand" "f")]
 		     UNSPEC_CVT_PS_PW))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "cvt.ps.pw\t%0,%1"
   [(set_attr "type" "fcvt")
    (set_attr "mode" "SF")])
@@ -271,9 +270,34 @@
 	(unspec:V2SF [(match_operand:V2SF 1 "register_operand" "f")
 		      (match_operand:V2SF 2 "register_operand" "f")]
 		     UNSPEC_MULR_PS))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "mulr.ps\t%0,%1,%2"
   [(set_attr "type" "fmul")
+   (set_attr "mode" "SF")])
+
+; abs.ps
+(define_expand "mips_abs_ps"
+  [(set (match_operand:V2SF 0 "register_operand")
+	(unspec:V2SF [(match_operand:V2SF 1 "register_operand")]
+		     UNSPEC_ABS_PS))]
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
+{
+  /* If we can ignore NaNs, this operation is equivalent to the
+     rtl ABS code.  */
+  if (!HONOR_NANS (V2SFmode))
+    {
+      emit_insn (gen_absv2sf2 (operands[0], operands[1]));
+      DONE;
+    }
+})
+
+(define_insn "*mips_abs_ps"
+  [(set (match_operand:V2SF 0 "register_operand" "=f")
+	(unspec:V2SF [(match_operand:V2SF 1 "register_operand" "f")]
+		     UNSPEC_ABS_PS))]
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
+  "abs.ps\t%0,%1"
+  [(set_attr "type" "fabs")
    (set_attr "mode" "SF")])
 
 ;----------------------------------------------------------------------------
@@ -286,7 +310,7 @@
 		    (match_operand:SCALARF 2 "register_operand" "f")
 		    (match_operand 3 "const_int_operand" "")]
 		   UNSPEC_CABS))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "cabs.%Y3.<fmt>\t%0,%1,%2"
   [(set_attr "type" "fcmp")
    (set_attr "mode" "FPSW")])
@@ -304,7 +328,7 @@
 		      (match_operand:V2SF 4 "register_operand" "f")
 		      (match_operand 5 "const_int_operand" "")]
 		     UNSPEC_C))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "#"
   "&& reload_completed"
   [(set (match_dup 6)
@@ -333,7 +357,7 @@
 		      (match_operand:V2SF 4 "register_operand" "f")
 		      (match_operand 5 "const_int_operand" "")]
 		     UNSPEC_CABS))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "#"
   "&& reload_completed"
   [(set (match_dup 6)
@@ -365,7 +389,7 @@
 		      (match_operand:V2SF 2 "register_operand" "f")
 		      (match_operand 3 "const_int_operand" "")]
 		     UNSPEC_C))]
-  "TARGET_PAIRED_SINGLE_FLOAT"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "c.%Y3.ps\t%0,%1,%2"
   [(set_attr "type" "fcmp")
    (set_attr "mode" "FPSW")])
@@ -376,11 +400,37 @@
 		      (match_operand:V2SF 2 "register_operand" "f")
 		      (match_operand 3 "const_int_operand" "")]
 		     UNSPEC_CABS))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "cabs.%Y3.ps\t%0,%1,%2"
   [(set_attr "type" "fcmp")
    (set_attr "mode" "FPSW")])
 
+;; An expander for generating an scc operation.
+(define_expand "scc_ps"
+  [(set (match_operand:CCV2 0)
+	(unspec:CCV2 [(match_operand 1)] UNSPEC_SCC))])
+
+(define_insn "s<code>_ps"
+  [(set (match_operand:CCV2 0 "register_operand" "=z")
+	(unspec:CCV2
+	   [(fcond (match_operand:V2SF 1 "register_operand" "f")
+		   (match_operand:V2SF 2 "register_operand" "f"))]
+	   UNSPEC_SCC))]
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
+  "c.<fcond>.ps\t%0,%1,%2"
+  [(set_attr "type" "fcmp")
+   (set_attr "mode" "FPSW")])
+
+(define_insn "s<code>_ps"
+  [(set (match_operand:CCV2 0 "register_operand" "=z")
+	(unspec:CCV2
+	   [(swapped_fcond (match_operand:V2SF 1 "register_operand" "f")
+			   (match_operand:V2SF 2 "register_operand" "f"))]
+	   UNSPEC_SCC))]
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
+  "c.<swapped_fcond>.ps\t%0,%2,%1"
+  [(set_attr "type" "fcmp")
+   (set_attr "mode" "FPSW")])
 
 ;----------------------------------------------------------------------------
 ; Floating Point Branch Instructions.
@@ -389,11 +439,11 @@
 ; Branch on Any of Four Floating Point Condition Codes True
 (define_insn "bc1any4t"
   [(set (pc)
-	(if_then_else (ne:CCV4 (match_operand:CCV4 0 "register_operand" "z")
-			       (const_int 0))
+	(if_then_else (ne (match_operand:CCV4 0 "register_operand" "z")
+			  (const_int 0))
 		      (label_ref (match_operand 1 "" ""))
 		      (pc)))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "%*bc1any4t\t%0,%1%/"
   [(set_attr "type" "branch")
    (set_attr "mode" "none")])
@@ -401,11 +451,11 @@
 ; Branch on Any of Four Floating Point Condition Codes False
 (define_insn "bc1any4f"
   [(set (pc)
-	(if_then_else (ne:CCV4 (match_operand:CCV4 0 "register_operand" "z")
-			       (const_int -1))
+	(if_then_else (ne (match_operand:CCV4 0 "register_operand" "z")
+			  (const_int -1))
 		      (label_ref (match_operand 1 "" ""))
 		      (pc)))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "%*bc1any4f\t%0,%1%/"
   [(set_attr "type" "branch")
    (set_attr "mode" "none")])
@@ -413,11 +463,11 @@
 ; Branch on Any of Two Floating Point Condition Codes True
 (define_insn "bc1any2t"
   [(set (pc)
-	(if_then_else (ne:CCV2 (match_operand:CCV2 0 "register_operand" "z")
-			       (const_int 0))
+	(if_then_else (ne (match_operand:CCV2 0 "register_operand" "z")
+			  (const_int 0))
 		      (label_ref (match_operand 1 "" ""))
 		      (pc)))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "%*bc1any2t\t%0,%1%/"
   [(set_attr "type" "branch")
    (set_attr "mode" "none")])
@@ -425,12 +475,65 @@
 ; Branch on Any of Two Floating Point Condition Codes False
 (define_insn "bc1any2f"
   [(set (pc)
-	(if_then_else (ne:CCV2 (match_operand:CCV2 0 "register_operand" "z")
-			       (const_int -1))
+	(if_then_else (ne (match_operand:CCV2 0 "register_operand" "z")
+			  (const_int -1))
 		      (label_ref (match_operand 1 "" ""))
 		      (pc)))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "%*bc1any2f\t%0,%1%/"
+  [(set_attr "type" "branch")
+   (set_attr "mode" "none")])
+
+; Used to access one register in a CCV2 pair.  Operand 0 is the register
+; pair and operand 1 is the index of the register we want (a CONST_INT).
+(define_expand "single_cc"
+  [(ne (unspec:CC [(match_operand 0) (match_operand 1)] UNSPEC_SINGLE_CC)
+       (const_int 0))])
+
+; This is a normal floating-point branch pattern, but rather than check
+; a single CCmode register, it checks one register in a CCV2 pair.
+; Operand 2 is the register pair and operand 3 is the index of the
+; register we want.
+(define_insn "*branch_upper_lower"
+  [(set (pc)
+        (if_then_else
+	 (match_operator 0 "equality_operator"
+	    [(unspec:CC [(match_operand:CCV2 2 "register_operand" "z")
+			 (match_operand 3 "const_int_operand")]
+			UNSPEC_SINGLE_CC)
+	     (const_int 0)])
+	 (label_ref (match_operand 1 "" ""))
+	 (pc)))]
+  "TARGET_HARD_FLOAT"
+{
+  operands[2]
+    = gen_rtx_REG (CCmode, REGNO (operands[2]) + INTVAL (operands[3]));
+  return mips_output_conditional_branch (insn, operands,
+					 MIPS_BRANCH ("b%F0", "%2,%1"),
+					 MIPS_BRANCH ("b%W0", "%2,%1"));
+}
+  [(set_attr "type" "branch")
+   (set_attr "mode" "none")])
+
+; As above, but with the sense of the condition reversed.
+(define_insn "*branch_upper_lower_inverted"
+  [(set (pc)
+        (if_then_else
+	 (match_operator 0 "equality_operator"
+	    [(unspec:CC [(match_operand:CCV2 2 "register_operand" "z")
+			 (match_operand 3 "const_int_operand")]
+			UNSPEC_SINGLE_CC)
+	     (const_int 0)])
+	 (pc)
+	 (label_ref (match_operand 1 "" ""))))]
+  "TARGET_HARD_FLOAT"
+{
+  operands[2]
+    = gen_rtx_REG (CCmode, REGNO (operands[2]) + INTVAL (operands[3]));
+  return mips_output_conditional_branch (insn, operands,
+					 MIPS_BRANCH ("b%W0", "%2,%1"),
+					 MIPS_BRANCH ("b%F0", "%2,%1"));
+}
   [(set_attr "type" "branch")
    (set_attr "mode" "none")])
 
@@ -442,7 +545,7 @@
   [(set (match_operand:ANYF 0 "register_operand" "=f")
 	(unspec:ANYF [(match_operand:ANYF 1 "register_operand" "f")]
 		     UNSPEC_RSQRT1))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "rsqrt1.<fmt>\t%0,%1"
   [(set_attr "type" "frsqrt1")
    (set_attr "mode" "<UNITMODE>")])
@@ -452,7 +555,7 @@
 	(unspec:ANYF [(match_operand:ANYF 1 "register_operand" "f")
 		      (match_operand:ANYF 2 "register_operand" "f")]
 		     UNSPEC_RSQRT2))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "rsqrt2.<fmt>\t%0,%1,%2"
   [(set_attr "type" "frsqrt2")
    (set_attr "mode" "<UNITMODE>")])
@@ -461,7 +564,7 @@
   [(set (match_operand:ANYF 0 "register_operand" "=f")
 	(unspec:ANYF [(match_operand:ANYF 1 "register_operand" "f")]
 		     UNSPEC_RECIP1))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "recip1.<fmt>\t%0,%1"
   [(set_attr "type" "frdiv1")
    (set_attr "mode" "<UNITMODE>")])
@@ -471,7 +574,44 @@
 	(unspec:ANYF [(match_operand:ANYF 1 "register_operand" "f")
 		      (match_operand:ANYF 2 "register_operand" "f")]
 		     UNSPEC_RECIP2))]
-  "TARGET_MIPS3D"
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
   "recip2.<fmt>\t%0,%1,%2"
   [(set_attr "type" "frdiv2")
    (set_attr "mode" "<UNITMODE>")])
+
+(define_expand "vcondv2sf"
+  [(set (match_operand:V2SF 0 "register_operand")
+	(if_then_else:V2SF
+	  (match_operator 3 ""
+	    [(match_operand:V2SF 4 "register_operand")
+	     (match_operand:V2SF 5 "register_operand")])
+	  (match_operand:V2SF 1 "register_operand")
+	  (match_operand:V2SF 2 "register_operand")))]
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
+{
+  mips_expand_vcondv2sf (operands[0], operands[1], operands[2],
+			 GET_CODE (operands[3]), operands[4], operands[5]);
+  DONE;
+})
+
+(define_expand "sminv2sf3"
+  [(set (match_operand:V2SF 0 "register_operand")
+	(smin:V2SF (match_operand:V2SF 1 "register_operand")
+		   (match_operand:V2SF 2 "register_operand")))]
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
+{
+  mips_expand_vcondv2sf (operands[0], operands[1], operands[2],
+			 LE, operands[1], operands[2]);
+  DONE;
+})
+
+(define_expand "smaxv2sf3"
+  [(set (match_operand:V2SF 0 "register_operand")
+	(smax:V2SF (match_operand:V2SF 1 "register_operand")
+		   (match_operand:V2SF 2 "register_operand")))]
+  "TARGET_HARD_FLOAT && TARGET_PAIRED_SINGLE_FLOAT"
+{
+  mips_expand_vcondv2sf (operands[0], operands[1], operands[2],
+			 LE, operands[2], operands[1]);
+  DONE;
+})

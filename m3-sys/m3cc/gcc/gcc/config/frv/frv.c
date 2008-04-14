@@ -1,4 +1,4 @@
-/* Copyright (C) 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005
+/* Copyright (C) 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005, 2006, 2007
    Free Software Foundation, Inc.
    Contributed by Red Hat, Inc.
 
@@ -6,7 +6,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -15,9 +15,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -51,6 +50,7 @@ Boston, MA 02110-1301, USA.  */
 #include "targhooks.h"
 #include "integrate.h"
 #include "langhooks.h"
+#include "df.h"
 
 #ifndef FRV_INLINE
 #define FRV_INLINE inline
@@ -270,7 +270,7 @@ frv_cpu_t frv_cpu_type = CPU_TYPE;	/* value of -mcpu= */
 
 static bool frv_handle_option			(size_t, const char *, int);
 static int frv_default_flags_for_cpu		(void);
-static int frv_string_begins_with		(tree, const char *);
+static int frv_string_begins_with		(const_tree, const char *);
 static FRV_INLINE bool frv_small_data_reloc_p	(rtx, int);
 static void frv_print_operand_memory_reference_reg
 						(FILE *, rtx);
@@ -297,8 +297,8 @@ static void frv_frame_access_standard_regs	(enum frv_stack_op,
 static struct machine_function *frv_init_machine_status		(void);
 static rtx frv_int_to_acc			(enum insn_code, int, rtx);
 static enum machine_mode frv_matching_accg_mode	(enum machine_mode);
-static rtx frv_read_argument			(tree *);
-static rtx frv_read_iacc_argument		(enum machine_mode, tree *);
+static rtx frv_read_argument			(tree, unsigned int);
+static rtx frv_read_iacc_argument		(enum machine_mode, tree, unsigned int);
 static int frv_check_constant_argument		(enum insn_code, int, rtx);
 static rtx frv_legitimize_target		(enum insn_code, rtx);
 static rtx frv_legitimize_argument		(enum insn_code, int, rtx);
@@ -330,7 +330,7 @@ static int frv_cond_flags 			(rtx);
 static bool frv_regstate_conflict_p 		(regstate_t, regstate_t);
 static int frv_registers_conflict_p_1 		(rtx *, void *);
 static bool frv_registers_conflict_p 		(rtx);
-static void frv_registers_update_1 		(rtx, rtx, void *);
+static void frv_registers_update_1 		(rtx, const_rtx, void *);
 static void frv_registers_update 		(rtx);
 static void frv_start_packet 			(void);
 static void frv_start_packet_block 		(void);
@@ -358,13 +358,14 @@ static bool frv_assemble_integer		(rtx, unsigned, int);
 static void frv_init_builtins			(void);
 static rtx frv_expand_builtin			(tree, rtx, rtx, enum machine_mode, int);
 static void frv_init_libfuncs			(void);
-static bool frv_in_small_data_p			(tree);
+static bool frv_in_small_data_p			(const_tree);
 static void frv_asm_output_mi_thunk
   (FILE *, tree, HOST_WIDE_INT, HOST_WIDE_INT, tree);
 static void frv_setup_incoming_varargs		(CUMULATIVE_ARGS *,
 						 enum machine_mode,
 						 tree, int *, int);
 static rtx frv_expand_builtin_saveregs		(void);
+static void frv_expand_builtin_va_start		(tree, rtx);
 static bool frv_rtx_costs			(rtx, int, int, int*);
 static void frv_asm_out_constructor		(rtx, int);
 static void frv_asm_out_destructor		(rtx, int);
@@ -375,7 +376,7 @@ static void frv_output_const_unspec		(FILE *,
 						 const struct frv_unspec *);
 static bool frv_function_ok_for_sibcall		(tree, tree);
 static rtx frv_struct_value_rtx			(tree, int);
-static bool frv_must_pass_in_stack (enum machine_mode mode, tree type);
+static bool frv_must_pass_in_stack (enum machine_mode mode, const_tree type);
 static int frv_arg_partial_bytes (CUMULATIVE_ARGS *, enum machine_mode,
 				  tree, bool);
 static void frv_output_dwarf_dtprel		(FILE *, int, rtx)
@@ -452,6 +453,9 @@ static void frv_output_dwarf_dtprel		(FILE *, int, rtx)
 #define TARGET_SETUP_INCOMING_VARARGS frv_setup_incoming_varargs
 #undef TARGET_MACHINE_DEPENDENT_REORG
 #define TARGET_MACHINE_DEPENDENT_REORG frv_reorg
+
+#undef TARGET_EXPAND_BUILTIN_VA_START
+#define TARGET_EXPAND_BUILTIN_VA_START frv_expand_builtin_va_start
 
 #if HAVE_AS_TLS
 #undef TARGET_ASM_OUTPUT_DWARF_DTPREL
@@ -833,9 +837,9 @@ frv_optimization_options (int level, int size ATTRIBUTE_UNUSED)
 /* Return true if NAME (a STRING_CST node) begins with PREFIX.  */
 
 static int
-frv_string_begins_with (tree name, const char *prefix)
+frv_string_begins_with (const_tree name, const char *prefix)
 {
-  int prefix_len = strlen (prefix);
+  const int prefix_len = strlen (prefix);
 
   /* Remember: NAME's length includes the null terminator.  */
   return (TREE_STRING_LENGTH (name) > prefix_len
@@ -1167,7 +1171,7 @@ frv_stack_info (void)
 	default:
 	  for (regno = first; regno <= last; regno++)
 	    {
-	      if ((regs_ever_live[regno] && !call_used_regs[regno])
+	      if ((df_regs_ever_live_p (regno) && !call_used_regs[regno])
 		  || (current_function_calls_eh_return
 		      && (regno >= FIRST_EH_REGNUM && regno <= LAST_EH_REGNUM))
 		  || (!TARGET_FDPIC && flag_pic
@@ -1185,7 +1189,7 @@ frv_stack_info (void)
 	  break;
 
 	case STACK_REGS_LR:
-	  if (regs_ever_live[LR_REGNO]
+	  if (df_regs_ever_live_p (LR_REGNO)
               || profile_flag
 	      /* This is set for __builtin_return_address, etc.  */
 	      || cfun->machine->frame_needed
@@ -1498,7 +1502,7 @@ frv_function_prologue (FILE *file, HOST_WIDE_INT size ATTRIBUTE_UNUSED)
       rtx insn;
 
       /* Just to check that the above comment is true.  */
-      gcc_assert (!regs_ever_live[GPR_FIRST + 3]);
+      gcc_assert (!df_regs_ever_live_p (GPR_FIRST + 3));
 
       /* Generate the instruction that saves the link register.  */
       fprintf (file, "\tmovsg lr,gr3\n");
@@ -1518,7 +1522,7 @@ frv_function_prologue (FILE *file, HOST_WIDE_INT size ATTRIBUTE_UNUSED)
 	      {
 		rtx address = XEXP (XVECEXP (pattern, 0, 1), 0);
 		if (GET_CODE (address) == REG && REGNO (address) == LR_REGNO)
-		  REGNO (address) = GPR_FIRST + 3;
+		  SET_REGNO (address, GPR_FIRST + 3);
 	      }
 	  }
     }
@@ -2186,7 +2190,7 @@ frv_expand_builtin_saveregs (void)
 
 /* Expand __builtin_va_start to do the va_start macro.  */
 
-void
+static void
 frv_expand_builtin_va_start (tree valist, rtx nextarg)
 {
   tree t;
@@ -2203,8 +2207,9 @@ frv_expand_builtin_va_start (tree valist, rtx nextarg)
       debug_rtx (nextarg);
     }
 
-  t = build (MODIFY_EXPR, TREE_TYPE (valist), valist,
-	     make_tree (ptr_type_node, nextarg));
+  t = build2 (GIMPLE_MODIFY_STMT, TREE_TYPE (valist), valist,
+	      fold_convert (TREE_TYPE (valist),
+			    make_tree (sizetype, nextarg)));
   TREE_SIDE_EFFECTS (t) = 1;
 
   expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
@@ -3113,7 +3118,7 @@ frv_init_cumulative_args (CUMULATIVE_ARGS *cum,
    in registers.  */
 
 static bool
-frv_must_pass_in_stack (enum machine_mode mode, tree type)
+frv_must_pass_in_stack (enum machine_mode mode, const_tree type)
 {
   if (mode == BLKmode)
     return true;
@@ -3360,7 +3365,7 @@ frv_legitimate_address_p (enum machine_mode mode,
       break;
 
     case CONST_INT:
-      /* 12 bit immediate */
+      /* 12-bit immediate */
       if (condexec_p)
 	ret = FALSE;
       else
@@ -3411,7 +3416,7 @@ frv_legitimate_address_p (enum machine_mode mode,
 	  break;
 
 	case CONST_INT:
-          /* 12 bit immediate */
+          /* 12-bit immediate */
 	  if (condexec_p)
 	    ret = FALSE;
 	  else
@@ -3796,7 +3801,7 @@ frv_expand_fdpic_call (rtx *operands, bool ret_value, bool sibcall)
       emit_insn (x);
       cfun->uses_pic_offset_table = TRUE;
       addr = dest;
-    }    
+    }
   else if (GET_CODE (addr) == SYMBOL_REF)
     {
       /* These are always either local, or handled through a local
@@ -4017,7 +4022,7 @@ frv_emit_movsi (rtx dest, rtx src)
 	     (read-write) for code size (read-only, shareable), as
 	     long as the symbol is not used in more than two different
 	     locations.
-	     
+
 	     With -fpie/-fpic, we'd be trading a single load for a
 	     sequence of 4 instructions, because the offset of the
 	     label can't be assumed to be addressable with 12 bits, so
@@ -4116,11 +4121,11 @@ frv_emit_movsi (rtx dest, rtx src)
 
 		  if (init && init != error_mark_node)
 		    reloc = compute_reloc_for_constant (init);
-		  
+
 		  named_section = TREE_CODE (decl) == VAR_DECL
 		    && lookup_attribute ("section", DECL_ATTRIBUTES (decl));
 		  readonly = decl_readonly_section (decl, reloc);
-		  
+
 		  if (named_section)
 		    unspec = R_FRV_GOT12;
 		  else if (!readonly)
@@ -5293,15 +5298,15 @@ frv_ifcvt_modify_tests (ce_if_block_t *ce_info, rtx *p_true, rtx *p_false)
       for (j = CC_FIRST; j <= CC_LAST; j++)
 	if (TEST_HARD_REG_BIT (tmp_reg->regs, j))
 	  {
-	    if (REGNO_REG_SET_P (then_bb->il.rtl->global_live_at_start, j))
+	    if (REGNO_REG_SET_P (df_get_live_in (then_bb), j))
 	      continue;
 
 	    if (else_bb
-		&& REGNO_REG_SET_P (else_bb->il.rtl->global_live_at_start, j))
+		&& REGNO_REG_SET_P (df_get_live_in (else_bb), j))
 	      continue;
 
 	    if (join_bb
-		&& REGNO_REG_SET_P (join_bb->il.rtl->global_live_at_start, j))
+		&& REGNO_REG_SET_P (df_get_live_in (join_bb), j))
 	      continue;
 
 	    SET_HARD_REG_BIT (frv_ifcvt.nested_cc_ok_rewrite, j);
@@ -5323,7 +5328,7 @@ frv_ifcvt_modify_tests (ce_if_block_t *ce_info, rtx *p_true, rtx *p_false)
 
       /* Remove anything live at the beginning of the join block from being
          available for allocation.  */
-      EXECUTE_IF_SET_IN_REG_SET (join_bb->il.rtl->global_live_at_start, 0, regno, rsi)
+      EXECUTE_IF_SET_IN_REG_SET (df_get_live_in (join_bb), 0, regno, rsi)
 	{
 	  if (regno < FIRST_PSEUDO_REGISTER)
 	    CLEAR_HARD_REG_BIT (tmp_reg->regs, regno);
@@ -5367,7 +5372,7 @@ frv_ifcvt_modify_tests (ce_if_block_t *ce_info, rtx *p_true, rtx *p_false)
 
       /* Anything live at the beginning of the block is obviously unavailable
          for allocation.  */
-      EXECUTE_IF_SET_IN_REG_SET (bb[j]->il.rtl->global_live_at_start, 0, regno, rsi)
+      EXECUTE_IF_SET_IN_REG_SET (df_get_live_in (bb[j]), 0, regno, rsi)
 	{
 	  if (regno < FIRST_PSEUDO_REGISTER)
 	    CLEAR_HARD_REG_BIT (tmp_reg->regs, regno);
@@ -6020,17 +6025,15 @@ frv_ifcvt_modify_insn (ce_if_block_t *ce_info,
 		  limit scheduling of the combined block quite
 		  severely.  */
 	       && ce_info->join_bb
-	       && ! (REGNO_REG_SET_P
-		     (ce_info->join_bb->il.rtl->global_live_at_start,
-		      REGNO (SET_DEST (set))))
+	       && ! (REGNO_REG_SET_P (df_get_live_in (ce_info->join_bb),
+				      REGNO (SET_DEST (set))))
 	       /* Similarly, we must not unconditionally set a reg
 		  used as scratch in the THEN branch if the same reg
 		  is live in the ELSE branch.  */
 	       && (! ce_info->else_bb
 		   || BLOCK_FOR_INSN (insn) == ce_info->else_bb
-		   || ! (REGNO_REG_SET_P
-			 (ce_info->else_bb->il.rtl->global_live_at_start,
-			  REGNO (SET_DEST (set))))))
+		   || ! (REGNO_REG_SET_P (df_get_live_in (ce_info->else_bb),
+					  REGNO (SET_DEST (set))))))
 	pattern = set;
 
       else if (mode == QImode || mode == HImode || mode == SImode
@@ -7215,7 +7218,7 @@ frv_registers_conflict_p (rtx x)
    under which X is modified.  Update FRV_PACKET accordingly.  */
 
 static void
-frv_registers_update_1 (rtx x, rtx pat ATTRIBUTE_UNUSED, void *data)
+frv_registers_update_1 (rtx x, const_rtx pat ATTRIBUTE_UNUSED, void *data)
 {
   unsigned int regno;
 
@@ -7641,7 +7644,7 @@ frv_reorder_packet (void)
   for (from = 0; from < to - 1; from++)
     {
       remove_insn (insns[from]);
-      add_insn_before (insns[from], insns[to - 1]);
+      add_insn_before (insns[from], insns[to - 1], NULL);
       SET_PACKING_FLAG (insns[from]);
     }
 }
@@ -7753,7 +7756,7 @@ frv_extract_membar (struct frv_io *io, rtx insn)
    if X is a register and *DATA depends on X.  */
 
 static void
-frv_io_check_address (rtx x, rtx pat ATTRIBUTE_UNUSED, void *data)
+frv_io_check_address (rtx x, const_rtx pat ATTRIBUTE_UNUSED, void *data)
 {
   rtx *other = data;
 
@@ -7765,7 +7768,7 @@ frv_io_check_address (rtx x, rtx pat ATTRIBUTE_UNUSED, void *data)
    Remove every modified register from the set.  */
 
 static void
-frv_io_handle_set (rtx x, rtx pat ATTRIBUTE_UNUSED, void *data)
+frv_io_handle_set (rtx x, const_rtx pat ATTRIBUTE_UNUSED, void *data)
 {
   HARD_REG_SET *set = data;
   unsigned int regno;
@@ -8148,7 +8151,7 @@ frv_reorg (void)
 }
 
 #define def_builtin(name, type, code) \
-  lang_hooks.builtin_function ((name), (type), (code), BUILT_IN_MD, NULL, NULL)
+  add_builtin_function ((name), (type), (code), BUILT_IN_MD, NULL, NULL)
 
 struct builtin_description
 {
@@ -8632,7 +8635,7 @@ frv_int_to_acc (enum insn_code icode, int opnum, rtx opval)
   reg = gen_rtx_REG (insn_data[icode].operand[opnum].mode,
 		     ACC_FIRST + INTVAL (opval));
   if (! (*insn_data[icode].operand[opnum].predicate) (reg, VOIDmode))
-    REGNO (reg) = ACCG_FIRST + INTVAL (opval);
+    SET_REGNO (reg, ACCG_FIRST + INTVAL (opval));
 
   if (! (*insn_data[icode].operand[opnum].predicate) (reg, VOIDmode))
     {
@@ -8687,28 +8690,27 @@ frv_matching_accg_for_acc (rtx acc)
 		      REGNO (acc) - ACC_FIRST + ACCG_FIRST);
 }
 
-/* Read a value from the head of the tree list pointed to by ARGLISTPTR.
-   Return the value as an rtx and replace *ARGLISTPTR with the tail of the
-   list.  */
+/* Read the requested argument from the call EXP given by INDEX.
+   Return the value as an rtx.  */
 
 static rtx
-frv_read_argument (tree *arglistptr)
+frv_read_argument (tree exp, unsigned int index)
 {
-  tree next = TREE_VALUE (*arglistptr);
-  *arglistptr = TREE_CHAIN (*arglistptr);
-  return expand_expr (next, NULL_RTX, VOIDmode, 0);
+  return expand_expr (CALL_EXPR_ARG (exp, index),
+		      NULL_RTX, VOIDmode, 0);
 }
 
 /* Like frv_read_argument, but interpret the argument as the number
    of an IACC register and return a (reg:MODE ...) rtx for it.  */
 
 static rtx
-frv_read_iacc_argument (enum machine_mode mode, tree *arglistptr)
+frv_read_iacc_argument (enum machine_mode mode, tree call,
+			unsigned int index)
 {
   int i, regno;
   rtx op;
 
-  op = frv_read_argument (arglistptr);
+  op = frv_read_argument (call, index);
   if (GET_CODE (op) != CONST_INT
       || INTVAL (op) < 0
       || INTVAL (op) > IACC_LAST - IACC_FIRST
@@ -8797,10 +8799,10 @@ frv_volatile_memref (enum machine_mode mode, rtx arg)
    only MHDSETS falls into this category.  */
 
 static rtx
-frv_expand_set_builtin (enum insn_code icode, tree arglist, rtx target)
+frv_expand_set_builtin (enum insn_code icode, tree call, rtx target)
 {
   rtx pat;
-  rtx op0 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
 
   if (! frv_check_constant_argument (icode, 1, op0))
     return NULL_RTX;
@@ -8817,10 +8819,10 @@ frv_expand_set_builtin (enum insn_code icode, tree arglist, rtx target)
 /* Expand builtins that take one operand.  */
 
 static rtx
-frv_expand_unop_builtin (enum insn_code icode, tree arglist, rtx target)
+frv_expand_unop_builtin (enum insn_code icode, tree call, rtx target)
 {
   rtx pat;
-  rtx op0 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
 
   target = frv_legitimize_target (icode, target);
   op0 = frv_legitimize_argument (icode, 1, op0);
@@ -8835,11 +8837,11 @@ frv_expand_unop_builtin (enum insn_code icode, tree arglist, rtx target)
 /* Expand builtins that take two operands.  */
 
 static rtx
-frv_expand_binop_builtin (enum insn_code icode, tree arglist, rtx target)
+frv_expand_binop_builtin (enum insn_code icode, tree call, rtx target)
 {
   rtx pat;
-  rtx op0 = frv_read_argument (&arglist);
-  rtx op1 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
+  rtx op1 = frv_read_argument (call, 1);
 
   target = frv_legitimize_target (icode, target);
   op0 = frv_legitimize_argument (icode, 1, op0);
@@ -8856,11 +8858,11 @@ frv_expand_binop_builtin (enum insn_code icode, tree arglist, rtx target)
    one.  */
 
 static rtx
-frv_expand_cut_builtin (enum insn_code icode, tree arglist, rtx target)
+frv_expand_cut_builtin (enum insn_code icode, tree call, rtx target)
 {
   rtx pat;
-  rtx op0 = frv_read_argument (&arglist);
-  rtx op1 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
+  rtx op1 = frv_read_argument (call, 1);
   rtx op2;
 
   target = frv_legitimize_target (icode, target);
@@ -8888,11 +8890,11 @@ frv_expand_cut_builtin (enum insn_code icode, tree arglist, rtx target)
 /* Expand builtins that take two operands and the second is immediate.  */
 
 static rtx
-frv_expand_binopimm_builtin (enum insn_code icode, tree arglist, rtx target)
+frv_expand_binopimm_builtin (enum insn_code icode, tree call, rtx target)
 {
   rtx pat;
-  rtx op0 = frv_read_argument (&arglist);
-  rtx op1 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
+  rtx op1 = frv_read_argument (call, 1);
 
   if (! frv_check_constant_argument (icode, 2, op1))
     return NULL_RTX;
@@ -8911,11 +8913,11 @@ frv_expand_binopimm_builtin (enum insn_code icode, tree arglist, rtx target)
    ints and return void.  */
 
 static rtx
-frv_expand_voidbinop_builtin (enum insn_code icode, tree arglist)
+frv_expand_voidbinop_builtin (enum insn_code icode, tree call)
 {
   rtx pat;
-  rtx op0 = frv_read_argument (&arglist);
-  rtx op1 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
+  rtx op1 = frv_read_argument (call, 1);
   enum machine_mode mode0 = insn_data[icode].operand[0].mode;
   rtx addr;
 
@@ -8949,11 +8951,11 @@ frv_expand_voidbinop_builtin (enum insn_code icode, tree arglist)
 /* Expand builtins that take two long operands and return void.  */
 
 static rtx
-frv_expand_int_void2arg (enum insn_code icode, tree arglist)
+frv_expand_int_void2arg (enum insn_code icode, tree call)
 {
   rtx pat;
-  rtx op0 = frv_read_argument (&arglist);
-  rtx op1 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
+  rtx op1 = frv_read_argument (call, 1);
 
   op0 = frv_legitimize_argument (icode, 1, op0);
   op1 = frv_legitimize_argument (icode, 1, op1);
@@ -8968,10 +8970,10 @@ frv_expand_int_void2arg (enum insn_code icode, tree arglist)
 /* Expand prefetch builtins.  These take a single address as argument.  */
 
 static rtx
-frv_expand_prefetches (enum insn_code icode, tree arglist)
+frv_expand_prefetches (enum insn_code icode, tree call)
 {
   rtx pat;
-  rtx op0 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
 
   pat = GEN_FCN (icode) (force_reg (Pmode, op0));
   if (! pat)
@@ -8987,12 +8989,12 @@ frv_expand_prefetches (enum insn_code icode, tree arglist)
    corresponds to the accumulator.  */
 
 static rtx
-frv_expand_voidtriop_builtin (enum insn_code icode, tree arglist)
+frv_expand_voidtriop_builtin (enum insn_code icode, tree call)
 {
   rtx pat;
-  rtx op0 = frv_read_argument (&arglist);
-  rtx op1 = frv_read_argument (&arglist);
-  rtx op2 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
+  rtx op1 = frv_read_argument (call, 1);
+  rtx op2 = frv_read_argument (call, 2);
   rtx op3;
 
   op0 = frv_int_to_acc (icode, 0, op0);
@@ -9015,11 +9017,11 @@ frv_expand_voidtriop_builtin (enum insn_code icode, tree arglist)
    void.  */
 
 static rtx
-frv_expand_voidaccop_builtin (enum insn_code icode, tree arglist)
+frv_expand_voidaccop_builtin (enum insn_code icode, tree call)
 {
   rtx pat;
-  rtx op0 = frv_read_argument (&arglist);
-  rtx op1 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
+  rtx op1 = frv_read_argument (call, 1);
   rtx op2;
   rtx op3;
 
@@ -9046,9 +9048,9 @@ frv_expand_voidaccop_builtin (enum insn_code icode, tree arglist)
 
 static rtx
 frv_expand_load_builtin (enum insn_code icode, enum machine_mode target_mode,
-                         tree arglist, rtx target)
+                         tree call, rtx target)
 {
-  rtx op0 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
   rtx cookie = frv_io_address_cookie (op0);
 
   if (target == 0 || !REG_P (target))
@@ -9063,10 +9065,10 @@ frv_expand_load_builtin (enum insn_code icode, enum machine_mode target_mode,
 /* Likewise __builtin_write* functions.  */
 
 static rtx
-frv_expand_store_builtin (enum insn_code icode, tree arglist)
+frv_expand_store_builtin (enum insn_code icode, tree call)
 {
-  rtx op0 = frv_read_argument (&arglist);
-  rtx op1 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
+  rtx op1 = frv_read_argument (call, 1);
   rtx cookie = frv_io_address_cookie (op0);
 
   op0 = frv_volatile_memref (insn_data[icode].operand[0].mode, op0);
@@ -9078,18 +9080,18 @@ frv_expand_store_builtin (enum insn_code icode, tree arglist)
 
 /* Expand the MDPACKH builtin.  It takes four unsigned short arguments and
    each argument forms one word of the two double-word input registers.
-   ARGLIST is a TREE_LIST of the arguments and TARGET, if nonnull,
-   suggests a good place to put the return value.  */
+   CALL is the tree for the call and TARGET, if nonnull, suggests a good place
+   to put the return value.  */
 
 static rtx
-frv_expand_mdpackh_builtin (tree arglist, rtx target)
+frv_expand_mdpackh_builtin (tree call, rtx target)
 {
   enum insn_code icode = CODE_FOR_mdpackh;
   rtx pat, op0, op1;
-  rtx arg1 = frv_read_argument (&arglist);
-  rtx arg2 = frv_read_argument (&arglist);
-  rtx arg3 = frv_read_argument (&arglist);
-  rtx arg4 = frv_read_argument (&arglist);
+  rtx arg1 = frv_read_argument (call, 0);
+  rtx arg2 = frv_read_argument (call, 1);
+  rtx arg3 = frv_read_argument (call, 2);
+  rtx arg4 = frv_read_argument (call, 3);
 
   target = frv_legitimize_target (icode, target);
   op0 = gen_reg_rtx (DImode);
@@ -9118,11 +9120,11 @@ frv_expand_mdpackh_builtin (tree arglist, rtx target)
    number as argument.  */
 
 static rtx
-frv_expand_mclracc_builtin (tree arglist)
+frv_expand_mclracc_builtin (tree call)
 {
   enum insn_code icode = CODE_FOR_mclracc;
   rtx pat;
-  rtx op0 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
 
   op0 = frv_int_to_acc (icode, 0, op0);
   if (! op0)
@@ -9151,11 +9153,11 @@ frv_expand_noargs_builtin (enum insn_code icode)
    number or accumulator guard number as argument and return an SI integer.  */
 
 static rtx
-frv_expand_mrdacc_builtin (enum insn_code icode, tree arglist)
+frv_expand_mrdacc_builtin (enum insn_code icode, tree call)
 {
   rtx pat;
   rtx target = gen_reg_rtx (SImode);
-  rtx op0 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
 
   op0 = frv_int_to_acc (icode, 1, op0);
   if (! op0)
@@ -9174,11 +9176,11 @@ frv_expand_mrdacc_builtin (enum insn_code icode, tree arglist)
    second.  */
 
 static rtx
-frv_expand_mwtacc_builtin (enum insn_code icode, tree arglist)
+frv_expand_mwtacc_builtin (enum insn_code icode, tree call)
 {
   rtx pat;
-  rtx op0 = frv_read_argument (&arglist);
-  rtx op1 = frv_read_argument (&arglist);
+  rtx op0 = frv_read_argument (call, 0);
+  rtx op1 = frv_read_argument (call, 1);
 
   op0 = frv_int_to_acc (icode, 0, op0);
   if (! op0)
@@ -9216,8 +9218,7 @@ frv_expand_builtin (tree exp,
                     enum machine_mode mode ATTRIBUTE_UNUSED,
                     int ignore ATTRIBUTE_UNUSED)
 {
-  tree arglist = TREE_OPERAND (exp, 1);
-  tree fndecl = TREE_OPERAND (TREE_OPERAND (exp, 0), 0);
+  tree fndecl = TREE_OPERAND (CALL_EXPR_FN (exp), 0);
   unsigned fcode = (unsigned)DECL_FUNCTION_CODE (fndecl);
   unsigned i;
   struct builtin_description *d;
@@ -9321,7 +9322,7 @@ frv_expand_builtin (tree exp,
       return frv_expand_noargs_builtin (CODE_FOR_mtrap);
 
     case FRV_BUILTIN_MCLRACC:
-      return frv_expand_mclracc_builtin (arglist);
+      return frv_expand_mclracc_builtin (exp);
 
     case FRV_BUILTIN_MCLRACCA:
       if (TARGET_ACC_8)
@@ -9330,23 +9331,23 @@ frv_expand_builtin (tree exp,
 	return frv_expand_noargs_builtin (CODE_FOR_mclracca4);
 
     case FRV_BUILTIN_MRDACC:
-      return frv_expand_mrdacc_builtin (CODE_FOR_mrdacc, arglist);
+      return frv_expand_mrdacc_builtin (CODE_FOR_mrdacc, exp);
 
     case FRV_BUILTIN_MRDACCG:
-      return frv_expand_mrdacc_builtin (CODE_FOR_mrdaccg, arglist);
+      return frv_expand_mrdacc_builtin (CODE_FOR_mrdaccg, exp);
 
     case FRV_BUILTIN_MWTACC:
-      return frv_expand_mwtacc_builtin (CODE_FOR_mwtacc, arglist);
+      return frv_expand_mwtacc_builtin (CODE_FOR_mwtacc, exp);
 
     case FRV_BUILTIN_MWTACCG:
-      return frv_expand_mwtacc_builtin (CODE_FOR_mwtaccg, arglist);
+      return frv_expand_mwtacc_builtin (CODE_FOR_mwtaccg, exp);
 
     case FRV_BUILTIN_MDPACKH:
-      return frv_expand_mdpackh_builtin (arglist, target);
+      return frv_expand_mdpackh_builtin (exp, target);
 
     case FRV_BUILTIN_IACCreadll:
       {
-	rtx src = frv_read_iacc_argument (DImode, &arglist);
+	rtx src = frv_read_iacc_argument (DImode, exp, 0);
 	if (target == 0 || !REG_P (target))
 	  target = gen_reg_rtx (DImode);
 	frv_split_iacc_move (target, src);
@@ -9354,20 +9355,20 @@ frv_expand_builtin (tree exp,
       }
 
     case FRV_BUILTIN_IACCreadl:
-      return frv_read_iacc_argument (SImode, &arglist);
+      return frv_read_iacc_argument (SImode, exp, 0);
 
     case FRV_BUILTIN_IACCsetll:
       {
-	rtx dest = frv_read_iacc_argument (DImode, &arglist);
-	rtx src = frv_read_argument (&arglist);
+	rtx dest = frv_read_iacc_argument (DImode, exp, 0);
+	rtx src = frv_read_argument (exp, 1);
 	frv_split_iacc_move (dest, force_reg (DImode, src));
 	return 0;
       }
 
     case FRV_BUILTIN_IACCsetl:
       {
-	rtx dest = frv_read_iacc_argument (SImode, &arglist);
-	rtx src = frv_read_argument (&arglist);
+	rtx dest = frv_read_iacc_argument (SImode, exp, 0);
+	rtx src = frv_read_argument (exp, 1);
 	emit_move_insn (dest, force_reg (SImode, src));
 	return 0;
       }
@@ -9380,63 +9381,63 @@ frv_expand_builtin (tree exp,
 
   for (i = 0, d = bdesc_set; i < ARRAY_SIZE (bdesc_set); i++, d++)
     if (d->code == fcode)
-      return frv_expand_set_builtin (d->icode, arglist, target);
+      return frv_expand_set_builtin (d->icode, exp, target);
 
   for (i = 0, d = bdesc_1arg; i < ARRAY_SIZE (bdesc_1arg); i++, d++)
     if (d->code == fcode)
-      return frv_expand_unop_builtin (d->icode, arglist, target);
+      return frv_expand_unop_builtin (d->icode, exp, target);
 
   for (i = 0, d = bdesc_2arg; i < ARRAY_SIZE (bdesc_2arg); i++, d++)
     if (d->code == fcode)
-      return frv_expand_binop_builtin (d->icode, arglist, target);
+      return frv_expand_binop_builtin (d->icode, exp, target);
 
   for (i = 0, d = bdesc_cut; i < ARRAY_SIZE (bdesc_cut); i++, d++)
     if (d->code == fcode)
-      return frv_expand_cut_builtin (d->icode, arglist, target);
+      return frv_expand_cut_builtin (d->icode, exp, target);
 
   for (i = 0, d = bdesc_2argimm; i < ARRAY_SIZE (bdesc_2argimm); i++, d++)
     if (d->code == fcode)
-      return frv_expand_binopimm_builtin (d->icode, arglist, target);
+      return frv_expand_binopimm_builtin (d->icode, exp, target);
 
   for (i = 0, d = bdesc_void2arg; i < ARRAY_SIZE (bdesc_void2arg); i++, d++)
     if (d->code == fcode)
-      return frv_expand_voidbinop_builtin (d->icode, arglist);
+      return frv_expand_voidbinop_builtin (d->icode, exp);
 
   for (i = 0, d = bdesc_void3arg; i < ARRAY_SIZE (bdesc_void3arg); i++, d++)
     if (d->code == fcode)
-      return frv_expand_voidtriop_builtin (d->icode, arglist);
+      return frv_expand_voidtriop_builtin (d->icode, exp);
 
   for (i = 0, d = bdesc_voidacc; i < ARRAY_SIZE (bdesc_voidacc); i++, d++)
     if (d->code == fcode)
-      return frv_expand_voidaccop_builtin (d->icode, arglist);
+      return frv_expand_voidaccop_builtin (d->icode, exp);
 
   for (i = 0, d = bdesc_int_void2arg;
        i < ARRAY_SIZE (bdesc_int_void2arg); i++, d++)
     if (d->code == fcode)
-      return frv_expand_int_void2arg (d->icode, arglist);
+      return frv_expand_int_void2arg (d->icode, exp);
 
   for (i = 0, d = bdesc_prefetches;
        i < ARRAY_SIZE (bdesc_prefetches); i++, d++)
     if (d->code == fcode)
-      return frv_expand_prefetches (d->icode, arglist);
+      return frv_expand_prefetches (d->icode, exp);
 
   for (i = 0, d = bdesc_loads; i < ARRAY_SIZE (bdesc_loads); i++, d++)
     if (d->code == fcode)
       return frv_expand_load_builtin (d->icode, TYPE_MODE (TREE_TYPE (exp)),
-				      arglist, target);
+				      exp, target);
 
   for (i = 0, d = bdesc_stores; i < ARRAY_SIZE (bdesc_stores); i++, d++)
     if (d->code == fcode)
-      return frv_expand_store_builtin (d->icode, arglist);
+      return frv_expand_store_builtin (d->icode, exp);
 
   return 0;
 }
 
 static bool
-frv_in_small_data_p (tree decl)
+frv_in_small_data_p (const_tree decl)
 {
   HOST_WIDE_INT size;
-  tree section_name;
+  const_tree section_name;
 
   /* Don't apply the -G flag to internal compiler structures.  We
      should leave such structures in the main data section, partly
@@ -9482,7 +9483,7 @@ frv_rtx_costs (rtx x,
   switch (code)
     {
     case CONST_INT:
-      /* Make 12 bit integers really cheap.  */
+      /* Make 12-bit integers really cheap.  */
       if (IN_RANGE_P (INTVAL (x), -2048, 2047))
 	{
 	  *total = 0;
@@ -9542,7 +9543,7 @@ frv_rtx_costs (rtx x,
 static void
 frv_asm_out_constructor (rtx symbol, int priority ATTRIBUTE_UNUSED)
 {
-  ctors_section ();
+  switch_to_section (ctors_section);
   assemble_align (POINTER_SIZE);
   if (TARGET_FDPIC)
     {
@@ -9557,12 +9558,12 @@ frv_asm_out_constructor (rtx symbol, int priority ATTRIBUTE_UNUSED)
 static void
 frv_asm_out_destructor (rtx symbol, int priority ATTRIBUTE_UNUSED)
 {
-  dtors_section ();
+  switch_to_section (dtors_section);
   assemble_align (POINTER_SIZE);
   if (TARGET_FDPIC)
     {
       int ok = frv_assemble_integer (symbol, POINTER_SIZE / BITS_PER_UNIT, 1);
-      
+
       gcc_assert (ok);
       return;
     }

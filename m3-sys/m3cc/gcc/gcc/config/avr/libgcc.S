@@ -1,5 +1,6 @@
 /*  -*- Mode: Asm -*-  */
-/* Copyright (C) 1998, 1999, 2000 Free Software Foundation, Inc.
+/* Copyright (C) 1998, 1999, 2000, 2007, 2008 
+   Free Software Foundation, Inc.
    Contributed by Denis Chertykov <denisc@overta.ru>
 
 This file is free software; you can redistribute it and/or modify it
@@ -40,7 +41,7 @@ Boston, MA 02110-1301, USA.  */
 	.section .text.libgcc, "ax", @progbits
 
 	.macro	mov_l  r_dest, r_src
-#if defined (__AVR_ENHANCED__)
+#if defined (__AVR_HAVE_MOVW__)
 	movw	\r_dest, \r_src
 #else
 	mov	\r_dest, \r_src
@@ -48,7 +49,7 @@ Boston, MA 02110-1301, USA.  */
 	.endm
 
 	.macro	mov_h  r_dest, r_src
-#if defined (__AVR_ENHANCED__)
+#if defined (__AVR_HAVE_MOVW__)
 	; empty
 #else
 	mov	\r_dest, \r_src
@@ -56,7 +57,7 @@ Boston, MA 02110-1301, USA.  */
 	.endm
 
 /* Note: mulqi3, mulhi3 are open-coded on the enhanced core.  */
-#if !defined (__AVR_ENHANCED__)
+#if !defined (__AVR_HAVE_MUL__)
 /*******************************************************
                Multiplication  8 x 8
 *******************************************************/
@@ -159,7 +160,7 @@ __mulhi3_exit:
 
 .endfunc
 #endif /* defined (L_mulhi3) */
-#endif /* !defined (__AVR_ENHANCED__) */
+#endif /* !defined (__AVR_HAVE_MUL__) */
 
 #if defined (L_mulhisi3)
 	.global	__mulhisi3
@@ -217,7 +218,7 @@ __umulhisi3:
 	.global	__mulsi3
 	.func	__mulsi3
 __mulsi3:
-#if defined (__AVR_ENHANCED__)
+#if defined (__AVR_HAVE_MUL__)
 	mul	r_arg1L, r_arg2L
 	movw	r_resL, r0
 	mul	r_arg1H, r_arg2H
@@ -276,12 +277,12 @@ __mulsi3_skip1:
 	cpc	r_arg1H,r_arg1L
 	brne	__mulsi3_loop		; exit if multiplier = 0
 __mulsi3_exit:
-	mov	r_arg1HH,r_resHH	; result to return register
-	mov	r_arg1HL,r_resHL
-	mov	r_arg1H,r_resH
-	mov	r_arg1L,r_resL
+	mov_h	r_arg1HH,r_resHH	; result to return register
+	mov_l	r_arg1HL,r_resHL
+	mov_h	r_arg1H,r_resH
+	mov_l	r_arg1L,r_resL
 	ret
-#endif /* !defined (__AVR_ENHANCED__) */
+#endif /* defined (__AVR_HAVE_MUL__) */
 #undef r_arg1L 
 #undef r_arg1H 
 #undef r_arg1HL
@@ -647,6 +648,7 @@ exit:
 	/* Code from .fini8 ... .fini1 sections inserted by ld script.  */
 
 	.section .fini0,"ax",@progbits
+	cli
 __stop_program:
 	rjmp	__stop_program
 	.endfunc
@@ -668,7 +670,7 @@ __tablejump2__:
 	rol	r31
 	.global __tablejump__
 __tablejump__:
-#if defined (__AVR_ENHANCED__)
+#if defined (__AVR_HAVE_LPMX__)
 	lpm	__tmp_reg__, Z+
 	lpm	r31, Z
 	mov	r30, __tmp_reg__
@@ -698,7 +700,7 @@ __do_copy_data:
 	ldi	r31, hi8(__data_load_start)
 	rjmp	.do_copy_data_start
 .do_copy_data_loop:
-#if defined (__AVR_ENHANCED__)
+#if defined (__AVR_HAVE_LPMX__)
 	lpm	r0, Z+
 #else
 	lpm

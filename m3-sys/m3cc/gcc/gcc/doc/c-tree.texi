@@ -1,4 +1,4 @@
-@c Copyright (c) 1999, 2000, 2001, 2002, 2003, 2004, 2005
+@c Copyright (c) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 @c Free Software Foundation, Inc.
 @c This is part of the GCC manual.
 @c For copying conditions, see the file gcc.texi.
@@ -271,6 +271,7 @@ The elements are indexed from zero.
 @tindex TYPE_MIN_VALUE
 @tindex TYPE_MAX_VALUE
 @tindex REAL_TYPE
+@tindex FIXED_POINT_TYPE
 @tindex COMPLEX_TYPE
 @tindex ENUMERAL_TYPE
 @tindex BOOLEAN_TYPE
@@ -305,10 +306,13 @@ The elements are indexed from zero.
 @findex TYPENAME_TYPE_FULLNAME
 @findex TYPE_FIELDS
 @findex TYPE_PTROBV_P
+@findex TYPE_CANONICAL
+@findex TYPE_STRUCTURAL_EQUALITY_P
+@findex SET_TYPE_STRUCTURAL_EQUALITY
 
 All types have corresponding tree nodes.  However, you should not assume
 that there is exactly one tree node corresponding to each type.  There
-are often several nodes each of which correspond to the same type.
+are often multiple nodes corresponding to the same type.
 
 For the most part, different kinds of types have different tree codes.
 (For example, pointer types use a @code{POINTER_TYPE} code while arrays
@@ -406,6 +410,52 @@ does not hold for the generic pointer to object type @code{void *}.  You
 may use @code{TYPE_PTROBV_P} to test for a pointer to object type as
 well as @code{void *}.
 
+@item TYPE_CANONICAL
+This macro returns the ``canonical'' type for the given type
+node. Canonical types are used to improve performance in the C++ and
+Objective-C++ front ends by allowing efficient comparison between two
+type nodes in @code{same_type_p}: if the @code{TYPE_CANONICAL} values
+of the types are equal, the types are equivalent; otherwise, the types
+are not equivalent. The notion of equivalence for canonical types is
+the same as the notion of type equivalence in the language itself. For
+instance,
+
+When @code{TYPE_CANONICAL} is @code{NULL_TREE}, there is no canonical
+type for the given type node. In this case, comparison between this
+type and any other type requires the compiler to perform a deep,
+``structural'' comparison to see if the two type nodes have the same
+form and properties.
+
+The canonical type for a node is always the most fundamental type in
+the equivalence class of types. For instance, @code{int} is its own
+canonical type. A typedef @code{I} of @code{int} will have @code{int}
+as its canonical type. Similarly, @code{I*}@ and a typedef @code{IP}@
+(defined to @code{I*}) will has @code{int*} as their canonical
+type. When building a new type node, be sure to set
+@code{TYPE_CANONICAL} to the appropriate canonical type. If the new
+type is a compound type (built from other types), and any of those
+other types require structural equality, use
+@code{SET_TYPE_STRUCTURAL_EQUALITY} to ensure that the new type also
+requires structural equality. Finally, if for some reason you cannot
+guarantee that @code{TYPE_CANONICAL} will point to the canonical type,
+use @code{SET_TYPE_STRUCTURAL_EQUALITY} to make sure that the new
+type--and any type constructed based on it--requires structural
+equality. If you suspect that the canonical type system is
+miscomparing types, pass @code{--param verify-canonical-types=1} to
+the compiler or configure with @code{--enable-checking} to force the
+compiler to verify its canonical-type comparisons against the
+structural comparisons; the compiler will then print any warnings if
+the canonical types miscompare.
+
+@item TYPE_STRUCTURAL_EQUALITY_P
+This predicate holds when the node requires structural equality
+checks, e.g., when @code{TYPE_CANONICAL} is @code{NULL_TREE}.
+
+@item SET_TYPE_STRUCTURAL_EQUALITY
+This macro states that the type node it is given requires structural
+equality checks, e.g., it sets @code{TYPE_CANONICAL} to
+@code{NULL_TREE}.
+
 @item same_type_p
 This predicate takes two types as input, and holds if they are the same
 type.  For example, if one type is a @code{typedef} for the other, or
@@ -429,9 +479,8 @@ Used to represent the @code{void} type.
 @item INTEGER_TYPE
 Used to represent the various integral types, including @code{char},
 @code{short}, @code{int}, @code{long}, and @code{long long}.  This code
-is not used for enumeration types, nor for the @code{bool} type.  Note
-that GCC's @code{CHAR_TYPE} node is @emph{not} used to represent
-@code{char}.  The @code{TYPE_PRECISION} is the number of bits used in
+is not used for enumeration types, nor for the @code{bool} type.
+The @code{TYPE_PRECISION} is the number of bits used in
 the representation, represented as an @code{unsigned int}.  (Note that
 in the general case this is not the same value as @code{TYPE_SIZE};
 suppose that there were a 24-bit integer type, but that alignment
@@ -449,6 +498,19 @@ that may be represented by this type.
 Used to represent the @code{float}, @code{double}, and @code{long
 double} types.  The number of bits in the floating-point representation
 is given by @code{TYPE_PRECISION}, as in the @code{INTEGER_TYPE} case.
+
+@item FIXED_POINT_TYPE
+Used to represent the @code{short _Fract}, @code{_Fract}, @code{long
+_Fract}, @code{long long _Fract}, @code{short _Accum}, @code{_Accum},
+@code{long _Accum}, and @code{long long _Accum} types.  The number of bits
+in the fixed-point representation is given by @code{TYPE_PRECISION},
+as in the @code{INTEGER_TYPE} case.  There may be padding bits, fractional
+bits and integral bits.  The number of fractional bits is given by
+@code{TYPE_FBIT}, and the number of integral bits is given by @code{TYPE_IBIT}.
+The fixed-point type is unsigned if @code{TYPE_UNSIGNED} holds; otherwise,
+it is signed.
+The fixed-point type is saturating if @code{TYPE_SATURATING} holds; otherwise,
+it is not saturating.
 
 @item COMPLEX_TYPE
 Used to represent GCC built-in @code{__complex__} data types.  The
@@ -968,12 +1030,20 @@ ordinary type might be @code{short} while the @code{DECL_ARG_TYPE} is
 
 @item FIELD_DECL
 These nodes represent non-static data members.  The @code{DECL_SIZE} and
-@code{DECL_ALIGN} behave as for @code{VAR_DECL} nodes.  The
-@code{DECL_FIELD_BITPOS} gives the first bit used for this field, as an
-@code{INTEGER_CST}.  These values are indexed from zero, where zero
-indicates the first bit in the object.
+@code{DECL_ALIGN} behave as for @code{VAR_DECL} nodes.  
+The position of the field within the parent record is specified by a 
+combination of three attributes.  @code{DECL_FIELD_OFFSET} is the position,
+counting in bytes, of the @code{DECL_OFFSET_ALIGN}-bit sized word containing
+the bit of the field closest to the beginning of the structure.  
+@code{DECL_FIELD_BIT_OFFSET} is the bit offset of the first bit of the field
+within this word; this may be nonzero even for fields that are not bit-fields,
+since @code{DECL_OFFSET_ALIGN} may be greater than the natural alignment
+of the field's type.
 
-If @code{DECL_C_BIT_FIELD} holds, this field is a bit-field.
+If @code{DECL_C_BIT_FIELD} holds, this field is a bit-field.  In a bit-field,
+@code{DECL_BIT_FIELD_TYPE} also contains the type that was originally
+specified for it, while DECL_TYPE may be a modified type with lesser precision,
+according to the size of the bit field.
 
 @item NAMESPACE_DECL
 @xref{Namespaces}.
@@ -1477,7 +1547,6 @@ This predicate holds if the function an overloaded
 @findex IF_COND
 @findex THEN_CLAUSE
 @findex ELSE_CLAUSE
-@tindex RETURN_INIT
 @tindex RETURN_STMT
 @findex RETURN_EXPR
 @tindex SUBOBJECT
@@ -1720,22 +1789,6 @@ statement can be obtained with the @code{LABEL_EXPR_LABEL} macro.  The
 @code{IDENTIFIER_NODE} giving the name of the label can be obtained from
 the @code{LABEL_DECL} with @code{DECL_NAME}.
 
-@item RETURN_INIT
-
-If the function uses the G++ ``named return value'' extension, meaning
-that the function has been defined like:
-@smallexample
-S f(int) return s @{@dots{}@}
-@end smallexample
-then there will be a @code{RETURN_INIT}.  There is never a named
-returned value for a constructor.  The first argument to the
-@code{RETURN_INIT} is the name of the object returned; the second
-argument is the initializer for the object.  The object is initialized
-when the @code{RETURN_INIT} is encountered.  The object referred to is
-the actual object returned; this extension is a manual way of doing the
-``return-value optimization''.  Therefore, the object must actually be
-constructed in the place where the object will be returned.
-
 @item RETURN_STMT
 
 Used to represent a @code{return} statement.  The @code{RETURN_EXPR} is
@@ -1840,6 +1893,7 @@ This macro returns the attributes on the type @var{type}.
 @findex tree_int_cst_lt
 @findex tree_int_cst_equal
 @tindex REAL_CST
+@tindex FIXED_CST
 @tindex COMPLEX_CST
 @tindex VECTOR_CST
 @tindex STRING_CST
@@ -1868,6 +1922,7 @@ This macro returns the attributes on the type @var{type}.
 @tindex NON_LVALUE_EXPR
 @tindex NOP_EXPR
 @tindex CONVERT_EXPR
+@tindex FIXED_CONVERT_EXPR
 @tindex THROW_EXPR
 @tindex LSHIFT_EXPR
 @tindex RSHIFT_EXPR
@@ -1879,6 +1934,7 @@ This macro returns the attributes on the type @var{type}.
 @tindex TRUTH_AND_EXPR
 @tindex TRUTH_OR_EXPR
 @tindex TRUTH_XOR_EXPR
+@tindex POINTER_PLUS_EXPR
 @tindex PLUS_EXPR
 @tindex MINUS_EXPR
 @tindex MULT_EXPR
@@ -1926,6 +1982,34 @@ This macro returns the attributes on the type @var{type}.
 @tindex TARGET_EXPR
 @tindex AGGR_INIT_EXPR
 @tindex VA_ARG_EXPR
+@tindex CHANGE_DYNAMIC_TYPE_EXPR
+@tindex OMP_PARALLEL
+@tindex OMP_FOR
+@tindex OMP_SECTIONS
+@tindex OMP_SINGLE
+@tindex OMP_SECTION
+@tindex OMP_MASTER
+@tindex OMP_ORDERED
+@tindex OMP_CRITICAL
+@tindex OMP_RETURN
+@tindex OMP_CONTINUE
+@tindex OMP_ATOMIC
+@tindex OMP_CLAUSE
+@tindex VEC_LSHIFT_EXPR
+@tindex VEC_RSHIFT_EXPR
+@tindex VEC_WIDEN_MULT_HI_EXPR
+@tindex VEC_WIDEN_MULT_LO_EXPR
+@tindex VEC_UNPACK_HI_EXPR
+@tindex VEC_UNPACK_LO_EXPR
+@tindex VEC_UNPACK_FLOAT_HI_EXPR
+@tindex VEC_UNPACK_FLOAT_LO_EXPR
+@tindex VEC_PACK_TRUNC_EXPR
+@tindex VEC_PACK_SAT_EXPR
+@tindex VEC_PACK_FIX_TRUNC_EXPR
+@tindex VEC_EXTRACT_EVEN_EXPR 
+@tindex VEC_EXTRACT_ODD_EXPR
+@tindex VEC_INTERLEAVE_HIGH_EXPR
+@tindex VEC_INTERLEAVE_LOW_EXPR
 
 The internal representation for expressions is for the most part quite
 straightforward.  However, there are a few facts that one must bear in
@@ -1933,7 +2017,7 @@ mind.  In particular, the expression ``tree'' is actually a directed
 acyclic graph.  (For example there may be many references to the integer
 constant zero throughout the source program; many of these will be
 represented by the same expression node.)  You should not rely on
-certain kinds of node being shared, nor should rely on certain kinds of
+certain kinds of node being shared, nor should you rely on certain kinds of
 nodes being unshared.
 
 The following macros can be used with all expression nodes:
@@ -1962,6 +2046,9 @@ TREE_OPERAND (expr, 0)
 @end smallexample
 @noindent
 As this example indicates, the operands are zero-indexed.
+
+All the expressions starting with @code{OMP_} represent directives and
+clauses used by the OpenMP API @w{@uref{http://www.openmp.org/}}.
 
 The table below begins with constants, moves on to unary expressions,
 then proceeds to binary expressions, and concludes with various other
@@ -2008,6 +2095,15 @@ its bit-pattern.
 
 FIXME: Talk about how to obtain representations of this constant, do
 comparisons, and so forth.
+
+@item FIXED_CST
+
+These nodes represent fixed-point constants.  The type of these constants
+is obtained with @code{TREE_TYPE}.  @code{TREE_FIXED_CST_PTR} points to
+to struct fixed_value;  @code{TREE_FIXED_CST} returns the structure itself.
+Struct fixed_value contains @code{data} with the size of two
+HOST_BITS_PER_WIDE_INT and @code{mode} as the associated fixed-point
+machine mode for @code{data}.
 
 @item COMPLEX_CST
 These nodes are used to represent complex number constants, that is a
@@ -2127,7 +2223,7 @@ pointer or reference type.
 
 @item FIX_TRUNC_EXPR
 These nodes represent conversion of a floating-point value to an
-integer.  The single operand will have a floating-point type, while the
+integer.  The single operand will have a floating-point type, while
 the complete expression will have an integral (or boolean) type.  The
 operand is rounded towards zero.
 
@@ -2175,6 +2271,13 @@ cases are always indicated explicitly.  Similarly, a user-defined
 conversion is never represented by a @code{CONVERT_EXPR}; instead, the
 function calls are made explicit.
 
+@item FIXED_CONVERT_EXPR
+These nodes are used to represent conversions that involve fixed-point
+values.  For example, from a fixed-point value to another fixed-point value,
+from an integer to a fixed-point value, from a fixed-point value to an
+integer, from a floating-point value to a fixed-point value, or from
+a fixed-point value to a floating-point value.
+
 @item THROW_EXPR
 These nodes represent @code{throw} expressions.  The single operand is
 an expression for the code that should be executed to throw the
@@ -2206,11 +2309,11 @@ type.
 
 @item TRUTH_ANDIF_EXPR
 @itemx TRUTH_ORIF_EXPR
-These nodes represent logical and and logical or, respectively.  These
-operators are not strict; i.e., the second operand is evaluated only if
-the value of the expression is not determined by evaluation of the first
-operand.  The type of the operands and that of the result are always of
-@code{BOOLEAN_TYPE} or @code{INTEGER_TYPE}.
+These nodes represent logical ``and'' and logical ``or'', respectively.
+These operators are not strict; i.e., the second operand is evaluated
+only if the value of the expression is not determined by evaluation of
+the first operand.  The type of the operands and that of the result are
+always of @code{BOOLEAN_TYPE} or @code{INTEGER_TYPE}.
 
 @item TRUTH_AND_EXPR
 @itemx TRUTH_OR_EXPR
@@ -2221,6 +2324,12 @@ corresponding operators in C or C++, but the front end will sometimes
 generate these expressions anyhow, if it can tell that strictness does
 not matter.  The type of the operands and that of the result are
 always of @code{BOOLEAN_TYPE} or @code{INTEGER_TYPE}.
+
+@itemx POINTER_PLUS_EXPR
+This node represents pointer arithmetic.  The first operand is always
+a pointer/reference type.  The second operand is always an unsigned
+integer type compatible with sizetype.  This is the only binary
+arithmetic operand that can operate on pointer types.
 
 @itemx PLUS_EXPR
 @itemx MINUS_EXPR
@@ -2408,18 +2517,38 @@ argument does cause side-effects.
 
 @item CALL_EXPR
 These nodes are used to represent calls to functions, including
-non-static member functions.  The first operand is a pointer to the
+non-static member functions.  @code{CALL_EXPR}s are implemented as
+expression nodes with a variable number of operands.  Rather than using
+@code{TREE_OPERAND} to extract them, it is preferable to use the
+specialized accessor macros and functions that operate specifically on
+@code{CALL_EXPR} nodes.
+
+@code{CALL_EXPR_FN} returns a pointer to the
 function to call; it is always an expression whose type is a
-@code{POINTER_TYPE}.  The second argument is a @code{TREE_LIST}.  The
-arguments to the call appear left-to-right in the list.  The
-@code{TREE_VALUE} of each list node contains the expression
-corresponding to that argument.  (The value of @code{TREE_PURPOSE} for
-these nodes is unspecified, and should be ignored.)  For non-static
+@code{POINTER_TYPE}.
+
+The number of arguments to the call is returned by @code{call_expr_nargs},
+while the arguments themselves can be accessed with the @code{CALL_EXPR_ARG} 
+macro.  The arguments are zero-indexed and numbered left-to-right.  
+You can iterate over the arguments using @code{FOR_EACH_CALL_EXPR_ARG}, as in:
+
+@smallexample
+tree call, arg;
+call_expr_arg_iterator iter;
+FOR_EACH_CALL_EXPR_ARG (arg, iter, call)
+  /* arg is bound to successive arguments of call.  */
+  @dots{};
+@end smallexample
+
+For non-static
 member functions, there will be an operand corresponding to the
 @code{this} pointer.  There will always be expressions corresponding to
 all of the arguments, even if the function is declared with default
 arguments and some arguments are not explicitly provided at the call
 sites.
+
+@code{CALL_EXPR}s also have a @code{CALL_EXPR_STATIC_CHAIN} operand that
+is used to implement nested functions.  This operand is otherwise null.
 
 @item STMT_EXPR
 These nodes are used to represent GCC's statement-expression extension.
@@ -2547,15 +2676,14 @@ cleanups.
 An @code{AGGR_INIT_EXPR} represents the initialization as the return
 value of a function call, or as the result of a constructor.  An
 @code{AGGR_INIT_EXPR} will only appear as a full-expression, or as the
-second operand of a @code{TARGET_EXPR}.  The first operand to the
-@code{AGGR_INIT_EXPR} is the address of a function to call, just as in
-a @code{CALL_EXPR}.  The second operand are the arguments to pass that
-function, as a @code{TREE_LIST}, again in a manner similar to that of
-a @code{CALL_EXPR}.
+second operand of a @code{TARGET_EXPR}.  @code{AGGR_INIT_EXPR}s have
+a representation similar to that of @code{CALL_EXPR}s.  You can use
+the @code{AGGR_INIT_EXPR_FN} and @code{AGGR_INIT_EXPR_ARG} macros to access
+the function to call and the arguments to pass.
 
 If @code{AGGR_INIT_VIA_CTOR_P} holds of the @code{AGGR_INIT_EXPR}, then
-the initialization is via a constructor call.  The address of the third
-operand of the @code{AGGR_INIT_EXPR}, which is always a @code{VAR_DECL},
+the initialization is via a constructor call.  The address of the
+@code{AGGR_INIT_EXPR_SLOT} operand, which is always a @code{VAR_DECL},
 is taken, and this value replaces the first argument in the argument
 list.
 
@@ -2566,5 +2694,259 @@ This node is used to implement support for the C/C++ variable argument-list
 mechanism.  It represents expressions like @code{va_arg (ap, type)}.
 Its @code{TREE_TYPE} yields the tree representation for @code{type} and
 its sole argument yields the representation for @code{ap}.
+
+@item CHANGE_DYNAMIC_TYPE_EXPR
+Indicates the special aliasing required by C++ placement new.  It has
+two operands: a type and a location.  It means that the dynamic type
+of the location is changing to be the specified type.  The alias
+analysis code takes this into account when doing type based alias
+analysis.
+
+@item OMP_PARALLEL
+
+Represents @code{#pragma omp parallel [clause1 @dots{} clauseN]}. It
+has four operands:
+
+Operand @code{OMP_PARALLEL_BODY} is valid while in GENERIC and
+High GIMPLE forms.  It contains the body of code to be executed
+by all the threads.  During GIMPLE lowering, this operand becomes
+@code{NULL} and the body is emitted linearly after
+@code{OMP_PARALLEL}.
+
+Operand @code{OMP_PARALLEL_CLAUSES} is the list of clauses
+associated with the directive.
+
+Operand @code{OMP_PARALLEL_FN} is created by
+@code{pass_lower_omp}, it contains the @code{FUNCTION_DECL}
+for the function that will contain the body of the parallel
+region.
+
+Operand @code{OMP_PARALLEL_DATA_ARG} is also created by
+@code{pass_lower_omp}. If there are shared variables to be
+communicated to the children threads, this operand will contain
+the @code{VAR_DECL} that contains all the shared values and
+variables.
+
+@item OMP_FOR
+
+Represents @code{#pragma omp for [clause1 @dots{} clauseN]}.  It
+has 5 operands:
+
+Operand @code{OMP_FOR_BODY} contains the loop body.
+
+Operand @code{OMP_FOR_CLAUSES} is the list of clauses
+associated with the directive.
+
+Operand @code{OMP_FOR_INIT} is the loop initialization code of
+the form @code{VAR = N1}.
+
+Operand @code{OMP_FOR_COND} is the loop conditional expression
+of the form @code{VAR @{<,>,<=,>=@} N2}.
+
+Operand @code{OMP_FOR_INCR} is the loop index increment of the
+form @code{VAR @{+=,-=@} INCR}.
+
+Operand @code{OMP_FOR_PRE_BODY} contains side-effect code from
+operands @code{OMP_FOR_INIT}, @code{OMP_FOR_COND} and
+@code{OMP_FOR_INC}.  These side-effects are part of the
+@code{OMP_FOR} block but must be evaluated before the start of
+loop body.
+
+The loop index variable @code{VAR} must be a signed integer variable,
+which is implicitly private to each thread.  Bounds
+@code{N1} and @code{N2} and the increment expression
+@code{INCR} are required to be loop invariant integer
+expressions that are evaluated without any synchronization. The
+evaluation order, frequency of evaluation and side-effects are
+unspecified by the standard.
+
+@item OMP_SECTIONS
+
+Represents @code{#pragma omp sections [clause1 @dots{} clauseN]}.
+
+Operand @code{OMP_SECTIONS_BODY} contains the sections body,
+which in turn contains a set of @code{OMP_SECTION} nodes for
+each of the concurrent sections delimited by @code{#pragma omp
+section}.
+
+Operand @code{OMP_SECTIONS_CLAUSES} is the list of clauses
+associated with the directive.
+
+@item OMP_SECTION
+
+Section delimiter for @code{OMP_SECTIONS}.
+
+@item OMP_SINGLE
+
+Represents @code{#pragma omp single}.
+
+Operand @code{OMP_SINGLE_BODY} contains the body of code to be
+executed by a single thread.
+
+Operand @code{OMP_SINGLE_CLAUSES} is the list of clauses
+associated with the directive.
+
+@item OMP_MASTER
+
+Represents @code{#pragma omp master}.
+
+Operand @code{OMP_MASTER_BODY} contains the body of code to be
+executed by the master thread.
+
+@item OMP_ORDERED
+
+Represents @code{#pragma omp ordered}.
+
+Operand @code{OMP_ORDERED_BODY} contains the body of code to be
+executed in the sequential order dictated by the loop index
+variable.
+
+@item OMP_CRITICAL
+
+Represents @code{#pragma omp critical [name]}.
+
+Operand @code{OMP_CRITICAL_BODY} is the critical section.
+
+Operand @code{OMP_CRITICAL_NAME} is an optional identifier to
+label the critical section.
+
+@item OMP_RETURN
+
+This does not represent any OpenMP directive, it is an artificial
+marker to indicate the end of the body of an OpenMP@. It is used
+by the flow graph (@code{tree-cfg.c}) and OpenMP region
+building code (@code{omp-low.c}).
+
+@item OMP_CONTINUE
+
+Similarly, this instruction does not represent an OpenMP
+directive, it is used by @code{OMP_FOR} and
+@code{OMP_SECTIONS} to mark the place where the code needs to
+loop to the next iteration (in the case of @code{OMP_FOR}) or
+the next section (in the case of @code{OMP_SECTIONS}).
+
+In some cases, @code{OMP_CONTINUE} is placed right before
+@code{OMP_RETURN}.  But if there are cleanups that need to
+occur right after the looping body, it will be emitted between
+@code{OMP_CONTINUE} and @code{OMP_RETURN}.
+
+@item OMP_ATOMIC
+
+Represents @code{#pragma omp atomic}.
+
+Operand 0 is the address at which the atomic operation is to be
+performed.
+
+Operand 1 is the expression to evaluate.  The gimplifier tries
+three alternative code generation strategies.  Whenever possible,
+an atomic update built-in is used.  If that fails, a
+compare-and-swap loop is attempted.  If that also fails, a
+regular critical section around the expression is used.
+
+@item OMP_CLAUSE
+
+Represents clauses associated with one of the @code{OMP_} directives.
+Clauses are represented by separate sub-codes defined in
+@file{tree.h}.  Clauses codes can be one of:
+@code{OMP_CLAUSE_PRIVATE}, @code{OMP_CLAUSE_SHARED},
+@code{OMP_CLAUSE_FIRSTPRIVATE},
+@code{OMP_CLAUSE_LASTPRIVATE}, @code{OMP_CLAUSE_COPYIN},
+@code{OMP_CLAUSE_COPYPRIVATE}, @code{OMP_CLAUSE_IF},
+@code{OMP_CLAUSE_NUM_THREADS}, @code{OMP_CLAUSE_SCHEDULE},
+@code{OMP_CLAUSE_NOWAIT}, @code{OMP_CLAUSE_ORDERED},
+@code{OMP_CLAUSE_DEFAULT}, and @code{OMP_CLAUSE_REDUCTION}.  Each code
+represents the corresponding OpenMP clause.
+
+Clauses associated with the same directive are chained together
+via @code{OMP_CLAUSE_CHAIN}. Those clauses that accept a list
+of variables are restricted to exactly one, accessed with
+@code{OMP_CLAUSE_VAR}.  Therefore, multiple variables under the
+same clause @code{C} need to be represented as multiple @code{C} clauses
+chained together.  This facilitates adding new clauses during
+compilation.
+
+@item VEC_LSHIFT_EXPR
+@item VEC_RSHIFT_EXPR
+These nodes represent whole vector left and right shifts, respectively.  
+The first operand is the vector to shift; it will always be of vector type.  
+The second operand is an expression for the number of bits by which to
+shift.  Note that the result is undefined if the second operand is larger
+than or equal to the first operand's type size.
+
+@item VEC_WIDEN_MULT_HI_EXPR
+@item VEC_WIDEN_MULT_LO_EXPR
+These nodes represent widening vector multiplication of the high and low
+parts of the two input vectors, respectively.  Their operands are vectors 
+that contain the same number of elements (@code{N}) of the same integral type.  
+The result is a vector that contains half as many elements, of an integral type 
+whose size is twice as wide.  In the case of @code{VEC_WIDEN_MULT_HI_EXPR} the
+high @code{N/2} elements of the two vector are multiplied to produce the
+vector of @code{N/2} products. In the case of @code{VEC_WIDEN_MULT_LO_EXPR} the
+low @code{N/2} elements of the two vector are multiplied to produce the
+vector of @code{N/2} products.
+
+@item VEC_UNPACK_HI_EXPR
+@item VEC_UNPACK_LO_EXPR
+These nodes represent unpacking of the high and low parts of the input vector,
+respectively.  The single operand is a vector that contains @code{N} elements 
+of the same integral or floating point type.  The result is a vector
+that contains half as many elements, of an integral or floating point type
+whose size is twice as wide.  In the case of @code{VEC_UNPACK_HI_EXPR} the
+high @code{N/2} elements of the vector are extracted and widened (promoted).
+In the case of @code{VEC_UNPACK_LO_EXPR} the low @code{N/2} elements of the
+vector are extracted and widened (promoted).
+
+@item VEC_UNPACK_FLOAT_HI_EXPR
+@item VEC_UNPACK_FLOAT_LO_EXPR
+These nodes represent unpacking of the high and low parts of the input vector,
+where the values are converted from fixed point to floating point.  The
+single operand is a vector that contains @code{N} elements of the same
+integral type.  The result is a vector that contains half as many elements
+of a floating point type whose size is twice as wide.  In the case of
+@code{VEC_UNPACK_HI_EXPR} the high @code{N/2} elements of the vector are
+extracted, converted and widened.  In the case of @code{VEC_UNPACK_LO_EXPR}
+the low @code{N/2} elements of the vector are extracted, converted and widened.
+
+@item VEC_PACK_TRUNC_EXPR
+This node represents packing of truncated elements of the two input vectors
+into the output vector.  Input operands are vectors that contain the same
+number of elements of the same integral or floating point type.  The result
+is a vector that contains twice as many elements of an integral or floating
+point type whose size is half as wide. The elements of the two vectors are
+demoted and merged (concatenated) to form the output vector.
+
+@item VEC_PACK_SAT_EXPR
+This node represents packing of elements of the two input vectors into the
+output vector using saturation.  Input operands are vectors that contain
+the same number of elements of the same integral type.  The result is a
+vector that contains twice as many elements of an integral type whose size
+is half as wide.  The elements of the two vectors are demoted and merged
+(concatenated) to form the output vector.
+
+@item VEC_PACK_FIX_TRUNC_EXPR
+This node represents packing of elements of the two input vectors into the
+output vector, where the values are converted from floating point
+to fixed point.  Input operands are vectors that contain the same number
+of elements of a floating point type.  The result is a vector that contains
+twice as many elements of an integral type whose size is half as wide.  The
+elements of the two vectors are merged (concatenated) to form the output
+vector.
+
+@item VEC_EXTRACT_EVEN_EXPR
+@item VEC_EXTRACT_ODD_EXPR
+These nodes represent extracting of the even/odd elements of the two input 
+vectors, respectively. Their operands and result are vectors that contain the 
+same number of elements of the same type.
+
+@item VEC_INTERLEAVE_HIGH_EXPR
+@item VEC_INTERLEAVE_LOW_EXPR
+These nodes represent merging and interleaving of the high/low elements of the
+two input vectors, respectively. The operands and the result are vectors that 
+contain the same number of elements (@code{N}) of the same type.
+In the case of @code{VEC_INTERLEAVE_HIGH_EXPR}, the high @code{N/2} elements of 
+the first input vector are interleaved with the high @code{N/2} elements of the
+second input vector. In the case of @code{VEC_INTERLEAVE_LOW_EXPR}, the low
+@code{N/2} elements of the first input vector are interleaved with the low 
+@code{N/2} elements of the second input vector.
 
 @end table
