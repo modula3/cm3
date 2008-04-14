@@ -1,12 +1,12 @@
 /* Definitions for DEC Alpha/AXP running FreeBSD using the ELF format
-   Copyright (C) 2000, 2002, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2002, 2004, 2005, 2007 Free Software Foundation, Inc.
    Contributed by David E. O'Brien <obrien@FreeBSD.org> and BSDi.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -15,34 +15,19 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 
-#undef  SUBTARGET_EXTRA_SPECS
-#define SUBTARGET_EXTRA_SPECS \
+#undef  EXTRA_SPECS
+#define EXTRA_SPECS \
   { "fbsd_dynamic_linker", FBSD_DYNAMIC_LINKER }
 
-/* Provide a FBSD_TARGET_CPU_CPP_BUILTINS and CPP_SPEC appropriate for
-   FreeBSD/alpha.  Besides the dealing with
-   the GCC option `-posix', and PIC issues as on all FreeBSD platforms, we must
-   deal with the Alpha's FP issues.  */
-
-#undef  FBSD_TARGET_CPU_CPP_BUILTINS
-#define FBSD_TARGET_CPU_CPP_BUILTINS()		\
-  do						\
-    {						\
-      if (flag_pic)				\
-	{					\
-	  builtin_define ("__PIC__");		\
-	  builtin_define ("__pic__");		\
-	}					\
-    }						\
-  while (0)
+/* Provide a CPP_SPEC appropriate for FreeBSD/alpha -- dealing with
+   the GCC option `-posix'.  */
 
 #undef  CPP_SPEC
-#define CPP_SPEC "%(cpp_subtarget) %{posix:-D_POSIX_SOURCE}"
+#define CPP_SPEC "%{posix:-D_POSIX_SOURCE}"
 
 #define LINK_SPEC "%{G*} %{relax:-relax}				\
   %{p:%nconsider using `-pg' instead of `-p' with gprof(1)}		\

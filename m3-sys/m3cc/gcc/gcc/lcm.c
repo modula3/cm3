@@ -1,12 +1,12 @@
 /* Generic partial redundancy elimination with lazy code motion support.
-   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005
+   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007
    Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* These routines are meant to be used by various optimization
    passes which can be modeled as lazy code motion problems.
@@ -107,7 +106,7 @@ compute_antinout_edge (sbitmap *antloc, sbitmap *transp, sbitmap *antin,
   /* Allocate a worklist array/queue.  Entries are only added to the
      list if they were not already on the list.  So the size is
      bounded by the number of basic blocks.  */
-  qin = qout = worklist = xmalloc (sizeof (basic_block) * n_basic_blocks);
+  qin = qout = worklist = XNEWVEC (basic_block, n_basic_blocks);
 
   /* We want a maximal solution, so make an optimistic initialization of
      ANTIN.  */
@@ -122,8 +121,8 @@ compute_antinout_edge (sbitmap *antloc, sbitmap *transp, sbitmap *antin,
     }
 
   qin = worklist;
-  qend = &worklist[n_basic_blocks];
-  qlen = n_basic_blocks;
+  qend = &worklist[n_basic_blocks - NUM_FIXED_BLOCKS];
+  qlen = n_basic_blocks - NUM_FIXED_BLOCKS;
 
   /* Mark blocks which are predecessors of the exit block so that we
      can easily identify them below.  */
@@ -260,7 +259,7 @@ compute_laterin (struct edge_list *edge_list, sbitmap *earliest,
      list if they were not already on the list.  So the size is
      bounded by the number of basic blocks.  */
   qin = qout = worklist
-    = xmalloc (sizeof (basic_block) * (n_basic_blocks + 1));
+    = XNEWVEC (basic_block, n_basic_blocks);
 
   /* Initialize a mapping from each edge to its index.  */
   for (i = 0; i < num_edges; i++)
@@ -294,11 +293,10 @@ compute_laterin (struct edge_list *edge_list, sbitmap *earliest,
     }
 
   /* Note that we do not use the last allocated element for our queue,
-     as EXIT_BLOCK is never inserted into it. In fact the above allocation
-     of n_basic_blocks + 1 elements is not necessary.  */
+     as EXIT_BLOCK is never inserted into it. */
   qin = worklist;
-  qend = &worklist[n_basic_blocks];
-  qlen = n_basic_blocks;
+  qend = &worklist[n_basic_blocks - NUM_FIXED_BLOCKS];
+  qlen = n_basic_blocks - NUM_FIXED_BLOCKS;
 
   /* Iterate until the worklist is empty.  */
   while (qlen)
@@ -377,7 +375,7 @@ compute_insert_delete (struct edge_list *edge_list, sbitmap *antloc,
    map the insert vector to what edge an expression should be inserted on.  */
 
 struct edge_list *
-pre_edge_lcm (FILE *file ATTRIBUTE_UNUSED, int n_exprs, sbitmap *transp,
+pre_edge_lcm (int n_exprs, sbitmap *transp,
 	      sbitmap *avloc, sbitmap *antloc, sbitmap *kill,
 	      sbitmap **insert, sbitmap **delete)
 {
@@ -391,15 +389,15 @@ pre_edge_lcm (FILE *file ATTRIBUTE_UNUSED, int n_exprs, sbitmap *transp,
   num_edges = NUM_EDGES (edge_list);
 
 #ifdef LCM_DEBUG_INFO
-  if (file)
+  if (dump_file)
     {
-      fprintf (file, "Edge List:\n");
-      verify_edge_list (file, edge_list);
-      print_edge_list (file, edge_list);
-      dump_sbitmap_vector (file, "transp", "", transp, last_basic_block);
-      dump_sbitmap_vector (file, "antloc", "", antloc, last_basic_block);
-      dump_sbitmap_vector (file, "avloc", "", avloc, last_basic_block);
-      dump_sbitmap_vector (file, "kill", "", kill, last_basic_block);
+      fprintf (dump_file, "Edge List:\n");
+      verify_edge_list (dump_file, edge_list);
+      print_edge_list (dump_file, edge_list);
+      dump_sbitmap_vector (dump_file, "transp", "", transp, last_basic_block);
+      dump_sbitmap_vector (dump_file, "antloc", "", antloc, last_basic_block);
+      dump_sbitmap_vector (dump_file, "avloc", "", avloc, last_basic_block);
+      dump_sbitmap_vector (dump_file, "kill", "", kill, last_basic_block);
     }
 #endif
 
@@ -415,10 +413,10 @@ pre_edge_lcm (FILE *file ATTRIBUTE_UNUSED, int n_exprs, sbitmap *transp,
   compute_antinout_edge (antloc, transp, antin, antout);
 
 #ifdef LCM_DEBUG_INFO
-  if (file)
+  if (dump_file)
     {
-      dump_sbitmap_vector (file, "antin", "", antin, last_basic_block);
-      dump_sbitmap_vector (file, "antout", "", antout, last_basic_block);
+      dump_sbitmap_vector (dump_file, "antin", "", antin, last_basic_block);
+      dump_sbitmap_vector (dump_file, "antout", "", antout, last_basic_block);
     }
 #endif
 
@@ -427,8 +425,8 @@ pre_edge_lcm (FILE *file ATTRIBUTE_UNUSED, int n_exprs, sbitmap *transp,
   compute_earliest (edge_list, n_exprs, antin, antout, avout, kill, earliest);
 
 #ifdef LCM_DEBUG_INFO
-  if (file)
-    dump_sbitmap_vector (file, "earliest", "", earliest, num_edges);
+  if (dump_file)
+    dump_sbitmap_vector (dump_file, "earliest", "", earliest, num_edges);
 #endif
 
   sbitmap_vector_free (antout);
@@ -442,10 +440,10 @@ pre_edge_lcm (FILE *file ATTRIBUTE_UNUSED, int n_exprs, sbitmap *transp,
   compute_laterin (edge_list, earliest, antloc, later, laterin);
 
 #ifdef LCM_DEBUG_INFO
-  if (file)
+  if (dump_file)
     {
-      dump_sbitmap_vector (file, "laterin", "", laterin, last_basic_block + 1);
-      dump_sbitmap_vector (file, "later", "", later, num_edges);
+      dump_sbitmap_vector (dump_file, "laterin", "", laterin, last_basic_block + 1);
+      dump_sbitmap_vector (dump_file, "later", "", later, num_edges);
     }
 #endif
 
@@ -459,10 +457,10 @@ pre_edge_lcm (FILE *file ATTRIBUTE_UNUSED, int n_exprs, sbitmap *transp,
   sbitmap_vector_free (later);
 
 #ifdef LCM_DEBUG_INFO
-  if (file)
+  if (dump_file)
     {
-      dump_sbitmap_vector (file, "pre_insert_map", "", *insert, num_edges);
-      dump_sbitmap_vector (file, "pre_delete_map", "", *delete,
+      dump_sbitmap_vector (dump_file, "pre_insert_map", "", *insert, num_edges);
+      dump_sbitmap_vector (dump_file, "pre_delete_map", "", *delete,
 			   last_basic_block);
     }
 #endif
@@ -485,7 +483,8 @@ compute_available (sbitmap *avloc, sbitmap *kill, sbitmap *avout,
   /* Allocate a worklist array/queue.  Entries are only added to the
      list if they were not already on the list.  So the size is
      bounded by the number of basic blocks.  */
-  qin = qout = worklist = xmalloc (sizeof (basic_block) * n_basic_blocks);
+  qin = qout = worklist = 
+    XNEWVEC (basic_block, n_basic_blocks - NUM_FIXED_BLOCKS);
 
   /* We want a maximal solution.  */
   sbitmap_vector_ones (avout, last_basic_block);
@@ -499,8 +498,8 @@ compute_available (sbitmap *avloc, sbitmap *kill, sbitmap *avout,
     }
 
   qin = worklist;
-  qend = &worklist[n_basic_blocks];
-  qlen = n_basic_blocks;
+  qend = &worklist[n_basic_blocks - NUM_FIXED_BLOCKS];
+  qlen = n_basic_blocks - NUM_FIXED_BLOCKS;
 
   /* Mark blocks which are successors of the entry block so that we
      can easily identify them below.  */
@@ -614,7 +613,7 @@ compute_nearerout (struct edge_list *edge_list, sbitmap *farthest,
   /* Allocate a worklist array/queue.  Entries are only added to the
      list if they were not already on the list.  So the size is
      bounded by the number of basic blocks.  */
-  tos = worklist = xmalloc (sizeof (basic_block) * (n_basic_blocks + 1));
+  tos = worklist = XNEWVEC (basic_block, n_basic_blocks + 1);
 
   /* Initialize NEARER for each edge and build a mapping from an edge to
      its index.  */
@@ -710,7 +709,7 @@ compute_rev_insert_delete (struct edge_list *edge_list, sbitmap *st_avloc,
    an expression should be inserted on.  */
 
 struct edge_list *
-pre_edge_rev_lcm (FILE *file ATTRIBUTE_UNUSED, int n_exprs, sbitmap *transp,
+pre_edge_rev_lcm (int n_exprs, sbitmap *transp,
 		  sbitmap *st_avloc, sbitmap *st_antloc, sbitmap *kill,
 		  sbitmap **insert, sbitmap **delete)
 {
@@ -735,25 +734,25 @@ pre_edge_rev_lcm (FILE *file ATTRIBUTE_UNUSED, int n_exprs, sbitmap *transp,
   compute_available (st_avloc, kill, st_avout, st_avin);
 
 #ifdef LCM_DEBUG_INFO
-  if (file)
+  if (dump_file)
     {
-      fprintf (file, "Edge List:\n");
-      verify_edge_list (file, edge_list);
-      print_edge_list (file, edge_list);
-      dump_sbitmap_vector (file, "transp", "", transp, last_basic_block);
-      dump_sbitmap_vector (file, "st_avloc", "", st_avloc, last_basic_block);
-      dump_sbitmap_vector (file, "st_antloc", "", st_antloc, last_basic_block);
-      dump_sbitmap_vector (file, "st_antin", "", st_antin, last_basic_block);
-      dump_sbitmap_vector (file, "st_antout", "", st_antout, last_basic_block);
-      dump_sbitmap_vector (file, "st_kill", "", kill, last_basic_block);
+      fprintf (dump_file, "Edge List:\n");
+      verify_edge_list (dump_file, edge_list);
+      print_edge_list (dump_file, edge_list);
+      dump_sbitmap_vector (dump_file, "transp", "", transp, last_basic_block);
+      dump_sbitmap_vector (dump_file, "st_avloc", "", st_avloc, last_basic_block);
+      dump_sbitmap_vector (dump_file, "st_antloc", "", st_antloc, last_basic_block);
+      dump_sbitmap_vector (dump_file, "st_antin", "", st_antin, last_basic_block);
+      dump_sbitmap_vector (dump_file, "st_antout", "", st_antout, last_basic_block);
+      dump_sbitmap_vector (dump_file, "st_kill", "", kill, last_basic_block);
     }
 #endif
 
 #ifdef LCM_DEBUG_INFO
-  if (file)
+  if (dump_file)
     {
-      dump_sbitmap_vector (file, "st_avout", "", st_avout, last_basic_block);
-      dump_sbitmap_vector (file, "st_avin", "", st_avin, last_basic_block);
+      dump_sbitmap_vector (dump_file, "st_avout", "", st_avout, last_basic_block);
+      dump_sbitmap_vector (dump_file, "st_avin", "", st_avin, last_basic_block);
     }
 #endif
 
@@ -763,8 +762,8 @@ pre_edge_rev_lcm (FILE *file ATTRIBUTE_UNUSED, int n_exprs, sbitmap *transp,
 		    kill, farthest);
 
 #ifdef LCM_DEBUG_INFO
-  if (file)
-    dump_sbitmap_vector (file, "farthest", "", farthest, num_edges);
+  if (dump_file)
+    dump_sbitmap_vector (dump_file, "farthest", "", farthest, num_edges);
 #endif
 
   sbitmap_vector_free (st_antin);
@@ -780,11 +779,11 @@ pre_edge_rev_lcm (FILE *file ATTRIBUTE_UNUSED, int n_exprs, sbitmap *transp,
   compute_nearerout (edge_list, farthest, st_avloc, nearer, nearerout);
 
 #ifdef LCM_DEBUG_INFO
-  if (file)
+  if (dump_file)
     {
-      dump_sbitmap_vector (file, "nearerout", "", nearerout,
+      dump_sbitmap_vector (dump_file, "nearerout", "", nearerout,
 			   last_basic_block + 1);
-      dump_sbitmap_vector (file, "nearer", "", nearer, num_edges);
+      dump_sbitmap_vector (dump_file, "nearer", "", nearer, num_edges);
     }
 #endif
 
@@ -799,10 +798,10 @@ pre_edge_rev_lcm (FILE *file ATTRIBUTE_UNUSED, int n_exprs, sbitmap *transp,
   sbitmap_vector_free (nearer);
 
 #ifdef LCM_DEBUG_INFO
-  if (file)
+  if (dump_file)
     {
-      dump_sbitmap_vector (file, "pre_insert_map", "", *insert, num_edges);
-      dump_sbitmap_vector (file, "pre_delete_map", "", *delete,
+      dump_sbitmap_vector (dump_file, "pre_insert_map", "", *insert, num_edges);
+      dump_sbitmap_vector (dump_file, "pre_delete_map", "", *delete,
 			   last_basic_block);
     }
 #endif

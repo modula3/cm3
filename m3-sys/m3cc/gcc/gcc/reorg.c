@@ -1,6 +1,7 @@
 /* Perform instruction reorganizations for delay slot filling.
-   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-   1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
+   2001, 2002, 2003, 2004, 2005, 2006, 2007
+   Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@vlsi1.ultra.nyu.edu).
    Hacked by Michael Tiemann (tiemann@cygnus.com).
 
@@ -8,7 +9,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -17,9 +18,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* Instruction reorganization pass.
 
@@ -211,7 +211,8 @@ static void update_reg_dead_notes (rtx, rtx);
 static void fix_reg_dead_note (rtx, rtx);
 static void update_reg_unused_notes (rtx, rtx);
 static void fill_simple_delay_slots (int);
-static rtx fill_slots_from_thread (rtx, rtx, rtx, rtx, int, int, int, int,
+static rtx fill_slots_from_thread (rtx, rtx, rtx, rtx,
+				   int, int, int, int,
 				   int *, rtx);
 static void fill_eager_delay_slots (void);
 static void relax_delay_slots (rtx);
@@ -511,6 +512,8 @@ emit_delay_sequence (rtx insn, rtx list, int length)
   INSN_DELETED_P (delay_insn) = 0;
   PREV_INSN (delay_insn) = PREV_INSN (seq_insn);
 
+  INSN_LOCATOR (seq_insn) = INSN_LOCATOR (delay_insn);
+
   for (li = list; li; li = XEXP (li, 1), i++)
     {
       rtx tem = XEXP (li, 0);
@@ -540,7 +543,8 @@ emit_delay_sequence (rtx insn, rtx list, int length)
 	      remove_note (tem, note);
 	      break;
 
-	    case REG_LABEL:
+	    case REG_LABEL_OPERAND:
+	    case REG_LABEL_TARGET:
 	      /* Keep the label reference count up to date.  */
 	      if (LABEL_P (XEXP (note, 0)))
 		LABEL_NUSES (XEXP (note, 0)) ++;
@@ -638,7 +642,7 @@ delete_from_delay_slot (rtx insn)
   prev = PREV_INSN (seq_insn);
   trial = XVECEXP (seq, 0, 0);
   delete_related_insns (seq_insn);
-  add_insn_after (trial, prev);
+  add_insn_after (trial, prev, NULL);
 
   /* If there was a barrier after the old SEQUENCE, remit it.  */
   if (had_barrier)
@@ -963,9 +967,8 @@ static int
 mostly_true_jump (rtx jump_insn, rtx condition)
 {
   rtx target_label = JUMP_LABEL (jump_insn);
-  rtx insn, note;
-  int rare_dest = rare_destination (target_label);
-  int rare_fallthrough = rare_destination (NEXT_INSN (jump_insn));
+  rtx note;
+  int rare_dest, rare_fallthrough;
 
   /* If branch probabilities are available, then use that number since it
      always gives a correct answer.  */
@@ -984,32 +987,10 @@ mostly_true_jump (rtx jump_insn, rtx condition)
 	return -1;
     }
 
-  /* ??? Ought to use estimate_probability instead.  */
-
-  /* If this is a branch outside a loop, it is highly unlikely.  */
-  if (GET_CODE (PATTERN (jump_insn)) == SET
-      && GET_CODE (SET_SRC (PATTERN (jump_insn))) == IF_THEN_ELSE
-      && ((GET_CODE (XEXP (SET_SRC (PATTERN (jump_insn)), 1)) == LABEL_REF
-	   && LABEL_OUTSIDE_LOOP_P (XEXP (SET_SRC (PATTERN (jump_insn)), 1)))
-	  || (GET_CODE (XEXP (SET_SRC (PATTERN (jump_insn)), 2)) == LABEL_REF
-	      && LABEL_OUTSIDE_LOOP_P (XEXP (SET_SRC (PATTERN (jump_insn)), 2)))))
-    return -1;
-
-  if (target_label)
-    {
-      /* If this is the test of a loop, it is very likely true.  We scan
-	 backwards from the target label.  If we find a NOTE_INSN_LOOP_BEG
-	 before the next real insn, we assume the branch is to the top of
-	 the loop.  */
-      for (insn = PREV_INSN (target_label);
-	   insn && NOTE_P (insn);
-	   insn = PREV_INSN (insn))
-	if (NOTE_LINE_NUMBER (insn) == NOTE_INSN_LOOP_BEG)
-	  return 2;
-    }
-
   /* Look at the relative rarities of the fallthrough and destination.  If
      they differ, we can predict the branch that way.  */
+  rare_dest = rare_destination (target_label);
+  rare_fallthrough = rare_destination (NEXT_INSN (jump_insn));
 
   switch (rare_fallthrough - rare_dest)
     {
@@ -1029,33 +1010,6 @@ mostly_true_jump (rtx jump_insn, rtx condition)
      taken.  This should be rare.  */
   if (condition == 0)
     return 0;
-
-  /* EQ tests are usually false and NE tests are usually true.  Also,
-     most quantities are positive, so we can make the appropriate guesses
-     about signed comparisons against zero.  */
-  switch (GET_CODE (condition))
-    {
-    case CONST_INT:
-      /* Unconditional branch.  */
-      return 1;
-    case EQ:
-      return 0;
-    case NE:
-      return 1;
-    case LE:
-    case LT:
-      if (XEXP (condition, 1) == const0_rtx)
-	return 0;
-      break;
-    case GE:
-    case GT:
-      if (XEXP (condition, 1) == const0_rtx)
-	return 1;
-      break;
-
-    default:
-      break;
-    }
 
   /* Predict backward branches usually take, forward branches usually not.  If
      we don't know whether this is forward or backward, assume the branch
@@ -2022,6 +1976,28 @@ update_reg_unused_notes (rtx insn, rtx redundant_insn)
     }
 }
 
+/* Return the label before INSN, or put a new label there.  */
+
+static rtx
+get_label_before (rtx insn)
+{
+  rtx label;
+
+  /* Find an existing label at this point
+     or make a new one if there is none.  */
+  label = prev_nonnote_insn (insn);
+
+  if (label == 0 || !LABEL_P (label))
+    {
+      rtx prev = PREV_INSN (insn);
+
+      label = gen_label_rtx ();
+      emit_label_after (label, prev);
+      LABEL_NUSES (label) = 0;
+    }
+  return label;
+}
+
 /* Scan a function looking for insns that need a delay slot and find insns to
    put into the delay slot.
 
@@ -2518,6 +2494,50 @@ fill_simple_delay_slots (int non_jumps_p)
 #endif
 }
 
+/* Follow any unconditional jump at LABEL;
+   return the ultimate label reached by any such chain of jumps.
+   Return null if the chain ultimately leads to a return instruction.
+   If LABEL is not followed by a jump, return LABEL.
+   If the chain loops or we can't find end, return LABEL,
+   since that tells caller to avoid changing the insn.  */
+
+static rtx
+follow_jumps (rtx label)
+{
+  rtx insn;
+  rtx next;
+  rtx value = label;
+  int depth;
+
+  for (depth = 0;
+       (depth < 10
+	&& (insn = next_active_insn (value)) != 0
+	&& JUMP_P (insn)
+	&& ((JUMP_LABEL (insn) != 0 && any_uncondjump_p (insn)
+	     && onlyjump_p (insn))
+	    || GET_CODE (PATTERN (insn)) == RETURN)
+	&& (next = NEXT_INSN (insn))
+	&& BARRIER_P (next));
+       depth++)
+    {
+      rtx tem;
+
+      /* If we have found a cycle, make the insn jump to itself.  */
+      if (JUMP_LABEL (insn) == label)
+	return label;
+
+      tem = next_active_insn (JUMP_LABEL (insn));
+      if (tem && (GET_CODE (PATTERN (tem)) == ADDR_VEC
+		  || GET_CODE (PATTERN (tem)) == ADDR_DIFF_VEC))
+	break;
+
+      value = JUMP_LABEL (insn);
+    }
+  if (depth == 10)
+    return label;
+  return value;
+}
+
 /* Try to find insns to place in delay slots.
 
    INSN is the jump needing SLOTS_TO_FILL delay slots.  It tests CONDITION
@@ -2719,15 +2739,41 @@ fill_slots_from_thread (rtx insn, rtx condition, rtx thread,
 		      /* We are moving this insn, not deleting it.  We must
 			 temporarily increment the use count on any referenced
 			 label lest it be deleted by delete_related_insns.  */
-		      note = find_reg_note (trial, REG_LABEL, 0);
-		      /* REG_LABEL could be NOTE_INSN_DELETED_LABEL too.  */
-		      if (note && LABEL_P (XEXP (note, 0)))
-			LABEL_NUSES (XEXP (note, 0))++;
+		      for (note = REG_NOTES (trial);
+			   note != NULL_RTX;
+			   note = XEXP (note, 1))
+			if (REG_NOTE_KIND (note) == REG_LABEL_OPERAND
+			    || REG_NOTE_KIND (note) == REG_LABEL_TARGET)
+			  {
+			    /* REG_LABEL_OPERAND could be
+			       NOTE_INSN_DELETED_LABEL too.  */
+			    if (LABEL_P (XEXP (note, 0)))
+			      LABEL_NUSES (XEXP (note, 0))++;
+			    else
+			      gcc_assert (REG_NOTE_KIND (note)
+					  == REG_LABEL_OPERAND);
+			  }
+		      if (JUMP_P (trial) && JUMP_LABEL (trial))
+			LABEL_NUSES (JUMP_LABEL (trial))++;
 
 		      delete_related_insns (trial);
 
-		      if (note && LABEL_P (XEXP (note, 0)))
-			LABEL_NUSES (XEXP (note, 0))--;
+		      for (note = REG_NOTES (trial);
+			   note != NULL_RTX;
+			   note = XEXP (note, 1))
+			if (REG_NOTE_KIND (note) == REG_LABEL_OPERAND
+			    || REG_NOTE_KIND (note) == REG_LABEL_TARGET)
+			  {
+			    /* REG_LABEL_OPERAND could be
+			       NOTE_INSN_DELETED_LABEL too.  */
+			    if (LABEL_P (XEXP (note, 0)))
+			      LABEL_NUSES (XEXP (note, 0))--;
+			    else
+			      gcc_assert (REG_NOTE_KIND (note)
+					  == REG_LABEL_OPERAND);
+			  }
+		      if (JUMP_P (trial) && JUMP_LABEL (trial))
+			LABEL_NUSES (JUMP_LABEL (trial))--;
 		    }
 		  else
 		    new_thread = next_active_insn (trial);
@@ -2867,6 +2913,8 @@ fill_slots_from_thread (rtx insn, rtx condition, rtx thread,
       dest = SET_DEST (pat), src = SET_SRC (pat);
       if ((GET_CODE (src) == PLUS || GET_CODE (src) == MINUS)
 	  && rtx_equal_p (XEXP (src, 0), dest)
+	  && (!FLOAT_MODE_P (GET_MODE (src))
+	      || flag_unsafe_math_optimizations)
 	  && ! reg_overlap_mentioned_p (dest, XEXP (src, 1))
 	  && ! side_effects_p (pat))
 	{
@@ -3085,6 +3133,189 @@ fill_eager_delay_slots (void)
     }
 }
 
+static void delete_computation (rtx insn);
+
+/* Recursively delete prior insns that compute the value (used only by INSN
+   which the caller is deleting) stored in the register mentioned by NOTE
+   which is a REG_DEAD note associated with INSN.  */
+
+static void
+delete_prior_computation (rtx note, rtx insn)
+{
+  rtx our_prev;
+  rtx reg = XEXP (note, 0);
+
+  for (our_prev = prev_nonnote_insn (insn);
+       our_prev && (NONJUMP_INSN_P (our_prev)
+		    || CALL_P (our_prev));
+       our_prev = prev_nonnote_insn (our_prev))
+    {
+      rtx pat = PATTERN (our_prev);
+
+      /* If we reach a CALL which is not calling a const function
+	 or the callee pops the arguments, then give up.  */
+      if (CALL_P (our_prev)
+	  && (! CONST_OR_PURE_CALL_P (our_prev)
+	      || GET_CODE (pat) != SET || GET_CODE (SET_SRC (pat)) != CALL))
+	break;
+
+      /* If we reach a SEQUENCE, it is too complex to try to
+	 do anything with it, so give up.  We can be run during
+	 and after reorg, so SEQUENCE rtl can legitimately show
+	 up here.  */
+      if (GET_CODE (pat) == SEQUENCE)
+	break;
+
+      if (GET_CODE (pat) == USE
+	  && NONJUMP_INSN_P (XEXP (pat, 0)))
+	/* reorg creates USEs that look like this.  We leave them
+	   alone because reorg needs them for its own purposes.  */
+	break;
+
+      if (reg_set_p (reg, pat))
+	{
+	  if (side_effects_p (pat) && !CALL_P (our_prev))
+	    break;
+
+	  if (GET_CODE (pat) == PARALLEL)
+	    {
+	      /* If we find a SET of something else, we can't
+		 delete the insn.  */
+
+	      int i;
+
+	      for (i = 0; i < XVECLEN (pat, 0); i++)
+		{
+		  rtx part = XVECEXP (pat, 0, i);
+
+		  if (GET_CODE (part) == SET
+		      && SET_DEST (part) != reg)
+		    break;
+		}
+
+	      if (i == XVECLEN (pat, 0))
+		delete_computation (our_prev);
+	    }
+	  else if (GET_CODE (pat) == SET
+		   && REG_P (SET_DEST (pat)))
+	    {
+	      int dest_regno = REGNO (SET_DEST (pat));
+	      int dest_endregno = END_REGNO (SET_DEST (pat));
+	      int regno = REGNO (reg);
+	      int endregno = END_REGNO (reg);
+
+	      if (dest_regno >= regno
+		  && dest_endregno <= endregno)
+		delete_computation (our_prev);
+
+	      /* We may have a multi-word hard register and some, but not
+		 all, of the words of the register are needed in subsequent
+		 insns.  Write REG_UNUSED notes for those parts that were not
+		 needed.  */
+	      else if (dest_regno <= regno
+		       && dest_endregno >= endregno)
+		{
+		  int i;
+
+		  REG_NOTES (our_prev)
+		    = gen_rtx_EXPR_LIST (REG_UNUSED, reg,
+					 REG_NOTES (our_prev));
+
+		  for (i = dest_regno; i < dest_endregno; i++)
+		    if (! find_regno_note (our_prev, REG_UNUSED, i))
+		      break;
+
+		  if (i == dest_endregno)
+		    delete_computation (our_prev);
+		}
+	    }
+
+	  break;
+	}
+
+      /* If PAT references the register that dies here, it is an
+	 additional use.  Hence any prior SET isn't dead.  However, this
+	 insn becomes the new place for the REG_DEAD note.  */
+      if (reg_overlap_mentioned_p (reg, pat))
+	{
+	  XEXP (note, 1) = REG_NOTES (our_prev);
+	  REG_NOTES (our_prev) = note;
+	  break;
+	}
+    }
+}
+
+/* Delete INSN and recursively delete insns that compute values used only
+   by INSN.  This uses the REG_DEAD notes computed during flow analysis.
+   If we are running before flow.c, we need do nothing since flow.c will
+   delete dead code.  We also can't know if the registers being used are
+   dead or not at this point.
+
+   Otherwise, look at all our REG_DEAD notes.  If a previous insn does
+   nothing other than set a register that dies in this insn, we can delete
+   that insn as well.
+
+   On machines with CC0, if CC0 is used in this insn, we may be able to
+   delete the insn that set it.  */
+
+static void
+delete_computation (rtx insn)
+{
+  rtx note, next;
+
+#ifdef HAVE_cc0
+  if (reg_referenced_p (cc0_rtx, PATTERN (insn)))
+    {
+      rtx prev = prev_nonnote_insn (insn);
+      /* We assume that at this stage
+	 CC's are always set explicitly
+	 and always immediately before the jump that
+	 will use them.  So if the previous insn
+	 exists to set the CC's, delete it
+	 (unless it performs auto-increments, etc.).  */
+      if (prev && NONJUMP_INSN_P (prev)
+	  && sets_cc0_p (PATTERN (prev)))
+	{
+	  if (sets_cc0_p (PATTERN (prev)) > 0
+	      && ! side_effects_p (PATTERN (prev)))
+	    delete_computation (prev);
+	  else
+	    /* Otherwise, show that cc0 won't be used.  */
+	    REG_NOTES (prev) = gen_rtx_EXPR_LIST (REG_UNUSED,
+						  cc0_rtx, REG_NOTES (prev));
+	}
+    }
+#endif
+
+  for (note = REG_NOTES (insn); note; note = next)
+    {
+      next = XEXP (note, 1);
+
+      if (REG_NOTE_KIND (note) != REG_DEAD
+	  /* Verify that the REG_NOTE is legitimate.  */
+	  || !REG_P (XEXP (note, 0)))
+	continue;
+
+      delete_prior_computation (note, insn);
+    }
+
+  delete_related_insns (insn);
+}
+
+/* If all INSN does is set the pc, delete it,
+   and delete the insn that set the condition codes for it
+   if that's what the previous thing was.  */
+
+static void
+delete_jump (rtx insn)
+{
+  rtx set = single_set (insn);
+
+  if (set && GET_CODE (SET_DEST (set)) == PC)
+    delete_computation (insn);
+}
+
+
 /* Once we have tried two ways to fill a delay slot, make a pass over the
    code to try to improve the results and to do such things as more jump
    threading.  */
@@ -3239,7 +3470,7 @@ relax_delay_slots (rtx first)
 	  for (i = 0; i < XVECLEN (pat, 0); i++)
 	    {
 	      rtx this_insn = XVECEXP (pat, 0, i);
-	      add_insn_after (this_insn, after);
+	      add_insn_after (this_insn, after, NULL);
 	      after = this_insn;
 	    }
 	  delete_scheduled_jump (delay_insn);
@@ -3357,7 +3588,7 @@ relax_delay_slots (rtx first)
 	  for (i = 0; i < XVECLEN (pat, 0); i++)
 	    {
 	      rtx this_insn = XVECEXP (pat, 0, i);
-	      add_insn_after (this_insn, after);
+	      add_insn_after (this_insn, after, NULL);
 	      after = this_insn;
 	    }
 	  delete_scheduled_jump (delay_insn);
@@ -3377,11 +3608,11 @@ relax_delay_slots (rtx first)
 	  continue;
 	}
 
-      /* See if this jump (with its delay slots) branches around another
-	 jump (without delay slots).  If so, invert this jump and point
-	 it to the target of the second jump.  We cannot do this for
-	 annulled jumps, though.  Again, don't convert a jump to a RETURN
-	 here.  */
+      /* See if this jump (with its delay slots) conditionally branches
+	 around an unconditional jump (without delay slots).  If so, invert
+	 this jump and point it to the target of the second jump.  We cannot
+	 do this for annulled jumps, though.  Again, don't convert a jump to
+	 a RETURN here.  */
       if (! INSN_ANNULLED_BRANCH_P (delay_insn)
 	  && any_condjump_p (delay_insn)
 	  && next && JUMP_P (next)
@@ -3582,14 +3813,14 @@ make_return_insns (rtx first)
 /* Try to find insns to place in delay slots.  */
 
 void
-dbr_schedule (rtx first, FILE *file)
+dbr_schedule (rtx first)
 {
   rtx insn, next, epilogue_insn = 0;
   int i;
 
   /* If the current function has no insns other than the prologue and
      epilogue, then do not try to fill any delay slots.  */
-  if (n_basic_blocks == 0)
+  if (n_basic_blocks == NUM_FIXED_BLOCKS)
     return;
 
   /* Find the highest INSN_UID and allocate and initialize our map from
@@ -3599,7 +3830,7 @@ dbr_schedule (rtx first, FILE *file)
       if (INSN_UID (insn) > max_uid)
 	max_uid = INSN_UID (insn);
       if (NOTE_P (insn)
-	  && NOTE_LINE_NUMBER (insn) == NOTE_INSN_EPILOGUE_BEG)
+	  && NOTE_KIND (insn) == NOTE_INSN_EPILOGUE_BEG)
 	epilogue_insn = insn;
     }
 
@@ -3661,17 +3892,6 @@ dbr_schedule (rtx first, FILE *file)
       relax_delay_slots (first);
     }
 
-  /* Delete any USE insns made by update_block; subsequent passes don't need
-     them or know how to deal with them.  */
-  for (insn = first; insn; insn = next)
-    {
-      next = NEXT_INSN (insn);
-
-      if (NONJUMP_INSN_P (insn) && GET_CODE (PATTERN (insn)) == USE
-	  && INSN_P (XEXP (PATTERN (insn), 0)))
-	next = delete_related_insns (insn);
-    }
-
   /* If we made an end of function label, indicate that it is now
      safe to delete it by undoing our prior adjustment to LABEL_NUSES.
      If it is now unused, delete it.  */
@@ -3683,12 +3903,23 @@ dbr_schedule (rtx first, FILE *file)
     make_return_insns (first);
 #endif
 
+  /* Delete any USE insns made by update_block; subsequent passes don't need
+     them or know how to deal with them.  */
+  for (insn = first; insn; insn = next)
+    {
+      next = NEXT_INSN (insn);
+
+      if (NONJUMP_INSN_P (insn) && GET_CODE (PATTERN (insn)) == USE
+	  && INSN_P (XEXP (PATTERN (insn), 0)))
+	next = delete_related_insns (insn);
+    }
+
   obstack_free (&unfilled_slots_obstack, unfilled_firstobj);
 
   /* It is not clear why the line below is needed, but it does seem to be.  */
   unfilled_firstobj = obstack_alloc (&unfilled_slots_obstack, 0);
 
-  if (file)
+  if (dump_file)
     {
       int i, j, need_comma;
       int total_delay_slots[MAX_DELAY_HISTOGRAM + 1];
@@ -3698,25 +3929,25 @@ dbr_schedule (rtx first, FILE *file)
 	   reorg_pass_number < MAX_REORG_PASSES;
 	   reorg_pass_number++)
 	{
-	  fprintf (file, ";; Reorg pass #%d:\n", reorg_pass_number + 1);
+	  fprintf (dump_file, ";; Reorg pass #%d:\n", reorg_pass_number + 1);
 	  for (i = 0; i < NUM_REORG_FUNCTIONS; i++)
 	    {
 	      need_comma = 0;
-	      fprintf (file, ";; Reorg function #%d\n", i);
+	      fprintf (dump_file, ";; Reorg function #%d\n", i);
 
-	      fprintf (file, ";; %d insns needing delay slots\n;; ",
+	      fprintf (dump_file, ";; %d insns needing delay slots\n;; ",
 		       num_insns_needing_delays[i][reorg_pass_number]);
 
 	      for (j = 0; j < MAX_DELAY_HISTOGRAM + 1; j++)
 		if (num_filled_delays[i][j][reorg_pass_number])
 		  {
 		    if (need_comma)
-		      fprintf (file, ", ");
+		      fprintf (dump_file, ", ");
 		    need_comma = 1;
-		    fprintf (file, "%d got %d delays",
+		    fprintf (dump_file, "%d got %d delays",
 			     num_filled_delays[i][j][reorg_pass_number], j);
 		  }
-	      fprintf (file, "\n");
+	      fprintf (dump_file, "\n");
 	    }
 	}
       memset (total_delay_slots, 0, sizeof total_delay_slots);
@@ -3742,35 +3973,35 @@ dbr_schedule (rtx first, FILE *file)
 		total_delay_slots[0]++;
 	    }
 	}
-      fprintf (file, ";; Reorg totals: ");
+      fprintf (dump_file, ";; Reorg totals: ");
       need_comma = 0;
       for (j = 0; j < MAX_DELAY_HISTOGRAM + 1; j++)
 	{
 	  if (total_delay_slots[j])
 	    {
 	      if (need_comma)
-		fprintf (file, ", ");
+		fprintf (dump_file, ", ");
 	      need_comma = 1;
-	      fprintf (file, "%d got %d delays", total_delay_slots[j], j);
+	      fprintf (dump_file, "%d got %d delays", total_delay_slots[j], j);
 	    }
 	}
-      fprintf (file, "\n");
+      fprintf (dump_file, "\n");
 #if defined (ANNUL_IFTRUE_SLOTS) || defined (ANNUL_IFFALSE_SLOTS)
-      fprintf (file, ";; Reorg annuls: ");
+      fprintf (dump_file, ";; Reorg annuls: ");
       need_comma = 0;
       for (j = 0; j < MAX_DELAY_HISTOGRAM + 1; j++)
 	{
 	  if (total_annul_slots[j])
 	    {
 	      if (need_comma)
-		fprintf (file, ", ");
+		fprintf (dump_file, ", ");
 	      need_comma = 1;
-	      fprintf (file, "%d got %d delays", total_annul_slots[j], j);
+	      fprintf (dump_file, "%d got %d delays", total_annul_slots[j], j);
 	    }
 	}
-      fprintf (file, "\n");
+      fprintf (dump_file, "\n");
 #endif
-      fprintf (file, "\n");
+      fprintf (dump_file, "\n");
     }
 
   /* For all JUMP insns, fill in branch prediction notes, so that during
@@ -3810,6 +4041,7 @@ dbr_schedule (rtx first, FILE *file)
          link = XEXP (link, 1))
       INSN_LOCATOR (XEXP (link, 0)) = 0;
   }
+
 #endif
 }
 #endif /* DELAY_SLOTS */
@@ -3819,19 +4051,20 @@ gate_handle_delay_slots (void)
 {
 #ifdef DELAY_SLOTS
   return flag_delayed_branch;
-#else 
+#else
   return 0;
 #endif
 }
 
 /* Run delay slot optimization.  */
-static void
+static unsigned int
 rest_of_handle_delay_slots (void)
 {
 #ifdef DELAY_SLOTS
-  dbr_schedule (get_insns (), dump_file);
+  dbr_schedule (get_insns ());
 #endif
-}   
+  return 0;
+}
 
 struct tree_opt_pass pass_delay_slots =
 {
@@ -3859,10 +4092,11 @@ gate_handle_machine_reorg (void)
 }
 
 
-static void
+static unsigned int
 rest_of_handle_machine_reorg (void)
 {
   targetm.machine_dependent_reorg ();
+  return 0;
 }
 
 struct tree_opt_pass pass_machine_reorg =
@@ -3882,4 +4116,3 @@ struct tree_opt_pass pass_machine_reorg =
   TODO_ggc_collect,                     /* todo_flags_finish */
   'M'                                   /* letter */
 };
-

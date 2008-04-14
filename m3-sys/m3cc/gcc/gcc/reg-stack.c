@@ -1,12 +1,13 @@
 /* Register to Stack convert for GNU compiler.
-   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-   2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
+   2001, 2002, 2003, 2004, 2005, 2006, 2007 
+   Free Software Foundation, Inc.
 
    This file is part of GCC.
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
+   the Free Software Foundation; either version 3, or (at your option)
    any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -15,9 +16,8 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 /* This pass converts stack-like registers from the "flat register
    file" model that gcc uses, to a stack convention that the 387 uses.
@@ -167,12 +167,17 @@
 #include "recog.h"
 #include "output.h"
 #include "basic-block.h"
+#include "cfglayout.h"
 #include "varray.h"
 #include "reload.h"
 #include "ggc.h"
 #include "timevar.h"
 #include "tree-pass.h"
 #include "target.h"
+#include "df.h"
+#include "vecprim.h"
+
+#ifdef STACK_REGS
 
 /* We use this array to cache info about insns, because otherwise we
    spend too much time in stack_regs_mentioned_p.
@@ -180,11 +185,11 @@
    Indexed by insn UIDs.  A value of zero is uninitialized, one indicates
    the insn uses stack registers, two indicates the insn does not use
    stack registers.  */
-static GTY(()) varray_type stack_regs_mentioned_data;
-
-#ifdef STACK_REGS
+static VEC(char,heap) *stack_regs_mentioned_data;
 
 #define REG_STACK_SIZE (LAST_STACK_REG - FIRST_STACK_REG + 1)
+
+int regstack_completed = 0;
 
 /* This is the basic stack record.  TOP is an index into REG[] such
    that REG[TOP] is the top of stack.  If TOP is -1 the stack is empty.
@@ -244,7 +249,7 @@ static rtx not_a_num;
 
 /* Forward declarations */
 
-static int stack_regs_mentioned_p (rtx pat);
+static int stack_regs_mentioned_p (const_rtx pat);
 static void pop_stack (stack, int);
 static rtx *get_true_reg (rtx *);
 
@@ -271,7 +276,7 @@ static rtx next_flags_user (rtx);
 /* Return nonzero if any stack register is mentioned somewhere within PAT.  */
 
 static int
-stack_regs_mentioned_p (rtx pat)
+stack_regs_mentioned_p (const_rtx pat)
 {
   const char *fmt;
   int i;
@@ -300,7 +305,7 @@ stack_regs_mentioned_p (rtx pat)
 /* Return nonzero if INSN mentions stacked registers, else return zero.  */
 
 int
-stack_regs_mentioned (rtx insn)
+stack_regs_mentioned (const_rtx insn)
 {
   unsigned int uid, max;
   int test;
@@ -309,21 +314,21 @@ stack_regs_mentioned (rtx insn)
     return 0;
 
   uid = INSN_UID (insn);
-  max = VARRAY_SIZE (stack_regs_mentioned_data);
+  max = VEC_length (char, stack_regs_mentioned_data);
   if (uid >= max)
     {
       /* Allocate some extra size to avoid too many reallocs, but
 	 do not grow too quickly.  */
-      max = uid + uid / 20;
-      VARRAY_GROW (stack_regs_mentioned_data, max);
+      max = uid + uid / 20 + 1;
+      VEC_safe_grow_cleared (char, heap, stack_regs_mentioned_data, max);
     }
 
-  test = VARRAY_CHAR (stack_regs_mentioned_data, uid);
+  test = VEC_index (char, stack_regs_mentioned_data, uid);
   if (test == 0)
     {
       /* This insn has yet to be examined.  Do so now.  */
       test = stack_regs_mentioned_p (PATTERN (insn)) ? 1 : 2;
-      VARRAY_CHAR (stack_regs_mentioned_data, uid) = test;
+      VEC_replace (char, stack_regs_mentioned_data, uid, test);
     }
 
   return test == 1;
@@ -420,7 +425,6 @@ get_true_reg (rtx *pat)
 						   GET_MODE (*pat));
 	      *pat = FP_MODE_REG (REGNO (subreg) + regno_off,
 				  GET_MODE (subreg));
-	    default:
 	      return pat;
 	    }
 	}
@@ -430,11 +434,19 @@ get_true_reg (rtx *pat)
 	pat = & XEXP (*pat, 0);
 	break;
 
+      case UNSPEC:
+	if (XINT (*pat, 1) == UNSPEC_TRUNC_NOOP)
+	  pat = & XVECEXP (*pat, 0, 0);
+	return pat;
+
       case FLOAT_TRUNCATE:
 	if (!flag_unsafe_math_optimizations)
 	  return pat;
 	pat = & XEXP (*pat, 0);
 	break;
+
+      default:
+	return pat;
       }
 }
 
@@ -686,11 +698,10 @@ stack_result (tree decl)
 static void
 replace_reg (rtx *reg, int regno)
 {
-  gcc_assert (regno >= FIRST_STACK_REG);
-  gcc_assert (regno <= LAST_STACK_REG);
+  gcc_assert (IN_RANGE (regno, FIRST_STACK_REG, LAST_STACK_REG));
   gcc_assert (STACK_REG_P (*reg));
 
-  gcc_assert (GET_MODE_CLASS (GET_MODE (*reg)) == MODE_FLOAT
+  gcc_assert (SCALAR_FLOAT_MODE_P (GET_MODE (*reg))
 	      || GET_MODE_CLASS (GET_MODE (*reg)) == MODE_COMPLEX_FLOAT);
 
   *reg = FP_MODE_REG (regno, GET_MODE (*reg));
@@ -807,9 +818,19 @@ emit_swap_insn (rtx insn, stack regstack, rtx reg)
 
   hard_regno = get_hard_regnum (regstack, reg);
 
-  gcc_assert (hard_regno >= FIRST_STACK_REG);
   if (hard_regno == FIRST_STACK_REG)
     return;
+  if (hard_regno == -1)
+    {
+      /* Something failed if the register wasn't on the stack.  If we had
+	 malformed asms, we zapped the instruction itself, but that didn't
+	 produce the same pattern of register sets as before.  To prevent
+	 further failure, adjust REGSTACK to include REG at TOP.  */
+      gcc_assert (any_malformed_asm);
+      regstack->reg[++regstack->top] = REGNO (reg);
+      return;
+    }
+  gcc_assert (hard_regno >= FIRST_STACK_REG);
 
   other_reg = regstack->top - (hard_regno - FIRST_STACK_REG);
 
@@ -1051,6 +1072,8 @@ move_for_stack_reg (rtx insn, stack regstack, rtx pat)
     }
   else
     {
+      rtx pat = PATTERN (insn);
+
       gcc_assert (STACK_REG_P (dest));
 
       /* Load from MEM, or possibly integer REG or constant, into the
@@ -1058,8 +1081,18 @@ move_for_stack_reg (rtx insn, stack regstack, rtx pat)
 	 stack. The stack mapping is changed to reflect that DEST is
 	 now at top of stack.  */
 
-      /* The destination ought to be dead.  */
-      gcc_assert (get_hard_regnum (regstack, dest) < FIRST_STACK_REG);
+      /* The destination ought to be dead.  However, there is a
+	 special case with i387 UNSPEC_TAN, where destination is live
+	 (an argument to fptan) but inherent load of 1.0 is modelled
+	 as a load from a constant.  */
+      if (GET_CODE (pat) == PARALLEL
+	  && XVECLEN (pat, 0) == 2
+	  && GET_CODE (XVECEXP (pat, 0, 1)) == SET
+	  && GET_CODE (SET_SRC (XVECEXP (pat, 0, 1))) == UNSPEC
+	  && XINT (SET_SRC (XVECEXP (pat, 0, 1)), 1) == UNSPEC_TAN)
+	emit_swap_insn (insn, regstack, dest);
+      else
+	gcc_assert (get_hard_regnum (regstack, dest) < FIRST_STACK_REG);
 
       gcc_assert (regstack->top < REG_STACK_SIZE);
 
@@ -1316,12 +1349,18 @@ subst_stack_regs_pat (rtx insn, stack regstack, rtx pat)
       if (STACK_REG_P (*src)
 	  && find_regno_note (insn, REG_DEAD, REGNO (*src)))
 	{
-	  emit_pop_insn (insn, regstack, *src, EMIT_AFTER);
+	  /* USEs are ignored for liveness information so USEs of dead
+	     register might happen.  */
+          if (TEST_HARD_REG_BIT (regstack->reg_set, REGNO (*src)))
+	    emit_pop_insn (insn, regstack, *src, EMIT_AFTER);
 	  return control_flow_insn_deleted;
 	}
-      /* ??? Uninitialized USE should not happen.  */
-      else
-	gcc_assert (get_hard_regnum (regstack, *src) != -1);
+      /* Uninitialized USE might happen for functions returning uninitialized
+         value.  We will properly initialize the USE on the edge to EXIT_BLOCK,
+	 so it is safe to ignore the use here. This is consistent with behavior
+	 of dataflow analyzer that ignores USE too.  (This also imply that 
+	 forcibly initializing the register to NaN here would lead to ICE later,
+	 since the REG_DEAD notes are not issued.)  */
       break;
 
     case CLOBBER:
@@ -1362,16 +1401,20 @@ subst_stack_regs_pat (rtx insn, stack regstack, rtx pat)
 		if (!note)
 		  {
 		    rtx t = *dest;
+		    if (COMPLEX_MODE_P (GET_MODE (t)))
+		      {
+			rtx u = FP_MODE_REG (REGNO (t) + 1, SFmode);
+			if (get_hard_regnum (regstack, u) == -1)
+			  {
+			    rtx pat2 = gen_rtx_CLOBBER (VOIDmode, u);
+			    rtx insn2 = emit_insn_before (pat2, insn);
+			    control_flow_insn_deleted
+			      |= move_nan_for_stack_reg (insn2, regstack, u);
+			  }
+		      }
 		    if (get_hard_regnum (regstack, t) == -1)
 		      control_flow_insn_deleted
 			|= move_nan_for_stack_reg (insn, regstack, t);
-		    if (COMPLEX_MODE_P (GET_MODE (t)))
-		      {
-			t = FP_MODE_REG (REGNO (t) + 1, DFmode);
-			if (get_hard_regnum (regstack, t) == -1)
-			  control_flow_insn_deleted
-			    |= move_nan_for_stack_reg (insn, regstack, t);
-		      }
 		  }
 	      }
 	  }
@@ -1607,6 +1650,27 @@ subst_stack_regs_pat (rtx insn, stack regstack, rtx pat)
 		replace_reg (src1, FIRST_STACK_REG);
 		break;
 
+	      case UNSPEC_FXAM:
+
+		/* This insn only operate on the top of the stack.  */
+
+		src1 = get_true_reg (&XVECEXP (pat_src, 0, 0));
+		emit_swap_insn (insn, regstack, *src1);
+
+		src1_note = find_regno_note (insn, REG_DEAD, REGNO (*src1));
+
+		replace_reg (src1, FIRST_STACK_REG);
+
+		if (src1_note)
+		  {
+		    remove_regno_note (insn, REG_DEAD,
+				       REGNO (XEXP (src1_note, 0)));
+		    emit_pop_insn (insn, regstack, XEXP (src1_note, 0),
+				   EMIT_AFTER);
+		  }
+
+		break;
+
 	      case UNSPEC_SIN:
 	      case UNSPEC_COS:
 	      case UNSPEC_FRNDINT:
@@ -1617,19 +1681,54 @@ subst_stack_regs_pat (rtx insn, stack regstack, rtx pat)
 	      case UNSPEC_FRNDINT_TRUNC:
 	      case UNSPEC_FRNDINT_MASK_PM:
 
-		/* These insns only operate on the top of the stack.  */
+		/* Above insns operate on the top of the stack.  */
+
+	      case UNSPEC_SINCOS_COS:
+	      case UNSPEC_XTRACT_FRACT:
+
+		/* Above insns operate on the top two stack slots,
+		   first part of one input, double output insn.  */
 
 		src1 = get_true_reg (&XVECEXP (pat_src, 0, 0));
 
 		emit_swap_insn (insn, regstack, *src1);
 
-		/* Input should never die, it is
-		   replaced with output.  */
+		/* Input should never die, it is replaced with output.  */
 		src1_note = find_regno_note (insn, REG_DEAD, REGNO (*src1));
 		gcc_assert (!src1_note);
 
 		if (STACK_REG_P (*dest))
 		  replace_reg (dest, FIRST_STACK_REG);
+
+		replace_reg (src1, FIRST_STACK_REG);
+		break;
+
+	      case UNSPEC_SINCOS_SIN:
+	      case UNSPEC_XTRACT_EXP:
+
+		/* These insns operate on the top two stack slots,
+		   second part of one input, double output insn.  */
+
+		regstack->top++;
+		/* FALLTHRU */
+
+	      case UNSPEC_TAN:
+
+		/* For UNSPEC_TAN, regstack->top is already increased
+		   by inherent load of constant 1.0.  */
+
+		/* Output value is generated in the second stack slot.
+		   Move current value from second slot to the top.  */
+		regstack->reg[regstack->top]
+		  = regstack->reg[regstack->top - 1];
+
+		gcc_assert (STACK_REG_P (*dest));
+
+		regstack->reg[regstack->top - 1] = REGNO (*dest);
+		SET_HARD_REG_BIT (regstack->reg_set, REGNO (*dest));
+		replace_reg (dest, FIRST_STACK_REG + 1);
+
+		src1 = get_true_reg (&XVECEXP (pat_src, 0, 0));
 
 		replace_reg (src1, FIRST_STACK_REG);
 		break;
@@ -1671,7 +1770,7 @@ subst_stack_regs_pat (rtx insn, stack regstack, rtx pat)
 	      case UNSPEC_FSCALE_FRACT:
 	      case UNSPEC_FPREM_F:
 	      case UNSPEC_FPREM1_F:
-		/* These insns operate on the top two stack slots.
+		/* These insns operate on the top two stack slots,
 		   first part of double input, double output insn.  */
 
 		src1 = get_true_reg (&XVECEXP (pat_src, 0, 0));
@@ -1689,11 +1788,12 @@ subst_stack_regs_pat (rtx insn, stack regstack, rtx pat)
 
 		/* Push the result back onto stack. Empty stack slot
 		   will be filled in second part of insn.  */
-		if (STACK_REG_P (*dest)) {
-		  regstack->reg[regstack->top] = REGNO (*dest);
-		  SET_HARD_REG_BIT (regstack->reg_set, REGNO (*dest));
-		  replace_reg (dest, FIRST_STACK_REG);
-		}
+		if (STACK_REG_P (*dest))
+		  {
+		    regstack->reg[regstack->top] = REGNO (*dest);
+		    SET_HARD_REG_BIT (regstack->reg_set, REGNO (*dest));
+		    replace_reg (dest, FIRST_STACK_REG);
+		  }
 
 		replace_reg (src1, FIRST_STACK_REG);
 		replace_reg (src2, FIRST_STACK_REG + 1);
@@ -1702,86 +1802,34 @@ subst_stack_regs_pat (rtx insn, stack regstack, rtx pat)
 	      case UNSPEC_FSCALE_EXP:
 	      case UNSPEC_FPREM_U:
 	      case UNSPEC_FPREM1_U:
-		/* These insns operate on the top two stack slots./
+		/* These insns operate on the top two stack slots,
 		   second part of double input, double output insn.  */
 
 		src1 = get_true_reg (&XVECEXP (pat_src, 0, 0));
 		src2 = get_true_reg (&XVECEXP (pat_src, 0, 1));
 
-		src1_note = find_regno_note (insn, REG_DEAD, REGNO (*src1));
-		src2_note = find_regno_note (insn, REG_DEAD, REGNO (*src2));
-
-		/* Inputs should never die, they are
-		   replaced with outputs.  */
-		gcc_assert (!src1_note);
-		gcc_assert (!src2_note);
-
-		swap_to_top (insn, regstack, *src1, *src2);
-
 		/* Push the result back onto stack. Fill empty slot from
 		   first part of insn and fix top of stack pointer.  */
-		if (STACK_REG_P (*dest)) {
-		  regstack->reg[regstack->top - 1] = REGNO (*dest);
-		  SET_HARD_REG_BIT (regstack->reg_set, REGNO (*dest));
-		  replace_reg (dest, FIRST_STACK_REG + 1);
-		}
+		if (STACK_REG_P (*dest))
+		  {
+		    regstack->reg[regstack->top - 1] = REGNO (*dest);
+		    SET_HARD_REG_BIT (regstack->reg_set, REGNO (*dest));
+		    replace_reg (dest, FIRST_STACK_REG + 1);
+		  }
 
 		replace_reg (src1, FIRST_STACK_REG);
 		replace_reg (src2, FIRST_STACK_REG + 1);
 		break;
 
-	      case UNSPEC_SINCOS_COS:
-	      case UNSPEC_TAN_ONE:
-	      case UNSPEC_XTRACT_FRACT:
-		/* These insns operate on the top two stack slots,
-		   first part of one input, double output insn.  */
+	      case UNSPEC_C2_FLAG:
+		/* This insn operates on the top two stack slots,
+		   third part of C2 setting double input insn.  */
 
 		src1 = get_true_reg (&XVECEXP (pat_src, 0, 0));
-
-		emit_swap_insn (insn, regstack, *src1);
-
-		/* Input should never die, it is
-		   replaced with output.  */
-		src1_note = find_regno_note (insn, REG_DEAD, REGNO (*src1));
-		gcc_assert (!src1_note);
-
-		/* Push the result back onto stack. Empty stack slot
-		   will be filled in second part of insn.  */
-		if (STACK_REG_P (*dest)) {
-		  regstack->reg[regstack->top + 1] = REGNO (*dest);
-		  SET_HARD_REG_BIT (regstack->reg_set, REGNO (*dest));
-		  replace_reg (dest, FIRST_STACK_REG);
-		}
+		src2 = get_true_reg (&XVECEXP (pat_src, 0, 1));
 
 		replace_reg (src1, FIRST_STACK_REG);
-		break;
-
-	      case UNSPEC_SINCOS_SIN:
-	      case UNSPEC_TAN_TAN:
-	      case UNSPEC_XTRACT_EXP:
-		/* These insns operate on the top two stack slots,
-		   second part of one input, double output insn.  */
-
-		src1 = get_true_reg (&XVECEXP (pat_src, 0, 0));
-
-		emit_swap_insn (insn, regstack, *src1);
-
-		/* Input should never die, it is
-		   replaced with output.  */
-		src1_note = find_regno_note (insn, REG_DEAD, REGNO (*src1));
-		gcc_assert (!src1_note);
-
-		/* Push the result back onto stack. Fill empty slot from
-		   first part of insn and fix top of stack pointer.  */
-		if (STACK_REG_P (*dest)) {
-		  regstack->reg[regstack->top] = REGNO (*dest);
-		  SET_HARD_REG_BIT (regstack->reg_set, REGNO (*dest));
-		  replace_reg (dest, FIRST_STACK_REG + 1);
-
-		  regstack->top++;
-		}
-
-		replace_reg (src1, FIRST_STACK_REG);
+		replace_reg (src2, FIRST_STACK_REG + 1);
 		break;
 
 	      case UNSPEC_SAHF:
@@ -2269,6 +2317,16 @@ subst_stack_regs (rtx insn, stack regstack)
   if (NOTE_P (insn) || INSN_DELETED_P (insn))
     return control_flow_insn_deleted;
 
+  /* If this a noreturn call, we can't insert pop insns after it.
+     Instead, reset the stack state to empty.  */
+  if (CALL_P (insn)
+      && find_reg_note (insn, REG_NORETURN, NULL))
+    {
+      regstack->top = -1;
+      CLEAR_HARD_REG_SET (regstack->reg_set);
+      return control_flow_insn_deleted;
+    }
+
   /* If there is a REG_UNUSED note on a stack register on this insn,
      the indicated reg must be popped.  The REG_UNUSED note is removed,
      since the form of the newly emitted pop insn references the reg,
@@ -2304,6 +2362,7 @@ change_stack (rtx insn, stack old, stack new, enum emit_where where)
 {
   int reg;
   int update_end = 0;
+  int i;
 
   /* Stack adjustments for the first insn in a block update the
      current_block's stack_in instead of inserting insns directly.
@@ -2327,6 +2386,17 @@ change_stack (rtx insn, stack old, stack new, enum emit_where where)
 	update_end = 1;
       insn = NEXT_INSN (insn);
     }
+
+  /* Initialize partially dead variables.  */
+  for (i = FIRST_STACK_REG; i < LAST_STACK_REG + 1; i++)
+    if (TEST_HARD_REG_BIT (new->reg_set, i)
+	&& !TEST_HARD_REG_BIT (old->reg_set, i))
+      {
+	old->reg[++old->top] = i;
+        SET_HARD_REG_BIT (old->reg_set, i);
+	emit_insn_before (gen_rtx_SET (VOIDmode,
+				       FP_MODE_REG (i, SFmode), not_a_num), insn);
+      }
 
   /* Pop any registers that are not needed in the new block.  */
 
@@ -2438,9 +2508,7 @@ change_stack (rtx insn, stack old, stack new, enum emit_where where)
       /* By now, the only difference should be the order of the stack,
 	 not their depth or liveliness.  */
 
-      GO_IF_HARD_REG_EQUAL (old->reg_set, new->reg_set, win);
-      gcc_unreachable ();
-    win:
+      gcc_assert (hard_reg_set_equal_p (old->reg_set, new->reg_set));
       gcc_assert (old->top == new->top);
 
       /* If the stack is not empty (new->top != -1), loop here emitting
@@ -2580,8 +2648,7 @@ convert_regs_exit (void)
   if (retvalue)
     {
       value_reg_low = REGNO (retvalue);
-      value_reg_high = value_reg_low
-	+ hard_regno_nregs[value_reg_low][GET_MODE (retvalue)] - 1;
+      value_reg_high = END_HARD_REGNO (retvalue) - 1;
     }
 
   output_stack = &BLOCK_INFO (EXIT_BLOCK_PTR)->stack_in;
@@ -2616,6 +2683,12 @@ propagate_stack (edge e)
   for (reg = 0; reg <= src_stack->top; ++reg)
     if (TEST_HARD_REG_BIT (dest_stack->reg_set, src_stack->reg[reg]))
       dest_stack->reg[++dest_stack->top] = src_stack->reg[reg];
+
+  /* Push in any partially dead values.  */
+  for (reg = FIRST_STACK_REG; reg < LAST_STACK_REG + 1; reg++)
+    if (TEST_HARD_REG_BIT (dest_stack->reg_set, reg)
+        && !TEST_HARD_REG_BIT (src_stack->reg_set, reg))
+      dest_stack->reg[++dest_stack->top] = reg;
 }
 
 
@@ -2624,7 +2697,7 @@ propagate_stack (edge e)
    should have been defined by now.  */
 
 static bool
-compensate_edge (edge e, FILE *file)
+compensate_edge (edge e)
 {
   basic_block source = e->src, target = e->dest;
   stack target_stack = &BLOCK_INFO (target)->stack_in;
@@ -2632,8 +2705,8 @@ compensate_edge (edge e, FILE *file)
   struct stack_def regstack;
   int reg;
 
-  if (file)
-    fprintf (file, "Edge %d->%d: ", source->index, target->index);
+  if (dump_file)
+    fprintf (dump_file, "Edge %d->%d: ", source->index, target->index);
 
   gcc_assert (target_stack->top != -2);
 
@@ -2646,16 +2719,16 @@ compensate_edge (edge e, FILE *file)
 
       if (reg == -1)
 	{
-	  if (file)
-	    fprintf (file, "no changes needed\n");
+	  if (dump_file)
+	    fprintf (dump_file, "no changes needed\n");
 	  return false;
 	}
     }
 
-  if (file)
+  if (dump_file)
     {
-      fprintf (file, "correcting stack to ");
-      print_stack (file, target_stack);
+      fprintf (dump_file, "correcting stack to ");
+      print_stack (dump_file, target_stack);
     }
 
   /* Abnormal calls may appear to have values live in st(0), but the
@@ -2724,7 +2797,7 @@ compensate_edge (edge e, FILE *file)
    source block to the stack_in of the destination block.  */
 
 static bool
-compensate_edges (FILE *file)
+compensate_edges (void)
 {
   bool inserted = false;
   basic_block bb;
@@ -2738,7 +2811,7 @@ compensate_edges (FILE *file)
         edge_iterator ei;
 
         FOR_EACH_EDGE (e, ei, bb->succs)
-	  inserted |= compensate_edge (e, file);
+	  inserted |= compensate_edge (e);
       }
   return inserted;
 }
@@ -2777,7 +2850,7 @@ better_edge (edge e1, edge e2)
 /* Convert stack register references in one block.  */
 
 static void
-convert_regs_1 (FILE *file, basic_block block)
+convert_regs_1 (basic_block block)
 {
   struct stack_def regstack;
   block_info bi = BLOCK_INFO (block);
@@ -2811,10 +2884,10 @@ convert_regs_1 (FILE *file, basic_block block)
 	}
     }
 
-  if (file)
+  if (dump_file)
     {
-      fprintf (file, "\nBasic block %d\nInput stack: ", block->index);
-      print_stack (file, &bi->stack_in);
+      fprintf (dump_file, "\nBasic block %d\nInput stack: ", block->index);
+      print_stack (dump_file, &bi->stack_in);
     }
 
   /* Process all insns in this block.  Keep track of NEXT so that we
@@ -2839,11 +2912,11 @@ convert_regs_1 (FILE *file, basic_block block)
       if (stack_regs_mentioned (insn)
 	  || CALL_P (insn))
 	{
-	  if (file)
+	  if (dump_file)
 	    {
-	      fprintf (file, "  insn %d input stack: ",
+	      fprintf (dump_file, "  insn %d input stack: ",
 		       INSN_UID (insn));
-	      print_stack (file, &regstack);
+	      print_stack (dump_file, &regstack);
 	    }
 	  control_flow_insn_deleted |= subst_stack_regs (insn, &regstack);
 	  starting_stack_p = false;
@@ -2851,14 +2924,14 @@ convert_regs_1 (FILE *file, basic_block block)
     }
   while (next);
 
-  if (file)
+  if (dump_file)
     {
-      fprintf (file, "Expected live registers [");
+      fprintf (dump_file, "Expected live registers [");
       for (reg = FIRST_STACK_REG; reg <= LAST_STACK_REG; ++reg)
 	if (TEST_HARD_REG_BIT (bi->out_reg_set, reg))
-	  fprintf (file, " %d", reg);
-      fprintf (file, " ]\nOutput stack: ");
-      print_stack (file, &regstack);
+	  fprintf (dump_file, " %d", reg);
+      fprintf (dump_file, " ]\nOutput stack: ");
+      print_stack (dump_file, &regstack);
     }
 
   insn = BB_END (block);
@@ -2876,8 +2949,8 @@ convert_regs_1 (FILE *file, basic_block block)
 	{
 	  rtx set;
 
-	  if (file)
-	    fprintf (file, "Emitting insn initializing reg %d\n", reg);
+	  if (dump_file)
+	    fprintf (dump_file, "Emitting insn initializing reg %d\n", reg);
 
 	  set = gen_rtx_SET (VOIDmode, FP_MODE_REG (reg, SFmode), not_a_num);
 	  insn = emit_insn_after (set, insn);
@@ -2908,9 +2981,9 @@ convert_regs_1 (FILE *file, basic_block block)
   /* Something failed if the stack lives don't match.  If we had malformed
      asms, we zapped the instruction itself, but that didn't produce the
      same pattern of register kills as before.  */
-  GO_IF_HARD_REG_EQUAL (regstack.reg_set, bi->out_reg_set, win);
-  gcc_assert (any_malformed_asm);
- win:
+     
+  gcc_assert (hard_reg_set_equal_p (regstack.reg_set, bi->out_reg_set)
+	      || any_malformed_asm);
   bi->stack_out = regstack;
   bi->done = true;
 }
@@ -2918,7 +2991,7 @@ convert_regs_1 (FILE *file, basic_block block)
 /* Convert registers in all blocks reachable from BLOCK.  */
 
 static void
-convert_regs_2 (FILE *file, basic_block block)
+convert_regs_2 (basic_block block)
 {
   basic_block *stack, *sp;
 
@@ -2926,7 +2999,7 @@ convert_regs_2 (FILE *file, basic_block block)
      is only processed after all its predecessors.  The number of predecessors
      of every block has already been computed.  */ 
 
-  stack = xmalloc (sizeof (*stack) * n_basic_blocks);
+  stack = XNEWVEC (basic_block, n_basic_blocks);
   sp = stack;
 
   *sp++ = block;
@@ -2959,7 +3032,7 @@ convert_regs_2 (FILE *file, basic_block block)
 	      *sp++ = e->dest;
 	  }
 
-      convert_regs_1 (file, block);
+      convert_regs_1 (block);
     }
   while (sp != stack);
 
@@ -2971,7 +3044,7 @@ convert_regs_2 (FILE *file, basic_block block)
    to the stack-like registers the 387 uses.  */
 
 static void
-convert_regs (FILE *file)
+convert_regs (void)
 {
   int inserted;
   basic_block b;
@@ -2991,7 +3064,7 @@ convert_regs (FILE *file)
 
   /* Process all blocks reachable from all entry points.  */
   FOR_EACH_EDGE (e, ei, ENTRY_BLOCK_PTR->succs)
-    convert_regs_2 (file, e->dest);
+    convert_regs_2 (e->dest);
 
   /* ??? Process all unreachable blocks.  Though there's no excuse
      for keeping these even when not optimizing.  */
@@ -3000,10 +3073,10 @@ convert_regs (FILE *file)
       block_info bi = BLOCK_INFO (b);
 
       if (! bi->done)
-	convert_regs_2 (file, b);
+	convert_regs_2 (b);
     }
 
-  inserted |= compensate_edges (file);
+  inserted |= compensate_edges ();
 
   clear_aux_for_blocks ();
 
@@ -3011,8 +3084,8 @@ convert_regs (FILE *file)
   if (inserted)
     commit_edge_insertions ();
 
-  if (file)
-    fputc ('\n', file);
+  if (dump_file)
+    fputc ('\n', dump_file);
 }
 
 /* Convert register usage from "flat" register file usage to a "stack
@@ -3023,35 +3096,28 @@ convert_regs (FILE *file)
    code duplication created when the converter inserts pop insns on
    the edges.  */
 
-bool
-reg_to_stack (FILE *file)
+static bool
+reg_to_stack (void)
 {
   basic_block bb;
   int i;
   int max_uid;
 
   /* Clean up previous run.  */
-  stack_regs_mentioned_data = 0;
+  if (stack_regs_mentioned_data != NULL)
+    VEC_free (char, heap, stack_regs_mentioned_data);
 
   /* See if there is something to do.  Flow analysis is quite
      expensive so we might save some compilation time.  */
   for (i = FIRST_STACK_REG; i <= LAST_STACK_REG; i++)
-    if (regs_ever_live[i])
+    if (df_regs_ever_live_p (i))
       break;
   if (i > LAST_STACK_REG)
     return false;
 
-  /* Ok, floating point instructions exist.  If not optimizing,
-     build the CFG and run life analysis.
-     Also need to rebuild life when superblock scheduling is done
-     as it don't update liveness yet.  */
-  if (!optimize
-      || ((flag_sched2_use_superblocks || flag_sched2_use_traces)
-	  && flag_schedule_insns_after_reload))
-    {
-      count_or_remove_death_notes (NULL, 1);
-      life_analysis (file, PROP_DEATH_NOTES);
-    }
+  df_note_add_problem ();
+  df_analyze ();
+
   mark_dfs_back_edges ();
 
   /* Set up block info for each basic block.  */
@@ -3074,9 +3140,9 @@ reg_to_stack (FILE *file)
       /* Copy live_at_end and live_at_start into temporaries.  */
       for (reg = FIRST_STACK_REG; reg <= LAST_STACK_REG; reg++)
 	{
-	  if (REGNO_REG_SET_P (bb->il.rtl->global_live_at_end, reg))
+	  if (REGNO_REG_SET_P (DF_LR_OUT (bb), reg))
 	    SET_HARD_REG_BIT (bi->out_reg_set, reg);
-	  if (REGNO_REG_SET_P (bb->il.rtl->global_live_at_start, reg))
+	  if (REGNO_REG_SET_P (DF_LR_IN (bb), reg))
 	    SET_HARD_REG_BIT (bi->stack_in.reg_set, reg);
 	}
     }
@@ -3104,7 +3170,8 @@ reg_to_stack (FILE *file)
      the PIC register hasn't been set up.  In that case, fall back
      on zero, which we can get from `ldz'.  */
 
-  if (flag_pic)
+  if ((flag_pic && !TARGET_64BIT)
+      || ix86_cmodel == CM_LARGE || ix86_cmodel == CM_LARGE_PIC)
     not_a_num = CONST0_RTX (SFmode);
   else
     {
@@ -3114,10 +3181,11 @@ reg_to_stack (FILE *file)
 
   /* Allocate a cache for stack_regs_mentioned.  */
   max_uid = get_max_uid ();
-  VARRAY_CHAR_INIT (stack_regs_mentioned_data, max_uid + 1,
-		    "stack_regs_mentioned cache");
+  stack_regs_mentioned_data = VEC_alloc (char, heap, max_uid + 1);
+  memset (VEC_address (char, stack_regs_mentioned_data),
+	  0, sizeof (char) * max_uid + 1);
 
-  convert_regs (file);
+  convert_regs ();
 
   free_aux_for_blocks ();
   return true;
@@ -3134,29 +3202,39 @@ gate_handle_stack_regs (void)
 #endif
 }
 
+struct tree_opt_pass pass_stack_regs =
+{
+  NULL,                                 /* name */
+  gate_handle_stack_regs,               /* gate */
+  NULL,					/* execute */
+  NULL,                                 /* sub */
+  NULL,                                 /* next */
+  0,                                    /* static_pass_number */
+  TV_REG_STACK,                         /* tv_id */
+  0,                                    /* properties_required */
+  0,                                    /* properties_provided */
+  0,                                    /* properties_destroyed */
+  0,                                    /* todo_flags_start */
+  0,                                    /* todo_flags_finish */
+  0                                     /* letter */
+};
+
 /* Convert register usage from flat register file usage to a stack
    register file.  */
-static void
+static unsigned int
 rest_of_handle_stack_regs (void)
 {
 #ifdef STACK_REGS
-  if (reg_to_stack (dump_file) && optimize)
-    {
-      if (cleanup_cfg (CLEANUP_EXPENSIVE | CLEANUP_POST_REGSTACK
-                       | (flag_crossjumping ? CLEANUP_CROSSJUMP : 0))
-          && (flag_reorder_blocks || flag_reorder_blocks_and_partition))
-        {
-          reorder_basic_blocks (0);
-          cleanup_cfg (CLEANUP_EXPENSIVE | CLEANUP_POST_REGSTACK);
-        }
-    }
+  reg_to_stack ();
+  regstack_completed = 1;
 #endif
+  return 0;
 }
 
-struct tree_opt_pass pass_stack_regs =
+struct tree_opt_pass pass_stack_regs_run =
 {
   "stack",                              /* name */
-  gate_handle_stack_regs,               /* gate */
+  NULL,                                 /* gate */
   rest_of_handle_stack_regs,            /* execute */
   NULL,                                 /* sub */
   NULL,                                 /* next */
@@ -3166,9 +3244,8 @@ struct tree_opt_pass pass_stack_regs =
   0,                                    /* properties_provided */
   0,                                    /* properties_destroyed */
   0,                                    /* todo_flags_start */
+  TODO_df_finish | TODO_verify_rtl_sharing |
   TODO_dump_func |
   TODO_ggc_collect,                     /* todo_flags_finish */
   'k'                                   /* letter */
 };
-
-#include "gt-reg-stack.h"

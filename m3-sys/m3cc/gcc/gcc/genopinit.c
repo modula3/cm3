@@ -1,12 +1,12 @@
 /* Generate code to initialize optabs from machine description.
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-   2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 
 #include "bconfig.h"
@@ -51,6 +50,7 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
    only full integer modes should be considered for the next mode, and $F
    means that only float modes should be considered.
    $P means that both full and partial integer modes should be considered.
+   $Q means that only fixed-point modes should be considered.
 
    $V means to emit 'v' if the first mode is a MODE_FLOAT mode.
 
@@ -59,112 +59,149 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
    upper-case forms of the comparison, respectively.  */
 
 static const char * const optabs[] =
-{ "sext_optab->handlers[$B][$A].insn_code = CODE_FOR_$(extend$a$b2$)",
-  "zext_optab->handlers[$B][$A].insn_code = CODE_FOR_$(zero_extend$a$b2$)",
-  "sfix_optab->handlers[$B][$A].insn_code = CODE_FOR_$(fix$F$a$I$b2$)",
-  "ufix_optab->handlers[$B][$A].insn_code = CODE_FOR_$(fixuns$F$a$b2$)",
-  "sfixtrunc_optab->handlers[$B][$A].insn_code = CODE_FOR_$(fix_trunc$F$a$I$b2$)",
-  "ufixtrunc_optab->handlers[$B][$A].insn_code = CODE_FOR_$(fixuns_trunc$F$a$I$b2$)",
-  "sfloat_optab->handlers[$B][$A].insn_code = CODE_FOR_$(float$I$a$F$b2$)",
-  "ufloat_optab->handlers[$B][$A].insn_code = CODE_FOR_$(floatuns$I$a$F$b2$)",
-  "trunc_optab->handlers[$B][$A].insn_code = CODE_FOR_$(trunc$a$b2$)",
-  "add_optab->handlers[$A].insn_code = CODE_FOR_$(add$P$a3$)",
-  "addv_optab->handlers[$A].insn_code =\n\
-    add_optab->handlers[$A].insn_code = CODE_FOR_$(add$F$a3$)",
-  "addv_optab->handlers[$A].insn_code = CODE_FOR_$(addv$I$a3$)",
-  "sub_optab->handlers[$A].insn_code = CODE_FOR_$(sub$P$a3$)",
-  "subv_optab->handlers[$A].insn_code =\n\
-    sub_optab->handlers[$A].insn_code = CODE_FOR_$(sub$F$a3$)",
-  "subv_optab->handlers[$A].insn_code = CODE_FOR_$(subv$I$a3$)",
-  "smul_optab->handlers[$A].insn_code = CODE_FOR_$(mul$P$a3$)",
-  "smulv_optab->handlers[$A].insn_code =\n\
-    smul_optab->handlers[$A].insn_code = CODE_FOR_$(mul$F$a3$)",
-  "smulv_optab->handlers[$A].insn_code = CODE_FOR_$(mulv$I$a3$)",
-  "umul_highpart_optab->handlers[$A].insn_code = CODE_FOR_$(umul$a3_highpart$)",
-  "smul_highpart_optab->handlers[$A].insn_code = CODE_FOR_$(smul$a3_highpart$)",
-  "smul_widen_optab->handlers[$B].insn_code = CODE_FOR_$(mul$a$b3$)$N",
-  "umul_widen_optab->handlers[$B].insn_code = CODE_FOR_$(umul$a$b3$)$N",
-  "sdiv_optab->handlers[$A].insn_code = CODE_FOR_$(div$a3$)",
-  "sdivv_optab->handlers[$A].insn_code = CODE_FOR_$(div$V$I$a3$)",
-  "udiv_optab->handlers[$A].insn_code = CODE_FOR_$(udiv$I$a3$)",
-  "sdivmod_optab->handlers[$A].insn_code = CODE_FOR_$(divmod$a4$)",
-  "udivmod_optab->handlers[$A].insn_code = CODE_FOR_$(udivmod$a4$)",
-  "smod_optab->handlers[$A].insn_code = CODE_FOR_$(mod$a3$)",
-  "umod_optab->handlers[$A].insn_code = CODE_FOR_$(umod$a3$)",
-  "fmod_optab->handlers[$A].insn_code = CODE_FOR_$(fmod$a3$)",
-  "drem_optab->handlers[$A].insn_code = CODE_FOR_$(drem$a3$)",
-  "ftrunc_optab->handlers[$A].insn_code = CODE_FOR_$(ftrunc$F$a2$)",
-  "and_optab->handlers[$A].insn_code = CODE_FOR_$(and$a3$)",
-  "ior_optab->handlers[$A].insn_code = CODE_FOR_$(ior$a3$)",
-  "xor_optab->handlers[$A].insn_code = CODE_FOR_$(xor$a3$)",
-  "ashl_optab->handlers[$A].insn_code = CODE_FOR_$(ashl$a3$)",
-  "ashr_optab->handlers[$A].insn_code = CODE_FOR_$(ashr$a3$)",
-  "lshr_optab->handlers[$A].insn_code = CODE_FOR_$(lshr$a3$)",
-  "rotl_optab->handlers[$A].insn_code = CODE_FOR_$(rotl$a3$)",
-  "rotr_optab->handlers[$A].insn_code = CODE_FOR_$(rotr$a3$)",
-  "smin_optab->handlers[$A].insn_code = CODE_FOR_$(smin$a3$)",
-  "smax_optab->handlers[$A].insn_code = CODE_FOR_$(smax$a3$)",
-  "umin_optab->handlers[$A].insn_code = CODE_FOR_$(umin$I$a3$)",
-  "umax_optab->handlers[$A].insn_code = CODE_FOR_$(umax$I$a3$)",
-  "pow_optab->handlers[$A].insn_code = CODE_FOR_$(pow$a3$)",
-  "atan2_optab->handlers[$A].insn_code = CODE_FOR_$(atan2$a3$)",
-  "neg_optab->handlers[$A].insn_code = CODE_FOR_$(neg$P$a2$)",
-  "negv_optab->handlers[$A].insn_code =\n\
-    neg_optab->handlers[$A].insn_code = CODE_FOR_$(neg$F$a2$)",
-  "negv_optab->handlers[$A].insn_code = CODE_FOR_$(negv$I$a2$)",
-  "abs_optab->handlers[$A].insn_code = CODE_FOR_$(abs$P$a2$)",
-  "absv_optab->handlers[$A].insn_code =\n\
-    abs_optab->handlers[$A].insn_code = CODE_FOR_$(abs$F$a2$)",
-  "absv_optab->handlers[$A].insn_code = CODE_FOR_$(absv$I$a2$)",
-  "copysign_optab->handlers[$A].insn_code = CODE_FOR_$(copysign$F$a3$)",
-  "sqrt_optab->handlers[$A].insn_code = CODE_FOR_$(sqrt$a2$)",
-  "floor_optab->handlers[$A].insn_code = CODE_FOR_$(floor$a2$)",
-  "lfloor_optab->handlers[$A].insn_code = CODE_FOR_$(lfloor$a2$)",
-  "ceil_optab->handlers[$A].insn_code = CODE_FOR_$(ceil$a2$)",
-  "lceil_optab->handlers[$A].insn_code = CODE_FOR_$(lceil$a2$)",
-  "round_optab->handlers[$A].insn_code = CODE_FOR_$(round$a2$)",
-  "btrunc_optab->handlers[$A].insn_code = CODE_FOR_$(btrunc$a2$)",
-  "nearbyint_optab->handlers[$A].insn_code = CODE_FOR_$(nearbyint$a2$)",
-  "rint_optab->handlers[$A].insn_code = CODE_FOR_$(rint$a2$)",
-  "lrint_optab->handlers[$A].insn_code = CODE_FOR_$(lrint$a2$)",
-  "sincos_optab->handlers[$A].insn_code = CODE_FOR_$(sincos$a3$)",
-  "sin_optab->handlers[$A].insn_code = CODE_FOR_$(sin$a2$)",
-  "asin_optab->handlers[$A].insn_code = CODE_FOR_$(asin$a2$)",
-  "cos_optab->handlers[$A].insn_code = CODE_FOR_$(cos$a2$)",
-  "acos_optab->handlers[$A].insn_code = CODE_FOR_$(acos$a2$)",
-  "exp_optab->handlers[$A].insn_code = CODE_FOR_$(exp$a2$)",
-  "exp10_optab->handlers[$A].insn_code = CODE_FOR_$(exp10$a2$)",
-  "exp2_optab->handlers[$A].insn_code = CODE_FOR_$(exp2$a2$)",
-  "expm1_optab->handlers[$A].insn_code = CODE_FOR_$(expm1$a2$)",
-  "ldexp_optab->handlers[$A].insn_code = CODE_FOR_$(ldexp$a3$)",
-  "logb_optab->handlers[$A].insn_code = CODE_FOR_$(logb$a2$)",
-  "ilogb_optab->handlers[$A].insn_code = CODE_FOR_$(ilogb$a2$)",
-  "log_optab->handlers[$A].insn_code = CODE_FOR_$(log$a2$)",
-  "log10_optab->handlers[$A].insn_code = CODE_FOR_$(log10$a2$)",  
-  "log2_optab->handlers[$A].insn_code = CODE_FOR_$(log2$a2$)",  
-  "log1p_optab->handlers[$A].insn_code = CODE_FOR_$(log1p$a2$)",  
-  "tan_optab->handlers[$A].insn_code = CODE_FOR_$(tan$a2$)",
-  "atan_optab->handlers[$A].insn_code = CODE_FOR_$(atan$a2$)",
-  "strlen_optab->handlers[$A].insn_code = CODE_FOR_$(strlen$a$)",
-  "one_cmpl_optab->handlers[$A].insn_code = CODE_FOR_$(one_cmpl$a2$)",
-  "ffs_optab->handlers[$A].insn_code = CODE_FOR_$(ffs$a2$)",
-  "clz_optab->handlers[$A].insn_code = CODE_FOR_$(clz$a2$)",
-  "ctz_optab->handlers[$A].insn_code = CODE_FOR_$(ctz$a2$)",
-  "popcount_optab->handlers[$A].insn_code = CODE_FOR_$(popcount$a2$)",
-  "parity_optab->handlers[$A].insn_code = CODE_FOR_$(parity$a2$)",
-  "mov_optab->handlers[$A].insn_code = CODE_FOR_$(mov$a$)",
-  "movstrict_optab->handlers[$A].insn_code = CODE_FOR_$(movstrict$a$)",
-  "movmisalign_optab->handlers[$A].insn_code = CODE_FOR_$(movmisalign$a$)",
-  "cmp_optab->handlers[$A].insn_code = CODE_FOR_$(cmp$a$)",
-  "tst_optab->handlers[$A].insn_code = CODE_FOR_$(tst$a$)",
-  "addcc_optab->handlers[$A].insn_code = CODE_FOR_$(add$acc$)",
+{ "convert_optab_handler (sext_optab, $B, $A)->insn_code = CODE_FOR_$(extend$a$b2$)",
+  "convert_optab_handler (zext_optab, $B, $A)->insn_code = CODE_FOR_$(zero_extend$a$b2$)",
+  "convert_optab_handler (sfix_optab, $B, $A)->insn_code = CODE_FOR_$(fix$F$a$I$b2$)",
+  "convert_optab_handler (ufix_optab, $B, $A)->insn_code = CODE_FOR_$(fixuns$F$a$b2$)",
+  "convert_optab_handler (sfixtrunc_optab, $B, $A)->insn_code = CODE_FOR_$(fix_trunc$F$a$I$b2$)",
+  "convert_optab_handler (ufixtrunc_optab, $B, $A)->insn_code = CODE_FOR_$(fixuns_trunc$F$a$I$b2$)",
+  "convert_optab_handler (sfloat_optab, $B, $A)->insn_code = CODE_FOR_$(float$I$a$F$b2$)",
+  "convert_optab_handler (ufloat_optab, $B, $A)->insn_code = CODE_FOR_$(floatuns$I$a$F$b2$)",
+  "convert_optab_handler (trunc_optab, $B, $A)->insn_code = CODE_FOR_$(trunc$a$b2$)",
+  "convert_optab_handler (fract_optab, $B, $A)->insn_code = CODE_FOR_$(fract$a$b2$)",
+  "convert_optab_handler (fractuns_optab, $B, $A)->insn_code = CODE_FOR_$(fractuns$I$a$Q$b2$)",
+  "convert_optab_handler (fractuns_optab, $B, $A)->insn_code = CODE_FOR_$(fractuns$Q$a$I$b2$)",
+  "convert_optab_handler (satfract_optab, $B, $A)->insn_code = CODE_FOR_$(satfract$a$Q$b2$)",
+  "convert_optab_handler (satfractuns_optab, $B, $A)->insn_code = CODE_FOR_$(satfractuns$I$a$Q$b2$)",
+  "optab_handler (add_optab, $A)->insn_code = CODE_FOR_$(add$P$a3$)",
+  "optab_handler (addv_optab, $A)->insn_code =\n\
+    optab_handler (add_optab, $A)->insn_code = CODE_FOR_$(add$F$a3$)",
+  "optab_handler (addv_optab, $A)->insn_code = CODE_FOR_$(addv$I$a3$)",
+  "optab_handler (add_optab, $A)->insn_code = CODE_FOR_$(add$Q$a3$)",
+  "optab_handler (ssadd_optab, $A)->insn_code = CODE_FOR_$(ssadd$Q$a3$)",
+  "optab_handler (usadd_optab, $A)->insn_code = CODE_FOR_$(usadd$Q$a3$)",
+  "optab_handler (sub_optab, $A)->insn_code = CODE_FOR_$(sub$P$a3$)",
+  "optab_handler (subv_optab, $A)->insn_code =\n\
+    optab_handler (sub_optab, $A)->insn_code = CODE_FOR_$(sub$F$a3$)",
+  "optab_handler (subv_optab, $A)->insn_code = CODE_FOR_$(subv$I$a3$)",
+  "optab_handler (sub_optab, $A)->insn_code = CODE_FOR_$(sub$Q$a3$)",
+  "optab_handler (sssub_optab, $A)->insn_code = CODE_FOR_$(sssub$Q$a3$)",
+  "optab_handler (ussub_optab, $A)->insn_code = CODE_FOR_$(ussub$Q$a3$)",
+  "optab_handler (smul_optab, $A)->insn_code = CODE_FOR_$(mul$Q$a3$)",
+  "optab_handler (ssmul_optab, $A)->insn_code = CODE_FOR_$(ssmul$Q$a3$)",
+  "optab_handler (usmul_optab, $A)->insn_code = CODE_FOR_$(usmul$Q$a3$)",
+  "optab_handler (smul_optab, $A)->insn_code = CODE_FOR_$(mul$P$a3$)",
+  "optab_handler (smulv_optab, $A)->insn_code =\n\
+    optab_handler (smul_optab, $A)->insn_code = CODE_FOR_$(mul$F$a3$)",
+  "optab_handler (smulv_optab, $A)->insn_code = CODE_FOR_$(mulv$I$a3$)",
+  "optab_handler (umul_highpart_optab, $A)->insn_code = CODE_FOR_$(umul$a3_highpart$)",
+  "optab_handler (smul_highpart_optab, $A)->insn_code = CODE_FOR_$(smul$a3_highpart$)",
+  "optab_handler (smul_widen_optab, $B)->insn_code = CODE_FOR_$(mul$a$b3$)$N",
+  "optab_handler (umul_widen_optab, $B)->insn_code = CODE_FOR_$(umul$a$b3$)$N",
+  "optab_handler (usmul_widen_optab, $B)->insn_code = CODE_FOR_$(usmul$a$b3$)$N",
+  "optab_handler (smadd_widen_optab, $B)->insn_code = CODE_FOR_$(madd$a$b4$)$N",
+  "optab_handler (umadd_widen_optab, $B)->insn_code = CODE_FOR_$(umadd$a$b4$)$N",
+  "optab_handler (ssmadd_widen_optab, $B)->insn_code = CODE_FOR_$(ssmadd$a$b4$)$N",
+  "optab_handler (usmadd_widen_optab, $B)->insn_code = CODE_FOR_$(usmadd$a$b4$)$N",
+  "optab_handler (smsub_widen_optab, $B)->insn_code = CODE_FOR_$(msub$a$b4$)$N",
+  "optab_handler (umsub_widen_optab, $B)->insn_code = CODE_FOR_$(umsub$a$b4$)$N",
+  "optab_handler (ssmsub_widen_optab, $B)->insn_code = CODE_FOR_$(ssmsub$a$b4$)$N",
+  "optab_handler (usmsub_widen_optab, $B)->insn_code = CODE_FOR_$(usmsub$a$b4$)$N",
+  "optab_handler (sdiv_optab, $A)->insn_code = CODE_FOR_$(div$a3$)",
+  "optab_handler (ssdiv_optab, $A)->insn_code = CODE_FOR_$(ssdiv$Q$a3$)",
+  "optab_handler (sdivv_optab, $A)->insn_code = CODE_FOR_$(div$V$I$a3$)",
+  "optab_handler (udiv_optab, $A)->insn_code = CODE_FOR_$(udiv$I$a3$)",
+  "optab_handler (udiv_optab, $A)->insn_code = CODE_FOR_$(udiv$Q$a3$)",
+  "optab_handler (usdiv_optab, $A)->insn_code = CODE_FOR_$(usdiv$Q$a3$)",
+  "optab_handler (sdivmod_optab, $A)->insn_code = CODE_FOR_$(divmod$a4$)",
+  "optab_handler (udivmod_optab, $A)->insn_code = CODE_FOR_$(udivmod$a4$)",
+  "optab_handler (smod_optab, $A)->insn_code = CODE_FOR_$(mod$a3$)",
+  "optab_handler (umod_optab, $A)->insn_code = CODE_FOR_$(umod$a3$)",
+  "optab_handler (fmod_optab, $A)->insn_code = CODE_FOR_$(fmod$a3$)",
+  "optab_handler (remainder_optab, $A)->insn_code = CODE_FOR_$(remainder$a3$)",
+  "optab_handler (ftrunc_optab, $A)->insn_code = CODE_FOR_$(ftrunc$F$a2$)",
+  "optab_handler (and_optab, $A)->insn_code = CODE_FOR_$(and$a3$)",
+  "optab_handler (ior_optab, $A)->insn_code = CODE_FOR_$(ior$a3$)",
+  "optab_handler (xor_optab, $A)->insn_code = CODE_FOR_$(xor$a3$)",
+  "optab_handler (ashl_optab, $A)->insn_code = CODE_FOR_$(ashl$a3$)",
+  "optab_handler (ssashl_optab, $A)->insn_code = CODE_FOR_$(ssashl$Q$a3$)",
+  "optab_handler (usashl_optab, $A)->insn_code = CODE_FOR_$(usashl$Q$a3$)",
+  "optab_handler (ashr_optab, $A)->insn_code = CODE_FOR_$(ashr$a3$)",
+  "optab_handler (lshr_optab, $A)->insn_code = CODE_FOR_$(lshr$a3$)",
+  "optab_handler (rotl_optab, $A)->insn_code = CODE_FOR_$(rotl$a3$)",
+  "optab_handler (rotr_optab, $A)->insn_code = CODE_FOR_$(rotr$a3$)",
+  "optab_handler (smin_optab, $A)->insn_code = CODE_FOR_$(smin$a3$)",
+  "optab_handler (smax_optab, $A)->insn_code = CODE_FOR_$(smax$a3$)",
+  "optab_handler (umin_optab, $A)->insn_code = CODE_FOR_$(umin$I$a3$)",
+  "optab_handler (umax_optab, $A)->insn_code = CODE_FOR_$(umax$I$a3$)",
+  "optab_handler (pow_optab, $A)->insn_code = CODE_FOR_$(pow$a3$)",
+  "optab_handler (atan2_optab, $A)->insn_code = CODE_FOR_$(atan2$a3$)",
+  "optab_handler (neg_optab, $A)->insn_code = CODE_FOR_$(neg$P$a2$)",
+  "optab_handler (negv_optab, $A)->insn_code =\n\
+    optab_handler (neg_optab, $A)->insn_code = CODE_FOR_$(neg$F$a2$)",
+  "optab_handler (negv_optab, $A)->insn_code = CODE_FOR_$(negv$I$a2$)",
+  "optab_handler (neg_optab, $A)->insn_code = CODE_FOR_$(neg$Q$a2$)",
+  "optab_handler (ssneg_optab, $A)->insn_code = CODE_FOR_$(ssneg$Q$a2$)",
+  "optab_handler (usneg_optab, $A)->insn_code = CODE_FOR_$(usneg$Q$a2$)",
+  "optab_handler (abs_optab, $A)->insn_code = CODE_FOR_$(abs$P$a2$)",
+  "optab_handler (absv_optab, $A)->insn_code =\n\
+    optab_handler (abs_optab, $A)->insn_code = CODE_FOR_$(abs$F$a2$)",
+  "optab_handler (absv_optab, $A)->insn_code = CODE_FOR_$(absv$I$a2$)",
+  "optab_handler (copysign_optab, $A)->insn_code = CODE_FOR_$(copysign$F$a3$)",
+  "optab_handler (signbit_optab, $A)->insn_code = CODE_FOR_$(signbit$F$a2$)",
+  "optab_handler (isinf_optab, $A)->insn_code = CODE_FOR_$(isinf$a2$)",
+  "optab_handler (sqrt_optab, $A)->insn_code = CODE_FOR_$(sqrt$a2$)",
+  "optab_handler (floor_optab, $A)->insn_code = CODE_FOR_$(floor$a2$)",
+  "convert_optab_handler (lfloor_optab, $B, $A)->insn_code = CODE_FOR_$(lfloor$F$a$I$b2$)",
+  "optab_handler (ceil_optab, $A)->insn_code = CODE_FOR_$(ceil$a2$)",
+  "convert_optab_handler (lceil_optab, $B, $A)->insn_code = CODE_FOR_$(lceil$F$a$I$b2$)",
+  "optab_handler (round_optab, $A)->insn_code = CODE_FOR_$(round$a2$)",
+  "optab_handler (btrunc_optab, $A)->insn_code = CODE_FOR_$(btrunc$a2$)",
+  "optab_handler (nearbyint_optab, $A)->insn_code = CODE_FOR_$(nearbyint$a2$)",
+  "optab_handler (rint_optab, $A)->insn_code = CODE_FOR_$(rint$a2$)",
+  "convert_optab_handler (lrint_optab, $B, $A)->insn_code = CODE_FOR_$(lrint$F$a$I$b2$)",
+  "convert_optab_handler (lround_optab, $B, $A)->insn_code = CODE_FOR_$(lround$F$a$I$b2$)",
+  "optab_handler (sincos_optab, $A)->insn_code = CODE_FOR_$(sincos$a3$)",
+  "optab_handler (sin_optab, $A)->insn_code = CODE_FOR_$(sin$a2$)",
+  "optab_handler (asin_optab, $A)->insn_code = CODE_FOR_$(asin$a2$)",
+  "optab_handler (cos_optab, $A)->insn_code = CODE_FOR_$(cos$a2$)",
+  "optab_handler (acos_optab, $A)->insn_code = CODE_FOR_$(acos$a2$)",
+  "optab_handler (exp_optab, $A)->insn_code = CODE_FOR_$(exp$a2$)",
+  "optab_handler (exp10_optab, $A)->insn_code = CODE_FOR_$(exp10$a2$)",
+  "optab_handler (exp2_optab, $A)->insn_code = CODE_FOR_$(exp2$a2$)",
+  "optab_handler (expm1_optab, $A)->insn_code = CODE_FOR_$(expm1$a2$)",
+  "optab_handler (ldexp_optab, $A)->insn_code = CODE_FOR_$(ldexp$a3$)",
+  "optab_handler (scalb_optab, $A)->insn_code = CODE_FOR_$(scalb$a3$)",
+  "optab_handler (logb_optab, $A)->insn_code = CODE_FOR_$(logb$a2$)",
+  "optab_handler (ilogb_optab, $A)->insn_code = CODE_FOR_$(ilogb$a2$)",
+  "optab_handler (log_optab, $A)->insn_code = CODE_FOR_$(log$a2$)",
+  "optab_handler (log10_optab, $A)->insn_code = CODE_FOR_$(log10$a2$)",  
+  "optab_handler (log2_optab, $A)->insn_code = CODE_FOR_$(log2$a2$)",  
+  "optab_handler (log1p_optab, $A)->insn_code = CODE_FOR_$(log1p$a2$)",  
+  "optab_handler (tan_optab, $A)->insn_code = CODE_FOR_$(tan$a2$)",
+  "optab_handler (atan_optab, $A)->insn_code = CODE_FOR_$(atan$a2$)",
+  "optab_handler (strlen_optab, $A)->insn_code = CODE_FOR_$(strlen$a$)",
+  "optab_handler (one_cmpl_optab, $A)->insn_code = CODE_FOR_$(one_cmpl$a2$)",
+  "optab_handler (bswap_optab, $A)->insn_code = CODE_FOR_$(bswap$a2$)",
+  "optab_handler (ffs_optab, $A)->insn_code = CODE_FOR_$(ffs$a2$)",
+  "optab_handler (clz_optab, $A)->insn_code = CODE_FOR_$(clz$a2$)",
+  "optab_handler (ctz_optab, $A)->insn_code = CODE_FOR_$(ctz$a2$)",
+  "optab_handler (popcount_optab, $A)->insn_code = CODE_FOR_$(popcount$a2$)",
+  "optab_handler (parity_optab, $A)->insn_code = CODE_FOR_$(parity$a2$)",
+  "optab_handler (mov_optab, $A)->insn_code = CODE_FOR_$(mov$a$)",
+  "optab_handler (movstrict_optab, $A)->insn_code = CODE_FOR_$(movstrict$a$)",
+  "optab_handler (movmisalign_optab, $A)->insn_code = CODE_FOR_$(movmisalign$a$)",
+  "optab_handler (storent_optab, $A)->insn_code = CODE_FOR_$(storent$a$)",
+  "optab_handler (cmp_optab, $A)->insn_code = CODE_FOR_$(cmp$a$)",
+  "optab_handler (tst_optab, $A)->insn_code = CODE_FOR_$(tst$a$)",
+  "optab_handler (addcc_optab, $A)->insn_code = CODE_FOR_$(add$acc$)",
   "bcc_gen_fctn[$C] = gen_$(b$c$)",
   "setcc_gen_code[$C] = CODE_FOR_$(s$c$)",
   "movcc_gen_code[$A] = CODE_FOR_$(mov$acc$)",
-  "cbranch_optab->handlers[$A].insn_code = CODE_FOR_$(cbranch$a4$)",
-  "cmov_optab->handlers[$A].insn_code = CODE_FOR_$(cmov$a6$)",
-  "cstore_optab->handlers[$A].insn_code = CODE_FOR_$(cstore$a4$)",
-  "push_optab->handlers[$A].insn_code = CODE_FOR_$(push$a1$)",
+  "optab_handler (cbranch_optab, $A)->insn_code = CODE_FOR_$(cbranch$a4$)",
+  "optab_handler (cmov_optab, $A)->insn_code = CODE_FOR_$(cmov$a6$)",
+  "optab_handler (cstore_optab, $A)->insn_code = CODE_FOR_$(cstore$a4$)",
+  "optab_handler (push_optab, $A)->insn_code = CODE_FOR_$(push$a1$)",
   "reload_in_optab[$A] = CODE_FOR_$(reload_in$a$)",
   "reload_out_optab[$A] = CODE_FOR_$(reload_out$a$)",
   "movmem_optab[$A] = CODE_FOR_$(movmem$a$)",
@@ -194,20 +231,45 @@ static const char * const optabs[] =
   "sync_compare_and_swap_cc[$A] = CODE_FOR_$(sync_compare_and_swap_cc$I$a$)",
   "sync_lock_test_and_set[$A] = CODE_FOR_$(sync_lock_test_and_set$I$a$)",
   "sync_lock_release[$A] = CODE_FOR_$(sync_lock_release$I$a$)",
-  "vec_set_optab->handlers[$A].insn_code = CODE_FOR_$(vec_set$a$)",
-  "vec_extract_optab->handlers[$A].insn_code = CODE_FOR_$(vec_extract$a$)",
-  "vec_init_optab->handlers[$A].insn_code = CODE_FOR_$(vec_init$a$)",
-  "vec_shl_optab->handlers[$A].insn_code = CODE_FOR_$(vec_shl_$a$)",
-  "vec_shr_optab->handlers[$A].insn_code = CODE_FOR_$(vec_shr_$a$)",
-  "vec_realign_load_optab->handlers[$A].insn_code = CODE_FOR_$(vec_realign_load_$a$)",
+  "optab_handler (vec_set_optab, $A)->insn_code = CODE_FOR_$(vec_set$a$)",
+  "optab_handler (vec_extract_optab, $A)->insn_code = CODE_FOR_$(vec_extract$a$)",
+  "optab_handler (vec_extract_even_optab, $A)->insn_code = CODE_FOR_$(vec_extract_even$a$)",
+  "optab_handler (vec_extract_odd_optab, $A)->insn_code = CODE_FOR_$(vec_extract_odd$a$)",
+  "optab_handler (vec_interleave_high_optab, $A)->insn_code = CODE_FOR_$(vec_interleave_high$a$)",
+  "optab_handler (vec_interleave_low_optab, $A)->insn_code = CODE_FOR_$(vec_interleave_low$a$)",
+  "optab_handler (vec_init_optab, $A)->insn_code = CODE_FOR_$(vec_init$a$)",
+  "optab_handler (vec_shl_optab, $A)->insn_code = CODE_FOR_$(vec_shl_$a$)",
+  "optab_handler (vec_shr_optab, $A)->insn_code = CODE_FOR_$(vec_shr_$a$)",
+  "optab_handler (vec_realign_load_optab, $A)->insn_code = CODE_FOR_$(vec_realign_load_$a$)",
   "vcond_gen_code[$A] = CODE_FOR_$(vcond$a$)",
   "vcondu_gen_code[$A] = CODE_FOR_$(vcondu$a$)",
-  "reduc_smax_optab->handlers[$A].insn_code = CODE_FOR_$(reduc_smax_$a$)",
-  "reduc_umax_optab->handlers[$A].insn_code = CODE_FOR_$(reduc_umax_$a$)",
-  "reduc_smin_optab->handlers[$A].insn_code = CODE_FOR_$(reduc_smin_$a$)",
-  "reduc_umin_optab->handlers[$A].insn_code = CODE_FOR_$(reduc_umin_$a$)",
-  "reduc_splus_optab->handlers[$A].insn_code = CODE_FOR_$(reduc_splus_$a$)" ,
-  "reduc_uplus_optab->handlers[$A].insn_code = CODE_FOR_$(reduc_uplus_$a$)" 
+  "optab_handler (ssum_widen_optab, $A)->insn_code = CODE_FOR_$(widen_ssum$I$a3$)",
+  "optab_handler (usum_widen_optab, $A)->insn_code = CODE_FOR_$(widen_usum$I$a3$)",
+  "optab_handler (udot_prod_optab, $A)->insn_code = CODE_FOR_$(udot_prod$I$a$)",
+  "optab_handler (sdot_prod_optab, $A)->insn_code = CODE_FOR_$(sdot_prod$I$a$)",
+  "optab_handler (reduc_smax_optab, $A)->insn_code = CODE_FOR_$(reduc_smax_$a$)",
+  "optab_handler (reduc_umax_optab, $A)->insn_code = CODE_FOR_$(reduc_umax_$a$)",
+  "optab_handler (reduc_smin_optab, $A)->insn_code = CODE_FOR_$(reduc_smin_$a$)",
+  "optab_handler (reduc_umin_optab, $A)->insn_code = CODE_FOR_$(reduc_umin_$a$)",
+  "optab_handler (reduc_splus_optab, $A)->insn_code = CODE_FOR_$(reduc_splus_$a$)" ,
+  "optab_handler (reduc_uplus_optab, $A)->insn_code = CODE_FOR_$(reduc_uplus_$a$)",
+  "optab_handler (vec_widen_umult_hi_optab, $A)->insn_code = CODE_FOR_$(vec_widen_umult_hi_$a$)",
+  "optab_handler (vec_widen_umult_lo_optab, $A)->insn_code = CODE_FOR_$(vec_widen_umult_lo_$a$)",
+  "optab_handler (vec_widen_smult_hi_optab, $A)->insn_code = CODE_FOR_$(vec_widen_smult_hi_$a$)",
+  "optab_handler (vec_widen_smult_lo_optab, $A)->insn_code = CODE_FOR_$(vec_widen_smult_lo_$a$)",
+  "optab_handler (vec_unpacks_hi_optab, $A)->insn_code = CODE_FOR_$(vec_unpacks_hi_$a$)",
+  "optab_handler (vec_unpacks_lo_optab, $A)->insn_code = CODE_FOR_$(vec_unpacks_lo_$a$)",
+  "optab_handler (vec_unpacku_hi_optab, $A)->insn_code = CODE_FOR_$(vec_unpacku_hi_$a$)",
+  "optab_handler (vec_unpacku_lo_optab, $A)->insn_code = CODE_FOR_$(vec_unpacku_lo_$a$)",
+  "optab_handler (vec_unpacks_float_hi_optab, $A)->insn_code = CODE_FOR_$(vec_unpacks_float_hi_$a$)",
+  "optab_handler (vec_unpacks_float_lo_optab, $A)->insn_code = CODE_FOR_$(vec_unpacks_float_lo_$a$)",
+  "optab_handler (vec_unpacku_float_hi_optab, $A)->insn_code = CODE_FOR_$(vec_unpacku_float_hi_$a$)",
+  "optab_handler (vec_unpacku_float_lo_optab, $A)->insn_code = CODE_FOR_$(vec_unpacku_float_lo_$a$)",
+  "optab_handler (vec_pack_trunc_optab, $A)->insn_code = CODE_FOR_$(vec_pack_trunc_$a$)",
+  "optab_handler (vec_pack_ssat_optab, $A)->insn_code = CODE_FOR_$(vec_pack_ssat_$a$)",
+  "optab_handler (vec_pack_usat_optab, $A)->insn_code = CODE_FOR_$(vec_pack_usat_$a$)",
+  "optab_handler (vec_pack_sfix_trunc_optab, $A)->insn_code = CODE_FOR_$(vec_pack_sfix_trunc_$a$)",
+  "optab_handler (vec_pack_ufix_trunc_optab, $A)->insn_code = CODE_FOR_$(vec_pack_ufix_trunc_$a$)"
 };
 
 static void gen_insn (rtx);
@@ -232,6 +294,7 @@ gen_insn (rtx insn)
   for (pindex = 0; pindex < ARRAY_SIZE (optabs); pindex++)
     {
       int force_float = 0, force_int = 0, force_partial_int = 0;
+      int force_fixed = 0;
       int force_consec = 0;
       int matches = 1;
 
@@ -260,6 +323,9 @@ gen_insn (rtx insn)
                 break;
 	      case 'F':
 		force_float = 1;
+		break;
+	      case 'Q':
+		force_fixed = 1;
 		break;
 	      case 'V':
                 break;
@@ -303,9 +369,20 @@ gen_insn (rtx insn)
                             || mode_class[i] == MODE_INT
                             || mode_class[i] == MODE_PARTIAL_INT
 			    || mode_class[i] == MODE_VECTOR_INT)
-			&& (! force_float || mode_class[i] == MODE_FLOAT 
+			&& (! force_float
+			    || mode_class[i] == MODE_FLOAT 
+			    || mode_class[i] == MODE_DECIMAL_FLOAT
 			    || mode_class[i] == MODE_COMPLEX_FLOAT
-			    || mode_class[i] == MODE_VECTOR_FLOAT))
+			    || mode_class[i] == MODE_VECTOR_FLOAT)
+			&& (! force_fixed
+			    || mode_class[i] == MODE_FRACT
+			    || mode_class[i] == MODE_UFRACT
+			    || mode_class[i] == MODE_ACCUM
+			    || mode_class[i] == MODE_UACCUM
+			    || mode_class[i] == MODE_VECTOR_FRACT
+			    || mode_class[i] == MODE_VECTOR_UFRACT
+			    || mode_class[i] == MODE_VECTOR_ACCUM
+			    || mode_class[i] == MODE_VECTOR_UACCUM))
 		      break;
 		  }
 
@@ -316,7 +393,7 @@ gen_insn (rtx insn)
 		else
 		  m2 = i, np += strlen (GET_MODE_NAME(i));
 
-		force_int = force_partial_int = force_float = 0;
+		force_int = force_partial_int = force_float = force_fixed = 0;
 		break;
 
 	      default:
@@ -353,7 +430,7 @@ gen_insn (rtx insn)
 	  case 'I':  case 'F':  case 'N':
 	    break;
 	  case 'V':
-            if (GET_MODE_CLASS (m1) == MODE_FLOAT)
+	    if (SCALAR_FLOAT_MODE_P (m1))
               printf ("v");
             break;
 	  case 'a':
@@ -403,6 +480,7 @@ from the machine description file `md'.  */\n\n");
   printf ("#include \"coretypes.h\"\n");
   printf ("#include \"tm.h\"\n");
   printf ("#include \"rtl.h\"\n");
+  printf ("#include \"tm_p.h\"\n");
   printf ("#include \"flags.h\"\n");
   printf ("#include \"insn-config.h\"\n");
   printf ("#include \"recog.h\"\n");
@@ -438,18 +516,11 @@ from the machine description file `md'.  */\n\n");
      also convert validly to an unsigned one.  */\n\
   for (i = 0; i < NUM_MACHINE_MODES; i++)\n\
     for (j = 0; j < NUM_MACHINE_MODES; j++)\n\
-      ufixtrunc_optab->handlers[i][j].insn_code\n\
-      = sfixtrunc_optab->handlers[i][j].insn_code;\n\
+      convert_optab_handler (ufixtrunc_optab, i, j)->insn_code\n\
+      = convert_optab_handler (sfixtrunc_optab, i, j)->insn_code;\n\
 #endif\n\
 }");
 
   fflush (stdout);
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
-}
-
-/* Define this so we can link with print-rtl.o to get debug_rtx function.  */
-const char *
-get_insn_name (int code ATTRIBUTE_UNUSED)
-{
-  return NULL;
 }

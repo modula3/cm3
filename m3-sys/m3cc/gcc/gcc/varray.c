@@ -1,5 +1,5 @@
 /* Virtual array support.
-   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004
+   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2006, 2007
    Free Software Foundation, Inc.
    Contributed by Cygnus Solutions.
 
@@ -7,7 +7,7 @@
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
+   the Free Software Foundation; either version 3, or (at your option)
    any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -16,26 +16,14 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to the Free
-   the Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
-/* This file is compiled twice: once for the generator programs
-   once for the compiler.  */
-#ifdef GENERATOR_FILE
-#include "bconfig.h"
-#else
 #include "config.h"
-#endif
-
 #include "system.h"
 #include "coretypes.h"
 #include "tm.h"
-#ifdef GENERATOR_FILE
-# include "errors.h"
-#else
-# include "toplev.h"
-#endif
+#include "toplev.h"
 #include "varray.h"
 #include "ggc.h"
 #include "hashtab.h"
@@ -176,7 +164,7 @@ varray_grow (varray_type va, size_t n)
 	va = xrealloc (va, VARRAY_HDR_SIZE + data_size);
       va->num_elements = n;
       if (n > old_elements)
-	memset (&va->data.c[old_data_size], 0, data_size - old_data_size);
+	memset (&va->data.vdt_c[old_data_size], 0, data_size - old_data_size);
 #ifdef GATHER_STATISTICS
       if (oldva != va)
         desc->copied++;
@@ -192,7 +180,7 @@ varray_clear (varray_type va)
 {
   size_t data_size = element[va->type].size * va->num_elements;
 
-  memset (va->data.c, 0, data_size);
+  memset (va->data.vdt_c, 0, data_size);
   va->elements_used = 0;
 }
 
@@ -251,19 +239,23 @@ print_statistics (void **slot, void *b)
 #endif
 
 /* Output per-varray memory usage statistics.  */
-void dump_varray_statistics (void)
+void
+dump_varray_statistics (void)
 {
 #ifdef GATHER_STATISTICS
   struct output_info info;
 
-  fprintf (stderr, "\nVARRAY Kind            Count      Bytes  Resized copied\n");
-  fprintf (stderr, "-------------------------------------------------------\n");
-  info.count = 0;
-  info.size = 0;
-  htab_traverse (varray_hash, print_statistics, &info);
-  fprintf (stderr, "-------------------------------------------------------\n");
-  fprintf (stderr, "%-20s %7d %10d\n",
-	   "Total", info.count, info.size);
-  fprintf (stderr, "-------------------------------------------------------\n");
+  if (varray_hash)
+    {
+      fprintf (stderr, "\nVARRAY Kind            Count      Bytes  Resized copied\n");
+      fprintf (stderr, "-------------------------------------------------------\n");
+      info.count = 0;
+      info.size = 0;
+      htab_traverse (varray_hash, print_statistics, &info);
+      fprintf (stderr, "-------------------------------------------------------\n");
+      fprintf (stderr, "%-20s %7d %10d\n",
+	       "Total", info.count, info.size);
+      fprintf (stderr, "-------------------------------------------------------\n");
+   }
 #endif
 }

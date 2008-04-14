@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for DEC Alpha w/ELF.
-   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003
+   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2007
    Free Software Foundation, Inc.
    Contributed by Richard Henderson (rth@tamu.edu).
 
@@ -7,7 +7,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #undef OBJECT_FORMAT_COFF
 #undef EXTENDED_COFF
@@ -123,9 +122,9 @@ do {									\
 #define ASM_OUTPUT_ALIGNED_LOCAL(FILE, NAME, SIZE, ALIGN)		\
 do {									\
   if ((SIZE) <= g_switch_value)						\
-    sbss_section();							\
+    switch_to_section (sbss_section);					\
   else									\
-    bss_section();							\
+    switch_to_section (bss_section);					\
   ASM_OUTPUT_TYPE_DIRECTIVE (FILE, NAME, "object");			\
   if (!flag_inhibit_size_directive)					\
     ASM_OUTPUT_SIZE_DIRECTIVE (FILE, NAME, SIZE);			\
@@ -192,37 +191,6 @@ do {									\
   fprintf ((FILE), "%s\n", ASM_SECTION_START_OP)
 
 #endif
-
-/* A default list of other sections which we might be "in" at any given
-   time.  For targets that use additional sections (e.g. .tdesc) you
-   should override this definition in the target-specific file which
-   includes this file.  */
-
-#undef  EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_sbss, in_sdata
-
-/* A default list of extra section function definitions.  For targets
-   that use additional sections (e.g. .tdesc) you should override this
-   definition in the target-specific file which includes this file.  */
-
-#undef  EXTRA_SECTION_FUNCTIONS
-#define EXTRA_SECTION_FUNCTIONS						\
-  SECTION_FUNCTION_TEMPLATE(sbss_section, in_sbss, SBSS_SECTION_ASM_OP)	\
-  SECTION_FUNCTION_TEMPLATE(sdata_section, in_sdata, SDATA_SECTION_ASM_OP)
-
-extern void sbss_section (void);
-extern void sdata_section (void);
-
-#undef  SECTION_FUNCTION_TEMPLATE
-#define SECTION_FUNCTION_TEMPLATE(FN, ENUM, OP)	\
-void FN (void)					\
-{						\
-  if (in_section != ENUM)			\
-    {						\
-      fprintf (asm_out_file, "%s\n", OP);	\
-      in_section = ENUM;			\
-    }						\
-}
 
 /* Switch into a generic section.  */
 #define TARGET_ASM_NAMED_SECTION  default_elf_asm_named_section

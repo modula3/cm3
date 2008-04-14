@@ -1,12 +1,12 @@
 /* Definitions for AT&T assembler syntax for the Intel 80386.
-   Copyright (C) 1988, 1996, 2000, 2001, 2002
+   Copyright (C) 1988, 1996, 2000, 2001, 2002, 2007
    Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -15,9 +15,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 
 /* Define the syntax of instructions and addresses.  */
@@ -33,6 +32,7 @@ Boston, MA 02110-1301, USA.  */
 
 /* How to output an ASCII string constant.  */
 
+#undef ASM_OUTPUT_ASCII
 #define ASM_OUTPUT_ASCII(FILE, PTR, SIZE)			\
 do								\
 { size_t i = 0, limit = (SIZE); 				\
@@ -57,6 +57,7 @@ do								\
 /* This is how to output an assembler line
    that says to advance the location counter by SIZE bytes.  */
 
+#undef ASM_OUTPUT_SKIP
 #define ASM_OUTPUT_SKIP(FILE,SIZE)  \
   fprintf ((FILE), "\t.set .,.+%u\n", (int)(SIZE))
 

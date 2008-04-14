@@ -327,23 +327,33 @@ typedef HOST_WIDEST_INT gcov_type;
 #define GCOV_COUNTER_V_SINGLE	3  /* The most common value of expression.  */
 #define GCOV_COUNTER_V_DELTA	4  /* The most common difference between
 				      consecutive values of expression.  */
-#define GCOV_LAST_VALUE_COUNTER 4  /* The last of counters used for value
+
+#define GCOV_COUNTER_V_INDIR	5  /* The most common indirect address */
+#define GCOV_COUNTER_AVERAGE	6  /* Compute average value passed to the
+				      counter.  */
+#define GCOV_COUNTER_IOR	7  /* IOR of the all values passed to
+				      counter.  */
+#define GCOV_LAST_VALUE_COUNTER 7  /* The last of counters used for value
 				      profiling.  */
-#define GCOV_COUNTERS		5
+#define GCOV_COUNTERS		8
 
 /* Number of counters used for value profiling.  */
 #define GCOV_N_VALUE_COUNTERS \
   (GCOV_LAST_VALUE_COUNTER - GCOV_FIRST_VALUE_COUNTER + 1)
   
   /* A list of human readable names of the counters */
-#define GCOV_COUNTER_NAMES	{"arcs", "interval", "pow2", "single", "delta"}
+#define GCOV_COUNTER_NAMES	{"arcs", "interval", "pow2", "single", \
+				 "delta","indirect_call", "average", "ior"}
   
   /* Names of merge functions for counters.  */
 #define GCOV_MERGE_FUNCTIONS	{"__gcov_merge_add",	\
 				 "__gcov_merge_add",	\
 				 "__gcov_merge_add",	\
 				 "__gcov_merge_single",	\
-				 "__gcov_merge_delta"}
+				 "__gcov_merge_delta",  \
+				 "__gcov_merge_single", \
+				 "__gcov_merge_add",	\
+				 "__gcov_merge_ior"}
   
 /* Convert a counter index to a tag.  */
 #define GCOV_TAG_FOR_COUNTER(COUNT)				\
@@ -461,6 +471,10 @@ extern void __gcov_merge_delta (gcov_type *, unsigned) ATTRIBUTE_HIDDEN;
 extern void __gcov_interval_profiler (gcov_type *, gcov_type, int, unsigned); 
 extern void __gcov_pow2_profiler (gcov_type *, gcov_type);
 extern void __gcov_one_value_profiler (gcov_type *, gcov_type);
+extern void __gcov_indirect_call_profiler (gcov_type *, gcov_type, void *, void *);
+extern void __gcov_average_profiler (gcov_type *, gcov_type);
+extern void __gcov_ior_profiler (gcov_type *, gcov_type);
+extern void __gcov_merge_ior (gcov_type *, unsigned);
 
 #ifndef inhibit_libc
 /* The wrappers around some library functions..  */

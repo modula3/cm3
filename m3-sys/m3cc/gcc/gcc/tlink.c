@@ -1,7 +1,7 @@
 /* Scan linker error messages for missing template instantiations and provide
    them.
 
-   Copyright (C) 1995, 1998, 1999, 2000, 2001, 2003, 2004, 2005
+   Copyright (C) 1995, 1998, 1999, 2000, 2001, 2003, 2004, 2005, 2007
    Free Software Foundation, Inc.
    Contributed by Jason Merrill (jason@cygnus.com).
 
@@ -9,7 +9,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -18,9 +18,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -125,7 +124,7 @@ symbol_hash_lookup (const char *string, int create)
   if (*e == NULL)
     {
       struct symbol_hash_entry *v;
-      *e = v = xcalloc (1, sizeof (*v));
+      *e = v = XCNEW (struct symbol_hash_entry);
       v->key = xstrdup (string);
     }
   return *e;
@@ -145,7 +144,7 @@ file_hash_lookup (const char *string)
   if (*e == NULL)
     {
       struct file_hash_entry *v;
-      *e = v = xcalloc (1, sizeof (*v));
+      *e = v = XCNEW (struct file_hash_entry);
       v->key = xstrdup (string);
     }
   return *e;
@@ -167,7 +166,7 @@ demangled_hash_lookup (const char *string, int create)
   if (*e == NULL)
     {
       struct demangled_hash_entry *v;
-      *e = v = xcalloc (1, sizeof (*v));
+      *e = v = XCNEW (struct demangled_hash_entry);
       v->key = xstrdup (string);
     }
   return *e;
@@ -607,12 +606,20 @@ scan_linker_output (const char *fname)
 {
   FILE *stream = fopen (fname, "r");
   char *line;
+  int skip_next_in_line = 0;
 
   while ((line = tfgets (stream)) != NULL)
     {
       char *p = line, *q;
       symbol *sym;
       int end;
+      int ok = 0;
+
+      /* On darwin9, we might have to skip " in " lines as well.  */
+      if (skip_next_in_line
+	  && strstr (p, " in "))
+	  continue;
+      skip_next_in_line = 0;
 
       while (*p && ISSPACE ((unsigned char) *p))
 	++p;
@@ -650,9 +657,24 @@ scan_linker_output (const char *fname)
       if (! sym && ! end)
 	/* Try a mangled name in quotes.  */
 	{
-	  const char *oldq = q + 1;
+	  char *oldq = q + 1;
 	  demangled *dem = 0;
 	  q = 0;
+
+	  /* On darwin9, we look for "foo" referenced from:\n\(.* in .*\n\)*  */
+	  if (strcmp (oldq, "referenced from:") == 0)
+	    {
+	      /* We have to remember that we found a symbol to tweak.  */
+	      ok = 1;
+
+	      /* We actually want to start from the first word on the
+		 line.  */
+	      oldq = p;
+
+	      /* Since the format is multiline, we have to skip
+		 following lines with " in ".  */
+	      skip_next_in_line = 1;
+	    }
 
 	  /* First try `GNU style'.  */
 	  p = strchr (oldq, '`');
@@ -681,7 +703,8 @@ scan_linker_output (const char *fname)
 
 	  /* We need to check for certain error keywords here, or we would
 	     mistakenly use GNU ld's "In function `foo':" message.  */
-	  if (q && (strstr (oldq, "ndefined")
+	  if (q && (ok
+		    || strstr (oldq, "ndefined")
 		    || strstr (oldq, "nresolved")
 		    || strstr (oldq, "nsatisfied")
 		    || strstr (oldq, "ultiple")))
