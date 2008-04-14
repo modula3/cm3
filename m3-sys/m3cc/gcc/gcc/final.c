@@ -3498,7 +3498,7 @@ output_addr_const (FILE *file, rtx x)
       break;
 
     case NOTE:
-      if (NOTE_LINE_NUMBER (x) == NOTE_INSN_DELETED_LABEL) {
+      if (NOTE_KIND (x) == NOTE_INSN_DELETED_LABEL) {
 	ASM_GENERATE_INTERNAL_LABEL (buf, "L", CODE_LABEL_NUMBER (x));
 #ifdef ASM_OUTPUT_LABEL_REF
 	ASM_OUTPUT_LABEL_REF (file, buf);

@@ -256,6 +256,7 @@ static int m3_handle_option (size_t scode, const char *arg, int value);
 static bool m3_post_options (const char **);
 static bool m3_init (void);
 static void m3_parse_file (int);
+static HOST_WIDE_INT m3_get_alias_set (tree);
 static void m3_finish (void);
 
 /* Functions to keep track of the current scope */
@@ -293,10 +294,8 @@ static void m3_write_globals (void);
 #undef LANG_HOOKS_PARSE_FILE
 #define LANG_HOOKS_PARSE_FILE m3_parse_file
 #undef LANG_HOOKS_GET_ALIAS_SET
-#define LANG_HOOKS_GET_ALIAS_SET hook_get_alias_set_0
+#define LANG_HOOKS_GET_ALIAS_SET m3_get_alias_set
 
-#undef LANG_HOOKS_CALLGRAPH_EXPAND_FUNCTION
-#define LANG_HOOKS_CALLGRAPH_EXPAND_FUNCTION m3_expand_function
 #undef LANG_HOOKS_WRITE_GLOBALS
 #define LANG_HOOKS_WRITE_GLOBALS m3_write_globals
 
@@ -548,13 +547,13 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
 	  if (TREE_INT_CST_LOW (y) & 1)
 	    {
 	      return m3_build2 (BIT_IOR_EXPR, t, x,
-				build_int_cstu (t, 1 << i));
+				build_int_cstu (t, (HOST_WIDE_INT)1 << i));
 	    }
 	  else
 	    {
 	      return m3_build2 (BIT_AND_EXPR, t, x,
 				m3_build1 (BIT_NOT_EXPR, t,
-					   build_int_cstu (t, 1 << i)));
+					   build_int_cstu (t, (HOST_WIDE_INT)1 << i)));
 	    }
 	}
       else
@@ -563,7 +562,7 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
 	  a = m3_build2 (BIT_AND_EXPR, t, y, v_one);
 	  b = m3_build2 (BIT_AND_EXPR, t, x,
 			 m3_build1 (BIT_NOT_EXPR, t,
-				    build_int_cstu (t, 1 << i)));
+				    build_int_cstu (t, (HOST_WIDE_INT)1 << i)));
 	  return m3_build2 (BIT_IOR_EXPR, t, b, left_shift (a, i));
 	}
     }
@@ -572,7 +571,7 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
       tree saved_bits, new_bits;
       if (i + n < HOST_BITS_PER_WIDE_INT)
 	{
-	  int mask = (1 << n) - 1;
+	  HOST_WIDE_INT mask = ((HOST_WIDE_INT)1 << n) - 1;
 	  saved_bits = m3_build1 (BIT_NOT_EXPR, t,
 				  build_int_cstu (t, mask << i));
 	  if (host_integerp (y, 0))
@@ -588,7 +587,7 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
 	}
       else if (n < HOST_BITS_PER_WIDE_INT)
 	{
-	  int mask = (1 << n) - 1;
+	  HOST_WIDE_INT mask = ((HOST_WIDE_INT)1 << n) - 1;
 	  tree a = build_int_cstu (t, mask);
 	  if (host_integerp (y, 0))
 	    {
@@ -689,6 +688,12 @@ m3_do_shift (enum tree_code code, tree t, tree val, tree cnt)
   c = m3_build2 (GE_EXPR, boolean_type_node, cnt, TYPE_SIZE(t));
   d = m3_build3 (COND_EXPR, t, c, v_zero, b);
   return d;
+}
+
+HOST_WIDE_INT
+m3_get_alias_set (tree ARG_UNUSED (t))
+{
+  return 0;
 }
 
 /* Mark EXP saying that we need to be able to take the
@@ -996,21 +1001,15 @@ m3_init_decl_processing (void)
   t_word_64 = unsigned_intDI_type_node;
   m3_push_type_decl (get_identifier ("word_64"), t_word_64);
 
-  t_int = integer_type_node;
-  t_word = unsigned_type_node;
-
-  t_longint = long_long_integer_type_node;
-  t_longword = long_long_unsigned_type_node;
-
   if (BITS_PER_WORD == 32)
     {
-      gcc_assert (t_int == t_int_32);
-      gcc_assert (t_word == t_word_32);
+      t_int = t_int_32;
+      t_word = t_word_32;
     }
   else if (BITS_PER_WORD == 64)
     {
-      gcc_assert (t_int == t_int_64);
-      gcc_assert (t_word == t_word_64);
+      t_int = t_int_64;
+      t_word = t_word_64;
     }
   else
     {
@@ -1020,8 +1019,8 @@ m3_init_decl_processing (void)
       m3_push_type_decl (get_identifier ("word"), t_word);
     }
 
-  gcc_assert (t_longint = t_int_64);
-  gcc_assert (t_longword == t_word_64);
+  t_longint = t_int_64;
+  t_longword = t_word_64;
 
   /* Set the type used for sizes and build the remaining common nodes. */
   size_type_node = t_word;
@@ -1048,8 +1047,8 @@ m3_init_decl_processing (void)
   m3_push_type_decl (get_identifier ("xreel"), t_xreel);
 
   t_void = void_type_node;
-  v_zero = integer_zero_node;
-  v_one = integer_one_node;
+  v_zero = build_int_cst (t_int, 0);
+  v_one = build_int_cst (t_int, 1);
   v_null = null_pointer_node;
 
   build_common_builtin_nodes ();
@@ -1974,8 +1973,8 @@ m3_call_direct (tree p, tree t)
   tree *slot = (tree *)htab_find_slot (builtins, p, NO_INSERT);
   if (slot) p = *slot;
   TREE_USED (p) = 1;
-  call = fold_build3 (CALL_EXPR, t, proc_addr (p), CALL_TOP_ARG (),
-		      CALL_TOP_STATIC_CHAIN ());
+  call = build_call_list (t, proc_addr (p), CALL_TOP_ARG ());
+  CALL_EXPR_STATIC_CHAIN (t) = CALL_TOP_STATIC_CHAIN ();
   if (VOID_TYPE_P(t)) {
     add_stmt (call);
   } else {
@@ -1996,8 +1995,8 @@ m3_call_indirect (tree t, tree cc)
 
   decl_attributes (&fntype, cc, 0);
 
-  call = build3 (CALL_EXPR, t, m3_cast (fntype, fnaddr), CALL_TOP_ARG (),
-		 CALL_TOP_STATIC_CHAIN ());
+  call = build_call_list (t, m3_cast (fntype, fnaddr), CALL_TOP_ARG ());
+  CALL_EXPR_STATIC_CHAIN (call) = CALL_TOP_STATIC_CHAIN ();
   if (VOID_TYPE_P(t)) {
     add_stmt (call);
   } else {
@@ -2156,14 +2155,17 @@ emit_fault_proc (void)
   location_t save_loc = input_location;
   tree p = fault_proc;
 
-  LOCATION_FILE (input_location) = "<internal>";
-  LOCATION_LINE (input_location) = 0;
+#ifdef USE_MAPPED_LOCATION
+  input_location = UNKNOWN_LOCATION;
+#else
+  input_line = 0;
+#endif
   DECL_SOURCE_LOCATION (p) = input_location;
 
   gcc_assert (current_function_decl == NULL_TREE);
   gcc_assert (current_block == NULL_TREE);
   current_function_decl = p;
-  allocate_struct_function (p);
+  allocate_struct_function (p, false);
 
   pending_blocks = tree_cons (NULL_TREE, current_block, pending_blocks);
   current_block = DECL_INITIAL (p); /* parm_block */
@@ -2265,7 +2267,14 @@ m3cg_set_source_file (void)
 {
   NAME (s);
 
+#ifdef USE_MAPPED_LOCATION
+  source_location l;
+  linemap_add (line_table, LC_RENAME, false, s, 1);
+  l = linemap_line_start (line_table, 1, 80);
+  input_location = l;
+#else
   input_filename = s;
+#endif
 }
 
 static void
@@ -2274,7 +2283,12 @@ m3cg_set_source_line (void)
   INTEGER (i);
 
   if (option_source_line_trace) fprintf(stderr, "  source line %4ld\n", i);
+#ifdef USE_MAPPED_LOCATION
+  source_location s = linemap_line_start (line_table, i, 80);
+  input_location = s;
+#else
   input_line = i;
+#endif
 }
 
 static void
@@ -3240,7 +3254,7 @@ m3cg_begin_procedure (void)
   announce_function (p);
 
   current_function_decl = p;
-  allocate_struct_function (p);
+  allocate_struct_function (p, false);
 
   pending_blocks = tree_cons (NULL_TREE, current_block, pending_blocks);
   current_block = DECL_INITIAL (p); /* parm_block */
@@ -5057,13 +5071,21 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
 static bool
 m3_init (void)
 {
+#ifdef USE_MAPPED_LOCATION
+  linemap_add (line_table, LC_ENTER, false, main_input_filename, 1);
+#else
   input_filename = main_input_filename;
+#endif
 
   /* Open input file.  */
   if (input_filename == 0 || !strcmp (input_filename, "-"))
     {
       finput = stdin;
-      input_filename = "stdin";
+#ifdef USE_MAPPED_LOCATION
+      linemap_add (line_table, LC_RENAME, false, "<stdin>", 1);
+#else
+      input_filename = "<stdin>";
+#endif
     }
   else
     finput = fopen (input_filename, "rb");
