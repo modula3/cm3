@@ -15,7 +15,7 @@ TYPE
   short_int          = [-16_7fff-1 .. 16_7fff];
   int                = [-16_7fffffff-1 .. 16_7fffffff];
   long_int           = [-16_7fffffff-1 .. 16_7fffffff];
-  long_long          = [-16_7fffffffffffffffL-1L .. 16_7fffffffffffffffL];
+  long_long          = LONGINT;
 
   (* the four unsigned integer types *)
   unsigned_char      = [16_0 .. 16_ff];
