@@ -8,16 +8,11 @@
   do						\
     {						\
 	HURD_TARGET_OS_CPP_BUILTINS();		\
-	if (flag_pic)				\
-	  {					\
-	    builtin_define ("__PIC__");		\
-	    builtin_define ("__pic__");		\
-	  }					\
     }						\
   while (0)
 
 #undef CPP_SPEC
-#define CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{bsd:-D_BSD_SOURCE}"
+#define CPP_SPEC "%{pthread:-D_REENTRANT} %{posix:-D_POSIX_SOURCE} %{bsd:-D_BSD_SOURCE}"
 
 #undef CC1_SPEC
 #define CC1_SPEC "%(cc1_cpu)"
@@ -31,13 +26,19 @@
     %{static:-static}}"
 
 #undef	STARTFILE_SPEC
+#if defined HAVE_LD_PIE
 #define STARTFILE_SPEC \
-  "%{!shared: \
-     %{!static: \
-       %{pg:gcrt1.o%s} %{!pg:%{p:gcrt1.o%s} %{!p:crt1.o%s}}} \
-     %{static:crt0.o%s}} \
-   crti.o%s %{static:crtbeginT.o%s}\
-   %{!static:%{!shared:crtbegin.o%s} %{shared:crtbeginS.o%s}}"
+  "%{!shared: %{pg|p|profile:gcrt0.o%s;pie:Scrt1.o%s;static:crt0.o%s;:crt1.o%s}} \
+   crti.o%s %{static:crtbeginT.o%s;shared|pie:crtbeginS.o%s;:crtbegin.o%s}"
+#else
+#define STARTFILE_SPEC \
+  "%{!shared: %{pg|p|profile:gcrt0.o%s;static:crt0.o%s;:crt1.o%s}} \
+   crti.o%s %{static:crtbeginT.o%s;shared|pie:crtbeginS.o%s;:crtbegin.o%s}"
+#endif
+
+#undef	ENDFILE_SPEC
+#define ENDFILE_SPEC \
+  "%{shared|pie:crtendS.o%s;:crtend.o%s} crtn.o%s"
 
 /* FIXME: Is a Hurd-specific fallback mechanism necessary?  */
 #undef MD_UNWIND_SUPPORT

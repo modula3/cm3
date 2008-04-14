@@ -1,5 +1,5 @@
 /* Target definitions for GNU compiler for SPARC running System V.4
-   Copyright (C) 1991, 1992, 1995, 1996, 1997, 1998, 2000, 2002
+   Copyright (C) 1991, 1992, 1995, 1996, 1997, 1998, 2000, 2002, 2007
    Free Software Foundation, Inc.
    Contributed by Ron Guilmette (rfg@monkeys.com).
 
@@ -7,7 +7,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #ifndef TARGET_VERSION
 #define TARGET_VERSION fprintf (stderr, " (sparc ELF)"); 
@@ -47,13 +46,6 @@ Boston, MA 02110-1301, USA.  */
 #undef COMMON_ASM_OP
 #undef SKIP_ASM_OP
 #undef SET_ASM_OP	/* Has no equivalent.  See ASM_OUTPUT_DEF below.  */
-
-/* The native assembler can't compute differences between symbols in different
-   sections when generating pic code, so we must put jump tables in the
-   text section.  */
-/* But we now defer the tables to the end of the function, so we make
-   this 0 to not confuse the branch shortening code.  */
-#define JUMP_TABLES_IN_TEXT_SECTION 0
 
 /* Pass -K to the assembler when PIC.  */
 #undef ASM_SPEC

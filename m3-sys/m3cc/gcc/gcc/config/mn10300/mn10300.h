@@ -1,14 +1,14 @@
 /* Definitions of target machine for GNU compiler.
    Matsushita MN10300 series
-   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005
-   Free Software Foundation, Inc.
+   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
+   2007 Free Software Foundation, Inc.
    Contributed by Jeff Law (law@cygnus.com).
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -17,9 +17,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 
 #undef ASM_SPEC
@@ -37,6 +36,8 @@ Boston, MA 02110-1301, USA.  */
     {						\
       builtin_define ("__mn10300__");		\
       builtin_define ("__MN10300__");		\
+      builtin_assert ("cpu=mn10300");		\
+      builtin_assert ("machine=mn10300");	\
     }						\
   while (0)
 
@@ -88,7 +89,7 @@ extern enum processor_type mn10300_processor;
 /* Allocation boundary (in *bits*) for storing arguments in argument list.  */
 #define PARM_BOUNDARY		32
 
-/* The stack goes in 32 bit lumps.  */
+/* The stack goes in 32-bit lumps.  */
 #define STACK_BOUNDARY 		32
 
 /* Allocation boundary (in *bits*) for the code of a function.
@@ -249,12 +250,12 @@ extern enum processor_type mn10300_processor;
 
    For any two classes, it is very desirable that there be another
    class that represents their union.  */
-   
+
 enum reg_class {
   NO_REGS, DATA_REGS, ADDRESS_REGS, SP_REGS,
-  DATA_OR_ADDRESS_REGS, SP_OR_ADDRESS_REGS, 
+  DATA_OR_ADDRESS_REGS, SP_OR_ADDRESS_REGS,
   EXTENDED_REGS, DATA_OR_EXTENDED_REGS, ADDRESS_OR_EXTENDED_REGS,
-  SP_OR_EXTENDED_REGS, SP_OR_ADDRESS_OR_EXTENDED_REGS, 
+  SP_OR_EXTENDED_REGS, SP_OR_ADDRESS_OR_EXTENDED_REGS,
   FP_REGS, FP_ACC_REGS,
   GENERAL_REGS, ALL_REGS, LIM_REG_CLASSES
 };
@@ -310,19 +311,6 @@ enum reg_class {
 /* The class value for index registers, and the one for base regs.  */
 #define INDEX_REG_CLASS DATA_OR_EXTENDED_REGS
 #define BASE_REG_CLASS  SP_OR_ADDRESS_REGS
-
-/* Get reg_class from a letter such as appears in the machine description.  */
-
-#define REG_CLASS_FROM_LETTER(C) \
-  ((C) == 'd' ? DATA_REGS : \
-   (C) == 'a' ? ADDRESS_REGS : \
-   (C) == 'y' ? SP_REGS : \
-   ! TARGET_AM33 ? NO_REGS : \
-   (C) == 'x' ? EXTENDED_REGS : \
-   ! TARGET_AM33_2 ? NO_REGS : \
-   (C) == 'f' ? FP_REGS : \
-   (C) == 'A' ? FP_ACC_REGS : \
-   NO_REGS)
 
 /* Macros to check register numbers against specific register classes.  */
 
@@ -425,7 +413,7 @@ enum reg_class {
   (!TARGET_AM33 && (MODE == QImode || MODE == HImode) ? DATA_REGS : CLASS)
 
 #define SECONDARY_RELOAD_CLASS(CLASS,MODE,IN) \
-  secondary_reload_class(CLASS,MODE,IN)
+  mn10300_secondary_reload_class(CLASS,MODE,IN)
 
 /* Return the maximum number of consecutive registers
    needed to represent mode MODE in a register of class CLASS.  */
@@ -438,39 +426,10 @@ enum reg_class {
    loaded the register.  */
 #define CLASS_CANNOT_CHANGE_SIZE FP_REGS
 
-/* The letters I, J, K, L, M, N, O, P in a register constraint string
-   can be used to stand for particular ranges of immediate operands.
-   This macro defines what the ranges are.
-   C is the letter, and VALUE is a constant value.
-   Return 1 if VALUE is in the range specified by C.  */
+/* Return 1 if VALUE is in the range specified.  */
 
 #define INT_8_BITS(VALUE) ((unsigned) (VALUE) + 0x80 < 0x100)
 #define INT_16_BITS(VALUE) ((unsigned) (VALUE) + 0x8000 < 0x10000)
-
-#define CONST_OK_FOR_I(VALUE) ((VALUE) == 0)
-#define CONST_OK_FOR_J(VALUE) ((VALUE) == 1)
-#define CONST_OK_FOR_K(VALUE) ((VALUE) == 2)
-#define CONST_OK_FOR_L(VALUE) ((VALUE) == 4)
-#define CONST_OK_FOR_M(VALUE) ((VALUE) == 3)
-#define CONST_OK_FOR_N(VALUE) ((VALUE) == 255 || (VALUE) == 65535)
-
-#define CONST_OK_FOR_LETTER_P(VALUE, C) \
-  ((C) == 'I' ? CONST_OK_FOR_I (VALUE) : \
-   (C) == 'J' ? CONST_OK_FOR_J (VALUE) : \
-   (C) == 'K' ? CONST_OK_FOR_K (VALUE) : \
-   (C) == 'L' ? CONST_OK_FOR_L (VALUE) : \
-   (C) == 'M' ? CONST_OK_FOR_M (VALUE) : \
-   (C) == 'N' ? CONST_OK_FOR_N (VALUE) : 0)
-
-
-/* Similar, but for floating constants, and defining letters G and H.
-   Here VALUE is the CONST_DOUBLE rtx itself. 
-     
-  `G' is a floating-point zero.  */
-
-#define CONST_DOUBLE_OK_FOR_LETTER_P(VALUE, C) \
-  ((C) == 'G' ? (GET_MODE_CLASS (GET_MODE (VALUE)) == MODE_FLOAT	\
-		 && (VALUE) == CONST0_RTX (GET_MODE (VALUE))) : 0)
 
 
 /* Stack layout; function entry, exit and calling.  */
@@ -527,7 +486,7 @@ enum reg_class {
 /* We use d0/d1 for passing parameters, so allocate 8 bytes of space
    for a register flushback area.  */
 #define REG_PARM_STACK_SPACE(DECL) 8
-#define OUTGOING_REG_PARM_STACK_SPACE
+#define OUTGOING_REG_PARM_STACK_SPACE 1
 #define ACCUMULATE_OUTGOING_ARGS 1
 
 /* So we can allocate space for return pointers once for the function
@@ -583,7 +542,7 @@ struct cum_arg {int nbytes; };
    NAMED is nonzero if this argument is a named parameter
     (otherwise it is an extra parameter matching an ellipsis).  */
 
-/* On the MN10300 all args are pushed.  */   
+/* On the MN10300 all args are pushed.  */
 
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED) \
   function_arg (&CUM, MODE, TYPE, NAMED)
@@ -665,50 +624,10 @@ struct cum_arg {int nbytes; };
   ((COUNT == 0)                         \
    ? gen_rtx_MEM (Pmode, arg_pointer_rtx) \
    : (rtx) 0)
-
-/* Implement `va_start' for varargs and stdarg.  */
-#define EXPAND_BUILTIN_VA_START(valist, nextarg) \
-  mn10300_va_start (valist, nextarg)
 
 /* 1 if X is an rtx for a constant that is a valid address.  */
 
 #define CONSTANT_ADDRESS_P(X)   CONSTANT_P (X)
-
-/* Extra constraints.  */
- 
-#define OK_FOR_Q(OP) \
-   (GET_CODE (OP) == MEM && ! CONSTANT_ADDRESS_P (XEXP (OP, 0)))
-
-#define OK_FOR_R(OP) \
-   (GET_CODE (OP) == MEM					\
-    && GET_MODE (OP) == QImode					\
-    && (CONSTANT_ADDRESS_P (XEXP (OP, 0))			\
-	|| (GET_CODE (XEXP (OP, 0)) == REG			\
-	    && REG_OK_FOR_BIT_BASE_P (XEXP (OP, 0))		\
-	    && XEXP (OP, 0) != stack_pointer_rtx)		\
-	|| (GET_CODE (XEXP (OP, 0)) == PLUS			\
-	    && GET_CODE (XEXP (XEXP (OP, 0), 0)) == REG		\
-	    && REG_OK_FOR_BIT_BASE_P (XEXP (XEXP (OP, 0), 0))	\
-	    && XEXP (XEXP (OP, 0), 0) != stack_pointer_rtx	\
-	    && GET_CODE (XEXP (XEXP (OP, 0), 1)) == CONST_INT	\
-	    && INT_8_BITS (INTVAL (XEXP (XEXP (OP, 0), 1))))))
-	 
-#define OK_FOR_T(OP) \
-   (GET_CODE (OP) == MEM					\
-    && GET_MODE (OP) == QImode					\
-    && (GET_CODE (XEXP (OP, 0)) == REG				\
-	&& REG_OK_FOR_BIT_BASE_P (XEXP (OP, 0))			\
-	&& XEXP (OP, 0) != stack_pointer_rtx))
-
-#define EXTRA_CONSTRAINT(OP, C) \
- ((C) == 'R' ? OK_FOR_R (OP) \
-  : (C) == 'Q' ? OK_FOR_Q (OP) \
-  : (C) == 'S' && flag_pic \
-  ? GET_CODE (OP) == UNSPEC && (XINT (OP, 1) == UNSPEC_PLT \
-				|| XINT (OP, 1) == UNSPEC_PIC) \
-  : (C) == 'S' ? GET_CODE (OP) == SYMBOL_REF \
-  : (C) == 'T' ? OK_FOR_T (OP) \
-  : 0)
 
 /* Maximum number of registers that can appear in a valid memory address.  */
 
@@ -738,7 +657,7 @@ struct cum_arg {int nbytes; };
    function record_unscaled_index_insn_codes.  */
 
 /* Accept either REG or SUBREG where a register is valid.  */
-  
+
 #define RTX_OK_FOR_BASE_P(X, strict)				\
   ((REG_P (X) && REGNO_STRICT_OK_FOR_BASE_P (REGNO (X),		\
  					     (strict))) 	\
@@ -752,7 +671,7 @@ do							\
     if (legitimate_address_p ((MODE), (X), REG_STRICT))	\
       goto ADDR;					\
   }							\
-while (0) 
+while (0)
 
 
 /* Try machine-dependent ways of modifying an illegitimate address
@@ -777,9 +696,7 @@ while (0)
 /* Go to LABEL if ADDR (a legitimate address expression)
    has an effect that depends on the machine mode it is used for.  */
 
-#define GO_IF_MODE_DEPENDENT_ADDRESS(ADDR,LABEL)        \
-  if (GET_CODE (ADDR) == POST_INC) \
-    goto LABEL
+#define GO_IF_MODE_DEPENDENT_ADDRESS(ADDR,LABEL)
 
 /* Nonzero if the constant value X is a legitimate general operand.
    It is given that X satisfies CONSTANT_P or is a CONST_DOUBLE.  */
@@ -813,7 +730,7 @@ while (0)
 	switch (XINT ((X), 1))						\
 	  {								\
 	  case UNSPEC_INT_LABEL:					\
-	    asm_fprintf ((STREAM), ".%LLIL%d",				\
+	    asm_fprintf ((STREAM), ".%LLIL" HOST_WIDE_INT_PRINT_DEC,	\
  			 INTVAL (XVECEXP ((X), 0, 0)));			\
 	    break;							\
 	  case UNSPEC_PIC:						\

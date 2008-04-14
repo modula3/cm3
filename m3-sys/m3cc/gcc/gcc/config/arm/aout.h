@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler, for ARM with a.out
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2004
+   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2004, 2007
    Free Software Foundation, Inc.
    Contributed by Richard Earnshaw (rearnsha@armltd.co.uk).
    
@@ -7,7 +7,7 @@
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published
-   by the Free Software Foundation; either version 2, or (at your
+   by the Free Software Foundation; either version 3, or (at your
    option) any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -16,9 +16,8 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 #ifndef ASM_APP_ON
 #define ASM_APP_ON  		""
@@ -47,7 +46,10 @@
 #define LOCAL_LABEL_PREFIX 	""
 #endif
 
-/* The assembler's names for the registers.  */
+/* The assembler's names for the registers.  Note that the ?xx registers are
+   there so that VFPv3/NEON registers D16-D31 have the same spacing as D0-D15
+   (each of which is overlaid on two S registers), although there are no
+   actual single-precision registers which correspond to D16-D31.  */
 #ifndef REGISTER_NAMES
 #define REGISTER_NAMES				   \
 {				                   \
@@ -68,6 +70,10 @@
   "s8",  "s9",  "s10", "s11", "s12", "s13", "s14", "s15", \
   "s16", "s17", "s18", "s19", "s20", "s21", "s22", "s23", \
   "s24", "s25", "s26", "s27", "s28", "s29", "s30", "s31", \
+  "d16", "?16", "d17", "?17", "d18", "?18", "d19", "?19", \
+  "d20", "?20", "d21", "?21", "d22", "?22", "d23", "?23", \
+  "d24", "?24", "d25", "?25", "d26", "?26", "d27", "?27", \
+  "d28", "?28", "d29", "?29", "d30", "?30", "d31", "?31", \
   "vfpcc"					   \
 }
 #endif
@@ -158,22 +164,30 @@
   {"mvdx13", 40},				\
   {"mvdx14", 41},				\
   {"mvdx15", 42},				\
-  {"d0", 63},					\
+  {"d0", 63}, {"q0", 63},			\
   {"d1", 65},					\
-  {"d2", 67},					\
+  {"d2", 67}, {"q1", 67},			\
   {"d3", 69},					\
-  {"d4", 71},					\
+  {"d4", 71}, {"q2", 71},			\
   {"d5", 73},					\
-  {"d6", 75},					\
+  {"d6", 75}, {"q3", 75},			\
   {"d7", 77},					\
-  {"d8", 79},					\
+  {"d8", 79}, {"q4", 79},			\
   {"d9", 81},					\
-  {"d10", 83},					\
+  {"d10", 83}, {"q5", 83},			\
   {"d11", 85},					\
-  {"d12", 87},					\
+  {"d12", 87}, {"q6", 87},			\
   {"d13", 89},					\
-  {"d14", 91},					\
+  {"d14", 91}, {"q7", 91},			\
   {"d15", 93},					\
+  {"q8", 95},					\
+  {"q9", 99},					\
+  {"q10", 103},					\
+  {"q11", 107},					\
+  {"q12", 111},					\
+  {"q13", 115},					\
+  {"q14", 119},					\
+  {"q15", 123}					\
 }
 #endif
 
@@ -214,16 +228,47 @@
 #endif
      
 /* Output an element of a dispatch table.  */
-#define ASM_OUTPUT_ADDR_VEC_ELT(STREAM, VALUE)  \
-  asm_fprintf (STREAM, "\t.word\t%LL%d\n", VALUE)
+#define ASM_OUTPUT_ADDR_VEC_ELT(STREAM, VALUE)			\
+  do								\
+    {								\
+      gcc_assert (!TARGET_THUMB2);				\
+      asm_fprintf (STREAM, "\t.word\t%LL%d\n", VALUE);		\
+    }								\
+  while (0)
+	  
 
+/* Thumb-2 always uses addr_diff_elf so that the Table Branch instructions
+   can be used.  For non-pic code where the offsets do not suitable for
+   TBB/TBH the elements are output as absolute labels.  */
 #define ASM_OUTPUT_ADDR_DIFF_ELT(STREAM, BODY, VALUE, REL)		\
   do									\
     {									\
       if (TARGET_ARM)							\
 	asm_fprintf (STREAM, "\tb\t%LL%d\n", VALUE);			\
-      else								\
+      else if (TARGET_THUMB1)						\
 	asm_fprintf (STREAM, "\t.word\t%LL%d-%LL%d\n", VALUE, REL);	\
+      else /* Thumb-2 */						\
+	{								\
+	  switch (GET_MODE(body))					\
+	    {								\
+	    case QImode: /* TBB */					\
+	      asm_fprintf (STREAM, "\t.byte\t(%LL%d-%LL%d)/2\n",	\
+			   VALUE, REL);					\
+	      break;							\
+	    case HImode: /* TBH */					\
+	      asm_fprintf (STREAM, "\t.2byte\t(%LL%d-%LL%d)/2\n",	\
+			   VALUE, REL);					\
+	      break;							\
+	    case SImode:						\
+	      if (flag_pic)						\
+		asm_fprintf (STREAM, "\t.word\t%LL%d+1-%LL%d\n", VALUE, REL); \
+	      else							\
+		asm_fprintf (STREAM, "\t.word\t%LL%d+1\n", VALUE);	\
+	      break;							\
+	    default:							\
+	      gcc_unreachable();					\
+	    }								\
+	}								\
     }									\
   while (0)
 
@@ -273,7 +318,7 @@
 #define ASM_OUTPUT_ALIGNED_LOCAL(STREAM, NAME, SIZE, ALIGN)		\
   do									\
     {									\
-      bss_section ();							\
+      switch_to_section (bss_section);					\
       ASM_OUTPUT_ALIGN (STREAM, floor_log2 (ALIGN / BITS_PER_UNIT));	\
       ASM_OUTPUT_LABEL (STREAM, NAME);					\
       fprintf (STREAM, "\t.space\t%d\n", (int)(SIZE));			\

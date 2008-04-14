@@ -1,13 +1,13 @@
 /* Definitions of target machine for GNU compiler, for DEC Alpha on OSF/1.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 2001, 2002, 2003,
-   2004 Free Software Foundation, Inc.
+   2004, 2007 Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@vlsi1.ultra.nyu.edu)
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* As of OSF 4.0, as can subtract adjacent labels.  */
 
@@ -61,8 +60,8 @@ Boston, MA 02110-1301, USA.  */
    instead of PTHREAD_USE_D4 since both have the same effect and the former
    doesn't invade the users' namespace.  */
 
-#undef CPP_SUBTARGET_SPEC
-#define CPP_SUBTARGET_SPEC \
+#undef CPP_SPEC
+#define CPP_SPEC \
 "%{pthread|threads:-D_REENTRANT} %{threads:-D_PTHREAD_USE_D4}"
 
 /* Under OSF4, -p and -pg require -lprof1, and -lprof1 requires -lpdf.  */
@@ -121,7 +120,7 @@ Boston, MA 02110-1301, USA.  */
 		%{K: -I %b.o~} \
 		%{!K: %{save-temps: -I %b.o~}} \
 		%{c:%W{o*}%{!o*:-o %b.o}}%{!c:-o %U.o} \
-		%{.s:%i} %{!.s:%g.s}}}"
+		%{,assembler:%i;:%g.s}}}"
 
 #else
 #define ASM_FINAL_SPEC "\
@@ -130,15 +129,15 @@ Boston, MA 02110-1301, USA.  */
 		%{K: -I %b.o~} \
 		%{!K: %{save-temps: -I %b.o~}} \
 		%{c:%W{o*}%{!o*:-o %b.o}}%{!c:-o %U.o} \
-		%{.s:%i} %{!.s:%g.s}}}"
+		%{,assembler:%i;:%g.s}}}"
 
 #endif
 
-#undef SUBTARGET_EXTRA_SPECS
-#define SUBTARGET_EXTRA_SPECS { "asm_oldas", ASM_OLDAS_SPEC }
+#undef EXTRA_SPECS
+#define EXTRA_SPECS { "asm_oldas", ASM_OLDAS_SPEC }
 
 /* Indicate that we have a stamp.h to use.  */
-#ifndef CROSS_COMPILE
+#ifndef CROSS_DIRECTORY_STRUCTURE
 #define HAVE_STAMP_H 1
 #endif
 

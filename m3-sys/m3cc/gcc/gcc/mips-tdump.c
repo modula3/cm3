@@ -1,6 +1,6 @@
 /* Read and manage MIPS symbol tables from object modules.
    Copyright (C) 1991, 1994, 1995, 1997, 1998, 1999, 2000, 2001, 2003, 2004,
-   2006 Free Software Foundation, Inc.
+   2006, 2007, 2008 Free Software Foundation, Inc.
    Contributed by hartzell@boulder.colorado.edu,
    Rewritten by meissner@osf.org.
 
@@ -8,7 +8,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -17,9 +17,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -29,11 +28,11 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #ifdef index
 #undef index
 #endif
-#ifndef CROSS_COMPILE
+#ifndef CROSS_DIRECTORY_STRUCTURE
 #include <a.out.h>
 #else
 #include "mips/a.out.h"
-#endif /* CROSS_COMPILE */
+#endif /* CROSS_DIRECTORY_STRUCTURE */
 
 /* Include getopt.h for the sake of getopt_long.  */
 #include "getopt.h"
@@ -1411,8 +1410,8 @@ main (int argc, char **argv)
 
   if (version)
     {
-      printf ("mips-tdump (GCC) %s\n", version_string);
-      fputs ("Copyright (C) 2006 Free Software Foundation, Inc.\n", stdout);
+      printf ("mips-tdump %s%s\n", pkgversion_string, version_string);
+      fputs ("Copyright (C) 2008 Free Software Foundation, Inc.\n", stdout);
       fputs ("This is free software; see the source for copying conditions.  There is NO\n\
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
              stdout);

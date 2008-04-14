@@ -1,12 +1,12 @@
 /* Definitions of floating-point access for GNU compiler.
    Copyright (C) 1989, 1991, 1994, 1996, 1997, 1998, 1999,
-   2000, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   2000, 2002, 2003, 2004, 2005, 2007, 2008 Free Software Foundation, Inc.
 
    This file is part of GCC.
 
    GCC is free software; you can redistribute it and/or modify it under
    the terms of the GNU General Public License as published by the Free
-   Software Foundation; either version 2, or (at your option) any later
+   Software Foundation; either version 3, or (at your option) any later
    version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,13 +15,16 @@
    for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 #ifndef GCC_REAL_H
 #define GCC_REAL_H
 
+#ifndef GENERATOR_FILE
+#include <gmp.h>
+#include <mpfr.h>
+#endif
 #include "machmode.h"
 
 /* An expanded form of the represented number.  */
@@ -35,7 +38,7 @@ enum real_value_class {
 };
 
 #define SIGNIFICAND_BITS	(128 + HOST_BITS_PER_LONG)
-#define EXP_BITS		(32 - 5)
+#define EXP_BITS		(32 - 6)
 #define MAX_EXP			((1 << (EXP_BITS - 1)) - 1)
 #define SIGSZ			(SIGNIFICAND_BITS / HOST_BITS_PER_LONG)
 #define SIG_MSB			((unsigned long)1 << (HOST_BITS_PER_LONG - 1))
@@ -46,6 +49,7 @@ struct real_value GTY(())
      sure they're packed together, otherwise REAL_VALUE_TYPE_SIZE will
      be miscomputed.  */
   unsigned int /* ENUM_BITFIELD (real_value_class) */ cl : 2;
+  unsigned int decimal : 1;
   unsigned int sign : 1;
   unsigned int signalling : 1;
   unsigned int canonical : 1;
@@ -123,9 +127,6 @@ struct real_format
   /* The radix of the exponent and digits of the significand.  */
   int b;
 
-  /* log2(b).  */
-  int log2_b;
-
   /* Size of the significand in digits of radix B.  */
   int p;
 
@@ -152,15 +153,24 @@ struct real_format
   bool has_denorm;
   bool has_signed_zero;
   bool qnan_msb_set;
+  bool canonical_nan_lsbs_set;
 };
 
 
-/* The target format used for each floating floating point mode.
-   Indexed by MODE - QFmode.  */
+/* The target format used for each floating point mode.
+   Float modes are followed by decimal float modes, with entries for
+   float modes indexed by (MODE - first float mode), and entries for
+   decimal float modes indexed by (MODE - first decimal float mode) +
+   the number of float modes.  */
 extern const struct real_format *
-  real_format_for_mode[MAX_MODE_FLOAT - MIN_MODE_FLOAT + 1];
+  real_format_for_mode[MAX_MODE_FLOAT - MIN_MODE_FLOAT + 1
+		       + MAX_MODE_DECIMAL_FLOAT - MIN_MODE_DECIMAL_FLOAT + 1];
 
-#define REAL_MODE_FORMAT(MODE) (real_format_for_mode[(MODE) - MIN_MODE_FLOAT])
+#define REAL_MODE_FORMAT(MODE)						\
+  (real_format_for_mode[DECIMAL_FLOAT_MODE_P (MODE)			\
+			? ((MODE - MIN_MODE_DECIMAL_FLOAT)		\
+			   + (MAX_MODE_FLOAT - MIN_MODE_FLOAT + 1))	\
+			: (MODE - MIN_MODE_FLOAT)])
 
 /* The following macro determines whether the floating point format is
    composite, i.e. may contain non-consecutive mantissa bits, in which
@@ -182,6 +192,9 @@ extern bool real_isinf (const REAL_VALUE_TYPE *);
 
 /* Determine whether a floating-point value X is a NaN.  */
 extern bool real_isnan (const REAL_VALUE_TYPE *);
+
+/* Determine whether a floating-point value X is finite.  */
+extern bool real_isfinite (const REAL_VALUE_TYPE *);
 
 /* Determine whether a floating-point value X is negative.  */
 extern bool real_isneg (const REAL_VALUE_TYPE *);
@@ -212,8 +225,11 @@ extern HOST_WIDE_INT real_to_integer (const REAL_VALUE_TYPE *);
 extern void real_to_integer2 (HOST_WIDE_INT *, HOST_WIDE_INT *,
 			      const REAL_VALUE_TYPE *);
 
-/* Initialize R from a decimal or hexadecimal string.  */
-extern void real_from_string (REAL_VALUE_TYPE *, const char *);
+/* Initialize R from a decimal or hexadecimal string.  Return -1 if
+   the value underflows, +1 if overflows, and 0 otherwise.  */
+extern int real_from_string (REAL_VALUE_TYPE *, const char *);
+/* Wrapper to allow different internal representation for decimal floats. */
+extern void real_from_string3 (REAL_VALUE_TYPE *, const char *, enum machine_mode);
 
 /* Initialize R from an integer pair HIGH/LOW.  */
 extern void real_from_integer (REAL_VALUE_TYPE *, enum machine_mode,
@@ -234,7 +250,7 @@ extern bool real_nan (REAL_VALUE_TYPE *, const char *, int, enum machine_mode);
 
 extern void real_maxval (REAL_VALUE_TYPE *, int, enum machine_mode);
 
-extern void real_2expN (REAL_VALUE_TYPE *, int);
+extern void real_2expN (REAL_VALUE_TYPE *, int, enum machine_mode);
 
 extern unsigned int real_hash (const REAL_VALUE_TYPE *);
 
@@ -242,8 +258,10 @@ extern unsigned int real_hash (const REAL_VALUE_TYPE *);
 /* Target formats defined in real.c.  */
 extern const struct real_format ieee_single_format;
 extern const struct real_format mips_single_format;
+extern const struct real_format motorola_single_format;
 extern const struct real_format ieee_double_format;
 extern const struct real_format mips_double_format;
+extern const struct real_format motorola_double_format;
 extern const struct real_format ieee_extended_motorola_format;
 extern const struct real_format ieee_extended_intel_96_format;
 extern const struct real_format ieee_extended_intel_96_round_53_format;
@@ -255,11 +273,10 @@ extern const struct real_format mips_quad_format;
 extern const struct real_format vax_f_format;
 extern const struct real_format vax_d_format;
 extern const struct real_format vax_g_format;
-extern const struct real_format i370_single_format;
-extern const struct real_format i370_double_format;
-extern const struct real_format c4x_single_format;
-extern const struct real_format c4x_extended_format;
 extern const struct real_format real_internal_format;
+extern const struct real_format decimal_single_format;
+extern const struct real_format decimal_double_format;
+extern const struct real_format decimal_quad_format;
 
 
 /* ====================================================================== */
@@ -301,6 +318,19 @@ extern const struct real_format real_internal_format;
 
 #define REAL_VALUE_FROM_UNSIGNED_INT(r, lo, hi, mode) \
   real_from_integer (&(r), mode, lo, hi, 1)
+
+/* Real values to IEEE 754R decimal floats.  */
+
+/* IN is a REAL_VALUE_TYPE.  OUT is an array of longs.  */
+#define REAL_VALUE_TO_TARGET_DECIMAL128(IN, OUT) \
+  real_to_target (OUT, &(IN), mode_for_size (128, MODE_DECIMAL_FLOAT, 0))
+
+#define REAL_VALUE_TO_TARGET_DECIMAL64(IN, OUT) \
+  real_to_target (OUT, &(IN), mode_for_size (64, MODE_DECIMAL_FLOAT, 0))
+
+/* IN is a REAL_VALUE_TYPE.  OUT is a long.  */
+#define REAL_VALUE_TO_TARGET_DECIMAL32(IN, OUT) \
+  ((OUT) = real_to_target (NULL, &(IN), mode_for_size (32, MODE_DECIMAL_FLOAT, 0)))
 
 extern REAL_VALUE_TYPE real_value_truncate (enum machine_mode,
 					    REAL_VALUE_TYPE);
@@ -355,12 +385,12 @@ extern REAL_VALUE_TYPE dconstm1;
 extern REAL_VALUE_TYPE dconstm2;
 extern REAL_VALUE_TYPE dconsthalf;
 extern REAL_VALUE_TYPE dconstthird;
-extern REAL_VALUE_TYPE dconstpi;
+extern REAL_VALUE_TYPE dconstsqrt2;
 extern REAL_VALUE_TYPE dconste;
 
 /* Function to return a real value (not a tree node)
    from a given integer constant.  */
-REAL_VALUE_TYPE real_value_from_int_cst (tree, tree);
+REAL_VALUE_TYPE real_value_from_int_cst (const_tree, const_tree);
 
 /* Given a CONST_DOUBLE in FROM, store into TO the value it represents.  */
 #define REAL_VALUE_FROM_CONST_DOUBLE(to, from) \
@@ -398,4 +428,19 @@ extern void real_round (REAL_VALUE_TYPE *, enum machine_mode,
 /* Set the sign of R to the sign of X.  */
 extern void real_copysign (REAL_VALUE_TYPE *, const REAL_VALUE_TYPE *);
 
+#ifndef GENERATOR_FILE
+/* Convert between MPFR and REAL_VALUE_TYPE.  The caller is
+   responsible for initializing and clearing the MPFR parameter.  */
+
+extern void real_from_mpfr (REAL_VALUE_TYPE *, mpfr_srcptr, tree, mp_rnd_t);
+extern void mpfr_from_real (mpfr_ptr, const REAL_VALUE_TYPE *, mp_rnd_t);
+#endif
+
+/* Check whether the real constant value given is an integer.  */
+extern bool real_isinteger (const REAL_VALUE_TYPE *c, enum machine_mode mode);
+
+/* Write into BUF the maximum representable finite floating-point
+   number, (1 - b**-p) * b**emax for a given FP format FMT as a hex
+   float string.  BUF must be large enough to contain the result.  */
+extern void get_max_float (const struct real_format *, char *, size_t);
 #endif /* ! GCC_REAL_H */
