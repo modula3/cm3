@@ -62,12 +62,15 @@ pex_init_common (int flags, const char *pname, const char *tempbase,
   obj->next_input = STDIN_FILE_NO;
   obj->next_input_name = NULL;
   obj->next_input_name_allocated = 0;
+  obj->stderr_pipe = -1;
   obj->count = 0;
   obj->children = NULL;
   obj->status = NULL;
   obj->time = NULL;
   obj->number_waited = 0;
+  obj->input_file = NULL;
   obj->read_output = NULL;
+  obj->read_err = NULL;
   obj->remove_count = 0;
   obj->remove = NULL;
   obj->funcs = funcs;
@@ -91,18 +94,72 @@ pex_add_remove (struct pex_obj *obj, const char *name, int allocated)
   obj->remove[obj->remove_count - 1] = add;
 }
 
-/* Run a program.  */
+/* Generate a temporary file name based on OBJ, FLAGS, and NAME.
+   Return NULL if we were unable to reserve a temporary filename.
+
+   If non-NULL, the result is either allocated with malloc, or the
+   same pointer as NAME.  */
+static char *
+temp_file (struct pex_obj *obj, int flags, char *name)
+{
+  if (name == NULL)
+    {
+      if (obj->tempbase == NULL)
+        {
+          name = make_temp_file (NULL);
+        }
+      else
+        {
+          int len = strlen (obj->tempbase);
+          int out;
+
+          if (len >= 6
+              && strcmp (obj->tempbase + len - 6, "XXXXXX") == 0)
+            name = xstrdup (obj->tempbase);
+          else
+            name = concat (obj->tempbase, "XXXXXX", NULL);
+
+          out = mkstemps (name, 0);
+          if (out < 0)
+            {
+              free (name);
+              return NULL;
+            }
+
+          /* This isn't obj->funcs->close because we got the
+             descriptor from mkstemps, not from a function in
+             obj->funcs.  Calling close here is just like what
+             make_temp_file does.  */
+          close (out);
+        }
+    }
+  else if ((flags & PEX_SUFFIX) != 0)
+    {
+      if (obj->tempbase == NULL)
+        name = make_temp_file (name);
+      else
+        name = concat (obj->tempbase, name, NULL);
+    }
+
+  return name;
+}
+
+
+/* As for pex_run (), but permits the environment for the child process
+   to be specified. */
 
 const char *
-pex_run (struct pex_obj *obj, int flags, const char *executable,
-	 char * const * argv, const char *orig_outname, const char *errname,
-	 int *err)
+pex_run_in_environment (struct pex_obj *obj, int flags, const char *executable,
+       	                char * const * argv, char * const * env,
+                        const char *orig_outname, const char *errname,
+                  	int *err)
 {
   const char *errmsg;
   int in, out, errdes;
   char *outname;
   int outname_allocated;
   int p[2];
+  int toclose;
   long pid;
 
   in = -1;
@@ -110,6 +167,17 @@ pex_run (struct pex_obj *obj, int flags, const char *executable,
   errdes = -1;
   outname = (char *) orig_outname;
   outname_allocated = 0;
+
+  /* If the user called pex_input_file, close the file now.  */
+  if (obj->input_file)
+    {
+      if (fclose (obj->input_file) == EOF)
+        {
+          errmsg = "closing pipeline input file";
+          goto error_exit;
+        }
+      obj->input_file = NULL;
+    }
 
   /* Set IN.  */
 
@@ -161,49 +229,16 @@ pex_run (struct pex_obj *obj, int flags, const char *executable,
     }
   else if ((obj->flags & PEX_USE_PIPES) == 0)
     {
-      if (outname == NULL)
-	{
-	  if (obj->tempbase == NULL)
-	    {
-	      outname = make_temp_file (NULL);
-	      outname_allocated = 1;
-	    }
-	  else
-	    {
-	      int len = strlen (obj->tempbase);
+      outname = temp_file (obj, flags, outname);
+      if (! outname)
+        {
+          *err = 0;
+          errmsg = "could not create temporary file";
+          goto error_exit;
+        }
 
-	      if (len >= 6
-		  && strcmp (obj->tempbase + len - 6, "XXXXXX") == 0)
-		outname = xstrdup (obj->tempbase);
-	      else
-		outname = concat (obj->tempbase, "XXXXXX", NULL);
-
-	      outname_allocated = 1;
-
-	      out = mkstemps (outname, 0);
-	      if (out < 0)
-		{
-		  *err = 0;
-		  errmsg = "could not create temporary output file";
-		  goto error_exit;
-		}
-
-	      /* This isn't obj->funcs->close because we got the
-		 descriptor from mkstemps, not from a function in
-		 obj->funcs.  Calling close here is just like what
-		 make_temp_file does.  */
-	      close (out);
-	      out = -1;
-	    }
-	}
-      else if ((flags & PEX_SUFFIX) != 0)
-	{
-	  if (obj->tempbase == NULL)
-	    outname = make_temp_file (outname);
-	  else
-	    outname = concat (obj->tempbase, outname, NULL);
-	  outname_allocated = 1;
-	}
+      if (outname != orig_outname)
+        outname_allocated = 1;
 
       if ((obj->flags & PEX_SAVE_TEMPS) == 0)
 	{
@@ -211,17 +246,10 @@ pex_run (struct pex_obj *obj, int flags, const char *executable,
 	  outname_allocated = 0;
 	}
 
-      if (!outname_allocated)
-	{
-	  obj->next_input_name = outname;
-	  obj->next_input_name_allocated = 0;
-	}
-      else
-	{
-	  obj->next_input_name = outname;
-	  outname_allocated = 0;
-	  obj->next_input_name_allocated = 1;
-	}
+      /* Hand off ownership of outname to the next stage.  */
+      obj->next_input_name = outname;
+      obj->next_input_name_allocated = outname_allocated;
+      outname_allocated = 0;
     }
   else
     {
@@ -256,14 +284,43 @@ pex_run (struct pex_obj *obj, int flags, const char *executable,
 
   /* Set ERRDES.  */
 
+  if (errname != NULL && (flags & PEX_STDERR_TO_PIPE) != 0)
+    {
+      *err = 0;
+      errmsg = "both ERRNAME and PEX_STDERR_TO_PIPE specified.";
+      goto error_exit;
+    }
+
+  if (obj->stderr_pipe != -1)
+    {
+      *err = 0;
+      errmsg = "PEX_STDERR_TO_PIPE used in the middle of pipeline";
+      goto error_exit;
+    }
+
   if (errname == NULL)
-    errdes = STDERR_FILE_NO;
+    {
+      if (flags & PEX_STDERR_TO_PIPE)
+	{
+	  if (obj->funcs->pipe (obj, p, (flags & PEX_BINARY_ERROR) != 0) < 0)
+	    {
+	      *err = errno;
+	      errmsg = "pipe";
+	      goto error_exit;
+	    }
+	  
+	  errdes = p[WRITE_PORT];
+	  obj->stderr_pipe = p[READ_PORT];	  
+	}
+      else
+	{
+	  errdes = STDERR_FILE_NO;
+	}
+    }
   else
     {
-      /* We assume that stderr is in text mode--it certainly shouldn't
-	 be controlled by PEX_BINARY_OUTPUT.  If necessary, we can add
-	 a PEX_BINARY_STDERR flag.  */
-      errdes = obj->funcs->open_write (obj, errname, 0);
+      errdes = obj->funcs->open_write (obj, errname, 
+				       (flags & PEX_BINARY_ERROR) != 0);
       if (errdes < 0)
 	{
 	  *err = errno;
@@ -272,10 +329,18 @@ pex_run (struct pex_obj *obj, int flags, const char *executable,
 	}
     }
 
+  /* If we are using pipes, the child process has to close the next
+     input pipe.  */
+
+  if ((obj->flags & PEX_USE_PIPES) == 0)
+    toclose = -1;
+  else
+    toclose = obj->next_input;
+
   /* Run the program.  */
 
-  pid = obj->funcs->exec_child (obj, flags, executable, argv, in, out, errdes,
-				&errmsg, err);
+  pid = obj->funcs->exec_child (obj, flags, executable, argv, env,
+				in, out, errdes, toclose, &errmsg, err);
   if (pid < 0)
     goto error_exit;
 
@@ -295,6 +360,98 @@ pex_run (struct pex_obj *obj, int flags, const char *executable,
   if (outname_allocated)
     free (outname);
   return errmsg;
+}
+
+/* Run a program.  */
+
+const char *
+pex_run (struct pex_obj *obj, int flags, const char *executable,
+       	 char * const * argv, const char *orig_outname, const char *errname,
+         int *err)
+{
+  return pex_run_in_environment (obj, flags, executable, argv, NULL,
+				 orig_outname, errname, err);
+}
+
+/* Return a FILE pointer for a temporary file to fill with input for
+   the pipeline.  */
+FILE *
+pex_input_file (struct pex_obj *obj, int flags, const char *in_name)
+{
+  char *name = (char *) in_name;
+  FILE *f;
+
+  /* This must be called before the first pipeline stage is run, and
+     there must not have been any other input selected.  */
+  if (obj->count != 0
+      || (obj->next_input >= 0 && obj->next_input != STDIN_FILE_NO)
+      || obj->next_input_name)
+    {
+      errno = EINVAL;
+      return NULL;
+    }
+
+  name = temp_file (obj, flags, name);
+  if (! name)
+    return NULL;
+
+  f = fopen (name, (flags & PEX_BINARY_OUTPUT) ? "wb" : "w");
+  if (! f)
+    {
+      free (name);
+      return NULL;
+    }
+
+  obj->input_file = f;
+  obj->next_input_name = name;
+  obj->next_input_name_allocated = (name != in_name);
+
+  return f;
+}
+
+/* Return a stream for a pipe connected to the standard input of the
+   first stage of the pipeline.  */
+FILE *
+pex_input_pipe (struct pex_obj *obj, int binary)
+{
+  int p[2];
+  FILE *f;
+
+  /* You must call pex_input_pipe before the first pex_run or pex_one.  */
+  if (obj->count > 0)
+    goto usage_error;
+
+  /* You must be using pipes.  Implementations that don't support
+     pipes clear this flag before calling pex_init_common.  */
+  if (! (obj->flags & PEX_USE_PIPES))
+    goto usage_error;
+
+  /* If we have somehow already selected other input, that's a
+     mistake.  */
+  if ((obj->next_input >= 0 && obj->next_input != STDIN_FILE_NO)
+      || obj->next_input_name)
+    goto usage_error;
+
+  if (obj->funcs->pipe (obj, p, binary != 0) < 0)
+    return NULL;
+
+  f = obj->funcs->fdopenw (obj, p[WRITE_PORT], binary != 0);
+  if (! f)
+    {
+      int saved_errno = errno;
+      obj->funcs->close (obj, p[READ_PORT]);
+      obj->funcs->close (obj, p[WRITE_PORT]);
+      errno = saved_errno;
+      return NULL;
+    }
+
+  obj->next_input = p[READ_PORT];
+
+  return f;
+
+ usage_error:
+  errno = EINVAL;
+  return NULL;
 }
 
 /* Return a FILE pointer for the output of the last program
@@ -337,6 +494,18 @@ pex_read_output (struct pex_obj *obj, int binary)
     }
 
   return obj->read_output;
+}
+
+FILE *
+pex_read_err (struct pex_obj *obj, int binary)
+{
+  int o;
+  
+  o = obj->stderr_pipe;
+  if (o < 0 || o == STDIN_FILE_NO)
+    return NULL;
+  obj->read_err = obj->funcs->fdopenr (obj, o, binary);
+  return obj->read_err;    
 }
 
 /* Get the exit status and, if requested, the resource time for all
@@ -452,6 +621,8 @@ pex_free (struct pex_obj *obj)
     free (obj->time);
   if (obj->read_output != NULL)
     fclose (obj->read_output);
+  if (obj->read_err != NULL)
+    fclose (obj->read_err);
 
   if (obj->remove_count > 0)
     {

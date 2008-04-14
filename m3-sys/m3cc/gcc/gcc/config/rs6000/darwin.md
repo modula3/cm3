@@ -1,12 +1,12 @@
 /* Machine description patterns for PowerPC running Darwin (Mac OS X).
-   Copyright (C) 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2004, 2005, 2007 Free Software Foundation, Inc.
    Contributed by Apple Computer Inc.
 
 This file is part of GCC.
 
 GNU CC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GNU CC is distributed in the hope that it will be useful,
@@ -15,9 +15,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU CC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.  */
 
 (define_insn "adddi3_high"
   [(set (match_operand:DI 0 "gpc_reg_operand" "=b")
@@ -239,33 +238,34 @@ Boston, MA 02110-1301, USA.  */
   "")
 
 (define_expand "load_macho_picbase"
-  [(set (match_operand 0 "" "")
-        (unspec [(match_operand 1 "" "")]
+  [(set (reg:SI 65)
+        (unspec [(match_operand 0 "" "")]
                    UNSPEC_LD_MPIC))]
   "(DEFAULT_ABI == ABI_DARWIN) && flag_pic"
 {
   if (TARGET_32BIT)
-    emit_insn (gen_load_macho_picbase_si (operands[0], operands[1]));
+    emit_insn (gen_load_macho_picbase_si (operands[0]));
   else
-    emit_insn (gen_load_macho_picbase_di (operands[0], operands[1]));
+    emit_insn (gen_load_macho_picbase_di (operands[0]));
 
   DONE;
 })
 
 (define_insn "load_macho_picbase_si"
-  [(set (match_operand:SI 0 "register_operand" "=l")
-	(unspec:SI [(match_operand:SI 1 "immediate_operand" "s")]
-		   UNSPEC_LD_MPIC))]
+  [(set (reg:SI 65)
+	(unspec:SI [(match_operand:SI 0 "immediate_operand" "s")
+		    (pc)] UNSPEC_LD_MPIC))]
   "(DEFAULT_ABI == ABI_DARWIN) && flag_pic"
-  "bcl 20,31,%1\\n%1:"
+  "bcl 20,31,%0\\n%0:"
   [(set_attr "type" "branch")
    (set_attr "length" "4")])
 
 (define_insn "load_macho_picbase_di"
-  [(set (match_operand:DI 0 "register_operand" "=l")
-	(unspec:DI [(match_operand:DI 1 "immediate_operand" "s")] UNSPEC_LD_MPIC))]
+  [(set (reg:DI 65)
+	(unspec:DI [(match_operand:DI 0 "immediate_operand" "s")
+		    (pc)] UNSPEC_LD_MPIC))]
   "(DEFAULT_ABI == ABI_DARWIN) && flag_pic && TARGET_64BIT"
-  "bcl 20,31,%1\\n%1:"
+  "bcl 20,31,%0\\n%0:"
   [(set_attr "type" "branch")
    (set_attr "length" "4")])
 
@@ -311,7 +311,7 @@ Boston, MA 02110-1301, USA.  */
   [(call (mem:SI (match_operand:DI 0 "register_operand" "c,*l,c,*l"))
 	 (match_operand 1 "" "g,g,g,g"))
    (use (match_operand:SI 2 "immediate_operand" "O,O,n,n"))
-   (clobber (match_scratch:SI 3 "=l,l,l,l"))]
+   (clobber (reg:SI 65))]
   "DEFAULT_ABI == ABI_DARWIN && TARGET_64BIT"
 {
   return "b%T0l";
@@ -323,7 +323,7 @@ Boston, MA 02110-1301, USA.  */
   [(call (mem:SI (match_operand:DI 0 "symbol_ref_operand" "s,s"))
 	 (match_operand 1 "" "g,g"))
    (use (match_operand:SI 2 "immediate_operand" "O,n"))
-   (clobber (match_scratch:SI 3 "=l,l"))]
+   (clobber (reg:SI 65))]
   "(DEFAULT_ABI == ABI_DARWIN)
    && (INTVAL (operands[2]) & CALL_LONG) == 0"
 {
@@ -341,7 +341,7 @@ Boston, MA 02110-1301, USA.  */
 	(call (mem:SI (match_operand:DI 1 "register_operand" "c,*l,c,*l"))
 	      (match_operand 2 "" "g,g,g,g")))
    (use (match_operand:SI 3 "immediate_operand" "O,O,n,n"))
-   (clobber (match_scratch:SI 4 "=l,l,l,l"))]
+   (clobber (reg:SI 65))]
   "DEFAULT_ABI == ABI_DARWIN"
 {
   return "b%T1l";
@@ -354,7 +354,7 @@ Boston, MA 02110-1301, USA.  */
 	(call (mem:SI (match_operand:DI 1 "symbol_ref_operand" "s,s"))
 	      (match_operand 2 "" "g,g")))
    (use (match_operand:SI 3 "immediate_operand" "O,n"))
-   (clobber (match_scratch:SI 4 "=l,l"))]
+   (clobber (reg:SI 65))]
   "(DEFAULT_ABI == ABI_DARWIN)
    && (INTVAL (operands[3]) & CALL_LONG) == 0"
 {
@@ -371,7 +371,7 @@ Boston, MA 02110-1301, USA.  */
   [(call (mem:SI (match_operand:DI 0 "symbol_ref_operand" "s,s"))
 	 (match_operand 1 "" ""))
    (use (match_operand 2 "immediate_operand" "O,n"))
-   (use (match_operand:SI 3 "register_operand" "l,l"))
+   (use (reg:SI 65))
    (return)]
   "(DEFAULT_ABI == ABI_DARWIN)
    && (INTVAL (operands[2]) & CALL_LONG) == 0"
@@ -386,7 +386,7 @@ Boston, MA 02110-1301, USA.  */
 	(call (mem:SI (match_operand:DI 1 "symbol_ref_operand" "s,s"))
 	      (match_operand 2 "" "")))
    (use (match_operand:SI 3 "immediate_operand" "O,n"))
-   (use (match_operand:SI 4 "register_operand" "l,l"))
+   (use (reg:SI 65))
    (return)]
   "(DEFAULT_ABI == ABI_DARWIN)
    && (INTVAL (operands[3]) & CALL_LONG) == 0"
@@ -402,7 +402,7 @@ Boston, MA 02110-1301, USA.  */
   [(call (mem:SI (match_operand:DI 0 "call_operand" "s,c")) ; 64
 	 (match_operand 1 "" ""))
    (use (match_operand 2 "" ""))
-   (use (match_operand:SI 3 "register_operand" "l,l"))
+   (use (reg:SI 65))
    (return)]
   "TARGET_64BIT && DEFAULT_ABI == ABI_DARWIN"
   "*
@@ -422,7 +422,7 @@ Boston, MA 02110-1301, USA.  */
 	(call (mem:SI (match_operand:DI 1 "call_operand" "s,c"))
 	      (match_operand 2 "" "")))
    (use (match_operand:SI 3 "" ""))
-   (use (match_operand:SI 4 "register_operand" "l,l"))
+   (use (reg:SI 65))
    (return)]
   "TARGET_64BIT && DEFAULT_ABI == ABI_DARWIN"
   "*
@@ -436,4 +436,3 @@ Boston, MA 02110-1301, USA.  */
 }"
   [(set_attr "type" "branch")
    (set_attr "length" "4")])
-

@@ -1,11 +1,11 @@
 ;; Scheduling description for Motorola PowerPC 750 and PowerPC 7400 processors.
-;;   Copyright (C) 2003, 2004 Free Software Foundation, Inc.
+;;   Copyright (C) 2003, 2004, 2007 Free Software Foundation, Inc.
 ;;
 ;; This file is part of GCC.
 
 ;; GCC is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published
-;; by the Free Software Foundation; either version 2, or (at your
+;; by the Free Software Foundation; either version 3, or (at your
 ;; option) any later version.
 
 ;; GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -14,9 +14,8 @@
 ;; License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to the
-;; Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
-;; MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 (define_automaton "ppc7xx,ppc7xxfp")
 (define_cpu_unit "iu1_7xx,iu2_7xx" "ppc7xx")
@@ -65,7 +64,8 @@
   "ppc750_du,lsu_7xx")
 
 (define_insn_reservation "ppc750-integer" 1
-  (and (eq_attr "type" "integer,insert_word")
+  (and (eq_attr "type" "integer,insert_word,insert_dword,shift,\
+                        trap,var_shift_rotate,cntlz,exts")
        (eq_attr "cpu" "ppc750,ppc7400"))
   "ppc750_du,iu1_7xx|iu2_7xx")
 
@@ -100,7 +100,8 @@
   "ppc750_du,iu1_7xx*19")
 
 (define_insn_reservation "ppc750-compare" 2
-  (and (eq_attr "type" "cmp,fast_compare,compare,delayed_compare")
+  (and (eq_attr "type" "cmp,fast_compare,compare,delayed_compare,\
+                        var_delayed_compare")
        (eq_attr "cpu" "ppc750,ppc7400"))
   "ppc750_du,(iu1_7xx|iu2_7xx)")
 

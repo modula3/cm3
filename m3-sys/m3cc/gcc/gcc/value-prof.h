@@ -1,11 +1,11 @@
 /* Definitions for transformations based on profile information for values.
-   Copyright (C) 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -14,9 +14,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #ifndef GCC_VALUE_PROF_H
 #define GCC_VALUE_PROF_H
@@ -29,8 +28,12 @@ enum hist_type
   HIST_TYPE_POW2,	/* Histogram of power of 2 values.  */
   HIST_TYPE_SINGLE_VALUE, /* Tries to identify the value that is (almost)
 			   always constant.  */
-  HIST_TYPE_CONST_DELTA	/* Tries to identify the (almost) always constant
+  HIST_TYPE_CONST_DELTA, /* Tries to identify the (almost) always constant
 			   difference between two evaluations of a value.  */
+  HIST_TYPE_INDIR_CALL,   /* Tries to identify the function that is (almost) 
+			    called in indirect call */
+  HIST_TYPE_AVERAGE,	/* Compute average value (sum of all values).  */
+  HIST_TYPE_IOR		/* Used to compute expected alignment.  */
 };
 
 #define COUNTER_FOR_HIST_TYPE(TYPE) ((int) (TYPE) + GCOV_FIRST_VALUE_COUNTER)
@@ -60,6 +63,7 @@ struct histogram_value_t
 };
 
 typedef struct histogram_value_t *histogram_value;
+typedef const struct histogram_value_t *const_histogram_value;
 
 DEF_VEC_P(histogram_value);
 DEF_VEC_ALLOC_P(histogram_value,heap);
@@ -94,8 +98,27 @@ struct profile_hooks {
   /* Insert code to find the most common value of a difference between two
      evaluations of an expression.  */
   void (*gen_const_delta_profiler) (histogram_value, unsigned, unsigned);
-  FILE * (*profile_dump_file) (void);
+
+  /* Insert code to find the most common indirect call */
+  void (*gen_ic_profiler) (histogram_value, unsigned, unsigned);
+
+  /* Insert code to find the average value of an expression.  */
+  void (*gen_average_profiler) (histogram_value, unsigned, unsigned);
+
+  /* Insert code to ior value of an expression.  */
+  void (*gen_ior_profiler) (histogram_value, unsigned, unsigned);
 };
+
+histogram_value gimple_histogram_value (struct function *, tree);
+histogram_value gimple_histogram_value_of_type (struct function *, tree, enum hist_type);
+void gimple_add_histogram_value (struct function *, tree, histogram_value);
+void dump_histograms_for_stmt (struct function *, FILE *, tree);
+void gimple_remove_histogram_value (struct function *, tree, histogram_value);
+void gimple_remove_stmt_histograms (struct function *, tree);
+void gimple_duplicate_stmt_histograms (struct function *, tree, struct function *, tree);
+void verify_histograms (void);
+void free_histograms (void);
+void stringop_block_profile (tree, unsigned int *, HOST_WIDE_INT *);
 
 /* In profile.c.  */
 extern void init_branch_prob (void);

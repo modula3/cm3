@@ -1,12 +1,12 @@
 ; Options for the IA-32 and AMD64 ports of the compiler.
 
-; Copyright (C) 2005 Free Software Foundation, Inc.
+; Copyright (C) 2005, 2006, 2007 Free Software Foundation, Inc.
 ;
 ; This file is part of GCC.
 ;
 ; GCC is free software; you can redistribute it and/or modify it under
 ; the terms of the GNU General Public License as published by the Free
-; Software Foundation; either version 2, or (at your option) any later
+; Software Foundation; either version 3, or (at your option) any later
 ; version.
 ;
 ; GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,33 +15,12 @@
 ; for more details.
 ;
 ; You should have received a copy of the GNU General Public License
-; along with GCC; see the file COPYING.  If not, write to the Free
-; Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-; 02110-1301, USA.
+; along with GCC; see the file COPYING3.  If not see
+; <http://www.gnu.org/licenses/>.
 
 m128bit-long-double
 Target RejectNegative Report Mask(128BIT_LONG_DOUBLE)
 sizeof(long double) is 16
-
-m32
-Target RejectNegative Report InverseMask(64BIT)
-Generate 32bit i386 code
-
-m386
-Target RejectNegative Undocumented
-;; Deprecated
-
-m3dnow
-Target Report Mask(3DNOW)
-Support 3DNow! built-in functions
-
-m486
-Target RejectNegative Undocumented
-;; Deprecated
-
-m64
-Target RejectNegative Report Mask(64BIT)
-Generate 64bit x86-64 code
 
 m80387
 Target Report Mask(80387)
@@ -95,12 +74,6 @@ mcmodel=
 Target RejectNegative Joined Var(ix86_cmodel_string)
 Use given x86-64 code model
 
-mdebug-addr
-Target RejectNegative Var(TARGET_DEBUG_ADDR) Undocumented
-
-mdebug-arg
-Target RejectNegative Var(TARGET_DEBUG_ARG) Undocumented
-
 mfancy-math-387
 Target RejectNegative Report InverseMask(NO_FANCY_MATH_387, USE_FANCY_MATH_387)
 Generate sin, cos, sqrt for FPU
@@ -125,13 +98,13 @@ minline-all-stringops
 Target Report Mask(INLINE_ALL_STRINGOPS)
 Inline all known string operations
 
+minline-stringops-dynamically
+Target Report Mask(INLINE_STRINGOPS_DYNAMICALLY)
+Inline memset/memcpy string operations, but perform inline version only for small blocks
+
 mintel-syntax
 Target Undocumented
 ;; Deprecated
-
-mmmx
-Target Report Mask(MMX)
-Support MMX built-in functions
 
 mms-bitfields
 Target Report Mask(MS_BITFIELD_LAYOUT)
@@ -153,13 +126,9 @@ momit-leaf-frame-pointer
 Target Report Mask(OMIT_LEAF_FRAME_POINTER)
 Omit the frame pointer in leaf functions
 
-mpentium
-Target RejectNegative Undocumented
-;; Deprecated
-
-mpentiumpro
-Target RejectNegative Undocumented
-;; Deprecated
+mpc
+Target RejectNegative Report Joined Var(ix87_precision_string)
+Set 80387 floating-point precision (-mpc32, -mpc64, -mpc80)
 
 mpreferred-stack-boundary=
 Target RejectNegative Joined Var(ix86_preferred_stack_boundary_string)
@@ -185,29 +154,21 @@ msoft-float
 Target InverseMask(80387)
 Do not use hardware fp
 
-msse
-Target Report Mask(SSE)
-Support MMX and SSE built-in functions and code generation
-
-msse2
-Target Report Mask(SSE2)
-Support MMX, SSE and SSE2 built-in functions and code generation
-
-msse3
-Target Report Mask(SSE3)
-Support MMX, SSE, SSE2 and SSE3 built-in functions and code generation
-
 msseregparm
 Target RejectNegative Mask(SSEREGPARM)
 Use SSE register passing conventions for SF and DF mode
 
-msvr3-shlib
-Target Report Mask(SVR3_SHLIB)
-Uninitialized locals in .bss
+mstackrealign
+Target Report Var(ix86_force_align_arg_pointer)
+Realign stack in prologue
 
 mstack-arg-probe
 Target Report Mask(STACK_PROBE)
 Enable stack probing
+
+mstringop-strategy=
+Target RejectNegative Joined Var(ix86_stringop_string)
+Chose strategy to generate stringop using
 
 mtls-dialect=
 Target RejectNegative Joined Var(ix86_tls_dialect_string)
@@ -221,5 +182,96 @@ mtune=
 Target RejectNegative Joined Var(ix86_tune_string)
 Schedule code for given CPU
 
-;; Support Athlon 3Dnow builtins
-Mask(3DNOW_A)
+mveclibabi=
+Target RejectNegative Joined Var(ix86_veclibabi_string)
+Vector library ABI to use
+
+;; ISA support
+
+m32
+Target RejectNegative Negative(m64) Report InverseMask(ISA_64BIT) Var(ix86_isa_flags) VarExists
+Generate 32bit i386 code
+
+m64
+Target RejectNegative Negative(m32) Report Mask(ISA_64BIT) Var(ix86_isa_flags) VarExists
+Generate 64bit x86-64 code
+
+mmmx
+Target Report Mask(ISA_MMX) Var(ix86_isa_flags) VarExists
+Support MMX built-in functions
+
+m3dnow
+Target Report Mask(ISA_3DNOW) Var(ix86_isa_flags) VarExists
+Support 3DNow! built-in functions
+
+m3dnowa
+Target Undocumented Mask(ISA_3DNOW_A) Var(ix86_isa_flags) VarExists
+Support Athlon 3Dnow! built-in functions
+
+msse
+Target Report Mask(ISA_SSE) Var(ix86_isa_flags) VarExists
+Support MMX and SSE built-in functions and code generation
+
+msse2
+Target Report Mask(ISA_SSE2) Var(ix86_isa_flags) VarExists
+Support MMX, SSE and SSE2 built-in functions and code generation
+
+msse3
+Target Report Mask(ISA_SSE3) Var(ix86_isa_flags) VarExists
+Support MMX, SSE, SSE2 and SSE3 built-in functions and code generation
+
+mssse3
+Target Report Mask(ISA_SSSE3) Var(ix86_isa_flags) VarExists
+Support MMX, SSE, SSE2, SSE3 and SSSE3 built-in functions and code generation
+
+msse4.1
+Target Report Mask(ISA_SSE4_1) Var(ix86_isa_flags) VarExists
+Support MMX, SSE, SSE2, SSE3, SSSE3 and SSE4.1 built-in functions and code generation
+
+msse4.2
+Target Report Mask(ISA_SSE4_2) Var(ix86_isa_flags) VarExists
+Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1 and SSE4.2 built-in functions and code generation
+
+msse4
+Target RejectNegative Report Mask(ISA_SSE4_2) MaskExists Var(ix86_isa_flags) VarExists
+Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1 and SSE4.2 built-in functions and code generation
+
+mno-sse4
+Target RejectNegative Report InverseMask(ISA_SSE4_1) MaskExists Var(ix86_isa_flags) VarExists
+Do not support SSE4.1 and SSE4.2 built-in functions and code generation
+
+msse4a
+Target Report Mask(ISA_SSE4A) Var(ix86_isa_flags) VarExists
+Support MMX, SSE, SSE2, SSE3 and SSE4A built-in functions and code generation
+
+msse5
+Target Report Mask(ISA_SSE5) Var(ix86_isa_flags) VarExists
+Support SSE5 built-in functions and code generation
+
+;; Instruction support
+
+mabm
+Target Report RejectNegative Var(x86_abm)
+Support code generation of Advanced Bit Manipulation (ABM) instructions.
+
+mcx16
+Target Report RejectNegative Var(x86_cmpxchg16b)
+Support code generation of cmpxchg16b instruction.
+
+mpopcnt
+Target Report RejectNegative Var(x86_popcnt)
+Support code generation of popcnt instruction.
+
+msahf
+Target Report RejectNegative Var(x86_sahf)
+Support code generation of sahf instruction in 64bit x86-64 code.
+
+mrecip
+Target Report RejectNegative Var(x86_recip)
+Generate reciprocals instead of divss and sqrtss.
+
+mfused-madd
+Target Report Var(x86_fused_muladd) Init(1)
+Enable automatic generation of fused floating point multiply-add instructions
+if the ISA supports such instructions.  The -mfused-madd option is on by
+default.

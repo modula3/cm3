@@ -1,5 +1,5 @@
 /* Definitions for GCC.  Part of the machine description for CRIS.
-   Copyright (C) 1998, 1999, 2000, 2001, 2004, 2005, 2006
+   Copyright (C) 1998, 1999, 2000, 2001, 2004, 2005, 2006, 2007
    Free Software Foundation, Inc.
    Contributed by Axis Communications.
 
@@ -7,7 +7,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* Prototypes for the CRIS port.  */
 
@@ -32,20 +31,24 @@ extern bool cris_simple_epilogue (void);
 extern const char *cris_op_str (rtx);
 extern void cris_notice_update_cc (rtx, rtx);
 extern bool cris_reload_address_legitimized (rtx, enum machine_mode, int, int, int);
+extern int cris_register_move_cost (enum machine_mode, enum reg_class,
+				    enum reg_class);
 extern void cris_print_operand (FILE *, rtx, int);
 extern void cris_print_operand_address (FILE *, rtx);
 extern int cris_side_effect_mode_ok (enum rtx_code, rtx *, int, int,
                                      int, int, int);
+extern bool cris_cc0_user_requires_cmp (rtx);
 extern rtx cris_return_addr_rtx (int, rtx);
 extern rtx cris_split_movdx (rtx *);
 extern int cris_legitimate_pic_operand (rtx);
 extern enum cris_pic_symbol_type cris_pic_symbol_type_of (rtx);
-extern bool cris_valid_pic_const (rtx);
+extern bool cris_valid_pic_const (rtx, bool);
 extern bool cris_store_multiple_op_p (rtx);
 extern bool cris_movem_load_rest_p (rtx, int);
 extern void cris_asm_output_symbol_ref (FILE *, rtx);
 extern bool cris_output_addr_const_extra (FILE *, rtx);
 extern int cris_cfun_uses_pic_table (void);
+extern void cris_asm_output_case_end (FILE *, int, rtx);
 extern rtx cris_gen_movem_load (rtx, rtx, int);
 extern rtx cris_emit_movem_store (rtx, rtx, int, bool);
 extern void cris_expand_pic_call_address (rtx *);

@@ -1,13 +1,13 @@
 ; Options for the rs6000 port of the compiler
 ;
-; Copyright (C) 2005 Free Software Foundation, Inc.
+; Copyright (C) 2005, 2006, 2007 Free Software Foundation, Inc.
 ; Contributed by Aldy Hernandez <aldy@quesejoda.com>.
 ;
 ; This file is part of GCC.
 ;
 ; GCC is free software; you can redistribute it and/or modify it under
 ; the terms of the GNU General Public License as published by the Free
-; Software Foundation; either version 2, or (at your option) any later
+; Software Foundation; either version 3, or (at your option) any later
 ; version.
 ;
 ; GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -16,9 +16,8 @@
 ; License for more details.
 ;
 ; You should have received a copy of the GNU General Public License
-; along with GCC; see the file COPYING.  If not, write to the Free
-; Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-; 02110-1301, USA.
+; along with GCC; see the file COPYING3.  If not see
+; <http://www.gnu.org/licenses/>.
 
 mpower
 Target Report RejectNegative Mask(POWER)
@@ -64,9 +63,29 @@ mfprnd
 Target Report Mask(FPRND)
 Use PowerPC V2.02 floating point rounding instructions
 
+mcmpb
+Target Report Mask(CMPB)
+Use PowerPC V2.05 compare bytes instruction
+
+mmfpgpr
+Target Report Mask(MFPGPR)
+Use extended PowerPC V2.05 move floating point to/from GPR instructions
+
 maltivec
 Target Report Mask(ALTIVEC)
 Use AltiVec instructions
+
+mhard-dfp
+Target Report Mask(DFP)
+Use decimal floating point instructions
+
+mmulhw
+Target Report Mask(MULHW)
+Use 4xx half-word multiply instructions
+
+mdlmzb
+Target Report Mask(DLMZB)
+Use 4xx string-search dlmzb instruction
 
 mmultiple
 Target Report Mask(MULTIPLE)
@@ -109,11 +128,11 @@ Target Report RejectNegative InverseMask(NO_FUSED_MADD, FUSED_MADD)
 Generate fused multiply/add instructions
 
 msched-prolog
-Target Report Mask(SCHED_PROLOG)
+Target Report Var(TARGET_SCHED_PROLOG) Init(1)
 Schedule the start and end of the procedure
 
 msched-epilog
-Target Undocumented Mask(SCHED_PROLOG) MaskExists
+Target Undocumented Var(TARGET_SCHED_PROLOG) VarExists
 
 maix-struct-return
 Target Report RejectNegative Var(aix_struct_return)
@@ -127,24 +146,24 @@ mxl-compat
 Target Report Var(TARGET_XL_COMPAT)
 Conform more closely to IBM XLC semantics
 
-mswdiv
-Target Report Var(swdiv)
-Generate software floating point divide for better throughput
+mrecip
+Target Report Var(TARGET_RECIP)
+Generate software reciprocal sqrt for better throughput
 
 mno-fp-in-toc
-Target Report RejectNegative Mask(NO_FP_IN_TOC)
+Target Report RejectNegative Var(TARGET_NO_FP_IN_TOC)
 Do not place floating point constants in TOC
 
 mfp-in-toc
-Target Report RejectNegative InverseMask(NO_FP_IN_TOC)
+Target Report RejectNegative Var(TARGET_NO_FP_IN_TOC,0)
 Place floating point constants in TOC
 
 mno-sum-in-toc
-Target RejectNegative Mask(NO_SUM_IN_TOC)
+Target RejectNegative Var(TARGET_NO_SUM_IN_TOC)
 Do not place symbol+offset constants in TOC
 
 msum-in-toc
-Target RejectNegative InverseMask(NO_SUM_IN_TOC)
+Target RejectNegative Var(TARGET_NO_SUM_IN_TOC,0) VarExists
 Place symbol+offset constants in TOC
 
 ;  Output only one TOC entry per module.  Normally linking fails if
@@ -181,6 +200,10 @@ Target RejectNegative Joined
 mspe
 Target Var(rs6000_spe)
 Generate SPE SIMD instructions on E500
+
+mpaired
+Target Var(rs6000_paired_float)
+Generate PPC750CL paired-single instructions
 
 mspe=
 Target RejectNegative Joined

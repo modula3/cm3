@@ -1,11 +1,12 @@
 /* Definitions for PA_RISC with ELF format
-   Copyright 1999, 2000, 2001, 2002, 2003 Free Software Foundation, Inc.
+   Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+   Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -14,9 +15,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 
 #undef TARGET_OS_CPP_BUILTINS
@@ -25,11 +25,6 @@ Boston, MA 02110-1301, USA.  */
     {						\
 	LINUX_TARGET_OS_CPP_BUILTINS();		\
 	builtin_assert ("machine=bigendian");	\
-	if (flag_pic)				\
-	  {					\
-		builtin_define ("__PIC__");	\
-		builtin_define ("__pic__");	\
-	  }					\
     }						\
   while (0)
 
@@ -49,13 +44,15 @@ Boston, MA 02110-1301, USA.  */
 /* Define this for shared library support because it isn't in the main
    linux.h file.  */
 
+#define GLIBC_DYNAMIC_LINKER "/lib/ld.so.1"
+
 #undef LINK_SPEC
 #define LINK_SPEC "\
   %{shared:-shared} \
   %{!shared: \
     %{!static: \
       %{rdynamic:-export-dynamic} \
-      %{!dynamic-linker:-dynamic-linker /lib/ld.so.1}} \
+      %{!dynamic-linker:-dynamic-linker " LINUX_DYNAMIC_LINKER "}} \
       %{static:-static}}"
 
 /* glibc's profiling functions don't need gcc to allocate counters.  */
@@ -68,7 +65,7 @@ Boston, MA 02110-1301, USA.  */
    file which includes this one.  */
 
 #undef STRING_ASM_OP
-#define STRING_ASM_OP   ".stringz"
+#define STRING_ASM_OP   "\t.stringz\t"
 
 #define TEXT_SECTION_ASM_OP "\t.text"
 #define DATA_SECTION_ASM_OP "\t.data"
@@ -106,6 +103,9 @@ Boston, MA 02110-1301, USA.  */
 /* NOTE: (*targetm.asm_out.internal_label)() is defined for us by elfos.h, and
    does what we want (i.e. uses colons).  It must be compatible with
    ASM_GENERATE_INTERNAL_LABEL(), so do not define it here.  */
+
+/* Use the default.  */
+#undef ASM_OUTPUT_INTERNAL_LABEL
 
 /* Use the default.  */
 #undef TARGET_ASM_GLOBALIZE_LABEL

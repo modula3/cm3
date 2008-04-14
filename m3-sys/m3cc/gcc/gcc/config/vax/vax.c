@@ -1,13 +1,13 @@
 /* Subroutines for insn-output.c for VAX.
    Copyright (C) 1987, 1994, 1995, 1997, 1998, 1999, 2000, 2001, 2002,
-   2004, 2005
+   2004, 2005, 2006, 2007
    Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -83,7 +82,7 @@ static rtx vax_struct_value_rtx (tree, int);
 #define TARGET_ADDRESS_COST vax_address_cost
 
 #undef TARGET_PROMOTE_PROTOTYPES
-#define TARGET_PROMOTE_PROTOTYPES hook_bool_tree_true
+#define TARGET_PROMOTE_PROTOTYPES hook_bool_const_tree_true
 
 #undef TARGET_STRUCT_VALUE_RTX
 #define TARGET_STRUCT_VALUE_RTX vax_struct_value_rtx
@@ -116,7 +115,7 @@ vax_output_function_prologue (FILE * file, HOST_WIDE_INT size)
   int mask = 0;
 
   for (regno = 0; regno < FIRST_PSEUDO_REGISTER; regno++)
-    if (regs_ever_live[regno] && !call_used_regs[regno])
+    if (df_regs_ever_live_p (regno) && !call_used_regs[regno])
       mask |= 1 << regno;
 
   fprintf (file, "\t.word 0x%x\n", mask);
@@ -127,7 +126,7 @@ vax_output_function_prologue (FILE * file, HOST_WIDE_INT size)
       int offset = 0;
 
       for (regno = FIRST_PSEUDO_REGISTER-1; regno >= 0; --regno)
-	if (regs_ever_live[regno] && !call_used_regs[regno])
+	if (df_regs_ever_live_p (regno) && !call_used_regs[regno])
 	  dwarf2out_reg_save (label, regno, offset -= 4);
 
       dwarf2out_reg_save (label, PC_REGNUM, offset -= 4);
@@ -179,7 +178,7 @@ split_quadword_operands (rtx * operands, rtx * low, int n ATTRIBUTE_UNUSED)
     {
       if (low[i])
 	/* it's already been figured out */;
-      else if (GET_CODE (operands[i]) == MEM
+      else if (MEM_P (operands[i])
 	       && (GET_CODE (XEXP (operands[i], 0)) == POST_INC))
 	{
 	  rtx addr = XEXP (operands[i], 0);
@@ -237,13 +236,13 @@ print_operand_address (FILE * file, rtx addr)
       reg1 = 0; ireg = 0; breg = 0; offset = 0;
 
       if (CONSTANT_ADDRESS_P (XEXP (addr, 0))
-	  || GET_CODE (XEXP (addr, 0)) == MEM)
+	  || MEM_P (XEXP (addr, 0)))
 	{
 	  offset = XEXP (addr, 0);
 	  addr = XEXP (addr, 1);
 	}
       else if (CONSTANT_ADDRESS_P (XEXP (addr, 1))
-	       || GET_CODE (XEXP (addr, 1)) == MEM)
+	       || MEM_P (XEXP (addr, 1)))
 	{
 	  offset = XEXP (addr, 1);
 	  addr = XEXP (addr, 0);
@@ -258,12 +257,12 @@ print_operand_address (FILE * file, rtx addr)
 	  ireg = XEXP (addr, 0);
 	  addr = XEXP (addr, 1);
 	}
-      else if (GET_CODE (XEXP (addr, 1)) == REG)
+      else if (REG_P (XEXP (addr, 1)))
 	{
 	  reg1 = XEXP (addr, 1);
 	  addr = XEXP (addr, 0);
 	}
-      else if (GET_CODE (XEXP (addr, 0)) == REG)
+      else if (REG_P (XEXP (addr, 0)))
 	{
 	  reg1 = XEXP (addr, 0);
 	  addr = XEXP (addr, 1);
@@ -271,7 +270,7 @@ print_operand_address (FILE * file, rtx addr)
       else
 	gcc_unreachable ();
 
-      if (GET_CODE (addr) == REG)
+      if (REG_P (addr))
 	{
 	  if (reg1)
 	    ireg = addr;
@@ -284,21 +283,21 @@ print_operand_address (FILE * file, rtx addr)
 	{
 	  gcc_assert (GET_CODE (addr) == PLUS);
 	  if (CONSTANT_ADDRESS_P (XEXP (addr, 0))
-	      || GET_CODE (XEXP (addr, 0)) == MEM)
+	      || MEM_P (XEXP (addr, 0)))
 	    {
 	      if (offset)
 		{
-		  if (GET_CODE (offset) == CONST_INT)
+		  if (CONST_INT_P (offset))
 		    offset = plus_constant (XEXP (addr, 0), INTVAL (offset));
 		  else
 		    {
-		      gcc_assert (GET_CODE (XEXP (addr, 0)) == CONST_INT);
+		      gcc_assert (CONST_INT_P (XEXP (addr, 0)));
 		      offset = plus_constant (offset, INTVAL (XEXP (addr, 0)));
 		    }
 		}
 	      offset = XEXP (addr, 0);
 	    }
-	  else if (GET_CODE (XEXP (addr, 0)) == REG)
+	  else if (REG_P (XEXP (addr, 0)))
 	    {
 	      if (reg1)
 		ireg = reg1, breg = XEXP (addr, 0), reg1 = 0;
@@ -313,21 +312,21 @@ print_operand_address (FILE * file, rtx addr)
 	    }
 
 	  if (CONSTANT_ADDRESS_P (XEXP (addr, 1))
-	      || GET_CODE (XEXP (addr, 1)) == MEM)
+	      || MEM_P (XEXP (addr, 1)))
 	    {
 	      if (offset)
 		{
-		  if (GET_CODE (offset) == CONST_INT)
+		  if (CONST_INT_P (offset))
 		    offset = plus_constant (XEXP (addr, 1), INTVAL (offset));
 		  else
 		    {
-		      gcc_assert (GET_CODE (XEXP (addr, 1)) == CONST_INT);
+		      gcc_assert (CONST_INT_P (XEXP (addr, 1)));
 		      offset = plus_constant (offset, INTVAL (XEXP (addr, 1)));
 		    }
 		}
 	      offset = XEXP (addr, 1);
 	    }
-	  else if (GET_CODE (XEXP (addr, 1)) == REG)
+	  else if (REG_P (XEXP (addr, 1)))
 	    {
 	      if (reg1)
 		ireg = reg1, breg = XEXP (addr, 1), reg1 = 0;
@@ -345,7 +344,7 @@ print_operand_address (FILE * file, rtx addr)
       /* If REG1 is nonzero, figure out if it is a base or index register.  */
       if (reg1)
 	{
-	  if (breg != 0 || (offset && GET_CODE (offset) == MEM))
+	  if (breg != 0 || (offset && MEM_P (offset)))
 	    {
 	      gcc_assert (!ireg);
 	      ireg = reg1;
@@ -364,7 +363,7 @@ print_operand_address (FILE * file, rtx addr)
 	{
 	  if (GET_CODE (ireg) == MULT)
 	    ireg = XEXP (ireg, 0);
-	  gcc_assert (GET_CODE (ireg) == REG);
+	  gcc_assert (REG_P (ireg));
 	  fprintf (file, "[%s]", reg_names[REGNO (ireg)]);
 	}
       break;
@@ -523,7 +522,7 @@ vax_address_cost_1 (rtx addr)
 static int
 vax_address_cost (rtx x)
 {
-  return (1 + (GET_CODE (x) == REG ? 0 : vax_address_cost_1 (x)));
+  return (1 + (REG_P (x) ? 0 : vax_address_cost_1 (x)));
 }
 
 /* Cost of an expression on a VAX.  This version has costs tuned for the
@@ -669,7 +668,7 @@ vax_rtx_costs (rtx x, int code, int outer_code, int *total)
     case ROTATE:
     case ROTATERT:
       *total = 6;		/* 5 on VAX 2, 4 on VAX 9000 */
-      if (GET_CODE (XEXP (x, 1)) == CONST_INT)
+      if (CONST_INT_P (XEXP (x, 1)))
 	fmt = "e"; 		/* all constant rotate counts are short */
       break;
 
@@ -677,7 +676,7 @@ vax_rtx_costs (rtx x, int code, int outer_code, int *total)
     case MINUS:
       *total = (mode == DFmode) ? 13 : 8; /* 6/8 on VAX 9000, 16/15 on VAX 2 */
       /* Small integer operands can use subl2 and addl2.  */
-      if ((GET_CODE (XEXP (x, 1)) == CONST_INT)
+      if ((CONST_INT_P (XEXP (x, 1)))
 	  && (unsigned HOST_WIDE_INT)(INTVAL (XEXP (x, 1)) + 63) < 127)
 	fmt = "e";
       break;
@@ -690,7 +689,7 @@ vax_rtx_costs (rtx x, int code, int outer_code, int *total)
     case AND:
       /* AND is special because the first operand is complemented.  */
       *total = 3;
-      if (GET_CODE (XEXP (x, 0)) == CONST_INT)
+      if (CONST_INT_P (XEXP (x, 0)))
 	{
 	  if ((unsigned HOST_WIDE_INT)~INTVAL (XEXP (x, 0)) > 63)
 	    *total = 4;
@@ -725,7 +724,7 @@ vax_rtx_costs (rtx x, int code, int outer_code, int *total)
       else
 	*total = 3;		/* 4 on VAX 2 */
       x = XEXP (x, 0);
-      if (GET_CODE (x) != REG && GET_CODE (x) != POST_INC)
+      if (!REG_P (x) && GET_CODE (x) != POST_INC)
 	*total += vax_address_cost_1 (x);
       return true;
 
@@ -789,7 +788,7 @@ vax_rtx_costs (rtx x, int code, int outer_code, int *total)
 	  break;
 	case MEM:
 	  *total += 1;		/* 2 on VAX 2 */
-	  if (GET_CODE (XEXP (op, 0)) != REG)
+	  if (!REG_P (XEXP (op, 0)))
 	    *total += vax_address_cost_1 (XEXP (op, 0));
 	  break;
 	case REG:
@@ -888,13 +887,13 @@ vax_notice_update_cc (rtx exp, rtx insn ATTRIBUTE_UNUSED)
     }
   else
     CC_STATUS_INIT;
-  if (cc_status.value1 && GET_CODE (cc_status.value1) == REG
+  if (cc_status.value1 && REG_P (cc_status.value1)
       && cc_status.value2
       && reg_overlap_mentioned_p (cc_status.value1, cc_status.value2))
     cc_status.value2 = 0;
-  if (cc_status.value1 && GET_CODE (cc_status.value1) == MEM
+  if (cc_status.value1 && MEM_P (cc_status.value1)
       && cc_status.value2
-      && GET_CODE (cc_status.value2) == MEM)
+      && MEM_P (cc_status.value2))
     cc_status.value2 = 0;
   /* Actual condition, one line up, should be that value2's address
      depends on value1, but that is too much of a pain.  */
@@ -917,7 +916,7 @@ vax_output_int_move (rtx insn ATTRIBUTE_UNUSED, rtx *operands,
 	}
       if (operands[1] == const0_rtx)
 	return "clrl %0";
-      if (GET_CODE (operands[1]) == CONST_INT
+      if (CONST_INT_P (operands[1])
 	  && (unsigned) INTVAL (operands[1]) >= 64)
 	{
 	  int i = INTVAL (operands[1]);
@@ -937,7 +936,7 @@ vax_output_int_move (rtx insn ATTRIBUTE_UNUSED, rtx *operands,
       return "movl %1,%0";
 
     case HImode:
-      if (GET_CODE (operands[1]) == CONST_INT)
+      if (CONST_INT_P (operands[1]))
 	{
 	  int i = INTVAL (operands[1]);
 	  if (i == 0)
@@ -952,7 +951,7 @@ vax_output_int_move (rtx insn ATTRIBUTE_UNUSED, rtx *operands,
       return "movw %1,%0";
 
     case QImode:
-      if (GET_CODE (operands[1]) == CONST_INT)
+      if (CONST_INT_P (operands[1]))
 	{
 	  int i = INTVAL (operands[1]);
 	  if (i == 0)
@@ -994,12 +993,12 @@ vax_output_int_add (rtx insn ATTRIBUTE_UNUSED, rtx *operands,
 	    return "incl %0";
 	  if (operands[2] == constm1_rtx)
 	    return "decl %0";
-	  if (GET_CODE (operands[2]) == CONST_INT
+	  if (CONST_INT_P (operands[2])
 	      && (unsigned) (- INTVAL (operands[2])) < 64)
 	    return "subl2 $%n2,%0";
-	  if (GET_CODE (operands[2]) == CONST_INT
+	  if (CONST_INT_P (operands[2])
 	      && (unsigned) INTVAL (operands[2]) >= 64
-	      && GET_CODE (operands[1]) == REG
+	      && REG_P (operands[1])
 	      && ((INTVAL (operands[2]) < 32767 && INTVAL (operands[2]) > -32768)
 		   || REGNO (operands[1]) > 11))
 	    return "movab %c2(%1),%0";
@@ -1009,20 +1008,20 @@ vax_output_int_add (rtx insn ATTRIBUTE_UNUSED, rtx *operands,
       if (rtx_equal_p (operands[0], operands[2]))
 	return "addl2 %1,%0";
 
-      if (GET_CODE (operands[2]) == CONST_INT
+      if (CONST_INT_P (operands[2])
 	  && INTVAL (operands[2]) < 32767
 	  && INTVAL (operands[2]) > -32768
-	  && GET_CODE (operands[1]) == REG
+	  && REG_P (operands[1])
 	  && push_operand (operands[0], SImode))
 	return "pushab %c2(%1)";
 
-      if (GET_CODE (operands[2]) == CONST_INT
+      if (CONST_INT_P (operands[2])
 	  && (unsigned) (- INTVAL (operands[2])) < 64)
 	return "subl3 $%n2,%1,%0";
 
-      if (GET_CODE (operands[2]) == CONST_INT
+      if (CONST_INT_P (operands[2])
 	  && (unsigned) INTVAL (operands[2]) >= 64
-	  && GET_CODE (operands[1]) == REG
+	  && REG_P (operands[1])
 	  && ((INTVAL (operands[2]) < 32767 && INTVAL (operands[2]) > -32768)
 	       || REGNO (operands[1]) > 11))
 	return "movab %c2(%1),%0";
@@ -1040,14 +1039,14 @@ vax_output_int_add (rtx insn ATTRIBUTE_UNUSED, rtx *operands,
 	    return "incw %0";
 	  if (operands[2] == constm1_rtx)
 	    return "decw %0";
-	  if (GET_CODE (operands[2]) == CONST_INT
+	  if (CONST_INT_P (operands[2])
 	      && (unsigned) (- INTVAL (operands[2])) < 64)
 	    return "subw2 $%n2,%0";
 	  return "addw2 %2,%0";
 	}
       if (rtx_equal_p (operands[0], operands[2]))
 	return "addw2 %1,%0";
-      if (GET_CODE (operands[2]) == CONST_INT
+      if (CONST_INT_P (operands[2])
 	  && (unsigned) (- INTVAL (operands[2])) < 64)
 	return "subw3 $%n2,%1,%0";
       return "addw3 %1,%2,%0";
@@ -1059,14 +1058,14 @@ vax_output_int_add (rtx insn ATTRIBUTE_UNUSED, rtx *operands,
 	    return "incb %0";
 	  if (operands[2] == constm1_rtx)
 	    return "decb %0";
-	  if (GET_CODE (operands[2]) == CONST_INT
+	  if (CONST_INT_P (operands[2])
 	      && (unsigned) (- INTVAL (operands[2])) < 64)
 	    return "subb2 $%n2,%0";
 	  return "addb2 %2,%0";
 	}
       if (rtx_equal_p (operands[0], operands[2]))
 	return "addb2 %1,%0";
-      if (GET_CODE (operands[2]) == CONST_INT
+      if (CONST_INT_P (operands[2])
 	  && (unsigned) (- INTVAL (operands[2])) < 64)
 	return "subb3 $%n2,%1,%0";
       return "addb3 %1,%2,%0";
@@ -1103,7 +1102,7 @@ int
 legitimate_constant_address_p (rtx x)
 {
   return (GET_CODE (x) == LABEL_REF || GET_CODE (x) == SYMBOL_REF
-	  || GET_CODE (x) == CONST_INT || GET_CODE (x) == CONST
+	  || CONST_INT_P (x) || GET_CODE (x) == CONST
 	  || GET_CODE (x) == HIGH);
 }
 
@@ -1121,12 +1120,12 @@ legitimate_constant_p (rtx x ATTRIBUTE_UNUSED)
 /* Nonzero if X is a hard reg that can be used as an index
    or, if not strict, if it is a pseudo reg.  */
 #define	INDEX_REGISTER_P(X, STRICT) \
-(GET_CODE (X) == REG && (!(STRICT) || REGNO_OK_FOR_INDEX_P (REGNO (X))))
+(REG_P (X) && (!(STRICT) || REGNO_OK_FOR_INDEX_P (REGNO (X))))
 
 /* Nonzero if X is a hard reg that can be used as a base reg
    or, if not strict, if it is a pseudo reg.  */
 #define	BASE_REGISTER_P(X, STRICT) \
-(GET_CODE (X) == REG && (!(STRICT) || REGNO_OK_FOR_BASE_P (REGNO (X))))
+(REG_P (X) && (!(STRICT) || REGNO_OK_FOR_BASE_P (REGNO (X))))
 
 #ifdef NO_EXTERNAL_INDIRECT_ADDRESS
 
@@ -1179,10 +1178,10 @@ static int
 nonindexed_address_p (rtx x, int strict)
 {
   rtx xfoo0;
-  if (GET_CODE (x) == REG)
+  if (REG_P (x))
     {
       extern rtx *reg_equiv_mem;
-      if (! reload_in_progress
+      if (!reload_in_progress
 	  || reg_equiv_mem[REGNO (x)] == 0
 	  || indirectable_address_p (reg_equiv_mem[REGNO (x)], strict))
 	return 1;
@@ -1192,7 +1191,7 @@ nonindexed_address_p (rtx x, int strict)
   if (indirectable_address_p (x, strict))
     return 1;
   xfoo0 = XEXP (x, 0);
-  if (GET_CODE (x) == MEM && indirectable_address_p (xfoo0, strict))
+  if (MEM_P (x) && indirectable_address_p (xfoo0, strict))
     return 1;
   if ((GET_CODE (x) == PRE_DEC || GET_CODE (x) == POST_INC)
       && BASE_REGISTER_P (xfoo0, strict))
@@ -1217,12 +1216,12 @@ index_term_p (rtx prod, enum machine_mode mode, int strict)
   xfoo0 = XEXP (prod, 0);
   xfoo1 = XEXP (prod, 1);
 
-  if (GET_CODE (xfoo0) == CONST_INT
+  if (CONST_INT_P (xfoo0)
       && INTVAL (xfoo0) == (int)GET_MODE_SIZE (mode)
       && INDEX_REGISTER_P (xfoo1, strict))
     return 1;
 
-  if (GET_CODE (xfoo1) == CONST_INT
+  if (CONST_INT_P (xfoo1)
       && INTVAL (xfoo1) == (int)GET_MODE_SIZE (mode)
       && INDEX_REGISTER_P (xfoo0, strict))
     return 1;
@@ -1306,17 +1305,17 @@ vax_mode_dependent_address_p (rtx x)
 {
   rtx xfoo0, xfoo1;
 
-  if (GET_CODE (x) == POST_INC || GET_CODE (x) == PRE_DEC)
-    return 1;
+  /* Auto-increment cases are now dealt with generically in recog.c.  */
+
   if (GET_CODE (x) != PLUS)
     return 0;
 
   xfoo0 = XEXP (x, 0);
   xfoo1 = XEXP (x, 1);
 
-  if (CONSTANT_ADDRESS_P (xfoo0) && GET_CODE (xfoo1) == REG)
+  if (CONSTANT_ADDRESS_P (xfoo0) && REG_P (xfoo1))
     return 0;
-  if (CONSTANT_ADDRESS_P (xfoo1) && GET_CODE (xfoo0) == REG)
+  if (CONSTANT_ADDRESS_P (xfoo1) && REG_P (xfoo0))
     return 0;
 
   return 1;

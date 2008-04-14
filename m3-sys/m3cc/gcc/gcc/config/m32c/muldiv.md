@@ -1,5 +1,5 @@
 ;; Machine Descriptions for R8C/M16C/M32C
-;; Copyright (C) 2005
+;; Copyright (C) 2005, 2007
 ;; Free Software Foundation, Inc.
 ;; Contributed by Red Hat.
 ;;
@@ -7,7 +7,7 @@
 ;;
 ;; GCC is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published
-;; by the Free Software Foundation; either version 2, or (at your
+;; by the Free Software Foundation; either version 3, or (at your
 ;; option) any later version.
 ;;
 ;; GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -16,9 +16,8 @@
 ;; License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to the Free
-;; Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-;; 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 ;; multiply and divide
 
@@ -29,6 +28,7 @@
                  (match_operand 2 "immediate_operand" "i,i")))]
   ""
   "mul.b\t%2,%1"
+  [(set_attr "flags" "o")]
 )
 
 ; Here is the pattern for registers and such.
@@ -38,6 +38,7 @@
                  (sign_extend:HI (match_operand:QI 2 "mra_operand" "RqiSd,?Rmm,RqiSd,?Rmm,RhlSd,?Rmm"))))]
   ""
   "mul.b\t%2,%1"
+  [(set_attr "flags" "o")]
 )
 
 ; Don't try to sign_extend a const_int.  Same for all other multiplies.
@@ -56,6 +57,7 @@
                  (match_operand 2 "immediate_operand" "i,i")))]
   ""
   "mulu.b\t%U2,%1"
+  [(set_attr "flags" "o")]
 )
 
 (define_insn "umulqihi3_r"
@@ -64,6 +66,7 @@
                  (zero_extend:HI (match_operand:QI 2 "mra_operand" "RqiSd,?Rmm,RqiSd,?Rmm,RhlSd,?Rmm"))))]
   ""
   "mulu.b\t%U2,%1"
+  [(set_attr "flags" "o")]
 )
 
 (define_expand "umulqihi3"
@@ -76,19 +79,21 @@
 )
 
 (define_insn "mulhisi3_c"
-  [(set (match_operand:SI 0 "mra_operand" "=RsiSd,??Rmm")
-        (mult:SI (sign_extend:SI (match_operand:HI 1 "mra_operand" "%0,0"))
-                 (match_operand 2 "immediate_operand" "i,i")))]
+  [(set (match_operand:SI 0 "ra_operand" "=Rsi")
+        (mult:SI (sign_extend:SI (match_operand:HI 1 "mra_operand" "%0"))
+                 (match_operand:HI 2 "immediate_operand" "i")))]
   ""
   "mul.w\t%2,%1"
+  [(set_attr "flags" "o")]
 )
 
 (define_insn "mulhisi3_r"
-  [(set (match_operand:SI 0 "mra_operand" "=RsiSd,RsiSd,??Rmm,??Rmm")
-        (mult:SI (sign_extend:SI (match_operand:HI 1 "mra_operand" "%0,0,0,0"))
-                 (sign_extend:SI (match_operand:HI 2 "mra_operand" "RhiSd,?Rmm,RhiSd,?Rmm"))))]
+  [(set (match_operand:SI 0 "mra_operand" "=Rsi,Rsi")
+        (mult:SI (sign_extend:SI (match_operand:HI 1 "mra_operand" "%0,0"))
+                 (sign_extend:SI (match_operand:HI 2 "mra_operand" "RhiSd,?Rmm"))))]
   ""
   "mul.w\t%2,%1"
+  [(set_attr "flags" "o")]
 )
 
 (define_expand "mulhisi3"
@@ -101,19 +106,21 @@
 )
 
 (define_insn "umulhisi3_c"
-  [(set (match_operand:SI 0 "mra_operand" "=RsiSd,??Rmm")
-        (mult:SI (zero_extend:SI (match_operand:HI 1 "mra_operand" "%0,0"))
-                 (match_operand 2 "immediate_operand" "i,i")))]
+  [(set (match_operand:SI 0 "ra_operand" "=Rsi")
+        (mult:SI (zero_extend:SI (match_operand:HI 1 "mra_operand" "%0"))
+                 (match_operand 2 "immediate_operand" "i")))]
   ""
   "mulu.w\t%u2,%1"
+  [(set_attr "flags" "o")]
 )
 
 (define_insn "umulhisi3_r"
-  [(set (match_operand:SI 0 "mra_operand" "=RsiSd,RsiSd,??Rmm,??Rmm")
-        (mult:SI (zero_extend:SI (match_operand:HI 1 "mra_operand" "%0,0,0,0"))
-                 (zero_extend:SI (match_operand:HI 2 "mra_operand" "RhiSd,?Rmm,RhiSd,?Rmm"))))]
+  [(set (match_operand:SI 0 "mra_operand" "=Rsi,Rsi")
+        (mult:SI (zero_extend:SI (match_operand:HI 1 "mra_operand" "%0,0"))
+                 (zero_extend:SI (match_operand:HI 2 "mra_operand" "RhiSd,?Rmm"))))]
   ""
   "mulu.w\t%u2,%1"
+  [(set_attr "flags" "o")]
 )
 
 (define_expand "umulhisi3"
@@ -127,17 +134,38 @@
 
 
 ; GCC expects to be able to multiply pointer-sized integers too, but
-; fortunately it only multiplies by powers of two.
-(define_insn "mulpsi3"
+; fortunately it only multiplies by powers of two, although sometimes
+; they're negative.
+(define_insn "mulpsi3_op"
   [(set (match_operand:PSI 0 "mra_operand" "=RsiSd")
 	(mult:PSI (match_operand:PSI 1 "mra_operand" "%0")
-		  (match_operand 2 "const_int_operand" "Ilb")))]
+		  (match_operand 2 "m32c_psi_scale" "Ilb")))]
   "TARGET_A24"
   "shl.l\t%b2,%0"
   [(set_attr "flags" "szc")]
   )
 
+(define_expand "mulpsi3"
+  [(set (match_operand:PSI 0 "mra_operand" "=RsiSd")
+	(mult:PSI (match_operand:PSI 1 "mra_operand" "%0")
+		  (match_operand 2 "m32c_psi_scale" "Ilb")))]
+  "TARGET_A24"
+  "if (GET_CODE (operands[2]) != CONST_INT
+       || ! m32c_psi_scale (operands[2], PSImode))
+     {
+       m32c_expand_neg_mulpsi3 (operands);
+       DONE;
+     }"
+  )
 
+(define_insn "mulsi3"
+  [(set (match_operand:SI 0 "r0123_operand" "=R02,R02")
+        (mult:SI (match_operand:SI 1 "r0123_operand" "%0,0")
+                 (match_operand:SI 2 "mra_operand" "RsiSd,?Rmm")))]
+  "TARGET_M32C"
+  "mul.l\t%2,%1"
+  [(set_attr "flags" "o")]
+)
 
 (define_expand "divmodqi4"
   [(set (match_dup 4)
@@ -161,6 +189,7 @@
    ]
   "0"
   "div.b\t%2"
+  [(set_attr "flags" "o")]
   )
 
 (define_expand "udivmodqi4"
@@ -185,6 +214,7 @@
    ]
   "0"
   "divu.b\t%2"
+  [(set_attr "flags" "o")]
   )
 
 (define_expand "divmodhi4"
@@ -209,6 +239,7 @@
    ]
   ""
   "div.w\t%2"
+  [(set_attr "flags" "o")]
   )
 
 (define_expand "udivmodhi4"
@@ -233,4 +264,25 @@
    ]
   ""
   "divu.w\t%2"
+  [(set_attr "flags" "o")]
   )
+
+(define_insn "divsi3"
+  [(set (match_operand:SI 0 "r0123_operand" "=R02,R02")
+        (div:SI (match_operand:SI 1 "r0123_operand" "0,0")
+                (match_operand:SI 2 "mra_operand" "RsiSd,?Rmm")))]
+  "TARGET_M32C"
+  "div.l\t%2"
+  [(set_attr "flags" "o")]
+)
+
+(define_insn "udivsi3"
+  [(set (match_operand:SI 0 "r0123_operand" "=R02,R02")
+        (udiv:SI (match_operand:SI 1 "r0123_operand" "0,0")
+                 (match_operand:SI 2 "mra_operand" "RsiSd,?Rmm")))]
+  "TARGET_M32C"
+  "divu.l\t%2"
+  [(set_attr "flags" "o")]
+)
+
+

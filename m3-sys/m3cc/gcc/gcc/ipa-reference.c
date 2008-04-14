@@ -1,12 +1,12 @@
 /* Callgraph based analysis of static variables.
-   Copyright (C) 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2004, 2005, 2007 Free Software Foundation, Inc.
    Contributed by Kenneth Zadeck <zadeck@naturalbridge.com>
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,10 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  
-*/
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* This file gathers information about how variables whose scope is
    confined to the compilation unit are used.  
@@ -111,7 +109,7 @@ tree memory_identifier_string;
 static inline ipa_reference_vars_info_t
 get_reference_vars_info_from_cgraph (struct cgraph_node * node)
 {
-  return get_var_ann (node->decl)->reference_vars_info;
+  return get_function_ann (node->decl)->reference_vars_info;
 }
 
 /* Get a bitmap that contains all of the locally referenced static
@@ -119,7 +117,7 @@ get_reference_vars_info_from_cgraph (struct cgraph_node * node)
 static ipa_reference_local_vars_info_t
 get_local_reference_vars_info (tree fn) 
 {
-  ipa_reference_vars_info_t info = get_var_ann (fn)->reference_vars_info;
+  ipa_reference_vars_info_t info = get_function_ann (fn)->reference_vars_info;
 
   if (info)
     return info->local;
@@ -134,7 +132,7 @@ get_local_reference_vars_info (tree fn)
 static ipa_reference_global_vars_info_t
 get_global_reference_vars_info (tree fn) 
 {
-  ipa_reference_vars_info_t info = get_var_ann (fn)->reference_vars_info;
+  ipa_reference_vars_info_t info = get_function_ann (fn)->reference_vars_info;
 
   if (info)
     return info->global;
@@ -269,6 +267,10 @@ has_proper_scope_for_analysis (tree t)
   if (DECL_EXTERNAL (t) || TREE_PUBLIC (t))
     return false;
 
+  /* We cannot touch decls where the type needs constructing.  */
+  if (TYPE_NEEDS_CONSTRUCTING (TREE_TYPE (t)))
+    return false;
+
   /* This is a variable we care about.  Check if we have seen it
      before, and if not add it the set of variables we care about.  */
   if (!bitmap_bit_p (all_module_statics, DECL_UID (t)))
@@ -286,7 +288,7 @@ check_operand (ipa_reference_local_vars_info_t local,
 {
   if (!t) return;
 
-  if ((TREE_CODE (t) == VAR_DECL)
+  if ((TREE_CODE (t) == VAR_DECL || TREE_CODE (t) == FUNCTION_DECL)
       && (has_proper_scope_for_analysis (t))) 
     {
       if (checking_write)
@@ -343,7 +345,7 @@ look_for_address_of (tree t)
   if (TREE_CODE (t) == ADDR_EXPR)
     {
       tree x = get_base_var (t);
-      if (TREE_CODE (x) == VAR_DECL) 
+      if (TREE_CODE (x) == VAR_DECL || TREE_CODE (x) == FUNCTION_DECL) 
 	if (has_proper_scope_for_analysis (x))
 	  bitmap_set_bit (module_statics_escape, DECL_UID (x));
     }
@@ -436,18 +438,13 @@ static void
 check_call (ipa_reference_local_vars_info_t local, tree call_expr) 
 {
   int flags = call_expr_flags (call_expr);
-  tree operand_list = TREE_OPERAND (call_expr, 1);
   tree operand;
   tree callee_t = get_callee_fndecl (call_expr);
   enum availability avail = AVAIL_NOT_AVAILABLE;
+  call_expr_arg_iterator iter;
 
-  for (operand = operand_list;
-       operand != NULL_TREE;
-       operand = TREE_CHAIN (operand))
-    {
-      tree argument = TREE_VALUE (operand);
-      check_rhs_var (local, argument);
-    }
+  FOR_EACH_CALL_EXPR_ARG (operand, iter, call_expr)
+    check_rhs_var (local, operand);
 
   if (callee_t)
     {
@@ -480,7 +477,7 @@ scan_for_static_refs (tree *tp,
 		      int *walk_subtrees, 
 		      void *data)
 {
-  struct cgraph_node *fn = data;
+  struct cgraph_node *fn = (struct cgraph_node *) data;
   tree t = *tp;
   ipa_reference_local_vars_info_t local = NULL;
   if (fn)
@@ -494,11 +491,11 @@ scan_for_static_refs (tree *tp,
       *walk_subtrees = 0;
       break;
 
-    case MODIFY_EXPR:
+    case GIMPLE_MODIFY_STMT:
       {
 	/* First look on the lhs and see what variable is stored to */
-	tree lhs = TREE_OPERAND (t, 0);
-	tree rhs = TREE_OPERAND (t, 1);
+	tree lhs = GIMPLE_STMT_OPERAND (t, 0);
+	tree rhs = GIMPLE_STMT_OPERAND (t, 1);
 	check_lhs_var (local, lhs);
 
 	/* For the purposes of figuring out what the cast affects */
@@ -507,6 +504,7 @@ scan_for_static_refs (tree *tp,
 	switch (TREE_CODE_CLASS (TREE_CODE (rhs))) 
 	  {
 	  case tcc_binary:	    
+	  case tcc_comparison:	    
  	    {
  	      tree op0 = TREE_OPERAND (rhs, 0);
  	      tree op1 = TREE_OPERAND (rhs, 1);
@@ -533,7 +531,14 @@ scan_for_static_refs (tree *tp,
 	      case ADDR_EXPR:
 		check_rhs_var (local, rhs);
 		break;
-	      case CALL_EXPR: 
+	      default:
+		break;
+	      }
+	    break;
+	  case tcc_vl_exp:
+	    switch (TREE_CODE (rhs))
+	      {
+	      case CALL_EXPR:
 		check_call (local, rhs);
 		break;
 	      default:
@@ -689,7 +694,7 @@ merge_callee_local_info (struct cgraph_node *target,
     get_reference_vars_info_from_cgraph (target)->local;
 
   /* Make the world safe for tail recursion.  */
-  struct ipa_dfs_info *node_info = x->aux;
+  struct ipa_dfs_info *node_info = (struct ipa_dfs_info *) x->aux;
   
   if (node_info->aux) 
     return;
@@ -741,6 +746,7 @@ merge_callee_local_info (struct cgraph_node *target,
 static void 
 ipa_init (void) 
 {
+  struct cgraph_node *node;
   memory_identifier_string = build_string(7, "memory");
 
   reference_vars_to_consider =
@@ -750,6 +756,10 @@ ipa_init (void)
   module_statics_escape = BITMAP_ALLOC (&ipa_obstack);
   module_statics_written = BITMAP_ALLOC (&ipa_obstack);
   all_module_statics = BITMAP_ALLOC (&ipa_obstack);
+
+  /* This will add NODE->DECL to the splay trees.  */
+  for (node = cgraph_nodes; node; node = node->next)
+    has_proper_scope_for_analysis (node->decl);
 
   /* There are some shared nodes, in particular the initializers on
      static declarations.  We do not need to scan them more than once
@@ -765,16 +775,11 @@ ipa_init (void)
    to variables defined within this unit.  */
 
 static void 
-analyze_variable (struct cgraph_varpool_node *vnode)
+analyze_variable (struct varpool_node *vnode)
 {
   tree global = vnode->decl;
-  if (TREE_CODE (global) == VAR_DECL)
-    {
-      if (DECL_INITIAL (global)) 
-	walk_tree (&DECL_INITIAL (global), scan_for_static_refs, 
-		   NULL, visited_nodes);
-    } 
-  else gcc_unreachable ();
+  walk_tree (&DECL_INITIAL (global), scan_for_static_refs, 
+             NULL, visited_nodes);
 }
 
 /* This is the main routine for finding the reference patterns for
@@ -784,13 +789,13 @@ static void
 analyze_function (struct cgraph_node *fn)
 {
   ipa_reference_vars_info_t info 
-    = xcalloc (1, sizeof (struct ipa_reference_vars_info_d));
+    = XCNEW (struct ipa_reference_vars_info_d);
   ipa_reference_local_vars_info_t l
-    = xcalloc (1, sizeof (struct ipa_reference_local_vars_info_d));
+    = XCNEW (struct ipa_reference_local_vars_info_d);
   tree decl = fn->decl;
 
   /* Add the info to the tree's annotation.  */
-  get_var_ann (fn->decl)->reference_vars_info = info;
+  get_function_ann (fn->decl)->reference_vars_info = info;
 
   info->local = l;
   l->statics_read = BITMAP_ALLOC (&ipa_obstack);
@@ -806,6 +811,21 @@ analyze_function (struct cgraph_node *fn)
     FOR_EACH_BB_FN (this_block, this_cfun)
       {
 	block_stmt_iterator bsi;
+	tree phi, op;
+	use_operand_p use;
+	ssa_op_iter iter;
+
+	/* Find the addresses taken in phi node arguments.  */
+	for (phi = phi_nodes (this_block); phi; phi = PHI_CHAIN (phi))
+	  {
+	    FOR_EACH_PHI_ARG (use, phi, iter, SSA_OP_USE)
+	      {
+		op = USE_FROM_PTR (use);
+		if (TREE_CODE (op) == ADDR_EXPR)
+		  check_rhs_var (l, op);
+	      }
+	  }
+
 	for (bsi = bsi_start (this_block); !bsi_end_p (bsi); bsi_next (&bsi))
 	  walk_tree (bsi_stmt_ptr (bsi), scan_for_static_refs, 
 		     fn, visited_nodes);
@@ -874,8 +894,8 @@ clean_function (struct cgraph_node *fn)
     }
 
   
-  free (get_var_ann (fn->decl)->reference_vars_info);
-  get_var_ann (fn->decl)->reference_vars_info = NULL;
+  free (get_function_ann (fn->decl)->reference_vars_info);
+  get_function_ann (fn->decl)->reference_vars_info = NULL;
 }
 
 
@@ -883,21 +903,21 @@ clean_function (struct cgraph_node *fn)
    on the local information that was produced by ipa_analyze_function
    and ipa_analyze_variable.  */
 
-static void
+static unsigned int
 static_execute (void)
 {
   struct cgraph_node *node;
-  struct cgraph_varpool_node *vnode;
+  struct varpool_node *vnode;
   struct cgraph_node *w;
   struct cgraph_node **order =
-    xcalloc (cgraph_n_nodes, sizeof (struct cgraph_node *));
-  int order_pos = order_pos = ipa_utils_reduced_inorder (order, false, true);
+    XCNEWVEC (struct cgraph_node *, cgraph_n_nodes);
+  int order_pos = ipa_utils_reduced_inorder (order, false, true);
   int i;
 
   ipa_init ();
 
   /* Process all of the variables first.  */
-  for (vnode = cgraph_varpool_nodes_queue; vnode; vnode = vnode->next_needed)
+  FOR_EACH_STATIC_INITIALIZER (vnode)
     analyze_variable (vnode);
 
   /* Process all of the functions next. 
@@ -963,6 +983,11 @@ static_execute (void)
     EXECUTE_IF_SET_IN_BITMAP (module_statics_readonly, 0, index, bi)
       {
 	tree var = get_static_decl (index);
+
+	/* Readonly on a function decl is very different from the
+	   variable.  */
+	if (TREE_CODE (var) == FUNCTION_DECL)
+	  continue;
 
 	/* Ignore variables in named sections - changing TREE_READONLY
 	   changes the section flags, potentially causing conflicts with
@@ -1057,7 +1082,7 @@ static_execute (void)
     {
       ipa_reference_vars_info_t node_info;
       ipa_reference_global_vars_info_t node_g = 
-	xcalloc (1, sizeof (struct ipa_reference_global_vars_info_d));
+	XCNEW (struct ipa_reference_global_vars_info_d);
       ipa_reference_local_vars_info_t node_l;
       
       bool read_all;
@@ -1081,7 +1106,7 @@ static_execute (void)
 
       /* If any node in a cycle is calls_read_all or calls_write_all
 	 they all are. */
-      w_info = node->aux;
+      w_info = (struct ipa_dfs_info *) node->aux;
       w = w_info->next_cycle;
       while (w)
 	{
@@ -1090,7 +1115,7 @@ static_execute (void)
 	  read_all |= w_l->calls_read_all;
 	  write_all |= w_l->calls_write_all;
 
-	  w_info = w->aux;
+	  w_info = (struct ipa_dfs_info *) w->aux;
 	  w = w_info->next_cycle;
 	}
 
@@ -1113,7 +1138,7 @@ static_execute (void)
 		       node_l->statics_written);
 	}
 
-      w_info = node->aux;
+      w_info = (struct ipa_dfs_info *) node->aux;
       w = w_info->next_cycle;
       while (w)
 	{
@@ -1134,7 +1159,7 @@ static_execute (void)
 	  if (!write_all)
 	    bitmap_ior_into (node_g->statics_written,
 			     w_l->statics_written);
-	  w_info = w->aux;
+	  w_info = (struct ipa_dfs_info *) w->aux;
 	  w = w_info->next_cycle;
 	}
 
@@ -1142,7 +1167,7 @@ static_execute (void)
       while (w)
 	{
 	  propagate_bits (w);
-	  w_info = w->aux;
+	  w_info = (struct ipa_dfs_info *) w->aux;
 	  w = w_info->next_cycle;
 	}
     }
@@ -1159,12 +1184,12 @@ static_execute (void)
       node = order[i];
       merge_callee_local_info (node, node);
       
-      w_info = node->aux;
+      w_info = (struct ipa_dfs_info *) node->aux;
       w = w_info->next_cycle;
       while (w)
 	{
 	  merge_callee_local_info (w, w);
-	  w_info = w->aux;
+	  w_info = (struct ipa_dfs_info *) w->aux;
 	  w = w_info->next_cycle;
 	}
     }
@@ -1202,7 +1227,7 @@ static_execute (void)
 		      get_static_name (index));
 	    }
 
-	  w_info = node->aux;
+	  w_info = (struct ipa_dfs_info *) node->aux;
 	  w = w_info->next_cycle;
 	  while (w) 
 	    {
@@ -1228,7 +1253,7 @@ static_execute (void)
 		}
 	      
 
-	      w_info = w->aux;
+	      w_info = (struct ipa_dfs_info *) w->aux;
 	      w = w_info->next_cycle;
 	    }
 	  fprintf (dump_file, "\n  globals read: ");
@@ -1292,6 +1317,7 @@ static_execute (void)
 	  && (cgraph_function_body_availability (node) == AVAIL_OVERWRITABLE))
 	clean_function (node);
     }
+  return 0;
 }
 
 

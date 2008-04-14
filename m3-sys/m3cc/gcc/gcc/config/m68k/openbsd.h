@@ -1,11 +1,11 @@
 /* Configuration file for an m68k OpenBSD target.
-   Copyright (C) 1999, 2002, 2003 Free Software Foundation, Inc.
+   Copyright (C) 1999, 2002, 2003, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* Target OS builtins.  */
 #define TARGET_OS_CPP_BUILTINS()		\
@@ -34,9 +33,8 @@ Boston, MA 02110-1301, USA.  */
 #undef CPP_SPEC
 #define CPP_SPEC "%{!msoft-float:-D__HAVE_68881__ -D__HAVE_FPU__} %{posix:-D_POSIX_SOURCE} %{pthread:-D_POSIX_THREADS}"
 
-/* m68k as needs to know about the processor subtype.  */
 #undef ASM_SPEC
-#define ASM_SPEC "%{m68030} %{m68040} %{m68060} %{fpic|fpie:-k} %{fPIC|fPIE:-k -K}"
+#define ASM_SPEC "%(asm_cpu_spec) %{fpic|fpie:-k} %{fPIC|fPIE:-k -K}"
 
 #define AS_NEEDS_DASH_FOR_PIPED_INPUT
 
@@ -73,6 +71,10 @@ Boston, MA 02110-1301, USA.  */
 #define DBX_CONTIN_CHAR '?'
 
 /* Stack & calling: aggregate returns.  */
+
+/* ??? This is traditional, but quite possibly wrong.  It appears to
+   disagree with gdb.  */
+#define PCC_STATIC_STRUCT_RETURN 1
 
 /* Don't default to pcc-struct-return, because gcc is the only compiler, and
    we want to retain compatibility with older gcc versions.  */

@@ -3,12 +3,12 @@
 <title>Installing GCC: Testing</title>
 <meta http-equiv="Content-Type" content="text/html">
 <meta name="description" content="Installing GCC: Testing">
-<meta name="generator" content="makeinfo 4.8">
+<meta name="generator" content="makeinfo 4.11">
 <link title="Top" rel="top" href="#Top">
 <link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
 <!--
 Copyright (C) 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2 or
@@ -80,15 +80,18 @@ portability in the DejaGnu code.)
    <p>This will test various components of GCC, such as compiler
 front ends and runtime libraries.  While running the testsuite, DejaGnu
 might emit some harmless messages resembling
-`<samp><span class="samp">WARNING: Couldn't find the global config file.</span></samp>' or
-`<samp><span class="samp">WARNING: Couldn't find tool init file</span></samp>' that can be ignored.
+&lsquo;<samp><span class="samp">WARNING: Couldn't find the global config file.</span></samp>&rsquo; or
+&lsquo;<samp><span class="samp">WARNING: Couldn't find tool init file</span></samp>&rsquo; that can be ignored.
+
+   <p>If you are testing a cross-compiler, you may want to run the testsuite
+on a simulator as described at <a href="http://gcc.gnu.org/simtest-howto.html">http://gcc.gnu.org/simtest-howto.html</a>.
 
 <h3 class="section"><a name="TOC0"></a>0.1 How can you run the testsuite on selected tests?</h3>
 
 <p>In order to run sets of tests selectively, there are targets
-`<samp><span class="samp">make check-gcc</span></samp>' and `<samp><span class="samp">make check-g++</span></samp>'
+&lsquo;<samp><span class="samp">make check-gcc</span></samp>&rsquo; and &lsquo;<samp><span class="samp">make check-g++</span></samp>&rsquo;
 in the <samp><span class="file">gcc</span></samp> subdirectory of the object directory.  You can also
-just run `<samp><span class="samp">make check</span></samp>' in a subdirectory of the object directory.
+just run &lsquo;<samp><span class="samp">make check</span></samp>&rsquo; in a subdirectory of the object directory.
 
    <p>A more selective way to just run all <samp><span class="command">gcc</span></samp> execute tests in the
 testsuite is to use
@@ -96,7 +99,7 @@ testsuite is to use
 <pre class="smallexample">         make check-gcc RUNTESTFLAGS="execute.exp <var>other-options</var>"
 </pre>
    <p>Likewise, in order to run only the <samp><span class="command">g++</span></samp> &ldquo;old-deja&rdquo; tests in
-the testsuite with filenames matching `<samp><span class="samp">9805*</span></samp>', you would use
+the testsuite with filenames matching &lsquo;<samp><span class="samp">9805*</span></samp>&rsquo;, you would use
 
 <pre class="smallexample">         make check-g++ RUNTESTFLAGS="old-deja.exp=9805* <var>other-options</var>"
 </pre>
@@ -104,30 +107,30 @@ the testsuite with filenames matching `<samp><span class="samp">9805*</span></sa
 source, the most important ones being <samp><span class="file">compile.exp</span></samp>,
 <samp><span class="file">execute.exp</span></samp>, <samp><span class="file">dg.exp</span></samp> and <samp><span class="file">old-deja.exp</span></samp>. 
 To get a list of the possible <samp><span class="file">*.exp</span></samp> files, pipe the
-output of `<samp><span class="samp">make check</span></samp>' into a file and look at the
-`<samp><span class="samp">Running ...  .exp</span></samp>' lines.
+output of &lsquo;<samp><span class="samp">make check</span></samp>&rsquo; into a file and look at the
+&lsquo;<samp><span class="samp">Running ...  .exp</span></samp>&rsquo; lines.
 
 <h3 class="section"><a name="TOC1"></a>0.2 Passing options and running multiple testsuites</h3>
 
 <p>You can pass multiple options to the testsuite using the
-`<samp><span class="samp">--target_board</span></samp>' option of DejaGNU, either passed as part of
-`<samp><span class="samp">RUNTESTFLAGS</span></samp>', or directly to <samp><span class="command">runtest</span></samp> if you prefer to
+&lsquo;<samp><span class="samp">--target_board</span></samp>&rsquo; option of DejaGNU, either passed as part of
+&lsquo;<samp><span class="samp">RUNTESTFLAGS</span></samp>&rsquo;, or directly to <samp><span class="command">runtest</span></samp> if you prefer to
 work outside the makefiles.  For example,
 
-<pre class="smallexample">         make check-g++ RUNTESTFLAGS="--target_board=unix/-O3/-fno-strength-reduce"
+<pre class="smallexample">         make check-g++ RUNTESTFLAGS="--target_board=unix/-O3/-fmerge-constants"
 </pre>
    <p>will run the standard <samp><span class="command">g++</span></samp> testsuites (&ldquo;unix&rdquo; is the target name
 for a standard native testsuite situation), passing
-`<samp><span class="samp">-O3 -fno-strength-reduce</span></samp>' to the compiler on every test, i.e.,
+&lsquo;<samp><span class="samp">-O3 -fmerge-constants</span></samp>&rsquo; to the compiler on every test, i.e.,
 slashes separate options.
 
    <p>You can run the testsuites multiple times using combinations of options
 with a syntax similar to the brace expansion of popular shells:
 
-<pre class="smallexample">         ..."--target_board=arm-sim/{-mhard-float,-msoft-float}{-O1,-O2,-O3,}"
+<pre class="smallexample">         ..."--target_board=arm-sim\{-mhard-float,-msoft-float\}\{-O1,-O2,-O3,\}"
 </pre>
    <p>(Note the empty option caused by the trailing comma in the final group.) 
-The following will run each testsuite eight times using the `<samp><span class="samp">arm-sim</span></samp>'
+The following will run each testsuite eight times using the &lsquo;<samp><span class="samp">arm-sim</span></samp>&rsquo;
 target, as if you had specified all possible combinations yourself:
 
 <pre class="smallexample">         --target_board=arm-sim/-mhard-float/-O1
@@ -142,15 +145,15 @@ target, as if you had specified all possible combinations yourself:
    <p>They can be combined as many times as you wish, in arbitrary ways.  This
 list:
 
-<pre class="smallexample">         ..."--target_board=unix/-Wextra{-O3,-fno-strength-reduce}{-fomit-frame-pointer,}"
+<pre class="smallexample">         ..."--target_board=unix/-Wextra\{-O3,-fno-strength\}\{-fomit-frame,\}"
 </pre>
-   <p>will generate four combinations, all involving `<samp><span class="samp">-Wextra</span></samp>'.
+   <p>will generate four combinations, all involving &lsquo;<samp><span class="samp">-Wextra</span></samp>&rsquo;.
 
    <p>The disadvantage to this method is that the testsuites are run in serial,
 which is a waste on multiprocessor systems.  For users with GNU Make and
 a shell which performs brace expansion, you can run the testsuites in
 parallel by having the shell perform the combinations and <samp><span class="command">make</span></samp>
-do the parallel runs.  Instead of using `<samp><span class="samp">--target_board</span></samp>', use a
+do the parallel runs.  Instead of using &lsquo;<samp><span class="samp">--target_board</span></samp>&rsquo;, use a
 special makefile target:
 
 <pre class="smallexample">         make -j<var>N</var> check-<var>testsuite</var>//<var>test-target</var>/<var>option1</var>/<var>option2</var>/...
@@ -166,21 +169,16 @@ typing <samp><span class="command">echo</span></samp> before the example given h
 
 <h3 class="section"><a name="TOC2"></a>0.3 Additional testing for Java Class Libraries</h3>
 
-<p>The Java runtime tests can be executed via `<samp><span class="samp">make check</span></samp>'
+<p>The Java runtime tests can be executed via &lsquo;<samp><span class="samp">make check</span></samp>&rsquo;
 in the <samp><var>target</var><span class="file">/libjava/testsuite</span></samp> directory in
 the build tree.
 
-   <p>The <a href="http://sources.redhat.com/mauve/">Mauve Project</a> provides
+   <p>The <a href="http://sourceware.org/mauve/">Mauve Project</a> provides
 a suite of tests for the Java Class Libraries.  This suite can be run
 as part of libgcj testing by placing the Mauve tree within the libjava
 testsuite at <samp><span class="file">libjava/testsuite/libjava.mauve/mauve</span></samp>, or by
-specifying the location of that tree when invoking `<samp><span class="samp">make</span></samp>', as in
-`<samp><span class="samp">make MAUVEDIR=~/mauve check</span></samp>'.
-
-   <p><a href="http://sources.redhat.com/mauve/jacks.html">Jacks</a>
-is a free testsuite that tests Java compiler front ends.  This suite
-can be run as part of libgcj testing by placing the Jacks tree within
-the libjava testsuite at <samp><span class="file">libjava/testsuite/libjava.jacks/jacks</span></samp>.
+specifying the location of that tree when invoking &lsquo;<samp><span class="samp">make</span></samp>&rsquo;, as in
+&lsquo;<samp><span class="samp">make MAUVEDIR=~/mauve check</span></samp>&rsquo;.
 
 <h3 class="section"><a name="TOC3"></a>0.4 How to interpret test results</h3>
 

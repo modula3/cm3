@@ -1,5 +1,5 @@
 /* Generate attribute information (insn-attr.h) from machine description.
-   Copyright (C) 1991, 1994, 1996, 1998, 1999, 2000, 2003, 2004
+   Copyright (C) 1991, 1994, 1996, 1998, 1999, 2000, 2003, 2004, 2007
    Free Software Foundation, Inc.
    Contributed by Richard Kenner (kenner@vlsi1.ultra.nyu.edu)
 
@@ -7,7 +7,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -16,9 +16,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 
 #include "bconfig.h"
@@ -174,13 +173,8 @@ main (int argc, char **argv)
       printf ("#define CPU_UNITS_QUERY 0\n");
       printf ("#endif\n\n");
       /* Interface itself: */
-      printf ("extern int max_dfa_issue_rate;\n\n");
-      printf ("/* The following macro value is calculated from the\n");
-      printf ("   automaton based pipeline description and is equal to\n");
-      printf ("   maximal number of all insns described in constructions\n");
-      printf ("   `define_insn_reservation' which can be issued on the\n");
-      printf ("   same processor cycle. */\n");
-      printf ("#define MAX_DFA_ISSUE_RATE max_dfa_issue_rate\n\n");
+      printf ("/* Internal insn code number used by automata.  */\n");
+      printf ("extern int internal_dfa_insn_code (rtx);\n\n");
       printf ("/* Insn latency time defined in define_insn_reservation. */\n");
       printf ("extern int insn_default_latency (rtx);\n\n");
       printf ("/* Return nonzero if there is a bypass for given insn\n");
@@ -198,7 +192,7 @@ main (int argc, char **argv)
       printf ("#endif\n\n");
       printf ("/* Maximal possible number of insns waiting results being\n");
       printf ("   produced by insns whose execution is not finished. */\n");
-      printf ("extern int max_insn_queue_index;\n\n");
+      printf ("extern const int max_insn_queue_index;\n\n");
       printf ("/* Pointer to data describing current state of DFA.  */\n");
       printf ("typedef void *state_t;\n\n");
       printf ("/* Size of the data in bytes.  */\n");
@@ -250,11 +244,15 @@ main (int argc, char **argv)
       printf ("   DFA state.  */\n");
       printf ("extern int cpu_unit_reservation_p (state_t, int);\n");
       printf ("#endif\n\n");
+      printf ("/* The following function returns true if insn\n");
+      printf ("   has a dfa reservation.  */\n");
+      printf ("extern bool insn_has_dfa_reservation_p (rtx);\n\n");
       printf ("/* Clean insn code cache.  It should be called if there\n");
       printf ("   is a chance that condition value in a\n");
       printf ("   define_insn_reservation will be changed after\n");
       printf ("   last call of dfa_start.  */\n");
       printf ("extern void dfa_clean_insn_cache (void);\n\n");
+      printf ("extern void dfa_clear_single_insn_cache (rtx);\n\n");      
       printf ("/* Initiate and finish work with DFA.  They should be\n");
       printf ("   called as the first and the last interface\n");
       printf ("   functions.  */\n");
@@ -285,11 +283,4 @@ main (int argc, char **argv)
     return FATAL_EXIT_CODE;
 
   return SUCCESS_EXIT_CODE;
-}
-
-/* Define this so we can link with print-rtl.o to get debug_rtx function.  */
-const char *
-get_insn_name (int code ATTRIBUTE_UNUSED)
-{
-  return NULL;
 }

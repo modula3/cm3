@@ -41,7 +41,8 @@
 
 @copying
 Copyright @copyright{} 1988, 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
+2008 Free Software Foundation, Inc.
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.2 or
@@ -62,9 +63,10 @@ included in the section entitled ``GNU Free Documentation License''.
      funds for GNU development.
 @end copying
 @ifnottex
-@dircategory Programming
+@dircategory Software development
 @direntry
 * gcc: (gcc).                  The GNU Compiler Collection.
+* g++: (gcc).                  The GNU C++ compiler.
 @end direntry
 This file documents the use of the GNU compilers.
 @sp 1
@@ -73,15 +75,12 @@ This file documents the use of the GNU compilers.
 @end ifnottex
 
 @setchapternewpage odd
-@shorttitlepage Using the GNU Compiler Collection (GCC)
 @titlepage
-@center @titlefont{Using the GNU Compiler Collection}
-@sp 2
-@center by Richard M. Stallman and the GCC Developer Community
+@title Using the GNU Compiler Collection
+@versionsubtitle
+@author Richard M. Stallman and the @sc{GCC} Developer Community
 @page
 @vskip 0pt plus 1filll
-For GCC Version @value{version-GCC}@*
-@sp 1
 Published by:
 @multitable @columnfractions 0.5 0.5
 @item GNU Press
@@ -119,7 +118,11 @@ Printed copies are available for $45 each.
 
 This manual documents how to use the GNU compilers,
 as well as their features and incompatibilities, and how to report
-bugs.  It corresponds to GCC version @value{version-GCC}.
+bugs.  It corresponds to the compilers
+@ifset VERSION_PACKAGE
+@value{VERSION_PACKAGE}
+@end ifset
+version @value{version-GCC}.
 The internals of the GNU compilers, including how to port them to new
 targets and some information about how to write front ends for new
 languages, are documented in a separate manual.  @xref{Top,,

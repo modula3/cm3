@@ -1,11 +1,11 @@
 ;; Predicate definitions for XSTORMY16.
-;; Copyright (C) 2005 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2007 Free Software Foundation, Inc.
 ;;
 ;; This file is part of GCC.
 ;;
 ;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 ;;
 ;; GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 ;; Return 1 if OP is a shift operator.
 
@@ -143,4 +142,37 @@
   return (nonimmediate_operand (op, mode) 
 	  && ! xstormy16_extra_constraint_p (op, 'Q')
 	  && ! xstormy16_extra_constraint_p (op, 'R'));
+})
+
+(define_predicate "xstormy16_carry_plus_operand"
+  (match_code "plus")
+{
+  return (GET_CODE (XEXP (op, 1)) == CONST_INT
+	  && (INTVAL (XEXP (op, 1)) < -4 || INTVAL (XEXP (op, 1)) > 4));
+})
+
+(define_predicate "xs_hi_general_operand"
+  (match_code "const_int,reg,subreg,mem,symbol_ref,label_ref,const")
+{
+  if ((GET_CODE (op) == CONST_INT)
+       && ((INTVAL (op) >= 32768) || (INTVAL (op) < -32768)))
+    {
+      error ("constant halfword load operand out of range");
+      return false;
+    }
+    
+  return general_operand (op, mode);
+})
+
+(define_predicate "xs_hi_nonmemory_operand"
+  (match_code "const_int,reg,subreg,const")
+{
+  if ((GET_CODE (op) == CONST_INT) 
+       && ((INTVAL (op) >= 32768) || (INTVAL (op) < -32768)))
+    {
+      error ("constant arithmetic operand out of range");
+      return false;
+    }
+
+  return nonmemory_operand (op, mode);
 })

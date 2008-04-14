@@ -1,11 +1,12 @@
 /* Definitions for code generation pass of GNU compiler.
-   Copyright (C) 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007
+   Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -14,9 +15,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #ifndef GCC_OPTABS_H
 #define GCC_OPTABS_H
@@ -26,6 +26,7 @@ Boston, MA 02110-1301, USA.  */
 /* Optabs are tables saying how to generate insn bodies
    for various machine modes and numbers of operands.
    Each optab applies to one operation.
+
    For example, add_optab applies to addition.
 
    The insn_code slot is the enum insn_code that says how to
@@ -38,15 +39,17 @@ Boston, MA 02110-1301, USA.  */
    A few optabs, such as move_optab and cmp_optab, are used
    by special code.  */
 
-struct optab_handlers GTY(())
+struct optab_handlers
 {
   enum insn_code insn_code;
-  rtx libfunc;
 };
 
-struct optab GTY(())
+struct optab
 {
   enum rtx_code code;
+  const char *libcall_basename;
+  char libcall_suffix;
+  void (*libcall_gen)(struct optab *, const char *name, char suffix, enum machine_mode);
   struct optab_handlers handlers[NUM_MACHINE_MODES];
 };
 typedef struct optab * optab;
@@ -54,9 +57,13 @@ typedef struct optab * optab;
 /* A convert_optab is for some sort of conversion operation between
    modes.  The first array index is the destination mode, the second
    is the source mode.  */
-struct convert_optab GTY(())
+struct convert_optab
 {
   enum rtx_code code;
+  const char *libcall_basename;
+  void (*libcall_gen)(struct convert_optab *, const char *name,
+		      enum machine_mode,
+		      enum machine_mode);
   struct optab_handlers handlers[NUM_MACHINE_MODES][NUM_MACHINE_MODES];
 };
 typedef struct convert_optab *convert_optab;
@@ -68,6 +75,20 @@ typedef struct convert_optab *convert_optab;
 /* Enumeration of valid indexes into optab_table.  */
 enum optab_index
 {
+  /* Fixed-point operators with signed/unsigned saturation */
+  OTI_ssadd,
+  OTI_usadd,
+  OTI_sssub,
+  OTI_ussub,
+  OTI_ssmul,
+  OTI_usmul,
+  OTI_ssdiv,
+  OTI_usdiv,
+  OTI_ssneg,
+  OTI_usneg,
+  OTI_ssashl,
+  OTI_usashl,
+
   OTI_add,
   OTI_addv,
   OTI_sub,
@@ -82,6 +103,36 @@ enum optab_index
   /* Signed multiply with result one machine mode wider than args */
   OTI_smul_widen,
   OTI_umul_widen,
+  /* Widening multiply of one unsigned and one signed operand.  */
+  OTI_usmul_widen,
+  /* Signed multiply and add with the result and addend one machine mode
+     wider than the multiplicand and multiplier.  */
+  OTI_smadd_widen,
+  /* Unsigned multiply and add with the result and addend one machine mode
+     wider than the multiplicand and multiplier.  */
+  OTI_umadd_widen,
+  /* Signed multiply and add with the result and addend one machine mode
+     wider than the multiplicand and multiplier.
+     All involved operations are saturating.  */
+  OTI_ssmadd_widen,
+  /* Unigned multiply and add with the result and addend one machine mode
+     wider than the multiplicand and multiplier.
+     All involved operations are saturating.  */
+  OTI_usmadd_widen,
+  /* Signed multiply and subtract the result and minuend one machine mode
+     wider than the multiplicand and multiplier.  */
+  OTI_smsub_widen,
+  /* Unsigned multiply and subtract the result and minuend one machine mode
+     wider than the multiplicand and multiplier.  */
+  OTI_umsub_widen,
+  /* Signed multiply and subtract the result and minuend one machine mode
+     wider than the multiplicand and multiplier.
+     All involved operations are saturating.  */
+  OTI_ssmsub_widen,
+  /* Unigned multiply and subtract the result and minuend one machine mode
+     wider than the multiplicand and multiplier.
+     All involved operations are saturating.  */
+  OTI_usmsub_widen,
 
   /* Signed divide */
   OTI_sdiv,
@@ -95,7 +146,7 @@ enum optab_index
   OTI_umod,
   /* Floating point remainder functions */
   OTI_fmod,
-  OTI_drem,
+  OTI_remainder,
   /* Convert float to integer in float fmt */
   OTI_ftrunc,
 
@@ -135,6 +186,8 @@ enum optab_index
   OTI_movstrict,
   /* Move, with a misaligned memory.  */
   OTI_movmisalign,
+  /* Nontemporal store.  */
+  OTI_storent,
 
   /* Unary operations */
   /* Negation */
@@ -143,6 +196,8 @@ enum optab_index
   /* Abs value */
   OTI_abs,
   OTI_absv,
+  /* Byteswap */
+  OTI_bswap,
   /* Bitwise not */
   OTI_one_cmpl,
   /* Bit scanning and counting */
@@ -173,6 +228,8 @@ enum optab_index
   OTI_expm1,
   /* Load exponent of a floating point number */
   OTI_ldexp,
+  /* Multiply floating-point number by integral power of radix */
+  OTI_scalb,
   /* Radix-independent exponent */
   OTI_logb,
   OTI_ilogb,
@@ -186,20 +243,21 @@ enum optab_index
   OTI_log1p,
   /* Rounding functions */
   OTI_floor,
-  OTI_lfloor,
   OTI_ceil,
-  OTI_lceil,
   OTI_btrunc,
   OTI_round,
   OTI_nearbyint,
   OTI_rint,
-  OTI_lrint,
   /* Tangent */
   OTI_tan,
   /* Inverse tangent */
   OTI_atan,
   /* Copy sign */
   OTI_copysign,
+  /* Signbit */
+  OTI_signbit,
+  /* Test for infinite value */
+  OTI_isinf,
 
   /* Compare insn; two operands.  */
   OTI_cmp,
@@ -239,10 +297,24 @@ enum optab_index
   OTI_reduc_splus,
   OTI_reduc_uplus,
 
+  /* Summation, with result machine mode one or more wider than args.  */
+  OTI_ssum_widen,
+  OTI_usum_widen,
+
+  /* Dot product, with result machine mode one or more wider than args.  */
+  OTI_sdot_prod,
+  OTI_udot_prod,
+
   /* Set specified field of vector operand.  */
   OTI_vec_set,
   /* Extract specified field of vector operand.  */
   OTI_vec_extract,
+  /* Extract even/odd fields of vector operands.  */
+  OTI_vec_extract_even,
+  OTI_vec_extract_odd,
+  /* Interleave fields of vector operands.  */
+  OTI_vec_interleave_high,
+  OTI_vec_interleave_low,
   /* Initialize vector operand.  */
   OTI_vec_init,
   /* Whole vector shift. The shift amount is in bits.  */
@@ -250,6 +322,37 @@ enum optab_index
   OTI_vec_shr,
   /* Extract specified elements from vectors, for vector load.  */
   OTI_vec_realign_load,
+  /* Widening multiplication.  
+     The high/low part of the resulting vector of products is returned.  */
+  OTI_vec_widen_umult_hi,
+  OTI_vec_widen_umult_lo,
+  OTI_vec_widen_smult_hi,
+  OTI_vec_widen_smult_lo,
+  /* Extract and widen the high/low part of a vector of signed or
+     floating point elements.  */
+  OTI_vec_unpacks_hi,
+  OTI_vec_unpacks_lo,
+  /* Extract and widen the high/low part of a vector of unsigned
+     elements.  */
+  OTI_vec_unpacku_hi,
+  OTI_vec_unpacku_lo,
+
+  /* Extract, convert to floating point and widen the high/low part of
+     a vector of signed or unsigned integer elements.  */
+  OTI_vec_unpacks_float_hi,
+  OTI_vec_unpacks_float_lo,
+  OTI_vec_unpacku_float_hi,
+  OTI_vec_unpacku_float_lo,
+
+  /* Narrow (demote) and merge the elements of two vectors.  */
+  OTI_vec_pack_trunc,
+  OTI_vec_pack_usat,
+  OTI_vec_pack_ssat,
+
+  /* Convert to signed/unsigned integer, narrow and merge elements
+     of two vectors of floating point elements.  */
+  OTI_vec_pack_sfix_trunc,
+  OTI_vec_pack_ufix_trunc,
 
   /* Perform a raise to the power of integer.  */
   OTI_powi,
@@ -257,122 +360,172 @@ enum optab_index
   OTI_MAX
 };
 
-extern GTY(()) optab optab_table[OTI_MAX];
+extern struct optab optab_table[OTI_MAX];
 
-#define add_optab (optab_table[OTI_add])
-#define sub_optab (optab_table[OTI_sub])
-#define smul_optab (optab_table[OTI_smul])
-#define addv_optab (optab_table[OTI_addv])
-#define subv_optab (optab_table[OTI_subv])
-#define smul_highpart_optab (optab_table[OTI_smul_highpart])
-#define umul_highpart_optab (optab_table[OTI_umul_highpart])
-#define smul_widen_optab (optab_table[OTI_smul_widen])
-#define umul_widen_optab (optab_table[OTI_umul_widen])
-#define sdiv_optab (optab_table[OTI_sdiv])
-#define smulv_optab (optab_table[OTI_smulv])
-#define sdivv_optab (optab_table[OTI_sdivv])
-#define sdivmod_optab (optab_table[OTI_sdivmod])
-#define udiv_optab (optab_table[OTI_udiv])
-#define udivmod_optab (optab_table[OTI_udivmod])
-#define smod_optab (optab_table[OTI_smod])
-#define umod_optab (optab_table[OTI_umod])
-#define fmod_optab (optab_table[OTI_fmod])
-#define drem_optab (optab_table[OTI_drem])
-#define ftrunc_optab (optab_table[OTI_ftrunc])
-#define and_optab (optab_table[OTI_and])
-#define ior_optab (optab_table[OTI_ior])
-#define xor_optab (optab_table[OTI_xor])
-#define ashl_optab (optab_table[OTI_ashl])
-#define lshr_optab (optab_table[OTI_lshr])
-#define ashr_optab (optab_table[OTI_ashr])
-#define rotl_optab (optab_table[OTI_rotl])
-#define rotr_optab (optab_table[OTI_rotr])
-#define smin_optab (optab_table[OTI_smin])
-#define smax_optab (optab_table[OTI_smax])
-#define umin_optab (optab_table[OTI_umin])
-#define umax_optab (optab_table[OTI_umax])
-#define pow_optab (optab_table[OTI_pow])
-#define atan2_optab (optab_table[OTI_atan2])
+#define ssadd_optab (&optab_table[OTI_ssadd])
+#define usadd_optab (&optab_table[OTI_usadd])
+#define sssub_optab (&optab_table[OTI_sssub])
+#define ussub_optab (&optab_table[OTI_ussub])
+#define ssmul_optab (&optab_table[OTI_ssmul])
+#define usmul_optab (&optab_table[OTI_usmul])
+#define ssdiv_optab (&optab_table[OTI_ssdiv])
+#define usdiv_optab (&optab_table[OTI_usdiv])
+#define ssneg_optab (&optab_table[OTI_ssneg])
+#define usneg_optab (&optab_table[OTI_usneg])
+#define ssashl_optab (&optab_table[OTI_ssashl])
+#define usashl_optab (&optab_table[OTI_usashl])
 
-#define mov_optab (optab_table[OTI_mov])
-#define movstrict_optab (optab_table[OTI_movstrict])
-#define movmisalign_optab (optab_table[OTI_movmisalign])
+#define add_optab (&optab_table[OTI_add])
+#define sub_optab (&optab_table[OTI_sub])
+#define smul_optab (&optab_table[OTI_smul])
+#define addv_optab (&optab_table[OTI_addv])
+#define subv_optab (&optab_table[OTI_subv])
+#define smul_highpart_optab (&optab_table[OTI_smul_highpart])
+#define umul_highpart_optab (&optab_table[OTI_umul_highpart])
+#define smul_widen_optab (&optab_table[OTI_smul_widen])
+#define umul_widen_optab (&optab_table[OTI_umul_widen])
+#define usmul_widen_optab (&optab_table[OTI_usmul_widen])
+#define smadd_widen_optab (&optab_table[OTI_smadd_widen])
+#define umadd_widen_optab (&optab_table[OTI_umadd_widen])
+#define ssmadd_widen_optab (&optab_table[OTI_ssmadd_widen])
+#define usmadd_widen_optab (&optab_table[OTI_usmadd_widen])
+#define smsub_widen_optab (&optab_table[OTI_smsub_widen])
+#define umsub_widen_optab (&optab_table[OTI_umsub_widen])
+#define ssmsub_widen_optab (&optab_table[OTI_ssmsub_widen])
+#define usmsub_widen_optab (&optab_table[OTI_usmsub_widen])
+#define sdiv_optab (&optab_table[OTI_sdiv])
+#define smulv_optab (&optab_table[OTI_smulv])
+#define sdivv_optab (&optab_table[OTI_sdivv])
+#define sdivmod_optab (&optab_table[OTI_sdivmod])
+#define udiv_optab (&optab_table[OTI_udiv])
+#define udivmod_optab (&optab_table[OTI_udivmod])
+#define smod_optab (&optab_table[OTI_smod])
+#define umod_optab (&optab_table[OTI_umod])
+#define fmod_optab (&optab_table[OTI_fmod])
+#define remainder_optab (&optab_table[OTI_remainder])
+#define ftrunc_optab (&optab_table[OTI_ftrunc])
+#define and_optab (&optab_table[OTI_and])
+#define ior_optab (&optab_table[OTI_ior])
+#define xor_optab (&optab_table[OTI_xor])
+#define ashl_optab (&optab_table[OTI_ashl])
+#define lshr_optab (&optab_table[OTI_lshr])
+#define ashr_optab (&optab_table[OTI_ashr])
+#define rotl_optab (&optab_table[OTI_rotl])
+#define rotr_optab (&optab_table[OTI_rotr])
+#define smin_optab (&optab_table[OTI_smin])
+#define smax_optab (&optab_table[OTI_smax])
+#define umin_optab (&optab_table[OTI_umin])
+#define umax_optab (&optab_table[OTI_umax])
+#define pow_optab (&optab_table[OTI_pow])
+#define atan2_optab (&optab_table[OTI_atan2])
 
-#define neg_optab (optab_table[OTI_neg])
-#define negv_optab (optab_table[OTI_negv])
-#define abs_optab (optab_table[OTI_abs])
-#define absv_optab (optab_table[OTI_absv])
-#define one_cmpl_optab (optab_table[OTI_one_cmpl])
-#define ffs_optab (optab_table[OTI_ffs])
-#define clz_optab (optab_table[OTI_clz])
-#define ctz_optab (optab_table[OTI_ctz])
-#define popcount_optab (optab_table[OTI_popcount])
-#define parity_optab (optab_table[OTI_parity])
-#define sqrt_optab (optab_table[OTI_sqrt])
-#define sincos_optab (optab_table[OTI_sincos])
-#define sin_optab (optab_table[OTI_sin])
-#define asin_optab (optab_table[OTI_asin])
-#define cos_optab (optab_table[OTI_cos])
-#define acos_optab (optab_table[OTI_acos])
-#define exp_optab (optab_table[OTI_exp])
-#define exp10_optab (optab_table[OTI_exp10])
-#define exp2_optab (optab_table[OTI_exp2])
-#define expm1_optab (optab_table[OTI_expm1])
-#define ldexp_optab (optab_table[OTI_ldexp])
-#define logb_optab (optab_table[OTI_logb])
-#define ilogb_optab (optab_table[OTI_ilogb])
-#define log_optab (optab_table[OTI_log])
-#define log10_optab (optab_table[OTI_log10])
-#define log2_optab (optab_table[OTI_log2])
-#define log1p_optab (optab_table[OTI_log1p])
-#define floor_optab (optab_table[OTI_floor])
-#define lfloor_optab (optab_table[OTI_lfloor])
-#define ceil_optab (optab_table[OTI_ceil])
-#define lceil_optab (optab_table[OTI_lceil])
-#define btrunc_optab (optab_table[OTI_btrunc])
-#define round_optab (optab_table[OTI_round])
-#define nearbyint_optab (optab_table[OTI_nearbyint])
-#define rint_optab (optab_table[OTI_rint])
-#define lrint_optab (optab_table[OTI_lrint])
-#define tan_optab (optab_table[OTI_tan])
-#define atan_optab (optab_table[OTI_atan])
-#define copysign_optab (optab_table[OTI_copysign])
+#define mov_optab (&optab_table[OTI_mov])
+#define movstrict_optab (&optab_table[OTI_movstrict])
+#define movmisalign_optab (&optab_table[OTI_movmisalign])
+#define storent_optab (&optab_table[OTI_storent])
 
-#define cmp_optab (optab_table[OTI_cmp])
-#define ucmp_optab (optab_table[OTI_ucmp])
-#define tst_optab (optab_table[OTI_tst])
+#define neg_optab (&optab_table[OTI_neg])
+#define negv_optab (&optab_table[OTI_negv])
+#define abs_optab (&optab_table[OTI_abs])
+#define absv_optab (&optab_table[OTI_absv])
+#define one_cmpl_optab (&optab_table[OTI_one_cmpl])
+#define bswap_optab (&optab_table[OTI_bswap])
+#define ffs_optab (&optab_table[OTI_ffs])
+#define clz_optab (&optab_table[OTI_clz])
+#define ctz_optab (&optab_table[OTI_ctz])
+#define popcount_optab (&optab_table[OTI_popcount])
+#define parity_optab (&optab_table[OTI_parity])
+#define sqrt_optab (&optab_table[OTI_sqrt])
+#define sincos_optab (&optab_table[OTI_sincos])
+#define sin_optab (&optab_table[OTI_sin])
+#define asin_optab (&optab_table[OTI_asin])
+#define cos_optab (&optab_table[OTI_cos])
+#define acos_optab (&optab_table[OTI_acos])
+#define exp_optab (&optab_table[OTI_exp])
+#define exp10_optab (&optab_table[OTI_exp10])
+#define exp2_optab (&optab_table[OTI_exp2])
+#define expm1_optab (&optab_table[OTI_expm1])
+#define ldexp_optab (&optab_table[OTI_ldexp])
+#define scalb_optab (&optab_table[OTI_scalb])
+#define logb_optab (&optab_table[OTI_logb])
+#define ilogb_optab (&optab_table[OTI_ilogb])
+#define log_optab (&optab_table[OTI_log])
+#define log10_optab (&optab_table[OTI_log10])
+#define log2_optab (&optab_table[OTI_log2])
+#define log1p_optab (&optab_table[OTI_log1p])
+#define floor_optab (&optab_table[OTI_floor])
+#define ceil_optab (&optab_table[OTI_ceil])
+#define btrunc_optab (&optab_table[OTI_btrunc])
+#define round_optab (&optab_table[OTI_round])
+#define nearbyint_optab (&optab_table[OTI_nearbyint])
+#define rint_optab (&optab_table[OTI_rint])
+#define tan_optab (&optab_table[OTI_tan])
+#define atan_optab (&optab_table[OTI_atan])
+#define copysign_optab (&optab_table[OTI_copysign])
+#define signbit_optab (&optab_table[OTI_signbit])
+#define isinf_optab (&optab_table[OTI_isinf])
 
-#define eq_optab (optab_table[OTI_eq])
-#define ne_optab (optab_table[OTI_ne])
-#define gt_optab (optab_table[OTI_gt])
-#define ge_optab (optab_table[OTI_ge])
-#define lt_optab (optab_table[OTI_lt])
-#define le_optab (optab_table[OTI_le])
-#define unord_optab (optab_table[OTI_unord])
+#define cmp_optab (&optab_table[OTI_cmp])
+#define ucmp_optab (&optab_table[OTI_ucmp])
+#define tst_optab (&optab_table[OTI_tst])
 
-#define strlen_optab (optab_table[OTI_strlen])
+#define eq_optab (&optab_table[OTI_eq])
+#define ne_optab (&optab_table[OTI_ne])
+#define gt_optab (&optab_table[OTI_gt])
+#define ge_optab (&optab_table[OTI_ge])
+#define lt_optab (&optab_table[OTI_lt])
+#define le_optab (&optab_table[OTI_le])
+#define unord_optab (&optab_table[OTI_unord])
 
-#define cbranch_optab (optab_table[OTI_cbranch])
-#define cmov_optab (optab_table[OTI_cmov])
-#define cstore_optab (optab_table[OTI_cstore])
-#define push_optab (optab_table[OTI_push])
-#define addcc_optab (optab_table[OTI_addcc])
+#define strlen_optab (&optab_table[OTI_strlen])
 
-#define reduc_smax_optab (optab_table[OTI_reduc_smax])
-#define reduc_umax_optab (optab_table[OTI_reduc_umax])
-#define reduc_smin_optab (optab_table[OTI_reduc_smin])
-#define reduc_umin_optab (optab_table[OTI_reduc_umin])
-#define reduc_splus_optab (optab_table[OTI_reduc_splus])
-#define reduc_uplus_optab (optab_table[OTI_reduc_uplus])
+#define cbranch_optab (&optab_table[OTI_cbranch])
+#define cmov_optab (&optab_table[OTI_cmov])
+#define cstore_optab (&optab_table[OTI_cstore])
+#define push_optab (&optab_table[OTI_push])
+#define addcc_optab (&optab_table[OTI_addcc])
 
-#define vec_set_optab (optab_table[OTI_vec_set])
-#define vec_extract_optab (optab_table[OTI_vec_extract])
-#define vec_init_optab (optab_table[OTI_vec_init])
-#define vec_shl_optab (optab_table[OTI_vec_shl])
-#define vec_shr_optab (optab_table[OTI_vec_shr])
-#define vec_realign_load_optab (optab_table[OTI_vec_realign_load])
+#define reduc_smax_optab (&optab_table[OTI_reduc_smax])
+#define reduc_umax_optab (&optab_table[OTI_reduc_umax])
+#define reduc_smin_optab (&optab_table[OTI_reduc_smin])
+#define reduc_umin_optab (&optab_table[OTI_reduc_umin])
+#define reduc_splus_optab (&optab_table[OTI_reduc_splus])
+#define reduc_uplus_optab (&optab_table[OTI_reduc_uplus])
 
-#define powi_optab (optab_table[OTI_powi])
+#define ssum_widen_optab (&optab_table[OTI_ssum_widen])
+#define usum_widen_optab (&optab_table[OTI_usum_widen])
+#define sdot_prod_optab (&optab_table[OTI_sdot_prod])
+#define udot_prod_optab (&optab_table[OTI_udot_prod])
+
+#define vec_set_optab (&optab_table[OTI_vec_set])
+#define vec_extract_optab (&optab_table[OTI_vec_extract])
+#define vec_extract_even_optab (&optab_table[OTI_vec_extract_even])
+#define vec_extract_odd_optab (&optab_table[OTI_vec_extract_odd])
+#define vec_interleave_high_optab (&optab_table[OTI_vec_interleave_high])
+#define vec_interleave_low_optab (&optab_table[OTI_vec_interleave_low])
+#define vec_init_optab (&optab_table[OTI_vec_init])
+#define vec_shl_optab (&optab_table[OTI_vec_shl])
+#define vec_shr_optab (&optab_table[OTI_vec_shr])
+#define vec_realign_load_optab (&optab_table[OTI_vec_realign_load])
+#define vec_widen_umult_hi_optab (&optab_table[OTI_vec_widen_umult_hi])
+#define vec_widen_umult_lo_optab (&optab_table[OTI_vec_widen_umult_lo])
+#define vec_widen_smult_hi_optab (&optab_table[OTI_vec_widen_smult_hi])
+#define vec_widen_smult_lo_optab (&optab_table[OTI_vec_widen_smult_lo])
+#define vec_unpacks_hi_optab (&optab_table[OTI_vec_unpacks_hi])
+#define vec_unpacks_lo_optab (&optab_table[OTI_vec_unpacks_lo])
+#define vec_unpacku_hi_optab (&optab_table[OTI_vec_unpacku_hi])
+#define vec_unpacku_lo_optab (&optab_table[OTI_vec_unpacku_lo])
+#define vec_unpacks_float_hi_optab (&optab_table[OTI_vec_unpacks_float_hi])
+#define vec_unpacks_float_lo_optab (&optab_table[OTI_vec_unpacks_float_lo])
+#define vec_unpacku_float_hi_optab (&optab_table[OTI_vec_unpacku_float_hi])
+#define vec_unpacku_float_lo_optab (&optab_table[OTI_vec_unpacku_float_lo])
+#define vec_pack_trunc_optab (&optab_table[OTI_vec_pack_trunc])
+#define vec_pack_ssat_optab (&optab_table[OTI_vec_pack_ssat])
+#define vec_pack_usat_optab (&optab_table[OTI_vec_pack_usat])
+#define vec_pack_sfix_trunc_optab (&optab_table[OTI_vec_pack_sfix_trunc])
+#define vec_pack_ufix_trunc_optab (&optab_table[OTI_vec_pack_ufix_trunc])
+
+#define powi_optab (&optab_table[OTI_powi])
 
 /* Conversion optabs have their own table and indexes.  */
 enum convert_optab_index
@@ -390,20 +543,38 @@ enum convert_optab_index
   COI_sfloat,
   COI_ufloat,
 
+  COI_lrint,
+  COI_lround,
+  COI_lfloor,
+  COI_lceil,
+
+  COI_fract,
+  COI_fractuns,
+  COI_satfract,
+  COI_satfractuns,
+
   COI_MAX
 };
 
-extern GTY(()) convert_optab convert_optab_table[COI_MAX];
+extern struct convert_optab convert_optab_table[COI_MAX];
 
-#define sext_optab (convert_optab_table[COI_sext])
-#define zext_optab (convert_optab_table[COI_zext])
-#define trunc_optab (convert_optab_table[COI_trunc])
-#define sfix_optab (convert_optab_table[COI_sfix])
-#define ufix_optab (convert_optab_table[COI_ufix])
-#define sfixtrunc_optab (convert_optab_table[COI_sfixtrunc])
-#define ufixtrunc_optab (convert_optab_table[COI_ufixtrunc])
-#define sfloat_optab (convert_optab_table[COI_sfloat])
-#define ufloat_optab (convert_optab_table[COI_ufloat])
+#define sext_optab (&convert_optab_table[COI_sext])
+#define zext_optab (&convert_optab_table[COI_zext])
+#define trunc_optab (&convert_optab_table[COI_trunc])
+#define sfix_optab (&convert_optab_table[COI_sfix])
+#define ufix_optab (&convert_optab_table[COI_ufix])
+#define sfixtrunc_optab (&convert_optab_table[COI_sfixtrunc])
+#define ufixtrunc_optab (&convert_optab_table[COI_ufixtrunc])
+#define sfloat_optab (&convert_optab_table[COI_sfloat])
+#define ufloat_optab (&convert_optab_table[COI_ufloat])
+#define lrint_optab (&convert_optab_table[COI_lrint])
+#define lround_optab (&convert_optab_table[COI_lround])
+#define lfloor_optab (&convert_optab_table[COI_lfloor])
+#define lceil_optab (&convert_optab_table[COI_lceil])
+#define fract_optab (&convert_optab_table[COI_fract])
+#define fractuns_optab (&convert_optab_table[COI_fractuns])
+#define satfract_optab (&convert_optab_table[COI_satfract])
+#define satfractuns_optab (&convert_optab_table[COI_satfractuns])
 
 /* These arrays record the insn_code of insns that may be needed to
    perform input and output reloads of special objects.  They provide a
@@ -412,7 +583,7 @@ extern enum insn_code reload_in_optab[NUM_MACHINE_MODES];
 extern enum insn_code reload_out_optab[NUM_MACHINE_MODES];
 
 /* Contains the optab used for each rtx code.  */
-extern GTY(()) optab code_to_optab[NUM_RTX_CODE + 1];
+extern optab code_to_optab[NUM_RTX_CODE + 1];
 
 
 typedef rtx (*rtxfun) (rtx);
@@ -492,6 +663,9 @@ extern enum insn_code sync_lock_release[NUM_MACHINE_MODES];
 
 /* Define functions given in optabs.c.  */
 
+extern rtx expand_widen_pattern_expr (tree exp, rtx op0, rtx op1, rtx wide_op,
+                                      rtx target, int unsignedp);
+
 extern rtx expand_ternary_op (enum machine_mode mode, optab ternary_optab,
 			      rtx op0, rtx op1, rtx op2, rtx target,
 			      int unsignedp);
@@ -532,6 +706,10 @@ extern rtx expand_copysign (rtx, rtx, rtx);
    an input.  */
 extern void emit_unop_insn (int, rtx, rtx, enum rtx_code);
 
+/* Excapsulate the block in REG_LIBCALL, and REG_RETVAL reg notes and add 
+   REG_LIBCALL_ID notes to all insns in block.  */
+extern void maybe_encapsulate_block (rtx, rtx, rtx);
+
 /* Emit code to perform a series of operations on a multi-word quantity, one
    word at a time.  */
 extern rtx emit_no_conflict_block (rtx, rtx, rtx, rtx, rtx);
@@ -551,7 +729,7 @@ enum can_compare_purpose
 
 /* Return the optab used for computing the given operation on the type
    given by the second argument.  */
-extern optab optab_for_tree_code (enum tree_code, tree);
+extern optab optab_for_tree_code (enum tree_code, const_tree);
 
 /* Nonzero if a compare of mode MODE can be done straightforwardly
    (without splitting it into pieces).  */
@@ -571,11 +749,17 @@ extern void set_optab_libfunc (optab, enum machine_mode, const char *);
 extern void set_conv_libfunc (convert_optab, enum machine_mode,
 			      enum machine_mode, const char *);
 
+/* Generate code for a FIXED_CONVERT_EXPR.  */
+extern void expand_fixed_convert (rtx, rtx, int, int);
+
 /* Generate code for a FLOAT_EXPR.  */
 extern void expand_float (rtx, rtx, int);
 
 /* Generate code for a FIX_EXPR.  */
 extern void expand_fix (rtx, rtx, int);
+
+/* Generate code for float to integral conversion.  */
+extern bool expand_sfix_optab (rtx, rtx, convert_optab);
 
 /* Return tree if target supports vector operations for COND_EXPR.  */
 bool expand_vec_cond_expr_p (tree, enum machine_mode);
@@ -586,4 +770,12 @@ extern rtx expand_vec_cond_expr (tree, rtx);
 /* Generate code for VEC_LSHIFT_EXPR and VEC_RSHIFT_EXPR.  */
 extern rtx expand_vec_shift_expr (tree, rtx);
 
+#define optab_handler(optab,mode) (&(optab)->handlers[(int) (mode)])
+#define convert_optab_handler(optab,mode,mode2) \
+	(&(optab)->handlers[(int) (mode)][(int) (mode2)])
+
+extern rtx optab_libfunc (optab optab, enum machine_mode mode);
+extern rtx optab_libfunc (optab optab, enum machine_mode mode);
+extern rtx convert_optab_libfunc (convert_optab optab, enum machine_mode mode1,
+			          enum machine_mode mode2);
 #endif /* GCC_OPTABS_H */

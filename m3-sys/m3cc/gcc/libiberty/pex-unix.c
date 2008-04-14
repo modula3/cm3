@@ -269,14 +269,16 @@ static void pex_child_error (struct pex_obj *, const char *, const char *, int)
      ATTRIBUTE_NORETURN;
 static int pex_unix_open_read (struct pex_obj *, const char *, int);
 static int pex_unix_open_write (struct pex_obj *, const char *, int);
-static long pex_unix_exec_child (struct pex_obj *, int, const char *,
-				 char * const *, int, int, int,
+static pid_t pex_unix_exec_child (struct pex_obj *, int, const char *,
+				 char * const *, char * const *,
+				 int, int, int, int,
 				 const char **, int *);
 static int pex_unix_close (struct pex_obj *, int);
-static int pex_unix_wait (struct pex_obj *, long, int *, struct pex_time *,
+static int pex_unix_wait (struct pex_obj *, pid_t, int *, struct pex_time *,
 			  int, const char **, int *);
 static int pex_unix_pipe (struct pex_obj *, int *, int);
 static FILE *pex_unix_fdopenr (struct pex_obj *, int, int);
+static FILE *pex_unix_fdopenw (struct pex_obj *, int, int);
 static void pex_unix_cleanup (struct pex_obj *);
 
 /* The list of functions we pass to the common routines.  */
@@ -290,6 +292,7 @@ const struct pex_funcs funcs =
   pex_unix_wait,
   pex_unix_pipe,
   pex_unix_fdopenr,
+  pex_unix_fdopenw,
   pex_unix_cleanup
 };
 
@@ -336,7 +339,7 @@ static void
 pex_child_error (struct pex_obj *obj, const char *executable,
 		 const char *errmsg, int err)
 {
-#define writeerr(s) write (STDERR_FILE_NO, s, strlen (s))
+#define writeerr(s) (void) write (STDERR_FILE_NO, s, strlen (s))
   writeerr (obj->pname);
   writeerr (": error trying to exec '");
   writeerr (executable);
@@ -350,12 +353,16 @@ pex_child_error (struct pex_obj *obj, const char *executable,
 
 /* Execute a child.  */
 
-static long
+extern char **environ;
+
+static pid_t
 pex_unix_exec_child (struct pex_obj *obj, int flags, const char *executable,
-		     char * const * argv, int in, int out, int errdes,
-		     const char **errmsg, int *err)
+		     char * const * argv, char * const * env,
+                     int in, int out, int errdes,
+		     int toclose, const char **errmsg, int *err)
 {
   pid_t pid;
+
   /* We declare these to be volatile to avoid warnings from gcc about
      them being clobbered by vfork.  */
   volatile int sleep_interval;
@@ -377,7 +384,7 @@ pex_unix_exec_child (struct pex_obj *obj, int flags, const char *executable,
     case -1:
       *err = errno;
       *errmsg = VFORK_STRING;
-      return -1;
+      return (pid_t) -1;
 
     case 0:
       /* Child process.  */
@@ -402,11 +409,20 @@ pex_unix_exec_child (struct pex_obj *obj, int flags, const char *executable,
 	  if (close (errdes) < 0)
 	    pex_child_error (obj, executable, "close", errno);
 	}
+      if (toclose >= 0)
+	{
+	  if (close (toclose) < 0)
+	    pex_child_error (obj, executable, "close", errno);
+	}
       if ((flags & PEX_STDERR_TO_STDOUT) != 0)
 	{
 	  if (dup2 (STDOUT_FILE_NO, STDERR_FILE_NO) < 0)
 	    pex_child_error (obj, executable, "dup2", errno);
 	}
+
+      if (env)
+        environ = (char**) env;
+
       if ((flags & PEX_SEARCH) != 0)
 	{
 	  execvp (executable, argv);
@@ -419,7 +435,7 @@ pex_unix_exec_child (struct pex_obj *obj, int flags, const char *executable,
 	}
 
       /* NOTREACHED */
-      return -1;
+      return (pid_t) -1;
 
     default:
       /* Parent process.  */
@@ -429,7 +445,7 @@ pex_unix_exec_child (struct pex_obj *obj, int flags, const char *executable,
 	    {
 	      *err = errno;
 	      *errmsg = "close";
-	      return -1;
+	      return (pid_t) -1;
 	    }
 	}
       if (out != STDOUT_FILE_NO)
@@ -438,7 +454,7 @@ pex_unix_exec_child (struct pex_obj *obj, int flags, const char *executable,
 	    {
 	      *err = errno;
 	      *errmsg = "close";
-	      return -1;
+	      return (pid_t) -1;
 	    }
 	}
       if (errdes != STDERR_FILE_NO)
@@ -447,18 +463,18 @@ pex_unix_exec_child (struct pex_obj *obj, int flags, const char *executable,
 	    {
 	      *err = errno;
 	      *errmsg = "close";
-	      return -1;
+	      return (pid_t) -1;
 	    }
 	}
 
-      return (long) pid;
+      return pid;
     }
 }
 
 /* Wait for a child process to complete.  */
 
 static int
-pex_unix_wait (struct pex_obj *obj, long pid, int *status,
+pex_unix_wait (struct pex_obj *obj, pid_t pid, int *status,
 	       struct pex_time *time, int done, const char **errmsg,
 	       int *err)
 {
@@ -493,6 +509,15 @@ pex_unix_fdopenr (struct pex_obj *obj ATTRIBUTE_UNUSED, int fd,
 		  int binary ATTRIBUTE_UNUSED)
 {
   return fdopen (fd, "r");
+}
+
+static FILE *
+pex_unix_fdopenw (struct pex_obj *obj ATTRIBUTE_UNUSED, int fd,
+		  int binary ATTRIBUTE_UNUSED)
+{
+  if (fcntl (fd, F_SETFD, FD_CLOEXEC) < 0)
+    return NULL;
+  return fdopen (fd, "w");
 }
 
 static void

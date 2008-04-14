@@ -1,20 +1,163 @@
-2006-05-24  Release Manager
+2008-03-05  Release Manager
 
-	* GCC 4.1.1 released.
+	* GCC 4.3.0 released.
 
-2006-04-20  Volker Reichelt  <reichelt@igpm.rwth-aachen.de>
+2008-03-02  Jakub Jelinek  <jakub@redhat.com>
+
+	* mf-runtime.c (__mf_usage): Update copyright notice dates.
+
+2008-02-28  Uros Bizjak  <ubizjak@gmail.com>
+
+	* testsuite/libmudflap.c/fail8-frag.c: Adjust scan pattern for
+	mudflap dead object.
+	* testsuite/libmudflap.c/fail9-frag.c: Ditto.
+
+2008-01-24  David Edelsohn  <edelsohn@gnu.org>
+
+	* configure: Regenerate.
+
+2008-01-05  Jakub Jelinek  <jakub@redhat.com>
+
+	PR tree-optimization/34618
+	* testsuite/libmudflap.c/pass62-frag.c: New test.
+
+2008-01-03  Jakub Jelinek  <jakub@redhat.com>
+
+	PR c++/34619
+	* testsuite/libmudflap.c++/pass61-frag.cxx: New test.
+
+2008-01-01  Volker Reichelt  <v.reichelt@netcologne.de>
+
+	PR libmudflap/26442
+	* testsuite/libmudflap.c++/pass60-frag.cxx: New test.
+
+2007-10-15  Maciej W. Rozycki  <macro@linux-mips.org>
+
+	* configure: Regenerate following changes to ../config/tls.m4.
+
+2007-07-26  Tom Tromey  <tromey@redhat.com>
+
+	* Makefile.in: Rebuilt.
+	* Makefile.am (clean-local): Removed.
+	(pth/mf-runtime.lo, pth/mf-heuristics.lo, pth/mf-hooks1.lo,
+	pth/mf-hooks2.lo, pth/mf-hooks3.lo): Likewise.
+	(libmudflapth_la_SOURCES): List sources.
+	(libmudflapth_la_LIBADD): Clear.
+	(libmudflapth_la_CFLAGS): New variable.
+
+2007-07-05  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* aclocal.m4: Regenerated.
+
+2007-06-02  Paolo Bonzini  <bonzini@gnu.org>
+
+	* configure: Regenerate.
+
+2007-05-31  Frank Ch. Eigler  <fche@redhat.com>
+
+	From Andi Kleen <ak@suse.de>:
+	* mf-runtime.c (options): Rename structure for compatibility with
+	glibc getopt_long.
+
+2007-05-23  Steve Ellcey  <sje@cup.hp.com>
+
+	* Makefile.in: Regenerate.
+	* configure: Regenerate.
+	* aclocal.m4: Regenerate.
+	* testsuite/Makefile.in: Regenerate.
+
+2007-03-14  Uros Bizjak  <ubizjak@gmail.com>
+
+	* testsuite/libmudflap.cth/pass59-frag.c (main): Fix casting of arg.
+
+2007-03-01  Brooks Moses  <brooks.moses@codesourcery.com>
+
+	* Makefile.am: Add dummy install-pdf target.
+	* Makefile.in: Regenerate
+
+2007-02-07  Jakub Jelinek  <jakub@redhat.com>
+
+	PR libgomp/28468
+	* configure: Regenerate.
+
+2006-12-04  Eric Botcazou  <ebotcazou@libertysurf.fr>
+
+	* configure: Regenerate.
+
+2006-11-13  Daniel Jacobowitz  <dan@codesourcery.com>
+
+	* configure: Regenerated.
+
+2006-11-10  Frank Ch. Eigler  <fche@redhat.com>
+
+	PR libmudflap/28578
+	* mf-hooks1.c (__mf_0fn_malloc): Make the bootstrap buffers
+	static but not function scope static.
+	(free): Skip deallocation attempts for objects placed into
+	bootstrap buffers.
+	* testsuite/libmudflap.cth/pass59-frag.c: New test.
+
+2006-11-06  Frank Ch. Eigler  <fche@redhat.com>
+
+	From Herman ten Brugge <hermantenbrugge@home.nl>:
+	* mf-runtime.c (__mf_uncache_object): Optimize the code so that
+	small and large objects are handled a lot faster.
+
+2006-11-06  Frank Ch. Eigler  <fche@redhat.com>
+
+	* configure.ac (__libc_freeres): Look for it.
+	* mf-impl.h (call_libc_freeres): New configuration flag.
+	* mf-runtime.c (__mf_set_default_options): Set it by default.
+	(__mfu_report): Call it if needed.
+	(__mfu_unregister): Remove "unaccessed registered object" warning.
+	* configure, config.h.in: Regenerated.
+
+2006-09-18  Tom Tromey  <tromey@redhat.com>
+
+	* configure: Rebuilt.
+
+2006-06-21  Frank Ch. Eigler  <fche@redhat.com>
+
+	PR 21274
+	mf-runtime.h installation based on ssp patch for PR 26473 from
+	Mark Mitchell  <mark@codesourcery.com>.
+	* configure.ac (ACX_NONCANONICAL_TARGET): Use it.
+	* Makefile.am (target_noncanonical): Define.
+	(libsubincludedir): New variable.
+	(nobase_libsubinclude_HEADERS): Add mf-runtime.h.
+	(include_HEADERS): Remove.
+	* configure, aclocal.m4, config.h.in: Regenerated.
+	* Makefile.in, testsuite/Makefile.in: Likewise.
+	* mf-runtime.h: Add #ifndef protection for conflicting _REENTRANT
+	and _THREAD_SAFE redefinition values.
+
+2006-05-23  Carlos O'Donell  <carlos@codesourcery.com>
+
+	* Makefile.am: Add install-html target. Add install-html to .PHONY
+	* Makefile.in: Regenerate.
+
+2006-04-19  Volker Reichelt  <reichelt@igpm.rwth-aachen.de>
 
 	PR mudflap/26789
 	* testsuite/libmudflap.c++/error1-frag.cxx: New test.
+
+	PR mudflap/26790
+	* testsuite/libmudflap.c++/error2-frag.cxx: New test.
 
 2006-04-10  Matthias Klose  <doko@debian.org>
 
 	* testsuite/lib/libmudflap.exp (libmudflap-init): Recognize multilib
 	directory names containing underscores.
 
-2006-02-28  Release Manager
+2005-11-22  Janis Johnson  <janis187@us.ibm.com>
 
-	* GCC 4.1.0 released.
+	* testsuite/lib/libmudflap.exp (libmudflap-init): Remove -static from
+	MUDFLAP_FLAGS if static library not supported.
+	* testsuite/libmudflap.c/cfrags.exp (MUDFLAP_FLAGS): new.
+	* testsuite/libmudflap.c/externs.exp: Ditto.
+	* testsuite/libmudflap.c++/ctors.exp: Ditto.
+	* testsuite/libmudflap.c++/c++frags.exp: Ditto.
+	* testsuite/libmudflap.cth/cthfrags.exp: Ditto.
 
 2005-10-04  James E Wilson  <wilson@specifix.com>
 

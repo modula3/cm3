@@ -20,6 +20,7 @@ autogen definitions fixincl;
 FIXINC_DEBUG = yes;
 #endif
 
+
 /*
  *  On Mac OS 10.3.9, the 'long double' functions are available in
  *  libSystem, but are not prototyped in math.h.
@@ -33,7 +34,11 @@ fix = {
 /* This file prototypes the long double functions available on Mac OS
    10.3.9.  */
 #ifndef __MATH__
+# undef __APPLE_CC__
+# define __APPLE_CC__  1345
 # include_next <architecture/ppc/math.h>
+# undef __APPLE_CC__
+# define __APPLE_CC__ 1
 # ifndef __LIBMLDBL_COMPAT
 #  ifdef __LONG_DOUBLE_128__
 #   define __LIBMLDBL_COMPAT(sym) __asm("_" #sym "$LDBL128")
@@ -135,6 +140,7 @@ fix = {
     files    = asm/posix_types.h;
     mach     = 'i[34567]86-*-linux*';
     bypass   = '} while';
+    bypass   = 'x86_64';
 
     /*
      * Define _POSIX_TYPES_H_WRAPPER at the end of the wrapper, not
@@ -648,7 +654,8 @@ fix = {
  */
 fix = {
     hackname  = alpha___extern_prefix;
-    select    = "(.*)(defined\\(__DECC\\)|def[ \t]*__DECC)[ \t]*\n(#[ \t]*pragma[ \t]*extern_prefix.*)";
+    select    = "(.*)(defined\\(__DECC\\)|def[ \t]*__DECC)[ \t]*\n"
+                "(#[ \t]*pragma[ \t]*extern_prefix.*)";
 
     mach      = "alpha*-dec-osf*";
     c_fix     = format;
@@ -675,7 +682,8 @@ fix = {
     c_fix     = format;
     c_fix_arg = "%0 && !defined(__PRAGMA_EXTERN_PREFIX)";
 
-    test_text = "#if (_ISO_C_SOURCE>=19990L) && !defined(_LIBC_POLLUTION_H_) && !defined(__DECC)";
+    test_text = "#if (_ISO_C_SOURCE>=19990L) "
+                "&& !defined(_LIBC_POLLUTION_H_) && !defined(__DECC)";
 };
 
 
@@ -708,7 +716,8 @@ fix = {
     select    = '(#define assert\(EX\).*)\(\(int\) \(EX\)\)';
     c_fix     = format;
     c_fix_arg = "%1(EX)";
-    test_text = '#define assert(EX) (((int) (EX)) ? (void)0 : __assert(#EX, __FILE__, __LINE__))';
+    test_text = '#define assert(EX) (((int) (EX)) ? (void)0 '
+                ': __assert(#EX, __FILE__, __LINE__))';
 };
 
 
@@ -776,14 +785,17 @@ fix = {
 fix = {
     hackname  = alpha_pthread;
     files     = pthread.h;
-    select    = "((#[ \t]*if)([ \t]*defined[ \t]*\\(_PTHREAD_ENV_DECC\\)|def _PTHREAD_ENV_DECC)(.*))\n"
+    select    = "((#[ \t]*if)([ \t]*defined[ \t]*\\(_PTHREAD_ENV_DECC\\)"
+                "|def _PTHREAD_ENV_DECC)(.*))\n"
 		"(#[ \t]*define _PTHREAD_USE_PTDNAM_)";
 
     mach      = "alpha*-dec-osf*";
     c_fix     = format;
-    c_fix_arg = "%2 defined (_PTHREAD_ENV_DECC)%4 || defined (__PRAGMA_EXTERN_PREFIX)\n%5";
+    c_fix_arg = "%2 defined (_PTHREAD_ENV_DECC)%4 "
+                "|| defined (__PRAGMA_EXTERN_PREFIX)\n%5";
 
-    test_text = "#  if defined (_PTHREAD_ENV_DECC) || defined (_PTHREAD_ENV_EPCC)\n"
+    test_text = "#  if defined (_PTHREAD_ENV_DECC) "
+                      "|| defined (_PTHREAD_ENV_EPCC)\n"
 		"#   define _PTHREAD_USE_PTDNAM_\n"
 		"#  endif\n"
 		"#  ifdef _PTHREAD_ENV_DECC\n"
@@ -881,8 +893,12 @@ fix = {
 
     mach     = "alpha*-dec-osf4*";
     select   = "#define wcstok wcstok_r";
-    sed      = "s@#define wcstok wcstok_r@extern wchar_t *wcstok __((wchar_t *, const wchar_t *, wchar_t **)) __asm__(\"wcstok_r\");@";
-    sed      = "s@#define wcsftime __wcsftime_isoc@extern size_t   wcsftime __((wchar_t *, size_t, const wchar_t *, const struct tm *)) __asm__(\"__wcsftime_isoc\");@";
+    sed      = "s@#define wcstok wcstok_r@"
+                "extern wchar_t *wcstok __((wchar_t *, const wchar_t *, "
+                          "wchar_t **)) __asm__(\"wcstok_r\");@";
+    sed      = "s@#define wcsftime __wcsftime_isoc@"
+                "extern size_t   wcsftime __((wchar_t *, size_t, const wchar_t *"
+                          ", const struct tm *)) __asm__(\"__wcsftime_isoc\");@";
     test_text = "#define wcstok wcstok_r\n"
 		"#define wcsftime __wcsftime_isoc";
 };
@@ -1022,14 +1038,11 @@ fix = {
  */
 fix = {
     hackname = broken_cabs;
-    files    = "math.h";
-    files    = "architecture/ppc/math.h";
-    files    = "architecture/i386/math.h";
+    files    = math.h, "architecture/*/math.h";
     select   = "^extern[ \t]+double[ \t]+cabs";
 
-    c_fix     = format;
-    c_fix_arg = "";
-    c_fix_arg = "^extern[ \t]+double[ \t]+cabs[ \t]*\\([^\\)]*\\);";
+    sed       = "s/^extern[ \t]*double[ \t]*cabs[ \t]*\([^\\\)]*\);//";
+    sed       = "s/^extern[ \t]*long[ \t]*double[ \t]*cabsl[ \t]*\([^\\\)]*\);//";
 
     test_text = "#ifdef __STDC__\n"
                 "extern     double   cabs(struct dbl_hypot);\n"
@@ -1039,8 +1052,30 @@ fix = {
                 "extern double cabs ( _Complex z );\n"
                 "extern double cabs(); /* This is a comment\n"
                 "                         and it ends here. */\n"
-		"extern double	cabs(struct __cabs_s);";
+                "extern double	cabs(struct __cabs_s);\n"
+                "extern long double cabsl( struct __cabsl_s );";
 };
+
+/*
+ * Fixup Darwin's broken check for __builtin_nanf.
+ */ 
+    
+fix = {
+    hackname  = broken_nan;
+    /*
+     *  It is tempting to omit the first "files" entry.  Do not.
+     *  The testing machinery will take the first "files" entry as the name
+     *  of a test file to play with.  It would be a nuisance to have a directory
+     *  with the name "*".
+     */
+    files     = "architecture/ppc/math.h";
+    files     = "architecture/*/math.h";
+    select    = "#if defined(__APPLE_CC__) && (__APPLE_CC__ >= 1345)";
+    bypass    = "powl";
+    c_fix     = format; 
+    c_fix_arg = "#if 1";
+    test_text = "#if defined(__APPLE_CC__) && (__APPLE_CC__ >= 1345)";
+}; 
 
 
 /*
@@ -1050,8 +1085,8 @@ fix = {
  */
 fix = {
     hackname  = bsd_stdio_attrs_conflict;
-    mach      = *-*-*bsd*;
-    mach      = *-*-*darwin*;
+    mach      = "*-*-*bsd*";
+    mach      = "*-*-*darwin*";
     files     = stdio.h;
     select    = "^#define[ \t]*vfscanf[ \t]*__svfscanf[ \t]*$";
     c_fix     = format;
@@ -1128,6 +1163,32 @@ fix = {
                 "}\n"
                 "#endif\n";
     test_text = "extern void* malloc( size_t );";
+};
+
+
+/*
+ *  On darwin8 and earlier, mach-o/swap.h isn't properly guarded
+ *  by 'extern "C"'.  On darwin7 some mach/ headers aren't properly guarded.
+ */
+fix = {
+  hackname  = darwin_externc;
+  mach      = "*-*-darwin*";
+  files     = mach-o/swap.h;
+  files     = mach/mach_time.h;
+  files     = mach/mach_traps.h;
+  files     = mach/message.h;
+  files     = mach/mig.h;
+  files     = mach/semaphore.h;
+  bypass    = "extern \"C\"";
+  bypass    = "__BEGIN_DECLS";
+  c_fix     = wrap;
+  c_fix_arg = "#ifdef __cplusplus\n"
+              "extern \"C\" {\n"
+              "#endif\n";
+  c_fix_arg = "#ifdef __cplusplus\n"
+              "}\n"
+              "#endif\n";
+  test_text = "extern void swap_fat_header();\n";
 };
 
 
@@ -1242,7 +1303,7 @@ fix = {
  */
 fix = {
     hackname  = freebsd_gcc3_breakage;
-    mach      = *-*-freebsd*;
+    mach      = "*-*-freebsd*";
     files     = sys/cdefs.h;
     select    = '^#if __GNUC__ == 2 && __GNUC_MINOR__ >= 7$';
     bypass    = '__GNUC__[ \t]*([>=]=[ \t]*[3-9]|>[ \t]*2)';
@@ -1259,12 +1320,170 @@ fix = {
  */
 fix = {
     hackname  = freebsd_gcc4_breakage;
-    mach      = *-*-freebsd*; 
+    mach      = "*-*-freebsd*"; 
     files     = sys/cdefs.h;
     select    = '^#if __GNUC__ == 2 && __GNUC_MINOR__ >= 7 \|\| __GNUC__ == 3$';
     c_fix     = format;
     c_fix_arg = '#if __GNUC__ == 2 && __GNUC_MINOR__ >= 7 || __GNUC__ >= 3';
     test_text = '#if __GNUC__ == 2 && __GNUC_MINOR__ >= 7 || __GNUC__ == 3';
+};
+
+
+/*
+ *  Some versions of glibc don't expect the C99 inline semantics.
+ */
+fix = {
+    hackname  = glibc_c99_inline_1;
+    files     = features.h, '*/features.h';
+    select    = "^ *&& !defined __OPTIMIZE_SIZE__ && !defined __NO_INLINE__$";
+    c_fix     = format;
+    c_fix_arg = "%0 && (defined __extern_inline || defined __GNUC_GNU_INLINE__)";
+    test_text = <<-EOT
+#if __GNUC_PREREQ (2, 7) && defined __OPTIMIZE__ \
+    && !defined __OPTIMIZE_SIZE__ && !defined __NO_INLINE__
+# define __USE_EXTERN_INLINES	1
+#endif
+EOT;
+};
+
+
+/*
+ *  Similar, but a version that didn't have __NO_INLINE__
+ */
+fix = {
+    hackname  = glibc_c99_inline_1a;
+    files     = features.h, '*/features.h';
+    select    = "(\\) && defined __OPTIMIZE__ && !defined __OPTIMIZE_SIZE__)\n"
+		"(#[ \t]*define[ \t]*__USE_EXTERN_INLINES[ \t]*1)";
+    c_fix     = format;
+    c_fix_arg = "%1 && (defined __extern_inline || defined __GNUC_GNU_INLINE__)\n%2";
+    test_text = <<-EOT
+#if __GNUC_PREREQ (2, 7) && defined __OPTIMIZE__ && !defined __OPTIMIZE_SIZE__
+# define __USE_EXTERN_INLINES	1
+#endif
+EOT;
+};
+
+
+/*
+ * The glibc_c99_inline_1 fix should have fixed everything.  Unfortunately
+ * there are many glibc headers which do not respect __USE_EXTERN_INLINES.
+ * The remaining glibc_c99_inline_* fixes deal with some of those headers.
+ */
+fix = {
+    hackname  = glibc_c99_inline_2;
+    files     = sys/stat.h, '*/sys/stat.h';
+    select    = "extern __inline__ int";
+    sed     = "s/extern int \\(stat\\|lstat\\|fstat\\|mknod\\)/"
+              "#ifdef __GNUC_GNU_INLINE__\\\nextern\\\n#endif\\\n"
+              "__inline__ int \\1/";
+    sed     = "s/extern int __REDIRECT\\(_NTH\\|\\) (\\(stat\\|lstat\\|fstat\\)/"
+              "#ifdef __GNUC_GNU_INLINE__\\\nextern\\\n#endif\\\n"
+              "__inline__ int __REDIRECT\\1 (\\2/";
+    sed     = "s/^extern __inline__ int/"
+              "#ifdef __GNUC_GNU_INLINE__\\\nextern\\\n#endif\\\n"
+              "__inline__ int/";
+    test_text = <<-EOT
+	extern int fstat64 (int __fd, struct stat64 *__buf) __THROW __nonnull ((2));
+	extern __inline__ int
+	__NTH (fstat64 (int __fd, struct stat64 *__statbuf))
+	{}
+	EOT;
+};
+
+
+fix = {
+    hackname  = glibc_c99_inline_3;
+    files     = bits/string2.h, '*/bits/string2.h';
+    select    = "extern __inline";
+    bypass    = "__extern_inline|__GNU_STDC_INLINE__";
+    c_fix     = format;
+    c_fix_arg = "# if defined(__cplusplus) || defined(__GNUC_STDC_INLINE__)";
+    c_fix_arg = "^# ifdef __cplusplus$";
+    test_text = <<-EOT
+	# ifdef __cplusplus
+	#  define __STRING_INLINE inline
+	# else
+	#  define __STRING_INLINE extern __inline
+	# endif
+	EOT;
+};
+
+
+fix = {
+    hackname  = glibc_c99_inline_4;
+    files     = sys/sysmacros.h, '*/sys/sysmacros.h', wchar.h, '*/wchar.h';
+    bypass    = "__extern_inline|__gnu_inline__";
+    select    = "(^| )extern __inline";
+    c_fix     = format;
+    c_fix_arg = "%0 __attribute__ ((__gnu_inline__))";
+    test_text = <<-EOT
+	__extension__ extern __inline unsigned int
+	extern __inline unsigned int
+	EOT;
+};
+
+
+/*  glibc-2.3.5 defines pthread mutex initializers incorrectly,
+ *  so we replace them with versions that correspond to the
+ *  definition.
+ */
+fix = {
+    hackname = glibc_mutex_init;
+    files    = pthread.h;
+    select   = '\{ *\{ *0, *\} *\}';
+    sed      = "/define[ \t]\\+PTHREAD_MUTEX_INITIALIZER[ \t]*\\\\/,+1"
+               "s/{ { 0, } }/{ { 0, 0, 0, 0, 0, 0 } }/";
+    sed      = "s/{ \\(0, 0, 0, 0, PTHREAD_MUTEX_\\(RECURSIVE\\|ERRORCHECK\\|ADAPTIVE\\)_NP\\) }/{ \\1, 0 }/";
+    sed      = "s/{ \\(0, 0, 0, PTHREAD_MUTEX_\\(RECURSIVE\\|ERRORCHECK\\|ADAPTIVE\\)_NP\\) }/{ \\1, 0, 0 }/";
+    sed      = "/define[ \t]\\+PTHREAD_RWLOCK_INITIALIZER[ \t]*\\\\/"
+               "N;s/^[ \t]*#[ \t]*"
+               "\\(define[ \t]\\+PTHREAD_RWLOCK_INITIALIZER[ \t]*\\\\\\)\\n"
+               "[ \t]*{ { 0, } }/# if __WORDSIZE == 64\\n"
+               "#  \\1\\n"
+               "  { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } }\\n"
+               "# else\\n"
+               "#  \\1\\n"
+               "  { { 0, 0, 0, 0, 0, 0, 0, 0 } }\\n"
+               "# endif/";
+    sed      = "s/{ \\(0, 0, 0, 0, 0, 0, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP\\) }/{ \\1, 0 }/";
+    sed      = "/define[ \t]\\+PTHREAD_COND_INITIALIZER/"
+               "s/{ { 0, } }/{ { 0, 0, 0, 0, 0, (void *) 0, 0, 0 } }/";
+
+    test_text = <<- _EOText_
+#define PTHREAD_MUTEX_INITIALIZER \\
+  { { 0, } }
+#ifdef __USE_GNU
+# if __WORDSIZE == 64
+#  define PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP \\
+  { { 0, 0, 0, 0, PTHREAD_MUTEX_RECURSIVE_NP } }
+#  define PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP \\
+  { { 0, 0, 0, 0, PTHREAD_MUTEX_ERRORCHECK_NP } }
+#  define PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP \\
+  { { 0, 0, 0, 0, PTHREAD_MUTEX_ADAPTIVE_NP } }
+# else
+#  define PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP \\
+  { { 0, 0, 0, PTHREAD_MUTEX_RECURSIVE_NP } }
+#  define PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP \\
+  { { 0, 0, 0, PTHREAD_MUTEX_ERRORCHECK_NP } }
+#  define PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP \\
+  { { 0, 0, 0, PTHREAD_MUTEX_ADAPTIVE_NP } }
+# endif
+#endif
+# define PTHREAD_RWLOCK_INITIALIZER \\
+  { { 0, } }
+# ifdef __USE_GNU
+#  if __WORDSIZE == 64
+#   define PTHREAD_RWLOCK_WRITER_NONRECURSIVE_INITIALIZER_NP \\
+  { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,					      \\
+      PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP } }
+#  else
+#   define PTHREAD_RWLOCK_WRITER_NONRECURSIVE_INITIALIZER_NP \\
+  { { 0, 0, 0, 0, 0, 0, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP } }
+#  endif
+# endif
+#define PTHREAD_COND_INITIALIZER { { 0, } }
+_EOText_;
 };
 
 
@@ -1381,6 +1600,27 @@ fix = {
 };
 
 
+fix = {
+     hackname  = hppa_hpux_fp_macros;
+     mach      = "hppa*-hp-hpux11*";
+     files     = math.h;
+     select    = "#[ \t]*define[ \t]*FP_NORMAL.*\n"
+		 "#[ \t]*define[ \t]*FP_ZERO.*\n"
+		 "#[ \t]*define[ \t]*FP_INFINITE.*\n"
+		 "#[ \t]*define[ \t]*FP_SUBNORMAL.*\n"
+		 "#[ \t]*define[ \t]*FP_NAN.*\n";
+     c_fix     = format;
+     c_fix_arg = "#endif /* _INCLUDE_HPUX_SOURCE */\n\n#if defined(_INCLUDE_HPUX_SOURCE) || (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L))\n%0#endif\n\n#ifdef _INCLUDE_HPUX_SOURCE\n";
+
+     test_text =
+            "#  define FP_NORMAL     0\n"
+            "#  define FP_ZERO       1\n"
+            "#  define FP_INFINITE   2\n"
+            "#  define FP_SUBNORMAL  3\n"
+            "#  define FP_NAN        4\n";
+};
+
+
 /*
  *  Fix hpux 10.X missing ctype declarations 1
  */
@@ -1471,7 +1711,7 @@ fix = {
  */
 fix = {
     hackname  = hpux11_abs;
-    mach      = ia64-hp-hpux11*;
+    mach      = "ia64-hp-hpux11*";
     files     = stdlib.h;
     select    = "ifndef _MATH_INCLUDED";
     c_fix     = format;
@@ -1696,6 +1936,92 @@ fix = {
     test_text = "extern union mpinfou spu_info[];";
 };
 
+fix = {
+    hackname  = hpux11_extern_sendfile;
+    mach      = "*-hp-hpux11.[12]*";
+    files     = sys/socket.h;
+    select    = "^[ \t]*extern sbsize_t sendfile.*\n.*, int\\)\\);\n";
+    c_fix     = format;
+    c_fix_arg = "#ifndef _APP32_64BIT_OFF_T\n%0#endif\n";
+    test_text = "   extern sbsize_t sendfile __((int, int, off_t, bsize_t,\n                               const struct iovec *, int));\n";
+};
+
+fix = {
+    hackname  = hpux11_extern_sendpath;
+    mach      = "*-hp-hpux11.[12]*";
+    files     = sys/socket.h;
+    select    = "^[ \t]*extern sbsize_t sendpath.*\n.*, int\\)\\);\n";
+    c_fix     = format;
+    c_fix_arg = "#ifndef _APP32_64BIT_OFF_T\n%0#endif\n";
+    test_text = "   extern sbsize_t sendpath __((int, int, off_t, bsize_t,\n                               const struct iovec *, int));\n";
+};
+
+fix = {
+    hackname  = hpux_extern_errno;
+    mach      = "*-hp-hpux10.*";
+    mach      = "*-hp-hpux11.[0-2]*";
+    files     = errno.h;
+    select    = "^[ \t]*extern int errno;$";
+    c_fix     = format;
+    c_fix_arg = "#ifdef __cplusplus\nextern \"C\" {\n#endif\n%0\n#ifdef __cplusplus\n}\n#endif";
+    test_text = "   extern int errno;\n";
+};
+
+/*
+ *  Fix C99 constant in __POINTER_SET define.
+ */
+fix = {
+    hackname  = hpux11_pthread_const;
+    mach      = "*-hp-hpux11.[0-3]*";
+    files     = sys/pthread.h;
+    select    = "^#define[ \t]*__POINTER_SET[ \t]*\\(\\(void \\*\\) 1LL\\)";
+
+    c_fix     = format;
+    c_fix_arg = "#define __POINTER_SET\t\t((void *) 1L)";
+    test_text = "#define __POINTER_SET\t\t((void *) 1LL)";
+};
+
+/*
+ *  Add missing braces to pthread initializer defines.
+ */
+fix = {
+    hackname  = hpux_pthread_initializers;
+    mach      = "*-hp-hpux11.[0-3]*";
+    files     = sys/pthread.h;
+    sed       = "s@^[ \t]*1, 1, 1, 1,[ \t]*\\\\"
+		 "@\t{ 1, 1, 1, 1 },\t\t\t\t\t\t\t\\\\@";
+    sed       = "s@^[ \t]*1,[ \t]*\\\\"
+		 "@\t{ 1, 0 }@";
+    sed       = "/^[ \t]*0$/d";
+    sed       = "s@__PTHREAD_MUTEX_VALID, 0"
+		 "@{ __PTHREAD_MUTEX_VALID, 0 }@";
+    sed       = "s@^[ \t]*0, 0, -1, 0,[ \t]*\\\\"
+		 "@\t{ 0, 0, -1, 0 },\t\t\t\t\t\t\\\\@";
+    sed       = "s@0, __LWP_MTX_VALID, 0, 1, 1, 1, 1,[ \t]*\\\\"
+		 "@{ 0, __LWP_MTX_VALID }, { 0, 1, 1, 1, 1 },\t\t\t\\\\@";
+    sed       = "s@^[ \t]*__LWP_MTX_VALID, 0, 1, 1, 1, 1,[ \t]*\\\\"
+		 "@\t{ 0, __LWP_MTX_VALID }, { 0, 1, 1, 1, 1 },\t\t\t\\\\@";
+    sed       = "s@^[ \t]*0, 0[ \t]*\\\\"
+		 "@\t{ 0, 0 }\t\t\t\t\t\t\t\\\\@";
+    sed       = "s@__PTHREAD_COND_VALID, 0"
+		 "@{ __PTHREAD_COND_VALID, 0 }@";
+    sed       = "s@__LWP_COND_VALID, 0,[ \t]*\\\\"
+		 "@{ __LWP_COND_VALID, 0 },\t\t\t\t\t\\\\@";
+    sed       = "s@__PTHREAD_RWLOCK_VALID, 0"
+		 "@{ __PTHREAD_RWLOCK_VALID, 0 }@";
+    sed       = "s@__LWP_RWLOCK_VALID, 0,[ \t]*\\\\"
+		 "@{ __LWP_RWLOCK_VALID, 0 },\t\t\t\t\t\\\\@";
+    sed       = "s@^[ \t]*0, 0, 0, 0, 0, 0, 0[ \t]*\\\\"
+		 "@\t{ 0, 0, 0, 0, 0 }, { 0, 0}\t\t\t\t\t\\\\@";
+    test_text = "#define PTHREAD_MUTEX_INITIALIZER  {\t\t\t\t\t\\\\\n"
+		"\t__PTHREAD_MUTEX_VALID, 0,\t\t\t\t\t\\\\\n"
+		"\t(PTHREAD_MUTEX_DEFAULT | PTHREAD_PROCESS_PRIVATE),\t\t\\\\\n"
+		"\t__SPNLCK_INITIALIZER,\t\t\t\t\t\t\\\\\n"
+		"\t0, 0, -1, 0,\t\t\t\t\t\t\t\\\\\n"
+		"\t0, __LWP_MTX_VALID, 0, 1, 1, 1, 1,\t\t\t\t\\\\\n"
+		"\t0, 0\t\t\t\t\t\t\t\t\\\\\n"
+		"}\n";
+};
 
 /*
  *  Fix glibc definition of HUGE_VAL in terms of hex floating point constant
@@ -1941,6 +2267,24 @@ fix = {
 };
 
 /*
+ *  IRIX 6.5 <stdint.h> only works with ISO C99 and errors out
+ *  otherwise.
+ */
+fix = {
+    hackname  = irix_stdint_c99;
+    files     = stdint.h;
+    select = "(#ifndef __c99\n)(#error This header file is to be used only for c99 mode compilations)";
+
+    mach      = "mips-sgi-irix6.5";
+    c_fix  = format;
+    c_fix_arg = "#if 0\n"
+	        "%2";
+    test_text =
+    "#ifndef __c99\n#error This header file is to be used only for c99 mode compilations\n#else";
+};
+
+
+/*
  *  IRIX 5.x's stdio.h and IRIX 6.5's internal/stdio_core.h declare
  *  some functions that take a va_list as
  *  taking char *.  However, GCC uses void * for va_list, so
@@ -2019,13 +2363,7 @@ fix = {
 fix = {
     hackname = kandr_concat;
     files  = "sparc/asm_linkage.h";
-    files  = "sun3/asm_linkage.h";
-    files  = "sun3x/asm_linkage.h";
-    files  = "sun4/asm_linkage.h";
-    files  = "sun4c/asm_linkage.h";
-    files  = "sun4m/asm_linkage.h";
-    files  = "sun4c/debug/asm_linkage.h";
-    files  = "sun4m/debug/asm_linkage.h";
+    files  = "sun*/asm_linkage.h";
     files  = "arm/as_support.h";
     files  = "arm/mc_type.h";
     files  = "arm/xcb.h";
@@ -2311,11 +2649,46 @@ fix = {
 
 
 /*
+ *  Some versions of NetBSD don't expect the C99 inline semantics.
+ */
+fix = {
+    hackname  = netbsd_c99_inline_1;
+    mach      = "*-*-netbsd*";
+    files     = signal.h;
+    select    = "extern __inline int";
+
+    c_fix     = format;
+    c_fix_arg = "extern\n#ifdef __GNUC_STDC_INLINE__\n__attribute__((__gnu_inline__))\n#endif\n__inline int";
+
+    test_text = "extern __inline int\nsigaddset(sigset_t *set, int signo)\n{}";
+};
+
+
+fix = {
+    hackname  = netbsd_c99_inline_2;
+    mach      = "*-*-netbsd*";
+    files     = signal.h;
+    select    = "#define _SIGINLINE extern __inline";
+
+    c_fix     = format;
+    c_fix_arg = <<- _EOArg_
+	#ifdef __GNUC_STDC_INLINE__
+	#define _SIGINLINE extern __attribute__((__gnu_inline__)) __inline
+	#else
+	%0
+	#endif
+	_EOArg_;
+
+    test_text = "#define _SIGINLINE extern __inline";
+};
+
+
+/*
  * NetBSD has a semicolon after the ending '}' for some extern "C".
  */
 fix = {
     hackname  = netbsd_extra_semicolon;
-    mach      = *-*-netbsd*;
+    mach      = "*-*-netbsd*";
     files     = sys/cdefs.h;
     select    = "#define[ \t]*__END_DECLS[ \t]*};";
 
@@ -2620,14 +2993,7 @@ fix = {
  */
 fix = {
     hackname = sco_math;
-    files    = math.h;
-    files    = ansi/math.h;
-    files    = posix/math.h;
-    files    = xpg4/math.h;
-    files    = xpg4v2/math.h;
-    files    = xpg4plus/math.h;
-    files    = ods_30_compat/math.h;
-    files    = oldstyle/math.h;
+    files    = math.h, '*/math.h';
     select   = "inline double abs";
     bypass   = "__GNUG__";
     sed      = "/#define.*__fp_class(a) \\\\/i\\\n"
@@ -2797,7 +3163,7 @@ fix = {
     files = iso/math_c99.h;
     c_fix = format;
     c_fix_arg = "#define\tfpclassify(x) \\\n"
-                "  __extension__ ({ __typeof(x) __x_fp = (x); \\\n"
+                "  __extension__ ({ const __typeof(x) __x_fp = (x); \\\n"
                 "\t\t   isnan(__x_fp) \\\n"
                 "\t\t     ? FP_NAN \\\n"
                 "\t\t     : isinf(__x_fp) \\\n"
@@ -2812,60 +3178,6 @@ fix = {
     '#ident	"@(#)math_c99.h	1.9	04/11/01 SMI"'"\n"
     "#undef	fpclassify\n"
     "#define	fpclassify(x)	__builtin_fpclassify(x)";
-};
-
-fix = {
-    hackname = solaris_math_5;
-    select = '@\(#\)math_c99.h' "[ \t]+1.[0-9]+[ \t]+[0-9/]+ SMI";
-    bypass = "__GNUC__";
-    files = iso/math_c99.h;
-    c_fix = format;
-    c_fix_arg = "#define\tisfinite(x) \\\n"
-                "  __extension__ ({ __typeof (x) __x_f = (x); \\\n"
-                "\t\t   __builtin_expect(!isnan(__x_f - __x_f), 1); })";
-    c_fix_arg = "^#define[ \t]+isfinite\\(x\\)[ \t]+__builtin_isfinite\\(x\\)";
-    test_text =
-    '#ident	"@(#)math_c99.h	1.9	04/11/01 SMI"'"\n"
-    "#undef	isfinite\n"
-    "#define	isfinite(x)	__builtin_isfinite(x)";
-};
-
-fix = {
-    hackname = solaris_math_6;
-    select = '@\(#\)math_c99.h' "[ \t]+1.[0-9]+[ \t]+[0-9/]+ SMI";
-    bypass = "__GNUC__";
-    files = iso/math_c99.h;
-    c_fix = format;
-    c_fix_arg = "#define\tisinf(x) \\\n"
-                "  __extension__ ({ __typeof (x) __x_i = (x); \\\n"
-                "\t\t   __builtin_expect(!isnan(__x_i) && !isfinite(__x_i), 0); })";
-    c_fix_arg = "^#define[ \t]+isinf\\(x\\)[ \t]+__builtin_isinf\\(x\\)";
-    test_text =
-    '#ident	"@(#)math_c99.h	1.9	04/11/01 SMI"'"\n"
-    "#undef	isinf\n"
-    "#define	isinf(x)	__builtin_isinf(x)";
-};
-
-fix = {
-    hackname = solaris_math_7;
-    select = '@\(#\)math_c99.h' "[ \t]+1.[0-9]+[ \t]+[0-9/]+ SMI";
-    bypass = "__GNUC__";
-    files = iso/math_c99.h;
-    c_fix = format;
-    c_fix_arg = "#define\tisnormal(x) \\\n"
-                "  __extension__ ({ __typeof(x) __x_n = (x); \\\n"
-                "\t\t   if (__x_n < 0.0) __x_n = -__x_n; \\\n"
-                "\t\t   __builtin_expect(isfinite(__x_n) \\\n"
-                "\t\t\t\t    && (sizeof(__x_n) == sizeof(float) \\\n"
-                "\t\t\t\t\t  ? __x_n >= __FLT_MIN__ \\\n"
-                "\t\t\t\t\t  : sizeof(__x_n) == sizeof(long double) \\\n"
-                "\t\t\t\t\t    ? __x_n >= __LDBL_MIN__ \\\n"
-                "\t\t\t\t\t    : __x_n >= __DBL_MIN__), 1); })";
-    c_fix_arg = "^#define[ \t]+isnormal\\(x\\)[ \t]+__builtin_isnormal\\(x\\)";
-    test_text =
-    '#ident	"@(#)math_c99.h	1.9	04/11/01 SMI"'"\n"
-    "#undef	isnormal\n"
-    "#define	isnormal(x)	__builtin_isnormal(x)";
 };
 
 fix = {
@@ -2941,20 +3253,110 @@ fix = {
     hackname = solaris_mutex_init_2;
     select = '@\(#\)pthread.h' "[ \t]+1.[0-9]+[ \t]+[0-9/]+ SMI";
     files = pthread.h;
+    /*
+     * On Solaris 10, this fix is unnecessary because upad64_t is
+     * always defined correctly regardless of the definition of the
+     * __STDC__ macro.  The first "mach" pattern matches up to
+     * solaris9.  The second "mach" pattern will not match any two (or
+     * more) digit solaris version, but it will match e.g. 2.5.1.
+     */
+    mach = '*-*-solaris2.[0-9]', '*-*-solaris2.[0-9][!0-9]*';
     c_fix = format;
     c_fix_arg = "#if __STDC__ - 0 == 0 && !defined(_NO_LONGLONG)\n"
                 "%0\n"
                 "#else\n"
-                "%1, {0}}%3\n"
+                "%1, {0}}%4\n"
                 "#endif";
-    c_fix_arg = "(^#define[ \t]+PTHREAD_(MUTEX|COND)_INITIALIZER[ \t]+\\{.*)"
+    c_fix_arg = "(^#define[ \t]+PTHREAD_(MUTEX|COND)_INITIALIZER[ \t]+"
+                "(|/\*.*\*/[ \t]*\\\\\n[ \t]*)\\{.*)"
                 ",[ \t]*0\\}" "(|[ \t].*)$";
     test_text =
     '#ident "@(#)pthread.h  1.26  98/04/12 SMI"'"\n"
     "#define PTHREAD_MUTEX_INITIALIZER\t{{{0},0}, {{{0}}}, 0}\n"
     "#define PTHREAD_COND_INITIALIZER\t{{{0}, 0}, 0}\t/* DEFAULTCV */\n"
-    "#define PTHREAD_RWLOCK_INITIALIZER\t"
-             "{0, 0, 0, {0, 0, 0}, {0, 0}, {0, 0}}";
+    "#define	PTHREAD_MUTEX_INITIALIZER		/* = DEFAULTMUTEX */	\\\\\n"
+    "	{{0, 0, 0, DEFAULT_TYPE, _MUTEX_MAGIC}, {{{0}}}, 0}\n"
+    "#define	PTHREAD_COND_INITIALIZER		/* = DEFAULTCV */	\\\\\n"
+    "	{{{0, 0, 0, 0}, DEFAULT_TYPE, _COND_MAGIC}, 0}";
+};
+
+
+/*
+ * Sun Solaris defines PTHREAD_RWLOCK_INITIALIZER with a "0" for some
+ *  fields of the pthread_rwlock_t structure, which are of type
+ *  upad64_t, which itself is typedef'd to int64_t, but with __STDC__
+ *  defined (e.g. by -ansi) it is a union. So change the initializer
+ *  to "{0}" instead.
+ */
+fix = {
+    hackname = solaris_rwlock_init_1;
+    select = '@\(#\)pthread.h' "[ \t]+1.[0-9]+[ \t]+[0-9/]+ SMI";
+    files = pthread.h;
+    mach = '*-*-solaris*';
+    c_fix = format;
+    c_fix_arg = "#if __STDC__ - 0 == 0 && !defined(_NO_LONGLONG)\n"
+                "%0\n"
+                "#else\n"
+                "%1{0, 0, 0, {{0}, {0}, {0}}, {{0}, {0}}, {{0}, {0}}}\n"
+                "#endif";
+    c_fix_arg = "(^#define[ \t]+PTHREAD_RWLOCK_INITIALIZER[ \t]+)"
+                "\\{0, 0, 0, \\{0, 0, 0\\}, \\{0, 0\\}, \\{0, 0\\}\\}[ \t]*$";
+
+    test_text =
+    '#ident "@(#)pthread.h  1.26  98/04/12 SMI"'"\n"
+    "#define PTHREAD_RWLOCK_INITIALIZER\t{0, 0, 0, {0, 0, 0}, {0, 0}, {0, 0}}";
+};
+
+
+/*
+ * Sun Solaris defines PTHREAD_ONCE_INIT as an array containing a
+ * structure.  As such, it need two levels of brackets, but only
+ * contains one.  Wrap the macro definition in an extra layer.
+ */
+fix = {
+    hackname = solaris_once_init_1;
+    select = '@\(#\)pthread.h' "[ \t]+1.[0-9]+[ \t]+[0-9/]+ SMI";
+    files = pthread.h;
+    mach = '*-*-solaris*';
+    c_fix = format;
+    c_fix_arg = "%1{%2}%3";
+    c_fix_arg = "(^#define[ \t]+PTHREAD_ONCE_INIT[ \t]+\\{)([^}]+)(\\})[ \t]*$";
+    test_text =
+    '#pragma ident	"@(#)pthread.h	1.37	04/09/28 SMI"'"\n"
+    "#define PTHREAD_ONCE_INIT\t{0, 0, 0, PTHREAD_ONCE_NOTDONE}";
+};
+
+
+/*
+ * Sun Solaris defines PTHREAD_ONCE_INIT with a "0" for some
+ *  fields of the pthread_once_t structure, which are of type
+ *  upad64_t, which itself is typedef'd to int64_t, but with __STDC__
+ *  defined (e.g. by -ansi) it is a union. So change the initializer
+ *  to "{0}" instead.  This test relies on solaris_once_init_1.
+ */
+fix = {
+    hackname = solaris_once_init_2;
+    select = '@\(#\)pthread.h' "[ \t]+1.[0-9]+[ \t]+[0-9/]+ SMI";
+    files = pthread.h;
+    /*
+     * On Solaris 10, this fix is unnecessary because upad64_t is
+     * always defined correctly regardless of the definition of the
+     * __STDC__ macro.  The first "mach" pattern matches up to
+     * solaris9.  The second "mach" pattern will not match any two (or
+     * more) digit solaris version, but it will match e.g. 2.5.1.
+     */
+    mach = '*-*-solaris2.[0-9]', '*-*-solaris2.[0-9][!0-9]*';
+    c_fix = format;
+    c_fix_arg = "#if __STDC__ - 0 == 0 && !defined(_NO_LONGLONG)\n"
+                "%0\n"
+                "#else\n"
+                "%1{0}, {0}, {0}, {%3}%4\n"
+                "#endif";
+    c_fix_arg = "(^#define[ \t]+PTHREAD_ONCE_INIT[ \t]+\\{\\{)"
+                "(0, 0, 0, )(PTHREAD_[A-Z_]+)(\\}\\})[ \t]*$";
+    test_text =
+    '#ident "@(#)pthread.h  1.26  98/04/12 SMI"'"\n"
+    "#define PTHREAD_ONCE_INIT\t{{0, 0, 0, PTHREAD_ONCE_NOTDONE}}\n";
 };
 
 

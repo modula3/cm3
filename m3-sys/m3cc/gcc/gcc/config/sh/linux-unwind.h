@@ -1,5 +1,5 @@
 /* DWARF2 EH unwinding support for SH Linux.
-   Copyright (C) 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
@@ -45,7 +45,7 @@ Boston, MA 02110-1301, USA.  */
 #define SH_DWARF_FRAME_FP0	25
 #define SH_DWARF_FRAME_XD0	87
 #define SH_DWARF_FRAME_PR	17
-#define SH_DWARF_FRAME_GBR	19
+#define SH_DWARF_FRAME_GBR	18
 #define SH_DWARF_FRAME_MACH	20
 #define SH_DWARF_FRAME_MACL	21
 #define SH_DWARF_FRAME_PC	16
@@ -94,9 +94,9 @@ shmedia_fallback_frame_state (struct _Unwind_Context *context,
     return _URC_END_OF_STACK;
 
   new_cfa = sc->sc_regs[15];
-  fs->cfa_how = CFA_REG_OFFSET;
-  fs->cfa_reg = 15;
-  fs->cfa_offset = new_cfa - (long) context->cfa;
+  fs->regs.cfa_how = CFA_REG_OFFSET;
+  fs->regs.cfa_reg = 15;
+  fs->regs.cfa_offset = new_cfa - (long) context->cfa;
 
   for (i = 0; i < 63; i++)
     {
@@ -137,6 +137,7 @@ shmedia_fallback_frame_state (struct _Unwind_Context *context,
   fs->regs.reg[63].loc.offset
     = (long)&(sc->sc_pc) - new_cfa;
   fs->retaddr_column = 63;
+  fs->signal_frame = 1;
   return _URC_NO_REASON;
 }
 
@@ -190,9 +191,9 @@ sh_fallback_frame_state (struct _Unwind_Context *context,
     return _URC_END_OF_STACK;
 
   new_cfa = sc->sc_regs[15];
-  fs->cfa_how = CFA_REG_OFFSET;
-  fs->cfa_reg = 15;
-  fs->cfa_offset = new_cfa - (long) context->cfa;
+  fs->regs.cfa_how = CFA_REG_OFFSET;
+  fs->regs.cfa_reg = 15;
+  fs->regs.cfa_offset = new_cfa - (long) context->cfa;
 
   for (i = 0; i < 15; i++)
     {
@@ -229,8 +230,8 @@ sh_fallback_frame_state (struct _Unwind_Context *context,
   r = SH_DWARF_FRAME_XD0;
   for (i = 0; i < 8; i++)
     {
-      fs->regs.reg[i].how = REG_SAVED_OFFSET;
-      fs->regs.reg[i].loc.offset
+      fs->regs.reg[r+i].how = REG_SAVED_OFFSET;
+      fs->regs.reg[r+i].loc.offset
 	= (long)&(sc->sc_xfpregs[2*i]) - new_cfa;
     }
 
@@ -246,6 +247,7 @@ sh_fallback_frame_state (struct _Unwind_Context *context,
   fs->regs.reg[SH_DWARF_FRAME_PC].loc.offset
     = (long)&(sc->sc_pc) - new_cfa;
   fs->retaddr_column = SH_DWARF_FRAME_PC;
+  fs->signal_frame = 1;
   return _URC_NO_REASON;
 }
 #endif /* defined (__SH5__) */

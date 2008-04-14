@@ -1,16 +1,15 @@
-/* The GNU C++ standard library requires that these macros be defined.  */
-#undef CPLUSPLUS_CPP_SPEC
-#define CPLUSPLUS_CPP_SPEC "-D_GNU_SOURCE %(cpp)"
-
 #undef  STARTFILE_SPEC
 #define STARTFILE_SPEC \
-  "crt1%O%s crti%O%s crtbegin%O%s crtlibid%O%s"
+  "%{!shared: crt1%O%s} crti%O%s crtbegin%O%s crtlibid%O%s"
 
-#undef  ENDFILE_SPEC
-#define ENDFILE_SPEC \
-  "crtend%O%s crtn%O%s"
+#define TARGET_OS_CPP_BUILTINS() LINUX_TARGET_OS_CPP_BUILTINS()
 
-#undef  LIB_SPEC
-#define LIB_SPEC "%{pthread:-lpthread} -lc"
+#define MD_UNWIND_SUPPORT "config/bfin/linux-unwind.h"
 
-#define NO_IMPLICIT_EXTERN_C
+/* Like the definition in gcc.c, but for purposes of uClinux, every link is
+   static.  */
+#define MFWRAP_SPEC " %{fmudflap|fmudflapth: \
+ --wrap=malloc --wrap=free --wrap=calloc --wrap=realloc\
+ --wrap=mmap --wrap=munmap --wrap=alloca\
+ %{fmudflapth: --wrap=pthread_create\
+}} %{fmudflap|fmudflapth: --wrap=main}"

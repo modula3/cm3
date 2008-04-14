@@ -1,12 +1,13 @@
 ;; GCC machine description for Tensilica's Xtensa architecture.
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007
+;; Free Software Foundation, Inc.
 ;; Contributed by Bob Wilson (bwilson@tensilica.com) at Tensilica.
 
 ;; This file is part of GCC.
 
 ;; GCC is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -15,9 +16,8 @@
 ;; License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to the Free
-;; Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-;; 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 
 (define_constants [
@@ -26,19 +26,61 @@
   (A7_REG		7)
   (A8_REG		8)
 
-  (UNSPEC_NSAU		1)
   (UNSPEC_NOP		2)
   (UNSPEC_PLT		3)
   (UNSPEC_RET_ADDR	4)
+
   (UNSPECV_SET_FP	1)
   (UNSPECV_ENTRY	2)
+  (UNSPECV_MEMW		3)
+  (UNSPECV_S32RI	4)
+  (UNSPECV_S32C1I	5)
+  (UNSPECV_EH_RETURN	6)
 ])
+
+;; This code iterator allows signed and unsigned widening multiplications
+;; to use the same template.
+(define_code_iterator any_extend [sign_extend zero_extend])
+
+;; <u> expands to an empty string when doing a signed operation and
+;; "u" when doing an unsigned operation.
+(define_code_attr u [(sign_extend "") (zero_extend "u")])
+
+;; <su> is like <u>, but the signed form expands to "s" rather than "".
+(define_code_attr su [(sign_extend "s") (zero_extend "u")])
+
+;; This code iterator allows four integer min/max operations to be
+;; generated from one template.
+(define_code_iterator any_minmax [smin umin smax umax])
+
+;; <minmax> expands to the opcode name for any_minmax operations.
+(define_code_attr minmax [(smin "min") (umin "minu")
+			  (smax "max") (umax "maxu")])
+
+;; This code iterator allows all branch instructions to be generated from
+;; a single define_expand template.
+(define_code_iterator any_cond [eq ne gt ge lt le gtu geu ltu leu])
+
+;; This code iterator is for setting a register from a comparison.
+(define_code_iterator any_scc [eq ne gt ge lt le])
+
+;; This code iterator is for floating-point comparisons.
+(define_code_iterator any_scc_sf [eq lt le])
+
+;; This iterator and attribute allow to combine most atomic operations.
+(define_code_iterator ATOMIC [and ior xor plus minus mult])
+(define_code_attr atomic [(and "and") (ior "ior") (xor "xor") 
+			  (plus "add") (minus "sub") (mult "nand")])
+
+;; This mode iterator allows the HI and QI patterns to be defined from
+;; the same template.
+(define_mode_iterator HQI [HI QI])
 
 
 ;; Attributes.
 
 (define_attr "type"
-  "unknown,jump,call,load,store,move,arith,multi,nop,farith,fmadd,fdiv,fsqrt,fconv,fload,fstore,mul16,mul32,div32,mac16,rsr,wsr"
+  "unknown,jump,call,load,store,move,arith,multi,nop,farith,fmadd,fdiv,fsqrt,fconv,fload,fstore,mul16,mul32,div32,mac16,rsr,wsr,entry"
   (const_string "unknown"))
 
 (define_attr "mode"
@@ -88,61 +130,13 @@
 			 (eq_attr "type" "fconv")
 			 "nothing")
 
-;; Include predicate definitions
+;; Include predicates and constraints.
 
 (include "predicates.md")
+(include "constraints.md")
 
 
 ;; Addition.
-
-(define_expand "adddi3"
-  [(set (match_operand:DI 0 "register_operand" "")
-	(plus:DI (match_operand:DI 1 "register_operand" "")
-		 (match_operand:DI 2 "register_operand" "")))]
-  ""
-{
-  rtx srclo;
-  rtx dstlo = gen_lowpart (SImode, operands[0]);
-  rtx src1lo = gen_lowpart (SImode, operands[1]);
-  rtx src2lo = gen_lowpart (SImode, operands[2]);
-
-  rtx dsthi = gen_highpart (SImode, operands[0]);
-  rtx src1hi = gen_highpart (SImode, operands[1]);
-  rtx src2hi = gen_highpart (SImode, operands[2]);
-
-  /* Either source can be used for overflow checking, as long as it's
-     not clobbered by the first addition.  */
-  if (!rtx_equal_p (dstlo, src1lo))
-    srclo = src1lo;
-  else if (!rtx_equal_p (dstlo, src2lo))
-    srclo = src2lo;
-  else
-    {
-      srclo = gen_reg_rtx (SImode);
-      emit_move_insn (srclo, src1lo);
-    }
-
-  emit_insn (gen_addsi3 (dstlo, src1lo, src2lo));
-  emit_insn (gen_addsi3 (dsthi, src1hi, src2hi));
-  emit_insn (gen_adddi_carry (dsthi, dstlo, srclo));
-  DONE;
-})
-
-;; Represent the add-carry operation as an atomic operation instead of
-;; expanding it to a conditional branch.  Otherwise, the edge
-;; profiling code breaks because inserting the count increment code
-;; causes a new jump insn to be added.
-
-(define_insn "adddi_carry"
-  [(set (match_operand:SI 0 "register_operand" "+a")
-	(plus:SI (ltu:SI (match_operand:SI 1 "register_operand" "r")
-			 (match_operand:SI 2 "register_operand" "r"))
-		 (match_dup 0)))]
-  ""
-  "bgeu\t%1, %2, 0f\;addi\t%0, %0, 1\;0:"
-  [(set_attr "type"	"multi")
-   (set_attr "mode"	"SI")
-   (set_attr "length"	"6")])
 
 (define_insn "addsi3"
   [(set (match_operand:SI 0 "register_operand" "=D,D,a,a,a")
@@ -159,35 +153,13 @@
    (set_attr "mode"	"SI")
    (set_attr "length"	"2,2,3,3,3")])
 
-(define_insn "*addx2"
+(define_insn "*addx"
   [(set (match_operand:SI 0 "register_operand" "=a")
 	(plus:SI (mult:SI (match_operand:SI 1 "register_operand" "r")
-			  (const_int 2))
+			  (match_operand:SI 3 "addsubx_operand" "i"))
 		 (match_operand:SI 2 "register_operand" "r")))]
   "TARGET_ADDX"
-  "addx2\t%0, %1, %2"
-  [(set_attr "type"	"arith")
-   (set_attr "mode"	"SI")
-   (set_attr "length"	"3")])
-
-(define_insn "*addx4"
-  [(set (match_operand:SI 0 "register_operand" "=a")
-	(plus:SI (mult:SI (match_operand:SI 1 "register_operand" "r")
-			  (const_int 4))
-		 (match_operand:SI 2 "register_operand" "r")))]
-  "TARGET_ADDX"
-  "addx4\t%0, %1, %2"
-  [(set_attr "type"	"arith")
-   (set_attr "mode"	"SI")
-   (set_attr "length"	"3")])
-
-(define_insn "*addx8"
-  [(set (match_operand:SI 0 "register_operand" "=a")
-	(plus:SI (mult:SI (match_operand:SI 1 "register_operand" "r")
-			  (const_int 8))
-		 (match_operand:SI 2 "register_operand" "r")))]
-  "TARGET_ADDX"
-  "addx8\t%0, %1, %2"
+  "addx%3\t%0, %1, %2"
   [(set_attr "type"	"arith")
    (set_attr "mode"	"SI")
    (set_attr "length"	"3")])
@@ -205,37 +177,6 @@
 
 ;; Subtraction.
 
-(define_expand "subdi3"
-  [(set (match_operand:DI 0 "register_operand" "")
-	(minus:DI (match_operand:DI 1 "register_operand" "")
-		  (match_operand:DI 2 "register_operand" "")))]
-  ""
-{
-  rtx dstlo = gen_lowpart (SImode, operands[0]);
-  rtx src1lo = gen_lowpart (SImode, operands[1]);
-  rtx src2lo = gen_lowpart (SImode, operands[2]);
-
-  rtx dsthi = gen_highpart (SImode, operands[0]);
-  rtx src1hi = gen_highpart (SImode, operands[1]);
-  rtx src2hi = gen_highpart (SImode, operands[2]);
-
-  emit_insn (gen_subsi3 (dsthi, src1hi, src2hi));
-  emit_insn (gen_subdi_carry (dsthi, src1lo, src2lo));
-  emit_insn (gen_subsi3 (dstlo, src1lo, src2lo));
-  DONE;
-})
-
-(define_insn "subdi_carry"
-  [(set (match_operand:SI 0 "register_operand" "+a")
-	(minus:SI (match_dup 0)
-		  (ltu:SI (match_operand:SI 1 "register_operand" "r")
-			  (match_operand:SI 2 "register_operand" "r"))))]
-  ""
-  "bgeu\t%1, %2, 0f\;addi\t%0, %0, -1\;0:"
-  [(set_attr "type"	"multi")
-   (set_attr "mode"	"SI")
-   (set_attr "length"	"6")])
-
 (define_insn "subsi3"
   [(set (match_operand:SI 0 "register_operand" "=a")
         (minus:SI (match_operand:SI 1 "register_operand" "r")
@@ -246,35 +187,13 @@
    (set_attr "mode"	"SI")
    (set_attr "length"	"3")])
 
-(define_insn "*subx2"
+(define_insn "*subx"
   [(set (match_operand:SI 0 "register_operand" "=a")
 	(minus:SI (mult:SI (match_operand:SI 1 "register_operand" "r")
-			   (const_int 2))
+			   (match_operand:SI 3 "addsubx_operand" "i"))
 		  (match_operand:SI 2 "register_operand" "r")))]
   "TARGET_ADDX"
-  "subx2\t%0, %1, %2"
-  [(set_attr "type"	"arith")
-   (set_attr "mode"	"SI")
-   (set_attr "length"	"3")])
-
-(define_insn "*subx4"
-  [(set (match_operand:SI 0 "register_operand" "=a")
-	(minus:SI (mult:SI (match_operand:SI 1 "register_operand" "r")
-			   (const_int 4))
-		  (match_operand:SI 2 "register_operand" "r")))]
-  "TARGET_ADDX"
-  "subx4\t%0, %1, %2"
-  [(set_attr "type"	"arith")
-   (set_attr "mode"	"SI")
-   (set_attr "length"	"3")])
-
-(define_insn "*subx8"
-  [(set (match_operand:SI 0 "register_operand" "=a")
-	(minus:SI (mult:SI (match_operand:SI 1 "register_operand" "r")
-			   (const_int 8))
-		  (match_operand:SI 2 "register_operand" "r")))]
-  "TARGET_ADDX"
-  "subx8\t%0, %1, %2"
+  "subx%3\t%0, %1, %2"
   [(set_attr "type"	"arith")
    (set_attr "mode"	"SI")
    (set_attr "length"	"3")])
@@ -291,6 +210,32 @@
 
 
 ;; Multiplication.
+
+(define_expand "<u>mulsidi3"
+  [(set (match_operand:DI 0 "register_operand")
+	(mult:DI (any_extend:DI (match_operand:SI 1 "register_operand"))
+		 (any_extend:DI (match_operand:SI 2 "register_operand"))))]
+  "TARGET_MUL32_HIGH"
+{
+  emit_insn (gen_mulsi3 (gen_lowpart (SImode, operands[0]),
+			 operands[1], operands[2]));
+  emit_insn (gen_<u>mulsi3_highpart (gen_highpart (SImode, operands[0]),
+				     operands[1], operands[2]));
+  DONE;
+})
+
+(define_insn "<u>mulsi3_highpart"
+  [(set (match_operand:SI 0 "register_operand" "=a")
+	(truncate:SI
+	 (lshiftrt:DI
+	  (mult:DI (any_extend:DI (match_operand:SI 1 "register_operand" "%r"))
+		   (any_extend:DI (match_operand:SI 2 "register_operand" "r")))
+	  (const_int 32))))]
+  "TARGET_MUL32_HIGH"
+  "mul<su>h\t%0, %1, %2"
+  [(set_attr "type"	"mul32")
+   (set_attr "mode"	"SI")
+   (set_attr "length"	"3")])
 
 (define_insn "mulsi3"
   [(set (match_operand:SI 0 "register_operand" "=a")
@@ -500,48 +445,41 @@
 
 ;; Min and max.
 
-(define_insn "sminsi3"
+(define_insn "<code>si3"
   [(set (match_operand:SI 0 "register_operand" "=a")
-        (smin:SI (match_operand:SI 1 "register_operand" "%r")
-                 (match_operand:SI 2 "register_operand" "r")))]
+        (any_minmax:SI (match_operand:SI 1 "register_operand" "%r")
+		       (match_operand:SI 2 "register_operand" "r")))]
   "TARGET_MINMAX"
-  "min\t%0, %1, %2"
-  [(set_attr "type"	"arith")
-   (set_attr "mode"	"SI")
-   (set_attr "length"	"3")])
-
-(define_insn "uminsi3"
-  [(set (match_operand:SI 0 "register_operand" "=a")
-        (umin:SI (match_operand:SI 1 "register_operand" "%r")
-                 (match_operand:SI 2 "register_operand" "r")))]
-  "TARGET_MINMAX"
-  "minu\t%0, %1, %2"
-  [(set_attr "type"	"arith")
-   (set_attr "mode"	"SI")
-   (set_attr "length"	"3")])
-
-(define_insn "smaxsi3"
-  [(set (match_operand:SI 0 "register_operand" "=a")
-        (smax:SI (match_operand:SI 1 "register_operand" "%r")
-                 (match_operand:SI 2 "register_operand" "r")))]
-  "TARGET_MINMAX"
-  "max\t%0, %1, %2"
-  [(set_attr "type"	"arith")
-   (set_attr "mode"	"SI")
-   (set_attr "length"	"3")])
-
-(define_insn "umaxsi3"
-  [(set (match_operand:SI 0 "register_operand" "=a")
-        (umax:SI (match_operand:SI 1 "register_operand" "%r")
-                 (match_operand:SI 2 "register_operand" "r")))]
-  "TARGET_MINMAX"
-  "maxu\t%0, %1, %2"
+  "<minmax>\t%0, %1, %2"
   [(set_attr "type"	"arith")
    (set_attr "mode"	"SI")
    (set_attr "length"	"3")])
 
 
-;; Find first bit.
+;; Count leading/trailing zeros and find first bit.
+
+(define_insn "clzsi2"
+  [(set (match_operand:SI 0 "register_operand" "=a")
+	(clz:SI (match_operand:SI 1 "register_operand" "r")))]
+  "TARGET_NSA"
+  "nsau\t%0, %1"
+  [(set_attr "type"	"arith")
+   (set_attr "mode"	"SI")
+   (set_attr "length"	"3")])
+
+(define_expand "ctzsi2"
+  [(set (match_operand:SI 0 "register_operand" "")
+	(ctz:SI (match_operand:SI 1 "register_operand" "")))]
+  "TARGET_NSA"
+{
+  rtx temp = gen_reg_rtx (SImode);
+  emit_insn (gen_negsi2 (temp, operands[1]));
+  emit_insn (gen_andsi3 (temp, temp, operands[1]));
+  emit_insn (gen_clzsi2 (temp, temp));
+  emit_insn (gen_negsi2 (temp, temp));
+  emit_insn (gen_addsi3 (operands[0], temp, GEN_INT (31)));
+  DONE;
+})
 
 (define_expand "ffssi2"
   [(set (match_operand:SI 0 "register_operand" "")
@@ -551,21 +489,11 @@
   rtx temp = gen_reg_rtx (SImode);
   emit_insn (gen_negsi2 (temp, operands[1]));
   emit_insn (gen_andsi3 (temp, temp, operands[1]));
-  emit_insn (gen_nsau (temp, temp));
+  emit_insn (gen_clzsi2 (temp, temp));
   emit_insn (gen_negsi2 (temp, temp));
   emit_insn (gen_addsi3 (operands[0], temp, GEN_INT (32)));
   DONE;
 })
-
-;; There is no RTL operator corresponding to NSAU.
-(define_insn "nsau"
-  [(set (match_operand:SI 0 "register_operand" "=a")
-	(unspec:SI [(match_operand:SI 1 "register_operand" "r")] UNSPEC_NSAU))]
-  "TARGET_NSA"
-  "nsau\t%0, %1"
-  [(set_attr "type"	"arith")
-   (set_attr "mode"	"SI")
-   (set_attr "length"	"3")])
 
 
 ;; Negation and one's complement.
@@ -1171,17 +1099,6 @@
   DONE;
 })
 
-(define_expand "tstsi"
-  [(set (cc0)
-	(match_operand:SI 0 "register_operand" ""))]
-  ""
-{
-  branch_cmp[0] = operands[0];
-  branch_cmp[1] = const0_rtx;
-  branch_type = CMP_SI;
-  DONE;
-})
-
 (define_expand "cmpsf"
   [(set (cc0)
 	(compare:CC (match_operand:SF 0 "register_operand" "")
@@ -1197,113 +1114,14 @@
 
 ;; Conditional branches.
 
-(define_expand "beq"
+(define_expand "b<code>"
   [(set (pc)
-	(if_then_else (eq (cc0) (const_int 0))
+	(if_then_else (any_cond (cc0) (const_int 0))
 		      (label_ref (match_operand 0 "" ""))
 		      (pc)))]
   ""
 {
-  xtensa_expand_conditional_branch (operands, EQ);
-  DONE;
-})
-
-(define_expand "bne"
-  [(set (pc)
-	(if_then_else (ne (cc0) (const_int 0))
-		      (label_ref (match_operand 0 "" ""))
-		      (pc)))]
-  ""
-{
-  xtensa_expand_conditional_branch (operands, NE);
-  DONE;
-})
-
-(define_expand "bgt"
-  [(set (pc)
-	(if_then_else (gt (cc0) (const_int 0))
-		      (label_ref (match_operand 0 "" ""))
-		      (pc)))]
-  ""
-{
-  xtensa_expand_conditional_branch (operands, GT);
-  DONE;
-})
-
-(define_expand "bge"
-  [(set (pc)
-	(if_then_else (ge (cc0) (const_int 0))
-		      (label_ref (match_operand 0 "" ""))
-		      (pc)))]
-  ""
-{
-  xtensa_expand_conditional_branch (operands, GE);
-  DONE;
-})
-
-(define_expand "blt"
-  [(set (pc)
-	(if_then_else (lt (cc0) (const_int 0))
-		      (label_ref (match_operand 0 "" ""))
-		      (pc)))]
-  ""
-{
-  xtensa_expand_conditional_branch (operands, LT);
-  DONE;
-})
-
-(define_expand "ble"
-  [(set (pc)
-	(if_then_else (le (cc0) (const_int 0))
-		      (label_ref (match_operand 0 "" ""))
-		      (pc)))]
-  ""
-{
-  xtensa_expand_conditional_branch (operands, LE);
-  DONE;
-})
-
-(define_expand "bgtu"
-  [(set (pc)
-	(if_then_else (gtu (cc0) (const_int 0))
-		      (label_ref (match_operand 0 "" ""))
-		      (pc)))]
-  ""
-{
-  xtensa_expand_conditional_branch (operands, GTU);
-  DONE;
-})
-
-(define_expand "bgeu"
-  [(set (pc)
-	(if_then_else (geu (cc0) (const_int 0))
-		      (label_ref (match_operand 0 "" ""))
-		      (pc)))]
-  ""
-{
-  xtensa_expand_conditional_branch (operands, GEU);
-  DONE;
-})
-
-(define_expand "bltu"
-  [(set (pc)
-	(if_then_else (ltu (cc0) (const_int 0))
-		      (label_ref (match_operand 0 "" ""))
-		      (pc)))]
-  ""
-{
-  xtensa_expand_conditional_branch (operands, LTU);
-  DONE;
-})
-
-(define_expand "bleu"
-  [(set (pc)
-	(if_then_else (leu (cc0) (const_int 0))
-		      (label_ref (match_operand 0 "" ""))
-		      (pc)))]
-  ""
-{
-  xtensa_expand_conditional_branch (operands, LEU);
+  xtensa_expand_conditional_branch (operands, <CODE>);
   DONE;
 })
 
@@ -1312,50 +1130,13 @@
 (define_insn "*btrue"
   [(set (pc)
 	(if_then_else (match_operator 3 "branch_operator"
-			 [(match_operand:SI 0 "register_operand" "r,r")
-			  (match_operand:SI 1 "branch_operand" "K,r")])
+		       [(match_operand:SI 0 "register_operand" "r,r")
+			(match_operand:SI 1 "branch_operand" "K,r")])
 		      (label_ref (match_operand 2 "" ""))
 		      (pc)))]
   ""
 {
-  if (which_alternative == 1)
-    {
-      switch (GET_CODE (operands[3]))
-	{
-	case EQ:	return "beq\t%0, %1, %2";
-	case NE:	return "bne\t%0, %1, %2";
-	case LT:	return "blt\t%0, %1, %2";
-	case GE:	return "bge\t%0, %1, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  else if (INTVAL (operands[1]) == 0)
-    {
-      switch (GET_CODE (operands[3]))
-	{
-	case EQ:	return (TARGET_DENSITY
-				? "beqz.n\t%0, %2"
-				: "beqz\t%0, %2");
-	case NE:	return (TARGET_DENSITY
-				? "bnez.n\t%0, %2"
-				: "bnez\t%0, %2");
-	case LT:	return "bltz\t%0, %2";
-	case GE:	return "bgez\t%0, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  else
-    {
-      switch (GET_CODE (operands[3]))
-	{
-	case EQ:	return "beqi\t%0, %d1, %2";
-	case NE:	return "bnei\t%0, %d1, %2";
-	case LT:	return "blti\t%0, %d1, %2";
-	case GE:	return "bgei\t%0, %d1, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  gcc_unreachable ();
+  return xtensa_emit_branch (false, which_alternative == 0, operands);
 }
   [(set_attr "type"	"jump,jump")
    (set_attr "mode"	"none")
@@ -1364,50 +1145,13 @@
 (define_insn "*bfalse"
   [(set (pc)
 	(if_then_else (match_operator 3 "branch_operator"
-			 [(match_operand:SI 0 "register_operand" "r,r")
-			  (match_operand:SI 1 "branch_operand" "K,r")])
+		       [(match_operand:SI 0 "register_operand" "r,r")
+			(match_operand:SI 1 "branch_operand" "K,r")])
 		      (pc)
 		      (label_ref (match_operand 2 "" ""))))]
   ""
 {
-  if (which_alternative == 1)
-    {
-      switch (GET_CODE (operands[3]))
-	{
-	case EQ:	return "bne\t%0, %1, %2";
-	case NE:	return "beq\t%0, %1, %2";
-	case LT:	return "bge\t%0, %1, %2";
-	case GE:	return "blt\t%0, %1, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  else if (INTVAL (operands[1]) == 0)
-    {
-      switch (GET_CODE (operands[3]))
-	{
-	case EQ:	return (TARGET_DENSITY
-				? "bnez.n\t%0, %2"
-				: "bnez\t%0, %2");
-	case NE:	return (TARGET_DENSITY
-				? "beqz.n\t%0, %2"
-				: "beqz\t%0, %2");
-	case LT:	return "bgez\t%0, %2";
-	case GE:	return "bltz\t%0, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  else
-    {
-      switch (GET_CODE (operands[3]))
-	{
-	case EQ:	return "bnei\t%0, %d1, %2";
-	case NE:	return "beqi\t%0, %d1, %2";
-	case LT:	return "bgei\t%0, %d1, %2";
-	case GE:	return "blti\t%0, %d1, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  gcc_unreachable ();
+  return xtensa_emit_branch (true, which_alternative == 0, operands);
 }
   [(set_attr "type"	"jump,jump")
    (set_attr "mode"	"none")
@@ -1416,31 +1160,13 @@
 (define_insn "*ubtrue"
   [(set (pc)
 	(if_then_else (match_operator 3 "ubranch_operator"
-			 [(match_operand:SI 0 "register_operand" "r,r")
-			  (match_operand:SI 1 "ubranch_operand" "L,r")])
+		       [(match_operand:SI 0 "register_operand" "r,r")
+			(match_operand:SI 1 "ubranch_operand" "L,r")])
 		      (label_ref (match_operand 2 "" ""))
 		      (pc)))]
   ""
 {
-  if (which_alternative == 1)
-    {
-      switch (GET_CODE (operands[3]))
-	{
-	case LTU:	return "bltu\t%0, %1, %2";
-	case GEU:	return "bgeu\t%0, %1, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  else
-    {
-      switch (GET_CODE (operands[3]))
-	{
-	case LTU:	return "bltui\t%0, %d1, %2";
-	case GEU:	return "bgeui\t%0, %d1, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  gcc_unreachable ();
+  return xtensa_emit_branch (false, which_alternative == 0, operands);
 }
   [(set_attr "type"	"jump,jump")
    (set_attr "mode"	"none")
@@ -1455,25 +1181,7 @@
 		      (label_ref (match_operand 2 "" ""))))]
   ""
 {
-  if (which_alternative == 1)
-    {
-      switch (GET_CODE (operands[3]))
-	{
-	case LTU:	return "bgeu\t%0, %1, %2";
-	case GEU:	return "bltu\t%0, %1, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  else
-    {
-      switch (GET_CODE (operands[3]))
-	{
-	case LTU:	return "bgeui\t%0, %d1, %2";
-	case GEU:	return "bltui\t%0, %d1, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  gcc_unreachable ();
+  return xtensa_emit_branch (true, which_alternative == 0, operands);
 }
   [(set_attr "type"	"jump,jump")
    (set_attr "mode"	"none")
@@ -1493,27 +1201,7 @@
 		      (pc)))]
   ""
 {
-  if (which_alternative == 0)
-    {
-      unsigned bitnum = INTVAL(operands[1]) & 0x1f;
-      operands[1] = GEN_INT(bitnum);
-      switch (GET_CODE (operands[3]))
-	{
-	case EQ:	return "bbci\t%0, %d1, %2";
-	case NE:	return "bbsi\t%0, %d1, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  else
-    {
-      switch (GET_CODE (operands[3]))
-	{
-	case EQ:	return "bbc\t%0, %1, %2";
-	case NE:	return "bbs\t%0, %1, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  gcc_unreachable ();
+  return xtensa_emit_bit_branch (false, which_alternative == 0, operands);
 }
   [(set_attr "type"	"jump")
    (set_attr "mode"	"none")
@@ -1531,27 +1219,7 @@
 		      (label_ref (match_operand 2 "" ""))))]
   ""
 {
-  if (which_alternative == 0)
-    {
-      unsigned bitnum = INTVAL (operands[1]) & 0x1f;
-      operands[1] = GEN_INT (bitnum);
-      switch (GET_CODE (operands[3]))
-	{
-	case EQ:	return "bbsi\t%0, %d1, %2";
-	case NE:	return "bbci\t%0, %d1, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  else
-    {
-      switch (GET_CODE (operands[3]))
-	{
-	case EQ:	return "bbs\t%0, %1, %2";
-	case NE:	return "bbc\t%0, %1, %2";
-	default:	gcc_unreachable ();
-	}
-    }
-  gcc_unreachable ();
+  return xtensa_emit_bit_branch (true, which_alternative == 0, operands);
 }
   [(set_attr "type"	"jump")
    (set_attr "mode"	"none")
@@ -1638,67 +1306,13 @@
 
 ;; Setting a register from a comparison.
 
-(define_expand "seq"
+(define_expand "s<code>"
   [(set (match_operand:SI 0 "register_operand" "")
-	(match_dup 1))]
+	(any_scc:SI (match_dup 1)
+		    (match_dup 2)))]
   ""
 {
-  operands[1] = gen_rtx_EQ (SImode, branch_cmp[0], branch_cmp[1]);
-  if (!xtensa_expand_scc (operands))
-    FAIL;
-  DONE;
-})
-
-(define_expand "sne"
-  [(set (match_operand:SI 0 "register_operand" "")
-	(match_dup 1))]
-  ""
-{
-  operands[1] = gen_rtx_NE (SImode, branch_cmp[0], branch_cmp[1]);
-  if (!xtensa_expand_scc (operands))
-    FAIL;
-  DONE;
-})
-
-(define_expand "sgt"
-  [(set (match_operand:SI 0 "register_operand" "")
-	(match_dup 1))]
-  ""
-{
-  operands[1] = gen_rtx_GT (SImode, branch_cmp[0], branch_cmp[1]);
-  if (!xtensa_expand_scc (operands))
-    FAIL;
-  DONE;
-})
-
-(define_expand "sge"
-  [(set (match_operand:SI 0 "register_operand" "")
-	(match_dup 1))]
-  ""
-{
-  operands[1] = gen_rtx_GE (SImode, branch_cmp[0], branch_cmp[1]);
-  if (!xtensa_expand_scc (operands))
-    FAIL;
-  DONE;
-})
-
-(define_expand "slt"
-  [(set (match_operand:SI 0 "register_operand" "")
-	(match_dup 1))]
-  ""
-{
-  operands[1] = gen_rtx_LT (SImode, branch_cmp[0], branch_cmp[1]);
-  if (!xtensa_expand_scc (operands))
-    FAIL;
-  DONE;
-})
-
-(define_expand "sle"
-  [(set (match_operand:SI 0 "register_operand" "")
-	(match_dup 1))]
-  ""
-{
-  operands[1] = gen_rtx_LE (SImode, branch_cmp[0], branch_cmp[1]);
+  operands[1] = gen_rtx_<CODE> (SImode, branch_cmp[0], branch_cmp[1]);
   if (!xtensa_expand_scc (operands))
     FAIL;
   DONE;
@@ -1740,29 +1354,7 @@
 			 (match_operand:SI 3 "register_operand" "0,r")))]
   ""
 {
-  if (which_alternative == 0)
-    {
-      switch (GET_CODE (operands[4]))
-	{
-	case EQ:	return "moveqz\t%0, %2, %1";
-	case NE:	return "movnez\t%0, %2, %1";
-	case LT:	return "movltz\t%0, %2, %1";
-	case GE:	return "movgez\t%0, %2, %1";
-	default:	gcc_unreachable ();
-	}
-    }
-  else
-    {
-      switch (GET_CODE (operands[4]))
-	{
-	case EQ:	return "movnez\t%0, %3, %1";
-	case NE:	return "moveqz\t%0, %3, %1";
-	case LT:	return "movgez\t%0, %3, %1";
-	case GE:	return "movltz\t%0, %3, %1";
-	default:	gcc_unreachable ();
-	}
-    }
-  gcc_unreachable ();
+  return xtensa_emit_movcc (which_alternative == 1, false, false, operands);
 }
   [(set_attr "type"	"move,move")
    (set_attr "mode"	"SI")
@@ -1777,18 +1369,7 @@
 			 (match_operand:SI 3 "register_operand" "0,r")))]
   "TARGET_BOOLEANS"
 {
-  int isEq = (GET_CODE (operands[4]) == EQ);
-  switch (which_alternative)
-    {
-    case 0:
-      if (isEq) return "movf\t%0, %2, %1";
-      return "movt\t%0, %2, %1";
-    case 1:
-      if (isEq) return "movt\t%0, %3, %1";
-      return "movf\t%0, %3, %1";
-    default:
-      gcc_unreachable ();
-    }
+  return xtensa_emit_movcc (which_alternative == 1, false, true, operands);
 }
   [(set_attr "type"	"move,move")
    (set_attr "mode"	"SI")
@@ -1803,52 +1384,8 @@
 			 (match_operand:SF 3 "register_operand" "0,r,0,f")))]
   ""
 {
-  switch (which_alternative)
-    {
-    case 0:
-      switch (GET_CODE (operands[4]))
-	{
-	case EQ:	return "moveqz\t%0, %2, %1";
-	case NE:	return "movnez\t%0, %2, %1";
-	case LT:	return "movltz\t%0, %2, %1";
-	case GE:	return "movgez\t%0, %2, %1";
-	default:	gcc_unreachable ();
-	}
-      break;
-    case 1:
-      switch (GET_CODE (operands[4]))
-	{
-	case EQ:	return "movnez\t%0, %3, %1";
-	case NE:	return "moveqz\t%0, %3, %1";
-	case LT:	return "movgez\t%0, %3, %1";
-	case GE:	return "movltz\t%0, %3, %1";
-	default:	gcc_unreachable ();
-	}
-      break;
-    case 2:
-      switch (GET_CODE (operands[4]))
-	{
-	case EQ:	return "moveqz.s %0, %2, %1";
-	case NE:	return "movnez.s %0, %2, %1";
-	case LT:	return "movltz.s %0, %2, %1";
-	case GE:	return "movgez.s %0, %2, %1";
-	default:	gcc_unreachable ();
-	}
-      break;
-    case 3:
-      switch (GET_CODE (operands[4]))
-	{
-	case EQ:	return "movnez.s %0, %3, %1";
-	case NE:	return "moveqz.s %0, %3, %1";
-	case LT:	return "movgez.s %0, %3, %1";
-	case GE:	return "movltz.s %0, %3, %1";
-	default:	gcc_unreachable ();
-	}
-      break;
-    default:
-      gcc_unreachable ();
-    }
-  gcc_unreachable ();
+  return xtensa_emit_movcc ((which_alternative & 1) == 1,
+			    which_alternative >= 2, false, operands);
 }
   [(set_attr "type"	"move,move,move,move")
    (set_attr "mode"	"SF")
@@ -1863,24 +1400,8 @@
 			 (match_operand:SF 3 "register_operand" "0,r,0,f")))]
   "TARGET_BOOLEANS"
 {
-  int isEq = (GET_CODE (operands[4]) == EQ);
-  switch (which_alternative)
-    {
-    case 0:
-      if (isEq) return "movf\t%0, %2, %1";
-      return "movt\t%0, %2, %1";
-    case 1:
-      if (isEq) return "movt\t%0, %3, %1";
-      return "movf\t%0, %3, %1";
-    case 2:
-      if (isEq) return "movf.s\t%0, %2, %1";
-      return "movt.s\t%0, %2, %1";
-    case 3:
-      if (isEq) return "movt.s\t%0, %3, %1";
-      return "movf.s\t%0, %3, %1";
-    default:
-      gcc_unreachable ();
-    }
+  return xtensa_emit_movcc ((which_alternative & 1) == 1,
+			    which_alternative >= 2, true, operands);
 }
   [(set_attr "type"	"move,move,move,move")
    (set_attr "mode"	"SF")
@@ -1889,32 +1410,12 @@
 
 ;; Floating-point comparisons.
 
-(define_insn "seq_sf"
+(define_insn "s<code>_sf"
   [(set (match_operand:CC 0 "register_operand" "=b")
-	(eq:CC (match_operand:SF 1 "register_operand" "f")
-	       (match_operand:SF 2 "register_operand" "f")))]
+	(any_scc_sf:CC (match_operand:SF 1 "register_operand" "f")
+		       (match_operand:SF 2 "register_operand" "f")))]
   "TARGET_HARD_FLOAT"
-  "oeq.s\t%0, %1, %2"
-  [(set_attr "type"	"farith")
-   (set_attr "mode"	"BL")
-   (set_attr "length"	"3")])
-
-(define_insn "slt_sf"
-  [(set (match_operand:CC 0 "register_operand" "=b")
-	(lt:CC (match_operand:SF 1 "register_operand" "f")
-	       (match_operand:SF 2 "register_operand" "f")))]
-  "TARGET_HARD_FLOAT"
-  "olt.s\t%0, %1, %2"
-  [(set_attr "type"	"farith")
-   (set_attr "mode"	"BL")
-   (set_attr "length"	"3")])
-
-(define_insn "sle_sf"
-  [(set (match_operand:CC 0 "register_operand" "=b")
-	(le:CC (match_operand:SF 1 "register_operand" "f")
-	       (match_operand:SF 2 "register_operand" "f")))]
-  "TARGET_HARD_FLOAT"
-  "ole.s\t%0, %1, %2"
+  "o<code>.s\t%0, %1, %2"
   [(set_attr "type"	"farith")
    (set_attr "mode"	"BL")
    (set_attr "length"	"3")])
@@ -2003,8 +1504,8 @@
 })
 
 (define_insn "call_internal"
-  [(call (mem (match_operand:SI 0 "call_insn_operand" "n,i,r"))
-	 (match_operand 1 "" "i,i,i"))]
+  [(call (mem (match_operand:SI 0 "call_insn_operand" "nir"))
+	 (match_operand 1 "" "i"))]
   ""
 {
   return xtensa_emit_call (0, operands);
@@ -2027,16 +1528,10 @@
     XEXP (operands[1], 0) = copy_to_mode_reg (Pmode, addr);
 })
 
-;; Cannot combine constraints for operand 0 into "afvb":
-;; reload.c:find_reloads seems to assume that grouped constraints somehow
-;; specify related register classes, and when they don't the constraints
-;; fail to match.  By not grouping the constraints, we get the correct
-;; behavior.
 (define_insn "call_value_internal"
-   [(set (match_operand 0 "register_operand" "=af,af,af,v,v,v,b,b,b")
-         (call (mem (match_operand:SI 1 "call_insn_operand"
-					"n,i,r,n,i,r,n,i,r"))
-               (match_operand 2 "" "i,i,i,i,i,i,i,i,i")))]
+   [(set (match_operand 0 "register_operand" "=a")
+         (call (mem (match_operand:SI 1 "call_insn_operand" "nir"))
+               (match_operand 2 "" "i")))]
   ""
 {
   return xtensa_emit_call (1, operands);
@@ -2047,18 +1542,11 @@
 
 (define_insn "entry"
   [(set (reg:SI A1_REG)
-	(unspec_volatile:SI [(match_operand:SI 0 "const_int_operand" "i")
-			     (match_operand:SI 1 "const_int_operand" "i")]
+	(unspec_volatile:SI [(match_operand:SI 0 "const_int_operand" "i")]
 			    UNSPECV_ENTRY))]
   ""
-{
-  if (frame_pointer_needed)
-    output_asm_insn (".frame\ta7, %0", operands);
-  else
-    output_asm_insn (".frame\tsp, %0", operands);
-  return "entry\tsp, %1";
-}
-  [(set_attr "type"	"move")
+  "entry\tsp, %0"
+  [(set_attr "type"	"entry")
    (set_attr "mode"	"SI")
    (set_attr "length"	"3")])
 
@@ -2113,6 +1601,26 @@
   DONE;
 })
 
+;; Stuff an address into the return address register along with the window
+;; size in the high bits.  Because we don't have the window size of the
+;; previous frame, assume the function called out with a CALL8 since that
+;; is what compilers always use.  Note: __builtin_frob_return_addr has
+;; already been applied to the handler, but the generic version doesn't
+;; allow us to frob it quite enough, so we just frob here.
+
+(define_insn_and_split "eh_return"
+  [(set (reg:SI A0_REG)
+	(unspec_volatile:SI [(match_operand:SI 0 "register_operand" "r")]
+			    UNSPECV_EH_RETURN))
+   (clobber (match_scratch:SI 1 "=r"))]
+  ""
+  "#"
+  "reload_completed"
+  [(set (match_dup 1) (ashift:SI (match_dup 0) (const_int 2)))
+   (set (match_dup 1) (plus:SI (match_dup 1) (const_int 2)))
+   (set (reg:SI A0_REG) (rotatert:SI (match_dup 1) (const_int 2)))]
+  "")
+
 ;; Setting up a frame pointer is tricky for Xtensa because GCC doesn't
 ;; know if a frame pointer is required until the reload pass, and
 ;; because there may be an incoming argument value in the hard frame
@@ -2158,21 +1666,6 @@
    (set_attr "mode"	"none")
    (set_attr "length"	"0")])
 
-;; The fix_return_addr pattern sets the high 2 bits of an address in a
-;; register to match the high bits of the current PC.
-(define_insn "fix_return_addr"
-  [(set (match_operand:SI 0 "register_operand" "=a")
-	(unspec:SI [(match_operand:SI 1 "register_operand" "r")]
-		   UNSPEC_RET_ADDR))
-   (clobber (match_scratch:SI 2 "=r"))
-   (clobber (match_scratch:SI 3 "=r"))]
-  ""
-  "mov\t%2, a0\;call0\t0f\;.align\t4\;0:\;mov\t%3, a0\;mov\ta0, %2\;\
-srli\t%3, %3, 30\;slli\t%0, %1, 2\;ssai\t2\;src\t%0, %3, %0"
-  [(set_attr "type"	"multi")
-   (set_attr "mode"	"SI")
-   (set_attr "length"	"24")])
-
 
 ;; Instructions for the Xtensa "boolean" option.
 
@@ -2211,3 +1704,113 @@ srli\t%3, %3, 30\;slli\t%0, %1, 2\;ssai\t2\;src\t%0, %3, %0"
   [(set_attr "type"	"jump")
    (set_attr "mode"	"none")
    (set_attr "length"	"3")])
+
+
+;; Atomic operations
+
+(define_expand "memory_barrier"
+  [(set (mem:BLK (match_dup 0))
+	(unspec_volatile:BLK [(mem:BLK (match_dup 0))] UNSPECV_MEMW))]
+  ""
+{
+  operands[0] = gen_rtx_MEM (BLKmode, gen_rtx_SCRATCH (SImode));
+  MEM_VOLATILE_P (operands[0]) = 1;
+})
+
+(define_insn "*memory_barrier"
+  [(set (match_operand:BLK 0 "" "")
+	(unspec_volatile:BLK [(match_operand:BLK 1 "" "")] UNSPECV_MEMW))]
+  ""
+  "memw"
+  [(set_attr "type"	"unknown")
+   (set_attr "mode"	"none")
+   (set_attr "length"	"3")])
+
+;; sync_lock_release is only implemented for SImode.
+;; For other modes, just use the default of a store with a memory_barrier.
+(define_insn "sync_lock_releasesi"
+  [(set (match_operand:SI 0 "mem_operand" "=U")
+	(unspec_volatile:SI
+	  [(match_operand:SI 1 "register_operand" "r")]
+	  UNSPECV_S32RI))]
+  "TARGET_RELEASE_SYNC"
+  "s32ri\t%1, %0"
+  [(set_attr "type"	"store")
+   (set_attr "mode"	"SI")
+   (set_attr "length"	"3")])
+
+(define_insn "sync_compare_and_swapsi"
+  [(parallel
+    [(set (match_operand:SI 0 "register_operand" "=a")
+	  (match_operand:SI 1 "mem_operand" "+U"))
+     (set (match_dup 1)
+	  (unspec_volatile:SI
+	    [(match_dup 1)
+	     (match_operand:SI 2 "register_operand" "r")
+	     (match_operand:SI 3 "register_operand" "0")]
+	    UNSPECV_S32C1I))])]
+  "TARGET_S32C1I"
+  "wsr\t%2, SCOMPARE1\;s32c1i\t%3, %1"
+  [(set_attr "type"	"multi")
+   (set_attr "mode"	"SI")
+   (set_attr "length"	"6")])
+
+(define_expand "sync_compare_and_swap<mode>"
+  [(parallel
+    [(set (match_operand:HQI 0 "register_operand" "")
+	  (match_operand:HQI 1 "mem_operand" ""))
+     (set (match_dup 1)
+	  (unspec_volatile:HQI
+	    [(match_dup 1)
+	     (match_operand:HQI 2 "register_operand" "")
+	     (match_operand:HQI 3 "register_operand" "")]
+	    UNSPECV_S32C1I))])]
+  "TARGET_S32C1I"
+{
+  xtensa_expand_compare_and_swap (operands[0], operands[1],
+				  operands[2], operands[3]);
+  DONE;
+})
+
+(define_expand "sync_lock_test_and_set<mode>"
+  [(match_operand:HQI 0 "register_operand")
+   (match_operand:HQI 1 "memory_operand")
+   (match_operand:HQI 2 "register_operand")]
+  "TARGET_S32C1I"
+{
+  xtensa_expand_atomic (SET, operands[0], operands[1], operands[2], false);
+  DONE;
+})
+
+(define_expand "sync_<atomic><mode>"
+  [(set (match_operand:HQI 0 "memory_operand")
+	(ATOMIC:HQI (match_dup 0)
+		    (match_operand:HQI 1 "register_operand")))]
+  "TARGET_S32C1I"
+{
+  xtensa_expand_atomic (<CODE>, NULL_RTX, operands[0], operands[1], false);
+  DONE;
+})
+
+(define_expand "sync_old_<atomic><mode>"
+  [(set (match_operand:HQI 0 "register_operand")
+	(match_operand:HQI 1 "memory_operand"))
+   (set (match_dup 1)
+	(ATOMIC:HQI (match_dup 1)
+		    (match_operand:HQI 2 "register_operand")))]
+  "TARGET_S32C1I"
+{
+  xtensa_expand_atomic (<CODE>, operands[0], operands[1], operands[2], false);
+  DONE;
+})
+
+(define_expand "sync_new_<atomic><mode>"
+  [(set (match_operand:HQI 0 "register_operand")
+	(ATOMIC:HQI (match_operand:HQI 1 "memory_operand")
+		    (match_operand:HQI 2 "register_operand"))) 
+   (set (match_dup 1) (ATOMIC:HQI (match_dup 1) (match_dup 2)))]
+  "TARGET_S32C1I"
+{
+  xtensa_expand_atomic (<CODE>, operands[0], operands[1], operands[2], true);
+  DONE;
+})

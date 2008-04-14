@@ -1,12 +1,12 @@
 /* Xtensa/Elf configuration.
    Derived from the configuration for GCC for Intel i386 running Linux.
-   Copyright (C) 2001,2003 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2003, 2006, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #define TARGET_SECTION_TYPE_FLAGS xtensa_multibss_section_type_flags
 
@@ -80,19 +79,6 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 /* Do not force "-fpic" for this target.  */
 #define XTENSA_ALWAYS_PIC 0
 
-/* Redefine the standard ELF version of ASM_DECLARE_FUNCTION_SIZE to
-   allow adding the ".end literal_prefix" directive at the end of the
-   function.  */
-#undef ASM_DECLARE_FUNCTION_SIZE
-#define ASM_DECLARE_FUNCTION_SIZE(FILE, FNAME, DECL)		\
-  do								\
-    {								\
-      if (!flag_inhibit_size_directive)				\
-	ASM_OUTPUT_MEASURED_SIZE (FILE, FNAME);			\
-      XTENSA_DECLARE_FUNCTION_SIZE(FILE, FNAME, DECL);		\
-    }								\
-  while (0)
-
 /* Search for headers in $tooldir/arch/include and for libraries and
    startfiles in $tooldir/arch/lib.  */
 #define GCC_DRIVER_HOST_INITIALIZATION \
@@ -113,3 +99,4 @@ do \
   } \
 while (0)
 
+#define HANDLE_PRAGMA_PACK_PUSH_POP 1

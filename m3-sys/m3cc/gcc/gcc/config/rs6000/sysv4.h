@@ -1,13 +1,13 @@
 /* Target definitions for GNU compiler for PowerPC running System V.4
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-   2004, 2005, 2006 Free Software Foundation, Inc.
+   2004, 2005, 2006, 2007 Free Software Foundation, Inc.
    Contributed by Cygnus Support.
 
    This file is part of GCC.
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published
-   by the Free Software Foundation; either version 2, or (at your
+   by the Free Software Foundation; either version 3, or (at your
    option) any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -16,9 +16,8 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to the
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 /* Header files should be C++ aware in general.  */
 #undef  NO_IMPLICIT_EXTERN_C
@@ -215,13 +214,12 @@ do {									\
       error ("-msecure-plt not supported by your assembler");		\
     }									\
 									\
-  if (TARGET_SOFT_FLOAT && TARGET_LONG_DOUBLE_128			\
-      && rs6000_explicit_options.long_double)				\
-    warning (0, "-msoft-float and -mlong-double-128 not supported");	\
-									\
   /* Treat -fPIC the same as -mrelocatable.  */				\
   if (flag_pic > 1 && DEFAULT_ABI != ABI_AIX)				\
-    target_flags |= MASK_RELOCATABLE | MASK_MINIMAL_TOC | MASK_NO_FP_IN_TOC; \
+    {									\
+      target_flags |= MASK_RELOCATABLE | MASK_MINIMAL_TOC;		\
+      TARGET_NO_FP_IN_TOC = 1;						\
+    }									\
 									\
   else if (TARGET_RELOCATABLE)						\
     flag_pic = 2;							\
@@ -363,131 +361,12 @@ do {									\
 #define	SDATA2_SECTION_ASM_OP "\t.section\t\".sdata2\",\"a\""
 #define	SBSS_SECTION_ASM_OP "\t.section\t\".sbss\",\"aw\",@nobits"
 
-/* Besides the usual ELF sections, we need a toc section.  */
-/* Override elfos.h definition.  */
-#undef	EXTRA_SECTIONS
-#define	EXTRA_SECTIONS in_toc, in_sdata, in_sdata2, in_sbss, in_init, in_fini
-
-/* Override elfos.h definition.  */
-#undef	EXTRA_SECTION_FUNCTIONS
-#define	EXTRA_SECTION_FUNCTIONS						\
-  TOC_SECTION_FUNCTION							\
-  SDATA_SECTION_FUNCTION						\
-  SDATA2_SECTION_FUNCTION						\
-  SBSS_SECTION_FUNCTION							\
-  INIT_SECTION_FUNCTION							\
-  FINI_SECTION_FUNCTION
-
-#define	TOC_SECTION_FUNCTION						\
-void									\
-toc_section (void)							\
-{									\
-  if (in_section != in_toc)						\
-    {									\
-      in_section = in_toc;						\
-      if (DEFAULT_ABI == ABI_AIX					\
-	  && TARGET_MINIMAL_TOC						\
-	  && !TARGET_RELOCATABLE)					\
-	{								\
-	  if (! toc_initialized)					\
-	    {								\
-	      toc_initialized = 1;					\
-	      fprintf (asm_out_file, "%s\n", TOC_SECTION_ASM_OP);	\
-	      (*targetm.asm_out.internal_label) (asm_out_file, "LCTOC", 0); \
-	      fprintf (asm_out_file, "\t.tc ");				\
-	      ASM_OUTPUT_INTERNAL_LABEL_PREFIX (asm_out_file, "LCTOC1[TC],"); \
-	      ASM_OUTPUT_INTERNAL_LABEL_PREFIX (asm_out_file, "LCTOC1"); \
-	      fprintf (asm_out_file, "\n");				\
-									\
-	      fprintf (asm_out_file, "%s\n", MINIMAL_TOC_SECTION_ASM_OP); \
-	      ASM_OUTPUT_INTERNAL_LABEL_PREFIX (asm_out_file, "LCTOC1"); \
-	      fprintf (asm_out_file, " = .+32768\n");			\
-	    }								\
-	  else								\
-	    fprintf (asm_out_file, "%s\n", MINIMAL_TOC_SECTION_ASM_OP);	\
-	}								\
-      else if (DEFAULT_ABI == ABI_AIX && !TARGET_RELOCATABLE)		\
-	fprintf (asm_out_file, "%s\n", TOC_SECTION_ASM_OP);		\
-      else								\
-	{								\
-	  fprintf (asm_out_file, "%s\n", MINIMAL_TOC_SECTION_ASM_OP);	\
-	  if (! toc_initialized)					\
-	    {								\
-	      ASM_OUTPUT_INTERNAL_LABEL_PREFIX (asm_out_file, "LCTOC1"); \
-	      fprintf (asm_out_file, " = .+32768\n");			\
-	      toc_initialized = 1;					\
-	    }								\
-	}								\
-    }									\
-}									\
-									\
-extern int in_toc_section (void);					\
-int in_toc_section (void)						\
-{									\
-  return in_section == in_toc;						\
-}
-
-#define	SDATA_SECTION_FUNCTION						\
-void									\
-sdata_section (void)							\
-{									\
-  if (in_section != in_sdata)						\
-    {									\
-      in_section = in_sdata;						\
-      fprintf (asm_out_file, "%s\n", SDATA_SECTION_ASM_OP);		\
-    }									\
-}
-
-#define	SDATA2_SECTION_FUNCTION						\
-void									\
-sdata2_section (void)							\
-{									\
-  if (in_section != in_sdata2)						\
-    {									\
-      in_section = in_sdata2;						\
-      fprintf (asm_out_file, "%s\n", SDATA2_SECTION_ASM_OP);		\
-    }									\
-}
-
-#define	SBSS_SECTION_FUNCTION						\
-void									\
-sbss_section (void)							\
-{									\
-  if (in_section != in_sbss)						\
-    {									\
-      in_section = in_sbss;						\
-      fprintf (asm_out_file, "%s\n", SBSS_SECTION_ASM_OP);		\
-    }									\
-}
-
-#define	INIT_SECTION_FUNCTION						\
-void									\
-init_section (void)							\
-{									\
-  if (in_section != in_init)						\
-    {									\
-      in_section = in_init;						\
-      fprintf (asm_out_file, "%s\n", INIT_SECTION_ASM_OP);		\
-    }									\
-}
-
-#define	FINI_SECTION_FUNCTION						\
-void									\
-fini_section (void)							\
-{									\
-  if (in_section != in_fini)						\
-    {									\
-      in_section = in_fini;						\
-      fprintf (asm_out_file, "%s\n", FINI_SECTION_ASM_OP);		\
-    }									\
-}
-
 /* Override default elf definitions.  */
+#define TARGET_ASM_INIT_SECTIONS rs6000_elf_asm_init_sections
+#undef  TARGET_ASM_RELOC_RW_MASK
+#define TARGET_ASM_RELOC_RW_MASK rs6000_elf_reloc_rw_mask
 #undef	TARGET_ASM_SELECT_RTX_SECTION
 #define	TARGET_ASM_SELECT_RTX_SECTION rs6000_elf_select_rtx_section
-#undef	TARGET_ASM_SELECT_SECTION
-#define	TARGET_ASM_SELECT_SECTION  rs6000_elf_select_section
-#define TARGET_ASM_UNIQUE_SECTION  rs6000_elf_unique_section
 
 /* Return nonzero if this entry is to be written into the constant pool
    in a special way.  We do so if this is a SYMBOL_REF, LABEL_REF or a CONST
@@ -512,7 +391,7 @@ fini_section (void)							\
        || (!TARGET_NO_FP_IN_TOC						\
 	   && !TARGET_RELOCATABLE					\
 	   && GET_CODE (X) == CONST_DOUBLE				\
-	   && GET_MODE_CLASS (GET_MODE (X)) == MODE_FLOAT		\
+	   && SCALAR_FLOAT_MODE_P (GET_MODE (X))			\
 	   && BITS_PER_WORD == HOST_BITS_PER_INT)))
 
 /* These macros generate the special .type and .size directives which
@@ -554,14 +433,12 @@ extern int rs6000_pic_labelno;
 
 #define	LCOMM_ASM_OP	"\t.lcomm\t"
 
-/* Override elfos.h definition.  */
-#undef	ASM_OUTPUT_ALIGNED_LOCAL
-#define	ASM_OUTPUT_ALIGNED_LOCAL(FILE, NAME, SIZE, ALIGN)		\
+/* Describe how to emit uninitialized local items.  */
+#define	ASM_OUTPUT_ALIGNED_DECL_LOCAL(FILE, DECL, NAME, SIZE, ALIGN)	\
 do {									\
-  if (rs6000_sdata != SDATA_NONE && (SIZE) > 0				\
-      && (SIZE) <= g_switch_value)					\
+  if ((DECL) && rs6000_elf_in_small_data_p (DECL))			\
     {									\
-      sbss_section ();							\
+      switch_to_section (sbss_section);					\
       ASM_OUTPUT_ALIGN (FILE, exact_log2 (ALIGN / BITS_PER_UNIT));	\
       ASM_OUTPUT_LABEL (FILE, NAME);					\
       ASM_OUTPUT_SKIP (FILE, SIZE);					\
@@ -581,7 +458,7 @@ do {									\
 /* Describe how to emit uninitialized external linkage items.  */
 #define	ASM_OUTPUT_ALIGNED_BSS(FILE, DECL, NAME, SIZE, ALIGN)		\
 do {									\
-  ASM_OUTPUT_ALIGNED_LOCAL (FILE, NAME, SIZE, ALIGN);			\
+  ASM_OUTPUT_ALIGNED_DECL_LOCAL (FILE, DECL, NAME, SIZE, ALIGN);	\
 } while (0)
 
 #ifdef HAVE_GAS_MAX_SKIP_P2ALIGN
@@ -652,23 +529,8 @@ extern int fixuplabelno;
 /* Historically we have also supported stabs debugging.  */
 #define DBX_DEBUGGING_INFO 1
 
-#define DBX_REGISTER_NUMBER(REGNO) rs6000_dbx_register_number (REGNO)
-
-/* Map register numbers held in the call frame info that gcc has
-   collected using DWARF_FRAME_REGNUM to those that should be output in
-   .debug_frame and .eh_frame.  We continue to use gcc hard reg numbers
-   for .eh_frame, but use the numbers mandated by the various ABIs for
-   .debug_frame.  rs6000_emit_prologue has translated any combination of
-   CR2, CR3, CR4 saves to a save of CR2.  The actual code emitted saves
-   the whole of CR, so we map CR2_REGNO to the DWARF reg for CR.  */
-#define DWARF2_FRAME_REG_OUT(REGNO, FOR_EH)	\
-  ((FOR_EH) ? (REGNO)				\
-   : (REGNO) == CR2_REGNO ? 64			\
-   : DBX_REGISTER_NUMBER (REGNO))
-
 #define TARGET_ENCODE_SECTION_INFO  rs6000_elf_encode_section_info
 #define TARGET_IN_SMALL_DATA_P  rs6000_elf_in_small_data_p
-#define TARGET_SECTION_TYPE_FLAGS  rs6000_elf_section_type_flags
 
 /* The ELF version doesn't encode [DS] or whatever at the end of symbols.  */
 
@@ -689,16 +551,6 @@ extern int fixuplabelno;
 #define TARGET_OS_SYSV_CPP_BUILTINS()		\
   do						\
     {						\
-      if (flag_pic == 1)			\
-	{					\
-	  builtin_define ("__pic__=1");		\
-	  builtin_define ("__PIC__=1");		\
-	}					\
-      else if (flag_pic == 2)			\
-	{					\
-	  builtin_define ("__pic__=2");		\
-	  builtin_define ("__PIC__=2");		\
-	}					\
       if (target_flags_explicit			\
 	  & MASK_RELOCATABLE)			\
 	builtin_define ("_RELOCATABLE");	\
@@ -725,7 +577,7 @@ extern int fixuplabelno;
 /* Override svr4.h definition.  */
 #undef	ASM_SPEC
 #define	ASM_SPEC "%(asm_cpu) \
-%{.s: %{mregnames} %{mno-regnames}} %{.S: %{mregnames} %{mno-regnames}} \
+%{,assembler|,assembler-with-cpp: %{mregnames} %{mno-regnames}} \
 %{v:-V} %{Qy:} %{!Qn:-Qy} %{n} %{T} %{Ym,*} %{Yd,*} %{Wa,*:%*} \
 %{mrelocatable} %{mrelocatable-lib} %{fpic|fpie|fPIC|fPIE:-K PIC} \
 %{memb|msdata|msdata=eabi: -memb} \
@@ -755,7 +607,7 @@ extern int fixuplabelno;
 #endif
 
 /* Pass -G xxx to the compiler and set correct endian mode.  */
-#define	CC1_SPEC "%{G*} \
+#define	CC1_SPEC "%{G*} %(cc1_cpu) \
 %{mlittle|mlittle-endian: %(cc1_endian_little);           \
   mbig   |mbig-endian   : %(cc1_endian_big);              \
   mcall-aixdesc |					  \
@@ -781,7 +633,7 @@ extern int fixuplabelno;
 %{profile: -p}"
 
 /* Don't put -Y P,<path> for cross compilers.  */
-#ifndef CROSS_COMPILE
+#ifndef CROSS_DIRECTORY_STRUCTURE
 #define LINK_PATH_SPEC "\
 %{!R*:%{L*:-R %*}} \
 %{!nostdlib: %{!YP,*: \
@@ -903,7 +755,7 @@ extern int fixuplabelno;
   mcall-openbsd: %(startfile_openbsd)     ; \
                : %(startfile_default)     }"
 
-#define	STARTFILE_DEFAULT_SPEC ""
+#define	STARTFILE_DEFAULT_SPEC "ecrti.o%s crtbegin.o%s"
 
 /* Override svr4.h definition.  */
 #undef	LIB_SPEC
@@ -920,7 +772,7 @@ extern int fixuplabelno;
   mcall-openbsd: %(lib_openbsd)     ; \
                : %(lib_default)     }"
 
-#define LIB_DEFAULT_SPEC ""
+#define LIB_DEFAULT_SPEC "-lc"
 
 /* Override svr4.h definition.  */
 #undef	ENDFILE_SPEC
@@ -939,7 +791,7 @@ extern int fixuplabelno;
 
 #define CRTSAVRES_DEFAULT_SPEC "crtsavres.o%s"
 
-#define	ENDFILE_DEFAULT_SPEC ""
+#define	ENDFILE_DEFAULT_SPEC "crtend.o%s ecrtn.o%s"
 
 /* Motorola ADS support.  */
 #define LIB_ADS_SPEC "--start-group -lads -lc --end-group"
@@ -1039,9 +891,19 @@ extern int fixuplabelno;
 
 #define LINK_START_LINUX_SPEC ""
 
+#define GLIBC_DYNAMIC_LINKER "/lib/ld.so.1"
+#define UCLIBC_DYNAMIC_LINKER "/lib/ld-uClibc.so.0"
+#if UCLIBC_DEFAULT
+#define CHOOSE_DYNAMIC_LINKER(G, U) "%{mglibc:%{muclibc:%e-mglibc and -muclibc used together}" G ";:" U "}"
+#else
+#define CHOOSE_DYNAMIC_LINKER(G, U) "%{muclibc:%{mglibc:%e-mglibc and -muclibc used together}" U ";:" G "}"
+#endif
+#define LINUX_DYNAMIC_LINKER \
+  CHOOSE_DYNAMIC_LINKER (GLIBC_DYNAMIC_LINKER, UCLIBC_DYNAMIC_LINKER)
+
 #define LINK_OS_LINUX_SPEC "-m elf32ppclinux %{!shared: %{!static: \
   %{rdynamic:-export-dynamic} \
-  %{!dynamic-linker:-dynamic-linker /lib/ld.so.1}}}"
+  %{!dynamic-linker:-dynamic-linker " LINUX_DYNAMIC_LINKER "}}}"
 
 #if defined(HAVE_LD_EH_FRAME_HDR)
 # define LINK_EH_SPEC "%{!static:--eh-frame-hdr} "

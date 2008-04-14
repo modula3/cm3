@@ -1,7 +1,7 @@
 /* This file contains the definitions and documentation for the common
    tree codes used in the GNU C and C++ compilers (see c-common.def
    for the standard codes).
-   Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005
+   Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2007
    Free Software Foundation, Inc.
    Written by Benjamin Chelf (chelf@codesourcery.com).
 
@@ -9,7 +9,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -18,9 +18,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -79,7 +78,7 @@ pop_stmt_list (tree t)
   cur_stmt_list = chain;
 
   /* If the statement list is completely empty, just return it.  This is
-     just as good small as build_empty_stmt, with the advantage that 
+     just as good small as build_empty_stmt, with the advantage that
      statement lists are merged when they appended to one another.  So
      using the STATEMENT_LIST avoids pathological buildup of EMPTY_STMT_P
      statements.  */
@@ -115,6 +114,9 @@ build_stmt (enum tree_code code, ...)
   va_list p;
   bool side_effects;
 
+  /* This function cannot be used to construct variably-sized nodes.  */
+  gcc_assert (TREE_CODE_CLASS (code) != tcc_vl_exp);
+
   va_start (p, code);
 
   ret = make_node (code);
@@ -132,7 +134,7 @@ build_stmt (enum tree_code code, ...)
     {
       tree t = va_arg (p, tree);
       if (t && !TYPE_P (t))
-        side_effects |= TREE_SIDE_EFFECTS (t);
+	side_effects |= TREE_SIDE_EFFECTS (t);
       TREE_OPERAND (ret, i) = t;
     }
 

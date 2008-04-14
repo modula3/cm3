@@ -1,11 +1,11 @@
 /* Darwin/powerpc host-specific hook definitions.
-   Copyright (C) 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
 
    This file is part of GCC.
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published
-   by the Free Software Foundation; either version 2, or (at your
+   by the Free Software Foundation; either version 3, or (at your
    option) any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -14,9 +14,8 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to the
-   Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
-   MA 02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -33,9 +32,19 @@ static void segv_crash_handler (int);
 static void segv_handler (int, siginfo_t *, void *);
 static void darwin_rs6000_extra_signals (void);
 
+#ifndef HAVE_DECL_SIGALTSTACK
 /* This doesn't have a prototype in signal.h in 10.2.x and earlier,
    fixed in later releases.  */
 extern int sigaltstack(const struct sigaltstack *, struct sigaltstack *);
+#endif
+
+/* The fields of the mcontext_t type have acquired underscores in later
+   OS versions.  */
+#ifdef HAS_MCONTEXT_T_UNDERSCORES
+#define MC_FLD(x) __ ## x
+#else
+#define MC_FLD(x) x
+#endif
 
 #undef HOST_HOOKS_EXTRA_SIGNALS
 #define HOST_HOOKS_EXTRA_SIGNALS darwin_rs6000_extra_signals
@@ -68,7 +77,7 @@ segv_handler (int sig ATTRIBUTE_UNUSED,
   sigaddset (&sigset, SIGSEGV);
   sigprocmask (SIG_UNBLOCK, &sigset, NULL);
 
-  faulting_insn = *(unsigned *)uc->uc_mcontext->ss.srr0;
+  faulting_insn = *(unsigned *)uc->uc_mcontext->MC_FLD(ss).MC_FLD(srr0);
 
   /* Note that this only has to work for GCC, so we don't have to deal
      with all the possible cases (GCC has no AltiVec code, for
@@ -117,7 +126,8 @@ segv_handler (int sig ATTRIBUTE_UNUSED,
     }
 
   fprintf (stderr, "[address=%08lx pc=%08x]\n", 
-	   uc->uc_mcontext->es.dar, uc->uc_mcontext->ss.srr0);
+	   uc->uc_mcontext->MC_FLD(es).MC_FLD(dar),
+	   uc->uc_mcontext->MC_FLD(ss).MC_FLD(srr0));
   internal_error ("Segmentation Fault");
   exit (FATAL_EXIT_CODE);
 }

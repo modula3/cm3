@@ -11,7 +11,7 @@ AC_PROG_CC
 
 ACX_PROG_CC_WARNING_OPTS([-W -Wall -Wwrite-strings -Wstrict-prototypes \
 			  -Wmissing-prototypes -Wold-style-definition \
-			  -Wmissing-format-attribute])
+			  -Wmissing-format-attribute -Wno-overlength-strings])
 ACX_PROG_CC_WARNING_ALMOST_PEDANTIC([-Wno-long-long])
 
 # Only enable with --enable-werror-always until existing warnings are
@@ -49,6 +49,7 @@ fi],
 [case $host in
 	i?86-*-msdosdjgpp* | \
 	i?86-*-mingw32* | \
+	x86_64-*-mingw32* | \
 	*-*-beos* )
 		TARGET=twoprocess
 		;;
@@ -84,7 +85,7 @@ define(fixincludes_UNLOCKED_FUNCS, clearerr_unlocked feof_unlocked dnl
   fread_unlocked fwrite_unlocked getchar_unlocked getc_unlocked dnl
   putchar_unlocked putc_unlocked)
 AC_CHECK_FUNCS(fixincludes_UNLOCKED_FUNCS)
-AC_CHECK_DECLS(m4_split(m4_normalize(abort errno fixincludes_UNLOCKED_FUNCS)))
+AC_CHECK_DECLS(m4_split(m4_normalize(abort asprintf basename errno vasprintf fixincludes_UNLOCKED_FUNCS)))
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

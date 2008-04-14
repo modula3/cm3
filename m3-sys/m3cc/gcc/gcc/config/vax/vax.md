@@ -1,12 +1,12 @@
 ;; Machine description for GNU compiler, VAX Version
 ;; Copyright (C) 1987, 1988, 1991, 1994, 1995, 1996, 1998, 1999, 2000, 2001,
-;; 2002, 2004, 2005 Free Software Foundation, Inc.
+;; 2002, 2004, 2005, 2007 Free Software Foundation, Inc.
 
 ;; This file is part of GCC.
 
 ;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GCC is distributed in the hope that it will be useful,
@@ -15,9 +15,8 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 
 ;;- Instruction patterns.  When multiple patterns apply,
@@ -43,11 +42,11 @@
 
 ;; Integer modes supported on VAX, with a mapping from machine mode
 ;; to mnemonic suffix.  DImode is always a special case.
-(define_mode_macro VAXint [QI HI SI])
+(define_mode_iterator VAXint [QI HI SI])
 (define_mode_attr  isfx [(QI "b") (HI "w") (SI "l")])
 
 ;; Similar for float modes supported on VAX.
-(define_mode_macro VAXfp [SF DF])
+(define_mode_iterator VAXfp [SF DF])
 (define_mode_attr  fsfx [(SF "f") (DF "%#")])
 
 ;; Some output patterns want integer immediates with a prefix...
@@ -152,7 +151,7 @@
   ""
   "*
 {
-  if (GET_CODE (operands[1]) == CONST_INT)
+  if (CONST_INT_P (operands[1]))
     {
       int i = INTVAL (operands[1]);
       if (i == 0)
@@ -173,7 +172,7 @@
   ""
   "*
 {
-  if (GET_CODE (operands[1]) == CONST_INT)
+  if (CONST_INT_P (operands[1]))
     {
       int i = INTVAL (operands[1]);
       if (i == 0)
@@ -528,14 +527,14 @@
   rtx op1 = operands[1];
 
   /* If there is a constant argument, complement that one.  */
-  if (GET_CODE (operands[2]) == CONST_INT && GET_CODE (op1) != CONST_INT)
+  if (CONST_INT_P (operands[2]) && !CONST_INT_P (op1))
     {
       operands[1] = operands[2];
       operands[2] = op1;
       op1 = operands[1];
     }
 
-  if (GET_CODE (op1) == CONST_INT)
+  if (CONST_INT_P (op1))
     operands[1] = GEN_INT (~INTVAL (op1));
   else
     operands[1] = expand_unop (<MODE>mode, one_cmpl_optab, op1, 0, 1);
@@ -621,7 +620,7 @@
   ""
   "
 {
-  if (GET_CODE (operands[2]) != CONST_INT)
+  if (!CONST_INT_P (operands[2]))
     operands[2] = gen_rtx_NEG (QImode, negate_rtx (QImode, operands[2]));
 }")
 
@@ -648,8 +647,8 @@
 {
   if (operands[2] == const1_rtx && rtx_equal_p (operands[0], operands[1]))
     return \"addl2 %0,%0\";
-  if (GET_CODE (operands[1]) == REG
-      && GET_CODE (operands[2]) == CONST_INT)
+  if (REG_P (operands[1])
+      && CONST_INT_P (operands[2]))
     {
       int i = INTVAL (operands[2]);
       if (i == 1)
@@ -715,7 +714,7 @@
   ""
   "
 {
-  if (GET_CODE (operands[2]) != CONST_INT)
+  if (!CONST_INT_P (operands[2]))
     operands[2] = gen_rtx_NEG (QImode, negate_rtx (QImode, operands[2]));
 }")
 
@@ -761,8 +760,8 @@
 	(match_operand:SI 3 "general_operand" "g"))]
    "(INTVAL (operands[1]) == 8 || INTVAL (operands[1]) == 16)
    && INTVAL (operands[2]) % INTVAL (operands[1]) == 0
-   && (GET_CODE (operands[0]) == REG
-       || ! mode_dependent_address_p (XEXP (operands[0], 0)))"
+   && (REG_P (operands[0])
+       || !mode_dependent_address_p (XEXP (operands[0], 0)))"
   "*
 {
   if (REG_P (operands[0]))
@@ -789,8 +788,8 @@
 			 (match_operand:SI 3 "const_int_operand" "n")))]
   "(INTVAL (operands[2]) == 8 || INTVAL (operands[2]) == 16)
    && INTVAL (operands[3]) % INTVAL (operands[2]) == 0
-   && (GET_CODE (operands[1]) == REG
-       || ! mode_dependent_address_p (XEXP (operands[1], 0)))"
+   && (REG_P (operands[1])
+       || !mode_dependent_address_p (XEXP (operands[1], 0)))"
   "*
 {
   if (REG_P (operands[1]))
@@ -816,8 +815,8 @@
 			 (match_operand:SI 3 "const_int_operand" "n")))]
   "(INTVAL (operands[2]) == 8 || INTVAL (operands[2]) == 16)
    && INTVAL (operands[3]) % INTVAL (operands[2]) == 0
-   && (GET_CODE (operands[1]) == REG
-       || ! mode_dependent_address_p (XEXP (operands[1], 0)))"
+   && (REG_P (operands[1])
+       || !mode_dependent_address_p (XEXP (operands[1], 0)))"
   "*
 {
   if (REG_P (operands[1]))
@@ -871,8 +870,9 @@
   ""
   "*
 {
-  if (GET_CODE (operands[3]) != CONST_INT || GET_CODE (operands[2]) != CONST_INT
-      || GET_CODE (operands[0]) != REG
+  if (!CONST_INT_P (operands[3])
+      || !CONST_INT_P (operands[2])
+      || !REG_P (operands[0])
       || (INTVAL (operands[2]) != 8 && INTVAL (operands[2]) != 16))
     return \"extv %3,%2,%1,%0\";
   if (INTVAL (operands[2]) == 8)
@@ -888,8 +888,9 @@
   ""
   "*
 {
-  if (GET_CODE (operands[3]) != CONST_INT || GET_CODE (operands[2]) != CONST_INT
-      || GET_CODE (operands[0]) != REG)
+  if (!CONST_INT_P (operands[3])
+      || !CONST_INT_P (operands[2])
+      || !REG_P (operands[0]))
     return \"extzv %3,%2,%1,%0\";
   if (INTVAL (operands[2]) == 8)
     return \"rotl %R3,%1,%0\;movzbl %0,%0\";
@@ -934,12 +935,13 @@
   ""
   "*
 {
-  if (GET_CODE (operands[0]) != REG || GET_CODE (operands[2]) != CONST_INT
-      || GET_CODE (operands[3]) != CONST_INT
+  if (!REG_P (operands[0])
+      || !CONST_INT_P (operands[2])
+      || !CONST_INT_P (operands[3])
       || (INTVAL (operands[2]) != 8 && INTVAL (operands[2]) != 16)
       || INTVAL (operands[2]) + INTVAL (operands[3]) > 32
       || side_effects_p (operands[1])
-      || (GET_CODE (operands[1]) == MEM
+      || (MEM_P (operands[1])
 	  && mode_dependent_address_p (XEXP (operands[1], 0))))
     return \"extv %3,%2,%1,%0\";
   if (INTVAL (operands[2]) == 8)
@@ -963,11 +965,12 @@
   ""
   "*
 {
-  if (GET_CODE (operands[0]) != REG || GET_CODE (operands[2]) != CONST_INT
-      || GET_CODE (operands[3]) != CONST_INT
+  if (!REG_P (operands[0])
+      || !CONST_INT_P (operands[2])
+      || !CONST_INT_P (operands[3])
       || INTVAL (operands[2]) + INTVAL (operands[3]) > 32
       || side_effects_p (operands[1])
-      || (GET_CODE (operands[1]) == MEM
+      || (MEM_P (operands[1])
 	  && mode_dependent_address_p (XEXP (operands[1], 0))))
     return \"extzv %3,%2,%1,%0\";
   if (INTVAL (operands[2]) == 8)
@@ -1009,7 +1012,7 @@
   "jbr %l0")
 
 ;; Conditional jumps
-(define_code_macro any_cond [eq ne gt lt gtu ltu ge le geu leu])
+(define_code_iterator any_cond [eq ne gt lt gtu ltu ge le geu leu])
 
 (define_insn "b<code>"
   [(set (pc)
@@ -1151,7 +1154,7 @@
    (set (match_dup 0)
 	(plus:SI (match_dup 0)
 		 (const_int 1)))]
-  "!TARGET_UNIX_ASM && GET_CODE (operands[1]) == CONST_INT"
+  "!TARGET_UNIX_ASM && CONST_INT_P (operands[1])"
   "jaoblss %P1,%0,%l2")
 
 (define_insn ""
@@ -1178,7 +1181,7 @@
    (set (match_dup 0)
 	(plus:SI (match_dup 0)
 		 (const_int 1)))]
-  "!TARGET_UNIX_ASM && GET_CODE (operands[1]) == CONST_INT"
+  "!TARGET_UNIX_ASM && CONST_INT_P (operands[1])"
   "jaobleq %P1,%0,%l2")
 
 ;; Something like a sob insn, but compares against -1.

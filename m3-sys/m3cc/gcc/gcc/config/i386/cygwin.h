@@ -1,13 +1,13 @@
 /* Operating system specific defines to be used when targeting GCC for
    hosting on Windows32, using a Unix style C library and tools.
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003
-   Free Software Foundation, Inc.
+   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
+   2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #define TARGET_VERSION fprintf (stderr, " (x86 Cygwin)");
 
@@ -38,7 +37,12 @@ Boston, MA 02110-1301, USA.  */
   %{shared|mdll: %{mno-cygwin:dllcrt2%O%s}}\
   %{!shared: %{!mdll: %{!mno-cygwin:crt0%O%s} %{mno-cygwin:crt2%O%s}\
   %{pg:gcrt0%O%s}}}\
-"
+  crtbegin.o%s"
+
+#undef ENDFILE_SPEC
+#define ENDFILE_SPEC \
+  "%{ffast-math|funsafe-math-optimizations:crtfastmath.o%s}\
+   crtend.o%s"
 
 /* Normally, -lgcc is not needed since everything in it is in the DLL, but we
    want to allow things to be added to it when installing new versions of
@@ -146,7 +150,7 @@ char cygwin_tool_include_dir[sizeof (TOOL_INCLUDE_DIR) + 1
 #undef TOOL_INCLUDE_DIR
 #define TOOL_INCLUDE_DIR ((const char *) cygwin_tool_include_dir)
 
-#ifndef CROSS_COMPILE
+#ifndef CROSS_DIRECTORY_STRUCTURE
 #undef STANDARD_INCLUDE_DIR
 #define STANDARD_INCLUDE_DIR "/usr/include"
 char cygwin_standard_include_dir[sizeof (STANDARD_INCLUDE_DIR) + 1
@@ -204,7 +208,7 @@ void mingw_scan (int, const char * const *, char **);
 #define GCC_DRIVER_HOST_INITIALIZATION \
 do \
 { \
-  mingw_scan(argc, argv, (char **) &spec_machine); \
+  mingw_scan(argc, (const char * const *) argv, (char **) &spec_machine); \
   } \
 while (0)
 #else
@@ -224,7 +228,7 @@ do \
   add_prefix (&startfile_prefixes,\
 	      concat (standard_startfile_prefix, "w32api", NULL),\
 	      "GCC", PREFIX_PRIORITY_LAST, 0, NULL);\
-  mingw_scan(argc, argv, &spec_machine); \
+  mingw_scan(argc, (const char * const *) argv, &spec_machine); \
   } \
 while (0)
 #endif
@@ -232,3 +236,9 @@ while (0)
 /* Binutils does not handle weak symbols from dlls correctly.  For now,
    do not use them unnecessarily in gthr-posix.h.  */
 #define GTHREAD_USE_WEAK 0
+
+/* Every program on cygwin links against cygwin1.dll which contains 
+   the pthread routines.  There is no need to explicitly link them
+   and the -pthread flag is not recognized.  */
+#undef GOMP_SELF_SPECS
+#define GOMP_SELF_SPECS ""

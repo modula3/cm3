@@ -1,11 +1,11 @@
 /* Definitions of target machine for GNU compiler, for DEC Alpha on Tru64 5.
-   Copyright (C) 2000, 2001, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2001, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
 
    This file is part of GCC.
 
    GCC is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
+   the Free Software Foundation; either version 3, or (at your option)
    any later version.
 
    GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* Tru64 5.1 uses IEEE QUAD format.  */
 #undef TARGET_DEFAULT
@@ -50,4 +49,8 @@
 /* Tru64 v5.1 has the float and long double forms of math functions.  */
 #undef TARGET_C99_FUNCTIONS
 #define TARGET_C99_FUNCTIONS  1
+
+/* The native assembler doesn't understand parenthesis.  */
+#define TARGET_ASM_OPEN_PAREN ""
+#define TARGET_ASM_CLOSE_PAREN ""
 

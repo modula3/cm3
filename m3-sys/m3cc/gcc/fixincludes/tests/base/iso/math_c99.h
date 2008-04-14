@@ -38,7 +38,7 @@
 #ident	"@(#)math_c99.h	1.9	04/11/01 SMI"
 #undef	fpclassify
 #define	fpclassify(x) \
-  __extension__ ({ __typeof(x) __x_fp = (x); \
+  __extension__ ({ const __typeof(x) __x_fp = (x); \
 		   isnan(__x_fp) \
 		     ? FP_NAN \
 		     : isinf(__x_fp) \
@@ -49,39 +49,6 @@
 			   ? FP_ZERO \
 			   : FP_SUBNORMAL; })
 #endif  /* SOLARIS_MATH_4_CHECK */
-
-
-#if defined( SOLARIS_MATH_5_CHECK )
-#ident	"@(#)math_c99.h	1.9	04/11/01 SMI"
-#undef	isfinite
-#define	isfinite(x) \
-  __extension__ ({ __typeof (x) __x_f = (x); \
-		   __builtin_expect(!isnan(__x_f - __x_f), 1); })
-#endif  /* SOLARIS_MATH_5_CHECK */
-
-
-#if defined( SOLARIS_MATH_6_CHECK )
-#ident	"@(#)math_c99.h	1.9	04/11/01 SMI"
-#undef	isinf
-#define	isinf(x) \
-  __extension__ ({ __typeof (x) __x_i = (x); \
-		   __builtin_expect(!isnan(__x_i) && !isfinite(__x_i), 0); })
-#endif  /* SOLARIS_MATH_6_CHECK */
-
-
-#if defined( SOLARIS_MATH_7_CHECK )
-#ident	"@(#)math_c99.h	1.9	04/11/01 SMI"
-#undef	isnormal
-#define	isnormal(x) \
-  __extension__ ({ __typeof(x) __x_n = (x); \
-		   if (__x_n < 0.0) __x_n = -__x_n; \
-		   __builtin_expect(isfinite(__x_n) \
-				    && (sizeof(__x_n) == sizeof(float) \
-					  ? __x_n >= __FLT_MIN__ \
-					  : sizeof(__x_n) == sizeof(long double) \
-					    ? __x_n >= __LDBL_MIN__ \
-					    : __x_n >= __DBL_MIN__), 1); })
-#endif  /* SOLARIS_MATH_7_CHECK */
 
 
 #if defined( SOLARIS_MATH_8_CHECK )

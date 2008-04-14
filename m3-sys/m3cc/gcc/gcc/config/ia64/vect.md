@@ -1,11 +1,11 @@
 ;; IA-64 machine description for vector operations.
-;; Copyright (C) 2004, 2005
+;; Copyright (C) 2004, 2005, 2007 Free Software Foundation, Inc.
 ;;
 ;; This file is part of GCC.
 ;;
 ;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 ;;
 ;; GCC is distributed in the hope that it will be useful,
@@ -14,16 +14,15 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 
 ;; Integer vector operations
 
-(define_mode_macro VECINT [V8QI V4HI V2SI])
-(define_mode_macro VECINT12 [V8QI V4HI])
-(define_mode_macro VECINT24 [V4HI V2SI])
+(define_mode_iterator VECINT [V8QI V4HI V2SI])
+(define_mode_iterator VECINT12 [V8QI V4HI])
+(define_mode_iterator VECINT24 [V4HI V2SI])
 (define_mode_attr vecsize [(V8QI "1") (V4HI "2") (V2SI "4")])
 
 (define_expand "mov<mode>"
@@ -801,10 +800,7 @@
 
   if (GET_CODE (op1) == CONST_INT && GET_CODE (op2) == CONST_INT)
     {
-      rtvec v = rtvec_alloc (2);
-      RTVEC_ELT (v, 0) = TARGET_BIG_ENDIAN ? op2 : op1;
-      RTVEC_ELT (v, 1) = TARGET_BIG_ENDIAN ? op1 : op2;;
-      x = gen_rtx_CONST_VECTOR (V2SImode, v);
+      x = gen_rtx_CONST_VECTOR (V2SImode, XVEC (operands[1], 0));
       emit_move_insn (operands[0], x);
       DONE;
     }

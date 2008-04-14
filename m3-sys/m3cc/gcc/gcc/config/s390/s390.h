@@ -1,6 +1,6 @@
 /* Definitions of target machine for GNU compiler, for IBM S/390
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006
-   Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
+   2007 Free Software Foundation, Inc.
    Contributed by Hartmut Penner (hpenner@de.ibm.com) and
                   Ulrich Weigand (uweigand@de.ibm.com).
 
@@ -8,7 +8,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -17,9 +17,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #ifndef _S390_H
 #define _S390_H
@@ -51,7 +50,8 @@ enum processor_flags
   PF_IEEE_FLOAT = 1,
   PF_ZARCH = 2,
   PF_LONG_DISPLACEMENT = 4,
-  PF_EXTIMM = 8
+  PF_EXTIMM = 8,
+  PF_DFP = 16
 };
 
 extern enum processor_type s390_tune;
@@ -68,11 +68,15 @@ extern enum processor_flags s390_arch_flags;
 	(s390_arch_flags & PF_LONG_DISPLACEMENT)
 #define TARGET_CPU_EXTIMM \
  	(s390_arch_flags & PF_EXTIMM)
+#define TARGET_CPU_DFP \
+ 	(s390_arch_flags & PF_DFP)
 
 #define TARGET_LONG_DISPLACEMENT \
        (TARGET_ZARCH && TARGET_CPU_LONG_DISPLACEMENT)
 #define TARGET_EXTIMM \
        (TARGET_ZARCH && TARGET_CPU_EXTIMM)
+#define TARGET_DFP \
+       (TARGET_ZARCH && TARGET_CPU_DFP)
 
 /* Run-time target specification.  */
 
@@ -98,14 +102,10 @@ extern enum processor_flags s390_arch_flags;
     }							\
   while (0)
 
-/* ??? Once this actually works, it could be made a runtime option.  */
-#define TARGET_IBM_FLOAT           0
-#define TARGET_IEEE_FLOAT          1
-
 #ifdef DEFAULT_TARGET_64BIT
-#define TARGET_DEFAULT             (MASK_64BIT | MASK_ZARCH | MASK_HARD_FLOAT)
+#define TARGET_DEFAULT             (MASK_64BIT | MASK_ZARCH | MASK_HARD_DFP)
 #else
-#define TARGET_DEFAULT             MASK_HARD_FLOAT
+#define TARGET_DEFAULT             0
 #endif
 
 /* Support for configure-time defaults.  */
@@ -141,6 +141,36 @@ extern enum processor_flags s390_arch_flags;
 /* Frame pointer is not used for debugging.  */
 #define CAN_DEBUG_WITHOUT_FP
 
+/* Constants needed to control the TEST DATA CLASS (TDC) instruction.  */
+#define S390_TDC_POSITIVE_ZERO                     (1 << 11)
+#define S390_TDC_NEGATIVE_ZERO                     (1 << 10)
+#define S390_TDC_POSITIVE_NORMALIZED_BFP_NUMBER    (1 << 9)
+#define S390_TDC_NEGATIVE_NORMALIZED_BFP_NUMBER    (1 << 8)
+#define S390_TDC_POSITIVE_DENORMALIZED_BFP_NUMBER  (1 << 7)
+#define S390_TDC_NEGATIVE_DENORMALIZED_BFP_NUMBER  (1 << 6)
+#define S390_TDC_POSITIVE_INFINITY                 (1 << 5)
+#define S390_TDC_NEGATIVE_INFINITY                 (1 << 4)
+#define S390_TDC_POSITIVE_QUIET_NAN                (1 << 3)
+#define S390_TDC_NEGATIVE_QUIET_NAN                (1 << 2)
+#define S390_TDC_POSITIVE_SIGNALING_NAN            (1 << 1)
+#define S390_TDC_NEGATIVE_SIGNALING_NAN            (1 << 0)
+
+/* The following values are different for DFP.  */
+#define S390_TDC_POSITIVE_DENORMALIZED_DFP_NUMBER (1 << 9)
+#define S390_TDC_NEGATIVE_DENORMALIZED_DFP_NUMBER (1 << 8)
+#define S390_TDC_POSITIVE_NORMALIZED_DFP_NUMBER   (1 << 7)
+#define S390_TDC_NEGATIVE_NORMALIZED_DFP_NUMBER   (1 << 6)
+
+/* For signbit, the BFP-DFP-difference makes no difference. */ 
+#define S390_TDC_SIGNBIT_SET (S390_TDC_NEGATIVE_ZERO \
+                          | S390_TDC_NEGATIVE_NORMALIZED_BFP_NUMBER \
+                          | S390_TDC_NEGATIVE_DENORMALIZED_BFP_NUMBER\
+                          | S390_TDC_NEGATIVE_INFINITY \
+                          | S390_TDC_NEGATIVE_QUIET_NAN \
+			  | S390_TDC_NEGATIVE_SIGNALING_NAN )
+
+#define S390_TDC_INFINITY (S390_TDC_POSITIVE_INFINITY \
+			  | S390_TDC_NEGATIVE_INFINITY )
 
 /* In libgcc2, determine target settings as compile-time constants.  */
 #ifdef IN_LIBGCC2
@@ -204,10 +234,6 @@ if (INTEGRAL_MODE_P (MODE) &&	        	    	\
   (LEVEL == SAVE_FUNCTION ? VOIDmode    \
   : LEVEL == SAVE_NONLOCAL ? (TARGET_64BIT ? OImode : TImode) : Pmode)
 
-/* Define target floating point format.  */
-#define TARGET_FLOAT_FORMAT \
-  (TARGET_IEEE_FLOAT? IEEE_FLOAT_FORMAT : IBM_FLOAT_FORMAT)
-
 
 /* Type layout.  */
 
@@ -264,7 +290,7 @@ if (INTEGRAL_MODE_P (MODE) &&	        	    	\
 /* Standard register usage.  */
 #define GENERAL_REGNO_P(N)	((int)(N) >= 0 && (N) < 16)
 #define ADDR_REGNO_P(N)		((N) >= 1 && (N) < 16)
-#define FP_REGNO_P(N)		((N) >= 16 && (N) < (TARGET_IEEE_FLOAT? 32 : 20))
+#define FP_REGNO_P(N)		((N) >= 16 && (N) < 32)
 #define CC_REGNO_P(N)		((N) == 33)
 #define FRAME_REGNO_P(N)	((N) == 32 || (N) == 34 || (N) == 35)
 #define ACCESS_REGNO_P(N)	((N) == 36 || (N) == 37)
@@ -355,36 +381,15 @@ if (INTEGRAL_MODE_P (MODE) &&	        	    	\
 
    Condition code modes fit only into the CC register.  */
 
+/* Because all registers in a class have the same size HARD_REGNO_NREGS
+   is equivalent to CLASS_MAX_NREGS.  */
 #define HARD_REGNO_NREGS(REGNO, MODE)                           \
-  (FP_REGNO_P(REGNO)?                                           \
-   (GET_MODE_CLASS(MODE) == MODE_COMPLEX_FLOAT ?                \
-    2 * ((GET_MODE_SIZE(MODE) / 2 + 8 - 1) / 8) : 		\
-    ((GET_MODE_SIZE(MODE) + 8 - 1) / 8)) :			\
-   GENERAL_REGNO_P(REGNO)?                                      \
-    ((GET_MODE_SIZE(MODE)+UNITS_PER_WORD-1) / UNITS_PER_WORD) : \
-   ACCESS_REGNO_P(REGNO)?					\
-    ((GET_MODE_SIZE(MODE) + 4 - 1) / 4) : 			\
-   1)
+  s390_class_max_nregs (REGNO_REG_CLASS (REGNO), (MODE))
 
-#define HARD_REGNO_MODE_OK(REGNO, MODE)                             \
-  (FP_REGNO_P(REGNO)?                                               \
-   (((MODE) == SImode || (MODE) == DImode                           \
-     || GET_MODE_CLASS(MODE) == MODE_FLOAT                          \
-     || GET_MODE_CLASS(MODE) == MODE_COMPLEX_FLOAT)                 \
-    && (HARD_REGNO_NREGS(REGNO, MODE) == 1 || !((REGNO) & 1))) :    \
-   GENERAL_REGNO_P(REGNO)?                                          \
-   ((HARD_REGNO_NREGS(REGNO, MODE) == 1 || !((REGNO) & 1))	    \
-    && (((MODE) != TFmode && (MODE) != TCmode) || TARGET_64BIT)) :  \
-   CC_REGNO_P(REGNO)?                                               \
-     GET_MODE_CLASS (MODE) == MODE_CC :                             \
-   FRAME_REGNO_P(REGNO)?                                            \
-     (enum machine_mode) (MODE) == Pmode :                          \
-   ACCESS_REGNO_P(REGNO)?					    \
-     (((MODE) == SImode || ((enum machine_mode) (MODE) == Pmode))   \
-      && (HARD_REGNO_NREGS(REGNO, MODE) == 1 || !((REGNO) & 1))) :  \
-   0)
+#define HARD_REGNO_MODE_OK(REGNO, MODE)         \
+  s390_hard_regno_mode_ok ((REGNO), (MODE))
 
-#define HARD_REGNO_RENAME_OK(FROM, TO) \
+#define HARD_REGNO_RENAME_OK(FROM, TO)          \
   s390_hard_regno_rename_ok (FROM, TO)
 
 #define MODES_TIEABLE_P(MODE1, MODE2)		\
@@ -394,13 +399,7 @@ if (INTEGRAL_MODE_P (MODE) &&	        	    	\
 /* Maximum number of registers to represent a value of mode MODE
    in a register of class CLASS.  */
 #define CLASS_MAX_NREGS(CLASS, MODE)   					\
-     ((CLASS) == FP_REGS ? 						\
-      (GET_MODE_CLASS(MODE) == MODE_COMPLEX_FLOAT ?                     \
-       2 * (GET_MODE_SIZE (MODE) / 2 + 8 - 1) / 8 :		        \
-       (GET_MODE_SIZE (MODE) + 8 - 1) / 8) :				\
-      (CLASS) == ACCESS_REGS ?						\
-      (GET_MODE_SIZE (MODE) + 4 - 1) / 4 :				\
-      (GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD)
+  s390_class_max_nregs ((CLASS), (MODE))
 
 /* If a 4-byte value is loaded into a FPR, it is placed into the
    *upper* half of the register, not the lower.  Therefore, we
@@ -476,8 +475,8 @@ extern const enum reg_class regclass_map[FIRST_PSEUDO_REGISTER];
    or a pseudo register currently allocated to one such.  */
 #define REGNO_OK_FOR_INDEX_P(REGNO)					\
     (((REGNO) < FIRST_PSEUDO_REGISTER 					\
-     && REGNO_REG_CLASS ((REGNO)) == ADDR_REGS) 			\
-    || (reg_renumber[REGNO] > 0 && reg_renumber[REGNO] < 16))
+      && REGNO_REG_CLASS ((REGNO)) == ADDR_REGS) 			\
+     || ADDR_REGNO_P (reg_renumber[REGNO]))
 #define REGNO_OK_FOR_BASE_P(REGNO) REGNO_OK_FOR_INDEX_P (REGNO)
 
 
@@ -486,19 +485,11 @@ extern const enum reg_class regclass_map[FIRST_PSEUDO_REGISTER];
 #define PREFERRED_RELOAD_CLASS(X, CLASS)	\
   s390_preferred_reload_class ((X), (CLASS))
 
-/* We need a secondary reload when loading a PLUS which is
-   not a valid operand for LOAD ADDRESS.  */
-#define SECONDARY_INPUT_RELOAD_CLASS(CLASS, MODE, IN)	\
-  s390_secondary_input_reload_class ((CLASS), (MODE), (IN))
-
-/* We need a secondary reload when storing a double-word
-   to a non-offsettable memory address.  */
-#define SECONDARY_OUTPUT_RELOAD_CLASS(CLASS, MODE, OUT)	\
-  s390_secondary_output_reload_class ((CLASS), (MODE), (OUT))
-
 /* We need secondary memory to move data between GPRs and FPRs.  */
 #define SECONDARY_MEMORY_NEEDED(CLASS1, CLASS2, MODE) \
- ((CLASS1) != (CLASS2) && ((CLASS1) == FP_REGS || (CLASS2) == FP_REGS))
+ ((CLASS1) != (CLASS2)                                \
+  && ((CLASS1) == FP_REGS || (CLASS2) == FP_REGS)     \
+  && (!TARGET_DFP || GET_MODE_SIZE (MODE) != 8))
 
 /* Get_secondary_mem widens its argument to BITS_PER_WORD which loses on 64bit
    because the movsi and movsf patterns don't handle r/f moves.  */
@@ -507,34 +498,6 @@ extern const enum reg_class regclass_map[FIRST_PSEUDO_REGISTER];
   ? mode_for_size (32, GET_MODE_CLASS (MODE), 0)	\
   : MODE)
 
-
-/* Define various machine-dependent constraint letters.  */
-
-#define REG_CLASS_FROM_LETTER(C)                                        \
-  ((C) == 'a' ? ADDR_REGS :                                             \
-   (C) == 'd' ? GENERAL_REGS :                                          \
-   (C) == 'f' ? FP_REGS :                                               \
-   (C) == 'c' ? CC_REGS : 						\
-   (C) == 't' ? ACCESS_REGS : NO_REGS)
-
-#define CONST_OK_FOR_CONSTRAINT_P(VALUE, C, STR)                          \
-  s390_const_ok_for_constraint_p ((VALUE), (C), (STR))
-
-#define CONST_DOUBLE_OK_FOR_CONSTRAINT_P(VALUE, C, STR)			\
-  s390_const_double_ok_for_constraint_p ((VALUE), (C), (STR))
-
-#define EXTRA_CONSTRAINT_STR(OP, C, STR)                               	\
-  s390_extra_constraint_str ((OP), (C), (STR))
-#define EXTRA_MEMORY_CONSTRAINT(C, STR)					\
-  ((C) == 'Q' || (C) == 'R' || (C) == 'S' || (C) == 'T' || (C) == 'A')
-#define EXTRA_ADDRESS_CONSTRAINT(C, STR)				\
-  ((C) == 'U' || (C) == 'W' || (C) == 'Y')
-
-#define CONSTRAINT_LEN(C, STR)                                  	\
-  ((C) == 'N' ? 5 : 	                                                \
-   (C) == 'O' ? 2 :							\
-   (C) == 'A' ? 2 :							\
-   (C) == 'B' ? 2 : DEFAULT_CONSTRAINT_LEN ((C), (STR)))
 
 /* Stack layout and calling conventions.  */
 
@@ -673,10 +636,11 @@ CUMULATIVE_ARGS;
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED)   \
   s390_function_arg (&CUM, MODE, TYPE, NAMED)
 
-/* Arguments can be placed in general registers 2 to 6,
-   or in floating point registers 0 and 2.  */
+/* Arguments can be placed in general registers 2 to 6, or in floating
+   point registers 0 and 2 for 31 bit and fprs 0, 2, 4 and 6 for 64
+   bit.  */
 #define FUNCTION_ARG_REGNO_P(N) (((N) >=2 && (N) <7) || \
-                                 (N) == 16 || (N) == 17)
+  (N) == 16 || (N) == 17 || (TARGET_64BIT && ((N) == 18 || (N) == 19)))
 
 
 /* Scalar return values.  */
@@ -705,11 +669,6 @@ CUMULATIVE_ARGS;
 #define PROFILE_BEFORE_PROLOGUE 1
 
 
-/* Implementing the varargs macros.  */
-
-#define EXPAND_BUILTIN_VA_START(valist, nextarg) \
-  s390_va_start (valist, nextarg)
-
 /* Trampolines for nested functions.  */
 
 #define TRAMPOLINE_SIZE (TARGET_64BIT ? 32 : 16)
@@ -728,38 +687,6 @@ CUMULATIVE_ARGS;
 
 /* Maximum number of registers that can appear in a valid memory address.  */
 #define MAX_REGS_PER_ADDRESS 2
-
-/* The macros REG_OK_FOR..._P assume that the arg is a REG rtx and check
-   its validity for a certain class.  We have two alternate definitions
-   for each of them.  The usual definition accepts all pseudo regs; the
-   other rejects them all.  The symbol REG_OK_STRICT causes the latter
-   definition to be used.
-
-   Most source files want to accept pseudo regs in the hope that they will
-   get allocated to the class that the insn wants them to be in.
-   Some source files that are used after register allocation
-   need to be strict.  */
-
-#define REG_OK_FOR_INDEX_NONSTRICT_P(X)   	\
-((GET_MODE (X) == Pmode) &&			\
- ((REGNO (X) >= FIRST_PSEUDO_REGISTER) 		\
-  || REGNO_REG_CLASS (REGNO (X)) == ADDR_REGS))
-
-#define REG_OK_FOR_BASE_NONSTRICT_P(X)    REG_OK_FOR_INDEX_NONSTRICT_P (X)
-
-#define REG_OK_FOR_INDEX_STRICT_P(X) 				\
-((GET_MODE (X) == Pmode) && (REGNO_OK_FOR_INDEX_P (REGNO (X))))
-
-#define REG_OK_FOR_BASE_STRICT_P(X)				\
-((GET_MODE (X) == Pmode) && (REGNO_OK_FOR_BASE_P (REGNO (X))))
-
-#ifndef REG_OK_STRICT
-#define REG_OK_FOR_INDEX_P(X)  REG_OK_FOR_INDEX_NONSTRICT_P(X)
-#define REG_OK_FOR_BASE_P(X)   REG_OK_FOR_BASE_NONSTRICT_P(X)
-#else
-#define REG_OK_FOR_INDEX_P(X)  REG_OK_FOR_INDEX_STRICT_P(X)
-#define REG_OK_FOR_BASE_P(X)   REG_OK_FOR_BASE_STRICT_P(X)
-#endif
 
 /* S/390 has no mode dependent addresses.  */
 #define GO_IF_MODE_DEPENDENT_ADDRESS(ADDR, LABEL)
@@ -879,12 +806,25 @@ extern struct rtx_def *s390_compare_op0, *s390_compare_op1, *s390_compare_emitte
     || (TARGET_64BIT && (SIZE) == 8) )
 
 /* This macro is used to determine whether store_by_pieces should be
-   called to "memset" storage with byte values other than zero, or
-   to "memcpy" storage when the source is a constant string.  */
+   called to "memcpy" storage when the source is a constant string.  */
 #define STORE_BY_PIECES_P(SIZE, ALIGN) MOVE_BY_PIECES_P (SIZE, ALIGN)
+
+/* Likewise to decide whether to "memset" storage with byte values
+   other than zero.  */
+#define SET_BY_PIECES_P(SIZE, ALIGN) STORE_BY_PIECES_P (SIZE, ALIGN)
 
 /* Don't perform CSE on function addresses.  */
 #define NO_FUNCTION_CSE
+
+/* This value is used in tree-sra to decide whether it might benefical
+   to split a struct move into several word-size moves.  For S/390
+   only small values make sense here since struct moves are relatively
+   cheap thanks to mvc so the small default value choosen for archs
+   with memmove patterns should be ok.  But this value is multiplied
+   in tree-sra with UNITS_PER_WORD to make a decision so we adjust it
+   here to compensate for that factor since mvc costs exactly the same
+   on 31 and 64 bit.  */
+#define MOVE_RATIO (TARGET_64BIT? 2 : 4)
 
 
 /* Sections.  */

@@ -1,5 +1,5 @@
 /* Frv prototypes.
-   Copyright (C) 1999, 2000, 2001, 2003, 2004, 2005 Free Software Foundation,
+   Copyright (C) 1999, 2000, 2001, 2003, 2004, 2005, 2007 Free Software Foundation,
    Inc.
    Contributed by Red Hat, Inc.
 
@@ -7,7 +7,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* CPU type.  This must be identical to the cpu enumeration in frv.md.  */
 typedef enum frv_cpu
@@ -65,8 +64,6 @@ extern rtx frv_function_arg			(CUMULATIVE_ARGS *,
 extern void frv_function_arg_advance		(CUMULATIVE_ARGS *,
 						 enum machine_mode,
 						 tree, int);
-
-extern void frv_expand_builtin_va_start		(tree, rtx);
 #endif /* TREE_CODE */
 
 extern int frv_expand_block_move		(rtx *);
@@ -127,11 +124,6 @@ extern int frv_acc_group		(rtx);
 #ifdef TREE_CODE
 extern int frv_adjust_field_align	(tree, int);
 #endif
-
-extern void fixup_section		(void);
-extern void sdata_section		(void);
-extern void sbss_section		(void);
-extern void data_section		(void);
 
 #ifdef RTX_CODE
 extern int integer_register_operand	(rtx, enum machine_mode);

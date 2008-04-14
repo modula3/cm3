@@ -1,11 +1,11 @@
 ;; Generic DFA-based pipeline description for MIPS targets
-;;   Copyright (C) 2004, 2005 Free Software Foundation, Inc.
+;;   Copyright (C) 2004, 2005, 2007 Free Software Foundation, Inc.
 ;;
 ;; This file is part of GCC.
 
 ;; GCC is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published
-;; by the Free Software Foundation; either version 2, or (at your
+;; by the Free Software Foundation; either version 3, or (at your
 ;; option) any later version.
 
 ;; GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -14,9 +14,8 @@
 ;; License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to the
-;; Free Software Foundation, 51 Franklin Street, Fifth Floor, Boston,
-;; MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 
 ;; This file is derived from the old define_function_unit description.
@@ -24,7 +23,7 @@
 
 (define_insn_reservation "generic_alu" 1
   (eq_attr "type" "unknown,prefetch,prefetchx,condmove,const,arith,
-		   shift,slt,clz,trap,multi,nop")
+		   shift,slt,clz,trap,multi,nop,logical,signext,move")
   "alu")
 
 (define_insn_reservation "generic_load" 3
@@ -36,7 +35,7 @@
   "alu")
 
 (define_insn_reservation "generic_xfer" 2
-  (eq_attr "type" "xfer")
+  (eq_attr "type" "mfc,mtc")
   "alu")
 
 (define_insn_reservation "generic_branch" 1

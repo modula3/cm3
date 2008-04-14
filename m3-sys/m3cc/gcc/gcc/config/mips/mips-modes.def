@@ -1,11 +1,11 @@
 /* MIPS extra machine modes. 
-   Copyright (C) 2003, 2004 Free Software Foundation, Inc.
+   Copyright (C) 2003, 2004, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* MIPS has a quirky almost-IEEE format for all its
    floating point.  */
@@ -29,6 +28,11 @@ FLOAT_MODE (TF, 16, mips_quad_format);
 /* Vector modes.  */
 VECTOR_MODES (FLOAT, 8);      /*            V4HF V2SF */
 VECTOR_MODES (INT, 4);        /*            V4QI V2HI */
+
+VECTOR_MODES (FRACT, 4);	/* V4QQ  V2HQ */
+VECTOR_MODES (UFRACT, 4);	/* V4UQQ V2UHQ */
+VECTOR_MODES (ACCUM, 4);	/*       V2HA */
+VECTOR_MODES (UACCUM, 4);	/*       V2UHA */
 
 /* Paired single comparison instructions use 2 or 4 CC.  */
 CC_MODE (CCV2);

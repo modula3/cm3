@@ -1,33 +1,161 @@
 /* Process source files and output type information.
-   Copyright (C) 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007
+   Free Software Foundation, Inc.
 
-This file is part of GCC.
+   This file is part of GCC.
 
-GCC is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
-version.
+   GCC is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License as published by the Free
+   Software Foundation; either version 3, or (at your option) any later
+   version.
 
-GCC is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 #include "bconfig.h"
 #include "system.h"
-#include "coretypes.h"
-#include "tm.h"
 #include "gengtype.h"
-#include "gtyp-gen.h"
-#include "errors.h"
+#include "errors.h"	/* for fatal */
+#include "double-int.h"
 
+/* Data types, macros, etc. used only in this file.  */
+
+/* Kinds of types we can understand.  */
+enum typekind {
+  TYPE_SCALAR,
+  TYPE_STRING,
+  TYPE_STRUCT,
+  TYPE_UNION,
+  TYPE_POINTER,
+  TYPE_ARRAY,
+  TYPE_LANG_STRUCT,
+  TYPE_PARAM_STRUCT
+};
+
+typedef unsigned lang_bitmap;
+
+/* A way to pass data through to the output end.  */
+struct options
+{
+  struct options *next;
+  const char *name;
+  const char *info;
+};
+
+/* Option data for the 'nested_ptr' option.  */
+struct nested_ptr_data
+{
+  type_p type;
+  const char *convert_to;
+  const char *convert_from;
+};
+
+/* A name and a type.  */
+struct pair
+{
+  pair_p next;
+  const char *name;
+  type_p type;
+  struct fileloc line;
+  options_p opt;
+};
+
+#define NUM_PARAM 10
+
+/* A description of a type.  */
+enum gc_used_enum
+  {
+    GC_UNUSED = 0,
+    GC_USED,
+    GC_MAYBE_POINTED_TO,
+    GC_POINTED_TO
+  };
+
+struct type
+{
+  enum typekind kind;
+  type_p next;
+  type_p pointer_to;
+  enum gc_used_enum gc_used;
+  union {
+    type_p p;
+    struct {
+      const char *tag;
+      struct fileloc line;
+      pair_p fields;
+      options_p opt;
+      lang_bitmap bitmap;
+      type_p lang_struct;
+    } s;
+    bool scalar_is_char;
+    struct {
+      type_p p;
+      const char *len;
+    } a;
+    struct {
+      type_p stru;
+      type_p param[NUM_PARAM];
+      struct fileloc line;
+    } param_struct;
+  } u;
+};
+
+#define UNION_P(x)					\
+ ((x)->kind == TYPE_UNION || 				\
+  ((x)->kind == TYPE_LANG_STRUCT 			\
+   && (x)->u.s.lang_struct->kind == TYPE_UNION))
+#define UNION_OR_STRUCT_P(x)			\
+ ((x)->kind == TYPE_UNION 			\
+  || (x)->kind == TYPE_STRUCT 			\
+  || (x)->kind == TYPE_LANG_STRUCT)
+
+/* Structure representing an output file.  */
+struct outf
+{
+  struct outf *next;
+  const char *name;
+  size_t buflength;
+  size_t bufused;
+  char *buf;
+};
+typedef struct outf * outf_p;
+
+/* An output file, suitable for definitions, that can see declarations
+   made in INPUT_FILE and is linked into every language that uses
+   INPUT_FILE.  */
+extern outf_p get_output_file_with_visibility
+   (const char *input_file);
+const char *get_output_file_name (const char *);
+
+/* Print, like fprintf, to O.  */
+static void oprintf (outf_p o, const char *S, ...)
+     ATTRIBUTE_PRINTF_2;
+
+/* The list of output files.  */
+static outf_p output_files;
+
+/* The output header file that is included into pretty much every
+   source file.  */
+static outf_p header_file;
+
+/* Source directory.  */
+static const char *srcdir;
+
+/* Length of srcdir name.  */
+static int srcdir_len = 0;
+
+static outf_p create_file (const char *, const char *);
+static const char * get_file_basename (const char *);
+
+
 /* Nonzero iff an error has occurred.  */
-static int hit_error = 0;
+bool hit_error = false;
 
 static void gen_rtx_next (void);
 static void write_rtx_next (void);
@@ -46,41 +174,332 @@ error_at_line (struct fileloc *pos, const char *msg, ...)
   fprintf (stderr, "%s:%d: ", pos->file, pos->line);
   vfprintf (stderr, msg, ap);
   fputc ('\n', stderr);
-  hit_error = 1;
+  hit_error = true;
 
   va_end (ap);
 }
 
-/* vasprintf, but produces fatal message on out-of-memory.  */
-int
-xvasprintf (char **result, const char *format, va_list args)
-{
-  int ret = vasprintf (result, format, args);
-  if (*result == NULL || ret < 0)
-    {
-      fputs ("gengtype: out of memory", stderr);
-      xexit (1);
-    }
-  return ret;
-}
-
-/* Wrapper for xvasprintf.  */
+/* asprintf, but produces fatal message on out-of-memory.  */
 char *
 xasprintf (const char *format, ...)
 {
+  int n;
   char *result;
   va_list ap;
 
   va_start (ap, format);
-  xvasprintf (&result, format, ap);
+  n = vasprintf (&result, format, ap);
+  if (result == NULL || n < 0)
+    fatal ("out of memory");
   va_end (ap);
+
   return result;
 }
+
+/* Input file handling. */
 
+/* Table of all input files.  */
+static const char **gt_files;
+static size_t num_gt_files;
+
+/* A number of places use the name of this file for a location for
+   things that we can't rely on the source to define.  Make sure we
+   can still use pointer comparison on filenames.  */
+static const char this_file[] = __FILE__;
+
+/* Vector of per-language directories.  */
+static const char **lang_dir_names;
+static size_t num_lang_dirs;
+
+/* An array of output files suitable for definitions.  There is one
+   BASE_FILES entry for each language.  */
+static outf_p *base_files;
+
+/* Return a bitmap which has bit `1 << BASE_FILE_<lang>' set iff
+   INPUT_FILE is used by <lang>.
+
+   This function should be written to assume that a file _is_ used
+   if the situation is unclear.  If it wrongly assumes a file _is_ used,
+   a linker error will result.  If it wrongly assumes a file _is not_ used,
+   some GC roots may be missed, which is a much harder-to-debug problem.
+
+   The relevant bitmap is stored immediately before the file's name in the
+   buffer set up by read_input_list.  It may be unaligned, so we have to
+   read it byte-by-byte.  */
+
+static lang_bitmap
+get_lang_bitmap (const char *gtfile)
+{
+
+  if (gtfile == this_file)
+    /* Things defined in this file are universal.  */
+    return (((lang_bitmap)1) << num_lang_dirs) - 1;
+  else
+    {
+      lang_bitmap n = 0;
+      int i;
+      for (i = -(int) sizeof (lang_bitmap); i < 0; i++)
+	n = (n << CHAR_BIT) + (unsigned char)gtfile[i];
+      return n;
+    }
+}
+
+/* Set the bitmap returned by get_lang_bitmap.  The only legitimate
+   caller of this function is read_input_list.  */
+static void
+set_lang_bitmap (char *gtfile, lang_bitmap n)
+{
+  int i;
+  for (i = -1; i >= -(int) sizeof (lang_bitmap); i--)
+    {
+      gtfile[i] = n & ((1U << CHAR_BIT)-1);
+      n >>= CHAR_BIT;
+    }
+}
+
+/* Scan the input file, LIST, and determine how much space we need to
+   store strings in.  Also, count the number of language directories
+   and files.  The numbers returned are overestimates as they does not
+   consider repeated files.  */
+static size_t
+measure_input_list (FILE *list)
+{
+  size_t n = 0;
+  int c;
+  bool atbol = true;
+  num_lang_dirs = 0;
+  num_gt_files = 0;
+  while ((c = getc (list)) != EOF)
+    {
+      n++;
+      if (atbol)
+	{
+	  if (c == '[')
+	    num_lang_dirs++;
+	  else
+	    {
+	      /* Add space for a lang_bitmap before the input file name.  */
+	      n += sizeof (lang_bitmap);
+	      num_gt_files++;
+	    }
+	  atbol = false;
+	}
+
+      if (c == '\n')
+	atbol = true;
+    }
+
+  rewind (list);
+  return n;
+}
+
+/* Read one input line from LIST to HEREP (which is updated).  A
+   pointer to the string is returned via LINEP.  If it was a language
+   subdirectory in square brackets, strip off the square brackets and
+   return true.  Otherwise, leave space before the string for a
+   lang_bitmap, and return false.  At EOF, returns false, does not
+   touch *HEREP, and sets *LINEP to NULL.  POS is used for
+   diagnostics.  */
+static bool
+read_input_line (FILE *list, char **herep, char **linep,
+		 struct fileloc *pos)
+{
+  char *here = *herep;
+  char *line;
+  int c = getc (list);
+
+  if (c == EOF)
+    {
+      *linep = 0;
+      return false;
+    }
+  else if (c == '[')
+    {
+      /* No space for a lang_bitmap is necessary.  Discard the '['. */
+      c = getc (list);
+      line = here;
+      while (c != ']' && c != '\n' && c != EOF)
+	{
+	  *here++ = c;
+	  c = getc (list);
+	}
+      *here++ = '\0';
+
+      if (c == ']')
+	{
+	  c = getc (list);  /* eat what should be a newline */
+	  if (c != '\n' && c != EOF)
+	    error_at_line (pos, "junk on line after language tag [%s]", line);
+	}
+      else
+	error_at_line (pos, "missing close bracket for language tag [%s", line);
+
+      *herep = here;
+      *linep = line;
+      return true;
+    }
+  else
+    {
+      /* Leave space for a lang_bitmap.  */
+      memset (here, 0, sizeof (lang_bitmap));
+      here += sizeof (lang_bitmap);
+      line = here;
+      do
+	{
+	  *here++ = c;
+	  c = getc (list);
+	}
+      while (c != EOF && c != '\n');
+      *here++ = '\0';
+      *herep = here;
+      *linep = line;
+      return false;
+    }
+}
+
+/* Read the list of input files from LIST and compute all of the
+   relevant tables.  There is one file per line of the list.  At
+   first, all the files on the list are language-generic, but
+   eventually a line will appear which is the name of a language
+   subdirectory in square brackets, like this: [cp].  All subsequent
+   files are specific to that language, until another language
+   subdirectory tag appears.  Files can appear more than once, if
+   they apply to more than one language.  */
+static void
+read_input_list (const char *listname)
+{
+  FILE *list = fopen (listname, "r");
+  if (!list)
+    fatal ("cannot open %s: %s", listname, strerror (errno));
+  else
+    {
+      struct fileloc epos;
+      size_t bufsz = measure_input_list (list);
+      char *buf = XNEWVEC (char, bufsz);
+      char *here = buf;
+      char *committed = buf;
+      char *limit = buf + bufsz;
+      char *line;
+      bool is_language;
+      size_t langno = 0;
+      size_t nfiles = 0;
+      lang_bitmap curlangs = (1 << num_lang_dirs) - 1;
+
+      epos.file = listname;
+      epos.line = 0;
+
+      lang_dir_names = XNEWVEC (const char *, num_lang_dirs);
+      gt_files = XNEWVEC (const char *, num_gt_files);
+
+      for (;;)
+	{
+	next_line:
+	  epos.line++;
+	  committed = here;
+	  is_language = read_input_line (list, &here, &line, &epos);
+	  gcc_assert (here <= limit);
+	  if (line == 0)
+	    break;
+	  else if (is_language)
+	    {
+	      size_t i;
+	      gcc_assert (langno <= num_lang_dirs);
+	      for (i = 0; i < langno; i++)
+		if (strcmp (lang_dir_names[i], line) == 0)
+		  {
+		    error_at_line (&epos, "duplicate language tag [%s]", line);
+		    curlangs = 1 << i;
+		    here = committed;
+		    goto next_line;
+		  }
+
+	      curlangs = 1 << langno;
+	      lang_dir_names[langno++] = line;
+	    }
+	  else
+	    {
+	      size_t i;
+	      gcc_assert (nfiles <= num_gt_files);
+	      for (i = 0; i < nfiles; i++)
+		if (strcmp (gt_files[i], line) == 0)
+		  {
+		    /* Throw away the string we just read, and add the
+		       current language to the existing string's bitmap.  */
+		    lang_bitmap bmap = get_lang_bitmap (gt_files[i]);
+		    if (bmap & curlangs)
+		      error_at_line (&epos, "file %s specified more than once "
+				     "for language %s", line, langno == 0
+				     ? "(all)"
+				     : lang_dir_names[langno - 1]);
+
+		    bmap |= curlangs;
+		    set_lang_bitmap ((char *)gt_files[i], bmap);
+		    here = committed;
+		    goto next_line;
+		  }
+
+	      set_lang_bitmap (line, curlangs);
+	      gt_files[nfiles++] = line;
+	    }
+	}
+      /* Update the global counts now that we know accurately how many
+	 things there are.  (We do not bother resizing the arrays down.)  */
+      num_lang_dirs = langno;
+      num_gt_files = nfiles;
+    }
+
+  /* Sanity check: any file that resides in a language subdirectory
+     (e.g. 'cp') ought to belong to the corresponding language.
+     ??? Still true if for instance ObjC++ is enabled and C++ isn't?
+     (Can you even do that?  Should you be allowed to?)  */
+  {
+    size_t f;
+    for (f = 0; f < num_gt_files; f++)
+      {
+	lang_bitmap bitmap = get_lang_bitmap (gt_files[f]);
+	const char *basename = get_file_basename (gt_files[f]);
+	const char *slashpos = strchr (basename, '/');
+
+	if (slashpos)
+	  {
+	    size_t l;
+	    for (l = 0; l < num_lang_dirs; l++)
+	      if ((size_t)(slashpos - basename) == strlen (lang_dir_names [l])
+		  && memcmp (basename, lang_dir_names[l],
+			     strlen (lang_dir_names[l])) == 0)
+		{
+		  if (!(bitmap & (1 << l)))
+		    error ("%s is in language directory '%s' but is not "
+			   "tagged for that language",
+			   basename, lang_dir_names[l]);
+		  break;
+		}
+          }
+      }
+  }
+
+  if (ferror (list))
+    fatal ("error reading %s: %s", listname, strerror (errno));
+
+  fclose (list);
+}
+
+
+
 /* The one and only TYPE_STRING.  */
 
-struct type string_type = {
-  TYPE_STRING, NULL, NULL, GC_USED, {0}
+static struct type string_type = {
+  TYPE_STRING, 0, 0, GC_USED, {0}
+};
+
+/* The two and only TYPE_SCALARs.  Their u.scalar_is_char flags are
+   set to appropriate values at the beginning of main.  */
+
+static struct type scalar_nonchar = {
+  TYPE_SCALAR, 0, 0, GC_USED, {0}
+};
+static struct type scalar_char = {
+  TYPE_SCALAR, 0, 0, GC_USED, {0}
 };
 
 /* Lists of various things.  */
@@ -90,7 +509,6 @@ static type_p structures;
 static type_p param_structs;
 static pair_p variables;
 
-static void do_scalar_typedef (const char *, struct fileloc *);
 static type_p find_param_structure
   (type_p t, type_p param[NUM_PARAM]);
 static type_p adjust_field_tree_exp (type_p t, options_p opt);
@@ -102,6 +520,18 @@ void
 do_typedef (const char *s, type_p t, struct fileloc *pos)
 {
   pair_p p;
+
+  /* temporary kludge - gengtype doesn't handle conditionals or macros.
+     Ignore any attempt to typedef CUMULATIVE_ARGS, location_t,
+     expanded_location, or source_locus, unless it is coming from
+     this file (main() sets them up with safe dummy definitions).  */
+  if ((!strcmp (s, "CUMULATIVE_ARGS")
+       || !strcmp (s, "location_t")
+       || !strcmp (s, "source_locus")
+       || !strcmp (s, "source_location")
+       || !strcmp (s, "expanded_location"))
+      && pos->file != this_file)
+    return;
 
   for (p = typedefs; p != NULL; p = p->next)
     if (strcmp (p->name, s) == 0)
@@ -122,12 +552,14 @@ do_typedef (const char *s, type_p t, struct fileloc *pos)
   typedefs = p;
 }
 
-/* Define S as a typename of a scalar.  */
+/* Define S as a typename of a scalar.  Cannot be used to define
+   typedefs of 'char'.  Note: is also used for pointer-to-function
+   typedefs (which are therefore not treated as pointers).  */
 
-static void
+void
 do_scalar_typedef (const char *s, struct fileloc *pos)
 {
-  do_typedef (s, create_scalar_type (s, strlen (s)), pos);
+  do_typedef (s, &scalar_nonchar, pos);
 }
 
 /* Return the type previously defined for S.  Use POS to report errors.  */
@@ -140,19 +572,26 @@ resolve_typedef (const char *s, struct fileloc *pos)
     if (strcmp (p->name, s) == 0)
       return p->type;
   error_at_line (pos, "unidentified type `%s'", s);
-  return create_scalar_type ("char", 4);
+  return &scalar_nonchar;  /* treat as "int" */
 }
 
-/* Create a new structure with tag NAME (or a union iff ISUNION is nonzero),
-   at POS with fields FIELDS and options O.  */
+/* Create and return a new structure with tag NAME (or a union iff
+   ISUNION is nonzero), at POS with fields FIELDS and options O.  */
 
-void
+type_p
 new_structure (const char *name, int isunion, struct fileloc *pos,
 	       pair_p fields, options_p o)
 {
   type_p si;
   type_p s = NULL;
-  lang_bitmap bitmap = get_base_file_bitmap (pos->file);
+  lang_bitmap bitmap = get_lang_bitmap (pos->file);
+
+  /* temporary kludge - gengtype doesn't handle conditionals or
+     macros.  Ignore any attempt to define struct location_s, unless
+     it is coming from this file (main() sets it up safely). */
+  if (!strcmp (name, "location_s") && !isunion
+      && pos->file != this_file)
+    return find_structure (name, 0);
 
   for (si = structures; si != NULL; si = si->next)
     if (strcmp (name, si->u.s.tag) == 0
@@ -202,7 +641,8 @@ new_structure (const char *name, int isunion, struct fileloc *pos,
   if (s->u.s.line.file != NULL
       || (s->u.s.lang_struct && (s->u.s.lang_struct->u.s.bitmap & bitmap)))
     {
-      error_at_line (pos, "duplicate structure definition");
+      error_at_line (pos, "duplicate definition of '%s %s'",
+		     isunion ? "union" : "struct", s->u.s.tag);
       error_at_line (&s->u.s.line, "previous definition here");
     }
 
@@ -214,6 +654,23 @@ new_structure (const char *name, int isunion, struct fileloc *pos,
   s->u.s.bitmap = bitmap;
   if (s->u.s.lang_struct)
     s->u.s.lang_struct->u.s.bitmap |= bitmap;
+
+  /* Reset location_s's location to input.h so that we know where to
+     write out its mark routine.  */
+  if (!strcmp (name, "location_s") && !isunion
+      && pos->file == this_file)
+    {
+      size_t n;
+      for (n = 0; n < num_gt_files; n++)
+	if (!strcmp (gt_files[n] + strlen (gt_files[n]) - strlen ("input.h"),
+		     "input.h"))
+	  {
+	    s->u.s.line.file = gt_files[n];
+	    break;
+	  }
+    }
+
+    return s;
 }
 
 /* Return the previously-defined structure with tag NAME (or a union
@@ -268,12 +725,12 @@ find_param_structure (type_p t, type_p param[NUM_PARAM])
 /* Return a scalar type with name NAME.  */
 
 type_p
-create_scalar_type (const char *name, size_t name_len)
+create_scalar_type (const char *name)
 {
-  type_p r = XCNEW (struct type);
-  r->kind = TYPE_SCALAR;
-  r->u.sc = (char *) xmemdup (name, name_len, name_len + 1);
-  return r;
+  if (!strcmp (name, "char") || !strcmp (name, "unsigned char"))
+    return &scalar_char;
+  else
+    return &scalar_nonchar;
 }
 
 /* Return a pointer to T.  */
@@ -305,14 +762,30 @@ create_array (type_p t, const char *len)
   return v;
 }
 
-/* Return an options structure with name NAME and info INFO.  */
+/* Return an options structure with name NAME and info INFO.  NEXT is the
+   next option in the chain.  */
+
 options_p
-create_option (const char *name, void *info)
+create_option (options_p next, const char *name, const void *info)
 {
   options_p o = XNEW (struct options);
+  o->next = next;
   o->name = name;
   o->info = (const char*) info;
   return o;
+}
+
+/* Return an options structure for a "nested_ptr" option.  */
+options_p
+create_nested_ptr_option (options_p next, type_p t,
+			  const char *to, const char *from)
+{
+  struct nested_ptr_data *d = XNEW (struct nested_ptr_data);
+
+  d->type = adjust_field_type (t, 0);
+  d->convert_to = to;
+  d->convert_from = from;
+  return create_option (next, "nested_ptr", d);
 }
 
 /* Add a variable named S of type T with options O defined at POS,
@@ -331,6 +804,83 @@ note_variable (const char *s, type_p t, options_p o, struct fileloc *pos)
   variables = n;
 }
 
+/* Most-general structure field creator.  */
+static pair_p
+create_field_all (pair_p next, type_p type, const char *name, options_p opt,
+		  const char *file, int line)
+{
+  pair_p field;
+
+  field = XNEW (struct pair);
+  field->next = next;
+  field->type = type;
+  field->name = name;
+  field->opt = opt;
+  field->line.file = file;
+  field->line.line = line;
+  return field;
+}
+
+/* Create a field that came from the source code we are scanning,
+   i.e. we have a 'struct fileloc', and possibly options; also,
+   adjust_field_type should be called.  */
+pair_p
+create_field_at (pair_p next, type_p type, const char *name, options_p opt,
+		 struct fileloc *pos)
+{
+  return create_field_all (next, adjust_field_type (type, opt),
+			   name, opt, pos->file, pos->line);
+}
+
+/* Create a fake field with the given type and name.  NEXT is the next
+   field in the chain.  */
+#define create_field(next,type,name) \
+    create_field_all(next,type,name, 0, this_file, __LINE__)
+
+/* Like create_field, but the field is only valid when condition COND
+   is true.  */
+
+static pair_p
+create_optional_field_ (pair_p next, type_p type, const char *name,
+			const char *cond, int line)
+{
+  static int id = 1;
+  pair_p union_fields;
+  type_p union_type;
+
+  /* Create a fake union type with a single nameless field of type TYPE.
+     The field has a tag of "1".  This allows us to make the presence
+     of a field of type TYPE depend on some boolean "desc" being true.  */
+  union_fields = create_field (NULL, type, "");
+  union_fields->opt = create_option (union_fields->opt, "dot", "");
+  union_fields->opt = create_option (union_fields->opt, "tag", "1");
+  union_type = new_structure (xasprintf ("%s_%d", "fake_union", id++), 1,
+			      &lexer_line, union_fields, NULL);
+
+  /* Create the field and give it the new fake union type.  Add a "desc"
+     tag that specifies the condition under which the field is valid.  */
+  return create_field_all (next, union_type, name,
+			   create_option (0, "desc", cond),
+			   this_file, line);
+}
+#define create_optional_field(next,type,name,cond)	\
+       create_optional_field_(next,type,name,cond,__LINE__)
+
+/* Reverse a linked list of 'struct pair's in place.  */
+pair_p
+nreverse_pairs (pair_p list)
+{
+  pair_p prev = 0, p, next;
+  for (p = list; p; p = next)
+    {
+      next = p->next;
+      p->next = prev;
+      prev = p;
+    }
+  return prev;
+}
+
+
 /* We don't care how long a CONST_DOUBLE is.  */
 #define CONST_DOUBLE_FORMAT "ww"
 /* We don't want to see codes that are only for generator files.  */
@@ -431,7 +981,7 @@ adjust_field_rtx_def (type_p t, options_p ARG_UNUSED (opt))
   options_p nodot;
   int i;
   type_p rtx_tp, rtvec_tp, tree_tp, mem_attrs_tp, note_union_tp, scalar_tp;
-  type_p bitmap_tp, basic_block_tp, reg_attrs_tp;
+  type_p bitmap_tp, basic_block_tp, reg_attrs_tp, constant_tp, symbol_union_tp;
 
   if (t->kind != TYPE_UNION)
     {
@@ -440,10 +990,7 @@ adjust_field_rtx_def (type_p t, options_p ARG_UNUSED (opt))
       return &string_type;
     }
 
-  nodot = XNEW (struct options);
-  nodot->next = NULL;
-  nodot->name = "dot";
-  nodot->info = "";
+  nodot = create_option (NULL, "dot", "");
 
   rtx_tp = create_pointer (find_structure ("rtx_def", 0));
   rtvec_tp = create_pointer (find_structure ("rtvec_def", 0));
@@ -452,7 +999,8 @@ adjust_field_rtx_def (type_p t, options_p ARG_UNUSED (opt))
   reg_attrs_tp = create_pointer (find_structure ("reg_attrs", 0));
   bitmap_tp = create_pointer (find_structure ("bitmap_element_def", 0));
   basic_block_tp = create_pointer (find_structure ("basic_block_def", 0));
-  scalar_tp = create_scalar_type ("rtunion scalar", 14);
+  constant_tp = create_pointer (find_structure ("constant_descriptor_rtx", 0));
+  scalar_tp = &scalar_nonchar;  /* rtunion int */
 
   {
     pair_p note_flds = NULL;
@@ -460,61 +1008,58 @@ adjust_field_rtx_def (type_p t, options_p ARG_UNUSED (opt))
 
     for (c = 0; c <= NOTE_INSN_MAX; c++)
       {
-	pair_p old_note_flds = note_flds;
-
-	note_flds = XNEW (struct pair);
-	note_flds->line.file = __FILE__;
-	note_flds->line.line = __LINE__;
-	note_flds->opt = XNEW (struct options);
-	note_flds->opt->next = nodot;
-	note_flds->opt->name = "tag";
-	note_flds->opt->info = note_insn_name[c];
-	note_flds->next = old_note_flds;
-
 	switch (c)
 	  {
-	    /* NOTE_INSN_MAX is used as the default field for line
-	       number notes.  */
 	  case NOTE_INSN_MAX:
-	    note_flds->opt->name = "default";
-	    note_flds->name = "rt_str";
-	    note_flds->type = &string_type;
+	    note_flds = create_field (note_flds, &string_type, "rt_str");
 	    break;
 
 	  case NOTE_INSN_BLOCK_BEG:
 	  case NOTE_INSN_BLOCK_END:
-	    note_flds->name = "rt_tree";
-	    note_flds->type = tree_tp;
+	    note_flds = create_field (note_flds, tree_tp, "rt_tree");
 	    break;
 
-	  case NOTE_INSN_EXPECTED_VALUE:
 	  case NOTE_INSN_VAR_LOCATION:
-	    note_flds->name = "rt_rtx";
-	    note_flds->type = rtx_tp;
+	    note_flds = create_field (note_flds, rtx_tp, "rt_rtx");
 	    break;
 
 	  default:
-	    note_flds->name = "rt_int";
-	    note_flds->type = scalar_tp;
+	    note_flds = create_field (note_flds, scalar_tp, "rt_int");
 	    break;
 	  }
+	/* NOTE_INSN_MAX is used as the default field for line
+	   number notes.  */
+	if (c == NOTE_INSN_MAX)
+	  note_flds->opt = create_option (nodot, "default", "");
+	else
+	  note_flds->opt = create_option (nodot, "tag", note_insn_name[c]);
       }
-    new_structure ("rtx_def_note_subunion", 1, &lexer_line, note_flds, NULL);
+    note_union_tp = new_structure ("rtx_def_note_subunion", 1,
+				   &lexer_line, note_flds, NULL);
   }
+  /* Create a type to represent the various forms of SYMBOL_REF_DATA.  */
+  {
+    pair_p sym_flds;
 
-  note_union_tp = find_structure ("rtx_def_note_subunion", 1);
+    sym_flds = create_field (NULL, tree_tp, "rt_tree");
+    sym_flds->opt = create_option (nodot, "default", "");
 
+    sym_flds = create_field (sym_flds, constant_tp, "rt_constant");
+    sym_flds->opt = create_option (nodot, "tag", "1");
+
+    symbol_union_tp = new_structure ("rtx_def_symbol_subunion", 1,
+				     &lexer_line, sym_flds, NULL);
+  }
   for (i = 0; i < NUM_RTX_CODE; i++)
     {
-      pair_p old_flds = flds;
       pair_p subfields = NULL;
       size_t aindex, nmindex;
       const char *sname;
+      type_p substruct;
       char *ftag;
 
       for (aindex = 0; aindex < strlen (rtx_format[i]); aindex++)
 	{
-	  pair_p old_subf = subfields;
 	  type_p t;
 	  const char *subname;
 
@@ -531,7 +1076,7 @@ adjust_field_rtx_def (type_p t, options_p ARG_UNUSED (opt))
 	    case '0':
 	      if (i == MEM && aindex == 1)
 		t = mem_attrs_tp, subname = "rt_mem";
-	      else if (i == JUMP_INSN && aindex == 9)
+	      else if (i == JUMP_INSN && aindex == 8)
 		t = rtx_tp, subname = "rt_rtx";
 	      else if (i == CODE_LABEL && aindex == 4)
 		t = scalar_tp, subname = "rt_int";
@@ -542,6 +1087,8 @@ adjust_field_rtx_def (type_p t, options_p ARG_UNUSED (opt))
 		t = rtx_tp, subname = "rt_rtx";
 	      else if (i == NOTE && aindex == 4)
 		t = note_union_tp, subname = "";
+	      else if (i == NOTE && aindex == 5)
+		t = scalar_tp, subname = "rt_int";
 	      else if (i == NOTE && aindex >= 7)
 		t = scalar_tp, subname = "rt_int";
 	      else if (i == ADDR_DIFF_VEC && aindex == 4)
@@ -557,7 +1104,7 @@ adjust_field_rtx_def (type_p t, options_p ARG_UNUSED (opt))
 	      else if (i == SYMBOL_REF && aindex == 1)
 		t = scalar_tp, subname = "rt_int";
 	      else if (i == SYMBOL_REF && aindex == 2)
-		t = tree_tp, subname = "rt_tree";
+		t = symbol_union_tp, subname = "";
 	      else if (i == BARRIER && aindex >= 3)
 		t = scalar_tp, subname = "rt_int";
 	      else
@@ -614,43 +1161,40 @@ adjust_field_rtx_def (type_p t, options_p ARG_UNUSED (opt))
 	      break;
 	    }
 
-	  subfields = XNEW (struct pair);
-	  subfields->next = old_subf;
-	  subfields->type = t;
-	  subfields->name = xasprintf (".fld[%lu].%s", (unsigned long)aindex,
-				       subname);
-	  subfields->line.file = __FILE__;
-	  subfields->line.line = __LINE__;
+	  subfields = create_field (subfields, t,
+				    xasprintf (".fld[%lu].%s",
+					       (unsigned long) aindex,
+					       subname));
+	  subfields->opt = nodot;
 	  if (t == note_union_tp)
-	    {
-	      subfields->opt = XNEW (struct options);
-	      subfields->opt->next = nodot;
-	      subfields->opt->name = "desc";
-	      subfields->opt->info = "NOTE_LINE_NUMBER (&%0)";
-	    }
-	  else
-	    subfields->opt = nodot;
+	    subfields->opt = create_option (subfields->opt, "desc",
+					    "NOTE_KIND (&%0)");
+	  if (t == symbol_union_tp)
+	    subfields->opt = create_option (subfields->opt, "desc",
+					    "CONSTANT_POOL_ADDRESS_P (&%0)");
 	}
 
-      flds = XNEW (struct pair);
-      flds->next = old_flds;
-      flds->name = "";
+      if (i == SYMBOL_REF)
+	{
+	  /* Add the "block_sym" field if SYMBOL_REF_HAS_BLOCK_INFO_P holds.  */
+	  type_p field_tp = find_structure ("block_symbol", 0);
+	  subfields
+	    = create_optional_field (subfields, field_tp, "block_sym",
+				     "SYMBOL_REF_HAS_BLOCK_INFO_P (&%0)");
+	}
+
       sname = xasprintf ("rtx_def_%s", rtx_name[i]);
-      new_structure (sname, 0, &lexer_line, subfields, NULL);
-      flds->type = find_structure (sname, 0);
-      flds->line.file = __FILE__;
-      flds->line.line = __LINE__;
-      flds->opt = XNEW (struct options);
-      flds->opt->next = nodot;
-      flds->opt->name = "tag";
+      substruct = new_structure (sname, 0, &lexer_line, subfields, NULL);
+
       ftag = xstrdup (rtx_name[i]);
       for (nmindex = 0; nmindex < strlen (ftag); nmindex++)
 	ftag[nmindex] = TOUPPER (ftag[nmindex]);
-      flds->opt->info = ftag;
+
+      flds = create_field (flds, substruct, "");
+      flds->opt = create_option (nodot, "tag", ftag);
     }
 
-  new_structure ("rtx_def_subunion", 1, &lexer_line, flds, nodot);
-  return find_structure ("rtx_def_subunion", 1);
+  return new_structure ("rtx_def_subunion", 1, &lexer_line, flds, nodot);
 }
 
 /* Handle `special("tree_exp")'.  This is a special case for
@@ -672,31 +1216,14 @@ adjust_field_tree_exp (type_p t, options_p opt ATTRIBUTE_UNUSED)
       return &string_type;
     }
 
-  nodot = XNEW (struct options);
-  nodot->next = NULL;
-  nodot->name = "dot";
-  nodot->info = "";
+  nodot = create_option (NULL, "dot", "");
 
-  flds = XNEW (struct pair);
-  flds->next = NULL;
-  flds->name = "";
-  flds->type = t;
-  flds->line.file = __FILE__;
-  flds->line.line = __LINE__;
-  flds->opt = XNEW (struct options);
-  flds->opt->next = nodot;
-  flds->opt->name = "length";
-  flds->opt->info = "TREE_CODE_LENGTH (TREE_CODE ((tree) &%0))";
-  {
-    options_p oldopt = flds->opt;
-    flds->opt = XNEW (struct options);
-    flds->opt->next = oldopt;
-    flds->opt->name = "default";
-    flds->opt->info = "";
-  }
+  flds = create_field (NULL, t, "");
+  flds->opt = create_option (nodot, "length",
+			     "TREE_OPERAND_LENGTH ((tree) &%0)");
+  flds->opt = create_option (flds->opt, "default", "");
 
-  new_structure ("tree_exp_subunion", 1, &lexer_line, flds, nodot);
-  return find_structure ("tree_exp_subunion", 1);
+  return new_structure ("tree_exp_subunion", 1, &lexer_line, flds, nodot);
 }
 
 /* Perform any special processing on a type T, about to become the type
@@ -772,81 +1299,17 @@ adjust_field_type (type_p t, options_p opt)
   if (! length_p
       && pointer_p
       && t->u.p->kind == TYPE_SCALAR
-      && (strcmp (t->u.p->u.sc, "char") == 0
-	  || strcmp (t->u.p->u.sc, "unsigned char") == 0))
+      && t->u.p->u.scalar_is_char)
     return &string_type;
   if (t->kind == TYPE_ARRAY && t->u.a.p->kind == TYPE_POINTER
       && t->u.a.p->u.p->kind == TYPE_SCALAR
-      && (strcmp (t->u.a.p->u.p->u.sc, "char") == 0
-	  || strcmp (t->u.a.p->u.p->u.sc, "unsigned char") == 0))
+      && t->u.a.p->u.p->u.scalar_is_char)
     return create_array (&string_type, t->u.a.len);
 
   return t;
 }
 
-/* Create a union for YYSTYPE, as yacc would do it, given a fieldlist FIELDS
-   and information about the correspondence between token types and fields
-   in TYPEINFO.  POS is used for error messages.  */
-
-void
-note_yacc_type (options_p o, pair_p fields, pair_p typeinfo,
-		struct fileloc *pos)
-{
-  pair_p p;
-  pair_p *p_p;
-
-  for (p = typeinfo; p; p = p->next)
-    {
-      pair_p m;
-
-      if (p->name == NULL)
-	continue;
-
-      if (p->type == (type_p) 1)
-	{
-	  pair_p pp;
-	  int ok = 0;
-
-	  for (pp = typeinfo; pp; pp = pp->next)
-	    if (pp->type != (type_p) 1
-		&& strcmp (pp->opt->info, p->opt->info) == 0)
-	      {
-		ok = 1;
-		break;
-	      }
-	  if (! ok)
-	    continue;
-	}
-
-      for (m = fields; m; m = m->next)
-	if (strcmp (m->name, p->name) == 0)
-	  p->type = m->type;
-      if (p->type == NULL)
-	{
-	  error_at_line (&p->line,
-			 "couldn't match fieldname `%s'", p->name);
-	  p->name = NULL;
-	}
-    }
-
-  p_p = &typeinfo;
-  while (*p_p)
-    {
-      pair_p p = *p_p;
-
-      if (p->name == NULL
-	  || p->type == (type_p) 1)
-	*p_p = p->next;
-      else
-	p_p = &p->next;
-    }
-
-  new_structure ("yy_union", 1, pos, typeinfo, o);
-  do_typedef ("YYSTYPE", find_structure ("yy_union", 1), pos);
-}
 
-static void process_gc_options (options_p, enum gc_used_enum,
-				int *, int *, int *, type_p *);
 static void set_gc_used_type (type_p, enum gc_used_enum, type_p *);
 static void set_gc_used (pair_p);
 
@@ -854,7 +1317,7 @@ static void set_gc_used (pair_p);
 
 static void
 process_gc_options (options_p opt, enum gc_used_enum level, int *maybe_undef,
-		    int *pass_param, int *length, type_p *nested_ptr)
+		    int *pass_param, int *length, int *skip, type_p *nested_ptr)
 {
   options_p o;
   for (o = opt; o; o = o->next)
@@ -866,6 +1329,8 @@ process_gc_options (options_p opt, enum gc_used_enum level, int *maybe_undef,
       *pass_param = 1;
     else if (strcmp (o->name, "length") == 0)
       *length = 1;
+    else if (strcmp (o->name, "skip") == 0)
+      *skip = 1;
     else if (strcmp (o->name, "nested_ptr") == 0)
       *nested_ptr = ((const struct nested_ptr_data *) o->info)->type;
 }
@@ -889,7 +1354,7 @@ set_gc_used_type (type_p t, enum gc_used_enum level, type_p param[NUM_PARAM])
 	int dummy;
 	type_p dummy2;
 
-	process_gc_options (t->u.s.opt, level, &dummy, &dummy, &dummy,
+	process_gc_options (t->u.s.opt, level, &dummy, &dummy, &dummy, &dummy,
 			    &dummy2);
 
 	for (f = t->u.s.fields; f; f = f->next)
@@ -897,9 +1362,10 @@ set_gc_used_type (type_p t, enum gc_used_enum level, type_p param[NUM_PARAM])
 	    int maybe_undef = 0;
 	    int pass_param = 0;
 	    int length = 0;
+	    int skip = 0;
 	    type_p nested_ptr = NULL;
 	    process_gc_options (f->opt, level, &maybe_undef, &pass_param,
-				&length, &nested_ptr);
+				&length, &skip, &nested_ptr);
 
 	    if (nested_ptr && f->type->kind == TYPE_POINTER)
 	      set_gc_used_type (nested_ptr, GC_POINTED_TO, 
@@ -911,6 +1377,8 @@ set_gc_used_type (type_p t, enum gc_used_enum level, type_p param[NUM_PARAM])
 	    else if (pass_param && f->type->kind == TYPE_POINTER && param)
 	      set_gc_used_type (find_param_structure (f->type->u.p, param),
 				GC_POINTED_TO, NULL);
+	    else if (skip)
+	      ; /* target type is not used through this field */
 	    else
 	      set_gc_used_type (f->type, GC_USED, pass_param ? param : NULL);
 	  }
@@ -965,27 +1433,7 @@ set_gc_used (pair_p variables)
    (but some output files have many input files), and there is one .h file
    for the whole build.  */
 
-/* The list of output files.  */
-static outf_p output_files;
-
-/* The output header file that is included into pretty much every
-   source file.  */
-static outf_p header_file;
-
-/* Number of files specified in gtfiles.  */
-#define NUM_GT_FILES (ARRAY_SIZE (all_files) - 1)
-
-/* Number of files in the language files array.  */
-#define NUM_LANG_FILES (ARRAY_SIZE (lang_files) - 1)
-
-/* Length of srcdir name.  */
-static int srcdir_len = 0;
-
-#define NUM_BASE_FILES (ARRAY_SIZE (lang_dir_names) - 1)
-outf_p base_files[NUM_BASE_FILES];
-
-static outf_p create_file (const char *, const char *);
-static const char * get_file_basename (const char *);
+/* Output file handling.  */
 
 /* Create and return an outf_p for a new file for NAME, to be called
    ONAME.  */
@@ -994,13 +1442,13 @@ static outf_p
 create_file (const char *name, const char *oname)
 {
   static const char *const hdr[] = {
-    "   Copyright (C) 2004 Free Software Foundation, Inc.\n",
+    "   Copyright (C) 2004, 2007 Free Software Foundation, Inc.\n",
     "\n",
     "This file is part of GCC.\n",
     "\n",
     "GCC is free software; you can redistribute it and/or modify it under\n",
     "the terms of the GNU General Public License as published by the Free\n",
-    "Software Foundation; either version 2, or (at your option) any later\n",
+    "Software Foundation; either version 3, or (at your option) any later\n",
     "version.\n",
     "\n",
     "GCC is distributed in the hope that it will be useful, but WITHOUT ANY\n",
@@ -1009,9 +1457,8 @@ create_file (const char *name, const char *oname)
     "for more details.\n",
     "\n",
     "You should have received a copy of the GNU General Public License\n",
-    "along with GCC; see the file COPYING.  If not, write to the Free\n",
-    "Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA\n",
-    "02110-1301, USA.  */\n",
+    "along with GCC; see the file COPYING3.  If not see\n",
+    "<http://www.gnu.org/licenses/>.  */\n",
     "\n",
     "/* This file is machine generated.  Do not edit.  */\n"
   };
@@ -1029,7 +1476,11 @@ create_file (const char *name, const char *oname)
   return f;
 }
 
-/* Print, like fprintf, to O.  */
+/* Print, like fprintf, to O.  
+   N.B. You might think this could be implemented more efficiently
+   with vsnprintf().  Unfortunately, there are C libraries that
+   provide that function but without the C99 semantics for its return
+   value, making it impossible to know how much space is required.  */
 void
 oprintf (outf_p o, const char *format, ...)
 {
@@ -1038,7 +1489,10 @@ oprintf (outf_p o, const char *format, ...)
   va_list ap;
 
   va_start (ap, format);
-  slength = xvasprintf (&s, format, ap);
+  slength = vasprintf (&s, format, ap);
+  if (s == NULL || (int)slength < 0)
+    fatal ("out of memory");
+  va_end (ap);
 
   if (o->bufused + slength > o->buflength)
     {
@@ -1054,7 +1508,6 @@ oprintf (outf_p o, const char *format, ...)
   memcpy (o->buf + o->bufused, s, slength);
   o->bufused += slength;
   free (s);
-  va_end (ap);
 }
 
 /* Open the global header file and the language-specific header files.  */
@@ -1066,7 +1519,9 @@ open_base_files (void)
 
   header_file = create_file ("GCC", "gtype-desc.h");
 
-  for (i = 0; i < NUM_BASE_FILES; i++)
+  base_files = XNEWVEC (outf_p, num_lang_dirs);
+
+  for (i = 0; i < num_lang_dirs; i++)
     base_files[i] = create_file (lang_dir_names[i],
 				 xasprintf ("gtype-%s.h", lang_dir_names[i]));
 
@@ -1080,7 +1535,7 @@ open_base_files (void)
       "hard-reg-set.h", "basic-block.h", "cselib.h", "insn-addr.h",
       "optabs.h", "libfuncs.h", "debug.h", "ggc.h", "cgraph.h",
       "tree-flow.h", "reload.h", "cpp-id-data.h", "tree-chrec.h",
-      "except.h", NULL
+      "cfglayout.h", "except.h", "output.h", "cfgloop.h", NULL
     };
     const char *const *ifp;
     outf_p gtype_desc_c;
@@ -1088,6 +1543,10 @@ open_base_files (void)
     gtype_desc_c = create_file ("GCC", "gtype-desc.c");
     for (ifp = ifiles; *ifp; ifp++)
       oprintf (gtype_desc_c, "#include \"%s\"\n", *ifp);
+
+    /* Make sure we handle "cfun" specially.  */
+    oprintf (gtype_desc_c, "\n/* See definition in function.h.  */\n");
+    oprintf (gtype_desc_c, "#undef cfun\n");
   }
 }
 
@@ -1106,7 +1565,7 @@ get_file_basename (const char *f)
 
   basename++;
 
-  for (i = 1; i < NUM_BASE_FILES; i++)
+  for (i = 0; i < num_lang_dirs; i++)
     {
       const char * s1;
       const char * s2;
@@ -1126,63 +1585,6 @@ get_file_basename (const char *f)
     }
 
   return basename;
-}
-
-/* Return a bitmap which has bit `1 << BASE_FILE_<lang>' set iff
-   INPUT_FILE is used by <lang>.
-
-   This function should be written to assume that a file _is_ used
-   if the situation is unclear.  If it wrongly assumes a file _is_ used,
-   a linker error will result.  If it wrongly assumes a file _is not_ used,
-   some GC roots may be missed, which is a much harder-to-debug problem.  */
-
-unsigned
-get_base_file_bitmap (const char *input_file)
-{
-  const char *basename = get_file_basename (input_file);
-  const char *slashpos = strchr (basename, '/');
-  unsigned j;
-  unsigned k;
-  unsigned bitmap;
-
-  /* If the file resides in a language subdirectory (e.g., 'cp'), assume that
-     it belongs to the corresponding language.  The file may belong to other
-     languages as well (which is checked for below).  */
-
-  if (slashpos)
-    {
-      size_t i;
-      for (i = 1; i < NUM_BASE_FILES; i++)
-	if ((size_t)(slashpos - basename) == strlen (lang_dir_names [i])
-	    && memcmp (basename, lang_dir_names[i], strlen (lang_dir_names[i])) == 0)
-          {
-            /* It's in a language directory, set that language.  */
-            bitmap = 1 << i;
-          }
-    }
-
-  /* If it's in any config-lang.in, then set for the languages
-     specified.  */
-
-  bitmap = 0;
-
-  for (j = 0; j < NUM_LANG_FILES; j++)
-    {
-      if (!strcmp(input_file, lang_files[j]))
-        {
-          for (k = 0; k < NUM_BASE_FILES; k++)
-            {
-              if (!strcmp(lang_dir_names[k], langs_for_lang_files[j]))
-                bitmap |= (1 << k);
-            }
-        }
-    }
-
-  /* Otherwise, set all languages.  */
-  if (!bitmap)
-    bitmap = (1 << NUM_BASE_FILES) - 1;
-
-  return bitmap;
 }
 
 /* An output file, suitable for definitions, that can see declarations
@@ -1246,7 +1648,7 @@ get_output_file_with_visibility (const char *input_file)
     {
       size_t i;
 
-      for (i = 0; i < NUM_BASE_FILES; i++)
+      for (i = 0; i < num_lang_dirs; i++)
 	if (memcmp (basename, lang_dir_names[i], strlen (lang_dir_names[i])) == 0
 	    && basename[strlen(lang_dir_names[i])] == '/')
 	  return base_files[i];
@@ -1310,20 +1712,11 @@ close_output_files (void)
 
       newfile = fopen (of->name, "w");
       if (newfile == NULL)
-	{
-	  perror ("opening output file");
-	  exit (1);
-	}
+	fatal ("opening output file %s: %s", of->name, strerror (errno));
       if (fwrite (of->buf, 1, of->bufused, newfile) != of->bufused)
-	{
-	  perror ("writing output file");
-	  exit (1);
-	}
+	fatal ("writing output file %s: %s", of->name, strerror (errno));
       if (fclose (newfile) != 0)
-	{
-	  perror ("closing output file");
-	  exit (1);
-	}
+	fatal ("closing output file %s: %s", of->name, strerror (errno));
     }
 }
 
@@ -1355,11 +1748,12 @@ struct write_types_data
   const char *marker_routine;
   const char *reorder_note_routine;
   const char *comment;
+  int skip_hooks;		/* skip hook generation if non zero */
 };
 
 static void output_escaped_param (struct walk_type_data *d,
 				  const char *, const char *);
-static void output_mangled_typename (outf_p, type_p);
+static void output_mangled_typename (outf_p, const_type_p);
 static void walk_type (type_p t, struct walk_type_data *d);
 static void write_func_for_structure
      (type_p orig_s, type_p s, type_p * param,
@@ -1412,7 +1806,7 @@ struct walk_type_data
 /* Print a mangled name representing T to OF.  */
 
 static void
-output_mangled_typename (outf_p of, type_p t)
+output_mangled_typename (outf_p of, const_type_p t)
 {
   if (t == NULL)
     oprintf (of, "Z");
@@ -1522,6 +1916,8 @@ walk_type (type_p t, struct walk_type_data *d)
       use_params_p = 1;
     else if (strcmp (oo->name, "desc") == 0)
       desc = oo->info;
+    else if (strcmp (oo->name, "mark_hook") == 0)
+      ;
     else if (strcmp (oo->name, "nested_ptr") == 0)
       nested_ptr_d = (const struct nested_ptr_data *) oo->info;
     else if (strcmp (oo->name, "dot") == 0)
@@ -1715,16 +2111,27 @@ walk_type (type_p t, struct walk_type_data *d)
 	if (t->u.a.p->kind == TYPE_SCALAR)
 	  break;
 
+	/* When walking an array, compute the length and store it in a
+	   local variable before walking the array elements, instead of
+	   recomputing the length expression each time through the loop.
+	   This is necessary to handle tcc_vl_exp objects like CALL_EXPR,
+	   where the length is stored in the first array element,
+	   because otherwise that operand can get overwritten on the
+	   first iteration.  */
 	oprintf (d->of, "%*s{\n", d->indent, "");
 	d->indent += 2;
 	oprintf (d->of, "%*ssize_t i%d;\n", d->indent, "", loopcounter);
-	oprintf (d->of, "%*sfor (i%d = 0; i%d != (size_t)(", d->indent, "",
-		 loopcounter, loopcounter);
+	oprintf (d->of, "%*ssize_t l%d = (size_t)(",
+		 d->indent, "", loopcounter);
 	if (length)
 	  output_escaped_param (d, length, "length");
 	else
 	  oprintf (d->of, "%s", t->u.a.len);
-	oprintf (d->of, "); i%d++) {\n", loopcounter);
+	oprintf (d->of, ");\n");
+	
+	oprintf (d->of, "%*sfor (i%d = 0; i%d != l%d; i%d++) {\n",
+		 d->indent, "",
+		 loopcounter, loopcounter, loopcounter, loopcounter);
 	d->indent += 2;
 	d->val = newval = xasprintf ("%s[i%d]", oldval, loopcounter);
 	d->used_length = 1;
@@ -2012,6 +2419,7 @@ write_func_for_structure (type_p orig_s, type_p s, type_p *param,
   int i;
   const char *chain_next = NULL;
   const char *chain_prev = NULL;
+  const char *mark_hook_name = NULL;
   options_p opt;
   struct walk_type_data d;
 
@@ -2029,6 +2437,8 @@ write_func_for_structure (type_p orig_s, type_p s, type_p *param,
       chain_next = opt->info;
     else if (strcmp (opt->name, "chain_prev") == 0)
       chain_prev = opt->info;
+    else if (strcmp (opt->name, "mark_hook") == 0)
+      mark_hook_name = opt->info;
 
   if (chain_prev != NULL && chain_next == NULL)
     error_at_line (&s->u.s.line, "chain_prev without chain_next");
@@ -2084,10 +2494,17 @@ write_func_for_structure (type_p orig_s, type_p s, type_p *param,
 	  output_type_enum (d.of, orig_s);
 	}
       oprintf (d.of, "))\n");
+      if (mark_hook_name && !wtd->skip_hooks)
+	{
+	  oprintf (d.of, "    {\n");
+	  oprintf (d.of, "      %s (xlimit);\n   ", mark_hook_name);
+	}
       oprintf (d.of, "   xlimit = (");
       d.prev_val[2] = "*xlimit";
       output_escaped_param (&d, chain_next, "chain_next");
       oprintf (d.of, ");\n");
+      if (mark_hook_name && !wtd->skip_hooks)
+	oprintf (d.of, "    }\n");
       if (chain_prev != NULL)
 	{
 	  oprintf (d.of, "  if (x != xlimit)\n");
@@ -2115,7 +2532,10 @@ write_func_for_structure (type_p orig_s, type_p s, type_p *param,
       oprintf (d.of, "  while (x != xlimit)\n");
     }
   oprintf (d.of, "    {\n");
-
+  if (mark_hook_name && chain_next == NULL && !wtd->skip_hooks)
+    {
+      oprintf (d.of, "      %s (x);\n", mark_hook_name);
+    }
   d.prev_val[2] = "*x";
   d.indent = 6;
   walk_type (s, &d);
@@ -2162,7 +2582,7 @@ write_types (type_p structures, type_p param_structs,
 	for (opt = s->u.s.opt; opt; opt = opt->next)
 	  if (strcmp (opt->name, "ptr_alias") == 0)
 	    {
-	      type_p t = (type_p) opt->info;
+	      const_type_p const t = (const_type_p) opt->info;
 	      if (t->kind == TYPE_STRUCT
 		  || t->kind == TYPE_UNION
 		  || t->kind == TYPE_LANG_STRUCT)
@@ -2231,14 +2651,16 @@ write_types (type_p structures, type_p param_structs,
 static const struct write_types_data ggc_wtd =
 {
   "ggc_m", NULL, "ggc_mark", "ggc_test_and_set_mark", NULL,
-  "GC marker procedures.  "
+  "GC marker procedures.  ",
+  FALSE
 };
 
 static const struct write_types_data pch_wtd =
 {
   "pch_n", "pch_p", "gt_pch_note_object", "gt_pch_note_object",
   "gt_pch_note_reorder",
-  "PCH type-walking procedures.  "
+  "PCH type-walking procedures.  ",
+  TRUE
 };
 
 /* Write out the local pointer-walking routines.  */
@@ -2339,7 +2761,7 @@ write_local (type_p structures, type_p param_structs)
 	for (opt = s->u.s.opt; opt; opt = opt->next)
 	  if (strcmp (opt->name, "ptr_alias") == 0)
 	    {
-	      type_p t = (type_p) opt->info;
+	      const_type_p const t = (const_type_p) opt->info;
 	      if (t->kind == TYPE_STRUCT
 		  || t->kind == TYPE_UNION
 		  || t->kind == TYPE_LANG_STRUCT)
@@ -2488,7 +2910,7 @@ finish_root_table (struct flist *flp, const char *pfx, const char *lastname,
   for (fli2 = flp; fli2; fli2 = fli2->next)
     if (fli2->started_p)
       {
-	lang_bitmap bitmap = get_base_file_bitmap (fli2->name);
+	lang_bitmap bitmap = get_lang_bitmap (fli2->name);
 	int fnum;
 
 	for (fnum = 0; bitmap != 0; fnum++, bitmap >>= 1)
@@ -2504,7 +2926,7 @@ finish_root_table (struct flist *flp, const char *pfx, const char *lastname,
 
   {
     size_t fnum;
-    for (fnum = 0; fnum < NUM_BASE_FILES; fnum++)
+    for (fnum = 0; fnum < num_lang_dirs; fnum++)
       oprintf (base_files [fnum],
 	       "const struct %s * const %s[] = {\n",
 	       tname, name);
@@ -2514,7 +2936,7 @@ finish_root_table (struct flist *flp, const char *pfx, const char *lastname,
   for (fli2 = flp; fli2; fli2 = fli2->next)
     if (fli2->started_p)
       {
-	lang_bitmap bitmap = get_base_file_bitmap (fli2->name);
+	lang_bitmap bitmap = get_lang_bitmap (fli2->name);
 	int fnum;
 
 	fli2->started_p = 0;
@@ -2530,7 +2952,7 @@ finish_root_table (struct flist *flp, const char *pfx, const char *lastname,
 
   {
     size_t fnum;
-    for (fnum = 0; fnum < NUM_BASE_FILES; fnum++)
+    for (fnum = 0; fnum < num_lang_dirs; fnum++)
       {
 	oprintf (base_files[fnum], "  NULL\n");
 	oprintf (base_files[fnum], "};\n");
@@ -2714,7 +3136,7 @@ write_array (outf_p f, pair_p v, const struct write_types_data *wtd)
   d.indent = 2;
   d.line = &v->line;
   d.opt = v->opt;
-  d.bitmap = get_base_file_bitmap (v->line.file);
+  d.bitmap = get_lang_bitmap (v->line.file);
   d.param = NULL;
 
   d.prev_val[3] = prevval3 = xasprintf ("&%s", v->name);
@@ -2998,60 +3420,137 @@ write_roots (pair_p variables)
 		     "gt_pch_scalar_rtab");
 }
 
-
-extern int main (int argc, char **argv);
-int
-main(int ARG_UNUSED (argc), char ** ARG_UNUSED (argv))
+/* Record the definition of a generic VEC structure, as if we had expanded
+   the macros in vec.h:
+
+   typedef struct VEC_<type>_base GTY(()) {
+   unsigned num;
+   unsigned alloc;
+   <type> GTY((length ("%h.num"))) vec[1];
+   } VEC_<type>_base
+
+   where the GTY(()) tags are only present if is_scalar is _false_.  */
+
+void
+note_def_vec (const char *typename, bool is_scalar, struct fileloc *pos)
 {
-  unsigned i;
-  static struct fileloc pos = { __FILE__, __LINE__ };
-  unsigned j;
+  pair_p fields;
+  type_p t;
+  options_p o;
+  type_p len_ty = create_scalar_type ("unsigned");
+  const char *name = concat ("VEC_", typename, "_base", (char *)0);
 
-  gen_rtx_next ();
-
-  srcdir_len = strlen (srcdir);
-
-  do_scalar_typedef ("CUMULATIVE_ARGS", &pos);
-  do_scalar_typedef ("REAL_VALUE_TYPE", &pos);
-  do_scalar_typedef ("uint8", &pos);
-  do_scalar_typedef ("jword", &pos);
-  do_scalar_typedef ("JCF_u2", &pos);
-#ifdef USE_MAPPED_LOCATION
-  do_scalar_typedef ("location_t", &pos);
-  do_scalar_typedef ("source_locus", &pos);
-#endif
-  do_scalar_typedef ("void", &pos);
-
-  do_typedef ("PTR", create_pointer (resolve_typedef ("void", &pos)), &pos);
-
-  do_typedef ("HARD_REG_SET", create_array (
-	      create_scalar_type ("unsigned long", strlen ("unsigned long")),
-	      "2"), &pos);
-
-  for (i = 0; i < NUM_GT_FILES; i++)
+  if (is_scalar)
     {
-      int dupflag = 0;
-      /* Omit if already seen.  */
-      for (j = 0; j < i; j++)
-        {
-          if (!strcmp (all_files[i], all_files[j]))
-            {
-              dupflag = 1;
-              break;
-            }
-        }
-      if (!dupflag)
-        parse_file (all_files[i]);
-#ifndef USE_MAPPED_LOCATION
-      /* temporary kludge - gengtype doesn't handle conditionals.
-	 Manually add source_locus *after* we've processed input.h.  */
-      if (i == 0)
-	do_typedef ("source_locus", create_pointer (resolve_typedef ("location_t", &pos)), &pos);
-#endif
+      t = create_scalar_type (typename);
+      o = 0;
+    }
+  else
+    {
+      t = resolve_typedef (typename, pos);
+      o = create_option (0, "length", "%h.num");
     }
 
-  if (hit_error != 0)
-    exit (1);
+  /* We assemble the field list in reverse order.  */
+  fields = create_field_at (0, create_array (t, "1"), "vec", o, pos);
+  fields = create_field_at (fields, len_ty, "alloc", 0, pos);
+  fields = create_field_at (fields, len_ty, "num", 0, pos);
+
+  do_typedef (name, new_structure (name, 0, pos, fields, 0), pos);
+}
+
+/* Record the definition of an allocation-specific VEC structure, as if
+   we had expanded the macros in vec.h:
+
+   typedef struct VEC_<type>_<astrat> {
+     VEC_<type>_base base;
+   } VEC_<type>_<astrat>;
+*/
+void
+note_def_vec_alloc (const char *type, const char *astrat, struct fileloc *pos)
+{
+  const char *astratname = concat ("VEC_", type, "_", astrat, (char *)0);
+  const char *basename = concat ("VEC_", type, "_base", (char *)0);
+
+  pair_p field = create_field_at (0, resolve_typedef (basename, pos),
+				  "base", 0, pos);
+
+  do_typedef (astratname, new_structure (astratname, 0, pos, field, 0), pos);
+}
+
+/* Yet more temporary kludge since gengtype doesn't understand conditionals.
+   This must be kept in sync with input.h.  */
+static void
+define_location_structures (void)
+{
+  pair_p fields;
+  type_p locs;
+  static struct fileloc pos = { this_file, __LINE__ };
+  do_scalar_typedef ("source_location", &pos);
+
+#ifdef USE_MAPPED_LOCATION
+    fields = create_field (0, &scalar_nonchar, "column");
+    fields = create_field (fields, &scalar_nonchar, "line");
+    fields = create_field (fields, &string_type, "file");
+    locs = new_structure ("anon:expanded_location", 0, &pos, fields, 0);
+
+    do_typedef ("expanded_location", locs, &pos);
+    do_scalar_typedef ("location_t", &pos);
+    do_scalar_typedef ("source_locus", &pos);
+#else
+    fields = create_field (0, &scalar_nonchar, "line");
+    fields = create_field (fields, &string_type, "file");
+    locs = new_structure ("location_s", 0, &pos, fields, 0);
+
+    do_typedef ("expanded_location", locs, &pos);
+    do_typedef ("location_t", locs, &pos);
+    do_typedef ("source_locus", create_pointer (locs), &pos);
+#endif
+}
+
+
+int
+main (int argc, char **argv)
+{
+  size_t i;
+  static struct fileloc pos = { this_file, 0 };
+
+  /* fatal uses this */
+  progname = "gengtype";
+
+  if (argc != 3)
+    fatal ("usage: gengtype srcdir input-list");
+
+  srcdir = argv[1];
+  srcdir_len = strlen (srcdir);
+
+  read_input_list (argv[2]);
+  if (hit_error)
+    return 1;
+
+  scalar_char.u.scalar_is_char = true;
+  scalar_nonchar.u.scalar_is_char = false;
+  gen_rtx_next ();
+
+  /* These types are set up with #define or else outside of where
+     we can see them.  */
+  pos.line = __LINE__ + 1;
+  do_scalar_typedef ("CUMULATIVE_ARGS", &pos); pos.line++;
+  do_scalar_typedef ("REAL_VALUE_TYPE", &pos); pos.line++;
+  do_scalar_typedef ("FIXED_VALUE_TYPE", &pos); pos.line++;
+  do_scalar_typedef ("double_int", &pos); pos.line++;
+  do_scalar_typedef ("uint8", &pos); pos.line++;
+  do_scalar_typedef ("jword", &pos); pos.line++;
+  do_scalar_typedef ("JCF_u2", &pos); pos.line++;
+  do_scalar_typedef ("void", &pos); pos.line++;
+  do_typedef ("PTR", create_pointer (resolve_typedef ("void", &pos)), &pos);
+  define_location_structures ();
+
+  for (i = 0; i < num_gt_files; i++)
+    parse_file (gt_files[i]);
+
+  if (hit_error)
+    return 1;
 
   set_gc_used (variables);
 
@@ -3064,5 +3563,7 @@ main(int ARG_UNUSED (argc), char ** ARG_UNUSED (argv))
   write_rtx_next ();
   close_output_files ();
 
-  return (hit_error != 0);
+  if (hit_error)
+    return 1;
+  return 0;
 }

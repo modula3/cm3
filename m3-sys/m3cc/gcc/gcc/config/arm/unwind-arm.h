@@ -1,5 +1,5 @@
 /* Header file for the ARM EABI unwinder
-   Copyright (C) 2003, 2004, 2005  Free Software Foundation, Inc.
+   Copyright (C) 2003, 2004, 2005, 2006, 2007  Free Software Foundation, Inc.
    Contributed by Paul Brook
 
    This file is free software; you can redistribute it and/or modify it
@@ -205,6 +205,13 @@ extern "C" {
 	_Unwind_Control_Block *, struct _Unwind_Context *, void *);
   _Unwind_Reason_Code _Unwind_ForcedUnwind (_Unwind_Control_Block *,
 					    _Unwind_Stop_Fn, void *);
+  /* @@@ Use unwind data to perform a stack backtrace.  The trace callback
+     is called for every stack frame in the call chain, but no cleanup
+     actions are performed.  */
+  typedef _Unwind_Reason_Code (*_Unwind_Trace_Fn) (_Unwind_Context *, void *);
+  _Unwind_Reason_Code _Unwind_Backtrace(_Unwind_Trace_Fn,
+					void*);
+
   _Unwind_Word _Unwind_GetCFA (struct _Unwind_Context *);
   void _Unwind_Complete(_Unwind_Control_Block *ucbp);
   void _Unwind_DeleteException (_Unwind_Exception *);
@@ -250,6 +257,9 @@ extern "C" {
 #define _Unwind_GetIP(context) \
   (_Unwind_GetGR (context, 15) & ~(_Unwind_Word)1)
 
+#define _Unwind_GetIPInfo(context, ip_before_insn) \
+  (*ip_before_insn = 0, _Unwind_GetGR (context, 15) & ~(_Unwind_Word)1)
+
   static inline void
   _Unwind_SetGR (_Unwind_Context *context, int regno, _Unwind_Word val)
     {
@@ -260,6 +270,13 @@ extern "C" {
      landing pad uses the same instruction set as the call site.  */
 #define _Unwind_SetIP(context, val) \
   _Unwind_SetGR (context, 15, val | (_Unwind_GetGR (context, 15) & 1))
+
+/* leb128 type numbers have a potentially unlimited size.
+   The target of the following definitions of _sleb128_t and _uleb128_t
+   is to have efficient data types large enough to hold the leb128 type
+   numbers used in the unwind code.  */
+typedef long _sleb128_t;
+typedef unsigned long _uleb128_t;
 
 #ifdef __cplusplus
 }   /* extern "C" */

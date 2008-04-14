@@ -1,12 +1,12 @@
 ; Options for the SH port of the compiler.
 
-; Copyright (C) 2005 Free Software Foundation, Inc.
+; Copyright (C) 2005, 2006, 2007 Free Software Foundation, Inc.
 ;
 ; This file is part of GCC.
 ;
 ; GCC is free software; you can redistribute it and/or modify it under
 ; the terms of the GNU General Public License as published by the Free
-; Software Foundation; either version 2, or (at your option) any later
+; Software Foundation; either version 3, or (at your option) any later
 ; version.
 ;
 ; GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@
 ; for more details.
 ;
 ; You should have received a copy of the GNU General Public License
-; along with GCC; see the file COPYING.  If not, write to the Free
-; Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-; 02110-1301, USA.
+; along with GCC; see the file COPYING3.  If not see
+; <http://www.gnu.org/licenses/>.
 
 ;; Used for various architecture options.
 Mask(SH_E)
@@ -57,11 +56,11 @@ Target RejectNegative Condition(SUPPORT_SH2A_NOFPU)
 Generate SH2a FPU-less code
 
 m2a-single
-Target RejectNegative Condition (SUPPORT_SH2A_SINGLE)
+Target RejectNegative Condition(SUPPORT_SH2A_SINGLE)
 Generate default single-precision SH2a code
 
 m2a-single-only
-Target RejectNegative Condition (SUPPORT_SH2A_SINGLE_ONLY)
+Target RejectNegative Condition(SUPPORT_SH2A_SINGLE_ONLY)
 Generate only single-precision SH2a code
 
 m2e
@@ -80,17 +79,82 @@ m4
 Target RejectNegative Mask(SH4) Condition(SUPPORT_SH4)
 Generate SH4 code
 
+m4-100
+Target RejectNegative Condition(SUPPORT_SH4)
+Generate SH4-100 code
+
+m4-200
+Target RejectNegative Condition(SUPPORT_SH4)
+Generate SH4-200 code
+
+;; TARGET_SH4_300 indicates if we have the ST40-300 instruction set and
+;; pipeline - irrespective of ABI.
+m4-300
+Target RejectNegative Condition(SUPPORT_SH4) Var(TARGET_SH4_300)
+Generate SH4-300 code
+
 m4-nofpu
 Target RejectNegative Condition(SUPPORT_SH4_NOFPU)
 Generate SH4 FPU-less code
+
+m4-100-nofpu
+Target RejectNegative Condition(SUPPORT_SH4_NOFPU)
+Generate SH4-100 FPU-less code
+
+m4-200-nofpu
+Target RejectNegative Condition(SUPPORT_SH4_NOFPU)
+Generate SH4-200 FPU-less code
+
+m4-300-nofpu
+Target RejectNegative Condition(SUPPORT_SH4_NOFPU) Var(TARGET_SH4_300) VarExists
+Generate SH4-300 FPU-less code
+
+m4-340
+Target RejectNegative Condition(SUPPORT_SH4_NOFPU) Var(TARGET_SH4_300) VarExists
+Generate code for SH4 340 series (MMU/FPU-less)
+;; passes -isa=sh4-nommu-nofpu to the assembler.
+
+m4-400
+Target RejectNegative Condition(SUPPORT_SH4_NOFPU)
+Generate code for SH4 400 series (MMU/FPU-less)
+;; passes -isa=sh4-nommu-nofpu to the assembler.
+
+m4-500
+Target RejectNegative Condition(SUPPORT_SH4_NOFPU)
+Generate code for SH4 500 series (FPU-less).
+;; passes -isa=sh4-nofpu to the assembler.
 
 m4-single
 Target RejectNegative Condition(SUPPORT_SH4_SINGLE)
 Generate default single-precision SH4 code
 
+m4-100-single
+Target RejectNegative Condition(SUPPORT_SH4_SINGLE)
+Generate default single-precision SH4-100 code
+
+m4-200-single
+Target RejectNegative Condition(SUPPORT_SH4_SINGLE)
+Generate default single-precision SH4-200 code
+
+m4-300-single
+Target RejectNegative Condition(SUPPORT_SH4_SINGLE) Var(TARGET_SH4_300) VarExists
+Generate default single-precision SH4-300 code
+
 m4-single-only
 Target RejectNegative Condition(SUPPORT_SH4_SINGLE_ONLY)
 Generate only single-precision SH4 code
+
+m4-100-single-only
+Target RejectNegative Condition(SUPPORT_SH4_SINGLE_ONLY)
+Generate only single-precision SH4-100 code
+
+m4-200-single-only
+Target RejectNegative Condition(SUPPORT_SH4_SINGLE_ONLY)
+Generate only single-precision SH4-200 code
+
+m4-300-single-only
+Target RejectNegative Condition(SUPPORT_SH4_SINGLE_ONLY) Var(TARGET_SH4_300) VarExists
+Generate only single-precision SH4-300 code
 
 m4a
 Target RejectNegative Mask(SH4A) Condition(SUPPORT_SH4A)
@@ -148,6 +212,22 @@ mbigtable
 Target Report RejectNegative Mask(BIGTABLE)
 Generate 32-bit offsets in switch tables
 
+mbranch-cost=
+Target RejectNegative Joined UInteger Var(sh_branch_cost) Init(-1)
+Cost to assume for a branch insn
+
+mcbranchdi
+Target Var(TARGET_CBRANCHDI4)
+Enable cbranchdi4 pattern
+
+mexpand-cbranchdi
+Target Var(TARGET_EXPAND_CBRANCHDI4)
+Expand cbranchdi4 pattern early into separate comparisons and branches.
+
+mcmpeqdi
+Target Var(TARGET_CMPEQDI_T)
+Emit cmpeqdi_t pattern even when -mcbranchdi and -mexpand-cbranchdi are in effect.
+
 mcut2-workaround
 Target RejectNegative Var(TARGET_SH5_CUT2_WORKAROUND)
 Enable SH5 cut2 workaround
@@ -158,7 +238,7 @@ Align doubles at 64-bit boundaries
 
 mdiv=
 Target RejectNegative Joined Var(sh_div_str) Init("")
-Division strategy, one of: call, call2, fp, inv, inv:minlat, inv20u, inv20l, inv:call, inv:call2, inv:fp
+Division strategy, one of: call, call2, fp, inv, inv:minlat, inv20u, inv20l, inv:call, inv:call2, inv:fp, call-div1, call-fp, call-table
 
 mdivsi3_libfunc=
 Target RejectNegative Joined Var(sh_divsi3_libfunc) Init("")
@@ -166,6 +246,10 @@ Specify name for 32 bit signed division function
 
 mfmovd
 Target RejectNegative Mask(FMOVD) Undocumented
+
+mfused-madd
+Target Var(TARGET_FMAC)
+Enable the use of the fused floating point multiply-accumulate operation
 
 mgettrcost=
 Target RejectNegative Joined UInteger Var(sh_gettrcost) Init(-1)
@@ -182,6 +266,10 @@ Increase the IEEE compliance for floating-point code
 mindexed-addressing
 Target Report Mask(ALLOW_INDEXED_ADDRESS) Condition(SUPPORT_ANY_SH5_32MEDIA)
 Enable the use of the indexed addressing mode for SHmedia32/SHcompact
+
+minline-ic_invalidate
+Target Report Var(TARGET_INLINE_IC_INVALIDATE)
+inline code to invalidate instruction cache entries after setting up nested function trampolines
 
 minvalid-symbols
 Target Report Mask(INVALID_SYMBOLS) Condition(SUPPORT_ANY_SH5)
@@ -231,4 +319,10 @@ Cost to assume for a multiply insn
 
 musermode
 Target Report RejectNegative Mask(USERMODE)
-Generate library function call to invalidate instruction cache entries after fixing trampoline
+Don't generate privileged-mode only code; implies -mno-inline-ic_invalidate if the inline code would not work in user mode.
+
+;; We might want to enable this by default for TARGET_HARD_SH4, because
+;; zero-offset branches have zero latency.  Needs some benchmarking.
+mpretend-cmove
+Target Var(TARGET_PRETEND_CMOVE)
+Pretend a branch-around-a-move is a conditional move.

@@ -1,5 +1,5 @@
 /* Target definitions for GCC for Intel 80386 running Interix
-   Parts Copyright (C) 1991, 1999, 2000, 2002, 2003, 2004
+   Parts Copyright (C) 1991, 1999, 2000, 2002, 2003, 2004, 2007
    Free Software Foundation, Inc.
 
    Parts:
@@ -12,7 +12,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -21,9 +21,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* The rest must follow.  */
 
@@ -44,7 +43,7 @@ Boston, MA 02110-1301, USA.  */
     MASK_ALIGN_DOUBLE | MASK_MS_BITFIELD_LAYOUT)
 
 #undef TARGET_CPU_DEFAULT
-#define TARGET_CPU_DEFAULT 2 /* 486 */
+#define TARGET_CPU_DEFAULT TARGET_CPU_DEFAULT_i486
 
 #define WCHAR_TYPE_SIZE 16
 #define WCHAR_TYPE "short unsigned int"
@@ -84,7 +83,7 @@ Boston, MA 02110-1301, USA.  */
 #undef CPP_SPEC
 /* Write out the correct language type definition for the header files.  
    Unless we have assembler language, write out the symbols for C.
-   mieee is an Alpha specific variant.  Cross polination a bad idea.
+   mieee is an Alpha specific variant.  Cross pollination a bad idea.
    */
 #define CPP_SPEC "-remap %{posix:-D_POSIX_SOURCE} \
 -isystem %$INTERIX_ROOT/usr/include"
@@ -326,8 +325,7 @@ while (0)
    differently depending on something about the variable or
    function named by the symbol (such as what section it is in).  */
 
-#undef TARGET_ENCODE_SECTION_INFO
-#define TARGET_ENCODE_SECTION_INFO i386_pe_encode_section_info
+#define SUBTARGET_ENCODE_SECTION_INFO i386_pe_encode_section_info
 #undef  TARGET_STRIP_NAME_ENCODING
 #define TARGET_STRIP_NAME_ENCODING  i386_pe_strip_name_encoding_full
 

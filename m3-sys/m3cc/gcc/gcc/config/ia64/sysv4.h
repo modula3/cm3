@@ -46,9 +46,9 @@ extern int size_directive_output;
 #define ASM_OUTPUT_ALIGNED_DECL_LOCAL(FILE, DECL, NAME, SIZE, ALIGN) \
 do {									\
   if ((DECL) && sdata_symbolic_operand (XEXP (DECL_RTL (DECL), 0), Pmode)) \
-    sbss_section ();							\
+    switch_to_section (sbss_section);					\
   else									\
-    bss_section ();							\
+    switch_to_section (bss_section);					\
   ASM_OUTPUT_ALIGN (FILE, floor_log2 ((ALIGN) / BITS_PER_UNIT));	\
   ASM_DECLARE_OBJECT_NAME (FILE, NAME, DECL);				\
   ASM_OUTPUT_SKIP (FILE, SIZE ? SIZE : 1);				\
@@ -84,8 +84,8 @@ do {						\
 #define DBX_REGISTER_NUMBER(REGNO) \
   ia64_dbx_register_number(REGNO)
 
-/* Things that svr4.h defines to the wrong type, because it assumes 32 bit
-   ints and 32 bit longs.  */
+/* Things that svr4.h defines to the wrong type, because it assumes 32-bit
+   ints and 32-bit longs.  */
 
 #undef SIZE_TYPE
 #define SIZE_TYPE "long unsigned int"
@@ -121,46 +121,10 @@ do {									\
 } while (0)
 
 /* Override default elf definition.  */
-/* ??? This is slight overkill.  We should check for static relocations
-   and allow those in .rodata.  */
-#undef  TARGET_ASM_SELECT_SECTION
-#define TARGET_ASM_SELECT_SECTION  ia64_rwreloc_select_section
-#undef  TARGET_ASM_UNIQUE_SECTION
-#define TARGET_ASM_UNIQUE_SECTION  ia64_rwreloc_unique_section
-#undef  TARGET_ASM_SELECT_RTX_SECTION
-#define TARGET_ASM_SELECT_RTX_SECTION  ia64_rwreloc_select_rtx_section
-#define TARGET_RWRELOC  true
-
-#undef EXTRA_SECTIONS
-#define EXTRA_SECTIONS in_sdata, in_sbss
-
-#undef EXTRA_SECTION_FUNCTIONS
-#define EXTRA_SECTION_FUNCTIONS						\
-  SDATA_SECTION_FUNCTION						\
-  SBSS_SECTION_FUNCTION
+#undef  TARGET_ASM_RELOC_RW_MASK
+#define TARGET_ASM_RELOC_RW_MASK  ia64_reloc_rw_mask
+#undef	TARGET_ASM_SELECT_RTX_SECTION
+#define TARGET_ASM_SELECT_RTX_SECTION  ia64_select_rtx_section
 
 #define SDATA_SECTION_ASM_OP "\t.sdata"
-
-#define SDATA_SECTION_FUNCTION						\
-void									\
-sdata_section (void)							\
-{									\
-  if (in_section != in_sdata)						\
-    {									\
-      fprintf (asm_out_file, "%s\n", SDATA_SECTION_ASM_OP);		\
-      in_section = in_sdata;						\
-    }									\
-}
-
 #define SBSS_SECTION_ASM_OP "\t.sbss"
-
-#define SBSS_SECTION_FUNCTION						\
-void									\
-sbss_section (void)							\
-{									\
-  if (in_section != in_sbss)						\
-    {									\
-      fprintf (asm_out_file, "%s\n", SBSS_SECTION_ASM_OP);		\
-      in_section = in_sbss;						\
-    }									\
-}

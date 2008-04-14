@@ -1,12 +1,12 @@
 /* Output sdb-format symbol table information from GNU compiler.
    Copyright (C) 1988, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-   2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   2000, 2001, 2002, 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /*  mike@tredysvr.Tredydev.Unisys.COM says:
 I modified the struct.c example and have a nm of a .o resulting from the
@@ -260,7 +259,7 @@ do { fprintf (asm_out_file, "\t.tag\t");	\
 /* Set the sdb tag identifier string for TYPE to NAME.  */
 
 #define SET_KNOWN_TYPE_TAG(TYPE, NAME) \
-  TYPE_SYMTAB_POINTER (TYPE) = (char *)(NAME)
+  TYPE_SYMTAB_POINTER (TYPE) = (const char *)(NAME)
 
 /* Return the name (a string) of the struct, union or enum tag
    described by the TREE_LIST node LINK.  This is 0 for an anonymous one.  */
@@ -313,7 +312,7 @@ const struct gcc_debug_hooks sdb_debug_hooks =
   sdbout_end_source_file,	         /* end_source_file */
   sdbout_begin_block,		         /* begin_block */
   sdbout_end_block,		         /* end_block */
-  debug_true_tree,		         /* ignore_block */
+  debug_true_const_tree,	         /* ignore_block */
   sdbout_source_line,		         /* source_line */
 #ifdef MIPS_DEBUGGING_INFO
   /* Defer on MIPS systems so that parameter descriptions follow
@@ -581,7 +580,7 @@ plain_type_1 (tree type, int level)
     case QUAL_UNION_TYPE:
     case ENUMERAL_TYPE:
       {
-	char *tag;
+	const char *tag;
 #ifdef SDB_ALLOW_FORWARD_REFERENCES
 	sdbout_record_type_name (type);
 #endif
@@ -1050,7 +1049,7 @@ sdbout_one_type (tree type)
       && DECL_SECTION_NAME (current_function_decl) != NULL_TREE)
     ; /* Don't change section amid function.  */
   else
-    text_section ();
+    switch_to_section (text_section);
 
   switch (TREE_CODE (type))
     {
