@@ -1,5 +1,5 @@
 /* Exception handling and frame unwind runtime interface routines.
-   Copyright (C) 2001, 2003, 2004 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2003, 2004, 2006 Free Software Foundation, Inc.
 
    This file is part of GCC.
 
@@ -108,6 +108,12 @@ typedef int _Unwind_Action;
 #define _UA_FORCE_UNWIND	8
 #define _UA_END_OF_STACK	16
 
+/* The target can override this macro to define any back-end-specific
+   attributes required for the lowest-level stack frame.  */
+#ifndef LIBGCC2_UNWIND_ATTRIBUTE
+#define LIBGCC2_UNWIND_ATTRIBUTE
+#endif
+
 /* This is an opaque type used to refer to a system-specific data
    structure used by the system unwinder. This context is created and
    destroyed by the system, and passed to the personality routine
@@ -115,7 +121,8 @@ typedef int _Unwind_Action;
 struct _Unwind_Context;
 
 /* Raise an exception, passing along the given exception object.  */
-extern _Unwind_Reason_Code _Unwind_RaiseException (struct _Unwind_Exception *);
+extern _Unwind_Reason_Code LIBGCC2_UNWIND_ATTRIBUTE
+_Unwind_RaiseException (struct _Unwind_Exception *);
 
 /* Raise an exception for forced unwinding.  */
 
@@ -123,20 +130,21 @@ typedef _Unwind_Reason_Code (*_Unwind_Stop_Fn)
      (int, _Unwind_Action, _Unwind_Exception_Class,
       struct _Unwind_Exception *, struct _Unwind_Context *, void *);
 
-extern _Unwind_Reason_Code _Unwind_ForcedUnwind (struct _Unwind_Exception *,
-						 _Unwind_Stop_Fn,
-						 void *);
+extern _Unwind_Reason_Code LIBGCC2_UNWIND_ATTRIBUTE
+_Unwind_ForcedUnwind (struct _Unwind_Exception *, _Unwind_Stop_Fn, void *);
 
 /* Helper to invoke the exception_cleanup routine.  */
 extern void _Unwind_DeleteException (struct _Unwind_Exception *);
 
 /* Resume propagation of an existing exception.  This is used after
    e.g. executing cleanup code, and not to implement rethrowing.  */
-extern void _Unwind_Resume (struct _Unwind_Exception *);
+extern void LIBGCC2_UNWIND_ATTRIBUTE
+_Unwind_Resume (struct _Unwind_Exception *);
 
-/* @@@ Resume propagation of an FORCE_UNWIND exception, or to rethrow
+/* @@@ Resume propagation of a FORCE_UNWIND exception, or to rethrow
    a normal exception that was handled.  */
-extern _Unwind_Reason_Code _Unwind_Resume_or_Rethrow (struct _Unwind_Exception *);
+extern _Unwind_Reason_Code LIBGCC2_UNWIND_ATTRIBUTE
+_Unwind_Resume_or_Rethrow (struct _Unwind_Exception *);
 
 /* @@@ Use unwind data to perform a stack backtrace.  The trace callback
    is called for every stack frame in the call chain, but no cleanup
@@ -144,17 +152,19 @@ extern _Unwind_Reason_Code _Unwind_Resume_or_Rethrow (struct _Unwind_Exception *
 typedef _Unwind_Reason_Code (*_Unwind_Trace_Fn)
      (struct _Unwind_Context *, void *);
 
-extern _Unwind_Reason_Code _Unwind_Backtrace (_Unwind_Trace_Fn, void *);
+extern _Unwind_Reason_Code LIBGCC2_UNWIND_ATTRIBUTE
+_Unwind_Backtrace (_Unwind_Trace_Fn, void *);
 
 /* These functions are used for communicating information about the unwind
    context (i.e. the unwind descriptors and the user register state) between
    the unwind library and the personality routine and landing pad.  Only
-   selected registers maybe manipulated.  */
+   selected registers may be manipulated.  */
 
 extern _Unwind_Word _Unwind_GetGR (struct _Unwind_Context *, int);
 extern void _Unwind_SetGR (struct _Unwind_Context *, int, _Unwind_Word);
 
 extern _Unwind_Ptr _Unwind_GetIP (struct _Unwind_Context *);
+extern _Unwind_Ptr _Unwind_GetIPInfo (struct _Unwind_Context *, int *);
 extern void _Unwind_SetIP (struct _Unwind_Context *, _Unwind_Ptr);
 
 /* @@@ Retrieve the CFA of the given context.  */
@@ -190,12 +200,14 @@ struct SjLj_Function_Context;
 extern void _Unwind_SjLj_Register (struct SjLj_Function_Context *);
 extern void _Unwind_SjLj_Unregister (struct SjLj_Function_Context *);
 
-extern _Unwind_Reason_Code _Unwind_SjLj_RaiseException
-     (struct _Unwind_Exception *);
-extern _Unwind_Reason_Code _Unwind_SjLj_ForcedUnwind
-     (struct _Unwind_Exception *, _Unwind_Stop_Fn, void *);
-extern void _Unwind_SjLj_Resume (struct _Unwind_Exception *);
-extern _Unwind_Reason_Code _Unwind_SjLj_Resume_or_Rethrow (struct _Unwind_Exception *);
+extern _Unwind_Reason_Code LIBGCC2_UNWIND_ATTRIBUTE
+_Unwind_SjLj_RaiseException (struct _Unwind_Exception *);
+extern _Unwind_Reason_Code LIBGCC2_UNWIND_ATTRIBUTE
+_Unwind_SjLj_ForcedUnwind (struct _Unwind_Exception *, _Unwind_Stop_Fn, void *);
+extern void LIBGCC2_UNWIND_ATTRIBUTE
+_Unwind_SjLj_Resume (struct _Unwind_Exception *);
+extern _Unwind_Reason_Code LIBGCC2_UNWIND_ATTRIBUTE
+_Unwind_SjLj_Resume_or_Rethrow (struct _Unwind_Exception *);
 
 /* @@@ The following provide access to the base addresses for text
    and data-relative addressing in the LDSA.  In order to stay link
@@ -228,6 +240,33 @@ extern _Unwind_Ptr _Unwind_GetTextRelBase (struct _Unwind_Context *);
 /* @@@ Given an address, return the entry point of the function that
    contains it.  */
 extern void * _Unwind_FindEnclosingFunction (void *pc);
+
+#ifndef __SIZEOF_LONG__
+  #error "__SIZEOF_LONG__ macro not defined"
+#endif
+
+#ifndef __SIZEOF_POINTER__
+  #error "__SIZEOF_POINTER__ macro not defined"
+#endif
+
+
+/* leb128 type numbers have a potentially unlimited size.
+   The target of the following definitions of _sleb128_t and _uleb128_t
+   is to have efficient data types large enough to hold the leb128 type
+   numbers used in the unwind code.
+   Mostly these types will simply be defined to long and unsigned long
+   except when a unsigned long data type on the target machine is not
+   capable of storing a pointer.  */
+
+#if __SIZEOF_LONG__ >= __SIZEOF_POINTER__
+  typedef long _sleb128_t;
+  typedef unsigned long _uleb128_t;
+#elif __SIZEOF_LONG_LONG__ >= __SIZEOF_POINTER__
+  typedef long long _sleb128_t;
+  typedef unsigned long long _uleb128_t;
+#else
+# error "What type shall we use for _sleb128_t?"
+#endif
 
 #ifdef __cplusplus
 }

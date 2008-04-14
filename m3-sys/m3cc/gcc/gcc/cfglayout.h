@@ -1,11 +1,11 @@
 /* Basic block reordering routines for the GNU compiler.
-   Copyright (C) 2000, 2003, 2004 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2003, 2004, 2007 Free Software Foundation, Inc.
 
    This file is part of GCC.
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
+   the Free Software Foundation; either version 3, or (at your option)
    any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -14,20 +14,19 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 #ifndef GCC_CFGLAYOUT_H
 #define GCC_CFGLAYOUT_H
 
 #include "basic-block.h"
 
-extern rtx cfg_layout_function_footer;
+extern GTY(()) rtx cfg_layout_function_footer;
+extern GTY(()) rtx cfg_layout_function_header;
 
 extern void cfg_layout_initialize (unsigned int);
 extern void cfg_layout_finalize (void);
-extern void insn_locators_initialize (void);
 extern void reemit_insn_block_notes (void);
 extern bool can_copy_bbs_p (basic_block *, unsigned);
 extern void copy_bbs (basic_block *, unsigned, basic_block *,

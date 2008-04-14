@@ -1,5 +1,5 @@
 /* Definitions of target machine for GNU compiler.  Vxworks PowerPC version.
-   Copyright (C) 1996, 2000, 2002, 2003, 2004, 2005
+   Copyright (C) 1996, 2000, 2002, 2003, 2004, 2005, 2007
    Free Software Foundation, Inc.
    Contributed by CodeSourcery, LLC.
 
@@ -7,7 +7,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -16,9 +16,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* Note to future editors: VxWorks is mostly an EABI target.  We do
    not use rs6000/eabi.h because we would have to override most of
@@ -41,16 +40,6 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
       builtin_define ("__VXWORKS__");		\
       if (!TARGET_SOFT_FLOAT)			\
 	builtin_define ("__hardfp");		\
-      if (flag_pic == 2)			\
-	{					\
-	  builtin_define ("__PIC__=2");		\
-	  builtin_define ("__pic__=2");		\
-	}					\
-      else if (flag_pic == 1)			\
-	{					\
-	  builtin_define ("__PIC__=1");		\
-	  builtin_define ("__pic__=1");		\
-	}					\
 						\
       /* C89 namespace violation! */		\
       builtin_define ("CPU_FAMILY=PPC");	\
@@ -94,7 +83,7 @@ VXWORKS_ADDITIONAL_CPP_SPEC
 
 #define ASM_SPEC \
 "%(asm_cpu) \
- %{.s: %{mregnames} %{mno-regnames}} %{.S: %{mregnames} %{mno-regnames}} \
+ %{,assembler|,assembler-with-cpp: %{mregnames} %{mno-regnames}} \
  %{v:-v} %{Qy:} %{!Qn:-Qy} %{n} %{T} %{Ym,*} %{Yd,*} %{Wa,*:%*} \
  %{mrelocatable} %{mrelocatable-lib} %{fpic:-K PIC} %{fPIC:-K PIC} -mbig"
 
@@ -126,19 +115,6 @@ VXWORKS_ADDITIONAL_CPP_SPEC
 #define STACK_BOUNDARY (16*BITS_PER_UNIT)
 /* Override sysv4.h, reset to the default.  */
 #undef  PREFERRED_STACK_BOUNDARY
-
-/* Enable SPE */
-#undef TARGET_SPE_ABI
-#undef TARGET_SPE
-#undef TARGET_E500
-#undef TARGET_ISEL
-#undef TARGET_FPRS
-
-#define TARGET_SPE_ABI rs6000_spe_abi
-#define TARGET_SPE rs6000_spe
-#define TARGET_E500 (rs6000_cpu == PROCESSOR_PPC8540)
-#define TARGET_ISEL rs6000_isel
-#define TARGET_FPRS (!rs6000_float_gprs)
 
 /* Make -mcpu=8540 imply SPE.  ISEL is automatically enabled, the
    others must be done by hand.  Handle -mrtp.  Disable -fPIC

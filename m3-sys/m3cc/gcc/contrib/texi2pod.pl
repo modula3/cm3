@@ -6,7 +6,7 @@
 
 # GCC is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
+# the Free Software Foundation; either version 3, or (at your option)
 # any later version.
 
 # GCC is distributed in the hope that it will be useful,
@@ -36,6 +36,7 @@ $shift = "";
 $fnno = 1;
 $inf = "";
 $ibase = "";
+@ipath = ();
 
 while ($_ = shift) {
     if (/^-D(.*)$/) {
@@ -51,6 +52,13 @@ while ($_ = shift) {
 	die "flags may only contain letters, digits, hyphens, dashes and underscores\n"
 	    unless $flag =~ /^[a-zA-Z0-9_-]+$/;
 	$defs{$flag} = $value;
+    } elsif (/^-I(.*)$/) {
+	if ($1 ne "") {
+	    $flag = $1;
+	} else {
+	    $flag = shift;
+	}
+        push (@ipath, $flag);
     } elsif (/^-/) {
 	usage();
     } else {
@@ -154,6 +162,8 @@ while(<$inf>) {
 	} elsif ($ended =~ /^(?:itemize|enumerate|[fv]?table)$/) {
 	    $_ = "\n=back\n";
 	    $ic = pop @icstack;
+	} elsif ($ended eq "multitable") {
+	    $_ = "\n=back\n";
 	} else {
 	    die "unknown command \@end $ended at line $.\n";
 	}
@@ -229,10 +239,14 @@ while(<$inf>) {
 	$inf = gensym();
 	$file = postprocess($1);
 
-	# Try cwd and $ibase.
-	open($inf, "<" . $file) 
-	    or open($inf, "<" . $ibase . "/" . $file)
-		or die "cannot open $file or $ibase/$file: $!\n";
+	# Try cwd and $ibase, then explicit -I paths.
+	$done = 0;
+	foreach $path ("", $ibase, @ipath) {
+	    $mypath = $file;
+	    $mypath = $path . "/" . $mypath if ($path ne "");
+	    open($inf, "<" . $mypath) and ($done = 1, last);
+	}
+	die "cannot find $file" if !$done;
 	next;
     };
 
@@ -240,6 +254,8 @@ while(<$inf>) {
 	and $_ = "\n=head2 $1\n";
     /^\@subsection\s+(.+)$/
 	and $_ = "\n=head3 $1\n";
+    /^\@subsubsection\s+(.+)$/
+	and $_ = "\n=head4 $1\n";
 
     # Block command handlers:
     /^\@itemize(?:\s+(\@[a-z]+|\*|-))?/ and do {
@@ -248,7 +264,7 @@ while(<$inf>) {
 	if (defined $1) {
 	    $ic = $1;
 	} else {
-	    $ic = '@bullet';
+	    $ic = '*';
 	}
 	$_ = "\n=over 4\n";
 	$endw = "itemize";
@@ -266,6 +282,12 @@ while(<$inf>) {
 	$endw = "enumerate";
     };
 
+    /^\@multitable\s.*/ and do {
+	push @endwstack, $endw;
+	$endw = "multitable";
+	$_ = "\n=over 4\n";
+    };
+
     /^\@([fv]?table)\s+(\@[a-z]+)/ and do {
 	push @endwstack, $endw;
 	push @icstack, $ic;
@@ -275,6 +297,7 @@ while(<$inf>) {
 	$ic =~ s/\@(?:code|kbd)/C/;
 	$ic =~ s/\@(?:dfn|var|emph|cite|i)/I/;
 	$ic =~ s/\@(?:file)/F/;
+	$ic =~ s/\@(?:asis)//;
 	$_ = "\n=over 4\n";
     };
 
@@ -285,10 +308,24 @@ while(<$inf>) {
 	$_ = "";	# need a paragraph break
     };
 
+    /^\@item\s+(.*\S)\s*$/ and $endw eq "multitable" and do {
+	@columns = ();
+	for $column (split (/\s*\@tab\s*/, $1)) {
+	    # @strong{...} is used a @headitem work-alike
+	    $column =~ s/^\@strong{(.*)}$/$1/;
+	    push @columns, $column;
+	}
+	$_ = "\n=item ".join (" : ", @columns)."\n";
+    };
+
     /^\@itemx?\s*(.+)?$/ and do {
 	if (defined $1) {
-	    # Entity escapes prevent munging by the <> processing below.
-	    $_ = "\n=item $ic\&LT;$1\&GT;\n";
+            if ($ic) {
+                # Entity escapes prevent munging by the <> processing below.
+                $_ = "\n=item $ic\&LT;$1\&GT;\n";
+            } else {
+                $_ = "\n=item $1\n";
+            }
 	} else {
 	    $_ = "\n=item $ic\n";
 	    $ic =~ y/A-Ya-y/B-Zb-z/;
@@ -344,7 +381,7 @@ sub postprocess
     s/\@r\{([^\}]*)\}/R<$1>/g;
     s/\@(?:dfn|var|emph|cite|i)\{([^\}]*)\}/I<$1>/g;
     s/\@(?:code|kbd)\{([^\}]*)\}/C<$1>/g;
-    s/\@(?:gccoptlist|samp|strong|key|option|env|command|b)\{([^\}]*)\}/B<$1>/g;
+    s/\@(?:samp|strong|key|option|env|command|b)\{([^\}]*)\}/B<$1>/g;
     s/\@sc\{([^\}]*)\}/\U$1/g;
     s/\@file\{([^\}]*)\}/F<$1>/g;
     s/\@w\{([^\}]*)\}/S<$1>/g;
@@ -370,12 +407,19 @@ sub postprocess
     s/\@gol//g;
     s/\@\*\s*\n?//g;
 
+    # Anchors are thrown away
+    s/\@anchor\{(?:[^\}]*)\}//g;
+
     # @uref can take one, two, or three arguments, with different
     # semantics each time.  @url and @email are just like @uref with
     # one argument, for our purposes.
     s/\@(?:uref|url|email)\{([^\},]*)\}/&lt;B<$1>&gt;/g;
     s/\@uref\{([^\},]*),([^\},]*)\}/$2 (C<$1>)/g;
     s/\@uref\{([^\},]*),([^\},]*),([^\},]*)\}/$3/g;
+
+    # Handle gccoptlist here, so it can contain the above formatting
+    # commands.
+    s/\@gccoptlist\{([^\}]*)\}/B<$1>/g;
 
     # Un-escape <> at this point.
     s/&LT;/</g;

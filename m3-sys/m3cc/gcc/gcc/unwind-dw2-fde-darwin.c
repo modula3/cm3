@@ -60,9 +60,9 @@ extern void _keymgr_unlock_processwide_ptr (int);
 struct mach_header;
 struct mach_header_64;
 extern char *getsectdatafromheader (struct mach_header*, const char*,
-			const char *, unsigned long *);
-extern char *getsectdatafromheader_64 (struct mach_header*, const char*,
-			const char *, unsigned long *);
+				    const char *, unsigned long *);
+extern char *getsectdatafromheader_64 (struct mach_header_64*, const char*,
+				       const char *, unsigned long *);
 
 /* This is referenced from KEYMGR_GCC3_DW2_OBJ_LIST.  */
 struct km_object_info {
@@ -152,20 +152,19 @@ examine_objects (void *pc, struct dwarf_eh_bases *bases, int dont_alloc)
   for (; image != NULL; image = image->next)
     if ((image->examined_p & EXAMINED_IMAGE_MASK) == 0)
       {
-	char *fde;
+	char *fde = NULL;
 	unsigned long sz;
 
-#ifdef __ppc64__
-	fde = getsectdatafromheader_64 ((struct mach_header_64 *) image->mh,
-				     "__DATA", "__eh_frame", &sz);
-#else
+	/* For ppc only check whether or not we have __DATA eh frames.  */
+#ifdef __ppc__
 	fde = getsectdatafromheader (image->mh, "__DATA", "__eh_frame", &sz);
 #endif
+
 	if (fde == NULL)
 	  {
-#ifdef __ppc64__
+#if __LP64__
 	    fde = getsectdatafromheader_64 ((struct mach_header_64 *) image->mh,
-					 "__TEXT", "__eh_frame", &sz);
+					    "__TEXT", "__eh_frame", &sz);
 #else
 	    fde = getsectdatafromheader (image->mh, "__TEXT",
 					 "__eh_frame", &sz);

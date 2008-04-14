@@ -1,11 +1,11 @@
 ;; DFA scheduling description for Renesas / SuperH SH.
-;; Copyright (C) 2004 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2006, 2007 Free Software Foundation, Inc.
 
 ;; This file is part of GCC.
 
 ;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 ;; Load and store instructions save a cycle if they are aligned on a
 ;; four byte boundary.  Using a function unit for stores encourages
@@ -45,7 +44,7 @@
 
 (define_insn_reservation "sh1_load_store" 2
   (and (eq_attr "pipe_model" "sh1")
-       (eq_attr "type" "load,pcload,pload,store,pstore"))
+       (eq_attr "type" "load,pcload,pload,mem_mac,store,fstore,pstore,mac_mem"))
   "sh1memory*2")
 
 (define_insn_reservation "sh1_arith3" 3
@@ -76,7 +75,7 @@
 
 (define_insn_reservation "sh1_fp" 2
   (and (eq_attr "pipe_model" "sh1")
-       (eq_attr "type" "fp,fmove"))
+       (eq_attr "type" "fp,fpscr_toggle,fp_cmp,fmove"))
   "sh1fp")
 
 (define_insn_reservation "sh1_fdiv" 13

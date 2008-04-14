@@ -1,11 +1,11 @@
 /* Prototypes for Blackfin functions used in the md file & elsewhere.
-   Copyright (C) 2005 Free Software Foundation, Inc.
+   Copyright (C) 2005, 2007, 2008 Free Software Foundation, Inc.
 
    This file is part of GNU CC.
 
    GNU CC is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
+   the Free Software Foundation; either version 3, or (at your option)
    any later version.
 
    GNU CC is distributed in the hope that it will be useful,
@@ -14,14 +14,62 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GNU CC; see the file COPYING.  If not, write to
-   the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 /* Function prototypes that cannot exist in bfin.h due to dependency
    complications.  */
 #ifndef GCC_BFIN_PROTOS_H
 #define GCC_BFIN_PROTOS_H
+
+/* CPU type.  */
+typedef enum bfin_cpu_type
+{
+  BFIN_CPU_BF522,
+  BFIN_CPU_BF523,
+  BFIN_CPU_BF524,
+  BFIN_CPU_BF525,
+  BFIN_CPU_BF526,
+  BFIN_CPU_BF527,
+  BFIN_CPU_BF531,
+  BFIN_CPU_BF532,
+  BFIN_CPU_BF533,
+  BFIN_CPU_BF534,
+  BFIN_CPU_BF536,
+  BFIN_CPU_BF537,
+  BFIN_CPU_BF538,
+  BFIN_CPU_BF539,
+  BFIN_CPU_BF542,
+  BFIN_CPU_BF544,
+  BFIN_CPU_BF547,
+  BFIN_CPU_BF548,
+  BFIN_CPU_BF549,
+  BFIN_CPU_BF561
+} bfin_cpu_t;
+
+/* Value of -mcpu= */
+extern bfin_cpu_t bfin_cpu_type;
+
+/* Value of -msi-revision= */
+extern int bfin_si_revision;
+
+extern unsigned int bfin_workarounds;
+
+/* For the anomaly 05-00-0245 */
+#define WA_SPECULATIVE_LOADS 0x00000001
+#define ENABLE_WA_SPECULATIVE_LOADS \
+  (bfin_workarounds & WA_SPECULATIVE_LOADS)
+
+/* For the anomaly 05-00-0244 */
+#define WA_SPECULATIVE_SYNCS 0x00000002
+#define ENABLE_WA_SPECULATIVE_SYNCS \
+  (bfin_workarounds & WA_SPECULATIVE_SYNCS)
+
+/* For the anomaly 05-00-0371 */
+#define WA_RETS 0x00000004
+#define ENABLE_WA_RETS \
+  (bfin_workarounds & WA_RETS)
+
 
 #define Mmode enum machine_mode
 
@@ -36,6 +84,7 @@ extern char *bfin_asm_short (void);
 extern int log2constp (unsigned HOST_WIDE_INT);
 
 extern rtx legitimize_address (rtx, rtx, Mmode);
+extern bool bfin_legitimate_constant_p (rtx);
 extern int hard_regno_mode_ok (int, Mmode);
 extern void init_cumulative_args (CUMULATIVE_ARGS *, tree, rtx);	  
 extern int bfin_frame_pointer_required (void);
@@ -44,10 +93,11 @@ extern HOST_WIDE_INT bfin_initial_elimination_offset (int, int);
 extern int effective_address_32bit_p (rtx, Mmode);
 extern int symbolic_reference_mentioned_p (rtx);
 extern rtx bfin_gen_compare (rtx, Mmode);
-extern void expand_move (rtx *, Mmode);
+extern bool expand_move (rtx *, Mmode);
 extern void bfin_expand_call (rtx, rtx, rtx, rtx, int);
 extern bool bfin_longcall_p (rtx, int);
-extern bool bfin_expand_strmov (rtx, rtx, rtx, rtx);
+extern bool bfin_dsp_memref_p (rtx);
+extern bool bfin_expand_movmem (rtx, rtx, rtx, rtx);
 
 extern void conditional_register_usage (void);
 extern int bfin_register_move_cost (enum machine_mode, enum reg_class,
@@ -69,19 +119,21 @@ extern void override_options (void);
 extern void asm_conditional_branch (rtx, rtx *, int, int);
 extern rtx bfin_gen_compare (rtx, Mmode);
 
-extern int bfin_return_in_memory (tree);
+extern int bfin_local_alignment (tree, int);
+extern int bfin_return_in_memory (const_tree);
 extern void initialize_trampoline (rtx, rtx, rtx);
 extern bool bfin_legitimate_address_p (Mmode, rtx, int);
 extern rtx bfin_va_arg (tree, tree);
 
 extern void bfin_expand_prologue (void);
-extern void bfin_expand_epilogue (int, int);
+extern void bfin_expand_epilogue (int, int, bool);
 extern int push_multiple_operation (rtx, Mmode);
 extern int pop_multiple_operation (rtx, Mmode);
 extern void output_push_multiple (rtx, rtx *);
 extern void output_pop_multiple (rtx, rtx *);
 extern int bfin_hard_regno_rename_ok (unsigned int, unsigned int);
 extern rtx bfin_return_addr_rtx (int);
+extern void bfin_hardware_loop (void);
 #undef  Mmode 
 
 #endif

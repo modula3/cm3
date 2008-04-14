@@ -1,11 +1,11 @@
 ;; DFA scheduling description for SH4.
-;; Copyright (C) 2004 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2006, 2007 Free Software Foundation, Inc.
 
 ;; This file is part of GCC.
 
 ;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GCC is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to
-;; the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 ;; Load and store instructions save a cycle if they are aligned on a
 ;; four byte boundary.  Using a function unit for stores encourages
@@ -209,8 +208,13 @@
 
 (define_insn_reservation "sh4_store" 1
   (and (eq_attr "pipe_model" "sh4")
-       (eq_attr "type" "store"))
+       (eq_attr "type" "store,fstore"))
   "issue+load_store,nothing,memory")
+
+(define_insn_reservation "mac_mem" 1
+  (and (eq_attr "pipe_model" "sh4")
+       (eq_attr "type" "mac_mem"))
+  "d_lock,nothing,memory")
 
 ;; Load Store instructions.
 ;; Group:	LS
@@ -372,34 +376,41 @@
 ;; Fixed point multiplication (DMULS.L DMULU.L MUL.L MULS.W,MULU.W)
 ;; Group:	CO
 ;; Latency: 	4 / 4
-;; Issue Rate: 	1
+;; Issue Rate: 	2
 
 (define_insn_reservation "multi" 4
   (and (eq_attr "pipe_model" "sh4")
        (eq_attr "type" "smpy,dmpy"))
   "d_lock,(d_lock+f1_1),(f1_1|f1_2)*3,F2")
 
-;; Fixed STS from MACL / MACH
+;; Fixed STS from, and LDS to MACL / MACH
 ;; Group:	CO
 ;; Latency: 	3
 ;; Issue Rate: 	1
 
 (define_insn_reservation "sh4_mac_gp" 3
   (and (eq_attr "pipe_model" "sh4")
-       (eq_attr "type" "mac_gp"))
+       (eq_attr "type" "mac_gp,gp_mac,mem_mac"))
   "d_lock")
 
 
 ;; Single precision floating point computation FCMP/EQ,
-;; FCMP/GT, FADD, FLOAT, FMAC, FMUL, FSUB, FTRC, FRVHG, FSCHG
+;; FCMP/GT, FADD, FLOAT, FMAC, FMUL, FSUB, FTRC, FRCHG, FSCHG
 ;; Group:	FE
 ;; Latency: 	3/4
 ;; Issue Rate: 	1
 
 (define_insn_reservation "fp_arith"  3
   (and (eq_attr "pipe_model" "sh4")
-       (eq_attr "type" "fp"))
+       (eq_attr "type" "fp,fp_cmp"))
   "issue,F01,F2")
+
+;; We don't model the resource usage of this exactly because that would
+;; introduce a bogus latency.
+(define_insn_reservation "sh4_fpscr_toggle"  1
+  (and (eq_attr "pipe_model" "sh4")
+       (eq_attr "type" "fpscr_toggle"))
+  "issue")
 
 (define_insn_reservation "fp_arith_ftrc"  3
   (and (eq_attr "pipe_model" "sh4")
@@ -437,7 +448,7 @@
 
 (define_insn_reservation "fp_double_arith" 8
   (and (eq_attr "pipe_model" "sh4")
-       (eq_attr "type" "dfp_arith"))
+       (eq_attr "type" "dfp_arith,dfp_mul"))
   "issue,F01,F1+F2,fpu*4,F2")
 
 ;; Double-precision FCMP (FCMP/EQ,FCMP/GT)

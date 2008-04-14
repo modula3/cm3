@@ -1,12 +1,12 @@
 /* Definitions for c-common.c.
    Copyright (C) 1987, 1993, 1994, 1995, 1997, 1998,
-   1999, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #ifndef GCC_C_COMMON_H
 #define GCC_C_COMMON_H
@@ -53,7 +52,7 @@ enum rid
   RID_VOLATILE, RID_SIGNED,  RID_AUTO,  RID_RESTRICT,
 
   /* C extensions */
-  RID_COMPLEX, RID_THREAD,
+  RID_COMPLEX, RID_THREAD, RID_SAT,
 
   /* C++ */
   RID_FRIEND, RID_VIRTUAL, RID_EXPLICIT, RID_EXPORT, RID_MUTABLE,
@@ -72,6 +71,8 @@ enum rid
   RID_ASM,       RID_TYPEOF,   RID_ALIGNOF,  RID_ATTRIBUTE,  RID_VA_ARG,
   RID_EXTENSION, RID_IMAGPART, RID_REALPART, RID_LABEL,      RID_CHOOSE_EXPR,
   RID_TYPES_COMPATIBLE_P,
+  RID_DFLOAT32, RID_DFLOAT64, RID_DFLOAT128,
+  RID_FRACT, RID_ACCUM,
 
   /* Too many ways of getting the name of a function as a string */
   RID_FUNCTION_NAME, RID_PRETTY_FUNCTION_NAME, RID_C99_FUNCTION_NAME,
@@ -81,19 +82,33 @@ enum rid
   RID_PUBLIC,   RID_PRIVATE,  RID_PROTECTED,
   RID_TEMPLATE, RID_NULL,     RID_CATCH,
   RID_DELETE,   RID_FALSE,    RID_NAMESPACE,
-  RID_NEW,      RID_OFFSETOF, RID_OPERATOR, 
-  RID_THIS,     RID_THROW,    RID_TRUE,     
-  RID_TRY,      RID_TYPENAME, RID_TYPEID,   
+  RID_NEW,      RID_OFFSETOF, RID_OPERATOR,
+  RID_THIS,     RID_THROW,    RID_TRUE,
+  RID_TRY,      RID_TYPENAME, RID_TYPEID,
   RID_USING,
 
   /* casts */
   RID_CONSTCAST, RID_DYNCAST, RID_REINTCAST, RID_STATCAST,
 
+  /* C++ extensions */
+  RID_HAS_NOTHROW_ASSIGN,      RID_HAS_NOTHROW_CONSTRUCTOR,
+  RID_HAS_NOTHROW_COPY,        RID_HAS_TRIVIAL_ASSIGN,
+  RID_HAS_TRIVIAL_CONSTRUCTOR, RID_HAS_TRIVIAL_COPY,
+  RID_HAS_TRIVIAL_DESTRUCTOR,  RID_HAS_VIRTUAL_DESTRUCTOR,
+  RID_IS_ABSTRACT,             RID_IS_BASE_OF,
+  RID_IS_CONVERTIBLE_TO,       RID_IS_CLASS,
+  RID_IS_EMPTY,                RID_IS_ENUM,
+  RID_IS_POD,                  RID_IS_POLYMORPHIC,
+  RID_IS_UNION,
+
+  /* C++0x */
+  RID_STATIC_ASSERT, RID_DECLTYPE,
+
   /* Objective-C */
   RID_AT_ENCODE,   RID_AT_END,
   RID_AT_CLASS,    RID_AT_ALIAS,     RID_AT_DEFS,
   RID_AT_PRIVATE,  RID_AT_PROTECTED, RID_AT_PUBLIC,
-  RID_AT_PROTOCOL, RID_AT_SELECTOR,  
+  RID_AT_PROTOCOL, RID_AT_SELECTOR,
   RID_AT_THROW,	   RID_AT_TRY,       RID_AT_CATCH,
   RID_AT_FINALLY,  RID_AT_SYNCHRONIZED,
   RID_AT_INTERFACE,
@@ -104,6 +119,8 @@ enum rid
   RID_FIRST_MODIFIER = RID_STATIC,
   RID_LAST_MODIFIER = RID_ONEWAY,
 
+  RID_FIRST_CXX0X = RID_STATIC_ASSERT,
+  RID_LAST_CXX0X = RID_DECLTYPE,
   RID_FIRST_AT = RID_AT_ENCODE,
   RID_LAST_AT = RID_AT_IMPLEMENTATION,
   RID_FIRST_PQ = RID_IN,
@@ -155,7 +172,7 @@ enum c_tree_index
     CTI_PRETTY_FUNCTION_NAME_DECL,
     CTI_C99_FUNCTION_NAME_DECL,
     CTI_SAVED_FUNCTION_NAME_DECLS,
-    
+
     CTI_VOID_ZERO,
 
     CTI_NULL,
@@ -237,6 +254,8 @@ extern c_language_kind c_language;
 #define c_dialect_cxx()		(c_language & clk_cxx)
 #define c_dialect_objc()	(c_language & clk_objc)
 
+extern bool lang_fortran;
+
 /* Information about a statement tree.  */
 
 struct stmt_tree_s GTY(()) {
@@ -279,29 +298,28 @@ struct c_language_function GTY(()) {
 
 /* Language-specific hooks.  */
 
-/* Callback that determines if it's ok for a function to have no
-   noreturn attribute.  */
-extern int (*lang_missing_noreturn_ok_p) (tree);
-
 /* If non-NULL, this function is called after a precompile header file
    is loaded.  */
 extern void (*lang_post_pch_load) (void);
 
 extern void push_file_scope (void);
 extern void pop_file_scope (void);
-extern int yyparse (void);
 extern stmt_tree current_stmt_tree (void);
 extern tree push_stmt_list (void);
 extern tree pop_stmt_list (tree);
 extern tree add_stmt (tree);
 extern void push_cleanup (tree, tree, bool);
+extern tree pushdecl_top_level (tree);
+extern tree pushdecl (tree);
+extern tree build_modify_expr (tree, enum tree_code, tree);
+extern tree build_indirect_ref (tree, const char *);
 
 extern int c_expand_decl (tree);
 
 extern int field_decl_cmp (const void *, const void *);
-extern void resort_sorted_fields (void *, void *, gt_pointer_operator, 
-                                  void *);
-extern bool has_c_linkage (tree decl);
+extern void resort_sorted_fields (void *, void *, gt_pointer_operator,
+				  void *);
+extern bool has_c_linkage (const_tree decl);
 
 /* Switches common to the C front ends.  */
 
@@ -385,6 +403,10 @@ extern int flag_short_double;
 
 extern int flag_short_wchar;
 
+/* Nonzero means allow implicit conversions between vectors with
+   differing numbers of subparts and/or differing element types.  */
+extern int flag_lax_vector_conversions;
+
 /* Nonzero means allow Microsoft extensions without warnings or errors.  */
 extern int flag_ms_extensions;
 
@@ -401,14 +423,9 @@ extern int flag_const_strings;
 
 extern int flag_signed_bitfields;
 
-/* Nonzero means warn about deprecated conversion from string constant to
-   `char *'.  */
+/* Warn about #pragma directives that are not recognized.  */
 
-extern int warn_write_strings;
-
-/* Warn about #pragma directives that are not recognized.  */      
-
-extern int warn_unknown_pragmas; /* Tri state variable.  */  
+extern int warn_unknown_pragmas; /* Tri state variable.  */
 
 /* Warn about format/argument anomalies in calls to formatted I/O functions
    (*printf, *scanf, strftime, strfmon, etc.).  */
@@ -522,6 +539,19 @@ extern int flag_access_control;
 
 extern int flag_check_new;
 
+/* The supported C++ dialects.  */
+
+enum cxx_dialect {
+  /* C++98  */
+  cxx98,
+  /* Experimental features that are likely to become part of
+     C++0x.  */
+  cxx0x
+};
+
+/* The C++ dialect being used. C++98 is the default.  */
+extern enum cxx_dialect cxx_dialect;
+
 /* Nonzero if we want the new ISO rules for pushing a new scope for `for'
    initialization variables.
    0: Old rules, set by -fno-for-scope.
@@ -548,6 +578,11 @@ extern int flag_working_directory;
    destructors for local statics and global objects.  */
 
 extern int flag_use_cxa_atexit;
+
+/* Nonzero to use __cxa_get_exception_ptr in the C++ exception-handling
+   logic.  */
+
+extern int flag_use_cxa_get_exception_ptr;
 
 /* Nonzero means make the default pedwarns warnings instead of errors.
    The value of this flag is ignored if -pedantic is specified.  */
@@ -622,13 +657,13 @@ extern void finish_fname_decls (void);
 extern const char *fname_as_string (int);
 extern tree fname_decl (unsigned, tree);
 
-extern void check_function_arguments (tree, tree, tree);
+extern void check_function_arguments (tree, int, tree *, tree);
 extern void check_function_arguments_recurse (void (*)
 					      (void *, tree,
 					       unsigned HOST_WIDE_INT),
 					      void *, tree,
 					      unsigned HOST_WIDE_INT);
-extern void check_function_format (tree, tree);
+extern void check_function_format (tree, int, tree *);
 extern void set_Wformat (int);
 extern tree handle_format_attribute (tree *, tree, tree, int, bool *);
 extern tree handle_format_arg_attribute (tree *, tree, tree, int, bool *);
@@ -636,23 +671,30 @@ extern int c_common_handle_option (size_t code, const char *arg, int value);
 extern bool c_common_missing_argument (const char *opt, size_t code);
 extern tree c_common_type_for_mode (enum machine_mode, int);
 extern tree c_common_type_for_size (unsigned int, int);
+extern tree c_common_fixed_point_type_for_size (unsigned int, unsigned int,
+						int, int);
 extern tree c_common_unsigned_type (tree);
 extern tree c_common_signed_type (tree);
 extern tree c_common_signed_or_unsigned_type (int, tree);
+extern tree c_build_bitfield_integer_type (unsigned HOST_WIDE_INT, int);
+extern bool decl_with_nonnull_addr_p (const_tree);
 extern tree c_common_truthvalue_conversion (tree);
 extern void c_apply_type_quals_to_decl (int, tree);
 extern tree c_sizeof_or_alignof_type (tree, bool, int);
 extern tree c_alignof_expr (tree);
 /* Print an error message for invalid operands to arith operation CODE.
    NOP_EXPR is used as a special case (see truthvalue_conversion).  */
-extern void binary_op_error (enum tree_code);
+extern void binary_op_error (enum tree_code, tree, tree);
 extern tree fix_string_type (tree);
 struct varray_head_tag;
 extern void constant_expression_warning (tree);
-extern void strict_aliasing_warning(tree, tree, tree);
+extern bool strict_aliasing_warning (tree, tree, tree);
+extern void empty_if_body_warning (tree, tree);
+extern void warnings_for_convert_and_check (tree, tree, tree);
 extern tree convert_and_check (tree, tree);
 extern void overflow_warning (tree);
-extern void unsigned_conversion_warning (tree, tree);
+extern void warn_logical_operator (enum tree_code, tree, tree);
+extern void check_main_parameter_types (tree decl);
 extern bool c_determine_visibility (tree);
 extern bool same_scalar_type_ignoring_signedness (tree, tree);
 
@@ -687,12 +729,13 @@ extern bool c_common_post_options (const char **);
 extern bool c_common_init (void);
 extern void c_common_finish (void);
 extern void c_common_parse_file (int);
-extern HOST_WIDE_INT c_common_get_alias_set (tree);
+extern alias_set_type c_common_get_alias_set (tree);
 extern void c_register_builtin_type (tree, const char*);
-extern bool c_promoting_integer_type_p (tree);
-extern int self_promoting_args_p (tree);
+extern bool c_promoting_integer_type_p (const_tree);
+extern int self_promoting_args_p (const_tree);
 extern tree strip_array_types (tree);
 extern tree strip_pointer_operator (tree);
+extern tree strip_pointer_or_array_types (tree);
 extern HOST_WIDE_INT c_common_to_target_charset (HOST_WIDE_INT);
 
 /* This is the basic parsing function.  */
@@ -728,7 +771,7 @@ enum c_tree_code {
 
 #undef DEFTREECODE
 
-extern int anon_aggr_type_p (tree);
+extern int anon_aggr_type_p (const_tree);
 
 /* For a VAR_DECL that is an anonymous union, these are the various
    sub-variables that make up the anonymous union.  */
@@ -753,6 +796,11 @@ extern tree build_case_label (tree, tree, tree);
 extern tree build_unary_op (enum tree_code, tree, int);
 extern tree build_binary_op (enum tree_code, tree, tree, int);
 extern tree perform_integral_promotions (tree);
+
+/* These functions must be defined by each front-end which implements
+   a variant of the C language.  They are used by port files.  */
+
+extern tree default_conversion (tree);
 
 /* Given two integer or real types, return the type for their sum.
    Given two compatible ANSI C types, returns the merged type.  */
@@ -779,8 +827,9 @@ extern tree finish_label_address_expr (tree);
 /* Same function prototype, but the C and C++ front ends have
    different implementations.  Used in c-common.c.  */
 extern tree lookup_label (tree);
+extern tree lookup_name (tree);
 
-extern int vector_types_convertible_p (tree t1, tree t2);
+extern bool vector_types_convertible_p (const_tree t1, const_tree t2, bool emit_lax_note);
 
 extern rtx c_expand_expr (tree, rtx, enum machine_mode, int, rtx *);
 
@@ -819,7 +868,7 @@ extern void c_warn_unused_result (tree *);
 
 extern void verify_sequence_points (tree);
 
-extern tree fold_offsetof (tree);
+extern tree fold_offsetof (tree, tree);
 
 /* Places where an lvalue, or modifiable lvalue, may be required.
    Used to select diagnostic messages in lvalue_error and
@@ -838,6 +887,13 @@ extern int complete_array_type (tree *, tree, bool);
 
 extern tree builtin_type_for_size (int, bool);
 
+extern void warn_array_subscript_with_type_char (tree);
+extern void warn_about_parentheses (enum tree_code, enum tree_code,
+				    enum tree_code);
+extern void warn_for_unused_label (tree label);
+extern void warn_for_div_by_zero (tree divisor);
+
+
 /* In c-gimplify.c  */
 extern void c_genericize (tree);
 extern int c_gimplify_expr (tree *, tree *, tree *);
@@ -850,7 +906,7 @@ extern void c_common_read_pch (cpp_reader *pfile, const char *name, int fd,
 			       const char *orig);
 extern void c_common_write_pch (void);
 extern void c_common_no_more_pch (void);
-extern void c_common_pch_pragma (cpp_reader *pfile);
+extern void c_common_pch_pragma (cpp_reader *pfile, const char *);
 extern void c_common_print_pch_checksum (FILE *f);
 
 /* In *-checksum.c */
@@ -929,6 +985,21 @@ extern void preprocess_file (cpp_reader *);
 extern void pp_file_change (const struct line_map *);
 extern void pp_dir_change (cpp_reader *, const char *);
 extern bool check_missing_format_attribute (tree, tree);
+
+/* In c-omp.c  */
+extern tree c_finish_omp_master (tree);
+extern tree c_finish_omp_critical (tree, tree);
+extern tree c_finish_omp_ordered (tree);
+extern void c_finish_omp_barrier (void);
+extern tree c_finish_omp_atomic (enum tree_code, tree, tree);
+extern void c_finish_omp_flush (void);
+extern tree c_finish_omp_for (location_t, tree, tree, tree, tree, tree, tree);
+extern void c_split_parallel_clauses (tree, tree *, tree *);
+extern enum omp_clause_default_kind c_omp_predetermined_sharing (tree);
+
+/* Not in c-omp.c; provided by the front end.  */
+extern bool c_omp_sharing_predetermined (tree);
+extern tree c_omp_remap_decl (tree, bool);
 
 /* In order for the format checking to accept the C frontend
    diagnostic framework extensions, you must include this file before

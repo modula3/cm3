@@ -1,12 +1,12 @@
 ;; Machine description for MorphoRISC1
-;; Copyright (C) 2005 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2007 Free Software Foundation, Inc.
 ;; Contributed by Red Hat, Inc.
 
 ;; This file is part of GCC.
 
 ;; GCC is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 2, or (at your option)
+;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
 
 ;; GCC is distributed in the hope that it will be useful,
@@ -15,9 +15,8 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GCC; see the file COPYING.  If not, write to the Free
-;; Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-;; 02110-1301, USA.
+;; along with GCC; see the file COPYING3.  If not see
+;; <http://www.gnu.org/licenses/>.
 
 ;; UNSPECs
 (define_constants
@@ -25,6 +24,7 @@
     (UNSPEC_BLOCKAGE 0)
     (UNSPEC_EI 1)
     (UNSPEC_DI 2)
+    (UNSPEC_LOOP 3)
   ])
 
 ;; Attributes
@@ -150,6 +150,59 @@
 	      (clobber (reg:SI 0))])]
   "")
 
+
+;; Loop instructions.  ms2 has a low overhead looping instructions.
+;; these take a constant or register loop count and a loop length
+;; offset.  Unfortunately the loop can only be up to 256 instructions,
+;; We deal with longer loops by moving the loop end upwards.  To do
+;; otherwise would force us to to be very pessimistic right up until
+;; the end.
+
+;; This instruction is a placeholder to make the control flow explicit.
+(define_insn "loop_end"
+  [(set (pc) (if_then_else
+			  (ne (match_operand:SI 0 "register_operand" "")
+			      (const_int 1))
+			  (label_ref (match_operand 1 "" ""))
+			  (pc)))
+   (set (match_dup 0) (plus:SI (match_dup 0) (const_int -1)))
+   (unspec [(const_int 0)] UNSPEC_LOOP)]
+  "TARGET_MS2"
+  ";loop end %0,%l1"
+  [(set_attr "length" "0")])
+
+;; This is the real looping instruction.  It is placed just before the
+;; loop body.  We make it a branch insn, so it stays at the end of the
+;; block it is in.
+(define_insn "loop_init"
+  [(set (match_operand:SI 0 "register_operand" "=r,r")
+	(match_operand:SI 1 "uns_arith_operand" "r,K"))
+   (unspec [(label_ref (match_operand 2 "" ""))] UNSPEC_LOOP)]
+  "TARGET_MS2"
+  "@
+   loop  %1,%l2 ;%0%#
+   loopi %1,%l2 ;%0%#"
+  [(set_attr "length" "4")
+   (set_attr "type" "branch")])
+
+; operand 0 is the loop count pseudo register
+; operand 1 is the number of loop iterations or 0 if it is unknown
+; operand 2 is the maximum number of loop iterations
+; operand 3 is the number of levels of enclosed loops
+; operand 4 is the label to jump to at the top of the loop
+(define_expand "doloop_end"
+  [(parallel [(set (pc) (if_then_else
+			  (ne (match_operand:SI 0 "nonimmediate_operand" "")
+			      (const_int 0))
+			  (label_ref (match_operand 4 "" ""))
+			  (pc)))
+	      (set (match_dup 0)
+		   (plus:SI (match_dup 0)
+			    (const_int -1)))
+	      (clobber (match_scratch:SI 5 ""))
+	      (clobber (match_scratch:SI 6 ""))])]
+  "TARGET_MS1_16_003 || TARGET_MS2"
+  {mt_add_loop ();})
 
 ;; Moves
 
@@ -811,7 +864,7 @@
 }")
 
 
-;; 32 bit Integer arithmetic
+;; 32-bit Integer arithmetic
 
 ;; Addition
 (define_insn "addsi3"
@@ -849,7 +902,7 @@
    (set_attr "type" "arith,arith")])
 
 
-;; 32 bit Integer Shifts and Rotates
+;; 32-bit Integer Shifts and Rotates
 
 ;; Arithmetic Shift Left
 (define_insn "ashlsi3"
@@ -888,9 +941,9 @@
    (set_attr "type" "arith,arith")])
 
 
-;; 32 Bit Integer Logical operations
+;; 32-Bit Integer Logical operations
 
-;; Logical AND, 32 bit integers
+;; Logical AND, 32-bit integers
 (define_insn "andsi3"
   [(set (match_operand:SI 0 "register_operand" "=r,r")
 	(and:SI (match_operand:SI 1 "register_operand" "%r,r")
@@ -902,7 +955,7 @@
   [(set_attr "length" "4,4")
    (set_attr "type" "arith,arith")])
 
-;; Inclusive OR, 32 bit integers
+;; Inclusive OR, 32-bit integers
 (define_insn "iorsi3"
   [(set (match_operand:SI 0 "register_operand" "=r,r")
 	(ior:SI (match_operand:SI 1 "register_operand" "%r,r")
@@ -914,7 +967,7 @@
   [(set_attr "length" "4,4")
    (set_attr "type" "arith,arith")])
 
-;; Exclusive OR, 32 bit integers
+;; Exclusive OR, 32-bit integers
 (define_insn "xorsi3"
   [(set (match_operand:SI 0 "register_operand" "=r,r")
 	(xor:SI (match_operand:SI 1 "register_operand" "%r,r")
@@ -927,7 +980,7 @@
    (set_attr "type" "arith,arith")])
 
 
-;; One's complement, 32 bit integers
+;; One's complement, 32-bit integers
 (define_insn "one_cmplsi2"
   [(set (match_operand:SI 0 "register_operand" "=r")
 	(not:SI (match_operand:SI 1 "register_operand" "r")))]

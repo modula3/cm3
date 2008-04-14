@@ -1,12 +1,12 @@
 /* Simple garbage collection for the GNU compiler.
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005
+   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
    Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 /* Generic garbage collection (GC) functions and data, not specific to
    any particular GC implementation.  */
@@ -305,13 +304,13 @@ gt_pch_note_reorder (void *obj, void *note_ptr_cookie,
 static hashval_t
 saving_htab_hash (const void *p)
 {
-  return POINTER_HASH (((struct ptr_data *)p)->obj);
+  return POINTER_HASH (((const struct ptr_data *)p)->obj);
 }
 
 static int
 saving_htab_eq (const void *p1, const void *p2)
 {
-  return ((struct ptr_data *)p1)->obj == p2;
+  return ((const struct ptr_data *)p1)->obj == p2;
 }
 
 /* Handy state for the traversal functions.  */
@@ -358,8 +357,8 @@ call_alloc (void **slot, void *state_p)
 static int
 compare_ptr_data (const void *p1_p, const void *p2_p)
 {
-  struct ptr_data *p1 = *(struct ptr_data *const *)p1_p;
-  struct ptr_data *p2 = *(struct ptr_data *const *)p2_p;
+  const struct ptr_data *const p1 = *(const struct ptr_data *const *)p1_p;
+  const struct ptr_data *const p2 = *(const struct ptr_data *const *)p2_p;
   return (((size_t)p1->new_addr > (size_t)p2->new_addr)
 	  - ((size_t)p1->new_addr < (size_t)p2->new_addr));
 }
@@ -468,7 +467,7 @@ gt_pch_save (FILE *f)
       
   ggc_pch_this_base (state.d, mmi.preferred_base);
 
-  state.ptrs = xmalloc (state.count * sizeof (*state.ptrs));
+  state.ptrs = XNEWVEC (struct ptr_data *, state.count);
   state.ptrs_i = 0;
   htab_traverse (saving_htab, call_alloc, &state);
   qsort (state.ptrs, state.count, sizeof (*state.ptrs), compare_ptr_data);
@@ -751,10 +750,10 @@ ggc_min_heapsize_heuristic (void)
 # endif
 
   /* Don't blindly run over our data limit; do GC at least when the
-     *next* GC would be within 16Mb of the limit.  If GCC does hit the
-     data limit, compilation will fail, so this tries to be
-     conservative.  */
-  limit_kbytes = MAX (0, limit_kbytes - 16 * 1024);
+     *next* GC would be within 20Mb of the limit or within a quarter of
+     the limit, whichever is larger.  If GCC does hit the data limit,
+     compilation will fail, so this tries to be conservative.  */
+  limit_kbytes = MAX (0, limit_kbytes - MAX (limit_kbytes / 4, 20 * 1024));
   limit_kbytes = (limit_kbytes * 100) / (110 + ggc_min_expand_heuristic());
   phys_kbytes = MIN (phys_kbytes, limit_kbytes);
 
@@ -795,7 +794,7 @@ static htab_t loc_hash;
 static hashval_t
 hash_descriptor (const void *p)
 {
-  const struct loc_descriptor *d = p;
+  const struct loc_descriptor *const d = p;
 
   return htab_hash_pointer (d->function) | d->line;
 }
@@ -803,8 +802,8 @@ hash_descriptor (const void *p)
 static int
 eq_descriptor (const void *p1, const void *p2)
 {
-  const struct loc_descriptor *d = p1;
-  const struct loc_descriptor *d2 = p2;
+  const struct loc_descriptor *const d = p1;
+  const struct loc_descriptor *const d2 = p2;
 
   return (d->file == d2->file && d->line == d2->line
 	  && d->function == d2->function);
@@ -823,7 +822,7 @@ struct ptr_hash_entry
 static hashval_t
 hash_ptr (const void *p)
 {
-  const struct ptr_hash_entry *d = p;
+  const struct ptr_hash_entry *const d = p;
 
   return htab_hash_pointer (d->ptr);
 }
@@ -831,7 +830,7 @@ hash_ptr (const void *p)
 static int
 eq_ptr (const void *p1, const void *p2)
 {
-  const struct ptr_hash_entry *p = p1;
+  const struct ptr_hash_entry *const p = p1;
 
   return (p->ptr == p2);
 }
@@ -865,7 +864,7 @@ ggc_record_overhead (size_t allocated, size_t overhead, void *ptr,
 		     const char *name, int line, const char *function)
 {
   struct loc_descriptor *loc = loc_descriptor (name, line, function);
-  struct ptr_hash_entry *p = xmalloc (sizeof (struct ptr_hash_entry));
+  struct ptr_hash_entry *p = XNEW (struct ptr_hash_entry);
   PTR *slot;
 
   p->ptr = ptr;
@@ -906,7 +905,8 @@ ggc_prune_overhead_list (void)
 }
 
 /* Notice that the pointer has been freed.  */
-void ggc_free_overhead (void *ptr)
+void
+ggc_free_overhead (void *ptr)
 {
   PTR *slot = htab_find_slot_with_hash (ptr_hash, ptr, htab_hash_pointer (ptr),
 					NO_INSERT);
@@ -918,12 +918,31 @@ void ggc_free_overhead (void *ptr)
 
 /* Helper for qsort; sort descriptors by amount of memory consumed.  */
 static int
+final_cmp_statistic (const void *loc1, const void *loc2)
+{
+  struct loc_descriptor *l1 = *(struct loc_descriptor **) loc1;
+  struct loc_descriptor *l2 = *(struct loc_descriptor **) loc2;
+  long diff;
+  diff = ((long)(l1->allocated + l1->overhead - l1->freed) -
+	  (l2->allocated + l2->overhead - l2->freed));
+  return diff > 0 ? 1 : diff < 0 ? -1 : 0;
+}
+
+/* Helper for qsort; sort descriptors by amount of memory consumed.  */
+static int
 cmp_statistic (const void *loc1, const void *loc2)
 {
   struct loc_descriptor *l1 = *(struct loc_descriptor **) loc1;
   struct loc_descriptor *l2 = *(struct loc_descriptor **) loc2;
-  return ((l1->allocated + l1->overhead - l1->freed) -
-	  (l2->allocated + l2->overhead - l2->freed));
+  long diff;
+
+  diff = ((long)(l1->allocated + l1->overhead - l1->freed - l1->collected) -
+	  (l2->allocated + l2->overhead - l2->freed - l2->collected));
+  if (diff)
+    return diff > 0 ? 1 : diff < 0 ? -1 : 0;
+  diff =  ((long)(l1->allocated + l1->overhead - l1->freed) -
+	   (l2->allocated + l2->overhead - l2->freed));
+  return diff > 0 ? 1 : diff < 0 ? -1 : 0;
 }
 
 /* Collect array of the descriptors from hashtable.  */
@@ -939,7 +958,8 @@ add_statistics (void **slot, void *b)
 
 /* Dump per-site memory statistics.  */
 #endif
-void dump_ggc_loc_statistics (void)
+void
+dump_ggc_loc_statistics (bool final ATTRIBUTE_UNUSED)
 {
 #ifdef GATHER_STATISTICS
   int nentries = 0;
@@ -956,7 +976,8 @@ void dump_ggc_loc_statistics (void)
 	   "source location", "Garbage", "Freed", "Leak", "Overhead", "Times");
   fprintf (stderr, "-------------------------------------------------------\n");
   htab_traverse (loc_hash, add_statistics, &nentries);
-  qsort (loc_array, nentries, sizeof (*loc_array), cmp_statistic);
+  qsort (loc_array, nentries, sizeof (*loc_array),
+	 final ? final_cmp_statistic : cmp_statistic);
   for (i = 0; i < nentries; i++)
     {
       struct loc_descriptor *d = loc_array[i];
@@ -997,5 +1018,6 @@ void dump_ggc_loc_statistics (void)
   fprintf (stderr, "%-48s %10s       %10s       %10s       %10s       %10s\n",
 	   "source location", "Garbage", "Freed", "Leak", "Overhead", "Times");
   fprintf (stderr, "-------------------------------------------------------\n");
+  ggc_force_collect = false;
 #endif
 }

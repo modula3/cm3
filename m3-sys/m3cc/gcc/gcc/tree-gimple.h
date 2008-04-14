@@ -1,12 +1,12 @@
 /* Functions to analyze and validate GIMPLE trees.
-   Copyright (C) 2002, 2003, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2005, 2007 Free Software Foundation, Inc.
    Contributed by Diego Novillo <dnovillo@redhat.com>
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -15,9 +15,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #ifndef _TREE_SIMPLE_H
 #define _TREE_SIMPLE_H 1
@@ -30,7 +29,8 @@ extern tree create_tmp_var_name (const char *);
 extern tree create_tmp_var (tree, const char *);
 extern tree get_initialized_tmp_var (tree, tree *, tree *);
 extern tree get_formal_tmp_var (tree, tree *);
-extern void declare_tmp_vars (tree, tree);
+
+extern void declare_vars (tree, tree, bool);
 
 extern void annotate_all_with_locus (tree *, location_t);
 
@@ -63,7 +63,7 @@ extern bool is_gimple_addressable (tree);
 extern bool is_gimple_lvalue (tree);
 
 /* Returns true iff T is a GIMPLE restricted function invariant.  */
-extern bool is_gimple_min_invariant (tree);
+extern bool is_gimple_min_invariant (const_tree);
 /* Returns true iff T is a GIMPLE rvalue.  */
 extern bool is_gimple_val (tree);
 /* Returns true iff T is a GIMPLE asm statement input.  */
@@ -130,8 +130,77 @@ extern tree alloc_stmt_list (void);
 extern void free_stmt_list (tree);
 extern tree force_labels_r (tree *, int *, void *);
 extern enum gimplify_status gimplify_va_arg_expr (tree *, tree *, tree *);
+struct gimplify_omp_ctx;
+extern void omp_firstprivatize_variable (struct gimplify_omp_ctx *, tree);
+extern tree gimple_boolify (tree);
+extern tree canonicalize_cond_expr_cond (tree);
+
+/* In omp-low.c.  */
+extern void diagnose_omp_structured_block_errors (tree);
+extern tree omp_reduction_init (tree, tree);
 
 /* In tree-nested.c.  */
 extern void lower_nested_functions (tree);
+extern void insert_field_into_struct (tree, tree);
+
+/* Convenience routines to walk all statements of a gimple function.
+   The difference between these walkers and the generic walk_tree is
+   that walk_stmt provides context information to the callback
+   routine to know whether it is currently on the LHS or RHS of an
+   assignment (IS_LHS) or contexts where only GIMPLE values are
+   allowed (VAL_ONLY).
+   
+   This is useful in walkers that need to re-write sub-expressions
+   inside statements while making sure the result is still in GIMPLE
+   form.
+
+   Note that this is useful exclusively before the code is converted
+   into SSA form.  Once the program is in SSA form, the standard
+   operand interface should be used to analyze/modify statements.  */
+
+struct walk_stmt_info
+{
+  /* For each statement, we invoke CALLBACK via walk_tree.  The passed
+     data is a walk_stmt_info structure.  */
+  walk_tree_fn callback;
+
+  /* Points to the current statement being walked.  */
+  tree_stmt_iterator tsi;
+  
+  /* Additional data that CALLBACK may want to carry through the
+     recursion.  */
+  void *info;
+
+  /* Indicates whether the *TP being examined may be replaced 
+     with something that matches is_gimple_val (if true) or something
+     slightly more complicated (if false).  "Something" technically 
+     means the common subset of is_gimple_lvalue and is_gimple_rhs, 
+     but we never try to form anything more complicated than that, so
+     we don't bother checking.
+
+     Also note that CALLBACK should update this flag while walking the
+     sub-expressions of a statement.  For instance, when walking the
+     statement 'foo (&var)', the flag VAL_ONLY will initially be set
+     to true, however, when walking &var, the operand of that
+     ADDR_EXPR does not need to be a GIMPLE value.  */
+  bool val_only;
+
+  /* True if we are currently walking the LHS of an assignment.  */
+  bool is_lhs;
+
+  /* Optional.  Set to true by CALLBACK if it made any changes.  */
+  bool changed;
+
+  /* True if we're interested in seeing BIND_EXPRs.  */
+  bool want_bind_expr;
+
+  /* True if we're interested in seeing RETURN_EXPRs.  */
+  bool want_return_expr;
+
+  /* True if we're interested in location information.  */
+  bool want_locations;
+};
+
+void walk_stmts (struct walk_stmt_info *, tree *);
 
 #endif /* _TREE_SIMPLE_H  */

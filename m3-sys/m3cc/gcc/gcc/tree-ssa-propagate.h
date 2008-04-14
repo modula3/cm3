@@ -1,13 +1,13 @@
 /* Data structures and function declarations for the SSA value propagation
    engine.
-   Copyright (C) 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2004, 2005, 2007 Free Software Foundation, Inc.
    Contributed by Diego Novillo <dnovillo@redhat.com>
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #ifndef _TREE_SSA_PROPAGATE_H
 #define _TREE_SSA_PROPAGATE_H 1
@@ -114,12 +113,13 @@ typedef enum ssa_prop_result (*ssa_prop_visit_phi_fn) (tree);
 /* In tree-ssa-propagate.c  */
 void ssa_propagate (ssa_prop_visit_stmt_fn, ssa_prop_visit_phi_fn);
 tree get_rhs (tree);
+bool valid_gimple_expression_p (tree expr);
 bool set_rhs (tree *, tree);
 tree first_vdef (tree);
 bool stmt_makes_single_load (tree);
 bool stmt_makes_single_store (tree);
 prop_value_t *get_value_loaded_by (tree, prop_value_t *);
 bool replace_uses_in (tree, bool *, prop_value_t *);
-void substitute_and_fold (prop_value_t *, bool);
+bool substitute_and_fold (prop_value_t *, bool);
 
 #endif /* _TREE_SSA_PROPAGATE_H  */

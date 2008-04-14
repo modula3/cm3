@@ -21,8 +21,10 @@ case $machine in
     i?86-*-pe | \
     i?86-*-cygwin* | \
     i?86-*-mingw32* | \
+    x86_64-*-mingw32* | \
     i?86-*-uwin* | \
     i?86-*-interix* | \
+    *-*-vxworks* | \
     powerpc-*-eabiaix* | \
     powerpc-*-eabisim* | \
     powerpc-*-eabi*    | \

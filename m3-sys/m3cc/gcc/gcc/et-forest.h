@@ -1,19 +1,19 @@
 /* Et-forest data structure implementation.
-   Copyright (C) 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 3 of the License, or
+   (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  */
+   You should have received a copy of the GNU General Public License
+   along with this program; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 /* This package implements ET forest data structure. Each tree in
    the structure maintains a tree structure and offers logarithmic time
@@ -74,10 +74,12 @@ struct et_node
 struct et_node *et_new_tree (void *data);
 void et_free_tree (struct et_node *);
 void et_free_tree_force (struct et_node *);
+void et_free_pools (void);
 void et_set_father (struct et_node *, struct et_node *);
 void et_split (struct et_node *);
 struct et_node *et_nca (struct et_node *, struct et_node *);
 bool et_below (struct et_node *, struct et_node *);
+struct et_node *et_root (struct et_node *);
 
 #ifdef __cplusplus
 }

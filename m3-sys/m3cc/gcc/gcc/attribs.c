@@ -1,12 +1,12 @@
 /* Functions dealing with attribute handling, used by most front ends.
    Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-   2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   2002, 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -33,6 +32,7 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #include "cpplib.h"
 #include "target.h"
 #include "langhooks.h"
+#include "hashtab.h"
 
 static void init_attributes (void);
 
@@ -40,13 +40,69 @@ static void init_attributes (void);
    searched.  */
 static const struct attribute_spec *attribute_tables[4];
 
+/* Hashtable mapping names (represented as substrings) to attribute specs. */
+static htab_t attribute_hash;
+
+/* Substring representation.  */
+
+struct substring
+{
+  const char *str;
+  int length;
+};
+
 static bool attributes_initialized = false;
 
 /* Default empty table of attributes.  */
+
 static const struct attribute_spec empty_attribute_table[] =
 {
   { NULL, 0, 0, false, false, false, NULL }
 };
+
+/* Return base name of the attribute.  Ie '__attr__' is turned into 'attr'.
+   To avoid need for copying, we simply return length of the string.  */
+
+static void
+extract_attribute_substring (struct substring *str)
+{
+  if (str->length > 4 && str->str[0] == '_' && str->str[1] == '_'
+      && str->str[str->length - 1] == '_' && str->str[str->length - 2] == '_')
+    {
+      str->length -= 4;
+      str->str += 2;
+    }
+}
+
+/* Simple hash function to avoid need to scan whole string.  */
+
+static inline hashval_t
+substring_hash (const char *str, int l)
+{
+  return str[0] + str[l - 1] * 256 + l * 65536;
+}
+
+/* Used for attribute_hash.  */
+
+static hashval_t
+hash_attr (const void *p)
+{
+  const struct attribute_spec *const spec = (const struct attribute_spec *) p;
+  const int l = strlen (spec->name);
+
+  return substring_hash (spec->name, l);
+}
+
+/* Used for attribute_hash.  */
+
+static int
+eq_attr (const void *p, const void *q)
+{
+  const struct attribute_spec *const spec = (const struct attribute_spec *) p;
+  const struct substring *const str = (const struct substring *) q;
+
+  return (!strncmp (spec->name, str->str, str->length) && !spec->name[str->length]);
+}
 
 /* Initialize attribute tables, and make some sanity checks
    if --enable-checking.  */
@@ -55,6 +111,7 @@ static void
 init_attributes (void)
 {
   size_t i;
+  int k;
 
   attribute_tables[0] = lang_hooks.common_attribute_table;
   attribute_tables[1] = lang_hooks.attribute_table;
@@ -77,21 +134,21 @@ init_attributes (void)
 	  /* The name must not begin and end with __.  */
 	  const char *name = attribute_tables[i][j].name;
 	  int len = strlen (name);
-	  
+
 	  gcc_assert (!(name[0] == '_' && name[1] == '_'
 			&& name[len - 1] == '_' && name[len - 2] == '_'));
-	  
+
 	  /* The minimum and maximum lengths must be consistent.  */
 	  gcc_assert (attribute_tables[i][j].min_length >= 0);
-	  
+
 	  gcc_assert (attribute_tables[i][j].max_length == -1
 		      || (attribute_tables[i][j].max_length
 			  >= attribute_tables[i][j].min_length));
-	  
+
 	  /* An attribute cannot require both a DECL and a TYPE.  */
 	  gcc_assert (!attribute_tables[i][j].decl_required
 		      || !attribute_tables[i][j].type_required);
-	  
+
 	  /* If an attribute requires a function type, in particular
 	     it requires a type.  */
 	  gcc_assert (!attribute_tables[i][j].function_type_required
@@ -121,7 +178,36 @@ init_attributes (void)
     }
 #endif
 
+  attribute_hash = htab_create (200, hash_attr, eq_attr, NULL);
+  for (i = 0; i < ARRAY_SIZE (attribute_tables); i++)
+    for (k = 0; attribute_tables[i][k].name != NULL; k++)
+      {
+	struct substring str;
+	const void **slot;
+
+	str.str = attribute_tables[i][k].name;
+	str.length = strlen (attribute_tables[i][k].name);
+	slot = (const void **)htab_find_slot_with_hash (attribute_hash, &str,
+					 substring_hash (str.str, str.length),
+					 INSERT);
+	gcc_assert (!*slot);
+	*slot = &attribute_tables[i][k];
+      }
   attributes_initialized = true;
+}
+
+/* Return the spec for the attribute named NAME.  */
+
+const struct attribute_spec *
+lookup_attribute_spec (tree name)
+{
+  struct substring attr;
+
+  attr.str = IDENTIFIER_POINTER (name);
+  attr.length = IDENTIFIER_LENGTH (name);
+  extract_attribute_substring (&attr);
+  return htab_find_with_hash (attribute_hash, &attr,
+			      substring_hash (attr.str, attr.length));
 }
 
 /* Process the attributes listed in ATTRIBUTES and install them in *NODE,
@@ -149,26 +235,9 @@ decl_attributes (tree *node, tree attributes, int flags)
       tree name = TREE_PURPOSE (a);
       tree args = TREE_VALUE (a);
       tree *anode = node;
-      const struct attribute_spec *spec = NULL;
+      const struct attribute_spec *spec = lookup_attribute_spec (name);
       bool no_add_attrs = 0;
       tree fn_ptr_tmp = NULL_TREE;
-      size_t i;
-
-      for (i = 0; i < ARRAY_SIZE (attribute_tables); i++)
-	{
-	  int j;
-
-	  for (j = 0; attribute_tables[i][j].name != NULL; j++)
-	    {
-	      if (is_attribute_p (attribute_tables[i][j].name, name))
-		{
-		  spec = &attribute_tables[i][j];
-		  break;
-		}
-	    }
-	  if (spec != NULL)
-	    break;
-	}
 
       if (spec == NULL)
 	{
@@ -184,6 +253,7 @@ decl_attributes (tree *node, tree attributes, int flags)
 		 IDENTIFIER_POINTER (name));
 	  continue;
 	}
+      gcc_assert (is_attribute_p (spec->name, name));
 
       if (spec->decl_required && !DECL_P (*anode))
 	{
@@ -227,8 +297,8 @@ decl_attributes (tree *node, tree attributes, int flags)
 		 pull out the target type now, frob it as appropriate, and
 		 rebuild the pointer type later.
 
-	         This would all be simpler if attributes were part of the
-	         declarator, grumble grumble.  */
+		 This would all be simpler if attributes were part of the
+		 declarator, grumble grumble.  */
 	      fn_ptr_tmp = TREE_TYPE (*anode);
 	      anode = &fn_ptr_tmp;
 	      flags &= ~(int) ATTR_FLAG_TYPE_IN_PLACE;
@@ -248,6 +318,14 @@ decl_attributes (tree *node, tree attributes, int flags)
 		       IDENTIFIER_POINTER (name));
 	      continue;
 	    }
+	}
+
+      if (TYPE_P (*anode)
+	  && (flags & (int) ATTR_FLAG_TYPE_IN_PLACE)
+	  && TYPE_SIZE (*anode) != NULL_TREE)
+	{
+	  warning (OPT_Wattributes, "type attributes ignored after type is already defined");
+	  continue;
 	}
 
       if (spec->handler != NULL)

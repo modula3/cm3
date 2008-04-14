@@ -1,5 +1,5 @@
 /* Target Definitions for R8C/M16C/M32C
-   Copyright (C) 2005
+   Copyright (C) 2005, 2007
    Free Software Foundation, Inc.
    Contributed by Red Hat.
 
@@ -7,7 +7,7 @@
 
    GCC is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published
-   by the Free Software Foundation; either version 2, or (at your
+   by the Free Software Foundation; either version 3, or (at your
    option) any later version.
 
    GCC is distributed in the hope that it will be useful, but WITHOUT
@@ -16,9 +16,8 @@
    License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with GCC; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with GCC; see the file COPYING3.  If not see
+   <http://www.gnu.org/licenses/>.  */
 
 #ifndef GCC_M32C_H
 #define GCC_M32C_H
@@ -29,9 +28,9 @@
 #define STARTFILE_SPEC "crt0.o%s crtbegin.o%s"
 
 /* There are four CPU series we support, but they basically break down
-   into two families - the R8C/M16C families, with 16 bit address
-   registers and one set of opcodes, and the M32CM/M32C group, with 24
-   bit address registers and a different set of opcodes.  The
+   into two families - the R8C/M16C families, with 16-bit address
+   registers and one set of opcodes, and the M32CM/M32C group, with
+   24-bit address registers and a different set of opcodes.  The
    assembler doesn't care except for which opcode set is needed; the
    big difference is in the memory maps, which we cover in
    LIB_SPEC.  */
@@ -97,7 +96,7 @@ extern int target_memregs;
 
 #define TARGET_VERSION fprintf (stderr, " (m32c)");
 
-#define OVERRIDE_OPTIONS m32c_override_options ();
+#define OVERRIDE_OPTIONS m32c_override_options ()
 
 /* Defining data structures for per-function information */
 
@@ -139,7 +138,7 @@ machine_function;
    GCC expects us to have a "native" format, so we pick the one that
    matches "int".  Pointers are 16 bits for R8C/M16C (when TARGET_A16
    is true) and 24 bits for M32CM/M32C (when TARGET_A24 is true), but
-   24 bit pointers are stored in 32 bit words.  */
+   24-bit pointers are stored in 32-bit words.  */
 #define BITS_PER_UNIT 8
 #define UNITS_PER_WORD 2
 #define POINTER_SIZE (TARGET_A16 ? 16 : 32)
@@ -150,7 +149,7 @@ machine_function;
 #define STACK_BOUNDARY (TARGET_A16 ? 8 : 16)
 
 /* We do this because we care more about space than about speed.  For
-   the chips with 16 bit busses, we could set these to 16 if
+   the chips with 16-bit busses, we could set these to 16 if
    desired.  */
 #define FUNCTION_BOUNDARY 8
 #define BIGGEST_ALIGNMENT 8
@@ -171,15 +170,18 @@ machine_function;
 
 #define DEFAULT_SIGNED_CHAR 1
 
+#undef PTRDIFF_TYPE
+#define PTRDIFF_TYPE (TARGET_A16 ? "int" : "long int")
+
 /* REGISTER USAGE */
 
 /* Register Basics */
 
 /* Register layout:
 
-        [r0h][r0l]  $r0  (16 bits, or two 8 bit halves)
+        [r0h][r0l]  $r0  (16 bits, or two 8-bit halves)
         [--------]  $r2  (16 bits)
-        [r1h][r1l]  $r1  (16 bits, or two 8 bit halves)
+        [r1h][r1l]  $r1  (16 bits, or two 8-bit halves)
         [--------]  $r3  (16 bits)
    [---][--------]  $a0  (might be 24 bits)
    [---][--------]  $a1  (might be 24 bits)
@@ -218,6 +220,13 @@ machine_function;
 #endif
 #define PC_REGNUM PC_REGNO
 
+/* Order of Allocation of Registers */
+
+#define REG_ALLOC_ORDER { \
+	0, 1, 2, 3, 4, 5, /* r0..r3, a0, a1 */ \
+	12, 13, 14, 15, 16, 17, 18, /* mem0..mem7 */  \
+	6, 7, 8, 9, 10, 11 /* sb, fb, sp, pc, flg, ap */ }
+
 /* How Values Fit in Registers */
 
 #define HARD_REGNO_NREGS(R,M) m32c_hard_regno_nregs (R, M)
@@ -254,10 +263,12 @@ machine_function;
   { 0x0000000a }, /* R23 - r2 r3 */\
   { 0x0000000f }, /* R03 - r0r2 r1r3 */\
   { 0x0000000f }, /* DI  - r0r2r1r3 + mems */\
+  { 0x00000010 }, /* A0  - a0 */\
+  { 0x00000020 }, /* A1  - a1 */\
   { 0x00000030 }, /* A   - a0 a1 */\
   { 0x000000f0 }, /* AD  - a0 a1 sb fp */\
   { 0x000001f0 }, /* PS  - a0 a1 sb fp sp */\
-  { 0x0000003f }, /* SI  - r0r2 r1r3 a0a1 */\
+  { 0x0000000f }, /* SI  - r0r2 r1r3 a0a1 */\
   { 0x0000003f }, /* HI  - r0 r1 r2 r3 a0 a1 */\
   { 0x0000003f }, /* RA  - r0..r3 a0 a1 */\
   { 0x0000007f }, /* GENERAL */\
@@ -290,6 +301,8 @@ enum reg_class
   R23_REGS,
   R03_REGS,
   DI_REGS,
+  A0_REGS,
+  A1_REGS,
   A_REGS,
   AD_REGS,
   PS_REGS,
@@ -328,6 +341,8 @@ enum reg_class
 "R23_REGS", \
 "R03_REGS", \
 "DI_REGS", \
+"A0_REGS", \
+"A1_REGS", \
 "A_REGS", \
 "AD_REGS", \
 "PS_REGS", \
@@ -415,7 +430,7 @@ enum reg_class
 #define RETURN_ADDR_RTX(COUNT,FA) m32c_return_addr_rtx (COUNT)
 
 #define INCOMING_RETURN_ADDR_RTX m32c_incoming_return_addr_rtx()
-#define INCOMING_FRAME_SP_OFFSET 3
+#define INCOMING_FRAME_SP_OFFSET (TARGET_A24 ? 4 : 3)
 
 /* Exception Handling Support */
 
@@ -442,6 +457,12 @@ enum reg_class
 #define DWARF_FRAME_REGISTERS 20
 #define DWARF_FRAME_REGNUM(N) m32c_dwarf_frame_regnum (N)
 #define DBX_REGISTER_NUMBER(N) m32c_dwarf_frame_regnum (N)
+
+#undef ASM_PREFERRED_EH_DATA_FORMAT
+/* This is the same as the default in practice, except that by making
+   it explicit we tell binutils what size pointers to use.  */
+#define ASM_PREFERRED_EH_DATA_FORMAT(CODE,GLOBAL) \
+  (TARGET_A16 ? DW_EH_PE_udata2 : DW_EH_PE_udata4)
 
 /* Eliminating Frame Pointer and Arg Pointer */
 
@@ -546,15 +567,13 @@ typedef struct m32c_cumulative_args
 
 #define LEGITIMIZE_ADDRESS(X,OLDX,MODE,WIN) \
 	if (m32c_legitimize_address(&(X),OLDX,MODE)) \
-	  goto win;
+	  goto WIN;
 
 #define LEGITIMIZE_RELOAD_ADDRESS(X,MODE,OPNUM,TYPE,IND_LEVELS,WIN) \
 	if (m32c_legitimize_reload_address(&(X),MODE,OPNUM,TYPE,IND_LEVELS)) \
-	  goto win;
+	  goto WIN;
 
-#define GO_IF_MODE_DEPENDENT_ADDRESS(ADDR,LABEL) \
-	if (m32c_mode_dependent_address (ADDR)) \
-	  goto LABEL;
+#define GO_IF_MODE_DEPENDENT_ADDRESS(ADDR,LABEL)
 
 #define LEGITIMATE_CONSTANT_P(X) m32c_legitimate_constant_p (X)
 
@@ -574,6 +593,15 @@ typedef struct m32c_cumulative_args
 #define TEXT_SECTION_ASM_OP ".text"
 #define DATA_SECTION_ASM_OP ".data"
 #define BSS_SECTION_ASM_OP ".bss"
+
+#define CTOR_LIST_BEGIN
+#define CTOR_LIST_END
+#define DTOR_LIST_BEGIN
+#define DTOR_LIST_END
+#define CTORS_SECTION_ASM_OP "\t.section\t.init_array,\"aw\",%init_array"
+#define DTORS_SECTION_ASM_OP "\t.section\t.fini_array,\"aw\",%fini_array"
+#define INIT_ARRAY_SECTION_ASM_OP "\t.section\t.init_array,\"aw\",%init_array"
+#define FINI_ARRAY_SECTION_ASM_OP "\t.section\t.fini_array,\"aw\",%fini_array"
 
 /* The Overall Framework of an Assembler File */
 
@@ -640,7 +668,9 @@ typedef struct m32c_cumulative_args
 #define MOVE_MAX 4
 #define TRULY_NOOP_TRUNCATION(op,ip) 1
 
-/* 16 or 24 bit pointers */
+#define STORE_FLAG_VALUE 1
+
+/* 16- or 24-bit pointers */
 #define Pmode (TARGET_A16 ? HImode : PSImode)
 #define FUNCTION_MODE QImode
 

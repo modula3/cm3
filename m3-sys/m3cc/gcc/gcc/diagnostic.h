@@ -1,5 +1,5 @@
 /* Various declarations for language-independent diagnostics subroutines.
-   Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005
+   Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007
    Free Software Foundation, Inc.
    Contributed by Gabriel Dos Reis <gdr@codesourcery.com>
 
@@ -7,7 +7,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -16,14 +16,14 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #ifndef GCC_DIAGNOSTIC_H
 #define GCC_DIAGNOSTIC_H
 
 #include "pretty-print.h"
+#include "options.h"
 
 /* Constants used to discriminate diagnostics.  */
 typedef enum
@@ -37,10 +37,13 @@ typedef enum
 /* A diagnostic is described by the MESSAGE to send, the FILE and LINE of
    its context and its KIND (ice, error, warning, note, ...)  See complete
    list in diagnostic.def.  */
-typedef struct
+typedef struct diagnostic_info
 {
   text_info message;
   location_t location;
+  /* TREE_BLOCK if the diagnostic is to be reported in some inline
+     function inlined into other function, otherwise NULL.  */
+  tree abstract_origin;
   /* The kind of diagnostic it is about.  */
   diagnostic_t kind;
   /* Which OPT_* directly controls this diagnostic.  */
@@ -72,6 +75,13 @@ struct diagnostic_context
   
   /* True if it has been requested that warnings be treated as errors.  */
   bool warning_as_error_requested;
+
+  /* For each option index that can be passed to warning() et all
+     (OPT_* from options.h), this array may contain a new kind that
+     the diagnostic should be changed to before reporting, or
+     DK_UNSPECIFIED to leave it as the reported kind, or DK_IGNORED to
+     not report it at all.  N_OPTS is from <options.h>.  */
+  char classify_diagnostic[N_OPTS];
 
   /* True if we should print the command line option which controls
      each diagnostic, if known.  */
@@ -130,13 +140,15 @@ struct diagnostic_context
 
 /* True if the last function in which a diagnostic was reported is
    different from the current one.  */
-#define diagnostic_last_function_changed(DC) \
-  ((DC)->last_function != current_function_decl)
+#define diagnostic_last_function_changed(DC, DI) \
+  ((DC)->last_function != ((DI)->abstract_origin \
+			   ? (DI)->abstract_origin : current_function_decl))
 
 /* Remember the current function as being the last one in which we report
    a diagnostic.  */
-#define diagnostic_set_last_function(DC) \
-  (DC)->last_function = current_function_decl
+#define diagnostic_set_last_function(DC, DI) \
+  (DC)->last_function = (((DI) && (DI)->abstract_origin) \
+			 ? (DI)->abstract_origin : current_function_decl)
 
 /* True if the last module or file in which a diagnostic was reported is
    different from the current one.  */
@@ -178,7 +190,13 @@ extern diagnostic_context *global_dc;
 /* Diagnostic related functions.  */
 extern void diagnostic_initialize (diagnostic_context *);
 extern void diagnostic_report_current_module (diagnostic_context *);
-extern void diagnostic_report_current_function (diagnostic_context *);
+extern void diagnostic_report_current_function (diagnostic_context *,
+						diagnostic_info *);
+
+/* Force diagnostics controlled by OPTIDX to be kind KIND.  */
+extern diagnostic_t diagnostic_classify_diagnostic (diagnostic_context *,
+						    int /* optidx */,
+						    diagnostic_t /* kind */);
 extern void diagnostic_report_diagnostic (diagnostic_context *,
 					  diagnostic_info *);
 #ifdef ATTRIBUTE_GCC_DIAG
@@ -203,5 +221,6 @@ extern void print_generic_decl (FILE *, tree, int);
 
 extern void debug_generic_expr (tree);
 extern void debug_generic_stmt (tree);
+extern void debug_tree_chain (tree);
 extern void debug_c_tree (tree);
 #endif /* ! GCC_DIAGNOSTIC_H */

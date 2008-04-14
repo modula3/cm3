@@ -1,11 +1,11 @@
 /* Loop unswitching for GNU compiler.
-   Copyright (C) 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2002, 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -14,9 +14,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -79,9 +78,8 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
   containing subloops would not be very large compared to complications
   with handling this case.  */
 
-static struct loop *unswitch_loop (struct loops *, struct loop *,
-				   basic_block, rtx, rtx);
-static void unswitch_single_loop (struct loops *, struct loop *, rtx, int);
+static struct loop *unswitch_loop (struct loop *, basic_block, rtx, rtx);
+static void unswitch_single_loop (struct loop *, rtx, int);
 static rtx may_unswitch_on (basic_block, struct loop *, rtx *);
 
 /* Prepare a sequence comparing OP0 with OP1 using COMP and jumping to LABEL if
@@ -135,30 +133,21 @@ compare_and_jump_seq (rtx op0, rtx op1, enum rtx_code comp, rtx label, int prob,
   return seq;
 }
 
-/* Main entry point.  Perform loop unswitching on all suitable LOOPS.  */
+/* Main entry point.  Perform loop unswitching on all suitable loops.  */
 void
-unswitch_loops (struct loops *loops)
+unswitch_loops (void)
 {
-  int i, num;
+  loop_iterator li;
   struct loop *loop;
 
   /* Go through inner loops (only original ones).  */
-  num = loops->num;
 
-  for (i = 1; i < num; i++)
+  FOR_EACH_LOOP (li, loop, LI_ONLY_INNERMOST)
     {
-      /* Removed loop?  */
-      loop = loops->parray[i];
-      if (!loop)
-	continue;
-
-      if (loop->inner)
-	continue;
-
-      unswitch_single_loop (loops, loop, NULL_RTX, 0);
+      unswitch_single_loop (loop, NULL_RTX, 0);
 #ifdef ENABLE_CHECKING
       verify_dominators (CDI_DOMINATORS);
-      verify_loop_structure (loops);
+      verify_loop_structure ();
 #endif
     }
 
@@ -172,7 +161,7 @@ unswitch_loops (struct loops *loops)
 static rtx
 may_unswitch_on (basic_block bb, struct loop *loop, rtx *cinsn)
 {
-  rtx test, at, insn, op[2], stest;
+  rtx test, at, op[2], stest;
   struct rtx_iv iv;
   unsigned i;
   enum machine_mode mode;
@@ -205,8 +194,7 @@ may_unswitch_on (basic_block bb, struct loop *loop, rtx *cinsn)
       if (CONSTANT_P (op[i]))
 	continue;
 
-      insn = iv_get_reaching_def (at, op[i]);
-      if (!iv_analyze (insn, op[i], &iv))
+      if (!iv_analyze (at, op[i], &iv))
 	return NULL_RTX;
       if (iv.step != const0_rtx
 	  || iv.first_special)
@@ -260,8 +248,7 @@ reversed_condition (rtx cond)
    number of unswitchings done; do not allow it to grow too much, it is too
    easy to create example on that the code would grow exponentially.  */
 static void
-unswitch_single_loop (struct loops *loops, struct loop *loop,
-		      rtx cond_checked, int num)
+unswitch_single_loop (struct loop *loop, rtx cond_checked, int num)
 {
   basic_block *bbs;
   struct loop *nloop;
@@ -352,7 +339,7 @@ unswitch_single_loop (struct loops *loops, struct loop *loop,
 	{
 	  /* Remove false path.  */
 	  e = FALLTHRU_EDGE (bbs[i]);
-	  remove_path (loops, e);
+	  remove_path (e);
 	  free (bbs);
 	  repeat = 1;
 	}
@@ -360,7 +347,7 @@ unswitch_single_loop (struct loops *loops, struct loop *loop,
 	{
 	  /* Remove true path.  */
 	  e = BRANCH_EDGE (bbs[i]);
-	  remove_path (loops, e);
+	  remove_path (e);
 	  free (bbs);
 	  repeat = 1;
 	}
@@ -377,12 +364,12 @@ unswitch_single_loop (struct loops *loops, struct loop *loop,
     fprintf (dump_file, ";; Unswitching loop\n");
 
   /* Unswitch the loop on this condition.  */
-  nloop = unswitch_loop (loops, loop, bbs[i], cond, cinsn);
+  nloop = unswitch_loop (loop, bbs[i], cond, cinsn);
   gcc_assert (nloop);
 
   /* Invoke itself on modified loops.  */
-  unswitch_single_loop (loops, nloop, rconds, num + 1);
-  unswitch_single_loop (loops, loop, conds, num + 1);
+  unswitch_single_loop (nloop, rconds, num + 1);
+  unswitch_single_loop (loop, conds, num + 1);
 
   free_EXPR_LIST_node (conds);
   if (rcond)
@@ -399,8 +386,7 @@ unswitch_single_loop (struct loops *loops, struct loop *loop,
    NULL, it is the insn in that COND is compared.  */
 
 static struct loop *
-unswitch_loop (struct loops *loops, struct loop *loop, basic_block unswitch_on,
-	       rtx cond, rtx cinsn)
+unswitch_loop (struct loop *loop, basic_block unswitch_on, rtx cond, rtx cinsn)
 {
   edge entry, latch_edge, true_edge, false_edge, e;
   basic_block switch_bb, unswitch_on_alt;
@@ -423,11 +409,9 @@ unswitch_loop (struct loops *loops, struct loop *loop, basic_block unswitch_on,
   irred_flag = entry->flags & EDGE_IRREDUCIBLE_LOOP;
   entry->flags &= ~EDGE_IRREDUCIBLE_LOOP;
   zero_bitmap = sbitmap_alloc (2);
-  sbitmap_zero (zero_bitmap);
-  if (!duplicate_loop_to_header_edge (loop, entry, loops, 1,
-	zero_bitmap, NULL, NULL, NULL, 0))
+  if (!duplicate_loop_to_header_edge (loop, entry, 1,
+			      	      NULL, NULL, NULL, 0))
     return NULL;
-  free (zero_bitmap);
   entry->flags |= irred_flag;
 
   /* Record the block with condition we unswitch on.  */
@@ -464,22 +448,18 @@ unswitch_loop (struct loops *loops, struct loop *loop, basic_block unswitch_on,
     }
 
   /* Loopify from the copy of LOOP body, constructing the new loop.  */
-  nloop = loopify (loops, latch_edge,
+  nloop = loopify (latch_edge,
 		   single_pred_edge (get_bb_copy (loop->header)), switch_bb,
-		   BRANCH_EDGE (switch_bb), FALLTHRU_EDGE (switch_bb), true);
+		   BRANCH_EDGE (switch_bb), FALLTHRU_EDGE (switch_bb), true,
+		   prob, REG_BR_PROB_BASE - prob);
 
   /* Remove branches that are now unreachable in new loops.  */
-  remove_path (loops, true_edge);
-  remove_path (loops, false_edge);
-
-  /* One of created loops do not have to be subloop of the outer loop now,
-     so fix its placement in loop data structure.  */
-  fix_loop_placement (loop);
-  fix_loop_placement (nloop);
+  remove_path (true_edge);
+  remove_path (false_edge);
 
   /* Preserve the simple loop preheaders.  */
-  loop_split_edge_with (loop_preheader_edge (loop), NULL_RTX);
-  loop_split_edge_with (loop_preheader_edge (nloop), NULL_RTX);
+  split_edge (loop_preheader_edge (loop));
+  split_edge (loop_preheader_edge (nloop));
 
   return nloop;
 }

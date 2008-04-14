@@ -1,5 +1,5 @@
 /* Definitions of MCore target. 
-   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2004
+   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2004, 2007
    Free Software Foundation, Inc.
    Contributed by Cygnus Solutions.
 
@@ -7,7 +7,7 @@ This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #ifndef __MCORE_ELF_H__
 #define __MCORE_ELF_H__
@@ -32,34 +31,13 @@ Boston, MA 02110-1301, USA.  */
 #undef  PREFERRED_DEBUGGING_TYPE
 #define PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
 
-#define EXPORTS_SECTION_ASM_OP	"\t.section .exports"
-
-#define SUBTARGET_EXTRA_SECTIONS in_exports
-
-#define SUBTARGET_EXTRA_SECTION_FUNCTIONS	\
-  EXPORT_SECTION_FUNCTION
-
-#define EXPORT_SECTION_FUNCTION 				\
-void								\
-exports_section ()						\
-{								\
-  if (in_section != in_exports)					\
-    {								\
-      fprintf (asm_out_file, "%s\n", EXPORTS_SECTION_ASM_OP);	\
-      in_section = in_exports;					\
-    }								\
-}
-
-#define SUBTARGET_SWITCH_SECTIONS		\
-  case in_exports: exports_section (); break;
-
-
 #define MCORE_EXPORT_NAME(STREAM, NAME)			\
   do							\
     {							\
-      exports_section ();				\
+      fprintf (STREAM, "\t.section .exports\n");	\
       fprintf (STREAM, "\t.ascii \" -export:%s\"\n",	\
 	       (* targetm.strip_name_encoding) (NAME));	\
+      in_section = NULL;				\
     }							\
   while (0);
 
@@ -73,7 +51,7 @@ exports_section ()						\
       if (mcore_dllexport_name_p (NAME))			\
 	{							\
           MCORE_EXPORT_NAME (FILE, NAME);			\
-	  function_section (DECL);				\
+	  switch_to_section (function_section (DECL));		\
 	}							\
       ASM_OUTPUT_TYPE_DIRECTIVE (FILE, NAME, "function");	\
       ASM_DECLARE_RESULT (FILE, DECL_RESULT (DECL));		\
@@ -89,9 +67,9 @@ exports_section ()						\
       HOST_WIDE_INT size;					\
       if (mcore_dllexport_name_p (NAME))			\
         {							\
-          enum in_section save_section = in_section;		\
+	  section *save_section = in_section;			\
 	  MCORE_EXPORT_NAME (FILE, NAME);			\
-          switch_to_section (save_section, (DECL));		\
+	  switch_to_section (save_section);			\
         }							\
       ASM_OUTPUT_TYPE_DIRECTIVE (FILE, NAME, "object");		\
       size_directive_output = 0;				\

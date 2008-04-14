@@ -8,7 +8,7 @@
 #
 # GCC is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2, or (at your option)
+# the Free Software Foundation; either version 3, or (at your option)
 # any later version.
 #
 # GCC is distributed in the hope that it will be useful,
@@ -22,7 +22,10 @@
 # Boston, MA 02110-1301, USA.
 
 website=http://gcc.gnu.org/
-files="gcc-4.1/index.html gcc-4.1/changes.html
+files="
+    gcc-4.3/index.html gcc-4.3/changes.html
+    gcc-4.2/index.html gcc-4.2/changes.html
+    gcc-4.1/index.html gcc-4.1/changes.html
     gcc-4.0/index.html gcc-4.0/changes.html
     gcc-3.4/index.html gcc-3.4/changes.html
     gcc-3.3/index.html gcc-3.3/changes.html

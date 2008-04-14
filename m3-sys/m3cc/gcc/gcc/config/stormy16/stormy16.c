@@ -1,13 +1,13 @@
 /* Xstormy16 target functions.
-   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005
-   Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
+   2006, 2007, 2008 Free Software Foundation, Inc.
    Contributed by Red Hat, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
+the Free Software Foundation; either version 3, or (at your option)
 any later version.
 
 GCC is distributed in the hope that it will be useful,
@@ -16,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to
-the Free Software Foundation, 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -47,6 +46,8 @@ Boston, MA 02110-1301, USA.  */
 #include "tm_p.h"
 #include "langhooks.h"
 #include "tree-gimple.h"
+#include "df.h"
+#include "ggc.h"
 
 static rtx emit_addhi3_postreload (rtx, rtx, rtx);
 static void xstormy16_asm_out_constructor (rtx, int);
@@ -58,12 +59,14 @@ static void xstormy16_init_builtins (void);
 static rtx xstormy16_expand_builtin (tree, rtx, rtx, enum machine_mode, int);
 static bool xstormy16_rtx_costs (rtx, int, int, int *);
 static int xstormy16_address_cost (rtx);
-static bool xstormy16_return_in_memory (tree, tree);
+static bool xstormy16_return_in_memory (const_tree, const_tree);
 
 /* Define the information needed to generate branch and scc insns.  This is
    stored from the compare operation.  */
 struct rtx_def * xstormy16_compare_op0;
 struct rtx_def * xstormy16_compare_op1;
+
+static GTY(()) section *bss100_section;
 
 /* Compute a (partial) cost for rtx X.  Return true if the complete
    cost has been computed, and false if subexpressions should be
@@ -479,35 +482,6 @@ xstormy16_secondary_reload_class (enum reg_class class,
   return NO_REGS;
 }
 
-/* Recognize a PLUS that needs the carry register.  */
-int
-xstormy16_carry_plus_operand (rtx x, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  return (GET_CODE (x) == PLUS
-	  && GET_CODE (XEXP (x, 1)) == CONST_INT
-	  && (INTVAL (XEXP (x, 1)) < -4 || INTVAL (XEXP (x, 1)) > 4));
-}
-
-/* Detect and error out on out-of-range constants for movhi.  */
-int
-xs_hi_general_operand (rtx x, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  if ((GET_CODE (x) == CONST_INT) 
-   && ((INTVAL (x) >= 32768) || (INTVAL (x) < -32768)))
-    error ("constant halfword load operand out of range");
-  return general_operand (x, mode);
-}
-
-/* Detect and error out on out-of-range constants for addhi and subhi.  */
-int
-xs_hi_nonmemory_operand (rtx x, enum machine_mode mode ATTRIBUTE_UNUSED)
-{
-  if ((GET_CODE (x) == CONST_INT) 
-   && ((INTVAL (x) >= 32768) || (INTVAL (x) < -32768)))
-    error ("constant arithmetic operand out of range");
-  return nonmemory_operand (x, mode);
-}
-
 enum reg_class
 xstormy16_preferred_reload_class (rtx x, enum reg_class class)
 {
@@ -667,7 +641,7 @@ xstormy16_legitimate_address_p (enum machine_mode mode ATTRIBUTE_UNUSED,
       && (! strict || REGNO (x) < FIRST_PSEUDO_REGISTER))
     return 1;
 
-  if (xstormy16_below100_symbol(x, mode))
+  if (xstormy16_below100_symbol (x, mode))
     return 1;
   
   return 0;
@@ -704,9 +678,7 @@ xstormy16_mode_dependent_address_p (rtx x)
   if (GET_CODE (x) == PLUS)
     x = XEXP (x, 0);
 
-  if (GET_CODE (x) == POST_INC
-      || GET_CODE (x) == PRE_DEC)
-    return 1;
+  /* Auto-increment addresses are now treated generically in recog.c.  */
 
   return 0;
 }
@@ -759,7 +731,7 @@ xstormy16_extra_constraint_p (rtx x, int c)
 	      && (INTVAL (x) == 0));
 
     case 'W':
-      return xstormy16_below100_operand(x, GET_MODE(x));
+      return xstormy16_below100_operand (x, GET_MODE (x));
 
     default:
       return 0;
@@ -999,10 +971,10 @@ struct xstormy16_stack_layout
 
 /* Does REGNO need to be saved?  */
 #define REG_NEEDS_SAVE(REGNUM, IFUN)					\
-  ((regs_ever_live[REGNUM] && ! call_used_regs[REGNUM])			\
+  ((df_regs_ever_live_p (REGNUM) && ! call_used_regs[REGNUM])		\
    || (IFUN && ! fixed_regs[REGNUM] && call_used_regs[REGNUM]		\
        && (REGNO_REG_CLASS (REGNUM) != CARRY_REGS)			\
-       && (regs_ever_live[REGNUM] || ! current_function_is_leaf)))
+       && (df_regs_ever_live_p (REGNUM) || ! current_function_is_leaf)))
 
 /* Compute the stack layout.  */
 struct xstormy16_stack_layout 
@@ -1352,12 +1324,12 @@ xstormy16_build_builtin_va_list (void)
    is stdarg.h instead of varargs.h.  VALIST is the tree of the va_list
    variable to initialize.  NEXTARG is the machine independent notion of the
    'next' argument after the variable arguments.  */
-void
+static void
 xstormy16_expand_builtin_va_start (tree valist, rtx nextarg ATTRIBUTE_UNUSED)
 {
   tree f_base, f_count;
   tree base, count;
-  tree t;
+  tree t,u;
 
   if (xstormy16_interrupt_function_p ())
     error ("cannot use va_start in interrupt function");
@@ -1365,20 +1337,21 @@ xstormy16_expand_builtin_va_start (tree valist, rtx nextarg ATTRIBUTE_UNUSED)
   f_base = TYPE_FIELDS (va_list_type_node);
   f_count = TREE_CHAIN (f_base);
   
-  base = build (COMPONENT_REF, TREE_TYPE (f_base), valist, f_base, NULL_TREE);
-  count = build (COMPONENT_REF, TREE_TYPE (f_count), valist, f_count,
-		 NULL_TREE);
+  base = build3 (COMPONENT_REF, TREE_TYPE (f_base), valist, f_base, NULL_TREE);
+  count = build3 (COMPONENT_REF, TREE_TYPE (f_count), valist, f_count,
+		  NULL_TREE);
 
   t = make_tree (TREE_TYPE (base), virtual_incoming_args_rtx);
-  t = build (PLUS_EXPR, TREE_TYPE (base), t, 
-	     build_int_cst (NULL_TREE, INCOMING_FRAME_SP_OFFSET));
-  t = build (MODIFY_EXPR, TREE_TYPE (base), base, t);
+  u = build_int_cst (NULL_TREE, INCOMING_FRAME_SP_OFFSET);
+  u = fold_convert (TREE_TYPE (count), u);
+  t = build2 (POINTER_PLUS_EXPR, TREE_TYPE (base), t, u);
+  t = build2 (GIMPLE_MODIFY_STMT, TREE_TYPE (base), base, t);
   TREE_SIDE_EFFECTS (t) = 1;
   expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
 
-  t = build (MODIFY_EXPR, TREE_TYPE (count), count, 
-	     build_int_cst (NULL_TREE,
-			    current_function_args_info * UNITS_PER_WORD));
+  t = build2 (GIMPLE_MODIFY_STMT, TREE_TYPE (count), count, 
+	      build_int_cst (NULL_TREE,
+			     current_function_args_info * UNITS_PER_WORD));
   TREE_SIDE_EFFECTS (t) = 1;
   expand_expr (t, const0_rtx, VOIDmode, EXPAND_NORMAL);
 }
@@ -1388,8 +1361,8 @@ xstormy16_expand_builtin_va_start (tree valist, rtx nextarg ATTRIBUTE_UNUSED)
    Note:  This algorithm is documented in stormy-abi.  */
    
 static tree
-xstormy16_expand_builtin_va_arg (tree valist, tree type, tree *pre_p,
-				 tree *post_p ATTRIBUTE_UNUSED)
+xstormy16_gimplify_va_arg_expr (tree valist, tree type, tree *pre_p,
+				tree *post_p ATTRIBUTE_UNUSED)
 {
   tree f_base, f_count;
   tree base, count;
@@ -1401,9 +1374,9 @@ xstormy16_expand_builtin_va_arg (tree valist, tree type, tree *pre_p,
   f_base = TYPE_FIELDS (va_list_type_node);
   f_count = TREE_CHAIN (f_base);
   
-  base = build (COMPONENT_REF, TREE_TYPE (f_base), valist, f_base, NULL_TREE);
-  count = build (COMPONENT_REF, TREE_TYPE (f_count), valist, f_count,
-		 NULL_TREE);
+  base = build3 (COMPONENT_REF, TREE_TYPE (f_base), valist, f_base, NULL_TREE);
+  count = build3 (COMPONENT_REF, TREE_TYPE (f_count), valist, f_count,
+		  NULL_TREE);
 
   must_stack = targetm.calls.must_pass_in_stack (TYPE_MODE (type), type);
   size_tree = round_up (size_in_bytes (type), UNITS_PER_WORD);
@@ -1421,23 +1394,22 @@ xstormy16_expand_builtin_va_arg (tree valist, tree type, tree *pre_p,
       tree r;
 
       t = fold_convert (TREE_TYPE (count), size_tree);
-      t = build (PLUS_EXPR, TREE_TYPE (count), count_tmp, t);
+      t = build2 (PLUS_EXPR, TREE_TYPE (count), count_tmp, t);
       r = fold_convert (TREE_TYPE (count), size_int (size_of_reg_args));
-      t = build (GT_EXPR, boolean_type_node, t, r);
-      t = build (COND_EXPR, void_type_node, t,
-		 build (GOTO_EXPR, void_type_node, lab_fromstack),
-		 NULL);
-      gimplify_and_add (t, pre_p);
-  
-      t = fold_convert (ptr_type_node, count_tmp);
-      t = build (PLUS_EXPR, ptr_type_node, base, t);
-      t = build (MODIFY_EXPR, void_type_node, addr, t);
+      t = build2 (GT_EXPR, boolean_type_node, t, r);
+      t = build3 (COND_EXPR, void_type_node, t,
+		  build1 (GOTO_EXPR, void_type_node, lab_fromstack),
+		  NULL_TREE);
       gimplify_and_add (t, pre_p);
 
-      t = build (GOTO_EXPR, void_type_node, lab_gotaddr);
+      t = build2 (POINTER_PLUS_EXPR, ptr_type_node, base, count_tmp);
+      t = build2 (GIMPLE_MODIFY_STMT, void_type_node, addr, t);
       gimplify_and_add (t, pre_p);
 
-      t = build (LABEL_EXPR, void_type_node, lab_fromstack);
+      t = build1 (GOTO_EXPR, void_type_node, lab_gotaddr);
+      gimplify_and_add (t, pre_p);
+
+      t = build1 (LABEL_EXPR, void_type_node, lab_fromstack);
       gimplify_and_add (t, pre_p);
     }
   
@@ -1450,31 +1422,32 @@ xstormy16_expand_builtin_va_arg (tree valist, tree type, tree *pre_p,
       tree r, u;
 
       r = size_int (NUM_ARGUMENT_REGISTERS * UNITS_PER_WORD);
-      u = build (MODIFY_EXPR, void_type_node, count_tmp, r);
+      u = build2 (GIMPLE_MODIFY_STMT, void_type_node, count_tmp, r);
 
       t = fold_convert (TREE_TYPE (count), r);
-      t = build (GE_EXPR, boolean_type_node, count_tmp, t);
-      t = build (COND_EXPR, void_type_node, t, NULL, u);
+      t = build2 (GE_EXPR, boolean_type_node, count_tmp, t);
+      t = build3 (COND_EXPR, void_type_node, t, NULL_TREE, u);
       gimplify_and_add (t, pre_p);
     }
 
   t = size_int (NUM_ARGUMENT_REGISTERS * UNITS_PER_WORD
 		- INCOMING_FRAME_SP_OFFSET);
   t = fold_convert (TREE_TYPE (count), t);
-  t = build (MINUS_EXPR, TREE_TYPE (count), count_tmp, t);
-  t = build (PLUS_EXPR, TREE_TYPE (count), t,
-	     fold_convert (TREE_TYPE (count), size_tree));
-  t = fold_convert (TREE_TYPE (base), fold (t));
-  t = build (MINUS_EXPR, TREE_TYPE (base), base, t);
-  t = build (MODIFY_EXPR, void_type_node, addr, t);
+  t = build2 (MINUS_EXPR, TREE_TYPE (count), count_tmp, t);
+  t = build2 (PLUS_EXPR, TREE_TYPE (count), t,
+	      fold_convert (TREE_TYPE (count), size_tree));
+  t = fold_convert (TREE_TYPE (t), fold (t));
+  t = fold_build1 (NEGATE_EXPR, TREE_TYPE (t), t);
+  t = build2 (POINTER_PLUS_EXPR, TREE_TYPE (base), base, t);
+  t = build2 (GIMPLE_MODIFY_STMT, void_type_node, addr, t);
   gimplify_and_add (t, pre_p);
 
-  t = build (LABEL_EXPR, void_type_node, lab_gotaddr);
+  t = build1 (LABEL_EXPR, void_type_node, lab_gotaddr);
   gimplify_and_add (t, pre_p);
 
   t = fold_convert (TREE_TYPE (count), size_tree);
-  t = build (PLUS_EXPR, TREE_TYPE (count), count_tmp, t);
-  t = build (MODIFY_EXPR, TREE_TYPE (count), count, t);
+  t = build2 (PLUS_EXPR, TREE_TYPE (count), count_tmp, t);
+  t = build2 (GIMPLE_MODIFY_STMT, TREE_TYPE (count), count, t);
   gimplify_and_add (t, pre_p);
   
   addr = fold_convert (build_pointer_type (type), addr);
@@ -1515,7 +1488,7 @@ xstormy16_initialize_trampoline (rtx addr, rtx fnaddr, rtx static_chain)
 /* Worker function for FUNCTION_VALUE.  */
 
 rtx
-xstormy16_function_value (tree valtype, tree func ATTRIBUTE_UNUSED)
+xstormy16_function_value (const_tree valtype, const_tree func ATTRIBUTE_UNUSED)
 {
   enum machine_mode mode;
   mode = TYPE_MODE (valtype);
@@ -1593,7 +1566,7 @@ xstormy16_asm_output_aligned_common (FILE *stream,
       const char *name2;
       int p2align = 0;
 
-      bss100_section ();
+      switch_to_section (bss100_section);
 
       while (align > 8)
 	{
@@ -1621,6 +1594,17 @@ xstormy16_asm_output_aligned_common (FILE *stream,
   fprintf (stream, "\t.comm\t");
   assemble_name (stream, name);
   fprintf (stream, ",%u,%u\n", size, align / BITS_PER_UNIT);
+}
+
+/* Implement TARGET_ASM_INIT_SECTIONS.  */
+
+static void
+xstormy16_asm_init_sections (void)
+{
+  bss100_section
+    = get_unnamed_section (SECTION_WRITE | SECTION_BSS,
+			   output_section_asm_op,
+			   "\t.section \".bss_below100\",\"aw\",@nobits");
 }
 
 /* Mark symbols with the "below100" attribute so that we can use the
@@ -1666,7 +1650,7 @@ xstormy16_asm_out_destructor (rtx symbol, int priority)
       section = buf;
     }
 
-  named_section_flags (section, 0);
+  switch_to_section (get_section (section, 0, NULL));
   assemble_align (POINTER_SIZE);
   assemble_integer (symbol, POINTER_SIZE / BITS_PER_UNIT, POINTER_SIZE, 1);
 }
@@ -1688,7 +1672,7 @@ xstormy16_asm_out_constructor (rtx symbol, int priority)
       section = buf;
     }
 
-  named_section_flags (section, 0);
+  switch_to_section (get_section (section, 0, NULL));
   assemble_align (POINTER_SIZE);
   assemble_integer (symbol, POINTER_SIZE / BITS_PER_UNIT, POINTER_SIZE, 1);
 }
@@ -1917,7 +1901,7 @@ xstormy16_output_addr_vec (FILE *file, rtx label ATTRIBUTE_UNUSED, rtx table)
 { 
   int vlen, idx;
   
-  current_function_section (current_function_decl);
+  switch_to_section (current_function_section ());
 
   vlen = XVECLEN (table, 0);
   for (idx = 0; idx < vlen; idx++)
@@ -2320,17 +2304,17 @@ xstormy16_init_builtins (void)
 	  else
 	    args = tree_cons (NULL_TREE, arg, args);
 	}
-      lang_hooks.builtin_function (s16builtins[i].name,
-				   build_function_type (ret_type, args),
-				   i, BUILT_IN_MD, NULL, NULL);
+      add_builtin_function (s16builtins[i].name,
+			    build_function_type (ret_type, args),
+			    i, BUILT_IN_MD, NULL, NULL);
     }
 }
 
 static rtx
-xstormy16_expand_builtin(tree exp, rtx target,
-			 rtx subtarget ATTRIBUTE_UNUSED,
-			 enum machine_mode mode ATTRIBUTE_UNUSED,
-			 int ignore ATTRIBUTE_UNUSED)
+xstormy16_expand_builtin (tree exp, rtx target,
+			  rtx subtarget ATTRIBUTE_UNUSED,
+			  enum machine_mode mode ATTRIBUTE_UNUSED,
+			  int ignore ATTRIBUTE_UNUSED)
 {
   rtx op[10], args[10], pat, copyto[10], retval = 0;
   tree fndecl, argtree;
@@ -2626,9 +2610,9 @@ xstormy16_reorg (void)
 /* Worker function for TARGET_RETURN_IN_MEMORY.  */
 
 static bool
-xstormy16_return_in_memory (tree type, tree fntype ATTRIBUTE_UNUSED)
+xstormy16_return_in_memory (const_tree type, const_tree fntype ATTRIBUTE_UNUSED)
 {
-  HOST_WIDE_INT size = int_size_in_bytes (type);
+  const HOST_WIDE_INT size = int_size_in_bytes (type);
   return (size == -1 || size > UNITS_PER_WORD * NUM_ARGUMENT_REGISTERS);
 }
 
@@ -2638,6 +2622,10 @@ xstormy16_return_in_memory (tree type, tree fntype ATTRIBUTE_UNUSED)
 #define TARGET_ASM_ALIGNED_SI_OP "\t.word\t"
 #undef TARGET_ENCODE_SECTION_INFO
 #define TARGET_ENCODE_SECTION_INFO xstormy16_encode_section_info
+
+/* select_section doesn't handle .bss_below100.  */
+#undef  TARGET_HAVE_SWITCHABLE_BSS_SECTIONS
+#define TARGET_HAVE_SWITCHABLE_BSS_SECTIONS false
 
 #undef TARGET_ASM_OUTPUT_MI_THUNK
 #define TARGET_ASM_OUTPUT_MI_THUNK xstormy16_asm_output_mi_thunk
@@ -2651,15 +2639,17 @@ xstormy16_return_in_memory (tree type, tree fntype ATTRIBUTE_UNUSED)
 
 #undef TARGET_BUILD_BUILTIN_VA_LIST
 #define TARGET_BUILD_BUILTIN_VA_LIST xstormy16_build_builtin_va_list
+#undef TARGET_EXPAND_BUILTIN_VA_START
+#define TARGET_EXPAND_BUILTIN_VA_START xstormy16_expand_builtin_va_start
 #undef TARGET_GIMPLIFY_VA_ARG_EXPR
-#define TARGET_GIMPLIFY_VA_ARG_EXPR xstormy16_expand_builtin_va_arg
+#define TARGET_GIMPLIFY_VA_ARG_EXPR xstormy16_gimplify_va_arg_expr
 
 #undef TARGET_PROMOTE_FUNCTION_ARGS
-#define TARGET_PROMOTE_FUNCTION_ARGS hook_bool_tree_true
+#define TARGET_PROMOTE_FUNCTION_ARGS hook_bool_const_tree_true
 #undef TARGET_PROMOTE_FUNCTION_RETURN
-#define TARGET_PROMOTE_FUNCTION_RETURN hook_bool_tree_true
+#define TARGET_PROMOTE_FUNCTION_RETURN hook_bool_const_tree_true
 #undef TARGET_PROMOTE_PROTOTYPES
-#define TARGET_PROMOTE_PROTOTYPES hook_bool_tree_true
+#define TARGET_PROMOTE_PROTOTYPES hook_bool_const_tree_true
 
 #undef TARGET_RETURN_IN_MEMORY
 #define TARGET_RETURN_IN_MEMORY xstormy16_return_in_memory
@@ -2668,3 +2658,5 @@ xstormy16_return_in_memory (tree type, tree fntype ATTRIBUTE_UNUSED)
 #define TARGET_MACHINE_DEPENDENT_REORG xstormy16_reorg
 
 struct gcc_target targetm = TARGET_INITIALIZER;
+
+#include "gt-stormy16.h"

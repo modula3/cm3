@@ -1,12 +1,12 @@
 /* Definitions of target machine for GNU compiler, for IBM S/390.
-   Copyright (C) 2000, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+   Copyright (C) 2000, 2002, 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
    Contributed by Hartmut Penner (hpenner@de.ibm.com)
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,20 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
+
+
+
+/* Prototypes of functions used for constraint evaluation in 
+   constraints.c.  */
+
+extern int s390_mem_constraint (const char *str, rtx op);
+extern int s390_O_constraint_str (const char c, HOST_WIDE_INT value);
+extern int s390_N_constraint_str (const char *str, HOST_WIDE_INT value);
+extern int s390_float_const_zero_p (rtx value);
+
+
 
 /* Declare functions in s390.c.  */
 
@@ -30,7 +41,9 @@ extern void s390_emit_epilogue (bool);
 extern void s390_function_profiler (FILE *, int);
 extern void s390_conditional_register_usage (void);
 extern void s390_set_has_landing_pad_p (bool);
+extern bool s390_hard_regno_mode_ok (unsigned int, enum machine_mode);
 extern bool s390_hard_regno_rename_ok (unsigned int, unsigned int);
+extern bool s390_class_max_nregs (enum reg_class, enum machine_mode);
 
 #ifdef RTX_CODE
 extern int s390_extra_constraint_str (rtx, int, const char *);
@@ -90,11 +103,9 @@ extern void s390_split_access_reg (rtx, rtx *, rtx *);
 extern bool s390_output_addr_const_extra (FILE*, rtx);
 extern void print_operand_address (FILE *, rtx);
 extern void print_operand (FILE *, rtx, int);
-extern void s390_output_constant_pool (rtx, rtx);
 extern void s390_output_pool_entry (rtx, enum machine_mode, unsigned int);
 extern void s390_trampoline_template (FILE *);
 extern void s390_initialize_trampoline (rtx, rtx, rtx);
-extern rtx s390_gen_rtx_const_DI (int, int);
 extern int s390_agen_dep_p (rtx, rtx);
 extern rtx s390_load_got (void);
 extern rtx s390_get_thread_pointer (void);
@@ -110,7 +121,6 @@ extern void s390_function_arg_advance (CUMULATIVE_ARGS *, enum machine_mode,
 				       tree, int);
 #ifdef RTX_CODE
 extern rtx s390_function_arg (CUMULATIVE_ARGS *, enum machine_mode, tree, int);
-extern rtx s390_function_value (tree, enum machine_mode);
-extern void s390_va_start (tree, rtx);
+extern rtx s390_function_value (const_tree, enum machine_mode);
 #endif /* RTX_CODE */
 #endif /* TREE_CODE */

@@ -1,12 +1,12 @@
 /* CPU mode switching
-   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005
+   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007
    Free Software Foundation, Inc.
 
 This file is part of GCC.
 
 GCC is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
-Software Foundation; either version 2, or (at your option) any later
+Software Foundation; either version 3, or (at your option) any later
 version.
 
 GCC is distributed in the hope that it will be useful, but WITHOUT ANY
@@ -15,9 +15,8 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with GCC; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.  */
+along with GCC; see the file COPYING3.  If not see
+<http://www.gnu.org/licenses/>.  */
 
 #include "config.h"
 #include "system.h"
@@ -36,6 +35,7 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #include "function.h"
 #include "tree-pass.h"
 #include "timevar.h"
+#include "df.h"
 
 /* We want target macros for the mode switching code to be able to refer
    to instruction attribute values.  */
@@ -92,8 +92,8 @@ static sbitmap *comp;
 
 static struct seginfo * new_seginfo (int, rtx, int, HARD_REG_SET);
 static void add_seginfo (struct bb_info *, struct seginfo *);
-static void reg_dies (rtx, HARD_REG_SET);
-static void reg_becomes_live (rtx, rtx, void *);
+static void reg_dies (rtx, HARD_REG_SET *);
+static void reg_becomes_live (rtx, const_rtx, void *);
 static void make_preds_opaque (basic_block, int);
 
 
@@ -104,7 +104,7 @@ static struct seginfo *
 new_seginfo (int mode, rtx insn, int bb, HARD_REG_SET regs_live)
 {
   struct seginfo *ptr;
-  ptr = xmalloc (sizeof (struct seginfo));
+  ptr = XNEW (struct seginfo);
   ptr->mode = mode;
   ptr->insn_ptr = insn;
   ptr->bbnum = bb;
@@ -160,27 +160,25 @@ make_preds_opaque (basic_block b, int j)
 /* Record in LIVE that register REG died.  */
 
 static void
-reg_dies (rtx reg, HARD_REG_SET live)
+reg_dies (rtx reg, HARD_REG_SET *live)
 {
-  int regno, nregs;
+  int regno;
 
   if (!REG_P (reg))
     return;
 
   regno = REGNO (reg);
   if (regno < FIRST_PSEUDO_REGISTER)
-    for (nregs = hard_regno_nregs[regno][GET_MODE (reg)] - 1; nregs >= 0;
-	 nregs--)
-      CLEAR_HARD_REG_BIT (live, regno + nregs);
+    remove_from_hard_reg_set (live, GET_MODE (reg), regno);
 }
 
 /* Record in LIVE that register REG became live.
    This is called via note_stores.  */
 
 static void
-reg_becomes_live (rtx reg, rtx setter ATTRIBUTE_UNUSED, void *live)
+reg_becomes_live (rtx reg, const_rtx setter ATTRIBUTE_UNUSED, void *live)
 {
-  int regno, nregs;
+  int regno;
 
   if (GET_CODE (reg) == SUBREG)
     reg = SUBREG_REG (reg);
@@ -190,9 +188,7 @@ reg_becomes_live (rtx reg, rtx setter ATTRIBUTE_UNUSED, void *live)
 
   regno = REGNO (reg);
   if (regno < FIRST_PSEUDO_REGISTER)
-    for (nregs = hard_regno_nregs[regno][GET_MODE (reg)] - 1; nregs >= 0;
-	 nregs--)
-      SET_HARD_REG_BIT (* (HARD_REG_SET *) live, regno + nregs);
+    add_to_hard_reg_set ((HARD_REG_SET *) live, GET_MODE (reg), regno);
 }
 
 /* Make sure if MODE_ENTRY is defined the MODE_EXIT is defined
@@ -221,7 +217,6 @@ create_pre_exit (int n_entities, int *entity_map, const int *num_modes)
     if (eg->flags & EDGE_FALLTHRU)
       {
 	basic_block src_bb = eg->src;
-	regset live_at_end = src_bb->il.rtl->global_live_at_end;
 	rtx last_insn, ret_reg;
 
 	gcc_assert (!pre_exit);
@@ -250,15 +245,48 @@ create_pre_exit (int n_entities, int *entity_map, const int *num_modes)
 
 		if (INSN_P (return_copy))
 		  {
-		    if (GET_CODE (PATTERN (return_copy)) == USE
-			&& GET_CODE (XEXP (PATTERN (return_copy), 0)) == REG
-			&& (FUNCTION_VALUE_REGNO_P
-			    (REGNO (XEXP (PATTERN (return_copy), 0)))))
+		    /* When using SJLJ exceptions, the call to the
+		       unregister function is inserted between the
+		       clobber of the return value and the copy.
+		       We do not want to split the block before this
+		       or any other call; if we have not found the
+		       copy yet, the copy must have been deleted.  */
+		    if (CALL_P (return_copy))
 		      {
-			maybe_builtin_apply = 1;
+			short_block = 1;
+			break;
+		      }
+		    return_copy_pat = PATTERN (return_copy);
+		    switch (GET_CODE (return_copy_pat))
+		      {
+		      case USE:
+			/* Skip __builtin_apply pattern.  */
+			if (GET_CODE (XEXP (return_copy_pat, 0)) == REG
+			    && (FUNCTION_VALUE_REGNO_P
+				(REGNO (XEXP (return_copy_pat, 0)))))
+			  {
+			    maybe_builtin_apply = 1;
+			    last_insn = return_copy;
+			    continue;
+			  }
+			break;
+
+		      case ASM_OPERANDS:
+			/* Skip barrier insns.  */
+			if (!MEM_VOLATILE_P (return_copy_pat))
+			  break;
+
+			/* Fall through.  */
+
+		      case ASM_INPUT:
+		      case UNSPEC_VOLATILE:
 			last_insn = return_copy;
 			continue;
+
+		      default:
+			break;
 		      }
+
 		    /* If the return register is not (in its entirety)
 		       likely spilled, the return copy might be
 		       partially or completely optimized away.  */
@@ -268,6 +296,25 @@ create_pre_exit (int n_entities, int *entity_map, const int *num_modes)
 			return_copy_pat = PATTERN (return_copy);
 			if (GET_CODE (return_copy_pat) != CLOBBER)
 			  break;
+			else if (!optimize)
+			  {
+			    /* This might be (clobber (reg [<result>]))
+			       when not optimizing.  Then check if
+			       the previous insn is the clobber for
+			       the return register.  */
+			    copy_reg = SET_DEST (return_copy_pat);
+			    if (GET_CODE (copy_reg) == REG
+				&& !HARD_REGISTER_NUM_P (REGNO (copy_reg)))
+			      {
+				if (INSN_P (PREV_INSN (return_copy)))
+				  {
+				    return_copy = PREV_INSN (return_copy);
+				    return_copy_pat = PATTERN (return_copy);
+				    if (GET_CODE (return_copy_pat) != CLOBBER)
+				      break;
+				  }
+			      }
+			  }
 		      }
 		    copy_reg = SET_DEST (return_copy_pat);
 		    if (GET_CODE (copy_reg) == REG)
@@ -370,8 +417,6 @@ create_pre_exit (int n_entities, int *entity_map, const int *num_modes)
 	else
 	  {
 	    pre_exit = split_edge (eg);
-	    COPY_REG_SET (pre_exit->il.rtl->global_live_at_start, live_at_end);
-	    COPY_REG_SET (pre_exit->il.rtl->global_live_at_end, live_at_end);
 	  }
       }
 
@@ -382,8 +427,8 @@ create_pre_exit (int n_entities, int *entity_map, const int *num_modes)
 /* Find all insns that need a particular mode setting, and insert the
    necessary mode switches.  Return true if we did work.  */
 
-int
-optimize_mode_switching (FILE *file)
+static int
+optimize_mode_switching (void)
 {
   rtx insn;
   int e;
@@ -401,8 +446,6 @@ optimize_mode_switching (FILE *file)
   bool emited = false;
   basic_block post_entry ATTRIBUTE_UNUSED, pre_exit ATTRIBUTE_UNUSED;
 
-  clear_bb_flags ();
-
   for (e = N_ENTITIES - 1, n_entities = 0; e >= 0; e--)
     if (OPTIMIZE_MODE_SWITCHING (e))
       {
@@ -415,7 +458,7 @@ optimize_mode_switching (FILE *file)
 	entry_exit_extra = 3;
 #endif
 	bb_info[n_entities]
-	  = xcalloc (last_basic_block + entry_exit_extra, sizeof **bb_info);
+	  = XCNEWVEC (struct bb_info, last_basic_block + entry_exit_extra);
 	entity_map[n_entities++] = e;
 	if (num_modes[e] > max_num_modes)
 	  max_num_modes = num_modes[e];
@@ -430,6 +473,8 @@ optimize_mode_switching (FILE *file)
   post_entry = split_edge (single_succ_edge (ENTRY_BLOCK_PTR));
   pre_exit = create_pre_exit (n_entities, entity_map, num_modes);
 #endif
+
+  df_analyze ();
 
   /* Create the bitmap vectors.  */
 
@@ -454,8 +499,7 @@ optimize_mode_switching (FILE *file)
 	  int last_mode = no_mode;
 	  HARD_REG_SET live_now;
 
-	  REG_SET_TO_HARD_REG_SET (live_now,
-				   bb->il.rtl->global_live_at_start);
+	  REG_SET_TO_HARD_REG_SET (live_now, df_get_live_in (bb));
 
 	  /* Pretend the mode is clobbered across abnormal edges.  */
 	  {
@@ -465,7 +509,11 @@ optimize_mode_switching (FILE *file)
 	      if (e->flags & EDGE_COMPLEX)
 		break;
 	    if (e)
-	      RESET_BIT (transp[bb->index], j);
+	      {
+		ptr = new_seginfo (no_mode, BB_HEAD (bb), bb->index, live_now);
+		add_seginfo (info + bb->index, ptr);
+		RESET_BIT (transp[bb->index], j);
+	      }
 	  }
 
 	  for (insn = BB_HEAD (bb);
@@ -490,12 +538,12 @@ optimize_mode_switching (FILE *file)
 		  /* Update LIVE_NOW.  */
 		  for (link = REG_NOTES (insn); link; link = XEXP (link, 1))
 		    if (REG_NOTE_KIND (link) == REG_DEAD)
-		      reg_dies (XEXP (link, 0), live_now);
+		      reg_dies (XEXP (link, 0), &live_now);
 
 		  note_stores (PATTERN (insn), reg_becomes_live, &live_now);
 		  for (link = REG_NOTES (insn); link; link = XEXP (link, 1))
 		    if (REG_NOTE_KIND (link) == REG_UNUSED)
-		      reg_dies (XEXP (link, 0), live_now);
+		      reg_dies (XEXP (link, 0), &live_now);
 		}
 	    }
 
@@ -563,7 +611,7 @@ optimize_mode_switching (FILE *file)
 
       FOR_EACH_BB (bb)
 	sbitmap_not (kill[bb->index], transp[bb->index]);
-      edge_list = pre_edge_lcm (file, n_entities, transp, comp, antic,
+      edge_list = pre_edge_lcm (n_entities, transp, comp, antic,
 				kill, &insert, &delete);
 
       for (j = n_entities - 1; j >= 0; j--)
@@ -596,8 +644,7 @@ optimize_mode_switching (FILE *file)
 	      mode = current_mode[j];
 	      src_bb = eg->src;
 
-	      REG_SET_TO_HARD_REG_SET (live_at_edge,
-				       src_bb->il.rtl->global_live_at_end);
+	      REG_SET_TO_HARD_REG_SET (live_at_edge, df_get_live_out (src_bb));
 
 	      start_sequence ();
 	      EMIT_MODE_SET (entity_map[j], mode, live_at_edge);
@@ -608,38 +655,11 @@ optimize_mode_switching (FILE *file)
 	      if (mode_set == NULL_RTX)
 		continue;
 
-	      /* If this is an abnormal edge, we'll insert at the end
-		 of the previous block.  */
-	      if (eg->flags & EDGE_ABNORMAL)
-		{
-		  emited = true;
-		  if (JUMP_P (BB_END (src_bb)))
-		    emit_insn_before (mode_set, BB_END (src_bb));
-		  else
-		    {
-		      /* It doesn't make sense to switch to normal
-		         mode after a CALL_INSN.  The cases in which a
-		         CALL_INSN may have an abnormal edge are
-		         sibcalls and EH edges.  In the case of
-		         sibcalls, the dest basic-block is the
-		         EXIT_BLOCK, that runs in normal mode; it is
-		         assumed that a sibcall insn requires normal
-		         mode itself, so no mode switch would be
-		         required after the call (it wouldn't make
-		         sense, anyway).  In the case of EH edges, EH
-		         entry points also start in normal mode, so a
-		         similar reasoning applies.  */
-		      gcc_assert (NONJUMP_INSN_P (BB_END (src_bb)));
-		      emit_insn_after (mode_set, BB_END (src_bb));
-		    }
-		  bb_info[j][src_bb->index].computing = mode;
-		  RESET_BIT (transp[src_bb->index], j);
-		}
-	      else
-		{
-		  need_commit = 1;
-		  insert_insn_on_edge (mode_set, eg);
-		}
+	      /* We should not get an abnormal edge here.  */
+	      gcc_assert (! (eg->flags & EDGE_ABNORMAL));
+
+	      need_commit = 1;
+	      insert_insn_on_edge (mode_set, eg);
 	    }
 
 	  FOR_EACH_BB_REVERSE (bb)
@@ -681,9 +701,7 @@ optimize_mode_switching (FILE *file)
 		  if (mode_set != NULL_RTX)
 		    {
 		      emited = true;
-		      if (NOTE_P (ptr->insn_ptr)
-			  && (NOTE_LINE_NUMBER (ptr->insn_ptr)
-			      == NOTE_INSN_BASIC_BLOCK))
+		      if (NOTE_INSN_BASIC_BLOCK_P (ptr->insn_ptr))
 			emit_insn_after (mode_set, ptr->insn_ptr);
 		      else
 			emit_insn_before (mode_set, ptr->insn_ptr);
@@ -698,7 +716,6 @@ optimize_mode_switching (FILE *file)
     }
 
   /* Finished. Free up all the things we've allocated.  */
-
   sbitmap_vector_free (kill);
   sbitmap_vector_free (antic);
   sbitmap_vector_free (transp);
@@ -713,12 +730,6 @@ optimize_mode_switching (FILE *file)
   if (!need_commit && !emited)
     return 0;
 #endif
-
-  max_regno = max_reg_num ();
-  allocate_reg_info (max_regno, FALSE, FALSE);
-  update_life_info_in_dirty_blocks (UPDATE_LIFE_GLOBAL_RM_NOTES,
-				    (PROP_DEATH_NOTES | PROP_KILL_DEAD_CODE
-				     | PROP_SCAN_DEAD_CODE));
 
   return 1;
 }
@@ -735,14 +746,13 @@ gate_mode_switching (void)
 #endif
 }
 
-static void
+static unsigned int
 rest_of_handle_mode_switching (void)
 {
 #ifdef OPTIMIZE_MODE_SWITCHING
-  no_new_pseudos = 0;
-  optimize_mode_switching (NULL);
-  no_new_pseudos = 1;
+  optimize_mode_switching ();
 #endif /* OPTIMIZE_MODE_SWITCHING */
+  return 0;
 }
 
 
@@ -759,6 +769,7 @@ struct tree_opt_pass pass_mode_switching =
   0,                                    /* properties_provided */
   0,                                    /* properties_destroyed */
   0,                                    /* todo_flags_start */
+  TODO_df_finish | TODO_verify_rtl_sharing |
   TODO_dump_func,                       /* todo_flags_finish */
   0                                     /* letter */
 };
