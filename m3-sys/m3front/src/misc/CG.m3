@@ -2006,16 +2006,71 @@ PROCEDURE Set_member (s: Size) =
   END Set_member;
 
 PROCEDURE Set_compare (s: Size;  op: Cmp) =
+  VAR a: Val := NIL;
+      b: Val := NIL;
+      tword := Target.Word.cg_type;
+      tint := Target.Integer.cg_type;
   BEGIN
+
+    (* a op b => BOOLEAN *)
+
+    (* Comparison is commutative in that the comparison can be reversed
+    if it is profitable to reverse the parameter order. *)
+
     IF Force_pair (commute := TRUE) THEN
       op := M3CG.SwappedCompare [op];
     END;
-    IF (s <= Target.Integer.size)
-      THEN cg.compare (Target.Word.cg_type, Target.Integer.cg_type, op);
-      ELSE cg.set_compare (AsBytes (s), op, Target.Integer.cg_type);
+
+    IF (s <= Target.Integer.size) THEN
+
+      (* The set fits in an integer, so handle things inline with integer operations
+      NOTE that for the sake of code size, we should perhaps implement these with functions. *)
+
+      IF (op = Cmp.EQ) OR (op = Cmp.NE) THEN
+
+        Compare (tword, op);
+
+      ELSE
+
+        (* Set a is less than or equal to set b, if all of set a's members are in set b.
+        (a <= b) = ((a & b) = a)
+        (a <  b) = (a <= b AND a # b)
+        (b >  a) = (a < b)
+        *)
+
+        IF (op = Cmp.GT) OR (op = Cmp.GE) THEN
+          a := Pop ();
+          b := Pop ();
+        ELSE
+          b := Pop ();
+          a := Pop ();
+        END;
+
+        Push (a);
+        Push (b);
+        And (tword);
+
+        Push (a);
+        Compare (tword, Cmp.EQ);
+
+        (* NOTE that short circuiting for < and > is probably desirable, if one
+        knows how to set up the labels and branches. *)
+
+        IF (op = Cmp.LT) OR (op = Cmp.GT) THEN
+          Push (b);
+          Push (a);
+          Compare (tword, Cmp.EQ);
+          And (tint);
+        END;
+
+        Free (a);
+        Free (b);
+      END;
+    ELSE
+      cg.set_compare (AsBytes (s), op, tint);
+      SPop (2, "Set_compare");
+      SPush (Type.Int32);
     END;
-    SPop (2, "Set_eq");
-    SPush (Type.Int32);
   END Set_compare;
 
 PROCEDURE Set_range (s: Size) =
