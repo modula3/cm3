@@ -2264,7 +2264,7 @@ PROCEDURE Swap () =
         cg.swap (xa.type, xb.type);
       END;
 
-      (* exchnage the local copies *)
+      (* exchange the local copies *)
       tmp := xa;  xa := xb;  xb := tmp;
     END;
   END Swap;
