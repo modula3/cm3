@@ -151,15 +151,27 @@ case "${UNAME}" in
       HAVE_SERIAL=yes
       EXE=".exe"
       SL='\\\\'
-      SYSLIBS="ADVAPI32.LIB GDI32.LIB KERNEL32.LIB ODBC32.LIB"
-      SYSLIBS="${SYSLIBS} OPENGL32.LIB WSOCK32.LIB COMDLG32.LIB"
-      SYSLIBS="${SYSLIBS} GLU32.LIB NETAPI32.LIB ODBCCP32.LIB USER32.LIB"
+      SYSLIBS='
+	advapi32.lib
+	comctl32.lib
+	comdlg32.lib
+	gdi32.lib
+	glu32.lib
+	kernel32.lib
+	netapi32.lib
+	odbc32.lib
+	opengl32.lib
+	user32.lib
+	winspool.lib
+	wsock32.lib
+      '
       L="c:/cm3/bin d:/cm3/bin e:/cm3/bin c:/reactor5/bin d:/reactor5/bin"
-      L="${L} e:/reactor5/bin c:/reactor/bin d:/reactor/bin"
-      L="${L} e:/reactor/bin /usr/local/cm3/bin /usr/local/reactor/bin"
+      #L="${L} e:/reactor5/bin c:/reactor/bin d:/reactor/bin"
+      #L="${L} e:/reactor/bin /usr/local/cm3/bin /usr/local/reactor/bin"
       L="${L} /usr/cm3/bin /usr/reactor/bin"
+      C="/cygdrive/c/cm3/lib /cygdrive/d/cm3/lib /usr/cm3/lib /usr/local/cm3/lib"
       CM3BINSEARCHPATH="${L}"
-      if f="`find_file KERNEL32.LIB ${L}`" ; then
+      if f="`find_file kernel32.lib ${C}`" ; then
         SYSLIBDIR="`dirname $f`"
       else
         SYSLIBDIR="unknown"

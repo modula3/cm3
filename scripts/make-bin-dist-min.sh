@@ -58,6 +58,10 @@ OPTIONS=""
 ACTION="`map_action build`"
 ADDARGS=""
 
+# cminstall is not contained in core and needs to be cleaned after an
+# upgrade
+"$ROOT/scripts/do-pkg.sh" realclean cminstall
+ 
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
 
@@ -94,11 +98,19 @@ fi
 #-----------------------------------------------------------------------------
 # configure a temporary config file
 echo configuring temporary config file "${INSTALLROOT}/bin/cm3.cfg"
+if [ "${TARGET}" = "NT386" -o "${TARGET}" = "NT386GNU" ]; then
+  CFG1="${ROOT}/m3-sys/cm3/src/config/${TARGET}.main"
+  CFG2="${ROOT}/m3-sys/cminstall/src/config/${TARGET}.main"
+  CFG3="${ROOT}/m3-sys/cminstall/src/config/${TARGET}.common"
+  cp "${CFG3}" "${INSTALLROOT}/bin"
+else
+  CFG1="${ROOT}/m3-sys/cm3/src/config/${TARGET}"
+fi
 sed -e '
   /^INSTALL_ROOT[ \t]*=/s;^.*$;INSTALL_ROOT = "'${INSTALLROOT}${SL}'";
   /^readonly DEV_LIB[ \t]*=/s;^.*$;readonly DEV_LIB = "'${DEV_LIB}${SL}'";
   /^readonly DEV_BIN[ \t]*=/s;^.*$;readonly DEV_BIN = "'${DEV_BIN}${SL}'";
-' "${ROOT}/m3-sys/cm3/src/config/${TARGET}" > "${INSTALLROOT}/bin/cm3.cfg"
+' "${CFG1}" > "${INSTALLROOT}/bin/cm3.cfg"
 
 #-----------------------------------------------------------------------------
 # clean everything
@@ -123,14 +135,10 @@ header "stage 4: installing libraries using new cm3 compiler"
 "${ROOT}/scripts/do-cm3-min.sh" buildglobal || exit 1
 
 header "stage 5: re-adjusting cm3.cfg"
-echo ".../cminstall/src/config/${TARGET} -->" \
-  "${INSTALLROOT}/bin/cm3.cfg"
-cp "${ROOT}/m3-sys/cminstall/src/config/${TARGET}" \
-  "${INSTALLROOT}/bin/cm3.cfg"
-echo ".../cm3/src/config/${TARGET} -->" \
-  "${INSTALLROOT}/bin/cm3.cfg--default"
-cp "${ROOT}/m3-sys/cm3/src/config/${TARGET}" \
-  "${INSTALLROOT}/bin/cm3.cfg--default"
+echo "${CFG2} -->" "${INSTALLROOT}/bin/cm3.cfg"
+cp "${CFG2}" "${INSTALLROOT}/bin/cm3.cfg"
+echo "${CFG1} -->" "${INSTALLROOT}/bin/cm3.cfg--default"
+cp "${CFG1}" "${INSTALLROOT}/bin/cm3.cfg--default"
 
 #-----------------------------------------------------------------------------
 # build binary distribution archives
