@@ -125,7 +125,7 @@ InstallRoot = getenv("CM3_INSTALL")
 if not InstallRoot:
   if not CM3:
     FatalError("environment variable CM3_INSTALL not set AND cm3 not found in PATH; please fix")
-  a = os.path.dirname(os.path.dirname(CM3))
+  InstallRoot = os.path.dirname(os.path.dirname(CM3))
 
 #
 # the root of the source tree
