@@ -189,9 +189,9 @@ if not defined ("no_config")
       else if exists("/usr/local/lib/libmpfr.a")
         ConfigureMultiplePrecisionFloatingPointRoundingLibrary = "--with-mpfr=/usr/local"
       else
-    %
-    % Let ./configure look for it.
-    %
+      %
+      % Let ./configure look for it.
+      %
       end end
     end
 
