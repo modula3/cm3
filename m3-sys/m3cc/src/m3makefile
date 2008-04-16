@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.37 2008-04-16 13:52:29 jkrell Exp $
+% $Id: m3makefile,v 1.38 2008-04-16 13:53:07 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -189,9 +189,9 @@ if not defined ("no_config")
       else if exists("/usr/local/lib/libmpfr.a")
         ConfigureMultiplePrecisionFloatingPointRoundingLibrary = "--with-mpfr=/usr/local"
       else
-    %
-    % Let ./configure look for it.
-    %
+      %
+      % Let ./configure look for it.
+      %
       end end
     end
 
