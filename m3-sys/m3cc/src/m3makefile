@@ -146,8 +146,12 @@ if not equal (M3CC_HOST, M3CC_TARGET)
   build_dir = "../" & BUILD_DIR & "-" & M3CC_TARGET
 end
 
+proc exists(x) is
+  return not stale(x, x)
+end
+
 % make sure the derived directory exists
-if stale (build_dir, build_dir)
+if not exists (build_dir)
   exec ("mkdir", build_dir)
 end
 
@@ -173,12 +177,29 @@ if not defined ("no_config")
     else
       ConfigTarget = "--target=" & GNU_platform (M3CC_TARGET)
     end
+    %
+    % Try to automatically configure libmpfr for Elego machines
+    % This should be reasonable for any machine, but if not,
+    % we can check hostname or uname.
+    %
+    local ConfigureMultiplePrecisionFloatingPointRoundingLibrary = ""
+    if exists("/usr/contrib/lib/libmpfr.a")
+      ConfigureMultiplePrecisionFloatingPointRoundingLibrary = "--with-mpfr=/usr/contrib"
+    else if exists("/usr/local/lib/libmpfr.a")
+      ConfigureMultiplePrecisionFloatingPointRoundingLibrary = "--with-mpfr=/usr/local"
+    else
+    %
+    % Let ./configure look for it.
+    %
+    end end
+
     m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG,
           "--srcdir=../gcc",
           ConfigTarget,
           "--enable-languages=m3cg",
           "--disable-nls",
           ConfigWithGNULD,
+          ConfigureMultiplePrecisionFloatingPointRoundingLibrary,
           "&& echo \"done\" > " & done])
   end
 end
