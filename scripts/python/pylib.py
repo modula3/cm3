@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.94 2008-04-16 08:03:00 jkrell Exp $
+# $Id: pylib.py,v 1.95 2008-04-16 08:07:00 jkrell Exp $
 
 import os
 from os import getenv
@@ -125,7 +125,7 @@ InstallRoot = getenv("CM3_INSTALL")
 if not InstallRoot:
   if not CM3:
     FatalError("environment variable CM3_INSTALL not set AND cm3 not found in PATH; please fix")
-  a = os.path.dirname(os.path.dirname(CM3))
+  InstallRoot = os.path.dirname(os.path.dirname(CM3))
 
 #
 # the root of the source tree
