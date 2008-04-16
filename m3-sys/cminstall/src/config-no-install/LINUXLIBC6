@@ -97,7 +97,7 @@ readonly INSTALL_IMPLS = TRUE
 % If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
 % that the library is not available.
 
-readonly proc exists(x) is
+proc exists(x) is
   return not stale(x, x)
 end
 
