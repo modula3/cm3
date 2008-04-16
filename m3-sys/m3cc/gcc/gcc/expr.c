@@ -9204,6 +9204,10 @@ expand_expr_real_1 (tree exp, rtx target, enum machine_mode tmode,
 	 represent.  */
       return const0_rtx;
 
+    case STATIC_CHAIN_EXPR:
+      /* Lowered by tree-nested.c */
+      gcc_unreachable ();
+
     case EXC_PTR_EXPR:
       return get_exception_pointer (cfun);
 

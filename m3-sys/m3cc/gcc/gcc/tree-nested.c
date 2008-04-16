@@ -1620,6 +1620,9 @@ convert_tramp_reference (tree *tp, int *walk_subtrees, void *data)
   switch (TREE_CODE (t))
     {
     case ADDR_EXPR:
+      if (TREE_STATIC (t))
+	break;
+
       /* Build
 	   T.1 = &CHAIN->tramp;
 	   T.2 = __builtin_adjust_trampoline (T.1);
@@ -1712,6 +1715,22 @@ convert_call_expr (tree *tp, int *walk_subtrees, void *data)
 	  info->static_chain_added
 	    |= (1 << (info->context != target_context));
 	}
+      break;
+
+    case STATIC_CHAIN_EXPR:
+      decl = TREE_OPERAND (t, 0);
+      target_context = decl_function_context (decl);
+      if (target_context)
+	{
+	  if (info->context == target_context)
+	    {
+	      /* Make sure frame_decl gets created.  */
+	      (void) get_frame_type (info);
+	    }
+	  *tp = get_static_chain (info, target_context, &wi->tsi);
+	}
+      else
+	*tp = null_pointer_node;
       break;
 
     case RETURN_EXPR:

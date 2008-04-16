@@ -162,6 +162,11 @@ along with GCC; see the file COPYING3.  If not see
 #define DBX_CONTIN_CHAR '\\'
 #endif
 
+/* Keep this string consistent with that of the same name in m3gdb, 
+   m3-lang.c. */ 
+static const char * procedures_have_extra_block_string 
+  = "procedures_have_extra_block."; 
+
 enum typestatus {TYPE_UNSEEN, TYPE_XREF, TYPE_DEFINED};
 
 /* Structure recording information about a C data type.
@@ -1040,6 +1045,10 @@ dbxout_init (const char *input_file_name)
   dbxout_begin_simple_stabs ("gcc2_compiled.", N_OPT);
   dbxout_stab_value_zero ();
 #endif
+
+  /* Emit an N_OPT stab to indicate that procedures have an extra block. */
+  dbxout_begin_simple_stabs (procedures_have_extra_block_string, N_OPT);
+  dbxout_stab_value_zero ();
 
   base_input_file = lastfile = input_file_name;
 
@@ -3416,6 +3425,12 @@ dbxout_block (tree block, int depth, tree args)
 	  did_output = 0;
 	  if (debug_info_level != DINFO_LEVEL_TERSE || depth == 0)
 	    did_output = dbxout_syms (BLOCK_VARS (block));
+          did_output = 1; /* Omitting the LBRAC/RBRAC for blocks with no
+                             locals makes the stabs block structure
+                             inconsistent with Modula-3 linker names for
+                             nested procedures, and leaves m3gdb unable to
+                             figure out what blocks they are nested in.
+                             rodney.bates@wichita.edu */
 	  if (args)
 	    dbxout_reg_parms (args);
 

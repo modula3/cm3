@@ -643,7 +643,12 @@ dequeue_and_dump (dump_info_p di)
 	    dump_child (buffer, arg);
 	    i++;
 	  }
+	dump_child ("schn", CALL_EXPR_STATIC_CHAIN (t));
       }
+      break;
+
+    case STATIC_CHAIN_EXPR:
+      dump_child ("fn", TREE_OPERAND (t, 0));
       break;
 
     case CONSTRUCTOR:
