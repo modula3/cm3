@@ -97,21 +97,32 @@ readonly INSTALL_IMPLS = TRUE
 % If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
 % that the library is not available.
 
+readonly proc exists(x) is
+  return not stale(x, x)
+end
+
+% This is what Ubuntu 8.4 Hardy Heron beta KDE4 uses
+if exists("/usr/lib32")
+  readonly lib32 = "-L/usr/lib32"
+else
+  readonly lib32 = "-L/usr/lib"
+end
+
 SYSTEM_LIBS =
 {
-    "LIBC"       : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lm", "-L/usr/lib", "-lpthread" ],
-    "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-ll" ],
-    "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lfl" ],
+    "LIBC"       : [ "-Xlinker", "-Bdynamic", lib32, "-lm", lib32, "-lpthread" ],
+    "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", lib32, "-ll" ],
+    "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", lib32, "-lfl" ],
     "POSTGRES95" : [ "-Xlinker", "-Bdynamic", "-L/usr/local/pgsql/lib", "-lpq" ],
-    "OPENGL"     : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lGLU", "-lGL", "-lXext" ],
-    "ODBC"       : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lodbc" ],
-    "MOTIF"      : [ "-Xlinker", "-Bdynamic", "-L/usr/lib", "-lXm" ],
+    "OPENGL"     : [ "-Xlinker", "-Bdynamic", lib32, "-lGLU", "-lGL", "-lXext" ],
+    "ODBC"       : [ "-Xlinker", "-Bdynamic", lib32, "-lodbc" ],
+    "MOTIF"      : [ "-Xlinker", "-Bdynamic", lib32, "-lXm" ],
     "TCP"        : [ ],
     "X11" :
     [
         "-Xlinker",
         "-Bdynamic",
-        "-L/usr/lib",
+        lib32,
         "-lXaw",
         "-lXmu",
         "-lXext",
@@ -152,8 +163,6 @@ readonly SYSTEM_ASM = "as" % Assembler
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend(source, object, optimize, debug) is
-    return 0
-
     local args =
     [
         "-quiet",
@@ -189,7 +198,6 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c(source, object, options, optimize, debug) is
-    return 0
     local args =
     [
         "-m32",
@@ -214,7 +222,6 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble(source, object) is
-    return 0
   return try_exec("@" & SYSTEM_ASM, "--32", source, "-o", object)
 end
 
@@ -243,11 +250,6 @@ readonly proc GetGcWrapFlags() is
     end
     return GcWrapFlags
 end
-
-% not currently needed but on the cusp often
-% readonly proc exists(x) is
-%   return not stale(x, x)
-% end
 
 % write("exists(/) is " & exists("/") & CR)
 % write("exists(/pub/lang/m3/cm3-dist/cm3/lib) is " & exists("/pub/lang/m3/cm3-dist/cm3/lib") & CR)
@@ -291,8 +293,8 @@ readonly proc FixM3GcDefs(Args) is
     %end
     %Result += "/usr/lib/libc.a"
     %return Result
-    Args += "-L" & LIB_USE
-    Args += "/usr/lib/libc.a"
+    %Args += "-L" & LIB_USE
+    %Args += "/usr/lib/libc.a"
     return Args
 end
 
@@ -339,7 +341,6 @@ end
 % a library.
 
 proc make_lib(lib, options, objects, imported_libs, shared) is
-    return 0
     local ret_code = 0
     local lib_a    = format("lib%s.a", lib)
     local lib_so   = format("lib%s.so", lib)
@@ -416,7 +417,6 @@ end
 % "m3_link" is called to produce a final executable.
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
-    return 0
     % The parameter order here is not faithful to the original.
     % Does it matter?
     local args = [ ]
