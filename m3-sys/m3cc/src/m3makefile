@@ -183,15 +183,17 @@ if not defined ("no_config")
     % we can check hostname or uname.
     %
     local ConfigureMultiplePrecisionFloatingPointRoundingLibrary = ""
-    if exists("/usr/contrib/lib/libmpfr.a")
-      ConfigureMultiplePrecisionFloatingPointRoundingLibrary = "--with-mpfr=/usr/contrib"
-    else if exists("/usr/local/lib/libmpfr.a")
-      ConfigureMultiplePrecisionFloatingPointRoundingLibrary = "--with-mpfr=/usr/local"
-    else
+    if not exists("/usr/lib/libmpfr.a") and not exists("/usr/include/mpfr.h")
+      if exists("/usr/contrib/lib/libmpfr.a")
+        ConfigureMultiplePrecisionFloatingPointRoundingLibrary = "--with-mpfr=/usr/contrib"
+      else if exists("/usr/local/lib/libmpfr.a")
+        ConfigureMultiplePrecisionFloatingPointRoundingLibrary = "--with-mpfr=/usr/local"
+      else
     %
     % Let ./configure look for it.
     %
-    end end
+      end end
+    end
 
     m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG,
           "--srcdir=../gcc",
