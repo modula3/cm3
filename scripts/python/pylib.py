@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.93 2008-04-06 22:05:28 jkrell Exp $
+# $Id: pylib.py,v 1.94 2008-04-16 08:03:00 jkrell Exp $
 
 import os
 from os import getenv
@@ -55,6 +55,12 @@ if env_OS == "Windows_NT":
     #    print("set PATHEXT=.;%PATHEXT%")
 else:
     from os import uname
+
+def FatalError(a = ""):
+    # logs don't work yet
+    #print("ERROR: see " + Logs)
+    print("fatal error " + a)
+    sys.exit(1)
 
 #
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52224
@@ -115,7 +121,11 @@ if ((UName.startswith("windows")
 #
 CM3 = getenv("CM3") or "cm3"
 CM3 = SearchPath(CM3 + EXE) or SearchPath(CM3)
-InstallRoot = getenv("CM3_INSTALL") or os.path.dirname(os.path.dirname(CM3))
+InstallRoot = getenv("CM3_INSTALL")
+if not InstallRoot:
+  if not CM3:
+    FatalError("environment variable CM3_INSTALL not set AND cm3 not found in PATH; please fix")
+  a = os.path.dirname(os.path.dirname(CM3))
 
 #
 # the root of the source tree
@@ -391,12 +401,6 @@ GMAKE = (GMAKE or "gmake")
 Config = Config or Target
 
 # print("Target is " + Target)
-
-def FatalError(a = ""):
-    # logs don't work yet
-    #print("ERROR: see " + Logs)
-    print("fatal error " + a)
-    sys.exit(1)
 
 def GetConfigForDistribution(Target):
 #
