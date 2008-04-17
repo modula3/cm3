@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.40 2008-04-17 15:26:40 jkrell Exp $
+% $Id: m3makefile,v 1.41 2008-04-17 15:30:55 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -75,7 +75,7 @@ proc exists (x) is
 end
 
 %
-% A "MultiArchHost" is a host that can execute multiple architectures.
+% A "MultiArchHost" is a host that can execute multiple architectures fairly efficiently.
 % A typical example is an AMD64 system that can also run x86 binaries.
 % Another example is x86 Macintoshes that can run PowerPC binaries.
 % Another example is NT on IA64, which can also run x86.
@@ -96,12 +96,22 @@ end
 % development than to have to do truly "cross" development involving two machines
 % (or even two virtual machines).
 %
-% How does one detect 64 bit Solaris?
+% Detection is missing for 64 bit Solaris and Mac OS X.
+% Mac OS X has a number of configurations:
+%  32 bit PowerPC only (G3, G4)
+%  64 bit and 32 bit PowerPC (G5)
+%  32 bit x86 and 32 bit PowerPC (Core)
+%  32 bit x86, 64 bit x86, 32 bit PowerPC (Core 2)
+%  The common theme on Mac OS X is:
+%   Everything can run 32 bit.
+%   Everything can run 32 bit PowerPC.
+%   However 32 bit PowerPC is presumably not as fast as, say, x86 on AMD64.
 %
-readonly local MultiArchHost =
-  ((not HostIsNT()) and (exists ("/lib32") or exists ("/lib64")))
+readonly proc HostIsMultiArch () is
+  return ((not HostIsNT()) and (exists ("/lib32") or exists ("/lib64")))
   or (HostIsNT() and (not equal ($SystemRoot, "")) and exists ($SystemRoot & "\\syswow64"))
-  
+end
+
 readonly proc GNU_platform (x) is
   if Platform_info contains x
     return Platform_info{x}
@@ -157,7 +167,7 @@ if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
 % We need to understand the three+ relevant architectures (build, host, target)
 % and that at least build and host can be "MultiArch".
 %
-if MultiArchHost
+if HostIsMultiArch ()
       and not defined ("M3CC_HOST")
       and not defined ("M3CC_TARGET")
       and not defined ("M3CC_CC")
@@ -175,23 +185,30 @@ if MultiArchHost
     % As well some/much/all belongs in the config file, to which this code sometimes
     % defers.
     %
-    %M3CC_CC = "gcc -m32 -g -Xassembler --32 -Xlinker -m -Xlinker elf_i386 -Xlinker -L/usr/lib32 -Xlinker -L/usr/lib"
-    %M3CC_CFLAGS = "-m32 -g -Xassembler --32 -Xlinker -m -Xlinker elf_i386 -Xlinker -L/usr/lib32 -Xlinker -L/usr/lib"
+    % There is much weirdness here.
+    %   Specifying LDFLAGS does not seem to work.
+    %   Using -Xlinker -m -Xlinker elf_i386 does not seem to work.
+    %   -L/usr/lib32 -L/usr/lib does not seem to work.
+    %   Terminology does not match up -- where are "build", "host", and "target" settings?
+    %   Why is gcc -m32 not sufficient? Or, at least why is configure --target --build --host not sufficient?
+    %   Can't the rest be sniffed out?
+    %
     M3CC_CONFIG = "--target=" & GNU_platform (M3CC_TARGET)
                 & " --host=" & GNU_platform (M3CC_TARGET)
                 & " --build=" & GNU_platform (M3CC_TARGET)
+                & " --disable-libmudflap"
+                & " --disable-libgcc"
+                & " --disable-libssp"
+                & " --disable-shared-libgcc"
                 & " AS=\"as --32\""
                 & " AS_FOR_TARGET=\"as --32\""
                 & " COMPILER_AS_FOR_TARGET=\"as --32\""
-                & " LD=\"ld -m elf_i386 -L/usr/lib32 -L/usr/lib\""
-                %& " LDFLAGS=\"-m elf_i386 -L/usr/lib32 -L/usr/lib\""
-                & " LD_FOR_TARGET=\"ld -m elf_i386 -L/usr/lib32 -L/usr/lib\""
-                %& " CC=\"gcc -m32 -g -Xassembler --32 -Xlinker -m -Xlinker elf_i386 -Xlinker -L/usr/lib32 -Xlinker -L/usr/lib\""
-                %& " CFLAGS=\"-m32 -g -Xassembler --32 -Xlinker -m -Xlinker elf_i386 -Xlinker -L/usr/lib32 -Xlinker -L/usr/lib\""
-                %& " GCC_FOR_TARGET=\"gcc -m32 -g -Xassembler --32 -Xlinker -m -Xlinker elf_i386 -Xlinker -L/usr/lib32 -Xlinker -L/usr/lib\""
-                & " CC=\"gcc -m32 -g -Xassembler --32\""
-                & " CFLAGS=\"-m32 -g -Xassembler --32\""
-                & " GCC_FOR_TARGET=\"gcc -m32 -g -Xassembler --32\""
+                & " LD=\"ld -m elf_i386 -L/usr/lib32\""
+                & " LD_FOR_TARGET=\"ld -m elf_i386 -L/usr/lib32\""
+                & " CFLAGS=\"-m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
+                & " LIBGCC2_CFLAGS=\"-m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
+                & " HOST_LIBGCC2_CFLAGS=\"-m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
+                & " GCC_FOR_TARGET=\"gcc -m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
   end
 end
 % check for overrides, otherwise use the defaults from the configuration file
@@ -216,7 +233,7 @@ if defined ("fs_canonical_pn")
 else
   build_dir =  (getwd() & "/" & build_dir)
 end
-write("# build_dir = \"" & build_dir & "\"\n")
+write("# build_dir = \"" & build_dir & "\"")
 
 % make sure the derived directory exists
 if not exists (build_dir)
@@ -226,7 +243,7 @@ end
 m3cc_ResponseFileCounter = "0"
 
 readonly proc m3cc_Run (x) is
-  if equal($OS, "Windows_NT")
+  if HostIsNT ()
     local readonly Temp = "_m3sh" & m3cc_ResponseFileCounter & ".sh"
     > Temp in
       write(x)
