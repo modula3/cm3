@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.39 2008-04-17 05:31:35 jkrell Exp $
+% $Id: m3makefile,v 1.40 2008-04-17 15:26:40 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -12,6 +12,7 @@ readonly Platform_info = {
   "AIX386"    : "i486-ibm-aix",
   "ALPHA_OSF" : "alpha-dec-osf1",
   "AMD64_DARWIN" : "i686-apple-darwin8.7.1",
+  "AMD64_LINUX" : "x86_64-pc-linux-gnu",
   "AP3000"    : "apollo68-bsd",
   "ARM"       : "arm--riscos",
   "BSDI4"     : "i386-unknown-freebsdelf",
@@ -26,9 +27,9 @@ readonly Platform_info = {
   "IBMR2"     : "rs6000-ibm-aix3.2",
   "IBMRT"     : "romp-ibm-aos",
   "IRIX5"     : "mips-sgi-irix5",
-  "LINUX"     : "i486--linux",
-  "LINUXELF"  : "i486--linuxelf",
-  "LINUXLIBC6": "i486--linuxelf",
+  "LINUX"     : "i686-pc-linux-gnuaout",
+  "LINUXELF"  : "i686-pc-linux-gnu",
+  "LINUXLIBC6": "i686-pc-linux-gnu",
   "NEXT"      : "next-bsd",
   "NT386"     : "i686-pc-mingw32",
   "NT386GNU"  : "i686-pc-cygwin",
@@ -48,6 +49,59 @@ readonly Platform_info = {
   "NetBSD2_i386" : "i386-unknown-netbsdelf"
 }
 
+readonly proc TargetWordSize (Target) is
+  if {"ALPHA_OSF":1,"AMD64_DARWIN":1,"AMD64_LINUX":1,"AMD64_NT":1,
+      "AMD64_FREEBSD":1,"AMD64_NETBSD":1,"AMD64_OPENBSD":1,"AMD64_SOLARIS":1,
+      "IA64_NT":1,"FBSD_ALPHA":1,"Tru64v5":1} contains Target
+    return "64"
+  end
+  return "32"
+end
+
+readonly proc TargetExeExtension (Target) is
+  if {"NT386":1,"NT386GNU":1,"AMD64_NT":1,"IA64_NT":1,"ARM_CE":1} contains Target
+    return ".exe"
+  else
+    return ""
+  end
+end
+
+readonly proc HostIsNT () is
+  return equal ($OS, "Windows_NT")
+end
+
+proc exists (x) is
+  return not stale (x, x)
+end
+
+%
+% A "MultiArchHost" is a host that can execute multiple architectures.
+% A typical example is an AMD64 system that can also run x86 binaries.
+% Another example is x86 Macintoshes that can run PowerPC binaries.
+% Another example is NT on IA64, which can also run x86.
+%
+% In such a case, letting gcc autoconfigure to build "native" executables
+% is ambiguous, and we should strive to be clearer. As well, we may need to
+% tell gcc which as/ld/etc. to use.
+%
+% NOTE: There are THREE architectures. The currently running one,
+% the one gcc will run on, the one gcc will produce code for.
+% Both the currently running one and the one gcc will run on could both
+% be "multi arch".
+%
+% We presently ASSUME that "currently running" and "gcc will run on" are the same.
+%
+% While support for these scenarios is not complete, it is also a very useful
+% scenario. In particular, it is easier to have one AMD64 host for AMD64 and x86
+% development than to have to do truly "cross" development involving two machines
+% (or even two virtual machines).
+%
+% How does one detect 64 bit Solaris?
+%
+readonly local MultiArchHost =
+  ((not HostIsNT()) and (exists ("/lib32") or exists ("/lib64")))
+  or (HostIsNT() and (not equal ($SystemRoot, "")) and exists ($SystemRoot & "\\syswow64"))
+  
 readonly proc GNU_platform (x) is
   if Platform_info contains x
     return Platform_info{x}
@@ -58,12 +112,6 @@ readonly proc GNU_platform (x) is
 end
 
 readonly m3cc_config = {
-
-  "PPC_DARWIN" : "--disable-multilib",
-  "I386_DARWIN" : "--disable-multilib",
-  "AMD64_DARWIN" : "--disable-multilib",
-  "SOLgnu" : "--disable-multilib",
-  "SOLsun" : "--disable-multilib",
 
   "HPPA"  : "--with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
@@ -95,9 +143,84 @@ readonly proc get_overrides (nm, ov) is
   end
 end
 
-EXE = ""
-if equal(TARGET, "NT386") or equal(TARGET, "NT386GNU")
-    EXE = ".exe"
+%
+% star means default
+% These are meant to come from the config file, but it can omit them
+%
+if not defined("GNU_CC")     GNU_CC     = "*"    end
+if not defined("GNU_CFLAGS") GNU_CFLAGS = "*"    end
+if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
+
+%
+% If user overrode nothing (too conservative?), then default a little better.
+% This area of "MultiArchHosts" needs work.
+% We need to understand the three+ relevant architectures (build, host, target)
+% and that at least build and host can be "MultiArch".
+%
+if MultiArchHost
+      and not defined ("M3CC_HOST")
+      and not defined ("M3CC_TARGET")
+      and not defined ("M3CC_CC")
+      and not defined ("M3CC_CFLAGS")
+      and not defined ("M3CC_MAKE")
+      and not defined ("M3CC_CONFIG")
+      and not defined ("M3CC_TARGET")
+      and not defined ("M3CC_HOST")
+  if equal (TARGET, "LINUXLIBC6")
+    M3CC_HOST = "AMD64_LINUX"
+    M3CC_TARGET = TARGET
+    %
+    % Some of this is obviously redundant and should be trimmed.
+    % Some of it might be completely unnecessary as well.
+    % As well some/much/all belongs in the config file, to which this code sometimes
+    % defers.
+    %
+    %M3CC_CC = "gcc -m32 -g -Xassembler --32 -Xlinker -m -Xlinker elf_i386 -Xlinker -L/usr/lib32 -Xlinker -L/usr/lib"
+    %M3CC_CFLAGS = "-m32 -g -Xassembler --32 -Xlinker -m -Xlinker elf_i386 -Xlinker -L/usr/lib32 -Xlinker -L/usr/lib"
+    M3CC_CONFIG = "--target=" & GNU_platform (M3CC_TARGET)
+                & " --host=" & GNU_platform (M3CC_TARGET)
+                & " --build=" & GNU_platform (M3CC_TARGET)
+                & " AS=\"as --32\""
+                & " AS_FOR_TARGET=\"as --32\""
+                & " COMPILER_AS_FOR_TARGET=\"as --32\""
+                & " LD=\"ld -m elf_i386 -L/usr/lib32 -L/usr/lib\""
+                %& " LDFLAGS=\"-m elf_i386 -L/usr/lib32 -L/usr/lib\""
+                & " LD_FOR_TARGET=\"ld -m elf_i386 -L/usr/lib32 -L/usr/lib\""
+                %& " CC=\"gcc -m32 -g -Xassembler --32 -Xlinker -m -Xlinker elf_i386 -Xlinker -L/usr/lib32 -Xlinker -L/usr/lib\""
+                %& " CFLAGS=\"-m32 -g -Xassembler --32 -Xlinker -m -Xlinker elf_i386 -Xlinker -L/usr/lib32 -Xlinker -L/usr/lib\""
+                %& " GCC_FOR_TARGET=\"gcc -m32 -g -Xassembler --32 -Xlinker -m -Xlinker elf_i386 -Xlinker -L/usr/lib32 -Xlinker -L/usr/lib\""
+                & " CC=\"gcc -m32 -g -Xassembler --32\""
+                & " CFLAGS=\"-m32 -g -Xassembler --32\""
+                & " GCC_FOR_TARGET=\"gcc -m32 -g -Xassembler --32\""
+  end
+end
+% check for overrides, otherwise use the defaults from the configuration file
+if not defined ("M3CC_HOST")    M3CC_HOST   = TARGET     end
+if not defined ("M3CC_TARGET")  M3CC_TARGET = TARGET     end
+if not defined ("M3CC_CC")      M3CC_CC     = GNU_CC     end
+if not defined ("M3CC_CFLAGS")  M3CC_CFLAGS = GNU_CFLAGS end
+if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
+if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
+
+% figure out where we're going to build the beast
+local build_dir = "."  % let m3build set the build directory
+if not equal (M3CC_HOST, M3CC_TARGET)
+  build_dir = "../" & BUILD_DIR & "-" & M3CC_TARGET
+end
+
+%
+% fs_canonical_pn is not yet implemented, so use getwd instead
+%
+if defined ("fs_canonical_pn")
+  build_dir = fs_canonical_pn (build_dir)
+else
+  build_dir =  (getwd() & "/" & build_dir)
+end
+write("# build_dir = \"" & build_dir & "\"\n")
+
+% make sure the derived directory exists
+if not exists (build_dir)
+  exec ("mkdir", build_dir)
 end
 
 m3cc_ResponseFileCounter = "0"
@@ -124,53 +247,83 @@ readonly proc m3cc_Run (x) is
   end
 end
 
-%
-% star means default
-% These are meant to come from the config file, but it can omit them
-%
-if not defined("GNU_CC")     GNU_CC     = "*"    end
-if not defined("GNU_CFLAGS") GNU_CFLAGS = "*"    end
-if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
-
-% check for overrides, otherwise use the defaults from the configuration file
-if not defined ("M3CC_HOST")    M3CC_HOST   = TARGET     end
-if not defined ("M3CC_TARGET")  M3CC_TARGET = TARGET     end
-if not defined ("M3CC_CC")      M3CC_CC     = GNU_CC     end
-if not defined ("M3CC_CFLAGS")  M3CC_CFLAGS = GNU_CFLAGS end
-if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
-if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
-
-% figure out where we're going to build the beast
-local build_dir = "."  % let m3build set the build directory
-if not equal (M3CC_HOST, M3CC_TARGET)
-  build_dir = "../" & BUILD_DIR & "-" & M3CC_TARGET
-end
-
-%
-% fs_canonical_pn is not yet implemented, so use getwd instead
-%
-if defined ("fs_canonical_pn")
-  build_dir = fs_canonical_pn (build_dir)
-else
-  build_dir =  (getwd() & "/" & build_dir)
-end
-write("# build_dir = \"" & build_dir & "\"\n")
-
-proc exists(x) is
-  return not stale(x, x)
-end
-
-% make sure the derived directory exists
-if not exists (build_dir)
-  exec ("mkdir", build_dir)
-end
-
 done  = ".configure-done"
 donep = build_dir & "/" & done
 if defined ("FORCE")
   m3cc_Run("-cd " & build_dir & " && test -f Makefile && " & M3CC_MAKE & " distclean")
-  m3cc_Run("-cd " & build_dir & " && rm -f cm3cg" & EXE)
+  m3cc_Run("-cd " & build_dir & " && rm -f cm3cg.exe cm3cg")
   m3cc_Run("-rm -f " & donep)
+end
+
+readonly proc ConfigureLib (x) is
+%
+% Some of these comments are speculation.
+%
+% gcc has relatively recently become dependent on libmpfr and libgmp.
+%
+% gmp is the GNU Multiple Precision library.
+% mpfr is the Multiple Precision Floatingpoint/Rounding library.
+% gcc uses these to accurately portable simulate target integer
+% and floating point arithmetic, such as to propagate constant expressions, etc.,
+% presumably. This is a relatively new dependency for gcc, introduced around 4.2 or 4.3.
+%
+% One or both of these are commonly not preinstalled on systems, or
+% if they are installed on a system that needs to build cm3cg, they
+% might not be in the standard locations.
+%
+% Here we do two things:
+%  Probe non-standard locations for their install.
+%  Conspire to have them be statically linked.
+%
+% The parameter a is "gmp" or "mpfr" which leads to strings such as:
+%  /usr/lib/libgmp.a
+%  /usr/lib/libmpfr.a
+%  /usr/include/gmp.h
+%  /usr/include/mpfr.h
+%
+% NOTE that we know/assume the "key" files x.h and libx.a.
+% We know/assume that there are multiple headers and therefore do not engage in attempting
+% to copy them, since we don't need to. We know/assume that libx.a and libx.so are colocated
+% and that copying just libx.a into an "isolated" location will yield static linking.
+% This is perhaps sleazy and perhaps there is a better way. However it also seems pretty
+% darn ok. Whether this for for Unixish NT systems remains to be seen, does not matter
+% much, and can be fixed easily enough (e.g. x.lib instead of libx.a).
+% This approach does not necessarily apply to arbitrary libraries, of course.
+%
+    local Lib = ""
+    local Include = ""
+    %
+    % Probing the user's home directory is probably reasonable.
+    % Importing the source for these into cm3 is probably reasonable.
+    %
+    foreach Bits in [TargetWordSize(M3CC_TARGET), ""]
+      if not Lib
+        foreach Candidate in ["/usr/contrib", "/usr/local", "/usr" ]
+          if not Lib
+            local CandidateLib = Candidate & "/lib" & Bits
+            local CandidateInclude = Candidate & "/include"
+            if exists(CandidateLib & "/lib" & x & ".a") and exists(CandidateInclude & "/" & x & ".h")
+              Lib = CandidateLib
+              Include = CandidateInclude
+              % break out of loops
+            end
+          end
+        end
+      end
+    end
+    if not Lib
+        error("lib" & x & ".a and " & x & ".h not found, having looked in /usr/{,local,contrib}/{lib{,32,64},include}")
+    end
+
+    %
+    % cm3 -commands does not print the copy as it ought to.
+    %
+    fs_cp(Lib & "/lib" & x & ".a", build_dir & "/lib" & x & ".a")
+    write("copy " & Lib & "/lib" & x & ".a " & build_dir & "/lib" & x & ".a\n")
+
+    local Config = "--with-" & x & "-include=" & Include & " --with-" & x & "-lib=" & build_dir
+    write (x & ": " & Config & "\n")
+    return Config
 end
 
 if not defined ("no_config")
@@ -187,38 +340,21 @@ if not defined ("no_config")
     else
       ConfigTarget = "--target=" & GNU_platform (M3CC_TARGET)
     end
-    %
-    % Try to automatically configure libmpfr and statically link.
-    % Elego machines have it in a non-standard location, and builds
-    % also fail running our gcc due to libgmpfr.so not found.
-    %
-    local mpfr = ""
-    %
-    % NOTE: These are in reverse order of preference, pending
-    % learning Quake better or Quake being better.
-    %
-    foreach a in ["/usr", "/usr/local", "/usr/contrib"]
-      if exists(a & "/lib/libmpfr.a") and exists(a & "/include/mpfr.h")
-        mpfr = a
-      end
-    end
-    if not mpfr
-      error("libmpfr.a and mpfr.h not found")
-    end
-    % cm3 -commands does not print the copy as it ought to.
-    fs_cp(mpfr & "/lib/libmpfr.a", build_dir & "/libmpfr.a")
-    write("# copy \"" & mpfr & "/lib/libmpfr.a\" \"" & build_dir & "/libmpfr.a\"\n")
-
-    mpfr = "--with-mpfr-include=" & mpfr & "/include --with-mpfr-lib=" & build_dir
-    write ("# mpfr = \"" & mpfr & "\"\n")
 
     m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG,
           "--srcdir=../gcc",
           ConfigTarget,
           "--enable-languages=m3cg",
+          %
+          % disable stuff to speed up
+          %
           "--disable-nls",
+          "--disable-multilib",
+          "--disable-bootstrap",
+          "--disable-libgomp",
           ConfigWithGNULD,
-          mpfr,
+          ConfigureLib("mpfr"),
+          ConfigureLib("gmp"),
           "&& echo \"done\" > " & done])
   end
 end
@@ -229,6 +365,8 @@ ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
 
 % build commands
 cmds = "cd " & build_dir & "; " & M3CC_MAKE & " " & ARG0 & " " & ARG1
+
+EXE = TargetExeExtension (M3CC_TARGET)
 
 readonly proc postcp() is
   pSrc  = build_dir & "/gcc/m3cgc1" & EXE
