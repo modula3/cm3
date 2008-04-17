@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.41 2008-04-17 15:30:55 jkrell Exp $
+% $Id: m3makefile,v 1.42 2008-04-17 23:17:00 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -193,22 +193,23 @@ if HostIsMultiArch ()
     %   Why is gcc -m32 not sufficient? Or, at least why is configure --target --build --host not sufficient?
     %   Can't the rest be sniffed out?
     %
+	%M3CC_CFLAGS="-m32 -g -Xassembler --32 -L/usr/lib32 -Xlinker -m -Xlinker elf_i386"
     M3CC_CONFIG = "--target=" & GNU_platform (M3CC_TARGET)
                 & " --host=" & GNU_platform (M3CC_TARGET)
-                & " --build=" & GNU_platform (M3CC_TARGET)
+                %& " --build=" & GNU_platform (M3CC_TARGET)
                 & " --disable-libmudflap"
-                & " --disable-libgcc"
                 & " --disable-libssp"
+                & " --disable-libgcc"
                 & " --disable-shared-libgcc"
-                & " AS=\"as --32\""
-                & " AS_FOR_TARGET=\"as --32\""
-                & " COMPILER_AS_FOR_TARGET=\"as --32\""
-                & " LD=\"ld -m elf_i386 -L/usr/lib32\""
-                & " LD_FOR_TARGET=\"ld -m elf_i386 -L/usr/lib32\""
-                & " CFLAGS=\"-m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
-                & " LIBGCC2_CFLAGS=\"-m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
-                & " HOST_LIBGCC2_CFLAGS=\"-m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
-                & " GCC_FOR_TARGET=\"gcc -m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
+                %& " AS=\"as --32\""
+                %& " AS_FOR_TARGET=\"as --32\""
+                %& " COMPILER_AS_FOR_TARGET=\"as --32\""
+                %& " LD=\"ld -m elf_i386 -L/usr/lib32\""
+                %& " LD_FOR_TARGET=\"ld -m elf_i386 -L/usr/lib32\""
+                %& " CFLAGS=\"-m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
+                %& " LIBGCC2_CFLAGS=\"-m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
+                %& " HOST_LIBGCC2_CFLAGS=\"-m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
+                %& " GCC_FOR_TARGET=\"gcc -m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
   end
 end
 % check for overrides, otherwise use the defaults from the configuration file
@@ -233,7 +234,7 @@ if defined ("fs_canonical_pn")
 else
   build_dir =  (getwd() & "/" & build_dir)
 end
-write("# build_dir = \"" & build_dir & "\"")
+write("# build_dir = " & build_dir & "\n")
 
 % make sure the derived directory exists
 if not exists (build_dir)
