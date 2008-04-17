@@ -146,6 +146,16 @@ if not equal (M3CC_HOST, M3CC_TARGET)
   build_dir = "../" & BUILD_DIR & "-" & M3CC_TARGET
 end
 
+%
+% fs_canonical_pn is not yet implemented, so use getwd instead
+%
+if defined ("fs_canonical_pn")
+  build_dir = fs_canonical_pn (build_dir)
+else
+  build_dir =  (getwd() & "/" & build_dir)
+end
+write("# build_dir = \"" & build_dir & "\"\n")
+
 proc exists(x) is
   return not stale(x, x)
 end
@@ -178,22 +188,29 @@ if not defined ("no_config")
       ConfigTarget = "--target=" & GNU_platform (M3CC_TARGET)
     end
     %
-    % Try to automatically configure libmpfr for Elego machines
-    % This should be reasonable for any machine, but if not,
-    % we can check hostname or uname.
+    % Try to automatically configure libmpfr and statically link.
+    % Elego machines have it in a non-standard location, and builds
+    % also fail running our gcc due to libgmpfr.so not found.
     %
-    local ConfigureMultiplePrecisionFloatingPointRoundingLibrary = ""
-    if not exists("/usr/lib/libmpfr.a") and not exists("/usr/include/mpfr.h")
-      if exists("/usr/contrib/lib/libmpfr.a")
-        ConfigureMultiplePrecisionFloatingPointRoundingLibrary = "--with-mpfr=/usr/contrib"
-      else if exists("/usr/local/lib/libmpfr.a")
-        ConfigureMultiplePrecisionFloatingPointRoundingLibrary = "--with-mpfr=/usr/local"
-      else
-      %
-      % Let ./configure look for it.
-      %
-      end end
+    local mpfr = ""
+    %
+    % NOTE: These are in reverse order of preference, pending
+    % learning Quake better or Quake being better.
+    %
+    foreach a in ["/usr", "/usr/local", "/usr/contrib"]
+      if exists(a & "/lib/libmpfr.a") and exists(a & "/include/mpfr.h")
+        mpfr = a
+      end
     end
+    if not mpfr
+      error("libmpfr.a and mpfr.h not found")
+    end
+    % cm3 -commands does not print the copy as it ought to.
+    fs_cp(mpfr & "/lib/libmpfr.a", build_dir & "/libmpfr.a")
+    write("# copy \"" & mpfr & "/lib/libmpfr.a\" \"" & build_dir & "/libmpfr.a\"\n")
+
+    mpfr = "--with-mpfr-include=" & mpfr & "/include --with-mpfr-lib=" & build_dir
+    write ("# mpfr = \"" & mpfr & "\"\n")
 
     m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG,
           "--srcdir=../gcc",
@@ -201,7 +218,7 @@ if not defined ("no_config")
           "--enable-languages=m3cg",
           "--disable-nls",
           ConfigWithGNULD,
-          ConfigureMultiplePrecisionFloatingPointRoundingLibrary,
+          mpfr,
           "&& echo \"done\" > " & done])
   end
 end
