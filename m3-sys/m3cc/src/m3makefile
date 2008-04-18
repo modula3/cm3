@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.50 2008-04-18 14:46:43 jkrell Exp $
+% $Id: m3makefile,v 1.51 2008-04-18 15:18:03 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -278,7 +278,7 @@ readonly proc ConfigureLib (x) is
     %
     if defined ("xxxfs_cp")
       fs_cp (Lib & "/lib" & x & ".a", build_dir & "/lib" & x & ".a")
-      writ e("copy " & Lib & "/lib" & x & ".a " & build_dir & "/lib" & x & ".a\n")
+      write ("copy " & Lib & "/lib" & x & ".a " & build_dir & "/lib" & x & ".a\n")
     else
       exec ("cp", Lib & "/lib" & x & ".a", build_dir & "/lib" & x & ".a")
     end
