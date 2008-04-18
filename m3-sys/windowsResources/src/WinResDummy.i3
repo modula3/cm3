@@ -1,2 +1,0 @@
-INTERFACE WinResDummy;
-END WinResDummy.
