@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.49 2008-04-18 14:39:49 jkrell Exp $
+% $Id: m3makefile,v 1.50 2008-04-18 14:46:43 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -165,7 +165,6 @@ else if defined ("xxxgetwd")
 else if defined ("path")
   build_dir =  (path () & "/../" & BUILD_DIR & "/" & build_dir)
 end end end
-write("# build_dir = " & build_dir & "\n")
 
 %
 % make sure the derived directory exists
@@ -254,7 +253,7 @@ readonly proc ConfigureLib (x) is
     % Probing the user's home directory is probably reasonable.
     % Importing the source for these into cm3 is probably reasonable.
     %
-    foreach Bits in [TargetWordSize(M3CC_TARGET), ""]
+    foreach Bits in [TargetWordSize (M3CC_TARGET), ""]
       if not Lib
         foreach Candidate in ["/usr/contrib", "/usr/local", "/usr" ]
           if not Lib
@@ -270,22 +269,25 @@ readonly proc ConfigureLib (x) is
       end
     end
     if not Lib
-        error("lib" & x & ".a and " & x & ".h not found, having looked in /usr/{,local,contrib}/{lib{,32,64},include}")
+        error ("lib" & x & ".a and " & x & ".h not found, having looked in /usr/{,local,contrib}/{lib{,32,64},include}")
     end
 
     %
     % cm3 -commands does not print the copy as it ought to.
+    % Older tools do not have fs_cp.
     %
-    fs_cp(Lib & "/lib" & x & ".a", build_dir & "/lib" & x & ".a")
-    write("copy " & Lib & "/lib" & x & ".a " & build_dir & "/lib" & x & ".a\n")
+    if defined ("xxxfs_cp")
+      fs_cp (Lib & "/lib" & x & ".a", build_dir & "/lib" & x & ".a")
+      writ e("copy " & Lib & "/lib" & x & ".a " & build_dir & "/lib" & x & ".a\n")
+    else
+      exec ("cp", Lib & "/lib" & x & ".a", build_dir & "/lib" & x & ".a")
+    end
     local Config = " --with-" & x & "-include=" & Include & " --with-" & x & "-lib=" & build_dir
 
     %
     % We could use -static instead, and then:
     %
     %local Config = " --with-" & x & "-include=" & Include & " --with-" & x & "-lib=" & Lib & "/lib"
-
-    write (x & ": " & Config & "\n")
 
     return Config
 end
@@ -317,8 +319,8 @@ if not defined ("no_config")
     Configure = Configure & " --disable-shared"
     Configure = Configure & " --enable-languages=m3cg"
     Configure = Configure & " --enable-targets=all"
-    Configure = Configure & ConfigureLib("mpfr")
-    Configure = Configure & ConfigureLib("gmp")
+    Configure = Configure & ConfigureLib ("mpfr")
+    Configure = Configure & ConfigureLib ("gmp")
     m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG, Configure, env, "&& echo \"done\" > " & done])
   end
 end
@@ -357,6 +359,4 @@ end
 % finally, compile it
 m3cc_Run (cmds)
 %write (cmds & EOL)
-if defined("postcp")
-  postcp()
-end
+postcp ()
