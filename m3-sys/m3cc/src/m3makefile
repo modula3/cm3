@@ -286,13 +286,13 @@ if not defined ("no_config")
     end
     Configure = Configure & " --srcdir=../gcc"
     Configure = Configure & " --disable-bootstrap"
-    Configure = Configure & " --disable-libgcc"
-    Configure = Configure & " --disable-libgomp"
-    Configure = Configure & " --disable-libmudflap"
-    Configure = Configure & " --disable-libssp"
+    %Configure = Configure & " --disable-libgcc"
+    %Configure = Configure & " --disable-libgomp"
+    %Configure = Configure & " --disable-libmudflap"
+    %Configure = Configure & " --disable-libssp"
     Configure = Configure & " --disable-multilib"
     Configure = Configure & " --disable-nls"
-    Configure = Configure & " --disable-shared"
+    %Configure = Configure & " --disable-shared"
     Configure = Configure & " --enable-languages=m3cg"
     Configure = Configure & ConfigureLib("mpfr")
     Configure = Configure & ConfigureLib("gmp")
