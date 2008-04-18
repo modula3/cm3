@@ -139,12 +139,17 @@ end
 
 %
 % fs_canonical_pn is not yet implemented, so use getwd instead
+% getwd isn't in current bootstrap tools, so fallback further
+% Older tools don't implement path (). In which case, you don't get
+% our configuration of gmp and mpfr (see ConfigureLib).
 %
-if defined ("fs_canonical_pn")
+if defined ("xxxfs_canonical_pn")
   build_dir = fs_canonical_pn (build_dir)
-else
-  build_dir =  (getwd() & "/" & build_dir)
-end
+else if defined ("xxxgetwd")
+  build_dir =  (getwd () & "/" & build_dir)
+else if defined ("path")
+  build_dir =  (path () & "/../" & BUILD_DIR & "/" & build_dir)
+end end end
 write("# build_dir = " & build_dir & "\n")
 
 %
@@ -221,6 +226,13 @@ readonly proc ConfigureLib (x) is
 % much, and can be fixed easily enough (e.g. x.lib instead of libx.a).
 % This approach does not necessarily apply to arbitrary libraries, of course.
 %
+    %
+    % Older tools can't form the full path; punt.
+    %
+    if not defined ("path")
+      return ""
+    end
+
     local Lib = ""
     local Include = ""
     %
