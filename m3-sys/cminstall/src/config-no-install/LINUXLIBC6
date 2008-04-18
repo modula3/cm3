@@ -18,7 +18,7 @@ readonly TARGET       = "LINUXLIBC6"      % code generation target
 readonly BUILD_DIR    = TARGET & PROFILING_P % directory for results
 readonly OS_TYPE      = "POSIX"           % { "WIN32" or "POSIX" }
 readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "i486--linuxelf"  % "cpu-vendor-os" string for GNU
+readonly GNU_PLATFORM = "i686-pc-linux-gnu"  % "cpu-vendor-os" string for GNU
 
 readonly NAMING_CONVENTIONS = "0"
 %                                        object files       libraries
@@ -101,12 +101,15 @@ proc exists(x) is
   return not stale(x, x)
 end
 
+%
 % This is what Ubuntu 8.4 Hardy Heron beta KDE4 uses
+%
 if exists("/usr/lib32")
-  readonly lib32 = "-L/usr/lib32"
+  lib32 = "-L/usr/lib32"
 else
-  readonly lib32 = "-L/usr/lib"
+  lib32 = "-L/usr/lib"
 end
+lib32 = ""
 
 SYSTEM_LIBS =
 {
@@ -163,26 +166,11 @@ readonly SYSTEM_ASM = "as" % Assembler
 readonly m3back = "@" & BIN_USE & "/cm3cg"
 
 proc m3_backend(source, object, optimize, debug) is
-    local args =
-    [
-        "-quiet",
-        source,
-        "-o",
-        object,
-        "-fPIC",
-        GetM3BackFlag("-m32"),
-        GetM3BackFlag("-fno-reorder-blocks"),
-    ]
-    if optimize
-        args += "-O3"
-    end
-    if debug
-        args += "-gstabs+"
-    end
-    if M3_PROFILING
-        args += "-p"
-    end
-    return try_exec(m3back, args)
+  local args = [ "-quiet", source, "-o", object, "-fPIC", GetM3BackFlag ("-m32"), GetM3BackFlag ("-fno-reorder-blocks") ]
+  if optimize  args += "-O3"  end
+  if debug     args += "-gstabs+"  end
+  if M3_PROFILING args += "-p" end
+  return try_exec (m3back, args)
 end
 
 M3_BACKEND_MODE = "3"
@@ -198,22 +186,12 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c(source, object, options, optimize, debug) is
-    local args =
-    [
-        "-m32",
-        "-fPIC",
-        options,
-    ]
-    if optimize
-        args += "-O"
-    end
-    if debug
-        args += "-gstabs+"
-    end
-    if M3_PROFILING
-        args += "-pg"
-    end
-    return try_exec("@" & SYSTEM_CC, args, "-c", source)
+  % should probe for if -m32 switch is accepted
+  local args = [ "-m32", "-fPIC", options ]
+  if optimize  args += "-O"  end
+  if debug     args += "-gstabs+"  end
+  if M3_PROFILING args += "-pg" end
+  return try_exec (SYSTEM_CC, args, "-c", source)
 end
 
 %---------------------------------------------------------------- assembler ---
@@ -222,6 +200,7 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble(source, object) is
+  % should probe for if --32 switch is accepted
   return try_exec("@" & SYSTEM_ASM, "--32", source, "-o", object)
 end
 
@@ -345,13 +324,13 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local lib_a    = format("lib%s.a", lib)
     local lib_so   = format("lib%s.so", lib)
     local lib_sox  = format("lib%s.so.5", lib)
-    
+
     % build the non-shared library
     ret_code = try_exec("@" & SYSTEM_AR, "crus", lib_a, objects)
     if not equal(ret_code, 0)
         return ret_code
     end
-    
+
     if not shared
         delete_file(lib_so)
         delete_file(lib_sox)
@@ -365,10 +344,11 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     end
     ret_code =
         try_exec(
-            "@" & SYSTEM_CC,
+            SYSTEM_CC,
             GetGcWrapFlags(),
             pg,
             "-shared",
+            % should probe for if -m32 switch is accepted
             "-m32",
             "-Wl,-soname," & lib_sox,
             "-o", lib_sox,
@@ -377,10 +357,10 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     if not equal(ret_code, 0)
         return ret_code
     end
-    
+
     % create the version aliases
     link_file(lib_sox, lib_so)
-    
+
     % make sure the shared library stuff gets installed properly
     install_derived(lib_sox)
     install_derived_link(lib_sox, lib_so)
@@ -426,6 +406,7 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
     args +=
     [
         GetGcWrapFlags(),
+        % should probe for if -m32 switch is accepted
         "-m32",
         "-o", prog,
         "-fPIC",
@@ -436,7 +417,7 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
     if M3_PROFILING
         args += "-pg"
     end
-    return try_exec("@" & SYSTEM_CC, args)
+    return try_exec(SYSTEM_CC, args)
 end
 
 %-------------------------------------------------------------------
@@ -519,5 +500,5 @@ end
 %
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-g"
+GNU_CFLAGS = "-g -O"
 GNU_MAKE   = "make"
