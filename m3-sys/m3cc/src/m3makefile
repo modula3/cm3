@@ -43,7 +43,7 @@ readonly Platform_info = {
   "Tru64v5"   : "alpha-dec-osf1",
   "UMAX"      : "encore-bsd",
   "VAX"       : "vax-dec-ultrix",
-  "I386_DARWIN" : "i386-apple-darwin8.7.1",
+  "I386_DARWIN" : "i686-apple-darwin8.7.1",
   "PPC_DARWIN"  : "powerpc-apple-darwin6.3",
   "PPC_LINUX"   : "powerpc-apple-linuxelf",
   "NetBSD2_i386" : "i386-unknown-netbsdelf"
@@ -72,44 +72,6 @@ end
 
 proc exists (x) is
   return not stale (x, x)
-end
-
-%
-% A "MultiArchHost" is a host that can execute multiple architectures fairly efficiently.
-% A typical example is an AMD64 system that can also run x86 binaries.
-% Another example is x86 Macintoshes that can run PowerPC binaries.
-% Another example is NT on IA64, which can also run x86.
-%
-% In such a case, letting gcc autoconfigure to build "native" executables
-% is ambiguous, and we should strive to be clearer. As well, we may need to
-% tell gcc which as/ld/etc. to use.
-%
-% NOTE: There are THREE architectures. The currently running one,
-% the one gcc will run on, the one gcc will produce code for.
-% Both the currently running one and the one gcc will run on could both
-% be "multi arch".
-%
-% We presently ASSUME that "currently running" and "gcc will run on" are the same.
-%
-% While support for these scenarios is not complete, it is also a very useful
-% scenario. In particular, it is easier to have one AMD64 host for AMD64 and x86
-% development than to have to do truly "cross" development involving two machines
-% (or even two virtual machines).
-%
-% Detection is missing for 64 bit Solaris and Mac OS X.
-% Mac OS X has a number of configurations:
-%  32 bit PowerPC only (G3, G4)
-%  64 bit and 32 bit PowerPC (G5)
-%  32 bit x86 and 32 bit PowerPC (Core)
-%  32 bit x86, 64 bit x86, 32 bit PowerPC (Core 2)
-%  The common theme on Mac OS X is:
-%   Everything can run 32 bit.
-%   Everything can run 32 bit PowerPC.
-%   However 32 bit PowerPC is presumably not as fast as, say, x86 on AMD64.
-%
-readonly proc HostIsMultiArch () is
-  return ((not HostIsNT()) and (exists ("/lib32") or exists ("/lib64")))
-  or (HostIsNT() and (not equal ($SystemRoot, "")) and exists ($SystemRoot & "\\syswow64"))
 end
 
 readonly proc GNU_platform (x) is
@@ -185,7 +147,9 @@ else
 end
 write("# build_dir = " & build_dir & "\n")
 
+%
 % make sure the derived directory exists
+%
 if not exists (build_dir)
   exec ("mkdir", build_dir)
 end
@@ -288,7 +252,7 @@ readonly proc ConfigureLib (x) is
     fs_cp(Lib & "/lib" & x & ".a", build_dir & "/lib" & x & ".a")
     write("copy " & Lib & "/lib" & x & ".a " & build_dir & "/lib" & x & ".a\n")
 
-    local Config = " --with-" & x & "-include=" & Include & " --with-" & x & "-lib=" & build_dir & " "
+    local Config = " --with-" & x & "-include=" & Include & " --with-" & x & "-lib=" & build_dir
     write (x & ": " & Config & "\n")
     return Config
 end
@@ -297,19 +261,27 @@ if not defined ("no_config")
   % configure the sources
   if not exists (donep)
     local Configure = ""
-    if not equal (M3CC_HOST, M3CC_TARGET)
-      Configure = Configure & " --target=" & GNU_platform (M3CC_TARGET)
+    if equal (M3CC_TARGET, "xxxLINUXLIBC6") or equal (M3CC_TARGET, "AMD64_LINUX")
+        Configure = Configure & " --enable-targets=" & GNU_platform ("LINUXLIBC6") & "," & GNU_platform ("AMD64_LINUX")
+    else
+      if equal (M3CC_TARGET, "xxxI386_DARWIN") or equal (M3CC_TARGET, "AMD64_DARWIN")
+        Configure = Configure & " --enable-targets=" & GNU_platform ("I386_DARWIN") & "," & GNU_platform ("AMD64_DARWIN")
+      else
+        if not equal (M3CC_HOST, M3CC_TARGET)
+          Configure = Configure & " --target=" & GNU_platform (M3CC_TARGET)
+        end
+      end
     end
-    Configure = Configure & " --srcdir=../gcc "
-    Configure = Configure & " --enable-languages=m3cg "
-    Configure = Configure & " --disable-bootstrap "
-    Configure = Configure & " --disable-libgomp "
-    Configure = Configure & " --disable-libmudflap "
-    Configure = Configure & " --disable-libssp "
+    Configure = Configure & " --srcdir=../gcc"
+    Configure = Configure & " --disable-bootstrap"
     Configure = Configure & " --disable-libgcc"
-    Configure = Configure & " --disable-multilib "
-    Configure = Configure & " --disable-nls "
-    Configure = Configure & " --disable-shared "
+    Configure = Configure & " --disable-libgomp"
+    Configure = Configure & " --disable-libmudflap"
+    Configure = Configure & " --disable-libssp"
+    Configure = Configure & " --disable-multilib"
+    Configure = Configure & " --disable-nls"
+    Configure = Configure & " --disable-shared"
+    Configure = Configure & " --enable-languages=m3cg"
     Configure = Configure & ConfigureLib("mpfr")
     Configure = Configure & ConfigureLib("gmp")
     m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG, Configure, "&& echo \"done\" > " & done])
