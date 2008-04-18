@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.46 2008-04-18 10:00:36 jkrell Exp $
+% $Id: m3makefile,v 1.47 2008-04-18 10:06:05 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -286,13 +286,13 @@ if not defined ("no_config")
     end
     Configure = Configure & " --srcdir=../gcc"
     Configure = Configure & " --disable-bootstrap"
-    Configure = Configure & " --disable-libgcc"
-    Configure = Configure & " --disable-libgomp"
-    Configure = Configure & " --disable-libmudflap"
-    Configure = Configure & " --disable-libssp"
+    %Configure = Configure & " --disable-libgcc"
+    %Configure = Configure & " --disable-libgomp"
+    %Configure = Configure & " --disable-libmudflap"
+    %Configure = Configure & " --disable-libssp"
     Configure = Configure & " --disable-multilib"
     Configure = Configure & " --disable-nls"
-    Configure = Configure & " --disable-shared"
+    %Configure = Configure & " --disable-shared"
     Configure = Configure & " --enable-languages=m3cg"
     Configure = Configure & ConfigureLib("mpfr")
     Configure = Configure & ConfigureLib("gmp")
