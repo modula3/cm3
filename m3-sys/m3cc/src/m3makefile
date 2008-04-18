@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.47 2008-04-18 10:06:05 jkrell Exp $
+% $Id: m3makefile,v 1.48 2008-04-18 14:03:41 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -83,7 +83,44 @@ readonly proc GNU_platform (x) is
   end
 end
 
+%
+% Configure does not seem to ferry environment variables from itself to make,
+% so these must be specified on both the configure command and the make command.
+%
+readonly m3cc_env = {
+  %
+  % Build an x86 hosted compiler that targets x86 and AMD64.
+  %
+  "LINUXLIBC6" : " "
+               & " CFLAGS=-m32"
+               %& " CC='gcc -m32 -Wa,--32 -Wl,-melf_i386'"
+               %& " CC_FOR_TARGET='gcc -m32 -Wa,--32 -Wl,-melf_i386'"
+               %& " CC_FOR_BUILD='gcc -m32 -Wa,--32 -Wl,-melf_i386'"
+               %& " LDFLAGS=-static" % avoid libgmp.so and libmpfr.so, libc.so is collateral damage, ok
+               %& " CFLAGS='-m32 -Wa,--32 -Wl,-melf_i386'"
+               %& " CFLAGS_FOR_TARGET='-m32 -Wa,--32 -Wl,-melf_i386'"
+               %& " CFLAGS_FOR_BUILD='-m32 -Wa,--32 -Wl,-melf_i386'"
+               %& " AS='as --32'"
+               %& " AS_FOR_BUILD='as --32'"
+               %& " AS_FOR_TARGET='as --32'"
+               %& " LDFLAGS=-Wl,-melf_i386"
+               %& " LDFLAGS_FOR_TARGET=-Wl,-melf_i386"
+               %& " LDFLAGS_FOR_BUILD=-Wl,-melf_i386"
+               %& " LD='ld -melf_i386'"
+               %& " LD_FOR_TARGET='ld -melf_i386'"
+               %& " LD_FOR_BUILD='ld -melf_i386'"
+               %& " LDEMULATION=elf_i386"
+               ,
+} % m3cc_env
+
 readonly m3cc_config = {
+  %
+  % Build an x86 hosted compiler that targets x86 and AMD64.
+  %
+  "LINUXLIBC6" : " --host=i686-pc-linux-gnu"
+               & " --build=i686-pc-linux-gnu"
+               %& " --target=i686-pc-linux-gnu" % redundant with --enable-targets=all
+               ,
 
   "HPPA"  : "--with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
@@ -230,7 +267,7 @@ readonly proc ConfigureLib (x) is
     % Older tools can't form the full path; punt.
     %
     if not defined ("path")
-      return ""
+      return " "
     end
 
     local Lib = ""
@@ -263,39 +300,48 @@ readonly proc ConfigureLib (x) is
     %
     fs_cp(Lib & "/lib" & x & ".a", build_dir & "/lib" & x & ".a")
     write("copy " & Lib & "/lib" & x & ".a " & build_dir & "/lib" & x & ".a\n")
-
     local Config = " --with-" & x & "-include=" & Include & " --with-" & x & "-lib=" & build_dir
+
+    %
+    % We could use -static instead, and then:
+    %
+    %local Config = " --with-" & x & "-include=" & Include & " --with-" & x & "-lib=" & Lib & "/lib"
+
     write (x & ": " & Config & "\n")
+
     return Config
+end
+
+local env = ""
+if m3cc_env contains (M3CC_TARGET)
+  env = m3cc_env {M3CC_TARGET}
 end
 
 if not defined ("no_config")
   % configure the sources
   if not exists (donep)
     local Configure = ""
-    if equal (M3CC_TARGET, "xxxLINUXLIBC6") or equal (M3CC_TARGET, "xxxAMD64_LINUX")
-        Configure = Configure & " --enable-targets=" & GNU_platform ("LINUXLIBC6") & "," & GNU_platform ("AMD64_LINUX")
-    else
-      if equal (M3CC_TARGET, "xxxI386_DARWIN") or equal (M3CC_TARGET, "xxxAMD64_DARWIN")
-        Configure = Configure & " --enable-targets=" & GNU_platform ("I386_DARWIN") & "," & GNU_platform ("AMD64_DARWIN")
-      else
-        if not equal (M3CC_HOST, M3CC_TARGET)
-          Configure = Configure & " --target=" & GNU_platform (M3CC_TARGET)
-        end
-      end
+    if not equal (M3CC_HOST, M3CC_TARGET)
+      Configure = Configure & " --target=" & GNU_platform (M3CC_TARGET)
     end
     Configure = Configure & " --srcdir=../gcc"
     Configure = Configure & " --disable-bootstrap"
-    %Configure = Configure & " --disable-libgcc"
-    %Configure = Configure & " --disable-libgomp"
-    %Configure = Configure & " --disable-libmudflap"
-    %Configure = Configure & " --disable-libssp"
+    Configure = Configure & " --disable-doc"
+    %Configure = Configure & " --disable-fixincludes" % shouldn't be needed, but is
+    Configure = Configure & " --disable-intl"
+    %Configure = Configure & " --disable-libcpp" % shouldn't be needed, but is
+    Configure = Configure & " --disable-libgcc"
+    Configure = Configure & " --disable-libgomp"
+    Configure = Configure & " --disable-libmudflap"
+    Configure = Configure & " --disable-libssp"
     Configure = Configure & " --disable-multilib"
     Configure = Configure & " --disable-nls"
-    %Configure = Configure & " --disable-shared"
+    Configure = Configure & " --disable-shared"
     Configure = Configure & " --enable-languages=m3cg"
+    Configure = Configure & " --enable-targets=all"
     Configure = Configure & ConfigureLib("mpfr")
     Configure = Configure & ConfigureLib("gmp")
+    Configure = Configure & " " & env
     m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG, Configure, "&& echo \"done\" > " & done])
   end
 end
@@ -305,7 +351,7 @@ ARG0 = get_overrides ("CC", M3CC_CC)
 ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
 
 % build commands
-cmds = "cd " & build_dir & "; " & M3CC_MAKE & " " & ARG0 & " " & ARG1
+cmds = "cd " & build_dir & "; " & M3CC_MAKE & " " & ARG0 & " " & ARG1 & " " & env & " all-gcc"
 
 EXE = TargetExeExtension (M3CC_TARGET)
 
