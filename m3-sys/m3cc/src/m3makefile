@@ -278,7 +278,7 @@ readonly proc ConfigureLib (x) is
     %
     if defined ("xxxfs_cp")
       fs_cp (Lib & "/lib" & x & ".a", build_dir & "/lib" & x & ".a")
-      writ e("copy " & Lib & "/lib" & x & ".a " & build_dir & "/lib" & x & ".a\n")
+      write ("copy " & Lib & "/lib" & x & ".a " & build_dir & "/lib" & x & ".a\n")
     else
       exec ("cp", Lib & "/lib" & x & ".a", build_dir & "/lib" & x & ".a")
     end
