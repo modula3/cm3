@@ -102,7 +102,11 @@ proc exists(x) is
 end
 
 %
-% This is what Ubuntu 8.4 Hardy Heron beta KDE4 uses
+% This is what Ubuntu 8.4 Hardy Heron beta KDE4 uses.
+% There are no .a files for x86 X11. There is no
+% prebuilt package that I could find.
+% man ld also says libFoo.so will work, however there
+% are almost none of these, mainly only libFoo.so.version.
 %
 if exists("/usr/lib32")
   proc Xlib(name, version) is
