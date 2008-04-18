@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.42 2008-04-17 23:17:00 jkrell Exp $
+% $Id: m3makefile,v 1.43 2008-04-18 09:37:40 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -12,7 +12,7 @@ readonly Platform_info = {
   "AIX386"    : "i486-ibm-aix",
   "ALPHA_OSF" : "alpha-dec-osf1",
   "AMD64_DARWIN" : "i686-apple-darwin8.7.1",
-  "AMD64_LINUX" : "x86_64-pc-linux-gnu",
+  "AMD64_LINUX" : "amd64-pc-linux-gnu",
   "AP3000"    : "apollo68-bsd",
   "ARM"       : "arm--riscos",
   "BSDI4"     : "i386-unknown-freebsdelf",
@@ -161,57 +161,6 @@ if not defined("GNU_CC")     GNU_CC     = "*"    end
 if not defined("GNU_CFLAGS") GNU_CFLAGS = "*"    end
 if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
 
-%
-% If user overrode nothing (too conservative?), then default a little better.
-% This area of "MultiArchHosts" needs work.
-% We need to understand the three+ relevant architectures (build, host, target)
-% and that at least build and host can be "MultiArch".
-%
-if HostIsMultiArch ()
-      and not defined ("M3CC_HOST")
-      and not defined ("M3CC_TARGET")
-      and not defined ("M3CC_CC")
-      and not defined ("M3CC_CFLAGS")
-      and not defined ("M3CC_MAKE")
-      and not defined ("M3CC_CONFIG")
-      and not defined ("M3CC_TARGET")
-      and not defined ("M3CC_HOST")
-  if equal (TARGET, "LINUXLIBC6")
-    M3CC_HOST = "AMD64_LINUX"
-    M3CC_TARGET = TARGET
-    %
-    % Some of this is obviously redundant and should be trimmed.
-    % Some of it might be completely unnecessary as well.
-    % As well some/much/all belongs in the config file, to which this code sometimes
-    % defers.
-    %
-    % There is much weirdness here.
-    %   Specifying LDFLAGS does not seem to work.
-    %   Using -Xlinker -m -Xlinker elf_i386 does not seem to work.
-    %   -L/usr/lib32 -L/usr/lib does not seem to work.
-    %   Terminology does not match up -- where are "build", "host", and "target" settings?
-    %   Why is gcc -m32 not sufficient? Or, at least why is configure --target --build --host not sufficient?
-    %   Can't the rest be sniffed out?
-    %
-	%M3CC_CFLAGS="-m32 -g -Xassembler --32 -L/usr/lib32 -Xlinker -m -Xlinker elf_i386"
-    M3CC_CONFIG = "--target=" & GNU_platform (M3CC_TARGET)
-                & " --host=" & GNU_platform (M3CC_TARGET)
-                %& " --build=" & GNU_platform (M3CC_TARGET)
-                & " --disable-libmudflap"
-                & " --disable-libssp"
-                & " --disable-libgcc"
-                & " --disable-shared-libgcc"
-                %& " AS=\"as --32\""
-                %& " AS_FOR_TARGET=\"as --32\""
-                %& " COMPILER_AS_FOR_TARGET=\"as --32\""
-                %& " LD=\"ld -m elf_i386 -L/usr/lib32\""
-                %& " LD_FOR_TARGET=\"ld -m elf_i386 -L/usr/lib32\""
-                %& " CFLAGS=\"-m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
-                %& " LIBGCC2_CFLAGS=\"-m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
-                %& " HOST_LIBGCC2_CFLAGS=\"-m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
-                %& " GCC_FOR_TARGET=\"gcc -m32 -g -Wa,--32 -L/usr/lib32 -Wl,-m,elf_i386\""
-  end
-end
 % check for overrides, otherwise use the defaults from the configuration file
 if not defined ("M3CC_HOST")    M3CC_HOST   = TARGET     end
 if not defined ("M3CC_TARGET")  M3CC_TARGET = TARGET     end
@@ -320,7 +269,7 @@ readonly proc ConfigureLib (x) is
           if not Lib
             local CandidateLib = Candidate & "/lib" & Bits
             local CandidateInclude = Candidate & "/include"
-            if exists(CandidateLib & "/lib" & x & ".a") and exists(CandidateInclude & "/" & x & ".h")
+            if exists (CandidateLib & "/lib" & x & ".a") and exists (CandidateInclude & "/" & x & ".h")
               Lib = CandidateLib
               Include = CandidateInclude
               % break out of loops
@@ -339,41 +288,31 @@ readonly proc ConfigureLib (x) is
     fs_cp(Lib & "/lib" & x & ".a", build_dir & "/lib" & x & ".a")
     write("copy " & Lib & "/lib" & x & ".a " & build_dir & "/lib" & x & ".a\n")
 
-    local Config = "--with-" & x & "-include=" & Include & " --with-" & x & "-lib=" & build_dir
+    local Config = " --with-" & x & "-include=" & Include & " --with-" & x & "-lib=" & build_dir & " "
     write (x & ": " & Config & "\n")
     return Config
 end
 
 if not defined ("no_config")
   % configure the sources
-  if stale(donep, donep)
-    local ConfigTarget = ""
-    local ConfigWithGNULD = ""
-    if equal (M3CC_HOST, M3CC_TARGET)
-%% Should not be using GNU ld.  SOLgnu => gcc only (ie, because cc not available),
-%% not other GNU tools
-%      if equal (M3CC_TARGET, "SOLgnu")
-%        ConfigWithGNULD = "--with-gnu-ld=yes"
-%      end
-    else
-      ConfigTarget = "--target=" & GNU_platform (M3CC_TARGET)
+  if not exists (donep)
+    local Configure = ""
+    if not equal (M3CC_HOST, M3CC_TARGET)
+      Configure = Configure & " --target=" & GNU_platform (M3CC_TARGET)
     end
-
-    m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG,
-          "--srcdir=../gcc",
-          ConfigTarget,
-          "--enable-languages=m3cg",
-          %
-          % disable stuff to speed up
-          %
-          "--disable-nls",
-          "--disable-multilib",
-          "--disable-bootstrap",
-          "--disable-libgomp",
-          ConfigWithGNULD,
-          ConfigureLib("mpfr"),
-          ConfigureLib("gmp"),
-          "&& echo \"done\" > " & done])
+    Configure = Configure & " --srcdir=../gcc "
+    Configure = Configure & " --enable-languages=m3cg "
+    Configure = Configure & " --disable-bootstrap "
+    Configure = Configure & " --disable-libgomp "
+    Configure = Configure & " --disable-libmudflap "
+    Configure = Configure & " --disable-libssp "
+    Configure = Configure & " --disable-libgcc"
+    Configure = Configure & " --disable-multilib "
+    Configure = Configure & " --disable-nls "
+    Configure = Configure & " --disable-shared "
+    Configure = Configure & ConfigureLib("mpfr")
+    Configure = Configure & ConfigureLib("gmp")
+    m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG, Configure, "&& echo \"done\" > " & done])
   end
 end
 
