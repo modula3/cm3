@@ -105,35 +105,34 @@ end
 % This is what Ubuntu 8.4 Hardy Heron beta KDE4 uses
 %
 if exists("/usr/lib32")
-  lib32 = "-L/usr/lib32"
+  proc Xlib(name, version) is
+    return "/usr/lib32/lib" & name & ".so." & version
+  end
 else
-  lib32 = "-L/usr/lib"
+  proc Xlib(name, version) is
+    return "-l" & name
+  end
 end
-lib32 = ""
 
 SYSTEM_LIBS =
 {
-    "LIBC"       : [ "-Xlinker", "-Bdynamic", lib32, "-lm", lib32, "-lpthread" ],
-    "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", lib32, "-ll" ],
-    "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", lib32, "-lfl" ],
+    "LIBC"       : [ "-Xlinker", "-Bdynamic", "-lm", "-lpthread" ],
+    "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", "-ll" ],
+    "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", "-lfl" ],
     "POSTGRES95" : [ "-Xlinker", "-Bdynamic", "-L/usr/local/pgsql/lib", "-lpq" ],
-    "OPENGL"     : [ "-Xlinker", "-Bdynamic", lib32, "-lGLU", "-lGL", "-lXext" ],
-    "ODBC"       : [ "-Xlinker", "-Bdynamic", lib32, "-lodbc" ],
-    "MOTIF"      : [ "-Xlinker", "-Bdynamic", lib32, "-lXm" ],
+    "OPENGL"     : [ "-Xlinker", "-Bdynamic", "-lGLU", "-lGL", "-lXext" ],
+    "ODBC"       : [ "-Xlinker", "-Bdynamic", "-lodbc" ],
+    "MOTIF"      : [ "-Xlinker", "-Bdynamic", "-lXm" ],
     "TCP"        : [ ],
-    "X11" :
-    [
-        "-Xlinker",
-        "-Bdynamic",
-        lib32,
-        "-lXaw",
-        "-lXmu",
-        "-lXext",
-        "-lXt",
-        "-lSM",
-        "-lICE",
-        "-lX11",
-    ],
+    "X11" :      [ "-Xlinker",
+                   "-Bdynamic",
+                    Xlib("Xaw", 7),
+                    Xlib("Xmu", 6),
+                    Xlib("Xext", 6),
+                    Xlib("Xt", 6),
+                    Xlib("SM", 6),
+                    Xlib("ICE", 6),
+                    Xlib("X11", 6) ]
 }
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
