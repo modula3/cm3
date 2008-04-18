@@ -273,10 +273,10 @@ if not defined ("no_config")
   % configure the sources
   if not exists (donep)
     local Configure = ""
-    if equal (M3CC_TARGET, "xxxLINUXLIBC6") or equal (M3CC_TARGET, "AMD64_LINUX")
+    if equal (M3CC_TARGET, "xxxLINUXLIBC6") or equal (M3CC_TARGET, "xxxAMD64_LINUX")
         Configure = Configure & " --enable-targets=" & GNU_platform ("LINUXLIBC6") & "," & GNU_platform ("AMD64_LINUX")
     else
-      if equal (M3CC_TARGET, "xxxI386_DARWIN") or equal (M3CC_TARGET, "AMD64_DARWIN")
+      if equal (M3CC_TARGET, "xxxI386_DARWIN") or equal (M3CC_TARGET, "xxxAMD64_DARWIN")
         Configure = Configure & " --enable-targets=" & GNU_platform ("I386_DARWIN") & "," & GNU_platform ("AMD64_DARWIN")
       else
         if not equal (M3CC_HOST, M3CC_TARGET)
