@@ -1,4 +1,4 @@
-@rem $Id: pkgmap.cmd,v 1.7 2008-03-16 14:47:38 jkrell Exp $
+@rem $Id: pkgmap.cmd,v 1.8 2008-04-19 13:25:56 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -28,6 +28,8 @@ if errorlevel 1 (
 ) else if "%1" == "-c" (
   if not defined PKG_ACTION set PKG_ACTION=%2
   shift
+) else if exist %ROOT%\m3-sys\%1\. (
+  set PKGS=%PKGS% %ROOT%\m3-sys\%1
 ) else if exist %ROOT%\%1\. (
   set PKGS=%PKGS% %ROOT%\%1
 ) else if exist (%1\.) (
