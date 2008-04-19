@@ -1389,6 +1389,11 @@ GenericCommand:
             PackageDirectories.append(q)
             continue
 
+        q = os.path.join(Root, "m3-sys", p)
+        if os.path.isdir(q):
+            PackageDirectories.append(q)
+            continue
+
         q = os.path.join(Root, p)
         if os.path.isdir(q):
             PackageDirectories.append(q)

@@ -42,6 +42,8 @@ while [ -n "$1" ] ; do
       PKG_ACTION="${PKG_ACTION} ; $2"
     fi
     shift
+  elif [ -d "$ROOT/m3-sys/$1" ] ; then
+    PKGS="${PKGS} $ROOT/m3-sys/$1"
   elif [ -d "$ROOT/$1" ] ; then
     PKGS="${PKGS} $ROOT/$1"
   elif [ -d "$1" ] ; then
