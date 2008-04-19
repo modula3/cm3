@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.28 2008-04-19 13:47:17 jkrell Exp $
+# $Id: pkgmap.sh,v 1.29 2008-04-19 19:04:28 jkrell Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -42,9 +42,15 @@ while [ -n "$1" ] ; do
       PKG_ACTION="${PKG_ACTION} ; $2"
     fi
     shift
+  elif [ -d "$ROOT/$1" ] ; then
+    PKGS="${PKGS} $ROOT/$1"
+  elif [ -d "$1" ] ; then
+    PKGS="${PKGS} $1"
   else
     p=`pkgpath $1`
-    if [ -n "$p" -a -f "$ROOT/$p/src/m3makefile" ] ; then
+    if [ -d "$p" ] ; then
+      PKGS="${PKGS} $p"
+    elif [ -n "$p" -a -d "$ROOT/$p" ] ; then
       PKGS="${PKGS} $ROOT/$p"
     else
       echo " *** cannot find package $1 / $p" 1>&2
