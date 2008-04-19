@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.26 2008-02-20 14:19:51 wagner Exp $
+# $Id: pkgmap.sh,v 1.27 2008-04-19 13:25:56 jkrell Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -42,6 +42,8 @@ while [ -n "$1" ] ; do
       PKG_ACTION="${PKG_ACTION} ; $2"
     fi
     shift
+  elif [ -d "$ROOT/m3-sys/$1" ] ; then
+    PKGS="${PKGS} $ROOT/m3-sys/$1"
   elif [ -d "$ROOT/$1" ] ; then
     PKGS="${PKGS} $ROOT/$1"
   elif [ -d "$1" ] ; then

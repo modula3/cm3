@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.95 2008-04-16 08:07:00 jkrell Exp $
+# $Id: pylib.py,v 1.96 2008-04-19 13:25:56 jkrell Exp $
 
 import os
 from os import getenv
@@ -1385,6 +1385,11 @@ GenericCommand:
     for p in Packages:
 
         q = p
+        if os.path.isdir(q):
+            PackageDirectories.append(q)
+            continue
+
+        q = os.path.join(Root, "m3-sys", p)
         if os.path.isdir(q):
             PackageDirectories.append(q)
             continue
