@@ -28,12 +28,6 @@ if errorlevel 1 (
 ) else if "%1" == "-c" (
   if not defined PKG_ACTION set PKG_ACTION=%2
   shift
-) else if exist %ROOT%\m3-sys\%1\. (
-  set PKGS=%PKGS% %ROOT%\m3-sys\%1
-) else if exist %ROOT%\%1\. (
-  set PKGS=%PKGS% %ROOT%\%1
-) else if exist (%1\.) (
-  set PKGS=%PKGS% %1
 ) else (
     call %ROOT%\scripts\win\pkginfo pkgpath p %1 || (
         echo *** cannot find package %1 / %p% 1
@@ -43,9 +37,7 @@ if errorlevel 1 (
 )
 if not "%p%" == "" set p=%p:/=\%
 if not "%p%" == "" (
-    if exist %p%\. (
-        set PKGS=%PKGS% %p%
-    ) else if exist %ROOT%\%p% (
+    if exist %ROOT%\%p%\src\m3makefile (
         set PKGS=%PKGS% %ROOT%\%p%
     ) else (
         echo *** cannot find package %1 / %p% 2

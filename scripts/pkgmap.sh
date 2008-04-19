@@ -42,17 +42,9 @@ while [ -n "$1" ] ; do
       PKG_ACTION="${PKG_ACTION} ; $2"
     fi
     shift
-  elif [ -d "$ROOT/m3-sys/$1" ] ; then
-    PKGS="${PKGS} $ROOT/m3-sys/$1"
-  elif [ -d "$ROOT/$1" ] ; then
-    PKGS="${PKGS} $ROOT/$1"
-  elif [ -d "$1" ] ; then
-    PKGS="${PKGS} $1"
   else
     p=`pkgpath $1`
-    if [ -d "$p" ] ; then
-      PKGS="${PKGS} $p"
-    elif [ -n "$p" -a -d "$ROOT/$p" ] ; then
+    if [ -n "$p" -a -f "$ROOT/$p/src/m3makefile" ] ; then
       PKGS="${PKGS} $ROOT/$p"
     else
       echo " *** cannot find package $1 / $p" 1>&2
