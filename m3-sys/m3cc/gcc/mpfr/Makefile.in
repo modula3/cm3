@@ -1665,7 +1665,7 @@ uninstall-info: uninstall-info-recursive
 	uninstall-info-am uninstall-libLTLIBRARIES
 
 
-get_patches.c: $(srcdir)/PATCHES get_patches.sh
+get_patches.c: $(srcdir)/PATCHES $(srcdir)/get_patches.sh
 	$(srcdir)/get_patches.sh > $@ || rm -f $@
 
 tune:
