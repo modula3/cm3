@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.96 2008-04-19 13:25:56 jkrell Exp $
+# $Id: pylib.py,v 1.97 2008-04-19 13:47:17 jkrell Exp $
 
 import os
 from os import getenv
@@ -1384,33 +1384,14 @@ GenericCommand:
 
     for p in Packages:
 
-        q = p
-        if os.path.isdir(q):
-            PackageDirectories.append(q)
-            continue
-
-        q = os.path.join(Root, "m3-sys", p)
-        if os.path.isdir(q):
-            PackageDirectories.append(q)
-            continue
-
-        q = os.path.join(Root, p)
-        if os.path.isdir(q):
-            PackageDirectories.append(q)
-            continue
-
         q = GetPackagePath(p)
         if not q:
             File = __file__
             sys.stderr.write("%(File)s *** cannot find package %(p)s\n" % vars())
             sys.exit(1)
 
-        if os.path.isdir(q):
-            PackageDirectories.append(q)
-            continue
-
         q = os.path.join(Root, q)
-        if os.path.isdir(q):
+        if os.path.isfile(os.path.join(q, "src", "m3makefile")):
             PackageDirectories.append(q)
             continue
 
