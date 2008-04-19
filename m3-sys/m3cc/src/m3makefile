@@ -153,20 +153,6 @@ if not equal (M3CC_HOST, M3CC_TARGET)
 end
 
 %
-% fs_canonical_pn is not yet implemented, so use getwd instead
-% getwd isn't in current bootstrap tools, so fallback further
-% Older tools don't implement path (). In which case, you don't get
-% our configuration of gmp and mpfr (see ConfigureLib).
-%
-if defined ("xxxfs_canonical_pn")
-  build_dir = fs_canonical_pn (build_dir)
-else if defined ("xxxgetwd")
-  build_dir =  (getwd () & "/" & build_dir)
-else if defined ("path")
-  build_dir =  (path () & "/../" & BUILD_DIR & "/" & build_dir)
-end end end
-
-%
 % make sure the derived directory exists
 %
 if not exists (build_dir)
@@ -205,93 +191,6 @@ if defined ("FORCE")
   m3cc_Run("-rm -f " & donep)
 end
 
-readonly proc ConfigureLib (x) is
-%
-% Some of these comments are speculation.
-%
-% gcc has relatively recently become dependent on libmpfr and libgmp.
-%
-% gmp is the GNU Multiple Precision library.
-% mpfr is the Multiple Precision Floatingpoint/Rounding library.
-% gcc uses these to accurately portable simulate target integer
-% and floating point arithmetic, such as to propagate constant expressions, etc.,
-% presumably. This is a relatively new dependency for gcc, introduced around 4.2 or 4.3.
-%
-% One or both of these are commonly not preinstalled on systems, or
-% if they are installed on a system that needs to build cm3cg, they
-% might not be in the standard locations.
-%
-% Here we do two things:
-%  Probe non-standard locations for their install.
-%  Conspire to have them be statically linked.
-%
-% The parameter a is "gmp" or "mpfr" which leads to strings such as:
-%  /usr/lib/libgmp.a
-%  /usr/lib/libmpfr.a
-%  /usr/include/gmp.h
-%  /usr/include/mpfr.h
-%
-% NOTE that we know/assume the "key" files x.h and libx.a.
-% We know/assume that there are multiple headers and therefore do not engage in attempting
-% to copy them, since we don't need to. We know/assume that libx.a and libx.so are colocated
-% and that copying just libx.a into an "isolated" location will yield static linking.
-% This is perhaps sleazy and perhaps there is a better way. However it also seems pretty
-% darn ok. Whether this for for Unixish NT systems remains to be seen, does not matter
-% much, and can be fixed easily enough (e.g. x.lib instead of libx.a).
-% This approach does not necessarily apply to arbitrary libraries, of course.
-%
-    %
-    % Older tools can't form the full path; punt.
-    %
-    if not defined ("path")
-      return " "
-    end
-
-    local Lib = ""
-    local Include = ""
-    %
-    % Probing the user's home directory is probably reasonable.
-    % Importing the source for these into cm3 is probably reasonable.
-    %
-    foreach Bits in [TargetWordSize (M3CC_TARGET), ""]
-      if not Lib
-        foreach Candidate in ["/usr/contrib", "/usr/local", "/usr" ]
-          if not Lib
-            local CandidateLib = Candidate & "/lib" & Bits
-            local CandidateInclude = Candidate & "/include"
-            if exists (CandidateLib & "/lib" & x & ".a") and exists (CandidateInclude & "/" & x & ".h")
-              Lib = CandidateLib
-              Include = CandidateInclude
-              % break out of loops
-            end
-          end
-        end
-      end
-    end
-    if not Lib
-        error ("lib" & x & ".a and " & x & ".h not found, having looked in /usr/{,local,contrib}/{lib{,32,64},include}")
-    end
-
-    %
-    % cm3 -commands does not print the copy as it ought to.
-    % Older tools do not have fs_cp.
-    %
-    if defined ("xxxfs_cp")
-      fs_cp (Lib & "/lib" & x & ".a", build_dir & "/lib" & x & ".a")
-      write ("copy " & Lib & "/lib" & x & ".a " & build_dir & "/lib" & x & ".a\n")
-    else
-      exec ("cp", Lib & "/lib" & x & ".a", build_dir & "/lib" & x & ".a")
-    end
-    local Config = " --with-" & x & "-include=" & Include & " --with-" & x & "-lib=" & build_dir
-
-    %
-    % We could use -static instead, and then:
-    %
-    %local Config = " --with-" & x & "-include=" & Include & " --with-" & x & "-lib=" & Lib & "/lib"
-
-    return Config
-end
-
 local env = ""
 if m3cc_env contains (M3CC_TARGET)
   env = m3cc_env {M3CC_TARGET}
@@ -319,8 +218,6 @@ if not defined ("no_config")
     Configure = Configure & " --disable-shared"
     Configure = Configure & " --enable-languages=m3cg"
     Configure = Configure & " --enable-targets=all"
-    Configure = Configure & ConfigureLib ("mpfr")
-    Configure = Configure & ConfigureLib ("gmp")
     m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG, Configure, env, "&& echo \"done\" > " & done])
   end
 end
