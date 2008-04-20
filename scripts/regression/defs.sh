@@ -274,7 +274,7 @@ cm3config() {
     SL=/
   fi
   if [ -d "$1" -a -f "${f}" ]; then
-    if perl -p -i -e 's;^INSTALL_ROOT[ \t]*=.*$;INSTALL_ROOT = "'$R'$SL";' "$f";
+    if perl -p -i -e 's;^INSTALL_ROOT[ \t]*=.*$;INSTALL_ROOT = "'${R}${SL}'";' "$f";
       then true
     else
       echo "INSTALL_ROOT substitution failed for ${f}" 1>2
