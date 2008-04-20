@@ -49,17 +49,20 @@ readonly Platform_info = {
   "NetBSD2_i386" : "i386-unknown-netbsdelf"
 }
 
-readonly proc TargetWordSize (Target) is
+%
+% not currently used
+%
+readonly proc Platform_WordSize (Platform) is
   if {"ALPHA_OSF":1,"AMD64_DARWIN":1,"AMD64_LINUX":1,"AMD64_NT":1,
       "AMD64_FREEBSD":1,"AMD64_NETBSD":1,"AMD64_OPENBSD":1,"AMD64_SOLARIS":1,
-      "IA64_NT":1,"FBSD_ALPHA":1,"Tru64v5":1} contains Target
+      "IA64_NT":1,"FBSD_ALPHA":1,"Tru64v5":1} contains Platform
     return "64"
   end
   return "32"
 end
 
-readonly proc TargetExeExtension (Target) is
-  if {"NT386":1,"NT386GNU":1,"AMD64_NT":1,"IA64_NT":1,"ARM_CE":1} contains Target
+readonly proc Platform_ExeExtension (Platform) is
+  if {"NT386":1,"NT386GNU":1,"AMD64_NT":1,"IA64_NT":1,"ARM_CE":1} contains Platform
     return ".exe"
   else
     return ""
@@ -68,6 +71,13 @@ end
 
 readonly proc HostIsNT () is
   return equal ($OS, "Windows_NT")
+end
+
+local DevNull1 = "1>/dev/null"
+local DevNull2 = "2>/dev/null"
+if HostIsNT ()
+  DevNull1 = "1>nul:"
+  DevNull2 = "2>nul:"
 end
 
 proc exists (x) is
@@ -84,6 +94,43 @@ readonly proc GNU_platform (x) is
 end
 
 %
+% If possible, build a 32bit hosted tool. This way we get at least somewhat
+% cross and native tools in one "for free".
+% This works on Ubuntu 8.4 but not Suse 10.3. (Really, it depends
+% on what all is installed, but Suse doesn't seem to offer quite the
+% requisite packages in their default repositories, libgcc-i386 in particular.)
+%
+
+local doesM3Work = FALSE
+local doesM3WorkValid = FALSE
+
+proc DoesM32Work () is
+  if not doesM3WorkValid
+    delete_file ("a.exe")
+    delete_file ("a.out")
+    > "m32.c" in
+      write ("main(){}\n")
+    end
+    % use configured/command line CC?
+    local ignore = try_exec ("@gcc -m32 m32.c", DevNull2, DevNull1)
+    doesM3Work = (exists ("a.exe") or exists ("a.out"))
+    delete_file ("a.exe")
+    delete_file ("a.out")
+    delete_file ("m32.c")
+    doesM3WorkValid = TRUE
+  end
+  return doesM3Work
+end
+
+proc PickM32 (thirtytwo, sixtyfour) is
+  if DoesM32Work ()
+    return thirtytwo
+  else
+    return sixtyfour
+  end
+end
+
+%
 % Configure does not seem to ferry environment variables from itself to make,
 % so these must be specified on both the configure command and the make command.
 %
@@ -91,14 +138,14 @@ readonly m3cc_env = {
   %
   % Build an x86 hosted compiler that targets x86 and AMD64.
   %
-  "LINUXLIBC6" : "CFLAGS=-m32"
+  "LINUXLIBC6" : PickM32 ("CFLAGS=-m32", "")
 } % m3cc_env
 
 readonly m3cc_config = {
   %
   % Build an x86 hosted compiler that targets x86 and AMD64.
   %
-  "LINUXLIBC6" : " --host=i686-pc-linux-gnu --build=i686-pc-linux-gnu",
+  "LINUXLIBC6" : PickM32("--host=i686-pc-linux-gnu --build=i686-pc-linux-gnu", ""),
 
   "HPPA"  : "--with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
@@ -229,7 +276,7 @@ ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
 % build commands
 cmds = "cd " & build_dir & "; " & M3CC_MAKE & " " & ARG0 & " " & ARG1 & " " & env & " all-gcc"
 
-EXE = TargetExeExtension (M3CC_TARGET)
+EXE = Platform_ExeExtension (M3CC_TARGET)
 
 readonly proc postcp() is
   pSrc  = build_dir & "/gcc/m3cgc1" & EXE
