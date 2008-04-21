@@ -138,7 +138,7 @@ readonly m3cc_env = {
   %
   % Build an x86 hosted compiler that targets x86 and AMD64.
   %
-  "LINUXLIBC6" : PickM32 ("CFLAGS='-m32 -g -O'", "")
+  "LINUXLIBC6" : PickM32 ("CFLAGS='-m32 -g'", "")
 } % m3cc_env
 
 readonly m3cc_config = {
