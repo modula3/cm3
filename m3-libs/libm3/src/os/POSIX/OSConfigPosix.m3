@@ -107,6 +107,7 @@ CONST
    (* PPC_LINUX	 *)  "Linux",
    (* NetBSD2_i386 *)  "NetBSD",
    (* AMD64_DARWIN *) "AMD64_DARWIN",
+   (* AMD64_LINUX *) "AMD64_LINUX",
    ..
   };
 
@@ -149,6 +150,7 @@ CONST
    (* PPC_LINUX	 *)  "ppc",
    (* NetBSD2_i386 *)  "i386",
    (* AMD64_DARWIN *) "AMD64",
+   (* AMD64_LINUX *) "AMD64",
    ..
   };
 
