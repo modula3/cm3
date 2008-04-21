@@ -138,7 +138,7 @@ readonly m3cc_env = {
   %
   % Build an x86 hosted compiler that targets x86 and AMD64.
   %
-  "LINUXLIBC6" : PickM32 ("CFLAGS=-m32", "")
+  "LINUXLIBC6" : PickM32 ("CFLAGS='-m32 -g -O'", "")
 } % m3cc_env
 
 readonly m3cc_config = {
@@ -243,19 +243,23 @@ if m3cc_env contains (M3CC_TARGET)
   env = m3cc_env {M3CC_TARGET}
 end
 
+local Cross = not equal (M3CC_HOST, M3CC_TARGET)
+local Native = equal (M3CC_HOST, M3CC_TARGET)
+
 if not defined ("no_config")
   % configure the sources
   if not exists (donep)
     local Configure = ""
-    if not equal (M3CC_HOST, M3CC_TARGET)
+    if Cross
       Configure = Configure & " --target=" & GNU_platform (M3CC_TARGET)
     end
     Configure = Configure & " --srcdir=../gcc"
     Configure = Configure & " --disable-bootstrap"
     Configure = Configure & " --disable-doc"
-    %Configure = Configure & " --disable-fixincludes" % shouldn't be needed, but is
+    if Native
+      Configure = Configure & " --disable-fixincludes"
+    end
     Configure = Configure & " --disable-intl"
-    %Configure = Configure & " --disable-libcpp" % shouldn't be needed, but is
     Configure = Configure & " --disable-libgcc"
     Configure = Configure & " --disable-libgomp"
     Configure = Configure & " --disable-libmudflap"
@@ -269,14 +273,9 @@ if not defined ("no_config")
   end
 end
 
-% check for non-default flags
-ARG0 = get_overrides ("CC", M3CC_CC)
-ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
-
-% build commands
-cmds = "cd " & build_dir & "; " & M3CC_MAKE & " " & ARG0 & " " & ARG1 & " " & env & " all-gcc"
-
 EXE = Platform_ExeExtension (M3CC_TARGET)
+
+local DoMipsTfile = equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
 
 readonly proc postcp() is
   pSrc  = build_dir & "/gcc/m3cgc1" & EXE
@@ -284,7 +283,7 @@ readonly proc postcp() is
   if stale(pDest, pSrc)
     cp_if(pSrc, pDest)
   end
-  if equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
+  if DoMipsTfile
     pSrc = build_dir & "/gcc/mips-tfile"
     pDest = build_dir & "/mips-tfile"
     if stale(pDest, pSrc)
@@ -293,11 +292,29 @@ readonly proc postcp() is
   end
 end
 
-if equal (M3CC_HOST, M3CC_TARGET)
+if Native
   BindExport ("cm3cg" & EXE)
-  if equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
+  if DoMipsTfile
     BindExport ("mips-tfile")
   end
+end
+
+% check for non-default flags
+ARG0 = get_overrides ("CC", M3CC_CC)
+ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
+
+% build commands
+cmds = "cd " & build_dir & "; " & M3CC_MAKE & " " & ARG0 & " " & ARG1 & " " & env
+if Cross
+  % not tested, be less tricky, build everything
+else
+  %
+  % Build only what is needed to build m3 backend, e.g. not the C frontend.
+  % This probably is still more than necessary but it is a start.
+  %
+  cmds = cmds & " all-gmp all-mpfr all-libcpp all-libdecnumber all-build-libiberty all-libiberty configure-gcc "
+  cmds = cmds & "; cd gcc ; " & M3CC_MAKE & " " & ARG0 & " " & ARG1 & " " & env
+  cmds = cmds & " s-modes insn-config.h m3cg" & EXE
 end
 
 % finally, compile it
