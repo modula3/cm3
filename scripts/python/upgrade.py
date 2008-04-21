@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.21 2008-03-24 13:41:27 jkrell Exp $
+# $Id: upgrade.py,v 1.22 2008-04-21 16:42:45 jkrell Exp $
 
 import sys
 import pylib
@@ -52,7 +52,7 @@ FilterPackages([ "m3cc" ]) and DoPackage(argv_BuildShip, [ "m3cc" ])
 # Up to now, the compiler binaries have not been installed.
 # We do this now but keep backups of the old ones. (not yet)
 #
-ShipCompiler() or sys.exit(1)
+ShipFront() or sys.exit(1)
 
 #
 # Now try the new compiler but building the core system (without
