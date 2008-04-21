@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.22 2008-04-21 16:42:45 jkrell Exp $
+# $Id: upgrade.py,v 1.23 2008-04-21 17:06:12 jkrell Exp $
 
 import sys
 import pylib
@@ -75,6 +75,6 @@ DoPackage(argv_BuildShip, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m
                             "cm3", "mklib", "m3cc", "m3core", "libm3",
     ]) or sys.exit(1)
 
-ShipCompiler() or sys.exit(1)
+ShipFront() or sys.exit(1)
 
 print("%s: Success." % os.path.basename(sys.argv[0]))
