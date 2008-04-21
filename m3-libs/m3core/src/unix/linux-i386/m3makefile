@@ -1,2 +1,2 @@
 Interface("Uucontext")
-implementation("Uin")
+Interface("UpthreadMachine")

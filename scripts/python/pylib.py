@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.98 2008-04-21 16:21:07 jkrell Exp $
+# $Id: pylib.py,v 1.99 2008-04-21 19:37:49 jkrell Exp $
 
 import os
 from os import getenv
@@ -280,111 +280,144 @@ Q = "'"
 #-----------------------------------------------------------------------------
 # evaluate uname information
 
-if (UName.startswith("windows")
-        or Target.startswith("NT386")
-        or UNameCommand.startswith("mingw")
-        or UNameCommand.startswith("cygwin")):
+if not Target:
+#
+# First pass, mainly just sniff to determien target, and not other data,
+# except for NT386.
+#
+    if (UName.startswith("windows")
+            or Target.startswith("NT386")
+            or UNameCommand.startswith("mingw")
+            or UNameCommand.startswith("cygwin")):
 
-    Q = ""
-    HAVE_SERIAL = True
-    GMAKE = getenv("GMAKE") or "make"
+        Q = ""
+        HAVE_SERIAL = True
+        GMAKE = getenv("GMAKE") or "make"
 
-    #
-    # TBD:
-    # If cl is not in the path, or link not in the path (Cygwin link doesn't count)
-    # then error toward GNU, and probe uname and gcc -v.
-    #
-    if ((Target.startswith("NT386GNU")
-        # uname can be in the %PATH% and still target native NT386
-        #or UNameCommand.startswith("cygwin")
-        or (OSType == "POSIX")
-        or (GCC_BACKEND == "yes"))
-        and (GCC_BACKEND != "no")
-        and (OSType != "WIN32")):
+        #
+        # TBD:
+        # If cl is not in the path, or link not in the path (Cygwin link doesn't count)
+        # then error toward GNU, and probe uname and gcc -v.
+        #
+        if ((Target.startswith("NT386GNU")
+            # uname can be in the %PATH% and still target native NT386
+            #or UNameCommand.startswith("cygwin")
+            or (OSType == "POSIX")
+            or (GCC_BACKEND == "yes"))
+            and (GCC_BACKEND != "no")
+            and (OSType != "WIN32")):
 
-        Target = "NT386"
-        Config = "NT386GNU"
-        OSType = "POSIX"
-        GCC_BACKEND = True
-        HAVE_SERIAL = False # temporary..
+            Target = "NT386"
+            Config = "NT386GNU"
+            OSType = "POSIX"
+            GCC_BACKEND = True
+            HAVE_SERIAL = False # temporary..
 
-    elif ((Target.startswith("NT386MINGNU")
-        # uname can be in the %PATH% and still target native NT386
-        #or UNameCommand.startswith("mingw")
-        or (GCC_BACKEND == "yes"))
-        and (GCC_BACKEND != "no")
-        and (OSType != "POSIX")):
+        elif ((Target.startswith("NT386MINGNU")
+            # uname can be in the %PATH% and still target native NT386
+            #or UNameCommand.startswith("mingw")
+            or (GCC_BACKEND == "yes"))
+            and (GCC_BACKEND != "no")
+            and (OSType != "POSIX")):
 
-        Target = "NT386"
-        Config = "NT386MINGNU"
-        OSType = "WIN32"
-        GCC_BACKEND = True
+            Target = "NT386"
+            Config = "NT386MINGNU"
+            OSType = "WIN32"
+            GCC_BACKEND = True
 
-    elif ((not Target.startswith("NT386MINGNU"))
-        and (not Target.startswith("NT386GNU"))
-        and (OSType != "POSIX")
-        and (GCC_BACKEND != "yes")):
+        elif ((not Target.startswith("NT386MINGNU"))
+            and (not Target.startswith("NT386GNU"))
+            and (OSType != "POSIX")
+            and (GCC_BACKEND != "yes")):
 
-        Target = "NT386"
-        Config = "NT386"
-        OSType = "WIN32"
-        GCC_BACKEND = False
+            Target = "NT386"
+            Config = "NT386"
+            OSType = "WIN32"
+            GCC_BACKEND = False
 
-    else:
-
-        print("unable to determine configuration")
-        sys.exit(1)
-
-elif UName.startswith("freebsd"):
-
-    GCC_BACKEND = True
-
-    if UNameArchM == "i386":
-        if UNameRevision.startswith("1"):
-            Target = "FreeBSD"
-        elif UNameRevision.startswith("2"):
-            Target = "FreeBSD2"
-        elif UNameRevision.startswith("3"):
-            Target = "FreeBSD3"
-        elif UNameRevision.startswith("4"):
-            Target = "FreeBSD4"
         else:
-            Target = "FreeBSD4"
+
+            print("unable to determine configuration")
+            sys.exit(1)
+
+    elif (Target == "") and UName.startswith("freebsd"):
+
+        if UNameArchM == "i386":
+            if UNameRevision.startswith("1"):
+                Target = "FreeBSD"
+            elif UNameRevision.startswith("2"):
+                Target = "FreeBSD2"
+            elif UNameRevision.startswith("3"):
+                Target = "FreeBSD3"
+            elif UNameRevision.startswith("4"):
+                Target = "FreeBSD4"
+            else:
+                Target = "FreeBSD4"
+        else:
+            Target = "FBSD_ALPHA"
+
+    elif (Target == "") and UName.startswith("darwin"):
+
+        # detect the m3 platform (Darwin runs on ppc and ix86)
+        if UNameArchP.startswith("powerpc"):
+            Target = "PPC_DARWIN"
+        elif re.match("i[3456]86", UNameArchP):
+            Target = "I386_DARWIN"
+
+    elif (Target == "") and UName.startswith("sunos"):
+
+        Target = "SOLgnu"
+        #Target = "SOLsun"
+
+    elif (Target == "") and UName.startswith("linux"):
+
+        if UNameArchM == "ppc":
+            Target = "PPC_LINUX"
+        elif UNameArchM == "x86_64":
+            Target = "AMD64_LINUX"
+        else:
+            Target = "LINUXLIBC6"
+
+    elif (Target == "") and UName.startswith("netbsd"):
+
+        Target = "NetBSD2_i386" # only arch/version combination supported yet
+
     else:
-        Target = "FBSD_ALPHA"
 
-elif UName.startswith("darwin"):
+        # more need to be added here, I haven't got all the platform info ready
+        pass
 
-    GCC_BACKEND = True
 
-    # detect the m3 platform (Darwin runs on ppc and ix86)
-    if UNameArchP.startswith("powerpc"):
-        Target = "PPC_DARWIN"
-    elif re.match("i[3456]86", UNameArchP):
-        Target = "I386_DARWIN"
-    GMAKE = getenv("GMAKE") or "make"
-
-elif UName.startswith("sunos"):
+if ((Target == "FreeBSD")
+    or (Target == "FreeBSD2")
+    or (Target == "FreeBSD3")
+    or (Target == "FreeBSD4")
+    or (Target == "FBSD_ALPHA")):
 
     GCC_BACKEND = True
-    Target = "SOLgnu"
-    #Target = "SOLsun"
 
-elif UName.startswith("linux"):
+elif ((Target == "PPC_DARWIN")
+    or (Target == "I386_DARWIN")
+    or (Target == "AMD64_DARWIN")):
 
     GCC_BACKEND = True
     GMAKE = getenv("GMAKE") or "make"
-    GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
-    if UNameArchM == "ppc":
-        Target = "PPC_LINUX"
-    else:
-        Target = "LINUXLIBC6"
 
-elif UName.startswith("netbsd"):
+elif ((Target == "SOLgnu") or (Target == "SOLsun")):
+
+    GCC_BACKEND = True
+
+elif ((Target == "LINUXLIBC6") or (Target == "PPC_LINUX") or (Target == "AMD64_LINUX")):
 
     GCC_BACKEND = True
     GMAKE = getenv("GMAKE") or "make"
-    Target = "NetBSD2_i386" # only arch/version combination supported yet
+    if (Target != "AMD64_LINUX"):
+        GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
+
+elif (Target == "NetBSD2_i386"):
+
+    GCC_BACKEND = True
+    GMAKE = getenv("GMAKE") or "make"
 
 else:
 
@@ -1248,7 +1281,7 @@ PackageSets["core"] += [
     "m3cc",
     "cm3",
     "m3front",
-	"m3gdb",
+    "m3gdb",
     ]
 
 PackageSets["base"] += [
@@ -1890,7 +1923,7 @@ if __name__ == "__main__":
     #
     # run test code if module run directly
     #
-    
+
     print(_ConvertFromCygwinPath("\\cygdrive/c/foo"))
     print(_ConvertFromCygwinPath("//foo"))
     sys.exit(1)

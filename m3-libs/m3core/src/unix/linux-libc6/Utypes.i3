@@ -28,6 +28,10 @@ PROCEDURE minor (x: dev_t): int;
 PROCEDURE makedev (x, y: int): dev_t;
 
 TYPE
+  uint16_t  = unsigned_short;
+  uint32_t  = unsigned_int;
+  in_addr_t = uint32_t; (* base type for internet address *)
+
   long_long_uint      = ARRAY [0..1] OF uint;
 
   u_char  = unsigned_char;
