@@ -52,7 +52,7 @@ FilterPackages([ "m3cc" ]) and DoPackage(argv_BuildShip, [ "m3cc" ])
 # Up to now, the compiler binaries have not been installed.
 # We do this now but keep backups of the old ones. (not yet)
 #
-ShipCompiler() or sys.exit(1)
+ShipFront() or sys.exit(1)
 
 #
 # Now try the new compiler but building the core system (without
