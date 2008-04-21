@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.54 2008-04-21 10:10:58 jkrell Exp $
+% $Id: m3makefile,v 1.55 2008-04-21 10:34:59 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -138,7 +138,7 @@ readonly m3cc_env = {
   %
   % Build an x86 hosted compiler that targets x86 and AMD64.
   %
-  "LINUXLIBC6" : PickM32 ("CFLAGS='-m32 -g -O'", "")
+  "LINUXLIBC6" : PickM32 ("CFLAGS='-m32 -g'", "")
 } % m3cc_env
 
 readonly m3cc_config = {
