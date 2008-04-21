@@ -1526,6 +1526,14 @@ def _CopyCompiler(From, To):
 
     from_cm3 = os.path.join(From, "cm3")
     from_cm3exe = os.path.join(From, "cm3.exe")
+    from_cm3cg = os.path.join(From, "cm3cg")
+    from_cm3cgexe = os.path.join(From, "cm3cg.exe")
+
+    if (not FileExists(from_cm3)
+     and not FileExists(from_cm3exe)
+     and not FileExists(from_cm3cg)
+     and not FileExists(from_cm3cgexe)):
+        FatalError("no cm3[cg][.exe] exists")
 
     #
     # check .exe first to avoid being fooled by Cygwin
@@ -1535,17 +1543,18 @@ def _CopyCompiler(From, To):
     elif FileExists(from_cm3):
         pass
     else:
-        FatalError("neither " + from_cm3 + " nor " + from_cm3exe + " exist")
+        from_cm3 = None
+        from_cm3exe = None
 
-    #
-    # delete .exe first to avoid being fooled by Cygwin
-    #
-    DeleteFile(os.path.join(To, "cm3.exe"))
-    DeleteFile(os.path.join(To, "cm3"))
-    CopyFile(from_cm3, To) or FatalError("3")
+    if from_cm3:
+        #
+        # delete .exe first to avoid being fooled by Cygwin
+        #
+        DeleteFile(os.path.join(To, "cm3.exe"))
+        DeleteFile(os.path.join(To, "cm3"))
+        CopyFile(from_cm3, To) or FatalError("3")
+        CopyFileIfExist(os.path.join(From, "cm3.pdb"), To) or FatalError("5")
 
-    from_cm3cg = os.path.join(From, "cm3cg")
-    from_cm3cgexe = os.path.join(From, "cm3cg.exe")
     if FileExists(from_cm3cgexe):
         from_cm3cg = from_cm3cgexe
     elif FileExists(from_cm3cg):
@@ -1561,14 +1570,14 @@ def _CopyCompiler(From, To):
         DeleteFile(os.path.join(To, "cm3cg"))
         CopyFile(from_cm3cg, To) or FatalError("4")
 
-    CopyFileIfExist(os.path.join(From, "cm3.pdb"), To) or FatalError("5")
-
     return True
 
-def ShipCompiler():
-    #
-    # The compiler has trouble shipping itself currently because it in use.
-    #
+def ShipBack():
+    return _CopyCompiler(
+        os.path.join(Root, "m3-sys", "m3cc", Config),
+        os.path.join(InstallRoot, "bin"))
+
+def ShipFront():
     return _CopyCompiler(
         os.path.join(Root, "m3-sys", "cm3", Config),
         os.path.join(InstallRoot, "bin"))

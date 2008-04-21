@@ -5,4 +5,4 @@ import sys
 import pylib
 from pylib import *
 
-CopyConfigForDevelopment() or sys.exit(1)
+ShipBack() or sys.exit(1)
