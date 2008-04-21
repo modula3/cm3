@@ -30,7 +30,7 @@ TYPE
     SPARC, SUN3, SUN386, UMAX, VAX, FreeBSD3,
     FreeBSD4, FBSD_ALPHA, LINUXLIBC6, I386_DARWIN,
     PPC_DARWIN, BSDI4, NT386GNU, PPC_LINUX, NetBSD2_i386,
-    AMD64_DARWIN, Undefined
+    AMD64_DARWIN, AMD64_LINUX, Undefined
   };
 
 CONST
@@ -71,7 +71,8 @@ CONST
     (* 33 *) "NT386GNU",
     (* 34 *) "PPC_LINUX",
     (* 35 *) "NetBSD2_i386",
-    (* 36 *) "AMD64_DARWIN"
+    (* 36 *) "AMD64_DARWIN",
+    (* 37 *) "AMD64_LINUX"
   };
 
 CONST
@@ -300,7 +301,7 @@ VAR (*CONST*)
   (* every structure size must be a multiple of this *)
 
   Bitfield_can_overlap: BOOLEAN;
-  (* a C bit field cannot overlap two adjacent storage units *)  
+  (* a C bit field cannot overlap two adjacent storage units *)
 
   Allow_packed_byte_aligned: BOOLEAN;
  (* Allow the compiler to align scalar types on byte boundaries when packing.

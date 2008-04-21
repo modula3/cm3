@@ -4,10 +4,28 @@
 
 INTERFACE Upthread;
 
+(* This file is largely the same across many/all platforms.
+Let's factor out the commonality and eliminate the dead. *)
+
 FROM Ctypes IMPORT char, int, unsigned_int, void_star;
 FROM Utypes IMPORT size_t;
 FROM Usignal IMPORT sigset_t;
 FROM Utime IMPORT struct_timespec;
+
+(* <bits/pthreadtypes.h> *)
+
+FROM UpthreadMachine IMPORT
+  SIZEOF_PTHREAD_ATTR_T        ,
+  SIZEOF_PTHREAD_MUTEX_T       ,
+  SIZEOF_PTHREAD_RWLOCK_T      ;
+
+(* <bits/pthreadtypes.h> *)
+
+CONST
+  SIZEOF_PTHREAD_COND_T        = 48;
+  SIZEOF_PTHREAD_CONDATTR_T    =  4;
+  SIZEOF_PTHREAD_MUTEXATTR_T   =  4;
+  SIZEOF_PTHREAD_RWLOCKATTR_T  =  8;
 
 (* <bits/local_lim.h> *)
 
@@ -16,18 +34,6 @@ CONST
   PTHREAD_KEYS_MAX = 1024;
 
 (* <bits/pthreadtypes.h> *)
-
-CONST
-  SIZEOF_PTHREAD_ATTR_T        = 36;
-  SIZEOF_PTHREAD_MUTEX_T       = 24;
-  SIZEOF_PTHREAD_MUTEXATTR_T   =  4;
-  SIZEOF_PTHREAD_COND_T        = 48;
-  SIZEOF_PTHREAD_COND_COMPAT_T = 12;
-  SIZEOF_PTHREAD_CONDATTR_T    =  4;
-  SIZEOF_PTHREAD_RWLOCK_T      = 32;
-  SIZEOF_PTHREAD_RWLOCKATTR_T  =  8;
-  SIZEOF_PTHREAD_BARRIER_T     = 20;
-  SIZEOF_PTHREAD_BARRIERATTR_T =  4;
 
 (* Thread identifiers.  The structure of the attribute type is not
    exposed on purpose.  *)

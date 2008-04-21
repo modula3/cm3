@@ -9,6 +9,7 @@ readonly HAS_STACK_WALKER = {
   "ALPHA_OSF"  : TRUE,  % has a working stack walker
   "AIX386"     : FALSE,
   "AMD64_DARWIN": FALSE,
+  "AMD64_LINUX": FALSE,
   "AP3000"     : FALSE,
   "ARM"        : FALSE,
   "DS3100"     : TRUE,  % has a working stack walker

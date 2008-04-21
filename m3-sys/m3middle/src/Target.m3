@@ -129,6 +129,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Aligned_procedures        := TRUE;
     Bitfield_can_overlap      := FALSE;
     Global_handler_stack      := TRUE;
+    First_readable_addr       := 0;
+    Guard_page_size           := 0;
 
     CASE System OF
     |  Systems.AIX386 =>
@@ -136,10 +138,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 25 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0;
                  Setjmp                    := "_setjmp";
 
     |  Systems.ALPHA_OSF =>
@@ -147,7 +147,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Word    := Word64;
                  Address := Word64;   Address.cg_type := CGType.Addr;
 
-                 max_align                 := 64;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
@@ -167,10 +166,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
                  Bitfield_can_overlap      := TRUE;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 83 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0;
                  Setjmp                    := "_setjmp";
 
     |  Systems.ARM =>
@@ -178,14 +175,11 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 32;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 16 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0;
                  Setjmp                    := "_setjmp";
 
     |  Systems.DS3100 =>
-                 max_align                 := 64;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
@@ -205,7 +199,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  First_readable_addr       := 4096 * Char.size;
                  Jumpbuf_size              := 11 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0 * Char.size;
                  Setjmp                    := "_setjmp";
                  Global_handler_stack      := FALSE; (* may use pthreads *)
 
@@ -215,14 +208,11 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
                  Bitfield_can_overlap      := TRUE;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 100 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0;
                  Setjmp                    := "_setjmp";
 
     |  Systems.HPPA =>
-                 max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 16;
@@ -230,7 +220,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 53 * Address.size;
                  Jumpbuf_align             := max_align;
                  Fixed_frame_size          := 8 * Address.size;
-                 Guard_page_size           := 0;
                  Setjmp                    := "_setjmp";
                  Aligned_procedures        := FALSE;
 
@@ -239,10 +228,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 32;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 65 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0;
                  Setjmp                    := "_setjmp";
 
     | Systems.IBMRT =>
@@ -250,14 +237,11 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 17 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0;
                  Setjmp                    := "_setjmp";
 
     |  Systems.IRIX5 =>
-                 max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
@@ -275,7 +259,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  First_readable_addr       := 16_1000;
                  Jumpbuf_size              := 8 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0 * Char.size;
                  Setjmp                    := "__setjmp";
 
     | Systems.NEXT =>
@@ -283,10 +266,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 39 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0;
                  Setjmp                    := "_setjmp";
 
     | Systems.NT386, Systems.NT386GNU =>
@@ -340,10 +321,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 32;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 22 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0;
                  Setjmp                    := "_setjmp";
 
     |  Systems.OS2 =>
@@ -351,10 +330,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 8 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0 * Char.size;
                  Setjmp                    := "__setjmp";
                  EOL                       := "\n"; (* really? *)
 
@@ -363,14 +340,12 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 84 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
                  Setjmp                    := "_setjmp";
 
     | Systems.SOLgnu, Systems.SOLsun =>
-                 max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
@@ -383,7 +358,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Global_handler_stack      := FALSE; (* may use pthreads *)
 
     | Systems.SPARC =>
-                 max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
@@ -398,7 +372,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 79 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 1024 * Char.size;
@@ -409,10 +382,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 8 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0;
                  Setjmp                    := "_setjmp";
 
     | Systems.UMAX =>
@@ -420,10 +391,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 10 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0;
                  Setjmp                    := "_setjmp";
 
     | Systems.VAX =>
@@ -438,7 +407,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 10 * Address.size;
                  Fixed_frame_size          := 12 * Address.size;
                  Guard_page_size           := 1024 * Char.size;
@@ -450,22 +418,31 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 0;
                  Jumpbuf_size              := 40 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0 * Char.size;
+                 Setjmp                    := "_setjmp";
+                 Global_handler_stack      := FALSE; (* may use pthreads *)
+
+    |  Systems.AMD64_LINUX =>
+                 Integer := Int64;
+                 Word    := Word64;
+                 Address := Word64;
+                 Address.cg_type := CGType.Addr;
+                 Little_endian             := TRUE;
+                 PCC_bitfield_type_matters := TRUE;
+                 Structure_size_boundary   := 8;
+                 Jumpbuf_size              := 200 * Char.size;
+                 Fixed_frame_size          := 8 * Char.size;
                  Setjmp                    := "_setjmp";
                  Global_handler_stack      := FALSE; (* may use pthreads *)
 
     |  Systems.I386_DARWIN =>
-                 max_align                 := 64;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
                  First_readable_addr       := 4096 * Char.size;
                  Jumpbuf_size              := 18 * Address.size;
                  Fixed_frame_size          := 8 * Address.size;
-                 Guard_page_size           := 0 * Char.size;
                  Setjmp                    := "setjmp";
                  Global_handler_stack      := FALSE; (* may use pthreads *)
 
@@ -474,19 +451,16 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Word    := Word64;
                  Address := Word64;   Address.cg_type := CGType.Addr;
 
-                 max_align                 := 64;
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
                  First_readable_addr       := 4096 * Char.size;
                  Jumpbuf_size              := 19 * Address.size;
                  Fixed_frame_size          := 8 * Address.size;
-                 Guard_page_size           := 0 * Char.size;
                  Setjmp                    := "setjmp";
                  Global_handler_stack      := FALSE; (* may use pthreads *)
 
     |  Systems.PPC_DARWIN =>
-                 max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
@@ -495,7 +469,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                                               Address.size;
                  Jumpbuf_align             := Word64.align;
                  Fixed_frame_size          := 8 * Address.size;
-                 Guard_page_size           := 0 * Char.size;
                  Setjmp                    := "setjmp";
                  Global_handler_stack      := FALSE; (* may use pthreads *)
                  (* Allow_packed_byte_aligned := TRUE; use <*LAZYALIGN*>*)
@@ -512,7 +485,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Setjmp                    := "_setjmp";
 
     |  Systems.PPC_LINUX => 
-                 max_align                 := 64;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
@@ -521,7 +493,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                                               32 * Address.size + 4;
                  Jumpbuf_align             := Word64.align;
                  Fixed_frame_size          := 8 * Address.size;
-                 Guard_page_size           := 0 * Char.size;
                  Setjmp                    := "_setjmp";
 
     | Systems.NetBSD2_i386 =>
@@ -532,7 +503,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  First_readable_addr       := 4096 * Char.size;
                  Jumpbuf_size              := 14 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
-                 Guard_page_size           := 0 * Char.size;
                  Setjmp                    := "_setjmp";
 
     ELSE RETURN FALSE;

@@ -1,0 +1,6 @@
+% Copyright according to COPYRIGHT-CMASS.
+
+% This file is the same across all platforms.
+% Let's factor it.
+
+c_source ("dtoa")

@@ -4,6 +4,10 @@ IMPORT Process, IO, Rd, Wr, FileRd, FileWr, Thread, OSError, TextRefTbl;
 IMPORT WinNT, Convert, CoffTime, File, FS, Text, Word, TextWr, TextSeq;
 IMPORT Fmt, Time, IntArraySort, RegularFile, WinDef, Params, Pathname;
 IMPORT TextExtras;
+IMPORT Ctypes;
+
+TYPE
+  UINT32 = Ctypes.unsigned_int;
 
 CONST
   MaxKeeper    = 10000;            (* max file size we'll hold in memory *)
@@ -353,7 +357,8 @@ PROCEDURE AddExport (sym: TEXT;  f: FileDesc) =
 PROCEDURE GetSymbolName (READONLY o: ObjFile;  sym: WinNT.PIMAGE_SYMBOL): TEXT =
   TYPE IntBytes = ARRAY [0..3] OF BYTE;
   VAR
-    offset, max_len, len: INTEGER;
+    max_len, len: INTEGER;
+    offset: UINT32;
     ptr: UNTRACED REF CHAR;
     buf: ARRAY [0..255] OF CHAR;
     res: TEXT;
