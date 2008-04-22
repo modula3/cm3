@@ -34,11 +34,7 @@ proc set_config_options() is
   M3_OPTIONS += "-w1"  %-- produce "level 1" warnings
 end
 
-%------------------------------------------------------------- export paths ---
-% During the installation, destination directories that do not exist 
-% will be created. You need the necessary permissions to do so; otherwise,
-% the installation will fail, but can be restarted after you have 
-% fixed the permissions.
+%-------------------------------------------------------------------- paths ---
 
 readonly
 proc
@@ -98,46 +94,17 @@ proc exists(x) is
   return not stale(x, x)
 end
 
-%
-% AMD64_LINUX varies in its support for building and running x86.
-% We make some effort here to work with varying configurations, but
-% nothing is guaranteed to work -- there might be no x86 .so
-% or .a files.
-%
-if equal (TARGET, "LINUXLIBC6") and exists ("/usr/lib32")
-  proc Xlib(name, version) is
-    local a = "/usr/lib32/lib" & name & ".so." & version
-    if exists (a)
-      return a
-    end
-    % hope for the best
-    return "-l" & name
-  end
-else
-  proc Xlib(name, version) is
-    return "-l" & name
-  end
-end
-
 SYSTEM_LIBS =
 {
-    "LIBC"       : [ "-Xlinker", "-Bdynamic", "-lm", "-lpthread" ],
-    "LEX-YACC"   : [ "-Xlinker", "-Bdynamic", "-ll" ],
-    "FLEX-BISON" : [ "-Xlinker", "-Bdynamic", "-lfl" ],
-    "POSTGRES95" : [ "-Xlinker", "-Bdynamic", "-L/usr/local/pgsql/lib", "-lpq" ],
-    "OPENGL"     : [ "-Xlinker", "-Bdynamic", "-lGLU", "-lGL", "-lXext" ],
-    "ODBC"       : [ "-Xlinker", "-Bdynamic", "-lodbc" ],
-    "MOTIF"      : [ "-Xlinker", "-Bdynamic", "-lXm" ],
+    "LIBC"       : [ "-lm", "-lpthread" ],
+    "LEX-YACC"   : [ "-ll" ],
+    "FLEX-BISON" : [ "-lfl" ],
+    "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
+    "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
+    "ODBC"       : [ "-lodbc" ],
+    "MOTIF"      : [ "-lXm" ],
     "TCP"        : [ ],
-    "X11" :      [ "-Xlinker",
-                   "-Bdynamic",
-                    Xlib("Xaw", 7),
-                    Xlib("Xmu", 6),
-                    Xlib("Xext", 6),
-                    Xlib("Xt", 6),
-                    Xlib("SM", 6),
-                    Xlib("ICE", 6),
-                    Xlib("X11", 6) ]
+    "X11" :      [  "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
 }
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
@@ -159,7 +126,8 @@ SYSTEM_LIBORDER =
 
 %---------------------------------------------------------- system programs ---
 
-readonly SYSTEM_CC  = "cc" % C compiler
+% should probe for if -m32 switch is accepted
+readonly SYSTEM_CC  = "@gcc -gstabs+ -fPIC " & GCC_M3264 % C compiler
 readonly SYSTEM_AR  = "@ar" % Archiver
 readonly SYSTEM_ASM = "@as" % Assembler
 
@@ -167,15 +135,13 @@ readonly SYSTEM_ASM = "@as" % Assembler
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
-%
-% -mno-align-double might be very important, and should do no harm
-%
-readonly m3back = "@cm3cg -mno-align-double -quiet -fPIC"
+readonly m3back = "@cm3cg -quiet -fPIC -gstabs+ -mno-align-double"
 
 proc m3_backend(source, object, optimize, debug) is
+  %
+  % These flags are local instead of global to avoid the probe when we compile nothing.
+  %
   local args = [ GetM3BackFlag (GCC_M3264), GetM3BackFlag ("-fno-reorder-blocks") ]
-  if optimize  args += "-O3"  end
-  if debug     args += "-gstabs+"  end
   if M3_PROFILING args += "-p" end
   return try_exec (m3back, args, source, "-o", object)
 end
@@ -194,9 +160,7 @@ M3_BACKEND_MODE = "3"
 
 proc compile_c(source, object, options, optimize, debug) is
   % should probe for if -m32 switch is accepted
-  local args = [ GCC_M3264, "-fPIC", options ]
-  if optimize  args += "-O"  end
-  if debug     args += "-gstabs+"  end
+  local args = options
   if M3_PROFILING args += "-pg" end
   return try_exec (SYSTEM_CC, args, "-c", source)
 end
@@ -364,8 +328,6 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
             GetGcWrapFlags(),
             pg,
             "-shared",
-            % should probe for if -m32 switch is accepted
-            GCC_M3264,
             "-Wl,-soname," & lib_sox,
             "-o", lib_sox,
             objects,
@@ -413,19 +375,10 @@ end
 % "m3_link" is called to produce a final executable.
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
-    % The parameter order here is not faithful to the original.
-    % Does it matter?
-    local args = [ ]
-    if not shared
-        args +=  [ "-Xlinker", "-Bstatic" ]
-    end
-    args +=
+    local args =
     [
         GetGcWrapFlags(),
-        % should probe for if -m32 switch is accepted
-        GCC_M3264,
         "-o", prog,
-        "-fPIC",
         options,
         objects,
         FixM3GcDefs(imported_libs),
@@ -505,16 +458,3 @@ X11_WITH_SHARED_MEM = TRUE
 readonly proc emacs_compile(el) is
   exec("emacs -batch -f batch-byte-compile", el)
 end
-
-%------------------------------------------------------------- GNU variants ---
-% The two large pieces of GNU software used by the Modula-3 system
-% gcc(=m3cc) and gdb(=m3gdb) often require slightly different C compilers
-% or flags.  They are specified here.  Note that they may be overridden
-% from the m3build command line.
-%
-% To use the GNU defaults for CC and CFLAGS, specify "*".
-%
-
-GNU_CC     = "gcc"
-GNU_CFLAGS = "-g -O"
-GNU_MAKE   = "make"
