@@ -32,8 +32,8 @@ libmpfr_la_LDFLAGS = -version-info 2:0:1
 
 MAKEINFOFLAGS = --enable-encoding
 
-get_patches.c: PATCHES get_patches.sh
-	./get_patches.sh > $@ || rm -f $@
+get_patches.c: $(srcdir)/PATCHES $(srcdir)/get_patches.sh
+	$(srcdir)/get_patches.sh > $@ || rm -f $@
 
 # Do not add get_patches.c to CLEANFILES so that this file doesn't
 # need to be (re)built as long as no patches are applied. Anyway the
