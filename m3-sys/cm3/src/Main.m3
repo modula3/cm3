@@ -45,9 +45,6 @@ PROCEDURE DoIt () =
           iter := defs.iterate();
         BEGIN
           WHILE iter.next(name, val) DO
-            IF M3Path.IsPathVariableName (name) THEN
-              val := M3Path.PathLooselyConvertUserInputToHost_TextToText (val);
-            END;
             Quake.Define(mach, name, val);
           END;
         END;

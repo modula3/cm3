@@ -9,16 +9,17 @@ MODULE QMachine;
 IMPORT ASCII, Atom, AtomList, IntRefTbl, Env, Fmt, Text, TextConv, FileWr;
 IMPORT Pipe, Rd, Wr, Thread, Stdio, OSError, TextSeq, TextClass;
 IMPORT Pathname, Process, File, FS, RTParams;
-IMPORT M3Buf, M3File, M3ID, M3Process, CoffTime;
+IMPORT M3Buf, M3File, M3ID, M3Process;
 IMPORT QIdent, QValue, QVal, QCode, QCompiler, QVTbl, QVSeq, QScanner;
 FROM Quake IMPORT Error, ID, IDMap, NoID;
 IMPORT Date, Time;
 IMPORT TextUtils, FSUtils, System, DirStack; (* sysutils *)
+IMPORT Compiler;
 
 (* IMPORT IO; *)
 
 CONST
-  OnUnix = (CoffTime.EpochAdjust = 0.0d0);
+  OnUnix = (Compiler.ThisOS = Compiler.OS.POSIX);
 
 TYPE
   QK = QValue.Kind;
@@ -1087,9 +1088,6 @@ PROCEDURE GetEnv (default, v0, v1, v2, v3, v4: TEXT := NIL): TEXT =
     IF val = NIL AND v3 # NIL THEN val := Env.Get(v3) END;
     IF val = NIL AND v4 # NIL THEN val := Env.Get(v4) END;
     IF val = NIL THEN val := default; END;
-    IF val # NIL AND IsPathVariableName(v0) THEN
-      val := PathLooselyConvertUserInputToHost_TextToText(val);
-    END;
     RETURN val;
   END GetEnv;
 
