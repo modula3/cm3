@@ -133,11 +133,10 @@ readonly m3back = "@" & BIN_USE & "/cm3cg"
 M3_USE_STACK_WALKER = TRUE
 
 proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", "-fPIC", source, "-o", object ]
-  if optimize  args += "-O3"  end
+  local args = [ "-m32", "-quiet", "-fPIC", source, "-o", object ]
+  if optimize  args += [ "-O3", "-fno-reorder-blocks" ] end
   if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
-  args += "-fno-reorder-blocks" % avoid warnings with -O3
   return try_exec (m3back, args)
 end
 
