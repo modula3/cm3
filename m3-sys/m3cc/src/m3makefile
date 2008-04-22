@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.55 2008-04-21 10:34:59 jkrell Exp $
+% $Id: m3makefile,v 1.56 2008-04-22 19:46:33 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -138,7 +138,7 @@ readonly m3cc_env = {
   %
   % Build an x86 hosted compiler that targets x86 and AMD64.
   %
-  "LINUXLIBC6" : PickM32 ("CFLAGS='-m32 -g'", "")
+  "LINUXLIBC6" : PickM32 ("CFLAGS='-m32 -g'", "CFLAGS=-g")
 } % m3cc_env
 
 readonly m3cc_config = {
@@ -193,10 +193,17 @@ if not defined ("M3CC_CFLAGS")  M3CC_CFLAGS = GNU_CFLAGS end
 if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
-% figure out where we're going to build the beast
+% figure out where we're going to build gcc
 local build_dir = "."  % let m3build set the build directory
 if not equal (M3CC_HOST, M3CC_TARGET)
   build_dir = "../" & BUILD_DIR & "-" & M3CC_TARGET
+end
+
+local proc concat (a, b) is
+  if a
+    return (a & " " & b)
+  end
+  return b
 end
 
 %
@@ -209,13 +216,16 @@ end
 m3cc_ResponseFileCounter = "0"
 
 readonly proc m3cc_Run (x) is
+  >> "_m3.log" in
+    write(x & CR)
+  end
   if HostIsNT ()
     local readonly Temp = "_m3sh" & m3cc_ResponseFileCounter & ".sh"
     > Temp in
       write(x)
     end
     %
-    % Quake can't do math, or generate unique temp files.
+    % Quake can't do math, or generate uniquely named temp files.
     % Uniqueness is not critical here, it is merely useful
     % while debugging to go back and see the temp files.
     %
@@ -231,29 +241,36 @@ readonly proc m3cc_Run (x) is
 end
 
 done  = ".configure-done"
-donep = build_dir & "/" & done
+donep = build_dir & SL & done
 if defined ("FORCE")
+  % Why not just rm -rf build_dir/*?
   m3cc_Run("-cd " & build_dir & " && test -f Makefile && " & M3CC_MAKE & " distclean")
-  m3cc_Run("-cd " & build_dir & " && rm -f cm3cg.exe cm3cg")
-  m3cc_Run("-rm -f " & donep)
+  delete_file(build_dir & SL & "cm3cg.exe")
+  delete_file(build_dir & SL & "cm3cg")
+  delete_file(donep)
 end
+delete_file(build_dir & SL & "_m3.log")
 
-local env = ""
+local env = get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS)
 if m3cc_env contains (M3CC_TARGET)
-  env = m3cc_env {M3CC_TARGET}
+  env = concat (env, m3cc_env {M3CC_TARGET})
 end
+M3CC_MAKE = concat (M3CC_MAKE, env)
+M3CC_CONFIG = concat (M3CC_CONFIG, env)
 
 local Cross = not equal (M3CC_HOST, M3CC_TARGET)
-local Native = equal (M3CC_HOST, M3CC_TARGET)
+local Native = not Cross
+
+% check for non-default flags
 
 if not defined ("no_config")
   % configure the sources
   if not exists (donep)
     local Configure = ""
     if Cross
-      Configure = Configure & " --target=" & GNU_platform (M3CC_TARGET)
+      Configure = "--target=" & GNU_platform (M3CC_TARGET)
     end
-    Configure = Configure & " --srcdir=../gcc"
+    Configure = concat (Configure, "--srcdir=../gcc")
     Configure = Configure & " --disable-bootstrap"
     Configure = Configure & " --disable-doc"
     if Native
@@ -269,13 +286,14 @@ if not defined ("no_config")
     Configure = Configure & " --disable-shared"
     Configure = Configure & " --enable-languages=m3cg"
     Configure = Configure & " --enable-targets=all"
-    m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG, Configure, env, "&& echo \"done\" > " & done])
+    m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG, Configure, env, " | tee -a _m3.log"])
+    m3cc_Run (["cd", build_dir, "; echo \"done\" > " & done])
   end
 end
 
 EXE = Platform_ExeExtension (M3CC_TARGET)
 
-local DoMipsTfile = equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF")
+local DoMipsTfile = (equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF"))
 
 readonly proc postcp() is
   pSrc  = build_dir & "/gcc/m3cgc1" & EXE
@@ -299,25 +317,23 @@ if Native
   end
 end
 
-% check for non-default flags
-ARG0 = get_overrides ("CC", M3CC_CC)
-ARG1 = get_overrides ("CFLAGS", M3CC_CFLAGS)
-
 % build commands
-cmds = "cd " & build_dir & "; " & M3CC_MAKE & " " & ARG0 & " " & ARG1 & " " & env
+cmds = "cd " & build_dir & "; " & M3CC_MAKE
 if Cross
-  % not tested, be less tricky, build everything
+  cmds = cmds & " | tee -a _m3.log"
 else
   %
   % Build only what is needed to build m3 backend, e.g. not the C frontend.
   % This probably is still more than necessary but it is a start.
   %
-  cmds = cmds & " all-gmp all-mpfr all-libcpp all-libdecnumber all-build-libiberty all-libiberty configure-gcc "
-  cmds = cmds & "; cd gcc ; " & M3CC_MAKE & " " & ARG0 & " " & ARG1 & " " & env
-  cmds = cmds & " s-modes insn-config.h m3cg" & EXE
+  cmds = cmds & " all-gmp all-mpfr all-libcpp all-libdecnumber all-build-libiberty all-libiberty configure-gcc | tee -a _m3.log"
+  cmds = cmds & "; cd gcc ; " & M3CC_MAKE
+  cmds = cmds & " s-modes insn-config.h m3cg" & EXE & " | tee -a _m3.log"
 end
 
 % finally, compile it
 m3cc_Run (cmds)
-%write (cmds & EOL)
+>> "_m3.log" in
+  write (cmds & EOL)
+end
 postcp ()
