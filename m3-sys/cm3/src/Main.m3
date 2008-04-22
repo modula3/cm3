@@ -9,7 +9,6 @@ IMPORT RTCollector, RTParams, RTutils, Thread, Wr;
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
 IMPORT MxConfig AS M3Config(*, CMKey, CMCurrent *);
 (* IMPORT Fmt, Time; only needed for key and expiration check *)
-IMPORT M3Path;
 
 VAR
   config    : TEXT          := NIL;
