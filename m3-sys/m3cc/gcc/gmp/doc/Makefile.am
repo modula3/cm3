@@ -23,6 +23,5 @@
 
 EXTRA_DIST = configuration isa_abi_headache projects.html tasks.html
 
-# These are going to the source tree. Disable until correct fix found.
-# info_TEXINFOS = gmp.texi
-# gmp_TEXINFOS = fdl.texi
+info_TEXINFOS = gmp.texi
+gmp_TEXINFOS = fdl.texi
