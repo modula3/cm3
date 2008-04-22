@@ -26,9 +26,9 @@ libmpfr_la_LIBADD = @LIBOBJS@
 #        2.3.x    2:x:1
 libmpfr_la_LDFLAGS = -version-info 2:0:1
 
-info_TEXINFOS = mpfr.texi
-
-mpfr_TEXINFOS = fdl.texi
+# Don't build docs, in order to avoid writing into source tree.
+# info_TEXINFOS = mpfr.texi
+# mpfr_TEXINFOS = fdl.texi
 
 MAKEINFOFLAGS = --enable-encoding
 
