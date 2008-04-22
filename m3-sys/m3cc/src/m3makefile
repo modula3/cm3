@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.56 2008-04-22 19:46:33 jkrell Exp $
+% $Id: m3makefile,v 1.57 2008-04-22 20:45:48 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -199,13 +199,6 @@ if not equal (M3CC_HOST, M3CC_TARGET)
   build_dir = "../" & BUILD_DIR & "-" & M3CC_TARGET
 end
 
-local proc concat (a, b) is
-  if a
-    return (a & " " & b)
-  end
-  return b
-end
-
 %
 % make sure the derived directory exists
 %
@@ -241,22 +234,27 @@ readonly proc m3cc_Run (x) is
 end
 
 done  = ".configure-done"
-donep = build_dir & SL & done
+donep = build_dir & "/" & done
 if defined ("FORCE")
   % Why not just rm -rf build_dir/*?
   m3cc_Run("-cd " & build_dir & " && test -f Makefile && " & M3CC_MAKE & " distclean")
-  delete_file(build_dir & SL & "cm3cg.exe")
-  delete_file(build_dir & SL & "cm3cg")
+  delete_file(build_dir & "/cm3cg.exe")
+  delete_file(build_dir & "/cm3cg")
   delete_file(donep)
 end
-delete_file(build_dir & SL & "_m3.log")
+delete_file(build_dir & "/_m3.log")
 
 local env = get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS)
+%
+% gmp and mpfr build their documentation into the source tree, leading cvs diff
+% to output a LOT of extra content, not good, avoid that.
+%
+env = env & " MAKEINFO=echo"
 if m3cc_env contains (M3CC_TARGET)
-  env = concat (env, m3cc_env {M3CC_TARGET})
+  env = env & " " & m3cc_env {M3CC_TARGET}
 end
-M3CC_MAKE = concat (M3CC_MAKE, env)
-M3CC_CONFIG = concat (M3CC_CONFIG, env)
+M3CC_MAKE = M3CC_MAKE & " " & env
+M3CC_CONFIG = M3CC_CONFIG & " " & env
 
 local Cross = not equal (M3CC_HOST, M3CC_TARGET)
 local Native = not Cross
@@ -268,9 +266,9 @@ if not defined ("no_config")
   if not exists (donep)
     local Configure = ""
     if Cross
-      Configure = "--target=" & GNU_platform (M3CC_TARGET)
+      Configure = " --target=" & GNU_platform (M3CC_TARGET)
     end
-    Configure = concat (Configure, "--srcdir=../gcc")
+    Configure = Configure & " --srcdir=../gcc"
     Configure = Configure & " --disable-bootstrap"
     Configure = Configure & " --disable-doc"
     if Native
@@ -286,7 +284,7 @@ if not defined ("no_config")
     Configure = Configure & " --disable-shared"
     Configure = Configure & " --enable-languages=m3cg"
     Configure = Configure & " --enable-targets=all"
-    m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG, Configure, env, " | tee -a _m3.log"])
+    m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG, Configure, " | tee -a _m3.log"])
     m3cc_Run (["cd", build_dir, "; echo \"done\" > " & done])
   end
 end
