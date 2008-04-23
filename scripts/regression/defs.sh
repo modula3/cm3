@@ -267,7 +267,7 @@ checkout()
 cm3config() {
   f="$1/bin/cm3.cfg"
   if [ "$CM3_TARGET" = "NT386" ]; then
-    R=`cygpath -w $1 | sed -e 's/\\/\\\\\\\\/g'`
+    R=`cygpath -w $1 | sed -e 's/\\\\/\\\\\\\\/g'`
     SL='\\\\'
   else
     R="$1"
