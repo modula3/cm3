@@ -166,7 +166,7 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble (source, object) is
-  return try_exec ("@" & SYSTEM_ASM, "-s", "-K", "PIC", source, "-o", object)
+  return try_exec ("@" & SYSTEM_ASM, "-xarch=v8plus", "-s", "-K", "PIC", source, "-o", object)
 end
 
 %--------------------------------------------------------- library creation ---
