@@ -267,7 +267,7 @@ checkout()
 cm3config() {
   f="$1/bin/cm3.cfg"
   if [ "$CM3_TARGET" = "NT386" ]; then
-    R=`cygpath -w $1 | sed -e 's/\\\\/\\\\\\\\/g'`
+    R=`cygpath -w $1 | sed -e 's/\\\\/\\\\\\\\\\\\\\\\/g'`
     SL='\\\\'
   else
     R="$1"
@@ -439,6 +439,11 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   fi
 
   if [ "$1" = "rel" ]; then
+    echo " === clean up before cm3 upgrade "
+    if [ -z "$NOCLEAN" ]; then
+      OMIT_GCC=yes ./scripts/do-cm3-core.sh realclean || exit 1
+      ./scripts/do-pkg.sh realclean cminstall
+    fi
     echo " === perform cm3 upgrade "
     UPGRADE_CM3_CFG=yes ./scripts/upgrade.sh || exit 1
     echo " >>> OK build_${1}_upgrade ${DS} ${WS}"
