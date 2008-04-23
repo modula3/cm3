@@ -1,2 +1,2 @@
 Interface("Uucontext")
-Interface("UpthreadMachine")
+interface("UpthreadMachine")
