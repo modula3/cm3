@@ -54,9 +54,9 @@ TYPE
     st_spare2 : u_long;
     st_ctime  : time_t;
     st_spare3 : u_long;
-    unused0   : long;
-    unused1   : long;
-    unused2   : long;
+    unused0   : u_long;
+    unused1   : u_long;
+    unused2   : u_long;
   END;
   struct_stat_star = UNTRACED REF struct_stat;
 
