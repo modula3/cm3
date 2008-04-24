@@ -10,8 +10,8 @@ TREENAME=cm3
 tinderbox_mailer() { 
   true	# needed if function is empty without this...
   # to report to the elego tinderbox host, check README and uncomment this:
-  # cat "$1" | ssh tinderbox.elego.de "sudo -u tinderbox \
-  # /usr/local/tinderbox/tinderbox-cgi/processmail_builds.cgi" 
+  #cat "$1" | ssh tinderbox.elego.de "sudo -u tinderbox \
+  #/usr/local/tinderbox/tinderbox-cgi/processmail_builds.cgi" 
 }
 
 # this is what we use in our local network:
@@ -50,7 +50,10 @@ cvs -d ${CVSROOT} checkout -A \
 test -r ${REGRESSION_SCRIPTS_DIR}/defs.sh || exit 10
 . ${REGRESSION_SCRIPTS_DIR}/defs.sh
   
-TESTMACHINE=${TESTMACHINE:-"`uname -s` `uname -r`"}
+UNAME_S=`uname -s`
+UNAME_R=`uname -r | sed -e 's/[^A-Za-z0-9_]/./g'`
+
+TESTMACHINE=${TESTMACHINE:-"${UNAME_S} ${UNAME_R}"}
 TTT="${CM3_TARGET} ${TESTMACHINE} ${TESTHOSTNAME}"
 BUILDNAME=${BUILDNAME:-"${TTT} ${BUILD_REL_NAME}-build"}
 

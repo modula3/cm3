@@ -23,7 +23,11 @@ then
 fi 
 
 # set default parameters:
-BUILDNAME=${BUILDNAME:-"`uname -n`-`uname -s`-`uname -r`-`uname -m`"}
+UNAME_N=`uname -n`
+UNAME_S=`uname -s`
+UNAME_R=`uname -r | sed -e 's/[^A-Za-z0-9_]/./g'`
+UNAME_M=`uname -m`
+BUILDNAME=${BUILDNAME:-"${UNAME_N}-${UNAME_S}=${UNAME_R}-${UNAME_M}"}
 
 echo "Building ${PROJECT}."
 echo "Tinderbox Tree:   \"${TREENAME}\""
