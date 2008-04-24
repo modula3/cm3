@@ -38,14 +38,13 @@ CONST
 TYPE
   struct_stat = RECORD
     st_dev    : dev_t;
-      pad1    : u_short;
     st_ino    : ino_t;
-    st_mode   : mode_t;
     st_nlink  : nlink_t;
+    st_mode   : mode_t;
     st_uid    : uid_t;
     st_gid    : gid_t;
+    pad0      : int;
     st_rdev   : dev_t;
-      pad2    : u_short;
     st_size   : off_t;
     st_blksize: u_long;
     st_blocks : u_long;
@@ -55,10 +54,10 @@ TYPE
     st_spare2 : u_long;
     st_ctime  : time_t;
     st_spare3 : u_long;
-    st_spare4 : u_long;
-    st_spare5 : u_long;
+    unused0   : long;
+    unused1   : long;
+    unused2   : long;
   END;
-
   struct_stat_star = UNTRACED REF struct_stat;
 
 <*EXTERNAL*> PROCEDURE stat (path: char_star; buf: struct_stat_star): int;
