@@ -9,7 +9,7 @@ INTERFACE Ustat;
 
 FROM Ctypes IMPORT int, char_star;
 FROM Utypes IMPORT u_short, u_long, dev_t, ino_t, off_t;
-FROM Utypes IMPORT mode_t, nlink_t, uid_t, gid_t, time_t, uint64_t;
+FROM Utypes IMPORT mode_t, nlink_t, uid_t, gid_t, time_t;
 
 CONST
   S_IFMT  : u_short = 8_0170000;
@@ -37,7 +37,7 @@ CONST
 
 TYPE
   struct_stat = RECORD
-    st_dev    : uint64_t;
+    st_dev    : dev_t;
       pad1    : u_short;
     st_ino    : ino_t;
     st_mode   : mode_t;
