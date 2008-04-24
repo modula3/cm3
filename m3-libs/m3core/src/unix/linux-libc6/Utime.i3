@@ -21,15 +21,18 @@ FROM Ctypes IMPORT char_star, int, long, long_star, long_int,
 TYPE
   struct_timeval = RECORD
     tv_sec: long;          (* seconds *)
-    tv_usec: long;         (* and microseconds *) END;
+    tv_usec: long;         (* and microseconds *)
+  END;
 
   struct_timezone = RECORD
     tz_minuteswest:  int; (* minutes west of Greenwich *)
-    tz_dsttime:      int; (* type of dst correction *) END;
+    tz_dsttime:      int; (* type of dst correction *)
+  END;
 
   struct_timespec = RECORD
     tv_sec: time_t;			 (* Seconds *)
-    tv_nsec: long_int;			 (* Nanoseconds *) END;
+    tv_nsec: long_int;			 (* Nanoseconds *)
+  END;
 
 CONST
   DST_NONE = 0;  (* not on dst *)
@@ -61,7 +64,7 @@ TYPE
     tm_zone:  char_star; (* abbreviation of timezone name *)
   END;
 
-  time_t = int; (* seconds since the Epoch *)
+  time_t = long; (* seconds since the Epoch *)
 
 (*** <sys/times.h> ***)
 
