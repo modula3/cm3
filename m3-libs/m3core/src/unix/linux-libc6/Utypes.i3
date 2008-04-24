@@ -66,7 +66,7 @@ TYPE
   key_t        = long;                (* sys V compatibility *)
   clock_t      = long;                (* POSIX compliance    *)
   mode_t       = uint;                (* POSIX compliance    *)
-  nlink_t      = uint;                (* POSIX compliance    *)
+  nlink_t      = u_long;              (* POSIX compliance    *)
   uid_t        = uint;                (* POSIX compliance    *)
   pid_t        = int;                 (* POSIX compliance    *)
   gid_t        = uint;                (* POSIX compliance    *)
