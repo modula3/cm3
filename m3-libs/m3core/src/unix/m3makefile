@@ -15,7 +15,7 @@ readonly _UnixPieces = {
   "ALPHA_OSF"  : [ "osf-1.generic", "osf-1.ALPHA_OSF" ],
   "AIX386"     : [ "aix-ps2-1-2" ],
   "AMD64_DARWIN": [ "darwin-generic", "darwin-amd64" ],
-  "AMD64_LINUX": [ "linux-libc6", "linux-amd64", "little-endian" ],
+  "AMD64_LINUX": [ "linux-libc6", "linux-amd64", "little-endian", "linux-64" ],
   "AP3000"     : [ "ultrix-3-1.generic", "ultrix-3-1.AP3000" ],
   "ARM"        : [ "ultrix-3-1.generic", "ultrix-3-1.ARM" ],
   "DS3100"     : [ "ultrix-3-1.generic", "ultrix-3-1.DS3100" ],
@@ -31,7 +31,7 @@ readonly _UnixPieces = {
   "IRIX5"      : [ "irix-5.2", "Common" ],
   "LINUX"      : [ "linux", "Common" ],
   "LINUXELF"   : [ "linux" ],
-  "LINUXLIBC6" : [ "linux-libc6", "linux-i386", "Common", "little-endian" ],
+  "LINUXLIBC6" : [ "linux-libc6", "linux-i386", "Common", "little-endian", "linux-32" ],
   "NEXT"       : [ "ultrix-3-1.generic", "ultrix-3-1.NEXT" ],
   "NT386"      : [ "cygwin", "Common" ],
   "NT386GNU"   : [ "cygwin", "Common" ],
@@ -47,7 +47,7 @@ readonly _UnixPieces = {
   "VAX"        : [ "ultrix-3-1.generic", "ultrix-3-1.VAX" ],
   "I386_DARWIN": [ "darwin-generic", "darwin-i386" ],
   "PPC_DARWIN" : [ "darwin-generic", "darwin-ppc" ],
-  "PPC_LINUX"  : [ "linux-libc6", "linux-ppc" ],
+  "PPC_LINUX"  : [ "linux-libc6", "linux-ppc", "linux-32" ],
   "NetBSD2_i386" : [ "netbsd2-i386" ]
 }
 
