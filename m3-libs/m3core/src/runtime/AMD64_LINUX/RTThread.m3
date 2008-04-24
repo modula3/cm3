@@ -9,7 +9,7 @@ UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
 IMPORT Usignal;
 
-PROCEDURE SP (READONLY s: State): ADDRESS =
+PROCEDURE SP (<*UNUSED*> READONLY s: State): ADDRESS =
   BEGIN
     (* no user thread support *)
     RETURN NIL;
@@ -17,12 +17,12 @@ PROCEDURE SP (READONLY s: State): ADDRESS =
 
 (*--------------------------------------------------------- thread stacks ---*)
 
-PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
+PROCEDURE NewStack (<*UNUSED*> size: INTEGER;  <*UNUSED*> VAR(*OUT*)s: Stack) =
   BEGIN
     (* no user thread support *)
   END NewStack;
 
-PROCEDURE DisposeStack (VAR s: Stack) =
+PROCEDURE DisposeStack (<*UNUSED*> VAR s: Stack) =
   BEGIN
     (* no user thread support *)
   END DisposeStack;
@@ -34,7 +34,7 @@ PROCEDURE FlushStackCache () =
 
 (*-------------------------------------------------- modifying the models ---*)
 
-PROCEDURE UpdateStateForNewSP (VAR s: State; offset: INTEGER) =
+PROCEDURE UpdateStateForNewSP (<*UNUSED*> VAR s: State; <*UNUSED*> offset: INTEGER) =
   BEGIN
     (* no user thread support *)
   END UpdateStateForNewSP;
@@ -46,7 +46,7 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
 
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
 
-PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
+PROCEDURE setup_sigvtalrm (<*UNUSED*> handler: Usignal.SignalHandler) =
   BEGIN
     (* no user thread support *)
   END setup_sigvtalrm;
