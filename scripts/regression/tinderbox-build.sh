@@ -215,7 +215,7 @@ COMPILE_RETURN=$?
 cat "${T}" >> ${LOG}
 
 { 
-  echo "compile return value: $?" 
+  echo "compile return value: ${COMPILE_RETURN}" 
   echo "[end compile `date '+%Y.%m.%d %H:%M:%S'`]" 
 } 2>&1 | tee -a ${LOG}
 
