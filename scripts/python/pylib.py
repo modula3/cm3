@@ -387,6 +387,7 @@ if not Target:
         # more need to be added here, I haven't got all the platform info ready
         pass
 
+GMAKE = None
 
 if ((Target == "FreeBSD")
     or (Target == "FreeBSD2")
