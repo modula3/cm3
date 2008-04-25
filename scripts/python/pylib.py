@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.99 2008-04-21 19:37:49 jkrell Exp $
+# $Id: pylib.py,v 1.100 2008-04-25 09:37:29 jkrell Exp $
 
 import os
 from os import getenv
@@ -387,6 +387,7 @@ if not Target:
         # more need to be added here, I haven't got all the platform info ready
         pass
 
+GMAKE = None
 
 if ((Target == "FreeBSD")
     or (Target == "FreeBSD2")
