@@ -18,15 +18,15 @@ TYPE
   BOOL = Ctypes.int;
   BYTE = Ctypes.unsigned_char;
   CCHAR = Ctypes.char;
-  DWORD = Ctypes.unsigned_long;
+  DWORD = Ctypes.unsigned_int;
   HANDLE = Ctypes.void_star;  (*** should be <: ADDRESS ***)
   INT = Ctypes.int;
-  LONG = Ctypes.long;
+  LONG = INT;
   LPBOOL = UNTRACED REF BOOL;
   LPBYTE = UNTRACED REF BYTE;
   LPDWORD = UNTRACED REF DWORD;
   LPINT = UNTRACED REF Ctypes.int;
-  LPLONG = UNTRACED REF Ctypes.long;
+  LPLONG = LPINT;
   LPVOID = Ctypes.void_star;
   LPCVOID = Ctypes.void_star;
   LPWORD = UNTRACED REF WORD;
@@ -36,7 +36,7 @@ TYPE
   PFLOAT = UNTRACED REF WFLOAT;
   PHANDLE = UNTRACED REF HANDLE;
   PINT = UNTRACED REF Ctypes.int;
-  PLONG = Ctypes.long_star;
+  PLONG = PINT;
   PSHORT = Ctypes.short_star;
   PSZ = Ctypes.char_star;
   PUCHAR = UNTRACED REF UCHAR;
@@ -47,7 +47,7 @@ TYPE
   SHORT = Ctypes.short;
   UCHAR = Ctypes.unsigned_char;
   UINT = Ctypes.unsigned_int;
-  ULONG = Ctypes.unsigned_long;
+  ULONG = Ctypes.unsigned_int;
   USHORT = Ctypes.unsigned_short;
   (* !!!  Name clash with Modula-3 builtin.  FLOAT -> WFLOAT *)
   WFLOAT = Ctypes.float;

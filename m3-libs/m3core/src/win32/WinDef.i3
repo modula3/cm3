@@ -8,7 +8,7 @@
 (*      modified on Tue Nov  8 16:20:58 PST 1994 by kalsow   *)
 (*      modified on Thu Mar 18 17:53:33 PST 1993 by harrison *)
 
-(* $Id: WinDef.i3,v 1.3 2008-01-23 03:24:07 jkrell Exp $ *)
+(* $Id: WinDef.i3,v 1.4 2008-04-26 16:29:03 jkrell Exp $ *)
 
 INTERFACE WinDef;
 
@@ -48,8 +48,8 @@ TYPE
   PUINT = WinBaseTypes.PUINT;
 
   CCHAR = Ctypes.char;
-  LONG = Ctypes.long;
-  PLONG = Ctypes.long_star;
+  LONG = Ctypes.int;
+  PLONG = Ctypes.int_star;
   PSHORT = Ctypes.short_star;
   SHORT = Ctypes.short;
 

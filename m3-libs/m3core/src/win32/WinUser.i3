@@ -29,7 +29,7 @@ FROM WinDef IMPORT SHORT, BOOL, WORD, DWORD, UINT, LPDWORD, LPWORD, LPVOID,
 FROM WinNT IMPORT WCHAR, HANDLE, LPSTR, LPWSTR, PVOID, LPTSTR, LPCSTR,
                   LPCWSTR, LONG, PSECURITY_INFORMATION,
                   PSECURITY_DESCRIPTOR, LPCTSTR;
-FROM Ctypes IMPORT int, char, long, void_star;
+FROM Ctypes IMPORT int, char, void_star;
 
 CONST WINVER = 16_0314;         (* version 3.2 *)
 
@@ -1826,7 +1826,7 @@ PROCEDURE GetNextDlgTabItem (hDlg: HWND; hCtl: HWND; bPrevious: BOOL): HWND;
 PROCEDURE GetDlgCtrlID (hWnd: HWND): int;
 
 <*EXTERNAL GetDialogBaseUnits:WINAPI*>
-PROCEDURE GetDialogBaseUnits (): long;
+PROCEDURE GetDialogBaseUnits (): int;
 
 <*EXTERNAL DefDlgProcA:WINAPI*>
 PROCEDURE DefDlgProcA (hDlg  : HWND;
