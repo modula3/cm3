@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.100 2008-04-25 09:37:29 jkrell Exp $
+# $Id: pylib.py,v 1.101 2008-04-26 21:34:38 jkrell Exp $
 
 import os
 from os import getenv
@@ -1567,7 +1567,7 @@ def _CopyCompiler(From, To):
      and not FileExists(from_cm3exe)
      and not FileExists(from_cm3cg)
      and not FileExists(from_cm3cgexe)):
-        FatalError("no cm3[cg][.exe] exists")
+        FatalError("none of " + from_cm3 + ", " + from_cm3exe + ", " + from_cm3cg + ", " + from_cm3cgexe + " exist")
 
     #
     # check .exe first to avoid being fooled by Cygwin
