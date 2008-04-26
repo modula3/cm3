@@ -48,8 +48,8 @@ TYPE
   PUINT = WinBaseTypes.PUINT;
 
   CCHAR = Ctypes.char;
-  LONG = Ctypes.long;
-  PLONG = Ctypes.long_star;
+  LONG = Ctypes.int;
+  PLONG = Ctypes.int_star;
   PSHORT = Ctypes.short_star;
   SHORT = Ctypes.short;
 
