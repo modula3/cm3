@@ -50,7 +50,7 @@ TYPE
   label_t        = struct_label_t;
 (*#endif*)
 
-  struct__quad = RECORD val: ARRAY [0..1] OF long; END;
+  struct__quad = RECORD val: ARRAY [0..1] OF int; END;
   quad         = struct__quad;
   daddr_t      = int; 
   caddr_t      = ADDRESS;
@@ -58,7 +58,7 @@ TYPE
   gno_t        = u_long;
   cnt_t        = short;               (* sys V compatibility *)
   swblk_t      = long;
-  size_t       = u_int;
+  size_t       = u_long;
   time_t       = long;
   dev_t        = long_long_uint;
   off_t        = long;
@@ -70,7 +70,7 @@ TYPE
   nlink_t      = u_long;              (* POSIX compliance    *)
   uid_t        = uint;                (* POSIX compliance    *)
   pid_t        = int;                 (* POSIX compliance    *)
-  gid_t        = uint;                (* POSIX compliance    *)
+  gid_t        = u_long;              (* POSIX compliance    *)
 
 CONST
   NBBY = 8;                           (* number of bits in a byte *)

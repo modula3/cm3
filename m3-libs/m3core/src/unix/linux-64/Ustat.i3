@@ -36,24 +36,24 @@ CONST
   S_OEXEC : u_short = 8_0000001;
 
 TYPE
-  struct_stat = RECORD
+  struct_stat = BITS 1152 FOR RECORD
     st_dev    : dev_t;
     st_ino    : ino_t;
     st_nlink  : nlink_t;
     st_mode   : mode_t;
     st_uid    : uid_t;
     st_gid    : gid_t;
-    pad0      : int;
+    (*pad0    : int;*)
     st_rdev   : dev_t;
     st_size   : off_t;
     st_blksize: u_long;
     st_blocks : u_long;
     st_atime  : time_t;
-    st_spare1 : u_long;
+    st_atimensec : u_long;
     st_mtime  : time_t;
-    st_spare2 : u_long;
+    st_mtimensec : u_long;
     st_ctime  : time_t;
-    st_spare3 : u_long;
+    st_ctimensec : u_long;
     unused0   : u_long;
     unused1   : u_long;
     unused2   : u_long;
