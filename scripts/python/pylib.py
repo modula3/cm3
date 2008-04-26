@@ -1567,7 +1567,7 @@ def _CopyCompiler(From, To):
      and not FileExists(from_cm3exe)
      and not FileExists(from_cm3cg)
      and not FileExists(from_cm3cgexe)):
-        FatalError("no cm3[cg][.exe] exists")
+        FatalError("none of " + from_cm3 + ", " + from_cm3exe + ", " + from_cm3cg + ", " + from_cm3cgexe + " exist")
 
     #
     # check .exe first to avoid being fooled by Cygwin
