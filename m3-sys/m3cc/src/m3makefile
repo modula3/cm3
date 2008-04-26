@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.58 2008-04-25 20:33:38 jkrell Exp $
+% $Id: m3makefile,v 1.59 2008-04-26 07:59:45 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -335,14 +335,15 @@ cmds = "cd " & build_dir & "; " & M3CC_MAKE
 if equal ($OS, "Windows_NT")
   % configure is having problems with libtool
   cmds = cmds & " all-gmp configure-mpfr all-libcpp all-libdecnumber all-build-libiberty all-libiberty configure-gcc | tee -a _m3.log"
-  cmds = cmds & "; cd mpfr ; sed -e \"s/@LIBTOOL@/libtool/\" < Makefile > Makefile.lt ; mv Makefile.lt Makefile"
-  cmds = cmds & "; cd tests ; sed -e \"s/@LIBTOOL@/libtool/\" < Makefile > Makefile.lt ; mv Makefile.lt Makefile"
-  cmds = cmds & "; cd ..  ; " & M3CC_MAKE
+  cmds = cmds & " ; cd mpfr ; sed -e \"s/@LIBTOOL@/libtool/\" < Makefile > Makefile.lt ; mv Makefile.lt Makefile"
+  cmds = cmds & " ; cd tests ; sed -e \"s/@LIBTOOL@/libtool/\" < Makefile > Makefile.lt ; mv Makefile.lt Makefile"
+  cmds = cmds & " ; cd ..  ; " & M3CC_MAKE
   cmds = cmds & " all-gmp          all-libcpp all-libdecnumber all-build-libiberty all-libiberty configure-gcc | tee -a _m3.log"
+  cmds = cmds & " ; cd .. "
 else
   cmds = cmds & " all-gmp all-mpfr all-libcpp all-libdecnumber all-build-libiberty all-libiberty configure-gcc | tee -a _m3.log"
 end
-cmds = cmds & "; cd ../gcc ; " & M3CC_MAKE
+cmds = cmds & " ; cd gcc ; " & M3CC_MAKE
 cmds = cmds & " s-modes insn-config.h m3cg | tee -a _m3.log"
 
 % finally, compile it
