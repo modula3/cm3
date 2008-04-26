@@ -11,8 +11,8 @@ INTERFACE WinSock;
 
        (* Taken from WINSOCK.H from WINSOCK version 1.1 *)
 
-FROM Ctypes IMPORT int, long, char, unsigned_char, unsigned_short,
-                   unsigned_int, unsigned_long, char_star, char_star_star,
+IMPORT Ctypes;
+FROM Ctypes IMPORT int, char, char_star, char_star_star,
                    int_star, short;
 FROM Word IMPORT Or, And, Shift, Not;
 
@@ -20,10 +20,10 @@ FROM Word IMPORT Or, And, Shift, Not;
 (* Basic system type definitions, taken from the BSD file sys/types.h. *)
 
 TYPE
-  u_char  = unsigned_char;
-  u_short = unsigned_short;
-  u_int   = unsigned_int;
-  u_long  = unsigned_long;
+  u_char  = Ctypes.unsigned_char;
+  u_short = Ctypes.unsigned_short;
+  u_int   = Ctypes.unsigned_int;
+  u_long  = u_int;
 
 CONST
   FD_SETSIZE = 64;
@@ -47,8 +47,8 @@ PROCEDURE FD_ISSET(s: SOCKET; VAR set: struct_fd_set): BOOLEAN;
 
 TYPE
   struct_timeval = RECORD
-    tv_sec: long;
-    tv_usec: long;
+    tv_sec: int;
+    tv_usec: int;
   END;
 
 
@@ -115,7 +115,7 @@ TYPE
     n_name:     char_star;      (* official name of net *)
     n_aliases:  char_star_star; (* alias list *)
     n_addrtype: short;          (* net address type *)
-    n_net:      u_long;         (* network # *)
+    n_net:      u_int;          (* network # *)
   END;
   struct_netent_star = UNTRACED REF struct_netent;
 
@@ -215,7 +215,7 @@ CONST
  *)
 TYPE
   struct_in_addr = RECORD
-    s_addr: u_long;
+    s_addr: u_int;
   END;
   struct_in_addr_b = RECORD
     b1, b2, b3, b4: u_char;   (* alias for in_addr *)
@@ -581,7 +581,7 @@ PROCEDURE connect (
     s: SOCKET; addr: struct_sockaddr_star; namelen: int): int;
 
 <* EXTERNAL ioctlsocket:PASCAL *>
-PROCEDURE ioctlsocket (s: SOCKET; cmd: long; argp: UNTRACED REF u_long): int;
+PROCEDURE ioctlsocket (s: SOCKET; cmd: int; argp: UNTRACED REF u_int): int;
 
 <* EXTERNAL getpeername:PASCAL *>
 PROCEDURE getpeername (
@@ -597,13 +597,13 @@ PROCEDURE getsockopt (
     optval: char_star;  optlen: int_star): int;
 
 <* EXTERNAL htonl:PASCAL *>
-PROCEDURE htonl(hostlong: u_long): u_long;
+PROCEDURE htonl(hostlong: u_int): u_int;
 
 <* EXTERNAL htons:PASCAL *>
 PROCEDURE htons (hostshort: u_short): u_short;
 
 <* EXTERNAL inet_addr:PASCAL *>
-PROCEDURE inet_addr (cp: char_star): u_long (*struct_in_addr*);
+PROCEDURE inet_addr (cp: char_star): u_int (*struct_in_addr*);
 
 <* EXTERNAL inet_ntoa:PASCAL *>
 PROCEDURE inet_ntoa (in: struct_in_addr): char_star;
@@ -612,7 +612,7 @@ PROCEDURE inet_ntoa (in: struct_in_addr): char_star;
 PROCEDURE listen(s: SOCKET; backlog: int): int;
 
 <* EXTERNAL ntohl:PASCAL *>
-PROCEDURE ntohl (netlong: u_long): u_long;
+PROCEDURE ntohl (netlong: u_int): u_int;
 
 <* EXTERNAL ntohs:PASCAL *>
 PROCEDURE ntohs (netshort: u_short): u_short;
