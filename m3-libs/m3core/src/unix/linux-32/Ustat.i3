@@ -36,7 +36,7 @@ CONST
   S_OEXEC : u_short = 8_0000001;
 
 TYPE
-  struct_stat = RECORD
+  struct_stat = BITS 704 FOR RECORD
     st_dev    : dev_t;
       pad1    : u_short;
     st_ino    : ino_t;
@@ -58,7 +58,6 @@ TYPE
     st_spare4 : u_long;
     st_spare5 : u_long;
   END;
-
   struct_stat_star = UNTRACED REF struct_stat;
 
 <*EXTERNAL*> PROCEDURE stat (path: char_star; buf: struct_stat_star): int;
