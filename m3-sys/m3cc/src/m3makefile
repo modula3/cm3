@@ -219,7 +219,7 @@ readonly proc m3cc_Run (x) is
     write(x & CR)
   end
   if HostIsNT ()
-    local readonly Temp = "_m3sh" & m3cc_ResponseFileCounter & ".sh"
+    local readonly Temp = "_m3sh" & m3cc_ResponseFileCounter & M3CC_TARGET & ".sh"
     > Temp in
       write(x)
     end
