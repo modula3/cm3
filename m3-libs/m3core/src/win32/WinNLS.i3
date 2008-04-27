@@ -10,10 +10,9 @@
 
 INTERFACE WinNLS;
 
-FROM Ctypes  IMPORT int;
-FROM WinDef  IMPORT BOOL, DWORD, BYTE, UINT, LPWORD, LPBOOL;
-FROM WinNT   IMPORT LPSTR, LPCSTR, LPWSTR, LPCWSTR, LCID, LANGID;
-FROM WinBase IMPORT LPSYSTEMTIME;
+FROM WinDef  IMPORT BOOL, INT32, UINT32, UINT8, PUINT16, PBOOL;
+FROM WinNT   IMPORT PSTR, PCSTR, PWSTR, PCWSTR, LCID, LANGID;
+FROM WinBase IMPORT PSYSTEMTIME;
 
 (***************************************************************************
 * Constants
@@ -167,7 +166,7 @@ CONST
 (*
  *  Sorting Flags.
  *
- *    WORD Sort:    culturally correct sort
+ *    UNT16 Sort:   culturally correct sort
  *                  hyphen and apostrophe are special cased
  *                  example: "coop" and "co-op" will sort together in a list
  *
@@ -475,9 +474,9 @@ CONST
 ****************************************************************************)
 
 TYPE
-  LCTYPE  = DWORD;  (*  Locale type constant. *)
-  CALTYPE = DWORD;  (* Calendar type constant. *)
-  CALID   = DWORD;  (*  Calendar ID.  *)
+  LCTYPE  = UINT32;  (*  Locale type constant. *)
+  CALTYPE = UINT32;  (* Calendar type constant. *)
+  CALID   = UINT32;  (*  Calendar ID.  *)
 
 (*
  *  CP Info.
@@ -485,9 +484,9 @@ TYPE
 TYPE
   LPCPINFO = UNTRACED REF CPINFO;
   CPINFO = RECORD
-    MaxCharSize : UINT;  (* max length (bytes) of a char *)
-    DefaultChar : ARRAY [0..MAX_DEFAULTCHAR-1] OF BYTE;   (* default character *)
-    LeadByte    : ARRAY [0..MAX_LEADBYTES-1] OF BYTE;     (* lead byte ranges *)
+    MaxCharSize : UINT32;  (* max length (bytes) of a char *)
+    DefaultChar : ARRAY [0..MAX_DEFAULTCHAR-1] OF UINT8;   (* default character *)
+    LeadByte    : ARRAY [0..MAX_LEADBYTES-1] OF UINT8;     (* lead byte ranges *)
   END;
 
 
@@ -497,22 +496,22 @@ TYPE
 TYPE
   LPNUMBERFMTA = UNTRACED REF NUMBERFMTA;
   NUMBERFMTA = RECORD
-    NumDigits     : UINT;    (* number of decimal digits *)
-    LeadingZero   : UINT;    (* if leading zero in decimal fields *)
-    Grouping      : UINT;    (* group size left of decimal *)
-    lpDecimalSep  : LPSTR;   (* ptr to decimal separator string *)
-    lpThousandSep : LPSTR;   (* ptr to thousand separator string *)
-    NegativeOrder : UINT;    (* negative number ordering *)
+    NumDigits     : UINT32;    (* number of decimal digits *)
+    LeadingZero   : UINT32;    (* if leading zero in decimal fields *)
+    Grouping      : UINT32;    (* group size left of decimal *)
+    lpDecimalSep  : PSTR;   (* ptr to decimal separator string *)
+    lpThousandSep : PSTR;   (* ptr to thousand separator string *)
+    NegativeOrder : UINT32;    (* negative number ordering *)
   END;
 
   LPNUMBERFMTW = UNTRACED REF NUMBERFMTW;
   NUMBERFMTW = RECORD
-    NumDigits     : UINT;    (* number of decimal digits *)
-    LeadingZero   : UINT;    (* if leading zero in decimal fields *)
-    Grouping      : UINT;    (* group size left of decimal *)
-    lpDecimalSep  : LPWSTR;  (* ptr to decimal separator string *)
-    lpThousandSep : LPWSTR;  (* ptr to thousand separator string *)
-    NegativeOrder : UINT;    (* negative number ordering *)
+    NumDigits     : UINT32;    (* number of decimal digits *)
+    LeadingZero   : UINT32;    (* if leading zero in decimal fields *)
+    Grouping      : UINT32;    (* group size left of decimal *)
+    lpDecimalSep  : PWSTR;  (* ptr to decimal separator string *)
+    lpThousandSep : PWSTR;  (* ptr to thousand separator string *)
+    NegativeOrder : UINT32;    (* negative number ordering *)
   END;
 
   NUMBERFMT   = NUMBERFMTA;
@@ -524,26 +523,26 @@ TYPE
 TYPE
   LPCURRENCYFMTA = UNTRACED REF CURRENCYFMTA;
   CURRENCYFMTA = RECORD
-    NumDigits        : UINT;    (* number of decimal digits *)
-    LeadingZero      : UINT;    (* if leading zero in decimal fields *)
-    Grouping         : UINT;    (* group size left of decimal *)
-    lpDecimalSep     : LPSTR;   (* ptr to decimal separator string *)
-    lpThousandSep    : LPSTR;   (* ptr to thousand separator string *)
-    NegativeOrder    : UINT;    (* negative currency ordering *)
-    PositiveOrder    : UINT;    (* positive currency ordering *)
-    lpCurrencySymbol : LPSTR;   (* ptr to currency symbol string *)
+    NumDigits        : UINT32;    (* number of decimal digits *)
+    LeadingZero      : UINT32;    (* if leading zero in decimal fields *)
+    Grouping         : UINT32;    (* group size left of decimal *)
+    lpDecimalSep     : PSTR;   (* ptr to decimal separator string *)
+    lpThousandSep    : PSTR;   (* ptr to thousand separator string *)
+    NegativeOrder    : UINT32;    (* negative currency ordering *)
+    PositiveOrder    : UINT32;    (* positive currency ordering *)
+    lpCurrencySymbol : PSTR;   (* ptr to currency symbol string *)
   END;
 
   LPCURRENCYFMTW = UNTRACED REF CURRENCYFMTW;
   CURRENCYFMTW = RECORD
-    NumDigits        : UINT;    (* number of decimal digits *)
-    LeadingZero      : UINT;    (* if leading zero in decimal fields *)
-    Grouping         : UINT;    (* group size left of decimal *)
-    lpDecimalSep     : LPWSTR;  (* ptr to decimal separator string *)
-    lpThousandSep    : LPWSTR;  (* ptr to thousand separator string *)
-    NegativeOrder    : UINT;    (* negative currency ordering *)
-    PositiveOrder    : UINT;    (* positive currency ordering *)
-    lpCurrencySymbol : LPWSTR;  (* ptr to currency symbol string *)
+    NumDigits        : UINT32;    (* number of decimal digits *)
+    LeadingZero      : UINT32;    (* if leading zero in decimal fields *)
+    Grouping         : UINT32;    (* group size left of decimal *)
+    lpDecimalSep     : PWSTR;  (* ptr to decimal separator string *)
+    lpThousandSep    : PWSTR;  (* ptr to thousand separator string *)
+    NegativeOrder    : UINT32;    (* negative currency ordering *)
+    PositiveOrder    : UINT32;    (* positive currency ordering *)
+    lpCurrencySymbol : PWSTR;  (* ptr to currency symbol string *)
   END;
 
   CURRENCYFMT   = CURRENCYFMTA;
@@ -553,17 +552,17 @@ TYPE
  *  Enumeration function constants.
  *)
 TYPE
-  LOCALE_ENUMPROCA   = <*CALLBACK*> PROCEDURE (str: LPSTR): BOOL;
-  CODEPAGE_ENUMPROCA = <*CALLBACK*> PROCEDURE (str: LPSTR): BOOL;
-  DATEFMT_ENUMPROCA  = <*CALLBACK*> PROCEDURE (str: LPSTR): BOOL;
-  TIMEFMT_ENUMPROCA  = <*CALLBACK*> PROCEDURE (str: LPSTR): BOOL;
-  CALINFO_ENUMPROCA  = <*CALLBACK*> PROCEDURE (str: LPSTR): BOOL;
+  LOCALE_ENUMPROCA   = <*CALLBACK*> PROCEDURE (str: PSTR): BOOL;
+  CODEPAGE_ENUMPROCA = <*CALLBACK*> PROCEDURE (str: PSTR): BOOL;
+  DATEFMT_ENUMPROCA  = <*CALLBACK*> PROCEDURE (str: PSTR): BOOL;
+  TIMEFMT_ENUMPROCA  = <*CALLBACK*> PROCEDURE (str: PSTR): BOOL;
+  CALINFO_ENUMPROCA  = <*CALLBACK*> PROCEDURE (str: PSTR): BOOL;
 
-  LOCALE_ENUMPROCW   = <*CALLBACK*> PROCEDURE (str: LPWSTR): BOOL;
-  CODEPAGE_ENUMPROCW = <*CALLBACK*> PROCEDURE (str: LPWSTR): BOOL;
-  DATEFMT_ENUMPROCW  = <*CALLBACK*> PROCEDURE (str: LPWSTR): BOOL;
-  TIMEFMT_ENUMPROCW  = <*CALLBACK*> PROCEDURE (str: LPWSTR): BOOL;
-  CALINFO_ENUMPROCW  = <*CALLBACK*> PROCEDURE (str: LPWSTR): BOOL;
+  LOCALE_ENUMPROCW   = <*CALLBACK*> PROCEDURE (str: PWSTR): BOOL;
+  CODEPAGE_ENUMPROCW = <*CALLBACK*> PROCEDURE (str: PWSTR): BOOL;
+  DATEFMT_ENUMPROCW  = <*CALLBACK*> PROCEDURE (str: PWSTR): BOOL;
+  TIMEFMT_ENUMPROCW  = <*CALLBACK*> PROCEDURE (str: PWSTR): BOOL;
+  CALINFO_ENUMPROCW  = <*CALLBACK*> PROCEDURE (str: PWSTR): BOOL;
 
   LOCALE_ENUMPROC    = LOCALE_ENUMPROCA;
   CODEPAGE_ENUMPROC  = CODEPAGE_ENUMPROCA;
@@ -591,40 +590,40 @@ TYPE
  *)
 
 <*EXTERNAL IsValidCodePage:WINAPI*>
-PROCEDURE IsValidCodePage (CodePage: UINT): BOOL;
+PROCEDURE IsValidCodePage (CodePage: UINT32): BOOL;
 
 <*EXTERNAL GetACP:WINAPI*>
-PROCEDURE GetACP (): UINT;
+PROCEDURE GetACP (): UINT32;
 
 <*EXTERNAL GetOEMCP:WINAPI*>
-PROCEDURE GetOEMCP (): UINT;
+PROCEDURE GetOEMCP (): UINT32;
 
 <*EXTERNAL GetCPInfo:WINAPI*>
-PROCEDURE GetCPInfo (CodePage: UINT;  lpCPInfo: LPCPINFO): BOOL;
+PROCEDURE GetCPInfo (CodePage: UINT32;  lpCPInfo: LPCPINFO): BOOL;
 
 <*EXTERNAL IsDBCSLeadByte:WINAPI*>
-PROCEDURE IsDBCSLeadByte (TestChar: BYTE): BOOL;
+PROCEDURE IsDBCSLeadByte (TestChar: UINT8): BOOL;
 
 <*EXTERNAL IsDBCSLeadByteEx:WINAPI*>
-PROCEDURE IsDBCSLeadByteEx (CodePage: UINT;  TestChar: BYTE): BOOL;
+PROCEDURE IsDBCSLeadByteEx (CodePage: UINT32;  TestChar: UINT8): BOOL;
 
 <*EXTERNAL MultiByteToWideChar:WINAPI*>
-PROCEDURE MultiByteToWideChar (CodePage       : UINT;
-                               dwFlags        : DWORD;
-                               lpMultiByteStr : LPCSTR;
-                               cchMultiByte   : int;
-                               lpWideCharStr  : LPWSTR;
-                               cchWideChar    : int): int;
+PROCEDURE MultiByteToWideChar (CodePage       : UINT32;
+                               dwFlags        : UINT32;
+                               lpMultiByteStr : PCSTR;
+                               cchMultiByte   : INT32;
+                               lpWideCharStr  : PWSTR;
+                               cchWideChar    : INT32): INT32;
 
 <*EXTERNAL WideCharToMultiByte:WINAPI*>
-PROCEDURE WideCharToMultiByte (CodePage          : UINT;
-                               dwFlags           : DWORD;
-                               lpWideCharStr     : LPCWSTR;
-                               cchWideChar       : int;
-                               lpMultiByteStr    : LPSTR;
-                               cchMultiByte      : int;
-                               lpDefaultChar     : LPCSTR;
-                               lpUsedDefaultChar : LPBOOL): int;
+PROCEDURE WideCharToMultiByte (CodePage          : UINT32;
+                               dwFlags           : UINT32;
+                               lpWideCharStr     : PCWSTR;
+                               cchWideChar       : INT32;
+                               lpMultiByteStr    : PSTR;
+                               cchMultiByte      : INT32;
+                               lpDefaultChar     : PCSTR;
+                               lpUsedDefaultChar : PBOOL): INT32;
 
 (*
  *  Locale Dependent APIs.
@@ -632,135 +631,135 @@ PROCEDURE WideCharToMultiByte (CodePage          : UINT;
 
 <*EXTERNAL CompareStringA:WINAPI*>
 PROCEDURE CompareStringA (Locale     : LCID;
-                          dwCmpFlags : DWORD;
-                          lpString1  : LPCSTR;
-                          cchCount1  : int;
-                          lpString2  : LPCSTR;
-                          cchCount2  : int): int;
+                          dwCmpFlags : UINT32;
+                          lpString1  : PCSTR;
+                          cchCount1  : INT32;
+                          lpString2  : PCSTR;
+                          cchCount2  : INT32): INT32;
 
 <*EXTERNAL CompareStringW:WINAPI*>
 PROCEDURE CompareStringW (Locale     : LCID;
-                          dwCmpFlags : DWORD;
-                          lpString1  : LPCWSTR;
-                          cchCount1  : int;
-                          lpString2  : LPCWSTR;
-                          cchCount2  : int): int;
+                          dwCmpFlags : UINT32;
+                          lpString1  : PCWSTR;
+                          cchCount1  : INT32;
+                          lpString2  : PCWSTR;
+                          cchCount2  : INT32): INT32;
 
 CONST CompareString = CompareStringA;
 
 <*EXTERNAL LCMapStringA:WINAPI*>
 PROCEDURE LCMapStringA (Locale     : LCID;
-                        dwMapFlags : DWORD;
-                        lpSrcStr   : LPCSTR;
-                        cchSrc     : int;
-                        lpDestStr  : LPSTR;
-                        cchDest    : int): int;
+                        dwMapFlags : UINT32;
+                        lpSrcStr   : PCSTR;
+                        cchSrc     : INT32;
+                        lpDestStr  : PSTR;
+                        cchDest    : INT32): INT32;
 
 <*EXTERNAL LCMapStringW:WINAPI*>
 PROCEDURE LCMapStringW (Locale     : LCID;
-                        dwMapFlags : DWORD;
-                        lpSrcStr   : LPCWSTR;
-                        cchSrc     : int;
-                        lpDestStr  : LPWSTR;
-                        cchDest    : int): int;
+                        dwMapFlags : UINT32;
+                        lpSrcStr   : PCWSTR;
+                        cchSrc     : INT32;
+                        lpDestStr  : PWSTR;
+                        cchDest    : INT32): INT32;
 
 CONST LCMapString = LCMapStringA;
 
 <*EXTERNAL GetLocaleInfoA:WINAPI*>
 PROCEDURE GetLocaleInfoA (Locale   : LCID;
                           LCType   : LCTYPE;
-                          lpLCData : LPSTR;
-                          cchData  : int): int;
+                          lpLCData : PSTR;
+                          cchData  : INT32): INT32;
 
 <*EXTERNAL GetLocaleInfoW:WINAPI*>
 PROCEDURE GetLocaleInfoW (Locale   : LCID;
                           LCType   : LCTYPE;
-                          lpLCData : LPWSTR;
-                          cchData  : int): int;
+                          lpLCData : PWSTR;
+                          cchData  : INT32): INT32;
 
 CONST GetLocaleInfo = GetLocaleInfoA;
 
 <*EXTERNAL SetLocaleInfoA:WINAPI*>
 PROCEDURE SetLocaleInfoA (Locale   : LCID;
                           LCType   : LCTYPE;
-                          lpLCData : LPCSTR): BOOL;
+                          lpLCData : PCSTR): BOOL;
 
 <*EXTERNAL SetLocaleInfoW:WINAPI*>
 PROCEDURE SetLocaleInfoW (Locale   : LCID;
                           LCType   : LCTYPE;
-                          lpLCData : LPCWSTR): BOOL;
+                          lpLCData : PCWSTR): BOOL;
 
 CONST SetLocaleInfo = SetLocaleInfoA;
 
 <*EXTERNAL GetTimeFormatA:WINAPI*>
 PROCEDURE GetTimeFormatA (Locale    : LCID;
-                          dwFlags   : DWORD;
-                          lpTime    : LPSYSTEMTIME;
-                          lpFormat  : LPCSTR;
-                          lpTimeStr : LPSTR;
-                          cchTime   : int): int;
+                          dwFlags   : UINT32;
+                          lpTime    : PSYSTEMTIME;
+                          lpFormat  : PCSTR;
+                          lpTimeStr : PSTR;
+                          cchTime   : INT32): INT32;
 
 <*EXTERNAL GetTimeFormatW:WINAPI*>
 PROCEDURE GetTimeFormatW (Locale    : LCID;
-                          dwFlags   : DWORD;
-                          lpTime    : LPSYSTEMTIME;
-                          lpFormat  : LPCWSTR;
-                          lpTimeStr : LPWSTR;
-                          cchTime   : int): int;
+                          dwFlags   : UINT32;
+                          lpTime    : PSYSTEMTIME;
+                          lpFormat  : PCWSTR;
+                          lpTimeStr : PWSTR;
+                          cchTime   : INT32): INT32;
 
 CONST GetTimeFormat = GetTimeFormatA;
 
 <*EXTERNAL GetDateFormatA:WINAPI*>
 PROCEDURE GetDateFormatA (Locale    : LCID;
-                          dwFlags   : DWORD;
-                          lpDate    : LPSYSTEMTIME;
-                          lpFormat  : LPCSTR;
-                          lpDateStr : LPSTR;
-                          cchDate   : int): int;
+                          dwFlags   : UINT32;
+                          lpDate    : PSYSTEMTIME;
+                          lpFormat  : PCSTR;
+                          lpDateStr : PSTR;
+                          cchDate   : INT32): INT32;
 
 <*EXTERNAL GetDateFormatW:WINAPI*>
 PROCEDURE GetDateFormatW (Locale    : LCID;
-                          dwFlags   : DWORD;
-                          lpDate    : LPSYSTEMTIME;
-                          lpFormat  : LPCWSTR;
-                          lpDateStr : LPWSTR;
-                          cchDate   : int): int;
+                          dwFlags   : UINT32;
+                          lpDate    : PSYSTEMTIME;
+                          lpFormat  : PCWSTR;
+                          lpDateStr : PWSTR;
+                          cchDate   : INT32): INT32;
 
 CONST GetDateFormat = GetDateFormatA;
 
 <*EXTERNAL GetNumberFormatA:WINAPI*>
 PROCEDURE GetNumberFormatA (Locale      : LCID;
-                            dwFlags     : DWORD;
-                            lpValue     : LPCSTR;
+                            dwFlags     : UINT32;
+                            lpValue     : PCSTR;
                             lpFormat    : LPNUMBERFMTA;
-                            lpNumberStr : LPSTR;
-                            cchNumber   : int): int;
+                            lpNumberStr : PSTR;
+                            cchNumber   : INT32): INT32;
 
 <*EXTERNAL GetNumberFormatW:WINAPI*>
 PROCEDURE GetNumberFormatW (Locale      : LCID;
-                            dwFlags     : DWORD;
-                            lpValue     : LPCWSTR;
+                            dwFlags     : UINT32;
+                            lpValue     : PCWSTR;
                             lpFormat    : LPNUMBERFMTW;
-                            lpNumberStr : LPWSTR;
-                            cchNumber   : int): int;
+                            lpNumberStr : PWSTR;
+                            cchNumber   : INT32): INT32;
 
 CONST GetNumberFormat = GetNumberFormatA;
 
 <*EXTERNAL GetCurrencyFormatA:WINAPI*>
 PROCEDURE GetCurrencyFormatA (Locale        : LCID;
-                              dwFlags       : DWORD;
-                              lpValue       : LPCSTR;
+                              dwFlags       : UINT32;
+                              lpValue       : PCSTR;
                               lpFormat      : LPCURRENCYFMTA;
-                              lpCurrencyStr : LPSTR;
-                              cchCurrency   : int): int;
+                              lpCurrencyStr : PSTR;
+                              cchCurrency   : INT32): INT32;
 
 <*EXTERNAL GetCurrencyFormatW:WINAPI*>
 PROCEDURE GetCurrencyFormatW (Locale        : LCID;
-                              dwFlags       : DWORD;
-                              lpValue       : LPCWSTR;
+                              dwFlags       : UINT32;
+                              lpValue       : PCWSTR;
                               lpFormat      : LPCURRENCYFMTW;
-                              lpCurrencyStr : LPWSTR;
-                              cchCurrency   : int): int;
+                              lpCurrencyStr : PWSTR;
+                              cchCurrency   : INT32): INT32;
 
 CONST GetCurrencyFormat = GetCurrencyFormatA;
 
@@ -781,29 +780,29 @@ CONST EnumCalendarInfo = EnumCalendarInfoA;
 <*EXTERNAL EnumTimeFormatsA:WINAPI*>
 PROCEDURE EnumTimeFormatsA (lpTimeFmtEnumProc : TIMEFMT_ENUMPROCA;
                             Locale            : LCID;
-                            dwFlags           : DWORD): BOOL;
+                            dwFlags           : UINT32): BOOL;
 
 <*EXTERNAL EnumTimeFormatsW:WINAPI*>
 PROCEDURE EnumTimeFormatsW (lpTimeFmtEnumProc : TIMEFMT_ENUMPROCW;
                             Locale            : LCID;
-                            dwFlags           : DWORD): BOOL;
+                            dwFlags           : UINT32): BOOL;
 
 CONST EnumTimeFormats = EnumTimeFormatsA;
 
 <*EXTERNAL EnumDateFormatsA:WINAPI*>
 PROCEDURE EnumDateFormatsA (lpDateFmtEnumProc : DATEFMT_ENUMPROCA;
                             Locale            : LCID;
-                            dwFlags           : DWORD): BOOL;
+                            dwFlags           : UINT32): BOOL;
 
 <*EXTERNAL EnumDateFormatsW:WINAPI*>
 PROCEDURE EnumDateFormatsW (lpDateFmtEnumProc : DATEFMT_ENUMPROCW;
                             Locale            : LCID;
-                            dwFlags           : DWORD): BOOL;
+                            dwFlags           : UINT32): BOOL;
 
 CONST EnumDateFormats = EnumDateFormatsA;
 
 <*EXTERNAL IsValidLocale:WINAPI*>
-PROCEDURE IsValidLocale (Locale: LCID;  dwFlags: DWORD): BOOL;
+PROCEDURE IsValidLocale (Locale: LCID;  dwFlags: UINT32): BOOL;
 
 <*EXTERNAL ConvertDefaultLocale:WINAPI*>
 PROCEDURE ConvertDefaultLocale (Locale: LCID): LCID;
@@ -832,17 +831,17 @@ PROCEDURE GetUserDefaultLCID (): LCID;
 
 <*EXTERNAL GetStringTypeExA:WINAPI*>
 PROCEDURE GetStringTypeExA (Locale     : LCID;
-                            dwInfoType : DWORD;
-                            lpSrcStr   : LPCSTR;
-                            cchSrc     : int;
-                            lpCharType : LPWORD): BOOL;
+                            dwInfoType : UINT32;
+                            lpSrcStr   : PCSTR;
+                            cchSrc     : INT32;
+                            lpCharType : PUINT16): BOOL;
 
 <*EXTERNAL GetStringTypeExW:WINAPI*>
 PROCEDURE GetStringTypeExW (Locale     : LCID;
-                            dwInfoType : DWORD;
-                            lpSrcStr   : LPCWSTR;
-                            cchSrc     : int;
-                            lpCharType : LPWORD): BOOL;
+                            dwInfoType : UINT32;
+                            lpSrcStr   : PCWSTR;
+                            cchSrc     : INT32;
+                            lpCharType : PUINT16): BOOL;
 
 CONST GetStringTypeEx = GetStringTypeExA;
 
@@ -860,50 +859,50 @@ CONST GetStringTypeEx = GetStringTypeExA;
 
 <*EXTERNAL GetStringTypeA:WINAPI*>
 PROCEDURE GetStringTypeA (Locale     : LCID;
-                          dwInfoType : DWORD;
-                          lpSrcStr   : LPCSTR;
-                          cchSrc     : int;
-                          lpCharType : LPWORD): BOOL;
+                          dwInfoType : UINT32;
+                          lpSrcStr   : PCSTR;
+                          cchSrc     : INT32;
+                          lpCharType : PUINT16): BOOL;
 
 <*EXTERNAL GetStringTypeW:WINAPI*>
-PROCEDURE GetStringTypeW (dwInfoType : DWORD;
-                          lpSrcStr   : LPCWSTR;
-                          cchSrc     : int;
-                          lpCharType : LPWORD): BOOL;
+PROCEDURE GetStringTypeW (dwInfoType : UINT32;
+                          lpSrcStr   : PCWSTR;
+                          cchSrc     : INT32;
+                          lpCharType : PUINT16): BOOL;
 
 <*EXTERNAL FoldStringA:WINAPI*>
-PROCEDURE FoldStringA (dwMapFlags : DWORD;
-                       lpSrcStr   : LPCSTR;
-                       cchSrc     : int;
-                       lpDestStr  : LPSTR;
-                       cchDest    : int): int;
+PROCEDURE FoldStringA (dwMapFlags : UINT32;
+                       lpSrcStr   : PCSTR;
+                       cchSrc     : INT32;
+                       lpDestStr  : PSTR;
+                       cchDest    : INT32): INT32;
 
 <*EXTERNAL FoldStringW:WINAPI*>
-PROCEDURE FoldStringW (dwMapFlags : DWORD;
-                       lpSrcStr   : LPCWSTR;
-                       cchSrc     : int;
-                       lpDestStr  : LPWSTR;
-                       cchDest    : int): int;
+PROCEDURE FoldStringW (dwMapFlags : UINT32;
+                       lpSrcStr   : PCWSTR;
+                       cchSrc     : INT32;
+                       lpDestStr  : PWSTR;
+                       cchDest    : INT32): INT32;
 
 CONST FoldString = FoldStringA;
 
 <*EXTERNAL EnumSystemLocalesA:WINAPI*>
 PROCEDURE EnumSystemLocalesA (lpLocaleEnumProc : LOCALE_ENUMPROCA;
-                              dwFlags          : DWORD): BOOL;
+                              dwFlags          : UINT32): BOOL;
 
 <*EXTERNAL EnumSystemLocalesW:WINAPI*>
 PROCEDURE EnumSystemLocalesW (lpLocaleEnumProc : LOCALE_ENUMPROCW;
-                              dwFlags          : DWORD): BOOL;
+                              dwFlags          : UINT32): BOOL;
 
 CONST EnumSystemLocales = EnumSystemLocalesA;
 
 <*EXTERNAL EnumSystemCodePagesA:WINAPI*>
 PROCEDURE EnumSystemCodePagesA (lpCodePageEnumProc : CODEPAGE_ENUMPROCA;
-                                dwFlags            : DWORD): BOOL;
+                                dwFlags            : UINT32): BOOL;
 
 <*EXTERNAL EnumSystemCodePagesW:WINAPI*>
 PROCEDURE EnumSystemCodePagesW (lpCodePageEnumProc : CODEPAGE_ENUMPROCW;
-                                dwFlags            : DWORD): BOOL;
+                                dwFlags            : UINT32): BOOL;
 
 CONST EnumSystemCodePages = EnumSystemCodePagesA;
 

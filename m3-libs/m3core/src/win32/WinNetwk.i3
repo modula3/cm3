@@ -16,8 +16,8 @@ INTERFACE WinNetwk;
 
 IMPORT WinError;
 
-FROM WinDef IMPORT BOOL, DWORD, LPDWORD, LPVOID, LPHANDLE;
-FROM WinNT IMPORT HANDLE, LPSTR, LPWSTR;
+FROM WinDef IMPORT BOOL, UINT32, PUINT32, PVOID, PHANDLE;
+FROM WinNT IMPORT HANDLE, PSTR, PWSTR;
 
 (* RESOURCE ENUMERATION *)
 
@@ -40,32 +40,34 @@ CONST
   RESOURCEDISPLAYTYPE_SHARE   = 16_00000003;
 
 TYPE
-  LPNETRESOURCEA = UNTRACED REF NETRESOURCEA;
+  PNETRESOURCEA = UNTRACED REF NETRESOURCEA;
+  LPNETRESOURCEA = PNETRESOURCEA; (* compat *)
   NETRESOURCEA = RECORD
-    dwScope      : DWORD;
-    dwType       : DWORD;
-    dwDisplayType: DWORD;
-    dwUsage      : DWORD;
-    lpLocalName  : LPSTR;
-    lpRemoteName : LPSTR;
-    lpComment    : LPSTR;
-    lpProvider   : LPSTR;
+    dwScope      : UINT32;
+    dwType       : UINT32;
+    dwDisplayType: UINT32;
+    dwUsage      : UINT32;
+    lpLocalName  : PSTR;
+    lpRemoteName : PSTR;
+    lpComment    : PSTR;
+    lpProvider   : PSTR;
   END;
 
-  LPNETRESOURCEW = UNTRACED REF NETRESOURCEW;
+  PNETRESOURCEW = UNTRACED REF NETRESOURCEW;
+  LPNETRESOURCEW = PNETRESOURCEW; (* compat *)
   NETRESOURCEW = RECORD
-    dwScope      : DWORD;
-    dwType       : DWORD;
-    dwDisplayType: DWORD;
-    dwUsage      : DWORD;
-    lpLocalName  : LPWSTR;
-    lpRemoteName : LPWSTR;
-    lpComment    : LPWSTR;
-    lpProvider   : LPWSTR;
+    dwScope      : UINT32;
+    dwType       : UINT32;
+    dwDisplayType: UINT32;
+    dwUsage      : UINT32;
+    lpLocalName  : PWSTR;
+    lpRemoteName : PWSTR;
+    lpComment    : PWSTR;
+    lpProvider   : PWSTR;
   END;
 
   NETRESOURCE   = NETRESOURCEA;
-  LPNETRESOURCE = LPNETRESOURCEA;
+  LPNETRESOURCE = PNETRESOURCEA; (* compat *)
 
 (* CONNECTIONS *)
 
@@ -74,122 +76,122 @@ CONST CONNECT_UPDATE_PROFILE = 16_00000001;
 TYPE
 
 <*EXTERNAL WNetAddConnectionA:APIENTRY*>
-PROCEDURE WNetAddConnectionA (lpRemoteName: LPSTR;
-                              lpPassword  : LPSTR;
-                              lpLocalName : LPSTR  ): DWORD;
+PROCEDURE WNetAddConnectionA (lpRemoteName: PSTR;
+                              lpPassword  : PSTR;
+                              lpLocalName : PSTR  ): UINT32;
 
 <*EXTERNAL WNetAddConnectionW:APIENTRY*>
-PROCEDURE WNetAddConnectionW (lpRemoteName: LPWSTR;
-                              lpPassword  : LPWSTR;
-                              lpLocalName : LPWSTR  ): DWORD;
+PROCEDURE WNetAddConnectionW (lpRemoteName: PWSTR;
+                              lpPassword  : PWSTR;
+                              lpLocalName : PWSTR  ): UINT32;
 CONST WNetAddConnection = WNetAddConnectionA;
 
 <*EXTERNAL WNetAddConnection2A:APIENTRY*>
-PROCEDURE WNetAddConnection2A (lpNetResource: LPNETRESOURCEA;
-                               lpPassword   : LPSTR;
-                               lpUserName   : LPSTR;
-                               dwFlags      : DWORD           ): DWORD;
+PROCEDURE WNetAddConnection2A (lpNetResource: PNETRESOURCEA;
+                               lpPassword   : PSTR;
+                               lpUserName   : PSTR;
+                               dwFlags      : UINT32           ): UINT32;
 
 <*EXTERNAL WNetAddConnection2W:APIENTRY*>
-PROCEDURE WNetAddConnection2W (lpNetResource: LPNETRESOURCEW;
-                               lpPassword   : LPWSTR;
-                               lpUserName   : LPWSTR;
-                               dwFlags      : DWORD           ): DWORD;
+PROCEDURE WNetAddConnection2W (lpNetResource: PNETRESOURCEW;
+                               lpPassword   : PWSTR;
+                               lpUserName   : PWSTR;
+                               dwFlags      : UINT32           ): UINT32;
 CONST WNetAddConnection2 = WNetAddConnection2A;
 
 <*EXTERNAL WNetCancelConnectionA:APIENTRY*>
-PROCEDURE WNetCancelConnectionA (lpName: LPSTR; fForce: BOOL): DWORD;
+PROCEDURE WNetCancelConnectionA (lpName: PSTR; fForce: BOOL): UINT32;
 
 <*EXTERNAL WNetCancelConnectionW:APIENTRY*>
-PROCEDURE WNetCancelConnectionW (lpName: LPWSTR; fForce: BOOL): DWORD;
+PROCEDURE WNetCancelConnectionW (lpName: PWSTR; fForce: BOOL): UINT32;
 CONST WNetCancelConnection = WNetCancelConnectionA;
 
 <*EXTERNAL WNetCancelConnection2A:APIENTRY*>
-PROCEDURE WNetCancelConnection2A (lpName : LPSTR;
-                                  dwFlags: DWORD;
-                                  fForce : BOOL   ): DWORD;
+PROCEDURE WNetCancelConnection2A (lpName : PSTR;
+                                  dwFlags: UINT32;
+                                  fForce : BOOL   ): UINT32;
 
 <*EXTERNAL WNetCancelConnection2W:APIENTRY*>
-PROCEDURE WNetCancelConnection2W (lpName : LPWSTR;
-                                  dwFlags: DWORD;
-                                  fForce : BOOL    ): DWORD;
+PROCEDURE WNetCancelConnection2W (lpName : PWSTR;
+                                  dwFlags: UINT32;
+                                  fForce : BOOL    ): UINT32;
 CONST WNetCancelConnection2 = WNetCancelConnection2A;
 
 <*EXTERNAL WNetGetConnectionA:APIENTRY*>
-PROCEDURE WNetGetConnectionA (lpLocalName : LPSTR;
-                              lpRemoteName: LPSTR;
-                              lpnLength   : LPDWORD): DWORD;
+PROCEDURE WNetGetConnectionA (lpLocalName : PSTR;
+                              lpRemoteName: PSTR;
+                              lpnLength   : PUINT32): UINT32;
 
 <*EXTERNAL WNetGetConnectionW:APIENTRY*>
-PROCEDURE WNetGetConnectionW (lpLocalName : LPWSTR;
-                              lpRemoteName: LPWSTR;
-                              lpnLength   : LPDWORD ): DWORD;
+PROCEDURE WNetGetConnectionW (lpLocalName : PWSTR;
+                              lpRemoteName: PWSTR;
+                              lpnLength   : PUINT32 ): UINT32;
 CONST WNetGetConnection = WNetGetConnectionA;
 
 <*EXTERNAL WNetOpenEnumA:APIENTRY*>
-PROCEDURE WNetOpenEnumA (dwScope      : DWORD;
-                         dwType       : DWORD;
-                         dwUsage      : DWORD;
-                         lpNetResource: LPNETRESOURCEA;
-                         lphEnum      : LPHANDLE        ): DWORD;
+PROCEDURE WNetOpenEnumA (dwScope      : UINT32;
+                         dwType       : UINT32;
+                         dwUsage      : UINT32;
+                         lpNetResource: PNETRESOURCEA;
+                         lphEnum      : PHANDLE        ): UINT32;
 
 <*EXTERNAL WNetOpenEnumW:APIENTRY*>
-PROCEDURE WNetOpenEnumW (dwScope      : DWORD;
-                         dwType       : DWORD;
-                         dwUsage      : DWORD;
-                         lpNetResource: LPNETRESOURCEW;
-                         lphEnum      : LPHANDLE        ): DWORD;
+PROCEDURE WNetOpenEnumW (dwScope      : UINT32;
+                         dwType       : UINT32;
+                         dwUsage      : UINT32;
+                         lpNetResource: PNETRESOURCEW;
+                         lphEnum      : PHANDLE        ): UINT32;
 CONST WNetOpenEnum = WNetOpenEnumA;
 
 <*EXTERNAL WNetEnumResourceA:APIENTRY*>
 PROCEDURE WNetEnumResourceA (hEnum       : HANDLE;
-                             lpcCount    : LPDWORD;
-                             lpBuffer    : LPVOID;
-                             lpBufferSize: LPDWORD  ): DWORD;
+                             lpcCount    : PUINT32;
+                             lpBuffer    : PVOID;
+                             lpBufferSize: PUINT32  ): UINT32;
 
 <*EXTERNAL WNetEnumResourceW:APIENTRY*>
 PROCEDURE WNetEnumResourceW (hEnum       : HANDLE;
-                             lpcCount    : LPDWORD;
-                             lpBuffer    : LPVOID;
-                             lpBufferSize: LPDWORD  ): DWORD;
+                             lpcCount    : PUINT32;
+                             lpBuffer    : PVOID;
+                             lpBufferSize: PUINT32  ): UINT32;
 CONST WNetEnumResource = WNetEnumResourceA;
 
 <*EXTERNAL WNetCloseEnum:APIENTRY*>
-PROCEDURE WNetCloseEnum (hEnum: HANDLE): DWORD;
+PROCEDURE WNetCloseEnum (hEnum: HANDLE): UINT32;
 
 (* OTHER *)
 
 <*EXTERNAL WNetGetUserA:APIENTRY*>
-PROCEDURE WNetGetUserA (lpName    : LPSTR;
-                        lpUserName: LPSTR;
-                        lpnLength : LPDWORD): DWORD;
+PROCEDURE WNetGetUserA (lpName    : PSTR;
+                        lpUserName: PSTR;
+                        lpnLength : PUINT32): UINT32;
 
 <*EXTERNAL WNetGetUserW:APIENTRY*>
-PROCEDURE WNetGetUserW (lpName    : LPWSTR;
-                        lpUserName: LPWSTR;
-                        lpnLength : LPDWORD ): DWORD;
+PROCEDURE WNetGetUserW (lpName    : PWSTR;
+                        lpUserName: PWSTR;
+                        lpnLength : PUINT32 ): UINT32;
 CONST WNetGetUser = WNetGetUserA;
 
 (* BROWSE DIALOG *)
 
 <*EXTERNAL HWND:APIENTRY*>
-PROCEDURE HWND (dwType: DWORD): DWORD;
+PROCEDURE HWND (dwType: UINT32): UINT32;
 
 (* ERRORS *)
 
 <*EXTERNAL WNetGetLastErrorA:APIENTRY*>
-PROCEDURE WNetGetLastErrorA (lpError      : LPDWORD;
-                             lpErrorBuf   : LPSTR;
-                             nErrorBufSize: DWORD;
-                             lpNameBuf    : LPSTR;
-                             nNameBufSize : DWORD    ): DWORD;
+PROCEDURE WNetGetLastErrorA (lpError      : PUINT32;
+                             lpErrorBuf   : PSTR;
+                             nErrorBufSize: UINT32;
+                             lpNameBuf    : PSTR;
+                             nNameBufSize : UINT32    ): UINT32;
 
 <*EXTERNAL WNetGetLastErrorW:APIENTRY*>
-PROCEDURE WNetGetLastErrorW (lpError      : LPDWORD;
-                             lpErrorBuf   : LPWSTR;
-                             nErrorBufSize: DWORD;
-                             lpNameBuf    : LPWSTR;
-                             nNameBufSize : DWORD    ): DWORD;
+PROCEDURE WNetGetLastErrorW (lpError      : PUINT32;
+                             lpErrorBuf   : PWSTR;
+                             nErrorBufSize: UINT32;
+                             lpNameBuf    : PWSTR;
+                             nNameBufSize : UINT32    ): UINT32;
 CONST WNetGetLastError = WNetGetLastErrorA;
 
 (* STATUS CODES *)

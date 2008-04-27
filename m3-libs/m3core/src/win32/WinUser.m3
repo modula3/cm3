@@ -11,61 +11,60 @@
 UNSAFE MODULE WinUser;
 
 IMPORT WinBase;
-FROM Ctypes IMPORT int;
-FROM WinNT  IMPORT LPCSTR, LPCWSTR;
-FROM WinDef IMPORT BOOL, DWORD, UINT, LPVOID, HWND, WPARAM, LPARAM,
-                   LRESULT, HINSTANCE, HMENU, HHOOK, LPRECT, LPPOINT;
+FROM WinNT IMPORT PCSTR, PCWSTR;
+FROM WinDef IMPORT BOOL, UINT32, PVOID, HWND, WPARAM, LPARAM, INT32,
+  LRESULT, HINSTANCE, HMENU, HHOOK, PRECT, PPOINT;
 
-PROCEDURE ExitWindows (<*UNUSED*> dwReserved: UINT;
-                       <*UNUSED*> Code: DWORD): BOOL =
+PROCEDURE ExitWindows (<*UNUSED*> dwReserved: UINT32;
+                       <*UNUSED*> Code: UINT32): BOOL =
   BEGIN
     RETURN ExitWindowsEx(EWX_LOGOFF, 16_FFFFFFFF);
   END ExitWindows;
 
-PROCEDURE PostAppMessageA (idThread: DWORD;
-                           wMsg    : UINT;
+PROCEDURE PostAppMessageA (idThread: UINT32;
+                           wMsg    : UINT32;
                            wParam  : WPARAM;
                            lParam  : LPARAM  ): BOOL =
   BEGIN
     RETURN PostThreadMessageA(idThread, wMsg, wParam, lParam);
   END PostAppMessageA;
 
-PROCEDURE PostAppMessageW (idThread: DWORD;
-                           wMsg    : UINT;
+PROCEDURE PostAppMessageW (idThread: UINT32;
+                           wMsg    : UINT32;
                            wParam  : WPARAM;
                            lParam  : LPARAM  ): BOOL =
   BEGIN
     RETURN PostThreadMessageW(idThread, wMsg, wParam, lParam);
   END PostAppMessageW;
 
-PROCEDURE CreateWindowA (lpClassName : LPCSTR;
-                         lpWindowName: LPCSTR;
-                         dwStyle     : DWORD;
-                         x           : int;
-                         y           : int;
-                         nWidth      : int;
-                         nHeight     : int;
+PROCEDURE CreateWindowA (lpClassName : PCSTR;
+                         lpWindowName: PCSTR;
+                         dwStyle     : UINT32;
+                         x           : INT32;
+                         y           : INT32;
+                         nWidth      : INT32;
+                         nHeight     : INT32;
                          hwndParent  : HWND;
                          hMenu       : HMENU;
                          hInstance   : HINSTANCE;
-                         lpParam     : LPVOID     ): HWND =
+                         lpParam     : PVOID     ): HWND =
   BEGIN
     RETURN
       CreateWindowExA(0, lpClassName, lpWindowName, dwStyle, x, y, nWidth,
                       nHeight, hwndParent, hMenu, hInstance, lpParam);
   END CreateWindowA;
 
-PROCEDURE CreateWindowW (lpClassName : LPCWSTR;
-                         lpWindowName: LPCWSTR;
-                         dwStyle     : DWORD;
-                         x           : int;
-                         y           : int;
-                         nWidth      : int;
-                         nHeight     : int;
+PROCEDURE CreateWindowW (lpClassName : PCWSTR;
+                         lpWindowName: PCWSTR;
+                         dwStyle     : UINT32;
+                         x           : INT32;
+                         y           : INT32;
+                         nWidth      : INT32;
+                         nHeight     : INT32;
                          hwndParent  : HWND;
                          hMenu       : HMENU;
                          hInstance   : HINSTANCE;
-                         lpParam     : LPVOID     ): HWND =
+                         lpParam     : PVOID     ): HWND =
   BEGIN
     RETURN
       CreateWindowExW(0, lpClassName, lpWindowName, dwStyle, x, y, nWidth,
@@ -73,7 +72,7 @@ PROCEDURE CreateWindowW (lpClassName : LPCWSTR;
   END CreateWindowW;
 
 PROCEDURE CreateDialogA (hInstance   : HINSTANCE;
-                         lpName      : LPCSTR;
+                         lpName      : PCSTR;
                          hwndParent  : HWND;
                          lpDialogFunc: DLGPROC    ): HWND =
   BEGIN
@@ -82,7 +81,7 @@ PROCEDURE CreateDialogA (hInstance   : HINSTANCE;
   END CreateDialogA;
 
 PROCEDURE CreateDialogW (hInstance   : HINSTANCE;
-                         lpName      : LPCWSTR;
+                         lpName      : PCWSTR;
                          hwndParent  : HWND;
                          lpDialogFunc: DLGPROC    ): HWND =
   BEGIN
@@ -109,18 +108,18 @@ PROCEDURE CreateDialogIndirectW (hInstance   : HINSTANCE;
   END CreateDialogIndirectW;
 
 PROCEDURE DialogBoxA (hInstance     : HINSTANCE;
-                      lpTemplateName: LPCSTR;
+                      lpTemplateName: PCSTR;
                       hWndParent    : HWND;
-                      lpDialogFunc  : DLGPROC    ): int =
+                      lpDialogFunc  : DLGPROC    ): INT32 =
   BEGIN
     RETURN
       DialogBoxParamA(hInstance, lpTemplateName, hWndParent, lpDialogFunc, 0);
   END DialogBoxA;
 
 PROCEDURE DialogBoxW (hInstance     : HINSTANCE;
-                      lpTemplateName: LPCWSTR;
+                      lpTemplateName: PCWSTR;
                       hWndParent    : HWND;
-                      lpDialogFunc  : DLGPROC    ): int =
+                      lpDialogFunc  : DLGPROC    ): INT32 =
   BEGIN
     RETURN
       DialogBoxParamW(hInstance, lpTemplateName, hWndParent, lpDialogFunc, 0);
@@ -129,7 +128,7 @@ PROCEDURE DialogBoxW (hInstance     : HINSTANCE;
 PROCEDURE DialogBoxIndirectA (hInstance      : HINSTANCE;
                               hDialogTemplate: LPDLGTEMPLATEA;
                               hWndParent     : HWND;
-                              lpDialogFunc   : DLGPROC         ): int =
+                              lpDialogFunc   : DLGPROC         ): INT32 =
   BEGIN
     RETURN DialogBoxIndirectParamA(
              hInstance, hDialogTemplate, hWndParent, lpDialogFunc, 0);
@@ -138,41 +137,41 @@ PROCEDURE DialogBoxIndirectA (hInstance      : HINSTANCE;
 PROCEDURE DialogBoxIndirectW (hInstance      : HINSTANCE;
                               hDialogTemplate: LPDLGTEMPLATEW;
                               hWndParent     : HWND;
-                              lpDialogFunc   : DLGPROC         ): int =
+                              lpDialogFunc   : DLGPROC         ): INT32 =
   BEGIN
     RETURN DialogBoxIndirectParamW(
              hInstance, hDialogTemplate, hWndParent, lpDialogFunc, 0);
   END DialogBoxIndirectW;
 
 PROCEDURE MessageBoxA (hWnd     : HWND;
-                       lpText   : LPCSTR;
-                       lpCaption: LPCSTR;
-                       uType    : UINT    ): int =
+                       lpText   : PCSTR;
+                       lpCaption: PCSTR;
+                       uType    : UINT32    ): INT32 =
   BEGIN
     RETURN MessageBoxExA(hWnd, lpText, lpCaption, uType, 0);
   END MessageBoxA;
 
 PROCEDURE MessageBoxW (hWnd     : HWND;
-                       lpText   : LPCWSTR;
-                       lpCaption: LPCWSTR;
-                       uType    : UINT    ): int =
+                       lpText   : PCWSTR;
+                       lpCaption: PCWSTR;
+                       uType    : UINT32    ): INT32 =
   BEGIN
     RETURN MessageBoxExW(hWnd, lpText, lpCaption, uType, 0);
   END MessageBoxW;
 
-PROCEDURE EnumTaskWindows (dwThreadId: DWORD;
+PROCEDURE EnumTaskWindows (dwThreadId: UINT32;
                            lpfn      : WNDENUMPROC;
                            lParam    : LPARAM       ): BOOL =
   BEGIN
     RETURN EnumThreadWindows(dwThreadId, lpfn, lParam);
   END EnumTaskWindows;
 
-PROCEDURE GetNextWindow (hWnd: HWND; uCmd: UINT): HWND =
+PROCEDURE GetNextWindow (hWnd: HWND; uCmd: UINT32): HWND =
   BEGIN
     RETURN GetWindow(hWnd, uCmd);
   END GetNextWindow;
 
-PROCEDURE DefHookProc (nCode : int;
+PROCEDURE DefHookProc (nCode : INT32;
                        wParam: WPARAM;
                        lParam: LPARAM;
                        phhk  : UNTRACED REF HHOOK): LRESULT =
@@ -182,28 +181,28 @@ PROCEDURE DefHookProc (nCode : int;
 
 (* hack to patch the buggy return values on Chicago *)
 
-PROCEDURE GetClientRect (hWnd: HWND; lpRect: LPRECT): BOOL =
+PROCEDURE GetClientRect (hWnd: HWND; lpRect: PRECT): BOOL =
   VAR b := raw_GetClientRect (hWnd, lpRect);
   BEGIN
     IF is_chicago THEN b := ORD (b # 0); END;
     RETURN b;
   END GetClientRect;
 
-PROCEDURE GetCursorPos (lpPoint: LPPOINT): BOOL =
+PROCEDURE GetCursorPos (lpPoint: PPOINT): BOOL =
   VAR b := raw_GetCursorPos (lpPoint);
   BEGIN
     IF is_chicago THEN b := ORD (b # 0); END;
     RETURN b;
   END GetCursorPos;
 
-PROCEDURE ClientToScreen (hWnd: HWND; lpPoint: LPPOINT): BOOL =
+PROCEDURE ClientToScreen (hWnd: HWND; lpPoint: PPOINT): BOOL =
   VAR b := raw_ClientToScreen (hWnd, lpPoint);
   BEGIN
     IF is_chicago THEN b := ORD (b # 0); END;
     RETURN b;
   END ClientToScreen;
 
-PROCEDURE ScreenToClient (hWnd: HWND; lpPoint: LPPOINT): BOOL =
+PROCEDURE ScreenToClient (hWnd: HWND; lpPoint: PPOINT): BOOL =
   VAR b := raw_ScreenToClient (hWnd, lpPoint);
   BEGIN
     IF is_chicago THEN b := ORD (b # 0); END;

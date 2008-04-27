@@ -21,12 +21,12 @@ INTERFACE WinVer;
 *                                                                             *
 \*****************************************************************************)
 
-FROM WinNT IMPORT LONG, LPWSTR, LPSTR, LPTSTR;
-FROM WinDef IMPORT DWORD, LPDWORD, BOOL, LPVOID;
+FROM WinNT IMPORT INT32, PWSTR, PSTR, PTSTR;
+FROM WinDef IMPORT UINT32, PUINT32, BOOL, PVOID;
 
 (* ----- Symbols ----- *)
 VAR                             (* CONST *)
-  VS_FILE_INFO: LPTSTR;
+  VS_FILE_INFO: PTSTR;
 
 CONST
   VS_VERSION_INFO = 1;
@@ -34,68 +34,68 @@ CONST
 
 (* ----- VS_VERSION.dwFileFlags ----- *)
 CONST
-  VS_FFI_SIGNATURE    : LONG = 16_FEEF04BD;
-  VS_FFI_STRUCVERSION : LONG = 16_00010000;
-  VS_FFI_FILEFLAGSMASK: LONG = 16_0000003F;
+  VS_FFI_SIGNATURE    : INT32 = 16_FEEF04BD;
+  VS_FFI_STRUCVERSION : INT32 = 16_00010000;
+  VS_FFI_FILEFLAGSMASK: INT32 = 16_0000003F;
 
 (* ----- VS_VERSION.dwFileFlags ----- *)
 CONST
-  VS_FF_DEBUG       : LONG = 16_00000001;
-  VS_FF_PRERELEASE  : LONG = 16_00000002;
-  VS_FF_PATCHED     : LONG = 16_00000004;
-  VS_FF_PRIVATEBUILD: LONG = 16_00000008;
-  VS_FF_INFOINFERRED: LONG = 16_00000010;
-  VS_FF_SPECIALBUILD: LONG = 16_00000020;
+  VS_FF_DEBUG       : INT32 = 16_00000001;
+  VS_FF_PRERELEASE  : INT32 = 16_00000002;
+  VS_FF_PATCHED     : INT32 = 16_00000004;
+  VS_FF_PRIVATEBUILD: INT32 = 16_00000008;
+  VS_FF_INFOINFERRED: INT32 = 16_00000010;
+  VS_FF_SPECIALBUILD: INT32 = 16_00000020;
 
 (* ----- VS_VERSION.dwFileOS ----- *)
 CONST
-  VOS_UNKNOWN: LONG = 16_00000000;
-  VOS_DOS    : LONG = 16_00010000;
-  VOS_OS216  : LONG = 16_00020000;
-  VOS_OS232  : LONG = 16_00030000;
-  VOS_NT     : LONG = 16_00040000;
+  VOS_UNKNOWN: INT32 = 16_00000000;
+  VOS_DOS    : INT32 = 16_00010000;
+  VOS_OS216  : INT32 = 16_00020000;
+  VOS_OS232  : INT32 = 16_00030000;
+  VOS_NT     : INT32 = 16_00040000;
 
-  VOS__BASE     : LONG = 16_00000000;
-  VOS__WINDOWS16: LONG = 16_00000001;
-  VOS__PM16     : LONG = 16_00000002;
-  VOS__PM32     : LONG = 16_00000003;
-  VOS__WINDOWS32: LONG = 16_00000004;
+  VOS__BASE     : INT32 = 16_00000000;
+  VOS__WINDOWS16: INT32 = 16_00000001;
+  VOS__PM16     : INT32 = 16_00000002;
+  VOS__PM32     : INT32 = 16_00000003;
+  VOS__WINDOWS32: INT32 = 16_00000004;
 
-  VOS_DOS_WINDOWS16: LONG = 16_00010001;
-  VOS_DOS_WINDOWS32: LONG = 16_00010004;
-  VOS_OS216_PM16   : LONG = 16_00020002;
-  VOS_OS232_PM32   : LONG = 16_00030003;
-  VOS_NT_WINDOWS32 : LONG = 16_00040004;
+  VOS_DOS_WINDOWS16: INT32 = 16_00010001;
+  VOS_DOS_WINDOWS32: INT32 = 16_00010004;
+  VOS_OS216_PM16   : INT32 = 16_00020002;
+  VOS_OS232_PM32   : INT32 = 16_00030003;
+  VOS_NT_WINDOWS32 : INT32 = 16_00040004;
 
 (* ----- VS_VERSION.dwFileType ----- *)
 CONST
-  VFT_UNKNOWN   : LONG = 16_00000000;
-  VFT_APP       : LONG = 16_00000001;
-  VFT_DLL       : LONG = 16_00000002;
-  VFT_DRV       : LONG = 16_00000003;
-  VFT_FONT      : LONG = 16_00000004;
-  VFT_VXD       : LONG = 16_00000005;
-  VFT_STATIC_LIB: LONG = 16_00000007;
+  VFT_UNKNOWN   : INT32 = 16_00000000;
+  VFT_APP       : INT32 = 16_00000001;
+  VFT_DLL       : INT32 = 16_00000002;
+  VFT_DRV       : INT32 = 16_00000003;
+  VFT_FONT      : INT32 = 16_00000004;
+  VFT_VXD       : INT32 = 16_00000005;
+  VFT_STATIC_LIB: INT32 = 16_00000007;
 
 (* ----- VS_VERSION.dwFileSubtype for VFT_WINDOWS_DRV ----- *)
 CONST
-  VFT2_UNKNOWN        : LONG = 16_00000000;
-  VFT2_DRV_PRINTER    : LONG = 16_00000001;
-  VFT2_DRV_KEYBOARD   : LONG = 16_00000002;
-  VFT2_DRV_LANGUAGE   : LONG = 16_00000003;
-  VFT2_DRV_DISPLAY    : LONG = 16_00000004;
-  VFT2_DRV_MOUSE      : LONG = 16_00000005;
-  VFT2_DRV_NETWORK    : LONG = 16_00000006;
-  VFT2_DRV_SYSTEM     : LONG = 16_00000007;
-  VFT2_DRV_INSTALLABLE: LONG = 16_00000008;
-  VFT2_DRV_SOUND      : LONG = 16_00000009;
-  VFT2_DRV_COMM       : LONG = 16_0000000A;
+  VFT2_UNKNOWN        : INT32 = 16_00000000;
+  VFT2_DRV_PRINTER    : INT32 = 16_00000001;
+  VFT2_DRV_KEYBOARD   : INT32 = 16_00000002;
+  VFT2_DRV_LANGUAGE   : INT32 = 16_00000003;
+  VFT2_DRV_DISPLAY    : INT32 = 16_00000004;
+  VFT2_DRV_MOUSE      : INT32 = 16_00000005;
+  VFT2_DRV_NETWORK    : INT32 = 16_00000006;
+  VFT2_DRV_SYSTEM     : INT32 = 16_00000007;
+  VFT2_DRV_INSTALLABLE: INT32 = 16_00000008;
+  VFT2_DRV_SOUND      : INT32 = 16_00000009;
+  VFT2_DRV_COMM       : INT32 = 16_0000000A;
 
 (* ----- VS_VERSION.dwFileSubtype for VFT_WINDOWS_FONT ----- *)
 CONST
-  VFT2_FONT_RASTER  : LONG = 16_00000001;
-  VFT2_FONT_VECTOR  : LONG = 16_00000002;
-  VFT2_FONT_TRUETYPE: LONG = 16_00000003;
+  VFT2_FONT_RASTER  : INT32 = 16_00000001;
+  VFT2_FONT_VECTOR  : INT32 = 16_00000002;
+  VFT2_FONT_TRUETYPE: INT32 = 16_00000003;
 
 (* ----- VerFindFile() flags ----- *)
 CONST
@@ -110,165 +110,165 @@ CONST
   VIFF_FORCEINSTALL  = 16_0001;
   VIFF_DONTDELETEOLD = 16_0002;
 
-  VIF_TEMPFILE: LONG = 16_00000001;
-  VIF_MISMATCH: LONG = 16_00000002;
-  VIF_SRCOLD  : LONG = 16_00000004;
+  VIF_TEMPFILE: INT32 = 16_00000001;
+  VIF_MISMATCH: INT32 = 16_00000002;
+  VIF_SRCOLD  : INT32 = 16_00000004;
 
-  VIF_DIFFLANG  : LONG = 16_00000008;
-  VIF_DIFFCODEPG: LONG = 16_00000010;
-  VIF_DIFFTYPE  : LONG = 16_00000020;
+  VIF_DIFFLANG  : INT32 = 16_00000008;
+  VIF_DIFFCODEPG: INT32 = 16_00000010;
+  VIF_DIFFTYPE  : INT32 = 16_00000020;
 
-  VIF_WRITEPROT       : LONG = 16_00000040;
-  VIF_FILEINUSE       : LONG = 16_00000080;
-  VIF_OUTOFSPACE      : LONG = 16_00000100;
-  VIF_ACCESSVIOLATION : LONG = 16_00000200;
-  VIF_SHARINGVIOLATION: LONG = 16_00000400;
-  VIF_CANNOTCREATE    : LONG = 16_00000800;
-  VIF_CANNOTDELETE    : LONG = 16_00001000;
-  VIF_CANNOTRENAME    : LONG = 16_00002000;
-  VIF_CANNOTDELETECUR : LONG = 16_00004000;
-  VIF_OUTOFMEMORY     : LONG = 16_00008000;
+  VIF_WRITEPROT       : INT32 = 16_00000040;
+  VIF_FILEINUSE       : INT32 = 16_00000080;
+  VIF_OUTOFSPACE      : INT32 = 16_00000100;
+  VIF_ACCESSVIOLATION : INT32 = 16_00000200;
+  VIF_SHARINGVIOLATION: INT32 = 16_00000400;
+  VIF_CANNOTCREATE    : INT32 = 16_00000800;
+  VIF_CANNOTDELETE    : INT32 = 16_00001000;
+  VIF_CANNOTRENAME    : INT32 = 16_00002000;
+  VIF_CANNOTDELETECUR : INT32 = 16_00004000;
+  VIF_OUTOFMEMORY     : INT32 = 16_00008000;
 
-  VIF_CANNOTREADSRC: LONG = 16_00010000;
-  VIF_CANNOTREADDST: LONG = 16_00020000;
+  VIF_CANNOTREADSRC: INT32 = 16_00010000;
+  VIF_CANNOTREADDST: INT32 = 16_00020000;
 
-  VIF_BUFFTOOSMALL: LONG = 16_00040000;
+  VIF_BUFFTOOSMALL: INT32 = 16_00040000;
 
 (* ----- Types and structures ----- *)
 
 TYPE
   VS_FIXEDFILEINFO = RECORD
-    dwSignature       : DWORD;  (* e.g.  16_feef04bd *)
-    dwStrucVersion    : DWORD;  (* e.g.  16_00000042 = "0.42" *)
-    dwFileVersionMS   : DWORD;  (* e.g.  16_00030075 = "3.75" *)
-    dwFileVersionLS   : DWORD;  (* e.g.  16_00000031 = "0.31" *)
-    dwProductVersionMS: DWORD;  (* e.g.  16_00030010 = "3.10" *)
-    dwProductVersionLS: DWORD;  (* e.g.  16_00000031 = "0.31" *)
-    dwFileFlagsMask   : DWORD;  (* = 16_3F for version "0.42" *)
-    dwFileFlags       : DWORD;  (* e.g.  VFF_DEBUG | VFF_PRERELEASE *)
-    dwFileOS          : DWORD;  (* e.g.  VOS_DOS_WINDOWS16 *)
-    dwFileType        : DWORD;  (* e.g.  VFT_DRIVER *)
-    dwFileSubtype     : DWORD;  (* e.g.  VFT2_DRV_KEYBOARD *)
-    dwFileDateMS      : DWORD;  (* e.g.  0 *)
-    dwFileDateLS      : DWORD;  (* e.g.  0 *)
+    dwSignature       : UINT32;  (* e.g.  16_feef04bd *)
+    dwStrucVersion    : UINT32;  (* e.g.  16_00000042 = "0.42" *)
+    dwFileVersionMS   : UINT32;  (* e.g.  16_00030075 = "3.75" *)
+    dwFileVersionLS   : UINT32;  (* e.g.  16_00000031 = "0.31" *)
+    dwProductVersionMS: UINT32;  (* e.g.  16_00030010 = "3.10" *)
+    dwProductVersionLS: UINT32;  (* e.g.  16_00000031 = "0.31" *)
+    dwFileFlagsMask   : UINT32;  (* = 16_3F for version "0.42" *)
+    dwFileFlags       : UINT32;  (* e.g.  VFF_DEBUG | VFF_PRERELEASE *)
+    dwFileOS          : UINT32;  (* e.g.  VOS_DOS_WINDOWS16 *)
+    dwFileType        : UINT32;  (* e.g.  VFT_DRIVER *)
+    dwFileSubtype     : UINT32;  (* e.g.  VFT2_DRV_KEYBOARD *)
+    dwFileDateMS      : UINT32;  (* e.g.  0 *)
+    dwFileDateLS      : UINT32;  (* e.g.  0 *)
   END;
 
 (* ----- Function prototypes ----- *)
 
 <*EXTERNAL VerFindFileA:APIENTRY*>
-PROCEDURE VerFindFileA (uFlags       : DWORD;
-                        szFileName   : LPSTR;
-                        szWinDir     : LPSTR;
-                        szAppDir     : LPSTR;
-                        szCurDir     : LPSTR;
-                        lpuCurDirLen : LPDWORD;
-                        szDestDir    : LPSTR;
-                        lpuDestDirLen: LPDWORD  ): DWORD;
+PROCEDURE VerFindFileA (uFlags       : UINT32;
+                        szFileName   : PSTR;
+                        szWinDir     : PSTR;
+                        szAppDir     : PSTR;
+                        szCurDir     : PSTR;
+                        lpuCurDirLen : PUINT32;
+                        szDestDir    : PSTR;
+                        lpuDestDirLen: PUINT32  ): UINT32;
 
 <*EXTERNAL VerFindFileW:APIENTRY*>
-PROCEDURE VerFindFileW (uFlags       : DWORD;
-                        szFileName   : LPWSTR;
-                        szWinDir     : LPWSTR;
-                        szAppDir     : LPWSTR;
-                        szCurDir     : LPWSTR;
-                        lpuCurDirLen : LPDWORD;
-                        szDestDir    : LPWSTR;
-                        lpuDestDirLen: LPDWORD  ): DWORD;
+PROCEDURE VerFindFileW (uFlags       : UINT32;
+                        szFileName   : PWSTR;
+                        szWinDir     : PWSTR;
+                        szAppDir     : PWSTR;
+                        szCurDir     : PWSTR;
+                        lpuCurDirLen : PUINT32;
+                        szDestDir    : PWSTR;
+                        lpuDestDirLen: PUINT32  ): UINT32;
 
 CONST VerFindFile = VerFindFileA;
 
 <*EXTERNAL VerInstallFileA:APIENTRY*>
-PROCEDURE VerInstallFileA (uFlags        : DWORD;
-                           szSrcFileName : LPSTR;
-                           szDestFileName: LPSTR;
-                           szSrcDir      : LPSTR;
-                           szDestDir     : LPSTR;
-                           szCurDir      : LPSTR;
-                           szTmpFile     : LPSTR;
-                           lpuTmpFileLen : LPDWORD): DWORD;
+PROCEDURE VerInstallFileA (uFlags        : UINT32;
+                           szSrcFileName : PSTR;
+                           szDestFileName: PSTR;
+                           szSrcDir      : PSTR;
+                           szDestDir     : PSTR;
+                           szCurDir      : PSTR;
+                           szTmpFile     : PSTR;
+                           lpuTmpFileLen : PUINT32): UINT32;
 
 <*EXTERNAL VerInstallFileW:APIENTRY*>
-PROCEDURE VerInstallFileW (uFlags        : DWORD;
-                           szSrcFileName : LPWSTR;
-                           szDestFileName: LPWSTR;
-                           szSrcDir      : LPWSTR;
-                           szDestDir     : LPWSTR;
-                           szCurDir      : LPWSTR;
-                           szTmpFile     : LPWSTR;
-                           lpuTmpFileLen : LPDWORD ): DWORD;
+PROCEDURE VerInstallFileW (uFlags        : UINT32;
+                           szSrcFileName : PWSTR;
+                           szDestFileName: PWSTR;
+                           szSrcDir      : PWSTR;
+                           szDestDir     : PWSTR;
+                           szCurDir      : PWSTR;
+                           szTmpFile     : PWSTR;
+                           lpuTmpFileLen : PUINT32 ): UINT32;
 
 CONST VerInstallFile = VerInstallFileA;
 
 (* Returns size of version info in bytes *)
 <*EXTERNAL GetFileVersionInfoSizeA:APIENTRY*>
-PROCEDURE GetFileVersionInfoSizeA (lptstrFilename: LPSTR;  (* Filename of
+PROCEDURE GetFileVersionInfoSizeA (lptstrFilename: PSTR;  (* Filename of
                                                                 version
                                                                 stamped
                                                                 file *)
 
-                                   lpdwHandle: LPDWORD): DWORD;
+                                   lpdwHandle: PUINT32): UINT32;
                         (* Information for use by GetFileVersionInfo *)
 
 (* Returns size of version info in bytes *)
 <*EXTERNAL GetFileVersionInfoSizeW:APIENTRY*>
-PROCEDURE GetFileVersionInfoSizeW (lptstrFilename: LPWSTR;  (* Filename
+PROCEDURE GetFileVersionInfoSizeW (lptstrFilename: PWSTR;  (* Filename
                                                                  of version
                                                                  stamped
                                                                  file *)
 
-                                     lpdwHandle: LPDWORD): DWORD;
+                                     lpdwHandle: PUINT32): UINT32;
        (* Information for use by GetFileVersionInfo *)
 
 CONST GetFileVersionInfoSize = GetFileVersionInfoSizeA;
 
 (* Read version info into buffer *)
 <*EXTERNAL GetFileVersionInfoA:APIENTRY*>
-PROCEDURE GetFileVersionInfoA (lptstrFilename: LPSTR;  (* Filename of
+PROCEDURE GetFileVersionInfoA (lptstrFilename: PSTR;  (* Filename of
                                                             version stamped
                                                             file *)
 
-                                 dwHandle: DWORD;  (* Information from
+                                 dwHandle: UINT32;  (* Information from
                                                       GetFileVersionSize *)
-                                 dwLen: DWORD;  (* Length of buffer for
+                                 dwLen: UINT32;  (* Length of buffer for
                                                    info *)
-                                 lpData: LPVOID): BOOL;
+                                 lpData: PVOID): BOOL;
   (* Buffer to place the data structure *)
 
 (* Read version info into buffer *)
 <*EXTERNAL GetFileVersionInfoW:APIENTRY*>
-PROCEDURE GetFileVersionInfoW (lptstrFilename: LPWSTR;  (* Filename of
+PROCEDURE GetFileVersionInfoW (lptstrFilename: PWSTR;  (* Filename of
                                                              version
                                                              stamped
                                                              file *)
 
-                               dwHandle: DWORD;  (* Information from
+                               dwHandle: UINT32;  (* Information from
                                                       GetFileVersionSize *)
-                               dwLen: DWORD;  (* Length of buffer for
+                               dwLen: UINT32;  (* Length of buffer for
                                                    info *)
-                               lpData: LPVOID): BOOL;
+                               lpData: PVOID): BOOL;
                          (* Buffer to place the data structure *)
 
 CONST GetFileVersionInfo = GetFileVersionInfoA;
 
 <*EXTERNAL VerLanguageNameA:APIENTRY*>
-PROCEDURE VerLanguageNameA (wLang: DWORD; szLang: LPSTR; nSize: DWORD): DWORD;
+PROCEDURE VerLanguageNameA (wLang: UINT32; szLang: PSTR; nSize: UINT32): UINT32;
 
 <*EXTERNAL VerLanguageNameW:APIENTRY*>
-PROCEDURE VerLanguageNameW (wLang: DWORD; szLang: LPWSTR; nSize: DWORD): DWORD;
+PROCEDURE VerLanguageNameW (wLang: UINT32; szLang: PWSTR; nSize: UINT32): UINT32;
 
 CONST VerLanguageName = VerLanguageNameA;
 
 <*EXTERNAL VerQueryValueA:APIENTRY*>
-PROCEDURE VerQueryValueA (pBlock    : LPVOID;
-                          lpSubBlock: LPSTR;
-                          lplpBuffer: UNTRACED REF LPVOID;
-                          lpuLen    : LPDWORD              ): BOOL;
+PROCEDURE VerQueryValueA (pBlock    : PVOID;
+                          lpSubBlock: PSTR;
+                          lplpBuffer: UNTRACED REF PVOID;
+                          lpuLen    : PUINT32              ): BOOL;
 
 <*EXTERNAL VerQueryValueW:APIENTRY*>
-PROCEDURE VerQueryValueW (pBlock    : LPVOID;
-                          lpSubBlock: LPWSTR;
-                          lplpBuffer: UNTRACED REF LPVOID;
-                          lpuLen    : LPDWORD              ): BOOL;
+PROCEDURE VerQueryValueW (pBlock    : PVOID;
+                          lpSubBlock: PWSTR;
+                          lplpBuffer: UNTRACED REF PVOID;
+                          lpuLen    : PUINT32              ): BOOL;
 
 CONST VerQueryValue = VerQueryValueA;
 

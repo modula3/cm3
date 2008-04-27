@@ -18,84 +18,136 @@ INTERFACE WinNT;
  * 
  * And we ignore architecture dependent declarations.
  *
- * Some basic type declarations have been moved to WinDef.i3 to avoid circular
+ * Some basic type declarations have been moved to WinBaseTypes.i3 to avoid circular
  * dependencies.
  *)
 
 <* PRAGMA UNALIGNED *>
 
-IMPORT Ctypes, Word, WinBaseTypes;
-
+IMPORT Word, WinBaseTypes;
 FROM Word IMPORT And, Or, Not;
-FROM WinDef IMPORT BYTE, CCHAR, DWORD, INT, PDWORD, PWORD, WORD;
+FROM Ctypes IMPORT char_star;
 
 TYPE
   ANYSIZE_ARRAY = [0 .. 0];
 
-  PVOID = Ctypes.void_star;
+  (* reexport base types *)
 
-  SHORT = WinBaseTypes.SHORT;
-  LONG = WinBaseTypes.LONG;
+  UINT8 = WinBaseTypes.UINT8;
+  UINT16 = WinBaseTypes.UINT16;
+  UINT32 = WinBaseTypes.UINT32;
+  UINT64 = WinBaseTypes.UINT64;
+  INT8 = WinBaseTypes.INT8;
+  INT16 = WinBaseTypes.INT16;
+  INT32 = WinBaseTypes.INT32;
+  INT64 = WinBaseTypes.INT64;
+  SIZE_T = WinBaseTypes.SIZE_T;   (* same size as a pointer, unsigned *)
+  SSIZE_T = WinBaseTypes.SSIZE_T; (* same size as a pointer, signed, aka ptrdiff_t *)
+  PUINT8 = WinBaseTypes.PUINT8;
+  PUINT16 = WinBaseTypes.PUINT16;
+  PUINT32 = WinBaseTypes.PUINT32;
+  PUINT64 = WinBaseTypes.PUINT64;
+  PINT8 = WinBaseTypes.PINT8;
+  PINT16 = WinBaseTypes.PINT16;
+  PINT32 = WinBaseTypes.PINT32;
+  PINT64 = WinBaseTypes.PINT64;
+  PVOID = WinBaseTypes.PVOID;
+  PCVOID = WinBaseTypes.PCVOID;
+  BOOL = WinBaseTypes.BOOL;
+  CCHAR = WinBaseTypes.CCHAR;
+  HANDLE = WinBaseTypes.HANDLE;
+  PBOOL = WinBaseTypes.PBOOL;
+  PFLOAT = WinBaseTypes.PFLOAT;
+  PHANDLE = WinBaseTypes.PHANDLE;
+  WFLOAT = WinBaseTypes.WFLOAT;
+  WCHAR = WinBaseTypes.WCHAR; (* wc, 16-bit UNICODE character *)
+  PSTR = WinBaseTypes.PSTR;
+  PCSTR = WinBaseTypes.PCSTR;
+  PWSTR = WinBaseTypes.PWSTR;
+  PCWSTR = WinBaseTypes.PCWSTR;
+  TCHAR = WinBaseTypes.TCHAR;
+  PTSTR = WinBaseTypes.PTSTR;
+  PCTSTR = WinBaseTypes.PCTSTR;
+  PSZ = WinBaseTypes.PSZ;
+
+  (* funny names for base types *)
+
+  BYTE = UINT8;
+  UCHAR = UINT8;
+  PUCHAR = PUINT8;
+  PBYTE = PUINT8;
+
+  PSHORT = PINT16;
+  SHORT = INT16;
+  USHORT = UINT16;
+  PUSHORT = PUINT16;
+  WORD = UINT16;
+  PWORD = PUINT16;
+
+  ULONG = UINT32;
+  DWORD = UINT32;
+  UINT = UINT32;
+  INT = INT32;
+  PULONG = PUINT32;
+  LONG = INT32;
+  PINT = PINT32;
+  LPINT = PINT32;
+  LPLONG = PINT32;
+  PDWORD = PUINT32;
+  PUINT = PUINT32;
+  PLONG = PINT32;
+
+  LPBOOL = PBOOL;
+  LPBYTE = PBYTE;
+  LPWORD = PWORD;
+  LPDWORD = PDWORD;
+  LPVOID = PVOID;
+  LPCVOID = PCVOID;
+
+  DWORD_PTR = SIZE_T; (* same size as a pointer, unsigned *)
+  UINT_PTR = SIZE_T; (* same size as a pointer, unsigned *)
+  ULONG_PTR = SIZE_T; (* same size as a pointer, unsigned *)
+  INT_PTR = SSIZE_T; (* same size as a pointer, signed *)
+  LONG_PTR = SSIZE_T; (* same size as a pointer, signed *)
 
 (*
  * UNICODE (Wide Character) types
  *)
-
-TYPE
-  WCHAR = Ctypes.unsigned_short;    (* wc,   16-bit UNICODE character *)
-
-  PWCHAR  = UNTRACED REF WCHAR;
-  LPWCH   = UNTRACED REF WCHAR;
-  PWCH    = UNTRACED REF WCHAR;
-  LPCWCH  = UNTRACED REF WCHAR;
-  PCWCH   = UNTRACED REF WCHAR;
-  NWPSTR  = UNTRACED REF WCHAR;
-  LPWSTR  = UNTRACED REF WCHAR;
-  PWSTR   = UNTRACED REF WCHAR;
-  LPCWSTR = UNTRACED REF WCHAR;
-  PCWSTR  = UNTRACED REF WCHAR;
+  PWCHAR  = PWSTR;
+  LPWCH   = PWSTR;
+  PWCH    = PWSTR;
+  LPCWCH  = PCWSTR;
+  PCWCH   = PCWSTR;
+  NWPSTR  = PWSTR;
+  LPWSTR  = PWSTR;
+  LPCWSTR = PCWSTR;
 
 (*
  * ANSI (Multi-byte Character) types
  *)
+  PCHAR  = PSTR;
+  LPCH   = PSTR;
+  PCH    = PSTR;
 
-TYPE
-  PCHAR  = Ctypes.char_star;
-  LPCH   = Ctypes.char_star;
-  PCH    = Ctypes.char_star;
-
-  LPCCH  = Ctypes.char_star;
-  PCCH   = Ctypes.char_star;
-  NPSTR  = Ctypes.char_star;
-  LPSTR  = Ctypes.char_star;
-  PSTR   = Ctypes.char_star;
-  LPCSTR = Ctypes.char_star;
-  PCSTR  = Ctypes.char_star;
+  LPCCH  = PCSTR;
+  PCCH   = PCSTR;
+  NPSTR  = PSTR;
+  LPSTR  = PSTR;
+  LPCSTR = PCSTR;
 
 (*
  * Neutral ANSI types
  *)
+  PTCHAR = PTSTR;
+  LPTCH   = PTSTR;
+  PTCH    = PTSTR;
+  LPTSTR  = PTSTR;
+  LPCTSTR = PCTSTR;
+  LP      = PWSTR;
 
-TYPE
-  TCHAR  = Ctypes.char;
-  PTCHAR = Ctypes.char_star;
-
-  LPTCH   = LPSTR;
-  PTCH    = LPSTR;
-  PTSTR   = LPSTR;
-  LPTSTR  = LPSTR;
-  LPCTSTR = LPCSTR;
-  LP      = LPWSTR;
-
-  PSHORT  = WinBaseTypes.PSHORT;
-  PLONG   = WinBaseTypes.PLONG;
-
-  HANDLE  = WinBaseTypes.HANDLE;
-  PHANDLE = WinBaseTypes.PHANDLE;
-
-  LCID    = DWORD;
-  PLCID   = PDWORD;
-  LANGID  = WORD;
+  LCID    = UINT32;
+  PLCID   = PUINT32;
+  LANGID  = UINT16;
 
 CONST
   APPLICATION_ERROR_MASK       = 16_20000000;
@@ -107,14 +159,14 @@ CONST
 TYPE
   PLARGE_INTEGER = UNTRACED REF LARGE_INTEGER;
   LARGE_INTEGER = RECORD
-    LowPart: DWORD;
-    HighPart: LONG;
+    LowPart: UINT32;
+    HighPart: INT32;
   END;
 
   PULARGE_INTEGER = UNTRACED REF ULARGE_INTEGER;
   ULARGE_INTEGER = RECORD
-    LowPart: DWORD;
-    HighPart: DWORD;
+    LowPart: UINT32;
+    HighPart: UINT32;
   END;
 
   LUID = LARGE_INTEGER;
@@ -133,7 +185,6 @@ TYPE
  *  as link words.
  *)
 
-TYPE
   PLIST_ENTRY = UNTRACED REF LIST_ENTRY;
   LIST_ENTRY = RECORD
     Flink: UNTRACED REF LIST_ENTRY;
@@ -163,39 +214,38 @@ CONST
   MAXWORD  = 16_ffff;
   MAXDWORD = 16_ffffffff;
 
-CONST
-  STATUS_WAIT_0                  : DWORD = 16_00000000;
-  STATUS_ABANDONED_WAIT_0        : DWORD = 16_00000080;
-  STATUS_USER_APC                : DWORD = 16_000000C0;
-  STATUS_TIMEOUT                 : DWORD = 16_00000102;
-  STATUS_PENDING                 : DWORD = 16_00000103;
-  STATUS_DATATYPE_MISALIGNMENT   : DWORD = 16_80000002;
-  STATUS_BREAKPOINT              : DWORD = 16_80000003;
-  STATUS_SINGLE_STEP             : DWORD = 16_80000004;
-  STATUS_ACCESS_VIOLATION        : DWORD = 16_C0000005;
-  STATUS_ILLEGAL_INSTRUCTION     : DWORD = 16_C000001D;
-  STATUS_NONCONTINUABLE_EXCEPTION: DWORD = 16_C0000025;
-  STATUS_INVALID_DISPOSITION     : DWORD = 16_C0000026;
-  STATUS_ARRAY_BOUNDS_EXCEEDED   : DWORD = 16_C000008C;
-  STATUS_FLOAT_DENORMAL_OPERAND  : DWORD = 16_C000008D;
-  STATUS_FLOAT_DIVIDE_BY_ZERO    : DWORD = 16_C000008E;
-  STATUS_FLOAT_INEXACT_RESULT    : DWORD = 16_C000008F;
-  STATUS_FLOAT_INVALID_OPERATION : DWORD = 16_C0000090;
-  STATUS_FLOAT_OVERFLOW          : DWORD = 16_C0000091;
-  STATUS_FLOAT_STACK_CHECK       : DWORD = 16_C0000092;
-  STATUS_FLOAT_UNDERFLOW         : DWORD = 16_C0000093;
-  STATUS_INTEGER_DIVIDE_BY_ZERO  : DWORD = 16_C0000094;
-  STATUS_INTEGER_OVERFLOW        : DWORD = 16_C0000095;
-  STATUS_PRIVILEGED_INSTRUCTION  : DWORD = 16_C0000096;
-  STATUS_STACK_OVERFLOW          : DWORD = 16_C00000FD;
-  STATUS_CONTROL_C_EXIT          : DWORD = 16_C000013A;
+  STATUS_WAIT_0                  : UINT32 = 16_00000000;
+  STATUS_ABANDONED_WAIT_0        : UINT32 = 16_00000080;
+  STATUS_USER_APC                : UINT32 = 16_000000C0;
+  STATUS_TIMEOUT                 : UINT32 = 16_00000102;
+  STATUS_PENDING                 : UINT32 = 16_00000103;
+  STATUS_DATATYPE_MISALIGNMENT   : UINT32 = 16_80000002;
+  STATUS_BREAKPOINT              : UINT32 = 16_80000003;
+  STATUS_SINGLE_STEP             : UINT32 = 16_80000004;
+  STATUS_ACCESS_VIOLATION        : UINT32 = 16_C0000005;
+  STATUS_ILLEGAL_INSTRUCTION     : UINT32 = 16_C000001D;
+  STATUS_NONCONTINUABLE_EXCEPTION: UINT32 = 16_C0000025;
+  STATUS_INVALID_DISPOSITION     : UINT32 = 16_C0000026;
+  STATUS_ARRAY_BOUNDS_EXCEEDED   : UINT32 = 16_C000008C;
+  STATUS_FLOAT_DENORMAL_OPERAND  : UINT32 = 16_C000008D;
+  STATUS_FLOAT_DIVIDE_BY_ZERO    : UINT32 = 16_C000008E;
+  STATUS_FLOAT_INEXACT_RESULT    : UINT32 = 16_C000008F;
+  STATUS_FLOAT_INVALID_OPERATION : UINT32 = 16_C0000090;
+  STATUS_FLOAT_OVERFLOW          : UINT32 = 16_C0000091;
+  STATUS_FLOAT_STACK_CHECK       : UINT32 = 16_C0000092;
+  STATUS_FLOAT_UNDERFLOW         : UINT32 = 16_C0000093;
+  STATUS_INTEGER_DIVIDE_BY_ZERO  : UINT32 = 16_C0000094;
+  STATUS_INTEGER_OVERFLOW        : UINT32 = 16_C0000095;
+  STATUS_PRIVILEGED_INSTRUCTION  : UINT32 = 16_C0000096;
+  STATUS_STACK_OVERFLOW          : UINT32 = 16_C00000FD;
+  STATUS_CONTROL_C_EXIT          : UINT32 = 16_C000013A;
 
   MAXIMUM_WAIT_OBJECTS = 64;    (* Maximum number of wait objects *)
 
   MAXIMUM_SUSPEND_COUNT = MAXCHAR; (* Maximum times thread can be suspended *)
 
 TYPE
-KSPIN_LOCK = DWORD;  
+KSPIN_LOCK = UINT32;  
 
 CONST
   EXCEPTION_NONCONTINUABLE = 16_1; (* Noncontinuable exception *)
@@ -209,14 +259,14 @@ CONST
 TYPE
   PEXCEPTION_RECORD = UNTRACED REF EXCEPTION_RECORD;
   EXCEPTION_RECORD = RECORD
-    ExceptionCode   : DWORD;
-    ExceptionFlags  : DWORD;
+    ExceptionCode   : UINT32;
+    ExceptionFlags  : UINT32;
     ExceptionRecord : UNTRACED REF EXCEPTION_RECORD;
     ExceptionAddress: PVOID;
-    NumberParameters: DWORD;
+    NumberParameters: UINT32;
     ExceptionInformation: ARRAY
                               [0 .. EXCEPTION_MAXIMUM_PARAMETERS - 1] OF
-                              DWORD;
+                              SIZE_T;
   END;
 
 
@@ -228,7 +278,7 @@ TYPE
   PEXCEPTION_POINTERS = UNTRACED REF EXCEPTION_POINTERS;
   EXCEPTION_POINTERS = RECORD
     ExceptionRecord: PEXCEPTION_RECORD;
-    ContextRecord: Ctypes.void_star;  (* !!! Architecture-dependent
+    ContextRecord: PVOID;  (* !!! Architecture-dependent
                                           context pointer *)
   END;
 
@@ -300,11 +350,11 @@ TYPE
   MEMORY_BASIC_INFORMATION = RECORD
     BaseAddress      : PVOID;
     AllocationBase   : PVOID;
-    AllocationProtect: DWORD;
-    RegionSize       : DWORD;
-    State            : DWORD;
-    Protect          : DWORD;
-    Type             : DWORD;
+    AllocationProtect: UINT32;
+    RegionSize       : UINT32;
+    State            : UINT32;
+    Protect          : UINT32;
+    Type             : UINT32;
   END;
 
 CONST
@@ -372,24 +422,24 @@ TYPE
 (*      |R|W|E|A|     |S|               |                               | *)
 (*      +-+-------------+---------------+-------------------------------+ *)
 (*      typedef struct _ACCESS_MASK { *)
-(*          WORD   SpecificRights; *)
-(*          BYTE  StandardRights; *)
-(*          BYTE  AccessSystemAcl : 1; *)
-(*          BYTE  Reserved : 3; *)
-(*          BYTE  GenericAll : 1; *)
-(*          BYTE  GenericExecute : 1; *)
-(*          BYTE  GenericWrite : 1; *)
-(*          BYTE  GenericRead : 1; *)
+(*          UINT16   SpecificRights; *)
+(*          UINT8  StandardRights; *)
+(*          UINT8  AccessSystemAcl : 1; *)
+(*          UINT8  Reserved : 3; *)
+(*          UINT8  GenericAll : 1; *)
+(*          UINT8  GenericExecute : 1; *)
+(*          UINT8  GenericWrite : 1; *)
+(*          UINT8  GenericRead : 1; *)
 (*      } ACCESS_MASK; *)
 (*      typedef ACCESS_MASK *PACCESS_MASK; *)
 (*  but to make life simple for programmer's we'll allow them to specify *)
 (*  a desired access mask by simply OR'ing together mulitple single rights *)
 (*  and treat an access mask as a ulong.  For example *)
 (*      DesiredAccess = DELETE | READ_CONTROL *)
-(*  So we'll declare ACCESS_MASK as DWORD *)
+(*  So we'll declare ACCESS_MASK as UINT32 *)
 
 TYPE
- ACCESS_MASK = DWORD;
+ ACCESS_MASK = UINT32;
  PACCESS_MASK = UNTRACED REF ACCESS_MASK;
 
 (*////////////////////////////////////////////////////////////////////// *)
@@ -422,22 +472,16 @@ CONST
 (*
  * AccessSystemAcl access type
  *)
-
-CONST
   ACCESS_SYSTEM_SECURITY = 16_01000000;
 
 (*
  * MaximumAllowed access type
  *)
-
-CONST
   MAXIMUM_ALLOWED  = 16_02000000;
 
 (*
  *  These are the generic rights.
  *)
-
-CONST
   GENERIC_READ    = 16_80000000;
   GENERIC_WRITE   = 16_40000000;
   GENERIC_EXECUTE = 16_20000000;
@@ -465,11 +509,10 @@ TYPE
 (*                                                                    // *)
 (*////////////////////////////////////////////////////////////////////// *)
 
-TYPE
   PLUID_AND_ATTRIBUTES = UNTRACED REF LUID_AND_ATTRIBUTES;
   LUID_AND_ATTRIBUTES = RECORD
     Luid      : LUID;
-    Attributes: DWORD;
+    Attributes: UINT32;
   END;
 
  LUID_AND_ATTRIBUTES_ARRAY = ARRAY ANYSIZE_ARRAY OF LUID_AND_ATTRIBUTES;
@@ -497,18 +540,17 @@ TYPE
 (*      |                                                               | *)
 (*      +---------------------------------------------------------------+ *)
 
-TYPE
   PSID_IDENTIFIER_AUTHORITY = UNTRACED REF SID_IDENTIFIER_AUTHORITY;
   SID_IDENTIFIER_AUTHORITY = RECORD
-    Value: ARRAY [0 .. 5] OF BYTE;
+    Value: ARRAY [0 .. 5] OF UINT8;
   END;
 
   PISID = UNTRACED REF SID;
   SID = RECORD
-   Revision           : BYTE;
-   SubAuthorityCount  : BYTE;
+   Revision           : UINT8;
+   SubAuthorityCount  : UINT8;
    IdentifierAuthority: SID_IDENTIFIER_AUTHORITY;
-   SubAuthority       : ARRAY ANYSIZE_ARRAY OF DWORD;
+   SubAuthority       : ARRAY ANYSIZE_ARRAY OF UINT32;
   END;
 
 
@@ -536,7 +578,7 @@ TYPE
   PSID_AND_ATTRIBUTES = UNTRACED REF SID_AND_ATTRIBUTES;
   SID_AND_ATTRIBUTES = RECORD
     Sid: PSID;
-    Attributes: DWORD;
+    Attributes: UINT32;
   END;
 
   SID_AND_ATTRIBUTES_ARRAY = ARRAY ANYSIZE_ARRAY OF SID_AND_ATTRIBUTES;
@@ -557,20 +599,20 @@ TYPE
 
 CONST (* ??? *)
   SECURITY_NULL_SID_AUTHORITY    = SID_IDENTIFIER_AUTHORITY{
-                                     ARRAY [0 .. 5] OF BYTE{0, 0, 0, 0, 0, 0}};
+                                     ARRAY [0 .. 5] OF UINT8{0, 0, 0, 0, 0, 0}};
   SECURITY_WORLD_SID_AUTHORITY   = SID_IDENTIFIER_AUTHORITY{
-                                     ARRAY [0 .. 5] OF BYTE{0, 0, 0, 0, 0, 1}};
+                                     ARRAY [0 .. 5] OF UINT8{0, 0, 0, 0, 0, 1}};
   SECURITY_LOCAL_SID_AUTHORITY   = SID_IDENTIFIER_AUTHORITY{
-                                     ARRAY [0 .. 5] OF BYTE{0, 0, 0, 0, 0, 2}};
+                                     ARRAY [0 .. 5] OF UINT8{0, 0, 0, 0, 0, 2}};
   SECURITY_CREATOR_SID_AUTHORITY = SID_IDENTIFIER_AUTHORITY{
-                                     ARRAY [0 .. 5] OF BYTE{0, 0, 0, 0, 0, 3}};
+                                     ARRAY [0 .. 5] OF UINT8{0, 0, 0, 0, 0, 3}};
 
-  SECURITY_NULL_RID : LONG = 16_00000000;
-  SECURITY_WORLD_RID: LONG = 16_00000000;
-  SECURITY_LOCAL_RID: LONG = 16_00000000;
+  SECURITY_NULL_RID : INT32 = 16_00000000;
+  SECURITY_WORLD_RID: INT32 = 16_00000000;
+  SECURITY_LOCAL_RID: INT32 = 16_00000000;
 
-  SECURITY_CREATOR_OWNER_RID: LONG = 16_00000000;
-  SECURITY_CREATOR_GROUP_RID: LONG = 16_00000001;
+  SECURITY_CREATOR_OWNER_RID: INT32 = 16_00000000;
+  SECURITY_CREATOR_GROUP_RID: INT32 = 16_00000001;
 
 
 
@@ -592,22 +634,21 @@ CONST (* ??? *)
 (*                                                          *)
 (*//////////////////////////////////////////////////////////*)
 
-CONST
   SECURITY_NT_AUTHORITY = SID_IDENTIFIER_AUTHORITY{
-                            ARRAY [0 .. 5] OF BYTE{0, 0, 0, 0, 0, 5}};
+                            ARRAY [0 .. 5] OF UINT8{0, 0, 0, 0, 0, 5}};
 
-  SECURITY_DIALUP_RID     : LONG = 16_00000001;
-  SECURITY_NETWORK_RID    : LONG = 16_00000002;
-  SECURITY_BATCH_RID      : LONG = 16_00000003;
-  SECURITY_INTERACTIVE_RID: LONG = 16_00000004;
-  SECURITY_SERVICE_RID    : LONG = 16_00000006;
+  SECURITY_DIALUP_RID     : INT32 = 16_00000001;
+  SECURITY_NETWORK_RID    : INT32 = 16_00000002;
+  SECURITY_BATCH_RID      : INT32 = 16_00000003;
+  SECURITY_INTERACTIVE_RID: INT32 = 16_00000004;
+  SECURITY_SERVICE_RID    : INT32 = 16_00000006;
 
-  SECURITY_LOGON_IDS_RID      : LONG = 16_00000005;
-  SECURITY_LOGON_IDS_RID_COUNT: LONG = 3;
+  SECURITY_LOGON_IDS_RID      : INT32 = 16_00000005;
+  SECURITY_LOGON_IDS_RID_COUNT: INT32 = 3;
 
-  SECURITY_LOCAL_SYSTEM_RID: LONG = 16_00000012;
+  SECURITY_LOCAL_SYSTEM_RID: INT32 = 16_00000012;
 
-  SECURITY_BUILTIN_DOMAIN_RID: LONG = 16_00000020;
+  SECURITY_BUILTIN_DOMAIN_RID: INT32 = 16_00000020;
 
 (*//////////////////////////////////////////////////////////*)
 (*                                                          *)
@@ -617,37 +658,33 @@ CONST
 
 (* Well-known users ... *)
 
-CONST
-  DOMAIN_USER_RID_ADMIN: LONG = 16_000001F4;
-  DOMAIN_USER_RID_GUEST: LONG = 16_000001F5;
+  DOMAIN_USER_RID_ADMIN: INT32 = 16_000001F4;
+  DOMAIN_USER_RID_GUEST: INT32 = 16_000001F5;
 
 (* well-known groups ... *)
 
-CONST
-  DOMAIN_GROUP_RID_ADMINS: LONG = 16_00000200;
-  DOMAIN_GROUP_RID_USERS : LONG = 16_00000201;
+  DOMAIN_GROUP_RID_ADMINS: INT32 = 16_00000200;
+  DOMAIN_GROUP_RID_USERS : INT32 = 16_00000201;
 
 (* well-known aliases ... *)
 
-CONST
-  DOMAIN_ALIAS_RID_ADMINS     : LONG = 16_00000220;
-  DOMAIN_ALIAS_RID_USERS      : LONG = 16_00000221;
-  DOMAIN_ALIAS_RID_GUESTS     : LONG = 16_00000222;
-  DOMAIN_ALIAS_RID_POWER_USERS: LONG = 16_00000223;
+  DOMAIN_ALIAS_RID_ADMINS     : INT32 = 16_00000220;
+  DOMAIN_ALIAS_RID_USERS      : INT32 = 16_00000221;
+  DOMAIN_ALIAS_RID_GUESTS     : INT32 = 16_00000222;
+  DOMAIN_ALIAS_RID_POWER_USERS: INT32 = 16_00000223;
 
-  DOMAIN_ALIAS_RID_ACCOUNT_OPS: LONG = 16_00000224;
-  DOMAIN_ALIAS_RID_SYSTEM_OPS : LONG = 16_00000225;
-  DOMAIN_ALIAS_RID_PRINT_OPS  : LONG = 16_00000226;
-  DOMAIN_ALIAS_RID_BACKUP_OPS : LONG = 16_00000227;
+  DOMAIN_ALIAS_RID_ACCOUNT_OPS: INT32 = 16_00000224;
+  DOMAIN_ALIAS_RID_SYSTEM_OPS : INT32 = 16_00000225;
+  DOMAIN_ALIAS_RID_PRINT_OPS  : INT32 = 16_00000226;
+  DOMAIN_ALIAS_RID_BACKUP_OPS : INT32 = 16_00000227;
 
-  DOMAIN_ALIAS_RID_REPLICATOR: LONG = 16_00000228;
+  DOMAIN_ALIAS_RID_REPLICATOR: INT32 = 16_00000228;
 
 (*
  * Allocate the System Luid.  The first 1000 LUIDs are reserved.
  * Use #999 here (16_3E7 = 999)
  *)
 
-CONST
   SYSTEM_LUID = LUID{16_0, 16_3E7};
 
 (*////////////////////////////////////////////////////////////////////// *)
@@ -658,12 +695,11 @@ CONST
 
 (* Group attributes *)
 
-CONST
-SE_GROUP_MANDATORY:LONG=              16_00000001;
-SE_GROUP_ENABLED_BY_DEFAULT:LONG=     16_00000002;
-SE_GROUP_ENABLED:LONG=                16_00000004;
-SE_GROUP_OWNER:LONG=                  16_00000008;
-SE_GROUP_LOGON_ID:LONG=               16_C0000000;
+SE_GROUP_MANDATORY:INT32=              16_00000001;
+SE_GROUP_ENABLED_BY_DEFAULT:INT32=     16_00000002;
+SE_GROUP_ENABLED:INT32=                16_00000004;
+SE_GROUP_OWNER:INT32=                  16_00000008;
+SE_GROUP_LOGON_ID:INT32=               16_C0000000;
 
 
 (* User attributes *)
@@ -693,24 +729,22 @@ SE_GROUP_LOGON_ID:LONG=               16_C0000000;
 
 (* This is the *current* ACL revision *)
 
-CONST
   ACL_REVISION = 2;
 
 (* This is the history of ACL revisions.  Add a new one whenever *)
 (* ACL_REVISION is updated *)
 
-CONST
   ACL_REVISION1 = 1;
   ACL_REVISION2 = 2;
 
 TYPE
   PACL = UNTRACED REF ACL;
   ACL = RECORD
-    AclRevision: BYTE;
-    Sbz1       : BYTE;
-    AclSize    : WORD;
-    AceCount   : WORD;
-    Sbz2       : WORD;
+    AclRevision: UINT8;
+    Sbz1       : UINT8;
+    AclSize    : UINT16;
+    AceCount   : UINT16;
+    Sbz2       : UINT16;
   END;
 
 (*  The structure of an ACE is a common ace header followed by ace type *)
@@ -726,12 +760,11 @@ TYPE
 (*  AceSize is the size, in bytes, of ace. *)
 (*  AceFlags are the Ace flags for audit and inheritance, defined shortly. *)
 
-TYPE
   PACE_HEADER = UNTRACED REF ACE_HEADER;
   ACE_HEADER = RECORD
-    AceType : BYTE;
-    AceFlags: BYTE;
-    AceSize : WORD;
+    AceType : UINT8;
+    AceFlags: UINT8;
+    AceSize : UINT16;
   END;
 
 (*  The following are the predefined ace types that go into the AceType *)
@@ -746,7 +779,6 @@ CONST
 (*  The following are the inherit flags that go into the AceFlags field *)
 (*  of an Ace header. *)
 
-CONST
   OBJECT_INHERIT_ACE       = 16_1;
   CONTAINER_INHERIT_ACE    = 16_2;
   NO_PROPAGATE_INHERIT_ACE = 16_4;
@@ -764,7 +796,6 @@ CONST
 (*  SYSTEM_AUDIT and SYSTEM_ALARM AceFlags *)
 (*  These control the signaling of audit and alarms for success or failure. *)
 
-CONST
   SUCCESSFUL_ACCESS_ACE_FLAG = 16_40;
   FAILED_ACCESS_ACE_FLAG     = 16_80;
 
@@ -799,28 +830,28 @@ TYPE
   ACCESS_ALLOWED_ACE = RECORD
     Header  : ACE_HEADER;
     Mask    : ACCESS_MASK;
-    SidStart: DWORD;
+    SidStart: UINT32;
   END;
 
   PACCESS_DENIED_ACE = UNTRACED REF ACCESS_DENIED_ACE;
   ACCESS_DENIED_ACE = RECORD
     Header  : ACE_HEADER;
     Mask    : ACCESS_MASK;
-    SidStart: DWORD;
+    SidStart: UINT32;
   END;
 
   PSYSTEM_AUDIT_ACE = UNTRACED REF SYSTEM_AUDIT_ACE;
   SYSTEM_AUDIT_ACE = RECORD
     Header  : ACE_HEADER;
     Mask    : ACCESS_MASK;
-    SidStart: DWORD;
+    SidStart: UINT32;
   END;
 
   PSYSTEM_ALARM_ACE = UNTRACED REF SYSTEM_ALARM_ACE;
   SYSTEM_ALARM_ACE = RECORD
     Header  : ACE_HEADER;
     Mask    : ACCESS_MASK;
-    SidStart: DWORD;
+    SidStart: UINT32;
   END;
 
 
@@ -828,7 +859,6 @@ TYPE
 (*  about and ACL.  First are the various information classes available to *)
 (*  the user. *)
 
-TYPE
   ACL_INFORMATION_CLASS = [1 .. 2];
 
 CONST
@@ -839,17 +869,16 @@ CONST
 (*  AclRevisionInformation *)
 
 TYPE
-  ACL_REVISION_INFORMATION = RECORD AclRevision: DWORD;  END;
+  ACL_REVISION_INFORMATION = RECORD AclRevision: UINT32;  END;
   PACL_REVISION_INFORMATION = UNTRACED REF ACL_REVISION_INFORMATION;
 
 (*  This record is returned if the user is requesting AclSizeInformation *)
 
-TYPE
   PACL_SIZE_INFORMATION = UNTRACED REF ACL_SIZE_INFORMATION;
   ACL_SIZE_INFORMATION = RECORD
-    AceCount     : DWORD;
-    AclBytesInUse: DWORD;
-    AclBytesFree : DWORD;
+    AceCount     : UINT32;
+    AclBytesInUse: UINT32;
+    AclBytesFree : UINT32;
   END;
 
 
@@ -874,8 +903,8 @@ CONST
 CONST SECURITY_DESCRIPTOR_MIN_LENGTH = 20;
 
 TYPE
-  SECURITY_DESCRIPTOR_CONTROL = WORD;
-  PSECURITY_DESCRIPTOR_CONTROL = UNTRACED REF WORD;
+  SECURITY_DESCRIPTOR_CONTROL = UINT16;
+  PSECURITY_DESCRIPTOR_CONTROL = UNTRACED REF UINT16;
 
 CONST
   SE_OWNER_DEFAULTED = 16_0001;
@@ -947,8 +976,8 @@ CONST
 TYPE
   PISECURITY_DESCRIPTOR = UNTRACED REF SECURITY_DESCRIPTOR;
   SECURITY_DESCRIPTOR = RECORD
-    Revision: BYTE;
-    Sbz1    : BYTE;
+    Revision: UINT8;
+    Sbz1    : UINT8;
     Control : SECURITY_DESCRIPTOR_CONTROL;
     Owner   : PSID;
     Group   : PSID;
@@ -999,9 +1028,9 @@ TYPE
 (* Privilege attributes *)
 
 CONST
-  SE_PRIVILEGE_ENABLED_BY_DEFAULT: LONG = 16_00000001;
-  SE_PRIVILEGE_ENABLED           : LONG = 16_00000002;
-  SE_PRIVILEGE_USED_FOR_ACCESS   : LONG = 16_80000000;
+  SE_PRIVILEGE_ENABLED_BY_DEFAULT: INT32 = 16_00000001;
+  SE_PRIVILEGE_ENABLED           : INT32 = 16_00000002;
+  SE_PRIVILEGE_USED_FOR_ACCESS   : INT32 = 16_80000000;
 
 
 
@@ -1018,8 +1047,8 @@ CONST PRIVILEGE_SET_ALL_NECESSARY = 1;
 TYPE
   PPRIVILEGE_SET = UNTRACED REF PRIVILEGE_SET;
   PRIVILEGE_SET = RECORD
-    PrivilegeCount: DWORD;
-    Control       : DWORD;
+    PrivilegeCount: UINT32;
+    Control       : UINT32;
     Privilege: ARRAY ANYSIZE_ARRAY OF LUID_AND_ATTRIBUTES;
   END;
 
@@ -1078,14 +1107,11 @@ CONST
   SecurityImpersonation  = 2;
   SecurityDelegation     = 3;
 
-
-CONST
   SECURITY_MAX_IMPERSONATION_LEVEL = SecurityDelegation;
   DEFAULT_IMPERSONATION_LEVEL      = SecurityImpersonation;
 
 (* Security Tracking Mode *)
 
-CONST
   SECURITY_DYNAMIC_TRACKING = TRUE;
   SECURITY_STATIC_TRACKING  = FALSE;
 
@@ -1100,7 +1126,7 @@ TYPE
 TYPE
   PSECURITY_QUALITY_OF_SERVICE = UNTRACED REF SECURITY_QUALITY_OF_SERVICE;
   SECURITY_QUALITY_OF_SERVICE = RECORD
-    Length             : DWORD;
+    Length             : UINT32;
     ImpersonationLevel : SECURITY_IMPERSONATION_LEVEL;
     ContextTrackingMode: SECURITY_CONTEXT_TRACKING_MODE;
     EffectiveOnly      : WBOOLEAN;
@@ -1108,7 +1134,6 @@ TYPE
 
 (* Used to represent information related to a thread impersonation *)
 
-TYPE
   PSE_IMPERSONATION_STATE = UNTRACED REF SE_IMPERSONATION_STATE;
   SE_IMPERSONATION_STATE = RECORD
     Token        : PACCESS_TOKEN;
@@ -1197,14 +1222,14 @@ TYPE
 
   PTOKEN_GROUPS = UNTRACED REF TOKEN_GROUPS;
   TOKEN_GROUPS = RECORD
-    GroupCount: DWORD;
+    GroupCount: UINT32;
     Groups    : ARRAY ANYSIZE_ARRAY OF SID_AND_ATTRIBUTES;
   END;
 
 
   PTOKEN_PRIVILEGES = UNTRACED REF TOKEN_PRIVILEGES;
   TOKEN_PRIVILEGES = RECORD
-    PrivilegeCount: DWORD;
+    PrivilegeCount: UINT32;
     Privileges    : ARRAY ANYSIZE_ARRAY OF LUID_AND_ATTRIBUTES;
   END;
 
@@ -1238,10 +1263,10 @@ TYPE
     ExpirationTime    : LARGE_INTEGER;
     TokenType         : TOKEN_TYPE;
     ImpersonationLevel: SECURITY_IMPERSONATION_LEVEL;
-    DynamicCharged    : DWORD;
-    DynamicAvailable  : DWORD;
-    GroupCount        : DWORD;
-    PrivilegeCount    : DWORD;
+    DynamicCharged    : UINT32;
+    DynamicAvailable  : UINT32;
+    GroupCount        : UINT32;
+    PrivilegeCount    : UINT32;
     ModifiedId        : LUID;
   END;
 
@@ -1255,26 +1280,26 @@ TYPE
   END;
 
 
-  SECURITY_INFORMATION = DWORD;
-  PSECURITY_INFORMATION = UNTRACED REF DWORD;
+  SECURITY_INFORMATION = UINT32;
+  PSECURITY_INFORMATION = UNTRACED REF UINT32;
 
 CONST
-  OWNER_SECURITY_INFORMATION: LONG = 16_00000001;
-  GROUP_SECURITY_INFORMATION: LONG = 16_00000002;
-  DACL_SECURITY_INFORMATION : LONG = 16_00000004;
-  SACL_SECURITY_INFORMATION : LONG = 16_00000008;
+  OWNER_SECURITY_INFORMATION: INT32 = 16_00000001;
+  GROUP_SECURITY_INFORMATION: INT32 = 16_00000002;
+  DACL_SECURITY_INFORMATION : INT32 = 16_00000004;
+  SACL_SECURITY_INFORMATION : INT32 = 16_00000008;
   HEAP_SERIALIZE                   = 16_00000001;
 
 TYPE
   PRTL_CRITICAL_SECTION_DEBUG = UNTRACED REF RTL_CRITICAL_SECTION_DEBUG;
   RTL_CRITICAL_SECTION_DEBUG = RECORD
-    Type                 : WORD;
-    CreatorBackTraceIndex: WORD;
+    Type                 : UINT16;
+    CreatorBackTraceIndex: UINT16;
     CriticalSection      : UNTRACED REF RTL_CRITICAL_SECTION;
     ProcessLocksList     : LIST_ENTRY;
-    EntryCount           : DWORD;
-    ContentionCount      : DWORD;
-    Depth                : DWORD;
+    EntryCount           : UINT32;
+    ContentionCount      : UINT32;
+    Depth                : UINT32;
     OwnerBackTrace       : ARRAY [0 .. 4] OF PVOID;
   END;
 
@@ -1304,11 +1329,11 @@ TYPE
     (* *)
     *)
 
-    LockCount      : LONG;
-    RecursionCount : LONG;
+    LockCount      : INT32;
+    RecursionCount : INT32;
     OwningThread   : HANDLE;  (* from the thread's ClientId->UniqueThread *)
     LockSemaphore  : HANDLE;
-    Reserved       : DWORD;
+    Reserved       : SIZE_T;
   END;
 
 CONST
@@ -1318,14 +1343,12 @@ CONST
   DLL_PROCESS_DETACH = 0;
 
 (* Defines for the READ flags for Eventlogging *)
-CONST
   EVENTLOG_SEQUENTIAL_READ = 16_0001;
   EVENTLOG_SEEK_READ       = 16_0002;
   EVENTLOG_FORWARDS_READ   = 16_0004;
   EVENTLOG_BACKWARDS_READ  = 16_0008;
 
 (* The types of events that can be logged. *)
-CONST
   EVENTLOG_SUCCESS          = 16_0000;
   EVENTLOG_ERROR_TYPE       = 16_0001;
   EVENTLOG_WARNING_TYPE     = 16_0002;
@@ -1335,7 +1358,6 @@ CONST
 
 (* Defines for the WRITE flags used by Auditing for paired events *)
 (* These are not implemented in Product 1 *)
-CONST
   EVENTLOG_START_PAIRED_EVENT    = 16_0001;
   EVENTLOG_END_PAIRED_EVENT      = 16_0002;
   EVENTLOG_END_ALL_PAIRED_EVENTS = 16_0004;
@@ -1351,23 +1373,23 @@ CONST
 TYPE
   PEVENTLOGRECORD = UNTRACED REF EVENTLOGRECORD;
   EVENTLOGRECORD = RECORD
-    Length       : DWORD;     (* Length of full record *)
-    Reserved     : DWORD;     (* Used by the service *)
-    RecordNumber : DWORD;     (* Absolute record number *)
-    TimeGenerated: DWORD;     (* Seconds since 1-1-1970 *)
-    TimeWritten  : DWORD;     (* Seconds since 1-1-1970 *)
-    EventID      : DWORD;
-    EventType    : WORD;
-    NumStrings   : WORD;
-    EventCategory: WORD;
-    ReservedFlags: WORD;      (* For use with paired events (auditing) *)
-    ClosingRecordNumber: DWORD;  (* For use with paired events
+    Length       : UINT32;     (* Length of full record *)
+    Reserved     : UINT32;     (* Used by the service *)
+    RecordNumber : UINT32;     (* Absolute record number *)
+    TimeGenerated: UINT32;     (* Seconds since 1-1-1970 *)
+    TimeWritten  : UINT32;     (* Seconds since 1-1-1970 *)
+    EventID      : UINT32;
+    EventType    : UINT16;
+    NumStrings   : UINT16;
+    EventCategory: UINT16;
+    ReservedFlags: UINT16;      (* For use with paired events (auditing) *)
+    ClosingRecordNumber: UINT32;  (* For use with paired events
     (auditing) *)
-    StringOffset : DWORD;     (* Offset from beginning of record *)
-    UserSidLength: DWORD;
-    UserSidOffset: DWORD;
-    DataLength   : DWORD;
-    DataOffset   : DWORD;     (* Offset from beginning of record *)
+    StringOffset : UINT32;     (* Offset from beginning of record *)
+    UserSidLength: UINT32;
+    UserSidOffset: UINT32;
+    DataLength   : UINT32;
+    DataOffset   : UINT32;     (* Offset from beginning of record *)
     (*
     (* *)
     (* Then follow: *)
@@ -1376,23 +1398,22 @@ TYPE
     (* WCHAR Computername[] *)
     (* SID   UserSid *)
     (* WCHAR Strings[] *)
-    (* BYTE  Data[] *)
+    (* UINT8  Data[] *)
     (* CHAR  Pad[] *)
-    (* DWORD Length; *)
+    (* UINT32 Length; *)
     (* *)
     *)
   END;
 
 CONST
-  DBG_CONTINUE             : DWORD = 16_00010002;
-  DBG_TERMINATE_THREAD     : DWORD = 16_40010003;
-  DBG_TERMINATE_PROCESS    : DWORD = 16_40010004;
-  DBG_CONTROL_C            : DWORD = 16_40010005;
-  DBG_EXCEPTION_NOT_HANDLED: DWORD = 16_80010001;
+  DBG_CONTINUE             : UINT32 = 16_00010002;
+  DBG_TERMINATE_THREAD     : UINT32 = 16_40010003;
+  DBG_TERMINATE_PROCESS    : UINT32 = 16_40010004;
+  DBG_CONTROL_C            : UINT32 = 16_40010005;
+  DBG_EXCEPTION_NOT_HANDLED: UINT32 = 16_80010001;
 
 (* Registry Specific Access Rights. *)
 
-CONST
   KEY_QUERY_VALUE        = 16_0001;
   KEY_SET_VALUE          = 16_0002;
   KEY_CREATE_SUB_KEY     = 16_0004;
@@ -1424,38 +1445,34 @@ CONST
 
 (* Open/Create Options *)
 
-CONST
-  REG_OPTION_RESERVED: LONG = 16_00000000; (* Parameter is reserved *)
+  REG_OPTION_RESERVED: INT32 = 16_00000000; (* Parameter is reserved *)
 
-  REG_OPTION_NON_VOLATILE: LONG = 16_00000000; (* Key is preserved when
+  REG_OPTION_NON_VOLATILE: INT32 = 16_00000000; (* Key is preserved when
                                                   system is rebooted *)
 
-  REG_OPTION_VOLATILE: LONG = 16_00000001; (* Key is not preserved when
+  REG_OPTION_VOLATILE: INT32 = 16_00000001; (* Key is not preserved when
                                               system is rebooted *)
 
-  REG_OPTION_CREATE_LINK: LONG = 16_00000002; (* Created key is a symbolic
+  REG_OPTION_CREATE_LINK: INT32 = 16_00000002; (* Created key is a symbolic
                                                  link *)
 
 (* Key creation/open disposition *)
 
-CONST
-  REG_CREATED_NEW_KEY: LONG = 16_00000001; (* New Registry Key created *)
-  REG_OPENED_EXISTING_KEY: LONG = 16_00000002; (* Existing Key opened *)
+  REG_CREATED_NEW_KEY: INT32 = 16_00000001; (* New Registry Key created *)
+  REG_OPENED_EXISTING_KEY: INT32 = 16_00000002; (* Existing Key opened *)
 
 (* Key restore flags *)
 
-CONST
-  REG_WHOLE_HIVE_VOLATILE: LONG = 16_00000001; (* Restore whole hive
+  REG_WHOLE_HIVE_VOLATILE: INT32 = 16_00000001; (* Restore whole hive
                                                   volatile *)
 
 (* Notify filter values *)
 
-CONST
-  REG_NOTIFY_CHANGE_NAME: LONG = 16_00000001; (* Create or delete
+  REG_NOTIFY_CHANGE_NAME: INT32 = 16_00000001; (* Create or delete
                                                  (child) *)
-  REG_NOTIFY_CHANGE_ATTRIBUTES: LONG = 16_00000002;
-  REG_NOTIFY_CHANGE_LAST_SET  : LONG = 16_00000004; (* time stamp *)
-  REG_NOTIFY_CHANGE_SECURITY  : LONG = 16_00000008;
+  REG_NOTIFY_CHANGE_ATTRIBUTES: INT32 = 16_00000002;
+  REG_NOTIFY_CHANGE_LAST_SET  : INT32 = 16_00000004; (* time stamp *)
+  REG_NOTIFY_CHANGE_SECURITY  : INT32 = 16_00000008;
 
   REG_LEGAL_CHANGE_FILTER = Or(REG_NOTIFY_CHANGE_NAME,
                                Or(REG_NOTIFY_CHANGE_ATTRIBUTES,
@@ -1465,7 +1482,6 @@ CONST
 
 (* Predefined Value Types. *)
 
-CONST
   REG_NONE = 0;                 (* No value type *)
   REG_SZ   = 1;                 (* Unicode nul terminated string *)
   REG_EXPAND_SZ = 2;            (* Unicode nul terminated string (with
@@ -1482,7 +1498,6 @@ CONST
 
 (* Service Types (Bit Mask) *)
 
-CONST
   SERVICE_KERNEL_DRIVER      = 16_00000001;
   SERVICE_FILE_SYSTEM_DRIVER = 16_00000002;
   SERVICE_DRIVER = Or(SERVICE_KERNEL_DRIVER, SERVICE_FILE_SYSTEM_DRIVER);
@@ -1498,7 +1513,6 @@ CONST
 
 (* Start Type *)
 
-CONST
   SERVICE_BOOT_START   = 16_00000000;
   SERVICE_SYSTEM_START = 16_00000001;
   SERVICE_AUTO_START   = 16_00000002;
@@ -1507,7 +1521,6 @@ CONST
 
 (* Error control type *)
 
-CONST
   SERVICE_ERROR_NORMAL   = 16_00000001;
   SERVICE_ERROR_SEVERE   = 16_00000002;
   SERVICE_ERROR_CRITICAL = 16_00000003;
@@ -1516,7 +1529,7 @@ CONST
 
 TYPE
   (* !!!  This is scrambled enum *)
-  SERVICE_NODE_TYPE = INT;
+  SERVICE_NODE_TYPE = INT32;
 
 CONST
   DriverType            : SERVICE_NODE_TYPE = SERVICE_KERNEL_DRIVER;
@@ -1544,88 +1557,88 @@ CONST
 (* IOCTL_TAPE_ERASE definitions *)
 
 CONST
-  TAPE_ERASE_SHORT      : LONG = 0;
-  TAPE_ERASE_SHORT_IMMED: LONG = 1;
-  TAPE_ERASE_LONG       : LONG = 2;
-  TAPE_ERASE_LONG_IMMED : LONG = 3;
+  TAPE_ERASE_SHORT      : INT32 = 0;
+  TAPE_ERASE_SHORT_IMMED: INT32 = 1;
+  TAPE_ERASE_LONG       : INT32 = 2;
+  TAPE_ERASE_LONG_IMMED : INT32 = 3;
 
 TYPE
-  TAPE_ERASE = RECORD Type: DWORD;  END;
+  TAPE_ERASE = RECORD Type: UINT32;  END;
   PTAPE_ERASE = UNTRACED REF TAPE_ERASE;
 
 (* IOCTL_TAPE_PREPARE definitions *)
 
 CONST
-  TAPE_LOAD         : LONG = 0;
-  TAPE_LOAD_IMMED   : LONG = 1;
-  TAPE_UNLOAD       : LONG = 2;
-  TAPE_UNLOAD_IMMED : LONG = 3;
-  TAPE_TENSION      : LONG = 4;
-  TAPE_TENSION_IMMED: LONG = 5;
-  TAPE_LOCK         : LONG = 6;
-  TAPE_UNLOCK       : LONG = 7;
+  TAPE_LOAD         : INT32 = 0;
+  TAPE_LOAD_IMMED   : INT32 = 1;
+  TAPE_UNLOAD       : INT32 = 2;
+  TAPE_UNLOAD_IMMED : INT32 = 3;
+  TAPE_TENSION      : INT32 = 4;
+  TAPE_TENSION_IMMED: INT32 = 5;
+  TAPE_LOCK         : INT32 = 6;
+  TAPE_UNLOCK       : INT32 = 7;
 
 TYPE
-  TAPE_PREPARE = RECORD Operation: DWORD;  END;
+  TAPE_PREPARE = RECORD Operation: UINT32;  END;
   PTAPE_PREPARE = UNTRACED REF TAPE_PREPARE;
 
 (* IOCTL_TAPE_WRITE_MARKS definitions *)
 
 CONST
-  TAPE_SETMARKS             : LONG = 0;
-  TAPE_SETMARKS_IMMED       : LONG = 1;
-  TAPE_FILEMARKS            : LONG = 2;
-  TAPE_FILEMARKS_IMMED      : LONG = 3;
-  TAPE_SHORT_FILEMARKS      : LONG = 4;
-  TAPE_SHORT_FILEMARKS_IMMED: LONG = 5;
-  TAPE_LONG_FILEMARKS       : LONG = 6;
-  TAPE_LONG_FILEMARKS_IMMED : LONG = 7;
+  TAPE_SETMARKS             : INT32 = 0;
+  TAPE_SETMARKS_IMMED       : INT32 = 1;
+  TAPE_FILEMARKS            : INT32 = 2;
+  TAPE_FILEMARKS_IMMED      : INT32 = 3;
+  TAPE_SHORT_FILEMARKS      : INT32 = 4;
+  TAPE_SHORT_FILEMARKS_IMMED: INT32 = 5;
+  TAPE_LONG_FILEMARKS       : INT32 = 6;
+  TAPE_LONG_FILEMARKS_IMMED : INT32 = 7;
 
 TYPE
   PTAPE_WRITE_MARKS = UNTRACED REF TAPE_WRITE_MARKS;
   TAPE_WRITE_MARKS = RECORD
-    Type : DWORD;
-    Count: DWORD;
+    Type : UINT32;
+    Count: UINT32;
   END;
 
 (* IOCTL_TAPE_GET_POSITION definitions *)
 
 CONST
-  TAPE_ABSOLUTE_POSITION: LONG = 0;
-  TAPE_LOGICAL_POSITION : LONG = 1;
+  TAPE_ABSOLUTE_POSITION: INT32 = 0;
+  TAPE_LOGICAL_POSITION : INT32 = 1;
 
 TYPE
   PTAPE_GET_POSITION = UNTRACED REF TAPE_GET_POSITION;
   TAPE_GET_POSITION = RECORD
-    Type      : DWORD;
-    Partition : DWORD;
-    OffsetLow : DWORD;
-    OffsetHigh: DWORD;
+    Type      : UINT32;
+    Partition : UINT32;
+    OffsetLow : UINT32;
+    OffsetHigh: UINT32;
   END;
 
 (* IOCTL_TAPE_SET_POSITION definitions *)
 
 CONST
-  TAPE_REWIND               : LONG = 0;
-  TAPE_REWIND_IMMED         : LONG = 1;
-  TAPE_ABSOLUTE_BLOCK       : LONG = 2;
-  TAPE_ABSOLUTE_BLOCK_IMMED : LONG = 3;
-  TAPE_LOGICAL_BLOCK        : LONG = 4;
-  TAPE_LOGICAL_BLOCK_IMMED  : LONG = 5;
-  TAPE_SPACE_END_OF_DATA    : LONG = 6;
-  TAPE_SPACE_RELATIVE_BLOCKS: LONG = 7;
-  TAPE_SPACE_FILEMARKS      : LONG = 8;
-  TAPE_SPACE_SEQUENTIAL_FMKS: LONG = 9;
-  TAPE_SPACE_SETMARKS       : LONG = 10;
-  TAPE_SPACE_SEQUENTIAL_SMKS: LONG = 11;
+  TAPE_REWIND               : INT32 = 0;
+  TAPE_REWIND_IMMED         : INT32 = 1;
+  TAPE_ABSOLUTE_BLOCK       : INT32 = 2;
+  TAPE_ABSOLUTE_BLOCK_IMMED : INT32 = 3;
+  TAPE_LOGICAL_BLOCK        : INT32 = 4;
+  TAPE_LOGICAL_BLOCK_IMMED  : INT32 = 5;
+  TAPE_SPACE_END_OF_DATA    : INT32 = 6;
+  TAPE_SPACE_RELATIVE_BLOCKS: INT32 = 7;
+  TAPE_SPACE_FILEMARKS      : INT32 = 8;
+  TAPE_SPACE_SEQUENTIAL_FMKS: INT32 = 9;
+  TAPE_SPACE_SETMARKS       : INT32 = 10;
+  TAPE_SPACE_SEQUENTIAL_SMKS: INT32 = 11;
 
 TYPE
   PTAPE_SET_POSITION = UNTRACED REF TAPE_SET_POSITION;
   TAPE_SET_POSITION = RECORD
-    Method    : DWORD;
-    Partition : DWORD;
-    OffsetLow : DWORD;
-    OffsetHigh: DWORD;
+    Method    : UINT32;
+    Partition : UINT32;
+    OffsetLow : UINT32;
+    OffsetHigh: UINT32;
   END;
 
 (* IOCTL_TAPE_GET_DRIVE_PARAMS definitions *)
@@ -1657,7 +1670,6 @@ CONST
 
 (* Definitions for FeaturesHigh parameter *)
 
-CONST
   TAPE_DRIVE_LOAD_UNLOAD = 16_00000001;
   TAPE_DRIVE_TENSION     = 16_00000002;
   TAPE_DRIVE_LOCK_UNLOCK = 16_00000004;
@@ -1693,17 +1705,16 @@ TYPE
     Compression          : WBOOLEAN;
     DataPadding          : WBOOLEAN;
     ReportSetmarks       : WBOOLEAN;
-    DefaultBlockSize     : DWORD;
-    MaximumBlockSize     : DWORD;
-    MinimumBlockSize     : DWORD;
-    MaximumPartitionCount: DWORD;
-    FeaturesLow          : DWORD;
-    FeaturesHigh         : DWORD;
+    DefaultBlockSize     : UINT32;
+    MaximumBlockSize     : UINT32;
+    MinimumBlockSize     : UINT32;
+    MaximumPartitionCount: UINT32;
+    FeaturesLow          : UINT32;
+    FeaturesHigh         : UINT32;
   END;
 
 (* IOCTL_TAPE_SET_DRIVE_PARAMETERS definitions *)
 
-TYPE
   PTAPE_SET_DRIVE_PARAMETERS = UNTRACED REF TAPE_SET_DRIVE_PARAMETERS;
   TAPE_SET_DRIVE_PARAMETERS = RECORD
     ECC           : WBOOLEAN;
@@ -1714,37 +1725,36 @@ TYPE
 
 (* IOCTL_TAPE_GET_MEDIA_PARAMETERS definitions *)
 
-TYPE
   PTAPE_GET_MEDIA_PARAMETERS = UNTRACED REF TAPE_GET_MEDIA_PARAMETERS;
   TAPE_GET_MEDIA_PARAMETERS = RECORD
-    CapacityLow   : DWORD;
-    CapacityHigh  : DWORD;
-    RemainingLow  : DWORD;
-    RemainingHigh : DWORD;
-    BlockSize     : DWORD;
-    PartitionCount: DWORD;
+    CapacityLow   : UINT32;
+    CapacityHigh  : UINT32;
+    RemainingLow  : UINT32;
+    RemainingHigh : UINT32;
+    BlockSize     : UINT32;
+    PartitionCount: UINT32;
     WriteProtected: WBOOLEAN;
   END;
 
 (* IOCTL_TAPE_SET_MEDIA_PARAMETERS definitions *)
 
 TYPE
-  TAPE_SET_MEDIA_PARAMETERS = RECORD BlockSize: DWORD;  END;
+  TAPE_SET_MEDIA_PARAMETERS = RECORD BlockSize: UINT32;  END;
   PTAPE_SET_MEDIA_PARAMETERS = UNTRACED REF TAPE_SET_MEDIA_PARAMETERS;
 
 (* IOCTL_TAPE_CREATE_PARTITION definitions *)
 
 CONST
-  TAPE_FIXED_PARTITIONS    : LONG = 0;
-  TAPE_SELECT_PARTITIONS   : LONG = 1;
-  TAPE_INITIATOR_PARTITIONS: LONG = 2;
+  TAPE_FIXED_PARTITIONS    : INT32 = 0;
+  TAPE_SELECT_PARTITIONS   : INT32 = 1;
+  TAPE_INITIATOR_PARTITIONS: INT32 = 2;
 
 TYPE
   PTAPE_CREATE_PARTITION = UNTRACED REF TAPE_CREATE_PARTITION;
   TAPE_CREATE_PARTITION = RECORD
-    Method: DWORD;
-    Count : DWORD;
-    Size  : DWORD;
+    Method: UINT32;
+    Count : UINT32;
+    Size  : UINT32;
   END;
 
 
@@ -1759,73 +1769,72 @@ CONST
 TYPE
   PIMAGE_DOS_HEADER = UNTRACED REF IMAGE_DOS_HEADER;
   IMAGE_DOS_HEADER = RECORD   (* DOS .EXE header *)
-    e_magic: WORD;            (* Magic number *)
+    e_magic: UINT16;            (* Magic number *)
 
-    e_cp      : WORD;         (* Pages in file *)
-    e_crlc    : WORD;         (* Relocations *)
-    e_cparhdr : WORD;         (* Size of header in paragraphs *)
-    e_minalloc: WORD;         (* Minimum extra paragraphs needed *)
-    e_maxalloc: WORD;         (* Maximum extra paragraphs needed *)
-    e_ss      : WORD;         (* Initial (relative) SS value *)
-    e_sp      : WORD;         (* Initial SP value *)
-    e_csum    : WORD;         (* Checksum *)
-    e_ip      : WORD;         (* Initial IP value *)
-    e_cs      : WORD;         (* Initial (relative) CS value *)
-    e_lfarlc  : WORD;         (* File address of relocation table *)
-    e_ovno    : WORD;         (* Overlay number *)
-    e_res: ARRAY [0 .. 3] OF WORD;  (* Reserved words *)
-    e_oemid  : WORD;          (* OEM identifier (for e_oeminfo) *)
-    e_oeminfo: WORD;          (* OEM information; e_oemid specific *)
-    e_res2: ARRAY [0 .. 9] OF WORD;  (* Reserved words *)
-    e_lfanew: LONG;           (* File address of new exe header *)
+    e_cp      : UINT16;         (* Pages in file *)
+    e_crlc    : UINT16;         (* Relocations *)
+    e_cparhdr : UINT16;         (* Size of header in paragraphs *)
+    e_minalloc: UINT16;         (* Minimum extra paragraphs needed *)
+    e_maxalloc: UINT16;         (* Maximum extra paragraphs needed *)
+    e_ss      : UINT16;         (* Initial (relative) SS value *)
+    e_sp      : UINT16;         (* Initial SP value *)
+    e_csum    : UINT16;         (* Checksum *)
+    e_ip      : UINT16;         (* Initial IP value *)
+    e_cs      : UINT16;         (* Initial (relative) CS value *)
+    e_lfarlc  : UINT16;         (* File address of relocation table *)
+    e_ovno    : UINT16;         (* Overlay number *)
+    e_res: ARRAY [0 .. 3] OF UINT16;  (* Reserved words *)
+    e_oemid  : UINT16;          (* OEM identifier (for e_oeminfo) *)
+    e_oeminfo: UINT16;          (* OEM information; e_oemid specific *)
+    e_res2: ARRAY [0 .. 9] OF UINT16;  (* Reserved words *)
+    e_lfanew: INT32;           (* File address of new exe header *)
   END;
 
   PIMAGE_OS2_HEADER = UNTRACED REF IMAGE_OS2_HEADER;
   IMAGE_OS2_HEADER = RECORD   (* OS/2 .EXE header *)
-    ne_magic       : WORD;    (* Magic number *)
+    ne_magic       : UINT16;    (* Magic number *)
     ne_ver         : CHAR;    (* Version number *)
     ne_rev         : CHAR;    (* Revision number *)
-    ne_enttab      : WORD;    (* Offset of Entry Table *)
-    ne_cbenttab    : WORD;    (* Number of bytes in Entry Table *)
-    ne_crc         : LONG;    (* Checksum of whole file *)
-    ne_flags       : WORD;    (* Flag word *)
-    ne_autodata    : WORD;    (* Automatic data segment number *)
-    ne_heap        : WORD;    (* Initial heap allocation *)
-    ne_stack       : WORD;    (* Initial stack allocation *)
-    ne_csip        : LONG;    (* Initial CS:IP setting *)
-    ne_sssp        : LONG;    (* Initial SS:SP setting *)
-    ne_cseg        : WORD;    (* Count of file segments *)
-    ne_cmod        : WORD;    (* Entries in Module Reference Table *)
-    ne_cbnrestab   : WORD;    (* Size of non-resident name table *)
-    ne_segtab      : WORD;    (* Offset of Segment Table *)
-    ne_rsrctab     : WORD;    (* Offset of Resource Table *)
-    ne_restab      : WORD;    (* Offset of resident name table *)
-    ne_modtab      : WORD;    (* Offset of Module Reference Table *)
-    ne_imptab      : WORD;    (* Offset of Imported Names Table *)
-    ne_nrestab     : LONG;    (* Offset of Non-resident Names Table *)
-    ne_cmovent     : WORD;    (* Count of movable entries *)
-    ne_align       : WORD;    (* Segment alignment shift count *)
-    ne_cres        : WORD;    (* Count of resource segments *)
-    ne_exetyp      : BYTE;    (* Target Operating system *)
-    ne_flagsothers : BYTE;    (* Other .EXE flags *)
-    ne_pretthunks  : WORD;    (* offset to return thunks *)
-    ne_psegrefbytes: WORD;    (* offset to segment ref.  bytes *)
-    ne_swaparea    : WORD;    (* Minimum code swap area size *)
-    ne_expver      : WORD;    (* Expected Windows version number *)
+    ne_enttab      : UINT16;    (* Offset of Entry Table *)
+    ne_cbenttab    : UINT16;    (* Number of bytes in Entry Table *)
+    ne_crc         : INT32;    (* Checksum of whole file *)
+    ne_flags       : UINT16;    (* Flag word *)
+    ne_autodata    : UINT16;    (* Automatic data segment number *)
+    ne_heap        : UINT16;    (* Initial heap allocation *)
+    ne_stack       : UINT16;    (* Initial stack allocation *)
+    ne_csip        : INT32;    (* Initial CS:IP setting *)
+    ne_sssp        : INT32;    (* Initial SS:SP setting *)
+    ne_cseg        : UINT16;    (* Count of file segments *)
+    ne_cmod        : UINT16;    (* Entries in Module Reference Table *)
+    ne_cbnrestab   : UINT16;    (* Size of non-resident name table *)
+    ne_segtab      : UINT16;    (* Offset of Segment Table *)
+    ne_rsrctab     : UINT16;    (* Offset of Resource Table *)
+    ne_restab      : UINT16;    (* Offset of resident name table *)
+    ne_modtab      : UINT16;    (* Offset of Module Reference Table *)
+    ne_imptab      : UINT16;    (* Offset of Imported Names Table *)
+    ne_nrestab     : INT32;    (* Offset of Non-resident Names Table *)
+    ne_cmovent     : UINT16;    (* Count of movable entries *)
+    ne_align       : UINT16;    (* Segment alignment shift count *)
+    ne_cres        : UINT16;    (* Count of resource segments *)
+    ne_exetyp      : UINT8;    (* Target Operating system *)
+    ne_flagsothers : UINT8;    (* Other .EXE flags *)
+    ne_pretthunks  : UINT16;    (* offset to return thunks *)
+    ne_psegrefbytes: UINT16;    (* offset to segment ref.  bytes *)
+    ne_swaparea    : UINT16;    (* Minimum code swap area size *)
+    ne_expver      : UINT16;    (* Expected Windows version number *)
   END;
 
 (* File header format. *)
 
-TYPE
   PIMAGE_FILE_HEADER = UNTRACED REF IMAGE_FILE_HEADER;
   IMAGE_FILE_HEADER = RECORD
-    Machine             : WORD;
-    NumberOfSections    : WORD;
-    TimeDateStamp       : DWORD;
-    PointerToSymbolTable: DWORD;
-    NumberOfSymbols     : DWORD;
-    SizeOfOptionalHeader: WORD;
-    Characteristics     : WORD;
+    Machine             : UINT16;
+    NumberOfSections    : UINT16;
+    TimeDateStamp       : UINT32;
+    PointerToSymbolTable: UINT32;
+    NumberOfSymbols     : UINT32;
+    SizeOfOptionalHeader: UINT16;
+    Characteristics     : UINT16;
   END;
 
 CONST
@@ -1864,8 +1873,8 @@ CONST
 TYPE
   PIMAGE_DATA_DIRECTORY = UNTRACED REF IMAGE_DATA_DIRECTORY;
   IMAGE_DATA_DIRECTORY = RECORD
-    VirtualAddress: DWORD;
-    Size          : DWORD;
+    VirtualAddress: UINT32;
+    Size          : UINT32;
   END;
 
 CONST IMAGE_NUMBEROF_DIRECTORY_ENTRIES = 16;
@@ -1879,41 +1888,41 @@ TYPE
     (* Standard fields. *)
     *)
 
-    Magic                  : WORD;
-    MajorLinkerVersion     : BYTE;
-    MinorLinkerVersion     : BYTE;
-    SizeOfCode             : DWORD;
-    SizeOfInitializedData  : DWORD;
-    SizeOfUninitializedData: DWORD;
-    AddressOfEntryPoint    : DWORD;
-    BaseOfCode             : DWORD;
-    BaseOfData             : DWORD;
+    Magic                  : UINT16;
+    MajorLinkerVersion     : UINT8;
+    MinorLinkerVersion     : UINT8;
+    SizeOfCode             : UINT32;
+    SizeOfInitializedData  : UINT32;
+    SizeOfUninitializedData: UINT32;
+    AddressOfEntryPoint    : UINT32;
+    BaseOfCode             : UINT32;
+    BaseOfData             : UINT32;
 
     (*
     (* NT additional fields. *)
     *)
 
-    ImageBase                  : DWORD;
-    SectionAlignment           : DWORD;
-    FileAlignment              : DWORD;
-    MajorOperatingSystemVersion: WORD;
-    MinorOperatingSystemVersion: WORD;
-    MajorImageVersion          : WORD;
-    MinorImageVersion          : WORD;
-    MajorSubsystemVersion      : WORD;
-    MinorSubsystemVersion      : WORD;
-    Reserved1                  : DWORD;
-    SizeOfImage                : DWORD;
-    SizeOfHeaders              : DWORD;
-    CheckSum                   : DWORD;
-    Subsystem                  : WORD;
-    DllCharacteristics         : WORD;
-    SizeOfStackReserve         : DWORD;
-    SizeOfStackCommit          : DWORD;
-    SizeOfHeapReserve          : DWORD;
-    SizeOfHeapCommit           : DWORD;
-    AddressOfTlsIndex          : DWORD;
-    NumberOfRvaAndSizes        : DWORD;
+    ImageBase                  : UINT32;
+    SectionAlignment           : UINT32;
+    FileAlignment              : UINT32;
+    MajorOperatingSystemVersion: UINT16;
+    MinorOperatingSystemVersion: UINT16;
+    MajorImageVersion          : UINT16;
+    MinorImageVersion          : UINT16;
+    MajorSubsystemVersion      : UINT16;
+    MinorSubsystemVersion      : UINT16;
+    Reserved1                  : UINT32;
+    SizeOfImage                : UINT32;
+    SizeOfHeaders              : UINT32;
+    CheckSum                   : UINT32;
+    Subsystem                  : UINT16;
+    DllCharacteristics         : UINT16;
+    SizeOfStackReserve         : UINT32;
+    SizeOfStackCommit          : UINT32;
+    SizeOfHeapReserve          : UINT32;
+    SizeOfHeapCommit           : UINT32;
+    AddressOfTlsIndex          : UINT32;
+    NumberOfRvaAndSizes        : UINT32;
     DataDirectory        : ARRAY [0 .. IMAGE_NUMBEROF_DIRECTORY_ENTRIES - 1] OF
                              IMAGE_DATA_DIRECTORY;
   END;
@@ -1925,14 +1934,14 @@ CONST
 TYPE
   PIMAGE_NT_HEADERS = UNTRACED REF IMAGE_NT_HEADERS;
   IMAGE_NT_HEADERS = RECORD
-    Signature     : DWORD;
+    Signature     : UINT32;
     FileHeader    : IMAGE_FILE_HEADER;
     OptionalHeader: IMAGE_OPTIONAL_HEADER;
   END;
 
 (*!!!???
 #define IMAGE_FIRST_SECTION( ntheader ) ((PIMAGE_SECTION_HEADER)        \
-    ((DWORD)ntheader +                                                  \
+    ((UINT32)ntheader +                                                  \
      FIELD_OFFSET( IMAGE_NT_HEADERS, OptionalHeader ) +                 \
      ((PIMAGE_NT_HEADERS)(ntheader))->FileHeader.SizeOfOptionalHeader   \
     ))
@@ -1954,7 +1963,6 @@ CONST
 
 (* Dll Characteristics *)
 
-CONST
   IMAGE_LIBRARY_PROCESS_INIT = 1; (* Dll has a process initialization
                                      routine. *)
   IMAGE_LIBRARY_PROCESS_TERM = 2; (* Dll has a thread termination
@@ -1966,7 +1974,6 @@ CONST
 
 (* Directory Entries *)
 
-CONST
   IMAGE_DIRECTORY_ENTRY_EXPORT       = 0; (* Export Directory *)
   IMAGE_DIRECTORY_ENTRY_IMPORT       = 1; (* Import Directory *)
   IMAGE_DIRECTORY_ENTRY_RESOURCE     = 2; (* Resource Directory *)
@@ -1986,22 +1993,22 @@ CONST IMAGE_SIZEOF_SHORT_NAME = 8;
 TYPE
   PIMAGE_SECTION_HEADER = UNTRACED REF IMAGE_SECTION_HEADER;
   IMAGE_SECTION_HEADER = RECORD
-    Name: ARRAY [0 .. IMAGE_SIZEOF_SHORT_NAME - 1] OF BYTE;
-    Misc: DWORD;
+    Name: ARRAY [0 .. IMAGE_SIZEOF_SHORT_NAME - 1] OF UINT8;
+    Misc: UINT32;
       (*???
           union {
-                  DWORD   PhysicalAddress;
-                  DWORD   VirtualSize;
+                  UINT32   PhysicalAddress;
+                  UINT32   VirtualSize;
           } Misc;
       *)
-    VirtualAddress      : DWORD;
-    SizeOfRawData       : DWORD;
-    PointerToRawData    : DWORD;
-    PointerToRelocations: DWORD;
-    PointerToLinenumbers: DWORD;
-    NumberOfRelocations : WORD;
-    NumberOfLinenumbers : WORD;
-    Characteristics     : DWORD;
+    VirtualAddress      : UINT32;
+    SizeOfRawData       : UINT32;
+    PointerToRawData    : UINT32;
+    PointerToRelocations: UINT32;
+    PointerToLinenumbers: UINT32;
+    NumberOfRelocations : UINT16;
+    NumberOfLinenumbers : UINT16;
+    Characteristics     : UINT32;
   END;
 
 CONST
@@ -2039,22 +2046,22 @@ CONST
 TYPE
   PIMAGE_SYMBOL = <* UNALIGNED *> UNTRACED REF IMAGE_SYMBOL;
   IMAGE_SYMBOL = RECORD
-    N: ARRAY [0 .. 7] OF BYTE;
+    N: ARRAY [0 .. 7] OF UINT8;
     (*???
     union {
-        BYTE    ShortName[8];
+        UINT8    ShortName[8];
         struct {
-            DWORD   Short;     (* if 0, use LongName *)
-            DWORD   Long;      (* offset into string table *)
+            UINT32   Short;     (* if 0, use LongName *)
+            UINT32   Long;      (* offset into string table *)
         } Name;
-        PBYTE   LongName[2];
+        PUINT8   LongName[2];
     } N;
     *)
-    Value              : DWORD;
-    SectionNumber      : SHORT;
-    Type               : WORD;
-    StorageClass       : BYTE;
-    NumberOfAuxSymbols : BYTE;
+    Value              : UINT32;
+    SectionNumber      : INT16;
+    Type               : UINT16;
+    StorageClass       : UINT8;
+    NumberOfAuxSymbols : UINT8;
   END;
 
 CONST IMAGE_SIZEOF_SYMBOL = 18;
@@ -2063,14 +2070,12 @@ CONST IMAGE_SIZEOF_SYMBOL = 18;
 (* Symbols have a section number of the section in which they are *)
 (* defined. Otherwise, section numbers have the following meanings: *)
 
-CONST
-  IMAGE_SYM_UNDEFINED: SHORT = 0; (* Symbol is undefined or is common. *)
-  IMAGE_SYM_ABSOLUTE : SHORT = -1; (* Symbol is an absolute value. *)
-  IMAGE_SYM_DEBUG    : SHORT = -2; (* Symbol is a special debug item. *)
+  IMAGE_SYM_UNDEFINED: INT16 = 0; (* Symbol is undefined or is common. *)
+  IMAGE_SYM_ABSOLUTE : INT16 = -1; (* Symbol is an absolute value. *)
+  IMAGE_SYM_DEBUG    : INT16 = -2; (* Symbol is a special debug item. *)
 
 (* Type (fundamental) values. *)
 
-CONST
   IMAGE_SYM_TYPE_NULL   = 0;    (* no type. *)
   IMAGE_SYM_TYPE_VOID   = 1;    (* *)
   IMAGE_SYM_TYPE_CHAR   = 2;    (* type character. *)
@@ -2090,7 +2095,6 @@ CONST
 
 (* Type (derived) values. *)
 
-CONST
   IMAGE_SYM_DTYPE_NULL     = 0; (* no derived type. *)
   IMAGE_SYM_DTYPE_POINTER  = 1; (* pointer. *)
   IMAGE_SYM_DTYPE_FUNCTION = 2; (* function. *)
@@ -2098,8 +2102,7 @@ CONST
 
 (* Storage classes. *)
 
-CONST
-  IMAGE_SYM_CLASS_END_OF_FUNCTION (*???: BYTE*) = -1;
+  IMAGE_SYM_CLASS_END_OF_FUNCTION (*???: UINT8*) = -1;
   IMAGE_SYM_CLASS_NULL                   = 0;
   IMAGE_SYM_CLASS_AUTOMATIC              = 1;
   IMAGE_SYM_CLASS_EXTERNAL               = 2;
@@ -2129,7 +2132,6 @@ CONST
 
 (* type packing constants *)
 
-CONST
   N_BTMASK = 8_17;
   N_TMASK  = 8_60;
   N_TMASK1 = 8_300;
@@ -2142,31 +2144,31 @@ CONST
 TYPE
 (* Basic Type of x *)
 <* INLINE *>
-PROCEDURE BTYPE (x: WORD): WORD;
+PROCEDURE BTYPE (x: UINT16): UINT16;
 
 (* Is x a pointer? *)
 
 <* INLINE *>
-PROCEDURE ISPTR (x: WORD): BOOLEAN;
+PROCEDURE ISPTR (x: UINT16): BOOLEAN;
 
 (* Is x a function? *)
 <* INLINE *>
-PROCEDURE ISFCN (x: WORD): BOOLEAN;
+PROCEDURE ISFCN (x: UINT16): BOOLEAN;
 
 (* Is x an array? *)
 
 <* INLINE *>
-PROCEDURE ISARY (x: WORD): BOOLEAN;
+PROCEDURE ISARY (x: UINT16): BOOLEAN;
 
 (* Is x a structure, union, or enumeration TAG? *)
 <* INLINE *>
-PROCEDURE ISTAG (x: WORD): BOOLEAN;
+PROCEDURE ISTAG (x: UINT16): BOOLEAN;
 
 <* INLINE *>
-PROCEDURE INCREF (x: WORD): WORD;
+PROCEDURE INCREF (x: UINT16): UINT16;
 
 <* INLINE *>
-PROCEDURE DECREF (x: WORD): WORD;
+PROCEDURE DECREF (x: UINT16): UINT16;
 
 (* Auxiliary entry format. *)
 
@@ -2174,42 +2176,42 @@ TYPE
   PIMAGE_AUX_SYMBOL = <* UNALIGNED *> UNTRACED REF IMAGE_AUX_SYMBOL;
   IMAGE_AUX_SYMBOL = RECORD
     Sym: RECORD
-      TagIndex: DWORD;
+      TagIndex: UINT32;
     END;
       (*
       struct {
-          DWORD    TagIndex;             (* struct, union, or enum tag index *)
+          UINT32    TagIndex;             (* struct, union, or enum tag index *)
           union {
               struct {
-                  WORD    Linenumber;    (* declaration line number *)
-                  WORD    Size;          (* size of struct, union, or enum *)
+                  UINT16    Linenumber;    (* declaration line number *)
+                  UINT16    Size;          (* size of struct, union, or enum *)
               } LnSz;
-             DWORD    TotalSize;
+             UINT32    TotalSize;
           } Misc;
           union {
               struct {                   (* if ISFCN, tag, or .bb *)
-                  DWORD    PointerToLinenumber;
-                  DWORD    PointerToNextFunction;
+                  UINT32    PointerToLinenumber;
+                  UINT32    PointerToNextFunction;
               } Function;
               struct {                   (* if ISARY, up to 4 dimen. *)
-                  WORD     Dimension[4];
+                  UINT16     Dimension[4];
               } Array;
           } FcnAry;
-          WORD    TvIndex;               (* tv index *)
+          UINT16    TvIndex;               (* tv index *)
       } Sym;
       *)
 
     File: RECORD
-      Name: ARRAY [0 .. IMAGE_SIZEOF_SYMBOL - 1] OF BYTE;
+      Name: ARRAY [0 .. IMAGE_SIZEOF_SYMBOL - 1] OF UINT8;
     END;
 
     Section: RECORD
-      Length: DWORD;  (* section length *)
-      NumberOfRelocations: WORD;  (* number of relocation entries *)
-      NumberOfLinenumbers: WORD;   (* number of line numbers *)
-      CheckSum           : DWORD;  (* checksum for communal *)
-      Number   : SHORT;  (* section number to associate with *)
-      Selection: BYTE;   (* communal selection type *)
+      Length: UINT32;  (* section length *)
+      NumberOfRelocations: UINT16;  (* number of relocation entries *)
+      NumberOfLinenumbers: UINT16;   (* number of line numbers *)
+      CheckSum           : UINT32;  (* checksum for communal *)
+      Number   : INT16;  (* section number to associate with *)
+      Selection: UINT8;   (* communal selection type *)
     END;
   END;
 
@@ -2217,7 +2219,6 @@ CONST IMAGE_SIZEOF_AUX_SYMBOL = 18;
 
 (* Communal selection types. *)
 
-CONST
   IMAGE_COMDAT_SELECT_UNKNOWN      = 0;
   IMAGE_COMDAT_SELECT_NODUPLICATES = 1;
   IMAGE_COMDAT_SELECT_ANY          = 2;
@@ -2234,16 +2235,15 @@ CONST
 TYPE
   PIMAGE_RELOCATION = <* UNALIGNED *> UNTRACED REF IMAGE_RELOCATION;
   IMAGE_RELOCATION = RECORD
-    VirtualAddress  : DWORD;
-    SymbolTableIndex: DWORD;
-    Type            : WORD;
+    VirtualAddress  : UINT32;
+    SymbolTableIndex: UINT32;
+    Type            : UINT16;
   END;
 
 CONST IMAGE_SIZEOF_RELOCATION = 10;
 
 (* I860 relocation types. *)
 
-CONST
   IMAGE_REL_I860_ABSOLUTE = 8_0; (* Reference is absolute, no relocation is
     necessary *)
   IMAGE_REL_I860_DIR32 = 8_06;  (* Direct 32-bit reference to the symbols
@@ -2307,9 +2307,9 @@ CONST
 TYPE
   PIMAGE_BASE_RELOCATION = UNTRACED REF IMAGE_BASE_RELOCATION;
   IMAGE_BASE_RELOCATION = RECORD
-    VirtualAddress: DWORD;
-    SizeOfBlock   : DWORD;
-     (* (* WORD TypeOffset[1]; *) *)
+    VirtualAddress: UINT32;
+    SizeOfBlock   : UINT32;
+     (* (* UINT16 TypeOffset[1]; *) *)
   END;
 
 CONST IMAGE_SIZEOF_BASE_RELOCATION = 8;
@@ -2331,14 +2331,14 @@ CONST
 TYPE
   PIMAGE_LINENUMBER = <* UNALIGNED *> UNTRACED REF IMAGE_LINENUMBER;
   IMAGE_LINENUMBER = RECORD
-    Type: DWORD;
+    Type: UINT32;
     (*
         union {
-            DWORD   SymbolTableIndex; (* Symbol table index of function name if Linenumber is 0. *)
-            DWORD   VirtualAddress; (* Virtual address of line number. *)
+            UINT32   SymbolTableIndex; (* Symbol table index of function name if Linenumber is 0. *)
+            UINT32   VirtualAddress; (* Virtual address of line number. *)
         } Type;
       *)
-    Linenumber: WORD;         (* Line number. *)
+    Linenumber: UINT16;         (* Line number. *)
   END;
 
 CONST IMAGE_SIZEOF_LINENUMBER = 6;
@@ -2347,22 +2347,22 @@ CONST IMAGE_SIZEOF_LINENUMBER = 6;
 
 CONST IMAGE_ARCHIVE_START_SIZE = 8;
 VAR                             (* !!!  CONST *)
-  IMAGE_ARCHIVE_START        : Ctypes.char_star; (* := TtoS("!<arch>\n")*)
-  IMAGE_ARCHIVE_END          : Ctypes.char_star; (* := TtoS("`\n")*)
-  IMAGE_ARCHIVE_PAD          : Ctypes.char_star; (* := TtoS("\n")*)
-  IMAGE_ARCHIVE_LINKER_MEMBER: Ctypes.char_star; (* := TtoS("/ ")*)
-  IMAGE_ARCHIVE_LONGNAMES_MEMBER: Ctypes.char_star; (* := TtoS("// ")*)
+  IMAGE_ARCHIVE_START        : char_star; (* := TtoS("!<arch>\n")*)
+  IMAGE_ARCHIVE_END          : char_star; (* := TtoS("`\n")*)
+  IMAGE_ARCHIVE_PAD          : char_star; (* := TtoS("\n")*)
+  IMAGE_ARCHIVE_LINKER_MEMBER: char_star; (* := TtoS("/ ")*)
+  IMAGE_ARCHIVE_LONGNAMES_MEMBER: char_star; (* := TtoS("// ")*)
 
 TYPE
   PIMAGE_ARCHIVE_MEMBER_HEADER = UNTRACED REF IMAGE_ARCHIVE_MEMBER_HEADER;
   IMAGE_ARCHIVE_MEMBER_HEADER = RECORD
-    Name     : ARRAY [0 .. 15] OF BYTE;  (* member name - `/' terminated. *)
-    Date     : ARRAY [0 .. 11] OF BYTE;  (* member date - decimal secs since 1970 *)
-    UserID   : ARRAY [0 .. 5]  OF BYTE;  (* member user id - decimal. *)
-    GroupID  : ARRAY [0 .. 5]  OF BYTE;  (* member group id - decimal. *)
-    Mode     : ARRAY [0 .. 7]  OF BYTE;  (* member mode - octal. *)
-    Size     : ARRAY [0 .. 9]  OF BYTE;  (* member size - decimal. *)
-    EndHeader: ARRAY [0 .. 1]  OF BYTE;  (* String to end header. *)
+    Name     : ARRAY [0 .. 15] OF UINT8;  (* member name - `/' terminated. *)
+    Date     : ARRAY [0 .. 11] OF UINT8;  (* member date - decimal secs since 1970 *)
+    UserID   : ARRAY [0 .. 5]  OF UINT8;  (* member user id - decimal. *)
+    GroupID  : ARRAY [0 .. 5]  OF UINT8;  (* member group id - decimal. *)
+    Mode     : ARRAY [0 .. 7]  OF UINT8;  (* member mode - octal. *)
+    Size     : ARRAY [0 .. 9]  OF UINT8;  (* member size - decimal. *)
+    EndHeader: ARRAY [0 .. 1]  OF UINT8;  (* String to end header. *)
   END;
 
 CONST IMAGE_SIZEOF_ARCHIVE_MEMBER_HDR = 60;
@@ -2374,17 +2374,17 @@ CONST IMAGE_SIZEOF_ARCHIVE_MEMBER_HDR = 60;
 TYPE
   PIMAGE_EXPORT_DIRECTORY = UNTRACED REF IMAGE_EXPORT_DIRECTORY;
   IMAGE_EXPORT_DIRECTORY = RECORD
-    Characteristics      : DWORD;
-    TimeDateStamp        : DWORD;
-    MajorVersion         : WORD;
-    MinorVersion         : WORD;
-    Name                 : DWORD;
-    Base                 : DWORD;
-    NumberOfFunctions    : DWORD;
-    NumberOfNames        : DWORD;
-    AddressOfFunctions   : UNTRACED REF PDWORD;
-    AddressOfNames       : UNTRACED REF PDWORD;
-    AddressOfNameOrdinals: UNTRACED REF PWORD;
+    Characteristics      : UINT32;
+    TimeDateStamp        : UINT32;
+    MajorVersion         : UINT16;
+    MinorVersion         : UINT16;
+    Name                 : UINT32;
+    Base                 : UINT32;
+    NumberOfFunctions    : UINT32;
+    NumberOfNames        : UINT32;
+    AddressOfFunctions   : UNTRACED REF PUINT32;
+    AddressOfNames       : UNTRACED REF PUINT32;
+    AddressOfNameOrdinals: UNTRACED REF PUINT16;
   END;
 
 (* Import Format *)
@@ -2392,17 +2392,17 @@ TYPE
 TYPE
   PIMAGE_IMPORT_BY_NAME = UNTRACED REF IMAGE_IMPORT_BY_NAME;
   IMAGE_IMPORT_BY_NAME = RECORD
-    Hint  :  WORD;
-    Name  : ARRAY [0 .. 1 - 1] OF  BYTE;
+    Hint  :  UINT16;
+    Name  : ARRAY [0 .. 1 - 1] OF  UINT8;
   END;
 
   PIMAGE_THUNK_DATA = UNTRACED REF IMAGE_THUNK_DATA;
   IMAGE_THUNK_DATA = RECORD
-    u1: DWORD;
+    u1: UINT32;
     (*
     union {
-    PDWORD Function;
-    DWORD Ordinal;
+    PUINT32 Function;
+    UINT32 Ordinal;
     PIMAGE_IMPORT_BY_NAME AddressOfData;
     } u1;
     *)
@@ -2413,19 +2413,19 @@ CONST
 
 TYPE
 <* INLINE *>
-PROCEDURE IMAGE_SNAP_BY_ORDINAL (Ordinal: WORD): BOOLEAN;
+PROCEDURE IMAGE_SNAP_BY_ORDINAL (Ordinal: UINT16): BOOLEAN;
 
 <* INLINE *>
-PROCEDURE IMAGE_ORDINAL (Ordinal: WORD): WORD;
+PROCEDURE IMAGE_ORDINAL (Ordinal: UINT16): UINT16;
 
 TYPE
   PIMAGE_IMPORT_DESCRIPTOR = UNTRACED REF IMAGE_IMPORT_DESCRIPTOR;
   IMAGE_IMPORT_DESCRIPTOR = RECORD
-    Characteristics: DWORD;
-    TimeDateStamp  : DWORD;
-    MajorVersion   : WORD;
-    MinorVersion   : WORD;
-    Name           : DWORD;
+    Characteristics: UINT32;
+    TimeDateStamp  : UINT32;
+    MajorVersion   : UINT16;
+    MinorVersion   : UINT16;
+    Name           : UINT32;
     FirstThunk     : PIMAGE_THUNK_DATA;
   END;
 
@@ -2445,12 +2445,12 @@ TYPE
 TYPE
   PIMAGE_RESOURCE_DIRECTORY = UNTRACED REF IMAGE_RESOURCE_DIRECTORY;
   IMAGE_RESOURCE_DIRECTORY = RECORD
-    Characteristics     : DWORD;
-    TimeDateStamp       : DWORD;
-    MajorVersion        : WORD;
-    MinorVersion        : WORD;
-    NumberOfNamedEntries: WORD;
-    NumberOfIdEntries   : WORD;
+    Characteristics     : UINT32;
+    TimeDateStamp       : UINT32;
+    MajorVersion        : UINT16;
+    MinorVersion        : UINT16;
+    NumberOfNamedEntries: UINT16;
+    NumberOfIdEntries   : UINT16;
     (* (* IMAGE_RESOURCE_DIRECTORY_ENTRY DirectoryEntries[]; *) *)
   END;
 
@@ -2474,8 +2474,8 @@ CONST
 TYPE
   PIMAGE_RESOURCE_DIRECTORY_ENTRY =UNTRACED REF IMAGE_RESOURCE_DIRECTORY_ENTRY;
   IMAGE_RESOURCE_DIRECTORY_ENTRY = RECORD
-    Name        : DWORD;
-    OffsetToData: DWORD;
+    Name        : UINT32;
+    OffsetToData: UINT32;
   END;
 
 (* For resource directory entries that have actual string names, the Name *)
@@ -2488,13 +2488,13 @@ TYPE
 TYPE
   PIMAGE_RESOURCE_DIRECTORY_STRING = UNTRACED REF IMAGE_RESOURCE_DIRECTORY_STRING;
   IMAGE_RESOURCE_DIRECTORY_STRING = RECORD
-    Length    : WORD;
+    Length    : UINT16;
     NameString: ARRAY [0 .. 0] OF CHAR;
   END;
 
   PIMAGE_RESOURCE_DIR_STRING_U = UNTRACED REF IMAGE_RESOURCE_DIR_STRING_U;
   IMAGE_RESOURCE_DIR_STRING_U = RECORD
-    Length    : WORD;
+    Length    : UINT16;
     NameString: ARRAY [0 .. 0] OF WCHAR;
   END;
 
@@ -2508,10 +2508,10 @@ TYPE
 TYPE
   PIMAGE_RESOURCE_DATA_ENTRY = UNTRACED REF IMAGE_RESOURCE_DATA_ENTRY;
   IMAGE_RESOURCE_DATA_ENTRY = RECORD
-    OffsetToData : DWORD;
-    Size         : DWORD;
-    CodePage     : DWORD;
-    Reserved     : DWORD;
+    OffsetToData : UINT32;
+    Size         : UINT32;
+    CodePage     : UINT32;
+    Reserved     : UINT32;
   END;
 
 (* Debug Format *)
@@ -2519,14 +2519,14 @@ TYPE
 TYPE
   PIMAGE_DEBUG_DIRECTORY = UNTRACED REF IMAGE_DEBUG_DIRECTORY;
   IMAGE_DEBUG_DIRECTORY = RECORD
-    Characteristics : DWORD;
-    TimeDateStamp   : DWORD;
-    MajorVersion    : WORD;
-    MinorVersion    : WORD;
-    Type            : DWORD;
-    SizeOfData      : DWORD;
-    AddressOfRawData: DWORD;
-    PointerToRawData: DWORD;
+    Characteristics : UINT32;
+    TimeDateStamp   : UINT32;
+    MajorVersion    : UINT16;
+    MinorVersion    : UINT16;
+    Type            : UINT32;
+    SizeOfData      : UINT32;
+    AddressOfRawData: UINT32;
+    PointerToRawData: UINT32;
   END;
 
 CONST
@@ -2537,14 +2537,14 @@ CONST
 TYPE
   PIMAGE_DEBUG_INFO = UNTRACED REF IMAGE_DEBUG_INFO;
   IMAGE_DEBUG_INFO = RECORD
-    NumberOfSymbols     : DWORD;
-    LvaToFirstSymbol    : DWORD;
-    NumberOfLinenumbers : DWORD;
-    LvaToFirstLinenumber: DWORD;
-    RvaToFirstByteOfCode: DWORD;
-    RvaToLastByteOfCode : DWORD;
-    RvaToFirstByteOfData: DWORD;
-    RvaToLastByteOfData : DWORD;
+    NumberOfSymbols     : UINT32;
+    LvaToFirstSymbol    : UINT32;
+    NumberOfLinenumbers : UINT32;
+    LvaToFirstLinenumber: UINT32;
+    RvaToFirstByteOfCode: UINT32;
+    RvaToLastByteOfCode : UINT32;
+    RvaToFirstByteOfData: UINT32;
+    RvaToLastByteOfData : UINT32;
   END;
 
 (* End Image Format *)

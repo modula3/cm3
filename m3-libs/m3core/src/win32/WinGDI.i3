@@ -17,17 +17,14 @@
 
 INTERFACE WinGDI;
 
-IMPORT Ctypes;
-
+FROM Ctypes IMPORT char;
 FROM Word IMPORT Or, Shift;
-FROM WinDef IMPORT SHORT, BOOL, WORD, DWORD, UINT, LPDWORD, LPVOID, HDC,
-                   LPARAM, POINT, HBRUSH, RECT, BYTE, LPBYTE, HBITMAP,
-                   LPRECT, LPINT, HRGN, LPPOINT, INT, COLORREF, USHORT,
-                   WFLOAT, HGDIOBJ, HMETAFILE, HMODULE, HFONT, HPEN,
-                   HPALETTE, HGLOBAL, RECTL, SIZEL, PFLOAT, LPSIZE,
-                   HENHMETAFILE, HGLRC;
-FROM WinNT IMPORT WCHAR, LPSTR, LPWSTR, LPCSTR, LPCWSTR, LONG, PSTR;
-FROM Ctypes IMPORT int, char, void_star, short;
+FROM WinDef IMPORT INT16, BOOL, UINT16, UINT32, PUINT32, PVOID, HDC,
+                   LPARAM, POINT, HBRUSH, RECT, UINT8, PUINT8, HBITMAP, PRECT,
+                   PINT32, HRGN, PPOINT, INT32, COLORREF, WFLOAT,
+                   HGDIOBJ, HMETAFILE, HMODULE, HFONT, HPEN, HPALETTE, HGLOBAL,
+                   RECTL, SIZEL, PFLOAT, PSIZE, HENHMETAFILE, HGLRC, WCHAR,
+                   PSTR, PWSTR, PCSTR, PCWSTR;
 
 (* Binary raster ops *)
 CONST
@@ -51,23 +48,23 @@ CONST
 
 (* Ternary raster operations *)
 CONST
-  SRCCOPY    : DWORD = 16_00CC0020; (* dest = source *)
-  SRCPAINT   : DWORD = 16_00EE0086; (* dest = source OR dest *)
-  SRCAND     : DWORD = 16_008800C6; (* dest = source AND dest *)
-  SRCINVERT  : DWORD = 16_00660046; (* dest = source XOR dest *)
-  SRCERASE   : DWORD = 16_00440328; (* dest = source AND (NOT dest ) *)
-  NOTSRCCOPY : DWORD = 16_00330008; (* dest = (NOT source) *)
-  NOTSRCERASE: DWORD = 16_001100A6; (* dest = (NOT src) AND (NOT dest) *)
-  MERGECOPY  : DWORD = 16_00C000CA; (* dest = (source AND pattern) *)
-  MERGEPAINT : DWORD = 16_00BB0226; (* dest = (NOT source) OR dest *)
-  PATCOPY    : DWORD = 16_00F00021; (* dest = pattern *)
-  PATPAINT   : DWORD = 16_00FB0A09; (* dest = DPSnoo *)
-  PATINVERT  : DWORD = 16_005A0049; (* dest = pattern XOR dest *)
-  DSTINVERT  : DWORD = 16_00550009; (* dest = (NOT dest) *)
-  BLACKNESS  : DWORD = 16_00000042; (* dest = BLACK *)
-  WHITENESS  : DWORD = 16_00FF0062; (* dest = WHITE *)
+  SRCCOPY    : UINT32 = 16_00CC0020; (* dest = source *)
+  SRCPAINT   : UINT32 = 16_00EE0086; (* dest = source OR dest *)
+  SRCAND     : UINT32 = 16_008800C6; (* dest = source AND dest *)
+  SRCINVERT  : UINT32 = 16_00660046; (* dest = source XOR dest *)
+  SRCERASE   : UINT32 = 16_00440328; (* dest = source AND (NOT dest ) *)
+  NOTSRCCOPY : UINT32 = 16_00330008; (* dest = (NOT source) *)
+  NOTSRCERASE: UINT32 = 16_001100A6; (* dest = (NOT src) AND (NOT dest) *)
+  MERGECOPY  : UINT32 = 16_00C000CA; (* dest = (source AND pattern) *)
+  MERGEPAINT : UINT32 = 16_00BB0226; (* dest = (NOT source) OR dest *)
+  PATCOPY    : UINT32 = 16_00F00021; (* dest = pattern *)
+  PATPAINT   : UINT32 = 16_00FB0A09; (* dest = DPSnoo *)
+  PATINVERT  : UINT32 = 16_005A0049; (* dest = pattern XOR dest *)
+  DSTINVERT  : UINT32 = 16_00550009; (* dest = (NOT dest) *)
+  BLACKNESS  : UINT32 = 16_00000042; (* dest = BLACK *)
+  WHITENESS  : UINT32 = 16_00FF0062; (* dest = WHITE *)
 
-CONST GDI_ERROR: LONG = 16_FFFFFFFF;
+CONST GDI_ERROR: INT32 = 16_FFFFFFFF;
 
 (* Region Flags *)
 CONST
@@ -348,62 +345,62 @@ TYPE
   PBITMAP = UNTRACED REF BITMAP;
   LPBITMAP = UNTRACED REF BITMAP;
   BITMAP = RECORD
-    bmType      : LONG;
-    bmWidth     : LONG;
-    bmHeight    : LONG;
-    bmWidthBytes: LONG;
-    bmPlanes    : WORD;
-    bmBitsPixel : WORD;
-    bmBits      : LPVOID;
+    bmType      : INT32;
+    bmWidth     : INT32;
+    bmHeight    : INT32;
+    bmWidthBytes: INT32;
+    bmPlanes    : UINT16;
+    bmBitsPixel : UINT16;
+    bmBits      : PVOID;
   END;
 
   RGBTRIPLE = RECORD
-    rgbtBlue : BYTE;
-    rgbtGreen: BYTE;
-    rgbtRed  : BYTE;
+    rgbtBlue : UINT8;
+    rgbtGreen: UINT8;
+    rgbtRed  : UINT8;
   END;
 
   RGBQUAD = RECORD
-    rgbBlue    : BYTE;
-    rgbGreen   : BYTE;
-    rgbRed     : BYTE;
-    rgbReserved: BYTE;
+    rgbBlue    : UINT8;
+    rgbGreen   : UINT8;
+    rgbRed     : UINT8;
+    rgbReserved: UINT8;
   END;
 
   (* structures for defining DIBs *)
   PBITMAPCOREHEADER = UNTRACED REF PBITMAPCOREHEADER;
   LPBITMAPCOREHEADER = UNTRACED REF PBITMAPCOREHEADER;
   BITMAPCOREHEADER = RECORD
-    bcSize    : DWORD;  (* used to get to color table *)
-    bcWidth   : WORD;
-    bcHeight  : WORD;
-    bcPlanes  : WORD;
-    bcBitCount: WORD;
+    bcSize    : UINT32;  (* used to get to color table *)
+    bcWidth   : UINT16;
+    bcHeight  : UINT16;
+    bcPlanes  : UINT16;
+    bcBitCount: UINT16;
   END;
 
   PBITMAPINFOHEADER = UNTRACED REF BITMAPINFOHEADER;
   LPBITMAPINFOHEADER = UNTRACED REF BITMAPINFOHEADER;
   BITMAPINFOHEADER = RECORD
-    biSize         : DWORD;
-    biWidth        : LONG;
-    biHeight       : LONG;
-    biPlanes       : WORD;
-    biBitCount     : WORD;
-    biCompression  : DWORD;
-    biSizeImage    : DWORD;
-    biXPelsPerMeter: LONG;
-    biYPelsPerMeter: LONG;
-    biClrUsed      : DWORD;
-    biClrImportant : DWORD;
+    biSize         : UINT32;
+    biWidth        : INT32;
+    biHeight       : INT32;
+    biPlanes       : UINT16;
+    biBitCount     : UINT16;
+    biCompression  : UINT32;
+    biSizeImage    : UINT32;
+    biXPelsPerMeter: INT32;
+    biYPelsPerMeter: INT32;
+    biClrUsed      : UINT32;
+    biClrImportant : UINT32;
   END;
 
 (* constants for the biCompression field *)
 CONST
-  BI_RGB      : LONG = 0;
-  BI_RLE8     : LONG = 1;
-  BI_RLE4     : LONG = 2;
-  BI_BITFIELDS: LONG = 3;
-  BI_TOPDOWN  : LONG = 4;   (*!!!  This should be deleted, I only leave *)
+  BI_RGB      : INT32 = 0;
+  BI_RLE8     : INT32 = 1;
+  BI_RLE4     : INT32 = 2;
+  BI_BITFIELDS: INT32 = 3;
+  BI_TOPDOWN  : INT32 = 4;   (*!!!  This should be deleted, I only leave *)
   (*!!!  it temp till Insignia changes there code !!!  remove by 10/1/92
    [patrickh] *)
 
@@ -426,11 +423,11 @@ TYPE
   PBITMAPFILEHEADER = UNTRACED REF BITMAPFILEHEADER;
   LPBITMAPFILEHEADER = UNTRACED REF BITMAPFILEHEADER;
   BITMAPFILEHEADER = RECORD
-    bfType     : WORD;
-    bfSize     : DWORD;
-    bfReserved1: WORD;
-    bfReserved2: WORD;
-    bfOffBits  : DWORD;
+    bfType     : UINT16;
+    bfSize     : UINT32;
+    bfReserved1: UINT16;
+    bfReserved2: UINT16;
+    bfOffBits  : UINT32;
   END;
   (*???  #pragma pack() *)
 
@@ -445,16 +442,16 @@ TYPE
   PMETARECORD = UNTRACED REF METARECORD;
   LPMETARECORD = UNTRACED REF METARECORD;
   METARECORD = RECORD
-    rdSize    : DWORD;
-    rdFunction: WORD;
-    rdParm    : ARRAY [0 .. 1 - 1] OF WORD;
+    rdSize    : UINT32;
+    rdFunction: UINT16;
+    rdParm    : ARRAY [0 .. 1 - 1] OF UINT16;
   END;
 
   LPMETAFILEPICT = UNTRACED REF METAFILEPICT;
   METAFILEPICT = RECORD
-    mm  : LONG;
-    xExt: LONG;
-    yExt: LONG;
+    mm  : INT32;
+    xExt: INT32;
+    yExt: INT32;
     hMF : HMETAFILE;
   END;
 
@@ -462,13 +459,13 @@ TYPE
   PMETAHEADER = UNTRACED REF METAHEADER;
   LPMETAHEADER = UNTRACED REF METAHEADER;
   METAHEADER = RECORD
-    mtType        : WORD;
-    mtHeaderSize  : WORD;
-    mtVersion     : WORD;
-    mtSize        : DWORD;
-    mtNoObjects   : WORD;
-    mtMaxRecord   : DWORD;
-    mtNoParameters: WORD;
+    mtType        : UINT16;
+    mtHeaderSize  : UINT16;
+    mtVersion     : UINT16;
+    mtSize        : UINT32;
+    mtNoObjects   : UINT16;
+    mtMaxRecord   : UINT32;
+    mtNoParameters: UINT16;
   END;
 
   (*???  #pragma pack() *)
@@ -477,38 +474,38 @@ TYPE
   PENHMETARECORD = UNTRACED REF ENHMETARECORD;
   LPENHMETARECORD = UNTRACED REF ENHMETARECORD;
   ENHMETARECORD = RECORD
-    iType: DWORD;  (* Record type MR_XXX *)
-    nSize: DWORD;  (* Record size in bytes *)
-    dParm: ARRAY [0 .. 1 - 1] OF DWORD;  (* Parameters *)
+    iType: UINT32;  (* Record type MR_XXX *)
+    nSize: UINT32;  (* Record size in bytes *)
+    dParm: ARRAY [0 .. 1 - 1] OF UINT32;  (* Parameters *)
   END;
 
   PENHMETAHEADER = UNTRACED REF ENHMETAHEADER;
   LPENHMETAHEADER = UNTRACED REF ENHMETAHEADER;
   ENHMETAHEADER =
     RECORD
-    iType: DWORD;             (* Record type MR_METAFILE *)
-    nSize: DWORD;             (* Record size in bytes.  This may be
+    iType: UINT32;             (* Record type MR_METAFILE *)
+    nSize: UINT32;             (* Record size in bytes.  This may be
                                    greater *)
       (* than the sizeof(ENHMETAHEADER). *)
     rclBounds: RECTL;         (* Inclusive-inclusive bounds in device
                                    units *)
     rclFrame: RECTL;          (* Inclusive-inclusive Picture Frame of
                                    metafile in .01 mm units *)
-    dSignature: DWORD;        (* Signature.  Must be
+    dSignature: UINT32;        (* Signature.  Must be
                                    ENHMETA_SIGNATURE. *)
-    nVersion: DWORD;          (* Version number *)
-    nBytes  : DWORD;          (* Size of the metafile in bytes *)
-    nRecords: DWORD;          (* Number of records in the metafile *)
-    nHandles: WORD;           (* Number of handles in the handle table *)
+    nVersion: UINT32;          (* Version number *)
+    nBytes  : UINT32;          (* Size of the metafile in bytes *)
+    nRecords: UINT32;          (* Number of records in the metafile *)
+    nHandles: UINT16;           (* Number of handles in the handle table *)
       (* Handle index zero is reserved. *)
-    sReserved: WORD;          (* Reserved.  Must be zero. *)
-    nDescription: DWORD;      (* Number of chars in the unicode
+    sReserved: UINT16;          (* Reserved.  Must be zero. *)
+    nDescription: UINT32;      (* Number of chars in the unicode
                                    description string *)
       (* This is 0 if there is no description string *)
-    offDescription: DWORD;    (* Offset to the metafile description
+    offDescription: UINT32;    (* Offset to the metafile description
                                    record. *)
       (* This is 0 if there is no description string *)
-    nPalEntries: DWORD;       (* Number of entries in the metafile
+    nPalEntries: UINT32;       (* Number of entries in the metafile
                                    palette. *)
     szlDevice: SIZEL;         (* Size of the reference device in pels *)
     szlMillimeters: SIZEL;    (* Size of the reference device in
@@ -527,52 +524,52 @@ TYPE
   NPTEXTMETRICA = UNTRACED REF TEXTMETRICA;
   LPTEXTMETRICA = UNTRACED REF TEXTMETRICA;
   TEXTMETRICA = RECORD
-    tmHeight          : LONG;
-    tmAscent          : LONG;
-    tmDescent         : LONG;
-    tmInternalLeading : LONG;
-    tmExternalLeading : LONG;
-    tmAveCharWidth    : LONG;
-    tmMaxCharWidth    : LONG;
-    tmWeight          : LONG;
-    tmOverhang        : LONG;
-    tmDigitizedAspectX: LONG;
-    tmDigitizedAspectY: LONG;
-    tmFirstChar       : BYTE;
-    tmLastChar        : BYTE;
-    tmDefaultChar     : BYTE;
-    tmBreakChar       : BYTE;
-    tmItalic          : BYTE;
-    tmUnderlined      : BYTE;
-    tmStruckOut       : BYTE;
-    tmPitchAndFamily  : BYTE;
-    tmCharSet         : BYTE;
+    tmHeight          : INT32;
+    tmAscent          : INT32;
+    tmDescent         : INT32;
+    tmInternalLeading : INT32;
+    tmExternalLeading : INT32;
+    tmAveCharWidth    : INT32;
+    tmMaxCharWidth    : INT32;
+    tmWeight          : INT32;
+    tmOverhang        : INT32;
+    tmDigitizedAspectX: INT32;
+    tmDigitizedAspectY: INT32;
+    tmFirstChar       : UINT8;
+    tmLastChar        : UINT8;
+    tmDefaultChar     : UINT8;
+    tmBreakChar       : UINT8;
+    tmItalic          : UINT8;
+    tmUnderlined      : UINT8;
+    tmStruckOut       : UINT8;
+    tmPitchAndFamily  : UINT8;
+    tmCharSet         : UINT8;
   END;
 
   PTEXTMETRICW = UNTRACED REF TEXTMETRICW;
   NPTEXTMETRICW = UNTRACED REF TEXTMETRICW;
   LPTEXTMETRICW = UNTRACED REF TEXTMETRICW;
   TEXTMETRICW = RECORD
-    tmHeight          : LONG;
-    tmAscent          : LONG;
-    tmDescent         : LONG;
-    tmInternalLeading : LONG;
-    tmExternalLeading : LONG;
-    tmAveCharWidth    : LONG;
-    tmMaxCharWidth    : LONG;
-    tmWeight          : LONG;
-    tmOverhang        : LONG;
-    tmDigitizedAspectX: LONG;
-    tmDigitizedAspectY: LONG;
+    tmHeight          : INT32;
+    tmAscent          : INT32;
+    tmDescent         : INT32;
+    tmInternalLeading : INT32;
+    tmExternalLeading : INT32;
+    tmAveCharWidth    : INT32;
+    tmMaxCharWidth    : INT32;
+    tmWeight          : INT32;
+    tmOverhang        : INT32;
+    tmDigitizedAspectX: INT32;
+    tmDigitizedAspectY: INT32;
     tmFirstChar       : WCHAR;
     tmLastChar        : WCHAR;
     tmDefaultChar     : WCHAR;
     tmBreakChar       : WCHAR;
-    tmItalic          : BYTE;
-    tmUnderlined      : BYTE;
-    tmStruckOut       : BYTE;
-    tmPitchAndFamily  : BYTE;
-    tmCharSet         : BYTE;
+    tmItalic          : UINT8;
+    tmUnderlined      : UINT8;
+    tmStruckOut       : UINT8;
+    tmPitchAndFamily  : UINT8;
+    tmCharSet         : UINT8;
   END;
 
   TEXTMETRIC = TEXTMETRICA;
@@ -582,69 +579,69 @@ TYPE
 
 (* ntmFlags field flags *)
 CONST
-  NTM_REGULAR: LONG = 16_00000040;
-  NTM_BOLD   : LONG = 16_00000020;
-  NTM_ITALIC : LONG = 16_00000001;
+  NTM_REGULAR: INT32 = 16_00000040;
+  NTM_BOLD   : INT32 = 16_00000020;
+  NTM_ITALIC : INT32 = 16_00000001;
 
 TYPE
   PNEWTEXTMETRICA = UNTRACED REF NEWTEXTMETRICA;
   NPNEWTEXTMETRICA = UNTRACED REF NEWTEXTMETRICA;
   LPNEWTEXTMETRICA = UNTRACED REF NEWTEXTMETRICA;
   NEWTEXTMETRICA = RECORD
-    tmHeight          : LONG;
-    tmAscent          : LONG;
-    tmDescent         : LONG;
-    tmInternalLeading : LONG;
-    tmExternalLeading : LONG;
-    tmAveCharWidth    : LONG;
-    tmMaxCharWidth    : LONG;
-    tmWeight          : LONG;
-    tmOverhang        : LONG;
-    tmDigitizedAspectX: LONG;
-    tmDigitizedAspectY: LONG;
-    tmFirstChar       : BYTE;
-    tmLastChar        : BYTE;
-    tmDefaultChar     : BYTE;
-    tmBreakChar       : BYTE;
-    tmItalic          : BYTE;
-    tmUnderlined      : BYTE;
-    tmStruckOut       : BYTE;
-    tmPitchAndFamily  : BYTE;
-    tmCharSet         : BYTE;
-    ntmFlags          : DWORD;
-    ntmSizeEM         : UINT;
-    ntmCellHeight     : UINT;
-    ntmAvgWidth       : UINT;
+    tmHeight          : INT32;
+    tmAscent          : INT32;
+    tmDescent         : INT32;
+    tmInternalLeading : INT32;
+    tmExternalLeading : INT32;
+    tmAveCharWidth    : INT32;
+    tmMaxCharWidth    : INT32;
+    tmWeight          : INT32;
+    tmOverhang        : INT32;
+    tmDigitizedAspectX: INT32;
+    tmDigitizedAspectY: INT32;
+    tmFirstChar       : UINT8;
+    tmLastChar        : UINT8;
+    tmDefaultChar     : UINT8;
+    tmBreakChar       : UINT8;
+    tmItalic          : UINT8;
+    tmUnderlined      : UINT8;
+    tmStruckOut       : UINT8;
+    tmPitchAndFamily  : UINT8;
+    tmCharSet         : UINT8;
+    ntmFlags          : UINT32;
+    ntmSizeEM         : UINT32;
+    ntmCellHeight     : UINT32;
+    ntmAvgWidth       : UINT32;
   END;
 
   PNEWTEXTMETRICW = UNTRACED REF NEWTEXTMETRICW;
   NPNEWTEXTMETRICW = UNTRACED REF NEWTEXTMETRICW;
   LPNEWTEXTMETRICW = UNTRACED REF NEWTEXTMETRICW;
   NEWTEXTMETRICW = RECORD
-    tmHeight          : LONG;
-    tmAscent          : LONG;
-    tmDescent         : LONG;
-    tmInternalLeading : LONG;
-    tmExternalLeading : LONG;
-    tmAveCharWidth    : LONG;
-    tmMaxCharWidth    : LONG;
-    tmWeight          : LONG;
-    tmOverhang        : LONG;
-    tmDigitizedAspectX: LONG;
-    tmDigitizedAspectY: LONG;
+    tmHeight          : INT32;
+    tmAscent          : INT32;
+    tmDescent         : INT32;
+    tmInternalLeading : INT32;
+    tmExternalLeading : INT32;
+    tmAveCharWidth    : INT32;
+    tmMaxCharWidth    : INT32;
+    tmWeight          : INT32;
+    tmOverhang        : INT32;
+    tmDigitizedAspectX: INT32;
+    tmDigitizedAspectY: INT32;
     tmFirstChar       : WCHAR;
     tmLastChar        : WCHAR;
     tmDefaultChar     : WCHAR;
     tmBreakChar       : WCHAR;
-    tmItalic          : BYTE;
-    tmUnderlined      : BYTE;
-    tmStruckOut       : BYTE;
-    tmPitchAndFamily  : BYTE;
-    tmCharSet         : BYTE;
-    ntmFlags          : DWORD;
-    ntmSizeEM         : UINT;
-    ntmCellHeight     : UINT;
-    ntmAvgWidth       : UINT;
+    tmItalic          : UINT8;
+    tmUnderlined      : UINT8;
+    tmStruckOut       : UINT8;
+    tmPitchAndFamily  : UINT8;
+    tmCharSet         : UINT8;
+    ntmFlags          : UINT32;
+    ntmSizeEM         : UINT32;
+    ntmCellHeight     : UINT32;
+    ntmAvgWidth       : UINT32;
   END;
 
   NEWTEXTMETRIC = NEWTEXTMETRICA;
@@ -659,11 +656,11 @@ TYPE
   NPPELARRAY = UNTRACED REF PELARRAY;
   LPPELARRAY = UNTRACED REF PELARRAY;
   PELARRAY = RECORD
-    paXCount: LONG;
-    paYCount: LONG;
-    paXExt  : LONG;
-    paYExt  : LONG;
-    paRGBs  : BYTE;
+    paXCount: INT32;
+    paYCount: INT32;
+    paXExt  : INT32;
+    paYExt  : INT32;
+    paRGBs  : UINT8;
   END;
 
   (* Logical Brush (or Pattern) *)
@@ -671,9 +668,9 @@ TYPE
   NPLOGBRUSH = UNTRACED REF LOGBRUSH;
   LPLOGBRUSH = UNTRACED REF LOGBRUSH;
   LOGBRUSH = RECORD
-    lbStyle: UINT;
+    lbStyle: UINT32;
     lbColor: COLORREF;
-    lbHatch: LONG;
+    lbHatch: INT32;
   END;
 
   PATTERN = LOGBRUSH;
@@ -686,7 +683,7 @@ TYPE
   NPLOGPEN = UNTRACED REF LOGPEN;
   LPLOGPEN = UNTRACED REF LOGPEN;
   LOGPEN = RECORD
-    lopnStyle: UINT;
+    lopnStyle: UINT32;
     lopnWidth: POINT;
     lopnColor: COLORREF;
   END;
@@ -695,22 +692,22 @@ TYPE
   NPEXTLOGPEN = UNTRACED REF EXTLOGPEN;
   LPEXTLOGPEN = UNTRACED REF EXTLOGPEN;
   EXTLOGPEN = RECORD
-    elpPenStyle  : DWORD;
-    elpWidth     : DWORD;
-    elpBrushStyle: UINT;
+    elpPenStyle  : UINT32;
+    elpWidth     : UINT32;
+    elpBrushStyle: UINT32;
     elpColor     : COLORREF;
-    elpHatch     : LONG;
-    elpNumEntries: DWORD;
-    elpStyleEntry: ARRAY [0 .. 1 - 1] OF DWORD;
+    elpHatch     : INT32;
+    elpNumEntries: UINT32;
+    elpStyleEntry: ARRAY [0 .. 1 - 1] OF UINT32;
   END;
 
   PPALETTEENTRY = UNTRACED REF PALETTEENTRY;
   LPPALETTEENTRY = UNTRACED REF PALETTEENTRY;
   PALETTEENTRY = RECORD
-    peRed  : BYTE;
-    peGreen: BYTE;
-    peBlue : BYTE;
-    peFlags: BYTE;
+    peRed  : UINT8;
+    peGreen: UINT8;
+    peBlue : UINT8;
+    peFlags: UINT8;
   END;
 
   (* Logical Palette *)
@@ -718,14 +715,14 @@ TYPE
   NPLOGPALETTE = UNTRACED REF LOGPALETTE;
   LPLOGPALETTE = UNTRACED REF LOGPALETTE;
   LOGPALETTE = RECORD
-    palVersion   : WORD;
-    palNumEntries: WORD;
+    palVersion   : UINT16;
+    palNumEntries: UINT16;
     palPalEntry  : ARRAY [0..100000] OF PALETTEENTRY;
   END;
 
   LOGPALETTEBASE= RECORD
-    palVersion   : WORD;
-    palNumEntries: WORD;
+    palVersion   : UINT16;
+    palNumEntries: UINT16;
   END;
 
 (* Logical Font *)
@@ -736,19 +733,19 @@ TYPE
   NPLOGFONTA = UNTRACED REF LOGFONTA;
   LPLOGFONTA = UNTRACED REF LOGFONTA;
   LOGFONTA = RECORD
-    lfHeight        : LONG;
-    lfWidth         : LONG;
-    lfEscapement    : LONG;
-    lfOrientation   : LONG;
-    lfWeight        : LONG;
-    lfItalic        : BYTE;
-    lfUnderline     : BYTE;
-    lfStrikeOut     : BYTE;
-    lfCharSet       : BYTE;
-    lfOutPrecision  : BYTE;
-    lfClipPrecision : BYTE;
-    lfQuality       : BYTE;
-    lfPitchAndFamily: BYTE;
+    lfHeight        : INT32;
+    lfWidth         : INT32;
+    lfEscapement    : INT32;
+    lfOrientation   : INT32;
+    lfWeight        : INT32;
+    lfItalic        : UINT8;
+    lfUnderline     : UINT8;
+    lfStrikeOut     : UINT8;
+    lfCharSet       : UINT8;
+    lfOutPrecision  : UINT8;
+    lfClipPrecision : UINT8;
+    lfQuality       : UINT8;
+    lfPitchAndFamily: UINT8;
     lfFaceName      : ARRAY [0 .. LF_FACESIZE - 1] OF char;
   END;
 
@@ -756,19 +753,19 @@ TYPE
   NPLOGFONTW = UNTRACED REF LOGFONTW;
   LPLOGFONTW = UNTRACED REF LOGFONTW;
   LOGFONTW = RECORD
-    lfHeight        : LONG;
-    lfWidth         : LONG;
-    lfEscapement    : LONG;
-    lfOrientation   : LONG;
-    lfWeight        : LONG;
-    lfItalic        : BYTE;
-    lfUnderline     : BYTE;
-    lfStrikeOut     : BYTE;
-    lfCharSet       : BYTE;
-    lfOutPrecision  : BYTE;
-    lfClipPrecision : BYTE;
-    lfQuality       : BYTE;
-    lfPitchAndFamily: BYTE;
+    lfHeight        : INT32;
+    lfWidth         : INT32;
+    lfEscapement    : INT32;
+    lfOrientation   : INT32;
+    lfWeight        : INT32;
+    lfItalic        : UINT8;
+    lfUnderline     : UINT8;
+    lfStrikeOut     : UINT8;
+    lfCharSet       : UINT8;
+    lfOutPrecision  : UINT8;
+    lfClipPrecision : UINT8;
+    lfQuality       : UINT8;
+    lfPitchAndFamily: UINT8;
     lfFaceName      : ARRAY [0 .. LF_FACESIZE - 1] OF WCHAR;
   END;
 
@@ -784,8 +781,8 @@ TYPE
   LPENUMLOGFONTA = UNTRACED REF ENUMLOGFONTA;
   ENUMLOGFONTA = RECORD
     elfLogFont : LOGFONTA;
-    elfFullName: ARRAY [0 .. LF_FULLFACESIZE - 1] OF BYTE;
-    elfStyle   : ARRAY [0 .. LF_FACESIZE - 1] OF BYTE;
+    elfFullName: ARRAY [0 .. LF_FULLFACESIZE - 1] OF UINT8;
+    elfStyle   : ARRAY [0 .. LF_FACESIZE - 1] OF UINT8;
   END;
 
   (* Structure passed to FONTENUMPROC *)
@@ -868,8 +865,8 @@ CONST
 TYPE
   LPCHARSET = UNTRACED REF CHARSET;
   CHARSET = RECORD
-    aflBlock: ARRAY [0 .. 3 - 1] OF DWORD;
-    flLang  : DWORD;
+    aflBlock: ARRAY [0 .. 3 - 1] OF UINT32;
+    flLang  : UINT32;
   END;
 
 CONST
@@ -890,17 +887,17 @@ CONST
 TYPE
   LPPANOSE = UNTRACED REF PANOSE;
   PANOSE = RECORD
-    ulCulture: DWORD;  (* !!!  [kirko] this field will disappear *)
-    bFamilyType     : BYTE;
-    bSerifStyle     : BYTE;
-    bWeight         : BYTE;
-    bProportion     : BYTE;
-    bContrast       : BYTE;
-    bStrokeVariation: BYTE;
-    bArmStyle       : BYTE;
-    bLetterform     : BYTE;
-    bMidline        : BYTE;
-    bXHeight        : BYTE;
+    ulCulture: UINT32;  (* !!!  [kirko] this field will disappear *)
+    bFamilyType     : UINT8;
+    bSerifStyle     : UINT8;
+    bWeight         : UINT8;
+    bProportion     : UINT8;
+    bContrast       : UINT8;
+    bStrokeVariation: UINT8;
+    bArmStyle       : UINT8;
+    bLetterform     : UINT8;
+    bMidline        : UINT8;
+    bXHeight        : UINT8;
   END;
 
 CONST
@@ -1020,14 +1017,14 @@ TYPE
   LPEXTLOGFONTA = UNTRACED REF EXTLOGFONTA;
   EXTLOGFONTA = RECORD
     elfLogFont : LOGFONTA;
-    elfFullName: ARRAY [0 .. LF_FULLFACESIZE - 1] OF BYTE;
-    elfStyle   : ARRAY [0 .. LF_FACESIZE - 1] OF BYTE;
-    elfVersion  : DWORD;  (* 0 for the first release of NT *)
-    elfStyleSize: DWORD;
-    elfMatch    : DWORD;
-    elfReserved : DWORD;
-    elfVendorId: ARRAY [0 .. ELF_VENDOR_SIZE - 1] OF BYTE;
-    elfCulture: DWORD;   (* 0 for Latin *)
+    elfFullName: ARRAY [0 .. LF_FULLFACESIZE - 1] OF UINT8;
+    elfStyle   : ARRAY [0 .. LF_FACESIZE - 1] OF UINT8;
+    elfVersion  : UINT32;  (* 0 for the first release of NT *)
+    elfStyleSize: UINT32;
+    elfMatch    : UINT32;
+    elfReserved : UINT32;
+    elfVendorId: ARRAY [0 .. ELF_VENDOR_SIZE - 1] OF UINT8;
+    elfCulture: UINT32;   (* 0 for Latin *)
     elfPanose : PANOSE;
   END;
 
@@ -1038,12 +1035,12 @@ TYPE
     elfLogFont : LOGFONTW;
     elfFullName: ARRAY [0 .. LF_FULLFACESIZE - 1] OF WCHAR;
     elfStyle   : ARRAY [0 .. LF_FACESIZE - 1] OF WCHAR;
-    elfVersion  : DWORD;  (* 0 for the first release of NT *)
-    elfStyleSize: DWORD;
-    elfMatch    : DWORD;
-    elfReserved : DWORD;
-    elfVendorId: ARRAY [0 .. ELF_VENDOR_SIZE - 1] OF BYTE;
-    elfCulture: DWORD;   (* 0 for Latin *)
+    elfVersion  : UINT32;  (* 0 for the first release of NT *)
+    elfStyleSize: UINT32;
+    elfMatch    : UINT32;
+    elfReserved : UINT32;
+    elfVendorId: ARRAY [0 .. ELF_VENDOR_SIZE - 1] OF UINT8;
+    elfCulture: UINT32;   (* 0 for Latin *)
     elfPanose : PANOSE;
   END;
 
@@ -1072,62 +1069,62 @@ CONST
 TYPE
   LPFMPENALTYSET = UNTRACED REF FMPENALTYSET;
   FMPENALTYSET = RECORD
-    psSize  : DWORD;  (* size of this structure in BYTE's *)
-    psHeight: DWORD;
-    psWidth : DWORD;
-    psEscapement    : DWORD;
-    psOrientation   : DWORD;
-    psWeight        : DWORD;
-    psItalic        : DWORD;
-    psUnderline     : DWORD;
-    psStrikeOut     : DWORD;
-    psOutPrecsion   : DWORD;
-    psClipPrecision : DWORD;
-    psQuality       : DWORD;
-    psPitchAndFamily: DWORD;
-    psFaceName      : DWORD;
-    psFullName      : DWORD;
-    psStyle         : DWORD;
-    psPanose  : ARRAY [0 .. PANOSE_COUNT - 1] OF DWORD;
-    psVendorId: DWORD;
-    psLocation: DWORD;
+    psSize  : UINT32;  (* size of this structure in UINT8's *)
+    psHeight: UINT32;
+    psWidth : UINT32;
+    psEscapement    : UINT32;
+    psOrientation   : UINT32;
+    psWeight        : UINT32;
+    psItalic        : UINT32;
+    psUnderline     : UINT32;
+    psStrikeOut     : UINT32;
+    psOutPrecsion   : UINT32;
+    psClipPrecision : UINT32;
+    psQuality       : UINT32;
+    psPitchAndFamily: UINT32;
+    psFaceName      : UINT32;
+    psFullName      : UINT32;
+    psStyle         : UINT32;
+    psPanose  : ARRAY [0 .. PANOSE_COUNT - 1] OF UINT32;
+    psVendorId: UINT32;
+    psLocation: UINT32;
   END;
 
   LPFMWEIGHTSET = UNTRACED REF FMWEIGHTSET;
   FMWEIGHTSET = RECORD
-    wsSize  : DWORD;  (* size of this structure in BYTE's *)
-    wsHeight: DWORD;
-    wsWidth : DWORD;
-    wsEscapement    : DWORD;
-    wsOrientation   : DWORD;
-    wsWeight        : DWORD;
-    wsItalic        : DWORD;
-    wsUnderline     : DWORD;
-    wsStrikeOut     : DWORD;
-    wsOutPrecsion   : DWORD;
-    wsClipPrecision : DWORD;
-    wsQuality       : DWORD;
-    wsPitchAndFamily: DWORD;
-    wsFaceName      : DWORD;
-    wsFullName      : DWORD;
-    wsStyle         : DWORD;
-    wsPanose  : ARRAY [0 .. PANOSE_COUNT - 1] OF DWORD;
-    wsVendorId: DWORD;
-    wsLocation: DWORD;
+    wsSize  : UINT32;  (* size of this structure in UINT8's *)
+    wsHeight: UINT32;
+    wsWidth : UINT32;
+    wsEscapement    : UINT32;
+    wsOrientation   : UINT32;
+    wsWeight        : UINT32;
+    wsItalic        : UINT32;
+    wsUnderline     : UINT32;
+    wsStrikeOut     : UINT32;
+    wsOutPrecsion   : UINT32;
+    wsClipPrecision : UINT32;
+    wsQuality       : UINT32;
+    wsPitchAndFamily: UINT32;
+    wsFaceName      : UINT32;
+    wsFullName      : UINT32;
+    wsStyle         : UINT32;
+    wsPanose  : ARRAY [0 .. PANOSE_COUNT - 1] OF UINT32;
+    wsVendorId: UINT32;
+    wsLocation: UINT32;
   END;
 
   LPFMATCHA = UNTRACED REF FMATCHA;
   FMATCHA = RECORD
-    fmSize: DWORD;    (* size of this structure in bytes *)
-    fmTotalPenalty: DWORD;  (* total penalty of physical font *)
+    fmSize: UINT32;    (* size of this structure in bytes *)
+    fmTotalPenalty: UINT32;  (* total penalty of physical font *)
     fmPenaltySet: FMPENALTYSET;  (* penalties of physical font *)
     fmExtLogFont: EXTLOGFONTA;   (* describes physical font *)
   END;
 
   LPFMATCHW = UNTRACED REF FMATCHW;
   FMATCHW = RECORD
-    fmSize: DWORD;    (* size of this structure in bytes *)
-    fmTotalPenalty: DWORD;  (* total penalty of physical font *)
+    fmSize: UINT32;    (* size of this structure in bytes *)
+    fmTotalPenalty: UINT32;  (* total penalty of physical font *)
     fmPenaltySet: FMPENALTYSET;  (* penalties of physical font *)
     fmExtLogFont: EXTLOGFONTW;   (* describes physical font *)
   END;
@@ -1162,16 +1159,16 @@ CONST
 
   MAPPER_INDEX_LAST = MAPPER_INDEX_LOCATION;
 
-  SIZEOFMAPORDER = BYTESIZE(UINT) * (MAPPER_INDEX_LAST + 1);
+  SIZEOFMAPORDER = BYTESIZE(UINT32) * (MAPPER_INDEX_LAST + 1);
 
 TYPE
-  FMORDER = ARRAY [0 .. MAPPER_INDEX_LAST + 1 - 1] OF DWORD;
+  FMORDER = ARRAY [0 .. MAPPER_INDEX_LAST + 1 - 1] OF UINT32;
   LPFMORDER = UNTRACED REF FMORDER;
 
   LPFMCONTROLS = UNTRACED REF FMCONTROLS;
   FMCONTROLS = RECORD
-    size         : DWORD;
-    penaltySumMax: DWORD;
+    size         : UINT32;
+    penaltySumMax: UINT32;
     fmpsMax      : FMPENALTYSET;
     fmws         : FMWEIGHTSET;
     fmorder      : FMORDER;
@@ -1185,9 +1182,9 @@ CONST
   DEVICE_FONTTYPE   = 16_002;
   TRUETYPE_FONTTYPE = 16_004;
 
-PROCEDURE RGB (r, g, b: BYTE): COLORREF;
-PROCEDURE PALETTERGB (r, g, b: BYTE): COLORREF;
-PROCEDURE PALETTEINDEX (i: WORD): COLORREF;
+PROCEDURE RGB (r, g, b: UINT8): COLORREF;
+PROCEDURE PALETTERGB (r, g, b: UINT8): COLORREF;
+PROCEDURE PALETTEINDEX (i: UINT16): COLORREF;
 
 (* palette entry flags *)
 CONST
@@ -1195,9 +1192,9 @@ CONST
   PC_EXPLICIT   = 16_02 (* palette index is explicit to device *);
   PC_NOCOLLAPSE = 16_04 (* do not match color to system palette *);
 
-PROCEDURE GetRValue (rgb: COLORREF): BYTE;
-PROCEDURE GetGValue (rgb: COLORREF): BYTE;
-PROCEDURE GetBValue (rgb: COLORREF): BYTE;
+PROCEDURE GetRValue (rgb: COLORREF): UINT8;
+PROCEDURE GetGValue (rgb: COLORREF): UINT8;
+PROCEDURE GetBValue (rgb: COLORREF): UINT8;
 
 (* Background Modes *)
 CONST
@@ -1480,8 +1477,8 @@ CONST
 
 (* constants for CreateDIBitmap *)
 CONST
-  CBM_CREATEDIB: LONG = 16_02 (* create DIB bitmap *);
-  CBM_INIT     : LONG = 16_04 (* initialize bitmap *);
+  CBM_CREATEDIB: INT32 = 16_02 (* create DIB bitmap *);
+  CBM_INIT     : INT32 = 16_04 (* initialize bitmap *);
 
 (* ExtFloodFill style flags *)
 CONST
@@ -1496,30 +1493,30 @@ TYPE
   NPDEVMODEA = UNTRACED REF DEVMODEA;
   LPDEVMODEA = UNTRACED REF DEVMODEA;
   DEVMODEA = RECORD
-    dmDeviceName   : ARRAY [0 .. 32 - 1] OF BYTE;
-    dmSpecVersion  : WORD;
-    dmDriverVersion: WORD;
-    dmSize         : WORD;
-    dmDriverExtra  : WORD;
-    dmFields       : DWORD;
-    dmOrientation  : short;
-    dmPaperSize    : short;
-    dmPaperLength  : short;
-    dmPaperWidth   : short;
-    dmScale        : short;
-    dmCopies       : short;
-    dmDefaultSource: short;
-    dmPrintQuality : short;
-    dmColor        : short;
-    dmDuplex       : short;
-    dmYResolution  : short;
-    dmTTOption     : short;
-    dmCollate      : short;
-    dmFormName     : ARRAY [0 .. 32 - 1] OF BYTE;
-    dmBitsPerPel   : USHORT;
-    dmPelsWidth    : DWORD;
-    dmPelsHeight   : DWORD;
-    dmDisplayMode  : DWORD;
+    dmDeviceName   : ARRAY [0 .. 32 - 1] OF UINT8;
+    dmSpecVersion  : UINT16;
+    dmDriverVersion: UINT16;
+    dmSize         : UINT16;
+    dmDriverExtra  : UINT16;
+    dmFields       : UINT32;
+    dmOrientation  : INT16;
+    dmPaperSize    : INT16;
+    dmPaperLength  : INT16;
+    dmPaperWidth   : INT16;
+    dmScale        : INT16;
+    dmCopies       : INT16;
+    dmDefaultSource: INT16;
+    dmPrintQuality : INT16;
+    dmColor        : INT16;
+    dmDuplex       : INT16;
+    dmYResolution  : INT16;
+    dmTTOption     : INT16;
+    dmCollate      : INT16;
+    dmFormName     : ARRAY [0 .. 32 - 1] OF UINT8;
+    dmBitsPerPel   : UINT16;
+    dmPelsWidth    : UINT32;
+    dmPelsHeight   : UINT32;
+    dmDisplayMode  : UINT32;
   END;
 
   PDEVMODEW = UNTRACED REF DEVMODEW;
@@ -1527,29 +1524,29 @@ TYPE
   NPDEVMODEW = UNTRACED REF DEVMODEW;
   DEVMODEW = RECORD
     dmDeviceName   : ARRAY [0 .. 32 - 1] OF WCHAR;
-    dmSpecVersion  : WORD;
-    dmDriverVersion: WORD;
-    dmSize         : WORD;
-    dmDriverExtra  : WORD;
-    dmFields       : DWORD;
-    dmOrientation  : short;
-    dmPaperSize    : short;
-    dmPaperLength  : short;
-    dmPaperWidth   : short;
-    dmScale        : short;
-    dmCopies       : short;
-    dmDefaultSource: short;
-    dmPrintQuality : short;
-    dmColor        : short;
-    dmDuplex       : short;
-    dmYResolution  : short;
-    dmTTOption     : short;
-    dmCollate      : short;
+    dmSpecVersion  : UINT16;
+    dmDriverVersion: UINT16;
+    dmSize         : UINT16;
+    dmDriverExtra  : UINT16;
+    dmFields       : UINT32;
+    dmOrientation  : INT16;
+    dmPaperSize    : INT16;
+    dmPaperLength  : INT16;
+    dmPaperWidth   : INT16;
+    dmScale        : INT16;
+    dmCopies       : INT16;
+    dmDefaultSource: INT16;
+    dmPrintQuality : INT16;
+    dmColor        : INT16;
+    dmDuplex       : INT16;
+    dmYResolution  : INT16;
+    dmTTOption     : INT16;
+    dmCollate      : INT16;
     dmFormName     : ARRAY [0 .. 32 - 1] OF WCHAR;
-    dmBitsPerPel   : USHORT;
-    dmPelsWidth    : DWORD;
-    dmPelsHeight   : DWORD;
-    dmDisplayMode  : DWORD;
+    dmBitsPerPel   : UINT16;
+    dmPelsWidth    : UINT32;
+    dmPelsHeight   : UINT32;
+    dmDisplayMode  : UINT32;
   END;
 
   DEVMODE = DEVMODEA;
@@ -1563,10 +1560,10 @@ CONST RDH_RECTANGLES = 1;
 TYPE
   PRGNDATAHEADER = RGNDATAHEADER;
   RGNDATAHEADER = RECORD
-    dwSize  : DWORD;
-    iType   : DWORD;
-    nCount  : DWORD;
-    nRgnSize: DWORD;
+    dwSize  : UINT32;
+    iType   : UINT32;
+    nCount  : UINT32;
+    nRgnSize: UINT32;
     rcBound : RECT;
   END;
 
@@ -1582,9 +1579,9 @@ TYPE
   NPABC = UNTRACED REF ABC;
   LPABC = UNTRACED REF ABC;
   ABC = RECORD
-    abcA: int;
-    abcB: UINT;
-    abcC: int;
+    abcA: INT32;
+    abcB: UINT32;
+    abcC: INT32;
   END;
 
   PABCFLOAT = UNTRACED REF ABCFLOAT;
@@ -1600,34 +1597,34 @@ TYPE
   NPOUTLINETEXTMETRICA = UNTRACED REF OUTLINETEXTMETRICA;
   LPOUTLINETEXTMETRICA = UNTRACED REF OUTLINETEXTMETRICA;
   OUTLINETEXTMETRICA = RECORD
-    otmSize               : UINT;
+    otmSize               : UINT32;
     otmTextMetrics        : TEXTMETRICA;
-    otmFiller             : BYTE;
+    otmFiller             : UINT8;
     otmPanoseNumber       : PANOSE;
-    otmfsSelection        : UINT;
-    otmfsType             : UINT;
-    otmsCharSlopeRise     : UINT;
-    otmsCharSlopeRun      : UINT;
-    otmItalicAngle        : UINT;
-    otmEMSquare           : UINT;
-    otmAscent             : UINT;
-    otmDescent            : int;
-    otmLineGap            : int;
-    otmsCapEmHeight       : UINT;
-    otmsXHeight           : UINT;
+    otmfsSelection        : UINT32;
+    otmfsType             : UINT32;
+    otmsCharSlopeRise     : UINT32;
+    otmsCharSlopeRun      : UINT32;
+    otmItalicAngle        : UINT32;
+    otmEMSquare           : UINT32;
+    otmAscent             : UINT32;
+    otmDescent            : INT32;
+    otmLineGap            : INT32;
+    otmsCapEmHeight       : UINT32;
+    otmsXHeight           : UINT32;
     otmrcFontBox          : RECT;
-    otmMacAscent          : int;
-    otmMacDescent         : int;
-    otmMacLineGap         : UINT;
-    otmusMinimumPPEM      : UINT;
+    otmMacAscent          : INT32;
+    otmMacDescent         : INT32;
+    otmMacLineGap         : UINT32;
+    otmusMinimumPPEM      : UINT32;
     otmptSubscriptSize    : POINT;
     otmptSubscriptOffset  : POINT;
     otmptSuperscriptSize  : POINT;
     otmptSuperscriptOffset: POINT;
-    otmsStrikeoutSize     : UINT;
-    otmsStrikeoutPosition : int;
-    otmsUnderscoreSize    : int;
-    otmsUnderscorePosition: UINT;
+    otmsStrikeoutSize     : UINT32;
+    otmsStrikeoutPosition : INT32;
+    otmsUnderscoreSize    : INT32;
+    otmsUnderscorePosition: UINT32;
     otmpFamilyName        : PSTR;
     otmpFaceName          : PSTR;
     otmpStyleName         : PSTR;
@@ -1638,34 +1635,34 @@ TYPE
   NPOUTLINETEXTMETRICW = UNTRACED REF OUTLINETEXTMETRICW;
   LPOUTLINETEXTMETRICW = UNTRACED REF OUTLINETEXTMETRICW;
   OUTLINETEXTMETRICW = RECORD
-    otmSize               : UINT;
+    otmSize               : UINT32;
     otmTextMetrics        : TEXTMETRICW;
-    otmFiller             : BYTE;
+    otmFiller             : UINT8;
     otmPanoseNumber       : PANOSE;
-    otmfsSelection        : UINT;
-    otmfsType             : UINT;
-    otmsCharSlopeRise     : UINT;
-    otmsCharSlopeRun      : UINT;
-    otmItalicAngle        : UINT;
-    otmEMSquare           : UINT;
-    otmAscent             : UINT;
-    otmDescent            : int;
-    otmLineGap            : int;
-    otmsCapEmHeight       : UINT;
-    otmsXHeight           : UINT;
+    otmfsSelection        : UINT32;
+    otmfsType             : UINT32;
+    otmsCharSlopeRise     : UINT32;
+    otmsCharSlopeRun      : UINT32;
+    otmItalicAngle        : UINT32;
+    otmEMSquare           : UINT32;
+    otmAscent             : UINT32;
+    otmDescent            : INT32;
+    otmLineGap            : INT32;
+    otmsCapEmHeight       : UINT32;
+    otmsXHeight           : UINT32;
     otmrcFontBox          : RECT;
-    otmMacAscent          : int;
-    otmMacDescent         : int;
-    otmMacLineGap         : UINT;
-    otmusMinimumPPEM      : UINT;
+    otmMacAscent          : INT32;
+    otmMacDescent         : INT32;
+    otmMacLineGap         : UINT32;
+    otmusMinimumPPEM      : UINT32;
     otmptSubscriptSize    : POINT;
     otmptSubscriptOffset  : POINT;
     otmptSuperscriptSize  : POINT;
     otmptSuperscriptOffset: POINT;
-    otmsStrikeoutSize     : UINT;
-    otmsStrikeoutPosition : int;
-    otmsUnderscoreSize    : int;
-    otmsUnderscorePosition: UINT;
+    otmsStrikeoutSize     : UINT32;
+    otmsStrikeoutPosition : INT32;
+    otmsUnderscoreSize    : INT32;
+    otmsUnderscorePosition: UINT32;
     otmpFamilyName        : PSTR;
     otmpFaceName          : PSTR;
     otmpStyleName         : PSTR;
@@ -1678,30 +1675,30 @@ TYPE
   LPOUTLINETEXTMETRIC = LPOUTLINETEXTMETRICA;
 
   POLYTEXTA = RECORD
-    x      : int;
-    y      : int;
-    n      : UINT;
-    lpwstr : UNTRACED REF BYTE;
-    uiFlags: UINT;
+    x      : INT32;
+    y      : INT32;
+    n      : UINT32;
+    lpwstr : UNTRACED REF UINT8;
+    uiFlags: UINT32;
     rcl    : RECT;
-    pdx    : UNTRACED REF int;
+    pdx    : UNTRACED REF INT32;
   END;
 
   POLYTEXTW = RECORD
-    x      : int;
-    y      : int;
-    n      : UINT;
+    x      : INT32;
+    y      : INT32;
+    n      : UINT32;
     lpwstr : UNTRACED REF WCHAR;
-    uiFlags: UINT;
+    uiFlags: UINT32;
     rcl    : RECT;
-    pdx    : UNTRACED REF int;
+    pdx    : UNTRACED REF INT32;
   END;
 
   POLYTEXT = POLYTEXTA;
 
   FIXED = RECORD
-    fract: WORD;
-    value: short;
+    fract: UINT16;
+    value: INT16;
   END;
 
   LPMAT2 = UNTRACED REF MAT2;
@@ -1714,11 +1711,11 @@ TYPE
 
   LPGLYPHMETRICS = UNTRACED REF GLYPHMETRICS;
   GLYPHMETRICS = RECORD
-    gmBlackBoxX    : UINT;
-    gmBlackBoxY    : UINT;
+    gmBlackBoxX    : UINT32;
+    gmBlackBoxY    : UINT32;
     gmptGlyphOrigin: POINT;
-    gmCellIncX     : short;
-    gmCellIncY     : short;
+    gmCellIncX     : INT16;
+    gmCellIncY     : INT16;
   END;
 
 (* GetGlyphOutline constants *)
@@ -1742,23 +1739,23 @@ TYPE
 
   LPTTPOLYCURVE = UNTRACED REF TTPOLYCURVE;
   TTPOLYCURVE = RECORD
-    wType: WORD;
-    cpfx : WORD;
+    wType: UINT16;
+    cpfx : UINT16;
     apfx : ARRAY [0 .. 1 - 1] OF POINTFX;
   END;
 
   LPTTPOLYGONHEADER = UNTRACED REF TTPOLYGONHEADER;
   TTPOLYGONHEADER = RECORD
-    cb      : DWORD;
-    dwType  : DWORD;
+    cb      : UINT32;
+    dwType  : UINT32;
     pfxStart: POINTFX;
   END;
 
   LPRASTERIZER_STATUS = UNTRACED REF RASTERIZER_STATUS;
   RASTERIZER_STATUS = RECORD
-    nSize      : short;
-    wFlags     : short;
-    nLanguageID: short;
+    nSize      : INT16;
+    wFlags     : INT16;
+    nLanguageID: INT16;
   END;
 
 (* bits defined in wFlags of RASTERIZER_STATUS *)
@@ -1769,32 +1766,32 @@ CONST
 (* Pixel format descriptor *)
 TYPE
   PIXELFORMATDESCRIPTOR = RECORD
-    nSize          : WORD;
-    nVersion       : WORD;
-    dwFlags        : DWORD;
-    iPixelType     : BYTE;
-    cColorBits     : BYTE;
-    cRedBits       : BYTE;
-    cRedShift      : BYTE;
-    cGreenBits     : BYTE;
-    cGreenShift    : BYTE;
-    cBlueBits      : BYTE;
-    cBlueShift     : BYTE;
-    cAlphaBits     : BYTE;
-    cAlphaShift    : BYTE;
-    cAccumBits     : BYTE;
-    cAccumRedBits  : BYTE;
-    cAccumGreenBits: BYTE;
-    cAccumBlueBits : BYTE;
-    cAccumAlphaBits: BYTE;
-    cDepthBits     : BYTE;
-    cStencilBits   : BYTE;
-    cAuxBuffers    : BYTE;
-    iLayerType     : BYTE;
-    bReserved      : BYTE;
-    dwLayerMask    : DWORD;
-    dwVisibleMask  : DWORD;
-    dwDamageMask   : DWORD;
+    nSize          : UINT16;
+    nVersion       : UINT16;
+    dwFlags        : UINT32;
+    iPixelType     : UINT8;
+    cColorBits     : UINT8;
+    cRedBits       : UINT8;
+    cRedShift      : UINT8;
+    cGreenBits     : UINT8;
+    cGreenShift    : UINT8;
+    cBlueBits      : UINT8;
+    cBlueShift     : UINT8;
+    cAlphaBits     : UINT8;
+    cAlphaShift    : UINT8;
+    cAccumBits     : UINT8;
+    cAccumRedBits  : UINT8;
+    cAccumGreenBits: UINT8;
+    cAccumBlueBits : UINT8;
+    cAccumAlphaBits: UINT8;
+    cDepthBits     : UINT8;
+    cStencilBits   : UINT8;
+    cAuxBuffers    : UINT8;
+    iLayerType     : UINT8;
+    bReserved      : UINT8;
+    dwLayerMask    : UINT32;
+    dwVisibleMask  : UINT32;
+    dwDamageMask   : UINT32;
   END;
   LPPIXELFORMATDESCRIPTOR = UNTRACED REF PIXELFORMATDESCRIPTOR;
 
@@ -1827,59 +1824,59 @@ CONST
 TYPE
   FONTENUMPROC = <*CALLBACK*> PROCEDURE (a1: UNTRACED REF LOGFONT;
                                          a2: UNTRACED REF TEXTMETRIC;
-                                         a3: DWORD;
-                                         a4: LPARAM                   ): int;
+                                         a3: UINT32;
+                                         a4: LPARAM                   ): INT32;
 
-  GOBJENUMPROC = <*CALLBACK*> PROCEDURE (a1: LPVOID; a2: LPARAM): int;
-  LINEDDAPROC = <*CALLBACK*> PROCEDURE (a1: int; a2: int; a3: LPARAM);
+  GOBJENUMPROC = <*CALLBACK*> PROCEDURE (a1: PVOID; a2: LPARAM): INT32;
+  LINEDDAPROC = <*CALLBACK*> PROCEDURE (a1: INT32; a2: INT32; a3: LPARAM);
 
 <*EXTERNAL AddFontResourceA:WINAPI*>
-PROCEDURE AddFontResourceA (a1: LPCSTR): int;
+PROCEDURE AddFontResourceA (a1: PCSTR): INT32;
 
 <*EXTERNAL AddFontResourceW:WINAPI*>
-PROCEDURE AddFontResourceW (a1: LPCWSTR): int;
+PROCEDURE AddFontResourceW (a1: PCWSTR): INT32;
 CONST AddFontResource = AddFontResourceA;
 
 <*EXTERNAL AddFontModule:WINAPI*>
-PROCEDURE AddFontModule (a1: HMODULE): int;
+PROCEDURE AddFontModule (a1: HMODULE): INT32;
 
 <*EXTERNAL AnimatePalette:WINAPI*>
 PROCEDURE AnimatePalette (a1: HPALETTE;
-                            a2: UINT;
-                            a3: UINT;
+                            a2: UINT32;
+                            a3: UINT32;
                             a4: UNTRACED REF PALETTEENTRY): BOOL;
 
 <*EXTERNAL Arc:WINAPI*>
-PROCEDURE Arc (a1: HDC; a2, a3, a4, a5, a6, a7, a8, a9: int): BOOL;
+PROCEDURE Arc (a1: HDC; a2, a3, a4, a5, a6, a7, a8, a9: INT32): BOOL;
 
 <*EXTERNAL BitBlt:WINAPI*>
-PROCEDURE BitBlt (a1: HDC;  a2, a3, a4, a5: int;
-                  a6: HDC;  a7, a8: int;  a9: DWORD): BOOL;
+PROCEDURE BitBlt (a1: HDC;  a2, a3, a4, a5: INT32;
+                  a6: HDC;  a7, a8: INT32;  a9: UINT32): BOOL;
 
 <*EXTERNAL CancelDC:WINAPI*>
 PROCEDURE CancelDC (a1: HDC): BOOL;
 
 <*EXTERNAL Chord:WINAPI*>
-PROCEDURE Chord (a1: HDC; a2, a3, a4, a5, a6, a7, a8, a9: int): BOOL;
+PROCEDURE Chord (a1: HDC; a2, a3, a4, a5, a6, a7, a8, a9: INT32): BOOL;
 
 <*EXTERNAL ChoosePixelFormat:WINAPI*>
-PROCEDURE ChoosePixelFormat(a1: HDC; a2: LPPIXELFORMATDESCRIPTOR): int;
+PROCEDURE ChoosePixelFormat(a1: HDC; a2: LPPIXELFORMATDESCRIPTOR): INT32;
 
 <*EXTERNAL CloseMetaFile:WINAPI*>
 PROCEDURE CloseMetaFile (a1: HDC): HMETAFILE;
 
 <*EXTERNAL CombineRgn:WINAPI*>
-PROCEDURE CombineRgn (a1: HRGN; a2: HRGN; a3: HRGN; a4: int): int;
+PROCEDURE CombineRgn (a1: HRGN; a2: HRGN; a3: HRGN; a4: INT32): INT32;
 
 <*EXTERNAL CopyMetaFileA:WINAPI*>
-PROCEDURE CopyMetaFileA (a1: HMETAFILE; a2: LPSTR): HMETAFILE;
+PROCEDURE CopyMetaFileA (a1: HMETAFILE; a2: PSTR): HMETAFILE;
 
 <*EXTERNAL CopyMetaFileW:WINAPI*>
-PROCEDURE CopyMetaFileW (a1: HMETAFILE; a2: LPWSTR): HMETAFILE;
+PROCEDURE CopyMetaFileW (a1: HMETAFILE; a2: PWSTR): HMETAFILE;
 CONST CopyMetaFile = CopyMetaFileA;
 
 <*EXTERNAL CreateBitmap:WINAPI*>
-PROCEDURE CreateBitmap (a1, a2: int;  a3, a4: UINT;  a5: void_star): HBITMAP;
+PROCEDURE CreateBitmap (a1, a2: INT32;  a3, a4: UINT32;  a5: PVOID): HBITMAP;
 
 <*EXTERNAL CreateBitmapIndirect:WINAPI*>
 PROCEDURE CreateBitmapIndirect (a1: LPBITMAP): HBITMAP;
@@ -1888,47 +1885,47 @@ PROCEDURE CreateBitmapIndirect (a1: LPBITMAP): HBITMAP;
 PROCEDURE CreateBrushIndirect (a1: LPLOGBRUSH): HBRUSH;
 
 <*EXTERNAL CreateCompatibleBitmap:WINAPI*>
-PROCEDURE CreateCompatibleBitmap (a1: HDC; a2: int; a3: int): HBITMAP;
+PROCEDURE CreateCompatibleBitmap (a1: HDC; a2: INT32; a3: INT32): HBITMAP;
 
 <*EXTERNAL CreateDiscardableBitmap:WINAPI*>
-PROCEDURE CreateDiscardableBitmap (a1: HDC; a2: int; a3: int): HBITMAP;
+PROCEDURE CreateDiscardableBitmap (a1: HDC; a2: INT32; a3: INT32): HBITMAP;
 
 <*EXTERNAL CreateCompatibleDC:WINAPI*>
 PROCEDURE CreateCompatibleDC (a1: HDC): HDC;
 
 <*EXTERNAL CreateDCA:WINAPI*>
-PROCEDURE CreateDCA (a1, a2, a3: LPCSTR;  a4: UNTRACED REF DEVMODEA): HDC;
+PROCEDURE CreateDCA (a1, a2, a3: PCSTR;  a4: UNTRACED REF DEVMODEA): HDC;
 
 <*EXTERNAL CreateDCW:WINAPI*>
-PROCEDURE CreateDCW (a1, a2, a3: LPCWSTR; a4: UNTRACED REF DEVMODEW): HDC;
+PROCEDURE CreateDCW (a1, a2, a3: PCWSTR; a4: UNTRACED REF DEVMODEW): HDC;
 CONST CreateDC = CreateDCA;
 
 <*EXTERNAL CreateDIBitmap:WINAPI*>
 PROCEDURE CreateDIBitmap (a1: HDC;
                             a2: LPBITMAPINFOHEADER;
-                            a3: DWORD;
-                            a4: UNTRACED REF BYTE;
+                            a3: UINT32;
+                            a4: UNTRACED REF UINT8;
                             a5: LPBITMAPINFO;
-                            a6: UINT                ): HBITMAP;
+                            a6: UINT32                ): HBITMAP;
 
 <*EXTERNAL CreateDIBSection:WINAPI*>
 PROCEDURE CreateDIBSection (a1: HDC;
                               a2: LPBITMAPINFO;
-                              a3: DWORD;
-                              a4: DWORD;
-                              a5: UNTRACED REF LPBYTE): HBITMAP;
+                              a3: UINT32;
+                              a4: UINT32;
+                              a5: UNTRACED REF PUINT8): HBITMAP;
 
 <*EXTERNAL CreateDIBPatternBrush:WINAPI*>
-PROCEDURE CreateDIBPatternBrush (a1: HGLOBAL; a2: UINT): HBRUSH;
+PROCEDURE CreateDIBPatternBrush (a1: HGLOBAL; a2: UINT32): HBRUSH;
 
 <*EXTERNAL CreateDIBPatternBrushPt:WINAPI*>
-PROCEDURE CreateDIBPatternBrushPt (a1: LPVOID; a2: DWORD): HBRUSH;
+PROCEDURE CreateDIBPatternBrushPt (a1: PVOID; a2: UINT32): HBRUSH;
 
 <*EXTERNAL CreateEllipticRgn:WINAPI*>
-PROCEDURE CreateEllipticRgn (a1: int; a2: int; a3: int; a4: int): HRGN;
+PROCEDURE CreateEllipticRgn (a1: INT32; a2: INT32; a3: INT32; a4: INT32): HRGN;
 
 <*EXTERNAL CreateEllipticRgnIndirect:WINAPI*>
-PROCEDURE CreateEllipticRgnIndirect (a1: LPRECT): HRGN;
+PROCEDURE CreateEllipticRgnIndirect (a1: PRECT): HRGN;
 
 <*EXTERNAL CreateFontIndirectA:WINAPI*>
 PROCEDURE CreateFontIndirectA (a1: UNTRACED REF LOGFONTA): HFONT;
@@ -1938,70 +1935,70 @@ PROCEDURE CreateFontIndirectW (a1: UNTRACED REF LOGFONTW): HFONT;
 CONST CreateFontIndirect = CreateFontIndirectA;
 
 <*EXTERNAL CreateFontA:WINAPI*>
-PROCEDURE CreateFontA (a1, a2, a3, a4, a5: int;
-                       a6, a7, a8, a9, a10, a11, a12, a13: DWORD;
-                       a14: LPCSTR ): HFONT;
+PROCEDURE CreateFontA (a1, a2, a3, a4, a5: INT32;
+                       a6, a7, a8, a9, a10, a11, a12, a13: UINT32;
+                       a14: PCSTR ): HFONT;
 
 <*EXTERNAL CreateFontW:WINAPI*>
-PROCEDURE CreateFontW (a1, a2, a3, a4, a5: int;
-                       a6, a7, a8, a9, a10, a11, a12, a13: DWORD;
-                       a14: LPCWSTR ): HFONT;
+PROCEDURE CreateFontW (a1, a2, a3, a4, a5: INT32;
+                       a6, a7, a8, a9, a10, a11, a12, a13: UINT32;
+                       a14: PCWSTR ): HFONT;
 
 CONST CreateFont = CreateFontA;
 
 <*EXTERNAL CreateHatchBrush:WINAPI*>
-PROCEDURE CreateHatchBrush (a1: int; a2: COLORREF): HBRUSH;
+PROCEDURE CreateHatchBrush (a1: INT32; a2: COLORREF): HBRUSH;
 
 <*EXTERNAL CreateICA:WINAPI*>
-PROCEDURE CreateICA (a1, a2, a3: LPCSTR; a4: UNTRACED REF DEVMODEA): HDC;
+PROCEDURE CreateICA (a1, a2, a3: PCSTR; a4: UNTRACED REF DEVMODEA): HDC;
 
 <*EXTERNAL CreateICW:WINAPI*>
-PROCEDURE CreateICW (a1, a2, a3: LPCWSTR; a4: UNTRACED REF DEVMODEW): HDC;
+PROCEDURE CreateICW (a1, a2, a3: PCWSTR; a4: UNTRACED REF DEVMODEW): HDC;
 CONST CreateIC = CreateICA;
 
 <*EXTERNAL CreateMetaFileA:WINAPI*>
-PROCEDURE CreateMetaFileA (a1: LPCSTR): HDC;
+PROCEDURE CreateMetaFileA (a1: PCSTR): HDC;
 
 <*EXTERNAL CreateMetaFileW:WINAPI*>
-PROCEDURE CreateMetaFileW (a1: LPCWSTR): HDC;
+PROCEDURE CreateMetaFileW (a1: PCWSTR): HDC;
 CONST CreateMetaFile = CreateMetaFileA;
 
 <*EXTERNAL CreatePalette:WINAPI*>
 PROCEDURE CreatePalette (a1: UNTRACED REF LOGPALETTE): HPALETTE;
 
 <*EXTERNAL CreatePen:WINAPI*>
-PROCEDURE CreatePen (a1: int; a2: int; a3: COLORREF): HPEN;
+PROCEDURE CreatePen (a1: INT32; a2: INT32; a3: COLORREF): HPEN;
 
 <*EXTERNAL CreatePenIndirect:WINAPI*>
 PROCEDURE CreatePenIndirect (a1: LPLOGPEN): HPEN;
 
 <*EXTERNAL CreatePolyPolygonRgn:WINAPI*>
-PROCEDURE CreatePolyPolygonRgn (a1: LPPOINT; a2: UNTRACED REF INT;
-                                a3, a4: int): HRGN;
+PROCEDURE CreatePolyPolygonRgn (a1: PPOINT; a2: UNTRACED REF INT32;
+                                a3, a4: INT32): HRGN;
 
 <*EXTERNAL CreatePatternBrush:WINAPI*>
 PROCEDURE CreatePatternBrush (a1: HBITMAP): HBRUSH;
 
 <*EXTERNAL CreateRectRgn:WINAPI*>
-PROCEDURE CreateRectRgn (a1: int; a2: int; a3: int; a4: int): HRGN;
+PROCEDURE CreateRectRgn (a1: INT32; a2: INT32; a3: INT32; a4: INT32): HRGN;
 
 <*EXTERNAL CreateRectRgnIndirect:WINAPI*>
-PROCEDURE CreateRectRgnIndirect (a1: LPRECT): HRGN;
+PROCEDURE CreateRectRgnIndirect (a1: PRECT): HRGN;
 
 <*EXTERNAL CreateRoundRectRgn:WINAPI*>
-PROCEDURE CreateRoundRectRgn (a1, a2, a3, a4, a5, a6: int): HRGN;
+PROCEDURE CreateRoundRectRgn (a1, a2, a3, a4, a5, a6: INT32): HRGN;
 
 <*EXTERNAL CreateScalableFontResourceA:WINAPI*>
-PROCEDURE CreateScalableFontResourceA (a1: DWORD;
-                                         a2: LPCSTR;
-                                         a3: LPCSTR;
-                                         a4: LPSTR   ): BOOL;
+PROCEDURE CreateScalableFontResourceA (a1: UINT32;
+                                         a2: PCSTR;
+                                         a3: PCSTR;
+                                         a4: PSTR   ): BOOL;
 
 <*EXTERNAL CreateScalableFontResourceW:WINAPI*>
-PROCEDURE CreateScalableFontResourceW (a1: DWORD;
-                                         a2: LPCWSTR;
-                                         a3: LPCWSTR;
-                                         a4: LPWSTR   ): BOOL;
+PROCEDURE CreateScalableFontResourceW (a1: UINT32;
+                                         a2: PCWSTR;
+                                         a3: PCWSTR;
+                                         a4: PWSTR   ): BOOL;
 CONST CreateScalableFontResource = CreateScalableFontResourceA;
 
 <*EXTERNAL CreateSolidBrush:WINAPI*>
@@ -2018,352 +2015,352 @@ PROCEDURE DeleteObject (a1: HGDIOBJ): BOOL;
 
 <*EXTERNAL DescribePixelFormat:WINAPI*>
 PROCEDURE DescribePixelFormat(a1: HDC; 
-                              a2: int; 
-                              a3: UINT; 
-                              a4: LPPIXELFORMATDESCRIPTOR): int;
+                              a2: INT32; 
+                              a3: UINT32; 
+                              a4: LPPIXELFORMATDESCRIPTOR): INT32;
 
 <*EXTERNAL DeviceCapabilitiesEx:WINAPI*>
-PROCEDURE DeviceCapabilitiesEx (a1: LPSTR;
-                                a2: LPSTR;
-                                a3: LPSTR;
-                                a4: int;
-                                a5: LPSTR;
-                                a6: LPDEVMODE): int;
+PROCEDURE DeviceCapabilitiesEx (a1: PSTR;
+                                a2: PSTR;
+                                a3: PSTR;
+                                a4: INT32;
+                                a5: PSTR;
+                                a6: LPDEVMODE): INT32;
 
 <*EXTERNAL Ellipse:WINAPI*>
-PROCEDURE Ellipse (a1: HDC; a2: int; a3: int; a4: int; a5: int): BOOL;
+PROCEDURE Ellipse (a1: HDC; a2: INT32; a3: INT32; a4: INT32; a5: INT32): BOOL;
 
 <*EXTERNAL EnumFontFamiliesA:WINAPI*>
 PROCEDURE EnumFontFamiliesA (a1: HDC;
-                               a2: LPCSTR;
+                               a2: PCSTR;
                                a3: FONTENUMPROC;
-                               a4: LPARAM        ): int;
+                               a4: LPARAM        ): INT32;
 
 <*EXTERNAL EnumFontFamiliesW:WINAPI*>
 PROCEDURE EnumFontFamiliesW (a1: HDC;
-                               a2: LPCWSTR;
+                               a2: PCWSTR;
                                a3: FONTENUMPROC;
-                               a4: LPARAM        ): int;
+                               a4: LPARAM        ): INT32;
 CONST EnumFontFamilies = EnumFontFamiliesA;
 
 <*EXTERNAL EnumFontsA:WINAPI*>
-PROCEDURE EnumFontsA (a1: HDC; a2: LPCSTR; a3: FONTENUMPROC; a4: LPARAM): int;
+PROCEDURE EnumFontsA (a1: HDC; a2: PCSTR; a3: FONTENUMPROC; a4: LPARAM): INT32;
 
 <*EXTERNAL EnumFontsW:WINAPI*>
 PROCEDURE EnumFontsW (a1: HDC;
-                      a2: LPCWSTR;
+                      a2: PCWSTR;
                       a3: FONTENUMPROC;
-                      a4: LPARAM        ): int;
+                      a4: LPARAM        ): INT32;
 CONST EnumFonts = EnumFontsA;
 
 <*EXTERNAL EnumObjects:WINAPI*>
-PROCEDURE EnumObjects (a1: HDC; a2: int; a3: GOBJENUMPROC; a4: LPARAM): int;
+PROCEDURE EnumObjects (a1: HDC; a2: INT32; a3: GOBJENUMPROC; a4: LPARAM): INT32;
 
 <*EXTERNAL EqualRgn:WINAPI*>
 PROCEDURE EqualRgn (a1: HRGN; a2: HRGN): BOOL;
 
 <*EXTERNAL Escape:WINAPI*>
-PROCEDURE Escape (a1: HDC; a2: int; a3: int; a4: LPCSTR; a5: LPVOID): int;
+PROCEDURE Escape (a1: HDC; a2: INT32; a3: INT32; a4: PCSTR; a5: PVOID): INT32;
 
 <*EXTERNAL ExtEscape:WINAPI*>
 PROCEDURE ExtEscape (a1: HDC;
-                     a2: int;
-                     a3: int;
-                     a4: LPCSTR;
-                     a5: int;
-                     a6: LPSTR   ): int;
+                     a2: INT32;
+                     a3: INT32;
+                     a4: PCSTR;
+                     a5: INT32;
+                     a6: PSTR   ): INT32;
 
 <*EXTERNAL DrawEscape:WINAPI*>
-PROCEDURE DrawEscape (a1: HDC; a2: int; a3: int; a4: LPCSTR): int;
+PROCEDURE DrawEscape (a1: HDC; a2: INT32; a3: INT32; a4: PCSTR): INT32;
 
 <*EXTERNAL ExcludeClipRect:WINAPI*>
-PROCEDURE ExcludeClipRect (a1: HDC; a2: int; a3: int; a4: int; a5: int): int;
+PROCEDURE ExcludeClipRect (a1: HDC; a2: INT32; a3: INT32; a4: INT32; a5: INT32): INT32;
 
 <*EXTERNAL ExtCreateRegion:WINAPI*>
-PROCEDURE ExtCreateRegion (a1: LPXFORM; a2: DWORD; a3: LPRGNDATA): HRGN;
+PROCEDURE ExtCreateRegion (a1: LPXFORM; a2: UINT32; a3: LPRGNDATA): HRGN;
 
 <*EXTERNAL ExtFloodFill:WINAPI*>
 PROCEDURE ExtFloodFill (a1: HDC;
-                        a2: int;
-                        a3: int;
+                        a2: INT32;
+                        a3: INT32;
                         a4: COLORREF;
-                        a5: UINT      ): BOOL;
+                        a5: UINT32      ): BOOL;
 
 <*EXTERNAL FillRgn:WINAPI*>
 PROCEDURE FillRgn (a1: HDC; a2: HRGN; a3: HBRUSH): BOOL;
 
 <*EXTERNAL FloodFill:WINAPI*>
-PROCEDURE FloodFill (a1: HDC; a2: int; a3: int; a4: COLORREF): BOOL;
+PROCEDURE FloodFill (a1: HDC; a2: INT32; a3: INT32; a4: COLORREF): BOOL;
 
 <*EXTERNAL FrameRgn:WINAPI*>
-PROCEDURE FrameRgn (a1: HDC; a2: HRGN; a3: HBRUSH; a4: int; a5: int): BOOL;
+PROCEDURE FrameRgn (a1: HDC; a2: HRGN; a3: HBRUSH; a4: INT32; a5: INT32): BOOL;
 
 <*EXTERNAL GetROP2:WINAPI*>
-PROCEDURE GetROP2 (a1: HDC): int;
+PROCEDURE GetROP2 (a1: HDC): INT32;
 
 <*EXTERNAL GetAspectRatioFilterEx:WINAPI*>
-PROCEDURE GetAspectRatioFilterEx (a1: HDC; a2: LPSIZE): BOOL;
+PROCEDURE GetAspectRatioFilterEx (a1: HDC; a2: PSIZE): BOOL;
 
 <*EXTERNAL GetBkColor:WINAPI*>
 PROCEDURE GetBkColor (a1: HDC): COLORREF;
 
 <*EXTERNAL GetBkMode:WINAPI*>
-PROCEDURE GetBkMode (a1: HDC): int;
+PROCEDURE GetBkMode (a1: HDC): INT32;
 
 <*EXTERNAL GetBitmapBits:WINAPI*>
-PROCEDURE GetBitmapBits (a1: HBITMAP; a2: LONG; a3: LPVOID): LONG;
+PROCEDURE GetBitmapBits (a1: HBITMAP; a2: INT32; a3: PVOID): INT32;
 
 <*EXTERNAL GetBitmapDimensionEx:WINAPI*>
-PROCEDURE GetBitmapDimensionEx (a1: HBITMAP; a2: LPSIZE): BOOL;
+PROCEDURE GetBitmapDimensionEx (a1: HBITMAP; a2: PSIZE): BOOL;
 
 <*EXTERNAL GetBoundsRect:WINAPI*>
-PROCEDURE GetBoundsRect (a1: HDC; a2: LPRECT; a3: UINT): UINT;
+PROCEDURE GetBoundsRect (a1: HDC; a2: PRECT; a3: UINT32): UINT32;
 
 <*EXTERNAL GetBrushOrgEx:WINAPI*>
-PROCEDURE GetBrushOrgEx (a1: HDC; a2: LPPOINT): BOOL;
+PROCEDURE GetBrushOrgEx (a1: HDC; a2: PPOINT): BOOL;
 
 <*EXTERNAL GetCharWidthA:WINAPI*>
-PROCEDURE GetCharWidthA (a1: HDC; a2: UINT; a3: UINT; a4: LPINT): BOOL;
+PROCEDURE GetCharWidthA (a1: HDC; a2: UINT32; a3: UINT32; a4: PINT32): BOOL;
 
 <*EXTERNAL GetCharWidthW:WINAPI*>
-PROCEDURE GetCharWidthW (a1: HDC; a2: UINT; a3: UINT; a4: LPINT): BOOL;
+PROCEDURE GetCharWidthW (a1: HDC; a2: UINT32; a3: UINT32; a4: PINT32): BOOL;
 CONST GetCharWidth = GetCharWidthA;
 
 <*EXTERNAL GetCharWidth32A:WINAPI*>
-PROCEDURE GetCharWidth32A (a1: HDC; a2: UINT; a3: UINT; a4: LPINT): BOOL;
+PROCEDURE GetCharWidth32A (a1: HDC; a2: UINT32; a3: UINT32; a4: PINT32): BOOL;
 
 <*EXTERNAL GetCharWidth32W:WINAPI*>
-PROCEDURE GetCharWidth32W (a1: HDC; a2: UINT; a3: UINT; a4: LPINT): BOOL;
+PROCEDURE GetCharWidth32W (a1: HDC; a2: UINT32; a3: UINT32; a4: PINT32): BOOL;
 CONST GetCharWidth32 = GetCharWidth32A;
 
 <*EXTERNAL GetCharWidthFloatA:WINAPI*>
-PROCEDURE GetCharWidthFloatA (a1: HDC; a2: UINT; a3: UINT; a4: PFLOAT): BOOL;
+PROCEDURE GetCharWidthFloatA (a1: HDC; a2: UINT32; a3: UINT32; a4: PFLOAT): BOOL;
 
 <*EXTERNAL GetCharWidthFloatW:WINAPI*>
-PROCEDURE GetCharWidthFloatW (a1: HDC; a2: UINT; a3: UINT; a4: PFLOAT): BOOL;
+PROCEDURE GetCharWidthFloatW (a1: HDC; a2: UINT32; a3: UINT32; a4: PFLOAT): BOOL;
 CONST GetCharWidthFloat = GetCharWidthFloatA;
 
 <*EXTERNAL GetCharABCWidthsA:WINAPI*>
-PROCEDURE GetCharABCWidthsA (a1: HDC; a2: UINT; a3: UINT; a4: LPABC): BOOL;
+PROCEDURE GetCharABCWidthsA (a1: HDC; a2: UINT32; a3: UINT32; a4: LPABC): BOOL;
 
 <*EXTERNAL GetCharABCWidthsW:WINAPI*>
-PROCEDURE GetCharABCWidthsW (a1: HDC; a2: UINT; a3: UINT; a4: LPABC): BOOL;
+PROCEDURE GetCharABCWidthsW (a1: HDC; a2: UINT32; a3: UINT32; a4: LPABC): BOOL;
 CONST GetCharABCWidths = GetCharABCWidthsA;
 
 <*EXTERNAL GetCharABCWidthsFloatA:WINAPI*>
 PROCEDURE GetCharABCWidthsFloatA (a1: HDC;
-                                    a2: UINT;
-                                    a3: UINT;
+                                    a2: UINT32;
+                                    a3: UINT32;
                                     a4: LPABCFLOAT): BOOL;
 
 <*EXTERNAL GetCharABCWidthsFloatW:WINAPI*>
 PROCEDURE GetCharABCWidthsFloatW (a1: HDC;
-                                    a2: UINT;
-                                    a3: UINT;
+                                    a2: UINT32;
+                                    a3: UINT32;
                                     a4: LPABCFLOAT): BOOL;
 CONST GetCharABCWidthsFloat = GetCharABCWidthsFloatA;
 
 <*EXTERNAL GetClipBox:WINAPI*>
-PROCEDURE GetClipBox (a1: HDC; a2: LPRECT): int;
+PROCEDURE GetClipBox (a1: HDC; a2: PRECT): INT32;
 
 <*EXTERNAL GetClipRgn:WINAPI*>
-PROCEDURE GetClipRgn (a1: HDC; a2: HRGN): int;
+PROCEDURE GetClipRgn (a1: HDC; a2: HRGN): INT32;
 
 <*EXTERNAL GetMetaRgn:WINAPI*>
-PROCEDURE GetMetaRgn (a1: HDC; a2: HRGN): int;
+PROCEDURE GetMetaRgn (a1: HDC; a2: HRGN): INT32;
 
 <*EXTERNAL GetCurrentObject:WINAPI*>
-PROCEDURE GetCurrentObject (a1: HDC; a2: UINT): HGDIOBJ;
+PROCEDURE GetCurrentObject (a1: HDC; a2: UINT32): HGDIOBJ;
 
 <*EXTERNAL GetCurrentPositionEx:WINAPI*>
-PROCEDURE GetCurrentPositionEx (a1: HDC; a2: LPPOINT): BOOL;
+PROCEDURE GetCurrentPositionEx (a1: HDC; a2: PPOINT): BOOL;
 
 <*EXTERNAL GetDeviceCaps:WINAPI*>
-PROCEDURE GetDeviceCaps (a1: HDC; a2: int): int;
+PROCEDURE GetDeviceCaps (a1: HDC; a2: INT32): INT32;
 
 <*EXTERNAL GetDIBits:WINAPI*>
 PROCEDURE GetDIBits (a1: HDC;
                      a2: HBITMAP;
-                     a3: UINT;
-                     a4: UINT;
-                     a5: LPVOID;
+                     a3: UINT32;
+                     a4: UINT32;
+                     a5: PVOID;
                      a6: LPBITMAPINFO;
-                     a7: UINT          ): int;
+                     a7: UINT32          ): INT32;
 
 <*EXTERNAL GetFontData:WINAPI*>
 PROCEDURE GetFontData (a1: HDC;
-                       a2: DWORD;
-                       a3: DWORD;
-                       a4: LPVOID;
-                       a5: DWORD   ): DWORD;
+                       a2: UINT32;
+                       a3: UINT32;
+                       a4: PVOID;
+                       a5: UINT32   ): UINT32;
 
 <*EXTERNAL GetGlyphOutline:WINAPI*>
 PROCEDURE GetGlyphOutline (a1: HDC;
-                           a2: UINT;
-                           a3: UINT;
+                           a2: UINT32;
+                           a3: UINT32;
                            a4: LPGLYPHMETRICS;
-                           a5: DWORD;
-                           a6: LPVOID;
-                           a7: UNTRACED REF MAT2): DWORD;
+                           a5: UINT32;
+                           a6: PVOID;
+                           a7: UNTRACED REF MAT2): UINT32;
 
 <*EXTERNAL GetMapMode:WINAPI*>
-PROCEDURE GetMapMode (a1: HDC): int;
+PROCEDURE GetMapMode (a1: HDC): INT32;
 
 <*EXTERNAL GetMetaFileBitsEx:WINAPI*>
-PROCEDURE GetMetaFileBitsEx (a1: HMETAFILE; a2: UINT; a3: LPVOID): UINT;
+PROCEDURE GetMetaFileBitsEx (a1: HMETAFILE; a2: UINT32; a3: PVOID): UINT32;
 
 <*EXTERNAL GetMetaFileA:WINAPI*>
-PROCEDURE GetMetaFileA (a1: LPCSTR): HMETAFILE;
+PROCEDURE GetMetaFileA (a1: PCSTR): HMETAFILE;
 
 <*EXTERNAL GetMetaFileW:WINAPI*>
-PROCEDURE GetMetaFileW (a1: LPCWSTR): HMETAFILE;
+PROCEDURE GetMetaFileW (a1: PCWSTR): HMETAFILE;
 CONST GetMetaFile = GetMetaFileA;
 
 <*EXTERNAL GetNearestColor:WINAPI*>
 PROCEDURE GetNearestColor (a1: HDC; a2: COLORREF): COLORREF;
 
 <*EXTERNAL GetNearestPaletteIndex:WINAPI*>
-PROCEDURE GetNearestPaletteIndex (a1: HPALETTE; a2: COLORREF): UINT;
+PROCEDURE GetNearestPaletteIndex (a1: HPALETTE; a2: COLORREF): UINT32;
 
 <*EXTERNAL GetObjectType:WINAPI*>
-PROCEDURE GetObjectType (h: HGDIOBJ): DWORD;
+PROCEDURE GetObjectType (h: HGDIOBJ): UINT32;
 
 <*EXTERNAL GetOutlineTextMetricsA:WINAPI*>
 PROCEDURE GetOutlineTextMetricsA (a1: HDC;
-                                    a2: UINT;
-                                    a3: LPOUTLINETEXTMETRICA): UINT;
+                                    a2: UINT32;
+                                    a3: LPOUTLINETEXTMETRICA): UINT32;
 
 <*EXTERNAL GetOutlineTextMetricsW:WINAPI*>
 PROCEDURE GetOutlineTextMetricsW (a1: HDC;
-                                  a2: UINT;
-                                  a3: LPOUTLINETEXTMETRICW): UINT;
+                                  a2: UINT32;
+                                  a3: LPOUTLINETEXTMETRICW): UINT32;
 CONST GetOutlineTextMetrics = GetOutlineTextMetricsA;
 
 <*EXTERNAL GetPaletteEntries:WINAPI*>
 PROCEDURE GetPaletteEntries (a1: HPALETTE;
-                             a2: UINT;
-                             a3: UINT;
-                             a4: LPPALETTEENTRY): UINT;
+                             a2: UINT32;
+                             a3: UINT32;
+                             a4: LPPALETTEENTRY): UINT32;
 
 <*EXTERNAL GetPixel:WINAPI*>
-PROCEDURE GetPixel (a1: HDC; a2: int; a3: int): COLORREF;
+PROCEDURE GetPixel (a1: HDC; a2: INT32; a3: INT32): COLORREF;
 
 <*EXTERNAL GetPixelFormat:WINAPI*>
-PROCEDURE GetPixelFormat (a1: HDC): int;
+PROCEDURE GetPixelFormat (a1: HDC): INT32;
 
 <*EXTERNAL GetPolyFillMode:WINAPI*>
-PROCEDURE GetPolyFillMode (a1: HDC): int;
+PROCEDURE GetPolyFillMode (a1: HDC): INT32;
 
 <*EXTERNAL GetRasterizerCaps:WINAPI*>
-PROCEDURE GetRasterizerCaps (a1: LPRASTERIZER_STATUS; a2: UINT): BOOL;
+PROCEDURE GetRasterizerCaps (a1: LPRASTERIZER_STATUS; a2: UINT32): BOOL;
 
 <*EXTERNAL GetRegionData:WINAPI*>
-PROCEDURE GetRegionData (a1: HRGN; a2: DWORD; a3: LPRGNDATA): DWORD;
+PROCEDURE GetRegionData (a1: HRGN; a2: UINT32; a3: LPRGNDATA): UINT32;
 
 <*EXTERNAL GetRgnBox:WINAPI*>
-PROCEDURE GetRgnBox (a1: HRGN; a2: LPRECT): int;
+PROCEDURE GetRgnBox (a1: HRGN; a2: PRECT): INT32;
 
 <*EXTERNAL GetStockObject:WINAPI*>
-PROCEDURE GetStockObject (a1: int): HGDIOBJ;
+PROCEDURE GetStockObject (a1: INT32): HGDIOBJ;
 
 <*EXTERNAL GetStretchBltMode:WINAPI*>
-PROCEDURE GetStretchBltMode (a1: HDC): int;
+PROCEDURE GetStretchBltMode (a1: HDC): INT32;
 
 <*EXTERNAL GetSystemPaletteEntries:WINAPI*>
 PROCEDURE GetSystemPaletteEntries (a1: HDC;
-                                     a2: UINT;
-                                     a3: UINT;
-                                     a4: LPPALETTEENTRY): UINT;
+                                     a2: UINT32;
+                                     a3: UINT32;
+                                     a4: LPPALETTEENTRY): UINT32;
 
 <*EXTERNAL GetSystemPaletteUse:WINAPI*>
-PROCEDURE GetSystemPaletteUse (a1: HDC): UINT;
+PROCEDURE GetSystemPaletteUse (a1: HDC): UINT32;
 
 <*EXTERNAL GetTextCharacterExtra:WINAPI*>
-PROCEDURE GetTextCharacterExtra (a1: HDC): int;
+PROCEDURE GetTextCharacterExtra (a1: HDC): INT32;
 
 <*EXTERNAL GetTextAlign:WINAPI*>
-PROCEDURE GetTextAlign (a1: HDC): UINT;
+PROCEDURE GetTextAlign (a1: HDC): UINT32;
 
 <*EXTERNAL GetTextColor:WINAPI*>
 PROCEDURE GetTextColor (a1: HDC): COLORREF;
 
 <*EXTERNAL GetTextExtentPointA:WINAPI*>
-PROCEDURE GetTextExtentPointA (a1: HDC; a2: LPCSTR; a3: int; a4: LPSIZE): BOOL;
+PROCEDURE GetTextExtentPointA (a1: HDC; a2: PCSTR; a3: INT32; a4: PSIZE): BOOL;
 
 <*EXTERNAL GetTextExtentPointW:WINAPI*>
-PROCEDURE GetTextExtentPointW (a1: HDC; a2: LPCWSTR; a3: int; a4: LPSIZE): BOOL;
+PROCEDURE GetTextExtentPointW (a1: HDC; a2: PCWSTR; a3: INT32; a4: PSIZE): BOOL;
 CONST GetTextExtentPoint = GetTextExtentPointA;
 
 <*EXTERNAL GetTextExtentPoint32A:WINAPI*>
-PROCEDURE GetTextExtentPoint32A (a1: HDC; a2: LPCSTR; a3: int; a4: LPSIZE): BOOL;
+PROCEDURE GetTextExtentPoint32A (a1: HDC; a2: PCSTR; a3: INT32; a4: PSIZE): BOOL;
 
 <*EXTERNAL GetTextExtentPoint32W:WINAPI*>
-PROCEDURE GetTextExtentPoint32W (a1: HDC; a2: LPCWSTR; a3: int; a4: LPSIZE): BOOL;
+PROCEDURE GetTextExtentPoint32W (a1: HDC; a2: PCWSTR; a3: INT32; a4: PSIZE): BOOL;
 CONST GetTextExtentPoint32 = GetTextExtentPoint32A;
 
 <*EXTERNAL GetTextExtentExPointA:WINAPI*>
 PROCEDURE GetTextExtentExPointA (a1: HDC;
-                                 a2: LPCSTR;
-                                 a3: int;
-                                 a4: int;
-                                 a5: LPINT;
-                                 a6: LPINT;
-                                 a7: LPSIZE  ): BOOL;
+                                 a2: PCSTR;
+                                 a3: INT32;
+                                 a4: INT32;
+                                 a5: PINT32;
+                                 a6: PINT32;
+                                 a7: PSIZE  ): BOOL;
 
 <*EXTERNAL GetTextExtentExPointW:WINAPI*>
 PROCEDURE GetTextExtentExPointW (a1: HDC;
-                                 a2: LPCWSTR;
-                                 a3: int;
-                                 a4: int;
-                                 a5: LPINT;
-                                 a6: LPINT;
-                                 a7: LPSIZE   ): BOOL;
+                                 a2: PCWSTR;
+                                 a3: INT32;
+                                 a4: INT32;
+                                 a5: PINT32;
+                                 a6: PINT32;
+                                 a7: PSIZE   ): BOOL;
 CONST GetTextExtentExPoint = GetTextExtentExPointA;
 
 <*EXTERNAL GetViewportExtEx:WINAPI*>
-PROCEDURE GetViewportExtEx (a1: HDC; a2: LPSIZE): BOOL;
+PROCEDURE GetViewportExtEx (a1: HDC; a2: PSIZE): BOOL;
 
 <*EXTERNAL GetViewportOrgEx:WINAPI*>
-PROCEDURE GetViewportOrgEx (a1: HDC; a2: LPPOINT): BOOL;
+PROCEDURE GetViewportOrgEx (a1: HDC; a2: PPOINT): BOOL;
 
 <*EXTERNAL GetWindowExtEx:WINAPI*>
-PROCEDURE GetWindowExtEx (a1: HDC; a2: LPSIZE): BOOL;
+PROCEDURE GetWindowExtEx (a1: HDC; a2: PSIZE): BOOL;
 
 <*EXTERNAL GetWindowOrgEx:WINAPI*>
-PROCEDURE GetWindowOrgEx (a1: HDC; a2: LPPOINT): BOOL;
+PROCEDURE GetWindowOrgEx (a1: HDC; a2: PPOINT): BOOL;
 
 <*EXTERNAL IntersectClipRect:WINAPI*>
-PROCEDURE IntersectClipRect (a1: HDC; a2: int; a3: int; a4: int; a5: int): int;
+PROCEDURE IntersectClipRect (a1: HDC; a2: INT32; a3: INT32; a4: INT32; a5: INT32): INT32;
 
 <*EXTERNAL InvertRgn:WINAPI*>
 PROCEDURE InvertRgn (a1: HDC; a2: HRGN): BOOL;
 
 <*EXTERNAL LineDDA:WINAPI*>
-PROCEDURE LineDDA (a1, a2, a3, a4: int; a5: LINEDDAPROC;  a6: LPARAM): BOOL;
+PROCEDURE LineDDA (a1, a2, a3, a4: INT32; a5: LINEDDAPROC;  a6: LPARAM): BOOL;
 
 <*EXTERNAL LineTo:WINAPI*>
-PROCEDURE LineTo (a1: HDC; a2: int; a3: int): BOOL;
+PROCEDURE LineTo (a1: HDC; a2: INT32; a3: INT32): BOOL;
 
 <*EXTERNAL MaskBlt:WINAPI*>
-PROCEDURE MaskBlt (a1: HDC;  a2, a3, a4, a5: int;  a6: HDC;
-                   a7, a8: int;  a9: HBITMAP;  a10, a11: int;
-                   a12: DWORD): BOOL;
+PROCEDURE MaskBlt (a1: HDC;  a2, a3, a4, a5: INT32;  a6: HDC;
+                   a7, a8: INT32;  a9: HBITMAP;  a10, a11: INT32;
+                   a12: UINT32): BOOL;
 
 <*EXTERNAL PlgBlt:WINAPI*>
-PROCEDURE PlgBlt (a1: HDC;  a2: LPPOINT;  a3: HDC;  a4, a5, a6, a7: int;
-                  a8: HBITMAP;   a9, a10: int): BOOL;
+PROCEDURE PlgBlt (a1: HDC;  a2: PPOINT;  a3: HDC;  a4, a5, a6, a7: INT32;
+                  a8: HBITMAP;   a9, a10: INT32): BOOL;
 
 <*EXTERNAL OffsetClipRgn:WINAPI*>
-PROCEDURE OffsetClipRgn (a1: HDC; a2: int; a3: int): int;
+PROCEDURE OffsetClipRgn (a1: HDC; a2: INT32; a3: INT32): INT32;
 
 <*EXTERNAL OffsetRgn:WINAPI*>
-PROCEDURE OffsetRgn (a1: HRGN; a2: int; a3: int): int;
+PROCEDURE OffsetRgn (a1: HRGN; a2: INT32; a3: INT32): INT32;
 
 <*EXTERNAL PatBlt:WINAPI*>
-PROCEDURE PatBlt (a1: HDC;  a2, a3, a4, a5: int;  a6: DWORD): BOOL;
+PROCEDURE PatBlt (a1: HDC;  a2, a3, a4, a5: INT32;  a6: UINT32): BOOL;
 
 <*EXTERNAL Pie:WINAPI*>
-PROCEDURE Pie (a1: HDC; a2, a3, a4, a5, a6, a7, a8, a9: int): BOOL;
+PROCEDURE Pie (a1: HDC; a2, a3, a4, a5, a6, a7, a8, a9: INT32): BOOL;
 
 <*EXTERNAL PlayMetaFile:WINAPI*>
 PROCEDURE PlayMetaFile (a1: HDC; a2: HMETAFILE): BOOL;
@@ -2372,56 +2369,56 @@ PROCEDURE PlayMetaFile (a1: HDC; a2: HMETAFILE): BOOL;
 PROCEDURE PaintRgn (a1: HDC; a2: HRGN): BOOL;
 
 <*EXTERNAL PolyPolygon:WINAPI*>
-PROCEDURE PolyPolygon (a1: HDC;  a2: LPPOINT;  a3: LPINT;  a4: int): BOOL;
+PROCEDURE PolyPolygon (a1: HDC;  a2: PPOINT;  a3: PINT32;  a4: INT32): BOOL;
 
 <*EXTERNAL PtInRegion:WINAPI*>
-PROCEDURE PtInRegion (a1: HRGN; a2: int; a3: int): BOOL;
+PROCEDURE PtInRegion (a1: HRGN; a2: INT32; a3: INT32): BOOL;
 
 <*EXTERNAL PtVisible:WINAPI*>
-PROCEDURE PtVisible (a1: HDC; a2: int; a3: int): BOOL;
+PROCEDURE PtVisible (a1: HDC; a2: INT32; a3: INT32): BOOL;
 
 <*EXTERNAL RectInRegion:WINAPI*>
-PROCEDURE RectInRegion (a1: HRGN; a2: LPRECT): BOOL;
+PROCEDURE RectInRegion (a1: HRGN; a2: PRECT): BOOL;
 
 <*EXTERNAL RectVisible:WINAPI*>
-PROCEDURE RectVisible (a1: HDC; a2: LPRECT): BOOL;
+PROCEDURE RectVisible (a1: HDC; a2: PRECT): BOOL;
 
 <*EXTERNAL Rectangle:WINAPI*>
-PROCEDURE Rectangle (a1: HDC; a2: int; a3: int; a4: int; a5: int): BOOL;
+PROCEDURE Rectangle (a1: HDC; a2: INT32; a3: INT32; a4: INT32; a5: INT32): BOOL;
 
 <*EXTERNAL RestoreDC:WINAPI*>
-PROCEDURE RestoreDC (a1: HDC; a2: int): BOOL;
+PROCEDURE RestoreDC (a1: HDC; a2: INT32): BOOL;
 
 <*EXTERNAL RealizePalette:WINAPI*>
-PROCEDURE RealizePalette (a1: HDC): UINT;
+PROCEDURE RealizePalette (a1: HDC): UINT32;
 
 <*EXTERNAL RemoveFontModule:WINAPI*>
 PROCEDURE RemoveFontModule (a1: HMODULE): BOOL;
 
 <*EXTERNAL RemoveFontResourceA:WINAPI*>
-PROCEDURE RemoveFontResourceA (a1: LPSTR): BOOL;
+PROCEDURE RemoveFontResourceA (a1: PSTR): BOOL;
 
 <*EXTERNAL RemoveFontResourceW:WINAPI*>
-PROCEDURE RemoveFontResourceW (a1: LPWSTR): BOOL;
+PROCEDURE RemoveFontResourceW (a1: PWSTR): BOOL;
 CONST RemoveFontResource = RemoveFontResourceA;
 
 <*EXTERNAL RoundRect:WINAPI*>
-PROCEDURE RoundRect (a1: HDC;  a2, a3, a4, a5, a6, a7: int): BOOL;
+PROCEDURE RoundRect (a1: HDC;  a2, a3, a4, a5, a6, a7: INT32): BOOL;
 
 <*EXTERNAL ResizePalette:WINAPI*>
-PROCEDURE ResizePalette (a1: HPALETTE; a2: UINT): BOOL;
+PROCEDURE ResizePalette (a1: HPALETTE; a2: UINT32): BOOL;
 
 <*EXTERNAL SaveDC:WINAPI*>
-PROCEDURE SaveDC (a1: HDC): int;
+PROCEDURE SaveDC (a1: HDC): INT32;
 
 <*EXTERNAL SelectClipRgn:WINAPI*>
-PROCEDURE SelectClipRgn (a1: HDC; a2: HRGN): int;
+PROCEDURE SelectClipRgn (a1: HDC; a2: HRGN): INT32;
 
 <*EXTERNAL ExtSelectClipRgn:WINAPI*>
-PROCEDURE ExtSelectClipRgn (a1: HDC; a2: HRGN; a3: int): int;
+PROCEDURE ExtSelectClipRgn (a1: HDC; a2: HRGN; a3: INT32): INT32;
 
 <*EXTERNAL SetMetaRgn:WINAPI*>
-PROCEDURE SetMetaRgn (a1: HDC): int;
+PROCEDURE SetMetaRgn (a1: HDC): INT32;
 
 <*EXTERNAL SelectObject:WINAPI*>
 PROCEDURE SelectObject (a1: HDC; a2: HGDIOBJ): HGDIOBJ;
@@ -2433,103 +2430,103 @@ PROCEDURE SelectPalette (a1: HDC; a2: HPALETTE; a3: BOOL): HPALETTE;
 PROCEDURE SetBkColor (a1: HDC; a2: COLORREF): COLORREF;
 
 <*EXTERNAL SetBkMode:WINAPI*>
-PROCEDURE SetBkMode (a1: HDC; a2: int): int;
+PROCEDURE SetBkMode (a1: HDC; a2: INT32): INT32;
 
 <*EXTERNAL SetBitmapBits:WINAPI*>
-PROCEDURE SetBitmapBits (a1: HBITMAP; a2: DWORD; a3: void_star): LONG;
+PROCEDURE SetBitmapBits (a1: HBITMAP; a2: UINT32; a3: PVOID): INT32;
 
 <*EXTERNAL SetBoundsRect:WINAPI*>
-PROCEDURE SetBoundsRect (a1: HDC; a2: LPRECT; a3: UINT): UINT;
+PROCEDURE SetBoundsRect (a1: HDC; a2: PRECT; a3: UINT32): UINT32;
 
 <*EXTERNAL SetDIBits:WINAPI*>
 PROCEDURE SetDIBits (a1: HDC;
                      a2: HBITMAP;
-                     a3: UINT;
-                     a4: UINT;
-                     a5: void_star;
+                     a3: UINT32;
+                     a4: UINT32;
+                     a5: PVOID;
                      a6: LPBITMAPINFO;
-                     a7: UINT          ): int;
+                     a7: UINT32          ): INT32;
 
 <*EXTERNAL SetDIBitsToDevice:WINAPI*>
 PROCEDURE SetDIBitsToDevice (a1 : HDC;
-                             a2 : int;
-                             a3 : int;
-                             a4 : DWORD;
-                             a5 : DWORD;
-                             a6 : int;
-                             a7 : int;
-                             a8 : UINT;
-                             a9 : UINT;
-                             a10: LPVOID;
+                             a2 : INT32;
+                             a3 : INT32;
+                             a4 : UINT32;
+                             a5 : UINT32;
+                             a6 : INT32;
+                             a7 : INT32;
+                             a8 : UINT32;
+                             a9 : UINT32;
+                             a10: PVOID;
                              a11: LPBITMAPINFO;
-                             a12: UINT          ): int;
+                             a12: UINT32          ): INT32;
 
 <*EXTERNAL SetMapperFlags:WINAPI*>
-PROCEDURE SetMapperFlags (a1: HDC; a2: DWORD): DWORD;
+PROCEDURE SetMapperFlags (a1: HDC; a2: UINT32): UINT32;
 
 <*EXTERNAL SetGraphicsMode:WINAPI*>
-PROCEDURE SetGraphicsMode(hdc: HDC; iMode: int): int;
+PROCEDURE SetGraphicsMode(hdc: HDC; iMode: INT32): INT32;
 
 <*EXTERNAL SetMapMode:WINAPI*>
-PROCEDURE SetMapMode (a1: HDC; a2: int): int;
+PROCEDURE SetMapMode (a1: HDC; a2: INT32): INT32;
 
 <*EXTERNAL SetMetaFileBitsEx:WINAPI*>
-PROCEDURE SetMetaFileBitsEx (a1: UINT; a2: LPBYTE): HMETAFILE;
+PROCEDURE SetMetaFileBitsEx (a1: UINT32; a2: PUINT8): HMETAFILE;
 
 <*EXTERNAL SetPaletteEntries:WINAPI*>
 PROCEDURE SetPaletteEntries (a1: HPALETTE;
-                             a2: UINT;
-                             a3: UINT;
-                             a4: UNTRACED REF PALETTEENTRY): UINT;
+                             a2: UINT32;
+                             a3: UINT32;
+                             a4: UNTRACED REF PALETTEENTRY): UINT32;
 
 <*EXTERNAL SetPixel:WINAPI*>
-PROCEDURE SetPixel (a1: HDC; a2: int; a3: int; a4: COLORREF): COLORREF;
+PROCEDURE SetPixel (a1: HDC; a2: INT32; a3: INT32; a4: COLORREF): COLORREF;
 
 <*EXTERNAL SetPixelV:WINAPI*>
-PROCEDURE SetPixelV (a1: HDC; a2: int; a3: int; a4: COLORREF): BOOL;
+PROCEDURE SetPixelV (a1: HDC; a2: INT32; a3: INT32; a4: COLORREF): BOOL;
 
 <*EXTERNAL SetPixelFormat:WINAPI*>
-PROCEDURE SetPixelFormat (a1: HDC; a2: int; a3: LPPIXELFORMATDESCRIPTOR): BOOL;
+PROCEDURE SetPixelFormat (a1: HDC; a2: INT32; a3: LPPIXELFORMATDESCRIPTOR): BOOL;
 
 <*EXTERNAL SetPolyFillMode:WINAPI*>
-PROCEDURE SetPolyFillMode (a1: HDC; a2: int): int;
+PROCEDURE SetPolyFillMode (a1: HDC; a2: INT32): INT32;
 
 <*EXTERNAL StretchBlt:WINAPI*>
-PROCEDURE StretchBlt (a1: HDC;  a2, a3, a4, a5: int;  a6: HDC;
-                      a7, a8, a9, a10: int;  a11: DWORD): BOOL;
+PROCEDURE StretchBlt (a1: HDC;  a2, a3, a4, a5: INT32;  a6: HDC;
+                      a7, a8, a9, a10: INT32;  a11: UINT32): BOOL;
 
 <*EXTERNAL SetRectRgn:WINAPI*>
-PROCEDURE raw_SetRectRgn (a1: HRGN; a2: int; a3: int; a4: int; a5: int): BOOL;
+PROCEDURE raw_SetRectRgn (a1: HRGN; a2: INT32; a3: INT32; a4: INT32; a5: INT32): BOOL;
 
-PROCEDURE SetRectRgn (a1: HRGN; a2: int; a3: int; a4: int; a5: int): BOOL;
+PROCEDURE SetRectRgn (a1: HRGN; a2: INT32; a3: INT32; a4: INT32; a5: INT32): BOOL;
 
 <*EXTERNAL StretchDIBits:WINAPI*>
-PROCEDURE StretchDIBits (a1: HDC;  a2, a3, a4, a5, a6, a7, a8, a9: int;
-                         a10: void_star;
+PROCEDURE StretchDIBits (a1: HDC;  a2, a3, a4, a5, a6, a7, a8, a9: INT32;
+                         a10: PVOID;
                          a11: LPBITMAPINFO;
-                         a12: UINT;
-                         a13: DWORD         ): int;
+                         a12: UINT32;
+                         a13: UINT32         ): INT32;
 
 <*EXTERNAL SetROP2:WINAPI*>
-PROCEDURE SetROP2 (a1: HDC; a2: int): int;
+PROCEDURE SetROP2 (a1: HDC; a2: INT32): INT32;
 
 <*EXTERNAL SetStretchBltMode:WINAPI*>
-PROCEDURE SetStretchBltMode (a1: HDC; a2: int): int;
+PROCEDURE SetStretchBltMode (a1: HDC; a2: INT32): INT32;
 
 <*EXTERNAL SetSystemPaletteUse:WINAPI*>
-PROCEDURE SetSystemPaletteUse (a1: HDC; a2: UINT): UINT;
+PROCEDURE SetSystemPaletteUse (a1: HDC; a2: UINT32): UINT32;
 
 <*EXTERNAL SetTextCharacterExtra:WINAPI*>
-PROCEDURE SetTextCharacterExtra (a1: HDC; a2: int): int;
+PROCEDURE SetTextCharacterExtra (a1: HDC; a2: INT32): INT32;
 
 <*EXTERNAL SetTextColor:WINAPI*>
 PROCEDURE SetTextColor (a1: HDC; a2: COLORREF): COLORREF;
 
 <*EXTERNAL SetTextAlign:WINAPI*>
-PROCEDURE SetTextAlign (a1: HDC; a2: UINT): UINT;
+PROCEDURE SetTextAlign (a1: HDC; a2: UINT32): UINT32;
 
 <*EXTERNAL SetTextJustification:WINAPI*>
-PROCEDURE SetTextJustification (a1: HDC; a2: int; a3: int): BOOL;
+PROCEDURE SetTextJustification (a1: HDC; a2: INT32; a3: INT32): BOOL;
 
 <*EXTERNAL UpdateColors:WINAPI*>
 PROCEDURE UpdateColors (a1: HDC): BOOL;
@@ -2538,14 +2535,14 @@ PROCEDURE UpdateColors (a1: HDC): BOOL;
 PROCEDURE PlayMetaFileRecord (a1: HDC;
                               a2: LPHANDLETABLE;
                               a3: LPMETARECORD;
-                              a4: UINT           ): BOOL;
+                              a4: UINT32           ): BOOL;
 
 TYPE
   MFENUMPROC = <*CALLBACK*> PROCEDURE (a1: HDC;
                                        a2: UNTRACED REF HANDLETABLE;
                                        a3: UNTRACED REF METARECORD;
-                                       a4: int;
-                                       a5: LPARAM                    ): int;
+                                       a4: INT32;
+                                       a5: LPARAM                    ): INT32;
 
 <*EXTERNAL EnumMetaFile:WINAPI*>
 PROCEDURE EnumMetaFile (a1: HDC;
@@ -2557,8 +2554,8 @@ TYPE
   ENHMFENUMPROC = <*CALLBACK*> PROCEDURE (a1: HDC;
                                           a2: UNTRACED REF HANDLETABLE;
                                           a3: UNTRACED REF ENHMETARECORD;
-                                          a4: int;
-                                          a5: LPARAM                    ): int;
+                                          a4: INT32;
+                                          a5: LPARAM                    ): INT32;
 
 (* Enhanced Metafile Function Declarations *)
 
@@ -2566,17 +2563,17 @@ TYPE
 PROCEDURE CloseEnhMetaFile (a1: HDC): HENHMETAFILE;
 
 <*EXTERNAL CopyEnhMetaFileA:WINAPI*>
-PROCEDURE CopyEnhMetaFileA (a1: HENHMETAFILE; a2: LPSTR): HENHMETAFILE;
+PROCEDURE CopyEnhMetaFileA (a1: HENHMETAFILE; a2: PSTR): HENHMETAFILE;
 
 <*EXTERNAL CopyEnhMetaFileW:WINAPI*>
-PROCEDURE CopyEnhMetaFileW (a1: HENHMETAFILE; a2: LPWSTR): HENHMETAFILE;
+PROCEDURE CopyEnhMetaFileW (a1: HENHMETAFILE; a2: PWSTR): HENHMETAFILE;
 CONST CopyEnhMetaFile = CopyEnhMetaFileA;
 
 <*EXTERNAL CreateEnhMetaFileA:WINAPI*>
-PROCEDURE CreateEnhMetaFileA (a1: HDC; a2: LPSTR; a3: LPRECT; a4: LPSTR): HDC;
+PROCEDURE CreateEnhMetaFileA (a1: HDC; a2: PSTR; a3: PRECT; a4: PSTR): HDC;
 
 <*EXTERNAL CreateEnhMetaFileW:WINAPI*>
-PROCEDURE CreateEnhMetaFileW (a1: HDC; a2: LPWSTR; a3: LPRECT; a4: LPWSTR): HDC;
+PROCEDURE CreateEnhMetaFileW (a1: HDC; a2: PWSTR; a3: PRECT; a4: PWSTR): HDC;
 CONST CreateEnhMetaFile = CreateEnhMetaFileA;
 
 <*EXTERNAL DeleteEnhMetaFile:WINAPI*>
@@ -2586,67 +2583,67 @@ PROCEDURE DeleteEnhMetaFile (a1: HENHMETAFILE): BOOL;
 PROCEDURE EnumEnhMetaFile (a1: HDC;
                              a2: HENHMETAFILE;
                              a3: ENHMFENUMPROC;
-                             a4: LPVOID;
-                             a5: LPRECT         ): BOOL;
+                             a4: PVOID;
+                             a5: PRECT         ): BOOL;
 
 <*EXTERNAL GetEnhMetaFileA:WINAPI*>
-PROCEDURE GetEnhMetaFileA (a1: LPSTR): HENHMETAFILE;
+PROCEDURE GetEnhMetaFileA (a1: PSTR): HENHMETAFILE;
 
 <*EXTERNAL GetEnhMetaFileW:WINAPI*>
-PROCEDURE GetEnhMetaFileW (a1: LPWSTR): HENHMETAFILE;
+PROCEDURE GetEnhMetaFileW (a1: PWSTR): HENHMETAFILE;
 CONST GetEnhMetaFile = GetEnhMetaFileA;
 
 <*EXTERNAL GetEnhMetaFileBits:WINAPI*>
-PROCEDURE GetEnhMetaFileBits (a1: HENHMETAFILE; a2: UINT; a3: LPBYTE): UINT;
+PROCEDURE GetEnhMetaFileBits (a1: HENHMETAFILE; a2: UINT32; a3: PUINT8): UINT32;
 
 <*EXTERNAL GetEnhMetaFileDescriptionA:WINAPI*>
 PROCEDURE GetEnhMetaFileDescriptionA (a1: HENHMETAFILE;
-                                      a2: UINT;
-                                      a3: LPSTR         ): UINT;
+                                      a2: UINT32;
+                                      a3: PSTR         ): UINT32;
 
 <*EXTERNAL GetEnhMetaFileDescriptionW:WINAPI*>
 PROCEDURE GetEnhMetaFileDescriptionW (a1: HENHMETAFILE;
-                                      a2: UINT;
-                                      a3: LPWSTR        ): UINT;
+                                      a2: UINT32;
+                                      a3: PWSTR        ): UINT32;
 CONST GetEnhMetaFileDescription = GetEnhMetaFileDescriptionA;
 
 <*EXTERNAL GetEnhMetaFileHeader:WINAPI*>
 PROCEDURE GetEnhMetaFileHeader (a1: HENHMETAFILE;
-                                a2: UINT;
-                                a3: LPENHMETAHEADER): UINT;
+                                a2: UINT32;
+                                a3: LPENHMETAHEADER): UINT32;
 
 <*EXTERNAL GetEnhMetaFilePaletteEntries:WINAPI*>
 PROCEDURE GetEnhMetaFilePaletteEntries (a1: HENHMETAFILE;
-                                        a2: UINT;
-                                        a3: LPPALETTEENTRY): UINT;
+                                        a2: UINT32;
+                                        a3: LPPALETTEENTRY): UINT32;
 
 <*EXTERNAL GetWinMetaFileBits:WINAPI*>
 PROCEDURE GetWinMetaFileBits (a1: HENHMETAFILE;
-                              a2: UINT;
-                              a3: LPBYTE;
-                              a4: INT;
-                              a5: HDC           ): UINT;
+                              a2: UINT32;
+                              a3: PUINT8;
+                              a4: INT32;
+                              a5: HDC           ): UINT32;
 
 <*EXTERNAL PlayEnhMetaFile:WINAPI*>
-PROCEDURE PlayEnhMetaFile (a1: HDC; a2: HENHMETAFILE; a3: LPRECT): BOOL;
+PROCEDURE PlayEnhMetaFile (a1: HDC; a2: HENHMETAFILE; a3: PRECT): BOOL;
 
 <*EXTERNAL PlayEnhMetaFileRecord:WINAPI*>
 PROCEDURE PlayEnhMetaFileRecord (a1: HDC;
                                  a2: LPHANDLETABLE;
                                  a3: LPENHMETARECORD;
-                                 a4: UINT             ): BOOL;
+                                 a4: UINT32             ): BOOL;
 
 <*EXTERNAL SetEnhMetaFileBits:WINAPI*>
-PROCEDURE SetEnhMetaFileBits (a1: UINT; a2: LPBYTE): HENHMETAFILE;
+PROCEDURE SetEnhMetaFileBits (a1: UINT32; a2: PUINT8): HENHMETAFILE;
 
 <*EXTERNAL SetWinMetaFileBits:WINAPI*>
-PROCEDURE SetWinMetaFileBits (a1: UINT;
-                              a2: LPBYTE;
+PROCEDURE SetWinMetaFileBits (a1: UINT32;
+                              a2: PUINT8;
                               a3: HDC;
                               a4: LPMETAFILEPICT): HENHMETAFILE;
 
 <*EXTERNAL GdiComment:WINAPI*>
-PROCEDURE GdiComment (a1: HDC; a2: UINT; a3: LPBYTE): BOOL;
+PROCEDURE GdiComment (a1: HDC; a2: UINT32; a3: PUINT8): BOOL;
 
 <*EXTERNAL GetTextMetricsA:WINAPI*>
 PROCEDURE GetTextMetricsA (a1: HDC; a2: LPTEXTMETRICA): BOOL;
@@ -2658,10 +2655,10 @@ CONST GetTextMetrics = GetTextMetricsA;
 (* new GDI *)
 
 <*EXTERNAL AngleArc:WINAPI*>
-PROCEDURE AngleArc (a1: HDC; a2, a3: int;  a4: DWORD;  a5, a6: WFLOAT): BOOL;
+PROCEDURE AngleArc (a1: HDC; a2, a3: INT32;  a4: UINT32;  a5, a6: WFLOAT): BOOL;
 
 <*EXTERNAL PolyPolyline:WINAPI*>
-PROCEDURE PolyPolyline (a1: HDC; a2: LPPOINT; a3: LPDWORD; a4: DWORD): BOOL;
+PROCEDURE PolyPolyline (a1: HDC; a2: PPOINT; a3: PUINT32; a4: UINT32): BOOL;
 
 <*EXTERNAL GetWorldTransform:WINAPI*>
 PROCEDURE GetWorldTransform (a1: HDC; a2: LPXFORM): BOOL;
@@ -2670,7 +2667,7 @@ PROCEDURE GetWorldTransform (a1: HDC; a2: LPXFORM): BOOL;
 PROCEDURE SetWorldTransform (a1: HDC; a2: LPXFORM): BOOL;
 
 <*EXTERNAL ModifyWorldTransform:WINAPI*>
-PROCEDURE ModifyWorldTransform (a1: HDC; a2: LPXFORM; a3: DWORD): BOOL;
+PROCEDURE ModifyWorldTransform (a1: HDC; a2: LPXFORM; a3: UINT32): BOOL;
 
 <*EXTERNAL CombineTransform:WINAPI*>
 PROCEDURE CombineTransform (a1: LPXFORM; a2: LPXFORM; a3: LPXFORM): BOOL;
@@ -2700,35 +2697,35 @@ CONST
 
 (* Min and max for RedGamma, GreenGamma, BlueGamma *)
 CONST
-  RGB_GAMMA_MIN: WORD = 8_02500;
-  RGB_GAMMA_MAX: WORD = 65000;
+  RGB_GAMMA_MIN: UINT16 = 8_02500;
+  RGB_GAMMA_MAX: UINT16 = 65000;
 
 (* Min and max for ReferenceBlack and ReferenceWhite *)
 CONST
-  REFERENCE_WHITE_MIN: WORD = 6000;
-  REFERENCE_WHITE_MAX: WORD = 10000;
-  REFERENCE_BLACK_MIN: WORD = 0;
-  REFERENCE_BLACK_MAX: WORD = 4000;
+  REFERENCE_WHITE_MIN: UINT16 = 6000;
+  REFERENCE_WHITE_MAX: UINT16 = 10000;
+  REFERENCE_BLACK_MIN: UINT16 = 0;
+  REFERENCE_BLACK_MAX: UINT16 = 4000;
 
 (* Min and max for Contrast, Brightness, Colorfulness, RedGreenTint *)
 CONST
-  COLOR_ADJ_MIN: SHORT = -100;
-  COLOR_ADJ_MAX: SHORT = 100;
+  COLOR_ADJ_MIN: INT16 = -100;
+  COLOR_ADJ_MAX: INT16 = 100;
 
 TYPE
   COLORADJUSTMENT = RECORD
-    caSize           : WORD;
-    caFlags          : WORD;
-    caIlluminantIndex: WORD;
-    caRedGamma       : WORD;
-    caGreenGamma     : WORD;
-    caBlueGamma      : WORD;
-    caReferenceBlack : WORD;
-    caReferenceWhite : WORD;
-    caContrast       : SHORT;
-    caBrightness     : SHORT;
-    caColorfulness   : SHORT;
-    caRedGreenTint   : SHORT;
+    caSize           : UINT16;
+    caFlags          : UINT16;
+    caIlluminantIndex: UINT16;
+    caRedGamma       : UINT16;
+    caGreenGamma     : UINT16;
+    caBlueGamma      : UINT16;
+    caReferenceBlack : UINT16;
+    caReferenceWhite : UINT16;
+    caContrast       : INT16;
+    caBrightness     : INT16;
+    caColorfulness   : INT16;
+    caRedGreenTint   : INT16;
   END;
   PCOLORADJUSTMENT = COLORADJUSTMENT;
   LPCOLORADJUSTMENT = COLORADJUSTMENT;
@@ -2743,55 +2740,55 @@ PROCEDURE GetColorAdjustment (a1: HDC; a2: LPCOLORADJUSTMENT): BOOL;
 PROCEDURE CreateHalftonePalette (a1: HDC): HPALETTE;
 
 TYPE
-  ABORTPROC = <*CALLBACK*> PROCEDURE (a1: HDC; a2: int): BOOL;
+  ABORTPROC = <*CALLBACK*> PROCEDURE (a1: HDC; a2: INT32): BOOL;
 
   LPDOCINFOA = UNTRACED REF DOCINFOA;
   DOCINFOA = RECORD
-    cbSize     : int;
-    lpszDocName: LPSTR;
-    lpszOutput : LPSTR;
+    cbSize     : INT32;
+    lpszDocName: PSTR;
+    lpszOutput : PSTR;
   END;
 
   LPDOCINFOW = UNTRACED REF DOCINFOW;
   DOCINFOW = RECORD
-    cbSize     : int;
-    lpszDocName: LPWSTR;
-    lpszOutput : LPWSTR;
+    cbSize     : INT32;
+    lpszDocName: PWSTR;
+    lpszOutput : PWSTR;
   END;
 
   DOCINFO = DOCINFOA;
   LPDOCINFO = LPDOCINFOA;
 
 <*EXTERNAL StartDocA:WINAPI*>
-PROCEDURE StartDocA (a1: HDC; a2: LPDOCINFOA): int;
+PROCEDURE StartDocA (a1: HDC; a2: LPDOCINFOA): INT32;
 
 <*EXTERNAL StartDocW:WINAPI*>
-PROCEDURE StartDocW (a1: HDC; a2: LPDOCINFOW): int;
+PROCEDURE StartDocW (a1: HDC; a2: LPDOCINFOW): INT32;
 CONST StartDoc = StartDocA;
 
 <*EXTERNAL EndDoc:WINAPI*>
-PROCEDURE EndDoc (a1: HDC): int;
+PROCEDURE EndDoc (a1: HDC): INT32;
 
 <*EXTERNAL StartPage:WINAPI*>
-PROCEDURE StartPage (a1: HDC): int;
+PROCEDURE StartPage (a1: HDC): INT32;
 
 <*EXTERNAL EndPage:WINAPI*>
-PROCEDURE EndPage (a1: HDC): int;
+PROCEDURE EndPage (a1: HDC): INT32;
 
 <*EXTERNAL AbortDoc:WINAPI*>
-PROCEDURE AbortDoc (a1: HDC): int;
+PROCEDURE AbortDoc (a1: HDC): INT32;
 
 <*EXTERNAL SetAbortProc:WINAPI*>
-PROCEDURE SetAbortProc (a1: HDC; a2: ABORTPROC): int;
+PROCEDURE SetAbortProc (a1: HDC; a2: ABORTPROC): INT32;
 
 <*EXTERNAL GdiPlayJournal:WINAPI*>
-PROCEDURE GdiPlayJournal (a1: HDC; a2: LPCSTR; a3: DWORD; a4: DWORD): BOOL;
+PROCEDURE GdiPlayJournal (a1: HDC; a2: PCSTR; a3: UINT32; a4: UINT32): BOOL;
 
 <*EXTERNAL AbortPath:WINAPI*>
 PROCEDURE AbortPath (a1: HDC): BOOL;
 
 <*EXTERNAL ArcTo:WINAPI*>
-PROCEDURE ArcTo (a1: HDC; a2, a3, a4, a5, a6, a7, a8, a9: int): BOOL;
+PROCEDURE ArcTo (a1: HDC; a2, a3, a4, a5, a6, a7, a8, a9: INT32): BOOL;
 
 <*EXTERNAL BeginPath:WINAPI*>
 PROCEDURE BeginPath (a1: HDC): BOOL;
@@ -2809,19 +2806,19 @@ PROCEDURE FillPath (a1: HDC): BOOL;
 PROCEDURE FlattenPath (a1: HDC): BOOL;
 
 <*EXTERNAL GetPath:WINAPI*>
-PROCEDURE GetPath (a1: HDC; a2: LPPOINT; a3: LPBYTE; a4: int): int;
+PROCEDURE GetPath (a1: HDC; a2: PPOINT; a3: PUINT8; a4: INT32): INT32;
 
 <*EXTERNAL PathToRegion:WINAPI*>
 PROCEDURE PathToRegion (a1: HDC): HRGN;
 
 <*EXTERNAL PolyDraw:WINAPI*>
-PROCEDURE PolyDraw (a1: HDC; a2: LPPOINT; a3: LPBYTE; a4: int): BOOL;
+PROCEDURE PolyDraw (a1: HDC; a2: PPOINT; a3: PUINT8; a4: INT32): BOOL;
 
 <*EXTERNAL SelectClipPath:WINAPI*>
-PROCEDURE SelectClipPath (a1: HDC; a2: int): BOOL;
+PROCEDURE SelectClipPath (a1: HDC; a2: INT32): BOOL;
 
 <*EXTERNAL SetArcDirection:WINAPI*>
-PROCEDURE SetArcDirection (a1: HDC; a2: int): int;
+PROCEDURE SetArcDirection (a1: HDC; a2: INT32): INT32;
 
 <*EXTERNAL SetMiterLimit:WINAPI*>
 PROCEDURE SetMiterLimit (a1: HDC; a2: WFLOAT; a3: PFLOAT): BOOL;
@@ -2836,132 +2833,132 @@ PROCEDURE StrokePath (a1: HDC): BOOL;
 PROCEDURE WidenPath (a1: HDC): BOOL;
 
 <*EXTERNAL ExtCreatePen:WINAPI*>
-PROCEDURE ExtCreatePen (a1: DWORD;
-                        a2: DWORD;
+PROCEDURE ExtCreatePen (a1: UINT32;
+                        a2: UINT32;
                         a3: LPLOGBRUSH;
-                        a4: DWORD;
-                        a5: LPDWORD     ): HPEN;
+                        a4: UINT32;
+                        a5: PUINT32     ): HPEN;
 
 <*EXTERNAL GetMiterLimit:WINAPI*>
 PROCEDURE GetMiterLimit (a1: HDC; a2: PFLOAT): BOOL;
 
 <*EXTERNAL GetArcDirection:WINAPI*>
-PROCEDURE GetArcDirection (a1: HDC): int;
+PROCEDURE GetArcDirection (a1: HDC): INT32;
 
 <*EXTERNAL GetObjectA:WINAPI*>
-PROCEDURE GetObjectA (a1: HGDIOBJ; a2: int; a3: LPVOID): int;
+PROCEDURE GetObjectA (a1: HGDIOBJ; a2: INT32; a3: PVOID): INT32;
 
 <*EXTERNAL GetObjectW:WINAPI*>
-PROCEDURE GetObjectW (a1: HGDIOBJ; a2: int; a3: LPVOID): int;
+PROCEDURE GetObjectW (a1: HGDIOBJ; a2: INT32; a3: PVOID): INT32;
 CONST GetObject = GetObjectA;
 
 <*EXTERNAL MoveToEx:WINAPI*>
-PROCEDURE MoveToEx (a1: HDC; a2: int; a3: int; a4: LPPOINT): BOOL;
+PROCEDURE MoveToEx (a1: HDC; a2: INT32; a3: INT32; a4: PPOINT): BOOL;
 
 <*EXTERNAL TextOutA:WINAPI*>
-PROCEDURE TextOutA (a1: HDC; a2: int; a3: int; a4: LPCSTR; a5: int): BOOL;
+PROCEDURE TextOutA (a1: HDC; a2: INT32; a3: INT32; a4: PCSTR; a5: INT32): BOOL;
 
 <*EXTERNAL TextOutW:WINAPI*>
-PROCEDURE TextOutW (a1: HDC; a2: int; a3: int; a4: LPCWSTR; a5: int): BOOL;
+PROCEDURE TextOutW (a1: HDC; a2: INT32; a3: INT32; a4: PCWSTR; a5: INT32): BOOL;
 CONST TextOut = TextOutA;
 
 <*EXTERNAL ExtTextOutA:WINAPI*>
 PROCEDURE ExtTextOutA (a1: HDC;
-                       a2: int;
-                       a3: int;
-                       a4: UINT;
-                       a5: LPRECT;
-                       a6: LPCSTR;
-                       a7: UINT;
-                       a8: LPINT              ): BOOL;
+                       a2: INT32;
+                       a3: INT32;
+                       a4: UINT32;
+                       a5: PRECT;
+                       a6: PCSTR;
+                       a7: UINT32;
+                       a8: PINT32              ): BOOL;
 
 <*EXTERNAL ExtTextOutW:WINAPI*>
 PROCEDURE ExtTextOutW (a1: HDC;
-                       a2: int;
-                       a3: int;
-                       a4: UINT;
-                       a5: LPRECT;
-                       a6: LPCWSTR;
-                       a7: UINT;
-                       a8: LPINT              ): BOOL;
+                       a2: INT32;
+                       a3: INT32;
+                       a4: UINT32;
+                       a5: PRECT;
+                       a6: PCWSTR;
+                       a7: UINT32;
+                       a8: PINT32              ): BOOL;
 CONST ExtTextOut = ExtTextOutA;
 
 <*EXTERNAL PolyTextOutA:WINAPI*>
-PROCEDURE PolyTextOutA (a1: HDC; a2: UNTRACED REF POLYTEXTA; a3: int): BOOL;
+PROCEDURE PolyTextOutA (a1: HDC; a2: UNTRACED REF POLYTEXTA; a3: INT32): BOOL;
 
 <*EXTERNAL PolyTextOutW:WINAPI*>
-PROCEDURE PolyTextOutW (a1: HDC; a2: UNTRACED REF POLYTEXTW; a3: int): BOOL;
+PROCEDURE PolyTextOutW (a1: HDC; a2: UNTRACED REF POLYTEXTW; a3: INT32): BOOL;
 CONST PolyTextOut = PolyTextOutA;
 
 <*EXTERNAL CreatePolygonRgn:WINAPI*>
-PROCEDURE CreatePolygonRgn (a1: LPPOINT; a2: int; a3: int): HRGN;
+PROCEDURE CreatePolygonRgn (a1: PPOINT; a2: INT32; a3: INT32): HRGN;
 
 <*EXTERNAL DPtoLP:WINAPI*>
-PROCEDURE DPtoLP (a1: HDC; a2: LPPOINT; a3: int): BOOL;
+PROCEDURE DPtoLP (a1: HDC; a2: PPOINT; a3: INT32): BOOL;
 
 <*EXTERNAL LPtoDP:WINAPI*>
-PROCEDURE LPtoDP (a1: HDC; a2: LPPOINT; a3: int): BOOL;
+PROCEDURE LPtoDP (a1: HDC; a2: PPOINT; a3: INT32): BOOL;
 
 <*EXTERNAL Polygon:WINAPI*>
-PROCEDURE Polygon (a1: HDC; a2: LPPOINT; a3: int): BOOL;
+PROCEDURE Polygon (a1: HDC; a2: PPOINT; a3: INT32): BOOL;
 
 <*EXTERNAL Polyline:WINAPI*>
-PROCEDURE Polyline (a1: HDC; a2: LPPOINT; a3: int): BOOL;
+PROCEDURE Polyline (a1: HDC; a2: PPOINT; a3: INT32): BOOL;
 
 <*EXTERNAL PolyBezier:WINAPI*>
-PROCEDURE PolyBezier (a1: HDC; a2: LPPOINT; a3: DWORD): BOOL;
+PROCEDURE PolyBezier (a1: HDC; a2: PPOINT; a3: UINT32): BOOL;
 
 <*EXTERNAL PolyBezierTo:WINAPI*>
-PROCEDURE PolyBezierTo (a1: HDC; a2: LPPOINT; a3: DWORD): BOOL;
+PROCEDURE PolyBezierTo (a1: HDC; a2: PPOINT; a3: UINT32): BOOL;
 
 <*EXTERNAL PolylineTo:WINAPI*>
-PROCEDURE PolylineTo (a1: HDC; a2: LPPOINT; a3: DWORD): BOOL;
+PROCEDURE PolylineTo (a1: HDC; a2: PPOINT; a3: UINT32): BOOL;
 
 <*EXTERNAL SetViewportExtEx:WINAPI*>
-PROCEDURE SetViewportExtEx (a1: HDC; a2: int; a3: int; a4: LPSIZE): BOOL;
+PROCEDURE SetViewportExtEx (a1: HDC; a2: INT32; a3: INT32; a4: PSIZE): BOOL;
 
 <*EXTERNAL SetViewportOrgEx:WINAPI*>
-PROCEDURE SetViewportOrgEx (a1: HDC; a2: int; a3: int; a4: LPPOINT): BOOL;
+PROCEDURE SetViewportOrgEx (a1: HDC; a2: INT32; a3: INT32; a4: PPOINT): BOOL;
 
 <*EXTERNAL SetWindowExtEx:WINAPI*>
-PROCEDURE SetWindowExtEx (a1: HDC; a2: int; a3: int; a4: LPSIZE): BOOL;
+PROCEDURE SetWindowExtEx (a1: HDC; a2: INT32; a3: INT32; a4: PSIZE): BOOL;
 
 <*EXTERNAL SetWindowOrgEx:WINAPI*>
-PROCEDURE SetWindowOrgEx (a1: HDC; a2: int; a3: int; a4: LPPOINT): BOOL;
+PROCEDURE SetWindowOrgEx (a1: HDC; a2: INT32; a3: INT32; a4: PPOINT): BOOL;
 
 <*EXTERNAL OffsetViewportOrgEx:WINAPI*>
-PROCEDURE OffsetViewportOrgEx (a1: HDC; a2: int; a3: int; a4: LPPOINT): BOOL;
+PROCEDURE OffsetViewportOrgEx (a1: HDC; a2: INT32; a3: INT32; a4: PPOINT): BOOL;
 
 <*EXTERNAL OffsetWindowOrgEx:WINAPI*>
-PROCEDURE OffsetWindowOrgEx (a1: HDC; a2: int; a3: int; a4: LPPOINT): BOOL;
+PROCEDURE OffsetWindowOrgEx (a1: HDC; a2: INT32; a3: INT32; a4: PPOINT): BOOL;
 
 <*EXTERNAL ScaleViewportExtEx:WINAPI*>
 PROCEDURE ScaleViewportExtEx (a1: HDC;
-                              a2: int;
-                              a3: int;
-                              a4: int;
-                              a5: int;
-                              a6: LPSIZE): BOOL;
+                              a2: INT32;
+                              a3: INT32;
+                              a4: INT32;
+                              a5: INT32;
+                              a6: PSIZE): BOOL;
 
 <*EXTERNAL ScaleWindowExtEx:WINAPI*>
 PROCEDURE ScaleWindowExtEx (a1: HDC;
-                            a2: int;
-                            a3: int;
-                            a4: int;
-                            a5: int;
-                            a6: LPSIZE): BOOL;
+                            a2: INT32;
+                            a3: INT32;
+                            a4: INT32;
+                            a5: INT32;
+                            a6: PSIZE): BOOL;
 
 <*EXTERNAL SetBitmapDimensionEx:WINAPI*>
-PROCEDURE SetBitmapDimensionEx (a1: HBITMAP; a2: int; a3: int; a4: LPSIZE): BOOL;
+PROCEDURE SetBitmapDimensionEx (a1: HBITMAP; a2: INT32; a3: INT32; a4: PSIZE): BOOL;
 
 <*EXTERNAL SetBrushOrgEx:WINAPI*>
-PROCEDURE SetBrushOrgEx (a1: HDC; a2: int; a3: int; a4: LPPOINT): BOOL;
+PROCEDURE SetBrushOrgEx (a1: HDC; a2: INT32; a3: INT32; a4: PPOINT): BOOL;
 
 <*EXTERNAL GetTextFaceA:WINAPI*>
-PROCEDURE GetTextFaceA (a1: HDC; a2: int; a3: LPSTR): int;
+PROCEDURE GetTextFaceA (a1: HDC; a2: INT32; a3: PSTR): INT32;
 
 <*EXTERNAL GetTextFaceW:WINAPI*>
-PROCEDURE GetTextFaceW (a1: HDC; a2: int; a3: LPWSTR): int;
+PROCEDURE GetTextFaceW (a1: HDC; a2: INT32; a3: PWSTR): INT32;
 CONST GetTextFace = GetTextFaceA;
 
 CONST FONTMAPPER_MAX = 10;
@@ -2969,21 +2966,21 @@ CONST FONTMAPPER_MAX = 10;
 <*EXTERNAL EnumNearestFontsA:WINAPI*>
 PROCEDURE EnumNearestFontsA (a1: HDC;
                              a2: LPEXTLOGFONTA;
-                             a3: DWORD;
-                             a4: LPFMATCHA      ): DWORD;
+                             a3: UINT32;
+                             a4: LPFMATCHA      ): UINT32;
 
 <*EXTERNAL EnumNearestFontsW:WINAPI*>
 PROCEDURE EnumNearestFontsW (a1: HDC;
                              a2: LPEXTLOGFONTW;
-                             a3: DWORD;
-                             a4: LPFMATCHW      ): DWORD;
+                             a3: UINT32;
+                             a4: LPFMATCHW      ): UINT32;
 CONST EnumNearestFonts = EnumNearestFontsA;
 
 <*EXTERNAL SetFontMapperControls:WINAPI*>
 PROCEDURE SetFontMapperControls (a1: LPFMCONTROLS): BOOL;
 
 <*EXTERNAL GetFontMapperControls:WINAPI*>
-PROCEDURE GetFontMapperControls (a1: LPFMCONTROLS; a2: DWORD): BOOL;
+PROCEDURE GetFontMapperControls (a1: LPFMCONTROLS; a2: UINT32): BOOL;
 
 <*EXTERNAL ExtCreateFontIndirectA:WINAPI*>
 PROCEDURE ExtCreateFontIndirectA (a1: LPEXTLOGFONTA): HFONT;
@@ -2996,19 +2993,19 @@ CONST ExtCreateFontIndirect = ExtCreateFontIndirectA;
 TYPE
   LPKERNINGPAIR = UNTRACED REF KERNINGPAIR;
   KERNINGPAIR = RECORD
-    wFirst     : WORD;
-    wSecond    : WORD;
-    iKernAmount: int;
+    wFirst     : UINT16;
+    wSecond    : UINT16;
+    iKernAmount: INT32;
   END;
 
 <*EXTERNAL GetKerningPairs:WINAPI*>
-PROCEDURE GetKerningPairs (a1: HDC; a2: DWORD; a3: LPKERNINGPAIR): DWORD;
+PROCEDURE GetKerningPairs (a1: HDC; a2: UINT32; a3: LPKERNINGPAIR): UINT32;
 
 <*EXTERNAL GetDCOrg:WINAPI*>
-PROCEDURE GetDCOrg (a1: HDC): DWORD;
+PROCEDURE GetDCOrg (a1: HDC): UINT32;
 
 <*EXTERNAL FixBrushOrgEx:WINAPI*>
-PROCEDURE FixBrushOrgEx (a1: HDC; a2: int; a3: int; a4: LPPOINT): BOOL;
+PROCEDURE FixBrushOrgEx (a1: HDC; a2: INT32; a3: INT32; a4: PPOINT): BOOL;
 
 <*EXTERNAL UnrealizeObject:WINAPI*>
 PROCEDURE UnrealizeObject (a1: HGDIOBJ): BOOL;
@@ -3017,10 +3014,10 @@ PROCEDURE UnrealizeObject (a1: HGDIOBJ): BOOL;
 PROCEDURE GdiFlush (): BOOL;
 
 <*EXTERNAL GdiSetBatchLimit:WINAPI*>
-PROCEDURE GdiSetBatchLimit (a1: DWORD): DWORD;
+PROCEDURE GdiSetBatchLimit (a1: UINT32): UINT32;
 
 <*EXTERNAL GdiGetBatchLimit:WINAPI*>
-PROCEDURE GdiGetBatchLimit (): DWORD;
+PROCEDURE GdiGetBatchLimit (): UINT32;
 
 
 (* OpenGL wgl prototypes *)
@@ -3041,10 +3038,10 @@ PROCEDURE wglGetCurrentDC (): HDC;
 PROCEDURE wglMakeCurrent (a1: HDC; a2: HGLRC): BOOL;
 
 <*EXTERNAL wglUseFontBitmapsA:WINAPI*>
-PROCEDURE wglUseFontBitmapsA (a1: HDC; a2: DWORD; a3: DWORD; a4: DWORD): BOOL;
+PROCEDURE wglUseFontBitmapsA (a1: HDC; a2: UINT32; a3: UINT32; a4: UINT32): BOOL;
 
 <*EXTERNAL wglUseFontBitmapsW:WINAPI*>
-PROCEDURE wglUseFontBitmapsW (a1: HDC; a2: DWORD; a3: DWORD; a4: DWORD): BOOL;
+PROCEDURE wglUseFontBitmapsW (a1: HDC; a2: UINT32; a3: UINT32; a4: UINT32): BOOL;
 
 CONST wglUseFontBitmaps = wglUseFontBitmapsA;
 

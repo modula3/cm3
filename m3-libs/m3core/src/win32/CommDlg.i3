@@ -9,92 +9,91 @@
 
 INTERFACE CommDlg;
 
-FROM Ctypes IMPORT short;
-
-FROM WinDef IMPORT BOOL, WORD, DWORD, UINT, HWND, HDC, WPARAM, LPARAM,
-                   HINSTANCE, INT, COLORREF, LPCOLORREF, HGLOBAL;
-
-FROM WinNT   IMPORT LPSTR, LPWSTR, LPCSTR, LPCWSTR;
+FROM WinDef IMPORT BOOL, UINT16, UINT32, HWND, HDC, WPARAM, LPARAM,
+                   HINSTANCE, INT32, COLORREF, PCOLORREF, HGLOBAL, INT16;
+FROM WinNT   IMPORT PSTR, PWSTR, PCSTR, PCWSTR;
 FROM WinGDI  IMPORT LPLOGFONTA, LPLOGFONTW;
 FROM WinUser IMPORT WM_USER;
 
 TYPE
-  LPOFNHOOKPROC = <*APIENTRY*> PROCEDURE (a0: HWND;  a1: UINT;
-                                        a2: WPARAM; a3: LPARAM): UINT;
+  LPOFNHOOKPROC = <*APIENTRY*> PROCEDURE (a0: HWND;  a1: UINT32;
+                                        a2: WPARAM; a3: LPARAM): UINT32;
 
 TYPE
-  LPOPENFILENAMEA = UNTRACED REF OPENFILENAMEA;
+  POPENFILENAMEA = UNTRACED REF OPENFILENAMEA;
+  LPOPENFILENAMEA = POPENFILENAMEA; (* compat *)
   OPENFILENAMEA = RECORD
-    lStructSize       : DWORD;
+    lStructSize       : UINT32;
     hwndOwner         : HWND;
     hInstance         : HINSTANCE;
-    lpstrFilter       : LPCSTR;
-    lpstrCustomFilter : LPSTR;
-    nMaxCustFilter    : DWORD;
-    nFilterIndex      : DWORD;
-    lpstrFile         : LPSTR;
-    nMaxFile          : DWORD;
-    lpstrFileTitle    : LPSTR;
-    nMaxFileTitle     : DWORD;
-    lpstrInitialDir   : LPCSTR;
-    lpstrTitle        : LPCSTR;
-    Flags             : DWORD;
-    nFileOffset       : WORD;
-    nFileExtension    : WORD;
-    lpstrDefExt       : LPCSTR;
+    lpstrFilter       : PCSTR;
+    lpstrCustomFilter : PSTR;
+    nMaxCustFilter    : UINT32;
+    nFilterIndex      : UINT32;
+    lpstrFile         : PSTR;
+    nMaxFile          : UINT32;
+    lpstrFileTitle    : PSTR;
+    nMaxFileTitle     : UINT32;
+    lpstrInitialDir   : PCSTR;
+    lpstrTitle        : PCSTR;
+    Flags             : UINT32;
+    nFileOffset       : UINT16;
+    nFileExtension    : UINT16;
+    lpstrDefExt       : PCSTR;
     lCustData         : LPARAM;
     lpfnHook          : LPOFNHOOKPROC;
-    lpTemplateName    : LPCSTR;
+    lpTemplateName    : PCSTR;
   END;
 
-  LPOPENFILENAMEW = UNTRACED REF OPENFILENAMEW;
+  POPENFILENAMEW = UNTRACED REF OPENFILENAMEW;
+  LPOPENFILENAMEW = POPENFILENAMEW; (* compat *)
   OPENFILENAMEW = RECORD
-    lStructSize       : DWORD;
+    lStructSize       : UINT32;
     hwndOwner         : HWND;
     hInstance         : HINSTANCE;
-    lpstrFilter       : LPCWSTR;
-    lpstrCustomFilter : LPWSTR;
-    nMaxCustFilter    : DWORD;
-    nFilterIndex      : DWORD;
-    lpstrFile         : LPWSTR;
-    nMaxFile          : DWORD;
-    lpstrFileTitle    : LPWSTR;
-    nMaxFileTitle     : DWORD;
-    lpstrInitialDir   : LPCWSTR;
-    lpstrTitle        : LPCWSTR;
-    Flags             : DWORD;
-    nFileOffset       : WORD;
-    nFileExtension    : WORD;
-    lpstrDefExt       : LPCWSTR;
+    lpstrFilter       : PCWSTR;
+    lpstrCustomFilter : PWSTR;
+    nMaxCustFilter    : UINT32;
+    nFilterIndex      : UINT32;
+    lpstrFile         : PWSTR;
+    nMaxFile          : UINT32;
+    lpstrFileTitle    : PWSTR;
+    nMaxFileTitle     : UINT32;
+    lpstrInitialDir   : PCWSTR;
+    lpstrTitle        : PCWSTR;
+    Flags             : UINT32;
+    nFileOffset       : UINT16;
+    nFileExtension    : UINT16;
+    lpstrDefExt       : PCWSTR;
     lCustData         : LPARAM;
     lpfnHook          : LPOFNHOOKPROC;
-    lpTemplateName    : LPCWSTR;
+    lpTemplateName    : PCWSTR;
   END;
 
   OPENFILENAME = OPENFILENAMEA;
-  LPOPENFILENAME = LPOPENFILENAMEA;
+  LPOPENFILENAME = POPENFILENAMEA; (* compat *)
 
 <*EXTERNAL GetOpenFileNameA:APIENTRY*>
-PROCEDURE GetOpenFileNameA (a1: LPOPENFILENAMEA): BOOL;
+PROCEDURE GetOpenFileNameA (a1: POPENFILENAMEA): BOOL;
 
 <*EXTERNAL GetOpenFileNameW:APIENTRY*>
-PROCEDURE GetOpenFileNameW (a1: LPOPENFILENAMEW): BOOL;
+PROCEDURE GetOpenFileNameW (a1: POPENFILENAMEW): BOOL;
 
 CONST GetOpenFileName = GetOpenFileNameA;
 
 <*EXTERNAL GetSaveFileNameA:APIENTRY*>
-PROCEDURE GetSaveFileNameA (a1: LPOPENFILENAMEA): BOOL;
+PROCEDURE GetSaveFileNameA (a1: POPENFILENAMEA): BOOL;
 
 <*EXTERNAL GetSaveFileNameW:APIENTRY*>
-PROCEDURE GetSaveFileNameW (a1: LPOPENFILENAMEW): BOOL;
+PROCEDURE GetSaveFileNameW (a1: POPENFILENAMEW): BOOL;
 
 CONST GetSaveFileName = GetSaveFileNameA;
 
 <*EXTERNAL GetFileTitleA:APIENTRY*>
-PROCEDURE GetFileTitleA (a1: LPCSTR; a2: LPSTR; a3: WORD): short;
+PROCEDURE GetFileTitleA (a1: PCSTR; a2: PSTR; a3: UINT16): INT16;
 
 <*EXTERNAL GetFileTitleW:APIENTRY*>
-PROCEDURE GetFileTitleW (a1: LPCWSTR; a2: LPWSTR; a3: WORD): short;
+PROCEDURE GetFileTitleW (a1: PCWSTR; a2: PWSTR; a3: UINT16): INT16;
 
 CONST GetFileTitle = GetFileTitleA;
 
@@ -135,33 +134,33 @@ CONST
   OFN_SHAREWARN        = 0;
 
 TYPE
-  LPCCHOOKPROC = <*APIENTRY*> PROCEDURE (a1: HWND;  a2: UINT;
-                                         a3: WPARAM;  a4: LPARAM): UINT;
+  LPCCHOOKPROC = <*APIENTRY*> PROCEDURE (a1: HWND;  a2: UINT32;
+                                         a3: WPARAM;  a4: LPARAM): UINT32;
 
   LPCHOOSECOLORA = UNTRACED REF CHOOSECOLORA;
   CHOOSECOLORA = RECORD
-    lStructSize    : DWORD;
+    lStructSize    : UINT32;
     hwndOwner      : HWND;
     hInstance      : HWND;
     rgbResult      : COLORREF;
-    lpCustColors   : LPCOLORREF;
-    Flags          : DWORD;
+    lpCustColors   : PCOLORREF;
+    Flags          : UINT32;
     lCustData      : LPARAM;
     lpfnHook       : LPCCHOOKPROC;
-    lpTemplateName : LPCSTR;
+    lpTemplateName : PCSTR;
   END;
 
   LPCHOOSECOLORW = UNTRACED REF CHOOSECOLORW;
   CHOOSECOLORW = RECORD
-    lStructSize    : DWORD;
+    lStructSize    : UINT32;
     hwndOwner      : HWND;
     hInstance      : HWND;
     rgbResult      : COLORREF;
-    lpCustColors   : LPCOLORREF;
-    Flags          : DWORD;
+    lpCustColors   : PCOLORREF;
+    Flags          : UINT32;
     lCustData      : LPARAM;
     lpfnHook       : LPCCHOOKPROC;
-    lpTemplateName : LPCWSTR;
+    lpTemplateName : PCWSTR;
   END;
 
   CHOOSECOLOR   = CHOOSECOLORA;
@@ -185,39 +184,39 @@ CONST
   CC_ENABLETEMPLATEHANDLE = 16_00000040;
 
 TYPE
-  LPFRHOOKPROC = <*APIENTRY*> PROCEDURE (a1: HWND;  a2: UINT;
-                                         a3: WPARAM;  a4: LPARAM): UINT;
+  LPFRHOOKPROC = <*APIENTRY*> PROCEDURE (a1: HWND;  a2: UINT32;
+                                         a3: WPARAM;  a4: LPARAM): UINT32;
 
   LPFINDREPLACEA = UNTRACED REF FINDREPLACEA;
   FINDREPLACEA = RECORD
-    lStructSize      : DWORD;        (*  size of this struct 16_20 *)
+    lStructSize      : UINT32;        (*  size of this struct 16_20 *)
     hwndOwner        : HWND;         (*  handle to owner's window *)
     hInstance        : HINSTANCE;    (*  instance handle of.EXE that *)
                                      (*    contains cust. dlg. template *)
-    Flags            : DWORD;        (*  one or more of the FR_?? *)
-    lpstrFindWhat    : LPSTR;        (*  ptr. to search string *)
-    lpstrReplaceWith : LPSTR;        (*  ptr. to replace string *)
-    wFindWhatLen     : WORD;         (*  size of find buffer *)
-    wReplaceWithLen  : WORD;         (*  size of replace buffer *)
+    Flags            : UINT32;        (*  one or more of the FR_?? *)
+    lpstrFindWhat    : PSTR;        (*  ptr. to search string *)
+    lpstrReplaceWith : PSTR;        (*  ptr. to replace string *)
+    wFindWhatLen     : UINT16;         (*  size of find buffer *)
+    wReplaceWithLen  : UINT16;         (*  size of replace buffer *)
     lCustData        : LPARAM;       (*  data passed to hook fn. *)
     lpfnHook         : LPFRHOOKPROC; (*  ptr. to hook fn. or NULL *)
-    lpTemplateName   : LPCSTR;       (*  custom template name *)
+    lpTemplateName   : PCSTR;       (*  custom template name *)
   END;
 
   LPFINDREPLACEW = UNTRACED REF FINDREPLACEW;
   FINDREPLACEW = RECORD
-    lStructSize      : DWORD;        (*  size of this struct 16_20 *)
+    lStructSize      : UINT32;        (*  size of this struct 16_20 *)
     hwndOwner        : HWND;         (*  handle to owner's window *)
     hInstance        : HINSTANCE;    (*  instance handle of.EXE that *)
                                      (*    contains cust. dlg. template *)
-    Flags            : DWORD;        (*  one or more of the FR_?? *)
-    lpstrFindWhat    : LPWSTR;       (*  ptr. to search string *)
-    lpstrReplaceWith : LPWSTR;       (*  ptr. to replace string *)
-    wFindWhatLen     : WORD;         (*  size of find buffer *)
-    wReplaceWithLen  : WORD;         (*  size of replace buffer *)
+    Flags            : UINT32;        (*  one or more of the FR_?? *)
+    lpstrFindWhat    : PWSTR;       (*  ptr. to search string *)
+    lpstrReplaceWith : PWSTR;       (*  ptr. to replace string *)
+    wFindWhatLen     : UINT16;         (*  size of find buffer *)
+    wReplaceWithLen  : UINT16;         (*  size of replace buffer *)
     lCustData        : LPARAM;       (*  data passed to hook fn. *)
     lpfnHook         : LPFRHOOKPROC; (*  ptr. to hook fn. or NULL *)
-    lpTemplateName   : LPCWSTR;      (*  custom template name *)
+    lpTemplateName   : PCWSTR;      (*  custom template name *)
   END;
 
   FINDREPLACE = FINDREPLACEA;
@@ -259,56 +258,56 @@ PROCEDURE ReplaceTextW (a1: LPFINDREPLACEW): HWND;
 CONST ReplaceText = ReplaceTextA;
 
 TYPE
-  LPCFHOOKPROC = <*APIENTRY*> PROCEDURE (a1: HWND;  a2: UINT;
-                                         a3: WPARAM;  a4: LPARAM): UINT;
+  LPCFHOOKPROC = <*APIENTRY*> PROCEDURE (a1: HWND;  a2: UINT32;
+                                         a3: WPARAM;  a4: LPARAM): UINT32;
 
   LPCHOOSEFONTA = UNTRACED REF CHOOSEFONTA;
   CHOOSEFONTA = RECORD
-    lStructSize    : DWORD;
+    lStructSize    : UINT32;
     hwndOwner      : HWND;         (*  caller's window handle *)
     hDC            : HDC;          (*  printer DC/IC or NULL *)
     lpLogFont      : LPLOGFONTA;   (*  ptr. to a LOGFONT struct *)
-    iPointSize     : INT;          (*  10 * size in points of selected font *)
-    Flags          : DWORD;        (*  enum. type flags *)
+    iPointSize     : INT32;          (*  10 * size in points of selected font *)
+    Flags          : UINT32;        (*  enum. type flags *)
     rgbColors      : COLORREF;     (*  returned text color *)
     lCustData      : LPARAM;       (*  data passed to hook fn. *)
     lpfnHook       : LPCFHOOKPROC; (*  ptr. to hook function *)
-    lpTemplateName : LPCSTR;       (*  custom template name *)
+    lpTemplateName : PCSTR;       (*  custom template name *)
     hInstance      : HINSTANCE;    (*  instance handle of.EXE that *)
                                    (*    contains cust. dlg. template *)
-    lpszStyle      : LPSTR;        (*  return the style field here *)
+    lpszStyle      : PSTR;        (*  return the style field here *)
                                    (*  must be LF_FACESIZE or bigger *)
-    nFontType      : WORD;         (*  same value reported to the EnumFonts *)
+    nFontType      : UINT16;         (*  same value reported to the EnumFonts *)
                                    (*    call back with the extra FONTTYPE_ *)
                                    (*    bits added *)
-(*___*)MISSING_ALIGNMENT__ : WORD;
-    nSizeMin       : INT;          (*  minimum pt size allowed & *)
-    nSizeMax       : INT;          (*  max pt size allowed if *)
+(*___*)MISSING_ALIGNMENT__ : UINT16;
+    nSizeMin       : INT32;          (*  minimum pt size allowed & *)
+    nSizeMax       : INT32;          (*  max pt size allowed if *)
                                    (*    CF_LIMITSIZE is used *)
   END;
 
   LPCHOOSEFONTW = UNTRACED REF CHOOSEFONTW;
   CHOOSEFONTW = RECORD
-    lStructSize    : DWORD;
+    lStructSize    : UINT32;
     hwndOwner      : HWND;         (*  caller's window handle *)
     hDC            : HDC;          (*  printer DC/IC or NULL *)
     lpLogFont      : LPLOGFONTW;   (*  ptr. to a LOGFONT struct *)
-    iPointSize     : INT;          (*  10 * size in points of selected font *)
-    Flags          : DWORD;        (*  enum. type flags *)
+    iPointSize     : INT32;          (*  10 * size in points of selected font *)
+    Flags          : UINT32;        (*  enum. type flags *)
     rgbColors      : COLORREF;     (*  returned text color *)
     lCustData      : LPARAM;       (*  data passed to hook fn. *)
     lpfnHook       : LPCFHOOKPROC; (*  ptr. to hook function *)
-    lpTemplateName : LPCWSTR;      (*  custom template name *)
+    lpTemplateName : PCWSTR;      (*  custom template name *)
     hInstance      : HINSTANCE;    (*  instance handle of.EXE that *)
                                    (*  contains cust. dlg. template *)
-    lpszStyle      : LPWSTR;       (*  return the style field here *)
+    lpszStyle      : PWSTR;       (*  return the style field here *)
                                    (*  must be LF_FACESIZE or bigger *)
-    nFontType      : WORD;         (*  same value reported to the EnumFonts *)
+    nFontType      : UINT16;         (*  same value reported to the EnumFonts *)
                                    (*    call back with the extra FONTTYPE_ *)
                                    (*    bits added *)
-(*___*)MISSING_ALIGNMENT__ : WORD;
-    nSizeMin       : INT;          (*  minimum pt size allowed & *)
-    nSizeMax       : INT;          (*  max pt size allowed if *)
+(*___*)MISSING_ALIGNMENT__ : UINT16;
+    nSizeMin       : INT32;          (*  minimum pt size allowed & *)
+    nSizeMax       : INT32;          (*  max pt size allowed if *)
                                    (*    CF_LIMITSIZE is used *)
   END;
 
@@ -403,55 +402,55 @@ CONST
 
 
 TYPE
-  LPPRINTHOOKPROC = <*APIENTRY*> PROCEDURE (a1: HWND;  a2: UINT;
-                                           a3: WPARAM;  a4: LPARAM): UINT;
+  LPPRINTHOOKPROC = <*APIENTRY*> PROCEDURE (a1: HWND;  a2: UINT32;
+                                           a3: WPARAM;  a4: LPARAM): UINT32;
 
-  LPSETUPHOOKPROC = <*APIENTRY*> PROCEDURE (a1: HWND;  a2: UINT;
-                                            a3: WPARAM;  a4: LPARAM): UINT;
+  LPSETUPHOOKPROC = <*APIENTRY*> PROCEDURE (a1: HWND;  a2: UINT32;
+                                            a3: WPARAM;  a4: LPARAM): UINT32;
 
 TYPE
   LPPRINTDLGA = UNTRACED REF PRINTDLGA;
   PRINTDLGA = RECORD
-    lStructSize         : DWORD;
+    lStructSize         : UINT32;
     hwndOwner           : HWND;
     hDevMode            : HGLOBAL;
     hDevNames           : HGLOBAL;
     hDC                 : HDC;
-    Flags               : DWORD;
-    nFromPage           : WORD;
-    nToPage             : WORD;
-    nMinPage            : WORD;
-    nMaxPage            : WORD;
-    nCopies             : WORD;
+    Flags               : UINT32;
+    nFromPage           : UINT16;
+    nToPage             : UINT16;
+    nMinPage            : UINT16;
+    nMaxPage            : UINT16;
+    nCopies             : UINT16;
     hInstance           : HINSTANCE;
     lCustData           : LPARAM;
     lpfnPrintHook       : LPPRINTHOOKPROC;
     lpfnSetupHook       : LPSETUPHOOKPROC;
-    lpPrintTemplateName : LPCSTR;
-    lpSetupTemplateName : LPCSTR;
+    lpPrintTemplateName : PCSTR;
+    lpSetupTemplateName : PCSTR;
     hPrintTemplate      : HGLOBAL;
     hSetupTemplate      : HGLOBAL;
   END;
 
   LPPRINTDLGW = UNTRACED REF PRINTDLGW;
   PRINTDLGW = RECORD
-    lStructSize         : DWORD;
+    lStructSize         : UINT32;
     hwndOwner           : HWND;
     hDevMode            : HGLOBAL;
     hDevNames           : HGLOBAL;
     hDC                 : HDC;
-    Flags               : DWORD;
-    nFromPage           : WORD;
-    nToPage             : WORD;
-    nMinPage            : WORD;
-    nMaxPage            : WORD;
-    nCopies             : WORD;
+    Flags               : UINT32;
+    nFromPage           : UINT16;
+    nToPage             : UINT16;
+    nMinPage            : UINT16;
+    nMaxPage            : UINT16;
+    nCopies             : UINT16;
     hInstance           : HINSTANCE;
     lCustData           : LPARAM;
     lpfnPrintHook       : LPPRINTHOOKPROC;
     lpfnSetupHook       : LPSETUPHOOKPROC;
-    lpPrintTemplateName : LPCWSTR;
-    lpSetupTemplateName : LPCWSTR;
+    lpPrintTemplateName : PCWSTR;
+    lpSetupTemplateName : PCWSTR;
     hPrintTemplate      : HGLOBAL;
     hSetupTemplate      : HGLOBAL;
   END;
@@ -495,15 +494,15 @@ CONST
 TYPE
   LPDEFNAMES = UNTRACED REF DEVNAMES;
   DEVNAMES = RECORD
-    wDriverOffset : WORD;
-    wDeviceOffset : WORD;
-    wOutputOffset : WORD;
-    wDefault      : WORD;
+    wDriverOffset : UINT16;
+    wDeviceOffset : UINT16;
+    wOutputOffset : UINT16;
+    wDefault      : UINT16;
   END;
 
 CONST DN_DEFAULTPRN = 16_0001;
 
 <*EXTERNAL CommDlgExtendedError:APIENTRY*>
-PROCEDURE CommDlgExtendedError (): DWORD;
+PROCEDURE CommDlgExtendedError (): UINT32;
 
 END CommDlg.

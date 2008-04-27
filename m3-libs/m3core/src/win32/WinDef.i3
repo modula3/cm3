@@ -14,77 +14,114 @@ INTERFACE WinDef;
 
 (* Corresponds to build version 0001 of windef.h *)
 
-IMPORT Ctypes, WinBaseTypes;
+IMPORT WinBaseTypes;
 
 TYPE
-  ULONG = WinBaseTypes.ULONG;
-  PULONG = WinBaseTypes.PULONG;
-  USHORT = WinBaseTypes.USHORT;
-  PUSHORT = WinBaseTypes.PUSHORT;
-  UCHAR = WinBaseTypes.UCHAR;
-  PUCHAR = WinBaseTypes.PUCHAR;
-  PSZ = WinBaseTypes.PSZ;
-  DWORD = WinBaseTypes.DWORD;
-  BOOL = WinBaseTypes.BOOL;
-  BYTE = WinBaseTypes.BYTE;
-  WORD = WinBaseTypes.WORD;
-  WFLOAT = WinBaseTypes.WFLOAT;
-  PFLOAT = WinBaseTypes.PFLOAT;
-  PBOOL = WinBaseTypes.PBOOL;
-  LPBOOL = WinBaseTypes.LPBOOL;
-  PBYTE = WinBaseTypes.PBYTE;
-  LPBYTE = WinBaseTypes.LPBYTE;
-  PINT = WinBaseTypes.PINT;
-  LPINT = WinBaseTypes.LPINT;
-  PWORD = WinBaseTypes.PWORD;
-  LPWORD = WinBaseTypes.LPWORD;
-  LPLONG = WinBaseTypes.LPLONG;
-  PDWORD = WinBaseTypes.PDWORD;
-  LPDWORD = WinBaseTypes.LPDWORD;
-  LPVOID = WinBaseTypes.LPVOID;
-  LPCVOID = WinBaseTypes.LPCVOID;
-  INT = WinBaseTypes.INT;
-  UINT = WinBaseTypes.UINT;
-  PUINT = WinBaseTypes.PUINT;
 
-  CCHAR = Ctypes.char;
-  LONG = Ctypes.int;
-  PLONG = Ctypes.int_star;
-  PSHORT = Ctypes.short_star;
-  SHORT = Ctypes.short;
+  (* reexport base types *)
+
+  UINT8 = WinBaseTypes.UINT8;
+  UINT16 = WinBaseTypes.UINT16;
+  UINT32 = WinBaseTypes.UINT32;
+  UINT64 = WinBaseTypes.UINT64;
+  INT8 = WinBaseTypes.INT8;
+  INT16 = WinBaseTypes.INT16;
+  INT32 = WinBaseTypes.INT32;
+  INT64 = WinBaseTypes.INT64;
+  SIZE_T = WinBaseTypes.SIZE_T;  (* same size as a pointer, unsigned *)
+  SSIZE_T = WinBaseTypes.SSIZE_T;  (* same size as a pointer, signed *)
+  PUINT8 = WinBaseTypes.PUINT8;
+  PUINT16 = WinBaseTypes.PUINT16;
+  PUINT32 = WinBaseTypes.PUINT32;
+  PUINT64 = WinBaseTypes.PUINT64;
+  PINT8 = WinBaseTypes.PINT8;
+  PINT16 = WinBaseTypes.PINT16;
+  PINT32 = WinBaseTypes.PINT32;
+  PINT64 = WinBaseTypes.PINT64;
+  PVOID = WinBaseTypes.PVOID;
+  PCVOID = WinBaseTypes.PCVOID;
+  BOOL = WinBaseTypes.BOOL;
+  CCHAR = WinBaseTypes.CCHAR;
+  HANDLE = WinBaseTypes.HANDLE;
+  PBOOL = WinBaseTypes.PBOOL;
+  PFLOAT = WinBaseTypes.PFLOAT;
+  PHANDLE = WinBaseTypes.PHANDLE;
+  WFLOAT = WinBaseTypes.WFLOAT;
+  WCHAR = WinBaseTypes.WCHAR;
+  PSTR = WinBaseTypes.PSTR;
+  PCSTR = WinBaseTypes.PCSTR;
+  PWSTR = WinBaseTypes.PWSTR;
+  PCWSTR = WinBaseTypes.PCWSTR;
+  TCHAR = WinBaseTypes.TCHAR;
+  PTSTR = WinBaseTypes.PTSTR;
+  PCTSTR = WinBaseTypes.PCTSTR;
+  PSZ = WinBaseTypes.PSZ;
+
+  (* funny names for base types *)
+
+  BYTE = UINT8;
+  UCHAR = UINT8;
+  PUCHAR = PUINT8;
+  PBYTE = PUINT8;
+
+  PSHORT = PINT16;
+  SHORT = INT16;
+  USHORT = UINT16;
+  PUSHORT = PUINT16;
+  WORD = UINT16;
+  PWORD = PUINT16;
+
+  ULONG = UINT32;
+  DWORD = UINT32;
+  UINT = UINT32;
+  INT = INT32;
+  PULONG = PUINT32;
+  LONG = INT32;
+  PINT = PINT32;
+  LPINT = PINT32;
+  LPLONG = PINT32;
+  PDWORD = PUINT32;
+  PUINT = PUINT32;
+  PLONG = PINT32;
+
+  LPBOOL = PBOOL;
+  LPBYTE = PBYTE;
+  LPWORD = PWORD;
+  LPDWORD = PDWORD;
+  LPVOID = PVOID;
+  LPCVOID = PCVOID;
 
 CONST
   MAX_PATH = 260;
 
 (* Types use for passing & returning polymorphic values *)
 TYPE
-  WPARAM = UINT;
-  LPARAM = LONG;
-  LRESULT = LONG;
+  WPARAM = SIZE_T;
+  LPARAM = SSIZE_T;
+  LRESULT = SSIZE_T;
 
 <* INLINE *>
-PROCEDURE MAKEWORD(a, b: BYTE): WORD;
+PROCEDURE MAKEWORD(a, b: UINT8): UINT16;
 <* INLINE *>
-PROCEDURE MAKELONG(a, b: WORD): LONG;
+PROCEDURE MAKELONG(a, b: UINT16): INT32;
 <* INLINE *>
-PROCEDURE LOWORD(l: LONG): WORD;
+PROCEDURE LOWORD(l: INT32): UINT16;
 <* INLINE *>
-PROCEDURE HIWORD(l: LONG): WORD;
+PROCEDURE HIWORD(l: INT32): UINT16;
 <* INLINE *>
-PROCEDURE LOBYTE(w: WORD): BYTE;
+PROCEDURE LOBYTE(w: UINT16): UINT8;
 <* INLINE *>
-PROCEDURE HIBYTE(w: WORD): BYTE;
+PROCEDURE HIBYTE(w: UINT16): UINT8;
 
 TYPE
-  ATOM = WORD;
+  ATOM = UINT16;
 
-  HANDLE       = WinBaseTypes.HANDLE;
-  SPHANDLE     = UNTRACED REF WinBaseTypes.HANDLE;
-  LPHANDLE     = UNTRACED REF WinBaseTypes.HANDLE;
-  HGLOBAL      = WinBaseTypes.HANDLE;
-  HLOCAL       = WinBaseTypes.HANDLE;
-  GLOBALHANDLE = WinBaseTypes.HANDLE;
-  LOCALHANDLE  = WinBaseTypes.HANDLE;
+  SPHANDLE     = PHANDLE; (* compat *)
+  LPHANDLE     = PHANDLE; (* compat *)
+  HGLOBAL      = HANDLE;
+  HLOCAL       = HANDLE;
+  GLOBALHANDLE = HANDLE;
+  LOCALHANDLE  = HANDLE;
 
   (* PROC     = <*WINAPI*> PROCEDURE (); never used *)
   (* NEARPROC = <*WINAPI*> PROCEDURE (); never used *)
@@ -122,63 +159,64 @@ TYPE
   HKL          <: HANDLE;
 
 TYPE
-  HFILE = Ctypes.int;   (* Polymorphic with C runtime file handle type *)
-  HCURSOR = HICON;      (* HICONs & HCURSORs are polymorphic *)
+  HFILE = SSIZE_T;   (* Polymorphic with C runtime file handle type, and with CreateFile Win32 HANDLE *)
+  HCURSOR = HICON;   (* HICONs & HCURSORs are polymorphic *)
 
-  COLORREF = DWORD;
-  LPCOLORREF = UNTRACED REF DWORD;
+  COLORREF = UINT32;
+  PCOLORREF = UNTRACED REF UINT32;
+  LPCOLORREF = PCOLORREF; (* compat *)
 
 CONST
   HFILE_ERROR: HFILE = -1;
 
 TYPE
   PRECT = UNTRACED REF RECT;
-  NPRECT =  UNTRACED REF RECT;
-  LPRECT =  UNTRACED REF RECT;
+  NPRECT = PRECT; (* compat *)
+  LPRECT = PRECT; (* compat *)
   RECT = RECORD
-    left  : LONG;
-    top   : LONG;
-    right : LONG;
-    bottom: LONG;
+    left  : INT32;
+    top   : INT32;
+    right : INT32;
+    bottom: INT32;
   END;
 
   PRECTL = UNTRACED REF RECTL;
   RECTL = RECORD
-    left  : LONG;
-    top   : LONG;
-    right : LONG;
-    bottom: LONG;
+    left  : INT32;
+    top   : INT32;
+    right : INT32;
+    bottom: INT32;
   END;
 
   PPOINT = UNTRACED REF POINT;
-  NPPOINT =  UNTRACED REF POINT;
-  LPPOINT =  UNTRACED REF POINT;
+  NPPOINT = PPOINT; (* compat *)
+  LPPOINT = PPOINT; (* compat *)
   POINT = RECORD
-    x: LONG;
-    y: LONG;
+    x: INT32;
+    y: INT32;
   END;
 
   PPOINTL = UNTRACED REF POINTL;
   POINTL = RECORD
-    x: LONG;
-    y: LONG;
+    x: INT32;
+    y: INT32;
   END;
 
   PSIZE = UNTRACED REF SIZE;
-  LPSIZE = UNTRACED REF SIZE;
+  LPSIZE = PSIZE; (* compat *)
   SIZE = RECORD
-    cx: LONG;
-    cy: LONG;
+    cx: INT32;
+    cy: INT32;
   END;
 
   SIZEL = SIZE;
   PSIZEL = UNTRACED REF SIZE;
 
   PPOINTS = UNTRACED REF POINTS;
-  LPPOINTS = UNTRACED REF POINTS;
+  LPPOINTS = PPOINTS; (* compat *)
   POINTS = RECORD
-    x: SHORT;
-    y: SHORT;
+    x: INT16;
+    y: INT16;
   END;
 
 CONST
