@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.61 2008-04-27 10:53:22 jkrell Exp $
+% $Id: m3makefile,v 1.62 2008-04-27 19:45:41 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -141,16 +141,17 @@ readonly m3cc_env = {
   %
   "LINUXLIBC6" : PickM32 ("CFLAGS='-m32 -g'", "CFLAGS=-g"),
   "AMD64_LINUX" : PickM32 ("CFLAGS='-m32 -g'", "CFLAGS=-g"),
-  "AMD64_NT" : PickM32 ("CFLAGS='-m32 -g'", "CFLAGS=-g"),
   "NT386" : PickM32 ("CFLAGS='-m32 -g'", "CFLAGS=-g"),
+  "AMD64_NT" : PickM32 ("CFLAGS='-m32 -g'", "CFLAGS=-g"),
 } % m3cc_env
 
 readonly m3cc_config = {
   %
   % Build an x86 hosted compiler that targets x86 and AMD64.
   %
-  "LINUXLIBC6" : PickM32("--host=i686-pc-linux-gnu --build=i686-pc-linux-gnu", ""),
+  "LINUXLIBC6" : "--host=i686-pc-linux-gnu --build=i686-pc-linux-gnu",
   "AMD64_LINUX" : PickM32("--host=i686-pc-linux-gnu --build=i686-pc-linux-gnu", ""),
+  "NT386"  : "--target=i686-pc-mingw32 --host=i686-pc-mingw32 --build=i686-pc-mingw32",
   "AMD64_NT"  : PickM32("--target=amd64-pc-mingw32 --host=i686-pc-mingw32 --build=i686-pc-mingw32", ""),
 
   "HPPA"  : "--with-gnu-as",
@@ -219,7 +220,7 @@ readonly proc m3cc_Run (x) is
     write(x & CR)
   end
   if HostIsNT ()
-    local readonly Temp = "_m3sh" & m3cc_ResponseFileCounter & M3CC_TARGET & ".sh"
+    local readonly Temp = "_m3sh" & m3cc_ResponseFileCounter & ".sh"
     > Temp in
       write(x)
     end
@@ -339,7 +340,8 @@ if equal ($OS, "Windows_NT")
   % leaves the string @LIBTOOL@ in the mpfr makefiles. This needs further
   % investigation, however this is a perfectly adequate workaround for now.
   %
-  cmds = cmds & " configure-mpfr | tee -a _m3.log"
+  %cmds = cmds & " configure-mpfr | tee -a _m3.log"
+  cmds = cmds & " configure-host | tee -a _m3.log"
   cmds = cmds & " ; cd mpfr ; sed -e \"s/@LIBTOOL@/libtool/\" < Makefile > Makefile.lt ; mv Makefile.lt Makefile"
   cmds = cmds & " ; cd tests ; sed -e \"s/@LIBTOOL@/libtool/\" < Makefile > Makefile.lt ; mv Makefile.lt Makefile"
   cmds = cmds & " ; cd ../.. ; " & M3CC_MAKE
