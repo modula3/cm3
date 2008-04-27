@@ -333,16 +333,18 @@ cmds = "cd " & build_dir & "; " & M3CC_MAKE
 % This probably is still more than necessary but it is a start.
 %
 if equal ($OS, "Windows_NT")
-  % configure is having problems with libtool
-  cmds = cmds & " all-gmp configure-mpfr all-libcpp all-libdecnumber all-build-libiberty all-libiberty configure-gcc | tee -a _m3.log"
+  %
+  % Configure is having problems with libtool.
+  % In particular, I have libtool in the usual Cygwin /usr/bin/libtool, but configure
+  % leaves the string @LIBTOOL@ in the mpfr makefiles. This needs further
+  % investigation, however this is a perfectly adequate workaround for now.
+  %
+  cmds = cmds & " configure-mpfr | tee -a _m3.log"
   cmds = cmds & " ; cd mpfr ; sed -e \"s/@LIBTOOL@/libtool/\" < Makefile > Makefile.lt ; mv Makefile.lt Makefile"
   cmds = cmds & " ; cd tests ; sed -e \"s/@LIBTOOL@/libtool/\" < Makefile > Makefile.lt ; mv Makefile.lt Makefile"
-  cmds = cmds & " ; cd ..  ; " & M3CC_MAKE
-  cmds = cmds & " all-gmp          all-libcpp all-libdecnumber all-build-libiberty all-libiberty configure-gcc | tee -a _m3.log"
-  cmds = cmds & " ; cd .. "
-else
-  cmds = cmds & " all-gmp all-mpfr all-libcpp all-libdecnumber all-build-libiberty all-libiberty configure-gcc | tee -a _m3.log"
+  cmds = cmds & " ; cd ../.. ; " & M3CC_MAKE
 end
+cmds = cmds & " all-gmp all-mpfr all-libcpp all-libdecnumber all-build-libiberty all-libiberty configure-gcc | tee -a _m3.log"
 cmds = cmds & " ; cd gcc ; " & M3CC_MAKE
 cmds = cmds & " s-modes insn-config.h m3cg | tee -a _m3.log"
 
