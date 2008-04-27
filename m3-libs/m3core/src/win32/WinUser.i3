@@ -17,19 +17,15 @@ INTERFACE WinUser;
    Procedure declarations, constant definitions and macros for the User
    component. *)
 
-IMPORT Ctypes;
-
 FROM Word IMPORT Or;
-FROM WinDef IMPORT SHORT, BOOL, WORD, DWORD, UINT, LPDWORD, LPWORD, LPVOID,
-                   HWND, HDC, WPARAM, LPARAM, LRESULT, HINSTANCE, HMENU,
-                   POINT, HKL, HDESK, HWINSTA, HICON, HCURSOR, HBRUSH,
-                   RECT, BYTE, ATOM, PBYTE, LPBYTE, LPHANDLE, HACCEL,
-                   HBITMAP, LPRECT, LPINT, HRGN, LPPOINT, INT, COLORREF,
-                   HHOOK;
-FROM WinNT IMPORT WCHAR, HANDLE, LPSTR, LPWSTR, PVOID, LPTSTR, LPCSTR,
-                  LPCWSTR, LONG, PSECURITY_INFORMATION,
-                  PSECURITY_DESCRIPTOR, LPCTSTR;
-FROM Ctypes IMPORT int, char, void_star;
+FROM WinBaseTypes IMPORT INT16, BOOL, UINT16, UINT32, PUINT32, PUINT16,
+  PVOID, UINT8, PUINT8, PINT32, INT32, WCHAR, HANDLE, PSTR, PWSTR, PTSTR,
+  PCSTR, PCTSTR, PCWSTR, SIZE_T;
+FROM WinDef IMPORT HWND, HDC, WPARAM, LPARAM, LRESULT, HINSTANCE, HMENU,
+  POINT, HKL, HDESK, HWINSTA, HICON, HCURSOR, HBRUSH, RECT, ATOM, PHANDLE,
+  HACCEL, HBITMAP, PRECT, HRGN, PPOINT, COLORREF, HHOOK;
+FROM WinNT IMPORT PSECURITY_INFORMATION, PSECURITY_DESCRIPTOR;
+FROM Ctypes IMPORT char;
 
 CONST WINVER = 16_0314;         (* version 3.2 *)
 
@@ -39,50 +35,50 @@ TYPE
 (* MENUTEMPLATEA = VOID; (* No M3 equivalent *)
   MENUTEMPLATEW = VOID; *)
 
-  LPMENUTEMPLATE = void_star;
+  LPMENUTEMPLATE = PVOID;
 
-  WNDPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: UINT;
+  WNDPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: UINT32;
                                     a3: WPARAM; a4: LPARAM): LRESULT;
 
-  DLGPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: UINT;
+  DLGPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: UINT32;
                                     a3: WPARAM; a4: LPARAM): BOOL;
 
-  TIMERPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: UINT; a3: UINT; a4: DWORD);
+  TIMERPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: SIZE_T; a3: UINT32; a4: UINT32);
 
-  GRAYSTRINGPROC = <*CALLBACK*> PROCEDURE (a1: HDC; a2: LPARAM; a3: int): BOOL;
+  GRAYSTRINGPROC = <*CALLBACK*> PROCEDURE (a1: HDC; a2: LPARAM; a3: INT32): BOOL;
 
-  PROPENUMPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: LPCSTR;
+  PROPENUMPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: PCSTR;
                                          a3: HANDLE): BOOL;
 
-  PROPENUMPROCEX = <*CALLBACK*> PROCEDURE (a1: HWND; a2: LPTSTR;
-                                           a3: HANDLE; a4: DWORD): BOOL;
+  PROPENUMPROCEX = <*CALLBACK*> PROCEDURE (a1: HWND; a2: PTSTR;
+                                           a3: HANDLE; a4: UINT32): BOOL;
 
   WNDENUMPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: LPARAM): BOOL;
 
-  HOOKPROC = <*CALLBACK*> PROCEDURE (code: int; wParam: WPARAM;
+  HOOKPROC = <*CALLBACK*> PROCEDURE (code: INT32; wParam: WPARAM;
                                      lParam: LPARAM): LRESULT;
 
-  EDITWORDBREAKPROC = <*CALLBACK*> PROCEDURE (lpch: LPSTR; ichCurrent: int;
-                                              cch: int; code: int): int;
+  EDITWORDBREAKPROC = <*CALLBACK*> PROCEDURE (lpch: PSTR; ichCurrent: INT32;
+                                              cch: INT32; code: INT32): INT32;
 
-  SENDASYNCPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: UINT;
-                                          a3: DWORD; a4: LRESULT);
+  SENDASYNCPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: UINT32;
+                                          a3: UINT32; a4: LRESULT);
 
-(*!!!  #define MAKEINTRESOURCE(i) (LPTSTR)((DWORD)((WORD)(i))) *)
+(*!!!  #define MAKEINTRESOURCE(i) (PTSTR)((UINT32)((UINT16)(i))) *)
 
 (* Predefined Resource Types *)
 VAR                             (* CONST *)
-  RT_CURSOR      : LPTSTR;
-  RT_BITMAP      : LPTSTR;
-  RT_ICON        : LPTSTR;
-  RT_MENU        : LPTSTR;
-  RT_DIALOG      : LPTSTR;
-  RT_STRING      : LPTSTR;
-  RT_FONTDIR     : LPTSTR;
-  RT_FONT        : LPTSTR;
-  RT_ACCELERATOR : LPTSTR;
-  RT_RCDATA      : LPTSTR;
-  RT_MESSAGETABLE: LPTSTR;
+  RT_CURSOR      : PTSTR;
+  RT_BITMAP      : PTSTR;
+  RT_ICON        : PTSTR;
+  RT_MENU        : PTSTR;
+  RT_DIALOG      : PTSTR;
+  RT_STRING      : PTSTR;
+  RT_FONTDIR     : PTSTR;
+  RT_FONT        : PTSTR;
+  RT_ACCELERATOR : PTSTR;
+  RT_RCDATA      : PTSTR;
+  RT_MESSAGETABLE: PTSTR;
 
 CONST DIFFERENCE = 11;
 
@@ -91,24 +87,24 @@ VAR                             (* CONST *)
      the ** value of DIFFERENCE must be changed.  ** (RT_GROUP_CURSOR -
      RT_CURSOR) must always be equal to DIFFERENCE ** (RT_GROUP_ICON -
      RT_ICON) must always be equal to DIFFERENCE *)
-  RT_GROUP_CURSOR: LPTSTR;
+  RT_GROUP_CURSOR: PTSTR;
   (* The value RT_BITMAP+DIFFERENCE (13) is intentionally unused *)
-  RT_GROUP_ICON: LPTSTR;
+  RT_GROUP_ICON: PTSTR;
   (* The value 15 is unused/obsolete *)
-  RT_VERSION   : LPTSTR;
-  RT_DLGINCLUDE: LPTSTR;
+  RT_VERSION   : PTSTR;
+  RT_DLGINCLUDE: PTSTR;
 
 TYPE
-  wvsprintfA = <*WINAPI*> PROCEDURE (a1: LPSTR; a2: LPCSTR;
-                                     arglist: Ctypes.void_star): Ctypes.int;
-  wvsprintfW = <*WINAPI*> PROCEDURE (a1: LPWSTR; a2: LPCWSTR;
-                                     arglist: Ctypes.void_star): Ctypes.int;
+  wvsprintfA = <*WINAPI*> PROCEDURE (a1: PSTR; a2: PCSTR;
+                                     arglist: PVOID): INT32;
+  wvsprintfW = <*WINAPI*> PROCEDURE (a1: PWSTR; a2: PCWSTR;
+                                     arglist: PVOID): INT32;
   wvsprintf = wvsprintfA;
 
 (* Steve G.  How do you want to handle varargs??? *)
 (*
-int WINAPI wsprintfA(LPSTR, LPCSTR, ...);
-int WINAPI wsprintfW(LPWSTR, LPCWSTR, ...);
+INT32 WINAPI wsprintfA(PSTR, PCSTR, ...);
+INT32 WINAPI wsprintfW(PWSTR, PCWSTR, ...);
 #ifdef UNICODE
 #define wsprintf wsprintfW
 #else
@@ -125,7 +121,6 @@ CONST
   SB_MAX  = 3;
 
 (* Scroll Bar Commands *)
-CONST
   SB_LINEUP        = 0;
   SB_LINELEFT      = 0;
   SB_LINEDOWN      = 1;
@@ -144,7 +139,6 @@ CONST
   SB_CMD_MAX       = 8;
 
 (* ShowWindow() Commands *)
-CONST
   SW_HIDE            = 0;
   SW_SHOWNORMAL      = 1;
   SW_NORMAL          = 1;
@@ -161,7 +155,6 @@ CONST
   SW_MAX             = 10;
 
 (* Old ShowWindow() Commands *)
-CONST
   HIDE_WINDOW         = 0;
   SHOW_OPENWINDOW     = 1;
   SHOW_ICONWINDOW     = 2;
@@ -169,14 +162,12 @@ CONST
   SHOW_OPENNOACTIVATE = 4;
 
 (* Identifiers for the WM_SHOWWINDOW message *)
-CONST
   SW_PARENTCLOSING = 1;
   SW_OTHERZOOM     = 2;
   SW_PARENTOPENING = 3;
   SW_OTHERUNZOOM   = 4;
 
 (* WM_KEYUP/DOWN/CHAR HIWORD(lParam) flags *)
-CONST
   KF_EXTENDED = 16_0100;
   KF_DLGMODE  = 16_0800;
   KF_MENUMODE = 16_1000;
@@ -185,7 +176,6 @@ CONST
   KF_UP       = 16_8000;
 
 (* Virtual Keys, Standard Set *)
-CONST
   VK_LBUTTON = 16_01;
   VK_RBUTTON = 16_02;
   VK_CANCEL  = 16_03;
@@ -293,7 +283,6 @@ CONST
   VK_OEM_CLEAR = 16_FE;
 
 (* SetWindowsHook() codes *)
-CONST
   WH_MIN             = (-1);
   WH_MSGFILTER       = (-1);
   WH_JOURNALRECORD   = 0;
@@ -310,13 +299,11 @@ CONST
   WH_MAX             = 10;
 
 (* Obsolete hook codes (NO LONGER SUPPORTED) *)
-CONST
   HC_GETLPLPFN  = (-3);
   HC_LPLPFNNEXT = (-2);
   HC_LPFNNEXT   = (-1);
 
 (* Hook Codes *)
-CONST
   HC_ACTION      = 0;
   HC_GETNEXT     = 1;
   HC_SKIP        = 2;
@@ -326,7 +313,6 @@ CONST
   HC_SYSMODALOFF = 5;
 
 (* CBT Hook Codes *)
-CONST
   HCBT_MOVESIZE     = 0;
   HCBT_MINMAX       = 1;
   HCBT_QS           = 2;
@@ -383,13 +369,11 @@ CONST
   MSGF_USER       = 4096;
 
 (* Shell support *)
-CONST
   HSHELL_WINDOWCREATED       = 1;
   HSHELL_WINDOWDESTROYED     = 2;
   HSHELL_ACTIVATESHELLWINDOW = 3;
 
 (* Window Manager Hook Codes *)
-CONST
   WC_INIT          = 1;
   WC_SWP           = 2;
   WC_DEFWINDOWPROC = 3;
@@ -403,10 +387,10 @@ TYPE
   PEVENTMSGMSG = UNTRACED REF EVENTMSG;
   PEVENTMSG = UNTRACED REF EVENTMSG;
   EVENTMSG = RECORD
-    message: UINT;
-    paramL : UINT;
-    paramH : UINT;
-    time   : DWORD;
+    message: UINT32;
+    paramL : UINT32;
+    paramH : UINT32;
+    time   : UINT32;
     hwnd   : HWND;
   END;
 
@@ -416,25 +400,25 @@ TYPE
   CWPSTRUCT = RECORD
     lParam : LPARAM;
     wParam : WPARAM;
-    message: DWORD;
+    message: UINT32;
     hwnd   : HWND;
   END;
 
   (* Structure used by WH_DEBUG *)
   PDEBUGHOOKINFO = UNTRACED REF DEBUGHOOKINFO;
   DEBUGHOOKINFO = RECORD
-    idThread: DWORD;
+    idThread: UINT32;
     reserved: LPARAM;
     lParam  : LPARAM;
     wParam  : WPARAM;
-    code    : int;
+    code    : INT32;
   END;
 
   MOUSEHOOKSTRUCT = RECORD
     pt          : POINT;
     hwnd        : HWND;
-    wHitTestCode: UINT;
-    dwExtraInfo : DWORD;
+    wHitTestCode: UINT32;
+    dwExtraInfo : UINT32;
   END;
 
 (*
@@ -455,15 +439,14 @@ CONST
 CONST KL_NAMELENGTH = 9;
 
 TYPE
-  LoadKeyboardLayoutA = <*WINAPI*> PROCEDURE (pwszKLID: LPCSTR; Flags: UINT): HKL;
-  LoadKeyboardLayoutW = <*WINAPI*> PROCEDURE (pwszKLID: LPCWSTR; Flags: UINT): HKL;
+  LoadKeyboardLayoutA = <*WINAPI*> PROCEDURE (pwszKLID: PCSTR; Flags: UINT32): HKL;
+  LoadKeyboardLayoutW = <*WINAPI*> PROCEDURE (pwszKLID: PCWSTR; Flags: UINT32): HKL;
   LoadKeyboardLayout = LoadKeyboardLayoutA;
 
-TYPE
-  ActivateKeyboardLayout = <*WINAPI*> PROCEDURE (hkl: HKL; Flags: UINT): BOOL;
+  ActivateKeyboardLayout = <*WINAPI*> PROCEDURE (hkl: HKL; Flags: UINT32): BOOL;
   UnloadKeyboardLayout   = <*WINAPI*> PROCEDURE (hkl: HKL): BOOL;
-  GetKeyboardLayoutNameA = <*WINAPI*> PROCEDURE (pwszKLID: LPSTR): BOOL;
-  GetKeyboardLayoutNameW = <*WINAPI*> PROCEDURE (pwszKLID: LPWSTR): BOOL;
+  GetKeyboardLayoutNameA = <*WINAPI*> PROCEDURE (pwszKLID: PSTR): BOOL;
+  GetKeyboardLayoutNameW = <*WINAPI*> PROCEDURE (pwszKLID: PWSTR): BOOL;
 
   GetKeyboardLayoutName = GetKeyboardLayoutNameA;
 
@@ -471,29 +454,29 @@ TYPE
  * Desktop-specific access flags
  *)
 CONST
-  DESKTOP_ENUMWINDOWS    : LONG = 16_0001;
-  DESKTOP_CREATEWINDOW   : LONG = 16_0002;
-  DESKTOP_CREATEMENU     : LONG = 16_0004;
-  DESKTOP_HOOKCONTROL    : LONG = 16_0008;
-  DESKTOP_JOURNALRECORD  : LONG = 16_0010;
-  DESKTOP_JOURNALPLAYBACK: LONG = 16_0020;
-  DESKTOP_ENUMERATE      : LONG = 16_0040;
+  DESKTOP_ENUMWINDOWS    : INT32 = 16_0001;
+  DESKTOP_CREATEWINDOW   : INT32 = 16_0002;
+  DESKTOP_CREATEMENU     : INT32 = 16_0004;
+  DESKTOP_HOOKCONTROL    : INT32 = 16_0008;
+  DESKTOP_JOURNALRECORD  : INT32 = 16_0010;
+  DESKTOP_JOURNALPLAYBACK: INT32 = 16_0020;
+  DESKTOP_ENUMERATE      : INT32 = 16_0040;
 
-TYPE GetThreadDesktop = <*WINAPI*> PROCEDURE (arg1: DWORD): HDESK;
+TYPE GetThreadDesktop = <*WINAPI*> PROCEDURE (arg1: UINT32): HDESK;
 
 (*
  * Windowstation-specific access flags
  *)
 CONST
-  WINSTA_ENUMDESKTOPS     : LONG = 16_0001;
-  WINSTA_READATTRIBUTES   : LONG = 16_0002;
-  WINSTA_ACCESSCLIPBOARD  : LONG = 16_0004;
-  WINSTA_CREATEDESKTOP    : LONG = 16_0008;
-  WINSTA_WRITEATTRIBUTES  : LONG = 16_0010;
-  WINSTA_ACCESSGLOBALATOMS: LONG = 16_0020;
-  WINSTA_EXITWINDOWS      : LONG = 16_0040;
-  WINSTA_ENUMERATE        : LONG = 16_0100;
-  WINSTA_READSCREEN       : LONG = 16_0200;
+  WINSTA_ENUMDESKTOPS     : INT32 = 16_0001;
+  WINSTA_READATTRIBUTES   : INT32 = 16_0002;
+  WINSTA_ACCESSCLIPBOARD  : INT32 = 16_0004;
+  WINSTA_CREATEDESKTOP    : INT32 = 16_0008;
+  WINSTA_WRITEATTRIBUTES  : INT32 = 16_0010;
+  WINSTA_ACCESSGLOBALATOMS: INT32 = 16_0020;
+  WINSTA_EXITWINDOWS      : INT32 = 16_0040;
+  WINSTA_ENUMERATE        : INT32 = 16_0100;
+  WINSTA_READSCREEN       : INT32 = 16_0200;
 
 
 <*EXTERNAL GetProcessWindowStation:WINAPI*>
@@ -502,12 +485,12 @@ PROCEDURE GetProcessWindowStation (): HWINSTA;
 (*
  * window-specific access flags
  *)
-CONST WIN_ACCESSWINDOW: LONG = 16_0001;
+CONST WIN_ACCESSWINDOW: INT32 = 16_0001;
 
 (*
  * menu-specific access flags
  *)
-CONST MENU_ACCESSMENU: LONG = 16_0001;
+CONST MENU_ACCESSMENU: INT32 = 16_0001;
 
 <*EXTERNAL SetUserObjectSecurity:WINAPI*>
 PROCEDURE SetUserObjectSecurity (arg1: HANDLE;
@@ -518,42 +501,42 @@ PROCEDURE SetUserObjectSecurity (arg1: HANDLE;
 PROCEDURE GetUserObjectSecurity (arg1: HANDLE;
                                  arg2: PSECURITY_INFORMATION;
                                  arg3: PSECURITY_DESCRIPTOR;
-                                 arg4: DWORD;
-                                 arg5: LPDWORD                ): BOOL;
+                                 arg4: UINT32;
+                                 arg5: PUINT32                ): BOOL;
 
 <*EXTERNAL ImpersonateDDEClientWindow:WINAPI*>
 PROCEDURE ImpersonateDDEClientWindow (hwndClient: HWND; hwndServer: HWND):BOOL;
 
 TYPE
   PWNDCLASSA = UNTRACED REF WNDCLASSA;
-  NPWNDCLASSA = UNTRACED REF WNDCLASSA;
-  LPWNDCLASSA = UNTRACED REF WNDCLASSA;
+  NPWNDCLASSA = PWNDCLASSA;
+  LPWNDCLASSA = PWNDCLASSA;
   WNDCLASSA = RECORD
-    style        : UINT;
+    style        : UINT32;
     lpfnWndProc  : WNDPROC;
-    cbClsExtra   : int;
-    cbWndExtra   : int;
+    cbClsExtra   : INT32;
+    cbWndExtra   : INT32;
     hInstance    : HINSTANCE;
     hIcon        : HICON;
     hCursor      : HCURSOR;
     hbrBackground: HBRUSH;
-    lpszMenuName : LPCSTR;
-    lpszClassName: LPCSTR;
+    lpszMenuName : PCSTR;
+    lpszClassName: PCSTR;
   END;
 
   PWNDCLASSW = UNTRACED REF WNDCLASSW;
-  LPWNDCLASSW = UNTRACED REF WNDCLASSW;
+  LPWNDCLASSW = PWNDCLASSW;
   WNDCLASSW = RECORD
-    style        : UINT;
+    style        : UINT32;
     lpfnWndProc  : WNDPROC;
-    cbClsExtra   : int;
-    cbWndExtra   : int;
+    cbClsExtra   : INT32;
+    cbWndExtra   : INT32;
     hInstance    : HINSTANCE;
     hIcon        : HICON;
     hCursor      : HCURSOR;
     hbrBackground: HBRUSH;
-    lpszMenuName : LPCWSTR;
-    lpszClassName: LPCWSTR;
+    lpszMenuName : PCWSTR;
+    lpszClassName: PCWSTR;
   END;
 
   WNDCLASS = WNDCLASSA;
@@ -563,19 +546,19 @@ TYPE
 
   (* Message structure *)
   PMSG = UNTRACED REF MSG;
-  LPMSG = UNTRACED REF MSG;
+  LPMSG = PMSG;
   MSG = RECORD
     hwnd   : HWND;
-    message: UINT;
+    message: UINT32;
     wParam : WPARAM;
     lParam : LPARAM;
-    time   : DWORD;
+    time   : UINT32;
     pt     : POINT;
   END;
 
 (*!!!  SteveG.  Macros will cost you extra.  #define POINTSTOPOINT(pt,pts)
-   {(pt).x = (SHORT)LOWORD(pts); \ (pt).y = (SHORT)HIWORD(pts);} #define
-   POINTTOPOINTS(pt) (MAKELONG((short)((pt).x), (short)((pt).y))) #define
+   {(pt).x = (INT16)LOWORD(pts); \ (pt).y = (INT16)HIWORD(pts);} #define
+   POINTTOPOINTS(pt) (MAKELONG((INT16)((pt).x), (INT16)((pt).y))) #define
    MAKEWPARAM(l, h) (WPARAM)MAKELONG(l, h) #define MAKELPARAM(l, h)
    (LPARAM)MAKELONG(l, h) #define MAKELRESULT(l, h) (LRESULT)MAKELONG(l,
    h) *)
@@ -591,7 +574,6 @@ CONST
   GWL_ID         = (-12);
 
 (* Class field offsets for GetClassLong() *)
-CONST
   GCL_MENUNAME      = (-8);
   GCL_HBRBACKGROUND = (-10);
   GCL_HCURSOR       = (-12);
@@ -605,7 +587,6 @@ CONST
 (*!!!define GCW_ATOM (-32)*)
 
 (* Window Messages *)
-CONST
   WM_NULL     = 16_0000;
   WM_CREATE   = 16_0001;
   WM_DESTROY  = 16_0002;
@@ -615,12 +596,10 @@ CONST
 (*
  * WM_ACTIVATE state values
  *)
-CONST
   WA_INACTIVE    = 0;
   WA_ACTIVE      = 1;
   WA_CLICKACTIVE = 2;
 
-CONST
   WM_SETFOCUS        = 16_0007;
   WM_KILLFOCUS       = 16_0008;
   WM_ENABLE          = 16_000A;
@@ -660,7 +639,7 @@ TYPE
     ptMaxTrackSize: POINT;
   END;
   PMINMAXINFO = UNTRACED REF MINMAXINFO;
-  LPMINMAXINFO = UNTRACED REF MINMAXINFO;
+  LPMINMAXINFO = PMINMAXINFO;
 CONST WM_GETMINMAXINFO = 16_0024;
 
 CONST
@@ -681,7 +660,6 @@ CONST
   WM_COMPAREITEM    = 16_0039;
   WM_FULLSCREEN     = 16_003A;
 
-CONST
   WM_COMPACTING           = 16_0041;
   WM_OTHERWINDOWCREATED   = 16_0042;
   WM_OTHERWINDOWDESTROYED = 16_0043;
@@ -693,8 +671,8 @@ CONST
   WM_COPYDATA             = 16_004A;
 TYPE
   COPYDATASTRUCT = RECORD
-    dwData: DWORD;
-    cbData: DWORD;
+    dwData: SIZE_T;
+    cbData: UINT32;
     lpData: PVOID;
   END;
   PCOPYDATASTRUCT = UNTRACED REF COPYDATASTRUCT;
@@ -810,7 +788,6 @@ CONST
   WM_HOTKEY            = 16_0312;
 
 (* PenWindows specific messages *)
-CONST
   WM_PENWINFIRST = 16_0380;
   WM_PENWINLAST  = 16_038F;
 
@@ -823,12 +800,10 @@ CONST
 CONST WM_USER = 16_0400;
 
 (* WM_SYNCTASK Commands *)
-CONST
   ST_BEGINSWP = 0;
   ST_ENDSWP   = 1;
 
 (* WinWhere() Area Codes *)
-CONST
   HTERROR       = (-2);
   HTTRANSPARENT = (-1);
   HTNOWHERE     = 0;
@@ -857,23 +832,21 @@ CONST
   HTSIZELAST    = HTBOTTOMRIGHT;
 
 (* SendMessageTimeout values *)
-CONST
   SMTO_NORMAL      = 16_0000;
   SMTO_BLOCK       = 16_0001;
   SMTO_ABORTIFHUNG = 16_0002;
 
 (* WM_MOUSEACTIVATE Return Codes *)
-CONST
   MA_ACTIVATE         = 1;
   MA_ACTIVATEANDEAT   = 2;
   MA_NOACTIVATE       = 3;
   MA_NOACTIVATEANDEAT = 4;
 
 <*EXTERNAL RegisterWindowMessageA:WINAPI*>
-PROCEDURE RegisterWindowMessageA (lpString: LPCSTR): UINT;
+PROCEDURE RegisterWindowMessageA (lpString: PCSTR): UINT32;
 
 <*EXTERNAL RegisterWindowMessageW:WINAPI*>
-PROCEDURE RegisterWindowMessageW (lpString: LPCWSTR): UINT;
+PROCEDURE RegisterWindowMessageW (lpString: PCWSTR): UINT32;
 CONST RegisterWindowMessage = RegisterWindowMessageA;
 
 (* WM_SIZE message wParam values *)
@@ -885,7 +858,6 @@ CONST
   SIZE_MAXHIDE   = 4;
 
 (* Obsolete constant names *)
-CONST
   SIZENORMAL     = SIZE_RESTORED;
   SIZEICONIC     = SIZE_MINIMIZED;
   SIZEFULLSCREEN = SIZE_MAXIMIZED;
@@ -897,21 +869,22 @@ TYPE
   WINDOWPOS = RECORD
     hwnd           : HWND;
     hwndInsertAfter: HWND;
-    x              : int;
-    y              : int;
-    cx             : int;
-    cy             : int;
-    flags          : UINT;
+    x              : INT32;
+    y              : INT32;
+    cx             : INT32;
+    cy             : INT32;
+    flags          : UINT32;
   END;
   PWINDOWPOS = UNTRACED REF WINDOWPOS;
-  LPWINDOWPOS = UNTRACED REF WINDOWPOS;
+  LPWINDOWPOS = PWINDOWPOS;
 
   (* WM_NCCALCSIZE parameter structure *)
   NCCALCSIZE_PARAMS = RECORD
     rgrc : ARRAY [0 .. 3 - 1] OF RECT;
     lppos: PWINDOWPOS;
   END;
-  LPNCCALCSIZE_PARAMS = UNTRACED REF NCCALCSIZE_PARAMS;
+  PNCCALCSIZE_PARAMS = UNTRACED REF NCCALCSIZE_PARAMS;
+  LPNCCALCSIZE_PARAMS = PNCCALCSIZE_PARAMS;
 
 (* WM_NCCALCSIZE "window valid rect" return values *)
 CONST
@@ -925,7 +898,6 @@ CONST
   WVR_VALIDRECTS  = 16_0400;
 
 (* Key State Masks for Mouse Messages *)
-CONST
   MK_LBUTTON = 16_0001;
   MK_RBUTTON = 16_0002;
   MK_SHIFT   = 16_0004;
@@ -933,28 +905,27 @@ CONST
   MK_MBUTTON = 16_0010;
 
 (* Window Styles *)
-CONST
-  WS_OVERLAPPED  : LONG = 16_00000000;
-  WS_POPUP       : LONG = 16_80000000;
-  WS_CHILD       : LONG = 16_40000000;
-  WS_MINIMIZE    : LONG = 16_20000000;
-  WS_VISIBLE     : LONG = 16_10000000;
-  WS_DISABLED    : LONG = 16_08000000;
-  WS_CLIPSIBLINGS: LONG = 16_04000000;
-  WS_CLIPCHILDREN: LONG = 16_02000000;
-  WS_MAXIMIZE    : LONG = 16_01000000;
-  WS_CAPTION     : LONG = 16_00C00000; (* WS_BORDER | WS_DLGFRAME *)
-  WS_BORDER      : LONG = 16_00800000;
-  WS_DLGFRAME    : LONG = 16_00400000;
-  WS_VSCROLL     : LONG = 16_00200000;
-  WS_HSCROLL     : LONG = 16_00100000;
-  WS_SYSMENU     : LONG = 16_00080000;
-  WS_THICKFRAME  : LONG = 16_00040000;
-  WS_GROUP       : LONG = 16_00020000;
-  WS_TABSTOP     : LONG = 16_00010000;
+  WS_OVERLAPPED  : INT32 = 16_00000000;
+  WS_POPUP       : INT32 = 16_80000000;
+  WS_CHILD       : INT32 = 16_40000000;
+  WS_MINIMIZE    : INT32 = 16_20000000;
+  WS_VISIBLE     : INT32 = 16_10000000;
+  WS_DISABLED    : INT32 = 16_08000000;
+  WS_CLIPSIBLINGS: INT32 = 16_04000000;
+  WS_CLIPCHILDREN: INT32 = 16_02000000;
+  WS_MAXIMIZE    : INT32 = 16_01000000;
+  WS_CAPTION     : INT32 = 16_00C00000; (* WS_BORDER | WS_DLGFRAME *)
+  WS_BORDER      : INT32 = 16_00800000;
+  WS_DLGFRAME    : INT32 = 16_00400000;
+  WS_VSCROLL     : INT32 = 16_00200000;
+  WS_HSCROLL     : INT32 = 16_00100000;
+  WS_SYSMENU     : INT32 = 16_00080000;
+  WS_THICKFRAME  : INT32 = 16_00040000;
+  WS_GROUP       : INT32 = 16_00020000;
+  WS_TABSTOP     : INT32 = 16_00010000;
 
-  WS_MINIMIZEBOX: LONG = 16_00020000;
-  WS_MAXIMIZEBOX: LONG = 16_00010000;
+  WS_MINIMIZEBOX: INT32 = 16_00020000;
+  WS_MAXIMIZEBOX: INT32 = 16_00010000;
 
   WS_TILED       = WS_OVERLAPPED;
   WS_ICONIC      = WS_MINIMIZE;
@@ -972,12 +943,11 @@ CONST
   WS_CHILDWINDOW = WS_CHILD;
 
 (* Extended Window Styles *)
-CONST
-  WS_EX_DLGMODALFRAME : LONG = 16_00000001;
-  WS_EX_NOPARENTNOTIFY: LONG = 16_00000004;
-  WS_EX_TOPMOST       : LONG = 16_00000008;
-  WS_EX_ACCEPTFILES   : LONG = 16_00000010;
-  WS_EX_TRANSPARENT   : LONG = 16_00000020;
+  WS_EX_DLGMODALFRAME : INT32 = 16_00000001;
+  WS_EX_NOPARENTNOTIFY: INT32 = 16_00000004;
+  WS_EX_TOPMOST       : INT32 = 16_00000008;
+  WS_EX_ACCEPTFILES   : INT32 = 16_00000010;
+  WS_EX_TRANSPARENT   : INT32 = 16_00000020;
 
 (* Class styles *)
 CONST
@@ -997,7 +967,6 @@ CONST
   CS_GLOBALCLASS     = 16_4000; (* Global window class *)
 
 (* Predefined Clipboard Formats *)
-CONST
   CF_TEXT         = 1;
   CF_BITMAP       = 2;
   CF_METAFILEPICT = 3;
@@ -1020,19 +989,16 @@ CONST
   CF_DSPENHMETAFILE  = 16_008E;
 
 (* "Private" formats don't get GlobalFree()'d *)
-CONST
   CF_PRIVATEFIRST = 16_0200;
   CF_PRIVATELAST  = 16_02FF;
 
 (* "GDIOBJ" formats do get DeleteObject()'d *)
-CONST
   CF_GDIOBJFIRST = 16_0300;
   CF_GDIOBJLAST  = 16_03FF;
 
 (*
  * Defines for the fVirt field of the Accelerator table structure.
  *)
-CONST
   FNOINVERT = 16_02;
   FSHIFT    = 16_04;
   FCONTROL  = 16_08;
@@ -1040,11 +1006,12 @@ CONST
 
 TYPE
   ACCEL = RECORD
-    fVirt: BYTE;        (* Also called the flags field *)
-    key  : WORD;
-    cmd  : WORD;
+    fVirt: UINT8;        (* Also called the flags field *)
+    key  : UINT16;
+    cmd  : UINT16;
   END;
-  LPACCEL = UNTRACED REF ACCEL;
+  PACCEL = UNTRACED REF ACCEL;
+  LPACCEL = PACCEL;
 
   PAINTSTRUCT = RECORD
     hdc        : HDC;
@@ -1052,41 +1019,42 @@ TYPE
     rcPaint    : RECT;
     fRestore   : BOOL;
     fIncUpdate : BOOL;
-    rgbReserved: ARRAY [0 .. 32 - 1] OF BYTE;
+    rgbReserved: ARRAY [0 .. 32 - 1] OF UINT8;
   END;
   PPAINTSTRUCT = UNTRACED REF PAINTSTRUCT;
-  LPPAINTSTRUCT = UNTRACED REF PAINTSTRUCT;
+  LPPAINTSTRUCT = PPAINTSTRUCT;
 
-  LPCREATESTRUCTA = UNTRACED REF CREATESTRUCTA;
+  PCREATESTRUCTA = UNTRACED REF CREATESTRUCTA;
+  LPCREATESTRUCTA = PCREATESTRUCTA;
   CREATESTRUCTA = RECORD
-    lpCreateParams: LPVOID;
+    lpCreateParams: PVOID;
     hInstance     : HINSTANCE;
     hMenu         : HMENU;
     hwndParent    : HWND;
-    cy            : int;
-    cx            : int;
-    y             : int;
-    x             : int;
-    style         : LONG;
-    lpszName      : LPCSTR;
-    lpszClass     : LPCSTR;
-    dwExStyle     : DWORD;
+    cy            : INT32;
+    cx            : INT32;
+    y             : INT32;
+    x             : INT32;
+    style         : INT32;
+    lpszName      : PCSTR;
+    lpszClass     : PCSTR;
+    dwExStyle     : UINT32;
   END;
 
   LPCREATESTRUCTW = CREATESTRUCTW;
   CREATESTRUCTW = RECORD
     hInstance     : HINSTANCE;
-    lpCreateParams: LPVOID;
+    lpCreateParams: PVOID;
     hMenu         : HMENU;
     hwndParent    : HWND;
-    cy            : int;
-    cx            : int;
-    y             : int;
-    x             : int;
-    style         : LONG;
-    lpszName      : LPCWSTR;
-    lpszClass     : LPCWSTR;
-    dwExStyle     : DWORD;
+    cy            : INT32;
+    cx            : INT32;
+    y             : INT32;
+    x             : INT32;
+    style         : INT32;
+    lpszName      : PCWSTR;
+    lpszClass     : PCWSTR;
+    dwExStyle     : UINT32;
   END;
 
 TYPE
@@ -1096,9 +1064,9 @@ TYPE
   PWINDOWPLACEMENT = UNTRACED REF WINDOWPLACEMENT;
   LPWINDOWPLACEMENT = UNTRACED REF WINDOWPLACEMENT;
   WINDOWPLACEMENT = RECORD
-    length          : UINT;
-    flags           : UINT;
-    showCmd         : UINT;
+    length          : UINT32;
+    flags           : UINT32;
+    showCmd         : UINT32;
     ptMinPosition   : POINT;
     ptMaxPosition   : POINT;
     rcNormalPosition: RECT;
@@ -1109,20 +1077,17 @@ CONST
   WPF_RESTORETOMAXIMIZED = 16_0002;
 
 (* Owner draw control types *)
-CONST
   ODT_MENU     = 1;
   ODT_LISTBOX  = 2;
   ODT_COMBOBOX = 3;
   ODT_BUTTON   = 4;
 
 (* Owner draw actions *)
-CONST
   ODA_DRAWENTIRE = 16_0001;
   ODA_SELECT     = 16_0002;
   ODA_FOCUS      = 16_0004;
 
 (* Owner draw state *)
-CONST
   ODS_SELECTED = 16_0001;
   ODS_GRAYED   = 16_0002;
   ODS_DISABLED = 16_0004;
@@ -1132,46 +1097,46 @@ CONST
 (* MEASUREITEMSTRUCT for ownerdraw *)
 TYPE
   MEASUREITEMSTRUCT = RECORD
-    CtlType   : UINT;
-    CtlID     : UINT;
-    itemID    : UINT;
-    itemWidth : UINT;
-    itemHeight: UINT;
-    itemData  : DWORD;
+    CtlType   : UINT32;
+    CtlID     : UINT32;
+    itemID    : UINT32;
+    itemWidth : UINT32;
+    itemHeight: UINT32;
+    itemData  : SIZE_T;
   END;
 
   (* DRAWITEMSTRUCT for ownerdraw *)
   DRAWITEMSTRUCT = RECORD
-    CtlType   : UINT;
-    CtlID     : UINT;
-    itemID    : UINT;
-    itemAction: UINT;
-    itemState : UINT;
+    CtlType   : UINT32;
+    CtlID     : UINT32;
+    itemID    : UINT32;
+    itemAction: UINT32;
+    itemState : UINT32;
     hwndItem  : HWND;
     hDC       : HDC;
     rcItem    : RECT;
-    itemData  : DWORD;
+    itemData  : SIZE_T;
   END;
 
   (* DELETEITEMSTRUCT for ownerdraw *)
   DELETEITEMSTRUCT = RECORD
-    CtlType : UINT;
-    CtlID   : UINT;
-    itemID  : UINT;
+    CtlType : UINT32;
+    CtlID   : UINT32;
+    itemID  : UINT32;
     hwndItem: HWND;
-    itemData: UINT;
+    itemData: SIZE_T;
   END;
 
   (* COMPAREITEMSTUCT for ownerdraw sorting *)
   COMPAREITEMSTRUCT = RECORD
-    CtlType   : UINT;
-    CtlID     : UINT;
+    CtlType   : UINT32;
+    CtlID     : UINT32;
     hwndItem  : HWND;
-    itemID1   : UINT;
-    itemData1 : DWORD;
-    itemID2   : UINT;
-    itemData2 : DWORD;
-    dwLocaleId: DWORD;
+    itemID1   : UINT32;
+    itemData1 : SIZE_T;
+    itemID2   : UINT32;
+    itemData2 : SIZE_T;
+    dwLocaleId: UINT32;
   END;
 
 (* Message Function Templates *)
@@ -1179,41 +1144,41 @@ TYPE
 <*EXTERNAL GetMessageA:WINAPI*>
 PROCEDURE GetMessageA (lpMsg        : LPMSG;
                        hWnd         : HWND;
-                       wMsgFilterMin: UINT;
-                      wMsgFilterMax: UINT   ): BOOL;
+                       wMsgFilterMin: UINT32;
+                      wMsgFilterMax: UINT32   ): BOOL;
 
 (* Message Function Templates *)
 
 <*EXTERNAL GetMessageW:WINAPI*>
 PROCEDURE GetMessageW (lpMsg        : LPMSG;
                        hWnd         : HWND;
-                       wMsgFilterMin: UINT;
-                       wMsgFilterMax: UINT   ): BOOL;
+                       wMsgFilterMin: UINT32;
+                       wMsgFilterMax: UINT32   ): BOOL;
 CONST GetMessage = GetMessageA;
 
 <*EXTERNAL TranslateMessage:WINAPI*>
 PROCEDURE TranslateMessage (lpMsg: UNTRACED REF MSG): BOOL;
 
 <*EXTERNAL DispatchMessageA:WINAPI*>
-PROCEDURE DispatchMessageA (lpMsg: UNTRACED REF MSG): LONG;
+PROCEDURE DispatchMessageA (lpMsg: UNTRACED REF MSG): INT32;
 
 <*EXTERNAL DispatchMessageW:WINAPI*>
-PROCEDURE DispatchMessageW (lpMsg: UNTRACED REF MSG): LONG;
+PROCEDURE DispatchMessageW (lpMsg: UNTRACED REF MSG): INT32;
 CONST DispatchMessage = DispatchMessageA;
 
 <*EXTERNAL PeekMessageA:WINAPI*>
 PROCEDURE PeekMessageA (lpMsg        : LPMSG;
                         hWnd         : HWND;
-                        wMsgFilterMin: UINT;
-                        wMsgFilterMax: UINT;
-                        wRemoveMsg   : UINT   ): BOOL;
+                        wMsgFilterMin: UINT32;
+                        wMsgFilterMax: UINT32;
+                        wRemoveMsg   : UINT32   ): BOOL;
 
 <*EXTERNAL PeekMessageW:WINAPI*>
 PROCEDURE PeekMessageW (lpMsg        : LPMSG;
                         hWnd         : HWND;
-                        wMsgFilterMin: UINT;
-                        wMsgFilterMax: UINT;
-                        wRemoveMsg   : UINT   ): BOOL;
+                        wMsgFilterMin: UINT32;
+                        wMsgFilterMax: UINT32;
+                        wRemoveMsg   : UINT32   ): BOOL;
 CONST PeekMessage = PeekMessageA;
 
 (* PeekMessage() Options *)
@@ -1224,12 +1189,12 @@ CONST
 
 <*EXTERNAL RegisterHotKey:WINAPI*>
 PROCEDURE RegisterHotKey (hwnd       : HWND;
-                          id         : int;
-                          fsModifiers: UINT;
-                          vk         : UINT  ): BOOL;
+                          id         : INT32;
+                          fsModifiers: UINT32;
+                          vk         : UINT32  ): BOOL;
 
 <*EXTERNAL UnregisterHotKey:WINAPI*>
-PROCEDURE UnregisterHotKey (hwnd: HWND; id: int): BOOL;
+PROCEDURE UnregisterHotKey (hwnd: HWND; id: INT32): BOOL;
 
 CONST
   MOD_ALT     = 16_0001;
@@ -1239,124 +1204,123 @@ CONST
   IDHOT_SNAPWINDOW  = (-1);     (* SHIFT-PRINTSCRN *)
   IDHOT_SNAPDESKTOP = (-2);     (* PRINTSCRN *)
 
-CONST
   EWX_LOGOFF   = 0;
   EWX_SHUTDOWN = 1;
   EWX_REBOOT   = 2;
   EWX_FORCE    = 4;
 
-PROCEDURE ExitWindows(dwReserved: UINT; Code: DWORD): BOOL;
+PROCEDURE ExitWindows(dwReserved: UINT32; Code: UINT32): BOOL;
 
 <*EXTERNAL ExitWindowsEx:WINAPI*>
-PROCEDURE ExitWindowsEx (uFlags: UINT; ForceTimeout: DWORD): BOOL;
+PROCEDURE ExitWindowsEx (uFlags: UINT32; ForceTimeout: UINT32): BOOL;
 
 <*EXTERNAL SwapMouseButton:WINAPI*>
 PROCEDURE SwapMouseButton (arg1: BOOL): BOOL;
 
 <*EXTERNAL GetMessagePos:WINAPI*>
-PROCEDURE GetMessagePos (): DWORD;
+PROCEDURE GetMessagePos (): UINT32;
 
 <*EXTERNAL GetMessageTime:WINAPI*>
-PROCEDURE GetMessageTime (): LONG;
+PROCEDURE GetMessageTime (): INT32;
 
 <*EXTERNAL GetMessageExtraInfo:WINAPI*>
-PROCEDURE GetMessageExtraInfo (): LONG;
+PROCEDURE GetMessageExtraInfo (): INT32;
 
 <*EXTERNAL SendMessageA:WINAPI*>
 PROCEDURE SendMessageA (hWnd  : HWND;
-                        Msg   : UINT;
+                        Msg   : UINT32;
                         wParam: WPARAM;
                         lParam: LPARAM  ): LRESULT;
 
 <*EXTERNAL SendMessageW:WINAPI*>
 PROCEDURE SendMessageW (hWnd  : HWND;
-                        Msg   : UINT;
+                        Msg   : UINT32;
                         wParam: WPARAM;
                         lParam: LPARAM  ): LRESULT;
 CONST SendMessage = SendMessageA;
 
 <*EXTERNAL SendMessageTimeoutA:WINAPI*>
 PROCEDURE SendMessageTimeoutA (hWnd      : HWND;
-                               Msg       : UINT;
+                               Msg       : UINT32;
                                wParam    : WPARAM;
                                lParam    : LPARAM;
-                               fuFlags   : UINT;
-                               uTimeout  : UINT;
-                               lpdwResult: LPDWORD ): LRESULT;
+                               fuFlags   : UINT32;
+                               uTimeout  : UINT32;
+                               lpdwResult: PUINT32 ): LRESULT;
 
 <*EXTERNAL SendMessageTimeoutW:WINAPI*>
 PROCEDURE SendMessageTimeoutW (hWnd      : HWND;
-                               Msg       : UINT;
+                               Msg       : UINT32;
                                wParam    : WPARAM;
                                lParam    : LPARAM;
-                               fuFlags   : UINT;
-                               uTimeout  : UINT;
-                               lpdwResult: LPDWORD ): LRESULT;
+                               fuFlags   : UINT32;
+                               uTimeout  : UINT32;
+                               lpdwResult: PUINT32 ): LRESULT;
 CONST SendMessageTimeout = SendMessageTimeoutA;
 
 <*EXTERNAL SendNotifyMessageA:WINAPI*>
 PROCEDURE SendNotifyMessageA (hwnd  : HWND;
-                                Msg   : UINT;
+                                Msg   : UINT32;
                                 wParam: WPARAM;
                                 lParam: LPARAM  ): BOOL;
 
 <*EXTERNAL SendNotifyMessageW:WINAPI*>
 PROCEDURE SendNotifyMessageW (hwnd  : HWND;
-                                Msg   : UINT;
+                                Msg   : UINT32;
                                 wParam: WPARAM;
                                 lParam: LPARAM  ): BOOL;
 CONST SendNotifyMessage = SendNotifyMessageA;
 
 <*EXTERNAL SendMessageCallbackA:WINAPI*>
 PROCEDURE SendMessageCallbackA (hwnd            : HWND;
-                                  Msg             : UINT;
+                                  Msg             : UINT32;
                                   wParam          : WPARAM;
                                   lParam          : LPARAM;
                                   lpResultCallBack: SENDASYNCPROC;
-                                  dwData          : DWORD          ): BOOL;
+                                  dwData          : UINT32          ): BOOL;
 
 <*EXTERNAL SendMessageCallbackW:WINAPI*>
 PROCEDURE SendMessageCallbackW (hwnd            : HWND;
-                                  Msg             : UINT;
+                                  Msg             : UINT32;
                                   wParam          : WPARAM;
                                   lParam          : LPARAM;
                                   lpResultCallBack: SENDASYNCPROC;
-                                  dwData          : DWORD          ): BOOL;
+                                  dwData          : UINT32          ): BOOL;
 CONST SendMessageCallback = SendMessageCallbackA;
 
 <*EXTERNAL PostMessageA:WINAPI*>
 PROCEDURE PostMessageA (hWnd  : HWND;
-                        Msg   : UINT;
+                        Msg   : UINT32;
                         wParam: WPARAM;
                         lParam: LPARAM  ): BOOL;
 
 <*EXTERNAL PostMessageW:WINAPI*>
 PROCEDURE PostMessageW (hWnd  : HWND;
-                        Msg   : UINT;
+                        Msg   : UINT32;
                         wParam: WPARAM;
                         lParam: LPARAM  ): BOOL;
 CONST PostMessage = PostMessageA;
 
 <*EXTERNAL PostThreadMessageA:WINAPI*>
-PROCEDURE PostThreadMessageA (idThread: DWORD;
-                              Msg     : UINT;
+PROCEDURE PostThreadMessageA (idThread: UINT32;
+                              Msg     : UINT32;
                               wParam  : WPARAM;
                               lParam  : LPARAM  ): BOOL;
 
 <*EXTERNAL PostThreadMessageW:WINAPI*>
-PROCEDURE PostThreadMessageW (idThread: DWORD;
-                              Msg     : UINT;
+PROCEDURE PostThreadMessageW (idThread: UINT32;
+                              Msg     : UINT32;
                               wParam  : WPARAM;
                               lParam  : LPARAM  ): BOOL;
 CONST PostThreadMessage = PostThreadMessageA;
 
-PROCEDURE PostAppMessageA (idThread: DWORD;
-                           wMsg    : UINT;
+PROCEDURE PostAppMessageA (idThread: UINT32;
+                           wMsg    : UINT32;
                            wParam  : WPARAM;
                            lParam  : LPARAM  ): BOOL;
 
-PROCEDURE PostAppMessageW (idThread: DWORD;
-                           wMsg    : UINT;
+PROCEDURE PostAppMessageW (idThread: UINT32;
+                           wMsg    : UINT32;
                            wParam  : WPARAM;
                            lParam  : LPARAM  ): BOOL;
 
@@ -1367,8 +1331,8 @@ VAR (* CONST *)
   HWND_BROADCAST: HWND;
 
 <*EXTERNAL AttachThreadInput:WINAPI*>
-PROCEDURE AttachThreadInput (idAttach  : DWORD;
-                             idAttachTo: DWORD;
+PROCEDURE AttachThreadInput (idAttach  : UINT32;
+                             idAttachTo: UINT32;
                              fAttach   : BOOL   ): BOOL;
 
 <*EXTERNAL ReplyMessage:WINAPI*>
@@ -1378,35 +1342,35 @@ PROCEDURE ReplyMessage (arg1: LRESULT): BOOL;
 PROCEDURE WaitMessage (): BOOL;
 
 <*EXTERNAL WaitForInputIdle:WINAPI*>
-PROCEDURE WaitForInputIdle (hProcess: HANDLE; dwMilliseconds: DWORD): DWORD;
+PROCEDURE WaitForInputIdle (hProcess: HANDLE; dwMilliseconds: UINT32): UINT32;
 
 <*EXTERNAL DefWindowProcA:WINAPI*>
 PROCEDURE DefWindowProcA (hWnd  : HWND;
-                            Msg   : UINT;
+                            Msg   : UINT32;
                             wParam: WPARAM;
                             lParam: LPARAM  ): LRESULT;
 
 <*EXTERNAL DefWindowProcW:WINAPI*>
 PROCEDURE DefWindowProcW (hWnd  : HWND;
-                            Msg   : UINT;
+                            Msg   : UINT32;
                             wParam: WPARAM;
                             lParam: LPARAM  ): LRESULT;
 CONST DefWindowProc = DefWindowProcA;
 
 <*EXTERNAL PostQuitMessage:WINAPI*>
-PROCEDURE PostQuitMessage (nExitCode: int);
+PROCEDURE PostQuitMessage (nExitCode: INT32);
 
 <*EXTERNAL CallWindowProcA:WINAPI*>
 PROCEDURE CallWindowProcA (lpPrevWndFunc: WNDPROC;
                              hWnd         : HWND;
-                             Msg          : UINT;
+                             Msg          : UINT32;
                              wParam       : WPARAM;
                              lParam       : LPARAM   ): LRESULT;
 
 <*EXTERNAL CallWindowProcW:WINAPI*>
 PROCEDURE CallWindowProcW (lpPrevWndFunc: WNDPROC;
                              hWnd         : HWND;
-                             Msg          : UINT;
+                             Msg          : UINT32;
                              wParam       : WPARAM;
                              lParam       : LPARAM   ): LRESULT;
 CONST CallWindowProc = CallWindowProcA;
@@ -1415,10 +1379,10 @@ CONST CallWindowProc = CallWindowProcA;
 PROCEDURE InSendMessage (): BOOL;
 
 <*EXTERNAL GetDoubleClickTime:WINAPI*>
-PROCEDURE GetDoubleClickTime (): UINT;
+PROCEDURE GetDoubleClickTime (): UINT32;
 
 <*EXTERNAL SetDoubleClickTime:WINAPI*>
-PROCEDURE SetDoubleClickTime (arg1: UINT): BOOL;
+PROCEDURE SetDoubleClickTime (arg1: UINT32): BOOL;
 
 <*EXTERNAL RegisterClassA:WINAPI*>
 PROCEDURE RegisterClassA (lpWndClass: UNTRACED REF WNDCLASSA): ATOM;
@@ -1428,20 +1392,20 @@ PROCEDURE RegisterClassW (lpWndClass: UNTRACED REF WNDCLASSW): ATOM;
 CONST RegisterClass = RegisterClassA;
 
 <*EXTERNAL UnregisterClassA:WINAPI*>
-PROCEDURE UnregisterClassA (lpClassName: LPCSTR; hInstance: HINSTANCE): BOOL;
+PROCEDURE UnregisterClassA (lpClassName: PCSTR; hInstance: HINSTANCE): BOOL;
 
 <*EXTERNAL UnregisterClassW:WINAPI*>
-PROCEDURE UnregisterClassW (lpClassName: LPCWSTR; hInstance: HINSTANCE): BOOL;
+PROCEDURE UnregisterClassW (lpClassName: PCWSTR; hInstance: HINSTANCE): BOOL;
 CONST UnregisterClass = UnregisterClassA;
 
 <*EXTERNAL GetClassInfoA:WINAPI*>
 PROCEDURE GetClassInfoA (hInstance  : HINSTANCE;
-                           lpClassName: LPCSTR;
+                           lpClassName: PCSTR;
                            lpWndClass : LPWNDCLASSA): BOOL;
 
 <*EXTERNAL GetClassInfoW:WINAPI*>
 PROCEDURE GetClassInfoW (hInstance  : HINSTANCE;
-                           lpClassName: LPCWSTR;
+                           lpClassName: PCWSTR;
                            lpWndClass : LPWNDCLASSW): BOOL;
 CONST GetClassInfo = GetClassInfoA;
 
@@ -1452,57 +1416,57 @@ VAR                             (* CONST *)
   HWND_DESKTOP: HWND;
 
 <*EXTERNAL CreateWindowExA:WINAPI*>
-PROCEDURE CreateWindowExA (dwExStyle   : DWORD;
-                             lpClassName : LPCSTR;
-                             lpWindowName: LPCSTR;
-                             dwStyle     : DWORD;
-                             X           : int;
-                             Y           : int;
-                             nWidth      : int;
-                             nHeight     : int;
+PROCEDURE CreateWindowExA (dwExStyle   : UINT32;
+                             lpClassName : PCSTR;
+                             lpWindowName: PCSTR;
+                             dwStyle     : UINT32;
+                             X           : INT32;
+                             Y           : INT32;
+                             nWidth      : INT32;
+                             nHeight     : INT32;
                              hWndParent  : HWND;
                              hMenu       : HMENU;
                              hInstance   : HINSTANCE;
-                             lpParam     : LPVOID     ): HWND;
+                             lpParam     : PVOID     ): HWND;
 
 <*EXTERNAL CreateWindowExW:WINAPI*>
-PROCEDURE CreateWindowExW (dwExStyle   : DWORD;
-                             lpClassName : LPCWSTR;
-                             lpWindowName: LPCWSTR;
-                             dwStyle     : DWORD;
-                             X           : int;
-                             Y           : int;
-                             nWidth      : int;
-                             nHeight     : int;
+PROCEDURE CreateWindowExW (dwExStyle   : UINT32;
+                             lpClassName : PCWSTR;
+                             lpWindowName: PCWSTR;
+                             dwStyle     : UINT32;
+                             X           : INT32;
+                             Y           : INT32;
+                             nWidth      : INT32;
+                             nHeight     : INT32;
                              hWndParent  : HWND;
                              hMenu       : HMENU;
                              hInstance   : HINSTANCE;
-                             lpParam     : LPVOID     ): HWND;
+                             lpParam     : PVOID     ): HWND;
 CONST CreateWindowEx = CreateWindowExA;
 
-PROCEDURE CreateWindowA (lpClassName : LPCSTR;
-                         lpWindowName: LPCSTR;
-                         dwStyle     : DWORD;
-                         x           : int;
-                         y           : int;
-                         nWidth      : int;
-                         nHeight     : int;
+PROCEDURE CreateWindowA (lpClassName : PCSTR;
+                         lpWindowName: PCSTR;
+                         dwStyle     : UINT32;
+                         x           : INT32;
+                         y           : INT32;
+                         nWidth      : INT32;
+                         nHeight     : INT32;
                          hwndParent  : HWND;
                          hMenu       : HMENU;
                          hInstance   : HINSTANCE;
-                         lpParam     : LPVOID     ): HWND;
+                         lpParam     : PVOID     ): HWND;
 
-PROCEDURE CreateWindowW (lpClassName : LPCWSTR;
-                         lpWindowName: LPCWSTR;
-                         dwStyle     : DWORD;
-                         x           : int;
-                         y           : int;
-                         nWidth      : int;
-                         nHeight     : int;
+PROCEDURE CreateWindowW (lpClassName : PCWSTR;
+                         lpWindowName: PCWSTR;
+                         dwStyle     : UINT32;
+                         x           : INT32;
+                         y           : INT32;
+                         nWidth      : INT32;
+                         nHeight     : INT32;
                          hwndParent  : HWND;
                          hMenu       : HMENU;
                          hInstance   : HINSTANCE;
-                         lpParam     : LPVOID     ): HWND;
+                         lpParam     : PVOID     ): HWND;
 
 CONST CreateWindow = CreateWindowA;
 
@@ -1519,7 +1483,7 @@ PROCEDURE IsChild (hWndParent: HWND; hWnd: HWND): BOOL;
 PROCEDURE DestroyWindow (hWnd: HWND): BOOL;
 
 <*EXTERNAL ShowWindow:WINAPI*>
-PROCEDURE ShowWindow (hWnd: HWND; nCmdShow: int): BOOL;
+PROCEDURE ShowWindow (hWnd: HWND; nCmdShow: INT32): BOOL;
 
 <*EXTERNAL FlashWindow:WINAPI*>
 PROCEDURE FlashWindow (hWnd: HWND; bInvert: BOOL): BOOL;
@@ -1535,20 +1499,20 @@ PROCEDURE CloseWindow (hWnd: HWND): BOOL;
 
 <*EXTERNAL MoveWindow:WINAPI*>
 PROCEDURE MoveWindow (hWnd    : HWND;
-                      X       : int;
-                      Y       : int;
-                      nWidth  : int;
-                      nHeight : int;
+                      X       : INT32;
+                      Y       : INT32;
+                      nWidth  : INT32;
+                      nHeight : INT32;
                       bRepaint: BOOL  ): BOOL;
 
 <*EXTERNAL SetWindowPos:WINAPI*>
 PROCEDURE SetWindowPos (hWnd           : HWND;
                         hWndInsertAfter: HWND;
-                        X              : int;
-                        Y              : int;
-                        cx             : int;
-                        cy             : int;
-                        uFlags         : UINT  ): BOOL;
+                        X              : INT32;
+                        Y              : INT32;
+                        cx             : INT32;
+                        cy             : INT32;
+                        uFlags         : UINT32  ): BOOL;
 
 <*EXTERNAL GetWindowPlacement:WINAPI*>
 PROCEDURE GetWindowPlacement (hwnd   : HWND;
@@ -1559,17 +1523,17 @@ PROCEDURE SetWindowPlacement (hwnd   : HWND;
                               lpwndpl: UNTRACED REF WINDOWPLACEMENT): BOOL;
 
 <*EXTERNAL BeginDeferWindowPos:WINAPI*>
-PROCEDURE BeginDeferWindowPos (nNumWindows: int): HDWP;
+PROCEDURE BeginDeferWindowPos (nNumWindows: INT32): HDWP;
 
 <*EXTERNAL DeferWindowPos:WINAPI*>
 PROCEDURE DeferWindowPos (hWinPosInfo    : HDWP;
                           hWnd           : HWND;
                           hWndInsertAfter: HWND;
-                          x              : int;
-                          y              : int;
-                          cx             : int;
-                          cy             : int;
-                          uFlags         : UINT  ): HDWP;
+                          x              : INT32;
+                          y              : INT32;
+                          cx             : INT32;
+                          cy             : INT32;
+                          uFlags         : UINT32  ): HDWP;
 
 <*EXTERNAL EndDeferWindowPos:WINAPI*>
 PROCEDURE EndDeferWindowPos (hWinPosInfo: HDWP): BOOL;
@@ -1612,19 +1576,19 @@ VAR                             (* CONST *)
   HWND_NOTOPMOST: HWND;
 
 (*
- * WARNING: * The following structures must NOT be DWORD padded because they are
- * followed by strings, etc that do not have to be DWORD aligned.
+ * WARNING: * The following structures must NOT be UINT32 padded because they are
+ * followed by strings, etc that do not have to be UINT32 aligned.
  *)
 (*???  #pragma pack(2)
 
-   typedef struct { DWORD style; DWORD dwExtendedStyle; WORD cdit; WORD x;
-   WORD y; WORD cx; WORD cy; END; typedef DLGTEMPLATE *LPDLGTEMPLATEA;
+   typedef struct { UINT32 style; UINT32 dwExtendedStyle; UINT16 cdit; UINT16 x;
+   UINT16 y; UINT16 cx; UINT16 cy; END; typedef DLGTEMPLATE *LPDLGTEMPLATEA;
    typedef DLGTEMPLATE *LPDLGTEMPLATEW; LPDLGTEMPLATE = LPDLGTEMPLATEA;
    typedef CONST DLGTEMPLATE *LPCDLGTEMPLATEA; typedef CONST DLGTEMPLATE
    *LPCDLGTEMPLATEW; LPCDLGTEMPLATE = LPCDLGTEMPLATEA;
 
-   (* * Dialog item template (dit) *) typedef struct { DWORD style; DWORD
-   dwExtendedStyle; WORD x; WORD y; WORD cx; WORD cy; WORD id; END; typedef
+   (* * Dialog item template (dit) *) typedef struct { UINT32 style; UINT32
+   dwExtendedStyle; UINT16 x; UINT16 y; UINT16 cx; UINT16 cy; UINT16 id; END; typedef
    DLGITEMTEMPLATE *PDLGITEMTEMPLATEA; typedef DLGITEMTEMPLATE
    *PDLGITEMTEMPLATEW; PDLGITEMTEMPLATE = PDLGITEMTEMPLATEA; typedef
    DLGITEMTEMPLATE *LPDLGITEMTEMPLATEA; typedef DLGITEMTEMPLATE
@@ -1645,14 +1609,14 @@ TYPE
 
 <*EXTERNAL CreateDialogParamA:WINAPI*>
 PROCEDURE CreateDialogParamA (hInstance     : HINSTANCE;
-                                lpTemplateName: LPCSTR;
+                                lpTemplateName: PCSTR;
                                 hWndParent    : HWND;
                                 lpDialogFunc  : DLGPROC;
                                 dwInitParam   : LPARAM     ): HWND;
 
 <*EXTERNAL CreateDialogParamW:WINAPI*>
 PROCEDURE CreateDialogParamW (hInstance     : HINSTANCE;
-                                lpTemplateName: LPCWSTR;
+                                lpTemplateName: PCWSTR;
                                 hWndParent    : HWND;
                                 lpDialogFunc  : DLGPROC;
                                 dwInitParam   : LPARAM     ): HWND;
@@ -1674,12 +1638,12 @@ PROCEDURE CreateDialogIndirectParamW (hInstance   : HINSTANCE;
 CONST CreateDialogIndirectParam = CreateDialogIndirectParamA;
 
 PROCEDURE CreateDialogA (hInstance   : HINSTANCE;
-                         lpName      : LPCSTR;
+                         lpName      : PCSTR;
                          hwndParent  : HWND;
                          lpDialogFunc: DLGPROC    ): HWND;
 
 PROCEDURE CreateDialogW (hInstance   : HINSTANCE;
-                         lpName      : LPCWSTR;
+                         lpName      : PCWSTR;
                          hwndParent  : HWND;
                          lpDialogFunc: DLGPROC    ): HWND;
 
@@ -1699,17 +1663,17 @@ CONST CreateDialogIndirect = CreateDialogIndirectA;
 
 <*EXTERNAL DialogBoxParamA:WINAPI*>
 PROCEDURE DialogBoxParamA (hInstance     : HINSTANCE;
-                             lpTemplateName: LPCSTR;
+                             lpTemplateName: PCSTR;
                              hWndParent    : HWND;
                              lpDialogFunc  : DLGPROC;
-                             dwInitParam   : LPARAM     ): int;
+                             dwInitParam   : LPARAM     ): INT32;
 
 <*EXTERNAL DialogBoxParamW:WINAPI*>
 PROCEDURE DialogBoxParamW (hInstance     : HINSTANCE;
-                             lpTemplateName: LPCWSTR;
+                             lpTemplateName: PCWSTR;
                              hWndParent    : HWND;
                              lpDialogFunc  : DLGPROC;
-                             dwInitParam   : LPARAM     ): int;
+                             dwInitParam   : LPARAM     ): INT32;
 CONST DialogBoxParam = DialogBoxParamA;
 
 <*EXTERNAL DialogBoxIndirectParamA:WINAPI*>
@@ -1717,103 +1681,103 @@ PROCEDURE DialogBoxIndirectParamA (hInstance      : HINSTANCE;
                                      hDialogTemplate: LPDLGTEMPLATEA;
                                      hWndParent     : HWND;
                                      lpDialogFunc   : DLGPROC;
-                                     dwInitParam    : LPARAM          ): int;
+                                     dwInitParam    : LPARAM          ): INT32;
 
 <*EXTERNAL DialogBoxIndirectParamW:WINAPI*>
 PROCEDURE DialogBoxIndirectParamW (hInstance      : HINSTANCE;
                                      hDialogTemplate: LPDLGTEMPLATEW;
                                      hWndParent     : HWND;
                                      lpDialogFunc   : DLGPROC;
-                                     dwInitParam    : LPARAM          ): int;
+                                     dwInitParam    : LPARAM          ): INT32;
 CONST DialogBoxIndirectParam = DialogBoxIndirectParamA;
 
 PROCEDURE DialogBoxA(hInstance     : HINSTANCE;
-                             lpTemplateName: LPCSTR;
+                             lpTemplateName: PCSTR;
                              hWndParent    : HWND;
-                             lpDialogFunc  : DLGPROC): int;
+                             lpDialogFunc  : DLGPROC): INT32;
 
 PROCEDURE DialogBoxW(hInstance     : HINSTANCE;
-                             lpTemplateName: LPCWSTR;
+                             lpTemplateName: PCWSTR;
                              hWndParent    : HWND;
-                             lpDialogFunc  : DLGPROC): int;
+                             lpDialogFunc  : DLGPROC): INT32;
 
 CONST DialogBox = DialogBoxA;
 
 PROCEDURE DialogBoxIndirectA (hInstance      : HINSTANCE;
                               hDialogTemplate: LPDLGTEMPLATEA;
                               hWndParent     : HWND;
-                              lpDialogFunc   : DLGPROC         ): int;
+                              lpDialogFunc   : DLGPROC         ): INT32;
 
 PROCEDURE DialogBoxIndirectW (hInstance      : HINSTANCE;
                               hDialogTemplate: LPDLGTEMPLATEW;
                               hWndParent     : HWND;
-                              lpDialogFunc   : DLGPROC         ): int;
+                              lpDialogFunc   : DLGPROC         ): INT32;
 
 CONST DialogBoxIndirect = DialogBoxIndirectA;
 
 <*EXTERNAL EndDialog:WINAPI*>
-PROCEDURE EndDialog (hDlg: HWND; nResult: int): BOOL;
+PROCEDURE EndDialog (hDlg: HWND; nResult: INT32): BOOL;
 
 <*EXTERNAL GetDlgItem:WINAPI*>
-PROCEDURE GetDlgItem (hDlg: HWND; nIDDlgItem: int): HWND;
+PROCEDURE GetDlgItem (hDlg: HWND; nIDDlgItem: INT32): HWND;
 
 <*EXTERNAL SetDlgItemInt:WINAPI*>
 PROCEDURE SetDlgItemInt (hDlg      : HWND;
-                           nIDDlgItem: int;
-                           uValue    : UINT;
+                           nIDDlgItem: INT32;
+                           uValue    : UINT32;
                            bSigned   : BOOL  ): BOOL;
 
 <*EXTERNAL GetDlgItemInt:WINAPI*>
 PROCEDURE GetDlgItemInt (hDlg        : HWND;
-                           nIDDlgItem  : int;
+                           nIDDlgItem  : INT32;
                            lpTranslated: UNTRACED REF BOOL;
-                           bSigned     : BOOL               ): UINT;
+                           bSigned     : BOOL               ): UINT32;
 
 <*EXTERNAL SetDlgItemTextA:WINAPI*>
-PROCEDURE SetDlgItemTextA (hDlg: HWND; nIDDlgItem: int; lpString: LPCSTR): BOOL;
+PROCEDURE SetDlgItemTextA (hDlg: HWND; nIDDlgItem: INT32; lpString: PCSTR): BOOL;
 
 <*EXTERNAL SetDlgItemTextW:WINAPI*>
-PROCEDURE SetDlgItemTextW (hDlg: HWND; nIDDlgItem: int; lpString: LPCWSTR): BOOL;
+PROCEDURE SetDlgItemTextW (hDlg: HWND; nIDDlgItem: INT32; lpString: PCWSTR): BOOL;
 CONST SetDlgItemText = SetDlgItemTextA;
 
 <*EXTERNAL GetDlgItemTextA:WINAPI*>
 PROCEDURE GetDlgItemTextA (hDlg      : HWND;
-                             nIDDlgItem: int;
-                             lpString  : LPSTR;
-                             nMaxCount : int    ): UINT;
+                             nIDDlgItem: INT32;
+                             lpString  : PSTR;
+                             nMaxCount : INT32    ): UINT32;
 
 <*EXTERNAL GetDlgItemTextW:WINAPI*>
 PROCEDURE GetDlgItemTextW (hDlg      : HWND;
-                             nIDDlgItem: int;
-                             lpString  : LPWSTR;
-                             nMaxCount : int     ): UINT;
+                             nIDDlgItem: INT32;
+                             lpString  : PWSTR;
+                             nMaxCount : INT32     ): UINT32;
 CONST GetDlgItemText = GetDlgItemTextA;
 
 <*EXTERNAL CheckDlgButton:WINAPI*>
-PROCEDURE CheckDlgButton (hDlg: HWND; nIDButton: int; uCheck: UINT): BOOL;
+PROCEDURE CheckDlgButton (hDlg: HWND; nIDButton: INT32; uCheck: UINT32): BOOL;
 
 <*EXTERNAL CheckRadioButton:WINAPI*>
 PROCEDURE CheckRadioButton (hDlg          : HWND;
-                              nIDFirstButton: int;
-                              nIDLastButton : int;
-                              nIDCheckButton: int   ): BOOL;
+                              nIDFirstButton: INT32;
+                              nIDLastButton : INT32;
+                              nIDCheckButton: INT32   ): BOOL;
 
 <*EXTERNAL IsDlgButtonChecked:WINAPI*>
-PROCEDURE IsDlgButtonChecked (hDlg: HWND; nIDButton: int): UINT;
+PROCEDURE IsDlgButtonChecked (hDlg: HWND; nIDButton: INT32): UINT32;
 
 <*EXTERNAL SendDlgItemMessageA:WINAPI*>
 PROCEDURE SendDlgItemMessageA (hDlg      : HWND;
-                                 nIDDlgItem: int;
-                                 Msg       : UINT;
+                                 nIDDlgItem: INT32;
+                                 Msg       : UINT32;
                                  wParam    : WPARAM;
-                                 lParam    : LPARAM  ): LONG;
+                                 lParam    : LPARAM  ): INT32;
 
 <*EXTERNAL SendDlgItemMessageW:WINAPI*>
 PROCEDURE SendDlgItemMessageW (hDlg      : HWND;
-                                 nIDDlgItem: int;
-                                 Msg       : UINT;
+                                 nIDDlgItem: INT32;
+                                 Msg       : UINT32;
                                  wParam    : WPARAM;
-                                 lParam    : LPARAM  ): LONG;
+                                 lParam    : LPARAM  ): INT32;
 CONST SendDlgItemMessage = SendDlgItemMessageA;
 
 <*EXTERNAL GetNextDlgGroupItem:WINAPI*>
@@ -1823,20 +1787,20 @@ PROCEDURE GetNextDlgGroupItem (hDlg: HWND; hCtl: HWND; bPrevious: BOOL): HWND;
 PROCEDURE GetNextDlgTabItem (hDlg: HWND; hCtl: HWND; bPrevious: BOOL): HWND;
 
 <*EXTERNAL GetDlgCtrlID:WINAPI*>
-PROCEDURE GetDlgCtrlID (hWnd: HWND): int;
+PROCEDURE GetDlgCtrlID (hWnd: HWND): INT32;
 
 <*EXTERNAL GetDialogBaseUnits:WINAPI*>
-PROCEDURE GetDialogBaseUnits (): int;
+PROCEDURE GetDialogBaseUnits (): INT32;
 
 <*EXTERNAL DefDlgProcA:WINAPI*>
 PROCEDURE DefDlgProcA (hDlg  : HWND;
-                       Msg   : UINT;
+                       Msg   : UINT32;
                        wParam: WPARAM;
                        lParam: LPARAM  ): LRESULT;
 
 <*EXTERNAL DefDlgProcW:WINAPI*>
 PROCEDURE DefDlgProcW (hDlg  : HWND;
-                       Msg   : UINT;
+                       Msg   : UINT32;
                        wParam: WPARAM;
                        lParam: LPARAM  ): LRESULT;
 CONST DefDlgProc = DefDlgProcA;
@@ -1847,7 +1811,7 @@ CONST DefDlgProc = DefDlgProcA;
 CONST DLGWINDOWEXTRA = 30;
 
 <*EXTERNAL CallMsgFilter:WINAPI*>
-PROCEDURE CallMsgFilter (lpMsg: LPMSG; nCode: int): BOOL;
+PROCEDURE CallMsgFilter (lpMsg: LPMSG; nCode: INT32): BOOL;
 
 (* Clipboard Manager Functions *)
 
@@ -1870,39 +1834,39 @@ PROCEDURE GetClipboardViewer (): HWND;
 PROCEDURE ChangeClipboardChain (arg1: HWND; arg2: HWND): BOOL;
 
 <*EXTERNAL SetClipboardData:WINAPI*>
-PROCEDURE SetClipboardData (uFormat: UINT; hMem: HANDLE): HANDLE;
+PROCEDURE SetClipboardData (uFormat: UINT32; hMem: HANDLE): HANDLE;
 
 <*EXTERNAL GetClipboardData:WINAPI*>
-PROCEDURE GetClipboardData (uFormat: UINT): HANDLE;
+PROCEDURE GetClipboardData (uFormat: UINT32): HANDLE;
 
 <*EXTERNAL RegisterClipboardFormatA:WINAPI*>
-PROCEDURE RegisterClipboardFormatA (arg1: LPCSTR): UINT;
+PROCEDURE RegisterClipboardFormatA (arg1: PCSTR): UINT32;
 
 <*EXTERNAL RegisterClipboardFormatW:WINAPI*>
-PROCEDURE RegisterClipboardFormatW (arg1: LPCWSTR): UINT;
+PROCEDURE RegisterClipboardFormatW (arg1: PCWSTR): UINT32;
 CONST RegisterClipboardFormat = RegisterClipboardFormatA;
 
 <*EXTERNAL CountClipboardFormats:WINAPI*>
-PROCEDURE CountClipboardFormats (): int;
+PROCEDURE CountClipboardFormats (): INT32;
 
 <*EXTERNAL EnumClipboardFormats:WINAPI*>
-PROCEDURE EnumClipboardFormats (arg1: UINT): UINT;
+PROCEDURE EnumClipboardFormats (arg1: UINT32): UINT32;
 
 <*EXTERNAL GetClipboardFormatNameA:WINAPI*>
-PROCEDURE GetClipboardFormatNameA (arg1: UINT; arg2: LPSTR; arg3: int): int;
+PROCEDURE GetClipboardFormatNameA (arg1: UINT32; arg2: PSTR; arg3: INT32): INT32;
 
 <*EXTERNAL GetClipboardFormatNameW:WINAPI*>
-PROCEDURE GetClipboardFormatNameW (arg1: UINT; arg2: LPWSTR; arg3: int): int;
+PROCEDURE GetClipboardFormatNameW (arg1: UINT32; arg2: PWSTR; arg3: INT32): INT32;
 CONST GetClipboardFormatName = GetClipboardFormatNameA;
 
 <*EXTERNAL EmptyClipboard:WINAPI*>
 PROCEDURE EmptyClipboard (): BOOL;
 
 <*EXTERNAL IsClipboardFormatAvailable:WINAPI*>
-PROCEDURE IsClipboardFormatAvailable (arg1: UINT): BOOL;
+PROCEDURE IsClipboardFormatAvailable (arg1: UINT32): BOOL;
 
 <*EXTERNAL GetPriorityClipboardFormat:WINAPI*>
-PROCEDURE GetPriorityClipboardFormat (arg1: UNTRACED REF UINT; arg2: int): int;
+PROCEDURE GetPriorityClipboardFormat (arg1: UNTRACED REF UINT32; arg2: INT32): INT32;
 
 <*EXTERNAL GetOpenClipboardWindow:WINAPI*>
 PROCEDURE GetOpenClipboardWindow (): HWND;
@@ -1910,73 +1874,73 @@ PROCEDURE GetOpenClipboardWindow (): HWND;
 (* Character Translation Routines *)
 
 <*EXTERNAL CharToOemA:WINAPI*>
-PROCEDURE CharToOemA (arg1: LPCSTR; arg2: LPSTR): BOOL;
+PROCEDURE CharToOemA (arg1: PCSTR; arg2: PSTR): BOOL;
 
 <*EXTERNAL CharToOemW:WINAPI*>
-PROCEDURE CharToOemW (arg1: LPCWSTR; arg2: LPSTR): BOOL;
+PROCEDURE CharToOemW (arg1: PCWSTR; arg2: PSTR): BOOL;
 CONST CharToOem = CharToOemA;
 
 <*EXTERNAL OemToCharA:WINAPI*>
-PROCEDURE OemToCharA (arg1: LPCSTR; arg2: LPSTR): BOOL;
+PROCEDURE OemToCharA (arg1: PCSTR; arg2: PSTR): BOOL;
 
 <*EXTERNAL OemToCharW:WINAPI*>
-PROCEDURE OemToCharW (arg1: LPCSTR; arg2: LPWSTR): BOOL;
+PROCEDURE OemToCharW (arg1: PCSTR; arg2: PWSTR): BOOL;
 CONST OemToChar = OemToCharA;
 
 <*EXTERNAL CharToOemBuffA:WINAPI*>
-PROCEDURE CharToOemBuffA (arg1: LPCSTR; arg2: LPSTR; arg3: DWORD): BOOL;
+PROCEDURE CharToOemBuffA (arg1: PCSTR; arg2: PSTR; arg3: UINT32): BOOL;
 
 <*EXTERNAL CharToOemBuffW:WINAPI*>
-PROCEDURE CharToOemBuffW (arg1: LPCWSTR; arg2: LPSTR; arg3: DWORD): BOOL;
+PROCEDURE CharToOemBuffW (arg1: PCWSTR; arg2: PSTR; arg3: UINT32): BOOL;
 CONST CharToOemBuff = CharToOemBuffA;
 
 <*EXTERNAL OemToCharBuffA:WINAPI*>
-PROCEDURE OemToCharBuffA (arg1: LPCSTR; arg2: LPSTR; arg3: DWORD): BOOL;
+PROCEDURE OemToCharBuffA (arg1: PCSTR; arg2: PSTR; arg3: UINT32): BOOL;
 
 <*EXTERNAL OemToCharBuffW:WINAPI*>
-PROCEDURE OemToCharBuffW (arg1: LPCSTR; arg2: LPWSTR; arg3: DWORD): BOOL;
+PROCEDURE OemToCharBuffW (arg1: PCSTR; arg2: PWSTR; arg3: UINT32): BOOL;
 CONST OemToCharBuff = OemToCharBuffA;
 
 <*EXTERNAL CharUpperA:WINAPI*>
-PROCEDURE CharUpperA (arg1: LPSTR): LPSTR;
+PROCEDURE CharUpperA (arg1: PSTR): PSTR;
 
 <*EXTERNAL CharUpperW:WINAPI*>
-PROCEDURE CharUpperW (arg1: LPWSTR): LPWSTR;
+PROCEDURE CharUpperW (arg1: PWSTR): PWSTR;
 CONST CharUpper = CharUpperA;
 
 <*EXTERNAL CharUpperBuffA:WINAPI*>
-PROCEDURE CharUpperBuffA (arg1: LPSTR; arg2: DWORD): DWORD;
+PROCEDURE CharUpperBuffA (arg1: PSTR; arg2: UINT32): UINT32;
 
 <*EXTERNAL CharUpperBuffW:WINAPI*>
-PROCEDURE CharUpperBuffW (arg1: LPWSTR; arg2: DWORD): DWORD;
+PROCEDURE CharUpperBuffW (arg1: PWSTR; arg2: UINT32): UINT32;
 CONST CharUpperBuff = CharUpperBuffA;
 
 <*EXTERNAL CharLowerA:WINAPI*>
-PROCEDURE CharLowerA (arg1: LPSTR): LPSTR;
+PROCEDURE CharLowerA (arg1: PSTR): PSTR;
 
 <*EXTERNAL CharLowerW:WINAPI*>
-PROCEDURE CharLowerW (arg1: LPWSTR): LPWSTR;
+PROCEDURE CharLowerW (arg1: PWSTR): PWSTR;
 CONST CharLower = CharLowerA;
 
 <*EXTERNAL CharLowerBuffA:WINAPI*>
-PROCEDURE CharLowerBuffA (a1: LPSTR; a2: DWORD): DWORD;
+PROCEDURE CharLowerBuffA (a1: PSTR; a2: UINT32): UINT32;
 
 <*EXTERNAL CharLowerBuffW:WINAPI*>
-PROCEDURE CharLowerBuffW (a1: LPWSTR; a2: DWORD): DWORD;
+PROCEDURE CharLowerBuffW (a1: PWSTR; a2: UINT32): UINT32;
 CONST CharLowerBuff = CharLowerBuffA;
 
 <*EXTERNAL CharNextA:WINAPI*>
-PROCEDURE CharNextA (a1: LPCSTR): LPSTR;
+PROCEDURE CharNextA (a1: PCSTR): PSTR;
 
 <*EXTERNAL CharNextW:WINAPI*>
-PROCEDURE CharNextW (a1: LPCWSTR): LPWSTR;
+PROCEDURE CharNextW (a1: PCWSTR): PWSTR;
 CONST CharNext = CharNextA;
 
 <*EXTERNAL CharPrevA:WINAPI*>
-PROCEDURE CharPrevA (a1: LPCSTR; a2: LPCSTR): LPSTR;
+PROCEDURE CharPrevA (a1: PCSTR; a2: PCSTR): PSTR;
 
 <*EXTERNAL CharPrevW:WINAPI*>
-PROCEDURE CharPrevW (a1: LPCWSTR; a2: LPCWSTR): LPWSTR;
+PROCEDURE CharPrevW (a1: PCWSTR; a2: PCWSTR): PWSTR;
 CONST CharPrev = CharPrevA;
 
 (*| ???
@@ -2033,60 +1997,60 @@ PROCEDURE GetActiveWindow (): HWND;
 PROCEDURE GetFocus (): HWND;
 
 <*EXTERNAL GetKBCodePage:WINAPI*>
-PROCEDURE GetKBCodePage (): UINT;
+PROCEDURE GetKBCodePage (): UINT32;
 
 <*EXTERNAL GetKeyState:WINAPI*>
-PROCEDURE GetKeyState (nVirtKey: int): SHORT;
+PROCEDURE GetKeyState (nVirtKey: INT32): INT16;
 
 <*EXTERNAL GetAsyncKeyState:WINAPI*>
-PROCEDURE GetAsyncKeyState (vKey: int): SHORT;
+PROCEDURE GetAsyncKeyState (vKey: INT32): INT16;
 
 <*EXTERNAL GetKeyboardState:WINAPI*>
-PROCEDURE GetKeyboardState (lpKeyState: PBYTE): BOOL;
+PROCEDURE GetKeyboardState (lpKeyState: PUINT8): BOOL;
 
 <*EXTERNAL SetKeyboardState:WINAPI*>
-PROCEDURE SetKeyboardState (lpKeyState: LPBYTE): BOOL;
+PROCEDURE SetKeyboardState (lpKeyState: PUINT8): BOOL;
 
 <*EXTERNAL GetKeyNameTextA:WINAPI*>
-PROCEDURE GetKeyNameTextA (lParam: LONG; lpString: LPSTR; nSize: int): int;
+PROCEDURE GetKeyNameTextA (lParam: INT32; lpString: PSTR; nSize: INT32): INT32;
 
 <*EXTERNAL GetKeyNameTextW:WINAPI*>
-PROCEDURE GetKeyNameTextW (lParam: LONG; lpString: LPWSTR; nSize: int): int;
+PROCEDURE GetKeyNameTextW (lParam: INT32; lpString: PWSTR; nSize: INT32): INT32;
 CONST GetKeyNameText = GetKeyNameTextA;
 
 <*EXTERNAL GetKeyboardType:WINAPI*>
-PROCEDURE GetKeyboardType (nTypeFlag: int): int;
+PROCEDURE GetKeyboardType (nTypeFlag: INT32): INT32;
 
 <*EXTERNAL ToAscii:WINAPI*>
-PROCEDURE ToAscii (uVirtKey  : UINT;
-                   uScanCode : UINT;
-                   lpKeyState: PBYTE;
-                   lpChar    : LPWORD;
-                   uFlags    : UINT    ): int;
+PROCEDURE ToAscii (uVirtKey  : UINT32;
+                   uScanCode : UINT32;
+                   lpKeyState: PUINT8;
+                   lpChar    : PUINT16;
+                   uFlags    : UINT32    ): INT32;
 
 <*EXTERNAL ToUnicode:WINAPI*>
-PROCEDURE ToUnicode (wVirtKey  : UINT;
-                     wScanCode : UINT;
-                     lpKeyState: PBYTE;
-                     lpChar    : LPDWORD;
-                     wFlags    : UINT     ): int;
+PROCEDURE ToUnicode (wVirtKey  : UINT32;
+                     wScanCode : UINT32;
+                     lpKeyState: PUINT8;
+                     lpChar    : PUINT32;
+                     wFlags    : UINT32     ): INT32;
 
 <*EXTERNAL VkKeyScanA:WINAPI*>
-PROCEDURE VkKeyScanA (cChar: CHAR): SHORT;
+PROCEDURE VkKeyScanA (cChar: CHAR): INT16;
 
 <*EXTERNAL VkKeyScanW:WINAPI*>
-PROCEDURE VkKeyScanW (cChar: WCHAR): SHORT;
+PROCEDURE VkKeyScanW (cChar: WCHAR): INT16;
 
 CONST VkKeyScan = VkKeyScanA;
 
 <*EXTERNAL MapVirtualKey:WINAPI*>
-PROCEDURE MapVirtualKey (uCode: UINT; uMapType: UINT): UINT;
+PROCEDURE MapVirtualKey (uCode: UINT32; uMapType: UINT32): UINT32;
 
 <*EXTERNAL GetInputState:WINAPI*>
 PROCEDURE GetInputState (): BOOL;
 
 <*EXTERNAL GetQueueStatus:WINAPI*>
-PROCEDURE GetQueueStatus (flags: UINT): DWORD;
+PROCEDURE GetQueueStatus (flags: UINT32): UINT32;
 
 <*EXTERNAL GetCapture:WINAPI*>
 PROCEDURE GetCapture (): HWND;
@@ -2098,11 +2062,11 @@ PROCEDURE SetCapture (hWnd: HWND): HWND;
 PROCEDURE ReleaseCapture (): BOOL;
 
 <*EXTERNAL MsgWaitForMultipleObjects:WINAPI*>
-PROCEDURE MsgWaitForMultipleObjects (nCount        : DWORD;
-                                     pHandles      : LPHANDLE;
+PROCEDURE MsgWaitForMultipleObjects (nCount        : UINT32;
+                                     pHandles      : PHANDLE;
                                      fWaitAll      : BOOL;
-                                     dwMilliseconds: DWORD;
-                                     dwWakeMask    : DWORD     ): DWORD;
+                                     dwMilliseconds: UINT32;
+                                     dwWakeMask    : UINT32     ): UINT32;
 
 (* Queue status flags for GetQueueStatus() and
    MsgWaitForMultipleObjects() *)
@@ -2134,7 +2098,7 @@ CONST
                       QS_KEY)))))));
 
 <*EXTERNAL GetSysInputMode:WINAPI*>
-PROCEDURE GetSysInputMode (): UINT;
+PROCEDURE GetSysInputMode (): UINT32;
 
 (* GetSysInputMode return values *)
 CONST
@@ -2152,12 +2116,12 @@ CONST
 (* Windows Functions *)
 <*EXTERNAL SetTimer:WINAPI*>
 PROCEDURE SetTimer (hwnd       : HWND;
-                    nIDEvent   : UINT;
-                    uElapse    : UINT;
-                    lpTimerFunc: TIMERPROC): UINT;
+                    nIDEvent   : SIZE_T;
+                    uElapse    : UINT32;
+                    lpTimerFunc: TIMERPROC): SIZE_T;
 
 <*EXTERNAL KillTimer:WINAPI*>
-PROCEDURE KillTimer (hWnd: HWND; uIDEvent: UINT): BOOL;
+PROCEDURE KillTimer (hWnd: HWND; uIDEvent: SIZE_T): BOOL;
 
 <*EXTERNAL IsWindowUnicode:WINAPI*>
 PROCEDURE IsWindowUnicode (hWnd: HWND): BOOL;
@@ -2169,26 +2133,26 @@ PROCEDURE EnableWindow (hWnd: HWND; bEnable: BOOL): BOOL;
 PROCEDURE IsWindowEnabled (hWnd: HWND): BOOL;
 
 <*EXTERNAL LoadAcceleratorsA:WINAPI*>
-PROCEDURE LoadAcceleratorsA (hInstance: HINSTANCE; lpTableName: LPCSTR): HACCEL;
+PROCEDURE LoadAcceleratorsA (hInstance: HINSTANCE; lpTableName: PCSTR): HACCEL;
 
 <*EXTERNAL LoadAcceleratorsW:WINAPI*>
-PROCEDURE LoadAcceleratorsW (hInstance: HINSTANCE; lpTableName: LPCWSTR): HACCEL;
+PROCEDURE LoadAcceleratorsW (hInstance: HINSTANCE; lpTableName: PCWSTR): HACCEL;
 
 CONST LoadAccelerators = LoadAcceleratorsA;
 
 <*EXTERNAL CreateAcceleratorTableA:WINAPI*>
-PROCEDURE CreateAcceleratorTable (lpaccl: LPACCEL; count: int): HACCEL;
+PROCEDURE CreateAcceleratorTable (lpaccl: PACCEL; count: INT32): HACCEL;
 
 <*EXTERNAL DestroyAcceleratorTable:WINAPI*>
 PROCEDURE DestroyAcceleratorTable (a1: HACCEL): BOOL;
 
 <*EXTERNAL CopyAcceleratorTable:WINAPI*>
-PROCEDURE CopyAcceleratorTable (a1: HACCEL; a2: LPACCEL; a3: int): int;
+PROCEDURE CopyAcceleratorTable (a1: HACCEL; a2: PACCEL; a3: INT32): INT32;
 
 <*EXTERNAL TranslateAccelerator:WINAPI*>
 PROCEDURE TranslateAccelerator (hWnd     : HWND;
                                 hAccTable: HACCEL;
-                                lpMsg    : LPMSG   ): int;
+                                lpMsg    : LPMSG   ): INT32;
 
 (* GetSystemMetrics() codes *)
 CONST
@@ -2240,13 +2204,13 @@ CONST
   SM_CMETRICS          = 44;
 
 <*EXTERNAL GetSystemMetrics:WINAPI*>
-PROCEDURE GetSystemMetrics (nIndex: int): int;
+PROCEDURE GetSystemMetrics (nIndex: INT32): INT32;
 
 <*EXTERNAL LoadMenuA:WINAPI*>
-PROCEDURE LoadMenuA (hInstance: HINSTANCE; lpMenuName: LPCSTR): HMENU;
+PROCEDURE LoadMenuA (hInstance: HINSTANCE; lpMenuName: PCSTR): HMENU;
 
 <*EXTERNAL LoadMenuW:WINAPI*>
-PROCEDURE LoadMenuW (hInstance: HINSTANCE; lpMenuName: LPCWSTR): HMENU;
+PROCEDURE LoadMenuW (hInstance: HINSTANCE; lpMenuName: PCWSTR): HMENU;
 CONST LoadMenu = LoadMenuA;
 
 <*EXTERNAL LoadMenuIndirectA:WINAPI*>
@@ -2264,42 +2228,42 @@ PROCEDURE SetMenu (hWnd: HWND; hMenu: HMENU): BOOL;
 
 <*EXTERNAL ChangeMenuA:WINAPI*>
 PROCEDURE ChangeMenuA (a1: HMENU;
-                       a2: UINT;
-                       a3: LPCTSTR;
-                       a4: UINT;
-                       a5: UINT     ): BOOL;
+                       a2: UINT32;
+                       a3: PCTSTR;
+                       a4: UINT32;
+                       a5: UINT32     ): BOOL;
 
 <*EXTERNAL ChangeMenuW:WINAPI*>
 PROCEDURE ChangeMenuW (a1: HMENU;
-                       a2: UINT;
-                       a3: LPCTSTR;
-                       a4: UINT;
-                       a5: UINT     ): BOOL;
+                       a2: UINT32;
+                       a3: PCTSTR;
+                       a4: UINT32;
+                       a5: UINT32     ): BOOL;
 CONST ChangeMenu = ChangeMenuA;
 
 <*EXTERNAL HiliteMenuItem:WINAPI*>
 PROCEDURE HiliteMenuItem (hWnd         : HWND;
                           hMenu        : HMENU;
-                          uIDHiliteItem: UINT;
-                          uHilite      : UINT   ): BOOL;
+                          uIDHiliteItem: UINT32;
+                          uHilite      : UINT32   ): BOOL;
 
 <*EXTERNAL GetMenuStringA:WINAPI*>
 PROCEDURE GetMenuStringA (hMenu    : HMENU;
-                          uIDItem  : UINT;
-                          lpString : LPSTR;
-                          nMaxCount: int;
-                          uFlag    : UINT   ): int;
+                          uIDItem  : UINT32;
+                          lpString : PSTR;
+                          nMaxCount: INT32;
+                          uFlag    : UINT32   ): INT32;
 
 <*EXTERNAL GetMenuStringW:WINAPI*>
 PROCEDURE GetMenuStringW (hMenu    : HMENU;
-                            uIDItem  : UINT;
-                            lpString : LPWSTR;
-                            nMaxCount: int;
-                            uFlag    : UINT    ): int;
+                            uIDItem  : UINT32;
+                            lpString : PWSTR;
+                            nMaxCount: INT32;
+                            uFlag    : UINT32    ): INT32;
 CONST GetMenuString = GetMenuStringA;
 
 <*EXTERNAL GetMenuState:WINAPI*>
-PROCEDURE GetMenuState (hMenu: HMENU; uId: UINT; uFlags: UINT): UINT;
+PROCEDURE GetMenuState (hMenu: HMENU; uId: UINT32; uFlags: UINT32): UINT32;
 
 <*EXTERNAL DrawMenuBar:WINAPI*>
 PROCEDURE DrawMenuBar (hWnd: HWND): BOOL;
@@ -2317,100 +2281,100 @@ PROCEDURE CreatePopupMenu (): HMENU;
 PROCEDURE DestroyMenu (hMenu: HMENU): BOOL;
 
 <*EXTERNAL CheckMenuItem:WINAPI*>
-PROCEDURE CheckMenuItem (hMenu: HMENU; uIDCheckItem: UINT; uCheck: UINT): BOOL;
+PROCEDURE CheckMenuItem (hMenu: HMENU; uIDCheckItem: UINT32; uCheck: UINT32): BOOL;
 
 <*EXTERNAL EnableMenuItem:WINAPI*>
 PROCEDURE EnableMenuItem (hMenu        : HMENU;
-                            uIDEnableItem: UINT;
-                            uEnable      : UINT   ): BOOL;
+                            uIDEnableItem: UINT32;
+                            uEnable      : UINT32   ): BOOL;
 
 <*EXTERNAL GetSubMenu:WINAPI*>
-PROCEDURE GetSubMenu (hMenu: HMENU; nPos: int): HMENU;
+PROCEDURE GetSubMenu (hMenu: HMENU; nPos: INT32): HMENU;
 
 <*EXTERNAL GetMenuItemID:WINAPI*>
-PROCEDURE GetMenuItemID (hMenu: HMENU; nPos: int): UINT;
+PROCEDURE GetMenuItemID (hMenu: HMENU; nPos: INT32): UINT32;
 
 <*EXTERNAL GetMenuItemCount:WINAPI*>
-PROCEDURE GetMenuItemCount (hMenu: HMENU): int;
+PROCEDURE GetMenuItemCount (hMenu: HMENU): INT32;
 
 <*EXTERNAL InsertMenuA:WINAPI*>
 PROCEDURE InsertMenuA (hMenu     : HMENU;
-                         uPosition : UINT;
-                         uFlags    : UINT;
-                         uIDNewItem: UINT;
-                         lpNewItem : LPCSTR ): BOOL;
+                         uPosition : UINT32;
+                         uFlags    : UINT32;
+                         uIDNewItem: SIZE_T;
+                         lpNewItem : PCSTR ): BOOL;
 
 <*EXTERNAL InsertMenuW:WINAPI*>
 PROCEDURE InsertMenuW (hMenu     : HMENU;
-                         uPosition : UINT;
-                         uFlags    : UINT;
-                         uIDNewItem: UINT;
-                         lpNewItem : LPCWSTR): BOOL;
+                         uPosition : UINT32;
+                         uFlags    : UINT32;
+                         uIDNewItem: SIZE_T;
+                         lpNewItem : PCWSTR): BOOL;
 CONST InsertMenu = InsertMenuA;
 
 <*EXTERNAL AppendMenuA:WINAPI*>
 PROCEDURE AppendMenuA (hMenu     : HMENU;
-                         uFlags    : UINT;
-                         uIDNewItem: UINT;
-                         lpNewItem : LPCSTR ): BOOL;
+                         uFlags    : UINT32;
+                         uIDNewItem: SIZE_T;
+                         lpNewItem : PCSTR ): BOOL;
 
 <*EXTERNAL AppendMenuW:WINAPI*>
 PROCEDURE AppendMenuW (hMenu     : HMENU;
-                         uFlags    : UINT;
-                         uIDNewItem: UINT;
-                         lpNewItem : LPCWSTR): BOOL;
+                         uFlags    : UINT32;
+                         uIDNewItem: SIZE_T;
+                         lpNewItem : PCWSTR): BOOL;
 CONST AppendMenu = AppendMenuA;
 
 <*EXTERNAL ModifyMenuA:WINAPI*>
 PROCEDURE ModifyMenuA (hMnu      : HMENU;
-                         uPosition : UINT;
-                         uFlags    : UINT;
-                         uIDNewItem: UINT;
-                         lpNewItem : LPCSTR ): BOOL;
+                         uPosition : UINT32;
+                         uFlags    : UINT32;
+                         uIDNewItem: SIZE_T;
+                         lpNewItem : PCSTR ): BOOL;
 
 <*EXTERNAL ModifyMenuW:WINAPI*>
 PROCEDURE ModifyMenuW (hMnu      : HMENU;
-                         uPosition : UINT;
-                         uFlags    : UINT;
-                         uIDNewItem: UINT;
-                         lpNewItem : LPCWSTR): BOOL;
+                         uPosition : UINT32;
+                         uFlags    : UINT32;
+                         uIDNewItem: SIZE_T;
+                         lpNewItem : PCWSTR): BOOL;
 CONST ModifyMenu = ModifyMenuA;
 
 <*EXTERNAL RemoveMenu:WINAPI*>
-PROCEDURE RemoveMenu (hMenu: HMENU; uPosition: UINT; uFlags: UINT): BOOL;
+PROCEDURE RemoveMenu (hMenu: HMENU; uPosition: UINT32; uFlags: UINT32): BOOL;
 
 <*EXTERNAL DeleteMenu:WINAPI*>
-PROCEDURE DeleteMenu (hMenu: HMENU; uPosition: UINT; uFlags: UINT): BOOL;
+PROCEDURE DeleteMenu (hMenu: HMENU; uPosition: UINT32; uFlags: UINT32): BOOL;
 
 <*EXTERNAL SetMenuItemBitmaps:WINAPI*>
 PROCEDURE SetMenuItemBitmaps (hMenu           : HMENU;
-                                uPosition       : UINT;
-                                uFlags          : UINT;
+                                uPosition       : UINT32;
+                                uFlags          : UINT32;
                                 hBitmapUnchecked: HBITMAP;
                                 hBitmapChecked  : HBITMAP  ): BOOL;
 
 <*EXTERNAL GetMenuCheckMarkDimensions:WINAPI*>
-PROCEDURE GetMenuCheckMarkDimensions (): LONG;
+PROCEDURE GetMenuCheckMarkDimensions (): INT32;
 
 <*EXTERNAL TrackPopupMenu:WINAPI*>
 PROCEDURE TrackPopupMenu (hMenu    : HMENU;
-                            uFlags   : UINT;
-                            x        : int;
-                            y        : int;
-                            nReserved: int;
+                            uFlags   : UINT32;
+                            x        : INT32;
+                            y        : INT32;
+                            nReserved: INT32;
                             hWnd     : HWND;
-                            prcRect  : LPRECT): BOOL;
+                            prcRect  : PRECT): BOOL;
 
 (* Flags for TrackPopupMenu *)
 CONST
-  TPM_LEFTBUTTON : LONG = 16_0000;
-  TPM_RIGHTBUTTON: LONG = 16_0002;
-  TPM_LEFTALIGN  : LONG = 16_0000;
-  TPM_CENTERALIGN: LONG = 16_0004;
-  TPM_RIGHTALIGN : LONG = 16_0008;
+  TPM_LEFTBUTTON : INT32 = 16_0000;
+  TPM_RIGHTBUTTON: INT32 = 16_0002;
+  TPM_LEFTALIGN  : INT32 = 16_0000;
+  TPM_CENTERALIGN: INT32 = 16_0004;
+  TPM_RIGHTALIGN : INT32 = 16_0008;
 
 <*EXTERNAL DrawIcon:WINAPI*>
-PROCEDURE DrawIcon (a1: HDC; a2: int; a3: int; a4: HICON): BOOL;
+PROCEDURE DrawIcon (a1: HDC; a2: INT32; a3: INT32; a4: HICON): BOOL;
 
 (* DrawText() Format Flags *)
 CONST
@@ -2432,17 +2396,17 @@ CONST
 
 <*EXTERNAL DrawTextA:WINAPI*>
 PROCEDURE DrawTextA (hDC     : HDC;
-                     lpString: LPCSTR;
-                     nCount  : int;
-                     lpRect  : LPRECT;
-                     uFormat : UINT    ): int;
+                     lpString: PCSTR;
+                     nCount  : INT32;
+                     lpRect  : PRECT;
+                     uFormat : UINT32    ): INT32;
 
 <*EXTERNAL DrawTextW:WINAPI*>
 PROCEDURE DrawTextW (hDC     : HDC;
-                     lpString: LPCWSTR;
-                     nCount  : int;
-                     lpRect  : LPRECT;
-                     uFormat : UINT     ): int;
+                     lpString: PCWSTR;
+                     nCount  : INT32;
+                     lpRect  : PRECT;
+                     uFormat : UINT32     ): INT32;
 CONST DrawText = DrawTextA;
 
 <*EXTERNAL GrayStringA:WINAPI*>
@@ -2450,58 +2414,58 @@ PROCEDURE GrayStringA (hDC         : HDC;
                          hBrush      : HBRUSH;
                          lpOutputFunc: GRAYSTRINGPROC;
                          lpData      : LPARAM;
-                         nCount      : int;
-                         X           : int;
-                         Y           : int;
-                         nWidth      : int;
-                         nHeight     : int             ): BOOL;
+                         nCount      : INT32;
+                         X           : INT32;
+                         Y           : INT32;
+                         nWidth      : INT32;
+                         nHeight     : INT32             ): BOOL;
 
 <*EXTERNAL GrayStringW:WINAPI*>
 PROCEDURE GrayStringW (hDC         : HDC;
                          hBrush      : HBRUSH;
                          lpOutputFunc: GRAYSTRINGPROC;
                          lpData      : LPARAM;
-                         nCount      : int;
-                         X           : int;
-                         Y           : int;
-                         nWidth      : int;
-                         nHeight     : int             ): BOOL;
+                         nCount      : INT32;
+                         X           : INT32;
+                         Y           : INT32;
+                         nWidth      : INT32;
+                         nHeight     : INT32             ): BOOL;
 CONST GrayString = GrayStringA;
 
 <*EXTERNAL TabbedTextOutA:WINAPI*>
 PROCEDURE TabbedTextOutA (hDC                : HDC;
-                            X                  : int;
-                            Y                  : int;
-                            lpString           : LPCSTR;
-                            nCount             : int;
-                            nTabPositions      : int;
-                            lpnTabStopPositions: LPINT;
-                            nTabOrigin         : int     ): LONG;
+                            X                  : INT32;
+                            Y                  : INT32;
+                            lpString           : PCSTR;
+                            nCount             : INT32;
+                            nTabPositions      : INT32;
+                            lpnTabStopPositions: PINT32;
+                            nTabOrigin         : INT32     ): INT32;
 
 <*EXTERNAL TabbedTextOutW:WINAPI*>
 PROCEDURE TabbedTextOutW (hDC                : HDC;
-                            X                  : int;
-                            Y                  : int;
-                            lpString           : LPCWSTR;
-                            nCount             : int;
-                            nTabPositions      : int;
-                            lpnTabStopPositions: LPINT;
-                            nTabOrigin         : int      ): LONG;
+                            X                  : INT32;
+                            Y                  : INT32;
+                            lpString           : PCWSTR;
+                            nCount             : INT32;
+                            nTabPositions      : INT32;
+                            lpnTabStopPositions: PINT32;
+                            nTabOrigin         : INT32      ): INT32;
 CONST TabbedTextOut = TabbedTextOutA;
 
 <*EXTERNAL GetTabbedTextExtentA:WINAPI*>
 PROCEDURE GetTabbedTextExtentA (hDC                : HDC;
-                                  lpString           : LPCSTR;
-                                  nCount             : int;
-                                  nTabPositions      : int;
-                                  lpnTabStopPositions: LPINT   ): DWORD;
+                                  lpString           : PCSTR;
+                                  nCount             : INT32;
+                                  nTabPositions      : INT32;
+                                  lpnTabStopPositions: PINT32   ): UINT32;
 
 <*EXTERNAL GetTabbedTextExtentW:WINAPI*>
 PROCEDURE GetTabbedTextExtentW (hDC                : HDC;
-                                  lpString           : LPCWSTR;
-                                  nCount             : int;
-                                  nTabPositions      : int;
-                                  lpnTabStopPositions: LPINT    ): DWORD;
+                                  lpString           : PCWSTR;
+                                  nCount             : INT32;
+                                  nTabPositions      : INT32;
+                                  lpnTabStopPositions: PINT32    ): UINT32;
 CONST GetTabbedTextExtent = GetTabbedTextExtentA;
 
 <*EXTERNAL UpdateWindow:WINAPI*>
@@ -2523,34 +2487,34 @@ PROCEDURE WindowFromDC (hdc: HDC): HWND;
 PROCEDURE GetDC (hWnd: HWND): HDC;
 
 <*EXTERNAL GetDCEx:WINAPI*>
-PROCEDURE GetDCEx (hwnd: HWND; hrgnClip: HRGN; flags: DWORD): HDC;
+PROCEDURE GetDCEx (hwnd: HWND; hrgnClip: HRGN; flags: UINT32): HDC;
 
 (* GetDCEx() flags *)
 CONST
-  DCX_WINDOW      : LONG = 16_00000001;
-  DCX_CACHE       : LONG = 16_00000002;
-  DCX_NORESETATTRS: LONG = 16_00000004;
-  DCX_CLIPCHILDREN: LONG = 16_00000008;
-  DCX_CLIPSIBLINGS: LONG = 16_00000010;
-  DCX_PARENTCLIP  : LONG = 16_00000020;
+  DCX_WINDOW      : INT32 = 16_00000001;
+  DCX_CACHE       : INT32 = 16_00000002;
+  DCX_NORESETATTRS: INT32 = 16_00000004;
+  DCX_CLIPCHILDREN: INT32 = 16_00000008;
+  DCX_CLIPSIBLINGS: INT32 = 16_00000010;
+  DCX_PARENTCLIP  : INT32 = 16_00000020;
 
-  DCX_EXCLUDERGN  : LONG = 16_00000040;
-  DCX_INTERSECTRGN: LONG = 16_00000080;
+  DCX_EXCLUDERGN  : INT32 = 16_00000040;
+  DCX_INTERSECTRGN: INT32 = 16_00000080;
 
-  DCX_EXCLUDEUPDATE  : LONG = 16_00000100;
-  DCX_INTERSECTUPDATE: LONG = 16_00000200;
+  DCX_EXCLUDEUPDATE  : INT32 = 16_00000100;
+  DCX_INTERSECTUPDATE: INT32 = 16_00000200;
 
-  DCX_LOCKWINDOWUPDATE: LONG = 16_00000400;
+  DCX_LOCKWINDOWUPDATE: INT32 = 16_00000400;
 
-  DCX_USESTYLE   : LONG = 16_00010000;
-  DCX_NORECOMPUTE: LONG = 16_00100000;
-  DCX_VALIDATE   : LONG = 16_00200000;
+  DCX_USESTYLE   : INT32 = 16_00010000;
+  DCX_NORECOMPUTE: INT32 = 16_00100000;
+  DCX_VALIDATE   : INT32 = 16_00200000;
 
 <*EXTERNAL GetWindowDC:WINAPI*>
 PROCEDURE GetWindowDC (hWnd: HWND): HDC;
 
 <*EXTERNAL ReleaseDC:WINAPI*>
-PROCEDURE ReleaseDC (hWnd: HWND; hDC: HDC): int;
+PROCEDURE ReleaseDC (hWnd: HWND; hDC: HDC): INT32;
 
 <*EXTERNAL BeginPaint:WINAPI*>
 PROCEDURE BeginPaint (hWnd: HWND; lpPaint: LPPAINTSTRUCT): HDC;
@@ -2559,21 +2523,21 @@ PROCEDURE BeginPaint (hWnd: HWND; lpPaint: LPPAINTSTRUCT): HDC;
 PROCEDURE EndPaint (hWnd: HWND; lpPaint: UNTRACED REF PAINTSTRUCT): BOOL;
 
 <*EXTERNAL GetUpdateRect:WINAPI*>
-PROCEDURE GetUpdateRect (hWnd: HWND; lpRect: LPRECT; bErase: BOOL): BOOL;
+PROCEDURE GetUpdateRect (hWnd: HWND; lpRect: PRECT; bErase: BOOL): BOOL;
 
 <*EXTERNAL GetUpdateRgn:WINAPI*>
-PROCEDURE GetUpdateRgn (hWnd: HWND; hRgn: HRGN; bErase: BOOL): int;
+PROCEDURE GetUpdateRgn (hWnd: HWND; hRgn: HRGN; bErase: BOOL): INT32;
 
 <*EXTERNAL ExcludeUpdateRgn:WINAPI*>
-PROCEDURE ExcludeUpdateRgn (hDC: HDC; hWnd: HWND): int;
+PROCEDURE ExcludeUpdateRgn (hDC: HDC; hWnd: HWND): INT32;
 
 <*EXTERNAL InvalidateRect:WINAPI*>
 PROCEDURE InvalidateRect (hWnd  : HWND;
-                            lpRect: LPRECT;
+                            lpRect: PRECT;
                             bErase: BOOL               ): BOOL;
 
 <*EXTERNAL ValidateRect:WINAPI*>
-PROCEDURE ValidateRect (hWnd: HWND; lpRect: LPRECT): BOOL;
+PROCEDURE ValidateRect (hWnd: HWND; lpRect: PRECT): BOOL;
 
 <*EXTERNAL InvalidateRgn:WINAPI*>
 PROCEDURE InvalidateRgn (hWnd: HWND; hRgn: HRGN; bErase: BOOL): BOOL;
@@ -2583,9 +2547,9 @@ PROCEDURE ValidateRgn (hWnd: HWND; hRgn: HRGN): BOOL;
 
 <*EXTERNAL RedrawWindow:WINAPI*>
 PROCEDURE RedrawWindow (hwnd      : HWND;
-                          lprcUpdate: LPRECT;
+                          lprcUpdate: PRECT;
                           hrgnUpdate: HRGN;
-                          flags     : UINT               ): BOOL;
+                          flags     : UINT32               ): BOOL;
 
 (* RedrawWindow() flags *)
 CONST
@@ -2609,29 +2573,29 @@ PROCEDURE LockWindowUpdate (hwndLock: HWND): BOOL;
 
 <*EXTERNAL ScrollWindow:WINAPI*>
 PROCEDURE ScrollWindow (hWnd      : HWND;
-                          XAmount   : int;
-                          YAmount   : int;
-                          lpRect    : LPRECT;
-                          lpClipRect: LPRECT  ): BOOL;
+                          XAmount   : INT32;
+                          YAmount   : INT32;
+                          lpRect    : PRECT;
+                          lpClipRect: PRECT  ): BOOL;
 
 <*EXTERNAL ScrollDC:WINAPI*>
 PROCEDURE ScrollDC (hDC       : HDC;
-                      dx        : int;
-                      dy        : int;
-                      lprcScroll: LPRECT;
-                      lprcClip  : LPRECT;
+                      dx        : INT32;
+                      dy        : INT32;
+                      lprcScroll: PRECT;
+                      lprcClip  : PRECT;
                       hrgnUpdate: HRGN;
-                      lprcUpdate: LPRECT             ): BOOL;
+                      lprcUpdate: PRECT             ): BOOL;
 
 <*EXTERNAL ScrollWindowEx:WINAPI*>
 PROCEDURE ScrollWindowEx (hwnd      : HWND;
-                            dx        : int;
-                            dy        : int;
-                            prcScroll : LPRECT;
-                            prcClip   : LPRECT;
+                            dx        : INT32;
+                            dy        : INT32;
+                            prcScroll : PRECT;
+                            prcClip   : PRECT;
                             hrgnUpdate: HRGN;
-                            prcUpdate : LPRECT;
-                            flags     : UINT               ): int;
+                            prcUpdate : PRECT;
+                            flags     : UINT32               ): INT32;
 
 CONST
   SW_SCROLLCHILDREN = 16_0001;  (* Scroll children within *lprcScroll. *)
@@ -2640,29 +2604,29 @@ CONST
                                    WM_ERASEBACKGROUND *)
 
 <*EXTERNAL SetScrollPos:WINAPI*>
-PROCEDURE SetScrollPos (hWnd: HWND; nBar: int; nPos: int; bRedraw: BOOL): int;
+PROCEDURE SetScrollPos (hWnd: HWND; nBar: INT32; nPos: INT32; bRedraw: BOOL): INT32;
 
 <*EXTERNAL GetScrollPos:WINAPI*>
-PROCEDURE GetScrollPos (hWnd: HWND; nBar: int): int;
+PROCEDURE GetScrollPos (hWnd: HWND; nBar: INT32): INT32;
 
 <*EXTERNAL SetScrollRange:WINAPI*>
 PROCEDURE SetScrollRange (hWnd   : HWND;
-                            nBar   : int;
-                            nMinPos: int;
-                            nMaxPos: int;
+                            nBar   : INT32;
+                            nMinPos: INT32;
+                            nMaxPos: INT32;
                             bRedraw: BOOL  ): BOOL;
 
 <*EXTERNAL GetScrollRange:WINAPI*>
 PROCEDURE GetScrollRange (hWnd    : HWND;
-                            nBar    : int;
-                            lpMinPos: LPINT;
-                            lpMaxPos: LPINT  ): BOOL;
+                            nBar    : INT32;
+                            lpMinPos: PINT32;
+                            lpMaxPos: PINT32  ): BOOL;
 
 <*EXTERNAL ShowScrollBar:WINAPI*>
-PROCEDURE ShowScrollBar (hWnd: HWND; wBar: int; bShow: BOOL): BOOL;
+PROCEDURE ShowScrollBar (hWnd: HWND; wBar: INT32; bShow: BOOL): BOOL;
 
 <*EXTERNAL EnableScrollBar:WINAPI*>
-PROCEDURE EnableScrollBar (hwnd: HWND; wSBflags: UINT; wArrows: UINT): BOOL;
+PROCEDURE EnableScrollBar (hwnd: HWND; wSBflags: UINT32; wArrows: UINT32): BOOL;
 
 (* EnableScrollBar() flags *)
 CONST
@@ -2679,166 +2643,166 @@ CONST
   ESB_DISABLE_RTDN = ESB_DISABLE_RIGHT;
 
 <*EXTERNAL SetPropA:WINAPI*>
-PROCEDURE SetPropA (hWnd: HWND; lpString: LPCSTR; hData: HANDLE): BOOL;
+PROCEDURE SetPropA (hWnd: HWND; lpString: PCSTR; hData: HANDLE): BOOL;
 
 <*EXTERNAL SetPropW:WINAPI*>
-PROCEDURE SetPropW (hWnd: HWND; lpString: LPCWSTR; hData: HANDLE): BOOL;
+PROCEDURE SetPropW (hWnd: HWND; lpString: PCWSTR; hData: HANDLE): BOOL;
 CONST SetProp = SetPropA;
 
 <*EXTERNAL GetPropA:WINAPI*>
-PROCEDURE GetPropA (hWnd: HWND; lpString: LPCSTR): HANDLE;
+PROCEDURE GetPropA (hWnd: HWND; lpString: PCSTR): HANDLE;
 
 <*EXTERNAL GetPropW:WINAPI*>
-PROCEDURE GetPropW (hWnd: HWND; lpString: LPCWSTR): HANDLE;
+PROCEDURE GetPropW (hWnd: HWND; lpString: PCWSTR): HANDLE;
 CONST GetProp = GetPropA;
 
 <*EXTERNAL RemovePropA:WINAPI*>
-PROCEDURE RemovePropA (hWnd: HWND; lpString: LPCSTR): HANDLE;
+PROCEDURE RemovePropA (hWnd: HWND; lpString: PCSTR): HANDLE;
 
 <*EXTERNAL RemovePropW:WINAPI*>
-PROCEDURE RemovePropW (hWnd: HWND; lpString: LPCWSTR): HANDLE;
+PROCEDURE RemovePropW (hWnd: HWND; lpString: PCWSTR): HANDLE;
 CONST RemoveProp = RemovePropA;
 
 <*EXTERNAL EnumPropsExA:WINAPI*>
 PROCEDURE EnumPropsExA (hWnd      : HWND;
                           lpEnumFunc: PROPENUMPROC;
-                          lParam    : LPARAM        ): int;
+                          lParam    : LPARAM        ): INT32;
 
 <*EXTERNAL EnumPropsExW:WINAPI*>
 PROCEDURE EnumPropsExW (hWnd      : HWND;
                           lpEnumFunc: PROPENUMPROC;
-                          lParam    : LPARAM        ): int;
+                          lParam    : LPARAM        ): INT32;
 CONST EnumPropsEx = EnumPropsExA;
 
 <*EXTERNAL EnumPropsA:WINAPI*>
-PROCEDURE EnumPropsA (hWnd: HWND; lpEnumFunc: PROPENUMPROC): int;
+PROCEDURE EnumPropsA (hWnd: HWND; lpEnumFunc: PROPENUMPROC): INT32;
 
 <*EXTERNAL EnumPropsW:WINAPI*>
-PROCEDURE EnumPropsW (hWnd: HWND; lpEnumFunc: PROPENUMPROC): int;
+PROCEDURE EnumPropsW (hWnd: HWND; lpEnumFunc: PROPENUMPROC): INT32;
 CONST EnumProps = EnumPropsA;
 
 <*EXTERNAL SetWindowTextA:WINAPI*>
-PROCEDURE SetWindowTextA (hWnd: HWND; lpString: LPCSTR): BOOL;
+PROCEDURE SetWindowTextA (hWnd: HWND; lpString: PCSTR): BOOL;
 
 <*EXTERNAL SetWindowTextW:WINAPI*>
-PROCEDURE SetWindowTextW (hWnd: HWND; lpString: LPCWSTR): BOOL;
+PROCEDURE SetWindowTextW (hWnd: HWND; lpString: PCWSTR): BOOL;
 CONST SetWindowText = SetWindowTextA;
 
 <*EXTERNAL GetWindowTextA:WINAPI*>
-PROCEDURE GetWindowTextA (hWnd: HWND; lpString: LPSTR; nMaxCount: int): int;
+PROCEDURE GetWindowTextA (hWnd: HWND; lpString: PSTR; nMaxCount: INT32): INT32;
 
 <*EXTERNAL GetWindowTextW:WINAPI*>
-PROCEDURE GetWindowTextW (hWnd: HWND; lpString: LPWSTR; nMaxCount: int): int;
+PROCEDURE GetWindowTextW (hWnd: HWND; lpString: PWSTR; nMaxCount: INT32): INT32;
 CONST GetWindowText = GetWindowTextA;
 
 <*EXTERNAL GetWindowTextLengthA:WINAPI*>
-PROCEDURE GetWindowTextLengthA (hWnd: HWND): int;
+PROCEDURE GetWindowTextLengthA (hWnd: HWND): INT32;
 
 <*EXTERNAL GetWindowTextLengthW:WINAPI*>
-PROCEDURE GetWindowTextLengthW (hWnd: HWND): int;
+PROCEDURE GetWindowTextLengthW (hWnd: HWND): INT32;
 CONST GetWindowTextLength = GetWindowTextLengthA;
 
 <*EXTERNAL GetClientRect:WINAPI*>
-PROCEDURE raw_GetClientRect (hWnd: HWND; lpRect: LPRECT): BOOL;
+PROCEDURE raw_GetClientRect (hWnd: HWND; lpRect: PRECT): BOOL;
 
-PROCEDURE GetClientRect (hWnd: HWND; lpRect: LPRECT): BOOL;
+PROCEDURE GetClientRect (hWnd: HWND; lpRect: PRECT): BOOL;
 
 <*EXTERNAL GetWindowRect:WINAPI*>
-PROCEDURE GetWindowRect (hWnd: HWND; lpRect: LPRECT): BOOL;
+PROCEDURE GetWindowRect (hWnd: HWND; lpRect: PRECT): BOOL;
 
 <*EXTERNAL AdjustWindowRect:WINAPI*>
-PROCEDURE AdjustWindowRect (lpRect: LPRECT; dwStyle: DWORD; bMenu: BOOL): BOOL;
+PROCEDURE AdjustWindowRect (lpRect: PRECT; dwStyle: UINT32; bMenu: BOOL): BOOL;
 
 <*EXTERNAL AdjustWindowRectEx:WINAPI*>
-PROCEDURE AdjustWindowRectEx (lpRect   : LPRECT;
-                                dwStyle  : DWORD;
+PROCEDURE AdjustWindowRectEx (lpRect   : PRECT;
+                                dwStyle  : UINT32;
                                 bMenu    : BOOL;
-                                dwExStyle: DWORD   ): BOOL;
+                                dwExStyle: UINT32   ): BOOL;
 
 (* MessageBox() Flags *)
 CONST
-  MB_OK              : LONG = 16_0000;
-  MB_OKCANCEL        : LONG = 16_0001;
-  MB_ABORTRETRYIGNORE: LONG = 16_0002;
-  MB_YESNOCANCEL     : LONG = 16_0003;
-  MB_YESNO           : LONG = 16_0004;
-  MB_RETRYCANCEL     : LONG = 16_0005;
+  MB_OK              : INT32 = 16_0000;
+  MB_OKCANCEL        : INT32 = 16_0001;
+  MB_ABORTRETRYIGNORE: INT32 = 16_0002;
+  MB_YESNOCANCEL     : INT32 = 16_0003;
+  MB_YESNO           : INT32 = 16_0004;
+  MB_RETRYCANCEL     : INT32 = 16_0005;
 
-  MB_ICONHAND       : LONG = 16_0010;
-  MB_ICONQUESTION   : LONG = 16_0020;
-  MB_ICONEXCLAMATION: LONG = 16_0030;
-  MB_ICONASTERISK   : LONG = 16_0040;
+  MB_ICONHAND       : INT32 = 16_0010;
+  MB_ICONQUESTION   : INT32 = 16_0020;
+  MB_ICONEXCLAMATION: INT32 = 16_0030;
+  MB_ICONASTERISK   : INT32 = 16_0040;
 
   MB_ICONINFORMATION = MB_ICONASTERISK;
   MB_ICONSTOP        = MB_ICONHAND;
 
-  MB_DEFBUTTON1: LONG = 16_0000;
-  MB_DEFBUTTON2: LONG = 16_0100;
-  MB_DEFBUTTON3: LONG = 16_0200;
+  MB_DEFBUTTON1: INT32 = 16_0000;
+  MB_DEFBUTTON2: INT32 = 16_0100;
+  MB_DEFBUTTON3: INT32 = 16_0200;
 
-  MB_APPLMODAL  : LONG = 16_0000;
-  MB_SYSTEMMODAL: LONG = 16_1000;
-  MB_TASKMODAL  : LONG = 16_2000;
+  MB_APPLMODAL  : INT32 = 16_0000;
+  MB_SYSTEMMODAL: INT32 = 16_1000;
+  MB_TASKMODAL  : INT32 = 16_2000;
 
-  MB_NOFOCUS             : LONG = 16_8000;
-  MB_SETFOREGROUND       : LONG = 16_10000;
-  MB_DEFAULT_DESKTOP_ONLY: LONG = 16_20000;
+  MB_NOFOCUS             : INT32 = 16_8000;
+  MB_SETFOREGROUND       : INT32 = 16_10000;
+  MB_DEFAULT_DESKTOP_ONLY: INT32 = 16_20000;
 
-  MB_TYPEMASK: LONG = 16_000F;
-  MB_ICONMASK: LONG = 16_00F0;
-  MB_DEFMASK : LONG = 16_0F00;
-  MB_MODEMASK: LONG = 16_3000;
-  MB_MISCMASK: LONG = 16_C000;
+  MB_TYPEMASK: INT32 = 16_000F;
+  MB_ICONMASK: INT32 = 16_00F0;
+  MB_DEFMASK : INT32 = 16_0F00;
+  MB_MODEMASK: INT32 = 16_3000;
+  MB_MISCMASK: INT32 = 16_C000;
 
 <*EXTERNAL MessageBoxExA:WINAPI*>
 PROCEDURE MessageBoxExA (hWnd       : HWND;
-                           lpText     : LPCSTR;
-                           lpCaption  : LPCSTR;
-                           uType      : UINT;
-                           wLanguageId: WORD    ): int;
+                           lpText     : PCSTR;
+                           lpCaption  : PCSTR;
+                           uType      : UINT32;
+                           wLanguageId: UINT16    ): INT32;
 
 <*EXTERNAL MessageBoxExW:WINAPI*>
 PROCEDURE MessageBoxExW (hWnd       : HWND;
-                           lpText     : LPCWSTR;
-                           lpCaption  : LPCWSTR;
-                           uType      : UINT;
-                           wLanguageId: WORD     ): int;
+                           lpText     : PCWSTR;
+                           lpCaption  : PCWSTR;
+                           uType      : UINT32;
+                           wLanguageId: UINT16     ): INT32;
 CONST MessageBoxEx = MessageBoxExA;
 
 PROCEDURE MessageBoxA (hWnd     : HWND;
-                       lpText   : LPCSTR;
-                       lpCaption: LPCSTR;
-                       uType    : UINT    ): int;
+                       lpText   : PCSTR;
+                       lpCaption: PCSTR;
+                       uType    : UINT32    ): INT32;
 
 PROCEDURE MessageBoxW (hWnd     : HWND;
-                       lpText   : LPCWSTR;
-                       lpCaption: LPCWSTR;
-                       uType    : UINT     ): int;
+                       lpText   : PCWSTR;
+                       lpCaption: PCWSTR;
+                       uType    : UINT32     ): INT32;
 
 CONST MessageBox = MessageBoxA;
 
 <*EXTERNAL MessageBeep:WINAPI*>
-PROCEDURE MessageBeep (uType: UINT): BOOL;
+PROCEDURE MessageBeep (uType: UINT32): BOOL;
 
 <*EXTERNAL ShowCursor:WINAPI*>
-PROCEDURE ShowCursor (bShow: BOOL): int;
+PROCEDURE ShowCursor (bShow: BOOL): INT32;
 
 <*EXTERNAL SetCursorPos:WINAPI*>
-PROCEDURE SetCursorPos (X: int; Y: int): BOOL;
+PROCEDURE SetCursorPos (X: INT32; Y: INT32): BOOL;
 
 <*EXTERNAL SetCursor:WINAPI*>
 PROCEDURE SetCursor (hCursor: HCURSOR): HCURSOR;
 
 <*EXTERNAL GetCursorPos:WINAPI*>
-PROCEDURE raw_GetCursorPos (lpPoint: LPPOINT): BOOL;
+PROCEDURE raw_GetCursorPos (lpPoint: PPOINT): BOOL;
 
-PROCEDURE GetCursorPos (lpPoint: LPPOINT): BOOL;
+PROCEDURE GetCursorPos (lpPoint: PPOINT): BOOL;
 
 <*EXTERNAL ClipCursor:WINAPI*>
-PROCEDURE ClipCursor (lpRect: LPRECT): BOOL;
+PROCEDURE ClipCursor (lpRect: PRECT): BOOL;
 
 <*EXTERNAL GetClipCursor:WINAPI*>
-PROCEDURE GetClipCursor (lpRect: LPRECT): BOOL;
+PROCEDURE GetClipCursor (lpRect: PRECT): BOOL;
 
 <*EXTERNAL GetCursor:WINAPI*>
 PROCEDURE GetCursor (): HCURSOR;
@@ -2846,14 +2810,14 @@ PROCEDURE GetCursor (): HCURSOR;
 <*EXTERNAL CreateCaret:WINAPI*>
 PROCEDURE CreateCaret (hWnd   : HWND;
                        hBitmap: HBITMAP;
-                       nWidth : int;
-                       nHeight: int      ): BOOL;
+                       nWidth : INT32;
+                       nHeight: INT32      ): BOOL;
 
 <*EXTERNAL GetCaretBlinkTime:WINAPI*>
-PROCEDURE GetCaretBlinkTime (): UINT;
+PROCEDURE GetCaretBlinkTime (): UINT32;
 
 <*EXTERNAL SetCaretBlinkTime:WINAPI*>
-PROCEDURE SetCaretBlinkTime (uMSeconds: UINT): BOOL;
+PROCEDURE SetCaretBlinkTime (uMSeconds: UINT32): BOOL;
 
 <*EXTERNAL DestroyCaret:WINAPI*>
 PROCEDURE DestroyCaret (): BOOL;
@@ -2865,26 +2829,26 @@ PROCEDURE HideCaret (hWnd: HWND): BOOL;
 PROCEDURE ShowCaret (hWnd: HWND): BOOL;
 
 <*EXTERNAL SetCaretPos:WINAPI*>
-PROCEDURE SetCaretPos (X: int; Y: int): BOOL;
+PROCEDURE SetCaretPos (X: INT32; Y: INT32): BOOL;
 
 <*EXTERNAL GetCaretPos:WINAPI*>
-PROCEDURE GetCaretPos (lpPoint: LPPOINT): BOOL;
+PROCEDURE GetCaretPos (lpPoint: PPOINT): BOOL;
 
 <*EXTERNAL ClientToScreen:WINAPI*>
-PROCEDURE raw_ClientToScreen (hWnd: HWND; lpPoint: LPPOINT): BOOL;
+PROCEDURE raw_ClientToScreen (hWnd: HWND; lpPoint: PPOINT): BOOL;
 
-PROCEDURE ClientToScreen (hWnd: HWND; lpPoint: LPPOINT): BOOL;
+PROCEDURE ClientToScreen (hWnd: HWND; lpPoint: PPOINT): BOOL;
 
 <*EXTERNAL ScreenToClient:WINAPI*>
-PROCEDURE raw_ScreenToClient (hWnd: HWND; lpPoint: LPPOINT): BOOL;
+PROCEDURE raw_ScreenToClient (hWnd: HWND; lpPoint: PPOINT): BOOL;
 
-PROCEDURE ScreenToClient (hWnd: HWND; lpPoint: LPPOINT): BOOL;
+PROCEDURE ScreenToClient (hWnd: HWND; lpPoint: PPOINT): BOOL;
 
 <*EXTERNAL MapWindowPoints:WINAPI*>
 PROCEDURE MapWindowPoints (hWndFrom: HWND;
                              hWndTo  : HWND;
-                             lpPoints: LPPOINT;
-                             cPoints : UINT     ): int;
+                             lpPoints: PPOINT;
+                             cPoints : UINT32     ): INT32;
 
 <*EXTERNAL WindowFromPoint:WINAPI*>
 PROCEDURE WindowFromPoint (Point: POINT): HWND;
@@ -2928,109 +2892,151 @@ CONST
   COLOR_MAX                 = 20;
 
 <*EXTERNAL GetSysColor:WINAPI*>
-PROCEDURE GetSysColor (nIndex: int): DWORD;
+PROCEDURE GetSysColor (nIndex: INT32): UINT32;
 
 <*EXTERNAL SetSysColors:WINAPI*>
-PROCEDURE SetSysColors (a1: int;
-                          a2: UNTRACED REF INT;
+PROCEDURE SetSysColors (a1: INT32;
+                          a2: UNTRACED REF INT32;
                           a3: UNTRACED REF COLORREF): BOOL;
 
 <*EXTERNAL DrawFocusRect:WINAPI*>
-PROCEDURE DrawFocusRect (a1: HDC; a2: LPRECT): BOOL;
+PROCEDURE DrawFocusRect (a1: HDC; a2: PRECT): BOOL;
 
 <*EXTERNAL FillRect:WINAPI*>
-PROCEDURE FillRect (hdc: HDC; lprc: LPRECT; hbr: HBRUSH): int;
+PROCEDURE FillRect (hdc: HDC; lprc: PRECT; hbr: HBRUSH): INT32;
 
 <*EXTERNAL FrameRect:WINAPI*>
-PROCEDURE FrameRect (hdc: HDC; lprc: LPRECT; hbr: HBRUSH): int;
+PROCEDURE FrameRect (hdc: HDC; lprc: PRECT; hbr: HBRUSH): INT32;
 
 <*EXTERNAL InvertRect:WINAPI*>
-PROCEDURE InvertRect (hdc: HDC; lprc: LPRECT): BOOL;
+PROCEDURE InvertRect (hdc: HDC; lprc: PRECT): BOOL;
 
 <*EXTERNAL SetRect:WINAPI*>
-PROCEDURE SetRect (a1: LPRECT; a2: int; a3: int; a4: int; a5: int): BOOL;
+PROCEDURE SetRect (a1: PRECT; a2: INT32; a3: INT32; a4: INT32; a5: INT32): BOOL;
 
 <*EXTERNAL SetRectEmpty:WINAPI*>
-PROCEDURE SetRectEmpty (a1: LPRECT): BOOL;
+PROCEDURE SetRectEmpty (a1: PRECT): BOOL;
 
 <*EXTERNAL CopyRect:WINAPI*>
-PROCEDURE CopyRect (a1: LPRECT; a2: LPRECT): int;
+PROCEDURE CopyRect (a1: PRECT; a2: PRECT): INT32;
 
 <*EXTERNAL InflateRect:WINAPI*>
-PROCEDURE InflateRect (a1: LPRECT; a2: int; a3: int): BOOL;
+PROCEDURE InflateRect (a1: PRECT; a2: INT32; a3: INT32): BOOL;
 
 <*EXTERNAL IntersectRect:WINAPI*>
-PROCEDURE IntersectRect (a1: LPRECT;
-                           a2: LPRECT;
-                           a3: LPRECT  ): int;
+PROCEDURE IntersectRect (a1: PRECT;
+                           a2: PRECT;
+                           a3: PRECT  ): INT32;
 
 <*EXTERNAL UnionRect:WINAPI*>
-PROCEDURE UnionRect (a1: LPRECT;
-                       a2: LPRECT;
-                       a3: LPRECT  ): BOOL;
+PROCEDURE UnionRect (a1: PRECT;
+                       a2: PRECT;
+                       a3: PRECT  ): BOOL;
 
 <*EXTERNAL SubtractRect:WINAPI*>
-PROCEDURE SubtractRect (a1: LPRECT;
-                          a2: LPRECT;
-                          a3: LPRECT  ): BOOL;
+PROCEDURE SubtractRect (a1: PRECT;
+                          a2: PRECT;
+                          a3: PRECT  ): BOOL;
 
 <*EXTERNAL OffsetRect:WINAPI*>
-PROCEDURE OffsetRect (a1: LPRECT; a2: int; a3: int): BOOL;
+PROCEDURE OffsetRect (a1: PRECT; a2: INT32; a3: INT32): BOOL;
 
 <*EXTERNAL IsRectEmpty:WINAPI*>
-PROCEDURE IsRectEmpty (lprc: LPRECT): BOOL;
+PROCEDURE IsRectEmpty (lprc: PRECT): BOOL;
 
 <*EXTERNAL EqualRect:WINAPI*>
-PROCEDURE EqualRect (a1: LPRECT; a2: LPRECT): BOOL;
+PROCEDURE EqualRect (a1: PRECT; a2: PRECT): BOOL;
 
 <*EXTERNAL PtInRect:WINAPI*>
-PROCEDURE PtInRect (a1: LPRECT; a2: POINT): BOOL;
+PROCEDURE PtInRect (a1: PRECT; a2: POINT): BOOL;
 
 <*EXTERNAL GetWindowWord:WINAPI*>
-PROCEDURE GetWindowWord (hWnd: HWND; nIndex: int): WORD;
+PROCEDURE GetWindowWord (hWnd: HWND; nIndex: INT32): UINT16;
 
 <*EXTERNAL SetWindowWord:WINAPI*>
-PROCEDURE SetWindowWord (hWnd: HWND; nIndex: int; wNewWord: WORD): WORD;
+PROCEDURE SetWindowWord (hWnd: HWND; nIndex: INT32; wNewWord: UINT16): UINT16;
 
 <*EXTERNAL GetWindowLongA:WINAPI*>
-PROCEDURE GetWindowLongA (hWnd: HWND; nIndex: int): LONG;
+PROCEDURE GetWindowLongA (hWnd: HWND; nIndex: INT32): INT32;
 
 <*EXTERNAL GetWindowLongW:WINAPI*>
-PROCEDURE GetWindowLongW (hWnd: HWND; nIndex: int): LONG;
+PROCEDURE GetWindowLongW (hWnd: HWND; nIndex: INT32): INT32;
 CONST GetWindowLong = GetWindowLongA;
 
 <*EXTERNAL SetWindowLongA:WINAPI*>
-PROCEDURE SetWindowLongA (hWnd: HWND; nIndex: int; dwNewLong: LONG): LONG;
+PROCEDURE SetWindowLongA (hWnd: HWND; nIndex: INT32; dwNewLong: INT32): INT32;
 
 <*EXTERNAL SetWindowLongW:WINAPI*>
-PROCEDURE SetWindowLongW (hWnd: HWND; nIndex: int; dwNewLong: LONG): LONG;
+PROCEDURE SetWindowLongW (hWnd: HWND; nIndex: INT32; dwNewLong: INT32): INT32;
 CONST SetWindowLong = SetWindowLongA;
 
+(*
+
+<*EXTERNAL "m3_GetWindowLongPtrA"*>
+PROCEDURE GetWindowLongPtrA (hWnd: HWND; nIndex: INT32): SSIZE_T;
+
+<*EXTERNAL "m3_GetWindowLongPtrW"*>
+PROCEDURE GetWindowLongPtrW (hWnd: HWND; nIndex: INT32): SSIZE_T;
+
+CONST GetWindowLongPtr = GetWindowLongPtrA;
+
+<*EXTERNAL "m3_SetWindowLongPtrA"*>
+PROCEDURE SetWindowLongPtrA (hWnd: HWND; nIndex: INT32; dwNewLong: SSIZE_T): SSIZE_T;
+
+<*EXTERNAL "m3_SetWindowLongPtrW"*>
+PROCEDURE SetWindowLongPtrW (hWnd: HWND; nIndex: INT32; dwNewLong: SSIZE_T): SSIZE_T;
+
+CONST SetWindowLongPtr = SetWindowLongPtrA;
+
+*)
+
 <*EXTERNAL GetClassWord:WINAPI*>
-PROCEDURE GetClassWord (hWnd: HWND; nIndex: int): WORD;
+PROCEDURE GetClassWord (hWnd: HWND; nIndex: INT32): UINT16;
 
 <*EXTERNAL SetClassWord:WINAPI*>
-PROCEDURE SetClassWord (hWnd: HWND; nIndex: int; wNewWord: WORD): WORD;
+PROCEDURE SetClassWord (hWnd: HWND; nIndex: INT32; wNewWord: UINT16): UINT16;
 
 <*EXTERNAL GetClassLongA:WINAPI*>
-PROCEDURE GetClassLongA (hWnd: HWND; nIndex: int): DWORD;
+PROCEDURE GetClassLongA (hWnd: HWND; nIndex: INT32): UINT32;
 
 <*EXTERNAL GetClassLongW:WINAPI*>
-PROCEDURE GetClassLongW (hWnd: HWND; nIndex: int): DWORD;
+PROCEDURE GetClassLongW (hWnd: HWND; nIndex: INT32): UINT32;
 CONST GetClassLong = GetClassLongA;
 
 <*EXTERNAL SetClassLongA:WINAPI*>
-PROCEDURE SetClassLongA (hWnd: HWND; nIndex: int; dwNewLong: LONG): DWORD;
+PROCEDURE SetClassLongA (hWnd: HWND; nIndex: INT32; dwNewLong: INT32): UINT32;
 
 <*EXTERNAL SetClassLongW:WINAPI*>
-PROCEDURE SetClassLongW (hWnd: HWND; nIndex: int; dwNewLong: LONG): DWORD;
+PROCEDURE SetClassLongW (hWnd: HWND; nIndex: INT32; dwNewLong: INT32): UINT32;
 CONST SetClassLong = SetClassLongA;
+
+
+(*
+
+<*EXTERNAL "m3_GetClassLongPtrA"*>
+PROCEDURE GetClassLongPtrA (hWnd: HWND; nIndex: INT32): SIZE_T;
+
+<*EXTERNAL "m3_GetClassLongPtrW"*>
+PROCEDURE GetClassLongPtrW (hWnd: HWND; nIndex: INT32): SIZE_T;
+
+CONST GetClassLongPtr = GetClassLongPtrA;
+
+<*EXTERNAL "m3_SetClassLongPtrA"*>
+PROCEDURE SetClassLongPtrA (hWnd: HWND; nIndex: INT32; dwNewLong: SSIZE_T): SIZE_T;
+
+<*EXTERNAL "m3_SetClassLongPtrW"*>
+PROCEDURE SetClassLongW (hWnd: HWND; nIndex: INT32; dwNewLong: SSIZE_T): SIZE_T;
+
+CONST SetClassLongPtr = SetClassLongPtrA;
+
+*)
+
 
 <*EXTERNAL GetDesktopWindow:WINAPI*>
 PROCEDURE GetDesktopWindow (): HWND;
 
 <*EXTERNAL SetDeskWallpaper:WINAPI*>
-PROCEDURE SetDeskWallpaper (lpString: LPCSTR): BOOL;
+PROCEDURE SetDeskWallpaper (lpString: PCSTR): BOOL;
 
 <*EXTERNAL GetParent:WINAPI*>
 PROCEDURE GetParent (hWnd: HWND): HWND;
@@ -3044,38 +3050,38 @@ PROCEDURE EnumChildWindows (hWndParent: HWND;
                               lParam    : LPARAM       ): BOOL;
 
 <*EXTERNAL FindWindowA:WINAPI*>
-PROCEDURE FindWindowA (lpClassName: LPCSTR; lpWindowName: LPCSTR): HWND;
+PROCEDURE FindWindowA (lpClassName: PCSTR; lpWindowName: PCSTR): HWND;
 
 <*EXTERNAL FindWindowW:WINAPI*>
-PROCEDURE FindWindowW (lpClassName: LPCWSTR; lpWindowName: LPCWSTR): HWND;
+PROCEDURE FindWindowW (lpClassName: PCWSTR; lpWindowName: PCWSTR): HWND;
 CONST FindWindow = FindWindowA;
 
 <*EXTERNAL EnumWindows:WINAPI*>
 PROCEDURE EnumWindows (lpEnumFunc: WNDENUMPROC; lParam: LPARAM): BOOL;
 
 <*EXTERNAL EnumThreadWindows:WINAPI*>
-PROCEDURE EnumThreadWindows (dwThreadId: DWORD;
+PROCEDURE EnumThreadWindows (dwThreadId: UINT32;
                                lpfn      : WNDENUMPROC;
                                lParam    : LPARAM       ): BOOL;
 
-PROCEDURE EnumTaskWindows (dwThreadId: DWORD;
+PROCEDURE EnumTaskWindows (dwThreadId: UINT32;
                            lpfn      : WNDENUMPROC;
                            lParam    : LPARAM       ): BOOL;
 
 <*EXTERNAL GetClassNameA:WINAPI*>
-PROCEDURE GetClassNameA (hWnd: HWND; lpClassName: LPSTR; nMaxCount: int): int;
+PROCEDURE GetClassNameA (hWnd: HWND; lpClassName: PSTR; nMaxCount: INT32): INT32;
 
 <*EXTERNAL GetClassNameW:WINAPI*>
-PROCEDURE GetClassNameW (hWnd: HWND; lpClassName: LPWSTR; nMaxCount: int): int;
+PROCEDURE GetClassNameW (hWnd: HWND; lpClassName: PWSTR; nMaxCount: INT32): INT32;
 CONST GetClassName = GetClassNameA;
 
 <*EXTERNAL GetTopWindow:WINAPI*>
 PROCEDURE GetTopWindow (hWnd: HWND): HWND;
 
-PROCEDURE GetNextWindow(hWnd: HWND; uCmd: UINT):HWND;
+PROCEDURE GetNextWindow(hWnd: HWND; uCmd: UINT32):HWND;
 
 <*EXTERNAL GetWindowThreadProcessId:WINAPI*>
-PROCEDURE GetWindowThreadProcessId (hWnd: HWND; lpdwProcessId: LPDWORD): DWORD;
+PROCEDURE GetWindowThreadProcessId (hWnd: HWND; lpdwProcessId: PUINT32): UINT32;
 
 <*EXTERNAL GetLastActivePopup:WINAPI*>
 PROCEDURE GetLastActivePopup (hWnd: HWND): HWND;
@@ -3091,29 +3097,29 @@ CONST
   GW_MAX       = 5;
 
 <*EXTERNAL GetWindow:WINAPI*>
-PROCEDURE GetWindow (hWnd: HWND; uCmd: UINT): HWND;
+PROCEDURE GetWindow (hWnd: HWND; uCmd: UINT32): HWND;
 
 <*EXTERNAL SetWindowsHookA:WINAPI*>
-PROCEDURE SetWindowsHookA (nFilterType: int; pfnFilterProc: HOOKPROC): HHOOK;
+PROCEDURE SetWindowsHookA (nFilterType: INT32; pfnFilterProc: HOOKPROC): HHOOK;
 
 <*EXTERNAL SetWindowsHookW:WINAPI*>
-PROCEDURE SetWindowsHookW (nFilterType: int; fnFilterProc: HOOKPROC): HHOOK;
+PROCEDURE SetWindowsHookW (nFilterType: INT32; fnFilterProc: HOOKPROC): HHOOK;
 CONST SetWindowsHook = SetWindowsHookA;
 
 <*EXTERNAL UnhookWindowsHook:WINAPI*>
-PROCEDURE UnhookWindowsHook (nCode: int; pfnFilterProc: HOOKPROC): BOOL;
+PROCEDURE UnhookWindowsHook (nCode: INT32; pfnFilterProc: HOOKPROC): BOOL;
 
 <*EXTERNAL SetWindowsHookExA:WINAPI*>
-PROCEDURE SetWindowsHookExA (idHook    : int;
+PROCEDURE SetWindowsHookExA (idHook    : INT32;
                                lpfn      : HOOKPROC;
                                hmod      : HINSTANCE;
-                               dwThreadId: DWORD      ): HHOOK;
+                               dwThreadId: UINT32      ): HHOOK;
 
 <*EXTERNAL SetWindowsHookExW:WINAPI*>
-PROCEDURE SetWindowsHookExW (idHook    : int;
+PROCEDURE SetWindowsHookExW (idHook    : INT32;
                                lpfn      : HOOKPROC;
                                hmod      : HINSTANCE;
-                               dwThreadId: DWORD      ): HHOOK;
+                               dwThreadId: UINT32      ): HHOOK;
 CONST SetWindowsHookEx = SetWindowsHookExA;
 
 <*EXTERNAL UnhookWindowsHookEx:WINAPI*>
@@ -3121,7 +3127,7 @@ PROCEDURE UnhookWindowsHookEx (hhk: HHOOK): BOOL;
 
 <*EXTERNAL CallNextHookEx:WINAPI*>
 PROCEDURE CallNextHookEx (hhk   : HHOOK;
-                            nCode : int;
+                            nCode : INT32;
                             wParam: WPARAM;
                             lParam: LPARAM  ): LRESULT;
 
@@ -3129,61 +3135,61 @@ PROCEDURE CallNextHookEx (hhk   : HHOOK;
  * Macros for source-level compatibility with old functions.
  *)
 
-PROCEDURE DefHookProc (nCode : int;
+PROCEDURE DefHookProc (nCode : INT32;
                        wParam: WPARAM;
                        lParam: LPARAM;
                        phhk  : UNTRACED REF HHOOK): LRESULT;
 
 (* Menu flags for Add/Check/EnableMenuItem() *)
 CONST
-  MF_INSERT: LONG = 16_00000000;
-  MF_CHANGE: LONG = 16_00000080;
-  MF_APPEND: LONG = 16_00000100;
-  MF_DELETE: LONG = 16_00000200;
-  MF_REMOVE: LONG = 16_00001000;
+  MF_INSERT: INT32 = 16_00000000;
+  MF_CHANGE: INT32 = 16_00000080;
+  MF_APPEND: INT32 = 16_00000100;
+  MF_DELETE: INT32 = 16_00000200;
+  MF_REMOVE: INT32 = 16_00001000;
 
-  MF_BYCOMMAND : LONG = 16_00000000;
-  MF_BYPOSITION: LONG = 16_00000400;
+  MF_BYCOMMAND : INT32 = 16_00000000;
+  MF_BYPOSITION: INT32 = 16_00000400;
 
-  MF_SEPARATOR: LONG = 16_00000800;
+  MF_SEPARATOR: INT32 = 16_00000800;
 
-  MF_ENABLED : LONG = 16_00000000;
-  MF_GRAYED  : LONG = 16_00000001;
-  MF_DISABLED: LONG = 16_00000002;
+  MF_ENABLED : INT32 = 16_00000000;
+  MF_GRAYED  : INT32 = 16_00000001;
+  MF_DISABLED: INT32 = 16_00000002;
 
-  MF_UNCHECKED      : LONG = 16_00000000;
-  MF_CHECKED        : LONG = 16_00000008;
-  MF_USECHECKBITMAPS: LONG = 16_00000200;
+  MF_UNCHECKED      : INT32 = 16_00000000;
+  MF_CHECKED        : INT32 = 16_00000008;
+  MF_USECHECKBITMAPS: INT32 = 16_00000200;
 
-  MF_STRING   : LONG = 16_00000000;
-  MF_BITMAP   : LONG = 16_00000004;
-  MF_OWNERDRAW: LONG = 16_00000100;
+  MF_STRING   : INT32 = 16_00000000;
+  MF_BITMAP   : INT32 = 16_00000004;
+  MF_OWNERDRAW: INT32 = 16_00000100;
 
-  MF_POPUP       : LONG = 16_00000010;
-  MF_MENUBARBREAK: LONG = 16_00000020;
-  MF_MENUBREAK   : LONG = 16_00000040;
+  MF_POPUP       : INT32 = 16_00000010;
+  MF_MENUBARBREAK: INT32 = 16_00000020;
+  MF_MENUBREAK   : INT32 = 16_00000040;
 
-  MF_UNHILITE: LONG = 16_00000000;
-  MF_HILITE  : LONG = 16_00000080;
+  MF_UNHILITE: INT32 = 16_00000000;
+  MF_HILITE  : INT32 = 16_00000080;
 
-  MF_SYSMENU    : LONG = 16_00002000;
-  MF_HELP       : LONG = 16_00004000;
-  MF_MOUSESELECT: LONG = 16_00008000;
+  MF_SYSMENU    : INT32 = 16_00002000;
+  MF_HELP       : INT32 = 16_00004000;
+  MF_MOUSESELECT: INT32 = 16_00008000;
 
 (* Menu item resource format *)
 TYPE
   MENUITEMTEMPLATEHEADER = RECORD
-                             versionNumber: WORD;
-                             offset       : WORD;
+                             versionNumber: UINT16;
+                             offset       : UINT16;
   END;
 
   MENUITEMTEMPLATE = RECORD
-                       mtOption: WORD;
-                       mtID    : WORD;
+                       mtOption: UINT16;
+                       mtID    : UINT16;
                        mtString: ARRAY [0 .. 1 - 1] OF char;
   END;
 
-CONST MF_END: LONG = 16_00000080;
+CONST MF_END: INT32 = 16_00000080;
 
 (* System Menu Command Values *)
 CONST
@@ -3212,85 +3218,85 @@ CONST
 (* Resource Loading Routines *)
 
 <*EXTERNAL LoadBitmapA:WINAPI*>
-PROCEDURE LoadBitmapA (hInstance: HINSTANCE; lpBitmapName: LPCSTR): HBITMAP;
+PROCEDURE LoadBitmapA (hInstance: HINSTANCE; lpBitmapName: PCSTR): HBITMAP;
 
 <*EXTERNAL LoadBitmapW:WINAPI*>
-PROCEDURE LoadBitmapW (hInstance: HINSTANCE; lpBitmapName: LPCWSTR): HBITMAP;
+PROCEDURE LoadBitmapW (hInstance: HINSTANCE; lpBitmapName: PCWSTR): HBITMAP;
 CONST LoadBitmap = LoadBitmapA;
 
 <*EXTERNAL LoadCursorA:WINAPI*>
-PROCEDURE LoadCursorA (hInstance: HINSTANCE; lpCursorName: LPCSTR): HCURSOR;
+PROCEDURE LoadCursorA (hInstance: HINSTANCE; lpCursorName: PCSTR): HCURSOR;
 
 <*EXTERNAL LoadCursorW:WINAPI*>
-PROCEDURE LoadCursorW (hInstance: HINSTANCE; lpCursorName: LPCWSTR): HCURSOR;
+PROCEDURE LoadCursorW (hInstance: HINSTANCE; lpCursorName: PCWSTR): HCURSOR;
 CONST LoadCursor = LoadCursorA;
 
 <*EXTERNAL CreateCursor:WINAPI*>
 PROCEDURE CreateCursor (a1: HINSTANCE;
-                        a2: int;
-                        a3: int;
-                        a4: int;
-                        a5: int;
-                        a6: void_star;
-                        a7: void_star  ): HCURSOR;
+                        a2: INT32;
+                        a3: INT32;
+                        a4: INT32;
+                        a5: INT32;
+                        a6: PVOID;
+                        a7: PVOID  ): HCURSOR;
 
 <*EXTERNAL DestroyCursor:WINAPI*>
 PROCEDURE DestroyCursor (a1: HCURSOR): BOOL;
 
 (* Standard Cursor IDs *)
 VAR                             (* CONST *)
-  IDC_ARROW      : LPTSTR;
-  IDC_IBEAM      : LPTSTR;
-  IDC_WAIT       : LPTSTR;
-  IDC_CROSS      : LPTSTR;
-  IDC_UPARROW    : LPTSTR;
-  IDC_SIZE       : LPTSTR;
-  IDC_ICON       : LPTSTR;
-  IDC_SIZENWSE   : LPTSTR;
-  IDC_SIZENESW   : LPTSTR;
-  IDC_SIZEWE     : LPTSTR;
-  IDC_SIZENS     : LPTSTR;
-  IDC_SIZEALL    : LPTSTR;      (* not in win3.1 *)
-  IDC_NO         : LPTSTR;      (* not in win3.1 *)
-  IDC_APPSTARTING: LPTSTR;      (* not in win3.1 *)
+  IDC_ARROW      : PTSTR;
+  IDC_IBEAM      : PTSTR;
+  IDC_WAIT       : PTSTR;
+  IDC_CROSS      : PTSTR;
+  IDC_UPARROW    : PTSTR;
+  IDC_SIZE       : PTSTR;
+  IDC_ICON       : PTSTR;
+  IDC_SIZENWSE   : PTSTR;
+  IDC_SIZENESW   : PTSTR;
+  IDC_SIZEWE     : PTSTR;
+  IDC_SIZENS     : PTSTR;
+  IDC_SIZEALL    : PTSTR;      (* not in win3.1 *)
+  IDC_NO         : PTSTR;      (* not in win3.1 *)
+  IDC_APPSTARTING: PTSTR;      (* not in win3.1 *)
 
 TYPE
   ICONINFO = RECORD
     fIcon   : BOOL;
-    xHotspot: DWORD;
-    yHotspot: DWORD;
+    xHotspot: UINT32;
+    yHotspot: UINT32;
     hbmMask : HBITMAP;
     hbmColor: HBITMAP;
   END;
   PICONINFO = UNTRACED REF ICONINFO;
 
 <*EXTERNAL LoadIconA:WINAPI*>
-PROCEDURE LoadIconA (hInstance: HINSTANCE; lpIconName: LPCSTR): HICON;
+PROCEDURE LoadIconA (hInstance: HINSTANCE; lpIconName: PCSTR): HICON;
 
 <*EXTERNAL LoadIconW:WINAPI*>
-PROCEDURE LoadIconW (hInstance: HINSTANCE; lpIconName: LPCWSTR): HICON;
+PROCEDURE LoadIconW (hInstance: HINSTANCE; lpIconName: PCWSTR): HICON;
 CONST LoadIcon = LoadIconA;
 
 <*EXTERNAL CreateIcon:WINAPI*>
 PROCEDURE CreateIcon (a1: HINSTANCE;
-                      a2: int;
-                      a3: int;
-                      a4: BYTE;
-                      a5: BYTE;
-                      a6: UNTRACED REF BYTE;
-                      a7: UNTRACED REF BYTE  ): HICON;
+                      a2: INT32;
+                      a3: INT32;
+                      a4: UINT8;
+                      a5: UINT8;
+                      a6: UNTRACED REF UINT8;
+                      a7: UNTRACED REF UINT8  ): HICON;
 
 <*EXTERNAL DestroyIcon:WINAPI*>
 PROCEDURE DestroyIcon (a1: HICON): BOOL;
 
 <*EXTERNAL LookupIconIdFromDirectory:WINAPI*>
-PROCEDURE LookupIconIdFromDirectory (presbits: PBYTE; fIcon: BOOL): int;
+PROCEDURE LookupIconIdFromDirectory (presbits: PUINT8; fIcon: BOOL): INT32;
 
 <*EXTERNAL CreateIconFromResource:WINAPI*>
-PROCEDURE CreateIconFromResource (presbits : PBYTE;
-                                  dwResSize: DWORD;
+PROCEDURE CreateIconFromResource (presbits : PUINT8;
+                                  dwResSize: UINT32;
                                   fIcon    : BOOL;
-                                  dwVer    : DWORD  ): HICON;
+                                  dwVer    : UINT32  ): HICON;
 
 <*EXTERNAL CreateIconIndirect:WINAPI*>
 PROCEDURE CreateIconIndirect (piconinfo: PICONINFO): HICON;
@@ -3366,23 +3372,23 @@ CONST
 
 (* Standard Icon IDs *)
 VAR                             (* CONST *)
-  IDI_APPLICATION: LPTSTR;
-  IDI_HAND       : LPTSTR;
-  IDI_QUESTION   : LPTSTR;
-  IDI_EXCLAMATION: LPTSTR;
-  IDI_ASTERISK   : LPTSTR;
+  IDI_APPLICATION: PTSTR;
+  IDI_HAND       : PTSTR;
+  IDI_QUESTION   : PTSTR;
+  IDI_EXCLAMATION: PTSTR;
+  IDI_ASTERISK   : PTSTR;
 
 <*EXTERNAL LoadStringA:WINAPI*>
 PROCEDURE LoadStringA (hInstance : HINSTANCE;
-                         uID       : UINT;
-                         lpBuffer  : LPSTR;
-                         nBufferMax: int        ): int;
+                         uID       : UINT32;
+                         lpBuffer  : PSTR;
+                         nBufferMax: INT32        ): INT32;
 
 <*EXTERNAL LoadStringW:WINAPI*>
 PROCEDURE LoadStringW (hInstance : HINSTANCE;
-                         uID       : UINT;
-                         lpBuffer  : LPWSTR;
-                         nBufferMax: int        ): int;
+                         uID       : UINT32;
+                         lpBuffer  : PWSTR;
+                         nBufferMax: INT32        ): INT32;
 CONST LoadString = LoadStringA;
 
 (* Dialog Box Command IDs *)
@@ -3399,19 +3405,19 @@ CONST
 
 (* Edit Control Styles *)
 CONST
-  ES_LEFT       : LONG = 16_0000;
-  ES_CENTER     : LONG = 16_0001;
-  ES_RIGHT      : LONG = 16_0002;
-  ES_MULTILINE  : LONG = 16_0004;
-  ES_UPPERCASE  : LONG = 16_0008;
-  ES_LOWERCASE  : LONG = 16_0010;
-  ES_PASSWORD   : LONG = 16_0020;
-  ES_AUTOVSCROLL: LONG = 16_0040;
-  ES_AUTOHSCROLL: LONG = 16_0080;
-  ES_NOHIDESEL  : LONG = 16_0100;
-  ES_OEMCONVERT : LONG = 16_0400;
-  ES_READONLY   : LONG = 16_0800;
-  ES_WANTRETURN : LONG = 16_1000;
+  ES_LEFT       : INT32 = 16_0000;
+  ES_CENTER     : INT32 = 16_0001;
+  ES_RIGHT      : INT32 = 16_0002;
+  ES_MULTILINE  : INT32 = 16_0004;
+  ES_UPPERCASE  : INT32 = 16_0008;
+  ES_LOWERCASE  : INT32 = 16_0010;
+  ES_PASSWORD   : INT32 = 16_0020;
+  ES_AUTOVSCROLL: INT32 = 16_0040;
+  ES_AUTOHSCROLL: INT32 = 16_0080;
+  ES_NOHIDESEL  : INT32 = 16_0100;
+  ES_OEMCONVERT : INT32 = 16_0400;
+  ES_READONLY   : INT32 = 16_0800;
+  ES_WANTRETURN : INT32 = 16_1000;
 
 (* Edit Control Notification Codes *)
 CONST
@@ -3469,19 +3475,19 @@ CONST
 
 (* Button Control Styles *)
 CONST
-  BS_PUSHBUTTON     : LONG = 16_00;
-  BS_DEFPUSHBUTTON  : LONG = 16_01;
-  BS_CHECKBOX       : LONG = 16_02;
-  BS_AUTOCHECKBOX   : LONG = 16_03;
-  BS_RADIOBUTTON    : LONG = 16_04;
-  BS_3STATE         : LONG = 16_05;
-  BS_AUTO3STATE     : LONG = 16_06;
-  BS_GROUPBOX       : LONG = 16_07;
-  BS_USERBUTTON     : LONG = 16_08;
-  BS_AUTORADIOBUTTON: LONG = 16_09;
-  BS_PUSHBOX        : LONG = 16_0A;
-  BS_OWNERDRAW      : LONG = 16_0B;
-  BS_LEFTTEXT       : LONG = 16_20;
+  BS_PUSHBUTTON     : INT32 = 16_00;
+  BS_DEFPUSHBUTTON  : INT32 = 16_01;
+  BS_CHECKBOX       : INT32 = 16_02;
+  BS_AUTOCHECKBOX   : INT32 = 16_03;
+  BS_RADIOBUTTON    : INT32 = 16_04;
+  BS_3STATE         : INT32 = 16_05;
+  BS_AUTO3STATE     : INT32 = 16_06;
+  BS_GROUPBOX       : INT32 = 16_07;
+  BS_USERBUTTON     : INT32 = 16_08;
+  BS_AUTORADIOBUTTON: INT32 = 16_09;
+  BS_PUSHBOX        : INT32 = 16_0A;
+  BS_OWNERDRAW      : INT32 = 16_0B;
+  BS_LEFTTEXT       : INT32 = 16_20;
 
 (* User Button Notification Codes *)
 CONST
@@ -3502,20 +3508,20 @@ CONST
 
 (* Static Control Constants *)
 CONST
-  SS_LEFT          : LONG = 16_00;
-  SS_CENTER        : LONG = 16_01;
-  SS_RIGHT         : LONG = 16_02;
-  SS_ICON          : LONG = 16_03;
-  SS_BLACKRECT     : LONG = 16_04;
-  SS_GRAYRECT      : LONG = 16_05;
-  SS_WHITERECT     : LONG = 16_06;
-  SS_BLACKFRAME    : LONG = 16_07;
-  SS_GRAYFRAME     : LONG = 16_08;
-  SS_WHITEFRAME    : LONG = 16_09;
-  SS_USERITEM      : LONG = 16_0A;
-  SS_SIMPLE        : LONG = 16_0B;
-  SS_LEFTNOWORDWRAP: LONG = 16_0C;
-  SS_NOPREFIX      : LONG = 16_80; (* Don't do "&" character translation *)
+  SS_LEFT          : INT32 = 16_00;
+  SS_CENTER        : INT32 = 16_01;
+  SS_RIGHT         : INT32 = 16_02;
+  SS_ICON          : INT32 = 16_03;
+  SS_BLACKRECT     : INT32 = 16_04;
+  SS_GRAYRECT      : INT32 = 16_05;
+  SS_WHITERECT     : INT32 = 16_06;
+  SS_BLACKFRAME    : INT32 = 16_07;
+  SS_GRAYFRAME     : INT32 = 16_08;
+  SS_WHITEFRAME    : INT32 = 16_09;
+  SS_USERITEM      : INT32 = 16_0A;
+  SS_SIMPLE        : INT32 = 16_0B;
+  SS_LEFTNOWORDWRAP: INT32 = 16_0C;
+  SS_NOPREFIX      : INT32 = 16_80; (* Don't do "&" character translation *)
 
 (* Static Control Mesages *)
 CONST
@@ -3527,7 +3533,7 @@ CONST
  * Dialog window class
  *)
 VAR                             (* CONST *)
-  WC_DIALOG: LPTSTR;
+  WC_DIALOG: PTSTR;
 
 (*
  * Get/SetWindowWord/Long offsets for use with WC_DIALOG windows
@@ -3543,21 +3549,21 @@ CONST
 PROCEDURE IsDialogMessage (hDlg: HWND; lpMsg: LPMSG): BOOL;
 
 <*EXTERNAL MapDialogRect:WINAPI*>
-PROCEDURE MapDialogRect (hDlg: HWND; lpRect: LPRECT): BOOL;
+PROCEDURE MapDialogRect (hDlg: HWND; lpRect: PRECT): BOOL;
 
 <*EXTERNAL DlgDirListA:WINAPI*>
 PROCEDURE DlgDirListA (hDlg         : HWND;
-                         lpPathSpec   : LPSTR;
-                         nIDListBox   : int;
-                         nIDStaticPath: int;
-                         uFileType    : UINT   ): int;
+                         lpPathSpec   : PSTR;
+                         nIDListBox   : INT32;
+                         nIDStaticPath: INT32;
+                         uFileType    : UINT32   ): INT32;
 
 <*EXTERNAL DlgDirListW:WINAPI*>
 PROCEDURE DlgDirListW (hDlg         : HWND;
-                         lpPathSpec   : LPWSTR;
-                         nIDListBox   : int;
-                         nIDStaticPath: int;
-                         uFileType    : UINT    ): int;
+                         lpPathSpec   : PWSTR;
+                         nIDListBox   : INT32;
+                         nIDStaticPath: INT32;
+                         uFileType    : UINT32    ): INT32;
 CONST DlgDirList = DlgDirListA;
 
 (*
@@ -3577,54 +3583,54 @@ CONST
 
 <*EXTERNAL DlgDirSelectExA:WINAPI*>
 PROCEDURE DlgDirSelectExA (hDlg      : HWND;
-                             lpString  : LPSTR;
-                             nCount    : int;
-                             nIDListBox: int    ): BOOL;
+                             lpString  : PSTR;
+                             nCount    : INT32;
+                             nIDListBox: INT32    ): BOOL;
 
 <*EXTERNAL DlgDirSelectExW:WINAPI*>
 PROCEDURE DlgDirSelectExW (hDlg      : HWND;
-                             lpString  : LPWSTR;
-                             nCount    : int;
-                             nIDListBox: int     ): BOOL;
+                             lpString  : PWSTR;
+                             nCount    : INT32;
+                             nIDListBox: INT32     ): BOOL;
 CONST DlgDirSelectEx = DlgDirSelectExA;
 
 <*EXTERNAL DlgDirListComboBoxA:WINAPI*>
 PROCEDURE DlgDirListComboBoxA (hDlg         : HWND;
-                                 lpPathSpec   : LPSTR;
-                                 nIDComboBox  : int;
-                                 nIDStaticPath: int;
-                                 uFiletype    : UINT   ): int;
+                                 lpPathSpec   : PSTR;
+                                 nIDComboBox  : INT32;
+                                 nIDStaticPath: INT32;
+                                 uFiletype    : UINT32   ): INT32;
 
 <*EXTERNAL DlgDirListComboBoxW:WINAPI*>
 PROCEDURE DlgDirListComboBoxW (hDlg         : HWND;
-                                 lpPathSpec   : LPWSTR;
-                                 nIDComboBox  : int;
-                                 nIDStaticPath: int;
-                                 uFiletype    : UINT    ): int;
+                                 lpPathSpec   : PWSTR;
+                                 nIDComboBox  : INT32;
+                                 nIDStaticPath: INT32;
+                                 uFiletype    : UINT32    ): INT32;
 CONST DlgDirListComboBox = DlgDirListComboBoxA;
 
 <*EXTERNAL DlgDirSelectComboBoxExA:WINAPI*>
 PROCEDURE DlgDirSelectComboBoxExA (hDlg       : HWND;
-                                     lpString   : LPSTR;
-                                     nCount     : int;
-                                     nIDComboBox: int    ): BOOL;
+                                     lpString   : PSTR;
+                                     nCount     : INT32;
+                                     nIDComboBox: INT32    ): BOOL;
 
 <*EXTERNAL DlgDirSelectComboBoxExW:WINAPI*>
 PROCEDURE DlgDirSelectComboBoxExW (hDlg       : HWND;
-                                     lpString   : LPWSTR;
-                                     nCount     : int;
-                                     nIDComboBox: int     ): BOOL;
+                                     lpString   : PWSTR;
+                                     nCount     : INT32;
+                                     nIDComboBox: INT32     ): BOOL;
 CONST DlgDirSelectComboBoxEx = DlgDirSelectComboBoxExA;
 
 (* Dialog Styles *)
 CONST
-  DS_ABSALIGN  : LONG = 16_01;
-  DS_SYSMODAL  : LONG = 16_02;
-  DS_LOCALEDIT : LONG = 16_20;  (* Edit items get Local storage. *)
-  DS_SETFONT   : LONG = 16_40;  (* User specified font for Dlg controls *)
-  DS_MODALFRAME: LONG = 16_80;  (* Can be combined with WS_CAPTION *)
-  DS_NOIDLEMSG : LONG = 16_100; (* WM_ENTERIDLE message will not be sent *)
-  DS_SETFOREGROUND: LONG = 16_200; (* not in win3.1 *)
+  DS_ABSALIGN  : INT32 = 16_01;
+  DS_SYSMODAL  : INT32 = 16_02;
+  DS_LOCALEDIT : INT32 = 16_20;  (* Edit items get Local storage. *)
+  DS_SETFONT   : INT32 = 16_40;  (* User specified font for Dlg controls *)
+  DS_MODALFRAME: INT32 = 16_80;  (* Can be combined with WS_CAPTION *)
+  DS_NOIDLEMSG : INT32 = 16_100; (* WM_ENTERIDLE message will not be sent *)
+  DS_SETFOREGROUND: INT32 = 16_200; (* not in win3.1 *)
 
   DM_GETDEFID = (WM_USER + 0);
   DM_SETDEFID = (WM_USER + 1);
@@ -3644,7 +3650,7 @@ CONST
   DLGC_STATIC          = 16_0100; (* Static item: don't include *)
   DLGC_BUTTON          = 16_2000; (* Button item: can be checked *)
 
-  LB_CTLCODE: LONG = 0;
+  LB_CTLCODE: INT32 = 0;
 
 (* Listbox Return Values *)
 CONST
@@ -3714,20 +3720,20 @@ CONST
 
 (* Listbox Styles *)
 CONST
-  LBS_NOTIFY           : LONG = 16_0001;
-  LBS_SORT             : LONG = 16_0002;
-  LBS_NOREDRAW         : LONG = 16_0004;
-  LBS_MULTIPLESEL      : LONG = 16_0008;
-  LBS_OWNERDRAWFIXED   : LONG = 16_0010;
-  LBS_OWNERDRAWVARIABLE: LONG = 16_0020;
-  LBS_HASSTRINGS       : LONG = 16_0040;
-  LBS_USETABSTOPS      : LONG = 16_0080;
-  LBS_NOINTEGRALHEIGHT : LONG = 16_0100;
-  LBS_MULTICOLUMN      : LONG = 16_0200;
-  LBS_WANTKEYBOARDINPUT: LONG = 16_0400;
-  LBS_EXTENDEDSEL      : LONG = 16_0800;
-  LBS_DISABLENOSCROLL  : LONG = 16_1000;
-  LBS_NODATA           : LONG = 16_2000;
+  LBS_NOTIFY           : INT32 = 16_0001;
+  LBS_SORT             : INT32 = 16_0002;
+  LBS_NOREDRAW         : INT32 = 16_0004;
+  LBS_MULTIPLESEL      : INT32 = 16_0008;
+  LBS_OWNERDRAWFIXED   : INT32 = 16_0010;
+  LBS_OWNERDRAWVARIABLE: INT32 = 16_0020;
+  LBS_HASSTRINGS       : INT32 = 16_0040;
+  LBS_USETABSTOPS      : INT32 = 16_0080;
+  LBS_NOINTEGRALHEIGHT : INT32 = 16_0100;
+  LBS_MULTICOLUMN      : INT32 = 16_0200;
+  LBS_WANTKEYBOARDINPUT: INT32 = 16_0400;
+  LBS_EXTENDEDSEL      : INT32 = 16_0800;
+  LBS_DISABLENOSCROLL  : INT32 = 16_1000;
+  LBS_NODATA           : INT32 = 16_2000;
   LBS_STANDARD = Or(LBS_NOTIFY, Or(LBS_SORT, Or(WS_VSCROLL, WS_BORDER)));
 
 (* Combo Box return Values *)
@@ -3752,17 +3758,17 @@ CONST
 
 (* Combo Box styles *)
 CONST
-  CBS_SIMPLE           : LONG = 16_0001;
-  CBS_DROPDOWN         : LONG = 16_0002;
-  CBS_DROPDOWNLIST     : LONG = 16_0003;
-  CBS_OWNERDRAWFIXED   : LONG = 16_0010;
-  CBS_OWNERDRAWVARIABLE: LONG = 16_0020;
-  CBS_AUTOHSCROLL      : LONG = 16_0040;
-  CBS_OEMCONVERT       : LONG = 16_0080;
-  CBS_SORT             : LONG = 16_0100;
-  CBS_HASSTRINGS       : LONG = 16_0200;
-  CBS_NOINTEGRALHEIGHT : LONG = 16_0400;
-  CBS_DISABLENOSCROLL  : LONG = 16_0800;
+  CBS_SIMPLE           : INT32 = 16_0001;
+  CBS_DROPDOWN         : INT32 = 16_0002;
+  CBS_DROPDOWNLIST     : INT32 = 16_0003;
+  CBS_OWNERDRAWFIXED   : INT32 = 16_0010;
+  CBS_OWNERDRAWVARIABLE: INT32 = 16_0020;
+  CBS_AUTOHSCROLL      : INT32 = 16_0040;
+  CBS_OEMCONVERT       : INT32 = 16_0080;
+  CBS_SORT             : INT32 = 16_0100;
+  CBS_HASSTRINGS       : INT32 = 16_0200;
+  CBS_NOINTEGRALHEIGHT : INT32 = 16_0400;
+  CBS_DISABLENOSCROLL  : INT32 = 16_0800;
 
 (* Combo Box messages *)
 CONST
@@ -3797,15 +3803,15 @@ CONST
 
 (* Scroll Bar Styles *)
 CONST
-  SBS_HORZ                   : LONG = 16_0000;
-  SBS_VERT                   : LONG = 16_0001;
-  SBS_TOPALIGN               : LONG = 16_0002;
-  SBS_LEFTALIGN              : LONG = 16_0002;
-  SBS_BOTTOMALIGN            : LONG = 16_0004;
-  SBS_RIGHTALIGN             : LONG = 16_0004;
-  SBS_SIZEBOXTOPLEFTALIGN    : LONG = 16_0002;
-  SBS_SIZEBOXBOTTOMRIGHTALIGN: LONG = 16_0004;
-  SBS_SIZEBOX                : LONG = 16_0008;
+  SBS_HORZ                   : INT32 = 16_0000;
+  SBS_VERT                   : INT32 = 16_0001;
+  SBS_TOPALIGN               : INT32 = 16_0002;
+  SBS_LEFTALIGN              : INT32 = 16_0002;
+  SBS_BOTTOMALIGN            : INT32 = 16_0004;
+  SBS_RIGHTALIGN             : INT32 = 16_0004;
+  SBS_SIZEBOXTOPLEFTALIGN    : INT32 = 16_0002;
+  SBS_SIZEBOXBOTTOMRIGHTALIGN: INT32 = 16_0004;
+  SBS_SIZEBOX                : INT32 = 16_0008;
 
 (* Scroll bar messages *)
 CONST
@@ -3827,26 +3833,26 @@ CONST
 
 TYPE
   MDICREATESTRUCTA = RECORD
-                       szClass: LPCSTR;
-                       szTitle: LPCSTR;
+                       szClass: PCSTR;
+                       szTitle: PCSTR;
                        hOwner : HANDLE;
-                       x      : int;
-                       y      : int;
-                       cx     : int;
-                       cy     : int;
-    style  : DWORD;
+                       x      : INT32;
+                       y      : INT32;
+                       cx     : INT32;
+                       cy     : INT32;
+    style  : UINT32;
     lParam : LPARAM;  (* app-defined stuff *)
   END;
   LPMDICREATESTRUCTA = UNTRACED REF MDICREATESTRUCTA;
   MDICREATESTRUCTW = RECORD
-    szClass: LPCWSTR;
-    szTitle: LPCWSTR;
+    szClass: PCWSTR;
+    szTitle: PCWSTR;
     hOwner : HANDLE;
-    x      : int;
-    y      : int;
-    cx     : int;
-    cy     : int;
-    style  : DWORD;
+    x      : INT32;
+    y      : INT32;
+    cx     : INT32;
+    cy     : INT32;
+    style  : UINT32;
     lParam : LPARAM;   (* app-defined stuff *)
   END;
   LPMDICREATESTRUCTW = UNTRACED REF MDICREATESTRUCTW;
@@ -3855,34 +3861,34 @@ TYPE
 
   CLIENTCREATESTRUCT = RECORD
     hWindowMenu : HANDLE;
-    idFirstChild: UINT;
+    idFirstChild: UINT32;
   END;
   LPCLIENTCREATESTRUCT = UNTRACED REF CLIENTCREATESTRUCT;
 
 <*EXTERNAL DefFrameProcA:WINAPI*>
 PROCEDURE DefFrameProcA (hWnd         : HWND;
     hWndMDIClient: HWND;
-    uMsg         : UINT;
+    uMsg         : UINT32;
     wParam       : WPARAM;
                            lParam       : LPARAM  ): LRESULT;
 
 <*EXTERNAL DefFrameProcW:WINAPI*>
 PROCEDURE DefFrameProcW (hWnd         : HWND;
                            hWndMDIClient: HWND;
-                           uMsg         : UINT;
+                           uMsg         : UINT32;
                            wParam       : WPARAM;
                            lParam       : LPARAM  ): LRESULT;
 CONST DefFrameProc = DefFrameProcA;
 
 <*EXTERNAL DefMDIChildProcA:WINAPI*>
 PROCEDURE DefMDIChildProcA (hWnd  : HWND;
-                              uMsg  : UINT;
+                              uMsg  : UINT32;
                               wParam: WPARAM;
                               lParam: LPARAM  ): LRESULT;
 
 <*EXTERNAL DefMDIChildProcW:WINAPI*>
 PROCEDURE DefMDIChildProcW (hWnd  : HWND;
-                              uMsg  : UINT;
+                              uMsg  : UINT32;
                               wParam: WPARAM;
                               lParam: LPARAM  ): LRESULT;
 CONST DefMDIChildProc = DefMDIChildProcA;
@@ -3891,46 +3897,46 @@ CONST DefMDIChildProc = DefMDIChildProcA;
 PROCEDURE TranslateMDISysAccel (hWndClient: HWND; lpMsg: LPMSG): BOOL;
 
 <*EXTERNAL ArrangeIconicWindows:WINAPI*>
-PROCEDURE ArrangeIconicWindows (hWnd: HWND): UINT;
+PROCEDURE ArrangeIconicWindows (hWnd: HWND): UINT32;
 
 <*EXTERNAL CreateMDIWindowA:WINAPI*>
-PROCEDURE CreateMDIWindowA (lpClassName : LPSTR;
-                              lpWindowName: LPSTR;
-                              dwStyle     : DWORD;
-                              X           : int;
-                              Y           : int;
-                              nWidth      : int;
-                              nHeight     : int;
+PROCEDURE CreateMDIWindowA (lpClassName : PSTR;
+                              lpWindowName: PSTR;
+                              dwStyle     : UINT32;
+                              X           : INT32;
+                              Y           : INT32;
+                              nWidth      : INT32;
+                              nHeight     : INT32;
                               hWndParent  : HWND;
                               hInstance   : HINSTANCE;
-                              lParam      : LONG       ): HWND;
+                              lParam      : INT32       ): HWND;
 
 <*EXTERNAL CreateMDIWindowW:WINAPI*>
-PROCEDURE CreateMDIWindowW (lpClassName : LPWSTR;
-                              lpWindowName: LPWSTR;
-                              dwStyle     : DWORD;
-                              X           : int;
-                              Y           : int;
-                              nWidth      : int;
-                              nHeight     : int;
+PROCEDURE CreateMDIWindowW (lpClassName : PWSTR;
+                              lpWindowName: PWSTR;
+                              dwStyle     : UINT32;
+                              X           : INT32;
+                              Y           : INT32;
+                              nWidth      : INT32;
+                              nHeight     : INT32;
                               hWndParent  : HWND;
                               hInstance   : HINSTANCE;
-                              lParam      : LONG       ): HWND;
+                              lParam      : INT32       ): HWND;
 CONST CreateMDIWindow = CreateMDIWindowA;
 
 (****** Help support ********************************************************)
 
 TYPE
-  HELPPOLY = DWORD;
+  HELPPOLY = UINT32;
   MULTIKEYHELPA = RECORD
-                    mkSize     : DWORD;
+                    mkSize     : UINT32;
                     mkKeylist  : CHAR;
     szKeyphrase: ARRAY [0 .. 1 - 1] OF CHAR;
   END;
   PMULTIKEYHELPA = UNTRACED REF MULTIKEYHELPA;
   LPMULTIKEYHELPA = UNTRACED REF MULTIKEYHELPA;
   MULTIKEYHELPW = RECORD
-    mkSize     : DWORD;
+    mkSize     : UINT32;
     mkKeylist  : WCHAR;
     szKeyphrase: ARRAY [0 .. 1 - 1] OF WCHAR;
   END;
@@ -3941,23 +3947,23 @@ TYPE
   LPMULTIKEYHELP = LPMULTIKEYHELPA;
 
   HELPWININFOA = RECORD
-    wStructSize: int;
-    x          : int;
-    y          : int;
-    dx         : int;
-    dy         : int;
-    wMax       : int;
+    wStructSize: INT32;
+    x          : INT32;
+    y          : INT32;
+    dx         : INT32;
+    dy         : INT32;
+    wMax       : INT32;
     rgchMember : ARRAY [0 .. 2 - 1] OF CHAR;
   END;
   PHELPWININFOA = UNTRACED REF HELPWININFOA;
   LPHELPWININFOA = UNTRACED REF HELPWININFOA;
   HELPWININFOW = RECORD
-    wStructSize: int;
-    x          : int;
-    y          : int;
-    dx         : int;
-    dy         : int;
-    wMax       : int;
+    wStructSize: INT32;
+    x          : INT32;
+    y          : INT32;
+    dx         : INT32;
+    dy         : INT32;
+    wMax       : INT32;
     rgchMember : ARRAY [0 .. 2 - 1] OF WCHAR;
   END;
   PHELPWININFOW = UNTRACED REF HELPWININFOW;
@@ -3970,47 +3976,47 @@ TYPE
  * Commands to pass WinHelp()
  *)
 CONST
-  HELP_CONTEXT   : LONG = 16_0001; (* Display topic in ulTopic *)
-  HELP_QUIT      : LONG = 16_0002; (* Terminate help *)
-  HELP_INDEX     : LONG = 16_0003; (* Display index *)
-  HELP_CONTENTS  : LONG = 16_0003;
-  HELP_HELPONHELP: LONG = 16_0004; (* Display help on using help *)
-  HELP_SETINDEX: LONG = 16_0005; (* Set current Index for multi index
+  HELP_CONTEXT   : INT32 = 16_0001; (* Display topic in ulTopic *)
+  HELP_QUIT      : INT32 = 16_0002; (* Terminate help *)
+  HELP_INDEX     : INT32 = 16_0003; (* Display index *)
+  HELP_CONTENTS  : INT32 = 16_0003;
+  HELP_HELPONHELP: INT32 = 16_0004; (* Display help on using help *)
+  HELP_SETINDEX: INT32 = 16_0005; (* Set current Index for multi index
                                     help *)
-  HELP_SETCONTENTS : LONG = 16_0005;
-  HELP_CONTEXTPOPUP: LONG = 16_0008;
-  HELP_FORCEFILE   : LONG = 16_0009;
-  HELP_KEY: LONG = 16_0101;     (* Display topic for keyword in
+  HELP_SETCONTENTS : INT32 = 16_0005;
+  HELP_CONTEXTPOPUP: INT32 = 16_0008;
+  HELP_FORCEFILE   : INT32 = 16_0009;
+  HELP_KEY: INT32 = 16_0101;     (* Display topic for keyword in
                                    offabData *)
-  HELP_COMMAND   : LONG = 16_0102;
-  HELP_PARTIALKEY: LONG = 16_0105;
-  HELP_MULTIKEY  : LONG = 16_0201;
-  HELP_SETWINPOS : LONG = 16_0203;
+  HELP_COMMAND   : INT32 = 16_0102;
+  HELP_PARTIALKEY: INT32 = 16_0105;
+  HELP_MULTIKEY  : INT32 = 16_0201;
+  HELP_SETWINPOS : INT32 = 16_0203;
 
 <*EXTERNAL WinHelpA:WINAPI*>
 PROCEDURE WinHelpA (hwndMain: HWND;
-                    lpszHelp: LPCSTR;
-                    uCommand: UINT;
-                    dwData  : DWORD   ): BOOL;
+                    lpszHelp: PCSTR;
+                    uCommand: UINT32;
+                    dwData  : SIZE_T   ): BOOL;
 
 <*EXTERNAL WinHelpW:WINAPI*>
 PROCEDURE WinHelpW (hwndMain: HWND;
-                    lpszHelp: LPCWSTR;
-                    uCommand: UINT;
-                    dwData  : DWORD    ): BOOL;
+                    lpszHelp: PCWSTR;
+                    uCommand: UINT32;
+                    dwData  : SIZE_T    ): BOOL;
 CONST WinHelp = WinHelpA;
 
 (* function declarations for profiler routines contained in Windows
    libraries *)
 
 <*EXTERNAL ProfInsChk:WINAPI*>
-PROCEDURE ProfInsChk (): int;
+PROCEDURE ProfInsChk (): INT32;
 
 <*EXTERNAL ProfSetup:WINAPI*>
-PROCEDURE ProfSetup (a1: int; a2: int);
+PROCEDURE ProfSetup (a1: INT32; a2: INT32);
 
 <*EXTERNAL ProfSampRate:WINAPI*>
-PROCEDURE ProfSampRate (a1: int; a2: int);
+PROCEDURE ProfSampRate (a1: INT32; a2: INT32);
 
 <*EXTERNAL ProfStart:WINAPI*>
 PROCEDURE ProfStart ();
@@ -4066,10 +4072,10 @@ CONST
   SPI_MAX                   = 36;
 
 <*EXTERNAL SystemParametersInfoA:WINAPI*>
-PROCEDURE SystemParametersInfoA (a1, a2: UINT; a3: PVOID; a4: UINT): BOOL;
+PROCEDURE SystemParametersInfoA (a1, a2: UINT32; a3: PVOID; a4: UINT32): BOOL;
 
 <*EXTERNAL SystemParametersInfoW:WINAPI*>
-PROCEDURE SystemParametersInfoW (a1, a2: UINT; a3: PVOID; a4: UINT): BOOL;
+PROCEDURE SystemParametersInfoW (a1, a2: UINT32; a3: PVOID; a4: UINT32): BOOL;
 
 CONST SystemParametersInfo = SystemParametersInfoA;
 
@@ -4082,7 +4088,6 @@ CONST
 
 (* constants *)
 
-CONST
 	SS_OWNERDRAW       = 16_0000000D;
 	SS_BITMAP          = 16_0000000E;
 	SS_ENHMETAFILE     = 16_0000000F;
@@ -4108,9 +4113,9 @@ TYPE
 
 	LPNMHDR = UNTRACED REF NMHDR;
 	NMHDR = RECORD
-	    hwndFrom:	HWND  ;
-	    idFrom:		UINT  ;
-	    code:			UINT  ;         (* NM_ code *)
+	    hwndFrom: HWND;
+	    idFrom: SIZE_T;
+	    code: UINT32; (* NM_ code *)
 	END;
 (*
 
@@ -4152,40 +4157,40 @@ CONST
 TYPE
 	LPMENUITEMINFO = UNTRACED REF MENUITEMINFO;
 	MENUITEMINFO = RECORD
-		cbSize: UINT;
-		fMask: UINT;
-		fType: UINT;
-		fState: UINT;       
-		wID: UINT;          
+		cbSize: UINT32;
+		fMask: UINT32;
+		fType: UINT32;
+		fState: UINT32;       
+		wID: UINT32;          
 		hSubMenu: HMENU;      
 		hbmpChecked: HBITMAP;  
 		hbmpUnchecked: HBITMAP; 
-		dwItemData: DWORD;  
-		dwTypeData: LPSTR;    
-		cch: UINT;         
+		dwItemData: SIZE_T;
+		dwTypeData: PSTR;    
+		cch: UINT32;         
 		hbmpItem: HBITMAP;     
 	END;
 
 <*EXTERNAL InsertMenuItemA:WINAPI*>
-PROCEDURE InsertMenuItem( hMenu: HMENU; uItem: UINT; fByposition: BOOL; lpmii: LPMENUITEMINFO): BOOL;
+PROCEDURE InsertMenuItem( hMenu: HMENU; uItem: UINT32; fByposition: BOOL; lpmii: LPMENUITEMINFO): BOOL;
 
 <*EXTERNAL GetMenuItemInfoA:WINAPI*>
-PROCEDURE GetMenuItemInfo(hMenu: HMENU; uItem: UINT; fByposition: BOOL; lpmii: LPMENUITEMINFO): BOOL;
+PROCEDURE GetMenuItemInfo(hMenu: HMENU; uItem: UINT32; fByposition: BOOL; lpmii: LPMENUITEMINFO): BOOL;
 
 <*EXTERNAL SetMenuItemInfoA:WINAPI*>
-PROCEDURE SetMenuItemInfo(hMenu: HMENU; uItem: UINT; fByposition: BOOL; lpmii: LPMENUITEMINFO): BOOL;
+PROCEDURE SetMenuItemInfo(hMenu: HMENU; uItem: UINT32; fByposition: BOOL; lpmii: LPMENUITEMINFO): BOOL;
 
 <*EXTERNAL GetMenuDefaultItem:WINAPI*>
-PROCEDURE GetMenuDefaultItem( hMenu: HMENU;  fByPos: UINT;  gmdiFlags: UINT): UINT;
+PROCEDURE GetMenuDefaultItem( hMenu: HMENU;  fByPos: UINT32;  gmdiFlags: UINT32): UINT32;
 
 <*EXTERNAL SetMenuDefaultItem:WINAPI*>
-PROCEDURE SetMenuDefaultItem( hMenu: HMENU;  uItem: UINT;  fByPos: UINT): BOOL;
+PROCEDURE SetMenuDefaultItem( hMenu: HMENU;  uItem: UINT32;  fByPos: UINT32): BOOL;
 
 <*EXTERNAL GetMenuItemRect:WINAPI*>
-PROCEDURE GetMenuItemRect( hWnd: HWND;  hMenu: HMENU;  uItem: UINT;  lprcItem: LPRECT): BOOL;
+PROCEDURE GetMenuItemRect( hWnd: HWND;  hMenu: HMENU;  uItem: UINT32;  lprcItem: PRECT): BOOL;
 
 <*EXTERNAL MenuItemFromPoint:WINAPI*>
-PROCEDURE MenuItemFromPoint( hWnd: HWND;  hMenu: HMENU;  ptScreen: POINT): int;
+PROCEDURE MenuItemFromPoint( hWnd: HWND;  hMenu: HMENU;  ptScreen: POINT): INT32;
 
 
 <*EXTERNAL SetDCBrushColor:WINAPI*>

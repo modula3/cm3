@@ -8,10 +8,11 @@
 
 MODULE WinSock;
 
+FROM WinBaseTypes IMPORT UINT32;
 IMPORT Word;
 
 PROCEDURE FD_CLR(s: SOCKET; VAR set: struct_fd_set) =
-  VAR i: u_int := 0;
+  VAR i: UINT32 := 0;
   BEGIN
     WHILE (i < set.fd_count) DO
       IF s = set.fd_array[i] THEN

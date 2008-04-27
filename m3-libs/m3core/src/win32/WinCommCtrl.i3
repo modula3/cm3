@@ -7,16 +7,10 @@ INTERFACE WinCommCtrl;
 *)
 
 
+FROM WinBaseTypes IMPORT UINT32, INT32;
+FROM WinDef IMPORT HDC, RECT, LPARAM, POINT, COLORREF;
 FROM WinUser IMPORT NMHDR;
-FROM WinBaseTypes IMPORT DWORD;
-FROM WinDef IMPORT HDC;
-FROM WinDef IMPORT RECT;
-FROM WinBaseTypes IMPORT UINT;
-FROM WinDef IMPORT LPARAM;
 FROM Word IMPORT Or;
-FROM WinDef IMPORT LONG, POINT, COLORREF;
-
-
 
 (* constants *)
 
@@ -172,26 +166,26 @@ CONST
 (* structures *)
 
 TYPE
-	HRESULT = LONG ;
+	HRESULT = INT32;
 
 	LPNMCUSTOMDRAW = UNTRACED REF NMCUSTOMDRAW;
 	NMCUSTOMDRAW = RECORD
 		hdr: NMHDR;
-		dwDrawStage: DWORD;
+		dwDrawStage: UINT32;
 		hdc: HDC;
 		rc: RECT;
-		dwItemSpec: DWORD;
-		uItemState: UINT;
+		dwItemSpec: UINT32;
+		uItemState: UINT32;
 		lItemlParam: LPARAM;
 	END;
 
 	LPNMMOUSE = UNTRACED REF NMMOUSE;
 	NMMOUSE = RECORD
 		hdr: NMHDR;
-		dwItemSpec: DWORD;
-		dwItemData: DWORD;
+		dwItemSpec: UINT32;
+		dwItemData: UINT32;
 		pt: POINT;
-		dwHitInfo: DWORD;
+		dwHitInfo: UINT32;
 	END;
 
 	LPNMOBJECTNOTIFY = UNTRACED REF NMOBJECTNOTIFY;
@@ -201,33 +195,33 @@ TYPE
 		piid: ADDRESS;
 		pObject: ADDRESS;
 		hResult: HRESULT;
-		dwFlags: DWORD;
+		dwFlags: UINT32;
 	END;
 
 	LPNMKEY = UNTRACED REF NMKEY;
 	NMKEY = RECORD
 		hdr: NMHDR;
-		nVKey: UINT;
-		uFlags: UINT;
+		nVKey: UINT32;
+		uFlags: UINT32;
 	END;
 
 	LPNMCHAR = UNTRACED REF NMCHAR;
 	NMCHAR = RECORD
 		hdr: NMHDR;
-		ch: UINT;
-		dwItemPrev: DWORD;
-		dwItemNext: DWORD;
+		ch: UINT32;
+		dwItemPrev: UINT32;
+		dwItemNext: UINT32;
 	END;
 
 	LPINITCOMMONCONTROLSEX = UNTRACED REF INITCOMMONCONTROLSEX;
 	INITCOMMONCONTROLSEX = RECORD
-		dwSize: DWORD;
-		dwICC: DWORD;
+		dwSize: UINT32;
+		dwICC: UINT32;
 	END;
 
 	LPCOLORSCHEME = UNTRACED REF COLORSCHEME;
 	COLORSCHEME = RECORD
-		dwSize: DWORD;
+		dwSize: UINT32;
 		clrBtnHighlight: COLORREF;
 		clrBtnShadow: COLORREF;
 	END;
@@ -235,10 +229,8 @@ TYPE
 	LPNMTTCUSTOMDRAW = UNTRACED REF NMTTCUSTOMDRAW;
 	NMTTCUSTOMDRAW = RECORD
 		nmcd: NMCUSTOMDRAW;
-		uDrawFlags: UINT;
+		uDrawFlags: UINT32;
 	END;
-
-
 
 
 (* functions *)

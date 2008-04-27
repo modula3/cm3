@@ -7,23 +7,12 @@ INTERFACE WinTabCon;
 	Copyright Darko Volaric 2002 darko@peter.com.au
 *)
 
-IMPORT
-	WinDef, WinImageList;
-
 FROM Word IMPORT Or;
-
-
-FROM WinNT IMPORT LPSTR;
-
-FROM WinDef IMPORT UINT;
-FROM Ctypes IMPORT int;
-FROM WinDef IMPORT DWORD;
-FROM WinDef IMPORT WORD;
-FROM WinDef IMPORT LPARAM;
-FROM WinDef IMPORT HWND;
-FROM WinDef IMPORT POINT;
+FROM WinNT IMPORT PSTR;
+FROM WinDef IMPORT UINT32, INT32, UINT16, LPARAM, HWND, POINT, PRECT;
 FROM WinUser IMPORT NMHDR;
 FROM WinCommCtrl IMPORT TCM_FIRST, CCM_SETUNICODEFORMAT, CCM_GETUNICODEFORMAT;
+FROM WinImageList IMPORT HIMAGELIST;
 
 (* constants *)
 
@@ -145,37 +134,40 @@ CONST
 
 TYPE
 
-	LPTCITEM = UNTRACED REF TCITEM;
+	PTCITEM = UNTRACED REF TCITEM;
+	LPTCITEM = PTCITEM; (* compat *)
 	TCITEM = RECORD
-		mask: 				UINT;
-		dwState: 			DWORD;
-		dwStateMask:	DWORD;
-		pszText: 			LPSTR; (* posible Unicode *)
-		cchTextMax: 	int;
-		iImage: 			int;
-		lParam: 			LPARAM;
+		mask: UINT32;
+		dwState: UINT32;
+		dwStateMask: UINT32;
+		pszText: PSTR; (* posible Unicode *)
+		cchTextMax: INT32;
+		iImage: INT32;
+		lParam: LPARAM;
 	END;
 
-	LPTCITEMHEADER = UNTRACED REF TCITEMHEADER;
+	PTCITEMHEADER = UNTRACED REF TCITEMHEADER;
+	LPTCITEMHEADER = PTCITEMHEADER; (* compat *)
 	TCITEMHEADER = RECORD
-		mask:					UINT;
-		lpReserved1:	UINT ;
-		lpReserved2:	UINT ;
-		pszText:			LPSTR ; (* posible Unicode *)
-		cchTextMax:		int ;
-		iImage:				int ;
+		mask: UINT32;
+		lpReserved1: UINT32;
+		lpReserved2: UINT32;
+		pszText: PSTR; (* posible Unicode *)
+		cchTextMax: INT32;
+		iImage: INT32;
 	END;
 
-	LPTCHITTESTINFO =  UNTRACED REF TCHITTESTINFO;
+	PTCHITTESTINFO = UNTRACED REF TCHITTESTINFO;
+	LPTCHITTESTINFO = PTCHITTESTINFO; (* compat *)
 	TCHITTESTINFO = RECORD
-		pt:			POINT ;
-		flags:	UINT ;
+		pt: POINT;
+		flags: UINT32;
 	END;
 
 	NMTCKEYDOWN = RECORD
-		hdr:		NMHDR ;
-		wVKey:	WORD ;
-		flags:	UINT ;
+		hdr: NMHDR;
+		wVKey: UINT16;
+		flags: UINT32;
 	END;
 
 
@@ -183,34 +175,34 @@ TYPE
 (* functions and macros *)
 
 
-PROCEDURE InsertItem(hwnd: HWND; iItem: INTEGER; READONLY pitem: LPTCITEM): INTEGER;
+PROCEDURE InsertItem(hwnd: HWND; iItem: INTEGER; READONLY pitem: PTCITEM): INTEGER;
 PROCEDURE GetCurSel(hwnd: HWND): INTEGER;
 PROCEDURE SetCurSel(hwnd: HWND; i: INTEGER): INTEGER;
-PROCEDURE GetImageList(hwnd: WinDef.HWND): WinImageList.HIMAGELIST;
-PROCEDURE SetImageList(hwnd: WinDef.HWND; himl: WinImageList.HIMAGELIST): WinImageList.HIMAGELIST;
-PROCEDURE GetItemCount(hwnd: WinDef.HWND): INTEGER;
-PROCEDURE GetItem(hwnd: WinDef.HWND; iItem: INTEGER; pitem: LPTCITEM): BOOLEAN;
-PROCEDURE SetItem(hwnd: WinDef.HWND; iItem: INTEGER; pitem: LPTCITEM): BOOLEAN;
-PROCEDURE DeleteItem(hwnd: WinDef.HWND; iItem: INTEGER): BOOLEAN;
-PROCEDURE DeleteAllItems(hwnd: WinDef.HWND): BOOLEAN;
-PROCEDURE GetItemRect(hwnd: WinDef.HWND; i: INTEGER; prc: WinDef.LPRECT): BOOLEAN;
-PROCEDURE HitTest(hwnd: WinDef.HWND; pinfo: LPTCHITTESTINFO): INTEGER;
-PROCEDURE SetItemExtra(hwnd: WinDef.HWND; cb: INTEGER): BOOLEAN;  
-PROCEDURE AdjustRect(hwnd: WinDef.HWND; bLarger: BOOLEAN; prc: WinDef.LPRECT): INTEGER;
-PROCEDURE SetItemSize(hwnd: WinDef.HWND; x, y: WinDef.WORD): WinDef.DWORD;
-PROCEDURE RemoveImage(hwnd: WinDef.HWND; i: INTEGER);
-PROCEDURE SetPadding(hwnd: WinDef.HWND; x, y: WinDef.WORD);
-PROCEDURE GetRowCount(hwnd: WinDef.HWND): INTEGER;
-PROCEDURE GetToolTips(hwnd: WinDef.HWND): WinDef.HWND;
-PROCEDURE SetToolTips(hwnd: WinDef.HWND; hwndTT: WinDef.HWND);
-PROCEDURE GetCurFocus(hwnd: WinDef.HWND): INTEGER;
-PROCEDURE SetCurFocus(hwnd: WinDef.HWND; i: INTEGER);
-PROCEDURE SetMinTabWidth(hwnd: WinDef.HWND; x: INTEGER): INTEGER;
-PROCEDURE DeselectAll(hwnd: WinDef.HWND; fExcludeFocus: BOOLEAN);
-PROCEDURE HighlightItem(hwnd: WinDef.HWND; i: INTEGER; fHighlight: BOOLEAN): BOOLEAN;  
-PROCEDURE SetUnicodeFormat(hwnd: WinDef.HWND; fUnicode: BOOLEAN): BOOLEAN;  
-PROCEDURE GetUnicodeFormat(hwnd: WinDef.HWND): BOOLEAN;  
-PROCEDURE SetExtendedStyle(hwnd: WinDef.HWND; dw: WinDef.DWORD): WinDef.DWORD;  
-PROCEDURE GetExtendedStyle(hwnd: WinDef.HWND): WinDef.DWORD;  
+PROCEDURE GetImageList(hwnd: HWND): HIMAGELIST;
+PROCEDURE SetImageList(hwnd: HWND; himl: HIMAGELIST): HIMAGELIST;
+PROCEDURE GetItemCount(hwnd: HWND): INTEGER;
+PROCEDURE GetItem(hwnd: HWND; iItem: INTEGER; pitem: PTCITEM): BOOLEAN;
+PROCEDURE SetItem(hwnd: HWND; iItem: INTEGER; pitem: PTCITEM): BOOLEAN;
+PROCEDURE DeleteItem(hwnd: HWND; iItem: INTEGER): BOOLEAN;
+PROCEDURE DeleteAllItems(hwnd: HWND): BOOLEAN;
+PROCEDURE GetItemRect(hwnd: HWND; i: INTEGER; prc: PRECT): BOOLEAN;
+PROCEDURE HitTest(hwnd: HWND; pinfo: PTCHITTESTINFO): INTEGER;
+PROCEDURE SetItemExtra(hwnd: HWND; cb: INTEGER): BOOLEAN;  
+PROCEDURE AdjustRect(hwnd: HWND; bLarger: BOOLEAN; prc: PRECT): INTEGER;
+PROCEDURE SetItemSize(hwnd: HWND; x, y: UINT16): UINT32;
+PROCEDURE RemoveImage(hwnd: HWND; i: INTEGER);
+PROCEDURE SetPadding(hwnd: HWND; x, y: UINT16);
+PROCEDURE GetRowCount(hwnd: HWND): INTEGER;
+PROCEDURE GetToolTips(hwnd: HWND): HWND;
+PROCEDURE SetToolTips(hwnd: HWND; hwndTT: HWND);
+PROCEDURE GetCurFocus(hwnd: HWND): INTEGER;
+PROCEDURE SetCurFocus(hwnd: HWND; i: INTEGER);
+PROCEDURE SetMinTabWidth(hwnd: HWND; x: INTEGER): INTEGER;
+PROCEDURE DeselectAll(hwnd: HWND; fExcludeFocus: BOOLEAN);
+PROCEDURE HighlightItem(hwnd: HWND; i: INTEGER; fHighlight: BOOLEAN): BOOLEAN;  
+PROCEDURE SetUnicodeFormat(hwnd: HWND; fUnicode: BOOLEAN): BOOLEAN;  
+PROCEDURE GetUnicodeFormat(hwnd: HWND): BOOLEAN;  
+PROCEDURE SetExtendedStyle(hwnd: HWND; dw: UINT32): UINT32;  
+PROCEDURE GetExtendedStyle(hwnd: HWND): UINT32;  
 
 END WinTabCon.

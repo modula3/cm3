@@ -80,17 +80,17 @@ BEGIN
 	M3toC.FreeCopiedS(item.pszText);
 END SetItemText;
 
-PROCEDURE SetExtendedListViewStyle(hwnd: WinDef.HWND; dw: WinDef.DWORD) =
+PROCEDURE SetExtendedListViewStyle(hwnd: WinDef.HWND; dw: WinDef.UINT32) =
 BEGIN
 	EVAL WinUser.SendMessage(hwnd, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dw);
 END SetExtendedListViewStyle;
 
-PROCEDURE GetNextItem(hwnd: WinDef.HWND; iStart: INTEGER; flags: WinDef.UINT): INTEGER =
+PROCEDURE GetNextItem(hwnd: WinDef.HWND; iStart: INTEGER; flags: WinDef.UINT32): INTEGER =
 BEGIN
 	RETURN WinUser.SendMessage(hwnd, LVM_GETNEXTITEM, iStart, flags);
 END GetNextItem;
 
-PROCEDURE SetItemState(hwnd: WinDef.HWND; i: INTEGER; state, mask: WinDef.UINT): BOOLEAN =
+PROCEDURE SetItemState(hwnd: WinDef.HWND; i: INTEGER; state, mask: WinDef.UINT32): BOOLEAN =
 VAR
 	item: LVITEM;
 BEGIN
@@ -187,12 +187,12 @@ BEGIN
 	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_SETIMAGELIST, iImageList, LOOPHOLE(himl, WinDef.LPARAM)), WinImageList.HIMAGELIST);
 END SetImageList;
 
-PROCEDURE GetCallbackMask(hwnd: WinDef.HWND): WinDef.UINT =
+PROCEDURE GetCallbackMask(hwnd: WinDef.HWND): WinDef.UINT32 =
 BEGIN
-	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_GETCALLBACKMASK, 0, 0), WinDef.UINT);
+	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_GETCALLBACKMASK, 0, 0), WinDef.UINT32);
 END GetCallbackMask;
 
-PROCEDURE SetCallbackMask(hwnd: WinDef.HWND; mask: WinDef.UINT): BOOLEAN =
+PROCEDURE SetCallbackMask(hwnd: WinDef.HWND; mask: WinDef.UINT32): BOOLEAN =
 BEGIN
 	RETURN VAL(WinUser.SendMessage(hwnd, LVM_SETCALLBACKMASK, mask, 0), BOOLEAN);
 END SetCallbackMask;
@@ -202,7 +202,7 @@ BEGIN
 	RETURN WinUser.SendMessage(hwnd, LVM_FINDITEM, iStart, LOOPHOLE(plvfi, WinDef.LPARAM));
 END FindItem;
 
-PROCEDURE GetItemRect(hwnd: WinDef.HWND; i: INTEGER; prc: WinDef.LPRECT; code: INTEGER): BOOLEAN =
+PROCEDURE GetItemRect(hwnd: WinDef.HWND; i: INTEGER; prc: WinDef.PRECT; code: INTEGER): BOOLEAN =
 BEGIN
 	IF prc # NIL THEN
 		prc.left := code;
@@ -217,7 +217,7 @@ BEGIN
 	RETURN VAL(WinUser.SendMessage(hwnd, LVM_GETITEMRECT, i, LOOPHOLE(prc, WinDef.LPARAM)), BOOLEAN);
 END GetItemRect;
 
-PROCEDURE SetItemPosition(hwnd: WinDef.HWND; i: INTEGER; x, y: WinDef.WORD): BOOLEAN =
+PROCEDURE SetItemPosition(hwnd: WinDef.HWND; i: INTEGER; x, y: WinDef.UINT16): BOOLEAN =
 BEGIN
 	RETURN VAL(WinUser.SendMessage(hwnd, LVM_SETITEMPOSITION, i, WinDef.MAKELONG(x, y)), BOOLEAN);
 END SetItemPosition;
@@ -227,7 +227,7 @@ BEGIN
 	RETURN VAL(WinUser.SendMessage(hwnd, LVM_GETITEMPOSITION, i, LOOPHOLE(ppt, WinDef.LPARAM)), BOOLEAN);
 END GetItemPosition;
 
-PROCEDURE GetStringWidth(hwnd: WinDef.HWND; psz: WinNT.LPCTSTR): INTEGER =
+PROCEDURE GetStringWidth(hwnd: WinDef.HWND; psz: WinNT.PCTSTR): INTEGER =
 BEGIN
 	RETURN WinUser.SendMessage(hwnd, LVM_GETSTRINGWIDTH, 0, LOOPHOLE(psz, WinDef.LPARAM));
 END GetStringWidth;
@@ -242,12 +242,12 @@ BEGIN
 	RETURN VAL(WinUser.SendMessage(hwnd, LVM_REDRAWITEMS, iFirst, iLast), BOOLEAN);
 END RedrawItems;
 
-PROCEDURE Arrange(hwnd: WinDef.HWND; code: WinDef.UINT): BOOLEAN =
+PROCEDURE Arrange(hwnd: WinDef.HWND; code: WinDef.UINT32): BOOLEAN =
 BEGIN
 	RETURN VAL(WinUser.SendMessage(hwnd, LVM_ARRANGE, LOOPHOLE(code, WinDef.WPARAM), 0), BOOLEAN);
 END Arrange;
 
-PROCEDURE GetViewRect(hwnd: WinDef.HWND; prc: WinDef.LPRECT): BOOLEAN =
+PROCEDURE GetViewRect(hwnd: WinDef.HWND; prc: WinDef.PRECT): BOOLEAN =
 BEGIN
 	RETURN VAL(WinUser.SendMessage(hwnd, LVM_GETVIEWRECT, 0, LOOPHOLE(prc, WinDef.LPARAM)), BOOLEAN);
 END GetViewRect;
@@ -302,9 +302,9 @@ BEGIN
 	RETURN VAL(WinUser.SendMessage(hwnd, LVM_SETUNICODEFORMAT, 0, 0), BOOLEAN);
 END GetUnicodeFormat;
 
-PROCEDURE GetItemState(hwnd: WinDef.HWND; i: INTEGER; mask: WinDef.UINT): WinDef.UINT =
+PROCEDURE GetItemState(hwnd: WinDef.HWND; i: INTEGER; mask: WinDef.UINT32): WinDef.UINT32 =
 BEGIN
-	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_GETITEMSTATE, i, LOOPHOLE(mask, WinDef.LPARAM)), WinDef.UINT);
+	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_GETITEMSTATE, i, LOOPHOLE(mask, WinDef.LPARAM)), WinDef.UINT32);
 END GetItemState;
 
 PROCEDURE SetItemCount(hwnd: WinDef.HWND; cItems: INTEGER) =
@@ -312,34 +312,34 @@ BEGIN
 	EVAL WinUser.SendMessage(hwnd, LVM_SETITEMCOUNT, cItems, 0);
 END SetItemCount;
 
-PROCEDURE SetItemCountEx(hwnd: WinDef.HWND; cItems: INTEGER; dwFlags: WinDef.DWORD) =
+PROCEDURE SetItemCountEx(hwnd: WinDef.HWND; cItems: INTEGER; dwFlags: WinDef.UINT32) =
 BEGIN
 	EVAL WinUser.SendMessage(hwnd, LVM_SETITEMCOUNT, cItems, dwFlags);
 END SetItemCountEx;
 
-PROCEDURE GetItemSpacing(hwnd: WinDef.HWND; fSmall: BOOLEAN): WinDef.DWORD =
+PROCEDURE GetItemSpacing(hwnd: WinDef.HWND; fSmall: BOOLEAN): WinDef.UINT32 =
 BEGIN
-	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_GETITEMSPACING, ORD(fSmall), 0), WinDef.DWORD);
+	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_GETITEMSPACING, ORD(fSmall), 0), WinDef.UINT32);
 END GetItemSpacing;
 
-PROCEDURE GetISearchString(hwnd: WinDef.HWND; lpsz: WinNT.LPSTR): BOOLEAN =
+PROCEDURE GetISearchString(hwnd: WinDef.HWND; lpsz: WinNT.PSTR): BOOLEAN =
 BEGIN
 	RETURN VAL(WinUser.SendMessage(hwnd, LVM_GETISEARCHSTRING, 0, LOOPHOLE(lpsz, WinDef.LPARAM)), BOOLEAN);
 END GetISearchString;
 
-PROCEDURE SetIconSpacing(hwnd: WinDef.HWND; cx, cy: WinDef.WORD): WinDef.DWORD =
+PROCEDURE SetIconSpacing(hwnd: WinDef.HWND; cx, cy: WinDef.UINT16): WinDef.UINT32 =
 BEGIN
-	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_SETICONSPACING, 0, WinDef.MAKELONG(cx,cy)), WinDef.DWORD);
+	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_SETICONSPACING, 0, WinDef.MAKELONG(cx,cy)), WinDef.UINT32);
 END SetIconSpacing;
 
-PROCEDURE SetExtendedListViewStyleEx(hwnd: WinDef.HWND; dwMask, dw: WinDef.DWORD): WinDef.DWORD =
+PROCEDURE SetExtendedListViewStyleEx(hwnd: WinDef.HWND; dwMask, dw: WinDef.UINT32): WinDef.UINT32 =
 BEGIN
-	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_SETEXTENDEDLISTVIEWSTYLE, dwMask, dw), WinDef.DWORD);
+	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_SETEXTENDEDLISTVIEWSTYLE, dwMask, dw), WinDef.UINT32);
 END SetExtendedListViewStyleEx;
 
-PROCEDURE GetExtendedListViewStyle(hwnd: WinDef.HWND): WinDef.DWORD =
+PROCEDURE GetExtendedListViewStyle(hwnd: WinDef.HWND): WinDef.UINT32 =
 BEGIN
-	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0), WinDef.DWORD);
+	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0), WinDef.UINT32);
 END GetExtendedListViewStyle;
 
 PROCEDURE SubItemHitTest(hwnd: WinDef.HWND; plvhti: LPLVHITTESTINFO): INTEGER =
@@ -377,22 +377,22 @@ BEGIN
 	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_GETHOTCURSOR, 0, 0), WinDef.HCURSOR);
 END GetHotCursor;
 
-PROCEDURE ApproximateViewRect(hwnd: WinDef.HWND; iWidth, iHeight: WinDef.WORD; iCount: INTEGER): WinDef.DWORD =
+PROCEDURE ApproximateViewRect(hwnd: WinDef.HWND; iWidth, iHeight: WinDef.UINT16; iCount: INTEGER): WinDef.UINT32 =
 BEGIN
-	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_APPROXIMATEVIEWRECT, iCount, WinDef.MAKELONG(iWidth, iHeight)), WinDef.DWORD);
+	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_APPROXIMATEVIEWRECT, iCount, WinDef.MAKELONG(iWidth, iHeight)), WinDef.UINT32);
 END ApproximateViewRect;
 
-PROCEDURE SetWorkAreas(hwnd: WinDef.HWND; nWorkAreas: INTEGER; prc: WinDef.LPRECT): BOOLEAN =
+PROCEDURE SetWorkAreas(hwnd: WinDef.HWND; nWorkAreas: INTEGER; prc: WinDef.PRECT): BOOLEAN =
 BEGIN
 	RETURN VAL(WinUser.SendMessage(hwnd, LVM_SETWORKAREAS, nWorkAreas, LOOPHOLE(prc, WinDef.LPARAM)), BOOLEAN);
 END SetWorkAreas;
 
-PROCEDURE GetWorkAreas(hwnd: WinDef.HWND; nWorkAreas: INTEGER; prc: WinDef.LPRECT): BOOLEAN =
+PROCEDURE GetWorkAreas(hwnd: WinDef.HWND; nWorkAreas: INTEGER; prc: WinDef.PRECT): BOOLEAN =
 BEGIN
 	RETURN VAL(WinUser.SendMessage(hwnd, LVM_GETWORKAREAS, nWorkAreas, LOOPHOLE(prc, WinDef.LPARAM)), BOOLEAN);
 END GetWorkAreas;
 
-PROCEDURE GetNumberOfWorkAreas(hwnd: WinDef.HWND; pnWorkAreas: UNTRACED REF WinDef.UINT): BOOLEAN =
+PROCEDURE GetNumberOfWorkAreas(hwnd: WinDef.HWND; pnWorkAreas: UNTRACED REF WinDef.UINT32): BOOLEAN =
 BEGIN
 	RETURN VAL(WinUser.SendMessage(hwnd, LVM_GETNUMBEROFWORKAREAS, 0, LOOPHOLE(pnWorkAreas, WinDef.LPARAM)), BOOLEAN);
 END GetNumberOfWorkAreas;
@@ -407,14 +407,14 @@ BEGIN
 	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_SETSELECTIONMARK, i, 0), INTEGER);
 END SetSelectionMark;
 
-PROCEDURE SetHoverTime(hwnd: WinDef.HWND; dwHoverTimeMs: WinDef.DWORD): WinDef.DWORD =
+PROCEDURE SetHoverTime(hwnd: WinDef.HWND; dwHoverTimeMs: WinDef.UINT32): WinDef.UINT32 =
 BEGIN
-	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_SETHOVERTIME, 0, dwHoverTimeMs), WinDef.DWORD);
+	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_SETHOVERTIME, 0, dwHoverTimeMs), WinDef.UINT32);
 END SetHoverTime;
 
-PROCEDURE GetHoverTime(hwnd: WinDef.HWND): WinDef.DWORD =
+PROCEDURE GetHoverTime(hwnd: WinDef.HWND): WinDef.UINT32 =
 BEGIN
-	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_GETHOVERTIME, 0, 0), WinDef.DWORD);
+	RETURN LOOPHOLE(WinUser.SendMessage(hwnd, LVM_GETHOVERTIME, 0, 0), WinDef.UINT32);
 END GetHoverTime;
 
 PROCEDURE SetToolTips(hwnd: WinDef.HWND; hwndNewHwnd: WinDef.HWND): WinDef.HWND =
@@ -437,9 +437,9 @@ BEGIN
 	RETURN VAL(WinUser.SendMessage(hwnd, LVM_GETBKIMAGEA, 0, LOOPHOLE(plvbki, WinDef.LPARAM)), BOOLEAN);
 END GetBkImage;
 
-PROCEDURE GetCheckState(hwnd: WinDef.HWND; i: WinDef.UINT): WinDef.UINT =
+PROCEDURE GetCheckState(hwnd: WinDef.HWND; i: WinDef.UINT32): WinDef.UINT32 =
 BEGIN
-	WITH r = WinUser.SendMessage(hwnd, LVM_GETITEMSTATE, LOOPHOLE(i, WinDef.UINT), LVIS_STATEIMAGEMASK) DO
+	WITH r = WinUser.SendMessage(hwnd, LVM_GETITEMSTATE, LOOPHOLE(i, WinDef.UINT32), LVIS_STATEIMAGEMASK) DO
 		RETURN Word.RightShift(r, 12) - 1;
 	END;
 END GetCheckState;
@@ -451,7 +451,7 @@ BEGIN
 	EVAL WinUser.SendMessage(hwnd, LVM_SETITEMPOSITION32, i, LOOPHOLE(ADR(ptNewPos), WinDef.LPARAM));
 END SetItemPosition32;
 
-PROCEDURE GetSubItemRect(hwnd: WinDef.HWND; iItem, iSubItem, code: INTEGER; prc: WinDef.LPRECT): BOOLEAN =
+PROCEDURE GetSubItemRect(hwnd: WinDef.HWND; iItem, iSubItem, code: INTEGER; prc: WinDef.PRECT): BOOLEAN =
 BEGIN
 	IF prc # NIL THEN
 		prc.top := iSubItem;
@@ -459,7 +459,7 @@ BEGIN
 	END;
 	(* the above statement was derived from the following C expression:
 	
-		 ((prc) ? ((((LPRECT)(prc))->top = iSubItem), (((LPRECT)(prc))->left = code), (LPARAM)(prc)) : (LPARAM)(LPRECT)NULL)
+		 ((prc) ? ((((PRECT)(prc))->top = iSubItem), (((PRECT)(prc))->left = code), (LPARAM)(prc)) : (LPARAM)(PRECT)NULL)
 	
 	*)
 	

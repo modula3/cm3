@@ -92,51 +92,54 @@ TYPE
 	HMIDIOUT = ADDRESS;
 	HMIDIIN = ADDRESS;
 
-	UINT = WinDef.UINT;
-	DWORD = WinDef.DWORD;
-	WORD = WinDef.WORD;
+	UINT32 = WinDef.UINT32;
+	UINT16 = WinDef.UINT16;
 
-	MMRESULT = UINT;
-	MMVERSION = UINT;
+	UINT = WinDef.UINT32;  (* compat *)
+	DWORD = WinDef.UINT32; (* compat *)
+	WORD = WinDef.UINT16;  (* compat *)
+
+	MMRESULT = UINT32;
+	MMVERSION = UINT32;
 	
 (* functions *)
 
 <*EXTERNAL midiOutOpen:WINAPI*>
 PROCEDURE midiOutOpen(
 	VAR phmo: HMIDIOUT;
-	uDeviceID: UINT;
-  dwCallback: DWORD;
-  dwInstance: DWORD;
-  fdwOpen: DWORD;
+	uDeviceID: UINT32;
+  dwCallback: UINT32;
+  dwInstance: UINT32;
+  fdwOpen: UINT32;
 ): MMRESULT;
 <*EXTERNAL midiOutClose:WINAPI*>
 PROCEDURE midiOutClose(hmo: HMIDIOUT): MMRESULT;
 <*EXTERNAL midiInOpen:WINAPI*>
 PROCEDURE midiInOpen(
 	VAR phmi: HMIDIIN;
-	uDeviceID: UINT;
-	dwCallback: DWORD;
-	dwInstance: DWORD;
-	fdwOpen: DWORD
+	uDeviceID: UINT32;
+	dwCallback: UINT32;
+	dwInstance: UINT32;
+	fdwOpen: UINT32
 ): MMRESULT;
 <*EXTERNAL midiInClose:WINAPI*>
 PROCEDURE midiInClose(hmi: HMIDIIN): MMRESULT;
 <*EXTERNAL midiOutShortMsg:WINAPI*>
-PROCEDURE midiOutShortMsg(hmo: HMIDIOUT; dwMsg: DWORD): MMRESULT;
+PROCEDURE midiOutShortMsg(hmo: HMIDIOUT; dwMsg: UINT32): MMRESULT;
 <*EXTERNAL midiInGetNumDevs:WINAPI*>
-PROCEDURE midiInGetNumDevs(): UINT;
+PROCEDURE midiInGetNumDevs(): UINT32;
 <*EXTERNAL midiOutGetNumDevs:WINAPI*>
-PROCEDURE midiOutGetNumDevs(): UINT;
+PROCEDURE midiOutGetNumDevs(): UINT32;
 
 <*EXTERNAL midiOutGetDevCapsA:WINAPI*>
-PROCEDURE midiOutGetDevCapsA(uDeviceID: UINT; pmoc: LPMIDIOUTCAPS; cbmoc: UINT): MMRESULT;
+PROCEDURE midiOutGetDevCapsA(uDeviceID: UINT32; pmoc: LPMIDIOUTCAPS; cbmoc: UINT32): MMRESULT;
 <*EXTERNAL midiInGetDevCapsA:WINAPI*>
-PROCEDURE midiInGetDevCapsA(uDeviceID: UINT; pmic: LPMIDIINCAPS; cbmic: UINT): MMRESULT;
+PROCEDURE midiInGetDevCapsA(uDeviceID: UINT32; pmic: LPMIDIINCAPS; cbmic: UINT32): MMRESULT;
 
 <*EXTERNAL midiOutGetDevCapsW:WINAPI*>
-PROCEDURE midiOutGetDevCapsW(uDeviceID: UINT; pmoc: LPMIDIOUTCAPS; cbmoc: UINT): MMRESULT;
+PROCEDURE midiOutGetDevCapsW(uDeviceID: UINT32; pmoc: LPMIDIOUTCAPS; cbmoc: UINT32): MMRESULT;
 <*EXTERNAL midiInGetDevCapsW:WINAPI*>
-PROCEDURE midiInGetDevCapsW(uDeviceID: UINT; pmic: LPMIDIINCAPS; cbmic: UINT): MMRESULT;
+PROCEDURE midiInGetDevCapsW(uDeviceID: UINT32; pmic: LPMIDIINCAPS; cbmic: UINT32): MMRESULT;
 
 <*EXTERNAL midiInStart:WINAPI*>
 PROCEDURE midiInStart(hmi: HMIDIIN): MMRESULT;
@@ -146,11 +149,11 @@ PROCEDURE midiInStop(hmi: HMIDIIN): MMRESULT;
 PROCEDURE midiOutReset(hmo: HMIDIOUT): MMRESULT;
 
 <*EXTERNAL midiOutPrepareHeader:WINAPI*>
-PROCEDURE midiOutPrepareHeader(hmo: HMIDIOUT;  pmh: LPMIDIHDR; cbmh: UINT): MMRESULT;
+PROCEDURE midiOutPrepareHeader(hmo: HMIDIOUT;  pmh: LPMIDIHDR; cbmh: UINT32): MMRESULT;
 <*EXTERNAL midiOutLongMsg:WINAPI*>
-PROCEDURE midiOutLongMsg(hmo: HMIDIOUT;  pmh: LPMIDIHDR; cbmh: UINT): MMRESULT;
+PROCEDURE midiOutLongMsg(hmo: HMIDIOUT;  pmh: LPMIDIHDR; cbmh: UINT32): MMRESULT;
 <*EXTERNAL midiOutUnprepareHeader:WINAPI*>
-PROCEDURE midiOutUnprepareHeader(hmo: HMIDIOUT;  pmh: LPMIDIHDR; cbmh: UINT): MMRESULT;
+PROCEDURE midiOutUnprepareHeader(hmo: HMIDIOUT;  pmh: LPMIDIHDR; cbmh: UINT32): MMRESULT;
 
 
 (* structures *)
@@ -161,35 +164,35 @@ TYPE
 	LPMIDIHDR = UNTRACED REF MIDIHDR;
 
 	MIDIOUTCAPS = RECORD
-    wMid: WORD; 
-    wPid: WORD; 
+    wMid: UINT16; 
+    wPid: UINT16; 
     vDriverVersion: MMVERSION; 
     szPname: ARRAY[0..MAXPNAMELEN-1] OF CHAR; 
-    wTechnology: WORD; 
-    wVoices: WORD; 
-    wNotes: WORD; 
-    wChannelMask: WORD; 
-    dwSupport: DWORD; 
+    wTechnology: UINT16; 
+    wVoices: UINT16; 
+    wNotes: UINT16; 
+    wChannelMask: UINT16; 
+    dwSupport: UINT32; 
 	END;
 	
 	MIDIINCAPS = RECORD
-    wMid: WORD; 
-    wPid: WORD; 
+    wMid: UINT16; 
+    wPid: UINT16; 
     vDriverVersion: MMVERSION; 
     szPname: ARRAY[0..MAXPNAMELEN-1] OF CHAR; 
-    dwSupport: DWORD; 
+    dwSupport: UINT32; 
 	END;
 
 	MIDIHDR = RECORD
 		lpData: ADDRESS;
-		dwBufferLength: DWORD;
-		dwBytesRecorded: DWORD;
-		dwUser: DWORD;
-		dwFlags: DWORD;
+		dwBufferLength: UINT32;
+		dwBytesRecorded: UINT32;
+		dwUser: UINT32;
+		dwFlags: UINT32;
 		lpNext: LPMIDIHDR;
-		reserved: DWORD;
-		dwOffset: DWORD;
-		dwReserved: ARRAY [0..3] OF DWORD;
+		reserved: UINT32;
+		dwOffset: UINT32;
+		dwReserved: ARRAY [0..3] OF UINT32;
 	END;
 
 END WinMidi.

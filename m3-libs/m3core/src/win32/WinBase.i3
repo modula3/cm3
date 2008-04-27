@@ -25,14 +25,13 @@ INTERFACE WinBase;
 IMPORT WinNT;
 
 FROM Word IMPORT Or, Shift;
-FROM WinDef IMPORT ULONG, DWORD, LPVOID, BOOL, WORD, BYTE, LPLONG, LONG,
-                   HGLOBAL, HINSTANCE, UINT, FARPROC, HLOCAL, PDWORD, HWND,
-                   LPDWORD, USHORT, LPHANDLE, HRSRC, ATOM, PLONG, LPWORD,
-                   HFILE, LPBYTE, MAX_PATH, LPBOOL, HMODULE, UCHAR, PUCHAR,
-                   LPCVOID;
-FROM WinNT IMPORT WCHAR, LPSTR, LPCSTR, LPWSTR, LPCWSTR, LPTSTR, LPCTSTR,
-                  PSID, PACL, PVOID, PLUID, LARGE_INTEGER, HANDLE, PHANDLE;
-FROM Ctypes IMPORT char, int, void_star;
+FROM WinBaseTypes IMPORT UINT8, UINT16, UINT32, INT32, PUINT16, PUINT32,
+  PINT32, PVOID, PBOOL, WCHAR, PSTR, PCSTR, PWSTR, PCWSTR, PTSTR, PCTSTR,
+  BOOL, PCVOID, SIZE_T, PSIZE_T, PUINT8;
+FROM WinDef IMPORT HGLOBAL, HINSTANCE, FARPROC, HLOCAL, HWND, HRSRC, ATOM,
+  HFILE, MAX_PATH, HMODULE;
+FROM WinNT IMPORT PSID, PACL, PLUID, LARGE_INTEGER, HANDLE, PHANDLE;
+FROM Ctypes IMPORT char;
 
 (*
  * Compatability macros
@@ -72,7 +71,6 @@ CONST
 (* File creation flags must start at the high end since they *)
 (* are combined with the attributes *)
 
-CONST
   FILE_FLAG_WRITE_THROUGH    = 16_80000000;
   FILE_FLAG_OVERLAPPED       = 16_40000000;
   FILE_FLAG_NO_BUFFERING     = 16_20000000;
@@ -93,20 +91,17 @@ CONST
 
 (* Define the dwOpenMode values for CreateNamedPipe *)
 
-CONST
   PIPE_ACCESS_INBOUND  = 16_00000001;
   PIPE_ACCESS_OUTBOUND = 16_00000002;
   PIPE_ACCESS_DUPLEX   = 16_00000003;
 
 (* Define the Named Pipe End flags for GetNamedPipeInfo *)
 
-CONST
   PIPE_CLIENT_END = 16_00000000;
   PIPE_SERVER_END = 16_00000001;
 
 (* Define the dwPipeMode values for CreateNamedPipe *)
 
-CONST
   PIPE_WAIT             = 16_00000000;
   PIPE_NOWAIT           = 16_00000001;
   PIPE_READMODE_BYTE    = 16_00000000;
@@ -116,12 +111,11 @@ CONST
 
 (* Define the well known values for CreateNamedPipe nMaxInstances *)
 
-CONST PIPE_UNLIMITED_INSTANCES = 255;
+  PIPE_UNLIMITED_INSTANCES = 255;
 
 (* Define the Security Quality of Service bits to be passed *)
 (* into CreateFile *)
 
-CONST
   SECURITY_ANONYMOUS      = Shift(WinNT.SecurityAnonymous, 16);
   SECURITY_IDENTIFICATION = Shift(WinNT.SecurityIdentification, 16);
   SECURITY_IMPERSONATION  = Shift(WinNT.SecurityImpersonation, 16);
@@ -139,82 +133,83 @@ CONST
 (* Special value for NextMessageSize to indicate that there is no next *)
 (* message. *)
 
-CONST MAILSLOT_NO_MESSAGE: ULONG = -1;
+  MAILSLOT_NO_MESSAGE: UINT32 = -1;
 
 (* Special value for read timeout to indicate that mailslot reads should *)
 (* never timeout. *)
 
-CONST MAILSLOT_WAIT_FOREVER: ULONG = -1;
+  MAILSLOT_WAIT_FOREVER: UINT32 = -1;
 
 (* File structures *)
 
 TYPE
-  LPOVERLAPPED = UNTRACED REF OVERLAPPED;
+  POVERLAPPED = UNTRACED REF OVERLAPPED;
+  LPOVERLAPPED = POVERLAPPED; (* compat *)
   OVERLAPPED = RECORD
-    Internal    : DWORD;
-    InternalHigh: DWORD;
-    Offset      : DWORD;
-    OffsetHigh  : DWORD;
+    Internal    : UINT32;
+    InternalHigh: UINT32;
+    Offset      : UINT32;
+    OffsetHigh  : UINT32;
     hEvent      : HANDLE;
   END;
 
   PSECURITY_ATTRIBUTES = UNTRACED REF SECURITY_ATTRIBUTES;
-  LPSECURITY_ATTRIBUTES = UNTRACED REF SECURITY_ATTRIBUTES;
+  LPSECURITY_ATTRIBUTES = PSECURITY_ATTRIBUTES; (* compat *)
   SECURITY_ATTRIBUTES = RECORD
-    nLength             : DWORD;
-    lpSecurityDescriptor: LPVOID;
+    nLength             : UINT32;
+    lpSecurityDescriptor: PVOID;
     bInheritHandle      : BOOL;
   END;
 
   PPROCESS_INFORMATION = UNTRACED REF PROCESS_INFORMATION;
-  LPPROCESS_INFORMATION = UNTRACED REF PROCESS_INFORMATION;
+  LPPROCESS_INFORMATION = PPROCESS_INFORMATION; (* compat *)
   PROCESS_INFORMATION = RECORD
     hProcess   : HANDLE;
     hThread    : HANDLE;
-    dwProcessId: DWORD;
-    dwThreadId : DWORD;
+    dwProcessId: UINT32;
+    dwThreadId : UINT32;
   END;
 
 (* File System time stamps are represented with the following structure: *)
 
-TYPE
   PFILETIME = UNTRACED REF FILETIME;
-  LPFILETIME = UNTRACED REF FILETIME;
+  LPFILETIME = PFILETIME; (* compat *)
   FILETIME = RECORD
-    dwLowDateTime : DWORD;
-    dwHighDateTime: DWORD;
+    dwLowDateTime : UINT32;
+    dwHighDateTime: UINT32;
   END;
 
 (* System time is represented with the following structure: *)
 
 TYPE
   PSYSTEMTIME = UNTRACED REF SYSTEMTIME;
-  LPSYSTEMTIME = UNTRACED REF SYSTEMTIME;
+  LPSYSTEMTIME = PSYSTEMTIME; (* compat *)
   SYSTEMTIME = RECORD
-    wYear        : WORD;
-    wMonth       : WORD;
-    wDayOfWeek   : WORD;
-    wDay         : WORD;
-    wHour        : WORD;
-    wMinute      : WORD;
-    wSecond      : WORD;
-    wMilliseconds: WORD;
+    wYear        : UINT16;
+    wMonth       : UINT16;
+    wDayOfWeek   : UINT16;
+    wDay         : UINT16;
+    wHour        : UINT16;
+    wMinute      : UINT16;
+    wSecond      : UINT16;
+    wMilliseconds: UINT16;
   END;
 
   PTHREAD_START_ROUTINE = <*WINAPI*> PROCEDURE
-                             (lpThreadParameter: LPVOID): DWORD;
+                             (lpThreadParameter: PVOID): UINT32;
 
-  LPTHREAD_START_ROUTINE = PTHREAD_START_ROUTINE;
+  LPTHREAD_START_ROUTINE = PTHREAD_START_ROUTINE; (* compat *)
 
   CRITICAL_SECTION = WinNT.RTL_CRITICAL_SECTION;
   PCRITICAL_SECTION = WinNT.PRTL_CRITICAL_SECTION;
-  LPCRITICAL_SECTION = WinNT.PRTL_CRITICAL_SECTION;
+  LPCRITICAL_SECTION = PCRITICAL_SECTION; (* compat *)
 
   CRITICAL_SECTION_DEBUG = WinNT.RTL_CRITICAL_SECTION_DEBUG;
   PCRITICAL_SECTION_DEBUG = WinNT.PRTL_CRITICAL_SECTION_DEBUG;
-  LPCRITICAL_SECTION_DEBUG = WinNT.PRTL_CRITICAL_SECTION_DEBUG;
+  LPCRITICAL_SECTION_DEBUG = PCRITICAL_SECTION_DEBUG; (* compat *)
 
-  LPLDT_ENTRY = LPVOID;
+  PLDT_ENTRY = PVOID;
+  LPLDT_ENTRY = PLDT_ENTRY; (* compat *)
 
 CONST
   MUTEX_MODIFY_STATE = WinNT.MUTANT_QUERY_STATE;
@@ -222,122 +217,118 @@ CONST
 
 (* Serial provider type. *)
 
-CONST SP_SERIALCOMM: DWORD = 16_00000001;
+  SP_SERIALCOMM: UINT32 = 16_00000001;
 
 (* Provider SubTypes *)
 
-CONST
-  PST_UNSPECIFIED   : DWORD = 16_00000000;
-  PST_RS232         : DWORD = 16_00000001;
-  PST_PARALLELPORT  : DWORD = 16_00000002;
-  PST_RS422         : DWORD = 16_00000003;
-  PST_RS423         : DWORD = 16_00000004;
-  PST_RS449         : DWORD = 16_00000005;
-  PST_FAX           : DWORD = 16_00000021;
-  PST_SCANNER       : DWORD = 16_00000022;
-  PST_NETWORK_BRIDGE: DWORD = 16_00000100;
-  PST_LAT           : DWORD = 16_00000101;
-  PST_TCPIP_TELNET  : DWORD = 16_00000102;
-  PST_X25           : DWORD = 16_00000103;
+  PST_UNSPECIFIED   : UINT32 = 16_00000000;
+  PST_RS232         : UINT32 = 16_00000001;
+  PST_PARALLELPORT  : UINT32 = 16_00000002;
+  PST_RS422         : UINT32 = 16_00000003;
+  PST_RS423         : UINT32 = 16_00000004;
+  PST_RS449         : UINT32 = 16_00000005;
+  PST_FAX           : UINT32 = 16_00000021;
+  PST_SCANNER       : UINT32 = 16_00000022;
+  PST_NETWORK_BRIDGE: UINT32 = 16_00000100;
+  PST_LAT           : UINT32 = 16_00000101;
+  PST_TCPIP_TELNET  : UINT32 = 16_00000102;
+  PST_X25           : UINT32 = 16_00000103;
 
 
 (* Provider capabilities flags. *)
 
-CONST
-  PCF_DTRDSR       : DWORD = 16_0001;
-  PCF_RTSCTS       : DWORD = 16_0002;
-  PCF_RLSD         : DWORD = 16_0004;
-  PCF_PARITY_CHECK : DWORD = 16_0008;
-  PCF_XONXOFF      : DWORD = 16_0010;
-  PCF_SETXCHAR     : DWORD = 16_0020;
-  PCF_TOTALTIMEOUTS: DWORD = 16_0040;
-  PCF_INTTIMEOUTS  : DWORD = 16_0080;
-  PCF_SPECIALCHARS : DWORD = 16_0100;
-  PCF_16BITMODE    : DWORD = 16_0200;
+  PCF_DTRDSR       : UINT32 = 16_0001;
+  PCF_RTSCTS       : UINT32 = 16_0002;
+  PCF_RLSD         : UINT32 = 16_0004;
+  PCF_PARITY_CHECK : UINT32 = 16_0008;
+  PCF_XONXOFF      : UINT32 = 16_0010;
+  PCF_SETXCHAR     : UINT32 = 16_0020;
+  PCF_TOTALTIMEOUTS: UINT32 = 16_0040;
+  PCF_INTTIMEOUTS  : UINT32 = 16_0080;
+  PCF_SPECIALCHARS : UINT32 = 16_0100;
+  PCF_16BITMODE    : UINT32 = 16_0200;
 
 (* Comm provider settable parameters. *)
 
-CONST
-  SP_PARITY      : DWORD = 16_0001;
-  SP_BAUD        : DWORD = 16_0002;
-  SP_DATABITS    : DWORD = 16_0004;
-  SP_STOPBITS    : DWORD = 16_0008;
-  SP_HANDSHAKING : DWORD = 16_0010;
-  SP_PARITY_CHECK: DWORD = 16_0020;
-  SP_RLSD        : DWORD = 16_0040;
+  SP_PARITY      : UINT32 = 16_0001;
+  SP_BAUD        : UINT32 = 16_0002;
+  SP_DATABITS    : UINT32 = 16_0004;
+  SP_STOPBITS    : UINT32 = 16_0008;
+  SP_HANDSHAKING : UINT32 = 16_0010;
+  SP_PARITY_CHECK: UINT32 = 16_0020;
+  SP_RLSD        : UINT32 = 16_0040;
 
 (* Settable baud rates in the provider. *)
 
-CONST
-  BAUD_075  : DWORD = 16_00000001;
-  BAUD_110  : DWORD = 16_00000002;
-  BAUD_134_5: DWORD = 16_00000004;
-  BAUD_150  : DWORD = 16_00000008;
-  BAUD_300  : DWORD = 16_00000010;
-  BAUD_600  : DWORD = 16_00000020;
-  BAUD_1200 : DWORD = 16_00000040;
-  BAUD_1800 : DWORD = 16_00000080;
-  BAUD_2400 : DWORD = 16_00000100;
-  BAUD_4800 : DWORD = 16_00000200;
-  BAUD_7200 : DWORD = 16_00000400;
-  BAUD_9600 : DWORD = 16_00000800;
-  BAUD_14400: DWORD = 16_00001000;
-  BAUD_19200: DWORD = 16_00002000;
-  BAUD_38400: DWORD = 16_00004000;
-  BAUD_56K  : DWORD = 16_00008000;
-  BAUD_128K : DWORD = 16_00010000;
-  BAUD_USER : DWORD = 16_10000000;
+  BAUD_075  : UINT32 = 16_00000001;
+  BAUD_110  : UINT32 = 16_00000002;
+  BAUD_134_5: UINT32 = 16_00000004;
+  BAUD_150  : UINT32 = 16_00000008;
+  BAUD_300  : UINT32 = 16_00000010;
+  BAUD_600  : UINT32 = 16_00000020;
+  BAUD_1200 : UINT32 = 16_00000040;
+  BAUD_1800 : UINT32 = 16_00000080;
+  BAUD_2400 : UINT32 = 16_00000100;
+  BAUD_4800 : UINT32 = 16_00000200;
+  BAUD_7200 : UINT32 = 16_00000400;
+  BAUD_9600 : UINT32 = 16_00000800;
+  BAUD_14400: UINT32 = 16_00001000;
+  BAUD_19200: UINT32 = 16_00002000;
+  BAUD_38400: UINT32 = 16_00004000;
+  BAUD_56K  : UINT32 = 16_00008000;
+  BAUD_128K : UINT32 = 16_00010000;
+  BAUD_USER : UINT32 = 16_10000000;
 
 (* Settable Data Bits *)
 
-CONST
-  DATABITS_5  : WORD = 16_0001;
-  DATABITS_6  : WORD = 16_0002;
-  DATABITS_7  : WORD = 16_0004;
-  DATABITS_8  : WORD = 16_0008;
-  DATABITS_16 : WORD = 16_0010;
-  DATABITS_16X: WORD = 16_0020;
+  DATABITS_5  : UINT16 = 16_0001;
+  DATABITS_6  : UINT16 = 16_0002;
+  DATABITS_7  : UINT16 = 16_0004;
+  DATABITS_8  : UINT16 = 16_0008;
+  DATABITS_16 : UINT16 = 16_0010;
+  DATABITS_16X: UINT16 = 16_0020;
 
 (* Settable Stop and Parity bits. *)
 
-CONST
-  STOPBITS_10 : WORD = 16_0001;
-  STOPBITS_15 : WORD = 16_0002;
-  STOPBITS_20 : WORD = 16_0004;
-  PARITY_NONE : WORD = 16_0100;
-  PARITY_ODD  : WORD = 16_0200;
-  PARITY_EVEN : WORD = 16_0400;
-  PARITY_MARK : WORD = 16_0800;
-  PARITY_SPACE: WORD = 16_1000;
+  STOPBITS_10 : UINT16 = 16_0001;
+  STOPBITS_15 : UINT16 = 16_0002;
+  STOPBITS_20 : UINT16 = 16_0004;
+  PARITY_NONE : UINT16 = 16_0100;
+  PARITY_ODD  : UINT16 = 16_0200;
+  PARITY_EVEN : UINT16 = 16_0400;
+  PARITY_MARK : UINT16 = 16_0800;
+  PARITY_SPACE: UINT16 = 16_1000;
 
 TYPE
   Int1  = BITS  1 FOR [0..1];
   Int2  = BITS  2 FOR [0..3];
   Int17 = BITS 17 FOR [0..16_1ffff];
 
-  LPCOMMPROP = UNTRACED REF COMMPROP;
+  PCOMMPROP = UNTRACED REF COMMPROP;
+  LPCOMMPROP = PCOMMPROP; (* compat *)
   COMMPROP = RECORD
-    wPacketLength      : WORD;
-    wPacketVersion     : WORD;
-    dwServiceMask      : DWORD;
-    dwReserved1        : DWORD;
-    dwMaxTxQueue       : DWORD;
-    dwMaxRxQueue       : DWORD;
-    dwMaxBaud          : DWORD;
-    dwProvSubType      : DWORD;
-    dwProvCapabilities : DWORD;
-    dwSettableParams   : DWORD;
-    dwSettableBaud     : DWORD;
-    wSettableData      : WORD;
-    wSettableStopParity: WORD;
-    dwCurrentTxQueue   : DWORD;
-    dwCurrentRxQueue   : DWORD;
-    dwProvSpec1        : DWORD;
-    dwProvSpec2        : DWORD;
+    wPacketLength      : UINT16;
+    wPacketVersion     : UINT16;
+    dwServiceMask      : UINT32;
+    dwReserved1        : UINT32;
+    dwMaxTxQueue       : UINT32;
+    dwMaxRxQueue       : UINT32;
+    dwMaxBaud          : UINT32;
+    dwProvSubType      : UINT32;
+    dwProvCapabilities : UINT32;
+    dwSettableParams   : UINT32;
+    dwSettableBaud     : UINT32;
+    wSettableData      : UINT16;
+    wSettableStopParity: UINT16;
+    dwCurrentTxQueue   : UINT32;
+    dwCurrentRxQueue   : UINT32;
+    dwProvSpec1        : UINT32;
+    dwProvSpec2        : UINT32;
     wcProvChar         : ARRAY [0 .. 0] OF WCHAR;
   END;
 
-  LPCOMSTAT = UNTRACED REF COMSTAT;
+  PCOMSTAT = UNTRACED REF COMSTAT;
+  LPCOMSTAT = PCOMSTAT; (* compat *)
   COMSTAT = RECORD
     fCtsHold : Int1;
     fDsrHold : Int1;
@@ -347,8 +338,8 @@ TYPE
     fEof     : Int1;
     fTxim    : Int1;
     fReserved: Int17;
-    cbInQue  : DWORD;
-    cbOutQue : DWORD;
+    cbInQue  : UINT32;
+    cbOutQue : UINT32;
   END;
 
 (* DTR Control Flow Values. *)
@@ -358,17 +349,18 @@ CONST
   DTR_CONTROL_HANDSHAKE = 16_02;
 
 (* RTS Control Flow Values *)
-CONST
+
   RTS_CONTROL_DISABLE   = 16_00;
   RTS_CONTROL_ENABLE    = 16_01;
   RTS_CONTROL_HANDSHAKE = 16_02;
   RTS_CONTROL_TOGGLE    = 16_03;
 
 TYPE
-  LPDCB = UNTRACED REF DCB;
+  PDCB = UNTRACED REF DCB;
+  LPDCB = PDCB; (* compat *)
   DCB = RECORD
-    DCBlength         : DWORD; (* sizeof(DCB) *)
-    BaudRate          : DWORD; (* Baudrate at which running *)
+    DCBlength         : UINT32; (* sizeof(DCB) *)
+    BaudRate          : UINT32; (* Baudrate at which running *)
     fBinary           : Int1;  (* Binary Mode (skip EOF check) *)
     fParity           : Int1;  (* Enable parity checking *)
     fOutxCtsFlow      : Int1;  (* CTS handshaking on output *)
@@ -383,56 +375,59 @@ TYPE
     fRtsControl       : Int2;  (* Rts Flow control *)
     fAbortOnError     : Int1;  (* Abort all reads and writes on Error *)
     fDummy2           : Int17; (* Reserved *)
-    wReserved         : WORD;  (* Not currently used *)
-    XonLim            : WORD;  (* Transmit X-ON threshold *)
-    XoffLim           : WORD;  (* Transmit X-OFF threshold *)
-    ByteSize          : BYTE;  (* Number of bits/byte, 4-8 *)
-    Parity            : BYTE;  (* 0-4=None,Odd,Even,Mark,Space *)
-    StopBits          : BYTE;  (* 0,1,2 = 1, 1.5, 2 *)
+    wReserved         : UINT16;  (* Not currently used *)
+    XonLim            : UINT16;  (* Transmit X-ON threshold *)
+    XoffLim           : UINT16;  (* Transmit X-OFF threshold *)
+    ByteSize          : UINT8;  (* Number of bits/byte, 4-8 *)
+    Parity            : UINT8;  (* 0-4=None,Odd,Even,Mark,Space *)
+    StopBits          : UINT8;  (* 0,1,2 = 1, 1.5, 2 *)
     XonChar           : char;  (* Tx and Rx X-ON character *)
     XoffChar          : char;  (* Tx and Rx X-OFF character *)
     ErrorChar         : char;  (* Error replacement char *)
     EofChar           : char;  (* End of Input character *)
     EvtChar           : char;  (* Recieved Event character *)
-    wReserved1        : WORD;  (* Fill for now. *)
+    wReserved1        : UINT16;  (* Fill for now. *)
   END;
 
-  LPCOMMTIMEOUTS = UNTRACED REF COMMTIMEOUTS;
+  PCOMMTIMEOUTS = UNTRACED REF COMMTIMEOUTS;
+  LPCOMMTIMEOUTS = PCOMMTIMEOUTS; (* compat *)
   COMMTIMEOUTS = RECORD
-    ReadIntervalTimeout        : DWORD;  (* Max time between read chars. *)
-    ReadTotalTimeoutMultiplier : DWORD;  (* Multiplier of characters. *)
-    ReadTotalTimeoutConstant   : DWORD;  (* Constant in milliseconds. *)
-    WriteTotalTimeoutMultiplier: DWORD;  (* Multiplier of characters. *)
-    WriteTotalTimeoutConstant  : DWORD;  (* Constant in milliseconds. *)
+    ReadIntervalTimeout        : UINT32;  (* Max time between read chars. *)
+    ReadTotalTimeoutMultiplier : UINT32;  (* Multiplier of characters. *)
+    ReadTotalTimeoutConstant   : UINT32;  (* Constant in milliseconds. *)
+    WriteTotalTimeoutMultiplier: UINT32;  (* Multiplier of characters. *)
+    WriteTotalTimeoutConstant  : UINT32;  (* Constant in milliseconds. *)
   END;
 
-  LPCOMMCONFIG = UNTRACED REF COMMCONFIG;
+  PCOMMCONFIG = UNTRACED REF COMMCONFIG;
+  LPCOMMCONFIG = PCOMMCONFIG; (* compat *)
   COMMCONFIG = RECORD
-    dwSize            : DWORD;  (* Size of the entire struct *)
-    wVersion          : WORD;   (* version of the structure *)
-    wReserved         : WORD;   (* alignment *)
+    dwSize            : UINT32;  (* Size of the entire struct *)
+    wVersion          : UINT16;   (* version of the structure *)
+    wReserved         : UINT16;   (* alignment *)
     dcb               : DCB;    (* device control block *)
-    dwProviderSubType : DWORD;  (* ordinal value for identifying
+    dwProviderSubType : UINT32;  (* ordinal value for identifying
                                    provider-defined data structure format*)
-    dwProviderOffset  : DWORD;  (* Specifies the offset of provider specific
+    dwProviderOffset  : UINT32;  (* Specifies the offset of provider specific
                                    data field in bytes from the start *)
-    dwProviderSize    : DWORD;  (* size of the provider-specific data field *)
+    dwProviderSize    : UINT32;  (* size of the provider-specific data field *)
     wcProviderData    : ARRAY [0..0] OF WCHAR; (* provider-specific data *)
   END;
 
-  LPSYSTEM_INFO = UNTRACED REF SYSTEM_INFO;
+  PSYSTEM_INFO = UNTRACED REF SYSTEM_INFO;
+  LPSYSTEM_INFO = PSYSTEM_INFO; (* compat *)
   SYSTEM_INFO = RECORD
-    wProcessorArchitecture     : WORD;
-    wReserved0                 : WORD;
-    dwPageSize                 : DWORD;
-    lpMinimumApplicationAddress: LPVOID;
-    lpMaximumApplicationAddress: LPVOID;
-    dwActiveProcessorMask      : DWORD;
-    dwNumberOfProcessors       : DWORD;
-    dwProcessorType            : DWORD;
-    dwAllocationGranularity    : DWORD;
-    wProcessorLevel            : WORD;
-    wProcessorRevision         : WORD;
+    wProcessorArchitecture     : UINT16;
+    wReserved0                 : UINT16;
+    dwPageSize                 : UINT32;
+    lpMinimumApplicationAddress: PVOID;
+    lpMaximumApplicationAddress: PVOID;
+    dwActiveProcessorMask      : UINT32;
+    dwNumberOfProcessors       : UINT32;
+    dwProcessorType            : UINT32;
+    dwAllocationGranularity    : UINT32;
+    wProcessorLevel            : UINT16;
+    wProcessorRevision         : UINT16;
   END;
 
 (*???  #define FreeModule(hLibModule) FreeLibrary((hLibModule)) #define
@@ -464,21 +459,20 @@ CONST
    GMEM_MOVEABLE ) *)
 
 (* Flags returned by GlobalFlags (in addition to GMEM_DISCARDABLE) *)
-CONST
   GMEM_DISCARDED = 16_4000;
   GMEM_LOCKCOUNT = 16_00FF;
 
 TYPE
   LPMEMORYSTATUS = UNTRACED REF MEMORYSTATUS;
   MEMORYSTATUS = RECORD
-    dwLength       : DWORD;
-    dwMemoryLoad   : DWORD;
-    dwTotalPhys    : DWORD;
-    dwAvailPhys    : DWORD;
-    dwTotalPageFile: DWORD;
-    dwAvailPageFile: DWORD;
-    dwTotalVirtual : DWORD;
-    dwAvailVirtual : DWORD;
+    dwLength       : UINT32;
+    dwMemoryLoad   : UINT32;
+    dwTotalPhys    : SIZE_T;
+    dwAvailPhys    : SIZE_T;
+    dwTotalPageFile: SIZE_T;
+    dwAvailPageFile: SIZE_T;
+    dwTotalVirtual : SIZE_T;
+    dwAvailVirtual : SIZE_T;
   END;
 
 (* Local Memory Flags *)
@@ -502,13 +496,11 @@ CONST
 (*???  #define LocalDiscard( h ) LocalReAlloc( (h), 0, LMEM_MOVEABLE ) *)
 
 (* Flags returned by LocalFlags (in addition to LMEM_DISCARDABLE) *)
-CONST
   LMEM_DISCARDED = 16_4000;
   LMEM_LOCKCOUNT = 16_00FF;
 
 (* dwCreationFlag values *)
 
-CONST
   DEBUG_PROCESS           = 16_00000001;
   DEBUG_ONLY_THIS_PROCESS = 16_00000002;
 
@@ -542,7 +534,6 @@ CONST
   THREAD_PRIORITY_IDLE          = WinNT.THREAD_BASE_PRIORITY_IDLE;
 
 (* Debug APIs *)
-CONST
   EXCEPTION_DEBUG_EVENT      = 1;
   CREATE_THREAD_DEBUG_EVENT  = 2;
   CREATE_PROCESS_DEBUG_EVENT = 3;
@@ -557,13 +548,13 @@ TYPE
   LPEXCEPTION_DEBUG_INFO = UNTRACED REF EXCEPTION_DEBUG_INFO;
   EXCEPTION_DEBUG_INFO = RECORD
     ExceptionRecord: WinNT.EXCEPTION_RECORD;
-    dwFirstChance  : DWORD;
+    dwFirstChance  : UINT32;
   END;
 
   LPCREATE_THREAD_DEBUG_INFO = UNTRACED REF CREATE_THREAD_DEBUG_INFO;
   CREATE_THREAD_DEBUG_INFO = RECORD
     hThread       : HANDLE;
-    lpStartAddress: LPTHREAD_START_ROUTINE;
+    lpStartAddress: PTHREAD_START_ROUTINE;
   END;
 
   LPCREATE_PROCESS_DEBUG_INFO = UNTRACED REF CREATE_PROCESS_DEBUG_INFO;
@@ -571,40 +562,40 @@ TYPE
     hFile                : HANDLE;
     hProcess             : HANDLE;
     hThread              : HANDLE;
-    lpBaseOfImage        : LPVOID;
-    dwDebugInfoFileOffset: DWORD;
-    nDebugInfoSize       : DWORD;
-    lpStartAddress       : LPTHREAD_START_ROUTINE;
+    lpBaseOfImage        : PVOID;
+    dwDebugInfoFileOffset: UINT32;
+    nDebugInfoSize       : UINT32;
+    lpStartAddress       : PTHREAD_START_ROUTINE;
   END;
 
-  EXIT_THREAD_DEBUG_INFO = RECORD dwExitCode: DWORD;  END;
+  EXIT_THREAD_DEBUG_INFO = RECORD dwExitCode: UINT32;  END;
   LPEXIT_THREAD_DEBUG_INFO = UNTRACED REF EXIT_THREAD_DEBUG_INFO;
 
-  EXIT_PROCESS_DEBUG_INFO = RECORD dwExitCode: DWORD;  END;
+  EXIT_PROCESS_DEBUG_INFO = RECORD dwExitCode: UINT32;  END;
   LPEXIT_PROCESS_DEBUG_INFO = UNTRACED REF EXIT_PROCESS_DEBUG_INFO;
 
   LPLOAD_DLL_DEBUG_INFO = UNTRACED REF LOAD_DLL_DEBUG_INFO;
   LOAD_DLL_DEBUG_INFO = RECORD
     hFile                : HANDLE;
-    lpBaseOfDll          : LPVOID;
-    dwDebugInfoFileOffset: DWORD;
-    nDebugInfoSize       : DWORD;
+    lpBaseOfDll          : PVOID;
+    dwDebugInfoFileOffset: UINT32;
+    nDebugInfoSize       : UINT32;
   END;
 
-  UNLOAD_DLL_DEBUG_INFO = RECORD lpBaseOfDll: LPVOID;  END;
+  UNLOAD_DLL_DEBUG_INFO = RECORD lpBaseOfDll: PVOID;  END;
   LPUNLOAD_DLL_DEBUG_INFO = UNTRACED REF UNLOAD_DLL_DEBUG_INFO;
 
   LPOUTPUT_DEBUG_STRING_INFO = UNTRACED REF OUTPUT_DEBUG_STRING_INFO;
   OUTPUT_DEBUG_STRING_INFO = RECORD
-    lpDebugStringData : LPSTR;
-    fUnicode          : WORD;
-    nDebugStringLength: WORD;
+    lpDebugStringData : PSTR;
+    fUnicode          : UINT16;
+    nDebugStringLength: UINT16;
   END;
 
   LPRIP_INFO = UNTRACED REF RIP_INFO;
   RIP_INFO = RECORD
-    dwError: DWORD;
-    dwType : DWORD;
+    dwError: UINT32;
+    dwType : UINT32;
   END;
 
 CONST
@@ -622,9 +613,9 @@ CONST
 TYPE
   LPDEBUG_EVENT = UNTRACED REF DEBUG_EVENT;
   DEBUG_EVENT = RECORD
-    dwDebugEventCode: DWORD;
-    dwProcessId     : DWORD;
-    dwThreadId      : DWORD;
+    dwDebugEventCode: UINT32;
+    dwProcessId     : UINT32;
+    dwThreadId      : UINT32;
     u               : ARRAY [0..MAX_DEBUG_EVENT-1] OF CHAR;
     (*!!!
       union {
@@ -643,73 +634,73 @@ TYPE
 
   LPDEBUG_EXCEPTION = UNTRACED REF DEBUG_EXCEPTION;
   DEBUG_EXCEPTION = RECORD
-    dwDebugEventCode: DWORD;
-    dwProcessId     : DWORD;
-    dwThreadId      : DWORD;
+    dwDebugEventCode: UINT32;
+    dwProcessId     : UINT32;
+    dwThreadId      : UINT32;
     Exception       : EXCEPTION_DEBUG_INFO;
   END;
 
   LPDEBUG_CREATE_THREAD = UNTRACED REF DEBUG_CREATE_THREAD;
   DEBUG_CREATE_THREAD = RECORD
-    dwDebugEventCode: DWORD;
-    dwProcessId     : DWORD;
-    dwThreadId      : DWORD;
+    dwDebugEventCode: UINT32;
+    dwProcessId     : UINT32;
+    dwThreadId      : UINT32;
     CreateThread    : CREATE_THREAD_DEBUG_INFO;
   END;
 
   LPDEBUG_CREATE_PROCESS = UNTRACED REF DEBUG_CREATE_PROCESS;
   DEBUG_CREATE_PROCESS = RECORD
-    dwDebugEventCode : DWORD;
-    dwProcessId      : DWORD;
-    dwThreadId       : DWORD;
+    dwDebugEventCode : UINT32;
+    dwProcessId      : UINT32;
+    dwThreadId       : UINT32;
     CreateProcessInfo: CREATE_PROCESS_DEBUG_INFO;
   END;
 
   LPDEBUG_EXIT_THREAD = UNTRACED REF DEBUG_EXIT_THREAD;
   DEBUG_EXIT_THREAD = RECORD
-    dwDebugEventCode: DWORD;
-    dwProcessId     : DWORD;
-    dwThreadId      : DWORD;
+    dwDebugEventCode: UINT32;
+    dwProcessId     : UINT32;
+    dwThreadId      : UINT32;
     ExitThread      : EXIT_THREAD_DEBUG_INFO;
   END;
 
   LPDEBUG_EXIT_PROCESS = UNTRACED REF DEBUG_EXIT_PROCESS;
   DEBUG_EXIT_PROCESS = RECORD
-    dwDebugEventCode: DWORD;
-    dwProcessId     : DWORD;
-    dwThreadId      : DWORD;
+    dwDebugEventCode: UINT32;
+    dwProcessId     : UINT32;
+    dwThreadId      : UINT32;
     ExitProcess     : EXIT_PROCESS_DEBUG_INFO;
   END;
 
   LPDEBUG_LOAD_DLL = UNTRACED REF DEBUG_LOAD_DLL;
   DEBUG_LOAD_DLL = RECORD
-    dwDebugEventCode: DWORD;
-    dwProcessId     : DWORD;
-    dwThreadId      : DWORD;
+    dwDebugEventCode: UINT32;
+    dwProcessId     : UINT32;
+    dwThreadId      : UINT32;
     LoadDll         : LOAD_DLL_DEBUG_INFO;
   END;
 
   LPDEBUG_UNLOAD_DLL = UNTRACED REF DEBUG_UNLOAD_DLL;
   DEBUG_UNLOAD_DLL = RECORD
-    dwDebugEventCode: DWORD;
-    dwProcessId     : DWORD;
-    dwThreadId      : DWORD;
+    dwDebugEventCode: UINT32;
+    dwProcessId     : UINT32;
+    dwThreadId      : UINT32;
     UnloadDll       : UNLOAD_DLL_DEBUG_INFO;
   END;
 
   LPDEBUG_OUTPUT_STRING = UNTRACED REF DEBUG_OUTPUT_STRING;
   DEBUG_OUTPUT_STRING = RECORD
-    dwDebugEventCode: DWORD;
-    dwProcessId     : DWORD;
-    dwThreadId      : DWORD;
+    dwDebugEventCode: UINT32;
+    dwProcessId     : UINT32;
+    dwThreadId      : UINT32;
     DebugString     : OUTPUT_DEBUG_STRING_INFO;
   END;
 
   LPDEBUG_RIP = UNTRACED REF DEBUG_RIP;
   DEBUG_RIP = RECORD
-    dwDebugEventCode: DWORD;
-    dwProcessId     : DWORD;
-    dwThreadId      : DWORD;
+    dwDebugEventCode: UINT32;
+    dwProcessId     : UINT32;
+    dwThreadId      : UINT32;
     RipInfo         : RIP_INFO;
   END;
 
@@ -727,7 +718,6 @@ CONST
 
 (*???  #define GetFreeSpace(w) (16_100000L) *)
 
-CONST
   FILE_TYPE_UNKNOWN = 16_0000;
   FILE_TYPE_DISK    = 16_0001;
   FILE_TYPE_CHAR    = 16_0002;
@@ -735,9 +725,9 @@ CONST
   FILE_TYPE_REMOTE  = 16_8000;
 
 
-  STD_INPUT_HANDLE : DWORD = -10;
-  STD_OUTPUT_HANDLE: DWORD = -11;
-  STD_ERROR_HANDLE : DWORD = -12;
+  STD_INPUT_HANDLE : UINT32 = -10;
+  STD_OUTPUT_HANDLE: UINT32 = -11;
+  STD_ERROR_HANDLE : UINT32 = -12;
 
   NOPARITY    = 0;
   ODDPARITY   = 1;
@@ -754,7 +744,6 @@ CONST
 
 (* Basud rates at which the communication device operates *)
 
-CONST
   CBR_110    = 110;
   CBR_300    = 300;
   CBR_600    = 600;
@@ -771,7 +760,6 @@ CONST
 
 (* Error Flags *)
 
-CONST
   CE_RXOVER   = 16_0001;        (* Receive Queue overflow *)
   CE_OVERRUN  = 16_0002;        (* Receive Overrun Error *)
   CE_RXPARITY = 16_0004;        (* Receive Parity Error *)
@@ -795,7 +783,6 @@ CONST
 
 (* Events *)
 
-CONST
   EV_RXCHAR   = 16_0001;        (* Any Character received *)
   EV_RXFLAG   = 16_0002;        (* Received certain character *)
   EV_TXEMPTY  = 16_0004;        (* Transmitt Queue Empty *)
@@ -812,7 +799,6 @@ CONST
 
 (* Escape Functions *)
 
-CONST
   SETXOFF  = 1;                 (* Simulate XOFF received *)
   SETXON   = 2;                 (* Simulate XON received *)
   SETRTS   = 3;                 (* Set RTS high *)
@@ -824,7 +810,6 @@ CONST
   CLRBREAK = 9;                 (* Clear the device break line. *)
 
 (* PURGE function flags. *)
-CONST
   PURGE_TXABORT = 16_0001;      (* Kill the pending/current writes to the
                                    comm port. *)
   PURGE_RXABORT = 16_0002;      (* Kill the pending/current reads to the
@@ -835,29 +820,25 @@ CONST
   LPTx = 16_80;                 (* Set if ID is for LPT device *)
 
 (* Modem Status Flags *)
-CONST
-  MS_CTS_ON : DWORD = 16_0010;
-  MS_DSR_ON : DWORD = 16_0020;
-  MS_RING_ON: DWORD = 16_0040;
-  MS_RLSD_ON: DWORD = 16_0080;
+  MS_CTS_ON : UINT32 = 16_0010;
+  MS_DSR_ON : UINT32 = 16_0020;
+  MS_RING_ON: UINT32 = 16_0040;
+  MS_RLSD_ON: UINT32 = 16_0080;
 
 (* WaitSoundState() Constants *)
 
-CONST
   S_QUEUEEMPTY   = 0;
   S_THRESHOLD    = 1;
   S_ALLTHRESHOLD = 2;
 
 (* Accent Modes *)
 
-CONST
   S_NORMAL   = 0;
   S_LEGATO   = 1;
   S_STACCATO = 2;
 
 (* SetSoundNoise() Sources *)
 
-CONST
   S_PERIOD512 = 0;              (* Freq = N/512 high pitch, less coarse
                                    hiss *)
   S_PERIOD1024 = 1;             (* Freq = N/1024 *)
@@ -923,74 +904,74 @@ CONST
 
 TYPE
   POFSTRUCT = UNTRACED REF OFSTRUCT;
-  LPOFSTRUCT = UNTRACED REF OFSTRUCT;
+  LPOFSTRUCT = POFSTRUCT; (* compat -- actually this whole OpenFile thing is for compat *)
   OFSTRUCT = RECORD
-    cBytes    : BYTE;
-    fFixedDisk: BYTE;
-    nErrCode  : WORD;
-    Reserved1 : WORD;
-    Reserved2 : WORD;
-    szPathName: ARRAY [0 .. OFS_MAXPATHNAME - 1] OF BYTE;
+    cBytes    : UINT8;
+    fFixedDisk: UINT8;
+    nErrCode  : UINT16;
+    Reserved1 : UINT16;
+    Reserved2 : UINT16;
+    szPathName: ARRAY [0 .. OFS_MAXPATHNAME - 1] OF UINT8;
   END;
 
 <*EXTERNAL InterlockedIncrement:WINAPI*>
-PROCEDURE InterlockedIncrement (lpAddend: LPLONG): LONG;
+PROCEDURE InterlockedIncrement (lpAddend: PINT32): INT32;
 
 <*EXTERNAL InterlockedDecrement:WINAPI*>
-PROCEDURE InterlockedDecrement (lpAddend: LPLONG): LONG;
+PROCEDURE InterlockedDecrement (lpAddend: PINT32): INT32;
 
 <*EXTERNAL FreeResource:WINAPI*>
 PROCEDURE FreeResource (hResData: HGLOBAL): BOOL;
 
 <*EXTERNAL LockResource:WINAPI*>
-PROCEDURE LockResource (hResData: HGLOBAL): LPVOID;
+PROCEDURE LockResource (hResData: HGLOBAL): PVOID;
 
 (*???  #define UnlockResource(hResData) ((hResData), 0) *)
 
 CONST MAXINTATOM = 16_C000;
 
-(*???  #define MAKEINTATOM(i) (LPTSTR)((DWORD)((WORD)(i))) INVALID_ATOM =
+(*???  #define MAKEINTATOM(i) (PTSTR)((UINT32)((UINT16)(i))) INVALID_ATOM =
    ((ATOM)0); *)
 
 <*EXTERNAL WinMain:WINAPI*>
 PROCEDURE WinMain (hInstance    : HINSTANCE;
                    hPrevInstance: HINSTANCE;
-                   lpCmdLine    : LPSTR;
-                   nShowCmd     : int        ): int;
+                   lpCmdLine    : PSTR;
+                   nShowCmd     : INT32        ): INT32;
 
 <*EXTERNAL FreeLibrary:WINAPI*>
 PROCEDURE FreeLibrary (hLibModule: HMODULE): BOOL;
 
 <*EXTERNAL FreeLibraryAndExitThread:WINAPI*>
-PROCEDURE FreeLibraryAndExitThread (hLibModule: HMODULE;  dwExitCode: DWORD);
+PROCEDURE FreeLibraryAndExitThread (hLibModule: HMODULE;  dwExitCode: UINT32);
 
 <*EXTERNAL DisableThreadLibraryCalls:WINAPI*>
 PROCEDURE DisableThreadLibraryCalls (hLibModule: HMODULE): BOOL;
 
 <*EXTERNAL GetProcAddress:WINAPI*>
-PROCEDURE GetProcAddress (hModule: HINSTANCE; lpProcName: LPCSTR): FARPROC;
+PROCEDURE GetProcAddress (hModule: HINSTANCE; lpProcName: PCSTR): FARPROC;
 
 <*EXTERNAL GetVersion:WINAPI*>
-PROCEDURE GetVersion (): DWORD;
+PROCEDURE GetVersion (): UINT32;
 
 <*EXTERNAL GlobalAlloc:WINAPI*>
-PROCEDURE GlobalAlloc (uFlags: UINT; dwBytes: DWORD): HGLOBAL;
+PROCEDURE GlobalAlloc (uFlags: UINT32; dwBytes: SIZE_T): HGLOBAL;
 
 <*EXTERNAL GlobalReAlloc:WINAPI*>
-PROCEDURE GlobalReAlloc (hMem: HGLOBAL; dwBytes: DWORD; uFlags: UINT): HGLOBAL;
+PROCEDURE GlobalReAlloc (hMem: HGLOBAL; dwBytes: SIZE_T; uFlags: UINT32): HGLOBAL;
 
 <*EXTERNAL GlobalSize:WINAPI*>
-PROCEDURE GlobalSize (hMem: HGLOBAL): DWORD;
+PROCEDURE GlobalSize (hMem: HGLOBAL): UINT32;
 
 <*EXTERNAL GlobalFlags:WINAPI*>
-PROCEDURE GlobalFlags (hMem: HGLOBAL): UINT;
+PROCEDURE GlobalFlags (hMem: HGLOBAL): UINT32;
 
 <*EXTERNAL GlobalLock:WINAPI*>
-PROCEDURE GlobalLock (hMem: HGLOBAL): LPVOID;
+PROCEDURE GlobalLock (hMem: HGLOBAL): PVOID;
 
-(*!!!MWH My version win31 = DWORD WINAPI GlobalHandle(UINT) *)
+(*!!!MWH My version win31 = UINT32 WINAPI GlobalHandle(UINT32) *)
 <*EXTERNAL GlobalHandle:WINAPI*>
-PROCEDURE GlobalHandle (pMem: LPVOID): HGLOBAL;
+PROCEDURE GlobalHandle (pMem: PVOID): HGLOBAL;
 
 <*EXTERNAL GlobalUnlock:WINAPI*>
 PROCEDURE GlobalUnlock (hMem: HGLOBAL): BOOL;
@@ -999,7 +980,7 @@ PROCEDURE GlobalUnlock (hMem: HGLOBAL): BOOL;
 PROCEDURE GlobalFree (hMem: HGLOBAL): HGLOBAL;
 
 <*EXTERNAL GlobalCompact:WINAPI*>
-PROCEDURE GlobalCompact (dwMinFree: DWORD): UINT;
+PROCEDURE GlobalCompact (dwMinFree: UINT32): SIZE_T;
 
 <*EXTERNAL GlobalFix:WINAPI*>
 PROCEDURE GlobalFix (hMem: HGLOBAL);
@@ -1008,7 +989,7 @@ PROCEDURE GlobalFix (hMem: HGLOBAL);
 PROCEDURE GlobalUnfix (hMem: HGLOBAL);
 
 <*EXTERNAL GlobalWire:WINAPI*>
-PROCEDURE GlobalWire (hMem: HGLOBAL): LPVOID;
+PROCEDURE GlobalWire (hMem: HGLOBAL): PVOID;
 
 <*EXTERNAL GlobalUnWire:WINAPI*>
 PROCEDURE GlobalUnWire (hMem: HGLOBAL): BOOL;
@@ -1017,121 +998,121 @@ PROCEDURE GlobalUnWire (hMem: HGLOBAL): BOOL;
 PROCEDURE GlobalMemoryStatus (lpBuffer: LPMEMORYSTATUS);
 
 <*EXTERNAL LocalAlloc:WINAPI*>
-PROCEDURE LocalAlloc (uFlags: UINT; uBytes: UINT): HLOCAL;
+PROCEDURE LocalAlloc (uFlags: UINT32; uBytes: SIZE_T): HLOCAL;
 
 <*EXTERNAL LocalReAlloc:WINAPI*>
-PROCEDURE LocalReAlloc (hMem: HLOCAL; uBytes: UINT; uFlags: UINT): HLOCAL;
+PROCEDURE LocalReAlloc (hMem: HLOCAL; uBytes: SIZE_T; uFlags: UINT32): HLOCAL;
 
 <*EXTERNAL LocalLock:WINAPI*>
-PROCEDURE LocalLock (hMem: HLOCAL): LPVOID;
+PROCEDURE LocalLock (hMem: HLOCAL): PVOID;
 
 <*EXTERNAL LocalHandle:WINAPI*>
-PROCEDURE LocalHandle (pMem: LPVOID): HLOCAL;
+PROCEDURE LocalHandle (pMem: PVOID): HLOCAL;
 
 <*EXTERNAL LocalUnlock:WINAPI*>
 PROCEDURE LocalUnlock (hMem: HLOCAL): BOOL;
 
 <*EXTERNAL LocalSize:WINAPI*>
-PROCEDURE LocalSize (hMem: HLOCAL): UINT;
+PROCEDURE LocalSize (hMem: HLOCAL): UINT32;
 
 <*EXTERNAL LocalFlags:WINAPI*>
-PROCEDURE LocalFlags (hMem: HLOCAL): UINT;
+PROCEDURE LocalFlags (hMem: HLOCAL): UINT32;
 
 <*EXTERNAL LocalFree:WINAPI*>
 PROCEDURE LocalFree (hMem: HLOCAL): HLOCAL;
 
 <*EXTERNAL LocalShrink:WINAPI*>
-PROCEDURE LocalShrink (hMem: HLOCAL; cbNewSize: UINT): UINT;
+PROCEDURE LocalShrink (hMem: HLOCAL; cbNewSize: UINT32): UINT32;
 
 <*EXTERNAL LocalCompact:WINAPI*>
-PROCEDURE LocalCompact (uMinFree: UINT): UINT;
+PROCEDURE LocalCompact (uMinFree: UINT32): UINT32;
 
 <*EXTERNAL FlushInstructionCache:WINAPI*>
 PROCEDURE FlushInstructionCache (hProcess     : HANDLE;
-                                 lpBaseAddress: LPVOID;
-                                 dwSize       : DWORD   ): BOOL;
+                                 lpBaseAddress: PVOID;
+                                 dwSize       : SIZE_T  ): BOOL;
 
 <*EXTERNAL VirtualAlloc:WINAPI*>
-PROCEDURE VirtualAlloc (lpAddress       : LPVOID;
-                        dwSize          : DWORD;
-                        flAllocationType: DWORD;
-                        flProtect       : DWORD   ): LPVOID;
+PROCEDURE VirtualAlloc (lpAddress       : PVOID;
+                        dwSize          : SIZE_T;
+                        flAllocationType: UINT32;
+                        flProtect       : UINT32   ): PVOID;
 
 <*EXTERNAL VirtualFree:WINAPI*>
-PROCEDURE VirtualFree (lpAddress : LPVOID;
-                       dwSize    : DWORD;
-                       dwFreeType: DWORD   ): BOOL;
+PROCEDURE VirtualFree (lpAddress : PVOID;
+                       dwSize    : SIZE_T;
+                       dwFreeType: UINT32   ): BOOL;
 
 <*EXTERNAL VirtualProtect:WINAPI*>
-PROCEDURE VirtualProtect (lpAddress     : DWORD;  (** was LPVOID -- don't want GC check --- WKK **)
-                          dwSize        : DWORD;
-                          flNewProtect  : DWORD;
-                          lpflOldProtect: PDWORD  ): BOOL;
+PROCEDURE VirtualProtect (lpAddress     : SIZE_T;  (** was PVOID -- don't want GC check --- WKK **)
+                          dwSize        : SIZE_T;
+                          flNewProtect  : UINT32;
+                          lpflOldProtect: PUINT32  ): BOOL;
 
 <*EXTERNAL VirtualQuery:WINAPI*>
-PROCEDURE VirtualQuery (lpAddress: LPVOID;
+PROCEDURE VirtualQuery (lpAddress: PVOID;
                         lpBuffer : WinNT.PMEMORY_BASIC_INFORMATION;
-                        dwLength : DWORD                            ): DWORD;
+                        dwLength : SIZE_T                           ): SIZE_T;
 
 <*EXTERNAL VirtualProtectEx:WINAPI*>
 PROCEDURE VirtualProtectEx (hProcess      : HANDLE;
-                            lpAddress     : LPVOID;
-                            dwSize        : DWORD;
-                            flNewProtect  : DWORD;
-                            lpflOldProtect: PDWORD  ): BOOL;
+                            lpAddress     : PVOID;
+                            dwSize        : SIZE_T;
+                            flNewProtect  : UINT32;
+                            lpflOldProtect: PUINT32  ): BOOL;
 
 <*EXTERNAL VirtualQueryEx:WINAPI*>
 PROCEDURE VirtualQueryEx (hProcess : HANDLE;
-                          lpAddress: LPVOID;
+                          lpAddress: PVOID;
                           lpBuffer : WinNT.PMEMORY_BASIC_INFORMATION;
-                          dwLength : DWORD                            ): DWORD;
+                          dwLength : SIZE_T                           ): SIZE_T;
 
 <*EXTERNAL HeapCreate:WINAPI*>
-PROCEDURE HeapCreate (flOptions    : DWORD;
-                      dwInitialSize: DWORD;
-                      dwMaximumSize: DWORD  ): HANDLE;
+PROCEDURE HeapCreate (flOptions    : UINT32;
+                      dwInitialSize: SIZE_T;
+                      dwMaximumSize: SIZE_T  ): HANDLE;
 
 <*EXTERNAL HeapDestroy:WINAPI*>
 PROCEDURE HeapDestroy (hHeap: HANDLE): BOOL;
 
 <*EXTERNAL HeapAlloc:WINAPI*>
-PROCEDURE HeapAlloc (hHeap: HANDLE; dwFlags: DWORD;  dwBytes: DWORD): LPVOID;
+PROCEDURE HeapAlloc (hHeap: HANDLE; dwFlags: UINT32;  dwBytes: UINT32): PVOID;
 
 <*EXTERNAL HeapReAlloc:WINAPI*>
 PROCEDURE HeapReAlloc (hHeap   : HANDLE;
-                       dwFlags : DWORD;
-                       lpMem   : LPVOID;
-                       dwBytes : DWORD): LPVOID;
+                       dwFlags : UINT32;
+                       lpMem   : PVOID;
+                       dwBytes : UINT32): PVOID;
 
 <*EXTERNAL HeapFree:WINAPI*>
-PROCEDURE HeapFree (hHeap: HANDLE;  dwFlags: DWORD;  lpMem: LPSTR): BOOL;
+PROCEDURE HeapFree (hHeap: HANDLE;  dwFlags: UINT32;  lpMem: PSTR): BOOL;
 
 <*EXTERNAL HeapSize:WINAPI*>
-PROCEDURE HeapSize (hHeap: HANDLE;  dwFlags: DWORD;  lpMem: LPSTR): DWORD;
+PROCEDURE HeapSize (hHeap: HANDLE;  dwFlags: UINT32;  lpMem: PSTR): UINT32;
 
 <*EXTERNAL HeapValidate:WINAPI*>
-PROCEDURE HeapValidate (hHeap: HANDLE; dwFlags: DWORD; lpMem: LPCVOID): BOOL;
+PROCEDURE HeapValidate (hHeap: HANDLE; dwFlags: UINT32; lpMem: PCVOID): BOOL;
 
 <*EXTERNAL HeapCompact:WINAPI*>
-PROCEDURE HeapCompact (hHeap: HANDLE; dwFlags: DWORD): UINT;
+PROCEDURE HeapCompact (hHeap: HANDLE; dwFlags: UINT32): UINT32;
 
 <*EXTERNAL GetProcessHeap:WINAPI*>
 PROCEDURE GetProcessHeap (): HANDLE;
 
 <*EXTERNAL GetProcessHeaps:WINAPI*>
-PROCEDURE GetProcessHeaps (NumberOfHeaps: DWORD; ProcessHeaps: PHANDLE): DWORD;
+PROCEDURE GetProcessHeaps (NumberOfHeaps: UINT32; ProcessHeaps: PHANDLE): UINT32;
 
 TYPE
   union_Block = RECORD
     hMem       : HANDLE;
-    dwReserved : ARRAY [0..2] OF DWORD;
+    dwReserved : ARRAY [0..2] OF UINT32;
   END;
 
   union_Region = RECORD
-    dwCommittedSize   : DWORD;
-    dwUnCommittedSize : DWORD;
-    lpFirstBlock      : LPVOID;
-    lpLastBlock       : LPVOID;
+    dwCommittedSize   : UINT32;
+    dwUnCommittedSize : UINT32;
+    lpFirstBlock      : PVOID;
+    lpLastBlock       : PVOID;
   END;
 
 TYPE
@@ -1139,10 +1120,10 @@ TYPE
   LPPROCESS_HEAP_ENTRY_Block = UNTRACED REF PROCESS_HEAP_ENTRY_Block;
   PROCESS_HEAP_ENTRY_Block = RECORD
     lpData       : PVOID;
-    cbData       : DWORD;
-    cbOverhead   : BYTE;
-    iRegionIndex : BYTE;
-    wFlags       : WORD;
+    cbData       : UINT32;
+    cbOverhead   : UINT8;
+    iRegionIndex : UINT8;
+    wFlags       : UINT16;
     Block        : union_Block;
   END;
 
@@ -1151,10 +1132,10 @@ TYPE
   LPPROCESS_HEAP_ENTRY_Region = UNTRACED REF PROCESS_HEAP_ENTRY_Region;
   PROCESS_HEAP_ENTRY_Region = RECORD
     lpData       : PVOID;
-    cbData       : DWORD;
-    cbOverhead   : BYTE;
-    iRegionIndex : BYTE;
-    wFlags       : WORD;
+    cbData       : UINT32;
+    cbOverhead   : UINT8;
+    iRegionIndex : UINT8;
+    wFlags       : UINT16;
     Region       : union_Region;
   END;
 
@@ -1189,101 +1170,101 @@ CONST
   SCS_OS216_BINARY = 5;
 
 <*EXTERNAL GetBinaryTypeA:WINAPI*>
-PROCEDURE GetBinaryTypeA (lpApplicationName: LPCSTR; lpBinaryType: LPDWORD): BOOL;
+PROCEDURE GetBinaryTypeA (lpApplicationName: PCSTR; lpBinaryType: PUINT32): BOOL;
 
 <*EXTERNAL GetBinaryTypeW:WINAPI*>
-PROCEDURE GetBinaryTypeW (lpApplicationName: LPCWSTR; lpBinaryType: LPDWORD): BOOL;
+PROCEDURE GetBinaryTypeW (lpApplicationName: PCWSTR; lpBinaryType: PUINT32): BOOL;
 
 CONST GetBinaryType = GetBinaryTypeA;
 
 <*EXTERNAL GetShortPathNameA:WINAPI*>
-PROCEDURE GetShortPathNameA (lpszLongPath  : LPCSTR;
-                             lpszShortPath : LPSTR;
-                             cchBuffer     : DWORD): DWORD;
+PROCEDURE GetShortPathNameA (lpszLongPath  : PCSTR;
+                             lpszShortPath : PSTR;
+                             cchBuffer     : UINT32): UINT32;
 
 <*EXTERNAL GetShortPathNameW:WINAPI*>
-PROCEDURE GetShortPathNameW (lpszLongPath  : LPCWSTR;
-                             lpszShortPath : LPWSTR;
-                             cchBuffer     : DWORD): DWORD;
+PROCEDURE GetShortPathNameW (lpszLongPath  : PCWSTR;
+                             lpszShortPath : PWSTR;
+                             cchBuffer     : UINT32): UINT32;
 
 CONST GetShortPathName = GetShortPathNameA;
 
 <*EXTERNAL GetProcessAffinityMask:WINAPI*>
 PROCEDURE GetProcessAffinityMask (hProcess              : HANDLE;
-                                  lpProcessAffinityMask : LPDWORD;
-                                  lpSystemAffinityMask  : LPDWORD): BOOL;
+                                  lpProcessAffinityMask : PUINT32;
+                                  lpSystemAffinityMask  : PUINT32): BOOL;
 
 <*EXTERNAL GetProcessTimes:WINAPI*>
 PROCEDURE GetProcessTimes (hProcess       : HANDLE;
-                           lpCreationTime : LPFILETIME;
-                           lpExitTime     : LPFILETIME;
-                           lpKernelTime   : LPFILETIME;
-                           lpUserTime     : LPFILETIME ): BOOL;
+                           lpCreationTime : PFILETIME;
+                           lpExitTime     : PFILETIME;
+                           lpKernelTime   : PFILETIME;
+                           lpUserTime     : PFILETIME ): BOOL;
 
 <*EXTERNAL GetProcessWorkingSetSize:WINAPI*>
 PROCEDURE GetProcessWorkingSetSize (hProcess                : HANDLE;
-                                    lpMinimumWorkingSetSize : LPDWORD;
-                                    lpMaximumWorkingSetSize : LPDWORD ): BOOL;
+                                    lpMinimumWorkingSetSize : PSIZE_T;
+                                    lpMaximumWorkingSetSize : PSIZE_T ): BOOL;
 
 <*EXTERNAL SetProcessWorkingSetSize:WINAPI*>
 PROCEDURE SetProcessWorkingSetSize (hProcess                : HANDLE;
-                                    dwMinimumWorkingSetSize : DWORD;
-                                    dwMaximumWorkingSetSize : DWORD ): BOOL;
+                                    dwMinimumWorkingSetSize : PSIZE_T;
+                                    dwMaximumWorkingSetSize : PSIZE_T ): BOOL;
 
 <*EXTERNAL OpenProcess:WINAPI*>
-PROCEDURE OpenProcess (dwDesiredAccess: DWORD;
+PROCEDURE OpenProcess (dwDesiredAccess: UINT32;
                          bInheritHandle : BOOL;
-                         dwProcessId    : DWORD  ): HANDLE;
+                         dwProcessId    : UINT32  ): HANDLE;
 
 <*EXTERNAL GetCurrentProcess:WINAPI*>
 PROCEDURE GetCurrentProcess (): HANDLE;
 
 <*EXTERNAL GetCurrentProcessId:WINAPI*>
-PROCEDURE GetCurrentProcessId (): DWORD;
+PROCEDURE GetCurrentProcessId (): UINT32;
 
 <*EXTERNAL ExitProcess:WINAPI*>
-PROCEDURE ExitProcess (uExitCode: UINT);
+PROCEDURE ExitProcess (uExitCode: UINT32);
 
 <*EXTERNAL TerminateProcess:WINAPI*>
-PROCEDURE TerminateProcess (hProcess: HANDLE; uExitCode: UINT): BOOL;
+PROCEDURE TerminateProcess (hProcess: HANDLE; uExitCode: UINT32): BOOL;
 
 <*EXTERNAL GetExitCodeProcess:WINAPI*>
-PROCEDURE GetExitCodeProcess (hProcess: HANDLE; lpExitCode: LPDWORD): BOOL;
+PROCEDURE GetExitCodeProcess (hProcess: HANDLE; lpExitCode: PUINT32): BOOL;
 
 
 <*EXTERNAL FatalExit:WINAPI*>
-PROCEDURE FatalExit (ExitCode: int);
+PROCEDURE FatalExit (ExitCode: INT32);
 
 <*EXTERNAL GetEnvironmentStringsA:WINAPI*>
-PROCEDURE GetEnvironmentStringsA (): LPSTR;
+PROCEDURE GetEnvironmentStringsA (): PSTR;
 
 <*EXTERNAL GetEnvironmentStringsW:WINAPI*>
-PROCEDURE GetEnvironmentStringsW (): LPWSTR;
+PROCEDURE GetEnvironmentStringsW (): PWSTR;
 
 CONST GetEnvironmentStrings = GetEnvironmentStringsA;
 
 <*EXTERNAL FreeEnvironmentStringsA:WINAPI*>
-PROCEDURE FreeEnvironmentStringsA (lpStr: LPSTR): BOOL;
+PROCEDURE FreeEnvironmentStringsA (lpStr: PSTR): BOOL;
 
 <*EXTERNAL FreeEnvironmentStringsW:WINAPI*>
-PROCEDURE FreeEnvironmentStringsW (lpStr: LPWSTR): BOOL;
+PROCEDURE FreeEnvironmentStringsW (lpStr: PWSTR): BOOL;
 
 CONST FreeEnvironmentStrings = FreeEnvironmentStringsA;
 
 <*EXTERNAL RaiseException:WINAPI*>
-PROCEDURE RaiseException (dwExceptionCode   : DWORD;
-                          dwExceptionFlags  : DWORD;
-                          nNumberOfArguments: DWORD;
-                          lpArguments       : LPDWORD);
+PROCEDURE RaiseException (dwExceptionCode   : UINT32;
+                          dwExceptionFlags  : UINT32;
+                          nNumberOfArguments: UINT32;
+                          lpArguments       : PUINT32);
 
 <*EXTERNAL UnhandledExceptionFilter:WINAPI*>
 PROCEDURE UnhandledExceptionFilter (ExceptionInfo: WinNT.PEXCEPTION_POINTERS
-                                     ): LONG;
+                                     ): INT32;
 
 TYPE
   LPTOP_LEVEL_EXCEPTION_FILTER = PTOP_LEVEL_EXCEPTION_FILTER;
   PTOP_LEVEL_EXCEPTION_FILTER
-    = <*WINAPI*> PROCEDURE (ExceptionInfo: WinNT.PEXCEPTION_POINTERS): LONG;
+    = <*WINAPI*> PROCEDURE (ExceptionInfo: WinNT.PEXCEPTION_POINTERS): INT32;
 
 <*EXTERNAL SetUnhandledExceptionFilter:WINAPI*>
 PROCEDURE SetUnhandledExceptionFilter (
@@ -1291,64 +1272,64 @@ PROCEDURE SetUnhandledExceptionFilter (
                                       ): PTOP_LEVEL_EXCEPTION_FILTER;
 
 <*EXTERNAL CreateThread:WINAPI*>
-PROCEDURE CreateThread (lpThreadAttributes: LPSECURITY_ATTRIBUTES;
-                        dwStackSize       : DWORD;
-                        lpStartAddress    : LPTHREAD_START_ROUTINE;
-                        lpParameter       : LPVOID;
-                        dwCreationFlags   : DWORD;
-                        lpThreadId        : LPDWORD                 ): HANDLE;
+PROCEDURE CreateThread (lpThreadAttributes: PSECURITY_ATTRIBUTES;
+                        dwStackSize       : UINT32;
+                        lpStartAddress    : PTHREAD_START_ROUTINE;
+                        lpParameter       : PVOID;
+                        dwCreationFlags   : UINT32;
+                        lpThreadId        : PUINT32                 ): HANDLE;
 
 <*EXTERNAL CreateRemoteThread:WINAPI*>
 PROCEDURE CreateRemoteThread (hProcess          : HANDLE;
-                              lpThreadAttributes: LPSECURITY_ATTRIBUTES;
-                              dwStackSize       : DWORD;
-                              lpStartAddress : LPTHREAD_START_ROUTINE;
-                              lpParameter    : LPVOID;
-                              dwCreationFlags: DWORD;
-                              lpThreadId     : LPDWORD              ): HANDLE;
+                              lpThreadAttributes: PSECURITY_ATTRIBUTES;
+                              dwStackSize       : UINT32;
+                              lpStartAddress : PTHREAD_START_ROUTINE;
+                              lpParameter    : PVOID;
+                              dwCreationFlags: UINT32;
+                              lpThreadId     : PUINT32              ): HANDLE;
 
 <*EXTERNAL GetCurrentThread:WINAPI*>
 PROCEDURE GetCurrentThread (): HANDLE;
 
 <*EXTERNAL GetCurrentThreadId:WINAPI*>
-PROCEDURE GetCurrentThreadId (): DWORD;
+PROCEDURE GetCurrentThreadId (): UINT32;
 
 <*EXTERNAL SetThreadAffinityMask:WINAPI*>
 PROCEDURE SetThreadAffinityMask (hThread              : HANDLE;
-                                 dwThreadAffinityMask : DWORD): DWORD;
+                                 dwThreadAffinityMask : UINT32): UINT32;
 
 <*EXTERNAL SetThreadPriority:WINAPI*>
-PROCEDURE SetThreadPriority (hThread: HANDLE; nPriority: int): BOOL;
+PROCEDURE SetThreadPriority (hThread: HANDLE; nPriority: INT32): BOOL;
 
 <*EXTERNAL GetThreadPriority:WINAPI*>
-PROCEDURE GetThreadPriority (hThread: HANDLE): int;
+PROCEDURE GetThreadPriority (hThread: HANDLE): INT32;
 
 <*EXTERNAL GetThreadTimes:WINAPI*>
 PROCEDURE GetThreadTimes (hThread        : HANDLE;
-                          lpCreationTime : LPFILETIME;
-                          lpExitTime     : LPFILETIME;
-                          lpKernelTime   : LPFILETIME;
-                          lpUserTime     : LPFILETIME): BOOL;
+                          lpCreationTime : PFILETIME;
+                          lpExitTime     : PFILETIME;
+                          lpKernelTime   : PFILETIME;
+                          lpUserTime     : PFILETIME): BOOL;
 
 <*EXTERNAL ExitThread:WINAPI*>
-PROCEDURE ExitThread (dwExitCode: DWORD);
+PROCEDURE ExitThread (dwExitCode: UINT32);
 
 <*EXTERNAL TerminateThread:WINAPI*>
-PROCEDURE TerminateThread (hThread: HANDLE; dwExitCode: DWORD): BOOL;
+PROCEDURE TerminateThread (hThread: HANDLE; dwExitCode: UINT32): BOOL;
 
 <*EXTERNAL GetExitCodeThread:WINAPI*>
-PROCEDURE GetExitCodeThread (hThread: HANDLE; lpExitCode: LPDWORD): BOOL;
+PROCEDURE GetExitCodeThread (hThread: HANDLE; lpExitCode: PUINT32): BOOL;
 
 <*EXTERNAL GetThreadSelectorEntry:WINAPI*>
 PROCEDURE GetThreadSelectorEntry (hThread        : HANDLE;
-                                  dwSelector     : DWORD;
-                                  lpSelectorEntry: LPLDT_ENTRY): BOOL;
+                                  dwSelector     : UINT32;
+                                  lpSelectorEntry: PLDT_ENTRY): BOOL;
 
 <*EXTERNAL GetLastError:WINAPI*>
-PROCEDURE GetLastError (): DWORD;
+PROCEDURE GetLastError (): UINT32;
 
 <*EXTERNAL SetLastError:WINAPI*>
-PROCEDURE SetLastError (dwErrCode: DWORD);
+PROCEDURE SetLastError (dwErrCode: UINT32);
 
 (* SetLastErrorEx() types. *)
 CONST
@@ -1357,32 +1338,32 @@ CONST
   SLE_WARNING    = 16_00000003;
 
 <*EXTERNAL SetLastErrorEx:WINAPI*>
-PROCEDURE SetLastErrorEx (dwErrCode: DWORD; dwType: DWORD);
+PROCEDURE SetLastErrorEx (dwErrCode: UINT32; dwType: UINT32);
 
 <*EXTERNAL GetOverlappedResult:WINAPI*>
 PROCEDURE GetOverlappedResult (hFile                     : HANDLE;
-                               lpOverlapped              : LPOVERLAPPED;
-                               lpNumberOfBytesTransferred: LPDWORD;
+                               lpOverlapped              : POVERLAPPED;
+                               lpNumberOfBytesTransferred: PUINT32;
                                bWait                     : BOOL        ): BOOL;
 
 <*EXTERNAL CreateIoCompletionPort:WINAPI*>
 PROCEDURE CreateIoCompletionPort (FileHandle               : HANDLE;
                                   ExistingCompletionPort   : HANDLE;
-                                  CompletionKey            : DWORD;
-                                  NumberOfConcurrentThreads: DWORD  ): HANDLE;
+                                  CompletionKey            : SIZE_T;
+                                  NumberOfConcurrentThreads: UINT32  ): HANDLE;
 
 <*EXTERNAL GetQueuedCompletionStatus:WINAPI*>
 PROCEDURE GetQueuedCompletionStatus (CompletionPort    : HANDLE;
-                                     lpNumberOfBytesTransferred : LPDWORD;
-                                     lpCompletionKey   : LPDWORD;
-                                     lpOverlapped      : UNTRACED REF LPOVERLAPPED;
-                                     dwMilliseconds    : DWORD ): BOOL;
+                                     lpNumberOfBytesTransferred : PUINT32;
+                                     lpCompletionKey   : PSIZE_T;
+                                     lpOverlapped      : UNTRACED REF POVERLAPPED;
+                                     dwMilliseconds    : UINT32 ): BOOL;
 
 <*EXTERNAL PostQueuedCompletionStatus:WINAPI*>
 PROCEDURE PostQueuedCompletionStatus (CompletionPort            : HANDLE;
-                                      dwNumberOfBytesTransferred: DWORD;
-                                      dwCompletionKey           : DWORD;
-                                      lpOverlapped              : LPOVERLAPPED): BOOL;
+                                      dwNumberOfBytesTransferred: UINT32;
+                                      dwCompletionKey           : SIZE_T;
+                                      lpOverlapped              : POVERLAPPED): BOOL;
 
 CONST
   SEM_FAILCRITICALERRORS     = 16_0001;
@@ -1391,25 +1372,25 @@ CONST
   SEM_NOOPENFILEERRORBOX     = 16_8000;
 
 <*EXTERNAL SetDebugErrorLevel:WINAPI*>
-PROCEDURE SetDebugErrorLevel (dwLevel: DWORD);
+PROCEDURE SetDebugErrorLevel (dwLevel: UINT32);
 
 <*EXTERNAL SetErrorMode:WINAPI*>
-PROCEDURE SetErrorMode (uMode: UINT): UINT;
+PROCEDURE SetErrorMode (uMode: UINT32): UINT32;
 
 
 <*EXTERNAL ReadProcessMemory:WINAPI*>
 PROCEDURE ReadProcessMemory (hProcess           : HANDLE;
-                             lpBaseAddress      : LPVOID;
-                             lpBuffer           : LPVOID;
-                             nSize              : DWORD;
-                             lpNumberOfBytesRead: LPDWORD ): BOOL;
+                             lpBaseAddress      : PCVOID;
+                             lpBuffer           : PVOID;
+                             nSize              : SIZE_T;
+                             lpNumberOfBytesRead: PSIZE_T ): BOOL;
 
 <*EXTERNAL WriteProcessMemory:WINAPI*>
 PROCEDURE WriteProcessMemory (hProcess              : HANDLE;
-                              lpBaseAddress         : LPVOID;
-                              lpBuffer              : LPVOID;
-                              nSize                 : DWORD;
-                              lpNumberOfBytesWritten: LPDWORD ): BOOL;
+                              lpBaseAddress         : PVOID;
+                              lpBuffer              : PCVOID;
+                              nSize                 : SIZE_T;
+                              lpNumberOfBytesWritten: PSIZE_T ): BOOL;
 
 <*EXTERNAL GetThreadContext:WINAPI*>
 PROCEDURE GetThreadContext (hThread: HANDLE; lpContext: LPCONTEXT): BOOL;
@@ -1418,10 +1399,10 @@ PROCEDURE GetThreadContext (hThread: HANDLE; lpContext: LPCONTEXT): BOOL;
 PROCEDURE SetThreadContext (hThread: HANDLE; lpContext: LPCONTEXT): BOOL;
 
 <*EXTERNAL SuspendThread:WINAPI*>
-PROCEDURE SuspendThread (hThread: HANDLE): DWORD;
+PROCEDURE SuspendThread (hThread: HANDLE): UINT32;
 
 <*EXTERNAL ResumeThread:WINAPI*>
-PROCEDURE ResumeThread (hThread: HANDLE): DWORD;
+PROCEDURE ResumeThread (hThread: HANDLE): UINT32;
 
 <*EXTERNAL IsDebuggerPresent:WINAPI*>
 PROCEDURE IsDebuggerPresent (): BOOL;
@@ -1431,73 +1412,73 @@ PROCEDURE DebugBreak ();
 
 <*EXTERNAL WaitForDebugEvent:WINAPI*>
 PROCEDURE WaitForDebugEvent (lpDebugEvent  : LPDEBUG_EVENT;
-                             dwMilliseconds: DWORD          ): BOOL;
+                             dwMilliseconds: UINT32          ): BOOL;
 
 <*EXTERNAL ContinueDebugEvent:WINAPI*>
-PROCEDURE ContinueDebugEvent (dwProcessId     : DWORD;
-                              dwThreadId      : DWORD;
-                              dwContinueStatus: DWORD  ): BOOL;
+PROCEDURE ContinueDebugEvent (dwProcessId     : UINT32;
+                              dwThreadId      : UINT32;
+                              dwContinueStatus: UINT32  ): BOOL;
 
 <*EXTERNAL DebugActiveProcess:WINAPI*>
-PROCEDURE DebugActiveProcess (dwProcessId: DWORD): BOOL;
+PROCEDURE DebugActiveProcess (dwProcessId: UINT32): BOOL;
 
 <*EXTERNAL DebugSnapShotProcessHeaps:WINAPI*>
-PROCEDURE DebugSnapShotProcessHeaps (dwProcessId: DWORD): HANDLE;
+PROCEDURE DebugSnapShotProcessHeaps (dwProcessId: UINT32): HANDLE;
 
 TYPE
   PDEBUG_HEAP_BACKTRACE = UNTRACED REF DEBUG_HEAP_BACKTRACE;
   DEBUG_HEAP_BACKTRACE = RECORD
-    Depth          : DWORD;
-    ReturnAddresses: ARRAY [0 .. 0] OF DWORD;
+    Depth          : UINT32;
+    ReturnAddresses: ARRAY [0 .. 0] OF UINT32;
   END;
 
   PDEBUG_HEAP_ALLOCATOR = UNTRACED REF DEBUG_HEAP_ALLOCATOR;
   DEBUG_HEAP_ALLOCATOR = RECORD
-    TotalBytesAllocated: DWORD;
-    OffsetToBackTrace  : DWORD;
+    TotalBytesAllocated: UINT32;
+    OffsetToBackTrace  : UINT32;
   END;
 
   PDEBUG_HEAP_ENTRY = UNTRACED REF DEBUG_HEAP_ENTRY;
   DEBUG_HEAP_ENTRY = RECORD
-    Address  : DWORD;
-    Size     : USHORT;
-    Allocator: USHORT;
+    Address  : UINT32;
+    Size     : UINT16;
+    Allocator: UINT16;
   END;
 
 CONST
-  DEBUG_HEAP_ENTRY_FREE (*!!!:USHORT*) = -1;
+  DEBUG_HEAP_ENTRY_FREE (*!!!:UINT16*) = -1;
 
 TYPE
   PDEBUG_HEAP_INFO = UNTRACED REF DEBUG_HEAP_INFO;
   DEBUG_HEAP_INFO = RECORD
-    Creator                : USHORT;
-    HeaderSizeLog2         : USHORT;
-    ReservedPages          : USHORT;
-    CommittedPages         : USHORT;
-    AllocatorReservedPages : USHORT;
-    AllocatorCommittedPages: USHORT;
-    NumberOfEntries        : DWORD;
+    Creator                : UINT16;
+    HeaderSizeLog2         : UINT16;
+    ReservedPages          : UINT16;
+    CommittedPages         : UINT16;
+    AllocatorReservedPages : UINT16;
+    AllocatorCommittedPages: UINT16;
+    NumberOfEntries        : UINT32;
     Entries: ARRAY [0 .. 0] OF DEBUG_HEAP_ENTRY;
   END;
 
   PDEBUG_HEAP_DUMP = UNTRACED REF DEBUG_HEAP_DUMP;
   DEBUG_HEAP_DUMP = RECORD
-    OffsetToAllocatorTable: DWORD;
-    NumberOfHeaps         : DWORD;
+    OffsetToAllocatorTable: UINT32;
+    NumberOfHeaps         : UINT32;
     HeapInfo: ARRAY [0 .. 0] OF DEBUG_HEAP_INFO;
   END;
 
 <*EXTERNAL InitializeCriticalSection:WINAPI*>
-PROCEDURE InitializeCriticalSection (lpCriticalSection: LPCRITICAL_SECTION);
+PROCEDURE InitializeCriticalSection (lpCriticalSection: PCRITICAL_SECTION);
 
 <*EXTERNAL EnterCriticalSection:WINAPI*>
-PROCEDURE EnterCriticalSection (lpCriticalSection: LPCRITICAL_SECTION);
+PROCEDURE EnterCriticalSection (lpCriticalSection: PCRITICAL_SECTION);
 
 <*EXTERNAL LeaveCriticalSection:WINAPI*>
-PROCEDURE LeaveCriticalSection (lpCriticalSection: LPCRITICAL_SECTION);
+PROCEDURE LeaveCriticalSection (lpCriticalSection: PCRITICAL_SECTION);
 
 <*EXTERNAL DeleteCriticalSection:WINAPI*>
-PROCEDURE DeleteCriticalSection (lpCriticalSection: LPCRITICAL_SECTION);
+PROCEDURE DeleteCriticalSection (lpCriticalSection: PCRITICAL_SECTION);
 
 <*EXTERNAL SetEvent:WINAPI*>
 PROCEDURE SetEvent (hEvent: HANDLE): BOOL;
@@ -1510,29 +1491,29 @@ PROCEDURE PulseEvent (hEvent: HANDLE): BOOL;
 
 <*EXTERNAL ReleaseSemaphore:WINAPI*>
 PROCEDURE ReleaseSemaphore (hSemaphore     : HANDLE;
-                            lReleaseCount  : LONG;
-                            lpPreviousCount: LPLONG  ): BOOL;
+                            lReleaseCount  : INT32;
+                            lpPreviousCount: PINT32  ): BOOL;
 
 <*EXTERNAL ReleaseMutex:WINAPI*>
 PROCEDURE ReleaseMutex (hMutex: HANDLE): BOOL;
 
 <*EXTERNAL WaitForSingleObject:WINAPI*>
-PROCEDURE WaitForSingleObject (hHandle: HANDLE; dwMilliseconds: DWORD): DWORD;
+PROCEDURE WaitForSingleObject (hHandle: HANDLE; dwMilliseconds: UINT32): UINT32;
 
 <*EXTERNAL WaitForMultipleObjects:WINAPI*>
-PROCEDURE WaitForMultipleObjects (nCount        : DWORD;
-                                  lpHandles     : LPHANDLE;
+PROCEDURE WaitForMultipleObjects (nCount        : UINT32;
+                                  lpHandles     : PHANDLE;
                                   bWaitAll      : BOOL;
-                                  dwMilliseconds: DWORD     ): DWORD;
+                                  dwMilliseconds: UINT32     ): UINT32;
 
 <*EXTERNAL Sleep:WINAPI*>
-PROCEDURE Sleep (dwMilliseconds: DWORD);
+PROCEDURE Sleep (dwMilliseconds: UINT32);
 
 <*EXTERNAL LoadResource:WINAPI*>
 PROCEDURE LoadResource (hModule: HINSTANCE; hResInfo: HRSRC): HRSRC;
 
 <*EXTERNAL SizeofResource:WINAPI*>
-PROCEDURE SizeofResource (hModule: HINSTANCE; hResInfo: HRSRC): DWORD;
+PROCEDURE SizeofResource (hModule: HINSTANCE; hResInfo: HRSRC): UINT32;
 
 
 <*EXTERNAL CloseProfileUserMapping:WINAPI*>
@@ -1546,38 +1527,38 @@ PROCEDURE OpenProfileUserMapping (): BOOLEAN;
 PROCEDURE GlobalDeleteAtom (nAtom: ATOM): ATOM;
 
 <*EXTERNAL InitAtomTable:WINAPI*>
-PROCEDURE InitAtomTable (nSize: DWORD): BOOL;
+PROCEDURE InitAtomTable (nSize: UINT32): BOOL;
 
 <*EXTERNAL DeleteAtom:WINAPI*>
 PROCEDURE DeleteAtom (nAtom: ATOM): ATOM;
 
 <*EXTERNAL SetHandleCount:WINAPI*>
-PROCEDURE SetHandleCount (uNumber: UINT): UINT;
+PROCEDURE SetHandleCount (uNumber: UINT32): UINT32;
 
 <*EXTERNAL GetLogicalDrives:WINAPI*>
-PROCEDURE GetLogicalDrives (): DWORD;
+PROCEDURE GetLogicalDrives (): UINT32;
 
 <*EXTERNAL LockFile:WINAPI*>
 PROCEDURE LockFile (hFile                   : HANDLE;
-                    dwFileOffsetLow         : DWORD;
-                    dwFileOffsetHigh        : DWORD;
-                    nNumberOfBytesToLockLow : DWORD;
-                    nNumberOfBytesToLockHigh: DWORD   ): BOOL;
+                    dwFileOffsetLow         : UINT32;
+                    dwFileOffsetHigh        : UINT32;
+                    nNumberOfBytesToLockLow : UINT32;
+                    nNumberOfBytesToLockHigh: UINT32   ): BOOL;
 
 <*EXTERNAL UnlockFile:WINAPI*>
 PROCEDURE UnlockFile (hFile                     : HANDLE;
-                      dwFileOffsetLow           : DWORD;
-                      dwFileOffsetHigh          : DWORD;
-                      nNumberOfBytesToUnlockLow : DWORD;
-                      nNumberOfBytesToUnlockHigh: DWORD   ): BOOL;
+                      dwFileOffsetLow           : UINT32;
+                      dwFileOffsetHigh          : UINT32;
+                      nNumberOfBytesToUnlockLow : UINT32;
+                      nNumberOfBytesToUnlockHigh: UINT32   ): BOOL;
 
 <*EXTERNAL LockFileEx:WINAPI*>
 PROCEDURE LockFileEx (hFile                   : HANDLE;
-                      dwFlags                 : DWORD;
-                      dwReserved              : DWORD;
-                      nNumberOfBytesToLockLow : DWORD;
-                      nNumberOfBytesToLockHigh: DWORD;
-                      lpOverlapped            : LPOVERLAPPED): BOOL;
+                      dwFlags                 : UINT32;
+                      dwReserved              : UINT32;
+                      nNumberOfBytesToLockLow : UINT32;
+                      nNumberOfBytesToLockHigh: UINT32;
+                      lpOverlapped            : POVERLAPPED): BOOL;
 
 CONST
   LOCKFILE_FAIL_IMMEDIATELY = 16_00000001;
@@ -1585,26 +1566,26 @@ CONST
 
 <*EXTERNAL UnlockFileEx:WINAPI*>
 PROCEDURE UnlockFileEx (hFile                     : HANDLE;
-                        dwReserved                : DWORD;
-                        nNumberOfBytesToUnlockLow : DWORD;
-                        nNumberOfBytesToUnlockHigh: DWORD;
-                        lpOverlapped              : LPOVERLAPPED): BOOL;
+                        dwReserved                : UINT32;
+                        nNumberOfBytesToUnlockLow : UINT32;
+                        nNumberOfBytesToUnlockHigh: UINT32;
+                        lpOverlapped              : POVERLAPPED): BOOL;
 
 
 TYPE
   PBY_HANDLE_FILE_INFORMATION = UNTRACED REF BY_HANDLE_FILE_INFORMATION;
   LPBY_HANDLE_FILE_INFORMATION = UNTRACED REF BY_HANDLE_FILE_INFORMATION;
   BY_HANDLE_FILE_INFORMATION = RECORD
-    dwFileAttributes    : DWORD;
+    dwFileAttributes    : UINT32;
     ftCreationTime      : FILETIME;
     ftLastAccessTime    : FILETIME;
     ftLastWriteTime     : FILETIME;
-    dwVolumeSerialNumber: DWORD;
-    nFileSizeHigh       : DWORD;
-    nFileSizeLow        : DWORD;
-    nNumberOfLinks      : DWORD;
-    nFileIndexHigh      : DWORD;
-    nFileIndexLow       : DWORD;
+    dwVolumeSerialNumber: UINT32;
+    nFileSizeHigh       : UINT32;
+    nFileSizeLow        : UINT32;
+    nNumberOfLinks      : UINT32;
+    nFileIndexHigh      : UINT32;
+    nFileIndexLow       : UINT32;
   END;
 
 <*EXTERNAL GetFileInformationByHandle:WINAPI*>
@@ -1612,67 +1593,67 @@ PROCEDURE GetFileInformationByHandle (hFile: HANDLE;
               lpFileInformation: LPBY_HANDLE_FILE_INFORMATION): BOOL;
 
 <*EXTERNAL GetFileType:WINAPI*>
-PROCEDURE GetFileType (hFile: HANDLE): DWORD;
+PROCEDURE GetFileType (hFile: HANDLE): UINT32;
 
 <*EXTERNAL GetFileSize:WINAPI*>
-PROCEDURE GetFileSize (hFile: HANDLE; lpFileSizeHigh: LPDWORD): DWORD;
+PROCEDURE GetFileSize (hFile: HANDLE; lpFileSizeHigh: PUINT32): UINT32;
 
 <*EXTERNAL GetStdHandle:WINAPI*>
-PROCEDURE GetStdHandle (nStdHandle: DWORD): HANDLE;
+PROCEDURE GetStdHandle (nStdHandle: UINT32): HANDLE;
 
 <*EXTERNAL SetStdHandle:WINAPI*>
-PROCEDURE SetStdHandle (nStdHandle: DWORD; hHandle: HANDLE): BOOL;
+PROCEDURE SetStdHandle (nStdHandle: UINT32; hHandle: HANDLE): BOOL;
 
 <*EXTERNAL WriteFile:WINAPI*>
 PROCEDURE WriteFile (hFile                 : HANDLE;
-                     lpBuffer              : void_star;
-                     nNumberOfBytesToWrite : DWORD;
-                     lpNumberOfBytesWritten: LPDWORD;
-                     lpOverlapped          : LPOVERLAPPED): BOOL;
+                     lpBuffer              : PVOID;
+                     nNumberOfBytesToWrite : UINT32;
+                     lpNumberOfBytesWritten: PUINT32;
+                     lpOverlapped          : POVERLAPPED): BOOL;
 
 <*EXTERNAL ReadFile:WINAPI*>
 PROCEDURE ReadFile (hFile               : HANDLE;
-                    lpBuffer            : LPVOID;
-                    nNumberOfBytesToRead: DWORD;
-                    lpNumberOfBytesRead : LPDWORD;
-                    lpOverlapped        : LPOVERLAPPED): BOOL;
+                    lpBuffer            : PVOID;
+                    nNumberOfBytesToRead: UINT32;
+                    lpNumberOfBytesRead : PUINT32;
+                    lpOverlapped        : POVERLAPPED): BOOL;
 
 <*EXTERNAL FlushFileBuffers:WINAPI*>
 PROCEDURE FlushFileBuffers (hFile: HANDLE): BOOL;
 
 <*EXTERNAL DeviceIoControl:WINAPI*>
 PROCEDURE DeviceIoControl (hDevice        : HANDLE;
-                           dwIoControlCode: DWORD;
-                           lpInBuffer     : LPVOID;
-                           nInBufferSize  : DWORD;
-                           lpOutBuffer    : LPVOID;
-                           nOutBufferSize : DWORD;
-                           lpBytesReturned: LPDWORD;
-                           lpOverlapped   : LPOVERLAPPED): BOOL;
+                           dwIoControlCode: UINT32;
+                           lpInBuffer     : PVOID;
+                           nInBufferSize  : UINT32;
+                           lpOutBuffer    : PVOID;
+                           nOutBufferSize : UINT32;
+                           lpBytesReturned: PUINT32;
+                           lpOverlapped   : POVERLAPPED): BOOL;
 
 <*EXTERNAL SetEndOfFile:WINAPI*>
 PROCEDURE SetEndOfFile (hFile: HANDLE): BOOL;
 
 <*EXTERNAL SetFilePointer:WINAPI*>
 PROCEDURE SetFilePointer (hFile               : HANDLE;
-                          lDistanceToMove     : LONG;
-                          lpDistanceToMoveHigh: PLONG;
-                          dwMoveMethod        : DWORD   ): DWORD;
+                          lDistanceToMove     : INT32;
+                          lpDistanceToMoveHigh: PINT32;
+                          dwMoveMethod        : UINT32   ): UINT32;
 
 <*EXTERNAL FindClose:WINAPI*>
 PROCEDURE FindClose (hFindFile: HANDLE): BOOL;
 
 <*EXTERNAL GetFileTime:WINAPI*>
 PROCEDURE GetFileTime (hFile           : HANDLE;
-                       lpCreationTime  : LPFILETIME;
-                       lpLastAccessTime: LPFILETIME;
-                       lpLastWriteTime : LPFILETIME  ): BOOL;
+                       lpCreationTime  : PFILETIME;
+                       lpLastAccessTime: PFILETIME;
+                       lpLastWriteTime : PFILETIME  ): BOOL;
 
 <*EXTERNAL SetFileTime:WINAPI*>
 PROCEDURE SetFileTime (hFile           : HANDLE;
-                       lpCreationTime  : LPFILETIME;
-                       lpLastAccessTime: LPFILETIME;
-                       lpLastWriteTime : LPFILETIME  ): BOOL;
+                       lpCreationTime  : PFILETIME;
+                       lpLastAccessTime: PFILETIME;
+                       lpLastWriteTime : PFILETIME  ): BOOL;
 
 <*EXTERNAL CloseHandle:WINAPI*>
 PROCEDURE CloseHandle (hObject: HANDLE): BOOL;
@@ -1681,19 +1662,19 @@ PROCEDURE CloseHandle (hObject: HANDLE): BOOL;
 PROCEDURE DuplicateHandle (hSourceProcessHandle: HANDLE;
                            hSourceHandle       : HANDLE;
                            hTargetProcessHandle: HANDLE;
-                           lpTargetHandle      : LPHANDLE;
-                           dwDesiredAccess     : DWORD;
+                           lpTargetHandle      : PHANDLE;
+                           dwDesiredAccess     : UINT32;
                            bInheritHandle      : BOOL;
-                           dwOptions           : DWORD     ): BOOL;
+                           dwOptions           : UINT32     ): BOOL;
 
 <*EXTERNAL LoadModule:WINAPI*>
-PROCEDURE LoadModule (lpModuleName: LPCSTR; lpParameterBlock: LPVOID): DWORD;
+PROCEDURE LoadModule (lpModuleName: PCSTR; lpParameterBlock: PVOID): UINT32;
 
 <*EXTERNAL WinExec:WINAPI*>
-PROCEDURE WinExec (lpCmdLine: LPCSTR; uCmdShow: UINT): UINT;
+PROCEDURE WinExec (lpCmdLine: PCSTR; uCmdShow: UINT32): UINT32;
 
 (*???  Redefined later--sjrh <*EXTERNAL BuildCommDCB:WINAPI*>
-PROCEDURE BuildCommDCB( lpDef: LPSTR; lpDCB: LPDCB ):BOOL;
+PROCEDURE BuildCommDCB( lpDef: PSTR; lpDCB: PDCB ):BOOL;
 *)
 
 <*EXTERNAL ClearCommBreak:WINAPI*>
@@ -1701,99 +1682,99 @@ PROCEDURE ClearCommBreak (hFile: HANDLE): BOOL;
 
 <*EXTERNAL ClearCommError:WINAPI*>
 PROCEDURE ClearCommError (hFile   : HANDLE;
-                          lpErrors: LPDWORD;
-                          lpStat  : LPCOMSTAT): BOOL;
+                          lpErrors: PUINT32;
+                          lpStat  : PCOMSTAT): BOOL;
 
 <*EXTERNAL SetupComm:WINAPI*>
-PROCEDURE SetupComm (hFile: HANDLE; dwInQueue: DWORD; dwOutQueue: DWORD): BOOL;
+PROCEDURE SetupComm (hFile: HANDLE; dwInQueue: UINT32; dwOutQueue: UINT32): BOOL;
 
 <*EXTERNAL EscapeCommFunction:WINAPI*>
-PROCEDURE EscapeCommFunction (hFile: HANDLE; dwFunc: DWORD): BOOL;
+PROCEDURE EscapeCommFunction (hFile: HANDLE; dwFunc: UINT32): BOOL;
 
 <*EXTERNAL GetCommMask:WINAPI*>
-PROCEDURE GetCommMask (hFile: HANDLE; lpEvtMask: LPDWORD): BOOL;
+PROCEDURE GetCommMask (hFile: HANDLE; lpEvtMask: PUINT32): BOOL;
 
 <*EXTERNAL GetCommProperties:WINAPI*>
-PROCEDURE GetCommProperties (hFile: HANDLE; lpCommProp: LPCOMMPROP): BOOL;
+PROCEDURE GetCommProperties (hFile: HANDLE; lpCommProp: PCOMMPROP): BOOL;
 
 <*EXTERNAL GetCommModemStatus:WINAPI*>
-PROCEDURE GetCommModemStatus (hFile: HANDLE; lpModemStat: LPDWORD): BOOL;
+PROCEDURE GetCommModemStatus (hFile: HANDLE; lpModemStat: PUINT32): BOOL;
 
 <*EXTERNAL GetCommState:WINAPI*>
-PROCEDURE GetCommState (hFile: HANDLE; lpDCB: LPDCB): BOOL;
+PROCEDURE GetCommState (hFile: HANDLE; lpDCB: PDCB): BOOL;
 
 <*EXTERNAL GetCommTimeouts:WINAPI*>
-PROCEDURE GetCommTimeouts (hFile: HANDLE; lpCommTimeouts: LPCOMMTIMEOUTS):BOOL;
+PROCEDURE GetCommTimeouts (hFile: HANDLE; lpCommTimeouts: PCOMMTIMEOUTS):BOOL;
 
 <*EXTERNAL PurgeComm:WINAPI*>
-PROCEDURE PurgeComm (hFile: HANDLE; dwFlags: DWORD): BOOL;
+PROCEDURE PurgeComm (hFile: HANDLE; dwFlags: UINT32): BOOL;
 
 <*EXTERNAL SetCommBreak:WINAPI*>
 PROCEDURE SetCommBreak (hFile: HANDLE): BOOL;
 
 <*EXTERNAL SetCommMask:WINAPI*>
-PROCEDURE SetCommMask (hFile: HANDLE; dwEvtMask: DWORD): BOOL;
+PROCEDURE SetCommMask (hFile: HANDLE; dwEvtMask: UINT32): BOOL;
 
 <*EXTERNAL SetCommState:WINAPI*>
-PROCEDURE SetCommState (hFile: HANDLE; lpDCB: LPDCB): BOOL;
+PROCEDURE SetCommState (hFile: HANDLE; lpDCB: PDCB): BOOL;
 
 <*EXTERNAL SetCommTimeouts:WINAPI*>
-PROCEDURE SetCommTimeouts (hFile: HANDLE; lpCommTimeouts: LPCOMMTIMEOUTS):BOOL;
+PROCEDURE SetCommTimeouts (hFile: HANDLE; lpCommTimeouts: PCOMMTIMEOUTS):BOOL;
 
 <*EXTERNAL TransmitCommChar:WINAPI*>
 PROCEDURE TransmitCommChar (hFile: HANDLE; cChar: char): BOOL;
 
 <*EXTERNAL WaitCommEvent:WINAPI*>
 PROCEDURE WaitCommEvent (hFile       : HANDLE;
-                         lpEvtMask   : LPDWORD;
-                         lpOverlapped: LPOVERLAPPED): BOOL;
+                         lpEvtMask   : PUINT32;
+                         lpOverlapped: POVERLAPPED): BOOL;
 
 
 <*EXTERNAL SetTapePosition:WINAPI*>
 PROCEDURE SetTapePosition (hDevice         : HANDLE;
-                           dwPositionMethod: DWORD;
-                           dwPartition     : DWORD;
-                           dwOffsetLow     : DWORD;
-                           dwOffsetHigh    : DWORD;
-                           bImmediate      : BOOL): DWORD;
+                           dwPositionMethod: UINT32;
+                           dwPartition     : UINT32;
+                           dwOffsetLow     : UINT32;
+                           dwOffsetHigh    : UINT32;
+                           bImmediate      : BOOL): UINT32;
 
 <*EXTERNAL GetTapePosition:WINAPI*>
 PROCEDURE GetTapePosition (hDevice       : HANDLE;
-                           dwPositionType: DWORD;
-                           lpdwPartition : LPDWORD;
-                           lpdwOffsetLow : LPDWORD;
-                           lpdwOffsetHigh: LPDWORD  ): DWORD;
+                           dwPositionType: UINT32;
+                           lpdwPartition : PUINT32;
+                           lpdwOffsetLow : PUINT32;
+                           lpdwOffsetHigh: PUINT32  ): UINT32;
 
 <*EXTERNAL PrepareTape:WINAPI*>
 PROCEDURE PrepareTape (hDevice     : HANDLE;
-                       dwOperation : DWORD;
-                       bImmediate  : BOOL): DWORD;
+                       dwOperation : UINT32;
+                       bImmediate  : BOOL): UINT32;
 
 <*EXTERNAL EraseTape:WINAPI*>
 PROCEDURE EraseTape (hDevice     : HANDLE;
-                     dwEraseType : DWORD;
-                     bImmediate  : BOOL): DWORD;
+                     dwEraseType : UINT32;
+                     bImmediate  : BOOL): UINT32;
 
 <*EXTERNAL CreateTapePartition:WINAPI*>
 PROCEDURE CreateTapePartition (hDevice          : HANDLE;
-                               dwPartitionMethod: DWORD;
-                               dwCount          : DWORD;
-                               dwSize           : DWORD   ): DWORD;
+                               dwPartitionMethod: UINT32;
+                               dwCount          : UINT32;
+                               dwSize           : UINT32   ): UINT32;
 
 <*EXTERNAL WriteTapemark:WINAPI*>
 PROCEDURE WriteTapemark (hDevice        : HANDLE;
-                         dwTapemarkType : DWORD;
-                         dwTapemarkCount: DWORD;
-                         bImmediate     : BOOL): DWORD;
+                         dwTapemarkType : UINT32;
+                         dwTapemarkCount: UINT32;
+                         bImmediate     : BOOL): UINT32;
 
 <*EXTERNAL GetTapeStatus:WINAPI*>
-PROCEDURE GetTapeStatus (hDevice: HANDLE): DWORD;
+PROCEDURE GetTapeStatus (hDevice: HANDLE): UINT32;
 
 <*EXTERNAL GetTapeParameters:WINAPI*>
 PROCEDURE GetTapeParameters (hDevice          : HANDLE;
-                             dwOperation      : DWORD;
-                             lpdwSize         : LPDWORD;
-                             lpTapeInformation: LPVOID   ): DWORD;
+                             dwOperation      : UINT32;
+                             lpdwSize         : PUINT32;
+                             lpTapeInformation: PVOID   ): UINT32;
 
 CONST
   GET_TAPE_MEDIA_INFORMATION = 0;
@@ -1801,15 +1782,15 @@ CONST
 
 <*EXTERNAL SetTapeParameters:WINAPI*>
 PROCEDURE SetTapeParameters (hDevice          : HANDLE;
-                             dwOperation      : DWORD;
-                             lpTapeInformation: LPVOID  ): DWORD;
+                             dwOperation      : UINT32;
+                             lpTapeInformation: PVOID  ): UINT32;
 
 CONST
   SET_TAPE_MEDIA_INFORMATION = 0;
   SET_TAPE_DRIVE_INFORMATION = 1;
 
 <*EXTERNAL Beep:WINAPI*>
-PROCEDURE Beep (dwFreq: DWORD; dwDuration: DWORD): BOOL;
+PROCEDURE Beep (dwFreq: UINT32; dwDuration: UINT32): BOOL;
 
 <*EXTERNAL OpenSound:WINAPI*>
 PROCEDURE OpenSound ();
@@ -1824,50 +1805,50 @@ PROCEDURE StartSound ();
 PROCEDURE StopSound ();
 
 <*EXTERNAL WaitSoundState:WINAPI*>
-PROCEDURE WaitSoundState (nState: DWORD): DWORD;
+PROCEDURE WaitSoundState (nState: UINT32): UINT32;
 
 <*EXTERNAL SyncAllVoices:WINAPI*>
-PROCEDURE SyncAllVoices (): DWORD;
+PROCEDURE SyncAllVoices (): UINT32;
 
 <*EXTERNAL CountVoiceNotes:WINAPI*>
-PROCEDURE CountVoiceNotes (nVoice: DWORD): DWORD;
+PROCEDURE CountVoiceNotes (nVoice: UINT32): UINT32;
 
 <*EXTERNAL GetThresholdEvent:WINAPI*>
-PROCEDURE GetThresholdEvent (): LPDWORD;
+PROCEDURE GetThresholdEvent (): PUINT32;
 
 <*EXTERNAL GetThresholdStatus:WINAPI*>
-PROCEDURE GetThresholdStatus (): DWORD;
+PROCEDURE GetThresholdStatus (): UINT32;
 
 <*EXTERNAL SetSoundNoise:WINAPI*>
-PROCEDURE SetSoundNoise (nSource: DWORD; nDuration: DWORD): DWORD;
+PROCEDURE SetSoundNoise (nSource: UINT32; nDuration: UINT32): UINT32;
 
 <*EXTERNAL SetVoiceAccent:WINAPI*>
-PROCEDURE SetVoiceAccent (nVoice : DWORD;
-                          nTempo : DWORD;
-                          nVolume: DWORD;
-                          nMode  : DWORD;
-                          nPitch : DWORD  ): DWORD;
+PROCEDURE SetVoiceAccent (nVoice : UINT32;
+                          nTempo : UINT32;
+                          nVolume: UINT32;
+                          nMode  : UINT32;
+                          nPitch : UINT32  ): UINT32;
 
 <*EXTERNAL SetVoiceEnvelope:WINAPI*>
-PROCEDURE SetVoiceEnvelope (nVoice, nShape, nRepeat: DWORD): DWORD;
+PROCEDURE SetVoiceEnvelope (nVoice, nShape, nRepeat: UINT32): UINT32;
 
 <*EXTERNAL SetVoiceNote:WINAPI*>
-PROCEDURE SetVoiceNote (nVoice, nValue, nLength, nCdots: DWORD): DWORD;
+PROCEDURE SetVoiceNote (nVoice, nValue, nLength, nCdots: UINT32): UINT32;
 
 <*EXTERNAL SetVoiceQueueSize:WINAPI*>
-PROCEDURE SetVoiceQueueSize (nVoice: DWORD; nBytes: DWORD): DWORD;
+PROCEDURE SetVoiceQueueSize (nVoice: UINT32; nBytes: UINT32): UINT32;
 
 <*EXTERNAL SetVoiceSound:WINAPI*>
-PROCEDURE SetVoiceSound (nVoice, Frequency, nDuration: DWORD): DWORD;
+PROCEDURE SetVoiceSound (nVoice, Frequency, nDuration: UINT32): UINT32;
 
 <*EXTERNAL SetVoiceThreshold:WINAPI*>
-PROCEDURE SetVoiceThreshold (nVoice: DWORD; nNotes: DWORD): DWORD;
+PROCEDURE SetVoiceThreshold (nVoice: UINT32; nNotes: UINT32): UINT32;
 
 <*EXTERNAL MulDiv:WINAPI*>
-PROCEDURE MulDiv (nNumber: int; nNumerator: int; nDenominator: int): int;
+PROCEDURE MulDiv (nNumber: INT32; nNumerator: INT32; nDenominator: INT32): INT32;
 
 <*EXTERNAL GetSystemTime:WINAPI*>
-PROCEDURE GetSystemTime (lpSystemTime: LPSYSTEMTIME);
+PROCEDURE GetSystemTime (lpSystemTime: PSYSTEMTIME);
 
 (* This is not in NT 3.1 but was introduced I think in NT 3.5.
    It is in Win95. Not sure about Win32s. *)
@@ -1875,107 +1856,107 @@ PROCEDURE GetSystemTime (lpSystemTime: LPSYSTEMTIME);
 PROCEDURE GetSystemTimeAsFileTime(VAR FileTime : FILETIME);
 
 <*EXTERNAL SetSystemTime:WINAPI*>
-PROCEDURE SetSystemTime (lpSystemTime: LPSYSTEMTIME): BOOL;
+PROCEDURE SetSystemTime (lpSystemTime: PSYSTEMTIME): BOOL;
 
 <*EXTERNAL GetLocalTime:WINAPI*>
-PROCEDURE GetLocalTime (lpSystemTime: LPSYSTEMTIME);
+PROCEDURE GetLocalTime (lpSystemTime: PSYSTEMTIME);
 
 <*EXTERNAL SetLocalTime:WINAPI*>
-PROCEDURE SetLocalTime (lpSystemTime: LPSYSTEMTIME): BOOL;
+PROCEDURE SetLocalTime (lpSystemTime: PSYSTEMTIME): BOOL;
 
 <*EXTERNAL GetSystemInfo:WINAPI*>
-PROCEDURE GetSystemInfo (lpSystemInfo: LPSYSTEM_INFO);
+PROCEDURE GetSystemInfo (lpSystemInfo: PSYSTEM_INFO);
 
 TYPE
   PTIME_ZONE_INFORMATION = UNTRACED REF TIME_ZONE_INFORMATION;
-  LPTIME_ZONE_INFORMATION = UNTRACED REF TIME_ZONE_INFORMATION;
+  LPTIME_ZONE_INFORMATION = PTIME_ZONE_INFORMATION; (* compat *)
   TIME_ZONE_INFORMATION = RECORD
-    Bias        : LONG;
+    Bias        : INT32;
     StandardName: ARRAY [0 .. 31] OF WCHAR;
     StandardDate: SYSTEMTIME;
-    StandardBias: LONG;
+    StandardBias: INT32;
     DaylightName: ARRAY [0 .. 31] OF WCHAR;
     DaylightDate: SYSTEMTIME;
-    DaylightBias: LONG;
+    DaylightBias: INT32;
   END;
 
 <*EXTERNAL GetTimeZoneInformation:WINAPI*>
 PROCEDURE GetTimeZoneInformation
-            (lpTimeZoneInformation: LPTIME_ZONE_INFORMATION): DWORD;
+            (lpTimeZoneInformation: PTIME_ZONE_INFORMATION): UINT32;
 
 <*EXTERNAL SetTimeZoneInformation:WINAPI*>
 PROCEDURE SetTimeZoneInformation
-            (lpTimeZoneInformation: LPTIME_ZONE_INFORMATION): BOOL;
+            (lpTimeZoneInformation: PTIME_ZONE_INFORMATION): BOOL;
 
 (* Routines to convert back and forth between system time and file time *)
 
 <*EXTERNAL SystemTimeToFileTime:WINAPI*>
-PROCEDURE SystemTimeToFileTime (lpSystemTime: LPSYSTEMTIME;
-                                lpFileTime  : LPFILETIME    ): BOOL;
+PROCEDURE SystemTimeToFileTime (lpSystemTime: PSYSTEMTIME;
+                                lpFileTime  : PFILETIME    ): BOOL;
 
 (* Note: As of 14-May-97, the following routine is implemented on
    Windows/NT, but not on Windows 95. -CAH *)
 <*EXTERNAL SystemTimeToTzSpecificLocalTime:WINAPI*>
 PROCEDURE SystemTimeToTzSpecificLocalTime (
-            lpTimeZoneInformation: LPTIME_ZONE_INFORMATION;
-            lpUniversalTime      : LPSYSTEMTIME;
-            lpLocalTime          : LPSYSTEMTIME            ): BOOL;
+            lpTimeZoneInformation: PTIME_ZONE_INFORMATION;
+            lpUniversalTime      : PSYSTEMTIME;
+            lpLocalTime          : PSYSTEMTIME            ): BOOL;
 
 <*EXTERNAL FileTimeToLocalFileTime:WINAPI*>
-PROCEDURE FileTimeToLocalFileTime (lpFileTime     : LPFILETIME;
-                                   lpLocalFileTime: LPFILETIME  ): BOOL;
+PROCEDURE FileTimeToLocalFileTime (lpFileTime     : PFILETIME;
+                                   lpLocalFileTime: PFILETIME  ): BOOL;
 
 <*EXTERNAL LocalFileTimeToFileTime:WINAPI*>
-PROCEDURE LocalFileTimeToFileTime (lpLocalFileTime: LPFILETIME;
-                                   lpFileTime     : LPFILETIME  ): BOOL;
+PROCEDURE LocalFileTimeToFileTime (lpLocalFileTime: PFILETIME;
+                                   lpFileTime     : PFILETIME  ): BOOL;
 
 <*EXTERNAL FileTimeToSystemTime:WINAPI*>
-PROCEDURE FileTimeToSystemTime (lpFileTime  : LPFILETIME;
-                                lpSystemTime: LPSYSTEMTIME): BOOL;
+PROCEDURE FileTimeToSystemTime (lpFileTime  : PFILETIME;
+                                lpSystemTime: PSYSTEMTIME): BOOL;
 
 <*EXTERNAL CompareFileTime:WINAPI*>
-PROCEDURE CompareFileTime (lpFileTime1: LPFILETIME;
-                           lpFileTime2: LPFILETIME  ): LONG;
+PROCEDURE CompareFileTime (lpFileTime1: PFILETIME;
+                           lpFileTime2: PFILETIME  ): INT32;
 
 <*EXTERNAL FileTimeToDosDateTime:WINAPI*>
-PROCEDURE FileTimeToDosDateTime (lpFileTime: LPFILETIME;
-                                 lpFatDate : LPWORD;
-                                 lpFatTime : LPWORD      ): BOOL;
+PROCEDURE FileTimeToDosDateTime (lpFileTime: PFILETIME;
+                                 lpFatDate : PUINT16;
+                                 lpFatTime : PUINT16      ): BOOL;
 
 <*EXTERNAL DosDateTimeToFileTime:WINAPI*>
-PROCEDURE DosDateTimeToFileTime (wFatDate  : WORD;
-                                 wFatTime  : WORD;
-                                 lpFileTime: LPFILETIME): BOOL;
+PROCEDURE DosDateTimeToFileTime (wFatDate  : UINT16;
+                                 wFatTime  : UINT16;
+                                 lpFileTime: PFILETIME): BOOL;
 
 <*EXTERNAL GetTickCount:WINAPI*>
-PROCEDURE GetTickCount (): DWORD;
+PROCEDURE GetTickCount (): UINT32;
 
 <*EXTERNAL SetSystemTimeAdjustment:WINAPI*>
-PROCEDURE SetSystemTimeAdjustment (dwTimeAdjustment        : DWORD;
+PROCEDURE SetSystemTimeAdjustment (dwTimeAdjustment        : UINT32;
                                    bTimeAdjustmentDisabled : BOOL): BOOL;
 
 <*EXTERNAL GetSystemTimeAdjustment:WINAPI*>
-PROCEDURE GetSystemTimeAdjustment (lpTimeAdjustment         : PDWORD;
-                                   lpTimeIncrement          : PDWORD;
-                                   lpTimeAdjustmentDisabled : LPBOOL): BOOL;
+PROCEDURE GetSystemTimeAdjustment (lpTimeAdjustment         : PUINT32;
+                                   lpTimeIncrement          : PUINT32;
+                                   lpTimeAdjustmentDisabled : PBOOL): BOOL;
 
 <*EXTERNAL FormatMessageA:WINAPI*>
-PROCEDURE FormatMessageA (dwFlags     : DWORD;
-                          lpSource    : LPVOID;
-                          dwMessageId : DWORD;
-                          dwLanguageId: DWORD;
-                          lpBuffer    : LPSTR;
-                          nSize       : DWORD;
-                          lpArguments : LPVOID  ): DWORD;
+PROCEDURE FormatMessageA (dwFlags     : UINT32;
+                          lpSource    : PVOID;
+                          dwMessageId : UINT32;
+                          dwLanguageId: UINT32;
+                          lpBuffer    : PSTR;
+                          nSize       : UINT32;
+                          lpArguments : PVOID  ): UINT32;
 
 <*EXTERNAL FormatMessageW:WINAPI*>
-PROCEDURE FormatMessageW (dwFlags     : DWORD;
-                          lpSource    : LPVOID;
-                          dwMessageId : DWORD;
-                          dwLanguageId: DWORD;
-                          lpBuffer    : LPWSTR;
-                          nSize       : DWORD;
-                          lpArguments : LPVOID  ): DWORD;
+PROCEDURE FormatMessageW (dwFlags     : UINT32;
+                          lpSource    : PVOID;
+                          dwMessageId : UINT32;
+                          dwLanguageId: UINT32;
+                          lpBuffer    : PWSTR;
+                          nSize       : UINT32;
+                          lpArguments : PVOID  ): UINT32;
 
 CONST FormatMessage = FormatMessageA;
 
@@ -1991,233 +1972,236 @@ CONST
 <*EXTERNAL CreatePipe:WINAPI*>
 PROCEDURE CreatePipe (hReadPipe       : PHANDLE;
                       hWritePipe      : PHANDLE;
-                      lpPipeAttributes: LPSECURITY_ATTRIBUTES;
-                      nSize           : DWORD                  ): BOOL;
+                      lpPipeAttributes: PSECURITY_ATTRIBUTES;
+                      nSize           : UINT32                  ): BOOL;
 
 <*EXTERNAL ConnectNamedPipe:WINAPI*>
 PROCEDURE ConnectNamedPipe (hNamedPipe  : HANDLE;
-                            lpOverlapped: LPOVERLAPPED): BOOL;
+                            lpOverlapped: POVERLAPPED): BOOL;
 
 <*EXTERNAL DisconnectNamedPipe:WINAPI*>
 PROCEDURE DisconnectNamedPipe (hNamedPipe: HANDLE): BOOL;
 
 <*EXTERNAL SetNamedPipeHandleState:WINAPI*>
 PROCEDURE SetNamedPipeHandleState (hNamedPipe          : HANDLE;
-                                   lpMode              : LPDWORD;
-                                   lpMaxCollectionCount: LPDWORD;
-                                   lpCollectDataTimeout: LPDWORD  ): BOOL;
+                                   lpMode              : PUINT32;
+                                   lpMaxCollectionCount: PUINT32;
+                                   lpCollectDataTimeout: PUINT32  ): BOOL;
 
 <*EXTERNAL GetNamedPipeInfo:WINAPI*>
 PROCEDURE GetNamedPipeInfo (hNamedPipe     : HANDLE;
-                            lpFlags        : LPDWORD;
-                            lpOutBufferSize: LPDWORD;
-                            lpInBufferSize : LPDWORD;
-                            lpMaxInstances : LPDWORD  ): BOOL;
+                            lpFlags        : PUINT32;
+                            lpOutBufferSize: PUINT32;
+                            lpInBufferSize : PUINT32;
+                            lpMaxInstances : PUINT32  ): BOOL;
 
 <*EXTERNAL PeekNamedPipe:WINAPI*>
 PROCEDURE PeekNamedPipe (hNamedPipe            : HANDLE;
-                         lpBuffer              : LPVOID;
-                         nBufferSize           : DWORD;
-                         lpBytesRead           : LPDWORD;
-                         lpTotalBytesAvail     : LPDWORD;
-                         lpBytesLeftThisMessage: LPDWORD  ): BOOL;
+                         lpBuffer              : PVOID;
+                         nBufferSize           : UINT32;
+                         lpBytesRead           : PUINT32;
+                         lpTotalBytesAvail     : PUINT32;
+                         lpBytesLeftThisMessage: PUINT32  ): BOOL;
 
 <*EXTERNAL TransactNamedPipe:WINAPI*>
 PROCEDURE TransactNamedPipe (hNamedPipe    : HANDLE;
-                             lpInBuffer    : LPVOID;
-                             nInBufferSize : DWORD;
-                             lpOutBuffer   : LPVOID;
-                             nOutBufferSize: DWORD;
-                             lpBytesRead   : LPDWORD;
-                             lpOverlapped  : LPOVERLAPPED): BOOL;
+                             lpInBuffer    : PVOID;
+                             nInBufferSize : UINT32;
+                             lpOutBuffer   : PVOID;
+                             nOutBufferSize: UINT32;
+                             lpBytesRead   : PUINT32;
+                             lpOverlapped  : POVERLAPPED): BOOL;
 
 <*EXTERNAL CreateMailslotA:WINAPI*>
-PROCEDURE CreateMailslotA (lpName              : LPSTR;
-                           nMaxMessageSize     : DWORD;
-                           lReadTimeout        : DWORD;
-                           lpSecurityAttributes: LPSECURITY_ATTRIBUTES):HANDLE;
+PROCEDURE CreateMailslotA (lpName              : PSTR;
+                           nMaxMessageSize     : UINT32;
+                           lReadTimeout        : UINT32;
+                           lpSecurityAttributes: PSECURITY_ATTRIBUTES):HANDLE;
 
 <*EXTERNAL CreateMailslotW:WINAPI*>
-PROCEDURE CreateMailslotW (lpName              : LPWSTR;
-                           nMaxMessageSize     : DWORD;
-                           lReadTimeout        : DWORD;
-                           lpSecurityAttributes: LPSECURITY_ATTRIBUTES):HANDLE;
+PROCEDURE CreateMailslotW (lpName              : PWSTR;
+                           nMaxMessageSize     : UINT32;
+                           lReadTimeout        : UINT32;
+                           lpSecurityAttributes: PSECURITY_ATTRIBUTES):HANDLE;
 
 CONST CreateMailslot = CreateMailslotA;
 
 <*EXTERNAL GetMailslotInfo:WINAPI*>
 PROCEDURE GetMailslotInfo (hMailslot       : HANDLE;
-                           lpMaxMessageSize: LPDWORD;
-                           lpNextSize      : LPDWORD;
-                           lpMessageCount  : LPDWORD;
-                           lpReadTimeout   : LPDWORD  ): BOOL;
+                           lpMaxMessageSize: PUINT32;
+                           lpNextSize      : PUINT32;
+                           lpMessageCount  : PUINT32;
+                           lpReadTimeout   : PUINT32  ): BOOL;
 
 <*EXTERNAL SetMailslotInfo:WINAPI*>
-PROCEDURE SetMailslotInfo (hMailslot: HANDLE; lReadTimeout: DWORD): BOOL;
+PROCEDURE SetMailslotInfo (hMailslot: HANDLE; lReadTimeout: UINT32): BOOL;
 
 <*EXTERNAL MapViewOfFile:WINAPI*>
 PROCEDURE MapViewOfFile (hFileMappingObject  : HANDLE;
-                         dwDesiredAccess     : DWORD;
-                         dwFileOffsetHigh    : DWORD;
-                         dwFileOffsetLow     : DWORD;
-                         dwNumberOfBytesToMap: DWORD   ): LPVOID;
+                         dwDesiredAccess     : UINT32;
+                         dwFileOffsetHigh    : UINT32;
+                         dwFileOffsetLow     : UINT32;
+                         dwNumberOfBytesToMap: SIZE_T  ): PVOID;
 
 <*EXTERNAL FlushViewOfFile:WINAPI*>
-PROCEDURE FlushViewOfFile (lpBaseAddress         : LPVOID;
-                           dwNumberOfBytesToFlush: DWORD   ): BOOL;
+PROCEDURE FlushViewOfFile (lpBaseAddress         : PVOID;
+                           dwNumberOfBytesToFlush: SIZE_T  ): BOOL;
 
 <*EXTERNAL UnmapViewOfFile:WINAPI*>
-PROCEDURE UnmapViewOfFile (lpBaseAddress: LPVOID): BOOL;
+PROCEDURE UnmapViewOfFile (lpBaseAddress: PVOID): BOOL;
 
 (* _l Compat Functions *)
 
 <*EXTERNAL lstrcmpA:WINAPI*>
-PROCEDURE lstrcmpA (lpString1: LPCSTR; lpString2: LPCSTR): int;
+PROCEDURE lstrcmpA (lpString1: PCSTR; lpString2: PCSTR): INT32;
 <*EXTERNAL lstrcmpW:WINAPI*>
-PROCEDURE lstrcmpW (lpString1: LPCWSTR; lpString2: LPCWSTR): int;
+PROCEDURE lstrcmpW (lpString1: PCWSTR; lpString2: PCWSTR): INT32;
 
 CONST lstrcmp = lstrcmpA;
 
 <*EXTERNAL lstrcmpiA:WINAPI*>
-PROCEDURE lstrcmpiA (lpString1: LPCSTR; lpString2: LPCSTR): int;
+PROCEDURE lstrcmpiA (lpString1: PCSTR; lpString2: PCSTR): INT32;
 <*EXTERNAL lstrcmpiW:WINAPI*>
-PROCEDURE lstrcmpiW (lpString1: LPCWSTR; lpString2: LPCWSTR): int;
+PROCEDURE lstrcmpiW (lpString1: PCWSTR; lpString2: PCWSTR): INT32;
 
 CONST lstrcmpi = lstrcmpiA;
 
 <*EXTERNAL lstrcpynA:WINAPI*>
-PROCEDURE lstrcpynA (lpString1: LPSTR; lpString2: LPCSTR; iMaxLength: int): LPSTR;
+PROCEDURE lstrcpynA (lpString1: PSTR; lpString2: PCSTR; iMaxLength: INT32): PSTR;
 <*EXTERNAL lstrcpynW:WINAPI*>
-PROCEDURE lstrcpynW (lpString1: LPWSTR; lpString2: LPCWSTR; iMaxLenght: int): LPWSTR;
+PROCEDURE lstrcpynW (lpString1: PWSTR; lpString2: PCWSTR; iMaxLenght: INT32): PWSTR;
 
 CONST lstrcpyn = lstrcpynA;
 
 <*EXTERNAL lstrcpyA:WINAPI*>
-PROCEDURE lstrcpyA (lpString1: LPSTR; lpString2: LPCSTR): LPSTR;
+PROCEDURE lstrcpyA (lpString1: PSTR; lpString2: PCSTR): PSTR;
 <*EXTERNAL lstrcpyW:WINAPI*>
-PROCEDURE lstrcpyW (lpString1: LPWSTR; lpString2: LPCWSTR): LPWSTR;
+PROCEDURE lstrcpyW (lpString1: PWSTR; lpString2: PCWSTR): PWSTR;
 
 CONST lstrcpy = lstrcpyA;
 
 <*EXTERNAL lstrcatA:WINAPI*>
-PROCEDURE lstrcatA (lpString1: LPSTR; lpString2: LPCSTR): LPSTR;
+PROCEDURE lstrcatA (lpString1: PSTR; lpString2: PCSTR): PSTR;
 <*EXTERNAL lstrcatW:WINAPI*>
-PROCEDURE lstrcatW (lpString1: LPWSTR; lpString2: LPCWSTR): LPWSTR;
+PROCEDURE lstrcatW (lpString1: PWSTR; lpString2: PCWSTR): PWSTR;
 CONST lstrcat = lstrcatA;
 
 <*EXTERNAL lstrlenA:WINAPI*>
-PROCEDURE lstrlenA (lpString: LPCSTR): int;
+PROCEDURE lstrlenA (lpString: PCSTR): INT32;
 <*EXTERNAL lstrlenW:WINAPI*>
-PROCEDURE lstrlenW (lpString: LPCWSTR): int;
+PROCEDURE lstrlenW (lpString: PCWSTR): INT32;
 CONST lstrlen = lstrlenA;
 
 <*EXTERNAL OpenFile:WINAPI*>
-PROCEDURE OpenFile (lpFileName  : LPCSTR;
-                    lpReOpenBuff: LPOFSTRUCT;
-                    uStyle      : UINT        ): HFILE;
+PROCEDURE OpenFile (lpFileName  : PCSTR;
+                    lpReOpenBuff: POFSTRUCT;
+                    uStyle      : UINT32        ): HFILE;
 
 <*EXTERNAL "_lopen":WINAPI*>
-PROCEDURE lopen (lpPathName: LPCSTR; iReadWrite: int): HFILE;
+PROCEDURE lopen (lpPathName: PCSTR; iReadWrite: INT32): HFILE;
 
 <*EXTERNAL "_lcreat":WINAPI*>
-PROCEDURE lcreat (lpPathName: LPCSTR; iAttribute: int): HFILE;
+PROCEDURE lcreat (lpPathName: PCSTR; iAttribute: INT32): HFILE;
 
 <*EXTERNAL "_lread":WINAPI*>
-PROCEDURE lread (hFile: HFILE; lpBuffer: LPVOID; uBytes: UINT): UINT;
+PROCEDURE lread (hFile: HFILE; lpBuffer: PVOID; uBytes: UINT32): UINT32;
 
 <*EXTERNAL "_lwrite":WINAPI*>
-PROCEDURE lwrite (hFile: HFILE; lpBuffer: LPCSTR; uBytes: UINT): UINT;
+PROCEDURE lwrite (hFile: HFILE; lpBuffer: PCSTR; uBytes: UINT32): UINT32;
 
 <*EXTERNAL "_lclose":WINAPI*>
 PROCEDURE lclose (hFile: HFILE): HFILE;
 
 <*EXTERNAL "_llseek":WINAPI*>
-PROCEDURE llseek (hFile: HFILE; lOffset: LONG; iOrigin: int): LONG;
+PROCEDURE llseek (hFile: HFILE; lOffset: INT32; iOrigin: INT32): INT32;
+
 
 <*EXTERNAL TlsAlloc:WINAPI*>
-PROCEDURE TlsAlloc (): DWORD;
+PROCEDURE TlsAlloc (): UINT32;
 
 CONST
   TLS_OUT_OF_INDEXES    = 16_FFFFFFFF;
 
 (* The values passed to "TlsSetValue" and returned by "TlsGetValue"
-   were originally declared "LPVOID".  But, since it's clear that they're
+   were originally declared "PVOID".  But, since it's clear that they're
    going to stuff the values somewhere hidden to the collector, any attempt
    to pass an address referring to a traced reference would cause disaster.
    So, to avoid the additional check done by the GC wrappers, we declare
-   the values as "DWORD"s instead.  These routines are called *very frequently*
+   the values as "SIZE_T"s instead.  These routines are called *very frequently*
    by the low-level thread and exception machinery.  Avoiding the extra
    wrapper check is worth it.  *)
 
 <*EXTERNAL TlsGetValue:WINAPI*>
-PROCEDURE TlsGetValue (dwTlsIndex: DWORD): DWORD;
+PROCEDURE TlsGetValue (dwTlsIndex: UINT32): SIZE_T;
 
 <*EXTERNAL TlsSetValue:WINAPI*>
-PROCEDURE TlsSetValue (dwTlsIndex: DWORD; lpTlsValue: DWORD): BOOL;
+PROCEDURE TlsSetValue (dwTlsIndex: UINT32; lpTlsValue: SIZE_T): BOOL;
 
 <*EXTERNAL TlsFree:WINAPI*>
-PROCEDURE TlsFree (dwTlsIndex: DWORD): BOOL;
+PROCEDURE TlsFree (dwTlsIndex: UINT32): BOOL;
 
 TYPE
-  LPOVERLAPPED_COMPLETION_ROUTINE =
-    <*WINAPI*> PROCEDURE (dwErrorCode              : DWORD;
-                          dwNumberOfBytesTransfered: DWORD;
-                          lpOverlapped             : LPOVERLAPPED);
+  POVERLAPPED_COMPLETION_ROUTINE =
+    <*WINAPI*> PROCEDURE (dwErrorCode              : UINT32;
+                          dwNumberOfBytesTransfered: UINT32;
+                          lpOverlapped             : POVERLAPPED);
+
+  LPOVERLAPPED_COMPLETION_ROUTINE = POVERLAPPED_COMPLETION_ROUTINE; (* compat *)
 
 <*EXTERNAL SleepEx:WINAPI*>
-PROCEDURE SleepEx (dwMilliseconds: DWORD; bAlertable: BOOL): DWORD;
+PROCEDURE SleepEx (dwMilliseconds: UINT32; bAlertable: BOOL): UINT32;
 
 <*EXTERNAL WaitForSingleObjectEx:WINAPI*>
 PROCEDURE WaitForSingleObjectEx (hHandle       : HANDLE;
-                                 dwMilliseconds: DWORD;
-                                 bAlertable    : BOOL    ): DWORD;
+                                 dwMilliseconds: UINT32;
+                                 bAlertable    : BOOL    ): UINT32;
 
 <*EXTERNAL WaitForMultipleObjectsEx:WINAPI*>
-PROCEDURE WaitForMultipleObjectsEx (nCount        : DWORD;
-                                    lpHandles     : LPHANDLE;
+PROCEDURE WaitForMultipleObjectsEx (nCount        : UINT32;
+                                    lpHandles     : PHANDLE;
                                     bWaitAll      : BOOL;
-                                    dwMilliseconds: DWORD;
-                                      bAlertable    : BOOL      ): DWORD;
+                                    dwMilliseconds: UINT32;
+                                      bAlertable    : BOOL      ): UINT32;
 
 <*EXTERNAL ReadFileEx:WINAPI*>
 PROCEDURE ReadFileEx (hFile               : HANDLE;
-                      lpBuffer            : LPVOID;
-                      nNumberOfBytesToRead: DWORD;
-                      lpOverlapped        : LPOVERLAPPED;
-                      lpCompletionRoutine : LPOVERLAPPED_COMPLETION_ROUTINE): BOOL;
+                      lpBuffer            : PVOID;
+                      nNumberOfBytesToRead: UINT32;
+                      lpOverlapped        : POVERLAPPED;
+                      lpCompletionRoutine : POVERLAPPED_COMPLETION_ROUTINE): BOOL;
 
 <*EXTERNAL WriteFileEx:WINAPI*>
 PROCEDURE WriteFileEx (hFile                : HANDLE;
-                       lpBuffer             : LPVOID;
-                       nNumberOfBytesToWrite: DWORD;
-                       lpOverlapped         : LPOVERLAPPED;
-                       lpCompletionRoutine: LPOVERLAPPED_COMPLETION_ROUTINE): BOOL;
+                       lpBuffer             : PVOID;
+                       nNumberOfBytesToWrite: UINT32;
+                       lpOverlapped         : POVERLAPPED;
+                       lpCompletionRoutine: POVERLAPPED_COMPLETION_ROUTINE): BOOL;
 
 <*EXTERNAL BackupRead:WINAPI*>
 PROCEDURE BackupRead (hFile               : HANDLE;
-                      lpBuffer            : LPBYTE;
-                      nNumberOfBytesToRead: DWORD;
-                      lpNumberOfBytesRead : LPDWORD;
+                      lpBuffer            : PUINT8;
+                      nNumberOfBytesToRead: UINT32;
+                      lpNumberOfBytesRead : PUINT32;
                       bAbort              : BOOL;
                       bProcessSecurity    : BOOL;
-                      lpContext           : UNTRACED REF LPVOID): BOOL;
+                      lpContext           : UNTRACED REF PVOID): BOOL;
 
 <*EXTERNAL BackupSeek:WINAPI*>
 PROCEDURE BackupSeek (hFile              : HANDLE;
-                      dwLowBytesToSeek   : DWORD;
-                      dwHighBytesToSeek  : DWORD;
-                      lpdwLowByteSeeked  : LPDWORD;
-                      lpdwHighByteSeeked : LPDWORD;
-                      lpContext          : UNTRACED REF LPVOID): BOOL;
+                      dwLowBytesToSeek   : UINT32;
+                      dwHighBytesToSeek  : UINT32;
+                      lpdwLowByteSeeked  : PUINT32;
+                      lpdwHighByteSeeked : PUINT32;
+                      lpContext          : UNTRACED REF PVOID): BOOL;
 
 <*EXTERNAL BackupWrite:WINAPI*>
 PROCEDURE BackupWrite (hFile                 : HANDLE;
-                       lpBuffer              : LPBYTE;
-                       nNumberOfBytesToWrite : DWORD;
-                       lpNumberOfBytesWritten: LPDWORD;
+                       lpBuffer              : PUINT8;
+                       nNumberOfBytesToWrite : UINT32;
+                       lpNumberOfBytesWritten: PUINT32;
                        bAbort                : BOOL;
                        bProcessSecurity      : BOOL;
-                       lpContext             : UNTRACED REF LPVOID): BOOL;
+                       lpContext             : UNTRACED REF PVOID): BOOL;
 
 (* Dual Mode API below this line.  Dual Mode Structures also included. *)
 
@@ -2236,21 +2220,21 @@ CONST
 TYPE
   LPSTARTUPINFOA = UNTRACED REF STARTUPINFOA;
   STARTUPINFOA = RECORD
-    cb             : DWORD;
-    lpReserved     : LPSTR;
-    lpDesktop      : LPSTR;
-    lpTitle        : LPSTR;
-    dwX            : DWORD;
-    dwY            : DWORD;
-    dwXSize        : DWORD;
-    dwYSize        : DWORD;
-    dwXCountChars  : DWORD;
-    dwYCountChars  : DWORD;
-    dwFillAttribute: DWORD;
-    dwFlags        : DWORD;
-    wShowWindow    : WORD;
-    cbReserved2    : WORD;
-    lpReserved2    : LPBYTE;
+    cb             : UINT32;
+    lpReserved     : PSTR;
+    lpDesktop      : PSTR;
+    lpTitle        : PSTR;
+    dwX            : UINT32;
+    dwY            : UINT32;
+    dwXSize        : UINT32;
+    dwYSize        : UINT32;
+    dwXCountChars  : UINT32;
+    dwYCountChars  : UINT32;
+    dwFillAttribute: UINT32;
+    dwFlags        : UINT32;
+    wShowWindow    : UINT16;
+    cbReserved2    : UINT16;
+    lpReserved2    : PUINT8;
     hStdInput      : HANDLE;
     hStdOutput     : HANDLE;
     hStdError      : HANDLE;
@@ -2258,21 +2242,21 @@ TYPE
 
   LPSTARTUPINFOW = UNTRACED REF STARTUPINFOW;
   STARTUPINFOW = RECORD
-    cb             : DWORD;
-    lpReserved     : LPWSTR;
-    lpDesktop      : LPWSTR;
-    lpTitle        : LPWSTR;
-    dwX            : DWORD;
-    dwY            : DWORD;
-    dwXSize        : DWORD;
-    dwYSize        : DWORD;
-    dwXCountChars  : DWORD;
-    dwYCountChars  : DWORD;
-    dwFillAttribute: DWORD;
-    dwFlags        : DWORD;
-    wShowWindow    : WORD;
-    cbReserved2    : WORD;
-    lpReserved2    : LPBYTE;
+    cb             : UINT32;
+    lpReserved     : PWSTR;
+    lpDesktop      : PWSTR;
+    lpTitle        : PWSTR;
+    dwX            : UINT32;
+    dwY            : UINT32;
+    dwXSize        : UINT32;
+    dwYSize        : UINT32;
+    dwXCountChars  : UINT32;
+    dwYCountChars  : UINT32;
+    dwFillAttribute: UINT32;
+    dwFlags        : UINT32;
+    wShowWindow    : UINT16;
+    cbReserved2    : UINT16;
+    lpReserved2    : PUINT8;
     hStdInput      : HANDLE;
     hStdOutput     : HANDLE;
     hStdError      : HANDLE;
@@ -2287,14 +2271,14 @@ TYPE
   PWIN32_FIND_DATAA = UNTRACED REF WIN32_FIND_DATAA;
   LPWIN32_FIND_DATAA = UNTRACED REF WIN32_FIND_DATAA;
   WIN32_FIND_DATAA = RECORD
-    dwFileAttributes  : DWORD;
+    dwFileAttributes  : UINT32;
     ftCreationTime    : FILETIME;
     ftLastAccessTime  : FILETIME;
     ftLastWriteTime   : FILETIME;
-    nFileSizeHigh     : DWORD;
-    nFileSizeLow      : DWORD;
-    dwReserved0       : DWORD;
-    dwReserved1       : DWORD;
+    nFileSizeHigh     : UINT32;
+    nFileSizeLow      : UINT32;
+    dwReserved0       : UINT32;
+    dwReserved1       : UINT32;
     cFileName         : ARRAY [0 .. MAX_PATH - 1] OF CHAR;
     cAlternateFileName: ARRAY [0 .. 14 - 1] OF CHAR;
   END;
@@ -2302,14 +2286,14 @@ TYPE
   PWIN32_FIND_DATAW = UNTRACED REF WIN32_FIND_DATAW;
   LPWIN32_FIND_DATAW = UNTRACED REF WIN32_FIND_DATAW;
   WIN32_FIND_DATAW = RECORD
-    dwFileAttributes  : DWORD;
+    dwFileAttributes  : UINT32;
     ftCreationTime    : FILETIME;
     ftLastAccessTime  : FILETIME;
     ftLastWriteTime   : FILETIME;
-    nFileSizeHigh     : DWORD;
-    nFileSizeLow      : DWORD;
-    dwReserved0       : DWORD;
-    dwReserved1       : DWORD;
+    nFileSizeHigh     : UINT32;
+    nFileSizeLow      : UINT32;
+    dwReserved0       : UINT32;
+    dwReserved1       : UINT32;
     cFileName         : ARRAY [0 .. MAX_PATH - 1] OF WCHAR;
     cAlternateFileName: ARRAY [0 .. 14 - 1] OF WCHAR;
   END;
@@ -2319,136 +2303,136 @@ TYPE
   LPWIN32_FIND_DATA = LPWIN32_FIND_DATAA;
 
 <*EXTERNAL CreateMutexA:WINAPI*>
-PROCEDURE CreateMutexA (lpMutexAttributes: LPSECURITY_ATTRIBUTES;
+PROCEDURE CreateMutexA (lpMutexAttributes: PSECURITY_ATTRIBUTES;
                         bInitialOwner    : BOOL;
-                        lpName           : LPSTR                  ): HANDLE;
+                        lpName           : PSTR                  ): HANDLE;
 
 <*EXTERNAL CreateMutexW:WINAPI*>
-PROCEDURE CreateMutexW (lpMutexAttributes: LPSECURITY_ATTRIBUTES;
+PROCEDURE CreateMutexW (lpMutexAttributes: PSECURITY_ATTRIBUTES;
                         bInitialOwner    : BOOL;
-                        lpName           : LPWSTR                 ): HANDLE;
+                        lpName           : PWSTR                 ): HANDLE;
 
 CONST CreateMutex = CreateMutexA;
 
 <*EXTERNAL OpenMutexA:WINAPI*>
-PROCEDURE OpenMutexA (dwDesiredAccess: DWORD;
+PROCEDURE OpenMutexA (dwDesiredAccess: UINT32;
                       bInheritHandle : BOOL;
-                      lpName         : LPSTR  ): HANDLE;
+                      lpName         : PSTR  ): HANDLE;
 
 <*EXTERNAL OpenMutexW:WINAPI*>
-PROCEDURE OpenMutexW (dwDesiredAccess: DWORD;
+PROCEDURE OpenMutexW (dwDesiredAccess: UINT32;
                       bInheritHandle : BOOL;
-                      lpName         : LPWSTR ): HANDLE;
+                      lpName         : PWSTR ): HANDLE;
 
 CONST OpenMutex = OpenMutexA;
 
 <*EXTERNAL CreateEventA:WINAPI*>
-PROCEDURE CreateEventA (lpEventAttributes: LPSECURITY_ATTRIBUTES;
+PROCEDURE CreateEventA (lpEventAttributes: PSECURITY_ATTRIBUTES;
                         bManualReset     : BOOL;
                         bInitialState    : BOOL;
-                        lpName           : LPSTR                  ): HANDLE;
+                        lpName           : PSTR                  ): HANDLE;
 
 <*EXTERNAL CreateEventW:WINAPI*>
-PROCEDURE CreateEventW (lpEventAttributes: LPSECURITY_ATTRIBUTES;
+PROCEDURE CreateEventW (lpEventAttributes: PSECURITY_ATTRIBUTES;
                         bManualReset     : BOOL;
                         bInitialState    : BOOL;
-                        lpName           : LPWSTR                 ): HANDLE;
+                        lpName           : PWSTR                 ): HANDLE;
 
 CONST CreateEvent = CreateEventA;
 
 <*EXTERNAL OpenEventA:WINAPI*>
-PROCEDURE OpenEventA (dwDesiredAccess: DWORD;
+PROCEDURE OpenEventA (dwDesiredAccess: UINT32;
                       bInheritHandle : BOOL;
-                      lpName         : LPSTR  ): HANDLE;
+                      lpName         : PSTR  ): HANDLE;
 
 <*EXTERNAL OpenEventW:WINAPI*>
-PROCEDURE OpenEventW (dwDesiredAccess: DWORD;
+PROCEDURE OpenEventW (dwDesiredAccess: UINT32;
                       bInheritHandle : BOOL;
-                      lpName         : LPWSTR ): HANDLE;
+                      lpName         : PWSTR ): HANDLE;
 
 CONST OpenEvent = OpenEventA;
 
 <*EXTERNAL CreateSemaphoreA:WINAPI*>
-PROCEDURE CreateSemaphoreA (lpSemaphoreAttributes: LPSECURITY_ATTRIBUTES;
-                            lInitialCount: LONG;
-                            lMaximumCount: LONG;
-                            lpName       : LPSTR ): HANDLE;
+PROCEDURE CreateSemaphoreA (lpSemaphoreAttributes: PSECURITY_ATTRIBUTES;
+                            lInitialCount: INT32;
+                            lMaximumCount: INT32;
+                            lpName       : PSTR ): HANDLE;
 
 <*EXTERNAL CreateSemaphoreW:WINAPI*>
-PROCEDURE CreateSemaphoreW (lpSemaphoreAttributes: LPSECURITY_ATTRIBUTES;
-                            lInitialCount: LONG;
-                            lMaximumCount: LONG;
-                            lpName       : LPWSTR): HANDLE;
+PROCEDURE CreateSemaphoreW (lpSemaphoreAttributes: PSECURITY_ATTRIBUTES;
+                            lInitialCount: INT32;
+                            lMaximumCount: INT32;
+                            lpName       : PWSTR): HANDLE;
 
 CONST CreateSemaphore = CreateSemaphoreA;
 
 <*EXTERNAL OpenSemaphoreA:WINAPI*>
-PROCEDURE OpenSemaphoreA (dwDesiredAccess: DWORD;
+PROCEDURE OpenSemaphoreA (dwDesiredAccess: UINT32;
                           bInheritHandle : BOOL;
-                          lpName         : LPSTR  ): HANDLE;
+                          lpName         : PSTR  ): HANDLE;
 
 <*EXTERNAL OpenSemaphoreW:WINAPI*>
-PROCEDURE OpenSemaphoreW (dwDesiredAccess: DWORD;
+PROCEDURE OpenSemaphoreW (dwDesiredAccess: UINT32;
                           bInheritHandle : BOOL;
-                          lpName         : LPWSTR ): HANDLE;
+                          lpName         : PWSTR ): HANDLE;
 
 CONST OpenSemaphore = OpenSemaphoreA;
 
 <*EXTERNAL CreateFileMappingA:WINAPI*>
 PROCEDURE CreateFileMappingA (hFile: HANDLE;
-                              lpFileMappingAttributes: LPSECURITY_ATTRIBUTES;
-                              flProtect        : DWORD;
-                              dwMaximumSizeHigh: DWORD;
-                              dwMaximumSizeLow : DWORD;
-                              lpName           : LPSTR  ): HANDLE;
+                              lpFileMappingAttributes: PSECURITY_ATTRIBUTES;
+                              flProtect        : UINT32;
+                              dwMaximumSizeHigh: UINT32;
+                              dwMaximumSizeLow : UINT32;
+                              lpName           : PSTR  ): HANDLE;
 
 <*EXTERNAL CreateFileMappingW:WINAPI*>
 PROCEDURE CreateFileMappingW (hFile: HANDLE;
-                              lpFileMappingAttributes: LPSECURITY_ATTRIBUTES;
-                              flProtect        : DWORD;
-                              dwMaximumSizeHigh: DWORD;
-                              dwMaximumSizeLow : DWORD;
-                              lpName           : LPWSTR ): HANDLE;
+                              lpFileMappingAttributes: PSECURITY_ATTRIBUTES;
+                              flProtect        : UINT32;
+                              dwMaximumSizeHigh: UINT32;
+                              dwMaximumSizeLow : UINT32;
+                              lpName           : PWSTR ): HANDLE;
 
 CONST CreateFileMapping = CreateFileMappingA;
 
 <*EXTERNAL OpenFileMappingA:WINAPI*>
-PROCEDURE OpenFileMappingA (dwDesiredAccess: DWORD;
+PROCEDURE OpenFileMappingA (dwDesiredAccess: UINT32;
                             bInheritHandle : BOOL;
-                            lpName         : LPSTR  ): HANDLE;
+                            lpName         : PSTR  ): HANDLE;
 
 <*EXTERNAL OpenFileMappingW:WINAPI*>
-PROCEDURE OpenFileMappingW (dwDesiredAccess: DWORD;
+PROCEDURE OpenFileMappingW (dwDesiredAccess: UINT32;
                             bInheritHandle : BOOL;
-                            lpName         : LPWSTR ): HANDLE;
+                            lpName         : PWSTR ): HANDLE;
 
 CONST OpenFileMapping = OpenFileMappingA;
 
 <*EXTERNAL GetLogicalDriveStringsA:WINAPI*>
-PROCEDURE GetLogicalDriveStringsA(nBufferLength: DWORD; lpBuffer: LPSTR):DWORD;
+PROCEDURE GetLogicalDriveStringsA(nBufferLength: UINT32; lpBuffer: PSTR):UINT32;
 
 <*EXTERNAL GetLogicalDriveStringsW:WINAPI*>
-PROCEDURE GetLogicalDriveStringsW(nBufferLength: DWORD; lpBuffer:LPWSTR):DWORD;
+PROCEDURE GetLogicalDriveStringsW(nBufferLength: UINT32; lpBuffer:PWSTR):UINT32;
 
 CONST GetLogicalDriveStrings = GetLogicalDriveStringsA;
 
 <*EXTERNAL LoadLibraryA:WINAPI*>
-PROCEDURE LoadLibraryA (lpLibFileName: LPCSTR): HINSTANCE;
+PROCEDURE LoadLibraryA (lpLibFileName: PCSTR): HINSTANCE;
 
 <*EXTERNAL LoadLibraryW:WINAPI*>
-PROCEDURE LoadLibraryW (lpLibFileName: LPCWSTR): HINSTANCE;
+PROCEDURE LoadLibraryW (lpLibFileName: PCWSTR): HINSTANCE;
 
 CONST LoadLibrary = LoadLibraryA;
 
 <*EXTERNAL LoadLibraryExA:WINAPI*>
-PROCEDURE LoadLibraryExA (lpLibFileName: LPCSTR;
+PROCEDURE LoadLibraryExA (lpLibFileName: PCSTR;
                           hFile        : HANDLE;
-                          dwFlags      : DWORD   ): HINSTANCE;
+                          dwFlags      : UINT32   ): HINSTANCE;
 
 <*EXTERNAL LoadLibraryExW:WINAPI*>
-PROCEDURE LoadLibraryExW (lpLibFileName: LPCWSTR;
+PROCEDURE LoadLibraryExW (lpLibFileName: PCWSTR;
                           hFile        : HANDLE;
-                          dwFlags      : DWORD    ): HINSTANCE;
+                          dwFlags      : UINT32    ): HINSTANCE;
 
 CONST LoadLibraryEx = LoadLibraryExA;
 
@@ -2457,62 +2441,62 @@ CONST DONT_RESOLVE_DLL_REFERENCES = 16_00000001;
 
 <*EXTERNAL GetModuleFileNameA:WINAPI*>
 PROCEDURE GetModuleFileNameA (hModule   : HINSTANCE;
-                              lpFilename: LPSTR;
-                              nSize     : DWORD      ): DWORD;
+                              lpFilename: PSTR;
+                              nSize     : UINT32      ): UINT32;
 
 <*EXTERNAL GetModuleFileNameW:WINAPI*>
 PROCEDURE GetModuleFileNameW (hModule   : HINSTANCE;
-                              lpFilename: LPWSTR;
-                              nSize     : DWORD      ): DWORD;
+                              lpFilename: PWSTR;
+                              nSize     : UINT32      ): UINT32;
 
 CONST GetModuleFileName = GetModuleFileNameA;
 
 <*EXTERNAL GetModuleHandleA:WINAPI*>
-PROCEDURE GetModuleHandleA (lpModuleName: LPCSTR): HMODULE;
+PROCEDURE GetModuleHandleA (lpModuleName: PCSTR): HMODULE;
 
 <*EXTERNAL GetModuleHandleW:WINAPI*>
-PROCEDURE GetModuleHandleW (lpModuleName: LPCWSTR): HMODULE;
+PROCEDURE GetModuleHandleW (lpModuleName: PCWSTR): HMODULE;
 
 CONST GetModuleHandle = GetModuleHandleA;
 
 <*EXTERNAL CreateProcessA:WINAPI*>
-PROCEDURE CreateProcessA (lpApplicationName   : LPCSTR;
-                          lpCommandLine       : LPCSTR;
-                          lpProcessAttributes : LPSECURITY_ATTRIBUTES;
-                          lpThreadAttributes  : LPSECURITY_ATTRIBUTES;
+PROCEDURE CreateProcessA (lpApplicationName   : PCSTR;
+                          lpCommandLine       : PCSTR;
+                          lpProcessAttributes : PSECURITY_ATTRIBUTES;
+                          lpThreadAttributes  : PSECURITY_ATTRIBUTES;
                           bInheritHandles     : BOOL;
-                          dwCreationFlags     : DWORD;
-                          lpEnvironment       : LPVOID;
-                          lpCurrentDirectory  : LPSTR;
+                          dwCreationFlags     : UINT32;
+                          lpEnvironment       : PVOID;
+                          lpCurrentDirectory  : PSTR;
                           lpStartupInfo       : LPSTARTUPINFOA;
                           lpProcessInformation: LPPROCESS_INFORMATION  ): BOOL;
 
 <*EXTERNAL CreateProcessW:WINAPI*>
-PROCEDURE CreateProcessW (lpApplicationName   : LPCWSTR;
-                          lpCommandLine       : LPCWSTR;
-                          lpProcessAttributes : LPSECURITY_ATTRIBUTES;
-                          lpThreadAttributes  : LPSECURITY_ATTRIBUTES;
+PROCEDURE CreateProcessW (lpApplicationName   : PCWSTR;
+                          lpCommandLine       : PCWSTR;
+                          lpProcessAttributes : PSECURITY_ATTRIBUTES;
+                          lpThreadAttributes  : PSECURITY_ATTRIBUTES;
                           bInheritHandles     : BOOL;
-                          dwCreationFlags     : DWORD;
-                          lpEnvironment       : LPVOID;
-                          lpCurrentDirectory  : LPWSTR;
+                          dwCreationFlags     : UINT32;
+                          lpEnvironment       : PVOID;
+                          lpCurrentDirectory  : PWSTR;
                           lpStartupInfo       : LPSTARTUPINFOW;
                           lpProcessInformation: LPPROCESS_INFORMATION  ): BOOL;
 
 CONST CreateProcess = CreateProcessA;
 
 <*EXTERNAL SetProcessShutdownParameters:WINAPI*>
-PROCEDURE SetProcessShutdownParameters (dwLevel: DWORD; dwFlags: DWORD): BOOL;
+PROCEDURE SetProcessShutdownParameters (dwLevel: UINT32; dwFlags: UINT32): BOOL;
 
 <*EXTERNAL GetProcessShutdownParameters:WINAPI*>
-PROCEDURE GetProcessShutdownParameters (lpdwLevel: LPDWORD;
-                                        lpdwFlags: LPDWORD  ): BOOL;
+PROCEDURE GetProcessShutdownParameters (lpdwLevel: PUINT32;
+                                        lpdwFlags: PUINT32  ): BOOL;
 
 <*EXTERNAL FatalAppExitA:WINAPI*>
-PROCEDURE FatalAppExitA (uAction: UINT; lpMessageText: LPCSTR);
+PROCEDURE FatalAppExitA (uAction: UINT32; lpMessageText: PCSTR);
 
 <*EXTERNAL FatalAppExitW:WINAPI*>
-PROCEDURE FatalAppExitW (uAction: UINT; lpMessageText: LPCWSTR);
+PROCEDURE FatalAppExitW (uAction: UINT32; lpMessageText: PCWSTR);
 
 CONST FatalAppExit = FatalAppExitA;
 
@@ -2525,164 +2509,164 @@ PROCEDURE GetStartupInfoW (lpStartupInfo: LPSTARTUPINFOW);
 CONST GetStartupInfo = GetStartupInfoA;
 
 <*EXTERNAL GetCommandLineA:WINAPI*>
-PROCEDURE GetCommandLineA (): LPSTR;
+PROCEDURE GetCommandLineA (): PSTR;
 
 <*EXTERNAL GetCommandLineW:WINAPI*>
-PROCEDURE GetCommandLineW (): LPWSTR;
+PROCEDURE GetCommandLineW (): PWSTR;
 
 CONST GetCommandLine = GetCommandLineA;
 
 <*EXTERNAL GetEnvironmentVariableA:WINAPI*>
-PROCEDURE GetEnvironmentVariableA (lpName  : LPSTR;
-                                   lpBuffer: LPSTR;
-                                   nSize   : DWORD  ): DWORD;
+PROCEDURE GetEnvironmentVariableA (lpName  : PSTR;
+                                   lpBuffer: PSTR;
+                                   nSize   : UINT32  ): UINT32;
 
 <*EXTERNAL GetEnvironmentVariableW:WINAPI*>
-PROCEDURE GetEnvironmentVariableW (lpName  : LPWSTR;
-                                   lpBuffer: LPWSTR;
-                                   nSize   : DWORD   ): DWORD;
+PROCEDURE GetEnvironmentVariableW (lpName  : PWSTR;
+                                   lpBuffer: PWSTR;
+                                   nSize   : UINT32   ): UINT32;
 
 CONST GetEnvironmentVariable = GetEnvironmentVariableA;
 
 <*EXTERNAL SetEnvironmentVariableA:WINAPI*>
-PROCEDURE SetEnvironmentVariableA (lpName: LPSTR; lpValue: LPSTR): BOOL;
+PROCEDURE SetEnvironmentVariableA (lpName: PSTR; lpValue: PSTR): BOOL;
 
 <*EXTERNAL SetEnvironmentVariableW:WINAPI*>
-PROCEDURE SetEnvironmentVariableW (lpName: LPWSTR; lpValue: LPWSTR): BOOL;
+PROCEDURE SetEnvironmentVariableW (lpName: PWSTR; lpValue: PWSTR): BOOL;
 
 CONST SetEnvironmentVariable = SetEnvironmentVariableA;
 
 <*EXTERNAL ExpandEnvironmentStringsA:WINAPI*>
-PROCEDURE ExpandEnvironmentStringsA (lpSrc: LPCSTR;
-                                     lpDst: LPSTR;
-                                     nSize: DWORD   ): DWORD;
+PROCEDURE ExpandEnvironmentStringsA (lpSrc: PCSTR;
+                                     lpDst: PSTR;
+                                     nSize: UINT32   ): UINT32;
 
 <*EXTERNAL ExpandEnvironmentStringsW:WINAPI*>
-PROCEDURE ExpandEnvironmentStringsW (lpSrc: LPCWSTR;
-                                     lpDst: LPWSTR;
-                                     nSize: DWORD    ): DWORD;
+PROCEDURE ExpandEnvironmentStringsW (lpSrc: PCWSTR;
+                                     lpDst: PWSTR;
+                                     nSize: UINT32    ): UINT32;
 
 CONST ExpandEnvironmentStrings = ExpandEnvironmentStringsA;
 
 <*EXTERNAL OutputDebugStringA:WINAPI*>
-PROCEDURE OutputDebugStringA (lpOutputString: LPCSTR);
+PROCEDURE OutputDebugStringA (lpOutputString: PCSTR);
 
 <*EXTERNAL OutputDebugStringW:WINAPI*>
-PROCEDURE OutputDebugStringW (lpOutputString: LPCWSTR);
+PROCEDURE OutputDebugStringW (lpOutputString: PCWSTR);
 
 CONST OutputDebugString = OutputDebugStringA;
 
 <*EXTERNAL FindResourceA:WINAPI*>
 PROCEDURE FindResourceA (hModule: HINSTANCE;
-                         lpName : LPCSTR;
-                         lpType : LPCSTR     ): HRSRC;
+                         lpName : PCSTR;
+                         lpType : PCSTR     ): HRSRC;
 
 <*EXTERNAL FindResourceW:WINAPI*>
 PROCEDURE FindResourceW (hModule: HINSTANCE;
-                         lpName : LPCWSTR;
-                         lpType : LPCWSTR    ): HRSRC;
+                         lpName : PCWSTR;
+                         lpType : PCWSTR    ): HRSRC;
 
 CONST FindResource = FindResourceA;
 
 <*EXTERNAL FindResourceExA:WINAPI*>
 PROCEDURE FindResourceExA (hModule  : HINSTANCE;
-                           lpType   : LPCSTR;
-                           lpName   : LPCSTR;
-                           wLanguage: WORD       ): HRSRC;
+                           lpType   : PCSTR;
+                           lpName   : PCSTR;
+                           wLanguage: UINT16       ): HRSRC;
 
 <*EXTERNAL FindResourceExW:WINAPI*>
 PROCEDURE FindResourceExW (hModule  : HINSTANCE;
-                           lpType   : LPCWSTR;
-                           lpName   : LPCWSTR;
-                           wLanguage: WORD       ): HRSRC;
+                           lpType   : PCWSTR;
+                           lpName   : PCWSTR;
+                           wLanguage: UINT16       ): HRSRC;
 
 CONST FindResourceEx = FindResourceExA;
 
 TYPE
   ENUMRESTYPEPROC = <*CALLBACK*> PROCEDURE (hModule: HINSTANCE;
-                                            lpType : LPTSTR;
-                                            lParam : LONG      ): BOOL;
+                                            lpType : PTSTR;
+                                            lParam : INT32      ): BOOL;
 
   ENUMRESNAMEPROC = <*CALLBACK*> PROCEDURE (hModule: HINSTANCE;
-                                            lpType : LPCTSTR;
-                                            lpName : LPTSTR;
-                                            lParam : LONG      ): BOOL;
+                                            lpType : PCTSTR;
+                                            lpName : PTSTR;
+                                            lParam : INT32      ): BOOL;
 
   ENUMRESLANGPROC = <*CALLBACK*> PROCEDURE (hModule  : HINSTANCE;
-                                            lpType   : LPCTSTR;
-                                            lpName   : LPCTSTR;
-                                            wLanguage: WORD;
-                                            lParam   : LONG       ): BOOL;
+                                            lpType   : PCTSTR;
+                                            lpName   : PCTSTR;
+                                            wLanguage: UINT16;
+                                            lParam   : INT32       ): BOOL;
 
 
 <*EXTERNAL EnumResourceTypesA:WINAPI*>
 PROCEDURE EnumResourceTypesA (hModule   : HINSTANCE;
                               lpEnumFunc: ENUMRESTYPEPROC;
-                              lParam    : LONG             ): BOOL;
+                              lParam    : INT32             ): BOOL;
 
 <*EXTERNAL EnumResourceTypesW:WINAPI*>
 PROCEDURE EnumResourceTypesW (hModule   : HINSTANCE;
                               lpEnumFunc: ENUMRESTYPEPROC;
-                              lParam    : LONG             ): BOOL;
+                              lParam    : INT32             ): BOOL;
 
 CONST EnumResourceTypes = EnumResourceTypesA;
 
 
 <*EXTERNAL EnumResourceNamesA:WINAPI*>
 PROCEDURE EnumResourceNamesA (hModule   : HINSTANCE;
-                              lpType    : LPCSTR;
+                              lpType    : PCSTR;
                               lpEnumFunc: ENUMRESNAMEPROC;
-                              lParam    : LONG             ): BOOL;
+                              lParam    : INT32             ): BOOL;
 
 <*EXTERNAL EnumResourceNamesW:WINAPI*>
 PROCEDURE EnumResourceNamesW (hModule   : HINSTANCE;
-                              lpType    : LPCWSTR;
+                              lpType    : PCWSTR;
                               lpEnumFunc: ENUMRESNAMEPROC;
-                              lParam    : LONG             ): BOOL;
+                              lParam    : INT32             ): BOOL;
 
 CONST EnumResourceNames = EnumResourceNamesA;
 
 <*EXTERNAL EnumResourceLanguagesA:WINAPI*>
 PROCEDURE EnumResourceLanguagesA (hModule   : HINSTANCE;
-                                  lpType    : LPCSTR;
-                                  lpName    : LPCSTR;
+                                  lpType    : PCSTR;
+                                  lpName    : PCSTR;
                                   lpEnumFunc: ENUMRESLANGPROC;
-                                  lParam    : LONG             ): BOOL;
+                                  lParam    : INT32             ): BOOL;
 
 <*EXTERNAL EnumResourceLanguagesW:WINAPI*>
 PROCEDURE EnumResourceLanguagesW (hModule   : HINSTANCE;
-                                  lpType    : LPCWSTR;
-                                  lpName    : LPCWSTR;
+                                  lpType    : PCWSTR;
+                                  lpName    : PCWSTR;
                                   lpEnumFunc: ENUMRESLANGPROC;
-                                  lParam    : LONG             ): BOOL;
+                                  lParam    : INT32             ): BOOL;
 
 CONST EnumResourceLanguages = EnumResourceLanguagesA;
 
 <*EXTERNAL BeginUpdateResourceA:WINAPI*>
-PROCEDURE BeginUpdateResourceA (pFileName               : LPSTR;
+PROCEDURE BeginUpdateResourceA (pFileName               : PSTR;
                                 bDeleteExistingResources: BOOL   ): HANDLE;
 
 <*EXTERNAL BeginUpdateResourceW:WINAPI*>
-PROCEDURE BeginUpdateResourceW (pFileName               : LPWSTR;
+PROCEDURE BeginUpdateResourceW (pFileName               : PWSTR;
                                 bDeleteExistingResources: BOOL    ): HANDLE;
 
 CONST BeginUpdateResource = BeginUpdateResourceA;
 
 <*EXTERNAL UpdateResourceA:WINAPI*>
 PROCEDURE UpdateResourceA (hUpdate  : HANDLE;
-                           lpType   : LPSTR;
-                           lpName   : LPSTR;
-                           wLanguage: WORD;
-                           lpData   : LPVOID;
-                           cbData   : DWORD   ): BOOL;
+                           lpType   : PSTR;
+                           lpName   : PSTR;
+                           wLanguage: UINT16;
+                           lpData   : PVOID;
+                           cbData   : UINT32   ): BOOL;
 
 <*EXTERNAL UpdateResourceW:WINAPI*>
 PROCEDURE UpdateResourceW (hUpdate  : HANDLE;
-                           lpType   : LPWSTR;
-                           lpName   : LPWSTR;
-                           wLanguage: WORD;
-                           lpData   : LPVOID;
-                           cbData   : DWORD   ): BOOL;
+                           lpType   : PWSTR;
+                           lpName   : PWSTR;
+                           wLanguage: UINT16;
+                           lpData   : PVOID;
+                           cbData   : UINT32   ): BOOL;
 
 CONST UpdateResource = UpdateResourceA;
 
@@ -2695,348 +2679,348 @@ PROCEDURE EndUpdateResourceW (hUpdate: HANDLE; fDiscard: BOOL): BOOL;
 CONST EndUpdateResource = EndUpdateResourceA;
 
 <*EXTERNAL GlobalAddAtomA:WINAPI*>
-PROCEDURE GlobalAddAtomA (lpString: LPCSTR): ATOM;
+PROCEDURE GlobalAddAtomA (lpString: PCSTR): ATOM;
 
 <*EXTERNAL GlobalAddAtomW:WINAPI*>
-PROCEDURE GlobalAddAtomW (lpString: LPCWSTR): ATOM;
+PROCEDURE GlobalAddAtomW (lpString: PCWSTR): ATOM;
 
 CONST GlobalAddAtom = GlobalAddAtomA;
 
 <*EXTERNAL GlobalFindAtomA:WINAPI*>
-PROCEDURE GlobalFindAtomA (lpString: LPCSTR): ATOM;
+PROCEDURE GlobalFindAtomA (lpString: PCSTR): ATOM;
 
 <*EXTERNAL GlobalFindAtomW:WINAPI*>
-PROCEDURE GlobalFindAtomW (lpString: LPCWSTR): ATOM;
+PROCEDURE GlobalFindAtomW (lpString: PCWSTR): ATOM;
 
 CONST GlobalFindAtom = GlobalFindAtomA;
 
 <*EXTERNAL GlobalGetAtomNameA:WINAPI*>
-PROCEDURE GlobalGetAtomNameA (nAtom: ATOM; lpBuffer: LPSTR; nSize: int): UINT;
+PROCEDURE GlobalGetAtomNameA (nAtom: ATOM; lpBuffer: PSTR; nSize: INT32): UINT32;
 
 <*EXTERNAL GlobalGetAtomNameW:WINAPI*>
-PROCEDURE GlobalGetAtomNameW (nAtom: ATOM; lpBuffer: LPWSTR; nSize: int): UINT;
+PROCEDURE GlobalGetAtomNameW (nAtom: ATOM; lpBuffer: PWSTR; nSize: INT32): UINT32;
 
 CONST GlobalGetAtomName = GlobalGetAtomNameA;
 
 <*EXTERNAL AddAtomA:WINAPI*>
-PROCEDURE AddAtomA (lpString: LPCSTR): ATOM;
+PROCEDURE AddAtomA (lpString: PCSTR): ATOM;
 
 <*EXTERNAL AddAtomW:WINAPI*>
-PROCEDURE AddAtomW (lpString: LPCWSTR): ATOM;
+PROCEDURE AddAtomW (lpString: PCWSTR): ATOM;
 
 CONST AddAtom = AddAtomA;
 
 <*EXTERNAL FindAtomA:WINAPI*>
-PROCEDURE FindAtomA (lpString: LPCSTR): ATOM;
+PROCEDURE FindAtomA (lpString: PCSTR): ATOM;
 
 <*EXTERNAL FindAtomW:WINAPI*>
-PROCEDURE FindAtomW (lpString: LPCWSTR): ATOM;
+PROCEDURE FindAtomW (lpString: PCWSTR): ATOM;
 
 CONST FindAtom = FindAtomA;
 
 <*EXTERNAL GetAtomNameA:WINAPI*>
-PROCEDURE GetAtomNameA (nAtom: ATOM; lpBuffer: LPSTR; nSize: int): UINT;
+PROCEDURE GetAtomNameA (nAtom: ATOM; lpBuffer: PSTR; nSize: INT32): UINT32;
 
 <*EXTERNAL GetAtomNameW:WINAPI*>
-PROCEDURE GetAtomNameW (nAtom: ATOM; lpBuffer: LPWSTR; nSize: int): UINT;
+PROCEDURE GetAtomNameW (nAtom: ATOM; lpBuffer: PWSTR; nSize: INT32): UINT32;
 
 CONST GetAtomName = GetAtomNameA;
 
 <*EXTERNAL GetProfileIntA:WINAPI*>
-PROCEDURE GetProfileIntA (lpAppName: LPCSTR;
-                          lpKeyName: LPCSTR;
-                          nDefault : DWORD   ): UINT;
+PROCEDURE GetProfileIntA (lpAppName: PCSTR;
+                          lpKeyName: PCSTR;
+                          nDefault : UINT32   ): UINT32;
 
 <*EXTERNAL GetProfileIntW:WINAPI*>
-PROCEDURE GetProfileIntW (lpAppName: LPCWSTR;
-                          lpKeyName: LPCWSTR;
-                          nDefault : DWORD    ): UINT;
+PROCEDURE GetProfileIntW (lpAppName: PCWSTR;
+                          lpKeyName: PCWSTR;
+                          nDefault : UINT32    ): UINT32;
 
 CONST GetProfileInt = GetProfileIntA;
 
 <*EXTERNAL GetProfileStringA:WINAPI*>
-PROCEDURE GetProfileStringA (lpAppName       : LPCSTR;
-                             lpKeyName       : LPCSTR;
-                             lpDefault       : LPCSTR;
-                             lpReturnedString: LPSTR;
-                             nSize           : DWORD   ): DWORD;
+PROCEDURE GetProfileStringA (lpAppName       : PCSTR;
+                             lpKeyName       : PCSTR;
+                             lpDefault       : PCSTR;
+                             lpReturnedString: PSTR;
+                             nSize           : UINT32   ): UINT32;
 
 <*EXTERNAL GetProfileStringW:WINAPI*>
-PROCEDURE GetProfileStringW (lpAppName       : LPCWSTR;
-                             lpKeyName       : LPCWSTR;
-                             lpDefault       : LPCWSTR;
-                             lpReturnedString: LPWSTR;
-                             nSize           : DWORD    ): DWORD;
+PROCEDURE GetProfileStringW (lpAppName       : PCWSTR;
+                             lpKeyName       : PCWSTR;
+                             lpDefault       : PCWSTR;
+                             lpReturnedString: PWSTR;
+                             nSize           : UINT32    ): UINT32;
 
 CONST GetProfileString = GetProfileStringA;
 
 <*EXTERNAL WriteProfileStringA:WINAPI*>
-PROCEDURE WriteProfileStringA (lpAppName: LPCSTR;
-                               lpKeyName: LPCSTR;
-                               lpString : LPCSTR  ): BOOL;
+PROCEDURE WriteProfileStringA (lpAppName: PCSTR;
+                               lpKeyName: PCSTR;
+                               lpString : PCSTR  ): BOOL;
 
 <*EXTERNAL WriteProfileStringW:WINAPI*>
-PROCEDURE WriteProfileStringW (lpAppName: LPCWSTR;
-                               lpKeyName: LPCWSTR;
-                               lpString : LPCWSTR  ): BOOL;
+PROCEDURE WriteProfileStringW (lpAppName: PCWSTR;
+                               lpKeyName: PCWSTR;
+                               lpString : PCWSTR  ): BOOL;
 
 CONST WriteProfileString = WriteProfileStringA;
 
 <*EXTERNAL GetProfileSectionA:WINAPI*>
-PROCEDURE GetProfileSectionA (lpAppName       : LPCSTR;
-                              lpReturnedString: LPSTR;
-                              nSize           : DWORD   ): DWORD;
+PROCEDURE GetProfileSectionA (lpAppName       : PCSTR;
+                              lpReturnedString: PSTR;
+                              nSize           : UINT32   ): UINT32;
 
 <*EXTERNAL GetProfileSectionW:WINAPI*>
-PROCEDURE GetProfileSectionW (lpAppName       : LPCWSTR;
-                              lpReturnedString: LPWSTR;
-                              nSize           : DWORD    ): DWORD;
+PROCEDURE GetProfileSectionW (lpAppName       : PCWSTR;
+                              lpReturnedString: PWSTR;
+                              nSize           : UINT32    ): UINT32;
 
 CONST GetProfileSection = GetProfileSectionA;
 
 <*EXTERNAL WriteProfileSectionA:WINAPI*>
-PROCEDURE WriteProfileSectionA (lpAppName: LPCSTR; lpString: LPCSTR): BOOL;
+PROCEDURE WriteProfileSectionA (lpAppName: PCSTR; lpString: PCSTR): BOOL;
 
 <*EXTERNAL WriteProfileSectionW:WINAPI*>
-PROCEDURE WriteProfileSectionW (lpAppName: LPCWSTR; lpString: LPCWSTR): BOOL;
+PROCEDURE WriteProfileSectionW (lpAppName: PCWSTR; lpString: PCWSTR): BOOL;
 
 CONST WriteProfileSection = WriteProfileSectionA;
 
 <*EXTERNAL GetPrivateProfileIntA:WINAPI*>
-PROCEDURE GetPrivateProfileIntA (lpAppName : LPCSTR;
-                                 lpKeyName : LPCSTR;
-                                 nDefault  : DWORD;
-                                 lpFileName: LPCSTR  ): UINT;
+PROCEDURE GetPrivateProfileIntA (lpAppName : PCSTR;
+                                 lpKeyName : PCSTR;
+                                 nDefault  : UINT32;
+                                 lpFileName: PCSTR  ): UINT32;
 
 <*EXTERNAL GetPrivateProfileIntW:WINAPI*>
-PROCEDURE GetPrivateProfileIntW (lpAppName : LPCWSTR;
-                                 lpKeyName : LPCWSTR;
-                                 nDefault  : DWORD;
-                                 lpFileName: LPCWSTR  ): UINT;
+PROCEDURE GetPrivateProfileIntW (lpAppName : PCWSTR;
+                                 lpKeyName : PCWSTR;
+                                 nDefault  : UINT32;
+                                 lpFileName: PCWSTR  ): UINT32;
 
 CONST GetPrivateProfileInt = GetPrivateProfileIntA;
 
 <*EXTERNAL GetPrivateProfileStringA:WINAPI*>
-PROCEDURE GetPrivateProfileStringA (lpAppName       : LPCSTR;
-                                    lpKeyName       : LPCSTR;
-                                    lpDefault       : LPCSTR;
-                                    lpReturnedString: LPSTR;
-                                    nSize           : DWORD;
-                                    lpFileName      : LPCSTR  ): DWORD;
+PROCEDURE GetPrivateProfileStringA (lpAppName       : PCSTR;
+                                    lpKeyName       : PCSTR;
+                                    lpDefault       : PCSTR;
+                                    lpReturnedString: PSTR;
+                                    nSize           : UINT32;
+                                    lpFileName      : PCSTR  ): UINT32;
 
 <*EXTERNAL GetPrivateProfileStringW:WINAPI*>
-PROCEDURE GetPrivateProfileStringW (lpAppName       : LPCWSTR;
-                                    lpKeyName       : LPCWSTR;
-                                    lpDefault       : LPCWSTR;
-                                    lpReturnedString: LPWSTR;
-                                    nSize           : DWORD;
-                                    lpFileName      : LPCWSTR  ): DWORD;
+PROCEDURE GetPrivateProfileStringW (lpAppName       : PCWSTR;
+                                    lpKeyName       : PCWSTR;
+                                    lpDefault       : PCWSTR;
+                                    lpReturnedString: PWSTR;
+                                    nSize           : UINT32;
+                                    lpFileName      : PCWSTR  ): UINT32;
 
 CONST GetPrivateProfileString = GetPrivateProfileStringA;
 
 <*EXTERNAL WritePrivateProfileStringA:WINAPI*>
-PROCEDURE WritePrivateProfileStringA (lpAppName : LPCSTR;
-                                      lpKeyName : LPCSTR;
-                                      lpString  : LPCSTR;
-                                      lpFileName: LPCSTR  ): BOOL;
+PROCEDURE WritePrivateProfileStringA (lpAppName : PCSTR;
+                                      lpKeyName : PCSTR;
+                                      lpString  : PCSTR;
+                                      lpFileName: PCSTR  ): BOOL;
 
 <*EXTERNAL WritePrivateProfileStringW:WINAPI*>
-PROCEDURE WritePrivateProfileStringW (lpAppName : LPCWSTR;
-                                      lpKeyName : LPCWSTR;
-                                      lpString  : LPCWSTR;
-                                      lpFileName: LPCWSTR  ): BOOL;
+PROCEDURE WritePrivateProfileStringW (lpAppName : PCWSTR;
+                                      lpKeyName : PCWSTR;
+                                      lpString  : PCWSTR;
+                                      lpFileName: PCWSTR  ): BOOL;
 
 CONST WritePrivateProfileString = WritePrivateProfileStringA;
 
 <*EXTERNAL GetPrivateProfileSectionA:WINAPI*>
-PROCEDURE GetPrivateProfileSectionA (lpAppName       : LPCSTR;
-                                     lpReturnedString: LPSTR;
-                                     nSize           : DWORD;
-                                     lpFileName      : LPCSTR  ): DWORD;
+PROCEDURE GetPrivateProfileSectionA (lpAppName       : PCSTR;
+                                     lpReturnedString: PSTR;
+                                     nSize           : UINT32;
+                                     lpFileName      : PCSTR  ): UINT32;
 
 <*EXTERNAL GetPrivateProfileSectionW:WINAPI*>
-PROCEDURE GetPrivateProfileSectionW (lpAppName       : LPCWSTR;
-                                     lpReturnedString: LPWSTR;
-                                     nSize           : DWORD;
-                                     lpFileName      : LPCWSTR  ): DWORD;
+PROCEDURE GetPrivateProfileSectionW (lpAppName       : PCWSTR;
+                                     lpReturnedString: PWSTR;
+                                     nSize           : UINT32;
+                                     lpFileName      : PCWSTR  ): UINT32;
 
 CONST GetPrivateProfileSection = GetPrivateProfileSectionA;
 
 <*EXTERNAL WritePrivateProfileSectionA:WINAPI*>
-PROCEDURE WritePrivateProfileSectionA (lpAppName : LPCSTR;
-                                       lpString  : LPCSTR;
-                                       lpFileName: LPCSTR  ): BOOL;
+PROCEDURE WritePrivateProfileSectionA (lpAppName : PCSTR;
+                                       lpString  : PCSTR;
+                                       lpFileName: PCSTR  ): BOOL;
 
 <*EXTERNAL WritePrivateProfileSectionW:WINAPI*>
-PROCEDURE WritePrivateProfileSectionW (lpAppName : LPCWSTR;
-                                       lpString  : LPCWSTR;
-                                       lpFileName: LPCWSTR  ): BOOL;
+PROCEDURE WritePrivateProfileSectionW (lpAppName : PCWSTR;
+                                       lpString  : PCWSTR;
+                                       lpFileName: PCWSTR  ): BOOL;
 
 CONST WritePrivateProfileSection = WritePrivateProfileSectionA;
 
 <*EXTERNAL GetPrivateProfileSectionNamesA:WINAPI*>
-PROCEDURE GetPrivateProfileSectionNamesA (lpszReturnBuffer : LPSTR;
-                                          nSize            : DWORD;
-                                          lpFileName       : LPCSTR): DWORD;
+PROCEDURE GetPrivateProfileSectionNamesA (lpszReturnBuffer : PSTR;
+                                          nSize            : UINT32;
+                                          lpFileName       : PCSTR): UINT32;
 
 <*EXTERNAL GetPrivateProfileSectionNamesW:WINAPI*>
-PROCEDURE GetPrivateProfileSectionNamesW (lpszReturnBuffer : LPWSTR;
-                                          nSize            : DWORD;
-                                          lpFileName       : LPCWSTR): DWORD;
+PROCEDURE GetPrivateProfileSectionNamesW (lpszReturnBuffer : PWSTR;
+                                          nSize            : UINT32;
+                                          lpFileName       : PCWSTR): UINT32;
 
 CONST GetPrivateProfileSectionNames = GetPrivateProfileSectionNamesA;
 
 <*EXTERNAL GetPrivateProfileStructA:WINAPI*>
-PROCEDURE GetPrivateProfileStructA (lpszSection : LPCSTR;
-                                    lpszKey     : LPCSTR;
-                                    lpStruct    : LPVOID;
-                                    uSizeStruct : UINT;
-                                    szFile      : LPCSTR): BOOL;
+PROCEDURE GetPrivateProfileStructA (lpszSection : PCSTR;
+                                    lpszKey     : PCSTR;
+                                    lpStruct    : PVOID;
+                                    uSizeStruct : UINT32;
+                                    szFile      : PCSTR): BOOL;
 
 <*EXTERNAL GetPrivateProfileStructW:WINAPI*>
-PROCEDURE GetPrivateProfileStructW (lpszSection : LPCWSTR;
-                                    lpszKey     : LPCWSTR;
-                                    lpStruct    : LPVOID;
-                                    uSizeStruct : UINT;
-                                    szFile      : LPCWSTR): BOOL;
+PROCEDURE GetPrivateProfileStructW (lpszSection : PCWSTR;
+                                    lpszKey     : PCWSTR;
+                                    lpStruct    : PVOID;
+                                    uSizeStruct : UINT32;
+                                    szFile      : PCWSTR): BOOL;
 
 CONST GetPrivateProfileStruct = GetPrivateProfileStructA;
 
 <*EXTERNAL WritePrivateProfileStructA:WINAPI*>
-PROCEDURE WritePrivateProfileStructA (lpszSection : LPCSTR;
-                                      lpszKey     : LPCSTR;
-                                      lpStruct    : LPVOID;
-                                      uSizeStruct : UINT;
-                                      szFile      : LPCSTR): BOOL;
+PROCEDURE WritePrivateProfileStructA (lpszSection : PCSTR;
+                                      lpszKey     : PCSTR;
+                                      lpStruct    : PVOID;
+                                      uSizeStruct : UINT32;
+                                      szFile      : PCSTR): BOOL;
 
 <*EXTERNAL WritePrivateProfileStructW:WINAPI*>
-PROCEDURE WritePrivateProfileStructW (lpszSection : LPCWSTR;
-                                      lpszKey     : LPCWSTR;
-                                      lpStruct    : LPVOID;
-                                      uSizeStruct : UINT;
-                                      szFile      : LPCWSTR): BOOL;
+PROCEDURE WritePrivateProfileStructW (lpszSection : PCWSTR;
+                                      lpszKey     : PCWSTR;
+                                      lpStruct    : PVOID;
+                                      uSizeStruct : UINT32;
+                                      szFile      : PCWSTR): BOOL;
 
 CONST WritePrivateProfileStruct = WritePrivateProfileStructA;
 
 <*EXTERNAL GetDriveTypeA:WINAPI*>
-PROCEDURE GetDriveTypeA (lpRootPathName: LPSTR): UINT;
+PROCEDURE GetDriveTypeA (lpRootPathName: PSTR): UINT32;
 
 <*EXTERNAL GetDriveTypeW:WINAPI*>
-PROCEDURE GetDriveTypeW (lpRootPathName: LPWSTR): UINT;
+PROCEDURE GetDriveTypeW (lpRootPathName: PWSTR): UINT32;
 
 CONST GetDriveType = GetDriveTypeA;
 
 <*EXTERNAL GetSystemDirectoryA:WINAPI*>
-PROCEDURE GetSystemDirectoryA (lpBuffer: LPSTR; uSize: UINT): UINT;
+PROCEDURE GetSystemDirectoryA (lpBuffer: PSTR; uSize: UINT32): UINT32;
 
 <*EXTERNAL GetSystemDirectoryW:WINAPI*>
-PROCEDURE GetSystemDirectoryW (lpBuffer: LPWSTR; uSize: UINT): UINT;
+PROCEDURE GetSystemDirectoryW (lpBuffer: PWSTR; uSize: UINT32): UINT32;
 
 CONST GetSystemDirectory = GetSystemDirectoryA;
 
 <*EXTERNAL GetTempPathA:WINAPI*>
-PROCEDURE GetTempPathA (nBufferLength: DWORD; lpBuffer: LPSTR): DWORD;
+PROCEDURE GetTempPathA (nBufferLength: UINT32; lpBuffer: PSTR): UINT32;
 
 <*EXTERNAL GetTempPathW:WINAPI*>
-PROCEDURE GetTempPathW (nBufferLength: DWORD; lpBuffer: LPWSTR): DWORD;
+PROCEDURE GetTempPathW (nBufferLength: UINT32; lpBuffer: PWSTR): UINT32;
 
 CONST GetTempPath = GetTempPathA;
 
 <*EXTERNAL GetTempFileNameA:WINAPI*>
-PROCEDURE GetTempFileNameA (lpPathName    : LPCSTR;
-                            lpPrefixString: LPCSTR;
-                            uUnique       : UINT;
-                            lpTempFileName: LPSTR   ): UINT;
+PROCEDURE GetTempFileNameA (lpPathName    : PCSTR;
+                            lpPrefixString: PCSTR;
+                            uUnique       : UINT32;
+                            lpTempFileName: PSTR   ): UINT32;
 
 <*EXTERNAL GetTempFileNameW:WINAPI*>
-PROCEDURE GetTempFileNameW (lpPathName    : LPCWSTR;
-                            lpPrefixString: LPCWSTR;
-                            uUnique       : UINT;
-                            lpTempFileName: LPWSTR   ): UINT;
+PROCEDURE GetTempFileNameW (lpPathName    : PCWSTR;
+                            lpPrefixString: PCWSTR;
+                            uUnique       : UINT32;
+                            lpTempFileName: PWSTR   ): UINT32;
 
 CONST GetTempFileName = GetTempFileNameA;
 
 <*EXTERNAL GetWindowsDirectoryA:WINAPI*>
-PROCEDURE GetWindowsDirectoryA (lpBuffer: LPSTR; uSize: UINT): UINT;
+PROCEDURE GetWindowsDirectoryA (lpBuffer: PSTR; uSize: UINT32): UINT32;
 
 <*EXTERNAL GetWindowsDirectoryW:WINAPI*>
-PROCEDURE GetWindowsDirectoryW (lpBuffer: LPWSTR; uSize: UINT): UINT;
+PROCEDURE GetWindowsDirectoryW (lpBuffer: PWSTR; uSize: UINT32): UINT32;
 
 CONST GetWindowsDirectory = GetWindowsDirectoryA;
 
 <*EXTERNAL SetCurrentDirectoryA:WINAPI*>
-PROCEDURE SetCurrentDirectoryA (lpPathName: LPSTR): BOOL;
+PROCEDURE SetCurrentDirectoryA (lpPathName: PSTR): BOOL;
 
 <*EXTERNAL SetCurrentDirectoryW:WINAPI*>
-PROCEDURE SetCurrentDirectoryW (lpPathName: LPWSTR): BOOL;
+PROCEDURE SetCurrentDirectoryW (lpPathName: PWSTR): BOOL;
 
 CONST SetCurrentDirectory = SetCurrentDirectoryA;
 
 <*EXTERNAL GetCurrentDirectoryA:WINAPI*>
-PROCEDURE GetCurrentDirectoryA (nBufferLength: DWORD; lpBuffer: LPSTR): DWORD;
+PROCEDURE GetCurrentDirectoryA (nBufferLength: UINT32; lpBuffer: PSTR): UINT32;
 
 <*EXTERNAL GetCurrentDirectoryW:WINAPI*>
-PROCEDURE GetCurrentDirectoryW (nBufferLength: DWORD; lpBuffer: LPWSTR): DWORD;
+PROCEDURE GetCurrentDirectoryW (nBufferLength: UINT32; lpBuffer: PWSTR): UINT32;
 
 CONST GetCurrentDirectory = GetCurrentDirectoryA;
 
 <*EXTERNAL GetDiskFreeSpaceA:WINAPI*>
-PROCEDURE GetDiskFreeSpaceA (lpRootPathName         : LPSTR;
-                             lpSectorsPerCluster    : LPDWORD;
-                             lpBytesPerSector       : LPDWORD;
-                             lpNumberOfFreeClusters : LPDWORD;
-                             lpTotalNumberOfClusters: LPDWORD  ): BOOL;
+PROCEDURE GetDiskFreeSpaceA (lpRootPathName         : PSTR;
+                             lpSectorsPerCluster    : PUINT32;
+                             lpBytesPerSector       : PUINT32;
+                             lpNumberOfFreeClusters : PUINT32;
+                             lpTotalNumberOfClusters: PUINT32  ): BOOL;
 
 <*EXTERNAL GetDiskFreeSpaceW:WINAPI*>
-PROCEDURE GetDiskFreeSpaceW (lpRootPathName         : LPWSTR;
-                             lpSectorsPerCluster    : LPDWORD;
-                             lpBytesPerSector       : LPDWORD;
-                             lpNumberOfFreeClusters : LPDWORD;
-                             lpTotalNumberOfClusters: LPDWORD  ): BOOL;
+PROCEDURE GetDiskFreeSpaceW (lpRootPathName         : PWSTR;
+                             lpSectorsPerCluster    : PUINT32;
+                             lpBytesPerSector       : PUINT32;
+                             lpNumberOfFreeClusters : PUINT32;
+                             lpTotalNumberOfClusters: PUINT32  ): BOOL;
 
 CONST GetDiskFreeSpace = GetDiskFreeSpaceA;
 
 <*EXTERNAL CreateDirectoryA:WINAPI*>
-PROCEDURE CreateDirectoryA (lpPathName          : LPSTR;
-                            lpSecurityAttributes: LPSECURITY_ATTRIBUTES): BOOL;
+PROCEDURE CreateDirectoryA (lpPathName          : PSTR;
+                            lpSecurityAttributes: PSECURITY_ATTRIBUTES): BOOL;
 
 <*EXTERNAL CreateDirectoryW:WINAPI*>
-PROCEDURE CreateDirectoryW (lpPathName          : LPWSTR;
-                            lpSecurityAttributes: LPSECURITY_ATTRIBUTES): BOOL;
+PROCEDURE CreateDirectoryW (lpPathName          : PWSTR;
+                            lpSecurityAttributes: PSECURITY_ATTRIBUTES): BOOL;
 
 CONST CreateDirectory = CreateDirectoryA;
 
 <*EXTERNAL CreateDirectoryExA:WINAPI*>
-PROCEDURE CreateDirectoryExA (lpTemplateDirectory : LPCSTR;
-                              lpNewDirectory      : LPCSTR;
-                              lpSecurityAttributes: LPSECURITY_ATTRIBUTES): BOOL;
+PROCEDURE CreateDirectoryExA (lpTemplateDirectory : PCSTR;
+                              lpNewDirectory      : PCSTR;
+                              lpSecurityAttributes: PSECURITY_ATTRIBUTES): BOOL;
 
 <*EXTERNAL CreateDirectoryExW:WINAPI*>
-PROCEDURE CreateDirectoryExW (lpTemplateDirectory : LPCWSTR;
-                              lpNewDirectory      : LPCWSTR;
-                              lpSecurityAttributes: LPSECURITY_ATTRIBUTES): BOOL;
+PROCEDURE CreateDirectoryExW (lpTemplateDirectory : PCWSTR;
+                              lpNewDirectory      : PCWSTR;
+                              lpSecurityAttributes: PSECURITY_ATTRIBUTES): BOOL;
 
 CONST CreateDirectoryEx = CreateDirectoryExA;
 
 <*EXTERNAL RemoveDirectoryA:WINAPI*>
-PROCEDURE RemoveDirectoryA (lpPathName: LPSTR): BOOL;
+PROCEDURE RemoveDirectoryA (lpPathName: PSTR): BOOL;
 
 <*EXTERNAL RemoveDirectoryW:WINAPI*>
-PROCEDURE RemoveDirectoryW (lpPathName: LPWSTR): BOOL;
+PROCEDURE RemoveDirectoryW (lpPathName: PWSTR): BOOL;
 
 CONST RemoveDirectory = RemoveDirectoryA;
 
 <*EXTERNAL GetFullPathNameA:WINAPI*>
-PROCEDURE GetFullPathNameA (lpFileName   : LPCSTR;
-                            nBufferLength: DWORD;
-                            lpBuffer     : LPSTR;
-                            lpFilePart   : UNTRACED REF LPSTR): DWORD;
+PROCEDURE GetFullPathNameA (lpFileName   : PCSTR;
+                            nBufferLength: UINT32;
+                            lpBuffer     : PSTR;
+                            lpFilePart   : UNTRACED REF PSTR): UINT32;
 
 <*EXTERNAL GetFullPathNameW:WINAPI*>
-PROCEDURE GetFullPathNameW (lpFileName   : LPCWSTR;
-                            nBufferLength: DWORD;
-                            lpBuffer     : LPWSTR;
-                            lpFilePart   : UNTRACED REF LPWSTR): DWORD;
+PROCEDURE GetFullPathNameW (lpFileName   : PCWSTR;
+                            nBufferLength: UINT32;
+                            lpBuffer     : PWSTR;
+                            lpFilePart   : UNTRACED REF PWSTR): UINT32;
 
 CONST GetFullPathName = GetFullPathNameA;
 
@@ -3046,26 +3030,26 @@ CONST
   DDD_EXACT_MATCH_ON_REMOVE = 16_00000004;
 
 <*EXTERNAL DefineDosDeviceA:WINAPI*>
-PROCEDURE DefineDosDeviceA (dwFlags      : DWORD;
-                            lpDeviceName : LPCSTR;
-                            lpTargetPath : LPCSTR): BOOL;
+PROCEDURE DefineDosDeviceA (dwFlags      : UINT32;
+                            lpDeviceName : PCSTR;
+                            lpTargetPath : PCSTR): BOOL;
 
 <*EXTERNAL DefineDosDeviceW:WINAPI*>
-PROCEDURE DefineDosDeviceW (dwFlags      : DWORD;
-                            lpDeviceName : LPCWSTR;
-                            lpTargetPath : LPCWSTR): BOOL;
+PROCEDURE DefineDosDeviceW (dwFlags      : UINT32;
+                            lpDeviceName : PCWSTR;
+                            lpTargetPath : PCWSTR): BOOL;
 
 CONST DefineDosDevice = DefineDosDeviceA;
 
 <*EXTERNAL QueryDosDeviceA:WINAPI*>
-PROCEDURE QueryDosDeviceA (lpDeviceName : LPCSTR;
-                           lpTargetPath : LPSTR;
-                           ucchMax      : DWORD): DWORD;
+PROCEDURE QueryDosDeviceA (lpDeviceName : PCSTR;
+                           lpTargetPath : PSTR;
+                           ucchMax      : UINT32): UINT32;
 
 <*EXTERNAL QueryDosDeviceW:WINAPI*>
-PROCEDURE QueryDosDeviceW (lpDeviceName : LPCWSTR;
-                           lpTargetPath : LPWSTR;
-                           ucchMax      : DWORD): DWORD;
+PROCEDURE QueryDosDeviceW (lpDeviceName : PCWSTR;
+                           lpTargetPath : PWSTR;
+                           ucchMax      : UINT32): UINT32;
 
 CONST QueryDosDevice = QueryDosDeviceA;
 
@@ -3073,65 +3057,65 @@ CONST EXPAND_LOCAL_DRIVES = TRUE;
 (* #define EXPAND_LOCAL_DRIVES *)
 
 <*EXTERNAL CreateFileA:WINAPI*>
-PROCEDURE CreateFileA (lpFileName           : LPCSTR;
-                       dwDesiredAccess      : DWORD;
-                       dwShareMode          : DWORD;
-                       lpSecurityAttributes : LPSECURITY_ATTRIBUTES;
-                       dwCreationDisposition: DWORD;
-                       dwFlagsAndAttributes : DWORD;
+PROCEDURE CreateFileA (lpFileName           : PCSTR;
+                       dwDesiredAccess      : UINT32;
+                       dwShareMode          : UINT32;
+                       lpSecurityAttributes : PSECURITY_ATTRIBUTES;
+                       dwCreationDisposition: UINT32;
+                       dwFlagsAndAttributes : UINT32;
                        hTemplateFile        : HANDLE                 ): HANDLE;
 
 <*EXTERNAL CreateFileW:WINAPI*>
-PROCEDURE CreateFileW (lpFileName           : LPCWSTR;
-                       dwDesiredAccess      : DWORD;
-                       dwShareMode          : DWORD;
-                       lpSecurityAttributes : LPSECURITY_ATTRIBUTES;
-                       dwCreationDisposition: DWORD;
-                       dwFlagsAndAttributes : DWORD;
+PROCEDURE CreateFileW (lpFileName           : PCWSTR;
+                       dwDesiredAccess      : UINT32;
+                       dwShareMode          : UINT32;
+                       lpSecurityAttributes : PSECURITY_ATTRIBUTES;
+                       dwCreationDisposition: UINT32;
+                       dwFlagsAndAttributes : UINT32;
                        hTemplateFile        : HANDLE                 ): HANDLE;
 
 CONST CreateFile = CreateFileA;
 
 <*EXTERNAL SetFileAttributesA:WINAPI*>
-PROCEDURE SetFileAttributesA (lpFileName: LPSTR; dwFileAttributes: DWORD):BOOL;
+PROCEDURE SetFileAttributesA (lpFileName: PSTR; dwFileAttributes: UINT32):BOOL;
 
 <*EXTERNAL SetFileAttributesW:WINAPI*>
-PROCEDURE SetFileAttributesW (lpFileName: LPWSTR; dwFileAttributes:DWORD):BOOL;
+PROCEDURE SetFileAttributesW (lpFileName: PWSTR; dwFileAttributes:UINT32):BOOL;
 
 CONST SetFileAttributes = SetFileAttributesA;
 
 <*EXTERNAL GetFileAttributesA:WINAPI*>
-PROCEDURE GetFileAttributesA (lpFileName: LPSTR): DWORD;
+PROCEDURE GetFileAttributesA (lpFileName: PSTR): UINT32;
 
 <*EXTERNAL GetFileAttributesW:WINAPI*>
-PROCEDURE GetFileAttributesW (lpFileName: LPWSTR): DWORD;
+PROCEDURE GetFileAttributesW (lpFileName: PWSTR): UINT32;
 
 CONST GetFileAttributes = GetFileAttributesA;
 
 <*EXTERNAL GetCompressedFileSizeA:WINAPI*>
-PROCEDURE GetCompressedFileSizeA (lpFileName     : LPCSTR;
-                                  lpFileSizeHigh : LPDWORD): DWORD;
+PROCEDURE GetCompressedFileSizeA (lpFileName     : PCSTR;
+                                  lpFileSizeHigh : PUINT32): UINT32;
 
 <*EXTERNAL GetCompressedFileSizeW:WINAPI*>
-PROCEDURE GetCompressedFileSizeW (lpFileName     : LPCWSTR;
-                                  lpFileSizeHigh : LPDWORD): DWORD;
+PROCEDURE GetCompressedFileSizeW (lpFileName     : PCWSTR;
+                                  lpFileSizeHigh : PUINT32): UINT32;
 
 CONST GetCompressedFileSize = GetCompressedFileSizeA;
 
 <*EXTERNAL DeleteFileA:WINAPI*>
-PROCEDURE DeleteFileA (lpFileName: LPSTR): BOOL;
+PROCEDURE DeleteFileA (lpFileName: PSTR): BOOL;
 
 <*EXTERNAL DeleteFileW:WINAPI*>
-PROCEDURE DeleteFileW (lpFileName: LPWSTR): BOOL;
+PROCEDURE DeleteFileW (lpFileName: PWSTR): BOOL;
 
 CONST DeleteFile = DeleteFileA;
 
 <*EXTERNAL FindFirstFileA:WINAPI*>
-PROCEDURE FindFirstFileA (lpFileName    : LPSTR;
+PROCEDURE FindFirstFileA (lpFileName    : PSTR;
                           lpFindFileData: LPWIN32_FIND_DATAA): HANDLE;
 
 <*EXTERNAL FindFirstFileW:WINAPI*>
-PROCEDURE FindFirstFileW (lpFileName    : LPWSTR;
+PROCEDURE FindFirstFileW (lpFileName    : PWSTR;
                           lpFindFileData: LPWIN32_FIND_DATAW): HANDLE;
 
 CONST FindFirstFile = FindFirstFileA;
@@ -3147,51 +3131,51 @@ PROCEDURE FindNextFileW (hFindFile     : HANDLE;
 CONST FindNextFile = FindNextFileA;
 
 <*EXTERNAL SearchPathA:WINAPI*>
-PROCEDURE SearchPathA (lpPath       : LPCSTR;
-                       lpFileName   : LPCSTR;
-                       lpExtension  : LPCSTR;
-                       nBufferLength: DWORD;
-                       lpBuffer     : LPSTR;
-                       lpFilePart   : UNTRACED REF LPSTR): DWORD;
+PROCEDURE SearchPathA (lpPath       : PCSTR;
+                       lpFileName   : PCSTR;
+                       lpExtension  : PCSTR;
+                       nBufferLength: UINT32;
+                       lpBuffer     : PSTR;
+                       lpFilePart   : UNTRACED REF PSTR): UINT32;
 
 <*EXTERNAL SearchPathW:WINAPI*>
-PROCEDURE SearchPathW (lpPath       : LPCWSTR;
-                       lpFileName   : LPCWSTR;
-                       lpExtension  : LPCWSTR;
-                       nBufferLength: DWORD;
-                       lpBuffer     : LPWSTR;
-                       lpFilePart   : UNTRACED REF LPWSTR): DWORD;
+PROCEDURE SearchPathW (lpPath       : PCWSTR;
+                       lpFileName   : PCWSTR;
+                       lpExtension  : PCWSTR;
+                       nBufferLength: UINT32;
+                       lpBuffer     : PWSTR;
+                       lpFilePart   : UNTRACED REF PWSTR): UINT32;
 
 CONST SearchPath = SearchPathA;
 
 <*EXTERNAL CopyFileA:WINAPI*>
-PROCEDURE CopyFileA (lpExistingFileName: LPSTR;
-                     lpNewFileName     : LPSTR;
+PROCEDURE CopyFileA (lpExistingFileName: PSTR;
+                     lpNewFileName     : PSTR;
                      bFailIfExists     : BOOL   ): BOOL;
 
 <*EXTERNAL CopyFileW:WINAPI*>
-PROCEDURE CopyFileW (lpExistingFileName: LPWSTR;
-                     lpNewFileName     : LPWSTR;
+PROCEDURE CopyFileW (lpExistingFileName: PWSTR;
+                     lpNewFileName     : PWSTR;
                      bFailIfExists     : BOOL    ): BOOL;
 
 CONST CopyFile = CopyFileA;
 
 <*EXTERNAL MoveFileA:WINAPI*>
-PROCEDURE MoveFileA (lpExistingFileName: LPSTR; lpNewFileName: LPSTR): BOOL;
+PROCEDURE MoveFileA (lpExistingFileName: PSTR; lpNewFileName: PSTR): BOOL;
 <*EXTERNAL MoveFileW:WINAPI*>
 
-PROCEDURE MoveFileW (lpExistingFileName: LPWSTR; lpNewFileName: LPWSTR): BOOL;
+PROCEDURE MoveFileW (lpExistingFileName: PWSTR; lpNewFileName: PWSTR): BOOL;
 CONST MoveFile = MoveFileA;
 
 <*EXTERNAL MoveFileExA:WINAPI*>
-PROCEDURE MoveFileExA (lpExistingFileName: LPSTR;
-                       lpNewFileName     : LPSTR;
-                       dwFlags           : DWORD  ): BOOL;
+PROCEDURE MoveFileExA (lpExistingFileName: PSTR;
+                       lpNewFileName     : PSTR;
+                       dwFlags           : UINT32  ): BOOL;
 
 <*EXTERNAL MoveFileExW:WINAPI*>
-PROCEDURE MoveFileExW (lpExistingFileName: LPWSTR;
-                       lpNewFileName     : LPWSTR;
-                       dwFlags           : DWORD   ): BOOL;
+PROCEDURE MoveFileExW (lpExistingFileName: PWSTR;
+                       lpNewFileName     : PWSTR;
+                       dwFlags           : UINT32   ): BOOL;
 
 CONST MoveFileEx = MoveFileExA;
 
@@ -3201,82 +3185,82 @@ CONST
   MOVEFILE_DELAY_UNTIL_REBOOT = 16_00000004;
 
 <*EXTERNAL CreateNamedPipeA:WINAPI*>
-PROCEDURE CreateNamedPipeA (lpName              : LPSTR;
-                            dwOpenMode          : DWORD;
-                            dwPipeMode          : DWORD;
-                            nMaxInstances       : DWORD;
-                            nOutBufferSize      : DWORD;
-                            nInBufferSize       : DWORD;
-                            nDefaultTimeOut     : DWORD;
-                          lpSecurityAttributes: LPSECURITY_ATTRIBUTES): HANDLE;
+PROCEDURE CreateNamedPipeA (lpName              : PSTR;
+                            dwOpenMode          : UINT32;
+                            dwPipeMode          : UINT32;
+                            nMaxInstances       : UINT32;
+                            nOutBufferSize      : UINT32;
+                            nInBufferSize       : UINT32;
+                            nDefaultTimeOut     : UINT32;
+                          lpSecurityAttributes: PSECURITY_ATTRIBUTES): HANDLE;
 
 <*EXTERNAL CreateNamedPipeW:WINAPI*>
-PROCEDURE CreateNamedPipeW (lpName              : LPWSTR;
-                            dwOpenMode          : DWORD;
-                            dwPipeMode          : DWORD;
-                            nMaxInstances       : DWORD;
-                            nOutBufferSize      : DWORD;
-                            nInBufferSize       : DWORD;
-                            nDefaultTimeOut     : DWORD;
-                          lpSecurityAttributes: LPSECURITY_ATTRIBUTES): HANDLE;
+PROCEDURE CreateNamedPipeW (lpName              : PWSTR;
+                            dwOpenMode          : UINT32;
+                            dwPipeMode          : UINT32;
+                            nMaxInstances       : UINT32;
+                            nOutBufferSize      : UINT32;
+                            nInBufferSize       : UINT32;
+                            nDefaultTimeOut     : UINT32;
+                          lpSecurityAttributes: PSECURITY_ATTRIBUTES): HANDLE;
 
 CONST CreateNamedPipe = CreateNamedPipeA;
 
 <*EXTERNAL GetNamedPipeHandleStateA:WINAPI*>
 PROCEDURE GetNamedPipeHandleStateA (hNamedPipe          : HANDLE;
-                                    lpState             : LPDWORD;
-                                    lpCurInstances      : LPDWORD;
-                                    lpMaxCollectionCount: LPDWORD;
-                                    lpCollectDataTimeout: LPDWORD;
-                                    lpUserName          : LPSTR;
-                                    nMaxUserNameSize    : DWORD    ): BOOL;
+                                    lpState             : PUINT32;
+                                    lpCurInstances      : PUINT32;
+                                    lpMaxCollectionCount: PUINT32;
+                                    lpCollectDataTimeout: PUINT32;
+                                    lpUserName          : PSTR;
+                                    nMaxUserNameSize    : UINT32    ): BOOL;
 
 <*EXTERNAL GetNamedPipeHandleStateW:WINAPI*>
 PROCEDURE GetNamedPipeHandleStateW (hNamedPipe          : HANDLE;
-                                    lpState             : LPDWORD;
-                                    lpCurInstances      : LPDWORD;
-                                    lpMaxCollectionCount: LPDWORD;
-                                    lpCollectDataTimeout: LPDWORD;
-                                    lpUserName          : LPWSTR;
-                                    nMaxUserNameSize    : DWORD    ): BOOL;
+                                    lpState             : PUINT32;
+                                    lpCurInstances      : PUINT32;
+                                    lpMaxCollectionCount: PUINT32;
+                                    lpCollectDataTimeout: PUINT32;
+                                    lpUserName          : PWSTR;
+                                    nMaxUserNameSize    : UINT32    ): BOOL;
 
 CONST GetNamedPipeHandleState = GetNamedPipeHandleStateA;
 
 <*EXTERNAL CallNamedPipeA:WINAPI*>
-PROCEDURE CallNamedPipeA (lpNamedPipeName: LPSTR;
-                          lpInBuffer     : LPVOID;
-                          nInBufferSize  : DWORD;
-                          lpOutBuffer    : LPVOID;
-                          nOutBufferSize : DWORD;
-                          lpBytesRead    : LPDWORD;
-                          nTimeOut       : DWORD    ): BOOL;
+PROCEDURE CallNamedPipeA (lpNamedPipeName: PSTR;
+                          lpInBuffer     : PVOID;
+                          nInBufferSize  : UINT32;
+                          lpOutBuffer    : PVOID;
+                          nOutBufferSize : UINT32;
+                          lpBytesRead    : PUINT32;
+                          nTimeOut       : UINT32    ): BOOL;
 
 <*EXTERNAL CallNamedPipeW:WINAPI*>
-PROCEDURE CallNamedPipeW (lpNamedPipeName: LPWSTR;
-                          lpInBuffer     : LPVOID;
-                          nInBufferSize  : DWORD;
-                          lpOutBuffer    : LPVOID;
-                          nOutBufferSize : DWORD;
-                          lpBytesRead    : LPDWORD;
-                          nTimeOut       : DWORD    ): BOOL;
+PROCEDURE CallNamedPipeW (lpNamedPipeName: PWSTR;
+                          lpInBuffer     : PVOID;
+                          nInBufferSize  : UINT32;
+                          lpOutBuffer    : PVOID;
+                          nOutBufferSize : UINT32;
+                          lpBytesRead    : PUINT32;
+                          nTimeOut       : UINT32    ): BOOL;
 
 CONST CallNamedPipe = CallNamedPipeA;
 
 <*EXTERNAL WaitNamedPipeA:WINAPI*>
-PROCEDURE WaitNamedPipeA (lpNamedPipeName: LPSTR; nTimeOut: DWORD): BOOL;
+PROCEDURE WaitNamedPipeA (lpNamedPipeName: PSTR; nTimeOut: UINT32): BOOL;
 
 <*EXTERNAL WaitNamedPipeW:WINAPI*>
-PROCEDURE WaitNamedPipeW (lpNamedPipeName: LPWSTR; nTimeOut: DWORD): BOOL;
+PROCEDURE WaitNamedPipeW (lpNamedPipeName: PWSTR; nTimeOut: UINT32): BOOL;
 
 CONST WaitNamedPipe = WaitNamedPipeA;
 
 <*EXTERNAL SetVolumeLabelA:WINAPI*>
-PROCEDURE SetVolumeLabelA (lpRootPathName : LPCSTR;
-                           lpVolumeName   : LPCSTR): BOOL;
+PROCEDURE SetVolumeLabelA (lpRootPathName : PCSTR;
+                           lpVolumeName   : PCSTR): BOOL;
 
 <*EXTERNAL SetVolumeLabelW:WINAPI*>
-PROCEDURE SetVolumeLabelW (lpRootPathName : LPCWSTR;
-                           lpVolumeName   : LPCWSTR): BOOL;
+PROCEDURE SetVolumeLabelW (lpRootPathName : PCWSTR;
+                           lpVolumeName   : PCWSTR): BOOL;
 
 CONST SetVolumeLabel = SetVolumeLabelA;
 
@@ -3290,42 +3274,42 @@ PROCEDURE SetFileApisToANSI ();
 PROCEDURE AreFileApisANSI (): BOOL;
 
 <*EXTERNAL GetVolumeInformationA:WINAPI*>
-PROCEDURE GetVolumeInformationA (lpRootPathName          : LPSTR;
-                                 lpVolumeNameBuffer      : LPSTR;
-                                 nVolumeNameSize         : DWORD;
-                                 lpVolumeSerialNumber    : LPDWORD;
-                                 lpMaximumComponentLength: LPDWORD;
-                                 lpFileSystemFlags       : LPDWORD;
-                                 lpFileSystemNameBuffer  : LPSTR;
-                                 nFileSystemNameSize     : DWORD    ): BOOL;
+PROCEDURE GetVolumeInformationA (lpRootPathName          : PSTR;
+                                 lpVolumeNameBuffer      : PSTR;
+                                 nVolumeNameSize         : UINT32;
+                                 lpVolumeSerialNumber    : PUINT32;
+                                 lpMaximumComponentLength: PUINT32;
+                                 lpFileSystemFlags       : PUINT32;
+                                 lpFileSystemNameBuffer  : PSTR;
+                                 nFileSystemNameSize     : UINT32    ): BOOL;
 
 <*EXTERNAL GetVolumeInformationW:WINAPI*>
-PROCEDURE GetVolumeInformationW (lpRootPathName          : LPWSTR;
-                                 lpVolumeNameBuffer      : LPWSTR;
-                                 nVolumeNameSize         : DWORD;
-                                 lpVolumeSerialNumber    : LPDWORD;
-                                 lpMaximumComponentLength: LPDWORD;
-                                 lpFileSystemFlags       : LPDWORD;
-                                 lpFileSystemNameBuffer  : LPWSTR;
-                                 nFileSystemNameSize     : DWORD    ): BOOL;
+PROCEDURE GetVolumeInformationW (lpRootPathName          : PWSTR;
+                                 lpVolumeNameBuffer      : PWSTR;
+                                 nVolumeNameSize         : UINT32;
+                                 lpVolumeSerialNumber    : PUINT32;
+                                 lpMaximumComponentLength: PUINT32;
+                                 lpFileSystemFlags       : PUINT32;
+                                 lpFileSystemNameBuffer  : PWSTR;
+                                 nFileSystemNameSize     : UINT32    ): BOOL;
 
 CONST GetVolumeInformation = GetVolumeInformationA;
 
 (* Event logging APIs *)
 
 <*EXTERNAL ClearEventLogA:WINAPI*>
-PROCEDURE ClearEventLogA (hEventLog: HANDLE; lpBackupFileName: LPSTR): BOOL;
+PROCEDURE ClearEventLogA (hEventLog: HANDLE; lpBackupFileName: PSTR): BOOL;
 
 <*EXTERNAL ClearEventLogW:WINAPI*>
-PROCEDURE ClearEventLogW (hEventLog: HANDLE; lpBackupFileName: LPWSTR): BOOL;
+PROCEDURE ClearEventLogW (hEventLog: HANDLE; lpBackupFileName: PWSTR): BOOL;
 
 CONST ClearEventLog = ClearEventLogA;
 
 <*EXTERNAL BackupEventLogA:WINAPI*>
-PROCEDURE BackupEventLogA (hEventLog: HANDLE; lpBackupFileName: LPSTR): BOOL;
+PROCEDURE BackupEventLogA (hEventLog: HANDLE; lpBackupFileName: PSTR): BOOL;
 
 <*EXTERNAL BackupEventLogW:WINAPI*>
-PROCEDURE BackupEventLogW (hEventLog: HANDLE; lpBackupFileName: LPWSTR): BOOL;
+PROCEDURE BackupEventLogW (hEventLog: HANDLE; lpBackupFileName: PWSTR): BOOL;
 
 CONST BackupEventLog = BackupEventLogA;
 
@@ -3337,81 +3321,81 @@ PROCEDURE DeregisterEventSource (hEventLog: HANDLE): BOOL;
 
 <*EXTERNAL GetNumberOfEventLogRecords:WINAPI*>
 PROCEDURE GetNumberOfEventLogRecords (hEventLog      : HANDLE;
-                                      NumberOfRecords: PDWORD  ): BOOL;
+                                      NumberOfRecords: PUINT32  ): BOOL;
 
 <*EXTERNAL GetOldestEventLogRecord:WINAPI*>
 PROCEDURE GetOldestEventLogRecord (hEventLog   : HANDLE;
-                                   OldestRecord: PDWORD  ): BOOL;
+                                   OldestRecord: PUINT32  ): BOOL;
 
 <*EXTERNAL OpenEventLogA:WINAPI*>
-PROCEDURE OpenEventLogA (lpUNCServerName: LPSTR; lpSourceName: LPSTR): HANDLE;
+PROCEDURE OpenEventLogA (lpUNCServerName: PSTR; lpSourceName: PSTR): HANDLE;
 
 <*EXTERNAL OpenEventLogW:WINAPI*>
-PROCEDURE OpenEventLogW (lpUNCServerName: LPWSTR; lpSourceName: LPWSTR):HANDLE;
+PROCEDURE OpenEventLogW (lpUNCServerName: PWSTR; lpSourceName: PWSTR):HANDLE;
 
 CONST OpenEventLog = OpenEventLogA;
 
 <*EXTERNAL RegisterEventSourceA:WINAPI*>
-PROCEDURE RegisterEventSourceA (lpUNCServerName: LPSTR;
-                                lpSourceName   : LPSTR  ): HANDLE;
+PROCEDURE RegisterEventSourceA (lpUNCServerName: PSTR;
+                                lpSourceName   : PSTR  ): HANDLE;
 
 <*EXTERNAL RegisterEventSourceW:WINAPI*>
-PROCEDURE RegisterEventSourceW (lpUNCServerName: LPWSTR;
-                                lpSourceName   : LPWSTR  ): HANDLE;
+PROCEDURE RegisterEventSourceW (lpUNCServerName: PWSTR;
+                                lpSourceName   : PWSTR  ): HANDLE;
 
 CONST RegisterEventSource = RegisterEventSourceA;
 
 <*EXTERNAL OpenBackupEventLogA:WINAPI*>
-PROCEDURE OpenBackupEventLogA (lpUNCServerName: LPSTR;
-                               lpFileName     : LPSTR):  HANDLE;
+PROCEDURE OpenBackupEventLogA (lpUNCServerName: PSTR;
+                               lpFileName     : PSTR):  HANDLE;
 
 <*EXTERNAL OpenBackupEventLogW:WINAPI*>
-PROCEDURE OpenBackupEventLogW (lpUNCServerName: LPWSTR;
-                               lpFileName     : LPWSTR  ): HANDLE;
+PROCEDURE OpenBackupEventLogW (lpUNCServerName: PWSTR;
+                               lpFileName     : PWSTR  ): HANDLE;
 
 CONST OpenBackupEventLog = OpenBackupEventLogA;
 
 <*EXTERNAL ReadEventLogA:WINAPI*>
 PROCEDURE ReadEventLogA (hEventLog               : HANDLE;
-                         dwReadFlags             : DWORD;
-                         dwRecordOffset          : DWORD;
-                         lpBuffer                : LPVOID;
-                         nNumberOfBytesToRead    : DWORD;
-                         pnBytesRead             : UNTRACED REF DWORD;
-                         pnMinNumberOfBytesNeeded: UNTRACED REF DWORD  ): BOOL;
+                         dwReadFlags             : UINT32;
+                         dwRecordOffset          : UINT32;
+                         lpBuffer                : PVOID;
+                         nNumberOfBytesToRead    : UINT32;
+                         pnBytesRead             : UNTRACED REF UINT32;
+                         pnMinNumberOfBytesNeeded: UNTRACED REF UINT32  ): BOOL;
 
 <*EXTERNAL ReadEventLogW:WINAPI*>
 PROCEDURE ReadEventLogW (hEventLog               : HANDLE;
-                         dwReadFlags             : DWORD;
-                         dwRecordOffset          : DWORD;
-                         lpBuffer                : LPVOID;
-                         nNumberOfBytesToRead    : DWORD;
-                         pnBytesRead             : UNTRACED REF DWORD;
-                         pnMinNumberOfBytesNeeded: UNTRACED REF DWORD  ): BOOL;
+                         dwReadFlags             : UINT32;
+                         dwRecordOffset          : UINT32;
+                         lpBuffer                : PVOID;
+                         nNumberOfBytesToRead    : UINT32;
+                         pnBytesRead             : UNTRACED REF UINT32;
+                         pnMinNumberOfBytesNeeded: UNTRACED REF UINT32  ): BOOL;
 
 CONST ReadEventLog = ReadEventLogA;
 
 <*EXTERNAL ReportEventA:WINAPI*>
 PROCEDURE ReportEventA (hEventLog  : HANDLE;
-                        wType      : WORD;
-                        wCategory  : WORD;
-                        dwEventID  : DWORD;
+                        wType      : UINT16;
+                        wCategory  : UINT16;
+                        dwEventID  : UINT32;
                         lpUserSid  : PSID;
-                        wNumStrings: WORD;
-                        dwDataSize : DWORD;
-                        lpStrings  : UNTRACED REF LPSTR;
-                        lpRawData  : LPVOID              ): BOOL;
+                        wNumStrings: UINT16;
+                        dwDataSize : UINT32;
+                        lpStrings  : UNTRACED REF PSTR;
+                        lpRawData  : PVOID              ): BOOL;
 
 <*EXTERNAL ReportEventW:WINAPI*>
 PROCEDURE ReportEventW (hEventLog  : HANDLE;
-                        wType      : WORD;
-                        wCategory  : WORD;
-                        dwEventID  : DWORD;
+                        wType      : UINT16;
+                        wCategory  : UINT16;
+                        dwEventID  : UINT32;
                         lpUserSid  : PSID;
-                        wNumStrings: WORD;
-                        dwDataSize : DWORD;
-                        lpStrings  : UNTRACED REF LPWSTR;
-                        lpRawData  : LPVOID               ): BOOL;
+                        wNumStrings: UINT16;
+                        dwDataSize : UINT32;
+                        lpStrings  : UNTRACED REF PWSTR;
+                        lpRawData  : PVOID               ): BOOL;
 
 CONST ReportEvent = ReportEventA;
 
@@ -3427,8 +3411,8 @@ PROCEDURE DuplicateToken (ExistingTokenHandle: HANDLE;
 PROCEDURE GetKernelObjectSecurity (Handle        : HANDLE;
                              RequestedInformation: WinNT.SECURITY_INFORMATION;
                              pSecurityDescriptor : WinNT.PSECURITY_DESCRIPTOR;
-                             nLength             : DWORD;
-                             lpnLengthNeeded     : LPDWORD): BOOL;
+                             nLength             : UINT32;
+                             lpnLengthNeeded     : PUINT32): BOOL;
 
 <*EXTERNAL ImpersonateNamedPipeClient:WINAPI*>
 PROCEDURE ImpersonateNamedPipeClient (hNamedPipe: HANDLE): BOOL;
@@ -3445,23 +3429,23 @@ PROCEDURE RevertToSelf (): BOOL;
 <*EXTERNAL AccessCheck:WINAPI*>
 PROCEDURE AccessCheck (pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR;
                        ClientToken        : HANDLE;
-                       DesiredAccess      : DWORD;
+                       DesiredAccess      : UINT32;
                        GenericMapping     : WinNT.PGENERIC_MAPPING;
                        PrivilegeSet       : WinNT.PPRIVILEGE_SET;
-                       PrivilegeSetLength : LPDWORD;
-                       GrantedAccess      : LPDWORD;
-                       AccessStatus       : LPBOOL                    ): BOOL;
+                       PrivilegeSetLength : PUINT32;
+                       GrantedAccess      : PUINT32;
+                       AccessStatus       : PBOOL                    ): BOOL;
 
 
 <*EXTERNAL OpenProcessToken:WINAPI*>
 PROCEDURE OpenProcessToken (ProcessHandle: HANDLE;
-                            DesiredAccess: DWORD;
+                            DesiredAccess: UINT32;
                             TokenHandle  : PHANDLE ): BOOL;
 
 
 <*EXTERNAL OpenThreadToken:WINAPI*>
 PROCEDURE OpenThreadToken (ThreadHandle : HANDLE;
-                           DesiredAccess: DWORD;
+                           DesiredAccess: UINT32;
                            OpenAsSelf   : BOOL;
                            TokenHandle  : PHANDLE ): BOOL;
 
@@ -3469,115 +3453,115 @@ PROCEDURE OpenThreadToken (ThreadHandle : HANDLE;
 <*EXTERNAL GetTokenInformation:WINAPI*>
 PROCEDURE GetTokenInformation (TokenHandle: HANDLE;
                           TokenInformationClass: WinNT.TOKEN_INFORMATION_CLASS;
-                               TokenInformation      : LPVOID;
-                               TokenInformationLength: DWORD;
-                               ReturnLength          : PDWORD  ): BOOL;
+                               TokenInformation      : PVOID;
+                               TokenInformationLength: UINT32;
+                               ReturnLength          : PUINT32  ): BOOL;
 
 
 <*EXTERNAL SetTokenInformation:WINAPI*>
 PROCEDURE SetTokenInformation (TokenHandle: HANDLE;
                           TokenInformationClass: WinNT.TOKEN_INFORMATION_CLASS;
-                               TokenInformation      : LPVOID;
-                               TokenInformationLength: DWORD   ): BOOL;
+                               TokenInformation      : PVOID;
+                               TokenInformationLength: UINT32   ): BOOL;
 
 
 <*EXTERNAL AdjustTokenPrivileges:WINAPI*>
 PROCEDURE AdjustTokenPrivileges (TokenHandle         : HANDLE;
                                  DisableAllPrivileges: BOOL;
                                  NewState     : WinNT.PTOKEN_PRIVILEGES;
-                                 BufferLength : DWORD;
+                                 BufferLength : UINT32;
                                  PreviousState: WinNT.PTOKEN_PRIVILEGES;
-                                 ReturnLength : PDWORD                 ): BOOL;
+                                 ReturnLength : PUINT32                 ): BOOL;
 
 
 <*EXTERNAL AdjustTokenGroups:WINAPI*>
 PROCEDURE AdjustTokenGroups (TokenHandle   : HANDLE;
                              ResetToDefault: BOOL;
                              NewState      : WinNT.PTOKEN_GROUPS;
-                             BufferLength  : DWORD;
+                             BufferLength  : UINT32;
                              PreviousState : WinNT.PTOKEN_GROUPS;
-                             ReturnLength  : PDWORD               ): BOOL;
+                             ReturnLength  : PUINT32               ): BOOL;
 
 
 <*EXTERNAL PrivilegeCheck:WINAPI*>
 PROCEDURE PrivilegeCheck (ClientToken       : HANDLE;
                           RequiredPrivileges: WinNT.PPRIVILEGE_SET;
-                          pfResult          : LPBOOL                ): BOOL;
+                          pfResult          : PBOOL                ): BOOL;
 
 
 <*EXTERNAL AccessCheckAndAuditAlarmA:WINAPI*>
-PROCEDURE AccessCheckAndAuditAlarmA (SubsystemName    : LPSTR;
-                                     HandleId         : LPVOID;
-                                     ObjectTypeName   : LPSTR;
-                                     ObjectName       : LPSTR;
+PROCEDURE AccessCheckAndAuditAlarmA (SubsystemName    : PSTR;
+                                     HandleId         : PVOID;
+                                     ObjectTypeName   : PSTR;
+                                     ObjectName       : PSTR;
                                 SecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR;
-                                     DesiredAccess    : DWORD;
+                                     DesiredAccess    : UINT32;
                                      GenericMapping   : WinNT.PGENERIC_MAPPING;
                                      ObjectCreation   : BOOL;
-                                     GrantedAccess    : LPDWORD;
-                                     AccessStatus     : LPBOOL;
-                                     pfGenerateOnClose: LPBOOL   ): BOOL;
+                                     GrantedAccess    : PUINT32;
+                                     AccessStatus     : PBOOL;
+                                     pfGenerateOnClose: PBOOL   ): BOOL;
 
 <*EXTERNAL AccessCheckAndAuditAlarmW:WINAPI*>
-PROCEDURE AccessCheckAndAuditAlarmW (SubsystemName    : LPWSTR;
-                                     HandleId         : LPVOID;
-                                     ObjectTypeName   : LPWSTR;
-                                     ObjectName       : LPWSTR;
+PROCEDURE AccessCheckAndAuditAlarmW (SubsystemName    : PWSTR;
+                                     HandleId         : PVOID;
+                                     ObjectTypeName   : PWSTR;
+                                     ObjectName       : PWSTR;
                                 SecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR;
-                                     DesiredAccess    : DWORD;
+                                     DesiredAccess    : UINT32;
                                     GenericMapping    : WinNT.PGENERIC_MAPPING;
                                      ObjectCreation   : BOOL;
-                                     GrantedAccess    : LPDWORD;
-                                     AccessStatus     : LPBOOL;
-                                     pfGenerateOnClose: LPBOOL   ): BOOL;
+                                     GrantedAccess    : PUINT32;
+                                     AccessStatus     : PBOOL;
+                                     pfGenerateOnClose: PBOOL   ): BOOL;
 
 CONST AccessCheckAndAuditAlarm = AccessCheckAndAuditAlarmA;
 
 
 <*EXTERNAL ObjectOpenAuditAlarmA:WINAPI*>
-PROCEDURE ObjectOpenAuditAlarmA (SubsystemName  : LPSTR;
-                                 HandleId       : LPVOID;
-                                 ObjectTypeName : LPSTR;
-                                 ObjectName     : LPSTR;
+PROCEDURE ObjectOpenAuditAlarmA (SubsystemName  : PSTR;
+                                 HandleId       : PVOID;
+                                 ObjectTypeName : PSTR;
+                                 ObjectName     : PSTR;
                              pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR;
                                  ClientToken    : HANDLE;
-                                 DesiredAccess  : DWORD;
-                                 GrantedAccess  : DWORD;
+                                 DesiredAccess  : UINT32;
+                                 GrantedAccess  : UINT32;
                                  Privileges     : WinNT.PPRIVILEGE_SET;
                                  ObjectCreation : BOOL;
                                  AccessGranted  : BOOL;
-                                 GenerateOnClose: LPBOOL               ): BOOL;
+                                 GenerateOnClose: PBOOL               ): BOOL;
 
 <*EXTERNAL ObjectOpenAuditAlarmW:WINAPI*>
-PROCEDURE ObjectOpenAuditAlarmW (SubsystemName : LPWSTR;
-                                 HandleId      : LPVOID;
-                                 ObjectTypeName: LPWSTR;
-                                 ObjectName    : LPWSTR;
+PROCEDURE ObjectOpenAuditAlarmW (SubsystemName : PWSTR;
+                                 HandleId      : PVOID;
+                                 ObjectTypeName: PWSTR;
+                                 ObjectName    : PWSTR;
                             pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR;
                                  ClientToken    : HANDLE;
-                                 DesiredAccess  : DWORD;
-                                 GrantedAccess  : DWORD;
+                                 DesiredAccess  : UINT32;
+                                 GrantedAccess  : UINT32;
                                  Privileges     : WinNT.PPRIVILEGE_SET;
                                  ObjectCreation : BOOL;
                                  AccessGranted  : BOOL;
-                                 GenerateOnClose: LPBOOL              ): BOOL;
+                                 GenerateOnClose: PBOOL              ): BOOL;
 
 CONST ObjectOpenAuditAlarm = ObjectOpenAuditAlarmA;
 
 
 <*EXTERNAL ObjectPrivilegeAuditAlarmA:WINAPI*>
-PROCEDURE ObjectPrivilegeAuditAlarmA (SubsystemName: LPSTR;
-                                      HandleId     : LPVOID;
+PROCEDURE ObjectPrivilegeAuditAlarmA (SubsystemName: PSTR;
+                                      HandleId     : PVOID;
                                       ClientToken  : HANDLE;
-                                      DesiredAccess: DWORD;
+                                      DesiredAccess: UINT32;
                                       Privileges: WinNT.PPRIVILEGE_SET;
                                       AccessGranted: BOOL): BOOL;
 
 <*EXTERNAL ObjectPrivilegeAuditAlarmW:WINAPI*>
-PROCEDURE ObjectPrivilegeAuditAlarmW (SubsystemName: LPWSTR;
-                                      HandleId     : LPVOID;
+PROCEDURE ObjectPrivilegeAuditAlarmW (SubsystemName: PWSTR;
+                                      HandleId     : PVOID;
                                       ClientToken  : HANDLE;
-                                      DesiredAccess: DWORD;
+                                      DesiredAccess: UINT32;
                                       Privileges: WinNT.PPRIVILEGE_SET;
                                       AccessGranted: BOOL): BOOL;
 
@@ -3585,28 +3569,28 @@ CONST ObjectPrivilegeAuditAlarm = ObjectPrivilegeAuditAlarmA;
 
 
 <*EXTERNAL ObjectCloseAuditAlarmA:WINAPI*>
-PROCEDURE ObjectCloseAuditAlarmA (SubsystemName  : LPSTR;
-                                  HandleId       : LPVOID;
+PROCEDURE ObjectCloseAuditAlarmA (SubsystemName  : PSTR;
+                                  HandleId       : PVOID;
                                   GenerateOnClose: BOOL    ): BOOL;
 
 <*EXTERNAL ObjectCloseAuditAlarmW:WINAPI*>
-PROCEDURE ObjectCloseAuditAlarmW (SubsystemName  : LPWSTR;
-                                  HandleId       : LPVOID;
+PROCEDURE ObjectCloseAuditAlarmW (SubsystemName  : PWSTR;
+                                  HandleId       : PVOID;
                                   GenerateOnClose: BOOL    ): BOOL;
 
 CONST ObjectCloseAuditAlarm = ObjectCloseAuditAlarmA;
 
 
 <*EXTERNAL PrivilegedServiceAuditAlarmA:WINAPI*>
-PROCEDURE PrivilegedServiceAuditAlarmA (SubsystemName: LPSTR;
-                                        ServiceName  : LPSTR;
+PROCEDURE PrivilegedServiceAuditAlarmA (SubsystemName: PSTR;
+                                        ServiceName  : PSTR;
                                         ClientToken  : HANDLE;
                                         Privileges: WinNT.PPRIVILEGE_SET;
                                         AccessGranted: BOOL): BOOL;
 
 <*EXTERNAL PrivilegedServiceAuditAlarmW:WINAPI*>
-PROCEDURE PrivilegedServiceAuditAlarmW (SubsystemName: LPWSTR;
-                                        ServiceName  : LPWSTR;
+PROCEDURE PrivilegedServiceAuditAlarmW (SubsystemName: PWSTR;
+                                        ServiceName  : PWSTR;
                                         ClientToken  : HANDLE;
                                         Privileges: WinNT.PPRIVILEGE_SET;
                                         AccessGranted: BOOL): BOOL;
@@ -3627,21 +3611,21 @@ PROCEDURE EqualPrefixSid (pSid1: PSID; pSid2: PSID): BOOL;
 
 
 <*EXTERNAL GetSidLengthRequired:WINAPI*>
-PROCEDURE GetSidLengthRequired (nSubAuthorityCount: UCHAR): DWORD;
+PROCEDURE GetSidLengthRequired (nSubAuthorityCount: UINT8): UINT32;
 
 
 <*EXTERNAL AllocateAndInitializeSid:WINAPI*>
 PROCEDURE AllocateAndInitializeSid (
                          pIdentifierAuthority: WinNT.PSID_IDENTIFIER_AUTHORITY;
-                         nSubAuthorityCount: BYTE;
-                         nSubAuthority0    : DWORD;
-                         nSubAuthority1    : DWORD;
-                         nSubAuthority2    : DWORD;
-                         nSubAuthority3    : DWORD;
-                         nSubAuthority4    : DWORD;
-                         nSubAuthority5    : DWORD;
-                         nSubAuthority6    : DWORD;
-                         nSubAuthority7    : DWORD;
+                         nSubAuthorityCount: UINT8;
+                         nSubAuthority0    : UINT32;
+                         nSubAuthority1    : UINT32;
+                         nSubAuthority2    : UINT32;
+                         nSubAuthority3    : UINT32;
+                         nSubAuthority4    : UINT32;
+                         nSubAuthority5    : UINT32;
+                         nSubAuthority6    : UINT32;
+                         nSubAuthority7    : UINT32;
                          pSid              : UNTRACED REF PSID): BOOL;
 
 <*EXTERNAL FreeSid:WINAPI*>
@@ -3650,7 +3634,7 @@ PROCEDURE FreeSid (pSid: PSID): PVOID;
 <*EXTERNAL InitializeSid:WINAPI*>
 PROCEDURE InitializeSid (Sid                 : PSID;
                          pIdentifierAuthority: WinNT.PSID_IDENTIFIER_AUTHORITY;
-                         nSubAuthorityCount  : BYTE): BOOL;
+                         nSubAuthorityCount  : UINT8): BOOL;
 
 
 <*EXTERNAL GetSidIdentifierAuthority:WINAPI*>
@@ -3659,35 +3643,35 @@ PROCEDURE GetSidIdentifierAuthority (
 
 
 <*EXTERNAL GetSidSubAuthority:WINAPI*>
-PROCEDURE GetSidSubAuthority (pSid: PSID; nSubAuthority: DWORD): PDWORD;
+PROCEDURE GetSidSubAuthority (pSid: PSID; nSubAuthority: UINT32): PUINT32;
 
 
 <*EXTERNAL GetSidSubAuthorityCount:WINAPI*>
-PROCEDURE GetSidSubAuthorityCount (pSid: PSID): PUCHAR;
+PROCEDURE GetSidSubAuthorityCount (pSid: PSID): PUINT8;
 
 
 <*EXTERNAL GetLengthSid:WINAPI*>
-PROCEDURE GetLengthSid (pSid: PSID): DWORD;
+PROCEDURE GetLengthSid (pSid: PSID): UINT32;
 
 
 <*EXTERNAL CopySid:WINAPI*>
-PROCEDURE CopySid (nDestinationSidLength: DWORD;
+PROCEDURE CopySid (nDestinationSidLength: UINT32;
                    pDestinationSid      : PSID;
                    pSourceSid           : PSID   ): BOOL;
 
 
 <*EXTERNAL AreAllAccessesGranted:WINAPI*>
-PROCEDURE AreAllAccessesGranted (GrantedAccess: DWORD;
-                                 DesiredAccess: DWORD  ): BOOL;
+PROCEDURE AreAllAccessesGranted (GrantedAccess: UINT32;
+                                 DesiredAccess: UINT32  ): BOOL;
 
 
 <*EXTERNAL AreAnyAccessesGranted:WINAPI*>
-PROCEDURE AreAnyAccessesGranted (GrantedAccess: DWORD;
-                                 DesiredAccess: DWORD  ): BOOL;
+PROCEDURE AreAnyAccessesGranted (GrantedAccess: UINT32;
+                                 DesiredAccess: UINT32  ): BOOL;
 
 
 <*EXTERNAL MapGenericMask:WINAPI*>
-PROCEDURE MapGenericMask (AccessMask    : PDWORD;
+PROCEDURE MapGenericMask (AccessMask    : PUINT32;
                           GenericMapping: WinNT.PGENERIC_MAPPING);
 
 
@@ -3697,73 +3681,73 @@ PROCEDURE IsValidAcl (pAcl: PACL): BOOL;
 
 <*EXTERNAL InitializeAcl:WINAPI*>
 PROCEDURE InitializeAcl (pAcl         : PACL;
-                         nAclLength   : DWORD;
-                         dwAclRevision: DWORD  ): BOOL;
+                         nAclLength   : UINT32;
+                         dwAclRevision: UINT32  ): BOOL;
 
 
 <*EXTERNAL GetAclInformation:WINAPI*>
 PROCEDURE GetAclInformation (pAcl                 : PACL;
-                             pAclInformation      : LPVOID;
-                             nAclInformationLength: DWORD;
+                             pAclInformation      : PVOID;
+                             nAclInformationLength: UINT32;
                      dwAclInformationClass: WinNT.ACL_INFORMATION_CLASS): BOOL;
 
 
 <*EXTERNAL SetAclInformation:WINAPI*>
 PROCEDURE SetAclInformation (pAcl                 : PACL;
-                             pAclInformation      : LPVOID;
-                             nAclInformationLength: DWORD;
+                             pAclInformation      : PVOID;
+                             nAclInformationLength: UINT32;
                      dwAclInformationClass: WinNT.ACL_INFORMATION_CLASS): BOOL;
 
 
 <*EXTERNAL AddAce:WINAPI*>
 PROCEDURE AddAce (pAcl              : PACL;
-                  dwAceRevision     : DWORD;
-                  dwStartingAceIndex: DWORD;
-                  pAceList          : LPVOID;
-                  nAceListLength    : DWORD   ): BOOL;
+                  dwAceRevision     : UINT32;
+                  dwStartingAceIndex: UINT32;
+                  pAceList          : PVOID;
+                  nAceListLength    : UINT32   ): BOOL;
 
 
 <*EXTERNAL DeleteAce:WINAPI*>
-PROCEDURE DeleteAce (pAcl: PACL; dwAceIndex: DWORD): BOOL;
+PROCEDURE DeleteAce (pAcl: PACL; dwAceIndex: UINT32): BOOL;
 
 
 <*EXTERNAL GetAce:WINAPI*>
 PROCEDURE GetAce (pAcl      : PACL;
-                  dwAceIndex: DWORD;
-                  pAce      : UNTRACED REF LPVOID): BOOL;
+                  dwAceIndex: UINT32;
+                  pAce      : UNTRACED REF PVOID): BOOL;
 
 
 <*EXTERNAL AddAccessAllowedAce:WINAPI*>
 PROCEDURE AddAccessAllowedAce (pAcl         : PACL;
-                               dwAceRevision: DWORD;
-                               AccessMask   : DWORD;
+                               dwAceRevision: UINT32;
+                               AccessMask   : UINT32;
                                pSid         : PSID   ): BOOL;
 
 
 <*EXTERNAL AddAccessDeniedAce:WINAPI*>
 PROCEDURE AddAccessDeniedAce (pAcl         : PACL;
-                              dwAceRevision: DWORD;
-                              AccessMask   : DWORD;
+                              dwAceRevision: UINT32;
+                              AccessMask   : UINT32;
                               pSid         : PSID   ): BOOL;
 
 
 <*EXTERNAL AddAuditAccessAce:WINAPI*>
 PROCEDURE AddAuditAccessAce (pAcl         : PACL;
-                             dwAceRevision: DWORD;
-                             dwAccessMask : DWORD;
+                             dwAceRevision: UINT32;
+                             dwAccessMask : UINT32;
                              pSid         : PSID;
                              bAuditSuccess: BOOL;
                              bAuditFailure: BOOL   ): BOOL;
 
 
 <*EXTERNAL FindFirstFreeAce:WINAPI*>
-PROCEDURE FindFirstFreeAce (pAcl: PACL; pAce: UNTRACED REF LPVOID): BOOL;
+PROCEDURE FindFirstFreeAce (pAcl: PACL; pAce: UNTRACED REF PVOID): BOOL;
 
 
 <*EXTERNAL InitializeSecurityDescriptor:WINAPI*>
 PROCEDURE InitializeSecurityDescriptor (
             pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR;
-            dwRevision         : DWORD                      ): BOOL;
+            dwRevision         : UINT32                      ): BOOL;
 
 
 <*EXTERNAL IsValidSecurityDescriptor:WINAPI*>
@@ -3773,14 +3757,14 @@ PROCEDURE IsValidSecurityDescriptor (
 
 <*EXTERNAL GetSecurityDescriptorLength:WINAPI*>
 PROCEDURE GetSecurityDescriptorLength (
-            pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR): DWORD;
+            pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR): UINT32;
 
 
 <*EXTERNAL GetSecurityDescriptorControl:WINAPI*>
 PROCEDURE GetSecurityDescriptorControl (
             pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR;
             pControl           : WinNT.PSECURITY_DESCRIPTOR_CONTROL;
-            lpdwRevision       : LPDWORD                             ): BOOL;
+            lpdwRevision       : PUINT32                             ): BOOL;
 
 
 <*EXTERNAL SetSecurityDescriptorDacl:WINAPI*>
@@ -3794,9 +3778,9 @@ PROCEDURE SetSecurityDescriptorDacl (
 <*EXTERNAL GetSecurityDescriptorDacl:WINAPI*>
 PROCEDURE GetSecurityDescriptorDacl (
               pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR;
-              lpbDaclPresent     : LPBOOL;
+              lpbDaclPresent     : PBOOL;
               pDacl              : UNTRACED REF PACL;
-              lpbDaclDefaulted   : LPBOOL): BOOL;
+              lpbDaclDefaulted   : PBOOL): BOOL;
 
 
 <*EXTERNAL SetSecurityDescriptorSacl:WINAPI*>
@@ -3810,9 +3794,9 @@ PROCEDURE SetSecurityDescriptorSacl (
 <*EXTERNAL GetSecurityDescriptorSacl:WINAPI*>
 PROCEDURE GetSecurityDescriptorSacl (
               pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR;
-              lpbSaclPresent     : LPBOOL;
+              lpbSaclPresent     : PBOOL;
               pSacl              : UNTRACED REF PACL;
-              lpbSaclDefaulted   : LPBOOL): BOOL;
+              lpbSaclDefaulted   : PBOOL): BOOL;
 
 
 <*EXTERNAL SetSecurityDescriptorOwner:WINAPI*>
@@ -3826,7 +3810,7 @@ PROCEDURE SetSecurityDescriptorOwner (
 PROCEDURE GetSecurityDescriptorOwner (
               pSecurityDescriptor : WinNT.PSECURITY_DESCRIPTOR;
               pOwner              : UNTRACED REF PSID;
-              lpbOwnerDefaulted   : LPBOOL): BOOL;
+              lpbOwnerDefaulted   : PBOOL): BOOL;
 
 
 <*EXTERNAL SetSecurityDescriptorGroup:WINAPI*>
@@ -3840,7 +3824,7 @@ PROCEDURE SetSecurityDescriptorGroup (
 PROCEDURE GetSecurityDescriptorGroup (
               pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR;
               pGroup             : UNTRACED REF PSID;
-              lpbGroupDefaulted  : LPBOOL): BOOL;
+              lpbGroupDefaulted  : PBOOL): BOOL;
 
 
 <*EXTERNAL CreatePrivateObjectSecurity:WINAPI*>
@@ -3867,8 +3851,8 @@ PROCEDURE GetPrivateObjectSecurity (
               ObjectDescriptor   : WinNT.PSECURITY_DESCRIPTOR;
               SecurityInformation: WinNT.SECURITY_INFORMATION;
               ResultantDescriptor: WinNT.PSECURITY_DESCRIPTOR;
-              DescriptorLength   : DWORD;
-              ReturnLength       : PDWORD ): BOOL;
+              DescriptorLength   : UINT32;
+              ReturnLength       : PUINT32 ): BOOL;
 
 
 <*EXTERNAL DestroyPrivateObjectSecurity:WINAPI*>
@@ -3880,33 +3864,33 @@ PROCEDURE DestroyPrivateObjectSecurity (
 PROCEDURE MakeSelfRelativeSD (
               pAbsoluteSecurityDescriptor    : WinNT.PSECURITY_DESCRIPTOR;
               pSelfRelativeSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR;
-              lpdwBufferLength               : LPDWORD): BOOL;
+              lpdwBufferLength               : PUINT32): BOOL;
 
 
 <*EXTERNAL MakeAbsoluteSD:WINAPI*>
 PROCEDURE MakeAbsoluteSD (
               pSelfRelativeSecurityDescriptor   : WinNT.PSECURITY_DESCRIPTOR;
               pAbsoluteSecurityDescriptor       : WinNT.PSECURITY_DESCRIPTOR;
-              lpdwAbsoluteSecurityDescriptorSize: LPDWORD;
+              lpdwAbsoluteSecurityDescriptorSize: PUINT32;
               pDacl                             : PACL;
-              lpdwDaclSize                      : LPDWORD;
+              lpdwDaclSize                      : PUINT32;
               pSacl                             : PACL;
-              lpdwSaclSize                      : LPDWORD;
+              lpdwSaclSize                      : PUINT32;
               pOwner                            : PSID;
-              lpdwOwnerSize                     : LPDWORD;
+              lpdwOwnerSize                     : PUINT32;
               pPrimaryGroup                     : PSID;
-              lpdwPrimaryGroupSize              : LPDWORD  ): BOOL;
+              lpdwPrimaryGroupSize              : PUINT32  ): BOOL;
 
 
 <*EXTERNAL SetFileSecurityA:WINAPI*>
 PROCEDURE SetFileSecurityA (
-              lpFileName         : LPSTR;
+              lpFileName         : PSTR;
               SecurityInformation: WinNT.SECURITY_INFORMATION;
               pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR): BOOL;
 
 <*EXTERNAL SetFileSecurityW:WINAPI*>
 PROCEDURE SetFileSecurityW (
-              lpFileName         : LPWSTR;
+              lpFileName         : PWSTR;
               SecurityInformation: WinNT.SECURITY_INFORMATION;
               pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR): BOOL;
 
@@ -3914,18 +3898,18 @@ CONST SetFileSecurity = SetFileSecurityA;
 
 
 <*EXTERNAL GetFileSecurityA:WINAPI*>
-PROCEDURE GetFileSecurityA (lpFileName: LPSTR;
+PROCEDURE GetFileSecurityA (lpFileName: PSTR;
                             RequestedInformation: WinNT.SECURITY_INFORMATION;
                             pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR;
-                            nLength        : DWORD;
-                            lpnLengthNeeded: LPDWORD): BOOL;
+                            nLength        : UINT32;
+                            lpnLengthNeeded: PUINT32): BOOL;
 
 <*EXTERNAL GetFileSecurityW:WINAPI*>
-PROCEDURE GetFileSecurityW (lpFileName: LPWSTR;
+PROCEDURE GetFileSecurityW (lpFileName: PWSTR;
                             RequestedInformation: WinNT.SECURITY_INFORMATION;
                             pSecurityDescriptor: WinNT.PSECURITY_DESCRIPTOR;
-                            nLength        : DWORD;
-                            lpnLengthNeeded: LPDWORD): BOOL;
+                            nLength        : UINT32;
+                            lpnLengthNeeded: PUINT32): BOOL;
 
 CONST GetFileSecurity = GetFileSecurityA;
 
@@ -3939,14 +3923,14 @@ PROCEDURE SetKernelObjectSecurity (
 
 
 <*EXTERNAL FindFirstChangeNotificationA:WINAPI*>
-PROCEDURE FindFirstChangeNotificationA (lpPathName    : LPSTR;
+PROCEDURE FindFirstChangeNotificationA (lpPathName    : PSTR;
                                         bWatchSubtree : BOOL;
-                                        dwNotifyFilter: DWORD  ): HANDLE;
+                                        dwNotifyFilter: UINT32  ): HANDLE;
 
 <*EXTERNAL FindFirstChangeNotificationW:WINAPI*>
-PROCEDURE FindFirstChangeNotificationW (lpPathName    : LPWSTR;
+PROCEDURE FindFirstChangeNotificationW (lpPathName    : PWSTR;
                                         bWatchSubtree : BOOL;
-                                        dwNotifyFilter: DWORD  ): HANDLE;
+                                        dwNotifyFilter: UINT32  ): HANDLE;
 
 CONST FindFirstChangeNotification = FindFirstChangeNotificationA;
 
@@ -3957,127 +3941,127 @@ PROCEDURE FindNextChangeNotification (hChangeHandle: HANDLE): BOOL;
 PROCEDURE FindCloseChangeNotification (hChangeHandle: HANDLE): BOOL;
 
 <*EXTERNAL VirtualLock:WINAPI*>
-PROCEDURE VirtualLock (lpAddress: LPVOID; dwSize: DWORD): BOOL;
+PROCEDURE VirtualLock (lpAddress: PVOID; dwSize: SIZE_T): BOOL;
 
 <*EXTERNAL VirtualUnlock:WINAPI*>
-PROCEDURE VirtualUnlock (lpAddress: LPVOID; dwSize: DWORD): BOOL;
+PROCEDURE VirtualUnlock (lpAddress: PVOID; dwSize: SIZE_T): BOOL;
 
 <*EXTERNAL MapViewOfFileEx:WINAPI*>
 PROCEDURE MapViewOfFileEx (hFileMappingObject  : HANDLE;
-                           dwDesiredAccess     : DWORD;
-                           dwFileOffsetHigh    : DWORD;
-                           dwFileOffsetLow     : DWORD;
-                           dwNumberOfBytesToMap: DWORD;
-                           lpBaseAddress       : LPVOID  ): LPVOID;
+                           dwDesiredAccess     : UINT32;
+                           dwFileOffsetHigh    : UINT32;
+                           dwFileOffsetLow     : UINT32;
+                           dwNumberOfBytesToMap: SIZE_T;
+                           lpBaseAddress       : PVOID  ): PVOID;
 
 <*EXTERNAL SetPriorityClass:WINAPI*>
-PROCEDURE SetPriorityClass (hProcess: HANDLE; dwPriorityClass: DWORD): BOOL;
+PROCEDURE SetPriorityClass (hProcess: HANDLE; dwPriorityClass: UINT32): BOOL;
 
 <*EXTERNAL GetPriorityClass:WINAPI*>
-PROCEDURE GetPriorityClass (hProcess: HANDLE): DWORD;
+PROCEDURE GetPriorityClass (hProcess: HANDLE): UINT32;
 
 <*EXTERNAL IsBadReadPtr:WINAPI*>
-PROCEDURE IsBadReadPtr (lp: void_star; ucb: UINT): BOOL;
+PROCEDURE IsBadReadPtr (lp: PVOID; ucb: UINT32): BOOL;
 
 <*EXTERNAL IsBadWritePtr:WINAPI*>
-PROCEDURE IsBadWritePtr (lp: LPVOID; ucb: UINT): BOOL;
+PROCEDURE IsBadWritePtr (lp: PVOID; ucb: UINT32): BOOL;
 
 <*EXTERNAL IsBadHugeReadPtr:WINAPI*>
-PROCEDURE IsBadHugeReadPtr (lp: void_star; ucb: UINT): BOOL;
+PROCEDURE IsBadHugeReadPtr (lp: PVOID; ucb: UINT32): BOOL;
 
 <*EXTERNAL IsBadHugeWritePtr:WINAPI*>
-PROCEDURE IsBadHugeWritePtr (lp: LPVOID; ucb: UINT): BOOL;
+PROCEDURE IsBadHugeWritePtr (lp: PVOID; ucb: UINT32): BOOL;
 
 <*EXTERNAL IsBadCodePtr:WINAPI*>
 PROCEDURE IsBadCodePtr (lpfn: FARPROC): BOOL;
 
 <*EXTERNAL IsBadStringPtrA:WINAPI*>
-PROCEDURE IsBadStringPtrA (lpsz: LPCSTR; ucchMax: UINT): BOOL;
+PROCEDURE IsBadStringPtrA (lpsz: PCSTR; ucchMax: UINT32): BOOL;
 
 <*EXTERNAL IsBadStringPtrW:WINAPI*>
-PROCEDURE IsBadStringPtrW (lpsz: LPCWSTR; ucchMax: UINT): BOOL;
+PROCEDURE IsBadStringPtrW (lpsz: PCWSTR; ucchMax: UINT32): BOOL;
 
 CONST IsBadStringPtr = IsBadStringPtrA;
 
 <*EXTERNAL LookupAccountSidA:WINAPI*>
-PROCEDURE LookupAccountSidA (lpSystemName          : LPSTR;
+PROCEDURE LookupAccountSidA (lpSystemName          : PSTR;
                              Sid                   : PSID;
-                             Name                  : LPSTR;
-                             cbName                : LPDWORD;
-                             ReferencedDomainName  : LPSTR;
-                             cbReferencedDomainName: LPDWORD;
+                             Name                  : PSTR;
+                             cbName                : PUINT32;
+                             ReferencedDomainName  : PSTR;
+                             cbReferencedDomainName: PUINT32;
                              peUse                 : WinNT.PSID_NAME_USE):BOOL;
 
 <*EXTERNAL LookupAccountSidW:WINAPI*>
-PROCEDURE LookupAccountSidW (lpSystemName          : LPWSTR;
+PROCEDURE LookupAccountSidW (lpSystemName          : PWSTR;
                              Sid                   : PSID;
-                             Name                  : LPWSTR;
-                             cbName                : LPDWORD;
-                             ReferencedDomainName  : LPWSTR;
-                             cbReferencedDomainName: LPDWORD;
+                             Name                  : PWSTR;
+                             cbName                : PUINT32;
+                             ReferencedDomainName  : PWSTR;
+                             cbReferencedDomainName: PUINT32;
                              peUse                 : WinNT.PSID_NAME_USE):BOOL;
 
 CONST LookupAccountSid = LookupAccountSidA;
 
 <*EXTERNAL LookupAccountNameA:WINAPI*>
-PROCEDURE LookupAccountNameA (lpSystemName          : LPSTR;
-                              lpAccountName         : LPSTR;
+PROCEDURE LookupAccountNameA (lpSystemName          : PSTR;
+                              lpAccountName         : PSTR;
                               Sid                   : PSID;
-                              cbSid                 : LPDWORD;
-                              ReferencedDomainName  : LPSTR;
-                              cbReferencedDomainName: LPDWORD;
+                              cbSid                 : PUINT32;
+                              ReferencedDomainName  : PSTR;
+                              cbReferencedDomainName: PUINT32;
                               peUse                : WinNT.PSID_NAME_USE):BOOL;
 
 <*EXTERNAL LookupAccountNameW:WINAPI*>
-PROCEDURE LookupAccountNameW (lpSystemName          : LPWSTR;
-                              lpAccountName         : LPWSTR;
+PROCEDURE LookupAccountNameW (lpSystemName          : PWSTR;
+                              lpAccountName         : PWSTR;
                               Sid                   : PSID;
-                              cbSid                 : LPDWORD;
-                              ReferencedDomainName  : LPWSTR;
-                              cbReferencedDomainName: LPDWORD;
+                              cbSid                 : PUINT32;
+                              ReferencedDomainName  : PWSTR;
+                              cbReferencedDomainName: PUINT32;
                               peUse                : WinNT.PSID_NAME_USE):BOOL;
 
 CONST LookupAccountName = LookupAccountNameA;
 
 <*EXTERNAL LookupPrivilegeValueA:WINAPI*>
-PROCEDURE LookupPrivilegeValueA (lpSystemName: LPSTR;
-                                 lpName      : LPSTR;
+PROCEDURE LookupPrivilegeValueA (lpSystemName: PSTR;
+                                 lpName      : PSTR;
                                  lpLuid      : PLUID  ): BOOL;
 
 <*EXTERNAL LookupPrivilegeValueW:WINAPI*>
-PROCEDURE LookupPrivilegeValueW (lpSystemName: LPWSTR;
-                                 lpName      : LPWSTR;
+PROCEDURE LookupPrivilegeValueW (lpSystemName: PWSTR;
+                                 lpName      : PWSTR;
                                  lpLuid      : PLUID   ): BOOL;
 
 CONST LookupPrivilegeValue = LookupPrivilegeValueA;
 
 <*EXTERNAL LookupPrivilegeNameA:WINAPI*>
-PROCEDURE LookupPrivilegeNameA (lpSystemName: LPSTR;
+PROCEDURE LookupPrivilegeNameA (lpSystemName: PSTR;
                                 lpLuid      : PLUID;
-                                lpName      : LPSTR;
-                                cbName      : LPDWORD): BOOL;
+                                lpName      : PSTR;
+                                cbName      : PUINT32): BOOL;
 
 <*EXTERNAL LookupPrivilegeNameW:WINAPI*>
-PROCEDURE LookupPrivilegeNameW (lpSystemName: LPWSTR;
+PROCEDURE LookupPrivilegeNameW (lpSystemName: PWSTR;
                                 lpLuid      : PLUID;
-                                lpName      : LPWSTR;
-                                cbName      : LPDWORD ): BOOL;
+                                lpName      : PWSTR;
+                                cbName      : PUINT32 ): BOOL;
 
 CONST LookupPrivilegeName = LookupPrivilegeNameA;
 
 <*EXTERNAL LookupPrivilegeDisplayNameA:WINAPI*>
-PROCEDURE LookupPrivilegeDisplayNameA (lpSystemName : LPSTR;
-                                       lpName       : LPSTR;
-                                       lpDisplayName: LPSTR;
-                                       cbDisplayName: LPDWORD;
-                                       lpLanguageId : LPDWORD  ): BOOL;
+PROCEDURE LookupPrivilegeDisplayNameA (lpSystemName : PSTR;
+                                       lpName       : PSTR;
+                                       lpDisplayName: PSTR;
+                                       cbDisplayName: PUINT32;
+                                       lpLanguageId : PUINT32  ): BOOL;
 
 <*EXTERNAL LookupPrivilegeDisplayNameW:WINAPI*>
-PROCEDURE LookupPrivilegeDisplayNameW (lpSystemName : LPWSTR;
-                                       lpName       : LPWSTR;
-                                       lpDisplayName: LPWSTR;
-                                       cbDisplayName: LPDWORD;
-                                       lpLanguageId : LPDWORD  ): BOOL;
+PROCEDURE LookupPrivilegeDisplayNameW (lpSystemName : PWSTR;
+                                       lpName       : PWSTR;
+                                       lpDisplayName: PWSTR;
+                                       cbDisplayName: PUINT32;
+                                       lpLanguageId : PUINT32  ): BOOL;
 
 CONST LookupPrivilegeDisplayName = LookupPrivilegeDisplayNameA;
 
@@ -4085,84 +4069,84 @@ CONST LookupPrivilegeDisplayName = LookupPrivilegeDisplayNameA;
 PROCEDURE AllocateLocallyUniqueId (Luid: PLUID): BOOL;
 
 <*EXTERNAL BuildCommDCBA:WINAPI*>
-PROCEDURE BuildCommDCBA (lpDef: LPCSTR; lpDCB: LPDCB): BOOL;
+PROCEDURE BuildCommDCBA (lpDef: PCSTR; lpDCB: LPDCB): BOOL;
 
 <*EXTERNAL BuildCommDCBW:WINAPI*>
-PROCEDURE BuildCommDCBW (lpDef: LPCWSTR; lpDCB: LPDCB): BOOL;
+PROCEDURE BuildCommDCBW (lpDef: PCWSTR; lpDCB: LPDCB): BOOL;
 
 CONST BuildCommDCB = BuildCommDCBA;
 
 <*EXTERNAL BuildCommDCBAndTimeoutsA:WINAPI*>
-PROCEDURE BuildCommDCBAndTimeoutsA (lpDef          : LPCSTR;
+PROCEDURE BuildCommDCBAndTimeoutsA (lpDef          : PCSTR;
                                     lpDCB          : LPDCB;
                                     lpCommTimeouts : LPCOMMTIMEOUTS): BOOL;
 
 <*EXTERNAL BuildCommDCBAndTimeoutsW:WINAPI*>
-PROCEDURE BuildCommDCBAndTimeoutsW (lpDef          : LPCWSTR;
+PROCEDURE BuildCommDCBAndTimeoutsW (lpDef          : PCWSTR;
                                     lpDCB          : LPDCB;
                                     lpCommTimeouts : LPCOMMTIMEOUTS): BOOL;
 
 CONST BuildCommDCBAndTimeouts = BuildCommDCBAndTimeoutsA;
 
 <*EXTERNAL CommConfigDialogA:WINAPI*>
-PROCEDURE CommConfigDialogA (lpszName : LPCSTR;
+PROCEDURE CommConfigDialogA (lpszName : PCSTR;
                              hWnd     : HWND;
                              lpCC     : LPCOMMCONFIG ): BOOL;
 
 <*EXTERNAL CommConfigDialogW:WINAPI*>
-PROCEDURE CommConfigDialogW (lpszName : LPCWSTR;
+PROCEDURE CommConfigDialogW (lpszName : PCWSTR;
                              hWnd     : HWND;
                              lpCC     : LPCOMMCONFIG ): BOOL;
 
 CONST CommConfigDialog = CommConfigDialogA;
 
 <*EXTERNAL GetDefaultCommConfigA:WINAPI*>
-PROCEDURE GetDefaultCommConfigA (lpszName : LPCSTR;
+PROCEDURE GetDefaultCommConfigA (lpszName : PCSTR;
                                  lpCC     : LPCOMMCONFIG;
-                                 lpdwSize : LPDWORD): BOOL;
+                                 lpdwSize : PUINT32): BOOL;
 
 <*EXTERNAL GetDefaultCommConfigW:WINAPI*>
-PROCEDURE GetDefaultCommConfigW (lpszName : LPCWSTR;
+PROCEDURE GetDefaultCommConfigW (lpszName : PCWSTR;
                                  lpCC     : LPCOMMCONFIG;
-                                 lpdwSize : LPDWORD): BOOL;
+                                 lpdwSize : PUINT32): BOOL;
 
 CONST GetDefaultCommConfig = GetDefaultCommConfigA;
 
 <*EXTERNAL SetDefaultCommConfigA:WINAPI*>
-PROCEDURE SetDefaultCommConfigA (lpszName : LPCSTR;
+PROCEDURE SetDefaultCommConfigA (lpszName : PCSTR;
                                  lpCC     : LPCOMMCONFIG;
-                                 dwSize   : DWORD): BOOL;
+                                 dwSize   : UINT32): BOOL;
 
 <*EXTERNAL SetDefaultCommConfigW:WINAPI*>
-PROCEDURE SetDefaultCommConfigW (lpszName : LPCWSTR;
+PROCEDURE SetDefaultCommConfigW (lpszName : PCWSTR;
                                  lpCC     : LPCOMMCONFIG;
-                                 dwSize   : DWORD): BOOL;
+                                 dwSize   : UINT32): BOOL;
 
 CONST SetDefaultCommConfig = SetDefaultCommConfigA;
 
 CONST MAX_COMPUTERNAME_LENGTH = 15;
 
 <*EXTERNAL GetComputerNameA:WINAPI*>
-PROCEDURE GetComputerNameA (lpBuffer: LPSTR; nSize: LPDWORD): BOOL;
+PROCEDURE GetComputerNameA (lpBuffer: PSTR; nSize: PUINT32): BOOL;
 
 <*EXTERNAL GetComputerNameW:WINAPI*>
-PROCEDURE GetComputerNameW (lpBuffer: LPWSTR; nSize: LPDWORD): BOOL;
+PROCEDURE GetComputerNameW (lpBuffer: PWSTR; nSize: PUINT32): BOOL;
 
 CONST GetComputerName = GetComputerNameA;
 
 <*EXTERNAL SetComputerNameA:WINAPI*>
-PROCEDURE SetComputerNameA (lpComputerName: LPSTR): BOOL;
+PROCEDURE SetComputerNameA (lpComputerName: PSTR): BOOL;
 
 <*EXTERNAL SetComputerNameW:WINAPI*>
-PROCEDURE SetComputerNameW (lpComputerName: LPWSTR): BOOL;
+PROCEDURE SetComputerNameW (lpComputerName: PWSTR): BOOL;
 
 CONST SetComputerName = SetComputerNameA;
 
 <*EXTERNAL GetUserNameA:WINAPI*>
-PROCEDURE GetUserNameA (lpBuffer: LPSTR; nSize: LPDWORD): BOOL;
+PROCEDURE GetUserNameA (lpBuffer: PSTR; nSize: PUINT32): BOOL;
 
 <*EXTERNAL GetUserNameW:WINAPI*>
-PROCEDURE GetUserNameW (lpBuffer: LPWSTR; nSize: LPDWORD): BOOL;
+PROCEDURE GetUserNameW (lpBuffer: PWSTR; nSize: PUINT32): BOOL;
 
 CONST GetUserName = GetUserNameA;
 
@@ -4181,32 +4165,32 @@ PROCEDURE QueryPerformanceFrequency (
 
 TYPE
   POSVERSIONINFOA = UNTRACED REF OSVERSIONINFOA;
-  LPOSVERSIONINFOA = UNTRACED REF OSVERSIONINFOA;
+  LPOSVERSIONINFOA = POSVERSIONINFOA; (* compat *)
   OSVERSIONINFOA = RECORD
-    dwOSVersionInfoSize : DWORD;
-    dwMajorVersion      : DWORD;
-    dwMinorVersion      : DWORD;
-    dwBuildNumber       : DWORD;
-    dwPlatformId        : DWORD;
+    dwOSVersionInfoSize : UINT32;
+    dwMajorVersion      : UINT32;
+    dwMinorVersion      : UINT32;
+    dwBuildNumber       : UINT32;
+    dwPlatformId        : UINT32;
     szCSDVersion        : ARRAY [0..127] OF CHAR; (* Maintenance string
                                                      for PSS usage *)
   END;
 
   POSVERSIONINFOW = UNTRACED REF OSVERSIONINFOW;
-  LPOSVERSIONINFOW = UNTRACED REF OSVERSIONINFOW;
+  LPOSVERSIONINFOW = POSVERSIONINFOW; (* compat *)
   OSVERSIONINFOW = RECORD
-    dwOSVersionInfoSize : DWORD;
-    dwMajorVersion      : DWORD;
-    dwMinorVersion      : DWORD;
-    dwBuildNumber       : DWORD;
-    dwPlatformId        : DWORD;
+    dwOSVersionInfoSize : UINT32;
+    dwMajorVersion      : UINT32;
+    dwMinorVersion      : UINT32;
+    dwBuildNumber       : UINT32;
+    dwPlatformId        : UINT32;
     szCSDVersion        : ARRAY [0..127] OF WCHAR; (* Maintenance string
                                                      for PSS usage *)
   END;
 
   OSVERSIONINFO   = OSVERSIONINFOA;
   POSVERSIONINFO  = POSVERSIONINFOA;
-  LPOSVERSIONINFO = LPOSVERSIONINFOA;
+  LPOSVERSIONINFO = POSVERSIONINFOA; (* compat *)
 
 CONST
   VER_PLATFORM_WIN32s        = 0;
@@ -4214,10 +4198,10 @@ CONST
   VER_PLATFORM_WIN32_NT      = 2;
 
 <*EXTERNAL GetVersionExA:WINAPI*>
-PROCEDURE GetVersionExA (lpVersionInformation: LPOSVERSIONINFOA): BOOL;
+PROCEDURE GetVersionExA (lpVersionInformation: POSVERSIONINFOA): BOOL;
 
 <*EXTERNAL GetVersionExW:WINAPI*>
-PROCEDURE GetVersionExW (lpVersionInformation: LPOSVERSIONINFOW): BOOL;
+PROCEDURE GetVersionExW (lpVersionInformation: POSVERSIONINFOW): BOOL;
 
 CONST GetVersionEx = GetVersionExA;
 
@@ -4226,7 +4210,6 @@ CONST GetVersionEx = GetVersionExA;
 
 (* Abnormal termination codes *)
 
-CONST
   TC_NORMAL  = 0;
   TC_HARDERR = 1;
   TC_GP_TRAP = 2;
@@ -4234,7 +4217,6 @@ CONST
 
 (* Power Management APIs *)
 
-CONST
   AC_LINE_OFFLINE             = 16_00;
   AC_LINE_ONLINE              = 16_01;
   AC_LINE_BACKUP_POWER        = 16_02;
@@ -4252,18 +4234,19 @@ CONST
   BATTERY_LIFE_UNKNOWN        = 16_FFFFFFFF;
 
 TYPE
-  LPSYSTEM_POWER_STATUS = UNTRACED REF SYSTEM_POWER_STATUS;
+  PSYSTEM_POWER_STATUS = UNTRACED REF SYSTEM_POWER_STATUS;
+  LPSYSTEM_POWER_STATUS = PSYSTEM_POWER_STATUS; (* compat *)
   SYSTEM_POWER_STATUS = RECORD
-    ACLineStatus        : BYTE;
-    BatteryFlag         : BYTE;
-    BatteryLifePercent  : BYTE;
-    Reserved1           : BYTE;
-    BatteryLifeTime     : DWORD;
-    BatteryFullLifeTime : DWORD;
+    ACLineStatus        : UINT8;
+    BatteryFlag         : UINT8;
+    BatteryLifePercent  : UINT8;
+    Reserved1           : UINT8;
+    BatteryLifeTime     : UINT32;
+    BatteryFullLifeTime : UINT32;
   END;
 
 <*EXTERNAL GetSystemPowerStatus:WINAPI*>
-PROCEDURE GetSystemPowerStatus (lpSystemPowerStatus: LPSYSTEM_POWER_STATUS): BOOL;
+PROCEDURE GetSystemPowerStatus (lpSystemPowerStatus: PSYSTEM_POWER_STATUS): BOOL;
 
 <*EXTERNAL SetSystemPowerState:WINAPI*>
 PROCEDURE SetSystemPowerState (fSuspend: BOOL;  fForce: BOOL): BOOL;

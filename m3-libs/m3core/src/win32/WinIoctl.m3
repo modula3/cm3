@@ -5,9 +5,9 @@
 MODULE WinIoctl;
 
 IMPORT Word;
-FROM WinDef IMPORT DWORD;
+FROM WinDef IMPORT UINT32;
 
-PROCEDURE IsRecognizedPartition (ptype: DWORD): BOOLEAN =
+PROCEDURE IsRecognizedPartition (ptype: UINT32): BOOLEAN =
   BEGIN
     IF Word.And (ptype, PARTITION_NTFT) # 0
       THEN ptype := Word.And (ptype, Word.Not (16_C0));

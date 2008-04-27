@@ -18,10 +18,10 @@ INTERFACE WinIoctl;
 
 IMPORT WinNT;
 
-FROM WinDef IMPORT BYTE, WORD, DWORD;
+FROM WinDef IMPORT UINT8, UINT16, UINT32;
 
 TYPE
-  DEVICE_TYPE = DWORD;
+  DEVICE_TYPE = UINT32;
 
 CONST
   FILE_DEVICE_BEEP                = 16_00000001;
@@ -82,7 +82,7 @@ TYPE
     Method    : BITS  2 FOR [METHOD_BUFFERED..METHOD_NEITHER];
     Function  : BITS 12 FOR [0..4095];
     Access    : BITS  2 FOR [0..3];
-    DeviceType: BITS 16 FOR WORD;
+    DeviceType: BITS 16 FOR UINT16;
   END;
 
 CONST
@@ -179,7 +179,7 @@ CONST PARTITION_NTFT              = 16_80;     (* NTFT partition *)
 *)
 
 
-PROCEDURE IsRecognizedPartition (partitionType: DWORD): BOOLEAN;
+PROCEDURE IsRecognizedPartition (partitionType: UINT32): BOOLEAN;
 (*
 //
 // Routine Description:
@@ -228,10 +228,10 @@ TYPE
   PFORMAT_PARAMETERS = UNTRACED REF FORMAT_PARAMETERS;
   FORMAT_PARAMETERS = RECORD
     MediaType: MEDIA_TYPE;
-    StartCylinderNumber: DWORD;
-    EndCylinderNumber: DWORD;
-    StartHeadNumber: DWORD;
-    EndHeadNumber: DWORD;
+    StartCylinderNumber: UINT32;
+    EndCylinderNumber: UINT32;
+    StartHeadNumber: UINT32;
+    EndHeadNumber: UINT32;
   END;
 
 (*
@@ -241,7 +241,7 @@ TYPE
 // reported in the `Information' field of the I/O Status Block.
 *)
 TYPE
-  BAD_TRACK_NUMBER = WORD;
+  BAD_TRACK_NUMBER = UINT16;
   PBAD_TRACK_NUMBER = UNTRACED REF BAD_TRACK_NUMBER;
 
 (*
@@ -252,13 +252,13 @@ TYPE
   PFORMAT_EX_PARAMETERS = UNTRACED REF FORMAT_EX_PARAMETERS;
   FORMAT_EX_PARAMETERS = RECORD
     MediaType : MEDIA_TYPE;
-    StartCylinderNumber: DWORD;
-    EndCylinderNumber: DWORD;
-    StartHeadNumber: DWORD;
-    EndHeadNumber: DWORD;
-    FormatGapLength: WORD;
-    SectorsPerTrack: WORD;
-    SectorNumber: ARRAY [0..0] OF WORD;
+    StartCylinderNumber: UINT32;
+    EndCylinderNumber: UINT32;
+    StartHeadNumber: UINT32;
+    EndHeadNumber: UINT32;
+    FormatGapLength: UINT16;
+    SectorsPerTrack: UINT16;
+    SectorNumber: ARRAY [0..0] OF UINT16;
   END;
 
 (*
@@ -271,9 +271,9 @@ TYPE
   DISK_GEOMETRY = RECORD
     Cylinders: WinNT.LARGE_INTEGER;
     MediaType: MEDIA_TYPE;
-    TracksPerCylinder: DWORD;
-    SectorsPerTrack  : DWORD;
-    BytesPerSector   : DWORD;
+    TracksPerCylinder: UINT32;
+    SectorsPerTrack  : UINT32;
+    BytesPerSector   : UINT32;
   END;
 
 (*
@@ -286,9 +286,9 @@ TYPE
   PARTITION_INFORMATION = RECORD
     StartingOffset: WinNT.LARGE_INTEGER;
     PartitionLength: WinNT.LARGE_INTEGER;
-    HiddenSectors: DWORD;
-    PartitionNumber: DWORD;
-    PartitionType: BYTE;
+    HiddenSectors: UINT32;
+    PartitionNumber: UINT32;
+    PartitionType: UINT8;
     BootIndicator: WinNT.WBOOLEAN;
     RecognizedPartition: WinNT.WBOOLEAN;
     RewritePartition: WinNT.WBOOLEAN;
@@ -301,7 +301,7 @@ TYPE
 TYPE
   PSET_PARTITION_INFORMATION = UNTRACED REF SET_PARTITION_INFORMATION;
   SET_PARTITION_INFORMATION = RECORD
-    PartitionType: BYTE;
+    PartitionType: UINT8;
   END;
 (*
 // The following structures is returned on an IOCTL_DISK_GET_DRIVE_LAYOUT
@@ -310,8 +310,8 @@ TYPE
 TYPE
   PDRIVE_LAYOUT_INFORMATION = UNTRACED REF DRIVE_LAYOUT_INFORMATION;
   DRIVE_LAYOUT_INFORMATION = RECORD
-    PartitionCount: DWORD;
-    Signature: DWORD;
+    PartitionCount: UINT32;
+    Signature: UINT32;
     PartitionEntry: ARRAY [0..0] OF PARTITION_INFORMATION;
   END;
 
@@ -323,7 +323,7 @@ TYPE
   PVERIFY_INFORMATION = UNTRACED REF VERIFY_INFORMATION;
   VERIFY_INFORMATION = RECORD
     StartingOffset: WinNT.LARGE_INTEGER;
-    Length: DWORD;
+    Length: UINT32;
   END;
 
 (*
@@ -334,9 +334,9 @@ TYPE
 TYPE
   PREASSIGN_BLOCKS = UNTRACED REF REASSIGN_BLOCKS;
   REASSIGN_BLOCKS = RECORD
-    Reserved: WORD;
-    Count: WORD;
-    BlockNumber: ARRAY [0..0] OF DWORD;
+    Reserved: UINT16;
+    Count: UINT16;
+    BlockNumber: ARRAY [0..0] OF UINT32;
   END;
 
 (*
@@ -376,8 +376,8 @@ CONST HIST_NO_OF_BUCKETS  = 24;
 TYPE
   PHISTOGRAM_BUCKET = UNTRACED REF HISTOGRAM_BUCKET;
   HISTOGRAM_BUCKET = RECORD
-    Reads : DWORD;
-    Writes: DWORD;
+    Reads : UINT32;
+    Writes: UINT32;
   END;
 
 CONST HISTOGRAM_BUCKET_SIZE = BYTESIZE(HISTOGRAM_BUCKET);
@@ -391,10 +391,10 @@ TYPE
     Average: WinNT.LARGE_INTEGER;
     AverageRead: WinNT.LARGE_INTEGER;
     AverageWrite: WinNT.LARGE_INTEGER;
-    Granularity: DWORD;
-    Size: DWORD;
-    ReadCount: DWORD;
-    WriteCount: DWORD;
+    Granularity: UINT32;
+    Size: UINT32;
+    ReadCount: UINT32;
+    WriteCount: UINT32;
     Histogram: PHISTOGRAM_BUCKET;
   END;
 
@@ -428,9 +428,9 @@ TYPE
     BytesWritten: WinNT.LARGE_INTEGER;
     ReadTime: WinNT.LARGE_INTEGER;
     WriteTime: WinNT.LARGE_INTEGER;
-    ReadCount: DWORD;
-    WriteCount: DWORD;
-    QueueDepth: DWORD;
+    ReadCount: UINT32;
+    WriteCount: UINT32;
+    QueueDepth: UINT32;
   END;
 
 (*
@@ -446,8 +446,8 @@ TYPE
    StartTime: WinNT.LARGE_INTEGER;
    EndTime: WinNT.LARGE_INTEGER;
    VirtualAddress: WinNT.PVOID;
-   NumberOfBytes: DWORD;
-   DeviceNumber: BYTE;
+   NumberOfBytes: UINT32;
+   DeviceNumber: UINT8;
    ReadRequest: WinNT.WBOOLEAN ;
   END;
 
@@ -459,9 +459,9 @@ TYPE
 TYPE
   PDISK_LOGGING = UNTRACED REF DISK_LOGGING;
   DISK_LOGGING = RECORD
-    Function: BYTE;
+    Function: UINT8;
     BufferAddress: WinNT.PVOID;
-    BufferSize: DWORD;
+    BufferSize: UINT32;
   END;
 
 (*
@@ -507,8 +507,8 @@ TYPE
 TYPE
   PPERF_BIN = UNTRACED REF PERF_BIN;
   PERF_BIN = RECORD
-    NumberOfBins: DWORD;
-    TypeOfBin: DWORD;
+    NumberOfBins: UINT32;
+    TypeOfBin: UINT32;
     BinsRanges: ARRAY [0..0] OF BIN_RANGE;
   END;
 
@@ -517,14 +517,14 @@ TYPE
   PBIN_COUNT = UNTRACED REF BIN_COUNT;
   BIN_COUNT = RECORD
     BinRange: BIN_RANGE;
-    BinCount: DWORD;
+    BinCount: UINT32;
   END;
 
 (* Bin results *)
 TYPE
   PBIN_RESULTS = UNTRACED REF BIN_RESULTS;
   BIN_RESULTS = RECORD
-    NumberOfBins: DWORD;
+    NumberOfBins: UINT32;
     BinCounts: ARRAY[0..0] OF BIN_COUNT;
   END;
 
@@ -535,27 +535,27 @@ CONST
 // The following values follow the escape designator in the
 // data stream if the LSRMST_INSERT mode has been turned on.
 *)
-CONST SERIAL_LSRMST_ESCAPE     : BYTE = 0;
+CONST SERIAL_LSRMST_ESCAPE     : UINT8 = 0;
 
 (*
 // Following this value is the contents of the line status
 // register, and then the character in the RX hardware when
 // the line status register was encountered.
 *)
-CONST SERIAL_LSRMST_LSR_DATA   : BYTE = 1;
+CONST SERIAL_LSRMST_LSR_DATA   : UINT8 = 1;
 
 (*
 // Following this value is the contents of the line status
 // register.  No error character follows
 *)
-CONST SERIAL_LSRMST_LSR_NODATA : BYTE = 2;
+CONST SERIAL_LSRMST_LSR_NODATA : UINT8 = 2;
 
 (*
 // Following this value is the contents of the modem status
 // register.
 *)
 CONST
-  SERIAL_LSRMST_MST : BYTE = 3;
+  SERIAL_LSRMST_MST : UINT8 = 3;
 
   FSCTL_LOCK_VOLUME       = CTL_CODE{ DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:=  6, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };
   FSCTL_UNLOCK_VOLUME     = CTL_CODE{ DeviceType:= FILE_DEVICE_FILE_SYSTEM, Function:=  7, Method:= METHOD_BUFFERED, Access:= FILE_ANY_ACCESS };

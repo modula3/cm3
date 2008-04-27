@@ -7,17 +7,15 @@ INTERFACE WinImageList;
 	Copyright Darko Volaric 2002 darko@peter.com.au
 *)
 
-FROM WinBaseTypes IMPORT DWORD;
-FROM Ctypes IMPORT int;
+FROM WinBaseTypes IMPORT UINT32, INT32;
 FROM WinDef IMPORT HDC;
 FROM WinDef IMPORT COLORREF;
-FROM WinBaseTypes IMPORT UINT;
 FROM WinDef IMPORT HBITMAP;
 FROM WinDef IMPORT RECT;
 FROM WinDef IMPORT HICON;
 FROM WinDef IMPORT BOOL;
-FROM WinNT IMPORT LPCSTR;
-FROM WinNT IMPORT LPCWSTR;
+FROM WinNT IMPORT PCSTR;
+FROM WinNT IMPORT PCWSTR;
 FROM WinDef IMPORT HWND;
 FROM WinDef IMPORT POINT;
 FROM WinDef IMPORT HINSTANCE;
@@ -65,28 +63,28 @@ TYPE
 
 	LPIMAGELISTDRAWPARAMS = UNTRACED REF IMAGELISTDRAWPARAMS;
 	IMAGELISTDRAWPARAMS = RECORD
-		cbSize: DWORD;
+		cbSize: UINT32;
 		himl: HIMAGELIST;
-		i: int;
+		i: INT32;
 		hdcDst: HDC;
-		x: int;
-		y: int;
-		cx: int;
-		cy: int;
-		xBitmap: int;
-		yBitmap: int;
+		x: INT32;
+		y: INT32;
+		cx: INT32;
+		cy: INT32;
+		xBitmap: INT32;
+		yBitmap: INT32;
 		rgbBk: COLORREF;
 		rgbFg: COLORREF;
-		fStyle: UINT;
-		dwRop: DWORD;
+		fStyle: UINT32;
+		dwRop: UINT32;
 	END;
 
 	LPIMAGEINFO = UNTRACED REF IMAGEINFO;
 	IMAGEINFO = RECORD
 		hbmImage: HBITMAP;
 		hbmMask: HBITMAP;
-		Unused1: int;
-		Unused2: int;
+		Unused1: INT32;
+		Unused2: INT32;
 		rcImage: RECT;
 	END;
 
@@ -94,22 +92,22 @@ TYPE
 
 
 <*EXTERNAL ImageList_Create:WINAPI*>
-PROCEDURE Create( cx: int; cy: int; flags: UINT; cInitial: int; cGrow: int): HIMAGELIST;
+PROCEDURE Create( cx: INT32; cy: INT32; flags: UINT32; cInitial: INT32; cGrow: INT32): HIMAGELIST;
 
 <*EXTERNAL ImageList_Destroy:WINAPI*>
 PROCEDURE Destroy( himl: HIMAGELIST): BOOL;
 
 <*EXTERNAL ImageList_GetImageCount:WINAPI*>
-PROCEDURE GetImageCount( himl: HIMAGELIST): int;
+PROCEDURE GetImageCount( himl: HIMAGELIST): INT32;
 
 <*EXTERNAL ImageList_SetImageCount:WINAPI*>
-PROCEDURE SetImageCount( himl: HIMAGELIST; uNewCount: UINT): BOOL;
+PROCEDURE SetImageCount( himl: HIMAGELIST; uNewCount: UINT32): BOOL;
 
 <*EXTERNAL ImageList_Add:WINAPI*>
-PROCEDURE Add( himl: HIMAGELIST; hbmImage: HBITMAP; hbmMask: HBITMAP): int;
+PROCEDURE Add( himl: HIMAGELIST; hbmImage: HBITMAP; hbmMask: HBITMAP): INT32;
 
 <*EXTERNAL ImageList_ReplaceIcon:WINAPI*>
-PROCEDURE ReplaceIcon( himl: HIMAGELIST; i: int; hicon: HICON): int;
+PROCEDURE ReplaceIcon( himl: HIMAGELIST; i: INT32; hicon: HICON): INT32;
 
 <*EXTERNAL ImageList_SetBkColor:WINAPI*>
 PROCEDURE SetBkColor( himl: HIMAGELIST; clrBk: COLORREF): COLORREF;
@@ -118,55 +116,55 @@ PROCEDURE SetBkColor( himl: HIMAGELIST; clrBk: COLORREF): COLORREF;
 PROCEDURE GetBkColor( himl: HIMAGELIST): COLORREF;
 
 <*EXTERNAL ImageList_SetOverlayImage:WINAPI*>
-PROCEDURE SetOverlayImage( himl: HIMAGELIST; iImage: int; iOverlay: int): BOOL;
+PROCEDURE SetOverlayImage( himl: HIMAGELIST; iImage: INT32; iOverlay: INT32): BOOL;
 
 <*EXTERNAL ImageList_Draw:WINAPI*>
-PROCEDURE Draw( himl: HIMAGELIST; i: int; hdcDst: HDC; x: int; y: int; fStyle: UINT): BOOL;
+PROCEDURE Draw( himl: HIMAGELIST; i: INT32; hdcDst: HDC; x: INT32; y: INT32; fStyle: UINT32): BOOL;
 
 <*EXTERNAL ImageList_Replace:WINAPI*>
-PROCEDURE Replace( himl: HIMAGELIST; i: int; hbmImage: HBITMAP; hbmMask: HBITMAP): BOOL;
+PROCEDURE Replace( himl: HIMAGELIST; i: INT32; hbmImage: HBITMAP; hbmMask: HBITMAP): BOOL;
 
 <*EXTERNAL ImageList_AddMasked:WINAPI*>
-PROCEDURE AddMasked( himl: HIMAGELIST; hbmImage: HBITMAP; crMask: COLORREF): int;
+PROCEDURE AddMasked( himl: HIMAGELIST; hbmImage: HBITMAP; crMask: COLORREF): INT32;
 
 <*EXTERNAL ImageList_DrawEx:WINAPI*>
-PROCEDURE DrawEx( himl: HIMAGELIST; i: int; hdcDst: HDC; x: int; y: int; dx: int; dy: int; rgbBk: COLORREF; rgbFg: COLORREF; fStyle: UINT): BOOL;
+PROCEDURE DrawEx( himl: HIMAGELIST; i: INT32; hdcDst: HDC; x: INT32; y: INT32; dx: INT32; dy: INT32; rgbBk: COLORREF; rgbFg: COLORREF; fStyle: UINT32): BOOL;
 
 <*EXTERNAL ImageList_DrawIndirect:WINAPI*>
 PROCEDURE DrawIndirect( pimldp: LPIMAGELISTDRAWPARAMS): BOOL;
 
 <*EXTERNAL ImageList_Remove:WINAPI*>
-PROCEDURE Remove( himl: HIMAGELIST; i: int): BOOL;
+PROCEDURE Remove( himl: HIMAGELIST; i: INT32): BOOL;
 
 <*EXTERNAL ImageList_GetIcon:WINAPI*>
-PROCEDURE GetIcon( himl: HIMAGELIST; i: int; flags: UINT): HICON;
+PROCEDURE GetIcon( himl: HIMAGELIST; i: INT32; flags: UINT32): HICON;
 
 <*EXTERNAL ImageList_LoadImageA:WINAPI*>
-PROCEDURE LoadImage( hi: HINSTANCE; lpbmp: LPCSTR; cx: int; cGrow: int; crMask: COLORREF; uType: UINT; uFlags: UINT): HIMAGELIST;
+PROCEDURE LoadImage( hi: HINSTANCE; lpbmp: PCSTR; cx: INT32; cGrow: INT32; crMask: COLORREF; uType: UINT32; uFlags: UINT32): HIMAGELIST;
 
 <*EXTERNAL ImageList_LoadImageW:WINAPI*>
-PROCEDURE LoadImageW( hi: HINSTANCE; lpbmp: LPCWSTR; cx: int; cGrow: int; crMask: COLORREF; uType: UINT; uFlags: UINT): HIMAGELIST;
+PROCEDURE LoadImageW( hi: HINSTANCE; lpbmp: PCWSTR; cx: INT32; cGrow: INT32; crMask: COLORREF; uType: UINT32; uFlags: UINT32): HIMAGELIST;
 
 <*EXTERNAL ImageList_Copy:WINAPI*>
-PROCEDURE Copy( himlDst: HIMAGELIST; iDst: int; himlSrc: HIMAGELIST; iSrc: int; uFlags: UINT): BOOL;
+PROCEDURE Copy( himlDst: HIMAGELIST; iDst: INT32; himlSrc: HIMAGELIST; iSrc: INT32; uFlags: UINT32): BOOL;
 
 <*EXTERNAL ImageList_BeginDrag:WINAPI*>
-PROCEDURE BeginDrag( himlTrack: HIMAGELIST; iTrack: int; dxHotspot: int; dyHotspot: int): BOOL;
+PROCEDURE BeginDrag( himlTrack: HIMAGELIST; iTrack: INT32; dxHotspot: INT32; dyHotspot: INT32): BOOL;
 
 <*EXTERNAL ImageList_EndDrag:WINAPI*>
 PROCEDURE EndDrag();
 
 <*EXTERNAL ImageList_DragEnter:WINAPI*>
-PROCEDURE DragEnter( hwndLock: HWND; x: int; y: int): BOOL;
+PROCEDURE DragEnter( hwndLock: HWND; x: INT32; y: INT32): BOOL;
 
 <*EXTERNAL ImageList_DragLeave:WINAPI*>
 PROCEDURE DragLeave( hwndLock: HWND): BOOL;
 
 <*EXTERNAL ImageList_DragMove:WINAPI*>
-PROCEDURE DragMove( x: int; y: int): BOOL;
+PROCEDURE DragMove( x: INT32; y: INT32): BOOL;
 
 <*EXTERNAL ImageList_SetDragCursorImage:WINAPI*>
-PROCEDURE SetDragCursorImage( himlDrag: HIMAGELIST; iDrag: int; dxHotspot: int; dyHotspot: int): BOOL;
+PROCEDURE SetDragCursorImage( himlDrag: HIMAGELIST; iDrag: INT32; dxHotspot: INT32; dyHotspot: INT32): BOOL;
 
 <*EXTERNAL ImageList_DragShowNolock:WINAPI*>
 PROCEDURE DragShowNolock( fShow: BOOL): BOOL;
@@ -181,24 +179,24 @@ PROCEDURE Read( pstm: LPSTREAM): HIMAGELIST;
 PROCEDURE Write( himl: HIMAGELIST; pstm: LPSTREAM): BOOL;
 
 <*EXTERNAL ImageList_GetIconSize:WINAPI*>
-PROCEDURE GetIconSize( himl: HIMAGELIST; VAR cx: int; VAR cy: int): BOOL;
+PROCEDURE GetIconSize( himl: HIMAGELIST; VAR cx: INT32; VAR cy: INT32): BOOL;
 
 <*EXTERNAL ImageList_SetIconSize:WINAPI*>
-PROCEDURE SetIconSize( himl: HIMAGELIST; cx: int; cy: int): BOOL;
+PROCEDURE SetIconSize( himl: HIMAGELIST; cx: INT32; cy: INT32): BOOL;
 
 <*EXTERNAL ImageList_GetImageInfo:WINAPI*>
-PROCEDURE GetImageInfo( himl: HIMAGELIST; i: int; VAR pImageInfo: IMAGEINFO): BOOL;
+PROCEDURE GetImageInfo( himl: HIMAGELIST; i: INT32; VAR pImageInfo: IMAGEINFO): BOOL;
 
 <*EXTERNAL ImageList_Merge:WINAPI*>
-PROCEDURE Merge( himl1: HIMAGELIST; i1: int; himl2: HIMAGELIST; i2: int; dx: int; dy: int): HIMAGELIST;
+PROCEDURE Merge( himl1: HIMAGELIST; i1: INT32; himl2: HIMAGELIST; i2: INT32; dx: INT32; dy: INT32): HIMAGELIST;
 
 <*EXTERNAL ImageList_Duplicate:WINAPI*>
 PROCEDURE Duplicate( himl: HIMAGELIST): HIMAGELIST;
 
-PROCEDURE AddIcon(himl: HIMAGELIST; hicon: HICON): int;
+PROCEDURE AddIcon(himl: HIMAGELIST; hicon: HICON): INT32;
 PROCEDURE RemoveAll(himl: HIMAGELIST): BOOL;
-PROCEDURE ExtractIcon(<*UNUSED*>hi: HINSTANCE; himl: HIMAGELIST; i: int): HICON;
-PROCEDURE LoadBitmap(hi: HINSTANCE; lpbmp: LPCSTR; cx: int; cGrow: int; crMask: COLORREF): HIMAGELIST;
+PROCEDURE ExtractIcon(<*UNUSED*>hi: HINSTANCE; himl: HIMAGELIST; i: INT32): HICON;
+PROCEDURE LoadBitmap(hi: HINSTANCE; lpbmp: PCSTR; cx: INT32; cGrow: INT32; crMask: COLORREF): HIMAGELIST;
 
 
 END WinImageList.

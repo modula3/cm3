@@ -11,27 +11,26 @@ INTERFACE WinSock;
 
        (* Taken from WINSOCK.H from WINSOCK version 1.1 *)
 
-IMPORT Ctypes;
-FROM Ctypes IMPORT int, char, char_star, char_star_star,
-                   int_star, short;
+FROM Ctypes IMPORT char_star, char_star_star, char;
+FROM WinBaseTypes IMPORT UINT8, UINT16, UINT32, INT16, INT32, PINT32, SIZE_T;
 FROM Word IMPORT Or, And, Shift, Not;
 
 
 (* Basic system type definitions, taken from the BSD file sys/types.h. *)
 
 TYPE
-  u_char  = Ctypes.unsigned_char;
-  u_short = Ctypes.unsigned_short;
-  u_int   = Ctypes.unsigned_int;
-  u_long  = u_int;
+  u_char  = UINT8; (* compat *)
+  u_short = UINT16; (* compat *)
+  u_int   = UINT32; (* compat *)
+  u_long  = UINT32; (* compat *)
 
 CONST
   FD_SETSIZE = 64;
 
 TYPE
-  SOCKET = u_int;
+  SOCKET = SIZE_T;
   struct_fd_set = RECORD
-    fd_count: u_int;
+    fd_count: UINT32;
     fd_array: ARRAY [0..FD_SETSIZE-1] OF SOCKET;
   END;
 
@@ -47,8 +46,8 @@ PROCEDURE FD_ISSET(s: SOCKET; VAR set: struct_fd_set): BOOLEAN;
 
 TYPE
   struct_timeval = RECORD
-    tv_sec: int;
-    tv_usec: int;
+    tv_sec: INT32;
+    tv_usec: INT32;
   END;
 
 
@@ -100,8 +99,8 @@ TYPE
   struct_hostent  = RECORD
     h_name:       char_star;        (* official name of host *)
     h_aliases:    char_star_star;   (* alias list *)
-    h_addrtype:   short;            (* host address type *)
-    h_length:     short;            (* length of address *)
+    h_addrtype:   INT16;            (* host address type *)
+    h_length:     INT16;            (* length of address *)
     h_addr_list:  char_star_star;   (* list of addresses from name server *)
     END;
   struct_hostent_star = UNTRACED REF struct_hostent;
@@ -114,15 +113,15 @@ TYPE
   struct_netent = RECORD
     n_name:     char_star;      (* official name of net *)
     n_aliases:  char_star_star; (* alias list *)
-    n_addrtype: short;          (* net address type *)
-    n_net:      u_int;          (* network # *)
+    n_addrtype: INT16;          (* net address type *)
+    n_net:      UINT32;          (* network # *)
   END;
   struct_netent_star = UNTRACED REF struct_netent;
 
   struct_servent = RECORD
     s_name:    char_star;       (* official service name *)
     s_aliases: char_star_star;  (* alias list *)
-    s_port:    short;           (* port # *)
+    s_port:    INT16;           (* port # *)
     s_proto:   char_star;       (* protocol to use *)
   END;
   struct_servent_star = UNTRACED REF struct_servent;
@@ -130,7 +129,7 @@ TYPE
   struct_protoent = RECORD
     p_name:    char_star;       (* official protocol name *)
     p_aliases: char_star_star;  (* alias list *)
-    p_proto:   short;           (* protocol # *)
+    p_proto:   INT16;           (* protocol # *)
   END;
   struct_protoent_star = UNTRACED REF struct_protoent;
 
@@ -215,13 +214,13 @@ CONST
  *)
 TYPE
   struct_in_addr = RECORD
-    s_addr: u_int;
+    s_addr: UINT32;
   END;
   struct_in_addr_b = RECORD
-    b1, b2, b3, b4: u_char;   (* alias for in_addr *)
+    b1, b2, b3, b4: UINT8;   (* alias for in_addr *)
   END;
   struct_int_addr_w = RECORD
-    w1, w2: u_short;          (* alias for in_addr *)
+    w1, w2: UINT16;          (* alias for in_addr *)
   END;
 
 (*
@@ -269,8 +268,8 @@ PROCEDURE IN_CLASSC(in: struct_in_addr): BOOLEAN;
  *)
 TYPE
   struct_sockaddr_in = RECORD
-    sin_family: short;
-    sin_port:   u_short;
+    sin_family: INT16;
+    sin_port:   UINT16;
     sin_addr:   struct_in_addr;
     sin_zero:   ARRAY [0..7] OF char;
   END;
@@ -289,14 +288,12 @@ CONST IP_OPTIONS = 1;            (* set/get IP per-packet options *)
  * This is used instead of -1, since the
  * SOCKET type is unsigned.
  *)
-CONST
   INVALID_SOCKET = Not(0);
   SOCKET_ERROR   = -1;
 
 (*
  * Types
  *)
-CONST
   SOCK_STREAM    = 1;            (* stream socket *)
   SOCK_DGRAM     = 2;            (* datagram socket *)
   SOCK_RAW       = 3;            (* raw-protocol interface *)
@@ -379,7 +376,7 @@ CONST
 TYPE
   struct_sockaddr_star = UNTRACED REF struct_sockaddr;
   struct_sockaddr = RECORD
-    sa_family: u_short;                 (* address family *)
+    sa_family: UINT16;                 (* address family *)
     sa_data: ARRAY [0..13] OF char;     (* up to 14 bytes of direct address *)
   END;
 
@@ -389,17 +386,16 @@ TYPE
  * information in raw sockets.
  *)
   struct_sockproto = RECORD
-    sp_family: u_short;                 (* address family *)
-    sp_protocol: u_short;               (* protocol *)
+    sp_family: UINT16;                 (* address family *)
+    sp_protocol: UINT16;               (* protocol *)
   END;
 
 (*
  * Structure used for manipulating linger option.
  *)
-TYPE
   struct_linger = RECORD
-    l_onoff: u_short;		        (* option on/off *)
-    l_linger: u_short;		        (* linger time *)
+    l_onoff: UINT16;		        (* option on/off *)
+    l_linger: UINT16;		        (* linger time *)
   END;
 
 (*
@@ -431,7 +427,6 @@ CONST
 (*
  * Level number for (get/set)sockopt() to apply to socket itself.
  *)
-CONST
   SOL_SOCKET     = 16_ffff;      (* options for socket level *)
 
 (*
@@ -439,7 +434,6 @@ CONST
  *)
   SOMAXCONN      = 5;
 
-CONST
   MSG_OOB        = 16_1;         (* process out-of-band data *)
   MSG_PEEK       = 16_2;         (* peek at incoming message *)
   MSG_DONTROUTE  = 16_4;         (* send without using routing tables *)
@@ -456,7 +450,6 @@ CONST MAXGETHOSTSTRUCT = 1024;
 (*
  * Define flags to be used with the WSAAsyncSelect() call.
  *)
-CONST
   FD_READ         = 16_1;
   FD_WRITE        = 16_2;
   FD_OOB          = 16_4;
@@ -473,7 +466,6 @@ CONST  WSABASEERR  = 10000;
 (*
  * Windows Sockets definitions of regular Microsoft C error constants
  *)
-CONST
   WSAEINTR              =  (WSABASEERR+4);
   WSAEBADF              =  (WSABASEERR+9);
   WSAEACCES             =  (WSABASEERR+13);
@@ -542,7 +534,6 @@ CONST
  * compatibility purposes.
  *)
 
-CONST
 (* Authoritative Answer: Host not found *)
   WSAHOST_NOT_FOUND     =  (WSABASEERR+1001);
   HOST_NOT_FOUND        =  WSAHOST_NOT_FOUND;
@@ -567,107 +558,107 @@ CONST
 
 <* EXTERNAL accept:PASCAL *>
 PROCEDURE accept(
-    s: SOCKET; addr: struct_sockaddr_star; addrlen: int_star): SOCKET;
+    s: SOCKET; addr: struct_sockaddr_star; addrlen: PINT32): SOCKET;
 
 <* EXTERNAL bind:PASCAL *>
 PROCEDURE bind (
-    s: SOCKET; name: struct_sockaddr_star; namelen: int): int;
+    s: SOCKET; name: struct_sockaddr_star; namelen: INT32): INT32;
 
 <* EXTERNAL closesocket:PASCAL *>
-PROCEDURE closesocket (s: SOCKET): int;
+PROCEDURE closesocket (s: SOCKET): INT32;
 
 <* EXTERNAL connect:PASCAL *>
 PROCEDURE connect (
-    s: SOCKET; addr: struct_sockaddr_star; namelen: int): int;
+    s: SOCKET; addr: struct_sockaddr_star; namelen: INT32): INT32;
 
 <* EXTERNAL ioctlsocket:PASCAL *>
-PROCEDURE ioctlsocket (s: SOCKET; cmd: int; argp: UNTRACED REF u_int): int;
+PROCEDURE ioctlsocket (s: SOCKET; cmd: INT32; argp: UNTRACED REF UINT32): INT32;
 
 <* EXTERNAL getpeername:PASCAL *>
 PROCEDURE getpeername (
-    s: SOCKET; name: struct_sockaddr_star; namelen: int_star): int;
+    s: SOCKET; name: struct_sockaddr_star; namelen: PINT32): INT32;
 
 <* EXTERNAL getsockname:PASCAL *>
 PROCEDURE getsockname (
-    s: SOCKET; name: struct_sockaddr_star; namelen: int_star): int;
+    s: SOCKET; name: struct_sockaddr_star; namelen: PINT32): INT32;
 
 <* EXTERNAL getsockopt:PASCAL *>
 PROCEDURE getsockopt (
-    s: SOCKET; level: int; optname: int;
-    optval: char_star;  optlen: int_star): int;
+    s: SOCKET; level: INT32; optname: INT32;
+    optval: char_star;  optlen: PINT32): INT32;
 
 <* EXTERNAL htonl:PASCAL *>
-PROCEDURE htonl(hostlong: u_int): u_int;
+PROCEDURE htonl(hostlong: UINT32): UINT32;
 
 <* EXTERNAL htons:PASCAL *>
-PROCEDURE htons (hostshort: u_short): u_short;
+PROCEDURE htons (hostshort: UINT16): UINT16;
 
 <* EXTERNAL inet_addr:PASCAL *>
-PROCEDURE inet_addr (cp: char_star): u_int (*struct_in_addr*);
+PROCEDURE inet_addr (cp: char_star): UINT32 (*struct_in_addr*);
 
 <* EXTERNAL inet_ntoa:PASCAL *>
 PROCEDURE inet_ntoa (in: struct_in_addr): char_star;
 
 <* EXTERNAL listen:PASCAL *>
-PROCEDURE listen(s: SOCKET; backlog: int): int;
+PROCEDURE listen(s: SOCKET; backlog: INT32): INT32;
 
 <* EXTERNAL ntohl:PASCAL *>
-PROCEDURE ntohl (netlong: u_int): u_int;
+PROCEDURE ntohl (netlong: UINT32): UINT32;
 
 <* EXTERNAL ntohs:PASCAL *>
-PROCEDURE ntohs (netshort: u_short): u_short;
+PROCEDURE ntohs (netshort: UINT16): UINT16;
 
 <* EXTERNAL recv:PASCAL *>
-PROCEDURE recv(s: SOCKET; buf: char_star; len, flags: int): int;
+PROCEDURE recv(s: SOCKET; buf: char_star; len, flags: INT32): INT32;
 
 <* EXTERNAL recvfrom:PASCAL *>
 PROCEDURE recvfrom(
-    s: SOCKET; buf: char_star; len, flags: int;
-    from: struct_sockaddr_star; fromlen: int_star): int;
+    s: SOCKET; buf: char_star; len, flags: INT32;
+    from: struct_sockaddr_star; fromlen: PINT32): INT32;
 
 <* EXTERNAL select:PASCAL *>
 PROCEDURE select (
-    nfds: int; readfds, writefds, exceptfds: UNTRACED REF struct_fd_set;
-    timeout: UNTRACED REF struct_timeval): int;
+    nfds: INT32; readfds, writefds, exceptfds: UNTRACED REF struct_fd_set;
+    timeout: UNTRACED REF struct_timeval): INT32;
 
 <* EXTERNAL send:PASCAL *>
-PROCEDURE send(s: SOCKET; msg: char_star; len, flags: int): int;
+PROCEDURE send(s: SOCKET; msg: char_star; len, flags: INT32): INT32;
 
 <* EXTERNAL sendto:PASCAL *>
 PROCEDURE sendto (
-    s: SOCKET; buf: char_star; len, flags: int;
-    to: struct_sockaddr_star; tolen: int): int;
+    s: SOCKET; buf: char_star; len, flags: INT32;
+    to: struct_sockaddr_star; tolen: INT32): INT32;
 
 <* EXTERNAL setsockopt:PASCAL *>
 PROCEDURE setsockopt(
-    s: SOCKET; level, optname: int; optval: char_star; optlen: int): int;
+    s: SOCKET; level, optname: INT32; optval: char_star; optlen: INT32): INT32;
 
 <* EXTERNAL shutdown:PASCAL *>
-PROCEDURE shutdown(s: SOCKET; how: int): int;
+PROCEDURE shutdown(s: SOCKET; how: INT32): INT32;
 
 <* EXTERNAL socket:PASCAL *>
-PROCEDURE socket(af, type, protocol: int): SOCKET;
+PROCEDURE socket(af, type, protocol: INT32): SOCKET;
 
 
 (* Database function prototypes *)
 
 <* EXTERNAL gethostbyaddr:PASCAL *>
-PROCEDURE gethostbyaddr (addr: char_star; len, type: int): struct_hostent_star;
+PROCEDURE gethostbyaddr (addr: char_star; len, type: INT32): struct_hostent_star;
 
 <* EXTERNAL gethostbyname:PASCAL *>
 PROCEDURE gethostbyname (name: char_star): struct_hostent_star;
 
 <* EXTERNAL gethostname:PASCAL *>
-PROCEDURE gethostname (name: char_star; namelen: int): int;
+PROCEDURE gethostname (name: char_star; namelen: INT32): INT32;
 
 <* EXTERNAL getservbyport:PASCAL *>
-PROCEDURE getservbyport (port: int; proto: char_star): struct_servent_star;
+PROCEDURE getservbyport (port: INT32; proto: char_star): struct_servent_star;
 
 <* EXTERNAL getservbyname:PASCAL *>
 PROCEDURE getservbyname (name, proto: char_star): struct_servent_star;
 
 <* EXTERNAL getprotobynumber:PASCAL *>
-PROCEDURE getprotobynumber (proto: int): struct_protoent_star;
+PROCEDURE getprotobynumber (proto: INT32): struct_protoent_star;
 
 <* EXTERNAL getprotobyname:PASCAL *>
 PROCEDURE getprotobyname (name: char_star): struct_protoent_star;
@@ -681,25 +672,25 @@ CONST
 
 TYPE
   WSAData = RECORD
-    wVersion:       u_short;
-    wHighVersion:   u_short;
+    wVersion:       UINT16;
+    wHighVersion:   UINT16;
     szDescription:  ARRAY [0..WSADESCRIPTION_LEN] OF char;
     szSystemStatus: ARRAY [0..WSASYS_STATUS_LEN] OF char;
-    iMaxSockets:    u_short;
-    iMaxUdpDg:      u_short;
+    iMaxSockets:    UINT16;
+    iMaxUdpDg:      UINT16;
     lpVendorInfo:   char_star;
   END;
   LPWSADATA = UNTRACED REF WSAData;
 
 
 <* EXTERNAL WSAStartup:PASCAL *>
-PROCEDURE WSAStartup(wVersionRequired: u_short; lpWSAData: LPWSADATA): int;
+PROCEDURE WSAStartup(wVersionRequired: UINT16; lpWSAData: LPWSADATA): INT32;
 
 <* EXTERNAL WSACleanup:PASCAL *>
-PROCEDURE WSACleanup(): int;
+PROCEDURE WSACleanup(): INT32;
 
 <* EXTERNAL WSAGetLastError:PASCAL *>
-PROCEDURE WSAGetLastError(): int;
+PROCEDURE WSAGetLastError(): INT32;
 
 
 (* Rest of Microsoft extensions omitted ... assume multithreaded env. *)
