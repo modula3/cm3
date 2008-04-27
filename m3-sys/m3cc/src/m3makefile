@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.60 2008-04-27 10:44:12 jkrell Exp $
+% $Id: m3makefile,v 1.61 2008-04-27 10:53:22 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -219,7 +219,7 @@ readonly proc m3cc_Run (x) is
     write(x & CR)
   end
   if HostIsNT ()
-    local readonly Temp = "_m3sh" & m3cc_ResponseFileCounter & ".sh"
+    local readonly Temp = "_m3sh" & m3cc_ResponseFileCounter & M3CC_TARGET & ".sh"
     > Temp in
       write(x)
     end
