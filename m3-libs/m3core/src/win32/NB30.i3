@@ -14,9 +14,7 @@ INTERFACE NB30;
    support. *)
 
 IMPORT Ctypes;
-
-FROM WinDef IMPORT UCHAR, PUCHAR, WORD, DWORD, ULONG, USHORT;
-FROM WinNT IMPORT HANDLE;
+FROM WinBaseTypes IMPORT UINT8, PUINT8, UINT16, UINT32, HANDLE;
 
 (****************************************************************
  *                                                              *
@@ -35,27 +33,27 @@ CONST
 TYPE
   PNCB = UNTRACED REF NCB;
   NCB = RECORD
-    ncb_command  : UCHAR;    (* command code *)
-    ncb_retcode  : UCHAR;    (* return code *)
-    ncb_lsn      : UCHAR;    (* local session number *)
-    ncb_num      : UCHAR;    (* number of our network name *)
-    ncb_buffer   : PUCHAR;   (* address of message buffer *)
-    ncb_length   : WORD;     (* size of message buffer *)
+    ncb_command  : UINT8;    (* command code *)
+    ncb_retcode  : UINT8;    (* return code *)
+    ncb_lsn      : UINT8;    (* local session number *)
+    ncb_num      : UINT8;    (* number of our network name *)
+    ncb_buffer   : PUINT8;   (* address of message buffer *)
+    ncb_length   : UINT16;     (* size of message buffer *)
     ncb_callname : NCB_name; (* blank-padded name of remote *)
     ncb_name     : NCB_name; (* our blank-padded netname *)
-    ncb_rto      : UCHAR;    (* rcv timeout/retry count *)
-    ncb_sto      : UCHAR;    (* send timeout/sys timeout *)
+    ncb_rto      : UINT8;    (* rcv timeout/retry count *)
+    ncb_sto      : UINT8;    (* send timeout/sys timeout *)
     ncb_post     : NCB_post; (* POST routine address *)
-    ncb_lana_num : UCHAR;    (* lana (adapter) number *)
-    ncb_cmd_cplt : UCHAR;    (* 0xff => commmand pending *)
-    ncb_reserve  : ARRAY [0 .. 9] OF UCHAR;  (* reserved, used by BIOS *)
+    ncb_lana_num : UINT8;    (* lana (adapter) number *)
+    ncb_cmd_cplt : UINT8;    (* 0xff => commmand pending *)
+    ncb_reserve  : ARRAY [0 .. 9] OF UINT8;  (* reserved, used by BIOS *)
     ncb_event    : HANDLE;   (* HANDLE to Win32 event which *)
                              (* will be set to the signalled *)
                              (* state when an ASYNCH command *)
                              (* completes *)
   END;
 
-  NCB_name = ARRAY [0 .. NCBNAMSZ - 1] OF UCHAR;
+  NCB_name = ARRAY [0 .. NCBNAMSZ - 1] OF UINT8;
   NCB_post = <*CALLBACK*> PROCEDURE (arg: PNCB);
 
   (*
@@ -65,44 +63,44 @@ TYPE
 
   PADAPTER_STATUS = UNTRACED REF ADAPTER_STATUS;
   ADAPTER_STATUS = RECORD
-    adapter_address  : ARRAY [0 .. 6 - 1] OF UCHAR;
-    rev_major        : UCHAR;
-    reserved0        : UCHAR;
-    adapter_type     : UCHAR;
-    rev_minor        : UCHAR;
-    duration         : WORD;
-    frmr_recv        : WORD;
-    frmr_xmit        : WORD;
+    adapter_address  : ARRAY [0 .. 6 - 1] OF UINT8;
+    rev_major        : UINT8;
+    reserved0        : UINT8;
+    adapter_type     : UINT8;
+    rev_minor        : UINT8;
+    duration         : UINT16;
+    frmr_recv        : UINT16;
+    frmr_xmit        : UINT16;
 
-    iframe_recv_err  : WORD;
+    iframe_recv_err  : UINT16;
 
-    xmit_aborts      : WORD;
-    xmit_success     : DWORD;
-    recv_success     : DWORD;
+    xmit_aborts      : UINT16;
+    xmit_success     : UINT32;
+    recv_success     : UINT32;
 
-    iframe_xmit_err  : WORD;
+    iframe_xmit_err  : UINT16;
 
-    recv_buff_unavail: WORD;
-    t1_timeouts      : WORD;
-    ti_timeouts      : WORD;
-    reserved1        : DWORD;
-    free_ncbs        : WORD;
-    max_cfg_ncbs     : WORD;
-    max_ncbs         : WORD;
-    xmit_buf_unavail : WORD;
-    max_dgram_size   : WORD;
-    pending_sess     : WORD;
-    max_cfg_sess     : WORD;
-    max_sess         : WORD;
-    max_sess_pkt_size: WORD;
-    name_count       : WORD;
+    recv_buff_unavail: UINT16;
+    t1_timeouts      : UINT16;
+    ti_timeouts      : UINT16;
+    reserved1        : UINT32;
+    free_ncbs        : UINT16;
+    max_cfg_ncbs     : UINT16;
+    max_ncbs         : UINT16;
+    xmit_buf_unavail : UINT16;
+    max_dgram_size   : UINT16;
+    pending_sess     : UINT16;
+    max_cfg_sess     : UINT16;
+    max_sess         : UINT16;
+    max_sess_pkt_size: UINT16;
+    name_count       : UINT16;
   END;
 
   PNAME_BUFFER = UNTRACED REF NAME_BUFFER;
   NAME_BUFFER = RECORD
     name      : NCB_name;
-    name_num  : UCHAR;
-    name_flags: UCHAR;
+    name_num  : UINT8;
+    name_flags: UINT8;
   END;
 
 (* values for name_flags bits. *)
@@ -129,20 +127,20 @@ CONST
 TYPE
   PSESSION_HEADER = UNTRACED REF SESSION_HEADER;
   SESSION_HEADER = RECORD
-    sess_name           : UCHAR;
-    num_sess            : UCHAR;
-    rcv_dg_outstanding  : UCHAR;
-    rcv_any_outstanding : UCHAR;
+    sess_name           : UINT8;
+    num_sess            : UINT8;
+    rcv_dg_outstanding  : UINT8;
+    rcv_any_outstanding : UINT8;
   END;
 
   PSESSION_BUFFER = UNTRACED REF SESSION_BUFFER;
   SESSION_BUFFER = RECORD
-    lsn               : UCHAR;
-    state             : UCHAR;
+    lsn               : UINT8;
+    state             : UINT8;
     local_name        : NCB_name;
     remote_name       : NCB_name;
-    rcvs_outstanding  : UCHAR;
-    sends_outstanding : UCHAR;
+    rcvs_outstanding  : UINT8;
+    sends_outstanding : UINT8;
   END;
 
 (* Values for state *)
@@ -165,8 +163,8 @@ CONST
 TYPE
   PLANA_ENUM = UNTRACED REF LANA_ENUM;
   LANA_ENUM = RECORD
-    length: UCHAR;  (* Number of valid entries in lana[] *)
-    lana: ARRAY [0 .. MAX_LANA] OF UCHAR;
+    length: UINT8;  (* Number of valid entries in lana[] *)
+    lana: ARRAY [0 .. MAX_LANA] OF UINT8;
   END;
 
   (*
@@ -176,19 +174,19 @@ TYPE
 
   PFIND_NAME_HEADER = UNTRACED REF FIND_NAME_HEADER;
   FIND_NAME_HEADER = RECORD
-    node_count  : WORD;
-    reserved    : UCHAR;
-    unique_group: UCHAR;
+    node_count  : UINT16;
+    reserved    : UINT8;
+    unique_group: UINT8;
   END;
 
   PFIND_NAME_BUFFER = UNTRACED REF FIND_NAME_BUFFER;
   FIND_NAME_BUFFER = RECORD
-    length          : UCHAR;
-    access_control  : UCHAR;
-    frame_control   : UCHAR;
-    destination_addr: ARRAY [0 .. 6 - 1] OF UCHAR;
-    source_addr     : ARRAY [0 .. 6 - 1] OF UCHAR;
-    routing_info    : ARRAY [0 .. 18 - 1] OF UCHAR;
+    length          : UINT8;
+    access_control  : UINT8;
+    frame_control   : UINT8;
+    destination_addr: ARRAY [0 .. 6 - 1] OF UINT8;
+    source_addr     : ARRAY [0 .. 6 - 1] OF UINT8;
+    routing_info    : ARRAY [0 .. 18 - 1] OF UINT8;
   END;
 
   (*
@@ -198,9 +196,9 @@ TYPE
 
   PACTION_HEADER = UNTRACED REF ACTION_HEADER;
   ACTION_HEADER = RECORD
-    transport_id: ULONG;
-    action_code : USHORT;
-    reserved    : USHORT;
+    transport_id: UINT32;
+    action_code : UINT16;
+    reserved    : UINT16;
   END;
 
 (* Values for transport_id *)
@@ -313,6 +311,6 @@ CONST
  ****************************************************************)
 
 <*EXTERNAL Netbios:WINAPI*>
-PROCEDURE Netbios(pncb: PNCB): UCHAR;
+PROCEDURE Netbios(pncb: PNCB): UINT8;
 
 END NB30.

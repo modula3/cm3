@@ -14,7 +14,7 @@
 
 MODULE WinDef;
 
-IMPORT Word, Ctypes;
+IMPORT Word;
 
 (**************************************
 REVEAL
@@ -46,7 +46,7 @@ REVEAL
 ****************************************)
 
 TYPE
-  dummy = RECORD unused: Ctypes.int; END;
+  dummy = RECORD unused: INT32; END;
 
 REVEAL
   HWND         = UNTRACED BRANDED "HWND" REF dummy;
@@ -75,37 +75,37 @@ REVEAL
   HKL          = UNTRACED BRANDED "HKL" REF dummy;
 
 <* INLINE *>
-PROCEDURE MAKEWORD (a, b: BYTE): WORD =
+PROCEDURE MAKEWORD (a, b: UINT8): UINT16 =
   BEGIN
     RETURN Word.Or(a, Word.Shift(b, 8));
   END MAKEWORD;
 
 <* INLINE *>
-PROCEDURE MAKELONG (a, b: WORD): LONG =
+PROCEDURE MAKELONG (a, b: UINT16): INT32 =
   BEGIN
     RETURN Word.Or(a, Word.Shift(b, 16));
   END MAKELONG;
 
 <* INLINE *>
-PROCEDURE LOWORD (l: LONG): WORD =
+PROCEDURE LOWORD (l: INT32): UINT16 =
   BEGIN
     RETURN Word.And(l, 16_ffff);
   END LOWORD;
 
 <* INLINE *>
-PROCEDURE HIWORD (l: LONG): WORD =
+PROCEDURE HIWORD (l: INT32): UINT16 =
   BEGIN
     RETURN Word.And(Word.Shift(l, -16), 16_ffff);
   END HIWORD;
 
 <* INLINE *>
-PROCEDURE LOBYTE (w: WORD): BYTE =
+PROCEDURE LOBYTE (w: UINT16): UINT8 =
   BEGIN
     RETURN Word.And(w, 16_ff)
   END LOBYTE;
 
 <* INLINE *>
-PROCEDURE HIBYTE (w: WORD): BYTE =
+PROCEDURE HIBYTE (w: UINT16): UINT8 =
   BEGIN
     RETURN Word.And(Word.Shift(w, -8), 16_ff);
   END HIBYTE;

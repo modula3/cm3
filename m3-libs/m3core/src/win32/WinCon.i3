@@ -16,35 +16,35 @@ INTERFACE WinCon;
    This module contains the public data structures, data types, and
    procedures exported by the NT console subsystem. *)
 
-IMPORT Ctypes, WinBase;
+IMPORT WinBase;
 
-FROM WinDef IMPORT SHORT, BOOL, WORD, DWORD, UINT, LPDWORD, LPWORD, LPVOID;
-FROM WinNT IMPORT WCHAR, HANDLE, LPSTR, LPWSTR, PVOID;
+FROM WinDef IMPORT INT16, BOOL, UINT16, UINT32, PUINT32, PUINT16, PVOID;
+FROM WinNT IMPORT WCHAR, HANDLE, PSTR, PWSTR;
 
 TYPE
   PCOORD = UNTRACED REF COORD;
   COORD = RECORD
-    X: SHORT;
-    Y: SHORT;
+    X: INT16;
+    Y: INT16;
   END;
 
   PSMALL_RECT = UNTRACED REF SMALL_RECT;
   SMALL_RECT = RECORD
-    Left  : SHORT;
-    Top   : SHORT;
-    Right : SHORT;
-    Bottom: SHORT;
+    Left  : INT16;
+    Top   : INT16;
+    Right : INT16;
+    Bottom: INT16;
   END;
 
   PKEY_EVENT_RECORD = UNTRACED REF KEY_EVENT_RECORD;
   KEY_EVENT_RECORD = RECORD
     bKeyDown        : BOOL;
-    wRepeatCount    : WORD;
-    wVirtualKeyCode : WORD;
-    wVirtualScanCode: WORD;
+    wRepeatCount    : UINT16;
+    wVirtualKeyCode : UINT16;
+    wVirtualScanCode: UINT16;
     uChar           : WCHAR; (* ??? *)
                      (* union { WCHAR UnicodeChar; CHAR AsciiChar; } uChar; *)
-    dwControlKeyState: DWORD;
+    dwControlKeyState: UINT32;
   END;
 
 (* ControlKeyState flags *)
@@ -64,9 +64,9 @@ TYPE
   PMOUSE_EVENT_RECORD = UNTRACED REF MOUSE_EVENT_RECORD;
   MOUSE_EVENT_RECORD = RECORD
     dwMousePosition  : COORD;
-    dwButtonState    : DWORD;
-    dwControlKeyState: DWORD;
-    dwEventFlags     : DWORD;
+    dwButtonState    : UINT32;
+    dwControlKeyState: UINT32;
+    dwEventFlags     : UINT32;
   END;
 
 (* ButtonState flags *)
@@ -88,7 +88,7 @@ TYPE
   WINDOW_BUFFER_SIZE_RECORD = RECORD dwSize: COORD;  END;
   PWINDOW_BUFFER_SIZE_RECORD = UNTRACED REF WINDOW_BUFFER_SIZE_RECORD;
 
-  MENU_EVENT_RECORD = RECORD dwCommandId: UINT;  END;
+  MENU_EVENT_RECORD = RECORD dwCommandId: UINT32;  END;
   PMENU_EVENT_RECORD = UNTRACED REF MENU_EVENT_RECORD;
 
   FOCUS_EVENT_RECORD = RECORD bSetFocus: BOOL;  END;
@@ -96,7 +96,7 @@ TYPE
 
   PINPUT_RECORD = UNTRACED REF INPUT_RECORD;
   INPUT_RECORD = RECORD
-    EventType: WORD;
+    EventType: UINT16;
     Event    : KEY_EVENT_RECORD;  (* !!! *)
                    (*
                    union {
@@ -124,7 +124,7 @@ TYPE
   CHAR_INFO = RECORD
     Char: WCHAR; (* ??? *)
                 (* union { WCHAR UnicodeChar; CHAR AsciiChar; } Char; *)
-    Attributes: WORD;
+    Attributes: UINT16;
   END;
 
 (* Attributes flags: *)
@@ -144,20 +144,20 @@ TYPE
   CONSOLE_SCREEN_BUFFER_INFO = RECORD
     dwSize             : COORD;
     dwCursorPosition   : COORD;
-    wAttributes        : WORD;
+    wAttributes        : UINT16;
     srWindow           : SMALL_RECT;
     dwMaximumWindowSize: COORD;
   END;
 
   PCONSOLE_CURSOR_INFO = UNTRACED REF CONSOLE_CURSOR_INFO;
   CONSOLE_CURSOR_INFO = RECORD
-    dwSize  : DWORD;
+    dwSize  : UINT32;
     bVisible: BOOL;
   END;
 
 (* typedef for ctrl-c handler routines *)
 
-TYPE PHANDLER_ROUTINE = <*WINAPI*> PROCEDURE (CtrlType: DWORD): BOOL;
+TYPE PHANDLER_ROUTINE = <*WINAPI*> PROCEDURE (CtrlType: UINT32): BOOL;
 
 CONST
   CTRL_C_EVENT     = 0;
@@ -188,42 +188,42 @@ CONST
 <*EXTERNAL PeekConsoleInputA:WINAPI*>
 PROCEDURE PeekConsoleInputA (hConsoleInput       : HANDLE;
                              lpBuffer            : PINPUT_RECORD;
-                             nLength             : DWORD;
-                             lpNumberOfEventsRead: LPDWORD        ): BOOL;
+                             nLength             : UINT32;
+                             lpNumberOfEventsRead: PUINT32        ): BOOL;
 
 <*EXTERNAL PeekConsoleInputW:WINAPI*>
 PROCEDURE PeekConsoleInputW (hConsoleInput       : HANDLE;
                              lpBuffer            : PINPUT_RECORD;
-                             nLength             : DWORD;
-                             lpNumberOfEventsRead: LPDWORD        ): BOOL;
+                             nLength             : UINT32;
+                             lpNumberOfEventsRead: PUINT32        ): BOOL;
 
 CONST PeekConsoleInput = PeekConsoleInputA;
 
 <*EXTERNAL ReadConsoleInputA:WINAPI*>
 PROCEDURE ReadConsoleInputA (hConsoleInput       : HANDLE;
                              lpBuffer            : PINPUT_RECORD;
-                             nLength             : DWORD;
-                             lpNumberOfEventsRead: LPDWORD        ): BOOL;
+                             nLength             : UINT32;
+                             lpNumberOfEventsRead: PUINT32        ): BOOL;
 
 <*EXTERNAL ReadConsoleInputW:WINAPI*>
 PROCEDURE ReadConsoleInputW (hConsoleInput       : HANDLE;
                              lpBuffer            : PINPUT_RECORD;
-                             nLength             : DWORD;
-                             lpNumberOfEventsRead: LPDWORD       ): BOOL;
+                             nLength             : UINT32;
+                             lpNumberOfEventsRead: PUINT32       ): BOOL;
 
 CONST ReadConsoleInput = ReadConsoleInputA;
 
 <*EXTERNAL WriteConsoleInputA:WINAPI*>
 PROCEDURE WriteConsoleInputA (hConsoleInput          : HANDLE;
                               lpBuffer               : PINPUT_RECORD;
-                              nLength                : DWORD;
-                              lpNumberOfEventsWritten: LPDWORD        ): BOOL;
+                              nLength                : UINT32;
+                              lpNumberOfEventsWritten: PUINT32        ): BOOL;
 
 <*EXTERNAL WriteConsoleInputW:WINAPI*>
 PROCEDURE WriteConsoleInputW (hConsoleInput          : HANDLE;
                               lpBuffer               : PINPUT_RECORD;
-                              nLength                : DWORD;
-                              lpNumberOfEventsWritten: LPDWORD        ): BOOL;
+                              nLength                : UINT32;
+                              lpNumberOfEventsWritten: PUINT32        ): BOOL;
 
 CONST WriteConsoleInput = WriteConsoleInputA;
 
@@ -261,79 +261,79 @@ CONST WriteConsoleOutput = WriteConsoleOutputA;
 
 <*EXTERNAL ReadConsoleOutputCharacterA:WINAPI*>
 PROCEDURE ReadConsoleOutputCharacterA (hConsoleOutput     : HANDLE;
-                                       lpCharacter        : LPSTR;
-                                       nLength            : DWORD;
+                                       lpCharacter        : PSTR;
+                                       nLength            : UINT32;
                                        dwReadCoord        : COORD;
-                                       lpNumberOfCharsRead: LPDWORD ): BOOL;
+                                       lpNumberOfCharsRead: PUINT32 ): BOOL;
 
 <*EXTERNAL ReadConsoleOutputCharacterW:WINAPI*>
 PROCEDURE ReadConsoleOutputCharacterW (hConsoleOutput     : HANDLE;
-                                       lpCharacter        : LPWSTR;
-                                       nLength            : DWORD;
+                                       lpCharacter        : PWSTR;
+                                       nLength            : UINT32;
                                        dwReadCoord        : COORD;
-                                       lpNumberOfCharsRead: LPDWORD ): BOOL;
+                                       lpNumberOfCharsRead: PUINT32 ): BOOL;
 
 CONST ReadConsoleOutputCharacter = ReadConsoleOutputCharacterA;
 
 <*EXTERNAL ReadConsoleOutputAttribute:WINAPI*>
 PROCEDURE ReadConsoleOutputAttribute (hConsoleOutput     : HANDLE;
-                                      lpAttribute        : LPWORD;
-                                      nLength            : DWORD;
+                                      lpAttribute        : PUINT16;
+                                      nLength            : UINT32;
                                       dwReadCoord        : COORD;
-                                      lpNumberOfAttrsRead: LPDWORD ): BOOL;
+                                      lpNumberOfAttrsRead: PUINT32 ): BOOL;
 
 <*EXTERNAL WriteConsoleOutputCharacterA:WINAPI*>
 PROCEDURE WriteConsoleOutputCharacterA (hConsoleOutput        : HANDLE;
-                                        lpCharacter           : LPSTR;
-                                        nLength               : DWORD;
+                                        lpCharacter           : PSTR;
+                                        nLength               : UINT32;
                                         dwWriteCoord          : COORD;
-                                        lpNumberOfCharsWritten: LPDWORD): BOOL;
+                                        lpNumberOfCharsWritten: PUINT32): BOOL;
 
 <*EXTERNAL WriteConsoleOutputCharacterW:WINAPI*>
 PROCEDURE WriteConsoleOutputCharacterW (hConsoleOutput        : HANDLE;
-                                        lpCharacter           : LPWSTR;
-                                        nLength               : DWORD;
+                                        lpCharacter           : PWSTR;
+                                        nLength               : UINT32;
                                         dwWriteCoord          : COORD;
-                                        lpNumberOfCharsWritten: LPDWORD): BOOL;
+                                        lpNumberOfCharsWritten: PUINT32): BOOL;
 
 CONST WriteConsoleOutputCharacter = WriteConsoleOutputCharacterA;
 
 <*EXTERNAL WriteConsoleOutputAttribute:WINAPI*>
 PROCEDURE WriteConsoleOutputAttribute (hConsoleOutput        : HANDLE;
-                                       lpAttribute           : LPWORD;
-                                       nLength               : DWORD;
+                                       lpAttribute           : PUINT16;
+                                       nLength               : UINT32;
                                        dwWriteCoord          : COORD;
-                                       lpNumberOfAttrsWritten: LPDWORD): BOOL;
+                                       lpNumberOfAttrsWritten: PUINT32): BOOL;
 
 <*EXTERNAL FillConsoleOutputCharacterA:WINAPI*>
 PROCEDURE FillConsoleOutputCharacterA (hConsoleOutput        : HANDLE;
                                        cCharacter            : CHAR;
-                                       nLength               : DWORD;
+                                       nLength               : UINT32;
                                        dwWriteCoord          : COORD;
-                                       lpNumberOfCharsWritten: LPDWORD ): BOOL;
+                                       lpNumberOfCharsWritten: PUINT32 ): BOOL;
 
 <*EXTERNAL FillConsoleOutputCharacterW:WINAPI*>
 PROCEDURE FillConsoleOutputCharacterW (hConsoleOutput        : HANDLE;
                                        cCharacter            : WCHAR;
-                                       nLength               : DWORD;
+                                       nLength               : UINT32;
                                        dwWriteCoord          : COORD;
-                                       lpNumberOfCharsWritten: LPDWORD ): BOOL;
+                                       lpNumberOfCharsWritten: PUINT32 ): BOOL;
 
 CONST FillConsoleOutputCharacter = FillConsoleOutputCharacterA;
 
 <*EXTERNAL FillConsoleOutputAttribute:WINAPI*>
 PROCEDURE FillConsoleOutputAttribute (hConsoleOutput        : HANDLE;
-                                      wAttribute            : WORD;
-                                      nLength               : DWORD;
+                                      wAttribute            : UINT16;
+                                      nLength               : UINT32;
                                       dwWriteCoord          : COORD;
-                                      lpNumberOfAttrsWritten: LPDWORD ): BOOL;
+                                      lpNumberOfAttrsWritten: PUINT32 ): BOOL;
 
 <*EXTERNAL GetConsoleMode:WINAPI*>
-PROCEDURE GetConsoleMode (hConsoleHandle: HANDLE; lpMode: LPDWORD): BOOL;
+PROCEDURE GetConsoleMode (hConsoleHandle: HANDLE; lpMode: PUINT32): BOOL;
 
 <*EXTERNAL GetNumberOfConsoleInputEvents:WINAPI*>
 PROCEDURE GetNumberOfConsoleInputEvents (hConsoleInput   : HANDLE;
-                                           lpNumberOfEvents: LPDWORD ): BOOL;
+                                           lpNumberOfEvents: PUINT32 ): BOOL;
 
 <*EXTERNAL GetConsoleScreenBufferInfo:WINAPI*>
 PROCEDURE GetConsoleScreenBufferInfo (
@@ -350,10 +350,10 @@ PROCEDURE GetConsoleCursorInfo (
 
 <*EXTERNAL GetNumberOfConsoleMouseButtons:WINAPI*>
 PROCEDURE GetNumberOfConsoleMouseButtons (
-              lpNumberOfMouseButtons: LPDWORD): BOOL;
+              lpNumberOfMouseButtons: PUINT32): BOOL;
 
 <*EXTERNAL SetConsoleMode:WINAPI*>
-PROCEDURE SetConsoleMode (hConsoleHandle: HANDLE; dwMode: DWORD): BOOL;
+PROCEDURE SetConsoleMode (hConsoleHandle: HANDLE; dwMode: UINT32): BOOL;
 
 <*EXTERNAL SetConsoleActiveScreenBuffer:WINAPI*>
 PROCEDURE SetConsoleActiveScreenBuffer (hConsoleOutput: HANDLE): BOOL;
@@ -397,15 +397,15 @@ PROCEDURE SetConsoleWindowInfo (hConsoleOutput : HANDLE;
 
 <*EXTERNAL SetConsoleTextAttribute:WINAPI*>
 PROCEDURE SetConsoleTextAttribute (hConsoleOutput: HANDLE;
-                                   wAttributes   : WORD    ): BOOL;
+                                   wAttributes   : UINT16    ): BOOL;
 
 <*EXTERNAL SetConsoleCtrlHandler:WINAPI*>
 PROCEDURE SetConsoleCtrlHandler (HandlerRoutine: PHANDLER_ROUTINE;
                                  Add           : BOOL           ): BOOL;
 
 <*EXTERNAL GenerateConsoleCtrlEvent:WINAPI*>
-PROCEDURE GenerateConsoleCtrlEvent (dwCtrlEvent     : DWORD;
-                                    dwProcessGroupId: DWORD  ): BOOL;
+PROCEDURE GenerateConsoleCtrlEvent (dwCtrlEvent     : UINT32;
+                                    dwProcessGroupId: UINT32  ): BOOL;
 
 <*EXTERNAL AllocConsole:WINAPI*>
 PROCEDURE AllocConsole (): BOOL;
@@ -415,50 +415,50 @@ PROCEDURE FreeConsole (): BOOL;
 
 
 <*EXTERNAL GetConsoleTitleA:WINAPI*>
-PROCEDURE GetConsoleTitleA (lpConsoleTitle: LPSTR; nSize: DWORD): DWORD;
+PROCEDURE GetConsoleTitleA (lpConsoleTitle: PSTR; nSize: UINT32): UINT32;
 
 <*EXTERNAL GetConsoleTitleW:WINAPI*>
-PROCEDURE GetConsoleTitleW (lpConsoleTitle: LPWSTR; nSize: DWORD): DWORD;
+PROCEDURE GetConsoleTitleW (lpConsoleTitle: PWSTR; nSize: UINT32): UINT32;
 
 CONST GetConsoleTitle = GetConsoleTitleA;
 
 <*EXTERNAL SetConsoleTitleA:WINAPI*>
-PROCEDURE SetConsoleTitleA (lpConsoleTitle: LPSTR): BOOL;
+PROCEDURE SetConsoleTitleA (lpConsoleTitle: PSTR): BOOL;
 
 <*EXTERNAL SetConsoleTitleW:WINAPI*>
-PROCEDURE SetConsoleTitleW (lpConsoleTitle: LPWSTR): BOOL;
+PROCEDURE SetConsoleTitleW (lpConsoleTitle: PWSTR): BOOL;
 
 CONST SetConsoleTitle = SetConsoleTitleA;
 
 <*EXTERNAL ReadConsoleA:WINAPI*>
 PROCEDURE ReadConsoleA (hConsoleInput       : HANDLE;
-                        lpBuffer            : LPVOID;
-                        nNumberOfCharsToRead: DWORD;
-                        lpNumberOfCharsRead : LPDWORD;
-                        lpReserved          : LPVOID   ): BOOL;
+                        lpBuffer            : PVOID;
+                        nNumberOfCharsToRead: UINT32;
+                        lpNumberOfCharsRead : PUINT32;
+                        lpReserved          : PVOID   ): BOOL;
 
 <*EXTERNAL ReadConsoleW:WINAPI*>
 PROCEDURE ReadConsoleW (hConsoleInput       : HANDLE;
-                        lpBuffer            : LPVOID;
-                        nNumberOfCharsToRead: DWORD;
-                        lpNumberOfCharsRead : LPDWORD;
-                        lpReserved          : LPVOID   ): BOOL;
+                        lpBuffer            : PVOID;
+                        nNumberOfCharsToRead: UINT32;
+                        lpNumberOfCharsRead : PUINT32;
+                        lpReserved          : PVOID   ): BOOL;
 
 CONST ReadConsole = ReadConsoleA;
 
 <*EXTERNAL WriteConsoleA:WINAPI*>
 PROCEDURE WriteConsoleA (hConsoleOutput        : HANDLE;
-                         lpBuffer              : Ctypes.void_star;
-                         nNumberOfCharsToWrite : DWORD;
-                         lpNumberOfCharsWritten: LPDWORD;
-                         lpReserved            : LPVOID           ): BOOL;
+                         lpBuffer              : PVOID;
+                         nNumberOfCharsToWrite : UINT32;
+                         lpNumberOfCharsWritten: PUINT32;
+                         lpReserved            : PVOID           ): BOOL;
 
 <*EXTERNAL WriteConsoleW:WINAPI*>
 PROCEDURE WriteConsoleW (hConsoleOutput        : HANDLE;
-                         lpBuffer              : Ctypes.void_star;
-                         nNumberOfCharsToWrite : DWORD;
-                         lpNumberOfCharsWritten: LPDWORD;
-                         lpReserved            : LPVOID          ): BOOL;
+                         lpBuffer              : PVOID;
+                         nNumberOfCharsToWrite : UINT32;
+                         lpNumberOfCharsWritten: PUINT32;
+                         lpReserved            : PVOID          ): BOOL;
 
 CONST WriteConsole = WriteConsoleA;
 
@@ -466,23 +466,23 @@ CONST CONSOLE_TEXTMODE_BUFFER = 1;
 
 <*EXTERNAL CreateConsoleScreenBuffer:WINAPI*>
 PROCEDURE CreateConsoleScreenBuffer (
-              dwDesiredAccess     : DWORD;
-              dwShareMode         : DWORD;
+              dwDesiredAccess     : UINT32;
+              dwShareMode         : UINT32;
               lpSecurityAttributes: WinBase.LPSECURITY_ATTRIBUTES;
-              dwFlags             : DWORD;
+              dwFlags             : UINT32;
               lpScreenBufferData  : PVOID  ): HANDLE;
 
 <*EXTERNAL GetConsoleCP:WINAPI*>
-PROCEDURE GetConsoleCP (): UINT;
+PROCEDURE GetConsoleCP (): UINT32;
 
 <*EXTERNAL SetConsoleCP:WINAPI*>
-PROCEDURE SetConsoleCP (wCodePageID: UINT): BOOL;
+PROCEDURE SetConsoleCP (wCodePageID: UINT32): BOOL;
 
 
 <*EXTERNAL GetConsoleOutputCP:WINAPI*>
-PROCEDURE GetConsoleOutputCP (): UINT;
+PROCEDURE GetConsoleOutputCP (): UINT32;
 
 <*EXTERNAL SetConsoleOutputCP:WINAPI*>
-PROCEDURE SetConsoleOutputCP (wCodePageID: UINT): BOOL;
+PROCEDURE SetConsoleOutputCP (wCodePageID: UINT32): BOOL;
 
 END WinCon.

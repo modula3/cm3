@@ -11,8 +11,8 @@
 INTERFACE TlHelp32;
 
 FROM Ctypes IMPORT char;
-FROM WinDef IMPORT HANDLE, DWORD, BOOL, HMODULE, LONG, LPVOID,
-                   LPCVOID, LPDWORD, LPBYTE, MAX_PATH;
+FROM WinDef IMPORT HANDLE, UINT32, BOOL, HMODULE, INT32, PVOID,
+ PCVOID, PUINT32, PUINT8, MAX_PATH;
 
 CONST
   MAX_MODULE_NAME32 = 255;
@@ -20,7 +20,7 @@ CONST
 (****** Shapshot function **********************************************)
 
 <*EXTERNAL CreateToolhelp32Snapshot:WINAPI*>
-PROCEDURE CreateToolhelp32Snapshot (dwFlags, th32ProcessID: DWORD): HANDLE;
+PROCEDURE CreateToolhelp32Snapshot (dwFlags, th32ProcessID: UINT32): HANDLE;
 (*
 // The th32ProcessID argument is only used if TH32CS_SNAPHEAPLIST or
 // TH32CS_SNAPMODULE is specified. th32ProcessID == 0 means the current
@@ -53,10 +53,10 @@ TYPE
   PHEAPLIST32 = UNTRACED REF HEAPLIST32;
   LPHEAPLIST32 = UNTRACED REF HEAPLIST32;
   HEAPLIST32 = RECORD
-    dwSize        : DWORD;
-    th32ProcessID : DWORD;  (* owning process *)
-    th32HeapID    : DWORD;  (* heap (in owning process's context!) *)
-    dwFlags       : DWORD;
+    dwSize        : UINT32;
+    th32ProcessID : UINT32;  (* owning process *)
+    th32HeapID    : UINT32;  (* heap (in owning process's context!) *)
+    dwFlags       : UINT32;
   END;
 
 CONST (* dwFlags for HEAPLIST32 *)
@@ -73,15 +73,15 @@ TYPE
   PHEAPENTRY32 = UNTRACED REF HEAPENTRY32;
   LPHEAPENTRY32 = UNTRACED REF HEAPENTRY32;
   HEAPENTRY32 = RECORD
-    dwSize        : DWORD;
+    dwSize        : UINT32;
     hHandle       : HANDLE; (* Handle of this heap block *)
-    dwAddress     : DWORD;  (* Linear address of start of block *)
-    dwBlockSize   : DWORD;  (* Size of block in bytes *)
-    dwFlags       : DWORD;
-    dwLockCount   : DWORD;
-    dwResvd       : DWORD;
-    th32ProcessID : DWORD;  (* owning process *)
-    th32HeapID    : DWORD;  (* heap block is in *)
+    dwAddress     : UINT32;  (* Linear address of start of block *)
+    dwBlockSize   : UINT32;  (* Size of block in bytes *)
+    dwFlags       : UINT32;
+    dwLockCount   : UINT32;
+    dwResvd       : UINT32;
+    th32ProcessID : UINT32;  (* owning process *)
+    th32HeapID    : UINT32;  (* heap block is in *)
   END;
 
 CONST (* dwFlags for HEAPENTRY32 *)
@@ -92,18 +92,18 @@ CONST (* dwFlags for HEAPENTRY32 *)
 
 <*EXTERNAL Heap32First:WINAPI*>
 PROCEDURE Heap32First (lphe          : LPHEAPENTRY32;
-                       th32ProcessID : DWORD;
-                       th32HeapID    : DWORD): BOOL;
+                       th32ProcessID : UINT32;
+                       th32HeapID    : UINT32): BOOL;
 
 <*EXTERNAL Heap32Next:WINAPI*>
 PROCEDURE Heap32Next (lphe: LPHEAPENTRY32): BOOL;
 
 <*EXTERNAL Toolhelp32ReadProcessMemory:WINAPI*>
-PROCEDURE Toolhelp32ReadProcessMemory (th32ProcessID       : DWORD;
-                                       lpBaseAddress       : LPCVOID;
-                                       lpBuffer            : LPVOID;
-                                       cbRead              : DWORD;
-                                       lpNumberOfBytesRead : LPDWORD): BOOL;
+PROCEDURE Toolhelp32ReadProcessMemory (th32ProcessID       : UINT32;
+                                       lpBaseAddress       : PCVOID;
+                                       lpBuffer            : PVOID;
+                                       cbRead              : UINT32;
+                                       lpNumberOfBytesRead : PUINT32): BOOL;
 
 (****** Process walking *************************************************)
 
@@ -111,15 +111,15 @@ TYPE
   PPROCESSENTRY32 = UNTRACED REF PROCESSENTRY32;
   LPPROCESSENTRY32 = UNTRACED REF PROCESSENTRY32;
   PROCESSENTRY32 = RECORD
-    dwSize              : DWORD;
-    cntUsage            : DWORD;
-    th32ProcessID       : DWORD;  (* this process *)
-    th32DefaultHeapID   : DWORD;
-    th32ModuleID        : DWORD;  (* associated exe *)
-    cntThreads          : DWORD;
-    th32ParentProcessID : DWORD;  (* this process's parent process *)
-    pcPriClassBase      : LONG;   (* Base priority of process's threads *)
-    dwFlags             : DWORD;
+    dwSize              : UINT32;
+    cntUsage            : UINT32;
+    th32ProcessID       : UINT32;  (* this process *)
+    th32DefaultHeapID   : UINT32;
+    th32ModuleID        : UINT32;  (* associated exe *)
+    cntThreads          : UINT32;
+    th32ParentProcessID : UINT32;  (* this process's parent process *)
+    pcPriClassBase      : INT32;   (* Base priority of process's threads *)
+    dwFlags             : UINT32;
     szExeFile           : ARRAY [0..MAX_PATH-1] OF char;    (* Path *)
   END;
 
@@ -135,13 +135,13 @@ TYPE
   PTHREADENTRY32 = UNTRACED REF THREADENTRY32;
   LPTHREADENTRY32 = UNTRACED REF THREADENTRY32;
   THREADENTRY32 = RECORD
-    dwSize             : DWORD;
-    cntUsage           : DWORD;
-    th32ThreadID       : DWORD; (* this thread *)
-    th32OwnerProcessID : DWORD; (* Process this thread is associated with *)
-    tpBasePri          : LONG;
-    tpDeltaPri         : LONG;
-    dwFlags            : DWORD;
+    dwSize             : UINT32;
+    cntUsage           : UINT32;
+    th32ThreadID       : UINT32; (* this thread *)
+    th32OwnerProcessID : UINT32; (* Process this thread is associated with *)
+    tpBasePri          : INT32;
+    tpDeltaPri         : INT32;
+    dwFlags            : UINT32;
   END;
 
 <*EXTERNAL Thread32First:WINAPI*>
@@ -156,13 +156,13 @@ TYPE
   PMODULEENTRY32 = UNTRACED REF MODULEENTRY32;
   LPMODULEENTRY32 = UNTRACED REF MODULEENTRY32;
   MODULEENTRY32 = RECORD
-    dwSize        : DWORD;
-    th32ModuleID  : DWORD;   (* This module *)
-    th32ProcessID : DWORD;   (* owning process *)
-    GlblcntUsage  : DWORD;   (* Global usage count on the module *)
-    ProccntUsage  : DWORD;   (* Module usage count in th32ProcessID's context *)
-    modBaseAddr   : LPBYTE;  (* Base address of module in th32ProcessID's context *)
-    modBaseSize   : DWORD;   (* Size in bytes of module starting at modBaseAddr *)
+    dwSize        : UINT32;
+    th32ModuleID  : UINT32;   (* This module *)
+    th32ProcessID : UINT32;   (* owning process *)
+    GlblcntUsage  : UINT32;   (* Global usage count on the module *)
+    ProccntUsage  : UINT32;   (* Module usage count in th32ProcessID's context *)
+    modBaseAddr   : PUINT8;  (* Base address of module in th32ProcessID's context *)
+    modBaseSize   : UINT32;   (* Size in bytes of module starting at modBaseAddr *)
     hModule       : HMODULE; (* The hModule of this module in th32ProcessID's context *)
     szModule      : ARRAY [0..MAX_MODULE_NAME32] OF char;
     szExePath     : ARRAY [0..MAX_PATH-1] OF char;

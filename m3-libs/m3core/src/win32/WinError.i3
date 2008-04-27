@@ -16,7 +16,7 @@ INTERFACE WinError;
  *   functions.
  *)
 
-FROM WinDef IMPORT LONG;
+FROM WinDef IMPORT INT32;
 
 (*  Values are 32 bit values layed out as follows:*)
 
@@ -52,37 +52,37 @@ FROM WinDef IMPORT LONG;
 (* Define the severity codes*)
 
 
-CONST NO_ERROR: LONG = 0;    (* dderror*)
+CONST NO_ERROR: INT32 = 0;    (* dderror*)
 (* No error*)
 
-CONST ERROR_SUCCESS: LONG = 0;
+CONST ERROR_SUCCESS: INT32 = 0;
 (* The configuration registry database operation completed successfully.*)
 
-CONST ERROR_INVALID_FUNCTION: LONG = 1;    (* dderror*)
+CONST ERROR_INVALID_FUNCTION: INT32 = 1;    (* dderror*)
 (* Incorrect function*)
 
-CONST ERROR_FILE_NOT_FOUND: LONG = 2;
+CONST ERROR_FILE_NOT_FOUND: INT32 = 2;
 (* The system cannot find the file specified.*)
 
-CONST ERROR_PATH_NOT_FOUND: LONG = 3;
+CONST ERROR_PATH_NOT_FOUND: INT32 = 3;
 (* The system cannot find the path specified.*)
 
-CONST ERROR_TOO_MANY_OPEN_FILES: LONG = 4;
+CONST ERROR_TOO_MANY_OPEN_FILES: INT32 = 4;
 (* The system cannot open the file.*)
 
-CONST ERROR_ACCESS_DENIED: LONG = 5;
+CONST ERROR_ACCESS_DENIED: INT32 = 5;
 (* Access Denied.*)
 
-CONST ERROR_INVALID_HANDLE: LONG = 6;
+CONST ERROR_INVALID_HANDLE: INT32 = 6;
 (* The handle is invalid.*)
 
-CONST ERROR_ARENA_TRASHED: LONG = 7;
+CONST ERROR_ARENA_TRASHED: INT32 = 7;
 (* The storage control blocks were destroyed.*)
 
-CONST ERROR_NOT_ENOUGH_MEMORY: LONG = 8;    (* dderror*)
+CONST ERROR_NOT_ENOUGH_MEMORY: INT32 = 8;    (* dderror*)
 (* Not enough storage is available to process this command.*)
 
-CONST ERROR_INVALID_BLOCK: LONG = 9;
+CONST ERROR_INVALID_BLOCK: INT32 = 9;
 (* The storage control block address is invalid.*)
 
 CONST ERROR_BAD_ENVIRONMENT = 10;
@@ -1892,7 +1892,7 @@ CONST ERROR_INVALID_PRIORITY = 1800;
 CONST ERROR_INVALID_PRINTER_NAME = 1801;
 (* The Printer Name is invalid.*)
 
-CONST ERROR_PRINTER_ALREADY_EXISTS: LONG = 1802;
+CONST ERROR_PRINTER_ALREADY_EXISTS: INT32 = 1802;
 (* The Printer already exists.*)
 
 CONST ERROR_INVALID_PRINTER_COMMAND = 1803;

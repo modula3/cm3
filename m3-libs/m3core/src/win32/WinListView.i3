@@ -6,27 +6,13 @@ INTERFACE WinListView;
 	Copyright Darko Volaric 2002 darko@peter.com.au
 *)
 
-IMPORT
-	WinDef, WinNT, WinImageList;
-
 FROM Word IMPORT Or;
-FROM WinBaseTypes IMPORT UINT;
-FROM Ctypes IMPORT int;
-FROM WinNT IMPORT LPSTR;
-FROM WinDef IMPORT LPARAM;
-FROM WinDef IMPORT LPPOINT;
-FROM WinNT IMPORT LPCSTR;
-FROM WinDef IMPORT POINT;
-FROM WinDef IMPORT HBITMAP;
+FROM WinBaseTypes IMPORT UINT16, UINT32, PSTR, PCSTR, INT32, PCTSTR;
+FROM WinDef IMPORT LPARAM, PPOINT, POINT, HBITMAP, COLORREF, HWND, PRECT, HCURSOR;
 FROM WinUser IMPORT NMHDR;
-FROM WinDef IMPORT COLORREF;
-FROM WinBaseTypes IMPORT ULONG;
-FROM WinBaseTypes IMPORT WORD;
-FROM WinBaseTypes IMPORT DWORD;
-FROM WinCommCtrl IMPORT NMCUSTOMDRAW;
-FROM WinDef IMPORT HWND;
-
-FROM WinCommCtrl IMPORT LVN_FIRST, LVM_FIRST, CCM_SETUNICODEFORMAT, CCM_GETUNICODEFORMAT;
+FROM WinCommCtrl IMPORT NMCUSTOMDRAW,
+ LVN_FIRST, LVM_FIRST, CCM_SETUNICODEFORMAT, CCM_GETUNICODEFORMAT;
+FROM WinImageList IMPORT HIMAGELIST;
 
 (* constants *)
 
@@ -407,56 +393,56 @@ TYPE
 
 	LPLVITEM = UNTRACED REF LVITEM;
 	LVITEM = RECORD
-		mask: UINT;
-		iItem: int;
-		iSubItem: int;
-		state: UINT;
-		stateMask: UINT;
-		pszText: LPSTR;  (* possible unicode *)
-		cchTextMax: int;
-		iImage: int;
+		mask: UINT32;
+		iItem: INT32;
+		iSubItem: INT32;
+		state: UINT32;
+		stateMask: UINT32;
+		pszText: PSTR;  (* possible unicode *)
+		cchTextMax: INT32;
+		iImage: INT32;
 		lParam: LPARAM;
-		iIndent: int;
+		iIndent: INT32;
 	END;
 
 	LPFINDINFO = UNTRACED REF LVFINDINFO;
 	LVFINDINFO = RECORD
-		flags: UINT;
-		psz: LPCSTR;  (* possible unicode *)
+		flags: UINT32;
+		psz: PCSTR;  (* possible unicode *)
 		lParam: LPARAM;
 		pt: POINT;
-		vkDirection: UINT;
+		vkDirection: UINT32;
 	END;
 
 	LPLVHITTESTINFO = UNTRACED REF LVHITTESTINFO;
 	LVHITTESTINFO = RECORD
 		pt: POINT;
-		flags: UINT;
-		iItem: int;
-		iSubItem: int;
+		flags: UINT32;
+		iItem: INT32;
+		iSubItem: INT32;
 	END;
 
 	LPLVCOLUMN = UNTRACED REF LVCOLUMN;
 	LVCOLUMN = RECORD
-		mask: UINT;
-		fmt: int;
-		cx: int;
-		pszText: LPSTR;  (* possible unicode *)
-		cchTextMax: int;
-		iSubItem: int;
-		iImage: int;
-		iOrder: int;
+		mask: UINT32;
+		fmt: INT32;
+		cx: INT32;
+		pszText: PSTR;  (* possible unicode *)
+		cchTextMax: INT32;
+		iSubItem: INT32;
+		iImage: INT32;
+		iOrder: INT32;
 	END;
 
 
 	LPLVBKIMAGE = UNTRACED REF LVBKIMAGE;
 	LVBKIMAGE = RECORD
-		ulFlags: ULONG;
+		ulFlags: UINT32;
 		hbm: HBITMAP;
-		pszImage: LPSTR;  (* possible unicode *)
-		cchImageMax: UINT;
-		xOffsetPercent: int;
-		yOffsetPercent: int;
+		pszImage: PSTR;  (* possible unicode *)
+		cchImageMax: UINT32;
+		xOffsetPercent: INT32;
+		yOffsetPercent: INT32;
 	END;
 
 
@@ -464,11 +450,11 @@ TYPE
 	LPNMLISTVIEW = UNTRACED REF NMLISTVIEW;
 	NMLISTVIEW = RECORD
 		hdr: NMHDR;
-		iItem: int;
-		iSubItem: int;
-		uNewState: UINT;
-		uOldState: UINT;
-		uChanged: UINT;
+		iItem: INT32;
+		iSubItem: INT32;
+		uNewState: UINT32;
+		uOldState: UINT32;
+		uChanged: UINT32;
 		ptAction: POINT;
 		lParam: LPARAM;
 	END;
@@ -477,14 +463,14 @@ TYPE
 	LPNMITEMACTIVATE = UNTRACED REF NMITEMACTIVATE;
 	NMITEMACTIVATE = RECORD
 		hdr: NMHDR;
-		iItem: int;
-		iSubItem: int;
-		uNewState: UINT;
-		uOldState: UINT;
-		uChanged: UINT;
+		iItem: INT32;
+		iSubItem: INT32;
+		uNewState: UINT32;
+		uOldState: UINT32;
+		uChanged: UINT32;
 		ptAction: POINT;
 		lParam: LPARAM;
-		uKeyFlags: UINT;
+		uKeyFlags: UINT32;
 	END;
 
 
@@ -494,15 +480,15 @@ TYPE
 		nmcd: NMCUSTOMDRAW;
 		clrText: COLORREF;
 		clrTextBk: COLORREF;
-		iSubItem: int;
+		iSubItem: INT32;
 	END;
 
 
 	LPNMLVCACHEHINT = UNTRACED REF NMLVCACHEHINT;
 	NMLVCACHEHINT = RECORD
 		hdr: NMHDR;
-		iFrom: int;
-		iTo: int;
+		iFrom: INT32;
+		iTo: INT32;
 	END;
 
 	LPNM_CACHEHINT = LPNMLVCACHEHINT;
@@ -513,7 +499,7 @@ TYPE
 	LPNMLVFINDITEM = UNTRACED REF NMLVFINDITEM;
 	NMLVFINDITEM = RECORD
 		hdr: NMHDR;
-		iStart: int;
+		iStart: INT32;
 		lvfi: LVFINDINFO;
 	END;
 
@@ -525,10 +511,10 @@ TYPE
 	LPNMLVODSTATECHANGE = UNTRACED REF NMLVODSTATECHANGE;
 	NMLVODSTATECHANGE = RECORD
 		hdr: NMHDR;
-		iFrom: int;
-		iTo: int;
-		uNewState: UINT;
-		uOldState: UINT;
+		iFrom: INT32;
+		iTo: INT32;
+		uNewState: UINT32;
+		uOldState: UINT32;
 	END;
 
 	PNM_ODSTATECHANGE  = LPNMLVODSTATECHANGE;
@@ -546,19 +532,19 @@ TYPE
 	LPNMLVKEYDOWN = UNTRACED REF NMLVKEYDOWN;
 	NMLVKEYDOWN = RECORD
 		hdr: NMHDR;
-		wVKey: WORD;
-		flags: UINT;
+		wVKey: UINT16;
+		flags: UINT32;
 	END;
 
 
 	LPNMLVGETINFOTIP = UNTRACED REF NMLVGETINFOTIP;
 	NMLVGETINFOTIP = RECORD
 		hdr: NMHDR;
-		dwFlags: DWORD;
-		pszText: LPSTR;
-		cchTextMax: int;
-		iItem: int;
-		iSubItem: int;
+		dwFlags: UINT32;
+		pszText: PSTR;
+		cchTextMax: INT32;
+		iItem: INT32;
+		iSubItem: INT32;
 		lParam: LPARAM;
 	END;
 
@@ -581,11 +567,11 @@ PROCEDURE SetColumn(hwnd: HWND; iCol: INTEGER; pcol: LPLVCOLUMN): BOOLEAN;
 PROCEDURE InsertColumn(hwnd: HWND; iCol: INTEGER; pcol: LPLVCOLUMN): INTEGER;
 PROCEDURE DeleteColumn(hwnd: HWND; iCol: INTEGER): BOOLEAN;
 PROCEDURE SetItemText(hwnd: HWND; i, iSubItem: INTEGER; text: TEXT);
-PROCEDURE SetExtendedListViewStyle(hwnd: HWND; dw: DWORD);
-PROCEDURE GetNextItem(hwnd: HWND; iStart: INTEGER; flags: UINT): INTEGER;
-PROCEDURE SetItemState(hwnd: HWND; i: INTEGER; state, mask: UINT): BOOLEAN;
+PROCEDURE SetExtendedListViewStyle(hwnd: HWND; dw: UINT32);
+PROCEDURE GetNextItem(hwnd: HWND; iStart: INTEGER; flags: UINT32): INTEGER;
+PROCEDURE SetItemState(hwnd: HWND; i: INTEGER; state, mask: UINT32): BOOLEAN;
 PROCEDURE GetItemText(hwnd: HWND; i, iSubItem: INTEGER): TEXT;
-PROCEDURE CreateDragImage(hwnd: HWND; i: INTEGER; lpptUpLeft: LPPOINT): WinImageList.HIMAGELIST;
+PROCEDURE CreateDragImage(hwnd: HWND; i: INTEGER; lpptUpLeft: PPOINT): HIMAGELIST;
 PROCEDURE HitTest(hwnd: HWND; pinfo: LPLVHITTESTINFO): INTEGER;
 PROCEDURE Scroll(hwnd: HWND; dx, dy: INTEGER): BOOLEAN;
 PROCEDURE GetSelectedCount(hwnd: HWND): INTEGER;
@@ -599,64 +585,64 @@ PROCEDURE SortItemsEx(
 	callback: <*CALLBACK*> PROCEDURE(p1, p2: INTEGER; param: ADDRESS): INTEGER; 
 	param: ADDRESS
 ): BOOLEAN;
-PROCEDURE GetColumnWidth(hwnd: WinDef.HWND; iCol: INTEGER): INTEGER;
-PROCEDURE SetColumnWidth(hwnd: WinDef.HWND; iCol, cx: INTEGER): BOOLEAN;
-PROCEDURE GetHeader(hwnd: WinDef.HWND): WinDef.HWND;
-PROCEDURE GetBkColor(hwnd: WinDef.HWND): WinDef.COLORREF;
-PROCEDURE SetBkColor(hwnd: WinDef.HWND; clrBk: WinDef.COLORREF): BOOLEAN;
-PROCEDURE GetImageList(hwnd: WinDef.HWND; iImageList: INTEGER): WinImageList.HIMAGELIST;
-PROCEDURE SetImageList(hwnd: WinDef.HWND; himl: WinImageList.HIMAGELIST; iImageList: INTEGER): WinImageList.HIMAGELIST;
-PROCEDURE GetCallbackMask(hwnd: WinDef.HWND): UINT;
-PROCEDURE SetCallbackMask(hwnd: WinDef.HWND; mask: UINT): BOOLEAN;
-PROCEDURE FindItem(hwnd: WinDef.HWND; iStart: INTEGER; plvfi: LPFINDINFO): INTEGER;
-PROCEDURE GetItemRect(hwnd: WinDef.HWND; i: INTEGER; prc: WinDef.LPRECT; code: INTEGER): BOOLEAN;
-PROCEDURE SetItemPosition(hwnd: WinDef.HWND; i: INTEGER; x, y: WinDef.WORD): BOOLEAN;
-PROCEDURE GetItemPosition(hwnd: WinDef.HWND; i: INTEGER; ppt: WinDef.LPPOINT): BOOLEAN;
-PROCEDURE GetStringWidth(hwnd: WinDef.HWND; psz: WinNT.LPCTSTR): INTEGER;
-PROCEDURE EnsureVisible(hwnd: WinDef.HWND; i: INTEGER; fPartialOK: BOOLEAN): BOOLEAN;
-PROCEDURE RedrawItems(hwnd: WinDef.HWND; iFirst, iLast: INTEGER): BOOLEAN;
-PROCEDURE Arrange(hwnd: WinDef.HWND; code: UINT): BOOLEAN;
-PROCEDURE GetViewRect(hwnd: WinDef.HWND; prc: WinDef.LPRECT): BOOLEAN;
-PROCEDURE GetTextColor(hwnd: WinDef.HWND): WinDef.COLORREF;
-PROCEDURE SetTextColor(hwnd: WinDef.HWND; clrText: WinDef.COLORREF): BOOLEAN;
-PROCEDURE GetTextBkColor(hwnd: WinDef.HWND): WinDef.COLORREF;
-PROCEDURE SetTextBkColor(hwnd: WinDef.HWND; clrTextBk: WinDef.COLORREF): BOOLEAN;
-PROCEDURE GetTopIndex(hwnd: WinDef.HWND): INTEGER;
-PROCEDURE GetCountPerPage(hwnd: WinDef.HWND): INTEGER;
-PROCEDURE GetOrigin(hwnd: WinDef.HWND; ppt: WinDef.LPPOINT): BOOLEAN;
-PROCEDURE Update(hwnd: WinDef.HWND; i: INTEGER): BOOLEAN;
-PROCEDURE SetUnicodeFormat(hwnd: WinDef.HWND; fUnicode: BOOLEAN): BOOLEAN;
-PROCEDURE GetUnicodeFormat(hwnd: WinDef.HWND): BOOLEAN;
-PROCEDURE GetItemState(hwnd: WinDef.HWND; i: INTEGER; mask: WinDef.UINT): WinDef.UINT;
-PROCEDURE SetItemCount(hwnd: WinDef.HWND; cItems: INTEGER);
-PROCEDURE SetItemCountEx(hwnd: WinDef.HWND; cItems: INTEGER; dwFlags: WinDef.DWORD);
-PROCEDURE GetItemSpacing(hwnd: WinDef.HWND; fSmall: BOOLEAN): WinDef.DWORD;
-PROCEDURE GetISearchString(hwnd: WinDef.HWND; lpsz: WinNT.LPSTR): BOOLEAN;
-PROCEDURE SetIconSpacing(hwnd: WinDef.HWND; cx, cy: WinDef.WORD): WinDef.DWORD;
-PROCEDURE SetExtendedListViewStyleEx(hwnd: WinDef.HWND; dwMask, dw: WinDef.DWORD): WinDef.DWORD;
-PROCEDURE GetExtendedListViewStyle(hwnd: WinDef.HWND): WinDef.DWORD;
-PROCEDURE SubItemHitTest(hwnd: WinDef.HWND; plvhti: LPLVHITTESTINFO): INTEGER;
-PROCEDURE SetColumnOrderArray(hwnd: WinDef.HWND; iCount: INTEGER; pi: RefIntArray): BOOLEAN;
-PROCEDURE GetColumnOrderArray(hwnd: WinDef.HWND; iCount: INTEGER; pi: RefIntArray): BOOLEAN;
-PROCEDURE SetHotItem(hwnd: WinDef.HWND; i: INTEGER): INTEGER;
-PROCEDURE GetHotItem(hwnd: WinDef.HWND): INTEGER;
-PROCEDURE SetHotCursor(hwnd: WinDef.HWND; hcur: WinDef.HCURSOR): WinDef.HCURSOR;
-PROCEDURE GetHotCursor(hwnd: WinDef.HWND): WinDef.HCURSOR;
-PROCEDURE ApproximateViewRect(hwnd: WinDef.HWND; iWidth, iHeight: WinDef.WORD; iCount: INTEGER): WinDef.DWORD;
-PROCEDURE SetWorkAreas(hwnd: WinDef.HWND; nWorkAreas: INTEGER; prc: WinDef.LPRECT): BOOLEAN;
-PROCEDURE GetWorkAreas(hwnd: WinDef.HWND; nWorkAreas: INTEGER; prc: WinDef.LPRECT): BOOLEAN;
-PROCEDURE GetNumberOfWorkAreas(hwnd: WinDef.HWND; pnWorkAreas: UNTRACED REF WinDef.UINT): BOOLEAN;
-PROCEDURE GetSelectionMark(hwnd: WinDef.HWND): INTEGER;
-PROCEDURE SetSelectionMark(hwnd: WinDef.HWND; i: INTEGER): INTEGER;
-PROCEDURE SetHoverTime(hwnd: WinDef.HWND; dwHoverTimeMs: WinDef.DWORD): WinDef.DWORD;
-PROCEDURE GetHoverTime(hwnd: WinDef.HWND): WinDef.DWORD;
-PROCEDURE SetToolTips(hwnd: WinDef.HWND; hwndNewHwnd: WinDef.HWND): WinDef.HWND;
-PROCEDURE GetToolTips(hwnd: WinDef.HWND): WinDef.HWND;
-PROCEDURE SetBkImage(hwnd: WinDef.HWND; plvbki: LPLVBKIMAGE): BOOLEAN;
-PROCEDURE GetBkImage(hwnd: WinDef.HWND; plvbki: LPLVBKIMAGE): BOOLEAN;
-PROCEDURE GetCheckState(hwnd: WinDef.HWND; i: WinDef.UINT): WinDef.UINT;
-PROCEDURE SetItemPosition32(hwnd: WinDef.HWND; i, x, y: INTEGER);
-PROCEDURE GetSubItemRect(hwnd: WinDef.HWND; iItem, iSubItem, code: INTEGER; prc: WinDef.LPRECT): BOOLEAN;
+PROCEDURE GetColumnWidth(hwnd: HWND; iCol: INTEGER): INTEGER;
+PROCEDURE SetColumnWidth(hwnd: HWND; iCol, cx: INTEGER): BOOLEAN;
+PROCEDURE GetHeader(hwnd: HWND): HWND;
+PROCEDURE GetBkColor(hwnd: HWND): COLORREF;
+PROCEDURE SetBkColor(hwnd: HWND; clrBk: COLORREF): BOOLEAN;
+PROCEDURE GetImageList(hwnd: HWND; iImageList: INTEGER): HIMAGELIST;
+PROCEDURE SetImageList(hwnd: HWND; himl: HIMAGELIST; iImageList: INTEGER): HIMAGELIST;
+PROCEDURE GetCallbackMask(hwnd: HWND): UINT32;
+PROCEDURE SetCallbackMask(hwnd: HWND; mask: UINT32): BOOLEAN;
+PROCEDURE FindItem(hwnd: HWND; iStart: INTEGER; plvfi: LPFINDINFO): INTEGER;
+PROCEDURE GetItemRect(hwnd: HWND; i: INTEGER; prc: PRECT; code: INTEGER): BOOLEAN;
+PROCEDURE SetItemPosition(hwnd: HWND; i: INTEGER; x, y: UINT16): BOOLEAN;
+PROCEDURE GetItemPosition(hwnd: HWND; i: INTEGER; ppt: PPOINT): BOOLEAN;
+PROCEDURE GetStringWidth(hwnd: HWND; psz: PCTSTR): INTEGER;
+PROCEDURE EnsureVisible(hwnd: HWND; i: INTEGER; fPartialOK: BOOLEAN): BOOLEAN;
+PROCEDURE RedrawItems(hwnd: HWND; iFirst, iLast: INTEGER): BOOLEAN;
+PROCEDURE Arrange(hwnd: HWND; code: UINT32): BOOLEAN;
+PROCEDURE GetViewRect(hwnd: HWND; prc: PRECT): BOOLEAN;
+PROCEDURE GetTextColor(hwnd: HWND): COLORREF;
+PROCEDURE SetTextColor(hwnd: HWND; clrText: COLORREF): BOOLEAN;
+PROCEDURE GetTextBkColor(hwnd: HWND): COLORREF;
+PROCEDURE SetTextBkColor(hwnd: HWND; clrTextBk: COLORREF): BOOLEAN;
+PROCEDURE GetTopIndex(hwnd: HWND): INTEGER;
+PROCEDURE GetCountPerPage(hwnd: HWND): INTEGER;
+PROCEDURE GetOrigin(hwnd: HWND; ppt: PPOINT): BOOLEAN;
+PROCEDURE Update(hwnd: HWND; i: INTEGER): BOOLEAN;
+PROCEDURE SetUnicodeFormat(hwnd: HWND; fUnicode: BOOLEAN): BOOLEAN;
+PROCEDURE GetUnicodeFormat(hwnd: HWND): BOOLEAN;
+PROCEDURE GetItemState(hwnd: HWND; i: INTEGER; mask: UINT32): UINT32;
+PROCEDURE SetItemCount(hwnd: HWND; cItems: INTEGER);
+PROCEDURE SetItemCountEx(hwnd: HWND; cItems: INTEGER; dwFlags: UINT32);
+PROCEDURE GetItemSpacing(hwnd: HWND; fSmall: BOOLEAN): UINT32;
+PROCEDURE GetISearchString(hwnd: HWND; lpsz: PSTR): BOOLEAN;
+PROCEDURE SetIconSpacing(hwnd: HWND; cx, cy: UINT16): UINT32;
+PROCEDURE SetExtendedListViewStyleEx(hwnd: HWND; dwMask, dw: UINT32): UINT32;
+PROCEDURE GetExtendedListViewStyle(hwnd: HWND): UINT32;
+PROCEDURE SubItemHitTest(hwnd: HWND; plvhti: LPLVHITTESTINFO): INTEGER;
+PROCEDURE SetColumnOrderArray(hwnd: HWND; iCount: INTEGER; pi: RefIntArray): BOOLEAN;
+PROCEDURE GetColumnOrderArray(hwnd: HWND; iCount: INTEGER; pi: RefIntArray): BOOLEAN;
+PROCEDURE SetHotItem(hwnd: HWND; i: INTEGER): INTEGER;
+PROCEDURE GetHotItem(hwnd: HWND): INTEGER;
+PROCEDURE SetHotCursor(hwnd: HWND; hcur: HCURSOR): HCURSOR;
+PROCEDURE GetHotCursor(hwnd: HWND): HCURSOR;
+PROCEDURE ApproximateViewRect(hwnd: HWND; iWidth, iHeight: UINT16; iCount: INTEGER): UINT32;
+PROCEDURE SetWorkAreas(hwnd: HWND; nWorkAreas: INTEGER; prc: PRECT): BOOLEAN;
+PROCEDURE GetWorkAreas(hwnd: HWND; nWorkAreas: INTEGER; prc: PRECT): BOOLEAN;
+PROCEDURE GetNumberOfWorkAreas(hwnd: HWND; pnWorkAreas: UNTRACED REF UINT32): BOOLEAN;
+PROCEDURE GetSelectionMark(hwnd: HWND): INTEGER;
+PROCEDURE SetSelectionMark(hwnd: HWND; i: INTEGER): INTEGER;
+PROCEDURE SetHoverTime(hwnd: HWND; dwHoverTimeMs: UINT32): UINT32;
+PROCEDURE GetHoverTime(hwnd: HWND): UINT32;
+PROCEDURE SetToolTips(hwnd: HWND; hwndNewHwnd: HWND): HWND;
+PROCEDURE GetToolTips(hwnd: HWND): HWND;
+PROCEDURE SetBkImage(hwnd: HWND; plvbki: LPLVBKIMAGE): BOOLEAN;
+PROCEDURE GetBkImage(hwnd: HWND; plvbki: LPLVBKIMAGE): BOOLEAN;
+PROCEDURE GetCheckState(hwnd: HWND; i: UINT32): UINT32;
+PROCEDURE SetItemPosition32(hwnd: HWND; i, x, y: INTEGER);
+PROCEDURE GetSubItemRect(hwnd: HWND; iItem, iSubItem, code: INTEGER; prc: PRECT): BOOLEAN;
 
 
 END WinListView.
