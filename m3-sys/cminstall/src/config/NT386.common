@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.30 2008-03-29 19:14:05 jkrell Exp $
+% $Id: NT386.common,v 1.31 2008-04-29 17:48:17 wagner Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -703,7 +703,7 @@ is
     % http://msdn2.microsoft.com/en-us/library/ms235591.aspx
     %
     if FileExists(ManifestFile)
-        local Command = "mt /nologo /manifest " & ManifestFile & " /outputresource:" & DllOrExe & ";" & ResourceId
+        local Command = "@mt /nologo /manifest " & ManifestFile & " /outputresource:" & DllOrExe & ";" & ResourceId
         if equal (SL, "/")
             % Posix exec through sh treats the semicolon as a command delimiter, so quote
             % the whole command and send it to cmd.
@@ -792,7 +792,7 @@ is
     end
 
     return try_exec(
-        "link",
+        "@link",
         WriteResponseFile(
             LinkResponseFile,
             " ",
@@ -1142,7 +1142,7 @@ is
     end
 
     return try_exec(
-        "link",
+        "@link",
         WriteResponseFile(
             LinkResponseFile,
             " ",
