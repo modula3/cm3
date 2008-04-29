@@ -70,7 +70,7 @@ TYPE
   nlink_t      = u_long;              (* POSIX compliance    *)
   uid_t        = uint;                (* POSIX compliance    *)
   pid_t        = int;                 (* POSIX compliance    *)
-  gid_t        = u_long;              (* POSIX compliance    *)
+  gid_t        = u_int;               (* POSIX compliance    *)
 
 CONST
   NBBY = 8;                           (* number of bits in a byte *)

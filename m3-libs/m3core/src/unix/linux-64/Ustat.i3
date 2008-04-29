@@ -8,7 +8,7 @@
 INTERFACE Ustat;
 
 FROM Ctypes IMPORT int, char_star;
-FROM Utypes IMPORT u_short, u_long, dev_t, ino_t, off_t;
+FROM Utypes IMPORT u_short, u_int, u_long, dev_t, ino_t, off_t;
 FROM Utypes IMPORT mode_t, nlink_t, uid_t, gid_t, time_t;
 
 CONST
@@ -43,7 +43,7 @@ TYPE
     st_mode   : mode_t;
     st_uid    : uid_t;
     st_gid    : gid_t;
-    (*pad0    : int;*)
+    pad0      : u_int;
     st_rdev   : dev_t;
     st_size   : off_t;
     st_blksize: u_long;
