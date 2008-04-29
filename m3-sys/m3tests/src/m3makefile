@@ -25,7 +25,7 @@ if pureWindows
 else
   write ("using POSIX tools", CR)
   readonly rm_dir  = "@-rm -rf"
-  readonly diff    = "@-diff -u"
+  readonly diff    = "@-diff -u -b"
   readonly head    = "| head -30"
   readonly cat     = "@-cat"
   readonly m3mkdir = "@-mkdir -p"
@@ -102,6 +102,11 @@ proc cmp_file (file) is
 
   fcc = subst (fc, " (core dumped)", "", 9)
   fbb = subst (fb, " (core dumped)", "", 9)
+  if equal ($OS, "Windows_NT") and equal (SL, "\\")
+    fcc = del_chars (fcc, "\r")
+    fcc = subst_chars (fcc, "\\", "/")
+    fs_putfile (file, fcc)
+  end
   if defined ("LOG_CMPS")
     r += file & ":\n" & fcc & "\n"
     r += base & ":\n" & fbb & "\n"
