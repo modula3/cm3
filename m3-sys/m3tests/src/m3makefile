@@ -9,12 +9,44 @@
 % useful constants
 %
 
-%readonly m3mkdir = format ("@%s%sm3mkdir", LIB_USE, SL)
+%
+% Quake variables specified with -D on the cm3 command line
+%
+if defined ("USE_POSIX_TOOLS") and defined ("USE_WINDOWS_TOOLS")
+  error ("only define one of USE_POSIX_TOOLS and USE_WINDOWS_TOOLS")
+end
 
-readonly pureWindows = equal ($OS, "Windows_NT") and equal (SL, "\\") and
-                       not tcontains ($PATH, "cygwin")
+%
+% environment variables
+%
+if not equal ($CM3_USE_POSIX_TOOLS, "") and not equal ($CM3_USE_WINDOWS_TOOLS, "")
+  error ("only define one of CM3_USE_POSIX_TOOLS and CM3_USE_WINDOWS_TOOLS")
+end
+if not equal ($CM3_USE_POSIX_TOOLS, "") and defined ("USE_WINDOWS_TOOLS")
+  error ("only define one of CM3_USE_POSIX_TOOLS and USE_WINDOWS_TOOLS")
+end
+if not equal ($CM3_USE_WINDOWS_TOOLS, "") and defined ("USE_POSIX_TOOLS")
+  error ("only define one of CM3_USE_WINDOWS_TOOLS and USE_POSIX_TOOLS")
+end
 
-if pureWindows
+if not defined ("USE_POSIX_TOOLS") and not defined ("USE_WINDOWS_TOOLS")
+  if equal ($OS, "Windows_NT") and equal (SL, "\\") and equal ($CM3_USE_POSIX_TOOLS, "")
+    USE_POSIX_TOOLS = FALSE
+    USE_WINDOWS_TOOLS = TRUE
+  else
+    USE_POSIX_TOOLS = TRUE
+    USE_WINDOWS_TOOLS = FALSE
+  end
+end
+
+if not defined ("USE_POSIX_TOOLS")
+  USE_POSIX_TOOLS = not USE_WINDOWS_TOOLS
+end
+if not defined ("USE_WINDOWS_TOOLS")
+  USE_WINDOWS_TOOLS = not USE_POSIX_TOOLS
+end
+
+if USE_WINDOWS_TOOLS
   write ("using Windows tools", CR)
   readonly rm_dir  = "@-rmdir 2>nul /s /q"
   readonly diff    = "@-fc"
