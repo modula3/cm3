@@ -23,8 +23,10 @@ PROCEDURE Crash () =
     ThreadF.SuspendOthers ();
     RTMachInfo.DumpStack (LOOPHOLE (Crash, ADDRESS), fp);
     RTSignal.RestoreHandlers (); (* so we really do crash... *)
-    WinBase.DebugBreak ();
-    WinBase.FatalExit (-1);
+    IF WinBase.IsDebuggerPresent () # 0 THEN
+      WinBase.DebugBreak ();
+    END;
+    Exit (-1);
   END Crash;
 
 (*********************
@@ -33,7 +35,7 @@ PROCEDURE Crash () =
   BEGIN
     ThreadF.SuspendOthers ();
     ptr^ := 99; (* try to get to the debugger... *)
-    WinBase.FatalExit (-1);
+    Exit (-1);
   END Crash;
 *********************)
 
