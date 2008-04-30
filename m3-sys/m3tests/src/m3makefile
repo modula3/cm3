@@ -46,22 +46,35 @@ if not defined ("USE_WINDOWS_TOOLS")
   USE_WINDOWS_TOOLS = not USE_POSIX_TOOLS
 end
 
+if equal ($OS, "Windows_NT") and equal (SL, "\\")
+  %
+  % Even if we are going to run Cygwin tools on the path,
+  % we are going to run them with cmd, not sh, so nul is it.
+  %
+  % As well, we will still use cmd mkdir, unless we use a path.s
+  %
+  % Specifically, SL = "\\" means we are using NT386 cm3.
+  % It means the as yet nonexistant HOST_OSTYPE = WIN32.
+  %
+  readonly devnull = "nul"
+  readonly m3mkdir = "-mkdir"
+else
+  readonly devnull = "/dev/null"
+  readonly m3mkdir = "@-mkdir -p"
+end
+
 if USE_WINDOWS_TOOLS
   write ("using Windows tools", CR)
   readonly rm_dir  = "@-rmdir 2>nul /s /q"
   readonly diff    = "@-fc"
   readonly head    = ""
   readonly cat     = "-type"
-  readonly m3mkdir = "-mkdir"
-  readonly devnull = "nul"
 else
   write ("using POSIX tools", CR)
   readonly rm_dir  = "@-rm -rf"
   readonly diff    = "@-diff -u -b"
   readonly head    = "| head -30"
   readonly cat     = "@-cat"
-  readonly m3mkdir = "@-mkdir -p"
-  readonly devnull = "/dev/null"
 end
 
 %------------------------------------------------------------------------------
