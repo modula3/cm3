@@ -51,7 +51,7 @@ if equal ($OS, "Windows_NT") and equal (SL, "\\")
   % Even if we are going to run Cygwin tools on the path,
   % we are going to run them with cmd, not sh, so nul is it.
   %
-  % As well, we will still use cmd mkdir, unless we use a path.s
+  % As well, we will still use cmd mkdir, unless we use a path.
   %
   % Specifically, SL = "\\" means we are using NT386 cm3.
   % It means the as yet nonexistant HOST_OSTYPE = WIN32.
