@@ -3185,9 +3185,9 @@ m3cg_declare_procedure (void)
   NAME    (n);
   INTEGER (n_params);
   MTYPE2  (return_type, ret_type);
-  UNUSED_LEVEL (lev);
+  LEVEL   (lev);
   CC      (cc);
-  BOOLEAN (exported);
+  UNUSED_BOOLEAN (exported);
   PROC    (parent);
   PROC    (p);
 
@@ -3214,7 +3214,7 @@ m3cg_declare_procedure (void)
 
   DECL_NAME (p) = get_identifier (n);
   TREE_STATIC (p) = 1;
-  TREE_PUBLIC (p) = exported;
+  TREE_PUBLIC (p) = (lev == 0); /* exported */
   DECL_CONTEXT (p) = parent;
   TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
   DECL_MODE (p) = FUNCTION_MODE;
