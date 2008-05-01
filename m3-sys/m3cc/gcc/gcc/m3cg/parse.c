@@ -1944,7 +1944,8 @@ static tree
 proc_addr (tree p)
 {
   tree expr = build1 (ADDR_EXPR, build_pointer_type (TREE_TYPE (p)), p);
-  TREE_STATIC (expr) = 1;
+  TREE_STATIC (expr) = 1; /* see check for TREE_STATIC on ADDR_EXPR
+			     in tree-nested.c */
   return expr;
 }
 
