@@ -253,18 +253,19 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     local args = ""
     if defined("CAPTURE_M3") args = "-DCAPTURE_M3" end
     write ("--- ", uid, " --- ", comment, CR)
-    %write ("pwd: ")
-    %exec ("pwd")
-    %write ("dir: ", dir, CR)
     fs_rmrec (dir & SL & BUILD_DIR)
     fs_mkdir (dir & SL & BUILD_DIR)
     local ignore = try_exec ("cd", dir, "&& cm3 -build ", args, "-silent >" & BUILD_DIR & SL & "stdout.build 2>" & BUILD_DIR & SL & "stderr.build")
 
     if defined ("CAPTURE_BUILD")
-      cp_if (dir & SL & BUILD_DIR & SL & "stdout.build", dir & SL & "stdout.build")
-      cp_if (dir & SL & BUILD_DIR & SL & "stderr.build", dir & SL & "stderr.build")
-      NormalizeFile (dir & SL & "stdout.build")
-      NormalizeFile (dir & SL & "stderr.build")
+      if not cmp_file (dir, "stdout.build")
+        cp_if (dir & SL & BUILD_DIR & SL & "stdout.build", dir & SL & "stdout.build")
+        NormalizeFile (dir & SL & "stdout.build")
+      end
+      if not cmp_file (dir, "stderr.build")
+        cp_if (dir & SL & BUILD_DIR & SL & "stderr.build", dir & SL & "stderr.build")
+        NormalizeFile (dir & SL & "stderr.build")
+      end
     end
 
     local ok1 = cmp_file (dir, "stdout.build") and
