@@ -1,2 +1,0 @@
-cl -nologo -Z7 -DWIN32 -I.. -ID://cm3//pkg//m3core//src//Csupport//Common -ID://cm3//pkg//m3core//src//Csupport//NT386 -ID://cm3//pkg//m3core//src//runtime//ex_frame -ID://cm3//pkg//m3core//src//C//Common -ID://cm3//pkg//m3core//src//C//NT386 -MD -Oi -c ..//C.c
-C.c
