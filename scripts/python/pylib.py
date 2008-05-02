@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.102 2008-05-02 02:46:58 jkrell Exp $
+# $Id: pylib.py,v 1.103 2008-05-02 05:54:10 jkrell Exp $
 
 import os
 from os import getenv
@@ -84,6 +84,63 @@ def SearchPath(name, paths = getenv("PATH")):
             if os.path.isfile(candidate):
                 return os.path.abspath(candidate)
 
+def _FormatEnvironmentVariable(Name):
+    if os.name == "nt":
+        return "%" + Name + "%"
+    else:
+        return "$" + Name
+
+def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
+    AnyMissing = False
+    Value = os.environ.get(Name)
+    if Value:
+        for File in RequiredFiles:
+            if not SearchPath(File, Value):
+                AnyMissing = True
+                break
+    else:
+        AnyMissing = True
+    if AnyMissing:
+        if Value:
+            NewValue = Attempt + os.path.pathsep + Value
+        else:
+            NewValue = Attempt
+        for File in RequiredFiles:
+            if not SearchPath(File, NewValue):
+                print("ERROR: " + File + " not found in " + _FormatEnvironmentVariable(Name) + "(" + NewValue + ")")
+                sys.exit(1)
+        os.environ[Name] = NewValue
+        if Value:
+            print(Name + "=" + Attempt + os.pathsep + _FormatEnvironmentVariable(Name))
+        else:
+            print(Name + "=" + Attempt)
+
+def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt):
+    Value = os.environ.get(Name)
+    if Value:
+        for File in RequiredFiles:
+            if SearchPath(File, Value):
+                return
+    if Value:
+        NewValue = Attempt + os.path.pathsep + Value
+    else:
+        NewValue = Attempt
+    for File in RequiredFiles:
+        if SearchPath(File, NewValue):
+            os.environ[Name] = NewValue
+            if Value:
+                print(Name + "=" + NewValue + os.pathsep + _FormatEnvironmentVariable(Name))
+            else:
+                print(Name + "=" + NewValue)
+            return
+    print("ERROR: " + _FormatEnvironmentVariable(Name) + " does not have any of " + " ".join(RequiredFiles))
+    sys.exit(1)
+
+def _ClearEnvironmentVariable(Name):
+    if Name in os.environ:
+        del(os.environ[Name])
+        print("set " + Name + "=")
+
 #-----------------------------------------------------------------------------
 #
 # very important -- what operating system/processor architecture
@@ -122,6 +179,15 @@ if ((UName.startswith("windows")
 CM3 = getenv("CM3") or "cm3"
 CM3 = SearchPath(CM3 + EXE) or SearchPath(CM3)
 InstallRoot = getenv("CM3_INSTALL")
+if not CM3 and not InstallRoot:
+    for a in ["c:\\cm3\\bin\\cm3.exe", "/usr/local/bin/cm3"]:
+        if os.path.isfile(a):
+            CM3 = a
+            bin = os.path.dirname(CM3)
+            print("using " + CM3)
+            InstallRoot = os.path.dirname(bin)
+            _SetupEnvironmentVariableAll("PATH", ["cm3"], bin)
+            break;
 if not InstallRoot:
     if CM3:
         InstallRoot = os.path.dirname(os.path.dirname(CM3))
@@ -285,67 +351,69 @@ Q = "'"
 #-----------------------------------------------------------------------------
 # evaluate uname information
 
+#
+# NT386 is different because for one "target", it has multiple "configurations".
+#
+
+if (UName.startswith("windows")
+        or Target.startswith("NT386")
+        or UNameCommand.startswith("mingw")
+        or UNameCommand.startswith("cygwin")):
+
+    Q = ""
+    HAVE_SERIAL = True
+    GMAKE = getenv("GMAKE") or "make"
+
+    #
+    # TBD:
+    # If cl is not in the path, or link not in the path (Cygwin link doesn't count)
+    # then error toward GNU, and probe uname and gcc -v.
+    #
+    if ((Target.startswith("NT386GNU")
+        # uname can be in the %PATH% and still target native NT386
+        #or UNameCommand.startswith("cygwin")
+        or (OSType == "POSIX")
+        or (GCC_BACKEND == "yes"))
+        and (GCC_BACKEND != "no")
+        and (OSType != "WIN32")):
+
+        Config = "NT386GNU"
+        OSType = "POSIX"
+        GCC_BACKEND = True
+        HAVE_SERIAL = False # temporary..
+
+    elif ((Target.startswith("NT386MINGNU")
+        # uname can be in the %PATH% and still target native NT386
+        #or UNameCommand.startswith("mingw")
+        or (GCC_BACKEND == "yes"))
+        and (GCC_BACKEND != "no")
+        and (OSType != "POSIX")):
+
+        Config = "NT386MINGNU"
+        OSType = "WIN32"
+        GCC_BACKEND = True
+
+    elif ((not Target.startswith("NT386MINGNU"))
+        and (not Target.startswith("NT386GNU"))
+        and (OSType != "POSIX")
+        and (GCC_BACKEND != "yes")):
+
+        Config = "NT386"
+        OSType = "WIN32"
+        GCC_BACKEND = False
+
+    else:
+
+        print("unable to determine configuration")
+        sys.exit(1)
+
+    Target = "NT386"
+
 if not Target:
 #
-# First pass, mainly just sniff to determien target, and not other data,
-# except for NT386.
+# First pass, just sniff to determine target, and not other data.
 #
-    if (UName.startswith("windows")
-            or Target.startswith("NT386")
-            or UNameCommand.startswith("mingw")
-            or UNameCommand.startswith("cygwin")):
-
-        Q = ""
-        HAVE_SERIAL = True
-        GMAKE = getenv("GMAKE") or "make"
-
-        #
-        # TBD:
-        # If cl is not in the path, or link not in the path (Cygwin link doesn't count)
-        # then error toward GNU, and probe uname and gcc -v.
-        #
-        if ((Target.startswith("NT386GNU")
-            # uname can be in the %PATH% and still target native NT386
-            #or UNameCommand.startswith("cygwin")
-            or (OSType == "POSIX")
-            or (GCC_BACKEND == "yes"))
-            and (GCC_BACKEND != "no")
-            and (OSType != "WIN32")):
-
-            Target = "NT386"
-            Config = "NT386GNU"
-            OSType = "POSIX"
-            GCC_BACKEND = True
-            HAVE_SERIAL = False # temporary..
-
-        elif ((Target.startswith("NT386MINGNU")
-            # uname can be in the %PATH% and still target native NT386
-            #or UNameCommand.startswith("mingw")
-            or (GCC_BACKEND == "yes"))
-            and (GCC_BACKEND != "no")
-            and (OSType != "POSIX")):
-
-            Target = "NT386"
-            Config = "NT386MINGNU"
-            OSType = "WIN32"
-            GCC_BACKEND = True
-
-        elif ((not Target.startswith("NT386MINGNU"))
-            and (not Target.startswith("NT386GNU"))
-            and (OSType != "POSIX")
-            and (GCC_BACKEND != "yes")):
-
-            Target = "NT386"
-            Config = "NT386"
-            OSType = "WIN32"
-            GCC_BACKEND = False
-
-        else:
-
-            print("unable to determine configuration")
-            sys.exit(1)
-
-    elif (Target == "") and UName.startswith("freebsd"):
+    if UName.startswith("freebsd"):
 
         if UNameArchM == "i386":
             if UNameRevision.startswith("1"):
@@ -361,7 +429,7 @@ if not Target:
         else:
             Target = "FBSD_ALPHA"
 
-    elif (Target == "") and UName.startswith("darwin"):
+    elif UName.startswith("darwin"):
 
         # detect the m3 platform (Darwin runs on ppc and ix86)
         if UNameArchP.startswith("powerpc"):
@@ -369,12 +437,12 @@ if not Target:
         elif re.match("i[3456]86", UNameArchP):
             Target = "I386_DARWIN"
 
-    elif (Target == "") and UName.startswith("sunos"):
+    elif UName.startswith("sunos"):
 
         Target = "SOLgnu"
         #Target = "SOLsun"
 
-    elif (Target == "") and UName.startswith("linux"):
+    elif UName.startswith("linux"):
 
         if UNameArchM == "ppc":
             Target = "PPC_LINUX"
@@ -383,7 +451,7 @@ if not Target:
         else:
             Target = "LINUXLIBC6"
 
-    elif (Target == "") and UName.startswith("netbsd"):
+    elif UName.startswith("netbsd"):
 
         Target = "NetBSD2_i386" # only arch/version combination supported yet
 
@@ -394,33 +462,27 @@ if not Target:
 
 GMAKE = None
 
-if ((Target == "FreeBSD")
-    or (Target == "FreeBSD2")
-    or (Target == "FreeBSD3")
-    or (Target == "FreeBSD4")
-    or (Target == "FBSD_ALPHA")):
+if (Target.find("FreeBSD") != -1) or (Target.find("FBSD") != -1):
 
     GCC_BACKEND = True
 
-elif ((Target == "PPC_DARWIN")
-    or (Target == "I386_DARWIN")
-    or (Target == "AMD64_DARWIN")):
+elif Target.find("DARWIN") != -1:
 
     GCC_BACKEND = True
     GMAKE = getenv("GMAKE") or "make"
 
-elif ((Target == "SOLgnu") or (Target == "SOLsun")):
+elif Target.startswith("SOL"): # SOLgnu, SOLsun
 
     GCC_BACKEND = True
 
-elif ((Target == "LINUXLIBC6") or (Target == "PPC_LINUX") or (Target == "AMD64_LINUX")):
+elif Target.find("LINUX") != -1:
 
     GCC_BACKEND = True
     GMAKE = getenv("GMAKE") or "make"
     if (Target != "AMD64_LINUX"):
         GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
 
-elif (Target == "NetBSD2_i386"):
+elif Target.find("NetBSD2") != -1:
 
     GCC_BACKEND = True
     GMAKE = getenv("GMAKE") or "make"
@@ -1655,65 +1717,6 @@ def CopyCompiler(From, To):
     _CopyCompiler(os.path.join(From, "bin"), os.path.join(To, "bin"))
     CopyMklib(From, To) or FatalError("9")
     return True
-
-def _FormatEnvironmentVariable(Name):
-    if os.name == "nt":
-        return "%" + Name + "%"
-    else:
-        return "$" + Name
-
-def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
-    AnyMissing = False
-    Value = os.environ.get(Name)
-    if Value:
-        for File in RequiredFiles:
-            if not SearchPath(File, Value):
-                AnyMissing = True
-                break
-    else:
-        AnyMissing = True
-    if AnyMissing:
-        if Value:
-            NewValue = Attempt + os.path.pathsep + Value
-        else:
-            NewValue = Attempt
-        for File in RequiredFiles:
-            if not SearchPath(File, NewValue):
-                print("ERROR: " + File + " not found in " + _FormatEnvironmentVariable(Name) + "(" + NewValue + ")")
-                sys.exit(1)
-        os.environ[Name] = NewValue
-        if Value:
-            print(Name + "=" + Attempt + os.pathsep + _FormatEnvironmentVariable(Name))
-        else:
-            print(Name + "=" + Attempt)
-
-
-def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt):
-    Value = os.environ.get(Name)
-    if Value:
-        for File in RequiredFiles:
-            if SearchPath(File, Value):
-                return
-    if Value:
-        NewValue = Attempt + os.path.pathsep + Value
-    else:
-        NewValue = Attempt
-    for File in RequiredFiles:
-        if SearchPath(File, NewValue):
-            os.environ[Name] = NewValue
-            if Value:
-                print(Name + "=" + NewValue + os.pathsep + _FormatEnvironmentVariable(Name))
-            else:
-                print(Name + "=" + NewValue)
-            return
-    print("ERROR: " + _FormatEnvironmentVariable(Name) + " does not have any of " + " ".join(RequiredFiles))
-    sys.exit(1)
-
-def _ClearEnvironmentVariable(Name):
-    if Name in os.environ:
-        del(os.environ[Name])
-        print("set " + Name + "=")
-
 
 #
 # Need to figure out how to do this properly, if at all.
