@@ -258,7 +258,7 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     %write ("dir: ", dir, CR)
     fs_rmrec (dir & SL & BUILD_DIR)
     fs_mkdir (dir & SL & BUILD_DIR)
-    exec ("cd", dir, "&& cm3 -build ", args, "-silent >" & BUILD_DIR & SL & "stdout.build 2>" & BUILD_DIR & SL & "stderr.build")
+    local ignore = try_exec ("cd", dir, "&& cm3 -build ", args, "-silent >" & BUILD_DIR & SL & "stdout.build 2>" & BUILD_DIR & SL & "stderr.build")
 
     if defined ("CAPTURE_BUILD")
       cp_if (dir & SL & BUILD_DIR & SL & "stdout.build", dir & SL & "stdout.build")
@@ -755,4 +755,3 @@ html(["  </body>", CR])
 html(["</html>", CR])
 
 end % NOT LIB_ONLY
-include ("../../Test.common") 
