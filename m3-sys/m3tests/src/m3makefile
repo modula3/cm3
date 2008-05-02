@@ -46,35 +46,16 @@ if not defined ("USE_WINDOWS_TOOLS")
   USE_WINDOWS_TOOLS = not USE_POSIX_TOOLS
 end
 
-if equal ($OS, "Windows_NT") and equal (SL, "\\")
-  %
-  % Even if we are going to run Cygwin tools on the path,
-  % we are going to run them with cmd, not sh, so nul is it.
-  %
-  % As well, we will still use cmd mkdir, unless we use a path.
-  %
-  % Specifically, SL = "\\" means we are using NT386 cm3.
-  % It means the as yet nonexistant HOST_OSTYPE = WIN32.
-  %
-  readonly devnull = "nul"
-  readonly m3mkdir = "-mkdir"
-else
-  readonly devnull = "/dev/null"
-  readonly m3mkdir = "@-mkdir -p"
-end
-
 if USE_WINDOWS_TOOLS
   write ("using Windows tools", CR)
-  readonly rm_dir  = "@-rmdir 2>nul /s /q"
   readonly diff    = "@-fc"
   readonly head    = ""
-  readonly cat     = "-type"
+  % readonly cat     = "-type"
 else
   write ("using POSIX tools", CR)
-  readonly rm_dir  = "@-rm -rf"
   readonly diff    = "@-diff -u -b"
   readonly head    = "| head -30"
-  readonly cat     = "@-cat"
+  % readonly cat     = "@-cat"
 end
 
 %------------------------------------------------------------------------------
@@ -305,8 +286,8 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     %write ("pwd: ")
     %exec ("pwd")
     %write ("dir: ", dir, CR)
-    exec (rm_dir, dir)
-    exec (m3mkdir, dir, "> " & devnull)
+    fs_rmrec (dir)
+    fs_mkdir (dir)
     if equal ($OS, "Windows_NT") and equal (SL, "\\")
         % exec ("cd")
         % write("dir is " & dir & CR)
@@ -351,7 +332,7 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     html (["</pre></td></tr>", CR])
 
     if not defined ("keep")
-      exec (rm_dir, dir & SL & BUILD_DIR)
+      fs_rmrec (dir & SL & BUILD_DIR)
     end
   end
 end
