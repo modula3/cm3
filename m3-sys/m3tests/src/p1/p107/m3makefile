@@ -4,3 +4,4 @@
  
 interface ("Foof")
 implementation ("Main")
+include ("../../Test.common") 

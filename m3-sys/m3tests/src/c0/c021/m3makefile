@@ -2,4 +2,5 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
  
-interface ("Test")
+import ("m3core")
+include ("../../Test.common")

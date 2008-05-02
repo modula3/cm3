@@ -5,3 +5,4 @@
 interface ("Fib")
 implementation ("Fib")
 implementation ("Main")
+include ("../../Test.common") 
