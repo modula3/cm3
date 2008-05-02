@@ -4,3 +4,4 @@
  
 interface ("print")
 implementation ("Main")
+include ("../../Test.common") 

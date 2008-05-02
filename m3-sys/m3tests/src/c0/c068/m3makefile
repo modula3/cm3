@@ -5,3 +5,4 @@
 interface ("Refany")
 implementation ("Main")
 implementation ("Refany")
+include ("../../Test.common") 

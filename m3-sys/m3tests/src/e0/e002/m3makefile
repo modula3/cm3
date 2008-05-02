@@ -4,3 +4,4 @@
  
 interface ("Baz")
 interface ("Foo")
+include ("../../Test.common") 

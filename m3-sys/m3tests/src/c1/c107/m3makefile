@@ -4,3 +4,4 @@
  
 interface ("Test")
 implementation ("Test")
+include ("../../Test.common") 

@@ -4,3 +4,4 @@
  
 interface ("A")
 interface ("B")
+include ("../../Test.common") 

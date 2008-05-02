@@ -4,3 +4,4 @@
  
 implementation ("Main")
 generic_implementation ("A")
+include ("../../Test.common") 

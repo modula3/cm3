@@ -1,0 +1,32 @@
+override ("m3tests", PACKAGE_DIR & "/../../../..")
+
+if defined ("local_libs")
+  override ("m3core", ROOT)
+  override ("libm3", ROOT)
+end
+
+import ("libm3")
+
+%
+% Some of the tests have their own Test.i3 and cannot import this.
+%
+if stale ("Test.i3", "Test.i3")
+  import ("m3tests")
+end
+
+%
+% This is outdated.
+%
+if defined ("local_m3")
+  M3 = format ("%s/m3/%s/m3", ROOT, BUILD_DIR)
+  m3_options = format ("-Y6@%s/m3cc/%s/cm3cg@-quiet@", ROOT, BUILD_DIR)
+end
+
+readonly proc RunTest () is
+  program("pgm")
+  local f = program_name ("pgm")
+  if not stale (f, f)
+    exec ("@-." & SL & f & " >stdout.pgm 2>stderr.pgm" )
+  end
+end
+RunTest()

@@ -5,3 +5,4 @@
 interface ("Extern")
 implementation ("Extern")
 implementation ("Main")
+include ("../../Test.common") 

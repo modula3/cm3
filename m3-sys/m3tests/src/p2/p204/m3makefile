@@ -4,3 +4,4 @@
 
 import ("tcp")
 implementation ("Main")
+include ("../../Test.common") 
