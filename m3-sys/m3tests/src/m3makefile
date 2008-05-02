@@ -109,8 +109,9 @@ if defined ("LOG_CMPS")
   fs_rmfile(ll)
 end
 
-proc cmp_file (file) is
-  local base = path_of (file)
+proc cmp_file (dir, file) is
+  local base = dir & SL & file
+  file = dir & SL & BUILD_DIR & SL & file
 
   %write ("cmp file=" & file, ", base=" & base, CR)
   if stale (file, file)
@@ -251,13 +252,13 @@ readonly proc run_test (class, group, uid, comment, should_run) is
       cp_if (dir & SL & "stderr.build", path_of(dir & SL & "stderr.build"))
     end
 
-    local ok1 = cmp_file (dir & SL & "stdout.build") and
-                cmp_file (dir & SL & "stderr.build")
+    local ok1 = cmp_file (dir, "stdout.build") and
+                cmp_file (dir, "stderr.build")
     local ok2 = "T"
 
     if should_run
-      ok2 = cmp_file (dir & SL & "stdout.pgm") and
-            cmp_file (dir & SL & "stderr.pgm")
+      ok2 = cmp_file (dir, "stdout.pgm") and
+            cmp_file (dir, "stderr.pgm")
     end
 
     if ok1 and ok2
