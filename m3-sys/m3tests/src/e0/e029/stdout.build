@@ -1,4 +1,6 @@
-"../src/Main.m3", line 24: warning: variable has type NULL (r)
-"../src/Main.m3", line 24: types are not assignable
-1 error and 1 warning encountered
-Fatal Error: package build failed
+"../Main.m3", line 24: warning: variable has type NULL (r)
+"../Main.m3", line 24: ** INTERNAL CG ERROR *** stack not empty, depth (1)
+"../Main.m3", line 25: ** INTERNAL CG ERROR *** stack not empty, depth (1)
+"../Main.m3", line 26: ** INTERNAL CG ERROR *** unaligned load_indirect  type=11  s/a=0/8
+"../Main.m3", line 26: ** INTERNAL CG ERROR *** unaligned store_indirect  type=11  s/a=0/8
+"../Main.m3", line 26: ** INTERNAL CG ERROR *** stack not empty, depth (1)
