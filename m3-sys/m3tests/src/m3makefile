@@ -98,6 +98,11 @@ proc compare_file (dir, file) is
     return
   end
 
+  if USE_POSIX_TOOLS
+    base = subst_chars (base, "\\", "/")
+    file = subst_chars (file, "\\", "/")
+  end
+
   exec (diff, file, base, head)
   if defined("HTML")
     exec (diff, file, base, ">>", report)
