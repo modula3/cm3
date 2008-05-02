@@ -63,6 +63,9 @@ end
 %
 import ("libm3")
 Module ("Test")
+if equal ($OS, "Windows_NT")
+  build_standalone ()
+end
 library ("test")
 
 % include floating point pieces from m3core
@@ -236,9 +239,6 @@ if stale ("TESTARGS", path_of ("m3makefile"))
     if defined ("local_libs")
       write ("override (\"m3core\", ROOT)", CR)
       write ("override (\"libm3\", ROOT)", CR)
-    end
-    if equal ($OS, "Windows_NT")
-        write ("  build_standalone ()", CR)
     end
     write (CR)
 
