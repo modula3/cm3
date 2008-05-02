@@ -5,3 +5,4 @@
 interface ("A")
 interface ("B")
 implementation ("Main")
+include ("../../Test.common") 

@@ -5,3 +5,4 @@
 interface ("Bar")
 interface ("Foo")
 implementation ("Test")
+include ("../../Test.common") 
