@@ -248,12 +248,10 @@ end
 readonly proc run_test (class, group, uid, comment, should_run) is
   if defined ("_all") or defined (class) or defined ("_" & uid)
     local dir = ".." & SL & "src" & SL & group & SL & uid
-    local args = "-build"
-    if defined("CAPTURE_M3") args = " -DCAPTURE_M3" end
     write ("--- ", uid, " --- ", comment, CR)
     fs_rmrec (dir & SL & BUILD_DIR)
     fs_mkdir (dir & SL & BUILD_DIR)
-    exec ("-cd", dir, "&& cm3", args, "-silent >" & BUILD_DIR & SL & "stdout.build 2>" & BUILD_DIR & SL & "stderr.build")
+    exec ("-cd", dir, "&& cm3", "-silent", ">" & BUILD_DIR & SL & "stdout.build 2>" & BUILD_DIR & SL & "stderr.build")
 
     if defined ("CAPTURE_BUILD")
       if not cmp_file (dir, "stdout.build")
