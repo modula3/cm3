@@ -59,9 +59,7 @@ end
 %
 import ("libm3")
 Module ("Test")
-if equal ($OS, "Windows_NT")
-  build_standalone ()
-end
+build_standalone ()
 library ("test")
 
 % include floating point pieces from m3core
