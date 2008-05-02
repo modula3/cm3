@@ -79,33 +79,31 @@ if not defined ("LIB_ONLY")
 % misc. utilities
 %
 
-proc compare_file (dir, file) is
-  local base = dir & SL & file
-  file = dir & SL & BUILD_DIR & SL & file
+proc compare_file (dir, OutputPath) is
+  local ExpectedPath = dir & SL & OutputPath
+  OutputPath = dir & SL & BUILD_DIR & SL & OutputPath
 
-  %write ("compare file=" & file, ", base=" & base, CR)
-  if stale (file, file)
-    write (file, " is missing", CR)
-    html ([file, "missing"])
-  error("1")
+  %write ("compare OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
+  if stale (OutputPath, OutputPath)
+    write (OutputPath, " is missing", CR)
+    html ([OutputPath, "missing"])
     return
   end
 
-  if stale (base, base)
-    write (base, " is missing", CR)
-    html ([base, "missing"])
-  error("2")
+  if stale (ExpectedPath, ExpectedPath)
+    write (ExpectedPath, " is missing", CR)
+    html ([ExpectedPath, "missing"])
     return
   end
 
   if USE_POSIX_TOOLS
-    base = subst_chars (base, "\\", "/")
-    file = subst_chars (file, "\\", "/")
+    ExpectedPath = subst_chars (ExpectedPath, "\\", "/")
+    OutputPath = subst_chars (OutputPath, "\\", "/")
   end
 
-  exec (diff, file, base, head)
+  exec (diff, OutputPath, ExpectedPath, head)
   if defined("HTML")
-    exec (diff, file, base, ">>", report)
+    exec (diff, OutputPath, ExpectedPath, ">>", report)
   end
 end
 
@@ -115,39 +113,34 @@ if defined ("LOG_CMPS")
 end
 
 proc cmp_file (dir, file) is
-  local base = dir & SL & file
-  file = dir & SL & BUILD_DIR & SL & file
+  local ExpectedPath = dir & SL & file
+  local OutputPath = dir & SL & BUILD_DIR & SL & file
 
-  %write ("cmp file=" & file, ", base=" & base, CR)
-  if stale (file, file)
+  %write ("cmp OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
+  if stale (OutputPath, OutputPath)
     return ""
   end
 
-  if stale (base, base)
+  if stale (ExpectedPath, ExpectedPath)
     return ""
   end
 
   local r = []
   if defined ("LOG_CMPS")
-    r += "cmp_file(" & file & ", " & base & ")\n"
+    r += "cmp_file(" & ExpectedPath & ", " & OutputPath & ")\n"
   end
-  fc = fs_contents (file)
-  fb = fs_contents (base)
 
-  fcc = subst (fc, " (core dumped)", "", 9)
-  fbb = subst (fb, " (core dumped)", "", 9)
-  if equal ($OS, "Windows_NT") and equal (SL, "\\")
-    fcc = del_chars (fcc, "\r")
-    fcc = subst_chars (fcc, "\\", "/")
-    fs_putfile (file, fcc)
-  end
+  local OutputContents = ReadAndNormalizeFile (OutputPath)
+  local ExpectedContents = NormalizeString (fs_contents (ExpectedPath))
+  fs_putfile (OutputPath, OutputContents)
+
   if defined ("LOG_CMPS")
-    r += file & ":\n" & fcc & "\n"
-    r += base & ":\n" & fbb & "\n"
+    r += OutputPath & ":\n" & OutputContents & "\n"
+    r += ExpectedPath & ":\n" & ExpectedContents & "\n"
   end
 
-  %if equal(try_exec ("@cmp", file, base), 0)
-  if equal(fcc, fbb)
+  %if equal(try_exec ("@cmp", OutputPath, ExpectedPath), 0)
+  if equal(OutputContents, ExpectedContents)
     if defined ("LOG_CMPS")
       r += "--> TRUE\n"
       >> ll in 
@@ -239,6 +232,21 @@ write ("path_of (\"m3makefile\") ", path_of ("m3makefile"), CR)
 % run a test case
 %
 
+readonly proc NormalizeString (String) is
+  String = subst (String, " (core dumped)", "", 9)
+  String = del_chars (subst (String, " (core dumped)", "", 9), "\r")
+  String = subst_chars (String, "\\", "/")
+  return String
+end
+
+readonly proc ReadAndNormalizeFile (Path) is
+  return NormalizeString (fs_contents (Path))
+end
+
+readonly proc NormalizeFile (Path) is
+  fs_putfile (Path, ReadAndNormalizeFile (Path))
+end
+
 readonly proc run_test (class, group, uid, comment, should_run) is
   if defined ("_all") or defined (class) or defined ("_" & uid)
     local dir = ".." & SL & "src" & SL & group & SL & uid
@@ -255,6 +263,8 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     if defined ("CAPTURE_BUILD")
       cp_if (dir & SL & BUILD_DIR & SL & "stdout.build", dir & SL & "stdout.build")
       cp_if (dir & SL & BUILD_DIR & SL & "stderr.build", dir & SL & "stderr.build")
+      NormalizeFile (dir & SL & "stdout.build")
+      NormalizeFile (dir & SL & "stderr.build")
     end
 
     local ok1 = cmp_file (dir, "stdout.build") and
