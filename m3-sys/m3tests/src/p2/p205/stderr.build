@@ -1,0 +1,22 @@
+
+
+***
+*** runtime error:
+***    An explicit or implicit NARROW() operation failed.
+***    file "../src/exprs/QualifyExpr.m3", line 471
+***
+
+Stack trace:
+   FP         PC      Procedure
+---------  ---------  -------------------------------
+ 0x12f3bc   0x56c536  CompileLV + 0xd4 in ../src/exprs/QualifyExpr.m3
+ 0x12f3dc   0x5584bf  CompileAddress + 0x59 in ../src/exprs/Expr.m3
+ 0x12f474   0x536530  PrepLV + 0x1528(!) in ../src/builtinOps/Subarray.m3
+ 0x12f490   0x535000  Prep + 0x1a in ../src/builtinOps/Subarray.m3
+ 0x12f4b0   0x566128  Prep + 0x75 in ../src/exprs/CallExpr.m3
+ 0x12f4cc   0x558301  Prep + 0x54 in ../src/exprs/Expr.m3
+ 0x12f4ec   0x559f2f  PrepForEmit + 0x81 in ../src/stmts/AssignStmt.m3
+ 0x12f514   0x4e03e3  UserInit + 0x242 in ../src/values/Variable.m3
+ 0x12f534   0x4d5573  UserInit + 0x4b in ../src/values/Value.m3
+ 0x12f554   0x4c48e2  InitValues + 0xf4 in ../src/misc/Scope.m3
+.........  .........  ... more frames ...

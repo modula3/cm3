@@ -1,0 +1,10 @@
+"../Main.m3", line 13: illegal based LONGINT literal, zero used
+"../Main.m3", line 14: illegal based LONGINT literal, zero used
+"../Main.m3", line 15: illegal based LONGINT literal, zero used
+"../Main.m3", line 16: illegal based LONGINT literal, zero used
+"../Main.m3", line 17: illegal based LONGINT literal, zero used
+"../Main.m3", line 18: illegal based LONGINT literal, zero used
+"../Main.m3", line 19: illegal based LONGINT literal, zero used
+"../Main.m3", line 20: illegal based LONGINT literal, zero used
+8 errors encountered
+Fatal Error: package build failed
