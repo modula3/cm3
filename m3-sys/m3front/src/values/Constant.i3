@@ -8,7 +8,10 @@
 
 INTERFACE Constant;
 
-IMPORT Expr, Decl;
+IMPORT Expr, Decl, Value;
+
+TYPE
+  T <: Value.T;
 
 PROCEDURE ParseDecl (READONLY att: Decl.Attributes);
 
