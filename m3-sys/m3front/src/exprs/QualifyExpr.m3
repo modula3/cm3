@@ -468,27 +468,10 @@ PROCEDURE CompileLV (p: P; lhs: BOOLEAN) =
   BEGIN
     CASE p.class OF
     | Class.cMODULE =>
-        (* While this fixes test case p2/p205, it does not seem to
-           either 1) solve the entire problem 2) operate at the correct abstraction level.
-
-           Further attemps to understand the code and write more test cases is in order.
-
-           What is particularly confusing in the code is the notion of LV + lh := FALSE.
-           That seems reasonable to merge common code for FooLV and Foo, however lh := FALSE
-           does not seem to always be preserved. As well, if the below only tests lhs,
-           the resulting compiler has a bunch of problems. Furthermore, checking for
-           an exact type usually seems wrong -- are there any subtypes of Constant.T?
-
-           It also seems a little strange to deem a constant array to be open.
-           It seems more like its fixed size would be deduced from the constant initializer.
-
-           The actual problem is that Variable.LoadLValue() cannot be passed a Constant,
-           since Constant.T is not a subtype of Variable.T.
-        *)
-        IF (NOT lhs) AND (TYPECODE (p.obj) = TYPECODE (Constant.T)) THEN
-          Value.Load (p.obj);
-        ELSE
-          Variable.LoadLValue (p.obj);
+        CASE Value.ClassOf (p.obj) OF
+        | Value.Class.Expr => Value.Load (p.obj);
+        | Value.Class.Var  => Variable.LoadLValue (p.obj);
+        ELSE <*ASSERT FALSE*>
         END;
     | Class.cFIELD =>
         Field.Split (p.obj, field);
