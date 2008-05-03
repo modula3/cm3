@@ -106,8 +106,8 @@ proc compare_file (dir, OutputPath) is
 end
 
 if defined ("LOG_CMPS")
-  ll = PACKAGE_DIR & SL & "m3tests-" & datestamp() & ".diffs"
-  fs_rmfile(ll)
+  ComparisonLogFilePath = PACKAGE_DIR & SL & "m3tests-" & datestamp() & ".diffs"
+  fs_rmfile(ComparisonLogFilePath)
 end
 
 proc cmp_file (dir, file) is
@@ -123,9 +123,9 @@ proc cmp_file (dir, file) is
     return ""
   end
 
-  local r = []
+  local ComparisonLogData = []
   if defined ("LOG_CMPS")
-    r += "cmp_file(" & ExpectedPath & ", " & OutputPath & ")\n"
+    ComparisonLogData += "cmp_file(" & ExpectedPath & ", " & OutputPath & ")\n"
   end
 
   local OutputContents = ReadAndNormalizeFile (OutputPath)
@@ -133,24 +133,24 @@ proc cmp_file (dir, file) is
   fs_putfile (OutputPath, OutputContents)
 
   if defined ("LOG_CMPS")
-    r += OutputPath & ":\n" & OutputContents & "\n"
-    r += ExpectedPath & ":\n" & ExpectedContents & "\n"
+    ComparisonLogData += OutputPath & ":\n" & OutputContents & "\n"
+    ComparisonLogData += ExpectedPath & ":\n" & ExpectedContents & "\n"
   end
 
   %if equal(try_exec ("@cmp", OutputPath, ExpectedPath), 0)
   if equal(OutputContents, ExpectedContents)
     if defined ("LOG_CMPS")
-      r += "--> TRUE\n"
-      >> ll in 
-        write (r)
+      ComparisonLogData += "--> TRUE\n"
+      >> ComparisonLogFilePath in 
+        write (ComparisonLogData)
       end
     end
     return "T"
   end
   if defined ("LOG_CMPS")
-    r += "--> FALSE\n"
-    >> ll in 
-      write (r)
+    ComparisonLogData += "--> FALSE\n"
+    >> ComparisonLogFilePath in 
+      write (ComparisonLogData)
     end
   end
   return ""
@@ -222,11 +222,6 @@ html(["      </thead>", CR])
 html(["      <tbody>", CR])
 
 %------------------------------------------------------------------------------
-
-write ("PACKAGE_DIR ", PACKAGE_DIR, CR)
-write ("path_of (\"m3makefile\") ", path_of ("m3makefile"), CR)
-
-%------------------------------------------------------------------------------
 % run a test case
 %
 
@@ -291,7 +286,7 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     html (["</pre></td></tr>", CR])
 
     if not defined ("keep")
-      %fs_rmrec (dir & SL & BUILD_DIR)
+      fs_rmrec (dir & SL & BUILD_DIR)
     end
   end
 end
