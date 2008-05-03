@@ -12,7 +12,7 @@ IMPORT Token, AssignStmt, Scanner, UserProc, Target, M3Buf;
 IMPORT Decl, ProcType, Procedure, OpenArrayType, Module, ErrType;
 FROM Scanner IMPORT GetToken, Match, MatchID, cur;
 
-TYPE
+REVEAL
   T = Value.T BRANDED "Constant.T" OBJECT
         tipe     : Type.T;
 	value    : Expr.T;
