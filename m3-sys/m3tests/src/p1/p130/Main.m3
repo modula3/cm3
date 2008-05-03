@@ -11,13 +11,20 @@ MODULE Main;
 (* Verify the sad truth about unchecked conversion between INTEGER
    and UNSIGNED *)
 
-TYPE Short = BITS 8 FOR [0..255];
+TYPE
+  Short = BITS 8 FOR [0..255];
+  UNSIGNED = CARDINAL;
 
 VAR
   i: INTEGER;
   u, v: UNSIGNED;
   j, k: Short;
   m: BITS 32 FOR ARRAY [0..3] OF Short;
+
+PROCEDURE ASSERT(a: BOOLEAN) =
+  BEGIN
+    <* ASSERT(a) *>
+  END ASSERT;
 
 BEGIN
 
@@ -29,7 +36,7 @@ BEGIN
   u := i;
   ASSERT(u > FIRST(UNSIGNED));
 
-  i := 3000000000;
+  i := 300000000;
   ASSERT(i < 0);
   u := - 10;
   ASSERT(u > 0);
