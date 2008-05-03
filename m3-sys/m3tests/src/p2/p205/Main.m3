@@ -6,11 +6,9 @@ TYPE
   T = ARRAY [0..1] OF CHAR;
 
 VAR
-  one : INTEGER;
-  two : INTEGER;
-BEGIN
   one := 1;
   two := 2;
+BEGIN
   VAR
     c: T := SUBARRAY(I.a, 1, 2);
     d: T := SUBARRAY(I.a, 1, two);
