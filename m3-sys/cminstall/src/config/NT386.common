@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.32 2008-05-02 06:56:40 jkrell Exp $
+% $Id: NT386.common,v 1.33 2008-05-03 08:11:58 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -243,7 +243,6 @@ SYSTEM_LIBS = { "MS" : SYSTEM_LIBS_MS, "GNU" : SYSTEM_LIBS_GNU }{LINKER}
 %------------------------------------------------------------------------------
 
 if equal(OS_TYPE, "WIN32")
-
 %
 % We must explicitly specify libcmt.lib or msvcrt.lib
 % in our link command because many links contain no C code and
@@ -307,8 +306,13 @@ end
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
-m3back = "cm3cg -gstabs+"
+m3back = "cm3cg"
 m3back_options = [ ]
+
+%
+% always generate information for debugging
+%
+m3back_options += "-gstabs+"
 
 %
 % -mno-align-double is VERY IMPORTANT
