@@ -202,8 +202,8 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     fs_mkdir (dir & SL & BUILD_DIR)
     exec ("-cd", dir, "&& cm3", "-silent", "-DM3TESTS", ">" & BUILD_DIR & SL & "stdout.build.raw 2>" & BUILD_DIR & SL & "stderr.build.raw")
 
-    NormalizeFile (dir & SL & "stdout.build")
-    NormalizeFile (dir & SL & "stderr.build")
+    NormalizeFile (dir & SL & BUILD_DIR & SL & "stdout.build")
+    NormalizeFile (dir & SL & BUILD_DIR & SL & "stderr.build")
 
     if defined ("CAPTURE_BUILD")
       if not cmp_file (dir, "stdout.build")

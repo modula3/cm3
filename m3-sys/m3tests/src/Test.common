@@ -25,8 +25,6 @@ end
 
 %------------------------------------------------------------------------------
 
-override ("m3tests", PACKAGE_DIR & "/../../../..")
-
 if defined ("local_libs")
   override ("m3core", ROOT)
   override ("libm3", ROOT)
@@ -36,13 +34,14 @@ import ("libm3")
 
 %------------------------------------------------------------------------------
 
-local M3TestsRoot = not stale ("Test.common", "Test.common")
+local M3TestsRoot = not stale ("../src/Test.common", "../src/Test.common")
 
 %
 % Some of the tests have their own Test.i3 and cannot import this.
 %
 if not M3TestsRoot
-  if stale ("Test.i3", "Test.i3")
+  if stale ("../Test.i3", "../Test.i3")
+    override ("m3tests", PACKAGE_DIR & "/../../../..")
     import ("m3tests")
   end
 end
