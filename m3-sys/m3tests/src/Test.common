@@ -4,6 +4,37 @@ readonly proc NormalizeString (String) is
   String = subst (String, " (core dumped)", "", 9)
   String = del_chars (subst (String, " (core dumped)", "", 9), "\r")
   String = subst_chars (String, "\\", "/")
+
+  %
+  % r0/r001 ends with an unhandled exception
+  %
+  % As a result, NT386 has a stack trace in *.pgm, other platforms do not.
+  % And *.build says "aborted", in some fashion.
+  % Remove these.
+  %
+  local StackTraceMarker = "\nStack trace:\n   FP         PC      Procedure\n---------  ---------  -------------------------------\n 0x"
+  local StackTracePosition = pos (String, StackTraceMarker)
+  if not equal (StackTracePosition, "-1")
+    String = sub (String, 0, StackTracePosition) & "\n"
+  end
+  %
+  % We probably need do something else here.
+  % This is what we see on birch. Maybe we can list enough variations.
+  % Maybe we can get regular expressions in Quake..
+  % Maybe we can wrap the invocation such as to quash the output.
+  % Maybe we can remove any line that says "Abort".
+  %
+  % "/bin/sh: line 1: 30573 Aborted                 ./pgm >stdout.pgm.raw 2>stderr.pgm.raw\n", "", 1)
+  %                   ^^^^^ This varies.
+  %
+  local AbortMarker1 = "/bin/sh: line 1: "
+  local AbortMarker2 = " Aborted                 ./pgm >stdout.pgm.raw 2>stderr.pgm.raw\n"
+  local AbortMarker1Position = pos (String, AbortMarker1)
+  local AbortMarker2Position = pos (String, AbortMarker2)
+  if not equal (AbortMarker1Position, "-1") and not equal (AbortMarker2Position, "-1")
+    String = sub (String, 0, AbortMarker1Position)
+  end
+
   return String
 end
 
