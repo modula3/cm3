@@ -8,11 +8,14 @@
 %------------------------------------------------------------------------------
 
 diff = "@-diff -u -b"
+diff_slash = SL
 head = "| head -30"
 
 if equal ($OS, "Windows_NT")
   if not equal (try_exec("@diff nul nul 2>nul"), 0)
     diff = "@-fc"
+  else
+    diff_slash = "\\"
   end
   if not equal (try_exec("@head nul 2>nul"), 0)
     head = ""
@@ -59,10 +62,8 @@ proc compare_file (dir, OutputPath) is
     return
   end
 
-  if USE_POSIX_TOOLS
-    ExpectedPath = subst_chars (ExpectedPath, "\\", "/")
-    OutputPath = subst_chars (OutputPath, "\\", "/")
-  end
+  ExpectedPath = subst_chars (ExpectedPath, SL, diff_slash)
+  OutputPath = subst_chars (OutputPath, SL, diff_slash)
 
   exec (diff, ExpectedPath, OutputPath, head)
   if defined("HTML")
