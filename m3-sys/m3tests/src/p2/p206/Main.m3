@@ -21,12 +21,8 @@ PROCEDURE p2( READONLY a: OAOAC ) =
   END p2;
 
 VAR
-(*
-  aa := OAC {'a', 'b', 'c'};
-  ab := ARRAY OF CHAR {'d', 'e', 'f'};
-*)
-  ac : ARRAY [0..2] OF CHAR := OAC {'a', 'b', 'c'};
-  ad : ARRAY [0..2] OF CHAR := ARRAY OF CHAR {'d', 'e', 'f'};
+  ac := OAC {'a', 'b', 'c'};
+  ad := ARRAY OF CHAR {'d', 'e', 'f'};
   ae := ARRAY [0..2] OF CHAR {'g', 'h', 'i'};
 CONST
   af = ARRAY [1..3] OF CHAR {'g', 'h', 'i'};
