@@ -14,8 +14,8 @@ IMPORT Error, Scope, Brand, Value, ErrType;
 TYPE
   P = Type.T BRANDED "NamedType.T" OBJECT
         scope      : Scope.T;
-	qid        : M3.QID;
-	type       : Type.T;
+        qid        : M3.QID;
+        type       : Type.T;
         obj        : Value.T;
       OVERRIDES
         check      := Check;

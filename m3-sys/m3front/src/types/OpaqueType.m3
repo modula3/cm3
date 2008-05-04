@@ -14,7 +14,7 @@ IMPORT Revelation, Scope, M3Buf, Textt, Value, Host;
 TYPE
   P = Type.T OBJECT
         declared   : Value.T;
-	super      : Type.T;
+        super      : Type.T;
         id         : M3ID.T;
         isTraced   : BOOLEAN;
       OVERRIDES

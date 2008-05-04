@@ -28,8 +28,8 @@ TYPE
         need_init   := ValueRep.Never;
         lang_init   := Compile;
         user_init   := ValueRep.NoInit;
-	toExpr      := ValueRep.NoExpr;
-	toType      := ValueRep.NoType;
+        toExpr      := ValueRep.NoExpr;
+        toType      := ValueRep.NoType;
         typeOf      := TypeOf;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
@@ -63,7 +63,7 @@ PROCEDURE Split (method: Value.T;  VAR info: Info): BOOLEAN =
               info.signature := t.signature;
               info.dfault    := t.dfaultE;
               info.override  := t.override;
-	      RETURN TRUE;
+              RETURN TRUE;
 
     ELSE RETURN FALSE;
     END;

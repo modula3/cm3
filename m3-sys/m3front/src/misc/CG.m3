@@ -12,6 +12,7 @@ IMPORT Text, IntIntTbl, IntRefTbl, Fmt, Word;
 IMPORT Scanner, Error, Module, RunTyme, WebInfo;
 IMPORT M3, M3CG, M3CG_Ops, M3CG_Check;
 IMPORT Host, Target, TInt, TFloat, TWord, TargetMap, M3RT (**, RTObject **);
+IMPORT RTIO;
 
 CONST
   Max_init_chars = 256; (* max size of a single init_chars string *)
@@ -836,19 +837,19 @@ PROCEDURE QuickSort (VAR a: ARRAY OF Node;  lo, hi: INTEGER) =
       i := (hi + lo) DIV 2;
       IF (a[lo].o < a[i].o) THEN
         IF (a[i].o < a[hi-1].o) THEN
-	  key := a[i];
+          key := a[i];
         ELSIF (a[lo].o < a[hi-1].o) THEN
           key := a[hi-1];  a[hi-1] := a[i];  a[i] := key;
         ELSE
-	  key := a[lo];  a[lo] := a[hi-1];  a[hi-1] := a[i];  a[i] := key;
+          key := a[lo];  a[lo] := a[hi-1];  a[hi-1] := a[i];  a[i] := key;
         END;
       ELSE
         IF (a[hi-1].o < a[i].o) THEN
-	  key := a[i];  tmp := a[hi-1];  a[hi-1] := a[lo];  a[lo] := tmp;
+          key := a[i];  tmp := a[hi-1];  a[hi-1] := a[lo];  a[lo] := tmp;
         ELSIF (a[lo].o < a[hi-1].o) THEN
-	  key := a[lo];  a[lo] := a[i];  a[i] := key;
+          key := a[lo];  a[lo] := a[i];  a[i] := key;
         ELSE
-	  key := a[hi-1];  a[hi-1] := a[lo];  a[lo] := a[i];  a[i] := key;
+          key := a[hi-1];  a[hi-1] := a[lo];  a[lo] := a[i];  a[i] := key;
         END;
       END;
 
@@ -1028,10 +1029,10 @@ PROCEDURE DumpInt (x: IntNode) =
 
 PROCEDURE Init_proc (o: Offset;  value: Proc;  is_const: BOOLEAN) =
   BEGIN
+    <*ASSERT o MOD Target.Address.align = 0 *>
     IF (in_init) THEN
       AdvanceInit (o);
       <*ASSERT o = init_pc*>
-      <*ASSERT o MOD Target.Address.align = 0 *>
       cg.init_proc (AsBytes (o), value);
     ELSE
       PushPending (NEW (ProcNode, o := o, v := value), is_const);
@@ -1046,10 +1047,10 @@ PROCEDURE DumpProc (x: ProcNode) =
 
 PROCEDURE Init_label (o: Offset;  value: Label;  is_const: BOOLEAN) =
   BEGIN
+    <*ASSERT o MOD Target.Address.align = 0 *>
     IF (in_init) THEN
       AdvanceInit (o);
       <*ASSERT o = init_pc*>
-      <*ASSERT o MOD Target.Address.align = 0 *>
       cg.init_label (AsBytes (o), value);
     ELSE
       PushPending (NEW (LabelNode, o := o, v := value), is_const);
@@ -1064,11 +1065,20 @@ PROCEDURE DumpLabel (x: LabelNode) =
 
 PROCEDURE Init_var (o: Offset;  value: Var;  bias: Offset;  is_const: BOOLEAN) =
   BEGIN
+    IF NOT (((o MOD Target.Address.align) = 0)
+        AND ((bias MOD Target.Byte) = 0)) THEN
+      RTIO.PutText ("o is 0x" & Fmt.Unsigned(o) & "\n");
+      RTIO.PutText ("init_pc is 0x" & Fmt.Unsigned(init_pc) & "\n");
+      RTIO.PutText ("bias is 0x" & Fmt.Unsigned(bias) & "\n");
+      RTIO.PutText ("Target.Address.align is 0x" & Fmt.Unsigned(Target.Address.align) & "\n");
+      RTIO.PutText ("Target.Byte is 0x" & Fmt.Unsigned(Target.Byte) & "\n");
+      RTIO.Flush ();
+    END;
+    <* ASSERT ((o MOD Target.Address.align) = 0) *>
+    <* ASSERT ((bias MOD Target.Byte) = 0) *>
     IF (in_init) THEN
       AdvanceInit (o);
-      <*ASSERT o = init_pc*>
-      <*ASSERT o MOD Target.Address.align = 0 *>
-      <*ASSERT bias MOD Target.Byte = 0*>
+      <* ASSERT (o = init_pc) *>
       cg.init_var (AsBytes (o), value, AsBytes (bias));
     ELSE
       PushPending (NEW (VarNode, o := o, v := value, b := bias), is_const);
@@ -1083,10 +1093,10 @@ PROCEDURE DumpVar (x: VarNode) =
 
 PROCEDURE Init_offset (o: Offset;  value: Var;  is_const: BOOLEAN) =
   BEGIN
+    <*ASSERT o MOD Target.Integer.align = 0 *>
     IF (in_init) THEN
       AdvanceInit (o);
       <*ASSERT o = init_pc*>
-      <*ASSERT o MOD Target.Integer.align = 0 *>
       cg.init_offset (AsBytes (o), value);
     ELSE
       PushPending (NEW (OffsetNode, o := o, v := value), is_const);
@@ -1102,10 +1112,10 @@ PROCEDURE DumpOffset (x: OffsetNode) =
 PROCEDURE Init_chars (o: Offset;  value: TEXT;  is_const: BOOLEAN) =
   VAR len, start: INTEGER;
   BEGIN
+    <*ASSERT o MOD Target.Char.align = 0 *>
     IF (in_init) THEN
       AdvanceInit (o);
       <*ASSERT o = init_pc*>
-      <*ASSERT o MOD Target.Char.align = 0 *>
       start := 0;
       len := Text.Length (value);
       WHILE (len - start > Max_init_chars) DO
@@ -1129,10 +1139,10 @@ PROCEDURE DumpChars (x: CharsNode) =
 
 PROCEDURE Init_float (o: Offset;  READONLY f: Target.Float;  is_const: BOOLEAN) =
   BEGIN
+    <*ASSERT o MOD Target.Real.align = 0 *>
     IF (in_init) THEN
       AdvanceInit (o);
       <*ASSERT o = init_pc*>
-      <*ASSERT o MOD Target.Real.align = 0 *>
       cg.init_float (AsBytes (o), f);
     ELSE
       PushPending (NEW (FloatNode, o := o, f := f), is_const);

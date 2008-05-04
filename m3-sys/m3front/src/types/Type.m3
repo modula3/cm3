@@ -107,7 +107,7 @@ PROCEDURE Parse (): T =
         END;
     ELSE
         Scanner.Fail ("bad type expression");
-	t := NIL;
+        t := NIL;
     END;
     RETURN t;
   END Parse;

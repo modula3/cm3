@@ -57,7 +57,7 @@ PROCEDURE Expand () =
     ELSE
       WITH new = NEW (REF ARRAY OF LineSeen, 2 * NUMBER (used^)) DO
         FOR i := 0 TO LAST (used^) DO new[i] := used[i] END;
-	used := new;
+        used := new;
       END;
     END;
   END Expand;

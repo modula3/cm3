@@ -45,10 +45,10 @@ TYPE
         getBounds    := ExprRep.NoBounds;
         isWritable   := ExprRep.IsNever;
         isDesignator := ExprRep.IsNever;
-	isZeroes     := IsZeroes;
-	genFPLiteral := GenFPLiteral;
-	prepLiteral  := PrepLiteral;
-	genLiteral   := GenLiteral;
+        isZeroes     := IsZeroes;
+        genFPLiteral := GenFPLiteral;
+        prepLiteral  := PrepLiteral;
+        genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
       END;
 
@@ -168,7 +168,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
           Error.Msg ("positional values must precede keyword values");
         END;
         IF (i >= n)
-	  THEN  Error.Msg ("too many values");  offset := n - 1;
+          THEN  Error.Msg ("too many values");  offset := n - 1;
           ELSE  offset := i;
         END;
       END;
@@ -243,7 +243,7 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
      * been prepped and compiled -- save it.
      *)
     IF p.do_direct THEN
-      <* ASSERT NOT lhs *>		 (* CHECK ME? *)
+      <* ASSERT NOT lhs *>               (* CHECK ME? *)
       p.tmp := CG.Pop ();
     ELSE
       t1 := CG.Declare_temp (info.size, info.alignment,

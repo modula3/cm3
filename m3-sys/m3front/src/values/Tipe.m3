@@ -25,8 +25,8 @@ TYPE
         need_init   := ValueRep.Never;
         lang_init   := ValueRep.NoInit;
         user_init   := ValueRep.NoInit;
-	toExpr      := ValueRep.NoExpr;
-	toType      := ToType;
+        toExpr      := ValueRep.NoExpr;
+        toType      := ToType;
         typeOf      := ValueRep.TypeVoid;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;

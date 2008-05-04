@@ -13,7 +13,7 @@ IMPORT NilChkExpr, CG, ErrType, Host;
 
 TYPE
   P = ExprRep.Ta BRANDED "DerefExpr.P" OBJECT
-	tmp: CG.Val;
+        tmp: CG.Val;
       OVERRIDES
         typeOf       := TypeOf;
         check        := Check;
@@ -29,10 +29,10 @@ TYPE
         getBounds    := ExprRep.NoBounds;
         isWritable   := ExprRep.IsAlways;
         isDesignator := ExprRep.IsAlways;
-	isZeroes     := ExprRep.IsNever;
-	genFPLiteral := ExprRep.NoFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := ExprRep.NoLiteral;
+        isZeroes     := ExprRep.IsNever;
+        genFPLiteral := ExprRep.NoFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
       END;
 

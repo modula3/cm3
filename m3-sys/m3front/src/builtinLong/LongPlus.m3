@@ -44,7 +44,7 @@ PROCEDURE GetArgs (args: Expr.List;  VAR w0, w1: Target.Int): BOOLEAN =
     e0 := Expr.ConstValue (args[0]);
     e1 := Expr.ConstValue (args[1]);
     RETURN (e0 # NIL) AND IntegerExpr.Split (e0, w0, t) AND 
-	   (e1 # NIL) AND IntegerExpr.Split (e1, w1, t);
+           (e1 # NIL) AND IntegerExpr.Split (e1, w1, t);
   END GetArgs;
 
 PROCEDURE Initialize () =

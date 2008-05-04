@@ -50,7 +50,7 @@ PROCEDURE Parse (): Type.T =
         p.index := Type.Parse ();
         IF (cur.token # TK.tCOMMA) THEN EXIT END;
         GetToken (); (* , *)
-	p.element := New (NIL, NIL);
+        p.element := New (NIL, NIL);
         p := p.element;
       END;
       Match (TK.tOF);

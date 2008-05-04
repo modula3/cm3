@@ -12,8 +12,8 @@ IMPORT M3, M3ID, CG, Type, Value, ValueRep, Expr, EnumExpr, Target, TInt;
 
 TYPE
   T = Value.T BRANDED OBJECT
-	value  : Target.Int;
-	parent : Type.T;
+        value  : Target.Int;
+        parent : Type.T;
       OVERRIDES
         typeCheck   := Check;
         set_globals := ValueRep.NoInit;
@@ -23,8 +23,8 @@ TYPE
         need_init   := ValueRep.Never;
         lang_init   := ValueRep.NoInit;
         user_init   := ValueRep.NoInit;
-	toExpr      := ToExpr;
-	toType      := ValueRep.NoType;
+        toExpr      := ToExpr;
+        toType      := ValueRep.NoType;
         typeOf      := TypeOf;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;

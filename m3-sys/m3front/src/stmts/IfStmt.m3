@@ -17,7 +17,7 @@ TYPE
         elseBody : Stmt.T;
       OVERRIDES
         check       := Check;
-	compile     := Compile;
+        compile     := Compile;
         outcomes    := GetOutcome;
       END;
 
@@ -107,7 +107,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
       IF (Stmt.Outcome.FallThrough IN xc)
         AND ((c.next # NIL) OR (p.elseBody # NIL)) THEN
         CG.Jump (l_end);
-	gotoEnd := TRUE;
+        gotoEnd := TRUE;
       END;
       CG.Set_label (l_next);
       c := c.next;

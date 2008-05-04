@@ -14,7 +14,7 @@ TYPE
         msgs   : REF ARRAY OF Expr.T;
       OVERRIDES
         check       := Check;
-	compile     := Compile;
+        compile     := Compile;
         outcomes    := GetOutcome;
       END;
 
