@@ -4,14 +4,6 @@ readonly proc NormalizeString (String) is
   String = subst (String, " (core dumped)", "", 9)
   String = del_chars (subst (String, " (core dumped)", "", 9), "\r")
   String = subst_chars (String, "\\", "/")
-  %
-  % If there is a stack dump, cut it off before it becomes "random".
-  %
-  local StackTraceSignature = "\nStack trace:\n   FP         PC      Procedure\n---------  ---------  -------------------------------\n 0x"
-  local StackTracePosition = pos (String, StackTraceSignature)
-  if not equal (StackTracePosition, "-1")
-    String = sub (String, 0, StackTracePosition) & StackTraceSignature & "\n"
-  end
   return String
 end
 
