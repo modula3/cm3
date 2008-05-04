@@ -50,7 +50,7 @@ TYPE
 TYPE
   FileState = RECORD
     ch      : CHAR;
-    offs    : INTEGER;	(* fileno * MaxLines + lineno *)
+    offs    : INTEGER;  (* fileno * MaxLines + lineno *)
     input   : File.T;
     buf     : InputBuffer;
     buf_ptr : InputBufferIndex;
@@ -400,7 +400,7 @@ PROCEDURE GetToken () =
           END;
           WHILE (AlphaNumerics[ch]) DO
             buf [len] := ch;  INC (len);
-	    GetCh ();
+            GetCh ();
           END;
           cur.id    := M3ID.FromStr (buf, len);
           cur.token := TK.tIDENT;
@@ -436,43 +436,43 @@ PROCEDURE GetToken () =
       | EOFChar  => cur.token := TK.tEOF;                   RETURN;
 
       | '*' => (* '*>' '*' *)
-	    GetCh ();
+            GetCh ();
             IF (ch = '>')
-	      THEN  cur.token := TK.tENDPRAGMA;  GetCh ();
+              THEN  cur.token := TK.tENDPRAGMA;  GetCh ();
               ELSE  cur.token := TK.tASTERISK;
             END;
             RETURN;
       | '=' => (*  '='  '=>'  *)
             GetCh ();
             IF (ch = '>')
-	      THEN  cur.token := TK.tIMPLIES;  GetCh ();
+              THEN  cur.token := TK.tIMPLIES;  GetCh ();
               ELSE  cur.token := TK.tEQUAL;
             END;
             RETURN;
       | ':' => (*  ':'  ':='  *)
             GetCh ();
             IF (ch = '=')
-	      THEN  cur.token := TK.tASSIGN;  GetCh ();
+              THEN  cur.token := TK.tASSIGN;  GetCh ();
               ELSE  cur.token := TK.tCOLON;
             END;
             RETURN;
       | '.' => (*  '.'  '..'  *)
             GetCh ();
             IF (ch = '.')
-	      THEN  cur.token := TK.tDOTDOT;  GetCh ();
+              THEN  cur.token := TK.tDOTDOT;  GetCh ();
               ELSE  cur.token := TK.tDOT;
             END;
             RETURN;
       | '(' => (*  '('*'  '('  *)
             GetCh ();
             IF (ch = '*')
-	      THEN  ScanComment ();
+              THEN  ScanComment ();
               ELSE  cur.token := TK.tLPAREN;  RETURN;
             END;
       | '>' => (*  '>'  '>='  *)
             GetCh ();
             IF (ch = '=')
-	      THEN  cur.token := TK.tGREQUAL;  GetCh ();
+              THEN  cur.token := TK.tGREQUAL;  GetCh ();
               ELSE  cur.token := TK.tGREATER;
             END;
             RETURN;
@@ -548,7 +548,7 @@ PROCEDURE ScanNumber () =
       IF (ch = '.') THEN
         (* we saw  "dddd.." *)
 
-	(*****  Rd.UnGetChar (input);  *****)
+        (*****  Rd.UnGetChar (input);  *****)
         DEC (input_ptr);  input_buf[input_ptr] := ORD ('.');
 
         IF NOT TInt.New (SUBARRAY (buf, 0, len-1),
@@ -868,9 +868,9 @@ PROCEDURE ScanComment () =
         GetCh ();  IF (ch = '*') THEN INC (nest); GetCh ();  END;
       ELSIF (ch = EOFChar) THEN
         save := offset;
-	offset := start;
+        offset := start;
         Error.Msg ("EOF encountered in comment");
-	offset := save;
+        offset := save;
         nest := 0;
       ELSIF (ch = '\n') THEN
         INC (offset);  INC (nLines);
@@ -977,13 +977,13 @@ PROCEDURE ScanPragma () =
         GetCh();  IF (ch = '*') THEN INC(nest); GetCh(); END;
       ELSIF (ch = EOFChar) THEN
         save := offset;
-	offset := start;
+        offset := start;
         Error.Msg ("EOF encountered in pragma");
-	offset := save;
-	nest := 0;
+        offset := save;
+        nest := 0;
       ELSIF (ch = '\n') THEN
         INC (offset);  INC (nLines);
-	GetCh();
+        GetCh();
       ELSE
         GetCh();
       END;

@@ -15,7 +15,7 @@ IMPORT Scope, Error, ErrType, TInt, CG, Host, RunTyme;
 TYPE
   P = Expr.T BRANDED "Named Expr" OBJECT
         scope       : Scope.T;
-	value       : Value.T;
+        value       : Value.T;
         name        : M3ID.T;
         inFold      : BOOLEAN;
         inIsZeroes  : BOOLEAN;
@@ -37,10 +37,10 @@ TYPE
         getBounds    := Bounder;
         isWritable   := IsWritable;
         isDesignator := IsDesignator;
-	isZeroes     := IsZeroes;
-	genFPLiteral := ExprRep.NoFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := ExprRep.NoLiteral;
+        isZeroes     := IsZeroes;
+        genFPLiteral := ExprRep.NoFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
       END;
 

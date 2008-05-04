@@ -15,7 +15,7 @@ TYPE
         body    : Stmt.T;
       OVERRIDES
         check       := Check;
-	compile     := Compile;
+        compile     := Compile;
         outcomes    := GetOutcome;
       END;
 

@@ -13,7 +13,7 @@ IMPORT Word, TipeMap, TipeDesc, ErrType;
 
 TYPE
   P = Type.T OBJECT
-	range      : Type.T;
+        range      : Type.T;
       OVERRIDES
         check      := Check;
         check_align:= TypeRep.ScalarAlign;

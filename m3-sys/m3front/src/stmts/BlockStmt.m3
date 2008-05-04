@@ -13,13 +13,13 @@ FROM Scanner IMPORT Match, cur;
 
 TYPE
   P = Stmt.T OBJECT
-	scope   : Scope.T;
+        scope   : Scope.T;
         body    : Stmt.T;
         fails   : ESet.T;
         trace   : TraceNode;
       OVERRIDES
         check       := Check;
-	compile     := Compile;
+        compile     := Compile;
         outcomes    := GetOutcome;
       END;
 

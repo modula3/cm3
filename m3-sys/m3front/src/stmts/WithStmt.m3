@@ -21,10 +21,10 @@ TYPE
         expr    : Expr.T;
         scope   : Scope.T;
         body    : Stmt.T;
-	kind    : Kind;
+        kind    : Kind;
       OVERRIDES
         check       := Check;
-	compile     := Compile;
+        compile     := Compile;
         outcomes    := GetOutcome;
       END;
 

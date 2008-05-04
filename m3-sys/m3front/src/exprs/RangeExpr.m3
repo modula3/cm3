@@ -28,10 +28,10 @@ TYPE
         getBounds    := Bounder;
         isWritable   := ExprRep.IsNever;
         isDesignator := ExprRep.IsNever;
-	isZeroes     := IsZeroes;
-	genFPLiteral := GenFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := ExprRep.NoLiteral;
+        isZeroes     := IsZeroes;
+        genFPLiteral := GenFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
       END;
 

@@ -15,11 +15,11 @@ FROM Scanner IMPORT GetToken, Match, MatchID, cur;
 REVEAL
   T = Value.T BRANDED "Constant.T" OBJECT
         tipe     : Type.T;
-	value    : Expr.T;
+        value    : Expr.T;
         offset   : INTEGER;
         coffset  : INTEGER;
         calign   : INTEGER;
-	explicit : BOOLEAN;
+        explicit : BOOLEAN;
         gen_init : BOOLEAN;
       OVERRIDES
         typeCheck   := Check;
@@ -30,8 +30,8 @@ REVEAL
         need_init   := ValueRep.Never;
         lang_init   := ValueRep.NoInit;
         user_init   := ValueRep.NoInit;
-	toExpr      := ToExpr;
-	toType      := ValueRep.NoType;
+        toExpr      := ToExpr;
+        toType      := ValueRep.NoType;
         typeOf      := TypeOf;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;

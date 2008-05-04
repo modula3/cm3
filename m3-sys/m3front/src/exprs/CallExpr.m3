@@ -39,7 +39,7 @@ REVEAL
 
 REVEAL
   T = T_ BRANDED "CallExpr.P" OBJECT
-	methods  : MethodList;
+        methods  : MethodList;
         proc_type: Type.T;
       OVERRIDES
         typeOf       := TypeOf;
@@ -56,11 +56,11 @@ REVEAL
         getBounds    := GetBounds;
         isWritable   := IsWritable;
         isDesignator := IsDesignator;
-	isZeroes     := ExprRep.IsNever;
-	genFPLiteral := ExprRep.NoFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := ExprRep.NoLiteral;
-	note_write   := NoteWrites;
+        isZeroes     := ExprRep.IsNever;
+        genFPLiteral := ExprRep.NoFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := ExprRep.NoLiteral;
+        note_write   := NoteWrites;
       END;
 
 PROCEDURE New (proc: Expr.T;  args: Expr.List): Expr.T =
@@ -103,11 +103,11 @@ PROCEDURE NewMethodList (minArgs, maxArgs: INTEGER;
                          need_addr    : Visitor;
                          checker      : TypeChecker;
                          prep         : Compiler;
-			 compiler     : Compiler;
+                         compiler     : Compiler;
                          prepLV       : CompilerLV;
-			 compilerLV   : CompilerLV;
+                         compilerLV   : CompilerLV;
                          prepBR       : CompilerBR;
-			 compilerBR   : CompilerBR;
+                         compilerBR   : CompilerBR;
                          evaluator    : Evaluator;
                          bounder      : Bounder;
                          isWritable   : Predicate;

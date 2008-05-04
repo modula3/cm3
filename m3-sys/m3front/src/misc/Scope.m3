@@ -286,7 +286,7 @@ PROCEDURE WarnUnused (t: T) =
           END;
           Scanner.offset := v.origin;
           Error.WarnID (level, v.name, "not used");
-	END;
+        END;
       END;
       v := v.next;
     END;

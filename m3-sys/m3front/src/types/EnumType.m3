@@ -17,9 +17,9 @@ TYPE
 
 TYPE
   P = Type.T BRANDED "EnumType.m3" OBJECT
-	n_elts     : INTEGER;
-	scope      : Scope.T;
-	rep        : Rep;
+        n_elts     : INTEGER;
+        scope      : Scope.T;
+        rep        : Rep;
       OVERRIDES
         check      := Check;
         check_align:= CheckAlign;

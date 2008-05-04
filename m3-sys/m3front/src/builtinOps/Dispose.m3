@@ -79,7 +79,7 @@ PROCEDURE Initialize () =
                                  CallExpr.NotBoolean,
                                  CallExpr.NoValue,
                                  CallExpr.NoBounds,
-				 CallExpr.IsNever, (* writable *)
+                                 CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
     Procedure.Define ("DISPOSE", Z, TRUE);

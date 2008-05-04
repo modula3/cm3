@@ -29,7 +29,7 @@ TYPE
   P = Expr.T BRANDED "CastExpr" OBJECT
         kind    : Kind;
         expr    : Expr.T;
-	tipe    : Type.T;
+        tipe    : Type.T;
         tmp     : CG.Var;
         tmp_cnt : INTEGER;
       OVERRIDES
@@ -47,10 +47,10 @@ TYPE
         getBounds    := Bounder;
         isWritable   := IsWritable;
         isDesignator := IsDesignator;
-	isZeroes     := ExprRep.IsNever;
-	genFPLiteral := GenFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := ExprRep.NoLiteral;
+        isZeroes     := ExprRep.IsNever;
+        genFPLiteral := GenFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
       END;
 

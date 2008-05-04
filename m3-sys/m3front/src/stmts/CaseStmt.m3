@@ -17,14 +17,14 @@ TYPE
         expr     : Expr.T   := NIL;
         tree     : Tree     := NIL;
         bodies   : StmtList := NIL;
-	complete : BOOLEAN  := FALSE;
+        complete : BOOLEAN  := FALSE;
         hasElse  : BOOLEAN  := FALSE;
         badLabels: BOOLEAN  := FALSE;
         elseBody : Stmt.T   := NIL;
         nCases   : INTEGER  := 0;
       OVERRIDES
         check       := Check;
-	compile     := Compile;
+        compile     := Compile;
         outcomes    := GetOutcome;
       END;
 
@@ -262,7 +262,7 @@ PROCEDURE CompleteTree (t: Tree;  min, max: Target.Int): BOOLEAN =
         IF NOT TInt.Subtract (t.min, One, max) THEN
           RETURN TRUE;
         END;
-	t := t.less;
+        t := t.less;
       ELSE
         IF TInt.Subtract (t.min, One, x) THEN
           IF NOT CompleteTree (t.less, min, x) THEN RETURN FALSE END;
@@ -270,7 +270,7 @@ PROCEDURE CompleteTree (t: Tree;  min, max: Target.Int): BOOLEAN =
         IF NOT TInt.Add (t.max, One, min) THEN
           RETURN TRUE;
         END;
-	t := t.greater;  
+        t := t.greater;  
       END;
     END;
     RETURN TInt.LT (max, min);

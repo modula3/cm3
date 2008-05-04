@@ -16,7 +16,7 @@ IMPORT ProcType, ObjectAdr, Word, M3RT;
 TYPE
   P = Type.T BRANDED "RefType.T"OBJECT
         brand      : Brand.T;
-	target     : Type.T;
+        target     : Type.T;
         isTraced   : BOOLEAN;
         user_name  : TEXT;
       OVERRIDES
@@ -42,11 +42,11 @@ PROCEDURE Parse (): Type.T =
       IF (Scanner.cur.token = Token.T.tIDENT) THEN
         IF root = M3ID.NoID THEN root := M3ID.Add ("ROOT"); END;
         IF (Scanner.cur.id # root) THEN
-	  Error.ID (Scanner.cur.id, "expected UNTRACED ROOT");
-	END;
-	Scanner.GetToken (); (* IDENT *)
-	super := ObjectAdr.T;
-	IF (Scanner.cur.token # Token.T.tOBJECT)
+          Error.ID (Scanner.cur.id, "expected UNTRACED ROOT");
+        END;
+        Scanner.GetToken (); (* IDENT *)
+        super := ObjectAdr.T;
+        IF (Scanner.cur.token # Token.T.tOBJECT)
           AND (Scanner.cur.token # Token.T.tBRANDED) THEN RETURN super END;
       END;
       traced := FALSE;
