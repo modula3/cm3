@@ -7,6 +7,10 @@
 
 %------------------------------------------------------------------------------
 
+include ("Test.common")
+
+%------------------------------------------------------------------------------
+
 diff = "@-diff -u -b"
 diff_slash = "/"
 head = "| head -30"
@@ -93,9 +97,8 @@ proc cmp_file (dir, file) is
     ComparisonLogData += "cmp_file(" & ExpectedPath & ", " & OutputPath & ")\n"
   end
 
-  local OutputContents = ReadAndNormalizeFile (OutputPath)
-  local ExpectedContents = NormalizeString (fs_contents (ExpectedPath))
-  fs_putfile (OutputPath, OutputContents)
+  local OutputContents = fs_contents (OutputPath)
+  local ExpectedContents = fs_contents (ExpectedPath)
 
   if defined ("LOG_CMPS")
     ComparisonLogData += OutputPath & ":\n" & OutputContents & "\n"
@@ -190,37 +193,23 @@ html(["      <tbody>", CR])
 % run a test case
 %
 
-readonly proc NormalizeString (String) is
-  String = subst (String, " (core dumped)", "", 9)
-  String = del_chars (subst (String, " (core dumped)", "", 9), "\r")
-  String = subst_chars (String, "\\", "/")
-  return String
-end
-
-readonly proc ReadAndNormalizeFile (Path) is
-  return NormalizeString (fs_contents (Path))
-end
-
-readonly proc NormalizeFile (Path) is
-  fs_putfile (Path, ReadAndNormalizeFile (Path))
-end
-
 readonly proc run_test (class, group, uid, comment, should_run) is
   if defined ("_all") or defined (class) or defined ("_" & uid)
     local dir = ".." & SL & "src" & SL & group & SL & uid
     write ("--- ", uid, " --- ", comment, CR)
     fs_rmrec (dir & SL & BUILD_DIR)
     fs_mkdir (dir & SL & BUILD_DIR)
-    exec ("-cd", dir, "&& cm3", "-silent", "-DM3TESTS", ">" & BUILD_DIR & SL & "stdout.build 2>" & BUILD_DIR & SL & "stderr.build")
+    exec ("-cd", dir, "&& cm3", "-silent", "-DM3TESTS", ">" & BUILD_DIR & SL & "stdout.build.raw 2>" & BUILD_DIR & SL & "stderr.build.raw")
+
+    NormalizeFile (dir & SL & "stdout.build")
+    NormalizeFile (dir & SL & "stderr.build")
 
     if defined ("CAPTURE_BUILD")
       if not cmp_file (dir, "stdout.build")
         cp_if (dir & SL & BUILD_DIR & SL & "stdout.build", dir & SL & "stdout.build")
-        NormalizeFile (dir & SL & "stdout.build")
       end
       if not cmp_file (dir, "stderr.build")
         cp_if (dir & SL & BUILD_DIR & SL & "stderr.build", dir & SL & "stderr.build")
-        NormalizeFile (dir & SL & "stderr.build")
       end
     end
 
