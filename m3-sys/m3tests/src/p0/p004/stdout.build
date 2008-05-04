@@ -1,4 +1,4 @@
-"../src/Main.m3", line 35: warning: exception is never raised: Main.e
+"../Main.m3", line 35: warning: exception is never raised: Main.e
 "../src/Main.m3", line 9: warning: exception is never raised: <ANY>
 "../src/Main.m3", line 59: warning: unreachable statement
 "../src/Main.m3", line 64: warning: unreachable statement

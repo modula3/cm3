@@ -1,4 +1,4 @@
-"../src/Main.m3", line 66: warning: exception is never raised: Main.E
+"../Main.m3", line 66: warning: exception is never raised: Main.E
 "../src/Main.m3", line 81: warning: exception is never raised: Main.E
 "../src/Main.m3", line 96: warning: exception is never raised: Main.E
 "../src/Main.m3", line 102: warning: exception is never raised: Main.E
