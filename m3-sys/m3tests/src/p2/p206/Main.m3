@@ -24,11 +24,40 @@ VAR
   ac := OAC {'a', 'b', 'c'};
   ad := ARRAY OF CHAR {'d', 'e', 'f'};
   ae := ARRAY [0..2] OF CHAR {'g', 'h', 'i'};
+CONST
+  af = ARRAY [1..3] OF CHAR {'g', 'h', 'i'};
+  ag = ARRAY [1..4] OF CHAR {'g', 'h', 'i', ..};
+  ah = OAC {'a', 'b', 'c'};
+  ai = ARRAY OF CHAR {'d', 'e', 'f'};
 BEGIN
+  ac := ac;
   ac := ad;
+  ac := ae;
+  ac := af;
+  (*ac := ag;*)
+  ac := ah;
+  ac := ai;
+
+  ad := ac;
+  ad := ad;
   ad := ae;
+  ad := af;
+  (*ad := ag;*)
+  ad := ah;
+  ad := ai;
+
+  ae := ac;
+  ae := ad;
+  ae := ae;
+  ae := af;
+  (*ae := ag;*)
+  ae := ah;
+  ae := ai;
+
   p1( OAC{'j', 'k', 'l', 'm'} );
+  p1( ag );
   p2( OAOAC{ac, ad} );
+  p2( OAOAC{ac, ag} );
   IO.Put("OK\n");
 END Main.
 
