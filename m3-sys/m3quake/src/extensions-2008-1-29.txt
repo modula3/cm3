@@ -24,11 +24,11 @@ text utilities
   squeeze( text ) --> text
 
   pos( text, text ) --> int
-  contains( text, text ) --> boolean
+  tcontains( text, text ) --> boolean
   bool( text ) --> boolean
 
   subst_chars( text, a, b ) --> text
-  del_chars( text, a, b ) --> text
+  del_chars( text, a ) --> text
   subst( text, a, b, n ) --> text
   subst_env( text ) --> text
   add_prefix( text[], text ) --> text[]
