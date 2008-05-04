@@ -13,7 +13,7 @@ for my $a (split(/[\r\n]+/, `cmd /c dir /s/b/a-d std*`))
     my $c = join("", <$b>);
     close($b);
     my $d = $c;
-    $d =~ s/^"\.\.\/src\//"..\//s;
+    $d =~ s/^"\.\.\/src\//"..\//mg;
     if ($c eq $d)
     {
         print("unlink($a)\n");
