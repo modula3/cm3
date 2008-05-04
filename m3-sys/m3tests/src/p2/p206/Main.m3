@@ -21,15 +21,23 @@ PROCEDURE p2( READONLY a: OAOAC ) =
   END p2;
 
 VAR
-  ac := OAC {'a', 'b', 'c'};
-  ad := ARRAY OF CHAR {'d', 'e', 'f'};
+(*
+  aa := OAC {'a', 'b', 'c'};
+  ab := ARRAY OF CHAR {'d', 'e', 'f'};
+*)
+  ac : ARRAY [0..2] OF CHAR := OAC {'a', 'b', 'c'};
+  ad : ARRAY [0..2] OF CHAR := ARRAY OF CHAR {'d', 'e', 'f'};
   ae := ARRAY [0..2] OF CHAR {'g', 'h', 'i'};
 CONST
   af = ARRAY [1..3] OF CHAR {'g', 'h', 'i'};
   ag = ARRAY [1..4] OF CHAR {'g', 'h', 'i', ..};
   ah = OAC {'a', 'b', 'c'};
   ai = ARRAY OF CHAR {'d', 'e', 'f'};
+VAR
+  aj : ARRAY [0..2] OF CHAR := OAC {'d', 'e', 'f'};
+  ak : ARRAY [-1..1] OF CHAR := ARRAY OF CHAR {'d', 'e', 'f'};
 BEGIN
+
   ac := ac;
   ac := ad;
   ac := ae;
@@ -54,11 +62,32 @@ BEGIN
   ae := ah;
   ae := ai;
 
+  aj := ac;
+  aj := ad;
+  aj := ae;
+  aj := af;
+  (*aj := ag;*)
+  aj := ah;
+  aj := ai;
+  aj := aj;
+  aj := ak;
+
+  ak := ac;
+  ak := ad;
+  ak := ae;
+  ak := af;
+  (*ak := ag;*)
+  ak := ah;
+  ak := ai;
+  ak := aj;
+  ak := ak;
+
   p1( OAC{'j', 'k', 'l', 'm'} );
   p1( ag );
   p2( OAOAC{ac, ad} );
   p2( OAOAC{ac, ag} );
   IO.Put("OK\n");
+
 END Main.
 
 (*
