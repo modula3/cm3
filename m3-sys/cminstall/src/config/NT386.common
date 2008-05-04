@@ -751,6 +751,14 @@ else
     % native builds do not need this.
 end
 
+%------------------------------------------------------------------------------
+
+UseHand = LIB_INSTALL & SL & "hand" & Obj
+if not FileExists (UseHand)
+  % for bootstrapping
+  UseHand = ""
+end
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -812,6 +820,7 @@ is
                  options,
                  objects,
                  subst_chars(imported_libs, "/", "\\"),
+                 UseHand,
             ]),
         "2>&1",
         ">", listing
@@ -858,6 +867,7 @@ is
                         "--large-address-aware",
                         objects,
                         EscapeList(imported_libs),
+                        UseHand,
                     ]),
             "2>&1",
             ">", listing
@@ -886,7 +896,11 @@ is
     local readonly listing  = lib & ".lst"
     local readonly LibResponseFile = GetResponseFileName()
     local LinkResponseFile = LibResponseFile
-    local Hand = equal (lib, "m3core") and FileExists("hand.obj")
+    local ShipHand = equal (lib, "m3core") and FileExists("hand" & Obj)
+
+    if ShipHand
+        UseHand = ""
+    end
 
     if shared
         LinkResponseFile = GetResponseFileName()
@@ -1003,8 +1017,8 @@ is
         BindExport(dll_file)
         PdbExport(pdb_file)
         install_derived(lib0_file)
-        if Hand
-            LibdExport("hand.obj")
+        if ShipHand
+            LibdExport("hand" & Obj)
         end
     end
     return ret_code
@@ -1166,7 +1180,7 @@ is
                 options,
                 objects,
                 subst_chars(imported_libs, "/", "\\"),
-                "hand.obj",
+                UseHand,
             ]),
         "2>&1",
         ">", listing
@@ -1218,7 +1232,7 @@ is
                         options,
                         objects,
                         EscapeList(imported_libs),
-                        "hand.obj",
+                        UseHand,
                     ]),
             "2>&1",
             ">", listing
@@ -1278,7 +1292,7 @@ is
             shared,
             pgm_file,
             listing,
-            LinkResponseFile
+            LinkResponseFile,
             )
     end
 
