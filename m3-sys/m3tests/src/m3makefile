@@ -99,9 +99,9 @@ proc compare_file (dir, OutputPath) is
     OutputPath = subst_chars (OutputPath, "\\", "/")
   end
 
-  exec (diff, OutputPath, ExpectedPath, head)
+  exec (diff, ExpectedPath, OutputPath, head)
   if defined("HTML")
-    exec (diff, OutputPath, ExpectedPath, ">>", report)
+    exec (diff, ExpectedPath, OutputPath, ">>", report)
   end
 end
 
@@ -246,7 +246,7 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     write ("--- ", uid, " --- ", comment, CR)
     fs_rmrec (dir & SL & BUILD_DIR)
     fs_mkdir (dir & SL & BUILD_DIR)
-    exec ("-cd", dir, "&& cm3", "-silent", ">" & BUILD_DIR & SL & "stdout.build 2>" & BUILD_DIR & SL & "stderr.build")
+    exec ("-cd", dir, "&& cm3", "-silent", "-DM3TESTS", ">" & BUILD_DIR & SL & "stdout.build 2>" & BUILD_DIR & SL & "stderr.build")
 
     if defined ("CAPTURE_BUILD")
       if not cmp_file (dir, "stdout.build")

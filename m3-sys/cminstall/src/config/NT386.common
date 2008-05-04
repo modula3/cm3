@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.33 2008-05-03 08:11:58 jkrell Exp $
+% $Id: NT386.common,v 1.34 2008-05-04 03:34:20 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -22,6 +22,22 @@ readonly WORD_SIZE    = "32BITS"            % { "32BITS" or "64BITS" }
 % for /f %a in ('gcc --print-libgcc') do cygpath --windows %a
 %
 readonly LIBGCC = "C:\\cygwin\\lib\\gcc\\i686-pc-cygwin\\3.4.4\\libgcc.a"
+
+%------------------------------------------------------------------------------
+
+proc M3TestsNoEcho () is
+  if defined ("M3TESTS")
+    return "@"
+  end
+  return ""
+end
+
+proc M3TestsCompileCToNul () is
+  if defined ("M3TESTS")
+    return ">nul"
+  end
+  return ""
+end
 
 %-------------------------------------------------- default compile options ---
 % "set_config_options" is called before starting the compilation. It should
@@ -474,7 +490,7 @@ is
         args += "-Ox"
     end
     args += "-Oi"
-    return try_exec("cl", [escape(args), "-c", escape(source)])
+    return try_exec(M3TestsNoEcho () & "cl", [escape(args), "-c", escape(source)], M3TestsCompileCToNul ())
 end
 
 %------------------------------------------------------------------------------
@@ -500,7 +516,7 @@ is
     if M3_PROFILING
         args += "-pg"
     end
-    return try_exec("gcc", "-gstabs+", escape(args), "-c", escape(source), "-o", object)
+    return try_exec(M3TestsNoEcho () & "gcc", "-gstabs+", escape(args), "-c", escape(source), "-o", object)
 end
 
 proc
@@ -695,7 +711,7 @@ is
     % http://msdn2.microsoft.com/en-us/library/ms235591.aspx
     %
     if FileExists(ManifestFile)
-        local Command = "@mt /nologo /manifest " & ManifestFile & " /outputresource:" & DllOrExe & ";" & ResourceId
+        local Command = M3TestsNoEcho () & "mt /nologo /manifest " & ManifestFile & " /outputresource:" & DllOrExe & ";" & ResourceId
         if equal (SL, "/")
             % Posix exec through sh treats the semicolon as a command delimiter, so quote
             % the whole command and send it to cmd.
@@ -784,7 +800,7 @@ is
     end
 
     return try_exec(
-        "@link",
+        M3TestsNoEcho () & "link",
         WriteResponseFile(
             LinkResponseFile,
             " ",
@@ -821,7 +837,7 @@ is
     end
 
     return try_exec(
-            "gcc",
+            M3TestsNoEcho () & "gcc",
             "-gstabs+",
             %"-v",
             "-shared", % must be visible to compiler
@@ -1135,7 +1151,7 @@ is
     end
 
     return try_exec(
-        "@link",
+        M3TestsNoEcho () & "link",
         WriteResponseFile(
             LinkResponseFile,
             " ",
@@ -1184,7 +1200,7 @@ is
     % end
 
     return try_exec(
-            "gcc",
+            M3TestsNoEcho () & "gcc",
             "-gstabs+",
             %"-v",
             "-Wl,"
