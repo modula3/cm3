@@ -8,13 +8,12 @@
 %------------------------------------------------------------------------------
 
 diff = "@-diff -u -b"
-diff_slash = SL
+diff_slash = "/"
 head = "| head -30"
 
 if equal ($OS, "Windows_NT")
   if not equal (try_exec("@diff nul nul 2>nul"), 0)
     diff = "@-fc"
-  else
     diff_slash = "\\"
   end
   if not equal (try_exec("@head nul 2>nul"), 0)
