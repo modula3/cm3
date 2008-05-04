@@ -1,3 +1,4 @@
-"../Main.m3", line 8: string: duplicate brand
-"../Main.m3", line 7: string: duplicate brand
+"../Main.m3", line 8: duplicate brand: string
+"../Main.m3", line 7: duplicate brand: string
 2 errors encountered
+Fatal Error: package build failed
