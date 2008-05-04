@@ -1,3 +1,30 @@
+%------------------------------------------------------------------------------
+
+readonly proc NormalizeString (String) is
+  String = subst (String, " (core dumped)", "", 9)
+  String = del_chars (subst (String, " (core dumped)", "", 9), "\r")
+  String = subst_chars (String, "\\", "/")
+  %
+  % If there is a stack dump, cut it off before it becomes "random".
+  %
+  local StackTraceSignature = "\nStack trace:\n   FP         PC      Procedure\n---------  ---------  -------------------------------\n 0x"
+  local StackTracePosition = pos (String, StackTraceSignature)
+  if not equal (StackTracePosition, "-1")
+    String = sub (String, 0, StackTracePosition) & StackTraceSignature & "\n"
+  end
+  return String
+end
+
+readonly proc ReadAndNormalizeFile (Path) is
+  return NormalizeString (fs_contents (Path))
+end
+
+readonly proc NormalizeFile (Path) is
+  fs_putfile (Path, ReadAndNormalizeFile (Path & ".raw"))
+end
+
+%------------------------------------------------------------------------------
+
 override ("m3tests", PACKAGE_DIR & "/../../../..")
 
 if defined ("local_libs")
@@ -7,11 +34,17 @@ end
 
 import ("libm3")
 
+%------------------------------------------------------------------------------
+
+local M3TestsRoot = not stale ("Test.common", "Test.common")
+
 %
 % Some of the tests have their own Test.i3 and cannot import this.
 %
-if stale ("Test.i3", "Test.i3")
-  import ("m3tests")
+if not stale ("Test.common", "Test.common")
+  if stale ("Test.i3", "Test.i3")
+    import ("m3tests")
+  end
 end
 
 %
@@ -22,11 +55,23 @@ if defined ("local_m3")
   m3_options = format ("-Y6@%s/m3cc/%s/cm3cg@-quiet@", ROOT, BUILD_DIR)
 end
 
+proc M3TestsNoEcho () is
+  if defined ("M3TESTS")
+    return "@"
+  end
+  return ""
+end
+
 readonly proc RunTest () is
-  program("pgm")
-  local f = program_name ("pgm")
-  if not stale (f, f)
-    exec ("@-." & SL & f & " >stdout.pgm 2>stderr.pgm" )
+  if not M3TestsRoot
+    program("pgm")
+    local f = program_name ("pgm")
+    if not stale (f, f)
+      exec (M3TestsNoEcho () & "-." & SL & f & " >stdout.pgm.raw 2>stderr.pgm.raw")
+      NormalizeFile ("stdout.pgm")
+      NormalizeFile ("stderr.pgm")
+    end
   end
 end
+
 RunTest()
