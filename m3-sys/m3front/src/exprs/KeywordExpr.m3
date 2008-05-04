@@ -13,7 +13,7 @@ IMPORT M3, M3ID, Expr, ExprRep, Type, Target;
 TYPE
   P = Expr.T OBJECT
         expr : Expr.T;
-	key  : M3ID.T;
+        key  : M3ID.T;
       OVERRIDES
         typeOf       := TypeOf;
         check        := Check;
@@ -29,10 +29,10 @@ TYPE
         getBounds    := Bounder;
         isWritable   := IsWritable;
         isDesignator := IsDesignator;
-	isZeroes     := IsZeroes;
-	genFPLiteral := ExprRep.NoFPLiteral;
-	prepLiteral  := PrepLiteral;
-	genLiteral   := GenLiteral;
+        isZeroes     := IsZeroes;
+        genFPLiteral := ExprRep.NoFPLiteral;
+        prepLiteral  := PrepLiteral;
+        genLiteral   := GenLiteral;
         note_write   := NoteWrites;
       END;
 

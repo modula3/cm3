@@ -17,11 +17,11 @@ IMPORT ProcExpr, ProcType, ObjectType, CallExpr, Host, Narrow;
 
 TYPE
   P = Stmt.T OBJECT
-	lhs     : Expr.T;
-	rhs     : Expr.T;
+        lhs     : Expr.T;
+        rhs     : Expr.T;
       OVERRIDES
         check       := CheckMethod;
-	compile     := Compile;
+        compile     := Compile;
         outcomes    := GetOutcome;
       END;
 
@@ -31,12 +31,12 @@ PROCEDURE Parse (): Stmt.T =
     e := Expr.Parse ();
     IF (Scanner.cur.token # Token.T.tASSIGN) THEN
       IF NOT CallExpr.Is (e) THEN
-	Error.Msg ("Expression is not a statement");
+        Error.Msg ("Expression is not a statement");
       END;
       s := CallStmt.New (e);
       s.origin := here;
       RETURN s;
-    END;	
+    END;
 
     p := NEW (P);
     StmtRep.Init (p);
@@ -160,7 +160,7 @@ PROCEDURE NeedsClosureCheck (proc: Expr.T;  errors: BOOLEAN): BOOLEAN =
   BEGIN
     IF NOT (NamedExpr.Split (proc, name, obj)
             OR QualifyExpr.Split (proc, obj)
-	    OR ProcExpr.Split (proc, obj)) THEN
+            OR ProcExpr.Split (proc, obj)) THEN
       (* non-constant, non-variable => OK *)
       RETURN FALSE;
     END;

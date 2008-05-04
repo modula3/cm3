@@ -25,7 +25,7 @@ REVEAL
         block        : Stmt.T;
         body         : Body;
         result       : Variable.T;
-	builtin      : BOOLEAN;
+        builtin      : BOOLEAN;
         predefined   : BOOLEAN;
         needs_raises : BOOLEAN;
         direct       : BOOLEAN;
@@ -42,8 +42,8 @@ REVEAL
         need_init   := NeedInit;
         lang_init   := LangInit;
         user_init   := ValueRep.NoInit;
-	toExpr      := ToExpr;
-	toType      := ValueRep.NoType;
+        toExpr      := ToExpr;
+        toType      := ValueRep.NoType;
         typeOf      := TypeOf;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
@@ -122,8 +122,8 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes;
       END;
       IF (att.isExternal) THEN
         Error.WarnID (2, id, "external procedure cannot include a body");
-	t.external := FALSE;
-	t.extName  := M3ID.NoID;
+        t.external := FALSE;
+        t.extName  := M3ID.NoID;
       END;
       t.syms  := Scope.PushNew (TRUE, id);
       t.block := BlockStmt.Parse (FALSE);
@@ -573,7 +573,7 @@ PROCEDURE GenBody (p: T) =
       StartRaises (p, l, frame);
         Scope.InitValues (p.syms);
         Scanner.offset := BlockStmt.BodyOffset (p.block);
-	Coverage.CountProcedure (p);
+        Coverage.CountProcedure (p);
         oc := Stmt.Compile (p.block);
         fallThru := (Stmt.Outcome.FallThrough IN oc);
       EndRaises (p, l, frame, fallThru);

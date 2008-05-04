@@ -146,7 +146,7 @@ PROCEDURE New (super: Type.T;  traced: BOOLEAN;  brand: Brand.T;
     IF (super = NIL) THEN
       IF (traced)
         THEN super := ObjectRef.T;
-	ELSE super := ObjectAdr.T;
+        ELSE super := ObjectAdr.T;
       END;
     END;
     p := NEW (P);
@@ -281,11 +281,11 @@ PROCEDURE LookUp (t: Type.T; id: M3ID.T;
 
       ELSIF (info.class = Type.Class.Opaque) THEN
         (* try any revelations that are visible *)
-	z := Revelation.LookUp (t);
-	IF (z # NIL) THEN
-	  (* use the concrete type *)
-	  t := z;
-	ELSE
+        z := Revelation.LookUp (t);
+        IF (z # NIL) THEN
+          (* use the concrete type *)
+          t := z;
+        ELSE
           (* try any subtype revelations that are visible *)
           Revelation.LookUpAll (t, x);
           FOR i := 0 TO x.cnt-1 DO
@@ -296,7 +296,7 @@ PROCEDURE LookUp (t: Type.T; id: M3ID.T;
             x.others := x.others.next;
           END;
           t := OpaqueType.Super (t);
-	END;
+        END;
 
       ELSE (* ??? *)
         RETURN FALSE;

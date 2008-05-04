@@ -15,7 +15,7 @@ FROM Scanner IMPORT GetToken, Match, MatchID, cur;
 
 TYPE
   T = Value.T BRANDED "Exceptionz.T" OBJECT
-	tipe    : Type.T;
+        tipe    : Type.T;
         refTipe : Type.T;
         offset  : INTEGER;
         coffset : INTEGER;
@@ -31,8 +31,8 @@ TYPE
         need_init   := ValueRep.Never;
         lang_init   := ValueRep.NoInit;
         user_init   := ValueRep.NoInit;
-	toExpr      := ValueRep.NoExpr;
-	toType      := ValueRep.NoType;
+        toExpr      := ValueRep.NoExpr;
+        toType      := ValueRep.NoType;
         typeOf      := ValueRep.TypeVoid;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;

@@ -60,10 +60,10 @@ TYPE
         getBounds    := ExprRep.NoBounds;
         isWritable   := ExprRep.IsNever;
         isDesignator := ExprRep.IsNever;
-	isZeroes     := ExprRep.IsNever;
-	genFPLiteral := ExprRep.NoFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := ExprRep.NoLiteral;
+        isZeroes     := ExprRep.IsNever;
+        genFPLiteral := ExprRep.NoFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
       END;
 
@@ -122,7 +122,7 @@ PROCEDURE EqCheck (a: P;  e: Expr.T;  x: M3.EqAssumption): BOOLEAN =
     | NULL => RETURN FALSE;
     | P(b) => RETURN (a.class = b.class)
                  AND (a.op = b.op)
-		 AND Expr.IsEqual (a.a, b.a, x)
+                 AND Expr.IsEqual (a.a, b.a, x)
                  AND Expr.IsEqual (a.b, b.b, x);
     ELSE RETURN FALSE;
     END;

@@ -249,7 +249,7 @@ PROCEDURE ESelector (types: BOOLEAN;  a: Expr.T;
         a.origin := here;
     | TK.tBRANDED, TK.tOBJECT =>
         IF (types) THEN
-	  brand := Brand.Parse ();
+          brand := Brand.Parse ();
           IF NamedExpr.SplitName (a, name) THEN
             t := NamedType.Create (M3ID.NoID, name);
           ELSIF QualifyExpr.SplitQID (a, module, name) THEN
@@ -258,7 +258,7 @@ PROCEDURE ESelector (types: BOOLEAN;  a: Expr.T;
             t := NIL;
             Fail ("bad selector");
           END;
-	  a := TypeExpr.New (ObjectType.Parse (t, TRUE, brand));
+          a := TypeExpr.New (ObjectType.Parse (t, TRUE, brand));
           a.origin := here;
         END;
     ELSE Fail ("bad selector");

@@ -76,7 +76,7 @@ CONST
   TypeStart = Set {T.tIDENT, T.tARRAY, T.tBITS, T.tBRANDED, T.tLBRACE,
                    T.tLAZYALIGN, T.tSTRICTALIGN,
                    T.tUNTRACED, T.tOBJECT, T.tPROCEDURE, T.tRECORD,
-		   T.tREF, T.tSET, T.tLBRACKET, T.tLPAREN};
+                   T.tREF, T.tSET, T.tLBRACKET, T.tLPAREN};
 
   ExprStart = Set {T.tNOT, T.tPLUS, T.tMINUS, T.tIDENT,
                    T.tINTEGERCONST, T.tLONGINTCONST,
@@ -86,9 +86,9 @@ CONST
 
   StmtStart = Set {T.tCASE, T.tEXIT, T.tEVAL, T.tFOR, T.tIF, T.tLOCK,
                    T.tLOOP, T.tRAISE, T.tREPEAT, T.tRETURN, T.tTRY,
-		   T.tTYPECASE, T.tWHILE, T.tWITH, T.tBEGIN, T.tASSERT,
+                   T.tTYPECASE, T.tWHILE, T.tWITH, T.tBEGIN, T.tASSERT,
                    T.tIDENT, T.tLPAREN, T.tARRAY, T.tRECORD, T.tDEBUG}
-		   + DeclStart;
+                   + DeclStart;
 
 VAR (*CONST*)
   name: ARRAY T OF M3ID.T;

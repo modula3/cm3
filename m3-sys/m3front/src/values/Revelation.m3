@@ -29,8 +29,8 @@ TYPE
 TYPE
   List = BRANDED "Revelation.List" REF RECORD
            next  : List;
-	   ident : T;
-	   local : BOOLEAN; (* as opposed to inherited *)
+           ident : T;
+           local : BOOLEAN; (* as opposed to inherited *)
            used  : BOOLEAN;
            home  : Value.T; (* External.T that caused the import *)
          END;

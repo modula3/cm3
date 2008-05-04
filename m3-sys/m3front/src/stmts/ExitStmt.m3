@@ -14,7 +14,7 @@ TYPE
   P = Stmt.T OBJECT
       OVERRIDES
         check       := Check;
-	compile     := Compile;
+        compile     := Compile;
         outcomes    := GetOutcome;
       END;
 

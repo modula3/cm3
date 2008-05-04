@@ -19,7 +19,7 @@ TYPE
         tail    : INTEGER;
       OVERRIDES
         check       := Check;
-	compile     := Compile;
+        compile     := Compile;
         outcomes    := GetOutcome;
       END;
 

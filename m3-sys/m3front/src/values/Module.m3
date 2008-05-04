@@ -32,7 +32,7 @@ REVEAL
         externals   : External.Set;
         importScope : Scope.T;
         localScope  : Scope.T;
-	revelations : Revelation.Set;
+        revelations : Revelation.Set;
         block       : Stmt.T;
         body        : InitBody;
         counter     : ARRAY [0..4] OF CHAR;
@@ -58,8 +58,8 @@ REVEAL
         need_init   := ValueRep.Never;
         lang_init   := ValueRep.NoInit;
         user_init   := ValueRep.NoInit;
-	toExpr      := ValueRep.NoExpr;
-	toType      := ValueRep.NoType;
+        toExpr      := ValueRep.NoExpr;
+        toType      := ValueRep.NoType;
         typeOf      := ValueRep.TypeVoid;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
@@ -771,7 +771,7 @@ PROCEDURE NoteVisibility (t: T) =
           END;
       | Value.Class.Field,
         Value.Class.Method,
-	Value.Class.Formal =>
+        Value.Class.Formal =>
           <* ASSERT FALSE *>
       END;
       v := v.next;

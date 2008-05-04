@@ -12,7 +12,7 @@ IMPORT M3, M3ID, CG, Expr, ExprRep, Value, Type, Module;
 IMPORT RecordType, ObjectType, Variable, VarExpr, Scope;
 IMPORT EnumType, RefType, DerefExpr, NamedExpr, Error, ProcType;
 IMPORT ErrType, RecordExpr, TypeExpr, MethodExpr, ProcExpr;
-IMPORT Method, Field, Target, M3RT, Host, RunTyme, Constant;
+IMPORT Method, Field, Target, M3RT, Host, RunTyme;
 
 TYPE
   Class = { cMODULE, cENUM, cOBJTYPE, cFIELD, cOBJFIELD, cMETHOD, cUNKNOWN };
@@ -26,7 +26,7 @@ TYPE
         obj         : Value.T;
         holder      : Type.T;
         objType     : Type.T;
-	temp        : CG.Val;
+        temp        : CG.Val;
         name        : M3ID.T;
         class       : Class;
         inFold      : BOOLEAN;
@@ -48,10 +48,10 @@ TYPE
         getBounds    := Bounder;
         isWritable   := IsWritable;
         isDesignator := IsDesignator;
-	isZeroes     := IsZeroes;
-	genFPLiteral := ExprRep.NoFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := ExprRep.NoLiteral;
+        isZeroes     := IsZeroes;
+        genFPLiteral := ExprRep.NoFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
       END;
 
@@ -99,11 +99,11 @@ PROCEDURE PassObject (e: Expr.T): BOOLEAN =
     TYPECASE e OF
     | NULL => (* nothing *)
     | P(p) => IF (p.class = Class.cMETHOD) THEN
-                CG.Push (p.temp);
-                CG.Pop_param (CG.Type.Addr);
-                CG.Free (p.temp);
-                p.temp := NIL;
-		RETURN TRUE;
+                  CG.Push (p.temp);
+                  CG.Pop_param (CG.Type.Addr);
+                  CG.Free (p.temp);
+                  p.temp := NIL;
+                RETURN TRUE;
               END;
     ELSE      (* nothing *)
     END;
@@ -286,7 +286,7 @@ PROCEDURE Prep (p: P) =
   BEGIN
     CASE p.class OF
     | Class.cMODULE =>
-	IF Host.doIncGC AND Value.ClassOf (p.obj) = Value.Class.Var THEN
+        IF Host.doIncGC AND Value.ClassOf (p.obj) = Value.Class.Var THEN
           EVAL Type.CheckInfo (p.type, info);
           IF info.isTraced THEN
             CASE info.class OF 
@@ -376,7 +376,7 @@ PROCEDURE Compile (p: P) =
         CG.Load_indirect (CG.Type.Addr, method.offset, Target.Address.size);
         CG.Boost_alignment (Target.Address.align);
     | Class.cFIELD =>
-	IF p.temp = NIL THEN
+        IF p.temp = NIL THEN
           Field.Split (p.obj, field);
           IF Expr.IsDesignator (p.expr)
             THEN Expr.CompileLValue (p.expr);
@@ -390,7 +390,7 @@ PROCEDURE Compile (p: P) =
           p.temp := NIL;
         END;
     | Class.cOBJFIELD =>
-	IF p.temp = NIL THEN
+        IF p.temp = NIL THEN
           Field.Split (p.obj, field);
           Expr.Compile (p.expr);
           CG.Boost_alignment (Target.Address.align);
@@ -478,7 +478,7 @@ PROCEDURE CompileLV (p: P; lhs: BOOLEAN) =
         Expr.CompileLValue (p.expr);
         CG.Add_offset (field.offset);
     | Class.cOBJFIELD =>
-	IF p.temp = NIL THEN
+        IF p.temp = NIL THEN
           Field.Split (p.obj, field);
           Expr.Compile (p.expr);
           IF lhs AND Host.doGenGC THEN

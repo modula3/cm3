@@ -45,10 +45,10 @@ REVEAL
         need_addr   : M3.Flag;
         no_type     : M3.Flag;
         global      : M3.Flag;
-	initDone    : M3.Flag;
-	initZero    : M3.Flag;
+        initDone    : M3.Flag;
+        initZero    : M3.Flag;
         initPending : M3.Flag;
-	initStatic  : M3.Flag;
+        initStatic  : M3.Flag;
       OVERRIDES
         typeCheck   := Check;
         set_globals := SetGlobals;
@@ -58,8 +58,8 @@ REVEAL
         need_init   := NeedInit;
         lang_init   := LangInit;
         user_init   := UserInit;
-	toExpr      := ValueRep.NoExpr;
-	toType      := ValueRep.NoType;
+        toExpr      := ValueRep.NoExpr;
+        toType      := ValueRep.NoType;
         typeOf      := TypeOf;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
@@ -133,18 +133,18 @@ PROCEDURE ParseDecl (READONLY att: Decl.Attributes) =
       FOR i := 0 TO n - 1 DO
         t := New (Ident.stack[j + i], FALSE);
         t.origin   := Ident.offset[j + i];
-	t.external := att.isExternal;
+        t.external := att.isExternal;
         t.unused   := att.isUnused;
         t.obsolete := att.isObsolete;
         t.tipe     := type;
         t.init     := expr;
         t.no_type  := (type = NIL);
-	IF (att.isExternal) THEN
-	  IF (alias # M3ID.NoID)
-	    THEN t.extName := alias;  alias := M3ID.NoID;
-	    ELSE t.extName := t.name;
-	  END;
-	END;
+        IF (att.isExternal) THEN
+          IF (alias # M3ID.NoID)
+            THEN t.extName := alias;  alias := M3ID.NoID;
+            ELSE t.extName := t.name;
+          END;
+        END;
         Scope.Insert (t);
         BindTrace (t, trace);
       END;
@@ -315,7 +315,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       IF (dfault = NIL) THEN
         IF Module.IsInterface () THEN
           Error.ID (t.name, "initial value is not a constant");
-	END;
+        END;
         IF (t.global) AND (info.size > Max_zero_global * Target.Integer.size) THEN
           <*ASSERT NOT t.indirect*>
           t.indirect := TRUE;

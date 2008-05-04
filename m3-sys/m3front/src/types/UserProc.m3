@@ -234,7 +234,7 @@ PROCEDURE IsProcedureLiteral (e: Expr.T;  VAR proc: Value.T): BOOLEAN =
     (*******
     RETURN (NamedExpr.Split (e, name, proc)
               OR QualifyExpr.Split (e, proc)
-	      OR ProcExpr.Split (e, proc))
+              OR ProcExpr.Split (e, proc))
           AND (Value.ClassOf (proc) = Value.Class.Procedure);
     *******)
   END IsProcedureLiteral;
