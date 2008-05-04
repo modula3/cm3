@@ -106,7 +106,7 @@ PROCEDURE CheckDuplicate (t: T;  hash: INTEGER) =
       IF (node = NIL) THEN
         (* add an entry to the table *)
         t.next := all_brands[cell];
-        all_brands[cell] := node;
+        all_brands[cell] := t;
         RETURN;
       ELSIF (node = t) OR (node.type = t.type) THEN
         (* ok, this is a repeated check of an existing brand *)
