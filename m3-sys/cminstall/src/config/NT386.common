@@ -886,6 +886,7 @@ is
     local readonly listing  = lib & ".lst"
     local readonly LibResponseFile = GetResponseFileName()
     local LinkResponseFile = LibResponseFile
+    local Hand = equal (lib, "m3core") and FileExists("hand.obj")
 
     if shared
         LinkResponseFile = GetResponseFileName()
@@ -1002,6 +1003,9 @@ is
         BindExport(dll_file)
         PdbExport(pdb_file)
         install_derived(lib0_file)
+        if Hand
+            LibdExport("hand.obj")
+        end
     end
     return ret_code
 end
@@ -1162,6 +1166,7 @@ is
                 options,
                 objects,
                 subst_chars(imported_libs, "/", "\\"),
+                "hand.obj",
             ]),
         "2>&1",
         ">", listing
@@ -1213,6 +1218,7 @@ is
                         options,
                         objects,
                         EscapeList(imported_libs),
+                        "hand.obj",
                     ]),
             "2>&1",
             ">", listing
