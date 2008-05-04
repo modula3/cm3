@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.34 2008-05-04 03:34:20 jkrell Exp $
+% $Id: NT386.common,v 1.35 2008-05-04 15:24:25 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -886,6 +886,7 @@ is
     local readonly listing  = lib & ".lst"
     local readonly LibResponseFile = GetResponseFileName()
     local LinkResponseFile = LibResponseFile
+    local Hand = equal (lib, "m3core") and FileExists("hand.obj")
 
     if shared
         LinkResponseFile = GetResponseFileName()
@@ -1002,6 +1003,9 @@ is
         BindExport(dll_file)
         PdbExport(pdb_file)
         install_derived(lib0_file)
+        if Hand
+            LibdExport("hand.obj")
+        end
     end
     return ret_code
 end
@@ -1162,6 +1166,7 @@ is
                 options,
                 objects,
                 subst_chars(imported_libs, "/", "\\"),
+                "hand.obj",
             ]),
         "2>&1",
         ">", listing
@@ -1213,6 +1218,7 @@ is
                         options,
                         objects,
                         EscapeList(imported_libs),
+                        "hand.obj",
                     ]),
             "2>&1",
             ">", listing
