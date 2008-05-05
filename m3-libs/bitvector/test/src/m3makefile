@@ -1,9 +1,0 @@
-import		("libm3")
-import		("bitvector")
-implementation	("TestBitVector")
-program		("TestBitVector")
-
-if defined("RUN")
-  r = q_exec( "." & SL & "TestBitVector" )
-  write( CR, "program returned ", r, CR )
-end
