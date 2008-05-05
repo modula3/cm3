@@ -21,6 +21,7 @@
  m3back ^
  m3staloneback ^
  m3front ^
+ sysutils ^
  m3quake ^
  cm3 ^
  patternmatching ^
