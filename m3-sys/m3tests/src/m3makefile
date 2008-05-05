@@ -226,9 +226,15 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     if ok1 and ok2
       html (["<tr class=\"bggreen tl\"><td>", uid,
              "</td><td class=\"small\" width=\"45%\">", comment])
+      >> "res.ok" in
+        write (uid, CR)
+      end
     else
       html (["<tr class=\"bgred tl\"><td>", uid,
              "</td><td class=\"small\" width=\"45%\">", comment])
+      >> "res.ko" in
+        write (uid, CR)
+      end
     end
 
     html ("</td><td class=\"small\"><pre>")
