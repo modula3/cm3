@@ -625,8 +625,14 @@ test_m3tests()
     xargs egrep '^\*\*|error.*and.*warning|fail' | grep -v '0 error' | \
     tee ${M3TERR}.extract 1>&2
 
-  nerrs=`awk -F: '{print $1}' ${M3TERR}.extract | sort -u | 
-         wc | awk '{print $1}'`
+  if [ -r ${CM3_TARGET}/res.ko ]; then
+    nerrs=`wc ${CM3_TARGET}/res.ko | awk '{print $1}'`
+    echo " >>> failed tests: `cat ${CM3_TARGET}/res.ko | xargs`"
+  else
+    # try old approach
+    nerrs=`awk -F: '{print $1}' ${M3TERR}.extract | sort -u | 
+           wc | awk '{print $1}'`
+  fi
   if [ 0 = "${nerrs}" ]; then
     echo " >>> OK test_m3tests ${DS} ${WS}"
     echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 m3tests run done"
