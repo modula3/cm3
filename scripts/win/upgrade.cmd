@@ -1,4 +1,4 @@
-@rem $Id: upgrade.cmd,v 1.9 2008-01-07 07:35:52 jkrell Exp $
+@rem $Id: upgrade.cmd,v 1.10 2008-05-05 22:34:10 rcoleburn Exp $
 
 @setlocal
 
@@ -21,6 +21,7 @@
  m3back ^
  m3staloneback ^
  m3front ^
+ sysutils ^
  m3quake ^
  cm3 ^
  patternmatching ^
