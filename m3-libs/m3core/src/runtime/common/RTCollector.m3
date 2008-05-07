@@ -18,6 +18,7 @@ IMPORT RT0, RTHeapEvent, RTHeapMap, RTIO, RTMachine;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
 IMPORT Word, Thread, ThreadF, RuntimeError, RTAllocCnts;
 IMPORT TextLiteral AS TextLit, RTLinker, Convert, Time;
+IMPORT Compiler;
 
 FROM RT0 IMPORT Typecode, TypeDefn, TypeInitProc;
 FROM Text IMPORT Length, GetChar, SetChars;
@@ -2909,4 +2910,8 @@ PROCEDURE FinishBench() =
   END FinishBench;
 
 BEGIN
+  (* temporarily turn of garbage collection until deeper debugging is done and the crashes fixed *)
+  IF Compiler.ThisPlatform = Compiler.Platform.AMD64_LINUX THEN
+    disableCount := 100;
+  END;
 END RTCollector.
