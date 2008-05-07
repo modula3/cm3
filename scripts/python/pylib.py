@@ -1683,6 +1683,9 @@ def ShipFront():
         os.path.join(Root, "m3-sys", "cm3", Config),
         os.path.join(InstallRoot, "bin"))
 
+def ShipCompiler():
+    return ShipBack() and ShipFront()
+
 def CopyMklib(From, To):
     #
     # Copy mklib from one InstallRoot to another, possibly having cleaned out the intermediate directories.

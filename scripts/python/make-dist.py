@@ -16,7 +16,7 @@ def Echo(a):
     print("")
 
 def Run(a):
-    
+
     #print(a + " in " + os.getcwd())
     #return True
     return (os.system(a) == 0)
@@ -163,7 +163,7 @@ if (not STAGE):
 #os.makedirs(Logs)
 
 #LogCounter = 1
-    
+
 InstallRoot_Previous = InstallRoot
 
 InstallRoot_CompilerWithPrevious = os.path.join(STAGE, "compiler_with_previous")
@@ -175,10 +175,10 @@ InstallRoot_CompilerWithSelf = os.path.join(STAGE, "compiler_with_self")
 # For now though, we only build min.
 #
 def FormInstallRoot(PackageSetName):
-    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + OSType + "-" + Config + "-" + CM3VERSION)
+    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
 
 def FormArchiveName(PackageSetName, Suffix):
-    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + OSType + "-" + Config + "-" + CM3VERSION + Suffix)
+    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION + Suffix)
 
 InstallRoot_Min = FormInstallRoot("min")
 InstallRoot_Standard = FormInstallRoot("std")
@@ -257,7 +257,7 @@ if Config != "NT386":
         CopyFile(a, NewLib) or FatalError()
 
 #
-# cm3 is run out of %path%, but mklib is not, so we have to copy it..
+# cm3 is run out of %path%, but mklib is not, so we have to copy it.
 #
 CopyMklib(InstallRoot, InstallRoot_CompilerWithPrevious) or FatalError()
 
@@ -283,7 +283,6 @@ def Setup(ExistingCompilerRoot, NewRoot):
     os.environ["CM3_INSTALL"] = ConvertToCygwinPath(NewRoot)
 
 Setup(InstallRoot, InstallRoot_CompilerWithPrevious)
-
 RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
 ShipCompiler() or FatalError()
@@ -315,7 +314,6 @@ Setup(InstallRoot_CompilerWithPrevious, InstallRoot_CompilerWithSelf)
 RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
 ShipCompiler() or FatalError()
-
 RealClean(pylib.PackageSets["all"]) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
@@ -326,9 +324,9 @@ Echo("build minimal packages with new compiler")
 
 Setup(InstallRoot_CompilerWithSelf, InstallRoot_Min)
 Packages = pylib.PackageSets["min"]
-#RealClean(Packages) or FatalError()
+RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
-#RealClean(Packages) or FatalError()
+RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
 Echo("build standard packages with new compiler")
@@ -342,9 +340,9 @@ else:
 
     Setup(InstallRoot_CompilerWithSelf, InstallRoot_Standard)
     Packages = pylib.PackageSets["std"]
-    #RealClean(Packages) or FatalError()
+    RealClean(Packages) or FatalError()
     BuildShip(Packages) or FatalError()
-    #RealClean(Packages) or FatalError()
+    RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
 
