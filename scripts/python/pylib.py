@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.103 2008-05-02 05:54:10 jkrell Exp $
+# $Id: pylib.py,v 1.104 2008-05-07 16:07:11 jkrell Exp $
 
 import os
 from os import getenv
@@ -1682,6 +1682,9 @@ def ShipFront():
     return _CopyCompiler(
         os.path.join(Root, "m3-sys", "cm3", Config),
         os.path.join(InstallRoot, "bin"))
+
+def ShipCompiler():
+    return ShipBack() and ShipFront()
 
 def CopyMklib(From, To):
     #
