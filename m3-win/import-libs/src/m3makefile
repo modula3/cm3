@@ -1,4 +1,4 @@
-% $Id: m3makefile,v 1.26 2008-03-16 15:10:42 jkrell Exp $
+% $Id: m3makefile,v 1.27 2008-05-08 14:58:29 jkrell Exp $
 %
 % Jay Krell
 % jay.krell@cornell.edu
@@ -182,11 +182,12 @@ foreach File in Files
     local readonly QuakeFileName = File & ".quake"
     local readonly LibFilePath = File & ".lib"
 
+    LibdExport(LibFilePath)
+
     if stale(LibFilePath, SourceFilePath(QuakeFileName))
 
         AnyStale = TRUE
         Stale += File
-        LibdExport(LibFilePath)
         local readonly DefFilePath = File & ".def"
         local Extension = "dll"
 
