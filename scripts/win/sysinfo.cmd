@@ -107,7 +107,7 @@ if "%ROOT%" == "" call :set_full_path ROOT %~dp0..\..
 if not defined TARGET set TARGET=NT386
 
 if "%TARGET%" == "NT386" (
-    call :CheckAndConifigureNT386Environment || exit /b 1
+    call :CheckAndConfigureNT386Environment || exit /b 1
 )
 if "%TARGET%" == "NT386GNU" (
     call :CheckAndConfigureNT386GNUEnvironment || exit /b 1
@@ -121,8 +121,8 @@ goto :end_CheckAndConfigureNT386GNUEnvironment
     exit /b 0
 :end_CheckAndConfigureNT386GNUEnvironment
 
-@goto :end_CheckAndConifigureNT386Environment
-:CheckAndConifigureNT386Environment
+@goto :end_CheckAndConfigureNT386Environment
+:CheckAndConfigureNT386Environment
 @rem
 @rem The variabls %temp%, %LIB%, %PATH%, %INCLUDE%, must be set.
 @rem
@@ -158,8 +158,9 @@ for %%a in (MSVCRT) do (
         call :check_for_lib %%a
     )
 )
+exit /b 0
 
-:end_CheckAndConifigureNT386Environment
+:end_CheckAndConfigureNT386Environment
 
 @goto :end_check_for_link_switch
 :check_for_link_switch
