@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.36 2008-05-04 15:33:37 jkrell Exp $
+% $Id: NT386.common,v 1.37 2008-05-08 15:52:16 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -25,18 +25,26 @@ readonly LIBGCC = "C:\\cygwin\\lib\\gcc\\i686-pc-cygwin\\3.4.4\\libgcc.a"
 
 %------------------------------------------------------------------------------
 
-proc M3TestsNoEcho () is
-  if defined ("M3TESTS")
-    return "@"
+proc Path_GetLastElement (a) is
+  local b = pos (a, "/")
+  if equal (b, "-1")
+    b = pos (a, "\\")
   end
-  return ""
+  if not equal (b, "-1")
+    a = sub (a, b, len (a))
+    a = sub (a, 1, len (a))
+    return Path_GetLastElement (a)
+  end
+  return a
 end
 
-proc M3TestsCompileCToNul () is
-  if defined ("M3TESTS")
-    return ">nul"
+proc Path_GetBase (a) is
+  a = Path_GetLastElement (a)
+  local b = pos (a, ".")
+  if not equal (b, "-1")
+    a = sub (a, 0, b)
   end
-  return ""
+  return a
 end
 
 %-------------------------------------------------- default compile options ---
@@ -490,7 +498,23 @@ is
         args += "-Ox"
     end
     args += "-Oi"
-    return try_exec(M3TestsNoEcho () & "cl", [escape(args), "-c", escape(source)], M3TestsCompileCToNul ())
+    %
+    % Visual C++ always echos source file names as they are compiled.
+    % This runs afoul of the goals of reducing the output of building.
+    % Therefore, redirect to a file and only be noisy upon errors.
+    %
+    local readonly Listing = Path_GetBase (source) & ".lst"
+    local readonly Command = ["cl", escape(args), "-c", escape(source)]
+    ret = try_exec("@" & Command, ">", Listing)
+    if not equal (ret, 0)
+      write (Command & CR)
+      if defined ("xxfs_contents")
+        write (fs_contents (Listing))
+      else
+        exec ("@type", Listing)
+      end
+    end
+    return ret
 end
 
 %------------------------------------------------------------------------------
@@ -516,7 +540,7 @@ is
     if M3_PROFILING
         args += "-pg"
     end
-    return try_exec(M3TestsNoEcho () & "gcc", "-gstabs+", escape(args), "-c", escape(source), "-o", object)
+    return try_exec("@gcc", "-gstabs+", escape(args), "-c", escape(source), "-o", object)
 end
 
 proc
@@ -711,7 +735,7 @@ is
     % http://msdn2.microsoft.com/en-us/library/ms235591.aspx
     %
     if FileExists(ManifestFile)
-        local Command = M3TestsNoEcho () & "mt /nologo /manifest " & ManifestFile & " /outputresource:" & DllOrExe & ";" & ResourceId
+        local Command = "@mt /nologo /manifest " & ManifestFile & " /outputresource:" & DllOrExe & ";" & ResourceId
         if equal (SL, "/")
             % Posix exec through sh treats the semicolon as a command delimiter, so quote
             % the whole command and send it to cmd.
@@ -808,7 +832,7 @@ is
     end
 
     return try_exec(
-        M3TestsNoEcho () & "link",
+        "@link",
         WriteResponseFile(
             LinkResponseFile,
             " ",
@@ -846,7 +870,7 @@ is
     end
 
     return try_exec(
-            M3TestsNoEcho () & "gcc",
+            "@gcc",
             "-gstabs+",
             %"-v",
             "-shared", % must be visible to compiler
@@ -932,7 +956,7 @@ is
     % build the static library
 
     ret_code = try_exec(
-        "mklib",
+        "@mklib",
         WriteResponseFile(
             LibResponseFile,
             " ",
@@ -1169,7 +1193,7 @@ is
     end
 
     return try_exec(
-        M3TestsNoEcho () & "link",
+        "@link",
         WriteResponseFile(
             LinkResponseFile,
             " ",
@@ -1219,7 +1243,7 @@ is
     % end
 
     return try_exec(
-            M3TestsNoEcho () & "gcc",
+            "@gcc",
             "-gstabs+",
             %"-v",
             "-Wl,"
