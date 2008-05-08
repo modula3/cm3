@@ -182,11 +182,12 @@ foreach File in Files
     local readonly QuakeFileName = File & ".quake"
     local readonly LibFilePath = File & ".lib"
 
+    LibdExport(LibFilePath)
+
     if stale(LibFilePath, SourceFilePath(QuakeFileName))
 
         AnyStale = TRUE
         Stale += File
-        LibdExport(LibFilePath)
         local readonly DefFilePath = File & ".def"
         local Extension = "dll"
 
