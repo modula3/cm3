@@ -1,4 +1,4 @@
-@rem $Id: upgrade.cmd,v 1.11 2008-05-08 11:36:42 jkrell Exp $
+@rem $Id: upgrade.cmd,v 1.12 2008-05-08 11:37:54 jkrell Exp $
 
 @setlocal
 
@@ -15,16 +15,16 @@
  libm3
 
 @set p_compiler=^
+ patternmatching ^
+ sysutils ^
  m3middle ^
  m3objfile ^
  m3linker ^
  m3back ^
  m3staloneback ^
  m3front ^
- sysutils ^
  m3quake ^
  cm3 ^
- patternmatching ^
  mklib
 
 @call :header backing up existing packages (once only)
