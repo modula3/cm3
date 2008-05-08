@@ -1,4 +1,4 @@
-@rem $Id: do-cm3-min.cmd,v 1.7 2008-03-16 14:47:37 jkrell Exp $
+@rem $Id: do-cm3-min.cmd,v 1.8 2008-05-08 11:36:42 jkrell Exp $
 
 @echo off
 

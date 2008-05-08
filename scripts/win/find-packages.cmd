@@ -1,4 +1,4 @@
-@rem $Id: find-packages.cmd,v 1.5 2008-03-16 14:31:55 jkrell Exp $
+@rem $Id: find-packages.cmd,v 1.6 2008-05-08 11:36:42 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 

@@ -1,4 +1,4 @@
-@rem $Id: sysinfo.cmd,v 1.20 2008-03-29 19:34:56 jkrell Exp $
+@rem $Id: sysinfo.cmd,v 1.21 2008-05-08 11:36:42 jkrell Exp $
 
 @if not "%1" == "" (shift & goto :%1)
 
