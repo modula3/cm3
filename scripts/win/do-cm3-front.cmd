@@ -1,4 +1,4 @@
-@rem $Id: do-cm3-front.cmd,v 1.2 2008-03-16 14:47:37 jkrell Exp $
+@rem $Id: do-cm3-front.cmd,v 1.3 2008-05-08 11:36:42 jkrell Exp $
 
 @echo off
 

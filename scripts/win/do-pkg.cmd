@@ -1,4 +1,4 @@
-@rem $Id: do-pkg.cmd,v 1.5 2007-12-31 10:33:25 jkrell Exp $
+@rem $Id: do-pkg.cmd,v 1.6 2008-05-08 11:36:42 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
