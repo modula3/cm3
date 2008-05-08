@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.37 2008-05-08 15:52:16 jkrell Exp $
+% $Id: NT386.common,v 1.38 2008-05-08 15:54:02 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -507,12 +507,12 @@ is
     local readonly Command = ["cl", escape(args), "-c", escape(source)]
     ret = try_exec("@" & Command, ">", Listing)
     if not equal (ret, 0)
-      write (Command & CR)
-      if defined ("xxfs_contents")
-        write (fs_contents (Listing))
-      else
-        exec ("@type", Listing)
-      end
+        write (Command & CR)
+        if defined ("xxfs_contents")
+            write (fs_contents (Listing))
+        else
+            exec ("@type", Listing)
+        end
     end
     return ret
 end
