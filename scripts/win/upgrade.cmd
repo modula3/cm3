@@ -15,16 +15,16 @@
  libm3
 
 @set p_compiler=^
+ patternmatching ^
+ sysutils ^
  m3middle ^
  m3objfile ^
  m3linker ^
  m3back ^
  m3staloneback ^
  m3front ^
- sysutils ^
  m3quake ^
  cm3 ^
- patternmatching ^
  mklib
 
 @call :header backing up existing packages (once only)
