@@ -507,12 +507,12 @@ is
     local readonly Command = ["cl", escape(args), "-c", escape(source)]
     ret = try_exec("@" & Command, ">", Listing)
     if not equal (ret, 0)
-      write (Command & CR)
-      if defined ("xxfs_contents")
-        write (fs_contents (Listing))
-      else
-        exec ("@type", Listing)
-      end
+        write (Command & CR)
+        if defined ("xxfs_contents")
+            write (fs_contents (Listing))
+        else
+            exec ("@type", Listing)
+        end
     end
     return ret
 end
