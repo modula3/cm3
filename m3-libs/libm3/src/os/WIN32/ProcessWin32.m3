@@ -189,11 +189,11 @@ PROCEDURE Wait(p: T): ExitCode =
     p.waitOk := FALSE;
     TRY
       IF WinBase.WaitForSingleObject(p.info.hProcess, WinBase.INFINITE) #
-	 WinBase.WAIT_OBJECT_0 THEN RAISE InternalError 
+        WinBase.WAIT_OBJECT_0 THEN RAISE InternalError 
       END;
       IF WinBase.GetExitCodeProcess(p.info.hProcess, ADR(status)) = 0 THEN
-	error := WinBase.GetLastError();
-	RAISE InternalError
+        error := WinBase.GetLastError();
+        RAISE InternalError
       END;
     FINALLY
       TRY CloseHandle(p.info.hProcess) EXCEPT ELSE END;
