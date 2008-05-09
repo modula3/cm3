@@ -35,7 +35,7 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     (* expose the global environment *)
     argc := p_argc;
     argv := p_argv;
-    envp := p_envp;
+    envp := GetEnvironmentStrings (p_envp);
     instance := p_instance;
 
     (* initialize the rest of the modules we'll be calling *)

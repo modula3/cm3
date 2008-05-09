@@ -27,6 +27,9 @@ PROCEDURE InitRuntime (argc: INTEGER;  argv, envp, instance: ADDRESS);
 (* Initializes the runtime and the environment globals.  It must be
    called once before any other Modula-3 code is executed.  *)
 
+<* EXTERNAL "RTLinker__GetEnvironmentStrings" *>
+PROCEDURE GetEnvironmentStrings (EnvFromMain: ADDRESS): ADDRESS;
+
 PROCEDURE AddUnit (b: RT0.Binder);
 (* Adds "b(0)" and any units it imports to the set of linked
    and initialized compilation units. *)
