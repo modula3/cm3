@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.34 2008-05-07 16:07:11 jkrell Exp $
+# $Id: make-dist.py,v 1.35 2008-05-09 21:34:25 jkrell Exp $
 
 import sys
 import os.path
@@ -175,10 +175,10 @@ InstallRoot_CompilerWithSelf = os.path.join(STAGE, "compiler_with_self")
 # For now though, we only build min.
 #
 def FormInstallRoot(PackageSetName):
-    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
+    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + OSType + "-" + Config + "-" + CM3VERSION)
 
 def FormArchiveName(PackageSetName, Suffix):
-    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION + Suffix)
+    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + OSType + "-" + Config + "-" + CM3VERSION + Suffix)
 
 InstallRoot_Min = FormInstallRoot("min")
 InstallRoot_Standard = FormInstallRoot("std")
