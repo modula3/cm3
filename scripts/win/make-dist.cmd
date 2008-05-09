@@ -1,4 +1,4 @@
-@rem $Id: make-dist.cmd,v 1.28 2008-05-08 18:21:43 jkrell Exp $
+@rem $Id: make-dist.cmd,v 1.29 2008-05-09 22:21:20 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -42,8 +42,8 @@ pushd %STAGE%
 
 set INSTALLROOT_COMPILER_WITH_PREVIOUS=compiler_with_previous
 set INSTALLROOT_COMPILER_WITH_SELF=compiler_with_self
-set INSTALLROOT_MIN=cm3-min-%TARGET%-%CM3VERSION%
-set INSTALLROOT_STD=cm3-std-%TARGET%-%CM3VERSION%
+set INSTALLROOT_MIN=cm3-min-%M3OSTYPE%-%TARGET%-%CM3VERSION%
+set INSTALLROOT_STD=cm3-std-%M3OSTYPE%-%TARGET%-%CM3VERSION%
 
 @rem for incremental runs to recover at this step..
 if /i "%1" == "goto_min" shift & goto :min
