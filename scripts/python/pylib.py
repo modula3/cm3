@@ -1633,10 +1633,11 @@ def _CopyCompiler(From, To):
     from_cm3cg = os.path.join(From, "cm3cg")
     from_cm3cgexe = os.path.join(From, "cm3cg.exe")
 
-    if (not FileExists(from_cm3)
-     and not FileExists(from_cm3exe)
-     and not FileExists(from_cm3cg)
-     and not FileExists(from_cm3cgexe)):
+    if (Config != "NT386"
+            and not FileExists(from_cm3)
+            and not FileExists(from_cm3exe)
+            and not FileExists(from_cm3cg)
+            and not FileExists(from_cm3cgexe)):
         FatalError("none of " + from_cm3 + ", " + from_cm3exe + ", " + from_cm3cg + ", " + from_cm3cgexe + " exist")
 
     #
