@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.106 2008-05-09 20:59:31 jkrell Exp $
+# $Id: pylib.py,v 1.107 2008-05-11 21:34:46 jkrell Exp $
 
 import os
 from os import getenv
@@ -176,6 +176,7 @@ if ((UName.startswith("windows")
 #
 # the root of the installation
 #
+CM3_FLAGS = getenv("CM3_FLAGS") or ""
 CM3 = getenv("CM3") or "cm3"
 CM3 = SearchPath(CM3 + EXE) or SearchPath(CM3)
 InstallRoot = getenv("CM3_INSTALL")
@@ -202,6 +203,11 @@ if not InstallRoot:
 # the root of the source tree
 #
 Root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+if Root.find(":\\") == 1:
+	Root = Root[2:]
+Root = Root.replace("\\\\", "/")
+Root = Root.replace("\\", "/")
 
 BuildAll = getenv("CM3_ALL") or False
 
@@ -347,6 +353,7 @@ CM3_GDB = False
 M3Build = getenv("M3BUILD") or "m3build"
 M3Ship = getenv("M3SHIP") or "m3ship"
 Q = "'"
+Q = "" # TBD
 
 #-----------------------------------------------------------------------------
 # evaluate uname information
@@ -355,10 +362,11 @@ Q = "'"
 # NT386 is different because for one "target", it has multiple "configurations".
 #
 
-if (UName.startswith("windows")
+if ((UName.startswith("windows")
         or Target.startswith("NT386")
         or UNameCommand.startswith("mingw")
-        or UNameCommand.startswith("cygwin")):
+        or UNameCommand.startswith("cygwin"))
+		and ((Target == "") or Target.startswith("NT386"))):
 
     Q = ""
     HAVE_SERIAL = True
@@ -479,7 +487,7 @@ elif Target.find("LINUX") != -1:
 
     GCC_BACKEND = True
     GMAKE = getenv("GMAKE") or "make"
-    if (Target != "AMD64_LINUX"):
+    if (Target.find("AMD64") == -1) and (Target.find("SPARC") == -1):
         GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
 
 elif Target.find("NetBSD2") != -1:
@@ -542,7 +550,8 @@ def _ConvertToCygwinPath(a):
 def _ConvertFromCygwinPath(a):
     if env_OS != "Windows_NT":
         return a
-    a = a.replace("/", "\\")
+    #a = a.replace("/", "\\")
+    a = a.replace("\\", "/")
     if (a.find("\\cygdrive\\") == 0):
         a = a[10] + ":" + a[11:]
     return a
@@ -627,11 +636,11 @@ if CleanArgs:
 if ShipArgs:
     ShipArgs = " " + ShipArgs
 
-CM3_BuildLocal = BuildLocal or "%(CM3)s -build -override %(DEFS)s%(BuildArgs)s"
-CM3_CleanLocal = CleanLocal or "%(CM3)s -clean -build -override %(DEFS)s%(CleanArgs)s"
-CM3_BuildGlobal = BuildGlobal or "%(CM3)s -build %(DEFS)s%(BuildArgs)s"
-CM3_CleanGlobal = CleanGlobal or "%(CM3)s -clean %(DEFS)s%(CleanArgs)s"
-CM3_Ship = Ship or "%(CM3)s -ship %(DEFS)s%(CleanArgs)s"
+CM3_BuildLocal = BuildLocal or "%(CM3)s %(CM3_FLAGS)s -build -override %(DEFS)s%(BuildArgs)s"
+CM3_CleanLocal = CleanLocal or "%(CM3)s %(CM3_FLAGS)s -clean -build -override %(DEFS)s%(CleanArgs)s"
+CM3_BuildGlobal = BuildGlobal or "%(CM3)s %(CM3_FLAGS)s -build %(DEFS)s%(BuildArgs)s"
+CM3_CleanGlobal = CleanGlobal or "%(CM3)s %(CM3_FLAGS)s -clean %(DEFS)s%(CleanArgs)s"
+CM3_Ship = Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(CleanArgs)s"
 
 # define build and ship programs for Poly. Modula-3 from Montreal
 
@@ -1783,6 +1792,17 @@ def SetupEnvironment():
         VSInstallDir = os.environ.get("VSINSTALLDIR") # E:\Program Files\Microsoft Visual Studio 8
         # VS80CommonTools = os.environ.get("VS80COMNTOOLS") # E:\Program Files\Microsoft Visual Studio 8\Common7\Tools
         VCInstallDir = os.environ.get("VCINSTALLDIR") # E:\Program Files\Microsoft Visual Studio 8\VC
+
+		# 9.0 Express
+		# always, global
+		#VS90COMNTOOLS=D:\msdev\90\Common7\Tools\
+		# after running the shortcut
+		#VCINSTALLDIR=D:\msdev\90\VC
+		#VSINSTALLDIR=D:\msdev\90
+		#
+		# The Windows SDK is carried with the express edition and tricky to find.
+		# Best if folks just run the installed shortcut probably.
+		#
 
         #
         # This is not yet finished.
