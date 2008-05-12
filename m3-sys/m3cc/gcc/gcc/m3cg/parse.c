@@ -3927,20 +3927,13 @@ m3cg_set_sym_difference (void)
   setop (set_sdiff_proc, n, 3);
 }
 
-/* Needs further investigation. */
-#ifdef __sparc
-#define assert_is_int(a) gcc_assert (INTEGRAL_TYPE_P (a))
-#else
-#define assert_is_int(a) gcc_assert(a == t_int)
-#endif
-
 static void
 m3cg_set_member (void)
 {
   UNUSED_BYTESIZE (n);
   MTYPE    (t);
 
-  assert_is_int (t);
+  gcc_assert (t == t_int);
   setop2 (set_member_proc, 2);
 }
 
@@ -3950,7 +3943,7 @@ m3cg_set_compare (tree proc)
   BYTESIZE (n);
   MTYPE    (t);
 
-  assert_is_int (t);
+  gcc_assert (t == t_int);
   setop (proc, n, 2);
 }
 
@@ -3967,7 +3960,7 @@ m3cg_set_range (void)
   UNUSED_BYTESIZE (n);
   MTYPE    (t);
 
-  assert_is_int (t);
+  gcc_assert (t == t_int);
   setop2 (set_range_proc, 3);
 }
 
@@ -3977,7 +3970,7 @@ m3cg_set_singleton (void)
   UNUSED_BYTESIZE (n);
   MTYPE    (t);
 
-  assert_is_int (t);
+  gcc_assert (t == t_int);
   setop2 (set_sing_proc, 2);
 }
 
@@ -4236,7 +4229,7 @@ m3cg_copy_n (void)
   MTYPE (mem_t);
   BOOLEAN (overlap);
 
-  assert_is_int (cnt_t);
+  gcc_assert (cnt_t == t_int);
   m3_start_call ();
 
   /* rearrange the parameters */
