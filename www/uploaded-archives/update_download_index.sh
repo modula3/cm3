@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SNAPS=${SNAPS:-/var/www/modula3.elegosoft.com/cm3/uploaded-archives}
-FNPAT1=${FNPAT1:-"cm3-{min,std,all,core,base,doc}-{POSIX,WIN32,WIN,WIN64}-"}
+FNPAT1=${FNPAT1:-"cm3-{min,std,all,core,base,doc,boot}-"}
 FNPATSUF=${FNPATSUF:-.{tar.gz,tar.bz,tar.bz2,tgz,tbz,zip}}
 FNPATLS=${FNPAT:-${FNPAT1}'*-*'${FNPATSUF}}
 INDEX=${INDEX:-index.html}
