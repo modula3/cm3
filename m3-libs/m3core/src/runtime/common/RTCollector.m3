@@ -2914,4 +2914,7 @@ BEGIN
   IF Compiler.ThisPlatform = Compiler.Platform.AMD64_LINUX THEN
     disableCount := 100;
   END;
+  IF Compiler.ThisPlatform = Compiler.Platform.SPARC32_LINUX THEN
+    disableCount := 100;
+  END;
 END RTCollector.

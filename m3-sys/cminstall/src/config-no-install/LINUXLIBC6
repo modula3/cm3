@@ -1,7 +1,9 @@
 readonly TARGET       = "LINUXLIBC6"      % code generation target
 readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "i686-pc-linux-gnu"  % "cpu-vendor-os" string for GNU
-readonly GCC_M3264 = "-m32"
-readonly AS_3264 = "--32"
+
+readonly m3back = "@cm3cg -quiet -gstabs+ -m32 -fPIC -mno-align-double"
+readonly SYSTEM_CC       = "@gcc -gstabs+ -m32 -fPIC -mno-align-double" % C compiler
+readonly SYSTEM_ASM = "@as --32" % Assembler
 
 include("Linux.common")

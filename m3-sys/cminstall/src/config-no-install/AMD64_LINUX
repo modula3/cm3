@@ -1,7 +1,21 @@
 readonly TARGET       = "AMD64_LINUX"      % code generation target
 readonly WORD_SIZE    = "64BITS"          % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "amd64-pc-linux-gnu"  % "cpu-vendor-os" string for GNU
-readonly GCC_M3264 = "-m64"
-readonly AS_3264 = "--64"
+
+readonly m3back = "@cm3cg -quiet -gstabs+ -m64 -fPIC -mno-align-double"
+readonly SYSTEM_CC       = "@gcc -gstabs+ -m64 -fPIC -mno-align-double" % C compiler
+readonly SYSTEM_ASM = "@as --64" % Assembler
+
+readonly proc GetGcWrapFlags() is
+    return ""
+end
+
+readonly proc FixM3GcDefs(Args) is
+    return Args
+end
+
+readonly proc GetM3BackFlag(x) is
+    return x
+end
 
 include("Linux.common")

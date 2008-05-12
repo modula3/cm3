@@ -127,21 +127,17 @@ SYSTEM_LIBORDER =
 %---------------------------------------------------------- system programs ---
 
 % should probe for if -m32 switch is accepted
-readonly SYSTEM_CC  = "@gcc -gstabs+ -fPIC " & GCC_M3264 % C compiler
 readonly SYSTEM_AR  = "@ar" % Archiver
-readonly SYSTEM_ASM = "@as" % Assembler
 
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
-readonly m3back = "@cm3cg -quiet -fPIC -gstabs+ -mno-align-double"
-
 proc m3_backend(source, object, optimize, debug) is
   %
   % These flags are local instead of global to avoid the probe when we compile nothing.
   %
-  local args = [ GetM3BackFlag (GCC_M3264), GetM3BackFlag ("-fno-reorder-blocks") ]
+  local args = [ GetM3BackFlag ("-fno-reorder-blocks") ]
   if M3_PROFILING args += "-p" end
   return try_exec (m3back, args, source, "-o", object)
 end
@@ -172,7 +168,7 @@ end
 
 proc assemble(source, object) is
   % should probe for if --32 switch is accepted
-  return try_exec(SYSTEM_ASM, AS_3264, source, "-o", object)
+  return try_exec(SYSTEM_ASM, source, "-o", object)
 end
 
 %------------------------------------------------------------------------------
@@ -184,22 +180,22 @@ end
 
 GcWrapFlags = ""
 
-readonly proc GetGcWrapFlags() is
-if not equal (TARGET, "AMD64_LINUX")
-    if not GcWrapFlags
-        % write("checking for GcWrapFlags" & CR)
-        GcWrapFlags = " "
-        local ExitCode = try_exec("@grep -F m3gcdefs " & PKG_USE & "/m3core/" & TARGET & "/.M3EXPORTS > /dev/null")
-        if equal(ExitCode, 0)
-            GcWrapFlags = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
+if not defined ("GetGcWrapFlags")
+	readonly proc GetGcWrapFlags() is
+		if not GcWrapFlags
+			% write("checking for GcWrapFlags" & CR)
+			GcWrapFlags = " "
+			local ExitCode = try_exec("@grep -F m3gcdefs " & PKG_USE & "/m3core/" & TARGET & "/.M3EXPORTS > /dev/null")
+			if equal(ExitCode, 0)
+				GcWrapFlags = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
 
-            % find libm3gcdefs here
-            % GcWrapFlags = GcWrapFlags & " -L" & LIB_USE & " -lm3gcdefs"
-            % GcWrapFlags = GcWrapFlags & " " & LIB_USE & "/libm3gcdefs.a"
-        end
-    end
-end
-    return GcWrapFlags
+				% find libm3gcdefs here
+				% GcWrapFlags = GcWrapFlags & " -L" & LIB_USE & " -lm3gcdefs"
+				% GcWrapFlags = GcWrapFlags & " " & LIB_USE & "/libm3gcdefs.a"
+			end
+		end
+		return GcWrapFlags
+	end
 end
 
 % write("exists(/) is " & exists("/") & CR)
@@ -220,68 +216,66 @@ end
 %
 % GcWrapFlags does not necessarily coincide with references to errno.
 %
-readonly proc FixM3GcDefs(Args) is
-if not equal (TARGET, "AMD64_LINUX")
-    local GcWrapFlags = GetGcWrapFlags()
-    if equal(GcWrapFlags, " ")
-        return Args
-    end
-    % if equal(LIB_USE, "/pub/lang/m3/cm3-dist/cm3/lib")
-    %     return Args
-    % end
-    % if equal(LIB_USE, "/pub/lang/m3/cm3-dist/cm3/bin/..lib")
-    %     return Args
-    % end
-    % local Result = [ ]
-    % Result += "-L" & LIB_USE
-    % foreach Arg in Args
-    %    write("Arg is " & Arg & CR)
-    %    if equal(Arg, "-L/pub/lang/m3/cm3-dist/cm3/lib")
-    %        write("changing arg" & CR)
-    %        Result += "-L" & LIB_USE
-    %    else
-    %        Result += Arg
-    %    end
-    %end
-    %Result += "/usr/lib/libc.a"
-    %return Result
-    %Args += "-L" & LIB_USE
-    %Args += "/usr/lib/libc.a"
-end
-    return Args
-end
-
-%
-% Hash of command line option to TRUE or FALSE,
-% to avoid probing more than once. 
-%
-local IsM3BackFlagSupported_Cache = { }
-
-readonly proc IsM3BackFlagSupported(x) is
-if not equal (TARGET, "AMD64_LINUX")
-    local Result = 0
-    if IsM3BackFlagSupported_Cache contains x
-        Result = IsM3BackFlagSupported_Cache{x}
-    else
-        % write("probing " & m3back & " for " & x & CR)
-        Result = not equal(try_exec(
-            m3back & " " & x & " /dev/null 2>&1 "
-            & "| grep -F -e \"Invalid option\" -e \"unrecognized command line option\" > /dev/null"), 0)
-        IsM3BackFlagSupported_Cache{x} = Result
-    end
-    return Result
-else
-    return TRUE
-end
+if not defined ("FixM3GcDefs")
+	readonly proc FixM3GcDefs(Args) is
+		local GcWrapFlags = GetGcWrapFlags()
+		if equal(GcWrapFlags, " ")
+			return Args
+		end
+		% if equal(LIB_USE, "/pub/lang/m3/cm3-dist/cm3/lib")
+		%     return Args
+		% end
+		% if equal(LIB_USE, "/pub/lang/m3/cm3-dist/cm3/bin/..lib")
+		%     return Args
+		% end
+		% local Result = [ ]
+		% Result += "-L" & LIB_USE
+		% foreach Arg in Args
+		%    write("Arg is " & Arg & CR)
+		%    if equal(Arg, "-L/pub/lang/m3/cm3-dist/cm3/lib")
+		%        write("changing arg" & CR)
+		%        Result += "-L" & LIB_USE
+		%    else
+		%        Result += Arg
+		%    end
+		%end
+		%Result += "/usr/lib/libc.a"
+		%return Result
+		%Args += "-L" & LIB_USE
+		%Args += "/usr/lib/libc.a"
+		return Args
+	end
 end
 
-readonly proc GetM3BackFlag(x) is
-if not equal (TARGET, "AMD64_LINUX")
-    if not IsM3BackFlagSupported(x)
-        x = ""
-    end
-end
-    return x
+
+if not defined ("GetM3BackFlag")
+
+	%
+	% Hash of command line option to TRUE or FALSE,
+	% to avoid probing more than once. 
+	%
+	local IsM3BackFlagSupported_Cache = { }
+
+	readonly proc IsM3BackFlagSupported(x) is
+		local Result = 0
+		if IsM3BackFlagSupported_Cache contains x
+			Result = IsM3BackFlagSupported_Cache{x}
+		else
+			% write("probing " & m3back & " for " & x & CR)
+			Result = not equal(try_exec(
+				m3back & " " & x & " /dev/null 2>&1 "
+				& "| grep -F -e \"Invalid option\" -e \"unrecognized command line option\" > /dev/null"), 0)
+			IsM3BackFlagSupported_Cache{x} = Result
+		end
+		return Result
+	end
+
+	readonly proc GetM3BackFlag(x) is
+		if not IsM3BackFlagSupported(x)
+			x = ""
+		end
+		return x
+	end
 end
 
 % write("GetGcWrapFlags is " & GetGcWrapFlags() & CR)

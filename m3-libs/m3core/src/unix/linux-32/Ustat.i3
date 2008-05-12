@@ -50,13 +50,12 @@ TYPE
     st_blksize: u_long;
     st_blocks : u_long;
     st_atime  : time_t;
-    st_spare1 : u_long;
+    st_atimensec : u_long;
     st_mtime  : time_t;
-    st_spare2 : u_long;
+    st_mtimensec : u_long;
     st_ctime  : time_t;
-    st_spare3 : u_long;
-    st_spare4 : u_long;
-    st_spare5 : u_long;
+    st_ctimensec : u_long;
+    st_spare  : LONGINT; (* This would be two INTEGERS but alignment is needed for SPARC32; NT386 cannot correctly compile this. *)
   END;
   struct_stat_star = UNTRACED REF struct_stat;
 

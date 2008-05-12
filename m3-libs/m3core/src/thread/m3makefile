@@ -33,6 +33,8 @@ readonly USE_PTHREADS = {
   "SOLgnu"     : TRUE,
   "SOLsun"     : TRUE,
   "SPARC"      : FALSE,
+  "SPARC32_LINUX" : TRUE,
+  "SPARC64_LINUX" : TRUE,
   "SUN3"       : FALSE,
   "SUN386"     : FALSE,
   "UMAX"       : FALSE,
