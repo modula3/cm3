@@ -140,7 +140,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 25 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     |  Systems.ALPHA_OSF =>
                  Integer := Int64;
@@ -169,7 +169,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 83 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     |  Systems.ARM =>
                  max_align                 := 32;
@@ -179,7 +179,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 16 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     |  Systems.DS3100 =>
                  Little_endian             := TRUE;
@@ -192,7 +192,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Has_stack_walker          := TRUE;
                  Setjmp                    := "_setjmp";
                  Checks_integer_ops        := TRUE;
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     |  Systems.FreeBSD, Systems.FreeBSD2, Systems.FreeBSD3, Systems.FreeBSD4 =>
                  max_align                 := 32;
@@ -214,7 +214,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 100 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     |  Systems.HPPA =>
                  Little_endian             := FALSE;
@@ -226,7 +226,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Fixed_frame_size          := 8 * Address.size;
                  Setjmp                    := "_setjmp";
                  Aligned_procedures        := FALSE;
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     |  Systems.IBMR2 =>
                  max_align                 := 32;
@@ -236,7 +236,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 65 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     | Systems.IBMRT =>
                  max_align                 := 32;
@@ -246,7 +246,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 17 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     |  Systems.IRIX5 =>
                  Little_endian             := FALSE;
@@ -257,7 +257,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
                  Setjmp                    := "setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     |  Systems.LINUX, Systems.LINUXELF =>
                  max_align                 := 32;
@@ -268,7 +268,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 8 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "__setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     | Systems.NEXT =>
                  max_align                 := 16;
@@ -278,17 +278,17 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 39 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     | Systems.NT386, Systems.NT386GNU =>
 
                  (* Cygwin is 13, Visual C++ is 16. Always use 16
-                 so the code has a chance of interoperating.
-                 Cygwin provides setjmp and _setjmp that resolve the same.
-                 Visual C++ provides only _setjmp.
-                 Visual C++ also has _setjmp3 that the compiler generates
-                 a call to. In fact _setjmp appears to only use 8 ints
-                 and _setjmp3 appears to use more. Consider switching to _setjmp3.
+                    so the code has a chance of interoperating.
+                    Cygwin provides setjmp and _setjmp that resolve the same.
+                    Visual C++ provides only _setjmp.
+                    Visual C++ also has _setjmp3 that the compiler generates
+                    a call to. In fact _setjmp appears to only use 8 ints
+                    and _setjmp3 appears to use more. Consider switching to _setjmp3.
                  *)
                  Jumpbuf_size := (16 * Address.size);
                  Setjmp := "_setjmp";
@@ -342,7 +342,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 22 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     |  Systems.OS2 =>
                  max_align                 := 32;
@@ -353,7 +353,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "__setjmp";
                  EOL                       := "\n"; (* really? *)
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     | Systems.SEQUENT =>
                  max_align                 := 32;
@@ -364,14 +364,14 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
-    | Systems.SOLgnu, Systems.SOLsun,
+    | Systems.SOLgnu,
+      Systems.SOLsun,
       Systems.SPARC,
-      Systems.SPARC32_LINUX, Systems.SPARC64_LINUX =>
-
-                (* common characteristics of all SPARC targets *)
-
+      Systems.SPARC32_LINUX,
+      Systems.SPARC64_LINUX =>
+                 (* common characteristics of all SPARC targets *)
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
@@ -379,33 +379,29 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Fixed_frame_size          := 20 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
 
-                  CASE System OF
-                    | Systems.SOLgnu, Systems.SOLsun =>
-                        Jumpbuf_size              := 19 * Address.size;
-                        Has_stack_walker          := TRUE;
-                        Setjmp                    := "setjmp";
-                        Global_handler_stack      := FALSE; (* may use pthreads *)
-
-                    | Systems.SPARC32_LINUX =>
-                        Global_handler_stack      := FALSE; (* may use pthreads *)
-                        Setjmp                    := "_setjmp";
-                        Jumpbuf_size              := 16_90 * Char.size;
-
-                    | Systems.SPARC64_LINUX =>
-                        Integer := Int64;
-                        Word    := Word64;
-                        Address := Word64;
-                        Address.cg_type := CGType.Addr;
-                        Global_handler_stack      := FALSE; (* may use pthreads *)
-                        Setjmp                    := "_setjmp";
-                        Jumpbuf_size              := 16_280 * Char.size;
-
-                    | Systems.SPARC =>
-                        Jumpbuf_size              := 10 * Address.size;
-                        Setjmp                    := "_setjmp";
-						Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 CASE System OF
+                 | Systems.SOLgnu, Systems.SOLsun =>
+                   Jumpbuf_size              := 19 * Address.size;
+                   Has_stack_walker          := TRUE;
+                   Setjmp                    := "setjmp";
+                   Global_handler_stack      := FALSE; (* may use pthreads *)
+                 | Systems.SPARC32_LINUX =>
+                   Global_handler_stack      := FALSE; (* may use pthreads *)
+                   Setjmp                    := "_setjmp";
+                   Jumpbuf_size              := 16_90 * Char.size;
+                 | Systems.SPARC64_LINUX =>
+                   Integer := Int64;
+                   Word    := Word64;
+                   Address := Word64;
+                   Address.cg_type := CGType.Addr;
+                   Global_handler_stack      := FALSE; (* may use pthreads *)
+                   Setjmp                    := "_setjmp";
+                   Jumpbuf_size              := 16_280 * Char.size;
+                 | Systems.SPARC =>
+                   Jumpbuf_size              := 10 * Address.size;
+                   Setjmp                    := "_setjmp";
+                   Global_handler_stack      := TRUE; (* uses only user mode threads *)
                   END;
-
     | Systems.SUN3 =>
                  max_align                 := 16;
                  Little_endian             := FALSE;
@@ -415,7 +411,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 1024 * Char.size;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     | Systems.SUN386 =>
                  max_align                 := 32;
@@ -425,7 +421,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 8 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     | Systems.UMAX =>
                  max_align                 := 32;
@@ -435,7 +431,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 10 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     | Systems.VAX =>
                  Real.min.fraction     := -1.70111x+38;
@@ -454,7 +450,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Guard_page_size           := 1024 * Char.size;
                  All_floats_legal          := FALSE;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     |  Systems.LINUXLIBC6 =>
                  max_align                 := 32;
@@ -526,7 +522,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
                  Setjmp                    := "_setjmp";
-				 Global_handler_stack      := TRUE; (* uses only user mode threads *)
+                 Global_handler_stack      := TRUE; (* uses only user mode threads *)
 
     |  Systems.PPC_LINUX => 
                  Little_endian             := FALSE;
