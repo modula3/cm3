@@ -2364,7 +2364,7 @@ PROCEDURE GenLibraryList (s: State;  wr: Wr.T)
         IF (u.loc.path = NIL) THEN
           Wr.PutText (wr, "-l" & M3ID.ToText (u.name));
         ELSE
-          Wr.PutText (wr, M3Path.Escape (
+          Wr.PutText (wr, M3Path.Convert (
                             M3Path.Join (u.loc.path, M3ID.ToText (u.name),
                                         u.kind)));
         END;

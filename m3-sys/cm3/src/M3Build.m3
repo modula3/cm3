@@ -1646,8 +1646,8 @@ PROCEDURE InstallSources (t: T) =
           last_loc := uu.loc;
         END;
         src := M3Unit.FullPath (uu);
-        Out (wr, "install_file(\"", M3Path.Escape (src), QCQ);
-        Out (wr, M3Path.Escape (dest), QCQ, "0644", QRPCR);
+        Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
+        Out (wr, M3Path.Convert (dest), QCQ, "0644", QRPCR);
       END;
     END Emit;
 
@@ -1780,8 +1780,8 @@ PROCEDURE InstallDerived (t: T;  name: TEXT) =
     VAR dest := InstallDerivedDir (t);
     BEGIN
       InstallDir (t, dest, wr);
-      Out (wr, "install_file(\"", M3Path.Escape (name), QCQ);
-      Out (wr, M3Path.Escape (dest), QCQ, "0644", QRPCR);
+      Out (wr, "install_file(\"", M3Path.Convert (name), QCQ);
+      Out (wr, M3Path.Convert (dest), QCQ, "0644", QRPCR);
     END Emit;
 
   BEGIN
@@ -1798,8 +1798,8 @@ PROCEDURE InstallDerivedLink (t: T;  from, to: TEXT) =
       from_file := M3Path.New (UseDerivedDir (t), from);
     BEGIN
       InstallDir (t, dest_dir, wr);
-      Out (wr, "link_file(\"", M3Path.Escape (from_file), QCQ);
-      Out (wr, M3Path.Escape (to_file), QRPCR);
+      Out (wr, "link_file(\"", M3Path.Convert (from_file), QCQ);
+      Out (wr, M3Path.Convert (to_file), QRPCR);
     END Emit;
 
   BEGIN
@@ -1828,8 +1828,8 @@ PROCEDURE InstallLinkToDerived (t: T;   src, dest: TEXT)
       link   := M3Path.New (dest, src);
     BEGIN
       InstallDir (t, dest, wr);
-      Out (wr, "link_file(\"", M3Path.Escape (target), QCQ);
-      Out (wr, M3Path.Escape (link), QRPCR)
+      Out (wr, "link_file(\"", M3Path.Convert (target), QCQ);
+      Out (wr, M3Path.Convert (link), QRPCR)
     END Emit;
 
   BEGIN
@@ -1847,7 +1847,7 @@ PROCEDURE InstallDir (t: T;  dir: TEXT;  wr: Wr.T)
       IF t.have_pkgtools THEN
         Out (wr, "-l ", dir, "\n");
       ELSIF NOT t.all_ship_dirs.put (M3ID.Add (dir), NIL) THEN
-        Out (wr, "make_dir(\"", M3Path.Escape (dir), QRPCR);
+        Out (wr, "make_dir(\"", M3Path.Convert (dir), QRPCR);
       END;
       t.last_ship_dir := dir;
     END;
@@ -1866,8 +1866,8 @@ PROCEDURE InstallFile (t: T;  src, dest, mode: TEXT;  derived: BOOLEAN)
       IF t.have_pkgtools THEN
         Out (wr, M3ID.ToText (t.build_dir), "/", src, "\n");
       ELSE
-        Out (wr, "install_file(\"", M3Path.Escape (src), QCQ);
-        Out (wr, M3Path.Escape (dest), QCQ, mode, QRPCR);
+        Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
+        Out (wr, M3Path.Convert (dest), QCQ, mode, QRPCR);
       END;
     END Emit;
 
@@ -1920,8 +1920,8 @@ PROCEDURE InstallSource (t: T;  src, dest, mode: TEXT) =
       IF t.have_pkgtools THEN
         Out (wr, src, "\n");
       ELSE
-        Out (wr, "install_file(\"", M3Path.Escape (src), QCQ);
-        Out (wr, M3Path.Escape (dest), QCQ, mode, QRPCR);
+        Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
+        Out (wr, M3Path.Convert (dest), QCQ, mode, QRPCR);
       END;
     END Emit;
     
@@ -2081,16 +2081,16 @@ PROCEDURE GenM3Exports (t: T;  header: TEXT)
       (* copy forward overrides *)
       VAR it := t.pkg_overrides.iterate (); BEGIN
         WHILE it.next (nm, ref) DO
-          Out (wr, "override(\"", M3Path.Escape (M3ID.ToText (nm)), QCQ);
-          Out (wr, M3Path.Escape (ref), QRPCR);
+          Out (wr, "override(\"", M3Path.Convert (M3ID.ToText (nm)), QCQ);
+          Out (wr, M3Path.Convert (ref), QRPCR);
         END;
       END;
   
       (* copy forward package imports *)
       VAR x := t.imports.iterate (); BEGIN
         WHILE x.next (nm, ref) DO
-          Out (wr, "import_version(\"", M3Path.Escape (M3ID.ToText (nm)), QCQ);
-          Out (wr, M3Path.Escape (ref), QRPCR);
+          Out (wr, "import_version(\"", M3Path.Convert (M3ID.ToText (nm)), QCQ);
+          Out (wr, M3Path.Convert (ref), QRPCR);
         END;
       END;
   
@@ -2105,21 +2105,21 @@ PROCEDURE GenM3Exports (t: T;  header: TEXT)
             | UK.I3, UK.M3, UK.IG, UK.MG, UK.C, UK.H, UK.S =>
                 <*ASSERT KindTag[u.kind] # NIL *>
                 Out (wr, KindTag[u.kind], "(\"");
-                Out (wr, M3Path.Escape (M3Unit.FileName (u)), QCQ);
-                Out (wr, M3Path.Escape (M3ID.ToText (u.loc.pkg)), QCQ);
-                Out (wr, M3Path.Escape (M3ID.ToText (u.loc.subdir)), QCQ);
+                Out (wr, M3Path.Convert (M3Unit.FileName (u)), QCQ);
+                Out (wr, M3Path.Convert (M3ID.ToText (u.loc.pkg)), QCQ);
+                Out (wr, M3Path.Convert (M3ID.ToText (u.loc.subdir)), QCQ);
                 Out (wr, HTag [u.hidden], QRPCR);
             | UK.M3LIB =>
                 Out (wr, "_import_m3lib(\"", M3ID.ToText (u.name), QCQ);
-                Out (wr, M3Path.Escape (M3ID.ToText (u.loc.pkg)), QCQ);
-                Out (wr, M3Path.Escape (M3ID.ToText (u.loc.subdir)), QRPCR);
+                Out (wr, M3Path.Convert (M3ID.ToText (u.loc.pkg)), QCQ);
+                Out (wr, M3Path.Convert (M3ID.ToText (u.loc.subdir)), QRPCR);
             | UK.LIB =>
                 Out (wr, "_import_otherlib(\"", M3ID.ToText (u.name), QCQ);
-                Out (wr, M3Path.Escape (u.loc.path), "\", IMPORTED)", Wr.EOL);
+                Out (wr, M3Path.Convert (u.loc.path), "\", IMPORTED)", Wr.EOL);
             | UK.TMPL =>
                 Out (wr, "_import_template(\"", M3Unit.FileName (u), QCQ);
-                Out (wr, M3Path.Escape (M3ID.ToText (u.loc.pkg)), QCQ);
-                Out (wr, M3Path.Escape (M3ID.ToText (u.loc.subdir)), QRPCR);
+                Out (wr, M3Path.Convert (M3ID.ToText (u.loc.pkg)), QCQ);
+                Out (wr, M3Path.Convert (M3ID.ToText (u.loc.subdir)), QRPCR);
             END;
           END;
           u := u.next;
