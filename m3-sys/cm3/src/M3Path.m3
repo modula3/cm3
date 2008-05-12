@@ -318,7 +318,7 @@ PROCEDURE LibraryName (base: TEXT): TEXT =
     RETURN Prefix[os][Kind.LIB] & base & Suffix[os][Kind.LIB];
   END LibraryName;
 
-PROCEDURE Escape (nm: TEXT): TEXT =
+PROCEDURE Convert (nm: TEXT): TEXT =
   VAR len: CARDINAL := 0; buf: ARRAY [0..255] OF CHAR;
   BEGIN
     IF nm # NIL THEN
@@ -327,34 +327,30 @@ PROCEDURE Escape (nm: TEXT): TEXT =
     IF len = 0 THEN
       RETURN nm;
     END;
-    IF (len + len <= NUMBER (buf))
-      THEN RETURN DoEscape (nm, len, buf);
-      ELSE RETURN DoEscape (nm, len, NEW (REF ARRAY OF CHAR, len + len)^);
+    IF (len <= NUMBER (buf))
+      THEN RETURN DoConvert (nm, len, buf);
+      ELSE RETURN DoConvert (nm, len, NEW (REF ARRAY OF CHAR, len)^);
     END;
-  END Escape;
+  END Convert;
 
-PROCEDURE DoEscape (nm: TEXT;  len: CARDINAL;  VAR buf: ARRAY OF CHAR): TEXT =
-  VAR n_escapes : CARDINAL := 0;  src, dest: CARDINAL;  c: CHAR;
+PROCEDURE DoConvert (nm: TEXT;  len: CARDINAL;  VAR buf: ARRAY OF CHAR): TEXT =
+  VAR changed := FALSE;
+	  c: CHAR;
   BEGIN
     Text.SetChars (buf, nm);
     FOR i := 0 TO len-1 DO
-      IF (buf[i] = BackSlash) THEN INC (n_escapes); END;
-    END;
-    IF (n_escapes = 0) THEN RETURN nm; END;
-    src  := len;
-    dest := src + n_escapes;
-    WHILE src # 0 DO
-      DEC (src);
-      DEC (dest);
-      c := buf[src];
-      buf[dest] := c;
-      IF (c = BackSlash) THEN
-        DEC (dest);
-        buf[dest] := BackSlash;
+      c := buf[i];
+      IF c = BackSlash THEN
+		changed := TRUE;
+        buf[i] := Slash;
       END;
     END;
-    RETURN Text.FromChars (SUBARRAY (buf, 0, len + n_escapes));
-  END DoEscape;
+	IF changed THEN
+      RETURN Text.FromChars (SUBARRAY (buf, 0, len));
+	ELSE
+	  RETURN nm;
+	END;
+  END DoConvert;
 
 PROCEDURE IsDirSep (ch: CHAR; d_sep: CHAR): BOOLEAN =
   BEGIN
