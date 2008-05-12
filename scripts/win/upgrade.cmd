@@ -15,7 +15,6 @@
  libm3
 
 @set p_compiler=^
- patternmatching ^
  sysutils ^
  m3middle ^
  m3objfile ^

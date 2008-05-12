@@ -38,6 +38,8 @@ readonly Platform_info = {
   "SOLgnu"    : "sparc-sun-solaris2",
   "SOLsun"    : "sparc-sun-solaris2",
   "SPARC"     : "sparc-sun-sunos4.1",
+  "SPARC32_LINUX" : "sparc-linux-gnu",
+  "SPARC64_LINUX" : "sparc64-linux-gnu",
   "SUN3"      : "m68k-sun-sunos4.1",
   "SUN386"    : "i386-sun-sunos4.1",
   "Tru64v5"   : "alpha-dec-osf1",
@@ -55,18 +57,10 @@ readonly Platform_info = {
 readonly proc Platform_WordSize (Platform) is
   if {"ALPHA_OSF":1,"AMD64_DARWIN":1,"AMD64_LINUX":1,"AMD64_NT":1,
       "AMD64_FREEBSD":1,"AMD64_NETBSD":1,"AMD64_OPENBSD":1,"AMD64_SOLARIS":1,
-      "IA64_NT":1,"FBSD_ALPHA":1,"Tru64v5":1} contains Platform
+      "IA64_NT":1,"FBSD_ALPHA":1,"Tru64v5":1,"SPARC64_LINUX":1} contains Platform
     return "64"
   end
   return "32"
-end
-
-readonly proc Platform_ExeExtension (Platform) is
-  if {"NT386":1,"NT386GNU":1,"AMD64_NT":1,"IA64_NT":1,"ARM_CE":1} contains Platform
-    return ".exe"
-  else
-    return ""
-  end
 end
 
 readonly proc HostIsNT () is
@@ -139,12 +133,16 @@ readonly m3cc_env = {
   % Build an x86 hosted compiler that targets x86 and AMD64.
   % Omitting -O cuts build time in half.
   %
-  "LINUXLIBC6" : PickM32 ("CFLAGS='-m32 -g' LEX='touch lex.yy.c'", 
-"CFLAGS=-g"),
-  "AMD64_LINUX" : PickM32 ("CFLAGS='-m32 -g' LEX='touch lex.yy.c'", 
-"CFLAGS=-g"),
+  "LINUXLIBC6" : PickM32 ("CFLAGS='-m32 -g' LEX='touch lex.yy.c'", "CFLAGS=-g"),
+  "AMD64_LINUX" : PickM32 ("CFLAGS='-m32 -g' LEX='touch lex.yy.c'", "CFLAGS=-g"),
   "NT386" : PickM32 ("CFLAGS='-m32 -g'", "CFLAGS=-g"),
   "AMD64_NT" : PickM32 ("CFLAGS='-m32 -g'", "CFLAGS=-g"),
+
+  % We really do want CC and CFLAGS.
+  % If we don't set CC, configure doesn't believe us that we are a native environment.
+  % If we don't set CFLAGS, we get -O which adds a lot of time.
+  "SPARC32_LINUX" : "CC='gcc -m32 -g' CFLAGS=",
+
 } % m3cc_env
 
 readonly m3cc_config = {
@@ -155,6 +153,7 @@ readonly m3cc_config = {
   "AMD64_LINUX" : PickM32("--host=i686-pc-linux-gnu --build=i686-pc-linux-gnu", ""),
   "NT386"  : "--target=i686-pc-mingw32 --host=i686-pc-mingw32 --build=i686-pc-mingw32",
   "AMD64_NT"  : PickM32("--target=amd64-pc-mingw32 --host=i686-pc-mingw32 --build=i686-pc-mingw32", ""),
+  "SPARC32_LINUX" : "--target=sparc-linux-gnu --host=sparc-linux-gnu --build=sparc-linux-gnu",
 
   "HPPA"  : "--with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
@@ -218,9 +217,7 @@ end
 m3cc_ResponseFileCounter = "0"
 
 readonly proc m3cc_Run (x) is
-  >> "_m3.log" in
-    write(x & CR)
-  end
+  write(x & CR)
   if HostIsNT ()
     local readonly Temp = "_m3sh" & m3cc_ResponseFileCounter & ".sh"
     > Temp in
@@ -303,13 +300,26 @@ if not defined ("no_config")
   end
 end
 
-EXE = Platform_ExeExtension (M3CC_TARGET)
+readonly proc ProbeExeExtension (a) is
+  return exists (a & ".exe")
+end
+
+readonly proc AppendExeExtension (a) is
+  if exists (a & ".exe")
+    return a & ".exe"
+  end
+  return a
+end
 
 local DoMipsTfile = (equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF"))
 
 readonly proc postcp() is
-  pSrc  = build_dir & "/gcc/m3cgc1" & EXE
-  pDest = build_dir & "/cm3cg" & EXE
+  pSrc  = build_dir & "/gcc/m3cgc1"
+  pDest = build_dir & "/cm3cg"
+  if ProbeExeExtension (pSrc)
+    pSrc = pSrc & ".exe"
+	pDest = pDest & ".exe"
+  end
   if stale(pDest, pSrc)
     cp_if(pSrc, pDest)
   end
@@ -323,7 +333,7 @@ readonly proc postcp() is
 end
 
 if Native
-  BindExport ("cm3cg" & EXE)
+  BindExport (AppendExeExtension ("cm3cg"))
   if DoMipsTfile
     BindExport ("mips-tfile")
   end
@@ -354,7 +364,5 @@ cmds = cmds & " s-modes insn-config.h m3cg | tee -a _m3.log"
 
 % finally, compile it
 m3cc_Run (cmds)
->> "_m3.log" in
-  write (cmds & EOL)
-end
+
 postcp ()

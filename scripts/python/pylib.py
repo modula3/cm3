@@ -456,6 +456,8 @@ if not Target:
             Target = "PPC_LINUX"
         elif UNameArchM == "x86_64":
             Target = "AMD64_LINUX"
+        elif UNameArchM == "sparc64":
+            Target = "SPARC32_LINUX"
         else:
             Target = "LINUXLIBC6"
 
@@ -608,7 +610,7 @@ SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "\\\\"))
 
 # define build and ship programs for Critical Mass Modula-3
 
-DEFS = "-keep -DROOT=%(Q)s%(Root)s%(Q)s"
+DEFS = "-DROOT=%(Q)s%(Root)s%(Q)s"
 DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
 DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
 DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
@@ -1954,6 +1956,7 @@ def SetupEnvironment():
             "PATH",
             ["gcc", "as", "ld"],
             os.path.join(SystemDrive, "cygwin", "bin"))
+
 
 if __name__ == "__main__":
     #
