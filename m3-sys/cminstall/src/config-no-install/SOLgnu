@@ -129,13 +129,12 @@ readonly SYSTEM_ASM = "as" % Assembler
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
-readonly m3back = "@" & BIN_USE & "/cm3cg"
+readonly m3back = "@" & BIN_USE & "/cm3cg -fPIC -gstabs+"
 M3_USE_STACK_WALKER = FALSE
 
 proc m3_backend (source, object, optimize, debug) is
-  local args = [ "-quiet", "-fPIC", source, "-o", object ]
+  local args = [ "-quiet", source, "-o", object ]
   if optimize  args += "-O"  end
-  if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
   touch (object)
   return 0
@@ -252,7 +251,7 @@ end
 proc m3_link (prog, options, objects, imported_libs, shared) is
   touch (prog)
   return 0
-  local linker = [ "@" & SYSTEM_CC, "-pthreads", "-fPIC" ]
+  local linker = [ "@" & SYSTEM_CC, "-pthreads" ]
   local args = []
   if M3_PROFILING args += "-pg" end
   args += [ "-o", prog, options, objects, imported_libs ]
@@ -343,6 +342,6 @@ end
 %
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-gstabs"
+GNU_CFLAGS = "-gstabs+"
 GNU_MAKE   = "make"
 

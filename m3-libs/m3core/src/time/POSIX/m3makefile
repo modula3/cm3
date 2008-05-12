@@ -36,6 +36,8 @@ readonly _DateImpls = {
   "SOLgnu"     : "DatePosix",
   "SOLsun"     : "DatePosix",
   "SPARC"      : "DateBsd",
+  "SPARC32_LINUX" : "DateBsd",
+  "SPARC64_LINUX" : "DateBsd",
   "SUN3"       : "DateBsd",
   "SUN386"     : "DateBsd",
   "UMAX"       : "DateBsd",

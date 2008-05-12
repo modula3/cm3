@@ -4,7 +4,7 @@
 % derived originally from the FreeBSD configuration
 %
 
-% $Id: PPC_DARWIN,v 1.12 2008-03-24 17:02:19 jkrell Exp $
+% $Id: PPC_DARWIN,v 1.13 2008-05-12 19:24:53 jkrell Exp $
 
 %-------------------------------------------------- compilation environment ---
 
@@ -138,7 +138,12 @@ SYSTEM_LIBORDER =
 
 %---------------------------------------------------------- system programs ---
 
-readonly SYSTEM_CC  = "cc" % C compiler
+%
+% fPIC is not usually needed here.
+% It is the default for Apple gcc and left
+% here in case user is using a self-built FSF gcc.
+%
+readonly SYSTEM_CC  = "gcc -fPIC -m32" % C compiler
 readonly SYSTEM_LIBTOOL = "libtool" % Archiver
 readonly SYSTEM_ASM = "as" % Assembler
 
@@ -146,7 +151,12 @@ readonly SYSTEM_ASM = "as" % Assembler
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
-readonly m3back = "@" & BIN_USE & "/cm3cg"
+%
+% fPIC really is needed here, despite man gcc saying it is the default.
+% This is because man gcc is about Apple's gcc but m3cg is
+% built from FSF source.
+%
+readonly m3back = "@" & BIN_USE & "/cm3cg -m32 -fPIC -gstabs+"
 
 proc m3_backend (source, object, optimize, debug) is
   local args =
@@ -155,14 +165,9 @@ proc m3_backend (source, object, optimize, debug) is
     source,
     "-o",
     object,
-    % fPIC really is needed here, despite man gcc saying it is the default.
-    % This is because man gcc is about Apple's gcc but m3cg is
-    % built from FSF source.
-    "-fPIC"
   ]
   args += "-fno-reorder-blocks"
   if optimize  args += "-O3"  end
-  if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-p" end
   return try_exec (m3back, args)
 end
@@ -180,12 +185,8 @@ M3_BACKEND_MODE = "3"
 % code, the system distributed by Critical Mass does not.
 
 proc compile_c (source, object, options, optimize, debug) is
-  % fPIC is not usually needed here.
-  % It is the default for Apple gcc and left
-  % here in case user is using a self-built FSF gcc.
-  local args = [ "-fPIC", options ]
+  local args = [ options ]
   if optimize  args += "-O"  end
-  if debug     args += "-gstabs"  end
   if M3_PROFILING args += "-pg" end
   return try_exec ("@" & SYSTEM_CC, args, "-c", source)
 end
@@ -297,9 +298,6 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
   [
     "-o",
     prog,
-    % -fPIC is the default in Apple tools but may be
-    % useful for self-built FSF tools
-    "-fPIC",
     options,
     objects,
     imported_libs,

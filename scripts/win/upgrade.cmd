@@ -1,4 +1,4 @@
-@rem $Id: upgrade.cmd,v 1.12 2008-05-08 11:37:54 jkrell Exp $
+@rem $Id: upgrade.cmd,v 1.13 2008-05-12 19:24:54 jkrell Exp $
 
 @setlocal
 
@@ -15,7 +15,6 @@
  libm3
 
 @set p_compiler=^
- patternmatching ^
  sysutils ^
  m3middle ^
  m3objfile ^

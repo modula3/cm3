@@ -38,6 +38,8 @@ readonly _FloatPieces = {
   "SOLgnu"     : _float_be,
   "SOLsun"     : [ "IEEE", "IEEE-be", "SOLsun" ],
   "SPARC"      : [ "IEEE", "IEEE-be", "SPARC" ],
+  "SPARC32_LINUX" : _float_be,
+  "SPARC64_LINUX" : _float_be,
   "SUN3"       : _float_be,
   "SUN386"     : [ "IEEE", "IEEE-le", "SUN386" ],
   "UMAX"       : _float_le,

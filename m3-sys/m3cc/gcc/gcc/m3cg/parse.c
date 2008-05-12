@@ -282,7 +282,6 @@ static int global_bindings_p (void);
 static void insert_block (tree block);
 
 static void m3_push_type_decl (tree, tree);
-static void m3_expand_function (tree);
 static void m3_write_globals (void);
 
 /* The front end language hooks (addresses of code for this front
@@ -923,15 +922,6 @@ builtin_function (const char *name, tree type, int function_code,
   return decl;
 }
 
-/* Modula-3 expand function langhook.  */
-
-static void
-m3_expand_function (tree fndecl)
-{
-  /* We have nothing special to do while expanding functions for Modula-3.  */
-  tree_rest_of_compilation (fndecl);
-}
-
 static void
 m3_write_globals (void)
 {
@@ -1331,6 +1321,7 @@ static GTY (()) varray_type m3_global_varrays[M3VA_MAX];
 
 /*======================================================= OPTION HANDLING ===*/
 
+static int option_trace_all         = 0;
 static int option_opcodes_trace     = 0;
 static int option_source_line_trace = 0;
 static int option_vars_trace        = 0;
@@ -1540,6 +1531,10 @@ scan_target_int (void)
   case M3CG_Int8:   n_bytes = 8;  sign =  1;  break;
   case M3CG_NInt8:  n_bytes = 8;  sign = -1;  break;
   default:
+
+    if (option_trace_all)
+      fprintf(stderr,"  integer 0x%lx\n", ((unsigned long) i));
+
     return build_int_cst (t, i);
   }
 
@@ -1554,6 +1549,11 @@ scan_target_int (void)
 
   res = build_int_cst_wide (t, low, hi);
   if (sign < 0) { res = m3_build1 (NEGATE_EXPR, t, res); }
+
+  if (option_trace_all)
+    fprintf(stderr,"  integer n_bytes 0x%lx hi 0x%lx low 0x%lx sign %ld\n",
+           ((unsigned long) n_bytes), ((unsigned long) hi), ((unsigned long) low), sign);
+
   return res;
 }
 
@@ -3927,13 +3927,20 @@ m3cg_set_sym_difference (void)
   setop (set_sdiff_proc, n, 3);
 }
 
+/* Needs further investigation. */
+#ifdef __sparc
+#define assert_is_int(a) gcc_assert (INTEGRAL_TYPE_P (a))
+#else
+#define assert_is_int(a) gcc_assert(a == t_int)
+#endif
+
 static void
 m3cg_set_member (void)
 {
   UNUSED_BYTESIZE (n);
   MTYPE    (t);
 
-  gcc_assert (t == t_int);
+  assert_is_int (t);
   setop2 (set_member_proc, 2);
 }
 
@@ -3943,7 +3950,7 @@ m3cg_set_compare (tree proc)
   BYTESIZE (n);
   MTYPE    (t);
 
-  gcc_assert (t == t_int);
+  assert_is_int (t);
   setop (proc, n, 2);
 }
 
@@ -3960,7 +3967,7 @@ m3cg_set_range (void)
   UNUSED_BYTESIZE (n);
   MTYPE    (t);
 
-  gcc_assert (t == t_int);
+  assert_is_int (t);
   setop2 (set_range_proc, 3);
 }
 
@@ -3970,7 +3977,7 @@ m3cg_set_singleton (void)
   UNUSED_BYTESIZE (n);
   MTYPE    (t);
 
-  gcc_assert (t == t_int);
+  assert_is_int (t);
   setop2 (set_sing_proc, 2);
 }
 
@@ -4229,7 +4236,7 @@ m3cg_copy_n (void)
   MTYPE (mem_t);
   BOOLEAN (overlap);
 
-  gcc_assert (cnt_t == t_int);
+  assert_is_int (cnt_t);
   m3_start_call ();
 
   /* rearrange the parameters */
@@ -5017,6 +5024,7 @@ m3_handle_option (size_t scode, const char *arg ATTRIBUTE_UNUSED, int value)
       break;
 
     case OPT_y:
+      option_trace_all         = 1;
       option_opcodes_trace     = 1;
       option_source_line_trace = 1;
       option_vars_trace        = 1;
