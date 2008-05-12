@@ -44,8 +44,8 @@ PROCEDURE ProgramName (base: TEXT): TEXT;
 PROCEDURE LibraryName (base: TEXT): TEXT;
 (* Return "base" as a library name on the target platform. *)
 
-PROCEDURE Escape (nm: TEXT): TEXT;
-(* Return 'nm' with and embedded backslashes doubled. *)
+PROCEDURE Convert (nm: TEXT): TEXT;
+(* Return 'nm' with and backslashes changed to forward slashes. *)
 
 PROCEDURE IsEqual (a, b: TEXT): BOOLEAN;
 (* Return "TRUE" if "a" and "b" name the same path on

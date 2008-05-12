@@ -384,7 +384,7 @@ PROCEDURE NoteSourceFile (VAR s: State;  dir, name: TEXT;  cmd_line: BOOLEAN)
 
     tag := SourceTag [info.kind];
     IF (tag # NIL) THEN
-      file := M3Path.Escape (M3Path.New (info.dir, info.base));
+      file := M3Path.Convert (M3Path.New (info.dir, info.base));
       Out (s.wr, tag, " (\"", file, "\")");
       s.found_work := TRUE;
     ELSE
@@ -444,7 +444,7 @@ PROCEDURE IncludeOverrides (VAR s: State;  overrides: TEXT)
   BEGIN
     IF M3File.IsReadable (overrides) THEN
       IF (s.use_overrides) THEN
-        Out (s.wr, "include (\"", M3Path.Escape (overrides), "\")");
+        Out (s.wr, "include (\"", M3Path.Convert (overrides), "\")");
         s.found_work := TRUE;
       ELSE
         IF (M3Options.major_mode = MM.Depend) THEN
@@ -470,7 +470,7 @@ PROCEDURE IncludeFile (VAR s: State;  file: TEXT)
   RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN
     IF M3File.IsReadable (file) THEN
-      Out (s.wr, "include (\"", M3Path.Escape (file), "\")");
+      Out (s.wr, "include (\"", M3Path.Convert (file), "\")");
       s.found_work := TRUE;
     ELSE
       IF (M3Options.major_mode = MM.Depend) THEN
@@ -485,7 +485,7 @@ PROCEDURE IncludeMakefile (VAR s: State;  makefile, dir: TEXT)
   RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN
     IF M3File.IsReadable (makefile) THEN
-      Out (s.wr, "include_dir (\"", M3Path.Escape (dir), "\")");
+      Out (s.wr, "include_dir (\"", M3Path.Convert (dir), "\")");
       s.found_work := TRUE;
     ELSE
       Msg.Debug ("Dirs.derived   = ", Dirs.derived, Wr.EOL);
