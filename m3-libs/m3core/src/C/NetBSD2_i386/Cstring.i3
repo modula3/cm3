@@ -1,21 +1,12 @@
 (* Copyright (C) 1989, Digital Equipment Corporation          *)
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
-(*                                                            *)
-(* File: Cstring.i3                                           *)
-(* Last modified on Mon Oct 17 09:19:10 PDT 1994 by kalsow    *)
-(*      modified on Tue Apr 20 20:16:18 PDT 1993 by muller    *)
-(*      modified on Sat Jan 20 22:31:44 1990 by jerome        *)
-(*      Olaf Wagner 16.09.1994                                *)
-
 
 INTERFACE Cstring;
 
 FROM Ctypes IMPORT char_star, const_char_star, const_void_star,
-                   int, void_star, unsigned_long;
-
-TYPE
-  size_t =  unsigned_long;
+                   int, void_star;
+FROM Cstddef IMPORT size_t;
 
 <*EXTERNAL*> 
 PROCEDURE memchr (s: const_void_star; c: int; n: size_t): void_star;
@@ -81,4 +72,3 @@ PROCEDURE strstr (s1: const_char_star; s2: const_char_star): char_star;
 PROCEDURE strerror (errnum: int): char_star;
 
 END Cstring.
-

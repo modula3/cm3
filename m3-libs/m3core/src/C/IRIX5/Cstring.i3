@@ -2,20 +2,11 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-(* File: Cstring.i3                                            *)
-(* Last modified on Fri Sep 30 11:24:55 PDT 1994 by ericv          *)
-(*      modified on Tue Apr 20 20:16:18 PDT 1993 by muller         *)
-(*      modified on Sat Jan 20 22:31:44 1990 by jerome         *)
-
-
 INTERFACE Cstring;
 
 FROM Ctypes IMPORT char_star, const_char_star, const_void_star,
-                   int, void_star, unsigned_int;
-
-
-TYPE
-  size_t            =  unsigned_int;
+                   int, void_star;
+FROM Cstddef IMPORT size_t;
 
 <*EXTERNAL*>
 PROCEDURE memcpy (s1: void_star; s2: const_void_star; n: size_t): void_star;
@@ -84,4 +75,3 @@ PROCEDURE strerror (errnum: int): char_star;
 PROCEDURE strlen (s: const_char_star): size_t;
 
 END Cstring.
-
