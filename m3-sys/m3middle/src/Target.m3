@@ -149,7 +149,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 16_400000;
+                 First_readable_addr       := 16_400000 * Char.size;
                  Jumpbuf_size              := 84 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
@@ -181,7 +181,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 16_400000;
+                 First_readable_addr       := 16_400000 * Char.size;
                  Jumpbuf_size              := 84 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
@@ -194,7 +194,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 4096 * Char.size;
+                 First_readable_addr       := 4096;
                  Jumpbuf_size              := 11 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "_setjmp";
@@ -242,7 +242,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 16_400000;
+                 First_readable_addr       := 16_400000 * Char.size;
                  Jumpbuf_size              := 28 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
@@ -253,7 +253,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 16_1000;
+                 First_readable_addr       := 16_1000 * Char.size;
                  Jumpbuf_size              := 8 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Setjmp                    := "__setjmp";
@@ -297,7 +297,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  (* initial experiments indicate that the first 64K of
                     a process's memory on NT are "free" and unreadable.
                     --- WKK  9/9/94 *)
-                 First_readable_addr       := 4096;
+                 First_readable_addr       := 4096 * Char.size;
                  Fixed_frame_size          := 0;
                  Guard_page_size           := 4096 * Char.size;
 
@@ -358,7 +358,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 8192;
+                 First_readable_addr       := 8192 * Char.size;
                  Fixed_frame_size          := 20 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
 
@@ -492,7 +492,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
-                 First_readable_addr       := 4096;
+                 First_readable_addr       := 4096 * Char.size;
                  Jumpbuf_size              := 10 * Address.size;
                  Fixed_frame_size          := 4 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
