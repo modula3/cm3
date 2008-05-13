@@ -1,13 +1,10 @@
 (* Copyright according to COPYRIGHT-CMASS. *)
-(* FIXME: copied from FreeBSD3 target. Probably needs to be changed. *)
 
 INTERFACE Cstring;
 
 FROM Ctypes IMPORT char_star, const_char_star, const_void_star,
-                   int, void_star, unsigned_long;
-
-TYPE
-  size_t =  unsigned_long;
+                   int, void_star;
+FROM Cstddef IMPORT size_t;
 
 <*EXTERNAL*> 
 PROCEDURE memchr (s: const_void_star; c: int; n: size_t): void_star;
@@ -66,11 +63,6 @@ PROCEDURE memmove (s1: void_star; s2: const_void_star; n: size_t): void_star;
 <*EXTERNAL*>
 PROCEDURE strcoll (s1: const_char_star; s2: const_char_star): int;
 
-(*
-<*EXTERNAL*>
-PROCEDURE strxrfm (s1: char_star; s2: const_char_star; n: size_t): size_t;
-*)
-
 <*EXTERNAL*>
 PROCEDURE strstr (s1: const_char_star; s2: const_char_star): char_star;
 
@@ -78,4 +70,3 @@ PROCEDURE strstr (s1: const_char_star; s2: const_char_star): char_star;
 PROCEDURE strerror (errnum: int): char_star;
 
 END Cstring.
-
