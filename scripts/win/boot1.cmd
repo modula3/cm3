@@ -39,19 +39,28 @@ mkdir \%BOOT%
 for %%a in (%packages%) do for /f %%b in ('dir /s/b/a-d make.%%a') do call :F1 %%b\.. %%b\..\..
 
 cd \%BOOT%
-del /s *.ic *.mc *.sh *.m3 *.i3 2>nul
+del /s *.ic *.mc *.sh *.m3 *.i3 Makefile 2>nul
 
 mkdir \%BOOT%\obj
 mkdir \%BOOT%\exe
 mkdir \%BOOT%\lib
+
+echo all: exe/cm3 >> \%BOOT%\Makefile
+echo AS=%AS% >> \%BOOT%\Makefile
+echo CC=%CC% >> \%BOOT%\Makefile
+
+rem
 rem mkdir \%BOOT%\config
 rem These files have by now been copied into the source tree of the other computer.
+rem
 rem if defined CM3_ROOT copy /y %CM3_ROOT:/=\%\m3-sys\cminstall\src\config \%BOOT%\config
 rem if defined CM3_ROOT copy /y %CM3_ROOT:/=\%\m3-sys\cminstall\src\config-no-install \%BOOT%\config
 
 for %%a in (%packages%) do call :F2 %%a
 
-dos2unix \%BOOT%\1.sh
+dos2unix \%BOOT%\makeverbose.sh
+findstr /b /v echo \%BOOT%\makeverbose.sh > \%BOOT%\make.sh
+dos2unix \%BOOT%\Makefile
 cd \
 del %BOOT%.tar.bz2 %BOOT%.tar.gz %BOOT%.tar 2>nul
 tar cfjv %BOOT%.tar.bz2 %BOOT%
@@ -59,16 +68,16 @@ tar cfjv %BOOT%.tar.bz2 %BOOT%
 @rem
 @rem for the really lazy:
 @rem
-del 1.sh 2>nul
-echo rm -rf %BOOT% >> 1.sh
-echo tar xvf %BOOT%.tar.bz2 >> 1.sh
-echo cd %BOOT% >> 1.sh
-echo . ./1.sh >> 1.sh
-echo cd .. >> 1.sh
-echo echo try this: ./%BOOT%/exe/cm3 >> 1.sh
-dos2unix 1.sh
-scp 1.sh jay@192.168.2.4:~
-scp %BOOT%.tar.bz2 jay@192.168.2.4:~
+del make.sh 2>nul
+echo rm -rf %BOOT% >> make.sh
+echo tar xvf %BOOT%.tar.bz2 >> make.sh
+echo cd %BOOT% >> make.sh
+echo . ./make.sh >> make.sh
+echo cd .. >> make.sh
+echo echo try this: ./%BOOT%/exe/cm3 >> make.sh
+dos2unix make.sh
+rem scp make.sh jay@192.168.2.4:~
+rem scp %BOOT%.tar.bz2 jay@192.168.2.4:~
 
 goto :eof
 
@@ -99,16 +108,31 @@ popd
 goto :eof
 
 :assemble
-echo echo %AS% %1/%2 -o obj/%2.obj >> \%BOOT%\1.sh
-echo      %AS% %1/%2 -o obj/%2.obj >> \%BOOT%\1.sh
+echo echo %AS% %1/%2 -o obj/%2.obj >> \%BOOT%\makeverbose.sh
+echo %AS% %1/%2 -o obj/%2.obj >> \%BOOT%\makeverbose.sh
+echo OBJS += obj/%2.obj >> \%BOOT%\Makefile
+echo obj/%2.obj: %1/%2>> \%BOOT%\Makefile
+call :EchoTab "	$(AS) %1/%2 -o obj/%2.obj" >> \%BOOT%\Makefile
 goto :eof
 
 :compile
-echo echo %CC% -c -I%1 %1/%2 -o obj/%2.obj >> \%BOOT%\1.sh
-echo      %CC% -c -I%1 %1/%2 -o obj/%2.obj >> \%BOOT%\1.sh
+echo echo %CC% -c -I%1 %1/%2 -o obj/%2.obj >> \%BOOT%\makeverbose.sh
+echo %CC% -c -I%1 %1/%2 -o obj/%2.obj >> \%BOOT%\makeverbose.sh
+echo OBJS += obj/%2.obj >> \%BOOT%\Makefile
+echo obj/%2.obj: %1/%2>> \%BOOT%\Makefile
+call :EchoTab "	$(CC) -c -I%1 %1/%2 -o obj/%2.obj" >> \%BOOT%\Makefile
 goto :eof
 
 :make_exe
-echo echo %CC% -o exe/%1 obj/*.obj -lm -lpthread >> \%BOOT%\1.sh
-echo      %CC% -o exe/%1 obj/*.obj -lm -lpthread >> \%BOOT%\1.sh
+echo echo %CC% -o exe/%1 obj/*.obj -lm -lpthread >> \%BOOT%\makeverbose.sh
+echo %CC% -o exe/%1 obj/*.obj -lm -lpthread >> \%BOOT%\makeverbose.sh
+echo exe/cm3: $(OBJS) >> \%BOOT%\Makefile >> \%BOOT%\Makefile
+call :EchoTab "	$(CC) -o exe/cm3 obj/*.obj -lm -lpthread" >> \%BOOT%\Makefile
+goto :eof
+
+:EchoTab
+SetLocal
+set a=%1
+echo %a:"=%
+EndLocal
 goto :eof
