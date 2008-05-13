@@ -345,10 +345,6 @@ VAR (*CONST*)
   Checks_integer_ops: BOOLEAN;
   (* TRUE => integer overflow checking is possible *)
 
-  Global_handler_stack: BOOLEAN;
-  (* TRUE => exception frames are linked through RTThread.handlerStack.
-     Otherwise, call RTHooks.{Push,Pop}EFrame to manipulate the stack. *)
-
   Aligned_procedures: BOOLEAN;
   (* TRUE => all procedure values are aligned to at least Integer.align
      and can be safely dereferenced.  Otherwise, the code generated to
