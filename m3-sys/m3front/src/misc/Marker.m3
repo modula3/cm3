@@ -53,7 +53,6 @@ VAR
   all_frames  : FramePtr := NIL;
   n_frames    : INTEGER  := 0;
   save_depth  : INTEGER  := 0;
-  frame_stack : CG.Var   := NIL;
   setjmp      : CG.Proc  := NIL;
   tos         : INTEGER  := 0;
   stack       : ARRAY [0..50] OF Frame;
@@ -171,48 +170,26 @@ PROCEDURE Push (k: Kind;  l_start, l_stop: CG.Label := CG.No_label;
 (*--------------------------------------------- explicit frame operations ---*)
 
 PROCEDURE PushFrame (frame: CG.Var;  class: M3RT.HandlerClass) =
-  VAR stack := frame_stack;  push: Procedure.T;
+  VAR push: Procedure.T;
   BEGIN
     CG.Load_intt (ORD (class));
     CG.Store_int (Target.Integer.cg_type, frame, M3RT.EF_class);
-    IF Target.Global_handler_stack THEN
-      IF (stack = NIL) THEN stack := GetFrameStack () END;
-      CG.Load_addr (stack);
-      CG.Store_addr (frame, M3RT.EF_next);
-      CG.Load_addr_of (frame, 0, Target.Address.align);
-      CG.Store_addr (stack);
-    ELSE
-      push := RunTyme.LookUpProc (RunTyme.Hook.PushEFrame);
-      Procedure.StartCall (push);
-      CG.Load_addr_of (frame, 0, Target.Address.align);
-      CG.Pop_param (CG.Type.Addr);
-      Procedure.EmitCall (push);
-    END;
+    push := RunTyme.LookUpProc (RunTyme.Hook.PushEFrame);
+    Procedure.StartCall (push);
+    CG.Load_addr_of (frame, 0, Target.Address.align);
+    CG.Pop_param (CG.Type.Addr);
+    Procedure.EmitCall (push);
   END PushFrame;
 
 PROCEDURE PopFrame (frame: CG.Var) =
-  VAR stack := frame_stack;   pop: Procedure.T;
+  VAR pop: Procedure.T;
   BEGIN
-    IF Target.Global_handler_stack THEN
-      IF (stack = NIL) THEN stack := GetFrameStack () END;
-      CG.Load_addr (frame, M3RT.EF_next);
-      CG.Store_addr (stack);
-    ELSE
-      pop := RunTyme.LookUpProc (RunTyme.Hook.PopEFrame);
-      Procedure.StartCall (pop);
-      CG.Load_addr (frame, M3RT.EF_next);
-      CG.Pop_param (CG.Type.Addr);
-      Procedure.EmitCall (pop);
-    END;
+    pop := RunTyme.LookUpProc (RunTyme.Hook.PopEFrame);
+    Procedure.StartCall (pop);
+    CG.Load_addr (frame, M3RT.EF_next);
+    CG.Pop_param (CG.Type.Addr);
+    Procedure.EmitCall (pop);
   END PopFrame;
-
-PROCEDURE GetFrameStack (): CG.Var =
-  BEGIN
-    frame_stack := CG.Import_global (M3ID.Add ("ThreadF__handlerStack"),
-                                     Target.Address.size, Target.Address.align,
-                                     CG.Type.Addr, 0);
-    RETURN frame_stack;
-  END GetFrameStack;
 
 PROCEDURE SetLock (acquire: BOOLEAN;  var: CG.Var;  offset: INTEGER) =
   VAR method_offset: INTEGER;
@@ -795,7 +772,6 @@ PROCEDURE Reset () =
     all_frames  := NIL;
     n_frames    := 0;
     save_depth  := 0;
-    frame_stack := NIL;
     setjmp      := NIL;
     tos         := 0;
   END Reset;
