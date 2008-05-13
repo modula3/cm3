@@ -10,8 +10,8 @@ INTERFACE Cstddef;
 IMPORT Ctypes;
 
 TYPE
-  size_t = INTEGER; (* This is wrong. It should be unsigned, e.g. [0 .. 2 ** BITSIZE(INTEGER) - 1]. *)
-  ptrdiff_t = INTEGER;
+  size_t = Ctypes.unsigned_long;
+  ptrdiff_t = Ctypes.long;
   wchar_t = Ctypes.unsigned_short;
 
 END Cstddef.
