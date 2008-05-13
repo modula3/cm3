@@ -4,8 +4,7 @@
 
 INTERFACE Cstring;
 
-FROM Ctypes IMPORT char_star, const_char_star, const_void_star,
-                   int, void_star;
+FROM Ctypes IMPORT char_star, const_char_star, const_void_star, int, void_star;
 FROM Cstddef IMPORT size_t;
 
 <*EXTERNAL*> PROCEDURE memchr (s: const_void_star; c: int; n: size_t): void_star;
