@@ -4,9 +4,7 @@ little used. Let's factor the commonality and eliminate the dead. *)
 INTERFACE Cstring;
 
 FROM Ctypes IMPORT const_char_star, void_star, const_void_star, int;
-
-TYPE
-  size_t =  CARDINAL;
+FROM Cstddef IMPORT size_t;
 
 <*EXTERNAL*>
 PROCEDURE strlen (s: const_char_star): size_t;
