@@ -1,0 +1,32 @@
+readonly TARGET       = "SPARC32_LINUX"		% code generation target
+readonly WORD_SIZE    = "32BITS"	        % { "32BITS" or "64BITS" }
+readonly GNU_PLATFORM = "sparc-linux-gnu"
+
+if TRUE % defined("M3_BOOTSTRAP")
+    %
+    % -fPIC seems to be causing problems, and isn't needed for booting.
+    % We get MUCH further without -fPIC. -fPIC fails the first line RTLinker__InitRuntime.
+    % -m32 seems to cause stuff at the end of the assembly that as 2.18 warns about.
+    %
+    readonly m3back = "@cm3cg -quiet -gstabs+ -munaligned-doubles"
+    readonly SYSTEM_CC       = "@gcc -gstabs+ -munaligned-doubles" % C compiler
+else
+    readonly m3back = "@cm3cg -quiet -gstabs+ -m32 -fPIC -munaligned-doubles"
+    readonly SYSTEM_CC       = "@gcc -gstabs+ -m32 -fPIC -munaligned-doubles" % C compiler
+end
+
+readonly SYSTEM_ASM = "@as -32" % Assembler
+
+readonly proc GetGcWrapFlags() is
+    return ""
+end
+
+readonly proc FixM3GcDefs(Args) is
+    return Args
+end
+
+readonly proc GetM3BackFlag(x) is
+    return x
+end
+
+include("Linux.common")
