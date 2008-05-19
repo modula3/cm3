@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.64 2008-05-12 19:24:53 jkrell Exp $
+% $Id: m3makefile,v 1.65 2008-05-19 13:09:03 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -40,6 +40,8 @@ readonly Platform_info = {
   "SPARC"     : "sparc-sun-sunos4.1",
   "SPARC32_LINUX" : "sparc-linux-gnu",
   "SPARC64_LINUX" : "sparc64-linux-gnu",
+  "SPARC32_OPENBSD" : "sparc-openbsd",
+  "SPARC64_OPENBSD" : "sparc64-openbsd",
   "SUN3"      : "m68k-sun-sunos4.1",
   "SUN386"    : "i386-sun-sunos4.1",
   "Tru64v5"   : "alpha-dec-osf1",
@@ -48,6 +50,7 @@ readonly Platform_info = {
   "I386_DARWIN" : "i686-apple-darwin8.7.1",
   "PPC_DARWIN"  : "powerpc-apple-darwin6.3",
   "PPC_LINUX"   : "powerpc-apple-linuxelf",
+  "PPC32_OPENBSD" : "powerpc-openbsd",
   "NetBSD2_i386" : "i386-unknown-netbsdelf"
 }
 
@@ -57,7 +60,7 @@ readonly Platform_info = {
 readonly proc Platform_WordSize (Platform) is
   if {"ALPHA_OSF":1,"AMD64_DARWIN":1,"AMD64_LINUX":1,"AMD64_NT":1,
       "AMD64_FREEBSD":1,"AMD64_NETBSD":1,"AMD64_OPENBSD":1,"AMD64_SOLARIS":1,
-      "IA64_NT":1,"FBSD_ALPHA":1,"Tru64v5":1,"SPARC64_LINUX":1} contains Platform
+      "IA64_NT":1,"FBSD_ALPHA":1,"Tru64v5":1,"SPARC64_LINUX":1,"SPARC64_OPENBSD":1} contains Platform
     return "64"
   end
   return "32"
@@ -87,74 +90,7 @@ readonly proc GNU_platform (x) is
   end
 end
 
-%
-% If possible, build a 32bit hosted tool. This way we get at least somewhat
-% cross and native tools in one "for free".
-% This works on Ubuntu 8.4 but not Suse 10.3. (Really, it depends
-% on what all is installed, but Suse doesn't seem to offer quite the
-% requisite packages in their default repositories, libgcc-i386 in particular.)
-%
-
-local doesM3Work = FALSE
-local doesM3WorkValid = FALSE
-
-proc DoesM32Work () is
-  if not doesM3WorkValid
-    delete_file ("a.exe")
-    delete_file ("a.out")
-    > "m32.c" in
-      write ("main(){}\n")
-    end
-    % use configured/command line CC?
-    local ignore = try_exec ("@gcc -m32 m32.c", DevNull2, DevNull1)
-    doesM3Work = (exists ("a.exe") or exists ("a.out"))
-    delete_file ("a.exe")
-    delete_file ("a.out")
-    delete_file ("m32.c")
-    doesM3WorkValid = TRUE
-  end
-  return doesM3Work
-end
-
-proc PickM32 (thirtytwo, sixtyfour) is
-  if DoesM32Work ()
-    return thirtytwo
-  else
-    return sixtyfour
-  end
-end
-
-%
-% Configure does not seem to ferry environment variables from itself to make,
-% so these must be specified on both the configure command and the make command.
-%
-readonly m3cc_env = {
-  %
-  % Build an x86 hosted compiler that targets x86 and AMD64.
-  % Omitting -O cuts build time in half.
-  %
-  "LINUXLIBC6" : PickM32 ("CFLAGS='-m32 -g' LEX='touch lex.yy.c'", "CFLAGS=-g"),
-  "AMD64_LINUX" : PickM32 ("CFLAGS='-m32 -g' LEX='touch lex.yy.c'", "CFLAGS=-g"),
-  "NT386" : PickM32 ("CFLAGS='-m32 -g'", "CFLAGS=-g"),
-  "AMD64_NT" : PickM32 ("CFLAGS='-m32 -g'", "CFLAGS=-g"),
-
-  % We really do want CC and CFLAGS.
-  % If we don't set CC, configure doesn't believe us that we are a native environment.
-  % If we don't set CFLAGS, we get -O which adds a lot of time.
-  "SPARC32_LINUX" : "CC='gcc -m32 -g' CFLAGS=",
-
-} % m3cc_env
-
 readonly m3cc_config = {
-  %
-  % Build an x86 hosted compiler that targets x86 and AMD64.
-  %
-  "LINUXLIBC6" : "--host=i686-pc-linux-gnu --build=i686-pc-linux-gnu",
-  "AMD64_LINUX" : PickM32("--host=i686-pc-linux-gnu --build=i686-pc-linux-gnu", ""),
-  "NT386"  : "--target=i686-pc-mingw32 --host=i686-pc-mingw32 --build=i686-pc-mingw32",
-  "AMD64_NT"  : PickM32("--target=amd64-pc-mingw32 --host=i686-pc-mingw32 --build=i686-pc-mingw32", ""),
-  "SPARC32_LINUX" : "--target=sparc-linux-gnu --host=sparc-linux-gnu --build=sparc-linux-gnu",
-
   "HPPA"  : "--with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
 
@@ -232,7 +168,6 @@ readonly proc m3cc_Run (x) is
         { "0":"1","1":"2","2":"3","3":"4","4":"5",
           "5":"6","6":"7","7":"8","8":"9","9":"0", }{m3cc_ResponseFileCounter}
 
-    write("sh ./" & Temp & " (" & x & ")" & CR)
     exec("sh ./" & Temp)
   else
     exec(x)
@@ -250,6 +185,10 @@ if defined ("FORCE")
 end
 delete_file(build_dir & "/_m3.log")
 
+%
+% Configure does not seem to ferry environment variables from itself to make,
+% so these must be specified on both the configure command and the make command.
+%
 local env = get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS)
 %
 % Problems building gmp/mpfr:
@@ -258,14 +197,12 @@ local env = get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS
 %   Automake and autoconf are causing problems building on NT, even when they are installed.
 %   We don't need their results usually. Libtool is also a problem, possibly a cascade.
 %
-if equal ($OS, "Windows_NT")
-  env = env & " MAKEINFO=echo AUTOMAKE=echo AUTOCONF=echo"
-else
-  env = env & " MAKEINFO=echo"
-end
-if m3cc_env contains (M3CC_TARGET)
-  env = env & " " & m3cc_env {M3CC_TARGET}
-end
+env = env & " CC='gcc -g'"
+env = env & " CFLAGS="
+env = env & " AUTOCONF=echo"
+env = env & " AUTOMAKE=echo"
+env = env & " LEX='touch lex.yy.c'"
+env = env & " MAKEINFO=echo"
 M3CC_MAKE = M3CC_MAKE & " " & env
 M3CC_CONFIG = M3CC_CONFIG & " " & env
 
@@ -352,7 +289,6 @@ if equal ($OS, "Windows_NT")
   % leaves the string @LIBTOOL@ in the mpfr makefiles. This needs further
   % investigation, however this is a perfectly adequate workaround for now.
   %
-  %cmds = cmds & " configure-mpfr | tee -a _m3.log"
   cmds = cmds & " configure-host | tee -a _m3.log"
   cmds = cmds & " ; cd mpfr ; sed -e \"s/@LIBTOOL@/libtool/\" < Makefile > Makefile.lt ; mv Makefile.lt Makefile"
   cmds = cmds & " ; cd tests ; sed -e \"s/@LIBTOOL@/libtool/\" < Makefile > Makefile.lt ; mv Makefile.lt Makefile"
