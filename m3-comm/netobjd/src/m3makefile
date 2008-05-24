@@ -8,6 +8,11 @@
 import("netobj")
 import("tcp")
 
+if equal (OS_TYPE, "WIN32")
+   import ("windowsResources")
+   WindowsResource("iconRes")
+end
+
 export_interface("NetObjMon")
 export_interface("NGCMonitor")
 export_interface("WireRep")
