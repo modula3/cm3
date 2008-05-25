@@ -1,112 +1,67 @@
 (* Copyright (C) 1990, Digital Equipment Corporation.         *)
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
-(*                                                            *)
-(* Last modified on Mon Jan  5 11:39:09 GMT 1998 by rrw       *)
-(*      modified on Fri Feb 24 15:24:49 PST 1995 by kalsow    *)
-(*      modified on Fri Apr 30 14:46:35 PDT 1993 by muller    *)
-(*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk    *)
-(*      modified on Wed Dec  2 11:29:00 PST 1992 by mcjones   *)
-(*      modified on Mon Apr 23 16:37:40 1990 by jerome        *)
-
-(* $Id: Utime.i3,v 1.9 2008-02-25 18:11:50 jkrell Exp $ *)
 
 INTERFACE Utime;
 
 FROM Ctypes IMPORT char_star, int, long, long_star, const_char_star;
 
-(*** <sys/time.h> ***)
-
 TYPE
   struct_timeval = RECORD
-    tv_sec: long;          (* seconds *)
-    tv_usec: long;         (* and microseconds *)
+    tv_sec: long;
+    tv_usec: long;
   END;
 
   struct_timezone = RECORD
-    tz_minuteswest:  int; (* minutes west of Greenwich *)
-    tz_dsttime:      int; (* type of dst correction *)
+    tz_minuteswest:  int;
+    tz_dsttime:      int;
   END;
 
   struct_timespec = RECORD
-    tv_sec: time_t;			 (* Seconds *)
-    tv_nsec: long;			 (* Nanoseconds *)
+    tv_sec: time_t;
+    tv_nsec: long;
   END;
 
 TYPE
   struct_itimerval = RECORD
-    it_interval: struct_timeval;            (* timer interval *)
-    it_value:    struct_timeval;            (* current value *)
+    it_interval: struct_timeval;
+    it_value:    struct_timeval;
   END;
 
   struct_tm_star = UNTRACED REF struct_tm;
   struct_tm = RECORD
-    tm_sec:   int;     (* seconds (0 - 59) *)
-    tm_min:   int;     (* minutes (0 - 59) *)
-    tm_hour:  int;     (* hours (0 - 23) *)
-    tm_mday:  int;     (* day of month (1 - 31) *)
-    tm_mon:   int;     (* month of year (0 - 11) *)
-    tm_year:  int;     (* year - 1900 *)
-    tm_wday:  int;     (* day of week (Sunday = 0) *)
-    tm_yday:  int;     (* day of year (0 - 365) *)
-    tm_isdst: int;     (* flag: daylight savings time in effect *)
+    tm_sec:   int;
+    tm_min:   int;
+    tm_hour:  int;
+    tm_mday:  int;
+    tm_mon:   int;
+    tm_year:  int;
+    tm_wday:  int;
+    tm_yday:  int;
+    tm_isdst: int;
   END;
 
-  time_t = int; (* seconds since the Epoch *)
+  time_t = int;
 
-(*** <sys/times.h> ***)
-(*** <sys/timeb.h> ***)
+CONST
+  ITIMER_REAL =    0;
+  ITIMER_VIRTUAL = 1;
 
-(*** gettimeofday(2), settimeofday(2) - get/set date and time ***)
-
-<*EXTERNAL*>
-PROCEDURE gettimeofday (VAR t: struct_timeval;
-                        z: UNTRACED REF struct_timezone := NIL): int;
-
-<*EXTERNAL*>
-PROCEDURE settimeofday (VAR t: struct_timeval;
-                        z: UNTRACED REF struct_timezone := NIL): int;
-
-(*** getitimer(2), setitimer(2) - get/set value of interval timer ***)
-
-CONST (* which *)
-  ITIMER_REAL =    0;   (* real time intervals *)
-  ITIMER_VIRTUAL = 1;   (* virtual time intervals *)
-
-<*EXTERNAL*>
-PROCEDURE getitimer (which: int; VAR value: struct_itimerval): int;
-
-<*EXTERNAL setitimer*>
-PROCEDURE setitimer_ (which: int; 
-                     VAR value, ovalue: struct_itimerval): int;
-
-PROCEDURE setitimer (which: int; 
-                     VAR value, ovalue: struct_itimerval): int;
-
-(*** clock(3) - report CPU time used (in micro-seconds) ***)
-
+<*EXTERNAL*> PROCEDURE gettimeofday (VAR t: struct_timeval; z: UNTRACED REF struct_timezone := NIL): int;
+<*EXTERNAL*> PROCEDURE settimeofday (VAR t: struct_timeval; z: UNTRACED REF struct_timezone := NIL): int;
+<*EXTERNAL*> PROCEDURE getitimer (which: int; VAR value: struct_itimerval): int;
+<*EXTERNAL setitimer*> PROCEDURE setitimer_ (which: int;  VAR value, ovalue: struct_itimerval): int;
+PROCEDURE setitimer (which: int; VAR value, ovalue: struct_itimerval): int;
 <*EXTERNAL*> PROCEDURE clock (): long;
-
-(*** time(3) - get date and time (in seconds) ***)
-
 <*EXTERNAL*> PROCEDURE time  (tloc: long_star): long;
-
-(*** ctime(3), localtime(3), gmtime(3)
-     - convert date and time (in seconds)  to string ***)
-
 <*EXTERNAL*> PROCEDURE ctime     (READONLY clock: long): char_star;
-
 <*EXTERNAL*> PROCEDURE localtime (clock: long_star): struct_tm_star;
 <*EXTERNAL*> PROCEDURE gmtime    (clock: long_star): struct_tm_star;
-
-(*** mktime(3) - convert a struct_tm to a time_t ***)
 <*EXTERNAL*> PROCEDURE mktime (tm: struct_tm_star): time_t;
-
 <*EXTERNAL*> PROCEDURE get_timezone(): time_t;
 <*EXTERNAL "get_timezone"*> PROCEDURE get_altzone(): time_t;
 <*EXTERNAL*> PROCEDURE get_daylight(): int;
 <*EXTERNAL*> PROCEDURE get_tzname(a: [0..1]): const_char_star;
-
 <*EXTERNAL*> PROCEDURE tzset();
 
 END Utime.
