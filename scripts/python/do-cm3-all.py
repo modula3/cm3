@@ -1,10 +1,10 @@
 #! /usr/bin/env python
-# $Id: do-cm3-all.py,v 1.1 2008-02-11 09:49:33 jkrell Exp $
+# $Id: do-cm3-all.py,v 1.2 2008-05-25 01:16:59 jkrell Exp $
 
-from pylib import *
-import pylib
 import sys
 import os.path
+import pylib
+from pylib import *
 
 SetupEnvironment()
 

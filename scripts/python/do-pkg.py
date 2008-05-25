@@ -1,9 +1,8 @@
 #! /usr/bin/env python
-# $Id: do-pkg.py,v 1.15 2008-01-19 01:48:23 jkrell Exp $
+# $Id: do-pkg.py,v 1.16 2008-05-25 01:16:59 jkrell Exp $
 
-import os.path
 import sys
-import pylib
+import os.path
 from pylib import *
 
 SetupEnvironment()
