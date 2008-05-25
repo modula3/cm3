@@ -1,9 +1,6 @@
 (* Copyright (C) 1989, Digital Equipment Corporation           *)
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
-(*                                                             *)
-(* Last modified on Wed Mar 15 16:49:26 PST 1995 by kalsow     *)
-(*      modified on Tue Mar 24 20:42:39 PST 1992 by muller     *)
 
 INTERFACE Ustat;
 
@@ -23,11 +20,6 @@ CONST
   S_IFCHR : u_short = 8_0020000;
   S_IFIFO : u_short = 8_0010000;
   S_IFPORT          = S_IFIFO;
-(*
-  S_ISUID : u_short = 8_0004000;
-  S_ISGID : u_short = 8_0002000;
-  S_ISVTX : u_short = 8_0001000;
-*)
   S_IREAD : u_short = 8_0400;
   S_IWRITE: u_short = 8_0200;
   S_IEXEC : u_short = 8_0100;
