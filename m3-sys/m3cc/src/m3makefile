@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.65 2008-05-19 13:09:03 jkrell Exp $
+% $Id: m3makefile,v 1.66 2008-05-25 19:23:34 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -64,6 +64,30 @@ readonly proc Platform_WordSize (Platform) is
     return "64"
   end
   return "32"
+end
+
+readonly proc Platform_IsOpenBSD (Platform) is
+  return {"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1} contains Platform
+end
+
+readonly proc ApplyPatches (Platform) is
+  if not Platform_IsOpenBSD (Platform)
+    return
+  end
+  pushd ("../gcc")
+  foreach a in fs_lsfiles ("../src/patches/openbsd", FALSE)
+    if not tcontains(a, ".done")
+      if not fs_exists (a & ".done")
+        if not tcontains(a, "readme.txt")
+          exec("patch -z .orig -p0 < " & a)
+          > a & ".done" in
+            write("")
+          end
+        end
+      end
+    end
+  end
+  popd ()
 end
 
 readonly proc HostIsNT () is
@@ -205,6 +229,8 @@ env = env & " LEX='touch lex.yy.c'"
 env = env & " MAKEINFO=echo"
 M3CC_MAKE = M3CC_MAKE & " " & env
 M3CC_CONFIG = M3CC_CONFIG & " " & env
+
+ApplyPatches (M3CC_TARGET)
 
 local Cross = not equal (M3CC_HOST, M3CC_TARGET)
 local Native = not Cross
