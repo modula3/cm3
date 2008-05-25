@@ -66,6 +66,30 @@ readonly proc Platform_WordSize (Platform) is
   return "32"
 end
 
+readonly proc Platform_IsOpenBSD (Platform) is
+  return {"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1} contains Platform
+end
+
+readonly proc ApplyPatches (Platform) is
+  if not Platform_IsOpenBSD (Platform)
+    return
+  end
+  pushd ("../gcc")
+  foreach a in fs_lsfiles ("../src/patches/openbsd", FALSE)
+    if not tcontains(a, ".done")
+      if not fs_exists (a & ".done")
+        if not tcontains(a, "readme.txt")
+          exec("patch -z .orig -p0 < " & a)
+          > a & ".done" in
+            write("")
+          end
+        end
+      end
+    end
+  end
+  popd ()
+end
+
 readonly proc HostIsNT () is
   return equal ($OS, "Windows_NT")
 end
@@ -205,6 +229,8 @@ env = env & " LEX='touch lex.yy.c'"
 env = env & " MAKEINFO=echo"
 M3CC_MAKE = M3CC_MAKE & " " & env
 M3CC_CONFIG = M3CC_CONFIG & " " & env
+
+ApplyPatches (M3CC_TARGET)
 
 local Cross = not equal (M3CC_HOST, M3CC_TARGET)
 local Native = not Cross
