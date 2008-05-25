@@ -4,6 +4,7 @@
 
 #define KR_headers
 #define IEEE_MC68k
+#undef IEEE_8087
 
 #define MULTIPLE_THREADS
 #define ACQUIRE_DTOA_LOCK(n) RTOS__LockHeap()
