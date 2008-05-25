@@ -165,23 +165,26 @@
  *	the result overflows to +-Infinity or underflows to 0.
  */
 
-#ifndef Long
+#include <limits.h>
+
+#if (UINT_MAX == 0xffffffff) && (ULONG_MAX > 0xffffffff)
+#define Long int
+#else
 #define Long long
 #endif
-#ifndef ULong
+
 typedef unsigned Long ULong;
-#endif
 
 #ifdef DEBUG
-#include "stdio.h"
+#include <stdio.h>
 #define Bug(x) {fprintf(stderr, "%s\n", x); exit(1);}
 #endif
 
-#include "stdlib.h"
-#include "string.h"
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef USE_LOCALE
-#include "locale.h"
+#include <locale.h>
 #endif
 
 #ifdef MALLOC
@@ -220,7 +223,7 @@ static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
 #undef INFNAN_CHECK
 #endif
 
-#include "errno.h"
+#include <errno.h>
 
 #ifdef Bad_float_h
 
@@ -252,11 +255,11 @@ static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
 #endif
 
 #else /* ifndef Bad_float_h */
-#include "float.h"
+#include <float.h>
 #endif /* Bad_float_h */
 
 #ifndef __MATH_H__
-#include "math.h"
+#include <math.h>
 #endif
 
 #ifdef __cplusplus
@@ -465,12 +468,17 @@ extern double rnd_prod(double, double), rnd_quot(double, double);
  */
 #endif
 #else	/* long long available */
+#ifdef _MSC_VER
+typedef __int64 Llong;
+typedef unsigned __int64 ULLong;
+#else
 #ifndef Llong
 #define Llong long long
 #endif
 #ifndef ULLong
 #define ULLong unsigned Llong
 #endif
+#endif /* _MSC_VER */
 #endif /* NO_LONG_LONG */
 
 #ifndef MULTIPLE_THREADS
