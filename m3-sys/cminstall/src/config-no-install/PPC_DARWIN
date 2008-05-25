@@ -4,7 +4,7 @@
 % derived originally from the FreeBSD configuration
 %
 
-% $Id: PPC_DARWIN,v 1.13 2008-05-12 19:24:53 jkrell Exp $
+% $Id: PPC_DARWIN,v 1.14 2008-05-25 03:24:36 jkrell Exp $
 
 %-------------------------------------------------- compilation environment ---
 
@@ -152,11 +152,41 @@ readonly SYSTEM_ASM = "as" % Assembler
 % translate Modula-3 intermediate code to object code.
 
 %
+% Hash of command line option to TRUE or FALSE,
+% to avoid probing more than once. 
+%
+local IsM3BackFlagSupported_Cache = { }
+
+if not defined ("GetM3BackFlag")
+
+	readonly proc IsM3BackFlagSupported(x) is
+		local Result = 0
+		if IsM3BackFlagSupported_Cache contains x
+			Result = IsM3BackFlagSupported_Cache{x}
+		else
+			% write("probing " & m3back & " for " & x & CR)
+			Result = not equal(try_exec(
+				m3back & " " & x & " /dev/null 2>&1 "
+				& "| grep -F -i -e \"Invalid option\" -e \"unrecognized command line option\" > /dev/null"), 0)
+			IsM3BackFlagSupported_Cache{x} = Result
+		end
+		return Result
+	end
+
+	readonly proc GetM3BackFlag(x) is
+		if not IsM3BackFlagSupported(x)
+			x = ""
+		end
+		return x
+	end
+end
+
+%
 % fPIC really is needed here, despite man gcc saying it is the default.
 % This is because man gcc is about Apple's gcc but m3cg is
 % built from FSF source.
 %
-readonly m3back = "@" & BIN_USE & "/cm3cg -m32 -fPIC -gstabs+"
+readonly m3back = "@" & BIN_USE & "/cm3cg -fPIC -gstabs+"
 
 proc m3_backend (source, object, optimize, debug) is
   local args =
@@ -166,6 +196,7 @@ proc m3_backend (source, object, optimize, debug) is
     "-o",
     object,
   ]
+  args += GetM3BackFlag("-m32")
   args += "-fno-reorder-blocks"
   if optimize  args += "-O3"  end
   if M3_PROFILING args += "-p" end
