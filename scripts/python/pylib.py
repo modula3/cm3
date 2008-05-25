@@ -141,13 +141,65 @@ def _ClearEnvironmentVariable(Name):
         del(os.environ[Name])
         print("set " + Name + "=")
 
+def _ComputeOSTypeFromTarget(a):
+    a = a.lower()
+    if ((a.find("linux") != -1) or (a.find("solaris") != -1) or (a.find("gnu") != -1) or (a.find("bsd") != -1)
+            or (a.find("darwin") != -1) or (a.find("cyg") != -1) or (a.find("aix") != -1) or (a.find("hpux") != -1)
+            or (a.find("irix") != -1) or (a.find("ultrix") != -1) or (a.find("osf") != -1)):
+        return "POSIX"
+    return "WIN32"
+
+def _MapTarget(a):
+    return {
+        "I386_LINUX" : "LINUXLIBC6",
+        "I386_NT" : "NT386",
+        "I386_CYGWIN" : "NT386GNU",
+        "PPC32_DARWIN" : "PPC_DARWIN",
+        "PPC32_LINUX" : "PPC_LINUX"
+    }.get(a) or a
+
+def _GetAllTargets():
+
+    # legacy naming
+
+    Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6" ]
+
+    # systematic naming
+
+    for proc in [ "I386", "AMD64", "PPC", "PPC64" ]:
+        for os in [ "DARWIN" ]:
+            Targets += [proc + "_" + os]
+
+    for proc in [ "I386", "AMD64", "PPC32", "PPC64", "SPARC32", "SPARC64" ]:
+        for os in [ "OPENBSD", "NETBSD", "FREEBSD" ]:
+            Targets += [proc + "_" + os]
+
+    for proc in [ "I386", "AMD64", "PPC32", "PPC64", "SPARC32", "SPARC64" ]:
+        for os in [ "LINUX" ]:
+            Targets += [proc + "_" + os]
+
+    for proc in [ "I386", "AMD64", "IA64", "PPC32", "MIPS", "ALPHA32" ]:
+        for os in [ "NT", "CYGWIN" ]:
+            Targets += [proc + "_" + os]
+
+    for proc in [ "I386", "AMD64", "SPARC32", "SPARC64" ]:
+        for os in [ "SOLARIS" ]:
+            Targets += [proc + "_" + os]
+
+    return Targets
+
 #-----------------------------------------------------------------------------
 #
 # very important -- what operating system/processor architecture
 # we are building for
 #
 Target = getenv("CM3_TARGET") or ""
-OSType = getenv("CM3_OSTYPE") or ""
+if Target == "":
+    AllTargets = _GetAllTargets()
+    for a in AllTargets:
+        if a in sys.argv:
+            Target = _MapTarget(a)
+OSType = getenv("CM3_OSTYPE") or _ComputeOSTypeFromTarget(Target)
 Config = Target
 EXE = "" # executable extension, ".exe" or empty
 UNameCommand = os.popen("uname").read().lower()
@@ -166,19 +218,25 @@ if ((UName.startswith("windows")
     or Target.startswith("NT386")
     or UNameCommand.startswith("mingw")
     or UNameCommand.startswith("cygwin"))
-#        and (not Target.startswith("NT386MINGNU"))
-#        and (not Target.startswith("NT386GNU"))
-#        and (OSType != "POSIX")
+#       and (not Target.startswith("NT386MINGNU"))
+#       and (not Target.startswith("NT386GNU"))
+#       and (OSType != "POSIX")
         ):
 
     EXE = ".exe"
 
+CM3_FLAGS = getenv("CM3_FLAGS") or ""
+if CM3_FLAGS == "":
+    if "boot" in sys.argv:
+        CM3_FLAGS="-boot"
+    if "keep" in sys.argv:
+        CM3_FLAGS="-keep"
+CM3 = getenv("CM3") or "cm3"
+CM3 = SearchPath(CM3 + EXE) or SearchPath(CM3)
+
 #
 # the root of the installation
 #
-CM3_FLAGS = getenv("CM3_FLAGS") or ""
-CM3 = getenv("CM3") or "cm3"
-CM3 = SearchPath(CM3 + EXE) or SearchPath(CM3)
 InstallRoot = getenv("CM3_INSTALL")
 if not CM3 and not InstallRoot:
     for a in ["c:\\cm3\\bin\\cm3.exe", "/usr/local/bin/cm3"]:
@@ -430,20 +488,31 @@ if not Target:
                 Target = "FreeBSD2"
             elif UNameRevision.startswith("3"):
                 Target = "FreeBSD3"
-            elif UNameRevision.startswith("4"):
-                Target = "FreeBSD4"
             else:
                 Target = "FreeBSD4"
         else:
             Target = "FBSD_ALPHA"
 
+    elif UName.startswith("openbsd"):
+
+        if UNameArchM == "sparc64":
+            Target = "SPARC64_OPENBSD"
+        elif UNameArchM == "macppc":
+            Target = "PPC32_OPENBSD"
+        else:
+            FatalError("unknown OpenBSD platform")
+
     elif UName.startswith("darwin"):
 
-        # detect the m3 platform (Darwin runs on ppc and ix86)
-        if UNameArchP.startswith("powerpc"):
+        # detect the m3 platform (Darwin runs on ppc32, ppc64, x86, amd64)
+        if UNameArchP == "powerpc":
             Target = "PPC_DARWIN"
         elif re.match("i[3456]86", UNameArchP):
             Target = "I386_DARWIN"
+        elif UNameArchP == "x86-64":
+            Target = "AMD64_DARWIN"
+        elif UNameArchP == "powerpc64":
+            Target = "PPC64_DARWIN"
 
     elif UName.startswith("sunos"):
 
@@ -472,7 +541,7 @@ if not Target:
 
 GMAKE = None
 
-if (Target.find("FreeBSD") != -1) or (Target.find("FBSD") != -1):
+if (Target.find("BSD") != -1):
 
     GCC_BACKEND = True
 
@@ -642,7 +711,7 @@ CM3_BuildLocal = BuildLocal or "%(CM3)s %(CM3_FLAGS)s -build -override %(DEFS)s%
 CM3_CleanLocal = CleanLocal or "%(CM3)s %(CM3_FLAGS)s -clean -build -override %(DEFS)s%(CleanArgs)s"
 CM3_BuildGlobal = BuildGlobal or "%(CM3)s %(CM3_FLAGS)s -build %(DEFS)s%(BuildArgs)s"
 CM3_CleanGlobal = CleanGlobal or "%(CM3)s %(CM3_FLAGS)s -clean %(DEFS)s%(CleanArgs)s"
-CM3_Ship = Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(CleanArgs)s"
+CM3_Ship = Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(ShipArgs)s"
 
 # define build and ship programs for Poly. Modula-3 from Montreal
 
@@ -780,8 +849,7 @@ def MakePackageDB():
         os.path.walk(
             Root,
             Callback,
-            Result
-            )
+            Result)
 
         Result.sort()
         open(PKGSDB, "w").writelines(Result)
@@ -799,8 +867,7 @@ def ReadPackageDB():
     PackageDB = (PackageDB or
             map(
                 lambda(a): a.replace("\n", "").replace('\\', '/').replace("\r", ""),
-                open(PKGSDB)
-                ))
+                open(PKGSDB)))
 
 def IsPackageDefined(a):
     a = a.replace('\\', '/')
@@ -851,56 +918,175 @@ def _Run(NoAction, Actions, PackageDirectory):
     if NoAction:
         return 0
 
+    #return 0
+
     PreviousDirectory = os.getcwd()
     os.chdir(PackageDirectory.replace('/', os.path.sep))
 
-    for a in Actions:
-        Result = os.system(a)
-        if Result != 0:
-            break
+    Result = os.system(Actions)
 
     os.chdir(PreviousDirectory)
     return Result
 
+
+def _BuildLocalFunction(NoAction, PackageDirectory):
+    return _Run(NoAction, BuildLocal, PackageDirectory)
+
+
+def _BuildGlobalFunction(NoAction, PackageDirectory):
+    return _Run(NoAction, BuildGlobal, PackageDirectory)
+
+
+def _ShipFunction(NoAction, PackageDirectory):
+    return _Run(NoAction, Ship, PackageDirectory)
+
+
+def _CleanLocalFunction(NoAction, PackageDirectory):
+    return _Run(NoAction, CleanLocal, PackageDirectory)
+
+
+def _CleanGlobalFunction(NoAction, PackageDirectory):
+    return _Run(NoAction, CleanGlobal, PackageDirectory)
+
+
+def _RealCleanFunction(NoAction, PackageDirectory):
+#
+# This in particular need not run commands but can be implemented
+# directly in Python.
+#
+    return _Run(NoAction, RealClean, PackageDirectory)
+
+def _MakeArchive(a):
+    #
+    # OpenBSD doesn't have bzip2 in base, so use gzip instead.
+    #
+    b = "tar cfz " + a + ".tar.gz " + a
+    print(b + "\n");
+    DeleteFile(a + ".tar.gz")
+    os.system(b)
+
+def Boot():
+
+    global BuildLocal
+    BuildLocal += " -boot -keep"
+
+    Version = "1"
+
+    Compile = ("gcc -gstabs+ " + ({
+        "SPARC32_LINUX"     : "-m32 -munaligned-doubles",
+        "SPARC64_LINUX"     : "-m64 -munaligned-doubles",
+        "LINUXLIBC6"        : "-m32 -fPIC -mno-align-double",
+        "AMD64_LINUX"       : "-m64 -fPIC -mno-align-double"
+        }.get(Target) or ""))
+
+    Link = (Compile + " " + ({
+        "PPC32_OPENBSD"     : "-lm -lpthread",
+        "SPARC64_OPENBSD"   : "-lm -lpthread"
+        }.get(Target) or ""))
+
+    Assemble = ("as " + ({
+        "SPARC32_LINUX"     : "-32",
+        "SPARC64_LINUX"     : "-64",
+        "LINUXLIBC6"        : "--32",
+        "AMD64_LINUX"       : "--64"
+        }.get(Target) or ""))
+
+    BootDir = "/cm3-boot-POSIX-" + Target + "-" + Version
+
+    P = [ "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
+          "m3objfile", "m3linker", "m3back", "m3front", "cm3" ]
+    if Target == "NT386":
+        P += ["mklib"]
+
+    #DoPackage(["", "realclean"] + P) or sys.exit(1)
+    DoPackage(["", "buildlocal"] + P) or sys.exit(1)
+
+    if os.path.isdir(BootDir):
+        shutil.rmtree(BootDir)
+    os.mkdir(BootDir)
+
+    #
+    # This would probably be a good use of XSL (xml style sheets)
+    #
+    Make = open(os.path.join(BootDir, "make.sh"), "wb")
+    MakeVerbose = open(os.path.join(BootDir, "makeverbose.sh"), "wb")
+    Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
+
+    Makefile.write("all: cm3\nAssemble=" + Assemble + "\nCompile=" + Compile + "\nLink=" + Link + "\n")
+
+    for q in P:
+        dir = GetPackagePath(q)
+        for a in os.listdir(os.path.join(Root, dir, Config)):
+            if (a.endswith(".ms") or a.endswith(".is") or a.endswith(".c")):
+                CopyFile(os.path.join(Root, dir, Config, a), BootDir)
+                Makefile.write("Objects += " + a + ".o\n" + a + ".o: " + a + "\n\t")
+                if a.endswith(".c"):
+                    Make.write(Compile + " -c " + a + "\n")
+                    MakeVerbose.write("echo " + Compile + " -c " + a + "\n")
+                    MakeVerbose.write(Compile + " -C " + a + "\n")
+                    Makefile.write("$(Compile) -c " + a + "\n")
+                else:
+                    Make.write(Assemble + " " + a + " -o " + a + ".o\n")
+                    MakeVerbose.write("echo " + Assemble + " " + a + " -o " + a + ".o\n")
+                    MakeVerbose.write(Assemble + " " + a + " -o " + a + ".o\n")
+                    Makefile.write("$(Assemble) " + a + " -o " + a + ".o\n")
+            if a.endswith(".h"):
+                CopyFile(os.path.join(Root, dir, Config, a), BootDir)
+
+    Makefile.write("cm3: $(Objects)\n\t$(Link) -o cm3 *.o\n")
+
+    Make.write(Link + " -o cm3 *.o\n")
+    MakeVerbose.write("echo " + Link + " -o cm3 *.o\n")
+    MakeVerbose.write(Link + " -o cm3 *.o\n")
+
+    Make.close()
+    Makefile.close()
+    MakeVerbose.close()
+
+    os.chdir("/")
+
+    _MakeArchive(BootDir[1:])
+
+
 ActionInfo = {
     "build":
     {
-        "Commands": [BuildLocal],
+        "Commands": [_BuildLocalFunction],
     },
     "buildlocal":
     {
-        "Commands": [BuildLocal],
+        "Commands": [_BuildLocalFunction],
     },
     "buildglobal":
     {
-        "Commands": [BuildGlobal, Ship],
+        "Commands": [_BuildGlobalFunction, _ShipFunction],
     },
     "buildship":
     {
-        "Commands": [BuildGlobal, Ship],
+        "Commands": [_BuildGlobalFunction, _ShipFunction],
     },
     "ship":
     {
-        "Commands": [Ship],
+        "Commands": [_ShipFunction],
     },
     "clean":
     {
-        "Commands": [CleanLocal],
+        "Commands": [_CleanLocalFunction],
         "KeepGoing": True,
     },
     "cleanlocal":
     {
-        "Commands": [CleanLocal],
+        "Commands": [_CleanLocalFunction],
         "KeepGoing": True,
     },
     "cleanglobal":
     {
-        "Commands": [CleanGlobal],
+        "Commands": [_CleanGlobalFunction],
         "KeepGoing": True,
     },
     "realclean":
     {
-        "Commands": [RealClean],
+        "Commands": [_RealCleanFunction],
         "KeepGoing": True,
     },
 }
@@ -1397,7 +1583,7 @@ def DoPackage(args, PackagesFromCaller = None):
     # print("args is " + str(args))
     # sys.stdout.flush()
 
-    if not PackagesFromCaller is None:
+    if not (PackagesFromCaller is None):
         PackagesFromCaller = FilterPackages(PackagesFromCaller)
         PackagesFromCaller = OrderPackages(PackagesFromCaller)
         if not PackagesFromCaller:
@@ -1434,8 +1620,7 @@ GenericCommand:
     ShowUsage(
         args,
         Usage,
-        PackagesFromCaller,
-        )
+        PackagesFromCaller)
 
     if (not PackagesFromCaller) and (not args[1:]):
         print("no actions and no packages specified\n")
@@ -1448,8 +1633,11 @@ GenericCommand:
     ListOnly = False
     KeepGoing = False
     NoAction = False
+    AllTargets = _GetAllTargets()
     for arg in args[1:]:
-        if arg == "":
+        if ((arg == "")
+            or (arg in AllTargets)
+            or (arg == "boot")):
             continue
         if arg.startswith("-"):
             if arg == "-l":
@@ -1533,18 +1721,19 @@ GenericCommand:
     for p in PackageDirectories:
         print("== package %(p)s ==" % vars())
         print("")
-        ExitCode = _Run(NoAction, ActionCommands, p)
-        if ExitCode != 0:
-            Success = False
-            if not KeepGoing:
-                print(" *** execution of %s failed ***" % (str(ActionCommands)))
-                sys.exit(1)
-        if KeepGoing:
-            print(" ==> %s returned %s" % (str(ActionCommands), ExitCode))
-            print("")
-        else:
-            print(" ==> %(p)s done" % vars())
-            print("")
+        for a in ActionCommands:
+            ExitCode = a(NoAction, p)
+            if ExitCode != 0:
+                Success = False
+                if not KeepGoing:
+                    print(" *** execution of %s failed ***" % (str(ActionCommands)))
+                    sys.exit(1)
+            if KeepGoing:
+                print(" ==> %s returned %s" % (str(ActionCommands), ExitCode))
+                print("")
+            else:
+                print(" ==> %(p)s done" % vars())
+                print("")
 
     return Success
 
@@ -1579,7 +1768,7 @@ def CopyFile(From, To):
     CopyCommand = "copy"
     if os.name != "nt":
         CopyCommand = "cp -Pv"
-    print(CopyCommand + " " + From + " " + To)
+    #print(CopyCommand + " " + From + " " + To)
     shutil.copy(From, To)
     return True
 
@@ -1597,10 +1786,8 @@ def CopyConfigForDevelopment():
     # The development environment depends on having a source tree, at least the cminstall\src\config directory.
     #
     To = os.path.join(InstallRoot, "bin")
-    CopyFile(
-        os.path.join(Root, "m3-sys", "cminstall", "src", "config", "cm3.cfg"),
-        os.path.join(To)
-        ) or FatalError()
+    CopyFile(os.path.join(Root, "m3-sys", "cminstall", "src", "config", "cm3.cfg"),
+             os.path.join(To)) or FatalError()
     CopyFile(os.path.join(Root, "scripts", "sysinfo.sh"), To) or FatalError()
     return True
 
@@ -1689,14 +1876,12 @@ def _CopyCompiler(From, To):
     return True
 
 def ShipBack():
-    return _CopyCompiler(
-        os.path.join(Root, "m3-sys", "m3cc", Config),
-        os.path.join(InstallRoot, "bin"))
+    return _CopyCompiler(os.path.join(Root, "m3-sys", "m3cc", Config),
+                         os.path.join(InstallRoot, "bin"))
 
 def ShipFront():
-    return _CopyCompiler(
-        os.path.join(Root, "m3-sys", "cm3", Config),
-        os.path.join(InstallRoot, "bin"))
+    return _CopyCompiler(os.path.join(Root, "m3-sys", "cm3", Config),
+                         os.path.join(InstallRoot, "bin"))
 
 def ShipCompiler():
     return ShipBack() and ShipFront()

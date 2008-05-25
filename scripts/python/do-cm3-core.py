@@ -1,10 +1,9 @@
 #! /usr/bin/env python
 # $Id$
 
-from pylib import *
-import pylib
 import sys
 import os.path
+from pylib import *
 
 SetupEnvironment()
 

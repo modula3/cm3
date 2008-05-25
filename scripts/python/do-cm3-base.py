@@ -2,8 +2,9 @@
 # $Id$
 
 import sys
-from pylib import *
 import os.path
+import pylib
+from pylib import *
 
 SetupEnvironment()
 
