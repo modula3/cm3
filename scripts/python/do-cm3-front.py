@@ -1,9 +1,9 @@
 #! /usr/bin/env python
-# $Id: do-cm3-front.py,v 1.7 2008-02-04 01:10:40 jkrell Exp $
+# $Id: do-cm3-front.py,v 1.8 2008-05-25 01:16:59 jkrell Exp $
 
 import sys
-from pylib import *
 import os.path
+from pylib import *
 
 SetupEnvironment()
 
