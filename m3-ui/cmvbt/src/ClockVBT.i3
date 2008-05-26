@@ -2,6 +2,8 @@
 (* Copyright 1996-2000 Critical Mass, Inc. All Rights Reserved. *)
 (* See file COPYRIGHT-CMASS for details. *)
 
+(* 05/16/2001 - Fixed bug that prevented specification of the time zone. -- R.C.Coleburn *)
+
 INTERFACE ClockVBT;
 IMPORT VBT, Font, PaintOp;
 IMPORT FmtTime, Time, Date;
@@ -15,7 +17,8 @@ TYPE
     init (font: Font.T := Font.BuiltIn;
           halign : REAL := 0.5;
           bgFg: PaintOp.ColorQuad := NIL;
-          proc: FmtProc := FmtTime.Long): T;
+          proc: FmtProc := FmtTime.Long;
+          zone: Date.TimeZone := NIL): T;
   END;
   Private <: VBT.Leaf;
 
