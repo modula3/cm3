@@ -2,10 +2,6 @@
 little used. Before commiting content here, let's factor the commonality
 and eliminate the dead. *)
 
-INTERFACE Cstdio;
+INTERFACE Csignal;
 
-TYPE
-    FILE = RECORD END;
-    FILE_star = UNTRACED REF FILE;
-
-END Cstdio.
+END Csignal.

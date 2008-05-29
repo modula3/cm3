@@ -2,7 +2,7 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-(* $Id: Utypes.i3,v 1.13 2008-05-25 20:06:27 jkrell Exp $ *)
+(* $Id: Utypes.i3,v 1.14 2008-05-29 12:43:21 jkrell Exp $ *)
 
 (* This file was generated from Utypes.i3.cpp. Do not edit it. *)
 
@@ -37,6 +37,11 @@ TYPE
   gid_t = uint32_t;
   blkcnt_t = int64_t;
   blksize_t = int32_t;
+
+  socklen_t = int32_t;
+  hostent_addrtype_t = short;
+  hostent_length_t = short;
+
   struct_timespec = RECORD
     tv_sec  : int32_t;
     tv_nsec : int32_t;

@@ -34,6 +34,7 @@ TYPE
   signed_short               = short_int;
   signed_short_int           = short_int;
   unsigned_short             = unsigned_short_int;
+  unsigned                   = unsigned_int;
   signed                     = int;
   signed_int                 = int;
   long                       = long_int;
@@ -67,5 +68,3 @@ TYPE
   double_star                = UNTRACED REF double;
 
 END Ctypes.
-
-

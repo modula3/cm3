@@ -1,12 +1,6 @@
 % Copyright (C) 1992, Digital Equipment Corporation
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
-%
-% Last modified on Mon Jan 13 09:32:21 PST 1997 by mcjones
-%      modified on Thu Oct 10 16:11:15 PDT 1996 by heydon
-%      modified on Wed Mar  1 08:22:56 PST 1995 by kalsow
-%      modified on Fri May 14 10:29:31 PDT 1993 by mjordan
-%      modified on Tue Feb 11 15:10:10 PST 1992 by muller
 
 % floating-point formats
 readonly _LittleEndian = "IEEE"
@@ -47,6 +41,7 @@ readonly _RandomPieces = {
   "SPARC"      : [ _BigEndian ],
   "SPARC32_LINUX" : [ _BigEndian ],
   "SPARC64_LINUX" : [ _BigEndian ],
+  "SPARC64_OPENBSD" : [ _BigEndian ],
   "SUN3"       : [ _BigEndian ],
   "SUN386"     : [ _LittleEndian ],
   "UMAX"       : [ _LittleEndian ],
@@ -54,6 +49,7 @@ readonly _RandomPieces = {
   "I386_DARWIN": [ _LittleEndian ],
   "PPC_DARWIN" : [ _BigEndian ],
   "PPC_LINUX"  : [ _BigEndian ],
+  "PPC32_OPENBSD" : [ _BigEndian ],
   "NetBSD2_i386"  : [ _LittleEndian ]
 }
 
@@ -64,4 +60,3 @@ if _RandomPieces contains TARGET
 else
   error (format ("random: unsupported platform: \"%s\"%s", TARGET, CR))
 end
-

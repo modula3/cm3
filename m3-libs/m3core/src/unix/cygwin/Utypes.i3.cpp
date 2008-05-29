@@ -1,4 +1,4 @@
-/* $Id: Utypes.i3.cpp,v 1.9 2008-05-25 20:06:27 jkrell Exp $ */
+/* $Id: Utypes.i3.cpp,v 1.10 2008-05-29 12:43:21 jkrell Exp $ */
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -68,6 +68,11 @@ int main()
 "  gid_t = %s;", PickType(gid_t()),
 "  blkcnt_t = %s;", FieldType(struct stat, st_blocks),
 "  blksize_t = %s;", FieldType(struct stat, st_blksize),
+"", 0,
+"  socklen_t = int32_t;", 0,
+"  hostent_addrtype_t = %s;", FieldType(struct hostent, h_addrtype),
+"  hostent_length_t = %s;", FieldType(struct hostent, h_length),
+"", 0,
 "  struct_timespec = RECORD", 0,
 "    tv_sec  : %s;", FieldType(struct timespec, tv_sec),
 "    tv_nsec : %s;", FieldType(struct timespec, tv_nsec),

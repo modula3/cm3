@@ -35,6 +35,7 @@ readonly USE_PTHREADS = {
   "SPARC"      : FALSE,
   "SPARC32_LINUX" : TRUE,
   "SPARC64_LINUX" : TRUE,
+  "SPARC64_OPENBSD" : TRUE,
   "SUN3"       : FALSE,
   "SUN386"     : FALSE,
   "UMAX"       : FALSE,
@@ -42,6 +43,7 @@ readonly USE_PTHREADS = {
   "I386_DARWIN": TRUE,
   "PPC_DARWIN" : TRUE,
   "PPC_LINUX"  : FALSE,
+  "PPC32_OPENBSD" : TRUE,
   "NetBSD2_i386"  : FALSE
 }
 
