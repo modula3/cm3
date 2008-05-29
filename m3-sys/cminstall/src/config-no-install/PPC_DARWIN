@@ -186,7 +186,7 @@ end
 % This is because man gcc is about Apple's gcc but m3cg is
 % built from FSF source.
 %
-readonly m3back = "@" & BIN_USE & "/cm3cg -fPIC -gstabs+"
+readonly m3back = "cm3cg -fPIC -gstabs+"
 
 proc m3_backend (source, object, optimize, debug) is
   local args =
