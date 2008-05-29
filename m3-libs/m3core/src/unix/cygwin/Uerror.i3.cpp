@@ -1,4 +1,4 @@
-/* $Id: Uerror.i3.cpp,v 1.3 2008-02-23 08:36:31 jkrell Exp $ */
+/* $Id: Uerror.i3.cpp,v 1.4 2008-05-29 12:43:21 jkrell Exp $ */
 
 #include <stdio.h>
 #include <errno.h>
@@ -16,15 +16,7 @@ int main()
 "(* All rights reserved.                                       *)", 0,
 "(* See the file COPYRIGHT for a full description.             *)", 0,
 "", 0,
-"(* Last modified on Mon Jan  5 01:05:58 GMT 1998 by rrw               *)", 0,
-"(*      modified on Fri Feb 24 14:53:26 PST 1995 by kalsow            *)", 0,
-"(*      modified on Tue Feb 14 20:02:55 GMT 1995 by rrw1000@cam.ac.uk *)", 0,
-"(*      modified on Thu Jul 21 00:00:00 1994 by sims@usa.acsys.com    *)", 0,
-"(*      modified on Thu Nov 22 05:20:45 1990 by muller                *)", 0,
-"", 0,
 "INTERFACE Uerror;", 0,
-"", 0,
-"(*** <errno.h> ***)", 0,
 "", 0,
 "CONST", 0,
 "  EPERM           = %u;    (* Not owner / operation not permitted  *)", EPERM,

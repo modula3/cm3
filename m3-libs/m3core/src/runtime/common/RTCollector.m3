@@ -2911,10 +2911,10 @@ PROCEDURE FinishBench() =
 
 BEGIN
   (* temporarily turn of garbage collection until deeper debugging is done and the crashes fixed *)
-  IF Compiler.ThisPlatform = Compiler.Platform.AMD64_LINUX THEN
-    disableCount := 100;
-  END;
-  IF Compiler.ThisPlatform = Compiler.Platform.SPARC32_LINUX THEN
+  IF (Compiler.ThisPlatform = Compiler.Platform.AMD64_LINUX)
+    OR (Compiler.ThisPlatform = Compiler.Platform.SPARC32_LINUX)
+    OR (Compiler.ThisPlatform = Compiler.Platform.SPARC64_OPENBSD)
+    OR (Compiler.ThisPlatform = Compiler.Platform.PPC32_OPENBSD) THEN
     disableCount := 100;
   END;
 END RTCollector.

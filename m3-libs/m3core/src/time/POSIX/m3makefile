@@ -38,6 +38,7 @@ readonly _DateImpls = {
   "SPARC"      : "DateBsd",
   "SPARC32_LINUX" : "DateBsd",
   "SPARC64_LINUX" : "DateBsd",
+  "SPARC64_OPENBSD" : "DateBsd",
   "SUN3"       : "DateBsd",
   "SUN386"     : "DateBsd",
   "UMAX"       : "DateBsd",
@@ -45,6 +46,7 @@ readonly _DateImpls = {
   "I386_DARWIN": "DateBsd",
   "PPC_DARWIN" : "DateBsd",
   "PPC_LINUX"  : "DateBsd",
+  "PPC32_OPENBSD" : "DateBsd",
   "NetBSD2_i386"  : "DateBsd"
 }
 

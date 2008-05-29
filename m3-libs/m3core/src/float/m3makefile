@@ -40,6 +40,7 @@ readonly _FloatPieces = {
   "SPARC"      : [ "IEEE", "IEEE-be", "SPARC" ],
   "SPARC32_LINUX" : _float_be,
   "SPARC64_LINUX" : _float_be,
+  "SPARC64_OPENBSD" : _float_be,
   "SUN3"       : _float_be,
   "SUN386"     : [ "IEEE", "IEEE-le", "SUN386" ],
   "UMAX"       : _float_le,
@@ -47,6 +48,7 @@ readonly _FloatPieces = {
   "I386_DARWIN": _float_le,
   "PPC_DARWIN" : _float_be,
   "PPC_LINUX"  : _float_be,
+  "PPC32_OPENBSD" : _float_be,
   "NetBSD2_i386"   : _float_le
 }
 

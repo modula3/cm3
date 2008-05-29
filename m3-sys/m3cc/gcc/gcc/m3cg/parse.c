@@ -1517,8 +1517,9 @@ static tree
 scan_target_int (void)
 {
   HOST_WIDE_INT low, hi;
-  long i, n_bytes, sign, shift;
+  long i, n_bytes, original_n_bytes, sign, shift;
   tree res, t = long_long_integer_type_node;
+  int trace_all = option_trace_all;
 
   i = (long) get_byte ();
   switch (i) {
@@ -1538,6 +1539,9 @@ scan_target_int (void)
     return build_int_cst (t, i);
   }
 
+  if (trace_all)
+    original_n_bytes = n_bytes;
+
   hi = low = 0;
   for (shift = 0; n_bytes > 0;  n_bytes--, shift += 8) {
     if (shift < HOST_BITS_PER_WIDE_INT) {
@@ -1550,9 +1554,9 @@ scan_target_int (void)
   res = build_int_cst_wide (t, low, hi);
   if (sign < 0) { res = m3_build1 (NEGATE_EXPR, t, res); }
 
-  if (option_trace_all)
-    fprintf(stderr,"  integer n_bytes 0x%lx hi 0x%lx low 0x%lx sign %ld\n",
-           ((unsigned long) n_bytes), ((unsigned long) hi), ((unsigned long) low), sign);
+  if (trace_all)
+    fprintf(stderr,"  integer i 0x%lx n_bytes 0x%lx hi 0x%lx low 0x%lx sign %ld\n",
+           ((unsigned long) i), ((unsigned long) original_n_bytes), ((unsigned long) hi), ((unsigned long) low), sign);
 
   return res;
 }

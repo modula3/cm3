@@ -1,37 +1,21 @@
 (* Copyright (C) 1990, Digital Equipment Corporation           *)
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
-(*                                                             *)
-(* Last modified on Mon Jan  5 09:41:49 GMT 1998 by rrw        *)
-(*      modified on Fri Apr 29 14:19:35 PDT 1994 by kalsow     *)
-(*      modified on Sat Apr 16 by rrw1000@hermes.cam.ac.uk     *)
-(*      modified on Tue Mar 24 20:01:29 PST 1992 by muller     *)
-(*      modified on Mon Jul  9 16:47:46 PDT 1990 by mjordan    *)
 
 UNSAFE INTERFACE Uexec;
 
-FROM Ctypes IMPORT int, const_char_star, char_star_star, unsigned_int;
+FROM Ctypes IMPORT int, const_char_star, char_star_star, unsigned;
 FROM Utypes IMPORT pid_t;
 
-<*EXTERNAL*> 
-PROCEDURE execvp(
-    name: const_char_star;
-    argv: char_star_star)
-    : int
-    RAISES {};
+<*EXTERNAL*> PROCEDURE execvp(name: const_char_star; argv: char_star_star) : int RAISES {};
+<*EXTERNAL*> PROCEDURE execve(name : const_char_star; arg : char_star_star; envp : char_star_star) : int;
 
-<*EXTERNAL*>
-PROCEDURE execve(
-    name : const_char_star;
-    arg : char_star_star;
-    envp : char_star_star) : int;
-
-(* options bits for the second argument of wait3. *)
 CONST
-  WNOHANG = 1;			 (* dont hang in wait *)
+  (* options bits for waitpid. *)
+  WNOHANG = 1;
 
 TYPE
-  w_A = BITS 32 FOR unsigned_int;
+  w_A = BITS 32 FOR unsigned;
 
   (* terminated process status *)
   w_T = BITS 32 FOR RECORD
@@ -61,10 +45,6 @@ TYPE
      in the declarations and do a LOOPHOLE when necessary *)
   w_A_star = UNTRACED REF w_A;
 
-(*** waitpid - wait for process to terminate ***)
-
-<*EXTERNAL*>
-PROCEDURE waitpid (pid: pid_t; status: UNTRACED REF w_T;
-                   options: int := 0): pid_t;
+<*EXTERNAL*> PROCEDURE waitpid (pid: pid_t; status: UNTRACED REF w_T; options: int := 0): pid_t;
 
 END Uexec.

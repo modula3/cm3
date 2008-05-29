@@ -106,9 +106,12 @@ CONST
    (* NT386GNU	 *)  "Cygwin",
    (* PPC_LINUX	 *)  "Linux",
    (* NetBSD2_i386 *)  "NetBSD",
-   (* AMD64_DARWIN *) "AMD64_DARWIN",
-   (* AMD64_LINUX *) "AMD64_LINUX",
-   ..
+   (* AMD64_DARWIN *) "Darwin",
+   (* AMD64_LINUX *) "Linux",
+   (* SPARC32_LINUX *) "Linux",
+   (* SPARC64_LINUX *) "Linux",
+   (* SPARC64_OPENBSD *) "OpenBSD",
+   (* PPC32_OPENBSD *) "OpenBSD",   ..
   };
 
 CONST
@@ -128,7 +131,7 @@ CONST
    (* LINUX      *)  "i486",
    (* LINUXELF   *)  "i486",
    (* NEXT       *)  "m68K",
-   (* NT386      *)  "i486",
+   (* NT386      *)  "i686",
    (* OKI        *)  "m68K",
    (* OS2        *)  "i486",
    (* SEQUENT    *)  "m68K",
@@ -140,17 +143,21 @@ CONST
    (* UMAX       *)  "m68K",
    (* VAX        *)  "vax",
    (* FreeBSD3   *)  "i486",
-   (* FreeBSD4   *)  "i486",
-   (* FBSD_ALPHA *)  "i486",
-   (* LINUXLIBC6 *)  "i486",
-   (* I386_DARWIN*)  "i486",
+   (* FreeBSD4   *)  "i686",
+   (* FBSD_ALPHA *)  "alpha",
+   (* LINUXLIBC6 *)  "i686",
+   (* I386_DARWIN*)  "i686",
    (* PPC_DARWIN *)  "ppc",
-   (* BSDI4	 *)  "i486",
-   (* NT386GNU	 *)  "i486",
+   (* BSDI4      *)  "i486",
+   (* NT386GNU	 *)  "i686",
    (* PPC_LINUX	 *)  "ppc",
-   (* NetBSD2_i386 *)  "i386",
-   (* AMD64_DARWIN *) "AMD64",
-   (* AMD64_LINUX *) "AMD64",
+   (* NetBSD2_i386 *)   "i686",
+   (* AMD64_DARWIN *)   "AMD64",
+   (* AMD64_LINUX *)    "AMD64",
+   (* SPARC32_LINUX *)  "sparc",
+   (* SPARC64_LINUX *)  "sparc64",
+   (* SPARC64_OPENBSD *) "sparc64",
+   (* PPC32_OPENBSD *)  "ppc",
    ..
   };
 
