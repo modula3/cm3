@@ -6,58 +6,28 @@
 %      modified on Fri Apr 30 11:31:44 PDT 1993 by mjordan
 
 readonly HAS_STACK_WALKER = {
-  "ALPHA_OSF"  : TRUE,  % has a working stack walker
-  "AIX386"     : FALSE,
-  "AMD64_DARWIN": FALSE,
-  "AMD64_LINUX": FALSE,
-  "AP3000"     : FALSE,
-  "ARM"        : FALSE,
-  "DS3100"     : TRUE,  % has a working stack walker
-  "FreeBSD"    : FALSE,
-  "FreeBSD2"   : FALSE,
-  "FreeBSD3"   : FALSE,
-  "FreeBSD4"   : FALSE,
-  "HP300"      : FALSE,
-  "HPPA"       : FALSE,
-  "IBMR2"      : FALSE,
-  "IBMRT"      : FALSE,
-  "IRIX5"      : FALSE,
-  "LINUX"      : FALSE,
-  "LINUXELF"   : FALSE,
-  "LINUXLIBC6" : FALSE,
-  "NEXT"       : FALSE,
-  "NT386"      : FALSE,
-  "NT386GNU"   : FALSE,
-  "OKI"        : FALSE,
-  "OS2"        : FALSE,
-  "SEQUENT"    : FALSE,
-  "SOLgnu"     : TRUE,  % has a working stack walker
-  "SOLsun"     : TRUE,  % has a working stack walker
-  "SPARC"      : FALSE,
-  "SPARC32_LINUX" : FALSE,
-  "SPARC64_LINUX" : FALSE,
-  "SUN3"       : FALSE,
-  "SUN386"     : FALSE,
-  "UMAX"       : FALSE,
-  "VAX"        : FALSE,
-  "I386_DARWIN": FALSE,
-  "PPC_DARWIN" : FALSE,
-  "PPC_LINUX"  : FALSE,
-  "NetBSD2_i386"  : FALSE
+  "ALPHA_OSF"  : TRUE,
+  "DS3100"     : TRUE,
+  "SOLgnu"     : TRUE,
+  "SOLsun"     : TRUE,
 }
-
 
 include_dir ("common")
 include_dir (OS_TYPE)
-if equal (TARGET, "NT386")
-  include_dir ("NT386")
+
+if equal (TARGET, "SPARC64_OPENBSD") or equal (TARGET, "PPC32_OPENBSD")
+  include_dir ("AMD64_LINUX")
 else
   include_dir (TARGET)
 end
 
 if defined("M3_USE_STACK_WALKER")
-  if M3_USE_STACK_WALKER and HAS_STACK_WALKER{TARGET}
-    include_dir("ex_stack")
+  if M3_USE_STACK_WALKER and HAS_STACK_WALKER contains TARGET
+    if HAS_STACK_WALKER{TARGET}
+      include_dir("ex_stack")
+    else
+      include_dir("ex_frame")
+    end
   else
     include_dir("ex_frame")
   end

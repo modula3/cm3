@@ -2,11 +2,11 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-INTERFACE Uprocess;
+INTERFACE Uugid;
 
-FROM Ctypes IMPORT int;
+FROM Utypes IMPORT gid_t, uid_t;
 
-<*EXTERNAL*> PROCEDURE getpid (): int;
+<*EXTERNAL*> PROCEDURE geteuid (): uid_t;
+<*EXTERNAL*> PROCEDURE getegid (): gid_t;
 
-END Uprocess.
-
+END Uugid.

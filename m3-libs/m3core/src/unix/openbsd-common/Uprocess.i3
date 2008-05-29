@@ -9,4 +9,3 @@ FROM Ctypes IMPORT int;
 <*EXTERNAL*> PROCEDURE getpid (): int;
 
 END Uprocess.
-

@@ -194,12 +194,16 @@ def _GetAllTargets():
 # we are building for
 #
 Target = getenv("CM3_TARGET") or ""
-if Target == "":
-    AllTargets = _GetAllTargets()
-    for a in AllTargets:
-        if a in sys.argv:
-            Target = _MapTarget(a)
-OSType = getenv("CM3_OSTYPE") or _ComputeOSTypeFromTarget(Target)
+AllTargets = _GetAllTargets()
+for a in AllTargets:
+    if a in sys.argv:
+        Target = _MapTarget(a)
+if not Target:
+    Target = getenv("CM3_TARGET") or ""
+if Target:
+    OSType = _ComputeOSTypeFromTarget(Target)
+else:
+    OSType = getenv("CM3_OSTYPE") or ""
 Config = Target
 EXE = "" # executable extension, ".exe" or empty
 UNameCommand = os.popen("uname").read().lower()

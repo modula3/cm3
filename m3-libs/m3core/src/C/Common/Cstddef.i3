@@ -11,6 +11,7 @@ IMPORT Ctypes;
 
 TYPE
   size_t = Ctypes.unsigned_long;
+  ssize_t = Ctypes.long;
   ptrdiff_t = Ctypes.long;
   wchar_t = Ctypes.unsigned_short;
 

@@ -2,11 +2,10 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-INTERFACE Uprocess;
+INTERFACE Uutmp;
 
-FROM Ctypes IMPORT int;
+FROM Ctypes IMPORT char_star;
 
-<*EXTERNAL*> PROCEDURE getpid (): int;
+<*EXTERNAL*> PROCEDURE getlogin (): char_star;
 
-END Uprocess.
-
+END Uutmp.

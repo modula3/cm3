@@ -1,15 +1,6 @@
 % Copyright (C) 1993, Digital Equipment Corporation
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
-%
-% Last modified on Tue Jan 24 09:41:26 PST 1995 by kalsow
-%      modified on Wed Jun  9 17:03:40 PDT 1993 by harrison
-%      modified on Fri Apr 30 09:00:26 PDT 1993 by mjordan
-%      modified on Fri Apr  9 15:56:58 PDT 1993 by muller
-%      modified on Tue Mar  9 17:07:30 PST 1993 by meehan
-%      modified on Wed Sep 23 13:16:01 PDT 1992 by jdd
-%      modified on Tue Sep 22 09:34:34 PDT 1992 by mhb
-
 
 readonly _UnixPieces = {
   "ALPHA_OSF"  : [ "osf-1.generic", "osf-1.ALPHA_OSF" ],
@@ -42,7 +33,8 @@ readonly _UnixPieces = {
   "SOLsun"     : [ "solaris-2-x", "Common" ],
   "SPARC"      : [ "sunos-4-x" ],
   "SPARC32_LINUX": [ "linux-libc6", "linux-sparc32", "big-endian", "linux-32" ],
-  "SPARC32_LINUX": [ "linux-libc6", "linux-sparc64", "big-endian", "linux-64" ],
+  "SPARC64_LINUX": [ "linux-libc6", "linux-sparc64", "big-endian", "linux-64" ],
+  "SPARC64_OPENBSD": [ "big-endian", "openbsd-common" ],
   "SUN3"       : [ "ultrix-3-1.generic", "ultrix-3-1.SUN3" ],
   "SUN386"     : [ "ultrix-3-1.generic", "ultrix-3-1.SUN386" ],
   "UMAX"       : [ "ultrix-3-1.generic", "ultrix-3-1.UMAX" ],
@@ -50,6 +42,7 @@ readonly _UnixPieces = {
   "I386_DARWIN": [ "darwin-generic", "darwin-i386" ],
   "PPC_DARWIN" : [ "darwin-generic", "darwin-ppc" ],
   "PPC_LINUX"  : [ "linux-libc6", "linux-ppc", "linux-32" ],
+  "PPC32_OPENBSD"  : [ "big-endian", "openbsd-common" ],
   "NetBSD2_i386" : [ "netbsd2-i386" ]
 }
 

@@ -37,6 +37,11 @@ TYPE
   gid_t = uint32_t;
   blkcnt_t = int64_t;
   blksize_t = int32_t;
+
+  socklen_t = int32_t;
+  hostent_addrtype_t = short;
+  hostent_length_t = short;
+
   struct_timespec = RECORD
     tv_sec  : int32_t;
     tv_nsec : int32_t;

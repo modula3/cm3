@@ -22,8 +22,6 @@ TYPE
 CONST
   MaxPathLen = 1024;
 
-(*** file flags ***)
-
   FREAD =      8_000001;        (* descriptor read/receive'able *)
   FWRITE =     8_000002;        (* descriptor write/send'ale *)
   FAPPEND   = 16_0008;          (* append on each write *)
@@ -48,38 +46,18 @@ CONST
   Mrwrr = MROWNER + MWOWNER + MRGROUP + MROTHER;
   Mrwrwrw = MROWNER + MWOWNER + MRGROUP + MWGROUP + MROTHER + MWOTHER;
 
-(*** access - determine the accessibility of file ***)
-
- (* parameters to access *)
   F_OK = 0; (* exist *)
   X_OK = 1; (* executable *)
   W_OK = 2; (* writable *)
   R_OK = 4; (* readable *)
 
 <*EXTERNAL*> PROCEDURE access (path: const_char_star; mod: int): int;
-
-(*** chdir - change working directory ***)
-
 <*EXTERNAL*> PROCEDURE chdir (path: const_char_star): int;
-
-(*** close - delete a descriptor ***)
-
 <*EXTERNAL*> PROCEDURE close (d: int): int;
 
-(*** dup2 - duplicate an open file descriptor ***)
-
 <*EXTERNAL*> PROCEDURE dup2 (oldd, newd: int): int;
+<*EXTERNAL*> PROCEDURE execve (name: const_char_star;  argv, envp: char_star_star): int;
 
-(* process.h *)
-
-(*** execve - execute a file ***)
-
-<*EXTERNAL*> PROCEDURE execve (name: const_char_star; 
-                           argv, envp: char_star_star): int;
-
-(*** spawnve - efficent fork + exec
-     spawnvpe - efficent fork + exec with path search
-***)
 CONST
     (* for mode parameter to spawn *)
     (* P_WAIT = 1; returns exit code (like system) *)

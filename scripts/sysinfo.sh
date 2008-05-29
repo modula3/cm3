@@ -253,7 +253,18 @@ case "${UNAME}" in
     GMAKE=${GMAKE:-gmake}
     CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
   ;;
+
+  OpenBSD*)
+    CM3_OSTYPE=POSIX
+    if [ "${UNAMEM}" = "macppc" ] ; then
+      CM3_TARGET=PPC32_OPENBSD
+    elif [ "${UNAMEM}" = "sparc64" ] ; then
+      CM3_TARGET=SPARC64_OPENBSD
+    fi
+  ;;
+
   # more need to be added here, I haven't got all the platform info ready
+
 esac
 
 DEV_BIN=${DEV_BIN:-${XDEV_BIN}}

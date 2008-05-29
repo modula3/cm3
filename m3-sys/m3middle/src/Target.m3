@@ -353,14 +353,18 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
       Systems.SOLsun,
       Systems.SPARC,
       Systems.SPARC32_LINUX,
-      Systems.SPARC64_LINUX =>
+      Systems.SPARC64_LINUX,
+      Systems.SPARC64_OPENBSD =>
+
                  (* common characteristics of all SPARC targets *)
+
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
                  First_readable_addr       := 8192 * Char.size;
                  Fixed_frame_size          := 20 * Address.size;
                  Guard_page_size           := 4096 * Char.size;
+                 Setjmp                    := "_setjmp";
 
                  CASE System OF <* NOWARN *>
                  | Systems.SOLgnu, Systems.SOLsun =>
@@ -369,20 +373,26 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                    Setjmp                    := "setjmp";
 
                  | Systems.SPARC32_LINUX =>
-                   Setjmp                    := "_setjmp";
                    Jumpbuf_size              := 16_90 * Char.size;
+
+                 | Systems.SPARC64_OPENBSD =>
+                   Integer := Int64;
+                   Word := Word64;
+                   Address := Word64;
+                   Address.cg_type := CGType.Addr;
+                   Jumpbuf_size := 16_70 * Char.size;
+                   Aligned_procedures := FALSE;
 
                  | Systems.SPARC64_LINUX =>
                    Integer := Int64;
-                   Word    := Word64;
+                   Word := Word64;
                    Address := Word64;
                    Address.cg_type := CGType.Addr;
-                   Setjmp                    := "_setjmp";
-                   Jumpbuf_size              := 16_280 * Char.size;
+                   Jumpbuf_size := 16_280 * Char.size;
+                   Aligned_procedures := FALSE;
 
                  | Systems.SPARC =>
                    Jumpbuf_size              := 10 * Address.size;
-                   Setjmp                    := "_setjmp";
 
                   END;
 
@@ -506,6 +516,16 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 58 * Address.size + 
                                               32 * Address.size + 4;
                  Jumpbuf_align             := Word64.align;
+                 Fixed_frame_size          := 8 * Address.size;
+                 Setjmp                    := "_setjmp";
+
+    |  Systems.PPC32_OPENBSD => 
+                 Little_endian             := FALSE;
+                 PCC_bitfield_type_matters := TRUE;
+                 Structure_size_boundary   := 8;
+                 First_readable_addr       := 4096 * Char.size;
+                 Jumpbuf_size              := 16_190 * Char.size;
+                 Jumpbuf_align             := Word64.align; (* ? *)
                  Fixed_frame_size          := 8 * Address.size;
                  Setjmp                    := "_setjmp";
 
