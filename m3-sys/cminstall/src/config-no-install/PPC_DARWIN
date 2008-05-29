@@ -4,7 +4,7 @@
 % derived originally from the FreeBSD configuration
 %
 
-% $Id: PPC_DARWIN,v 1.14 2008-05-25 03:24:36 jkrell Exp $
+% $Id: PPC_DARWIN,v 1.15 2008-05-29 19:04:13 jkrell Exp $
 
 %-------------------------------------------------- compilation environment ---
 
@@ -186,7 +186,7 @@ end
 % This is because man gcc is about Apple's gcc but m3cg is
 % built from FSF source.
 %
-readonly m3back = "@" & BIN_USE & "/cm3cg -fPIC -gstabs+"
+readonly m3back = "cm3cg -fPIC -gstabs+"
 
 proc m3_backend (source, object, optimize, debug) is
   local args =

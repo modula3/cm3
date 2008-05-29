@@ -1,24 +1,25 @@
-readonly TARGET       = "SPARC64_LINUX"			% code generation target
-readonly WORD_SIZE    = "64BITS"				% { "32BITS" or "64BITS" }
+readonly TARGET = "SPARC64_LINUX" % code generation target
+readonly WORD_SIZE = "64BITS" % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "sparc64-sun-linux-gnu"	% "cpu-vendor-os" string for GNU
+
+%
+% add s switch to ar and remove need for ranlib
+%
+readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
 %
 % fPIC not working yet
 %
-readonly m3back = "@cm3cg -quiet -g -m64"
-readonly SYSTEM_CC  =      "@gcc -g -m64" % C compiler
-readonly SYSTEM_ASM = "@as -64" % Assembler
+readonly m3back = "cm3cg -quiet -g -m64"
+readonly SYSTEM_CC = "gcc -g -m64" % C compiler
+readonly SYSTEM_ASM = "as -64" % Assembler
 
-readonly proc GetGcWrapFlags() is
-    return ""
-end
+%
+% newer platforms never needed these workarounds for
+% bootstrapping with older builds
+%
+readonly proc GetGcWrapFlags() is return "" end
+readonly proc FixM3GcDefs(x) is return x end
+readonly proc GetM3BackFlag(x) is return x end
 
-readonly proc FixM3GcDefs(Args) is
-    return Args
-end
-
-readonly proc GetM3BackFlag(x) is
-    return x
-end
-
-include("Linux.common")
+include("Unix.common")
