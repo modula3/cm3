@@ -19,8 +19,6 @@ TYPE
     domainname : ARRAY [0..SYS_NMLN-1] OF char;
   END;
 
-
-<*EXTERNAL*>
-PROCEDURE uname (buf: struct_utsname_star): int;
+<*EXTERNAL*> PROCEDURE uname (buf: struct_utsname_star): int;
 
 END Uutsname.

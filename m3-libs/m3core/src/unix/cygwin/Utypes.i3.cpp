@@ -1,10 +1,9 @@
-/* $Id$ */
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <netdb.h>
 
 const char* PickType(const unsigned char&) { return "uint8_t"; }
 const char* PickType(const unsigned short&) { return "uint16_t"; }
@@ -33,8 +32,6 @@ int main()
 "(* All rights reserved.                                       *)", 0,
 "(* See the file COPYRIGHT for a full description.             *)", 0,
 "", 0,
-"(* $Id" "$ *)", 0,
-"", 0,
 "(* This file was generated from " __FILE__ ". Do not edit it. *)", 0,
 "", 0,
 "INTERFACE Utypes;", 0,
@@ -42,7 +39,6 @@ int main()
 "IMPORT Ctypes;", 0,
 "", 0,
 "TYPE", 0,
-"", 0,
 "  uint8_t = Ctypes.unsigned_char;", 0,
 "  uint16_t = Ctypes.unsigned_short;", 0,
 "  uint32_t = Ctypes.unsigned_int;", 0,

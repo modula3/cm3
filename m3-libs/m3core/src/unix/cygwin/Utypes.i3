@@ -2,8 +2,6 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-(* $Id$ *)
-
 (* This file was generated from Utypes.i3.cpp. Do not edit it. *)
 
 INTERFACE Utypes;
@@ -11,7 +9,6 @@ INTERFACE Utypes;
 IMPORT Ctypes;
 
 TYPE
-
   uint8_t = Ctypes.unsigned_char;
   uint16_t = Ctypes.unsigned_short;
   uint32_t = Ctypes.unsigned_int;
@@ -39,8 +36,8 @@ TYPE
   blksize_t = int32_t;
 
   socklen_t = int32_t;
-  hostent_addrtype_t = short;
-  hostent_length_t = short;
+  hostent_addrtype_t = int16_t;
+  hostent_length_t = int16_t;
 
   struct_timespec = RECORD
     tv_sec  : int32_t;

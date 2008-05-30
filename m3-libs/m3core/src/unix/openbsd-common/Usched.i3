@@ -7,7 +7,5 @@ INTERFACE Usched;
 FROM Ctypes IMPORT int;
 
 <*EXTERNAL sched_yield*> PROCEDURE yield (): int;
-<*EXTERNAL sched_get_priority_max*> PROCEDURE get_priority_max (policy: int): int;
-<*EXTERNAL sched_get_priority_min*> PROCEDURE get_priority_min (policy: int): int;
 
 END Usched.
