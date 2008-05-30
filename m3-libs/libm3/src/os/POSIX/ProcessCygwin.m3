@@ -8,8 +8,7 @@
 UNSAFE MODULE ProcessCygwin EXPORTS Process;
 
 IMPORT Cerrno, Ctypes, File, FilePosix, OSError, OSErrorPosix,
-  Pathname, RTLinker, Unix, Uerror, ProcessPosixCommon, Process,
-  Text;
+  Pathname, RTLinker, Unix, Uerror, ProcessPosixCommon, Process;
 
 FROM ProcessPosixCommon IMPORT ArrCStr, GetPathToExec, AllocArgs,
     AllocEnv, FreeArgs, FreeEnv, stdin_g, stdout_g, stderr_g,
