@@ -7,8 +7,9 @@ IMPORT M3Timers, Pathname, Process, Quake;
 IMPORT RTCollector, RTParams, RTutils, Thread, Wr;
 
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
-IMPORT MxConfig AS M3Config(*, CMKey, CMCurrent *);
+IMPORT MxConfig, M3Config(*, CMKey, CMCurrent *);
 (* IMPORT Fmt, Time; only needed for key and expiration check *)
+IMPORT Version;
 
 VAR
   config    : TEXT          := NIL;
@@ -28,10 +29,10 @@ PROCEDURE DoIt () =
     END;
     Process.RegisterExitor (CleanUp);
 
-    config := M3Config.FindFile ();
+    config := MxConfig.FindFile ();
     IF (config = NIL) THEN
       Msg.FatalError (NIL, "unable to locate configuration file, \"",
-                      M3Config.Filename, "\"");
+                      MxConfig.Filename, "\"");
     END;
 
     mach := M3Build.NewMachine ();
@@ -47,6 +48,36 @@ PROCEDURE DoIt () =
             Quake.Define(mach, name, val);
           END;
         END;
+
+        (* Default to a native build, so the config file can say less. *)
+
+        Quake.Define(mach, "TARGET", M3Config.TARGET);
+        Quake.Define(mach, "OS_TYPE", M3Config.OS_TYPE);
+        Quake.Define(mach, "BACKEND_MODE", Version.BackendMode);
+        Quake.Define(mach, "C_COMPILER", Version.CCompiler);
+        Quake.Define(mach, "LINKER", Version.Linker);
+        Quake.Define(mach, "THREAD_LIBRARY", Version.ThreadLibrary);
+        Quake.Define(mach, "WINDOW_LIBRARY", Version.WindowLibrary);
+        Quake.Define(mach, "WORD_SIZE", M3Config.WORD_SIZE);
+        (* These don't actually matter.
+        Quake.Define(mach, "TARGET_NAMING", Version.NamingConventions);
+        Quake.Define(mach, "NAMING_CONVENTIONS", Version.NamingConventions);
+        *)
+
+        (* Even if the config file overrides the defaults, such as to do
+        a cross build, the host characteristics are still available. *)
+
+        Quake.Define(mach, "HOST", M3Config.TARGET);
+        Quake.Define(mach, "HOST_OS_TYPE", M3Config.OS_TYPE);
+        (* These don't likely matter.
+        Quake.Define(mach, "HOST_BACKEND_MODE", Version.BackendMode);
+        Quake.Define(mach, "HOST_C_COMPILER", Version.CCompiler);
+        Quake.Define(mach, "HOST_LINKER", Version.Linker);
+        Quake.Define(mach, "HOST_THREAD_LIBRARY", Version.ThreadLibrary);
+        Quake.Define(mach, "HOST_WINDOW_LIBRARY", Version.WindowLibrary);
+        Quake.Define(mach, "HOST_WORD_SIZE", M3Config.WORD_SIZE);
+        Quake.Define(mach, "HOST_NAMING_CONVENTIONS", Version.NamingConventions);
+        *)
 
         (* define the site configuration *)
         Msg.Verbose ("EVAL (\"", config, "\")");

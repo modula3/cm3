@@ -13,7 +13,8 @@ IMPORT Msg, Arg, Utils, M3Path, M3Backend, M3Compiler;
 IMPORT Quake, QMachine, QValue, QVal, QVSeq;
 IMPORT M3Loc, M3Unit, M3Options, MxConfig AS M3Config;
 IMPORT QIdent;
-FROM Target IMPORT M3BackendMode_t, BackendAssembly;
+FROM Target IMPORT M3BackendMode_t, BackendAssembly, BackendModeStrings;
+FROM M3Path IMPORT OSKind, OSKindStrings;
 
 TYPE
   UK = M3Unit.Kind;
@@ -144,8 +145,7 @@ PROCEDURE SetupNamingConventionsInternal (VAR s : State; mach : Quake.Machine) =
     value : QValue.Binding;
   BEGIN
     s.machine       := mach;
-    
-
+ 
     (* This area seems to always been messed up, and more work is needed.
     In particular NAMING_CONVENTIONS and TARGET_NAMING seem to have been confused.
     Really, neither one should be configurable in Quake.
@@ -158,18 +158,58 @@ PROCEDURE SetupNamingConventionsInternal (VAR s : State; mach : Quake.Machine) =
     *)
     value := GetDefn (s, "NAMING_CONVENTIONS");
     IF value # NIL THEN
-      M3Path.SetOS (GetOSType (s, value), host := FALSE);
+      M3Path.SetOS (ConvertNamingConventionStringToEnum (s, value), host := FALSE);
     END;
 
     value := GetDefn (s, "TARGET_NAMING");
     IF value # NIL THEN
-      WITH target_os = GetOSType (s, value) DO
+      WITH target_os = ConvertNamingConventionStringToEnum (s, value) DO
         s.target_os := target_os;
         M3Path.SetOS (target_os, host := FALSE);
       END;
     END;
 
   END SetupNamingConventionsInternal;
+
+PROCEDURE ConvertStringToEnum(s: State; name : TEXT; binding: QValue.Binding; min, max: INTEGER; READONLY map: ARRAY OF TEXT): INTEGER =
+  VAR
+    i : INTEGER;
+    value := BindingToText (s, binding);
+  BEGIN
+
+    IF Text.Length (value) = 0 THEN
+        Msg.FatalError (NIL, "unrecognized " & name & ": ", "(empty)");
+    END;
+
+    TRY
+      i := QVal.ToInt (s.machine, binding.value);
+      IF (i < min) OR (i > max) THEN
+        Msg.FatalError (NIL, "unrecognized " & name & ": ", value);
+      END;
+      RETURN i;
+    EXCEPT Quake.Error =>
+    END;
+
+    FOR i := min TO max DO
+      IF Text.Equal(value, map[i]) THEN
+        RETURN i;
+      END;
+    END;
+
+    Msg.FatalError (NIL, "unrecognized " & name & ": ", value);
+    RETURN -1;
+
+  END ConvertStringToEnum;
+
+PROCEDURE ConvertBackendModeStringToEnum(s: State; binding: QValue.Binding): M3BackendMode_t =
+  BEGIN
+    RETURN VAL(ConvertStringToEnum(s, "backend mode", binding, ORD(FIRST(M3BackendMode_t)), ORD(LAST(M3BackendMode_t)), BackendModeStrings), M3BackendMode_t);
+  END ConvertBackendModeStringToEnum;
+
+PROCEDURE ConvertNamingConventionStringToEnum(s: State; binding: QValue.Binding): OSKind =
+  BEGIN
+    RETURN VAL(ConvertStringToEnum(s, "naming convention", binding, ORD(FIRST(OSKind)), ORD(LAST(OSKind)), OSKindStrings), OSKind);
+  END ConvertNamingConventionStringToEnum;
 
 PROCEDURE SetupNamingConventions (mach : Quake.Machine) =
   VAR s := NEW (State);
@@ -183,6 +223,7 @@ PROCEDURE CompileUnits (main     : TEXT;
                         info_kind: UK;
                         mach     : Quake.Machine): State =
   VAR s := NEW (State);  nm := M3Path.Parse (main);
+    value : QValue.Binding;
   BEGIN
     DumpUnits (units);
     ETimer.ResetAll ();
@@ -202,10 +243,40 @@ PROCEDURE CompileUnits (main     : TEXT;
     s.m3env.globals := s;
 
     s.target := GetConfigItem (s, "TARGET");
-    s.m3backend_mode := VAL (MAX (0, MIN (GetConfigInt (s, "M3_BACKEND_MODE"), 3)), M3BackendMode_t);
+
+    value := GetDefn (s, "M3_BACKEND_MODE");
+    IF value = NIL THEN
+      value := GetDefn (s, "BACKEND_MODE");
+    END;
+    IF value = NIL THEN
+        ConfigErr (s, "BACKEND_MODE or M3_BACKEND_MODE", "not defined");
+    END;
+    s.m3backend_mode := ConvertBackendModeStringToEnum(s, value);
+
+    value := GetDefn (s, "TARGET_NAMING");
+    IF value # NIL THEN
+      WITH target_os = ConvertNamingConventionStringToEnum (s, value) DO
+        s.target_os := target_os;
+        M3Path.SetOS (target_os, host := FALSE);
+      END;
+    END;
+
     IF NOT Target.Init (s.target, GetConfigItem (s, "OS_TYPE", "POSIX"), s.m3backend_mode) THEN
       Msg.FatalError (NIL, "unrecognized target machine: TARGET = ", s.target);
     END;
+
+    (* This is too late. But the point is valid -- specifying WORD_SIZE is redundant
+    and should not be needed. *)
+    (*
+    IF Target.Integer.size = 32 THEN
+      Quake.Define(s.machine, "WORD_SIZE", "32BITS");
+    ELSIF Target.Integer.size = 64 THEN
+      Quake.Define(s.machine, "WORD_SIZE", "64BITS");
+    ELSE
+      Msg.FatalError (NIL, "internal error: unknown word size: ", Fmt.Int(Target.Integer.size));
+    END;
+    *)
+
     Target.Has_stack_walker := GetConfigBool(s, "M3_USE_STACK_WALKER",
                                              Target.Has_stack_walker);
 
@@ -251,21 +322,6 @@ PROCEDURE CompileUnits (main     : TEXT;
     RETURN s;
   END CompileUnits;
 
-PROCEDURE GetOSType (s: State; bind: QValue.Binding): M3Path.OSKind =
-  VAR val := BindingToText (s, bind);
-  BEGIN
-    IF Text.Length (val) = 1 THEN
-      CASE (Text.GetChar (val, 0)) OF
-        | '0' => RETURN M3Path.OSKind.Unix;
-        | '1' => RETURN M3Path.OSKind.GrumpyUnix;
-        | '2' => RETURN M3Path.OSKind.Win32;
-        ELSE
-      END;
-    END;
-    ConfigErr (s, s.machine.map.id2txt(bind.name), "unrecognized naming convention: " & val);
-    RETURN M3Path.OSKind.Unix;
-  END GetOSType;
-
 PROCEDURE BindingToText (s: State; bind: QValue.Binding; default: TEXT := NIL): TEXT =
   BEGIN
     IF bind = NIL THEN
@@ -297,6 +353,7 @@ PROCEDURE GetConfigProc (s: State;  symbol: TEXT;
     RETURN x;
   END GetConfigProc;
 
+(*
 PROCEDURE GetConfigInt (s: State;  symbol: TEXT): INTEGER =
   VAR bind := GetDefn (s, symbol);
   BEGIN
@@ -308,6 +365,7 @@ PROCEDURE GetConfigInt (s: State;  symbol: TEXT): INTEGER =
     END;
     RETURN 0;
   END GetConfigInt;
+*)
 
 PROCEDURE GetConfigBool (s: State;  symbol: TEXT; default := FALSE): BOOLEAN =
   VAR bind := GetDefn (s, symbol);

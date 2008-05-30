@@ -17,6 +17,9 @@
 %
 readonly TARGET       = "NT386"             % code generation target
 
+readonly OS_TYPE      = "WIN32"
+readonly GNU_PLATFORM = "i686-pc-mingw32"
+
 if M3_PROFILING
     readonly PROFILING_P = "p"
 else
@@ -29,5 +32,8 @@ readonly BUILD_DIR = "NT386MINGNU" & PROFILING_P
 readonly M3_BACKEND_MODE = "3" % other values are 0, 1, 2
 readonly C_COMPILER = "GNU" % other values are MS
 readonly LINKER = "GNU" % other values are MS
+readonly NAMING_CONVENTIONS = "2"
+readonly THREAD_LIBRARY = "MS"
+readonly WINDOW_LIBRARY = "MS"
 
-include("NT386")
+include("NT386.common")

@@ -94,6 +94,12 @@ TYPE
   };
 
 CONST
+  BackendModeStrings = ARRAY M3BackendMode_t OF TEXT
+  { "IntegratedObject",
+    "IntegratedAssembly",
+    "ExternalObject",
+    "ExternalAssembly" };
+
   BackendIntegrated = ARRAY M3BackendMode_t OF BOOLEAN { TRUE, TRUE, FALSE, FALSE };
   BackendAssembly = ARRAY M3BackendMode_t OF BOOLEAN { FALSE, TRUE, FALSE, TRUE };
 

@@ -44,10 +44,10 @@ end
 
 %------------------------------------------------------------------------------
 
-% Generate the "Version.m3" implementation file.  It contains the release
+% Generate the "Version.i3" implementation file.  It contains the release
 % name, if any, else the compilation date and time.
 proc version_impl(name) is
-  local filename = name & ".m3"
+  local filename = name & ".i3"
   local tempname = "_m3temp_" & filename
   local datefn = ".." & SL & BUILD_DIR & SL & "_m3datenow.quake"
   local dcmd = ""
@@ -64,7 +64,7 @@ proc version_impl(name) is
 
   if defined("_all")
     > tempname in
-      write("MODULE Version;", CR, CR, "BEGIN", CR)
+      write("INTERFACE ", name, ";", CR)
     end
 
     local NOW = ""
@@ -159,17 +159,70 @@ proc version_impl(name) is
       write(" *** warning: CM3_LAST_CHANGED not defined", CR)
     end
     >> tempname in
-      write("  Text := \"", CM3_VERSION_TEXT, "\";", CR)
-      write("  Number := \"", CM3_VERSION_NUMBER, "\";", CR)
-      write("  LastChanged := \"", CM3_LAST_CHANGED, "\";", CR)
-      write("  Created := \"", NOW, "\";", CR)
-      write("  Target := \"", TARGET, "\";", CR)
-    end
-    >> tempname in
-      write("END Version.", CR)
+        write("CONST", CR)
+        write("  Text = \"", CM3_VERSION_TEXT, "\";", CR)
+        write("  Number = \"", CM3_VERSION_NUMBER, "\";", CR)
+        write("  LastChanged = \"", CM3_LAST_CHANGED, "\";", CR)
+        write("  Created = \"", NOW, "\";", CR)
+
+        %
+        % When cm3 uses this data, it is describing the HOST.
+        % They are reasonable defaults for the TARGET, ASSUMING a NATIVE build.
+        %
+        write("  Target = \"", TARGET, "\";", CR)
+        write("  OSType = \"", OS_TYPE, "\";", CR)
+
+        if defined ("C_COMPILER")
+            write("  CCompiler = \"", C_COMPILER, "\";", CR)
+        else
+            write("  CCompiler = \"\";", CR)
+        end
+        if defined ("LINKER")
+            write("  Linker = \"", LINKER, "\";", CR)
+        else
+            write("  Linker = \"\";", CR)
+        end
+        if defined ("THREAD_LIBRARY")
+            write("  ThreadLibrary = \"", THREAD_LIBRARY, "\";", CR)
+        else
+            write("  ThreadLibrary = \"\";", CR)
+        end
+        if defined ("WINDOW_LIBRARY")
+            write("  WindowLibrary = \"", WINDOW_LIBRARY, "\";", CR)
+        else
+            write("  WindowLibrary = \"\";", CR)
+        end
+
+        local readonly proc map(a, b) is
+          if a contains b
+            return a{b}
+          end
+          return b
+        end
+
+        write("  BackendMode = \"",
+            map({"0" : "IntegratedObject",
+             "1" : "IntegratedAssembly",
+             "2" : "ExternalObject",
+             "3" : "ExternalAssembly"}, M3_BACKEND_MODE), "\";", CR)
+
+        write("  NamingConventions = \"",
+            map({"0" : "Unix",
+             "1" : "GrumpyUnix",
+             "2" : "Win32"}, TARGET_NAMING), "\";", CR)
+
+        write("  WordSize = \"", WORD_SIZE, "\";", CR)
+
+        if defined ("GNU_PLATFORM")
+            write("  GNUPlatform = \"", GNU_PLATFORM, "\";", CR)
+        else
+            write("  GNUPlatform = \"\";", CR)
+        end
+
+        write("END ", name, ".", CR)
     end
     cp_if(tempname, filename)
-    derived_implementation(name)
+    derived_interface(name, HIDDEN)
   end
 end
 

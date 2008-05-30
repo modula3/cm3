@@ -15,7 +15,7 @@
 % That is, m3cgcat doesn't understand include and needs
 % the data presented more directly.
 %
-readonly TARGET = "NT386"   % code generation target
+TARGET = "NT386"   % code generation target
 
 INSTALL_ROOT = BEGIN_CONFIG
   "Where should CM3 be installed?"

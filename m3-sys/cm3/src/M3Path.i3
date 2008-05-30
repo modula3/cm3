@@ -20,8 +20,13 @@ TYPE
   Kind = { Unknown, I3, IC, IS, IO, M3, MC, MS, MO,
            IG, MG, C, H, S, O, M3LIB, LIB, LIBX, PGM, PGMX, TMPL };
 
-TYPE
   OSKind = { Unix, GrumpyUnix, Win32 };
+
+CONST
+  OSKindStrings = ARRAY OSKind OF TEXT
+  { "Unix",
+    "GrumpyUnix",
+    "Win32" };
 
 PROCEDURE SetOS (os: OSKind;  host: BOOLEAN);
 (* Set the conventions for the specifed platform *)
