@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.110 2008-05-29 12:43:22 jkrell Exp $
+# $Id: pylib.py,v 1.111 2008-05-30 07:07:10 jkrell Exp $
 
 import os
 from os import getenv
@@ -1318,6 +1318,7 @@ PackageSets = {
         "m3core",
         "libm3",
         "sysutils",
+        "windowsResources",
         "patternmatching",
 
     # system / compiler libraries and tools
@@ -2135,11 +2136,11 @@ def SetupEnvironment():
         #_ClearEnvironmentVariable("LIB")
         #_ClearEnvironmentVariable("INCLUDE")
 
-        if HostIsNT:
-            _SetupEnvironmentVariableAll(
-                "PATH",
-                ["cygX11-6.dll"],
-                os.path.join(SystemDrive, "cygwin", "usr", "X11R6", "bin"))
+        #if HostIsNT:
+        #    _SetupEnvironmentVariableAll(
+        #        "PATH",
+        #        ["cygX11-6.dll"],
+        #        os.path.join(SystemDrive, "cygwin", "usr", "X11R6", "bin"))
 
         _SetupEnvironmentVariableAll(
             "PATH",
