@@ -4,8 +4,6 @@
 
 INTERFACE UpthreadMachine;
 
-(* <bits/pthreadtypes.h> *)
-
 CONST
   SIZEOF_PTHREAD_ATTR_T        = 56;
   SIZEOF_PTHREAD_MUTEX_T       = 40;
