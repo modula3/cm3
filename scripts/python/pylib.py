@@ -1318,6 +1318,7 @@ PackageSets = {
         "m3core",
         "libm3",
         "sysutils",
+        "windowsResources",
         "patternmatching",
 
     # system / compiler libraries and tools
@@ -2135,11 +2136,11 @@ def SetupEnvironment():
         #_ClearEnvironmentVariable("LIB")
         #_ClearEnvironmentVariable("INCLUDE")
 
-        if HostIsNT:
-            _SetupEnvironmentVariableAll(
-                "PATH",
-                ["cygX11-6.dll"],
-                os.path.join(SystemDrive, "cygwin", "usr", "X11R6", "bin"))
+        #if HostIsNT:
+        #    _SetupEnvironmentVariableAll(
+        #        "PATH",
+        #        ["cygX11-6.dll"],
+        #        os.path.join(SystemDrive, "cygwin", "usr", "X11R6", "bin"))
 
         _SetupEnvironmentVariableAll(
             "PATH",
