@@ -31,9 +31,6 @@ CONST
   S_OWRITE: u_short = 8_0000002;
   S_OEXEC : u_short = 8_0000001;
 
-  S_IFPIPE = 0;
-  S_IFPORT = S_IFIFO;
-
 TYPE
   struct_stat = RECORD
     st_dev       : dev_t;
