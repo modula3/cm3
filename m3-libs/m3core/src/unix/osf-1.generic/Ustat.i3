@@ -82,8 +82,6 @@ CONST                     (* user / group / other definitions *)
   S_IFDIR  = 8_0040000;   (*   directory *)
   S_IFCHR  = 8_0020000;   (*   character special *)
   S_IFIFO  = 8_0010000;   (*   fifo *)
-  S_IFPIPE = 8_0000000;   (*   pipe *)
-  S_IFPORT = S_IFIFO;
 
   S_ISVTX  = 8_0001000;   (* save text even after use *)
 
