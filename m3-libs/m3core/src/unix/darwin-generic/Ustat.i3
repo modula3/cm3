@@ -81,9 +81,6 @@ CONST
   S_IFWHT : u_short = 8_0160000;	 (* whiteout *)
   S_ISVTX : u_short = 8_0001000;	 (* save swapped text even after use *)
 
-  S_IFPIPE: u_short = 8_0000000;	 (* no such constant in stat.h! *)
-  S_IFPORT = S_IFIFO;
-
 (*
  * Definitions of flags stored in file flags word.
  *)

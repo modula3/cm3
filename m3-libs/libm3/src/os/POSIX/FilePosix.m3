@@ -44,7 +44,7 @@ PROCEDURE FileTypeFromStatbuf(READONLY statbuf: Ustat.struct_stat)
           THEN RETURN RegularFile.FileType
           ELSE RETURN Terminal.FileType
         END
-    | Ustat.S_IFPIPE, Ustat.S_IFPORT, Ustat.S_IFSOCK =>
+    | Ustat.S_IFIFO, Ustat.S_IFSOCK =>
         RETURN Pipe.FileType
     | Ustat.S_IFREG =>
         RETURN RegularFile.FileType

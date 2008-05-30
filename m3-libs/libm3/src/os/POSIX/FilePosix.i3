@@ -33,7 +33,7 @@ PROCEDURE New(fd: INTEGER; ds: DirectionSet): File.T RAISES {OSError.E};
 
 PROCEDURE NewPipe(fd: INTEGER; ds: DirectionSet): Pipe.T;
 (* Create a "Pipe.T" based on "fd" and "ds".  It is an unchecked (but safe)
-   error if "fd" is not "S_IFPIPE", "S_IFPORT", or "S_IFSOCK". *)
+   error if "fd" is not "S_IFIFO" or "S_IFSOCK". *)
 
 PROCEDURE FileTypeFromStatbuf(READONLY statbuf: Ustat.struct_stat)
   : File.Type;
