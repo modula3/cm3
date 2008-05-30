@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.39 2008-05-12 19:24:52 jkrell Exp $
+% $Id: NT386.common,v 1.40 2008-05-30 11:55:13 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -1386,6 +1386,7 @@ end
 % in user's m3makefiles.
 
 if equal(M3_BACKEND_MODE, "0") or equal(M3_BACKEND_MODE, "1")
+        or equal(M3_BACKEND_MODE, "IntegratedObject") or equal(M3_BACKEND_MODE, "IntegratedAssembly")
     M3_FRONT_FLAGS = ["-unfold_nested_procs", "-check_procs"]
 % --- internal configuration options passed directly to the Modula-3 front-end
 else
