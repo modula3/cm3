@@ -1,5 +1,5 @@
 %
-% $Id: NT386.main,v 1.2 2008-05-08 15:04:40 jkrell Exp $
+% $Id: NT386.main,v 1.3 2008-05-30 11:55:13 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -15,7 +15,7 @@
 % That is, m3cgcat doesn't understand include and needs
 % the data presented more directly.
 %
-readonly TARGET = "NT386"   % code generation target
+TARGET = "NT386"   % code generation target
 
 INSTALL_ROOT = BEGIN_CONFIG
   "Where should CM3 be installed?"
