@@ -14,12 +14,10 @@ CONST
   S_IFSOCK: u_short = 8_0140000;
   S_IFLNK : u_short = 8_0120000;
   S_IFREG : u_short = 8_0100000;
-  S_IFPIPE: u_short = 8_0000000;
   S_IFBLK : u_short = 8_0060000;
   S_IFDIR : u_short = 8_0040000;
   S_IFCHR : u_short = 8_0020000;
   S_IFIFO : u_short = 8_0010000;
-  S_IFPORT          = S_IFIFO;
   S_IREAD : u_short = 8_0400;
   S_IWRITE: u_short = 8_0200;
   S_IEXEC : u_short = 8_0100;

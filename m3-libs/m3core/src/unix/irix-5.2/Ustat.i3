@@ -31,10 +31,6 @@ CONST
   S_IFLNK	 = 16_A000;	(* symbolic link *)
   S_IFSOCK	 = 16_C000;	(* socket *)
 
-(*** PIPE and PORT don't exist, they're for src/os/POSIX/FilePosix.m3 ***)
-  S_IFPIPE       = 16_1000;     (* fifo *)
-  S_IFPORT       = 16_0000;     (* pipe *)
-
   S_ISUID	 = 16_800;	(* set user id on execution *)
   S_ISGID	 = 16_400;	(* set group id on execution *)
 
