@@ -14,7 +14,6 @@ FROM Utypes IMPORT pid_t;
 
 CONST
   WNOHANG = 1;
-  (* WUNTRACED = 2; *)
 
 TYPE
   w_A = unsigned;

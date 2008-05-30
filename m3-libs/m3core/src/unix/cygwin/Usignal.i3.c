@@ -1,4 +1,4 @@
-/* $Id: Usignal.i3.c,v 1.20 2008-02-23 09:50:39 jkrell Exp $ */
+/* $Id: Usignal.i3.c,v 1.21 2008-05-30 07:48:28 jkrell Exp $ */
 
 #include <signal.h>
 #include <stdio.h>
@@ -29,18 +29,14 @@ int main()
 "", 0,
 "FROM Ctypes IMPORT int;", 0,
 "", 0,
-"(*** <signal.h> ***)", 0,
-"", 0,
 "CONST", 0,
-"  SIGINT = 16_%08x; (* interrupt *)", SIGINT,
-"  SIGKILL = 16_%08x; (* kill (cannot be caught or ignored) *)", SIGKILL,
+"  SIGINT = 16_%08x;", SIGINT,
+"  SIGKILL = 16_%08x;", SIGKILL,
 "", 0,
 "TYPE", 0,
 "  SignalHandler = ADDRESS;", 0,
 "  SignalActionHandler = ADDRESS;", 0,
 "", 0,
-"", 0,
-"(*** kill(2) - send signal to a process ***)", 0,
 "", 0,
 "<*EXTERNAL*> PROCEDURE kill (pid, sig: int): int;", 0,
 "", 0,

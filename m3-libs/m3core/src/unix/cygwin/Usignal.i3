@@ -7,28 +7,20 @@
 (*      modified on Tue Feb 14 20:58:12 GMT 1995 by rrw1000@cam.ac.uk *)
 (*      modified on Tue Mar  2 17:18:02 PST 1993 by muller            *)
 
-(* $Id: Usignal.i3,v 1.19 2008-02-23 09:50:39 jkrell Exp $ *)
-
 (* This file was generated from Usignal.i3.c. Do not edit it. *)
 
 INTERFACE Usignal;
 
 FROM Ctypes IMPORT int;
 
-(*** <signal.h> ***)
-
 CONST
-  SIGINT = 16_00000002; (* interrupt *)
-  SIGKILL = 16_00000009; (* kill (cannot be caught or ignored) *)
+  SIGINT = 16_00000002;
+  SIGKILL = 16_00000009;
 
 TYPE
   SignalHandler = ADDRESS;
   SignalActionHandler = ADDRESS;
 
-
-(*** kill(2) - send signal to a process ***)
-
 <*EXTERNAL*> PROCEDURE kill (pid, sig: int): int;
-
 
 END Usignal.
