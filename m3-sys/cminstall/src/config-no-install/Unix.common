@@ -244,15 +244,13 @@ if not defined ("FixM3GcDefs")
 	end
 end
 
+%
+% Hash of command line option to TRUE or FALSE,
+% to avoid probing more than once. 
+%
+local IsM3BackFlagSupported_Cache = { }
 
 if not defined ("GetM3BackFlag")
-
-	%
-	% Hash of command line option to TRUE or FALSE,
-	% to avoid probing more than once. 
-	%
-	local IsM3BackFlagSupported_Cache = { }
-
 	readonly proc IsM3BackFlagSupported(x) is
 		local Result = 0
 		if IsM3BackFlagSupported_Cache contains x
