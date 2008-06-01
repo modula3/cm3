@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.112 2008-06-01 06:25:44 jkrell Exp $
+# $Id: pylib.py,v 1.113 2008-06-01 11:37:18 jkrell Exp $
 
 import os
 from os import getenv
@@ -1744,7 +1744,7 @@ GenericCommand:
 
 def DeleteFile(a):
     if os.path.isfile(a):
-        os.chmod(a, ~0)
+        os.chmod(a, 0700)
         os.remove(a)
 
 def CreateDirectory(a):
@@ -1793,7 +1793,6 @@ def CopyConfigForDevelopment():
     To = os.path.join(InstallRoot, "bin")
     CopyFile(os.path.join(Root, "m3-sys", "cminstall", "src", "config", "cm3.cfg"),
              os.path.join(To)) or FatalError()
-    CopyFile(os.path.join(Root, "scripts", "sysinfo.sh"), To) or FatalError()
     return True
 
 #def CopyDirectoryNonRecursive(From, To):
