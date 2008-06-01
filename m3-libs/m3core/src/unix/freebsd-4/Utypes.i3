@@ -75,9 +75,6 @@ TYPE
   cc_t         = u_char;
   speed_t      = long;
 
-  in_addr_t    = u_int32_t;
-  in_port_t    = u_int16_t;
-
 CONST
   NBBY = 8;                           (* number of bits in a byte *)
 
