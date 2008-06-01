@@ -29,42 +29,48 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.16 2008-06-01 05:30:16 jkrell Exp $
+% $Id: version.quake,v 1.17 2008-06-01 05:38:20 jkrell Exp $
 
 
 %------------------------------------------------------------------------------
 
-proc
-FileExists(
-    a,
-    )
-is
+proc FileExists(a) is
     return not stale(a, a)
 end
 
 %------------------------------------------------------------------------------
 
-% Generate the "Version.i3" implementation file.  It contains the release
-% name, if any, else the compilation date and time.
+%
+% Generate the "Version.i3" implementation file. It contains the release
+% name, if any, else the compilation date and time, and other information
+% about the environment used to build the compiler.
+%
 proc version_impl(name) is
-  local filename = name & ".i3"
-  local tempname = "_m3temp_" & filename
-  local datefn = ".." & SL & BUILD_DIR & SL & "_m3datenow.quake"
-  local dcmd = ""
-  local ret = 0
+    local filename = name & ".i3"
+    local tempname = "_m3temp_" & filename
+    local datefn = ".." & SL & BUILD_DIR & SL & "_m3datenow.quake"
+    local dcmd = ""
+    local ret = 0
 
-  % delete some but not all outputs
-  delete_file(datefn)
-  delete_file("_m3version.cmd")
-  delete_file(tempname)
+    %
+    % delete some but not all outputs
+    %
+    delete_file(datefn)
+    delete_file("_m3version.cmd")
+    delete_file(tempname)
 
-  % delete with the old names
-  delete_file(".." & SL & TARGET & ".datenow")
-  delete_file("." & filename)
+    %
+    % delete with the old names (these were outside the output directory)
+    %
+    delete_file(".." & SL & TARGET & ".datenow")
+    delete_file("." & filename)
 
-  if defined("_all")
+    if not defined("_all")
+        return
+    end
+
     > tempname in
-      write("INTERFACE ", name, ";", CR)
+        write("INTERFACE ", name, ";", CR)
     end
 
     local NOW = ""
@@ -76,8 +82,9 @@ proc version_impl(name) is
     end
 
     if equal ($OS, "Windows_NT") and equal (SL, "\\")
-
+        %
         % why two names for these?
+        %
         local readonly Map =
         {
             "CM3_VERSION_NUMBER" : 
@@ -96,13 +103,17 @@ proc version_impl(name) is
                 },
         }
 
+        %
         % are any not defined, and not in the environment
         % if so, we need to run sysinfo.cmd to look at sysinfo.sh
+        %
         local Missing = [ ]
         local AnyMissing = FALSE
 
+        %
         % were any initially missing, but then gotten from environment
         % we still need to write and include a file for this
+        %
         local AnyChanged = FALSE
         local Changed = [ ]
 
@@ -147,16 +158,16 @@ proc version_impl(name) is
         include(datefn)
     end
     if not defined("CM3_VERSION_NUMBER")
-      CM3_VERSION_NUMBER = "000000"
-      write(" *** warning: CM3_VERSION_NUMBER not defined", CR)
+        CM3_VERSION_NUMBER = "000000"
+        write(" *** warning: CM3_VERSION_NUMBER not defined", CR)
     end
     if not defined("CM3_VERSION_TEXT")
-      CM3_VERSION_TEXT = "d0.0.0"
-      write(" *** warning: CM3_VERSION_TEXT not defined", CR)
+        CM3_VERSION_TEXT = "d0.0.0"
+        write(" *** warning: CM3_VERSION_TEXT not defined", CR)
     end
     if not defined("CM3_LAST_CHANGED")
-      CM3_LAST_CHANGED = "unknown"
-      write(" *** warning: CM3_LAST_CHANGED not defined", CR)
+        CM3_LAST_CHANGED = "unknown"
+        write(" *** warning: CM3_LAST_CHANGED not defined", CR)
     end
     >> tempname in
         write("CONST", CR)
@@ -175,7 +186,7 @@ proc version_impl(name) is
 
         local GNUPlatform = ""
         if defined ("GNU_PLATFORM")
-          GNUPlatform = GNU_PLATFORM
+            GNUPlatform = GNU_PLATFORM
         end
         write("  GNUPlatform = \"", GNUPlatform, "\";", CR)
 
@@ -204,26 +215,26 @@ proc version_impl(name) is
         write("  WindowLibrary = \"", WindowLibrary, "\";", CR)
 
         local readonly proc map(a, b) is
-          if a contains b
-            return a{b}
-          end
-          return b
+            if a contains b
+                return a{b}
+            end
+            return b
         end
 
         write("  BackendMode = \"",
             map({"0" : "IntegratedObject",
-             "1" : "IntegratedAssembly",
-             "2" : "ExternalObject",
-             "3" : "ExternalAssembly"}, M3_BACKEND_MODE), "\";", CR)
+                 "1" : "IntegratedAssembly",
+                 "2" : "ExternalObject",
+                 "3" : "ExternalAssembly"}, M3_BACKEND_MODE), "\";", CR)
 
         local TargetNaming = ""
         if defined("TARGET_NAMING")
-          TargetNaming = TARGET_NAMING
+            TargetNaming = TARGET_NAMING
         else if defined("NAMING_CONVENTIONS")
             TargetNaming = NAMING_CONVENTIONS
         end end
         if TargetNaming
-          TargetNaming = map({"0" : "Unix", "1" : "GrumpyUnix", "2" : "Win32"}, TargetNaming)
+            TargetNaming = map({"0" : "Unix", "1" : "GrumpyUnix", "2" : "Win32"}, TargetNaming)
         end
         write("  TargetNaming      = \"", TargetNaming, "\";", CR)
         write("  NamingConventions = \"", TargetNaming, "\";", CR)
@@ -232,6 +243,4 @@ proc version_impl(name) is
     end
     cp_if(tempname, filename)
     derived_interface(name, HIDDEN)
-  end
 end
-
