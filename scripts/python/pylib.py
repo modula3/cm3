@@ -1744,7 +1744,7 @@ GenericCommand:
 
 def DeleteFile(a):
     if os.path.isfile(a):
-        os.chmod(a, ~0)
+        os.chmod(a, 0700)
         os.remove(a)
 
 def CreateDirectory(a):
@@ -1793,7 +1793,6 @@ def CopyConfigForDevelopment():
     To = os.path.join(InstallRoot, "bin")
     CopyFile(os.path.join(Root, "m3-sys", "cminstall", "src", "config", "cm3.cfg"),
              os.path.join(To)) or FatalError()
-    CopyFile(os.path.join(Root, "scripts", "sysinfo.sh"), To) or FatalError()
     return True
 
 #def CopyDirectoryNonRecursive(From, To):
