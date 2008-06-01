@@ -29,7 +29,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.15 2008-05-30 11:55:13 jkrell Exp $
+% $Id: version.quake,v 1.16 2008-06-01 05:30:16 jkrell Exp $
 
 
 %------------------------------------------------------------------------------
@@ -171,27 +171,37 @@ proc version_impl(name) is
         %
         write("  Target = \"", TARGET, "\";", CR)
         write("  OSType = \"", OS_TYPE, "\";", CR)
+        write("  WordSize = \"", WORD_SIZE, "\";", CR)
 
+        local GNUPlatform = ""
+        if defined ("GNU_PLATFORM")
+          GNUPlatform = GNU_PLATFORM
+        end
+        write("  GNUPlatform = \"", GNUPlatform, "\";", CR)
+
+        local CCompiler = ""
         if defined ("C_COMPILER")
-            write("  CCompiler = \"", C_COMPILER, "\";", CR)
-        else
-            write("  CCompiler = \"\";", CR)
+            CCompiler = C_COMPILER
         end
+        write("  CCompiler = \"", CCompiler, "\";", CR)
+
+        local Linker = ""
         if defined ("LINKER")
-            write("  Linker = \"", LINKER, "\";", CR)
-        else
-            write("  Linker = \"\";", CR)
+            Linker = LINKER
         end
+        write("  Linker = \"", Linker, "\";", CR)
+
+        local ThreadLibrary = ""
         if defined ("THREAD_LIBRARY")
-            write("  ThreadLibrary = \"", THREAD_LIBRARY, "\";", CR)
-        else
-            write("  ThreadLibrary = \"\";", CR)
+            Linker = THREAD_LIBRARY
         end
+        write("  ThreadLibrary = \"", ThreadLibrary, "\";", CR)
+
+        local WindowLibrary = ""
         if defined ("WINDOW_LIBRARY")
-            write("  WindowLibrary = \"", WINDOW_LIBRARY, "\";", CR)
-        else
-            write("  WindowLibrary = \"\";", CR)
+            Linker = WINDOW_LIBRARY
         end
+        write("  WindowLibrary = \"", WindowLibrary, "\";", CR)
 
         local readonly proc map(a, b) is
           if a contains b
@@ -206,18 +216,17 @@ proc version_impl(name) is
              "2" : "ExternalObject",
              "3" : "ExternalAssembly"}, M3_BACKEND_MODE), "\";", CR)
 
-        write("  NamingConventions = \"",
-            map({"0" : "Unix",
-             "1" : "GrumpyUnix",
-             "2" : "Win32"}, TARGET_NAMING), "\";", CR)
-
-        write("  WordSize = \"", WORD_SIZE, "\";", CR)
-
-        if defined ("GNU_PLATFORM")
-            write("  GNUPlatform = \"", GNU_PLATFORM, "\";", CR)
-        else
-            write("  GNUPlatform = \"\";", CR)
+        local TargetNaming = ""
+        if defined("TARGET_NAMING")
+          TargetNaming = TARGET_NAMING
+        else if defined("NAMING_CONVENTIONS")
+            TargetNaming = NAMING_CONVENTIONS
+        end end
+        if TargetNaming
+          TargetNaming = map({"0" : "Unix", "1" : "GrumpyUnix", "2" : "Win32"}, TargetNaming)
         end
+        write("  TargetNaming      = \"", TargetNaming, "\";", CR)
+        write("  NamingConventions = \"", TargetNaming, "\";", CR)
 
         write("END ", name, ".", CR)
     end
