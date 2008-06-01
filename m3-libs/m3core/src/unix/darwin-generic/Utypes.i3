@@ -61,8 +61,6 @@ TYPE
   blkcnt_t     = int64_t;		 (* total blocks *)
   blksize_t    = int32_t;		 (* preferred block size *)
   gid_t        = u_int32_t;		 (* group id *)
-  in_addr_t    = u_int32_t;		 (* base type for internet address *)
-  in_port_t    = u_int16_t;
   ino_t        = u_int32_t;		 (* inode number *)
   key_t        = int32_t;		 (* IPC key (for Sys V IPC) *)
   mode_t       = u_int16_t;		 (* permissions *)

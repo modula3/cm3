@@ -10,7 +10,6 @@ Interface ("Udir")
 Interface ("Uerror")
 Interface ("Uexec")
 Interface ("Ugrp")
-Module    ("Uin")
 %--- Interface ("Uipc") -- not supported?
 Interface ("Umman")
 %--- Module    ("Umsg") -- not supported?

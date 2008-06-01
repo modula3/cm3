@@ -26,8 +26,6 @@ TYPE
   dev_t = int32_t;
   gid_t = uint32_t;
   id_t = uint32_t;
-  in_addr_t = int32_t;
-  in_port_t = int16_t;
   ino_t = uint32_t;
   mode_t = uint32_t;
   nlink_t = uint32_t;

@@ -2,13 +2,10 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-(* Last modified on Fri Oct  7 09:51:29 PDT 1994 by ericv         *)
-(*      modified on Thu Nov 12 11:38:20 PST 1992 by muller        *)
-
 INTERFACE Usignal;
 
-FROM Ctypes IMPORT int, char_star;
-FROM Utypes IMPORT uint32_t, uint64_t, pid_t;
+FROM Ctypes IMPORT int, char_star, uint32_t;
+FROM Utypes IMPORT uint64_t, pid_t;
 
 (*** <signal.h> ***)
 
