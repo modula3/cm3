@@ -6,14 +6,14 @@
 
 MODULE Uin;
 
-FROM Utypes IMPORT uint16_t, uint32_t;
+FROM Ctypes IMPORT unsigned_short, unsigned;
 
 (* Big-endian versions; simply return the argument. *)
 
-PROCEDURE ntohl(x: uint32_t): uint32_t = BEGIN RETURN x; END ntohl;
-PROCEDURE ntohs(x: uint16_t): uint16_t = BEGIN RETURN x; END ntohs;
-PROCEDURE htonl(x: uint32_t): uint32_t = BEGIN RETURN x; END htonl;
-PROCEDURE htons(x: uint16_t): uint16_t = BEGIN RETURN x; END htons;
+PROCEDURE ntohl(x: unsigned): unsigned = BEGIN RETURN x; END ntohl;
+PROCEDURE ntohs(x: unsigned_short): unsigned_short = BEGIN RETURN x; END ntohs;
+PROCEDURE htonl(x: unsigned): unsigned = BEGIN RETURN x; END htonl;
+PROCEDURE htons(x: unsigned_short): unsigned_short = BEGIN RETURN x; END htons;
 
 BEGIN
 END Uin.
