@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.35 2008-05-09 21:34:25 jkrell Exp $
+# $Id: make-dist.py,v 1.36 2008-06-01 06:25:44 jkrell Exp $
 
 import sys
 import os.path
@@ -154,8 +154,8 @@ def FatalError():
 STAGE = getenv("STAGE")
 
 if (not STAGE):
-    tempfile.tempdir = os.path.join(tempfile.gettempdir(), "cm3", "make-dist")
-    CreateDirectory(tempfile.tempdir)
+    #tempfile.tempdir = os.path.join(tempfile.gettempdir(), "cm3", "make-dist")
+    #CreateDirectory(tempfile.tempdir)
     STAGE = tempfile.mkdtemp()
 
 # doesn't work yet
