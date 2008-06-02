@@ -1583,13 +1583,13 @@ scan_target_int (void)
 
 #define UID_SIZE 6
 
-#define NO_UID -1
+#define NO_UID (0xFFFFFFFFUL)
 
-#define TYPEID(x)    long x = get_int ()
+#define TYPEID(x)    unsigned long x = (0xFFFFFFFFUL & (unsigned long) get_int ())
 #define UNUSED_TYPEID(x)    long x ATTRIBUTE_UNUSED = get_int ()
 
 static void
-fmt_uid (long x, char *buf)
+fmt_uid (unsigned long x, char *buf)
 {
   unsigned digit;
   int i;
@@ -1598,8 +1598,8 @@ fmt_uid (long x, char *buf)
   if (x == NO_UID) { strcpy (buf, "zzzzzz");  return; }
 
   for (i = UID_SIZE-1; i >= 0; i--) {
-    digit = ((unsigned)x) % 62;
-    x = ((unsigned)x) / 62;
+    digit = (x % 62);
+    x = (x / 62);
     if      (digit < 26) { buf[i] = 'A' + digit; }
     else if (digit < 52) { buf[i] = 'a' + (digit - 26); }
     else                 { buf[i] = '0' + (digit - 52); }
@@ -1760,7 +1760,7 @@ static int current_dbg_type_count2;
 static int current_dbg_type_count3;
 
 static void
-debug_tag (char kind, long id, ...)
+debug_tag (char kind, unsigned long id, ...)
 {
   va_list args;
   char *fmt;
@@ -1793,7 +1793,7 @@ debug_field (const char *name)
 }
 
 static void
-debug_field_id (long id)
+debug_field_id (unsigned long id)
 {
   char buf [UID_SIZE+1];
   fmt_uid (id, buf);
@@ -1801,7 +1801,7 @@ debug_field_id (long id)
 }
 
 static void
-debug_field_fmt (long id, ...)
+debug_field_fmt (unsigned long id, ...)
 {
   va_list args;
   char name [100];
@@ -1916,7 +1916,7 @@ static void add_stmt (tree t)
 }
 
 static tree
-fix_name (const char *name, long id)
+fix_name (const char *name, unsigned long id)
 {
   char buf[100];
 
