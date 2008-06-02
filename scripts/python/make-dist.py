@@ -210,6 +210,9 @@ Echo("build new compiler with old compiler and old runtime (%(InstallRoot_Previo
 # ------------------------------------------------------------------------------------------------------------------------
 
 # build just compiler this pass, not the runtime
+# That is, assuming we have m3core and libm3, build the rest of the compiler.
+# We don't build mklib here because it can't be built against older non-Windows m3core, and
+# because we don't need it to build the compiler.
 
 Packages = [
     "import-libs",
@@ -292,23 +295,13 @@ RealClean(Packages) or FatalError()
 Echo("build new compiler and new runtime with new compiler (%(InstallRoot_CompilerWithPrevious)s to %(InstallRoot_CompilerWithSelf)s)" % vars())
 # ----------------------------------------------------------------------------------------------------------------------------------
 
-Packages = [
-    "import-libs",
-    "m3core",
-    "libm3",
-    "sysutils",
-    "m3bundle",
-    "m3middle",
-    "m3objfile",
-    "m3linker",
-    "m3back",
-    "m3staloneback",
-    "m3front",
-    "m3quake",
-    "m3cc",
-    "cm3",
-    "mklib",
-    ]
+#
+# This time build the entire compiler from m3core and on up, and the
+# occasional build tools m3bundle, mklib, but don't bother building cm3cg again.
+#
+
+Packages += ["m3core", "libm3", "m3bundle", "mklib" ]
+Packages.remove("m3cc")
 
 Setup(InstallRoot_CompilerWithPrevious, InstallRoot_CompilerWithSelf)
 RealClean(Packages) or FatalError()
@@ -324,6 +317,7 @@ Echo("build minimal packages with new compiler")
 
 Setup(InstallRoot_CompilerWithSelf, InstallRoot_Min)
 Packages = pylib.PackageSets["min"]
+Packages.remove("m3cc")
 RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
 RealClean(Packages) or FatalError()
@@ -340,6 +334,7 @@ else:
 
     Setup(InstallRoot_CompilerWithSelf, InstallRoot_Standard)
     Packages = pylib.PackageSets["std"]
+    Packages.remove("m3cc")
     RealClean(Packages) or FatalError()
     BuildShip(Packages) or FatalError()
     RealClean(Packages) or FatalError()
