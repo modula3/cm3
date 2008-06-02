@@ -104,7 +104,8 @@ SYSTEM_LIBS =
     "ODBC"       : [ "-lodbc" ],
     "MOTIF"      : [ "-lXm" ],
     "TCP"        : [ ],
-    "X11" :      [  "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
+    "X11" :      [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", 
+"-lXt", "-lSM", "-lICE", "-lX11" ]
 }
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
