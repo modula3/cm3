@@ -8,6 +8,7 @@
 
 Interface ("Cerrno")
 Interface ("Cstddef")
+Interface ("Cstdint")
 Interface ("Cstdlib")
 Interface ("Ctypes")
 Module ("M3toC")
