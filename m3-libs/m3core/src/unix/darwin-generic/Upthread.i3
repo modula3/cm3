@@ -50,15 +50,19 @@ TYPE
   END;
 
 CONST
-  PTHREAD_SIZE            = 596;
-  PTHREAD_ATTR_SIZE       =  36;
-  PTHREAD_MUTEXATTR_SIZE  =   8;
-  PTHREAD_MUTEX_SIZE      =  40;
-  PTHREAD_CONDATTR_SIZE   =   4;
-  PTHREAD_COND_SIZE       =  24;
-  PTHREAD_ONCE_SIZE       =   4;
-  PTHREAD_RWLOCK_SIZE     = 124;
-  PTHREAD_RWLOCKATTR_SIZE =  12;
+
+  X32 = ORD(BITSIZE(INTEGER) = 32);
+  X64 = ORD(BITSIZE(INTEGER) = 64);
+  
+  PTHREAD_SIZE            = ((X32 * 596) + (X64 * 1168));
+  PTHREAD_ATTR_SIZE       = ((X32 *  36) + (X64 * 56));
+  PTHREAD_MUTEXATTR_SIZE  = 8;
+  PTHREAD_MUTEX_SIZE      = ((X32 * 40) + (X64 * 56));
+  PTHREAD_CONDATTR_SIZE   = ((X32 * 4) + (X64 * 8));
+  PTHREAD_COND_SIZE       = ((X32 * 24) + (X64 * 40));
+  PTHREAD_ONCE_SIZE       = ((X32 * 4) + (X64 * 8));
+  PTHREAD_RWLOCK_SIZE     = ((X32 * 124) + (X64 * 192));
+  PTHREAD_RWLOCKATTR_SIZE = ((X32 * 12) + (X64 * 16));
 
 TYPE
   struct_opaque_pthread_t = RECORD
