@@ -724,12 +724,12 @@ tagnames=${tagnames+${tagnames},}CXX
 
 tagnames=${tagnames+${tagnames},}F77
 
-exec 7<&0 </dev/null 6>&1
-
 # Name of the host.
 # hostname on some systems (SVR3.2, Linux) returns a bogus exit status,
 # so uname gets run too.
 ac_hostname=`(hostname || uname -n) 2>/dev/null | sed 1q`
+
+exec 6>&1
 
 #
 # Initializations.
