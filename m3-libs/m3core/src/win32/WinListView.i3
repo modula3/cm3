@@ -533,7 +533,8 @@ TYPE
 	NMLVKEYDOWN = RECORD
 		hdr: NMHDR;
 		wVKey: UINT16;
-		flags: UINT32;
+		(*flags: UINT32;*)
+        unaligned_flags: ARRAY [0..1] OF UINT16;
 	END;
 
 

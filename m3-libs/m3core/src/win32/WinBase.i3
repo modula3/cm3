@@ -303,6 +303,7 @@ TYPE
   Int1  = BITS  1 FOR [0..1];
   Int2  = BITS  2 FOR [0..3];
   Int17 = BITS 17 FOR [0..16_1ffff];
+  Int25 = BITS 25 FOR [0..16_1ffffff];
 
   PCOMMPROP = UNTRACED REF COMMPROP;
   LPCOMMPROP = PCOMMPROP; (* compat *)
@@ -337,7 +338,7 @@ TYPE
     fXoffSent: Int1;
     fEof     : Int1;
     fTxim    : Int1;
-    fReserved: Int17;
+    fReserved: Int25;
     cbInQue  : UINT32;
     cbOutQue : UINT32;
   END;

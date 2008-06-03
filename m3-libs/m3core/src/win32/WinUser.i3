@@ -1007,6 +1007,7 @@ CONST
 TYPE
   ACCEL = RECORD
     fVirt: UINT8;        (* Also called the flags field *)
+    padding: UINT8;
     key  : UINT16;
     cmd  : UINT16;
   END;
@@ -4112,10 +4113,11 @@ CONST
 TYPE
 
 	LPNMHDR = UNTRACED REF NMHDR;
-	NMHDR = RECORD
+	NMHDR = BITS (BITSIZE(ADDRESS) * 3 * 8) FOR RECORD
 	    hwndFrom: HWND;
 	    idFrom: SIZE_T;
 	    code: UINT32; (* NM_ code *)
+        (* padding: UINT32; Win64 only *)
 	END;
 (*
 

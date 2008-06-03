@@ -202,7 +202,7 @@ PROCEDURE IsRecognizedPartition (partitionType: UINT32): BOOLEAN;
 (* Define the media types supported by the driver. *)
 TYPE
   PMEDIA_TYPE = UNTRACED REF MEDIA_TYPE;
-  MEDIA_TYPE =
+  MEDIA_TYPE = BITS 32 FOR
   {
     Unknown,                (* Format is unknown *)
     F5_1Pt2_512,            (* 5.25", 1.2MB,  512 bytes/sector *)
