@@ -422,12 +422,14 @@ TYPE
   (*???  #pragma pack(2) *)
   PBITMAPFILEHEADER = UNTRACED REF BITMAPFILEHEADER;
   LPBITMAPFILEHEADER = UNTRACED REF BITMAPFILEHEADER;
-  BITMAPFILEHEADER = RECORD
+  BITMAPFILEHEADER = BITS (16_E * 8) FOR RECORD
     bfType     : UINT16;
-    bfSize     : UINT32;
+    (*bfSize     : UINT32;*)
+    unaligned_bfSize: ARRAY [0..1] OF UINT16;
     bfReserved1: UINT16;
     bfReserved2: UINT16;
-    bfOffBits  : UINT32;
+    (*bfOffBits  : UINT32;*)
+    unaligned_bfOffBits: ARRAY [0..1] OF UINT16;
   END;
   (*???  #pragma pack() *)
 
@@ -458,13 +460,16 @@ TYPE
   (*???  #pragma pack(2) *)
   PMETAHEADER = UNTRACED REF METAHEADER;
   LPMETAHEADER = UNTRACED REF METAHEADER;
-  METAHEADER = RECORD
+  METAHEADER = BITS (16_12 * 8) FOR RECORD
     mtType        : UINT16;
     mtHeaderSize  : UINT16;
     mtVersion     : UINT16;
-    mtSize        : UINT32;
+    (*mtSize        : UINT32;*)
+    unaligned_mtSize  : ARRAY [0..1] OF UINT16;
     mtNoObjects   : UINT16;
-    mtMaxRecord   : UINT32;
+    (*mtMaxRecord   : UINT32;*)
+    (* This is aligned ok, but it blows up the alignment and size of the containing record. *)
+    unaligned_mtMaxRecord  : ARRAY [0..1] OF UINT16;
     mtNoParameters: UINT16;
   END;
 
@@ -608,6 +613,7 @@ TYPE
     tmStruckOut       : UINT8;
     tmPitchAndFamily  : UINT8;
     tmCharSet         : UINT8;
+    padding           : ARRAY [0..2] OF UINT8;
     ntmFlags          : UINT32;
     ntmSizeEM         : UINT32;
     ntmCellHeight     : UINT32;
@@ -638,6 +644,7 @@ TYPE
     tmStruckOut       : UINT8;
     tmPitchAndFamily  : UINT8;
     tmCharSet         : UINT8;
+    padding           : ARRAY [0..2] OF UINT8;
     ntmFlags          : UINT32;
     ntmSizeEM         : UINT32;
     ntmCellHeight     : UINT32;
@@ -861,15 +868,6 @@ CONST
   FW_ULTRABOLD  = FW_EXTRABOLD;
   FW_BLACK      = FW_HEAVY;
 
-(* !!![kirko] The CHARSET structure is sheduled to die *)
-TYPE
-  LPCHARSET = UNTRACED REF CHARSET;
-  CHARSET = RECORD
-    aflBlock: ARRAY [0 .. 3 - 1] OF UINT32;
-    flLang  : UINT32;
-  END;
-
-CONST
   PANOSE_COUNT              = 10;
   PAN_FAMILYTYPE_INDEX      = 0;
   PAN_SERIFSTYLE_INDEX      = 1;
@@ -887,7 +885,6 @@ CONST
 TYPE
   LPPANOSE = UNTRACED REF PANOSE;
   PANOSE = RECORD
-    ulCulture: UINT32;  (* !!!  [kirko] this field will disappear *)
     bFamilyType     : UINT8;
     bSerifStyle     : UINT8;
     bWeight         : UINT8;

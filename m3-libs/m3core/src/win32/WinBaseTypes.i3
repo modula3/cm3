@@ -13,19 +13,19 @@ INTERFACE WinBaseTypes;
    reexported from those modules as appropiate. *)
 
 IMPORT Ctypes;
-IMPORT Cstddef;
+IMPORT Cstdint;
 
 TYPE
-  UINT8 = Ctypes.unsigned_char;
-  UINT16 = Ctypes.unsigned_short;
-  UINT32 = Ctypes.unsigned_int;
-  UINT64 = Ctypes.unsigned_long_long;
-  INT8 = Ctypes.signed_char;
-  INT16 = Ctypes.short;
-  INT32 = Ctypes.int;
-  INT64 = Ctypes.long_long;
-  SIZE_T = Cstddef.size_t; (* same size as a pointer, unsigned *)
-  SSIZE_T = Cstddef.ptrdiff_t; (* same size as a pointer, signed *)
+  UINT8 = Cstdint.uint8_t;
+  UINT16 = Cstdint.uint16_t;
+  UINT32 = Cstdint.uint32_t;
+  UINT64 = Cstdint.uint64_t;
+  INT8 = Cstdint.int8_t;
+  INT16 = Cstdint.int16_t;
+  INT32 = Cstdint.int32_t;
+  INT64 = Cstdint.int64_t;
+  SIZE_T = Cstdint.uintptr_t;
+  SSIZE_T = Cstdint.intptr_t;
 (*
   ULONGLONG = UINT64;
   LONGLONG = INT64;

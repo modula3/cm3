@@ -166,6 +166,7 @@ TYPE
     NMTCKEYDOWN = RECORD
         hdr: NMHDR;
         wVKey: UINT16;
+        padding:UINT16;
         flags: UINT32;
     END;
 

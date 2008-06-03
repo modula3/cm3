@@ -114,6 +114,7 @@ TYPE
     n_name:     char_star;      (* official name of net *)
     n_aliases:  char_star_star; (* alias list *)
     n_addrtype: INT16;          (* net address type *)
+    padding:    UINT16;
     n_net:      UINT32;          (* network # *)
   END;
   struct_netent_star = UNTRACED REF struct_netent;

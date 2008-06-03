@@ -244,7 +244,7 @@ PROCEDURE MatchCurrentPalette () =
   END MatchCurrentPalette;
 
 <*CALLBACK*>
-PROCEDURE EnumColors (a1: WinDef.LPVOID;  <*UNUSED*>a2: WinDef.LPARAM): Ctypes.int =
+PROCEDURE EnumColors (a1: WinDef.LPVOID;  <*UNUSED*>a2: WinDef.LPARAM): WinDef.INT32 =
   VAR pen : WinGDI.LPLOGPEN := a1;  r,g,b: WinDef.BYTE;
   BEGIN
     IF (pen # NIL) AND (pen.lopnStyle = WinGDI.PS_SOLID) THEN
