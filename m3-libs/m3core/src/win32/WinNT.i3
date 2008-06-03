@@ -1097,7 +1097,7 @@ CONST
 (* 0 to something else, fix the Windows CreateFile call. *)
 
 TYPE
-  SECURITY_IMPERSONATION_LEVEL = [0 .. 3];
+  SECURITY_IMPERSONATION_LEVEL = BITS 32 FOR [0 .. 3];
   PSECURITY_IMPERSONATION_LEVEL =
     UNTRACED REF SECURITY_IMPERSONATION_LEVEL;
 
@@ -1139,6 +1139,7 @@ TYPE
     Token        : PACCESS_TOKEN;
     CopyOnOpen   : WBOOLEAN;
     EffectiveOnly: WBOOLEAN;
+    paddding : UINT16;
     Level        : SECURITY_IMPERSONATION_LEVEL;
   END;
 
@@ -1187,7 +1188,7 @@ CONST
 (* Token Types *)
 
 TYPE
-  TOKEN_TYPE = [1 .. 2];
+  TOKEN_TYPE = BITS 32 FOR [1 .. 2];
   PTOKEN_TYPE = UNTRACED REF TOKEN_TYPE;
 
 CONST
@@ -1770,7 +1771,7 @@ TYPE
   PIMAGE_DOS_HEADER = UNTRACED REF IMAGE_DOS_HEADER;
   IMAGE_DOS_HEADER = RECORD   (* DOS .EXE header *)
     e_magic: UINT16;            (* Magic number *)
-
+    e_cblp: UINT16;             (* Bytes on last page of file *)
     e_cp      : UINT16;         (* Pages in file *)
     e_crlc    : UINT16;         (* Relocations *)
     e_cparhdr : UINT16;         (* Size of header in paragraphs *)
