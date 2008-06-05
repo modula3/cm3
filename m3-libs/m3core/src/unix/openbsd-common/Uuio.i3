@@ -4,7 +4,8 @@
 INTERFACE Uuio;
 
 FROM Ctypes IMPORT int, void_star, const_void_star;
-FROM Cstddef IMPORT size_t, ssize_t;
+FROM Cstddef IMPORT size_t;
+FROM Utypes IMPORT ssize_t;
 
 TYPE
   struct_iovec = RECORD
