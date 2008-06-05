@@ -33,6 +33,7 @@ TYPE
   pid_t = int32_t;
   rlim_t = uint64_t;
   size_t = Cstddef.size_t;
+  ssize_t = Ctypes.long;
   time_t = int32_t;
   uid_t = uint32_t;
 
