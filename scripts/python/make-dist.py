@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.38 2008-06-06 10:43:28 jkrell Exp $
+# $Id: make-dist.py,v 1.39 2008-06-06 11:42:06 jkrell Exp $
 
 import sys
 import os.path
@@ -300,7 +300,8 @@ Echo("build new compiler and new runtime with new compiler (%(InstallRoot_Compil
 #
 
 Packages += ["m3core", "libm3", "m3bundle", "mklib" ]
-Packages.remove("m3cc")
+if "m3cc" in Packages:
+    Packages.remove("m3cc")
 
 Setup(InstallRoot_CompilerWithPrevious, InstallRoot_CompilerWithSelf)
 RealClean(Packages) or FatalError()
@@ -316,7 +317,8 @@ Echo("build minimal packages with new compiler")
 
 Setup(InstallRoot_CompilerWithSelf, InstallRoot_Min)
 Packages = pylib.PackageSets["min"]
-Packages.remove("m3cc")
+if "m3cc" in Packages:
+    Packages.remove("m3cc")
 RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
 RealClean(Packages) or FatalError()
@@ -333,7 +335,8 @@ else:
 
     Setup(InstallRoot_CompilerWithSelf, InstallRoot_Standard)
     Packages = pylib.PackageSets["std"]
-    Packages.remove("m3cc")
+    if "m3cc" in Packages:
+        Packages.remove("m3cc")
     RealClean(Packages) or FatalError()
     BuildShip(Packages) or FatalError()
     RealClean(Packages) or FatalError()
