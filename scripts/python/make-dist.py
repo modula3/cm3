@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.37 2008-06-02 03:58:09 jkrell Exp $
+# $Id: make-dist.py,v 1.38 2008-06-06 10:43:28 jkrell Exp $
 
 import sys
 import os.path
@@ -111,11 +111,10 @@ def TarBzip2(PackageSetName):
 
 def MakeArchives():
     for PackageSetName in ["min", "std"]:
-        if (Config != "NT386GNU" or PackageSetName != "std"):
-            if Config == "NT386":
-                Zip(PackageSetName)
-            else:
-                TarBzip2(PackageSetName)
+        if Config == "NT386":
+            Zip(PackageSetName)
+        else:
+            TarBzip2(PackageSetName)
 
 def BuildShip(Packages):
     # This is more indirect than necessary.
