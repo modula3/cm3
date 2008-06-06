@@ -306,7 +306,7 @@ if "m3cc" in Packages:
 Setup(InstallRoot_CompilerWithPrevious, InstallRoot_CompilerWithSelf)
 RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
-ShipCompiler() or FatalError()
+ShipFront() or FatalError()
 RealClean(pylib.PackageSets["all"]) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
