@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.39 2008-06-06 11:42:06 jkrell Exp $
+# $Id: make-dist.py,v 1.40 2008-06-06 11:43:15 jkrell Exp $
 
 import sys
 import os.path
@@ -306,7 +306,7 @@ if "m3cc" in Packages:
 Setup(InstallRoot_CompilerWithPrevious, InstallRoot_CompilerWithSelf)
 RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
-ShipCompiler() or FatalError()
+ShipFront() or FatalError()
 RealClean(pylib.PackageSets["all"]) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
