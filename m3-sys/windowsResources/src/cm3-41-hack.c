@@ -1,9 +1,9 @@
 
-void* __stdcall GetEnvironmentStringsA();
+void* __stdcall GetEnvironmentStringsA(void);
 
-void* __stdcall GetEnvironmentStrings()
+void* __stdcall GetEnvironmentStrings(void)
 
   {
-    GetEnvironmentStringsA();
+    return GetEnvironmentStringsA();
   }
 
