@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.116 2008-06-07 09:18:06 jkrell Exp $
+# $Id: pylib.py,v 1.117 2008-06-07 22:26:42 jkrell Exp $
 
 import os
 from os import getenv
@@ -517,6 +517,7 @@ else:
 #   - defaults to host
 #
 
+Target = None
 for a in _GetAllTargets():
     if a in sys.argv:
         Target = _MapTarget(a)
