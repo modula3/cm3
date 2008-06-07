@@ -517,6 +517,7 @@ else:
 #   - defaults to host
 #
 
+Target = None
 for a in _GetAllTargets():
     if a in sys.argv:
         Target = _MapTarget(a)
