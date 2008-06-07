@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.115 2008-06-07 09:07:59 jkrell Exp $
+# $Id: pylib.py,v 1.116 2008-06-07 09:18:06 jkrell Exp $
 
 import os
 from os import getenv
@@ -12,7 +12,7 @@ import re
 import tempfile
 import shutil
 
-#
+#-----------------------------------------------------------------------------
 # Several important variables are gotten from the environment or probed.
 # The probing is usually 100% correct.
 #
@@ -62,10 +62,10 @@ def FatalError(a = ""):
     sys.exit(1)
 
 #-----------------------------------------------------------------------------
-
 #
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52224
 #
+
 def SearchPath(name, paths = getenv("PATH")):
     #Given a search path, find file
     if (name.find("/") != -1) or (name.find("\\") != -1):
@@ -213,11 +213,13 @@ CM3 = getenv("CM3") or "cm3"
 CM3 = SearchPath(CM3)
 
 #-----------------------------------------------------------------------------
-
-#
 # the root of the installation
+# This can be sniffed by finding cm3 in $PATH, else defaulted
+# if the defaults contain a cm3.
 #
+
 InstallRoot = getenv("CM3_INSTALL")
+
 if not CM3 and not InstallRoot:
     for a in ["c:\\cm3\\bin\\cm3.exe", "/usr/local/bin/cm3"]:
         if os.path.isfile(a):
@@ -227,27 +229,42 @@ if not CM3 and not InstallRoot:
             InstallRoot = os.path.dirname(bin)
             _SetupEnvironmentVariableAll("PATH", ["cm3"], bin)
             break;
+
 if not InstallRoot:
     if CM3:
         InstallRoot = os.path.dirname(os.path.dirname(CM3))
     else:
         if "realclean" in sys.argv:
-            CM3 = __file__ # dummy to satisfy some code
-            InstallRoot = __file__ # dummy to satisfy some code
+            #
+            # Realclean does not require knowing CM3_INSTALL or
+            # being able to run cm3, so just set dummy values.
+            #
+            CM3 = __file__
+            InstallRoot = __file__
         else:
             FatalError("environment variable CM3_INSTALL not set AND cm3 not found in PATH; please fix")
 
-#
+#-----------------------------------------------------------------------------
 # the root of the source tree
+# This is always correctly and simply found based on the location of this very code.
 #
 Root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+#-----------------------------------------------------------------------------
+# If the current working drive is the same drive as Root is in, then the Win32
+# path can take on a valid working Posix form -- no colon, all forward slashes.
+# Plenty of Win32 code accepts forward slashes.
+#
+# If the current working drive and the drive of Root are different, then this
+# is flawed. However, we can and probably should completely fix that by
+# merely cd'ing to a directory on the drive of Root, if other paths either
+# are also on that drive, or have their drive letter not removed.
+#
 if Root.find(":\\") == 1:
 	Root = Root[2:]
+
 Root = Root.replace("\\\\", "/")
 Root = Root.replace("\\", "/")
-
-BuildAll = getenv("CM3_ALL") or False
 
 #-----------------------------------------------------------------------------
 
@@ -410,12 +427,14 @@ Q = "" # TBD
 #
 # GCC_BACKEND is almost always true.
 #
+
 GCC_BACKEND = True
 
 #-----------------------------------------------------------------------------
 #
 # Sniff to determine host.
 #
+
 UNameCommand = os.popen("uname").read().lower()
 UNameTuple = uname()
 UName = UNameTuple[0].lower()
@@ -497,6 +516,7 @@ else:
 #   - CM3_TARGET environment variable
 #   - defaults to host
 #
+
 for a in _GetAllTargets():
     if a in sys.argv:
         Target = _MapTarget(a)
@@ -506,12 +526,14 @@ Target = Target or getenv("CM3_TARGET") or Host
 #
 # OSType is almost always POSIX, the user cannot set it, it is changed to WIN32 sometimes later
 #
+
 OSType = "POSIX"
 
 #-----------------------------------------------------------------------------
 #
 # Usually Config == Target, except NT386 has multiple configurations.
 #
+
 Config = Target
 
 #-----------------------------------------------------------------------------
@@ -692,6 +714,7 @@ Root = NativeRoot
 #
 # This has no effect with current tools/libraries.
 #
+
 DEFS += " @M3novm"
 
 #-----------------------------------------------------------------------------
@@ -749,8 +772,9 @@ else:
 RealClean = (RealClean % vars())
 
 #-----------------------------------------------------------------------------
-
 # choose the compiler to use
+# pm3/dec/m3build is not tested and likely cm3 is all that works (heavily used)
+#
 
 if SearchPath(CM3):
     BuildLocal = CM3_BuildLocal
@@ -1081,6 +1105,7 @@ def Boot():
     _MakeArchive(BootDir[1:])
 
 #-----------------------------------------------------------------------------
+# map action names to code and possibly other data
 
 ActionInfo = {
     "build":
@@ -1124,6 +1149,10 @@ ActionInfo = {
         "KeepGoing": True,
     },
 }
+
+#-----------------------------------------------------------------------------
+
+BuildAll = getenv("CM3_ALL") or False
 
 def _FilterPackage(Package):
     PackageConditions = {
