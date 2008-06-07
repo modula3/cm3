@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.67 2008-06-03 10:49:28 jkrell Exp $
+% $Id: m3makefile,v 1.68 2008-06-07 10:48:30 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -264,11 +264,11 @@ if not defined ("no_config")
 end
 
 readonly proc ProbeExeExtension (a) is
-  return exists (a & ".exe")
+  return equal (TARGET,  "NT386") or exists (a & ".exe")
 end
 
 readonly proc AppendExeExtension (a) is
-  if exists (a & ".exe")
+  if ProbeExeExtension (a)
     return a & ".exe"
   end
   return a
