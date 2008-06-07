@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.114 2008-06-07 08:10:44 jkrell Exp $
+# $Id: pylib.py,v 1.115 2008-06-07 09:07:59 jkrell Exp $
 
 import os
 from os import getenv
@@ -18,9 +18,6 @@ import shutil
 #
 # CM3_TARGET
 #    probed with $OS and uname
-#
-# CM3_OSTYPE
-#    follows mostly from Target, except CM3_TARGET=NT386 can be WIN32 or POSIX
 #
 # CM3_ROOT
 #    the root of the source, computed from the path to this file
@@ -56,11 +53,15 @@ if env_OS == "Windows_NT":
 else:
     from os import uname
 
+#-----------------------------------------------------------------------------
+
 def FatalError(a = ""):
     # logs don't work yet
     #print("ERROR: see " + Logs)
     print("fatal error " + a)
     sys.exit(1)
+
+#-----------------------------------------------------------------------------
 
 #
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52224
@@ -84,11 +85,15 @@ def SearchPath(name, paths = getenv("PATH")):
             if os.path.isfile(candidate):
                 return os.path.abspath(candidate)
 
+#-----------------------------------------------------------------------------
+
 def _FormatEnvironmentVariable(Name):
     if os.name == "nt":
         return "%" + Name + "%"
     else:
         return "$" + Name
+
+#-----------------------------------------------------------------------------
 
 def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
     AnyMissing = False
@@ -115,6 +120,8 @@ def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
         else:
             print(Name + "=" + Attempt)
 
+#-----------------------------------------------------------------------------
+
 def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt):
     Value = os.environ.get(Name)
     if Value:
@@ -136,20 +143,20 @@ def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt):
     print("ERROR: " + _FormatEnvironmentVariable(Name) + " does not have any of " + " ".join(RequiredFiles))
     sys.exit(1)
 
+#-----------------------------------------------------------------------------
+
 def _ClearEnvironmentVariable(Name):
     if Name in os.environ:
         del(os.environ[Name])
         print("set " + Name + "=")
 
-def _ComputeOSTypeFromTarget(a):
-    a = a.lower()
-    if ((a.find("linux") != -1) or (a.find("solaris") != -1) or (a.find("gnu") != -1) or (a.find("bsd") != -1)
-            or (a.find("darwin") != -1) or (a.find("cyg") != -1) or (a.find("aix") != -1) or (a.find("hpux") != -1)
-            or (a.find("irix") != -1) or (a.find("ultrix") != -1) or (a.find("osf") != -1)):
-        return "POSIX"
-    return "WIN32"
+#-----------------------------------------------------------------------------
 
 def _MapTarget(a):
+    #
+    # Convert sensible names that the user might provide on the
+    # command line into the legacy names other code knows about.
+    #
     return {
         "I386_LINUX" : "LINUXLIBC6",
         "I386_NT" : "NT386",
@@ -158,15 +165,21 @@ def _MapTarget(a):
         "PPC32_LINUX" : "PPC_LINUX"
     }.get(a) or a
 
+#-----------------------------------------------------------------------------
+
 def _GetAllTargets():
 
     # legacy naming
 
     Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6" ]
 
+    for proc in [ "PPC", ]:
+        for os in [ "OPENBSD", "NETBSD", "FREEBSD", "DARWIN", "LINUX", "NT" ]:
+            Targets += [proc + "_" + os]
+
     # systematic naming
 
-    for proc in [ "I386", "AMD64", "PPC", "PPC64" ]:
+    for proc in [ "I386", "AMD64", "PPC32", "PPC64" ]:
         for os in [ "DARWIN" ]:
             Targets += [proc + "_" + os]
 
@@ -189,54 +202,17 @@ def _GetAllTargets():
     return Targets
 
 #-----------------------------------------------------------------------------
-#
-# very important -- what operating system/processor architecture
-# we are building for
-#
-Target = getenv("CM3_TARGET") or ""
-AllTargets = _GetAllTargets()
-for a in AllTargets:
-    if a in sys.argv:
-        Target = _MapTarget(a)
-if not Target:
-    Target = getenv("CM3_TARGET") or ""
-if Target:
-    OSType = _ComputeOSTypeFromTarget(Target)
-else:
-    OSType = getenv("CM3_OSTYPE") or ""
-Config = Target
-EXE = "" # executable extension, ".exe" or empty
-UNameCommand = os.popen("uname").read().lower()
-UNameTuple = uname()
-UName = UNameTuple[0].lower()
-UNameArchP = platform.processor().lower()
-UNameArchM = UNameTuple[4].lower()
-UNameRevision = UNameTuple[2].lower()
 
-#
-# NT386GNU produces "foo.exe" instead of "foo".
-# That is changable however. This code should
-# adapt if so.
-#
-if ((UName.startswith("windows")
-    or Target.startswith("NT386")
-    or UNameCommand.startswith("mingw")
-    or UNameCommand.startswith("cygwin"))
-#       and (not Target.startswith("NT386MINGNU"))
-#       and (not Target.startswith("NT386GNU"))
-#       and (OSType != "POSIX")
-        ):
+CM3_FLAGS = ""
+if "boot" in sys.argv:
+    CM3_FLAGS = CM3_FLAGS + " -boot"
+if "keep" in sys.argv:
+    CM3_FLAGS = CM3_FLAGS + " -keep"
 
-    EXE = ".exe"
-
-CM3_FLAGS = getenv("CM3_FLAGS") or ""
-if CM3_FLAGS == "":
-    if "boot" in sys.argv:
-        CM3_FLAGS="-boot"
-    if "keep" in sys.argv:
-        CM3_FLAGS="-keep"
 CM3 = getenv("CM3") or "cm3"
-CM3 = SearchPath(CM3 + EXE) or SearchPath(CM3)
+CM3 = SearchPath(CM3)
+
+#-----------------------------------------------------------------------------
 
 #
 # the root of the installation
@@ -273,6 +249,8 @@ Root = Root.replace("\\", "/")
 
 BuildAll = getenv("CM3_ALL") or False
 
+#-----------------------------------------------------------------------------
+
 #
 # User can override all these from environment, as in sh.
 # The environment variable names are all UPPERCASE.
@@ -288,8 +266,7 @@ Variables = [
     "M3GDB",
 
     #
-    # A temporary "staging" location? For
-    # building distributions?
+    # a temporary "staging" location for building distributions
     #
     "STAGE",
 
@@ -327,6 +304,8 @@ Variables = [
     "OMIT_GCC",
 ]
 
+#-----------------------------------------------------------------------------
+
 DefaultsFromSh = {
     "CM3VERSION" : None,
     "CM3VERSIONNUM" : None,
@@ -347,7 +326,6 @@ for a in DefaultsFromSh.keys():
     DefaultsFromSh[a] = eval(a)
 
 #-----------------------------------------------------------------------------
-# output functions
 
 def header(a):
     print("")
@@ -409,182 +387,198 @@ CM3VERSION = getenv("CM3VERSION") or GetDefaultFromSh("CM3VERSION")
 CM3VERSIONNUM = getenv("CM3VERSIONNUM") or GetDefaultFromSh("CM3VERSIONNUM")
 CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetDefaultFromSh("CM3LASTCHANGED")
 
-GCC_BACKEND = getenv("CM3_GCC_BACKEND", "")
 CM3_GDB = False
+
+#-----------------------------------------------------------------------------
+#
+# nascent support for building via SRC or PM3, probably will never work
+#
 
 M3Build = getenv("M3BUILD") or "m3build"
 M3Ship = getenv("M3SHIP") or "m3ship"
+
+
+#-----------------------------------------------------------------------------
+#
+# some dumb detail as to where quotes are needed on command lines
+#
+
 Q = "'"
 Q = "" # TBD
 
 #-----------------------------------------------------------------------------
-# evaluate uname information
-
 #
-# NT386 is different because for one "target", it has multiple "configurations".
+# GCC_BACKEND is almost always true.
 #
+GCC_BACKEND = True
 
-if ((UName.startswith("windows")
-        or Target.startswith("NT386")
+#-----------------------------------------------------------------------------
+#
+# Sniff to determine host.
+#
+UNameCommand = os.popen("uname").read().lower()
+UNameTuple = uname()
+UName = UNameTuple[0].lower()
+UNameArchP = platform.processor().lower()
+UNameArchM = UNameTuple[4].lower()
+UNameRevision = UNameTuple[2].lower()
+
+Host = None
+
+if (UName.startswith("windows")
         or UNameCommand.startswith("mingw")
-        or UNameCommand.startswith("cygwin"))
-		and ((Target == "") or Target.startswith("NT386"))):
+        or UNameCommand.startswith("cygwin")):
 
+    Host = "NT386"
+
+elif UName.startswith("freebsd"):
+
+    if UNameArchM == "i386":
+        if UNameRevision.startswith("1"):
+            Host = "FreeBSD"
+        elif UNameRevision.startswith("2"):
+            Host = "FreeBSD2"
+        elif UNameRevision.startswith("3"):
+            Host = "FreeBSD3"
+        else:
+            Host = "FreeBSD4"
+    else:
+        Host = "FBSD_ALPHA"
+
+elif UName.startswith("openbsd"):
+
+    if UNameArchM == "sparc64":
+        Host = "SPARC64_OPENBSD"
+    elif UNameArchM == "macppc":
+        Host = "PPC32_OPENBSD"
+    else:
+        FatalError("unknown OpenBSD platform")
+
+elif UName.startswith("darwin"):
+
+    # detect the m3 platform (Darwin runs on ppc32, ppc64, x86, amd64)
+    if UNameArchP == "powerpc":
+        Host = "PPC_DARWIN"
+    elif re.match("i[3456]86", UNameArchP):
+        Host = "I386_DARWIN"
+    elif UNameArchP == "x86-64":
+        Host = "AMD64_DARWIN"
+    elif UNameArchP == "powerpc64":
+        Host = "PPC64_DARWIN"
+
+elif UName.startswith("sunos"):
+
+    Host = "SOLgnu"
+    #Host = "SOLsun"
+
+elif UName.startswith("linux"):
+
+    if UNameArchM == "ppc":
+        Host = "PPC_LINUX"
+    elif UNameArchM == "x86_64":
+        Host = "AMD64_LINUX"
+    elif UNameArchM == "sparc64":
+        Host = "SPARC32_LINUX"
+    else:
+        Host = "LINUXLIBC6"
+
+elif UName.startswith("netbsd"):
+
+    Host = "NetBSD2_i386" # only arch/version combination supported yet
+
+else:
+    # more need to be added here, I haven't got all the platform info ready
+    pass
+
+#-----------------------------------------------------------------------------
+#
+# Target is:
+#   - any parameter on the command line that is a platform
+#   - CM3_TARGET environment variable
+#   - defaults to host
+#
+for a in _GetAllTargets():
+    if a in sys.argv:
+        Target = _MapTarget(a)
+Target = Target or getenv("CM3_TARGET") or Host
+
+#-----------------------------------------------------------------------------
+#
+# OSType is almost always POSIX, the user cannot set it, it is changed to WIN32 sometimes later
+#
+OSType = "POSIX"
+
+#-----------------------------------------------------------------------------
+#
+# Usually Config == Target, except NT386 has multiple configurations.
+#
+Config = Target
+
+#-----------------------------------------------------------------------------
+#
+# Set data that derives from target/config.
+#
+
+#
+# Is this the right default?
+#
+HAVE_SERIAL = False
+
+if Target.startswith("NT386"):
+
+    # q for quote: This is probably about the host, not the target.
     Q = ""
+
     HAVE_SERIAL = True
-    GMAKE = getenv("GMAKE") or "make"
 
     #
     # TBD:
     # If cl is not in the path, or link not in the path (Cygwin link doesn't count)
     # then error toward GNU, and probe uname and gcc -v.
     #
-    if ((Target.startswith("NT386GNU")
-        # uname can be in the %PATH% and still target native NT386
-        #or UNameCommand.startswith("cygwin")
-        or (OSType == "POSIX")
-        or (GCC_BACKEND == "yes"))
-        and (GCC_BACKEND != "no")
-        and (OSType != "WIN32")):
-
+    if Target == "NT386GNU":
         Config = "NT386GNU"
         OSType = "POSIX"
-        GCC_BACKEND = True
         HAVE_SERIAL = False # temporary..
 
-    elif ((Target.startswith("NT386MINGNU")
-        # uname can be in the %PATH% and still target native NT386
-        #or UNameCommand.startswith("mingw")
-        or (GCC_BACKEND == "yes"))
-        and (GCC_BACKEND != "no")
-        and (OSType != "POSIX")):
-
+    elif Target == "NT386MINGNU":
         Config = "NT386MINGNU"
         OSType = "WIN32"
-        GCC_BACKEND = True
 
-    elif ((not Target.startswith("NT386MINGNU"))
-        and (not Target.startswith("NT386GNU"))
-        and (OSType != "POSIX")
-        and (GCC_BACKEND != "yes")):
-
+    else:
         Config = "NT386"
         OSType = "WIN32"
         GCC_BACKEND = False
 
-    else:
-
-        print("unable to determine configuration")
-        sys.exit(1)
-
     Target = "NT386"
 
-if not Target:
-#
-# First pass, just sniff to determine target, and not other data.
-#
-    if UName.startswith("freebsd"):
-
-        if UNameArchM == "i386":
-            if UNameRevision.startswith("1"):
-                Target = "FreeBSD"
-            elif UNameRevision.startswith("2"):
-                Target = "FreeBSD2"
-            elif UNameRevision.startswith("3"):
-                Target = "FreeBSD3"
-            else:
-                Target = "FreeBSD4"
-        else:
-            Target = "FBSD_ALPHA"
-
-    elif UName.startswith("openbsd"):
-
-        if UNameArchM == "sparc64":
-            Target = "SPARC64_OPENBSD"
-        elif UNameArchM == "macppc":
-            Target = "PPC32_OPENBSD"
-        else:
-            FatalError("unknown OpenBSD platform")
-
-    elif UName.startswith("darwin"):
-
-        # detect the m3 platform (Darwin runs on ppc32, ppc64, x86, amd64)
-        if UNameArchP == "powerpc":
-            Target = "PPC_DARWIN"
-        elif re.match("i[3456]86", UNameArchP):
-            Target = "I386_DARWIN"
-        elif UNameArchP == "x86-64":
-            Target = "AMD64_DARWIN"
-        elif UNameArchP == "powerpc64":
-            Target = "PPC64_DARWIN"
-
-    elif UName.startswith("sunos"):
-
-        Target = "SOLgnu"
-        #Target = "SOLsun"
-
-    elif UName.startswith("linux"):
-
-        if UNameArchM == "ppc":
-            Target = "PPC_LINUX"
-        elif UNameArchM == "x86_64":
-            Target = "AMD64_LINUX"
-        elif UNameArchM == "sparc64":
-            Target = "SPARC32_LINUX"
-        else:
-            Target = "LINUXLIBC6"
-
-    elif UName.startswith("netbsd"):
-
-        Target = "NetBSD2_i386" # only arch/version combination supported yet
-
-    else:
-
-        # more need to be added here, I haven't got all the platform info ready
-        pass
-
-GMAKE = None
-
-if (Target.find("BSD") != -1):
-
-    GCC_BACKEND = True
-
-elif Target.find("DARWIN") != -1:
-
-    GCC_BACKEND = True
-    GMAKE = getenv("GMAKE") or "make"
-
-elif Target.startswith("SOL"): # SOLgnu, SOLsun
-
-    GCC_BACKEND = True
-
 elif Target.find("LINUX") != -1:
-
-    GCC_BACKEND = True
-    GMAKE = getenv("GMAKE") or "make"
+    #
+    # Support for bootstrapping from older toolsets.
+    # Expand and reduce this through time.
+    #
     if (Target.find("AMD64") == -1) and (Target.find("SPARC") == -1):
         GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
 
-elif Target.find("NetBSD2") != -1:
+#-----------------------------------------------------------------------------
 
-    GCC_BACKEND = True
-    GMAKE = getenv("GMAKE") or "make"
+GMAKE = "gmake"
+
+if ((Host.find("DARWIN") != -1)
+    or (Host.find("LINUX") != -1)
+    or (Host.find("NT386") != -1)):
+
+    GMAKE = "make"
 
 else:
-
-    # more need to be added here, I haven't got all the platform info ready
     pass
 
 #-----------------------------------------------------------------------------
-# define the exported values
 
 M3GDB = (M3GDB or CM3_GDB)
-OSType = (OSType or "POSIX")
-PKGSDB = (getenv("PKGSDB") or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "PKGS"))
-GMAKE = (GMAKE or "gmake")
-Config = Config or Target
+PKGSDB = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "PKGS")
 
-# print("Target is " + Target)
+#-----------------------------------------------------------------------------
 
 def GetConfigForDistribution(Target):
 #
@@ -597,10 +591,14 @@ def GetConfigForDistribution(Target):
     b = os.path.join(a, "config", Target)
     return b
 
+#-----------------------------------------------------------------------------
+
 def SetEnvironmentVariable(Name, Value):
     if not os.environ.get(Name) or (os.environ[Name] != Value):
         os.environ[Name] = Value
         print("set " + Name + "=" + Value);
+
+#-----------------------------------------------------------------------------
 
 def IsCygwinBinary(a):
     if env_OS != "Windows_NT":
@@ -612,6 +610,8 @@ def IsCygwinBinary(a):
     #print("a is " + a)
     return (os.system("findstr 2>&1 >nul /m cygwin1.dll \"" + a + "\"") == 0)
 
+#-----------------------------------------------------------------------------
+
 def _ConvertToCygwinPath(a):
     if env_OS != "Windows_NT":
         return a
@@ -622,6 +622,8 @@ def _ConvertToCygwinPath(a):
         a = "/cygdrive/" + a[0:1] + a[2:]
     return a
 
+#-----------------------------------------------------------------------------
+
 def _ConvertFromCygwinPath(a):
     if env_OS != "Windows_NT":
         return a
@@ -630,6 +632,8 @@ def _ConvertFromCygwinPath(a):
     if (a.find("\\cygdrive\\") == 0):
         a = a[10] + ":" + a[11:]
     return a
+
+#-----------------------------------------------------------------------------
 
 if IsCygwinBinary(CM3):
 
@@ -651,9 +655,16 @@ else:
     def ConvertFromCygwinPath(a):
         return _ConvertFromCygwinPath(a)
 
+#-----------------------------------------------------------------------------
+
 def ConvertPath(a):
     # This isn't "roundtrip", this is one (or both) is a nop.
     return ConvertFromCygwinPath(ConvertToCygwinPath(a))
+
+#-----------------------------------------------------------------------------
+#
+# reflect what we decided back into the environment
+#
 
 SetEnvironmentVariable("CM3_TARGET", Target);
 SetEnvironmentVariable("CM3_INSTALL", ConvertPath(InstallRoot))
@@ -661,27 +672,8 @@ SetEnvironmentVariable("M3CONFIG", ConvertPath(os.environ.get("M3CONFIG") or Get
 SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "\\\\"))
 
 #-----------------------------------------------------------------------------
-# elego customizations
-#
-# comment these if they interfere with your environment
-
-# if not getenv("STAGE"):
-#
-#     if ((OSType == "POSIX")
-#             and (os.devnull == "/dev/null")
-#             and os.system("type domainname > /dev/null 2>/dev/null")
-#             and (os.popen("domainname 2>/dev/null").read().replace("\n", "") == "elegoohm")):
-#
-#         STAGE = "/pub/lang/m3/cm3-dist"
-#
-#     elif (OSType == "WIN32") and (getenv("HOSTNAME") == "FIR"):
-#
-#         STAGE = "c:/tmp/cm3stage"
-#
-
-#-----------------------------------------------------------------------------
-
 # define build and ship programs for Critical Mass Modula-3
+#
 
 DEFS = "-DROOT=%(Q)s%(Root)s%(Q)s"
 DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
@@ -693,7 +685,7 @@ Root = ConvertPath(Root).replace("\\", "\\\\")
 DEFS = (DEFS % vars())
 Root = NativeRoot
 
-#
+#-----------------------------------------------------------------------------
 # workaround crash when booting from 5.1.3 that is
 # difficult to debug -- crashes earlier in debugger
 # without this switch, no repro with this switch
@@ -701,6 +693,10 @@ Root = NativeRoot
 # This has no effect with current tools/libraries.
 #
 DEFS += " @M3novm"
+
+#-----------------------------------------------------------------------------
+# Make sure these variables all start with a space if they are non-empty.
+#
 
 if BuildArgs:
     BuildArgs = " " + BuildArgs
@@ -711,13 +707,20 @@ if CleanArgs:
 if ShipArgs:
     ShipArgs = " " + ShipArgs
 
+#-----------------------------------------------------------------------------
+# form the various commands we might run
+#
+
 CM3_BuildLocal = BuildLocal or "%(CM3)s %(CM3_FLAGS)s -build -override %(DEFS)s%(BuildArgs)s"
 CM3_CleanLocal = CleanLocal or "%(CM3)s %(CM3_FLAGS)s -clean -build -override %(DEFS)s%(CleanArgs)s"
 CM3_BuildGlobal = BuildGlobal or "%(CM3)s %(CM3_FLAGS)s -build %(DEFS)s%(BuildArgs)s"
 CM3_CleanGlobal = CleanGlobal or "%(CM3)s %(CM3_FLAGS)s -clean %(DEFS)s%(CleanArgs)s"
 CM3_Ship = Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(ShipArgs)s"
 
+#-----------------------------------------------------------------------------
 # define build and ship programs for Poly. Modula-3 from Montreal
+# This will not likely ever work, but maybe.
+#
 
 PM3_BuildLocal = BuildLocal or "%(M3Build)s -O %(DEFS)s%(BuildArgs)s"
 PM3_CleanLocal = CleanLocal or "%(M3Build)s clean -O %(DEFS)s%(CleanArgs)s"
@@ -725,7 +728,10 @@ PM3_BuildGlobal = BuildGlobal or "%(M3Build)s %(DEFS)s %(BuildArgs)s)s"
 PM3_CleanGlobal = CleanGlobal or "%(M3Build)s clean %(DEFS)s%(CleanArgs)s"
 PM3_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
 
+#-----------------------------------------------------------------------------
 # define build and ship programs for DEC SRC Modula-3
+# This will not likely ever work, but maybe.
+#
 
 SRC_BuildLocal = BuildLocal or "%(M3Build)s -O %(DEFS)s%(BuildArgs)s"
 SRC_CleanLocal = CleanLocal or "%(M3Build)s clean -O %(DEFS)s%(CleanArgs)s"
@@ -741,6 +747,8 @@ else:
     RealClean = RealClean or "rm -rf %(Config)s"
 
 RealClean = (RealClean % vars())
+
+#-----------------------------------------------------------------------------
 
 # choose the compiler to use
 
@@ -770,8 +778,12 @@ BuildGlobal = BuildGlobal.strip() % vars()
 CleanGlobal = CleanGlobal.strip() % vars()
 Ship = Ship.strip() % vars()
 
+#-----------------------------------------------------------------------------
+
 def format_one(width, string):
     return ("%-*s" % (width, string))
+
+#-----------------------------------------------------------------------------
 
 def print_list(strings, NumberOfColumns):
     Result = ""
@@ -790,11 +802,17 @@ def print_list(strings, NumberOfColumns):
             j += 1
     return Result
 
+#-----------------------------------------------------------------------------
+
 def PrintList2(strings):
     return print_list(strings, 2)
 
+#-----------------------------------------------------------------------------
+
 def PrintList4(strings):
     return print_list(strings, 4)
+
+#-----------------------------------------------------------------------------
 
 def ShowUsage(args, Usage, P):
     for arg in args[1:]:
@@ -830,6 +848,8 @@ def ShowUsage(args, Usage, P):
                 print(GenericOptions)
             sys.exit(0)
 
+#-----------------------------------------------------------------------------
+
 def MakePackageDB():
     if not os.path.isfile(PKGSDB):
         #
@@ -860,12 +880,16 @@ def MakePackageDB():
             sys.stderr.write("%(File)s: cannot generate package list\n" % vars())
             sys.exit(1)
 
+#-----------------------------------------------------------------------------
+
 PackageDB = None
 
 def ReadPackageDB():
     MakePackageDB()
     global PackageDB
     PackageDB = (PackageDB or map(lambda(a): a.replace("\n", "").replace('\\', '/').replace("\r", ""), open(PKGSDB)))
+
+#-----------------------------------------------------------------------------
 
 def IsPackageDefined(a):
     a = a.replace('\\', '/').lower()
@@ -874,6 +898,8 @@ def IsPackageDefined(a):
     for i in PackageDB:
         if i.lower().endswith(a):
             return True
+
+#-----------------------------------------------------------------------------
 
 def GetPackagePath(a):
     a = a.replace('\\', '/')
@@ -906,6 +932,8 @@ def ListPackages(pkgs):
         Result = PackageDB
     return map(lambda(a): (Root + '/' + a), Result)
 
+#-----------------------------------------------------------------------------
+
 def _Run(NoAction, Actions, PackageDirectory):
 
     print(" +++ %s +++" % Actions)
@@ -923,26 +951,32 @@ def _Run(NoAction, Actions, PackageDirectory):
     os.chdir(PreviousDirectory)
     return Result
 
+#-----------------------------------------------------------------------------
 
 def _BuildLocalFunction(NoAction, PackageDirectory):
     return _Run(NoAction, BuildLocal, PackageDirectory)
 
+#-----------------------------------------------------------------------------
 
 def _BuildGlobalFunction(NoAction, PackageDirectory):
     return _Run(NoAction, BuildGlobal, PackageDirectory)
 
+#-----------------------------------------------------------------------------
 
 def _ShipFunction(NoAction, PackageDirectory):
     return _Run(NoAction, Ship, PackageDirectory)
 
+#-----------------------------------------------------------------------------
 
 def _CleanLocalFunction(NoAction, PackageDirectory):
     return _Run(NoAction, CleanLocal, PackageDirectory)
 
+#-----------------------------------------------------------------------------
 
 def _CleanGlobalFunction(NoAction, PackageDirectory):
     return _Run(NoAction, CleanGlobal, PackageDirectory)
 
+#-----------------------------------------------------------------------------
 
 def _RealCleanFunction(NoAction, PackageDirectory):
 #
@@ -950,6 +984,8 @@ def _RealCleanFunction(NoAction, PackageDirectory):
 # directly in Python.
 #
     return _Run(NoAction, RealClean, PackageDirectory)
+
+#-----------------------------------------------------------------------------
 
 def _MakeArchive(a):
     #
@@ -959,6 +995,8 @@ def _MakeArchive(a):
     print(b + "\n");
     DeleteFile(a + ".tar.gz")
     os.system(b)
+
+#-----------------------------------------------------------------------------
 
 def Boot():
 
@@ -1042,6 +1080,7 @@ def Boot():
 
     _MakeArchive(BootDir[1:])
 
+#-----------------------------------------------------------------------------
 
 ActionInfo = {
     "build":
@@ -1107,9 +1146,13 @@ def _FilterPackage(Package):
     }
     return PackageConditions.get(Package, True)
 
+#-----------------------------------------------------------------------------
+
 def FilterPackages(Packages):
     Packages = filter(_FilterPackage, Packages)
     return Packages
+
+#-----------------------------------------------------------------------------
 
 PackageSets = {
 #
@@ -1553,6 +1596,8 @@ PackageSets["base"] += [
     "serial",
     ]
 
+#-----------------------------------------------------------------------------
+
 def OrderPackages(Packages):
     AllPackagesInOrder = PackageSets["all"]
     AllPackagesHashed = dict.fromkeys(AllPackagesInOrder)
@@ -1573,6 +1618,8 @@ def OrderPackages(Packages):
             del PackagesHashed[Package]
 
     return PackagesInOrder
+
+#-----------------------------------------------------------------------------
 
 def DoPackage(args, PackagesFromCaller = None):
 
@@ -1735,15 +1782,21 @@ GenericCommand:
 
     return Success
 
+#-----------------------------------------------------------------------------
+
 def DeleteFile(a):
     if os.path.isfile(a):
         os.chmod(a, 0700)
         os.remove(a)
 
+#-----------------------------------------------------------------------------
+
 def CreateDirectory(a):
     if not os.path.isdir(a):
         os.makedirs(a)
     return True
+
+#-----------------------------------------------------------------------------
 
 def MakeTempDir():
     if getenv("TEMP") and not os.path.exists(getenv("TEMP")):
@@ -1751,8 +1804,12 @@ def MakeTempDir():
 
 MakeTempDir()
 
+#-----------------------------------------------------------------------------
+
 def FileExists(a):
     return os.path.isfile(a)
+
+#-----------------------------------------------------------------------------
 
 def CopyFile(From, To):
     if os.path.isdir(To):
@@ -1770,10 +1827,14 @@ def CopyFile(From, To):
     shutil.copy(From, To)
     return True
 
+#-----------------------------------------------------------------------------
+
 def CopyFileIfExist(From, To):
     if os.path.isfile(From):
         return CopyFile(From, To)
     return True
+
+#-----------------------------------------------------------------------------
 
 def CopyConfigForDevelopment():
     #
@@ -1788,6 +1849,8 @@ def CopyConfigForDevelopment():
              os.path.join(To)) or FatalError()
     return True
 
+#-----------------------------------------------------------------------------
+
 #def CopyDirectoryNonRecursive(From, To):
 #    CreateDirectory(To)
 #    for File in glob.glob(os.path.join(From, "*")):
@@ -1795,6 +1858,8 @@ def CopyConfigForDevelopment():
 #            print(File + " => " + To + "\n")
 #            CopyFile(File, To)
 #    return True
+
+#-----------------------------------------------------------------------------
 
 def CopyConfigForDistribution(To):
     #
@@ -1818,6 +1883,8 @@ def CopyConfigForDistribution(To):
         CopyFile(os.path.join(a, "config-no-install", "Unix.common"), To)
     open(os.path.join(To, "cm3.cfg"), "w").write("include(\"" + Config + "\")\n")
     return True
+
+#-----------------------------------------------------------------------------
 
 def _CopyCompiler(From, To):
 
@@ -1872,16 +1939,24 @@ def _CopyCompiler(From, To):
 
     return True
 
+#-----------------------------------------------------------------------------
+
 def ShipBack():
     return _CopyCompiler(os.path.join(Root, "m3-sys", "m3cc", Config),
                          os.path.join(InstallRoot, "bin"))
+
+#-----------------------------------------------------------------------------
 
 def ShipFront():
     return _CopyCompiler(os.path.join(Root, "m3-sys", "cm3", Config),
                          os.path.join(InstallRoot, "bin"))
 
+#-----------------------------------------------------------------------------
+
 def ShipCompiler():
     return ShipBack() and ShipFront()
+
+#-----------------------------------------------------------------------------
 
 def CopyMklib(From, To):
     #
@@ -1909,6 +1984,8 @@ def CopyMklib(From, To):
     CopyFileIfExist(os.path.join(From, "mklib.pdb"), To) or FatalError("8")
     return True
 
+#-----------------------------------------------------------------------------
+
 def CopyCompiler(From, To):
     #
     # Copy the compiler from one InstallRoot to another, possibly having cleaned out the intermediate directories.
@@ -1917,6 +1994,8 @@ def CopyCompiler(From, To):
     _CopyCompiler(os.path.join(From, "bin"), os.path.join(To, "bin"))
     CopyMklib(From, To) or FatalError("9")
     return True
+
+#-----------------------------------------------------------------------------
 
 #
 # Need to figure out how to do this properly, if at all.
@@ -2139,6 +2218,7 @@ def SetupEnvironment():
             ["gcc", "as", "ld"],
             os.path.join(SystemDrive, "cygwin", "bin"))
 
+#-----------------------------------------------------------------------------
 
 if __name__ == "__main__":
     #
