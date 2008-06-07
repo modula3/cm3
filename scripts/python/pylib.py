@@ -850,10 +850,7 @@ def MakePackageDB():
         print("making " + PKGSDB + ".. (slow but rare)")
         Result = [ ]
 
-        os.path.walk(
-            Root,
-            Callback,
-            Result)
+        os.path.walk(Root, Callback, Result)
 
         Result.sort()
         open(PKGSDB, "w").writelines(Result)
@@ -868,25 +865,22 @@ PackageDB = None
 def ReadPackageDB():
     MakePackageDB()
     global PackageDB
-    PackageDB = (PackageDB or
-            map(
-                lambda(a): a.replace("\n", "").replace('\\', '/').replace("\r", ""),
-                open(PKGSDB)))
+    PackageDB = (PackageDB or map(lambda(a): a.replace("\n", "").replace('\\', '/').replace("\r", ""), open(PKGSDB)))
 
 def IsPackageDefined(a):
-    a = a.replace('\\', '/')
+    a = a.replace('\\', '/').lower()
     ReadPackageDB()
     a = ('/' + a)
     for i in PackageDB:
-        if i.endswith(a):
+        if i.lower().endswith(a):
             return True
 
 def GetPackagePath(a):
     a = a.replace('\\', '/')
     ReadPackageDB()
-    b = ('/' + a)
+    b = ('/' + a).lower()
     for i in PackageDB:
-        if i.endswith(b):
+        if i.lower().endswith(b):
             return i.replace('/', os.path.sep)
     File = __file__
     sys.stderr.write("%(File)s: package %(a)s not found (%(b)s)\n" % vars())
@@ -898,17 +892,14 @@ def ListPackages(pkgs):
         for pkg in pkgs:
             pkg = pkg.replace('\\', '/')
             # remove Root from the start
-            if pkg.startswith(Root + '/'):
+            if pkg.lower().startswith(Root.lower() + '/'):
                 pkg = pkg[len(Root) + 1:]
-                #print("1 " + pkg)
             # if no slashes, then need a leading slash
             if pkg.find('/') == -1:
                 pkg = ('/' + pkg)
-                #print("2 " + pkg)
             for q in PackageDB:
                 q = q.replace('\\', '/')
-                if q.find(pkg) != -1:
-                    #print("3 " + q)
+                if q.lower().find(pkg.lower()) != -1:
                     Result.append(q)
                     break
     else:
@@ -1149,6 +1140,7 @@ PackageSets = {
 
         "import-libs",
         "libm3",
+        "windowsResources",
         "sysutils",
         "patternmatching",
         "m3core",
@@ -1317,8 +1309,8 @@ PackageSets = {
         "import-libs",
         "m3core",
         "libm3",
-        "sysutils",
         "windowsResources",
+        "sysutils",
         "patternmatching",
 
     # system / compiler libraries and tools
@@ -1515,6 +1507,7 @@ PackageSets_CoreBaseCommon = [
     "import-libs",
     "m3core",
     "libm3",
+    "windowsResources",
     "sysutils",
     "m3middle",
     "m3quake",
