@@ -264,11 +264,11 @@ if not defined ("no_config")
 end
 
 readonly proc ProbeExeExtension (a) is
-  return exists (a & ".exe")
+  return equal (TARGET,  "NT386") or exists (a & ".exe")
 end
 
 readonly proc AppendExeExtension (a) is
-  if exists (a & ".exe")
+  if ProbeExeExtension (a)
     return a & ".exe"
   end
   return a
