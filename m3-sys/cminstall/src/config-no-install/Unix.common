@@ -94,6 +94,8 @@ proc exists(x) is
   return not stale(x, x)
 end
 
+if not defined ("SYSTEM_LIBS")
+
 SYSTEM_LIBS =
 {
     "LIBC"       : [ "-lm", "-lpthread" ],
@@ -108,8 +110,12 @@ SYSTEM_LIBS =
 "-lXt", "-lSM", "-lICE", "-lX11" ]
 }
 
+end
+
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
 % scanned by the linker.
+
+if not defined ("SYSTEM_LIBORDER")
 
 SYSTEM_LIBORDER =
 [
@@ -125,6 +131,8 @@ SYSTEM_LIBORDER =
     "LIBC",
 ]
 
+end
+
 %---------------------------------------------------------- system programs ---
 
 readonly SYSTEM_AR  = "@ar" % Archiver
@@ -139,6 +147,11 @@ proc m3_backend(source, object, optimize, debug) is
   %
   local args = [ GetM3BackFlag ("-fno-reorder-blocks") ]
   if M3_PROFILING args += "-p" end
+  if equal (WORD_SIZE, "32BITS")
+    args += GetM3BackFlag("-m32")
+  else if equal (WORD_SIZE, "64BITS")
+    args += "-m64"
+  end end
   return try_exec ("@" & m3back, args, source, "-o", object)
 end
 
@@ -154,10 +167,14 @@ M3_BACKEND_MODE = "3"
 % is only called if your program or library explicitly includes C source
 % code, the system distributed by Critical Mass does not.
 
+if not defined ("compile_c")
+
 proc compile_c(source, object, options, optimize, debug) is
   local args = options
   if M3_PROFILING args += "-pg" end
   return try_exec ("@" & SYSTEM_CC, args, "-c", source)
+end
+
 end
 
 %---------------------------------------------------------------- assembler ---
@@ -165,8 +182,12 @@ end
 % is only called if your program or library explicitly includes assembly source
 % code, the system distributed by Critical Mass does not.
 
+if not defined ("assemble")
+
 proc assemble(source, object) is
   return try_exec("@" & SYSTEM_ASM, source, "-o", object)
+end
+
 end
 
 %------------------------------------------------------------------------------
@@ -289,6 +310,8 @@ end
 % "make_lib" is called to combine a collection of object modules into
 % a library.
 
+if not defined("make_lib")
+
 proc make_lib(lib, options, objects, imported_libs, shared) is
     local ret_code = 0
     local lib_a    = format("lib%s.a", lib)
@@ -349,10 +372,14 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     return 0
 end
 
+end
+
 %-------------------------------------------------------------------
 % "skip_lib" is called when the compiler decides it doesn't need to
 % call "make_lib", but it wants to discover the names of the derived
 % files that should be deleted or shipped.
+
+if not defined("skip_lib")
 
 proc skip_lib(lib, shared) is
     local lib_so   = format("lib%s.so", lib)
@@ -372,8 +399,12 @@ proc skip_lib(lib, shared) is
     return 0
 end
 
+end
+
 %------------------------------------------------------------------- linker ---
 % "m3_link" is called to produce a final executable.
+
+if not defined("m3_link")
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
     local args =
@@ -388,6 +419,8 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
         args += "-pg"
     end
     return try_exec("@" & SYSTEM_CC, args)
+end
+
 end
 
 %-------------------------------------------------------------------
