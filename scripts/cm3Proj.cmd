@@ -10,6 +10,7 @@ REM v1.10--08/29/2003 by RCC, completed nested PROJ capability
 REM v1.11--06/10/2004 by RCC, fixed problem with FATAL errors not terminating during embedded calls to processDirective
 REM v1.12--01/21/2008 by RCC, don't check for TAR & GZIP in bin folder unless ARCSRC command is given.
 REM v1.13--03/20/2008 by RCC, fixed crash problem when CD path had embedded spaces.
+REM v1.14--06/08/2008 by RCC, allowed flexibility in location of GZIP and TAR utilities; added date/time stamp to archives.
 REM ===========================================================================
 REM PURPOSE:
 REM    This Windows batch/command file aids users is building, shipping, 
@@ -42,8 +43,8 @@ REM    CM3_PKG is the location of the public repository, typically "C:\cm3\pkg"
 REM
 REM    CM3P_Answer, CM3P_Archive, CM3P_CD, CM3P_cm3Opts, CM3P_DefaultInstallRoot, 
 REM    CM3P_Fatal, CM3P_File, CM3P_List, CM3P_Make, CM3P_Nest, CM3P_Pause, 
-REM    CM3P_PriorFolder, CM3P_ProjName, CM3P_ProjRoot, and CM3P_SavePrompt are
-REM    temporary env vars used internally.
+REM    CM3P_PriorFolder, CM3P_ProjName, CM3P_ProjRoot, CM3P_SavePrompt, 
+REM    CM3P_ArcDirBin, and CM3P_Temp are temporary env vars used internally.
 REM ---------------------------------------------------------------------------
 REM FILE USAGE:
 REM    This batch/command file uses text files named "name.CM3P" where "name"
@@ -77,7 +78,7 @@ rem fall thru to Begin
 :Begin
 :-----
 echo ===============================================================================
-echo cm3Proj.CMD, written by R.C.Coleburn 08/13/2003, v1.13 03/20/2008 by RCC
+echo cm3Proj.CMD, written by R.C.Coleburn 08/13/2003, v1.14 06/08/2008 by RCC
 echo ===============================================================================
 
 :Params1
@@ -419,9 +420,17 @@ goto :EOF
 
 :ArcSrc
 :------
-if not exist "%CM3_BIN%\tar.exe" goto FATAL_Env
-if not exist "%CM3_BIN%\gzip.exe" goto FATAL_Env
+REM TAR.EXE & GZIP.EXE expected in same folder.
+REM Look first in the path; then C:\cygwin\bin; then %CM3_BIN%
+set CM3P_ArcDirBin=
+for /d %%I in (tar.exe) do set CM3P_ArcDirBin=%%~dp$PATH:I
+if (%CM3P_ArcDirBin%)==() set CM3P_ArcDirBin=C:\cygwin\bin\
+if not exist %CM3P_ArcDirBin%tar.exe set CM3P_ArcDirBin=C:\cygwin\bin\
+if not exist %CM3P_ArcDirBin%tar.exe set CM3P_ArcDirBin=%CM3_BIN%\
+if not exist %CM3P_ArcDirBin%tar.exe goto FATAL_NoTarGzip
+if not exist %CM3P_ArcDirBin%gzip.exe goto FATAL_NoTarGzip
 echo Command Action = ARCSRC (archive all project sources)
+echo Using TAR and GZIP located in "%CM3P_ArcDirBin%"
 call :ShowFile
 echo -------------------------------------------------------------------------------
 set CM3P_Archive=%CM3P_ProjName%_Sources
@@ -435,20 +444,22 @@ if exist read* xcopy /q read* %TEMP%\%CM3P_Archive%
 for /F "eol=; tokens=1,2,3" %%A in (%CM3P_File%) do call :processDirective %%A %%B %2 arcPkg %%C
 if (%CM3P_Fatal%)==(TRUE) goto End
 echo.
-echo *** deleting .bak and .asv files from temporary storage ...
+echo *** deleting .BAK files from temporary storage ...
 del /s/q %TEMP%\%CM3P_Archive%\*.bak >>NUL:
-del /s/q %TEMP%\%CM3P_Archive%\*.asv >>NUL:
+rem del /s/q %TEMP%\%CM3P_Archive%\*.asv >>NUL:
 echo.
-echo *** creating tar archive ...
+echo *** creating TAR archive ...
 pushd %TEMP%
-tar --create --totals --file %CM3P_Archive%.tar %CM3P_Archive%
+%CM3P_ArcDirBin%tar --create --totals --file %CM3P_Archive%.tar %CM3P_Archive%
+for %%I in (%CM3P_Archive%.tar) do set CM3P_Temp=%%~tI
+for /f "tokens=1-6 delims=:/ " %%A in ("%CM3P_Temp%") do set CM3P_Temp=%CM3P_Archive%_%%C_%%A%%B_%%D%%E%%F
 echo.
 echo *** compressing archive ...
-gzip %CM3P_Archive%.tar
+%CM3P_ArcDirBin%gzip %CM3P_Archive%.tar
 popd
 echo.
-echo *** storing tgz archive as %CM3P_Archive%.tgz ...
-move %TEMP%\%CM3P_Archive%.tar.gz %CM3P_Archive%.tgz
+echo *** storing TGZ archive as "%CM3P_Temp%.tgz" ...
+move /y %TEMP%\%CM3P_Archive%.tar.gz %CM3P_Temp%.tgz
 echo.
 echo *** removing temporary files ...
 rmdir /s/q %TEMP%\%CM3P_Archive%
@@ -542,10 +553,16 @@ echo           CM3_ROOT expected in folder %CM3_ROOT%
 echo            CM3_BIN expected in folder %CM3_BIN%
 echo            CM3_PKG expected in folder %CM3_PKG%
 echo            CM3.EXE expected in file   %CM3_BIN%\cm3.exe
-echo            TAR.EXE expected in file   %CM3_BIN%\TAR.exe
-echo           GZip.EXE expected in file   %CM3_BIN%\GZip.exe
 echo cm3SetupCmdEnv.CMD expected in file   %CM3_BIN%\cm3SetupCmdEnv.CMD
 echo        cm3Proj.CMD expected in file   %CM3_BIN%\cm3Proj.CMD
+goto End
+
+:FATAL_NoTarGzip
+:---------------
+set CM3P_Fatal=TRUE
+echo.
+echo FATAL ERROR:  Unable to locate TAR and GZIP utilities via
+echo .             PATH, C:\cygwin\bin, or %CM3_BIN%
 goto End
 
 :Remarks
@@ -751,6 +768,8 @@ set CM3P_Make=
 set CM3P_Pause=
 set CM3P_ProjName=
 set CM3P_ProjRoot=
+set CM3P_ArcDirBin=
+set CM3P_Temp=
 if defined CM3P_PriorFolder cd /d "%CM3P_PriorFolder%"
 set CM3P_PriorFolder=
 if defined CM3P_SavePrompt prompt %CM3P_SavePrompt%
