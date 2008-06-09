@@ -1,11 +1,7 @@
 %
-% $Id$
-%
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
-%
-% Last modified on Fri Feb 10 13:16:06 PST 1995 by kalsow
 %
 
 readonly Platform_info = {
@@ -153,6 +149,10 @@ if not defined("GNU_CC")     GNU_CC     = "*"    end
 if not defined("GNU_CFLAGS") GNU_CFLAGS = "*"    end
 if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
 
+if defined("HOST_GNU_MAKE")
+  GNU_MAKE = HOST_GNU_MAKE
+end
+
 % check for overrides, otherwise use the defaults from the configuration file
 if not defined ("M3CC_HOST")    M3CC_HOST   = TARGET     end
 if not defined ("M3CC_TARGET")  M3CC_TARGET = TARGET     end
@@ -264,7 +264,7 @@ if not defined ("no_config")
 end
 
 readonly proc ProbeExeExtension (a) is
-  return equal (TARGET,  "NT386") or exists (a & ".exe")
+  return equal (TARGET, "NT386") or exists (a & ".exe")
 end
 
 readonly proc AppendExeExtension (a) is
