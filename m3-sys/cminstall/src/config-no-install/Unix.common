@@ -272,6 +272,34 @@ command line option\" 2>/dev/null >/dev/null"), 0)
     end
 end
 
+%------------------------------------------------------------------------------
+% A general mechanism for part of m3core to always be statically linked.
+% For example data on NT should not be dynamically linked, and the
+% libgcc helper functions are small and not worth dynamic linking.
+%
+
+proc GetM3CoreStaticObjs(lib) is
+    local Result = [ ]
+    if defined ("M3CoreStaticObjs") and not equal (lib, "m3core")
+        foreach a in M3CoreStaticObjs
+            local b = LIB_INSTALL & SL & a & ".o"
+            if exists (b)
+                Result += [ b ]
+            end
+        end
+    end
+    return Result
+end
+
+proc ShipM3CoreStaticObjs(lib) is
+    local Result = [ ]
+    if defined ("M3CoreStaticObjs") and equal (lib, "m3core")
+        foreach a in M3CoreStaticObjs
+            LibdExport(a & ".o")
+        end
+    end
+end
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -321,6 +349,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
             "-Wl,-soname," & lib_sox,
             "-o", lib_sox,
             objects,
+            GetM3CoreStaticObjs(lib),
             )
     if not equal(ret_code, 0)
         return ret_code
@@ -334,6 +363,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     install_derived_link(lib_sox, lib_so)
     install_link_to_derived(lib_sox, LIB_INSTALL)
     install_link_to_derived(lib_so, LIB_INSTALL)
+    ShipM3CoreStaticObjs(lib)
 
     return 0
 end
@@ -380,6 +410,7 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
         options,
         objects,
         FixM3GcDefs(imported_libs),
+        GetM3CoreStaticObjs(""),
     ]
     if M3_PROFILING
         args += "-pg"

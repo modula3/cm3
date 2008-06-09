@@ -35,7 +35,7 @@ readonly _CSupportPieces = {
   "OS2"        : [ "OS2", "little-endian" ],
   "SEQUENT"    : [ "little-endian" ],
   "SOLgnu"     : [ "big-endian" ],
-  "SOLsun"     : [ "big-endian" ],
+  "SOLsun"     : [ "big-endian", "libgcc" ],
   "SPARC"      : [ "SPARC", "big-endian" ],
   "SPARC32_LINUX": [ "big-endian" ],
   "SPARC64_LINUX": [ "big-endian" ],
