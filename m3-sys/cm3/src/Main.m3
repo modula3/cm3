@@ -59,25 +59,13 @@ PROCEDURE DoIt () =
         Quake.Define(mach, "THREAD_LIBRARY", Version.ThreadLibrary);
         Quake.Define(mach, "WINDOW_LIBRARY", Version.WindowLibrary);
         Quake.Define(mach, "WORD_SIZE", M3Config.WORD_SIZE);
-        (* These don't actually matter.
-        Quake.Define(mach, "TARGET_NAMING", Version.NamingConventions);
-        Quake.Define(mach, "NAMING_CONVENTIONS", Version.NamingConventions);
-        *)
 
         (* Even if the config file overrides the defaults, such as to do
         a cross build, the host characteristics are still available. *)
 
         Quake.Define(mach, "HOST", M3Config.TARGET);
         Quake.Define(mach, "HOST_OS_TYPE", M3Config.OS_TYPE);
-        (* These don't likely matter.
-        Quake.Define(mach, "HOST_BACKEND_MODE", Version.BackendMode);
-        Quake.Define(mach, "HOST_C_COMPILER", Version.CCompiler);
-        Quake.Define(mach, "HOST_LINKER", Version.Linker);
-        Quake.Define(mach, "HOST_THREAD_LIBRARY", Version.ThreadLibrary);
-        Quake.Define(mach, "HOST_WINDOW_LIBRARY", Version.WindowLibrary);
-        Quake.Define(mach, "HOST_WORD_SIZE", M3Config.WORD_SIZE);
-        Quake.Define(mach, "HOST_NAMING_CONVENTIONS", Version.NamingConventions);
-        *)
+        Quake.Define(mach, "HOST_GNU_MAKE", Version.GNUMake);
 
         (* define the site configuration *)
         Msg.Verbose ("EVAL (\"", config, "\")");
