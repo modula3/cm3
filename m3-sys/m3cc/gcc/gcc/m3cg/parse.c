@@ -1256,10 +1256,8 @@ m3_init_decl_processing (void)
 #define LONG_DOUBLE_TYPE_SIZE 64
 #endif
 #else
-#ifdef LONG_DOUBLE_TYPE_SIZE
 #undef LONG_DOUBLE_TYPE_SIZE
-#endif
-#define LONG_DOUBLE_TYPE_SIZE 64
+#define LONG_DOUBLE_TYPE_SIZE DOUBLE_TYPE_SIZE
 #endif
 
 #ifndef MAX
@@ -1611,45 +1609,95 @@ fmt_uid (unsigned long x, char *buf)
 
 /*----------------------------------------------------------------- float ---*/
 
-#define FLOAT(x,fkind)  int fkind;  tree x = scan_float(&fkind)
-
-#define REEL_BYTES  (FLOAT_TYPE_SIZE / 8)
-#define LREEL_BYTES (DOUBLE_TYPE_SIZE / 8)
-#define XREEL_BYTES (LONG_DOUBLE_TYPE_SIZE / 8)
+#define FLOAT(x, fkind)  unsigned fkind;  tree x = scan_float(&fkind)
 
 static tree
-scan_float (int *fkind)
+scan_float (unsigned *out_Kind)
 {
-  long i = get_int ();
-  long n_bytes;
-  float x1;
-  double x2;
-  long double x3;
-  void *adr;
+    unsigned char* Bytes;
+    unsigned i;
+    unsigned Kind;
+    /* real_from_target_fmt wants floats stored in an array of longs, 32 bits per long, even if long can hold more.
+    So for example a 64 bit double on a system with 64 bit long will have 32 bits of zeros in the middle. */
+    long Longs[2];
+    static const struct {
+        tree* Tree;
+        unsigned Size;
+    } Map[] = { { &t_reel ,  (FLOAT_TYPE_SIZE / 8) },
+                { &t_lreel, (DOUBLE_TYPE_SIZE / 8) },
+                { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8) }};
+    unsigned Size;
+    tree Type;
+    REAL_VALUE_TYPE Value;
 
-  tree tipe;
-  REAL_VALUE_TYPE val;
+    gcc_assert (sizeof(float) == 4);
+    gcc_assert (sizeof(double) == 8);
+    gcc_assert (FLOAT_TYPE_SIZE == 32);
+    gcc_assert (DOUBLE_TYPE_SIZE == 64);
+    gcc_assert (LONG_DOUBLE_TYPE_SIZE == 64);
+    gcc_assert ((sizeof(long) == 4) || (sizeof(long) == 8));
 
-  *fkind = i;
-  switch (i) {
-  case 0:  tipe = t_reel;  n_bytes = REEL_BYTES;  adr = &x1;  break;
-  case 1:  tipe = t_lreel; n_bytes = LREEL_BYTES; adr = &x2;  break;
-  case 2:  tipe = t_xreel; n_bytes = XREEL_BYTES; adr = &x3;  break;
-  default:
-    fatal_error(" *** invalid floating point value, precision = 0x%lx, at m3cg_lineno %d",
-                i, m3cg_lineno);
-  }
+    Longs[0] = 0;
+    Longs[1] = 0;
+    Bytes = (unsigned char*) &Longs;
+    Kind = (unsigned) get_int();
+    if (Kind >= (sizeof(Map) / sizeof(Map[0])))
+    {
+        fatal_error(" *** invalid floating point value, precision = 0x%x, at m3cg_lineno %d",
+                    Kind, m3cg_lineno);
+    }
+    *out_Kind = Kind;
+    Type = *Map[Kind].Tree;
+    Size = Map[Kind].Size;
 
-  /* read the value's bytes */
-  for (i = 0;  i < n_bytes;  i++)  { ((char *)adr)[i] = get_int (); }
+    gcc_assert ((Size == 4) || (Size == 8));
 
-  /* finally, assemble a floating point value */
-  if (tipe == t_reel) {
-    real_from_target_fmt (&val, adr, &ieee_single_format);
-  } else {
-    real_from_target_fmt (&val, adr, &ieee_double_format);
-  }
-  return build_real (tipe, val);
+    /* read the value's bytes; each long holds 32 bits, even if long is larger than 32 bits
+    always read the bytes in increasing address, independent of endianness */
+    for (i = 0;  i < Size;  i++)
+    {
+        Bytes[i / 4 * sizeof(long) + i % 4] = (unsigned char) (0xFF & get_int ());
+    }
+
+    if (option_trace_all)
+    {
+        union
+        {
+            unsigned char Bytes[sizeof(long double)]; /* currently double suffices */
+            float Float;
+            double Double;
+            long double LongDouble; /* not currently used */
+        } u = { { 0 } };
+
+        /* repack the bytes adjacent to each other */
+
+        for (i = 0;  i < Size;  i++)
+        {
+            u.Bytes[i] = Bytes[i / 4 * sizeof(long) + i % 4];
+        }
+        if (Type == t_reel)
+        {
+            fprintf(stderr," float %f bytes 0x%02x%02x%02x%02x\n", u.Float, u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3]);
+        }
+        else
+        {
+            fprintf(stderr," double %f bytes 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+                u.Double,
+                u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3],
+                u.Bytes[4], u.Bytes[5], u.Bytes[6], u.Bytes[7]);
+        }
+    }
+
+    /* finally, assemble a floating point value */
+    if (Type == t_reel)
+    {
+        real_from_target_fmt (&Value, Longs, &ieee_single_format);
+    }
+    else
+    {
+        real_from_target_fmt (&Value, Longs, &ieee_double_format);
+    }
+    return build_real (Type, Value);
 }
 
 /*-------------------------------------------------------------- booleans ---*/
@@ -3138,7 +3186,6 @@ m3cg_init_float (void)
   case 0: t = t_reel;   break;
   case 1: t = t_lreel;  break;
   case 2: t = t_xreel;  break;
-  default: t = t_lreel; break; /* make the compiler happy */
   }
 
   one_field (o, t, &f, &v);
