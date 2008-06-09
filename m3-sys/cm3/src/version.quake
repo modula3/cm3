@@ -204,13 +204,13 @@ proc version_impl(name) is
 
         local ThreadLibrary = ""
         if defined ("THREAD_LIBRARY")
-            Linker = THREAD_LIBRARY
+            ThreadLibrary = THREAD_LIBRARY
         end
         write("  ThreadLibrary = \"", ThreadLibrary, "\";", CR)
 
         local WindowLibrary = ""
         if defined ("WINDOW_LIBRARY")
-            Linker = WINDOW_LIBRARY
+            WindowLibrary = WINDOW_LIBRARY
         end
         write("  WindowLibrary = \"", WindowLibrary, "\";", CR)
 
