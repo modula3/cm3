@@ -1,6 +1,6 @@
 % Copyright 1996 Critical Mass, Inc. All rights reserved.
 % 
-% Standard configuration file for LINUX with ELF object files
+% common configuration file for various platforms
 %
 
 %-------------------------------------------------- compilation environment ---
@@ -36,11 +36,7 @@ end
 
 %-------------------------------------------------------------------- paths ---
 
-readonly
-proc
-CM3SetInstallRoot(
-    )
-is
+readonly proc CM3SetInstallRoot() is
     if defined("INSTALL_ROOT")
         return
     end
@@ -82,6 +78,12 @@ readonly INSTALL_IMPLS = TRUE
 %    => save only the exported interfaces and templates 
 %    => makes the installed system slightly smaller.
 
+%-------------------------------------------------------------------
+
+proc exists(x) is
+    return not stale(x, x)
+end
+
 %------------------------------------------------ external system libraries ---
 % SYSTEM_LIBS provides a mapping from Modula-3 names for the common
 % external libraries to site-dependent information about how they
@@ -89,10 +91,6 @@ readonly INSTALL_IMPLS = TRUE
 % of linker arguments that are used when linking against that library.
 % If SYSTEM_LIBS{x} is not defined, the Modula-3 system will assume
 % that the library is not available.
-
-proc exists(x) is
-  return not stale(x, x)
-end
 
 if not defined ("SYSTEM_LIBS")
 
@@ -106,8 +104,7 @@ SYSTEM_LIBS =
     "ODBC"       : [ "-lodbc" ],
     "MOTIF"      : [ "-lXm" ],
     "TCP"        : [ ],
-    "X11" :      [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", 
-"-lXt", "-lSM", "-lICE", "-lX11" ]
+    "X11" :      [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
 }
 
 end
@@ -117,19 +114,8 @@ end
 
 if not defined ("SYSTEM_LIBORDER")
 
-SYSTEM_LIBORDER =
-[
-    "OPENGL",
-    "DECPEX",
-    "MOTIF",
-    "X11",
-    "TCP",
-    "ODBC",
-    "POSTGRES95",
-    "FLEX-BISON",
-    "LEX-YACC",
-    "LIBC",
-]
+SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
+    "ODBC", "POSTGRES95", "FLEX-BISON", "LEX-YACC", "LIBC" ]
 
 end
 
@@ -142,17 +128,17 @@ readonly SYSTEM_AR  = "@ar" % Archiver
 % translate Modula-3 intermediate code to object code.
 
 proc m3_backend(source, object, optimize, debug) is
-  %
-  % These flags are local instead of global to avoid the probe when we compile nothing.
-  %
-  local args = [ GetM3BackFlag ("-fno-reorder-blocks") ]
-  if M3_PROFILING args += "-p" end
-  if equal (WORD_SIZE, "32BITS")
-    args += GetM3BackFlag("-m32")
-  else if equal (WORD_SIZE, "64BITS")
-    args += "-m64"
-  end end
-  return try_exec ("@" & m3back, args, source, "-o", object)
+    %
+    % These flags are local instead of global to avoid the probe when we compile nothing.
+    %
+    local args = [ GetM3BackFlag ("-fno-reorder-blocks") ]
+    if M3_PROFILING
+        args += "-p"
+     end
+    if equal (WORD_SIZE, "32BITS")
+        args += GetM3BackFlag("-m32")
+    end
+    return try_exec ("@" & m3back, args, source, "-o", object)
 end
 
 M3_BACKEND_MODE = "3"
@@ -170,10 +156,10 @@ M3_BACKEND_MODE = "3"
 if not defined ("compile_c")
 
 proc compile_c(source, object, options, optimize, debug) is
-  local args = options
-  if M3_PROFILING args += "-pg" end
-  return try_exec ("@" & SYSTEM_CC, args, "-c", source)
-end
+    local args = options
+    if M3_PROFILING args += "-pg" end
+    return try_exec ("@" & SYSTEM_CC, args, "-c", source)
+    end
 
 end
 
@@ -185,7 +171,7 @@ end
 if not defined ("assemble")
 
 proc assemble(source, object) is
-  return try_exec("@" & SYSTEM_ASM, source, "-o", object)
+    return try_exec("@" & SYSTEM_ASM, source, "-o", object)
 end
 
 end
@@ -200,28 +186,21 @@ end
 GcWrapFlags = ""
 
 if not defined ("GetGcWrapFlags")
-	readonly proc GetGcWrapFlags() is
-		if not GcWrapFlags
-			% write("checking for GcWrapFlags" & CR)
-			GcWrapFlags = " "
-			local ExitCode = try_exec("@grep -F m3gcdefs " & PKG_USE & "/m3core/" & TARGET & "/.M3EXPORTS > /dev/null")
-			if equal(ExitCode, 0)
-				GcWrapFlags = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
-
-				% find libm3gcdefs here
-				% GcWrapFlags = GcWrapFlags & " -L" & LIB_USE & " -lm3gcdefs"
-				% GcWrapFlags = GcWrapFlags & " " & LIB_USE & "/libm3gcdefs.a"
-			end
-		end
-		return GcWrapFlags
-	end
+    readonly proc GetGcWrapFlags() is
+        if not GcWrapFlags
+            % write("checking for GcWrapFlags" & CR)
+            GcWrapFlags = " " % tricky non-false value -- the default
+            local ExitCode = try_exec("@grep -F m3gcdefs " & PKG_USE & "/m3core/" & TARGET & "/.M3EXPORTS > /dev/null")
+            if equal(ExitCode, 0)
+                GcWrapFlags = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
+                % find libm3gcdefs here
+                % GcWrapFlags = GcWrapFlags & " -L" & LIB_USE & " -lm3gcdefs"
+                % GcWrapFlags = GcWrapFlags & " " & LIB_USE & "/libm3gcdefs.a"
+            end
+        end
+        return GcWrapFlags
+    end
 end
-
-% write("exists(/) is " & exists("/") & CR)
-% write("exists(/pub/lang/m3/cm3-dist/cm3/lib) is " & exists("/pub/lang/m3/cm3-dist/cm3/lib") & CR)
-% write("exists(/bin/sh) is " & exists("/bin/sh") & CR)
-% write("exists(/bin/shx) is " & exists("/bin/shx") & CR)
-% error("")
 
 %
 % The 5.1.8 distribution seems to look for libm3gcdefs
@@ -236,34 +215,34 @@ end
 % GcWrapFlags does not necessarily coincide with references to errno.
 %
 if not defined ("FixM3GcDefs")
-	readonly proc FixM3GcDefs(Args) is
-		local GcWrapFlags = GetGcWrapFlags()
-		if equal(GcWrapFlags, " ")
-			return Args
-		end
-		% if equal(LIB_USE, "/pub/lang/m3/cm3-dist/cm3/lib")
-		%     return Args
-		% end
-		% if equal(LIB_USE, "/pub/lang/m3/cm3-dist/cm3/bin/..lib")
-		%     return Args
-		% end
-		% local Result = [ ]
-		% Result += "-L" & LIB_USE
-		% foreach Arg in Args
-		%    write("Arg is " & Arg & CR)
-		%    if equal(Arg, "-L/pub/lang/m3/cm3-dist/cm3/lib")
-		%        write("changing arg" & CR)
-		%        Result += "-L" & LIB_USE
-		%    else
-		%        Result += Arg
-		%    end
-		%end
-		%Result += "/usr/lib/libc.a"
-		%return Result
-		%Args += "-L" & LIB_USE
-		%Args += "/usr/lib/libc.a"
-		return Args
-	end
+    readonly proc FixM3GcDefs(Args) is
+        local GcWrapFlags = GetGcWrapFlags()
+        if equal(GcWrapFlags, " ")
+            return Args
+        end
+        % if equal(LIB_USE, "/pub/lang/m3/cm3-dist/cm3/lib")
+        %     return Args
+        % end
+        % if equal(LIB_USE, "/pub/lang/m3/cm3-dist/cm3/bin/..lib")
+        %     return Args
+        % end
+        % local Result = [ ]
+        % Result += "-L" & LIB_USE
+        % foreach Arg in Args
+        %    write("Arg is " & Arg & CR)
+        %    if equal(Arg, "-L/pub/lang/m3/cm3-dist/cm3/lib")
+        %        write("changing arg" & CR)
+        %        Result += "-L" & LIB_USE
+        %    else
+        %        Result += Arg
+        %    end
+        %end
+        %Result += "/usr/lib/libc.a"
+        %return Result
+        %Args += "-L" & LIB_USE
+        %Args += "/usr/lib/libc.a"
+        return Args
+    end
 end
 
 %
@@ -273,38 +252,27 @@ end
 local IsM3BackFlagSupported_Cache = { }
 
 if not defined ("GetM3BackFlag")
-	readonly proc IsM3BackFlagSupported(x) is
-		local Result = 0
-		if IsM3BackFlagSupported_Cache contains x
-			Result = IsM3BackFlagSupported_Cache{x}
-		else
-			% write("probing " & m3back & " for " & x & CR)
-			Result = not equal(try_exec(
-				m3back & " " & x & " /dev/null 2>&1 "
-				& "| grep -F -e \"Invalid option\" -e \"unrecognized command line option\" > /dev/null"), 0)
-			IsM3BackFlagSupported_Cache{x} = Result
-		end
-		return Result
-	end
-
-	readonly proc GetM3BackFlag(x) is
-		if not IsM3BackFlagSupported(x)
-			x = ""
-		end
-		return x
-	end
+    readonly proc IsM3BackFlagSupported(x) is
+        local Result = 0
+        if IsM3BackFlagSupported_Cache contains x
+            Result = IsM3BackFlagSupported_Cache{x}
+        else
+            % write("probing " & m3back & " for " & x & CR)
+            Result = not equal(try_exec(
+                m3back & " " & x & " /dev/null 2>&1 "
+                & "| grep -F -i -e \"Invalid option\" -e \"unrecognized command line option\" > /dev/null"), 0)
+            IsM3BackFlagSupported_Cache{x} = Result
+        end
+        return Result
+    end
+        
+    readonly proc GetM3BackFlag(x) is
+        if not IsM3BackFlagSupported(x)
+            x = ""
+        end
+        return x
+    end
 end
-
-% write("GetGcWrapFlags is " & GetGcWrapFlags() & CR)
-% write("GetGcWrapFlags is " & GetGcWrapFlags() & CR)
-% write("GetM3BackFlag(-foo) is " & GetM3BackFlag("-foo") & CR)
-% write("GetM3BackFlag(-fno-reorder-blocks) is " & GetM3BackFlag("-fno-reorder-blocks") & CR)
-% write("GetM3BackFlag(-fno-reorder-blocks) is " & GetM3BackFlag("-fno-reorder-blocks") & CR)
-% write("GetM3BackFlag(-g) is " & GetM3BackFlag("-g") & CR)
-% write("GetM3BackFlag(-g) is " & GetM3BackFlag("-g") & CR)
-% write("GetM3BackFlag(-m32) is " & GetM3BackFlag("-m32") & CR)
-% write("GetM3BackFlag(-m32) is " & GetM3BackFlag("-m32") & CR)
-% error("")
 
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
@@ -437,20 +405,8 @@ end
 % they can be set "permanently" here in the config file or in as needed
 % in user's m3makefiles.
 
-M3_FRONT_FLAGS = [ ]
-% --- internal configuration options passed directly to the Modula-3 front-end
-
 M3_OPTIONS = [ ]
 % --- user options passed directly to the Modula-3 front-end
-
-% M3_KEEP_FILES = TRUE
-% --- keep intermediate and temporary files
-
-% M3_WINDOWS_GUI = TRUE
-% --- generate a Windows GUI subsystem program instead of a console one.
-
-% M3_COVERAGE = TRUE
-% --- compile & link with coverage options
 
 M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 % --- library linked in programs compiled with "-Z" coverage option
@@ -461,27 +417,8 @@ M3_SPLIT_LIBNAMES = TRUE
 M3_SHARED_LIB_ARG = "-Wl,-R"
 % --- pass "-R" flags to the linker too...
 
-% M3_BOOTSTRAP = TRUE
-% --- generate bootstrap code (assembly) instead of finaly object code
-
-% M3_COMPILE_ONCE = TRUE
-% --- don't recompile code to improve opaque object references
-
-% SYS_HAS_LOADER = TRUE
-% --- generate a loader info file with objects, libraries and timestamps
-
-% M3_SKIP_LINK = TRUE
-% --- skip the final link for programs, presumably to use the loader instead
-
-% M3_MAIN_IN_C = TRUE
-% --- generate the Modula-3 main program as C code
-
 X11_WITH_SHARED_MEM = TRUE
 % --- X11 libraries include the shared memory extensions (XShm...)
-
-%M3_NEED_STANDALONE_LINKS = TRUE
-% --- linker is broken and we need to build a directory of symbolic
-%     links pointing to the non-shared libraries.
 
 %-------------------------------------------------------------------- emacs ---
 % If you have emacs and want to compile ".el" files to ".elc" files,
@@ -490,5 +427,5 @@ X11_WITH_SHARED_MEM = TRUE
 % or later.
 
 readonly proc emacs_compile(el) is
-  exec("emacs -batch -f batch-byte-compile", el)
+    exec("emacs -batch -f batch-byte-compile", el)
 end
