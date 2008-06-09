@@ -195,10 +195,12 @@ html(["      <tbody>", CR])
 %
 
 readonly proc run_test (class, group, uid, comment, should_run) is
+
+  local dir = ".." & SL & "src" & SL & group & SL & uid
+  fs_rmrec (dir & SL & BUILD_DIR)
+
   if defined ("_all") or defined (class) or defined ("_" & uid)
-    local dir = ".." & SL & "src" & SL & group & SL & uid
     write ("--- ", uid, " --- ", comment, CR)
-    fs_rmrec (dir & SL & BUILD_DIR)
     fs_mkdir (dir & SL & BUILD_DIR)
     exec ("-cd", dir, "&& cm3", "-silent", "-DM3TESTS", ">" & BUILD_DIR & SL & "stdout.build.raw 2>" & BUILD_DIR & SL & "stderr.build.raw")
 
