@@ -119,10 +119,6 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
 
 end
 
-%---------------------------------------------------------- system programs ---
-
-readonly SYSTEM_AR  = "@ar" % Archiver
-
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
@@ -190,7 +186,8 @@ if not defined ("GetGcWrapFlags")
         if not GcWrapFlags
             % write("checking for GcWrapFlags" & CR)
             GcWrapFlags = " " % tricky non-false value -- the default
-            local ExitCode = try_exec("@grep -F m3gcdefs " & PKG_USE & "/m3core/" & TARGET & "/.M3EXPORTS > /dev/null")
+            local ExitCode = try_exec("@fgrep m3gcdefs " & PKG_USE & 
+"/m3core/" & TARGET & "/.M3EXPORTS 2>/dev/null >/dev/null")
             if equal(ExitCode, 0)
                 GcWrapFlags = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
                 % find libm3gcdefs here
@@ -259,8 +256,9 @@ if not defined ("GetM3BackFlag")
         else
             % write("probing " & m3back & " for " & x & CR)
             Result = not equal(try_exec(
-                m3back & " " & x & " /dev/null 2>&1 "
-                & "| grep -F -i -e \"Invalid option\" -e \"unrecognized command line option\" > /dev/null"), 0)
+                "@" & m3back & " " & x & " /dev/null 2>&1 "
+                & "| fgrep -i -e \"Invalid option\" -e \"unrecognized 
+command line option\" 2>/dev/null >/dev/null"), 0)
             IsM3BackFlagSupported_Cache{x} = Result
         end
         return Result
