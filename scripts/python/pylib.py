@@ -171,7 +171,7 @@ def _GetAllTargets():
 
     # legacy naming
 
-    Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6" ]
+    Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6", "SOLsun", "SOLgnu" ]
 
     for proc in [ "PPC", ]:
         for os in [ "OPENBSD", "NETBSD", "FREEBSD", "DARWIN", "LINUX", "NT" ]:

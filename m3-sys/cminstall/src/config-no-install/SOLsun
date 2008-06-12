@@ -4,7 +4,6 @@
 % Standard configuration file for SOLsun (Solaris 2.x w/Sun C)
 %
 
-
 readonly TARGET       = "SOLsun"
 readonly WORD_SIZE    = "32BITS"
 readonly GNU_PLATFORM = "sparc-sun-solaris2"
@@ -14,7 +13,7 @@ SYSTEM_LIBS = {
   "LIBC"       : [ "-lsocket", "-lnsl",
                    "-lpthread",
                    "-lrt", % semaphores
-                   "-lsunmath", "-lm", "-lc"
+                   "-lm", "-lc"
                  ],
   "LEX-YACC"   : [ "-ll" ],
   "FLEX-BISON" : [ ],
@@ -40,8 +39,10 @@ SYSTEM_LIBORDER = [
   "LIBC"
 ]
 
-readonly SYSTEM_CC = "cc -g -mt -xcode=pic13 -xldscope=symbolic"
-readonly SYSTEM_LD = SYSTEM_CC % "ld"
+readonly SYSTEM_CC = "cc -g -mt -xcode=pic13 "
+  & "-xldscope=symbolic -B direct -z ignore -z combreloc -z defs "
+  & "-z text"
+readonly SYSTEM_LD = SYSTEM_CC
 readonly SYSTEM_AR = "ar"
 readonly SYSTEM_ASM = "as"
 
@@ -59,7 +60,6 @@ proc assemble (source, object) is
   return try_exec ("@" & SYSTEM_ASM, "-xarch=v8plus", "-s", "-K", "PIC", source, "-o", object)
 end
 
-
 proc make_lib (lib, options, objects, imported_libs, shared) is
   local ret_code = 0
   local lib_a    = format ("lib%s.a", lib)
@@ -73,11 +73,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if shared
     % then, build the shared library
     ret_code = try_exec ("@" & SYSTEM_LD,
-      "-dy",
-      "-G",
-      "-z defs",
-      % "-z text",
-      "-o",
+      "-G", "-o",
       lib_sox, "-h", lib_sox, objects,
       imported_libs,
       %GetM3CoreStaticObjs(lib)
@@ -106,10 +102,7 @@ end
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local linker = [ "@" & SYSTEM_CC ]
-  local args = [
-    "-o", prog, options, objects, imported_libs,
-    % "-z text",
-    "-z defs" ]
+  local args = [ "-o", prog, options, objects, imported_libs ]
   return try_exec (linker, args, GetM3CoreStaticObjs(""))
 end
 
@@ -126,5 +119,6 @@ include ("Unix.common")
 M3_SHARED_LIB_ARG = "-R"
 % --- pass "-R" flags to the linker too.
 
+M3_MAIN_IN_C = TRUE
 
 GNU_MAKE   = "gmake"
