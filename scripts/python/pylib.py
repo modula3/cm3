@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.117 2008-06-07 22:26:42 jkrell Exp $
+# $Id: pylib.py,v 1.118 2008-06-12 12:55:17 jkrell Exp $
 
 import os
 from os import getenv
@@ -171,7 +171,7 @@ def _GetAllTargets():
 
     # legacy naming
 
-    Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6" ]
+    Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6", "SOLsun", "SOLgnu" ]
 
     for proc in [ "PPC", ]:
         for os in [ "OPENBSD", "NETBSD", "FREEBSD", "DARWIN", "LINUX", "NT" ]:
