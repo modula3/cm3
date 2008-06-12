@@ -12,6 +12,7 @@ REM v1.31--12/06/2006 by RCC, added CM3Setup_DefaultSDKSetup
 REM v1.40--01/20/2008 by RCC, added IDE option, added SHOW option, misc enhance
 REM v1.41--01/24/2008 by RCC, set Visual Studio defaults to match 2008 Express
 REM v1.42--04/10/2008 by RCC, change default search names for CM3-IDE (Olaf likes lower case, e.g. cm3ide)
+REM v1.43--06/12/2008 by RCC, put cm3 version number in window title
 REM ===========================================================================
 REM PURPOSE:
 REM    This Windows batch/command file sets up the environment for using cm3.
@@ -149,7 +150,7 @@ REM    Set to absolute path of BAT/CMD that sets up Microsoft Visual Studio/C/C+
 REM    Set to empty to disable calling this auto setup routine.
 REM    Example: set CM3Setup_DefaultVCSetup="C:\Program Files\Microsoft Visual Studio 8\VC\bin\VCVars32.bat"
 REM 
-set CM3Setup_DefaultVCSetup="C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat"
+set CM3Setup_DefaultVCSetup="C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86
 REM ---------------------------------------------------------------------------
 REM ...some other variants shown here for examples...
 REM set CM3Setup_DefaultVCSetup="C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat"
@@ -186,7 +187,7 @@ REM fall thru to Begin
 :-----
 echo.
 echo -------------------------------------------------------------------------------
-echo cm3SetupCmdEnv.CMD, written by R.C.Coleburn 08/12/2003, v1.42 04/10/2008 by RCC
+echo cm3SetupCmdEnv.CMD, written by R.C.Coleburn 08/12/2003, v1.43 06/12/2008 by RCC
 echo -------------------------------------------------------------------------------
 echo.
 REM fall thru to Args1
@@ -639,6 +640,7 @@ goto :EOF
 REM Everthing is good; we are done.  Show the user what has been achived.
 REM
 title cm3 Command Prompt
+for /f "tokens=1-5" %%a in ('c:\cm3\bin\cm3.exe -version') do if /I (%%d)==(version) title %%a %%b %%c %%d %%e
 set CM3_DoneSetup=TRUE
 echo.
 echo === Command Prompt Ready for CM3 ===
