@@ -17,9 +17,9 @@ SYSTEM_LIBS = {
                  ],
   "LEX-YACC"   : [ "-ll" ],
   "FLEX-BISON" : [ ],
-  "POSTGRES95" : [ ],
+  % "POSTGRES95" : [ ],
   "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
-  "ODBC"       : [  ],
+  % "ODBC"       : [  ],
   "MOTIF"      : [ "-lXm" ],
   "X11"        : [ "-lXaw", "-lXmu", "-lXext", "-lXt", "-lX11" ],
   "TCP"        : [ ]
