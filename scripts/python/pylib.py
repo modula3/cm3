@@ -1908,9 +1908,8 @@ def CopyConfigForDistribution(To):
         if os.path.isfile(File):
             print(File + " => " + To + "\n")
             CopyFile(File, To)
-    if Target.lower().find("linux") != -1:
-        print("Unix.common => " + To + "\n")
-        CopyFile(os.path.join(a, "config-no-install", "Unix.common"), To)
+    print("Unix.common => " + To + "\n")
+    CopyFile(os.path.join(a, "config-no-install", "Unix.common"), To)
     open(os.path.join(To, "cm3.cfg"), "w").write("include(\"" + Config + "\")\n")
     return True
 
