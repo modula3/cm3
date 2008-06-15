@@ -180,16 +180,16 @@ end
 % make sure the derived directory exists
 %
 if not exists (build_dir)
-  exec ("sh -c \"mkdir", build_dir, "\"")
+  exec ("-mkdir", build_dir)
 end
 
 m3cc_ResponseFileCounter = "0"
 
 readonly proc m3cc_Run (x) is
+  >> "_m3.log" in
+    write(x & CR)
+  end
   write(x & CR)
-  %>> "_m3.log" in
-  %  write(x & CR)
-  %end
   if HostIsNT ()
     local readonly Temp = "_m3sh" & m3cc_ResponseFileCounter & ".sh"
     > Temp in
@@ -200,25 +200,96 @@ readonly proc m3cc_Run (x) is
     % Uniqueness is not critical here, it is merely useful
     % while debugging to go back and see the temp files.
     %
-    Counter =
+    m3cc_ResponseFileCounter =
         { "0":"1","1":"2","2":"3","3":"4","4":"5",
           "5":"6","6":"7","7":"8","8":"9","9":"0", }{m3cc_ResponseFileCounter}
 
+    write("sh ./" & Temp & " (" & x & ")" & CR)
     exec("sh ./" & Temp)
   else
     exec(x)
   end
 end
 
-done  = ".configure-done"
-donep = build_dir & "/" & done
+done = build_dir & "/.configure-done"
+
 if defined ("FORCE")
+  %
+  % Note: this block is hard to maintain correctly and I personally
+  % just rmdir /q/s <target> or rm -rf <taret>.
+  %
   % Why not just rm -rf build_dir/*?
-  m3cc_Run("-cd " & build_dir & " && test -f Makefile && " & M3CC_MAKE & " distclean")
-  delete_file(build_dir & "/cm3cg.exe")
-  delete_file(build_dir & "/cm3cg")
-  delete_file(build_dir & "/_m3.log")
-  delete_file(donep)
+  % Scared of getting it wrong?
+  %
+  if exists (build_dir & "/Makefile")
+    exec("-cd " & build_dir & " && " & M3CC_MAKE & " distclean")
+  end
+  foreach a in [
+      "cm3cg.exe",
+      "confdefs.h",
+      "config.log",
+      "cm3cg",
+      "gcc/as",
+      "gcc/config.log",
+      "gcc/config.cache",
+      "gcc/collect-ld",
+      "gcc/gcov-iov.h",
+      "gcc/insn-automata.c",
+      "gcc/insn-conditions.md",
+      "gcc/libada-mk",
+      "gcc/nm",
+      "gcc/m3cgc1.exe",
+      "gcc/m3cgc1",
+      "libdecnumber/gstdint.h",
+      "mpfr/get_patches.c",
+      ".M3SHIP",
+      done,
+      "_m3.log",
+      "_m3sh0.sh" ]
+    delete_file(build_dir & "/" & a)
+  end
+  %
+  % Now delete directories that should be empty.
+  %
+  foreach a in [
+      "gcc/build",
+      "gcc/doc",
+      "gcc/m3cg",
+      "gcc/treelang",
+      "gmp/demos/calc",
+      "gmp/demos/expr",
+      "gmp/tests/cxx",
+      "gmp/tests/devel",
+      "gmp/tests/misc",
+      "gmp/tests/mpbsd",
+      "gmp/tests/mpf",
+      "gmp/tests/mpn",
+      "gmp/tests/mpq",
+      "gmp/tests/mpz",
+      "gmp/tests/rand",
+      "gmp/cxx",
+      "gmp/demos",
+      "gmp/doc",
+      "gmp/mpbsd",
+      "gmp/mpf",
+      "gmp/mpn",
+      "gmp/mpq",
+      "gmp/mpz",
+      "gmp/printf",
+      "gmp/scanf",
+      "gmp/tests",
+      "gmp/tune",
+      "mpfr/tests",
+      "gcc",
+      "gmp",
+      "libcpp",
+      "libdecnumber",
+      "mpfr"
+      ]
+    if exists (build_dir & "/" & a)
+      exec("-rmdir " & build_dir & "/" & a)
+    end
+  end
 end
 
 %
@@ -251,7 +322,7 @@ local Native = not Cross
 
 if not defined ("no_config")
   % configure the sources
-  if not exists (donep)
+  if not exists (done)
     local Configure = ""
     if Cross
       Configure = " -target=" & GNU_platform (M3CC_TARGET)
@@ -270,8 +341,10 @@ if not defined ("no_config")
     Configure = Configure & " -disable-shared"
     Configure = Configure & " -enable-languages=m3cg"
     Configure = Configure & " -enable-targets=all"
-    m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG, Configure, " | tee -a _m3.log"])
-    m3cc_Run (["cd", build_dir, "; echo \"done\" > " & done])
+    m3cc_Run (["cd", build_dir, "&&", "../gcc/configure", M3CC_CONFIG, Configure, " | tee -a _m3.log"])
+    > done in
+      write("done")
+    end
   end
 end
 
@@ -318,16 +391,13 @@ end
 % configure
 %
 
-cmds = "cd " & build_dir & "; " & M3CC_MAKE & " configure-host | tee -a _m3.log"
-m3cc_Run (cmds)
+m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host | tee -a _m3.log"])
 
 proc Sed (file0, find, replace) is
-  if not stale (file0, file0)
+  if exists (file0)
     local file1 = file0 & ".1"
-    exec ("sed -e \"s/" & find & "/" & replace & "/\" < " & file0 & " > " & file1)
-    if stale (file1, file0)
-      cp_if (file0, file1)
-    end
+    m3cc_Run (["sed", "-e", "\"s/" & find & "/" & replace & "/\"", "<", file0, ">", file1])
+    m3cc_Run (["../gcc/move-if-change", file1, file0])
   end
 end
 
@@ -338,11 +408,11 @@ end
 foreach dir in ["gcc", "libcpp", "libdecnumber", "mpfr", "mpfr/tests"]
   foreach file in ["Makefile", "auto-host.h", "config.h"]
     local file = dir & "/" & file
-    if not stale (file, file)
-      Sed (file, "^LIBICONV =.+$", "LIBICONV =")
-      Sed (file, "^LIBICONV_DEP =.+$", "LIBICONV_DEP =")
-      Sed (file, "^#define HAVE_ICONV 1$", "")
-      Sed (file, "^#define HAVE_ICONV_H 1$", "")
+    if exists (file)
+      Sed (file, "^LIBICONV = .+$", "LIBICONV =")
+      Sed (file, "^LIBICONV_DEP = .+$", "LIBICONV_DEP =")
+      Sed (file, "^#define HAVE_ICONV 1$", "#undef HAVE_ICONV")
+      Sed (file, "^#define HAVE_ICONV_H 1$", "#undef HAVE_ICONV_H")
       %
       % Configure is for some reason unable to find Cygwin /usr/bin/libtool.
       %
@@ -356,9 +426,7 @@ end
 %
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
 %
-cmds = M3CC_MAKE & " all-gmp all-mpfr all-libcpp all-libdecnumber all-build-libiberty all-libiberty | tee -a _m3.log"
-m3cc_Run (cmds)
-cmds = "cd gcc ; " & M3CC_MAKE & " s-modes insn-config.h m3cg | tee -a _m3.log"
-m3cc_Run (cmds)
+m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-mpfr all-libcpp all-libdecnumber all-build-libiberty all-libiberty | tee -a _m3.log"])
+m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes insn-config.h m3cg | tee -a _m3.log"])
 
 postcp ()
