@@ -26,16 +26,6 @@
  cm3 ^
  mklib
 
-@call :header backing up existing packages (once only)
-@rem does nothing if backup already exists
-call %~dp0backup-pkgs || exit /b 1
-@echo on
-
-@call :header restoring old packages from backup (for multiple runs)
-@rem for multiple runs of this script...
-call %~dp0backup-pkgs -restore  || exit /b 1
-@echo on
-
 @call :header cleaning core packages
 call %~dp0do-cm3-core realclean || exit /b 1
 @echo on
