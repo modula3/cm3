@@ -11,7 +11,7 @@ readonly Platform_info = {
   "AMD64_LINUX" : "amd64-pc-linux-gnu",
   "AMD64_NT"  : "amd64-pc-mingw32",
   "AP3000"    : "apollo68-bsd",
-  "ARM"       : "arm--riscos",
+  "ARM"       : "arm-riscos",
   "BSDI4"     : "i386-unknown-freebsdelf",
   "DS3100"    : "decstation",
   "FBSD_ALPHA": "alpha-unknown-freebsd",
@@ -29,7 +29,7 @@ readonly Platform_info = {
   "LINUXLIBC6": "i686-pc-linux-gnu",
   "NEXT"      : "next-bsd",
   "NT386"     : "i686-pc-mingw32",
-  "OKI"       : "i860--sysv4.0",
+  "OKI"       : "i860-sysv4.0",
   "SEQUENT"   : "i386-sequent-bsd",
   "SOLgnu"    : "sparc-sun-solaris2",
   "SOLsun"    : "sparc-sun-solaris2",
@@ -111,14 +111,23 @@ readonly proc GNU_platform (x) is
 end
 
 readonly m3cc_config = {
-  "HPPA"  : "--with-gnu-as",
+
+  %
+  % The NT386GNU hosted tools work.
+  % The native ones do not.
+  % -disable-tls consistently to reduce noise
+  % when comparing them.
+  %
+  "SPARC64_OPENBSD" : "-disable-tls",
+
+  "HPPA"  : "-with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
 
-  "IRIX5" : "--with-stabs --with-gnu-as"
+  "IRIX5" : "-with-stabs -with-gnu-as"
   % mips-sgi-irix5 does not support debugging using the native
   % assembler.  If you don't have gas, delete the config options above.
   % You will need the latest version of gas (binutils-2.5 or better).
-  % --with-stabs is necessary because Modula-3 v3.3 generates funny
+  % -with-stabs is necessary because Modula-3 v3.3 generates funny
   % symbol names that can't be parsed by the ECOFF debugging
   % directives.  [Modula-3 v3.4 and later don't generate funny
   % symbol names. -- Bill Kalsow 1/13/94]
@@ -178,6 +187,9 @@ m3cc_ResponseFileCounter = "0"
 
 readonly proc m3cc_Run (x) is
   write(x & CR)
+  %>> "_m3.log" in
+  %  write(x & CR)
+  %end
   if HostIsNT ()
     local readonly Temp = "_m3sh" & m3cc_ResponseFileCounter & ".sh"
     > Temp in
@@ -205,9 +217,9 @@ if defined ("FORCE")
   m3cc_Run("-cd " & build_dir & " && test -f Makefile && " & M3CC_MAKE & " distclean")
   delete_file(build_dir & "/cm3cg.exe")
   delete_file(build_dir & "/cm3cg")
+  delete_file(build_dir & "/_m3.log")
   delete_file(donep)
 end
-delete_file(build_dir & "/_m3.log")
 
 %
 % Configure does not seem to ferry environment variables from itself to make,
@@ -242,22 +254,22 @@ if not defined ("no_config")
   if not exists (donep)
     local Configure = ""
     if Cross
-      Configure = " --target=" & GNU_platform (M3CC_TARGET)
+      Configure = " -target=" & GNU_platform (M3CC_TARGET)
     end
-    Configure = Configure & " --srcdir=../gcc"
-    Configure = Configure & " --disable-bootstrap"
-    Configure = Configure & " --disable-doc"
-    Configure = Configure & " --disable-fixincludes"
-    Configure = Configure & " --disable-intl"
-    Configure = Configure & " --disable-libgcc"
-    Configure = Configure & " --disable-libgomp"
-    Configure = Configure & " --disable-libmudflap"
-    Configure = Configure & " --disable-libssp"
-    Configure = Configure & " --disable-multilib"
-    Configure = Configure & " --disable-nls"
-    Configure = Configure & " --disable-shared"
-    Configure = Configure & " --enable-languages=m3cg"
-    Configure = Configure & " --enable-targets=all"
+    Configure = Configure & " -srcdir=../gcc"
+    Configure = Configure & " -disable-bootstrap"
+    Configure = Configure & " -disable-doc"
+    Configure = Configure & " -disable-fixincludes"
+    Configure = Configure & " -disable-intl"
+    Configure = Configure & " -disable-libgcc"
+    Configure = Configure & " -disable-libgomp"
+    Configure = Configure & " -disable-libmudflap"
+    Configure = Configure & " -disable-libssp"
+    Configure = Configure & " -disable-multilib"
+    Configure = Configure & " -disable-nls"
+    Configure = Configure & " -disable-shared"
+    Configure = Configure & " -enable-languages=m3cg"
+    Configure = Configure & " -enable-targets=all"
     m3cc_Run (["cd", build_dir, "; ../gcc/configure", M3CC_CONFIG, Configure, " | tee -a _m3.log"])
     m3cc_Run (["cd", build_dir, "; echo \"done\" > " & done])
   end
@@ -302,29 +314,51 @@ if Native
   end
 end
 
-% build commands
-cmds = "cd " & build_dir & "; " & M3CC_MAKE
+%
+% configure
+%
+
+cmds = "cd " & build_dir & "; " & M3CC_MAKE & " configure-host | tee -a _m3.log"
+m3cc_Run (cmds)
+
+proc Sed (file0, find, replace) is
+  if not stale (file0, file0)
+    local file1 = file0 & ".1"
+    exec ("sed -e \"s/" & find & "/" & replace & "/\" < " & file0 & " > " & file1)
+    if stale (file1, file0)
+      cp_if (file0, file1)
+    end
+  end
+end
+
+%
+% remove libiconv dependency
+% It isn't needed, and stock Solaris install lacks it.
+%
+foreach dir in ["gcc", "libcpp", "libdecnumber", "mpfr", "mpfr/tests"]
+  foreach file in ["Makefile", "auto-host.h", "config.h"]
+    local file = dir & "/" & file
+    if not stale (file, file)
+      Sed (file, "^LIBICONV =.+$", "LIBICONV =")
+      Sed (file, "^LIBICONV_DEP =.+$", "LIBICONV_DEP =")
+      Sed (file, "^#define HAVE_ICONV 1$", "")
+      Sed (file, "^#define HAVE_ICONV_H 1$", "")
+      %
+      % Configure is for some reason unable to find Cygwin /usr/bin/libtool.
+      %
+      if HostIsNT ()
+        Sed (file, "@LIBTOOL@", "libtool")
+      end
+    end
+  end
+end
+
 %
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
-% This probably is still more than necessary but it is a start.
 %
-if equal ($OS, "Windows_NT")
-  %
-  % Configure is having problems with libtool.
-  % In particular, I have libtool in the usual Cygwin /usr/bin/libtool, but configure
-  % leaves the string @LIBTOOL@ in the mpfr makefiles. This needs further
-  % investigation, however this is a perfectly adequate workaround for now.
-  %
-  cmds = cmds & " configure-host | tee -a _m3.log"
-  cmds = cmds & " ; cd mpfr ; sed -e \"s/@LIBTOOL@/libtool/\" < Makefile > Makefile.lt ; mv Makefile.lt Makefile"
-  cmds = cmds & " ; cd tests ; sed -e \"s/@LIBTOOL@/libtool/\" < Makefile > Makefile.lt ; mv Makefile.lt Makefile"
-  cmds = cmds & " ; cd ../.. ; " & M3CC_MAKE
-end
-cmds = cmds & " all-gmp all-mpfr all-libcpp all-libdecnumber all-build-libiberty all-libiberty configure-gcc | tee -a _m3.log"
-cmds = cmds & " ; cd gcc ; " & M3CC_MAKE
-cmds = cmds & " s-modes insn-config.h m3cg | tee -a _m3.log"
-
-% finally, compile it
+cmds = M3CC_MAKE & " all-gmp all-mpfr all-libcpp all-libdecnumber all-build-libiberty all-libiberty | tee -a _m3.log"
+m3cc_Run (cmds)
+cmds = "cd gcc ; " & M3CC_MAKE & " s-modes insn-config.h m3cg | tee -a _m3.log"
 m3cc_Run (cmds)
 
 postcp ()
