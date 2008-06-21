@@ -1,0 +1,10 @@
+% m3makefile for opaque
+
+import ("libm3")
+
+module("Person")
+module("Employee")
+
+implementation ("PartiallyOpaque")
+program ("partial-opaque")
+

@@ -1,0 +1,7 @@
+% m3makefile for m3sh
+
+import ("libm3")
+
+implementation ("M3sh")
+program ("m3sh")
+
