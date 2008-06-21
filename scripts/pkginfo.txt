@@ -36,6 +36,7 @@ table-list base core std
 tempfiles base core std
 tcl base core std
 tcp base std gui comm
+cm3ide std
 udp std
 libsio std
 libbuf std
