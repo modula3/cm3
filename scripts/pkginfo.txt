@@ -80,7 +80,7 @@ vbtkit std gui
 cmvbt std gui
 jvideo std gui
 videovbt std gui
-web std gui
+m3-www/web std gui
 formsvbtpixmaps std gui
 formsvbt std gui
 formsview std gui
