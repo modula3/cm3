@@ -1495,9 +1495,12 @@ PROCEDURE RunM3 (s: State;  u: M3Unit.T;  object: TEXT): BOOLEAN =
     END;
 
     (* open the input file *)
-    input  := Utils.OpenReader (UnitPath (u), fatal := FALSE);
-    ok := (input # NIL);
     source.name := UnitPath (u);
+    input  := Utils.OpenReader (source.name, fatal := FALSE);
+    ok := (input # NIL);
+    IF NOT ok THEN 
+      Msg.Error (NIL, "open failed on: ", source.name);
+    END; 
     source.contents := input;
 
     IF (ok) AND ((u.stale_src) OR (u.missing_info)) THEN
@@ -1883,6 +1886,7 @@ PROCEDURE RunCC (s: State;  source, object: TEXT;  debug, optimize: BOOLEAN) =
     PushBool  (s, debug);
     IF CallProc (s, s.c_compiler) THEN
       s.compile_failed := TRUE;
+      Msg.Error (NIL, "C compiler failed compiling: ", source);
       Utils.Remove (object);
     END;
     ETimer.Pop ();
@@ -1901,6 +1905,7 @@ PROCEDURE RunM3Back (s: State;  source, object: TEXT;
     failed := CallProc (s, s.m3backend);
     IF failed THEN
       s.compile_failed := TRUE;
+      Msg.Error (NIL, "m3cc (aka cm3cg) failed compiling: ", source);
       Utils.Remove (object);
     END;
     ETimer.Pop ();
@@ -1917,6 +1922,7 @@ PROCEDURE RunAsm (s: State;  source, object: TEXT): BOOLEAN =
     failed := CallProc (s, s.assembler);
     IF failed THEN
       s.compile_failed := TRUE;
+      Msg.Error (NIL, "assembler failed assembling: ", source);
       Utils.Remove (object);
     END;
     ETimer.Pop ();
@@ -2119,6 +2125,7 @@ PROCEDURE BuildCProgram (s: State;  shared: BOOLEAN) =
       PushBool  (s, shared);
       IF CallProc (s, s.linker) THEN
         s.compile_failed := TRUE;
+        Msg.Error (NIL, "linker failed linking: ", name.base);
       END;
     ETimer.Pop ();
   END BuildCProgram;
@@ -2200,6 +2207,7 @@ PROCEDURE BuildProgram (s: State;  shared: BOOLEAN) =
       PushBool  (s, shared);
       IF CallProc (s, s.linker) THEN
         s.compile_failed := TRUE;
+        Msg.Error (NIL, "linker failed linking: ", name.base);
       END;
     ETimer.Pop ();
   END BuildProgram;
@@ -2506,6 +2514,7 @@ PROCEDURE BuildLibrary (s: State;  shared: BOOLEAN) =
       PushBool  (s, shared);
       IF CallProc (s, s.librarian) THEN
         s.compile_failed := TRUE;
+        Msg.Error (NIL, "librarian failed building: ", name.base);
       END;
     ETimer.Pop ();
   END BuildLibrary;
@@ -2870,15 +2879,20 @@ PROCEDURE CallProc (s: State;  READONLY p: ConfigProc): BOOLEAN =
       s.machine.pop (v);
       EVAL s.machine.exec_echo (sav);
       exit_code := QVal.ToInt (s.machine, v);
+      IF exit_code # 0 THEN
+        Msg.Error (NIL, "  ", p.name, " => ", Fmt.Int (exit_code));
+      END; 
     EXCEPT
     | Quake.Error (msg) =>
         Msg.Out (msg, Wr.EOL);
         Msg.FatalError (NIL, "procedure \"", p.name,
                         "\" defined in \"" & s.config_file,
                         "\" failed.");
+        exit_code := LAST(INTEGER); 
     | Thread.Alerted =>
         Msg.FatalError (NIL, "interrupted while calling \"", p.name,
                         "\" defined in \"" & s.config_file, "\"");
+        exit_code := LAST(INTEGER)-1; 
     END;
     Msg.Verbose ("  ", p.name, " => ", Fmt.Int (exit_code));
     RETURN (exit_code # 0);
