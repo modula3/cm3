@@ -101,15 +101,15 @@ PROCEDURE OutL (a, b: TEXT;  l: Arg.List) =
 
 PROCEDURE OutE (a, b, c, d, e, f, g: TEXT := NIL) =
   BEGIN
-    OutX (Stdio.stderr, a, b, c, d, e, f, g);
+    OutX ("<stderr>", Stdio.stderr, a, b, c, d, e, f, g);
   END OutE;
 
 PROCEDURE Out (a, b, c, d, e, f, g: TEXT := NIL) =
   BEGIN
-    OutX (Stdio.stdout, a, b, c, d, e, f, g);
+    OutX ("<stdout>", Stdio.stdout, a, b, c, d, e, f, g);
   END Out;
 
-PROCEDURE OutX (wr : Wr.T; a, b, c, d, e, f, g: TEXT := NIL) =
+PROCEDURE OutX (name: TEXT; wr : Wr.T; a, b, c, d, e, f, g: TEXT := NIL) =
   BEGIN
     TRY
       IF (a # NIL) THEN Wr.PutText (wr, a) END;
@@ -119,15 +119,15 @@ PROCEDURE OutX (wr : Wr.T; a, b, c, d, e, f, g: TEXT := NIL) =
       IF (e # NIL) THEN Wr.PutText (wr, e) END;
       IF (f # NIL) THEN Wr.PutText (wr, f) END;
       IF (g # NIL) THEN Wr.PutText (wr, g) END;
-      Utils.FlushWriter (wr, "<stdout>");
+      Utils.FlushWriter (wr, name);
     EXCEPT
     | Wr.Failure (args) =>
         IF NOT crashing THEN
-          FatalError (args, "unable to write file: <stdout>");
+          FatalError (args, "unable to write file: " & name);
         END;
     | Thread.Alerted =>
         IF NOT crashing THEN
-          FatalError (NIL, "interrupted -- unable to write file: <stdout>");
+          FatalError (NIL, "interrupted -- unable to write file: " & name);
         END;
     END;
   END OutX;
