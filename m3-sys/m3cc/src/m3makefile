@@ -341,6 +341,12 @@ if not defined ("no_config")
     Configure = Configure & " -disable-shared"
     Configure = Configure & " -enable-languages=m3cg"
     Configure = Configure & " -enable-targets=all"
+    %
+    % remove libiconv dependency
+    % It isn't needed, and stock Solaris install lacks it.
+    %
+    Configure = Configure & " -without-libiconv-prefix"
+
     m3cc_Run (["cd", build_dir, "&&", "../gcc/configure", M3CC_CONFIG, Configure, " | tee -a _m3.log"])
     > done in
       write("done")
@@ -401,18 +407,10 @@ proc Sed (file0, find, replace) is
   end
 end
 
-%
-% remove libiconv dependency
-% It isn't needed, and stock Solaris install lacks it.
-%
 foreach dir in ["gcc", "libcpp", "libdecnumber", "mpfr", "mpfr/tests"]
   foreach file in ["Makefile", "auto-host.h", "config.h"]
     local file = dir & "/" & file
     if exists (file)
-      Sed (file, "^LIBICONV = .+$", "LIBICONV =")
-      Sed (file, "^LIBICONV_DEP = .+$", "LIBICONV_DEP =")
-      Sed (file, "^#define HAVE_ICONV 1$", "#undef HAVE_ICONV")
-      Sed (file, "^#define HAVE_ICONV_H 1$", "#undef HAVE_ICONV_H")
       %
       % Configure is for some reason unable to find Cygwin /usr/bin/libtool.
       %
