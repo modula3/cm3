@@ -66,12 +66,12 @@ PROCEDURE Get (name: TEXT; path: Path): TEXT
    "Rd.GetText". *)
 
 PROCEDURE BuildPath (a1, a2, a3, a4: REFANY := NIL): Path;
-(* Build a "Path" from the non-"NIL" elements. Each element must be
-   either a "Bundle.T" or a "TEXT".  If it is a "TEXT", is assumed to
+(* Build a "Path" from the non-"NIL" elements.  Each element must be
+   either a "Bundle.T" or a "TEXT".  If it is a "TEXT", it is assumed to
    be the pathname of a directory, unless it starts with a dollar
-   sign, in which case it is assumed to be environment variable whose
+   sign, in which case it is assumed to be an environment variable whose
    value is the name of a directory; the value is retrieved using
-   "Env.Get". It is a checked runtime error of the pathname is not
+   "Env.Get".  It is a checked runtime error if the pathname is not
    valid. *)
 
 END Rsrc.
