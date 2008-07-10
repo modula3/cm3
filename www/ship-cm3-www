@@ -42,23 +42,43 @@ if [ "$1" = "-v" ] ; then
   VERBOSE="-v"
   shift
 fi
-
+fns=""
+while [ -n "$1" ]; do
+  fns="$fns $1"
+  shift
+done
 
 for r in ${REMOTE}; do
   if [ "x${VERBOSE}" = x-v ] ; then
     echo "updating remote site ${r}..."
   fi
-  RSYNC_RSH=ssh rsync ${NOPT} ${VERBOSE} -C ${RSYNCOPTS} -ruptl \
-    --exclude=cm3 \
-    --exclude=PkgTags \
-    --exclude=tmp \
-    --exclude=\*~ \
-    --exclude=\*.flc \
-    --exclude=www-install.sh \
-    --exclude=ship-cm3-www \
-    --exclude=ship-cm3-testing \
-    --exclude=doc/help/reactor \
-    * ${r}
+  if [ -z "$fns" ]; then
+    RSYNC_RSH=ssh rsync ${NOPT} ${VERBOSE} -C ${RSYNCOPTS} -ruptl \
+      --exclude=cm3 \
+      --exclude=PkgTags \
+      --exclude=tmp \
+      --exclude=\*~ \
+      --exclude=\*.flc \
+      --exclude=www-install.sh \
+      --exclude=ship-cm3-www \
+      --exclude=ship-cm3-testing \
+      --exclude=uploaded-archives \
+      * ${r}
+  else
+    for f in $fns; do
+      RSYNC_RSH=ssh rsync ${NOPT} ${VERBOSE} -C ${RSYNCOPTS} -uptl \
+        --exclude=cm3 \
+        --exclude=PkgTags \
+        --exclude=tmp \
+        --exclude=\*~ \
+        --exclude=\*.flc \
+        --exclude=www-install.sh \
+        --exclude=ship-cm3-www \
+        --exclude=ship-cm3-testing \
+        --exclude=uploaded-archives \
+        ${f}/* ${r}/${f}
+    done
+  fi
 done
 
 #    --exclude=doc/src_reports/*.ps* \
