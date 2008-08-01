@@ -10,7 +10,6 @@
 
 UNSAFE MODULE WinUser;
 
-IMPORT WinBase;
 FROM WinNT IMPORT PCSTR, PCWSTR;
 FROM WinDef IMPORT BOOL, UINT32, PVOID, HWND, WPARAM, LPARAM, INT32,
   LRESULT, HINSTANCE, HMENU, HHOOK, PRECT, PPOINT;
@@ -182,40 +181,26 @@ PROCEDURE DefHookProc (nCode : INT32;
 (* hack to patch the buggy return values on Chicago *)
 
 PROCEDURE GetClientRect (hWnd: HWND; lpRect: PRECT): BOOL =
-  VAR b := raw_GetClientRect (hWnd, lpRect);
   BEGIN
-    IF is_chicago THEN b := ORD (b # 0); END;
-    RETURN b;
+    RETURN ORD ((raw_GetClientRect (hWnd, lpRect)) # 0);
   END GetClientRect;
 
 PROCEDURE GetCursorPos (lpPoint: PPOINT): BOOL =
-  VAR b := raw_GetCursorPos (lpPoint);
   BEGIN
-    IF is_chicago THEN b := ORD (b # 0); END;
-    RETURN b;
+    RETURN ORD ((raw_GetCursorPos (lpPoint)) # 0);
   END GetCursorPos;
 
 PROCEDURE ClientToScreen (hWnd: HWND; lpPoint: PPOINT): BOOL =
-  VAR b := raw_ClientToScreen (hWnd, lpPoint);
   BEGIN
-    IF is_chicago THEN b := ORD (b # 0); END;
-    RETURN b;
+    RETURN ORD ((raw_ClientToScreen (hWnd, lpPoint)) # 0);
   END ClientToScreen;
 
 PROCEDURE ScreenToClient (hWnd: HWND; lpPoint: PPOINT): BOOL =
-  VAR b := raw_ScreenToClient (hWnd, lpPoint);
   BEGIN
-    IF is_chicago THEN b := ORD (b # 0); END;
-    RETURN b;
+    RETURN ORD ((raw_ScreenToClient (hWnd, lpPoint)) # 0);
   END ScreenToClient;
 
-VAR
-  os_version : WinBase.OSVERSIONINFO;
-  is_chicago : BOOLEAN;
 BEGIN
-  os_version.dwOSVersionInfoSize := BYTESIZE (os_version);
-  VAR b := WinBase.GetVersionEx (ADR (os_version)); BEGIN <*ASSERT b # 0*> END;
-  is_chicago := (os_version.dwPlatformId = WinBase.VER_PLATFORM_WIN32_WINDOWS);
 
   RT_CURSOR := LOOPHOLE(1, ADDRESS);
   RT_BITMAP := LOOPHOLE(2, ADDRESS);
@@ -262,7 +247,9 @@ BEGIN
   IDC_SIZENS := LOOPHOLE(32645, ADDRESS);
   IDC_SIZEALL := LOOPHOLE(32646, ADDRESS); (* not in win3.1 *)
   IDC_NO := LOOPHOLE(32648, ADDRESS); (* not in win3.1 *)
+  IDC_HAND := LOOPHOLE(32649, ADDRESS);
   IDC_APPSTARTING := LOOPHOLE(32650, ADDRESS); (* not in win3.1 *)
+  IDC_HELP := LOOPHOLE(32651, ADDRESS);
 
   IDI_APPLICATION := LOOPHOLE(32512, ADDRESS);
   IDI_HAND := LOOPHOLE(32513, ADDRESS);
@@ -271,5 +258,22 @@ BEGIN
   IDI_ASTERISK := LOOPHOLE(32516, ADDRESS);
 
   WC_DIALOG := LOOPHOLE(16_8002, ADDRESS);
+
+  HBMMENU_CALLBACK := LOOPHOLE(-1, ADDRESS);
+  HBMMENU_SYSTEM := LOOPHOLE(1, ADDRESS);
+  HBMMENU_MBAR_RESTORE := LOOPHOLE(2, ADDRESS);
+  HBMMENU_MBAR_MINIMIZE := LOOPHOLE(3, ADDRESS);
+  HBMMENU_MBAR_CLOSE := LOOPHOLE(5, ADDRESS);
+  HBMMENU_MBAR_CLOSE_D := LOOPHOLE(6, ADDRESS);
+  HBMMENU_MBAR_MINIMIZE_D := LOOPHOLE(7, ADDRESS);
+  HBMMENU_POPUP_CLOSE := LOOPHOLE(8, ADDRESS);
+  HBMMENU_POPUP_RESTORE := LOOPHOLE(9, ADDRESS);
+  HBMMENU_POPUP_MAXIMIZE := LOOPHOLE(10, ADDRESS);
+  HBMMENU_POPUP_MINIMIZE := LOOPHOLE(11, ADDRESS);
+
+  IDI_WINLOGO := LOOPHOLE(32517, ADDRESS);
+  IDI_WARNING := IDI_EXCLAMATION;
+  IDI_ERROR := IDI_HAND;
+  IDI_INFORMATION := IDI_ASTERISK;
 
 END WinUser.

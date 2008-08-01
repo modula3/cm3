@@ -47,7 +47,6 @@ CONST
   R2_LAST        = 16;
 
 (* Ternary raster operations *)
-CONST
   SRCCOPY    : UINT32 = 16_00CC0020; (* dest = source *)
   SRCPAINT   : UINT32 = 16_00EE0086; (* dest = source OR dest *)
   SRCAND     : UINT32 = 16_008800C6; (* dest = source AND dest *)
@@ -63,11 +62,12 @@ CONST
   DSTINVERT  : UINT32 = 16_00550009; (* dest = (NOT dest) *)
   BLACKNESS  : UINT32 = 16_00000042; (* dest = BLACK *)
   WHITENESS  : UINT32 = 16_00FF0062; (* dest = WHITE *)
+  NOMIRRORBITMAP = 16_80000000; (* Do not Mirror the bitmap in this call *)
+  CAPTUREBLT = 16_40000000; (* Include layered windows *)
 
-CONST GDI_ERROR: INT32 = 16_FFFFFFFF;
+  GDI_ERROR: INT32 = 16_FFFFFFFF;
 
 (* Region Flags *)
-CONST
   ERROR         = 0;
   NULLREGION    = 1;
   SIMPLEREGION  = 2;
@@ -75,7 +75,6 @@ CONST
   RGN_ERROR     = ERROR;
 
 (* CombineRgn() Styles *)
-CONST
   RGN_AND  = 1;
   RGN_OR   = 2;
   RGN_XOR  = 3;
@@ -85,21 +84,30 @@ CONST
   RGN_MAX  = RGN_COPY;
 
 (* StretchBlt() Modes *)
-CONST
   BLACKONWHITE      = 1;
   WHITEONBLACK      = 2;
   COLORONCOLOR      = 3;
   HALFTONE          = 4;
   MAXSTRETCHBLTMODE = 4;
+  STRETCH_ANDSCANS = BLACKONWHITE;
+  STRETCH_ORSCANS = WHITEONBLACK;
+  STRETCH_DELETESCANS = COLORONCOLOR;
+  STRETCH_HALFTONE = HALFTONE;
+
+(* Layout Orientation Options *)
+
+  LAYOUT_RTL = 16_00000001; (* Right to left *)
+  LAYOUT_BTT = 16_00000002; (* Bottom to top *)
+  LAYOUT_VBH = 16_00000004; (* Vertical before horizontal *)
+  LAYOUT_ORIENTATIONMASK = (LAYOUT_RTL + LAYOUT_BTT + LAYOUT_VBH);
+  LAYOUT_BITMAPORIENTATIONPRESERVED = 16_00000008;
 
 (* PolyFill() Modes *)
-CONST
   ALTERNATE     = 1;
   WINDING       = 2;
   POLYFILL_LAST = 2;
 
 (* Text Alignment Options *)
-CONST
   TA_NOUPDATECP = 0;
   TA_UPDATECP   = 1;
 
@@ -110,6 +118,7 @@ CONST
   TA_TOP      = 0;
   TA_BOTTOM   = 8;
   TA_BASELINE = 24;
+  TA_RTLREADING = 256;
   TA_MASK     = (TA_BASELINE + TA_CENTER + TA_UPDATECP);
 
   VTA_BASELINE = TA_BASELINE;
@@ -122,11 +131,16 @@ CONST
   ETO_GRAYED  = 1;
   ETO_OPAQUE  = 2;
   ETO_CLIPPED = 4;
+  ETO_GLYPH_INDEX = 16_0010;
+  ETO_RTLREADING = 16_0080;
+  ETO_NUMERICSLOCAL = 16_0400;
+  ETO_NUMERICSLATIN = 16_0800;
+  ETO_IGNORELANGUAGE = 16_1000;
+  ETO_PDY = 16_2000;
 
   ASPECT_FILTERING = 16_0001;
 
 (* Bounds Accumulation APIs *)
-CONST
   DCB_RESET      = 16_0001;
   DCB_ACCUMULATE = 16_0002;
   DCB_DIRTY      = DCB_ACCUMULATE;
@@ -135,7 +149,6 @@ CONST
   DCB_DISABLE    = 16_0008;
 
 (* Metafile Functions *)
-CONST
   META_SETBKCOLOR           = 16_0201;
   META_SETBKMODE            = 16_0102;
   META_SETMAPMODE           = 16_0103;
@@ -182,7 +195,7 @@ CONST
   META_SELECTCLIPREGION     = 16_012C;
   META_SELECTOBJECT         = 16_012D;
   META_SETTEXTALIGN         = 16_012E;
-  META_DRAWTEXT             = 16_062F;
+  (* META_DRAWTEXT          = 16_062F; *) (* not in headers *)
 
   META_CHORD          = 16_0830;
   META_SETMAPPERFLAGS = 16_0231;
@@ -201,6 +214,7 @@ CONST
   META_STRETCHDIB            = 16_0f43;
 
   META_EXTFLOODFILL = 16_0548;
+  META_SETLAYOUT = 16_0149;
 
   (* #define META_RESETDC 16_014C *)
   (* #define META_STARTDOC 16_014D *)
@@ -221,8 +235,8 @@ CONST
   (* #define META_CREATEBITMAP 16_06FE *)
   META_CREATEREGION = 16_06FF;
 
+
 (* GDI Escapes *)
-CONST
   NEWFRAME           = 1;
   ABORTDOC           = 2;
   NEXTBAND           = 3;
@@ -292,9 +306,19 @@ CONST
   SET_CLIP_BOX         = 4108;
   SET_BOUNDS           = 4109;
   SET_MIRROR_MODE      = 4110;
+  OPENCHANNEL = 4110;
+  DOWNLOADHEADER = 4111;
+  CLOSECHANNEL = 4112;
+  POSTSCRIPT_PASSTHROUGH = 4115;
+  ENCAPSULATED_POSTSCRIPT = 4116;
+  POSTSCRIPT_IDENTIFY = 4117; (* new escape for NT5 pscript driver *)
+  POSTSCRIPT_INJECTION = 4118; (* new escape for NT5 pscript driver *)
+  CHECKJPEGFORMAT = 4119;
+  CHECKPNGFORMAT = 4120;
+  GET_PS_FEATURESETTING = 4121; (* new escape for NT5 pscript driver *)
+  SPCLPASSTHROUGH2 = 4568; (* new escape for NT5 pscript driver *)
 
 (* Spooler Error Codes *)
-CONST
   SP_NOTREPORTED = 16_4000;
   SP_ERROR       = (-1);
   SP_APPABORT    = (-2);
@@ -305,7 +329,6 @@ CONST
   PR_JOBSTATUS = 16_0000;
 
 (* Object Definitions for EnumObjects() *)
-CONST
   OBJ_PEN         = 1;
   OBJ_BRUSH       = 2;
   OBJ_DC          = 3;
@@ -319,9 +342,9 @@ CONST
   OBJ_EXTPEN      = 11;
   OBJ_ENHMETADC   = 12;
   OBJ_ENHMETAFILE = 13;
+  OBJ_COLORSPACE = 14;
 
 (* xform stuff *)
-CONST
   MWT_IDENTITY      = 1;
   MWT_LEFTMULTIPLY  = 2;
   MWT_RIGHTMULTIPLY = 3;
@@ -1053,7 +1076,6 @@ CONST
 (* the complete set of font attribute distances *)
 
 (* Allowed values for FMATCH::wType *)
-CONST
   FMATCH_EXACT = 0;
   FMATCH_NEAR  = 1;
   FMATCH_FAR   = 2;
@@ -1200,20 +1222,17 @@ CONST
   BKMODE_LAST = 2;
 
 (* Graphics Modes *)
-CONST
   GM_COMPATIBLE = 1;
   GM_ADVANCED = 2;
   GM_LAST = 2;
 
 (* PolyDraw and GetPath point types *)
-CONST
   PT_CLOSEFIGURE = 16_01;
   PT_LINETO      = 16_02;
   PT_BEZIERTO    = 16_04;
   PT_MOVETO      = 16_06;
 
 (* Mapping Modes *)
-CONST
   MM_TEXT        = 1;
   MM_LOMETRIC    = 2;
   MM_HIMETRIC    = 3;
@@ -1224,18 +1243,15 @@ CONST
   MM_ANISOTROPIC = 8;
 
 (* Min and Max Mapping Mode values *)
-CONST
   MM_MIN            = MM_TEXT;
   MM_MAX            = MM_ANISOTROPIC;
   MM_MAX_FIXEDSCALE = MM_TWIPS;
 
 (* Coordinate Modes *)
-CONST
   ABSOLUTE = 1;
   RELATIVE = 2;
 
 (* Stock Logical Objects *)
-CONST
   WHITE_BRUSH         = 0;
   LTGRAY_BRUSH        = 1;
   GRAY_BRUSH          = 2;
@@ -1253,12 +1269,12 @@ CONST
   DEVICE_DEFAULT_FONT = 14;
   DEFAULT_PALETTE     = 15;
   SYSTEM_FIXED_FONT   = 16;
-  STOCK_LAST          = 16;
+  DEFAULT_GUI_FONT = 17;
+  (* STOCK_LAST = 16; *) (* this varies *)
 
   CLR_INVALID = 16_FFFFFFFF;
 
 (* Brush Styles *)
-CONST
   BS_SOLID        = 0;
   BS_NULL         = 1;
   BS_HOLLOW       = BS_NULL;
@@ -1267,15 +1283,18 @@ CONST
   BS_INDEXED      = 4;
   BS_DIBPATTERN   = 5;
   BS_DIBPATTERNPT = 6;
+  BS_PATTERN8X8 = 7;
+  BS_DIBPATTERN8X8 = 8;
+  BS_MONOPATTERN = 9;
 
 (* Hatch Styles *)
-CONST
   HS_HORIZONTAL = 0 (* ----- *);
   HS_VERTICAL   = 1 (* ||||| *);
   HS_FDIAGONAL  = 2 (* \\\\\ *);
   HS_BDIAGONAL  = 3 (* ///// *);
   HS_CROSS      = 4 (* +++++ *);
   HS_DIAGCROSS  = 5 (* xxxxx *);
+  (* None of these are in current headers.
   HS_FDIAGONAL1 = 6;
   HS_BDIAGONAL1 = 7;
   HS_SOLID      = 8;
@@ -1290,9 +1309,9 @@ CONST
   HS_NOSHADE    = 17;
   HS_HALFTONE   = 18;
   HS_API_MAX    = 19;
+  *)
 
 (* Pen Styles *)
-CONST
   PS_SOLID       = 0;
   PS_DASH        = 1 (* ------- *);
   PS_DOT         = 2 (* ....... *);
@@ -1304,7 +1323,6 @@ CONST
   PS_ALTERNATE   = 8;
   PS_STYLE_MASK  = 16_0000000F;
 
-CONST
   PS_ENDCAP_ROUND  = 16_00000000;
   PS_ENDCAP_SQUARE = 16_00000100;
   PS_ENDCAP_FLAT   = 16_00000200;
@@ -1323,7 +1341,6 @@ CONST
   AD_CLOCKWISE        = 2;
 
 (* Device Parameters for GetDeviceCaps() *)
-CONST
   DRIVERVERSION = 0 (* Device driver version *);
   TECHNOLOGY    = 2 (* Device classification *);
   HORZSIZE      = 4 (* Horizontal size in millimeters *);
@@ -1356,7 +1373,6 @@ CONST
   COLORRES    = 108 (* Actual color resolution *);
 
 (* Printing related DeviceCaps.  These replace the appropriate Escapes *)
-CONST
   PHYSICALWIDTH   = 110 (* Physical Width in device units *);
   PHYSICALHEIGHT  = 111 (* Physical Height in device units *);
   PHYSICALOFFSETX = 112 (* Physical Printable Area x margin *);
@@ -1367,7 +1383,6 @@ CONST
 (* Device Capability Masks: *)
 
 (* Device Technologies *)
-CONST
   DT_PLOTTER    = 0 (* Vector plotter *);
   DT_RASDISPLAY = 1 (* Raster display *);
   DT_RASPRINTER = 2 (* Raster printer *);
@@ -1377,7 +1392,6 @@ CONST
   DT_DISPFILE   = 6 (* Display-file *);
 
 (* Curve Capabilities *)
-CONST
   CC_NONE       = 0 (* Curves not supported *);
   CC_CIRCLES    = 1 (* Can do circles *);
   CC_PIE        = 2 (* Can do pie wedges *);
@@ -1390,7 +1404,6 @@ CONST
   CC_ROUNDRECT  = 256 (* *);
 
 (* Line Capabilities *)
-CONST
   LC_NONE       = 0 (* Lines not supported *);
   LC_POLYLINE   = 2 (* Can do polylines *);
   LC_MARKER     = 4 (* Can do markers *);
@@ -1401,7 +1414,6 @@ CONST
   LC_INTERIORS  = 128 (* Can do interiors *);
 
 (* Polygonal Capabilities *)
-CONST
   PC_NONE        = 0 (* Polygonals not supported *);
   PC_POLYGON     = 1 (* Can do polygons *);
   PC_RECTANGLE   = 2 (* Can do rectangles *);
@@ -1414,13 +1426,11 @@ CONST
   PC_INTERIORS   = 128 (* Can do interiors *);
 
 (* Polygonal Capabilities *)
-CONST
   CP_NONE      = 0 (* No clipping of output *);
   CP_RECTANGLE = 1 (* Output clipped to rects *);
   CP_REGION    = 2 (* *);
 
 (* Text Capabilities *)
-CONST
   TC_OP_CHARACTER = 16_00000001 (* Can do OutputPrecision CHARACTER *);
   TC_OP_STROKE    = 16_00000002 (* Can do OutputPrecision STROKE *);
   TC_CP_STROKE    = 16_00000004 (* Can do ClipPrecision STROKE *);
@@ -1440,7 +1450,6 @@ CONST
   TC_SCROLLBLT    = 16_00010000 (* do text scroll with blt *);
 
 (* Raster Capabilities *)
-CONST
   RC_BITBLT       = 1 (* Can do standard BLT. *);
   RC_BANDING      = 2 (* Device requires banding support *);
   RC_SCALING      = 4 (* Device requires scaling support *);
@@ -1459,7 +1468,6 @@ CONST
   RC_DEVBITS      = 16_8000;
 
 (* DIB color table identifiers *)
-CONST
   DIB_RGB_COLORS      = 0 (* color table in RGBs *);
   DIB_PAL_COLORS      = 1 (* color table in palette indices *);
   DIB_PAL_INDICES     = 2 (* No color table indices into surf palette *);
@@ -1467,23 +1475,20 @@ CONST
   DIB_PAL_LOGINDICES  = 4 (* No color table indices into DC palette *);
 
 (* constants for Get/SetSystemPaletteUse() *)
-CONST
   SYSPAL_ERROR    = 0;
   SYSPAL_STATIC   = 1;
   SYSPAL_NOSTATIC = 2;
 
 (* constants for CreateDIBitmap *)
-CONST
   CBM_CREATEDIB: INT32 = 16_02 (* create DIB bitmap *);
   CBM_INIT     : INT32 = 16_04 (* initialize bitmap *);
 
 (* ExtFloodFill style flags *)
-CONST
   FLOODFILLBORDER  = 0;
   FLOODFILLSURFACE = 1;
 
 (* DEVMODE dmDisplayMode flags *)
-CONST DM_GRAYSCALE = 1;
+  DM_GRAYSCALE = 1;
 
 TYPE
   PDEVMODEA = UNTRACED REF DEVMODEA;
