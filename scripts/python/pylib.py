@@ -221,7 +221,7 @@ CM3 = SearchPath(CM3)
 InstallRoot = getenv("CM3_INSTALL")
 
 if not CM3 and not InstallRoot:
-    for a in ["c:\\cm3\\bin\\cm3.exe", "/cm3/bin/cm3", "/usr/local/bin/cm3"]:
+    for a in ["c:\\cm3\\bin\\cm3.exe", "d:\\cm3\\bin\\cm3.exe", "/cm3/bin/cm3", "/usr/local/bin/cm3"]:
         if os.path.isfile(a):
             CM3 = a
             bin = os.path.dirname(CM3)
@@ -629,6 +629,7 @@ def IsCygwinBinary(a):
     if not os.path.isfile(a):
         FatalError(a + " does not exist")
     a = a.replace("/cygdrive/c/", "c:\\")
+    a = a.replace("/cygdrive/d/", "d:\\")
     a = a.replace("/", "\\")
     #print("a is " + a)
     return (os.system("findstr 2>&1 >nul /m cygwin1.dll \"" + a + "\"") == 0)
