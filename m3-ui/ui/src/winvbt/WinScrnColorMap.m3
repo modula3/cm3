@@ -8,7 +8,7 @@
 
 UNSAFE MODULE WinScrnColorMap;
 
-IMPORT Ctypes, Math, ScrnColorMap, WinDef, WinGDI, WinUser;
+IMPORT Math, ScrnColorMap, WinDef, WinGDI, WinUser;
 
 CONST
   Gamma        = 1.1D0;
