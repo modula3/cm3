@@ -9,7 +9,6 @@
 
 UNSAFE MODULE WinGDI;
 
-IMPORT WinBase;
 FROM Word IMPORT Shift, Or, Extract;
 FROM WinDef IMPORT UINT8, COLORREF, UINT16, HRGN, BOOL, INT32;
 
@@ -46,18 +45,10 @@ PROCEDURE GetBValue (rgb: COLORREF): UINT8 =
 (* hack to patch the buggy return values on Chicago *)
 
 PROCEDURE SetRectRgn (a1: HRGN; a2: INT32; a3: INT32; a4: INT32; a5: INT32): BOOL =
-  VAR b := raw_SetRectRgn (a1, a2, a3, a4, a5);
   BEGIN
-    IF is_chicago THEN b := ORD (b # 0); END;
-    RETURN b;
+    RETURN ORD ((raw_SetRectRgn (a1, a2, a3, a4, a5)) # 0);
   END SetRectRgn;
 
-VAR
-  os_version : WinBase.OSVERSIONINFO;
-  is_chicago : BOOLEAN;
 BEGIN
-  os_version.dwOSVersionInfoSize := BYTESIZE (os_version);
-  VAR b := WinBase.GetVersionEx (ADR (os_version)); BEGIN <*ASSERT b # 0*> END;
-  is_chicago := (os_version.dwPlatformId = WinBase.VER_PLATFORM_WIN32_WINDOWS);
 END WinGDI.
 
