@@ -153,7 +153,8 @@ CONST
   SW_SHOWNA          = 8;
   SW_RESTORE         = 9;
   SW_SHOWDEFAULT     = 10;
-  SW_MAX             = 10;
+  SW_FORCEMINIMIZE   = 11;
+  (* SW_MAX          = 10; *) (* varied *)
 
 (* Old ShowWindow() Commands *)
   HIDE_WINDOW         = 0;
@@ -168,6 +169,17 @@ CONST
   SW_PARENTOPENING = 3;
   SW_OTHERUNZOOM   = 4;
 
+(* AnimateWindow() Commands *)
+  AW_HOR_POSITIVE = 16_00000001;
+  AW_HOR_NEGATIVE = 16_00000002;
+  AW_VER_POSITIVE = 16_00000004;
+  AW_VER_NEGATIVE = 16_00000008;
+  AW_CENTER = 16_00000010;
+  AW_HIDE = 16_00010000;
+  AW_ACTIVATE = 16_00020000;
+  AW_SLIDE = 16_00040000;
+  AW_BLEND = 16_00080000;
+
 (* WM_KEYUP/DOWN/CHAR HIWORD(lParam) flags *)
   KF_EXTENDED = 16_0100;
   KF_DLGMODE  = 16_0800;
@@ -180,7 +192,10 @@ CONST
   VK_LBUTTON = 16_01;
   VK_RBUTTON = 16_02;
   VK_CANCEL  = 16_03;
-  VK_MBUTTON = 16_04;           (* NOT contiguous with L & RBUTTON *)
+  VK_MBUTTON = 16_04; (* NOT contiguous with L & RBUTTON *)
+
+  VK_XBUTTON1 = 16_05; (* NOT contiguous with L & RBUTTON *)
+  VK_XBUTTON2 = 16_06; (* NOT contiguous with L & RBUTTON *)
 
   VK_BACK = 16_08;
   VK_TAB  = 16_09;
@@ -216,6 +231,10 @@ CONST
   VK_LWIN = 16_5B;
   VK_RWIN = 16_5C;
   VK_APPS = 16_5D;
+
+  (* 0x5E : reserved *)
+
+  VK_SLEEP = 16_5F;
 
   (* VK_0 thru VK_9 are the same as ASCII '0' thru '9' (16_30 - 16_39) *)
   (* VK_A thru VK_Z are the same as ASCII 'A' thru 'Z' (16_41 - 16_5A) *)
@@ -261,11 +280,26 @@ CONST
   VK_F23       = 16_86;
   VK_F24       = 16_87;
 
+  (* 0x88 - 0x8F : unassigned *)
+
   VK_NUMLOCK = 16_90;
   VK_SCROLL  = 16_91;
 
-  (*
-   * VK_L* & VK_R* - left and right Alt, Ctrl and Shift virtual keys.
+  (* NEC PC-9800 kbd definitions *)
+
+  VK_OEM_NEC_EQUAL = 16_92; (* '=' key on numpad *)
+
+  (* Fujitsu/OASYS kbd definitions *)
+
+  VK_OEM_FJ_JISHO = 16_92; (* 'Dictionary' key *)
+  VK_OEM_FJ_MASSHOU = 16_93; (* 'Unregister word' key *)
+  VK_OEM_FJ_TOUROKU = 16_94; (* 'Register word' key *)
+  VK_OEM_FJ_LOYA = 16_95; (* 'Left OYAYUBI' key *)
+  VK_OEM_FJ_ROYA = 16_96; (* 'Right OYAYUBI' key *)
+
+  (* 0x97 - 0x9F : unassigned *)
+
+  (* VK_L* & VK_R* - left and right Alt, Ctrl and Shift virtual keys.
    * Used only as parameters to GetAsyncKeyState() and GetKeyState().
    * No other API or message will distinguish left and right keys in this way.
    *)
@@ -275,7 +309,77 @@ CONST
   VK_RCONTROL = 16_A3;
   VK_LMENU    = 16_A4;
   VK_RMENU    = 16_A5;
+
+  VK_BROWSER_BACK = 16_A6;
+  VK_BROWSER_FORWARD = 16_A7;
+  VK_BROWSER_REFRESH = 16_A8;
+  VK_BROWSER_STOP = 16_A9;
+  VK_BROWSER_SEARCH = 16_AA;
+  VK_BROWSER_FAVORITES = 16_AB;
+  VK_BROWSER_HOME = 16_AC;
+
+  VK_VOLUME_MUTE = 16_AD;
+  VK_VOLUME_DOWN = 16_AE;
+  VK_VOLUME_UP = 16_AF;
+  VK_MEDIA_NEXT_TRACK = 16_B0;
+  VK_MEDIA_PREV_TRACK = 16_B1;
+  VK_MEDIA_STOP = 16_B2;
+  VK_MEDIA_PLAY_PAUSE = 16_B3;
+  VK_LAUNCH_MAIL = 16_B4;
+  VK_LAUNCH_MEDIA_SELECT = 16_B5;
+  VK_LAUNCH_APP1 = 16_B6;
+  VK_LAUNCH_APP2 = 16_B7;
+
+  (* 0xB8 - 0xB9 : reserved *)
+
+  VK_OEM_1 = 16_BA; (* ';:' for US *)
+  VK_OEM_PLUS = 16_BB;  (* '+' any country *)
+  VK_OEM_COMMA = 16_BC;  (* ',' any country *)
+  VK_OEM_MINUS = 16_BD; (* '-' any country *)
+  VK_OEM_PERIOD = 16_BE;   (* '.' any country *)
+  VK_OEM_2 = 16_BF;  (* '/?' for US *)
+  VK_OEM_3 = 16_C0;  (* '`~' for US *)
+
+  (* 0xC1 - 0xD7 : reserved *)
+
+  (* 0xD8 - 0xDA : unassigned *)
+
+  VK_OEM_4 = 16_DB; (*  '[{' for US *)
+  VK_OEM_5 = 16_DC; (*  '\|' for US *)
+  VK_OEM_6 = 16_DD; (*  ']}' for US *)
+  VK_OEM_7 = 16_DE; (*  ''"' for US *)
+  VK_OEM_8 = 16_DF;
+
+  (* 0xE0 : reserved  *)
+
+  (* Various extended or enhanced keyboards  *)
+
+  VK_OEM_AX = 16_E1; (*  'AX' key on Japanese AX kbd *)
+  VK_OEM_102 = 16_E2; (*  "<>" or "\|" on RT 102-key kbd. *)
+  VK_ICO_HELP = 16_E3; (*  Help key on ICO *)
+  VK_ICO_00 = 16_E4; (*  00 key on ICO *)
   VK_PROCESSKEY = 16_E5;
+  VK_ICO_CLEAR = 16_E6;
+  VK_PACKET = 16_E7;
+
+  (* 0xE8 : unassigned *)
+
+  (* Nokia/Ericsson definitions *)
+
+  VK_OEM_RESET = 16_E9;
+  VK_OEM_JUMP = 16_EA;
+  VK_OEM_PA1 = 16_EB;
+  VK_OEM_PA2 = 16_EC;
+  VK_OEM_PA3 = 16_ED;
+  VK_OEM_WSCTRL = 16_EE;
+  VK_OEM_CUSEL = 16_EF;
+  VK_OEM_ATTN = 16_F0;
+  VK_OEM_FINISH = 16_F1;
+  VK_OEM_COPY = 16_F2;
+  VK_OEM_AUTO = 16_F3;
+  VK_OEM_ENLW = 16_F4;
+  VK_OEM_BACKTAB = 16_F5;
+
   VK_ATTN      = 16_F6;
   VK_CRSEL     = 16_F7;
   VK_EXSEL     = 16_F8;
@@ -285,6 +389,8 @@ CONST
   VK_NONAME    = 16_FC;
   VK_PA1       = 16_FD;
   VK_OEM_CLEAR = 16_FE;
+
+  (* 0xFF : reserved *)
 
 (* SetWindowsHook() codes *)
   WH_MIN             = (-1);
@@ -386,6 +492,16 @@ CONST
   HSHELL_REDRAW = 6;
   HSHELL_TASKMAN = 7;
   HSHELL_LANGUAGE = 8;
+  HSHELL_SYSMENU = 9;
+  HSHELL_ENDTASK = 10;
+  HSHELL_ACCESSIBILITYSTATE = 11;
+  HSHELL_APPCOMMAND = 12;
+  HSHELL_WINDOWREPLACED = 13;
+  HSHELL_WINDOWREPLACING = 14;
+  HSHELL_HIGHBIT = 16_8000;
+
+  HSHELL_FLASH =  (HSHELL_REDRAW + HSHELL_HIGHBIT);
+  HSHELL_RUDEAPPACTIVATED = (HSHELL_WINDOWACTIVATED + HSHELL_HIGHBIT);
 
 (* Window Manager Hook Codes *)
   WC_INIT          = 1;
