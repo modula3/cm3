@@ -221,7 +221,7 @@ CM3 = SearchPath(CM3)
 InstallRoot = getenv("CM3_INSTALL")
 
 if not CM3 and not InstallRoot:
-    for a in ["c:\\cm3\\bin\\cm3.exe", "/usr/local/bin/cm3"]:
+    for a in ["c:\\cm3\\bin\\cm3.exe", "/cm3/bin/cm3", "/usr/local/bin/cm3"]:
         if os.path.isfile(a):
             CM3 = a
             bin = os.path.dirname(CM3)
@@ -2025,7 +2025,6 @@ def CopyCompiler(From, To):
     return True
 
 #-----------------------------------------------------------------------------
-
 #
 # Need to figure out how to do this properly, if at all.
 #
@@ -2035,6 +2034,7 @@ def CopyCompiler(From, To):
 # see scripts\win\sysinfo.cmd. Some of these are set always by those installers.
 # (Though I delete them. :) )
 #
+
 def SetupEnvironment():
     SystemDrive = os.environ.get("SystemDrive", "")
     if os.environ.get("OS") == "Windows_NT":
