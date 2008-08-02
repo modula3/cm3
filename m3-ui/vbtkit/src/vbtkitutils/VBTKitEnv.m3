@@ -27,6 +27,7 @@ BEGIN
       IF Text.Equal (s, "ivy") THEN TextPortModel := "ivy"
       ELSIF Text.Equal (s, "mac") THEN TextPortModel := "mac"
       ELSIF Text.Equal (s, "xterm") THEN TextPortModel := "xterm"
+      ELSIF Text.Equal (s, "emacs") THEN TextPortModel := "emacs"
       END
     END
   END;
