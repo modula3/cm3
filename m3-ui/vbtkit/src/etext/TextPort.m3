@@ -775,13 +775,36 @@ PROCEDURE Filter (v: T; cd: VBT.KeyRec) =
         BEGIN
           (* Treat an empty interval as if it were not replace-mode *)
           IF v.isReplaceMode () AND interval.left () # interval.right () THEN
-            m.putSelectedText ("")
+            (* m.putSelectedText ("") *)
+            EVAL v.unsafeReplace (interval.left(), interval.right(), "");
+            WITH rec = m.selection [Primary] DO
+              rec.replaceMode := FALSE;
+              rec.anchor.l := m.v.index();
+              rec.anchor.r := m.v.index();
+              rec.cursor := m.v.index();
+            END;
+            m.dragging := FALSE;
           ELSE
             EVAL TextPortClass.DeletePrevChar (v)
           END
         END
       ELSIF ch IN ISOChar.Graphics THEN
-        v.insert (Text.FromChar (ch))
+        IF v.isReplaceMode() THEN
+          VAR interval := v.m.selection [Primary].interval;
+          BEGIN
+            EVAL v.unsafeReplace (interval.left(), interval.right(),
+                                  Text.FromChar (ch));
+            WITH rec = m.selection [Primary] DO
+              rec.replaceMode := FALSE;
+              rec.anchor.l := m.v.index();
+              rec.anchor.r := m.v.index();
+              rec.cursor := m.v.index();
+            END;
+            m.dragging := FALSE;
+          END
+        ELSE
+          v.insert (Text.FromChar (ch))
+        END
       ELSE
         (* including NullKey, for untranslatable keys *)
         RETURN

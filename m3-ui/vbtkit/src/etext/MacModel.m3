@@ -396,7 +396,14 @@ PROCEDURE ArrowKey (m: T; READONLY cd: VBT.KeyRec) =
   BEGIN
     IF NOT VBT.Modifier.Shift IN cd.modifiers THEN
       CancelHighlight (m);
-      TextPortClass.Model.arrowKey (m, cd)
+      TextPortClass.Model.arrowKey (m, cd);
+      WITH rec = m.selection [Primary] DO
+        rec.anchor.l := m.v.index();
+        rec.anchor.r := m.v.index();
+        rec.cursor := m.v.index();
+        rec.replaceMode := FALSE;
+        m.dragging := FALSE;
+      END;
     ELSE
       CONST name = "Arrow Key";
       TYPE End = {Left, Right};
@@ -431,6 +438,7 @@ PROCEDURE ArrowKey (m: T; READONLY cd: VBT.KeyRec) =
           WITH ext = m.getSelection (Primary) DO
             oldr := extentToIRange (ext, VAL (ORD (here = ext.r), End))
           END;
+          m.selection [Primary].replaceMode := TRUE;
           IF VBT.Modifier.Option IN cd.modifiers THEN
             m.selection [Primary].mode := VText.SelectionMode.WordSelection;
             CASE ch OF
