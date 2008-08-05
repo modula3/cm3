@@ -412,6 +412,14 @@ foreach dir in ["gcc", "libcpp", "libdecnumber", "mpfr", "mpfr/tests"]
     local file = dir & "/" & file
     if exists (file)
       %
+      % remove libiconv dependency
+      % It isn't needed, and stock Solaris install lacks it.
+      %
+      Sed (file, "^LIBICONV =.+$", "LIBICONV =")
+      Sed (file, "^LIBICONV_DEP =.+$", "LIBICONV_DEP =")
+      Sed (file, "^#define HAVE_ICONV 1$", "")
+      Sed (file, "^#define HAVE_ICONV_H 1$", "")
+      %
       % Configure is for some reason unable to find Cygwin /usr/bin/libtool.
       %
       if HostIsNT ()
