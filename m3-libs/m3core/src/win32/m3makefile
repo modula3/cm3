@@ -9,10 +9,10 @@
 Interface  ("WinBaseTypes")
 Module     ("WinDef")
 Module     ("WinNT")
+c_source   ("WinNTc")
 
 if equal (TARGET, "NT386")
 
-c_source   ("WinNTc")
 Interface  ("WinError")
 Interface  ("WinBase")
 Interface  ("WinCon")
