@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.40 2008-05-30 11:55:13 jkrell Exp $
+% $Id: NT386.common,v 1.41 2008-08-08 13:14:39 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -844,7 +844,7 @@ is
                  options,
                  objects,
                  subst_chars(imported_libs, "/", "\\"),
-                 UseHand,
+                 subst_chars(UseHand, "/", "\\"),
             ]),
         "2>&1",
         ">", listing
@@ -1204,7 +1204,7 @@ is
                 options,
                 objects,
                 subst_chars(imported_libs, "/", "\\"),
-                UseHand,
+                subst_chars(UseHand, "/", "\\"),
             ]),
         "2>&1",
         ">", listing
