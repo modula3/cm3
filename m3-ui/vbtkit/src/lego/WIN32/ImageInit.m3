@@ -1,5 +1,5 @@
 MODULE ImageInit;
-IMPORT WinNT, WinBase, WinGDI, WinUser;
+IMPORT WinNT, WinGDI, WinUser;
 
 (*
 Historically Image.Raw.xres and Image.Raw.yres were both always 75.0.
