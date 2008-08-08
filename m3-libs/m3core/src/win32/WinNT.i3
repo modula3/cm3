@@ -258,7 +258,7 @@ CONST
   MAXIMUM_SUSPEND_COUNT = MAXCHAR; (* Maximum times thread can be suspended *)
 
 TYPE
-KSPIN_LOCK = UINT32;  
+KSPIN_LOCK = SIZE_T;
 
 CONST
   EXCEPTION_NONCONTINUABLE = 16_1; (* Noncontinuable exception *)
