@@ -4,20 +4,16 @@
 %
 % Last modified on Wed Nov  9 15:14:29 PST 1994 by kalsow  
 
-% $Id: m3makefile,v 1.5 2008-02-17 09:38:31 jkrell Exp $
-
-if not equal (TARGET, "NT386")
+% $Id: m3makefile,v 1.6 2008-08-08 13:29:48 jkrell Exp $
 
 Interface  ("WinBaseTypes")
 Module     ("WinDef")
 Module     ("WinNT")
 
-else
+if equal (TARGET, "NT386")
 
-Interface  ("WinBaseTypes")
-Module     ("WinDef")
+c_source   ("WinNTc")
 Interface  ("WinError")
-Module     ("WinNT")
 Interface  ("WinBase")
 Interface  ("WinCon")
 Module     ("WinGDI")
