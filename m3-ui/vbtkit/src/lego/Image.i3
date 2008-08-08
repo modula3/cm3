@@ -37,11 +37,28 @@ TYPE
   Mode = {Stable, Normal, Accurate};
   RGB = RECORD r, g, b: REAL END;
 
+PROCEDURE GetXRes(self: Raw) : REAL;
+PROCEDURE GetYRes(self: Raw) : REAL;
+PROCEDURE SetXRes(self: Raw; a: REAL);
+PROCEDURE SetYRes(self: Raw; a: REAL);
+
 TYPE
   Raw = OBJECT
-      width, height: INTEGER;
-      xres, yres: REAL := 75.0; (* in pixels per inch *)
+      height: INTEGER;
+      width: INTEGER;
+      private : RECORD
+        valid : RECORD
+          xres := FALSE;
+          yres := FALSE;
+        END;
+        xres: REAL; (* in pixels per inch *)
+        yres: REAL; (* in pixels per inch *)
+      END;
     METHODS
+      getXRes () : REAL := GetXRes;
+      getYRes () : REAL := GetYRes;
+      setXRes (a: REAL) := SetXRes;
+      setYRes (a: REAL) := SetYRes;
       get (h, v: INTEGER): Pixel;
       set (h, v: INTEGER; pixel: Pixel);
     END;
