@@ -6,18 +6,14 @@
 
 % $Id$
 
-if not equal (TARGET, "NT386")
-
 Interface  ("WinBaseTypes")
 Module     ("WinDef")
 Module     ("WinNT")
 
-else
+if equal (TARGET, "NT386")
 
-Interface  ("WinBaseTypes")
-Module     ("WinDef")
+c_source   ("WinNTc")
 Interface  ("WinError")
-Module     ("WinNT")
 Interface  ("WinBase")
 Interface  ("WinCon")
 Module     ("WinGDI")

@@ -30,6 +30,7 @@ TYPE
   INT64 = WinBaseTypes.INT64;
   SIZE_T = WinBaseTypes.SIZE_T;  (* same size as a pointer, unsigned *)
   SSIZE_T = WinBaseTypes.SSIZE_T;  (* same size as a pointer, signed *)
+  PSIZE_T = WinBaseTypes.PSIZE_T;
   PUINT8 = WinBaseTypes.PUINT8;
   PUINT16 = WinBaseTypes.PUINT16;
   PUINT32 = WinBaseTypes.PUINT32;

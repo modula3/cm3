@@ -21,7 +21,7 @@ INTERFACE WinUser;
 FROM Word IMPORT Or;
 FROM WinBaseTypes IMPORT INT16, BOOL, UINT16, UINT32, PUINT32, PUINT16,
   PVOID, UINT8, PUINT8, PINT32, INT32, WCHAR, HANDLE, PSTR, PWSTR, PTSTR,
-  PCSTR, PCTSTR, PCWSTR, SIZE_T;
+  PCSTR, PCTSTR, PCWSTR, SIZE_T, PSIZE_T, SSIZE_T;
 FROM WinDef IMPORT HWND, HDC, WPARAM, LPARAM, LRESULT, HINSTANCE, HMENU,
   POINT, HKL, HDESK, HWINSTA, HICON, HCURSOR, HBRUSH, RECT, ATOM, PHANDLE,
   HACCEL, HBITMAP, PRECT, HRGN, PPOINT, COLORREF, HHOOK;
@@ -42,7 +42,7 @@ TYPE
                                     a3: WPARAM; a4: LPARAM): LRESULT;
 
   DLGPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: UINT32;
-                                    a3: WPARAM; a4: LPARAM): BOOL;
+                                    a3: SIZE_T; a4: LPARAM): SSIZE_T;
 
   TIMERPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: SIZE_T; a3: UINT32; a4: UINT32);
 
@@ -52,7 +52,7 @@ TYPE
                                          a3: HANDLE): BOOL;
 
   PROPENUMPROCEX = <*CALLBACK*> PROCEDURE (a1: HWND; a2: PTSTR;
-                                           a3: HANDLE; a4: UINT32): BOOL;
+                                           a3: HANDLE; a4: SIZE_T): BOOL;
 
   WNDENUMPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: LPARAM): BOOL;
 
@@ -63,7 +63,7 @@ TYPE
                                               cch: INT32; code: INT32): INT32;
 
   SENDASYNCPROC = <*CALLBACK*> PROCEDURE (a1: HWND; a2: UINT32;
-                                          a3: UINT32; a4: LRESULT);
+                                          a3: SIZE_T; a4: LRESULT);
 
 (*!!!  #define MAKEINTRESOURCE(i) (PTSTR)((UINT32)((UINT16)(i))) *)
 
@@ -94,6 +94,17 @@ VAR                             (* CONST *)
   (* The value 15 is unused/obsolete *)
   RT_VERSION   : PTSTR;
   RT_DLGINCLUDE: PTSTR;
+  RT_PLUGPLAY  : PTSTR;
+  RT_VXD       : PTSTR;
+  RT_ANICURSOR : PTSTR;
+  RT_ANIICON   : PTSTR;
+  RT_HTML      : PTSTR;
+  RT_MANIFEST  : PTSTR;
+  CREATEPROCESS_MANIFEST_RESOURCE_ID : PTSTR;
+  ISOLATIONAWARE_MANIFEST_RESOURCE_ID : PTSTR;
+  ISOLATIONAWARE_NOSTATICIMPORT_MANIFEST_RESOURCE_ID : PTSTR;
+  MINIMUM_RESERVED_MANIFEST_RESOURCE_ID : PTSTR;
+  MAXIMUM_RESERVED_MANIFEST_RESOURCE_ID : PTSTR;
 
 TYPE
   wvsprintfA = <*WINAPI*> PROCEDURE (a1: PSTR; a2: PCSTR;
@@ -209,7 +220,20 @@ CONST
   VK_PAUSE   = 16_13;
   VK_CAPITAL = 16_14;
 
+  VK_KANA = 16_15;
+  VK_HANGEUL = 16_15; (* old name *)
+  VK_HANGUL =  16_15;
+  VK_JUNJA  =  16_17;
+  VK_FINAL  =  16_18;
+  VK_HANJA  =  16_19;
+  VK_KANJI  =  16_19;
+
   VK_ESCAPE = 16_1B;
+
+  VK_CONVERT = 16_1C;
+  VK_NONCONVERT = 16_1D;
+  VK_ACCEPT = 16_1E;
+  VK_MODECHANGE = 16_1F;
 
   VK_SPACE    = 16_20;
   VK_PRIOR    = 16_21;
@@ -454,8 +478,8 @@ TYPE
    *)
   LPCBT_CREATEWNDW = UNTRACED REF CBT_CREATEWNDW;
   CBT_CREATEWNDW = RECORD
-                     lpcs           : UNTRACED REF CREATESTRUCTW;
-                     hwndInsertAfter: HWND;
+    lpcs           : UNTRACED REF CREATESTRUCTW;
+    hwndInsertAfter: HWND;
   END;
 
   CBT_CREATEWND = CBT_CREATEWNDA;
@@ -466,12 +490,32 @@ TYPE
    *)
   LPCBTACTIVATESTRUCT = UNTRACED REF CBTACTIVATESTRUCT;
   CBTACTIVATESTRUCT = RECORD
-                        fMouse    : BOOL;
-                        hWndActive: HWND;
+    fMouse    : BOOL;
+    hWndActive: HWND;
   END;
 
-(* WH_MSGFILTER Filter Proc Codes *)
+  (*
+   * WTSSESSION_NOTIFICATION structure pointed to by lParam, for WM_WTSSESSION_CHANGE
+   *)
+  PWTSSESSION_NOTIFICATION = UNTRACED REF WTSSESSION_NOTIFICATION;
+  WTSSESSION_NOTIFICATION = RECORD
+    cbSize : UINT32;
+    dwSessionId : UINT32;
+  END;
+
 CONST
+(* codes passed in WPARAM for WM_WTSSESSION_CHANGE *)
+    WTS_CONSOLE_CONNECT = 1;
+    WTS_CONSOLE_DISCONNECT = 2;
+    WTS_REMOTE_CONNECT = 3;
+    WTS_REMOTE_DISCONNECT = 4;
+    WTS_SESSION_LOGON = 5;
+    WTS_SESSION_LOGOFF = 6;
+    WTS_SESSION_LOCK = 7;
+    WTS_SESSION_UNLOCK = 8;
+    WTS_SESSION_REMOTE_CONTROL = 9;
+
+(* WH_MSGFILTER Filter Proc Codes *)
   MSGF_DIALOGBOX  = 0;
   MSGF_MESSAGEBOX = 1;
   MSGF_MENU       = 2;
@@ -503,7 +547,85 @@ CONST
   HSHELL_FLASH =  (HSHELL_REDRAW + HSHELL_HIGHBIT);
   HSHELL_RUDEAPPACTIVATED = (HSHELL_WINDOWACTIVATED + HSHELL_HIGHBIT);
 
-(* Window Manager Hook Codes *)
+(* cmd for HSHELL_APPCOMMAND and WM_APPCOMMAND *)
+
+  APPCOMMAND_BROWSER_BACKWARD = 1;
+  APPCOMMAND_BROWSER_FORWARD = 2;
+  APPCOMMAND_BROWSER_REFRESH = 3;
+  APPCOMMAND_BROWSER_STOP = 4;
+  APPCOMMAND_BROWSER_SEARCH = 5;
+  APPCOMMAND_BROWSER_FAVORITES = 6;
+  APPCOMMAND_BROWSER_HOME = 7;
+  APPCOMMAND_VOLUME_MUTE = 8;
+  APPCOMMAND_VOLUME_DOWN = 9;
+  APPCOMMAND_VOLUME_UP = 10;
+  APPCOMMAND_MEDIA_NEXTTRACK = 11;
+  APPCOMMAND_MEDIA_PREVIOUSTRACK = 12;
+  APPCOMMAND_MEDIA_STOP = 13;
+  APPCOMMAND_MEDIA_PLAY_PAUSE = 14;
+  APPCOMMAND_LAUNCH_MAIL = 15;
+  APPCOMMAND_LAUNCH_MEDIA_SELECT = 16;
+  APPCOMMAND_LAUNCH_APP1 = 17;
+  APPCOMMAND_LAUNCH_APP2 = 18;
+  APPCOMMAND_BASS_DOWN = 19;
+  APPCOMMAND_BASS_BOOST = 20;
+  APPCOMMAND_BASS_UP = 21;
+  APPCOMMAND_TREBLE_DOWN = 22;
+  APPCOMMAND_TREBLE_UP = 23;
+  APPCOMMAND_MICROPHONE_VOLUME_MUTE = 24;
+  APPCOMMAND_MICROPHONE_VOLUME_DOWN = 25;
+  APPCOMMAND_MICROPHONE_VOLUME_UP = 26;
+  APPCOMMAND_HELP = 27;
+  APPCOMMAND_FIND = 28;
+  APPCOMMAND_NEW = 29;
+  APPCOMMAND_OPEN = 30;
+  APPCOMMAND_CLOSE = 31;
+  APPCOMMAND_SAVE = 32;
+  APPCOMMAND_PRINT = 33;
+  APPCOMMAND_UNDO = 34;
+  APPCOMMAND_REDO = 35;
+  APPCOMMAND_COPY = 36;
+  APPCOMMAND_CUT = 37;
+  APPCOMMAND_PASTE = 38;
+  APPCOMMAND_REPLY_TO_MAIL = 39;
+  APPCOMMAND_FORWARD_MAIL = 40;
+  APPCOMMAND_SEND_MAIL = 41;
+  APPCOMMAND_SPELL_CHECK = 42;
+  APPCOMMAND_DICTATE_OR_COMMAND_CONTROL_TOGGLE = 43;
+  APPCOMMAND_MIC_ON_OFF_TOGGLE = 44;
+  APPCOMMAND_CORRECTION_LIST = 45;
+  APPCOMMAND_MEDIA_PLAY = 46;
+  APPCOMMAND_MEDIA_PAUSE = 47;
+  APPCOMMAND_MEDIA_RECORD = 48;
+  APPCOMMAND_MEDIA_FAST_FORWARD = 49;
+  APPCOMMAND_MEDIA_REWIND = 50;
+  APPCOMMAND_MEDIA_CHANNEL_UP = 51;
+  APPCOMMAND_MEDIA_CHANNEL_DOWN = 52;
+  APPCOMMAND_DELETE = 53;
+  APPCOMMAND_DWM_FLIP3D = 54;
+
+  FAPPCOMMAND_MOUSE = 16_8000;
+  FAPPCOMMAND_KEY = 0;
+  FAPPCOMMAND_OEM = 16_1000;
+  FAPPCOMMAND_MASK = 16_F000;
+
+(*
+PROCEDURE GET_APPCOMMAND_LPARAM(lParam : LPARAM) : INT16;
+PROCEDURE GET_DEVICE_LPARAM(lParam : LPARAM) : UINT16;
+PROCEDURE GET_MOUSEORKEY_LPARAM(lParam : LPARAM) : UINT16;
+PROCEDURE GET_FLAGS_LPARAM(lParam : LPARAM) : UINT16;
+PROCEDURE GET_KEYSTATE_LPARAM(lParam : LPARAM) : UINT32;
+*)
+
+TYPE
+
+  SHELLHOOKINFO = RECORD
+    hwnd: HWND;
+    rc: RECT;
+  END;
+  PSHELLHOOKINFO = UNTRACED REF SHELLHOOKINFO;
+
+(* Window Manager Hook Codes -- not in any header
   WC_INIT          = 1;
   WC_SWP           = 2;
   WC_DEFWINDOWPROC = 3;
@@ -511,6 +633,7 @@ CONST
   WC_MOVE          = 5;
   WC_SIZE          = 6;
   WC_DRAWCAPTION   = 7;
+  *)
 
 (* Message Structure used in Journaling *)
 TYPE
@@ -524,7 +647,6 @@ TYPE
     hwnd   : HWND;
   END;
 
-
   (* Message structure used by WH_CALLWNDPROC *)
   PCWPSTRUCT = UNTRACED REF CWPSTRUCT;
   CWPSTRUCT = RECORD
@@ -534,11 +656,53 @@ TYPE
     hwnd   : HWND;
   END;
 
+  (* Message structure used by WH_CALLWNDPROCRET *)
+  PCWPRETSTRUCT = UNTRACED REF CWPRETSTRUCT;
+  CWPRETSTRUCT = RECORD
+    lResult : LRESULT;
+    lParam : LPARAM;
+    wParam : WPARAM;
+    message: UINT32;
+    hwnd   : HWND;
+  END;
+
+  (* Low level hook flags *)
+CONST
+  LLKHF_EXTENDED = 16_0001; (* KF_EXTENDED >> 8 *)
+  LLKHF_INJECTED = 16_00000010;
+  LLKHF_ALTDOWN = 16_0020; (* KF_ALTDOWN >> 8 *)
+  LLKHF_UP = 16_0080; (* KF_UP >> 8 *)
+
+  LLMHF_INJECTED = 16_00000001;
+
+  (* Structure used by WH_KEYBOARD_LL *)
+TYPE
+  KBDLLHOOKSTRUCT = RECORD
+    vkCode : UINT32;
+    scanCode : UINT32;
+    flags : UINT32;
+    time : UINT32;
+    dwExtraInfo : SIZE_T;
+  END;
+  PKBDLLHOOKSTRUCT = UNTRACED REF KBDLLHOOKSTRUCT;
+
+  (* Structure used by WH_MOUSE_LL *)
+
+  MSLLHOOKSTRUCT = RECORD
+    pt : POINT;
+    mouseData : UINT32;
+    flags : UINT32;
+    time : UINT32;
+    dwExtraInfo : SIZE_T;
+  END;
+  PMSLLHOOKSTRUCT = UNTRACED REF MSLLHOOKSTRUCT;
+
   (* Structure used by WH_DEBUG *)
+
   PDEBUGHOOKINFO = UNTRACED REF DEBUGHOOKINFO;
   DEBUGHOOKINFO = RECORD
     idThread: UINT32;
-    reserved: LPARAM;
+    idThreadInstaller: UINT32;
     lParam  : LPARAM;
     wParam  : WPARAM;
     code    : INT32;
@@ -548,7 +712,7 @@ TYPE
     pt          : POINT;
     hwnd        : HWND;
     wHitTestCode: UINT32;
-    dwExtraInfo : UINT32;
+    dwExtraInfo : SIZE_T;
   END;
 
 (*
@@ -568,7 +732,7 @@ CONST
 (*
  * Size of KeyboardLayoutName (number of characters), including nul terminator
  *)
-CONST KL_NAMELENGTH = 9;
+  KL_NAMELENGTH = 9;
 
 TYPE
   LoadKeyboardLayoutA = <*WINAPI*> PROCEDURE (pwszKLID: PCSTR; Flags: UINT32): HKL;
@@ -788,9 +952,9 @@ TYPE
   END;
   PMINMAXINFO = UNTRACED REF MINMAXINFO;
   LPMINMAXINFO = PMINMAXINFO;
-CONST WM_GETMINMAXINFO = 16_0024;
-
 CONST
+  WM_GETMINMAXINFO = 16_0024;
+
   WM_PAINTICON      = 16_0026;
   WM_ICONERASEBKGND = 16_0027;
   WM_NEXTDLGCTL     = 16_0028;
@@ -930,6 +1094,24 @@ CONST
   WM_CAPTURECHANGED = 16_0215;
   WM_MOVING         = 16_0216;
   WM_POWERBROADCAST = 16_0218;
+    PBT_APMQUERYSUSPEND = 16_0000;
+    PBT_APMQUERYSTANDBY = 16_0001;
+    PBT_APMQUERYSUSPENDFAILED = 16_0002;
+    PBT_APMQUERYSTANDBYFAILED = 16_0003;
+    PBT_APMSUSPEND = 16_0004;
+    PBT_APMSTANDBY = 16_0005;
+    PBT_APMRESUMECRITICAL = 16_0006;
+    PBT_APMRESUMESUSPEND = 16_0007;
+    PBT_APMRESUMESTANDBY = 16_0008;
+    PBTF_APMRESUMEFROMFAILURE = 16_00000001;
+    PBT_APMBATTERYLOW = 16_0009;
+    PBT_APMPOWERSTATUSCHANGE = 16_000A;
+    PBT_APMOEMEVENT = 16_000B;
+    PBT_APMRESUMEAUTOMATIC = 16_0012;
+    PBT_POWERSETTINGCHANGE = 16_8013;
+
+    (* POWERBROADCAST_SETTING = RECORD ... *)
+
   WM_DEVICECHANGE   = 16_0219;
 
   WM_MDICREATE      = 16_0220;
@@ -981,9 +1163,17 @@ CONST
   WM_PALETTEISCHANGING = 16_0310;
   WM_PALETTECHANGED    = 16_0311;
   WM_HOTKEY            = 16_0312;
-
   WM_PRINT = 16_0317;
   WM_PRINTCLIENT = 16_0318;
+  WM_APPCOMMAND = 16_0319;
+  WM_THEMECHANGED = 16_031A;
+  WM_CLIPBOARDUPDATE = 16_031D;
+  WM_DWMCOMPOSITIONCHANGED = 16_031E;
+  WM_DWMNCRENDERINGCHANGED = 16_031F;
+  WM_DWMCOLORIZATIONCOLORCHANGED = 16_0320;
+  WM_DWMWINDOWMAXIMIZEDCHANGE = 16_0321;
+  WM_GETTITLEBARINFOEX = 16_033F;
+
   WM_HANDHELDFIRST = 16_0358;
   WM_HANDHELDLAST = 16_035F;
   WM_AFXFIRST = 16_0360;
@@ -1001,13 +1191,26 @@ CONST
 (* NOTE: All Message Numbers below 16_0400 are RESERVED. *)
 
 (* Private Window Messages Start Here: *)
-CONST WM_USER = 16_0400;
+  WM_USER = 16_0400;
+
+
+(* wParam for WM_SIZING message *)
+
+  WMSZ_LEFT = 1;
+  WMSZ_RIGHT = 2;
+  WMSZ_TOP = 3;
+  WMSZ_TOPLEFT = 4;
+  WMSZ_TOPRIGHT = 5;
+  WMSZ_BOTTOM = 6;
+  WMSZ_BOTTOMLEFT = 7;
+  WMSZ_BOTTOMRIGHT = 8;
+
 
 (* WM_SYNCTASK Commands *)
   ST_BEGINSWP = 0;
   ST_ENDSWP   = 1;
 
-(* WinWhere() Area Codes *)
+(* WM_NCHITTEST and MOUSEHOOKSTRUCT Mouse Position Codes *)
   HTERROR       = (-2);
   HTTRANSPARENT = (-1);
   HTNOWHERE     = 0;
@@ -1042,6 +1245,8 @@ CONST WM_USER = 16_0400;
   SMTO_NORMAL      = 16_0000;
   SMTO_BLOCK       = 16_0001;
   SMTO_ABORTIFHUNG = 16_0002;
+  SMTO_NOTIMEOUTIFNOTHUNG = 16_0008;
+  SMTO_ERRORONEXIT = 16_0020;
 
 (* WM_MOUSEACTIVATE Return Codes *)
   MA_ACTIVATE         = 1;
@@ -1177,21 +1382,137 @@ CONST
 CONST
   CS_VREDRAW      = 16_0001;
   CS_HREDRAW      = 16_0002;
-  CS_KEYCVTWINDOW = 16_0004;
+  (* CS_KEYCVTWINDOW = 16_0004; *) (* not in current headers *)
   CS_DBLCLKS      = 16_0008;
   (* 16_0010 - reserved (see user\server\usersrv.h) *)
   CS_OWNDC           = 16_0020;
   CS_CLASSDC         = 16_0040;
   CS_PARENTDC        = 16_0080;
-  CS_NOKEYCVT        = 16_0100;
+  (* CS_NOKEYCVT     = 16_0100; *) (* not in current headers *)
   CS_NOCLOSE         = 16_0200;
   CS_SAVEBITS        = 16_0800;
   CS_BYTEALIGNCLIENT = 16_1000;
   CS_BYTEALIGNWINDOW = 16_2000;
   CS_GLOBALCLASS     = 16_4000; (* Global window class *)
   CS_IME = 16_00010000;
+  CS_DROPSHADOW = 16_00020000;
+
+  (* WM_PRINT flags *)
+
+  PRF_CHECKVISIBLE = 16_00000001;
+  PRF_NONCLIENT = 16_00000002;
+  PRF_CLIENT = 16_00000004;
+  PRF_ERASEBKGND = 16_00000008;
+  PRF_CHILDREN = 16_00000010;
+  PRF_OWNED = 16_00000020;
+
+  (* 3D border styles *)
+
+  BDR_RAISEDOUTER = 16_0001;
+  BDR_SUNKENOUTER = 16_0002;
+  BDR_RAISEDINNER = 16_0004;
+  BDR_SUNKENINNER = 16_0008;
+  BDR_OUTER = Or(BDR_RAISEDOUTER, BDR_SUNKENOUTER);
+  BDR_INNER = Or(BDR_RAISEDINNER, BDR_SUNKENINNER);
+  BDR_RAISED = Or(BDR_RAISEDOUTER, BDR_RAISEDINNER);
+  BDR_SUNKEN = Or(BDR_SUNKENOUTER, BDR_SUNKENINNER);
+
+  EDGE_RAISED = Or(BDR_RAISEDOUTER, BDR_RAISEDINNER);
+  EDGE_SUNKEN = Or(BDR_SUNKENOUTER, BDR_SUNKENINNER);
+  EDGE_ETCHED = Or(BDR_SUNKENOUTER, BDR_RAISEDINNER);
+  EDGE_BUMP = Or(BDR_RAISEDOUTER, BDR_SUNKENINNER);
+
+  (* border flags *)
+
+  BF_LEFT = 16_0001;
+  BF_TOP = 16_0002;
+  BF_RIGHT = 16_0004;
+  BF_BOTTOM = 16_0008;
+  BF_TOPLEFT = Or(BF_TOP, BF_LEFT);
+  BF_TOPRIGHT = Or(BF_TOP, BF_RIGHT);
+  BF_BOTTOMLEFT = Or(BF_BOTTOM, BF_LEFT);
+  BF_BOTTOMRIGHT = Or(BF_BOTTOM, BF_RIGHT);
+  BF_RECT = Or(BF_LEFT, Or(BF_TOP, Or(BF_RIGHT, BF_BOTTOM)));
+  BF_DIAGONAL = 16_0010;
+  BF_DIAGONAL_ENDTOPRIGHT = Or(BF_DIAGONAL, Or(BF_TOP, BF_RIGHT));
+  BF_DIAGONAL_ENDTOPLEFT = Or(BF_DIAGONAL, Or(BF_TOP, BF_LEFT));
+  BF_DIAGONAL_ENDBOTTOMLEFT = Or(BF_DIAGONAL, Or(BF_BOTTOM, BF_LEFT));
+  BF_DIAGONAL_ENDBOTTOMRIGHT = Or(BF_DIAGONAL, Or(BF_BOTTOM, BF_RIGHT));
+  BF_MIDDLE = 16_0800; (* Fill in the middle *)
+  BF_SOFT = 16_1000; (* For softer buttons *)
+  BF_ADJUST = 16_2000; (* Calculate the space left over *)
+  BF_FLAT = 16_4000; (* For flat rather than 3D borders *)
+  BF_MONO = 16_8000; (* For monochrome borders *)
+
+  (* flags for DrawFrameControl *)
+
+  DFC_CAPTION = 1;
+  DFC_MENU = 2;
+  DFC_SCROLL = 3;
+  DFC_BUTTON = 4;
+  DFC_POPUPMENU = 5;
+
+  DFCS_CAPTIONCLOSE = 16_0000;
+  DFCS_CAPTIONMIN = 16_0001;
+  DFCS_CAPTIONMAX = 16_0002;
+  DFCS_CAPTIONRESTORE = 16_0003;
+  DFCS_CAPTIONHELP = 16_0004;
+
+  DFCS_MENUARROW = 16_0000;
+  DFCS_MENUCHECK = 16_0001;
+  DFCS_MENUBULLET = 16_0002;
+  DFCS_MENUARROWRIGHT = 16_0004;
+
+  DFCS_SCROLLUP = 16_0000;
+  DFCS_SCROLLDOWN = 16_0001;
+  DFCS_SCROLLLEFT = 16_0002;
+  DFCS_SCROLLRIGHT = 16_0003;
+  DFCS_SCROLLCOMBOBOX = 16_0005;
+  DFCS_SCROLLSIZEGRIP = 16_0008;
+  DFCS_SCROLLSIZEGRIPRIGHT = 16_0010;
+
+  DFCS_BUTTONCHECK = 16_0000;
+  DFCS_BUTTONRADIOIMAGE = 16_0001;
+  DFCS_BUTTONRADIOMASK = 16_0002;
+  DFCS_BUTTONRADIO = 16_0004;
+  DFCS_BUTTON3STATE = 16_0008;
+  DFCS_BUTTONPUSH = 16_0010;
+
+  DFCS_INACTIVE = 16_0100;
+  DFCS_PUSHED = 16_0200;
+  DFCS_CHECKED = 16_0400;
+  DFCS_TRANSPARENT = 16_0800;
+  DFCS_HOT = 16_1000;
+  DFCS_ADJUSTRECT = 16_2000;
+  DFCS_FLAT = 16_4000;
+  DFCS_MONO = 16_8000;
+
+<*EXTERNAL DrawFrameControl:WINAPI*>
+PROCEDURE DrawFrameControl(DeviceContext: HDC; VAR BoundingRectangle: RECT; Type: UINT32; State: UINT32): BOOL;
+
+  (* flags for DrawCaption *)
+CONST
+  DC_ACTIVE = 16_0001;
+  DC_SMALLCAP = 16_0002;
+  DC_ICON = 16_0004;
+  DC_TEXT = 16_0008;
+  DC_INBUTTON = 16_0010;
+  DC_GRADIENT = 16_0020;
+  DC_BUTTONS = 16_1000;
+
+<*EXTERNAL DrawCaption:WINAPI*>
+PROCEDURE DrawCaption(hwnd: HWND; hdc: HDC; rect: PRECT; flags: UINT32): BOOL;
+
+CONST
+    IDANI_OPEN = 1;
+    (* IDANI_CLOSE = 2; *)
+    IDANI_CAPTION = 3;
+
+<*EXTERNAL DrawAnimatedRects:WINAPI*>
+PROCEDURE DrawAnimatedRects(hwnd: HWND; idAni: INT32; From: PRECT; To: PRECT): BOOL;
 
 (* Predefined Clipboard Formats *)
+CONST
   CF_TEXT         = 1;
   CF_BITMAP       = 2;
   CF_METAFILEPICT = 3;
@@ -1208,6 +1529,7 @@ CONST
   CF_ENHMETAFILE  = 14;
   CF_HDROP = 15;
   CF_LOCALE = 16;
+  CF_DIBV5 = 17;
   (* CF_MAX varies *)
 
   CF_OWNERDISPLAY    = 16_0080;
@@ -1306,7 +1628,26 @@ TYPE
 CONST
   WPF_SETMINPOSITION     = 16_0001;
   WPF_RESTORETOMAXIMIZED = 16_0002;
+  WPF_ASYNCWINDOWPLACEMENT = 16_0004;
 
+TYPE
+  PNMHDR = UNTRACED REF NMHDR;
+  LPNMHDR = PNMHDR;
+  NMHDR = BITS (BITSIZE(ADDRESS) * 3 * 8) FOR RECORD
+    hwndFrom: HWND;
+    idFrom: SIZE_T;
+    code: UINT32; (* NM_ code *)
+    (* padding: UINT32; Win64 only *)
+  END;
+
+  PSTYLESTRUCT = UNTRACED REF NMHDR;
+  LPSTYLESTRUCT = PSTYLESTRUCT;
+  STYLESTRUCT = RECORD
+    styleOld: UINT32;
+    styleNew: UINT32;
+  END;
+
+CONST
 (* Owner draw control types *)
   ODT_MENU     = 1;
   ODT_LISTBOX  = 2;
@@ -1327,6 +1668,10 @@ CONST
   ODS_FOCUS    = 16_0010;
   ODS_DEFAULT = 16_0020;
   ODS_COMBOBOXEDIT = 16_1000;
+  ODS_HOTLIGHT = 16_0040;
+  ODS_INACTIVE = 16_0080;
+  ODS_NOACCEL = 16_0100;
+  ODS_NOFOCUSRECT = 16_0200;
 
 (* MEASUREITEMSTRUCT for ownerdraw *)
 TYPE
@@ -1400,6 +1745,8 @@ PROCEDURE DispatchMessageA (lpMsg: UNTRACED REF MSG): INT32;
 PROCEDURE DispatchMessageW (lpMsg: UNTRACED REF MSG): INT32;
 CONST DispatchMessage = DispatchMessageA;
 
+(* SetMessageQueue *)
+
 <*EXTERNAL PeekMessageA:WINAPI*>
 PROCEDURE PeekMessageA (lpMsg        : LPMSG;
                         hWnd         : HWND;
@@ -1420,6 +1767,12 @@ CONST
   PM_NOREMOVE = 16_0000;
   PM_REMOVE   = 16_0001;
   PM_NOYIELD  = 16_0002;
+  (*
+  PM_QS_INPUT = (QS_INPUT << 16)
+  PM_QS_POSTMESSAGE = ((QS_POSTMESSAGE | QS_HOTKEY | QS_TIMER) << 16)
+  PM_QS_PAINT = (QS_PAINT << 16)
+  PM_QS_SENDMESSAGE = (QS_SENDMESSAGE << 16)
+  *)
 
 <*EXTERNAL RegisterHotKey:WINAPI*>
 PROCEDURE RegisterHotKey (hwnd       : HWND;
@@ -1439,11 +1792,18 @@ CONST
   IDHOT_SNAPWINDOW  = (-1);     (* SHIFT-PRINTSCRN *)
   IDHOT_SNAPDESKTOP = (-2);     (* PRINTSCRN *)
 
+  ENDSESSION_LOGOFF = 16_80000000;
+  ENDSESSION_CRITICAL = 16_40000000;
+  ENDSESSION_CLOSEAPP = 1;
+
   EWX_LOGOFF   = 0;
   EWX_SHUTDOWN = 1;
   EWX_REBOOT   = 2;
   EWX_FORCE    = 4;
   EWX_POWEROFF = 8;
+  EWX_FORCEIFHUNG = 16_10;
+  EWX_QUICKRESOLVE = 16_20;
+  EWX_RESTARTAPPS = 16_40;
 
 PROCEDURE ExitWindows(dwReserved: UINT32; Code: UINT32): BOOL;
 
@@ -1460,7 +1820,13 @@ PROCEDURE GetMessagePos (): UINT32;
 PROCEDURE GetMessageTime (): INT32;
 
 <*EXTERNAL GetMessageExtraInfo:WINAPI*>
-PROCEDURE GetMessageExtraInfo (): INT32;
+PROCEDURE GetMessageExtraInfo (): LPARAM;
+
+<*EXTERNAL IsWow64Message:WINAPI*>
+PROCEDURE IsWow64Message(): BOOL;
+
+<*EXTERNAL SetMessageExtraInfo:WINAPI*>
+PROCEDURE SetMessageExtraInfo(lParam: LPARAM): LPARAM;
 
 <*EXTERNAL SendMessageA:WINAPI*>
 PROCEDURE SendMessageA (hWnd  : HWND;
@@ -1482,7 +1848,7 @@ PROCEDURE SendMessageTimeoutA (hWnd      : HWND;
                                lParam    : LPARAM;
                                fuFlags   : UINT32;
                                uTimeout  : UINT32;
-                               lpdwResult: PUINT32 ): LRESULT;
+                               lpdwResult: PSIZE_T ): LRESULT;
 
 <*EXTERNAL SendMessageTimeoutW:WINAPI*>
 PROCEDURE SendMessageTimeoutW (hWnd      : HWND;
@@ -1491,7 +1857,7 @@ PROCEDURE SendMessageTimeoutW (hWnd      : HWND;
                                lParam    : LPARAM;
                                fuFlags   : UINT32;
                                uTimeout  : UINT32;
-                               lpdwResult: PUINT32 ): LRESULT;
+                               lpdwResult: PSIZE_T): LRESULT;
 CONST SendMessageTimeout = SendMessageTimeoutA;
 
 <*EXTERNAL SendNotifyMessageA:WINAPI*>
@@ -1513,7 +1879,7 @@ PROCEDURE SendMessageCallbackA (hwnd            : HWND;
                                   wParam          : WPARAM;
                                   lParam          : LPARAM;
                                   lpResultCallBack: SENDASYNCPROC;
-                                  dwData          : UINT32          ): BOOL;
+                                  dwData          : SIZE_T): BOOL;
 
 <*EXTERNAL SendMessageCallbackW:WINAPI*>
 PROCEDURE SendMessageCallbackW (hwnd            : HWND;
@@ -1521,7 +1887,7 @@ PROCEDURE SendMessageCallbackW (hwnd            : HWND;
                                   wParam          : WPARAM;
                                   lParam          : LPARAM;
                                   lpResultCallBack: SENDASYNCPROC;
-                                  dwData          : UINT32          ): BOOL;
+                                  dwData          : SIZE_T): BOOL;
 CONST SendMessageCallback = SendMessageCallbackA;
 
 <*EXTERNAL PostMessageA:WINAPI*>
@@ -1720,6 +2086,12 @@ PROCEDURE DestroyWindow (hWnd: HWND): BOOL;
 
 <*EXTERNAL ShowWindow:WINAPI*>
 PROCEDURE ShowWindow (hWnd: HWND; nCmdShow: INT32): BOOL;
+
+<*EXTERNAL AnimateWindow:WINAPI*>
+PROCEDURE AnimateWindow(hwnd: HWND; Time: UINT32; Flags: UINT32): BOOL;
+
+<*EXTERNAL ShowWindowAsync:WINAPI*>
+PROCEDURE ShowWindowAsync (hWnd: HWND; nCmdShow: INT32): BOOL;
 
 <*EXTERNAL FlashWindow:WINAPI*>
 PROCEDURE FlashWindow (hWnd: HWND; bInvert: BOOL): BOOL;
@@ -2059,6 +2431,9 @@ PROCEDURE OpenClipboard (hWnd: HWND): BOOL;
 
 <*EXTERNAL CloseClipboard:WINAPI*>
 PROCEDURE CloseClipboard (): BOOL;
+
+<*EXTERNAL GetClipboardSequenceNumber:WINAPI*>
+PROCEDURE GetClipboardSequenceNumber (): UINT32;
 
 <*EXTERNAL GetClipboardOwner:WINAPI*>
 PROCEDURE GetClipboardOwner (): HWND;
@@ -3407,7 +3782,8 @@ CONST
   GW_HWNDPREV  = 3;
   GW_OWNER     = 4;
   GW_CHILD     = 5;
-  GW_MAX       = 5;
+  GW_ENABLEDPOPUP = 6;
+  (* GW_MAX    = 5; *) (* varies *)
 
 <*EXTERNAL GetWindow:WINAPI*>
 PROCEDURE GetWindow (hWnd: HWND; uCmd: UINT32): HWND;
@@ -3483,17 +3859,27 @@ CONST
   MF_DEFAULT = 16_00001000;
   MF_RIGHTJUSTIFY = 16_00004000;
 
+  MFT_STRING = MF_STRING;
+  MFT_BITMAP = MF_BITMAP;
+  MFT_MENUBARBREAK = MF_MENUBARBREAK;
+  MFT_MENUBREAK = MF_MENUBREAK;
+  MFT_OWNERDRAW = MF_OWNERDRAW;
+  MFT_RADIOCHECK = 16_00000200;
+  MFT_SEPARATOR = MF_SEPARATOR;
+  MFT_RIGHTORDER = 16_00002000;
+  MFT_RIGHTJUSTIFY = MF_RIGHTJUSTIFY;
+
 (* Menu item resource format *)
 TYPE
   MENUITEMTEMPLATEHEADER = RECORD
-                             versionNumber: UINT16;
-                             offset       : UINT16;
+    versionNumber: UINT16;
+    offset       : UINT16;
   END;
 
   MENUITEMTEMPLATE = RECORD
-                       mtOption: UINT16;
-                       mtID    : UINT16;
-                       mtString: ARRAY [0 .. 1 - 1] OF char;
+    mtOption: UINT16;
+    mtID    : UINT16;
+    mtString: ARRAY [0 .. 1 - 1] OF char;
   END;
 
 CONST MF_END: INT32 = 16_00000080;
@@ -3522,7 +3908,6 @@ CONST
   SC_SEPARATOR = 16_F00F;
 
 (* Obsolete names *)
-CONST
   SC_ICON = SC_MINIMIZE;
   SC_ZOOM = SC_MAXIMIZE;
 
@@ -3555,7 +3940,7 @@ PROCEDURE CreateCursor (a1: HINSTANCE;
 PROCEDURE DestroyCursor (a1: HCURSOR): BOOL;
 
 (* Standard Cursor IDs *)
-VAR                             (* CONST *)
+VAR (* CONST *)
   IDC_ARROW      : PTSTR;
   IDC_IBEAM      : PTSTR;
   IDC_WAIT       : PTSTR;
@@ -3684,7 +4069,6 @@ CONST
   OIC_ERROR = OIC_HAND;
   OIC_INFORMATION = OIC_NOTE;
 
-CONST
   ORD_LANGDRIVER = 1;           (* The ordinal number for the entry point
                                    of ** language drivers. *)
 
@@ -3728,7 +4112,6 @@ CONST
 (* Control Manager Structures and Definitions *)
 
 (* Edit Control Styles *)
-CONST
   ES_LEFT       : INT32 = 16_0000;
   ES_CENTER     : INT32 = 16_0001;
   ES_RIGHT      : INT32 = 16_0002;
@@ -3745,7 +4128,6 @@ CONST
   ES_NUMBER = 16_2000;
 
 (* Edit Control Notification Codes *)
-CONST
   EN_SETFOCUS  = 16_0100;
   EN_KILLFOCUS = 16_0200;
   EN_CHANGE    = 16_0300;
@@ -3756,7 +4138,6 @@ CONST
   EN_VSCROLL   = 16_0602;
 
 (* Edit Control Messages *)
-CONST
   EM_GETSEL              = 16_00B0;
   EM_SETSEL              = 16_00B1;
   EM_GETRECT             = 16_00B2;
@@ -3800,13 +4181,11 @@ CONST
 
 
 (* EDITWORDBREAKPROC code values *)
-CONST
   WB_LEFT        = 0;
   WB_RIGHT       = 1;
   WB_ISDELIMITER = 2;
 
 (* Button Control Styles *)
-CONST
   BS_PUSHBUTTON     : INT32 = 16_00;
   BS_DEFPUSHBUTTON  : INT32 = 16_01;
   BS_CHECKBOX       : INT32 = 16_02;
@@ -3836,7 +4215,6 @@ CONST
   BS_RIGHTBUTTON = BS_LEFTTEXT;
 
 (* User Button Notification Codes *)
-CONST
   BN_CLICKED       = 0;
   BN_PAINT         = 1;
   BN_HILITE        = 2;
@@ -3850,7 +4228,6 @@ CONST
   BN_KILLFOCUS = 7;
 
 (* Button Control Messages *)
-CONST
   BM_GETCHECK = 16_00F0;
   BM_SETCHECK = 16_00F1;
   BM_GETSTATE = 16_00F2;
@@ -3859,9 +4236,16 @@ CONST
   BM_CLICK = 16_00F5;
   BM_GETIMAGE = 16_00F6;
   BM_SETIMAGE = 16_00F7;
+  BM_SETDONTCLICK = 16_00F8;
+
+  BST_UNCHECKED = 16_0000;
+  BST_CHECKED = 16_0001;
+  BST_INDETERMINATE = 16_0002;
+  BST_PUSHED = 16_0004;
+  BST_FOCUS = 16_0008;
+
 
 (* Static Control Constants *)
-CONST
   SS_LEFT          : INT32 = 16_00;
   SS_CENTER        : INT32 = 16_01;
   SS_RIGHT         : INT32 = 16_02;
@@ -3894,17 +4278,21 @@ CONST
   SS_ELLIPSISMASK = 16_0000C000;
 
 (* Static Control Mesages *)
-CONST
   STM_SETICON = 16_170;
   STM_GETICON = 16_171;
   STM_SETIMAGE = 16_0172;
   STM_GETIMAGE = 16_0173; 
   (* STM_MSGMAX  = 16_172; *) (* has varied, is now 174 *)
+  STN_CLICKED = 0;
+  STN_DBLCLK = 1;
+  STN_ENABLE = 2;
+  STN_DISABLE = 3;
+
 
 (*
  * Dialog window class
  *)
-VAR                             (* CONST *)
+VAR (* CONST *)
   WC_DIALOG: PTSTR;
 
 (*
@@ -3944,7 +4332,6 @@ CONST DlgDirList = DlgDirListA;
 (*
  * DlgDirList, DlgDirListComboBox flags values
  *)
-CONST
   DDL_READWRITE = 16_0000;
   DDL_READONLY  = 16_0001;
   DDL_HIDDEN    = 16_0002;
@@ -4013,7 +4400,8 @@ CONST
   DS_CENTER = 16_0800;
   DS_CENTERMOUSE = 16_1000;
   DS_CONTEXTHELP = 16_2000;
-
+  DS_SHELLFONT = Or(DS_SETFONT, DS_FIXEDSYS);
+  DS_USEPIXELS = 16_8000;
 
   DM_GETDEFID = (WM_USER + 0);
   DM_SETDEFID = (WM_USER + 1);
@@ -4022,7 +4410,6 @@ CONST
 
 
 (* Dialog Codes *)
-CONST
   DLGC_WANTARROWS      = 16_0001; (* Control wants arrow keys *)
   DLGC_WANTTAB         = 16_0002; (* Control wants tab keys *)
   DLGC_WANTALLKEYS     = 16_0004; (* Control wants all keys *)
@@ -4036,7 +4423,6 @@ CONST
   DLGC_BUTTON          = 16_2000; (* Button item: can be checked *)
 
 (* Listbox Return Values *)
-CONST
   LB_CTLCODE: INT32 = 0;
   LB_OKAY     = 0;
   LB_ERR      = (-1);
@@ -4050,7 +4436,6 @@ CONST
 (* all other details also will be returned *)
 
 (* Listbox Notification Codes *)
-CONST
   LBN_ERRSPACE  = (-2);
   LBN_SELCHANGE = 1;
   LBN_DBLCLK    = 2;
@@ -4059,7 +4444,6 @@ CONST
   LBN_KILLFOCUS = 5;
 
 (* Listbox messages *)
-CONST
   LB_ADDSTRING           = 16_0180;
   LB_INSERTSTRING        = 16_0181;
   LB_DELETESTRING        = 16_0182;
@@ -4102,10 +4486,10 @@ CONST
   LB_SETCOUNT            = 16_01A7;
   LB_INITSTORAGE = 16_01A8;
   LB_ITEMFROMPOINT = 16_01A9;
+  LB_MULTIPLEADDSTRING = 16_01B1;
   (* LB_MSGMAX varies depending on version *)
 
 (* Listbox Styles *)
-CONST
   LBS_NOTIFY           : INT32 = 16_0001;
   LBS_SORT             : INT32 = 16_0002;
   LBS_NOREDRAW         : INT32 = 16_0004;
@@ -4120,17 +4504,16 @@ CONST
   LBS_EXTENDEDSEL      : INT32 = 16_0800;
   LBS_DISABLENOSCROLL  : INT32 = 16_1000;
   LBS_NODATA           : INT32 = 16_2000;
-  LBS_STANDARD = Or(LBS_NOTIFY, Or(LBS_SORT, Or(WS_VSCROLL, WS_BORDER)));
   LBS_NOSEL = 16_4000;
+  LBS_COMBOBOX = 16_8000;
+  LBS_STANDARD = Or(LBS_NOTIFY, Or(LBS_SORT, Or(WS_VSCROLL, WS_BORDER)));
 
 (* Combo Box return Values *)
-CONST
   CB_OKAY     = 0;
   CB_ERR      = (-1);
   CB_ERRSPACE = (-2);
 
 (* Combo Box Notification Codes *)
-CONST
   CBN_ERRSPACE     = (-1);
   CBN_SELCHANGE    = 1;
   CBN_DBLCLK       = 2;
@@ -4144,7 +4527,6 @@ CONST
   CBN_SELENDCANCEL = 10;
 
 (* Combo Box styles *)
-CONST
   CBS_SIMPLE           : INT32 = 16_0001;
   CBS_DROPDOWN         : INT32 = 16_0002;
   CBS_DROPDOWNLIST     : INT32 = 16_0003;
@@ -4160,7 +4542,6 @@ CONST
   CBS_LOWERCASE = 16_4000;
 
 (* Combo Box messages *)
-CONST
   CB_GETEDITSEL            = 16_0140;
   CB_LIMITTEXT             = 16_0141;
   CB_SETEDITSEL            = 16_0142;
@@ -4195,10 +4576,11 @@ CONST
   CB_GETDROPPEDWIDTH = 16_015F;
   CB_SETDROPPEDWIDTH = 16_0160;
   CB_INITSTORAGE = 16_0161;
+  CB_MULTIPLEADDSTRING = 16_0163;
+  CB_GETCOMBOBOXINFO = 16_0164;
   (* CB_MSGMAX             = 16_015b; *) (* varies *)
 
 (* Scroll Bar Styles *)
-CONST
   SBS_HORZ                   : INT32 = 16_0000;
   SBS_VERT                   : INT32 = 16_0001;
   SBS_TOPALIGN               : INT32 = 16_0002;
@@ -4211,7 +4593,6 @@ CONST
   SBS_SIZEGRIP = 16_0010;
 
 (* Scroll bar messages *)
-CONST
   SBM_SETPOS         = 16_00E0; (* not in win3.1 *)
   SBM_GETPOS         = 16_00E1; (* not in win3.1 *)
   SBM_SETRANGE       = 16_00E2; (* not in win3.1 *)
@@ -4220,25 +4601,36 @@ CONST
   SBM_ENABLE_ARROWS  = 16_00E4; (* not in win3.1 *)
   SBM_SETSCROLLINFO = 16_00E9;
   SBM_GETSCROLLINFO = 16_00EA;
+  SBM_GETSCROLLBARINFO = 16_00EB;
+
+  SIF_RANGE = 16_0001;
+  SIF_PAGE = 16_0002;
+  SIF_POS = 16_0004;
+  SIF_DISABLENOSCROLL = 16_0008;
+  SIF_TRACKPOS = 16_0010;
+  SIF_ALL = Or(SIF_RANGE, Or(SIF_PAGE, Or(SIF_POS, SIF_TRACKPOS)));
+
+ (* SetScrollInfo *)
+ (* GetScrollInfo *)
+
 
 (* MDI client style bits *)
-CONST MDIS_ALLCHILDSTYLES = 16_0001;
+  MDIS_ALLCHILDSTYLES = 16_0001;
 
 (* wParam Flags for WM_MDITILE and WM_MDICASCADE messages. *)
-CONST
   MDITILE_VERTICAL     = 16_0000; (* not in win3.1 *)
   MDITILE_HORIZONTAL   = 16_0001; (* not in win3.1 *)
   MDITILE_SKIPDISABLED = 16_0002; (* not in win3.1 *)
 
 TYPE
   MDICREATESTRUCTA = RECORD
-                       szClass: PCSTR;
-                       szTitle: PCSTR;
-                       hOwner : HANDLE;
-                       x      : INT32;
-                       y      : INT32;
-                       cx     : INT32;
-                       cy     : INT32;
+    szClass: PCSTR;
+    szTitle: PCSTR;
+    hOwner : HANDLE;
+    x      : INT32;
+    y      : INT32;
+    cx     : INT32;
+    cy     : INT32;
     style  : UINT32;
     lParam : LPARAM;  (* app-defined stuff *)
   END;
@@ -4323,6 +4715,8 @@ PROCEDURE CreateMDIWindowW (lpClassName : PWSTR;
                               lParam      : INT32       ): HWND;
 CONST CreateMDIWindow = CreateMDIWindowA;
 
+(* TileWindows *)
+
 (****** Help support ********************************************************)
 
 TYPE
@@ -4400,6 +4794,13 @@ CONST
   HELP_TCARD_DATA = 16_0010;
   HELP_TCARD_OTHER_CALLER = 16_0011;
 
+  IDH_NO_HELP = 28440;
+  IDH_MISSING_CONTEXT = 28441; (* Control doesn't have matching help context *)
+  IDH_GENERIC_HELP_BUTTON = 28442; (* Property sheet help button *)
+  IDH_OK = 28443;
+  IDH_CANCEL = 28444;
+  IDH_HELP = 28445;
+
 <*EXTERNAL WinHelpA:WINAPI*>
 PROCEDURE WinHelpA (hwndMain: HWND;
                     lpszHelp: PCSTR;
@@ -4414,7 +4815,7 @@ PROCEDURE WinHelpW (hwndMain: HWND;
 CONST WinHelp = WinHelpA;
 
 (* function declarations for profiler routines contained in Windows
-   libraries *)
+   libraries
 
 <*EXTERNAL ProfInsChk:WINAPI*>
 PROCEDURE ProfInsChk (): INT32;
@@ -4439,6 +4840,8 @@ PROCEDURE ProfFlush ();
 
 <*EXTERNAL ProfFinish:WINAPI*>
 PROCEDURE ProfFinish ();
+
+*)
 
 (* Parameter for SystemParametersInfo() *)
 CONST
@@ -4558,27 +4961,14 @@ CONST
   SPIF_UPDATEINIFILE    = 16_0001;
   SPIF_SENDWININICHANGE = 16_0002;
   SPIF_SENDCHANGE = SPIF_SENDWININICHANGE;
+  METRICS_USEDEFAULT = -1;
 
 (* misc stuff added by darkov March 2003
    much of Darkov's stuff merged back near related stuff by Jaykrell August 2008
    as part of adding more misc stuff (updating to circa NT 4 headers) *)
 
-(* structures *)
-TYPE
-
-	LPNMHDR = UNTRACED REF NMHDR;
-	NMHDR = BITS (BITSIZE(ADDRESS) * 3 * 8) FOR RECORD
-	    hwndFrom: HWND;
-	    idFrom: SIZE_T;
-	    code: UINT32; (* NM_ code *)
-        (* padding: UINT32; Win64 only *)
-	END;
-
-(*
 <*EXTERNAL GetSysColorBrush:WINAPI*>
-PROCEDURE GetSysColorBrush(nIndex: INTEGER): HBRUSH;
-*)
-
+PROCEDURE GetSysColorBrush(nIndex: INT32): HBRUSH;
 	
 CONST	
 	MFS_GRAYED          = 16_00000003;
@@ -4683,17 +5073,10 @@ CONST
     UOI_TYPE = 3;
     UOI_USER_SID = 4;
 
-    WMSZ_LEFT = 1;
-    WMSZ_RIGHT = 2;
-    WMSZ_TOP = 3;
-    WMSZ_TOPLEFT = 4;
-    WMSZ_TOPRIGHT = 5;
-    WMSZ_BOTTOM = 6;
-    WMSZ_BOTTOMLEFT = 7;
-    WMSZ_BOTTOMRIGHT = 8;
-
+    (* WM_SETICON / WM_GETICON Type Codes *)
     ICON_SMALL = 0;
     ICON_BIG = 1;
+    ICON_SMALL2 = 2;
 
     TME_HOVER = 16_00000001;
     TME_LEAVE = 16_00000002;
@@ -4702,96 +5085,11 @@ CONST
 
     HOVER_DEFAULT = 16_FFFFFFFF;
 
-    PRF_CHECKVISIBLE = 16_00000001;
-    PRF_NONCLIENT = 16_00000002;
-    PRF_CLIENT = 16_00000004;
-    PRF_ERASEBKGND = 16_00000008;
-    PRF_CHILDREN = 16_00000010;
-    PRF_OWNED = 16_00000020;
-
-    BDR_RAISEDOUTER = 16_0001;
-    BDR_SUNKENOUTER = 16_0002;
-    BDR_RAISEDINNER = 16_0004;
-    BDR_SUNKENINNER = 16_0008;
-    BDR_OUTER = 16_0003;
-    BDR_INNER = 16_000C;
-    BDR_RAISED = 16_0005;
-    BDR_SUNKEN = 16_000A;
-
-    EDGE_RAISED = Or(BDR_RAISEDOUTER, BDR_RAISEDINNER);
-    EDGE_SUNKEN = Or(BDR_SUNKENOUTER, BDR_SUNKENINNER);
-    EDGE_ETCHED = Or(BDR_SUNKENOUTER, BDR_RAISEDINNER);
-    EDGE_BUMP = Or(BDR_RAISEDOUTER, BDR_SUNKENINNER);
-
-    BF_LEFT = 16_0001;
-    BF_TOP = 16_0002;
-    BF_RIGHT = 16_0004;
-    BF_BOTTOM = 16_0008;
-    BF_TOPLEFT = Or(BF_TOP, BF_LEFT);
-    BF_TOPRIGHT = Or(BF_TOP, BF_RIGHT);
-    BF_BOTTOMLEFT = Or(BF_BOTTOM, BF_LEFT);
-    BF_BOTTOMRIGHT = Or(BF_BOTTOM, BF_RIGHT);
-    BF_RECT = Or(BF_LEFT, Or(BF_TOP, Or(BF_RIGHT, BF_BOTTOM)));
-    BF_DIAGONAL = 16_0010;
-    BF_DIAGONAL_ENDTOPRIGHT = Or(BF_DIAGONAL, Or(BF_TOP, BF_RIGHT));
-    BF_DIAGONAL_ENDTOPLEFT = Or(BF_DIAGONAL, Or(BF_TOP, BF_LEFT));
-    BF_DIAGONAL_ENDBOTTOMLEFT = Or(BF_DIAGONAL, Or(BF_BOTTOM, BF_LEFT));
-    BF_DIAGONAL_ENDBOTTOMRIGHT = Or(BF_DIAGONAL, Or(BF_BOTTOM, BF_RIGHT));
-    BF_MIDDLE = 16_0800; (* Fill in the middle *)
-    BF_SOFT = 16_1000; (* For softer buttons *)
-    BF_ADJUST = 16_2000; (* Calculate the space left over *)
-    BF_FLAT = 16_4000; (* For flat rather than 3D borders *)
-    BF_MONO = 16_8000; (* For monochrome borders *)
-
-    DFC_CAPTION = 1;
-    DFC_MENU = 2;
-    DFC_SCROLL = 3;
-    DFC_BUTTON = 4;
-
-    DFCS_CAPTIONCLOSE = 16_0000;
-    DFCS_CAPTIONMIN = 16_0001;
-    DFCS_CAPTIONMAX = 16_0002;
-    DFCS_CAPTIONRESTORE = 16_0003;
-    DFCS_CAPTIONHELP = 16_0004;
-    DFCS_MENUARROW = 16_0000;
-    DFCS_MENUCHECK = 16_0001;
-    DFCS_MENUBULLET = 16_0002;
-    DFCS_MENUARROWRIGHT = 16_0004;
-    DFCS_SCROLLUP = 16_0000;
-    DFCS_SCROLLDOWN = 16_0001;
-    DFCS_SCROLLLEFT = 16_0002;
-    DFCS_SCROLLRIGHT = 16_0003;
-    DFCS_SCROLLCOMBOBOX = 16_0005;
-    DFCS_SCROLLSIZEGRIP = 16_0008;
-    DFCS_SCROLLSIZEGRIPRIGHT = 16_0010;
-    DFCS_BUTTONCHECK = 16_0000;
-    DFCS_BUTTONRADIOIMAGE = 16_0001;
-    DFCS_BUTTONRADIOMASK = 16_0002;
-    DFCS_BUTTONRADIO = 16_0004;
-    DFCS_BUTTON3STATE = 16_0008;
-    DFCS_BUTTONPUSH = 16_0010;
-    DFCS_INACTIVE = 16_0100;
-    DFCS_PUSHED = 16_0200;
-    DFCS_CHECKED = 16_0400;
-    DFCS_ADJUSTRECT = 16_2000;
-    DFCS_FLAT = 16_4000;
-    DFCS_MONO = 16_8000;
-
-    DC_ACTIVE = 16_0001;
-    DC_SMALLCAP = 16_0002;
-    DC_ICON = 16_0004;
-    DC_TEXT = 16_0008;
-    DC_INBUTTON = 16_0010;
-
-    IDANI_OPEN = 1;
-    IDANI_CLOSE = 2;
-    IDANI_CAPTION = 3;
-
+    (*
     EW_RESTARTWINDOWS = 16_0042;
     EW_REBOOTSYSTEM = 16_0043;
     EW_EXITANDEXECAPP = 16_0044;
-
-    ENDSESSION_LOGOFF = 16_80000000;
+    *)
 
     BSM_ALLCOMPONENTS = 16_00000000;
     BSM_VXDS = 16_00000001;
@@ -4862,16 +5160,6 @@ CONST
     CWP_SKIPDISABLED = 16_0002;
     CWP_SKIPTRANSPARENT = 16_0004;
 
-    MFT_STRING = MF_STRING;
-    MFT_BITMAP = MF_BITMAP;
-    MFT_MENUBARBREAK = MF_MENUBARBREAK;
-    MFT_MENUBREAK = MF_MENUBREAK;
-    MFT_OWNERDRAW = MF_OWNERDRAW;
-    MFT_RADIOCHECK = 16_00000200;
-    MFT_SEPARATOR = MF_SEPARATOR;
-    MFT_RIGHTORDER = 16_00002000;
-    MFT_RIGHTJUSTIFY = MF_RIGHTJUSTIFY;
-
     IMAGE_BITMAP = 0;
     IMAGE_ICON = 1;
     IMAGE_CURSOR = 2;
@@ -4900,22 +5188,11 @@ CONST
     RES_ICON = 1;
     RES_CURSOR = 2;
 
+    (* Edit control EM_SETMARGIN parameters *)
+
     EC_LEFTMARGIN = 16_0001;
     EC_RIGHTMARGIN = 16_0002;
     EC_USEFONTINFO = 16_FFFF;
-
-    BST_UNCHECKED = 16_0000;
-    BST_CHECKED = 16_0001;
-    BST_INDETERMINATE = 16_0002;
-    BST_PUSHED = 16_0004;
-    BST_FOCUS = 16_0008;
-
-    STN_CLICKED = 0;
-    STN_DBLCLK = 1;
-    STN_ENABLE = 2;
-    STN_DISABLE = 3;
-
-    STM_MSGMAX = 16_0174;
 
     PSM_PAGEINFO = (WM_USER+100);
     PSM_SHEETINFO = (WM_USER+101);
@@ -4931,22 +5208,6 @@ CONST
     PSI_REBOOT = 16_0003;
     PSI_GETSIBLINGS = 16_0004;
 
-    SIF_RANGE = 16_0001;
-    SIF_PAGE = 16_0002;
-    SIF_POS = 16_0004;
-    SIF_DISABLENOSCROLL = 16_0008;
-    SIF_TRACKPOS = 16_0010;
-    SIF_ALL = Or(SIF_RANGE, Or(SIF_PAGE, Or(SIF_POS, SIF_TRACKPOS)));
-
-    IDH_NO_HELP = 28440;
-    IDH_MISSING_CONTEXT = 28441; (* Control doesn't have matching help context *)
-    IDH_GENERIC_HELP_BUTTON = 28442; (* Property sheet help button *)
-    IDH_OK = 28443;
-    IDH_CANCEL = 28444;
-    IDH_HELP = 28445;
-
-    METRICS_USEDEFAULT = -1;
-
     ARW_BOTTOMLEFT = 16_0000;
     ARW_BOTTOMRIGHT = 16_0001;
     ARW_TOPLEFT = 16_0002;
@@ -4961,9 +5222,13 @@ CONST
     ARW_HIDE = 16_0008;
     ARW_VALID = 16_000F;
 
+    (* flags for SERIALKEYS dwFlags field *)
+
     SERKF_SERIALKEYSON = 16_00000001;
     SERKF_AVAILABLE = 16_00000002;
     SERKF_INDICATOR = 16_00000004;
+
+    (* flags for HIGHCONTRAST dwFlags field *)
 
     HCF_HIGHCONTRASTON = 16_00000001;
     HCF_AVAILABLE = 16_00000002;
@@ -4972,6 +5237,8 @@ CONST
     HCF_HOTKEYSOUND = 16_00000010;
     HCF_INDICATOR = 16_00000020;
     HCF_HOTKEYAVAILABLE = 16_00000040;
+
+    (* Flags for ChangeDisplaySettings *)
 
     CDS_UPDATEREGISTRY = 16_00000001;
     CDS_TEST = 16_00000002;
@@ -4982,6 +5249,8 @@ CONST
     CDS_SETRECT = 16_20000000;
     CDS_NORESET = 16_10000000;
 
+    (* Return values for ChangeDisplaySettings *)
+
     DISP_CHANGE_SUCCESSFUL = 0;
     DISP_CHANGE_RESTART = 1;
     DISP_CHANGE_FAILED = -1;
@@ -4990,9 +5259,12 @@ CONST
     DISP_CHANGE_BADFLAGS = -4;
     DISP_CHANGE_BADPARAM = -5;
     (*
-    ENUM_CURRENT_SETTINGS = ((DWORD)-1);
-    ENUM_REGISTRY_SETTINGS = ((DWORD)-2);
+    ENUM_CURRENT_SETTINGS = ((UINT32)-1);
+    ENUM_REGISTRY_SETTINGS = ((UINT32)-2);
     *)
+
+    (* FILTERKEYS dwFlags field *)
+
     FKF_FILTERKEYSON = 16_00000001;
     FKF_AVAILABLE = 16_00000002;
     FKF_HOTKEYACTIVE = 16_00000004;
@@ -5000,6 +5272,8 @@ CONST
     FKF_HOTKEYSOUND = 16_00000010;
     FKF_INDICATOR = 16_00000020;
     FKF_CLICKON = 16_00000040;
+
+    (* STICKYKEYS dwFlags field *)
 
     SKF_STICKYKEYSON = 16_00000001;
     SKF_AVAILABLE = 16_00000002;
@@ -5010,6 +5284,24 @@ CONST
     SKF_AUDIBLEFEEDBACK = 16_00000040;
     SKF_TRISTATE = 16_00000080;
     SKF_TWOKEYSOFF = 16_00000100;
+    SKF_LALTLATCHED = 16_10000000;
+    SKF_LCTLLATCHED = 16_04000000;
+    SKF_LSHIFTLATCHED = 16_01000000;
+    SKF_RALTLATCHED = 16_20000000;
+    SKF_RCTLLATCHED = 16_08000000;
+    SKF_RSHIFTLATCHED = 16_02000000;
+    SKF_LWINLATCHED = 16_40000000;
+    SKF_RWINLATCHED = 16_80000000;
+    SKF_LALTLOCKED = 16_00100000;
+    SKF_LCTLLOCKED = 16_00040000;
+    SKF_LSHIFTLOCKED = 16_00010000;
+    SKF_RALTLOCKED = 16_00200000;
+    SKF_RCTLLOCKED = 16_00080000;
+    SKF_RSHIFTLOCKED = 16_00020000;
+    SKF_LWINLOCKED = 16_00400000;
+    SKF_RWINLOCKED = 16_00800000;
+
+    (* MOUSEKEYS dwFlags field *)
 
     MKF_MOUSEKEYSON = 16_00000001;
     MKF_AVAILABLE = 16_00000002;
@@ -5020,16 +5312,24 @@ CONST
     MKF_MODIFIERS = 16_00000040;
     MKF_REPLACENUMBERS = 16_00000080;
 
+    (* ACCESSTIMEOUT dwFlags field *)
+
     ATF_TIMEOUTON = 16_00000001;
     ATF_ONOFFFEEDBACK = 16_00000002;
 
+    (* values for SOUNDSENTRY iFSGrafEffect field *)
+
     SSGF_NONE = 0;
     SSGF_DISPLAY = 3;
+
+    (* values for SOUNDSENTRY iFSTextEffect field *)
 
     SSTF_NONE = 0;
     SSTF_CHARS = 1;
     SSTF_BORDER = 2;
     SSTF_DISPLAY = 3;
+
+    (* values for SOUNDSENTRY iWindowsEffect field *)
 
     SSWF_NONE = 0;
     SSWF_TITLE = 1;
@@ -5037,9 +5337,13 @@ CONST
     SSWF_DISPLAY = 3;
     SSWF_CUSTOM = 4;
 
+    (* SOUNDSENTRY dwFlags field *)
+
     SSF_SOUNDSENTRYON = 16_00000001;
     SSF_AVAILABLE = 16_00000002;
     SSF_INDICATOR = 16_00000004;
+
+    (* TOGGLEKEYS dwFlags field *)
 
     TKF_TOGGLEKEYSON = 16_00000001;
     TKF_AVAILABLE = 16_00000002;
@@ -5047,6 +5351,8 @@ CONST
     TKF_CONFIRMHOTKEY = 16_00000008;
     TKF_HOTKEYSOUND = 16_00000010;
     TKF_INDICATOR = 16_00000020;
+
+    (* SetLastErrorEx() types. *)
 
     SLE_ERROR = 16_00000001;
     SLE_MINORERROR = 16_00000002;
