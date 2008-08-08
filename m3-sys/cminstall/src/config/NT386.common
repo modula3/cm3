@@ -844,7 +844,7 @@ is
                  options,
                  objects,
                  subst_chars(imported_libs, "/", "\\"),
-                 UseHand,
+                 subst_chars(UseHand, "/", "\\"),
             ]),
         "2>&1",
         ">", listing
@@ -1204,7 +1204,7 @@ is
                 options,
                 objects,
                 subst_chars(imported_libs, "/", "\\"),
-                UseHand,
+                subst_chars(UseHand, "/", "\\"),
             ]),
         "2>&1",
         ">", listing
