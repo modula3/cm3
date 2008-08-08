@@ -8,7 +8,7 @@
 (*      modified on Tue Nov  8 16:20:58 PST 1994 by kalsow   *)
 (*      modified on Thu Mar 18 17:53:33 PST 1993 by harrison *)
 
-(* $Id: WinDef.i3,v 1.5 2008-04-27 09:59:00 jkrell Exp $ *)
+(* $Id: WinDef.i3,v 1.6 2008-08-08 13:29:48 jkrell Exp $ *)
 
 INTERFACE WinDef;
 
@@ -30,6 +30,7 @@ TYPE
   INT64 = WinBaseTypes.INT64;
   SIZE_T = WinBaseTypes.SIZE_T;  (* same size as a pointer, unsigned *)
   SSIZE_T = WinBaseTypes.SSIZE_T;  (* same size as a pointer, signed *)
+  PSIZE_T = WinBaseTypes.PSIZE_T;
   PUINT8 = WinBaseTypes.PUINT8;
   PUINT16 = WinBaseTypes.PUINT16;
   PUINT32 = WinBaseTypes.PUINT32;
