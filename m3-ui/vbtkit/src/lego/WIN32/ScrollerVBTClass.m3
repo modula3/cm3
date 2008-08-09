@@ -109,17 +109,17 @@ PROCEDURE Init (v: T; axis := Axis.T.Ver; colors: PaintOp.ColorQuad := NIL): T =
     END;
     v.stripeBorderP := colors.bgFg;
     v.stripeBorder := Pixmap.Solid;
-    v.stripeW.millimeters := FLOAT(TRUNC(0.25 * DefaultScrollMargin / ImageInit.GetDefaultXRes() * MMperInch));
-    v.stripeE.millimeters := FLOAT(TRUNC(0.25 * DefaultScrollMargin / ImageInit.GetDefaultXRes() * MMperInch));
-    v.stripeN.millimeters := FLOAT(TRUNC(0.25 * DefaultScrollMargin / ImageInit.GetDefaultYRes() * MMperInch));
-    v.stripeS.millimeters := FLOAT(TRUNC(0.25 * DefaultScrollMargin / ImageInit.GetDefaultYRes() * MMperInch));
+    v.stripeW.millimeters := 0.25 * DefaultScrollMargin / ImageInit.GetDefaultXRes() * MMperInch;
+    v.stripeE.millimeters := 0.25 * DefaultScrollMargin / ImageInit.GetDefaultXRes() * MMperInch;
+    v.stripeN.millimeters := 0.25 * DefaultScrollMargin / ImageInit.GetDefaultYRes() * MMperInch;
+    v.stripeS.millimeters := 0.25 * DefaultScrollMargin / ImageInit.GetDefaultYRes() * MMperInch;
     IF axis = Axis.T.Ver
     THEN
-       v.scrollMargin.millimeters := FLOAT(TRUNC(DefaultScrollMargin / ImageInit.GetDefaultXRes() * MMperInch));
-       v.stripeWidth.millimeters  := FLOAT(TRUNC(DefaultStripeWidth  / ImageInit.GetDefaultXRes() * MMperInch));
+       v.scrollMargin.millimeters := DefaultScrollMargin / ImageInit.GetDefaultXRes() * MMperInch;
+       v.stripeWidth.millimeters  := DefaultStripeWidth  / ImageInit.GetDefaultXRes() * MMperInch;
     ELSE
-       v.scrollMargin.millimeters := FLOAT(TRUNC(DefaultScrollMargin / ImageInit.GetDefaultYRes() * MMperInch));
-       v.stripeWidth.millimeters  := FLOAT(TRUNC(DefaultStripeWidth  / ImageInit.GetDefaultYRes() * MMperInch));
+       v.scrollMargin.millimeters := DefaultScrollMargin / ImageInit.GetDefaultYRes() * MMperInch;
+       v.stripeWidth.millimeters  := DefaultStripeWidth  / ImageInit.GetDefaultYRes() * MMperInch;
     END; (* if *)
     v.minStripeLen.millimeters := DefaultMinStripeLen;
     v.repeater := NEW (AutoRepeater, v := v).init ();
