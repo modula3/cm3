@@ -12,7 +12,7 @@
 MODULE ScrollerVBTClass;
 
 IMPORT AutoRepeat, Axis, (* Cursor, *) PaintOp, Pixmap, Point, Rect,
-         Region, VBT, VBTKitResources;
+         Region, VBT, VBTKitResources, ImageInit;
 (*Debugging> IMPORT IO; <Debugging*)
 
 TYPE
@@ -92,6 +92,7 @@ TYPE
     AutoRepeat.T OBJECT v: T OVERRIDES repeat := Repeat END;
 
 PROCEDURE Init (v: T; axis := Axis.T.Ver; colors: PaintOp.ColorQuad := NIL): T =
+  CONST MMperInch = 25.4;
   BEGIN
     IF colors = NIL THEN colors := PaintOp.bgFg END;
     InitGraphics ();
@@ -103,17 +104,23 @@ PROCEDURE Init (v: T; axis := Axis.T.Ver; colors: PaintOp.ColorQuad := NIL): T =
     FOR a := FIRST (Axis.T) TO LAST (Axis.T) DO
       v.scrollTextureP [a] := PaintOp.FromRGB (0.8, 0.8, 0.8);
       v.scrollTexture [a] := ScrollPixmap [a];
-      v.stripeTextureP [a] := PaintOp.FromRGB (0.6, 0.6, 0.6); 
+      v.stripeTextureP [a] := PaintOp.FromRGB (0.6, 0.6, 0.6);
       v.stripeTexture [a] := Pixmap.Solid;
     END;
     v.stripeBorderP := colors.bgFg;
     v.stripeBorder := Pixmap.Solid;
-    v.stripeW.millimeters := 0.25;
-    v.stripeE.millimeters := 0.25;
-    v.stripeN.millimeters := 0.25;
-    v.stripeS.millimeters := 0.25;
-    v.scrollMargin.millimeters := DefaultScrollMargin;
-    v.stripeWidth.millimeters := DefaultStripeWidth;
+    v.stripeW.millimeters := 0.25 * DefaultScrollMargin / ImageInit.GetDefaultXRes() * MMperInch;
+    v.stripeE.millimeters := 0.25 * DefaultScrollMargin / ImageInit.GetDefaultXRes() * MMperInch;
+    v.stripeN.millimeters := 0.25 * DefaultScrollMargin / ImageInit.GetDefaultYRes() * MMperInch;
+    v.stripeS.millimeters := 0.25 * DefaultScrollMargin / ImageInit.GetDefaultYRes() * MMperInch;
+    IF axis = Axis.T.Ver
+    THEN
+       v.scrollMargin.millimeters := DefaultScrollMargin / ImageInit.GetDefaultXRes() * MMperInch;
+       v.stripeWidth.millimeters  := DefaultStripeWidth  / ImageInit.GetDefaultXRes() * MMperInch;
+    ELSE
+       v.scrollMargin.millimeters := DefaultScrollMargin / ImageInit.GetDefaultYRes() * MMperInch;
+       v.stripeWidth.millimeters  := DefaultStripeWidth  / ImageInit.GetDefaultYRes() * MMperInch;
+    END; (* if *)
     v.minStripeLen.millimeters := DefaultMinStripeLen;
     v.repeater := NEW (AutoRepeater, v := v).init ();
     RETURN v
@@ -124,7 +131,7 @@ PROCEDURE Update (v: T; start, end, length: CARDINAL) =
     LOCK v.mu DO
       IF start = v.start AND end = v.end AND length = v.length THEN
         RETURN
-      ELSE  
+      ELSE
         v.start := start;
         v.end := end;
         v.length := length
@@ -205,11 +212,11 @@ PROCEDURE PaintView (v: T) =
     ComputeStripePosition(v, dom);
 
       (* paint scroll buttons *)
-    VBT.PaintPixmap(v, low, PaintOp.Copy, 
-                       ScrollButtonPixmap[v.axis, ScrollButton.Low], 
+    VBT.PaintPixmap(v, low, PaintOp.Copy,
+                       ScrollButtonPixmap[v.axis, ScrollButton.Low],
                        Rect.NorthWest(low));
-    VBT.PaintPixmap(v, hi, PaintOp.Copy, 
-                       ScrollButtonPixmap[v.axis, ScrollButton.High], 
+    VBT.PaintPixmap(v, hi, PaintOp.Copy,
+                       ScrollButtonPixmap[v.axis, ScrollButton.High],
                        Rect.NorthWest(hi));
 
     stripe := v.stripe;
@@ -245,7 +252,7 @@ PROCEDURE PaintView (v: T) =
   END PaintView;
 
 PROCEDURE AdjustForScrollButtons (v: T; r: Rect.T; VAR low, high: Rect.T): Rect.T =
-  (* LL = mu. Sets the domain of low and high 'arrow' buttons, 
+  (* LL = mu. Sets the domain of low and high 'arrow' buttons,
               and returns the subset of the domain which is
               to be used for drawing. *)
   CONST
@@ -269,7 +276,7 @@ PROCEDURE AdjustForScrollButtons (v: T; r: Rect.T; VAR low, high: Rect.T): Rect.
     RETURN res;
   END AdjustForScrollButtons;
 
-PROCEDURE ComputeStripePosition (v: T; r: Rect.T) = 
+PROCEDURE ComputeStripePosition (v: T; r: Rect.T) =
   (* LL = mu. Returns the domain of the white part of the stripe. *)
   VAR
     lo, hi             : INTEGER;
@@ -365,7 +372,7 @@ PROCEDURE Mouse (v: T; READONLY cd: VBT.MouseRec) RAISES {} =
   END Mouse;
 
 PROCEDURE WithinButtons (v: T; READONLY cp: VBT.CursorPosition;
-                    VAR step: INTEGER): BOOLEAN = 
+                    VAR step: INTEGER): BOOLEAN =
 (* LL = v.mu *)
   CONST
     Slop = 1; (* One 'units' movement. *)
@@ -373,7 +380,7 @@ PROCEDURE WithinButtons (v: T; READONLY cp: VBT.CursorPosition;
     dom := VBT.Domain(v);
     low, hi: Rect.T;
     factor: INTEGER := 0;
-  <*UNUSED*>  VAR    
+  <*UNUSED*>  VAR
     logical_min, logical_max, logical_step: INTEGER;
   BEGIN
     EVAL AdjustForScrollButtons (v, dom, low, hi);
@@ -385,14 +392,14 @@ PROCEDURE WithinButtons (v: T; READONLY cp: VBT.CursorPosition;
 (******
     logical_min := ScrollerVBT.GetMin(v);
     logical_max := ScrollerVBT.GetMax(v);
-    <* ASSERT logical_max > logical_min *> 
+    <* ASSERT logical_max > logical_min *>
     step := (factor * v.length * logical_step) DIV (logical_max - logical_min);
 *****)
     step := factor * Slop;
     RETURN factor # 0;
   END WithinButtons;
 
-PROCEDURE BeforeThumb (v: T; READONLY cp: VBT.CursorPosition): BOOLEAN = 
+PROCEDURE BeforeThumb (v: T; READONLY cp: VBT.CursorPosition): BOOLEAN =
 (* LL = v.mu *)
   BEGIN
     RETURN Rect.Member (cp.pt, VBT.Domain(v)) AND
@@ -406,7 +413,7 @@ PROCEDURE AfterThumb (v: T; READONLY cp: VBT.CursorPosition): BOOLEAN =
            DeltaPoints (v.axis, cp.pt, Rect.SouthEast(v.stripe)) > 0;
   END AfterThumb;
 
-PROCEDURE WithinThumb (v: T; READONLY cp: VBT.CursorPosition): BOOLEAN = 
+PROCEDURE WithinThumb (v: T; READONLY cp: VBT.CursorPosition): BOOLEAN =
 (* LL = v.mu *)
   BEGIN
     RETURN Rect.Member (cp.pt, VBT.Domain (v)) AND
@@ -420,21 +427,21 @@ PROCEDURE Gesture (v: T; READONLY cd: VBT.MouseRec; VAR action: Action): BOOLEAN
   BEGIN
     LOCK v.mu DO
       CASE cd.whatChanged OF
-      | VBT.Modifier.MouseL, 
+      | VBT.Modifier.MouseL,
         VBT.Modifier.MouseR,
         VBT.Modifier.MouseM =>
           (*Debugging> IO.Put("Mouse L, R, or M\n"); <Debugging*)
-          CASE v.state OF 
-          | State.Listen => 
+          CASE v.state OF
+          | State.Listen =>
             IF WithinButtons (v, cd.cp, step) THEN
               action.type := ActionType.AutoScroll;
-              IF step < 0 THEN 
+              IF step < 0 THEN
                 (*Debugging> IO.Put("Top Button\n"); <Debugging*)
                 v.state := State.ScrollBOF;
               ELSIF step > 0 THEN
                 (*Debugging> IO.Put("Bottom Button\n"); <Debugging*)
                 v.state := State.ScrollEOF;
-              ELSE 
+              ELSE
                 <* ASSERT FALSE *> (* step must be either negative or positive *)
               END;
               action.towardsEOF := step > 0;
@@ -448,7 +455,7 @@ PROCEDURE Gesture (v: T; READONLY cd: VBT.MouseRec; VAR action: Action): BOOLEAN
               action.towardsEOF := TRUE;
               v.state := State.ScrollEOF;
             ELSIF WithinThumb (v, cd.cp) THEN
-              (* Don't do anything when the thumb is down, 
+              (* Don't do anything when the thumb is down,
                  unless there is some mouse movement. *)
               VBT.SetCage(v, VBT.CageFromPosition(cd.cp, TRUE));
               v.state := State.Thumb;
@@ -465,7 +472,7 @@ PROCEDURE Gesture (v: T; READONLY cd: VBT.MouseRec; VAR action: Action): BOOLEAN
               END;
             ELSE RETURN FALSE;
             END;
-          | State.ScrollBOF => 
+          | State.ScrollBOF =>
             action.towardsEOF := FALSE;
             IF BeforeThumb (v, cd.cp) THEN
               action.type := ActionType.Scroll;
@@ -477,14 +484,14 @@ PROCEDURE Gesture (v: T; READONLY cd: VBT.MouseRec; VAR action: Action): BOOLEAN
               END;
             ELSE RETURN FALSE;
             END;
-          | State.Thumb => 
-            action.type := ActionType.Thumb;  
+          | State.Thumb =>
+            action.type := ActionType.Thumb;
           ELSE
             RETURN FALSE;
           END;
 (*Debugging>
       | VBT.Modifier.Mouse0 => IO.Put("Mouse 0\n"); RETURN FALSE;
-      | VBT.Modifier.Mouse1 => IO.Put("Mouse 1\n"); RETURN FALSE; 
+      | VBT.Modifier.Mouse1 => IO.Put("Mouse 1\n"); RETURN FALSE;
       | VBT.Modifier.Mouse2 => IO.Put("Mouse 2\n"); RETURN FALSE;
       | VBT.Modifier.Mouse3 => IO.Put("Mouse 3\n"); RETURN FALSE;
       | VBT.Modifier.Mouse4 => IO.Put("Mouse 4\n"); RETURN FALSE;
@@ -517,7 +524,7 @@ PROCEDURE Position (v: T; READONLY cd: VBT.PositionRec) RAISES {} =
     VBT.SetCage(v, VBT.CageFromPosition(cd.cp, TRUE));
     IF cd.cp.offScreen THEN AutoRepeat.Stop(v.repeater); RETURN END;
     AutoRepeat.Start(v.repeater);
-    LOCK v.mu DO 
+    LOCK v.mu DO
       v.event.cp := cd.cp;
       IF Rect.Member (cd.cp.pt, VBT.Domain(v)) THEN
          GetPartHeight (v, action.part, action.height);
@@ -526,7 +533,7 @@ PROCEDURE Position (v: T; READONLY cd: VBT.PositionRec) RAISES {} =
         AutoRepeat.Stop (v.repeater);
       END;
     END;
-    IF perform THEN 
+    IF perform THEN
       IF Gesture (v, v.event, action) THEN
         PerformAction (v, action);
       END;
@@ -565,7 +572,7 @@ PROCEDURE PerformAction (v: T; READONLY action: Action) =
 
 (***********
 
-PROCEDURE Where (t: TEXT; cp: VBT.CursorPosition) = 
+PROCEDURE Where (t: TEXT; cp: VBT.CursorPosition) =
   BEGIN
     IO.Put (Fmt.F(" (%s %s,%s) ", t, Fmt.Int(cp.pt.h), Fmt.Int(cp.pt.v)));
   END Where;
@@ -578,7 +585,7 @@ PROCEDURE Repeat (ar: AutoRepeater) =
     v              := ar.v;
   BEGIN
     IF Gesture (v, v.event, action) THEN
-      LOCK v.mu DO 
+      LOCK v.mu DO
         GetPartHeight (v, action.part, action.height);
       END;
       PerformAction (v, action);
@@ -693,16 +700,16 @@ VAR
                 ARRAY ScrollButton OF TEXT {"up.ppm", "down.ppm"}};
 
 CONST
-  DefaultScrollMargin = 0.5;
-  DefaultStripeWidth  = 3.0;
-  DefaultMinStripeLen = 8.0;
+  DefaultScrollMargin =  3.0; (* in pixels *) (* ((2 x Margin) + StripeWidth) = 16 = Width of up/down.ppm = Height of left/right.ppm *)
+  DefaultStripeWidth  = 10.0; (* in pixels *) (* ((2 x Margin) + StripeWidth) = 16 = Width of up/down.ppm = Height of left/right.ppm *)
+  DefaultMinStripeLen =  8.0; (* in millimeters *)
 
 VAR
   globalLock: MUTEX;
   graphicsInited: BOOLEAN;
 (*  Cursors: ARRAY State, Axis.T OF Cursor.T; *)
   ScrollPixmap: ARRAY Axis.T OF Pixmap.T;
-  
+
 PROCEDURE InitGraphics () =
   BEGIN
     LOCK globalLock DO
@@ -720,7 +727,7 @@ PROCEDURE InitGraphics () =
 
       FOR i := FIRST(Axis.T) TO LAST(Axis.T) DO
         FOR j := FIRST(ScrollButton) TO LAST(ScrollButton) DO
-          ScrollButtonPixmap[i,j] := 
+          ScrollButtonPixmap[i,j] :=
               VBTKitResources.GetPixmap (ScrollButtonPixmapNames[i,j]);
         END;
       END;
