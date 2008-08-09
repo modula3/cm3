@@ -9,13 +9,13 @@ and the values are computed.
 
 PROCEDURE GetDefaultXRes() : REAL =
 BEGIN
-    RETURN 75.0;
+  RETURN 75.0;
 END GetDefaultXRes;
 
 PROCEDURE GetDefaultYRes() : REAL =
 BEGIN
-    RETURN 75.0;
+  RETURN 75.0;
 END GetDefaultYRes;
 
 BEGIN
-END;
+END ImageInit.
