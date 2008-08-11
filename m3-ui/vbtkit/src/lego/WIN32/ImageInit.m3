@@ -23,6 +23,7 @@ BEGIN
     pix_hor = FLOAT(WinUser.GetSystemMetrics(WinUser.SM_CXSCREEN)),
     pix_ver = FLOAT(WinUser.GetSystemMetrics(WinUser.SM_CYSCREEN))
   DO
+    EVAL WinUser.ReleaseDC(hwnd, hdc);
     yres := (pix_ver / mm_ver * 10.0 * 2.54);
     xres := (pix_hor / mm_hor * 10.0 * 2.54);
   END;
