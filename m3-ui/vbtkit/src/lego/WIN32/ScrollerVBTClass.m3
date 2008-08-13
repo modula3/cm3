@@ -12,7 +12,7 @@
 MODULE ScrollerVBTClass;
 
 IMPORT AutoRepeat, Axis, (* Cursor, *) PaintOp, Pixmap, Point, Rect,
-         Region, VBT, VBTKitResources, ImageInit;
+         Region, VBT, VBTKitResources, WinUser, WinGDI;
 (*Debugging> IMPORT IO; <Debugging*)
 
 TYPE
@@ -91,8 +91,8 @@ TYPE
   AutoRepeater =
     AutoRepeat.T OBJECT v: T OVERRIDES repeat := Repeat END;
 
+
 PROCEDURE Init (v: T; axis := Axis.T.Ver; colors: PaintOp.ColorQuad := NIL): T =
-  CONST MMperInch = 25.4;
   BEGIN
     IF colors = NIL THEN colors := PaintOp.bgFg END;
     InitGraphics ();
@@ -109,21 +109,33 @@ PROCEDURE Init (v: T; axis := Axis.T.Ver; colors: PaintOp.ColorQuad := NIL): T =
     END;
     v.stripeBorderP := colors.bgFg;
     v.stripeBorder := Pixmap.Solid;
-    v.stripeW.millimeters := 0.25 * DefaultScrollMargin / ImageInit.GetDefaultXRes() * MMperInch;
-    v.stripeE.millimeters := 0.25 * DefaultScrollMargin / ImageInit.GetDefaultXRes() * MMperInch;
-    v.stripeN.millimeters := 0.25 * DefaultScrollMargin / ImageInit.GetDefaultYRes() * MMperInch;
-    v.stripeS.millimeters := 0.25 * DefaultScrollMargin / ImageInit.GetDefaultYRes() * MMperInch;
+  WITH
+    Window = WinUser.GetDesktopWindow(),
+    DeviceContext  = WinUser.GetDC(Window),
+    MillimetersPerScreenX = FLOAT(WinGDI.GetDeviceCaps(DeviceContext, WinGDI.HORZSIZE)),
+    MillimetersPerScreenY = FLOAT(WinGDI.GetDeviceCaps(DeviceContext, WinGDI.VERTSIZE)),
+    PixelsPerScreenX = FLOAT(WinUser.GetSystemMetrics(WinUser.SM_CXSCREEN)),
+    PixelsPerScreenY = FLOAT(WinUser.GetSystemMetrics(WinUser.SM_CYSCREEN)),
+    PixelsPerMillimeterX = (PixelsPerScreenX / MillimetersPerScreenX),
+    PixelsPerMillimeterY = (PixelsPerScreenY / MillimetersPerScreenY)
+  DO
+    EVAL WinUser.ReleaseDC(Window, DeviceContext);
+    v.stripeW.millimeters := 0.25 * DefaultScrollMargin / PixelsPerMillimeterX;
+    v.stripeE.millimeters := 0.25 * DefaultScrollMargin / PixelsPerMillimeterX;
+    v.stripeN.millimeters := 0.25 * DefaultScrollMargin / PixelsPerMillimeterY;
+    v.stripeS.millimeters := 0.25 * DefaultScrollMargin / PixelsPerMillimeterY;
     IF axis = Axis.T.Ver
     THEN
-       v.scrollMargin.millimeters := DefaultScrollMargin / ImageInit.GetDefaultXRes() * MMperInch;
-       v.stripeWidth.millimeters  := DefaultStripeWidth  / ImageInit.GetDefaultXRes() * MMperInch;
+       v.scrollMargin.millimeters := DefaultScrollMargin / PixelsPerMillimeterY;
+       v.stripeWidth.millimeters  := DefaultStripeWidth / PixelsPerMillimeterY;
     ELSE
-       v.scrollMargin.millimeters := DefaultScrollMargin / ImageInit.GetDefaultYRes() * MMperInch;
-       v.stripeWidth.millimeters  := DefaultStripeWidth  / ImageInit.GetDefaultYRes() * MMperInch;
+       v.scrollMargin.millimeters := DefaultScrollMargin / PixelsPerMillimeterX;
+       v.stripeWidth.millimeters  := DefaultStripeWidth / PixelsPerMillimeterX;
     END; (* if *)
     v.minStripeLen.millimeters := DefaultMinStripeLen;
     v.repeater := NEW (AutoRepeater, v := v).init ();
     RETURN v
+  END
   END Init;
 
 PROCEDURE Update (v: T; start, end, length: CARDINAL) =
