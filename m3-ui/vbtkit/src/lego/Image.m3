@@ -16,7 +16,7 @@ IMPORT Axis, Color, Fmt, IntIntTbl, Math, Palette, Pixmap, Point,
 
 IMPORT (* for FromVBT *)
   Region, RigidVBT, ScaleFilter, Filter, Split, Trestle,
-  VBTClass, ImageInit;
+  VBTClass;
 
 TYPE
   PixelMap = ARRAY [0 .. 255] OF INTEGER;
@@ -53,8 +53,8 @@ PROCEDURE ApplyScaled1 (cl: Closure; st: ScreenType.T):
     xres := st.res[Axis.T.Hor] * 25.4;
     yres := st.res[Axis.T.Ver] * 25.4;
   BEGIN
-    RETURN ScaleRaw(st, cl.raw, ROUND(xres / cl.raw.getXRes()),
-                    ROUND(yres / cl.raw.getYRes()))
+    RETURN ScaleRaw(st, cl.raw, ROUND(xres / cl.raw.xres),
+                    ROUND(yres / cl.raw.yres))
   END ApplyScaled1;
 
 
@@ -128,10 +128,10 @@ PROCEDURE ApplyScaledN (cl: ScaledNClosure; st: ScreenType.T):
   BEGIN
     (* find the raw closest to a multiple of the screen resolution *)
     FOR i := 0 TO LAST(cl.raws^) DO
-      WITH xs     = MIN(ROUND(xres / cl.raws[i].getXRes()), cl.maxScale),
-           ys     = MIN(ROUND(yres / cl.raws[i].getYRes()), cl.maxScale),
-           xerror = ABS(xres - FLOAT(xs) * cl.raws[i].getXRes()),
-           yerror = ABS(yres - FLOAT(ys) * cl.raws[i].getYRes())          DO
+      WITH xs     = MIN(ROUND(xres / cl.raws[i].xres), cl.maxScale),
+           ys     = MIN(ROUND(yres / cl.raws[i].yres), cl.maxScale),
+           xerror = ABS(xres - FLOAT(xs) * cl.raws[i].xres),
+           yerror = ABS(yres - FLOAT(ys) * cl.raws[i].yres)          DO
         IF xerror <= xtol AND yerror <= ytol
              AND (MAX(xs, ys) < scaleClosest)
              OR (MAX(xs, ys) = scaleClosest
@@ -148,10 +148,10 @@ PROCEDURE ApplyScaledN (cl: ScaledNClosure; st: ScreenType.T):
       errorClosest := MAX(xres, yres); (* can't do worse *)
       closest := 0; (* to be extra extra safe *)
       FOR i := 1 TO LAST(cl.raws^) DO
-        WITH xs     = MIN(ROUND(xres / cl.raws[i].getXRes()), cl.maxScale),
-             ys     = MIN(ROUND(yres / cl.raws[i].getYRes()), cl.maxScale),
-             xerror = ABS(xres - FLOAT(xs) * cl.raws[i].getXRes()),
-             yerror = ABS(yres - FLOAT(ys) * cl.raws[i].getYRes())          DO
+        WITH xs     = MIN(ROUND(xres / cl.raws[i].xres), cl.maxScale),
+             ys     = MIN(ROUND(yres / cl.raws[i].yres), cl.maxScale),
+             xerror = ABS(xres - FLOAT(xs) * cl.raws[i].xres),
+             yerror = ABS(yres - FLOAT(ys) * cl.raws[i].yres)          DO
           IF MAX(xerror, yerror) <= errorClosest THEN
             closest := i;
             errorClosest := MAX(xerror, yerror);
@@ -161,8 +161,8 @@ PROCEDURE ApplyScaledN (cl: ScaledNClosure; st: ScreenType.T):
     END;
 
     RETURN ScaleRaw(st, cl.raws[closest],
-                    MAX(1, ROUND(xres / cl.raws[closest].getXRes())),
-                    MAX(1, ROUND(yres / cl.raws[closest].getYRes())));
+                    MAX(1, ROUND(xres / cl.raws[closest].xres)),
+                    MAX(1, ROUND(yres / cl.raws[closest].yres)));
   END ApplyScaledN;
 
 TYPE
@@ -563,8 +563,8 @@ PROCEDURE FromScrnPixmap (pm: ScrnPixmap.T; st: VBT.ScreenType):
     IF spm.depth = 1 THEN
       VAR raw := NEW(ImBitmap).init(width, height);
       BEGIN
-        raw.setXRes(st.res[Axis.T.Hor]);
-        raw.setYRes(st.res[Axis.T.Ver]);
+        raw.xres := st.res[Axis.T.Hor];
+        raw.yres := st.res[Axis.T.Ver];
         FOR h := 0 TO raw.width - 1 DO
           FOR v := 0 TO raw.height - 1 DO
             WITH pix = spm.get(Point.T{h + spm.bounds.west,
@@ -585,8 +585,8 @@ PROCEDURE FromScrnPixmap (pm: ScrnPixmap.T; st: VBT.ScreenType):
         colors: ColorsArray;
         entry: ARRAY [0 .. 0] OF ScrnColorMap.Entry;
       BEGIN
-        raw.setXRes(st.res[Axis.T.Hor]);
-        raw.setYRes(st.res[Axis.T.Ver]);
+        raw.xres := st.res[Axis.T.Hor];
+        raw.yres := st.res[Axis.T.Ver];
         FOR h := 0 TO raw.width - 1 DO
           FOR v := 0 TO raw.height - 1 DO
             WITH pix = spm.get(Point.T{h + spm.bounds.west,
@@ -960,43 +960,6 @@ PROCEDURE GetChar (rd: Rd.T): CHAR
     END;
     RETURN ch
   END GetChar;
-
-(*
-Historically Image.Raw.xres and Image.Raw.yres were both always 75.0.
-Historically that was not too far from what monitors had.
-These days (2008) monitors can have much higher dpi
-and the values are computed.
-*)
-
-PROCEDURE GetXRes(self: Raw) : REAL =
-BEGIN
-    IF self.private.valid.xres THEN
-        RETURN self.private.xres;
-    ELSE
-        RETURN ImageInit.GetDefaultXRes();
-    END;
-END GetXRes;
-
-PROCEDURE GetYRes(self: Raw) : REAL =
-BEGIN
-    IF self.private.valid.yres THEN
-        RETURN self.private.yres;
-    ELSE
-        RETURN ImageInit.GetDefaultYRes();
-    END;
-END GetYRes;
-
-PROCEDURE SetXRes(self: Raw; a: REAL) =
-BEGIN
-    self.private.xres := a;
-    self.private.valid.xres := TRUE;
-END SetXRes;
-
-PROCEDURE SetYRes(self: Raw; a: REAL) =
-BEGIN
-    self.private.yres := a;
-    self.private.valid.yres := TRUE;
-END SetYRes;
 
 BEGIN
 END Image.
