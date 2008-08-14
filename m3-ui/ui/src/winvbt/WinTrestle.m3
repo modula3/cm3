@@ -418,7 +418,10 @@ PROCEDURE Acquire (<*UNUSED*> self: T;
       ur    : Child := v.upRef;
       status: WinDef.BOOL;
       handle: WinDef.HANDLE;
+      mu := ARRAY [0..1] OF MUTEX { NIL, NIL };
+      imu := 0;
     BEGIN
+
       IF ur = NIL OR ur.hwnd = NIL THEN
         RETURN;
       END;
@@ -428,6 +431,13 @@ PROCEDURE Acquire (<*UNUSED*> self: T;
       END;
 
       TRY
+        Thread.Release (v);
+        mu[imu] := v;
+        INC (imu);
+        Thread.Release (VBT.mu);
+        mu[imu] := VBT.mu;
+        INC (imu);
+
         status := WinUser.EmptyClipboard ();
         <* ASSERT status # False *>
 
@@ -437,6 +447,10 @@ PROCEDURE Acquire (<*UNUSED*> self: T;
       FINALLY
         status := WinUser.CloseClipboard ();
         <* ASSERT status # False *>
+        WHILE imu # 0 DO
+          Thread.Acquire (mu[imu - 1]);
+          DEC (imu);
+        END;
       END;
     END AcquireClipboard;
 
