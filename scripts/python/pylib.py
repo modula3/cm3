@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.121 2008-08-01 06:02:31 jkrell Exp $
+# $Id: pylib.py,v 1.122 2008-08-14 14:54:08 jkrell Exp $
 
 import os
 from os import getenv
@@ -887,6 +887,10 @@ def MakePackageDB():
                 return
             if Directory.find("_darcs") != -1:
                 return
+            if Directory.find("examples/web") != -1:
+                return
+            if Directory.find("examples\\web") != -1:
+                return
             if not "m3makefile" in Names:
                 return
             if not os.path.isfile(os.path.join(Directory, "m3makefile")):
@@ -1373,6 +1377,10 @@ PackageSets = {
         "juno-machine",
         "juno-compiler",
         "juno-app",
+
+        "deckscape",
+        "webscape",
+        "webcat",
         ],
 
 
@@ -1574,6 +1582,10 @@ PackageSets = {
         #"pp",
         #"kate",
         "sgml",
+
+        "deckscape",
+        "webscape",
+        "webcat",
         ],
 }
 
