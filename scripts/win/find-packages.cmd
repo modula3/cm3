@@ -1,4 +1,4 @@
-@rem $Id: find-packages.cmd,v 1.6 2008-05-08 11:36:42 jkrell Exp $
+@rem $Id: find-packages.cmd,v 1.7 2008-08-14 14:54:08 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -7,7 +7,7 @@ setlocal
 call %~dp0sysinfo || exit /b 1
 
 dir /s/b %ROOT%\m3makefile > %PKGSDB%.1
-findstr /e /i \src\m3makefile %PKGSDB%.1 > %PKGSDB%.2
+findstr /e /i \src\m3makefile %PKGSDB%.1 | findstr /v examples\\web > %PKGSDB%.2
 sort < %PKGSDB%.2 > %PKGSDB%.1
 del %PKGSDB%.2
 for /f %%i in (%PKGSDB%.1) do call :F1 %%i\..\.. >> %PKGSDB%.2

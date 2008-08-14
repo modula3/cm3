@@ -153,3 +153,6 @@ parserlib/parserlib/test caltech-parser
 pp
 kate
 sgml
+deckscape
+webscape
+webcat
