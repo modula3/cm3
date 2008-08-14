@@ -302,11 +302,10 @@ Echo("build new compiler and new runtime with new compiler (%(InstallRoot_Compil
 Packages += ["m3core", "libm3", "m3bundle", "mklib" ]
 if "m3cc" in Packages:
     Packages.remove("m3cc")
-
 Setup(InstallRoot_CompilerWithPrevious, InstallRoot_CompilerWithSelf)
 RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
-ShipFront() or FatalError()
+ShipCompiler() or FatalError()
 RealClean(pylib.PackageSets["all"]) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
@@ -321,6 +320,7 @@ if "m3cc" in Packages:
     Packages.remove("m3cc")
 RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
+ShipCompiler() or FatalError()
 RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
@@ -339,6 +339,7 @@ else:
         Packages.remove("m3cc")
     RealClean(Packages) or FatalError()
     BuildShip(Packages) or FatalError()
+    ShipCompiler() or FatalError()
     RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------

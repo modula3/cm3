@@ -887,6 +887,10 @@ def MakePackageDB():
                 return
             if Directory.find("_darcs") != -1:
                 return
+            if Directory.find("examples/web") != -1:
+                return
+            if Directory.find("examples\\web") != -1:
+                return
             if not "m3makefile" in Names:
                 return
             if not os.path.isfile(os.path.join(Directory, "m3makefile")):
@@ -1373,6 +1377,10 @@ PackageSets = {
         "juno-machine",
         "juno-compiler",
         "juno-app",
+
+        "deckscape",
+        "webscape",
+        "webcat",
         ],
 
 
@@ -1574,6 +1582,10 @@ PackageSets = {
         #"pp",
         #"kate",
         "sgml",
+
+        "deckscape",
+        "webscape",
+        "webcat",
         ],
 }
 
