@@ -26,6 +26,25 @@ TYPE
 
 TYPE Closure = Palette.PixmapClosure OBJECT raw: Raw END;
 
+
+
+VAR forceUnscaledBehavior: BOOLEAN := FALSE;
+
+PROCEDURE ForceUnScaledBehavior (useUnscaled: BOOLEAN) =
+(* If useUnscaled=TRUE, subsequent calls to Scaled() will instead operate as
+   Unscaled().  Calling this procedure again with useUnscaled=FALSE will
+   restore the defined behavior for subsequent calls to Scaled().  The reason
+   for adding this procedure is that the implementation of most of FormsVBT
+   uses Scaled().  By calling this procedure the programmer can override the
+   Scaled() behavior to produce Unscaled() behavior, even for library
+   components, without having to modify the source code.
+*)
+BEGIN (* ForceUnScaledBehavior *)
+   forceUnscaledBehavior := useUnscaled;
+END ForceUnScaledBehavior;
+
+
+
 PROCEDURE Unscaled (raw: Raw): T =
   BEGIN
     RETURN
@@ -43,8 +62,15 @@ PROCEDURE ApplyUnscaled (cl: Closure; st: ScreenType.T):
 
 PROCEDURE Scaled (raw: Raw): T =
   BEGIN
-    RETURN Palette.FromPixmapClosure(
-             NEW(Closure, apply := ApplyScaled1, raw := raw))
+    IF forceUnscaledBehavior
+    THEN
+       RETURN
+         Palette.FromPixmapClosure(
+           NEW(Closure, apply := ApplyUnscaled, raw := raw))
+    ELSE
+       RETURN Palette.FromPixmapClosure(
+                NEW(Closure, apply := ApplyScaled1, raw := raw))
+    END; (* if *)
   END Scaled;
 
 PROCEDURE ApplyScaled1 (cl: Closure; st: ScreenType.T):
@@ -98,9 +124,9 @@ PROCEDURE ScaledN (
     maxScale: CARDINAL := 4): T =
   VAR new := NEW(REF ARRAY OF Raw, NUMBER(raws));
   BEGIN
-    new^ := raws;
-    RETURN Palette.FromPixmapClosure(
-             NEW(ScaledNClosure, raws := new,
+     new^ := raws;
+     RETURN Palette.FromPixmapClosure(
+              NEW(ScaledNClosure, raws := new,
                  tolerance := MAX(tolerance, 0.00001),
                  maxScale := maxScale))
   END ScaledN;
