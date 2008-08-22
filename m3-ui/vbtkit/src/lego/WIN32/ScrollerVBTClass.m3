@@ -12,13 +12,13 @@
 MODULE ScrollerVBTClass;
 
 IMPORT AutoRepeat, Axis, (* Cursor, *) PaintOp, Pixmap, Point, Rect,
-         Region, VBT, VBTKitResources, WinUser, WinGDI;
-(*Debugging> IMPORT IO; <Debugging*)
+         Region, VBT, VBTKitResources;
+(*Debugging> IMPORT IO, Fmt; <Debugging*)
 
 TYPE
     Dim = RECORD
           pixels: INTEGER;
-          millimeters: REAL
+          millimeters: REAL;
         END;
 
     State = {Listen, Thumb, ScrollEOF, ScrollBOF};
@@ -56,6 +56,8 @@ REVEAL
 
       stripe: Rect.T;
 
+      needToComputePixels: BOOLEAN := FALSE; (* set true when MM passed in via SetAttributes() *)
+
       stripeW, stripeE, stripeN, stripeS: Dim;
 
       scrollMargin, stripeWidth, minStripeLen: Dim;
@@ -91,7 +93,6 @@ TYPE
   AutoRepeater =
     AutoRepeat.T OBJECT v: T OVERRIDES repeat := Repeat END;
 
-
 PROCEDURE Init (v: T; axis := Axis.T.Ver; colors: PaintOp.ColorQuad := NIL): T =
   BEGIN
     IF colors = NIL THEN colors := PaintOp.bgFg END;
@@ -109,33 +110,18 @@ PROCEDURE Init (v: T; axis := Axis.T.Ver; colors: PaintOp.ColorQuad := NIL): T =
     END;
     v.stripeBorderP := colors.bgFg;
     v.stripeBorder := Pixmap.Solid;
-  WITH
-    Window = WinUser.GetDesktopWindow(),
-    DeviceContext  = WinUser.GetDC(Window),
-    MillimetersPerScreenX = FLOAT(WinGDI.GetDeviceCaps(DeviceContext, WinGDI.HORZSIZE)),
-    MillimetersPerScreenY = FLOAT(WinGDI.GetDeviceCaps(DeviceContext, WinGDI.VERTSIZE)),
-    PixelsPerScreenX = FLOAT(WinUser.GetSystemMetrics(WinUser.SM_CXSCREEN)),
-    PixelsPerScreenY = FLOAT(WinUser.GetSystemMetrics(WinUser.SM_CYSCREEN)),
-    PixelsPerMillimeterX = (PixelsPerScreenX / MillimetersPerScreenX),
-    PixelsPerMillimeterY = (PixelsPerScreenY / MillimetersPerScreenY)
-  DO
-    EVAL WinUser.ReleaseDC(Window, DeviceContext);
-    v.stripeW.millimeters := 0.25 * DefaultScrollMargin / PixelsPerMillimeterX;
-    v.stripeE.millimeters := 0.25 * DefaultScrollMargin / PixelsPerMillimeterX;
-    v.stripeN.millimeters := 0.25 * DefaultScrollMargin / PixelsPerMillimeterY;
-    v.stripeS.millimeters := 0.25 * DefaultScrollMargin / PixelsPerMillimeterY;
-    IF axis = Axis.T.Ver
-    THEN
-       v.scrollMargin.millimeters := DefaultScrollMargin / PixelsPerMillimeterY;
-       v.stripeWidth.millimeters  := DefaultStripeWidth / PixelsPerMillimeterY;
-    ELSE
-       v.scrollMargin.millimeters := DefaultScrollMargin / PixelsPerMillimeterX;
-       v.stripeWidth.millimeters  := DefaultStripeWidth / PixelsPerMillimeterX;
-    END; (* if *)
+    WITH quarterMargin = ROUND(FLOAT(DefaultScrollMargin) * 0.25)
+    DO
+       v.stripeW.pixels := quarterMargin;
+       v.stripeE.pixels := quarterMargin;
+       v.stripeN.pixels := quarterMargin;
+       v.stripeS.pixels := quarterMargin;
+    END; (* with *)
+    v.scrollMargin.pixels := DefaultScrollMargin;
+    v.stripeWidth.pixels  := DefaultStripeWidth;
     v.minStripeLen.millimeters := DefaultMinStripeLen;
     v.repeater := NEW (AutoRepeater, v := v).init ();
     RETURN v
-  END
   END Init;
 
 PROCEDURE Update (v: T; start, end, length: CARDINAL) =
@@ -160,6 +146,7 @@ PROCEDURE Update (v: T; start, end, length: CARDINAL) =
 PROCEDURE GetAttributes (v: T): Attributes =
   VAR a: Attributes;
   BEGIN
+(*Debugging> IO.Put("===+++===!!! GetAttributes !!!===+++==="); <Debugging*)
     a.axis := v.axis;
     a.margin := v.scrollMargin.millimeters;
     a.scrollPaintOps := v.scrollTextureP;
@@ -171,12 +158,25 @@ PROCEDURE GetAttributes (v: T): Attributes =
     a.stripeBorder := v.stripeW.millimeters;
     a.stripeBorderPaintOp := v.stripeBorderP;
     a.stripeBorderPixmap := v.stripeBorder;
+    IF NOT v.needToComputePixels
+    THEN
+       WITH st = VBT.ScreenTypeOf(v)
+       DO
+          IF v # NIL
+          THEN
+             a.margin := FLOAT(v.scrollMargin.pixels) / st.res[Axis.Other[v.axis]];
+             a.stripeWidth := FLOAT(v.stripeWidth.pixels) / st.res[Axis.Other[v.axis]];
+             a.stripeBorder := FLOAT(v.stripeW.pixels) / st.res[Axis.Other[v.axis]];
+          END; (* if *)
+       END; (* with *)
+    END; (* if *)
     RETURN a;
   END GetAttributes;
 
 PROCEDURE SetAttributes (v: T; READONLY a: Attributes) =
   <* LL.sup = VBT.mu *>
   BEGIN
+(*Debugging> IO.Put("===+++===!!! SetAttributes !!!===+++==="); <Debugging*)
     v.axis := a.axis;
     v.scrollMargin.millimeters := a.margin;
     v.scrollTextureP := a.scrollPaintOps;
@@ -191,6 +191,8 @@ PROCEDURE SetAttributes (v: T; READONLY a: Attributes) =
     v.stripeN.millimeters := a.stripeBorder;
     v.stripeBorderP := a.stripeBorderPaintOp;
     v.stripeBorder := a.stripeBorderPixmap;
+    v.needToComputePixels := TRUE;
+
     VBT.NewShape(v);
     VBT.Mark(v);
   END SetAttributes;
@@ -267,21 +269,19 @@ PROCEDURE AdjustForScrollButtons (v: T; r: Rect.T; VAR low, high: Rect.T): Rect.
   (* LL = mu. Sets the domain of low and high 'arrow' buttons,
               and returns the subset of the domain which is
               to be used for drawing. *)
-  CONST
-    ScrollButtonSize = 16;
-
   VAR
     res : Rect.T := r;
+    scrollButtonSize := Rect.Size(v.axis, VBT.PixmapDomain(v, ScrollButtonPixmap[v.axis, ScrollButton.Low]));
   BEGIN
     low := r; high := r;
     IF v.axis = Axis.T.Ver THEN
-      INC(res.north, ScrollButtonSize);
-      DEC(res.south, ScrollButtonSize);
+      INC(res.north, scrollButtonSize);
+      DEC(res.south, scrollButtonSize);
       high.north := res.south;
       low.south := res.north;
     ELSE
-      INC(res.west, ScrollButtonSize);
-      DEC(res.east, ScrollButtonSize);
+      INC(res.west, scrollButtonSize);
+      DEC(res.east, scrollButtonSize);
       high.west := res.east;
       low.east := res.west;
     END;
@@ -556,8 +556,8 @@ PROCEDURE GetPartHeight (v: T; VAR (* out*) part, height: INTEGER) =
   (* LL = mu *)
   VAR dom := VBT.Domain(v);
   BEGIN
-    part := DeltaPoints(v.axis, v.event.cp.pt, Rect.NorthWest(dom));
     height := Rect.Size(v.axis, dom);
+    part := DeltaPoints(v.axis, v.event.cp.pt, Rect.NorthWest(dom));
   END GetPartHeight;
 
 PROCEDURE DeltaPoints (axis: Axis.T; READONLY p1, p2: Point.T): INTEGER =
@@ -575,7 +575,9 @@ PROCEDURE PerformAction (v: T; READONLY action: Action) =
   BEGIN
     CASE action.type OF
     | ActionType.Scroll =>
-        v.scroll(action.cd, action.part, action.height, action.towardsEOF);
+        v.scroll(action.cd, (*action.part,*)action.height, action.height, action.towardsEOF);
+           (* In the call above, I changed "part" to "height" for Windows to get one screen
+           at a time instead of the proportional effects specified in the interface.--R.Coleburn*)
     | ActionType.AutoScroll =>
         v.autoScroll(action.cd, action.linesToScroll, action.towardsEOF);
     | ActionType.Thumb => v.thumb(action.cd, action.part, action.height);
@@ -626,23 +628,41 @@ PROCEDURE Rescreen (                      v : T;
                     <* UNUSED *> READONLY cd: VBT.RescreenRec)
   RAISES {} =
   BEGIN
-    v.stripeW.pixels :=
-      ROUND(VBT.MMToPixels(v, v.stripeW.millimeters, Axis.T.Hor));
-    v.stripeE.pixels :=
-      ROUND(VBT.MMToPixels(v, v.stripeE.millimeters, Axis.T.Hor));
-    v.stripeN.pixels :=
-      ROUND(VBT.MMToPixels(v, v.stripeN.millimeters, Axis.T.Ver));
-    v.stripeS.pixels :=
-      ROUND(VBT.MMToPixels(v, v.stripeS.millimeters, Axis.T.Ver));
+    IF v.needToComputePixels
+    THEN
+       v.stripeW.pixels :=
+         ROUND(VBT.MMToPixels(v, v.stripeW.millimeters, Axis.T.Hor));
+       v.stripeE.pixels :=
+         ROUND(VBT.MMToPixels(v, v.stripeE.millimeters, Axis.T.Hor));
+       v.stripeN.pixels :=
+         ROUND(VBT.MMToPixels(v, v.stripeN.millimeters, Axis.T.Ver));
+       v.stripeS.pixels :=
+         ROUND(VBT.MMToPixels(v, v.stripeS.millimeters, Axis.T.Ver));
 
-    v.scrollMargin.pixels :=
-      ROUND(VBT.MMToPixels(
-        v, v.scrollMargin.millimeters, Axis.Other[v.axis]));
+       v.scrollMargin.pixels :=
+         ROUND(VBT.MMToPixels(
+           v, v.scrollMargin.millimeters, Axis.Other[v.axis]));
 
-    v.stripeWidth.pixels :=
-      ROUND(VBT.MMToPixels(
-        v, v.stripeWidth.millimeters, Axis.Other[v.axis]));
-
+       v.stripeWidth.pixels :=
+         ROUND(VBT.MMToPixels(
+           v, v.stripeWidth.millimeters, Axis.Other[v.axis]));
+       v.needToComputePixels := (v.stripeWidth.pixels = 0) AND (v.stripeWidth.millimeters # 0.0);
+    ELSE
+       WITH dom = VBT.PixmapDomain(v, ScrollButtonPixmap[v.axis, ScrollButton.Low]),
+            multiplier = Rect.Size(v.axis, dom) DIV PixmapSize,
+            margin = multiplier * DefaultScrollMargin,
+            quarterMargin = ROUND(FLOAT(margin) * 0.25),
+            width = multiplier * DefaultStripeWidth
+       DO
+          v.stripeW.pixels := quarterMargin;
+          v.stripeE.pixels := quarterMargin;
+          v.stripeN.pixels := quarterMargin;
+          v.stripeS.pixels := quarterMargin;
+          v.scrollMargin.pixels := margin;
+          v.stripeWidth.pixels := width;
+       END; (* with *)
+    END; (* if *)
+(*Debugging> IO.Put("=== === RescreenScrollBar === === qm=" & Fmt.Int(v.stripeW.pixels) & ", margin=" & Fmt.Int(v.scrollMargin.pixels) & ", width=" & Fmt.Int(v.stripeWidth.pixels) & " === ===\n"); <Debugging*)
     v.minStripeLen.pixels :=
       ROUND(VBT.MMToPixels(v, v.minStripeLen.millimeters, v.axis));
     VBT.NewShape(v);
@@ -710,10 +730,14 @@ VAR
   ScrollButtonPixmapNames := ARRAY Axis.T OF ARRAY ScrollButton OF TEXT
                {ARRAY ScrollButton OF TEXT {"left.ppm", "right.ppm"},
                 ARRAY ScrollButton OF TEXT {"up.ppm", "down.ppm"}};
+(* Note that for the above pixmaps, the raw size is 16 pixels square.
+   If the pixmaps change, you must change the values of PixmapSize,
+   DefaultScrollMargin, and DefaultStripeWidth below as per the formula. *)
 
 CONST
-  DefaultScrollMargin =  3.0; (* in pixels *) (* ((2 x Margin) + StripeWidth) = 16 = Width of up/down.ppm = Height of left/right.ppm *)
-  DefaultStripeWidth  = 10.0; (* in pixels *) (* ((2 x Margin) + StripeWidth) = 16 = Width of up/down.ppm = Height of left/right.ppm *)
+  PixmapSize          = 16; (* # pixels on each side, pixmap must be square *)
+  DefaultScrollMargin =  3; (* in pixels *) (* ((2 x Margin) + StripeWidth) = PixmapSize *)
+  DefaultStripeWidth  = 10; (* in pixels *) (* ((2 x Margin) + StripeWidth) = PixmapSize *)
   DefaultMinStripeLen =  8.0; (* in millimeters *)
 
 VAR
