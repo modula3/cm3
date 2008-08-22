@@ -40,7 +40,7 @@ TYPE
 TYPE
   Raw = OBJECT
       width, height: INTEGER;
-      xres, yres: REAL := 75.0; (* in pixels per inch *)
+      xres, yres: REAL := 75.0; (* res at which raw image was *constructed*, in pixels per inch (dpi) *)
     METHODS
       get (h, v: INTEGER): Pixel;
       set (h, v: INTEGER; pixel: Pixel);
@@ -307,6 +307,16 @@ PROCEDURE ScaledN (READONLY raws: ARRAY OF Raw;
 
    \end{itemize}
 
+*)
+
+PROCEDURE ForceUnScaledBehavior (useUnscaled: BOOLEAN);
+(* If useUnscaled=TRUE, subsequent calls to Scaled() will instead operate as
+   Unscaled().  Calling this procedure again with useUnscaled=FALSE will
+   restore the defined behavior for subsequent calls to Scaled().  The reason
+   for adding this procedure is that the implementation of most of FormsVBT
+   uses Scaled().  By calling this procedure the programmer can override the
+   Scaled() behavior to produce Unscaled() behavior, even for library
+   components, without having to modify the source code.
 *)
 
 END Image.
