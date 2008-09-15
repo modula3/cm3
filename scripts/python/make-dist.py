@@ -308,7 +308,11 @@ Setup(InstallRoot_CompilerWithPrevious, InstallRoot_CompilerWithSelf)
 RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
 ShipCompiler() or FatalError()
-RealClean(pylib.PackageSets["all"]) or FatalError()
+
+AllPackages = pylib.PackageSets["all"]
+if "m3cc" in AllPackages:
+    AllPackages.remove("m3cc")
+RealClean(AllPackages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
 Echo("build minimal packages with new compiler")
