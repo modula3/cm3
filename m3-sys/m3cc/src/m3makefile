@@ -38,6 +38,7 @@ readonly Platform_info = {
   "SPARC64_LINUX" : "sparc64-linux-gnu",
   "SPARC32_OPENBSD" : "sparc-openbsd",
   "SPARC64_OPENBSD" : "sparc64-openbsd",
+  "SPARC64_SOLARIS" : "sparc64-sun-solaris2.10",
   "SUN3"      : "m68k-sun-sunos4.1",
   "SUN386"    : "i386-sun-sunos4.1",
   "Tru64v5"   : "alpha-dec-osf1",
@@ -56,7 +57,8 @@ readonly Platform_info = {
 readonly proc Platform_WordSize (Platform) is
   if {"ALPHA_OSF":1,"AMD64_DARWIN":1,"AMD64_LINUX":1,"AMD64_NT":1,
       "AMD64_FREEBSD":1,"AMD64_NETBSD":1,"AMD64_OPENBSD":1,"AMD64_SOLARIS":1,
-      "IA64_NT":1,"FBSD_ALPHA":1,"Tru64v5":1,"SPARC64_LINUX":1,"SPARC64_OPENBSD":1} contains Platform
+      "IA64_NT":1,"FBSD_ALPHA":1,"Tru64v5":1,"SPARC64_LINUX":1,
+      "SPARC64_OPENBSD":1,"SPARC64_SOLARIS":1} contains Platform
     return "64"
   end
   return "32"
@@ -172,15 +174,18 @@ if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
 % figure out where we're going to build gcc
 local build_dir = "."  % let m3build set the build directory
+
 if not equal (M3CC_HOST, M3CC_TARGET)
   build_dir = "../" & BUILD_DIR & "-" & M3CC_TARGET
-end
-
-%
-% make sure the derived directory exists
-%
-if not exists (build_dir)
-  exec ("-mkdir", build_dir)
+  % make sure the derived directory exists
+  if not exists (build_dir)
+    exec ("-cd .. && mkdir " & BUILD_DIR & "-" & M3CC_TARGET)
+  end
+else
+  % make sure the derived directory exists
+  if not exists (build_dir)
+    exec ("-mkdir", build_dir)
+  end
 end
 
 m3cc_ResponseFileCounter = "0"
@@ -394,6 +399,53 @@ if Native
 end
 
 %
+% Modula-3 never uses "decimal" types, so dfp.c and libdecnumber.a are not needed.
+% Make dummy versions of them.
+%
+
+if not exists (build_dir & "/gcc")
+  exec ("-cd " & build_dir & "&& mkdir gcc")
+end
+
+> build_dir & "/gcc/dfp.c" in
+    write(""
+& "void decimal_real_from_string (void) { abort(); }\n"
+& "void encode_decimal32 (void) { abort(); }\n"
+& "void decode_decimal32 (void) { abort(); }\n"
+& "void encode_decimal64 (void) { abort(); }\n"
+& "void decode_decimal64 (void) { abort(); }\n"
+& "void encode_decimal128 (void) { abort(); }\n"
+& "void decode_decimal128 (void) { abort(); }\n"
+& "void decimal_do_compare (void) { abort(); }\n"
+& "void decimal_round_for_format (void) { abort(); }\n"
+& "void decimal_real_convert (void) { abort(); }\n"
+& "void decimal_real_to_decimal (void) { abort(); }\n"
+& "void decimal_do_fix_trunc (void) { abort(); }\n"
+& "void decimal_real_to_integer (void) { abort(); }\n"
+& "void decimal_real_to_integer2 (void) { abort(); }\n"
+& "void decimal_real_arithmetic (void) { abort(); }\n"
+& "void decimal_real_maxval (void) { abort(); }\n")
+end
+
+if not exists (build_dir & "/libdecnumber")
+  exec ("-cd " & build_dir & "&& mkdir libdecnumber")
+end
+> build_dir & "/libdecnumber/a.c" in
+  write("\n")
+end
+exec("gcc -c " & build_dir & "/libdecnumber/a.c -o " & build_dir & "/libdecnumber/a.o")
+exec("ar cru " & build_dir & "/libdecnumber/libdecnumber.a " & build_dir & "/libdecnumber/a.o")
+exec("ranlib " & build_dir & "/libdecnumber/libdecnumber.a")
+
+%
+% trigger toplevel Makefile to think configure is done
+%
+> build_dir & "/libdecnumber/Makefile" in
+  write("all:\n")
+end
+
+
+%
 % configure
 %
 
@@ -407,7 +459,7 @@ proc Sed (file0, find, replace) is
   end
 end
 
-foreach dir in ["gcc", "libcpp", "libdecnumber", "mpfr", "mpfr/tests"]
+foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
   foreach file in ["Makefile", "auto-host.h", "config.h"]
     local file = dir & "/" & file
     if exists (file)
@@ -432,7 +484,12 @@ end
 %
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
 %
-m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-mpfr all-libcpp all-libdecnumber all-build-libiberty all-libiberty | tee -a _m3.log"])
+m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-mpfr all-build-libiberty all-libiberty | tee -a _m3.log"])
+
+%
+% make just libcpp.a, don't bother with makedepend.exe
+%
+m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & " libcpp.a | tee -a _m3.log"])
 m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes insn-config.h m3cg | tee -a _m3.log"])
 
 postcp ()
