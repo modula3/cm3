@@ -288,6 +288,8 @@ Setup(InstallRoot, InstallRoot_CompilerWithPrevious)
 RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
 ShipCompiler() or FatalError()
+if "m3cc" in Packages:
+    Packages.remove("m3cc")
 RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
