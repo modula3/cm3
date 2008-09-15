@@ -310,8 +310,9 @@ BuildShip(Packages) or FatalError()
 ShipCompiler() or FatalError()
 
 AllPackages = pylib.PackageSets["all"]
-if "m3cc" in AllPackages:
-    AllPackages.remove("m3cc")
+for a in ["m3cc", "cm3"]:
+    if a in AllPackages:
+        AllPackages.remove(a)
 RealClean(AllPackages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
