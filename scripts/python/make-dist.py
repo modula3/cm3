@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.41 2008-08-14 14:54:07 jkrell Exp $
+# $Id: make-dist.py,v 1.42 2008-09-15 14:17:35 jkrell Exp $
 
 import sys
 import os.path
@@ -288,6 +288,8 @@ Setup(InstallRoot, InstallRoot_CompilerWithPrevious)
 RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
 ShipCompiler() or FatalError()
+if "m3cc" in Packages:
+    Packages.remove("m3cc")
 RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
