@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.43 2008-09-15 15:52:09 jkrell Exp $
+# $Id: make-dist.py,v 1.44 2008-09-15 16:21:27 jkrell Exp $
 
 import sys
 import os.path
@@ -310,8 +310,9 @@ BuildShip(Packages) or FatalError()
 ShipCompiler() or FatalError()
 
 AllPackages = pylib.PackageSets["all"]
-if "m3cc" in AllPackages:
-    AllPackages.remove("m3cc")
+for a in ["m3cc", "cm3"]:
+    if a in AllPackages:
+        AllPackages.remove(a)
 RealClean(AllPackages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
