@@ -47,7 +47,7 @@ along with GCC; see the file COPYING3.  If not see
    The first one is marked as continued with a double-backslash at the
    end of its "name".
 
-   The kind-of-symbol letter distinguished function names from global
+   The kind-of-symbol letter distinguishes function names from global
    variables from file-scope variables from parameters from auto
    variables in memory from typedef names from register variables.
    See `dbxout_symbol'.
@@ -2509,7 +2509,7 @@ dbxout_symbol (tree decl, int local ATTRIBUTE_UNUSED)
 
       /* We now have a used symbol.  We need to generate the info for
          the symbol's type in addition to the symbol itself.  These
-         type symbols are queued to be generated after were done with
+         type symbols are queued to be generated after we're done with
          the symbol itself (otherwise they would fight over the
          stabstr obstack).
 
@@ -2809,6 +2809,28 @@ dbxout_symbol (tree decl, int local ATTRIBUTE_UNUSED)
   DBXOUT_DECR_NESTING;
   return result;
 }
+
+/* Special-purpose function to write stabs for the static_chain_decl. 
+   So far, this is not working.  m3gdb needs the place in the activation
+   record where the SL is stored.  Right now, the SL is not necessarily
+   stored at all, but may just be kept in a register.  DECL_RTL and 
+   DECL_INCOMING_RTL may both have register expressions.  But stabs
+   entries for register variables, of kind N_RSYM, are currently ignored
+   by gdb in dbxread.c, and making it read them could create problems
+   elsewhere, because there can be other variables for which both an
+   N_RSYM and an N_LSYM stabs entry are created.   
+*/ 
+static int 
+dbxout_static_chain_decl (tree decl) 
+{ int result = 0;
+  tree type =  DECL_ARG_TYPE (decl); 
+  rtx decl_rtl = DECL_RTL (decl);
+  if (decl_rtl)
+    { decl_rtl = eliminate_regs (decl_rtl, 0, NULL_RTX);
+      result = dbxout_symbol_location (decl, type, 0, decl_rtl);
+    }
+  return result;
+}
 
 /* Output the stab for DECL, a VAR_DECL, RESULT_DECL or PARM_DECL.
    Add SUFFIX to its name, if SUFFIX is not 0.
@@ -3106,7 +3128,7 @@ dbxout_syms (tree syms)
   return result;
 }
 
-/* The following two functions output definitions of function parameters.
+/* The following three functions output definitions of function parameters.
    Each parameter gets a definition locating it in the parameter list.
    Each parameter that is a register variable gets a second definition
    locating it in the register.
@@ -3118,8 +3140,8 @@ dbxout_syms (tree syms)
 /* Output definitions, referring to storage in the parmlist,
    of all the parms in PARMS, which is a chain of PARM_DECL nodes.  */
 
-void
-dbxout_parms (tree parms)
+static void
+dbxout_parms_1 (tree parms, bool is_memory)
 {
   ++debug_nesting;
   emit_pending_bincls_if_required ();
@@ -3148,7 +3170,7 @@ dbxout_parms (tree parms)
 	  }
 #endif
 
-	if (PARM_PASSED_IN_MEMORY (parms))
+	if (is_memory || PARM_PASSED_IN_MEMORY (parms))
 	  {
 	    rtx inrtl = XEXP (DECL_INCOMING_RTL (parms), 0);
 
@@ -3306,6 +3328,11 @@ dbxout_parms (tree parms)
       }
   DBXOUT_DECR_NESTING;
 }
+
+void
+dbxout_parms (tree parms)
+  { dbxout_parms_1 ( parms, /* is_memory */ false ); 
+  } 
 
 /* Output definitions for the places where parms live during the function,
    when different from where they were passed, when the parms were passed
@@ -3492,6 +3519,64 @@ dbxout_block (tree block, int depth, tree args)
     }
 }
 
+#if 0
+/* Code copied from 1.4.2.2: */ 
+/* This code will probably be unused, but preserve it for now, just in case. */
+
+/* Register HARD_FRAME_POINTER_REGNUM holds the frame pointer, and it is
+   relative to this that stabs displacement values for locals are emitted.
+   However, when static links are used to access nonlocal variables, they
+   use FRAME_POINTER_REGNUM as a base.  If this is a distinct register, it
+   is possible, for some functions, that it points to a different place in
+   the activation record.  If so, we emit a pseudo-local-variable stabs
+   with a canned name, so m3gdb can figure out where static links really
+   point.  The value is the offset to be added to the contents of register
+   HARD_FRAME_POINTER_REGNUM to get the address where register
+   FRAME_POINTER_REGNUM will point, when used to access the same activation
+   record from within a nested function. */
+
+#if HARD_FRAME_POINTER_REGNUM != FRAME_POINTER_REGNUM
+
+/* The value of this must agree with the string of the same name in m3gdb,
+   file m3-util.c, used by function m3_frame_base_to_base_offset. */
+static const char * frame_offset_name = "__frame_offset";
+
+int
+dbxout_emit_frame_offset ( tree funcdecl )
+
+  { int value;
+
+    /* The code below will use global variable cfun to get the function
+       info from which to compute value. */
+#ifdef ELIMINABLE_REGS
+    INITIAL_ELIMINATION_OFFSET
+      ( FRAME_POINTER_REGNUM, HARD_FRAME_POINTER_REGNUM, value );
+#else
+    INITIAL_FRAME_POINTER_OFFSET ( value );
+#endif
+
+    if ( value != 0 )
+      { emit_pending_bincls_if_required ( );
+        dbxout_prepare_symbol ( funcdecl /* UNUSED */ );
+        current_sym_code = N_LSYM;
+        current_sym_value = value;
+        FORCE_TEXT;
+        fprintf (asmfile, ASM_STABS_OP );
+        putc ( '"' , asmfile );
+        fprintf (asmfile, frame_offset_name );
+        current_sym_nchars = strlen ( frame_offset_name );
+        /* No "letter" for local variable. */
+        putc ( ':' , asmfile );
+        CHARS ( 1 );
+        dbxout_type ( void_type_node, 0 );
+        dbxout_finish_symbol ( funcdecl );
+      }
+  } /* dbxout_emit_frame_offset */
+
+#endif /* HARD_FRAME_POINTER_REGNUM != FRAME_POINTER_REGNUM */
+
+#endif /* 1.4.2.2 */ 
+
 /* Output the information about a function and its arguments and result.
    Usually this follows the function's code,
    but on some systems, it comes before.  */
@@ -3518,8 +3603,26 @@ dbxout_begin_function (tree decl)
   TREE_USED (decl) = saved_tree_used1;
 
   dbxout_parms (DECL_ARGUMENTS (decl));
+
+  /* m3gdb is more robust if it gets the static link decl. */ 
+  { tree static_decl = DECL_STRUCT_FUNCTION (decl)->static_chain_decl; 
+    if ( static_decl ) 
+      { dbxout_static_chain_decl (static_decl ); } 
+      
+  } 
   if (DECL_NAME (DECL_RESULT (decl)) != 0)
     dbxout_symbol (DECL_RESULT (decl), 1);
+
+#if 0  
+/* Code copied from 1.4.2.2: */ 
+/* This code will probably be unused, but preserve it for now, just in case. */
+
+#if HARD_FRAME_POINTER_REGNUM != FRAME_POINTER_REGNUM
+  dbxout_emit_frame_offset ( decl );
+#endif
+
+
+#endif /* 1.4.2.2 */ 
 }
 #endif /* DBX_DEBUGGING_INFO */
 

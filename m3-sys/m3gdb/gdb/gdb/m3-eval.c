@@ -1024,7 +1024,7 @@ m3_frame_for_block (struct block *target_block )
          parsing and stored in the OP_VAR_VALUE node, which would have 
          to be changed to M3_OP_VAR_VALUE. */ 
       l_target_proc_block = m3_block_proc_block ( target_block ); 
-      while ( true ) 
+      while ( l_frame != NULL ) 
         { l_frame_proc_block 
             = m3_block_proc_block 
                 ( get_frame_block ( l_frame , NULL ) 
@@ -1032,28 +1032,37 @@ m3_frame_for_block (struct block *target_block )
                        but it doesn't matter, because we skip to the enclosing 
                        procedure block for this block and target_block. */ 
                 ); 
-          if ( l_frame_proc_block == NULL ) { return NULL; } 
+          if ( l_frame_proc_block == NULL ) { break; } 
           if ( l_frame_proc_block == l_target_proc_block ) { return l_frame; } 
           l_frame = m3_static_parent_frame ( l_frame );
         } /* while */
     } /* if */ 
-  else /* Do it the old way. */  
-    { /* Starting with the selected frame and working outward, find the first
-         frame that belongs to block.  This is a crude way to locate non-local
-         variables/parameters of statically-enclosing procedures of the selected
-         frame's procedure.  If procedures are called as procedure constants,
-         this should find the right frame.  If something was called as the
-         value of a procedure parameter, it may be wrong.  
-      */
-      start = BLOCK_START ( target_block );
-      end = BLOCK_END ( target_block );
-      while ( true )
-        { if ( l_frame == NULL ) { return NULL; } 
-          calling_pc = get_frame_address_in_block ( l_frame );
-          if ( start <= calling_pc && calling_pc < end ) { return l_frame; }
-          l_frame = get_prev_frame ( l_frame );
-        } /* while */ 
-    } /* else */ 
+  /* If we fall through to here, using static links failed.  Try an older
+     method.  It will at least work in the absence of active frames for nested 
+     procedures that were called through procedure parameters. */ 
+  /* Starting with the selected frame and working outward, find the first
+     frame that belongs to block.  This is a crude way to locate non-local
+     variables/parameters of statically-enclosing procedures of the selected
+     frame's procedure.  If procedures are called as procedure constants,
+     this should find the right frame.  If something was called as the
+     value of a procedure parameter, it may be wrong.  
+  */
+  start = BLOCK_START ( target_block );
+  end = BLOCK_END ( target_block );
+  l_frame = deprecated_safe_get_selected_frame ( ); 
+  while ( true )
+    { if ( l_frame == NULL ) { return NULL; } 
+      calling_pc = get_frame_address_in_block ( l_frame );
+      if ( start <= calling_pc && calling_pc < end ) 
+        { warning 
+            (_("This could be wrong if a proc param with nested procedure value was called."));
+          return l_frame; 
+        }
+      l_frame = get_prev_frame ( l_frame );
+    } /* while */ 
+  /* That failed too. */ 
+  error (_("Static link does not lead to a valid frame."));
+  /* NORETURN */ 
 } /* m3_frame_for_block */ 
 
 /* Handle value conversion of an ordinal value for either assignment
@@ -1657,8 +1666,8 @@ m3_check_and_coerce_array (
 
    Procedure type stabs entries for procedure variables and methods are 
    produced a little differently by the compilers, and don't contain enough 
-   information at all.  Fortunately, for evaluating a user-typed call, we can 
-   get the runtime address of the procedure constant first, then get the 
+   information at all.  Fortunately, for evaluating a user-entered call, we 
+   can get the runtime address of the procedure constant first, then get its 
    symbol from that. 
 
    It is not clear that the type of "_result" will be available when the 
