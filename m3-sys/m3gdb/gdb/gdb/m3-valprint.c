@@ -1147,7 +1147,7 @@ m3_print_proc_value (
                   ( stream,
                     "Static ancestor=(16_%lx)frame #%d", 
                     inf_static_link,  
-                    m3_frame_no_from_static_link ( inf_static_link )
+                    m3_frame_no_from_static_link ( inf_static_link)
                   ); 
               }  
             fputs_filtered ( "}", stream ); 

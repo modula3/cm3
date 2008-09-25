@@ -35,6 +35,7 @@
 #include "langhooks.h"
 #include "pointer-set.h"
 #include "ggc.h"
+#include "flags.h"
 
 
 /* The object of this pass is to lower the representation of a set of nested
@@ -185,6 +186,10 @@ insert_field_into_struct (tree type, tree field)
   *p = field;
 }
 
+/* This must agree with the string defined by the same name in m3gdb, file
+   m3-util.c */ 
+static const char * nonlocal_var_rec_name = "_nonlocal_var_rec"; 
+
 /* Build or return the RECORD_TYPE that describes the frame state that is
    shared between INFO->CONTEXT and its nested functions.  This record will
    not be complete until finalize_nesting_tree; up until that point we'll
@@ -209,7 +214,8 @@ get_frame_type (struct nesting_info *info)
       free (name);
 
       info->frame_type = type;
-      info->frame_decl = create_tmp_var_for (info, type, "FRAME");
+      info->frame_decl 
+        = create_tmp_var_for (info, type, nonlocal_var_rec_name);
 
       /* ??? Always make it addressable for now, since it is meant to
 	 be pointed to by the static chain pointer.  This pessimizes
@@ -218,6 +224,8 @@ get_frame_type (struct nesting_info *info)
 	 reachable, but the true pessimization is to create the non-
 	 local frame structure in the first place.  */
       TREE_ADDRESSABLE (info->frame_decl) = 1;
+      /* m3gdb needs to know about this variable. */ 
+      DECL_IGNORED_P (info->frame_decl) = 0;  
     }
   return type;
 }
@@ -290,6 +298,10 @@ lookup_field_for_decl (struct nesting_info *info, tree decl,
   return *slot;
 }
 
+/* This must agree with the string defined by the same name in m3gdb, file
+   m3_util.c */ 
+static const char * static_link_var_name = "_static_link_var"; 
+
 /* Build or return the variable that holds the static chain within
    INFO->CONTEXT.  This variable may only be used within INFO->CONTEXT.  */
 
@@ -310,9 +322,14 @@ get_chain_decl (struct nesting_info *info)
 	 Note also that it's represented as a parameter.  This is more
 	 close to the truth, since the initial value does come from 
 	 the caller.  */
-      decl = build_decl (PARM_DECL, create_tmp_var_name ("CHAIN"), type);
+      decl = build_decl 
+               (PARM_DECL, get_identifier (static_link_var_name), type);
+      TREE_CHAIN (decl) = NULL; /* Possibly redundant, but dbxout needs it. */ 
       DECL_ARTIFICIAL (decl) = 1;
-      DECL_IGNORED_P (decl) = 1;
+
+      /* m3gdb needs to know about this variable. */ 
+      DECL_IGNORED_P (decl) = 0;
+
       TREE_USED (decl) = 1;
       DECL_CONTEXT (decl) = info->context;
       DECL_ARG_TYPE (decl) = type;
@@ -325,6 +342,10 @@ get_chain_decl (struct nesting_info *info)
     }
   return decl;
 }
+
+/* This must agree with the string defined by the same name in m3gdb, file
+   m3_util.c */ 
+static const char * static_link_copy_field_name = "_static_link_copy_field"; 
 
 /* Build or return the field within the non-local frame state that holds
    the static chain for INFO->CONTEXT.  This is the way to walk back up
@@ -339,10 +360,12 @@ get_chain_field (struct nesting_info *info)
       tree type = build_pointer_type (get_frame_type (info->outer));
 
       field = make_node (FIELD_DECL);
-      DECL_NAME (field) = get_identifier ("__chain");
+      DECL_NAME (field) = get_identifier (static_link_copy_field_name);
       TREE_TYPE (field) = type;
       DECL_ALIGN (field) = TYPE_ALIGN (type);
       DECL_NONADDRESSABLE_P (field) = 1;
+      /* m3gdb should know about this field. */ 
+      DECL_IGNORED_P (field) = 0;  
 
       insert_field_into_struct (get_frame_type (info), field);
 
@@ -1802,6 +1825,18 @@ convert_all_function_calls (struct nesting_info *root)
       walk_function (convert_tramp_reference, root);
       walk_function (convert_call_expr, root);
 
+      /* If this is a nested function and we are supporting debugging via
+         m3gdb, we always need a chain_decl, so m3gdb can find the static 
+         chain, even if the programmer's code doesn't use it.  This will 
+         also ensure that !DECL_NO_STATIC_CHAIN (root->context), which will 
+         in turn ensure that the static chain value is passed at runtime
+         in calls to function root->context. */ 
+      if (root->outer 
+          && (write_symbols != NO_DEBUG
+              && debug_info_level != DINFO_LEVEL_NONE
+              && debug_info_level != DINFO_LEVEL_TERSE))
+        { (void) get_chain_decl (root); } 
+
       /* If the function does not use a static chain, then remember that.  */
       if (root->outer && !root->chain_decl && !root->chain_field)
 	DECL_NO_STATIC_CHAIN (root->context) = 1;
@@ -1931,7 +1966,7 @@ finalize_nesting_tree_1 (struct nesting_info *root)
      proper BIND_EXPR.  */
   if (root->new_local_var_chain)
     declare_vars (root->new_local_var_chain, DECL_SAVED_TREE (root->context),
-		  false);
+		  true);
   if (root->debug_var_chain)
     declare_vars (root->debug_var_chain, DECL_SAVED_TREE (root->context),
 		  true);
