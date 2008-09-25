@@ -2121,35 +2121,58 @@ m3_indirect_type_from_type (struct type *type)
           still vary with stack growth direction. */ 
 static const int static_link_location_offset = - 4; 
 
+/* This must agree with the string defined by the same name in the gcc backend,
+   tree-nested.c */ 
+static const char * static_link_var_name = "_static_link_var"; 
+
+CORE_ADDR 
+m3_inf_static_link ( struct frame_info *start_frame ) 
+
+  { long displ; 
+    struct block * proc_block; 
+    struct symbol * sl_sym; 
+    CORE_ADDR inf_frame_address; 
+    CORE_ADDR static_link; 
+
+    inf_frame_address = get_frame_locals_address (start_frame);   
+    proc_block = m3_block_proc_block (get_frame_block (start_frame, NULL)); 
+    sl_sym = lookup_block_symbol 
+               (proc_block, static_link_var_name, NULL, VAR_DOMAIN);
+    if (false && sl_sym != NULL) 
+/* FIXME: This is disabled for now, because I couldn't find where
+   gcc puts the displacement of stored static link field. 
+*/ 
+      { displ = SYMBOL_VALUE(sl_sym); }
+    else 
+      { displ = static_link_location_offset; } 
+    static_link 
+      = read_memory_typed_address /* from gdbcore.h */ 
+          ( inf_frame_address + displ, builtin_type_void_data_ptr );
+    return static_link - m3_frame_base_to_sl_target_offset ( proc_block );  
+  } /* m3_inf_static_link */  
+
 struct frame_info * 
 m3_static_parent_frame ( struct frame_info *start_frame ) 
 
   { struct frame_info * frame ; 
-    CORE_ADDR static_link; 
+    CORE_ADDR inf_static_link; 
 
     if (start_frame == NULL) return NULL; 
 
-    /* Maybe just call read_memory? */
-    static_link 
-       = read_memory_typed_address /* from gdbcore.h */ 
-           ( get_frame_locals_address ( start_frame ) 
-               + static_link_location_offset, 
-             builtin_type_void_data_ptr 
-           ); 
+    inf_static_link = m3_inf_static_link (start_frame);  
     frame = start_frame; 
     do 
       { frame = get_prev_frame (frame); 
-        if (frame == NULL )
-          { error (_("Static link does not lead to a valid frame."));
-            /* NORETURN */ 
-          }  
+        if (frame == NULL) { return NULL; } 
       } 
     while 
-      ( /* Using m3_address_lies_within_frame_locals makes this immune to gcc's
-           evil habit of making static links point to variable places within the
-           activation record besides where the frame pointer does. */ 
-              ! m3_address_lies_within_frame_locals ( static_link, frame ) 
+      ( frame != NULL 
+        /* Using m3_address_lies_within_frame_locals adds some immunity to gcc's
+           debugger-hostile habit of making static links point elsewhere  
+           within the activation record than where the frame pointer does. */ 
+        && ! m3_address_lies_within_frame_locals ( inf_static_link, frame ) 
       ); 
+/* TODO: Check that we get a frame for the expected block. */ 
     return frame; 
   } /* m3_static_parent_frame */ 
 
@@ -2351,8 +2374,13 @@ m3_address_lies_within_frame_locals (
 } /* m3_address_lies_within_block_locals */ 
 
 /* This must agree with the string defined by the same name in the gcc backend,
-   dbxout.c, and used by dbxout_emit_frame_offset: */ 
-static const char * frame_offset_name = "__frame_offset"; 
+   file tree-nested.c */
+/* Actually, it's unused as of 2008-9-9, but it may be used in the future. */  
+static const char * static_link_copy_field_name = "_static_link_copy_field"; 
+
+/* This must agree with the string defined by the same name in the gcc backend,
+   tree_nested.c */ 
+static const char * nonlocal_var_rec_name = "_nonlocal_var_rec"; 
 
 /* Given a block for a procedure procblock, return the amount to add
    to the frame base address to get the place in the activation record
@@ -2366,7 +2394,7 @@ m3_frame_base_to_sl_target_offset ( struct block * procblock )
     offset_sym 
       = lookup_block_symbol 
           ( m3_block_proc_block ( procblock ), 
-            frame_offset_name, NULL, VAR_DOMAIN 
+            nonlocal_var_rec_name, NULL, VAR_DOMAIN 
           );
     if ( offset_sym == NULL ) { return 0; }
     return SYMBOL_VALUE ( offset_sym );  
