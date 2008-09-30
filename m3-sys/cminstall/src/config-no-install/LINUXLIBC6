@@ -6,4 +6,9 @@ readonly m3back = "@cm3cg -quiet -gstabs+ -m32 -fPIC -mno-align-double"
 readonly SYSTEM_CC       = "@gcc -gstabs+ -m32 -fPIC -mno-align-double" % C compiler
 readonly SYSTEM_ASM = "@as --32" % Assembler
 
+%
+% add s switch to ar and remove need for ranlib
+%
+readonly AR_AND_RANLIB_ARE_ONE = TRUE
+
 include("Unix.common")
