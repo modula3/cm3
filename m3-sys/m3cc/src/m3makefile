@@ -176,11 +176,12 @@ if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 local build_dir = "."  % let m3build set the build directory
 
 if not equal (M3CC_HOST, M3CC_TARGET)
-  build_dir = "../" & BUILD_DIR & "-" & M3CC_TARGET
+  build_dir = M3CC_HOST & "-" & M3CC_TARGET
   % make sure the derived directory exists
   if not exists (build_dir)
-    exec ("-cd .. && mkdir " & BUILD_DIR & "-" & M3CC_TARGET)
+    exec ("-cd .. && mkdir " & build_dir)
   end
+  build_dir = "../" & build_dir
 else
   % make sure the derived directory exists
   if not exists (build_dir)
