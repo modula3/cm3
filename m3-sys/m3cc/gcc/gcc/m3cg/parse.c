@@ -1332,7 +1332,7 @@ static int option_types_trace       = 0;
 
 #define BUFFER_SIZE 0x10000
 
-static char input_buffer[BUFFER_SIZE];
+static unsigned char input_buffer[BUFFER_SIZE];
 static int  input_len    = 0;
 static int  input_cursor = 0;
 static int  input_eof    = 0;
@@ -2156,6 +2156,29 @@ setop2 (tree p, int q)
   m3_call_direct (p, t);
 }
 
+/*----------------------------------------------------------------------------*/
+
+static const char* mode_to_string(enum machine_mode mode)
+{
+  const char* modestring = "";
+
+  switch (mode)
+  {
+    default:
+      break;
+    case VOIDmode:
+      modestring = "VOIDmode";
+      break;
+    case DImode:
+      modestring = "DImode";
+      break;
+    case BLKmode:
+      modestring = "BLKmode";
+      break;
+  }
+  return modestring;
+}
+
 /*---------------------------------------------------------------- faults ---*/
 
 static int  fault_offs;                /*   + offset                */
@@ -2181,7 +2204,14 @@ declare_fault_proc (void)
   DECL_CONTEXT (proc) = 0;
 
   parm = build_decl (PARM_DECL, fix_name ("arg", 0x195c2a74), t_word);
-  if (DECL_MODE (parm) == VOIDmode) DECL_MODE (parm) = Pmode;
+  if (DECL_MODE (parm) == VOIDmode)
+  {
+      if (option_trace_all)
+      {
+        fprintf(stderr, "declare_fault_proc: converting parameter from VOIDmode to Pmode\n");
+      }
+      DECL_MODE (parm) = Pmode;
+  }
   DECL_ARG_TYPE (parm) = t_word;
   DECL_ARGUMENTS (proc) = parm;
   DECL_CONTEXT (parm) = proc;
@@ -2191,6 +2221,13 @@ declare_fault_proc (void)
 
   BLOCK_SUPERCONTEXT (top_block) = parm_block;
   BLOCK_SUBBLOCKS (parm_block) = top_block;
+
+  if (option_trace_all)
+  {
+    enum machine_mode mode = TYPE_MODE (TREE_TYPE (parm));
+    const char* modestring = mode_to_string(mode);
+    fprintf(stderr, "declare_fault_proc: type is %u (%s)\n", (unsigned) mode, modestring);
+  }
 
   fault_proc = proc;
 }
@@ -2388,7 +2425,7 @@ m3cg_declare_array (void)
             "  array id 0x%lx, index id 0x%lx, elements id 0x%lx, size 0x%lx\n",
             my_id, index_id, elts_id, size);
 
-  debug_tag ('A', my_id, "_%d", size);
+  debug_tag ('A', my_id, "_%ld", size);
   debug_field_id (index_id);
   debug_field_id (elts_id);
   debug_struct ();
@@ -2406,7 +2443,7 @@ m3cg_declare_open_array (void)
             "  open array id 0x%lx, elements id 0x%lx, size 0x%lx\n",
             my_id, elts_id, size);
 
-  debug_tag ('B', my_id, "_%d", size);
+  debug_tag ('B', my_id, "_%ld", size);
   debug_field_id (elts_id);
   debug_struct ();
 }
@@ -2423,7 +2460,7 @@ m3cg_declare_enum (void)
             "  enum id 0x%lx, elements 0x%lx, size 0x%lx\n",
             my_id, n_elts, size);
 
-  debug_tag ('C', my_id, "_%d", size);
+  debug_tag ('C', my_id, "_%ld", size);
   current_dbg_type_count1 = n_elts;
 }
 
@@ -2451,7 +2488,7 @@ m3cg_declare_packed (void)
             "  packed id 0x%lx, target id 0x%lx, size 0x%lx\n",
             my_id, target_id, size);
   debug_field_id (target_id);
-  debug_tag ('D', my_id, "_%d", size);
+  debug_tag ('D', my_id, "_%ld", size);
   debug_struct ();
 }
 
@@ -2466,7 +2503,7 @@ m3cg_declare_record (void)
     fprintf(stderr,
             "  record id 0x%lx, fields 0x%lx, size 0x%lx\n",
             my_id, n_fields, size);
-  debug_tag ('R', my_id, "_%d", size);
+  debug_tag ('R', my_id, "_%ld", size);
   current_dbg_type_count1 = n_fields;
   current_dbg_type_count2 = 0;
   if (current_dbg_type_count1 == 0) { debug_struct (); }
@@ -2484,7 +2521,7 @@ m3cg_declare_field (void)
     fprintf(stderr, "  field %s, id 0x%lx, size 0x%lx, offset 0x%lx\n",
             name, my_id, size, offset);
 
-  debug_field_fmt (my_id, "_%d_%d_%s", offset, size, name);
+  debug_field_fmt (my_id, "_%ld_%ld_%s", offset, size, name);
   current_dbg_type_count1--;
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0) {
     debug_struct ();
@@ -2498,7 +2535,7 @@ m3cg_declare_set (void)
   TYPEID  (domain_id);
   BITSIZE (size);
 
-  debug_tag ('S', my_id, "_%d", size);
+  debug_tag ('S', my_id, "_%ld", size);
   debug_field_id (domain_id);
   debug_struct ();
 }
@@ -2651,7 +2688,7 @@ m3cg_declare_proctype (void)
     fprintf(stderr,
             "  proctype id 0x%lx, result id 0x%lx, formals 0x%lx, raises 0x%lx\n",
             my_id, result_id, n_formals, n_raises);
-  debug_tag ('P', my_id, "_%d_%c%d", GET_MODE_BITSIZE (Pmode),
+  debug_tag ('P', my_id, "_%d_%c%ld", GET_MODE_BITSIZE (Pmode),
 	     n_raises < 0 ? 'A' : 'L', MAX (n_raises, 0));
   current_dbg_type_count1 = n_formals;
   current_dbg_type_count2 = MAX (0, n_raises);
@@ -2709,7 +2746,7 @@ m3cg_declare_object (void)
             my_id, super_id, sbrand, traced, n_fields, n_methods);
   }
 
-  debug_tag ('O', my_id, "_%d_%d_%d_%d_%s", POINTER_SIZE, n_fields, traced,
+  debug_tag ('O', my_id, "_%d_%ld_%d_%d_%s", POINTER_SIZE, n_fields, traced,
 	     (brand ? 1:0), (brand ? brand : ""));
   debug_field_id (super_id);
   current_dbg_type_count1 = n_fields;
@@ -3016,7 +3053,15 @@ m3cg_declare_param (void)
     /* arguments were accumulated in reverse, build type, then unreverse */
     tree parm, args = void_list_node;
     for (parm = DECL_ARGUMENTS (p); parm; parm = TREE_CHAIN(parm))
+    {
+      if (option_trace_all)
+      {
+        enum machine_mode mode = TYPE_MODE (TREE_TYPE (parm));
+        const char* modestring = mode_to_string(mode);
+        fprintf(stderr, "m3cg_declare_param: type is %u (%s)\n", (unsigned) mode, modestring);
+      }
       args = tree_cons (NULL_TREE, TREE_TYPE (parm), args);
+    }
     args = build_function_type (TREE_TYPE (TREE_TYPE (p)), args);
     decl_attributes (&args, TYPE_ATTRIBUTES (TREE_TYPE (p)), 0);
     TREE_TYPE (p) = args;
