@@ -1531,7 +1531,7 @@ scan_target_int (void)
   case M3CG_NInt8:  n_bytes = 8;  sign = -1;  break;
   default:
 
-    if (option_trace_all)
+    if (trace_all)
       fprintf(stderr,"  integer 0x%lx\n", ((unsigned long) i));
 
     return build_int_cst (t, i);
@@ -2189,6 +2189,7 @@ declare_fault_proc (void)
   tree proc, parm, resultdecl;
   tree parm_block = make_node (BLOCK);
   tree top_block  = make_node (BLOCK);
+  int trace_all = option_trace_all;
 
   proc = build_decl (FUNCTION_DECL, get_identifier ("_m3_fault"),
 		     build_function_type_list (t_void, t_word, NULL_TREE));
@@ -2206,10 +2207,8 @@ declare_fault_proc (void)
   parm = build_decl (PARM_DECL, fix_name ("arg", 0x195c2a74), t_word);
   if (DECL_MODE (parm) == VOIDmode)
   {
-      if (option_trace_all)
-      {
-        fprintf(stderr, "declare_fault_proc: converting parameter from VOIDmode to Pmode\n");
-      }
+      if (trace_all)
+        fprintf(stderr, "  declare_fault_proc: converting parameter from VOIDmode to Pmode\n");
       DECL_MODE (parm) = Pmode;
   }
   DECL_ARG_TYPE (parm) = t_word;
@@ -2222,11 +2221,11 @@ declare_fault_proc (void)
   BLOCK_SUPERCONTEXT (top_block) = parm_block;
   BLOCK_SUBBLOCKS (parm_block) = top_block;
 
-  if (option_trace_all)
+  if (trace_all)
   {
     enum machine_mode mode = TYPE_MODE (TREE_TYPE (parm));
-    const char* modestring = mode_to_string(mode);
-    fprintf(stderr, "declare_fault_proc: type is %u (%s)\n", (unsigned) mode, modestring);
+
+    fprintf(stderr, "  declare_fault_proc: type is 0x%x (%s)\n", (unsigned) mode, mode_to_string(mode));
   }
 
   fault_proc = proc;
@@ -3015,6 +3014,7 @@ m3cg_declare_param (void)
   BOOLEAN    (up_level);
   UNUSED_FREQUENCY  (f);
   RETURN_VAR (v, PARM_DECL);
+  int trace_all = option_trace_all;
 
   tree p;
 
@@ -3044,7 +3044,19 @@ m3cg_declare_param (void)
   DECL_ARG_TYPE (v) = TREE_TYPE (v);
   DECL_CONTEXT (v) = p;
   layout_decl (v, a);
-  if (DECL_MODE (v) == VOIDmode) DECL_MODE (v) = Pmode;
+
+  if (trace_all)
+  {
+    enum machine_mode mode = TYPE_MODE (TREE_TYPE (v));
+    fprintf(stderr, "  mode 0x%x (%s)\n", (unsigned) mode, mode_to_string(mode));
+  }
+
+  if (DECL_MODE (v) == VOIDmode)
+  {
+      if (trace_all)
+        fprintf(stderr, "  converting from VOIDmode to Pmode\n");
+      DECL_MODE (v) = Pmode;
+  }
 
   TREE_CHAIN (v) = DECL_ARGUMENTS (p);
   DECL_ARGUMENTS (p) = v;
@@ -3054,12 +3066,6 @@ m3cg_declare_param (void)
     tree parm, args = void_list_node;
     for (parm = DECL_ARGUMENTS (p); parm; parm = TREE_CHAIN(parm))
     {
-      if (option_trace_all)
-      {
-        enum machine_mode mode = TYPE_MODE (TREE_TYPE (parm));
-        const char* modestring = mode_to_string(mode);
-        fprintf(stderr, "m3cg_declare_param: type is %u (%s)\n", (unsigned) mode, modestring);
-      }
       args = tree_cons (NULL_TREE, TREE_TYPE (parm), args);
     }
     args = build_function_type (TREE_TYPE (TREE_TYPE (p)), args);
