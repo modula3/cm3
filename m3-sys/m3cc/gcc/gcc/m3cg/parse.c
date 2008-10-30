@@ -2037,7 +2037,7 @@ m3_call_direct (tree p, tree t)
   if (slot) p = *slot;
   TREE_USED (p) = 1;
   call = build_call_list (t, proc_addr (p), CALL_TOP_ARG ());
-  CALL_EXPR_STATIC_CHAIN (t) = CALL_TOP_STATIC_CHAIN ();
+  CALL_EXPR_STATIC_CHAIN (call) = CALL_TOP_STATIC_CHAIN ();
   if (VOID_TYPE_P(t)) {
     add_stmt (call);
   } else {
