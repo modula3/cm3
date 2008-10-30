@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.122 2008-08-14 14:54:08 jkrell Exp $
+# $Id: pylib.py,v 1.123 2008-10-30 11:13:10 jkrell Exp $
 
 import os
 from os import getenv
@@ -443,12 +443,14 @@ UNameArchM = UNameTuple[4].lower()
 UNameRevision = UNameTuple[2].lower()
 
 Host = None
+TurnOffGarbageCollection = False
 
 if (UName.startswith("windows")
         or UNameCommand.startswith("mingw")
         or UNameCommand.startswith("cygwin")):
 
     Host = "NT386"
+    # Host = "I386_NT"
 
 elif UName.startswith("freebsd"):
 
@@ -461,8 +463,10 @@ elif UName.startswith("freebsd"):
             Host = "FreeBSD3"
         else:
             Host = "FreeBSD4"
+        # Host = "I386_FREEBSD"
     else:
         Host = "FBSD_ALPHA"
+        # Host = "ALPHA64_FREEBSD"
 
 elif UName.startswith("openbsd"):
 
@@ -472,6 +476,8 @@ elif UName.startswith("openbsd"):
         Host = "PPC32_OPENBSD"
     else:
         FatalError("unknown OpenBSD platform")
+
+    TurnOffGarbageCollection = True
 
 elif UName.startswith("darwin"):
 
@@ -489,6 +495,7 @@ elif UName.startswith("sunos"):
 
     Host = "SOLgnu"
     #Host = "SOLsun"
+    #Host = "SPARC32_SOLARIS"
 
 elif UName.startswith("linux"):
 
@@ -496,14 +503,26 @@ elif UName.startswith("linux"):
         Host = "PPC_LINUX"
     elif UNameArchM == "x86_64":
         Host = "AMD64_LINUX"
+        TurnOffGarbageCollection = True
     elif UNameArchM == "sparc64":
         Host = "SPARC32_LINUX"
+        TurnOffGarbageCollection = True
     else:
+        # Host = "I386_LINUX"
         Host = "LINUXLIBC6"
 
 elif UName.startswith("netbsd"):
 
+    # Host = "I386_NETBSD"
     Host = "NetBSD2_i386" # only arch/version combination supported yet
+
+elif UName.startswith("irix"):
+
+    TurnOffGarbageCollection = True
+    Host = "MIPS32_IRIX"
+    # later
+    # if UName.startswith("irix64"):
+    #   Host = "MIPS64_IRIX"
 
 else:
     # more need to be added here, I haven't got all the platform info ready
@@ -718,6 +737,13 @@ Root = NativeRoot
 #
 
 DEFS += " @M3novm"
+
+if TurnOffGarbageCollection:
+    DEFS += " @M3nogc"
+
+#
+#
+#
 
 #-----------------------------------------------------------------------------
 # Make sure these variables all start with a space if they are non-empty.
