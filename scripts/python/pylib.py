@@ -477,8 +477,6 @@ elif UName.startswith("openbsd"):
     else:
         FatalError("unknown OpenBSD platform")
 
-    TurnOffGarbageCollection = True
-
 elif UName.startswith("darwin"):
 
     # detect the m3 platform (Darwin runs on ppc32, ppc64, x86, amd64)
@@ -503,10 +501,8 @@ elif UName.startswith("linux"):
         Host = "PPC_LINUX"
     elif UNameArchM == "x86_64":
         Host = "AMD64_LINUX"
-        TurnOffGarbageCollection = True
     elif UNameArchM == "sparc64":
         Host = "SPARC32_LINUX"
-        TurnOffGarbageCollection = True
     else:
         # Host = "I386_LINUX"
         Host = "LINUXLIBC6"
@@ -518,7 +514,6 @@ elif UName.startswith("netbsd"):
 
 elif UName.startswith("irix"):
 
-    TurnOffGarbageCollection = True
     Host = "MIPS32_IRIX"
     # later
     # if UName.startswith("irix64"):
