@@ -38,7 +38,6 @@ CONST
    architecture's VM page size (if VM is TRUE).  Otherwise, 8192 bytes is a
    reasonable page size.  The page size must be a power of two. *)
 
-CONST
   BytesPerHeapPage    = 8192;        (* bytes per page *)
   LogBytesPerHeapPage = 13;
   AdrPerHeapPage      = 8192;        (* addresses per page *)
@@ -46,7 +45,6 @@ CONST
 
 (*--------------------------------------------------------- thread stacks ---*)
 
-CONST
   PointerAlignment = BYTESIZE(INTEGER);
   (* The C compiler allocates all pointers on 'PointerAlignment'-byte
      boundaries.  The garbage collector scans thread stacks, but only
@@ -55,7 +53,6 @@ CONST
      Setting it too large will cause the collector to collect storage
      that is not free. *)
 
-CONST
   StackFrameAlignment = 2 * BYTESIZE(INTEGER);
   (* Stack frames must be aligned to this constraint (in ADRSIZE units). 
      It's not a big deal if this value is too large, but it may break 
@@ -64,7 +61,6 @@ CONST
 (*----------------------------------------------- exception stack walking ---*)
 (* The "FrameInfo" type must minimally include fields named "pc" and "sp". *)
 
-CONST
   Has_stack_walker = FALSE;
   (* Indicates whether this platform supports the stack walking functions
      defined in the "RTStack" interface. *)
