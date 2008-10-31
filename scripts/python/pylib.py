@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.123 2008-10-30 11:13:10 jkrell Exp $
+# $Id: pylib.py,v 1.124 2008-10-31 13:36:44 jkrell Exp $
 
 import os
 from os import getenv
@@ -477,8 +477,6 @@ elif UName.startswith("openbsd"):
     else:
         FatalError("unknown OpenBSD platform")
 
-    TurnOffGarbageCollection = True
-
 elif UName.startswith("darwin"):
 
     # detect the m3 platform (Darwin runs on ppc32, ppc64, x86, amd64)
@@ -503,10 +501,8 @@ elif UName.startswith("linux"):
         Host = "PPC_LINUX"
     elif UNameArchM == "x86_64":
         Host = "AMD64_LINUX"
-        TurnOffGarbageCollection = True
     elif UNameArchM == "sparc64":
         Host = "SPARC32_LINUX"
-        TurnOffGarbageCollection = True
     else:
         # Host = "I386_LINUX"
         Host = "LINUXLIBC6"
@@ -518,7 +514,6 @@ elif UName.startswith("netbsd"):
 
 elif UName.startswith("irix"):
 
-    TurnOffGarbageCollection = True
     Host = "MIPS32_IRIX"
     # later
     # if UName.startswith("irix64"):
