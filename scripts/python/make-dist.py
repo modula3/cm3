@@ -114,7 +114,7 @@ def MakeArchives():
         if Config == "NT386":
             Zip(PackageSetName)
         else:
-            TarBzip2(PackageSetName)
+            TarGzip(PackageSetName)
 
 def BuildShip(Packages):
     # This is more indirect than necessary.
