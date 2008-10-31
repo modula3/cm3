@@ -47,7 +47,7 @@ CONST
 (*--------------------------------------------------------- thread stacks ---*)
 
 CONST
-  PointerAlignment = BITSIZE(INTEGER);
+  PointerAlignment = BYTESIZE(INTEGER);
   (* The C compiler allocates all pointers on 'PointerAlignment'-byte
      boundaries.  The garbage collector scans thread stacks, but only
      looks at these possible pointer locations.  Setting this value
@@ -56,7 +56,7 @@ CONST
      that is not free. *)
 
 CONST
-  StackFrameAlignment = 2 * BITSIZE(INTEGER);
+  StackFrameAlignment = 2 * BYTESIZE(INTEGER);
   (* Stack frames must be aligned to this constraint (in ADRSIZE units). 
      It's not a big deal if this value is too large, but it may break 
      the thread mechanism to make it too small. *)
