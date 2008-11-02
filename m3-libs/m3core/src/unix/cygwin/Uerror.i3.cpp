@@ -1,4 +1,4 @@
-/* $Id: Uerror.i3.cpp,v 1.5 2008-05-30 07:48:28 jkrell Exp $ */
+/* $Id: Uerror.i3.cpp,v 1.6 2008-11-02 10:46:25 jkrell Exp $ */
 
 #include <stdio.h>
 #include <errno.h>
@@ -16,45 +16,48 @@ int main()
 "(* All rights reserved.                                       *)", 0,
 "(* See the file COPYRIGHT for a full description.             *)", 0,
 "", 0,
+"(* This file was generated from " __FILE__ ". Do not edit it. *)", 0,
+"", 0,
 "INTERFACE Uerror;", 0,
 "", 0,
 "CONST", 0,
-"  EPERM = %u;", EPERM,
-"  ENOENT = %u;", ENOENT,
-"  EINTR = %u;", EINTR,
-"  EIO = %u;", EIO,
-"  ENOEXEC = %u;", ENOEXEC,
-"  EBADF = %u;", EBADF,
-"  ECHILD = %u;", ECHILD,
-"  EAGAIN = %u;", EAGAIN,
-"  ENOMEM = %u;", ENOMEM,
-"  EACCES = %u;", EACCES,
-"  EEXIST = %u;", EEXIST,
-"  EISDIR = %u;", EISDIR,
-"  EINVAL = %u;", EINVAL,
-"  ENFILE = %u;", ENFILE,
-"  EMFILE = %u;", EMFILE,
-"  EPIPE = %u;", EPIPE,
-"  EDOM = %u;", EDOM,
-"  ERANGE = %u;", ERANGE,
-"  ENAMETOOLONG = %u;", ENAMETOOLONG,
-"  ENOTEMPTY = %u;", ENOTEMPTY,
-"  EWOULDBLOCK = EAGAIN;", EWOULDBLOCK,
-"  ENOTSOCK = %u;", ENOTSOCK,
-"  EADDRINUSE = %u;", EADDRINUSE,
-"  EADDRNOTAVAIL = %u;", EADDRNOTAVAIL,
-"  ENETDOWN = %u;", ENETDOWN,
-"  ENETUNREACH = %u;", ENETUNREACH,
-"  ENETRESET = %u;", ENETRESET,
-"  ECONNABORTED = %u;", ECONNABORTED,
-"  ECONNRESET = %u;", ECONNRESET,
-"  EISCONN = %u;", EISCONN,
-"  ETIMEDOUT = %u;", ETIMEDOUT,
-"  ECONNREFUSED = %u;", ECONNREFUSED,
-"  EHOSTDOWN = %u;", EHOSTDOWN,
-"  EHOSTUNREACH = %u;", EHOSTUNREACH,
-"  EINPROGRESS = %u;", EINPROGRESS,
-"  EALREADY = %u;", EALREADY,
+#define X(x) "  " #x " = %u;", x,
+X(EPERM)
+X(ENOENT)
+X(EINTR)
+X(EIO)
+X(ENOEXEC)
+X(EBADF)
+X(ECHILD)
+X(EAGAIN)
+X(ENOMEM)
+X(EACCES)
+X(EEXIST)
+X(EISDIR)
+X(EINVAL)
+X(ENFILE)
+X(EMFILE)
+X(EPIPE)
+X(EDOM)
+X(ERANGE)
+X(ENAMETOOLONG)
+X(ENOTEMPTY)
+"  EWOULDBLOCK = EAGAIN;", 0,
+X(ENOTSOCK)
+X(EADDRINUSE)
+X(EADDRNOTAVAIL)
+X(ENETDOWN)
+X(ENETUNREACH)
+X(ENETRESET)
+X(ECONNABORTED)
+X(ECONNRESET)
+X(EISCONN)
+X(ETIMEDOUT)
+X(ECONNREFUSED)
+X(EHOSTDOWN)
+X(EHOSTUNREACH)
+X(EINPROGRESS)
+X(EALREADY)
 "", 0,
 "(* Extension by mjordan *)", 0,
 "CONST", 0,
