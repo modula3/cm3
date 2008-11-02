@@ -2,6 +2,8 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
+(* This file was generated from Uerror.i3.cpp. Do not edit it. *)
+
 INTERFACE Uerror;
 
 CONST
