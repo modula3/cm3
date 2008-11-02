@@ -2,9 +2,9 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-INTERFACE Uerror;
+(* This file was generated from Uerror.i3.cpp. Do not edit it. *)
 
-(* These have mostly  not been checked yet.*)
+INTERFACE Uerror;
 
 CONST
   EPERM = 1;
@@ -73,7 +73,7 @@ CONST
   ENAMETOOLONG = 63;
   EHOSTDOWN = 64;
   EHOSTUNREACH = 65;
-  ENOTEMPTY = 66; 
+  ENOTEMPTY = 66;
   EPROCLIM = 67;
   EUSERS = 68;
   EDQUOT = 69;
