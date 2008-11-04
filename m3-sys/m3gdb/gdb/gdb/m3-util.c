@@ -606,7 +606,7 @@ m3_lookup_symbol_all_static_and_global (
     return sym;  
   } /* m3_lookup_symbol_all_static_and_global */ 
 
-/* If blk contains a symbol with the right name spelling to be an inteface 
+/* If blk contains a symbol with the right name spelling to be an interface 
    or module global record, return it.  kind == 'M' to find a module global
    symbol, or kind == 'I' for an interface. Set unit_name to the declared name
    of the interface or module. */ 
@@ -648,14 +648,14 @@ m3_block_globals_symbol (
     return NULL; 
   } /* m3_block_globals_symbol */ 
 
-/* Return the interface or module global variable record symbol for
-   interface or module named 'unit_name'.  kind == 'M' to find a 
-   module global symbol, or kind == 'I' for an interface. 
-   For an interface, its demangled name is "I$<interfaceName>".
-   For a module, its demangled name is "M$<moduleName>".
-   kind should be either 'I' or 'M', for interface or module. 
-   It could be in any static or global block. name is a terminated
-   string (see m3_term_strings_equal). 
+/* Return the interface or module global variable record symbol,
+   and the symtab it was found in, for interface or module named 
+   'unit_name'.  kind == 'M' to find a module global symbol, or 
+   kind == 'I' for an interface.  For an interface, its demangled 
+   name is "I$<interfaceName>".  For a module, its demangled name 
+   is "M$<moduleName>".  kind should be either 'I' or 'M', for 
+   interface or module.  It could be located in any static or global 
+   block in the mass of linked-together code. 
 */ 
 struct symbol *
 m3_unit_name_globals_symbol ( 
@@ -666,7 +666,6 @@ m3_unit_name_globals_symbol (
 
   { struct symbol * sym; 
     char struct_name [ M3_MAX_SYMBOLLEN + 3 ]; 
-    char * struct_name_to = struct_name + M3_MAX_SYMBOLLEN; 
 
     struct_name [ 0 ] = kind; 
     struct_name [ 1 ] = '$'; 
