@@ -1135,12 +1135,12 @@ m3_lookup_symbol_nonlocal (
 
   /* We are now beyond finding the id via Modula-3 language lookup
      rules in the current environment.  Now just look for linkage
-     names of globally procedures in the entire compilation closure.
+     names of global procedures in the entire compilation closure.
      
      To get all the places a procedure declared in a module might be
      found, we need to look in all the static blocks for PM3, all the
      global blocks for newer CM3s, and both places, for older CM3s.
-     Our language- independent caller will look in all the static
+     Our language-independent caller will look in all the static
      blocks if we return without success.  It probably doesn't matter
      what order we do this in, so just look in the global blocks here.
   */ 
@@ -2080,7 +2080,7 @@ m3_disable_vm_gc ( )
                  "in the debugger.\n" 
               ) ); 
             printf_filtered 
-              (_("You can undo this by typing \"print RTCollectorSRC__EnableVM()\"\n" 
+              (_("You can undo this by typing \"print RTCollectorSRC.EnableVM()\"\n" 
               ) ); 
           } 
         else { printf_filtered ( "Can't disable VM GC.\n"); } 
@@ -2924,7 +2924,7 @@ get_linespec_token ( char * * start, char * * finish )
 
 /* If m3_decode_linespec returns with result.nelts == 0, nothing was found 
    that has a Modula-3 interpretation, but other interpretations (including
-   file:line, etc.) should be tried.  If argptr has a Modula-3 interpretation,
+   file:line, etc.) should be tried.  If *argptr has a Modula-3 interpretation,
    but it is somehow invalid, this will produce an error and/or throw an
    exception. 
  */ 
@@ -2990,7 +2990,9 @@ m3_decode_linespec (
       { /* Try interpreting tok in the current M3 addressing environment. */
 /* Do we really want to do this?  If there is a locally referencable M3
    procedure, it could hide a globally-declared id in another language and
-   make the latter inaccessible altogether. */ 
+   make the latter inaccessible altogether.  OTOH, it does make linespecs
+   behave like expressions. 
+*/ 
         local_sym = lookup_symbol 
                 ( unit_name,
                   m3_proc_body_block ( expression_context_block ),
@@ -3072,11 +3074,23 @@ m3_decode_linespec (
                identifier is meaningful here.  It denotes an anonymous block
                within the module body or procedure. */
             block_no = m3_int_value ( tok, tok_end );
-            if ( module_body_sym != NULL )  
-              { /* For a module name, the block number must be 1. The 1 in
-                   the linespec refers to the anonymous block that is the 
-                   module body, but he compiler has made it a named 
-                   procedure denoted by module_body_sym. */ 
+            if ( local_sym != NULL ) 
+              { qual_block 
+                  = m3_find_nested_block 
+                      ( SYMBOL_BLOCK_VALUE ( local_sym ), 
+                        local_symtab, 
+                        block_no 
+                      );
+                if ( qual_block != NULL ) /* Such a block exists. */ 
+                  { qual_sym = local_sym; 
+                    qual_symtab = local_symtab;
+                  }  
+              } 
+            if ( qual_sym == NULL && module_body_sym != NULL )  
+              { /* For a module name, the block number must be 1. This
+                   denotes the anonymous block that is the module body. 
+                   The compiler has made it a named procedure denoted 
+                   by module_body_sym. */ 
                 if ( block_no != 1 ) 
 /* TODO:  Possibly emit/throw error here? */ 
                   { return result_sals; } 
@@ -3086,30 +3100,17 @@ m3_decode_linespec (
                     qual_symtab = module_body_symtab; 
                   } 
               } 
-            else if ( local_sym == NULL ) 
-                      /* No procedure to select a block of.*/ 
+            else /* Nothing to select a block of.*/ 
               { return result_sals; } 
-            else 
-              { qual_sym = local_sym; 
-                qual_block 
-                  = m3_find_nested_block 
-                      ( SYMBOL_BLOCK_VALUE ( local_sym ), 
-                        local_symtab, 
-                        block_no 
-                      );
-                if ( qual_block == NULL ) /* No such block. */ 
-              { return result_sals; } 
-                qual_symtab = local_symtab; 
-              } 
             tok = tok_end; /* Consume integer. */ 
             get_linespec_token ( & tok, & tok_end );  
           } 
         else /* Dot and identifier. */  
-          { name = tok; 
-            name_len = tok_end - tok;
+          { name_len = tok_end - tok;
             name = ( char * ) alloca ( name_len + 1 );
             strncpy ( name, tok, name_len ); 
             name [ name_len ] = '\0';  
+            qual_sym = NULL; 
             if ( local_sym != NULL ) 
               { qual_sym  
                   = m3_lookup_nested_proc 
@@ -3127,11 +3128,19 @@ m3_decode_linespec (
               { qual_sym 
                   = m3_lookup_interface_id ( unit_name, name, & qual_symtab ); 
               } 
-            if ( qual_sym == NULL && module_sym != NULL ) 
+            if ( ( qual_sym == NULL 
+                   || TYPE_CODE ( SYMBOL_TYPE ( qual_sym ) ) != TYPE_CODE_FUNC
+                 ) 
+                 && module_sym != NULL 
+               ) 
               { qual_sym 
                   = m3_lookup_module_id ( unit_name, name, & qual_symtab ); 
               } 
-            if ( qual_sym == NULL && module_sym != NULL ) 
+            if ( ( qual_sym == NULL 
+                   || TYPE_CODE ( SYMBOL_TYPE ( qual_sym ) ) != TYPE_CODE_FUNC
+                 ) 
+                 && module_sym != NULL 
+               ) 
               { qual_sym 
                   = m3_lookup_exported ( unit_name, name, & qual_symtab ); 
               } 
@@ -3172,7 +3181,10 @@ m3_decode_linespec (
                 * argptr = tok; 
                 return result_sals; 
               } 
-            else { return result_sals; } 
+            else 
+              { /* Nothing meaningful found. */ 
+                return result_sals; 
+              } 
           } 
         else if ( * tok == '.' ) 
           { /* Another dot qualifier follows. */ 
@@ -3257,7 +3269,7 @@ m3_main_name ( )
        initialization, but before any user-coded initialization (i.e, 
        before executing any module body code). */
     if ( m3_compiler_kind ( ) == m3_ck_cm3 ) 
-      { return "RTLinker__RunMainBody"; } 
+      { return "Main_I3"; } 
     else if ( m3_compiler_kind ( ) == m3_ck_pm3 ) 
       { return "RTLinker__RunMainBodies"; } 
     else { return NULL; } 

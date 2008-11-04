@@ -765,7 +765,7 @@ decode_line_1 (char **argptr, int funfirstline, struct symtab *default_symtab,
       if (is_quoted)
 	*argptr = *argptr + 1;
       
-      /* Is it a C++, Modula-3, or Java compound data structure?
+      /* Is it a C++ or Java compound data structure?
 	 The check on p[1] == ':' is capturing the case of "::",
 	 since p[0]==':' was checked above.  
 	 Note that the call to decode_compound does everything
