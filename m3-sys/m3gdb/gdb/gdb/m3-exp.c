@@ -563,11 +563,12 @@ m3_parse_e7 ( )
 
       case TK_DOT: {
 	get_token ();
-	/* The case <interfaceName>.<decl> won't reach here, because it is fully
-           parsed my m3_parse_e8.  We can't distinguish other meanings of dot 
-           constructs here, because we would need the the type of the left 
-           subexpression.  So just use STRUCTOP_M3_STRUCT to build a 
-           dot-construct expression and let evaluation figure it out later. */
+	/* The cases <interfaceName>.<decl> and <moduleName>.<decl> won't 
+           reach here, because they are fully parsed by m3_parse_e8.  
+           We can't distinguish other meanings of dot constructs here, 
+           because we would need the the type of the left subexpression.  
+           So just use STRUCTOP_M3_STRUCT to build a dot-construct 
+           expression and let evaluation figure it out later. */
 
 	if (cur_tok.kind != TK_IDENT) {
 	  error ("An identifier must follow a dot."); 

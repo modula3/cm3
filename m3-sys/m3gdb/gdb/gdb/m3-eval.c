@@ -1188,7 +1188,7 @@ m3_proc_value_from_qualified_name (
 static const char * FromChars_proc_name = "FromChars";  
 static const char * FromWideChars_proc_name = "FromWideChars";  
 
-/* m3gdb_string might be  a value of a string of chars or wide chars that is
+/* m3gdb_string might be a value of a string of chars or wide chars that is
    located in m3gdb space.  If so, convert it to a TEXT in inferior space,
    by making a call on Text.FromChars or Text.FromWideChars.  Otherwise,
    identity. */ 
@@ -2221,7 +2221,7 @@ m3_evaluate_enum_const (
    latter value.  Otherwise, 'self' will be set to null. */ 
 /* NOTE: m3_parse_e8, in m3-exp.c, during expression parsing, handles
          dot-constructs that are merely qualified references to declared 
-         entities.  So This only needs to handle access to fields and 
+         entities.  So this code only needs to handle access to fields and 
          methods of record and object values. 
 */ 
 static struct value *
@@ -2963,7 +2963,6 @@ m3_evaluate_subexp_maybe_packed (
               value_from_double ( neg_type, - m3_value_as_float ( arg1 ) ) ;
           case TYPE_CODE_M3_INTEGER: 
           case TYPE_CODE_M3_LONGINT: 
-          case TYPE_CODE_M3_LONGCARD: 
             return 
               m3_value_from_longest 
                 ( neg_type, - m3_value_as_integer ( arg1 ) );
@@ -3190,6 +3189,25 @@ m3_evaluate_subexp_maybe_packed (
       }
     }
 
+    case UNOP_M3_TRUNC: {
+      struct type *arg1_type;
+
+      (*pos) += 1; 
+      arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
+      arg1_type = value_type (arg1);
+
+      if (TYPE_CODE (arg1_type) == TYPE_CODE_FLT) {
+        double val;
+        LONGEST intval;
+        val  = m3_value_as_float (arg1);
+        intval = (LONGEST) (val);
+        return m3_value_from_longest (builtin_type_m3_integer, intval);
+      } else {
+	error (_("TRUNC must be applied to a floating-point value"));
+	return arg1;
+      }
+    }
+
     case UNOP_M3_TYPECODE: {
       struct type * arg1_type;
       CORE_ADDR val_contents; 
@@ -3234,28 +3252,9 @@ m3_evaluate_subexp_maybe_packed (
           default : 
             error 
               (_("TYPECODE must be applied to a traced reference or object "
-                 "value or a reference type.")
+                 "value.")
               );
         } 
-    }
-
-    case UNOP_M3_TRUNC: {
-      struct type *arg1_type;
-
-      (*pos) += 1; 
-      arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
-      arg1_type = value_type (arg1);
-
-      if (TYPE_CODE (arg1_type) == TYPE_CODE_FLT) {
-        double val;
-        LONGEST intval;
-        val  = m3_value_as_float (arg1);
-        intval = (LONGEST) (val);
-        return m3_value_from_longest (builtin_type_m3_integer, intval);
-      } else {
-	error (_("TRUNC must be applied to a floating-point value"));
-	return arg1;
-      }
     }
 
     case UNOP_M3_ORD: 
@@ -3411,7 +3410,8 @@ m3_evaluate_subexp_maybe_packed (
 	  memcpy (value_contents_raw (v) + (TARGET_PTR_BIT / HOST_CHAR_BIT),
 		  value_contents (array)
 		    + (TARGET_PTR_BIT + m3_target_integer_bit)/ HOST_CHAR_BIT, 
-		  TYPE_LENGTH (elem_type) - m3_target_integer_bit / HOST_CHAR_BIT);
+		  TYPE_LENGTH (elem_type) - m3_target_integer_bit 
+                  / HOST_CHAR_BIT);
 	  *(char **)value_contents_raw (v) = 
 	    *(char **)value_contents (array) + offset / 8; }
 
@@ -3578,51 +3578,53 @@ m3_evaluate_subexp_maybe_packed (
 	  arg2_type = builtin_type_m3_void;
 	  break; }
 
-
-      if ( TYPE_CODE (arg1_type) != TYPE_CODE (arg2_type)
-	   || TYPE_CODE (arg1_type) == TYPE_CODE_M3_VOID
-         ) 
+      if ( TYPE_CODE (arg1_type) == TYPE_CODE (arg2_type) 
+           || ( TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER
+                && TYPE_CODE (arg2_type) == TYPE_CODE_M3_LONGINT 
+              ) 
+           || ( TYPE_CODE (arg1_type) == TYPE_CODE_M3_LONGINT
+                && TYPE_CODE (arg2_type) == TYPE_CODE_M3_INTEGER 
+              ) 
+         ) { /* types are OK. */ } 
+      else 
         { error (_("Incompatible argument types for binary operation.")); 
-        /* FIXME: This is too restrictive, for some operators. */ 
           /* NORETURN */ 
         } 
 
       if ( TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER
            || TYPE_CODE (arg1_type) == TYPE_CODE_M3_LONGINT
          ) 
-       {
-       LONGEST res = 0;
-       if ( ! int_ok ) 
-          { error (_("Binary operation requires integer typed operands.")); 
-            /* NORETURN */ 
-          } 
-	switch (op) {
-	  case BINOP_M3_MULT: 	res = ival1 * ival2;          break;
-	  case BINOP_M3_ADD:	res = ival1 + ival2;          break;
-	  case BINOP_M3_MINUS:  res = ival1 - ival2;          break;
-	  case BINOP_M3_DIV:    res = m3_div (ival1, ival2);  break;
-	  case BINOP_M3_MOD:    res = m3_modi (ival1, ival2); break;
-	} /* switch */
-	return m3_value_from_longest (result_type, res);
-      }
+        { LONGEST res = 0;
+          if ( ! int_ok ) 
+           { error (_("Binary operation requires integer typed operands.")); 
+             /* NORETURN */ 
+           } 
+	  switch (op) 
+            { case BINOP_M3_MULT:   res = ival1 * ival2;          break;
+	      case BINOP_M3_ADD:    res = ival1 + ival2;          break;
+	      case BINOP_M3_MINUS:  res = ival1 - ival2;          break;
+	      case BINOP_M3_DIV:    res = m3_div (ival1, ival2);  break;
+	      case BINOP_M3_MOD:    res = m3_modi (ival1, ival2); break;
+	    } /* switch */
+	  return m3_value_from_longest (result_type, res);
+        }
 
       if (TYPE_CODE (arg1_type) == TYPE_CODE_FLT) 
-      {
-       double res = 0.0;
-       if ( ! float_ok ) 
-          { error (_("Binary operation requires floating typed operands.")); 
-            /* NORETURN */ 
-          } 
-	
-	switch (op) {
-	  case BINOP_M3_DIVIDE: res = fval1 / fval2;          break;
-	  case BINOP_M3_MULT:   res = fval1 * fval2;          break;
-	  case BINOP_M3_ADD:    res = fval1 + fval2;          break;
-	  case BINOP_M3_MINUS:  res = fval1 - fval2;          break;
-	  case BINOP_M3_MOD:    res = m3_modf (fval1, fval2); break;
-	}
-	return value_from_double (arg1_type, res);
-      }
+        { double res = 0.0;
+          if ( ! float_ok ) 
+            { error (_("Binary operation requires floating typed operands.")); 
+              /* NORETURN */ 
+            } 
+
+          switch (op) 
+            { case BINOP_M3_DIVIDE: res = fval1 / fval2;          break;
+              case BINOP_M3_MULT:   res = fval1 * fval2;          break;
+              case BINOP_M3_ADD:    res = fval1 + fval2;          break;
+              case BINOP_M3_MINUS:  res = fval1 - fval2;          break;
+              case BINOP_M3_MOD:    res = m3_modf (fval1, fval2); break;
+            }
+          return value_from_double (arg1_type, res);
+        }
     }
 
     case BINOP_M3_AND: {
@@ -3709,6 +3711,8 @@ m3_evaluate_subexp_maybe_packed (
         proc_val = m3_proc_value_from_qualified_name ( "Text", "Cat" ); 
         if ( proc_val == NULL ) 
           { return 0; } 
+/* FIXME: If both operands are m3gdb strings (located in m3gdb
+          process space, keep the concatenation in m3gdb space too. */ 
         return m3_call_proc_const_or_var 
                  ( proc_val, 2, "Text.Cat", exp, pos, noside );  
       } 
