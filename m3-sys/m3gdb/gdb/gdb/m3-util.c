@@ -1533,7 +1533,7 @@ m3_defaultMethods_from_tc_addr ( CORE_ADDR tc_addr )
  * RETURNs 0 if NAME wasn't found in REC_TYPE
  *         1 otherwise.
  */
-int 
+bool
 m3_find_rec_field (
     struct type * rec_type,
     const char * name,
@@ -1561,7 +1561,7 @@ m3_find_rec_field (
     return 0; 
   } /* m3_find_rec_field */ 
 		      
-int
+bool 
 m3_find_obj_field (
     struct type *obj_type,
     char *name,
@@ -1587,7 +1587,7 @@ m3_find_obj_field (
     return 0; 
   } /* m3_find_obj_field */ 
 
-int
+bool 
 m3_find_obj_method (
     struct type *obj_type,
     char *name,
