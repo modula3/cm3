@@ -1065,7 +1065,7 @@ m3_lookup_symbol_nonlocal (
   int i; 
   char type_name [ M3_MAX_SYMBOLLEN ]; 
   char * unit_name = NULL;
-  int found; 
+  bool field_found; 
 
   /* Look in the static block surrounding the execution context, where we 
      will find all global procedures in PM3 etc. and nonexported global 
@@ -1102,9 +1102,9 @@ m3_lookup_symbol_nonlocal (
         } 
     }
   if ( unit_sym != NULL ) 
-    { found = m3_find_rec_field 
-                ( SYMBOL_TYPE ( unit_sym ), name, NULL, NULL, NULL );
-      if ( found ) 
+    { field_found = m3_find_rec_field 
+                      ( SYMBOL_TYPE ( unit_sym ), name, NULL, NULL, NULL );
+      if ( field_found ) 
         { if ( symtab != NULL ) 
             { /* This result is probably never used, but we need it to 
                  satisfy the interface of the la_lookup_symbol_nonlocal 
