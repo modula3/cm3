@@ -20,9 +20,9 @@ The interruptions of service should be very small, and the overall
 performance should be better than with the previous collectors.
 <P>
 
-The use of VM protection is currently implemented only for the DS3100
-and SPARC architectures.  On other architectures,
-<A HREF="m3args.html"><TT>@M3novm</TT></A> is the default.
+The use of VM protection has become obsolete by the addition of
+compiled-in hints for garbage collection since CM3 5.4.
+Now <A HREF="m3args.html"><TT>@M3novm</TT></A> is the default.
 <P>
 
 Note that the new optional background collection 
@@ -30,7 +30,7 @@ thread is not on by default; this may change in the future.
 <P>
 
 When you debug a Modula-3 program with
-<A HREF="debugging.html"><TT>m3gdb</TT></A>,
+<A HREF="../m3gdb/m3gdb-onepage.html"><TT>m3gdb</TT></A>,
 you will find it simplest to 
 run it with the <A HREF="m3args.html"><TT>@M3novm</TT></A> switch.
 More information on
@@ -38,7 +38,9 @@ More information on
 in presence of the VM-synchronized garbage
 collector is available here.
 <P>
-
+<a href="../m3gdb/m3gdb-onepage.html"><tt>m3gdb</tt></a> has its own
+reference documentation.
+<P>
 Because of the use of VM protection by the collector,
 there are some additional constraints 
 on what programs may legally do.  For example, you cannot pass an 
