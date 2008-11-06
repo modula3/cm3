@@ -48,8 +48,8 @@ for r in ${REMOTE}; do
   if [ "x${VERBOSE}" = x-v ] ; then
     echo "updating remote site ${r}..."
   fi
-  RSYNC_RSH=ssh rsync ${NOPT} ${VERBOSE} -C ${RSYNCOPTS} -rutl \
-    --exclude=cm3 \
+  RSYNC_RSH=ssh rsync ${NOPT} ${VERBOSE} -C ${RSYNCOPTS} -rul \
+    --exclude=help/gen_html \
     --exclude=ship-cm3-www-doc \
     --exclude=PkgTags \
     --exclude=tmp \
