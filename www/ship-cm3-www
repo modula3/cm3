@@ -54,7 +54,7 @@ for r in ${REMOTE}; do
   fi
   if [ -z "$fns" ]; then
     RSYNC_RSH=ssh rsync ${NOPT} ${VERBOSE} -C ${RSYNCOPTS} -ruptl \
-      --exclude=cm3 \
+      --exclude=doc \
       --exclude=PkgTags \
       --exclude=tmp \
       --exclude=\*~ \
@@ -67,7 +67,6 @@ for r in ${REMOTE}; do
   else
     for f in $fns; do
       RSYNC_RSH=ssh rsync ${NOPT} ${VERBOSE} -C ${RSYNCOPTS} -uptl \
-        --exclude=cm3 \
         --exclude=PkgTags \
         --exclude=tmp \
         --exclude=\*~ \
