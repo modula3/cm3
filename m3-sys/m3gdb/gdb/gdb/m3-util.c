@@ -824,16 +824,17 @@ m3_lookup_type (
    Return its symbol if so, or NULL if not.  EXCEPT: global variables have no
    symbol.  If it's a global variable, return the symbol for the globals 
    record for the interface.  Caller will have to detect this case and combine 
-   it with 'ident' in its own way. If a symbol is found and symtab is non-NULL,
-   set symtab to the containing symbol table.  If this is a procedure declared
-   in interface 'interface_name', the symbol and symtab returned will belong
-   to the exporting _module_ (this is the only symbol we have.)  This will not
-   find a procedure that is not declared in an interface. */ 
+   it with 'ident' in its own way. If a symbol is found and result_symtab is 
+   non-NULL, set result_symtab to the containing symbol table.  If this is a 
+   procedure declared in interface 'interface_name', the symbol and 
+   result_symtab returned will belong to the exporting _module_ (this is 
+   the only symbol we have.)  This will not find a procedure that is not 
+   declared in an interface. */ 
 struct symbol *
 m3_lookup_interface_id ( 
     const char * interface_name, 
     const char * ident, 
-    struct symtab * * symtab 
+    struct symtab * * result_symtab 
   ) 
 
   { struct symbol * interface_rec_sym;
@@ -851,30 +852,7 @@ m3_lookup_interface_id (
       = m3_unit_name_globals_symbol 
           ( 'I', interface_name, & interface_symtab ); 
     if ( interface_rec_sym != NULL ) 
-      { /* Look in the interface global record, where we will find a variable
-           or, for PM3, a procedure, that was declared  in the interface. */ 
-        found 
-          = m3_find_rec_field 
-              ( SYMBOL_TYPE ( interface_rec_sym ), 
-                ident, 0, 0, & global_type 
-              );
-        if ( found 
-             && /* SRC, PM3, and EZM3 put a procedure declared in an
-                   interface into the interface global record.  But we don't
-                   want to use it from here, because this gives no symbol 
-                   for it.  Ignore a procedure here, and find it differently, 
-                   below.  However, for PM3 and friends, just its presence here
-                   will be important below. */ 
-                ( global_type == NULL 
-                  || TYPE_CODE ( global_type ) != TYPE_CODE_M3_PROC 
-                ) 
-           ) 
-          /* Found a variable. */ 
-          { if ( symtab != NULL) { * symtab = interface_symtab; } 
-            return interface_rec_sym; 
-          }
-
-        /* Look in the static block of the interface, where we will find 
+      { /* Look in the static block of the interface, where we will find 
            a type declared in the interface, with transformed name, the 
            same for all compilers. */ 
         if ( interface_symtab != NULL ) 
@@ -884,10 +862,24 @@ m3_lookup_interface_id (
                     ( interface_name, 
                       ident, 
                       interface_static_block, 
-                      symtab 
+                      result_symtab 
                     ); 
             if ( sym != NULL ) { return sym; } 
           }
+
+        /* Look in the interface global record, where we will find a variable
+           or, for PM3, a procedure, that was declared in the interface. */ 
+        found 
+          = m3_find_rec_field 
+              ( SYMBOL_TYPE ( interface_rec_sym ), 
+                ident, 0, 0, & global_type 
+              );
+        /* SRC, PM3, and EZM3 put a procedure declared in an
+           interface into the interface global record.  But we don't
+           want to use it from there, because this gives no symbol 
+           for it. Find it differently below.  However, for PM3 and friends, 
+           just its presence here will be important below, if it is also
+           found as a procedure symbol. */ 
 
         /* A procedure declared in an interface has a symbol only in the 
            exporting module.  Look for it by constructing the linkage name
@@ -906,10 +898,11 @@ m3_lookup_interface_id (
              this is a procedure declared in interface 'interface_name'.  Even 
              so, it is in the symbol table for the exporting _module_ where sym
              will have been found.  This could have a different module name.  
-             'symtab' will be set for this module. */  
-          { if ( symtab != NULL) { * symtab = module_symtab; } 
+             'result_symtab' will be set for this module. */  
+          { if ( result_symtab != NULL) { * result_symtab = module_symtab; } 
             return sym; 
           }
+
         /* Now try the static block of all symtabs. */ 
         sym = m3_lookup_symbol_all_static 
                 ( ident, linkage_name, VAR_DOMAIN, & module_symtab ); 
@@ -922,10 +915,17 @@ m3_lookup_interface_id (
              etc. and this is a procedure declared in interface 
              'interface_name'.  Even so, it is in the symbol table for the 
              exporting _module_, where sym will have been found.  This could 
-             have a different module name.  'symtab' will be set for this
+             have a different module name.  'result_symtab' will be set for this
               module. */  
-          { if ( symtab != NULL) { * symtab = module_symtab; } 
+          { if ( result_symtab != NULL) { * result_symtab = module_symtab; } 
             return sym; 
+          }
+
+        if ( found ) 
+          /* We found ident in the interface global record earlier, but did not
+             also find it as a procedure, so it must really be a variable. */ 
+          { if ( result_symtab != NULL) { * result_symtab = interface_symtab; } 
+            return interface_rec_sym; 
           }
       } 
     /* 'name' is not declared in an interface named 'interface_name'. */ 
@@ -941,7 +941,7 @@ struct symbol *
 m3_lookup_module_id ( 
     const char * module_name, 
     const char * ident, 
-    struct symtab * * symtab 
+    struct symtab * * result_symtab 
   ) 
 
   { struct symbol * module_rec_sym;
@@ -960,29 +960,7 @@ m3_lookup_module_id (
     module_rec_sym 
       = m3_unit_name_globals_symbol ( 'M', module_name, & module_symtab ); 
     if ( module_rec_sym != NULL ) 
-      { /* Look in the module global record, where we will find a variable
-           or, for PM3, a procedure, that was declared  in the module. */ 
-        found 
-          = m3_find_rec_field 
-              ( SYMBOL_TYPE ( module_rec_sym ), 
-                ident, 0, 0, & global_type 
-              );
-        if ( found 
-             && /* SRC, PM3, and EZM3 put a procedure declared in a
-                   module into the module global record.  But we don't
-                   want to use it from here, because this gives no symbol 
-                   for it.  Ignore a procedure here, and find it differently, 
-                   below. */ 
-                ( global_type == NULL 
-                  || TYPE_CODE ( global_type ) != TYPE_CODE_M3_PROC 
-                ) 
-           ) 
-          /* Found a variable. */ 
-        { if ( symtab != NULL) { * symtab = module_symtab; } 
-          return module_rec_sym; 
-        }
-
-        /* Look in the static block of the module, where we will find 
+      { /* Look in the static block of the module, where we will find 
            a type or procedure declared in the module.  This is the same 
            for all compilers. */ 
         if ( module_symtab != NULL ) 
@@ -992,42 +970,56 @@ m3_lookup_module_id (
                     ( module_name, 
                       ident, 
                       module_static_block, 
-                      symtab 
+                      result_symtab 
                     ); 
             if ( sym != NULL ) { return sym; } 
+          }
 
-            /* Construct the linkage name "moduleName__ProcName" and look for 
-               it in the static and global blocks of this module. */
-            linkage_name [ 0 ] = '\0'; 
-            strncat ( linkage_name, module_name , M3_MAX_SYMBOLLEN );
-            strcat ( linkage_name, "__" );
-            strncat ( linkage_name, ident, M3_MAX_SYMBOLLEN );
-            sym = lookup_symbol_aux_block
-                    ( ident, linkage_name, module_static_block, 
-                      VAR_DOMAIN, & l_symtab 
-                    );
-            /* This is the procedure we want, regardless of whether it is 
-               exported. */ 
-            if ( sym != NULL 
-                 && sym->aclass != LOC_STATIC /* Is this still necessary? */ 
-               )
-              { if ( symtab != NULL) { * symtab = l_symtab; } 
-                return sym; 
-              }      
-            
-            /* For CM3, if the procedure is exported or it's a later compiler,
-               it will be in the global block. */ 
-            module_global_block = BLOCKVECTOR_BLOCK ( bv, GLOBAL_BLOCK );
-            sym = lookup_symbol_aux_block
-                    ( ident, linkage_name, module_global_block, 
-                      VAR_DOMAIN, & l_symtab 
-                    );
-            if ( sym != NULL 
-                 && sym->aclass != LOC_STATIC /* Is this still necessary? */ 
-               )
-              { if ( symtab != NULL) { * symtab = l_symtab; } 
-                return sym; 
-              } 
+        /* Construct the linkage name "moduleName__ProcName" and look for 
+           it in the static and global blocks of this module. */
+        linkage_name [ 0 ] = '\0'; 
+        strncat ( linkage_name, module_name , M3_MAX_SYMBOLLEN );
+        strcat ( linkage_name, "__" );
+        strncat ( linkage_name, ident, M3_MAX_SYMBOLLEN );
+        sym = lookup_symbol_aux_block
+                ( ident, linkage_name, module_static_block, 
+                  VAR_DOMAIN, & l_symtab 
+                );
+        /* We found it in the static block.  This is the procedure we want, 
+           regardless of whether it is exported. */ 
+        if ( sym != NULL 
+             && sym->aclass != LOC_STATIC /* Is this still necessary? */ 
+           )
+          { if ( result_symtab != NULL) { * result_symtab = l_symtab; } 
+            return sym; 
+          }      
+
+        /* For CM3, if the procedure is exported or it's a later compiler,
+           it will be in the global block. */ 
+        module_global_block = BLOCKVECTOR_BLOCK ( bv, GLOBAL_BLOCK );
+        sym = lookup_symbol_aux_block
+                ( ident, linkage_name, module_global_block, 
+                  VAR_DOMAIN, & l_symtab 
+                );
+        if ( sym != NULL 
+             && sym->aclass != LOC_STATIC /* Is this still necessary? */ 
+           )
+          { if ( result_symtab != NULL) { * result_symtab = l_symtab; } 
+            return sym; 
+          } 
+
+        /* Look in the module global record, where we will find a variable.
+           For PM3, a procedure that was declared  in the module will be
+           here too, but we would have found it differently above and
+           returned. */ 
+        found 
+          = m3_find_rec_field 
+              ( SYMBOL_TYPE ( module_rec_sym ), 
+                ident, 0, 0, & global_type 
+              );
+        if ( found ) 
+          { if ( result_symtab != NULL) { * result_symtab = module_symtab; } 
+            return module_rec_sym; 
           }
       }
 
