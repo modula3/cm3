@@ -1,0 +1,145 @@
+% Copyright 1996 Critical Mass, Inc. All rights reserved.
+% 
+% common configuration file for various platforms
+%
+
+%------------------------------------------------------------------------------
+
+proc CM3SetInstallRoot() is
+    if defined("INSTALL_ROOT")
+        return
+    end
+    if not equal($CM3_INSTALL, "")
+        INSTALL_ROOT = $CM3_INSTALL
+        return
+    end
+    INSTALL_ROOT = (path() & SL & "..")
+end
+
+CM3SetInstallRoot()
+
+%------------------------------------------------------------------------------
+
+readonly BIN_INSTALL    = INSTALL_ROOT & SL & "bin"     % executables
+readonly LIB_INSTALL    = INSTALL_ROOT & SL & "lib" & PROFILING_P   % libraries
+readonly PKG_INSTALL    = INSTALL_ROOT & SL & "pkg"     % packages
+readonly DOC_INSTALL    = INSTALL_ROOT & SL & "doc"     % documents
+readonly EMACS_INSTALL  = INSTALL_ROOT & SL & "elisp"   % emacs lisp code
+readonly MAN_INSTALL    = INSTALL_ROOT & SL & "man"     % man pages
+readonly HTML_INSTALL   = INSTALL_ROOT & SL & "www"     % public hypertext
+
+% On some systems (e.g. AFS) you must install public files in a different
+% place from where you use them.  If that is the case for your system,
+% specify the "use" location here, otherwise leave them alone.
+%
+USE_ROOT  = INSTALL_ROOT
+BIN_USE   = BIN_INSTALL     % executables
+LIB_USE   = LIB_INSTALL     % libraries
+PKG_USE   = PKG_INSTALL     % packages
+
+%------------------------------------------------------------------------------
+
+readonly INSTALL_IMPLS = FALSE
+% TRUE
+%    => save all source files during the install
+%    => makes debugging easier and browsing more fruitful
+% FALSE
+%    => save only the exported interfaces and templates 
+%    => makes the installed system slightly smaller.
+
+%-------------------------------------------------------------------
+
+proc exists(x) is
+    return not stale(x, x)
+end
+
+%------------------------------------------------------------------------------
+
+proc GetM3Back() is
+    if defined("m3back")
+        return "@" & m3back
+    end
+    % probe all of these?
+    % rationale:
+    %  probe the built one ahead of the installed on
+    %  probe host/target ahead of just target
+    %  probe slash ahead of dash
+    %  I favor slash; gcc precedent is dash.
+    %  (because dash fits in less modified $PATH, slash not)
+    % ROOT/m3-sys/m3cc/HOST/TARGET/gcc/m3cgc1.exe
+    % ROOT/m3-sys/m3cc/HOST/TARGET/gcc/m3cgc1
+    % ROOT/m3-sys/m3cc/HOST-TARGET/gcc/m3cgc1.exe
+    % ROOT/m3-sys/m3cc/HOST-TARGET/gcc/m3cgc1
+    % INSTALL_ROOT/bin/HOST/TARGET/cm3cg.exe
+    % INSTALL_ROOT/bin/HOST/TARGET/cm3cg
+    % INSTALL_ROOT/bin/HOST/TARGET-cm3cg.exe
+    % INSTALL_ROOT/bin/HOST/TARGET-cm3cg
+    % ROOT/m3-sys/m3cc/TARGET/gcc/m3cgc1.exe
+    % ROOT/m3-sys/m3cc/TARGET/gcc/m3cgc1
+    % ROOT/m3-sys/m3cc/TARGET/cm3cg.exe
+    % ROOT/m3-sys/m3cc/TARGET/cm3cg
+    % INSTALL_ROOT/bin/TARGET/cm3cg.exe
+    % INSTALL_ROOT/bin/TARGET/cm3cg
+    % INSTALL_ROOT/bin/TARGET-cm3cg.exe
+    % INSTALL_ROOT/bin/TARGET-cm3cg
+    % INSTALL_ROOT/bin/cm3cg.exe
+    % INSTALL_ROOT/bin/cm3cg
+    bin = INSTALL_ROOT & "/bin/"
+    m3cc = ROOT & "/m3-sys/m3cc"
+    local cache = { }
+    foreach target in [ TARGET & "/", TARGET & "-", ""]
+        foreach host in [ HOST & "/", "" ]
+            foreach root in [ m3cc, bin ]
+                foreach gcc in ["gcc/m3cgc1", "cm3cg"]
+                    foreach exe in [".exe", ""]
+                        local a = root & HOST & TARGET & gcc & exe
+                        write("probing " & a & "\n")
+                        if not Cache contains a
+                            if FileExists(a)
+                                m3back = a
+                                return a
+                            else
+                                Cache{a} = 1
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    local a = "cm3cg"
+    m3back = a
+    return "@" & a
+end
+
+%-------------------------------------------------- default compile options ---
+% "set_config_options" is called before starting the compilation. It should
+% be used to provide system-wide default options.
+
+proc set_config_options() is
+    m3_option("-why")   %-- produce a listing that explains what's happening and why
+    m3_debug(TRUE)      %-- produce object code with debugging symbols
+    M3_OPTIONS += "-w1"  %-- produce "level 1" warnings
+end
+
+%------------------------------------------------------------------------------
+
+if not defined("q_exec")
+
+readonly proc q_exec(a) is
+    return try_exec(a)
+end
+
+end
+
+%-------------------------------------------------------------------- emacs ---
+% If you have emacs and want to compile ".el" files to ".elc" files,
+% fill in the function below. Otherwise, comment out or delete the
+% entire function. Note, the distributed code assumes gnuemacs version 19
+% or later.
+
+readonly proc emacs_compile(el) is
+    return q_exec("emacs -batch -f batch-byte-compile", el)
+end
+
+%------------------------------------------------------------------------------
