@@ -7,7 +7,14 @@
 readonly TARGET       = "SOLsun"
 readonly WORD_SIZE    = "32BITS"
 readonly GNU_PLATFORM = "sparc-sun-solaris2"
-readonly m3back = "cm3cg -quiet -gstabs+ -fPIC -m32"
+readonly m3back_flags = "-quiet -gstabs+ -fPIC -m32"
+
+readonly SYSTEM_LD = "cc -g -mt -xcode=pic13 -xldscope=symbolic -B direct -z ignore -z combreloc -z defs -z text"
+readonly SYSTEM_CC = SYSTEM_LD
+readonly SYSTEM_AR = "ar"
+readonly SYSTEM_ASM = "as"
+
+M3_USE_STACK_WALKER = TRUE
 
 SYSTEM_LIBS = {
   "LIBC"       : [ "-lsocket", "-lnsl",
@@ -25,7 +32,6 @@ SYSTEM_LIBS = {
   "TCP"        : [ ]
 }
 
-
 SYSTEM_LIBORDER = [
   "OPENGL",
   % "DECPEX",
@@ -38,23 +44,6 @@ SYSTEM_LIBORDER = [
   "LEX-YACC",
   "LIBC"
 ]
-
-readonly SYSTEM_CC = "cc -g -mt -xcode=pic13 "
-  & "-xldscope=symbolic -B direct -z ignore -z combreloc -z defs "
-  & "-z text"
-readonly SYSTEM_LD = SYSTEM_CC
-readonly SYSTEM_AR = "ar"
-readonly SYSTEM_ASM = "as"
-
-
-M3_USE_STACK_WALKER = TRUE
-
-
-proc compile_c (source, object, options, optimize, debug) is
-  local args = [ options ]
-  return try_exec ("@" & SYSTEM_CC, args, "-c", source)
-end
-
 
 proc assemble (source, object) is
   return try_exec ("@" & SYSTEM_ASM, "-xarch=v8plus", "-s", "-K", "PIC", source, "-o", object)
@@ -76,7 +65,6 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
       "-G", "-o",
       lib_sox, "-h", lib_sox, objects,
       imported_libs,
-      %GetM3CoreStaticObjs(lib)
       )
     if not equal (ret_code, 0) return ret_code end
 
@@ -88,7 +76,6 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     install_derived_link (lib_sox, lib_so)
     install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
-    ShipM3CoreStaticObjs(lib)
   else
     delete_file (lib_so)
     delete_file (lib_sox)
@@ -103,15 +90,8 @@ end
 proc m3_link (prog, options, objects, imported_libs, shared) is
   local linker = [ "@" & SYSTEM_CC ]
   local args = [ "-o", prog, options, objects, imported_libs ]
-  return try_exec (linker, args, GetM3CoreStaticObjs(""))
+  return try_exec (linker, args)
 end
-
-
-%
-% NT386.common could use "hand" here in the future.
-%
-%M3CoreStaticObjs = ["libgcc"]
-
 
 include ("Unix.common")
 

@@ -6,6 +6,8 @@
 %
 % Common parameterized configuration file for an x86 machine running Windows NT or perhaps Windows 95,
 
+include("cm3cfg.common")
+
 %-------------------------------------------------- compilation environment ---
 
 readonly WORD_SIZE    = "32BITS"            % { "32BITS" or "64BITS" }
@@ -47,73 +49,8 @@ proc Path_GetBase (a) is
   return a
 end
 
-%-------------------------------------------------- default compile options ---
-% "set_config_options" is called before starting the compilation. It should
-% be used to provide system-wide default options.
-
-proc
-set_config_options(
-    )
-is
-    m3_option("-why")   %-- produce a listing that explains what's happening and why
-    m3_debug(TRUE)      %-- produce object code with debugging symbols
-    M3_OPTIONS += "-w1"  %-- produce "level 1" warnings
-end
-
-%------------------------------------------------------------- export paths ---
-% During the installation, destination directories that do not exists
-% will be created. You need the necessary permissions to do so; otherwise,
-% the installation will fail, but can be restarted after you have
-% fixed the permissions.
-
-readonly
-proc
-CM3SetInstallRoot(
-    )
-is
-    if defined("INSTALL_ROOT")
-        return
-    end
-    if not equal($CM3_INSTALL, "")
-        INSTALL_ROOT = $CM3_INSTALL
-        return
-    end
-    if not equal($INSTALLROOT, "")
-        INSTALL_ROOT = $INSTALLROOT
-        return
-    end
-    INSTALL_ROOT = (path() & SL & "..")
-end
-
-CM3SetInstallRoot()
-
 %------------------------------------------------------------------------------
 
-readonly BIN_INSTALL    = INSTALL_ROOT & SL & "bin"     % executables
-readonly LIB_INSTALL    = INSTALL_ROOT & SL & "lib" & PROFILING_P   % libraries
-readonly PKG_INSTALL    = INSTALL_ROOT & SL & "pkg"     % packages
-readonly DOC_INSTALL    = INSTALL_ROOT & SL & "doc"     % documents
-readonly EMACS_INSTALL  = INSTALL_ROOT & SL & "elisp"   % emacs lisp code
-readonly MAN_INSTALL    = INSTALL_ROOT & SL & "man"     % man pages
-readonly HTML_INSTALL   = INSTALL_ROOT & SL & "www"     % public hypertext
-
-%
-% On some systems (e.g. AFS) you must install public files in a different
-% place from where you use them. If that is the case for your system,
-% specify the "use" location here, otherwise leave them alone.
-%
-readonly BIN_USE = BIN_INSTALL     % executables
-readonly PKG_USE = PKG_INSTALL     % packages
-
-readonly INSTALL_IMPLS = FALSE
-% TRUE
-%    => save all source files during the install
-%    => makes debugging easier and browsing more fruitful
-% FALSE
-%    => save only the exported interfaces and templates
-%    => makes the installed system slightly smaller.
-
-%------------------------------------------------ external system libraries ---
 % SYSTEM_LIBS provides a mapping from Modula-3 names for the common
 % external libraries to site-dependent information about how they
 % are accessed. If SYSTEM_LIBS{x} is defined it should be a list
@@ -164,35 +101,13 @@ readonly FormatDll = "%s.dll"
 
 %------------------------------------------------------------------------------
 
-if not defined("q_exec")
-
-readonly proc q_exec(a) is
-    return try_exec(a)
-end
-
-end
-
-%------------------------------------------------------------------------------
-
-local
-readonly
-proc
-LibOut(
-    a,
-    )
-is
+local readonly proc LibOut(a) is
     return LibOutPrefix & a & LibOutSuffix
 end
 
 %------------------------------------------------------------------------------
 
-local
-readonly
-proc
-LibIn(
-    a,
-    )
-is
+local readonly proc LibIn(a) is
     return LibInPrefix & a & LibInSuffix
 end
 
@@ -330,7 +245,6 @@ end
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
-m3back = "cm3cg"
 m3back_options = [ ]
 
 %
@@ -371,14 +285,7 @@ m3back_optimize += "-Wuninitialized"
 
 %------------------------------------------------------------------------------
 
-proc
-m3_backend(
-    source,
-    object,
-    optimize,
-    debug,
-    )
-is
+proc m3_backend(source, object, optimize, debug) is
     local args = [source, "-o", object]
     if optimize
         args += m3back_optimize
@@ -387,26 +294,19 @@ is
     if M3_PROFILING
         args += "-p"
     end
+    local m3back = GetM3Back()
     return q_exec([m3back, args])
 end
 
 %------------------------------------------------------------------------------
 
-proc
-FileExists(
-    a,
-    )
-is
+proc FileExists(a) is
     return not stale(a, a)
 end
 
 %------------------------------------------------------------------------------
 
-proc
-DeleteFile(
-    a,
-    )
-is
+proc DeleteFile(a) is
     delete_file(a)
 end
 
@@ -414,12 +314,7 @@ end
 
 readonly OS = $OS
 
-proc
-MoveFile(
-    a,
-    b,
-    )
-is
+proc MoveFile(a, b) is
     local ret = 0
     if defined("fs_cp")
         fs_cp(a, b)
@@ -438,11 +333,7 @@ end
 
 %------------------------------------------------------------------------------
 
-proc
-DeleteFiles(
-    a
-    )
-is
+proc DeleteFiles(a) is
     foreach b in a
         DeleteFile(b)
     end
@@ -453,15 +344,7 @@ end
 % is only called if your program or library explicitly includes C source
 % code, the system distributed by Critical Mass does not.
 
-proc
-compile_c_ms(
-    source,
-    object,
-    options,
-    optimize,
-    debug,
-    )
-is
+proc compile_c_ms(source, object, options, optimize, debug) is
     local args =
     [
 %
@@ -519,15 +402,7 @@ end
 
 %------------------------------------------------------------------------------
 
-proc
-compile_c_gnu(
-    source,
-    object,
-    options,
-    optimize,
-    debug,
-    )
-is
+proc compile_c_gnu(source, object, options, optimize, debug) is
     local args = options
     %
     % There's very little C in the system, and dtoa.h is crashing,
@@ -543,15 +418,7 @@ is
     return try_exec("@gcc", "-gstabs+", escape(args), "-c", subst_chars(source, "\\", "/"), "-o", object)
 end
 
-proc
-compile_c(
-    source,
-    object,
-    options,
-    optimize,
-    debug,
-    )
-is
+proc compile_c(source, object, options, optimize, debug) is
     if equal(C_COMPILER, "MS")
         return compile_c_ms(source, object, options, optimize, debug)
     end
@@ -566,31 +433,16 @@ end
 %
 % not used
 %
-proc
-assemble_ms(
-    source,
-    object,
-    )
-is
+proc assemble_ms(source, object) is
     local args = arglist("@", ["-Ml", "-t", "-z", source & "," & object & ";"])
     return q_exec("masm386", args)
 end
 
-proc
-assemble_gnu(
-    source,
-    object,
-    )
-is
+proc assemble_gnu(source, object) is
     return q_exec(["as", source, "-o", object])
 end
 
-proc
-assemble(
-    source,
-    object,
-    )
-is
+proc assemble(source, object) is
     return assemble_gnu(source, object)
 end
 
@@ -612,11 +464,7 @@ end
 
 ResponseFileCounter = "0"
 
-readonly
-proc
-GetResponseFileName(
-    )
-is
+readonly proc GetResponseFileName() is
     local readonly Result = "_m3responsefile" & ResponseFileCounter & ".txt"
     ResponseFileCounter =
         { "0":"1","1":"2","2":"3","3":"4","4":"5",
@@ -629,14 +477,7 @@ end
 % I couldn't get anything with write to work, nothing would handle
 % plain parameters and lists
 %
-readonly
-proc
-WriteResponseFile(
-    File,
-    Divider,
-    Args,
-    )
-is
+readonly proc WriteResponseFile(File, Divider, Args) is
     local readonly Temp = arglist("", Args)
     if equal(Temp, Args)
         if equal(Divider, " ")
@@ -663,11 +504,7 @@ end
 
 %------------------------------------------------------------------------------
 
-readonly
-proc
-GetPackageDirectory(
-    )
-is
+readonly proc GetPackageDirectory() is
     %
     % older builds, such as 5.1.3, do not define PACKAGE_DIR
     % This is only used to point the user at a file to
@@ -683,13 +520,7 @@ end
 
 %------------------------------------------------------------------------------
 
-readonly
-proc
-ConvertLibsToStandalone(
-    imported_libs,
-    shared,
-    )
-is
+readonly proc ConvertLibsToStandalone(imported_libs, shared) is
     if shared
         return imported_libs
     end
@@ -709,12 +540,7 @@ end
 
 % A "pdb' is a "program database", that is, a Microsoft symbol file.
 
-readonly
-proc
-PdbExport(
-    pdb,
-    )
-is
+readonly proc PdbExport(pdb) is
     if FileExists(pdb)
         BindExport(pdb)
     end
@@ -722,14 +548,7 @@ end
 
 %------------------------------------------------------------------------------
 
-readonly
-proc
-ManifestTool(
-    DllOrExe,
-    ManifestFile,
-    ResourceId,
-    )
-is
+readonly proc ManifestTool(DllOrExe, ManifestFile, ResourceId) is
     local ret = 0
     %
     % http://msdn2.microsoft.com/en-us/library/ms235591.aspx
@@ -753,12 +572,7 @@ end
 % Modula-3 has fixed sized buffers and fails assertions if we try
 % to give it more than 1k. This is lame.
 %
-readonly
-proc
-EscapeList(
-    List
-    )
-is
+readonly proc EscapeList(List) is
     local Result = [ ]
     foreach Element in List
         Result += escape(Element)
@@ -794,18 +608,7 @@ end
 % make_lib and m3_link need to share code!
 %
 
-proc
-make_dll_ms(
-    options,
-    objects,
-    imported_libs,
-    lib_file,
-    def_file,
-    dll_file,
-    listing,
-    LinkResponseFile,
-    )
-is
+proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, listing, LinkResponseFile) is
     %
     % Noentry cuts out the C runtime startup code,
     % which usually brings in most of our dependency on msvcr*.dll.
@@ -853,18 +656,7 @@ end
 
 %------------------------------------------------------------------------------
 
-proc
-make_dll_gnu(
-    options,
-    objects,
-    imported_libs,
-    lib_file,
-    def_file,
-    dll_file,
-    listing,
-    LinkResponseFile,
-    )
-is
+proc make_dll_gnu(options, objects, imported_libs, lib_file, def_file, dll_file, listing, LinkResponseFile) is
     if M3_PROFILING 
         objects += "-pg"
     end
@@ -900,15 +692,7 @@ end
 
 %------------------------------------------------------------------------------
 
-proc
-make_lib(
-    lib,
-    options,
-    objects,
-    imported_libs,
-    shared,
-    )
-is
+proc make_lib(lib, options, objects, imported_libs, shared) is
     local ret_code = 0
 
     local readonly lib_file = format(FormatLib, lib)
@@ -1053,12 +837,7 @@ end
 % call "make_lib", but it wants to discover the names of the derived
 % files that should be deleted or shipped.
 
-proc
-skip_lib(
-    lib,
-    shared,
-    )
-is
+proc skip_lib(lib, shared) is
     local readonly lib_file = format(FormatLib, lib)
     local readonly lib0_file = lib_file & ".sa"
     local def_file  = lib & ".def"
@@ -1173,18 +952,7 @@ end
 
 %------------------------------------------------------------------------------
 
-proc
-m3_link_ms(
-    prog,
-    options,
-    objects,
-    imported_libs,
-    shared,
-    pgm_file,
-    listing,
-    LinkResponseFile,
-    )
-is
+proc m3_link_ms(prog, options, objects, imported_libs, shared, pgm_file, listing, LinkResponseFile) is
     local entry = ["-subsystem:console", "-entry:mainCRTStartup"]
     if defined("M3_WINDOWS_GUI")
         if M3_WINDOWS_GUI
@@ -1213,18 +981,7 @@ end
 
 %------------------------------------------------------------------------------
 
-proc
-m3_link_gnu(
-    prog,
-    options,
-    objects,
-    imported_libs,
-    shared,
-    pgm_file,
-    listing,
-    LinkResponseFile,
-    )
-is
+proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, listing, LinkResponseFile) is
     if not shared
         %options += "-static"
     end
@@ -1265,15 +1022,7 @@ end
 
 %------------------------------------------------------------------------------
 
-proc
-m3_link(
-    prog,
-    options,
-    objects,
-    imported_libs,
-    shared,
-    )
-is
+proc m3_link(prog, options, objects, imported_libs, shared) is
     local ret_code = 0
     local readonly pgm_file = format(FormatExe, prog)
     local readonly manifest_file = pgm_file & ".manifest"
@@ -1351,12 +1100,7 @@ end
 % call "m3_link", but it wants to discover the names of the derived
 % files that should be deleted or shipped.
 
-proc
-skip_link(
-    prog,
-    shared,
-    )
-is
+proc skip_link(prog, shared) is
     local readonly pgm_file = format(FormatExe, prog)
     local readonly manifest_file = pgm_file & ".manifest"
     local readonly pdb_file = prog & ".pdb"
@@ -1435,18 +1179,3 @@ X11_WITH_SHARED_MEM = TRUE
 M3_NEED_STANDALONE_LINKS = FALSE
 % --- linker is broken and we need to build a directory of symbolic
 %     links pointing to the non-shared libraries.
-
-%-------------------------------------------------------------------- emacs ---
-% If you have emacs and want to compile ".el" files to ".elc" files,
-% fill in the function below. Otherwise, comment out or delete the
-% entire function. Note, the distributed code assumes gnuemacs version 19
-% or later.
-
-readonly
-proc
-emacs_compile(
-    el,
-    )
-is
-    return q_exec("emacs -batch -f batch-byte-compile", el)
-end

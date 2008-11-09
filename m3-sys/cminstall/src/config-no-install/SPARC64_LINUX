@@ -10,7 +10,7 @@ readonly AR_AND_RANLIB_ARE_ONE = TRUE
 %
 % fPIC not working yet
 %
-readonly m3back = "cm3cg -quiet -g -m64"
+readonly m3back_flags = "-quiet -g -m64"
 readonly SYSTEM_CC = "gcc -g -m64" % C compiler
 readonly SYSTEM_ASM = "as -64" % Assembler
 

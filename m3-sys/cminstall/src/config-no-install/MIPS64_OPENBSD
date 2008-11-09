@@ -1,10 +1,11 @@
-readonly TARGET = "SPARC64_OPENBSD"
+readonly TARGET = "MIPS64_OPENBSD"
 readonly WORD_SIZE = "64BITS"
-readonly GNU_PLATFORM = "sparc64-openbsd"
+readonly GNU_PLATFORM = "mips64-openbsd"
 
-readonly m3back_flags = "-gstabs+ -quiet"
-readonly SYSTEM_CC = "gcc -gstabs+"
-readonly SYSTEM_ASM = "as"
+readonly m3back_flags = "-gstabs+ -mabi=64 -fPIC -quiet"
+readonly m3back = "cm3cg -gstabs+ -mabi=64 -fPIC -quiet"
+readonly SYSTEM_CC = "gcc -g -mabi=64 -fPIC"
+readonly SYSTEM_ASM = "as -EB -g0 -64 -KPIC"
 
 %
 % newer platforms never needed these workarounds for
