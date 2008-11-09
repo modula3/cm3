@@ -7,13 +7,13 @@
 
 UNSAFE MODULE M3File;
 
-IMPORT CoffTime, FS, File, OSError, Text;
+IMPORT Compiler, FS, File, OSError, Text;
 
 TYPE
   BufPtr = UNTRACED REF ARRAY BufferLength OF File.Byte;
 
 CONST
-  OnUnix = (CoffTime.EpochAdjust = 0.0d0);
+  OnUnix = (Compiler.ThisOS = Compiler.OS.POSIX);
   (* We need to preserve permission bits on Unix.  On Win32 it's
      too hard (Win95 doesn't have security, and WinNT w/o NTFS
      is broken too!), so we don't bother.  *)

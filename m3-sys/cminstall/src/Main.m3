@@ -1,13 +1,13 @@
 MODULE Main;
 
-IMPORT Bundle, (* CMKey, CMCurrent, *) CoffTime, Env, File, Fmt, FS, Glob;
+IMPORT Bundle, (* CMKey, CMCurrent, *) Compiler, Env, File, Fmt, FS, Glob;
 IMPORT M3ID, Msg, OS, OSError, Params, Pathname, Pipe, Process;
 IMPORT Quake, QScanner, QToken, RegEx, Registry, RegularFile, Setup;
 IMPORT Text, Text2, TextSeq, TextWr, Thread, Wr;
 FROM Msg IMPORT Out, OutS, Ask, AskBool, AskChoice;
 
 CONST
-  OnUnix = (CoffTime.EpochAdjust = 0.0d0);
+  OnUnix = (Compiler.ThisOS = Compiler.OS.POSIX);
 
   DefaultInstallDir = ARRAY BOOLEAN OF TEXT
     { "c:\\cm3", "/usr/local/cm3" } [OnUnix];
