@@ -9,10 +9,11 @@ readonly WORD_SIZE    = "32BITS"
 readonly GNU_PLATFORM = "sparc-sun-solaris2"
 readonly m3back_flags = "-quiet -gstabs+ -fPIC -m32"
 
-readonly SYSTEM_CC  = "gcc"
-readonly SYSTEM_LD  = "ld"
+readonly SYSTEM_CC = "sparc-sun-solaris2.10-gcc -g -pipe -fPIC -m32"
+readonly SYSTEM_LD = "/usr/ccs/bin/ld -B direct -B local -z ignore -z combreloc -z defs -z text"
+readonly LIBGCC = "/usr/local/lib/gcc/sparc-sun-solaris2.10/4.3.1/libgcc.a"
 readonly SYSTEM_AR = "ar"
-readonly SYSTEM_ASM = "as"
+readonly SYSTEM_ASM = "as -xarch=v8plus -s -K PIC"
 
 M3_USE_STACK_WALKER = TRUE
 
@@ -51,11 +52,6 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local lib_so   = format ("lib%s.so", lib)
   local lib_sox  = format ("lib%s.so.5", lib)
 
-  touch (lib_a)
-  touch (lib_so)
-  touch (lib_sox)
-  return 0
-
   % first, build the non-shared library
   ret_code = try_exec ("@" & SYSTEM_AR, "cru", lib_a, objects)
   if not equal (ret_code, 0) return ret_code end
@@ -63,11 +59,11 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if shared
     % then, build the shared library
     if M3_PROFILING  % FIXME: This is probably wrong (untested)
-      ret_code = try_exec ("@" & SYSTEM_LD, "-pg -dy -G -z text -o", 
-                           lib_sox, "-h", lib_sox, objects)
+      ret_code = try_exec ("@" & SYSTEM_LD, "-pg -dy -G -o", 
+                           lib_sox, "-h", lib_sox, objects, imported_libs, LIBGCC)
     else
-      ret_code = try_exec ("@" & SYSTEM_LD, "-dy -G -z text -o", 
-                           lib_sox, "-h", lib_sox, objects)
+      ret_code = try_exec ("@" & SYSTEM_LD, "-dy -G -o", 
+                           lib_sox, "-h" & lib_sox, objects, imported_libs, LIBGCC)
     end
     if not equal (ret_code, 0) return ret_code end
 
@@ -91,14 +87,14 @@ end
 % "m3_link" is called to produce a final executable.
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
-  local linker = [ "@" & SYSTEM_CC, "-pthreads" ]
+  local linker = [ "@" & SYSTEM_LD, "-pthreads", "-pie" ]
   local args = []
   if M3_PROFILING args += "-pg" end
-  args += [ "-o", prog, options, objects, imported_libs ]
+  args += [ "-o", prog, options, objects, imported_libs, LIBGCC]
   if shared
     return try_exec (linker, args)
   else
-    return try_exec (linker, "-Xlinker", "-dy", "-Xlinker", "-Bstatic", args)
+    return try_exec (linker, "-dy -Bstatic", args)
   end
 end
 
@@ -112,5 +108,5 @@ M3_SHARED_LIB_ARG = "-R"
 % --- pass "-R" flags to the linker too...
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-gstabs+"
+GNU_CFLAGS = "-g"
 GNU_MAKE   = "make"

@@ -70,13 +70,6 @@ proc m3_backend(source, object, optimize, debug) is
     return try_exec (m3back, args, source, "-o", object)
 end
 
-M3_BACKEND_MODE = "3"
-% -- defines how the frontend, backend, and assembler interact
-%  "0"  -- don't call m3_backend, M3CG produces object code
-%  "1"  -- don't call m3_backend, M3CG produces assembly code
-%  "2"  -- call m3_backend, it produces object code
-%  "3"  -- call m3_backend, it produces assembly code
-
 %--------------------------------------------------------------- C compiler ---
 % "compile_c" is called to compile C source files.  Note that this function
 % is only called if your program or library explicitly includes C source
@@ -369,12 +362,6 @@ end
 % they can be set "permanently" here in the config file or in as needed
 % in user's m3makefiles.
 
-M3_FRONT_FLAGS = [ ]
-% --- internal configuration options passed directly to the Modula-3 front-end
-
-M3_OPTIONS = [ ]
-% --- user options passed directly to the Modula-3 front-end
-
 M3_COVERAGE_LIB = LIB_USE & "/report_coverage.o"
 % --- library linked in programs compiled with "-Z" coverage option
 
@@ -384,8 +371,4 @@ M3_SPLIT_LIBNAMES = TRUE
 if not defined("M3_SHARED_LIB_ARG")
   M3_SHARED_LIB_ARG = "-Wl,-R"
 end
-
-% --- pass "-R" flags to the linker too...
-
-X11_WITH_SHARED_MEM = TRUE
-% --- X11 libraries include the shared memory extensions (XShm...)
+% --- pass "-R" flags to the linker too.
