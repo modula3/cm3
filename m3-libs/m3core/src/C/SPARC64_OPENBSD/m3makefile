@@ -1,0 +1,7 @@
+% This file is the same or almost the same across all platforms, and
+% little used. Let's factor the commonality
+% and take out the dead.
+Interface ("Csetjmp")
+Interface ("Csignal")
+Interface ("Cstring")
+Interface ("Cstdio")

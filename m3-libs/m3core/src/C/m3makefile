@@ -8,10 +8,5 @@
 %      modified on Wed May  5 11:53:58 PDT 1993 by mjordan
 
 include_dir ("Common")
-if equal (TARGET, "SPARC64_OPENBSD")
-  include_dir ("AMD64_LINUX")
-else
-  include_dir (TARGET)
-end
+include_dir (TARGET)
 include_dir (WORD_SIZE)
-

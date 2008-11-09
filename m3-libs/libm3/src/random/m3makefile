@@ -30,6 +30,7 @@ readonly _RandomPieces = {
   "LINUX"      : [ _LittleEndian ],
   "LINUXELF"   : [ _LittleEndian ],
   "LINUXLIBC6" : [ _LittleEndian ],
+  "MIPS64_OPENBSD" : [ _BigEndian ],
   "NEXT"       : [ _BigEndian ],
   "NT386"      : [ _LittleEndian ],
   "NT386GNU"   : [ _LittleEndian ],
