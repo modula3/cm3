@@ -12,7 +12,7 @@ readonly m3back_flags = "-quiet -gstabs+ -fPIC -m32"
 readonly SYSTEM_LD = "cc -g -mt -xcode=pic13 -xldscope=symbolic -B direct -z ignore -z combreloc -z defs -z text"
 readonly SYSTEM_CC = SYSTEM_LD
 readonly SYSTEM_AR = "ar"
-readonly SYSTEM_ASM = "as"
+readonly SYSTEM_ASM = "as -xarch=v8plus -s -K PIC"
 
 M3_USE_STACK_WALKER = TRUE
 
@@ -64,8 +64,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     ret_code = try_exec ("@" & SYSTEM_LD,
       "-G", "-o",
       lib_sox, "-h", lib_sox, objects,
-      imported_libs,
-      )
+      imported_libs)
     if not equal (ret_code, 0) return ret_code end
 
     % create the version aliases
@@ -95,10 +94,7 @@ end
 
 include ("Unix.common")
 
-
 M3_SHARED_LIB_ARG = "-R"
 % --- pass "-R" flags to the linker too.
 
 M3_MAIN_IN_C = TRUE
-
-GNU_MAKE   = "gmake"
