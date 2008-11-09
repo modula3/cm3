@@ -4,7 +4,7 @@
 % derived originally from the FreeBSD configuration
 %
 
-% $Id: PPC_DARWIN,v 1.16 2008-11-09 06:20:12 jkrell Exp $
+% $Id: PPC_DARWIN,v 1.17 2008-11-09 06:35:51 jkrell Exp $
 
 %-------------------------------------------------- compilation environment ---
 
