@@ -329,13 +329,6 @@ VAR (*CONST*)
   (* Thread stacks; these are bit counts *)
   Jumpbuf_size     : CARDINAL; (* size of a "jmp_buf" *)
   Jumpbuf_align    : CARDINAL; (* alignment of a "jmp_buf" *)
-  Fixed_frame_size : CARDINAL; (* size of an "empty" stack frame *)
-  Guard_page_size  : CARDINAL; (* size of the "unmapped" region at the
-                                            end of a thread stack *)
-  (* These parameters are used to estimate the size each procedure's
-     frame.  If the estimated size of a procedure's frame is less
-     than the guard page's size, no explict check for stack overflow
-     is needed.  *)
 
   (* floating point values *)
   All_floats_legal : BOOLEAN;
