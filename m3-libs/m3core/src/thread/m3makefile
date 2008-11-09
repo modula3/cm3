@@ -24,6 +24,9 @@ readonly USE_PTHREADS = {
   "LINUX"      : FALSE,
   "LINUXELF"   : FALSE,
   "LINUXLIBC6" : TRUE,  % old kernels without NPTL should be FALSE
+  "MIPS32_IRIX" : TRUE,
+  "MIPS64_IRIX" : TRUE,
+  "MIPS64_OPENBSD" : TRUE,
   "NEXT"       : FALSE,
   "NT386"      : TRUE,
   "NT386GNU"   : TRUE,
@@ -41,7 +44,10 @@ readonly USE_PTHREADS = {
   "UMAX"       : FALSE,
   "VAX"        : FALSE,
   "I386_DARWIN": TRUE,
+  "PPC32_AIX" : TRUE,
+  "PPC64_AIX" : TRUE,
   "PPC_DARWIN" : TRUE,
+  "PPC64_DARWIN" : TRUE,
   "PPC_LINUX"  : FALSE,
   "PPC32_OPENBSD" : TRUE,
   "NetBSD2_i386"  : FALSE
