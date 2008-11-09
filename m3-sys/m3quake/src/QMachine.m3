@@ -1302,6 +1302,10 @@ PROCEDURE DoCopyIfNew (t: T;  n_args: INTEGER) RAISES {Error} =
 PROCEDURE CopyIfNew (t: T;  src, dest: TEXT) RAISES {Error} =
   VAR equal := FALSE;
   BEGIN
+
+    src := FixPath (src);
+    dest := FixPath (dest);
+
     IF M3File.IsDirectory (dest) THEN
       dest := Pathname.Join (dest, Pathname.Last (src), NIL);
     END;
@@ -1701,6 +1705,7 @@ PROCEDURE MakeDir (t: T;  dir: TEXT)  RAISES {Error} =
   VAR parent: TEXT;
   BEGIN
     IF dir = NIL THEN RETURN END;
+    dir := FixPath (dir);
     IF M3File.IsDirectory (dir) THEN RETURN END;
 
     parent := Pathname.Prefix (dir);
@@ -1723,6 +1728,29 @@ PROCEDURE DoNormalize (t: T;  n_args: INTEGER) RAISES {Error} =
     Pop (t, val);  prefix  := QVal.ToText (t, val);
     PushText (t, Normalize (t, prefix, unfixed));
   END DoNormalize;
+
+PROCEDURE FixPath (path: TEXT): TEXT =
+(* Many Win32 functions allow forward slashes in place of
+backward slashes. On a system with just one volume, or in
+a context in which only one volume matters, c:/foo and /foo
+mean the same thing. Therefore it is possibly advantageous
+and simplifying to just use "/foo". However older Win32 Modula-3
+runtime does not accept forward slashes.
+In order to bootstrap a newer cm3 against an older runtime, convert.
+*)
+  BEGIN
+    IF OnUnix THEN
+      IF Text.Length(path) > 2
+          AND Text.GetChar(path, 1) = ':'
+          AND Text.GetChar(path, 2) = '\\' THEN
+        path := Text.Sub(path, 2);
+      END;
+      path := TextUtils.SubstChar(path, '\\', '/');
+    ELSE
+      path := TextUtils.SubstChar(path, '/', '\\');
+    END;
+    RETURN path;
+  END FixPath;
 
 PROCEDURE Normalize (t: T;  prefix, unfixed: TEXT): TEXT  RAISES {Error} =
   VAR unfixedArcs, prefixArcs: Pathname.Arcs;

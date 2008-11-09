@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.127 2008-11-09 08:06:34 jkrell Exp $
+# $Id: pylib.py,v 1.128 2008-11-09 10:53:57 jkrell Exp $
 
 import os
 from os import getenv
@@ -228,6 +228,7 @@ CM3 = SearchPath(CM3)
 #
 
 InstallRoot = getenv("CM3_INSTALL")
+# print("InstallRoot is " + InstallRoot)
 
 if not CM3 and not InstallRoot:
     for a in ["c:\\cm3\\bin\\cm3.exe", "d:\\cm3\\bin\\cm3.exe", "/cm3/bin/cm3", "/usr/local/bin/cm3"]:
@@ -269,11 +270,15 @@ Root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 # merely cd'ing to a directory on the drive of Root, if other paths either
 # are also on that drive, or have their drive letter not removed.
 #
-if Root.find(":\\") == 1:
-	Root = Root[2:]
 
-Root = Root.replace("\\\\", "/")
-Root = Root.replace("\\", "/")
+# This is all well and good for current cm3, but older Win32 cm3 doesn't like
+# these paths (even though underlying Win32 does). So try leaving things alone.
+
+# if Root.find(":\\") == 1:
+#	Root = Root[2:]
+#
+# Root = Root.replace("\\\\", "/")
+# Root = Root.replace("\\", "/")
 
 #-----------------------------------------------------------------------------
 
@@ -635,6 +640,7 @@ def GetConfigForDistribution(Target):
     if os.path.isfile(b):
         return b
     b = os.path.join(a, "config", Target)
+    # print("GetConfigForDistribution:" + b)
     return b
 
 #-----------------------------------------------------------------------------
@@ -674,8 +680,8 @@ def _ConvertToCygwinPath(a):
 def _ConvertFromCygwinPath(a):
     if env_OS != "Windows_NT":
         return a
-    #a = a.replace("/", "\\")
-    a = a.replace("\\", "/")
+    a = a.replace("/", "\\")
+    #a = a.replace("\\", "/")
     if (a.find("\\cygdrive\\") == 0):
         a = a[10] + ":" + a[11:]
     return a
@@ -706,7 +712,9 @@ else:
 
 def ConvertPath(a):
     # This isn't "roundtrip", this is one (or both) is a nop.
-    return ConvertFromCygwinPath(ConvertToCygwinPath(a))
+    b = ConvertFromCygwinPath(ConvertToCygwinPath(a))
+    # print("converted " + a + " to " + b)
+    return b
 
 #-----------------------------------------------------------------------------
 #
@@ -717,6 +725,8 @@ SetEnvironmentVariable("CM3_TARGET", Target);
 SetEnvironmentVariable("CM3_INSTALL", ConvertPath(InstallRoot))
 SetEnvironmentVariable("M3CONFIG", ConvertPath(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
 SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "\\\\"))
+
+# sys.exit(1)
 
 #-----------------------------------------------------------------------------
 # define build and ship programs for Critical Mass Modula-3
