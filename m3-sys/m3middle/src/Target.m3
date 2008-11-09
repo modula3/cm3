@@ -211,6 +211,11 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 28 * Address.size;
                  Setjmp                    := "setjmp";
 
+    |  Systems.MIPS64_OPENBSD => (* 64 bit MIPS, big endian, OpenBSD *)
+                 Init64();
+                 Little_endian             := FALSE;
+                 Jumpbuf_size              := 298 * Char.size;
+
     |  Systems.LINUX, Systems.LINUXELF =>
                  max_align                 := 32;
                  Jumpbuf_size              := 8 * Address.size;

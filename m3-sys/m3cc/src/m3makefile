@@ -12,6 +12,7 @@ readonly Platform_info = {
   "AMD64_NT"  : "amd64-pc-mingw32",
   "AP3000"    : "apollo68-bsd",
   "ARM"       : "arm-riscos",
+  "ARM_LINUX" : "arm-linux-uclibc",
   "BSDI4"     : "i386-unknown-freebsdelf",
   "DS3100"    : "decstation",
   "FBSD_ALPHA": "alpha-unknown-freebsd",
@@ -29,6 +30,7 @@ readonly Platform_info = {
   "LINUXLIBC6": "i686-pc-linux-gnu",
   "NEXT"      : "next-bsd",
   "NT386"     : "i686-pc-mingw32",
+  "MIPS64_OPENBSD" : "mips64-openbsd",
   "OKI"       : "i860-sysv4.0",
   "SEQUENT"   : "i386-sequent-bsd",
   "SOLgnu"    : "sparc-sun-solaris2",
@@ -58,14 +60,14 @@ readonly proc Platform_WordSize (Platform) is
   if {"ALPHA_OSF":1,"AMD64_DARWIN":1,"AMD64_LINUX":1,"AMD64_NT":1,
       "AMD64_FREEBSD":1,"AMD64_NETBSD":1,"AMD64_OPENBSD":1,"AMD64_SOLARIS":1,
       "IA64_NT":1,"FBSD_ALPHA":1,"Tru64v5":1,"SPARC64_LINUX":1,
-      "SPARC64_OPENBSD":1,"SPARC64_SOLARIS":1} contains Platform
+      "SPARC64_OPENBSD":1,"SPARC64_SOLARIS":1,"MIPS64_IRIX":1,"MIPS64_OPENBSD":1} contains Platform
     return "64"
   end
   return "32"
 end
 
 readonly proc Platform_IsOpenBSD (Platform) is
-  return {"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1} contains Platform
+  return {"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1,"MIPS64_OPENBSD":1} contains Platform
 end
 
 readonly proc ApplyPatches (Platform) is
@@ -122,6 +124,19 @@ readonly m3cc_config = {
   %
   "SPARC64_OPENBSD" : "-disable-tls",
 
+  "ARM_LINUX": "-with-float=soft -enable-target-optspace -enable-threads -enable-shared",
+
+  %
+  % Irix requires GNU as and GNU ld should work but presently does not.
+  % Irix native ld works.
+  % AIX almost always requires native as and ld -- cross builds are not possible.
+  % Not all of this is relevant to m3cg, but user can build gcc/cc1 here.
+  %
+  "PPC32_AIX" : "-with-ld=/us/bin/ld -with-as=/usr/bin/as",
+  "PPC64_AIX" : "-with-ld=/us/bin/ld -with-as=/usr/bin/as",
+  "MIPS32_IRIX" : "-with-ld=/us/bin/ld -with-gnu-as",
+  "MIPS64_IRIX" : "-with-ld=/us/bin/ld -with-gnu-as",
+
   "HPPA"  : "-with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
 
@@ -164,7 +179,27 @@ if defined("HOST_GNU_MAKE")
   GNU_MAKE = HOST_GNU_MAKE
 end
 
+% See gcc configure documentation.
+% "Build" is the present machine we are running on, the machine that is building the compiler.
+% "Host" is the machine the compiler will run on.
+% "Target" is the machine the compiler's output will run on.
+% Typically, in a "native" build, all three are the same.
+% There are five variations.
+% BHT - Build Host Target
+%  HT -       Host Target
+% AAA - native building a native compiler
+%       This requires having an HT=AA compiler, and produces another AA compiler.
+% AAB - building a cross compiler that will run on current machine
+%       This requires HT=AA to build fixincludes and gcc, AB to build libgcc, producing a AB compiler (which is used to build libgcc)
+% ABA - building a cross compiler that runs on another machine, targeting current machine ("cross back"?)
+%       This requires HT=AA to build fixincludes, AB to build gcc, AA to build libgcc, producing a BA compiler.
+% ABB - cross building a native compiler
+%       This requires HT=AA to build fixincludes, AB to build gcc and libgcc, producing a BB compiler.
+% ABC - cross building a cross compiler
+%       This requires HT=AA to build fixincludes, AB to build gcc, AC to build libgcc, producing a BC compiler.
+%
 % check for overrides, otherwise use the defaults from the configuration file
+if not defined ("M3CC_BUILD")   M3CC_BUILD  = TARGET     end
 if not defined ("M3CC_HOST")    M3CC_HOST   = TARGET     end
 if not defined ("M3CC_TARGET")  M3CC_TARGET = TARGET     end
 if not defined ("M3CC_CC")      M3CC_CC     = GNU_CC     end
@@ -175,7 +210,9 @@ if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 % figure out where we're going to build gcc
 local build_dir = "."  % let m3build set the build directory
 
-if not equal (M3CC_HOST, M3CC_TARGET)
+local Native = equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD)
+
+if not Native
   build_dir = M3CC_HOST & "-" & M3CC_TARGET
   % make sure the derived directory exists
   if not exists (build_dir)
@@ -222,7 +259,7 @@ done = build_dir & "/.configure-done"
 if defined ("FORCE")
   %
   % Note: this block is hard to maintain correctly and I personally
-  % just rmdir /q/s <target> or rm -rf <taret>.
+  % just rmdir /q/s <target> or rm -rf <target>.
   %
   % Why not just rm -rf build_dir/*?
   % Scared of getting it wrong?
@@ -258,39 +295,16 @@ if defined ("FORCE")
   % Now delete directories that should be empty.
   %
   foreach a in [
-      "gcc/build",
-      "gcc/doc",
-      "gcc/m3cg",
-      "gcc/treelang",
-      "gmp/demos/calc",
-      "gmp/demos/expr",
-      "gmp/tests/cxx",
-      "gmp/tests/devel",
-      "gmp/tests/misc",
-      "gmp/tests/mpbsd",
-      "gmp/tests/mpf",
-      "gmp/tests/mpn",
-      "gmp/tests/mpq",
-      "gmp/tests/mpz",
-      "gmp/tests/rand",
-      "gmp/cxx",
-      "gmp/demos",
-      "gmp/doc",
-      "gmp/mpbsd",
-      "gmp/mpf",
-      "gmp/mpn",
-      "gmp/mpq",
-      "gmp/mpz",
-      "gmp/printf",
-      "gmp/scanf",
-      "gmp/tests",
-      "gmp/tune",
-      "mpfr/tests",
-      "gcc",
-      "gmp",
-      "libcpp",
-      "libdecnumber",
-      "mpfr"
+      "gcc/build", "gcc/doc", "gcc/m3cg", "gcc/treelang",
+      "gmp/demos/calc", "gmp/demos/expr", "gmp/tests/cxx",
+      "gmp/tests/devel", "gmp/tests/misc", "gmp/tests/mpbsd",
+      "gmp/tests/mpf", "gmp/tests/mpn", "gmp/tests/mpq",
+      "gmp/tests/mpz", "gmp/tests/rand", "gmp/cxx",
+      "gmp/demos", "gmp/doc", "gmp/mpbsd",
+      "gmp/mpf", "gmp/mpn", "gmp/mpq",
+      "gmp/mpz", "gmp/printf", "gmp/scanf",
+      "gmp/tests", "gmp/tune", "mpfr/tests",
+      "gcc", "gmp", "libcpp", "libdecnumber", "mpfr"
       ]
     if exists (build_dir & "/" & a)
       exec("-rmdir " & build_dir & "/" & a)
@@ -310,48 +324,58 @@ local env = get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS
 %   Automake and autoconf are causing problems building on NT, even when they are installed.
 %   We don't need their results usually. Libtool is also a problem, possibly a cascade.
 %
-env = env & " CC='gcc -g'"
-env = env & " CFLAGS="
-env = env & " AUTOCONF=echo"
-env = env & " AUTOMAKE=echo"
+% env = env & " CC='gcc -g'"
+% env = env & " CFLAGS="
+env = env & " AUTOCONF=:"
+env = env & " AUTOMAKE=:"
 env = env & " LEX='touch lex.yy.c'"
-env = env & " MAKEINFO=echo"
+env = env & " MAKEINFO=:"
 M3CC_MAKE = M3CC_MAKE & " " & env
 M3CC_CONFIG = M3CC_CONFIG & " " & env
 
 ApplyPatches (M3CC_TARGET)
-
-local Cross = not equal (M3CC_HOST, M3CC_TARGET)
-local Native = not Cross
 
 % check for non-default flags
 
 if not defined ("no_config")
   % configure the sources
   if not exists (done)
-    local Configure = ""
-    if Cross
-      Configure = " -target=" & GNU_platform (M3CC_TARGET)
+    local Configure = " "
+
+    %
+    % Workaround Canadian fixincludes not understanding sysroot of the cross compiler used to build it.
+    % http://gcc.gnu.org/bugzilla/show_bug.cgi?id=37036
+    % This does not affect m3cg.
+    %
+    if equal (M3CC_HOST, M3CC_TARGET) and not equal (M3CC_HOST, M3CC_BUILD)
+        Configure = Configure & " -with-sysroot=/"
+        local Prefix = "/usr/local"
+        local DefaultSysroot = Prefix & "/" & GNU_platform (M3CC_TARGET) & "/sys-root"
+        Configure = Configure & " -with-build-sysroot=" & DefaultSysroot
+        Configure = Configure & " -host=" & GNU_platform (M3CC_HOST)
+        Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+    else
+        if not equal (M3CC_HOST, M3CC_TARGET)
+          Configure = Configure & " -with-sysroot"
+          Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+        end
     end
     Configure = Configure & " -srcdir=../gcc"
     Configure = Configure & " -disable-bootstrap"
-    Configure = Configure & " -disable-doc"
-    Configure = Configure & " -disable-fixincludes"
     Configure = Configure & " -disable-intl"
-    Configure = Configure & " -disable-libgcc"
     Configure = Configure & " -disable-libgomp"
     Configure = Configure & " -disable-libmudflap"
     Configure = Configure & " -disable-libssp"
-    Configure = Configure & " -disable-multilib"
     Configure = Configure & " -disable-nls"
-    Configure = Configure & " -disable-shared"
     Configure = Configure & " -enable-languages=m3cg"
     Configure = Configure & " -enable-targets=all"
-    %
-    % remove libiconv dependency
-    % It isn't needed, and stock Solaris install lacks it.
-    %
-    Configure = Configure & " -without-libiconv-prefix"
+
+    % These are compatible with just building m3cg, but user might
+    % build gcc/cc1/libgcc here.
+    Configure = Configure & " -disable-fixincludes"
+    Configure = Configure & " -disable-libgcc"
+    Configure = Configure & " -disable-decimal-float"
+    Configure = Configure & " -disable-fixed-point"
 
     m3cc_Run (["cd", build_dir, "&&", "../gcc/configure", M3CC_CONFIG, Configure, " | tee -a _m3.log"])
     > done in
@@ -400,53 +424,6 @@ if Native
 end
 
 %
-% Modula-3 never uses "decimal" types, so dfp.c and libdecnumber.a are not needed.
-% Make dummy versions of them.
-%
-
-if not exists (build_dir & "/gcc")
-  exec ("-cd " & build_dir & "&& mkdir gcc")
-end
-
-> build_dir & "/gcc/dfp.c" in
-    write(""
-& "void decimal_real_from_string (void) { abort(); }\n"
-& "void encode_decimal32 (void) { abort(); }\n"
-& "void decode_decimal32 (void) { abort(); }\n"
-& "void encode_decimal64 (void) { abort(); }\n"
-& "void decode_decimal64 (void) { abort(); }\n"
-& "void encode_decimal128 (void) { abort(); }\n"
-& "void decode_decimal128 (void) { abort(); }\n"
-& "void decimal_do_compare (void) { abort(); }\n"
-& "void decimal_round_for_format (void) { abort(); }\n"
-& "void decimal_real_convert (void) { abort(); }\n"
-& "void decimal_real_to_decimal (void) { abort(); }\n"
-& "void decimal_do_fix_trunc (void) { abort(); }\n"
-& "void decimal_real_to_integer (void) { abort(); }\n"
-& "void decimal_real_to_integer2 (void) { abort(); }\n"
-& "void decimal_real_arithmetic (void) { abort(); }\n"
-& "void decimal_real_maxval (void) { abort(); }\n")
-end
-
-if not exists (build_dir & "/libdecnumber")
-  exec ("-cd " & build_dir & "&& mkdir libdecnumber")
-end
-> build_dir & "/libdecnumber/a.c" in
-  write("\n")
-end
-exec("gcc -c " & build_dir & "/libdecnumber/a.c -o " & build_dir & "/libdecnumber/a.o")
-exec("ar cru " & build_dir & "/libdecnumber/libdecnumber.a " & build_dir & "/libdecnumber/a.o")
-exec("ranlib " & build_dir & "/libdecnumber/libdecnumber.a")
-
-%
-% trigger toplevel Makefile to think configure is done
-%
-> build_dir & "/libdecnumber/Makefile" in
-  write("all:\n")
-end
-
-
-%
 % configure
 %
 
@@ -484,8 +461,9 @@ end
 
 %
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
+% User can still cd into build directory and run make to get gcc/cc1/libgcc.
 %
-m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-mpfr all-build-libiberty all-libiberty | tee -a _m3.log"])
+m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-mpfr all-build-libiberty all-libiberty all-libdecnumber | tee -a _m3.log"])
 
 %
 % make just libcpp.a, don't bother with makedepend.exe

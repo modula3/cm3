@@ -30,6 +30,7 @@ readonly _FloatPieces = {
   "LINUX"      : _float_le,
   "LINUXELF"   : _float_le,
   "LINUXLIBC6" : _float_le,
+  "MIPS64_OPENBSD" : _float_be,
   "NEXT"       : _float_be,
   "NT386"      : _float_le,
   "NT386GNU"   : _float_le,

@@ -111,7 +111,9 @@ CONST
    (* SPARC32_LINUX *) "Linux",
    (* SPARC64_LINUX *) "Linux",
    (* SPARC64_OPENBSD *) "OpenBSD",
-   (* PPC32_OPENBSD *) "OpenBSD",   ..
+   (* PPC32_OPENBSD *) "OpenBSD",
+   (* MIPS64_OPENBSD *) "OpenBSD",
+   ..
   };
 
 CONST
@@ -158,6 +160,7 @@ CONST
    (* SPARC64_LINUX *)  "sparc64",
    (* SPARC64_OPENBSD *) "sparc64",
    (* PPC32_OPENBSD *)  "ppc",
+   (* MIPS64_OPENBSD *) "mips64",
    ..
   };
 
