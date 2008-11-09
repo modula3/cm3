@@ -78,6 +78,7 @@ end
 
 proc GetM3Back() is
     if defined("m3back")
+        % write("using " & m3back & "\n")
         return m3back
     end
     % probe all of these?
@@ -86,7 +87,9 @@ proc GetM3Back() is
     %  probe host/target ahead of just target
     %  probe slash ahead of dash
     %  I favor slash; gcc precedent is dash.
-    %  (because dash fits in less modified $PATH, slash not)
+    %  (because dash fits in less modified $PATH, slash not?)
+    %  Dash is also goodness in the directory name for how m3cc builds,
+    %  but again, I prefer slash.
     % ROOT/m3-sys/m3cc/HOST/TARGET/gcc/m3cgc1.exe
     % ROOT/m3-sys/m3cc/HOST/TARGET/gcc/m3cgc1
     % ROOT/m3-sys/m3cc/HOST-TARGET/gcc/m3cgc1.exe
@@ -105,9 +108,11 @@ proc GetM3Back() is
     % INSTALL_ROOT/bin/TARGET-cm3cg
     % INSTALL_ROOT/bin/cm3cg.exe
     % INSTALL_ROOT/bin/cm3cg
+
     bin = INSTALL_ROOT & "/bin/"
     m3cc = ROOT & "/m3-sys/m3cc/"
     local Cache = { }
+
     %
     % Not all these combinations are meant to be used,
     % and the order isn't always right.
@@ -130,7 +135,7 @@ proc GetM3Back() is
                         if not Cache contains a
                             % write("probing " & a & "\n")
                             if FileExists(a)
-                                write("using " & a & "\n")
+                                % write("using " & a & "\n")
                                 m3back = "@" & a & " " & m3back_flags
                                 return m3back
                             else
@@ -142,6 +147,7 @@ proc GetM3Back() is
             end
         end
     end
+    % write("using m3cg in PATH (if there is one)\n")
     m3back = "@m3cg " & m3back_flags
     return m3back
 end
