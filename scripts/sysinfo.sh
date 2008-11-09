@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.62 2008-05-29 12:43:22 jkrell Exp $
+# $Id: sysinfo.sh,v 1.63 2008-11-09 23:13:43 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -233,8 +233,8 @@ case "${UNAME}" in
 
   SunOS*)
     CM3_OSTYPE=POSIX
-    CM3_TARGET=SOLgnu
-    #CM3_TARGET=SOLsun
+    CM3_TARGET=${CM3_TARGET:-"SOLgnu"}
+    #CM3_TARGET=${CM3_TARGET:-"SOLsun"}
   ;;
 
   Linux*)
