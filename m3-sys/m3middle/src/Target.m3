@@ -459,6 +459,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := TRUE;
                  PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 8;
+                 First_readable_addr       := 4096 * Char.size;
                  Jumpbuf_size              := 200 * Char.size;
                  Fixed_frame_size          := 8 * Char.size;
                  Setjmp                    := "_setjmp";
