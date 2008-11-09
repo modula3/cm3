@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.124 2008-10-31 13:36:44 jkrell Exp $
+# $Id: pylib.py,v 1.125 2008-11-09 06:24:42 jkrell Exp $
 
 import os
 from os import getenv
@@ -59,7 +59,14 @@ def FatalError(a = ""):
     # logs don't work yet
     #print("ERROR: see " + Logs)
     print("fatal error " + a)
-    sys.exit(1)
+    if __name__ != "__main__":
+        sys.exit(1)
+
+def GetLastPathElement(a):
+    return a[max(a.rfind("/"), a.rfind("\\")) + 1:]
+
+def RemoveLastPathElement(a):
+    return a[0:max(a.rfind("/"), a.rfind("\\"))]
 
 #-----------------------------------------------------------------------------
 #
@@ -113,7 +120,8 @@ def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
         for File in RequiredFiles:
             if not SearchPath(File, NewValue):
                 print("ERROR: " + File + " not found in " + _FormatEnvironmentVariable(Name) + "(" + NewValue + ")")
-                sys.exit(1)
+                if __name__ != "__main__":
+                    sys.exit(1)
         os.environ[Name] = NewValue
         if Value:
             print(Name + "=" + Attempt + os.pathsep + _FormatEnvironmentVariable(Name))
@@ -141,7 +149,8 @@ def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt):
                 print(Name + "=" + NewValue)
             return
     print("ERROR: " + _FormatEnvironmentVariable(Name) + " does not have any of " + " ".join(RequiredFiles))
-    sys.exit(1)
+    if __name__ != "__main__":
+        sys.exit(1)
 
 #-----------------------------------------------------------------------------
 
@@ -183,7 +192,7 @@ def _GetAllTargets():
         for os in [ "DARWIN" ]:
             Targets += [proc + "_" + os]
 
-    for proc in [ "I386", "AMD64", "PPC32", "PPC64", "SPARC32", "SPARC64" ]:
+    for proc in [ "MIPS64", "I386", "AMD64", "PPC32", "PPC64", "SPARC32", "SPARC64" ]:
         for os in [ "OPENBSD", "NETBSD", "FREEBSD" ]:
             Targets += [proc + "_" + os]
 
@@ -1052,28 +1061,42 @@ def _MakeArchive(a):
 def Boot():
 
     global BuildLocal
-    BuildLocal += " -boot -keep"
+    BuildLocal += " -boot -keep "
 
     Version = "1"
 
-    Compile = ("gcc -gstabs+ " + ({
-        "SPARC32_LINUX"     : "-m32 -munaligned-doubles",
-        "SPARC64_LINUX"     : "-m64 -munaligned-doubles",
-        "LINUXLIBC6"        : "-m32 -fPIC -mno-align-double",
-        "AMD64_LINUX"       : "-m64 -fPIC -mno-align-double"
+    # This information is duplicated from the config files.
+    # TBD: put it only in one place.
+    # The older bootstraping method does get that right.
+
+    Compile = ("gcc -g -fPIC " + ({
+        "AMD64_LINUX"       : " -m64 -mno-align-double ",
+        "LINUXLIBC6"        : " -m32 -mno-align-double ",
+        "MIPS64_OPENBSD"    : " -mabi=64 ",
+        "SPARC32_LINUX"     : " -m32 -munaligned-doubles ",
+        "SPARC64_LINUX"     : " -m64 -munaligned-doubles ",
         }.get(Target) or ""))
 
     Link = (Compile + " " + ({
-        "PPC32_OPENBSD"     : "-lm -lpthread",
-        "SPARC64_OPENBSD"   : "-lm -lpthread"
+        "MIPS64_OPENBSD"    : " -lm -lpthread ",
+        "PPC32_OPENBSD"     : " -lm -lpthread ",
+        "SPARC64_OPENBSD"   : " -lm -lpthread ",
         }.get(Target) or ""))
 
+    # not in Link
+    Compile += " -c "
+
     Assemble = ("as " + ({
-        "SPARC32_LINUX"     : "-32",
-        "SPARC64_LINUX"     : "-64",
-        "LINUXLIBC6"        : "--32",
-        "AMD64_LINUX"       : "--64"
+        "AMD64_LINUX"       : " --64 ",
+        "LINUXLIBC6"        : " --32 ",
+        # "MIPS64_OPENBSD"    : " -EB -g0 -64 -KPIC ",
+        "SPARC32_LINUX"     : " -32 ",
+        "SPARC64_LINUX"     : " -64 ",
         }.get(Target) or ""))
+
+    Compile = re.sub("  +", " ", Compile)
+    Link = re.sub("  +", " ", Link)
+    Assemble = re.sub("  +", " ", Assemble)
 
     BootDir = "/cm3-boot-POSIX-" + Target + "-" + Version
 
@@ -1084,7 +1107,7 @@ def Boot():
 
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
-
+        
     if os.path.isdir(BootDir):
         shutil.rmtree(BootDir)
     os.mkdir(BootDir)
@@ -1093,10 +1116,15 @@ def Boot():
     # This would probably be a good use of XSL (xml style sheets)
     #
     Make = open(os.path.join(BootDir, "make.sh"), "wb")
-    MakeVerbose = open(os.path.join(BootDir, "makeverbose.sh"), "wb")
     Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
+    UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
 
-    Makefile.write("all: cm3\nAssemble=" + Assemble + "\nCompile=" + Compile + "\nLink=" + Link + "\n")
+    Makefile.write("all: cm3\n\n")
+
+    for a in [UpdateSource, Make]:
+        a.write("#!/bin/sh\n\nset -e\n\nset -x\n\n")
+    for a in [Makefile, Make]:
+        a.write("Assemble=" + Assemble + "\nCompile=" + Compile + "\nLink=" + Link + "\n")
 
     for q in P:
         dir = GetPackagePath(q)
@@ -1105,27 +1133,62 @@ def Boot():
                 CopyFile(os.path.join(Root, dir, Config, a), BootDir)
                 Makefile.write("Objects += " + a + ".o\n" + a + ".o: " + a + "\n\t")
                 if a.endswith(".c"):
-                    Make.write(Compile + " -c " + a + "\n")
-                    MakeVerbose.write("echo " + Compile + " -c " + a + "\n")
-                    MakeVerbose.write(Compile + " -C " + a + "\n")
-                    Makefile.write("$(Compile) -c " + a + "\n")
+                    Command = "Compile"
                 else:
-                    Make.write(Assemble + " " + a + " -o " + a + ".o\n")
-                    MakeVerbose.write("echo " + Assemble + " " + a + " -o " + a + ".o\n")
-                    MakeVerbose.write(Assemble + " " + a + " -o " + a + ".o\n")
-                    Makefile.write("$(Assemble) " + a + " -o " + a + ".o\n")
+                    Command = "Assemble"
+                for b in [Make, Makefile]:
+                    b.write("${" + Command + "} " + a + " -o " + a + ".o\n")
             if a.endswith(".h"):
                 CopyFile(os.path.join(Root, dir, Config, a), BootDir)
 
-    Makefile.write("cm3: $(Objects)\n\t$(Link) -o cm3 *.o\n")
+    Makefile.write("cm3: $(Objects)\n\t")    
+    for a in [Make, Makefile]:
+        a.write("$(Link) -o cm3 *.o\n")
 
-    Make.write(Link + " -o cm3 *.o\n")
-    MakeVerbose.write("echo " + Link + " -o cm3 *.o\n")
-    MakeVerbose.write(Link + " -o cm3 *.o\n")
+    for a in [
+            #
+            # Add to this list as needed.
+            # Adding more than necessary is ok -- assume the target system has no changes,
+            # so we can replace whatever is there.
+            #
+            "m3-libs/libm3/src/os/POSIX/OSConfigPosix.m3",
+            "m3-libs/libm3/src/random/m3makefile",
+            "m3-libs/m3core/src/C/m3makefile",
+            "m3-libs/m3core/src/Csupport/m3makefile",
+            "m3-libs/m3core/src/float/m3makefile",
+            "m3-libs/m3core/src/runtime/m3makefile",
+            "m3-libs/m3core/src/runtime/common/Compiler.tmpl",
+            "m3-libs/m3core/src/thread/m3makefile",
+            "m3-libs/m3core/src/time/POSIX/m3makefile",
+            "m3-libs/m3core/src/unix/m3makefile",
+            "m3-sys/cminstall/src/config-no-install/Unix.common",
+            "m3-sys/m3cc/src/m3makefile",
+            "m3-sys/m3middle/src/Target.i3",
+            "m3-sys/m3middle/src/Target.m3",
+            "scripts/python/pylib.py",
+            "m3-libs/m3core/src/C/" + Target + "/Csetjmp.i3",
+            "m3-libs/m3core/src/C/" + Target + "/Csignal.i3",
+            "m3-libs/m3core/src/C/" + Target + "/Cstdio.i3",
+            "m3-libs/m3core/src/C/" + Target + "/Cstring.i3",
+            "m3-libs/m3core/src/C/" + Target + "/m3makefile"]:
+        source = os.path.join(Root, a)
+        if FileExists(source):
+            name = GetLastPathElement(a)
+            reldir = RemoveLastPathElement(a)
+            destdir = os.path.join(BootDir, reldir)
+            dest = os.path.join(destdir, name)
+            try:
+                os.makedirs(destdir)
+            except:
+                pass
+            CopyFile(source, dest)
 
-    Make.close()
-    Makefile.close()
-    MakeVerbose.close()
+            for b in [UpdateSource, Make]:
+                b.write("mkdir -p /dev2/cm3/" + reldir + "\n")
+                b.write("cp " + a + " /dev2/cm3/" + a + "\n")
+
+    for a in [UpdateSource, Make, Makefile]:
+        a.close()
 
     os.chdir("/")
 
@@ -1942,8 +2005,9 @@ def CopyConfigForDistribution(To):
         if os.path.isfile(File):
             print(File + " => " + To + "\n")
             CopyFile(File, To)
-    print("Unix.common => " + To + "\n")
-    CopyFile(os.path.join(a, "config-no-install", "Unix.common"), To)
+    foreach a in ["Unix", "cm3cfg"]:
+        print(a + ".common => " + To + "\n")
+        CopyFile(os.path.join(a, "config-no-install", a + ".common"), To)
     open(os.path.join(To, "cm3.cfg"), "w").write("include(\"" + Config + "\")\n")
     return True
 
@@ -2287,6 +2351,20 @@ if __name__ == "__main__":
     #
     # run test code if module run directly
     #
+    for a in [
+            "a", "a/b", "a\\b", "\\a",
+            "\\a/b", "\\a\\b", "/a", "/a/b",
+            "/a\\b", "/a\\", "/a/b\\", "/a\\b\\",
+            "ac", "a/bc", "a\\bc", "\\ac",
+            "\\a/bc", "\\a\\bc", "/ac", "/a/bc",
+            "/a\\bc", "/ac\\", "/a/bc\\", "/a\\bc\\",
+            "a", "ac/b", "ac\\b", "\\a",
+            "\\ac/b", "\\ac\\b", "/a", "/ac/b",
+            "/ac\\b", "/a\\", "/ac/b\\", "/ac\\b\\",
+            ]:
+        print("RemoveLastPathElement(%s):%s" % (a, RemoveLastPathElement(a)))
+        print("GetLastPathElement(%s):%s" % (a, GetLastPathElement(a)))
+    sys.exit(1)
 
     print(_ConvertFromCygwinPath("\\cygdrive/c/foo"))
     print(_ConvertFromCygwinPath("//foo"))
