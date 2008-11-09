@@ -13,6 +13,14 @@ IMPORT Text, TargetMap, M3RT;
 VAR (*CONST*)
   CCs : REF ARRAY OF CallingConvention;
 
+PROCEDURE Init64 () =
+  BEGIN
+    Integer := Int64;
+    Word := Word64;
+    Address := Word64;
+    Address.cg_type := CGType.Addr;
+  END Init64;
+
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
   CONST FF = 16_ff;
   VAR sys := 0;  max_align := 64;
@@ -115,43 +123,35 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Alignments[3] := 64;
 
     CCs := NIL;
+    OS_name := in_OS_name;
+
+    (* common values *)
 
     Allow_packed_byte_aligned := FALSE;
-
-    (* add the system-specific customization *)
-
-    OS_name := in_OS_name;
     EOL                       := "\n";
     Jumpbuf_align             := Address.align;
     All_floats_legal          := TRUE;
-    Checks_integer_ops        := FALSE;
     Has_stack_walker          := FALSE;
     Aligned_procedures        := TRUE;
-    Bitfield_can_overlap      := FALSE;
     First_readable_addr       := 4096 * Char.size;
+    PCC_bitfield_type_matters := TRUE;
+    Structure_size_boundary   := 8;
+    Little_endian             := TRUE;
+    Setjmp                    := "_setjmp";
+
+    (* add the system-specific customization *)
 
     CASE System OF
     |  Systems.AIX386 =>
                  max_align                 := 32;
-                 Little_endian             := TRUE;
                  PCC_bitfield_type_matters := FALSE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 25 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     |  Systems.ALPHA_OSF =>
-                 Integer := Int64;
-                 Word    := Word64;
-                 Address := Word64;   Address.cg_type := CGType.Addr;
-
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
+                 Init64();
                  First_readable_addr       := 16_400000 * Char.size;
                  Jumpbuf_size              := 84 * Address.size;
                  Has_stack_walker          := TRUE;
-                 Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := TRUE;
                  Aligned_procedures        := FALSE;
 
     |  Systems.AP3000 =>
@@ -159,54 +159,37 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
-                 Bitfield_can_overlap      := TRUE;
                  Jumpbuf_size              := 83 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     |  Systems.ARM =>
                  max_align                 := 32;
                  Little_endian             := FALSE;
-                 PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 32;
                  Jumpbuf_size              := 16 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     |  Systems.DS3100 =>
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  First_readable_addr       := 16_400000 * Char.size;
                  Jumpbuf_size              := 84 * Address.size;
                  Has_stack_walker          := TRUE;
-                 Setjmp                    := "_setjmp";
-                 Checks_integer_ops        := TRUE;
 
     |  Systems.FreeBSD, Systems.FreeBSD2, Systems.FreeBSD3, Systems.FreeBSD4 =>
                  max_align                 := 32;
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  First_readable_addr       := 4096;
                  Jumpbuf_size              := 11 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     |  Systems.HP300 =>
                  max_align                 := 16;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
-                 Bitfield_can_overlap      := TRUE;
                  Jumpbuf_size              := 100 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     |  Systems.HPPA =>
                  Little_endian             := FALSE;
-                 PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 16;
                  First_readable_addr       := 16_1000;
                  Jumpbuf_size              := 53 * Address.size;
                  Jumpbuf_align             := max_align;
-                 Setjmp                    := "_setjmp";
                  Aligned_procedures        := FALSE;
 
     |  Systems.IBMR2 =>
@@ -215,29 +198,21 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 32;
                  Jumpbuf_size              := 65 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     | Systems.IBMRT =>
                  max_align                 := 32;
                  Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 17 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     |  Systems.IRIX5 =>
                  Little_endian             := FALSE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  First_readable_addr       := 16_400000 * Char.size;
                  Jumpbuf_size              := 28 * Address.size;
                  Setjmp                    := "setjmp";
 
     |  Systems.LINUX, Systems.LINUXELF =>
                  max_align                 := 32;
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 8 * Address.size;
                  Setjmp                    := "__setjmp";
 
@@ -247,7 +222,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
                  Jumpbuf_size              := 39 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     | Systems.NT386, Systems.NT386GNU =>
 
@@ -260,7 +234,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                     and _setjmp3 appears to use more. Consider switching to _setjmp3.
                  *)
                  Jumpbuf_size := (16 * Address.size);
-                 Setjmp := "_setjmp";
 
                  IF Text.Equal(OS_name, "WIN32") THEN
                    EOL := "\r\n";
@@ -273,9 +246,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  END;
 
                  max_align                 := 32;
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
 
                  (* m3back doesn't handle 64 bit integers *)
                  IF BackendIntegrated[backend_mode] THEN
@@ -298,28 +268,18 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     | Systems.OKI =>
                  max_align                 := 32;
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
                  Structure_size_boundary   := 32;
                  Jumpbuf_size              := 22 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     |  Systems.OS2 =>
                  max_align                 := 32;
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 8 * Address.size;
                  Setjmp                    := "__setjmp";
                  EOL                       := "\n"; (* really? *)
 
     | Systems.SEQUENT =>
                  max_align                 := 32;
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 84 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     | Systems.SOLgnu,
       Systems.SOLsun,
@@ -331,10 +291,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  (* common characteristics of all SPARC targets *)
 
                  Little_endian             := FALSE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  First_readable_addr       := 8192 * Char.size;
-                 Setjmp                    := "_setjmp";
 
                  CASE System OF <* NOWARN *>
                  | Systems.SOLgnu, Systems.SOLsun =>
@@ -346,18 +303,12 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                    Jumpbuf_size              := 16_90 * Char.size;
 
                  | Systems.SPARC64_OPENBSD =>
-                   Integer := Int64;
-                   Word := Word64;
-                   Address := Word64;
-                   Address.cg_type := CGType.Addr;
+                   Init64();
                    Jumpbuf_size := 16_70 * Char.size;
                    Aligned_procedures := FALSE;
 
                  | Systems.SPARC64_LINUX =>
-                   Integer := Int64;
-                   Word := Word64;
-                   Address := Word64;
-                   Address.cg_type := CGType.Addr;
+                   Init64();
                    Jumpbuf_size := 16_280 * Char.size;
                    Aligned_procedures := FALSE;
 
@@ -372,23 +323,15 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
                  Jumpbuf_size              := 79 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     | Systems.SUN386 =>
                  max_align                 := 32;
-                 Little_endian             := TRUE;
                  PCC_bitfield_type_matters := FALSE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 8 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     | Systems.UMAX =>
                  max_align                 := 32;
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 10 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     | Systems.VAX =>
                  Real.min.fraction     := -1.70111x+38;
@@ -399,54 +342,28 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Extended.max.fraction := -1.70111x+38;
 
                  max_align                 := 32;
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 10 * Address.size;
                  All_floats_legal          := FALSE;
-                 Setjmp                    := "_setjmp";
 
     |  Systems.LINUXLIBC6 =>
                  max_align                 := 32;
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 40 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     |  Systems.AMD64_LINUX =>
-                 Integer := Int64;
-                 Word    := Word64;
-                 Address := Word64;
-                 Address.cg_type := CGType.Addr;
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
+                 Init64();
                  Jumpbuf_size              := 200 * Char.size;
-                 Setjmp                    := "_setjmp";
 
     |  Systems.I386_DARWIN =>
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 18 * Address.size;
                  Setjmp                    := "setjmp";
 
     |  Systems.AMD64_DARWIN =>
-                 Integer := Int64;
-                 Word    := Word64;
-                 Address := Word64;   Address.cg_type := CGType.Addr;
-
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
+                 Init64();
                  Jumpbuf_size              := 19 * Address.size;
                  Setjmp                    := "setjmp";
 
     |  Systems.PPC_DARWIN =>
                  Little_endian             := FALSE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := (26 + 36 + 129 + 1 + 1) * 
                                               Address.size;
                  Jumpbuf_align             := Word64.align;
@@ -455,36 +372,22 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     | Systems.BSDI4 =>
                  max_align                 := 32;
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 10 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     |  Systems.PPC_LINUX => 
                  Little_endian             := FALSE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 58 * Address.size + 
                                               32 * Address.size + 4;
                  Jumpbuf_align             := Word64.align;
-                 Setjmp                    := "_setjmp";
 
     |  Systems.PPC32_OPENBSD => 
                  Little_endian             := FALSE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 16_190 * Char.size;
                  Jumpbuf_align             := Word64.align; (* ? *)
-                 Setjmp                    := "_setjmp";
 
     | Systems.NetBSD2_i386 =>
                  max_align                 := 32;
-                 Little_endian             := TRUE;
-                 PCC_bitfield_type_matters := TRUE;
-                 Structure_size_boundary   := 8;
                  Jumpbuf_size              := 14 * Address.size;
-                 Setjmp                    := "_setjmp";
 
     ELSE RETURN FALSE;
     END;
