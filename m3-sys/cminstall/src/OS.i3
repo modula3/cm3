@@ -8,7 +8,7 @@ IMPORT AtomList, CoffTime;
 EXCEPTION Error(TEXT);
 
 CONST
-  on_unix = (CoffTime.EpochAdjust = 0.0d0);
+  on_unix = (Compiler.ThisOS = Compiler.OS.POSIX);
 
 PROCEDURE IsDirectory (file: TEXT): BOOLEAN;
 PROCEDURE IsExecutable (file: TEXT): BOOLEAN;
