@@ -3,7 +3,7 @@
 
 INTERFACE OS;
 
-IMPORT AtomList, CoffTime;
+IMPORT AtomList, Compiler;
 
 EXCEPTION Error(TEXT);
 
