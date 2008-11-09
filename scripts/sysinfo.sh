@@ -233,8 +233,8 @@ case "${UNAME}" in
 
   SunOS*)
     CM3_OSTYPE=POSIX
-    CM3_TARGET=SOLgnu
-    #CM3_TARGET=SOLsun
+    CM3_TARGET=${CM3_TARGET:-"SOLgnu"}
+    #CM3_TARGET=${CM3_TARGET:-"SOLsun"}
   ;;
 
   Linux*)
