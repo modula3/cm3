@@ -70,11 +70,15 @@ proc exists(x) is
     return not stale(x, x)
 end
 
+proc FileExists(x) is
+    return not stale(x, x)
+end
+
 %------------------------------------------------------------------------------
 
 proc GetM3Back() is
     if defined("m3back")
-        return "@" & m3back
+        return m3back
     end
     % probe all of these?
     % rationale:
@@ -102,19 +106,33 @@ proc GetM3Back() is
     % INSTALL_ROOT/bin/cm3cg.exe
     % INSTALL_ROOT/bin/cm3cg
     bin = INSTALL_ROOT & "/bin/"
-    m3cc = ROOT & "/m3-sys/m3cc"
-    local cache = { }
+    m3cc = ROOT & "/m3-sys/m3cc/"
+    local Cache = { }
+    %
+    % Not all these combinations are meant to be used,
+    % and the order isn't always right.
+    %
+    % We do not intend to look at, for example:
+    %   /home/jay/dev2/cm3/m3-sys/m3cc/AMD64_LINUX/AMD64_LINUX-gcc/m3cgc1.exe
+    % Target- is only a prefix on file names, not directories.
+    %
+    %   /cm3/bin/AMD64_LINUX/AMD64_LINUX-gcc/m3cgc1.exe
+    % The installed file is always renamed to cm3cg.
+    %
+    % Work on this more later.
+    %
     foreach target in [ TARGET & "/", TARGET & "-", ""]
-        foreach host in [ HOST & "/", "" ]
+        foreach host in [ HOST & "/", HOST & "-", "" ]
             foreach root in [ m3cc, bin ]
                 foreach gcc in ["gcc/m3cgc1", "cm3cg"]
                     foreach exe in [".exe", ""]
-                        local a = root & HOST & TARGET & gcc & exe
-                        write("probing " & a & "\n")
+                        local a = root & host & target & gcc & exe
                         if not Cache contains a
+                            % write("probing " & a & "\n")
                             if FileExists(a)
-                                m3back = a
-                                return a
+                                write("using " & a & "\n")
+                                m3back = "@" & a & " " & m3back_flags
+                                return m3back
                             else
                                 Cache{a} = 1
                             end
@@ -124,9 +142,8 @@ proc GetM3Back() is
             end
         end
     end
-    local a = "cm3cg"
-    m3back = a
-    return "@" & a
+    m3back = "@m3cg " & m3back_flags
+    return m3back
 end
 
 %-------------------------------------------------- default compile options ---
