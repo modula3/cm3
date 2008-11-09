@@ -129,8 +129,7 @@ if not defined ("GetGcWrapFlags")
         if not GcWrapFlags
             % write("checking for GcWrapFlags" & CR)
             GcWrapFlags = " " % tricky non-false value -- the default
-            local ExitCode = try_exec("@fgrep m3gcdefs " & PKG_USE & 
-"/m3core/" & TARGET & "/.M3EXPORTS 2>/dev/null >/dev/null")
+            local ExitCode = try_exec("@fgrep m3gcdefs " & PKG_USE & "/m3core/" & TARGET & "/.M3EXPORTS 2>/dev/null >/dev/null")
             if equal(ExitCode, 0)
                 GcWrapFlags = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
                 % find libm3gcdefs here
@@ -201,8 +200,7 @@ if not defined ("GetM3BackFlag")
             % write("probing " & m3back & " for " & x & CR)
             Result = not equal(try_exec(
                 m3back & " " & x & " /dev/null 2>&1 "
-                & "| fgrep -i -e \"Invalid option\" -e \"unrecognized 
-command line option\" 2>/dev/null >/dev/null"), 0)
+                & "| fgrep -i -e \"Invalid option\" -e \"unrecognized command line option\" 2>/dev/null >/dev/null"), 0)
             IsM3BackFlagSupported_Cache{x} = Result
         end
         return Result
@@ -221,6 +219,7 @@ end
 % For example data on NT should not be dynamically linked, and the
 % libgcc helper functions are small and not worth dynamic linking.
 %
+% This does not currently work where it is needed.
 
 proc GetM3CoreStaticObjs(lib) is
     local Result = [ ]
@@ -256,17 +255,20 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local lib_so   = format("lib%s.so", lib)
     local lib_sox  = format("lib%s.so.5", lib)
 
-    % build the non-shared library
+    % first build the non-shared library in the usual ar/ranlib way
+
+    local S = "";
+
     if defined("AR_AND_RANLIB_ARE_ONE")
-        ret_code = try_exec("@ar", "crus", lib_a, objects)
-        if not equal(ret_code, 0)
-            return ret_code
-        end
-    else
-        ret_code = try_exec("@ar", "cru", lib_a, objects)
-        if not equal(ret_code, 0)
-            return ret_code
-        end
+        S = "s"
+    end
+
+    ret_code = try_exec("@ar", "cru" & S, lib_a, objects)
+    if not equal(ret_code, 0)
+        return ret_code
+    end
+
+    if not defined("AR_AND_RANLIB_ARE_ONE")
         ret_code = try_exec("@ranlib", lib_a)
         if not equal(ret_code, 0)
             return ret_code
@@ -293,8 +295,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
             "-Wl,-soname," & lib_sox,
             "-o", lib_sox,
             objects,
-            GetM3CoreStaticObjs(lib),
-            )
+            GetM3CoreStaticObjs(lib))
     if not equal(ret_code, 0)
         return ret_code
     end
