@@ -1514,7 +1514,8 @@ scan_sign (void)
 static tree
 scan_target_int (void)
 {
-  HOST_WIDE_INT low, hi;
+  unsigned HOST_WIDE_INT low;
+  HOST_WIDE_INT hi;
   long i, n_bytes, original_n_bytes, sign, shift;
   tree res, t = long_long_integer_type_node;
   int trace_all = option_trace_all;
@@ -1543,9 +1544,9 @@ scan_target_int (void)
   hi = low = 0;
   for (shift = 0; n_bytes > 0;  n_bytes--, shift += 8) {
     if (shift < HOST_BITS_PER_WIDE_INT) {
-      low = low | (((HOST_WIDE_INT) get_byte ()) << shift);
+      low = low | (((unsigned HOST_WIDE_INT) get_byte ()) << shift);
     } else {
-      hi = hi | (((HOST_WIDE_INT) get_byte ()) << shift);
+      hi = hi | (((HOST_WIDE_INT) get_byte ()) << (shift - HOST_BITS_PER_WIDE_INT));
     }
   }
 
@@ -1553,8 +1554,10 @@ scan_target_int (void)
   if (sign < 0) { res = m3_build1 (NEGATE_EXPR, t, res); }
 
   if (trace_all)
-    fprintf(stderr,"  integer i 0x%lx n_bytes 0x%lx hi 0x%lx low 0x%lx sign %ld\n",
-           ((unsigned long) i), ((unsigned long) original_n_bytes), ((unsigned long) hi), ((unsigned long) low), sign);
+  {
+    fprintf(stderr,"  integer i 0x%lx n_bytes 0x%lx " HOST_WIDE_INT_PRINT_DOUBLE_HEX " sign %ld\n",
+           ((unsigned long) i), ((unsigned long) original_n_bytes), hi, low, sign);
+  }
 
   return res;
 }
