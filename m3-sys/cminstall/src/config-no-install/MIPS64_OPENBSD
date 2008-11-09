@@ -3,9 +3,8 @@ readonly WORD_SIZE = "64BITS"
 readonly GNU_PLATFORM = "mips64-openbsd"
 
 readonly m3back_flags = "-gstabs+ -mabi=64 -fPIC -quiet"
-readonly m3back = "cm3cg -gstabs+ -mabi=64 -fPIC -quiet"
 readonly SYSTEM_CC = "gcc -g -mabi=64 -fPIC"
-readonly SYSTEM_ASM = "as -EB -g0 -64 -KPIC"
+readonly SYSTEM_ASM = "as"
 
 %
 % newer platforms never needed these workarounds for
