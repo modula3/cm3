@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.126 2008-11-09 08:05:35 jkrell Exp $
+# $Id: pylib.py,v 1.127 2008-11-09 08:06:34 jkrell Exp $
 
 import os
 from os import getenv
@@ -2005,9 +2005,9 @@ def CopyConfigForDistribution(To):
         if os.path.isfile(File):
             print(File + " => " + To + "\n")
             CopyFile(File, To)
-    for a in ["Unix.common", "cm3cfg.common"]:
-        print(a + " => " + To + "\n")
-        CopyFile(os.path.join(a, "config-no-install", a), To)
+    for b in ["Unix.common", "cm3cfg.common"]:
+        print(b + " => " + To + "\n")
+        CopyFile(os.path.join(a, "config-no-install", b), To)
     open(os.path.join(To, "cm3.cfg"), "w").write("include(\"" + Config + "\")\n")
     return True
 
