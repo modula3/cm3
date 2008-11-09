@@ -311,9 +311,6 @@ VAR (*CONST*)
   Structure_size_boundary: CARDINAL;
   (* every structure size must be a multiple of this; this is a bit count *)
 
-  Bitfield_can_overlap: BOOLEAN;
-  (* a C bit field cannot overlap two adjacent storage units *)
-
   Allow_packed_byte_aligned: BOOLEAN;
  (* Allow the compiler to align scalar types on byte boundaries when packing.
     The target processor must support byte alignment of scalar store and
@@ -342,9 +339,6 @@ VAR (*CONST*)
   Setjmp: TEXT;
   (* The C name of the routine used to capture the machine state in
        an exception handler frame. *)
-
-  Checks_integer_ops: BOOLEAN;
-  (* TRUE => integer overflow checking is possible *)
 
   Aligned_procedures: BOOLEAN;
   (* TRUE => all procedure values are aligned to at least Integer.align
