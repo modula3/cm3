@@ -7,16 +7,6 @@ include("cm3cfg.common")
 
 %-------------------------------------------------- compilation environment ---
 
-%M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (option -profile)
-%M3_PROFILING = FALSE
-
-if M3_PROFILING
-    readonly PROFILING_P = "p"
-else
-    readonly PROFILING_P = ""
-end
-
-readonly BUILD_DIR    = TARGET & PROFILING_P % directory for results
 readonly OS_TYPE      = "POSIX"           % { "WIN32" or "POSIX" }
 
 readonly NAMING_CONVENTIONS = "0"
@@ -257,7 +247,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
 
     % first build the non-shared library in the usual ar/ranlib way
 
-    local S = "";
+    local S = ""
 
     if defined("AR_AND_RANLIB_ARE_ONE")
         S = "s"

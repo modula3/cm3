@@ -5,6 +5,23 @@
 
 %------------------------------------------------------------------------------
 
+%M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (option -profile)
+%M3_PROFILING = FALSE
+
+if not defined("PROFILING_P")
+    if M3_PROFILING
+        readonly PROFILING_P = "p"
+    else
+        readonly PROFILING_P = ""
+    end
+end
+
+if not defined("BUILD_DIR")
+    readonly BUILD_DIR    = TARGET & PROFILING_P % directory for results
+end
+
+%------------------------------------------------------------------------------
+
 proc CM3SetInstallRoot() is
     if defined("INSTALL_ROOT")
         return
