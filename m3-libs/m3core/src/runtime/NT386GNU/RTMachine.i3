@@ -28,12 +28,6 @@ TYPE
 PROCEDURE SaveState (VAR s: State): INTEGER;
 (* Capture the currently running thread's state *)
 
-CONST
-  FramePadBottom = 2;
-  FramePadTop    = 0;
-  (* Additional padding words from above and below an existing
-     thread's stack pointer to copy when creating a new thread *)
-
 (*------------------------------------------------------------------ heap ---*)
 
 (* The heap page size is machine-dependent, since it might depend on the
