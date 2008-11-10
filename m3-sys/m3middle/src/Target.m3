@@ -291,7 +291,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
       Systems.SPARC,
       Systems.SPARC32_LINUX,
       Systems.SPARC64_LINUX,
-      Systems.SPARC64_OPENBSD =>
+      Systems.SPARC64_OPENBSD,
+      Systems.SPARC64_SOLARIS =>
 
                  (* common characteristics of all SPARC targets *)
 
@@ -316,6 +317,11 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                    Init64();
                    Jumpbuf_size := 16_280 * Char.size;
                    Aligned_procedures := FALSE;
+
+                 | Systems.SPARC64_SOLARIS =>
+                   Init64();
+                   Jumpbuf_size := 16_90 * Char.size;
+                   Setjmp := "setjmp";
 
                  | Systems.SPARC =>
                    Jumpbuf_size              := 10 * Address.size;

@@ -43,6 +43,7 @@ readonly _CSupportPieces = {
   "SPARC32_LINUX": [ "big-endian" ],
   "SPARC64_LINUX": [ "big-endian" ],
   "SPARC64_OPENBSD": [ "big-endian" ],
+  "SPARC64_SOLARIS": [ "big-endian" ],
   "SUN3"       : [ "SUN3", "big-endian" ],
   "SUN386"     : [ "SUN386", "little-endian" ],
   "UMAX"       : [ "UMAX", "little-endian" ],
