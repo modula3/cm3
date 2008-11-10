@@ -14,4 +14,12 @@ Interface ("Ctypes")
 Module ("M3toC")
 Module ("Cstdarg")
 
+% not yet common to all, but should be, will be
+
+if equal (TARGET, "AMD64_LINUX") or equal (TARGET, "SPARC64_SOLARIS") or equal (TARGET, "MIPS64_OPENBSD")
+or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX") or equal (TARGET, "SPARC64_OPENBSD")
+  Interface ("Cstring")
+  Interface ("Cstdio")
+end
+
 c_source ("CerrnoC")

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.128 2008-11-09 10:53:57 jkrell Exp $
+# $Id: pylib.py,v 1.129 2008-11-10 13:44:43 jkrell Exp $
 
 import os
 from os import getenv
@@ -188,7 +188,7 @@ def _GetAllTargets():
 
     # systematic naming
 
-    for proc in [ "I386", "AMD64", "PPC32", "PPC64" ]:
+    for proc in [ "I386", "AMD64", "PPC32", "PPC64", "ARM" ]:
         for os in [ "DARWIN" ]:
             Targets += [proc + "_" + os]
 
@@ -196,12 +196,28 @@ def _GetAllTargets():
         for os in [ "OPENBSD", "NETBSD", "FREEBSD" ]:
             Targets += [proc + "_" + os]
 
-    for proc in [ "I386", "AMD64", "PPC32", "PPC64", "SPARC32", "SPARC64" ]:
+    for proc in [ "MIPS64", "I386", "AMD64", "PPC32", "PPC64", "SPARC32", "SPARC64", "ARM" ]:
         for os in [ "LINUX" ]:
             Targets += [proc + "_" + os]
 
-    for proc in [ "I386", "AMD64", "IA64", "PPC32", "MIPS", "ALPHA32" ]:
-        for os in [ "NT", "CYGWIN" ]:
+    for proc in [ "MIPS32", "MIPS64" ]:
+        for os in [ "IRIX" ]:
+            Targets += [proc + "_" + os]
+
+    for proc in [ "PPC32", "PPC64" ]:
+        for os in [ "AIX" ]:
+            Targets += [proc + "_" + os]
+
+    for proc in [ "I386", "AMD64", "IA64", "PPC32", "MIPS", "MIPS32", "ALPHA32", "ALPHA64" ]:
+        for os in [ "NT" ]:
+            Targets += [proc + "_" + os]
+
+    for proc in [ "I386", "PPC32", "MIPS32", "ARM", "SH" ]:
+        for os in [ "CE" ]:
+            Targets += [proc + "_" + os]
+
+    for proc in [ "I386", "AMD64", "IA64" ]:
+        for os in [ "CYGWIN" ]:
             Targets += [proc + "_" + os]
 
     for proc in [ "I386", "AMD64", "SPARC32", "SPARC64" ]:
@@ -1093,15 +1109,23 @@ def Boot():
         "SPARC64_OPENBSD"   : " -lm -lpthread ",
         }.get(Target) or ""))
 
+    Compile = {
+        "SPARC64_SOLARIS"       : "cc -g -mt -xarch=v9 -xcode=pic32 -xldscope=symbolic",
+        }.get(Target) or Compile
+
+    Link = {
+        "SPARC64_SOLARIS"       : Compile + " -lrt -lm -lnsl -lsocket "
+        }.get(Target) or Link
+
     # not in Link
     Compile += " -c "
 
     Assemble = ("as " + ({
         "AMD64_LINUX"       : " --64 ",
         "LINUXLIBC6"        : " --32 ",
-        # "MIPS64_OPENBSD"    : " -EB -g0 -64 -KPIC ",
         "SPARC32_LINUX"     : " -32 ",
         "SPARC64_LINUX"     : " -64 ",
+        "SPARC64_SOLARIS"   : " -s -K PIC -xarch=v9 ",
         }.get(Target) or ""))
 
     Compile = re.sub("  +", " ", Compile)
@@ -1132,9 +1156,13 @@ def Boot():
     Makefile.write("all: cm3\n\n")
 
     for a in [UpdateSource, Make]:
-        a.write("#!/bin/sh\n\nset -e\n\nset -x\n\n")
-    for a in [Makefile, Make]:
+        a.write("#!/bin/sh\n\nset -e\nset -x\n\n")
+
+    for a in [Makefile]:
         a.write("Assemble=" + Assemble + "\nCompile=" + Compile + "\nLink=" + Link + "\n")
+
+    for a in [Make]:
+        a.write("Assemble=\"" + Assemble + "\"\nCompile=\"" + Compile + "\"\nLink=\"" + Link + "\"\n")
 
     for q in P:
         dir = GetPackagePath(q)
@@ -1155,6 +1183,8 @@ def Boot():
     for a in [Make, Makefile]:
         a.write("$(Link) -o cm3 *.o\n")
 
+    Common = "Common"
+
     for a in [
             #
             # Add to this list as needed.
@@ -1164,14 +1194,21 @@ def Boot():
             "m3-libs/libm3/src/os/POSIX/OSConfigPosix.m3",
             "m3-libs/libm3/src/random/m3makefile",
             "m3-libs/m3core/src/C/m3makefile",
+            "m3-libs/m3core/src/C/" + Target + "/m3makefile",
+            "m3-libs/m3core/src/C/" + Common + "/m3makefile",
             "m3-libs/m3core/src/Csupport/m3makefile",
             "m3-libs/m3core/src/float/m3makefile",
             "m3-libs/m3core/src/runtime/m3makefile",
             "m3-libs/m3core/src/runtime/common/Compiler.tmpl",
+            "m3-libs/m3core/src/text/TextLiteral.i3",
             "m3-libs/m3core/src/thread/m3makefile",
             "m3-libs/m3core/src/time/POSIX/m3makefile",
             "m3-libs/m3core/src/unix/m3makefile",
+            "m3-sys/cminstall/src/config-no-install/SOLgnu",
+            "m3-sys/cminstall/src/config-no-install/SOLsun",
             "m3-sys/cminstall/src/config-no-install/Unix.common",
+            "m3-sys/cminstall/src/config-no-install/Solaris.common",
+            "m3-sys/cminstall/src/config-no-install/" + Target,
             "m3-sys/m3cc/src/m3makefile",
             "m3-sys/m3middle/src/Target.i3",
             "m3-sys/m3middle/src/Target.m3",
@@ -1180,7 +1217,12 @@ def Boot():
             "m3-libs/m3core/src/C/" + Target + "/Csignal.i3",
             "m3-libs/m3core/src/C/" + Target + "/Cstdio.i3",
             "m3-libs/m3core/src/C/" + Target + "/Cstring.i3",
-            "m3-libs/m3core/src/C/" + Target + "/m3makefile"]:
+            "m3-libs/m3core/src/C/" + Target + "/m3makefile",
+            "m3-libs/m3core/src/C/" + Common + "/Csetjmp.i3",
+            "m3-libs/m3core/src/C/" + Common + "/Csignal.i3",
+            "m3-libs/m3core/src/C/" + Common + "/Cstdio.i3",
+            "m3-libs/m3core/src/C/" + Common + "/Cstring.i3",
+            "m3-libs/m3core/src/C/" + Common + "/m3makefile" ]:
         source = os.path.join(Root, a)
         if FileExists(source):
             name = GetLastPathElement(a)

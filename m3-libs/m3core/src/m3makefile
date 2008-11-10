@@ -11,6 +11,28 @@
 %      modified on Wed May 20 21:18:03 PDT 1992 by muller
 %      modified on Fri Feb 28 13:50:29 PST 1992 by meehan
 
+%------------------------------------------------------------------------------
+
+% future: push this knowledge somewhere more central
+readonly NO_USER_THREADS =
+{
+    "AMD64_LINUX":1,
+    "ARM_LINUX":1,
+    "MIPS32_IRIX":1,
+    "MIPS64_IRIX":1,
+    "MIPS64_OPENBSD":1,
+    "NT386":1,
+    "NT386GNU":1,
+    "PPC32_AIX":1,
+    "PPC32_OPENBSD":1,
+    "PPC64_AIX":1,
+    "PPC64_DARWIN":1,
+    "SPARC32_LINUX":1,
+    "SPARC64_LINUX":1,
+    "SPARC64_OPENBSD":1,
+    "SPARC64_SOLARIS":1,
+}
+
 %----------------------------------------------- machine dependent packages ---
 
 include_dir ("Csupport")

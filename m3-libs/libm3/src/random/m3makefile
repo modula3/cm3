@@ -43,6 +43,7 @@ readonly _RandomPieces = {
   "SPARC32_LINUX" : [ _BigEndian ],
   "SPARC64_LINUX" : [ _BigEndian ],
   "SPARC64_OPENBSD" : [ _BigEndian ],
+  "SPARC64_SOLARIS" : [ _BigEndian ],
   "SUN3"       : [ _BigEndian ],
   "SUN386"     : [ _LittleEndian ],
   "UMAX"       : [ _LittleEndian ],
