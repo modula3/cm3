@@ -38,11 +38,13 @@ CONST
 (*--------------------------------------------------------- thread stacks ---*)
 
 CONST
-  PointerAlignment = 4;
+  PointerAlignment = BYTESIZE(INTEGER);
   (* The C compiler allocates all pointers on 'PointerAlignment'-byte
      boundaries.  The garbage collector scans thread stacks, but only
      looks at these possible pointer locations.  Setting this value
      smaller than is needed will only make your system run slower.
+        Correction: Setting it too small will cause alignment faults in RTCollector__NoteStackLocations,
+        at least on platforms that ever have alignment faults.
      Setting it too large will cause the collector to collect storage
      that is not free. *)
 
