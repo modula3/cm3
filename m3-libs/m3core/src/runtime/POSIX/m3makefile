@@ -8,8 +8,8 @@ implementation ("RTArgs")
 implementation ("RTOS")
 module         ("RTPerfTool")
 implementation ("RTProcessPosix")
-interface      ("RTThread")
-if not equal (TARGET, "NT386")
+
+if not NO_USER_THREADS contains TARGET
+  interface ("RTThread")
   implementation ("RTThreadStk")
 end
-

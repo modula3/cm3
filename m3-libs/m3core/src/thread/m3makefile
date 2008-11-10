@@ -7,8 +7,6 @@
 readonly USE_PTHREADS = {
   "ALPHA_OSF"  : FALSE,
   "AIX386"     : FALSE,
-  "AMD64_DARWIN": TRUE,
-  "AMD64_LINUX": TRUE,
   "AP3000"     : FALSE,
   "ARM"        : FALSE,
   "DS3100"     : FALSE,
@@ -24,41 +22,32 @@ readonly USE_PTHREADS = {
   "LINUX"      : FALSE,
   "LINUXELF"   : FALSE,
   "LINUXLIBC6" : TRUE,  % old kernels without NPTL should be FALSE
-  "MIPS32_IRIX" : TRUE,
-  "MIPS64_IRIX" : TRUE,
-  "MIPS64_OPENBSD" : TRUE,
   "NEXT"       : FALSE,
-  "NT386"      : TRUE,
-  "NT386GNU"   : TRUE,
   "OKI"        : FALSE,
   "OS2"        : FALSE,
   "SEQUENT"    : FALSE,
   "SOLgnu"     : TRUE,
   "SOLsun"     : TRUE,
   "SPARC"      : FALSE,
-  "SPARC32_LINUX" : TRUE,
-  "SPARC64_LINUX" : TRUE,
-  "SPARC64_OPENBSD" : TRUE,
   "SUN3"       : FALSE,
   "SUN386"     : FALSE,
   "UMAX"       : FALSE,
   "VAX"        : FALSE,
   "I386_DARWIN": TRUE,
-  "PPC32_AIX" : TRUE,
-  "PPC64_AIX" : TRUE,
   "PPC_DARWIN" : TRUE,
-  "PPC64_DARWIN" : TRUE,
   "PPC_LINUX"  : FALSE,
-  "PPC32_OPENBSD" : TRUE,
   "NetBSD2_i386"  : FALSE
 }
 
 include_dir ("Common")
 if equal (OS_TYPE, "WIN32") or equal (TARGET, "NT386")
     include_dir ("WIN32")
+else if NO_USER_THREADS contains TARGET
+    include_dir("PTHREAD")
 else if not defined("NOPTHREAD") and USE_PTHREADS{TARGET}
     include_dir("PTHREAD")
 else
     include_dir (OS_TYPE)
+end
 end
 end

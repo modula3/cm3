@@ -120,7 +120,7 @@ readonly m3cc_config = {
   % The NT386GNU hosted tools work.
   % The native ones do not.
   % -disable-tls consistently to reduce noise
-  % when comparing them.
+  % when comparing them, since we don't use this feature anyway.
   %
   "SPARC64_OPENBSD" : "-disable-tls",
 
@@ -136,6 +136,22 @@ readonly m3cc_config = {
   "PPC64_AIX" : "-with-ld=/us/bin/ld -with-as=/usr/bin/as",
   "MIPS32_IRIX" : "-with-ld=/us/bin/ld -with-gnu-as",
   "MIPS64_IRIX" : "-with-ld=/us/bin/ld -with-gnu-as",
+
+  %
+  % Hm -- I thought this was just about what assembler/linker the gcc driver runs,
+  % but it might also affect the contents of the assembly.
+  % For example, SPARC64_SOLARIS output isn't being accepted by SUN as, let's see..
+  % #ifdef HAVE_AS_REGISTER_PSEUDO_OP
+  % D:\dev2\cm3.2\m3-sys\m3cc\gcc\gcc\config\sparc\sparc.c(3842):	  fprintf (file, "\t.register\t%%g%d, #%s\n", i,
+  %
+  % "SPARC64_SOLARIS" : "-without-gnu-ld -without-gnu-as",
+  %
+  % Not for my initial build I patched config.h manually, but this should the same thing.
+  % Also, native builds will probably just figure it out. This is needed for cross builds,
+  % unless perhaps building binutils along with m3cg.
+  % If m3cg omits the .register psuedo ops, assembly completely fails, with lots of errors.
+  %
+  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes",
 
   "HPPA"  : "-with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
@@ -229,29 +245,10 @@ end
 m3cc_ResponseFileCounter = "0"
 
 readonly proc m3cc_Run (x) is
-  >> "_m3.log" in
-    write(x & CR)
-  end
-  write(x & CR)
   if HostIsNT ()
-    local readonly Temp = "_m3sh" & m3cc_ResponseFileCounter & ".sh"
-    > Temp in
-      write(x)
-    end
-    %
-    % Quake can't do math, or generate uniquely named temp files.
-    % Uniqueness is not critical here, it is merely useful
-    % while debugging to go back and see the temp files.
-    %
-    m3cc_ResponseFileCounter =
-        { "0":"1","1":"2","2":"3","3":"4","4":"5",
-          "5":"6","6":"7","7":"8","8":"9","9":"0", }{m3cc_ResponseFileCounter}
-
-    write("sh ./" & Temp & " (" & x & ")" & CR)
-    exec("sh ./" & Temp)
-  else
-    exec(x)
+    x = "sh -c \"" & x & "\""
   end
+  exec(x)
 end
 
 done = build_dir & "/.configure-done"
@@ -369,6 +366,9 @@ if not defined ("no_config")
     Configure = Configure & " -disable-nls"
     Configure = Configure & " -enable-languages=m3cg"
     Configure = Configure & " -enable-targets=all"
+
+    % Save some libtool wrapping layers to speed up esp. on NT?
+    Configure = Configure & " -disable-dependency-tracking"
 
     % These are compatible with just building m3cg, but user might
     % build gcc/cc1/libgcc here.

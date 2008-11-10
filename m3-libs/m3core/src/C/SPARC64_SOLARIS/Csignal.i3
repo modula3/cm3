@@ -2,6 +2,6 @@
 little used. Before commiting content here, let's factor the commonality
 and eliminate the dead. *)
 
-INTERFACE Cstdio;
+INTERFACE Csignal;
 
-END Cstdio.
+END Csignal.
