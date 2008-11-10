@@ -1,5 +1,0 @@
-
-import("libm3")
-implementation("ThreadExample")
-program("ttimer")
-

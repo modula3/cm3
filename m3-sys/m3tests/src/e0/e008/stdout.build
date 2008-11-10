@@ -1,8 +1,0 @@
-"../B.i3", line 7: circular imports: C -> A -> B -> C
-"../B.i3", line 9: undefined (C.T)
-2 errors encountered
-"../B.i3", line 7: imported interface contains errors (C)
-1 error encountered
-"../A.i3", line 7: imported interface contains errors (B)
-1 error encountered
-Fatal Error: package build failed

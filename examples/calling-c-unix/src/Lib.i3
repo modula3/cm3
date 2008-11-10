@@ -1,7 +1,0 @@
-
-INTERFACE Lib;
-
-PROCEDURE GetCWD(): TEXT;
-
-END Lib.
-  

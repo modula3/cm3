@@ -1,8 +1,0 @@
-
-
-import ("libm3")
-c_source ("Cstuff")
-interface ("Cstuff")
-implementation ("CcallsM3")
-program ("ccallsm3")
-
