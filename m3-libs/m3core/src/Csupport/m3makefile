@@ -1,8 +1,0 @@
-% Copyright (C) 1992, Digital Equipment Corporation
-% All rights reserved.
-% See the file COPYRIGHT for a full description.
-
-% Last modified on Fri Aug 13 09:55:30 PDT 1993 by kalsow
-
-include_dir ("Common")
-include_dir (TARGET)

@@ -1,6 +1,0 @@
-#!/bin/csh
-obliq-ui < cgiserver.obl
-echo "Started VO Name Server - vossns"
-while 1
-sleep 5
-end

@@ -1,9 +1,0 @@
-/* $Id: m3makefile,v 1.2 2001-09-19 13:27:07 wagner Exp $ */
-m3_option("-X2@-pg@")
-m3_option("-g")
-%remove_m3_option("-O")
-m3_option("-times")
-import ("libm3")
-Module("TextReader") /* needed by m3tmplhack, must be compiled before cit_util. */
-
-Library("cit_common")
