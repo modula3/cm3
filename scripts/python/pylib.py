@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.129 2008-11-10 13:44:43 jkrell Exp $
+# $Id: pylib.py,v 1.130 2008-11-10 14:40:08 jkrell Exp $
 
 import os
 from os import getenv
@@ -1142,9 +1142,14 @@ def Boot():
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
         
-    if os.path.isdir(BootDir):
+    try:
         shutil.rmtree(BootDir)
-    os.mkdir(BootDir)
+    except:
+        pass
+    try:
+        os.mkdir(BootDir)
+    except:
+        pass
 
     #
     # This would probably be a good use of XSL (xml style sheets)
