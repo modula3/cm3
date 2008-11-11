@@ -9,22 +9,8 @@
 
 INTERFACE RTMachine;
 
-IMPORT Csetjmp;
 IMPORT Usignal;
 FROM Upthread IMPORT pthread_t;
-
-(*--------------------------------------------------------- thread state ---*)
-
-(* TBD: remove userthread and gcvm support, which includes much
-of the below *)
-
-TYPE
-  State = Csetjmp.jmp_buf;
-  (* The machine state is saved in a "State".  This is opaque to the client. *)
-
-<*EXTERNAL "_setjmp" *>
-PROCEDURE SaveState (VAR s: State): INTEGER;
-(* Capture the currently running thread's state *)
 
 (*------------------------------------------------------------------ heap ---*)
 
