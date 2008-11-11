@@ -31,7 +31,7 @@ PROCEDURE SaveState (VAR s: State): INTEGER;
 (* The heap page size is machine-dependent, since it might depend on the
    architecture's VM page size (if VM is TRUE).  Otherwise, 8192 bytes is a
    reasonable page size.  The page size must be a power of two. *)
-
+CONST
   BytesPerHeapPage    = 8192;        (* bytes per page *)
   LogBytesPerHeapPage = 13;
   AdrPerHeapPage      = 8192;        (* addresses per page *)
