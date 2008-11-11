@@ -35,7 +35,3 @@ or equal (TARGET, "SPARC64_SOLARIS")
 % NT386 deliberately omitted: longjmp != "_longjmp"
   Interface ("Csetjmp")
 end
-
-if NO_USER_THREADS contains TARGET
-  Interface ("Csetjmp")
-end
