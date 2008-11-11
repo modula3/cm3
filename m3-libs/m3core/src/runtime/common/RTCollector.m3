@@ -18,7 +18,6 @@ IMPORT RT0, RTHeapEvent, RTHeapMap, RTIO, RTMachine;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
 IMPORT Word, Thread, ThreadF, RuntimeError, RTAllocCnts;
 IMPORT TextLiteral AS TextLit, RTLinker, Convert, Time;
-IMPORT Compiler;
 
 FROM RT0 IMPORT Typecode, TypeDefn, TypeInitProc;
 FROM Text IMPORT Length, GetChar, SetChars;
