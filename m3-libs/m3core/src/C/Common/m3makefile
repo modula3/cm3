@@ -13,13 +13,25 @@ Interface ("Cstdlib")
 Interface ("Ctypes")
 Module ("M3toC")
 Module ("Cstdarg")
+c_source ("CerrnoC")
 
 % not yet common to all, but should be, will be
 
-if equal (TARGET, "AMD64_LINUX") or equal (TARGET, "SPARC64_SOLARIS") or equal (TARGET, "MIPS64_OPENBSD")
-or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX") or equal (TARGET, "SPARC64_OPENBSD")
+if equal (TARGET, "AMD64_LINUX") or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
+or equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
+or equal (TARGET, "SPARC64_SOLARIS")
+or equal (TARGET, "NT386")
   Interface ("Cstring")
   Interface ("Cstdio")
 end
 
-c_source ("CerrnoC")
+% never common to all, but common to a few
+% see Csetjmp.i3 for the characteristics required to use the common definition
+% if the system does not meet the requirements, make a separate version for it
+
+if equal (TARGET, "AMD64_LINUX") or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
+or equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
+or equal (TARGET, "SPARC64_SOLARIS")
+% NT386 deliberately omitted: longjmp != "_longjmp"
+  Interface ("Csetjmp")
+end
