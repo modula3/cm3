@@ -215,7 +215,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     |  Systems.MIPS64_OPENBSD =>
                  Init64();
                  Little_endian             := FALSE;
-                 Jumpbuf_size              := 16_298 * Char.size;
+                 Jumpbuf_size              := 16_53 * Address.size;
                  Aligned_procedures        := FALSE;
 
     |  Systems.LINUX, Systems.LINUXELF =>
