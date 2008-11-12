@@ -7,25 +7,11 @@ INTERFACE Upthread;
 (* This file is largely the same across many/all platforms.
 Let's factor out the commonality and eliminate the dead. *)
 
-FROM Ctypes IMPORT char, int, unsigned_int, void_star;
+FROM Ctypes IMPORT int, unsigned_int, void_star;
 FROM Utypes IMPORT size_t;
 FROM Usignal IMPORT sigset_t;
 FROM Utime IMPORT struct_timespec;
-
-(* <bits/pthreadtypes.h> *)
-
-FROM UpthreadMachine IMPORT
-  SIZEOF_PTHREAD_ATTR_T        ,
-  SIZEOF_PTHREAD_MUTEX_T       ,
-  SIZEOF_PTHREAD_RWLOCK_T      ;
-
-(* <bits/pthreadtypes.h> *)
-
-CONST
-  SIZEOF_PTHREAD_COND_T        = 48;
-  SIZEOF_PTHREAD_CONDATTR_T    =  4;
-  SIZEOF_PTHREAD_MUTEXATTR_T   =  4;
-  SIZEOF_PTHREAD_RWLOCKATTR_T  =  8;
+IMPORT Upthreadtypes;
 
 (* <bits/local_lim.h> *)
 
@@ -39,29 +25,19 @@ CONST
    exposed on purpose.  *)
 TYPE
   pthread_t = void_star;
-  pthread_attr_t = RECORD
-    data: ARRAY[1..SIZEOF_PTHREAD_ATTR_T] OF char;
-  END;
+  pthread_attr_t = Upthreadtypes.pthread_attr_t;
 
 (* Data structures for mutex handling.  The structure of the attribute
    type is not exposed on purpose.  *)
 TYPE
-  pthread_mutex_t = RECORD
-    data: ARRAY[1..SIZEOF_PTHREAD_MUTEX_T] OF char;
-  END;
-  pthread_mutexattr_t = RECORD
-    data: ARRAY[1..SIZEOF_PTHREAD_MUTEXATTR_T] OF char;
-  END;
+  pthread_mutex_t = Upthreadtypes.pthread_mutex_t;
+  pthread_mutexattr_t = ARRAY[1..1] OF int;
 
 (* Data structure for conditional variable handling.  The structure of
    the attribute type is not exposed on purpose.  *)
 TYPE
-  pthread_cond_t = RECORD
-    data: ARRAY [1..SIZEOF_PTHREAD_COND_T] OF char;
-  END;
-  pthread_condattr_t = RECORD
-    data: ARRAY [1..SIZEOF_PTHREAD_CONDATTR_T] OF char;
-  END;
+  pthread_cond_t = RECORD data: ARRAY[1..6] OF LONGINT; END;
+  pthread_condattr_t = ARRAY[1..1] OF int;
 
 (* Keys for thread-specific data *)
 TYPE
@@ -76,12 +52,8 @@ TYPE
 (* Data structure for read-write lock variable handling.  The
    structure of the attribute type is not exposed on purpose.  *)
 TYPE
-  pthread_rwlock_t = RECORD
-    data: ARRAY [1..SIZEOF_PTHREAD_RWLOCK_T] OF char;
-  END;
-  pthread_rwlockattr_t = RECORD
-    data: ARRAY [1..SIZEOF_PTHREAD_RWLOCKATTR_T] OF char;
-  END;
+  pthread_rwlock_t = Upthreadtypes.pthread_rwlock_t;
+  pthread_rwlockattr_t = Upthreadtypes.pthread_rwlockattr_t;
 
 (* <bits/sched.h> *)
 TYPE
@@ -93,18 +65,15 @@ TYPE
 
 (* Mutex initializers.  *)
 CONST
-  PTHREAD_MUTEX_INITIALIZER =
-    pthread_mutex_t { ARRAY [1..SIZEOF_PTHREAD_MUTEX_T] OF char {0, .. } };
+  PTHREAD_MUTEX_INITIALIZER = pthread_mutex_t {0, .. };
 
 (* Read-write lock initializers.  *)
 CONST
-  PTHREAD_RWLOCK_INITIALIZER =
-    pthread_rwlock_t { ARRAY [1..SIZEOF_PTHREAD_RWLOCK_T] OF char {0, .. } };
+  PTHREAD_RWLOCK_INITIALIZER = pthread_rwlock_t { 0, .. };
 
 (* Conditional variable handling.  *)
 CONST
-  PTHREAD_COND_INITIALIZER =
-    pthread_cond_t { ARRAY [1..SIZEOF_PTHREAD_COND_T] OF char {0, .. } };
+  PTHREAD_COND_INITIALIZER = pthread_cond_t { ARRAY[1..6] OF LONGINT { 0L, .. } };
 
 (* Single execution handling.  *)
 CONST
