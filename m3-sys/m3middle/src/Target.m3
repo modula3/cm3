@@ -19,6 +19,7 @@ PROCEDURE Init64 () =
     Word := Word64;
     Address := Word64;
     Address.cg_type := CGType.Addr;
+    Jumpbuf_align := Address.align;
   END Init64;
 
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
@@ -214,7 +215,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     |  Systems.MIPS64_OPENBSD =>
                  Init64();
                  Little_endian             := FALSE;
-                 Jumpbuf_size              := 298 * Char.size;
+                 Jumpbuf_size              := 16_298 * Char.size;
                  Aligned_procedures        := FALSE;
 
     |  Systems.LINUX, Systems.LINUXELF =>
