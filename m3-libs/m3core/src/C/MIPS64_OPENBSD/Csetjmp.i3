@@ -1,13 +1,12 @@
-(* This file is the same or almost the same across all platforms, and
-little used. Let's factor the commonality and eliminate the dead. *)
-
 INTERFACE Csetjmp;
 
 FROM Ctypes IMPORT int;
 
 TYPE
   jmp_buf = RECORD
-    opaque : ARRAY [1..25] OF INTEGER;
+(* This information appears both here and in m3middle/Target.m3.
+   Ideally it would only occur in one place. *)
+    opaque : ARRAY [1..16_53] OF INTEGER;
   END;
 
 <*EXTERNAL "_longjmp" *> PROCEDURE ulongjmp (VAR env: jmp_buf; val: int);
