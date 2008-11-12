@@ -10,7 +10,7 @@ INTERFACE Csetjmp;		(* for NT386/WIN32 *)
 
 FROM Ctypes IMPORT int;
 
-TYPE jmp_buf = ARRAY [0..7] OF int;
+TYPE jmp_buf = ARRAY [0..15] OF int;
 
 <*EXTERNAL "setjmp" *> PROCEDURE usetjmp (VAR env: jmp_buf): int;
 <*EXTERNAL "longjmp" *> PROCEDURE ulongjmp (VAR env: jmp_buf; val: int);
