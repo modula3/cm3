@@ -1,6 +1,3 @@
-(* This file is the same or almost the same across all platforms, and
-little used. Let's factor the commonality and eliminate the dead. *)
-
 INTERFACE Csetjmp;
 
 FROM Ctypes IMPORT int;
