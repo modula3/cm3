@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.132 2008-11-12 04:41:16 jkrell Exp $
+# $Id: pylib.py,v 1.133 2008-11-12 14:36:37 jkrell Exp $
 
 import os
 from os import getenv
@@ -531,7 +531,6 @@ elif UName.startswith("linux"):
         Host = "PPC_LINUX"
     elif UNameArchM == "x86_64":
         Host = "AMD64_LINUX"
-        TurnOffGarbageCollection = True
     elif UNameArchM == "sparc64":
         Host = "SPARC32_LINUX"
     else:
@@ -770,8 +769,7 @@ Root = NativeRoot
 DEFS += " @M3novm"
 
 if TurnOffGarbageCollection:
-    #DEFS += " @M3nogc"
-    DEFS += " @M3paranoidgc"
+    DEFS += " @M3nogc"
 
 #
 #
