@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.131 2008-11-11 13:41:15 jkrell Exp $
+# $Id: pylib.py,v 1.132 2008-11-12 04:41:16 jkrell Exp $
 
 import os
 from os import getenv
@@ -1868,6 +1868,7 @@ GenericCommand:
     for arg in args[1:]:
         if ((arg == "")
             or (arg in AllTargets)
+            or (arg == "keep")
             or (arg == "boot")):
             continue
         if arg.startswith("-"):
