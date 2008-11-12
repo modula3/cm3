@@ -215,6 +215,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Init64();
                  Little_endian             := FALSE;
                  Jumpbuf_size              := 298 * Char.size;
+                 Aligned_procedures        := FALSE;
 
     |  Systems.LINUX, Systems.LINUXELF =>
                  max_align                 := 32;
