@@ -6,19 +6,13 @@
 (*      modified on Fri Oct  9 17:44:27 PDT 1992 by muller     *)
 (*      modified on Sun Jul 12, 1992 by thomas@mw.lpc.ethz.ch  *)
 
-INTERFACE Csetjmp;
+INTERFACE Csetjmp;		(* for NT386/WIN32 *)
 
 FROM Ctypes IMPORT int;
 
-TYPE
-  jmp_buf = RECORD
-  (* For systems without user threads, the size of this need not be declared correctly.
-     It is at the end of a record allocated by the compiler that the runtime merely needs
-     the address of. The runtime does need to know the size. The compiler does not know the
-     size. In future, the compiler should feed that size to here. *)
-    opaque : INTEGER;
-  END;
+TYPE jmp_buf = ARRAY [0..7] OF int;
 
+<*EXTERNAL "setjmp" *> PROCEDURE usetjmp (VAR env: jmp_buf): int;
 <*EXTERNAL "longjmp" *> PROCEDURE ulongjmp (VAR env: jmp_buf; val: int);
 
 END Csetjmp.
