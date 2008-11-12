@@ -491,6 +491,9 @@ PROCEDURE ReadFP(reader: Reader): TypeCode
     END;
     tc := RTTypeFP.FromFingerprint(fp);
     IF tc = RTType.NoSuchType THEN
+      tc := ReadPm3FP (fp); 
+    END; 
+    IF tc = RTType.NoSuchType THEN
       RAISE Error(
              "Can't read pickle, Fingerprint " 
              & FPImage(fp) & 
@@ -1080,6 +1083,83 @@ PROCEDURE InitHeader() =
     myTrailer[HT.t1] := Trailer1;
     myTrailer[HT.t2] := Trailer2;
   END InitHeader;
+
+(* Adaptation to some builtin fingerprints that have different byte order in
+   Pm3 and Cm3.
+*) 
+
+TYPE FPA =  ARRAY [0..7] OF BITS 8 FOR [0..255];
+     (* Give a short name to anonymous type of Fingerprint.T.byte. *) 
+
+CONST NULL_uid = 16_48ec756e; 
+CONST pm3_NULL_Fp = FPA {16_24,16_80,16_00,16_00,16_6c,16_6c,16_75,16_6e}; 
+CONST cm3_NULL_Fp = FPA {16_6e,16_75,16_6c,16_6c,16_00,16_00,16_80,16_24};
+
+CONST ROOT_uid = 16_9d8fb489;
+CONST pm3_ROOT_Fp = FPA {16_f8,16_09,16_19,16_c8,16_65,16_86,16_ad,16_41};
+CONST cm3_ROOT_Fp = FPA {16_41,16_ad,16_86,16_65,16_c8,16_19,16_09,16_f8};
+
+CONST UNTRACED_ROOT_uid = 16_898ea789;
+CONST pm3_UNTRACED_ROOT_Fp = FPA {16_f8,16_09,16_19,16_c8,16_71,16_87,16_be,16_41};
+CONST cm3_UNTRACED_ROOT_Fp = FPA {16_41,16_be,16_87,16_71,16_c8,16_19,16_09,16_f8};
+
+(* Can the following two occur in a pickle?  Maybe if somebody registered a
+   special for them? *) 
+CONST ADDRESS_uid = 16_08402063;
+CONST pm3_ADDRESS_Fp = FPA {16_91,16_21,16_8a,16_62,16_f2,16_01,16_ca,16_6a};
+CONST cm3_ADDRESS_Fp = FPA {16_f2,16_01,16_ca,16_6a,16_91,16_21,16_8a,16_62};
+
+CONST REFANY_uid = 16_1c1c45e6;
+CONST pm3_REFANY_Fp = FPA {16_65,16_72,16_24,16_80,16_79,16_6e,16_61,16_66};
+CONST cm3_REFANY_Fp = FPA {16_66,16_61,16_6e,16_79,16_80,16_24,16_72,16_65};
+
+TYPE TE = 
+  RECORD 
+    uid : INTEGER;
+    pm3_fp : Fingerprint.T; 
+    cm3_fp : Fingerprint.T; 
+  END; 
+
+TYPE FP = Fingerprint.T; 
+
+TYPE pm3_cm3_table_T = ARRAY [ 0 .. 4 ] OF TE; 
+
+CONST pm3_cm3_table = pm3_cm3_table_T 
+        { TE { uid := NULL_uid, 
+               pm3_fp := FP { byte := pm3_NULL_Fp }, 
+               cm3_fp := FP { byte := cm3_NULL_Fp } }, 
+          TE { uid := ROOT_uid, 
+               pm3_fp := FP { byte := pm3_ROOT_Fp }, 
+               cm3_fp := FP { byte := cm3_ROOT_Fp } }, 
+          TE { uid := UNTRACED_ROOT_uid, 
+               pm3_fp := FP { byte := pm3_UNTRACED_ROOT_Fp }, 
+               cm3_fp := FP { byte := cm3_UNTRACED_ROOT_Fp } }, 
+          TE { uid := ADDRESS_uid, 
+               pm3_fp := FP { byte := pm3_ADDRESS_Fp }, 
+               cm3_fp := FP { byte := cm3_ADDRESS_Fp } }, 
+          TE { uid := REFANY_uid, 
+               pm3_fp := FP { byte := pm3_REFANY_Fp }, 
+               cm3_fp := FP { byte := cm3_REFANY_Fp } }
+        }; 
+
+PROCEDURE ReadPm3FP (READONLY fp: Fingerprint.T): TypeCode =
+  VAR i: INTEGER; tc: TypeCode; t: RT0.TypeDefn;
+  BEGIN
+    i := 0; 
+    LOOP 
+      IF i > LAST (pm3_cm3_table) THEN RETURN RTType.NoSuchType; END;
+      WITH te = pm3_cm3_table[i] DO 
+        IF fp.byte = te.pm3_fp.byte THEN
+          tc := RTTypeFP.FromFingerprint(te.cm3_fp);
+          IF tc # RTType.NoSuchType THEN
+            t := RTType.Get(tc);
+            IF t^.selfID = te.uid THEN RETURN tc; END; 
+          END; 
+        END; 
+      END; 
+      INC (i);  
+    END; 
+  END ReadPm3FP; 
 
 BEGIN
 
