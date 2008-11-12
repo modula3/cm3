@@ -1868,6 +1868,7 @@ GenericCommand:
     for arg in args[1:]:
         if ((arg == "")
             or (arg in AllTargets)
+            or (arg == "keep")
             or (arg == "boot")):
             continue
         if arg.startswith("-"):
