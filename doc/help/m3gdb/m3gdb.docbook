@@ -813,7 +813,7 @@
 
       <para>
         &m3gdb; always treats a heap object as having its 
-        <emphasis>allocated</emphasis>type, not the static 
+        <emphasis>allocated </emphasis>type, not the static 
         type of the expression used to refer to it.  
         This allows you to select fields, etc. of the actual object. 
       </para> 
