@@ -390,8 +390,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     |  Systems.PPC_LINUX => 
                  Little_endian             := FALSE;
-                 Jumpbuf_size              := 58 * Address.size + 
-                                              32 * Address.size + 4;
+                 Jumpbuf_size              := 16_94 * Address.size;
                  Jumpbuf_align             := Word64.align;
 
     |  Systems.PPC32_OPENBSD => 
