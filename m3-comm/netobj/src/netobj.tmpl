@@ -31,11 +31,18 @@ readonly proc _v_netobj (intf, type, v, useintf, version) is
   derived_interface (base_name, v)
   derived_implementation (base_name)
 
+  local gc = ""
+  if defined("HOST")
+    if equal("HOST", "AMD64_LINUX")
+        gc = "@M3nogc"
+    end
+  end
+
   if defined("_all") % then we're building, not cleaning or shipping
     if stale(base_name & ".i3", intf_pn)
       generate_tfile()
       exec(_NETOBJ_STUBGEN, v_arg, "-sno", intf & "." & type, netobjuse, useintf,
-            M3SEARCH_TABLES)
+            M3SEARCH_TABLES, gc)
     end
   end
 end % _v_netobj
