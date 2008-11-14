@@ -183,6 +183,9 @@ proc GetM3Back() is
     %
     % Work on this more later.
     %
+    if not defined("HOST")
+        HOST = TARGET
+    end
     foreach host in [ HOST & "/", HOST & "-", "" ]
         foreach target in [ TARGET & "/", TARGET & "-", ""]
             foreach root in [ m3cc, bin ]
