@@ -23,7 +23,7 @@ typedef struct __jmp_buf_tag jmp_buf2;
 int main(int argc, char** argv)
 {
 
-#define A(a) printf("%s %x\n", #a, (unsigned) sizeof(a))
+#define A(a) printf("%s 0x%x bytes %u bytes 0x%0x 'addresses' %u 'addresses' 0x%x bits %u bits\n", #a, (unsigned) sizeof(a), (unsigned) sizeof(a), (unsigned) sizeof(a) / sizeof(void*), (unsigned) sizeof(a) / sizeof(void*), (unsigned) sizeof(a) * 8, (unsigned) sizeof(a) * 8)
 
     A(jmp_buf);
     //A(jmp_buf2);
@@ -46,12 +46,11 @@ int main(int argc, char** argv)
 #define STRING(a) #a
 #define A(a) printf(STRING(a) " %s\n", F1(a()))
 
-    printf("sizeof(jmp_buf) %x\n", (unsigned) sizeof(jmp_buf));
     A(clock_t);
     A(dev_t);
     A(gid_t);
-    A(in_addr_t);
-    A(in_port_t);
+    //A(in_addr_t);
+    //A(in_port_t);
     A(ino_t);
     A(mode_t);
     A(nlink_t);
