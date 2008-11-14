@@ -166,8 +166,8 @@ proc GetM3Back() is
     % INSTALL_ROOT/bin/cm3cg.exe
     % INSTALL_ROOT/bin/cm3cg
 
-    bin = INSTALL_ROOT & "/bin/"
-    m3cc = ROOT & "/m3-sys/m3cc/"
+    local bin = INSTALL_ROOT & "/bin/"
+    local m3cc = ROOT & "/m3-sys/m3cc/"
     local Cache = { }
 
     %

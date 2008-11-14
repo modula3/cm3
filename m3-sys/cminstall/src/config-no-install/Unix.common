@@ -173,20 +173,24 @@ end
 %
 local IsM3BackFlagSupported_Cache = { }
 
+readonly proc _IsM3BackFlagSupported(x) is
+    local Result = 0
+    if IsM3BackFlagSupported_Cache contains x
+        Result = IsM3BackFlagSupported_Cache{x}
+    else
+        local m3back = GetM3Back()
+        % write("probing " & m3back & " for " & x & CR)
+        Result = not equal(try_exec(
+            m3back & " " & x & " /dev/null 2>&1 "
+            & "| fgrep -i -e \"Invalid option\" -e \"unrecognized command line option\" 2>/dev/null >/dev/null"), 0)
+        IsM3BackFlagSupported_Cache{x} = Result
+    end
+    return Result
+end
+    
 if not defined ("GetM3BackFlag")
     readonly proc IsM3BackFlagSupported(x) is
-        local Result = 0
-        if IsM3BackFlagSupported_Cache contains x
-            Result = IsM3BackFlagSupported_Cache{x}
-        else
-            local m3back = GetM3Back()
-            % write("probing " & m3back & " for " & x & CR)
-            Result = not equal(try_exec(
-                m3back & " " & x & " /dev/null 2>&1 "
-                & "| fgrep -i -e \"Invalid option\" -e \"unrecognized command line option\" 2>/dev/null >/dev/null"), 0)
-            IsM3BackFlagSupported_Cache{x} = Result
-        end
-        return Result
+        return _IsM3BackFlagSupported(x)
     end
         
     readonly proc GetM3BackFlag(x) is
