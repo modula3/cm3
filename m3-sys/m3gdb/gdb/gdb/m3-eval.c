@@ -2602,7 +2602,7 @@ m3_ordinal_FIRST_info (
         arg = value_at_lazy ( arg_type, m3_value_as_address ( arg ) );
       }
     /* FIXME: ^first, use a function to dereference indirects.  Second, pull 
-              this out to call sites, so FIRST and LAST can be make to work on 
+              this out to call sites, so FIRST and LAST can be made to work on 
               floating types via other code. */ 
 
     if ( m3_is_ordinal_type ( arg_type ) ) 
@@ -2668,6 +2668,56 @@ m3_eval_VAL ( struct expression *exp, int *pos, enum noside noside )
     m3_ordinal_range_check ( sval, arg2_type, "first argument to VAL" ); 
     return m3_value_from_longest ( arg2_type, sval );
   } /* m3_eval_VAL */ 
+
+static struct value *
+m3_evaluate_ADR ( struct expression *exp, int *pos, enum noside noside )
+{ enum exp_opcode op;
+  int pc;
+  struct symbol *var;
+  enum address_class sym_class;
+  struct value * arg_val; 
+  struct type * arg_type; 
+  struct value * result; 
+
+  pc = (*pos);
+  op = exp->elts[pc].opcode;
+
+  switch (op)
+    { case UNOP_M3_DEREF:
+      /* ADR function cancels earlier-applied dereference. 
+         This is overly liberal in not changing the type to ADDRESS.
+      */ 
+      (*pos)++;
+      return m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
+
+      case OP_VAR_VALUE:
+        var = exp->elts[pc + 2].symbol;
+        sym_class = SYMBOL_CLASS (var);
+        if (sym_class == LOC_CONST
+            || sym_class == LOC_CONST_BYTES
+            || sym_class == LOC_REGISTER
+            || sym_class == LOC_REGPARM)
+          { error (_("ADR applied to register or constant.")); }
+        break; 
+    }
+    arg_val = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
+    arg_type = value_type ( arg_val );
+    while ( TYPE_CODE ( arg_type ) == TYPE_CODE_M3_INDIRECT ) 
+      { arg_type = TYPE_M3_TARGET (arg_type);
+        arg_val 
+          = value_at_lazy ( arg_type, m3_value_as_address ( arg_val ) ); 
+      } 
+    if (VALUE_LVAL (arg_val) != lval_memory)
+      { error (_("ADR applied to non-designator.")); /* NORETURN */ }
+    return  
+      value_from_pointer 
+        ( builtin_type_m3_address
+          , VALUE_ADDRESS (arg_val)
+            + value_offset (arg_val)
+            + value_embedded_offset (arg_val)
+        );
+    return result; 
+} /* m3_evaluate_ADR */ 
 
 static struct value *
 m3_evaluate_subexp_maybe_packed ( 
@@ -2893,7 +2943,7 @@ m3_evaluate_subexp_maybe_packed (
       struct type * res_type;
       CORE_ADDR ref_value; 
 
-      (*pos) += 1; 
+      (*pos) += 1;
       arg1 = m3_evaluate_subexp (0, exp, pos, noside);
       arg1_type = value_type ( arg1 );
 
@@ -3082,10 +3132,9 @@ m3_evaluate_subexp_maybe_packed (
       { struct value * v; 
 
         ( * pos) += 1; 
-      v = evaluate_subexp_for_address (exp, pos, noside); 
-      TYPE_CODE (value_type (v)) = TYPE_CODE_M3_ADDRESS;
-      TYPE_M3_SIZE (value_type (v)) = TARGET_PTR_BIT;
-      return v; }
+        v = m3_evaluate_ADR (exp, pos, noside); 
+        return v; 
+      }
 
     case UNOP_M3_ADRSIZE: {
       LONGEST sz;
