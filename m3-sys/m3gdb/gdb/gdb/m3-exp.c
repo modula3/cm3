@@ -103,7 +103,7 @@ write_m3_type ( struct type *tipe )
   get_token ();
 }
 
-static int m3_parse_expr ( ); /* Forward decl. */ 
+static int m3_parse_e0 ( ); /* Forward decl. */
 
 static void 
 m3_builtin_1_param ( enum exp_opcode op ) 
@@ -111,7 +111,7 @@ m3_builtin_1_param ( enum exp_opcode op )
   get_token (); /* builtin function name */
   if (cur_tok.kind != TK_LPAREN) { error ("missing opening ("); }
   get_token ();
-  m3_parse_expr ();
+  m3_parse_e0 ();
   if (cur_tok.kind != TK_RPAREN) { error ("missing closing )"); }
   get_token ();
   write_exp_elt_opcode (op); 
@@ -123,10 +123,10 @@ m3_builtin_2_params ( enum exp_opcode op )
   get_token (); /* builtin function name */
   if (cur_tok.kind != TK_LPAREN) { error ("missing opening ("); }
   get_token ();
-  m3_parse_expr ();
+  m3_parse_e0 ();
   if (cur_tok.kind != TK_COMMA) { error ("missing second parameter"); }
   get_token ();
-  m3_parse_expr ();
+  m3_parse_e0 ();
   if (cur_tok.kind != TK_RPAREN) { error ("missing closing )"); }
   get_token ();
   write_exp_elt_opcode (op); 
@@ -138,10 +138,10 @@ m3_float_op ( enum exp_opcode op )
   get_token (); /* builtin function name */
   if (cur_tok.kind != TK_LPAREN) { error ("missing opening ("); }
   get_token ();
-  m3_parse_expr ();
+  m3_parse_e0 ();
   if (cur_tok.kind == TK_COMMA) {
     get_token ();
-    m3_parse_expr ();
+    m3_parse_e0 ();
   } else {
     write_exp_elt_opcode (OP_M3_TYPE);
     write_exp_elt_type (builtin_type_m3_real);
@@ -429,7 +429,7 @@ m3_parse_e8 ( )
 
     case TK_LPAREN:
       get_token ();
-      m3_parse_expr ();
+      m3_parse_e0 ();
       if (cur_tok.kind != TK_RPAREN) { error ("missing closing )"); }
       get_token ();
       break;
@@ -587,7 +587,7 @@ m3_parse_e7 ( )
         else {  
           more_args = true;
           while (more_args) { 
-            if (m3_parse_expr ()) {return 1;}
+            if (m3_parse_e0 ()) {return 1;}
             arglist_len++; 
             switch (cur_tok.kind) {
               case TK_COMMA: { get_token(); break; } 
@@ -608,7 +608,7 @@ m3_parse_e7 ( )
 	cur_tok.kind = TK_COMMA;
 	while (cur_tok.kind == TK_COMMA) {
 	  get_token ();
-	  if (m3_parse_expr ()) { return 1; }
+	  if (m3_parse_e0 ()) { return 1; }
 	  write_exp_elt_opcode (BINOP_M3_SUBSCRIPT);
 	}
 	
