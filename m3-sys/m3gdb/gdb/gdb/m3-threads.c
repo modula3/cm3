@@ -58,7 +58,7 @@ ensure_init_thread_constants ( void )
   m3_unit_name_globals_symbol ('I', "Thread", NULL );
   m3_unit_name_globals_symbol ('M', "ThreadPosix", NULL );
 
-  thread__t = find_m3_type_named ("Thread.T",1);
+  thread__t = find_m3_type_named ("Thread.T", /*must_find =*/ true);
 
   m3_find_rec_field (thread__t, "id", 
 		     &thread__t__id_size, &thread__t__id_offset, 0);
