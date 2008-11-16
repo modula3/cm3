@@ -9,6 +9,12 @@ implementation ("RTOS")
 module         ("RTPerfTool")
 implementation ("RTProcessPosix")
 
+if equal (TARGET, "AMD64_LINUX")
+    implementation ("RTOSbrk")
+else
+    implementation ("RTOSmmap")
+end
+
 if not NO_USER_THREADS contains TARGET
   interface ("RTThread")
   implementation ("RTThreadStk")

@@ -73,7 +73,7 @@ CONST
 (*** brk, sbrk - change data segment space allocation *)
 
 <*EXTERNAL*> PROCEDURE brk (addr: ADDRESS): int;
-<*EXTERNAL*> PROCEDURE sbrk (inc: int): int;
+<*EXTERNAL*> PROCEDURE sbrk (inc: INTEGER): ADDRESS;
 
 
 (*** chdir - change working directory ***)
