@@ -36,6 +36,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "parser-defs.h"
 #include "objfiles.h"
 #include "exceptions.h" 
+#include "target.h"
 
 #include "m3-util.h"
 #include "m3-lang.h"
@@ -67,7 +68,7 @@ int rttype_infomap_map_offset = 0;
 int rttype_infomap_cnt_size = 0; 
 int rttype_infomap_cnt_offset = 0;
 
-static bool constant_init_done = false;
+bool m3_constant_init_done = false;
 
 /* Compare two terminated strings for equality.  A terminated string is 
    described by a from pointer and a to pointer.  Its last character is 
@@ -103,25 +104,25 @@ void
 init_m3_constants ( )
 { bool is_cm3; 
 
-  if ( constant_init_done ) { return; }
+  if ( m3_constant_init_done ) { return; }
 
   { struct type* rt0_tc;
     struct type* rt0_otc;
   
-    rt0_tc = find_m3_type_named ("RT0.Typecell",0);
+    rt0_tc = find_m3_type_named ("RT0.Typecell", /*must_find =*/ false);
     if (!rt0_tc) 
       { 
         error ("Can't find RT0.Typecell. Maybe M3 libraries are compiled "
                "without debug info, or not stabs.\n"
               ); 
-        return; /* without setting constant_init_done. */ 
+        return; /* without setting m3_constant_init_done. */ 
       } 
     m3_find_rec_field (rt0_tc, "selfID",
 		     &rt0_tc_selfID_size, &rt0_tc_selfID_offset, 0);
     m3_find_rec_field (rt0_tc, "dataSize",
 		     &rt0_tc_dataSize_size, &rt0_tc_dataSize_offset, 0);
 
-    rt0_otc = find_m3_type_named ("RT0.ObjectTypecell",0);
+    rt0_otc = find_m3_type_named ("RT0.ObjectTypecell", /*must_find =*/ false);
     is_cm3 = (rt0_otc != 0); 
 
     if (is_cm3)
@@ -133,13 +134,13 @@ init_m3_constants ( )
         m3_find_rec_field 
           (rt0_tc, "kind", &rt0_tc_kind_size, &rt0_tc_kind_offset, 0);
 
-        t = find_m3_type_named ("RTType.InfoMap",1);
+        t = find_m3_type_named ("RTType.InfoMap", /*must_find =*/ true);
         m3_find_rec_field (t, "map", 
           &rttype_infomap_map_size, &rttype_infomap_map_offset, 0);
         m3_find_rec_field (t, "cnt", 
           &rttype_infomap_cnt_size, &rttype_infomap_cnt_offset, 0);
 
-        t = find_m3_type_named ("RTType.Info",1);
+        t = find_m3_type_named ("RTType.Info", /*must_find =*/ true);
 
         m3_find_rec_field (t, "def", 
            &rttype_info_def_size, &rttype_info_def_offset, 0);
@@ -180,7 +181,7 @@ init_m3_constants ( )
 		     &rt0_defaultMethods_offset, 0);
   }
 
-  constant_init_done = true;
+  m3_constant_init_done = true;
 }
 
 bool 
@@ -494,27 +495,28 @@ m3_symtab_of_block ( const struct block * blk )
   } /* m3_symtab_of_block */ 
 
 struct type *
-find_m3_type_named (name, must_find)
-     char *name;
-     int must_find; /* Emit an error message, if can't find it. */ 
-{
-  char struct_name [ M3_MAX_SYMBOLLEN ]; 
-  struct symbol *s;
+find_m3_type_named (
+    char * name, 
+    bool must_find /* Emit an error message, if can't find it. */ 
+  )
 
-  /* FIXME: Rework this.  Use a less drastic way than lookup_symbol, 
-     take apart the qualified name and lookup the interface and type
-     id separately, and change the demangler to unqualify the name
-     of a type found in an Mn_zzzzzz_Interface.Type entry.  Also, 
-     get rid of the B$ in the prefix, which will allow ordinary lookup
-     to not need special cases for types. */ 
-  snprintf (struct_name, M3_MAX_SYMBOLLEN, "B$%s", name);
-  s = lookup_symbol (struct_name, 0, STRUCT_DOMAIN, 0, 0);
-  if (s == NULL) {
-    if (must_find) error ("unable to find type named \"%s\"\n", name);
-    return NULL;
-  };
-  return TYPE_M3_TYPE_TYPE (SYMBOL_TYPE (s));
-}
+  { char struct_name [ M3_MAX_SYMBOLLEN ]; 
+    struct symbol *s;
+
+    /* FIXME: Rework this.  Use a less drastic way than lookup_symbol, 
+       take apart the qualified name and look up the interface and type
+       id separately, and change the demangler to unqualify the name
+       of a type found in an Mn_zzzzzz_Interface.Type entry.  Also, 
+       get rid of the B$ in the prefix, which will allow ordinary lookup
+       to not need special cases for types. */ 
+    snprintf (struct_name, M3_MAX_SYMBOLLEN, "B$%s", name);
+    s = lookup_symbol (struct_name, 0, STRUCT_DOMAIN, 0, 0);
+    if (s == NULL) {
+      if (must_find) error ("unable to find type named \"%s\"\n", name);
+      return NULL;
+    };
+    return TYPE_M3_TYPE_TYPE (SYMBOL_TYPE (s));
+  } /* find_m3_type_named */
 
 /* Lookup a symbol in the one global block associated with block.  */
 struct symbol *
@@ -1256,7 +1258,8 @@ CORE_ADDR
 m3_tc_addr_from_inf_object_addr ( CORE_ADDR addr )
 
 { LONGEST typecode, n_types;
-  CORE_ADDR result, map_ptr;
+  CORE_ADDR result, map_ptr, debugee_addr;
+  int result_code; 
 
   if (!addr) { return 0; }
 
@@ -1266,48 +1269,130 @@ m3_tc_addr_from_inf_object_addr ( CORE_ADDR addr )
 
   if ( m3_compiler_kind ( ) == m3_ck_cm3 ) 
     { n_types = 0;
-      read_memory (rttype_types_addr + rttype_infomap_cnt_offset / 8,
-                          (char*)&n_types, rttype_infomap_cnt_size / 8);
-
-      if (typecode >= n_types) {
-        warning ("encountered out-of-range typecode: %d (ref: 16_%lx)"
-                 "\n   good typecode values are: [0..%d]",
-                 (int)typecode, addr, (int)(n_types-1)  );
-        return 0;
-      }
+      debugee_addr = rttype_types_addr + rttype_infomap_cnt_offset / 8;
+      result_code 
+        = target_read_memory 
+            ( debugee_addr,
+              (char*) &n_types, 
+              rttype_infomap_cnt_size / 8
+            );
+      if (result_code != 0)
+        { warning
+            ( "Unable to read RT variable \"RTType.types.cnt\" from 16_%lx." 
+            , debugee_addr
+            ); 
+          return 0; 
+        } 
+      if (typecode >= n_types) 
+        { warning 
+            ( "Out-of-range typecode: %d (ref: 16_%lx)"
+              "\n   good typecode values are: [0..%d]",
+              (int)typecode, addr, (int)(n_types-1)  
+            );
+          return 0;
+        }
 
       map_ptr = 0;
-      read_memory (rttype_types_addr + rttype_infomap_map_offset / 8,
-                          (char*)&map_ptr, rttype_infomap_map_size / 8);
-      if (map_ptr == 0) {
-        warning ("no allocated typecell map (typecode: %d, ref: 16_%lx)",
-                 (int)typecode, addr);
-        return 0;
-      }
+      debugee_addr = rttype_types_addr + rttype_infomap_map_offset / 8,
+      result_code 
+        = target_read_memory 
+            ( debugee_addr, 
+              (char*) &map_ptr, rttype_infomap_map_size / 8
+            );
+      if (result_code != 0)
+        { warning
+            ( "Unable to read RT variable \"RTType.types.map\" from 16_%lx." 
+            , debugee_addr
+            ); 
+          return 0; 
+        } 
+      if (map_ptr == 0) 
+        { warning 
+            ( "No allocated typecell map (typecode: %d, ref: 16_%lx)",
+              (int)typecode, 
+              addr
+             );
+          return 0;
+        }
 
-      read_memory (map_ptr
-                          + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT,
-                          (char *)&result, TARGET_PTR_BIT / TARGET_CHAR_BIT);
-      if (result == 0) {
-        warning ("typecode %d (ref: 16_%lx) has NIL RTType.InfoPtr value",
-                 (int)typecode, addr);
-        return 0;
-      }
+      debugee_addr = map_ptr + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT;
+      result_code 
+        = target_read_memory 
+            ( debugee_addr,
+              (char *) &result, 
+              TARGET_PTR_BIT / TARGET_CHAR_BIT
+            );
+      if (result_code != 0)
+        { warning
+            ( "Unable to read \"RTType.InfoPtr\" value for typecode %d, "
+              "from 16_%lx.", 
+              (int) typecode, 
+              debugee_addr
+            ); 
+          return 0; 
+        } 
+      if (result == 0) 
+        { warning 
+            ( "Typecode %d (ref: 16_%lx) has NIL RTType.InfoPtr value",
+              (int) typecode, 
+              addr
+            );
+          return 0;
+        }
 
-      read_memory (result + rttype_info_def_offset / 8,
-                          (char*)&result, TARGET_PTR_BIT / TARGET_CHAR_BIT);
-      if (result == 0) {
-        warning ("typecode %d (ref: 16_%lx) has no associated typecell",
-                 (int)typecode, addr);
-        return 0;
-      }
-
+      debugee_addr = result + rttype_info_def_offset / 8;
+      result_code 
+        = target_read_memory 
+            ( debugee_addr,
+              (char*) &result, 
+              TARGET_PTR_BIT / TARGET_CHAR_BIT
+            );
+      if (result_code != 0)
+        { warning
+            ( "Unable to read \"RTType.InfoPtr.def\" field for typecode %d, "
+              "from 16_%lx.", 
+              (int) typecode, 
+              debugee_addr
+            ); 
+          return 0; 
+        } 
+      if (result == 0) 
+        { warning 
+            ( "Typecode %d (ref: 16_%lx) has NIL associated typecell at 16_%lx",
+              (int)typecode, 
+              addr,
+              debugee_addr
+            );
+          return 0;
+        }
       return result;
     } 
   else if ( m3_compiler_kind ( ) == m3_ck_pm3 ) 
-    { read_memory (rt0u_types_value 
-	  	          + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT,
-		          (char *)&result, TARGET_PTR_BIT / TARGET_CHAR_BIT);
+    { debugee_addr 
+        = rt0u_types_value + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT;
+      result_code 
+        = target_read_memory 
+            ( debugee_addr,
+	      (char *)&result, 
+              TARGET_PTR_BIT / TARGET_CHAR_BIT
+            );
+      if (result_code != 0)
+        { warning
+            ( "Unable to read \"RT0u.types\" element for typecode %d, "
+              "from 16_%lx.", 
+              (int) typecode, 
+              debugee_addr
+            ); 
+          return 0; 
+        } 
+      if (result == 0) 
+        { warning 
+            ( "Typecode %d (ref: 16_%lx) has NIL associated typecell at 16_%lx",
+              (int)typecode, 
+              addr,
+              debugee_addr
+            );
+        }
       return result; 
 
     } 

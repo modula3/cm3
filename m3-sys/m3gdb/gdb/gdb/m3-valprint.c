@@ -150,7 +150,7 @@ get_TEXT_subtype_info (
   ti->type_name = nm;
   ti->wide_mode = wide_mode;
 
-  t = find_m3_type_named (nm, 0);
+  t = find_m3_type_named (nm, /*must_find =*/ false);
   /* If compiled by SRC, PM3, or EZM3, there will be no such type. */ 
   if ( t ) 
     { ti -> type = t; 

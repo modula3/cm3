@@ -2236,7 +2236,7 @@ m3-uid.o: m3-uid.c $(m3_uid_h) $(defs_h) $(gdb_string_h)
 m3-util.o: m3-util.c $(m3_util_h) $(defs_h) $(gdb_sssert_h) $(gdbcore_h) \
 	$(gdbtypes_h) $(expression_h) $(language_h) $(symtab_h) $(valprint_h) \
 	$(frame_h) $(dictionary_h) $(block_h) $(parser_defs_h) $(objfiles_h) \
-	$(m3_lang_h) $(m3_uid_h)
+	$(target_h) $(m3_lang_h) $(m3_uid_h)
 m3-valprint.o: m3-valprint.c $(m3_valprint_h) $(defs_h) $(gdbtypes_h) \
 	$(value_h) $(gdbcore_h) $(c_lang_h) $(frame_h) $(gdb_string_h) \
 	$(symtab_h) $(valprint_h) $(gdb_assert_h) $(m3_lang_h) $(m3_util_h)

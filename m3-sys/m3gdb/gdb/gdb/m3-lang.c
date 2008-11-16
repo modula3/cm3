@@ -2180,6 +2180,7 @@ m3_observer_solib_symbols_loaded ( struct so_list * so )
            But we can lookup symbols and examine or change global variables.
         */
         m3_libm3core_so_is_loaded = true; 
+        m3_constant_init_done = false;
         m3_disable_vm_gc ( );  
         l_thread_kind = m3_thread_kind ( ); 
         if ( l_thread_kind == tk_pthread ) 
@@ -2207,6 +2208,7 @@ m3_observer_solib_unloaded ( struct so_list * so )
            stock gdb does. 
         */
         m3_libm3core_so_is_loaded = false; 
+        m3_constant_init_done = false;
         m3_waiting_for_libm3core_so_to_unload = false; 
       } 
   } /* m3_observer_solib_loaded */ 
@@ -2247,7 +2249,7 @@ m3_info_m3_command ( char * args, int from_tty )
           printf_filtered (_("Using PThreads")); 
           break; 
         case tk_posix: 
-          printf_filtered (_("Using Posix threads")); 
+          printf_filtered (_("Using user-space threads")); 
           break; 
         case tk_win32:
           printf_filtered (_("Using Win32 threads")); 

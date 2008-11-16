@@ -59,6 +59,8 @@ extern int rttype_infomap_map_offset;
 extern int rttype_infomap_cnt_size; 
 extern int rttype_infomap_cnt_offset;
 
+extern bool m3_constant_init_done;
+
 /* We are allowing unsafe operations. */ 
 extern bool 
 is_unsafe ( void );  
@@ -109,7 +111,12 @@ m3_value_is_type ( struct value * val );
 extern struct symtab * 
 m3_symtab_of_block ( const struct block * blk ); 
 
-extern struct type * find_m3_type_named (char *, int);
+extern 
+struct type *
+find_m3_type_named 
+  ( char * name 
+  ,  bool must_find /* Emit an error message, if can't find it. */ 
+  );
 
 extern char * find_m3_type_name (struct type *);
 
