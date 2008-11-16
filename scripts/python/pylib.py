@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.133 2008-11-12 14:36:37 jkrell Exp $
+# $Id: pylib.py,v 1.134 2008-11-16 17:57:52 jkrell Exp $
 
 import os
 from os import getenv
@@ -1107,6 +1107,7 @@ def Boot():
         "MIPS64_OPENBSD"    : " -lm -lpthread ",
         "PPC32_OPENBSD"     : " -lm -lpthread ",
         "SPARC64_OPENBSD"   : " -lm -lpthread ",
+        "PPC_LINUX"         : " -lm ",
         }.get(Target) or ""))
 
     Compile = {
@@ -1198,6 +1199,7 @@ def Boot():
             #
             "m3-libs/libm3/src/os/POSIX/OSConfigPosix.m3",
             "m3-libs/libm3/src/random/m3makefile",
+            "m3-libs/m3core/src/m3makefile",
             "m3-libs/m3core/src/C/m3makefile",
             "m3-libs/m3core/src/C/" + Target + "/m3makefile",
             "m3-libs/m3core/src/C/" + Common + "/m3makefile",
@@ -1211,10 +1213,12 @@ def Boot():
             "m3-libs/m3core/src/unix/m3makefile",
             "m3-sys/cminstall/src/config-no-install/SOLgnu",
             "m3-sys/cminstall/src/config-no-install/SOLsun",
-            "m3-sys/cminstall/src/config-no-install/Unix.common",
             "m3-sys/cminstall/src/config-no-install/Solaris.common",
+            "m3-sys/cminstall/src/config-no-install/Unix.common",
+            "m3-sys/cminstall/src/config-no-install/cm3cfg.common",
             "m3-sys/cminstall/src/config-no-install/" + Target,
             "m3-sys/m3cc/src/m3makefile",
+            "m3-sys/m3cc/src/gcc/m3cg/parse.c",
             "m3-sys/m3middle/src/Target.i3",
             "m3-sys/m3middle/src/Target.m3",
             "scripts/python/pylib.py",
@@ -1227,7 +1231,8 @@ def Boot():
             "m3-libs/m3core/src/C/" + Common + "/Csignal.i3",
             "m3-libs/m3core/src/C/" + Common + "/Cstdio.i3",
             "m3-libs/m3core/src/C/" + Common + "/Cstring.i3",
-            "m3-libs/m3core/src/C/" + Common + "/m3makefile" ]:
+            "m3-libs/m3core/src/C/" + Common + "/m3makefile"
+            ]:
         source = os.path.join(Root, a)
         if FileExists(source):
             name = GetLastPathElement(a)
