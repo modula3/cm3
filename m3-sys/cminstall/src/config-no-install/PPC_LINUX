@@ -11,4 +11,20 @@ readonly SYSTEM_ASM = "@as" % Assembler
 %
 readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
+%
+% Avoid support for bootstrapping from older builds.
+% There are such old PPC_LINUX releases, but these
+% checks are hanging.
+%
+readonly proc GetGcWrapFlags() is return "" end
+readonly proc FixM3GcDefs(x) is return x end
+
+readonly proc GetM3BackFlag(x) is
+    % not supported on older build
+    if equal(x, "-m32")
+        return ""
+    end
+    return x
+end
+
 include("Unix.common")
