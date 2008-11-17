@@ -1532,6 +1532,9 @@ PackageSets = {
 
     "all": # in order
         [
+    # backend
+        "m3cc",
+
     # base libraries
 
         "import-libs",
@@ -1550,7 +1553,6 @@ PackageSets = {
         "m3staloneback",
         "m3front",
         "m3quake",
-        "m3cc",
         "cm3",
         "m3scanner",
         "m3tools",
