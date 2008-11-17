@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.134 2008-11-16 17:57:52 jkrell Exp $
+# $Id: pylib.py,v 1.135 2008-11-17 09:11:35 jkrell Exp $
 
 import os
 from os import getenv
@@ -1532,6 +1532,9 @@ PackageSets = {
 
     "all": # in order
         [
+    # backend
+        "m3cc",
+
     # base libraries
 
         "import-libs",
@@ -1550,7 +1553,6 @@ PackageSets = {
         "m3staloneback",
         "m3front",
         "m3quake",
-        "m3cc",
         "cm3",
         "m3scanner",
         "m3tools",
