@@ -1,15 +1,11 @@
 #!/bin/bash
 
 SNAPS=${SNAPS:-/var/www/modula3.elegosoft.com/cm3/uploaded-archives}
-FNPAT1=${FNPAT1:-"cm3-"}
-FNPATSUF=${FNPATSUF:-.{gz,bz,bz2,tgz,tbz,zip,tlz,lz,lzma}}
-FNPATLS=${FNPAT:-${FNPAT1}'*-*'${FNPATSUF}}
 INDEX=${INDEX:-index.html}
 cd $SNAPS || exit 1
 
-TARGETS=`eval ls -1 ${FNPATLS} 2>/dev/null |
-  awk -F- '{ print $4 }' |
-  sort -u`
+# future: a central list somewhere
+TARGETS=`echo AMD64_LINUX SPARC32_LINUX LINUXLIBC6 NT386GNU SOLsun NT386 | sort -u`
 
 if [ -f "${INDEX}" ]; then
   mv ${INDEX} ${INDEX}.old
@@ -40,7 +36,7 @@ EOF
 
 # echo $TARGETS
 for t in ${TARGETS}; do
-  all=`eval ls -1t ${FNPAT1}${t}-*${FNPATSUF} 2>/dev/null`
+  all=`eval ls -1t cm3-*${t}* 2>/dev/null`
   echo "<h3>Target Platform ${t}</h3>"
   echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
   for f in ${all}; do
