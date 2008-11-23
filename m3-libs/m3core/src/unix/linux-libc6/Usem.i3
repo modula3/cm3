@@ -8,7 +8,7 @@
 
 UNSAFE INTERFACE Usem;
 
-FROM Ctypes IMPORT char, int, unsigned_int, const_char_star;
+FROM Ctypes IMPORT int, unsigned_int, const_char_star;
 FROM Utypes IMPORT mode_t;
 
 (*** <bits/semaphore.h> ***)
