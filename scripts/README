@@ -40,6 +40,25 @@ You are probably most interested in one of the following:
  o Use install-cm3-compiler.sh to install the actual compiler
    (front-end and back-end) from the workspace.
 
+Each of the do-cm3-*.sh scripts takes an action as an argument, which
+translates into options to the cm3 command(s) executed by the script,
+according to the following table:
+
+   do-cm3-*.sh argument:                cm3 command(s) and options:
+
+   <no argument>, build, buildlocal     cm3 -build -override ...
+   buildglobal, buildship               cm3 -build ...; cm3 -ship ...
+   ship                                 cm3 -ship ...
+   clean, cleanlocal                    cm3 -clean -override ...
+   cleanglobal                          cm3 -clean ...
+     
+In the common case of just building parts of CM3, you do not want any
+action that results in -override.  One effect -override will have is to
+install a libm3 that will usually make compilations fail with a message
+about ROOT being undefined. Normally, use buildship. 
+
+There is no action argument to the do-cm3-*.sh scripts that will just
+build, without shipping, but without overrides either. 
 
 Please read the file README.BOOT for booting and porting instructions.
 Read the file README.ELEGO for instructions how to use CM3 together
