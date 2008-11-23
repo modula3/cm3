@@ -13,9 +13,6 @@ FROM Utypes IMPORT mode_t;
 
 (*** <bits/semaphore.h> ***)
 
-CONST
-  SIZEOF_SEM_T = 16;
-
 (* Value returned if `sem_open' failed.  *)
 CONST
   SEM_FAILED = 0;
@@ -25,8 +22,11 @@ CONST
   SEM_VALUE_MAX = 2147483647;
 
 TYPE
+ (* 32bit: 16 bytes with 32 bit alignment *)
+ (* 64bit: 32 bytes with 64 bit alignment *)
+ (* which works out to be 4 INTEGERs either way *)
   sem_t = RECORD
-    data: ARRAY[1..SIZEOF_SEM_T] OF char;
+    data: ARRAY [0..3] OF INTEGER;
   END;
   sem_t_star = UNTRACED REF sem_t;
 
