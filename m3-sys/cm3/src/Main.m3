@@ -61,7 +61,7 @@ PROCEDURE DoIt () =
         Quake.Define(mach, "WORD_SIZE", M3Config.WORD_SIZE);
 
         (* Even if the config file overrides the defaults, such as to do
-        a cross build, the host characteristics are still available. *)
+           a cross build, the host characteristics are still available. *)
 
         Quake.Define(mach, "HOST", M3Config.TARGET);
         Quake.Define(mach, "HOST_OS_TYPE", M3Config.OS_TYPE);
@@ -71,7 +71,7 @@ PROCEDURE DoIt () =
         Msg.Verbose ("EVAL (\"", config, "\")");
         Quake.Run (mach, config);
 
-        (* -- disabled 
+        (* -- disabled
         CheckExpire (Quake.LookUp (mach, "INSTALL_KEY"));
         *)
 
@@ -192,7 +192,7 @@ PROCEDURE CleanUp () =
         Msg.Error (NIL, msg);
       END;
     END;
-    
+
     WebFile.Dump ();
     Builder.CleanUp ();
     M3Timers.Stop ();
