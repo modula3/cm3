@@ -1168,13 +1168,13 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
     EVAL WinBase.TlsSetValue(handlersIndex, LOOPHOLE (frame, WinDef.DWORD));
   END PopEFrame;
 
-PROCEDURE IOWait (<*UNUSED*> fd: INTEGER; <*UNUSED*> read: BOOLEAN;
+PROCEDURE IOWait (<*UNUSED*> fd: CARDINAL; <*UNUSED*> read: BOOLEAN;
                   <*UNUSED*> timeoutInterval: LONGREAL := -1.0D0): WaitResult =
   BEGIN
     RETURN WaitResult.Timeout;
   END IOWait;
 
-PROCEDURE IOAlertWait (<*UNUSED*> fd: INTEGER; <*UNUSED*> read: BOOLEAN;
+PROCEDURE IOAlertWait (<*UNUSED*> fd: CARDINAL; <*UNUSED*> read: BOOLEAN;
                        <*UNUSED*> timeoutInterval: LONGREAL := -1.0D0): WaitResult =
   BEGIN
     RETURN WaitResult.Timeout;
