@@ -698,7 +698,7 @@ TYPE
   FDSet = SET OF [0 .. FDSetSize-1];
   FDS = REF ARRAY OF FDSet;
 
-PROCEDURE IOWait (fd: INTEGER; read: BOOLEAN;
+PROCEDURE IOWait (fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult =
   <*FATAL Alerted*>
   VAR self := Self();
@@ -711,7 +711,7 @@ PROCEDURE IOWait (fd: INTEGER; read: BOOLEAN;
     END;
   END IOWait;
 
-PROCEDURE IOAlertWait (fd: INTEGER; read: BOOLEAN;
+PROCEDURE IOAlertWait (fd: CARDINAL; read: BOOLEAN;
                        timeoutInterval: LONGREAL := -1.0D0): WaitResult
   RAISES {Alerted} =
   VAR self := Self();

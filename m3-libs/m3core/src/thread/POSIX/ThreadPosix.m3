@@ -583,7 +583,7 @@ VAR
   (* note that using a FD beyond the range of legal FDs produces
      a checked runtime error *)
 
-PROCEDURE IOWait(fd: INTEGER; read: BOOLEAN;
+PROCEDURE IOWait(fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult =
   <*FATAL Alerted*>
   BEGIN
@@ -591,7 +591,7 @@ PROCEDURE IOWait(fd: INTEGER; read: BOOLEAN;
     RETURN XIOWait(fd, read, timeoutInterval);
   END IOWait;
 
-PROCEDURE IOAlertWait(fd: INTEGER; read: BOOLEAN;
+PROCEDURE IOAlertWait(fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult
                   RAISES {Alerted} =
   BEGIN

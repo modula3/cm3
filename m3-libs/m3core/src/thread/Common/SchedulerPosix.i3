@@ -15,14 +15,13 @@ FROM Ctypes IMPORT int;
 TYPE
   WaitResult = {Ready, Error, FDError, Timeout};
 
+PROCEDURE WaitProcess(pid: int): int;
 (* This is a wrapper for Posix waitpid and merely ASSERTs(FALSE) on Win32. *)
 
-PROCEDURE WaitProcess(pid: int): int;
-
-PROCEDURE IOWait(fd: INTEGER; read: BOOLEAN;
+PROCEDURE IOWait(fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult;
 
-PROCEDURE IOAlertWait(fd: INTEGER; read: BOOLEAN;
+PROCEDURE IOAlertWait(fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult
                   RAISES {Thread.Alerted};
 
