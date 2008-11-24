@@ -16,7 +16,3 @@ void RTThread__Transfer (ucontext_t *from, ucontext_t *to)
     setcontext(to);		/* fire it up */
   }
 }
-
-/* global, per-thread linked list of exception handlers */
-void* ThreadF__handlerStack = 0;
-

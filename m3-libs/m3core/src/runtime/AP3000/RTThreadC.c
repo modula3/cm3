@@ -16,7 +16,3 @@ jmp_buf *from, *to;
     _longjmp (*to, 1);
   }
 }
-
-/* global, per-thread linked list of exception handlers */
-void* ThreadF__handlerStack = 0;
-
