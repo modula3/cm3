@@ -28,7 +28,3 @@ if (((*to)[JB_S8] <= (int)(&etext)) || ((*to)[JB_PC] == 0) || ((*to)[JB_SP] == 0
   (*from)[JB_ONSIGSTK] = 0; /* Ultrix setjmp doesn't set this field! */
   if (_setjmp(*from) == 0) _longjmp (*to, 1);
 }
-
-/* global, per-thread linked list of exception handlers */
-void* ThreadF__handlerStack = 0;
-

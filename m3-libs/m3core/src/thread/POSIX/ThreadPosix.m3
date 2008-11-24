@@ -1157,13 +1157,11 @@ PROCEDURE DetermineContext (oldSP: ADDRESS) =
 PROCEDURE StartThread () =
   <*FATAL Alerted*>
   BEGIN
-    handlerStack := self.context.handlers;
     Cerrno.SetErrno(self.context.errno);
     RTThread.allow_sigvtalrm ();
     DEC (inCritical);
 
     IF debug THEN
-      OutAddr("> DetermineContext: start thread, handlerStack = ", handlerStack);
       DumpThread(self);
     END;
     FloatMode.InitThread (self.floatState);
@@ -1253,11 +1251,9 @@ PROCEDURE Transfer (VAR from, to: Context;  new_self: T) =
 
     IF (ADR (from) # ADR (to)) THEN
       RTThread.disallow_sigvtalrm ();
-      from.handlers := handlerStack;
       from.errno := Cerrno.GetErrno();
       self := new_self;
       RTThread.Transfer (from.buf, to.buf);
-      handlerStack := from.handlers;
       Cerrno.SetErrno(from.errno);
       RTThread.allow_sigvtalrm ();
     END;
@@ -1603,12 +1599,12 @@ PROCEDURE BroadcastHeap () =
 
 PROCEDURE GetCurrentHandlers (): ADDRESS=
   BEGIN
-    RETURN handlerStack;
+    RETURN self.context.handlers;
   END GetCurrentHandlers;
 
 PROCEDURE SetCurrentHandlers (h: ADDRESS)=
   BEGIN
-    handlerStack := h;
+    self.context.handlers := h;
   END SetCurrentHandlers;
 
 (*RTHooks.PushEFrame*)
@@ -1616,14 +1612,14 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
   TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
   VAR f := LOOPHOLE (frame, Frame);
   BEGIN
-    f.next := handlerStack;
-    handlerStack := f;
+    f.next := self.context.handlers;
+    self.context.handlers := f;
   END PushEFrame;
 
 (*RTHooks.PopEFrame*)
 PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
-    handlerStack := frame;
+    self.context.handlers := frame;
   END PopEFrame;
 
 (*------------------------------------------------------------- debugging ---*)
