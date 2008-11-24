@@ -81,10 +81,6 @@ PROCEDURE SetSwitchingInterval (usec: CARDINAL);
 
 (*---------------------------------------------------- exception delivery ---*)
 
-<*EXTERNAL "ThreadF__handlerStack" *>
-VAR handlerStack: ADDRESS;
-(* linked list of exception frames. *)
-
 PROCEDURE GetCurrentHandlers(): ADDRESS;
 (* == RETURN RTThread.handlerStack *)
 

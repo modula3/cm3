@@ -15,7 +15,3 @@ jmp_buf *from, *to;
 {
   if (_fpsetjmp(*from) == 0) _fplongjmp (*to, 1);
 }
-
-/* global, per-thread linked list of exception handlers */
-void* ThreadF__handlerStack = 0;
-
