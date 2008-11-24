@@ -1518,7 +1518,6 @@ scan_target_int (void)
   HOST_WIDE_INT hi;
   long i, n_bytes, original_n_bytes, sign, shift;
   tree res, t = long_long_integer_type_node;
-  int trace_all = option_trace_all;
 
   i = (long) get_byte ();
   switch (i) {
@@ -1532,13 +1531,13 @@ scan_target_int (void)
   case M3CG_NInt8:  n_bytes = 8;  sign = -1;  break;
   default:
 
-    if (trace_all)
+    if (option_trace_all)
       fprintf(stderr,"  integer 0x%lx\n", ((unsigned long) i));
 
     return build_int_cst (t, i);
   }
 
-  if (trace_all)
+  if (option_trace_all)
     original_n_bytes = n_bytes;
 
   hi = low = 0;
@@ -1553,7 +1552,7 @@ scan_target_int (void)
   res = build_int_cst_wide (t, low, hi);
   if (sign < 0) { res = m3_build1 (NEGATE_EXPR, t, res); }
 
-  if (trace_all)
+  if (option_trace_all)
   {
     fprintf(stderr,"  integer i 0x%lx n_bytes 0x%lx " HOST_WIDE_INT_PRINT_DOUBLE_HEX " sign %ld\n",
            ((unsigned long) i), ((unsigned long) original_n_bytes), hi, low, sign);
@@ -1623,6 +1622,7 @@ scan_float (unsigned *out_Kind)
     /* real_from_target_fmt wants floats stored in an array of longs, 32 bits per long, even if long can hold more.
     So for example a 64 bit double on a system with 64 bit long will have 32 bits of zeros in the middle. */
     long Longs[2];
+    void *adr;
     static const struct {
         tree* Tree;
         unsigned Size;
@@ -1630,8 +1630,8 @@ scan_float (unsigned *out_Kind)
                 { &t_lreel, (DOUBLE_TYPE_SIZE / 8) },
                 { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8) }};
     unsigned Size;
-    tree Type;
-    REAL_VALUE_TYPE Value;
+    tree tipe;
+    REAL_VALUE_TYPE val;
 
     gcc_assert (sizeof(float) == 4);
     gcc_assert (sizeof(double) == 8);
@@ -1642,7 +1642,8 @@ scan_float (unsigned *out_Kind)
 
     Longs[0] = 0;
     Longs[1] = 0;
-    Bytes = (unsigned char*) &Longs;
+    adr = &Longs;
+    Bytes = adr;
     Kind = (unsigned) get_int();
     if (Kind >= (sizeof(Map) / sizeof(Map[0])))
     {
@@ -1650,7 +1651,7 @@ scan_float (unsigned *out_Kind)
                     Kind, m3cg_lineno);
     }
     *out_Kind = Kind;
-    Type = *Map[Kind].Tree;
+    tipe = *Map[Kind].Tree;
     Size = Map[Kind].Size;
 
     gcc_assert ((Size == 4) || (Size == 8));
@@ -1678,7 +1679,7 @@ scan_float (unsigned *out_Kind)
         {
             u.Bytes[i] = Bytes[i / 4 * sizeof(long) + i % 4];
         }
-        if (Type == t_reel)
+        if (tipe == t_reel)
         {
             fprintf(stderr," float %f bytes 0x%02x%02x%02x%02x\n", u.Float, u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3]);
         }
@@ -1691,16 +1692,13 @@ scan_float (unsigned *out_Kind)
         }
     }
 
-    /* finally, assemble a floating point value */
-    if (Type == t_reel)
-    {
-        real_from_target_fmt (&Value, Longs, &ieee_single_format);
-    }
-    else
-    {
-        real_from_target_fmt (&Value, Longs, &ieee_double_format);
-    }
-    return build_real (Type, Value);
+  /* finally, assemble a floating point value */
+  if (tipe == t_reel) {
+    real_from_target_fmt (&val, adr, &ieee_single_format);
+  } else {
+    real_from_target_fmt (&val, adr, &ieee_double_format);
+  }
+  return build_real (tipe, val);
 }
 
 /*-------------------------------------------------------------- booleans ---*/
@@ -2192,7 +2190,6 @@ declare_fault_proc (void)
   tree proc, parm, resultdecl;
   tree parm_block = make_node (BLOCK);
   tree top_block  = make_node (BLOCK);
-  int trace_all = option_trace_all;
 
   proc = build_decl (FUNCTION_DECL, get_identifier ("_m3_fault"),
 		     build_function_type_list (t_void, t_word, NULL_TREE));
@@ -2210,7 +2207,7 @@ declare_fault_proc (void)
   parm = build_decl (PARM_DECL, fix_name ("arg", 0x195c2a74), t_word);
   if (DECL_MODE (parm) == VOIDmode)
   {
-      if (trace_all)
+      if (option_trace_all)
         fprintf(stderr, "  declare_fault_proc: converting parameter from VOIDmode to Pmode\n");
       DECL_MODE (parm) = Pmode;
   }
@@ -2224,7 +2221,7 @@ declare_fault_proc (void)
   BLOCK_SUPERCONTEXT (top_block) = parm_block;
   BLOCK_SUBBLOCKS (parm_block) = top_block;
 
-  if (trace_all)
+  if (option_trace_all)
   {
     enum machine_mode mode = TYPE_MODE (TREE_TYPE (parm));
 
@@ -3017,7 +3014,6 @@ m3cg_declare_param (void)
   BOOLEAN    (up_level);
   UNUSED_FREQUENCY  (f);
   RETURN_VAR (v, PARM_DECL);
-  int trace_all = option_trace_all;
 
   tree p;
 
@@ -3048,7 +3044,7 @@ m3cg_declare_param (void)
   DECL_CONTEXT (v) = p;
   layout_decl (v, a);
 
-  if (trace_all)
+  if (option_trace_all)
   {
     enum machine_mode mode = TYPE_MODE (TREE_TYPE (v));
     fprintf(stderr, "  mode 0x%x (%s)\n", (unsigned) mode, mode_to_string(mode));
@@ -3056,7 +3052,7 @@ m3cg_declare_param (void)
 
   if (DECL_MODE (v) == VOIDmode)
   {
-      if (trace_all)
+      if (option_trace_all)
         fprintf(stderr, "  converting from VOIDmode to Pmode\n");
       DECL_MODE (v) = Pmode;
   }
@@ -3068,9 +3064,7 @@ m3cg_declare_param (void)
     /* arguments were accumulated in reverse, build type, then unreverse */
     tree parm, args = void_list_node;
     for (parm = DECL_ARGUMENTS (p); parm; parm = TREE_CHAIN(parm))
-    {
       args = tree_cons (NULL_TREE, TREE_TYPE (parm), args);
-    }
     args = build_function_type (TREE_TYPE (TREE_TYPE (p)), args);
     decl_attributes (&args, TYPE_ATTRIBUTES (TREE_TYPE (p)), 0);
     TREE_TYPE (p) = args;
