@@ -297,12 +297,14 @@ PROCEDURE ConventionFromID (id: INTEGER): CallingConvention;
 
 (*--------------------------------------------------- misc. configuration ---*)
 
+(* sizes are specified in bits *)
+
 CONST
   Byte = 8;  (* minimum addressable unit (in bits) *)
 
 VAR (*CONST*)
-  Set_grain : CARDINAL; (* allocation unit for large sets, in bits *)
-  Set_align : CARDINAL; (* alignment for large sets, in bits *)
+  Set_grain : CARDINAL; (* allocation unit for large sets *)
+  Set_align : CARDINAL; (* alignment for large sets *)
 
   Little_endian : BOOLEAN;
   (* TRUE => byte[0] of an integer contains its least-significant bits *)
@@ -312,7 +314,7 @@ VAR (*CONST*)
      a bit-field to compute the alignment of the struct *)
 
   Structure_size_boundary: CARDINAL;
-  (* every structure size must be a multiple of this; this is a bit count *)
+  (* every structure size must be a multiple of this *)
 
   Allow_packed_byte_aligned: BOOLEAN;
  (* Allow the compiler to align scalar types on byte boundaries when packing.
@@ -324,9 +326,9 @@ VAR (*CONST*)
   First_readable_addr: CARDINAL;
   (* Read or write references to addresses in the range [0..First_readable-1]
      will cause an address faults.  Hence, no explicit NIL checks are needed
-     for dereferencing with offsets in this range. This is a bit address. *)
+     for dereferencing with offsets in this range. *)
 
-  (* Thread stacks; these are bit counts *)
+  (* Thread stacks *)
   Jumpbuf_size     : CARDINAL; (* size of a "jmp_buf" *)
   Jumpbuf_align    : CARDINAL; (* alignment of a "jmp_buf" *)
 
