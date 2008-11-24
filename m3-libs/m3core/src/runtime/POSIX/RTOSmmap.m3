@@ -4,7 +4,7 @@
 
 UNSAFE MODULE RTOSmmap EXPORTS RTOS;
 
-IMPORT Unix, Umman, Word, Utypes;
+IMPORT Umman, Word, Utypes;
 
 (*------------------------------------------------------------- allocator ---*)
 
