@@ -55,8 +55,6 @@ CONST
 
 VAR p0, p1: Page := Nil;
 
-VAR desc: UNTRACED REF ARRAY OF Desc;
-
 VAR max_heap: INTEGER := -1;
 (** If "max_heap" is non-negative, the traced heap will not be
     extended beyond "max_heap" bytes.  If "max_heap" is
@@ -71,9 +69,14 @@ TYPE
            note      : BITS 3 FOR Note;
            gray      : BITS 1 FOR BOOLEAN;
            clean     : BITS 1 FOR BOOLEAN;
-           continued : BITS 1 FOR BOOLEAN;
+           locked    : BITS 1 FOR BOOLEAN;
            link: BITS BITSIZE(ADDRESS) - LogAdrPerPage FOR Page := Nil;
          END;
+  PageHdr = RECORD
+           desc: Desc;
+           nb: CARDINAL := 1;
+         END;
+  RefPage = UNTRACED REF PageHdr;
 
 TYPE Space = {Unallocated, Free, Previous, Current};
 
@@ -105,6 +108,9 @@ TYPE Generation = {Older, Younger};
 VAR
   allocatedPages: CARDINAL := 0; (* the number of pages in the Free,
                                     Previous, or Current spaces *)
+
+PROCEDURE ReferentSize (h: RefHeader): CARDINAL;
+PROCEDURE AddressToPage (r: ADDRESS): RefPage;
 
 (****** HEAP OBJECTS ******)
 
@@ -177,10 +183,10 @@ TYPE
   AllocPool = RECORD
     desc       : Desc;           (* descriptor for new pages in this pool *)
     notAfter   : Notes;          (* if possible avoid following these pages *)
-    page       : Page    := Nil; (* current allocation page of the pool *)
+    page       : RefPage := NIL; (* current allocation page of the pool *)
     next       : ADDRESS := NIL; (* address of next available byte *)
     limit      : ADDRESS := NIL; (* address of first unavailable byte *)
-    filePage   : Page    := Nil; (* page last filed *)
+    filePage   : RefPage := NIL; (* page last filed *)
   END;
 
 PROCEDURE ClosePool (VAR pool: AllocPool);
@@ -189,21 +195,21 @@ CONST
   NewPool = AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := FALSE, note := Note.Allocated, gray := FALSE,
-                  continued := FALSE, clean := FALSE },
+                  clean := FALSE, locked := FALSE },
     notAfter := Notes {Note.Copied} };
 
 VAR (* LL >= LockHeap *)
   pureCopy := AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := TRUE, note := Note.Copied, gray := FALSE,
-                  continued := FALSE, clean := FALSE },
+                  clean := FALSE, locked := FALSE },
     notAfter := Notes {Note.Allocated} };
 
 VAR (* LL >= LockHeap *)
   impureCopy := AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
                   pure := FALSE, note := Note.Copied, gray := TRUE,
-                  continued := FALSE, clean := TRUE },
+                  clean := TRUE, locked := FALSE },
     notAfter := Notes {Note.Allocated} };
 
 TYPE

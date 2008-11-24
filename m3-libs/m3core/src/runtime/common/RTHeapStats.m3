@@ -211,7 +211,8 @@ PROCEDURE InnerVisit (<*UNUSED*> self: RTHeapMap.Visitor;  loc: ADDRESS) =
           (* this is a new ref... *)
           map[word] := Word.Or (mask, map[word]);
           INC (visit.n_objects);
-          INC (visit.n_bytes, DataSize (header) + BYTESIZE (RT0.RefHeader));
+          INC (visit.n_bytes,
+               RTHeapRep.ReferentSize(header) + BYTESIZE (RT0.RefHeader));
           IF (top_of_stack < NUMBER (VisitStack)) THEN
             visit_stack [top_of_stack] := header;
             INC (top_of_stack);
@@ -222,54 +223,6 @@ PROCEDURE InnerVisit (<*UNUSED*> self: RTHeapMap.Visitor;  loc: ADDRESS) =
       END;
     END;
   END InnerVisit;
-
-PROCEDURE DataSize (h: RTHeapMap.ObjectPtr): CARDINAL =
-  TYPE TK = RT0.TypeKind;
-  VAR
-    res : INTEGER;
-    tc  : RT0.Typecode := h.typecode;
-    def : RT0.TypeDefn;
-  BEGIN
-    IF tc = RTHeapRep.Fill_1_type THEN RETURN 0; END;
-
-    IF tc = RTHeapRep.Fill_N_type THEN
-      res := LOOPHOLE(h + ADRSIZE(RT0.RefHeader), UNTRACED REF INTEGER)^;
-      RETURN res - BYTESIZE(RT0.RefHeader);
-    END;
-
-    def := RTType.Get (tc);
-
-    IF (def.kind # ORD (TK.Array)) THEN
-      (* the typecell datasize tells the truth *)
-      RETURN def.dataSize;
-    END;
-
-(* Otherwise, the referent is an open array; it has the following layout:
-|     pointer to the elements (ADDRESS)
-|     size 1
-|     ....
-|     size n
-|     optional padding
-|     elements
-|     ....
-   where n is the number of open dimensions (given by the definition)
-   and each size is the number of elements along the dimension. *)
-
-    VAR
-      adef := LOOPHOLE (def, RT0.ArrayTypeDefn);
-      sizes: UNTRACED REF INTEGER := h + ADRSIZE(RT0.RefHeader)
-                                       + ADRSIZE(ADDRESS);  (* ^ elt pointer*)
-    BEGIN
-      res := 1;
-      FOR i := 0 TO adef.nDimensions - 1 DO
-        res := res * sizes^;
-        INC(sizes, ADRSIZE(sizes^));
-      END;
-      res := res * adef.elementSize;
-    END;
-    res := RTMisc.Upper(res + def.dataSize, BYTESIZE(RT0.RefHeader));
-    RETURN res;
-  END DataSize;
 
 PROCEDURE TypeName (ref: ADDRESS): TEXT =
   CONST Mask = ADRSIZE (RT0.RefHeader) - 1; (* assume it's 2^k-1 for some k *)
@@ -374,15 +327,13 @@ PROCEDURE GetThreadStats (READONLY ti: ThreadInfo) =
   END GetThreadStats;
 
 PROCEDURE ScanPages (start, stop: ADDRESS) =
-  VAR fp := start;  p: ADDRESS;  page: INTEGER;
+  VAR fp: UNTRACED REF ADDRESS := start;
   BEGIN
     (* scan the stack or registers *)
     WHILE fp <= stop DO
-      p := LOOPHOLE(fp, UNTRACED REF ADDRESS)^;
-      IF heap_min <= p AND p < heap_max THEN
-        page := (p - heap_min) DIV RTHeapRep.BytesPerPage;
-        IF RTHeapRep.desc[page].space = RTHeapRep.Space.Current THEN
-          VisitPage (page);
+      WITH page = RTHeapRep.AddressToPage(fp^), d = page.desc DO
+        IF page # NIL AND d.space = RTHeapRep.Space.Current THEN
+          VisitPage(page);
         END;
       END;
       INC(fp, RTMachine.PointerAlignment);
@@ -400,18 +351,16 @@ PROCEDURE GetThreadRootStats (READONLY ti: ThreadInfo) =
   END GetThreadRootStats;
 
 PROCEDURE ScanThreadRoots (start, stop: ADDRESS;  on_stack: BOOLEAN) =
-  VAR fp := start;  p: ADDRESS;  page: INTEGER;
+  VAR fp: UNTRACED REF ADDRESS := start;
   BEGIN
     WHILE fp <= stop DO
-      p := LOOPHOLE(fp, UNTRACED REF ADDRESS)^;
-      IF heap_min <= p AND p < heap_max THEN
-        page := (p - heap_min) DIV RTHeapRep.BytesPerPage;
-        IF RTHeapRep.desc[page].space = RTHeapRep.Space.Current THEN
+      WITH page = RTHeapRep.AddressToPage(fp^), d = page.desc DO
+        IF page # NIL AND d.space = RTHeapRep.Space.Current THEN
           IF on_stack
             THEN visit.location := fp;
             ELSE visit.location := NIL;
           END;
-          visit.ref := p;
+          visit.ref := fp^;
           ResetVisitCounts ();
           Visit (NIL, fp);
           AddVisit (stack_roots);
@@ -432,18 +381,16 @@ PROCEDURE GetThreadPageStats (READONLY ti: ThreadInfo) =
   END GetThreadPageStats;
 
 PROCEDURE ScanThreadPageRoots (start, stop: ADDRESS;  on_stack: BOOLEAN) =
-  VAR fp := start;  p: ADDRESS;  page: INTEGER;
+  VAR fp: UNTRACED REF ADDRESS := start;
   BEGIN
     WHILE fp <= stop DO
-      p := LOOPHOLE(fp, UNTRACED REF ADDRESS)^;
-      IF heap_min <= p AND p < heap_max THEN
-        page := (p - heap_min) DIV RTHeapRep.BytesPerPage;
-        IF RTHeapRep.desc[page].space = RTHeapRep.Space.Current THEN
+      WITH page = RTHeapRep.AddressToPage(fp^), d = page.desc DO
+        IF page # NIL AND d.space = RTHeapRep.Space.Current THEN
           IF on_stack
             THEN visit.location := fp;
             ELSE visit.location := NIL;
           END;
-          visit.ref := p;
+          visit.ref := fp^;
           ResetVisitCounts ();
           VisitPage (page);
           AddVisit (stack_pages);
@@ -453,42 +400,17 @@ PROCEDURE ScanThreadPageRoots (start, stop: ADDRESS;  on_stack: BOOLEAN) =
     END;
   END ScanThreadPageRoots;
 
-PROCEDURE VisitPage (page: INTEGER) =
-  VAR start, stop: ADDRESS;  h: RTHeapMap.ObjectPtr;  ref: ADDRESS;
+PROCEDURE VisitPage (page: RTHeapRep.RefPage) =
+  VAR
+    h : RTHeapRep.RefHeader := page + ADRSIZE(RTHeapRep.PageHdr);
+    he: RTHeapRep.RefHeader := page + RTHeapRep.BytesPerPage;
+    ref: ADDRESS;
   BEGIN
-    (* find the address limits of this "page" *)
-    WHILE (page > 0)
-      AND (RTHeapRep.desc[page].space = RTHeapRep.Space.Current)
-      AND (RTHeapRep.desc[page].continued) DO
-      DEC (page);
-    END;
-    start := heap_min + page * RTHeapRep.BytesPerPage;
-
-    (*****
-    REPEAT
-      INC (page);
-    UNTIL (page >= RTHeapRep.p1-RTHeapRep.p0)
-       OR (RTHeapRep.desc[page].space # RTHeapRep.Space.Current)
-       OR (NOT RTHeapRep.desc[page].continued);
-    stop := heap_min + page * RTHeapRep.BytesPerPage;
-    *****
-    ***** multi-page objects never share their pages
-    *****   => only need to start scanning on their first page
-    *****      - Michel Dagenais, 6/17/96
-    ****)
-    stop := start + RTHeapRep.BytesPerPage;
-
-    IF (start <= last_alloc) AND (last_alloc < stop) THEN
-      (* we're on the allocator's partial page... *)
-      stop := last_alloc;
-    END;
-
     (* visit each object on the page *)
-    h := start;
-    WHILE (h < stop) AND (h.typecode # 0) DO
-      ref := h + ADRSIZE (RT0.RefHeader);
+    WHILE h < he DO
+      ref := h + ADRSIZE (RTHeapRep.Header);
       Visit (NIL, ADR (ref));
-      INC (h, DataSize (h) + ADRSIZE (RT0.RefHeader));
+      INC (h, ADRSIZE(RTHeapRep.Header) + RTHeapRep.ReferentSize (h));
     END;
   END VisitPage;
 
@@ -634,8 +556,7 @@ PROCEDURE MinInfoBytes (READONLY s: InfoSet): INTEGER =
 PROCEDURE DumpStack (READONLY ti: ThreadInfo) =
   CONST Max_proc = 4096;  (* good enough for 99% of the procedures *)
   VAR
-    fp, p: ADDRESS;
-    page : INTEGER;
+    fp: UNTRACED REF ADDRESS; p: ADDRESS;
     cons_cnt, cons_bytes : INTEGER;
     opt_cnt, opt_bytes   : INTEGER;
     have_frames : BOOLEAN;
@@ -689,38 +610,39 @@ PROCEDURE DumpStack (READONLY ti: ThreadInfo) =
         END;
       END;
 
-      p := LOOPHOLE(fp, UNTRACED REF ADDRESS)^;
-      IF heap_min <= p AND p < heap_max THEN
-        page := (p - heap_min) DIV RTHeapRep.BytesPerPage;
-        IF RTHeapRep.desc[page].space = RTHeapRep.Space.Current THEN
-          visit.location := fp;
-          visit.ref := p;
+      p := fp^;
+      WITH page = RTHeapRep.AddressToPage(p), d = page.desc DO
+        IF page # NIL AND d.space = RTHeapRep.Space.Current THEN
+          IF d.space = RTHeapRep.Space.Current THEN
+            visit.location := fp;
+            visit.ref := p;
 
-          (* make the conservative scan *)
-          ResetVisitCounts ();
-          VisitPage (page);
-          cons_bytes := visit.n_bytes;
-          cons_cnt   := visit.n_objects;
+            (* make the conservative scan *)
+            ResetVisitCounts ();
+            VisitPage (page);
+            cons_bytes := visit.n_bytes;
+            cons_cnt   := visit.n_objects;
 
-          (* make the optimistic scan *)
-          ResetVisitCounts ();
-          Visit (NIL, fp);
-          opt_bytes := visit.n_bytes;
-          opt_cnt   := visit.n_objects;
+            (* make the optimistic scan *)
+            ResetVisitCounts ();
+            Visit (NIL, fp);
+            opt_bytes := visit.n_bytes;
+            opt_cnt   := visit.n_objects;
 
-          IF (cons_bytes >= conservative_cutoff)
-            OR (opt_bytes >= optimistic_cutoff) THEN
-            (* report this ref! *)
-            PutInt  (fp - ti.stack_start, 5);
-            PutInt  (opt_cnt, 8);
-            PutInt  (opt_bytes, 8);
-            PutInt  (cons_cnt, 7);
-            PutInt  (cons_bytes, 8);
-            PutText ("  ");
-            PutAddr (p);
-            PutText (" ");
-            PutText (TypeName (p));
-            PutText ("\n");
+            IF (cons_bytes >= conservative_cutoff)
+              OR (opt_bytes >= optimistic_cutoff) THEN
+              (* report this ref! *)
+              PutInt  (fp - ti.stack_start, 5);
+              PutInt  (opt_cnt, 8);
+              PutInt  (opt_bytes, 8);
+              PutInt  (cons_cnt, 7);
+              PutInt  (cons_bytes, 8);
+              PutText ("  ");
+              PutAddr (p);
+              PutText (" ");
+              PutText (TypeName (p));
+              PutText ("\n");
+            END;
           END;
         END;
       END;

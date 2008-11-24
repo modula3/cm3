@@ -26,8 +26,8 @@ TYPE
         desc := RTHeapRep.Desc{
                   space := RTHeapRep.Space.Unallocated, generation :=
                   RTHeapRep.Generation.Younger, pure := FALSE, note :=
-                  RTHeapRep.Note.Allocated, gray := FALSE, continued := FALSE,
-                  clean := FALSE };
+                  RTHeapRep.Note.Allocated, gray := FALSE,
+                  clean := FALSE, locked := FALSE };
       END;
 
 END RTHeapEvent.
