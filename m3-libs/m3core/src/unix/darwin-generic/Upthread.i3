@@ -27,9 +27,10 @@ CONST
  * [Internal] data structure signatures
  *)
 CONST
-  PTHREAD_MUTEX_SIG_init = 16_32AAABA7;
-  PTHREAD_COND_SIG_init  = 16_3CB0B1BB;
-  PTHREAD_ONCE_SIG_init  = 16_30B1BCBA;
+  PTHREAD_MUTEX_SIG_init  = 16_32AAABA7;
+  PTHREAD_COND_SIG_init   = 16_3CB0B1BB;
+  PTHREAD_ONCE_SIG_init   = 16_30B1BCBA;
+  PTHREAD_RWLOCK_SIG_init = 16_2DA8B3B4;
 (*
  * POSIX scheduling policies
  *)
@@ -168,6 +169,14 @@ CONST
   PTHREAD_MUTEX_ERRORCHECK = 1;
   PTHREAD_MUTEX_RECURSIVE  = 2;
   PTHREAD_MUTEX_DEFAULT = PTHREAD_MUTEX_NORMAL;
+
+(*
+ * RWLock variables
+ *)
+CONST
+  PTHREAD_RWLOCK_INITIALIZER =
+    pthread_rwlock_t { PTHREAD_RWLOCK_SIG_init,
+                       ARRAY [0..PTHREAD_RWLOCK_SIZE-1] OF char {0, ..} };
 
 (*
  * Mutex variables
