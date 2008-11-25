@@ -15,7 +15,18 @@ IMPORT VBT, Wr;
 
 IMPORT RTHeapEvent, RTHeapRep;
 
-FROM RTHeapRep IMPORT Desc, Generation, Note, Page, Space;
+FROM RTHeapRep IMPORT Generation, Note, Page, Space;
+
+TYPE
+  Desc = RECORD
+           space     : BITS 2 FOR Space;
+           generation: BITS 1 FOR Generation;
+           pure      : BITS 1 FOR BOOLEAN;
+           note      : BITS 3 FOR Note;
+           gray      : BITS 1 FOR BOOLEAN;
+           clean     : BITS 1 FOR BOOLEAN;
+           continued : BITS 1 FOR BOOLEAN;
+  END;
 
 <*FATAL ANY*>
 
@@ -486,11 +497,18 @@ PROCEDURE Run () =
             LayoutHeapMap(map);
             RepaintHeapMap(map, Region.T{r := map.rect});
         | RTHeapEvent.Kind.Change =>
-            VAR new := CounterOf(e.desc);
+            VAR
+              edesc := Desc{space      := e.desc.space,
+                            generation := e.desc.generation,
+                            pure       := e.desc.pure,
+                            note       := e.desc.note,
+                            gray       := e.desc.gray,
+                            clean      := e.desc.clean}
+              new := CounterOf(edesc);
             BEGIN
               VAR old := CounterOf(desc[e.first - firstPage]);
               BEGIN
-                desc[e.first - firstPage] := e.desc;
+                desc[e.first - firstPage] := edesc;
                 IF new # old THEN
                   IF old # Counter.None THEN
                     DEC(count[old]);
@@ -502,11 +520,11 @@ PROCEDURE Run () =
                   END;
                 END;
               END;
-              e.desc.continued := TRUE;
+              edesc.continued := TRUE;
               FOR p := e.first + 1 TO e.first + e.nb - 1 DO
                 VAR old := CounterOf(desc[p - firstPage]);
                 BEGIN
-                  desc[p - firstPage] := e.desc;
+                  desc[p - firstPage] := edesc;
                   IF new # old THEN
                     IF old # Counter.None THEN
                       DEC(count[old]);
