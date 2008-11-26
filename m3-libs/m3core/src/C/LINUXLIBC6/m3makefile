@@ -7,9 +7,6 @@
 
 Interface ("Csetjmp")
 Interface ("Csignal")
-Interface ("Cstring")
-
-Module ("Cstdio")
 
 %s_source("CsetjmpASM")
 
