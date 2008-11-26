@@ -25,7 +25,7 @@ TYPE
            note      : BITS 3 FOR Note;
            gray      : BITS 1 FOR BOOLEAN;
            clean     : BITS 1 FOR BOOLEAN;
-           continued : BITS 1 FOR BOOLEAN;
+           continued : BITS 1 FOR BOOLEAN := FALSE;
   END;
 
 <*FATAL ANY*>
@@ -503,7 +503,7 @@ PROCEDURE Run () =
                             pure       := e.desc.pure,
                             note       := e.desc.note,
                             gray       := e.desc.gray,
-                            clean      := e.desc.clean}
+                            clean      := e.desc.clean};
               new := CounterOf(edesc);
             BEGIN
               VAR old := CounterOf(desc[e.first - firstPage]);
