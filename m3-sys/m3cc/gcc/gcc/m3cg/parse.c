@@ -1616,21 +1616,20 @@ fmt_uid (unsigned long x, char *buf)
 static tree
 scan_float (unsigned *out_Kind)
 {
-    unsigned char* Bytes;
-    unsigned i;
-    unsigned Kind;
     /* real_from_target_fmt wants floats stored in an array of longs, 32 bits per long, even if long can hold more.
     So for example a 64 bit double on a system with 64 bit long will have 32 bits of zeros in the middle. */
-    long Longs[2];
-    void *adr;
+    long Longs[2] = { 0, 0 };
+    unsigned char * const Bytes = (unsigned char*) &Longs;
+    unsigned i;
+    unsigned Kind;
     static const struct {
         tree* Tree;
         unsigned Size;
-    } Map[] = { { &t_reel ,  (FLOAT_TYPE_SIZE / 8) },
-                { &t_lreel, (DOUBLE_TYPE_SIZE / 8) },
-                { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8) }};
+        const struct real_format* format;
+    } Map[] = { { &t_reel ,  (FLOAT_TYPE_SIZE / 8), &ieee_single_format },
+                { &t_lreel, (DOUBLE_TYPE_SIZE / 8), &ieee_double_format },
+                { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8), &ieee_double_format }};
     unsigned Size;
-    tree tipe;
     REAL_VALUE_TYPE val;
 
     gcc_assert (sizeof(float) == 4);
@@ -1640,10 +1639,6 @@ scan_float (unsigned *out_Kind)
     gcc_assert (LONG_DOUBLE_TYPE_SIZE == 64);
     gcc_assert ((sizeof(long) == 4) || (sizeof(long) == 8));
 
-    Longs[0] = 0;
-    Longs[1] = 0;
-    adr = &Longs;
-    Bytes = adr;
     Kind = (unsigned) get_int();
     if (Kind >= (sizeof(Map) / sizeof(Map[0])))
     {
@@ -1651,7 +1646,6 @@ scan_float (unsigned *out_Kind)
                     Kind, m3cg_lineno);
     }
     *out_Kind = Kind;
-    tipe = *Map[Kind].Tree;
     Size = Map[Kind].Size;
 
     gcc_assert ((Size == 4) || (Size == 8));
@@ -1679,7 +1673,7 @@ scan_float (unsigned *out_Kind)
         {
             u.Bytes[i] = Bytes[i / 4 * sizeof(long) + i % 4];
         }
-        if (tipe == t_reel)
+        if (Size == 4)
         {
             fprintf(stderr," float %f bytes 0x%02x%02x%02x%02x\n", u.Float, u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3]);
         }
@@ -1693,12 +1687,8 @@ scan_float (unsigned *out_Kind)
     }
 
   /* finally, assemble a floating point value */
-  if (tipe == t_reel) {
-    real_from_target_fmt (&val, adr, &ieee_single_format);
-  } else {
-    real_from_target_fmt (&val, adr, &ieee_double_format);
-  }
-  return build_real (tipe, val);
+  real_from_target_fmt (&val, Longs, Map[Kind].format);
+  return build_real (*Map[Kind].Tree, val);
 }
 
 /*-------------------------------------------------------------- booleans ---*/
