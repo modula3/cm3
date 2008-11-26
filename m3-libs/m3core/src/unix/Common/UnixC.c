@@ -2,8 +2,15 @@
 /* All rights reserved.                                        */
 /* See the file COPYRIGHT for a full description.              */
 
+/*
+Writing libm3/os/POSIX/FilePosix.m3/RegularFileLock, RegularFileUnlock in C
+saves us from having to declare struct flock, which is gnarled up in #ifdefs.
+*/
+
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <string.h>
 
 typedef struct flock flock_t;
 typedef size_t BOOLEAN;
