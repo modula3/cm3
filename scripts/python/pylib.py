@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.135 2008-11-17 09:11:35 jkrell Exp $
+# $Id: pylib.py,v 1.136 2008-12-13 18:56:24 jkrell Exp $
 
 import os
 from os import getenv
@@ -1231,7 +1231,15 @@ def Boot():
             "m3-libs/m3core/src/C/" + Common + "/Csignal.i3",
             "m3-libs/m3core/src/C/" + Common + "/Cstdio.i3",
             "m3-libs/m3core/src/C/" + Common + "/Cstring.i3",
-            "m3-libs/m3core/src/C/" + Common + "/m3makefile"
+            "m3-libs/m3core/src/C/" + Common + "/m3makefile",
+            "m3-libs/m3core/src/C/" + Common + "/Udir.i3",
+            "m3-libs/m3core/src/C/" + Common + "/UdirC.c",
+            "m3-libs/m3core/src/C/" + Common + "/Uerror.i3.cpp",
+            "m3-libs/m3core/src/C/" + Common + "/UnixC.c",
+            "m3-libs/m3core/src/C/" + Common + "/Ustat.i3",
+            "m3-libs/m3core/src/C/" + Common + "/UstatC.c",
+            "m3-libs/m3core/src/C/" + Common + "/UtimeC.c",
+            "m3-libs/m3core/src/C/" + Common + "/Uutsname.i3.cpp",
             ]:
         source = os.path.join(Root, a)
         if FileExists(source):
