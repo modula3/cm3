@@ -2860,9 +2860,11 @@ m3cg_declare_segment (void)
 	    IDENTIFIER_POINTER(DECL_NAME(v)), id);
   /* we really don't have an idea of what the type of this var is;
      let's try to put something that will be good enough for all
-     the uses of this var we are going to see before we have a bind_segment */
+     the uses of this var we are going to see before we have a bind_segment
+  Use a large size so that gcc doesn't think it fits in a register, so that
+  loads out of it do get their offsets applied. */
   TREE_TYPE (v)
-    = m3_build_type (T_struct, BIGGEST_ALIGNMENT, BIGGEST_ALIGNMENT);
+    = m3_build_type (T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT);
   layout_decl (v, BIGGEST_ALIGNMENT);
   TYPE_UNSIGNED (TREE_TYPE (v)) = 1;
   TREE_STATIC (v) = 1;
