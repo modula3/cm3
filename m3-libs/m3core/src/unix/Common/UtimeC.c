@@ -4,10 +4,13 @@
 wrap up global variables in functions until something else is done
 */
 
+const char* get_tzname(unsigned a);
+
+#ifndef __OpenBSD__
+
 time_t get_timezone(void);
 time_t get_altzone(void);
 int get_daylight(void);
-const char* get_tzname(unsigned a);
 
 time_t get_timezone(void)
 {
@@ -36,6 +39,8 @@ int get_daylight(void)
     return daylight;
 #endif
 }
+
+#endif /* __OpenBSD__ */
 
 const char* get_tzname(unsigned a)
 {

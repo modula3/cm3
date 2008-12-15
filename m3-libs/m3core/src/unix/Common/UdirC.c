@@ -2,47 +2,38 @@
 #include <dirent.h>
 #include <assert.h>
 #include <stddef.h>
-
 #ifndef _MSC_VER
+#define __int32 int
 #define __int64 long long
 #endif
-
+typedef unsigned __int32 UINT32;
 typedef struct dirent dirent_t;
 
 typedef struct _m3_dirent_t {
+#ifdef __OpenBSD__
+    UINT32 d_ino;
+#else
     __int64 d_ino;
-    char pad_for_align[3]; /* maybe not portable */
+    char pad[3]; /* not portable */
+#endif
     char d_name[1];
 } m3_dirent_t;
 
-m3_dirent_t* m3_readdir(DIR* dir)
+volatile m3_dirent_t* m3_readdir(DIR* dir)
 {
-    __int64 d_ino;
-    m3_dirent_t* m3;
-    dirent_t* d;
+    volatile m3_dirent_t* m3;
+    volatile dirent_t* d;
 
     d = readdir(dir);
     if (!d)
         return 0;
 
-    d_ino = d->d_ino;
     m3 = (m3_dirent_t*) (((char*)d->d_name) - offsetof(m3_dirent_t, d_name));
-    assert((((size_t) m3) & (sizeof(__int64) - 1)) == 0);
-    m3->d_ino = d_ino;
+
+#ifdef __OpenBSD__
+    m3->d_ino = d->d_fileno;
+#else
+    m3->d_ino = d->d_ino;
+#endif
     return m3;
 }
-
-#ifdef UDIR_MAIN
-
-#include <stdio.h>
-
-int main()
-{
-    dirent_t* d = 0;
-#define X(x) printf(#x " 0x%x\n", (unsigned) (size_t) x)
-    X(&d->d_name); /* This should be > 8 and evenly divisible by 8, else revisit;
-                    the first compromise is to go down to size_t, if 32 bit platforms only have 32 bit ino. */
-    X(sizeof(d->d_ino));
-    return 0;
-}
-#endif
