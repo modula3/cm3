@@ -1,2 +1,6 @@
 Interface ("Upthreadtypes")
 Interface ("Ustat")
+
+if not equal (TARGET, "PPC_LINUX") and not equal(TARGET, "LINUXLIBC6")
+  Interface ("Uucontext")
+end
