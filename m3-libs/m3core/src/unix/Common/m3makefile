@@ -1,7 +1,6 @@
 
 c_source("UstatC")
 c_source ("UtimeC")
-c_source ("UnixC")
 
 if equal (TARGET, "MIPS64_OPENBSD")
     Interface ("Ustat")
