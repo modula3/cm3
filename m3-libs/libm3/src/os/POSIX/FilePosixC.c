@@ -14,6 +14,12 @@ saves us from having to declare struct flock, which is gnarled up in #ifdefs.
 #include <errno.h>
 #include <string.h>
 
+#ifdef _WIN64
+typedef __int64 INTEGER;
+#else
+typedef long INTEGER;
+#endif
+
 typedef struct flock flock_t;
 #define FALSE 0
 #define TRUE 1
