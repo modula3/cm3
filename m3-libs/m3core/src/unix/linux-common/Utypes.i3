@@ -28,7 +28,7 @@ TYPE
   ino_t = Cstddef.size_t;
   mode_t = uint32_t;
   nlink_t = Cstddef.size_t;
-  off_t = INTEGER;
+  off_t = LONGINT;
   pid_t = int32_t;
   rlim_t = Cstddef.size_t;
   size_t = Cstddef.size_t;
