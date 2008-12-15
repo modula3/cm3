@@ -14,14 +14,14 @@ CONST
   SIGABRT = 6;
   SIGKILL = 9;
   SIGTERM = 15;
-  NSIG = 32; (* needs work *)
+  NSIG = 65; (* 129 on MIPS *)
   SA_RESTART = 16_10000000;
   SA_SIGINFO = 4;
 
 TYPE
   SignalActionHandler = PROCEDURE (sig: int; sip: siginfo_t_star; uap: Uucontext.ucontext_t_star);
   SignalHandler = PROCEDURE (sig: int);
-  sigset_t = INTEGER;
+  sigset_t = Uucontext.sigset_t;
   siginfo_t_star = ADDRESS;
   sa_sigaction = ADDRESS;
 
@@ -29,6 +29,7 @@ TYPE
     sa_sigaction: SignalActionHandler; (* union of two function pointers *)
     sa_mask     : sigset_t;
     sa_flags    : int;
+    sa_restorer : ADDRESS;
   END;
 
 <*EXTERNAL*> PROCEDURE kill (pid: pid_t; sig: int): int;

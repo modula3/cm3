@@ -15,6 +15,9 @@ TYPE
   pthread_cond_t = RECORD data: ARRAY[1..6] OF LONGINT; END;
   pthread_key_t = unsigned_int;
 
+  destructor_t = PROCEDURE(arg: ADDRESS);
+  start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;
+
 CONST
   PTHREAD_MUTEX_INITIALIZER = pthread_mutex_t {0, .. };
   PTHREAD_COND_INITIALIZER = pthread_cond_t { ARRAY[1..6] OF LONGINT { 0L, .. } };
