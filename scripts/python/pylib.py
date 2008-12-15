@@ -1104,6 +1104,7 @@ def Boot():
         }.get(Target) or ""))
 
     Link = (Compile + " " + ({
+        "AMD64_LINUX"       : " -lm -lpthread ",
         "MIPS64_OPENBSD"    : " -lm -lpthread ",
         "PPC32_OPENBSD"     : " -lm -lpthread ",
         "SPARC64_OPENBSD"   : " -lm -lpthread ",
