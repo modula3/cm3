@@ -12,14 +12,17 @@ saves us from having to declare struct flock, which is gnarled up in #ifdefs.
 #include <errno.h>
 #include <string.h>
 
+#ifdef _WIN64
+typedef __int64 INTEGER;
+#else
+typedef long INTEGER;
+#endif
+
 typedef struct flock flock_t;
-typedef size_t BOOLEAN;
 #define FALSE 0
 #define TRUE 1
 
-void OSErrorPosix__Raise(void);
-
-BOOLEAN m3_RegularFileLock(int fd)
+INTEGER m3_RegularFileLock(int fd)
 {
     flock_t lock;
     int err;
@@ -28,17 +31,17 @@ BOOLEAN m3_RegularFileLock(int fd)
     lock.l_type = F_WRLCK;
     lock.l_whence = L_SET;
 
-    if (fcntl(fd, F_SETLK, &flock) < 0)
+    if (fcntl(fd, F_SETLK, &lock) < 0)
     {
         err = errno;
-        if (err == EACCESS || err == EAGAIN)
+        if (err == EACCES || err == EAGAIN)
             return FALSE;
-        OSErrorPosix__Raise();
+        return -1;
     }
     return TRUE;
 }
 
-void m3_RegularFileUnlock(int fd)
+INTEGER m3_RegularFileUnlock(int fd)
 {
     flock_t lock;
 
@@ -46,8 +49,8 @@ void m3_RegularFileUnlock(int fd)
     lock.l_type = F_UNLCK;
     lock.l_whence = L_SET;
 
-    if (fcntl(fd, F_SETLK, &flock) < 0)
+    if (fcntl(fd, F_SETLK, &lock) < 0)
     {
-        OSErrorPosix__Raise();
+        return -1;
     }
 }

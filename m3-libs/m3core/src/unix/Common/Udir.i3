@@ -4,13 +4,12 @@
 
 UNSAFE INTERFACE Udir;
 
-FROM Ctypes IMPORT char, const_char_star;
-FROM Utypes IMPORT int;
+FROM Ctypes IMPORT char, const_char_star, int;
 
 TYPE
   dirent = RECORD
     d_ino: LONGINT;
-    pad_for_align: ARRAY [0..2] OF char; (* maybe not portable *)
+    pad: ARRAY [0..2] OF char; (* not portable *)
     d_name: ARRAY [0..255] OF char;
   END;
   dirent_star = UNTRACED REF dirent;
