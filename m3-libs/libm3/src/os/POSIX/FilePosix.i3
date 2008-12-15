@@ -7,6 +7,7 @@
 INTERFACE FilePosix;
 
 IMPORT File, OSError, Pipe, Ustat;
+FROM Ctypes IMPORT int;
 
 (* In this interface we reveal that all Unix "File.T"s have a
    file descriptor field, "fd". *)
@@ -40,5 +41,10 @@ PROCEDURE FileTypeFromStatbuf(READONLY statbuf: Ustat.struct_stat)
 (* Return the "File.Type" corresponding mostly closely to
    "Word.And(statbuf.st_mode, Ustat.S_IFMT)". *)
   
+(* 1 for TRUE, 0 for FALSE, -1 for error (in errno) *)
+<*EXTERNAL*> PROCEDURE RegularFileLockC(fd: int): INTEGER;
+
+(* return value from fnctl; <0 for failure, error in errno *)
+<*EXTERNAL*> PROCEDURE RegularFileUnlockC(fd: int): INTEGER;
 
 END FilePosix.

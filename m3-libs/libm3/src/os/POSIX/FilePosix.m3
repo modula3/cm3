@@ -159,41 +159,22 @@ PROCEDURE RegularFileFlush(h: RegularFile.T) RAISES {OSError.E} =
   END RegularFileFlush;
 
 PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E} =
-  (* The following initialization is a bit sleazy.  It doesn't
-     initialize all the fields.  We depend on each Unix.i3 giving
-     a static initialization for any other fields.
-     (e.g. freebsd-2/Unix.i3) *)
-  VAR flock := Unix.struct_flock {
-    l_type := Unix.F_WRLCK,
-    l_whence := Unix.L_SET,
-    l_pid := 0}; (* don't care *)
+  VAR i: INTEGER;
   BEGIN
-    IF Unix.fcntl(h.fd, Unix.F_SETLK, LOOPHOLE(ADR(flock), Ctypes.long)) < 0
-     THEN
-      WITH errno = Cerrno.GetErrno() DO
-        IF errno = Uerror.EACCES OR errno = Uerror.EAGAIN THEN
-          RETURN FALSE
-        END;
-      END;
-      OSErrorPosix.Raise()
+    i := RegularFileLockC(h.fd);
+    IF i < 0 THEN
+	  OSErrorPosix.Raise();
     END;
-    RETURN TRUE
+    RETURN (i # 0);
   END RegularFileLock;
 
 PROCEDURE RegularFileUnlock(h: RegularFile.T) RAISES {OSError.E} =
-  (* The following initialization is a bit sleazy.  It doesn't
-     initialize all the fields.  We depend on each Unix.i3 giving
-     a static initialization for any other fields.
-     (e.g. freebsd-2/Unix.i3) *)
-  VAR flock := Unix.struct_flock {
-    l_type := Unix.F_UNLCK,
-    l_whence := Unix.L_SET,
-    l_pid := 0}; (* don't care *)
+  VAR i: INTEGER;
   BEGIN
-    IF Unix.fcntl(h.fd, Unix.F_SETLK, LOOPHOLE(ADR(flock), Ctypes.long)) < 0
-    THEN
-      OSErrorPosix.Raise()
-    END
+    i := RegularFileUnlockC(h.fd);
+    IF i < 0 THEN
+	  OSErrorPosix.Raise();
+    END;
   END RegularFileUnlock;
 
 (*---------------------IntermittentFile methods------------------------------*)

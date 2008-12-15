@@ -24,3 +24,5 @@ if equal (TARGET, "NT386")
 else
     implementation("ProcessPosix")
 end
+
+c_source("FilePosixC")
