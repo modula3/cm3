@@ -1,2 +1,15 @@
 
+c_source("UstatC")
 c_source ("UtimeC")
+c_source ("UnixC")
+
+if equal (TARGET, "MIPS64_OPENBSD")
+    Interface ("Ustat")
+    c_source("UdirC")
+end
+
+if equal (TARGET, "AMD64_LINUX")
+    Interface ("Ustat")
+    Interface ("Udir")
+    c_source("UdirC")
+end
