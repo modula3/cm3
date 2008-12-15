@@ -4,8 +4,8 @@
 
 INTERFACE Unix;
 
-FROM Ctypes IMPORT short, int, long, const_char_star, char_star, char_star_star;
-FROM Utypes IMPORT off_t, size_t, pid_t;
+FROM Ctypes IMPORT int, long, const_char_star, char_star, char_star_star;
+FROM Utypes IMPORT off_t, size_t;
 FROM Utime IMPORT struct_timeval;
 
 TYPE
@@ -31,6 +31,7 @@ CONST
   W_OK = 2;
   R_OK = 4;
 
+<*EXTERNAL*> PROCEDURE sbrk (inc: int): char_star;
 <*EXTERNAL*> PROCEDURE access (path: const_char_star; mod: int): int;
 <*EXTERNAL*> PROCEDURE chdir (path: const_char_star): int;
 <*EXTERNAL*> PROCEDURE close (d: int): int;
@@ -44,26 +45,11 @@ CONST
   F_SETFD = 2;
   F_GETFL = 3;
   F_SETFL = 4;
-
-  (* in this case, you need to pass LOOPHOLE (ADR (v), int)
-     for arg, where v is a variable of type struct_flock *)
   F_SETLK = 8;
-
-TYPE
-  struct_flock = RECORD
-    l_start: off_t := 0L;
-    l_len: off_t := 0L;
-    l_pid: pid_t := 0;
-    l_type: short;
-    l_whence: short;
-  END;
-
-CONST
   F_UNLCK = 2;
   F_WRLCK = 3;
 
 <*EXTERNAL*> PROCEDURE fcntl (fd, request, arg: int): int;
-
 <*EXTERNAL*> PROCEDURE flock (fd, operation: int): int;
 <*EXTERNAL*> PROCEDURE fsync (fd: int): int;
 <*EXTERNAL*> PROCEDURE getdtablesize (): int;
@@ -87,12 +73,12 @@ CONST (* lseek(whence) *)
 <*EXTERNAL*> PROCEDURE mkdir (path: const_char_star; mode: int): int;
 
 CONST
-  O_RDONLY = 16_0000;
-  O_RDWR = 16_0002;
-  O_CREAT = 16_0200;
-  O_EXCL = 16_0800;
-  O_TRUNC = 16_0400;
-  O_NONBLOCK = 16_0004;
+  O_RDONLY = 0;
+  O_RDWR = 2;
+  O_CREAT = 16_0040;
+  O_EXCL = 16_0080;
+  O_TRUNC = 16_0200;
+  O_NONBLOCK = 16_0800;
   O_NDELAY = O_NONBLOCK; (* compat *)
   M3_NONBLOCK = O_NONBLOCK;
 
@@ -103,6 +89,10 @@ CONST
   readEnd = 0;
   writeEnd = 1;
 <*EXTERNAL*> PROCEDURE pipe (VAR fildes: ARRAY [0..1] OF int): int;
+
+(* 1 for TRUE, 0 for FALSE, -1 for error (in errno) *)
+<*EXTERNAL "m3_RegularFileLock"*> PROCEDURE RegularFileLock(fd: int): INTEGER;
+<*EXTERNAL "m3_RegularFileUnlock"*> PROCEDURE RegularFileUnlock(fd: int): INTEGER;
 
 <*EXTERNAL*> PROCEDURE readlink (path: const_char_star; buf: ADDRESS; bufsize: int): int;
 <*EXTERNAL*> PROCEDURE rename (from, to: const_char_star): int;
