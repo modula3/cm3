@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.136 2008-12-13 18:56:24 jkrell Exp $
+# $Id: pylib.py,v 1.137 2008-12-15 17:29:40 jkrell Exp $
 
 import os
 from os import getenv
@@ -1104,6 +1104,7 @@ def Boot():
         }.get(Target) or ""))
 
     Link = (Compile + " " + ({
+        "AMD64_LINUX"       : " -lm -lpthread ",
         "MIPS64_OPENBSD"    : " -lm -lpthread ",
         "PPC32_OPENBSD"     : " -lm -lpthread ",
         "SPARC64_OPENBSD"   : " -lm -lpthread ",
