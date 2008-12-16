@@ -12,3 +12,8 @@ if equal (TARGET, "AMD64_LINUX")
     Interface ("Udir")
     c_source("UdirC")
 end
+
+if equal (TARGET, "NT386")
+    Interface ("Udir")
+    c_source("UdirC")
+end
