@@ -101,10 +101,6 @@ if HostIsNT ()
   DevNull2 = "2>nul:"
 end
 
-proc exists (x) is
-  return not stale (x, x)
-end
-
 readonly proc GNU_platform (x) is
   if Platform_info contains x
     return Platform_info{x}
@@ -146,7 +142,7 @@ readonly m3cc_config = {
   %
   % "SPARC64_SOLARIS" : "-without-gnu-ld -without-gnu-as",
   %
-  % Not for my initial build I patched config.h manually, but this should the same thing.
+  % Note for my initial build I patched config.h manually, but this should the same thing.
   % Also, native builds will probably just figure it out. This is needed for cross builds,
   % unless perhaps building binutils along with m3cg.
   % If m3cg omits the .register psuedo ops, assembly completely fails, with lots of errors.
@@ -229,17 +225,9 @@ local build_dir = "."  % let m3build set the build directory
 local Native = equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD)
 
 if not Native
-  build_dir = M3CC_HOST & "-" & M3CC_TARGET
+  build_dir = "../" & M3CC_HOST & "-" & M3CC_TARGET
   % make sure the derived directory exists
-  if not exists (build_dir)
-    exec ("-cd .. && mkdir " & build_dir)
-  end
-  build_dir = "../" & build_dir
-else
-  % make sure the derived directory exists
-  if not exists (build_dir)
-    exec ("-mkdir", build_dir)
-  end
+  fs_mkdir (build_dir)
 end
 
 m3cc_ResponseFileCounter = "0"
@@ -261,51 +249,17 @@ if defined ("FORCE")
   % Why not just rm -rf build_dir/*?
   % Scared of getting it wrong?
   %
-  if exists (build_dir & "/Makefile")
+  if fs_exists (build_dir & "/Makefile")
     exec("-cd " & build_dir & " && " & M3CC_MAKE & " distclean")
   end
-  foreach a in [
-      "cm3cg.exe",
-      "confdefs.h",
-      "config.log",
-      "cm3cg",
-      "gcc/as",
-      "gcc/config.log",
-      "gcc/config.cache",
-      "gcc/collect-ld",
-      "gcc/gcov-iov.h",
-      "gcc/insn-automata.c",
-      "gcc/insn-conditions.md",
-      "gcc/libada-mk",
-      "gcc/nm",
-      "gcc/m3cgc1.exe",
-      "gcc/m3cgc1",
-      "libdecnumber/gstdint.h",
-      "mpfr/get_patches.c",
-      ".M3SHIP",
-      done,
-      "_m3.log",
-      "_m3sh0.sh" ]
+  foreach a in ["cm3cg", "cm3cg.exe", "confdefs.h", "config.log", "cm3cg", ".M3SHIP", done, "_m3.log", "_m3sh0.sh"]
     delete_file(build_dir & "/" & a)
   end
   %
-  % Now delete directories that should be empty.
+  % Now delete directories.
   %
-  foreach a in [
-      "gcc/build", "gcc/doc", "gcc/m3cg", "gcc/treelang",
-      "gmp/demos/calc", "gmp/demos/expr", "gmp/tests/cxx",
-      "gmp/tests/devel", "gmp/tests/misc", "gmp/tests/mpbsd",
-      "gmp/tests/mpf", "gmp/tests/mpn", "gmp/tests/mpq",
-      "gmp/tests/mpz", "gmp/tests/rand", "gmp/cxx",
-      "gmp/demos", "gmp/doc", "gmp/mpbsd",
-      "gmp/mpf", "gmp/mpn", "gmp/mpq",
-      "gmp/mpz", "gmp/printf", "gmp/scanf",
-      "gmp/tests", "gmp/tune", "mpfr/tests",
-      "gcc", "gmp", "libcpp", "libdecnumber", "mpfr"
-      ]
-    if exists (build_dir & "/" & a)
-      exec("-rmdir " & build_dir & "/" & a)
-    end
+  foreach a in ["gcc", "gmp", "libcpp", "libdecnumber", "mpfr", "libiberty"]
+    fs_rmrec(build_dir & "/" & a)
   end
 end
 
@@ -336,7 +290,7 @@ ApplyPatches (M3CC_TARGET)
 
 if not defined ("no_config")
   % configure the sources
-  if not exists (done)
+  if not fs_exists (done)
     local Configure = " "
 
     %
@@ -385,7 +339,7 @@ if not defined ("no_config")
 end
 
 readonly proc ProbeExeExtension (a) is
-  return equal (TARGET, "NT386") or exists (a & ".exe")
+  return equal (TARGET, "NT386") or fs_exists (a & ".exe")
 end
 
 readonly proc AppendExeExtension (a) is
@@ -430,9 +384,9 @@ end
 m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host | tee -a _m3.log"])
 
 proc Sed (file0, find, replace) is
-  if exists (file0)
+  if fs_exists (file0)
     local file1 = file0 & ".1"
-    m3cc_Run (["sed", "-e", "\"s/" & find & "/" & replace & "/\"", "<", file0, ">", file1])
+    m3cc_Run (["sed", "-e", "'s/" & find & "/" & replace & "/'", "<", file0, ">", file1])
     m3cc_Run (["../gcc/move-if-change", file1, file0])
   end
 end
@@ -440,7 +394,7 @@ end
 foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
   foreach file in ["Makefile", "auto-host.h", "config.h"]
     local file = dir & "/" & file
-    if exists (file)
+    if fs_exists (file)
       %
       % remove libiconv dependency
       % It isn't needed, and stock Solaris install lacks it.

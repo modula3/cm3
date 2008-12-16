@@ -1883,6 +1883,8 @@ GenericCommand:
         if ((arg == "")
             or (arg in AllTargets)
             or (arg == "keep")
+            or (arg == "noclean")
+            or (arg == "nocleangcc")
             or (arg == "boot")):
             continue
         if arg.startswith("-"):

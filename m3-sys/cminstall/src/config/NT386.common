@@ -217,12 +217,12 @@ end
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
-m3back_options = [ ]
+m3back_flags = [ ]
 
 %
 % always generate information for debugging
 %
-m3back_options += "-gstabs+"
+m3back_flags += "-gstabs+"
 
 %
 % -mno-align-double is VERY IMPORTANT
@@ -233,19 +233,19 @@ m3back_options += "-gstabs+"
 % gets aligned and the runtime linking information is then
 % not at the expected offset and you crash in startup.
 %
-m3back_options += "-mno-align-double"
+m3back_flags += "-mno-align-double"
 
 %
 % Don't depend on cygwin1.dll.
 %
 if equal(OS_TYPE, "WIN32")
-    m3back_options += "-mno-cygwin"
+    m3back_flags += "-mno-cygwin"
 end
 
 %
 % Don't report timings and such.
 %
-m3back_options += "-quiet"
+m3back_flags += "-quiet"
 
 m3back_optimize = [ ]
 m3back_optimize += "-O"
@@ -262,12 +262,12 @@ proc m3_backend(source, object, optimize, debug) is
     if optimize
         args += m3back_optimize
     end
-    args += m3back_options
+    args += m3back_flags
     if M3_PROFILING
         args += "-p"
     end
     local m3back = GetM3Back()
-    return q_exec([m3back, args])
+    return try_exec(m3back, args)
 end
 
 %--------------------------------------------------------------- C compiler ---
