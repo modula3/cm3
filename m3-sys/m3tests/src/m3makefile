@@ -80,9 +80,17 @@ if defined ("LOG_CMPS")
   fs_rmfile(ComparisonLogFilePath)
 end
 
+proc FileExists(x) is
+    return not stale(x, x)
+end
+
 proc cmp_file (dir, file) is
   local ExpectedPath = dir & SL & file
   local OutputPath = dir & SL & BUILD_DIR & SL & file
+
+  if equal (WORD_SIZE, "64BITS") and FileExists (ExpectedPath & "64")
+    ExpectedPath = ExpectedPath & "64"
+  end
 
   %write ("cmp OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
   if stale (OutputPath, OutputPath)
