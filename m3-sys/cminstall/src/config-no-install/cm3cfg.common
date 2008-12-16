@@ -193,7 +193,7 @@ proc GetM3Back() is
                     foreach exe in [".exe", ""]
                         local a = root & host & target & gcc & exe
                         if not Cache contains a
-                            write("probing " & a & "\n")
+                            % write("probing " & a & "\n")
                             if FileExists(a)
                                 % write("using " & a & "\n")
                                 m3back = "@" & a & " " & m3back_flags
