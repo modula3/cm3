@@ -1134,7 +1134,7 @@ def Boot():
     Link = re.sub("  +", " ", Link)
     Assemble = re.sub("  +", " ", Assemble)
 
-    BootDir = "/cm3-boot-POSIX-" + Target + "-" + Version
+    BootDir = "/cm3-boot-" + Target + "-" + Version
 
     P = [ "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
           "m3objfile", "m3linker", "m3back", "m3front", "cm3" ]
