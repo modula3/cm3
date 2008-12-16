@@ -9,10 +9,13 @@ FROM Utypes IMPORT pid_t;
 IMPORT Uucontext;
 
 CONST
+  SIGHUP = 1;
   SIGINT = 2;
   SIGQUIT = 3;
   SIGABRT = 6;
   SIGKILL = 9;
+  SIGSEGV = 11;
+  SIGPIPE = 13;
   SIGTERM = 15;
   NSIG = 65; (* 129 on MIPS *)
   SA_RESTART = 16_10000000;
@@ -33,6 +36,7 @@ TYPE
   END;
 
 <*EXTERNAL*> PROCEDURE kill (pid: pid_t; sig: int): int;
+<*EXTERNAL*> PROCEDURE sigemptyset (VAR set: sigset_t): int;
 <*EXTERNAL*> PROCEDURE sigprocmask (how: int; READONLY set: sigset_t; VAR oset: sigset_t): int;
 <*EXTERNAL*> PROCEDURE sigsuspend (READONLY set: sigset_t): int;
 <*EXTERNAL*> PROCEDURE sigaction (sig: int; READONLY act: struct_sigaction; VAR oact: struct_sigaction): int;
