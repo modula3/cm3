@@ -4,6 +4,7 @@
 
 INTERFACE Utime;
 
+IMPORT Utypes;
 FROM Utypes IMPORT clock_t;
 FROM Ctypes IMPORT char_star, int, long, long_int, unsigned_short, short;
 
@@ -48,7 +49,7 @@ TYPE
   END;
 
   struct_tm_star = UNTRACED REF struct_tm;
-  time_t = int;
+  time_t = Utypes.time_t;
 
   struct_tms = RECORD
     tms_utime: clock_t;
