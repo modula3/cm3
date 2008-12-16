@@ -5,6 +5,8 @@
 /*
 Writing part of libm3/os/POSIX/FilePosix.m3/RegularFileLock, RegularFileUnlock in C
 saves us from having to declare struct flock, which is gnarled up in #ifdefs.
+
+see http://www.opengroup.org/onlinepubs/009695399/functions/fcntl.html
 */
 
 #define __USE_LARGEFILE64
@@ -32,7 +34,7 @@ INTEGER RegularFileLockC(int fd)
 
     ZeroMemory(&lock, sizeof(lock));
     lock.l_type = F_WRLCK;
-    lock.l_whence = L_SET;
+    lock.l_whence = SEEK_SET;
 
     if (fcntl(fd, F_SETLK, &lock) < 0)
     {
@@ -50,7 +52,7 @@ INTEGER RegularFileUnlockC(int fd)
 
     ZeroMemory(&lock, sizeof(lock));
     lock.l_type = F_UNLCK;
-    lock.l_whence = L_SET;
+    lock.l_whence = SEEK_SET;
 
     return fcntl(fd, F_SETLK, &lock);
 }

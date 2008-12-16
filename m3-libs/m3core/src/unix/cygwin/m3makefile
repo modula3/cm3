@@ -6,9 +6,8 @@
 %      modified on Wed Jun  9 17:03:32 PDT 1993 by harrison
 %      modified on Tue Mar  2 17:17:34 PST 1993 by muller
 
-% $Id: m3makefile,v 1.14 2008-06-01 04:51:50 jkrell Exp $
+% $Id: m3makefile,v 1.15 2008-12-16 16:40:43 jkrell Exp $
 
-Interface ("Udir")
 Interface ("Uerror")
 Interface ("Uexec")
 Interface ("Umman")

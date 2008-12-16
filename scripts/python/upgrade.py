@@ -1,10 +1,12 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.23 2008-04-21 17:06:12 jkrell Exp $
+# $Id: upgrade.py,v 1.24 2008-12-16 16:40:43 jkrell Exp $
 
 import sys
 import pylib
 from pylib import *
 
+cleangcc = not ("nocleangcc" in sys.argv)
+clean = not ("noclean" in sys.argv)
 argv_RealClean = [sys.argv[0], "realclean"] + sys.argv[1:]
 argv_BuildShip = [sys.argv[0], "buildship"] + sys.argv[1:]
 
@@ -24,11 +26,14 @@ CopyConfigForDevelopment() or sys.exit(1)
 # clean everything
 #
 
-DoPackage(
-    argv_RealClean, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
-                      "m3linker", "m3back", "m3staloneback", "m3front", "sysutils",
-                      "cm3", "mklib", "m3cc", "m3core", "libm3",
-    ]) or sys.exit(1)
+if clean:
+    DoPackage(
+        argv_RealClean, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
+                          "m3linker", "m3back", "m3staloneback", "m3front", "sysutils",
+                          "cm3", "mklib", "m3cc", "m3core", "libm3",
+        ]) or sys.exit(1)
+if cleangcc:
+    DoPackage(argv_RealClean, [ "m3cc" ]) or sys.exit(1)
 
 #
 # Now build the compiler with the installed version of the runtime;

@@ -2,51 +2,47 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-(* This file was generated from Uerror.i3.cpp. Do not edit it. *)
+(* This file was generated from ..\Common\Uerror.i3.cpp. Do not edit it. *)
 
 INTERFACE Uerror;
 
 CONST
-  EPERM = 1;
-  ENOENT = 2;
-  EINTR = 4;
-  EIO = 5;
-  ENOEXEC = 8;
-  EBADF = 9;
-  ECHILD = 10;
-  EAGAIN = 11;
-  ENOMEM = 12;
   EACCES = 13;
-  EEXIST = 17;
-  EISDIR = 21;
-  EINVAL = 22;
-  ENFILE = 23;
-  EMFILE = 24;
-  EPIPE = 32;
-  EDOM = 33;
-  ERANGE = 34;
-  ENAMETOOLONG = 91;
-  ENOTEMPTY = 90;
-  EWOULDBLOCK = EAGAIN;
-  ENOTSOCK = 108;
   EADDRINUSE = 112;
   EADDRNOTAVAIL = 125;
-  ENETDOWN = 115;
-  ENETUNREACH = 114;
-  ENETRESET = 126;
+  EAGAIN = 11;
+  EALREADY = 120;
+  EBADF = 9;
+  ECHILD = 10;
   ECONNABORTED = 113;
-  ECONNRESET = 104;
-  EISCONN = 127;
-  ETIMEDOUT = 116;
   ECONNREFUSED = 111;
+  ECONNRESET = 104;
+  EDOM = 33;
+  EEXIST = 17;
   EHOSTDOWN = 117;
   EHOSTUNREACH = 118;
   EINPROGRESS = 119;
-  EALREADY = 120;
+  EINTR = 4;
+  EINVAL = 22;
+  EIO = 5;
+  EISCONN = 127;
+  EISDIR = 21;
+  EMFILE = 24;
+  ENAMETOOLONG = 91;
+  ENETDOWN = 115;
+  ENETRESET = 126;
+  ENETUNREACH = 114;
+  ENFILE = 23;
+  ENOENT = 2;
+  ENOEXEC = 8;
+  ENOMEM = 12;
+  ENOTEMPTY = 90;
+  ENOTSOCK = 108;
+  EPERM = 1;
+  EPIPE = 32;
+  ERANGE = 34;
+  ETIMEDOUT = 116;
+  EWOULDBLOCK = EAGAIN;
+  Max = 127;
 
-(* Extension by mjordan *)
-CONST
-  Max = 140; (* should be exported from Uerror *)
-  
 END Uerror.
-

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.138 2008-12-16 12:00:54 jkrell Exp $
+# $Id: pylib.py,v 1.139 2008-12-16 16:40:43 jkrell Exp $
 
 import os
 from os import getenv
@@ -1883,6 +1883,8 @@ GenericCommand:
         if ((arg == "")
             or (arg in AllTargets)
             or (arg == "keep")
+            or (arg == "noclean")
+            or (arg == "nocleangcc")
             or (arg == "boot")):
             continue
         if arg.startswith("-"):
