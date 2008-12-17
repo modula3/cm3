@@ -121,7 +121,6 @@ readonly proc GetPackageDirectory() is
     %
     % older builds, such as 5.1.3, do not define PACKAGE_DIR
     % This is only used to point the user at a file to
-    %
     % help diagnose build errors, so ok to downgrade to
     % an empty string.
     %
