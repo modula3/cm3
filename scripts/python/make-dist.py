@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.46 2008-12-16 12:00:55 jkrell Exp $
+# $Id: make-dist.py,v 1.47 2008-12-17 14:47:34 jkrell Exp $
 
 import sys
 import os.path
@@ -132,8 +132,8 @@ def RealClean(Packages):
     # is desired. Er, then again, this doesn't touch STAGE,
     # it touches the output directories in the source tree.
     #
-    #return True
-    return Do("realclean", Packages)
+    return True
+    #return Do("realclean", Packages)
 
 def CreateSkel():
     for a in ("bin", "pkg"):
