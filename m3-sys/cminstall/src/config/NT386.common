@@ -262,7 +262,6 @@ proc m3_backend(source, object, optimize, debug) is
     if optimize
         args += m3back_optimize
     end
-    args += m3back_flags
     if M3_PROFILING
         args += "-p"
     end
