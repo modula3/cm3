@@ -132,8 +132,8 @@ def RealClean(Packages):
     # is desired. Er, then again, this doesn't touch STAGE,
     # it touches the output directories in the source tree.
     #
-    #return True
-    return Do("realclean", Packages)
+    return True
+    #return Do("realclean", Packages)
 
 def CreateSkel():
     for a in ("bin", "pkg"):
