@@ -1,3 +1,5 @@
+#define __USE_LARGEFILE64
+
 #include <assert.h>
 
 #ifndef _MSC_VER
