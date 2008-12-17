@@ -23,12 +23,12 @@ commonality. */
     INTEGER st_uid;
 } m3_stat_t;
 
-__inline void m3stat_set_mtime(m3_stat_t* m3st, LONGINT mtime) { m3st->st_mtime = mtime; }
-__inline void m3stat_set_rdev(m3_stat_t* m3st, LONGINT rdev) { m3st->st_rdev = rdev; }
-__inline void m3stat_set_size(m3_stat_t* m3st, LONGINT size) { m3st->st_size = size; }
-__inline void m3stat_set_gid(m3_stat_t* m3st, INTEGER gid) { m3st->st_gid = gid; }
-__inline void m3stat_set_mode(m3_stat_t* m3st, INTEGER mode) { m3st->st_mode = mode; }
-__inline void m3stat_set_uid(m3_stat_t* m3st, INTEGER uid) { m3st->st_uid = uid; }
+void m3stat_set_mtime(m3_stat_t* m3st, LONGINT mtime) { m3st->st_mtime = mtime; }
+void m3stat_set_rdev(m3_stat_t* m3st, LONGINT rdev) { m3st->st_rdev = rdev; }
+void m3stat_set_size(m3_stat_t* m3st, LONGINT size) { m3st->st_size = size; }
+void m3stat_set_gid(m3_stat_t* m3st, INTEGER gid) { m3st->st_gid = gid; }
+void m3stat_set_mode(m3_stat_t* m3st, INTEGER mode) { m3st->st_mode = mode; }
+void m3stat_set_uid(m3_stat_t* m3st, INTEGER uid) { m3st->st_uid = uid; }
 
 /* These headers sometimes #define away our identifiers st_mtime, etc.
    That is why we have the wrapper functions. */
