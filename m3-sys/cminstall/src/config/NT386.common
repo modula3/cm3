@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.44 2008-12-16 16:40:43 jkrell Exp $
+% $Id: NT386.common,v 1.45 2008-12-17 14:44:38 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -262,7 +262,6 @@ proc m3_backend(source, object, optimize, debug) is
     if optimize
         args += m3back_optimize
     end
-    args += m3back_flags
     if M3_PROFILING
         args += "-p"
     end
