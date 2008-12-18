@@ -552,7 +552,7 @@ call_function_by_hand (struct value *function, int nargs, struct value **args)
 #ifdef _LANG_m3
   /* For Modula-3, checking and coercing actuals/formals requires a lot more 
      information than is passed in here, so most of the work is done before 
-     calling call_function_by_hand and we skip doing it here.  However, there 
+     calling call_function_by_hand, and we skip doing it here.  However, there 
      are some kinds of parameters that require pushing auxiliary data on the 
      stack, prior to pushing any of the parameters themselves.  
      m3_push_aux_param_data takes care of this.  */ 

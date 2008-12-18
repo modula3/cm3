@@ -1,3 +1,5 @@
+/* *INDENT-OFF* */ 
+
 /* M3 language support routines for GDB, the GNU debugger.
    Copyright 1992, 1993 Free Software Foundation, Inc.
 
@@ -445,8 +447,24 @@ m3_indirect_type_from_type ( struct type *type );
 /* Where static link is stored, relative to frame locals. */ 
 extern const int static_link_offset; 
 
-extern struct frame_info * 
-m3_static_parent_frame ( struct frame_info *start_frame ); 
+CORE_ADDR 
+m3_1st_inf_static_link (struct frame_info *start_frame); 
+
+/* From start_frame, traverse the static chain and return the ancestor 
+   frame whose corresponding procedure block is the same as the procedure
+   block containing ancestor_block.  ancestor_block really should be an
+   ancestor of the block corresponding to start_frame. 
+   Also set *ancestor_static_link to the inferior static link value 
+   corresponding to this frame.  ancestor_static_link can be NULL.  
+   Emit an error message if can't get a good ancestor frame and static 
+   link value. 
+*/
+extern struct frame_info *
+m3_static_ancestor_frame (
+    struct frame_info * start_frame,
+    struct block * ancestor_block,
+    CORE_ADDR * ancestor_static_link
+  );
 
 extern int 
 m3_proc_closure_align ( ); 

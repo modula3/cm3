@@ -53,6 +53,10 @@ extern bool processing_pm3_compilation;
 */   
 extern bool procedures_have_extra_block; 
 
+extern const char * m3_static_link_var_name; 
+extern const char * m3_nonlocal_var_rec_name; 
+extern const char * m3_static_link_copy_field_name; 
+
 /* Use the directory name and object file name (taken from stabs SO entries,)
    to maybe detect the Modula-3 target name. */  
 extern void

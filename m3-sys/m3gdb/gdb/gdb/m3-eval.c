@@ -1,3 +1,5 @@
+/* *INDENT-OFF* */ 
+
 /* Modula-3 language support definitions for GDB, the GNU debugger.
    Copyright 2006, Free Software Foundation, Inc.
 
@@ -999,72 +1001,6 @@ m3_subtype_relation ( struct type * left, struct type * right )
       } /* switch ( left_code ) */ 
   } /* m3_subtype_relation */ 
 
-bool use_static_link = true; 
-
-/* Follow static links, as needed, to get the right frame for target_block. */ 
-static struct frame_info *
-m3_frame_for_block (struct block *target_block )
-{
-  struct frame_info *l_frame; 
-  struct block * l_frame_proc_block; 
-  struct block * l_target_proc_block ; 
-
-  CORE_ADDR start;
-  CORE_ADDR end;
-  CORE_ADDR calling_pc;
-
-  if ( target_block == NULL) { return NULL; } 
-  l_frame = deprecated_safe_get_selected_frame ( ); 
-  if ( use_static_link ) 
-    { /* Find the first frame in the static chain that has the same 
-         procedure-level block as target_block.  In a static chain, 
-         there can be only one such frame. 
-         It might be nice to count the number of static links followed,
-         but the number would have to be computed during expression 
-         parsing and stored in the OP_VAR_VALUE node, which would have 
-         to be changed to M3_OP_VAR_VALUE. */ 
-      l_target_proc_block = m3_block_proc_block ( target_block ); 
-      while ( l_frame != NULL ) 
-        { l_frame_proc_block 
-            = m3_block_proc_block 
-                ( get_frame_block ( l_frame , NULL ) 
-                  /* ^ Which may not be the right static ancestor block at all,
-                       but it doesn't matter, because we skip to the enclosing 
-                       procedure block for this block and target_block. */ 
-                ); 
-          if ( l_frame_proc_block == NULL ) { break; } 
-          if ( l_frame_proc_block == l_target_proc_block ) { return l_frame; } 
-          l_frame = m3_static_parent_frame ( l_frame );
-        } /* while */
-    } /* if */ 
-  /* If we fall through to here, using static links failed.  Try an older
-     method.  It will at least work in the absence of active frames for nested 
-     procedures that were called through procedure parameters. */ 
-  /* Starting with the selected frame and working outward, find the first
-     frame that belongs to block.  This is a crude way to locate non-local
-     variables/parameters of statically-enclosing procedures of the selected
-     frame's procedure.  If procedures are called as procedure constants,
-     this should find the right frame.  If something was called as the
-     value of a procedure parameter, it may be wrong.  
-  */
-  start = BLOCK_START ( target_block );
-  end = BLOCK_END ( target_block );
-  l_frame = deprecated_safe_get_selected_frame ( ); 
-  while ( true )
-    { if ( l_frame == NULL ) { return NULL; } 
-      calling_pc = get_frame_address_in_block ( l_frame );
-      if ( start <= calling_pc && calling_pc < end ) 
-        { warning 
-            (_("This could be wrong if a proc param with nested procedure value was called."));
-          return l_frame; 
-        }
-      l_frame = get_prev_frame ( l_frame );
-    } /* while */ 
-  /* That failed too. */ 
-  error (_("Static link does not lead to a valid frame."));
-  /* NORETURN */ 
-} /* m3_frame_for_block */ 
-
 /* Handle value conversion of an ordinal value for either assignment
    or parameter passing.  Returns an appropriate struct value * if 
    the types are ordinal and everything is OK.  Displays an error (and
@@ -1791,8 +1727,8 @@ m3_patched_proc_result_type (
 */ 
 
 /* If proc_const_value is a value for a procedure constant that is nested,
-   return a value for a closure for that procedure, using the current, 
-   user-selected frame to construct its environment pointer. 
+   return a value for a (gdb-space) closure for that procedure, using the 
+   current, user-selected frame to construct its environment pointer. 
    Nested or not, if inf_code_addr_result is non-NULL, set it to the 
    inferior code address of the procedure. */
 static struct value *
@@ -1804,10 +1740,11 @@ m3_nested_proc_const_closure (
 { struct type * proc_type; 
   struct block * callee_block; 
   struct block * callee_parent_proc_block; 
-  struct frame_info * static_link_frame; 
+  struct frame_info * callee_parent_frame; 
+  struct frame_info * referring_frame; 
   struct value * result; 
   CORE_ADDR inf_code_addr; 
-  CORE_ADDR static_link; 
+  CORE_ADDR inf_static_link; 
   
   if ( inf_code_addr_result != NULL ) { * inf_code_addr_result = 0; }
   if ( proc_const_value == NULL ) { return NULL; } 
@@ -1815,8 +1752,8 @@ m3_nested_proc_const_closure (
   if ( proc_type == NULL || TYPE_CODE ( proc_type ) != TYPE_CODE_FUNC ) 
     { return proc_const_value; }
   /* Types with TYPE_CODE_FUNC are constructed with length of 1 byte, but
-     Modula-3 calls will use these as the type of a (procedure) parameter to be
-     passed, whose size must be the size of a pointer. */ 
+     Modula-3 calls will use these as the type of a (procedure) parameter 
+     to be passed, whose size must be the size of a pointer. */ 
   TYPE_LENGTH ( proc_type ) = TARGET_PTR_BIT / TARGET_CHAR_BIT; 
   inf_code_addr 
     = VALUE_ADDRESS ( proc_const_value ) + value_offset ( proc_const_value ); 
@@ -1827,13 +1764,14 @@ m3_nested_proc_const_closure (
   if ( callee_parent_proc_block == NULL ) /* Not nested. */
     { result = proc_const_value; } 
   else /* Nested procedure. */  
-    { static_link_frame = m3_frame_for_block ( callee_parent_proc_block );  
-      static_link 
-        = get_frame_base_address ( static_link_frame )  
-          + m3_frame_base_to_sl_target_offset ( callee_parent_proc_block ); 
+    { referring_frame = deprecated_safe_get_selected_frame ( );
+      /* TODO: ^Push this frame value up to call sites. */  
+      callee_parent_frame 
+        = m3_static_ancestor_frame
+            ( referring_frame, callee_parent_proc_block, & inf_static_link); 
       result  
         = m3_build_gdb_proc_closure 
-            ( proc_type, inf_code_addr, static_link ); 
+            ( proc_type, inf_code_addr, inf_static_link ); 
     } 
   if ( inf_code_addr_result != NULL ) 
     { * inf_code_addr_result = inf_code_addr; }
@@ -2755,7 +2693,9 @@ m3_evaluate_subexp_maybe_packed (
         b = exp->elts[pc+1].block; 
         sym = exp->elts[pc+2].symbol; 
         if (symbol_read_needs_frame (sym))
-          { frame = m3_frame_for_block (b);
+          { frame 
+              = m3_static_ancestor_frame 
+                  ( deprecated_safe_get_selected_frame ( ), b, NULL );
             if (frame == NULL)
               { proc_sym = BLOCK_FUNCTION ( m3_block_proc_block ( b ) ); 
                 if ( proc_sym != NULL 
