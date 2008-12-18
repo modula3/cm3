@@ -1191,9 +1191,9 @@ inside_entry_func (struct frame_info *this_frame)
 }
 
 /* Return a structure containing various interesting information about
-   the frame that called THIS_FRAME.  Returns NULL if there is entier
+   the frame that called THIS_FRAME.  Returns NULL if there is either
    no such frame or the frame fails any of a set of target-independent
-   condition that should terminate the frame chain (e.g., as unwinding
+   conditions that should terminate the frame chain (e.g., as unwinding
    past main()).
 
    This function should not contain target-dependent tests, such as

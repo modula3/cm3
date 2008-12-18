@@ -1,3 +1,5 @@
+/* *INDENT-OFF* */ 
+
 /* Modula-3 language support definitions for GDB, the GNU debugger.
    Copyright 2006 Free Software Foundation, Inc.
 
@@ -1596,7 +1598,7 @@ m3_defaultMethods_from_tc_addr ( CORE_ADDR tc_addr )
 
 /*
  * m3_find_rec_field
- * takes: REC_TYPE - a m3 Record type
+ * takes: REC_TYPE - a m3 record type
  *        NAME - the name of a field of such a record as a character pointer
  *        SIZE - a reference to an integer, which this routine will
  *               fill the size of that field in.
@@ -1607,8 +1609,7 @@ m3_defaultMethods_from_tc_addr ( CORE_ADDR tc_addr )
  *
  * If SIZE, OFFSET or TYPE are NULL they won't be set.
  *
- * RETURNs 0 if NAME wasn't found in REC_TYPE
- *         1 otherwise.
+ * RETURNs true iff NAME was found in REC_TYPE.
  */
 bool
 m3_find_rec_field (
@@ -2191,67 +2192,457 @@ m3_indirect_type_from_type (struct type *type)
   return result; 
 }
 
+/* If proc_block was discovered earlier to contain an artificial, 
+   compiler-generated block, return it, otherwise, identity. */ 
+struct block * 
+m3_proc_body_block ( struct block * proc_block )
+
+{ struct block * result; 
+  struct symbol * proc_sym; 
+
+  if ( proc_block == NULL ) { return NULL; }
+  proc_sym = BLOCK_FUNCTION ( proc_block );
+  if ( proc_sym == NULL || SYMBOL_LANGUAGE ( proc_sym ) != language_m3 ) 
+    { return proc_block; }  
+  result = M3_BLOCK_BODY_BLOCK ( proc_block );   
+  if ( result == NULL ) { return proc_block; }  
+  return result; 
+} /* m3_proc_body_block */ 
+
+/* The symbol table that contains param_block. */ 
+struct symtab *
+m3_symtab_containing_block ( struct block * param_block ) 
+
+  { struct objfile *objfile = NULL;
+    struct blockvector *bv;
+    struct block *bl;
+    struct symtab *st = NULL;
+
+    /* Search the list of symtabs for one whose global block encloses the
+       inferior address range of this block.  */
+    ALL_SYMTABS (objfile, st)
+      {
+        bv = BLOCKVECTOR (st);
+        bl = BLOCKVECTOR_BLOCK (bv, GLOBAL_BLOCK);
+        if (BLOCK_START (bl) <= BLOCK_START (param_block)
+            && BLOCK_END (bl) > BLOCK_START (param_block))
+          { return st; } 
+      }
+    return NULL; 
+  } /* m3_symtab_containing_block */ 
+
+/* Return the symbol of procedure named 'name', that is nested inside
+   the block parent_block, found in block_symtab.  name is a "terminated
+   string", see m3_term_strings_equal.  parent_block can be a procedure 
+   block that contains an extra block for the procedure body.  
+   Return NULL if anything goes wrong. */ 
+struct symbol * 
+m3_lookup_nested_proc ( 
+    struct block * parent_block, 
+    struct symtab * block_symtab, 
+    char * name, 
+    char * name_to 
+  )
+
+  { struct blockvector * bv; 
+    struct block * body_block;
+    struct block * trial_block;
+    int i; 
+    struct symbol * trial_sym; 
+
+    if ( parent_block == NULL ) { return NULL; } 
+    body_block = m3_proc_body_block ( parent_block ); 
+    bv = BLOCKVECTOR ( block_symtab );
+    for ( i = 0; i < BLOCKVECTOR_NBLOCKS ( bv ); i ++ ) 
+      { trial_block = BLOCKVECTOR_BLOCK ( bv, i ); 
+        trial_sym = BLOCK_FUNCTION ( trial_block ); 
+        if ( trial_sym != NULL 
+             && TYPE_CODE ( SYMBOL_TYPE ( trial_sym ) ) == TYPE_CODE_FUNC 
+                /* ^Probably can't fail, but I'm paranoid. */ 
+             && BLOCK_SUPERBLOCK ( trial_block ) == body_block 
+             && m3_term_strings_equal 
+                  ( SYMBOL_NATURAL_NAME ( trial_sym ), NULL, name, name_to )
+           ) 
+          { return trial_sym; } 
+      } 
+    return NULL; 
+    
+  } /* m3_lookup_nested_proc */ 
+
+/* Return the 'block_no'-th block that is nested directly inside
+   'parent_block', found in 'block_symtab'.  Here, blocks are numbered
+   starting from one.  parent_block can be a procedure block that
+   contains an extra block for the procedure body. Return NULL if 
+   anything goes wrong. */ 
+struct block * 
+m3_find_nested_block ( 
+    struct block * parent_block, 
+    struct symtab * block_symtab, 
+    int block_no 
+  ) 
+
+  { struct blockvector * bv; 
+    struct block * body_block;
+    struct block * trial_block;
+    int i; 
+    int trial_block_no; 
+
+    if ( parent_block == NULL ) { return NULL; } 
+    body_block = m3_proc_body_block ( parent_block ); 
+    bv = BLOCKVECTOR ( block_symtab );
+    trial_block_no = 1; 
+    for ( i = 0; i < BLOCKVECTOR_NBLOCKS ( bv ); i ++ ) 
+      { trial_block = BLOCKVECTOR_BLOCK ( bv, i ); 
+        if ( BLOCK_FUNCTION ( trial_block ) == NULL 
+             && BLOCK_SUPERBLOCK ( trial_block ) == body_block 
+           ) 
+          { /* It's a directly nested block.  See if the right one. */ 
+            if ( trial_block_no == block_no ) 
+              { return trial_block; } 
+            else { trial_block_no ++; }  
+          } 
+      } 
+    return NULL; 
+    
+  } /* m3_find_nested_block */ 
+
+/* Given a block for a procedure, start_block, return the amount to add
+   to the frame base address to get the place in the activation record
+   where static links point. */ 
+ULONGEST 
+m3_frame_base_to_sl_target_offset ( struct block * start_block ) 
+
+  { struct symbol * offset_sym; 
+    struct block * proc_block;
+    struct block * body_block;
+    struct symtab * block_symtab; 
+
+    if (start_block == NULL) { return 0; } 
+    proc_block = m3_block_proc_block (start_block);
+    body_block = m3_proc_body_block (proc_block); 
+    offset_sym 
+      = lookup_block_symbol 
+          ( body_block, 
+            m3_nonlocal_var_rec_name, NULL, VAR_DOMAIN 
+          );
+    if (offset_sym == NULL) { return 0; }
+    return SYMBOL_VALUE (offset_sym);  
+  } /* m3_frame_base_to_sl_target_offset */ 
+
+/* Return the procedure block of the static parent procedure of
+   the referring procedure, which child_block is inside* of. 
+   NULL if child_block is NULL or no such block exists.
+*/ 
+static struct block * 
+m3_static_parent_proc_block ( struct block * child_block )
+
+{ struct block * child_proc_block; 
+  struct block * parent_block; 
+  struct block * parent_proc_block; 
+
+  child_proc_block = m3_block_proc_block (child_block); 
+  if (child_proc_block != NULL)
+    { parent_block = BLOCK_SUPERBLOCK (child_proc_block); } 
+  parent_proc_block = m3_block_proc_block (parent_block); 
+  return parent_proc_block; 
+} /* m3_static_parent_proc_block */ 
+
 /* TODO:  Make this target-dependent value adapt.  It does seems to be very 
           deeply built in to gcc (and the standalone backend too) that it is 
           always the first thing in the local variables area, but it will
           still vary with stack growth direction. */ 
 static const int static_link_location_offset = - 4; 
 
-/* This must agree with the string defined by the same name in the gcc backend,
-   tree-nested.c */ 
-static const char * static_link_var_name = "_static_link_var"; 
-
+/* This is the actual SL value that is used in the inferior.  
+   It may point to a different place in the activation record
+   than where the base pointer points. 
+*/ 
 CORE_ADDR 
-m3_inf_static_link ( struct frame_info *start_frame ) 
+m3_1st_inf_static_link (struct frame_info *start_frame) 
 
   { long displ; 
-    struct block * proc_block; 
+    struct block * referring_block; 
+    struct block * referring_proc_block; 
+    struct block * target_proc_block; 
+    struct block * target_body_block; 
     struct symbol * sl_sym; 
+    struct value * sl_value; 
     CORE_ADDR inf_frame_address; 
     CORE_ADDR static_link; 
+    CORE_ADDR offset; 
 
     inf_frame_address = get_frame_locals_address (start_frame);   
-    proc_block = m3_block_proc_block (get_frame_block (start_frame, NULL)); 
-    sl_sym = lookup_block_symbol 
-               (proc_block, static_link_var_name, NULL, VAR_DOMAIN);
-    if (false && sl_sym != NULL) 
-/* FIXME: This is disabled for now, because I couldn't find where
-   gcc puts the displacement of stored static link field. 
-*/ 
-      { displ = SYMBOL_VALUE(sl_sym); }
-    else 
-      { displ = static_link_location_offset; } 
-    static_link 
-      = read_memory_typed_address /* from gdbcore.h */ 
-          ( inf_frame_address + displ, builtin_type_void_data_ptr );
-    return static_link - m3_frame_base_to_sl_target_offset ( proc_block );  
-  } /* m3_inf_static_link */  
+    referring_block = get_frame_block (start_frame, NULL); 
+    referring_proc_block = m3_block_proc_block (referring_block); 
+    target_proc_block = m3_static_parent_proc_block (referring_proc_block); 
+    target_body_block = m3_proc_body_block (target_proc_block); 
+    sl_sym 
+      = lookup_block_symbol 
+          (referring_proc_block, m3_static_link_var_name, NULL, VAR_DOMAIN);
+    if (sl_sym != NULL) 
+      { sl_value = read_var_value (sl_sym, start_frame);
+        static_link = m3_value_as_address (sl_value); 
+      }
+    else /* An older compiler that always puts SL in a fixed place. */ 
+      { displ = static_link_location_offset;  
+        static_link 
+          = read_memory_typed_address /* from gdbcore.h */ 
+              ( inf_frame_address + displ, builtin_type_void_data_ptr );
+      } 
+    offset = m3_frame_base_to_sl_target_offset ( target_body_block );  
+    return static_link /* - offset */; 
+  } /* m3_1st_inf_static_link */  
 
-struct frame_info * 
-m3_static_parent_frame ( struct frame_info *start_frame ) 
+/* starting_link is an inferior static link value that points into an
+   activation record for referring_block.  Return the next inferior 
+   static link, for the next outer containing activation record, found
+   in the nonlocally referenced record of the block.  Such a static
+   link will exist only when compiled by later gcc backends.  Return
+   zero if it can't be found.  
+    
+ */
+CORE_ADDR 
+m3_inf_subseq_static_link (
+    struct block * referring_block, CORE_ADDR starting_link) 
+
+  { struct block * referring_proc_block; 
+    struct symbol * nonlocal_var_sym; 
+    struct type * nonlocal_var_type; 
+    struct type * field_type; 
+    CORE_ADDR static_link; 
+    int bitsize;  
+    int bitpos; 
+
+
+    referring_proc_block = m3_block_proc_block (referring_block); 
+    nonlocal_var_sym 
+      = lookup_block_symbol 
+          (referring_proc_block, m3_nonlocal_var_rec_name, NULL, VAR_DOMAIN);
+    if (nonlocal_var_sym != NULL) 
+      { nonlocal_var_type = SYMBOL_TYPE (nonlocal_var_sym);
+        if ( m3_find_rec_field 
+               ( nonlocal_var_type, m3_static_link_copy_field_name, 
+                 & bitsize, & bitpos, & field_type
+               )
+           ) 
+          { static_link 
+              = read_memory_typed_address /* from gdbcore.h */ 
+                  ( starting_link + bitpos / TARGET_CHAR_BIT, 
+                    builtin_type_void_data_ptr 
+                  );
+            return static_link; 
+          } 
+      } 
+    return 0; 
+  } /* m3_inf_subseq_static_link */  
+
+/* Using the selected frame as a starting point, the frame whose corresponding
+   inferior activation record contains inf_addr. 
+*/ 
+static struct frame_info * 
+m3_frame_containing_inf_addr ( 
+    CORE_ADDR inf_addr, struct frame_info * start_frame ) 
 
   { struct frame_info * frame ; 
     CORE_ADDR inf_static_link; 
 
-    if (start_frame == NULL) return NULL; 
-
-    inf_static_link = m3_inf_static_link (start_frame);  
     frame = start_frame; 
-    do 
-      { frame = get_prev_frame (frame); 
-        if (frame == NULL) { return NULL; } 
-      } 
+    do { frame = get_prev_frame (frame); } 
     while 
       ( frame != NULL 
-        /* Using m3_address_lies_within_frame_locals adds some immunity to gcc's
-           debugger-hostile habit of making static links point elsewhere  
-           within the activation record than where the frame pointer does. */ 
-        && ! m3_address_lies_within_frame_locals ( inf_static_link, frame ) 
+        && ! m3_address_lies_within_frame_locals ( inf_addr, frame ) 
+        /* Using m3_address_lies_within_frame_locals instead of requiring
+           an exact inferior activation record address match adds some 
+           immunity to gcc's debugger-hostile habit of making static links 
+           point elsewhere within the activation record than where the 
+           frame pointer does. */ 
       ); 
-/* TODO: Check that we get a frame for the expected block. */ 
     return frame; 
-  } /* m3_static_parent_frame */ 
+  } /* m3_frame_containing_inf_addr */ 
 
+/* Compute and return the inferior static link value that points to the
+   activation record of frame, as compiler-generated code would pass it. 
+   For SRC, PM3, EZM3, and CM3s that use a code generator based on gcc
+   not later than 2.7.2, this is just the traditional pointer to the base
+   of the activation record.  For code generators starting with 4.3.0, it
+   will be the pointer to the record of nonlocally accessed variables and
+   formals, located inside the activation record. 
+*/
+CORE_ADDR
+m3_static_link_pointing_to_frame (struct frame_info * start_frame)
+  { CORE_ADDR inf_ar_base_addr;  
+    CORE_ADDR displ; 
+    CORE_ADDR result; 
+    struct block * proc_block; 
+    struct symbol * nonlocal_var_sym; 
+    struct type * nonlocal_var_type; 
+    struct type * field_type; 
+    int bitsize;  
+    int bitpos; 
+
+    inf_ar_base_addr = get_frame_locals_address (start_frame); 
+    proc_block = m3_block_proc_block (get_frame_block (start_frame, NULL)); 
+    nonlocal_var_sym 
+      = lookup_block_symbol 
+          (proc_block, m3_nonlocal_var_rec_name, NULL, VAR_DOMAIN);
+    if (nonlocal_var_sym != NULL) { displ = SYMBOL_VALUE(nonlocal_var_sym); } 
+    else { displ = 0; }
+    result
+      = read_memory_typed_address /* from gdbcore.h */ 
+          ( inf_ar_base_addr + displ, builtin_type_void_data_ptr );
+    return result; 
+  
+  } /* m3_static_link_pointing_to_frame */ 
+
+bool use_static_link = true; 
+
+/* Like m3_static_ancestor_frame, except just return NULL 
+   if can't get a good ancestor frame and static link value. 
+*/
+static struct frame_info *
+m3_inner_static_ancestor_frame (
+    struct frame_info * start_frame,
+    struct block * ancestor_block,
+    CORE_ADDR * ancestor_static_link
+  )
+
+  { struct block * ancestor_proc_block;
+    struct block * l_proc_block;
+    struct frame_info * l_frame; 
+    struct symbol * ancestor_proc_sym;
+    char * ancestor_proc_name; 
+    CORE_ADDR l_link; 
+    CORE_ADDR start;
+    CORE_ADDR end;
+    CORE_ADDR calling_pc;
+
+    if (ancestor_static_link != 0) { * ancestor_static_link = 0; }  
+    if (start_frame == NULL) { return NULL; }
+    ancestor_proc_block = m3_block_proc_block (ancestor_block);
+    if (ancestor_proc_block == NULL) { return NULL; }
+    l_frame = start_frame;
+    l_proc_block = m3_block_proc_block (get_frame_block (l_frame, NULL)); 
+    if (l_proc_block == ancestor_proc_block) 
+      /* We followed zero static links. */
+      { /* Get the right static link value for start_frame. */
+        if (ancestor_static_link != 0) 
+          { * ancestor_static_link 
+              = m3_static_link_pointing_to_frame (start_frame); 
+          }  
+        return start_frame; 
+      }
+    if (use_static_link) 
+      { /* Now follow the first static link. */ 
+        l_link = m3_1st_inf_static_link (start_frame);
+        l_frame = m3_frame_containing_inf_addr (l_link, l_frame);
+        if (l_frame != NULL) 
+          { l_proc_block 
+              = m3_block_proc_block (get_frame_block (l_frame, NULL)); 
+            while (true)
+              { if (l_proc_block == ancestor_proc_block) 
+                  /* Found the link and frame for the right block. */ 
+                  { if (ancestor_static_link != 0) 
+                      { * ancestor_static_link = l_link; }  
+                    return l_frame;
+                  } 
+                /* Advance another static link. */ 
+                l_link = m3_inf_subseq_static_link ( l_proc_block, l_link);
+                if (l_link != 0)
+                  { l_frame = m3_frame_containing_inf_addr (l_link, l_frame);
+                    if (l_frame == NULL) { break; }
+                    l_proc_block 
+                      = m3_block_proc_block (get_frame_block (l_frame, NULL)); 
+                  } 
+                else /* Try to find the static link the standard way. */
+                  { l_link = m3_1st_inf_static_link (l_frame);
+                    l_frame = m3_frame_containing_inf_addr (l_link, l_frame);
+                    if (l_frame == NULL) { break; }
+                    l_proc_block 
+                      = m3_block_proc_block (get_frame_block (l_frame, NULL)); 
+                  } 
+              } 
+          }
+      }
+
+    /* If we fall through to here, following static links failed.  
+       Try a cruder method.  
+
+       Follow _dynamic_ ancestors, looking for the first frame corresponding
+       to ancestor_block.  This is a crude way to locate non-local
+       variables/parameters of statically-enclosing procedures of the selected
+       frame's procedure.  If all procedures are called as procedure constants,
+       this should find the right frame.  If something was called as the
+       value of a procedure parameter, it may be wrong.  
+    */
+    start = BLOCK_START ( ancestor_block );
+    end = BLOCK_END ( ancestor_block );
+    l_frame = start_frame; 
+    while ( true )
+      { if ( l_frame == NULL ) { return NULL; } 
+        calling_pc = get_frame_address_in_block ( l_frame );
+        if ( start <= calling_pc && calling_pc < end ) 
+          /* Found it the approximate way. */ 
+          { ancestor_proc_sym = BLOCK_FUNCTION (ancestor_proc_block);
+            if (ancestor_proc_sym != NULL) 
+              { ancestor_proc_name = SYMBOL_PRINT_NAME (ancestor_proc_sym); }  
+            else {ancestor_proc_name = ""; }
+            warning 
+              (_("This could be the wrong instance of procedure %s, "
+                  "if a proc param with a nested procedure value was called."
+                ),
+                ancestor_proc_name
+              );
+            if (ancestor_static_link != 0) 
+              { l_link = m3_static_link_pointing_to_frame (l_frame); 
+                * ancestor_static_link = l_link; 
+              }  
+            return l_frame; 
+          }
+        l_frame = get_prev_frame ( l_frame );
+      } /* while */ 
+    /* That failed too. */
+    return NULL;  
+  } /* m3_inner_static_ancestor_frame */  
+
+/* From start_frame, traverse the static chain and return the ancestor 
+   frame whose corresponding procedure block is the same as the procedure
+   block containing ancestor_block.  ancestor_block really should be an
+   ancestor of the block corresponding to start_frame. 
+   Also set *ancestor_static_link to the inferior static link value 
+   corresponding to this frame.  ancestor_static_link can be NULL.  
+   Emit an error message if can't get a good ancestor frame and static 
+   link value.  
+*/
+struct frame_info *
+m3_static_ancestor_frame (
+    struct frame_info * start_frame,
+    struct block * ancestor_block,
+    CORE_ADDR * ancestor_static_link
+  )
+
+  { struct frame_info * result; 
+    struct symbol * ancestor_sym;
+    struct symbol * ancestor_proc_sym;
+    char * ancestor_proc_name; 
+
+    result 
+      = m3_inner_static_ancestor_frame 
+          (start_frame, ancestor_block, ancestor_static_link); 
+    if (result == NULL) 
+      { ancestor_proc_sym 
+          = BLOCK_FUNCTION (m3_block_proc_block (ancestor_block)); 
+        if (ancestor_proc_sym != NULL) 
+          { ancestor_proc_name = SYMBOL_PRINT_NAME (ancestor_proc_sym); }  
+        else {ancestor_proc_name = ""; }
+        error 
+          ( _("Static links do not lead to a valid frame for procedure \"%s\"."),
+            ancestor_proc_name 
+          ); /* NORETURN */ 
+      } 
+    return result;
+  } /* m3_static_ancestor_frame */ 
+
+/* Inferior alignment for procedure closures. */ 
 int 
 m3_proc_closure_align ( ) 
   { return m3_target_integer_bit / TARGET_CHAR_BIT; }
@@ -2267,9 +2658,9 @@ m3_alloc_closure_type ( struct type * proc_type )
 
   /* FIXME: There is only one type object builtin_type_m3_proc_closure, 
      and we always return it.  We ought to allocate a new one here,
-     because we patch its TYPE_TARGET_TYPE.  But it would need to be
-     in the same space as values, and that would entail duplicating
-     allocate_type.  Instead, we assume there will never be more than one 
+     because we patch its TYPE_TARGET_TYPE.  But then it would need to be
+     in the same space as values, and that would further entail duplicating
+     proc_type.  Instead, we assume there will never be more than one 
      user command being evaluated at a time and only one call at a time
      within a command, even for nested calls.  So we should be able to
      get away with this.  But it's sleazy. */ 
@@ -2374,7 +2765,8 @@ m3_proc_env_ptr ( const gdb_byte * valaddr, int bitpos )
 
     inf_addr = m3_extract_address ( valaddr, bitpos );  
     if ( m3_inf_address_is_proc_closure ( inf_addr ) ) 
-      { closure_value = value_at_lazy ( builtin_type_m3_proc_closure, inf_addr );
+      { closure_value 
+          = value_at_lazy ( builtin_type_m3_proc_closure, inf_addr );
       /* Kinda sleazy, reusing builtin_type_m3_proc_closure, without even 
          patching its target type, but I think it will work. */ 
         return 
@@ -2384,7 +2776,7 @@ m3_proc_env_ptr ( const gdb_byte * valaddr, int bitpos )
     else { return 0; } 
   } /* m3_proc_env_ptr */ 
 
-/* Return the first superblock ancestor* of block that is a function block. */
+/* Return the first superblock* ancestor of block that is a function block. */
 struct block * 
 m3_block_proc_block ( struct block * blk ) 
 
@@ -2428,145 +2820,44 @@ m3_block_locals_range ( struct block * blk, LONGEST * min, LONGEST * max )
     if ( max != NULL ) { * max = l_max; }  
   } /* m3_block_locals_range */ 
 
+/* Does (inferior) address lie within the range of the parameters and local
+   variables of frame?
+*/ 
 bool 
 m3_address_lies_within_frame_locals ( 
     CORE_ADDR address, 
     struct frame_info * frame 
   ) 
 
-{ struct block * blk; 
-  LONGEST min_displ; 
-  LONGEST max_displ; 
+{ struct block * proc_block; 
+  struct block * body_block; 
+  LONGEST min_proc_displ = 0; 
+  LONGEST max_proc_displ = 0; 
+  LONGEST min_body_displ = 0; 
+  LONGEST max_body_displ = 0; 
+  LONGEST min_displ = 0; 
+  LONGEST max_displ = 0; 
   CORE_ADDR locals_address; 
   
   if ( frame == NULL ) { return false; } 
-  blk = m3_block_proc_block ( get_frame_block ( frame, NULL ) ); 
-  if ( blk == NULL ) { return false; } 
-  m3_block_locals_range ( blk, & min_displ, & max_displ ); 
+  proc_block = m3_block_proc_block ( get_frame_block ( frame, NULL ) ); 
+  if ( proc_block == NULL ) { return false; } 
+  body_block = m3_proc_body_block (proc_block);
+  m3_block_locals_range (body_block, & min_body_displ, & max_body_displ); 
+  /* Accounting for displacements in the proc block could be a bit of
+     overkill, but I'm paranoid.
+  */  
+  if (proc_block != body_block) 
+    { m3_block_locals_range (proc_block, & min_proc_displ, & max_proc_displ);}
+  if (min_proc_displ < min_body_displ) { min_displ = min_proc_displ; }
+  else { min_displ = min_body_displ; }
+  if (max_proc_displ > max_body_displ) { max_displ = max_proc_displ; }
+  else { max_displ = max_body_displ; }
   locals_address = get_frame_locals_address ( frame ); 
   if ( address < locals_address + min_displ ) { return false; } 
-  if ( address >= locals_address + max_displ ) { return false; } 
+  if ( address > locals_address + max_displ ) { return false; } 
   return true; 
 } /* m3_address_lies_within_block_locals */ 
-
-/* This must agree with the string defined by the same name in the gcc backend,
-   file tree-nested.c */
-/* Actually, it's unused as of 2008-9-9, but it may be used in the future. */  
-static const char * static_link_copy_field_name = "_static_link_copy_field"; 
-
-/* This must agree with the string defined by the same name in the gcc backend,
-   tree_nested.c */ 
-static const char * nonlocal_var_rec_name = "_nonlocal_var_rec"; 
-
-/* Given a block for a procedure procblock, return the amount to add
-   to the frame base address to get the place in the activation record
-   where static links point. */ 
-ULONGEST 
-m3_frame_base_to_sl_target_offset ( struct block * procblock ) 
-
-  { struct symbol * offset_sym; 
-
-    if ( procblock == NULL ) { return 0; } 
-    offset_sym 
-      = lookup_block_symbol 
-          ( m3_block_proc_block ( procblock ), 
-            nonlocal_var_rec_name, NULL, VAR_DOMAIN 
-          );
-    if ( offset_sym == NULL ) { return 0; }
-    return SYMBOL_VALUE ( offset_sym );  
-  } /* m3_frame_base_to_sl_target_offset */ 
-
-/* If proc_block was discovered earlier to contain an artificial, 
-   compiler-generated block, return it, otherwise, identity. */ 
-struct block * 
-m3_proc_body_block ( struct block * proc_block )
-
-{ struct block * result; 
-  struct symbol * proc_sym; 
-
-  if ( proc_block == NULL ) { return NULL; }
-  proc_sym = BLOCK_FUNCTION ( proc_block );
-  if ( proc_sym == NULL || SYMBOL_LANGUAGE ( proc_sym ) != language_m3 ) 
-    { return proc_block; }  
-  result = M3_BLOCK_BODY_BLOCK ( proc_block );   
-  if ( result == NULL ) { return proc_block; }  
-  return result; 
-} /* m3_proc_body_block */ 
-
-/* Return the symbol of procedure named 'name', that is nested inside
-   the block parent_block, found in block_symtab.  name is a "terminated
-   string", see m3_term_strings_equal.  parent_block can be a procedure 
-   block that contains an extra block for the procedure body.  
-   Return NULL if anything goes wrong. */ 
-struct symbol * 
-m3_lookup_nested_proc ( 
-    struct block * parent_block, 
-    struct symtab * block_symtab, 
-    char * name, 
-    char * name_to 
-  )
-
-  { struct blockvector * bv; 
-    struct block * body_block;
-    struct block * trial_block;
-    int i; 
-    struct symbol * trial_sym; 
-
-    if ( parent_block == NULL ) { return NULL; } 
-    body_block = m3_proc_body_block ( parent_block ); 
-    bv = BLOCKVECTOR ( block_symtab );
-    for ( i = 0; i < BLOCKVECTOR_NBLOCKS ( bv ); i ++ ) 
-      { trial_block = BLOCKVECTOR_BLOCK ( bv, i ); 
-        trial_sym = BLOCK_FUNCTION ( trial_block ); 
-        if ( trial_sym != NULL 
-             && TYPE_CODE ( SYMBOL_TYPE ( trial_sym ) ) == TYPE_CODE_FUNC 
-                /* ^Probably can't fail, but I'm paranoid. */ 
-             && BLOCK_SUPERBLOCK ( trial_block ) == body_block 
-             && m3_term_strings_equal 
-                  ( SYMBOL_NATURAL_NAME ( trial_sym ), NULL, name, name_to )
-           ) 
-          { return trial_sym; } 
-      } 
-    return NULL; 
-    
-  } /* m3_lookup_nested_proc */ 
-
-/* Return the 'block_no'-th block that is nested directly inside
-   'parent_block', found in 'block_symtab'.  Here, blocks are numbered
-   starting from one.  parent_block can be a procedure block that
-   contains an extra block for the procedure body. Return NULL if 
-   anything goes wrong. */ 
-struct block * 
-m3_find_nested_block ( 
-    struct block * parent_block, 
-    struct symtab * block_symtab, 
-    int block_no 
-  ) 
-
-  { struct blockvector * bv; 
-    struct block * body_block;
-    struct block * trial_block;
-    int i; 
-    int trial_block_no; 
-
-    if ( parent_block == NULL ) { return NULL; } 
-    body_block = m3_proc_body_block ( parent_block ); 
-    bv = BLOCKVECTOR ( block_symtab );
-    trial_block_no = 1; 
-    for ( i = 0; i < BLOCKVECTOR_NBLOCKS ( bv ); i ++ ) 
-      { trial_block = BLOCKVECTOR_BLOCK ( bv, i ); 
-        if ( BLOCK_FUNCTION ( trial_block ) == NULL 
-             && BLOCK_SUPERBLOCK ( trial_block ) == body_block 
-           ) 
-          { /* It's a directly nested block.  See if the right one. */ 
-            if ( trial_block_no == block_no ) 
-              { return trial_block; } 
-            else { trial_block_no ++; }  
-          } 
-      } 
-    return NULL; 
-    
-  } /* m3_find_nested_block */ 
 
 /* PRE: string,string_to are a terminated string that is all digits.
    Convert it to an integer.

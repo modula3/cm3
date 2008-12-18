@@ -1,7 +1,7 @@
 /* *INDENT-OFF* */ 
 
 /* Support for printing Modula-3 values for GDB, the GNU debugger.
-   Copyright 1994, Digitial Equipement Corporation */
+   Copyright 1994, Digital Equipement Corporation */
 
 #include <stdbool.h>
 
@@ -22,18 +22,18 @@
 static ULONGEST 
 m3_trunc_to_bits ( ULONGEST val, int bitct ) 
 
-{ ULONGEST mask;
-  int trunc_bit;  
+  { ULONGEST mask;
+    int trunc_bit;  
 
-  if ( bitct <= 0 ) 
-    { return val; } 
-  if ( bitct < TARGET_CHAR_BIT * sizeof ( ULONGEST ) ) 
-    { mask = ( ( ULONGEST ) - 1 ) << bitct; 
-      return val & ( ~ mask) ; 
-    } 
-  else { return val; }
+    if ( bitct <= 0 ) 
+      { return val; } 
+    if ( bitct < TARGET_CHAR_BIT * sizeof ( ULONGEST ) ) 
+      { mask = ( ( ULONGEST ) - 1 ) << bitct; 
+        return val & ( ~ mask) ; 
+      } 
+    else { return val; }
 
-} /* m3_truncate_to_target_size */
+  } /* m3_trunc_to_bits */
 
 static void 
 m3_print_scalar (
@@ -44,75 +44,76 @@ m3_print_scalar (
      int format,
      int trunc_bits /* If > 0, truncate from left to this many bits. */ 
   )
-{
-  LONGEST rawval, val; 
 
-  rawval = m3_extract_ord ( valaddr, bitpos, bitsize, trunc_bits > 0 );
-  val = m3_trunc_to_bits ( rawval, trunc_bits ) ;
-  switch ( format ) {
-    case '&':
-      if ( val == 0 )
-	{ fputs_filtered ( "NIL", stream ); 
-          break; 
-        } 
-      /* else fall through. */ 
-    case 'x':
-        { fputs_filtered ( "16_", stream ); 
-          fputs_filtered 
-            ( int_string ( val, 16, 0, ( bitsize + 3 ) / 4, 0 ), 
-              stream 
-            );
-          break;
-        } 
-    case 'o': 
-      fputs_filtered ( "8_", stream ); 
-      fputs_filtered 
-        ( int_string 
-	    ( val, 8, 0, ( bitsize + 2 ) / 3, 0 ), 
-          stream 
-        ); 
-      break;
-    case 'b': 
-      fputs_filtered ( "16_", stream ); 
-      fputs_filtered ( int_string ( val, 16, 0, 2, 0 ), stream ); 
-      break;
-    case 'h': 
-      fputs_filtered ( "16_", stream ); 
-      fputs_filtered ( int_string ( val, 16, 0, 4, 0 ), stream ); 
-      break;
-    case 'w': 
-      fputs_filtered ( "16_", stream ); 
-      fputs_filtered ( int_string ( val, 16, 0, 8, 0 ), stream ); 
-      break;
-    case 'g': 
-      fputs_filtered ( "16_", stream ); 
-      fputs_filtered ( int_string ( val, 16, 0, 16, 0 ), stream ); 
-      break;
-    case 'u':
-      fputs_filtered ( int_string ( val, 10, 0, 0, 0 ), stream ); 
-      break;
-    case 'd':
-    case 0: 
-      fputs_filtered ( int_string ( val, 10, 1, 0, 0 ), stream ); 
-      break;
-    default:  
-      fputs_filtered ( int_string ( val, 10, 1, 0, 0 ), stream ); 
-      fprintf_filtered 
-        ( stream, 
-          "<Format '%c' is invalid for Modula-3 scalar.>", 
-          (char) format 
-        ); 
-  } 
-}
+  { LONGEST rawval, val; 
+
+    rawval = m3_extract_ord ( valaddr, bitpos, bitsize, trunc_bits > 0 );
+    val = m3_trunc_to_bits ( rawval, trunc_bits ) ;
+    switch ( format ) {
+      case '&':
+        if ( val == 0 )
+          { fputs_filtered ( "NIL", stream ); 
+            break; 
+          } 
+        /* else fall through. */ 
+      case 'x':
+          { fputs_filtered ( "16_", stream ); 
+            fputs_filtered 
+              ( int_string ( val, 16, 0, ( bitsize + 3 ) / 4, 0 ), 
+                stream 
+              );
+            break;
+          } 
+      case 'o': 
+        fputs_filtered ( "8_", stream ); 
+        fputs_filtered 
+          ( int_string 
+              ( val, 8, 0, ( bitsize + 2 ) / 3, 0 ), 
+            stream 
+          ); 
+        break;
+      case 'b': 
+        fputs_filtered ( "16_", stream ); 
+        fputs_filtered ( int_string ( val, 16, 0, 2, 0 ), stream ); 
+        break;
+      case 'h': 
+        fputs_filtered ( "16_", stream ); 
+        fputs_filtered ( int_string ( val, 16, 0, 4, 0 ), stream ); 
+        break;
+      case 'w': 
+        fputs_filtered ( "16_", stream ); 
+        fputs_filtered ( int_string ( val, 16, 0, 8, 0 ), stream ); 
+        break;
+      case 'g': 
+        fputs_filtered ( "16_", stream ); 
+        fputs_filtered ( int_string ( val, 16, 0, 16, 0 ), stream ); 
+        break;
+      case 'u':
+        fputs_filtered ( int_string ( val, 10, 0, 0, 0 ), stream ); 
+        break;
+      case 'd':
+      case 0: 
+        fputs_filtered ( int_string ( val, 10, 1, 0, 0 ), stream ); 
+        break;
+      default:  
+        fputs_filtered ( int_string ( val, 10, 1, 0, 0 ), stream ); 
+        fprintf_filtered 
+          ( stream, 
+            "<Format '%c' is invalid for Modula-3 scalar.>", 
+            (char) format 
+          ); 
+    } 
+  } /* m3_print_scalar */ 
 
 static int 
 compare (const gdb_byte *valaddr, int bitpos1, int bitpos2, int bitsize)
-{
-  if ((bitpos1 % 8) != 0 || (bitpos2 % 8) != 0 || (bitsize % 8 != 0)) {
-    /* these comparisons are too hard for now */
-    return 0; }
-  return memcmp (valaddr + bitpos1/8, valaddr + bitpos2/8, bitsize/8) == 0;
-}
+
+  { if ((bitpos1 % 8) != 0 || (bitpos2 % 8) != 0 || (bitsize % 8 != 0)) 
+      { /* these comparisons are too hard for now */
+        return 0; 
+      }
+    return memcmp (valaddr + bitpos1/8, valaddr + bitpos2/8, bitsize/8) == 0;
+  } /* compare */ 
 
 struct type_info {
   char *        type_name;
@@ -144,37 +145,39 @@ get_TEXT_subtype_info (
                        compiled without debug info. */ 
   )
 
-{ struct type *t;
-/* REVIEWME: Failure cases. */
-  if ( ti -> tc_addr != 0 || ti -> uid != 0 ) { return true; }
-  ti->type_name = nm;
-  ti->wide_mode = wide_mode;
+  { struct type *t;
+  /* REVIEWME: Failure cases. */
+    if ( ti -> tc_addr != 0 || ti -> uid != 0 ) { return true; }
+    ti->type_name = nm;
+    ti->wide_mode = wide_mode;
 
-  t = find_m3_type_named (nm, /*must_find =*/ false);
-  /* If compiled by SRC, PM3, or EZM3, there will be no such type. */ 
-  if ( t ) 
-    { ti -> type = t; 
-      ti -> tc_addr   = m3_tc_addr_from_type (t);
-      ti -> uid = 0; /* TODO: It would be nice to get the real uid from the 
-                              typecell. See m3_tc_addr_from_type for inspiration. */ 
-      return true; 
-    } 
-  else if ( default_uid != 0 ) 
-    { ti -> type = 0; 
-      ti -> tc_addr = 0; 
-      ti -> uid = default_uid; 
-      warning ( "Using defaults for TEXT subtype %s." , nm ); 
-      if ( text_debug_warning_ct ++ == 0) 
-        { warning 
-            ( "This probably means libm3core was compiled without debug info." ); 
-        } 
-      return true; 
-    } 
-  else 
-    { warning ( "No information on TEXT subtype %s." , nm );  
-      return false; 
-    } 
-} /* get_TEXT_subtype_info */
+    t = find_m3_type_named (nm, /*must_find =*/ false);
+    /* If compiled by SRC, PM3, or EZM3, there will be no such type. */ 
+    if ( t ) 
+      { ti -> type = t; 
+        ti -> tc_addr   = m3_tc_addr_from_type (t);
+        ti -> uid = 0; /* TODO: It would be nice to get the real uid from the 
+                                typecell. See m3_tc_addr_from_type for 
+                                inspiration. 
+                       */ 
+        return true; 
+      } 
+    else if ( default_uid != 0 ) 
+      { ti -> type = 0; 
+        ti -> tc_addr = 0; 
+        ti -> uid = default_uid; 
+        warning ( "Using defaults for TEXT subtype %s." , nm ); 
+        if ( text_debug_warning_ct ++ == 0) 
+          { warning 
+              ( "This probably means libm3core was compiled without debug info." ); 
+          } 
+        return true; 
+      } 
+    else 
+      { warning ( "No information on TEXT subtype %s." , nm );  
+        return false; 
+      } 
+  } /* get_TEXT_subtype_info */
 
 static bool /* success */ 
 get_obj_field_info ( struct type_info * ti, 
@@ -184,37 +187,37 @@ get_obj_field_info ( struct type_info * ti,
     int default_bitsize
    ) 
  
-{ struct type * l_type = ti -> type; 
-  CORE_ADDR l_tc_addr = ti -> tc_addr; 
+  { struct type * l_type = ti -> type; 
+    CORE_ADDR l_tc_addr = ti -> tc_addr; 
 
-  fi -> field_name = field_name; 
-  while ( l_type != 0 && TYPE_CODE ( l_type ) == TYPE_CODE_M3_OBJECT) 
-    { if ( m3_find_obj_field 
-             ( l_type, field_name, 
-               & fi -> bitsize, 
-               & fi -> bitpos, 
-               & fi -> type 
-             ) 
-         )
-         { fi-> bitpos
-             += TARGET_CHAR_BIT * m3_dataOffset_from_tc_addr ( l_tc_addr ); 
-           return true; 
-         } 
+    fi -> field_name = field_name; 
+    while ( l_type != 0 && TYPE_CODE ( l_type ) == TYPE_CODE_M3_OBJECT) 
+      { if ( m3_find_obj_field 
+               ( l_type, field_name, 
+                 & fi -> bitsize, 
+                 & fi -> bitpos, 
+                 & fi -> type 
+               ) 
+           )
+           { fi-> bitpos
+               += TARGET_CHAR_BIT * m3_dataOffset_from_tc_addr ( l_tc_addr ); 
+             return true; 
+           } 
 
-       l_tc_addr = m3_super_tc_addr_from_tc_addr ( l_tc_addr ); 
-       l_type = m3_type_from_tc ( l_tc_addr ); 
-    } 
-  fi -> type = 0;
-  fi -> bitpos = default_bitpos;
-  fi -> bitsize = default_bitsize; 
-  warning 
-    ( "Using defaults for field %s of type %s" , field_name, ti->type_name );
-  if ( text_debug_warning_ct ++ == 0) 
-    { warning 
-        ( "This probably means libm3core was compiled without debug info." ); 
-    } 
-  return false;
-} /* get_obj_field_info */ 
+         l_tc_addr = m3_super_tc_addr_from_tc_addr ( l_tc_addr ); 
+         l_type = m3_type_from_tc ( l_tc_addr ); 
+      } 
+    fi -> type = 0;
+    fi -> bitpos = default_bitpos;
+    fi -> bitsize = default_bitsize; 
+    warning 
+      ( "Using defaults for field %s of type %s" , field_name, ti->type_name );
+    if ( text_debug_warning_ct ++ == 0) 
+      { warning 
+          ( "This probably means libm3core was compiled without debug info." ); 
+      } 
+    return false;
+  } /* get_obj_field_info */ 
 
 static bool text_info_is_initialized = false; 
 
@@ -247,104 +250,106 @@ static struct   field_info TextCat_a_or_b_wide;
 
 static void
 init_m3_text_info ( )
-{ /* The hard-wired defaults here for uids of types and of (bit)
-     offsets and sizes of fields will allow m3gdb to handle TEXT
-     values even if the Modula-3 text library code was compiled
-     without debug information.  However, they have to be kept in sync
-     with the text libraries and are very fragile if those libraries
-     change.  The values here were taken from the CM3 CVS distribution
-     on 2006-5-20.
 
-     If the libraries were compiled with debug information, that will
-     be used in preference to these defaults, and that will be far
-     more robust.
-  */ 
-  if ( ! text_info_is_initialized ) 
-    { if ( m3_compiler_kind ( ) == m3_ck_cm3 ) 
-        { if ( ! Text . tc_addr && ! Text . uid ) 
-             { get_TEXT_subtype_info ( "Text.T", 2, &Text, 0x7e2f4762 ); } 
-          if ( ! TextLiteral.tc_addr  && ! TextLiteral . uid ) 
-             { get_TEXT_subtype_info 
-                 ( "TextLiteral.T", 2, &TextLiteral, 0xc69eecff ); 
-               get_obj_field_info 
-                 ( &TextLiteral, "cnt", &TextLiteral_cnt ,32, 32);
-               get_obj_field_info 
-                 ( &TextLiteral, "buf", &TextLiteral_buf, 64, 0x1ffffef8 ); 
+  { /* The hard-wired defaults here for uids of types and of (bit)
+       offsets and sizes of fields will allow m3gdb to handle TEXT
+       values even if the Modula-3 text library code was compiled
+       without debug information.  However, they have to be kept in sync
+       with the text libraries and are very fragile if those libraries
+       change.  The values here were taken from the CM3 CVS distribution
+       on 2006-5-20.
 
-             } 
-          if ( ! Text8 . tc_addr && ! Text8 . uid ) 
-             { get_TEXT_subtype_info ( "Text8.T", 0, &Text8, 0x49d4e83f );
-               get_obj_field_info 
-                 ( &Text8, "contents", &Text8_contents, 32, 32 );
-             } 
-          if ( ! Text8Short . tc_addr  & ! Text8Short . uid ) 
-             { get_TEXT_subtype_info 
-                 ( "Text8Short.T", 0, &Text8Short, 0xe57bbfe0 ); 
-               get_obj_field_info 
-                 ( &Text8Short, "len", &Text8Short_len, 32, 32 ); 
-               get_obj_field_info 
-                 ( &Text8Short, "contents", &Text8Short_contents, 64, 128 ); 
-             } 
-          if ( ! Text16 . tc_addr && ! Text16 . uid ) 
-             { get_TEXT_subtype_info ( "Text16.T", 1, &Text16, 0x89ce6bf1 );
-               get_obj_field_info 
-                 ( &Text16, "contents", &Text16_contents, 32, 32 ); 
-             } 
-          if ( ! Text16Short . tc_addr && ! Text16Short . uid ) 
-             { get_TEXT_subtype_info 
-                 ( "Text16Short.T", 1, &Text16Short, 0xed75fe12 );
-               get_obj_field_info 
-                 ( &Text16Short, "len", &Text16Short_len, 32, 32 ); 
-               get_obj_field_info 
-                 ( &Text16Short, "contents", &Text16Short_contents, 64, 256 ); 
-             } 
-          if ( ! Text8CString . tc_addr && ! Text8CString . uid ) 
-             { get_TEXT_subtype_info 
-                 ( "Text8CString.T", 0, &Text8CString, 0xbd2b102e );
-               get_obj_field_info 
-                 ( &Text8CString, "str", &Text8CString_str, 32, 32 ); 
-             } 
-          if ( ! TextSub . tc_addr && ! TextSub . uid ) 
-             { get_TEXT_subtype_info ( "TextSub.TT", 3, &TextSub, 0xe2215acf );
-               get_obj_field_info 
-                 ( &TextSub, "base", &TextSub_base, 32, 32 ); 
-               get_obj_field_info 
-                 ( &TextSub, "len", &TextSub_len, 96, 32 ); 
-               get_obj_field_info 
-                 ( &TextSub, "start", &TextSub_start, 64, 32 ); 
-             } 
-          if ( ! TextCat.tc_addr && ! TextCat . uid ) 
-             { get_TEXT_subtype_info ( "TextCat.T", 3, &TextCat, 0x493d82da );
-               get_obj_field_info 
-                 ( &TextCat, "a", &TextCat_a, 32, 32 ); 
-               get_obj_field_info 
-                 ( &TextCat, "a_len", &TextCat_a_len, 96, 32 ); 
-               get_obj_field_info 
-                 ( &TextCat, "b", &TextCat_b, 64, 32 ); 
-               get_obj_field_info 
-                 ( &TextCat, "b_len", &TextCat_b_len, 128, 32 ); 
-               get_obj_field_info 
-                 ( &TextCat, "a_or_b_wide", &TextCat_a_or_b_wide, 160, 8 ); 
-             } 
-        } 
-      else if ( m3_compiler_kind ( ) == m3_ck_pm3 )  
-        { if ( ! Text . tc_addr & ! Text . uid ) 
-            { get_TEXT_subtype_info ( "Text.T", 2, &Text, 0xcd7f2264 ); } 
-        } 
-      text_info_is_initialized = true; 
-    } 
-} /* init_m3_text_info */ 
+       If the libraries were compiled with debug information, that will
+       be used in preference to these defaults, and that will be far
+       more robust.
+    */ 
+    if ( ! text_info_is_initialized ) 
+      { if ( m3_compiler_kind ( ) == m3_ck_cm3 ) 
+          { if ( ! Text . tc_addr && ! Text . uid ) 
+               { get_TEXT_subtype_info ( "Text.T", 2, &Text, 0x7e2f4762 ); } 
+            if ( ! TextLiteral.tc_addr  && ! TextLiteral . uid ) 
+               { get_TEXT_subtype_info 
+                   ( "TextLiteral.T", 2, &TextLiteral, 0xc69eecff ); 
+                 get_obj_field_info 
+                   ( &TextLiteral, "cnt", &TextLiteral_cnt ,32, 32);
+                 get_obj_field_info 
+                   ( &TextLiteral, "buf", &TextLiteral_buf, 64, 0x1ffffef8 ); 
+
+               } 
+            if ( ! Text8 . tc_addr && ! Text8 . uid ) 
+               { get_TEXT_subtype_info ( "Text8.T", 0, &Text8, 0x49d4e83f );
+                 get_obj_field_info 
+                   ( &Text8, "contents", &Text8_contents, 32, 32 );
+               } 
+            if ( ! Text8Short . tc_addr  & ! Text8Short . uid ) 
+               { get_TEXT_subtype_info 
+                   ( "Text8Short.T", 0, &Text8Short, 0xe57bbfe0 ); 
+                 get_obj_field_info 
+                   ( &Text8Short, "len", &Text8Short_len, 32, 32 ); 
+                 get_obj_field_info 
+                   ( &Text8Short, "contents", &Text8Short_contents, 64, 128 ); 
+               } 
+            if ( ! Text16 . tc_addr && ! Text16 . uid ) 
+               { get_TEXT_subtype_info ( "Text16.T", 1, &Text16, 0x89ce6bf1 );
+                 get_obj_field_info 
+                   ( &Text16, "contents", &Text16_contents, 32, 32 ); 
+               } 
+            if ( ! Text16Short . tc_addr && ! Text16Short . uid ) 
+               { get_TEXT_subtype_info 
+                   ( "Text16Short.T", 1, &Text16Short, 0xed75fe12 );
+                 get_obj_field_info 
+                   ( &Text16Short, "len", &Text16Short_len, 32, 32 ); 
+                 get_obj_field_info 
+                   ( &Text16Short, "contents", &Text16Short_contents, 64, 256 ); 
+               } 
+            if ( ! Text8CString . tc_addr && ! Text8CString . uid ) 
+               { get_TEXT_subtype_info 
+                   ( "Text8CString.T", 0, &Text8CString, 0xbd2b102e );
+                 get_obj_field_info 
+                   ( &Text8CString, "str", &Text8CString_str, 32, 32 ); 
+               } 
+            if ( ! TextSub . tc_addr && ! TextSub . uid ) 
+               { get_TEXT_subtype_info 
+                   ( "TextSub.TT", 3, &TextSub, 0xe2215acf );
+                 get_obj_field_info 
+                   ( &TextSub, "base", &TextSub_base, 32, 32 ); 
+                 get_obj_field_info 
+                   ( &TextSub, "len", &TextSub_len, 96, 32 ); 
+                 get_obj_field_info 
+                   ( &TextSub, "start", &TextSub_start, 64, 32 ); 
+               } 
+            if ( ! TextCat.tc_addr && ! TextCat . uid ) 
+               { get_TEXT_subtype_info ( "TextCat.T", 3, &TextCat, 0x493d82da );
+                 get_obj_field_info 
+                   ( &TextCat, "a", &TextCat_a, 32, 32 ); 
+                 get_obj_field_info 
+                   ( &TextCat, "a_len", &TextCat_a_len, 96, 32 ); 
+                 get_obj_field_info 
+                   ( &TextCat, "b", &TextCat_b, 64, 32 ); 
+                 get_obj_field_info 
+                   ( &TextCat, "b_len", &TextCat_b_len, 128, 32 ); 
+                 get_obj_field_info 
+                   ( &TextCat, "a_or_b_wide", &TextCat_a_or_b_wide, 160, 8 ); 
+               } 
+          } 
+        else if ( m3_compiler_kind ( ) == m3_ck_pm3 )  
+          { if ( ! Text . tc_addr & ! Text . uid ) 
+              { get_TEXT_subtype_info ( "Text.T", 2, &Text, 0xcd7f2264 ); } 
+          } 
+        text_info_is_initialized = true; 
+      } 
+  } /* init_m3_text_info */ 
 
 static bool 
 type_info_matches ( CORE_ADDR tc_addr, struct type_info * info ) 
 
-{ int uid; 
+  { int uid; 
 
-  if ( info -> tc_addr != 0 && tc_addr == info -> tc_addr ) { return true; } 
-  uid = m3_int_uid_from_tc_addr ( tc_addr ); 
-  if ( info -> uid != 0 && uid == info -> uid ) { return true; }
-  return false; 
-} /* type_info_matches */
+    if ( info -> tc_addr != 0 && tc_addr == info -> tc_addr ) { return true; } 
+    uid = m3_int_uid_from_tc_addr ( tc_addr ); 
+    if ( info -> uid != 0 && uid == info -> uid ) { return true; }
+    return false; 
+  } /* type_info_matches */
 
 static struct type * library_type_m3_TextLiteral_buf_char; 
 static struct type * library_type_m3_TextLiteral_buf_char_index; 
@@ -355,65 +360,67 @@ static bool TextLiteral_types_initialized = false;
 static void 
 init_m3_TextLiteral_library_types ( ) 
 
-{ if ( ! TextLiteral_types_initialized ) 
-    { library_type_m3_TextLiteral_buf_char_index  
-        = init_type 
-           ( TYPE_CODE_M3_SUBRANGE, TARGET_INT_BIT/TARGET_CHAR_BIT /* size */, 
-             0 /*flags*/,  "<TextLiteral.T.buff.index_char>", 
-             (struct objfile *) NULL 
-           );
-      TYPE_M3_SIZE ( library_type_m3_TextLiteral_buf_char_index ) 
-        = TARGET_INT_BIT; 
-      TYPE_M3_SUBRANGE_MIN ( library_type_m3_TextLiteral_buf_char_index ) = 0; 
-      TYPE_M3_SUBRANGE_MAX ( library_type_m3_TextLiteral_buf_char_index ) = - 1; 
-      /* TYPE_M3_SUBRANGE_MAX will be set each time this is used. */ 
+  { if ( ! TextLiteral_types_initialized ) 
+      { library_type_m3_TextLiteral_buf_char_index  
+          = init_type 
+             ( TYPE_CODE_M3_SUBRANGE, TARGET_INT_BIT/TARGET_CHAR_BIT /* size */, 
+               0 /*flags*/,  "<TextLiteral.T.buff.index_char>", 
+               (struct objfile *) NULL 
+             );
+        TYPE_M3_SIZE ( library_type_m3_TextLiteral_buf_char_index ) 
+          = TARGET_INT_BIT; 
+        TYPE_M3_SUBRANGE_MIN ( library_type_m3_TextLiteral_buf_char_index ) 
+          = 0; 
+        TYPE_M3_SUBRANGE_MAX ( library_type_m3_TextLiteral_buf_char_index ) 
+          = - 1; 
+        /* TYPE_M3_SUBRANGE_MAX will be set each time this is used. */ 
 
-      library_type_m3_TextLiteral_buf_char  
-        = init_type 
-           ( TYPE_CODE_M3_ARRAY, 0 /* size */, 
-             0 /* flags */,  "<TextLiteral.T.buff_char>", 
-             (struct objfile *) NULL 
-           );
-      TYPE_FIELDS ( library_type_m3_TextLiteral_buf_char ) 
-        = (struct field *) malloc ( 2 * sizeof ( struct field ) );
-      TYPE_NFIELDS ( library_type_m3_TextLiteral_buf_char ) = 2;  
-      LHS_TYPE_M3_ARRAY_INDEX ( library_type_m3_TextLiteral_buf_char ) 
-        = library_type_m3_TextLiteral_buf_char_index; 
-      LHS_TYPE_M3_ARRAY_ELEM ( library_type_m3_TextLiteral_buf_char ) 
-        = builtin_type_m3_char; 
+        library_type_m3_TextLiteral_buf_char  
+          = init_type 
+             ( TYPE_CODE_M3_ARRAY, 0 /* size */, 
+               0 /* flags */,  "<TextLiteral.T.buff_char>", 
+               (struct objfile *) NULL 
+             );
+        TYPE_FIELDS ( library_type_m3_TextLiteral_buf_char ) 
+          = (struct field *) malloc ( 2 * sizeof ( struct field ) );
+        TYPE_NFIELDS ( library_type_m3_TextLiteral_buf_char ) = 2;  
+        LHS_TYPE_M3_ARRAY_INDEX ( library_type_m3_TextLiteral_buf_char ) 
+          = library_type_m3_TextLiteral_buf_char_index; 
+        LHS_TYPE_M3_ARRAY_ELEM ( library_type_m3_TextLiteral_buf_char ) 
+          = builtin_type_m3_char; 
 
-      library_type_m3_TextLiteral_buf_widechar_index  
-        = init_type 
-           ( TYPE_CODE_M3_SUBRANGE, TARGET_INT_BIT/TARGET_CHAR_BIT /* size */, 
-             0 /*flags*/,  "<TextLiteral.T.buff.index_widechar>", 
-             (struct objfile *) NULL 
-           );
-      TYPE_M3_SIZE ( library_type_m3_TextLiteral_buf_widechar_index ) 
-        = TARGET_INT_BIT; 
-      TYPE_M3_SUBRANGE_MIN ( library_type_m3_TextLiteral_buf_widechar_index ) 
-        = 0; 
-      TYPE_M3_SUBRANGE_MAX ( library_type_m3_TextLiteral_buf_widechar_index ) 
-        = - 1; 
-      /* TYPE_M3_SUBRANGE_MAX will be set each time this is used. */ 
+        library_type_m3_TextLiteral_buf_widechar_index  
+          = init_type 
+             ( TYPE_CODE_M3_SUBRANGE, TARGET_INT_BIT/TARGET_CHAR_BIT /* size */, 
+               0 /*flags*/,  
+               "<TextLiteral.T.buff.index_widechar>", 
+               (struct objfile *) NULL 
+             );
+        TYPE_M3_SIZE ( library_type_m3_TextLiteral_buf_widechar_index ) 
+          = TARGET_INT_BIT; 
+        TYPE_M3_SUBRANGE_MIN ( library_type_m3_TextLiteral_buf_widechar_index ) 
+          = 0; 
+        TYPE_M3_SUBRANGE_MAX ( library_type_m3_TextLiteral_buf_widechar_index ) 
+          = - 1; 
+        /* TYPE_M3_SUBRANGE_MAX will be set each time this is used. */ 
 
-      library_type_m3_TextLiteral_buf_widechar  
-        = init_type 
-           ( TYPE_CODE_M3_ARRAY, 0 /* size */, 
-             0 /* flags */,  "<TextLiteral.T.buff_widechar>", 
-             (struct objfile *) NULL 
-           );
-      TYPE_FIELDS ( library_type_m3_TextLiteral_buf_widechar ) 
-        = (struct field *) malloc ( 2 * sizeof ( struct field ) );
-      TYPE_NFIELDS ( library_type_m3_TextLiteral_buf_char ) = 2;  
-      LHS_TYPE_M3_ARRAY_INDEX ( library_type_m3_TextLiteral_buf_widechar ) 
-        = library_type_m3_TextLiteral_buf_widechar_index; 
-      LHS_TYPE_M3_ARRAY_ELEM ( library_type_m3_TextLiteral_buf_widechar ) 
-        = builtin_type_m3_widechar; 
-   
-      TextLiteral_types_initialized = true; 
-    } 
-} /* init_m3_TextLiteral_library_types */  
+        library_type_m3_TextLiteral_buf_widechar  
+          = init_type 
+             ( TYPE_CODE_M3_ARRAY, 0 /* size */, 
+               0 /* flags */,  "<TextLiteral.T.buff_widechar>", 
+               (struct objfile *) NULL 
+             );
+        TYPE_FIELDS ( library_type_m3_TextLiteral_buf_widechar ) 
+          = (struct field *) malloc ( 2 * sizeof ( struct field ) );
+        TYPE_NFIELDS ( library_type_m3_TextLiteral_buf_char ) = 2;  
+        LHS_TYPE_M3_ARRAY_INDEX ( library_type_m3_TextLiteral_buf_widechar ) 
+          = library_type_m3_TextLiteral_buf_widechar_index; 
+        LHS_TYPE_M3_ARRAY_ELEM ( library_type_m3_TextLiteral_buf_widechar ) 
+          = builtin_type_m3_widechar; 
 
+        TextLiteral_types_initialized = true; 
+      } 
+  } /* init_m3_TextLiteral_library_types */  
 
 /* FIXME: The parameters to m3_extract_ord can't be right here. */ 
 /* Fetch the contents of the boolean field described by fi, of the object at 
@@ -422,16 +429,16 @@ static bool
 m3_text_field_boolean (
     CORE_ADDR ref, struct type_info * ti, struct field_info * fi )  
 
-{ CORE_ADDR addr; 
-  LONGEST result; 
-  gdb_byte buf [16]; 
-  
-  addr = ref + fi -> bitpos / TARGET_CHAR_BIT; 
-  read_memory ( addr, buf, fi -> bitsize / TARGET_CHAR_BIT );  
-  result 
-    = m3_extract_ord ( buf, 0, fi -> bitsize, 0); 
-  return result != 0; 
-}  /* m3_text_field_boolean */ 
+  { CORE_ADDR addr; 
+    LONGEST result; 
+    gdb_byte buf [16]; 
+
+    addr = ref + fi -> bitpos / TARGET_CHAR_BIT; 
+    read_memory ( addr, buf, fi -> bitsize / TARGET_CHAR_BIT );  
+    result 
+      = m3_extract_ord ( buf, 0, fi -> bitsize, 0); 
+    return result != 0; 
+  }  /* m3_text_field_boolean */ 
 
 /* Fetch the contents of the signed length field described by fi, of the object
    at inferior address ref, of object type described by ti. */ 
@@ -443,15 +450,15 @@ m3_text_field_length (
     int sign_extend 
   )  
 
-{ CORE_ADDR addr; 
-  LONGEST result; 
-  gdb_byte buf [16]; 
-  
-  addr = ref + fi -> bitpos / TARGET_CHAR_BIT; 
-  read_memory ( addr, buf, fi -> bitsize / TARGET_CHAR_BIT );  
-  result = m3_extract_ord ( buf, 0, fi -> bitsize, sign_extend); 
-  return result; 
-}  /* m3_text_field_length */ 
+  { CORE_ADDR addr; 
+    LONGEST result; 
+    gdb_byte buf [16]; 
+
+    addr = ref + fi -> bitpos / TARGET_CHAR_BIT; 
+    read_memory ( addr, buf, fi -> bitsize / TARGET_CHAR_BIT );  
+    result = m3_extract_ord ( buf, 0, fi -> bitsize, sign_extend); 
+    return result; 
+  }  /* m3_text_field_length */ 
 
 /* Fetch the contents of the pointer field described by fi, of the object at 
    inferior address ref, of object type described by ti. */ 
@@ -459,15 +466,15 @@ static CORE_ADDR
 m3_text_field_pointer ( 
     CORE_ADDR ref, struct type_info * ti, struct field_info * fi )  
 
-{ CORE_ADDR addr; 
-  CORE_ADDR result; 
-  gdb_byte buf [16]; 
-  
-  addr = ref + fi -> bitpos / TARGET_CHAR_BIT; 
-  read_memory ( addr, buf, fi -> bitsize / TARGET_CHAR_BIT );  
-  result = m3_extract_address ( buf, 0 ); 
-  return result; 
-}  /* m3_text_field_pointer */ 
+  { CORE_ADDR addr; 
+    CORE_ADDR result; 
+    gdb_byte buf [16]; 
+
+    addr = ref + fi -> bitpos / TARGET_CHAR_BIT; 
+    read_memory ( addr, buf, fi -> bitsize / TARGET_CHAR_BIT );  
+    result = m3_extract_address ( buf, 0 ); 
+    return result; 
+  }  /* m3_text_field_pointer */ 
 
 /* Return the inferior address of the field described by fi, of the object at 
    inferior address ref, of object type described by ti. */
@@ -478,11 +485,11 @@ m3_text_field_addr (
     struct field_info * fi 
   )  
 
-{ CORE_ADDR result; 
-  
-  result = ref + fi -> bitpos / TARGET_CHAR_BIT; 
-  return result; 
-}  /* m3_text_field_addr */ 
+  { CORE_ADDR result; 
+
+    result = ref + fi -> bitpos / TARGET_CHAR_BIT; 
+    return result; 
+  }  /* m3_text_field_addr */ 
 
 /* See whether field 'field_name' of object at inferior address 'ref',
    with inferior typecell address 'tc_addr' is the 'buf' field of an
@@ -508,48 +515,50 @@ m3_check_TextLiteral_buf (
     struct type ** field_type 
   ) 
 
-{ LONGEST string_length;
-  LONGEST byte_length; 
-  
-  init_m3_text_info ( );
-  init_m3_TextLiteral_library_types ( ); 
-  if ( type_info_matches ( tc_addr, &TextLiteral ) 
-       && TextLiteral_buf . field_name != 0 
-       && strcmp ( field_name, TextLiteral_buf . field_name ) == 0 
-     ) /* It's the TextLiteral.T.buf field we are looking for. */ 
-    { string_length 
-        = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 ) ;
-      if ( string_length < 0 ) 
-        { TYPE_M3_SUBRANGE_MAX 
-            ( library_type_m3_TextLiteral_buf_widechar_index )
-            = - string_length; 
-          byte_length = ( - string_length + 1 ) * TARGET_M3_WIDECHAR_BYTE;
-          TYPE_LENGTH ( library_type_m3_TextLiteral_buf_widechar ) 
-            = byte_length;
-          TYPE_M3_SIZE ( library_type_m3_TextLiteral_buf_widechar )
-            = ( - string_length + 1 ) * TARGET_M3_WIDECHAR_BIT ;  
-          if ( bitsize != NULL ) { * bitsize = byte_length * TARGET_CHAR_BIT; }
-          if ( bitpos != NULL ) { * bitpos = TextLiteral_buf . bitpos; } 
-          if ( field_type != NULL ) 
-            { * field_type = library_type_m3_TextLiteral_buf_widechar; } 
-          return true; 
-        }  
-      else 
-        { TYPE_M3_SUBRANGE_MAX ( library_type_m3_TextLiteral_buf_char_index ) 
-             = string_length; 
-          byte_length = string_length + 1; 
-          TYPE_LENGTH ( library_type_m3_TextLiteral_buf_char ) = byte_length; 
-          TYPE_M3_SIZE ( library_type_m3_TextLiteral_buf_char )
-            = ( string_length + 1 ) * TARGET_CHAR_BIT;  
-          if ( bitsize != NULL ) { * bitsize = byte_length * TARGET_CHAR_BIT; }
-          if ( bitpos != NULL ) { * bitpos = TextLiteral_buf . bitpos; } 
-          if ( field_type != NULL ) 
-            { * field_type = library_type_m3_TextLiteral_buf_char; } 
-          return true; 
-        }  
-    }  
-  else { return false; } 
-} /* m3_check_TextLiteral_buf */
+  { LONGEST string_length;
+    LONGEST byte_length; 
+
+    init_m3_text_info ( );
+    init_m3_TextLiteral_library_types ( ); 
+    if ( type_info_matches ( tc_addr, &TextLiteral ) 
+         && TextLiteral_buf . field_name != 0 
+         && strcmp ( field_name, TextLiteral_buf . field_name ) == 0 
+       ) /* It's the TextLiteral.T.buf field we are looking for. */ 
+      { string_length 
+          = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 ) ;
+        if ( string_length < 0 ) 
+          { TYPE_M3_SUBRANGE_MAX 
+              ( library_type_m3_TextLiteral_buf_widechar_index )
+              = - string_length; 
+            byte_length = ( - string_length + 1 ) * TARGET_M3_WIDECHAR_BYTE;
+            TYPE_LENGTH ( library_type_m3_TextLiteral_buf_widechar ) 
+              = byte_length;
+            TYPE_M3_SIZE ( library_type_m3_TextLiteral_buf_widechar )
+              = ( - string_length + 1 ) * TARGET_M3_WIDECHAR_BIT ;  
+            if ( bitsize != NULL ) 
+              { * bitsize = byte_length * TARGET_CHAR_BIT; }
+            if ( bitpos != NULL ) { * bitpos = TextLiteral_buf . bitpos; } 
+            if ( field_type != NULL ) 
+              { * field_type = library_type_m3_TextLiteral_buf_widechar; } 
+            return true; 
+          }  
+        else 
+          { TYPE_M3_SUBRANGE_MAX ( library_type_m3_TextLiteral_buf_char_index ) 
+               = string_length; 
+            byte_length = string_length + 1; 
+            TYPE_LENGTH ( library_type_m3_TextLiteral_buf_char ) = byte_length; 
+            TYPE_M3_SIZE ( library_type_m3_TextLiteral_buf_char )
+              = ( string_length + 1 ) * TARGET_CHAR_BIT;  
+            if ( bitsize != NULL ) 
+              { * bitsize = byte_length * TARGET_CHAR_BIT; }
+            if ( bitpos != NULL ) { * bitpos = TextLiteral_buf . bitpos; } 
+            if ( field_type != NULL ) 
+              { * field_type = library_type_m3_TextLiteral_buf_char; } 
+            return true; 
+          }  
+      }  
+    else { return false; } 
+  } /* m3_check_TextLiteral_buf */
 
 /* Print a C-style string, getting the data from the inferior, from inferior
    address 'ref'.  Normally stops on a null byte, but will not exceed 'len' 
@@ -564,33 +573,33 @@ m3_print_cstring (
 
 #define BUFFSIZE 256
 
-{ CORE_ADDR lref;
-  ULONGEST charsremaining;
-  ULONGEST charsprinted;
-  ULONGEST buffct; 
-  ULONGEST i;
-  char c; 
-  char buff[BUFFSIZE];
+  { CORE_ADDR lref;
+    ULONGEST charsremaining;
+    ULONGEST charsprinted;
+    ULONGEST buffct; 
+    ULONGEST i;
+    char c; 
+    char buff[BUFFSIZE];
 
-  lref = ref + start; 
-  charsremaining = len - start;
-  charsprinted = 0; 
-  while (charsremaining > 0)
-    { /* copy one buffer load into gdb's process space and print it. */
-      buffct = charsremaining < BUFFSIZE ? charsremaining : BUFFSIZE; 
-      read_memory (lref, buff, buffct);
-      for (i = 0; i < buffct; i++) 
-        { c = buff[i];
-          if ( c == '\0' ) 
-            { return charsprinted; } 
-          m3_emit_char ( c, stream, '"');
-          charsprinted ++; 
-        }
-      lref += buffct;
-      charsremaining -= buffct; 
-    } 
-  return charsprinted; 
-} /* m3_print_cstring */ 
+    lref = ref + start; 
+    charsremaining = len - start;
+    charsprinted = 0; 
+    while (charsremaining > 0)
+      { /* copy one buffer load into gdb's process space and print it. */
+        buffct = charsremaining < BUFFSIZE ? charsremaining : BUFFSIZE; 
+        read_memory (lref, buff, buffct);
+        for (i = 0; i < buffct; i++) 
+          { c = buff[i];
+            if ( c == '\0' ) 
+              { return charsprinted; } 
+            m3_emit_char ( c, stream, '"');
+            charsprinted ++; 
+          }
+        lref += buffct;
+        charsremaining -= buffct; 
+      } 
+    return charsprinted; 
+  } /* m3_print_cstring */ 
 
 /* Does not stop on a null byte, which, in TEXT, can occur.  Inserts escapes,
    but does not add enclosing quotes. */ 
@@ -602,14 +611,14 @@ m3_print_chars (
     struct ui_file *stream 
   )
 
-{ char *str;
-  int i;
+  { char *str;
+    int i;
 
-  /* Copy the string characters into gdb's process space. */
-  str = (char *) alloca (len);
-  read_memory (ref + start, str, len);
-  for (i = 0; i < len; i++) { m3_emit_char ( str[i], stream, '"'); }
-} /* m3_print_chars */ 
+    /* Copy the string characters into gdb's process space. */
+    str = (char *) alloca (len);
+    read_memory (ref + start, str, len);
+    for (i = 0; i < len; i++) { m3_emit_char ( str[i], stream, '"'); }
+  } /* m3_print_chars */ 
 
 /* Does not stop on a null byte, which, in TEXT, can occur.  Inserts escapes,
    but does not add enclosing quotes. */ 
@@ -621,25 +630,25 @@ m3_print_widechars (
     struct ui_file *stream 
   )
 
-{ gdb_byte * wstr;
-  LONGEST byte_length; 
-  int i;
+  { gdb_byte * wstr;
+    LONGEST byte_length; 
+    int i;
 
-  /* Copy the wide characters into gdb's process space. */
-  wstr = ( gdb_byte * )  alloca ( len * TARGET_M3_WIDECHAR_BYTE);
-  read_memory 
-    ( ref + start * TARGET_M3_WIDECHAR_BYTE, 
-      wstr, len * TARGET_M3_WIDECHAR_BYTE 
-    );
-  byte_length = 2 * len; 
-  for (i = 0; i < byte_length; i+=2) 
-    { m3_emit_widechar 
-       ( m3_extract_ord ( & wstr [ i ], 0, TARGET_M3_WIDECHAR_BIT, 0), 
-         stream, 
-         '"' 
-       );
-    }
-} /* m3_print_widechars */ 
+    /* Copy the wide characters into gdb's process space. */
+    wstr = ( gdb_byte * )  alloca ( len * TARGET_M3_WIDECHAR_BYTE);
+    read_memory 
+      ( ref + start * TARGET_M3_WIDECHAR_BYTE, 
+        wstr, len * TARGET_M3_WIDECHAR_BYTE 
+      );
+    byte_length = 2 * len; 
+    for (i = 0; i < byte_length; i+=2) 
+      { m3_emit_widechar 
+         ( m3_extract_ord ( & wstr [ i ], 0, TARGET_M3_WIDECHAR_BIT, 0), 
+           stream, 
+           '"' 
+         );
+      }
+  } /* m3_print_widechars */ 
 
 /* Special case to print CM3 TextLiteral.T value as an object.  It contains
    a field named "buf", whose type is a very long array, but actually, only
@@ -654,32 +663,32 @@ m3_print_cm3_TextLiteral_object (
     struct ui_file *stream 
   ) 
 
-{ CORE_ADDR chars;
-  LONGEST string_length;
+  { CORE_ADDR chars;
+    LONGEST string_length;
 
-  string_length 
-    = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 ) ;
-  fputs_filtered ("(*", stream); 
-  fputs_filtered ( TextLiteral.type_name, stream); 
-  fputs_filtered ("*) ", stream); 
-  fputs_filtered ( TextLiteral_cnt.field_name, stream); 
-  fputs_filtered (" = ", stream);
-  fputs_filtered ( int_string ( string_length, 10, 1, 0, 0 ), stream ); 
-  fputs_filtered ("; ", stream); 
-  fputs_filtered ( TextLiteral_buf.field_name, stream); 
-  fputs_filtered (" = ", stream);
- 
-  chars = m3_text_field_addr ( ref, &TextLiteral, &TextLiteral_buf );   
-  if (string_length < 0) /* Wide chars. */ 
-    { fputs_filtered ("W\"", stream);
-      m3_print_widechars ( chars, 0, - string_length, stream);
-    } 
-  else /* Narrow chars. */ 
-    { fputs_filtered ("\"", stream);
-      m3_print_chars ( chars, 0, string_length, stream);
-    } 
-  fputs_filtered ("\" END", stream);
-} /* m3_print_cm3_TextLiteral_object */ 
+    string_length 
+      = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 ) ;
+    fputs_filtered ("(*", stream); 
+    fputs_filtered ( TextLiteral.type_name, stream); 
+    fputs_filtered ("*) ", stream); 
+    fputs_filtered ( TextLiteral_cnt.field_name, stream); 
+    fputs_filtered (" = ", stream);
+    fputs_filtered ( int_string ( string_length, 10, 1, 0, 0 ), stream ); 
+    fputs_filtered ("; ", stream); 
+    fputs_filtered ( TextLiteral_buf.field_name, stream); 
+    fputs_filtered (" = ", stream);
+
+    chars = m3_text_field_addr ( ref, &TextLiteral, &TextLiteral_buf );   
+    if (string_length < 0) /* Wide chars. */ 
+      { fputs_filtered ("W\"", stream);
+        m3_print_widechars ( chars, 0, - string_length, stream);
+      } 
+    else /* Narrow chars. */ 
+      { fputs_filtered ("\"", stream);
+        m3_print_chars ( chars, 0, string_length, stream);
+      } 
+    fputs_filtered ("\" END", stream);
+  } /* m3_print_cm3_TextLiteral_object */ 
 
 /* See if an object is one of the CM3 TEXT subtypes and, if so, print it as a
    string or wide string. 
@@ -689,6 +698,7 @@ m3_print_cm3_TextLiteral_object (
 */ 
 static ULONGEST /* - 3 if not a CM3 TEXT or subtype thereof. 
                    - 2 if a CM3 TEXT subtype, but improperly formed.   
+                       (The reason has been printed)
                    - 1 if CM3 string, but longer than length, so was truncated.
                    Else, number of chars (of either size) actually printed. */ 
 m3_print_cm3_text ( 
@@ -700,207 +710,209 @@ m3_print_cm3_text (
     struct ui_file *stream 
   )
 
-{ ULONGEST result;
-  CORE_ADDR chars;
-  LONGEST string_length;
-  ULONGEST print_length;
-  CORE_ADDR open_array; 
+  { ULONGEST result;
+    CORE_ADDR chars;
+    LONGEST string_length;
+    ULONGEST print_length;
+    CORE_ADDR open_array; 
 
-  if ( type_info_matches ( tc_addr, &Text ) ) 
-    { fputs_filtered ("\"<Not a proper subtype of CM3 TEXT>\"", stream ); 
-      return - 2; 
-    } 
-  else if ( type_info_matches ( tc_addr, &TextLiteral ) ) 
-    { string_length 
-        = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 ) ;
-      chars = m3_text_field_addr ( ref, &TextLiteral, &TextLiteral_buf );   
-      if (string_length < 0) /* Wide chars. */ 
-        { string_length = - string_length - start; 
-          if ( length < string_length) 
-            { print_length = length; result = - 1; }
-          else { print_length = string_length; result = string_length; } 
-          if (add_quotes) 
-            { fputs_filtered ("W\"", stream); } 
-          m3_print_widechars ( chars, start, print_length, stream);
-        } 
-      else /* Narrow chars. */ 
-        { string_length -= start; 
-          if ( length < string_length) 
-            { print_length = length; result = - 1; }
-          else { print_length = string_length; result = string_length; } 
-          if (add_quotes) 
-            { fputs_filtered ("\"", stream); } 
-          m3_print_chars ( chars, start, print_length, stream);
-        } 
-    } 
-    
-  else if ( type_info_matches ( tc_addr, &Text8 ) ) 
-    { open_array = m3_text_field_pointer ( ref , &Text8, &Text8_contents ); 
-      string_length 
-        = m3_inf_open_array_shape_component ( open_array, 0 ) - start - 1; 
-      chars = m3_inf_open_array_elems_addr ( open_array );
-      if ( length < string_length ) 
-        { print_length = length; result = - 1; }
-      else { print_length = string_length; result = string_length; } 
-      if (add_quotes) 
-        { fputs_filtered ("\"", stream); } 
-      m3_print_chars ( chars, start, print_length, stream);
-    } 
+    if ( type_info_matches ( tc_addr, &Text ) ) 
+      { fputs_filtered ("\"<Not a proper subtype of CM3 TEXT>\"", stream ); 
+        return - 2; 
+      } 
+    else if ( type_info_matches ( tc_addr, &TextLiteral ) ) 
+      { string_length 
+          = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 ) ;
+        chars = m3_text_field_addr ( ref, &TextLiteral, &TextLiteral_buf );   
+        if (string_length < 0) /* Wide chars. */ 
+          { string_length = - string_length - start; 
+            if ( length < string_length) 
+              { print_length = length; result = - 1; }
+            else { print_length = string_length; result = string_length; } 
+            if (add_quotes) 
+              { fputs_filtered ("W\"", stream); } 
+            m3_print_widechars ( chars, start, print_length, stream);
+          } 
+        else /* Narrow chars. */ 
+          { string_length -= start; 
+            if ( length < string_length) 
+              { print_length = length; result = - 1; }
+            else { print_length = string_length; result = string_length; } 
+            if (add_quotes) 
+              { fputs_filtered ("\"", stream); } 
+            m3_print_chars ( chars, start, print_length, stream);
+          } 
+      } 
 
-  else if ( type_info_matches ( tc_addr, &Text16 ) ) 
-    { open_array = m3_text_field_pointer ( ref , &Text16, &Text16_contents ); 
-      string_length 
-        = m3_inf_open_array_shape_component ( open_array, 0 ) - start - 1;
-      chars = m3_inf_open_array_elems_addr ( open_array );
-      if ( length < string_length ) 
-        { print_length = length; result = - 1; }
-      else { print_length = string_length; result = string_length; } 
-      if (add_quotes) 
-        { fputs_filtered ("W\"", stream); }
-      m3_print_widechars ( chars, start, print_length, stream);
-    } 
+    else if ( type_info_matches ( tc_addr, &Text8 ) ) 
+      { open_array = m3_text_field_pointer ( ref , &Text8, &Text8_contents ); 
+        string_length 
+          = m3_inf_open_array_shape_component ( open_array, 0 ) - start - 1; 
+        chars = m3_inf_open_array_elems_addr ( open_array );
+        if ( length < string_length ) 
+          { print_length = length; result = - 1; }
+        else { print_length = string_length; result = string_length; } 
+        if (add_quotes) 
+          { fputs_filtered ("\"", stream); } 
+        m3_print_chars ( chars, start, print_length, stream);
+      } 
 
-  else if ( type_info_matches ( tc_addr, &Text8Short ) ) 
-    { string_length 
-        = m3_text_field_length ( ref, &Text8Short, &Text8Short_len, 0 ) 
-          - start;
-      if ( string_length 
-           > Text8Short_contents . bitsize / TARGET_CHAR_BIT - start 
-         )
-        { return - 2; } 
-      chars = m3_text_field_addr ( ref, &Text8Short, &Text8Short_contents );
-      if ( length < string_length ) 
-        { print_length = length; result = - 1; }
-      else { print_length = string_length ; result = string_length; } 
-      if (add_quotes) 
-        { fputs_filtered ("\"", stream); } 
-      m3_print_chars ( chars, start, print_length, stream);
-    } 
+    else if ( type_info_matches ( tc_addr, &Text16 ) ) 
+      { open_array = m3_text_field_pointer ( ref , &Text16, &Text16_contents ); 
+        string_length 
+          = m3_inf_open_array_shape_component ( open_array, 0 ) - start - 1;
+        chars = m3_inf_open_array_elems_addr ( open_array );
+        if ( length < string_length ) 
+          { print_length = length; result = - 1; }
+        else { print_length = string_length; result = string_length; } 
+        if (add_quotes) 
+          { fputs_filtered ("W\"", stream); }
+        m3_print_widechars ( chars, start, print_length, stream);
+      } 
 
-  else if ( type_info_matches ( tc_addr, &Text16Short ) ) 
-    { string_length 
-        = m3_text_field_length 
-            ( ref, &Text16Short, &Text16Short_len, 0 ) - start;
-      if ( string_length 
-           > Text16Short_contents . bitsize / TARGET_M3_WIDECHAR_BIT - start 
-         ) 
-        { return - 2; } 
-      chars = m3_text_field_addr ( ref, &Text16Short, &Text16Short_contents );
-      if ( length < string_length ) 
-        { print_length = length; result = - 1; }
-      else { print_length = string_length ; result = string_length; } 
-      if (add_quotes) 
-        { fputs_filtered ("W\"", stream); } 
-      m3_print_widechars ( chars, start, print_length, stream);
-    } 
+    else if ( type_info_matches ( tc_addr, &Text8Short ) ) 
+      { string_length 
+          = m3_text_field_length ( ref, &Text8Short, &Text8Short_len, 0 ) 
+            - start;
+        if ( string_length 
+             > Text8Short_contents . bitsize / TARGET_CHAR_BIT - start 
+           )
+          { return - 2; } 
+        chars = m3_text_field_addr ( ref, &Text8Short, &Text8Short_contents );
+        if ( length < string_length ) 
+          { print_length = length; result = - 1; }
+        else { print_length = string_length ; result = string_length; } 
+        if (add_quotes) 
+          { fputs_filtered ("\"", stream); } 
+        m3_print_chars ( chars, start, print_length, stream);
+      } 
 
-  else if ( type_info_matches ( tc_addr, &Text8CString ) ) 
-    { chars = m3_text_field_pointer ( ref , &Text8CString, &Text8CString_str );
-      if (add_quotes) 
-        { fputs_filtered ("\"", stream); } 
-      result = m3_print_cstring ( chars, start, length, stream);
-    } 
+    else if ( type_info_matches ( tc_addr, &Text16Short ) ) 
+      { string_length 
+          = m3_text_field_length 
+              ( ref, &Text16Short, &Text16Short_len, 0 ) - start;
+        if ( string_length 
+             > Text16Short_contents . bitsize / TARGET_M3_WIDECHAR_BIT - start 
+           ) 
+          { return - 2; } 
+        chars = m3_text_field_addr ( ref, &Text16Short, &Text16Short_contents );
+        if ( length < string_length ) 
+          { print_length = length; result = - 1; }
+        else { print_length = string_length ; result = string_length; } 
+        if (add_quotes) 
+          { fputs_filtered ("W\"", stream); } 
+        m3_print_widechars ( chars, start, print_length, stream);
+      } 
 
-  else if ( type_info_matches ( tc_addr, &TextCat ) ) 
-    { CORE_ADDR a_object, b_object; 
-      CORE_ADDR a_tc_addr, b_tc_addr; 
-      LONGEST a_printed = 0;
-      LONGEST b_printed = 0; 
-      LONGEST a_len = 0; 
+    else if ( type_info_matches ( tc_addr, &Text8CString ) ) 
+      { chars 
+          = m3_text_field_pointer ( ref , &Text8CString, &Text8CString_str );
+        if (add_quotes) 
+          { fputs_filtered ("\"", stream); } 
+        result = m3_print_cstring ( chars, start, length, stream);
+      } 
 
-      a_object = m3_text_field_pointer ( ref, &TextCat, &TextCat_a ); 
-      b_object = m3_text_field_pointer ( ref, &TextCat, &TextCat_b ); 
-      if (a_object == 0 || b_object == 0 ) 
-         { fputs_filtered ("\"<Ill-formed CM3 TEXT value>\"", stream ); 
-           return - 2; 
-         } 
-      if (add_quotes)
-        { bool a_or_b_wide 
-            = m3_text_field_boolean ( ref, &TextCat, &TextCat_a_or_b_wide ); 
-          if (a_or_b_wide) 
-            { fputs_filtered ("W\"", stream); } 
-          else { fputs_filtered ("\"", stream); } 
-        } 
-      if ( length > 0 ) 
-        { a_tc_addr = m3_tc_addr_from_inf_object_addr (a_object);
-          a_len = m3_text_field_length ( ref , &TextCat, &TextCat_a_len, 0 ); 
-          if ( start >= a_len ) 
-            { start -= a_len; } 
-          else 
-            { a_printed 
-                = m3_print_cm3_text 
-                    ( a_object, a_tc_addr, start, length, false, stream ); 
-              switch ( a_printed ) 
-                { case - 2: /* Substring is not good CM3 TEXT subtype. */
-                    { fputs_filtered ("<Ill-formed CM3 TEXT value>", stream );
-                      return - 2; 
-                    } 
-                  case - 1 :  /* String was truncated to length. */ 
-                    { result = - 1; 
-                      length = 0; /* Cause skip of b-side code. */  
-                      break; 
-                    } 
-                  default: 
-                    { start = 0; 
-                      length -= a_printed;
-                    } 
-                } /* switch */ 
-            } /* else */ 
-        } /* if */
-      if ( length > 0 ) 
-        { b_tc_addr = m3_tc_addr_from_inf_object_addr (b_object);
-          b_printed 
-            = m3_print_cm3_text 
-                ( b_object, b_tc_addr, start, length, false, stream ); 
-          switch (b_printed ) 
-            { case - 2 : /* Substring is not good CM3 TEXT subtype. */
-                { fputs_filtered ("<Ill-formed CM3 TEXT value>", stream );
-                  return - 2; 
-                } 
-              case - 1 :  /* String was truncated. */ 
-                { result = - 1; 
-                  break; 
-                } 
-              default : { result = a_printed + b_printed; } 
-            } 
-        } 
-    } 
+    else if ( type_info_matches ( tc_addr, &TextCat ) ) 
+      { CORE_ADDR a_object, b_object; 
+        CORE_ADDR a_tc_addr, b_tc_addr; 
+        LONGEST a_printed = 0;
+        LONGEST b_printed = 0; 
+        LONGEST a_len = 0; 
 
-  else if ( type_info_matches ( tc_addr, &TextSub ) ) 
-    { CORE_ADDR base;
-      LONGEST substart;
-      CORE_ADDR tc_addr;
+        a_object = m3_text_field_pointer ( ref, &TextCat, &TextCat_a ); 
+        b_object = m3_text_field_pointer ( ref, &TextCat, &TextCat_b ); 
+        if (a_object == 0 || b_object == 0 ) 
+           { fputs_filtered ("\"<Ill-formed CM3 TEXT value>\"", stream ); 
+             return - 2; 
+           } 
+        if (add_quotes)
+          { bool a_or_b_wide 
+              = m3_text_field_boolean ( ref, &TextCat, &TextCat_a_or_b_wide ); 
+            if (a_or_b_wide) 
+              { fputs_filtered ("W\"", stream); } 
+            else { fputs_filtered ("\"", stream); } 
+          } 
+        if ( length > 0 ) 
+          { a_tc_addr = m3_tc_addr_from_inf_object_addr (a_object);
+            a_len = m3_text_field_length ( ref , &TextCat, &TextCat_a_len, 0 ); 
+            if ( start >= a_len ) 
+              { start -= a_len; } 
+            else 
+              { a_printed 
+                  = m3_print_cm3_text 
+                      ( a_object, a_tc_addr, start, length, false, stream ); 
+                switch ( a_printed ) 
+                  { case - 2: /* Substring is not good CM3 TEXT subtype. */
+                      { fputs_filtered ("<Ill-formed CM3 TEXT value>", stream );
+                        return - 2; 
+                      } 
+                    case - 1 :  /* String was truncated to length. */ 
+                      { result = - 1; 
+                        length = 0; /* Cause skip of b-side code. */  
+                        break; 
+                      } 
+                    default: 
+                      { start = 0; 
+                        length -= a_printed;
+                      } 
+                  } /* switch */ 
+              } /* else */ 
+          } /* if */
+        if ( length > 0 ) 
+          { b_tc_addr = m3_tc_addr_from_inf_object_addr (b_object);
+            b_printed 
+              = m3_print_cm3_text 
+                  ( b_object, b_tc_addr, start, length, false, stream ); 
+            switch (b_printed ) 
+              { case - 2 : /* Substring is not good CM3 TEXT subtype. */
+                  { fputs_filtered ("<Ill-formed CM3 TEXT value>", stream );
+                    return - 2; 
+                  } 
+                case - 1 :  /* String was truncated. */ 
+                  { result = - 1; 
+                    break; 
+                  } 
+                default : { result = a_printed + b_printed; } 
+              } 
+          } 
+      } 
 
-      base = m3_text_field_pointer ( ref , &TextSub, &TextSub_base ); 
-      if ( base == 0 ) 
-        { fputs_filtered ("\"<Ill-formed CM3 TEXT value>\"", stream ); 
-          return - 2; 
-        } 
-      substart 
-        = m3_text_field_length ( ref , &TextSub, &TextSub_start, 0 ) + start;
-      string_length = m3_text_field_length ( ref , &TextSub, &TextSub_len, 0 );
-      if ( length < string_length) 
-        { print_length = length; result = - 1; }
-      else { print_length = string_length; result = string_length; } 
-      tc_addr = m3_tc_addr_from_inf_object_addr ( base );
-      result 
-        = m3_print_cm3_text 
-            ( base, tc_addr, start + substart, print_length, add_quotes, 
-              stream
-            );
-      add_quotes = false; 
-      if ( result == - 1 ) /* We expect this. */ 
-        { result = print_length; } 
-      /* result values - 2 and - 3 just get passed up. */ 
-    } 
+    else if ( type_info_matches ( tc_addr, &TextSub ) ) 
+      { CORE_ADDR base;
+        LONGEST substart;
+        CORE_ADDR tc_addr;
 
-  else /* It's not a CM3 TEXT subtype. */ { return - 3; }
+        base = m3_text_field_pointer ( ref , &TextSub, &TextSub_base ); 
+        if ( base == 0 ) 
+          { fputs_filtered ("\"<Ill-formed CM3 TEXT value>\"", stream ); 
+            return - 2; 
+          } 
+        substart 
+          = m3_text_field_length ( ref , &TextSub, &TextSub_start, 0 ) + start;
+        string_length 
+          = m3_text_field_length ( ref , &TextSub, &TextSub_len, 0 );
+        if ( length < string_length) 
+          { print_length = length; result = - 1; }
+        else { print_length = string_length; result = string_length; } 
+        tc_addr = m3_tc_addr_from_inf_object_addr ( base );
+        result 
+          = m3_print_cm3_text 
+              ( base, tc_addr, start + substart, print_length, add_quotes, 
+                stream
+              );
+        add_quotes = false; 
+        if ( result == - 1 ) /* We expect this. */ 
+          { result = print_length; } 
+        /* result values - 2 and - 3 just get passed up. */ 
+      } 
 
-  /* Fall through to here if we recognized and printed a CM3 TEXT subtype. */ 
-  if (add_quotes) 
-    { fputs_filtered ("\"", stream); } 
-  return result;  
-} /* m3_print_cm3_text */ 
+    else /* It's not a CM3 TEXT subtype. */ { return - 3; }
+
+    /* Fall through to here if we recognized and printed a CM3 TEXT subtype. */ 
+    if (add_quotes) 
+      { fputs_filtered ("\"", stream); } 
+    return result;  
+  } /* m3_print_cm3_text */ 
 
 static void
 m3_print_plain_object (
@@ -910,49 +922,48 @@ m3_print_plain_object (
      int format
   )
 
-{
-  char name [100];
-  struct type *this_obj;
-  struct symbol *this_obj_sym;
-  int i, data_offset; 
+  { char name [100];
+    struct type *this_obj;
+    struct symbol *this_obj_sym;
+    int i, data_offset; 
 
-  if (tc_addr == 0) {
-    return; }
+    if (tc_addr == 0) {
+      return; }
 
-  this_obj = m3_type_from_tc (tc_addr);
-  if (TYPE_CODE (this_obj) == TYPE_CODE_M3_ROOT
-      || TYPE_CODE (this_obj) == TYPE_CODE_M3_TRANSIENT_ROOT
-      || TYPE_CODE (this_obj) == TYPE_CODE_M3_UN_ROOT) {
-    return; }
+    this_obj = m3_type_from_tc (tc_addr);
+    if (TYPE_CODE (this_obj) == TYPE_CODE_M3_ROOT
+        || TYPE_CODE (this_obj) == TYPE_CODE_M3_TRANSIENT_ROOT
+        || TYPE_CODE (this_obj) == TYPE_CODE_M3_UN_ROOT) {
+      return; }
 
-  m3_print_plain_object (valaddr, m3_super_tc_addr_from_tc_addr (tc_addr),
-		     stream, format);
-  data_offset = m3_dataOffset_from_tc_addr (tc_addr);
+    m3_print_plain_object (valaddr, m3_super_tc_addr_from_tc_addr (tc_addr),
+                       stream, format);
+    data_offset = m3_dataOffset_from_tc_addr (tc_addr);
 
-  /* TODO: Make the printing of types selectable by a user option or format 
-     letter. */
-  if (0 && (TYPE_M3_OBJ_NFIELDS (this_obj) > 0)) {
-    fputs_filtered ("(*", stream);
-    m3_print_type(this_obj, 0, stream, 0, 0);
-    fputs_filtered ("*) ", stream);
-  }
+    /* TODO: Make the printing of types selectable by a user option or format 
+       letter. */
+    if (0 && (TYPE_M3_OBJ_NFIELDS (this_obj) > 0)) {
+      fputs_filtered ("(*", stream);
+      m3_print_type(this_obj, 0, stream, 0, 0);
+      fputs_filtered ("*) ", stream);
+    }
 
-  for (i = 0; i < TYPE_M3_OBJ_NFIELDS (this_obj); i++) {
-    if (i != 0) {
+    for (i = 0; i < TYPE_M3_OBJ_NFIELDS (this_obj); i++) {
+      if (i != 0) {
+        fputs_filtered ("; ", stream);
+        wrap_here ("    "); }
+      fputs_filtered (TYPE_M3_OBJ_FIELD_NAME (this_obj, i), stream);
+      fputs_filtered (" = ", stream);
+      m3_val_print2 (TYPE_M3_OBJ_FIELD_TYPE (this_obj, i), 
+                     valaddr, 
+                     data_offset * TARGET_CHAR_BIT + 
+                        TYPE_M3_OBJ_FIELD_BITPOS (this_obj, i),
+                     TYPE_M3_OBJ_FIELD_BITSIZE (this_obj, i),
+                     stream, format, 0, 0); }
+    if (i > 0) {
       fputs_filtered ("; ", stream);
       wrap_here ("    "); }
-    fputs_filtered (TYPE_M3_OBJ_FIELD_NAME (this_obj, i), stream);
-    fputs_filtered (" = ", stream);
-    m3_val_print2 (TYPE_M3_OBJ_FIELD_TYPE (this_obj, i), 
-		   valaddr, 
-		   data_offset * TARGET_CHAR_BIT + 
-		      TYPE_M3_OBJ_FIELD_BITPOS (this_obj, i),
-		   TYPE_M3_OBJ_FIELD_BITSIZE (this_obj, i),
-		   stream, format, 0, 0); }
-  if (i > 0) {
-    fputs_filtered ("; ", stream);
-    wrap_here ("    "); }
-} /* m3_print_plain_object */ 
+  } /* m3_print_plain_object */ 
 
 /* TODO: make this queryable and alterable by user command: */ 
 int max_string_length = 2048; 
@@ -971,79 +982,79 @@ m3_print_object (
      int format
   )
 
-{
-  gdb_byte *bits;
-  CORE_ADDR ref;
-  CORE_ADDR tc_addr;
+  {
+    gdb_byte *bits;
+    CORE_ADDR ref;
+    CORE_ADDR tc_addr;
 
-  /* Get the inferior pointer value in ref. */
-  ref = m3_extract_address (valaddr, bitpos);
-  if (ref == 0) {
-    fputs_filtered ("NIL", stream);
-    return;
-  }
-
-  /* Get the inferior runtime type cell address in tc_addr. */
-  tc_addr = m3_tc_addr_from_inf_object_addr (ref);
-  if (tc_addr == 0) {
-    fprintf_filtered 
-      (stream, _("<Can't find Modula-3 TypeCell for object at "));
-    m3_print_scalar (valaddr, bitpos, TARGET_PTR_BIT, stream, '&', 0); 
-    /* FIXME: valaddr does not point to a place where the negative-displacement
-       GC word is present. 
-    fprintf_filtered 
-      (stream, ", with typecode %d>", m3_typecode_from_inf_object_addr ( valaddr ) );
-    */ 
-    return;
-  }
-
-  init_m3_text_info ( );  
-
-  /* Print the address of the object. */ 
-  fprintf_filtered (stream, "(*");
-  m3_print_scalar (valaddr, bitpos, TARGET_PTR_BIT, stream, '&', 0); 
-  fprintf_filtered (stream, "*) ");
-
-  /* Is it a CM3 TEXT? */
-  if ( m3_compiler_kind ( ) == m3_ck_cm3 && format != m3_text_object_format ) 
-    { int actual_printed; 
-
-      actual_printed 
-        = m3_print_cm3_text 
-            ( ref , tc_addr, 0, max_string_length, true, stream );  
-      switch ( actual_printed ) 
-        { case - 1: /* CM3 string, was truncated at requested max length. */ 
-            { fputs_filtered ("...", stream);
-              return ; 
-            }  
-          case - 2: /* Ill-formed CM3 string.  Also print it as an object. */  
-          case - 3: /* Wasn't a CM3 string. */ 
-            { break; }   
-          default: /* CM3 string, was printed at full length. */ 
-            { return; } 
-        } 
-    } 
-
-  /* Is it CM3 TextLiteral.T, in object format? */ 
-  if ( format == m3_text_object_format 
-       && type_info_matches ( tc_addr , &TextLiteral ) 
-     ) 
-    { m3_print_cm3_TextLiteral_object ( ref, stream ); 
-      return; 
-    } 
-
-  /* Fall through to here for normal object. */ 
-  bits = m3_read_object_fields_bits (ref);
-  if (bits == 0) /* This shouldn't happen. */ 
-    { fputs_filtered ("NIL", stream);
+    /* Get the inferior pointer value in ref. */
+    ref = m3_extract_address (valaddr, bitpos);
+    if (ref == 0) {
+      fputs_filtered ("NIL", stream);
       return;
     }
-  fprintf_filtered (stream, "OBJECT ");
-  m3_print_plain_object 
-    ( bits, tc_addr, stream, format == m3_text_object_format ? 0 : format );
-  fputs_filtered (" END", stream);
-  free (bits);
-} /* m3_print_object */ 
+
+    /* Get the inferior runtime type cell address in tc_addr. */
+    tc_addr = m3_tc_addr_from_inf_object_addr (ref);
+    if (tc_addr == 0) {
+      fprintf_filtered 
+        (stream, _("<Can't find Modula-3 TypeCell for object at "));
+      m3_print_scalar (valaddr, bitpos, TARGET_PTR_BIT, stream, '&', 0); 
+      /* FIXME: valaddr does not point to a place where the negative-displacement
+         GC word is present. 
+      fprintf_filtered 
+        (stream, ", with typecode %d>", m3_typecode_from_inf_object_addr ( valaddr ) );
+      */ 
+      return;
+    }
+
+    init_m3_text_info ( );  
+
+    /* Print the address of the object. */ 
+    fprintf_filtered (stream, "(*");
+    m3_print_scalar (valaddr, bitpos, TARGET_PTR_BIT, stream, '&', 0); 
+    fprintf_filtered (stream, "*) ");
+
+    /* Is it a CM3 TEXT? */
+    if ( m3_compiler_kind ( ) == m3_ck_cm3 && format != m3_text_object_format ) 
+      { int actual_printed; 
+
+        actual_printed 
+          = m3_print_cm3_text 
+              ( ref , tc_addr, 0, max_string_length, true, stream );  
+        switch ( actual_printed ) 
+          { case - 1: /* CM3 string, was truncated at requested max length. */ 
+              { fputs_filtered ("...", stream);
+                return ; 
+              }  
+            case - 2: /* Ill-formed CM3 string.  Also print it as an object. */  
+            case - 3: /* Wasn't a CM3 string. */ 
+              { break; }   
+            default: /* CM3 string, was printed at full length. */ 
+              { return; } 
+          } 
+      } 
+
+    /* Is it CM3 TextLiteral.T, in object format? */ 
+    if ( format == m3_text_object_format 
+         && type_info_matches ( tc_addr , &TextLiteral ) 
+       ) 
+      { m3_print_cm3_TextLiteral_object ( ref, stream ); 
+        return; 
+      } 
+
+    /* Fall through to here for normal object. */ 
+    bits = m3_read_object_fields_bits (ref);
+    if (bits == 0) /* This shouldn't happen. */ 
+      { fputs_filtered ("NIL", stream);
+        return;
+      }
+    fprintf_filtered (stream, "OBJECT ");
+    m3_print_plain_object 
+      ( bits, tc_addr, stream, format == m3_text_object_format ? 0 : format );
+    fputs_filtered (" END", stream);
+    free (bits);
+  } /* m3_print_object */ 
 
 extern unsigned int repeat_count_threshold;
 
@@ -1052,43 +1063,43 @@ extern unsigned int repeat_count_threshold;
 static void 
 m3_print_proc_name ( struct symbol * sym, struct ui_file *stream ) 
 
-{ const char * name;
-  const char * next_comp;
-  char *char_p;
-  int len; 
+  { const char * name;
+    const char * next_comp;
+    char *char_p;
+    int len; 
 
-  name = SYMBOL_LINKAGE_NAME ( sym ); 
-  next_comp = name; 
-  char_p = strchr ( next_comp, '_' );
-  if ( char_p != NULL && char_p != next_comp && char_p[ 1 ] == '_' )
-     /* Two underscores. */ 
-    { while ( true ) 
-        { len = char_p - next_comp; 
-          if ( '0' <= * next_comp && * next_comp <= '9' ) 
-            { fprintf_filtered ( stream, "<block-%.*s>.", len, next_comp ); } 
-          else 
-            { fprintf_filtered ( stream, "%.*s.", len, next_comp ); } 
-          next_comp = char_p + 2; 
-          char_p = strchr ( next_comp, '_' );
-          if ( char_p != NULL && char_p != next_comp && char_p[1] == '_' ) 
-            /* There is another component, terminated by double underscore. 
-               Loop. */
-            { } 
-          else 
-            { char_p = strchr ( next_comp, '.' );
-              if ( ( char_p != NULL ) && ( char_p != next_comp ) ) 
-                /* The last component is terminated by a dot. */ 
-                { len = char_p - next_comp; 
-                  fprintf_filtered ( stream, "%.*s", len, next_comp ); 
-                } 
-              else { fputs_filtered ( next_comp, stream ); } 
-              break; 
-            } 
-        } /* while */ 
-    }
-  else 
-    { fputs_filtered ( next_comp, stream ); } 
-} /* m3_print_proc_name */ 
+    name = SYMBOL_LINKAGE_NAME ( sym ); 
+    next_comp = name; 
+    char_p = strchr ( next_comp, '_' );
+    if ( char_p != NULL && char_p != next_comp && char_p[ 1 ] == '_' )
+       /* Two underscores. */ 
+      { while ( true ) 
+          { len = char_p - next_comp; 
+            if ( '0' <= * next_comp && * next_comp <= '9' ) 
+              { fprintf_filtered ( stream, "<block-%.*s>.", len, next_comp ); } 
+            else 
+              { fprintf_filtered ( stream, "%.*s.", len, next_comp ); } 
+            next_comp = char_p + 2; 
+            char_p = strchr ( next_comp, '_' );
+            if ( char_p != NULL && char_p != next_comp && char_p[1] == '_' ) 
+              /* There is another component, terminated by double underscore. 
+                 Loop. */
+              { } 
+            else 
+              { char_p = strchr ( next_comp, '.' );
+                if ( ( char_p != NULL ) && ( char_p != next_comp ) ) 
+                  /* The last component is terminated by a dot. */ 
+                  { len = char_p - next_comp; 
+                    fprintf_filtered ( stream, "%.*s", len, next_comp ); 
+                  } 
+                else { fputs_filtered ( next_comp, stream ); } 
+                break; 
+              } 
+          } /* while */ 
+      }
+    else 
+      { fputs_filtered ( next_comp, stream ); } 
+  } /* m3_print_proc_name */ 
 
 /* Print the filename and line number of a procedure symbol, on stream, with
    no terminating new line. */ 
@@ -1096,35 +1107,20 @@ static void
 m3_print_proc_file_and_line ( 
     struct symbol * proc_sym, struct ui_file *stream ) 
 
-{ struct symtab_and_line sal; 
-   
-  sal = find_function_start_sal ( proc_sym, 0 );  
-  fprintf_filtered 
-    ( stream, "%s:%d", sal . symtab -> filename, SYMBOL_LINE ( proc_sym ) ); 
-} /* m3_print_proc_file_and_line */ 
+  { struct symtab_and_line sal; 
 
-static int 
-m3_frame_no_from_static_link ( CORE_ADDR inf_static_link ) 
-
-{ struct frame_info *l_frame; 
-  struct block * l_frame_proc_block; 
-  struct block * l_target_proc_block ; 
-
-  if ( inf_static_link == 0 ) { return - 1; } 
-  l_frame = deprecated_safe_get_selected_frame ( ); 
-  /* Using m3_address_lies_within_frame_locals makes this immune to gcc's
-     evil habit of making static links point to variable places within the
-     activation record besides where the frame pointer does. */ 
-  while ( ! m3_address_lies_within_frame_locals ( inf_static_link , l_frame ) )
-    { l_frame = m3_static_parent_frame ( l_frame ); } 
-  return frame_relative_level ( l_frame ); 
-} /* m3_frame_no_from_static_link */ 
+    sal = find_function_start_sal ( proc_sym, 0 );  
+    fprintf_filtered 
+      ( stream, "%s:%d", sal . symtab -> filename, SYMBOL_LINE ( proc_sym ) ); 
+  } /* m3_print_proc_file_and_line */ 
 
 static void 
 m3_print_proc_value ( 
   CORE_ADDR inf_code_addr, CORE_ADDR inf_static_link, struct ui_file *stream ) 
 
-  { struct symbol * proc_sym; 
+  { struct symbol * proc_sym;
+    struct block * proc_block;  
+    struct frame_info * proc_frame;
 
     if ( inf_code_addr == 0 ) 
       { fputs_filtered ( "NIL", stream ); } 
@@ -1141,13 +1137,20 @@ m3_print_proc_value (
             fputs_filtered ( "\", Declared at: ", stream ); 
             m3_print_proc_file_and_line ( proc_sym, stream ); 
             if ( inf_static_link != 0 )
-              { fputs_filtered ( ", ", stream ); 
+              { proc_block = SYMBOL_BLOCK_VALUE (proc_sym);
+                proc_frame 
+                  = m3_static_ancestor_frame  
+                     ( deprecated_safe_get_selected_frame ( ),
+                       proc_block,
+                       NULL
+                     ); 
+                fputs_filtered ( ", ", stream ); 
                 wrap_here ( "" ); 
                 fprintf_filtered 
                   ( stream,
-                    "Static ancestor=(16_%lx)frame #%d", 
+                    "Static ancestor=(16_%lx), frame #%d", 
                     inf_static_link,  
-                    m3_frame_no_from_static_link ( inf_static_link)
+                    frame_relative_level (proc_frame)
                   ); 
               }  
             fputs_filtered ( "}", stream ); 
