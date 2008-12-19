@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.142 2008-12-19 00:32:24 jkrell Exp $
+# $Id: pylib.py,v 1.143 2008-12-19 09:23:17 jkrell Exp $
 
 import os
 from os import getenv
@@ -1103,20 +1103,30 @@ def Boot():
         "SPARC64_LINUX"     : " -m64 -munaligned-doubles ",
         }.get(Target) or ""))
 
+    CommonLink = " -lm -lpthread "
+
     Link = (Compile + " " + ({
-        "AMD64_LINUX"       : " -lm -lpthread ",
-        "MIPS64_OPENBSD"    : " -lm -lpthread ",
-        "PPC32_OPENBSD"     : " -lm -lpthread ",
-        "SPARC64_OPENBSD"   : " -lm -lpthread ",
+        "AMD64_LINUX"       : CommonLink,
+        "MIPS64_OPENBSD"    : CommonLink,
+        "PPC32_OPENBSD"     : CommonLink,
+        "SPARC32_LINUX"     : CommonLink,
+        "SPARC64_LINUX"     : CommonLink,
+        "SPARC64_OPENBSD"   : CommonLink,
         "PPC_LINUX"         : " -lm ",
         }.get(Target) or ""))
 
+    SunCompile = "cc -g -mt -xcode=pic32 -xldscope=symbolic"
+
     Compile = {
-        "SPARC64_SOLARIS"       : "cc -g -mt -xarch=v9 -xcode=pic32 -xldscope=symbolic",
+        "SOLsun"                : SunCompile + " -xarch=v8plus ",
+        "SPARC64_SOLARIS"       : SunCompile + " -xarch=v9 ",
         }.get(Target) or Compile
 
+    SunLink = " -lrt -lm -lnsl -lsocket "
+
     Link = {
-        "SPARC64_SOLARIS"       : Compile + " -lrt -lm -lnsl -lsocket "
+        "SOLsun"                : Compile + SunLink,
+        "SPARC64_SOLARIS"       : Compile + SunLink,
         }.get(Target) or Link
 
     # not in Link
@@ -1127,6 +1137,7 @@ def Boot():
         "LINUXLIBC6"        : " --32 ",
         "SPARC32_LINUX"     : " -32 ",
         "SPARC64_LINUX"     : " -64 ",
+        "SOLsun"            : " -s -K PIC -xarch=v8plus ",
         "SPARC64_SOLARIS"   : " -s -K PIC -xarch=v9 ",
         }.get(Target) or ""))
 
@@ -1174,7 +1185,7 @@ def Boot():
     for q in P:
         dir = GetPackagePath(q)
         for a in os.listdir(os.path.join(Root, dir, Config)):
-            if (a.endswith(".ms") or a.endswith(".is") or a.endswith(".c")):
+            if (a.endswith(".ms") or a.endswith(".is") or a.endswith(".s") or a.endswith(".c")):
                 CopyFile(os.path.join(Root, dir, Config, a), BootDir)
                 Makefile.write("Objects += " + a + ".o\n" + a + ".o: " + a + "\n\t")
                 if a.endswith(".c"):
