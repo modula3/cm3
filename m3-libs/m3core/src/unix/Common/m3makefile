@@ -1,20 +1,22 @@
 
-c_source("UstatC")
 c_source ("UtimeC")
 
 if equal (TARGET, "MIPS64_OPENBSD")
+    c_source("UstatC")
     Interface ("Ustat")
     c_source("UdirC")
 end
 
 if equal (TARGET, "AMD64_LINUX")
   or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
+    c_source("UstatC")
     Interface ("Ustat")
     Interface ("Udir")
     c_source("UdirC")
 end
 
 if equal (TARGET, "NT386")
+    c_source("UstatC")
     Interface ("Udir")
     c_source("UdirC")
 end
