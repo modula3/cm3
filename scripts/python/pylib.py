@@ -1330,9 +1330,7 @@ def _FilterPackage(Package):
         "tcl": BuildAll or HAVE_TCL,
         "udp": BuildAll or OSType == "POSIX",
         "tapi": BuildAll or OSType == "WIN32",
-        # "temporarily" removed due to problem on I386_CYGWIN
-        # "serial": BuildAll or HAVE_SERIAL,
-        "serial": False,
+        "serial": BuildAll or HAVE_SERIAL,
         "X11R4": BuildAll or OSType != "WIN32",
         "m3cc": GCC_BACKEND and not OMIT_GCC,
     }
