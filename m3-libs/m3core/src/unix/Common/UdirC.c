@@ -16,13 +16,13 @@ However, if the underlying platform makes it 32bits, and
 d_name is 32bit aligned but not 64bit aligned, then 32bits
 is preferable.*/
 #ifdef __OpenBSD__
-typedef UINT32 ino_t;
+typedef UINT32 m3_ino_t;
 #else
-typedef UINT64 ino_t;
+typedef UINT64 m3_ino_t;
 #endif
 
 typedef struct _m3_dirent_t {
-    ino_t d_ino;
+    m3_ino_t d_ino;
 #ifndef __OpenBSD__
     char pad[3]; /* not portable */
 #endif
@@ -45,7 +45,7 @@ volatile m3_dirent_t* m3_readdir(DIR* dir)
 
 #if !defined(__i386__)
     /* and that it is aligned */
-    assert((((size_t)m3) & ~(sizeof(ino_t) - 1)) == 0);
+    assert((((size_t)m3) & ~(sizeof(m3_ino_t) - 1)) == 0);
 #endif
 
 #ifdef __OpenBSD__

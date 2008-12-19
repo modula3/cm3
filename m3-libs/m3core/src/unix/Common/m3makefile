@@ -8,6 +8,7 @@ if equal (TARGET, "MIPS64_OPENBSD")
 end
 
 if equal (TARGET, "AMD64_LINUX")
+  or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
     Interface ("Ustat")
     Interface ("Udir")
     c_source("UdirC")
