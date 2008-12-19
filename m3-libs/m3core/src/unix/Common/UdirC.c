@@ -1,3 +1,5 @@
+#define __USE_LARGEFILE64
+
 #include <sys/types.h>
 #include <dirent.h>
 #include <assert.h>
