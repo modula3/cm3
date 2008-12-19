@@ -66,12 +66,12 @@ readonly INSTALL_IMPLS = FALSE
 
 %-------------------------------------------------------------------
 
-proc exists(x) is
+proc FileExists(x) is
     return not stale(x, x)
 end
 
-proc FileExists(x) is
-    return not stale(x, x)
+proc exists(x) is
+    return FileExists(x)
 end
 
 proc DeleteFile(a) is
@@ -185,24 +185,47 @@ proc GetM3Back() is
     if not defined("HOST")
         HOST = TARGET
     end
-    local ALT1 = ""
+    local ALTHOST = ""
+    local ALTTARGET = ""
     if equal (HOST, "NT386")
-      ALT1 = "NT386GNU"
+      ALTHOST = "NT386GNU"
     end
-    foreach host in [ HOST & SL, HOST & "-", ALT1 & SL, ""]
-        foreach target in [ TARGET & SL, TARGET & "-", ""]
-            foreach root in [ m3cc, bin ]
-                foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
-                    foreach exe in [".exe", ""]
-                        local a = root & host & target & gcc & exe
-                        if not Cache contains a
-                            % write("probing " & a & "\n")
-                            if FileExists(a)
-                                % write("using " & a & "\n")
-                                m3back = "@" & a & " " & m3back_flags
-                                return m3back
-                            else
-                                Cache{a} = 1
+    if equal (HOST, "SOLsun")
+      ALTHOST = "SOLgnu"
+    end
+    if equal (HOST, "SOLgnu")
+      ALTHOST = "SOLsun"
+    end
+    if equal (TARGET, "SOLsun")
+      ALTTARGET = "SOLgnu"
+    end
+    if equal (TARGET, "SOLgnu")
+      ALTTARGET = "SOLsun"
+    end
+    %
+    % NOTE that if you share one file system across multiple hosts, then
+    % host and target can get confused, if one is empty. For that reason,
+    % we should probe all variants where both are non-empty before we probe
+    % any where either is empty, but we don't.
+    %
+    foreach host in [ HOST & SL, HOST & "-", ALTHOST & SL, ALTHOST & "-", ""]
+        if not equal (host, "-")
+            foreach target in [ TARGET & SL, TARGET & "-", ALTTARGET & SL, ALTTARGET & "-", ""]
+                if not equal (target, "-")
+                    foreach root in [ m3cc, bin ]
+                        foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
+                            foreach exe in [".exe", ""]
+                                local a = root & host & target & gcc & exe
+                                if not Cache contains a
+                                    % write("probing " & a & "\n")
+                                    if FileExists(a)
+                                        % write("using " & a & "\n")
+                                        m3back = "@" & a & " " & m3back_flags
+                                        return m3back
+                                    else
+                                        Cache{a} = 1
+                                    end
+                                end
                             end
                         end
                     end
