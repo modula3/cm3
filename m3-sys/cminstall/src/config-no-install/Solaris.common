@@ -21,13 +21,13 @@ if equal (C_COMPILER, "SUN")
 end
 
 if equal (C_COMPILER, "GNU")
-    if not defined(SOLARIS_VERSION)
+    if not defined("SOLARIS_VERSION")
         SOLARIS_VERSION = "2.10"
     end
-    if not defined(GCC_VERSION)
+    if not defined("GCC_VERSION")
         GCC_VERSION = "4.3.1"
     end
-    if not defined(GCC_PREFIX)
+    if not defined("GCC_PREFIX")
         GCC_PREFIX = "/usr/local"
     end
     readonly GNU_PLATFORM = "sparc" & GccPlatformBits & "-sun-solaris" & SOLARIS_VERSION
@@ -124,7 +124,10 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     if M3_PROFILING
         args += "-pg"
     end
-    args += [ "-o", prog, options, objects, imported_libs, LIBGCC]
+    args += [ "-o", prog, options, objects, imported_libs ]
+    if not defined("LIBGCC")
+        args += [ LIBGCC ]
+    end
     if shared
         return try_exec (linker, args)
     else
