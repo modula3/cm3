@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.140 2008-12-17 14:47:34 jkrell Exp $
+# $Id: pylib.py,v 1.141 2008-12-19 00:24:21 jkrell Exp $
 
 import os
 from os import getenv
@@ -1330,9 +1330,7 @@ def _FilterPackage(Package):
         "tcl": BuildAll or HAVE_TCL,
         "udp": BuildAll or OSType == "POSIX",
         "tapi": BuildAll or OSType == "WIN32",
-        # "temporarily" removed due to problem on I386_CYGWIN
-        # "serial": BuildAll or HAVE_SERIAL,
-        "serial": False,
+        "serial": BuildAll or HAVE_SERIAL,
         "X11R4": BuildAll or OSType != "WIN32",
         "m3cc": GCC_BACKEND and not OMIT_GCC,
     }
