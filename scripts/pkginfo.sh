@@ -38,7 +38,6 @@ UsePackage()
     tcl) [ "${HAVE_TCL}" = yes ] ;;
     serial) [ "${HAVE_SERIAL}" = yes ] ;;
 
-    udp) [ "${M3OSTYPE}" = "POSIX" ] ;;
     tapi) [ "${M3OSTYPE}" = "WIN32" ] ;;
 
     X11R4) [ "${M3OSTYPE}" != "WIN32" ] ;;
