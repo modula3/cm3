@@ -1,6 +1,5 @@
 interface("Upthread")
 Interface("Utypes")
-Interface("Usignal")
 Interface("Usem")
 Interface("Usched")
 
