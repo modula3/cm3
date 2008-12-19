@@ -1328,7 +1328,6 @@ def _FilterPackage(Package):
 
         "fix_nl": BuildAll or OSType == "WIN32",
         "tcl": BuildAll or HAVE_TCL,
-        "udp": BuildAll or OSType == "POSIX",
         "tapi": BuildAll or OSType == "WIN32",
         "serial": BuildAll or HAVE_SERIAL,
         "X11R4": BuildAll or OSType != "WIN32",

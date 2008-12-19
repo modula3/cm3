@@ -34,7 +34,7 @@ goto :eof
 
 :FilterOnePackage
     @rem goto :FilterOnePackage_%1
-    for %%a in (mklib fix_nl libdump import_libs tcl serial udp X11R4 m3staloneback m3cc m3gdb) do if /i "%1" == "%%a" goto :FilterOnePackage_%1
+    for %%a in (mklib fix_nl libdump import_libs tcl serial X11R4 m3staloneback m3cc m3gdb) do if /i "%1" == "%%a" goto :FilterOnePackage_%1
     exit /b 0
     goto :eof
 
@@ -52,10 +52,6 @@ goto :eof
 
 :FilterOnePackage_serial
     if /i "%HAVE_SERIAL%" == "yes" exit /b 0
-    exit /b 1
-
-:FilterOnePackage_udp
-    if /i "%M3OSTYPE%" == "POSIX" exit /b 0
     exit /b 1
 
 :FilterOnePackage_X11R4
