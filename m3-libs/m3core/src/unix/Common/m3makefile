@@ -2,9 +2,13 @@
 c_source ("UtimeC")
 
 if equal (TARGET, "MIPS64_OPENBSD")
+        or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
+%
+% OpenBSD has a very clear dirent with no ifdefs, and a 32bit ino that isn't
+% 64bit aligned, so it just uses the old per Modula-3 approach dor Udir
+%
     c_source("UstatC")
     Interface ("Ustat")
-    c_source("UdirC")
 end
 
 if equal (TARGET, "AMD64_LINUX")
@@ -16,6 +20,9 @@ if equal (TARGET, "AMD64_LINUX")
 end
 
 if equal (TARGET, "NT386")
+%
+% Cygwin's stat flags are not common.
+%
     c_source("UstatC")
     Interface ("Udir")
     c_source("UdirC")
