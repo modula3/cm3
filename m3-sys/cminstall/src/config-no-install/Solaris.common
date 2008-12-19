@@ -1,14 +1,11 @@
-readonly SYSTEM_LD = "/usr/ccs/bin/ld -B direct -z ignore -z combreloc -z defs -z text"
 readonly SYSTEM_AR = "ar"
 
 if equal (WORD_SIZE, "32BITS")
     GccMBits = "32"
-    GccPlatformBits = ""
     SunXArch = "v8plus"
     M3_USE_STACK_WALKER = TRUE
 else
     GccMBits = "64"
-    GccPlatformBits = "64"
     SunXArch = "v9"
 end
 
@@ -16,39 +13,17 @@ readonly m3back_flags = "-quiet -gstabs+ -fPIC -m" & GccMBits
 readonly SYSTEM_ASM = "as -s -K PIC -xarch=" & SunXArch
 
 if equal (C_COMPILER, "SUN")
-    readonly LIBGCC = ""
     readonly SYSTEM_CC = "cc -g -mt -xarch=" & SunXArch & " -xcode=pic32 -xldscope=symbolic"
+    % SYSTEM_LD = "/usr/ccs/bin/ld"
 end
 
 if equal (C_COMPILER, "GNU")
-    if not defined("SOLARIS_VERSION")
-        SOLARIS_VERSION = "2.10"
-    end
-    if not defined("GCC_VERSION")
-        GCC_VERSION = "4.3.1"
-    end
-    if not defined("GCC_PREFIX")
-        GCC_PREFIX = "/usr/local"
-    end
-    readonly GNU_PLATFORM = "sparc" & GccPlatformBits & "-sun-solaris" & SOLARIS_VERSION
     if not defined("SYSTEM_CC")
-        % This can suffice.
-        %   readonly SYSTEM_CC = "gcc -fPIC"
-        % or this:
-        %   readonly SYSTEM_CC = "gcc -fPIC -m" & GccMBits
-        readonly SYSTEM_CC = GCC_PREFIX & "/bin/" & GNU_PLATFORM & "-gcc -g -fPIC -m" & GccMBits
-    end
-    if not defined("LIBGCC")
-        %
-        % TBD get invoking gcc to work instead.
-        % In particular, gcc -fPIC -m32 or -m64 is nice.
-        % i.e. if we link with gcc and have multilib-enabled gcc, then
-        % we can dispense with knowing: LIBGCC, GNU_PLATFORM, GCC_PREFIX, SOLARIS_VERSION
-        %
-        readonly LIBGCC = GCC_PREFIX & "/lib/gcc/" & GNU_PLATFORM & "/" & GCC_VERSION & "/libgcc.a"
+        readonly SYSTEM_CC = "gcc -g -fPIC -m" & GccMBits
     end
 end
 
+readonly SYSTEM_LD = SYSTEM_CC & " -B direct -z ignore -z combreloc -z defs -z text"
 
 SYSTEM_LIBS = {
     "LIBC"      : [ "-lsocket", "-lnsl",
@@ -92,7 +67,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
     if shared
         % then, build the shared library
-        ret_code = try_exec ("@" & SYSTEM_LD, "-G", "-o",
+        ret_code = try_exec ("@" & SYSTEM_LD, "-shared", "-G", "-o",
                              lib_sox, "-h", lib_sox, objects,
                              imported_libs)
         if not equal (ret_code, 0)
@@ -125,9 +100,6 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
         args += "-pg"
     end
     args += [ "-o", prog, options, objects, imported_libs ]
-    if not defined("LIBGCC")
-        args += [ LIBGCC ]
-    end
     if shared
         return try_exec (linker, args)
     else
