@@ -43,5 +43,6 @@ CONST
   ERANGE = 34;
   ETIMEDOUT = 60;
   EWOULDBLOCK = EAGAIN;
+  Max = 66;
 
 END Uerror.
