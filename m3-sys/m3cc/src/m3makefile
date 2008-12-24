@@ -70,6 +70,10 @@ readonly proc Platform_IsOpenBSD (Platform) is
   return {"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1,"MIPS64_OPENBSD":1} contains Platform
 end
 
+readonly proc FileExists (a) is
+    return not stale (a, a)
+end
+
 readonly proc ApplyPatches (Platform) is
   if not Platform_IsOpenBSD (Platform)
     return
@@ -77,7 +81,7 @@ readonly proc ApplyPatches (Platform) is
   pushd ("../gcc")
   foreach a in fs_lsfiles ("../src/patches/openbsd", FALSE)
     if not tcontains(a, ".done")
-      if not fs_exists (a & ".done")
+      if not FileExists (a & ".done")
         if not tcontains(a, "readme.txt")
           exec("patch -z .orig -p0 < " & a)
           > a & ".done" in
@@ -249,7 +253,7 @@ if defined ("FORCE")
   % Why not just rm -rf build_dir/*?
   % Scared of getting it wrong?
   %
-  if fs_exists (build_dir & "/Makefile")
+  if FileExists (build_dir & "/Makefile")
     exec("-cd " & build_dir & " && " & M3CC_MAKE & " distclean")
   end
   foreach a in ["cm3cg", "cm3cg.exe", "confdefs.h", "config.log", "cm3cg", ".M3SHIP", done, "_m3.log", "_m3sh0.sh"]
@@ -290,7 +294,7 @@ ApplyPatches (M3CC_TARGET)
 
 if not defined ("no_config")
   % configure the sources
-  if not fs_exists (done)
+  if not FileExists (done)
     local Configure = " "
 
     %
@@ -339,7 +343,7 @@ if not defined ("no_config")
 end
 
 readonly proc ProbeExeExtension (a) is
-  return equal (TARGET, "NT386") or fs_exists (a & ".exe")
+  return equal (TARGET, "NT386") or FileExists (a & ".exe")
 end
 
 readonly proc AppendExeExtension (a) is
@@ -384,7 +388,7 @@ end
 m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host | tee -a _m3.log"])
 
 proc Sed (file0, find, replace) is
-  if fs_exists (file0)
+  if FileExists (file0)
     local file1 = file0 & ".1"
     m3cc_Run (["sed", "-e", "'s/" & find & "/" & replace & "/'", "<", file0, ">", file1])
     m3cc_Run (["../gcc/move-if-change", file1, file0])
@@ -394,7 +398,7 @@ end
 foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
   foreach file in ["Makefile", "auto-host.h", "config.h"]
     local file = dir & "/" & file
-    if fs_exists (file)
+    if FileExists (file)
       %
       % remove libiconv dependency
       % It isn't needed, and stock Solaris install lacks it.
