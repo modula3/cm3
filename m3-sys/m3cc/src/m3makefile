@@ -70,6 +70,10 @@ readonly proc Platform_IsOpenBSD (Platform) is
   return {"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1,"MIPS64_OPENBSD":1} contains Platform
 end
 
+%
+% fs_exists is deliberately not used here, in order to build
+% starting with versions of cm3 that do not have it.
+%
 readonly proc FileExists (a) is
     return not stale (a, a)
 end
