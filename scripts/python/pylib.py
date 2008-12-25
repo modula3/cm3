@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# $Id: pylib.py,v 1.143 2008-12-19 09:23:17 jkrell Exp $
 
 import os
 from os import getenv
