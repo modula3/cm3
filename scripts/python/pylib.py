@@ -1111,7 +1111,7 @@ def Boot():
         "SPARC32_LINUX"     : CommonLink,
         "SPARC64_LINUX"     : CommonLink,
         "SPARC64_OPENBSD"   : CommonLink,
-        "PPC_LINUX"         : " -lm ",
+        "PPC_LINUX"         : CommonLink,
         }.get(Target) or ""))
 
     SunCompile = "cc -g -mt -xcode=pic32 -xldscope=symbolic"

@@ -9,7 +9,8 @@
 
 INTERFACE RTMachine;
 
-IMPORT Csetjmp;
+IMPORT Csetjmp, Usignal;
+FROM Upthread IMPORT pthread_t;
 
 (*--------------------------------------------------------- thread state ---*)
 
@@ -67,5 +68,13 @@ CONST
 
 TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
 
-END RTMachine.
+CONST
+  SIG_SUSPEND = Usignal.NSIG-1; (* SIGRTMAX *)
+  SuspendThread: PROCEDURE(t: pthread_t): BOOLEAN = NIL;
+  RestartThread: PROCEDURE(t: pthread_t) = NIL;
+  GetState: PROCEDURE(t: pthread_t; VAR state: ThreadState): ADDRESS = NIL;
+  SaveRegsInStack: PROCEDURE(): ADDRESS = NIL;
 
+TYPE ThreadState = RECORD END;
+
+END RTMachine.
