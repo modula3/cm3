@@ -50,7 +50,10 @@ readonly Platform_info = {
   "PPC_DARWIN"  : "powerpc-apple-darwin6.3",
   "PPC_LINUX"   : "powerpc-apple-linuxelf",
   "PPC32_OPENBSD" : "powerpc-openbsd",
-  "NetBSD2_i386" : "i386-unknown-netbsdelf"
+  "NetBSD2_i386" : "i386-unknown-netbsdelf",
+  "I386_SOLARIS" : "i686-sun-solaris2.11",
+  "AMD64_SOLARIS" : "amd64-sun-solaris2.11",
+  "I386_MSDOS" : "i386-pc-msdosdjgpp",
 }
 
 %
@@ -244,6 +247,10 @@ readonly proc m3cc_Run (x) is
   if HostIsNT ()
     x = "sh -c \"" & x & "\""
   end
+  write(x & CR)
+  >> build_dir & SL & "_m3.log" in
+    write(x & CR)
+  end
   exec(x)
 end
 
@@ -401,7 +408,7 @@ end
 
 foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
   foreach file in ["Makefile", "auto-host.h", "config.h"]
-    local file = dir & "/" & file
+    local file = build_dir & "/" & dir & "/" & file
     if FileExists (file)
       %
       % remove libiconv dependency
