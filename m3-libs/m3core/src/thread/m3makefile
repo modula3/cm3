@@ -35,7 +35,7 @@ readonly USE_PTHREADS = {
   "VAX"        : FALSE,
   "I386_DARWIN": TRUE,
   "PPC_DARWIN" : TRUE,
-  "PPC_LINUX"  : FALSE,
+  "PPC_LINUX"  : TRUE,
   "NetBSD2_i386"  : FALSE
 }
 
