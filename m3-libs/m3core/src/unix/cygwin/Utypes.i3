@@ -21,19 +21,13 @@ TYPE
   u_short = uint16_t;
   u_int = uint32_t;
   u_long = uint32_t;
-  ino_t = uint64_t;
   size_t = uint32_t;
   time_t = int32_t;
-  dev_t = uint32_t;
   off_t = int64_t;
   clock_t = uint32_t;
-  mode_t = uint32_t;
-  nlink_t = uint16_t;
   uid_t = uint32_t;
   pid_t = int32_t;
   gid_t = uint32_t;
-  blkcnt_t = int64_t;
-  blksize_t = int32_t;
 
   socklen_t = int32_t;
   hostent_addrtype_t = int16_t;
