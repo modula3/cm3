@@ -4,7 +4,11 @@
 #include <dirent.h>
 #include <assert.h>
 #include <stddef.h>
+#if defined(__CYGWIN__)
+typedef struct dirent dirent_t;
+#else
 typedef struct dirent64 dirent_t;
+#endif
 
 /* The simplest thing is to just always make this UINT64.
 However, if the underlying platform makes it 32bits, and
@@ -23,7 +27,11 @@ volatile m3_dirent_t* m3_readdir(DIR* dir)
     volatile m3_dirent_t* m3;
     volatile dirent_t* d;
 
+#if defined(__CYGWIN__)
+    d = readdir(dir);
+#else
     d = readdir64(dir);
+#endif
     if (!d)
         return 0;
 
