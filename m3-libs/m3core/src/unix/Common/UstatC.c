@@ -1,16 +1,5 @@
-#define __USE_LARGEFILE64
-
+#include "m3unix.h"
 #include <assert.h>
-
-#ifndef _MSC_VER
-#define __int64 long long
-#endif
-#ifdef _WIN64
-typedef __int64 INTEGER;
-#else
-typedef long INTEGER;
-#endif
-typedef __int64 LONGINT;
 
 typedef struct _m3_stat_t {
 /* Sorted by size, then by name; make everything LONGINT if possible, else INTEGER;
