@@ -5,28 +5,27 @@
 INTERFACE Utime;
 
 IMPORT Utypes;
-FROM Utypes IMPORT clock_t;
-FROM Ctypes IMPORT char_star, int, long, long_int, unsigned_short, short;
+FROM Ctypes IMPORT char_star, long;
+FROM Utypes IMPORT int32_t;
 
 CONST
   ITIMER_REAL = 0;
   ITIMER_VIRTUAL = 1;
-  ITIMER_PROF = 2;
 
 TYPE
   struct_timeval = RECORD
     tv_sec: long;
     tv_usec: long;
- END;
+  END;
 
   struct_timezone = RECORD
-    tz_minuteswest:  int;
-    tz_dsttime:      int;
+    tz_minuteswest:  int32_t;
+    tz_dsttime:      int32_t;
   END;
 
   struct_timespec = RECORD
     tv_sec: time_t;
-    tv_nsec: long_int;
+    tv_nsec: long;
   END;
 
   struct_itimerval = RECORD
@@ -34,50 +33,34 @@ TYPE
     it_value: struct_timeval;
   END;
 
+  struct_tm_star = UNTRACED REF struct_tm;
   struct_tm = RECORD
-    tm_sec:   int;
-    tm_min:   int;
-    tm_hour:  int;
-    tm_mday:  int;
-    tm_mon:   int;
-    tm_year:  int;
-    tm_wday:  int;
-    tm_yday:  int;
-    tm_isdst: int;
+    tm_sec:   int32_t;
+    tm_min:   int32_t;
+    tm_hour:  int32_t;
+    tm_mday:  int32_t;
+    tm_mon:   int32_t;
+    tm_year:  int32_t;
+    tm_wday:  int32_t;
+    tm_yday:  int32_t;
+    tm_isdst: int32_t;
     tm_gmtoff:long;
     tm_zone:  char_star;
   END;
 
-  struct_tm_star = UNTRACED REF struct_tm;
   time_t = Utypes.time_t;
 
-  struct_tms = RECORD
-    tms_utime: clock_t;
-    tms_stime: clock_t;
-    tms_cutime: clock_t;
-    tms_cstime: clock_t;
-  END;
-  struct_tms_star = UNTRACED REF struct_tms;
+<*EXTERNAL*> PROCEDURE gettimeofday (VAR t: struct_timeval; z: UNTRACED REF struct_timezone := NIL): int32_t;
+<*EXTERNAL*> PROCEDURE settimeofday (VAR t: (*const*) struct_timeval; z: UNTRACED REF (*const*) struct_timezone := NIL): int32_t;
+<*EXTERNAL*> PROCEDURE getitimer (which: int32_t; VAR value: struct_itimerval): int32_t;
 
-  struct_timeb = RECORD
-    time:       time_t;
-    millitm:    unsigned_short;
-    timezone:   short;
-    dstflag:    short;
-  END;
-  struct_timeb_star = UNTRACED REF struct_timeb;
-
-<*EXTERNAL*> PROCEDURE gettimeofday (VAR t: struct_timeval; z: UNTRACED REF struct_timezone := NIL): int;
-<*EXTERNAL*> PROCEDURE settimeofday (VAR t: (*const*) struct_timeval; z: UNTRACED REF (*const*) struct_timezone := NIL): int;
-<*EXTERNAL*> PROCEDURE getitimer (which: int; VAR value: struct_itimerval): int;
-<*EXTERNAL*> PROCEDURE setitimer (which: int;  VAR (*const*) value, ovalue: struct_itimerval): int;
-<*EXTERNAL*> PROCEDURE clock (): clock_t;
-<*EXTERNAL*> PROCEDURE times (buffer: struct_tms_star): clock_t;
 <*EXTERNAL*> PROCEDURE time (tloc: UNTRACED REF time_t): time_t;
 <*EXTERNAL*> PROCEDURE ctime (READONLY clock: time_t): char_star;
 <*EXTERNAL*> PROCEDURE localtime (clock: (*const*) UNTRACED REF time_t): struct_tm_star;
 <*EXTERNAL*> PROCEDURE gmtime (clock: (*const*) UNTRACED REF time_t): struct_tm_star;
 <*EXTERNAL*> PROCEDURE mktime (tm: struct_tm_star): time_t;
-<*EXTERNAL*> PROCEDURE nanosleep (READONLY req: struct_timespec; VAR rem: struct_timespec): int;
+
+<*EXTERNAL*> PROCEDURE setitimer (which: int32_t;  VAR (*const*) value, ovalue: struct_itimerval): int32_t;
+<*EXTERNAL*> PROCEDURE nanosleep (READONLY req: struct_timespec; VAR rem: struct_timespec): int32_t;
 
 END Utime.
