@@ -1,6 +1,6 @@
-readonly TARGET = "SPARC64_LINUX" % code generation target
-readonly WORD_SIZE = "64BITS" % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "sparc64-sun-linux-gnu"	% "cpu-vendor-os" string for GNU
+readonly TARGET = "SPARC64_LINUX"
+readonly WORD_SIZE = "64BITS"
+readonly GNU_PLATFORM = "sparc64-linux"
 
 %
 % add s switch to ar and remove need for ranlib
@@ -8,11 +8,14 @@ readonly GNU_PLATFORM = "sparc64-sun-linux-gnu"	% "cpu-vendor-os" string for GNU
 readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
 %
-% fPIC not working yet
+% fPIC not working?
 %
-readonly m3back_flags = "-quiet -g -m64"
-readonly SYSTEM_CC = "gcc -g -m64" % C compiler
-readonly SYSTEM_ASM = "as -64" % Assembler
+ readonly m3back_flags = "-quiet -gstabs+ -m64"
+%readonly m3back_flags = "-quiet -gstabs+ -m64 -fPIC"
+ readonly SYSTEM_CC = "gcc -gstabs+ -m64"
+%readonly SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC"
+
+readonly SYSTEM_ASM = "as -64"
 
 %
 % newer platforms never needed these workarounds for
