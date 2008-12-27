@@ -45,25 +45,7 @@ CONST
   F_GETFL = 3;
   F_SETFL = 4;
 
-  (* in this case, you need to pass LOOPHOLE (ADR (v), int)
-     for arg, where v is a variable of type struct_flock *)
-  F_SETLK = 8;
-
-TYPE
-  struct_flock = RECORD
-    l_start: off_t := 0L;
-    l_len: off_t := 0L;
-    l_pid: pid_t := 0;
-    l_type: short;
-    l_whence: short;
-  END;
-
-CONST
-  F_UNLCK = 2;
-  F_WRLCK = 3;
-
 <*EXTERNAL*> PROCEDURE fcntl (fd, request, arg: int): int;
-
 <*EXTERNAL*> PROCEDURE flock (fd, operation: int): int;
 <*EXTERNAL*> PROCEDURE fsync (fd: int): int;
 <*EXTERNAL*> PROCEDURE getdtablesize (): int;
@@ -75,14 +57,7 @@ CONST
   FIONREAD = 16_4004667f;
 
 <*EXTERNAL*> PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
-
-CONST (* lseek(whence) *)
-  L_SET = 0;
-  L_INCR = 1;
-  L_XTND = 2;
-
 <*EXTERNAL*> PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
-
 <*EXTERNAL*> PROCEDURE tell (d: int): long;
 <*EXTERNAL*> PROCEDURE mkdir (path: const_char_star; mode: int): int;
 

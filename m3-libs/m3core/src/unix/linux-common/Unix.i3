@@ -45,12 +45,8 @@ CONST
   F_SETFD = 2;
   F_GETFL = 3;
   F_SETFL = 4;
-  F_SETLK = 8;
-  F_UNLCK = 2;
-  F_WRLCK = 3;
 
 <*EXTERNAL*> PROCEDURE fcntl (fd, request, arg: int): int;
-<*EXTERNAL*> PROCEDURE flock (fd, operation: int): int;
 <*EXTERNAL*> PROCEDURE fsync (fd: int): int;
 <*EXTERNAL*> PROCEDURE getdtablesize (): int;
 <*EXTERNAL*> PROCEDURE gethostname (name: char_star; namelen: int): int;
@@ -61,11 +57,6 @@ CONST
   FIONREAD = 16_4004667f;
 
 <*EXTERNAL*> PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
-
-CONST (* lseek(whence) *)
-  L_SET = 0;
-  L_INCR = 1;
-  L_XTND = 2;
 
 <*EXTERNAL "lseek64"*> PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
 <*EXTERNAL*> PROCEDURE mkdir (path: const_char_star; mode: int): int;
