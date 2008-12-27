@@ -75,7 +75,6 @@ TYPE
 <*EXTERNAL*> PROCEDURE times (buffer: struct_tms_star): clock_t;
 <*EXTERNAL*> PROCEDURE time (tloc: UNTRACED REF time_t): time_t;
 <*EXTERNAL*> PROCEDURE ctime (READONLY clock: time_t): char_star;
-<*EXTERNAL*> PROCEDURE asctime (tm: (*const*) struct_tm_star): char_star;
 <*EXTERNAL*> PROCEDURE localtime (clock: (*const*) UNTRACED REF time_t): struct_tm_star;
 <*EXTERNAL*> PROCEDURE gmtime (clock: (*const*) UNTRACED REF time_t): struct_tm_star;
 <*EXTERNAL*> PROCEDURE mktime (tm: struct_tm_star): time_t;

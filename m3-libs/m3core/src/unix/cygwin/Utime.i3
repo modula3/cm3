@@ -55,10 +55,10 @@ CONST
 <*EXTERNAL setitimer*> PROCEDURE setitimer_ (which: int32_t;  VAR value, ovalue: struct_itimerval): int32_t;
 PROCEDURE setitimer (which: int32_t; VAR value, ovalue: struct_itimerval): int32_t;
 <*EXTERNAL*> PROCEDURE clock (): int32_t;
-<*EXTERNAL*> PROCEDURE time  (tloc: int32_star_t): int32_t;
-<*EXTERNAL*> PROCEDURE ctime     (READONLY clock: int32_t): char_star;
+<*EXTERNAL*> PROCEDURE time (tloc: int32_star_t): int32_t;
+<*EXTERNAL*> PROCEDURE ctime (READONLY clock: int32_t): char_star;
 <*EXTERNAL*> PROCEDURE localtime (clock: int32_star_t): struct_tm_star;
-<*EXTERNAL*> PROCEDURE gmtime    (clock: int32_star_t): struct_tm_star;
+<*EXTERNAL*> PROCEDURE gmtime (clock: int32_star_t): struct_tm_star;
 <*EXTERNAL*> PROCEDURE mktime (tm: struct_tm_star): time_t;
 <*EXTERNAL*> PROCEDURE get_timezone(): time_t;
 <*EXTERNAL "get_timezone"*> PROCEDURE get_altzone(): time_t;
