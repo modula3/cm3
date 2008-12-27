@@ -13,7 +13,6 @@ Interface ("Uresource")
 Interface ("Utime")
 Interface ("Uugid")
 Interface ("Uuio")
-Interface ("Uutmp")
 Interface ("Uutsname")
 
 if not equal(TARGET, "SPARC32_LINUX") and not equal(TARGET, "SPARC64_LINUX")

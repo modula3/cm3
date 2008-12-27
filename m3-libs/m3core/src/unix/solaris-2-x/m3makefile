@@ -33,7 +33,6 @@ Module    ("Utypes")
 Interface ("Uucontext")
 Interface ("Uugid")
 Interface ("Uuio")
-Interface ("Uutmp")
 Interface ("Uutsname")
 
 % Dir.c is buggy on '/net'.

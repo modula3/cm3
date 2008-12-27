@@ -29,6 +29,5 @@ Interface ("Utime")
 Module    ("Utypes")
 Interface ("Uugid")
 Interface ("Uuio")
-Interface ("Uutmp")
 Interface ("Uutsname")
 
