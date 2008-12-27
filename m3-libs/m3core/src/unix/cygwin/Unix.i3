@@ -33,14 +33,7 @@ CONST
   F_SETFD = 16_2;
   F_GETFL = 16_3;
   F_SETFL = 16_4;
-  F_SETLK = 16_8;
-  F_UNLCK = 16_3;
-  F_WRLCK = 16_2;
-  LOCK_EX = 16_2;
   FIONREAD = 16_4004667f;
-  L_SET = 16_0;
-  L_INCR = 16_1;
-  L_XTND = 16_2;
   O_RDONLY = 16_0;
   O_RDWR = 16_2;
   O_CREAT = 16_200;
@@ -48,16 +41,6 @@ CONST
   O_TRUNC = 16_400;
   O_NDELAY = 16_4000;
   M3_NONBLOCK = 16_4000;
-
-TYPE
-
-  struct_flock = RECORD
-    l_type:   short;
-    l_whence: short;
-    l_start:  off_t   := 0L;
-    l_len:    off_t   := 0L;
-    l_pid:    pid_t   := 0;
-  END;
 
 <*EXTERNAL*> PROCEDURE access (path: const_char_star; mod: int): int;
 <*EXTERNAL*> PROCEDURE chdir (path: const_char_star): int;
@@ -68,7 +51,6 @@ TYPE
 <*EXTERNAL*> PROCEDURE exit (i: int);
 <*EXTERNAL "_exit"*> PROCEDURE underscore_exit (i: int);
 <*EXTERNAL*> PROCEDURE fcntl (fd, request, arg: int): int;
-<*EXTERNAL*> PROCEDURE flock (fd, operation: int): int;
 <*EXTERNAL*> PROCEDURE fsync (fd: int): int;
 <*EXTERNAL*> PROCEDURE getdtablesize (): int;
 <*EXTERNAL*> PROCEDURE gethostname (name: char_star; namelen: int): int;
@@ -90,4 +72,3 @@ TYPE
 <*EXTERNAL*> PROCEDURE vfork (): int;
 
 END Unix.
-
