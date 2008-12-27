@@ -23,6 +23,7 @@ readonly NO_USER_THREADS =
     "MIPS64_OPENBSD":1,
     "NT386":1,
     "NT386GNU":1,
+    "PPC_LINUX":1,
     "PPC32_AIX":1,
     "PPC32_OPENBSD":1,
     "PPC64_AIX":1,
