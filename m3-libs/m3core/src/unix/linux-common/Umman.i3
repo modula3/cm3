@@ -13,6 +13,6 @@ CONST
   MAP_PRIVATE = 2;
   MAP_ANON = 16_20;
 
-<*EXTERNAL*> PROCEDURE mmap (addr: void_star; len: size_t; prot, flags, fd: int; off: off_t) : void_star;
+<*EXTERNAL "mmap64"*> PROCEDURE mmap (addr: void_star; len: size_t; prot, flags, fd: int; off: off_t) : void_star;
 
 END Umman.
