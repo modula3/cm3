@@ -6,7 +6,7 @@
 
 readonly TARGET       = "SOLsun"
 readonly WORD_SIZE    = "32BITS"
-readonly SYSTEM_CC = "cc -g -mt -xarch=v8plus -xcode=pic32 -xldscope=symbolic"
+readonly C_COMPILER = "SUN"
 
 
 include ("Solaris.common")
