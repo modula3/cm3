@@ -76,7 +76,6 @@ TYPE
 <*EXTERNAL*> PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
 <*EXTERNAL*> PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
 <*EXTERNAL*> PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
-<*EXTERNAL*> PROCEDURE tell (d: int): long;
 <*EXTERNAL*> PROCEDURE mkdir (path: const_char_star; mode: int): int;
 <*EXTERNAL*> PROCEDURE open (name: const_char_star; flags, mode: int): int;
 <*EXTERNAL*> PROCEDURE creat (name: const_char_star; mode: int): int;
