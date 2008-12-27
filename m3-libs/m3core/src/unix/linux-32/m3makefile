@@ -1,6 +1,6 @@
 Interface ("Upthreadtypes")
 
-if equal (TARGET, "PPC_LINUX") or equal(TARGET, "LINUXLIBC6")
+if equal(TARGET, "LINUXLIBC6")
   Interface ("Ustat")
 else
   Interface ("Uucontext")

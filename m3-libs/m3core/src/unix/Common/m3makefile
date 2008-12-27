@@ -11,7 +11,7 @@ if equal (TARGET, "MIPS64_OPENBSD")
     Interface ("Ustat")
 end
 
-if equal (TARGET, "AMD64_LINUX")
+if equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
   or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
     c_source("UstatC")
     Interface ("Ustat")
