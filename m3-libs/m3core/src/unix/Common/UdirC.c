@@ -40,10 +40,8 @@ volatile m3_dirent_t* m3_readdir(DIR* dir)
     /* make sure there was actually room */
     assert(((char*)m3) >= ((char*)d));
 
-#if !defined(__i386__)
     /* and that it is aligned */
-    assert((((size_t)m3) & ~(sizeof(m3_ino_t) - 1)) == 0);
-#endif
+    assert((((size_t)m3) & (sizeof(m3_ino_t) - 1)) == 0);
 
     m3->d_ino = d->d_ino;
     return m3;

@@ -6,7 +6,7 @@ readonly _UnixPieces = {
   "ALPHA_OSF"       : [ "osf-1.generic", "osf-1.ALPHA_OSF",                "uin-common", "little-endian" ],
   "AIX386"          : [ "aix-ps2-1-2",                                     "uin-common", "little-endian" ],
   "AMD64_DARWIN"    : [ "darwin-generic", "darwin-amd64",                  "uin-len",    "little-endian" ],
-  "AMD64_LINUX"     : [ "linux-common", "Common", "linux-amd64", "linux-64", "uin-common", "little-endian" ],
+  "AMD64_LINUX"     : [ "linux-common", "Common", "linux-64",              "uin-common", "little-endian" ],
   "AP3000"          : [ "ultrix-3-1.generic", "ultrix-3-1.AP3000",         "uin-common", "little-endian" ],
   "ARM"             : [ "ultrix-3-1.generic", "ultrix-3-1.ARM",            "uin-common", "little-endian" ],
   "DS3100"          : [ "ultrix-3-1.generic", "ultrix-3-1.DS3100",         "uin-common", "little-endian" ],
@@ -44,7 +44,7 @@ readonly _UnixPieces = {
   "VAX"             : [ "ultrix-3-1.generic", "ultrix-3-1.VAX",            "uin-common", "little-endian" ],
   "I386_DARWIN"     : [ "darwin-generic", "darwin-i386",                   "uin-len",    "little-endian" ],
   "PPC_DARWIN"      : [ "darwin-generic", "darwin-ppc",                    "uin-len",    "big-endian" ],
-  "PPC_LINUX"       : [ "linux-libc6", "linux-ppc", "linux-32",            "uin-common", "big-endian" ],
+  "PPC_LINUX"       : [ "linux-common", "Common", "linux-32",              "uin-common", "big-endian" ],
   "PPC32_OPENBSD"   : [ "openbsd-common", "Common",                        "uin-len",    "big-endian" ],
   "NetBSD2_i386"    : [ "netbsd2-i386",                                    "uin-common", "little-endian" ],
 }
@@ -72,6 +72,7 @@ readonly Uutmp1 = {
   "AMD64_LINUX" : 1,
   "SPARC32_LINUX" : 1,
   "SPARC64_LINUX" : 1,
+  "PPC_LINUX" : 1,
 
   % cygwin
   "I386_CYGWIN" : 1,
@@ -122,7 +123,6 @@ readonly UutmpCustom = {
   "HP300" : 1,
   "HPPA" : 1,
   "IRIX5" : 1,
-  "PPC_LINUX" : 1,
   "LINUXLIBC6" : 1,
 }
 
