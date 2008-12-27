@@ -67,9 +67,7 @@ CONST (* lseek(whence) *)
   L_INCR = 1;
   L_XTND = 2;
 
-<*EXTERNAL*> PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
-
-<*EXTERNAL*> PROCEDURE tell (d: int): long;
+<*EXTERNAL "lseek64"*> PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
 <*EXTERNAL*> PROCEDURE mkdir (path: const_char_star; mode: int): int;
 
 CONST
@@ -90,15 +88,11 @@ CONST
   writeEnd = 1;
 <*EXTERNAL*> PROCEDURE pipe (VAR fildes: ARRAY [0..1] OF int): int;
 
-(* 1 for TRUE, 0 for FALSE, -1 for error (in errno) *)
-<*EXTERNAL "m3_RegularFileLock"*> PROCEDURE RegularFileLock(fd: int): INTEGER;
-<*EXTERNAL "m3_RegularFileUnlock"*> PROCEDURE RegularFileUnlock(fd: int): INTEGER;
-
 <*EXTERNAL*> PROCEDURE readlink (path: const_char_star; buf: ADDRESS; bufsize: int): int;
 <*EXTERNAL*> PROCEDURE rename (from, to: const_char_star): int;
 <*EXTERNAL*> PROCEDURE rmdir (path: const_char_star): int;
 <*EXTERNAL*> PROCEDURE symlink (name1, name2: const_char_star): int;
-<*EXTERNAL*> PROCEDURE ftruncate (fd: int; length: off_t): int;
+<*EXTERNAL "ftruncate64"*> PROCEDURE ftruncate (fd: int; length: off_t): int;
 <*EXTERNAL*> PROCEDURE unlink (path: const_char_star): int;
 <*EXTERNAL*> PROCEDURE utimes (file: const_char_star; tvp: UNTRACED REF ARRAY [0..1] OF struct_timeval): int;
 <*EXTERNAL*> PROCEDURE vfork (): int;
