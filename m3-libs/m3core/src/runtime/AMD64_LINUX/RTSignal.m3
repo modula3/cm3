@@ -23,7 +23,7 @@ PROCEDURE InstallHandlers () =
     IgnoreSignal   := LOOPHOLE (1, Usignal.SignalActionHandler);
     (* Note: we cannot use Usignal.SIG_DFL and Usignal.SIG_IGN because
        they may not be initialized when this module is kicked into action
-       by the low-level runtime startup code... *)
+       by the low-level runtime startup code. *)
 
     SetHandler (0, Usignal.SIGHUP,  Shutdown);
     SetHandler (1, Usignal.SIGINT,  Interrupt);
@@ -75,8 +75,7 @@ PROCEDURE Shutdown (sig: int;
     new.sa_flags := 0;
     EVAL Usignal.sigemptyset(new.sa_mask);
     RTProcess.InvokeExitors ();                   (* flush stdio... *)
-    (* restore default handler *)
-    EVAL Usignal.sigaction (sig, new, old);
+    EVAL Usignal.sigaction (sig, new, old);       (* restore default handler *)
     EVAL Usignal.kill (Uprocess.getpid (), sig);  (* and resend the signal *)
   END Shutdown;
 
@@ -92,6 +91,8 @@ PROCEDURE Interrupt (sig: int;
       h ();
     END;
   END Interrupt;
+
+(*** ? TEMPORARY: should map these to runtime exceptions  *****)
 
 PROCEDURE Quit (<*UNUSED*> sig: int;
                 <*UNUSED*> sip: Usignal.siginfo_t_star;
@@ -110,8 +111,7 @@ PROCEDURE SegV (<*UNUSED*> sig: int;
   BEGIN
     (* IF (uap # NIL) THEN pc := uap.uc_mcontext.gregs[Uucontext.REG_EIP]; END; *)
     (* If we must get the program counter, defer to #ifdef'ed C code. *)
-    RTError.MsgPC (pc,
-      "Segmentation violation - possible attempt to dereference NIL");
+    RTError.MsgPC (pc, "Segmentation violation - possible attempt to dereference NIL");
   END SegV;
 
 BEGIN
