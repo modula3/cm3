@@ -5,7 +5,6 @@ Interface("Usem")
 Interface ("Uexec")
 Interface ("Umman")
 Interface ("Unix")
-Interface ("Uresource")
 Interface ("Utime")
 Interface ("Uutsname")
 

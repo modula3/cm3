@@ -13,6 +13,7 @@ if equal (TARGET, "MIPS64_OPENBSD")
     Interface ("Uugid")
     Interface ("Usched") % never used on NT386 but ok
     Interface ("Uprocess")
+    Interface ("Uresource")
 end
 
 if equal (TARGET, "MIPS64_OPENBSD")
