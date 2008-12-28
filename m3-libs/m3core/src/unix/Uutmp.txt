@@ -1,6 +1,6 @@
 Previously there were 22 versions of Uutmp.i3, though
-of those 22, there were only 7 different contents.
-Even of those 7, it is unlikely that all the variation is needed.
+of those 22, there were only 6 different contents.
+Even of those 6, it is unlikely that all the variation is needed.
 
 Uutmp1 3
  openbsd-common
