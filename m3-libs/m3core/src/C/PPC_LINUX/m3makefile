@@ -6,5 +6,3 @@
 %      modified on Thu May  6 13:16:32 PDT 1993 by muller
 
 Interface ("Csetjmp")
-Interface ("Csignal")
-
