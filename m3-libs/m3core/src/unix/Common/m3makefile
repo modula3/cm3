@@ -5,10 +5,11 @@ if equal (TARGET, "MIPS64_OPENBSD")
         or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
 %
 % OpenBSD has a very clear dirent with no ifdefs, and a 32bit ino that isn't
-% 64bit aligned, so it just uses the old per Modula-3 approach dor Udir
+% 64bit aligned, so it just use the old direct approach
 %
     c_source("UstatC")
     Interface ("Ustat")
+    Interface ("Uuio")
 end
 
 if equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
@@ -17,6 +18,7 @@ if equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
     Interface ("Ustat")
     Interface ("Udir")
     c_source("UdirC")
+    Interface ("Uuio")
 end
 
 if equal (TARGET, "NT386")
@@ -26,4 +28,5 @@ if equal (TARGET, "NT386")
     c_source("UstatC")
     Interface ("Udir")
     c_source("UdirC")
+    Interface ("Uuio")
 end
