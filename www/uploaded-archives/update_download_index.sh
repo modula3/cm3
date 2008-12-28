@@ -5,7 +5,7 @@ INDEX=${INDEX:-index.html}
 cd $SNAPS || exit 1
 
 # future: a central list somewhere
-TARGETS=`echo AMD64_LINUX SPARC32_LINUX LINUXLIBC6 NT386GNU SOLsun NT386 | sort -u`
+TARGETS=`echo AMD64_LINUX SPARC32_LINUX LINUXLIBC6 NT386GNU SOLsun NT386 PPC_LINUX | sort -u`
 
 if [ -f "${INDEX}" ]; then
   mv ${INDEX} ${INDEX}.old
