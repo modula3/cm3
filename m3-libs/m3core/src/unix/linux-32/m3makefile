@@ -1,7 +1,5 @@
 Interface ("Upthreadtypes")
 
-if equal(TARGET, "LINUXLIBC6")
-  Interface ("Ustat")
-else
+if not equal(TARGET, "LINUXLIBC6")
   Interface ("Uucontext")
 end
