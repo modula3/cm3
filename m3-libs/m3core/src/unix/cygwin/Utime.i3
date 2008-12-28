@@ -53,10 +53,15 @@ TYPE
 <*EXTERNAL*> PROCEDURE getitimer (which: int32_t; VAR value: struct_itimerval): int32_t;
 
 <*EXTERNAL*> PROCEDURE time (tloc: UNTRACED REF time_t): time_t;
+<*EXTERNAL*> PROCEDURE mktime (tm: struct_tm_star): time_t;
+
 <*EXTERNAL*> PROCEDURE ctime (READONLY clock: time_t): char_star;
 <*EXTERNAL*> PROCEDURE localtime (clock: (*const*) UNTRACED REF time_t): struct_tm_star;
 <*EXTERNAL*> PROCEDURE gmtime (clock: (*const*) UNTRACED REF time_t): struct_tm_star;
-<*EXTERNAL*> PROCEDURE mktime (tm: struct_tm_star): time_t;
+
+<*EXTERNAL*> PROCEDURE ctime_r (READONLY clock: time_t; buffer: char_star): char_star;
+<*EXTERNAL*> PROCEDURE localtime_r (READONLY clock: time_t; result: struct_tm_star): struct_tm_star;
+<*EXTERNAL*> PROCEDURE gmtime_r (READONLY clock: time_t; result: struct_tm_star): struct_tm_star;
 
 <*EXTERNAL setitimer*> PROCEDURE setitimer_ (which: int32_t; VAR value, ovalue: struct_itimerval): int32_t;
 PROCEDURE setitimer (which: int32_t; VAR value, ovalue: struct_itimerval): int32_t;
