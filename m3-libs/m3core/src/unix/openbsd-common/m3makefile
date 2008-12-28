@@ -3,7 +3,6 @@ Interface("Uucontext")
 Interface("Utypes")
 Interface("Usignal")
 Interface("Usem")
-Interface("Usched")
 
 Interface ("Udir")
 Interface ("Uerror")
