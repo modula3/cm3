@@ -10,6 +10,7 @@ if equal (TARGET, "MIPS64_OPENBSD")
     c_source("UstatC")
     Interface ("Ustat")
     Interface ("Uuio")
+    Interface ("Upwd")
 end
 
 if equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
@@ -19,6 +20,7 @@ if equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
     Interface ("Udir")
     c_source("UdirC")
     Interface ("Uuio")
+    Interface ("Upwd")
 end
 
 if equal (TARGET, "NT386")
@@ -29,4 +31,5 @@ if equal (TARGET, "NT386")
     Interface ("Udir")
     c_source("UdirC")
     Interface ("Uuio")
+    Interface ("Upwd")
 end
