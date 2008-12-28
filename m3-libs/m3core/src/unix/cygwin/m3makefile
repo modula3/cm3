@@ -6,13 +6,12 @@
 %      modified on Wed Jun  9 17:03:32 PDT 1993 by harrison
 %      modified on Tue Mar  2 17:17:34 PST 1993 by muller
 
-% $Id: m3makefile,v 1.18 2008-12-28 07:26:45 jkrell Exp $
+% $Id: m3makefile,v 1.19 2008-12-28 08:31:38 jkrell Exp $
 
 Interface ("Uerror")
 Interface ("Uexec")
 Interface ("Umman")
 Interface ("Unix")
-Interface ("Uprocess")
 Interface ("Uresource")
 Interface ("Usignal")
 Interface ("Ustat")
