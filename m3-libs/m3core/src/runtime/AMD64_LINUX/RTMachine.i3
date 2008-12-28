@@ -15,12 +15,9 @@ FROM Upthread IMPORT pthread_t;
 
 (*--------------------------------------------------------- thread state ---*)
 
-(* TBD: remove userthread and gcvm support, which includes much
-of the below *)
-
 TYPE
   State = Csetjmp.jmp_buf;
-  (* The machine state is saved in a "State".  This is opaque to the client. *)
+  (* The machine state is saved in a "State". This is opaque to the client. *)
 
 <*EXTERNAL "_setjmp" *>
 PROCEDURE SaveState (VAR s: State): INTEGER;
@@ -29,8 +26,9 @@ PROCEDURE SaveState (VAR s: State): INTEGER;
 (*------------------------------------------------------------------ heap ---*)
 
 (* The heap page size is machine-dependent, since it might depend on the
-   architecture's VM page size (if VM is TRUE).  Otherwise, 8192 bytes is a
-   reasonable page size.  The page size must be a power of two. *)
+   architecture's VM page size (if VM is TRUE). Otherwise, 8192 bytes is a
+   reasonable page size. The page size must be a power of two. *)
+
 CONST
   BytesPerHeapPage    = 8192;        (* bytes per page *)
   LogBytesPerHeapPage = 13;
@@ -41,8 +39,8 @@ CONST
 
   PointerAlignment = BYTESIZE(INTEGER);
   (* The C compiler allocates all pointers on 'PointerAlignment'-byte
-     boundaries.  The garbage collector scans thread stacks, but only
-     looks at these possible pointer locations.  Setting this value
+     boundaries. The garbage collector scans thread stacks, but only
+     looks at these possible pointer locations. Setting this value
      smaller than is needed will only make your system run slower.
      Setting it too large will cause the collector to collect storage
      that is not free. *)
