@@ -1,7 +1,6 @@
 interface("Upthread")
 Interface("Utypes")
 Interface("Usem")
-Interface("Usched")
 
 Interface ("Uexec")
 Interface ("Umman")
