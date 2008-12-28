@@ -12,6 +12,7 @@ if equal (TARGET, "MIPS64_OPENBSD")
     Interface ("Uuio")
     Interface ("Upwd")
     Interface ("Unetdb")
+    Interface ("Uugid")
 end
 
 if equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
@@ -23,6 +24,7 @@ if equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
     Interface ("Uuio")
     Interface ("Upwd")
     Interface ("Unetdb")
+    Interface ("Uugid")
 end
 
 if equal (TARGET, "NT386")
@@ -35,4 +37,5 @@ if equal (TARGET, "NT386")
     Interface ("Uuio")
     Interface ("Upwd")
     Interface ("Unetdb")
+    Interface ("Uugid")
 end
