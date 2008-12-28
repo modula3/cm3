@@ -3,42 +3,40 @@ c_source ("UtimeC")
 
 if equal (TARGET, "MIPS64_OPENBSD")
         or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
-%
-% OpenBSD has a very clear dirent with no ifdefs, and a 32bit ino that isn't
-% 64bit aligned, so it just use the old direct approach
-%
+        or equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
+        or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
+        or equal (TARGET, "NT386")
     c_source("UstatC")
-    Interface ("Ustat")
     Interface ("Uuio")
     Interface ("Upwd")
     Interface ("Unetdb")
     Interface ("Uugid")
-    Interface ("Usched")
+    Interface ("Usched") % never used on NT386 but ok
+end
+
+if equal (TARGET, "MIPS64_OPENBSD")
+        or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
+%
+% OpenBSD has a very clear dirent with no ifdefs, and a 32bit ino that isn't
+% 64bit aligned, so it just use the old direct approach -- Udir ommited here.
+%
+    Interface ("Ustat")
 end
 
 if equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
   or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
-    c_source("UstatC")
+%
+% everything
+%
     Interface ("Ustat")
     Interface ("Udir")
     c_source("UdirC")
-    Interface ("Uuio")
-    Interface ("Upwd")
-    Interface ("Unetdb")
-    Interface ("Uugid")
-    Interface ("Usched")
 end
 
 if equal (TARGET, "NT386")
 %
-% Cygwin's stat flags are not common.
+% Cygwin's stat flags are not common -- Ustat ommited here.
 %
-    c_source("UstatC")
     Interface ("Udir")
     c_source("UdirC")
-    Interface ("Uuio")
-    Interface ("Upwd")
-    Interface ("Unetdb")
-    Interface ("Uugid")
-    Interface ("Usched") % never used but ok
 end
