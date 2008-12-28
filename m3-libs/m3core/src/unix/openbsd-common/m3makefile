@@ -2,7 +2,6 @@ interface("Upthread")
 Interface("Uucontext")
 Interface("Utypes")
 Interface("Usignal")
-Interface("Usem")
 
 Interface ("Udir")
 Interface ("Uerror")
