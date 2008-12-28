@@ -7,7 +7,4 @@
 
 Interface ("Csetjmp")
 Interface ("Csignal")
-Interface ("Cstring")
-
-Module ("Cstdio")
 
