@@ -12,12 +12,9 @@ FROM Utypes IMPORT mode_t;
 
 (*** <semaphore.h> ***)
 
-CONST
-  SIZEOF_SEM_T = 48;
-
 TYPE
   sem_t = RECORD
-    data: ARRAY[1..SIZEOF_SEM_T] OF char;
+    data: ARRAY[1..6] OF LONGINT;
   END;
   sem_t_star = UNTRACED REF sem_t;
 
