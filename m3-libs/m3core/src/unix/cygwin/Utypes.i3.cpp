@@ -1,3 +1,10 @@
+/*
+Build this with and without #include "../Common/m3unix.h"
+and verify the results match.
+*/
+#if 0
+#include "../Common/m3unix.h"
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
