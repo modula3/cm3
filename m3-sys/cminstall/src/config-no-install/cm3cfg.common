@@ -185,8 +185,8 @@ proc GetM3Back() is
     if not defined("HOST")
         HOST = TARGET
     end
-    local ALTHOST = ""
-    local ALTTARGET = ""
+    local ALTHOST = HOST
+    local ALTTARGET = TARGET
     if equal (HOST, "NT386")
       ALTHOST = "NT386GNU"
     end
@@ -212,18 +212,22 @@ proc GetM3Back() is
         if not equal (host, "-")
             foreach target in [ TARGET & SL, TARGET & "-", ALTTARGET & SL, ALTTARGET & "-", ""]
                 if not equal (target, "-")
-                    foreach root in [ m3cc, bin ]
-                        foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
-                            foreach exe in [".exe", ""]
-                                local a = root & host & target & gcc & exe
-                                if not Cache contains a
-                                    % write("probing " & a & "\n")
-                                    if FileExists(a)
-                                        % write("using " & a & "\n")
-                                        m3back = "@" & a & " " & m3back_flags
-                                        return m3back
-                                    else
-                                        Cache{a} = 1
+                    if not equal (target, "") or equal (HOST, TARGET)
+                        if not equal (host, "") or equal (HOST, TARGET)
+                            foreach root in [ m3cc, bin ]
+                                foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
+                                    foreach exe in [".exe", ""]
+                                        local a = root & host & target & gcc & exe
+                                        if not Cache contains a
+                                            % write("probing " & a & "\n")
+                                            if FileExists(a)
+                                                % write("using " & a & "\n")
+                                                m3back = "@" & a & " " & m3back_flags
+                                                return m3back
+                                            else
+                                                Cache{a} = 1
+                                            end
+                                        end
                                     end
                                 end
                             end
