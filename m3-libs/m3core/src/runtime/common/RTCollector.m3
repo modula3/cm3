@@ -622,7 +622,7 @@ VAR collectorState := CollectorState.Zero;
 
 VAR
   threshold := ARRAY [0 .. 1] OF
-                 REAL{FLOAT(InitialBytes DIV 4 DIV BytesPerPage - 1), 1.0};
+                 REAL{MAX(1.0, FLOAT(InitialBytes DIV 4 DIV BytesPerPage - 1)), 1.0};
 (* start a collection as soon as current space reaches threshold[0] /
    threshold[1] pages; the initial value is 64KB *)
 
