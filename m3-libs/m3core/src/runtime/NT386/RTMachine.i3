@@ -9,6 +9,8 @@
 
 INTERFACE RTMachine;
 
+IMPORT Word;
+
 (*------------------------------------------------------------------ heap ---*)
 
 (* The heap page size is machine-dependent, since it might depend on the
@@ -16,8 +18,8 @@ INTERFACE RTMachine;
    reasonable page size.  The page size must be a power of two. *)
 
 CONST
-  BytesPerHeapPage    = 8192;               (* bytes per page *)
-  LogBytesPerHeapPage = 13;
+  BytesPerHeapPage    = Word.LeftShift(1, LogBytesPerHeapPage); (* bytes per page *)
+  LogBytesPerHeapPage = 16;
   AdrPerHeapPage      = BytesPerHeapPage;   (* addresses per page *)
   LogAdrPerHeapPage   = LogBytesPerHeapPage;
 
