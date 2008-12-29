@@ -5,29 +5,29 @@
 INTERFACE Ustat;
 
 FROM Ctypes IMPORT int, char_star;
-FROM Utypes IMPORT u_short;
+FROM Utypes IMPORT uint16_t;
 
 CONST
-  S_IFMT   : u_short = 8_0170000;
-  S_IFSOCK : u_short = 8_0140000;
-  S_IFLNK  : u_short = 8_0120000;
-  S_IFREG  : u_short = 8_0100000;
-  S_IFBLK  : u_short = 8_0060000;
-  S_IFDIR  : u_short = 8_0040000;
-  S_IFCHR  : u_short = 8_0020000;
-  S_IFIFO  : u_short = 8_0010000;
-  S_ISUID  : u_short = 8_0004000;
-  S_ISGID  : u_short = 8_0002000;
-  S_ISVTX  : u_short = 8_0001000;
-  S_IREAD  : u_short = 8_0000400;
-  S_IWRITE : u_short = 8_0000200;
-  S_IEXEC  : u_short = 8_0000100;
-  S_GREAD  : u_short = 8_0000040;
-  S_GWRITE : u_short = 8_0000020;
-  S_GEXEC  : u_short = 8_0000010;
-  S_OREAD  : u_short = 8_0000004;
-  S_OWRITE : u_short = 8_0000002;
-  S_OEXEC  : u_short = 8_0000001;
+  S_IFMT   : uint16_t = 8_0170000;
+  S_IFSOCK : uint16_t = 8_0140000;
+  S_IFLNK  : uint16_t = 8_0120000;
+  S_IFREG  : uint16_t = 8_0100000;
+  S_IFBLK  : uint16_t = 8_0060000;
+  S_IFDIR  : uint16_t = 8_0040000;
+  S_IFCHR  : uint16_t = 8_0020000;
+  S_IFIFO  : uint16_t = 8_0010000;
+  S_ISUID  : uint16_t = 8_0004000;
+  S_ISGID  : uint16_t = 8_0002000;
+  S_ISVTX  : uint16_t = 8_0001000;
+  S_IREAD  : uint16_t = 8_0000400;
+  S_IWRITE : uint16_t = 8_0000200;
+  S_IEXEC  : uint16_t = 8_0000100;
+  S_GREAD  : uint16_t = 8_0000040;
+  S_GWRITE : uint16_t = 8_0000020;
+  S_GEXEC  : uint16_t = 8_0000010;
+  S_OREAD  : uint16_t = 8_0000004;
+  S_OWRITE : uint16_t = 8_0000002;
+  S_OEXEC  : uint16_t = 8_0000001;
 
 TYPE
   struct_stat = RECORD
