@@ -41,6 +41,8 @@ readonly Ultrix = {
   "VAX" : 1,
 }
 
+h_source ("../../unix/Common/m3unix")
+
 if (RTOSbrk contains TARGET) or (Ultrix contains TARGET)
     c_source ("RTOSbrk")
 else
