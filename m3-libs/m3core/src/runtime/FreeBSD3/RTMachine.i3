@@ -30,15 +30,16 @@ CONST
 
 (*------------------------------------------------------------------ heap ---*)
 
-(* The heap page size is machine-dependent, since it might depend on the
-   architecture's VM page size (if VM is TRUE).  Otherwise, 8192 bytes is a
-   reasonable page size.  The page size must be a power of two. *)
+(* The heap page size used to be machine-dependent, since it could depend
+   on the architecture's VM page size (if VM was TRUE). VM is now always
+   FALSE. Otherwise, 8192 bytes is a reasonable page size. The page size must
+   be a power of two. *)
 
 CONST
-  BytesPerHeapPage    = 4096;        (* bytes per page *)
+  BytesPerHeapPage    = 4096;               (* bytes per page *)
   LogBytesPerHeapPage = 12;
-  AdrPerHeapPage      = 4096;        (* addresses per page *)
-  LogAdrPerHeapPage   = 12;
+  AdrPerHeapPage      = BytesPerHeapPage;   (* addresses per page *)
+  LogAdrPerHeapPage   = LogBytesPerHeapPage;
 
 (*--------------------------------------------------------- thread stacks ---*)
 
