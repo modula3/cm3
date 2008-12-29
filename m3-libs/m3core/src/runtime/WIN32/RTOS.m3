@@ -7,7 +7,7 @@
 UNSAFE MODULE RTOS;
 
 IMPORT RTMachInfo, RTSignal, ThreadF;
-IMPORT WinBase, WinNT, WinCon, WinDef, Word;
+IMPORT WinBase, WinCon, WinDef;
 
 (*--------------------------------------------------- process termination ---*)
 
@@ -58,12 +58,15 @@ PROCEDURE GetMemory (size: INTEGER): ADDRESS =
   END GetMemory;
 ******)
 
+(******
 VAR
   reserved_mem  : BOOLEAN := FALSE;
   next_reserved : ADDRESS := NIL;
   page_size     : INTEGER := 8192;
   page_mask     : INTEGER := 8191;
+******)
 
+(******
 PROCEDURE GetMemory (size: INTEGER): ADDRESS =
   (* Return the address of "size" bytes of unused storage *)
   VAR mem: ADDRESS;
@@ -87,7 +90,9 @@ PROCEDURE GetMemory (size: INTEGER): ADDRESS =
     RETURN WinBase.VirtualAlloc (NIL, size, WinNT.MEM_COMMIT,
                                  WinNT.PAGE_READWRITE);
   END GetMemory;
+******)
 
+(******
 PROCEDURE InitMemory () =
   CONST Reserve = 64 * 1024 * 1024; (* 64MByte *)
   VAR info: WinBase.SYSTEM_INFO;
@@ -104,11 +109,11 @@ PROCEDURE InitMemory () =
     page_mask := Word.Not (page_size - 1);
     (* ASSERT page_size = 2^k for some k *)
   END InitMemory;
+******)
 
 (*------------------------------------------------------------------- I/O ---*)
 
 VAR
-  ready  := FALSE;
   stderr : WinDef.HANDLE;
   (* Perhaps we should explicitly open CONERR$ et al,
      in case of redirection by parent? *)
@@ -116,10 +121,9 @@ VAR
 PROCEDURE Write (a: ADDRESS;  n: INTEGER) =
   VAR nWritten: INTEGER;
   BEGIN
-    IF NOT ready THEN
+    IF stderr = NIL THEN
       EVAL WinCon.AllocConsole(); (* make sure we've got one! *)
       stderr := WinBase.GetStdHandle(WinBase.STD_ERROR_HANDLE);
-      ready := TRUE;
     END;
     EVAL WinBase.WriteFile(stderr, a, n, ADR(nWritten), NIL);
   END Write;
