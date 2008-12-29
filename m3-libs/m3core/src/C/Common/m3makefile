@@ -30,3 +30,20 @@ if     equal (TARGET, "AMD64_LINUX")
   Interface ("Cstring")
   Interface ("Cstdio")
 end
+
+% This could be common; it just isn't used by the other ports.
+
+if         equal (TARGET, "AMD64_DARWIN")
+        or equal (TARGET, "FreeBSD")
+        or equal (TARGET, "FreeBSD2")
+        or equal (TARGET, "FreeBSD3")
+        or equal (TARGET, "FreeBSD4")
+        or equal (TARGET, "I386_DARWIN")
+        or equal (TARGET, "LINUX")
+        or equal (TARGET, "LINUXELF")
+        or equal (TARGET, "LINUXLIBC6")
+        or equal (TARGET, "NetBSD2_i386")
+        or equal (TARGET, "OS2")
+        or equal (TARGET, "PPC_DARWIN")
+  Interface ("Csignal")
+end
