@@ -9,12 +9,16 @@ FROM Utypes IMPORT pid_t;
 IMPORT Uucontext;
 
 CONST
+  SIGHUP = 1;
   SIGINT = 2;
   SIGQUIT = 3;
   SIGABRT = 6;
   SIGKILL = 9;
+  SIGSEGV = 11;
+  SIGPIPE = 13;
   SIGTERM = 15;
   NSIG = 32;
+
   SA_RESTART = 2;
   SA_SIGINFO = 16_0040;
 
@@ -38,6 +42,7 @@ TYPE
 <*EXTERNAL*> PROCEDURE sigpending (VAR set: sigset_t): int;
 <*EXTERNAL*> PROCEDURE sigwait (READONLY set: sigset_t; VAR sig: int): int;
 <*EXTERNAL*> PROCEDURE sigdelset (VAR set: sigset_t; signo: int): int;
+<*EXTERNAL*> PROCEDURE sigemptyset (VAR set: sigset_t): int;
 <*EXTERNAL*> PROCEDURE sigfillset (VAR set: sigset_t): int;
 
 END Usignal.
