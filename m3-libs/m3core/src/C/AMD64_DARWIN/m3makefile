@@ -2,7 +2,6 @@
 % FIXME: copied from FreeBSD3 target. Probably needs to be changed.
 
 Interface ("Csetjmp")
-Interface ("Csignal")
 Interface ("Cstring")
 Module ("Cstdio")
 
