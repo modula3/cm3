@@ -19,8 +19,6 @@ TYPE
 
 <*EXTERNAL*> PROCEDURE opendir (filename: const_char_star): DIR_star;
 <*EXTERNAL "m3_readdir"*> PROCEDURE readdir (dirp: DIR_star): dirent_star;
-<*EXTERNAL*> PROCEDURE telldir (dirp: DIR_star): INTEGER;
-<*EXTERNAL*> PROCEDURE seekdir (dirp: DIR_star; loc: INTEGER);
 <*EXTERNAL*> PROCEDURE closedir(dirp: DIR_star): int;
 
 END Udir.
