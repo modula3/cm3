@@ -622,6 +622,7 @@ elif Target.find("LINUX") != -1:
     #
     # Support for bootstrapping from older toolsets.
     # Expand and reduce this through time.
+    # Latest PPC_LINUX release is 5.2.6 and it requires these flags.
     #
     if (Target.find("AMD64") == -1) and (Target.find("SPARC") == -1):
         GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
@@ -1102,17 +1103,7 @@ def Boot():
         "SPARC64_LINUX"     : " -m64 -munaligned-doubles ",
         }.get(Target) or ""))
 
-    CommonLink = " -lm -lpthread "
-
-    Link = (Compile + " " + ({
-        "AMD64_LINUX"       : CommonLink,
-        "MIPS64_OPENBSD"    : CommonLink,
-        "PPC32_OPENBSD"     : CommonLink,
-        "SPARC32_LINUX"     : CommonLink,
-        "SPARC64_LINUX"     : CommonLink,
-        "SPARC64_OPENBSD"   : CommonLink,
-        "PPC_LINUX"         : CommonLink,
-        }.get(Target) or ""))
+    Link = Compile + " -lm -lpthread "
 
     SunCompile = "cc -g -mt -xcode=pic32 -xldscope=symbolic"
 
@@ -1140,6 +1131,9 @@ def Boot():
         "SPARC64_SOLARIS"   : " -s -K PIC -xarch=v9 ",
         }.get(Target) or ""))
 
+    #
+    # squeeze runs of spaces
+    #
     Compile = re.sub("  +", " ", Compile)
     Link = re.sub("  +", " ", Link)
     Assemble = re.sub("  +", " ", Assemble)
@@ -1354,7 +1348,7 @@ def _FilterPackage(Package):
         "tapi": BuildAll or OSType == "WIN32",
         "serial": BuildAll or HAVE_SERIAL,
         "X11R4": BuildAll or OSType != "WIN32",
-        "m3cc": GCC_BACKEND and not OMIT_GCC,
+        "m3cc": (GCC_BACKEND and (not OMIT_GCC) and (not "skipgcc" in sys.argv) and (not "omitgcc" in sys.argv) and (not "nogcc" in sys.argv)),
     }
     return PackageConditions.get(Package, True)
 
@@ -1907,6 +1901,9 @@ GenericCommand:
             or (arg == "keep")
             or (arg == "noclean")
             or (arg == "nocleangcc")
+            or (arg == "nogcc")
+            or (arg == "skipgcc")
+            or (arg == "omitgcc")
             or (arg == "boot")):
             continue
         if arg.startswith("-"):

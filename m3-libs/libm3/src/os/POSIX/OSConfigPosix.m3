@@ -114,6 +114,7 @@ CONST
    (* PPC32_OPENBSD *) "OpenBSD",
    (* MIPS64_OPENBSD *) "OpenBSD",
    (* SPARC64_SOLARIS *) "Solaris",
+   (* I386_OPENBSD *) "OpenBSD",
    ..
   };
 
@@ -163,6 +164,7 @@ CONST
    (* PPC32_OPENBSD *)  "ppc",
    (* MIPS64_OPENBSD *) "mips64",
    (* SPARC64_SOLARIS *) "sparc64",
+   (* I386_OPENBSD *) "i686",
    ..
   };
 

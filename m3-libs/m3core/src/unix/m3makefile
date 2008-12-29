@@ -46,6 +46,7 @@ readonly _UnixPieces = {
   "PPC_DARWIN"      : [ "darwin-generic", "darwin-ppc",                    "uin-len",    "big-endian" ],
   "PPC_LINUX"       : [ "linux-common", "Common", "linux-32",              "uin-common", "big-endian" ],
   "PPC32_OPENBSD"   : [ "openbsd-common", "Common",                        "uin-len",    "big-endian" ],
+  "I386_OPENBSD"    : [ "openbsd-common", "Common",                        "uin-len",    "little-endian" ],
   "NetBSD2_i386"    : [ "netbsd2-i386",                                    "uin-common", "little-endian" ],
 }
 
@@ -67,6 +68,7 @@ readonly Uutmp1 = {
   "MIPS64_OPENBSD"  : 1,
   "SPARC64_OPENBSD" : 1,
   "PPC32_OPENBSD"   : 1,
+  "I386_OPENBSD" : 1,
 
   % linux-common
   "AMD64_LINUX" : 1,
