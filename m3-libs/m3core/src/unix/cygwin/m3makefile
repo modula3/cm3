@@ -10,7 +10,6 @@
 
 Interface ("Uerror")
 Interface ("Uexec")
-Interface ("Umman")
 Interface ("Unix")
 Interface ("Usignal")
 Interface ("Ustat")
