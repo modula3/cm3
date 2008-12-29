@@ -4,8 +4,8 @@
 
 INTERFACE Unix;
 
-FROM Ctypes IMPORT short, int, long, const_char_star, char_star, char_star_star;
-FROM Utypes IMPORT off_t, size_t, pid_t;
+FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star;
+FROM Utypes IMPORT off_t, size_t;
 FROM Utime IMPORT struct_timeval;
 
 TYPE
@@ -58,7 +58,6 @@ CONST
 
 <*EXTERNAL*> PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
 <*EXTERNAL*> PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
-<*EXTERNAL*> PROCEDURE tell (d: int): long;
 <*EXTERNAL*> PROCEDURE mkdir (path: const_char_star; mode: int): int;
 
 CONST
