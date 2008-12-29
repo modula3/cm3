@@ -10,6 +10,7 @@
 #endif
 
 #include <stddef.h>
+#include <sys/types.h>
 
 typedef ptrdiff_t INTEGER;
 typedef __int64 LONGINT;

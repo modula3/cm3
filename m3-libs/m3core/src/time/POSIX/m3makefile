@@ -28,6 +28,7 @@ readonly _DateImpls = {
   "LINUX"      : "DateLinux",
   "LINUXELF"   : "DateLinux",
   "LINUXLIBC6" : "DateBsd",
+  "I386_OPENBSD" : "DateBsd",
   "MIPS64_OPENBSD" : "DateBsd",
   "NEXT"       : "DateBsd",
   "NT386"      : "DateLinux",

@@ -132,15 +132,194 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     EOL                       := "\n";
     Jumpbuf_align             := Address.align;
     All_floats_legal          := TRUE;
-    Has_stack_walker          := FALSE;
-    Aligned_procedures        := TRUE;
-    First_readable_addr       := 4096 * Char.size;
     PCC_bitfield_type_matters := TRUE;
     Structure_size_boundary   := 8;
     Little_endian             := TRUE;
     Setjmp                    := "_setjmp";
 
+    (* There is no portable stack walker, and therefore few systems have one.
+    Having a stack walker theoretically speeds up everything nicely.
+    If you are familiar with NT exception handling, all but x86 have a stack walker.
+    Not having a stack walker means that functions that have try/except/finally/raise
+    incur a codegen cost even if there is never a raise -- for having the try.
+    Having a stack walker means "zero cost" for exception handling code that
+    does not actually raise an exception.
+
+    If there is NOT a stack walker, prologues/epilogues for functions that try/except/finally/raise
+    call PushEFrame / PopEFrame, essentially to build a walkable parallel stack.
+
+    If there is a stack walker, then raise can discover what PushEFrame / PopEFrame effectively recorded.
+
+    NT/x86 has a highly optimized equivalent of PushEFrame / PopEFrame, not currently used by Modula-3.
+    *)
+    Has_stack_walker          := FALSE;
+
+    (* "Closures" in Modula-3 -- function pointers to nested functions,
+    are represented as a pointer to -1 (of size?) followed by other data.
+    -1 is assumed to be invalid code. Prior to calling any function pointer,
+    the generated code first checks for the marker -1, to decide how to call it.
+    On systems where data alignment matters, but functions are not aligned,
+    this can result in an alignment fault. Most systems either don't care
+    about alignment (x86, AMD64) or have fixed sized and aligned instructions (PowerPC),
+    in which case the check for -1 can just be a direct read, in which case Aligned_procedures := TRUE.
+    This logic can break down on 64bit platforms, where the -1 is perhaps 64bits, but
+    the fixed size instructions may be 32bits. Or of course, on systems that care
+    about data alignment but not code alignment, or in which the alignments differ.
+
+    Setting this to FALSE is safe, but results in slower code -- code that
+    checks function pointers for alignment before checking for the -1, and if they
+    aren't aligned, doing a byte-wise read instead of an integer-wise read.
+
+    We can probably do better here, such as ensuring the marker is 4 bytes instead of 8,
+    if that works (for 64 bit platforms, that care about alignment, but with fixed
+    sized aligned 32 bit instructions, which probably describes some e.g. MIPS64 and SPARC64)
+    *)
+    Aligned_procedures        := TRUE;
+
+    (* The affect of First_readable_addr is that (static?) array indices (offsets)
+    lower than it (and positive?) do not have a NULL check on the array base.
+    Reading NULL + an offset less than First_readable_addr is assumed to access
+    violate the same as reading NULL. It is a nice optimization.
+    Setting the value too low results in correct but suboptimal code.
+    However just setting it to a small non-zero number should provide most of the benefit.
+    Setting the value too high results in missing NULL checks -- a loss of safety enforcement.
+    Typically setting it to one hardware page is a good estimate, since if NULL is not accessible,
+    nor is any address on the same page. As well, setting it to getpagesize, whatever
+    the granularity of mmap/VirtualAlloc, often larger than a hardware page, is another good guess.
+    *)
+    First_readable_addr       := 4096 * Char.size;
+
     (* add the system-specific customization *)
+
+    (* 64bit *)
+
+    CASE System OF
+    | Systems.ALPHA_OSF,
+(*    Systems.ALPHA_LINUX,
+      Systems.ALPHA_FREEBSD,
+      Systems.ALPHA_OPENBSD,
+      Systems.ALPHA_NETBSD,
+      Systems.ALPHA_VMS,
+
+      Systems.AMD64_CYGWIN, *)
+      Systems.AMD64_DARWIN,
+(*    Systems.AMD64_FREEBSD,
+      Systems.AMD64_NETBSD,
+      Systems.AMD64_OPENBSD, *)
+      Systems.AMD64_LINUX,
+(*    Systems.AMD64_NT,
+      Systems.AMD64_SOLARIS,
+
+      Systems.HPPA64_LINUX,
+      Systems.HPPA64_HPUX,
+
+      Systems.IA64_FREEBSD,
+      Systems.IA64_HPUX,
+      Systems.IA64_LINUX,
+      Systems.IA64_NT,
+      Systems.IA64_VMS,
+
+      Systems.MIPS64_LINUX,
+      Systems.MIPS64_IRIX, *)
+      Systems.MIPS64_OPENBSD,
+(*    Systems.MIPS64_NETBSD,
+
+      Systems.PPC64_AIX,
+      Systems.PPC64_LINUX,
+      Systems.PPC64_DARWIN,
+
+      Systems.SPARC64_FREEBSD,
+      Systems.SPARC64_NETBSD, *)
+      Systems.SPARC64_OPENBSD,
+      Systems.SPARC64_LINUX,
+      Systems.SPARC64_SOLARIS
+    =>
+        Init64();
+    ELSE
+    END;
+
+    (* big endian *)
+
+    CASE System OF
+    | 
+(*    Systems.HPPA32_HPUX,
+      Systems.HPPA32_LINUX,
+      Systems.HPPA64_HPUX,
+      Systems.HPPA64_LINUX,
+
+      Systems.MIPS32_LINUX,
+      Systems.MIPS32_IRIX,
+      Systems.MIPS32_OPENBSD,
+      Systems.MIPS32_NETBSD,
+      Systems.MIPS64_LINUX,
+      Systems.MIPS64_IRIX, *)
+      Systems.MIPS64_OPENBSD,
+(*    Systems.MIPS64_NETBSD, *)
+
+      Systems.PPC_LINUX,
+      Systems.PPC_DARWIN,
+(*    Systems.PPC32_AIX,
+      Systems.PPC32_FREEBSD,
+      Systems.PPC32_NETBSD,
+      Systems.PPC32_OPENBSD,
+      Systems.PPC64_AIX,
+      Systems.PPC64_LINUX,
+      Systems.PPC64_DARWIN, *)
+
+      Systems.SPARC32_LINUX,
+(*    Systems.SPARC32_SOLARIS,
+      Systems.SPARC64_FREEBSD,
+      Systems.SPARC64_NETBSD, *)
+      Systems.SPARC64_OPENBSD,
+      Systems.SPARC64_LINUX,
+      Systems.SPARC64_SOLARIS,
+
+      Systems.SOLgnu,
+      Systems.SOLsun,
+
+      Systems.AP3000,
+      Systems.ARM,
+      Systems.HP300,
+      Systems.HPPA,
+      Systems.IBMR2,
+      Systems.IBMRT,
+      Systems.IRIX5,
+      Systems.NEXT,
+      Systems.SPARC,
+      Systems.SUN3
+    =>
+        Little_endian := FALSE;
+    ELSE
+    END;
+
+    (* Solaris (should we put all "setjmp" platforms here?) *)
+
+    CASE System OF
+    (* SPARC32_SOLARIS *)
+    | Systems.SOLgnu,
+      Systems.SOLsun,
+(*    Systems.I386_SOLARIS,
+      Systems.AMD64_SOLARIS, *)
+      Systems.SPARC64_SOLARIS
+    =>
+        Setjmp := "setjmp";
+    ELSE
+    END;
+
+    (* SPARC *)
+
+    CASE System OF
+    | Systems.SOLgnu,
+      Systems.SOLsun,
+      Systems.SPARC,
+      Systems.SPARC32_LINUX,
+      Systems.SPARC64_LINUX,
+      Systems.SPARC64_OPENBSD,
+      Systems.SPARC64_SOLARIS
+    =>
+        First_readable_addr := 8192 * Char.size;
+    ELSE
+    END;
 
     CASE System OF
     |  Systems.AIX386 =>
@@ -149,7 +328,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 25 * Address.size;
 
     |  Systems.ALPHA_OSF =>
-                 Init64();
                  First_readable_addr       := 16_400000 * Char.size;
                  Jumpbuf_size              := 84 * Address.size;
                  Has_stack_walker          := TRUE;
@@ -157,14 +335,12 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     |  Systems.AP3000 =>
                  max_align                 := 16;
-                 Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
                  Jumpbuf_size              := 83 * Address.size;
 
     |  Systems.ARM =>
                  max_align                 := 32;
-                 Little_endian             := FALSE;
                  Structure_size_boundary   := 32;
                  Jumpbuf_size              := 16 * Address.size;
 
@@ -180,13 +356,11 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     |  Systems.HP300 =>
                  max_align                 := 16;
-                 Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
                  Jumpbuf_size              := 100 * Address.size;
 
     |  Systems.HPPA =>
-                 Little_endian             := FALSE;
                  Structure_size_boundary   := 16;
                  First_readable_addr       := 16_1000;
                  Jumpbuf_size              := 53 * Address.size;
@@ -195,26 +369,21 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     |  Systems.IBMR2 =>
                  max_align                 := 32;
-                 Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 32;
                  Jumpbuf_size              := 65 * Address.size;
 
     | Systems.IBMRT =>
                  max_align                 := 32;
-                 Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Jumpbuf_size              := 17 * Address.size;
 
     |  Systems.IRIX5 =>
-                 Little_endian             := FALSE;
                  First_readable_addr       := 16_400000 * Char.size;
                  Jumpbuf_size              := 28 * Address.size;
                  Setjmp                    := "setjmp";
 
     |  Systems.MIPS64_OPENBSD =>
-                 Init64();
-                 Little_endian             := FALSE;
                  Jumpbuf_size              := 16_53 * Address.size;
                  Aligned_procedures        := FALSE;
 
@@ -225,7 +394,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     | Systems.NEXT =>
                  max_align                 := 16;
-                 Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
                  Jumpbuf_size              := 39 * Address.size;
@@ -298,33 +466,31 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
                  (* common characteristics of all SPARC targets *)
 
-                 Little_endian             := FALSE;
                  First_readable_addr       := 8192 * Char.size;
 
                  CASE System OF <* NOWARN *>
+                 (* SPARC32_SOLARIS *)
                  | Systems.SOLgnu, Systems.SOLsun =>
                    Jumpbuf_size              := 19 * Address.size;
                    Has_stack_walker          := TRUE;
-                   Setjmp                    := "setjmp";
 
                  | Systems.SPARC32_LINUX =>
                    Jumpbuf_size              := 16_90 * Char.size;
 
                  | Systems.SPARC64_OPENBSD =>
-                   Init64();
                    Jumpbuf_size := 16_70 * Char.size;
                    Aligned_procedures := FALSE;
 
                  | Systems.SPARC64_LINUX =>
-                   Init64();
                    Jumpbuf_size := 16_280 * Char.size;
                    Aligned_procedures := FALSE;
 
                  | Systems.SPARC64_SOLARIS =>
-                   Init64();
                    Jumpbuf_size := 16_90 * Char.size;
-                   Setjmp := "setjmp";
                    Aligned_procedures := FALSE;
+
+(*               |  Systems.I386_SOLARIS =>
+                   Jumpbuf_size := 16_280 * Char.size; TBD *)
 
                  | Systems.SPARC =>
                    Jumpbuf_size              := 10 * Address.size;
@@ -333,7 +499,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     | Systems.SUN3 =>
                  max_align                 := 16;
-                 Little_endian             := FALSE;
                  PCC_bitfield_type_matters := FALSE;
                  Structure_size_boundary   := 16;
                  Jumpbuf_size              := 79 * Address.size;
@@ -364,7 +529,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 40 * Address.size;
 
     |  Systems.AMD64_LINUX =>
-                 Init64();
                  Jumpbuf_size              := 200 * Char.size;
 
     |  Systems.I386_DARWIN =>
@@ -372,12 +536,10 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Setjmp                    := "setjmp";
 
     |  Systems.AMD64_DARWIN =>
-                 Init64();
                  Jumpbuf_size              := 19 * Address.size;
                  Setjmp                    := "setjmp";
 
     |  Systems.PPC_DARWIN =>
-                 Little_endian             := FALSE;
                  Jumpbuf_size              := (26 + 36 + 129 + 1 + 1) * 
                                               Address.size;
                  Jumpbuf_align             := Word64.align;
@@ -389,12 +551,10 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 10 * Address.size;
 
     |  Systems.PPC_LINUX => 
-                 Little_endian             := FALSE;
                  Jumpbuf_size              := 16_94 * Address.size;
                  Jumpbuf_align             := Word64.align;
 
     |  Systems.PPC32_OPENBSD => 
-                 Little_endian             := FALSE;
                  Jumpbuf_size              := 16_190 * Char.size;
                  Jumpbuf_align             := Word64.align; (* ? *)
 
@@ -402,8 +562,15 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  max_align                 := 32;
                  Jumpbuf_size              := 14 * Address.size;
 
+(*    | Systems.I386_MSDOS =>
+                 Jumpbuf_size              := 172 * Char.size; TBD *)
+
+    | Systems.I386_OPENBSD =>
+                 Jumpbuf_size              := 10 * Address.size;
+
     ELSE RETURN FALSE;
     END;
+
 
     IF (CCs = NIL) THEN
       CCs := NEW (REF ARRAY OF CallingConvention, 1);
