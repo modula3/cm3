@@ -4,7 +4,6 @@
 
 INTERFACE Usocket;
 
-IMPORT Ctypes, Utypes;
 FROM Ctypes IMPORT int, void_star, const_void_star;
 FROM Uin IMPORT struct_sockaddr_in;
 FROM Utypes IMPORT socklen_t, size_t;
@@ -17,7 +16,7 @@ CONST
   SO_KEEPALIVE = 16_0008;
   SO_LINGER = 16_0080;
 
-  SOL_SOCKET = 16_ffff;
+  SOL_SOCKET = 16_FFFF;
   AF_INET = 2;
   MSG_PEEK = 2;
 
