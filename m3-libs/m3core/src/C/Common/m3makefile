@@ -12,7 +12,6 @@ Interface ("Cstdint")
 Interface ("Cstdlib")
 Interface ("Ctypes")
 Module ("M3toC")
-Module ("Cstdarg")
 c_source ("CerrnoC")
 
 % not yet common to all, but should be, will be
