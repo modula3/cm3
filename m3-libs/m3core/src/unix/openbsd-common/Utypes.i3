@@ -17,21 +17,15 @@ TYPE
   u_int16_t = uint16_t;
   u_int32_t = uint32_t;
   u_int64_t = uint64_t;
-  u_short = uint16_t;
 
+  u_short = uint16_t;
   u_int   = uint32_t;
   u_long = Cstddef.size_t;
 
   clock_t = int32_t;
-  dev_t = int32_t;
   gid_t = uint32_t;
-  id_t = uint32_t;
-  ino_t = uint32_t;
-  mode_t = uint32_t;
-  nlink_t = uint32_t;
   off_t = int64_t;
   pid_t = int32_t;
-  rlim_t = uint64_t;
   size_t = Cstddef.size_t;
   ssize_t = Ctypes.long;
   time_t = int32_t;
