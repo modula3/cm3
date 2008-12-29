@@ -52,6 +52,7 @@ readonly _RandomPieces = {
   "PPC_DARWIN" : [ _BigEndian ],
   "PPC_LINUX"  : [ _BigEndian ],
   "PPC32_OPENBSD" : [ _BigEndian ],
+  "I386_OPENBSD" : [ _LittleEndian ],
   "NetBSD2_i386"  : [ _LittleEndian ]
 }
 

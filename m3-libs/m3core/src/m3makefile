@@ -18,6 +18,7 @@ readonly NO_USER_THREADS =
 {
     "AMD64_LINUX":1,
     "ARM_LINUX":1,
+    "I386_OPENBSD":1,
     "MIPS32_IRIX":1,
     "MIPS64_IRIX":1,
     "MIPS64_OPENBSD":1,

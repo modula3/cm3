@@ -54,6 +54,7 @@ readonly Platform_info = {
   "I386_SOLARIS" : "i686-sun-solaris2.11",
   "AMD64_SOLARIS" : "amd64-sun-solaris2.11",
   "I386_MSDOS" : "i386-pc-msdosdjgpp",
+  "I386_OPENBSD" : "i686-openbsd",
 }
 
 %
@@ -70,7 +71,7 @@ readonly proc Platform_WordSize (Platform) is
 end
 
 readonly proc Platform_IsOpenBSD (Platform) is
-  return {"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1,"MIPS64_OPENBSD":1} contains Platform
+  return {"I386_OPENBSD":1,"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1,"MIPS64_OPENBSD":1} contains Platform
 end
 
 %

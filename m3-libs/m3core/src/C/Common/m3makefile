@@ -26,6 +26,7 @@ if     equal (TARGET, "AMD64_LINUX")
     or equal (TARGET, "NT386")
     or equal (TARGET, "LINUXLIBC6")
     or equal (TARGET, "PPC_LINUX")
+    or equal (TARGET, "I386_OPENBSD")
   Interface ("Cstring")
   Interface ("Cstdio")
 end

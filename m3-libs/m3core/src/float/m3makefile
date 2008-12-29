@@ -49,6 +49,7 @@ readonly _FloatPieces = {
   "UMAX"       : _float_le,
   "VAX"        : [ "VAX" ],
   "I386_DARWIN": _float_le,
+  "I386_OPENBSD": _float_le,
   "PPC_DARWIN" : _float_be,
   "PPC_LINUX"  : _float_be,
   "PPC32_OPENBSD" : _float_be,
