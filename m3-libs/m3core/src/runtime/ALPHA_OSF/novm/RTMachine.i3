@@ -35,10 +35,10 @@ CONST
    reasonable page size.  The page size must be a power of two. *)
 
 CONST
-  BytesPerHeapPage    = 8192;        (* bytes per page *)
+  BytesPerHeapPage    = 8192;               (* bytes per page *)
   LogBytesPerHeapPage = 13;
-  AdrPerHeapPage      = 8192;        (* addresses per page *)
-  LogAdrPerHeapPage   = 13;
+  AdrPerHeapPage      = BytesPerHeapPage;   (* addresses per page *)
+  LogAdrPerHeapPage   = LogBytesPerHeapPage;
 
 (* The collector supports the use of VM protection to achieve incremental,
    generational collection.  This is not possible on all architectures, and
