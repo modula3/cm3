@@ -5,7 +5,6 @@ Interface("Usignal")
 
 Interface ("Udir")
 Interface ("Uerror")
-Interface ("Uexec")
 Interface ("Unix")
 Interface ("Usignal")
 Interface ("Usocket")
