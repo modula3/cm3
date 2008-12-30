@@ -31,3 +31,6 @@ if equal(M3_VARIANT, "PM3")
 else
   implementation("FSUnix_cm3")
 end
+
+include(ROOT & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "Uwaitpid.quake")
+MakeUwaitpid("Sysutils_")

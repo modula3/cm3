@@ -1,7 +1,6 @@
 interface("Upthread")
 Interface("Utypes")
 
-Interface ("Uexec")
 Interface ("Unix")
 Interface ("Utime")
 Interface ("Uutsname")

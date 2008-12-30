@@ -26,7 +26,7 @@
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
 
-IMPORT Unix, Text, Ctypes, Uexec, Process, Thread, Fmt, Cerrno, Uerror;
+IMPORT Unix, Text, Ctypes, Sysutils_Uwaitpid, Process, Thread, Fmt, Cerrno, Uerror;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE Hostname() : TEXT =
@@ -48,15 +48,14 @@ PROCEDURE Hostname() : TEXT =
 PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
   VAR
     result: Ctypes.int;
-    statusT: Uexec.w_T;
-    statusM3: Uexec.w_M3;
+    statusM3: Sysutils_Uwaitpid.waitpid_status_t;
     pid := Process.GetID(p);
     e : Ctypes.int;
     err : TEXT;
   CONST Delay = 0.1D0;
   BEGIN
     LOOP
-      result := Uexec.waitpid(pid, ADR(statusT) , Uexec.WNOHANG);
+      result := Sysutils_Uwaitpid.waitpid(pid, statusM3, Sysutils_Uwaitpid.WNOHANG);
       IF result # 0 THEN EXIT END;
       Thread.Pause(Delay)
     END;
@@ -71,11 +70,7 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
       END;
       RAISE Error("Could not wait: " & err);
     END;
-    statusM3.w_Filler := 0;
-    statusM3.w_Coredump := statusT.w_Coredump;
-    statusM3.w_Termsig := statusT.w_Termsig;
-    statusM3.w_Retcode := statusT.w_Retcode;
-    RETURN MIN(LAST(Process.ExitCode),LOOPHOLE(statusM3,Uexec.w_A));
+    RETURN MIN(LAST(Process.ExitCode), statusM3.w_Loophole);
   END Wait;
 
 BEGIN

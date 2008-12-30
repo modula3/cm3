@@ -9,7 +9,6 @@
 % $Id$
 
 Interface ("Uerror")
-Interface ("Uexec")
 Interface ("Unix")
 Interface ("Usignal")
 Interface ("Ustat")

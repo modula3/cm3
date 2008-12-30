@@ -1,12 +1,16 @@
 
 c_source ("UtimeC")
 
+include(ROOT & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "Uwaitpid.quake")
+MakeUwaitpid("")
+
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
         or equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
         or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
         or equal (TARGET, "NT386")
     c_source("UstatC")
+    Interface ("Uexec")
     Interface ("Uuio")
     Interface ("Upwd")
     Interface ("Unetdb")
