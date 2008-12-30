@@ -35,6 +35,12 @@ TYPE
         w_Coredump: BITS  1 FOR [0..16_01];  (* core dump indicator *)
         w_Termsig : BITS  7 FOR [0..16_7F];  (* termination signal *)
         w_Retcode : BITS  8 FOR [0..16_FF];  (* exit code if w_termsig == 0 *)
+
+    above is all big endian
+    for little endian, reverse the field order
+
+    That is, w_Filler is the most significant bits.
+    w_Retcode is the least significant bits.
 *)
         (* The "M3" output fields: *)
         w_Coredump: uint8_t := 0; (* boolean: core dump indicator *)
