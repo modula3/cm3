@@ -9,7 +9,7 @@ IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError,  RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched, Usem, Usignal,
-       Uucontext, Uerror, Uexec;
+       Uucontext, Uerror, Uwaitpid;
 FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t, pthread_mutex_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER;
@@ -835,17 +835,12 @@ PROCEDURE UTimeFromTime (time: Time.T): UTime =
 PROCEDURE WaitProcess (pid: int): int =
   (* ThreadPThread.m3 and ThreadPosix.m3 are very similar. *)
   VAR
-    statusT: Uexec.w_T;
-    statusM3: Uexec.w_M3;
+    statusM3: Uwaitpid.waitpid_status_t;
   BEGIN
     LOOP
-      WITH r = Uexec.waitpid(pid, ADR(statusT), 0) DO
+      WITH r = Uwaitpid.waitpid(pid, statusM3) DO
         IF r > 0 THEN
-          statusM3 := Uexec.w_M3 { w_Filler := 0,
-                                   w_Coredump := statusT.w_Coredump,
-                                   w_Termsig := statusT.w_Termsig,
-                                   w_Retcode := statusT.w_Retcode };
-          RETURN LOOPHOLE(statusM3, Uexec.w_A);
+          RETURN statusM3.w_Loophole;
         END;
         <*ASSERT r < 0*>
       END;

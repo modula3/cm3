@@ -16,7 +16,7 @@ EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks;
 IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
        RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
        RTProcess, RTThread, RTIO, ThreadEvent, Time, TimePosix,
-       Unix, Usignal, Utime, Word, Uexec;
+       Unix, Usignal, Utime, Word, Uwaitpid;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 
@@ -1026,21 +1026,16 @@ PROCEDURE WaitProcess (pid: int): int =
 (* ThreadPThread.m3 and ThreadPosix.m3 are the same here except ThreadPosix.m3 calls Pause(). *)
   VAR
     result: int;
-    statusT: Uexec.w_T;
-    statusM3: Uexec.w_M3;
+    statusM3: Uwaitpid.waitpid_status_t;
   CONST Delay = 0.1D0;
   BEGIN
     LOOP
-      result := Uexec.waitpid(pid, ADR(statusT), Uexec.WNOHANG);
+      result := Uwaitpid.waitpid(pid, statusM3, Uwaitpid.WNOHANG);
       IF result # 0 THEN EXIT END;
       Pause(Delay);
     END;
     <* ASSERT result > 0 *>
-    statusM3.w_Filler := 0;
-    statusM3.w_Coredump := statusT.w_Coredump;
-    statusM3.w_Termsig := statusT.w_Termsig;
-    statusM3.w_Retcode := statusT.w_Retcode;
-    RETURN LOOPHOLE(statusM3, Uexec.w_A);
+    RETURN statusM3.w_Loophole;
   END WaitProcess;
 
 (*-------------------------------------------------- low-level coroutines ---*)

@@ -11,7 +11,7 @@ UNSAFE MODULE ProcessPosixCommon EXPORTS ProcessPosixCommon, Process;
 
 IMPORT Atom, AtomList, Cerrno, Ctypes, Env, File, FilePosix, M3toC, OSError,
   OSErrorPosix, Pathname, RTLinker, RTProcess, RTSignal,
-  Scheduler, Text, SchedulerPosix, Unix, Uerror, Uexec, Uprocess, Ustat,
+  Scheduler, Text, SchedulerPosix, Unix, Uerror, Uwaitpid, Uprocess, Ustat,
   Utime, Uugid, Word, Process;
 
 CONST
@@ -34,7 +34,7 @@ PROCEDURE Create_ForkExec(
     oit, nit: Utime.struct_itimerval;
     forkResult, execResult: INTEGER;
     forkErrno, execErrno: Ctypes.int;
-    waitStatus: Uexec.w_A;
+    waitStatus: Uwaitpid.waitpid_status_t;
     stdin_fd, stdout_fd, stderr_fd: INTEGER := NoFileDescriptor;
   BEGIN
     VAR path := GetPathToExec(cmd); BEGIN
@@ -111,7 +111,7 @@ PROCEDURE Create_ForkExec(
     (* The vfork succeeded.  Did the execve succeed? *)
     IF execResult < 0 THEN
       (* No, clean up child process. *)
-      EVAL Uexec.waitpid(forkResult, ADR(waitStatus), 0);
+      EVAL Uwaitpid.waitpid(forkResult, waitStatus, 0);
       OSErrorPosix.Raise0(execErrno)
     END;
 
