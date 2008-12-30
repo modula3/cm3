@@ -5,6 +5,7 @@
 #include "m3unix.h"
 #include <unistd.h>
 #include <sys/wait.h>
+#include <assert.h>
 
 typedef struct _m3_waitpid_status_t {
     UINT8 w_Coredump;
@@ -34,17 +35,32 @@ m3_waitpid(
     if ((pid_result == 0) || (pid_result == -1))
         goto Exit;
 
-    m3_status.w_Coredump = !! WIFSIGNALED(status);
-    m3_status.w_Termsig = WTERMSIG(status);
-    m3_status.w_Retcode = WEXITSTATUS(status);
-#if 0
-    m3_status.w_Stopsig = WSTOPSIG(status);
-    m3_status.w_Stopval = ?
-    m3_status.w_Exited = WIFEXITED(status);
-    m3_status.w_Signaled = WIFSIGNALED(status);
-    m3_status.w_Stopped = WIFSTOPPED(status);
-    m3_status.w_Continued = WIFCONTINUED(status);
+    if (WIFEXITED(status))
+    {
+        assert(WEXITSTATUS(status) <= 0xFF);
+        m3_status.w_Retcode = WEXITSTATUS(status);
+        m3_status.w_Exited = 1;
+    }
+    else if (WIFSIGNALED(status))
+    {
+        assert(WTERMSIG(status) <= 0x7F);
+        m3_status.w_Termsig = WTERMSIG(status);
+        m3_status.w_Signaled = 1;
+    }
+    else if (WIFSTOPPED(status))
+    {
+        m3_status.w_Stopsig = WSTOPSIG(status);
+        m3_status.w_Stopped = 1;
+    }
+#ifdef WIFCONTINUED     /* Not all implementations support this */
+    else if (WIFCONTINUED(status))
+    {
+        m3_status.w_Continued = 1;
+    }
+#ifdef WCOREDUMP
+    m3_status.w_Coredump = WCOREDUMP(status);
 #endif
+    m3_status.w_A_Loophole = ((UINT32) m3_status.w_Coredump << 15) | ((UINT32) m3_status.w_Termsig << 8) | ((UINT32) m3_status.w_Retcode);
 
 Exit:
     *out_m3_status = m3_status;
