@@ -4,8 +4,11 @@ SNAPS=${SNAPS:-/var/www/modula3.elegosoft.com/cm3/uploaded-archives}
 INDEX=${INDEX:-index.html}
 cd $SNAPS || exit 1
 
-# future: a central list somewhere
-TARGETS=`echo AMD64_LINUX SPARC32_LINUX LINUXLIBC6 NT386GNU SOLsun NT386 PPC_LINUX | sort -u`
+for t in `cat targets.txt`; do
+  if ls -1t cm3-*${t}-* >/dev/null 2>/dev/null; then
+    TARGETS="${TARGETS} ${t}"
+  fi
+done
 
 if [ -f "${INDEX}" ]; then
   mv ${INDEX} ${INDEX}.old
