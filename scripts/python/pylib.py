@@ -503,6 +503,8 @@ elif UName.startswith("openbsd"):
         Host = "SPARC64_OPENBSD"
     elif UNameArchM == "macppc":
         Host = "PPC32_OPENBSD"
+    elif UNameArchM == "i386":
+        Host = "I386_OPENBSD"
     else:
         FatalError("unknown OpenBSD platform")
 
