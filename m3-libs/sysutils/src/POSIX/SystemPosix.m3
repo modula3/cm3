@@ -53,13 +53,11 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
     pid := Process.GetID(p);
     e : Ctypes.int;
     err : TEXT;
-    existed := FALSE;
   CONST Delay = 0.1D0;
   BEGIN
     LOOP
       result := Uexec.waitpid(pid, ADR(statusT) , Uexec.WNOHANG);
       IF result # 0 THEN EXIT END;
-      existed := TRUE;
       Thread.Pause(Delay)
     END;
     IF result < 0 THEN 
