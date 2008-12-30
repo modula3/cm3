@@ -43,19 +43,19 @@ TYPE
     w_Retcode is the least significant bits.
 *)
         (* The "M3" output fields: *)
+        w_A_Loophole : uint16_t := 0; (* w_Coredump << 15 | w_Termsig << 8 | w_Retcode *)
         w_Coredump: uint8_t := 0; (* boolean: core dump indicator *)
         w_Termsig : uint8_t := 0; (* termination signal *)
         w_Retcode : uint8_t := 0; (* exit code if w_termsig == 0 *)
 
-        (* The rest are speculative, unused, and therefore not implemented. *)
-        (*
+        (* These are not used. *)
         w_Stopsig : uint8_t := 0; (* signal that stopped us *)
-        w_Stopval : uint8_t := 0; (* == W_STOPPED if stopped *)
         w_Exited  : uint8_t := 0; (* boolean: WIFEXITED *)
         w_Signaled: uint8_t := 0; (* boolean: WIFSIGNALED *)
-        w_Stopped : uint8_t := 0; (* boolean: WIFSTOPPED *)
+        w_Stopped : uint8_t := 0; (* boolean: WIFSTOPPED (aka Stopval aka W_STOPPED) *)
+
+        (* This is not used and not portable. *)
         w_Continued : uint8_t := 0; (* boolean: WIFCONTINUED *)
-        *)
   END;
 
 CONST
