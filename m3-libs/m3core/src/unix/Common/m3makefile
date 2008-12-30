@@ -1,5 +1,7 @@
 
 c_source ("UtimeC")
+Interface ("Uwaitpid")
+c_source  ("Uwaitpid")
 
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
