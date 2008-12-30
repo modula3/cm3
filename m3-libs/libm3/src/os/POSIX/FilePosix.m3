@@ -10,7 +10,7 @@ UNSAFE MODULE FilePosix;
 
 IMPORT Cerrno, Ctypes, File, FS, M3toC, OSError, OSErrorPosix, Pipe,
   RegularFile, SchedulerPosix, Terminal, Uerror, Unix, Ustat, Uuio,
-  Word, Utypes;
+  Word, Utypes, FilePosixC;
 
 REVEAL 
   File.T = T BRANDED OBJECT OVERRIDES
@@ -161,7 +161,7 @@ PROCEDURE RegularFileFlush(h: RegularFile.T) RAISES {OSError.E} =
 PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E} =
   VAR i: INTEGER;
   BEGIN
-    i := RegularFileLockC(h.fd);
+    i := FilePosixC.RegularFileLockC(h.fd);
     IF i < 0 THEN
 	  OSErrorPosix.Raise();
     END;
@@ -171,7 +171,7 @@ PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E} =
 PROCEDURE RegularFileUnlock(h: RegularFile.T) RAISES {OSError.E} =
   VAR i: INTEGER;
   BEGIN
-    i := RegularFileUnlockC(h.fd);
+    i := FilePosixC.RegularFileUnlockC(h.fd);
     IF i < 0 THEN
 	  OSErrorPosix.Raise();
     END;

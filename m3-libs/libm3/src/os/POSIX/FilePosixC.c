@@ -10,18 +10,15 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/fcntl.html
 */
 
 #define __USE_LARGEFILE64
+#define __USE_FILE_OFFSET64
 
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
+#include <stddef.h>
 
-#ifdef _WIN64
-typedef __int64 INTEGER;
-#else
-typedef long INTEGER;
-#endif
-
+typedef ptrdiff_t INTEGER;
 typedef struct flock flock_t;
 #define FALSE 0
 #define TRUE 1
