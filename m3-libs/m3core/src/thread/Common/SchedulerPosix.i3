@@ -15,8 +15,12 @@ FROM Ctypes IMPORT int;
 TYPE
   WaitResult = {Ready, Error, FDError, Timeout};
 
+(* Wrapper for waitpid. *)
 PROCEDURE WaitProcess(pid: int): int;
-(* This is a wrapper for Posix waitpid and merely ASSERTs(FALSE) on Win32. *)
+
+(* TRUE for pthreads, TRUE on Cygwin (NT threads), FALSE on user threads.
+This guides how WaitProcess yields, and potentially other code, such as in sysutils. *)
+PROCEDURE DoesWaitPidYield() : BOOLEAN;
 
 PROCEDURE IOWait(fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult;

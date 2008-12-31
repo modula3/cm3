@@ -11,9 +11,3 @@
 Interface ("ThreadF")
 Interface ("ThreadContext")
 implementation ("ThreadWin32")
-
-if equal (OS_TYPE, "WIN32")
-  implementation ("WaitProcessWin32")
-else
-  implementation ("WaitProcessCygwin")
-end

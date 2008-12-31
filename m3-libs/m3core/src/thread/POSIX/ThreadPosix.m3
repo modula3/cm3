@@ -1022,21 +1022,10 @@ PROCEDURE FreeDeadStacks () =
     END;
   END FreeDeadStacks;
 
-PROCEDURE WaitProcess (pid: int): int =
-(* ThreadPThread.m3 and ThreadPosix.m3 are the same here except ThreadPosix.m3 calls Pause(). *)
-  VAR
-    result: int;
-    statusM3: Uwaitpid.waitpid_status_t;
-  CONST Delay = 0.1D0;
-  BEGIN
-    LOOP
-      result := Uwaitpid.waitpid(pid, statusM3, Uwaitpid.WNOHANG);
-      IF result # 0 THEN EXIT END;
-      Pause(Delay);
-    END;
-    <* ASSERT result > 0 *>
-    RETURN statusM3.w_Loophole;
-  END WaitProcess;
+PROCEDURE DoesWaitPidYield() : BOOLEAN =
+BEGIN
+    RETURN FALSE;
+END DoesWaitPidYield.
 
 (*-------------------------------------------------- low-level coroutines ---*)
 
