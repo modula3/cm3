@@ -1,10 +1,11 @@
 %
 % Paper over SOME cross-build scenarios, without affecting native builds.
 %
+HOST_BUILDDIR = BUILD_DIR
 if defined("HOST")
-  HOST_BUILDDIR = HOST
-else
-  HOST_BUILDDIR = BUILD_DIR
+    if not equal(HOST, TARGET)
+        HOST_BUILDDIR = HOST
+    end
 end
 
 if defined ("STUBGEN")
