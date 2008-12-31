@@ -1,3 +1,11 @@
+%
+% Paper over SOME cross-build scenarios, without affecting native builds.
+%
+if defined("HOST")
+  HOST_BUILDDIR = HOST
+else
+  HOST_BUILDDIR = BUILD_DIR
+end
 
 if defined ("SHAREDOBJGEN")
   % take the version specified by the user
@@ -5,6 +13,6 @@ if defined ("SHAREDOBJGEN")
 else
   %% - full path
   _SHAREDOBJ_STUBGEN = 
-    format(ROOT & "/m3-comm/sharedobjgen/%s/shobjcodegen", BUILD_DIR)
+    format(ROOT & "/m3-comm/sharedobjgen/%s/shobjcodegen", HOST_BUILDDIR)
   SHAREDOBJGEN = _SHAREDOBJ_STUBGEN
 end

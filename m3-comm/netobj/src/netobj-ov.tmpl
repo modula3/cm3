@@ -1,7 +1,16 @@
+%
+% Paper over SOME cross-build scenarios, without affecting native builds.
+%
+if defined("HOST")
+  HOST_BUILDDIR = HOST
+else
+  HOST_BUILDDIR = BUILD_DIR
+end
+
 if defined ("STUBGEN")
   % take the version specified by the user
   _NETOBJ_STUBGEN = STUBGEN
 else
-  _NETOBJ_STUBGEN = format (ROOT & "/m3-comm/stubgen/%s/stubgen", BUILD_DIR)
+  _NETOBJ_STUBGEN = format (ROOT & "/m3-comm/stubgen/%s/stubgen", HOST_BUILDDIR)
   STUBGEN = _NETOBJ_STUBGEN
 end

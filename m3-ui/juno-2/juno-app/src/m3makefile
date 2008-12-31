@@ -19,9 +19,17 @@ import		("juno-compiler")
 %import         ("pkl-fonts") % explicitly define the dependency
 
 /* build the font pickles first */
-PKLPKG=         ".." & SL & "pkl-fonts"
-PKLDIR=         PKLPKG & SL & BUILD_DIR
-exec            ("cd " & PKLDIR & " && ." & SL & "PklFonts > FontData.pkl")
+
+%
+% Paper over SOME cross-build scenarios, without affecting native builds.
+%
+if defined("HOST")
+  HOST_BUILDDIR = HOST
+else
+  HOST_BUILDDIR = BUILD_DIR
+end
+
+exec ("cd .." & SL & "pkl-fonts" & SL & HOST_BUILDDIR & " && ." & SL & "PklFonts > FontData.pkl")
 
 /* private interfaces */
 interface       ("EditorUI")
