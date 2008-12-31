@@ -1,7 +1,16 @@
+%
+% Paper over SOME cross-build scenarios, without affecting native builds.
+%
+if defined("HOST")
+  HOST_BUILDDIR = HOST
+else
+  HOST_BUILDDIR = BUILD_DIR
+end
+
 if defined ("M3ZUME")
   % take the version of m3zume specified by the user
   _ZUME_EXEC = M3ZUME
 else
-  _ZUME_EXEC = format (ROOT & "/m3-ui/m3zume/%s/m3zume", BUILD_DIR)
+  _ZUME_EXEC = format (ROOT & "/m3-ui/m3zume/%s/m3zume", HOST_BUILDDIR)
   M3ZUME = _ZUME_EXEC
 end
