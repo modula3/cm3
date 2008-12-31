@@ -4,8 +4,8 @@
 
 INTERFACE Unix;
 
-FROM Ctypes IMPORT short, int, long, const_char_star, char_star, char_star_star;
-FROM Utypes IMPORT off_t, size_t, pid_t;
+FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star;
+FROM Utypes IMPORT off_t, size_t;
 FROM Utime IMPORT struct_timeval;
 
 CONST
@@ -70,5 +70,13 @@ CONST
 <*EXTERNAL*> PROCEDURE unlink (path: const_char_star): int;
 <*EXTERNAL*> PROCEDURE utimes (file: const_char_star; tvp: UNTRACED REF ARRAY [0..1] OF struct_timeval): int;
 <*EXTERNAL*> PROCEDURE vfork (): int;
+
+CONST
+  MAX_FDSET = 1024;
+
+TYPE
+  FDSet = SET OF [0 .. MAX_FDSET - 1];
+
+<*EXTERNAL*> PROCEDURE select (nfds: int; readfds, writefds, exceptfds: UNTRACED REF FDSet; timeout: UNTRACED REF struct_timeval): int;
 
 END Unix.
