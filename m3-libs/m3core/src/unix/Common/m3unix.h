@@ -1,9 +1,4 @@
-/* TBD: what is the meaning of each of these? */
-#define __USE_LARGEFILE64
 #define _FILE_OFFSET_BITS 64
-#define _LARGEFILE_SOURCE
-#define _LARGEFILE64_SOURCE
-#define __USE_FILE_OFFSET64
 
 #ifdef _MSC_VER
 typedef   signed __int8   INT8;
