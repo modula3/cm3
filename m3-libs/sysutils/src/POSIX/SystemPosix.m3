@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: SystemPosix.m3,v 1.4 2009-01-01 00:02:44 jkrell Exp $ *)
+ * $Id: SystemPosix.m3,v 1.5 2009-01-01 00:55:29 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
@@ -48,12 +48,25 @@ PROCEDURE Hostname() : TEXT =
     RETURN "amnesiac";
   END Hostname;
 
+
+PROCEDURE WaitError(e: int) RAISES {Error} =
+  VAR
+    err : TEXT;
+  BEGIN
+    CASE e OF
+      Uerror.ECHILD => err := "The process specified in pid does not exist or is not a child of the calling process.";
+    | Uerror.EINTR => err := "WNOHANG was not set and an unblocked signal or a SIGCHLD was caught.";
+    | Uerror.EINVAL => err := "The options argument was invalid.";
+    ELSE
+      err := "Unexpected return value " & Fmt.Int(e);
+    END;
+    RAISE Error("Could not wait: " & err);
+  END WaitError;
+
 PROCEDURE WaitSlow(pid: int): Process.ExitCode RAISES {Error} =
   VAR
     result: int;
     status: waitpid_status_t;
-    e : int;
-    err : TEXT;
   CONST Delay = 0.1D0;
   BEGIN
     LOOP
@@ -63,38 +76,24 @@ PROCEDURE WaitSlow(pid: int): Process.ExitCode RAISES {Error} =
         EXIT
       END;
 
-      (* This is why this is slow. Even if the process finishes "soon", we
-      still wait a full Delay. We pause here so that other threads in this
-      parent process will proceed while the child process runs. Not letting
-      parent threads run could lead to deadlock, if the child process is
-      consuming parent thread output, or parent threads are consuming
-      child process output. When we have kernel threads, waitpid lets them
-      run. When we implement our own user threads, the kernel, that implements
-      waitpid, doesn't know about our threads and therefore doesn't let them run. *)
+      (* Let parent threads run while waiting for child process, to avoid deadlock
+      in case they depend on each other. Slow, because the child process might
+      end "soon", but we still wait a full Delay. *)
 
       Thread.Pause(Delay)
 
     END;
     IF result < 0 THEN 
-      e := Cerrno.GetErrno();
-      CASE e OF
-        Uerror.ECHILD => err := "The process specified in pid does not exist or is not a child of the calling process.";
-      | Uerror.EINTR => err := "WNOHANG was not set and an unblocked signal or a SIGCHLD was caught.";
-      | Uerror.EINVAL => err := "The options argument was invalid.";
-      ELSE
-        err := "Unexpected return value " & Fmt.Int(e);
-      END;
-      RAISE Error("Could not wait: " & err);
+      WaitError(Cerrno.GetErrno());
     END;
     RETURN MIN(LAST(Process.ExitCode), status.w_Loophole);
   END WaitSlow;
 
 PROCEDURE WaitFast(pid: int): Process.ExitCode RAISES {Error} =
   VAR
-    result: int;
-    status: waitpid_status_t;
+    result : int;
+    status : waitpid_status_t;
     e : int;
-    err : TEXT;
   BEGIN
     LOOP
       result := waitpid(pid, status, 0);
@@ -104,15 +103,10 @@ PROCEDURE WaitFast(pid: int): Process.ExitCode RAISES {Error} =
       END;
       IF result < 0 THEN 
         e := Cerrno.GetErrno();
-        CASE e OF
-          Uerror.ECHILD => err := "The process specified in pid does not exist or is not a child of the calling process.";
-        | Uerror.EINTR => (* keep looping *) err := NIL;
-        | Uerror.EINVAL => err := "The options argument was invalid.";
+        IF e = Uerror.EINTR THEN
+          (* keep looping *)
         ELSE
-          err := "Unexpected return value " & Fmt.Int(e);
-        END;
-        IF err # NIL THEN
-            RAISE Error("Could not wait: " & err);
+          WaitError(e);
         END;
       END;
     END;
