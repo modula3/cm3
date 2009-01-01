@@ -13,27 +13,7 @@
 
 %------------------------------------------------------------------------------
 
-% future: push this knowledge somewhere more central
-readonly NO_USER_THREADS =
-{
-    "AMD64_LINUX":1,
-    "ARM_LINUX":1,
-    "I386_OPENBSD":1,
-    "MIPS32_IRIX":1,
-    "MIPS64_IRIX":1,
-    "MIPS64_OPENBSD":1,
-    "NT386":1,
-    "NT386GNU":1,
-    "PPC_LINUX":1,
-    "PPC32_AIX":1,
-    "PPC32_OPENBSD":1,
-    "PPC64_AIX":1,
-    "PPC64_DARWIN":1,
-    "SPARC32_LINUX":1,
-    "SPARC64_LINUX":1,
-    "SPARC64_OPENBSD":1,
-    "SPARC64_SOLARIS":1,
-}
+include("thread.quake")
 
 %----------------------------------------------- machine dependent packages ---
 

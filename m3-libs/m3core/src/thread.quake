@@ -1,0 +1,146 @@
+% Copyright (C) 1992, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+%------------------------------------------------------------------------------
+
+%
+% ?future: push this knowledge somewhere more central?
+%
+readonly NO_USER_THREADS =
+{
+    "AMD64_LINUX":1,
+    "ARM_LINUX":1,
+    "I386_OPENBSD":1,
+    "MIPS32_IRIX":1,
+    "MIPS64_IRIX":1,
+    "MIPS64_OPENBSD":1,
+    "NT386":1,
+    "NT386GNU":1,
+    "PPC_LINUX":1,
+    "PPC32_AIX":1,
+    "PPC32_OPENBSD":1,
+    "PPC64_AIX":1,
+    "PPC64_DARWIN":1,
+    "SPARC32_LINUX":1,
+    "SPARC64_LINUX":1,
+    "SPARC64_OPENBSD":1,
+    "SPARC64_SOLARIS":1,
+}
+
+%------------------------------------------------------------------------------
+
+readonly USE_PTHREADS = {
+  "ALPHA_OSF"  : FALSE,
+  "AIX386"     : FALSE,
+  "AP3000"     : FALSE,
+  "ARM"        : FALSE,
+  "DS3100"     : FALSE,
+  "FreeBSD"    : FALSE,
+  "FreeBSD2"   : FALSE,
+  "FreeBSD3"   : FALSE,
+  "FreeBSD4"   : TRUE,
+  "HP300"      : FALSE,
+  "HPPA"       : FALSE,
+  "IBMR2"      : FALSE,
+  "IBMRT"      : FALSE,
+  "IRIX5"      : FALSE,
+  "LINUX"      : FALSE,
+  "LINUXELF"   : FALSE,
+  "LINUXLIBC6" : TRUE,  % old kernels without NPTL should be FALSE
+  "NEXT"       : FALSE,
+  "OKI"        : FALSE,
+  "OS2"        : FALSE,
+  "SEQUENT"    : FALSE,
+  "SOLgnu"     : TRUE,
+  "SOLsun"     : TRUE,
+  "SPARC"      : FALSE,
+  "SUN3"       : FALSE,
+  "SUN386"     : FALSE,
+  "UMAX"       : FALSE,
+  "VAX"        : FALSE,
+  "I386_DARWIN": TRUE,
+  "PPC_DARWIN" : TRUE,
+  "PPC_LINUX"  : TRUE,
+  "NetBSD2_i386"  : FALSE
+}
+
+% pthreads or cygwin
+PosixKernelThreads = FALSE
+
+% pthreads or Win32 threads; not user threads
+KernelThreads = FALSE
+
+%
+% New targets default to using pthreads, unless USE_PTHREADS is filled in to say FALSE.
+%
+if not (USE_PTHREADS contains TARGET)
+    USE_PTHREADS{TARGET} = TRUE
+end
+
+
+if equal (OS_TYPE, "WIN32") or equal (TARGET, "NT386")
+    % native NT386 or Cygwin
+    KernelThreads = TRUE
+else
+    if (NO_USER_THREADS contains TARGET) or ((not defined("NOPTHREAD")) and USE_PTHREADS{TARGET})
+        PosixKernelThreads = TRUE
+        KernelThreads = TRUE
+    end
+end
+
+
+if equal (OS_TYPE, "POSIX") and equal (TARGET, "NT386")
+    % cygwin -- not pthreads, but a posix system with kernel threads -- confusing?
+    PosixKernelThreads = TRUE
+end
+
+%------------------------------------------------------------------------------
+
+%
+% It is necessary to make DoesWaitPidYield available via copying so that
+% sysutils can reuse it, without becoming dependent on newer m3core.
+% In the future, once bootstrapped, this can be reverted to "normal".
+% "normal" is SchedulerPosix.DoesWaitPidYield.
+%
+
+%
+% This code is derived from Compiler.tmpl (via Uwaitpid.quake).
+%
+
+proc WriteArrayToFile(Array, File) is
+    %
+    % Write to a temporary file first and cp_if, for correct incrementality.
+    %
+    if defined("_all") % What does this do?
+        > File & ".tmp" in
+            foreach Line in Array
+                write (Line, CR)
+            end
+        end
+        cp_if (File & ".tmp", File)
+    end
+end
+
+%------------------------------------------------------------------------------
+
+readonly proc MakeDoesWaitPidYield(Prefix) is
+
+    DoesWaitPidYield_i3 = [
+"(* Copyright (C) 1990, Digital Equipment Corporation           *)",
+"(* All rights reserved.                                        *)",
+"(* See the file COPYRIGHT for a full description.              *)",
+"",
+"INTERFACE " & Prefix & "DoesWaitPidYield;",
+"",
+"CONST Value = " & KernelThreads & ";",
+"",
+"END " & Prefix & "DoesWaitPidYield.",
+    ]
+
+    WriteArrayToFile(DoesWaitPidYield_i3, Prefix & "DoesWaitPidYield.i3")
+
+    derived_interface (Prefix & "DoesWaitPidYield", HIDDEN)
+end
+
+%------------------------------------------------------------------------------

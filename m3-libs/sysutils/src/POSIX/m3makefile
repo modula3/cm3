@@ -32,5 +32,19 @@ else
   implementation("FSUnix_cm3")
 end
 
-include(ROOT & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "Uwaitpid.quake")
+%------------------------------------------------------------------------------
+
+%
+% pull in pieces of current m3core, while still being compatible with
+% older m3core for bootstrapping reasons
+%
+
+local M3Core = ROOT & SL & "m3-libs" & SL & "m3core" & SL & "src"
+
+include(M3Core & SL & "Uwaitpid.quake")
+include(M3Core & SL & "thread.quake")
+
 MakeUwaitpid("Sysutils_")
+MakeDoesWaitPidYield("Sysutils_")
+
+%------------------------------------------------------------------------------
