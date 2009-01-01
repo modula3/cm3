@@ -21,12 +21,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: SystemPosix.m3,v 1.3 2008-12-30 23:49:09 jkrell Exp $ *)
+ * $Id: SystemPosix.m3,v 1.4 2009-01-01 00:02:44 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
 
-IMPORT Unix, Text, Ctypes, Sysutils_Uwaitpid, Process, Thread, Fmt, Cerrno, Uerror;
+IMPORT Unix, Text, Process, Thread, Fmt, Cerrno, Uerror;
+FROM Ctypes IMPORT int;
+FROM Sysutils_Uwaitpid IMPORT waitpid_status_t, waitpid, WNOHANG;
+IMPORT Sysutils_DoesWaitPidYield;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE Hostname() : TEXT =
@@ -45,19 +48,32 @@ PROCEDURE Hostname() : TEXT =
     RETURN "amnesiac";
   END Hostname;
 
-PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
+PROCEDURE WaitSlow(pid: int): Process.ExitCode RAISES {Error} =
   VAR
-    result: Ctypes.int;
-    statusM3: Sysutils_Uwaitpid.waitpid_status_t;
-    pid := Process.GetID(p);
-    e : Ctypes.int;
+    result: int;
+    status: waitpid_status_t;
+    e : int;
     err : TEXT;
   CONST Delay = 0.1D0;
   BEGIN
     LOOP
-      result := Sysutils_Uwaitpid.waitpid(pid, statusM3, Sysutils_Uwaitpid.WNOHANG);
-      IF result # 0 THEN EXIT END;
+      result := waitpid(pid, status, WNOHANG);
+      <* ASSERT(result >= -1) *>
+      IF result # 0 THEN
+        EXIT
+      END;
+
+      (* This is why this is slow. Even if the process finishes "soon", we
+      still wait a full Delay. We pause here so that other threads in this
+      parent process will proceed while the child process runs. Not letting
+      parent threads run could lead to deadlock, if the child process is
+      consuming parent thread output, or parent threads are consuming
+      child process output. When we have kernel threads, waitpid lets them
+      run. When we implement our own user threads, the kernel, that implements
+      waitpid, doesn't know about our threads and therefore doesn't let them run. *)
+
       Thread.Pause(Delay)
+
     END;
     IF result < 0 THEN 
       e := Cerrno.GetErrno();
@@ -70,7 +86,47 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
       END;
       RAISE Error("Could not wait: " & err);
     END;
-    RETURN MIN(LAST(Process.ExitCode), statusM3.w_Loophole);
+    RETURN MIN(LAST(Process.ExitCode), status.w_Loophole);
+  END WaitSlow;
+
+PROCEDURE WaitFast(pid: int): Process.ExitCode RAISES {Error} =
+  VAR
+    result: int;
+    status: waitpid_status_t;
+    e : int;
+    err : TEXT;
+  BEGIN
+    LOOP
+      result := waitpid(pid, status, 0);
+      <* ASSERT((result = -1) OR (result > 0)) *>
+      IF result > 0 THEN
+        RETURN MIN(LAST(Process.ExitCode), status.w_Loophole);
+      END;
+      IF result < 0 THEN 
+        e := Cerrno.GetErrno();
+        CASE e OF
+          Uerror.ECHILD => err := "The process specified in pid does not exist or is not a child of the calling process.";
+        | Uerror.EINTR => (* keep looping *) err := NIL;
+        | Uerror.EINVAL => err := "The options argument was invalid.";
+        ELSE
+          err := "Unexpected return value " & Fmt.Int(e);
+        END;
+        IF err # NIL THEN
+            RAISE Error("Could not wait: " & err);
+        END;
+      END;
+    END;
+  END WaitFast;
+
+PROCEDURE Wait (p: Process.T): Process.ExitCode RAISES {Error} =
+  VAR pid := Process.GetID(p);
+  BEGIN
+    (* IF SchedulerPosix.DoesWaitPidYield() THEN *)
+    IF Sysutils_DoesWaitPidYield.Value THEN
+        RETURN WaitFast(pid);
+    ELSE
+        RETURN WaitSlow(pid);
+    END;
   END Wait;
 
 BEGIN

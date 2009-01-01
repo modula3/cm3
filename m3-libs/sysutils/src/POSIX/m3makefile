@@ -21,7 +21,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: m3makefile,v 1.5 2008-12-31 10:55:07 jkrell Exp $
+% $Id: m3makefile,v 1.6 2009-01-01 00:02:45 jkrell Exp $
 
 implementation("OSSpecialsPosix")
 implementation("PathReprPosix")
@@ -32,5 +32,19 @@ else
   implementation("FSUnix_cm3")
 end
 
-include(ROOT & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "Uwaitpid.quake")
+%------------------------------------------------------------------------------
+
+%
+% pull in pieces of current m3core, while still being compatible with
+% older m3core for bootstrapping reasons
+%
+
+local M3Core = ROOT & SL & "m3-libs" & SL & "m3core" & SL & "src"
+
+include(M3Core & SL & "Uwaitpid.quake")
+include(M3Core & SL & "thread.quake")
+
 MakeUwaitpid("Sysutils_")
+MakeDoesWaitPidYield("Sysutils_")
+
+%------------------------------------------------------------------------------
