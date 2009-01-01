@@ -4,76 +4,18 @@
 
 /* Last modified on Tue May  4 10:17:51 PDT 1993 by mjordan                  */
 
-readonly USE_PTHREADS = {
-  "ALPHA_OSF"  : FALSE,
-  "AIX386"     : FALSE,
-  "AP3000"     : FALSE,
-  "ARM"        : FALSE,
-  "DS3100"     : FALSE,
-  "FreeBSD"    : FALSE,
-  "FreeBSD2"   : FALSE,
-  "FreeBSD3"   : FALSE,
-  "FreeBSD4"   : TRUE,
-  "HP300"      : FALSE,
-  "HPPA"       : FALSE,
-  "IBMR2"      : FALSE,
-  "IBMRT"      : FALSE,
-  "IRIX5"      : FALSE,
-  "LINUX"      : FALSE,
-  "LINUXELF"   : FALSE,
-  "LINUXLIBC6" : TRUE,  % old kernels without NPTL should be FALSE
-  "NEXT"       : FALSE,
-  "OKI"        : FALSE,
-  "OS2"        : FALSE,
-  "SEQUENT"    : FALSE,
-  "SOLgnu"     : TRUE,
-  "SOLsun"     : TRUE,
-  "SPARC"      : FALSE,
-  "SUN3"       : FALSE,
-  "SUN386"     : FALSE,
-  "UMAX"       : FALSE,
-  "VAX"        : FALSE,
-  "I386_DARWIN": TRUE,
-  "PPC_DARWIN" : TRUE,
-  "PPC_LINUX"  : TRUE,
-  "NetBSD2_i386"  : FALSE
-}
-
 include_dir ("Common")
-
-% pthreads or cygwin
-local PosixKernelThreads = FALSE
-
-% pthreads or Win32 threads; not user threads
-local KernelThreads = FALSE
-
-%
-% New targets default to using pthreads, unless USE_PTHREADS is filled in to say FALSE.
-%
-if not (USE_PTHREADS contains TARGET)
-    USE_PTHREADS{TARGET} = TRUE
-end
 
 
 if equal (OS_TYPE, "WIN32") or equal (TARGET, "NT386")
     include_dir ("WIN32")
-    KernelThreads = TRUE
 else
     if (NO_USER_THREADS contains TARGET) or ((not defined("NOPTHREAD")) and USE_PTHREADS{TARGET})
         include_dir("PTHREAD")
-        PosixKernelThreads = TRUE
-        KernelThreads = TRUE
     else
         include_dir (OS_TYPE)
     end
 end
-
-
-if equal (OS_TYPE, "POSIX") and equal (TARGET, "NT386")
-    % cygwin
-    PosixKernelThreads = TRUE
-end
-
 
 if KernelThreads
     % pthreads or Win32 threads; not user threads

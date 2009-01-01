@@ -8,7 +8,9 @@
 % This code is derived from Compiler.tmpl.
 %
 
-readonly proc WriteArrayToFile(Array, File) is
+%------------------------------------------------------------------------------
+
+proc WriteArrayToFile(Array, File) is
     %
     % Write to a temporary file first and cp_if, for correct incrementality.
     %
@@ -21,6 +23,8 @@ readonly proc WriteArrayToFile(Array, File) is
         cp_if (File & ".tmp", File)
     end
 end
+
+%------------------------------------------------------------------------------
 
 readonly proc MakeUwaitpid(Prefix) is
 
@@ -166,6 +170,8 @@ readonly proc MakeUwaitpid(Prefix) is
 "END " & Prefix & "Uwaitpid.",
     ]
 
+%------------------------------------------------------------------------------
+
     readonly Uwaitpid_C = [
 "",
 "/* Copyright (C) 1990, Digital Equipment Corporation           */",
@@ -272,6 +278,8 @@ Prefix & "m3_waitpid(",
 "}",
     ]
 
+%------------------------------------------------------------------------------
+
     WriteArrayToFile(Uwaitpid_i3, Prefix & "Uwaitpid.i3")
     WriteArrayToFile(Uwaitpid_C, Prefix & "Uwaitpid.c")
 
@@ -286,3 +294,5 @@ Prefix & "m3_waitpid(",
     end
     derived_c (Prefix & "Uwaitpid")
 end
+
+%------------------------------------------------------------------------------
