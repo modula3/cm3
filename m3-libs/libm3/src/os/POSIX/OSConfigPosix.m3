@@ -54,7 +54,11 @@ PROCEDURE UserHome (): TEXT =
 PROCEDURE Init () =
   VAR uts: Uutsname.struct_utsname;
   BEGIN
-    IF os_version # NIL THEN RETURN; END;
+    IF (host_name # NIL) AND (host_arch # NIL)
+            AND (os_name # NIL) AND (os_version # NIL) THEN
+        RETURN;
+    END;
+
     IF Uutsname.uname (ADR (uts)) >= 0 THEN
       host_name  := M3toC.CopyStoT (ADR (uts.nodename[0]));
       host_arch  := M3toC.CopyStoT (ADR (uts.machine[0]));
