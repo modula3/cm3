@@ -7,40 +7,44 @@ INTERFACE Unix;
 FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star;
 FROM Utypes IMPORT off_t, size_t;
 FROM Utime IMPORT struct_timeval;
+IMPORT Usysdep;
 
 CONST
   readEnd = 0;
   writeEnd = 1;
-  MaxPathLen = 1024;
-  MSETUID = 0;
-  MSETGID = 0;
-  MSTICKY = 0;
-  MROWNER = 8_0400;
-  MWOWNER = 8_0200;
-  MXOWNER = 8_0100;
-  MRGROUP = 8_0040;
-  MWGROUP = 8_0020;
-  MXGROUP = 8_0010;
-  MROTHER = 8_0004;
-  MWOTHER = 8_0002;
-  MXOTHER = 8_0001;
+  MaxPathLen = Usysdep.MaxPathLen;
+  MSETUID = Usysdep.MSETUID;
+  MSETGID = Usysdep.MSETGID;
+  MSTICKY = Usysdep.MSTICKY;
+  MROWNER = Usysdep.MROWNER;
+  MWOWNER = Usysdep.MWOWNER;
+  MXOWNER = Usysdep.MXOWNER;
+  MRGROUP = Usysdep.MRGROUP;
+  MWGROUP = Usysdep.MWGROUP;
+  MXGROUP = Usysdep.MXGROUP;
+  MROTHER = Usysdep.MROTHER;
+  MWOTHER = Usysdep.MWOTHER;
+  MXOTHER = Usysdep.MXOTHER;
   Mrwrwrw = MROWNER + MWOWNER + MRGROUP + MWGROUP + MROTHER + MWOTHER;
-  F_OK = 16_0;
-  X_OK = 16_1;
-  W_OK = 16_2;
-  R_OK = 16_4;
-  P_NOWAIT = 16_2;
-  F_SETFD = 16_2;
-  F_GETFL = 16_3;
-  F_SETFL = 16_4;
-  FIONREAD = 16_4004667f;
-  O_RDONLY = 16_0;
-  O_RDWR = 16_2;
-  O_CREAT = 16_200;
-  O_EXCL = 16_800;
-  O_TRUNC = 16_400;
-  O_NDELAY = 16_4000;
-  M3_NONBLOCK = 16_4000;
+  F_OK = Usysdep.F_OK;
+  X_OK = Usysdep.X_OK;
+  W_OK = Usysdep.W_OK;
+  R_OK = Usysdep.R_OK;
+  P_NOWAIT = Usysdep.P_NOWAIT;
+  F_SETFD = Usysdep.F_SETFD;
+  F_GETFL = Usysdep.F_GETFL;
+  F_SETFL = Usysdep.F_SETFL;
+  FIONREAD = Usysdep.FIONREAD;
+  O_RDONLY = Usysdep.O_RDONLY;
+  O_RDWR = Usysdep.O_RDWR;
+  O_CREAT = Usysdep.O_CREAT;
+  O_EXCL = Usysdep.O_EXCL;
+  O_TRUNC = Usysdep.O_TRUNC;
+  O_NDELAY = Usysdep.O_NDELAY;
+  M3_NONBLOCK = Usysdep.M3_NONBLOCK;
+
+(* some of these functions will need C wrappers for portability to systems
+that have both 32bit and 64functions; e.g. open, lseek, creat, ftruncate, maybe pipe, ioctl *)
 
 <*EXTERNAL*> PROCEDURE access (path: const_char_star; mod: int): int;
 <*EXTERNAL*> PROCEDURE chdir (path: const_char_star): int;
@@ -72,7 +76,7 @@ CONST
 <*EXTERNAL*> PROCEDURE vfork (): int;
 
 CONST
-  MAX_FDSET = 1024;
+  MAX_FDSET = Usysdep.MAX_FDSET;
 
 TYPE
   FDSet = SET OF [0 .. MAX_FDSET - 1];
