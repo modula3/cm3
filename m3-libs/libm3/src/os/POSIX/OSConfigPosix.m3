@@ -3,7 +3,7 @@
 
 UNSAFE MODULE OSConfigPosix EXPORTS OSConfig;
 
-IMPORT Compiler, Env, M3toC, OSError, Process, Uutsname;
+IMPORT Compiler, Env, OSError, Process, OSConfigPosixC;
 
 VAR
   host_name  : TEXT := NIL;
@@ -52,19 +52,12 @@ PROCEDURE UserHome (): TEXT =
 (*---------------------------------------------------------- internal ---*)
 
 PROCEDURE Init () =
-  VAR uts: Uutsname.struct_utsname;
   BEGIN
     IF (host_name # NIL) AND (host_arch # NIL)
             AND (os_name # NIL) AND (os_version # NIL) THEN
         RETURN;
     END;
-
-    IF Uutsname.uname (ADR (uts)) >= 0 THEN
-      host_name  := M3toC.CopyStoT (ADR (uts.nodename[0]));
-      host_arch  := M3toC.CopyStoT (ADR (uts.machine[0]));
-      os_name    := M3toC.CopyStoT (ADR (uts.sysname[0]));
-      os_version := M3toC.CopyStoT (ADR (uts.release[0]));
-    ELSE
+    IF OSConfigPosixC.Init (host_name, host_arch, os_name, os_version) < 0 THEN
       host_name  := "<unknown>";
       host_arch  := DefaultArch [ORD(Compiler.ThisPlatform)];
       os_name    := DefaultOSName [ORD(Compiler.ThisPlatform)];
