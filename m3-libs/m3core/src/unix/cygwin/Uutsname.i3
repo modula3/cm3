@@ -4,9 +4,10 @@
 INTERFACE Uutsname;
 
 FROM Ctypes IMPORT char, int;
+IMPORT Usysdep;
 
 CONST
-  SYS_NMLN = 20;
+  SYS_NMLN = Usysdep.SYS_NMLN;
 
 TYPE
   struct_utsname_star = UNTRACED REF struct_utsname;

@@ -5,46 +5,25 @@
 INTERFACE Utime;
 
 IMPORT Utypes;
-FROM Ctypes IMPORT char_star, long, const_char_star;
+FROM Ctypes IMPORT char_star, const_char_star;
 FROM Utypes IMPORT int32_t;
+IMPORT Usysdep;
 
 CONST
-  ITIMER_REAL = 0;
-  ITIMER_VIRTUAL = 1;
+  ITIMER_REAL = Usysdep.ITIMER_REAL;
+  ITIMER_VIRTUAL = Usysdep.ITIMER_VIRTUAL;
 
 TYPE
-  struct_timeval = RECORD
-    tv_sec: long;
-    tv_usec: long;
-  END;
+  struct_timeval = Usysdep.struct_timeval;
 
-  struct_timezone = RECORD
-    tz_minuteswest:  int32_t;
-    tz_dsttime:      int32_t;
-  END;
+  struct_timezone = Usysdep.struct_timezone;
 
-  struct_timespec = RECORD
-    tv_sec: time_t;
-    tv_nsec: long;
-  END;
+  struct_timespec = Usysdep.struct_timespec;
 
-  struct_itimerval = RECORD
-    it_interval: struct_timeval;
-    it_value: struct_timeval;
-  END;
+  struct_itimerval = Usysdep.struct_itimerval;
 
   struct_tm_star = UNTRACED REF struct_tm;
-  struct_tm = RECORD
-    tm_sec:   int32_t;
-    tm_min:   int32_t;
-    tm_hour:  int32_t;
-    tm_mday:  int32_t;
-    tm_mon:   int32_t;
-    tm_year:  int32_t;
-    tm_wday:  int32_t;
-    tm_yday:  int32_t;
-    tm_isdst: int32_t;
-  END;
+  struct_tm = Usysdep.struct_tm;
 
   time_t = Utypes.time_t;
 
@@ -63,8 +42,7 @@ TYPE
 <*EXTERNAL*> PROCEDURE localtime_r (READONLY clock: time_t; result: struct_tm_star): struct_tm_star;
 <*EXTERNAL*> PROCEDURE gmtime_r (READONLY clock: time_t; result: struct_tm_star): struct_tm_star;
 
-<*EXTERNAL setitimer*> PROCEDURE setitimer_ (which: int32_t; VAR value, ovalue: struct_itimerval): int32_t;
-PROCEDURE setitimer (which: int32_t; VAR value, ovalue: struct_itimerval): int32_t;
+<*EXTERNAL "m3_setitimer"*> PROCEDURE setitimer (which: int32_t; VAR value, ovalue: struct_itimerval): int32_t;
 
 <*EXTERNAL*> PROCEDURE get_timezone(): time_t;
 <*EXTERNAL "get_timezone"*> PROCEDURE get_altzone(): time_t;
