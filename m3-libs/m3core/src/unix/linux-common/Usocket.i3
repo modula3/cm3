@@ -4,26 +4,23 @@
 
 INTERFACE Usocket;
 
-IMPORT Ctypes, Utypes;
 FROM Ctypes IMPORT int, void_star, const_void_star;
 FROM Uin IMPORT struct_sockaddr_in;
 FROM Utypes IMPORT socklen_t, size_t;
+IMPORT Usysdep;
 
 CONST
-  SOCK_STREAM = 1;
-  SOCK_DGRAM = 2;
-  SO_REUSEADDR = 2;
-  SO_KEEPALIVE = 9;
-  SO_LINGER = 13;
-  SOL_SOCKET = 1;
-  AF_INET = 2;
-  MSG_PEEK = 2;
+  SOCK_STREAM = Usysdep.SOCK_STREAM;
+  SOCK_DGRAM = Usysdep.SOCK_DGRAM;
+  SO_REUSEADDR = Usysdep.SO_REUSEADDR;
+  SO_KEEPALIVE = Usysdep.SO_KEEPALIVE;
+  SO_LINGER = Usysdep.SO_LINGER;
+  SOL_SOCKET = Usysdep.SOL_SOCKET;
+  AF_INET = Usysdep.AF_INET;
+  MSG_PEEK = Usysdep.MSG_PEEK;
 
 TYPE
-  struct_linger = RECORD
-    l_onoff: int;
-    l_linger: int;
-  END;
+  struct_linger = Usysdep.struct_linger;
 
   socklen_t_star = UNTRACED REF socklen_t;
 
