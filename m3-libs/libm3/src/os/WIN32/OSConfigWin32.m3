@@ -102,7 +102,11 @@ PROCEDURE InitHostArch () =
 PROCEDURE InitOSName () =
   VAR ver: WinBase.OSVERSIONINFO;
   BEGIN
-    IF os_version # NIL THEN RETURN; END;
+
+    IF (os_name # NIL) AND (os_version # NIL) THEN
+        RETURN;
+    END;
+
     ver.dwOSVersionInfoSize := BYTESIZE (ver);
     IF WinBase.GetVersionEx (ADR (ver)) # 0 THEN
       CASE ver.dwPlatformId OF
