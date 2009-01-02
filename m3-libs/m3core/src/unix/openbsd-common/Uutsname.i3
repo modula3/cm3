@@ -1,9 +1,14 @@
+(* Copyright (C) 1990, Digital Equipment Corporation.         *)
+(* All rights reserved.                                       *)
+(* See the file COPYRIGHT for a full description.             *)
+
 INTERFACE Uutsname;
 
 FROM Ctypes IMPORT char, int;
+IMPORT Usysdep;
 
 CONST
-  SYS_NMLN = 256;
+  SYS_NMLN = Usysdep.SYS_NMLN;
 
 TYPE
   struct_utsname_star = UNTRACED REF struct_utsname;

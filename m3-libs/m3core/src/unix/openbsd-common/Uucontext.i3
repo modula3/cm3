@@ -2,15 +2,12 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-(* This file is not much filled in. Let's factor commonality
-and eliminate dead. Let's not add stuff for usermode threads. *)
-
 INTERFACE Uucontext;
 
-FROM Ctypes IMPORT unsigned, void_star;
+IMPORT Usysdep;
 
 TYPE
-  sigset_t = unsigned;
-  ucontext_t_star = void_star;
+  sigset_t = Usysdep.sigset_t;
+  ucontext_t_star = Usysdep.ucontext_t_star;
 
 END Uucontext.

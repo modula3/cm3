@@ -6,22 +6,23 @@ INTERFACE Upthread;
 
 FROM Ctypes IMPORT int;
 FROM Utypes IMPORT size_t;
+IMPORT Usysdep;
 
 TYPE
-  pthread_t = ADDRESS;
-  pthread_attr_t = ADDRESS;
-  pthread_mutex_t = ADDRESS;
-  pthread_cond_t = ADDRESS;
-  pthread_mutexattr_t = ADDRESS;
-  pthread_condattr_t = ADDRESS;
-  pthread_key_t = int;
+  pthread_t = Usysdep.pthread_t;
+  pthread_attr_t = Usysdep.pthread_attr_t;
+  pthread_mutex_t = Usysdep.pthread_mutex_t;
+  pthread_cond_t = Usysdep.pthread_cond_t;
+  pthread_mutexattr_t = Usysdep.pthread_mutexattr_t;
+  pthread_condattr_t = Usysdep.pthread_condattr_t;
+  pthread_key_t = Usysdep.pthread_key_t;
 
-  destructor_t = PROCEDURE(arg: ADDRESS);
-  start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;
+  destructor_t = Usysdep.destructor_t;
+  start_routine_t = Usysdep.start_routine_t;
 
 CONST
-  PTHREAD_MUTEX_INITIALIZER : pthread_mutex_t = NIL;
-  PTHREAD_COND_INITIALIZER : pthread_cond_t = NIL;
+  PTHREAD_MUTEX_INITIALIZER = Usysdep.PTHREAD_MUTEX_INITIALIZER;
+  PTHREAD_COND_INITIALIZER = Usysdep.PTHREAD_COND_INITIALIZER;
 
 <*EXTERNAL pthread_create*> PROCEDURE create (VAR pthread: pthread_t; READONLY attr: pthread_attr_t; start_routine: start_routine_t; arg: ADDRESS): int;
 <*EXTERNAL pthread_detach*> PROCEDURE detach (thread: pthread_t): int;
