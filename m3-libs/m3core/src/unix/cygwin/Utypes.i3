@@ -2,50 +2,49 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-(* This file was generated from Utypes.i3.cpp. Do not edit it. *)
-
 INTERFACE Utypes;
 
-IMPORT Ctypes;
+IMPORT Cstddef;
+IMPORT Cstdint;
 IMPORT Usysdep;
 
 TYPE
 
-  (* fixed size types; favor Cstdint instead *)
-  uint8_t = Ctypes.unsigned_char;
-  uint16_t = Ctypes.unsigned_short;
-  uint32_t = Ctypes.unsigned_int;
-  uint64_t = Ctypes.unsigned_long_long;
-  int8_t = Ctypes.char;
-  int16_t = Ctypes.short;
-  int32_t = Ctypes.int;
-  int64_t = Ctypes.long_long;
+  (* useless forwarding of unsigned fixed sized types; favor Cstdint instead *)
+  uint8_t = Cstdint.uint8_t;
+  uint16_t = Cstdint.uint16_t;
+  uint32_t = Cstdint.uint32_t;
+  uint64_t = Cstdint.uint64_t;
 
-  (* funny names; avoid using *)
-  u_char = uint8_t;
+  (* useless forwarding of signed fixed sized types; favor Cstdint instead *)
+  int8_t = Cstdint.int8_t;
+  int16_t = Cstdint.int16_t;
+  int32_t = Cstdint.int32_t;
+  int64_t = Cstdint.int64_t;
+
+  (* useless funny synonyms; favor explicitly sized types *)
   u_short = uint16_t;
   u_int = uint32_t;
 
-  (* avoid using u_long; use uint32_t or size_t instead, whichever is correct *)
-  u_long = Usysdep.u_long;
+ (* Exactly pointer-sized integers, unsigned and signed *)
+  size_t = Cstddef.size_t;
+  ssize_t = Cstddef.ptrdiff_t;
 
-  size_t = Usysdep.size_t;
-
-  (* ideally all file sizes, file offsets, times are 64 bit, but deal with that later *)
-  time_t = Usysdep.time_t;
-  off_t = Usysdep.off_t;
+  (* Ideally this is always 64 bits, else time runs out. *)
   clock_t = Usysdep.clock_t;
 
-  uid_t = Usysdep.uid_t;
-  pid_t = Usysdep.pid_t;
+  (* Ideally this is always 64 bits; 32bits is too small for many files. *)
+  off_t = Usysdep.off_t;
+
+  (* Ideally this is always 64 bits, else time runs out in 2038. *)
+  time_t = Usysdep.time_t;
+
   gid_t = Usysdep.gid_t;
+  pid_t = Usysdep.pid_t;
+  uid_t = Usysdep.uid_t;
 
   socklen_t = Usysdep.socklen_t;
   hostent_addrtype_t = Usysdep.hostent_addrtype_t;
   hostent_length_t = Usysdep.hostent_length_t;
-
-  struct_timespec = Usysdep.struct_timespec;
-
-  timestruc_t = struct_timespec;
 
 END Utypes.
