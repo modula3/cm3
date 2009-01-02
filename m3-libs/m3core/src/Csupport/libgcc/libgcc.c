@@ -1,22 +1,31 @@
 /*
-derived from gcc/gcc/config/darwin-64.c which is LGPL, like libgcc, ok.
-*/
-/*
-This code is for the configuration of
-using the gcc backend, without an actual gcc installation.
-Specifically without libgcc.
-Or for linking native linker.
+Derived closely from gcc/gcc/config/darwin-64.c which is LGPL, like libgcc, ok.
+libgcc is frequently linked into non-GPL software.
+
+This code is for the configuration of using the gcc backend,
+either without an actual gcc installation, or for using native non-gcc linker,
+esp. on 32bit systems.
 
 INT64 is gcc's "double integer" aka 64 bit integer.
 UINT64 is unsigned double integer.
 
-The backend sometimes outputs calls to functions, such
-as helpers for 64 bit math.
+Specifically, the backend and gcc C compiler output calls to these functions.
+gcc as the linker links to libgcc, which implements these functions.
+
+Given the heavy use of gcc as the linker on current systems, this problem has
+not occured much. It does occur on SOLsun.
+If other 32bit systems such as HP-UX, AIX, IRIX, come back, then those platforms
+    will benefit from this also.
+
+64bit systems tend to implement these operations inline, so no need.
+
+NT386 interoperating with NT386GNU is aided by this, specifically
+NT386 linking to NT386GNU /cm3/lib/hand.obj, which should probably move to either
+    /cm3/pkg/m3core/target/hand.obj or
+    /cm3/lib/target/hand.obj, probably the first.
 */
 
-#ifdef __GNUC__
-#error This code must not be compiled with gcc, that would be circular.
-#endif
+#ifndef __GNUC__
 
 typedef int word_type;
 
@@ -72,3 +81,5 @@ int __paritysi2 (UINT32 x) { return __builtin_parity (x); }
 count set bits?
 int __popcountsi2 (UINT32 x) { return __builtin_popcount (x); }
 */
+
+#endif

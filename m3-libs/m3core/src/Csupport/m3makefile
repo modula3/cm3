@@ -38,7 +38,7 @@ readonly _CSupportPieces = {
   "OS2"        : [ "OS2", "little-endian" ],
   "SEQUENT"    : [ "little-endian" ],
   "SOLgnu"     : [ "big-endian" ],
-  "SOLsun"     : [ "big-endian", "libgcc" ],
+  "SOLsun"     : [ "big-endian" ],
   "SPARC"      : [ "SPARC", "big-endian" ],
   "SPARC32_LINUX": [ "big-endian" ],
   "SPARC64_LINUX": [ "big-endian" ],
@@ -64,3 +64,5 @@ if _CSupportPieces contains TARGET
 else
   error (format ("csupport: unsupported platform: \"%s\"%s", TARGET, CR))
 end
+
+include_dir ("libgcc")
