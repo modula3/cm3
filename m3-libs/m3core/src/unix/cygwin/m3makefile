@@ -9,6 +9,5 @@ Interface ("Ustat")
 Interface ("Usocket")
 Interface ("Utime")
 Interface ("Utypes")
-Interface ("Uutsname")
 
 interface ("Usysdep")
