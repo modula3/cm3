@@ -9,3 +9,5 @@ if not equal(TARGET, "SPARC32_LINUX") and not equal(TARGET, "SPARC64_LINUX")
     Interface ("Usocket")
     Interface ("Usignal")
 end
+
+interface("Usysdep")
