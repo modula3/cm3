@@ -84,6 +84,18 @@ PROCEDURE InitHostArch () =
         host_arch := "Alpha " & Fmt.Int (sys.wProcessorLevel);
     | WinNT.PROCESSOR_ARCHITECTURE_MIPS =>
         host_arch := "Mips R4000";
+    | WinNT.PROCESSOR_ARCHITECTURE_SHX =>
+        host_arch := "SHx";
+    | WinNT.PROCESSOR_ARCHITECTURE_ARM =>
+        host_arch := "ARM";
+    | WinNT.PROCESSOR_ARCHITECTURE_IA64 =>
+        host_arch := "IA64";
+    | WinNT.PROCESSOR_ARCHITECTURE_ALPHA64 =>
+        host_arch := "ALPHA64";
+    | WinNT.PROCESSOR_ARCHITECTURE_MSIL =>
+        host_arch := "MSIL";
+    | WinNT.PROCESSOR_ARCHITECTURE_AMD64 =>
+        host_arch := "AMD64";
     | WinNT.PROCESSOR_ARCHITECTURE_PPC =>
         CASE sys.wProcessorLevel OF
         | 1  =>  host_arch := "PowerPC 601";
