@@ -28,8 +28,6 @@ readonly _DateImpls = {
   "LINUX"      : "DateLinux",
   "LINUXELF"   : "DateLinux",
   "LINUXLIBC6" : "DateBsd",
-  "I386_OPENBSD" : "DateBsd",
-  "MIPS64_OPENBSD" : "DateBsd",
   "NEXT"       : "DateBsd",
   "NT386"      : "DateLinux",
   "NT386GNU"   : "DateLinux",
@@ -48,8 +46,12 @@ readonly _DateImpls = {
   "I386_DARWIN": "DateBsd",
   "PPC_DARWIN" : "DateBsd",
   "PPC_LINUX"  : "DateBsd",
-  "PPC32_OPENBSD" : "DateBsd",
-  "NetBSD2_i386"  : "DateBsd"
+  "NetBSD2_i386"  : "DateBsd",
+
+  "I386_OPENBSD" : "DateBsd",
+  "MIPS64_OPENBSD" : "DateBsd",
+  "SPARC64_OPENBSD" : "DateBsd",
+  "PPC32_OPENBSD" : "DateBsd"
 }
 
 if _DateImpls contains TARGET
