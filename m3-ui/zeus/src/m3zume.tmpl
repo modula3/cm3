@@ -17,6 +17,45 @@ else
   %% _ZUME_EXEC = "m3zume"
 end
 
+%
+% Allow native I386_NT (NT386) cm3 to run I386_CYGWIN (NT386GNU) m3zume.
+% This is a fairly real scenario in my workflow that I was ignoring.
+% I386_CYGWIN does not like commands like:
+%   m3zume ..\foo\bar => invalid extension, it probably
+%   thinks \foo\bar is the extension.
+% This is a more general problem, not fully solved here.
+% For this to be OK on native Win32 depends on that / are now accepted on Win32.
+% (Which I question from time to time, if it was a good idea.)
+%
+%
+% A problem is that on "biarch" systems, such as NT386 + NT386GNU, or
+% LINUXLIBC6 + AMD64_LINUX, /cm3/bin/cm3 can bounce back and forth between the two,
+% leading to the two worlds to come together somewhat, and perhaps interop.
+%
+% Probably there should be /cm3/bin/target/cm3, and a "portable" /cm3/bin/cm3 that
+% figures out which one to call. On Posix it would be an extensionless sh
+% that ends with "exec". It could sniff host platform with uname, like sysinfo.sh does,
+% though sysinfo.sh would also compute it, allowing skipping running the sniffing repeatedly.
+% On NT it would be nice if it could be .cmd, but more likely an NT386 binary.
+% On uniarch systems, just link the two.
+%
+% This way the systems don't have to interop, nor would the general problem of differing
+% slashes have to be dealt with. Though, it is a dilemna beyond Modula-3 as to interop
+% of Cygwin binaries with Win32 binaries.
+%
+
+readonly proc PathOf(a) is
+    a = path_of(a)
+    if defined("HOST")
+        if equal (HOST, "NT386")
+            if defined("subst_chars")
+                a = subst_chars(a, "\\", "/")
+            end
+        end
+    end
+    return a
+end
+
 %------------------------------------------------------------- vanilla zume ---
 
 readonly _ZUME_FV_FILES = [ "EventData", "TranscriptView" ]
@@ -25,7 +64,7 @@ readonly _ZUME_M3_FILES = [ "AlgClass", "ViewClass", "IE",
 
 readonly proc zume(x) is
   local any_stale = ""
-  local evt_file = path_of(x & ".evt")
+  local evt_file = PathOf(x & ".evt")
 
   foreach p in _ZUME_M3_FILES
     local fn = x & p
@@ -38,7 +77,7 @@ readonly proc zume(x) is
   end
 
   if defined("_all") and any_stale
-    exec(_ZUME_EXEC, path_of(x))
+    exec(_ZUME_EXEC, PathOf(x))
   end
 
   foreach r in _ZUME_FV_FILES
@@ -53,7 +92,7 @@ readonly _ZUME3D_M3_FILES = [ "AlgClass", "ViewClass", "3DViewClass", "IE",
 
 readonly proc zume3D(x) is
   local any_stale = ""
-  local evt_file = path_of(x & ".evt")
+  local evt_file = PathOf(x & ".evt")
 
   foreach p in _ZUME3D_M3_FILES
     local fn = x & p
@@ -66,7 +105,7 @@ readonly proc zume3D(x) is
   end
 
   if defined("_all") and any_stale
-    exec(_ZUME_EXEC, "-3D", path_of(x))
+    exec(_ZUME_EXEC, "-3D", PathOf(x))
   end
 
   foreach r in _ZUME_FV_FILES
@@ -80,7 +119,7 @@ readonly _OBLUME_FILES = ["ObliqView"]
 
 readonly proc oblume(x, obl) is
   local any_stale = ""
-  local evt_file = path_of(x & ".evt")
+  local evt_file = PathOf(x & ".evt")
 
   import ("obliqparse")
   import ("obliqlibm3")
@@ -97,7 +136,7 @@ readonly proc oblume(x, obl) is
   end
 
   if defined ("_all") and any_stale
-    exec(_ZUME_EXEC, "-Obliq", path_of(obl), path_of(x))
+    exec(_ZUME_EXEC, "-Obliq", PathOf(obl), PathOf(x))
   end
 
   resource(obl & ".obl")
@@ -109,7 +148,7 @@ readonly _OBLUME3D_FILES = ["Obliq3DView"]
 
 readonly proc oblume3D(x, obl) is
   local any_stale = ""
-  local evt_file = path_of(x & ".evt")
+  local evt_file = PathOf(x & ".evt")
 
   import ("obliqparse")
   import ("obliqlibm3")
@@ -126,7 +165,7 @@ readonly proc oblume3D(x, obl) is
   end
 
   if defined ("_all") and any_stale
-    exec(_ZUME_EXEC, "-Obliq3D", path_of(obl), path_of(x))
+    exec(_ZUME_EXEC, "-Obliq3D", PathOf(obl), PathOf(x))
   end
 
   resource(obl & ".obl")
@@ -138,7 +177,7 @@ readonly _JUNOZUME_FILES = ["JunoView"]
 
 readonly proc junozume(x, viewName) is
   local any_stale = ""
-  local evt_file = path_of(x & ".evt")
+  local evt_file = PathOf(x & ".evt")
 
   foreach p in _JUNOZUME_FILES
     local fn = format("%s%s%s", x, viewName, p)
@@ -151,7 +190,7 @@ readonly proc junozume(x, viewName) is
   end
 
   if defined ("_all") and any_stale
-    exec(_ZUME_EXEC, "-Juno", viewName, path_of(x))
+    exec(_ZUME_EXEC, "-Juno", viewName, PathOf(x))
   end
 end
 
@@ -161,7 +200,7 @@ end
 %  
 %  readonly proc geflume(x, gef) is
 %    local any_stale = ""
-%    local evt_file = path_of(x & ".evt")
+%    local evt_file = PathOf(x & ".evt")
 %  
 %    import ("gef")
 %  
@@ -176,7 +215,7 @@ end
 %    end
 %  
 %    if defined ("_all") and any_stale
-%      exec(_ZUME_EXEC, "-GEF", path_of(gef), path_of(x))
+%      exec(_ZUME_EXEC, "-GEF", PathOf(gef), PathOf(x))
 %    end
 %  
 %    resource(gef & ".gef")
