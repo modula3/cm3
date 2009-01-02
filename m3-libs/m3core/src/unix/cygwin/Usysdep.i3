@@ -170,9 +170,4 @@ TYPE
   END;
 *)
 
-(* INTERFACE Uutsname; *)
-
-CONST
-  SYS_NMLN = 20;
-
 END Usysdep.

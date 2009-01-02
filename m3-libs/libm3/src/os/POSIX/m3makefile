@@ -27,3 +27,6 @@ end
 
 c_source("FilePosixC")
 interface("FilePosixC")
+
+interface("OSConfigPosixC")
+c_source("OSConfigPosixC")
