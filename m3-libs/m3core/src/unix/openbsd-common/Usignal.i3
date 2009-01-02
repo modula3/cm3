@@ -6,34 +6,30 @@ INTERFACE Usignal;
 
 FROM Ctypes IMPORT int;
 FROM Utypes IMPORT pid_t;
-IMPORT Uucontext;
+IMPORT Usysdep;
 
 CONST
-  SIGHUP = 1;
-  SIGINT = 2;
-  SIGQUIT = 3;
-  SIGABRT = 6;
-  SIGKILL = 9;
-  SIGSEGV = 11;
-  SIGPIPE = 13;
-  SIGTERM = 15;
-  NSIG = 32;
+  SIGHUP = Usysdep.SIGHUP;
+  SIGINT = Usysdep.SIGINT;
+  SIGQUIT = Usysdep.SIGQUIT;
+  SIGABRT = Usysdep.SIGABRT;
+  SIGKILL = Usysdep.SIGKILL;
+  SIGSEGV = Usysdep.SIGSEGV;
+  SIGPIPE = Usysdep.SIGPIPE;
+  SIGTERM = Usysdep.SIGTERM;
+  NSIG = Usysdep.NSIG;
 
-  SA_RESTART = 2;
-  SA_SIGINFO = 16_0040;
+  SA_RESTART = Usysdep.SA_RESTART;
+  SA_SIGINFO = Usysdep.SA_SIGINFO;
 
 TYPE
-  SignalActionHandler = PROCEDURE (sig: int; sip: siginfo_t_star; uap: Uucontext.ucontext_t_star);
-  SignalHandler = PROCEDURE (sig: int);
-  sigset_t = INTEGER;
-  siginfo_t_star = ADDRESS;
-  sa_sigaction = ADDRESS;
+  SignalActionHandler = Usysdep.SignalActionHandler;
+  SignalHandler = Usysdep.SignalHandler;
+  sigset_t = Usysdep.sigset_t;
+  siginfo_t_star = Usysdep.siginfo_t_star;
+  sa_sigaction = Usysdep.sa_sigaction;
 
-  struct_sigaction = RECORD
-    sa_sigaction: SignalActionHandler; (* union of two function pointers *)
-    sa_mask     : sigset_t;
-    sa_flags    : int;
-  END;
+  struct_sigaction = Usysdep.struct_sigaction;
 
 <*EXTERNAL*> PROCEDURE kill (pid: pid_t; sig: int): int;
 <*EXTERNAL*> PROCEDURE sigprocmask (how: int; READONLY set: sigset_t; VAR oset: sigset_t): int;
