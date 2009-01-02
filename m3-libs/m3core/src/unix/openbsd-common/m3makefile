@@ -9,6 +9,5 @@ Interface ("Unix")
 Interface ("Usignal")
 Interface ("Usocket")
 Interface ("Utime")
-Interface ("Uutsname")
 
 interface("Usysdep")

@@ -190,9 +190,4 @@ TYPE
   sigset_t = unsigned;
   ucontext_t_star = void_star;
 
-(* INTERFACE Uutsname; *)
-
-CONST
-  SYS_NMLN = 256;
-
 END Usysdep.
