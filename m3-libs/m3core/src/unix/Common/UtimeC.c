@@ -22,11 +22,16 @@ time_t m3_get_timezone(void)
 }
 
 /* Are these correct? */
-#if !defined(__CYGWIN__) && !defined(__hpux) && !defined(__linux)
+#if !defined(__hpux) && !defined(__linux)
 
 time_t m3_get_altzone(void)
 {
+#ifdef __CYGWIN__
+    /* Is this correct? */
+    return m3_get_timezone();
+#else
     return altzone;
+#endif
 }
 
 #endif

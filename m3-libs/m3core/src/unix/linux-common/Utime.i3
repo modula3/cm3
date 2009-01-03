@@ -4,7 +4,7 @@
 
 INTERFACE Utime;
 
-FROM Ctypes IMPORT char_star;
+FROM Ctypes IMPORT char_star, const_char_star;
 FROM Cstdint IMPORT int32_t;
 IMPORT Usysdep;
 
@@ -41,7 +41,14 @@ TYPE
 <*EXTERNAL*> PROCEDURE localtime_r (READONLY clock: time_t; result: struct_tm_star): struct_tm_star;
 <*EXTERNAL*> PROCEDURE gmtime_r (READONLY clock: time_t; result: struct_tm_star): struct_tm_star;
 
-<*EXTERNAL*> PROCEDURE setitimer (which: int32_t;  VAR (*const*) value, ovalue: struct_itimerval): int32_t;
+<*EXTERNAL "m3_setitimer"*> PROCEDURE setitimer (which: int32_t; VAR (*const*) new_value, old_value: struct_itimerval): int32_t;
 <*EXTERNAL*> PROCEDURE nanosleep (READONLY req: struct_timespec; VAR rem: struct_timespec): int32_t;
+
+<*EXTERNAL "m3_get_timezone"*> PROCEDURE get_timezone(): time_t;
+<*EXTERNAL "m3_get_altzone"*> PROCEDURE get_altzone(): time_t;
+<*EXTERNAL "m3_get_daylight"*> PROCEDURE get_daylight(): int32_t;
+<*EXTERNAL "m3_get_tzname"*> PROCEDURE get_tzname(a: [0..1]): const_char_star;
+
+<*EXTERNAL*> PROCEDURE tzset();
 
 END Utime.
