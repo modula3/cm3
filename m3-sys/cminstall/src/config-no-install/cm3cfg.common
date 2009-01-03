@@ -238,7 +238,7 @@ proc GetM3Back() is
         end
     end
     % write("using m3cg in PATH (if there is one)\n")
-    m3back = "@m3cg " & m3back_flags
+    m3back = "@cm3cg " & m3back_flags
     return m3back
 end
 
