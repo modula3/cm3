@@ -16,10 +16,32 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
     Interface ("Upwd")
     Interface ("Unetdb")
     Interface ("Uugid")
-    Interface ("Usched") % never used on NT386 but ok
-    Interface ("Usem") % never used on NT386 but ok
     Interface ("Uprocess")
     Interface ("Uresource")
+
+    Interface("Unix")
+    Interface("Utime")
+    Interface("Utypes")
+
+    %
+    % pthreads related
+    %
+    if not equal (TARGET, "NT386")
+        Interface("Upthread")
+        Interface("Usched")
+        Interface("Usem")
+    end
+
+    %
+    % NT386 has a slimmer Usignal, omitting pthreads stuff
+    % SPARC*_LINUX needs some work, for now has its own of Usignal and Usocket
+    %
+    if not equal (TARGET, "NT386") and not equal (TARGET, "SPARC32_LINUX") and not equal (TARGET, "SPARC64_LINUX")
+        Interface("Usignal")
+    end
+    if not equal (TARGET, "SPARC32_LINUX") and not equal (TARGET, "SPARC64_LINUX")
+        Interface("Usocket")
+    end
 end
 
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
