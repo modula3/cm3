@@ -3,11 +3,6 @@
 % See the file COPYRIGHT for a full description.
 
 Interface ("Uerror")
-Interface ("Unix")
 Interface ("Usignal")
 Interface ("Ustat")
-Interface ("Usocket")
-Interface ("Utime")
-Interface ("Utypes")
-
 interface ("Usysdep")

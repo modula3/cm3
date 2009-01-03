@@ -1,13 +1,4 @@
-interface("Upthread")
 Interface("Uucontext")
-Interface("Utypes")
-Interface("Usignal")
-
 Interface ("Udir")
 Interface ("Uerror")
-Interface ("Unix")
-Interface ("Usignal")
-Interface ("Usocket")
-Interface ("Utime")
-
 interface("Usysdep")
