@@ -77,11 +77,6 @@ PROCEDURE localtime_r(clock: time_t_star; result: struct_tm_star): struct_tm_sta
 
 <*EXTERNAL*> PROCEDURE tzset ();
 
-<*EXTERNAL*> PROCEDURE get_timezone(): time_t;
-<*EXTERNAL*> PROCEDURE get_altzone(): time_t;
-<*EXTERNAL*> PROCEDURE get_daylight(): int;
-<*EXTERNAL*> PROCEDURE get_tzname(a: [0..1]): const_char_star;
-
 VAR (*CONST*) CLK_TCK: INTEGER;
 
 
