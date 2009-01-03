@@ -45,6 +45,9 @@ CONST
 
   MAX_FDSET = 1024;
 
+TYPE
+  mode_t = uint32_t;
+
 (* INTERFACE Upthread; *)
 
 TYPE
@@ -72,16 +75,18 @@ CONST
   SIGSEGV = 11;
   SIGPIPE = 13;
   SIGTERM = 15;
+
   NSIG = 65; (* 129 on MIPS *)
-  SA_RESTART = 16_10000000;
-  SA_SIGINFO = 4;
+
+  (* flags in struct_sigaction *)
+  SA_RESTART = 16_10000000;(* Restart syscall on signal return. *)
+  SA_SIGINFO = 4; (* three parameter signal callback vs. one parameter *)
 
 TYPE
   SignalActionHandler = PROCEDURE (sig: int; sip: siginfo_t_star; uap: Uucontext.ucontext_t_star);
   SignalHandler = PROCEDURE (sig: int);
   sigset_t = Uucontext.sigset_t;
   siginfo_t_star = ADDRESS;
-  sa_sigaction = ADDRESS;
 
   struct_sigaction = RECORD
     sa_sigaction: SignalActionHandler; (* union of two function pointers *)
