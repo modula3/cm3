@@ -7,8 +7,13 @@ INTERFACE Usysdep;
 (* INTERFACE Unix; *)
 
 IMPORT Ctypes;
-FROM Ctypes IMPORT long;
+FROM Ctypes IMPORT int, const_char_star, char_star_star;
 FROM Cstdint IMPORT uint16_t, uint32_t, int16_t, int32_t, int64_t;
+
+(* This is the only system that uses this. *)
+CONST
+  P_NOWAIT = 16_2;
+<*EXTERNAL*> PROCEDURE spawnve (mode: int; name: const_char_star; argv, envp: char_star_star): int;
 
 (* Unix.i3 *)
 
@@ -30,7 +35,6 @@ CONST
   X_OK = 16_1;
   W_OK = 16_2;
   R_OK = 16_4;
-  P_NOWAIT = 16_2;
   F_SETFD = 16_2;
   F_GETFL = 16_3;
   F_SETFL = 16_4;
@@ -40,11 +44,12 @@ CONST
   O_CREAT = 16_200;
   O_EXCL = 16_800;
   O_TRUNC = 16_400;
-  O_NDELAY = 16_4000;
-  M3_NONBLOCK = 16_4000;
+  O_NONBLOCK = 16_4000;
 
-CONST
   MAX_FDSET = 1024;
+
+TYPE
+  mode_t = int;
 
 (* INTERFACE Usignal; *)
 
@@ -53,8 +58,8 @@ CONST
   SIGKILL = 16_00000009;
 
 TYPE
-  SignalHandler = ADDRESS;
   SignalActionHandler = ADDRESS;
+  SignalHandler = ADDRESS;
 
 (* INTERFACE Usocket; *)
 
@@ -105,8 +110,8 @@ CONST
 
 TYPE
   struct_timeval = RECORD
-    tv_sec: long;
-    tv_usec: long;
+    tv_sec: INTEGER;
+    tv_usec: INTEGER;
   END;
 
   struct_timezone = RECORD
@@ -116,7 +121,7 @@ TYPE
 
   struct_timespec = RECORD
     tv_sec: time_t;
-    tv_nsec: long;
+    tv_nsec: INTEGER;
   END;
 
   struct_itimerval = RECORD
@@ -124,7 +129,6 @@ TYPE
     it_value: struct_timeval;
   END;
 
-  struct_tm_star = UNTRACED REF struct_tm;
   struct_tm = RECORD
     tm_sec:   int32_t;
     tm_min:   int32_t;
@@ -140,9 +144,6 @@ TYPE
 (* INTERFACE Utypes; *)
 
 TYPE
-  (* avoid ever using u_long; use Cstdint.uint32_t or Cstddef.size_t instead *)
-  u_long = uint32_t;
-
   (* use Cstddef.size_t instead *)
   size_t = uint32_t;
 
