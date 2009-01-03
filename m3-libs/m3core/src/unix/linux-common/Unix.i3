@@ -7,7 +7,7 @@ INTERFACE Unix;
 FROM Cstddef IMPORT size_t;
 FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star;
 FROM Utime IMPORT struct_timeval;
-FROM Utypes IMPORT off_t, mode_t;
+FROM Utypes IMPORT mode_t, off_t;
 IMPORT Usysdep;
 
 CONST
