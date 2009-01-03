@@ -14,16 +14,18 @@ CONST
   SIGABRT = 6;
   SIGKILL = 9;
   SIGTERM = 15;
+
   NSIG = 65; (* 129 on MIPS *)
-  SA_RESTART = 2;
-  SA_SIGINFO = 16_200;
+
+  (* flags in struct_sigaction *)
+  SA_RESTART = 2;      (* Restart syscall on signal return. *)
+  SA_SIGINFO = 16_200; (* three parameter signal callback instead of one parameter *)
 
 TYPE
   SignalActionHandler = PROCEDURE (sig: int; sip: siginfo_t_star; uap: Uucontext.ucontext_t_star);
   SignalHandler = PROCEDURE (sig: int);
   sigset_t = Uucontext.sigset_t;
   siginfo_t_star = ADDRESS;
-  sa_sigaction = ADDRESS;
 
   struct_sigaction = RECORD
     sa_sigaction: SignalActionHandler; (* union of two function pointers *)

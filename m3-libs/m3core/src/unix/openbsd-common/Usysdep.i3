@@ -58,6 +58,9 @@ CONST
 
   MAX_FDSET = 1024;
 
+TYPE
+  mode_t = uint32_t;
+
 (* INTERFACE Upthread; *)
 
 TYPE
@@ -65,8 +68,8 @@ TYPE
   pthread_attr_t = ADDRESS;
   pthread_mutex_t = ADDRESS;
   pthread_cond_t = ADDRESS;
-  pthread_mutexattr_t = ADDRESS;
-  pthread_condattr_t = ADDRESS;
+  (* pthread_mutexattr_t = ADDRESS; *)
+  (* pthread_condattr_t = ADDRESS; *)
   pthread_key_t = int;
 
   destructor_t = PROCEDURE(arg: ADDRESS);
@@ -86,16 +89,17 @@ CONST
   SIGSEGV = 11;
   SIGPIPE = 13;
   SIGTERM = 15;
+
   NSIG = 32;
 
-  SA_RESTART = 2;
-  SA_SIGINFO = 16_0040;
+  (* flags in struct_sigaction *)
+  SA_RESTART = 2; (* Restart syscall on signal return. *)
+  SA_SIGINFO = 16_0040; (* three parameter signal callback vs. one parameter *)
 
 TYPE
   SignalActionHandler = PROCEDURE (sig: int; sip: siginfo_t_star; uap: ucontext_t_star);
   SignalHandler = PROCEDURE (sig: int);
   siginfo_t_star = ADDRESS;
-  sa_sigaction = ADDRESS;
 
   struct_sigaction = RECORD
     sa_sigaction: SignalActionHandler; (* union of two function pointers *)

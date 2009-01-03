@@ -13,8 +13,8 @@ TYPE
   pthread_attr_t = Usysdep.pthread_attr_t;
   pthread_mutex_t = Usysdep.pthread_mutex_t;
   pthread_cond_t = Usysdep.pthread_cond_t;
-  pthread_mutexattr_t = Usysdep.pthread_mutexattr_t;
-  pthread_condattr_t = Usysdep.pthread_condattr_t;
+  (* pthread_mutexattr_t = Usysdep.pthread_mutexattr_t; *)
+  (* pthread_condattr_t = Usysdep.pthread_condattr_t; *)
   pthread_key_t = Usysdep.pthread_key_t;
 
   destructor_t = Usysdep.destructor_t;
@@ -33,11 +33,13 @@ CONST
 <*EXTERNAL pthread_attr_getstacksize*> PROCEDURE attr_getstacksize (READONLY attr: pthread_attr_t; VAR stacksize: size_t): int;
 <*EXTERNAL pthread_attr_setstacksize*> PROCEDURE attr_setstacksize (VAR attr: pthread_attr_t; stacksize: size_t): int;
 <*EXTERNAL pthread_yield*> PROCEDURE yield (): int;
-<*EXTERNAL pthread_mutex_init*> PROCEDURE mutex_init (VAR mutex: pthread_mutex_t; attr: UNTRACED REF pthread_mutexattr_t): int;
+(*<*EXTERNAL pthread_mutex_init*> PROCEDURE mutex_init (VAR mutex: pthread_mutex_t; attr: UNTRACED REF pthread_mutexattr_t): int;*)
+  <*EXTERNAL pthread_mutex_init*> PROCEDURE mutex_init (VAR mutex: pthread_mutex_t; attr: ADDRESS := NIL): int;
 <*EXTERNAL pthread_mutex_destroy*> PROCEDURE mutex_destroy (VAR mutex: pthread_mutex_t): int;
 <*EXTERNAL pthread_mutex_lock*> PROCEDURE mutex_lock (VAR mutex: pthread_mutex_t): int;
 <*EXTERNAL pthread_mutex_unlock*> PROCEDURE mutex_unlock (VAR mutex: pthread_mutex_t): int;
-<*EXTERNAL pthread_cond_init*> PROCEDURE cond_init (VAR cond: pthread_cond_t; attr: UNTRACED REF pthread_condattr_t): int;
+(*<*EXTERNAL pthread_cond_init*> PROCEDURE cond_init (VAR cond: pthread_cond_t; attr: UNTRACED REF pthread_condattr_t): int;*)
+  <*EXTERNAL pthread_cond_init*> PROCEDURE cond_init (VAR cond: pthread_cond_t; attr: ADDRESS := NIL): int;
 <*EXTERNAL pthread_cond_destroy*> PROCEDURE cond_destroy (VAR cond: pthread_cond_t): int;
 <*EXTERNAL pthread_cond_wait*> PROCEDURE cond_wait (VAR cond: pthread_cond_t; VAR mutex: pthread_mutex_t): int;
 <*EXTERNAL pthread_cond_signal*> PROCEDURE cond_signal (VAR cond: pthread_cond_t): int;
