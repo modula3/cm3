@@ -24,13 +24,19 @@ import		("juno-compiler")
 % Paper over SOME cross-build scenarios, without affecting native builds.
 %
 HOST_BUILDDIR = BUILD_DIR
+CrossBuild = FALSE
 if defined("HOST")
     if not equal(HOST, TARGET)
         HOST_BUILDDIR = HOST
+        CrossBuild = TRUE
     end
 end
 
-exec ("cd .." & SL & "pkl-fonts" & SL & HOST_BUILDDIR & " && ." & SL & "PklFonts > FontData.pkl")
+%
+% Why doesn't the pkl-fonts package do this itself?
+% Why not use the shipped PklFonts? Maybe due to not shipping?
+%
+exec (".." & SL & "pkl-fonts" & SL & HOST_BUILDDIR & SL & "PklFonts > .." & SL & "pkl-fonts" & SL & BUILD_DIR & SL & "FontData.pkl")
 
 /* private interfaces */
 interface       ("EditorUI")
