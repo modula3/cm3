@@ -1,13 +1,4 @@
-interface("Upthread")
-Interface("Utypes")
-
-Interface ("Unix")
-Interface ("Utime")
-
 if not equal(TARGET, "SPARC32_LINUX") and not equal(TARGET, "SPARC64_LINUX")
     Interface ("Uerror")
-    Interface ("Usocket")
-    Interface ("Usignal")
 end
-
 interface("Usysdep")
