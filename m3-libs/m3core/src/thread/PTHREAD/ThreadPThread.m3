@@ -585,6 +585,7 @@ PROCEDURE Fork (closure: Closure): T =
       allThreads.prev.next := act;
       allThreads.prev := act;
       WITH r = Upthread.create(act.handle, attr, ThreadBase, act) DO
+        EVAL Upthread.attr_destroy(attr);
         IF r # 0 THEN
           RTError.MsgI(ThisFile(), ThisLine(),
                        "Thread client error: Fork failed with error: ", r);
