@@ -8,7 +8,7 @@ IMPORT Quake, QValue, QCode, QMachine, QVal, QVSeq, QVTbl, M3Timers;
 IMPORT Arg, Builder, M3Loc, M3Options, M3Path, M3Unit, Msg, Utils;
 FROM QMachine IMPORT PushText, PopText, PopID, PopBool;
 IMPORT MxConfig AS M3Config;
-IMPORT OSError, Process, Dirs;
+IMPORT OSError, Process, Dirs, TextUtils;
 
 TYPE
   UK = M3Unit.Kind;
@@ -539,6 +539,36 @@ PROCEDURE DoOverride (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     Override (t, pkg, dir);
   END DoOverride;
 
+(* Host and Target paths sometimes get confused, leading to many warnings such as:
+package "libm3" is already overridden to C:\dev2\cm3.2/m3-libs, ignoring new override to C:/dev2/cm3.2/m3-libs
+PathEqual is defined as Text.Equal or Text.Equal(replacing backward slashes with forward slashes).
+It would also be reasonable to be case insensitive if the path contains any backward slashes, or if
+they both contain colon as the second character. *)
+PROCEDURE OverrideEqual(a: TEXT; b: TEXT): BOOLEAN =
+VAR
+    a_Length: CARDINAL;
+    b_Length: CARDINAL;
+    a_BackwardSlash: INTEGER;
+    b_BackwardSlash: INTEGER;
+BEGIN
+    IF Text.Equal(a, b) THEN
+        RETURN TRUE;
+    END;
+    a_Length := Text.Length(a);
+    b_Length := Text.Length(b);
+    IF a_Length # b_Length THEN
+        RETURN FALSE;
+    END;
+    a_BackwardSlash := Text.FindChar(a, '\\');
+    b_BackwardSlash := Text.FindChar(b, '\\');
+    IF (a_BackwardSlash = -1) AND (b_BackwardSlash = -1) THEN
+        RETURN FALSE;
+    END;
+    a := TextUtils.SubstChar(a, '\\', '/');
+    b := TextUtils.SubstChar(b, '\\', '/');
+    RETURN Text.Equal(a, b);
+END OverrideEqual;
+
 PROCEDURE Override (t: T;  pkg: M3ID.T;  dir: TEXT) =
   (* establish an override for the location of package "pkg" *)
   VAR  ref: REFANY;  pkg_txt := M3ID.ToText (pkg);
@@ -552,7 +582,7 @@ PROCEDURE Override (t: T;  pkg: M3ID.T;  dir: TEXT) =
       END;
       t.already_warned := TRUE;
     ELSIF t.pkg_overrides.get (pkg, ref) THEN
-      IF NOT Text.Equal (dir, ref) THEN
+      IF NOT OverrideEqual (dir, ref) THEN
         IF M3Options.major_mode = MM.Depend THEN
           Msg.Verbose ("package \"", pkg_txt, "\" is already overridden to ",
                        ref, ", ignoring new override to " & dir & Wr.EOL);
