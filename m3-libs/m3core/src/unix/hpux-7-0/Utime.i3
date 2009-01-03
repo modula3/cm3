@@ -173,11 +173,6 @@ PROCEDURE asctime_r(tm: struct_tm_star; buf: char_star; buflen: int):char_star;
 <*EXTERNAL*> PROCEDURE nl_cxtime     (clock: long_star; format: char_star)
 							: char_star;
 
-<*EXTERNAL*> PROCEDURE get_timezone(): time_t;
-<*EXTERNAL "get_timezone"*> PROCEDURE get_altzone(): time_t;
-<*EXTERNAL*> PROCEDURE get_daylight(): int;
-<*EXTERNAL*> PROCEDURE get_tzname(a: [0..1]): const_char_star;
-
 <*EXTERNAL*> PROCEDURE tzset	 ();
 <*EXTERNAL "tzset" *> PROCEDURE tzsetwall ();
 
