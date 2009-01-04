@@ -30,3 +30,6 @@ interface("FilePosixC")
 
 interface("OSConfigPosixC")
 c_source("OSConfigPosixC")
+
+interface("FSPosixC")
+c_source("FSPosixC")
