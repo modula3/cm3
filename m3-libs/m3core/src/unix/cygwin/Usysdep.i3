@@ -22,23 +22,7 @@ CONST
   MSETUID = 0;
   MSETGID = 0;
   MSTICKY = 0;
-  MROWNER = 8_0400;
-  MWOWNER = 8_0200;
-  MXOWNER = 8_0100;
-  MRGROUP = 8_0040;
-  MWGROUP = 8_0020;
-  MXGROUP = 8_0010;
-  MROTHER = 8_0004;
-  MWOTHER = 8_0002;
-  MXOTHER = 8_0001;
-  F_OK = 16_0;
-  X_OK = 16_1;
-  W_OK = 16_2;
-  R_OK = 16_4;
-  F_SETFD = 16_2;
-  F_GETFL = 16_3;
-  F_SETFL = 16_4;
-  FIONREAD = 16_4004667f;
+
   O_RDONLY = 16_0;
   O_RDWR = 16_2;
   O_CREAT = 16_200;
@@ -104,10 +88,6 @@ CONST
 
 (* INTERFACE Utime; *)
 
-CONST
-  ITIMER_REAL = 0;
-  ITIMER_VIRTUAL = 1;
-
 TYPE
   struct_timeval = RECORD
     tv_sec: INTEGER;
@@ -149,9 +129,6 @@ TYPE
 
   (* ideally uint64_t or uint64_t, on all platforms, deal with it later *)
   time_t = int32_t;
-
-  (* ideally uint64_t or int64_t, on all platforms, deal with it later *)
-  off_t = int64_t;
 
   (* ideally uint64_t or int64_t, on all platforms, deal with it later *)
   clock_t = uint32_t;
