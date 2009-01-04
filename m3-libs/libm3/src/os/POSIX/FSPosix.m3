@@ -12,7 +12,7 @@ UNSAFE MODULE FSPosix EXPORTS FS;
 
 IMPORT Atom, AtomList, Cerrno, Ctypes, File, FilePosix, M3toC, OSError,
        OSErrorPosix, Pathname, Process, Time, Text, TextSeq, Unix,
-       Udir, Uerror, Ustat, Utime, Word, Scheduler;
+       Udir, Uerror, Ustat, Utime, Word, Scheduler, FSPosixC;
 
 FROM Unix IMPORT O_RDWR, O_CREAT, O_TRUNC, O_EXCL;
 
@@ -278,8 +278,8 @@ PROCEDURE IterRaw(iter: Iterator; VAR (*OUT*) name: TEXT): BOOLEAN =
     LOOP (* to ignore "." and ".." *)
       IF iter.d = NIL THEN RETURN FALSE
       ELSE
-        WITH e = Udir.readdir(iter.d) DO
-          IF e = NIL THEN
+        WITH n = FSPosixC.m3_readdir_name(iter.d) DO
+          IF n = NIL THEN
             Scheduler.DisableSwitching ();
               (* closedir() calls free() => not user-thread safe *)
               EVAL Udir.closedir(iter.d);
@@ -287,11 +287,9 @@ PROCEDURE IterRaw(iter: Iterator; VAR (*OUT*) name: TEXT): BOOLEAN =
             iter.d := NIL;
             RETURN FALSE
           ELSE
-            WITH sp = ADR(e.d_name) DO
-              IF NOT DotOrDotDot(LOOPHOLE(sp, NamePrefix)) THEN
-                name := M3toC.CopyStoT(LOOPHOLE (sp, ADDRESS));
-                RETURN TRUE
-              END
+            IF NOT DotOrDotDot(LOOPHOLE(n, NamePrefix)) THEN
+              name := M3toC.CopyStoT(n);
+              RETURN TRUE
             END
           END
         END
