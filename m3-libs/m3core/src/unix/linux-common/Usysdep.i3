@@ -112,11 +112,6 @@ TYPE
     tv_nsec: INTEGER;
   END;
 
-  struct_itimerval = RECORD
-    it_interval: struct_timeval;
-    it_value: struct_timeval;
-  END;
-
   struct_tm = RECORD
     tm_sec:   int;
     tm_min:   int;
