@@ -116,11 +116,6 @@ TYPE
     tv_usec: INTEGER;
   END;
 
-  struct_timezone = RECORD
-    tz_minuteswest:  int32_t;
-    tz_dsttime:      int32_t;
-  END;
-
   struct_timespec = RECORD
     tv_sec: time_t;
     tv_nsec: INTEGER;

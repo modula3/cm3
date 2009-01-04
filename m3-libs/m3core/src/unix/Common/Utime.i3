@@ -15,7 +15,10 @@ CONST
 TYPE
   struct_timeval = Usysdep.struct_timeval;
 
-  struct_timezone = Usysdep.struct_timezone;
+  struct_timezone = RECORD
+    tz_minuteswest:  int; (* minutes west of Greenwich *)
+    tz_dsttime:      int; (* type of dst correction *)
+  END;
 
   struct_timespec = Usysdep.struct_timespec;
 
