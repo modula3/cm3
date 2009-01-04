@@ -144,19 +144,19 @@ CONST
 
 (* de facto standard definitions *)
 
-  S_IFMT	 = 16_F000;	(* type of file *)
+  S_IFMT	 = 8_170000;	(* type of file *)
   S_IAMB	 = 16_1FF;	(* access mode bits *)
-  S_IFIFO	 = 16_1000;	(* fifo *)
-  S_IFCHR	 = 16_2000;	(* character special *)
-  S_IFDIR	 = 16_4000;	(* directory *)
-  S_IFNAM	 = 16_5000;  (* XENIX special named file *)
+  S_IFIFO	 = 8_010000;	(* fifo *)
+  S_IFCHR	 = 8_20000;	(* character special *)
+  S_IFDIR	 = 8_40000;	(* directory *)
+  S_IFNAM	 = 16_50000;  (* XENIX special named file *)
   S_INSEM  = 16_1;	(* XENIX semaphore subtype of IFNAM *)
   S_INSHD  = 16_2;	(* XENIX shared data subtype of IFNAM *)
 
-  S_IFBLK	 = 16_6000;	(* block special *)
-  S_IFREG	 = 16_8000;	(* regular *)
-  S_IFLNK	 = 16_A000;	(* symbolic link *)
-  S_IFSOCK	 = 16_C000;	(* socket *)
+  S_IFBLK	 = 8_0060000;	(* block special *)
+  S_IFREG	 = 8_0100000;	(* regular *)
+  S_IFLNK	 = 8_0120000;	(* symbolic link *)
+  S_IFSOCK	 = 8_0140000;	(* socket *)
 
   S_ISUID	 = 16_800;	(* set user id on execution *)
   S_ISGID	 = 16_400;	(* set group id on execution *)
