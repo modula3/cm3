@@ -46,21 +46,13 @@ end
 
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
-%
-% OpenBSD has a very clear dirent with no ifdefs, and a 32bit ino that isn't
-% 64bit aligned, so it just use the old direct approach -- Udir ommited here.
-%
-    Interface ("Ustat")
-end
-
-if equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
-  or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
+        or equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
+        or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
 %
 % everything
 %
     Interface ("Ustat")
     Interface ("Udir")
-    c_source("UdirC")
 end
 
 if equal (TARGET, "NT386")
@@ -68,5 +60,4 @@ if equal (TARGET, "NT386")
 % Cygwin's stat flags are not common -- Ustat ommited here.
 %
     Interface ("Udir")
-    c_source("UdirC")
 end

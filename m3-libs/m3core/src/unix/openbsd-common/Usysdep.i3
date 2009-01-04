@@ -7,21 +7,6 @@ INTERFACE Usysdep;
 FROM Ctypes IMPORT char, int, char_star, unsigned, void_star;
 FROM Cstdint IMPORT uint8_t, uint16_t, uint32_t, int32_t, int64_t;
 
-(* UNSAFE INTERFACE Udir; *)
-
-CONST
-  MAXNAMLEN = 255;
-  MAXPATHLEN = 1024;
-
-TYPE
-  dirent = RECORD
-    d_fileno:   uint32_t;
-    d_reclen:   uint16_t;
-    d_type:     uint8_t;
-    d_namelen:  uint8_t;
-    d_name:     ARRAY [0..MAXNAMLEN] OF char;
-  END;
-
 (* INTERFACE Unix; *)
 
 CONST
@@ -44,7 +29,6 @@ TYPE
 
 (* INTERFACE Upthread; *)
 
-TYPE
   pthread_t = ADDRESS;
   pthread_attr_t = ADDRESS;
   pthread_mutex_t = ADDRESS;
@@ -110,7 +94,6 @@ TYPE
 
 (* INTERFACE Utime; *)
 
-TYPE
   struct_timeval = RECORD
     tv_sec: INTEGER;
     tv_usec: INTEGER;
