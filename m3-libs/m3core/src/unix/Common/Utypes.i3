@@ -33,8 +33,10 @@ TYPE
   (* Ideally this is always 64 bits, else time runs out. *)
   clock_t = Usysdep.clock_t;
 
-  (* Ideally this is always 64 bits; 32bits is too small for many files. *)
-  off_t = Usysdep.off_t;
+  (* This might not be right for all systems, but let's hope. We
+  can make it so with wrapper functions, if function parameters are the
+  only occurence. If it occurs in structs, then no. *)
+  off_t = int64_t;
 
   (* Ideally this is always 64 bits, else time runs out in 2038. *)
   time_t = Usysdep.time_t;

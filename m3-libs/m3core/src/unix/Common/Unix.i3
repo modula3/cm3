@@ -12,23 +12,26 @@ IMPORT Usysdep;
 
 CONST
   MaxPathLen = Usysdep.MaxPathLen;
+
   MSETUID = Usysdep.MSETUID;
   MSETGID = Usysdep.MSETGID;
   MSTICKY = Usysdep.MSTICKY;
-  MROWNER = Usysdep.MROWNER;
-  MWOWNER = Usysdep.MWOWNER;
-  MXOWNER = Usysdep.MXOWNER;
-  MRGROUP = Usysdep.MRGROUP;
-  MWGROUP = Usysdep.MWGROUP;
-  MXGROUP = Usysdep.MXGROUP;
-  MROTHER = Usysdep.MROTHER;
-  MWOTHER = Usysdep.MWOTHER;
-  MXOTHER = Usysdep.MXOTHER;
+  MROWNER = 8_0400;
+  MWOWNER = 8_0200;
+  MXOWNER = 8_0100;
+  MRGROUP = 8_0040;
+  MWGROUP = 8_0020;
+  MXGROUP = 8_0010;
+  MROTHER = 8_0004;
+  MWOTHER = 8_0002;
+  MXOTHER = 8_0001;
+
   Mrwrwrw = MROWNER + MWOWNER + MRGROUP + MWGROUP + MROTHER + MWOTHER;
-  F_OK = Usysdep.F_OK;
-  X_OK = Usysdep.X_OK;
-  W_OK = Usysdep.W_OK;
-  R_OK = Usysdep.R_OK;
+
+  F_OK = 0;
+  X_OK = 1;
+  W_OK = 2;
+  R_OK = 4;
 
 <*EXTERNAL*> PROCEDURE sbrk (inc: INTEGER): char_star;
 <*EXTERNAL*> PROCEDURE access (path: const_char_star; mode: int): int;
@@ -41,9 +44,9 @@ CONST
 <*EXTERNAL "_exit"*> PROCEDURE underscore_exit (i: int);
 
 CONST
-  F_SETFD = Usysdep.F_SETFD;
-  F_GETFL = Usysdep.F_GETFL;
-  F_SETFL = Usysdep.F_SETFL;
+  F_SETFD = 2; (* Set close-on-exec flag *)
+  F_GETFL = 3; (* Get fd status flags *)
+  F_SETFL = 4; (* Set fd status flags *)
 
 <*EXTERNAL*> PROCEDURE fcntl (fd, request, arg: int): int;
 <*EXTERNAL*> PROCEDURE fsync (fd: int): int;
@@ -53,7 +56,7 @@ CONST
 <*EXTERNAL*> PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
 
 CONST
-  FIONREAD = Usysdep.FIONREAD;
+  FIONREAD = 16_4004667f;
 
 <*EXTERNAL*> PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
 <*EXTERNAL "m3_lseek"*> PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
