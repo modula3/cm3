@@ -19,7 +19,10 @@ TYPE
 
   struct_timespec = Usysdep.struct_timespec;
 
-  struct_itimerval = Usysdep.struct_itimerval;
+  struct_itimerval = RECORD
+    it_interval: struct_timeval;	 (* timer interval *)
+    it_value: struct_timeval;		 (* current value *)
+  END;
 
   struct_tm_star = UNTRACED REF struct_tm;
   struct_tm = Usysdep.struct_tm;
