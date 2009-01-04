@@ -20,7 +20,10 @@ TYPE
     tz_dsttime:      int; (* type of dst correction *)
   END;
 
-  struct_timespec = Usysdep.struct_timespec;
+  struct_timespec = RECORD
+    tv_sec: time_t; (* seconds *)
+    tv_nsec: long;  (* nanoseconds *)
+  END;
 
   struct_itimerval = RECORD
     it_interval: struct_timeval;	 (* timer interval *)
