@@ -16,13 +16,13 @@ TYPE
   struct_timeval = Usysdep.struct_timeval;
 
   struct_timezone = RECORD
-    tz_minuteswest:  int; (* minutes west of Greenwich *)
-    tz_dsttime:      int; (* type of dst correction *)
+    tz_minuteswest: int32_t; (* minutes west of Greenwich *)
+    tz_dsttime:     int32_t; (* type of dst correction *)
   END;
 
   struct_timespec = RECORD
     tv_sec: time_t; (* seconds *)
-    tv_nsec: long;  (* nanoseconds *)
+    tv_nsec: INTEGER; (* nanoseconds *)
   END;
 
   struct_itimerval = RECORD
