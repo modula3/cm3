@@ -1,10 +1,8 @@
 #include "m3unix.h"
 #include <time.h>
 #include <assert.h>
-#ifdef __CYGWIN__ /* temporary */
 #include <sys/time.h>
 typedef struct itimerval itimerval_t;
-#endif
 
 /*
 wrap up global variables in functions until something else is done
@@ -53,8 +51,6 @@ const char* m3_get_tzname(unsigned a)
     return tzname[a & 1];
 }
 
-#ifdef __CYGWIN__ /* temporary */
-
 /*
 Cygwin setitmer(other than ITIMER_REAL) always fails.
 We need it to succeed, though it need not do anything else.
@@ -70,5 +66,3 @@ int m3_setitimer (int Timer, const itimerval_t* NewValue, itimerval_t* OldValue)
 #endif
     return setitimer(Timer, NewValue, OldValue);
 }
-
-#endif
