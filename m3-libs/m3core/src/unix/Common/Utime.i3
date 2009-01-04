@@ -9,8 +9,8 @@ FROM Cstdint IMPORT int32_t;
 IMPORT Usysdep;
 
 CONST
-  ITIMER_REAL = Usysdep.ITIMER_REAL;
-  ITIMER_VIRTUAL = Usysdep.ITIMER_VIRTUAL;
+  ITIMER_REAL = 0; (* real time intervals *)
+  ITIMER_VIRTUAL = 1; (* virtual time intervals *)
 
 TYPE
   struct_timeval = Usysdep.struct_timeval;
