@@ -9,8 +9,7 @@ saves us from having to declare struct flock, which is gnarled up in #ifdefs.
 see http://www.opengroup.org/onlinepubs/009695399/functions/fcntl.html
 */
 
-#define __USE_LARGEFILE64
-#define __USE_FILE_OFFSET64
+#define _FILE_OFFSET_BITS 64
 
 #include <unistd.h>
 #include <fcntl.h>
