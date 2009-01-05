@@ -147,20 +147,20 @@ PROCEDURE GetPathToExec(pn: Pathname.T): Pathname.T RAISES {OSError.E} =
             IF statBuf.st_mode = MaskXXX THEN RETURN prog END;
             IF uid < 0 THEN uid := Uugid.geteuid() END;
             IF uid = statBuf.st_uid THEN
-	      statBuf.st_mode := Word.And(statBuf.st_mode, Ustat.S_IEXEC)
+              statBuf.st_mode := Word.And(statBuf.st_mode, Ustat.S_IEXEC)
             ELSE
               IF gid < 0 THEN gid := Uugid.getegid() END;
               IF gid = statBuf.st_gid THEN
                 statBuf.st_mode := Word.And(statBuf.st_mode, Ustat.S_GEXEC)
               ELSE
-        	statBuf.st_mode := Word.And(statBuf.st_mode, Ustat.S_OEXEC)
+                statBuf.st_mode := Word.And(statBuf.st_mode, Ustat.S_OEXEC)
               END
             END;
             IF statBuf.st_mode # 0 THEN RETURN prog END
           END;
-	END;
-	IF i < 0 THEN EXIT END;
-	start := i + 1
+        END;
+        IF i < 0 THEN EXIT END;
+        start := i + 1
       END;
       OSErrorPosix.Raise0(Uerror.ENOENT)
     ELSE (* pn contains '/' *)
