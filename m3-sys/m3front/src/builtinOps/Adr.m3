@@ -14,12 +14,12 @@ IMPORT RefType, Type, Host;
 VAR Z: CallExpr.MethodList;
 
 PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
-  VAR t := Addr.T;
   BEGIN
     IF Host.new_adr THEN
-      t := RefType.New (Expr.TypeOf (ce.args[0]), FALSE, NIL);
+      RETURN RefType.New (Expr.TypeOf (ce.args[0]), FALSE, NIL);
+    ELSE
+      RETURN Addr.T;
     END;
-    RETURN t;
   END TypeOf;
 
 PROCEDURE Check (ce: CallExpr.T;  <*UNUSED*> VAR cs: Expr.CheckState) =
