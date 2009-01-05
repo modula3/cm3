@@ -8,7 +8,7 @@ typedef struct itimerval itimerval_t;
 wrap up global variables in functions until something else is done
 */
 
-#ifndef __OpenBSD__
+#if !defined(__OpenBSD__) && !defined(__FreeBSD__)
 
 time_t m3_get_timezone(void)
 {
@@ -43,13 +43,13 @@ int m3_get_daylight(void)
 #endif
 }
 
-#endif /* __OpenBSD__ */
-
 const char* m3_get_tzname(unsigned a)
 {
     assert((a == 0) || (a == 1));
     return tzname[a & 1];
 }
+
+#endif /* !defined(__OpenBSD__) && !defined(__FreeBSD__) */
 
 /*
 Cygwin setitmer(other than ITIMER_REAL) always fails.
