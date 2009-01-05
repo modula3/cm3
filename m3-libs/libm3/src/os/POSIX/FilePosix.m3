@@ -275,7 +275,7 @@ PROCEDURE IsDevNull(READONLY statbuf: Ustat.struct_stat): BOOLEAN RAISES {} =
   BEGIN
     IF NOT null_done THEN
       null_fd := Unix.open(M3toC.FlatTtoS("/dev/null"), Unix.O_RDONLY, Unix.Mrwrwrw);
-      IF null_fd < 0 THEN;
+      IF null_fd < 0 THEN
         null_done := TRUE;
         RETURN FALSE
       ELSE
