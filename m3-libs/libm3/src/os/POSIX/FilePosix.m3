@@ -274,13 +274,18 @@ PROCEDURE IsDevNull(READONLY statbuf: Ustat.struct_stat): BOOLEAN RAISES {} =
   VAR result: INTEGER;
   BEGIN
     IF NOT null_done THEN
+      null_fd := Unix.open(M3toC.FlatTtoS("/dev/null"), Unix.O_RDONLY, Unix.Mrwrwrw);
+      IF null_fd < 0 THEN;
+        null_done := TRUE;
+        RETURN FALSE
+      ELSE
+        result := Ustat.fstat(null_fd, ADR(null_stat));
+        EVAL Unix.close(null_fd);
+        IF result # 0 THEN
+          null_fd := -1
+        END
+      END;
       null_done := TRUE;
-      null_fd := Unix.open(
-        M3toC.FlatTtoS("/dev/null"), Unix.O_RDONLY, Unix.Mrwrwrw);
-      IF null_fd < 0 THEN RETURN FALSE END;
-      result := Ustat.fstat(null_fd, ADR(null_stat));
-      EVAL Unix.close(null_fd);
-      IF result # 0 THEN null_fd := -1 END
     END;
     RETURN null_fd >= 0 AND statbuf.st_rdev = null_stat.st_rdev
   END IsDevNull;
