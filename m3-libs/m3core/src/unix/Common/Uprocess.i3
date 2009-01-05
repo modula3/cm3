@@ -2,10 +2,10 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-INTERFACE Uprocess;
+<*EXTERNAL*> INTERFACE Uprocess;
 
 FROM Ctypes IMPORT int;
 
-<*EXTERNAL*> PROCEDURE getpid (): int;
+PROCEDURE getpid (): int;
 
 END Uprocess.
