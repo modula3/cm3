@@ -56,7 +56,7 @@ const char* m3_get_tzname(unsigned a)
 #endif /* M3BSD */
 
 /*
-Cygwin setitmer(other than ITIMER_REAL) always fails.
+Cygwin setitimer(other than ITIMER_REAL) always fails.
 We need it to succeed, though it need not do anything else.
 */
 
