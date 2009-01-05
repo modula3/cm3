@@ -57,3 +57,13 @@ Interface ("RTStack")
 Interface ("RTTypeSRC")
 interface ("RTOS")
 
+if equal (TARGET, "SPARC64_OPENBSD") or equal (TARGET, "PPC32_OPENBSD")
+    or equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
+    or equal (TARGET, "MIPS32_IRIX") or equal (TARGET, "MIPS64_IRIX")
+    or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
+    or equal (TARGET, "PPC_LINUX") or equal (TARGET, "AMD64_LINUX")
+
+Interface      ("RTMachine")
+implementation ("RTSignal")
+
+end
