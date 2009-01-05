@@ -4,11 +4,15 @@
 #include <sys/time.h>
 typedef struct itimerval itimerval_t;
 
+#if defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__NetBSD__)
+#define M3BSD
+#endif
+
 /*
 wrap up global variables in functions until something else is done
 */
 
-#if !defined(__OpenBSD__) && !defined(__FreeBSD__)
+#ifndef M3BSD
 
 time_t m3_get_timezone(void)
 {
@@ -49,7 +53,7 @@ const char* m3_get_tzname(unsigned a)
     return tzname[a & 1];
 }
 
-#endif /* !defined(__OpenBSD__) && !defined(__FreeBSD__) */
+#endif /* M3BSD */
 
 /*
 Cygwin setitmer(other than ITIMER_REAL) always fails.
