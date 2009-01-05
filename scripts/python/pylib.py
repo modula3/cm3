@@ -2383,9 +2383,11 @@ def SetupEnvironment():
         Lib = os.environ.get("LIB")
         if not SearchPath("delayimp.lib", Lib):
             os.environ["USE_DELAYLOAD"] = "0"
+            print("set USE_DELAYLOAD=0")
 
         if not SearchPath("msvcrt.lib", Lib):
             os.environ["USE_MSVCRT"] = "0"
+            print("set USE_MSVCRT=0")
 
     #
     # some host/target confusion here..
@@ -2444,10 +2446,28 @@ def SetupEnvironment():
 
 #-----------------------------------------------------------------------------
 
+# ported from scripts/win/sysinfo.cmd
+# not currently used
+
+def CheckForLinkSwitch(Switch):
+    EnvName = "USE_" + Switch
+    EnvValue = "0"
+    if os.system("link | findstr /i /c:\" /" + Switch + "\" > nul") == 0:
+        EnvValue = "1"
+    os.environ[EnvName] = EnvValue
+    print("set " + EnvName + "=" + EnvValue)
+
+#-----------------------------------------------------------------------------
+
 if __name__ == "__main__":
+
     #
     # run test code if module run directly
     #
+
+    CheckForLinkSwitch("DELAYLOAD")
+    sys.exit(1)
+
     for a in [
             "a", "a/b", "a\\b", "\\a",
             "\\a/b", "\\a\\b", "/a", "/a/b",
