@@ -163,7 +163,7 @@ PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E} =
   BEGIN
     i := FilePosixC.RegularFileLockC(h.fd);
     IF i < 0 THEN
-	  OSErrorPosix.Raise();
+      OSErrorPosix.Raise();
     END;
     RETURN (i # 0);
   END RegularFileLock;
@@ -173,7 +173,7 @@ PROCEDURE RegularFileUnlock(h: RegularFile.T) RAISES {OSError.E} =
   BEGIN
     i := FilePosixC.RegularFileUnlockC(h.fd);
     IF i < 0 THEN
-	  OSErrorPosix.Raise();
+      OSErrorPosix.Raise();
     END;
   END RegularFileUnlock;
 
@@ -198,14 +198,14 @@ PROCEDURE IntermittentRead(
          unexpected state in the case of a core dump elsewhere. *)
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, new_mode) # 0 THEN
-	OSErrorPosix.Raise()
+        OSErrorPosix.Raise()
       END;
 
       status := Uuio.read(h.fd, p_b, NUMBER(b));
       errno := Cerrno.GetErrno();
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) # 0 THEN
-	OSErrorPosix.Raise()
+        OSErrorPosix.Raise()
       END;
 
       IF status >= 0 THEN
@@ -239,14 +239,14 @@ PROCEDURE IntermittentWrite(h: File.T; READONLY b: ARRAY OF File.Byte)
          unexpected state in the case of a core dump elsewhere. *)
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, new_mode) # 0 THEN
-	OSErrorPosix.Raise()
+        OSErrorPosix.Raise()
       END;
 
       status := Uuio.write(h.fd, p, n);
       errno := Cerrno.GetErrno();
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) # 0 THEN
-	OSErrorPosix.Raise()
+        OSErrorPosix.Raise()
       END;
 
       IF status >= 0 THEN
