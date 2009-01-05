@@ -2,7 +2,7 @@
 (* All rights reserved.                                               *)
 (* See the file COPYRIGHT for a full description.                     *)
 
-INTERFACE Usignal;
+<*EXTERNAL*> INTERFACE Usignal;
 
 FROM Ctypes IMPORT int;
 FROM Utypes IMPORT pid_t;
@@ -34,13 +34,14 @@ TYPE
     sa_restorer : ADDRESS;
   END;
 
-<*EXTERNAL*> PROCEDURE kill (pid: pid_t; sig: int): int;
-<*EXTERNAL*> PROCEDURE sigprocmask (how: int; READONLY set: sigset_t; VAR oset: sigset_t): int;
-<*EXTERNAL*> PROCEDURE sigsuspend (READONLY set: sigset_t): int;
-<*EXTERNAL*> PROCEDURE sigaction (sig: int; READONLY act: struct_sigaction; VAR oact: struct_sigaction): int;
-<*EXTERNAL*> PROCEDURE sigpending (VAR set: sigset_t): int;
-<*EXTERNAL*> PROCEDURE sigwait (READONLY set: sigset_t; VAR sig: int): int;
-<*EXTERNAL*> PROCEDURE sigdelset (VAR set: sigset_t; signo: int): int;
-<*EXTERNAL*> PROCEDURE sigfillset (VAR set: sigset_t): int;
+PROCEDURE kill (pid: pid_t; sig: int): int;
+
+PROCEDURE sigaction (sig: int; READONLY act: struct_sigaction; VAR oact: struct_sigaction): int;
+PROCEDURE sigdelset (VAR set: sigset_t; signo: int): int;
+PROCEDURE sigfillset (VAR set: sigset_t): int;
+PROCEDURE sigpending (VAR set: sigset_t): int;
+PROCEDURE sigprocmask (how: int; READONLY set: sigset_t; VAR oset: sigset_t): int;
+PROCEDURE sigsuspend (READONLY set: sigset_t): int;
+PROCEDURE sigwait (READONLY set: sigset_t; VAR sig: int): int;
 
 END Usignal.

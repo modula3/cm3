@@ -2,7 +2,7 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-INTERFACE Usocket;
+<*EXTERNAL*> INTERFACE Usocket;
 
 IMPORT Ctypes, Utypes;
 FROM Ctypes IMPORT int, void_star, const_void_star;
@@ -27,17 +27,17 @@ TYPE
 
   socklen_t_star = UNTRACED REF socklen_t;
 
-<*EXTERNAL*> PROCEDURE accept(s: int; addr: UNTRACED REF struct_sockaddr_in; addrlen: socklen_t_star) : int RAISES {};
-<*EXTERNAL*> PROCEDURE bind(s: int; name: (*const*) UNTRACED REF struct_sockaddr_in; namelen: socklen_t) : int RAISES {};
-<*EXTERNAL*> PROCEDURE connect(s: int; name: (*const*) UNTRACED REF struct_sockaddr_in; namelen: socklen_t) : int RAISES {};
-<*EXTERNAL*> PROCEDURE getpeername(s: int; name: UNTRACED REF struct_sockaddr_in; namelen: socklen_t_star) : int RAISES {};
-<*EXTERNAL*> PROCEDURE getsockname( s: int; name: UNTRACED REF struct_sockaddr_in; namelen: socklen_t_star) : int RAISES {};
-<*EXTERNAL*> PROCEDURE getsockopt(s, level, optname: int; optval: void_star; optlen: socklen_t_star) : int RAISES {};
-<*EXTERNAL*> PROCEDURE listen(s, backlog: int): int RAISES {};
-<*EXTERNAL*> PROCEDURE recvfrom(s: int; buf: void_star; len: size_t; flags: int; from: UNTRACED REF struct_sockaddr_in; fromlen: socklen_t_star) : int RAISES {};
-<*EXTERNAL*> PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int; to: UNTRACED REF struct_sockaddr_in; tolen: socklen_t) : int RAISES {};
-<*EXTERNAL*> PROCEDURE setsockopt(s, level, optname: int; optval: const_void_star; optlen: socklen_t) : int RAISES {};
-<*EXTERNAL*> PROCEDURE shutdown(s, how: int): int RAISES {};
-<*EXTERNAL*> PROCEDURE socket(af, type, protocol: int): int RAISES {};
+PROCEDURE accept(s: int; addr: UNTRACED REF struct_sockaddr_in; addrlen: socklen_t_star) : int RAISES {};
+PROCEDURE bind(s: int; name: (*const*) UNTRACED REF struct_sockaddr_in; namelen: socklen_t) : int RAISES {};
+PROCEDURE connect(s: int; name: (*const*) UNTRACED REF struct_sockaddr_in; namelen: socklen_t) : int RAISES {};
+PROCEDURE getpeername(s: int; name: UNTRACED REF struct_sockaddr_in; namelen: socklen_t_star) : int RAISES {};
+PROCEDURE getsockname(s: int; name: UNTRACED REF struct_sockaddr_in; namelen: socklen_t_star) : int RAISES {};
+PROCEDURE getsockopt(s, level, optname: int; optval: void_star; optlen: socklen_t_star) : int RAISES {};
+PROCEDURE listen(s, backlog: int): int RAISES {};
+PROCEDURE recvfrom(s: int; buf: void_star; len: size_t; flags: int; from: UNTRACED REF struct_sockaddr_in; fromlen: socklen_t_star) : int RAISES {};
+PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int; to: UNTRACED REF struct_sockaddr_in; tolen: socklen_t) : int RAISES {};
+PROCEDURE setsockopt(s, level, optname: int; optval: const_void_star; optlen: socklen_t) : int RAISES {};
+PROCEDURE shutdown(s, how: int): int RAISES {};
+PROCEDURE socket(af, type, protocol: int): int RAISES {};
 
 END Usocket.
