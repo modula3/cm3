@@ -178,17 +178,7 @@ readonly proc MakeUwaitpid(Prefix) is
 "/* All rights reserved.                                        */",
 "/* See the file COPYRIGHT for a full description.              */",
 "",
-
-%
-% Workaround Modula-3 lameness.
-%
-%"#include \"m3unix.h\"",
-%
-%h_source(ROOT & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "unix" & SL & "Common" & SL & "m3unix")
-%Fatal Error: duplicate unit: \cm3\pkg\m3core\src/unix/Common\m3unix.h C:\dev2\cm3.2\m3-libs\m3core\src\unix\Common\m3unix.h
-%
-"#include \"" & escape(ROOT & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "unix" & SL & "Common" & SL & "m3unix.h") & "\"",
-
+"#include \"m3unix.h\"",
 "#include <unistd.h>",
 "#include <sys/wait.h>",
 "#include <assert.h>",
@@ -285,10 +275,6 @@ Prefix & "m3_waitpid(",
 
     if Prefix
         derived_interface (Prefix & "Uwaitpid", HIDDEN)
-        %
-        %h_source(ROOT & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "unix" & SL & "Common" & SL & "m3unix")
-        %Fatal Error: duplicate unit: \cm3\pkg\m3core\src/unix/Common\m3unix.h C:\dev2\cm3.2\m3-libs\m3core\src\unix\Common\m3unix.h
-        % lame. Therefore we fiddle with the #include in the source.
     else
         derived_interface (Prefix & "Uwaitpid", VISIBLE)
     end
