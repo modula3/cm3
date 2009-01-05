@@ -2,7 +2,7 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-INTERFACE Ustat;
+<*EXTERNAL*> INTERFACE Ustat;
 
 FROM Ctypes IMPORT int, char_star;
 FROM Utypes IMPORT uint16_t;

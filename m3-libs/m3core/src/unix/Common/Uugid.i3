@@ -2,11 +2,11 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-INTERFACE Uugid;
+<*EXTERNAL*> INTERFACE Uugid;
 
 FROM Utypes IMPORT gid_t, uid_t;
 
-<*EXTERNAL*> PROCEDURE geteuid (): uid_t;
-<*EXTERNAL*> PROCEDURE getegid (): gid_t;
+PROCEDURE geteuid (): uid_t;
+PROCEDURE getegid (): gid_t;
 
 END Uugid.

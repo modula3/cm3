@@ -2,7 +2,7 @@
 (* All rights reserved.                                               *)
 (* See the file COPYRIGHT for a full description.                     *)
 
-INTERFACE Unix;
+<*EXTERNAL*> INTERFACE Unix;
 
 FROM Cstddef IMPORT size_t;
 FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star;
@@ -33,14 +33,14 @@ CONST
   W_OK = 2;
   R_OK = 4;
 
-<*EXTERNAL*> PROCEDURE sbrk (inc: INTEGER): char_star;
-<*EXTERNAL*> PROCEDURE access (path: const_char_star; mode: int): int;
-<*EXTERNAL*> PROCEDURE chdir (path: const_char_star): int;
-<*EXTERNAL*> PROCEDURE close (d: int): int;
-<*EXTERNAL*> PROCEDURE dup2 (oldd, newd: int): int;
-<*EXTERNAL*> PROCEDURE execve (name: const_char_star;  argv, envp: char_star_star): int;
+PROCEDURE sbrk (inc: INTEGER): char_star;
+PROCEDURE access (path: const_char_star; mode: int): int;
+PROCEDURE chdir (path: const_char_star): int;
+PROCEDURE close (d: int): int;
+PROCEDURE dup2 (oldd, newd: int): int;
+PROCEDURE execve (name: const_char_star;  argv, envp: char_star_star): int;
 
-<*EXTERNAL*> PROCEDURE exit (i: int);
+PROCEDURE exit (i: int);
 <*EXTERNAL "_exit"*> PROCEDURE underscore_exit (i: int);
 
 CONST
@@ -48,19 +48,19 @@ CONST
   F_GETFL = 3; (* Get fd status flags *)
   F_SETFL = 4; (* Set fd status flags *)
 
-<*EXTERNAL*> PROCEDURE fcntl (fd, request, arg: int): int;
-<*EXTERNAL*> PROCEDURE fsync (fd: int): int;
-<*EXTERNAL*> PROCEDURE getdtablesize (): int;
-<*EXTERNAL*> PROCEDURE gethostname (name: char_star; namelen: size_t): int;
-<*EXTERNAL*> PROCEDURE getpagesize (): int;
-<*EXTERNAL*> PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
+PROCEDURE fcntl (fd, request, arg: int): int;
+PROCEDURE fsync (fd: int): int;
+PROCEDURE getdtablesize (): int;
+PROCEDURE gethostname (name: char_star; namelen: size_t): int;
+PROCEDURE getpagesize (): int;
+PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
 
 CONST
   FIONREAD = 16_4004667f;
 
-<*EXTERNAL*> PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
+PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
 <*EXTERNAL "m3_lseek"*> PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
-<*EXTERNAL*> PROCEDURE mkdir (path: const_char_star; mode: mode_t): int;
+PROCEDURE mkdir (path: const_char_star; mode: mode_t): int;
 
 CONST
   O_RDONLY = Usysdep.O_RDONLY;
@@ -78,16 +78,16 @@ CONST
 CONST
   readEnd = 0;
   writeEnd = 1;
-<*EXTERNAL*> PROCEDURE pipe (VAR fildes: ARRAY [0..1] OF int): int;
+PROCEDURE pipe (VAR fildes: ARRAY [0..1] OF int): int;
 
-<*EXTERNAL*> PROCEDURE readlink (path: const_char_star; buf: ADDRESS; bufsize: int): int;
-<*EXTERNAL*> PROCEDURE rename (from, to: const_char_star): int;
-<*EXTERNAL*> PROCEDURE rmdir (path: const_char_star): int;
-<*EXTERNAL*> PROCEDURE symlink (name1, name2: const_char_star): int;
+PROCEDURE readlink (path: const_char_star; buf: ADDRESS; bufsize: int): int;
+PROCEDURE rename (from, to: const_char_star): int;
+PROCEDURE rmdir (path: const_char_star): int;
+PROCEDURE symlink (name1, name2: const_char_star): int;
 <*EXTERNAL "m3_ftruncate"*> PROCEDURE ftruncate (fd: int; length: off_t): int;
-<*EXTERNAL*> PROCEDURE unlink (path: const_char_star): int;
-<*EXTERNAL*> PROCEDURE utimes (file: const_char_star; tvp: UNTRACED REF ARRAY [0..1] OF struct_timeval): int;
-<*EXTERNAL*> PROCEDURE vfork (): int;
+PROCEDURE unlink (path: const_char_star): int;
+PROCEDURE utimes (file: const_char_star; tvp: UNTRACED REF ARRAY [0..1] OF struct_timeval): int;
+PROCEDURE vfork (): int;
 
 CONST
   MAX_FDSET = Usysdep.MAX_FDSET;
@@ -95,6 +95,6 @@ CONST
 TYPE
   FDSet = SET OF [0 .. MAX_FDSET - 1];
 
-<*EXTERNAL*> PROCEDURE select (nfds: int; readfds, writefds, exceptfds: UNTRACED REF FDSet; timeout: UNTRACED REF struct_timeval): int;
+PROCEDURE select (nfds: int; readfds, writefds, exceptfds: UNTRACED REF FDSet; timeout: UNTRACED REF struct_timeval): int;
 
 END Unix.

@@ -2,7 +2,7 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-INTERFACE Uresource;
+<*EXTERNAL*> INTERFACE Uresource;
 
 FROM Ctypes IMPORT int, long;
 FROM Utime IMPORT struct_timeval;
@@ -31,6 +31,6 @@ TYPE
   END;
   struct_rusage_star = UNTRACED REF struct_rusage;
 
-<*EXTERNAL*> PROCEDURE getrusage (who: int; VAR rus: struct_rusage): int;
+PROCEDURE getrusage (who: int; VAR rus: struct_rusage): int;
 
 END Uresource.

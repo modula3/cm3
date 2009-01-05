@@ -2,7 +2,7 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-INTERFACE Unetdb;
+<*EXTERNAL*> INTERFACE Unetdb;
 
 FROM Ctypes IMPORT int, char_star, char_star_star, const_char_star;
 FROM Utypes IMPORT socklen_t, hostent_addrtype_t, hostent_length_t;
@@ -22,7 +22,7 @@ CONST
   NO_RECOVERY    = 3;
   NO_ADDRESS     = 4;
 
-<*EXTERNAL*> PROCEDURE gethostbyname (name: const_char_star): struct_hostent_star;
-<*EXTERNAL*> PROCEDURE gethostbyaddr (addr: const_char_star; len: socklen_t; type: int): struct_hostent_star;
+PROCEDURE gethostbyname (name: const_char_star): struct_hostent_star;
+PROCEDURE gethostbyaddr (addr: const_char_star; len: socklen_t; type: int): struct_hostent_star;
 
 END Unetdb.
