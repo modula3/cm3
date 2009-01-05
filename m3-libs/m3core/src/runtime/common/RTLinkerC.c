@@ -7,7 +7,7 @@ One additional copy of the environment variables is leaked per .exe/.dll.
 void* RTLinker__GetEnvironmentStrings (void* EnvFromMain)
 {
 #ifdef _WIN32
-	__declspec(dllimport) char** __stdcall GetEnvironmentStringsA(void);
+    __declspec(dllimport) char** __stdcall GetEnvironmentStringsA(void);
     return GetEnvironmentStringsA ();
 #else
     return EnvFromMain;
