@@ -2,7 +2,7 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-INTERFACE Upthread;
+<*EXTERNAL*> INTERFACE Upthread;
 
 FROM Ctypes IMPORT int;
 FROM Utypes IMPORT size_t;

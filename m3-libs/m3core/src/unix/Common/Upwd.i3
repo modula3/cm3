@@ -2,7 +2,7 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-INTERFACE Upwd;
+<*EXTERNAL*> INTERFACE Upwd;
 
 FROM Ctypes IMPORT char_star, int;
 FROM Utypes IMPORT uid_t;
@@ -17,7 +17,7 @@ TYPE
     provide the pointer type and not the value type. *)
   END;
 
-<*EXTERNAL*> PROCEDURE getpwuid (uid: int): struct_passwd_star;
-<*EXTERNAL*> PROCEDURE getpwnam (name: char_star): struct_passwd_star;
+PROCEDURE getpwuid (uid: int): struct_passwd_star;
+PROCEDURE getpwnam (name: char_star): struct_passwd_star;
 
 END Upwd.

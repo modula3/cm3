@@ -41,7 +41,7 @@ However the "winner", Solaris, is correct.
 Linux is correct.
 *)
 
-UNSAFE INTERFACE Usem;
+<*EXTERNAL*> UNSAFE INTERFACE Usem;
 
 FROM Ctypes IMPORT int, unsigned;
 
