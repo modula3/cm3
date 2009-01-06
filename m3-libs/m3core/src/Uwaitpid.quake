@@ -178,6 +178,7 @@ readonly proc MakeUwaitpid(Prefix) is
 "/* All rights reserved.                                        */",
 "/* See the file COPYRIGHT for a full description.              */",
 "",
+"#include <sys/types.h>",
 "#include <unistd.h>",
 "#include <sys/wait.h>",
 "#include <assert.h>",
