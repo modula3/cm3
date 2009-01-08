@@ -3,8 +3,8 @@
 % See the file COPYRIGHT for a full description.
 
 readonly _UnixPieces = {
-  "ALPHA_OSF"       : [ "osf-1.generic", "osf-1.ALPHA_OSF",        "uin-common", "little-endian" ],
   "AIX386"          : [ "aix-ps2-1-2",                             "uin-common", "little-endian" ],
+  "ALPHA_OSF"       : [ "osf-1.generic", "osf-1.ALPHA_OSF",        "uin-common", "little-endian" ],
   "AMD64_DARWIN"    : [ "darwin-generic", "darwin-amd64",          "uin-len",    "little-endian" ],
   "AMD64_LINUX"     : [ "linux-common", "linux-64",                "uin-common", "little-endian" ],
   "AP3000"          : [ "ultrix-3-1.generic", "ultrix-3-1.AP3000", "uin-common", "little-endian" ],
@@ -17,6 +17,8 @@ readonly _UnixPieces = {
   "FreeBSD4"        : [ "freebsd-4",                               "uin-len",    "little-endian" ],
   "HP300"           : [ "hpux-7-0",                                "uin-common", "big-endian" ],
   "HPPA"            : [ "hpux-7-0",                                "uin-common", "big-endian" ],
+  "I386_DARWIN"     : [ "darwin-generic", "darwin-i386",            "uin-len",    "little-endian" ],
+  "I386_OPENBSD"    : [ "openbsd-common",                           "uin-len",    "little-endian" ],
   "IBMR2"           : [ "aix-3-2",                                 "uin-common", "big-endian" ],
   "IBMRT"           : [ "ibm-4-3",                                 "uin-common", "big-endian" ],
   "IRIX5"           : [ "irix-5.2",                                "uin-common", "big-endian" ],
@@ -27,8 +29,12 @@ readonly _UnixPieces = {
   "NEXT"            : [ "ultrix-3-1.generic", "ultrix-3-1.NEXT",   "uin-common", "big-endian" ],
   "NT386"           : [ "cygwin",                                  "uin-common", "little-endian" ],
   "NT386GNU"        : [ "cygwin",                                  "uin-common", "little-endian" ],
+  "NetBSD2_i386"    : [ "netbsd2-i386",                             "uin-common", "little-endian" ],
   "OKI"             : [ "sysv-4.0",                                "uin-common", "little-endian" ],
   "OS2"             : [ "os2",                                     "uin-common", "little-endian" ],
+  "PPC32_OPENBSD"   : [ "openbsd-common",                           "uin-len",    "big-endian" ],
+  "PPC_DARWIN"      : [ "darwin-generic", "darwin-ppc",             "uin-len",    "big-endian" ],
+  "PPC_LINUX"       : [ "linux-common", "linux-32",                 "uin-common", "big-endian" ],
   "SEQUENT"         : [ "ultrix-3-1.generic", "ultrix-3-1.SEQUENT","uin-common", "little-endian" ],
   "SOLgnu"          : [ "solaris-2-x",                             "uin-common", "big-endian" ],
   "SOLsun"          : [ "solaris-2-x",                             "uin-common", "big-endian" ],
@@ -42,12 +48,6 @@ readonly _UnixPieces = {
   "SUN386"          : [ "ultrix-3-1.generic", "ultrix-3-1.SUN386",  "uin-common", "little-endian" ],
   "UMAX"            : [ "ultrix-3-1.generic", "ultrix-3-1.UMAX",    "uin-common", "little-endian" ],
   "VAX"             : [ "ultrix-3-1.generic", "ultrix-3-1.VAX",     "uin-common", "little-endian" ],
-  "I386_DARWIN"     : [ "darwin-generic", "darwin-i386",            "uin-len",    "little-endian" ],
-  "PPC_DARWIN"      : [ "darwin-generic", "darwin-ppc",             "uin-len",    "big-endian" ],
-  "PPC_LINUX"       : [ "linux-common", "linux-32",                 "uin-common", "big-endian" ],
-  "PPC32_OPENBSD"   : [ "openbsd-common",                           "uin-len",    "big-endian" ],
-  "I386_OPENBSD"    : [ "openbsd-common",                           "uin-len",    "little-endian" ],
-  "NetBSD2_i386"    : [ "netbsd2-i386",                             "uin-common", "little-endian" ],
 }
 
 if equal (OS_TYPE, "WIN32")
