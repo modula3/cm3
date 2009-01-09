@@ -492,6 +492,7 @@ typedef unsigned __int64 ULLong;
 extern "C" double m3_strtod(const char *s00, char **se);
 extern "C" char *m3_dtoa(double d, int mode, int ndigits,
 			int *decpt, int *sign, char **rve);
+extern "C" void m3_freedtoa(char *s);
 #endif
 
  struct
@@ -2604,9 +2605,9 @@ nrv_alloc(char *s, char **rve, int n)
 
  void
 #ifdef KR_headers
-freedtoa(s) char *s;
+m3_freedtoa(s) char *s;
 #else
-freedtoa(char *s)
+m3_freedtoa(char *s)
 #endif
 {
 	Bigint *b = (Bigint *)((int *)s - 1);
@@ -2715,7 +2716,7 @@ m3_dtoa
 
 #ifndef MULTIPLE_THREADS
 	if (dtoa_result) {
-		freedtoa(dtoa_result);
+		m3_freedtoa(dtoa_result);
 		dtoa_result = 0;
 		}
 #endif
