@@ -10,7 +10,7 @@
 UNSAFE MODULE Convert;
 
 IMPORT Word, Long, Ctypes;
-FROM CConvert IMPORT strtod, dtoa;
+FROM CConvert IMPORT strtod, dtoa, freedtoa;
 
 VAR
   Digits := ARRAY [0..15] OF CHAR {
@@ -324,8 +324,9 @@ BEGIN
 
     df := NEW (REF ARRAY OF CHAR, digits);
     FOR i := 0 TO digits - 1 DO
-      df [i] := LOOPHOLE(start, UNTRACED REF CHAR)^;
-      INC (start, ADRSIZE (CHAR)); END;
+      df [i] := LOOPHOLE(start + i * ADRSIZE (CHAR), UNTRACED REF CHAR)^;
+    END;
+    freedtoa (start);
 
     IF decpt = 9999 THEN (* Special value returned by dtoa *)
       IF sign # 0 THEN
@@ -369,8 +370,9 @@ BEGIN
 
     ds := NEW (REF ARRAY OF CHAR, digits);
     FOR i := 0 TO digits - 1 DO
-      ds [i] := LOOPHOLE(start, UNTRACED REF CHAR)^;
-      INC (start, ADRSIZE (CHAR)); END;
+      ds [i] := LOOPHOLE(start + i * ADRSIZE (CHAR), UNTRACED REF CHAR)^;
+    END;
+    freedtoa (start);
 
     IF decpt = 9999 THEN (* Special value returned by dtoa *)
       IF sign # 0 THEN

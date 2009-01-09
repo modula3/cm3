@@ -59,6 +59,10 @@ PROCEDURE dtoa (d: double;  mode: int;  ndigits: int;  decpt: int_star;
      to hold the suppressed trailing zeros.
 *)
 
+<* EXTERNAL m3_freedtoa *>
+PROCEDURE freedtoa (s: char_star);
+(* Must be used to free values s returned by dtoa. *)
+
 END CConvert.
 
 (* The implementations of these routines can be found in
