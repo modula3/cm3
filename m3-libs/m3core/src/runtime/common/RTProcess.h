@@ -9,8 +9,16 @@
 #ifndef RTPROCESS_INCLUDED
 #define RTPROCESS_INCLUDED
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void (*RTProcess__InterruptHandler)(void);
 void RTProcess__InvokeExitors(void);
 RTProcess__InterruptHandler RTProcess__OnInterrupt(RTProcess__InterruptHandler);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

@@ -11,6 +11,14 @@
 #ifndef M3TEXT_INCLUDED
 #define M3TEXT_INCLUDED
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void* TEXT;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif
