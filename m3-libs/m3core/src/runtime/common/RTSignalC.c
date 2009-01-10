@@ -32,6 +32,10 @@ typedef void ucontext_t;
 #include "RTError.h"
 #define MsgPC RTError__MsgPC
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define PRIVATE(x) RTSignalCPrivate_ ## x
 
 #define Handlers PRIVATE(Handlers)
@@ -61,9 +65,9 @@ void Quit(int Signal, siginfo_t* SignalInfo, void* Context);
 
 void InstallOneHandler(size_t Index);
 void RestoreOneHandler(size_t Index);
-size_t GetProgramCounterFromSignalContext(ucontext_t* Context);
+size_t GetProgramCounterFromSignalContext(void* Context);
 
-size_t GetProgramCounterFromSignalContext(ucontext_t* VoidContext)
+size_t GetProgramCounterFromSignalContext(void* VoidContext)
 {
     size_t pc = 0;
 #if 0 /* FUTURE, each or at least some of these need investigation and testing */
@@ -97,7 +101,9 @@ size_t GetProgramCounterFromSignalContext(ucontext_t* VoidContext)
 #define DefaultHandler ((SignalActionHandler) SIG_DFL)
 #define IgnoreSignal   ((SignalActionHandler) SIG_IGN)
 
-/*extern*/
+#ifdef __cplusplus
+extern
+#endif
 const struct
 {
     int Signal;
@@ -143,6 +149,8 @@ void InstallOneHandler(size_t Index)
 }
 
 void InstallHandlers(Texts_t* M3Texts)
+/* Texts are passed down from Modula-3 so that we don't know how to create them.
+Maybe change that. */
 {
     size_t i = { 0 };
 
@@ -173,7 +181,7 @@ void RestoreHandlers(void)
     }
 }
 
-void Shutdown(int Signal, siginfo_t* SignalInfo, void* VoidContext)
+void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context)
 {
     sigaction_t New;
     sigaction_t Old;
@@ -188,9 +196,8 @@ void Shutdown(int Signal, siginfo_t* SignalInfo, void* VoidContext)
     kill(getpid(), Signal);         /* and resend the signal */
 }
 
-void Interrupt(int Signal, siginfo_t* SignalInfo, void* VoidContext)
+void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context)
 {
-    ucontext_t* Context = (ucontext_t*) VoidContext;
     InterruptHandler Handler = OnInterrupt(NULL);
 
     if (Handler == NULL)
@@ -204,18 +211,21 @@ void Interrupt(int Signal, siginfo_t* SignalInfo, void* VoidContext)
     }
 }
 
-void Quit(int Signal, siginfo_t* SignalInfo, void* VoidContext)
+void RTSignalCPrivate_CommonFatalSignalHandler(void* Context, TEXT Message)
 {
-    ucontext_t* Context = (ucontext_t*) VoidContext;
-    size_t pc = GetProgramCounterFromSignalContext(Context);
-
-    MsgPC(pc, Texts->aborted);
+    MsgPC(GetProgramCounterFromSignalContext(Context), Message);
 }
 
-void SegV(int Signal, siginfo_t* SignalInfo, void* VoidContext)
+void Quit(int Signal, siginfo_t* SignalInfo, void* Context)
 {
-    ucontext_t* Context = (ucontext_t*) VoidContext;
-    size_t pc = GetProgramCounterFromSignalContext(Context);
-
-    MsgPC(pc, Texts->segv);
+    RTSignalCPrivate_CommonFatalSignalHandler(Context, Texts->aborted);
 }
+
+void SegV(int Signal, siginfo_t* SignalInfo, void* Context)
+{
+    RTSignalCPrivate_CommonFatalSignalHandler(Context, Texts->segv);
+}
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

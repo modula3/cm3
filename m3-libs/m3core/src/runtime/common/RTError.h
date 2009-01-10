@@ -12,6 +12,14 @@
 #include <stddef.h>
 #include "m3text.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void RTError__MsgPC(size_t, TEXT);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

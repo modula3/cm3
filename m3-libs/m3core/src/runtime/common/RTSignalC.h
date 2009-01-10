@@ -13,6 +13,10 @@
 
 #include "m3text.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _RTSignalC_Texts_t
 {
     TEXT aborted;
@@ -21,5 +25,9 @@ typedef struct _RTSignalC_Texts_t
 
 void RTSignalC_InstallHandlers(RTSignalC_Texts_t* Texts);
 void RTSignalC_RestoreHandlers(void);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif
