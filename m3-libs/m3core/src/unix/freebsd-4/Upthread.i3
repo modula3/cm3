@@ -4,7 +4,7 @@
 
 INTERFACE Upthread;
 
-FROM Ctypes IMPORT char, int, unsigned_int, void_star;
+FROM Ctypes IMPORT char, int, void_star;
 FROM Utypes IMPORT size_t;
 FROM Usignal IMPORT sigset_t;
 FROM Utime IMPORT struct_timespec;
