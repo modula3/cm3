@@ -1131,6 +1131,7 @@ def Boot():
         "LINUXLIBC6"        : " --32 ",
         "SPARC32_LINUX"     : " -32 ",
         "SPARC64_LINUX"     : " -64 ",
+        "SPARC64_LINUX"     : " -64 -Av9 ",
         "SOLsun"            : " -s -K PIC -xarch=v8plus ",
         "SPARC64_SOLARIS"   : " -s -K PIC -xarch=v9 ",
         }.get(Target) or ""))
