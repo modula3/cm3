@@ -493,6 +493,8 @@ elif UName.startswith("freebsd"):
         else:
             Host = "FreeBSD4"
         # Host = "I386_FREEBSD"
+    elif UNameArchM == "amd64":
+        Host = "AMD64_FREEBSD"
     else:
         Host = "FBSD_ALPHA"
         # Host = "ALPHA64_FREEBSD"
@@ -1166,7 +1168,7 @@ def Boot():
     Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
 
-    Makefile.write("all: cm3\n\n")
+    Makefile.write(".SUFFIXES:\nall: cm3\n\n")
 
     for a in [UpdateSource, Make]:
         a.write("#!/bin/sh\n\nset -e\nset -x\n\n")
@@ -1214,6 +1216,7 @@ def Boot():
             "m3-libs/m3core/src/float/m3makefile",
             "m3-libs/m3core/src/runtime/m3makefile",
             "m3-libs/m3core/src/runtime/common/Compiler.tmpl",
+            "m3-libs/m3core/src/runtime/common/RTSignalC.c",
             "m3-libs/m3core/src/runtime/" + Target + "/m3makefile",
             "m3-libs/m3core/src/runtime/" + Target + "/RTMachine.m3",
             "m3-libs/m3core/src/runtime/" + Target + "/RTSignal.m3",
