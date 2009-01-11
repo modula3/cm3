@@ -9,9 +9,7 @@ IMPORT Usignal;
 
 TYPE
   jmp_buf = BITS 16_1280 FOR RECORD
-    regs: ARRAY [0..(64 + (12 * 4)) - 1] OF INTEGER;
-    mask_was_saved: INTEGER;
-    saved_mask: Usignal.sigset_t; 
+    regs: ARRAY [0..16_4A - 1] OF LONGINT;
   END;
 
 <*EXTERNAL*> PROCEDURE setjmp (VAR env: jmp_buf): int;
