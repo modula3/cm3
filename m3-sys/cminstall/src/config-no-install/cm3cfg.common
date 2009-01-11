@@ -165,7 +165,7 @@ proc GetM3Back() is
     % INSTALL_ROOT/bin/cm3cg.exe
     % INSTALL_ROOT/bin/cm3cg
 
-    if not defined("ROOT")
+    if defined("ROOT")
 
         local bin = INSTALL_ROOT & SL & "bin" & SL
         local m3cc = ROOT & SL & "m3-sys" & SL & "m3cc" & SL
