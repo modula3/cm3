@@ -9,7 +9,7 @@ IMPORT Usignal;
 
 TYPE
   jmp_buf = BITS 16_1280 FOR RECORD
-    regs: ARRAY [0..16_4A - 1] OF LONGINT;
+    opaque: ARRAY [0..16_4A - 1] OF LONGINT;
   END;
 
 <*EXTERNAL*> PROCEDURE setjmp (VAR env: jmp_buf): int;
