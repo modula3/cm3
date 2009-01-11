@@ -273,9 +273,9 @@ readonly proc m3cc_Run (x) is
     x = "sh -c \"" & x & "\""
   end
   write(x & CR)
-  >> build_dir & SL & "_m3.log" in
-    write(x & CR)
-  end
+  %>> build_dir & SL & "_m3.log" in
+  %  write(x & CR)
+  %end
   exec(x)
 end
 
@@ -371,7 +371,8 @@ if not defined ("no_config")
     Configure = Configure & " -disable-decimal-float"
     Configure = Configure & " -disable-fixed-point"
 
-    m3cc_Run (["cd", build_dir, "&&", "../gcc/configure", M3CC_CONFIG, Configure, " | tee -a _m3.log"])
+    %m3cc_Run (["cd", build_dir, "&&", "../gcc/configure", M3CC_CONFIG, Configure, " | tee -a _m3.log"])
+    m3cc_Run (["cd", build_dir, "&&", "../gcc/configure", M3CC_CONFIG, Configure])
     > done in
       write("done")
     end
