@@ -203,8 +203,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
       Systems.AMD64_CYGWIN, *)
       Systems.AMD64_DARWIN,
-(*    Systems.AMD64_FREEBSD,
-      Systems.AMD64_NETBSD,
+      Systems.AMD64_FREEBSD,
+(*    Systems.AMD64_NETBSD,
       Systems.AMD64_OPENBSD, *)
       Systems.AMD64_LINUX,
 (*    Systems.AMD64_NT,
@@ -353,6 +353,9 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  max_align                 := 32;
                  First_readable_addr       := 4096;
                  Jumpbuf_size              := 11 * Address.size;
+
+    |  Systems.AMD64_FREEBSD =>
+                 Jumpbuf_size              := 16_80 * Char.size;
 
     |  Systems.HP300 =>
                  max_align                 := 16;

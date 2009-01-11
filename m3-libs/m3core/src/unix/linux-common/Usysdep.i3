@@ -7,7 +7,6 @@ INTERFACE Usysdep;
 FROM Cstdint IMPORT uint32_t;
 FROM Ctypes IMPORT char_star, void_star, int;
 IMPORT Upthreadtypes;
-IMPORT Uucontext;
 
 (* INTERFACE Unix; *)
 
@@ -48,33 +47,8 @@ CONST
 (* INTERFACE Usignal; *)
 
 CONST
-  SIGHUP = 1;
   SIGINT = 2;
-  SIGQUIT = 3;
-  SIGABRT = 6;
   SIGKILL = 9;
-  SIGSEGV = 11;
-  SIGPIPE = 13;
-  SIGTERM = 15;
-
-  NSIG = 65; (* 129 on MIPS *)
-
-  (* flags in struct_sigaction *)
-  SA_RESTART = 16_10000000;(* Restart syscall on signal return. *)
-  SA_SIGINFO = 4; (* three parameter signal callback vs. one parameter *)
-
-TYPE
-  SignalActionHandler = PROCEDURE (sig: int; sip: siginfo_t_star; uap: Uucontext.ucontext_t_star);
-  SignalHandler = PROCEDURE (sig: int);
-  sigset_t = Uucontext.sigset_t;
-  siginfo_t_star = ADDRESS;
-
-  struct_sigaction = RECORD
-    sa_sigaction: SignalActionHandler; (* union of two function pointers *)
-    sa_mask     : sigset_t;
-    sa_flags    : int;
-    sa_restorer : ADDRESS;
-  END;
 
 (* INTERFACE Usocket; *)
 
@@ -127,5 +101,8 @@ TYPE
   socklen_t = uint32_t;
   hostent_addrtype_t = int;
   hostent_length_t = int;
+
+(* RTMachine.i3 *)
+CONST SIG_SUSPEND = 64;  (* NSIG - 1 signals are 1-64, this is the last one *) (* 128 on MIPS *)
 
 END Usysdep.

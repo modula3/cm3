@@ -9,3 +9,6 @@
 
 Interface ("ThreadF")
 implementation ("ThreadPThread")
+
+interface ("ThreadPThreadC")
+c_source ("ThreadPThreadC")

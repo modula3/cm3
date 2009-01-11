@@ -11,6 +11,7 @@ readonly _CSupportPieces = {
   "ALPHA_OSF"  : [ "little-endian" ],
   "AIX386"     : [ "little-endian" ],
   "AMD64_DARWIN": [ "little-endian" ],
+  "AMD64_FREEBSD": [ "little-endian" ],
   "AMD64_LINUX": [ "little-endian" ],
   "AP3000"     : [ "little-endian" ],
   "ARM"        : [ "little-endian" ],

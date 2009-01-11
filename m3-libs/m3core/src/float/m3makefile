@@ -13,6 +13,7 @@ readonly _FloatPieces = {
   "ALPHA_OSF"  : _float_le,
   "AIX386"     : _float_le,
   "AMD64_DARWIN": _float_le,
+  "AMD64_FREEBSD": _float_le,
   "AMD64_LINUX": _float_le,
   "AP3000"     : _float_le,
   "ARM"        : _float_le,
