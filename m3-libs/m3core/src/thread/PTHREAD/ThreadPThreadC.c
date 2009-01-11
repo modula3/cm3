@@ -35,24 +35,25 @@ void ThreadPThreadC_SetupHandlers(void* SignalHandler, int sig)
 
     r = sem_init(&ackSem, 0, 0);
     assert(r == 0);
-    sigfillset(&mask);
-    assert(r == 0);
 
-    sigdelset(&mask, sig);
-    sigdelset(&mask, SIGINT);
+    r = sigfillset(&mask);
     assert(r == 0);
-    sigdelset(&mask, SIGQUIT);
+    r = sigdelset(&mask, sig);
     assert(r == 0);
-    sigdelset(&mask, SIGABRT);
+    r = sigdelset(&mask, SIGINT);
     assert(r == 0);
-    sigdelset(&mask, SIGTERM);
+    r = sigdelset(&mask, SIGQUIT);
+    assert(r == 0);
+    r = sigdelset(&mask, SIGABRT);
+    assert(r == 0);
+    r = sigdelset(&mask, SIGTERM);
     assert(r == 0);
 
     act.sa_flags = SA_RESTART | SA_SIGINFO;
     act.sa_sigaction = SignalHandler;
-    sigfillset(&act.sa_mask);
+    r = sigfillset(&act.sa_mask);
     assert(r == 0);
-    sigaction(sig, &act, &oact);
+    r = sigaction(sig, &act, &oact);
     assert(r == 0);
 }
 
