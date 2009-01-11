@@ -165,67 +165,70 @@ proc GetM3Back() is
     % INSTALL_ROOT/bin/cm3cg.exe
     % INSTALL_ROOT/bin/cm3cg
 
-    local bin = INSTALL_ROOT & SL & "bin" & SL
-    local m3cc = ROOT & SL & "m3-sys" & SL & "m3cc" & SL
-    local Cache = { }
+    if not defined("ROOT")
 
-    %
-    % Not all these combinations are meant to be used,
-    % and the order isn't always right.
-    %
-    % We do not intend to look at, for example:
-    %   /home/jay/dev2/cm3/m3-sys/m3cc/AMD64_LINUX/AMD64_LINUX-gcc/m3cgc1.exe
-    % Target- is only a prefix on file names, not directories.
-    %
-    %   /cm3/bin/AMD64_LINUX/AMD64_LINUX-gcc/m3cgc1.exe
-    % The installed file is always renamed to cm3cg.
-    %
-    % Work on this more later.
-    %
-    if not defined("HOST")
-        HOST = TARGET
-    end
-    local ALTHOST = HOST
-    local ALTTARGET = TARGET
-    if equal (HOST, "NT386")
-      ALTHOST = "NT386GNU"
-    end
-    if equal (HOST, "SOLsun")
-      ALTHOST = "SOLgnu"
-    end
-    if equal (HOST, "SOLgnu")
-      ALTHOST = "SOLsun"
-    end
-    if equal (TARGET, "SOLsun")
-      ALTTARGET = "SOLgnu"
-    end
-    if equal (TARGET, "SOLgnu")
-      ALTTARGET = "SOLsun"
-    end
-    %
-    % NOTE that if you share one file system across multiple hosts, then
-    % host and target can get confused, if one is empty. For that reason,
-    % we should probe all variants where both are non-empty before we probe
-    % any where either is empty, but we don't.
-    %
-    foreach host in [ HOST & SL, HOST & "-", ALTHOST & SL, ALTHOST & "-", ""]
-        if not equal (host, "-")
-            foreach target in [ TARGET & SL, TARGET & "-", ALTTARGET & SL, ALTTARGET & "-", ""]
-                if not equal (target, "-")
-                    if not equal (target, "") or equal (HOST, TARGET)
-                        if not equal (host, "") or equal (HOST, TARGET)
-                            foreach root in [ m3cc, bin ]
-                                foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
-                                    foreach exe in [".exe", ""]
-                                        local a = root & host & target & gcc & exe
-                                        if not Cache contains a
-                                            % write("probing " & a & "\n")
-                                            if FileExists(a)
-                                                % write("using " & a & "\n")
-                                                m3back = "@" & a & " " & m3back_flags
-                                                return m3back
-                                            else
-                                                Cache{a} = 1
+        local bin = INSTALL_ROOT & SL & "bin" & SL
+        local m3cc = ROOT & SL & "m3-sys" & SL & "m3cc" & SL
+        local Cache = { }
+
+        %
+        % Not all these combinations are meant to be used,
+        % and the order isn't always right.
+        %
+        % We do not intend to look at, for example:
+        %   /home/jay/dev2/cm3/m3-sys/m3cc/AMD64_LINUX/AMD64_LINUX-gcc/m3cgc1.exe
+        % Target- is only a prefix on file names, not directories.
+        %
+        %   /cm3/bin/AMD64_LINUX/AMD64_LINUX-gcc/m3cgc1.exe
+        % The installed file is always renamed to cm3cg.
+        %
+        % Work on this more later.
+        %
+        if not defined("HOST")
+            HOST = TARGET
+        end
+        local ALTHOST = HOST
+        local ALTTARGET = TARGET
+        if equal (HOST, "NT386")
+          ALTHOST = "NT386GNU"
+        end
+        if equal (HOST, "SOLsun")
+          ALTHOST = "SOLgnu"
+        end
+        if equal (HOST, "SOLgnu")
+          ALTHOST = "SOLsun"
+        end
+        if equal (TARGET, "SOLsun")
+          ALTTARGET = "SOLgnu"
+        end
+        if equal (TARGET, "SOLgnu")
+          ALTTARGET = "SOLsun"
+        end
+        %
+        % NOTE that if you share one file system across multiple hosts, then
+        % host and target can get confused, if one is empty. For that reason,
+        % we should probe all variants where both are non-empty before we probe
+        % any where either is empty, but we don't.
+        %
+        foreach host in [ HOST & SL, HOST & "-", ALTHOST & SL, ALTHOST & "-", ""]
+            if not equal (host, "-")
+                foreach target in [ TARGET & SL, TARGET & "-", ALTTARGET & SL, ALTTARGET & "-", ""]
+                    if not equal (target, "-")
+                        if not equal (target, "") or equal (HOST, TARGET)
+                            if not equal (host, "") or equal (HOST, TARGET)
+                                foreach root in [ m3cc, bin ]
+                                    foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
+                                        foreach exe in [".exe", ""]
+                                            local a = root & host & target & gcc & exe
+                                            if not Cache contains a
+                                                % write("probing " & a & "\n")
+                                                if FileExists(a)
+                                                    % write("using " & a & "\n")
+                                                    m3back = "@" & a & " " & m3back_flags
+                                                    return m3back
+                                                else
+                                                    Cache{a} = 1
+                                                end
                                             end
                                         end
                                     end
