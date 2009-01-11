@@ -9,7 +9,7 @@ IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError,  RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent,
        Utime, Word, Upthread, Usched, Usem, Usignal,
-       Uucontext, Uerror, ThreadPThreadC;
+       Uerror, ThreadPThreadC;
 FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t, pthread_mutex_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER;
