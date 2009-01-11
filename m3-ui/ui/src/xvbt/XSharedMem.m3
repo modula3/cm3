@@ -9,7 +9,7 @@ UNSAFE MODULE XSharedMem;
 
 IMPORT Completion, Compl, ComplSeq, Ctypes, Picture, PictureRep, IP, M3toC,
        Point, Rect, Text, TrestleComm, VBT, X, XClient, XClientExt,
-       XClientF, XPicture, TrestleOnX, XScreenType, XShm;
+       XClientF, XPicture, TrestleOnX, XScreenType, XShm, Unix, Unetdb;
 
 (* New() exported by XSharedFree *)
 
@@ -83,16 +83,38 @@ PROCEDURE MakeCompletion (<*UNUSED*> im: T): Completion.T =
 (* }}} *)
 (* {{{ -- host name stuff -- *)
 
+(* This is a clone of IP.GetHostAddr that returns
+   TRUE if IP.GetHostAddr is likely to succeed and
+   FALSE if IP.GetHostAddr is likely to fail. *)
+VAR mu := NEW(MUTEX);
+
+PROCEDURE PredictIPGetHostAddrSuccess(): BOOLEAN =
+  VAR hname: ARRAY [0..255] OF CHAR;
+  BEGIN
+    LOCK mu DO
+      RETURN (Unix.gethostname(ADR(hname[0]), BYTESIZE(hname)) = 0)
+        AND (Unetdb.gethostbyname(ADR(hname[0])) # NIL);
+    END;
+  END PredictIPGetHostAddrSuccess;
+
 (* return TRUE if server and client are on same host *)
 PROCEDURE SameHost (trsl: XClient.T): BOOLEAN =
   VAR
     display                 := DisplayHost(trsl);
     displayAddr: IP.Address;
+
   BEGIN
     IF display = NIL THEN RETURN TRUE; END;
 
     TRY
       IF NOT IP.GetHostByName(display, displayAddr) THEN RETURN FALSE; END;
+
+      (* IP.GetHostAddr can return a fatal exception; try to avoid that
+         by predicting its success. *)
+      IF NOT PredictIPGetHostAddrSuccess() THEN
+        RETURN FALSE;
+      END;
+
       RETURN displayAddr = IP.GetHostAddr();
     EXCEPT
     | IP.Error => RETURN FALSE;
