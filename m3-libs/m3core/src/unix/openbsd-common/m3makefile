@@ -1,3 +1,2 @@
-Interface("Uucontext")
 Interface ("Uerror")
 interface("Usysdep")

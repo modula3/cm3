@@ -4,10 +4,7 @@
 
 INTERFACE Uucontext;
 
-IMPORT Usysdep;
-
 TYPE
-  sigset_t = Usysdep.sigset_t;
-  ucontext_t_star = Usysdep.ucontext_t_star;
+  ucontext_t_star = ADDRESS;
 
 END Uucontext.

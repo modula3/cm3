@@ -4,8 +4,8 @@
 
 INTERFACE Usysdep;
 
-FROM Ctypes IMPORT char, int, char_star, unsigned, void_star;
-FROM Cstdint IMPORT uint8_t, uint16_t, uint32_t, int32_t, int64_t;
+FROM Ctypes IMPORT int, char_star;
+FROM Cstdint IMPORT uint32_t, int32_t;
 
 (* INTERFACE Unix; *)
 
@@ -46,31 +46,9 @@ CONST
 
 (* INTERFACE Usignal; *)
 
-  SIGHUP = 1;
+CONST
   SIGINT = 2;
-  SIGQUIT = 3;
-  SIGABRT = 6;
   SIGKILL = 9;
-  SIGSEGV = 11;
-  SIGPIPE = 13;
-  SIGTERM = 15;
-
-  NSIG = 32;
-
-  (* flags in struct_sigaction *)
-  SA_RESTART = 2; (* Restart syscall on signal return. *)
-  SA_SIGINFO = 16_0040; (* three parameter signal callback vs. one parameter *)
-
-TYPE
-  SignalActionHandler = PROCEDURE (sig: int; sip: siginfo_t_star; uap: ucontext_t_star);
-  SignalHandler = PROCEDURE (sig: int);
-  siginfo_t_star = ADDRESS;
-
-  struct_sigaction = RECORD
-    sa_sigaction: SignalActionHandler; (* union of two function pointers *)
-    sa_mask     : sigset_t;
-    sa_flags    : int;
-  END;
 
 (* INTERFACE Usocket; *)
 
@@ -131,9 +109,7 @@ TYPE
   hostent_addrtype_t = int32_t;
   hostent_length_t = int32_t;
 
-(* INTERFACE Uucontext; *)
-
-  sigset_t = unsigned;
-  ucontext_t_star = void_star;
+(* RTMachine.i3 *)
+CONST SIG_SUSPEND = 31; (* SIGUSR2 *)
 
 END Usysdep.

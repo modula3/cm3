@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
 EnvFromMain is either char** from main, or char* GetEnvironmentStringsA from WinMain.
 Rather than make a coordinated compiler/runtime change, we just ignore
@@ -13,3 +17,7 @@ void* RTLinker__GetEnvironmentStrings (void* EnvFromMain)
     return EnvFromMain;
 #endif
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

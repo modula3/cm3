@@ -4,10 +4,14 @@
 
 #include <signal.h>
 #include <semaphore.h>
+#include <assert.h>
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define ZeroMemory(a, b) (memset((a), 0, (b)))
 
 typedef struct sigaction sigaction_t;
 
@@ -20,7 +24,7 @@ sigset_t mask;
 /* Signal based suspend/resume */
 sem_t ackSem;
 
-void ThreadPThreadC_SetupHandlers (void) =
+void ThreadPThreadC_SetupHandlers(void* SignalHandler, int sig)
 {
     sigaction_t act;
     sigaction_t oact;
@@ -33,7 +37,8 @@ void ThreadPThreadC_SetupHandlers (void) =
     assert(r == 0);
     sigfillset(&mask);
     assert(r == 0);
-    sigdelset(&mask, SIG);
+
+    sigdelset(&mask, sig);
     sigdelset(&mask, SIGINT);
     assert(r == 0);
     sigdelset(&mask, SIGQUIT);
@@ -45,9 +50,9 @@ void ThreadPThreadC_SetupHandlers (void) =
 
     act.sa_flags = SA_RESTART | SA_SIGINFO;
     act.sa_sigaction = SignalHandler;
-    sigfillset(&act.sa_mask)
+    sigfillset(&act.sa_mask);
     assert(r == 0);
-    sigaction(SIG, act, oact);
+    sigaction(sig, &act, &oact);
     assert(r == 0);
 }
 

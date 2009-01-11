@@ -170,7 +170,8 @@ def _MapTarget(a):
         "I386_NT" : "NT386",
         "I386_CYGWIN" : "NT386GNU",
         "PPC32_DARWIN" : "PPC_DARWIN",
-        "PPC32_LINUX" : "PPC_LINUX"
+        "PPC32_LINUX" : "PPC_LINUX",
+        "I386_FREEBSD" : "FreeBSD4",
     }.get(a) or a
 
 #-----------------------------------------------------------------------------
@@ -179,7 +180,7 @@ def _GetAllTargets():
 
     # legacy naming
 
-    Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6", "SOLsun", "SOLgnu" ]
+    Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4" ]
 
     for proc in [ "PPC", ]:
         for os in [ "OPENBSD", "NETBSD", "FREEBSD", "DARWIN", "LINUX", "NT" ]:
@@ -1210,31 +1211,52 @@ def Boot():
             "m3-libs/libm3/src/os/POSIX/OSConfigPosix.m3",
             "m3-libs/libm3/src/random/m3makefile",
             "m3-libs/m3core/src/m3makefile",
+            "m3-libs/m3core/src/Uwaitpid.quake",
+            "m3-libs/m3core/src/thread.quake",
             "m3-libs/m3core/src/C/m3makefile",
             "m3-libs/m3core/src/C/" + Target + "/m3makefile",
             "m3-libs/m3core/src/C/" + Common + "/m3makefile",
             "m3-libs/m3core/src/Csupport/m3makefile",
             "m3-libs/m3core/src/float/m3makefile",
             "m3-libs/m3core/src/runtime/m3makefile",
+            "m3-libs/m3core/src/runtime/common/m3makefile",
             "m3-libs/m3core/src/runtime/common/Compiler.tmpl",
+            "m3-libs/m3core/src/runtime/common/m3text.h",
+            "m3-libs/m3core/src/runtime/common/RTError.h",
+            "m3-libs/m3core/src/runtime/common/RTMachine.i3",
+            "m3-libs/m3core/src/runtime/common/RTProcess.h",
             "m3-libs/m3core/src/runtime/common/RTSignalC.c",
+            "m3-libs/m3core/src/runtime/common/RTSignalC.h",
+            "m3-libs/m3core/src/runtime/common/RTSignalC.i3",
+            "m3-libs/m3core/src/runtime/common/RTSignal.i3",
+            "m3-libs/m3core/src/runtime/common/RTSignal.m3",
             "m3-libs/m3core/src/runtime/" + Target + "/m3makefile",
             "m3-libs/m3core/src/runtime/" + Target + "/RTMachine.m3",
             "m3-libs/m3core/src/runtime/" + Target + "/RTSignal.m3",
             "m3-libs/m3core/src/runtime/" + Target + "/RTThread.m3",
             "m3-libs/m3core/src/text/TextLiteral.i3",
             "m3-libs/m3core/src/thread/m3makefile",
+            "m3-libs/m3core/src/thread/PTHREAD/m3makefile",
+            "m3-libs/m3core/src/thread/PTHREAD/ThreadPThread.m3",
+            "m3-libs/m3core/src/thread/PTHREAD/ThreadPThreadC.i3",
+            "m3-libs/m3core/src/thread/PTHREAD/ThreadPThreadC.c",
             "m3-libs/m3core/src/time/POSIX/m3makefile",
             "m3-libs/m3core/src/unix/m3makefile",
             "m3-libs/m3core/src/unix/linux-32/m3makefile",
             "m3-libs/m3core/src/unix/linux-64/m3makefile",
+            "m3-libs/m3core/src/unix/freebsd-common/m3makefile",
+            "m3-libs/m3core/src/unix/freebsd-common/Uerror.i3",
+            "m3-libs/m3core/src/unix/freebsd-common/Usysdep.i3",
+            "m3-libs/m3core/src/unix/freebsd-common/Uucontext.i3",
             "m3-libs/m3core/src/unix/Common/m3makefile",
             "m3-libs/m3core/src/unix/Common/m3unix.h",
             "m3-libs/m3core/src/unix/Common/Udir.i3",
             "m3-libs/m3core/src/unix/Common/UdirC.c",
+            "m3-libs/m3core/src/unix/Common/Usignal.i3",
             "m3-libs/m3core/src/unix/Common/Ustat.i3",
             "m3-libs/m3core/src/unix/Common/UstatC.c",
             "m3-libs/m3core/src/unix/Common/UtimeC.c",
+            "m3-libs/m3core/src/unix/Common/Uucontext.i3",
             "m3-sys/cminstall/src/config-no-install/SOLgnu",
             "m3-sys/cminstall/src/config-no-install/SOLsun",
             "m3-sys/cminstall/src/config-no-install/Solaris.common",
@@ -1247,23 +1269,12 @@ def Boot():
             "m3-sys/m3middle/src/Target.m3",
             "scripts/python/pylib.py",
             "m3-libs/m3core/src/C/" + Target + "/Csetjmp.i3",
-            "m3-libs/m3core/src/C/" + Target + "/Csignal.i3",
-            "m3-libs/m3core/src/C/" + Target + "/Cstdio.i3",
-            "m3-libs/m3core/src/C/" + Target + "/Cstring.i3",
             "m3-libs/m3core/src/C/" + Target + "/m3makefile",
             "m3-libs/m3core/src/C/" + Common + "/Csetjmp.i3",
             "m3-libs/m3core/src/C/" + Common + "/Csignal.i3",
             "m3-libs/m3core/src/C/" + Common + "/Cstdio.i3",
             "m3-libs/m3core/src/C/" + Common + "/Cstring.i3",
             "m3-libs/m3core/src/C/" + Common + "/m3makefile",
-            "m3-libs/m3core/src/C/" + Common + "/Udir.i3",
-            "m3-libs/m3core/src/C/" + Common + "/UdirC.c",
-            "m3-libs/m3core/src/C/" + Common + "/Uerror.i3.cpp",
-            "m3-libs/m3core/src/C/" + Common + "/UnixC.c",
-            "m3-libs/m3core/src/C/" + Common + "/Ustat.i3",
-            "m3-libs/m3core/src/C/" + Common + "/UstatC.c",
-            "m3-libs/m3core/src/C/" + Common + "/UtimeC.c",
-            "m3-libs/m3core/src/C/" + Common + "/Uutsname.i3.cpp",
             ]:
         source = os.path.join(Root, a)
         if FileExists(source):

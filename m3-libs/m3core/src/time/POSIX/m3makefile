@@ -11,6 +11,7 @@ readonly _DateImpls = {
   "ALPHA_OSF"  : "DateBsd",
   "AIX386"     : "DateBsd",
   "AMD64_DARWIN": "DateBsd",
+  "AMD64_FREEBSD": "DateBsd",
   "AMD64_LINUX": "DateBsd",
   "AP3000"     : "DateBsd",
   "ARM"        : "DateBsd",
