@@ -9,11 +9,12 @@ IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError,  RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent,
        Utime, Word, Upthread, Usched, Usem, Usignal,
-       Uucontext, Uerror;
+       Uucontext, Uerror, ThreadPThreadC;
 FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t, pthread_mutex_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER;
 FROM Compiler IMPORT ThisFile, ThisLine;
+FROM ThreadPThreadC IMPORT mask, ackSem;
 FROM Ctypes IMPORT int;
 FROM Utypes IMPORT size_t;
 
@@ -886,7 +887,6 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
   END ProcessOther;
 
 (* Signal based suspend/resume *)
-VAR ackSem: Usem.sem_t;
 
 CONST SIG = RTMachine.SIG_SUSPEND;
 
@@ -1111,7 +1111,6 @@ PROCEDURE StartWorld () =
     END;
   END StartWorld;
 
-VAR mask: Usignal.sigset_t;
 PROCEDURE SignalHandler (sig: int;
                          <*UNUSED*> sip: Usignal.siginfo_t_star;
                          <*UNUSED*> uap: Uucontext.ucontext_t_star) =
@@ -1139,24 +1138,13 @@ PROCEDURE SignalHandler (sig: int;
   END SignalHandler;
 
 PROCEDURE SetupHandlers () =
-  VAR act, oact: Usignal.struct_sigaction;
   BEGIN
     IF RTMachine.SuspendThread # NIL AND RTMachine.RestartThread # NIL THEN
       RETURN;
     END;
     <*ASSERT RTMachine.SuspendThread = NIL*>
     <*ASSERT RTMachine.RestartThread = NIL*>
-    WITH r = Usem.init(ackSem, 0, 0) DO <*ASSERT r=0*> END;
-    WITH r = Usignal.sigfillset(mask) DO <*ASSERT r=0*> END;
-    WITH r = Usignal.sigdelset(mask, SIG) DO <*ASSERT r=0*> END;
-    WITH r = Usignal.sigdelset(mask, Usignal.SIGINT) DO <*ASSERT r=0*> END;
-    WITH r = Usignal.sigdelset(mask, Usignal.SIGQUIT) DO <*ASSERT r=0*> END;
-    WITH r = Usignal.sigdelset(mask, Usignal.SIGABRT) DO <*ASSERT r=0*> END;
-    WITH r = Usignal.sigdelset(mask, Usignal.SIGTERM) DO <*ASSERT r=0*> END;
-    act.sa_flags := Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO);
-    act.sa_sigaction := SignalHandler;
-    WITH r = Usignal.sigfillset(act.sa_mask) DO <*ASSERT r=0*> END;
-    WITH r = Usignal.sigaction(SIG, act, oact) DO <*ASSERT r=0*> END;
+    ThreadPThreadC.SetupHandlers(SignalHandler, SIG);
   END SetupHandlers;
 
 (*----------------------------------------------------------- misc. stuff ---*)
