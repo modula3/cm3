@@ -7,8 +7,13 @@
 <*EXTERNAL*> UNSAFE INTERFACE ThreadPThreadC;
 
 FROM Usem IMPORT sem_t;
-FROM Usignal IMPORT SignalActionHandler, sigset_t;
+FROM Usignal IMPORT sigset_t;
 FROM Ctypes IMPORT int;
+
+(*---------------------------------------------------------------------------*)
+
+TYPE
+  SignalActionHandler = PROCEDURE (sig: int; sip: ADDRESS (*siginfo_t_star*); uap: ADDRESS (*Uucontext.ucontext_t_star*));
 
 (*---------------------------------------------------------------------------*)
 

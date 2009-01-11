@@ -1112,8 +1112,8 @@ PROCEDURE StartWorld () =
   END StartWorld;
 
 PROCEDURE SignalHandler (sig: int;
-                         <*UNUSED*> sip: Usignal.siginfo_t_star;
-                         <*UNUSED*> uap: Uucontext.ucontext_t_star) =
+                         <*UNUSED*> sip: ADDRESS (*Usignal.siginfo_t_star*);
+                         <*UNUSED*> uap: ADDRESS (*Uucontext.ucontext_t_star*)) =
   VAR
     errno := Cerrno.GetErrno();
     xx: INTEGER;
