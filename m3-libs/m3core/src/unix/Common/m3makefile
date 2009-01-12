@@ -21,6 +21,12 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
     Interface("Utime")
     Interface("Utypes")
 
+    if not equal(TARGET, "NT386") % later
+        Interface("Uerror")
+        c_source("Uerror")
+        h_source("UerrorX")
+    end
+
     %
     % pthreads related
     %

@@ -1,3 +1,2 @@
 Interface("Usocket")
 Interface("Usignal")
-Interface("Uerror")
