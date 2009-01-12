@@ -57,10 +57,9 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
     result := SchedulerPosix.WaitProcess (pid, status);
     IF result < 0 THEN 
       e := Cerrno.GetErrno();
-      CASE e OF
-      | Uerror.ECHILD => err := "The process specified in pid does not exist or is not a child of the calling process.";
-      | Uerror.EINTR => err := "WNOHANG was not set and an unblocked signal or a SIGCHLD was caught.";
-      | Uerror.EINVAL => err := "The options argument was invalid.";
+      IF (e = Uerror.ECHILD) THEN err := "The process specified in pid does not exist or is not a child of the calling process.";
+      ELSIF (e = Uerror.EINTR) THEN err := "WNOHANG was not set and an unblocked signal or a SIGCHLD was caught.";
+      ELSIF (e = Uerror.EINVAL) THEN err := "The options argument was invalid.";
       ELSE
         err := "Unexpected return value " & Fmt.Int(e);
       END;
