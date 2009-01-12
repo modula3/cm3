@@ -151,10 +151,5 @@ PROCEDURE UTimeFromTime (time: Time.T): UTime =
     RETURN UTime{floor, FLOOR(1.0D6 * (time - FLOAT(floor, LONGREAL)))};
   END UTimeFromTime;
 
-PROCEDURE DoesWaitPidYield() : BOOLEAN =
-BEGIN
-    RETURN TRUE;
-END DoesWaitPidYield;
-
 BEGIN
 END ThreadPScheduler.

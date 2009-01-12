@@ -11,7 +11,7 @@ UNSAFE MODULE ProcessPosixCommon EXPORTS ProcessPosixCommon, Process;
 
 IMPORT Atom, AtomList, Cerrno, Ctypes, Env, File, FilePosix, M3toC, OSError,
   OSErrorPosix, Pathname, RTLinker, RTProcess, RTSignal,
-  Scheduler, Text, SchedulerPosix, Unix, Uerror, Uwaitpid, Uprocess, Ustat,
+  Scheduler, Text, SchedulerPosix, Unix, Uerror, Uexec, Uprocess, Ustat,
   Utime, Uugid, Word, Process;
 
 CONST
@@ -34,7 +34,7 @@ PROCEDURE Create_ForkExec(
     oit, nit: Utime.struct_itimerval;
     forkResult, execResult: INTEGER;
     forkErrno, execErrno: Ctypes.int;
-    waitStatus: Uwaitpid.waitpid_status_t;
+    waitStatus: Ctypes.int;
     stdin_fd, stdout_fd, stderr_fd: INTEGER := NoFileDescriptor;
   BEGIN
     VAR path := GetPathToExec(cmd); BEGIN
@@ -111,7 +111,7 @@ PROCEDURE Create_ForkExec(
     (* The vfork succeeded.  Did the execve succeed? *)
     IF execResult < 0 THEN
       (* No, clean up child process. *)
-      EVAL Uwaitpid.waitpid(forkResult, waitStatus, 0);
+      EVAL Uexec.waitpid(forkResult, ADR(waitStatus), 0);
       OSErrorPosix.Raise0(execErrno)
     END;
 
@@ -273,10 +273,21 @@ PROCEDURE SetFd(fd: INTEGER; h: INTEGER(*File.T*)): BOOLEAN =
 EXCEPTION WaitAlreadyCalled;
 
 PROCEDURE Wait(p: T): ExitCode = <* FATAL WaitAlreadyCalled *> 
+  VAR
+    result, status: Ctypes.int;
+    statusT: Uexec.w_T;
+    statusM3: Uexec.w_M3;
   BEGIN
     IF NOT p.waitOk THEN RAISE WaitAlreadyCalled END;
     p.waitOk := FALSE;
-    RETURN MIN(LAST(ExitCode), SchedulerPosix.WaitProcess (p.pid));
+    result := SchedulerPosix.WaitProcess (p.pid, status);
+    <*ASSERT result > 0*>
+    statusT := LOOPHOLE(status, Uexec.w_T);
+    statusM3.w_Filler := 0;
+    statusM3.w_Coredump := statusT.w_Coredump;
+    statusM3.w_Termsig := statusT.w_Termsig;
+    statusM3.w_Retcode := statusT.w_Retcode;
+    RETURN MIN(LAST(Process.ExitCode), LOOPHOLE(statusM3,Uexec.w_A));
   END Wait;
 
 PROCEDURE Exit(n: ExitCode) =

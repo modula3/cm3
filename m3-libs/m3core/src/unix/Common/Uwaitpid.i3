@@ -129,7 +129,7 @@ TYPE
 CONST
     WNOHANG = 1; (* flag to waitpid, can be defined arbitrarily, system-independent, C wrapper translates *)
 
-<*EXTERNAL m3_waitpid*>
-PROCEDURE waitpid (pid: pid_t; (*out*) VAR status: waitpid_status_t; options: int := 0): pid_t;
+<*EXTERNAL waitpid*>
+PROCEDURE waitpid (pid: pid_t; (*out*) VAR status: int; options: int := 0): pid_t;
 
 END Uwaitpid.
