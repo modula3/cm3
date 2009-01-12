@@ -34,17 +34,8 @@ end
 
 %------------------------------------------------------------------------------
 
-%
-% pull in pieces of current m3core, while still being compatible with
-% older m3core for bootstrapping reasons
-%
-
-local M3Core = ".." & SL & ".." & SL & ".." & SL & "m3core" & SL & "src"
-
-include(M3Core & SL & "Uwaitpid.quake")
-include(M3Core & SL & "thread.quake")
-
-MakeUwaitpid("Sysutils_")
-MakeDoesWaitPidYield("Sysutils_")
+interface("Sysutils_DoesWaitPidYield")
+interface("Sysutils_Uwaitpid")
+c_source("Sysutils_Uwaitpid")
 
 %------------------------------------------------------------------------------
