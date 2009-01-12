@@ -24,7 +24,7 @@ time_t m3_get_timezone(void)
 }
 
 /* Are these correct? */
-#if !defined(__hpux) && !defined(__linux)
+#if !defined(__hpux) && !defined(__linux) && 0
 
 time_t m3_get_altzone(void)
 {
