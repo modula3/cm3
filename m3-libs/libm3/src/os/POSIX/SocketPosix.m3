@@ -128,29 +128,30 @@ PROCEDURE Connect (t: T;  READONLY ep: EndPoint)
         END;
       END;
 
-      CASE Cerrno.GetErrno() OF
-      | Uerror.EISCONN =>
+      WITH errno = Cerrno.GetErrno() DO
+        IF errno = Uerror.EISCONN THEN
           EXIT;
-      | Uerror.EADDRNOTAVAIL,
-        Uerror.ECONNREFUSED,
-        Uerror.EINVAL,
-        Uerror.ECONNRESET,
-        Uerror.EBADF =>
+        ELSIF  (errno = Uerror.EADDRNOTAVAIL)
+            OR (errno = Uerror.ECONNREFUSED)
+            OR (errno = Uerror.EINVAL)
+            OR (errno = Uerror.ECONNRESET)
+            OR (errno = Uerror.EBADF) THEN
           IOError (Refused);
-      | Uerror.ETIMEDOUT =>
+        ELSIF (errno = Uerror.ETIMEDOUT) THEN
           IOError (Timeout);
-      | Uerror.ENETUNREACH,
-        Uerror.EHOSTUNREACH,
-        Uerror.EHOSTDOWN,
-        Uerror.ENETDOWN =>
+        ELSIF  (errno = Uerror.ENETUNREACH)
+            OR (errno = Uerror.EHOSTUNREACH)
+            OR (errno = Uerror.EHOSTDOWN)
+            OR (errno = Uerror.ENETDOWN) THEN
           IOError (Unreachable);
-      | Uerror.EWOULDBLOCK,  <*NOWARN*>
-        Uerror.EAGAIN,       <*NOWARN*>
-        Uerror.EINPROGRESS,
-        Uerror.EALREADY =>
+        ELSIF (errno = Uerror.EWOULDBLOCK)
+           OR (errno = Uerror.EAGAIN)
+           OR (errno = Uerror.EINPROGRESS)
+           OR (errno = Uerror.EALREADY) THEN
           (* nope, not yet *)
-      ELSE
+        ELSE
           IOError (Unexpected);
+        END;
       END;
 
       EVAL SchedulerPosix.IOAlertWait (t.fd, FALSE);
@@ -169,15 +170,16 @@ PROCEDURE Accept (t: T): T
       fd := Usocket.accept (t.fd, ADR (name), ADR (len));
       IF fd >= 0 THEN EXIT; END;
 
-      CASE Cerrno.GetErrno() OF
-      | Uerror.EMFILE,
-        Uerror.ENFILE =>
+      WITH errno = Cerrno.GetErrno() DO
+        IF  (errno = Uerror.EMFILE)
+            OR (errno = Uerror.ENFILE) THEN
           IOError (NoResources);
-      | Uerror.EWOULDBLOCK,  <*NOWARN*>
-        Uerror.EAGAIN =>     <*NOWARN*>
+        ELSIF  (errno = Uerror.EWOULDBLOCK)
+            OR (errno = Uerror.EAGAIN) THEN
           (* nope, not yet *)
-      ELSE
+        ELSE
           IOError (Unexpected);
+        END;
       END;
 
       EVAL SchedulerPosix.IOAlertWait (t.fd, TRUE);
@@ -208,24 +210,25 @@ PROCEDURE ReceiveFrom (t: T;  VAR(*OUT*) ep: EndPoint;
         RETURN len;
       END;
 
-      CASE Cerrno.GetErrno() OF
-      | Uerror.ECONNRESET =>
+      WITH errno = Cerrno.GetErrno() DO
+        IF (errno = Uerror.ECONNRESET) THEN
           RETURN 0;
-      | Uerror.EPIPE,
-        Uerror.ENETRESET =>
+        ELSIF (errno = Uerror.EPIPE)
+           OR (errno = Uerror.ENETRESET) THEN
           IOError (ConnLost);
-      | Uerror.ETIMEDOUT =>
+        ELSIF (errno = Uerror.ETIMEDOUT) THEN
           IOError (Timeout);
-      | Uerror.ENETUNREACH,
-        Uerror.EHOSTUNREACH,
-        Uerror.EHOSTDOWN,
-        Uerror.ENETDOWN =>
+        ELSIF (errno = Uerror.ENETUNREACH)
+           OR (errno = Uerror.EHOSTUNREACH)
+           OR (errno = Uerror.EHOSTDOWN)
+           OR (errno = Uerror.ENETDOWN) THEN
           IOError (Unreachable);
-      | Uerror.EWOULDBLOCK, <*NOWARN*>
-        Uerror.EAGAIN =>    <*NOWARN*>
+        ELSIF (errno = Uerror.EWOULDBLOCK)
+           OR (errno = Uerror.EAGAIN) THEN
           IF NOT mayBlock THEN RETURN -1; END;
-      ELSE
+        ELSE
           IOError (Unexpected);
+        END;
       END;
 
       EVAL SchedulerPosix.IOWait (t.fd, TRUE);
@@ -240,24 +243,25 @@ PROCEDURE Read (t: T;  VAR(*OUT*) b: ARRAY OF File.Byte;  mayBlock := TRUE): INT
       len := Uuio.read (t.fd, p_b, NUMBER (b));
       IF len >= 0 THEN RETURN len; END;
 
-      CASE Cerrno.GetErrno() OF
-      | Uerror.ECONNRESET =>
+      WITH errno = Cerrno.GetErrno() DO
+        IF (errno = Uerror.ECONNRESET) THEN
           RETURN 0;
-      | Uerror.EPIPE,
-        Uerror.ENETRESET =>
+        ELSIF (errno = Uerror.EPIPE)
+           OR (errno = Uerror.ENETRESET) THEN
           IOError (ConnLost);
-      | Uerror.ETIMEDOUT =>
+        ELSIF (errno = Uerror.ETIMEDOUT) THEN
           IOError (Timeout);
-      | Uerror.ENETUNREACH,
-        Uerror.EHOSTUNREACH,
-        Uerror.EHOSTDOWN,
-        Uerror.ENETDOWN =>
+        ELSIF (errno = Uerror.ENETUNREACH)
+           OR (errno = Uerror.EHOSTUNREACH)
+           OR (errno = Uerror.EHOSTDOWN)
+           OR (errno = Uerror.ENETDOWN) THEN
           IOError (Unreachable);
-      | Uerror.EWOULDBLOCK, <*NOWARN*>
-        Uerror.EAGAIN =>    <*NOWARN*>
+        ELSIF (errno = Uerror.EWOULDBLOCK)
+           OR (errno = Uerror.EAGAIN) THEN
           IF NOT mayBlock THEN RETURN -1; END;
-      ELSE
+        ELSE
           IOError (Unexpected);
+        END;
       END;
 
       EVAL SchedulerPosix.IOWait (t.fd, TRUE);
@@ -280,23 +284,24 @@ PROCEDURE SendTo (t: T;  READONLY ep: EndPoint;
       IF len >= 0 THEN
         INC (p, len);  DEC (n, len);
       ELSE
-        CASE Cerrno.GetErrno() OF
-        | Uerror.EPIPE,
-          Uerror.ECONNRESET,
-          Uerror.ENETRESET =>
+        WITH errno = Cerrno.GetErrno() DO
+          IF     (errno = Uerror.EPIPE)
+              OR (errno = Uerror.ECONNRESET)
+              OR (errno = Uerror.ENETRESET) THEN
             IOError (ConnLost);
-        | Uerror.ETIMEDOUT =>
+          ELSIF (errno = Uerror.ETIMEDOUT) THEN
             IOError (Timeout);
-        | Uerror.ENETUNREACH,
-          Uerror.EHOSTUNREACH,
-          Uerror.EHOSTDOWN,
-          Uerror.ENETDOWN =>
+          ELSIF  (errno = Uerror.ENETUNREACH)
+              OR (errno = Uerror.EHOSTUNREACH)
+              OR (errno = Uerror.EHOSTDOWN)
+              OR (errno = Uerror.ENETDOWN) THEN
             IOError (Unreachable);
-        | Uerror.EWOULDBLOCK, <*NOWARN*>
-          Uerror.EAGAIN =>    <*NOWARN*>
-            (* OK, wait to write out a bit more... *)
-        ELSE
+          ELSIF  (errno = Uerror.EWOULDBLOCK)
+              OR (errno = Uerror.EAGAIN) THEN
+              (* OK, wait to write out a bit more... *)
+          ELSE
             IOError (Unexpected);
+          END;
         END;
       END;
 
@@ -320,23 +325,24 @@ PROCEDURE Write (t: T;  READONLY b: ARRAY OF File.Byte)
       IF len >= 0 THEN
         INC (p, len);  DEC (n, len);
       ELSE
-        CASE Cerrno.GetErrno() OF
-        | Uerror.EPIPE,
-          Uerror.ECONNRESET,
-          Uerror.ENETRESET =>
+        WITH errno = Cerrno.GetErrno() DO
+          IF     (errno = Uerror.EPIPE)
+              OR (errno = Uerror.ECONNRESET)
+              OR (errno = Uerror.ENETRESET) THEN
             IOError (ConnLost);
-        | Uerror.ETIMEDOUT =>
+          ELSIF (errno = Uerror.ETIMEDOUT) THEN
             IOError (Timeout);
-        | Uerror.ENETUNREACH,
-          Uerror.EHOSTUNREACH,
-          Uerror.EHOSTDOWN,
-          Uerror.ENETDOWN =>
+          ELSIF  (errno = Uerror.ENETUNREACH)
+              OR (errno = Uerror.EHOSTUNREACH)
+              OR (errno = Uerror.EHOSTDOWN)
+              OR (errno = Uerror.ENETDOWN) THEN
             IOError (Unreachable);
-        | Uerror.EWOULDBLOCK, <*NOWARN*>
-          Uerror.EAGAIN =>    <*NOWARN*>
+          ELSIF  (errno = Uerror.EWOULDBLOCK)
+              OR (errno = Uerror.EAGAIN) THEN
             (* OK, wait to write out a bit more... *)
-        ELSE
+          ELSE
             IOError (Unexpected);
+          END;
         END;
       END;
 
