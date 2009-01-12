@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.45 2008-12-17 14:44:38 jkrell Exp $
+% $Id: NT386.common,v 1.46 2009-01-12 22:42:27 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -502,6 +502,12 @@ if not FileExists (UseHand)
   UseHand = ""
 end
 
+UseUerror = LIB_INSTALL & SL & "Uerror" & Obj
+if not FileExists (UseUerror)
+  % for bootstrapping
+  UseHand = ""
+end
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -588,6 +594,7 @@ proc make_dll_gnu(options, objects, imported_libs, lib_file, def_file, dll_file,
                         "--large-address-aware",
                         objects,
                         EscapeList(imported_libs),
+                        escape(UseUerror),
                         %escape(UseHand),
                     ]),
             "2>&1",
@@ -610,9 +617,14 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local readonly LibResponseFile = GetResponseFileName()
     local LinkResponseFile = LibResponseFile
     local ShipHand = equal (lib, "m3core") and FileExists("hand" & Obj)
+    local ShipUerror = equal (lib, "m3core") and FileExists("Uerror" & Obj)
 
     if ShipHand
         UseHand = ""
+    end
+
+    if ShipUerror
+        UseUerror = ""
     end
 
     if shared
@@ -727,6 +739,9 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         install_derived(lib0_file)
         if ShipHand
             LibdExport("hand" & Obj)
+        end
+        if ShipUerror
+            LibdExport("Uerror" & Obj)
         end
     end
     return ret_code
