@@ -2,8 +2,7 @@
 c_source ("UtimeC")
 c_source ("UnixC")
 
-include(ROOT & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "Uwaitpid.quake")
-MakeUwaitpid("")
+interface("Uwaitpid")
 
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
