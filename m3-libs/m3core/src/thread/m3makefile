@@ -16,14 +16,3 @@ else
         include_dir (OS_TYPE)
     end
 end
-
-if KernelThreads
-    % pthreads or Win32 threads; not user threads
-    interface ("ThreadInternal")
-end
-
-if PosixKernelThreads
-    % pthreads or cygwin
-    implementation("ThreadPScheduler")
-    implementation("ThreadPWait")
-end
