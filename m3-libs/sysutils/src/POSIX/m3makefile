@@ -39,7 +39,7 @@ end
 % older m3core for bootstrapping reasons
 %
 
-local M3Core = ROOT & SL & "m3-libs" & SL & "m3core" & SL & "src"
+local M3Core = ".." & SL & ".." & SL & ".." & SL & "m3core" & SL & "src"
 
 include(M3Core & SL & "Uwaitpid.quake")
 include(M3Core & SL & "thread.quake")
