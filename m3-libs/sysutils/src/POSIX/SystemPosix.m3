@@ -26,10 +26,7 @@
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
 
-IMPORT Unix, Text, Process, Thread, Fmt, Cerrno, Uerror;
-FROM Ctypes IMPORT int;
-FROM Sysutils_Uwaitpid IMPORT waitpid_status_t, waitpid, WNOHANG;
-IMPORT Sysutils_DoesWaitPidYield;
+IMPORT Unix, Text, Ctypes, Uexec, Process, Fmt, Cerrno, Uerror, SchedulerPosix;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE Hostname() : TEXT =
@@ -48,79 +45,33 @@ PROCEDURE Hostname() : TEXT =
     RETURN "amnesiac";
   END Hostname;
 
-
-PROCEDURE WaitError(e: int) RAISES {Error} =
+PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
   VAR
+    result, status: Ctypes.int;
+    statusT: Uexec.w_T;
+    statusM3: Uexec.w_M3;
+    pid := Process.GetID(p);
+    e : Ctypes.int;
     err : TEXT;
   BEGIN
-    CASE e OF
-      Uerror.ECHILD => err := "The process specified in pid does not exist or is not a child of the calling process.";
-    | Uerror.EINTR => err := "WNOHANG was not set and an unblocked signal or a SIGCHLD was caught.";
-    | Uerror.EINVAL => err := "The options argument was invalid.";
-    ELSE
-      err := "Unexpected return value " & Fmt.Int(e);
-    END;
-    RAISE Error("Could not wait: " & err);
-  END WaitError;
-
-PROCEDURE WaitSlow(pid: int): Process.ExitCode RAISES {Error} =
-  VAR
-    result: int;
-    status: waitpid_status_t;
-  CONST Delay = 0.1D0;
-  BEGIN
-    LOOP
-      result := waitpid(pid, status, WNOHANG);
-      <* ASSERT(result >= -1) *>
-      IF result # 0 THEN
-        EXIT
-      END;
-
-      (* Let parent threads run while waiting for child process, to avoid deadlock
-      in case they depend on each other. Slow, because the child process might
-      end "soon", but we still wait a full Delay. *)
-
-      Thread.Pause(Delay)
-
-    END;
+    result := SchedulerPosix.WaitProcess (pid, status);
     IF result < 0 THEN 
-      WaitError(Cerrno.GetErrno());
-    END;
-    RETURN MIN(LAST(Process.ExitCode), status.w_Loophole);
-  END WaitSlow;
-
-PROCEDURE WaitFast(pid: int): Process.ExitCode RAISES {Error} =
-  VAR
-    result : int;
-    status : waitpid_status_t;
-    e : int;
-  BEGIN
-    LOOP
-      result := waitpid(pid, status, 0);
-      <* ASSERT((result = -1) OR (result > 0)) *>
-      IF result > 0 THEN
-        RETURN MIN(LAST(Process.ExitCode), status.w_Loophole);
+      e := Cerrno.GetErrno();
+      CASE e OF
+      | Uerror.ECHILD => err := "The process specified in pid does not exist or is not a child of the calling process.";
+      | Uerror.EINTR => err := "WNOHANG was not set and an unblocked signal or a SIGCHLD was caught.";
+      | Uerror.EINVAL => err := "The options argument was invalid.";
+      ELSE
+        err := "Unexpected return value " & Fmt.Int(e);
       END;
-      IF result < 0 THEN 
-        e := Cerrno.GetErrno();
-        IF e = Uerror.EINTR THEN
-          (* keep looping *)
-        ELSE
-          WaitError(e);
-        END;
-      END;
+      RAISE Error("Could not wait: " & err);
     END;
-  END WaitFast;
-
-PROCEDURE Wait (p: Process.T): Process.ExitCode RAISES {Error} =
-  VAR pid := Process.GetID(p);
-  BEGIN
-    (* IF SchedulerPosix.DoesWaitPidYield() THEN *)
-    IF Sysutils_DoesWaitPidYield.Value THEN
-        RETURN WaitFast(pid);
-    ELSE
-        RETURN WaitSlow(pid);
-    END;
+    statusT := LOOPHOLE(status, Uexec.w_T);
+    statusM3.w_Filler := 0;
+    statusM3.w_Coredump := statusT.w_Coredump;
+    statusM3.w_Termsig := statusT.w_Termsig;
+    statusM3.w_Retcode := statusT.w_Retcode;
+    RETURN MIN(LAST(Process.ExitCode), LOOPHOLE(statusM3,Uexec.w_A));
   END Wait;
 
 BEGIN

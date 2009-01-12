@@ -31,11 +31,3 @@ if equal(M3_VARIANT, "PM3")
 else
   implementation("FSUnix_cm3")
 end
-
-%------------------------------------------------------------------------------
-
-interface("Sysutils_DoesWaitPidYield")
-interface("Sysutils_Uwaitpid")
-c_source("Sysutils_Uwaitpid")
-
-%------------------------------------------------------------------------------
