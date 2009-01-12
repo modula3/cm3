@@ -23,20 +23,15 @@ time_t m3_get_timezone(void)
 #endif
 }
 
-/* Are these correct? */
-#if !defined(__hpux) && !defined(__linux) && 0
+/* correct? */
+#ifdef __CYGWIN__
 
 time_t m3_get_altzone(void)
 {
-#ifdef __CYGWIN__
-    /* Is this correct? */
     return m3_get_timezone();
-#else
-    return altzone;
-#endif
 }
 
-#endif
+#endif /* __CYGWIN__ */
 
 int m3_get_daylight(void)
 {
