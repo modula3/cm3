@@ -2,16 +2,7 @@
 (* All rights reserved.                                            *)
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
-(* This interface exists to bridge SchedulerPosix to
-two different implementations of Thread (pthreads and cygwin).
-
-Perhaps this all belongs in ThreadF, except perfOn, which
-could be ThreadFVar. (don't export variables outside of libraries)
-
-However, putting these here saves us from duplicating in two ThreadF.i3,
-and from exporting any of this.
-*)
-
+(* This interface exists to bridge SchedulerPosix to WIN32 threads *)
 INTERFACE ThreadInternal;
 
 FROM ThreadF IMPORT Id, State;

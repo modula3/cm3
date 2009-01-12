@@ -2,14 +2,16 @@
 (* All rights reserved.                                            *)
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
-(* This is the implementation for pthreads and Cygwin. *)
+(* This is the implementation for Cygwin. *)
 
-UNSAFE MODULE ThreadPScheduler EXPORTS SchedulerPosix;
+UNSAFE MODULE SchedulerPosix;
 
 FROM ThreadInternal IMPORT PerfChanged, PerfRunning, XTestAlert, perfOn;
 FROM ThreadF IMPORT State, MyId;
 FROM Thread IMPORT Alerted, Self, T;
 IMPORT Unix, Cerrno, Uerror, Utime, Time;
+FROM Ctypes IMPORT int;
+IMPORT Uexec;
 
 CONST FDSetSize = BITSIZE(INTEGER);
 
@@ -151,5 +153,17 @@ PROCEDURE UTimeFromTime (time: Time.T): UTime =
     RETURN UTime{floor, FLOOR(1.0D6 * (time - FLOAT(floor, LONGREAL)))};
   END UTimeFromTime;
 
+PROCEDURE WaitProcess (pid: int; VAR status: int): int =
+  (* ThreadPThread.m3 and ThreadPosix.m3 are very similar. *)
+  BEGIN
+    LOOP
+      WITH r = Uexec.waitpid(pid, ADR(status), 0) DO
+        <*ASSERT r # 0*>
+        IF r > 0 THEN RETURN r END;
+        IF Cerrno.GetErrno() # Uerror.EINTR THEN RETURN r END;
+      END;
+    END;
+  END WaitProcess;
+
 BEGIN
-END ThreadPScheduler.
+END SchedulerPosix.
