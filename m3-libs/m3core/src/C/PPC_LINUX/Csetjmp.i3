@@ -5,7 +5,6 @@
 INTERFACE Csetjmp;
 
 FROM Ctypes IMPORT int;
-IMPORT Usignal;
 
 TYPE
   jmp_buf = BITS 16_1280 FOR RECORD
