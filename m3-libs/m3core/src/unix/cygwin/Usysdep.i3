@@ -8,7 +8,7 @@ INTERFACE Usysdep;
 
 IMPORT Ctypes;
 FROM Ctypes IMPORT int, const_char_star, char_star_star;
-FROM Cstdint IMPORT uint16_t, uint32_t, int16_t, int32_t, int64_t;
+FROM Cstdint IMPORT uint16_t, uint32_t, int16_t, int32_t;
 
 (* This is the only system that uses this. *)
 CONST
