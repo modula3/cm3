@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: SystemPosix.m3,v 1.6 2009-01-12 09:20:32 hosking Exp $ *)
+ * $Id: SystemPosix.m3,v 1.7 2009-01-12 13:25:27 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
@@ -57,10 +57,9 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
     result := SchedulerPosix.WaitProcess (pid, status);
     IF result < 0 THEN 
       e := Cerrno.GetErrno();
-      CASE e OF
-      | Uerror.ECHILD => err := "The process specified in pid does not exist or is not a child of the calling process.";
-      | Uerror.EINTR => err := "WNOHANG was not set and an unblocked signal or a SIGCHLD was caught.";
-      | Uerror.EINVAL => err := "The options argument was invalid.";
+      IF (e = Uerror.ECHILD) THEN err := "The process specified in pid does not exist or is not a child of the calling process.";
+      ELSIF (e = Uerror.EINTR) THEN err := "WNOHANG was not set and an unblocked signal or a SIGCHLD was caught.";
+      ELSIF (e = Uerror.EINVAL) THEN err := "The options argument was invalid.";
       ELSE
         err := "Unexpected return value " & Fmt.Int(e);
       END;
