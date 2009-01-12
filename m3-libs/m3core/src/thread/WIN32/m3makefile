@@ -11,3 +11,8 @@
 Interface ("ThreadF")
 Interface ("ThreadContext")
 implementation ("ThreadWin32")
+
+if equal (TARGET, "NT386")
+	interface("ThreadInternal")
+	implementation("SchedulerPosix")
+end
