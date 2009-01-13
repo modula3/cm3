@@ -505,7 +505,7 @@ end
 UseUerror = LIB_INSTALL & SL & "Uerror" & Obj
 if not FileExists (UseUerror)
   % for bootstrapping
-  UseHand = ""
+  UseUerror = ""
 end
 
 %--------------------------------------------------------- library creation ---
