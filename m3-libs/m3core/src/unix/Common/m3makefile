@@ -2,7 +2,8 @@
 c_source ("UtimeC")
 c_source ("UnixC")
 
-Interface("Uwaitpid")
+Interface("Uexec")
+c_source("Uexec")
 
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
