@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: SystemPosix.m3,v 1.7 2009-01-12 13:25:27 jkrell Exp $ *)
+ * $Id: SystemPosix.m3,v 1.8 2009-01-13 11:06:24 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
@@ -48,8 +48,6 @@ PROCEDURE Hostname() : TEXT =
 PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
   VAR
     result, status: Ctypes.int;
-    statusT: Uexec.w_T;
-    statusM3: Uexec.w_M3;
     pid := Process.GetID(p);
     e : Ctypes.int;
     err : TEXT;
@@ -65,12 +63,8 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
       END;
       RAISE Error("Could not wait: " & err);
     END;
-    statusT := LOOPHOLE(status, Uexec.w_T);
-    statusM3.w_Filler := 0;
-    statusM3.w_Coredump := statusT.w_Coredump;
-    statusM3.w_Termsig := statusT.w_Termsig;
-    statusM3.w_Retcode := statusT.w_Retcode;
-    RETURN MIN(LAST(Process.ExitCode), LOOPHOLE(statusM3,Uexec.w_A));
+    Uexec.RepackStatus(status);
+    RETURN MIN(LAST(Process.ExitCode), status);
   END Wait;
 
 BEGIN
