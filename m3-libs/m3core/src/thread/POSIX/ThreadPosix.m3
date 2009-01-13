@@ -16,7 +16,7 @@ EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks;
 IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
        RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
        RTProcess, RTThread, RTIO, ThreadEvent, Time, TimePosix,
-       Unix, Usignal, Utime, Word, Uwaitpid;
+       Unix, Usignal, Utime, Word, Uexec;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 
@@ -1022,10 +1022,16 @@ PROCEDURE FreeDeadStacks () =
     END;
   END FreeDeadStacks;
 
-PROCEDURE DoesWaitPidYield() : BOOLEAN =
-BEGIN
-    RETURN FALSE;
-END DoesWaitPidYield.
+PROCEDURE WaitProcess (pid: int; VAR status: int): int =
+(* ThreadPThread.m3 and ThreadPosix.m3 are the same here except ThreadPosix.m3 calls Pause(). *)
+  BEGIN
+    LOOP
+      WITH r = Uexec.waitpid(pid, ADR(status), Uexec.WNOHANG);
+        IF r # 0 THEN RETURN r END;
+      END;
+      Pause(Delay);
+    END;
+  END WaitProcess;
 
 (*-------------------------------------------------- low-level coroutines ---*)
 
