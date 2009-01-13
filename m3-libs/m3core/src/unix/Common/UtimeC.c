@@ -4,7 +4,8 @@
 #include <sys/time.h>
 typedef struct itimerval itimerval_t;
 
-#if defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__NetBSD__)
+
+#if defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__APPLE__)
 #define M3BSD
 #endif
 
