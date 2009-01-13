@@ -7,7 +7,6 @@
 %      modified on Mon Jan 11 14:44:50 PST 1993 by muller
 
 Interface ("Udir")
-Interface ("Uexec")
 Module ("Usignal")
 Interface ("Ustat")
 Interface ("Unix")

@@ -10,7 +10,6 @@
 c_source  ("waitpidwrap")
 Interface ("Udir")
 Interface ("Uerror")
-Interface ("Uexec")
 Interface ("Ugrp")
 Interface ("Uipc")
 Interface ("Umman")

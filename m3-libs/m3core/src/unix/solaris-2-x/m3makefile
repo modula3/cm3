@@ -8,7 +8,6 @@
 
 Interface ("Udir")
 Interface ("Uerror")
-Interface ("Uexec")
 Interface ("Uframe")
 Interface ("Ugrp")
 Interface ("Uipc")

@@ -48,8 +48,6 @@ PROCEDURE Hostname() : TEXT =
 PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
   VAR
     result, status: Ctypes.int;
-    statusT: Uexec.w_T;
-    statusM3: Uexec.w_M3;
     pid := Process.GetID(p);
     e : Ctypes.int;
     err : TEXT;
@@ -65,12 +63,8 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
       END;
       RAISE Error("Could not wait: " & err);
     END;
-    statusT := LOOPHOLE(status, Uexec.w_T);
-    statusM3.w_Filler := 0;
-    statusM3.w_Coredump := statusT.w_Coredump;
-    statusM3.w_Termsig := statusT.w_Termsig;
-    statusM3.w_Retcode := statusT.w_Retcode;
-    RETURN MIN(LAST(Process.ExitCode), LOOPHOLE(statusM3,Uexec.w_A));
+    Uexec.RepackStatus(status);
+    RETURN MIN(LAST(Process.ExitCode), status);
   END Wait;
 
 BEGIN

@@ -275,19 +275,13 @@ EXCEPTION WaitAlreadyCalled;
 PROCEDURE Wait(p: T): ExitCode = <* FATAL WaitAlreadyCalled *> 
   VAR
     result, status: Ctypes.int;
-    statusT: Uexec.w_T;
-    statusM3: Uexec.w_M3;
   BEGIN
     IF NOT p.waitOk THEN RAISE WaitAlreadyCalled END;
     p.waitOk := FALSE;
     result := SchedulerPosix.WaitProcess (p.pid, status);
     <*ASSERT result > 0*>
-    statusT := LOOPHOLE(status, Uexec.w_T);
-    statusM3.w_Filler := 0;
-    statusM3.w_Coredump := statusT.w_Coredump;
-    statusM3.w_Termsig := statusT.w_Termsig;
-    statusM3.w_Retcode := statusT.w_Retcode;
-    RETURN MIN(LAST(Process.ExitCode), LOOPHOLE(statusM3,Uexec.w_A));
+    Uexec.RepackStatus(status);
+    RETURN MIN(LAST(Process.ExitCode), status);
   END Wait;
 
 PROCEDURE Exit(n: ExitCode) =
