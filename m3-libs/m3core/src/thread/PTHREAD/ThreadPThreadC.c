@@ -15,14 +15,12 @@ extern "C" {
 
 typedef struct sigaction sigaction_t;
 
-#define mask ThreadPThreadC_mask
-#define ackSem ThreadPThreadC_ackSem
 #define SetupHandlers ThreadPThreadC_SetupHandlers
 
-sigset_t mask;
+static sigset_t mask;
 
 /* Signal based suspend/resume */
-sem_t ackSem;
+static sem_t ackSem;
 
 void ThreadPThreadC_SetupHandlers(void* SignalHandler, int sig)
 {
@@ -55,6 +53,26 @@ void ThreadPThreadC_SetupHandlers(void* SignalHandler, int sig)
     assert(r == 0);
     r = sigaction(sig, &act, &oact);
     assert(r == 0);
+}
+
+int ThreadPThreadC_sem_wait(void)
+{
+    return sem_wait(&ackSem);
+}
+
+int ThreadPThreadC_sem_post(void)
+{
+    return sem_post(&ackSem);
+}
+
+int ThreadPThreadC_sem_getvalue(int* value)
+{
+    return sem_getvalue(&ackSem, value);
+}
+
+int ThreadPThreadC_sigsuspend (void)
+{
+    return sigsuspend(&mask);
 }
 
 #ifdef __cplusplus

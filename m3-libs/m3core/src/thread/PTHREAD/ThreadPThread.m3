@@ -8,13 +8,12 @@ EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks;
 IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError,  RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
-       Unix, Utime, Word, Upthread, Usched, Usem, Usignal,
+       Unix, Utime, Word, Upthread, Usched,
        Uerror, ThreadPThreadC, Uexec;
 FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t, pthread_mutex_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM ThreadPThreadC IMPORT mask, ackSem;
 FROM Ctypes IMPORT int;
 FROM Utypes IMPORT size_t;
 
@@ -953,9 +952,9 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
       LOOP
         IF StopThread(act) THEN EXIT END;
         IF SignalThread(act, ActState.Stopping) THEN
-          WITH r = Usem.getvalue(ackSem, acks) DO <*ASSERT r=0*> END;
+          WITH r = ThreadPThreadC.sem_getvalue(acks) DO <*ASSERT r=0*> END;
           IF acks > 0 THEN
-            WHILE Usem.wait(ackSem) # 0 DO
+            WHILE ThreadPThreadC.sem_wait() # 0 DO
               <*ASSERT Cerrno.GetErrno() = Uerror.EINTR*>
             END;
             EXIT;
@@ -971,9 +970,9 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
       LOOP
         IF StartThread(act) THEN EXIT END;
         IF SignalThread(act, ActState.Starting) THEN
-          WITH r = Usem.getvalue(ackSem, acks) DO <*ASSERT r=0*> END;
+          WITH r = ThreadPThreadC.sem_getvalue(acks) DO <*ASSERT r=0*> END;
           IF acks > 0 THEN
-            WHILE Usem.wait(ackSem) # 0 DO
+            WHILE ThreadPThreadC.sem_wait() # 0 DO
               <*ASSERT Cerrno.GetErrno() = Uerror.EINTR*>
             END;
             EXIT;
@@ -1122,7 +1121,7 @@ PROCEDURE StopWorld () =
       END;
     END;
     WHILE nLive > 0 DO
-      WITH r = Usem.getvalue(ackSem, acks) DO <*ASSERT r=0*> END;
+      WITH r = ThreadPThreadC.sem_getvalue(acks) DO <*ASSERT r=0*> END;
       IF acks = nLive THEN EXIT END;
       <*ASSERT acks < nLive*>
       IF wait_nsecs <= 0 THEN
@@ -1155,7 +1154,7 @@ PROCEDURE StopWorld () =
     (* drain semaphore *)
     FOR i := 0 TO nLive-1 DO
       LOOP
-        WITH r = Usem.wait(ackSem) DO
+        WITH r = ThreadPThreadC.sem_wait() DO
           IF r = 0 THEN EXIT END;
           IF Cerrno.GetErrno() = Uerror.EINTR THEN
             (*retry*)
@@ -1214,7 +1213,7 @@ PROCEDURE StartWorld () =
       END;
     END;
     WHILE nDead > 0 DO
-      WITH r = Usem.getvalue(ackSem, acks) DO <*ASSERT r=0*> END;
+      WITH r = ThreadPThreadC.sem_getvalue(acks) DO <*ASSERT r=0*> END;
       IF acks = nDead THEN EXIT END;
       <*ASSERT acks < nDead*>
       IF wait_nsecs <= 0 THEN
@@ -1247,7 +1246,7 @@ PROCEDURE StartWorld () =
     (* drain semaphore *)
     FOR i := 0 TO nDead-1 DO
       LOOP
-        WITH r = Usem.wait(ackSem) DO
+        WITH r = ThreadPThreadC.sem_wait() DO
           IF r = 0 THEN EXIT END;
           IF Cerrno.GetErrno() = Uerror.EINTR THEN
             (*retry*)
@@ -1280,11 +1279,11 @@ PROCEDURE SignalHandler (sig: int;
         ELSE me.sp := ADR(xx);
       END;
       me.state := ActState.Stopped;
-      WITH r = Usem.post(ackSem) DO <*ASSERT r=0*> END;
-      REPEAT EVAL Usignal.sigsuspend(mask) UNTIL me.state = ActState.Starting;
+      WITH r = ThreadPThreadC.sem_post() DO <*ASSERT r=0*> END;
+      REPEAT EVAL ThreadPThreadC.sigsuspend() UNTIL me.state = ActState.Starting;
       me.sp := NIL;
       me.state := ActState.Started;
-      WITH r = Usem.post(ackSem) DO <*ASSERT r=0*> END;
+      WITH r = ThreadPThreadC.sem_post() DO <*ASSERT r=0*> END;
     END;
     Cerrno.SetErrno(errno);
   END SignalHandler;
