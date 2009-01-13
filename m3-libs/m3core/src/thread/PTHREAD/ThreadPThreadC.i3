@@ -6,8 +6,6 @@
 
 <*EXTERNAL*> UNSAFE INTERFACE ThreadPThreadC;
 
-FROM Usem IMPORT sem_t;
-FROM Usignal IMPORT sigset_t;
 FROM Ctypes IMPORT int;
 
 (*---------------------------------------------------------------------------*)
@@ -17,10 +15,21 @@ TYPE
 
 (*---------------------------------------------------------------------------*)
 
-<*EXTERNAL "ThreadPThreadC_mask"*> VAR mask : sigset_t;
-<*EXTERNAL "ThreadPThreadC_ackSem"*> VAR ackSem : sem_t;
-
 <*EXTERNAL "ThreadPThreadC_SetupHandlers"*> PROCEDURE SetupHandlers(SignalHandler : SignalActionHandler; sig : int);
+
+(*---------------------------------------------------------------------------*)
+
+(* the semaphore is implied *)
+
+<*EXTERNAL "ThreadPThreadC_sem_wait"*> PROCEDURE sem_wait (): int;
+<*EXTERNAL "ThreadPThreadC_sem_post"*> PROCEDURE sem_post (): int;
+<*EXTERNAL "ThreadPThreadC_sem_getvalue"*> PROCEDURE sem_getvalue (VAR value: int): int;
+
+(*---------------------------------------------------------------------------*)
+
+(* the signal set is implied *)
+
+<*EXTERNAL "ThreadPThreadC_sigsuspend"*> PROCEDURE sigsuspend (): int;
 
 (*---------------------------------------------------------------------------*)
 
