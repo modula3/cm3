@@ -1024,9 +1024,10 @@ PROCEDURE FreeDeadStacks () =
 
 PROCEDURE WaitProcess (pid: int; VAR status: int): int =
 (* ThreadPThread.m3 and ThreadPosix.m3 are the same here except ThreadPosix.m3 calls Pause(). *)
+  CONST Delay = 0.1D0;
   BEGIN
     LOOP
-      WITH r = Uexec.waitpid(pid, ADR(status), Uexec.WNOHANG);
+      WITH r = Uexec.waitpid(pid, ADR(status), Uexec.WNOHANG) DO
         IF r # 0 THEN RETURN r END;
       END;
       Pause(Delay);
