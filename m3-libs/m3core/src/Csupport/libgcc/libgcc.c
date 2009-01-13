@@ -25,6 +25,13 @@ NT386 linking to NT386GNU /cm3/lib/hand.obj, which should probably move to eithe
     /cm3/lib/target/hand.obj, probably the first.
 */
 
+/* otherwise we get:
+libtool: file: libgcc.o has no symbols
+*/
+void m3_quash_darwin_libtool_warning_that_libgcc_has_no_symbols(void)
+{
+}
+
 #ifndef __GNUC__
 
 typedef int word_type;
