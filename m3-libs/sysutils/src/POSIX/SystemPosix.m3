@@ -26,7 +26,8 @@
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
 
-IMPORT Unix, Text, Ctypes, Uexec, Process, Fmt, Cerrno, Uerror, SchedulerPosix;
+IMPORT Unix, Text, Ctypes, Uexec, Process, Fmt, Cerrno, Uerror;
+IMPORT (*SchedulerPosix*) Word;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE Hostname() : TEXT =
@@ -52,7 +53,11 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
     e : Ctypes.int;
     err : TEXT;
   BEGIN
+(* Use this once m3core is new enough.
     result := SchedulerPosix.WaitProcess (pid, status);
+*)
+    (* 0 should be WNOHANG on user threads platforms, which there are presently none of *)
+    result := Uexec.waitpid (pid, ADR(status), 0);
     IF result < 0 THEN 
       e := Cerrno.GetErrno();
       IF (e = Uerror.ECHILD) THEN err := "The process specified in pid does not exist or is not a child of the calling process.";
@@ -63,7 +68,13 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
       END;
       RAISE Error("Could not wait: " & err);
     END;
+(* Use this once m3core is new enough.
     Uexec.RepackStatus(status);
+*)
+    (* ensure non-zero implies lower bits non-zero *)
+    IF (Word.And(status, 16_FFFFFF00) # 0) AND (Word.And(status, 16_FF) = 0) THEN
+      status := 1;
+    END;
     RETURN MIN(LAST(Process.ExitCode), status);
   END Wait;
 
