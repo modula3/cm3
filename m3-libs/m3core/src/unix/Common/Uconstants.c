@@ -9,6 +9,8 @@
 #include <stddef.h>
 #include <errno.h>
 #include <signal.h>
+#include <fcntl.h>
+#include <sys/socket.h>
 
 /* enable this and preprocess file to get approximate *.i3 contents, fix them in up in editor */
 #if 0
