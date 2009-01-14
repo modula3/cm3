@@ -13,6 +13,8 @@ IMPORT Usysdep;
 CONST
   MaxPathLen = Usysdep.MaxPathLen;
 
+(* http://www.opengroup.org/onlinepubs/9699919799/basedefs/sys_stat.h.html *)
+
   MSETUID = Usysdep.MSETUID;
   MSETGID = Usysdep.MSETGID;
   MSTICKY = Usysdep.MSTICKY;

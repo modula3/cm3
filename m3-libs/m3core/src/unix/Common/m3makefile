@@ -24,7 +24,7 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
 
     if not equal(TARGET, "NT386") % later
         Interface("Uerror")
-        c_source("Uerror")
+        c_source("Uconstants")
         h_source("UerrorX")
     end
 

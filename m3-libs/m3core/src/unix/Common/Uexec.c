@@ -8,8 +8,6 @@
 #include <assert.h>
 #include <stddef.h>
 
-const int Uexec_WNOHANG = WNOHANG;
-
 void Uexec_RepackStatus(int* var_status)
 {
     int status;
