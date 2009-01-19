@@ -60,11 +60,13 @@ If (x) = -1 generates a warning, try (memset(&x, -1, sizeof(x)), x) */
 #define __int64 long long
 #endif
 
-#define ALIGN_OF(x) (sizeof(struct {char a; x b;}) - sizeof(x))
+#define ALIGN_OF_TYPE(x) (sizeof(struct {char a; x b;}) - sizeof(x))
 
 typedef unsigned U;
 
 FILE* LogFile;
+
+BOOL TryCompile();
 
 #if __STDC__
 void Print(char* Format, ...)
@@ -226,6 +228,121 @@ void SanityCheck()
     }
 }
 
+typedef struct _Field_t {
+    char* Name; /* initialize this */
+    size_t Size; /* filled in at runtime */
+    size_t Offset; /* filled in at runtime */
+    char* Type; /* filled in at runtime */
+} Field_t;
+
+typedef struct _Struct_t {
+    Field_t* Fields;
+    size_t NumberOfFields;
+    /* CONSIDER: OptionalFields, and #define HAVE_NativeName_FieldName for what is present. */
+    char* NativeName;
+    char* MyName;
+} Struct_t;
+
+void ReconstituteStruct(Prefix, Struct, FilePath)
+    char* Prefix;
+    Struct_t* Struct;
+    char* FilePath;
+/*
+Given a type declared in Prefix, write out FilePath that redeclares, containing
+the fields identified by Struct, and any necessary padding for fields not
+listed in Struct. Prefix should declare it as NativeName. FilePath
+will declare it as MyName.
+
+Methodology:
+    Write out a program that writes out what it can discover about the type.
+*/
+{
+    size_t i;
+    size_t j;
+    char* a[60];
+    char* Source;
+    char* NativeName = Struct->NativeName;
+    char* MyName = Struct->MyName ? Struct->MyName : Struct->NativeName;
+
+    unlink(FilePath);
+
+    /* Make sure Prefix compiles. */
+
+    if (TryCompile(Prefix) == FALSE)
+    {
+        printf("ReconstituteStruct unable to compile prefix\n");
+        exit(1);
+    }
+
+    for (i = 0 ; FilePath[i] ; ++i)
+    {
+        if (FilePath[i] == '\\')
+            FilePath[i] = '/';
+    }
+
+    for (i = 0 ; i != Struct->NumberOfFields ; ++i)
+    {
+        j = 0;
+        a[j++] = Prefix;
+        a[j++] = "\n";
+        a[j++] = "#include <stdio.h>\n";
+        a[j++] = "#include <stddef.h>\n"; /* offsetof */
+        a[j++] = "#define SIZEOF_FIELD(struc, field) (sizeof((struc*)0)->field)\n";
+        a[j++] = "#define ALIGN_OF_TYPE(x) (sizeof(struct {char a; x b;}) - sizeof(x))\n";
+        a[j++] = "typedef unsigned U;\n";
+        a[j++] = "int main()\n";
+        a[j++] = "{\n";
+        a[j++] = "  FILE* File;\n";
+        a[j++] = "  File = fopen(\"";
+        a[j++] = FilePath;
+        a[j++] = "\", \"a\");\n";
+
+        if (i == 0)
+        {
+            a[j++] = "fprintf(File, \"sizeof(%s):\", \"";
+            a[j++] = NativeName;
+            a[j++] = "\");\n";
+            a[j++] = "  fprintf(File, \"%u\\n\", (U)sizeof(";
+            a[j++] = NativeName;
+            a[j++] = "));\n";
+
+            a[j++] = "fprintf(File, \"ALIGN_OF_TYPE(%s):\", \"";
+            a[j++] = NativeName;
+            a[j++] = "\");\n";
+            a[j++] = "  fprintf(File, \"%u\\n\", (U)ALIGN_OF_TYPE(";
+            a[j++] = NativeName;
+            a[j++] = "));\n";
+        }
+
+        a[j++] = "fprintf(File, \"offsetof(%s, %s):\", \"";
+        a[j++] = NativeName;
+        a[j++] = "\", \"";
+        a[j++] = Struct->Fields[i].Name;
+        a[j++] = "\");\n";
+        a[j++] = "  fprintf(File, \"%u\\n\", (U)offsetof(";
+        a[j++] = NativeName;
+        a[j++] = ", ";
+        a[j++] = Struct->Fields[i].Name;
+        a[j++] = "));\n";
+
+        a[j++] = "fprintf(File, \"SIZEOF_FIELD(%s, %s):\", \"";
+        a[j++] = NativeName;
+        a[j++] = "\", \"";
+        a[j++] = Struct->Fields[i].Name;
+        a[j++] = "\");\n";
+        a[j++] = "  fprintf(File, \"%u\\n\", (U)SIZEOF_FIELD(";
+        a[j++] = NativeName;
+        a[j++] = ", ";
+        a[j++] = Struct->Fields[i].Name;
+        a[j++] = "));\n";
+
+        a[j++] = "return 0;\n}\n";
+        Source = ConcatN(a, j);
+        TryCompileAndLinkAndRun(Source);
+        free(Source);
+    }
+}
+
 void DefineOpaqueType(Name, Size, Align)
     char* Name;
     size_t Size;
@@ -243,35 +360,35 @@ void DefineOpaqueType(Name, Size, Align)
         exit(1);
     }
 
-    if (Size == sizeof(void*) && Align == ALIGN_OF(void*))
+    if (Size == sizeof(void*) && Align == ALIGN_OF_TYPE(void*))
     {
         Print("%s = INTEGER; (* opaque *)\n", Name);
         return;
     }
-    if (Size == sizeof(__int64) && Align == ALIGN_OF(__int64))
+    if (Size == sizeof(__int64) && Align == ALIGN_OF_TYPE(__int64))
     {
         Print("%s = LONGINT; (* opaque *)\n", Name);
         return;
     }
-    if (Size == sizeof(int) && Align == ALIGN_OF(int))
+    if (Size == sizeof(int) && Align == ALIGN_OF_TYPE(int))
     {
         Print("%s = int32_t; (* opaque *)\n", Name);
         return;
     }
-    if (Align == ALIGN_OF(void*))
+    if (Align == ALIGN_OF_TYPE(void*))
         Element = "INTEGER";
-    else if (Align == ALIGN_OF(__int64))
+    else if (Align == ALIGN_OF_TYPE(__int64))
         Element = "LONGINT";
-    else if (Align > ALIGN_OF(__int64))
+    else if (Align > ALIGN_OF_TYPE(__int64))
     {
         Print("WARNING: %s alignment lowered from %u to LONGINT\n", Name, (U)Align);
         Element = "LONGINT";
     }
-    else if (Align == ALIGN_OF(int))
+    else if (Align == ALIGN_OF_TYPE(int))
         Element = "uint32_t";
-    else if (Align == ALIGN_OF(short))
+    else if (Align == ALIGN_OF_TYPE(short))
         Element = "uint16_t";
-    else if (Align == ALIGN_OF(char))
+    else if (Align == ALIGN_OF_TYPE(char))
         Element = "uint8_t";
     else
     {
@@ -282,9 +399,9 @@ void DefineOpaqueType(Name, Size, Align)
 }
 
 #ifdef __STDC__
-#define DEFINE_OPAQUE_TYPE(name) DefineOpaqueType(#name, sizeof(name), ALIGN_OF(name))
+#define DEFINE_OPAQUE_TYPE(name) DefineOpaqueType(#name, sizeof(name), ALIGN_OF_TYPE(name))
 #else
-#define DEFINE_OPAQUE_TYPE(name) DefineOpaqueType("name", sizeof(name), ALIGN_OF(name))
+#define DEFINE_OPAQUE_TYPE(name) DefineOpaqueType("name", sizeof(name), ALIGN_OF_TYPE(name))
 #endif
 
 void DefineIntegerType(Name, Size, Signed, Align)
@@ -303,9 +420,9 @@ void DefineIntegerType(Name, Size, Signed, Align)
 }
 
 #ifdef __STDC__
-#define DEFINE_INTEGER_TYPE(x) DefineIntegerType(#x, sizeof(x), IS_TYPE_SIGNED(x), ALIGN_OF(x))
+#define DEFINE_INTEGER_TYPE(x) DefineIntegerType(#x, sizeof(x), IS_TYPE_SIGNED(x), ALIGN_OF_TYPE(x))
 #else
-#define DEFINE_INTEGER_TYPE(x) DefineIntegerType("x", sizeof(x), IS_TYPE_SIGNED(x), ALIGN_OF(x))
+#define DEFINE_INTEGER_TYPE(x) DefineIntegerType("x", sizeof(x), IS_TYPE_SIGNED(x), ALIGN_OF_TYPE(x))
 #endif
 
 void DefineIntegerFieldType(struc, field, myname, Size, Signed)
@@ -757,6 +874,10 @@ BOOL CheckGlobalVariable(Prefix, Type, Name)
             Source = ConcatN(a, i);
             Result = TryCompileAndLinkAndRun(Source);
             free(Source);
+
+            /* loop through "all possible types", int, long, float, until assigning
+            the address of a field to such a pointer successfuly compiles; user could
+            feed us list of possible types, such as other structs. */
         }
     } while(0);
 
@@ -1007,7 +1128,7 @@ do { \
         in_addr2_t a;
         in_addr_t b;
         CHECK(sizeof(a) == sizeof(b));
-        CHECK(ALIGN_OF(in_addr2_t) == ALIGN_OF(in_addr_t));
+        CHECK(ALIGN_OF_TYPE(in_addr2_t) == ALIGN_OF_TYPE(in_addr_t));
         a.addr = 1234;
         b.s_addr = 1234;
         CHECK(memcmp(&a, &b, sizeof(a)) == 0);
@@ -1025,12 +1146,12 @@ do { \
         /* This could be relaxed but our memcmps below are sloppy. */
         CHECK(sizeof(len) == sizeof(nolen));
         CHECK(sizeof(len) == sizeof(a));
-        CHECK(ALIGN_OF(sockaddr_in_len_t) == ALIGN_OF(sockaddr_in_nolen_t));
-        CHECK(ALIGN_OF(sockaddr_in_len_t) == ALIGN_OF(sockaddr_in_t));
+        CHECK(ALIGN_OF_TYPE(sockaddr_in_len_t) == ALIGN_OF_TYPE(sockaddr_in_nolen_t));
+        CHECK(ALIGN_OF_TYPE(sockaddr_in_len_t) == ALIGN_OF_TYPE(sockaddr_in_t));
 
         /* A more correct check. */
         CHECK((sizeof(a) == sizeof(len)) || (sizeof(a) == sizeof(nolen)));
-        CHECK((ALIGN_OF(sockaddr_in_t) == ALIGN_OF(sockaddr_in_len_t)) || (ALIGN_OF(sockaddr_in_t) == ALIGN_OF(sockaddr_in_nolen_t)));
+        CHECK((ALIGN_OF_TYPE(sockaddr_in_t) == ALIGN_OF_TYPE(sockaddr_in_len_t)) || (ALIGN_OF_TYPE(sockaddr_in_t) == ALIGN_OF_TYPE(sockaddr_in_nolen_t)));
 
         CHECK((sizeof(a.sin_family) == 2) || (sizeof(a.sin_family) == 1));
         CHECK(sizeof(a.sin_port) == 2);
@@ -1096,6 +1217,35 @@ do { \
             exit(1);
         }
 #endif
+    }
+
+    {
+        Field_t Fields[30];
+        size_t i;
+        Struct_t Struct;
+        char* Prefix;
+
+        memset(&Struct, 0, sizeof(Struct));
+        memset(&Fields, 0, sizeof(Fields));
+        
+        Struct.NativeName = "stat_t";
+        Prefix = "#include <sys/stat.h>\ntypedef struct stat stat_t;\n";
+        Struct.MyName = "mystat_t";
+        i = 0;
+        Fields[i++].Name = "st_size";
+        Fields[i++].Name = "st_dev";
+        Fields[i++].Name = "st_ino";
+        Fields[i++].Name = "st_mode";
+        Fields[i++].Name = "st_nlink";
+        Fields[i++].Name = "st_nlink";
+        Fields[i++].Name = "st_uid";
+        Fields[i++].Name = "st_uid";
+        Fields[i++].Name = "st_gid";
+        Fields[i++].Name = "st_rdev";
+        Fields[i++].Name = "st_size";
+        Struct.Fields = Fields;
+        Struct.NumberOfFields = i;
+        ReconstituteStruct(Prefix, &Struct, "mystat.h");
     }
 
     Print("done\n");
