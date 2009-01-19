@@ -258,6 +258,9 @@ if Config != "NT386":
     for a in glob.glob(os.path.join(InstallRoot, "lib", "libm3gcdefs.*")):
         CopyFile(a, NewLib) or FatalError()
 
+for a in glob.glob(os.path.join(InstallRoot, "lib", "*.obj")):
+    CopyFile(a, NewLib) or FatalError()
+
 #
 # cm3 is run out of %path%, but mklib is not, so we have to copy it.
 #
@@ -277,6 +280,10 @@ def Setup(ExistingCompilerRoot, NewRoot):
         CopyRecursive(InstallRoot_Min, NewRoot) or FatalError()
     else:
         CopyCompiler(ExistingCompilerRoot, NewRoot) or FatalError()
+        NewLib = os.path.join(NewRoot, "lib")
+        CreateDirectory(NewLib)
+        for a in glob.glob(os.path.join(ExistingCompilerRoot, "lib", "*.obj")):
+            CopyFile(a, NewLib) or FatalError()
 
     CopyConfigForDistribution(NewRoot) or sys.exit(1)
 
