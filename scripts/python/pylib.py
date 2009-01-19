@@ -2032,6 +2032,10 @@ def DeleteFile(a):
 
 def CreateDirectory(a):
     if not os.path.isdir(a):
+        Command = "mkdir"
+        if os.name != "nt":
+            Command = "mkdir -p"
+        print(Command + " " + a)
         os.makedirs(a)
     return True
 
@@ -2062,7 +2066,7 @@ def CopyFile(From, To):
     CopyCommand = "copy"
     if os.name != "nt":
         CopyCommand = "cp -Pv"
-    #print(CopyCommand + " " + From + " " + To)
+    print(CopyCommand + " " + From + " " + To)
     shutil.copy(From, To)
     return True
 
@@ -2111,14 +2115,14 @@ def CopyConfigForDistribution(To):
     To = os.path.join(To, "bin")
     for File in glob.glob(os.path.join(a, "config", Target + "*")):
         if os.path.isfile(File):
-            print(File + " => " + To + "\n")
+            #print(File + " => " + To + "\n")
             CopyFile(File, To)
     for File in glob.glob(os.path.join(a, "config-no-install", Target + "*")):
         if os.path.isfile(File):
-            print(File + " => " + To + "\n")
+            #print(File + " => " + To + "\n")
             CopyFile(File, To)
     for b in ["Unix.common", "cm3cfg.common"]:
-        print(b + " => " + To + "\n")
+        #print(b + " => " + To + "\n")
         CopyFile(os.path.join(a, "config-no-install", b), To)
     open(os.path.join(To, "cm3.cfg"), "w").write("include(\"" + Config + "\")\n")
     return True
