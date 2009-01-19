@@ -65,7 +65,13 @@ If (x) = -1 generates a warning, try (memset(&x, -1, sizeof(x)), x) */
 
 typedef unsigned U;
 
-FILE* LogFile;
+FILE* LogFile = stdout;
+
+/* Hypothetically would change these for a C generating mode.
+But the right way to implement all this is probably to output XML and then apply an XSL style sheet,
+but that would really bloat up the implementation. */
+char* BeginComment = "(*";
+char* EndComment = "*)";
 
 BOOL TryCompile();
 
@@ -363,17 +369,17 @@ void DefineOpaqueType(Name, Size, Align)
 
     if (Size == sizeof(void*) && Align == ALIGN_OF_TYPE(void*))
     {
-        Print("%s = INTEGER; (* opaque *)\n", Name);
+        Print("%s = INTEGER; %s opaque %s\n", Name, BeginComment, EndComment);
         return;
     }
     if (Size == sizeof(__int64) && Align == ALIGN_OF_TYPE(__int64))
     {
-        Print("%s = LONGINT; (* opaque *)\n", Name);
+        Print("%s = LONGINT; %s opaque %s\n", Name, BeginComment, EndComment);
         return;
     }
     if (Size == sizeof(int) && Align == ALIGN_OF_TYPE(int))
     {
-        Print("%s = int32_t; (* opaque *)\n", Name);
+        Print("%s = int32_t; %s opaque %s\n", Name, BeginComment, EndComment);
         return;
     }
     if (Align == ALIGN_OF_TYPE(void*))
@@ -435,7 +441,7 @@ void DefineIntegerType(Name, Size, Signed, Align)
     size_t Align;
 {
     Align *= 8;
-    Print("%s = %s; (* align = %u *)\n", Name, GetIntegerType(Size, Signed), (U)Align);
+    Print("%s = %s; %s align = %u %s\n", Name, GetIntegerType(Size, Signed), BeginComment, (U)Align, EndComment);
 }
 
 #ifdef __STDC__
@@ -451,7 +457,7 @@ void DefineIntegerFieldType(struc, field, myname, Size, Signed)
     size_t Size;
     BOOL Signed;
 {
-    Print("%s = %s; (* %s.%s *)\n", myname, GetIntegerType(Size, Signed), struc, field);
+    Print("%s = %s; %s %s.%s %s\n", myname, GetIntegerType(Size, Signed), BeginComment, struc, field, EndComment);
 }
 
 #ifdef __STDC__
@@ -678,13 +684,27 @@ void FindDevNull()
 void FindCompiler()
 {
     size_t i = 0;
+    char* CFlags;
 
     if (Compiler)
         return;
 
     Print("looking for C compiler..");
+
+    if (CFlags = getenv("CFLAGS"))
+    {
+        Print("using environment variable CFLAGS: %s\n", CFlags);
+    }
+
+    if (Compiler = getenv("CC"))
+    {
+        Print("using CC environment variable: %s\n", Compiler);
+        Compiler = CFlags ? Concat3(Compiler, " ", CFlags) : Compiler;
+        return;
+    }
     for (i = 0 ; Compiler = PossibleCompilers[i] ; ++i)
     {
+        Compiler = CFlags ? Concat3(Compiler, " ", CFlags) : Compiler;
         if (TryCompile("int main() { return 0; }\n"))
         {
             Print("%s\n", Compiler);
