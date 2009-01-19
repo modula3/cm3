@@ -12,7 +12,3 @@ Interface ("ThreadF")
 Interface ("ThreadContext")
 implementation ("ThreadWin32")
 interface("ThreadInternal")
-
-if equal (OS_TYPE, "POSIX")
-	implementation("SchedulerPosix")
-end

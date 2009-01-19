@@ -7,7 +7,7 @@
 include_dir ("Common")
 
 
-if equal (OS_TYPE, "WIN32") or equal (TARGET, "NT386")
+if equal (OS_TYPE, "WIN32")
     include_dir ("WIN32")
 else
     if (NO_USER_THREADS contains TARGET) or ((not defined("NOPTHREAD")) and USE_PTHREADS{TARGET})
