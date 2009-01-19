@@ -126,20 +126,23 @@ PROCEDURE CheckLink(arcs: Pathname.Arcs): Pathname.Arcs
 
 TYPE ABW = ARRAY BOOLEAN OF Word.T;
 
-CONST OpenFlags = ARRAY CreateOption OF ABW{
+(* CONST *)
+VAR OpenFlags := ARRAY CreateOption OF ABW{
   (* truncate =    FALSE                  TRUE                 *)
   (* Never  *) ABW{O_RDWR,                O_RDWR+O_TRUNC        },
   (* Ok     *) ABW{O_RDWR+O_CREAT,        O_RDWR+O_CREAT+O_TRUNC},
   (* Always *) ABW{O_RDWR+O_CREAT+O_EXCL, O_RDWR+O_CREAT+O_EXCL }
   };
 
-CONST AllAccessModes =
+(* CONST *)
+VAR AllAccessModes :=
   Unix.MSETUID + Unix.MSETGID + Unix.MSTICKY +
   Unix.MROWNER + Unix.MWOWNER + Unix.MXOWNER +
   Unix.MRGROUP + Unix.MWGROUP + Unix.MXGROUP +
   Unix.MROTHER + Unix.MWOTHER + Unix.MXOTHER;
 
-CONST OpenMode = ARRAY AccessOption OF Ctypes.int{
+(* CONST *)
+VAR OpenMode := ARRAY AccessOption OF Ctypes.int{
   (*OnlyOwnerCanRead*) Unix.MROWNER+Unix.MWOWNER,
   (*ReadOnly*)         Unix.MROWNER+Unix.MRGROUP+Unix.MROTHER,
   (*Default*)          Unix.Mrwrwrw (* should this be AllAccessModes? *)
@@ -180,12 +183,13 @@ PROCEDURE OpenFileReadonly(pn: Pathname.T): File.T RAISES {OSError.E}=
   END OpenFileReadonly;
 
 PROCEDURE CreateDirectory(pn: Pathname.T) RAISES {OSError.E}=
-  CONST
+  VAR
     (* Default access is rwxrwxrwx. The umask is applied by Unix *)
-    RWXRWXRWX = Ustat.S_IREAD + Ustat.S_IWRITE + Ustat.S_IEXEC +
+    (*CONST*)
+    RWXRWXRWX := Ustat.S_IREAD + Ustat.S_IWRITE + Ustat.S_IEXEC +
         Ustat.S_GREAD + Ustat.S_GWRITE + Ustat.S_GEXEC +
         Ustat.S_OREAD + Ustat.S_OWRITE + Ustat.S_OEXEC;
-  VAR fname := M3toC.SharedTtoS(pn);
+    fname := M3toC.SharedTtoS(pn);
   BEGIN
     IF Unix.mkdir(fname, RWXRWXRWX) < 0 THEN Fail(pn, fname); END;
     M3toC.FreeSharedS(pn, fname);
