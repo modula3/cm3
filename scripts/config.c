@@ -61,6 +61,7 @@ If (x) = -1 generates a warning, try (memset(&x, -1, sizeof(x)), x) */
 #endif
 
 #define ALIGN_OF_TYPE(x) (sizeof(struct {char a; x b;}) - sizeof(x))
+#define SIZEOF_FIELD(struc, field) (sizeof((struc*)0)->field)
 
 typedef unsigned U;
 
@@ -404,19 +405,37 @@ void DefineOpaqueType(Name, Size, Align)
 #define DEFINE_OPAQUE_TYPE(name) DefineOpaqueType("name", sizeof(name), ALIGN_OF_TYPE(name))
 #endif
 
+
+char* GetIntegerType(Size, Signed)
+    size_t Size;
+    BOOL Signed;
+{
+    Size *= 8;
+    switch (Size | Signed)
+    {
+    case 8: return "uint8_t";
+    case 16: return "uint16_t";
+    case 32: return "uint32_t";
+    case 64: return "uint64_t";
+    case 8|1: return "int8_t";
+    case 16|1: return "int16_t";
+    case 32|1: return "int32_t";
+    case 64|1: return "int64_t";
+    default:
+        /* consider using array of smaller type */
+        printf("ERROR: not able to represent size %u\n", (U)Size);
+        exit(1);
+    }
+}
+
 void DefineIntegerType(Name, Size, Signed, Align)
     char* Name;
     size_t Size;
     BOOL Signed;
     size_t Align;
 {
-    char* u = 0;
-
-    u = (Signed ? "" : "u");
-    Size *= 8;
     Align *= 8;
-
-    Print("%s = %sint%u_t; (* align = %u *)\n", Name, u, (U)Size, (U)Align);
+    Print("%s = %s; (* align = %u *)\n", Name, GetIntegerType(Size, Signed), (U)Align);
 }
 
 #ifdef __STDC__
@@ -432,12 +451,7 @@ void DefineIntegerFieldType(struc, field, myname, Size, Signed)
     size_t Size;
     BOOL Signed;
 {
-    char* u = 0;
-
-    u = (Signed ? "" : "u");
-    Size *= 8;
-
-    Print("%s = %sint%u_t; (* %s.%s *)\n", myname, u, (U)Size, struc, field);
+    Print("%s = %s; (* %s.%s *)\n", myname, GetIntegerType(Size, Signed), struc, field);
 }
 
 #ifdef __STDC__
@@ -1043,7 +1057,6 @@ do { \
         CheckField("typedef struct { int i;} T;\n", "T", "float", "j");
     }
 
-    /* bundled HP-UX cc */
     {
         /*
         We should probably just write C code for this.
@@ -1063,6 +1076,35 @@ do { \
         hostent_t hostent;
         DEFINE_INTEGER_FIELD_TYPE(hostent_t, h_addrtype, hostent.h_addrtype, hostent_addrtype_t);
         DEFINE_INTEGER_FIELD_TYPE(hostent_t, h_length, hostent.h_length, hostent_length_t);
+    }
+
+    {
+        /*
+        We should probably just write C code for this.
+
+        struct linger {
+          unsigned short	l_onoff;	Linger active
+          unsigned short	l_linger;	How long to linger for
+        };
+        */
+        typedef struct linger linger_t;
+        linger_t linger;
+        char* t1;
+        char* t2;
+
+        /* Assert these are the only two fields. We also don't allow padding, if we can get
+        away with that. We can loosen these restrictions if needed. (see unfinished
+        ReconstituteStruct; though really, just writing more C is a good solution).
+        */
+        CHECK(&linger == (void*)&linger.l_onoff);
+        CHECK((&linger + 1) == (void*)(&linger.l_linger + 1));
+        CHECK(&linger.l_linger == (&linger.l_onoff + 1));
+
+        t1 = GetIntegerType(sizeof(linger.l_onoff), IS_FIELD_SIGNED(linger.l_onoff));
+        t2 = GetIntegerType(sizeof(linger.l_linger), IS_FIELD_SIGNED(linger.l_linger));
+        CHECK(t1 == t2);
+
+        Print("struct_linger = RECORD\n  l_onoff: %s;\n  l_linger: %s;\nEND;\n", t1, t1);
     }
 
     {
