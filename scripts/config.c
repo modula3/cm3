@@ -7,9 +7,8 @@ A sort of autoconf replacement, though far less general.
 And maybe faster and simpler.
 
 Bundled cc on HP_UX is K&R, so this is K&R,
-at least for function prototypes.
-We will still try to get away with such ANSI features as
-    void*, unsigned/signed char, memset, etc.
+at least for function prototypes. And it doesn't like
+"signed" and at least somewhat "const".
 
 On some systems this file cannot run from a.out because
 that conflicts with its own output, so, for example:
@@ -31,13 +30,14 @@ that conflicts with its own output, so, for example:
 #include <pthread.h>
 #ifndef _WIN32
 #ifndef __STDC__
-#define const /* nothing, for bundled HP-UX cc */
+#define const /* nothing, for bundled HP-UX cc, esp. within the system's own headers */
 #endif
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
 #endif /* WIN32 */
 #include <setjmp.h>
+#include <time.h>
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
@@ -65,8 +65,6 @@ If (x) = -1 generates a warning, try (memset(&x, -1, sizeof(x)), x) */
 typedef unsigned U;
 
 FILE* LogFile;
-
-/* Bundled HP-UX does understand stdarg.h */
 
 #if __STDC__
 void Print(char* Format, ...)
@@ -167,7 +165,9 @@ void SanityCheck()
     CHECK(sizeof(int64_t) == 8);
 
     CHECK(sizeof(char) == sizeof(unsigned char));
-    /*CHECK(sizeof(char) == sizeof(signed char));*/
+#ifdef __STDC__
+    CHECK(sizeof(char) == sizeof(signed char));
+#endif
     CHECK(sizeof(short) == sizeof(unsigned short));
     CHECK(sizeof(int) == sizeof(unsigned int));
     CHECK(sizeof(long) == sizeof(unsigned long));
@@ -194,8 +194,10 @@ void SanityCheck()
     CHECK((CHAR_MIN == 0) || (CHAR_MIN == -128));
     CHECK((CHAR_MAX == 127) || (CHAR_MAX == 255));
 
-    /*CHECK(SCHAR_MIN == SMIN(signed char));*/
-    /*CHECK(SCHAR_MAX == SMAX(signed char));*/
+#ifdef __STDC__
+    CHECK(SCHAR_MIN == SMIN(signed char));
+    CHECK(SCHAR_MAX == SMAX(signed char));
+#endif
     CHECK(UCHAR_MAX == UMAX(unsigned char));
 
     CHECK(SHRT_MIN == -32768);
@@ -332,6 +334,10 @@ void DefineIntegerFieldType(struc, field, myname, Size, Signed)
 char* Compiler;
 
 char* PossibleCompilers[] = {
+
+    /* My HP-UX requires -lpthread to link, seems wrong.
+    -Werror is because certain code that really should error, only warns. */
+
     "gcc -lpthread -Werror",
     "gcc -Werror",
     "cc -lpthread -Werror",
@@ -652,7 +658,9 @@ BOOL CheckField(Prefix, Struct, Type, Field)
             a[i++] = " = (";
             a[i++] = Type;
             a[i++] = ")1;\n";
-            a[i++] = "return (memcmp(&a, &b, sizeof(b) != 0));}\n";
+            a[i++] = "return (memcmp(&a.";
+            a[i++] = Field;
+            a[i++] = ", &b, sizeof(b)) != 0);}\n";
             Source = ConcatN(a, i);
             Result = TryCompileAndLinkAndRun(Source);
             free(Source);
@@ -829,6 +837,7 @@ void Config()
     FindDevNull();
     FindCompiler();
 
+#if 0
     CheckHeader("<time.h>");
 
     CheckField("#include <time.h>\n", "struct tm", "int", "tm_sec");
@@ -839,10 +848,40 @@ void Config()
     CheckField("#include <time.h>\n", "struct tm", "int", "tm_year");
     CheckField("#include <time.h>\n", "struct tm", "int", "tm_wday");
     CheckField("#include <time.h>\n", "struct tm", "int", "tm_yday");
+#endif
+
+    /* test code */
     CheckField("#include <time.h>\n", "struct tm", "int", "tm_isdst");
-    CheckField("#include <time.h>\n", "struct tm", "int", "tm_isdst");
+    CheckField("#include <time.h>\n", "struct tm", "long", "tm_isdst");
+    CheckField("#include <time.h>\n", "struct tm", "float", "tm_isdst");
+
     CheckField("#include <time.h>\n", "struct tm", "int", "tm_gmtoff");
     CheckField("#include <time.h>\n", "struct tm", "int", "tm_zone");
+    {
+        typedef struct tm tm_t;
+        typedef struct { int tm_sec, tm_min, tm_hour, tm_mday, tm_mon, tm_year, tm_wday, tm_yday, tm_isdst; } tm2_t;
+        tm_t a;
+        tm2_t b;
+
+        CHECK(sizeof(tm_t) >= sizeof(tm2_t));
+
+#define X(x) \
+do { \
+    CHECK(offsetof(tm_t, x) == offsetof(tm2_t, x)); \
+    CHECK(sizeof(a.x) == sizeof(b.x)); \
+    CHECK(IS_FIELD_SIGNED(a.x) == IS_FIELD_SIGNED(b.x)); \
+} while(0)
+        X(tm_sec);
+        X(tm_min);
+        X(tm_hour);
+        X(tm_mday);
+        X(tm_mon);
+        X(tm_year);
+        X(tm_wday);
+        X(tm_yday);
+        X(tm_isdst);
+#undef X
+    }
 
     /* one we know which fields exist, the next thing is to construct a program
     that checks that we have all the fields, sort them by offset, and declare it;
@@ -859,6 +898,7 @@ void Config()
         CheckGlobalVariable("#include <time.h>\n", "int", "daylight");
     }
 
+    /* Is this always long or sometimes int? */
     if (CheckGlobalVariable("#include <time.h>\n", "long", "_timezone") == FALSE)
     {
         if (CheckGlobalVariable("#include <time.h>\n", "int", "_timezone") == FALSE)
@@ -906,7 +946,11 @@ void Config()
 
     {
         /* test code */
-        typedef struct { unsigned char a; /*signed*/ char b; unsigned short c; short d; unsigned int e;
+        typedef struct { unsigned char a;
+#ifdef __STDC__
+        signed
+#endif
+            char b; unsigned short c; short d; unsigned int e;
         int f; unsigned __int64 g; __int64 h; } T;
         T t;
 
@@ -936,7 +980,7 @@ void Config()
     }
 #endif
 
-    /* There are two possible definitions of uin.h. Check for each. */
+    /* There are two known definitions of uin.h. Check for each. */
 /*
   struct_in_addr = RECORD
     s_addr: unsigned;
