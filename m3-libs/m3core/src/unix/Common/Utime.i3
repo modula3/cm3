@@ -8,9 +8,9 @@ FROM Ctypes IMPORT char_star, const_char_star;
 FROM Cstdint IMPORT int32_t;
 IMPORT Usysdep;
 
-CONST
-  ITIMER_REAL = 0; (* real time intervals *)
-  ITIMER_VIRTUAL = 1; (* virtual time intervals *)
+(*CONST*)
+<*EXTERNAL "Utime_ITIMER_REAL"*> VAR ITIMER_REAL: int; (* real time intervals *)
+<*EXTERNAL "Utime_ITIMER_VIRTUAL"*> VAR ITIMER_VIRTUAL: int; (* virtual time intervals *)
 
 TYPE
   struct_timeval = Usysdep.struct_timeval;

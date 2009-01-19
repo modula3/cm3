@@ -2,7 +2,4 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 
-Interface ("Uerror")
-Interface ("Usignal")
-Interface ("Ustat")
 interface ("Usysdep")

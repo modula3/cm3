@@ -5,7 +5,7 @@
 INTERFACE Usysdep;
 
 FROM Cstdint IMPORT uint32_t;
-FROM Ctypes IMPORT char_star, void_star, int;
+FROM Ctypes IMPORT char_star, int;
 IMPORT Upthreadtypes;
 
 (* INTERFACE Unix; *)
@@ -16,13 +16,6 @@ CONST
   MSETGID = 8_2000;
   MSTICKY = 8_1000;
 
-  O_RDONLY = 0;
-  O_RDWR = 2;
-  O_CREAT = 16_0040;
-  O_EXCL = 16_0080;
-  O_TRUNC = 16_0200;
-  O_NONBLOCK = 16_0800;
-
   MAX_FDSET = 1024;
 
 TYPE
@@ -30,39 +23,14 @@ TYPE
 
 (* INTERFACE Upthread; *)
 
-TYPE
-  pthread_t = void_star;
+  pthread_t = ADDRESS;
   pthread_attr_t = Upthreadtypes.pthread_attr_t;
   pthread_mutex_t = Upthreadtypes.pthread_mutex_t;
   pthread_cond_t = RECORD data: ARRAY[1..6] OF LONGINT; END;
   pthread_key_t = uint32_t;
 
-  destructor_t = PROCEDURE(arg: ADDRESS);
-  start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;
-
-CONST
-  PTHREAD_MUTEX_INITIALIZER = pthread_mutex_t {0, .. };
-  PTHREAD_COND_INITIALIZER = pthread_cond_t { ARRAY[1..6] OF LONGINT { 0L, .. } };
-
-(* INTERFACE Usignal; *)
-
-CONST
-  SIGINT = 2;
-  SIGKILL = 9;
-
 (* INTERFACE Usocket; *)
 
-CONST
-  SOCK_STREAM = 1;
-  SOCK_DGRAM = 2;
-  SO_REUSEADDR = 2;
-  SO_KEEPALIVE = 9;
-  SO_LINGER = 13;
-  SOL_SOCKET = 1;
-  AF_INET = 2;
-  MSG_PEEK = 2;
-
-TYPE
   struct_linger = RECORD
     l_onoff: int;
     l_linger: int;
@@ -70,7 +38,6 @@ TYPE
 
 (* INTERFACE Utime; *)
 
-TYPE
   struct_timeval = RECORD
     tv_sec: INTEGER;
     tv_usec: INTEGER;
@@ -92,7 +59,6 @@ TYPE
 
 (* INTERFACE Utypes; *)
 
-  clock_t = INTEGER; (* ideally always 64 bits *)
   gid_t = uint32_t;
   pid_t = int;
   time_t = INTEGER; (* ideally always 64 bits *)

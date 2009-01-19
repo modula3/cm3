@@ -18,22 +18,29 @@ CONST
   MSETUID = Usysdep.MSETUID;
   MSETGID = Usysdep.MSETGID;
   MSTICKY = Usysdep.MSTICKY;
-  MROWNER = 8_0400;
-  MWOWNER = 8_0200;
-  MXOWNER = 8_0100;
-  MRGROUP = 8_0040;
-  MWGROUP = 8_0020;
-  MXGROUP = 8_0010;
-  MROTHER = 8_0004;
-  MWOTHER = 8_0002;
-  MXOTHER = 8_0001;
 
-  Mrwrwrw = MROWNER + MWOWNER + MRGROUP + MWGROUP + MROTHER + MWOTHER;
+(*CONST*)
+(* owner *)
+<*EXTERNAL "Unix_MROWNER"*> VAR MROWNER: int; (* readable by owner *)
+<*EXTERNAL "Unix_MWOWNER"*> VAR MWOWNER: int; (* writable by owner *)
+<*EXTERNAL "Unix_MXOWNER"*> VAR MXOWNER: int; (* executable by owner *)
+(* group *)
+<*EXTERNAL "Unix_MRGROUP"*> VAR MRGROUP: int; (* readable by group *)
+<*EXTERNAL "Unix_MWGROUP"*> VAR MWGROUP: int; (* writable by group *)
+<*EXTERNAL "Unix_MXGROUP"*> VAR MXGROUP: int; (* executable by group *)
+(* other *)
+<*EXTERNAL "Unix_MROTHER"*> VAR MROTHER: int; (* readable by other *)
+<*EXTERNAL "Unix_MWOTHER"*> VAR MWOTHER: int; (* writable by other *)
+<*EXTERNAL "Unix_MXOTHER"*> VAR MXOTHER: int; (* executable by other *)
 
-  F_OK = 0;
-  X_OK = 1;
-  W_OK = 2;
-  R_OK = 4;
+(* readable/writable by all, executable by none *)
+<*EXTERNAL "Unix_Mrwrwrw"*> VAR Mrwrwrw: int; (* MROWNER + MWOWNER + MRGROUP + MWGROUP + MROTHER + MWOTHER *)
+
+(* CONST *)
+<*EXTERNAL "Unix_F_OK"*> VAR F_OK: int;
+<*EXTERNAL "Unix_X_OK"*> VAR X_OK: int;
+<*EXTERNAL "Unix_W_OK"*> VAR W_OK: int;
+<*EXTERNAL "Unix_R_OK"*> VAR R_OK: int;
 
 PROCEDURE sbrk (inc: INTEGER): char_star;
 PROCEDURE access (path: const_char_star; mode: int): int;
@@ -45,10 +52,10 @@ PROCEDURE execve (name: const_char_star;  argv, envp: char_star_star): int;
 PROCEDURE exit (i: int);
 <*EXTERNAL "_exit"*> PROCEDURE underscore_exit (i: int);
 
-CONST
-  F_SETFD = 2; (* Set close-on-exec flag *)
-  F_GETFL = 3; (* Get fd status flags *)
-  F_SETFL = 4; (* Set fd status flags *)
+(* CONST *)
+<*EXTERNAL "Unix_F_SETFD"*> VAR F_SETFD: int; (* Set close-on-exec flag *)
+<*EXTERNAL "Unix_F_GETFL"*> VAR F_GETFL: int; (* Get fd status flags *)
+<*EXTERNAL "Unix_F_SETFL"*> VAR F_SETFL: int; (* Set fd status flags *)
 
 PROCEDURE fcntl (fd, request, arg: int): int;
 PROCEDURE fsync (fd: int): int;
@@ -57,22 +64,22 @@ PROCEDURE gethostname (name: char_star; namelen: size_t): int;
 PROCEDURE getpagesize (): int;
 PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
 
-CONST
-  FIONREAD = 16_4004667f;
+(* CONST *)
+<*EXTERNAL "Unix_FIONREAD"*> VAR FIONREAD: int;
 
 PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
 <*EXTERNAL "m3_lseek"*> PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
 PROCEDURE mkdir (path: const_char_star; mode: mode_t): int;
 
-CONST
-  O_RDONLY = Usysdep.O_RDONLY;
-  O_RDWR = Usysdep.O_RDWR;
-  O_CREAT = Usysdep.O_CREAT;
-  O_EXCL = Usysdep.O_EXCL;
-  O_TRUNC = Usysdep.O_TRUNC;
-  O_NONBLOCK = Usysdep.O_NONBLOCK;
-  O_NDELAY = O_NONBLOCK; (* compat *)
-  M3_NONBLOCK = O_NONBLOCK; (* compat *)
+(* CONST *)
+<*EXTERNAL "Unix_O_RDONLY"*> VAR O_RDONLY: int;
+<*EXTERNAL "Unix_O_RDWR"*> VAR O_RDWR: int;
+<*EXTERNAL "Unix_O_CREAT"*> VAR O_CREAT: int;
+<*EXTERNAL "Unix_O_EXCL"*> VAR O_EXCL: int;
+<*EXTERNAL "Unix_O_TRUNC"*> VAR O_TRUNC: int;
+<*EXTERNAL "Unix_O_NONBLOCK"*> VAR O_NONBLOCK: int;
+<*EXTERNAL "Unix_O_NDELAY"*> VAR O_NDELAY: int; (* compat *)
+<*EXTERNAL "Unix_M3_NONBLOCK"*> VAR M3_NONBLOCK: int; (* compat *)
 
 <*EXTERNAL "m3_open"*> PROCEDURE open (name: const_char_star; flags: int; mode: mode_t): int;
 <*EXTERNAL "m3_creat"*> PROCEDURE creat (name: const_char_star; mode: mode_t): int;
