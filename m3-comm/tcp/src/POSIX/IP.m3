@@ -86,11 +86,10 @@ PROCEDURE GetHostAddr(): Address =
   END GetHostAddr;
 
 PROCEDURE InterpretError() RAISES {Error} =
+  VAR err := Herrno.Get_h_errno();
   BEGIN
-    CASE Herrno.Get_h_errno() OF
-    | Unetdb.TRY_AGAIN, Unetdb.NO_RECOVERY, Unetdb.NO_ADDRESS =>
+    IF (err = Unetdb.TRY_AGAIN) OR (err = Unetdb.NO_RECOVERY) OR (err = Unetdb.NO_ADDRESS) THEN
         IPError.Raise (LookupFailure);
-    ELSE
     END;
   END InterpretError;
 
