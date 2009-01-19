@@ -11,4 +11,3 @@
 Interface ("ThreadF")
 Interface ("ThreadContext")
 implementation ("ThreadWin32")
-interface("ThreadInternal")
