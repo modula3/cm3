@@ -139,18 +139,18 @@ PROCEDURE StartConnect(to: IP.Endpoint;
 
     IF from # IP.NullEndPoint THEN  (* Bind to the "from" address. *)
       EVAL Usocket.setsockopt(fd, SockOpt.SOL_SOCKET, SockOpt.SO_REUSEADDR,
-	ADR(True), BYTESIZE(True));
+        ADR(True), BYTESIZE(True));
       fromName.sin_family := Usocket.AF_INET;
       fromName.sin_port := Uin.htons(from.port);
       fromName.sin_addr.s_addr := LOOPHOLE(from.addr, Utypes.u_int);
       fromName.sin_zero := Sin_Zero;
       status := Usocket.bind(fd, ADR(fromName), BYTESIZE(SockAddrIn));
       IF status # 0 THEN
-	IF Cerrno.GetErrno() = Uerror.EADDRINUSE THEN
-	  Raise(IP.PortBusy);
-	ELSE
-	  RaiseUnexpected();
-	END
+        IF Cerrno.GetErrno() = Uerror.EADDRINUSE THEN
+          Raise(IP.PortBusy);
+        ELSE
+          RaiseUnexpected();
+        END
       END;
     END;
 
@@ -238,8 +238,8 @@ PROCEDURE CloseConnector(c: Connector) =
   BEGIN
     LOCK c DO
       IF NOT c.closed THEN
-	EVAL Unix.close(c.fd);
-	c.closed := TRUE;
+        EVAL Unix.close(c.fd);
+        c.closed := TRUE;
       END;
     END;
   END CloseConnector;
@@ -476,11 +476,11 @@ PROCEDURE CoalesceWrites(tcp: T; allow: BOOLEAN)
 
     LOCK tcp DO
       IF tcp.closed THEN
-	RAISE IP.Error(AtomList.List1(Closed));
+        RAISE IP.Error(AtomList.List1(Closed));
       END;
       IF Usocket.setsockopt(tcp.fd, Uin.IPPROTO_TCP, TCP_NODELAY,
-	ADR(noDelay), BYTESIZE(noDelay)) = -1 THEN
-	RaiseUnexpected();
+        ADR(noDelay), BYTESIZE(noDelay)) = -1 THEN
+        RaiseUnexpected();
       END;
     END;
   END CoalesceWrites;
@@ -509,10 +509,10 @@ PROCEDURE GetPeerName(tcp: T): IP.Endpoint
   BEGIN
     LOCK tcp DO
       IF tcp.closed THEN
-	RAISE IP.Error(AtomList.List1(Closed));
+        RAISE IP.Error(AtomList.List1(Closed));
       END;
       IF Usocket.getpeername(tcp.fd, ADR(addr), ADR(len)) = -1 THEN
-	RaiseUnexpected();
+        RaiseUnexpected();
       END;
     END;
 
@@ -530,10 +530,10 @@ PROCEDURE GetSockName(tcp: T): IP.Endpoint
   BEGIN
     LOCK tcp DO
       IF tcp.closed THEN
-	RAISE IP.Error(AtomList.List1(Closed));
+        RAISE IP.Error(AtomList.List1(Closed));
       END;
       IF Usocket.getsockname(tcp.fd, ADR(addr), ADR(len)) = -1 THEN
-	RaiseUnexpected();
+        RaiseUnexpected();
       END;
     END;
 
@@ -551,11 +551,11 @@ PROCEDURE KeepAlive(tcp: T; allow: BOOLEAN)
 
     LOCK tcp DO
       IF tcp.closed THEN
-	RAISE IP.Error(AtomList.List1(Closed));
+        RAISE IP.Error(AtomList.List1(Closed));
       END;
       IF Usocket.setsockopt(tcp.fd, SockOpt.SOL_SOCKET, SockOpt.SO_KEEPALIVE,
-	ADR(keepAlive), BYTESIZE(keepAlive)) = -1 THEN
-	RaiseUnexpected();
+        ADR(keepAlive), BYTESIZE(keepAlive)) = -1 THEN
+        RaiseUnexpected();
       END;
     END;
   END KeepAlive;
@@ -575,11 +575,11 @@ PROCEDURE LingerOnClose(tcp: T; allow: BOOLEAN)
 
     LOCK tcp DO
       IF tcp.closed THEN
-	RAISE IP.Error(AtomList.List1(Closed));
+        RAISE IP.Error(AtomList.List1(Closed));
       END;
       IF Usocket.setsockopt(tcp.fd, SockOpt.SOL_SOCKET, SockOpt.SO_LINGER,
-	ADR(linger), BYTESIZE(linger)) = -1 THEN
-	RaiseUnexpected();
+        ADR(linger), BYTESIZE(linger)) = -1 THEN
+        RaiseUnexpected();
       END;
     END;
   END LingerOnClose;
