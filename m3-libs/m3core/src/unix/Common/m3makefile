@@ -22,48 +22,17 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
     Interface("Utime")
     Interface("Utypes")
 
-    if not equal(TARGET, "NT386") % later
-        Interface("Uerror")
-        c_source("Uconstants")
-        h_source("UerrorX")
-    end
+    Interface("Uerror")
+    c_source("Uconstants")
+    h_source("UerrorX")
 
-    %
-    % pthreads related
-    %
-    if not equal (TARGET, "NT386")
-        Interface("Upthread")
-        Interface("Usched")
-        Interface("Uucontext")
-    end
+    Interface("Upthread")
+    Interface("Usched")
+    Interface("Uucontext")
 
-    %
-    % NT386 has a slimmer Usignal, omitting pthreads stuff
-    % SPARC*_LINUX needs some work, for now has its own of Usignal and Usocket
-    %
-    if not equal (TARGET, "NT386") and not equal (TARGET, "SPARC32_LINUX") and not equal (TARGET, "SPARC64_LINUX")
-        Interface("Usignal")
-    end
-    if not equal (TARGET, "SPARC32_LINUX") and not equal (TARGET, "SPARC64_LINUX")
-        Interface("Usocket")
-    end
-end
+    Interface("Usignal")
+    Interface("Usocket")
 
-if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
-        or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
-        or equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
-        or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
-        or equal (TARGET, "AMD64_FREEBSD")
-%
-% everything
-%
     Interface ("Ustat")
-    Interface ("Udir")
-end
-
-if equal (TARGET, "NT386")
-%
-% Cygwin's stat flags are not common -- Ustat ommited here.
-%
     Interface ("Udir")
 end
