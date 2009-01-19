@@ -12,11 +12,9 @@ FROM Ctypes IMPORT int;
 
 TYPE
   jmp_buf = RECORD
-  (* For systems without user threads, the size of this need not be declared correctly.
-     It is at the end of a record allocated by the compiler that the runtime merely needs
-     the address of. The runtime does need to know the size. The compiler does not know the
-     size. In future, the compiler should feed that size to here. *)
-    opaque : INTEGER;
+(* This information appears both here and in m3middle/Target.m3.
+   Ideally it would only occur in one place. *)
+    opaque : ARRAY [0..15] OF INTEGER;
   END;
 
 <*EXTERNAL "longjmp" *> PROCEDURE ulongjmp (VAR env: jmp_buf; val: int);
