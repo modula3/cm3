@@ -4,8 +4,8 @@
 
 <*EXTERNAL*> INTERFACE Utime;
 
-FROM Ctypes IMPORT char_star, const_char_star;
-FROM Cstdint IMPORT int32_t, int;
+FROM Ctypes IMPORT char_star, const_char_star, int;
+FROM Cstdint IMPORT int32_t;
 IMPORT Usysdep;
 
 (*CONST*)
