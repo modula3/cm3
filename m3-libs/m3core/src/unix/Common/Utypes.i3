@@ -30,9 +30,6 @@ TYPE
   size_t = Cstddef.size_t;
   ssize_t = Cstddef.ptrdiff_t;
 
-  (* Ideally this is always 64 bits, else time runs out. *)
-  clock_t = Usysdep.clock_t;
-
   (* This might not be right for all systems, but let's hope. We
   can make it so with wrapper functions, if function parameters are the
   only occurence. If it occurs in structs, then no. *)

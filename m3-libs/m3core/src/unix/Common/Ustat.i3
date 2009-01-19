@@ -5,29 +5,28 @@
 <*EXTERNAL*> INTERFACE Ustat;
 
 FROM Ctypes IMPORT int, char_star;
-FROM Utypes IMPORT uint16_t;
 
-CONST
-  S_IFMT   : uint16_t = 8_0170000;
-  S_IFSOCK : uint16_t = 8_0140000;
-  S_IFLNK  : uint16_t = 8_0120000;
-  S_IFREG  : uint16_t = 8_0100000;
-  S_IFBLK  : uint16_t = 8_0060000;
-  S_IFDIR  : uint16_t = 8_0040000;
-  S_IFCHR  : uint16_t = 8_0020000;
-  S_IFIFO  : uint16_t = 8_0010000;
-  S_ISUID  : uint16_t = 8_0004000;
-  S_ISGID  : uint16_t = 8_0002000;
-  S_ISVTX  : uint16_t = 8_0001000;
-  S_IREAD  : uint16_t = 8_0000400;
-  S_IWRITE : uint16_t = 8_0000200;
-  S_IEXEC  : uint16_t = 8_0000100;
-  S_GREAD  : uint16_t = 8_0000040;
-  S_GWRITE : uint16_t = 8_0000020;
-  S_GEXEC  : uint16_t = 8_0000010;
-  S_OREAD  : uint16_t = 8_0000004;
-  S_OWRITE : uint16_t = 8_0000002;
-  S_OEXEC  : uint16_t = 8_0000001;
+(*CONST*)
+<*EXTERNAL "Ustat_S_IFMT"*> VAR S_IFMT: int;
+<*EXTERNAL "Ustat_S_IFSOCK"*> VAR S_IFSOCK: int;
+<*EXTERNAL "Ustat_S_IFLNK"*> VAR S_IFLNK: int;
+<*EXTERNAL "Ustat_S_IFREG"*> VAR S_IFREG: int;
+<*EXTERNAL "Ustat_S_IFBLK"*> VAR S_IFBLK: int;
+<*EXTERNAL "Ustat_S_IFDIR"*> VAR S_IFDIR: int;
+<*EXTERNAL "Ustat_S_IFCHR"*> VAR S_IFCHR: int;
+<*EXTERNAL "Ustat_S_IFIFO"*> VAR S_IFIFO: int;
+<*EXTERNAL "Ustat_S_ISUID"*> VAR S_ISUID: int;
+<*EXTERNAL "Ustat_S_ISGID"*> VAR S_ISGID: int;
+<*EXTERNAL "Ustat_S_ISVTX"*> VAR S_ISVTX: int;
+<*EXTERNAL "Ustat_S_IREAD"*> VAR S_IREAD: int;
+<*EXTERNAL "Ustat_S_IWRITE"*> VAR S_IWRITE: int;
+<*EXTERNAL "Ustat_S_IEXEC"*> VAR S_IEXEC: int;
+<*EXTERNAL "Ustat_S_GREAD"*> VAR S_GREAD: int;
+<*EXTERNAL "Ustat_S_GWRITE"*> VAR S_GWRITE: int;
+<*EXTERNAL "Ustat_S_GEXEC"*> VAR S_GEXEC: int;
+<*EXTERNAL "Ustat_S_OREAD"*> VAR S_OREAD: int;
+<*EXTERNAL "Ustat_S_OWRITE"*> VAR S_OWRITE: int;
+<*EXTERNAL "Ustat_S_OEXEC"*> VAR S_OEXEC: int;
 
 TYPE
   struct_stat = RECORD

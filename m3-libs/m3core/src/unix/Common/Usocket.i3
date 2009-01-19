@@ -10,18 +10,18 @@ FROM Uin IMPORT struct_sockaddr_in;
 FROM Utypes IMPORT socklen_t;
 IMPORT Usysdep;
 
-CONST
-  SOCK_STREAM = Usysdep.SOCK_STREAM;
-  SOCK_DGRAM = Usysdep.SOCK_DGRAM;
+(* CONST *)
+<*EXTERNAL "Usocket_SOCK_STREAM"*> VAR SOCK_STREAM: int;
+<*EXTERNAL "Usocket_SOCK_DGRAM"*> VAR SOCK_DGRAM: int;
 
-  SO_REUSEADDR = Usysdep.SO_REUSEADDR;
-  SO_KEEPALIVE = Usysdep.SO_KEEPALIVE;
-  SO_LINGER = Usysdep.SO_LINGER;
+<*EXTERNAL "Usocket_SO_REUSEADDR"*> VAR SO_REUSEADDR: int;
+<*EXTERNAL "Usocket_SO_KEEPALIVE"*> VAR SO_KEEPALIVE: int;
+<*EXTERNAL "Usocket_SO_LINGER"*> VAR SO_LINGER: int;
 
-  SOL_SOCKET = Usysdep.SOL_SOCKET;
+<*EXTERNAL "Usocket_SOL_SOCKET"*> VAR SOL_SOCKET: int;
 
-  AF_INET = Usysdep.AF_INET;
-  MSG_PEEK = Usysdep.MSG_PEEK;
+<*EXTERNAL "Usocket_SOL_SOCKET"*> VAR AF_INET: int;
+<*EXTERNAL "Usocket_MSG_PEEK"*> VAR MSG_PEEK: int;
 
 TYPE
   struct_linger = Usysdep.struct_linger;

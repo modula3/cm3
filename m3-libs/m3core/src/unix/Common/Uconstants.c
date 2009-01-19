@@ -155,6 +155,11 @@ X(ITIMER_REAL) /* real time intervals */
 X(ITIMER_VIRTUAL) /* virtual time intervals */
 
 
+#undef X
+#define X(x) const int Uresource_##x = x;
+X(RUSAGE_SELF)
+
+
 #ifdef __CYGWIN__
 
 #include <process.h>

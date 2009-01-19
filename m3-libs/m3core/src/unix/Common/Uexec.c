@@ -2,6 +2,7 @@
 /* All rights reserved.                                        */
 /* See the file COPYRIGHT for a full description.              */
 
+#define _FILE_OFFSET_BITS 64
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/wait.h>

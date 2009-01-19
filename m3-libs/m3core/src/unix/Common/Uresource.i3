@@ -7,8 +7,8 @@
 FROM Ctypes IMPORT int, long;
 FROM Utime IMPORT struct_timeval;
 
-CONST
-  RUSAGE_SELF     = 0;
+(*CONST*)
+<*EXTERNAL "Uresource_RUSAGE_SELF"*> VAR RUSAGE_SELF: int;
 
 TYPE
   struct_rusage = RECORD
