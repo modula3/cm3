@@ -348,7 +348,7 @@ if False:
 else:
 
     Setup(InstallRoot_CompilerWithSelf, InstallRoot_Standard)
-    Packages = pylib.PackageSets["std"]
+    Packages = pylib.FilterPackages(pylib.PackageSets["std"])
     if "m3cc" in Packages:
         Packages.remove("m3cc")
     RealClean(Packages) or FatalError()
