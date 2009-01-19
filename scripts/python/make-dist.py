@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.48 2009-01-19 22:37:09 jkrell Exp $
+# $Id: make-dist.py,v 1.49 2009-01-19 22:57:53 jkrell Exp $
 
 import sys
 import os.path
@@ -348,7 +348,7 @@ if False:
 else:
 
     Setup(InstallRoot_CompilerWithSelf, InstallRoot_Standard)
-    Packages = pylib.PackageSets["std"]
+    Packages = pylib.FilterPackages(pylib.PackageSets["std"])
     if "m3cc" in Packages:
         Packages.remove("m3cc")
     RealClean(Packages) or FatalError()
