@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.47 2008-12-17 14:47:34 jkrell Exp $
+# $Id: make-dist.py,v 1.48 2009-01-19 22:37:09 jkrell Exp $
 
 import sys
 import os.path
@@ -258,6 +258,9 @@ if Config != "NT386":
     for a in glob.glob(os.path.join(InstallRoot, "lib", "libm3gcdefs.*")):
         CopyFile(a, NewLib) or FatalError()
 
+for a in glob.glob(os.path.join(InstallRoot, "lib", "*.obj")):
+    CopyFile(a, NewLib) or FatalError()
+
 #
 # cm3 is run out of %path%, but mklib is not, so we have to copy it.
 #
@@ -277,6 +280,10 @@ def Setup(ExistingCompilerRoot, NewRoot):
         CopyRecursive(InstallRoot_Min, NewRoot) or FatalError()
     else:
         CopyCompiler(ExistingCompilerRoot, NewRoot) or FatalError()
+        NewLib = os.path.join(NewRoot, "lib")
+        CreateDirectory(NewLib)
+        for a in glob.glob(os.path.join(ExistingCompilerRoot, "lib", "*.obj")):
+            CopyFile(a, NewLib) or FatalError()
 
     CopyConfigForDistribution(NewRoot) or sys.exit(1)
 
