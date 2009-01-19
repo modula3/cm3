@@ -38,21 +38,22 @@ REVEAL
 PROCEDURE FileTypeFromStatbuf(READONLY statbuf: Ustat.struct_stat)
   : File.Type =
   BEGIN
-    CASE Word.And(statbuf.st_mode, Ustat.S_IFMT) OF
-    | Ustat.S_IFCHR =>
+    WITH type = Word.And(statbuf.st_mode, Ustat.S_IFMT) DO
+      IF type = Ustat.S_IFCHR THEN
         IF IsDevNull(statbuf)
           THEN RETURN RegularFile.FileType
           ELSE RETURN Terminal.FileType
-        END
-    | Ustat.S_IFIFO, Ustat.S_IFSOCK =>
-        RETURN Pipe.FileType
-    | Ustat.S_IFREG =>
+        END;
+      ELSIF (type = Ustat.S_IFIFO) OR (type = Ustat.S_IFSOCK) THEN
+        RETURN Pipe.FileType;
+      ELSIF type = Ustat.S_IFREG THEN
         RETURN RegularFile.FileType
-    | Ustat.S_IFDIR =>
+      ELSIF type = Ustat.S_IFDIR THEN
         RETURN FS.DirectoryFileType
-    ELSE
+      ELSE
         RETURN RegularFile.FileType
-    END
+      END
+    END;
   END FileTypeFromStatbuf;
 
 PROCEDURE New(fd: INTEGER; ds: DirectionSet): File.T RAISES {OSError.E} =
@@ -210,9 +211,9 @@ PROCEDURE IntermittentRead(
 
       IF status >= 0 THEN
         RETURN status
-      ELSIF status = -1
-         AND errno # Uerror.EWOULDBLOCK
-         AND errno # Uerror.EAGAIN THEN
+      ELSIF (status = -1)
+         AND (errno # Uerror.EWOULDBLOCK)
+         AND (errno # Uerror.EAGAIN) THEN
         OSErrorPosix.Raise0(errno)
       ELSIF NOT mayBlock THEN
         RETURN -1
@@ -253,9 +254,9 @@ PROCEDURE IntermittentWrite(h: File.T; READONLY b: ARRAY OF File.Byte)
         p := LOOPHOLE(LOOPHOLE(p, INTEGER) + status, Ctypes.char_star);
         n := n - status;
         IF n = 0 THEN EXIT END
-      ELSIF status = -1
-         AND errno # Uerror.EWOULDBLOCK
-         AND errno # Uerror.EAGAIN THEN
+      ELSIF (status = -1)
+         AND (errno # Uerror.EWOULDBLOCK)
+         AND (errno # Uerror.EAGAIN) THEN
         OSErrorPosix.Raise0(errno)
       END;
 
