@@ -45,8 +45,8 @@ readonly _UnixPieces = {
   "SOLgnu"          : [ "solaris-2-x",                             "uin-common", "big-endian" ],
   "SOLsun"          : [ "solaris-2-x",                             "uin-common", "big-endian" ],
   "SPARC"           : [ "sunos-4-x",                               "uin-common", "big-endian" ],
-  "SPARC32_LINUX"   : [ "linux-common", "linux-sparc", "linux-32", "uin-common", "big-endian" ],
-  "SPARC64_LINUX"   : [ "linux-common", "linux-sparc", "linux-64", "uin-common", "big-endian" ],
+  "SPARC32_LINUX"   : [ "linux-common", "linux-32", "uin-common", "big-endian" ],
+  "SPARC64_LINUX"   : [ "linux-common", "linux-64", "uin-common", "big-endian" ],
   "SPARC64_OPENBSD" : [ "openbsd-common",                          "uin-len",    "big-endian" ],
   % TBD make a new minimal set of Solaris headers starting with OpenBSD or Cygwin as a base
   "SPARC64_SOLARIS" : [ "solaris-2-x",                              "uin-common", "big-endian" ],

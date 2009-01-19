@@ -6,11 +6,10 @@
 
 FROM Ctypes IMPORT int;
 FROM Utypes IMPORT pid_t;
-IMPORT Usysdep;
 
-CONST
-  SIGINT = Usysdep.SIGINT;
-  SIGKILL = Usysdep.SIGKILL;
+(*CONST*)
+<*EXTERNAL "Usignal_SIGINT"*> VAR SIGINT: int;
+<*EXTERNAL "Usignal_SIGKILL"*> VAR SIGKILL: int;
 
 TYPE
   SignalActionHandler = PROCEDURE (sig: int; sip: siginfo_t_star; uap: ADDRESS (* Uucontext.ucontext_t_star *) );
