@@ -12,7 +12,7 @@
 (*      modified on Fri Mar 26 15:04:39 PST 1993 by birrell        *)
 
 UNSAFE MODULE ThreadWin32
-EXPORTS ThreadInternal, Scheduler, Thread, ThreadF, RTOS, RTHooks;
+EXPORTS Scheduler, SchedulerPosix, Thread, ThreadF, RTOS, RTHooks;
 
 IMPORT RTError, WinBase, WinDef, WinGDI, WinNT, RTParams;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
@@ -349,23 +349,17 @@ PROCEDURE Alert(t: T) =
     WinBase.LeaveCriticalSection(cm);
   END Alert;
 
-PROCEDURE XTestAlert (self: T): BOOLEAN =
-    VAR result: BOOLEAN;
-  BEGIN
-      WinBase.EnterCriticalSection(cm);
-      result := self.alerted; IF result THEN self.alerted := FALSE END;
-      WinBase.LeaveCriticalSection(cm);
-      RETURN result
-  END XTestAlert;
-
 PROCEDURE TestAlert(): BOOLEAN =
-    VAR self := Self();
+    VAR self := Self(); result: BOOLEAN;
   BEGIN
     IF self = NIL THEN
       (* Not created by Fork; not alertable *)
       RETURN FALSE
     ELSE
-      RETURN XTestAlert(self);
+      WinBase.EnterCriticalSection(cm);
+      result := self.alerted; IF result THEN self.alerted := FALSE END;
+      WinBase.LeaveCriticalSection(cm);
+      RETURN result
     END;
   END TestAlert;
 
@@ -957,7 +951,7 @@ PROCEDURE VerifySP (start, stop: ADDRESS): ADDRESS =
     RETURN info.BaseAddress;
   END VerifySP;
 
-(*----------------------------------------------------------- misc. stuff ---*)
+(*------------------------------------------------------------ misc. stuff ---*)
 
 PROCEDURE MyId(): Id RAISES {}=
   VAR self := Self ();
@@ -997,7 +991,7 @@ PROCEDURE Choke (lineno: INTEGER) =
 
 VAR
   perfW : RTPerfTool.Handle;
-  (* perfOn: BOOLEAN := FALSE;                             (* LL = perfMu *) *)
+  perfOn: BOOLEAN := FALSE;                             (* LL = perfMu *)
   perfMu := MyInitializeCriticalSection(ADR(perfMu_x)); (* read-only *)
   perfMu_x: WinBase.CRITICAL_SECTION;
 
@@ -1173,6 +1167,18 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
     EVAL WinBase.TlsSetValue(handlersIndex, LOOPHOLE (frame, WinDef.DWORD));
   END PopEFrame;
+
+PROCEDURE IOWait (<*UNUSED*> fd: CARDINAL; <*UNUSED*> read: BOOLEAN;
+                  <*UNUSED*> timeoutInterval: LONGREAL := -1.0D0): WaitResult =
+  BEGIN
+    RETURN WaitResult.Timeout;
+  END IOWait;
+
+PROCEDURE IOAlertWait (<*UNUSED*> fd: CARDINAL; <*UNUSED*> read: BOOLEAN;
+                       <*UNUSED*> timeoutInterval: LONGREAL := -1.0D0): WaitResult =
+  BEGIN
+    RETURN WaitResult.Timeout;
+  END IOAlertWait;
 
 BEGIN
 END ThreadWin32.
