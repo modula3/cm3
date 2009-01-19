@@ -36,9 +36,8 @@ TYPE SockAddrIn = Uin.struct_sockaddr_in;
 
 PROCEDURE Create (reliable: BOOLEAN): T
   RAISES {OSError.E} =
-  CONST
-    Map = ARRAY BOOLEAN OF INTEGER { Usocket.SOCK_DGRAM, Usocket.SOCK_STREAM };
   VAR
+    (*CONST*) Map := ARRAY BOOLEAN OF INTEGER { Usocket.SOCK_DGRAM, Usocket.SOCK_STREAM };
     t    := NEW (T, ds := FilePosix.ReadWrite);
     True := 1;
   BEGIN

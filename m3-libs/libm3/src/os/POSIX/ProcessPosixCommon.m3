@@ -126,7 +126,7 @@ PROCEDURE GetPathToExec(pn: Pathname.T): Pathname.T RAISES {OSError.E} =
     start, i, end, result, uid, gid: INTEGER;
     statBuf: Ustat.struct_stat;
     pname: Ctypes.char_star;
-  CONST MaskXXX = Ustat.S_IEXEC + Ustat.S_GEXEC + Ustat.S_OEXEC;
+  (*CONST*) MaskXXX := Ustat.S_IEXEC + Ustat.S_GEXEC + Ustat.S_OEXEC;
   BEGIN
     IF Text.FindChar(pn, '/') < 0 THEN
       path := Env.Get("PATH");
