@@ -3,7 +3,7 @@
 
 UNSAFE MODULE SocketPosix EXPORTS Socket;
 
-IMPORT Atom, AtomList, IsUltrixOrOSF, Cerrno, Ctypes, File, FilePosix;
+IMPORT Atom, AtomList, SocketPosix_IsUltrixOrOSF, Cerrno, Ctypes, File, FilePosix;
 IMPORT OSError, OSErrorPosix, SchedulerPosix, Thread, Unix;
 IMPORT Uin, Uuio, Uerror, Usocket, Ustat, Unetdb, Utypes, Word;
 
@@ -501,7 +501,7 @@ PROCEDURE RefetchError(fd: INTEGER) =
    in Cerrno.GetErrno().  *)
   VAR optbuf: INTEGER := 0;   optlen := BYTESIZE(optbuf);
   BEGIN
-    IF IsUltrixOrOSF.Value THEN
+    IF SocketPosix_IsUltrixOrOSF.Value THEN
       EVAL Usocket.getsockopt (fd, Uin.IPPROTO_TCP, TCP_NODELAY,
                                  ADR(optbuf), ADR(optlen));
     END;
