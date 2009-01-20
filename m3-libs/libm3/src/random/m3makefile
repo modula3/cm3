@@ -37,6 +37,8 @@ readonly _RandomPieces = {
   "NT386GNU"   : [ _LittleEndian ],
   "OKI"        : [ _LittleEndian ],
   "OS2"        : [ _LittleEndian ],
+  "PA32_HPUX"  : [ _BigEndian ],
+  "PA64_HPUX"  : [ _BigEndian ],
   "SEQUENT"    : [ _LittleEndian ],
   "SOLgnu"     : [ _BigEndian ],
   "SOLsun"     : [ _BigEndian ],
