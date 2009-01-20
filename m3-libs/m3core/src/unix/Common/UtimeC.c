@@ -24,15 +24,18 @@ time_t m3_get_timezone(void)
 #endif
 }
 
-/* correct? */
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__) || defined(__sun)
 
 time_t m3_get_altzone(void)
 {
-    return m3_get_timezone();
+#ifdef __CYGWIN__
+    return m3_get_timezone(); /* ? */
+#else
+    return altzone;
+#endif
 }
 
-#endif /* __CYGWIN__ */
+#endif /* cygwin | sun */
 
 int m3_get_daylight(void)
 {
