@@ -4,10 +4,14 @@
 
 INTERFACE Usysdep;
 
-FROM Cstdint IMPORT uint32_t;
-FROM Ctypes IMPORT char_star, int;
+FROM Cstdint IMPORT int32_t;
+FROM Ctypes IMPORT int;
 FROM Cstddef IMPORT size_t;
-IMPORT Upthreadtypes;
+
+CONST
+    (* trick from darwin-generic/Upthread.i3 *)
+    X32 = ORD(BITSIZE(INTEGER) = 32);
+    X64 = ORD(BITSIZE(INTEGER) = 64);
 
 (* INTERFACE Unix; *)
 
@@ -15,10 +19,6 @@ CONST
     MaxPathLen = 1024;
 
     MAX_FDSET = 1024;
-
-    (* trick from darwin-generic/Upthread.i3 *)
-    X32 = ORD(BITSIZE(INTEGER) = 32);
-    X64 = ORD(BITSIZE(INTEGER) = 64);
 
 TYPE
     mode_t = uint16_t;
