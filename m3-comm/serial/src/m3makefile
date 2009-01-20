@@ -2,9 +2,5 @@
 import ("libm3")
 
 interface   ("SerialPort")
-if equal (TARGET, "NT386")
-  include_dir ("WIN32")
-else
-  include_dir (OS_TYPE)
-end
+include_dir (OS_TYPE)
 Library     ("serialio")

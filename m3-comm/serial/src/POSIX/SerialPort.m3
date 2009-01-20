@@ -44,7 +44,9 @@ TYPE
 CONST  (* mappings from Modula-3 <-> POSIX constant values *)
   NO_VALUE = -1;
 
-  UnixBaudRates = ValueMap { ERR_UNKNOWN_BAUDRATE, 10, Utermio.BAUDBITS,
+(*CONST*)
+VAR
+  UnixBaudRates := ValueMap { ERR_UNKNOWN_BAUDRATE, 10, Utermio.BAUDBITS,
     ValMap { Utermio.B75, Utermio.B110,   Utermio.B300,   Utermio.B600,
              Utermio.B1200,  Utermio.B2400,  Utermio.B4800,
              Utermio.B9600,  Utermio.B14400, Utermio.B19200,
@@ -52,18 +54,19 @@ CONST  (* mappings from Modula-3 <-> POSIX constant values *)
              Utermio.B230400 }
   };
 
-  UnixDataBits = ValueMap { ERR_UNKNOWN_BYTESIZE, 3, Utermio.CSIZE,
+  UnixDataBits := ValueMap { ERR_UNKNOWN_BYTESIZE, 3, Utermio.CSIZE,
     ValMap { Utermio.CS8, Utermio.CS7, Utermio.CS6, Utermio.CS5, .. }
   };
 
-  UnixStopBits = ValueMap { ERR_UNKNOWN_STOPBITS, 2, Utermio.CSTOPB,
+  UnixStopBits := ValueMap { ERR_UNKNOWN_STOPBITS, 2, Utermio.CSTOPB,
     ValMap { 0(*1.0*), NO_VALUE(*1.5*), Utermio.CSTOPB(*2.0*), .. }
   };
 
-  UnixParity = ValueMap { ERR_UNKNOWN_PARITY, 2, Utermio.PARITYBITS,
+  UnixParity := ValueMap { ERR_UNKNOWN_PARITY, 2, Utermio.PARITYBITS,
     ValMap { Utermio.PARNONE, Utermio.PARODD, Utermio.PAREVEN, .. }
   };
 
+CONST
   (* I believe that these last 2 could be implemented manually, using the
      termios modem control line IOCTLs TIOCMGET/TIOCMSET.  I'm not
      sure how practical that is, however.  -- Blair 
