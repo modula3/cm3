@@ -84,7 +84,7 @@ char* EndComment = "*)";
 BOOL TryCompile();
 BOOL TryCompileAndLinkAndRun();
 
-#if __STDC__
+#ifdef __STDC__
 void Print(char* Format, ...)
 #else
 void Print(Format, va_alist)
@@ -94,7 +94,7 @@ void Print(Format, va_alist)
 {
     va_list Args;
 
-#if __STDC__
+#ifdef __STDC__
     va_start(Args, Format);
 #else
     va_start(Args);
