@@ -37,6 +37,8 @@ readonly _FloatPieces = {
   "NT386GNU"   : _float_le,
   "OKI"        : _float_le,
   "OS2"        : _float_le,
+  "PA32_HPUX"  : _float_be,
+  "PA64_HPUX"  : _float_be,
   "SEQUENT"    : _float_le,
   "SOLgnu"     : _float_be,
   "SOLsun"     : _float_be,
