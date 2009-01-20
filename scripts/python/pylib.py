@@ -101,7 +101,7 @@ def _FormatEnvironmentVariable(Name):
 
 #-----------------------------------------------------------------------------
 
-def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
+def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
     AnyMissing = False
     Value = os.environ.get(Name)
     if Value:
@@ -118,14 +118,20 @@ def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
             NewValue = Attempt
         for File in RequiredFiles:
             if not SearchPath(File, NewValue):
-                print("ERROR: " + File + " not found in " + _FormatEnvironmentVariable(Name) + "(" + NewValue + ")")
-                if __name__ != "__main__":
-                    sys.exit(1)
+                return "ERROR: " + File + " not found in " + _FormatEnvironmentVariable(Name) + "(" + NewValue + ")"
         os.environ[Name] = NewValue
         if Value:
             print(Name + "=" + Attempt + os.pathsep + _FormatEnvironmentVariable(Name))
         else:
             print(Name + "=" + Attempt)
+    return None
+
+def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
+    Error = _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt)
+    if Error:
+        print(Error)
+        if __name__ != "__main__":
+            sys.exit(1)
 
 #-----------------------------------------------------------------------------
 
@@ -2371,7 +2377,11 @@ def SetupEnvironment():
         #elif VCBin:
         #    MspdbDir = VCBin
 
-        _SetupEnvironmentVariableAll("INCLUDE", ["errno.h"], VCInc)
+        if _CheckSetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc):
+            a = os.path.join(SystemDrive, "Program Files")
+            b = os.path.join(a, "Microsoft Platform SDK for Windows Server 2003 R2", "Include")
+            c = os.path.join(a, "Microsoft SDKs", "Windows", "v6.0A", "Include")
+            _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc + ";" + c + ";" + b)
 
         _SetupEnvironmentVariableAll(
             "LIB",
