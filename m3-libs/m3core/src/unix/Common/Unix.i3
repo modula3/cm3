@@ -13,13 +13,11 @@ IMPORT Usysdep;
 CONST
   MaxPathLen = Usysdep.MaxPathLen;
 
-(* http://www.opengroup.org/onlinepubs/9699919799/basedefs/sys_stat.h.html *)
-
-  MSETUID = Usysdep.MSETUID;
-  MSETGID = Usysdep.MSETGID;
-  MSTICKY = Usysdep.MSTICKY;
-
 (*CONST*)
+<*EXTERNAL "Unix_MSETUID"*> VAR MSETUID: int; (* set user id on execution *)
+<*EXTERNAL "Unix_MSETGID"*> VAR MSETGID: int; (* set group id on execution *)
+<*EXTERNAL "Unix_MSTICKY"*> VAR MSTICKY: int; (* save swapped text even after use *)
+
 (* owner *)
 <*EXTERNAL "Unix_MROWNER"*> VAR MROWNER: int; (* readable by owner *)
 <*EXTERNAL "Unix_MWOWNER"*> VAR MWOWNER: int; (* writable by owner *)
