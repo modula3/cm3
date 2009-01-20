@@ -57,10 +57,10 @@ typedef struct timeval timeval_t;
 If (x) = -1 generates a warning, try (memset(&x, -1, sizeof(x)), x) */
 
 #ifdef __STDC__
-#define CHECK(x) ((x) || (CheckFailed(#x), 0))
+#define CHECK(x) ((void)((x) || (CheckFailed(#x), 0)))
 #else
 /* bundled HP-UX cc */
-#define CHECK(x) ((x) || (CheckFailed("x"), 0))
+#define CHECK(x) ((void)((x) || (CheckFailed("x"), 0)))
 #endif
 
 /* Define a 64bit integer type, and verify that a exists. */
@@ -82,6 +82,7 @@ char* BeginComment = "(*";
 char* EndComment = "*)";
 
 BOOL TryCompile();
+BOOL TryCompileAndLinkAndRun();
 
 #if __STDC__
 void Print(char* Format, ...)
@@ -277,7 +278,7 @@ Methodology:
     char* a[60];
     char* Source;
     char* NativeName = Struct->NativeName;
-    char* MyName = Struct->MyName ? Struct->MyName : Struct->NativeName;
+    /*char* MyName = Struct->MyName ? Struct->MyName : Struct->NativeName;*/
 
     unlink(FilePath);
 
@@ -615,7 +616,6 @@ BOOL DoesCompileAndLinkOutputExist()
 void CreateSourceFile(Snippet)
     char* Snippet;
 {
-    size_t i = 0;
     FILE* FileHandle = 0;
 
     FileHandle = fopen("conf1.c", "w");
@@ -716,7 +716,7 @@ void FindDevNull()
         return;
 
     Print("looking for /dev/null..");
-    for (i = 0 ; DevNull = PossibleDevNull[i] ; ++i)
+    for (i = 0 ; (DevNull = PossibleDevNull[i]) != NULL ; ++i)
     {
         File = fopen(DevNull, "r");
         if (File != NULL)
@@ -740,18 +740,18 @@ void FindCompiler()
 
     Print("looking for C compiler..");
 
-    if (CFlags = getenv("CFLAGS"))
+    if ((CFlags = getenv("CFLAGS")) != NULL)
     {
         Print("using environment variable CFLAGS: %s\n", CFlags);
     }
 
-    if (Compiler = getenv("CC"))
+    if ((Compiler = getenv("CC")) != NULL)
     {
         Print("using CC environment variable: %s\n", Compiler);
         Compiler = CFlags ? Concat3(Compiler, " ", CFlags) : Compiler;
         return;
     }
-    for (i = 0 ; Compiler = PossibleCompilers[i] ; ++i)
+    for (i = 0 ; (Compiler = PossibleCompilers[i]) != NULL ; ++i)
     {
         Compiler = CFlags ? Concat3(Compiler, " ", CFlags) : Compiler;
         if (TryCompile("int main() { return 0; }\n"))
@@ -1126,8 +1126,8 @@ void Config()
     }
 #endif
 
-    { ssize_t (*p)(int, void*, size_t) = read; }
-    { ssize_t (*p)(int, const void*, size_t) = write; }
+    { ssize_t (*p)(int, void*, size_t) = read; (void)&p; }
+    { ssize_t (*p)(int, const void*, size_t) = write; (void)&p; }
 
     FindDevNull();
     FindCompiler();
