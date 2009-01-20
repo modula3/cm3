@@ -144,7 +144,7 @@ readonly UutmpCustom = {
 }
 
 if Uutmp1 contains TARGET
-  include_dir("Uutmp1")
+  % nothing -- it is in common
 else if Uutmp2 contains TARGET
   include_dir("Uutmp2")
 else if Uutmp3 contains TARGET
