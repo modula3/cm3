@@ -32,6 +32,7 @@ that conflicts with its own output, so, for example:
 #include <stddef.h>
 #include <pthread.h>
 #ifndef _WIN32
+#include <unistd.h>
 #ifndef __STDC__
 #define const /* nothing, for bundled HP-UX cc, esp. within the system's own headers */
 #endif
@@ -1116,6 +1117,17 @@ void Config()
         CHECK(&p->it_interval == &q->it_interval);
         CHECK(&p->it_value == &q->it_value);
     }
+
+    /* That we have the function signatures correct. */
+#if 0
+    {
+        uid_t (*p_geteuid)(void) = geteuid;
+        gid_t (*p_getegid)(void) = getegid;
+    }
+#endif
+
+    { ssize_t (*p)(int, void*, size_t) = read; }
+    { ssize_t (*p)(int, const void*, size_t) = write; }
 
     FindDevNull();
     FindCompiler();
