@@ -42,6 +42,8 @@ typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 
+typedef struct timeval timeval_t;
+
 #define IS_TYPE_SIGNED(x)  (((x)-1) < (x)0)
 #define IS_FIELD_SIGNED(x) (((x) = -1) < 0)
 
@@ -65,7 +67,7 @@ If (x) = -1 generates a warning, try (memset(&x, -1, sizeof(x)), x) */
 
 typedef unsigned U;
 
-FILE* LogFile = stdout;
+FILE* LogFile;
 
 /* Hypothetically would change these for a C generating mode.
 But the right way to implement all this is probably to output XML and then apply an XSL style sheet,
@@ -383,26 +385,43 @@ void DefineOpaqueType(Name, Size, Align)
         return;
     }
     if (Align == ALIGN_OF_TYPE(void*))
+    {
         Element = "INTEGER";
+    }
     else if (Align == ALIGN_OF_TYPE(__int64))
+    {
         Element = "LONGINT";
+    }
     else if (Align > ALIGN_OF_TYPE(__int64))
     {
         Print("WARNING: %s alignment lowered from %u to LONGINT\n", Name, (U)Align);
         Element = "LONGINT";
+        Align = ALIGN_OF_TYPE(__int64);
     }
     else if (Align == ALIGN_OF_TYPE(int))
+    {
         Element = "uint32_t";
+    }
     else if (Align == ALIGN_OF_TYPE(short))
+    {
         Element = "uint16_t";
+    }
     else if (Align == ALIGN_OF_TYPE(char))
+    {
         Element = "uint8_t";
+    }
     else
     {
         Print("ERROR: unable to represent alignment %u for type %s\n", (U)Align, Name);
         exit(1);
     }
-    Print("%s = RECORD opaque: ARRAY [0..%u] OF int; END\n", Name, (U)(Size / Align - 1), Element);
+    /* need to check that it is an even multiple */
+    if ((Size % Align) != 0)
+    {
+        printf("ERROR: size (%u) is not an even multiple of align (%u) for type %s\n", Size, Align, Name);
+        exit(1);
+    }
+    Print("%s = RECORD opaque: ARRAY [1..%u] OF %s; END\n", Name, (U)(Size / Align), Element);
 }
 
 #ifdef __STDC__
@@ -471,10 +490,16 @@ void DefineIntegerFieldType(struc, field, myname, Size, Signed)
 char* Compiler;
 
 char* PossibleCompilers[] = {
-
+    /* favor compiler used to build this, if user defines it */
+#ifdef CC
+    CC
+#ifdef CFLAGS
+    CFLAGS
+#endif
+    ,
+#endif
     /* My HP-UX requires -lpthread to link, seems wrong.
     -Werror is because certain code that really should error, only warns. */
-
     "gcc -lpthread -Werror",
     "gcc -Werror",
     "cc -lpthread -Werror",
@@ -598,6 +623,20 @@ void CreateSourceFile(Snippet)
     fclose(FileHandle);
 }
 
+/* gcc warns about the -lpthread when we are only compiling; annoying */
+
+void RemoveLinkOptionFromCommandLine(CommandLine)
+    char* CommandLine;
+{
+    char* pthread;
+
+    pthread = strstr(CommandLine, " -lpthread ");
+    if (pthread)
+    {
+        memmove(pthread, pthread + 10, 1 + strlen(pthread + 10));
+    }
+}
+
 BOOL TryCompile(Snippet)
     char* Snippet;
 {
@@ -606,6 +645,7 @@ BOOL TryCompile(Snippet)
     BOOL Exists = 0;
 
     CommandLine = Concat2(Compiler, " -c conf1.c");
+    RemoveLinkOptionFromCommandLine(CommandLine);
     CreateSourceFile(Snippet);
     fprintf(LogFile, "running: %s\n", CommandLine);
     ExitCode = system(CommandLine);
@@ -988,6 +1028,19 @@ void Config()
     DEFINE_INTEGER_TYPE(uid_t);
     DEFINE_INTEGER_TYPE(time_t);
     DEFINE_INTEGER_TYPE(off_t);
+    DEFINE_INTEGER_TYPE(mode_t);
+
+    {
+        timeval_t tv;
+
+        DEFINE_INTEGER_FIELD_TYPE(timeval_t, tv_sec, tv.tv_sec, tv_sec_t);
+        DEFINE_INTEGER_FIELD_TYPE(timeval_t, tv_usec, tv.tv_usec, tv_usec_t);
+
+        /* Check that timeval_t has only these two fields, in this order. */
+        CHECK(&tv == (void*)&tv.tv_sec);
+        CHECK((&tv.tv_sec + 1) == &tv.tv_usec);
+        CHECK((&tv.tv_usec + 1) == (void*)(&tv + 1));
+    }
 
     FindDevNull();
     FindCompiler();
@@ -1010,8 +1063,8 @@ void Config()
     CheckField("#include <time.h>\n", "struct tm", "long", "tm_isdst");
     CheckField("#include <time.h>\n", "struct tm", "float", "tm_isdst");
 
-    CheckField("#include <time.h>\n", "struct tm", "int", "tm_gmtoff");
-    CheckField("#include <time.h>\n", "struct tm", "int", "tm_zone");
+    CheckField("#include <time.h>\n", "struct tm", "long", "tm_gmtoff");
+    CheckField("#include <time.h>\n", "struct tm", "char*", "tm_zone");
     {
         typedef struct tm tm_t;
         typedef struct { int tm_sec, tm_min, tm_hour, tm_mday, tm_mon, tm_year, tm_wday, tm_yday, tm_isdst; } tm2_t;
@@ -1056,11 +1109,7 @@ do { \
     /* Is this always long or sometimes int? */
     if (CheckGlobalVariable("#include <time.h>\n", "long", "_timezone") == FALSE)
     {
-        if (CheckGlobalVariable("#include <time.h>\n", "int", "_timezone") == FALSE)
-        {
-            CheckGlobalVariable("#include <time.h>\n", "long", "timezone");
-            CheckGlobalVariable("#include <time.h>\n", "int", "timezone");
-        }
+        CheckGlobalVariable("#include <time.h>\n", "long", "timezone");
     }
 
     {
@@ -1096,6 +1145,22 @@ do { \
         hostent_t hostent;
         DEFINE_INTEGER_FIELD_TYPE(hostent_t, h_addrtype, hostent.h_addrtype, hostent_addrtype_t);
         DEFINE_INTEGER_FIELD_TYPE(hostent_t, h_length, hostent.h_length, hostent_length_t);
+        char* t1;
+        char* t2;
+
+        /* Check that all these fields are present, in this order, and no more. */
+
+        CHECK(&hostent == (void*)&hostent.h_name);
+        CHECK((&hostent.h_name + 1) == (void*)&hostent.h_aliases);
+        CHECK((&hostent.h_aliases + 1) == (void*)&hostent.h_addrtype);
+        CHECK((&hostent.h_addrtype + 1) == (void*)&hostent.h_length);
+        CHECK((&hostent.h_length + 1) == (void*)&hostent.h_addr_list);
+        CHECK((&hostent.h_addr_list + 1) == (void*)(&hostent + 1));
+
+        t1 = GetIntegerType(sizeof(hostent.h_addrtype), IS_FIELD_SIGNED(hostent.h_addrtype));
+        t2 = GetIntegerType(sizeof(hostent.h_length), IS_FIELD_SIGNED(hostent.h_length));
+
+        Print("hostent_addrtype_t = %s;\nhostent_length_t = %s;\n", t1, t2);
     }
 
     {
@@ -1206,6 +1271,7 @@ do { \
         const static char Prefix[] = "#include <netinet/in.h>\n";
 
         /* This could be relaxed but our memcmps below are sloppy. */
+
         CHECK(sizeof(len) == sizeof(nolen));
         CHECK(sizeof(len) == sizeof(a));
         CHECK(ALIGN_OF_TYPE(sockaddr_in_len_t) == ALIGN_OF_TYPE(sockaddr_in_nolen_t));
