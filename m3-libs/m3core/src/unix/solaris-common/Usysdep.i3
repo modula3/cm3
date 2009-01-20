@@ -4,10 +4,8 @@
 
 INTERFACE Usysdep;
 
-FROM Cstdint IMPORT uint32_t;
-FROM Ctypes IMPORT char_star, int;
-FROM Cstddef IMPORT size_t;
-IMPORT Upthreadtypes;
+FROM Cstdint IMPORT uint32_t, uint32_t;
+FROM Ctypes IMPORT int;
 
 CONST
     (* trick from darwin-generic/Upthread.i3 *)

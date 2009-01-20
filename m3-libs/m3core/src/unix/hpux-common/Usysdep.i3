@@ -4,7 +4,7 @@
 
 INTERFACE Usysdep;
 
-FROM Cstdint IMPORT int32_t;
+FROM Cstdint IMPORT uint16_t, int32_t;
 FROM Ctypes IMPORT int;
 FROM Cstddef IMPORT size_t;
 
