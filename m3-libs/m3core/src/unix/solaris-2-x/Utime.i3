@@ -150,13 +150,13 @@ PROCEDURE setitimer (which: int;  VAR value, ovalue: struct_itimerval): int;
 (* Reentrant equivalents from Solaris 2.4 and POSIX.4a Draft #6. *)
 
 <*EXTERNAL*>
-PROCEDURE ctime_r (clock: long_star; buf: char_star; buflen: int): char_star;
+PROCEDURE ctime_r (READONLY clock: long; buf: char_star; buflen: int): char_star;
 
 <*EXTERNAL*>
-PROCEDURE localtime_r (clock: long_star; res: struct_tm_star): struct_tm_star;
+PROCEDURE localtime_r (READONLY clock: long; res: struct_tm_star): struct_tm_star;
 
 <*EXTERNAL*>
-PROCEDURE gmtime_r (clock: long_star; res: struct_tm_star): struct_tm_star;
+PROCEDURE gmtime_r (READONLY clock: long; res: struct_tm_star): struct_tm_star;
 
 <*EXTERNAL*>
 PROCEDURE asctime_r(tm: struct_tm_star; buf: char_star; buflen: int):char_star;
