@@ -16,7 +16,10 @@ that conflicts with its own output, so, for example:
   ./config
 */
 
+#define _INCLUDE_POSIX_SOURCE
+#define _INCLUDE_HPUX_SOURCE
 #define _FILE_OFFSET_BITS 64
+
 #ifdef __STDC__
 #include <stdarg.h>
 #else
@@ -38,6 +41,7 @@ that conflicts with its own output, so, for example:
 #endif /* WIN32 */
 #include <setjmp.h>
 #include <time.h>
+#include <signal.h>
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
@@ -618,8 +622,11 @@ void CreateSourceFile(Snippet)
         Print("fopen(conf1.c, w) failed\n");
         exit(1);
     }
+
+    Snippet = Concat2("#define _INCLUDE_POSIX_SOURCE\n#define _INCLUDE_HPUX_SOURCE\n#define _FILE_OFFSET_BITS 64\n", Snippet);
     fprintf(LogFile, "compiling: %s", Snippet);
     fprintf(FileHandle, "%s", Snippet);
+    free(Snippet);
     fclose(FileHandle);
 }
 
@@ -1029,6 +1036,7 @@ void Config()
     DEFINE_INTEGER_TYPE(time_t);
     DEFINE_INTEGER_TYPE(off_t);
     DEFINE_INTEGER_TYPE(mode_t);
+    DEFINE_INTEGER_TYPE(socklen_t);
 
     {
         timeval_t tv;
@@ -1220,6 +1228,33 @@ do { \
     DEFINE_OPAQUE_TYPE(pthread_key_t);
 
     DEFINE_OPAQUE_TYPE(jmp_buf);
+
+#ifdef _SIGRTMAX
+    printf("_SIGRTMAX = %u;\n", _SIGRTMAX);
+#else
+    printf("_SIGRTMAX not defined\n");
+#endif
+#ifdef SIGRTMAX
+    printf("SIGRTMAX = %u;\n", SIGRTMAX);
+#else
+    printf("SIGRTMAX not defined\n");
+#endif
+#ifdef SIGUSR2
+    printf("SIGUSR2 = %u\n", SIGUSR2);
+#else
+    printf("SIGUSR2 not defined\n");
+#endif
+#ifdef _SIGUSR2
+    printf("_SIGUSR2 = %u\n", _SIGUSR2);
+#else
+    printf("_SIGUSR2 not defined\n");
+#endif
+
+#ifdef _NSIG
+    printf("_NSIG = %u\n", _NSIG);
+#else
+    printf("_NSIG not defined\n");
+#endif
 
 #ifndef _WIN32
     /* test code */
