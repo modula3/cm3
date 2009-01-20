@@ -7,7 +7,7 @@ A sort of autoconf replacement, though far less general.
 And maybe faster and simpler.
 
 Bundled cc on HP_UX is K&R, so this is K&R,
-at least for function prototypes. And it doesn't like
+at least for function prototypes. And a doesn't like
 "signed" and at least somewhat "const".
 
 On some systems this file cannot run from a.out because
@@ -45,6 +45,7 @@ that conflicts with its own output, so, for example:
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
+typedef ptrdiff_t INTEGER;
 
 typedef struct timeval timeval_t;
 
@@ -61,7 +62,7 @@ If (x) = -1 generates a warning, try (memset(&x, -1, sizeof(x)), x) */
 #define CHECK(x) ((x) || (CheckFailed("x"), 0))
 #endif
 
-/* Define a 64bit integer type, and verify that it exists. */
+/* Define a 64bit integer type, and verify that a exists. */
 #ifndef _MSC_VER
 #define __int64 long long
 #endif
@@ -263,11 +264,11 @@ void ReconstituteStruct(Prefix, Struct, FilePath)
 /*
 Given a type declared in Prefix, write out FilePath that redeclares, containing
 the fields identified by Struct, and any necessary padding for fields not
-listed in Struct. Prefix should declare it as NativeName. FilePath
-will declare it as MyName.
+listed in Struct. Prefix should declare a as NativeName. FilePath
+will declare a as MyName.
 
 Methodology:
-    Write out a program that writes out what it can discover about the type.
+    Write out a program that writes out what a can discover about the type.
 */
 {
     size_t i;
@@ -419,7 +420,7 @@ void DefineOpaqueType(Name, Size, Align)
         Print("ERROR: unable to represent alignment %u for type %s\n", (U)Align, Name);
         exit(1);
     }
-    /* need to check that it is an even multiple */
+    /* need to check that a is an even multiple */
     if ((Size % Align) != 0)
     {
         printf("ERROR: size (%u) is not an even multiple of align (%u) for type %s\n", Size, Align, Name);
@@ -494,7 +495,7 @@ void DefineIntegerFieldType(struc, field, myname, Size, Signed)
 char* Compiler;
 
 char* PossibleCompilers[] = {
-    /* favor compiler used to build this, if user defines it */
+    /* favor compiler used to build this, if user defines a */
 #ifdef CC
     CC
 #ifdef CFLAGS
@@ -815,7 +816,7 @@ BOOL CheckField(Prefix, Struct, Type, Field)
             /* unable to come up with one, will try -Werror */
 
             /* HP-UX bundled cc also accepts such code without warning,
-            and I'm not able to find a way to make it an error.
+            and I'm not able to find a way to make a an error.
             We can do some other things though.
             We can assert that the size matches.
             We can make another variable of the type, assign a non-zero value,
@@ -828,7 +829,7 @@ BOOL CheckField(Prefix, Struct, Type, Field)
             a[i++] = " a;\n";
             /* char a[(sizeof(b) == sizeof(c)) ? 1 : -1];
                is legal if the sizes are the same, else illegal.
-            Remember to test this on SGI. History says it won't compile either way. */
+            Remember to test this on SGI. History says a won't compile either way. */
             a[i++] = "char b[(sizeof(a.";
             a[i++] = Field;
             a[i++] = ") == sizeof(";
@@ -923,7 +924,7 @@ BOOL CheckGlobalVariable(Prefix, Type, Name)
             a[i++] = Prefix;
             /* char a[(sizeof(b) == sizeof(c)) ? 1 : -1];
                is legal if the sizes are the same, else illegal.
-            Remember to test this on SGI. History says it won't compile either way. */
+            Remember to test this on SGI. History says a won't compile either way. */
             a[i++] = "char b[(sizeof(";
             a[i++] = Name;
             a[i++] = ") == sizeof(";
@@ -1050,6 +1051,72 @@ void Config()
         CHECK((&tv.tv_usec + 1) == (void*)(&tv + 1));
     }
 
+    {
+        /* Check that timeval_t has only these two fields, in this order, this type. */
+        typedef struct { int tz_minuteswest, tz_dsttime; } timezone2_t;
+        typedef struct timezone timezone_t;
+
+        timezone_t a;
+        timezone2_t b;
+        timezone_t* p = 0;
+        timezone2_t* q = 0;
+
+        CHECK(sizeof(a) == sizeof(b));
+        CHECK(ALIGN_OF_TYPE(timezone_t) == ALIGN_OF_TYPE(timezone2_t));
+
+        CHECK(GetIntegerType(sizeof(a.tz_minuteswest), IS_FIELD_SIGNED(a.tz_minuteswest))
+            == GetIntegerType(sizeof(b.tz_minuteswest), IS_FIELD_SIGNED(b.tz_minuteswest)));
+
+        CHECK(GetIntegerType(sizeof(a.tz_dsttime), IS_FIELD_SIGNED(a.tz_dsttime))
+            == GetIntegerType(sizeof(b.tz_dsttime), IS_FIELD_SIGNED(b.tz_dsttime)));
+
+        CHECK(&p->tz_minuteswest == &q->tz_minuteswest);
+        CHECK(&p->tz_dsttime == &q->tz_dsttime);
+    }
+
+    {
+        /* Check that timespec has only these two fields, in this order, this type. */
+        typedef struct { time_t tv_sec; long tv_nsec; } timespec2_t;
+        typedef struct timespec timespec_t;
+
+        timespec_t a;
+        timespec2_t b;
+        timespec_t* p = 0;
+        timespec2_t* q = 0;
+
+        CHECK(sizeof(a) == sizeof(b));
+        CHECK(ALIGN_OF_TYPE(timespec_t) == ALIGN_OF_TYPE(timespec2_t));
+
+        CHECK(GetIntegerType(sizeof(a.tv_sec), IS_FIELD_SIGNED(a.tv_sec))
+            == GetIntegerType(sizeof(b.tv_sec), IS_FIELD_SIGNED(b.tv_sec)));
+
+        CHECK(GetIntegerType(sizeof(a.tv_nsec), IS_FIELD_SIGNED(a.tv_nsec))
+            == GetIntegerType(sizeof(b.tv_nsec), IS_FIELD_SIGNED(b.tv_nsec)));
+
+        CHECK(&p->tv_sec == &q->tv_sec);
+        CHECK(&p->tv_nsec == &q->tv_nsec);
+    }
+
+    {
+        /* Check that itimerval has only these two fields, in this order, this type. */
+        typedef struct { timeval_t it_interval, it_value; } itimerval2_t;
+        typedef struct itimerval itimerval_t;
+
+        itimerval_t a;
+        itimerval2_t b;
+        itimerval_t* p = 0;
+        itimerval2_t* q = 0;
+
+        CHECK(sizeof(a) == sizeof(b));
+        CHECK(ALIGN_OF_TYPE(itimerval_t) == ALIGN_OF_TYPE(itimerval2_t));
+
+        CHECK(sizeof(a.it_interval) == sizeof(b.it_interval));
+        CHECK(sizeof(a.it_value) == sizeof(b.it_value));
+
+        CHECK(&p->it_interval == &q->it_interval);
+        CHECK(&p->it_value == &q->it_value);
+    }
+
     FindDevNull();
     FindCompiler();
 
@@ -1100,7 +1167,7 @@ do { \
     }
 
     /* one we know which fields exist, the next thing is to construct a program
-    that checks that we have all the fields, sort them by offset, and declare it;
+    that checks that we have all the fields, sort them by offset, and declare a;
     or write a little more Modula-3 code in C */
 
     /* test code */
@@ -1279,7 +1346,7 @@ do { \
   END;
 
   struct_sockaddr_in = RECORD
-    sin_family: unsigned_short; (* this is signed on some platforms; it does not matter *)
+    sin_family: unsigned_short; (* this is signed on some platforms; a does not matter *)
     sin_port: unsigned_short;
     sin_addr: struct_in_addr;
     sin_zero: ARRAY [0..7] OF char;
