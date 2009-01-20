@@ -610,7 +610,6 @@ if Target.startswith("NT386"):
     if Target == "NT386GNU":
         Config = "NT386GNU"
         OSType = "POSIX"
-        HAVE_SERIAL = False # temporary..
 
     elif Target == "NT386MINGNU":
         Config = "NT386MINGNU"
