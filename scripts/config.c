@@ -1143,10 +1143,11 @@ do { \
         */
         typedef struct hostent hostent_t;
         hostent_t hostent;
-        DEFINE_INTEGER_FIELD_TYPE(hostent_t, h_addrtype, hostent.h_addrtype, hostent_addrtype_t);
-        DEFINE_INTEGER_FIELD_TYPE(hostent_t, h_length, hostent.h_length, hostent_length_t);
         char* t1;
         char* t2;
+
+        DEFINE_INTEGER_FIELD_TYPE(hostent_t, h_addrtype, hostent.h_addrtype, hostent_addrtype_t);
+        DEFINE_INTEGER_FIELD_TYPE(hostent_t, h_length, hostent.h_length, hostent_length_t);
 
         /* Check that all these fields are present, in this order, and no more. */
 
