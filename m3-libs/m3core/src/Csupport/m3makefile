@@ -35,6 +35,8 @@ readonly _CSupportPieces = {
   "NEXT"       : [ "NEXT", "big-endian" ],
   "NT386"      : [ "little-endian" ],
   "NT386GNU"   : [ "little-endian" ],
+  "PA32_HPUX"  : [ "big-endian" ],
+  "PA64_HPUX"  : [ "big-endian" ],
   "OKI"        : [ "little-endian" ],
   "OS2"        : [ "OS2", "little-endian" ],
   "SEQUENT"    : [ "little-endian" ],
