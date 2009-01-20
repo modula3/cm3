@@ -33,3 +33,16 @@ c_source("OSConfigPosixC")
 
 interface("FSPosixC")
 c_source("FSPosixC")
+
+
+> "IsUltrixOrOSF.i3" in
+    write("INTERFACE IsUltrixOrOSF;\n")
+    write("CONST Value = ")
+    if equal(TARGET, "ALPHA_OSF") or equal(TARGET, "DS3100")
+        write("TRUE")
+    else
+        write("FALSE")
+    end
+    write(";\nEND IsUltrixOrOSF.")
+    derived_interface("IsUltrixOrOSF", HIDDEN)
+end
