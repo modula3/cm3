@@ -3,7 +3,8 @@
 
 UNSAFE MODULE OSConfigPosix EXPORTS OSConfig;
 
-IMPORT Compiler, Env, OSError, Process, OSConfigPosixC;
+IMPORT Env, OSError, Process, OSConfigPosixC;
+IMPORT OSConfigPosix_DefaultOSName, OSConfigPosix_DefaultArch;
 
 VAR
   host_name  : TEXT := NIL;
@@ -59,113 +60,11 @@ PROCEDURE Init () =
     END;
     IF OSConfigPosixC.Init (host_name, host_arch, os_name, os_version) < 0 THEN
       host_name  := "<unknown>";
-      host_arch  := DefaultArch [ORD(Compiler.ThisPlatform)];
-      os_name    := DefaultOSName [ORD(Compiler.ThisPlatform)];
+      host_arch  := OSConfigPosix_DefaultArch.Value;
+      os_name    := OSConfigPosix_DefaultOSName.Value;
       os_version := "";
     END;
   END Init;
-
-CONST
-  DefaultOSName = ARRAY [0..49] (* Compiler.Platform *) OF TEXT {
-   (* AIX386     *)  "AIX",
-   (* ALPHA_OSF  *)  "Digital Unix",
-   (* AP3000     *)  "Unix",
-   (* ARM        *)  "Unix",
-   (* DS3100     *)  "Ultrix",
-   (* FreeBSD    *)  "FreeBSD",
-   (* FreeBSD2   *)  "FreeBSD",
-   (* HP300      *)  "HP/UX",
-   (* HPPA       *)  "HP/UX",
-   (* IBMR2      *)  "AIX",
-   (* IBMRT      *)  "AIX",
-   (* IRIX5      *)  "Irix",
-   (* LINUX      *)  "Linux",
-   (* LINUXELF   *)  "Linux",
-   (* NEXT       *)  "NextOS",
-   (* NT386      *)  "Win32",
-   (* OKI        *)  "Unix",
-   (* OS2        *)  "OS/2",
-   (* SEQUENT    *)  "Unix",
-   (* SOLgnu     *)  "Solaris",
-   (* SOLsun     *)  "Solaris",
-   (* SPARC      *)  "SunOS",
-   (* SUN3       *)  "SunOS",
-   (* SUN386     *)  "SunOS",
-   (* UMAX       *)  "Unix",
-   (* VAX        *)  "Ultrix",
-   (* FreeBSD3   *)  "FreeBSD",
-   (* FreeBSD4   *)  "FreeBSD",
-   (* FBSD_ALPHA *)  "FreeBSD",
-   (* LINUXLIBC6 *)  "Linux",
-   (* I386_DARWIN*)  "Darwin",
-   (* PPC_DARWIN *)  "Darwin",
-   (* BSDI4	 *)  "BSD/OS",
-   (* NT386GNU	 *)  "Cygwin",
-   (* PPC_LINUX	 *)  "Linux",
-   (* NetBSD2_i386 *)  "NetBSD",
-   (* AMD64_DARWIN *) "Darwin",
-   (* AMD64_LINUX *) "Linux",
-   (* SPARC32_LINUX *) "Linux",
-   (* SPARC64_LINUX *) "Linux",
-   (* SPARC64_OPENBSD *) "OpenBSD",
-   (* PPC32_OPENBSD *) "OpenBSD",
-   (* MIPS64_OPENBSD *) "OpenBSD",
-   (* SPARC64_SOLARIS *) "Solaris",
-   (* I386_OPENBSD *) "OpenBSD",
-   (* AMD64_FREEBSD *) "FreeBSD",
-   ..
-  };
-
-CONST
-  DefaultArch = ARRAY [0..49] (* Compiler.Platform *) OF TEXT {
-   (* AIX386     *)  "i386",
-   (* ALPHA_OSF  *)  "alpha",
-   (* AP3000     *)  "apollo",
-   (* ARM        *)  "acorn risc",
-   (* DS3100     *)  "mips",
-   (* FreeBSD    *)  "i486",
-   (* FreeBSD2   *)  "i486",
-   (* HP300      *)  "hp300",
-   (* HPPA       *)  "hppa",
-   (* IBMR2      *)  "IBM romp",
-   (* IBMRT      *)  "IBM RT",
-   (* IRIX5      *)  "mips",
-   (* LINUX      *)  "i486",
-   (* LINUXELF   *)  "i486",
-   (* NEXT       *)  "m68K",
-   (* NT386      *)  "i686",
-   (* OKI        *)  "m68K",
-   (* OS2        *)  "i486",
-   (* SEQUENT    *)  "m68K",
-   (* SOLgnu     *)  "sparc",
-   (* SOLsun     *)  "sparc",
-   (* SPARC      *)  "sparc",
-   (* SUN3       *)  "sparc3",
-   (* SUN386     *)  "i386",
-   (* UMAX       *)  "m68K",
-   (* VAX        *)  "vax",
-   (* FreeBSD3   *)  "i486",
-   (* FreeBSD4   *)  "i686",
-   (* FBSD_ALPHA *)  "alpha",
-   (* LINUXLIBC6 *)  "i686",
-   (* I386_DARWIN*)  "i686",
-   (* PPC_DARWIN *)  "ppc",
-   (* BSDI4      *)  "i486",
-   (* NT386GNU	 *)  "i686",
-   (* PPC_LINUX	 *)  "ppc",
-   (* NetBSD2_i386 *)   "i686",
-   (* AMD64_DARWIN *)   "AMD64",
-   (* AMD64_LINUX *)    "AMD64",
-   (* SPARC32_LINUX *)  "sparc",
-   (* SPARC64_LINUX *)  "sparc64",
-   (* SPARC64_OPENBSD *) "sparc64",
-   (* PPC32_OPENBSD *)  "ppc",
-   (* MIPS64_OPENBSD *) "mips64",
-   (* SPARC64_SOLARIS *) "sparc64",
-   (* I386_OPENBSD *) "i686",
-   (* AMD64_FREEBSD *) "AMD64",
-   ..
-  };
 
 PROCEDURE InitUserName () =
   BEGIN
