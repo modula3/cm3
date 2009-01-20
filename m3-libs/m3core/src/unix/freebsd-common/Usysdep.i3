@@ -13,9 +13,6 @@ FROM Cstdint IMPORT uint32_t, int32_t;
 
 CONST
   MaxPathLen = 1024;
-  MSETUID = 8_4000;
-  MSETGID = 8_2000;
-  MSTICKY = 8_1000;
 
   MAX_FDSET = 1024;
 
