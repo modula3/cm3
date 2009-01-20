@@ -8,6 +8,8 @@ implementation ("RTArgs")
 implementation ("RTOS")
 module         ("RTPerfTool")
 implementation ("RTProcessPosix")
+c_source("RTProcessPosixC")
+interface("RTProcessPosixC")
 
 readonly RTOSbrk = {
   %

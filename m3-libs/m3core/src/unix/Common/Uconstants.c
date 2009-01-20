@@ -155,10 +155,6 @@ X(ITIMER_REAL) /* real time intervals */
 X(ITIMER_VIRTUAL) /* virtual time intervals */
 
 
-#undef X
-#define X(x) const int Uresource_##x = x;
-X(RUSAGE_SELF)
-
 
 #ifdef __CYGWIN__
 
@@ -171,4 +167,57 @@ X(RUSAGE_SELF)
 
 Y(P_NOWAIT, _P_NOWAIT)
 
+#undef X
+#undef Y
+#define X(x) const int Utermio_##x = x;
+#define Y(x, y) const int Utermio_##x = y;
+
+#if 0 /* preprocess and fixup for Modula-3 *.i3 contents */
+#undef X
+#undef Y
+#define X(x) <* EXTERNAL Utermio_##x *> VAR #x: int;
+#define Y(x, y) <* EXTERNAL Utermio_##x *> VAR #x: int;
 #endif
+
+#include <sys/termios.h>
+
+Y(BAUDBITS, CBAUD)
+X(B75)
+X(B110)
+X(B300)
+X(B600)
+X(B1200)
+X(B2400)
+X(B4800)
+X(B9600)
+#ifdef B14400
+X(B14400)
+#else
+Y(B14400, -1)
+#endif
+X(B19200)
+X(B38400)
+X(B57600)
+X(B115200)
+X(B230400)
+X(CSIZE)
+X(CS8)
+X(CS7)
+X(CS6)
+X(CS5 )
+X(CSTOPB)
+
+Y(PARITYBITS, PARODD | PARENB)
+Y(PARNONE, 0)
+Y(PARODD, PARODD | PARENB)
+Y(PAREVEN, PARENB)
+
+X(IGNBRK)
+X(IGNPAR)
+X(CREAD)
+X(VMIN)
+X(VTIME)
+
+X(TCSANOW)
+
+#endif /* cygwin */

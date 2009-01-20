@@ -16,7 +16,6 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
     Interface ("Unetdb")
     Interface ("Uugid")
     Interface ("Uprocess")
-    Interface ("Uresource")
 
     Interface("Unix")
     Interface("Utime")
@@ -35,4 +34,8 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
 
     Interface ("Ustat")
     Interface ("Udir")
+end
+
+if equal (TARGET, "NT386")
+    Interface ("Utermio")
 end
