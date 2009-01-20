@@ -2080,9 +2080,9 @@ CORE_ADDR
 m3_inf_open_array_elems_addr ( CORE_ADDR ref ) 
 
 { CORE_ADDR result; 
-  gdb_byte buf [16] ; /* liberal. */ 
+  gdb_byte buf [64] ; /* liberal. */ 
 
-  read_memory ( ref, buf, TARGET_PTR_BIT );  
+  read_memory ( ref, buf, TARGET_PTR_BIT / TARGET_CHAR_BIT );  
   result = m3_open_array_elems_addr ( buf ); 
   return result; 
 } /* m3_inf_open_array_elems_addr */ 
@@ -2098,13 +2098,14 @@ m3_inf_open_array_shape_component ( CORE_ADDR ref, int dimension )
 
 { ULONGEST result; 
   int target_offset; 
-  gdb_byte buf [16]; /* liberal. */ 
+  gdb_byte buf [64]; /* liberal. */ 
 
   target_offset = m3_shape_component_offset ( dimension ); 
   /* FIXME: ^This would fail if TARGET_CHAR_BIT /= HOST_CHAR_BIT, because 
      m3-shape_component_offset returns a gdb-space offset, while we need
      a target offset here. */ 
-  read_memory ( ref + target_offset, buf, m3_target_integer_bit );  
+  read_memory 
+    ( ref + target_offset, buf, m3_target_integer_bit/TARGET_CHAR_BIT );  
   result = m3_extract_ord (buf, 0, m3_target_integer_bit, 0);
   return result; 
 } /* m3_inf_open_array_shape_component */ 
