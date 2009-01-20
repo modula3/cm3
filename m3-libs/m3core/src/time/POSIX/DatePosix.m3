@@ -22,8 +22,8 @@ PROCEDURE FromTime(t: Time.T; z: TimeZone := NIL): T =
   BEGIN
     tv := TimePosix.ToUtime(t);
     IF (z = NIL) OR (z^ = 0)
-      THEN EVAL Utime.localtime_r (ADR(tv.tv_sec), ADR (tm));
-      ELSE EVAL Utime.gmtime_r (ADR(tv.tv_sec), ADR(tm));
+      THEN EVAL Utime.localtime_r (tv.tv_sec, ADR (tm));
+      ELSE EVAL Utime.gmtime_r (tv.tv_sec, ADR(tm));
     END;
 
     date.year    := tm.tm_year + 1900;
