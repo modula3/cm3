@@ -19,6 +19,9 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
+#ifdef __sun
+#include <sys/filio.h>
+#endif
 
 /* enable this and preprocess file to get approximate *.i3 contents, fix them in up in editor */
 #if 0
@@ -29,7 +32,7 @@
 
 
 /* check that Max is enough; if you get an error here, raise it in Uerror.i3 and here */
-typedef int CheckMax[128 - sizeof(union{
+typedef int CheckMax[151 - sizeof(union{
 #undef X
 #define X(x) char a##x[x];
 #include "UerrorX.h"

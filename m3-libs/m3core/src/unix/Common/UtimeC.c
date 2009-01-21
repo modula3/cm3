@@ -59,7 +59,7 @@ Cygwin setitimer(other than ITIMER_REAL) always fails.
 We need it to succeed, though it need not do anything else.
 */
 
-int m3_setitimer (int Timer, const itimerval_t* NewValue, itimerval_t* OldValue)
+int m3_setitimer (int Timer, /*const*/ itimerval_t* NewValue, itimerval_t* OldValue)
 {
 #ifdef __CYGWIN__
     if (Timer != ITIMER_REAL)
