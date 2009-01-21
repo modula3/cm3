@@ -65,7 +65,4 @@ TYPE
   hostent_addrtype_t = int;
   hostent_length_t = int;
 
-(* RTMachine.i3 *)
-CONST SIG_SUSPEND = 64;  (* NSIG - 1 signals are 1-64, this is the last one *) (* 128 on MIPS *)
-
 END Usysdep.

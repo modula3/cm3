@@ -15,7 +15,12 @@ TYPE
 
 (*---------------------------------------------------------------------------*)
 
-<*EXTERNAL "ThreadPThreadC_SetupHandlers"*> PROCEDURE SetupHandlers(SignalHandler : SignalActionHandler; sig : int);
+(*CONST*)
+<*EXTERNAL "ThreadPThreadC_SIG_SUSPEND"*>VAR SIG_SUSPEND: int;
+
+(*---------------------------------------------------------------------------*)
+
+<*EXTERNAL "ThreadPThreadC_SetupHandlers"*> PROCEDURE SetupHandlers();
 
 (*---------------------------------------------------------------------------*)
 

@@ -73,7 +73,4 @@ TYPE
   hostent_addrtype_t = int32_t;
   hostent_length_t = int32_t;
 
-(* RTMachine.i3 *)
-CONST SIG_SUSPEND = 31; (* SIGUSR2 *)
-
 END Usysdep.

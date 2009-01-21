@@ -76,9 +76,6 @@ TYPE
   hostent_addrtype_t = int16_t;
   hostent_length_t = int16_t;
 
-(* RTMachine.i3 *)
-CONST SIG_SUSPEND = 19; (* SIGUSR2 *)
-
 (* INTERFACE Utermio *)
 
 TYPE

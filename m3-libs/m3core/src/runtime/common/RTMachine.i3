@@ -11,7 +11,6 @@ INTERFACE RTMachine;
 
 IMPORT Csetjmp;
 FROM Upthread IMPORT pthread_t;
-IMPORT Usysdep;
 
 (*--------------------------------------------------------- thread state ---*)
 
@@ -56,7 +55,6 @@ CONST
 TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
 
 CONST
-  SIG_SUSPEND = Usysdep.SIG_SUSPEND;
   SuspendThread: PROCEDURE(t: pthread_t): BOOLEAN = NIL;
   RestartThread: PROCEDURE(t: pthread_t) = NIL;
   GetState: PROCEDURE(t: pthread_t; VAR state: ThreadState): ADDRESS = NIL;
