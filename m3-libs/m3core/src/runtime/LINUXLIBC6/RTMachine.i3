@@ -9,7 +9,7 @@
 
 INTERFACE RTMachine;
 
-IMPORT Csetjmp, Usignal;
+IMPORT Csetjmp;
 FROM Upthread IMPORT pthread_t;
 
 (*--------------------------------------------------------- thread state ---*)

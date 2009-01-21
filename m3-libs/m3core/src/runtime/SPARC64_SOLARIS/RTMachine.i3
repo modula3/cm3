@@ -10,7 +10,7 @@
 
 INTERFACE RTMachine;
 
-IMPORT Uucontext, Usignal;
+IMPORT Uucontext;
 FROM Upthread IMPORT pthread_t;
 
 (*--------------------------------------------------------- thread state ---*)
