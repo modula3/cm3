@@ -66,7 +66,4 @@ TYPE
     hostent_addrtype_t = int32_t; (* hostent_t.h_addrtype *)
     hostent_length_t = int32_t; (* hostent_t.h_length *)
 
-(* RTMachine.i3 *)
-CONST SIG_SUSPEND = 48;  (* SIGRTMAX *)
-
 END Usysdep.
