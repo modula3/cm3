@@ -85,7 +85,6 @@ PROCEDURE SaveRegsInStack(): ADDRESS;
 TYPE ThreadState = RECORD END;
 
 CONST
-  SIG_SUSPEND = Usignal.SIGUSR2;		 (* SIGRTMAX? *)
   SuspendThread: PROCEDURE(t: pthread_t): BOOLEAN = NIL;
   RestartThread: PROCEDURE(t: pthread_t) = NIL;
   GetState: PROCEDURE(t: pthread_t; VAR state: ThreadState): ADDRESS = NIL;

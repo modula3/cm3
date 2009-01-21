@@ -71,7 +71,6 @@ TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
 TYPE ThreadState = x86_thread_state64_t;
 
 CONST
-  SIG_SUSPEND = 0;
   SaveRegsInStack: PROCEDURE(): ADDRESS = NIL;
 
 <*EXTERNAL RTMachine__SuspendThread*>

@@ -16,6 +16,7 @@ IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t, pthread_mutex_t
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 FROM Utypes IMPORT size_t;
+FROM ThreadPThreadC IMPORT SIG_SUSPEND;
 
 (*----------------------------------------------------- types and globals ---*)
 
@@ -1039,14 +1040,12 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
 
 (* Signal based suspend/resume *)
 
-CONST SIG = RTMachine.SIG_SUSPEND;
-
 PROCEDURE SignalThread(act: Activation; state: ActState): BOOLEAN =
   BEGIN
-    IF SIG = 0 THEN RETURN FALSE END;
+    IF SIG_SUSPEND = 0 THEN RETURN FALSE END;
     SetState(act, state);
     LOOP
-      WITH z = Upthread.kill(act.handle, SIG) DO
+      WITH z = Upthread.kill(act.handle, SIG_SUSPEND) DO
         IF z = 0 THEN RETURN TRUE END;
         <*ASSERT z = Uerror.EAGAIN*>
         (* try it again... *)
@@ -1262,7 +1261,8 @@ PROCEDURE StartWorld () =
     END;
   END StartWorld;
 
-PROCEDURE SignalHandler (sig: int;
+(* "warning: not used": it is referenced from C *)
+<*NOWARN*>PROCEDURE SignalHandler (sig: int;
                          <*UNUSED*> sip: ADDRESS (*Usignal.siginfo_t_star*);
                          <*UNUSED*> uap: ADDRESS (*Uucontext.ucontext_t_star*)) =
   VAR
@@ -1270,7 +1270,7 @@ PROCEDURE SignalHandler (sig: int;
     xx: INTEGER;
     me := GetActivation();
   BEGIN
-    <*ASSERT sig = SIG*>
+    <*ASSERT sig = SIG_SUSPEND*>
     IF me # NIL
       AND me.state = ActState.Stopping
       AND me.heapState.inCritical = 0 THEN
@@ -1295,7 +1295,7 @@ PROCEDURE SetupHandlers () =
     END;
     <*ASSERT RTMachine.SuspendThread = NIL*>
     <*ASSERT RTMachine.RestartThread = NIL*>
-    ThreadPThreadC.SetupHandlers(SignalHandler, SIG);
+    ThreadPThreadC.SetupHandlers();
   END SetupHandlers;
 
 (*----------------------------------------------------------- misc. stuff ---*)
