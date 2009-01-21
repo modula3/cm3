@@ -44,6 +44,6 @@ FROM Ctypes IMPORT int;
 <*EXTERNAL "Uerror_EWOULDBLOCK"*> VAR EWOULDBLOCK: int;
 
 CONST
-  Max = 128; (* approx *)
+  Max = 151; (* approx *)
 
 END Uerror.
