@@ -16,6 +16,9 @@
 #include <pthread.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sys/time.h>
 
 /* enable this and preprocess file to get approximate *.i3 contents, fix them in up in editor */
 #if 0
