@@ -16,8 +16,12 @@ that conflicts with its own output, so, for example:
   ./config
 */
 
-#define _INCLUDE_POSIX_SOURCE
-#define _INCLUDE_HPUX_SOURCE
+/* These might reveal or change things, however
+we build most Modula-3 .c files without them, so be consistent.
+If we find they merely reveal what we need, without changing anything,
+then use them. */
+/*#define _INCLUDE_POSIX_SOURCE*/
+/*#define _INCLUDE_HPUX_SOURCE*/
 #define _FILE_OFFSET_BITS 64
 
 #ifdef __STDC__
@@ -43,6 +47,7 @@ that conflicts with its own output, so, for example:
 #include <setjmp.h>
 #include <time.h>
 #include <signal.h>
+#include <sys/param.h>
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
@@ -425,7 +430,7 @@ void DefineOpaqueType(Name, Size, Align)
     /* need to check that a is an even multiple */
     if ((Size % Align) != 0)
     {
-        printf("ERROR: size (%u) is not an even multiple of align (%u) for type %s\n", Size, Align, Name);
+        printf("ERROR: size (%u) is not an even multiple of align (%u) for type %s\n", (U)Size, (U)Align, Name);
         exit(1);
     }
     Print("%s = RECORD opaque: ARRAY [1..%u] OF %s; END\n", Name, (U)(Size / Align), Element);
@@ -1048,7 +1053,7 @@ void Config()
 
         /* Check that timeval_t has only these two fields, in this order. */
         CHECK(&tv == (void*)&tv.tv_sec);
-        CHECK((&tv.tv_sec + 1) == &tv.tv_usec);
+        CHECK((&tv.tv_sec + 1) == (void*)&tv.tv_usec);
         CHECK((&tv.tv_usec + 1) == (void*)(&tv + 1));
     }
 
@@ -1308,6 +1313,36 @@ do { \
 
     DEFINE_OPAQUE_TYPE(jmp_buf);
 
+#ifdef PATH_MAX
+    printf("PATH_MAX = %u;\n", PATH_MAX);
+#else
+    printf("PATH_MAX not defined\n");
+#endif
+
+#ifdef MAXPATHLEN
+    printf("MAXPATHLEN = %u;\n", MAXPATHLEN);
+#else
+    printf("MAXPATHLEN not defined\n");
+#endif
+
+#ifdef FILENAME_MAX
+    printf("FILENAME_MAX = %u;\n", FILENAME_MAX);
+#else
+    printf("FILENAME_MAX not defined\n");
+#endif
+
+#ifdef _XOPEN_PATH_MAX
+    printf("_XOPEN_PATH_MAX = %u;\n", _XOPEN_PATH_MAX);
+#else
+    printf("_XOPEN_PATH_MAX not defined\n");
+#endif
+
+#ifdef _POSIX_PATH_MAX
+    printf("_POSIX_PATH_MAX = %u;\n", _POSIX_PATH_MAX);
+#else
+    printf("_POSIX_PATH_MAX not defined\n");
+#endif
+
 #ifdef _SIGRTMAX
     printf("_SIGRTMAX = %u;\n", _SIGRTMAX);
 #else
@@ -1334,6 +1369,9 @@ do { \
 #else
     printf("_NSIG not defined\n");
 #endif
+
+    printf("FD_SETSIZE is %u\n", (U)FD_SETSIZE);
+    DEFINE_OPAQUE_TYPE(fd_set);
 
 #ifndef _WIN32
     /* test code */
@@ -1439,7 +1477,7 @@ do { \
             CHECK(memcmp(&a, &nolen, sizeof(nolen)) == 0);
             if (CheckField(Prefix, "struct sockaddr_in", "unsigned char", "len") == TRUE)
             {
-                printf("ERROR: confused about sockaddr_in_t.len\n");
+                printf("ERROR: confused about sockaddr_in_t.len (1)\n");
                 exit(1);
             }
             printf("sockaddr_in_t => no len field\n");
@@ -1447,9 +1485,9 @@ do { \
         else if (sizeof(a.sin_family) == 1)
         {
             CHECK(memcmp(&a, &len, sizeof(len)) == 0);
-            if (CheckField(Prefix, "struct sockaddr_in", "unsigned char", "len") == FALSE)
+            if (CheckField(Prefix, "struct sockaddr_in", "unsigned char", "sin_len") == FALSE)
             {
-                printf("ERROR: confused about sockaddr_in_t.len\n");
+                printf("ERROR: confused about sockaddr_in_t.len (2)\n");
                 exit(1);
             }
             printf("sockaddr_in_t => len field\n");
