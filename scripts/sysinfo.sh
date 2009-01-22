@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.64 2008-11-16 16:28:17 jkrell Exp $
+# $Id: sysinfo.sh,v 1.65 2009-01-22 00:58:29 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -29,9 +29,9 @@ PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 # Refer to scripts/win/sysinfo.cmd and scripts/python/lib.py.
 # Specifically look for "DefaultsFromSh".
 #
-CM3VERSION=${CM3VERSION:-"d5.7.0"}
-CM3VERSIONNUM=${CM3VERSIONNUM:-"050700"}
-CM3LASTCHANGED=${CM3LASTCHANGED:-"2008-03-16"}
+CM3VERSION=${CM3VERSION:-"d5.7.1"}
+CM3VERSIONNUM=${CM3VERSIONNUM:-"050701"}
+CM3LASTCHANGED=${CM3LASTCHANGED:-"2009-01-21"}
 
 CM3_GCC_BACKEND=yes
 CM3_GDB=no
