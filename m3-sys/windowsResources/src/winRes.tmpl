@@ -14,17 +14,35 @@
 readonly proc WindowsResource (file) is
    local src = path_of (file & ".rc")
    local res = file & ".res"
-   local obj = file & ".obj"
-   local out = "/out:" & obj
+%  local obj = file & ".obj"
+%  local out = "/out:" & obj
    
    if equal (OS_TYPE, "WIN32")
       if defined ("_all")
-         if stale (obj, src)
+%        if stale (obj, src)
+         if stale (res, src)
             exec ("rc -DWIN32 -i", path_of(""), "-fo", res, src)
-            exec ("cvtres /verbose /machine:x86", out, res)
+%
+% This is not compatible with very old toolsets, Visual C++ 2.0, whose usage is:
+%
+% usage: CVTRES [-d] [-v] [-r] [-i386 | -mips | -alpha] [-o outfile] filespec
+%        where  filespec is an WIN32 .RES file
+%               -d - print debug info
+%               -v - print conversion statistics & info
+%               -r - make resource section readonly
+%               outfile is the desired output file name.
+%               outfile defaults to filespec.obj.
+% and I don't believe it is ever needed, and it is minor porting
+% nuisance to other architectures.
+% The linker accepts .res files directly, perhaps calling cvtres itself.
+% I have seen precious few folks ever call cvtres.
+%
+%          exec ("cvtres /verbose /machine:x86", out, res)
          end
       end
-      pgm_source (obj)
-      deriveds ("", [res, obj])
+%     pgm_source (obj)
+      pgm_source (res)
+%     deriveds ("", [res, obj])
+      deriveds ("", [res])
    end
 end
