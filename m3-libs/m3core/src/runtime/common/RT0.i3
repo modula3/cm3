@@ -41,7 +41,7 @@ TYPE (* allocated at offset 0 of each compilation unit's global data *)
     full_rev       : RevPtr;
     partial_rev    : RevPtr;
     proc_info      : ProcPtr;
-    try_scopes     : ADDRESS;  (* RTExRep.Scope *)
+    try_scopes     : ADDRESS;  (* RTExStack.Scope *)
     var_map        : ADDRESS;  (* RTTypeMap.T *)
     gc_map         : ADDRESS;  (* reduced RTTypeMap.T *)
     imports        : ImportPtr;
