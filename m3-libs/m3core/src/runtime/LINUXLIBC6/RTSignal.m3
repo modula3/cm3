@@ -36,14 +36,14 @@ PROCEDURE SetHandler (id: INTEGER; sig: int;  handler: Usignal.SignalActionHandl
   BEGIN
     new.sa_sigaction := LOOPHOLE (handler, Usignal.SignalActionHandler);
     new.sa_flags := Usignal.SA_SIGINFO;
-    WITH i = Usignal.sigemptyset(new.sa_mask) DO <*ASSERT i = 0*> END;
+    WITH i = Usignal.sigemptyset(new.sa_mask) DO <* ASSERT i = 0 *> END;
     WITH i = Usignal.sigaction (sig, new, initial_handlers[id]) DO
-      <*ASSERT i = 0*>
+      <* ASSERT i = 0 *>
     END;
     IF (initial_handlers[id].sa_sigaction # DefaultHandler) THEN
       (* don't override inherited, non-default handlers *)
       WITH i = Usignal.sigaction (sig, initial_handlers[id], new) DO
-        <*ASSERT i = 0*>
+        <* ASSERT i = 0 *>
       END;
     END;
   END SetHandler;

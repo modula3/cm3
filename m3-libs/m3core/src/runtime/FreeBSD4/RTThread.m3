@@ -89,7 +89,7 @@ PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
     sv.sv_mask    := Usignal.empty_sv_mask;
     sv.sv_flags   := 0;
     i := Usignal.sigvec (Usignal.SIGVTALRM, sv, osv);
-    <*ASSERT i = 0*>
+    <* ASSERT i = 0 *>
   END setup_sigvtalrm;
 
 PROCEDURE allow_sigvtalrm () =
