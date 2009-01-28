@@ -24,9 +24,9 @@ VAR page_bytes : CARDINAL := 0;
 VAR stack_slop : CARDINAL;
 
 PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
-  VAR i: INTEGER;  start: ADDRESS;
+  VAR i: INTEGER; start: ADDRESS;
   BEGIN
-    IF (page_bytes = 0) THEN
+    IF page_bytes = 0 THEN
       page_bytes := Unix.getpagesize ();
       stack_slop := 2 * (page_bytes DIV BYTESIZE (INTEGER));
     END;
@@ -52,7 +52,7 @@ PROCEDURE DisposeStack (VAR s: Stack) =
   VAR i: INTEGER;  start := RTMisc.Align (ADR (s.words[0]), page_bytes);
   BEGIN
     (* find the aligned page and re-map it *)
-    i := Umman.mprotect (start, page_bytes, Umman.PROT_READ+Umman.PROT_WRITE);
+    i := Umman.mprotect (start, page_bytes, Umman.PROT_READ + Umman.PROT_WRITE);
     <* ASSERT i = 0 *>
 
     (* and finally, free the storage *)

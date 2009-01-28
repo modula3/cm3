@@ -24,9 +24,9 @@ VAR page_bytes : CARDINAL := 0;
 VAR stack_slop : CARDINAL;
 
 PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
-  VAR start: ADDRESS;
+  VAR i: INTEGER; start: ADDRESS;
   BEGIN
-    IF (page_bytes = 0) THEN
+    IF page_bytes = 0 THEN
       page_bytes := Unix.getpagesize ();
       stack_slop := 2 * (page_bytes DIV BYTESIZE (INTEGER));
     END;
@@ -37,9 +37,7 @@ PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
 
     (* find the aligned page and unmap it *)
     start := RTMisc.Align (ADR (s.words[0]), page_bytes);
-    WITH i = Umman.mprotect (start, page_bytes, Umman.PROT_NONE) DO
-      <* ASSERT i = 0 *>
-    END;
+    i := Umman.mprotect (start, page_bytes, Umman.PROT_NONE);
 
     (* finally, set the bounds of the usable region *)
     s.first := start + page_bytes;
@@ -47,13 +45,11 @@ PROCEDURE NewStack (size: INTEGER;  VAR(*OUT*)s: Stack) =
   END NewStack;
 
 PROCEDURE DisposeStack (VAR s: Stack) =
-  VAR start := RTMisc.Align (ADR (s.words[0]), page_bytes);
+  VAR i: INTEGER; start := RTMisc.Align (ADR (s.words[0]), page_bytes);
   BEGIN
     (* find the aligned page and re-map it *)
-    WITH i = Umman.mprotect (start, page_bytes,
-                             Word.Or(Umman.PROT_READ, Umman.PROT_WRITE)) DO
-      <* ASSERT i = 0 *>
-    END;
+    i := Umman.mprotect (start, page_bytes, Umman.PROT_READ + Umman.PROT_WRITE);
+    <* ASSERT i = 0 *>
 
     (* and finally, free the storage *)
     DISPOSE (s.words);
