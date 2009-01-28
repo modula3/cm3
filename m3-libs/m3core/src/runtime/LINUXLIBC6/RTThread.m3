@@ -8,8 +8,6 @@
 UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
 IMPORT Usignal, Unix, RTMisc, Umman, Word;
-FROM Usignal
-IMPORT sigprocmask, sigemptyset, sigaddset, SIGVTALRM, SIG_BLOCK, SIG_UNBLOCK;
 
 PROCEDURE SP (READONLY s: State): ADDRESS =
   BEGIN
@@ -88,13 +86,13 @@ VAR ThreadSwitchSignal: Usignal.sigset_t;
 
 PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
   BEGIN
-    EVAL Usignal.signal(SIGVTALRM, handler);
+    EVAL Usignal.signal(Usignal.SIGVTALRM, handler);
   END setup_sigvtalrm;
 
 PROCEDURE allow_sigvtalrm () =
   VAR old: Usignal.sigset_t;
   BEGIN
-    WITH i = sigprocmask(SIG_UNBLOCK, ThreadSwitchSignal, old) DO
+    WITH i = Usignal.sigprocmask(Usignal.SIG_UNBLOCK, ThreadSwitchSignal, old) DO
       <* ASSERT i = 0 *>
     END;
   END allow_sigvtalrm;
@@ -102,12 +100,12 @@ PROCEDURE allow_sigvtalrm () =
 PROCEDURE disallow_sigvtalrm () =
   VAR old: Usignal.sigset_t;
   BEGIN
-    WITH i = sigprocmask(SIG_BLOCK, ThreadSwitchSignal, old) DO
+    WITH i = Usignal.sigprocmask(Usignal.SIG_BLOCK, ThreadSwitchSignal, old) DO
       <* ASSERT i = 0 *>
     END;
   END disallow_sigvtalrm;
 
 BEGIN
-  WITH i = sigemptyset(ThreadSwitchSignal) DO <* ASSERT i = 0 *> END;
-  WITH i = sigaddset(ThreadSwitchSignal, SIGVTALRM) DO <* ASSERT i = 0 *> END;
+  WITH i = Usignal.sigemptyset(ThreadSwitchSignal) DO <* ASSERT i = 0 *> END;
+  WITH i = Usignal.sigaddset(ThreadSwitchSignal, Usignal.SIGVTALRM) DO <* ASSERT i = 0 *> END;
 END RTThread.
