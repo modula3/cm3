@@ -55,9 +55,9 @@ PROCEDURE RestoreHandlers () =
   END RestoreHandlers;
 
 PROCEDURE RestoreHandler (id: INTEGER;  sig: int) =
-  VAR dummy: Usignal.struct_sigaction;
+  VAR old: Usignal.struct_sigaction;
   BEGIN
-    EVAL Usignal.sigaction (sig, initial_handlers[id], dummy);
+    EVAL Usignal.sigaction (sig, initial_handlers[id], old);
   END RestoreHandler;
 
 PROCEDURE Shutdown (sig: int;
