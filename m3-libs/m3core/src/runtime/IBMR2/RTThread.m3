@@ -55,8 +55,7 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
 
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
 
-VAR
-  ThreadSwitchSignal: Usignal.sigset_t;
+VAR ThreadSwitchSignal: Usignal.sigset_t;
 
 PROCEDURE mask_sigvtalrm (VAR i: Usignal.sigset_t) =
   BEGIN
