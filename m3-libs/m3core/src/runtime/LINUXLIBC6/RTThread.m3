@@ -47,7 +47,7 @@ PROCEDURE DisposeStack (VAR s: Stack) =
   VAR i: INTEGER;  start := RTMisc.Align (ADR (s.words[0]), page_bytes);
   BEGIN
     (* find the aligned page and re-map it *)
-    i := Umman.mprotect (start, page_bytes, Umman.PROT_READ+Umman.PROT_WRITE);
+    i := Umman.mprotect (start, page_bytes, Umman.PROT_READ + Umman.PROT_WRITE);
     <* ASSERT i = 0 *>
 
     (* and finally, free the storage *)
