@@ -89,7 +89,7 @@ PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
     sa.sa_flags   := 0;
     EVAL Usignal.sigemptyset(sa.sa_mask);
     i := Usignal.sigaction (Usignal.SIGVTALRM, ADR(sa), ADR(osa));
-    <*ASSERT i = 0*>
+    <* ASSERT i = 0 *>
   END setup_sigvtalrm;
 
 PROCEDURE allow_sigvtalrm () =
@@ -99,7 +99,7 @@ PROCEDURE allow_sigvtalrm () =
     EVAL Usignal.sigemptyset(set);
     EVAL Usignal.sigaddset(set, Usignal.SIGVTALRM);
     i := Usignal.sigprocmask(Usignal.SIG_UNBLOCK, ADR(set), ADR(oset));
-    <*ASSERT i = 0*>
+    <* ASSERT i = 0 *>
   END allow_sigvtalrm;
 
 PROCEDURE disallow_sigvtalrm () =
@@ -109,7 +109,7 @@ PROCEDURE disallow_sigvtalrm () =
     EVAL Usignal.sigemptyset(set);
     EVAL Usignal.sigaddset(set, Usignal.SIGVTALRM);
     i := Usignal.sigprocmask(Usignal.SIG_BLOCK, ADR(set), ADR(oset));
-    <*ASSERT i = 0*>
+    <* ASSERT i = 0 *>
   END disallow_sigvtalrm;
 
 BEGIN
