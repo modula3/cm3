@@ -23,7 +23,10 @@ then use them. */
 /*#define _INCLUDE_POSIX_SOURCE*/
 /*#define _INCLUDE_HPUX_SOURCE*/
 #define _FILE_OFFSET_BITS 64
-
+#ifdef __CYGWIN__
+/* This is what code should do to get a correct jmpbuf. */
+/* #define _JBLEN 13 */
+#endif
 #ifdef __STDC__
 #include <stdarg.h>
 #else
@@ -997,6 +1000,38 @@ void StackDirection(a)
         Print("stack grows up\n");
 }
 
+void DetermineJmpBufSize()
+{
+    /* Cygwin misreports the jmpbuf size in its headers. Let us determine the correct size.
+    This is heuristic based. */
+    jmp_buf jb;
+    sigjmp_buf sjb;
+    unsigned i;
+    unsigned j;
+    unsigned k;
+
+    for (k = 0 ; k != 2 ; ++k)
+    {
+        for (i = 0 ; i != 256; ++i)
+        {
+            memset(jb, i, sizeof(jb));
+            memset(sjb, i, sizeof(sjb));
+            setjmp(jb);
+            sigsetjmp(sjb, 1);
+            for (j = k ? sizeof(sjb) : sizeof(jb) ; j != 0 ; --j)
+            {
+                if ((k ? ((unsigned char*)&sjb) : ((unsigned char*)&jb))[j - 1] != i)
+                {
+                    printf("apparent %sjmpbuf size: %u\n", k ? "sig" : "", j);
+                    break;
+                }
+            }
+        }
+    }
+    printf("claimed jmpbuf size: %u\n", (U)sizeof(jb));
+    printf("claimed sigjmpbuf size: %u\n", (U)sizeof(sjb));
+}
+
 void Config()
 {
     union {
@@ -1016,6 +1051,8 @@ void Config()
 
     endian.value = (endian.value == 1);
     Print(endian.value ? "little endian\n" : "big endian\n");
+
+    DetermineJmpBufSize();
 
     StackDirection(&endian.bytes[0]);
 
