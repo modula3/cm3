@@ -12,7 +12,7 @@ f1 (int a, int b, int c)
 {
     printf("start f1(%d, %d, %d)\n", a, b, c);
     swapcontext(&ctx[1], &ctx[3]);
-    puts("finish f1");
+    printf("finish f1(%d, %d, %d)\n", a, b, c);
 }
 
 static void
@@ -28,7 +28,7 @@ f3 (int a, int b)
 {
     printf("start f3(%d, %d)\n", a, b);
     swapcontext(&ctx[3], &ctx[2]);
-    puts("finish f3");
+    printf("finish f3(%d, %d)\n", a, b);
 }
 
 
@@ -53,6 +53,8 @@ main (void)
     makecontext(&ctx[2], f2, 0);
     makecontext(&ctx[3], f3, 2, 4, 5);
     swapcontext(&ctx[0], &ctx[3]);
+
+    printf("done\n");
 
     return 0;
 }
