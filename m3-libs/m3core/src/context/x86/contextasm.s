@@ -8,7 +8,7 @@ getcontext:
 _getcontext:
  pushal
  pushl $1
- call internal_getcontext
+ call _internal_getcontext
  addl $36, %esp
  movl $0, %eax
  ret
@@ -17,7 +17,7 @@ _getcontext:
  .global _setcontext
 setcontext:
 _setcontext:
- call internal_setcontext
+ call _internal_setcontext
  movl 4(%esp), %eax
  movl %eax, %esp
  popal
@@ -37,6 +37,6 @@ swapcontext:
 _swapcontext:
  pushal
  pushl $0
- call internal_getcontext
+ call _internal_getcontext
  addl $40, %esp
  jmp setcontext
