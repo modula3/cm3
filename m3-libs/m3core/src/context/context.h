@@ -39,15 +39,20 @@ struct _stack_t
     int ss_flags;
 };
 
-/* http://msdn.microsoft.com/en-us/library/984x0h58.aspx lists non-volatile registers; we add esp and eip */
 struct _mcontext_t
 {
-    /* assembly code depends on the layouts here so don't move stuff around */
-    size_t esi;
+    /* assembly code depends on the layouts here so don't move stuff around
+    This order is determined by pushad, plus eip at the end.
+    http://msdn.microsoft.com/en-us/library/984x0h58.aspx lists non-volatile registers; pusha
+    is a superset. */
     size_t edi;
-    size_t ebx;
+    size_t esi;
     size_t ebp;
-    size_t* esp;
+    size_t esp;
+    size_t ebx;
+    size_t edx;
+    size_t ecx;
+    size_t eax;
     size_t eip;
 };
 
