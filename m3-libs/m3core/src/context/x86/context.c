@@ -30,9 +30,19 @@ internal_getcontext(
     sigprocmask(SIG_SETMASK, NULL, &context->uc_sigmask);
 }
 
+void _internal_getcontext(size_t zero, size_t edi, size_t esi, size_t ebp, size_t esp, size_t ebx, size_t edx, size_t ecx, size_t eax, size_t eip, ucontext_t* context)
+{
+    internal_getcontext(zero, edi, esi, ebp, esp, ebx, edx, ecx, eax, eip, context);
+}
+
 void internal_setcontext(size_t ret, ucontext_t* context)
 {
     sigprocmask(SIG_SETMASK, &context->uc_sigmask, NULL);
+}
+
+void _internal_setcontext(size_t ret, ucontext_t* context)
+{
+    internal_setcontext(ret, context);
 }
 
 void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
