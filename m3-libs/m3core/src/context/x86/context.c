@@ -22,11 +22,21 @@ internal_getcontext(
     size_t eip,
     ucontext_t* context)
 {
+    mcontext_t* m = &context->uc_mcontext;
     if (zero)
         memset(context, 0, sizeof(*context));
     esp += 4;
-    eax = (size_t)context;
-    memcpy(&context->uc_mcontext, &edi, sizeof(context->uc_mcontext));
+#define X(x) m->sc_##x = x;
+    X(edi)
+    X(esi)
+    X(ebp)
+    X(esp)
+    X(ebx)
+    X(edx)
+    X(ecx)
+    X(eax)
+    X(eip)
+#undef X
     sigprocmask(SIG_SETMASK, NULL, &context->uc_sigmask);
 }
 
@@ -57,7 +67,7 @@ void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
     /* push a return to setcontext(context->uc_link) */
 
     *--esp = (size_t)context->uc_link;
-    *--esp = context->uc_mcontext.eip;
+    *--esp = context->uc_mcontext.sc_eip;
     *--esp = (size_t)setcontext;
 
     if (argc != 0)
@@ -66,7 +76,7 @@ void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
         to internal_endcontext with the frame setup with argc available;
         ebp is non-volatile and function must preserve it */
 
-        context->uc_mcontext.ebp = (size_t)esp;
+        context->uc_mcontext.sc_ebp = (size_t)esp;
         *--esp = (argc + 1) * sizeof(size_t);
 
         esp -= argc;
@@ -76,8 +86,8 @@ void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
         }
         *--esp = (size_t)internal_endcontext;
     }
-    context->uc_mcontext.eip = (size_t)function;
-    context->uc_mcontext.esp = (size_t)esp;
+    context->uc_mcontext.sc_eip = (size_t)function;
+    context->uc_mcontext.sc_esp = (size_t)esp;
 
     va_end(args);
 }

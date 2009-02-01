@@ -16,17 +16,25 @@ Systems with make/set/get/swapcontext include:
 */
 
 #include <stddef.h>
-#define stack_t x_stack_t
-#define ucontext_t x_ucontext_t
+
+/*
+OpenBSD has typedef struct sigcontext_t ucontext_t which is wrong.
+*/
+#ifdef __OpenBSD__
+#define ucontext_t openbsd_ucontext_t
+#endif
 #include <signal.h>
-#undef stack_t
 #undef ucontext_t
 
 struct _ucontext_t;
 typedef struct _ucontext_t ucontext_t;
 
+#if !defined(__OpenBSD__) || !defined(__i386__)
+
 struct _mcontext_t;
 typedef struct _mcontext_t mcontext_t;
+
+#if !defined(__OpenBSD__)
 
 struct _stack_t;
 typedef struct _stack_t stack_t;
@@ -39,21 +47,40 @@ struct _stack_t
     int ss_flags;
 };
 
+#endif
+
 struct _mcontext_t
 {
-    /* assembly code depends on the layouts here so don't move stuff around
-    This order is determined by pushad, plus eip at the end.
-    http://msdn.microsoft.com/en-us/library/984x0h58.aspx lists non-volatile registers; pusha is a superset. */
-    size_t edi;
-    size_t esi;
-    size_t ebp;
-    size_t esp;
-    size_t ebx;
-    size_t edx;
-    size_t ecx;
-    size_t eax;
-    size_t eip;
+    /* This matches OpenBSD struct sigcontext -- at least prefix. */
+	size_t	sc_gs;
+	size_t	sc_fs;
+	size_t	sc_es;
+	size_t	sc_ds;
+	size_t	sc_edi;
+	size_t	sc_esi;
+	size_t	sc_ebp;
+	size_t	sc_ebx;
+	size_t	sc_edx;
+	size_t	sc_ecx;
+	size_t	sc_eax;
+	size_t	sc_eip;
+	size_t	sc_cs;
+	size_t	sc_eflags;
+	size_t	sc_esp;
+#if 0
+    size_t	sc_ss;
+	size_t	sc_onstack;
+	size_t	sc_mask;
+	size_t	sc_trapno;
+	size_t	sc_err;
+#endif
 };
+
+#else
+
+typedef struct sigcontext mcontext_t;
+
+#endif
 
 struct _ucontext_t
 {
