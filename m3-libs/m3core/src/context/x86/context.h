@@ -41,7 +41,6 @@ typedef struct _stack_t stack_t;
 
 struct _stack_t
 {
-    /* assembly code depends on the layouts here so don't move stuff around */
     void* ss_sp; /* stack base or pointer */
     size_t ss_size; /* stack size */
     int ss_flags;
@@ -52,6 +51,7 @@ struct _stack_t
 struct _mcontext_t
 {
     /* This matches OpenBSD struct sigcontext -- at least prefix. */
+    /* assembly code depends on the layouts here so don't move stuff around */
 	size_t	sc_gs;
 	size_t	sc_fs;
 	size_t	sc_es;
