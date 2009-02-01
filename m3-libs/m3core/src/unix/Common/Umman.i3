@@ -5,9 +5,7 @@
 <*EXTERNAL*> INTERFACE Umman;
 
 FROM Ctypes IMPORT int;
-FROM Utypes IMPORT size_t;
-
-(*** sys/mman.h ***)
+FROM Cstddef IMPORT size_t;
 
 (*CONST*)
 <*EXTERNAL "Uman_PROT_NONE"*> VAR PROT_NONE: int;
