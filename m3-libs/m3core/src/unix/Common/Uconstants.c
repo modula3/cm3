@@ -24,13 +24,6 @@
 #include <sys/filio.h>
 #endif
 
-/* enable this and preprocess file to get approximate *.i3 contents, fix them in up in editor */
-#if 0
-#undef X
-#define X(x) <* EXTERNAL Uerror_##x *> VAR #x: int;
-#include "UerrorX.h"
-#endif
-
 
 /* check that Max is enough; if you get an error here, raise it in Uerror.i3 and here */
 typedef int CheckMax[151 - sizeof(union{
@@ -41,7 +34,7 @@ typedef int CheckMax[151 - sizeof(union{
 
 
 #undef X
-#define X(x) const int Uerror_##x = x;
+#define X(x) const int Uerror__##x = x;
 #include "UerrorX.h"
 
 
@@ -166,7 +159,7 @@ X(ITIMER_VIRTUAL) /* virtual time intervals */
 
 
 #undef X
-#define X(x) const int Umman_##x = x;
+#define X(x) const int Umman__##x = x;
 X(PROT_NONE)
 X(PROT_READ)
 X(PROT_WRITE)
@@ -185,15 +178,8 @@ Y(P_NOWAIT, _P_NOWAIT)
 
 #undef X
 #undef Y
-#define X(x) const int Utermio_##x = x;
-#define Y(x, y) const int Utermio_##x = y;
-
-#if 0 /* preprocess and fixup for Modula-3 *.i3 contents */
-#undef X
-#undef Y
-#define X(x) <* EXTERNAL Utermio_##x *> VAR #x: int;
-#define Y(x, y) <* EXTERNAL Utermio_##x *> VAR #x: int;
-#endif
+#define X(x) const int Utermio__##x = x;
+#define Y(x, y) const int Utermio__##x = y;
 
 #include <sys/termios.h>
 

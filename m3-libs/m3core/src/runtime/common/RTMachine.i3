@@ -22,6 +22,12 @@ TYPE
 PROCEDURE SaveState (VAR s: State): INTEGER;
 (* Capture the currently running thread's state *)
 
+(* stub support for old user threads implementation *)
+CONST
+  FramePadBottom = 0;
+  FramePadTop    = 0;
+  StackFrameAlignment = 0;
+
 (*------------------------------------------------------------------ heap ---*)
 
 (* The heap page size used to be machine-dependent, since it could depend
@@ -29,7 +35,6 @@ PROCEDURE SaveState (VAR s: State): INTEGER;
    FALSE. Otherwise, 8192 bytes is a reasonable page size. The page size must
    be a power of two. *)
 
-CONST
   BytesPerHeapPage    = 8192;               (* bytes per page *)
   LogBytesPerHeapPage = 13;
   AdrPerHeapPage      = BytesPerHeapPage;   (* addresses per page *)

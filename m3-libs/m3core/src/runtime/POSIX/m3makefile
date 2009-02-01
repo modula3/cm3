@@ -52,7 +52,5 @@ else
     c_source ("RTOSmmap")
 end
 
-if not NO_USER_THREADS contains TARGET
-  interface ("RTThread")
-  implementation ("RTThreadStk")
-end
+interface ("RTThread")
+implementation ("RTThreadStk")

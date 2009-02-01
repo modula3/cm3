@@ -10,9 +10,10 @@ The users of sigaction() vary as to which flags they use.
 Some use BSD sigvec which is similar to sigaction.
 */
 
-#include <signal.h>
 #include "ThreadPosixC.h"
+#include <signal.h>
 #include <assert.h>
+#include <setjmp.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,30 +21,19 @@ extern "C" {
 
 #define ZeroMemory(address, size) (memset((address), 0, (size)))
 
-#define SignalHandler1 ThreadPosixC_SignalHandler1
-#define SignalHandler3 ThreadPosixC_SignalHandler3
-#define setup_sigvtalrm ThreadPosixC_setup_sigvtalrm
-#define allow_sigvtalrm ThreadPosixC_allow_sigvtalrm
-#define disallow_sigvtalrm ThreadPosixC_disallow_sigvtalrm
-#define Init ThreadPosixC_Init
-#define ThreadSwitchSignal ThreadPosixC_ThreadSwitchSignal
+#define SignalHandler1 ThreadPosixC__SignalHandler1
+#define setup_sigvtalrm ThreadPosixC__setup_sigvtalrm
+#define allow_sigvtalrm ThreadPosixC__allow_sigvtalrm
+#define disallow_sigvtalrm ThreadPosixC__disallow_sigvtalrm
+#define Init ThreadPosixC__Init
+#define ThreadSwitchSignal ThreadPosixC__ThreadSwitchSignal
 
 sigset_t ThreadSwitchSignal;
 
 void setup_sigvtalrm(SignalHandler1 handler)
 {
-#if 0
-    sigaction_t sa;
-
-    ZeroMemory(&sa, sizeof(sa));
-    sa.sa_flags = SA_SIGINFO /* | SA_RESTART ? */;
-    sa.sa_sigaction = handler;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGVTALRM, &sa, NULL);
-#else
     void* old = signal(SIGVTALRM, handler);
     assert(old != SIG_ERR);
-#endif
 }
 
 void allow_sigvtalrm(void)
@@ -64,6 +54,11 @@ void Init(void)
     assert(i == 0);
     i = sigaddset(&ThreadSwitchSignal, SIGVTALRM);
     assert(i == 0);
+}
+
+void RTThread__Transfer(jmp_buf* from, jmp_buf* to)
+{
+    assert(0);
 }
 
 #ifdef __cplusplus
