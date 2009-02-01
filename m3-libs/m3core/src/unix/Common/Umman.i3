@@ -14,7 +14,6 @@ FROM Utypes IMPORT size_t;
 <*EXTERNAL "Uman_PROT_READ"*> VAR PROT_READ: int;
 <*EXTERNAL "Uman_PROT_WRITE"*> VAR PROT_WRITE: int;
 
-<*EXTERNAL*>
 PROCEDURE mprotect (addr: ADDRESS; len: size_t; prot:int): int;
 
 END Umman.
