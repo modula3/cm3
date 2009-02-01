@@ -12,6 +12,7 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
         or equal (TARGET, "NT386") or equal (TARGET, "AMD64_FREEBSD")
 
+    Interface ("Umman")
     Interface("Uutmp")
     c_source("UstatC")
     Interface ("Uuio")
