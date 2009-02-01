@@ -53,19 +53,3 @@ const char* m3_get_tzname(unsigned a)
 }
 
 #endif /* M3BSD */
-
-/*
-Cygwin setitimer(other than ITIMER_REAL) always fails.
-We need it to succeed, though it need not do anything else.
-*/
-
-int m3_setitimer (int Timer, /*const*/ itimerval_t* NewValue, itimerval_t* OldValue)
-{
-#ifdef __CYGWIN__
-    if (Timer != ITIMER_REAL)
-    {
-        return 0;
-    }
-#endif
-    return setitimer(Timer, NewValue, OldValue);
-}

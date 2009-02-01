@@ -9,7 +9,6 @@ FROM Cstdint IMPORT int32_t;
 IMPORT Usysdep;
 
 (*CONST*)
-<*EXTERNAL "Utime_ITIMER_REAL"*> VAR ITIMER_REAL: int; (* real time intervals *)
 <*EXTERNAL "Utime_ITIMER_VIRTUAL"*> VAR ITIMER_VIRTUAL: int; (* virtual time intervals *)
 
 TYPE
@@ -50,7 +49,7 @@ PROCEDURE ctime_r (READONLY clock: time_t; buffer: char_star): char_star;
 PROCEDURE localtime_r (READONLY clock: time_t; result: struct_tm_star): struct_tm_star;
 PROCEDURE gmtime_r (READONLY clock: time_t; result: struct_tm_star): struct_tm_star;
 
-<*EXTERNAL "m3_setitimer"*> PROCEDURE setitimer (which: int32_t; VAR (*const*) new_value, old_value: struct_itimerval): int32_t;
+PROCEDURE setitimer (which: int32_t; VAR (*const*) new_value, old_value: struct_itimerval): int32_t;
 PROCEDURE nanosleep (READONLY req: struct_timespec; VAR rem: struct_timespec): int32_t;
 
 <*EXTERNAL "m3_get_timezone"*> PROCEDURE get_timezone(): time_t;
