@@ -9,13 +9,19 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
 #include <assert.h>
 typedef struct itimerval itimerval_t;
 typedef struct timeval timeval_t;
+typedef struct sigaction sigaction_t;
+typedef struct sigcontext sigcontext_t;
 
-static ucontext_t ctx[4];
-unsigned preempt = 1;
+ucontext_t ctx[4];
+volatile unsigned preempt = 1;
 volatile unsigned switches;
 volatile unsigned current_thread;
+volatile unsigned done[4];
 
-typedef void (*SignalHandler)(int signo);
+#define ZeroMemory(address, size) (memset((address), 0, (size)))
+
+typedef void (*SignalHandler1)(int signo);
+typedef void (*SignalHandler3)(int signo, siginfo_t*, void* /* ucontext_t */);
 
 sigset_t ThreadSwitchSignal;
 
@@ -36,6 +42,7 @@ static void f1(int a, int b, int c)
     }
         
     printf("finish f1(%d, %d, %d)\n", a, b, c);
+    done[1] = 1;
 }
 
 static void f2()
@@ -53,6 +60,7 @@ static void f2()
     }
 
     puts("finish f2");
+    done[2] = 1;
 }
 
 static void f3(int a, int b)
@@ -70,12 +78,18 @@ static void f3(int a, int b)
     }
 
     printf("finish f3(%d, %d)\n", a, b);
+    done[3] = 1;
 }
 
-void setup_sigvtalrm(SignalHandler handler)
+void setup_sigvtalrm(SignalHandler3 handler)
 {
-    void* old = signal(SIGVTALRM, handler);
-    assert(old != SIG_ERR);
+    sigaction_t sa;
+
+    ZeroMemory(&sa, sizeof(sa));
+    sa.sa_flags = SA_SIGINFO;
+    sa.sa_sigaction = handler;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGVTALRM, &sa, NULL);
 }
 
 void allow_sigvtalrm(void)
@@ -98,12 +112,36 @@ void init_ThreadSwitchSignal(void)
     assert(i == 0);
 }
 
-void switch_thread(int sig)
+void switch_thread(int signo, siginfo_t* info, void* voidcontext/* ucontext_t */)
 {
     unsigned previous_thread = current_thread++;
+
+/* This version access violates every few runs. Why? */
+#if 0 && defined(__OpenBSD__) && defined(__i386__)
+    openbsd_ucontext_t* current_context = (openbsd_ucontext_t*)voidcontext;
+    openbsd_ucontext_t* new_context = &ctx[current_thread & 3].uc_mcontext;
+    openbsd_ucontext_t* old_context = &ctx[previous_thread & 3].uc_mcontext;
+#endif
+
     allow_sigvtalrm();
     switches += 1;
+
+/* This version access violates every few runs. Why? */
+#if 0 && defined(__OpenBSD__) && defined(__i386__)
+#define X(x) old_context->x = current_context->x; current_context->x = new_context->x;
+    X(sc_edi)
+    X(sc_esi)
+    X(sc_ebp)
+    X(sc_esp)
+    X(sc_ebx)
+    X(sc_edx)
+    X(sc_ecx)
+    X(sc_eax)
+    X(sc_eip)
+#undef X
+#else
     swapcontext(&ctx[previous_thread & 3], &ctx[current_thread & 3]);
+#endif
 }
 
 void StartSwitching(void)
@@ -146,8 +184,9 @@ int main(void)
     else
     {
         StartSwitching();
-        while (switches < 10)
+        while (!done[1] || !done[2] || !done[3])
         {
+            /*printf(".");*/
             sleep(0);
         }
     }
