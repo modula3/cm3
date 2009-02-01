@@ -15,8 +15,8 @@
 extern "C" {
 #endif
 
-typedef void /*ThreadPosixC_SignalHandler1)(int signo);
-typedef void /*ThreadPosixC_SignalHandler3)(int signo, siginfo_t*, void* /* ucontext_t */);
+typedef void (*ThreadPosixC_SignalHandler1)(int signo);
+typedef void (*ThreadPosixC_SignalHandler3)(int signo, siginfo_t*, void* /* ucontext_t */);
 
 void ThreadPosixC_setup_sigvtalrm(ThreadPosixC_SignalHandler1 handler);
 
