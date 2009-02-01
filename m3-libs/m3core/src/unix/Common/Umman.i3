@@ -2,16 +2,17 @@
 (* All rights reserved.                                                      *)
 (* See the file COPYRIGHT for a full description.                            *)
 
-<*EXTERNAL*> INTERFACE Umman;
+INTERFACE Umman;
 
 FROM Ctypes IMPORT int;
 FROM Cstddef IMPORT size_t;
 
 (*CONST*)
-<*EXTERNAL "Uman_PROT_NONE"*> VAR PROT_NONE: int;
-<*EXTERNAL "Uman_PROT_READ"*> VAR PROT_READ: int;
-<*EXTERNAL "Uman_PROT_WRITE"*> VAR PROT_WRITE: int;
+VAR
+  PROT_NONE: int;
+  PROT_READ: int;
+  PROT_WRITE: int;
 
-PROCEDURE mprotect (addr: ADDRESS; len: size_t; prot:int): int;
+<*EXTERNAL*> PROCEDURE mprotect (addr: ADDRESS; len: size_t; prot:int): int;
 
 END Umman.
