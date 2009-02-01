@@ -10,7 +10,7 @@ _getcontext:
  pushl $1
  call _internal_getcontext
  addl $36, %esp
- movl $0, %eax
+ xor %eax, %eax
  ret
 
  .global setcontext
@@ -19,10 +19,17 @@ setcontext:
 _setcontext:
  call _internal_setcontext
  movl 4(%esp), %eax
- movl %eax, %esp
- popal
- movl 12(%eax), %esp
- jmp *32(%eax)
+ movl 16(%eax), %edi
+ movl 20(%eax), %esi
+ movl 24(%eax), %ebp
+ movl 28(%eax), %ebx
+ movl 32(%eax), %edx
+ movl 36(%eax), %ecx
+ movl 56(%eax), %esp
+ pushl 44(%eax)
+ pushl 40(%eax)
+ popl %eax
+ retl
 
  .global internal_endcontext
  .global _internal_endcontext
