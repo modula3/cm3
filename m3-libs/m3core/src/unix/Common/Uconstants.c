@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/time.h>
+#include <sys/mman.h>
 #ifdef __sun
 #include <sys/filio.h>
 #endif
@@ -163,6 +164,12 @@ X(IPPROTO_TCP)
 X(ITIMER_REAL) /* real time intervals */
 X(ITIMER_VIRTUAL) /* virtual time intervals */
 
+
+#undef X
+#define X(x) const int Umman_##x = x;
+X(PROT_NONE)
+X(PROT_READ)
+X(PROT_WRITE)
 
 
 #ifdef __CYGWIN__
