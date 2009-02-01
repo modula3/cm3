@@ -9,22 +9,15 @@
 #ifndef THREADPOSIXC_INCLUDED
 #define THREADPOSIXC_INCLUDED
 
-#include <signal.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef void (*ThreadPosixC_SignalHandler1)(int signo);
-typedef void (*ThreadPosixC_SignalHandler3)(int signo, siginfo_t*, void* /* ucontext_t */);
-
-void ThreadPosixC_setup_sigvtalrm(ThreadPosixC_SignalHandler1 handler);
-
-void ThreadPosixC_allow_sigvtalrm(void);
-
-void ThreadPosixC_disallow_sigvtalrm(void);
-
-void ThreadPosixC_Init(void);
+typedef void (*ThreadPosixC__SignalHandler1)(int signo);
+void ThreadPosixC__setup_sigvtalrm(ThreadPosixC__SignalHandler1 handler);
+void ThreadPosixC__allow_sigvtalrm(void);
+void ThreadPosixC__disallow_sigvtalrm(void);
+void ThreadPosixC__Init(void);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -12,6 +12,7 @@ FROM Utypes IMPORT pid_t;
 <*EXTERNAL "Usignal_SIGKILL"*> VAR SIGKILL: int;
 
 TYPE
+  SignalHandler = PROCEDURE (sig: int);
   SignalActionHandler = PROCEDURE (sig: int; sip: siginfo_t_star; uap: ADDRESS (* Uucontext.ucontext_t_star *) );
   siginfo_t_star = ADDRESS;
 

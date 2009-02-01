@@ -15,56 +15,57 @@
  * 
  *)
 
-<*EXTERNAL*> INTERFACE Utermio;
+INTERFACE Utermio;
 IMPORT Usysdep;
 FROM Ctypes IMPORT int;
 
 (*CONST*)
-<*EXTERNAL "Utermio_B110"*> VAR B110: int;
-<*EXTERNAL "Utermio_B115200"*> VAR B115200: int;
-<*EXTERNAL "Utermio_B1200"*> VAR B1200: int;
-<*EXTERNAL "Utermio_B14400"*> VAR B14400: int;
-<*EXTERNAL "Utermio_B19200"*> VAR B19200: int;
-<*EXTERNAL "Utermio_B230400"*> VAR B230400: int;
-<*EXTERNAL "Utermio_B2400"*> VAR B2400: int;
-<*EXTERNAL "Utermio_B300"*> VAR B300: int;
-<*EXTERNAL "Utermio_B38400"*> VAR B38400: int;
-<*EXTERNAL "Utermio_B4800"*> VAR B4800: int;
-<*EXTERNAL "Utermio_B57600"*> VAR B57600: int;
-<*EXTERNAL "Utermio_B600"*> VAR B600: int;
-<*EXTERNAL "Utermio_B75"*> VAR B75: int;
-<*EXTERNAL "Utermio_B9600"*> VAR B9600: int;
-<*EXTERNAL "Utermio_BAUDBITS"*> VAR BAUDBITS: int;
-<*EXTERNAL "Utermio_CREAD"*> VAR CREAD: int;
-<*EXTERNAL "Utermio_CS5"*> VAR CS5: int;
-<*EXTERNAL "Utermio_CS6"*> VAR CS6: int;
-<*EXTERNAL "Utermio_CS7"*> VAR CS7: int;
-<*EXTERNAL "Utermio_CS8"*> VAR CS8: int;
-<*EXTERNAL "Utermio_CSIZE"*> VAR CSIZE: int;
-<*EXTERNAL "Utermio_CSTOPB"*> VAR CSTOPB: int;
-<*EXTERNAL "Utermio_IGNBRK"*> VAR IGNBRK: int;
-<*EXTERNAL "Utermio_IGNPAR"*> VAR IGNPAR: int;
-<*EXTERNAL "Utermio_PAREVEN"*> VAR PAREVEN: int;
-<*EXTERNAL "Utermio_PARITYBITS"*> VAR PARITYBITS: int;
-<*EXTERNAL "Utermio_PARNONE"*> VAR PARNONE: int;
-<*EXTERNAL "Utermio_PARODD"*> VAR PARODD: int;
-<*EXTERNAL "Utermio_TCSANOW"*> VAR TCSANOW: int;
-<*EXTERNAL "Utermio_VMIN"*> VAR VMIN: int;
-<*EXTERNAL "Utermio_VTIME"*> VAR VTIME: int;
+VAR
+  B110: int;
+  B115200: int;
+  B1200: int;
+  B14400: int;
+  B19200: int;
+  B230400: int;
+  B2400: int;
+  B300: int;
+  B38400: int;
+  B4800: int;
+  B57600: int;
+  B600: int;
+  B75: int;
+  B9600: int;
+  BAUDBITS: int;
+  CREAD: int;
+  CS5: int;
+  CS6: int;
+  CS7: int;
+  CS8: int;
+  CSIZE: int;
+  CSTOPB: int;
+  IGNBRK: int;
+  IGNPAR: int;
+  PAREVEN: int;
+  PARITYBITS: int;
+  PARNONE: int;
+  PARODD: int;
+  TCSANOW: int;
+  VMIN: int;
+  VTIME: int;
 
 TYPE
   struct_termios = Usysdep.struct_termios;
   speed_t = Usysdep.speed_t;
 
-PROCEDURE tcgetattr (fildes: int; termios_p: UNTRACED REF struct_termios): int; 
-PROCEDURE tcsetattr(fildes, optional_actions: int; termios_p: UNTRACED REF struct_termios) : int;
-PROCEDURE tcsendbreak(fildes, duration: int): int;
-PROCEDURE tcdrain(fildes: int): int;
-PROCEDURE tcflush(fildes, queue_selector: int): int;
-PROCEDURE tcflow(fildes, action: int): int;
-PROCEDURE cfgetospeed(termios_p: UNTRACED REF struct_termios): speed_t;
-PROCEDURE cfsetospeed(termios_p: UNTRACED REF struct_termios; speed: speed_t): int;
-PROCEDURE cfgetispeed(termios_p: UNTRACED REF struct_termios): speed_t;
-PROCEDURE cfsetispeed(termios_p: UNTRACED REF struct_termios; speed: speed_t): int;
+<*EXTERNAL*> PROCEDURE tcgetattr (fildes: int; termios_p: UNTRACED REF struct_termios): int; 
+<*EXTERNAL*> PROCEDURE tcsetattr(fildes, optional_actions: int; termios_p: UNTRACED REF struct_termios) : int;
+<*EXTERNAL*> PROCEDURE tcsendbreak(fildes, duration: int): int;
+<*EXTERNAL*> PROCEDURE tcdrain(fildes: int): int;
+<*EXTERNAL*> PROCEDURE tcflush(fildes, queue_selector: int): int;
+<*EXTERNAL*> PROCEDURE tcflow(fildes, action: int): int;
+<*EXTERNAL*> PROCEDURE cfgetospeed(termios_p: UNTRACED REF struct_termios): speed_t;
+<*EXTERNAL*> PROCEDURE cfsetospeed(termios_p: UNTRACED REF struct_termios; speed: speed_t): int;
+<*EXTERNAL*> PROCEDURE cfgetispeed(termios_p: UNTRACED REF struct_termios): speed_t;
+<*EXTERNAL*> PROCEDURE cfsetispeed(termios_p: UNTRACED REF struct_termios; speed: speed_t): int;
 
 END Utermio.

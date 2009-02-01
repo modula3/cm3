@@ -73,5 +73,6 @@ c_source       ("RTSignalC")
 interface      ("RTSignalC")
 Interface      ("RTMachine")
 implementation ("RTSignal")
+implementation ("RTThread")
 
 end

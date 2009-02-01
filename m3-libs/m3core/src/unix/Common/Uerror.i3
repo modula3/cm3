@@ -2,46 +2,48 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-<*EXTERNAL*> INTERFACE Uerror;
+INTERFACE Uerror;
 
 FROM Ctypes IMPORT int;
 
-<*EXTERNAL "Uerror_EACCES"*> VAR EACCES: int;
-<*EXTERNAL "Uerror_EADDRINUSE"*> VAR EADDRINUSE: int;
-<*EXTERNAL "Uerror_EADDRNOTAVAIL"*> VAR EADDRNOTAVAIL: int;
-<*EXTERNAL "Uerror_EAGAIN"*> VAR EAGAIN: int;
-<*EXTERNAL "Uerror_EALREADY"*> VAR EALREADY: int;
-<*EXTERNAL "Uerror_EBADF"*> VAR EBADF: int;
-<*EXTERNAL "Uerror_ECHILD"*> VAR ECHILD: int;
-<*EXTERNAL "Uerror_ECONNABORTED"*> VAR ECONNABORTED: int;
-<*EXTERNAL "Uerror_ECONNREFUSED"*> VAR ECONNREFUSED: int;
-<*EXTERNAL "Uerror_ECONNRESET"*> VAR ECONNRESET: int;
-<*EXTERNAL "Uerror_EDOM"*> VAR EDOM: int;
-<*EXTERNAL "Uerror_EEXIST"*> VAR EEXIST: int;
-<*EXTERNAL "Uerror_EHOSTDOWN"*> VAR EHOSTDOWN: int;
-<*EXTERNAL "Uerror_EHOSTUNREACH"*> VAR EHOSTUNREACH: int;
-<*EXTERNAL "Uerror_EINPROGRESS"*> VAR EINPROGRESS: int;
-<*EXTERNAL "Uerror_EINTR"*> VAR EINTR: int;
-<*EXTERNAL "Uerror_EINVAL"*> VAR EINVAL: int;
-<*EXTERNAL "Uerror_EIO"*> VAR EIO: int;
-<*EXTERNAL "Uerror_EISCONN"*> VAR EISCONN: int;
-<*EXTERNAL "Uerror_EISDIR"*> VAR EISDIR: int;
-<*EXTERNAL "Uerror_EMFILE"*> VAR EMFILE: int;
-<*EXTERNAL "Uerror_ENAMETOOLONG"*> VAR ENAMETOOLONG: int;
-<*EXTERNAL "Uerror_ENETDOWN"*> VAR ENETDOWN: int;
-<*EXTERNAL "Uerror_ENETRESET"*> VAR ENETRESET: int;
-<*EXTERNAL "Uerror_ENETUNREACH"*> VAR ENETUNREACH: int;
-<*EXTERNAL "Uerror_ENFILE"*> VAR ENFILE: int;
-<*EXTERNAL "Uerror_ENOENT"*> VAR ENOENT: int;
-<*EXTERNAL "Uerror_ENOEXEC"*> VAR ENOEXEC: int;
-<*EXTERNAL "Uerror_ENOMEM"*> VAR ENOMEM: int;
-<*EXTERNAL "Uerror_ENOTEMPTY"*> VAR ENOTEMPTY: int;
-<*EXTERNAL "Uerror_ENOTSOCK"*> VAR ENOTSOCK: int;
-<*EXTERNAL "Uerror_EPERM"*> VAR EPERM: int;
-<*EXTERNAL "Uerror_EPIPE"*> VAR EPIPE: int;
-<*EXTERNAL "Uerror_ERANGE"*> VAR ERANGE: int;
-<*EXTERNAL "Uerror_ETIMEDOUT"*> VAR ETIMEDOUT: int;
-<*EXTERNAL "Uerror_EWOULDBLOCK"*> VAR EWOULDBLOCK: int;
+(* CONST *)
+VAR
+  EACCES: int;
+  EADDRINUSE: int;
+  EADDRNOTAVAIL: int;
+  EAGAIN: int;
+  EALREADY: int;
+  EBADF: int;
+  ECHILD: int;
+  ECONNABORTED: int;
+  ECONNREFUSED: int;
+  ECONNRESET: int;
+  EDOM: int;
+  EEXIST: int;
+  EHOSTDOWN: int;
+  EHOSTUNREACH: int;
+  EINPROGRESS: int;
+  EINTR: int;
+  EINVAL: int;
+  EIO: int;
+  EISCONN: int;
+  EISDIR: int;
+  EMFILE: int;
+  ENAMETOOLONG: int;
+  ENETDOWN: int;
+  ENETRESET: int;
+  ENETUNREACH: int;
+  ENFILE: int;
+  ENOENT: int;
+  ENOEXEC: int;
+  ENOMEM: int;
+  ENOTEMPTY: int;
+  ENOTSOCK: int;
+  EPERM: int;
+  EPIPE: int;
+  ERANGE: int;
+  ETIMEDOUT: int;
+  EWOULDBLOCK: int;
 
 CONST
   Max = 151; (* approx *)

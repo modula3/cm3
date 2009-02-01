@@ -9,3 +9,5 @@
 
 Interface ("ThreadF")
 implementation ("ThreadPosix")
+interface ("ThreadPosixC")
+c_source ("ThreadPosixC")
