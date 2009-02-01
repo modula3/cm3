@@ -30,9 +30,15 @@ extern "C" {
 
 sigset_t ThreadSwitchSignal;
 
+#ifdef __CYGWIN__
+#define SIG_TIMESLICE SIGALRM
+#else
+#define SIG_TIMESLICE SIGVTALRM
+#endif
+
 void setup_sigvtalrm(SignalHandler1 handler)
 {
-    void* old = signal(SIGVTALRM, handler);
+    void* old = signal(SIG_TIMESLICE, handler);
     assert(old != SIG_ERR);
 }
 
@@ -52,7 +58,7 @@ void Init(void)
 {
     int i = sigemptyset(&ThreadSwitchSignal);
     assert(i == 0);
-    i = sigaddset(&ThreadSwitchSignal, SIGVTALRM);
+    i = sigaddset(&ThreadSwitchSignal, SIG_TIMESLICE);
     assert(i == 0);
 }
 
