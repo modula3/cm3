@@ -44,7 +44,6 @@ void MyYield()
 #endif
 
 typedef void (*SignalHandler1)(int signo);
-typedef void (*SignalHandler3)(int signo, siginfo_t*, void* /* ucontext_t */);
 
 sigset_t ThreadSwitchSignal;
 
@@ -150,7 +149,6 @@ void init_ThreadSwitchSignal(void)
     i = sigaddset(&ThreadSwitchSignal, SIG_TIMESLICE);
     assert(i == 0);
 }
-
 
 void switch_thread(int signo)
 {
