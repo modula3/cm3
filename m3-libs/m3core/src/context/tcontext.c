@@ -126,27 +126,10 @@ static void f3(int a, int b)
     done[3] = 1;
 }
 
-#if 0
-
-void setup_sigvtalrm(SignalHandler3 handler)
-{
-    sigaction_t sa;
-
-    ZeroMemory(&sa, sizeof(sa));
-    sa.sa_flags = SA_SIGINFO;
-    sa.sa_sigaction = handler;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIG_TIMESLICE, &sa, NULL);
-}
-
-#else
-
 void setup_sigvtalrm(SignalHandler1 handler)
 {
     signal(SIG_TIMESLICE, handler);
 }
-
-#endif
 
 void allow_sigvtalrm(void)
 {
@@ -168,42 +151,6 @@ void init_ThreadSwitchSignal(void)
     assert(i == 0);
 }
 
-
-#if 0
-
-void switch_thread(int signo, siginfo_t* info, void* voidcontext/* ucontext_t */)
-{
-    unsigned previous_thread = current_thread++;
-
-/* This version access violates every few runs. Why? */
-#if 0 && defined(__OpenBSD__) && defined(__i386__)
-    openbsd_ucontext_t* current_context = (openbsd_ucontext_t*)voidcontext;
-    openbsd_ucontext_t* new_context = &ctx[current_thread & 3].uc_mcontext;
-    openbsd_ucontext_t* old_context = &ctx[previous_thread & 3].uc_mcontext;
-#endif
-
-    allow_sigvtalrm();
-    switches += 1;
-
-/* This version access violates every few runs. Why? */
-#if 0 && defined(__OpenBSD__) && defined(__i386__)
-#define X(x) old_context->x = current_context->x; current_context->x = new_context->x;
-    X(sc_edi)
-    X(sc_esi)
-    X(sc_ebp)
-    X(sc_esp)
-    X(sc_ebx)
-    X(sc_edx)
-    X(sc_ecx)
-    X(sc_eax)
-    X(sc_eip)
-#undef X
-#else
-    swapcontext(&ctx[previous_thread & 3], &ctx[current_thread & 3]);
-#endif
-}
-
-#else
 
 void switch_thread(int signo)
 {
@@ -234,8 +181,6 @@ void switch_thread(int signo)
 #endif
 }
 
-#endif
-
 void StartSwitching(void)
 {
     itimerval_t interval;
@@ -251,7 +196,7 @@ void StartSwitching(void)
 
 int main(void)
 {
-    char st[3][8192];
+    static char st[3][256 * 1024];
     unsigned i;
 
     print_threadid("main");
