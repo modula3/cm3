@@ -23,19 +23,12 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
 
 int getcontext(ucontext_t* context)
 {
-    static unsigned counter;
-
     sigprocmask(SIG_SETMASK, NULL, &context->uc_sigmask);
     setjmp(*(jmp_buf*)&context->uc_mcontext);
-    printf("getcontext: counter=%u\n", ++counter);
-    fflush(stdout);
 }
 
 int setcontext(const ucontext_t* context)
 {
-    static unsigned counter;
-    printf("setcontext: counter=%u\n", ++counter);
-    fflush(stdout);
     sigprocmask(SIG_SETMASK, &context->uc_sigmask, NULL);
     longjmp(*(jmp_buf*)&context->uc_mcontext, 1);
     return 0;
@@ -51,11 +44,6 @@ void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
 
     va_start(args, argc);
     stack = (size_t*)(((size_t)context->uc_stack.ss_sp) + context->uc_stack.ss_size);
-
-#if 0 /* __CYGWIN__ */
-    stack -= (1 << 10);
-    memcpy(stack, ((char**)NtCurrentTeb())[1] - (1 << 12), 1 << 12);
-#endif
 
     /* push a return to setcontext(context->uc_link) */
 
@@ -92,8 +80,6 @@ void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
 
 int swapcontext(ucontext_t* old_context, const ucontext_t* new_context)
 {
-    static unsigned counter;
-    printf("swapcontext(%p,%p): counter=%u\n", old_context, new_context, ++counter);
     getcontext(old_context);
     setcontext(new_context);
     return 0;
