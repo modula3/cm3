@@ -3,6 +3,11 @@
 /* See the file COPYRIGHT for a full description.             */
 
 #define _FILE_OFFSET_BITS 64
+#if defined(__OpenBSD__)
+#include "context.h"
+#else
+/*#include <ucontext.h>*/
+#endif
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/wait.h>
@@ -173,6 +178,14 @@ X(PROT_NONE)
 X(PROT_READ)
 X(PROT_WRITE)
 
+
+#if defined(__OpenBSD__)
+#undef X
+#undef Y
+#define X(x) const int Uucontext__##x = x;
+#define Y(x, y) const int Uucontext__##x = y;
+Y(context_t_size, sizeof(ucontext_t))
+#endif
 
 #ifdef __CYGWIN__
 
