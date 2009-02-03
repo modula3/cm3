@@ -67,9 +67,6 @@ PROCEDURE Clone (ref: REFANY): REFANY
    reference, object or array.  The new referent will have the same
    runtime type as "ref" and a copy of its contents, "ref^". *)
 
-PROCEDURE MallocZeroed(size: INTEGER): ADDRESS;
-PROCEDURE Free(VAR a: ADDRESS);
-
 EXCEPTION OutOfMemory;
 (* Raised if the allocator was unable to allocate the requested object *)
 
