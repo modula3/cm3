@@ -154,19 +154,20 @@ PROCEDURE AllocateUntracedOpenArray (defn : ADDRESS;
 
 PROCEDURE DisposeUntracedRef (VAR a: ADDRESS) =
   BEGIN
-    Free(a);
+    Scheduler.DisableSwitching();
+    IF a # NIL THEN Cstdlib.free(a); a := NIL; END;
+    Scheduler.EnableSwitching();
   END DisposeUntracedRef;
 
 PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
   VAR def: RT0.TypeDefn;
   BEGIN
-    IF a = NIL THEN
-      RETURN;
-    END;
     Scheduler.DisableSwitching();
-    def := RTType.Get (TYPECODE (a));
-    Cstdlib.free (a - MAX(BYTESIZE(Header), def.dataAlignment));
-    a := NIL;
+    IF a # NIL THEN
+      def := RTType.Get (TYPECODE (a));
+      Cstdlib.free (a - MAX(BYTESIZE(Header), def.dataAlignment));
+      a := NIL;
+    END;
     Scheduler.EnableSwitching();
   END DisposeUntracedObj;
 
@@ -214,7 +215,10 @@ PROCEDURE GetUntracedRef (def: RT0.TypeDefn): ADDRESS =
     IF (def.typecode = 0) OR (def.traced # 0) OR (def.kind # ORD (TK.Ref)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
-    res := MallocZeroed(def.dataSize);
+    Scheduler.DisableSwitching();
+    res := Cstdlib.calloc(1, def.dataSize);
+    Scheduler.EnableSwitching();
+    IF res = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory) END;
     IF def.initProc # NIL THEN def.initProc(res); END;
     IF countsOn THEN BumpCnt(def.typecode) END;
     RETURN res;
@@ -229,7 +233,10 @@ PROCEDURE GetUntracedObj (def: RT0.TypeDefn): UNTRACED ROOT =
     IF (def.typecode = 0) OR (def.traced # 0) OR (def.kind # ORD (TK.Obj)) THEN
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
-    res := MallocUninitialized(hdrSize + def.dataSize);
+    Scheduler.DisableSwitching();
+    res := Cstdlib.malloc(hdrSize + def.dataSize);
+    Scheduler.EnableSwitching();
+    IF res = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory) END;
     res := res + hdrSize;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
         Header{typecode := def.typecode};
@@ -271,7 +278,10 @@ PROCEDURE GetUntracedOpenArray (def: RT0.TypeDefn; READONLY s: Shape): ADDRESS =
       <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
     END;
     WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s) DO
-      res := MallocZeroed(nBytes);
+      Scheduler.DisableSwitching();
+      res := Cstdlib.calloc(nBytes);
+      Scheduler.EnableSwitching();
+      IF res = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory) END;
       InitArray (res, LOOPHOLE(def, RT0.ArrayTypeDefn), s);
       IF countsOn THEN BumpSize (def.typecode, nBytes) END;
     END;
@@ -305,19 +315,25 @@ PROCEDURE ArraySize (def: RT0.ArrayTypeDefn;  READONLY s: Shape): CARDINAL =
 
 PROCEDURE BumpCnt (tc: RT0.Typecode) =
   BEGIN
-    RTOS.LockHeap();
-    IF (tc >= n_types) THEN ExpandCnts (tc); END;
-    WITH z = n_objects[tc] DO z := Word.Plus (z, 1) END;
-    RTOS.UnlockHeap();
+    TRY
+      RTOS.LockHeap();
+      IF (tc >= n_types) THEN ExpandCnts (tc); END;
+      WITH z = n_objects[tc] DO z := Word.Plus (z, 1) END;
+    FINALLY
+      RTOS.UnlockHeap();
+    END;
   END BumpCnt;
 
 PROCEDURE BumpSize (tc: RT0.Typecode;  size: INTEGER) =
   BEGIN
-    RTOS.LockHeap();
-    IF (tc >= n_types) THEN ExpandCnts (tc); END;
-    WITH z = n_objects[tc] DO z := Word.Plus (z, 1)    END;
-    WITH z = n_bytes[tc]   DO z := Word.Plus (z, size) END;
-    RTOS.UnlockHeap();
+    TRY
+      RTOS.LockHeap();
+      IF (tc >= n_types) THEN ExpandCnts (tc); END;
+      WITH z = n_objects[tc] DO z := Word.Plus (z, 1)    END;
+      WITH z = n_bytes[tc]   DO z := Word.Plus (z, size) END;
+    FINALLY
+      RTOS.UnlockHeap();
+    END;
   END BumpSize;
 
 PROCEDURE ExpandCnts (tc: RT0.Typecode) =
@@ -334,8 +350,8 @@ PROCEDURE ExpandCnts (tc: RT0.Typecode) =
     WHILE (new_cnt <= goal) DO INC (new_cnt, new_cnt); END;
 
     new_mem   := new_cnt * BYTESIZE (INTEGER);
-    new_cnts  := MallocZeroed (new_mem);
-    new_sizes := MallocZeroed (new_mem);
+    new_cnts  := Malloc (new_mem);
+    new_sizes := Malloc (new_mem);
 
     IF (old_cnts # NIL) THEN
       RTMisc.Copy (old_cnts,  new_cnts,  n_types * BYTESIZE (INTEGER)); 
@@ -353,37 +369,16 @@ PROCEDURE ExpandCnts (tc: RT0.Typecode) =
       Cstdlib.free (old_sizes);
     END;
   END ExpandCnts;
-
-PROCEDURE MallocUninitialized(size: INTEGER): ADDRESS =
-  VAR res : ADDRESS;
-  BEGIN
-    Scheduler.DisableSwitching();
-    res := Cstdlib.malloc(size);
-    Scheduler.EnableSwitching();
-    IF res = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory) END;
-    RETURN res;
-  END MallocUninitialized;
     
-PROCEDURE MallocZeroed(size: INTEGER): ADDRESS =
-  VAR res : ADDRESS;
+PROCEDURE Malloc (size: INTEGER): ADDRESS =
+  VAR res: ADDRESS;
   BEGIN
-    Scheduler.DisableSwitching();
+    SchedulerDisableSwitching();
     res := Cstdlib.calloc(1, size);
     Scheduler.EnableSwitching();
-    IF res = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory) END;
+    IF (res = NIL) THEN RAISE RTE.E (RTE.T.OutOfMemory); END;
     RETURN res;
-  END MallocZeroed;
-
-PROCEDURE Free(VAR a: ADDRESS) =
-  BEGIN
-    IF a = NIL THEN
-      RETURN;
-    END;
-    Scheduler.DisableSwitching();
-    Cstdlib.free(a);
-    a := NIL;
-    Scheduler.EnableSwitching();
-  END Free;
+  END Malloc;
 
 BEGIN
 END RTAllocator.
