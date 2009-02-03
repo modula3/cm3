@@ -279,7 +279,7 @@ PROCEDURE GetUntracedOpenArray (def: RT0.TypeDefn; READONLY s: Shape): ADDRESS =
     END;
     WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s) DO
       Scheduler.DisableSwitching();
-      res := Cstdlib.calloc(nBytes);
+      res := Cstdlib.calloc(1, nBytes);
       Scheduler.EnableSwitching();
       IF res = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory) END;
       InitArray (res, LOOPHOLE(def, RT0.ArrayTypeDefn), s);
@@ -373,7 +373,7 @@ PROCEDURE ExpandCnts (tc: RT0.Typecode) =
 PROCEDURE Malloc (size: INTEGER): ADDRESS =
   VAR res: ADDRESS;
   BEGIN
-    SchedulerDisableSwitching();
+    Scheduler.DisableSwitching();
     res := Cstdlib.calloc(1, size);
     Scheduler.EnableSwitching();
     IF (res = NIL) THEN RAISE RTE.E (RTE.T.OutOfMemory); END;
