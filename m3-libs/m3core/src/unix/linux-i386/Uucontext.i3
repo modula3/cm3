@@ -192,4 +192,15 @@ TYPE
   ucontext_t = struct_ucontext;
   ucontext_t_star = UNTRACED REF ucontext_t;
 
+(*CONST*)
+VAR
+    context_t_size: int; (* VAR context := NEW(UNTRACED REF? ARRAY OF CHAR, Uucontext.context_t_size); *)
+
+PROCEDURE set_stack(a: ucontext_t_star; Start: ADDRESS; Size: INTEGER);
+<*EXTERNAL*>PROCEDURE getcontext(a: ucontext_t_star);
+<*EXTERNAL*>PROCEDURE setcontext(a: ucontext_t_star): int;
+(* argc must be 0. *)
+<*EXTERNAL*>PROCEDURE makecontext(a: ucontext_t_star; b: PROCEDURE (); argc: int := 0);
+<*EXTERNAL*>PROCEDURE swapcontext(a, b: ucontext_t_star): int;
+
 END Uucontext.
