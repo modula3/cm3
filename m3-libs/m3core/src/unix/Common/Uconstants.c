@@ -23,7 +23,10 @@
 #ifdef __sun
 #include <sys/filio.h>
 #endif
-
+#ifdef __CYGWIN__
+#include <process.h>
+#include <sys/termios.h>
+#endif
 
 /* check that Max is enough; if you get an error here, raise it in Uerror.i3 and here */
 typedef int CheckMax[151 - sizeof(union{
@@ -173,8 +176,6 @@ X(PROT_WRITE)
 
 #ifdef __CYGWIN__
 
-#include <process.h>
-
 #undef X
 #define X(x) const int Usysdep_##x = x;
 #undef Y
@@ -186,8 +187,6 @@ Y(P_NOWAIT, _P_NOWAIT)
 #undef Y
 #define X(x) const int Utermio__##x = x;
 #define Y(x, y) const int Utermio__##x = y;
-
-#include <sys/termios.h>
 
 Y(BAUDBITS, CBAUD)
 X(B75)
