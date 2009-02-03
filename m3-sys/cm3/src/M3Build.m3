@@ -539,35 +539,36 @@ PROCEDURE DoOverride (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     Override (t, pkg, dir);
   END DoOverride;
 
-(* Host and Target paths sometimes get confused, leading to many warnings such as:
-package "libm3" is already overridden to C:\dev2\cm3.2/m3-libs, ignoring new override to C:/dev2/cm3.2/m3-libs
-PathEqual is defined as Text.Equal or Text.Equal(replacing backward slashes with forward slashes).
-It would also be reasonable to be case insensitive if the path contains any backward slashes, or if
-they both contain colon as the second character. *)
+(* Host and Target paths sometimes get confused, leading to many warnings such
+   as: package "libm3" is already overridden to C:\dev2\cm3.2/m3-libs,
+   ignoring new override to C:/dev2/cm3.2/m3-libs. PathEqual is defined as
+   Text.Equal or Text.Equal(replacing backward slashes with forward slashes).
+   It would also be reasonable to be case insensitive if the path contains any
+   backward slashes, or if they both contain colon as the second character. *)
 PROCEDURE OverrideEqual(a: TEXT; b: TEXT): BOOLEAN =
-VAR
+  VAR
     a_Length: CARDINAL;
     b_Length: CARDINAL;
     a_BackwardSlash: INTEGER;
     b_BackwardSlash: INTEGER;
-BEGIN
+  BEGIN
     IF Text.Equal(a, b) THEN
-        RETURN TRUE;
+      RETURN TRUE;
     END;
     a_Length := Text.Length(a);
     b_Length := Text.Length(b);
     IF a_Length # b_Length THEN
-        RETURN FALSE;
+      RETURN FALSE;
     END;
     a_BackwardSlash := Text.FindChar(a, '\\');
     b_BackwardSlash := Text.FindChar(b, '\\');
     IF (a_BackwardSlash = -1) AND (b_BackwardSlash = -1) THEN
-        RETURN FALSE;
+      RETURN FALSE;
     END;
     a := TextUtils.SubstChar(a, '\\', '/');
     b := TextUtils.SubstChar(b, '\\', '/');
     RETURN Text.Equal(a, b);
-END OverrideEqual;
+  END OverrideEqual;
 
 PROCEDURE Override (t: T;  pkg: M3ID.T;  dir: TEXT) =
   (* establish an override for the location of package "pkg" *)
