@@ -1,3 +1,5 @@
+% Eventually everything in this file will apply to all platforms,
+% but we will get to that point very gradually.
 
 c_source ("UtimeC")
 c_source ("UnixC")
@@ -5,12 +7,17 @@ c_source ("UnixC")
 Interface("Uexec")
 c_source("Uexec")
 
-if equal (TARGET, "I386_OPENBSD")
+if         equal (TARGET, "I386_OPENBSD")
+        or equal (TARGET, "LINUXLIBC6")
     c_source("Uucontext")
     h_source("Uucontext")
 end
 
 include_dir("context")
+
+if equal (TARGET, "LINUXLIBC6")
+    c_source("Uconstants")
+end
 
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")

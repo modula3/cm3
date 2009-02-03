@@ -5,6 +5,10 @@
 #define _FILE_OFFSET_BITS 64
 #if defined(__OpenBSD__)
 #include "context.h"
+#define HAS_UCONTEXT_T
+#elif defined(__linux) && defined(__i386)
+#include <ucontext.h>
+#define HAS_UCONTEXT_T
 #else
 /*#include <ucontext.h>*/
 #endif
@@ -179,7 +183,7 @@ X(PROT_READ)
 X(PROT_WRITE)
 
 
-#if defined(__OpenBSD__)
+#ifdef HAS_UCONTEXT_T
 #undef X
 #undef Y
 #define X(x) const int Uucontext__##x = x;
