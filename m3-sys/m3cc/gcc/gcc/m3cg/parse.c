@@ -1616,73 +1616,75 @@ fmt_uid (unsigned long x, char *buf)
 static tree
 scan_float (unsigned *out_Kind)
 {
-    /* real_from_target_fmt wants floats stored in an array of longs, 32 bits per long, even if long can hold more.
-    So for example a 64 bit double on a system with 64 bit long will have 32 bits of zeros in the middle. */
-    long Longs[2] = { 0, 0 };
-    unsigned char * const Bytes = (unsigned char*) &Longs;
-    unsigned i;
-    unsigned Kind;
-    static const struct {
-        tree* Tree;
-        unsigned Size;
-        const struct real_format* format;
-    } Map[] = { { &t_reel ,  (FLOAT_TYPE_SIZE / 8), &ieee_single_format },
-                { &t_lreel, (DOUBLE_TYPE_SIZE / 8), &ieee_double_format },
-                { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8), &ieee_double_format }};
+  /* real_from_target_fmt wants floats stored in an array of longs, 32 bits
+     per long, even if long can hold more.  So for example a 64 bit double on
+     a system with 64 bit long will have 32 bits of zeros in the middle. */
+  long Longs[2] = { 0, 0 };
+  unsigned char * const Bytes = (unsigned char*) &Longs;
+  unsigned i;
+  unsigned Kind;
+  static const struct {
+    tree* Tree;
     unsigned Size;
-    REAL_VALUE_TYPE val;
+    const struct real_format* format;
+  } Map[] = { { &t_reel ,  (FLOAT_TYPE_SIZE / 8), &ieee_single_format },
+	      { &t_lreel, (DOUBLE_TYPE_SIZE / 8), &ieee_double_format },
+	      { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8), &ieee_double_format }};
+  unsigned Size;
+  REAL_VALUE_TYPE val;
 
-    gcc_assert (sizeof(float) == 4);
-    gcc_assert (sizeof(double) == 8);
-    gcc_assert (FLOAT_TYPE_SIZE == 32);
-    gcc_assert (DOUBLE_TYPE_SIZE == 64);
-    gcc_assert (LONG_DOUBLE_TYPE_SIZE == 64);
-    gcc_assert ((sizeof(long) == 4) || (sizeof(long) == 8));
+  gcc_assert (sizeof(float) == 4);
+  gcc_assert (sizeof(double) == 8);
+  gcc_assert (FLOAT_TYPE_SIZE == 32);
+  gcc_assert (DOUBLE_TYPE_SIZE == 64);
+  gcc_assert (LONG_DOUBLE_TYPE_SIZE == 64);
+  gcc_assert ((sizeof(long) == 4) || (sizeof(long) == 8));
 
-    Kind = (unsigned) get_int();
-    if (Kind >= (sizeof(Map) / sizeof(Map[0])))
+  Kind = (unsigned) get_int();
+  if (Kind >= (sizeof(Map) / sizeof(Map[0])))
     {
-        fatal_error(" *** invalid floating point value, precision = 0x%x, at m3cg_lineno %d",
-                    Kind, m3cg_lineno);
+      fatal_error(" *** invalid floating point value, precision = 0x%x, at m3cg_lineno %d",
+		  Kind, m3cg_lineno);
     }
-    *out_Kind = Kind;
-    Size = Map[Kind].Size;
+  *out_Kind = Kind;
+  Size = Map[Kind].Size;
+  
+  gcc_assert ((Size == 4) || (Size == 8));
 
-    gcc_assert ((Size == 4) || (Size == 8));
-
-    /* read the value's bytes; each long holds 32 bits, even if long is larger than 32 bits
-    always read the bytes in increasing address, independent of endianness */
-    for (i = 0;  i < Size;  i++)
+  /* read the value's bytes; each long holds 32 bits, even if long is larger
+     than 32 bits always read the bytes in increasing address, independent of
+     endianness */
+  for (i = 0;  i < Size;  i++)
     {
-        Bytes[i / 4 * sizeof(long) + i % 4] = (unsigned char) (0xFF & get_int ());
+      Bytes[i / 4 * sizeof(long) + i % 4] = (unsigned char) (0xFF & get_int ());
     }
 
-    if (option_trace_all)
+  if (option_trace_all)
     {
-        union
-        {
-            unsigned char Bytes[sizeof(long double)]; /* currently double suffices */
-            float Float;
-            double Double;
-            long double LongDouble; /* not currently used */
-        } u = { { 0 } };
+      union
+      {
+	unsigned char Bytes[sizeof(long double)]; /* currently double suffices */
+	float Float;
+	double Double;
+	long double LongDouble; /* not currently used */
+      } u = { { 0 } };
 
-        /* repack the bytes adjacent to each other */
+      /* repack the bytes adjacent to each other */
 
-        for (i = 0;  i < Size;  i++)
+      for (i = 0;  i < Size;  i++)
         {
-            u.Bytes[i] = Bytes[i / 4 * sizeof(long) + i % 4];
+	  u.Bytes[i] = Bytes[i / 4 * sizeof(long) + i % 4];
         }
-        if (Size == 4)
+      if (Size == 4)
         {
-            fprintf(stderr," float %f bytes 0x%02x%02x%02x%02x\n", u.Float, u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3]);
+	  fprintf(stderr," float %f bytes 0x%02x%02x%02x%02x\n", u.Float, u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3]);
         }
-        else
+      else
         {
-            fprintf(stderr," double %f bytes 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
-                u.Double,
-                u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3],
-                u.Bytes[4], u.Bytes[5], u.Bytes[6], u.Bytes[7]);
+	  fprintf(stderr," double %f bytes 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+		  u.Double,
+		  u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3],
+		  u.Bytes[4], u.Bytes[5], u.Bytes[6], u.Bytes[7]);
         }
     }
 
@@ -2858,11 +2860,11 @@ m3cg_declare_segment (void)
   if (option_vars_trace)
     fprintf(stderr, "  segment %s typeid 0x%lx\n",
 	    IDENTIFIER_POINTER(DECL_NAME(v)), id);
-  /* we really don't have an idea of what the type of this var is;
-     let's try to put something that will be good enough for all
-     the uses of this var we are going to see before we have a bind_segment
-  Use a large size so that gcc doesn't think it fits in a register, so that
-  loads out of it do get their offsets applied. */
+  /* we really don't have an idea of what the type of this var is; let's try
+     to put something that will be good enough for all the uses of this var we
+     are going to see before we have a bind_segment. Use a large size so that
+     gcc doesn't think it fits in a register, so that loads out of it do get
+     their offsets applied. */
   TREE_TYPE (v)
     = m3_build_type (T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT);
   layout_decl (v, BIGGEST_ALIGNMENT);
@@ -4730,6 +4732,7 @@ m3cg_fetch (enum built_in_function fncode)
   m3_pop_param (t);
   m3_pop_param (t_addr);
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t);
+  return;
 
  incompatible:
   fatal_error ("incompatible type for argument to atomic op");
@@ -4780,6 +4783,7 @@ m3cg_bool_compare_and_swap (void)
   m3_pop_param (t);
   m3_pop_param (t_addr);
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], u);
+  return;
 
  incompatible:
   fatal_error ("incompatible type for argument to atomic op");
@@ -4804,6 +4808,7 @@ m3cg_val_compare_and_swap (void)
   m3_pop_param (t);
   m3_pop_param (t_addr);
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t);
+  return;
 
  incompatible:
   fatal_error ("incompatible type for argument to atomic op");
@@ -4834,6 +4839,7 @@ m3cg_lock_test_and_set (void)
   m3_pop_param (t);
   m3_pop_param (t_addr);
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t);
+  return;
 
  incompatible:
   fatal_error ("incompatible type for argument to atomic op");
@@ -4856,6 +4862,7 @@ m3cg_lock_release (void)
   m3_start_call ();
   m3_pop_param (t_addr);
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t_void);
+  return;
 
  incompatible:
   fatal_error ("incompatible type for argument to atomic op");
