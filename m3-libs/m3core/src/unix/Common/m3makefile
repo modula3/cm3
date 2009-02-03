@@ -5,6 +5,13 @@ c_source ("UnixC")
 Interface("Uexec")
 c_source("Uexec")
 
+if equal (TARGET, "I386_OPENBSD")
+    c_source("Uucontext")
+    h_source("Uucontext")
+end
+
+include_dir("context")
+
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
         or equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
