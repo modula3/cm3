@@ -13,7 +13,7 @@ VAR
 TYPE
     ucontext_t_star = ADDRESS;
 
-PROCEDURE set_stack(a: ucontext_t_star; Start: ADDRESS; Size: INTEGER);
+<*EXTERNAL "Uucontext_set_stack"*>PROCEDURE set_stack(a: ucontext_t_star; Start: ADDRESS; Size: INTEGER);
 <*EXTERNAL*>PROCEDURE getcontext(a: ucontext_t_star);
 <*EXTERNAL*>PROCEDURE setcontext(a: ucontext_t_star): int;
 <*EXTERNAL*>PROCEDURE makecontext(a: ucontext_t_star; b: PROCEDURE (); argc: int := 0);
