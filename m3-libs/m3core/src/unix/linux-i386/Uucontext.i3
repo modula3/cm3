@@ -196,7 +196,7 @@ TYPE
 VAR
     context_t_size: int; (* VAR context := NEW(UNTRACED REF? ARRAY OF CHAR, Uucontext.context_t_size); *)
 
-PROCEDURE set_stack(a: ucontext_t_star; Start: ADDRESS; Size: INTEGER);
+<*EXTERNAL "Uucontext_set_stack"*>PROCEDURE set_stack(a: ucontext_t_star; Start: ADDRESS; Size: INTEGER);
 <*EXTERNAL*>PROCEDURE getcontext(a: ucontext_t_star);
 <*EXTERNAL*>PROCEDURE setcontext(a: ucontext_t_star): int;
 (* argc must be 0. *)
