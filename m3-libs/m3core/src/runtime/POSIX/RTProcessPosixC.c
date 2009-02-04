@@ -2,6 +2,7 @@
 /* All rights reserved.                                        */
 /* See the file COPYRIGHT for a full description.              */
 
+#include <sys/types.h>
 #include <time.h>
 #include <sys/resource.h>
 #include <assert.h>
