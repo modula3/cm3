@@ -14,6 +14,7 @@ not to call (statically, but the compiler can't or won't tell). */
 #include <semaphore.h>
 #include <string.h>
 #endif
+#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -143,6 +144,32 @@ int ThreadPThreadC_sigsuspend()
 #else
     return sigsuspend(&mask);
 #endif
+}
+
+#define VAR(t) t*
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+typedef void* (*start_routine_t)(void*);
+
+int ThreadPThreadC_thread_create(VAR(pthread_t) pthread, size_t stackSize, start_routine_t start_routine, void* arg)
+{
+    int r;
+    size_t bytes;
+    pthread_attr_t attr;
+
+    r = pthread_attr_init(&attr);
+    assert(r == 0);
+    
+    r = pthread_attr_getstacksize(&attr, &bytes);
+    assert(r == 0);
+
+    bytes = MAX(bytes, stackSize);
+    pthread_attr_setstacksize(&attr, bytes);
+
+    r = pthread_create(pthread, &attr, start_routine, arg);
+
+    pthread_attr_destroy(&attr);
+
+    return r;
 }
 
 #ifdef __cplusplus
