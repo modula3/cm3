@@ -11,11 +11,10 @@ IMPORT Cerrno, FloatMode, MutexRep,
        Unix, Utime, Word, Upthread, Usched,
        Uerror, ThreadPThreadC, Uexec;
 FROM Upthread
-IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_attr_t, pthread_mutex_t,
+IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_mutex_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
-FROM Utypes IMPORT size_t;
 FROM ThreadPThreadC IMPORT SIG_SUSPEND;
 
 (*----------------------------------------------------- types and globals ---*)
@@ -561,9 +560,7 @@ PROCEDURE Fork (closure: Closure): T =
   VAR
     act := NEW(Activation);
     t := CreateT(act);
-    attr: pthread_attr_t;
     size := defaultStackSize;
-    bytes: size_t;
   BEGIN
     (* determine the initial size of the stack for this thread *)
     TYPECASE closure OF
@@ -576,17 +573,12 @@ PROCEDURE Fork (closure: Closure): T =
       t.id := nextId;  INC(nextId);
       IF perfOn THEN PerfChanged(t.id, State.alive) END;
 
-      WITH r = Upthread.attr_init(attr) DO <*ASSERT r=0*> END;
-      WITH r = Upthread.attr_getstacksize(attr, bytes)  DO <*ASSERT r=0*> END;
-      bytes := MAX(bytes, size * ADRSIZE(Word.T));
-      EVAL Upthread.attr_setstacksize(attr, bytes);
       act.next := allThreads;
       act.prev := allThreads.prev;
       act.size := size;
       allThreads.prev.next := act;
       allThreads.prev := act;
-      WITH r = Upthread.create(act.handle, attr, ThreadBase, act) DO
-        EVAL Upthread.attr_destroy(attr);
+      WITH r = ThreadPThreadC.thread_create(act.handle, size * ADRSIZE(Word.T), ThreadBase, act) DO
         IF r # 0 THEN
           RTError.MsgI(ThisFile(), ThisLine(),
                        "Thread client error: Fork failed with error: ", r);

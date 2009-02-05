@@ -21,7 +21,6 @@ TYPE
 (* INTERFACE Upthread; *)
 
   pthread_t = ADDRESS;
-  pthread_attr_t = Upthreadtypes.pthread_attr_t;
   pthread_mutex_t = Upthreadtypes.pthread_mutex_t;
   pthread_cond_t = RECORD data: ARRAY[1..6] OF LONGINT; END;
   pthread_key_t = uint32_t;

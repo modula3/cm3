@@ -25,7 +25,6 @@ TYPE
 (* INTERFACE Upthread; *)
 
     pthread_t = int32_t; (* opaque *)
-    pthread_attr_t = int32_t; (* opaque *)
     pthread_mutex_t = RECORD opaque: ARRAY [1..11 * X64 + 22 * X32] OF INTEGER; END;  (* 88 opaque bytes with size_t alignment *)
     pthread_cond_t = RECORD opaque: ARRAY [1..7 * X64 + 14 * X32] OF INTEGER; END;  (* 56 opaque bytes with size_t alignment *)
     pthread_key_t = int32_t; (* opaque *)

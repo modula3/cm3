@@ -20,7 +20,6 @@ TYPE
 (* INTERFACE Upthread; *)
 
   pthread_t = INTEGER; (* opaque *)
-  pthread_attr_t = RECORD opaque: ARRAY [1..10] OF INTEGER; END;
   pthread_mutex_t = RECORD opaque: ARRAY [1..11] OF INTEGER; END;
   pthread_cond_t = RECORD opaque: ARRAY [1..7] OF INTEGER; END;
   pthread_key_t = INTEGER; (* opaque *)
