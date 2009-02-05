@@ -30,7 +30,8 @@ PROCEDURE DoCheck (name: TEXT;  ce: CallExpr.T;
       ELSE
         Error.Txt (name, "first argument must be of an ordinal type");
       END;
-    ELSIF (NOT Expr.IsDesignator (e)) THEN
+    END;
+    IF (NOT Expr.IsDesignator (e)) THEN
       Error.Txt (name, "first argument must be a variable");
     ELSIF (NOT Expr.IsWritable (e, lhs := TRUE)) THEN
       Error.Txt (name, "first argument must be writable");
