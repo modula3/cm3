@@ -5,8 +5,8 @@
 #include <assert.h>
 
 #ifdef __APPLE__
-/* MacOSX diverges in a good way and therefore this file is
-just stubs for it, that other code dynamically choses
+/* MacOSX diverges in a good way and therefore many functions
+in this file are just stubs for it, that other code dynamically choses
 not to call (statically, but the compiler can't or won't tell). */
 #define APPLE_ASSERT_FALSE assert(!"MacOS X should not get here.");
 #else
