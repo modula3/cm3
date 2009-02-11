@@ -1,5 +1,5 @@
 CFLAGS=-I. -g
-VPATH=..
+VPATH=..:../../../../context
 
 tcontext: context.o contextasm.o tcontext.o
 	$(CC) $(CFLAGS) context.o contextasm.o tcontext.o -o $@

@@ -47,7 +47,7 @@ void config2(jmp_buf* jb1)
     diff(*(JB*)jb1, *(JB*)jb2);
 }
 
-void config(size_t a)
+void config(volatile size_t a)
 {
     jmp_buf jb1;
     jmp_buf jb2;
@@ -58,8 +58,9 @@ void config(size_t a)
     memset(&jb2, 0, sizeof(jb2));
 
     printf("config is at %p\n", &config);
-    printf("parameter is at %p\n", &a);
-    printf("local is at %p\n", &jb1);
+    printf("parameter %p is at %p\n", (void*)a, &a);
+    printf("local jb1 is at %p\n", &jb1);
+    printf("local jb2 is at %p\n", &jb2);
 
     printf("looking for first parameter\n");
     setjmp(jb1);
@@ -80,18 +81,29 @@ void config(size_t a)
     config2(&jb1);
 }
 
+void stack_grow(char* a)
+{
+    char b;
+    
+    printf("stack grows %s\n", (a < &b ? "up" : "down"));
+}
+
 int main()
 {
+    char a;
+    
     printf("alignof(jmp_buf) %u\n", (unsigned) __alignof(jmp_buf));
     printf("sizeof(jmp_buf) %u\n", (unsigned) sizeof(jmp_buf));
+    
+    stack_grow(&a);
 
     if (sizeof(jmp_buf) % sizeof(size_t))
     {
         printf("jmp_buf size not multiple of size_t\n");
         exit(1);
     }
-    config(0xdeadbeef * 2);
-    config(0xcafebabe * 2);
-    config(0xfeedface * 2);
+    config(0xdeadbeef * 16);
+    config(0xcafebabe * 16);
+    config(0xfeedface * 16);
     return 0;
 }
