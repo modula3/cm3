@@ -34,22 +34,28 @@ typedef unsigned char _JBTYPE __attribute__((aligned(4)));
 #ifdef __OpenBSD__
 #define ucontext_t openbsd_ucontext_t
 #endif
+#ifdef __APPLE__
+#define ucontext_t macosx_ucontext_t
+#define mcontext_t macosx_mcontext_t
+#endif
 
 #include <setjmp.h>
 #include <stddef.h>
 #include <signal.h>
 #undef ucontext_t
+#undef mcontext_t
 
 #ifdef __cplusplus
 extern "C"
+
 {
 #endif
 
 struct _ucontext_t;
 typedef struct _ucontext_t ucontext_t;
 
-/* OpenBSD provides a correct stack_t */
-#ifndef __OpenBSD__
+/* OpenBSD, MacOS X provides a correct stack_t */
+#if !defined(__OpenBSD__) && !defined(__APPLE__)
 
 struct _stack_t;
 typedef struct _stack_t stack_t;
@@ -82,4 +88,6 @@ int  swapcontext(ucontext_t*, const ucontext_t*);
 } /* extern "C" */
 #endif
 
+
 #endif
+
