@@ -19,7 +19,7 @@ PROCEDURE Create (n: CARDINAL): T;
 (* Create a new text capable of holding "n" characters. Note that the
    length of the "contents" array is "n+1" because of the null termination.
    The characters at positions "[0..n-1]" are left undefined. The character
-   at position "n" is '\000' *)
+   at position "n" is initialized to '\000' *)
 
 END Text8.
 
