@@ -2,7 +2,7 @@
 (* See file COPYRIGHT-CMASS for details. *)
 
 (* A "Text16Short.T" is a text containing at most "MaxLength"
-   16-bit or "WIDECHAR" characters. *)
+   characters of type WIDECHAR. *)
 
 INTERFACE Text16Short;
 
@@ -14,7 +14,8 @@ TYPE
     len     : CARDINAL;
     contents: ARRAY [0..MaxLength] OF WIDECHAR;
   END;
-  (* The array contains the characters of the text followed by a '\000'. *)
+  (* The array contains the characters of the text followed immediately 
+     by one element containing VAL(0,WIDECHAR). *)
 
 PROCEDURE New (READONLY a: ARRAY OF WIDECHAR): T;
 (* Return a new text containing the characters of "a".  It is a checked

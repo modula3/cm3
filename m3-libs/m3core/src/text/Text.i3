@@ -17,7 +17,8 @@ INTERFACE Text;
 
 IMPORT TextClass, Word;
 
-TYPE T = TEXT;
+TYPE T = TEXT; 
+(* Type TEXT is abstract.  Do not allocate it. *) 
 
 CONST Brand = TextClass.Brand;
 

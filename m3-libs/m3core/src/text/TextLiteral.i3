@@ -31,8 +31,8 @@ REVEAL
     get_wide_chars := RTHooks.TextLitGetWideChars;
   END;
   (* The array contains the characters of the text followed by a null
-     character.  If "cnt" is negative each pair of bytes in "buf"
-     is a "WIDECHAR".  Otherwise, each byte of "buf" is a "CHAR". *)
+     character.  If "cnt" is negative each group of ADRSIZE(WIDECHAR) bytes 
+     in "buf" is a "WIDECHAR".  Otherwise, each byte of "buf" is a "CHAR". *)
 
 TYPE
   Byte = [0..255];
