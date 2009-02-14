@@ -14,16 +14,15 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
 #ifdef __CYGWIN__ /* This isn't going to work anyway. */
 #define CONTEXT_PC 8 /* experimentally derived */
 #define CONTEXT_STACK 7 /* experimentally derived */
-#define CONTEXT_FRAME 6 /* experimentally derived */
-#endif
-#if defined(__OpenBSD__) && defined(__i386__)
+#error unsupported platform
+#elif defined(__OpenBSD__) && defined(__i386__)
 #define CONTEXT_PC 0 /* experimentally derived */
 #define CONTEXT_STACK 2 /* experimentally derived */
-#define CONTEXT_FRAME 3 /* experimentally derived */
-#endif
-#if defined(__APPLE__) && defined(__ppc__)
+#elif defined(__APPLE__) && defined(__ppc__)
 #define CONTEXT_PC 21 /* experimentally derived */
 #define CONTEXT_STACK 0 /* experimentally derived */
+#else
+#error unsupported platform
 #endif
 
 int getcontext(ucontext_t* context)
@@ -42,32 +41,28 @@ int setcontext(const ucontext_t* context)
     return 0;
 }
 
-void internal_endcontext();
-
-#if defined(__APPLE__) && defined(__ppc__)
-
 /* see:
 http://developer.apple.com/documentation/DeveloperTools/Conceptual/LowLevelABI/100-32-bit_PowerPC_Function_Calling_Conventions/32bitPowerPC.html#//apple_ref/doc/uid/TP40002438
 
 From reading the APSL code, setjmp does not preserve the registers that are used for parameters; so burn them up and use
 the later stack-based parameters for the actual parameters
 */
-void internal_setcontext(size_t r3, size_t r4, size_t r5, size_t r6, size_t r7, size_t r8, size_t r9, size_t r10,
+void internal_setcontext(
+    size_t r3, size_t r4, size_t r5, size_t r6, size_t r7, size_t r8, size_t r9, size_t r10,
     ucontext_t* uc_link, void (*function)(), size_t argc, ...)
 {
+#if defined(__APPLE__) && defined(__ppc__)
     va_list args;
     size_t i;
     va_start(args, argc);
     for (i = 0 ; (i != 8) && (i != argc) ; ++i)
-    {
         (&r3)[i] = va_arg(args, size_t);
-    }
     va_end(args);
+#endif
     function(r3, r4, r5, r6, r7, r8, r9, r10);
     setcontext(uc_link);        
     exit(0); /* exit thread? */
 }
-#endif
 
 void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
 {
@@ -77,50 +72,25 @@ void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
 
     va_start(args, argc);
     stack = (size_t*)(((size_t)context->uc_stack.ss_sp) + context->uc_stack.ss_size);
-
 #if defined(__APPLE__) && defined(__ppc__)
     stack -= argc;
     for (i = 0 ; i < argc ; ++i)
-    {
         stack[i] = va_arg(args, size_t);
-    }
+#endif
     *--stack = (size_t)argc;
     *--stack = (size_t)function;
     *--stack = (size_t)context->uc_link;
+#if defined(__APPLE__) && defined(__ppc__)
     stack -= 14; /* experimentally derived */
-    context->uc_mcontext[CONTEXT_PC] = (size_t)internal_setcontext;
 #endif
-
 #if defined(__OpenBSD__) && defined(__i386__)
-
-    /* push a return to setcontext(context->uc_link) */
-
-    *--stack = (size_t)context->uc_link;
-    *--stack = context->uc_mcontext[CONTEXT_PC];
-    *--stack = (size_t)setcontext;
-
-    if (argc > 0)
-    {
-        /* endeavor to cleanup the parameters by returning
-        to internal_endcontext with the frame setup with argc available;
-        ebp is non-volatile and function must preserve it */
-
-        context->uc_mcontext[CONTEXT_FRAME] = (size_t)stack;
-        *--stack = (argc + 1) * sizeof(size_t);
-
-        stack -= argc;
-        for (i = 0 ; i < argc ; ++i)
-        {
-            stack[i] = va_arg(args, size_t);
-        }
-        *--stack = (size_t)internal_endcontext;
-    }
-
-    stack -= 1; /* why? */
-
-    context->uc_mcontext[CONTEXT_PC] = (size_t)function;
-#endif /* __OpenBSD__ __i386__ */
-
+    stack -= 8;
+    for (i = 0 ; i < argc ; ++i)
+        stack[i] = va_arg(args, size_t);
+    stack -= 2; /* experimentally derived; 1 for
+                   return address, 1 for ? */
+#endif
+    context->uc_mcontext[CONTEXT_PC] = (size_t)internal_setcontext;
     context->uc_mcontext[CONTEXT_STACK] = (size_t)stack;
 
     va_end(args);
