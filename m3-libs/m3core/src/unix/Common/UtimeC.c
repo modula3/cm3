@@ -4,6 +4,8 @@
 #include <sys/time.h>
 typedef struct itimerval itimerval_t;
 
+/* to address libtool: file: UtimeC.o has no symbols */
+void UtimeC__dummy(void) { }
 
 #if defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__APPLE__)
 #define M3BSD
