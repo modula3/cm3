@@ -153,14 +153,14 @@ Y(S_OWRITE, S_IWOTH)
 Y(S_OEXEC, S_IXOTH)
 
 #undef X
-#define X(x) const int Unetdb_##x = x;
+#define X(x) const int Unetdb__##x = x;
 X(TRY_AGAIN)
 X(NO_RECOVERY)
 X(NO_ADDRESS)
 
 
 #undef X
-#define X(x) const int Uin_##x = x;
+#define X(x) const int Uin__##x = x;
 X(IPPROTO_TCP)
 
 
