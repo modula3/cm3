@@ -1336,18 +1336,14 @@ PROCEDURE op_and_fetch (self: U;  op: AtomicOp;  t: IType) =
 
 PROCEDURE bool_compare_and_swap (self: U;  t: IType;  u: IType) =
   BEGIN
-    self.s_pop (T_to_ST [t]);
-    self.s_pop (T_to_ST [t]);
-    self.s_pop (ST.Addr);
+    self.s_pop (T_to_ST [t], ST.Match, ST.Addr);
     self.s_push (u);
     self.child.bool_compare_and_swap (t, u);
   END bool_compare_and_swap;
 
 PROCEDURE val_compare_and_swap (self: U;  t: IType) =
   BEGIN
-    self.s_pop (T_to_ST [t]);
-    self.s_pop (T_to_ST [t]);
-    self.s_pop (ST.Addr);
+    self.s_pop (T_to_ST [t], ST.Match, ST.Addr);
     self.s_push (t);
     self.child.val_compare_and_swap (t);
   END val_compare_and_swap;
@@ -1359,8 +1355,7 @@ PROCEDURE synchronize (self: U) =
 
 PROCEDURE lock_test_and_set (self: U;  t: IType) =
   BEGIN
-    self.s_pop (T_to_ST [t]);
-    self.s_pop (ST.Addr);
+    self.s_pop (T_to_ST [t], ST.Addr);
     self.s_push (t);
     self.child.lock_test_and_set (t);
   END lock_test_and_set;
