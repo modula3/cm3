@@ -9,7 +9,7 @@
 #include <assert.h>
 #include <stddef.h>
 
-void Uexec_RepackStatus(int* var_status)
+void Uexec__RepackStatus(int* var_status)
 {
     int status;
 

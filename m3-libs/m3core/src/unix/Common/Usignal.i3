@@ -8,8 +8,8 @@ FROM Ctypes IMPORT int;
 FROM Utypes IMPORT pid_t;
 
 (*CONST*)
-<*EXTERNAL "Usignal_SIGINT"*> VAR SIGINT: int;
-<*EXTERNAL "Usignal_SIGKILL"*> VAR SIGKILL: int;
+<*EXTERNAL "Usignal__SIGINT"*> VAR SIGINT: int;
+<*EXTERNAL "Usignal__SIGKILL"*> VAR SIGKILL: int;
 
 TYPE
   SignalHandler = PROCEDURE (sig: int);

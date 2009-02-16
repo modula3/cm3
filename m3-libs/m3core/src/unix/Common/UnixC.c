@@ -39,23 +39,23 @@ C wrappers are being used to reduce functionality -- 32 bit offsets instead of 6
 
 /* open doesn't take any off_t parameter, but there is open64, that
 #define _FILE_OFFSET_BITS 64 maps open to. */
-int m3_open(const char* path, int flags, mode_t mode)
+int Unix__open(const char* path, int flags, mode_t mode)
 {
     return open(path, flags, mode);
 }
 
 /* likewise for creat (see open) */
-int m3_creat(const char* path, mode_t mode)
+int Unix__creat(const char* path, mode_t mode)
 {
     return creat(path, mode);
 }
 
-int m3_ftruncate(int fd, off_t length)
+int Unix__ftruncate(int fd, off_t length)
 {
     return ftruncate(fd, length);
 }
 
-off_t m3_lseek(int fd, off_t offset, int whence)
+off_t Unix__lseek(int fd, off_t offset, int whence)
 {
     return lseek(fd, offset, whence);
 }

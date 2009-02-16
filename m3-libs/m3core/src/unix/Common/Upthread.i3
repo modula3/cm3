@@ -17,8 +17,10 @@ TYPE
   destructor_t = PROCEDURE(arg: ADDRESS);
   start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;
 
-<*EXTERNAL "Upthread_PTHREAD_MUTEX_INITIALIZER"*> VAR PTHREAD_MUTEX_INITIALIZER : pthread_mutex_t;
-<*EXTERNAL "Upthread_PTHREAD_COND_INITIALIZER"*> VAR PTHREAD_COND_INITIALIZER : pthread_cond_t;
+<*EXTERNAL "Upthread__PTHREAD_MUTEX_INITIALIZER"*>
+VAR PTHREAD_MUTEX_INITIALIZER : pthread_mutex_t;
+<*EXTERNAL "Upthread__PTHREAD_COND_INITIALIZER"*>
+VAR PTHREAD_COND_INITIALIZER : pthread_cond_t;
 
 <*EXTERNAL pthread_detach*> PROCEDURE detach (thread: pthread_t): int;
 <*EXTERNAL pthread_self*> PROCEDURE self (): pthread_t;
