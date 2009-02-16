@@ -2,8 +2,8 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-<*EXTERNAL*> INTERFACE RTProcessPosixC;
+INTERFACE RTProcessPosixC;
 
-<*EXTERNAL "RTProcessPosixC_TimeUsed"*> PROCEDURE TimeUsed (): REAL;
+<*EXTERNAL "RTProcessPosix__TimeUsed"*> PROCEDURE TimeUsed (): REAL;
 
 END RTProcessPosixC.
