@@ -4,16 +4,13 @@
 
 (*---------------------------------------------------------------------------*)
 
-UNSAFE INTERFACE ThreadPThreadC;
+UNSAFE INTERFACE ThreadPThread;
 
 FROM Ctypes IMPORT int;
 FROM Cstddef IMPORT size_t;
 FROM Upthread IMPORT pthread_t, start_routine_t;
 
 (*---------------------------------------------------------------------------*)
-
-TYPE
-  SignalActionHandler = PROCEDURE (sig: int; sip: ADDRESS (*siginfo_t_star*); uap: ADDRESS (*Uucontext.ucontext_t_star*));
 
 PROCEDURE SignalHandler(sig: int; sip, uap: ADDRESS);
 
@@ -49,4 +46,4 @@ PROCEDURE thread_create(VAR pthread: pthread_t; stackSize: size_t; start_routine
 
 (*---------------------------------------------------------------------------*)
 
-END ThreadPThreadC.
+END ThreadPThread.
