@@ -59,12 +59,12 @@ TYPE
 <*EXTERNAL "__sF"*> VAR sF : ARRAY [0..NSTDBUF-1] OF FILE;
                     VAR iF : ARRAY [0..NIOBRW-1]  OF FILE_star;
 
-<*EXTERNAL fbsd_feof*>      PROCEDURE feof (f: FILE_star): int;
-<*EXTERNAL fbsd_getc*>      PROCEDURE getc (f: FILE_star): int;
-<*EXTERNAL fbsd_ungetc*>    PROCEDURE ungetc (c: int; f: FILE_star): int;
-<*EXTERNAL fbsd_putc*>      PROCEDURE putc (c: int; f: FILE_star): int;
-<*EXTERNAL fbsd_fflush*>    PROCEDURE fflush (f: FILE_star): int;
-<*EXTERNAL fbsd_fdopen*>    PROCEDURE fdopen (fd: int; mode: char_star): FILE_star;
-<*EXTERNAL fbsd_fclose*>    PROCEDURE fclose (f: FILE_star): int;
+<*EXTERNAL*> PROCEDURE feof (f: FILE_star): int;
+<*EXTERNAL*> PROCEDURE getc (f: FILE_star): int;
+<*EXTERNAL*> PROCEDURE ungetc (c: int; f: FILE_star): int;
+<*EXTERNAL*> PROCEDURE putc (c: int; f: FILE_star): int;
+<*EXTERNAL*> PROCEDURE fflush (f: FILE_star): int;
+<*EXTERNAL*> PROCEDURE fdopen (fd: int; mode: char_star): FILE_star;
+<*EXTERNAL*> PROCEDURE fclose (f: FILE_star): int;
 
 END Cstdio.
