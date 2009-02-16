@@ -13,7 +13,7 @@ typedef struct rusage rusage_t;
 extern "C" {
 #endif
 
-#define TimevalSecs RTProcess__TimevalSecs
+#define TimevalSecs RTProcessPosix__TimevalSecs
 
 float TimevalSecs(timeval_t* t)
 /* Return the number of seconds represented by "t" as a floating-
@@ -22,7 +22,7 @@ float TimevalSecs(timeval_t* t)
     return (((float) t->tv_sec) + (((float) t->tv_usec) / 1.0e6));
 }
 
-float RTProcess__TimeUsed(void)
+float RTProcessPosix__TimeUsed(void)
 {
     rusage_t usage;
     int ret = getrusage(RUSAGE_SELF, &usage);
