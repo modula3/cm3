@@ -4,7 +4,3 @@
 Interface ("Csetjmp")
 Interface ("Cstring")
 Module ("Cstdio")
-
-c_source ("CstdioC")
-
-
