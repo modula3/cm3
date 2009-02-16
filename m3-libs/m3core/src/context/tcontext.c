@@ -23,8 +23,8 @@ volatile unsigned next_thread;
 volatile unsigned done[4];
 
 #define USE_YIELD defined(__CYGWIN__)
-#undef USE_YIELD
-#define USE_YIELD 1
+/*#undef USE_YIELD*/
+/*#define USE_YIELD 1*/
 
 void MyYield()
 {
