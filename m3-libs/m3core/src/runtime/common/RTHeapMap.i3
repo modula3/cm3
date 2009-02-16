@@ -19,12 +19,16 @@ PROCEDURE WalkRef (h: ObjectPtr;  v: Visitor);
 (* For each traced reference at address 'x' in the object referenced by 'h',
    call 'v(x)'. *)
 
+PROCEDURE DoWalkRef(t: RT0.TypeDefn;  a: ADDRESS;  v: Visitor);
+(* For each traced reference at address 'x' in the object of type 't'
+   starting at address 'a', call 'v(x)'. *)
+
 PROCEDURE WalkGlobals (v: Visitor);
 (* For each traced reference at address 'x' in a global var, call 'v(x)'. *)
 
 PROCEDURE WalkModuleGlobals (v: Visitor;  m: CARDINAL);
 (* For each traced reference at address 'x' in a global variable of
    module 'm' (RTModule.Get(m)), call 'v(x)' *)
-  
+
 END RTHeapMap.
 
