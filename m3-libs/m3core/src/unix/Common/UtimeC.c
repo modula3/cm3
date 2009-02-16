@@ -17,7 +17,7 @@ wrap up global variables in functions until something else is done
 
 #ifndef M3BSD
 
-time_t m3_get_timezone(void)
+time_t Utime__get_timezone(void)
 {
 #ifdef __CYGWIN__
     return _timezone;
@@ -28,10 +28,10 @@ time_t m3_get_timezone(void)
 
 #if defined(__CYGWIN__) || defined(__sun)
 
-time_t m3_get_altzone(void)
+time_t Utime__get_altzone(void)
 {
 #ifdef __CYGWIN__
-    return m3_get_timezone(); /* ? */
+    return Utime__get_timezone(); /* ? */
 #else
     return altzone;
 #endif
@@ -39,7 +39,7 @@ time_t m3_get_altzone(void)
 
 #endif /* cygwin | sun */
 
-int m3_get_daylight(void)
+int Utime__get_daylight(void)
 {
 #ifdef __CYGWIN__
     return _daylight;
@@ -48,7 +48,7 @@ int m3_get_daylight(void)
 #endif
 }
 
-const char* m3_get_tzname(unsigned a)
+const char* Utime__get_tzname(unsigned a)
 {
     assert((a == 0) || (a == 1));
     return tzname[a & 1];

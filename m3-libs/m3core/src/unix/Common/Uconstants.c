@@ -51,20 +51,20 @@ typedef int CheckMax[151 - sizeof(union{
 
 
 #undef X
-#define X(x) const int Uexec_##x = x;
+#define X(x) const int Uexec__##x = x;
 X(WNOHANG)
 
 
 #undef X
-#define X(x) const int Usignal_##x = x;
+#define X(x) const int Usignal__##x = x;
 X(SIGINT)
 X(SIGKILL)
 
 
 #undef X
-#define X(x) const int Unix_##x = x;
+#define X(x) const int Unix__##x = x;
 #undef Y
-#define Y(x, y) const int Unix_##x = y;
+#define Y(x, y) const int Unix__##x = y;
 
 X(FIONREAD)
 
@@ -104,14 +104,14 @@ Y(Mrwrwrw, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
 
 
 #undef X
-#define X(type, x) const type Upthread_##x = x;
+#define X(type, x) const type Upthread__##x = x;
 
 X(pthread_mutex_t, PTHREAD_MUTEX_INITIALIZER)
 X(pthread_cond_t, PTHREAD_COND_INITIALIZER)
 
 
 #undef X
-#define X(x) const int Usocket_##x = x;
+#define X(x) const int Usocket__##x = x;
 
 X(SOCK_STREAM)
 X(SOCK_DGRAM)
@@ -126,9 +126,9 @@ X(MSG_PEEK)
 
 
 #undef X
-#define X(x) const int Ustat_##x = x;
+#define X(x) const int Ustat__##x = x;
 #undef Y
-#define Y(x, y) const int Ustat_##x = y;
+#define Y(x, y) const int Ustat__##x = y;
 
 X(S_IFMT)
 X(S_IFSOCK)
@@ -166,8 +166,8 @@ X(IPPROTO_TCP)
 
 #undef X
 #undef Y
-#define X(x) const int Utime_##x = x;
-#define Y(x, y) const int Utime_##x = y;
+#define X(x) const int Utime__##x = x;
+#define Y(x, y) const int Utime__##x = y;
 /* Cygwin only supports real time whereas Modula-3 only uses virtual time. Lie. */
 #ifdef __CYGWIN__
 Y(ITIMER_VIRTUAL, ITIMER_REAL)
@@ -194,9 +194,9 @@ Y(context_t_size, sizeof(ucontext_t))
 #ifdef __CYGWIN__
 
 #undef X
-#define X(x) const int Usysdep_##x = x;
+#define X(x) const int Usysdep__##x = x;
 #undef Y
-#define Y(x, y) const int Usysdep_##x = y;
+#define Y(x, y) const int Usysdep__##x = y;
 
 Y(P_NOWAIT, _P_NOWAIT)
 

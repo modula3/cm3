@@ -11,17 +11,17 @@ FROM Utypes IMPORT socklen_t;
 IMPORT Usysdep;
 
 (* CONST *)
-<*EXTERNAL "Usocket_SOCK_STREAM"*> VAR SOCK_STREAM: int;
-<*EXTERNAL "Usocket_SOCK_DGRAM"*> VAR SOCK_DGRAM: int;
+<*EXTERNAL "Usocket__SOCK_STREAM"*>  VAR SOCK_STREAM: int;
+<*EXTERNAL "Usocket__SOCK_DGRAM"*>   VAR SOCK_DGRAM: int;
 
-<*EXTERNAL "Usocket_SO_REUSEADDR"*> VAR SO_REUSEADDR: int;
-<*EXTERNAL "Usocket_SO_KEEPALIVE"*> VAR SO_KEEPALIVE: int;
-<*EXTERNAL "Usocket_SO_LINGER"*> VAR SO_LINGER: int;
+<*EXTERNAL "Usocket__SO_REUSEADDR"*> VAR SO_REUSEADDR: int;
+<*EXTERNAL "Usocket__SO_KEEPALIVE"*> VAR SO_KEEPALIVE: int;
+<*EXTERNAL "Usocket__SO_LINGER"*>    VAR SO_LINGER: int;
 
-<*EXTERNAL "Usocket_SOL_SOCKET"*> VAR SOL_SOCKET: int;
+<*EXTERNAL "Usocket__SOL_SOCKET"*>   VAR SOL_SOCKET: int;
 
-<*EXTERNAL "Usocket_SOL_SOCKET"*> VAR AF_INET: int;
-<*EXTERNAL "Usocket_MSG_PEEK"*> VAR MSG_PEEK: int;
+<*EXTERNAL "Usocket__SOL_SOCKET"*>   VAR AF_INET: int;
+<*EXTERNAL "Usocket__MSG_PEEK"*>     VAR MSG_PEEK: int;
 
 TYPE
   struct_linger = Usysdep.struct_linger;
