@@ -23,10 +23,6 @@ then use them. */
 /*#define _INCLUDE_POSIX_SOURCE*/
 /*#define _INCLUDE_HPUX_SOURCE*/
 #define _FILE_OFFSET_BITS 64
-#ifdef __CYGWIN__
-/* This is what code should do to get a correct jmpbuf. */
-/* #define _JBLEN 13 */
-#endif
 #ifdef __STDC__
 #include <stdarg.h>
 #else
@@ -1010,6 +1006,8 @@ void DetermineJmpBufSize()
     unsigned j;
     unsigned k;
 
+#ifdef __CYGWIN__
+
     for (k = 0 ; k != 2 ; ++k)
     {
         for (i = 0 ; i != 256; ++i)
@@ -1028,6 +1026,8 @@ void DetermineJmpBufSize()
             }
         }
     }
+#endif
+
     printf("claimed jmpbuf size: %u\n", (U)sizeof(jb));
     printf("claimed sigjmpbuf size: %u\n", (U)sizeof(sjb));
 }
@@ -1445,7 +1445,11 @@ do { \
         in_addr2_t a;
         in_addr_t b;
         CHECK(sizeof(a) == sizeof(b));
+#ifdef __NetBSD__
+        CHECK(ALIGN_OF_TYPE(in_addr2_t) >= ALIGN_OF_TYPE(in_addr_t));
+#else
         CHECK(ALIGN_OF_TYPE(in_addr2_t) == ALIGN_OF_TYPE(in_addr_t));
+#endif
         a.addr = 1234;
         b.s_addr = 1234;
         CHECK(memcmp(&a, &b, sizeof(a)) == 0);
