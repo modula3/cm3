@@ -14,10 +14,10 @@ FROM Ctypes IMPORT int;
 
    The "errno" value is preserved across thread switches. *)
 
-<*EXTERNAL "m3_Cerrno_GetErrno"*>
+<*EXTERNAL "Cerrno__GetErrno"*>
 PROCEDURE GetErrno(): int;
 
-<*EXTERNAL "m3_Cerrno_SetErrno"*>
+<*EXTERNAL "Cerrno__SetErrno"*>
 PROCEDURE SetErrno(e: int);
 
 END Cerrno.

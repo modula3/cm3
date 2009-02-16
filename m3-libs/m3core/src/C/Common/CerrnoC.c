@@ -5,13 +5,13 @@
 #include <errno.h>
 
 int
-m3_Cerrno_GetErrno(void)
+Cerrno__GetErrno(void)
 {
     return errno;
 }
 
 void
-m3_Cerrno_SetErrno(int e)
+Cerrno__SetErrno(int e)
 {
     errno = e;
 }
