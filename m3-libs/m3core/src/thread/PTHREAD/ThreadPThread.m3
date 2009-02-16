@@ -4,7 +4,7 @@
 
 UNSAFE MODULE ThreadPThread
 EXPORTS
-Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThreadC;
+Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError,  RTHeapRep, RTIO, RTMachine, RTParams,
