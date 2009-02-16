@@ -8,12 +8,11 @@ INTERFACE Text8Short;
 
 CONST MaxLength = 15;
 
-TYPE 
-  TContents = ARRAY [0..MaxLength] OF CHAR;
+TYPE
   T <: Public;
   Public = TEXT OBJECT
     len     : CARDINAL;
-    contents: TContents;
+    contents: ARRAY [0..MaxLength] OF CHAR;
   END;
   (* The array contains the characters of the text followed by a '\000'. *)
 

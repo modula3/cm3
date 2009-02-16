@@ -7,9 +7,9 @@ IMPORT Ctypes, Cstring, TextClass;
 
 REVEAL
   T = Public BRANDED "Text8CString.T" OBJECT OVERRIDES
-    get_info  := T8CGetInfo;
-    get_char  := T8CGetChar;
-    get_chars := T8CGetChars;
+    get_info  := GetInfo;
+    get_char  := GetChar;
+    get_chars := GetChars;
   END;
 
 PROCEDURE New (s: Ctypes.char_star): TEXT =
@@ -17,21 +17,21 @@ PROCEDURE New (s: Ctypes.char_star): TEXT =
     RETURN NEW (T, str := s);
   END New;
 
-PROCEDURE T8CGetInfo (t: T;  VAR info: TextClass.Info) =
+PROCEDURE GetInfo (t: T;  VAR info: TextClass.Info) =
   BEGIN
     info.start  := t.str;
     info.length := Cstring.strlen (t.str);
     info.wide   := FALSE;
-  END T8CGetInfo;
+  END GetInfo;
 
-PROCEDURE T8CGetChar (t: T;  i: CARDINAL): CHAR =
+PROCEDURE GetChar (t: T;  i: CARDINAL): CHAR =
   VAR len := Cstring.strlen (t.str);
   BEGIN
     IF i >= len THEN (* force a subscript fault *) i := -1; <*NOWARN*> END;
     RETURN LOOPHOLE (t.str + i * ADRSIZE (CHAR), UNTRACED REF CHAR)^;
-  END T8CGetChar;
+  END GetChar;
 
-PROCEDURE T8CGetChars (t: T;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
+PROCEDURE GetChars (t: T;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
   VAR
     len := Cstring.strlen (t.str);
     n   := MIN (NUMBER (a), len - start);
@@ -40,7 +40,7 @@ PROCEDURE T8CGetChars (t: T;  VAR a: ARRAY OF CHAR;  start: CARDINAL) =
       EVAL Cstring.memcpy (ADR (a[0]), t.str + start * ADRSIZE (CHAR),
                            n * BYTESIZE (CHAR));
     END;
-  END T8CGetChars;
+  END GetChars;
 
 BEGIN
 END Text8CString.
