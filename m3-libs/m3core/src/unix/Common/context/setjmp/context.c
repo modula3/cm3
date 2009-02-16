@@ -66,7 +66,10 @@ static void print_context(const char* name, const ucontext_t* context)
 
 int getcontext(ucontext_t* context)
 {
-    jmp_buf jb;
+#ifdef OpenBSD_powerpc
+    /* This does make a positive difference. */
+    volatile char a[65];
+#endif
     sigprocmask(SIG_SETMASK, NULL, &context->uc_sigmask);
     setjmp(context->uc_mcontext.jb);
     return 0;
