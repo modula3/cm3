@@ -44,9 +44,9 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
 #define CONTEXT_STACK 0 /* experimentally derived */
 #endif
 
+#if 0
 static void print_context(const char* name, const ucontext_t* context)
 {
-#if 0
     size_t i;
 
     printf("%s:%p: ", name, context);
@@ -61,22 +61,20 @@ static void print_context(const char* name, const ucontext_t* context)
     }
     printf("\n");
     fflush(stdout);
-#endif
 }
+#endif
 
 int getcontext(ucontext_t* context)
 {
     jmp_buf jb;
     sigprocmask(SIG_SETMASK, NULL, &context->uc_sigmask);
     setjmp(context->uc_mcontext.jb);
-    print_context("getcontext(c)", context);
     return 0;
 }
 
 int setcontext(const ucontext_t* const_context)
 {
     ucontext_t* context = (ucontext_t*)const_context;
-    print_context("setcontext(c)", context);
     if (context)
     {
         sigprocmask(SIG_SETMASK, &context->uc_sigmask, NULL);
@@ -91,10 +89,10 @@ http://developer.apple.com/documentation/DeveloperTools/Conceptual/LowLevelABI/1
 From reading the APSL code, setjmp does not preserve the registers that are used for parameters; so burn them up and use
 the later stack-based parameters for the actual parameters
 
-OpenBSD/powerpc also does not preserve a bunch of registers.
+OpenBSD/powerpc also does not preserve a bunch of registers in the
+  setjmp code, but the prolog/epilog appears to handle them.
 */
 void internal_setcontext(
-    /* volatile is only due to paranoia */
     size_t r3,
     size_t r4,
     size_t r5,
@@ -118,7 +116,7 @@ void internal_setcontext(
     va_end(args);
 #endif
 #if 0 /* fishing mode */
-    printf("marker is %x\n", (unsigned)marker);
+    printf("marker is %lx\n", (unsigned long)marker);
     exit(1);
 #endif
     assert(marker == (0x12345678 << 8));
@@ -171,8 +169,6 @@ void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
 
 int swapcontext(ucontext_t* old_context, const ucontext_t* new_context)
 {
-    print_context("swapcontext(old)", old_context);
-    print_context("swap_context(new)", new_context);
     getcontext(old_context);
     setcontext(new_context);
     return 0;
