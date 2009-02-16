@@ -21,7 +21,7 @@ extern "C" {
 #endif
 
 
-#define SIG_SUSPEND ThreadPThreadC_SIG_SUSPEND
+#define SIG_SUSPEND ThreadPThread__SIG_SUSPEND
  
 /* expected values for compat, if compat matters:
     Solaris: 17 (at least 32bit SPARC?)
@@ -56,7 +56,6 @@ const int SIG_SUSPEND = SIGUSR2;
 
 typedef struct sigaction sigaction_t;
 
-#define SetupHandlers ThreadPThreadC_SetupHandlers
 #define SignalHandler ThreadPThread__SignalHandler
 
 static sigset_t mask;
@@ -72,7 +71,7 @@ void SignalHandler();
 
 #endif /* Apple */
 
-void ThreadPThreadC_SetupHandlers()
+void ThreadPThread__SetupHandlers()
 {
 #ifdef __APPLE__
     APPLE_ASSERT_FALSE
@@ -109,7 +108,7 @@ void ThreadPThreadC_SetupHandlers()
 #endif
 }
 
-int ThreadPThreadC_sem_wait()
+int ThreadPThread__sem_wait()
 {
 #ifdef __APPLE__
     APPLE_ASSERT_FALSE
@@ -118,7 +117,7 @@ int ThreadPThreadC_sem_wait()
 #endif
 }
 
-int ThreadPThreadC_sem_post()
+int ThreadPThread__sem_post()
 {
 #ifdef __APPLE__
     APPLE_ASSERT_FALSE
@@ -127,7 +126,7 @@ int ThreadPThreadC_sem_post()
 #endif
 }
 
-int ThreadPThreadC_sem_getvalue(value)
+int ThreadPThread__sem_getvalue(value)
     int* value;
 {
 #ifdef __APPLE__
@@ -137,7 +136,7 @@ int ThreadPThreadC_sem_getvalue(value)
 #endif
 }
 
-int ThreadPThreadC_sigsuspend()
+int ThreadPThread__sigsuspend()
 {
 #ifdef __APPLE__
     APPLE_ASSERT_FALSE
@@ -150,7 +149,7 @@ int ThreadPThreadC_sigsuspend()
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 typedef void* (*start_routine_t)(void*);
 
-int ThreadPThreadC_thread_create(VAR(pthread_t) pthread, size_t stackSize, start_routine_t start_routine, void* arg)
+int ThreadPThread__thread_create(VAR(pthread_t) pthread, size_t stackSize, start_routine_t start_routine, void* arg)
 {
     int r;
     size_t bytes;

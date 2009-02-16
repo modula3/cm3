@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTThread EXPORTS RTThread;
 
-IMPORT Word, Usignal, Unix, RTMisc, Umman;
+IMPORT Usignal, Unix, RTMisc, Umman;
 
 CONST
   SP_pos = 2;
