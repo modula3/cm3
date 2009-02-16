@@ -4,7 +4,7 @@
 
 (*---------------------------------------------------------------------------*)
 
-<*EXTERNAL*> UNSAFE INTERFACE ThreadPThreadC;
+UNSAFE INTERFACE ThreadPThreadC;
 
 FROM Ctypes IMPORT int;
 FROM Cstddef IMPORT size_t;
@@ -15,34 +15,36 @@ FROM Upthread IMPORT pthread_t, start_routine_t;
 TYPE
   SignalActionHandler = PROCEDURE (sig: int; sip: ADDRESS (*siginfo_t_star*); uap: ADDRESS (*Uucontext.ucontext_t_star*));
 
+PROCEDURE SignalHandler(sig: int; sip, uap: ADDRESS);
+
 (*---------------------------------------------------------------------------*)
 
 (*CONST*)
-<*EXTERNAL "ThreadPThreadC_SIG_SUSPEND"*>VAR SIG_SUSPEND: int;
+<*EXTERNAL "ThreadPThread__SIG_SUSPEND"*>VAR SIG_SUSPEND: int;
 
 (*---------------------------------------------------------------------------*)
 
-<*EXTERNAL "ThreadPThreadC_SetupHandlers"*> PROCEDURE SetupHandlers();
+<*EXTERNAL "ThreadPThread__SetupHandlers"*> PROCEDURE SetupHandlers();
 
 (*---------------------------------------------------------------------------*)
 
 (* the semaphore is implied *)
 
-<*EXTERNAL "ThreadPThreadC_sem_wait"*> PROCEDURE sem_wait (): int;
-<*EXTERNAL "ThreadPThreadC_sem_post"*> PROCEDURE sem_post (): int;
-<*EXTERNAL "ThreadPThreadC_sem_getvalue"*> PROCEDURE sem_getvalue (VAR value: int): int;
+<*EXTERNAL "ThreadPThread__sem_wait"*> PROCEDURE sem_wait (): int;
+<*EXTERNAL "ThreadPThread__sem_post"*> PROCEDURE sem_post (): int;
+<*EXTERNAL "ThreadPThread__sem_getvalue"*> PROCEDURE sem_getvalue (VAR value: int): int;
 
 (*---------------------------------------------------------------------------*)
 
 (* the signal set is implied *)
 
-<*EXTERNAL "ThreadPThreadC_sigsuspend"*> PROCEDURE sigsuspend (): int;
+<*EXTERNAL "ThreadPThread__sigsuspend"*> PROCEDURE sigsuspend (): int;
 
 (*---------------------------------------------------------------------------*)
 
 (* pthread_create but replace attr with stackSize so that attr need not be known to Modula-3 *)
 
-<*EXTERNAL "ThreadPThreadC_thread_create"*>
+<*EXTERNAL "ThreadPThread__thread_create"*>
 PROCEDURE thread_create(VAR pthread: pthread_t; stackSize: size_t; start_routine: start_routine_t; arg: ADDRESS): int;
 
 (*---------------------------------------------------------------------------*)

@@ -126,9 +126,6 @@ PROCEDURE MyInitializeCriticalSection (cs: WinBase.LPCRITICAL_SECTION): WinBase.
   END MyInitializeCriticalSection;
 
 (*----------------------------------------------------------------- Mutex ---*)
-(* Note: {Unlock,Lock}Mutex are the routines called directly by
-   the compiler.  Acquire and Release are the routines exported through
-   the Thread interface *)
          
 PROCEDURE Acquire (m: Mutex) =
   BEGIN
@@ -143,7 +140,7 @@ PROCEDURE Release (m: Mutex) =
 PROCEDURE LockMutex (m: Mutex) =
   VAR self := Self();  wait := FALSE;  next, prev: T;
   BEGIN
-    IF self = NIL THEN Die(ThisLine(), "Acquire called from non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "LockMutex called from non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(self.id, State.locking) END;
 
     WinBase.EnterCriticalSection(cm);
@@ -184,7 +181,7 @@ PROCEDURE LockMutex (m: Mutex) =
 PROCEDURE UnlockMutex(m: Mutex) =
   VAR self := Self();  prevCount: WinDef.LONG;  next: T;
   BEGIN
-    IF self = NIL THEN Die(ThisLine(), "Release called from non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "UnlockMutex called from non-Modula-3 thread") END;
     WinBase.EnterCriticalSection(cm);
 
       (* Make sure I'm allowed to release this mutex. *)
@@ -565,10 +562,10 @@ PROCEDURE RunThread (me: Activation): WinNT.HANDLE =
       self := slots [me.slot];
     WinBase.LeaveCriticalSection (slotMu);
 
-    LockMutex(threadMu);
-    cl := self.closure;
+    LOCK threadMu DO
+      cl := self.closure;
       self.id := nextId;  INC (nextId);
-    UnlockMutex(threadMu);
+    END;
 
     IF (cl = NIL) THEN
       Die (ThisLine(), "NIL closure passed to Thread.Fork!");
@@ -596,13 +593,13 @@ PROCEDURE RunThread (me: Activation): WinNT.HANDLE =
       WinBase.LeaveCriticalSection (slotMu);
     END;
 
-    LockMutex(threadMu);
+    LOCK threadMu DO
       (* mark "self" done and clean it up a bit *)
       self.result := res;
       self.completed := TRUE;
       Broadcast(self.cond); (* let everybody know that "self" is done *)
       IF perfOn THEN PerfChanged(self.id, State.dying) END;
-    UnlockMutex(threadMu);
+    END;
 
     IF perfOn THEN PerfDeleted(self.id) END;
 
@@ -618,7 +615,7 @@ PROCEDURE RunThread (me: Activation): WinNT.HANDLE =
       RETURN next_self.waitSema;
     ELSE
       (* we're dying *)
-      RTHeapRep.ClosePool(me.heapState.newPool);
+      RTHeapRep.FlushThreadState(me.heapState);
 
       IF WinBase.CloseHandle(self.waitSema) = 0 THEN Choke(ThisLine()) END;
       self.waitSema := NIL;
@@ -707,7 +704,7 @@ PROCEDURE Fork(closure: Closure): T =
 PROCEDURE Join(t: T): REFANY =
   VAR res: REFANY;
   BEGIN
-    LockMutex(threadMu);
+    LOCK threadMu DO
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
       WHILE NOT t.completed DO Wait(threadMu, t.cond) END;
       res := t.result;
@@ -715,15 +712,14 @@ PROCEDURE Join(t: T): REFANY =
       t.joined := TRUE;
       t.cond := NIL;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
-    UnlockMutex(threadMu);
+    END;
     RETURN res;
   END Join;
 
 PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
   VAR res: REFANY;
   BEGIN
-    LockMutex(threadMu);
-    TRY
+    LOCK threadMu DO
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
       WHILE NOT t.completed DO AlertWait(threadMu, t.cond) END;
       res := t.result;
@@ -731,8 +727,6 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
       t.joined := TRUE;
       t.cond := NIL;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
-    FINALLY
-      UnlockMutex(threadMu);
     END;
     RETURN res;
   END AlertJoin;
@@ -887,16 +881,6 @@ PROCEDURE ResumeOthers () =
     WinBase.LeaveCriticalSection(activeMu);
   END ResumeOthers;
 
-PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool)) =
-  (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
-  VAR act := allThreads;
-  BEGIN
-    REPEAT
-      p(act.heapState.newPool);
-      act := act.next;
-    UNTIL act = allThreads;
-  END ProcessPools;
-
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   CONST UserRegs = Word.Or(ThreadContext.CONTEXT_CONTROL,
@@ -911,6 +895,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
         IF (act.stackbase - fixed_SP) > 10000 THEN
           fixed_SP := VerifySP (fixed_SP, act.stackbase);
         END;
+        RTHeapRep.FlushThreadState(act.heapState);
         p(fixed_SP, act.stackbase); (* Process the stack *)
         p(ADR(context.Edi), ADR(context.Eip));  (* Process the registers *)
       END;
@@ -1057,8 +1042,7 @@ PROCEDURE Init() =
     self := CreateT(me);
     self.id := nextId;  INC (nextId);
 
-    mutex := NEW(MUTEX);
-    condition := NEW(Condition);
+    heapCond := NEW(Condition);
 
     me.stackbase := InitialStackBase (ADR (self));
     IF me.stackbase = NIL THEN Choke(ThisLine()); END;
@@ -1106,36 +1090,48 @@ PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
 VAR
   cs        := MyInitializeCriticalSection(ADR(csstorage)); (* read-only *)
   csstorage : WinNT.RTL_CRITICAL_SECTION;
-  lock_cnt  := 0;      (* LL = cs *)
-  do_signal := FALSE;  (* LL = cs *)
-  mutex: MUTEX;
-  condition: Condition;
+  inCritical:= 0;      (* LL = cs *)
+  heapCond: Condition;
 
 PROCEDURE LockHeap () =
   BEGIN
     WinBase.EnterCriticalSection(cs);
-    INC(lock_cnt);
+    INC(inCritical);
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
-  VAR sig := FALSE;
   BEGIN
-    DEC(lock_cnt);
-    IF (lock_cnt = 0) AND (do_signal) THEN sig := TRUE; do_signal := FALSE; END;
+    DEC(inCritical);
     WinBase.LeaveCriticalSection(cs);
-    IF (sig) THEN Broadcast(condition); END;
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
-  (* LL = 0 *)
+  VAR self := Self();
   BEGIN
-    LOCK mutex DO Wait(mutex, condition); END;
+    WinBase.EnterCriticalSection(cm);
+
+    <* ASSERT( (self.waitingOn=NIL) AND (self.nextWaiter=NIL) ) *>
+    self.waitingOn := heapCond;
+    self.nextWaiter := heapCond.waiters;
+    heapCond.waiters := self;
+    WinBase.LeaveCriticalSection(cm);
+
+    DEC(inCritical);
+    <*ASSERT inCritical = 0*>
+    WinBase.LeaveCriticalSection(cs);
+
+    IF WinBase.WaitForSingleObject(self.waitSema, WinBase.INFINITE) # 0 THEN
+      Choke(ThisLine());
+    END;
+
+    WinBase.EnterCriticalSection(cs);
+    <*ASSERT inCritical = 0*>
+    INC(inCritical);
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =
-  (* LL = inCritical *)
   BEGIN
-    do_signal := TRUE;
+    Broadcast(heapCond);
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)
