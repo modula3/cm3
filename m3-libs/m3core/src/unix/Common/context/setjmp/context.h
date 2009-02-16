@@ -69,7 +69,11 @@ struct _stack_t
 
 #endif
 
-typedef size_t mcontext_t[sizeof(jmp_buf) / sizeof(size_t)];
+typedef union
+{
+    size_t a[sizeof(jmp_buf) / sizeof(size_t)];
+    jmp_buf jb;
+} mcontext_t;
 
 struct _ucontext_t
 {
@@ -88,6 +92,4 @@ int  swapcontext(ucontext_t*, const ucontext_t*);
 } /* extern "C" */
 #endif
 
-
 #endif
-
