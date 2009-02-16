@@ -403,10 +403,7 @@ PROCEDURE Self (): T =
   END Self;
 
 (*--------------------------------------------------------------- MUTEXes ---*)
-(* Note: {Unlock,Lock}Mutex are the routines called directly by
-   the compiler.  Acquire and Release are the routines exported through
-   the Thread interface *)
-         
+
 PROCEDURE Acquire (m: Mutex) =
   BEGIN
     m.acquire ();
@@ -513,11 +510,6 @@ PROCEDURE ResumeOthers () =
     DEC(inCritical);
   END ResumeOthers;
 
-PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool)) =
-  BEGIN
-    p(heapState.newPool);
-  END ProcessPools;
-
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   (* we need to be careful to avoid read/write barriers here --
      hence the extensive use of LOOPHOLE. *)
@@ -525,6 +517,9 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     me := LOOPHOLE(LOOPHOLE(ADR(self), UNTRACED REF ADDRESS)^, T);
     t: T; start, stop: ADDRESS;
   BEGIN
+    (* flush thread state *)
+    RTHeapRep.FlushThreadState(heapState);
+
     (* save my state *)
     EVAL RTThread.Save (me.context.buf);
 
@@ -1160,7 +1155,7 @@ PROCEDURE StartThread () =
 
     INC (inCritical);
     Broadcast (self.endCondition);
-    RTHeapRep.ClosePool(heapState.newPool);
+    RTHeapRep.FlushThreadState(heapState);
     ICannotRun (State.dying);
     INC (stats.n_dead);
     DEC (inCritical);
@@ -1556,34 +1551,36 @@ PROCEDURE QQ(): ADDRESS =
 VAR
   lock_cnt  := 0;      (* LL = inCritical *)
   do_signal := FALSE;  (* LL = inCritical *)
-  mutex: MUTEX;
-  condition: Condition;
+  heapCond: Condition;
 
 PROCEDURE LockHeap () =
   BEGIN
     INC(inCritical);
-    INC(lock_cnt);
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
-  VAR sig := FALSE;
   BEGIN
-    DEC(lock_cnt);
-    IF (lock_cnt = 0) AND (do_signal) THEN sig := TRUE; do_signal := FALSE; END;
     DEC(inCritical);
-    IF (sig) THEN Broadcast(condition); END;
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
-  (* LL = 0 *)
+  (* LL = inCritical *)
   BEGIN
-    LOCK mutex DO Wait(mutex, condition); END;
+    self.alertable := FALSE;
+    ICannotRun (State.waiting);
+    self.waitingForCondition := heapCond;
+    self.nextWaiting := heapCond.waitingForMe;
+    heapCond.waitingForMe := self;
+    DEC(inCritical);
+    <*ASSERT inCritical = 0*>
+    InternalYield ();
+    <*ASSERT inCritical = 0*>
+    INC(inCritical);
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =
-  (* LL = inCritical *)
   BEGIN
-    do_signal := TRUE;
+    Broadcast(heapCond);
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)

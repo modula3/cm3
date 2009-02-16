@@ -7,7 +7,7 @@
 #define VAX
 
 #define MULTIPLE_THREADS
-#define ACQUIRE_DTOA_LOCK(n) RTOS__LockHeap()
-#define FREE_DTOA_LOCK(n) RTOS__UnlockHeap()
+#define ACQUIRE_DTOA_LOCK(n) CConvert__Acquire(n)
+#define FREE_DTOA_LOCK(n) CConvert__Release(n)
 
 #include "dtoa.h"

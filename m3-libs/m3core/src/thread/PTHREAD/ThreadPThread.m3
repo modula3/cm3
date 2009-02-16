@@ -3,19 +3,19 @@
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
 UNSAFE MODULE ThreadPThread
-EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks;
+EXPORTS
+Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThreadC;
 
 IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError,  RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched,
-       Uerror, ThreadPThreadC, Uexec;
+       Uerror, Uexec;
 FROM Upthread
 IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_mutex_t,
        PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
-FROM ThreadPThreadC IMPORT SIG_SUSPEND;
 
 (*----------------------------------------------------- types and globals ---*)
 
@@ -32,8 +32,8 @@ REVEAL
   Mutex = MutexRep.Public BRANDED "Mutex Pthread-1.0" OBJECT
     mutex: UNTRACED REF pthread_mutex_t := NIL;
   OVERRIDES
-    acquire := Acquire;
-    release := Release;
+    acquire := LockMutex;
+    release := UnlockMutex;
   END;
 
   Condition = BRANDED "Thread.Condition Pthread-1.0" OBJECT
@@ -109,6 +109,16 @@ PROCEDURE SetState (act: Activation;  state: ActState) =
   END SetState;    
 
 (*----------------------------------------------------------------- Mutex ---*)
+         
+PROCEDURE Acquire (m: Mutex) =
+  BEGIN
+    m.acquire ();
+  END Acquire;
+
+PROCEDURE Release (m: Mutex) =
+  BEGIN
+    m.release ();
+  END Release;
 
 PROCEDURE CleanMutex (r: REFANY) =
   VAR m := NARROW(r, Mutex);
@@ -132,11 +142,11 @@ PROCEDURE InitMutex (m: Mutex) =
     RTHeapRep.RegisterFinalCleanup (m, CleanMutex);
   END InitMutex;
 
-PROCEDURE Acquire (m: Mutex) =
+PROCEDURE LockMutex (m: Mutex) =
   VAR self := Self();
   BEGIN
     IF self = NIL THEN
-      Die(ThisLine(), "Acquire called from a non-Modula-3 thread");
+      Die(ThisLine(), "LockMutex called from a non-Modula-3 thread");
     END;
     IF m.mutex = NIL THEN InitMutex(m) END;
     IF perfOn THEN PerfChanged(self.id, State.locking) END;
@@ -147,14 +157,14 @@ PROCEDURE Acquire (m: Mutex) =
       END;
     END;
     IF perfOn THEN PerfRunning(self.id) END;
-  END Acquire;
+  END LockMutex;
 
-PROCEDURE Release (m: Mutex) =
+PROCEDURE UnlockMutex (m: Mutex) =
   (* LL = m *)
   VAR self := Self();
   BEGIN
     IF self = NIL THEN
-      Die(ThisLine(), "Release called from a non-Modula-3 thread");
+      Die(ThisLine(), "UnlockMutex called from a non-Modula-3 thread");
     END;
     WITH r = Upthread.mutex_unlock(m.mutex^) DO
       IF r # 0 THEN
@@ -162,7 +172,7 @@ PROCEDURE Release (m: Mutex) =
                      "Thread client error: pthread_mutex_unlock error: ", r);
       END;
     END;
-  END Release;
+  END UnlockMutex;
 
 (*---------------------------------------- Condition variables and Alerts ---*)
 
@@ -540,7 +550,7 @@ PROCEDURE RunThread (me: Activation) =
     IF perfOn THEN PerfDeleted(self.id) END;
 
     (* we're dying *)
-    RTHeapRep.ClosePool(me.heapState.newPool);
+    RTHeapRep.FlushThreadState(me.heapState);
 
     FreeSlot(self);  (* note: needs self.act ! *)
     (* Since we're no longer slotted, we cannot touch traced refs. *)
@@ -578,7 +588,7 @@ PROCEDURE Fork (closure: Closure): T =
       act.size := size;
       allThreads.prev.next := act;
       allThreads.prev := act;
-      WITH r = ThreadPThreadC.thread_create(act.handle, size * ADRSIZE(Word.T), ThreadBase, act) DO
+      WITH r = thread_create(act.handle, size * ADRSIZE(Word.T), ThreadBase, act) DO
         IF r # 0 THEN
           RTError.MsgI(ThisFile(), ThisLine(),
                        "Thread client error: Fork failed with error: ", r);
@@ -901,16 +911,6 @@ PROCEDURE ResumeOthers () =
     WITH r = Upthread.mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ResumeOthers;
 
-PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool)) =
-  (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
-  VAR act := allThreads;
-  BEGIN
-    REPEAT
-      p(act.heapState.newPool);
-      act := act.next;
-    UNTIL act = allThreads;
-  END ProcessPools;
-
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR
@@ -945,9 +945,9 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
       LOOP
         IF StopThread(act) THEN EXIT END;
         IF SignalThread(act, ActState.Stopping) THEN
-          WITH r = ThreadPThreadC.sem_getvalue(acks) DO <*ASSERT r=0*> END;
+          WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
           IF acks > 0 THEN
-            WHILE ThreadPThreadC.sem_wait() # 0 DO
+            WHILE sem_wait() # 0 DO
               <*ASSERT Cerrno.GetErrno() = Uerror.EINTR*>
             END;
             EXIT;
@@ -963,9 +963,9 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
       LOOP
         IF StartThread(act) THEN EXIT END;
         IF SignalThread(act, ActState.Starting) THEN
-          WITH r = ThreadPThreadC.sem_getvalue(acks) DO <*ASSERT r=0*> END;
+          WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
           IF acks > 0 THEN
-            WHILE ThreadPThreadC.sem_wait() # 0 DO
+            WHILE sem_wait() # 0 DO
               <*ASSERT Cerrno.GetErrno() = Uerror.EINTR*>
             END;
             EXIT;
@@ -997,6 +997,7 @@ PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       THEN sp := RTMachine.SaveRegsInStack();
       ELSE sp := ADR(xx);
     END;
+    RTHeapRep.FlushThreadState(me.heapState);
     IF stack_grows_down
       THEN p(sp, me.stackbase);
       ELSE p(me.stackbase, sp);
@@ -1023,6 +1024,7 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       (* assume registers are saved in suspended thread's stack *)
       sp := act.sp;
     END;
+    RTHeapRep.FlushThreadState(act.heapState);
     IF stack_grows_down
       THEN p(sp, act.stackbase);
       ELSE p(act.stackbase, sp);
@@ -1112,7 +1114,7 @@ PROCEDURE StopWorld () =
       END;
     END;
     WHILE nLive > 0 DO
-      WITH r = ThreadPThreadC.sem_getvalue(acks) DO <*ASSERT r=0*> END;
+      WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
       IF acks = nLive THEN EXIT END;
       <*ASSERT acks < nLive*>
       IF wait_nsecs <= 0 THEN
@@ -1145,7 +1147,7 @@ PROCEDURE StopWorld () =
     (* drain semaphore *)
     FOR i := 0 TO nLive-1 DO
       LOOP
-        WITH r = ThreadPThreadC.sem_wait() DO
+        WITH r = sem_wait() DO
           IF r = 0 THEN EXIT END;
           IF Cerrno.GetErrno() = Uerror.EINTR THEN
             (*retry*)
@@ -1204,7 +1206,7 @@ PROCEDURE StartWorld () =
       END;
     END;
     WHILE nDead > 0 DO
-      WITH r = ThreadPThreadC.sem_getvalue(acks) DO <*ASSERT r=0*> END;
+      WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
       IF acks = nDead THEN EXIT END;
       <*ASSERT acks < nDead*>
       IF wait_nsecs <= 0 THEN
@@ -1237,7 +1239,7 @@ PROCEDURE StartWorld () =
     (* drain semaphore *)
     FOR i := 0 TO nDead-1 DO
       LOOP
-        WITH r = ThreadPThreadC.sem_wait() DO
+        WITH r = sem_wait() DO
           IF r = 0 THEN EXIT END;
           IF Cerrno.GetErrno() = Uerror.EINTR THEN
             (*retry*)
@@ -1253,10 +1255,7 @@ PROCEDURE StartWorld () =
     END;
   END StartWorld;
 
-(* "warning: not used": it is referenced from C *)
-<*NOWARN*>PROCEDURE SignalHandler (sig: int;
-                         <*UNUSED*> sip: ADDRESS (*Usignal.siginfo_t_star*);
-                         <*UNUSED*> uap: ADDRESS (*Uucontext.ucontext_t_star*)) =
+PROCEDURE SignalHandler (sig: int; <*UNUSED*> sip, uap: ADDRESS) =
   VAR
     errno := Cerrno.GetErrno();
     xx: INTEGER;
@@ -1271,24 +1270,14 @@ PROCEDURE StartWorld () =
         ELSE me.sp := ADR(xx);
       END;
       me.state := ActState.Stopped;
-      WITH r = ThreadPThreadC.sem_post() DO <*ASSERT r=0*> END;
-      REPEAT EVAL ThreadPThreadC.sigsuspend() UNTIL me.state = ActState.Starting;
+      WITH r = sem_post() DO <*ASSERT r=0*> END;
+      REPEAT EVAL sigsuspend() UNTIL me.state = ActState.Starting;
       me.sp := NIL;
       me.state := ActState.Started;
-      WITH r = ThreadPThreadC.sem_post() DO <*ASSERT r=0*> END;
+      WITH r = sem_post() DO <*ASSERT r=0*> END;
     END;
     Cerrno.SetErrno(errno);
   END SignalHandler;
-
-PROCEDURE SetupHandlers () =
-  BEGIN
-    IF RTMachine.SuspendThread # NIL AND RTMachine.RestartThread # NIL THEN
-      RETURN;
-    END;
-    <*ASSERT RTMachine.SuspendThread = NIL*>
-    <*ASSERT RTMachine.RestartThread = NIL*>
-    ThreadPThreadC.SetupHandlers();
-  END SetupHandlers;
 
 (*----------------------------------------------------------- misc. stuff ---*)
 
@@ -1392,14 +1381,15 @@ PROCEDURE Init ()=
     self: T;
     me := GetActivation();
   BEGIN
-    SetupHandlers ();
+    IF RTMachine.SuspendThread = NIL OR RTMachine.RestartThread = NIL THEN
+      <*ASSERT RTMachine.SuspendThread = NIL*>
+      <*ASSERT RTMachine.RestartThread = NIL*>
+      SetupHandlers();
+    END;
 
     (* cm, activeMu, slotMu: initialized statically *)
     self := CreateT(me);
     self.id := nextId;  INC(nextId);
-
-    heapMu := NEW(Mutex);
-    heapCond := NEW(Condition);
 
     stack_grows_down := ADR(xx) > XX();
 
@@ -1427,65 +1417,46 @@ PROCEDURE XX (): ADDRESS =
    and collector. *)
 
 VAR
-  lockMu := PTHREAD_MUTEX_INITIALIZER;
-  lockCond := PTHREAD_COND_INITIALIZER;
-  holder: pthread_t;
-  lock_cnt := 0;
-  do_signal := FALSE;
-  heapMu: MUTEX;
-  heapCond: Condition;
+  heapMu := PTHREAD_MUTEX_INITIALIZER;
+  heapCond := PTHREAD_COND_INITIALIZER;
+  holder: ADDRESS;
+  inCritical := 0;
 
 PROCEDURE LockHeap () =
-  VAR self := Upthread.self();
+  VAR me := GetActivation();
   BEGIN
-    (* suspended => other threads are stopped and we hold the lock *)
-    IF suspended THEN
-      <*ASSERT lock_cnt # 0*>
-      <*ASSERT Upthread.equal(holder, self) # 0*>
-      RETURN;
+    IF holder # me THEN
+      WITH r = Upthread.mutex_lock(heapMu) DO <*ASSERT r=0*> END;
+      holder := me;
     END;
-    WITH r = Upthread.mutex_lock(lockMu) DO <*ASSERT r=0*> END;
-    LOOP
-      IF lock_cnt = 0 THEN holder := self; EXIT END;
-      IF Upthread.equal(holder, self) # 0 THEN EXIT END;
-      WITH r = Upthread.cond_wait(lockCond, lockMu) DO <*ASSERT r=0*> END;
-    END;
-    INC(lock_cnt);
-    WITH r = Upthread.mutex_unlock(lockMu) DO <*ASSERT r=0*> END;
+    INC(inCritical);
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
-  VAR
-    sig := FALSE;
-    self := Upthread.self();
+  VAR me := GetActivation();
   BEGIN
-    (* suspended => other threads are stopped and we hold the lock *)
-    IF suspended THEN
-      <*ASSERT lock_cnt # 0*>
-      <*ASSERT Upthread.equal(holder, self) # 0*>
-      RETURN;
+    <*ASSERT holder = me*>
+    DEC(inCritical);
+    IF inCritical = 0 THEN
+      holder := NIL;
+      WITH r = Upthread.mutex_unlock(heapMu) DO <*ASSERT r=0*> END;
     END;
-    WITH r = Upthread.mutex_lock(lockMu) DO <*ASSERT r=0*> END;
-      <*ASSERT Upthread.equal(holder, self) # 0*>
-      DEC(lock_cnt);
-      IF lock_cnt = 0 THEN
-        WITH r = Upthread.cond_signal(lockCond) DO <*ASSERT r=0*> END;
-        IF do_signal THEN sig := TRUE; do_signal := FALSE; END;
-      END;
-    WITH r = Upthread.mutex_unlock(lockMu) DO <*ASSERT r=0*> END;
-    IF sig THEN Broadcast(heapCond) END;
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
-  (* LL = 0 *)
+  VAR me := GetActivation();
   BEGIN
-    LOCK heapMu DO Wait(heapMu, heapCond); END;
+    <*ASSERT holder = me*>
+    DEC(inCritical);
+    <*ASSERT inCritical = 0*>
+    WITH r = Upthread.cond_wait(heapCond, heapMu) DO <*ASSERT r=0*> END;
+    <*ASSERT inCritical = 0*>
+    INC(inCritical);
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =
-  (* LL = LockHeap *)
   BEGIN
-    do_signal := TRUE;
+    WITH r = Upthread.cond_broadcast(heapCond) DO <*ASSERT r=0*> END;
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)

@@ -63,6 +63,9 @@ PROCEDURE dtoa (d: double;  mode: int;  ndigits: int;  decpt: int_star;
 PROCEDURE freedtoa (s: char_star);
 (* Must be used to free values s returned by dtoa. *)
 
+PROCEDURE Acquire (n: INTEGER);
+PROCEDURE Release (n: INTEGER);
+
 END CConvert.
 
 (* The implementations of these routines can be found in

@@ -189,8 +189,6 @@ TYPE
     filePage   : RefPage := NIL; (* page last filed *)
   END;
 
-PROCEDURE ClosePool (VAR pool: AllocPool);
-
 CONST
   NewPool = AllocPool {
     desc := Desc {space := Space.Current, generation := Generation.Younger,
@@ -221,6 +219,9 @@ TYPE
     inCritical: INTEGER := 0;
     newPool := NewPool;
   END;
+
+(* Flush cached thread state (must happen when thread is stopped for GC) *)
+PROCEDURE FlushThreadState (VAR thread: ThreadState);
 
 (* RegisterFinalCleanup is available for low-level cleanup by the thread
    package.  If "r" is registered for cleanup, then just before "r" is
