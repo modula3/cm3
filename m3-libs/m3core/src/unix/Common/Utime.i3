@@ -9,7 +9,8 @@ FROM Cstdint IMPORT int32_t;
 IMPORT Usysdep;
 
 (*CONST*)
-<*EXTERNAL "Utime_ITIMER_VIRTUAL"*> VAR ITIMER_VIRTUAL: int; (* virtual time intervals *)
+<*EXTERNAL "Utime__ITIMER_VIRTUAL"*>
+VAR ITIMER_VIRTUAL: int; (* virtual time intervals *)
 
 TYPE
   struct_timeval = Usysdep.struct_timeval;
@@ -52,10 +53,14 @@ PROCEDURE gmtime_r (READONLY clock: time_t; result: struct_tm_star): struct_tm_s
 PROCEDURE setitimer (which: int32_t; VAR (*const*) new_value, old_value: struct_itimerval): int32_t;
 PROCEDURE nanosleep (READONLY req: struct_timespec; VAR rem: struct_timespec): int32_t;
 
-<*EXTERNAL "m3_get_timezone"*> PROCEDURE get_timezone(): time_t;
-<*EXTERNAL "m3_get_altzone"*> PROCEDURE get_altzone(): time_t;
-<*EXTERNAL "m3_get_daylight"*> PROCEDURE get_daylight(): int32_t;
-<*EXTERNAL "m3_get_tzname"*> PROCEDURE get_tzname(a: [0..1]): const_char_star;
+<*EXTERNAL "Utime__get_timezone"*>
+PROCEDURE get_timezone(): time_t;
+<*EXTERNAL "Utime__get_altzone"*>
+PROCEDURE get_altzone(): time_t;
+<*EXTERNAL "Utime__get_daylight"*>
+PROCEDURE get_daylight(): int32_t;
+<*EXTERNAL "Utime__get_tzname"*>
+PROCEDURE get_tzname(a: [0..1]): const_char_star;
 
 PROCEDURE tzset();
 

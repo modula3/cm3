@@ -14,10 +14,11 @@ PROCEDURE execve(name: const_char_star; argv: char_star_star; envp: char_star_st
 (* compat with Usem usage *)
 TYPE wait_queue_star = ADDRESS;
 
-<*EXTERNAL "Uexec_WNOHANG"*> VAR WNOHANG: int; (* do not hang in wait *)
+<*EXTERNAL "Uexec__WNOHANG"*> VAR WNOHANG: int; (* do not hang in wait *)
 
 PROCEDURE waitpid (pid: pid_t; status: UNTRACED REF int; options: int): pid_t;
 
-<*EXTERNAL "Uexec_RepackStatus"*> PROCEDURE RepackStatus(VAR status: int);
+<*EXTERNAL "Uexec__RepackStatus"*>
+PROCEDURE RepackStatus(VAR status: int);
 
 END Uexec.

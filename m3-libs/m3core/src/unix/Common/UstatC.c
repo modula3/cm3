@@ -14,12 +14,18 @@ commonality. */
     INTEGER st_uid;
 } m3_stat_t;
 
-void m3stat_set_mtime(m3_stat_t* m3st, LONGINT mtime) { m3st->st_mtime = mtime; }
-void m3stat_set_rdev(m3_stat_t* m3st, LONGINT rdev) { m3st->st_rdev = rdev; }
-void m3stat_set_size(m3_stat_t* m3st, LONGINT size) { m3st->st_size = size; }
-void m3stat_set_gid(m3_stat_t* m3st, INTEGER gid) { m3st->st_gid = gid; }
-void m3stat_set_mode(m3_stat_t* m3st, INTEGER mode) { m3st->st_mode = mode; }
-void m3stat_set_uid(m3_stat_t* m3st, INTEGER uid) { m3st->st_uid = uid; }
+static void m3stat_set_mtime(m3_stat_t* m3st, LONGINT mtime)
+{ m3st->st_mtime = mtime; }
+static void m3stat_set_rdev(m3_stat_t* m3st, LONGINT rdev)
+{ m3st->st_rdev = rdev; }
+static void m3stat_set_size(m3_stat_t* m3st, LONGINT size)
+{ m3st->st_size = size; }
+static void m3stat_set_gid(m3_stat_t* m3st, INTEGER gid)
+{ m3st->st_gid = gid; }
+static void m3stat_set_mode(m3_stat_t* m3st, INTEGER mode)
+{ m3st->st_mode = mode; }
+static void m3stat_set_uid(m3_stat_t* m3st, INTEGER uid)
+{ m3st->st_uid = uid; }
 
 /* These headers sometimes #define away our identifiers st_mtime, etc.
    That is why we have the wrapper functions. */
@@ -29,7 +35,7 @@ void m3stat_set_uid(m3_stat_t* m3st, INTEGER uid) { m3st->st_uid = uid; }
 
 typedef struct stat stat_t;
 
-int m3stat_from_stat(int result, m3_stat_t* m3st, stat_t* st)
+static int m3stat_from_stat(int result, m3_stat_t* m3st, stat_t* st)
 {
     assert(result == 0 || result == -1);
     if (result == 0)
@@ -44,19 +50,19 @@ int m3stat_from_stat(int result, m3_stat_t* m3st, stat_t* st)
     return result;
 }
 
-int m3_stat(const char* path, m3_stat_t* m3st)
+int Ustat__stat(const char* path, m3_stat_t* m3st)
 {
     stat_t st;
     return m3stat_from_stat(stat(path, &st), m3st, &st);
 }
 
-int m3_lstat(const char* path, m3_stat_t* m3st)
+int Ustat__lstat(const char* path, m3_stat_t* m3st)
 {
     stat_t st;
     return m3stat_from_stat(lstat(path, &st), m3st, &st);
 }
 
-int m3_fstat(int fd, m3_stat_t* m3st)
+int Ustat__fstat(int fd, m3_stat_t* m3st)
 {
     stat_t st;
     return m3stat_from_stat(fstat(fd, &st), m3st, &st);

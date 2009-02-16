@@ -18,9 +18,9 @@ TYPE
   struct_hostent_star = UNTRACED REF struct_hostent;
 
 (*CONST*)
-<*EXTERNAL "Unetdb_TRY_AGAIN"*> VAR TRY_AGAIN: int;
-<*EXTERNAL "Unetdb_NO_RECOVERY"*> VAR NO_RECOVERY: int;
-<*EXTERNAL "Unetdb_NO_ADDRESS"*> VAR NO_ADDRESS: int;
+<*EXTERNAL "Unetdb__TRY_AGAIN"*>   VAR TRY_AGAIN:   int;
+<*EXTERNAL "Unetdb__NO_RECOVERY"*> VAR NO_RECOVERY: int;
+<*EXTERNAL "Unetdb__NO_ADDRESS"*>  VAR NO_ADDRESS:  int;
 
 PROCEDURE gethostbyname (name: const_char_star): struct_hostent_star;
 PROCEDURE gethostbyaddr (addr: const_char_star; len: socklen_t; type: int): struct_hostent_star;
