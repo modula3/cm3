@@ -679,4 +679,16 @@ PROCEDURE Closure_frame ();
 PROCEDURE Comment (offset: INTEGER;  is_const: BOOLEAN;  a, b, c, d: TEXT := NIL);
 (* annotate the output with a&b&c&d as a comment *)
 
+(*--------------------------------------------------------------- atomics ---*)
+
+PROCEDURE Cas (t: IType);
+(* tmp := Mem [s2.A].t;
+   IF tmp = s1.t THEN Mem [s2.A].t := s0.t; END;
+   s2.t := tmp; pop(2) *)
+
+PROCEDURE CasP (t: IType;  u: IType);
+(* tmp := Mem [s2.A].t;
+   IF tmp = s1.t THEN Mem [s2.A].t := s0.t; END;
+   s2.t := (tmp = s1.t); pop(2) *)
+
 END CG.

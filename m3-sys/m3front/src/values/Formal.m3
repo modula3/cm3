@@ -49,13 +49,14 @@ TYPE
     errored : BOOLEAN;
   END;
 
-PROCEDURE NewBuiltin (name: TEXT;  offset: INTEGER;  type: Type.T): Value.T =
+PROCEDURE NewBuiltin (name: TEXT;  offset: INTEGER;  type: Type.T;
+                      mode: Mode): Value.T =
   VAR t := NEW (T);
   BEGIN
     ValueRep.Init (t, M3ID.Add (name), Value.Class.Formal);
     t.readonly := FALSE;
     t.offset   := offset;
-    t.mode     := Mode.mVALUE;
+    t.mode     := mode;
     t.tipe     := type;
     t.dfault   := NIL;
     t.unused   := FALSE;
