@@ -9,7 +9,7 @@
 MODULE CasP;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure;
-IMPORT Error, ErrType, Int, LInt, Bool;
+IMPORT Error, ErrType, Bool, Addr, Module;
 
 VAR Z: CallExpr.MethodList;
 
@@ -23,9 +23,14 @@ PROCEDURE DoCheck (name: TEXT; ce: CallExpr.T) =
   BEGIN
     e := ce.args[0];
     t := Expr.TypeOf (e);
-    IF NOT (Type.IsEqual (t, Int.T, NIL) OR Type.IsEqual (t, LInt.T, NIL)) THEN
-      Error.Txt (name, "first argument must have integer type");
-    ELSIF (NOT Expr.IsDesignator (e)) THEN
+    IF NOT Type.IsOrdinal (t) THEN
+      IF Type.IsSubtype (t, Addr.T) THEN
+        IF Module.IsSafe () THEN Error.Txt (name, "unsafe operation") END;
+      ELSE
+        Error.Txt (name, "first argument must be of an ordinal type");
+      END;
+    END;
+    IF (NOT Expr.IsDesignator (e)) THEN
       Error.Txt (name, "first argument must be a variable");
     ELSIF (NOT Expr.IsWritable (e, lhs := TRUE)) THEN
       Error.Txt (name, "first argument must be writable");
@@ -62,7 +67,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
     Expr.Compile (ce.args[1]); CG.Force ();
     Expr.Compile (ce.args[2]); CG.Force ();
     CG.CasP (Type.CGType (Expr.TypeOf (lhs), in_memory := TRUE),
-             Type.CGType (Type.Base (Bool.T), in_memory := FALSE));
+             Type.CGType (Bool.T, in_memory := FALSE));
     Expr.NoteWrite (lhs);
   END Compile;
 
