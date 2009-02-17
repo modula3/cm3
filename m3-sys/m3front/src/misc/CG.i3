@@ -681,12 +681,12 @@ PROCEDURE Comment (offset: INTEGER;  is_const: BOOLEAN;  a, b, c, d: TEXT := NIL
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE Cas (t: IType);
+PROCEDURE Cas (t: MType);
 (* tmp := Mem [s2.A].t;
    IF tmp = s1.t THEN Mem [s2.A].t := s0.t; END;
    s2.t := tmp; pop(2) *)
 
-PROCEDURE CasP (t: IType;  u: IType);
+PROCEDURE CasP (t: MType;  u: IType);
 (* tmp := Mem [s2.A].t;
    IF tmp = s1.t THEN Mem [s2.A].t := s0.t; END;
    s2.t := (tmp = s1.t); pop(2) *)
