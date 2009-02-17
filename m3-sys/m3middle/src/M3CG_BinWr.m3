@@ -1609,7 +1609,7 @@ PROCEDURE comment (u: U;  a, b, c, d: TEXT := NIL) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE fetch_and_op (u: U;  op: AtomicOp;  t: IType) =
+PROCEDURE fetch_and_op (u: U;  op: AtomicOp;  t: MType) =
   CONST
     OpName = ARRAY AtomicOp OF Bop { Bop.fetch_and_add, Bop.fetch_and_sub,
                                      Bop.fetch_and_or,  Bop.fetch_and_and,
@@ -1619,7 +1619,7 @@ PROCEDURE fetch_and_op (u: U;  op: AtomicOp;  t: IType) =
     TName (u, t);
   END fetch_and_op;
 
-PROCEDURE op_and_fetch (u: U;  op: AtomicOp;  t: IType) =
+PROCEDURE op_and_fetch (u: U;  op: AtomicOp;  t: MType) =
   CONST
     OpName = ARRAY AtomicOp OF Bop { Bop.add_and_fetch, Bop.sub_and_fetch,
                                      Bop.or_and_fetch,  Bop.and_and_fetch,
@@ -1629,14 +1629,14 @@ PROCEDURE op_and_fetch (u: U;  op: AtomicOp;  t: IType) =
     TName (u, t);
   END op_and_fetch;
 
-PROCEDURE bool_compare_and_swap (u: U;  t: IType;  z: IType) =
+PROCEDURE bool_compare_and_swap (u: U;  t: MType;  z: IType) =
   BEGIN
     Cmd   (u, Bop.bool_compare_and_swap);
     TName (u, t);
     TName (u, z);
   END bool_compare_and_swap;
 
-PROCEDURE val_compare_and_swap (u: U;  t: IType) =
+PROCEDURE val_compare_and_swap (u: U;  t: MType) =
   BEGIN
     Cmd   (u, Bop.val_compare_and_swap);
     TName (u, t);
@@ -1647,13 +1647,13 @@ PROCEDURE synchronize (u: U) =
     Cmd (u, Bop.synchronize);
   END synchronize;
 
-PROCEDURE lock_test_and_set (u: U;  t: IType) =
+PROCEDURE lock_test_and_set (u: U;  t: MType) =
   BEGIN
     Cmd   (u, Bop.lock_test_and_set);
     TName (u, t);
   END lock_test_and_set;
   
-PROCEDURE lock_release (u: U;  t: IType) =
+PROCEDURE lock_release (u: U;  t: MType) =
   BEGIN
     Cmd   (u, Bop.lock_release);
     TName (u, t);

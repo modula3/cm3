@@ -641,20 +641,20 @@ comment (a, b, c, d: TEXT := NIL);
    of this list, an empty list will continue to mean all globally accessible
    variables.  *)
 
-fetch_and_op (op: AtomicOp;  t: IType);
+fetch_and_op (op: AtomicOp;  t: MType);
 (* tmp := Mem [s1.A].t; Mem [s1.A].t := tmp op s0.t; s1.t := tmp; pop *)
-op_and_fetch (op: AtomicOp;  t: IType);
+op_and_fetch (op: AtomicOp;  t: MType);
 (* tmp := Mem [s1.A].t op s0.t; Mem [s1.A].t := tmp; s1.t := tmp; pop *)
 
-bool_compare_and_swap (t: IType;  u: IType);
+bool_compare_and_swap (t: MType;  u: IType);
 (* tmp := Mem [s2.A].t;  IF tmp = s1.t THEN Mem [s2.A].t := s0.t; END; s2.u := (tmp = s1.t); pop(2) *)
-val_compare_and_swap (t: IType);
+val_compare_and_swap (t: MType);
 (* tmp := Mem [s2.A].t;  IF tmp = s1.t THEN Mem [s2.A].t := s0.t; END; s2.t := tmp; pop(2) *)
 
 synchronize ();
 (* This builtin issues a full memory barrier *)
 
-lock_test_and_set (t: IType);
+lock_test_and_set (t: MType);
 (* tmp := Mem [s1.A].t;  Mem [s1.A].t := s0.t;  s1.t := tmp;  pop *)
 (* This builtin, as described by Intel, is not a traditional test-and-set
    operation, but rather an atomic exchange operation. It writes value into
@@ -669,7 +669,7 @@ lock_test_and_set (t: IType);
    to) before the builtin, but previous memory stores may not be globally
    visible yet, and previous memory loads may not yet be satisfied.  *)
 
-lock_release (t: IType);
+lock_release (t: MType);
 (* Mem [s0.A].t := 0;  pop *)
 (* This builtin releases the lock acquired by lock_test_and_set. Normally this
    means writing the constant 0 to *ptr.  This builtin is not a full barrier,
