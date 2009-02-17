@@ -916,22 +916,22 @@ PROCEDURE comment (xx: T;  a, b, c, d: TEXT := NIL) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE fetch_and_op (xx: T;  op: AtomicOp;  t: IType) =
+PROCEDURE fetch_and_op (xx: T;  op: AtomicOp;  t: MType) =
   BEGIN
     xx.child.fetch_and_op (op, t);
   END fetch_and_op;
 
-PROCEDURE op_and_fetch (xx: T;  op: AtomicOp;  t: IType) =
+PROCEDURE op_and_fetch (xx: T;  op: AtomicOp;  t: MType) =
   BEGIN
     xx.child.op_and_fetch (op, t);
   END op_and_fetch;
 
-PROCEDURE bool_compare_and_swap (xx: T;  t: IType;  u: IType) =
+PROCEDURE bool_compare_and_swap (xx: T;  t: MType;  u: IType) =
   BEGIN
     xx.child.bool_compare_and_swap (t, u);
   END bool_compare_and_swap;
 
-PROCEDURE val_compare_and_swap (xx: T;  t: IType) =
+PROCEDURE val_compare_and_swap (xx: T;  t: MType) =
   BEGIN
     xx.child.val_compare_and_swap (t);
   END val_compare_and_swap;
@@ -941,12 +941,12 @@ PROCEDURE synchronize (xx: T) =
     xx.child.synchronize ();
   END synchronize;
 
-PROCEDURE lock_test_and_set (xx: T;  t: IType) =
+PROCEDURE lock_test_and_set (xx: T;  t: MType) =
   BEGIN
     xx.child.lock_test_and_set (t);
   END lock_test_and_set;
 
-PROCEDURE lock_release (xx: T;  t: IType) =
+PROCEDURE lock_release (xx: T;  t: MType) =
   BEGIN
     xx.child.lock_release (t);
   END lock_release;
