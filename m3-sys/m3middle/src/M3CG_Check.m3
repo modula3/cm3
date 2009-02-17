@@ -1320,28 +1320,28 @@ PROCEDURE load_static_link (self: U;  p: Proc) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE fetch_and_op (self: U;  op: AtomicOp;  t: IType) =
+PROCEDURE fetch_and_op (self: U;  op: AtomicOp;  t: MType) =
   BEGIN
     self.s_pop (ST.Addr);
     self.s_push (t);
     self.child.fetch_and_op (op, t);
   END fetch_and_op;
 
-PROCEDURE op_and_fetch (self: U;  op: AtomicOp;  t: IType) =
+PROCEDURE op_and_fetch (self: U;  op: AtomicOp;  t: MType) =
   BEGIN
     self.s_pop (ST.Addr);
     self.s_push (t);
     self.child.op_and_fetch (op, t);
   END op_and_fetch;
 
-PROCEDURE bool_compare_and_swap (self: U;  t: IType;  u: IType) =
+PROCEDURE bool_compare_and_swap (self: U;  t: MType;  u: IType) =
   BEGIN
     self.s_pop (T_to_ST [t], ST.Match, ST.Addr);
     self.s_push (u);
     self.child.bool_compare_and_swap (t, u);
   END bool_compare_and_swap;
 
-PROCEDURE val_compare_and_swap (self: U;  t: IType) =
+PROCEDURE val_compare_and_swap (self: U;  t: MType) =
   BEGIN
     self.s_pop (T_to_ST [t], ST.Match, ST.Addr);
     self.s_push (t);
@@ -1353,14 +1353,14 @@ PROCEDURE synchronize (self: U) =
     self.child.synchronize ();
   END synchronize;
 
-PROCEDURE lock_test_and_set (self: U;  t: IType) =
+PROCEDURE lock_test_and_set (self: U;  t: MType) =
   BEGIN
     self.s_pop (T_to_ST [t], ST.Addr);
     self.s_push (t);
     self.child.lock_test_and_set (t);
   END lock_test_and_set;
 
-PROCEDURE lock_release (self: U;  t: IType) =
+PROCEDURE lock_release (self: U;  t: MType) =
   BEGIN
     self.s_pop (ST.Addr);
     self.child.lock_release (t);
