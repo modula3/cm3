@@ -1152,40 +1152,40 @@ m3_init_decl_processing (void)
 		"__sync_val_compare_and_swap_8");
 
   sync_builtin (BUILT_IN_SYNCHRONIZE,
-		 build_function_type_list (t_void, NULL_TREE),
-		 "__sync_synchronize");
+		build_function_type_list (t_void, NULL_TREE),
+		"__sync_synchronize");
 
   t = t_int_8;
   sync_builtin (BUILT_IN_LOCK_TEST_AND_SET_1,
-		 build_function_type_list (t, t_addr, t, NULL_TREE),
-		 "__sync_lock_test_and_set_1");
+		build_function_type_list (t, t_addr, t, NULL_TREE),
+		"__sync_lock_test_and_set_1");
   sync_builtin (BUILT_IN_LOCK_RELEASE_1,
-		 build_function_type_list (t, t_addr, NULL_TREE),
-		 "__sync_lock_release_1");
+		build_function_type_list (t, t_addr, NULL_TREE),
+		"__sync_lock_release_1");
 
   t = t_int_16;
   sync_builtin (BUILT_IN_LOCK_TEST_AND_SET_2,
-		 build_function_type_list (t, t_addr, t, NULL_TREE),
-		 "__sync_lock_test_and_set_2");
+		build_function_type_list (t, t_addr, t, NULL_TREE),
+		"__sync_lock_test_and_set_2");
   sync_builtin (BUILT_IN_LOCK_RELEASE_2,
-		 build_function_type_list (t, t_addr, NULL_TREE),
-		 "__sync_lock_release_2");
+		build_function_type_list (t, t_addr, NULL_TREE),
+		"__sync_lock_release_2");
 
   t = t_int_32;
   sync_builtin (BUILT_IN_LOCK_TEST_AND_SET_4,
-		 build_function_type_list (t, t_addr, t, NULL_TREE),
-		 "__sync_lock_test_and_set_4");
+		build_function_type_list (t, t_addr, t, NULL_TREE),
+		"__sync_lock_test_and_set_4");
   sync_builtin (BUILT_IN_LOCK_RELEASE_4,
 		 build_function_type_list (t, t_addr, NULL_TREE),
 		 "__sync_lock_release_4");
 
   t = t_int_64;
   sync_builtin (BUILT_IN_LOCK_TEST_AND_SET_8,
-		 build_function_type_list (t, t_addr, t, NULL_TREE),
-		 "__sync_lock_test_and_set_8");
+		build_function_type_list (t, t_addr, t, NULL_TREE),
+		"__sync_lock_test_and_set_8");
   sync_builtin (BUILT_IN_LOCK_RELEASE_8,
-		 build_function_type_list (t, t_addr, NULL_TREE),
-		 "__sync_lock_release_8");
+		build_function_type_list (t, t_addr, NULL_TREE),
+		"__sync_lock_release_8");
 
 #if 0
   t = build_function_type_list (t_addr, t_addr, t_addr, t_int, NULL_TREE);
@@ -4722,7 +4722,7 @@ m3cg_fetch (enum built_in_function fncode)
 
   int size;
 
-  if (!INTEGRAL_TYPE_P (t))
+  if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
     goto incompatible;
   size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
   if (size != 1 && size != 2 && size != 4 && size != 8)
@@ -4731,6 +4731,8 @@ m3cg_fetch (enum built_in_function fncode)
   m3_start_call ();
   m3_pop_param (t);
   m3_pop_param (t_addr);
+  CALL_TOP_ARG() = nreverse(CALL_TOP_ARG());
+  CALL_TOP_TYPE() = nreverse(CALL_TOP_TYPE());
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t);
   return;
 
@@ -4772,7 +4774,7 @@ m3cg_bool_compare_and_swap (void)
   int size;
   enum built_in_function fncode = BUILT_IN_BOOL_COMPARE_AND_SWAP_N;
 
-  if (!INTEGRAL_TYPE_P (t))
+  if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
     goto incompatible;
   size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
   if (size != 1 && size != 2 && size != 4 && size != 8)
@@ -4782,6 +4784,8 @@ m3cg_bool_compare_and_swap (void)
   m3_pop_param (t);
   m3_pop_param (t);
   m3_pop_param (t_addr);
+  CALL_TOP_ARG() = nreverse(CALL_TOP_ARG());
+  CALL_TOP_TYPE() = nreverse(CALL_TOP_TYPE());
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], u);
   return;
 
@@ -4797,7 +4801,7 @@ m3cg_val_compare_and_swap (void)
   int size;
   enum built_in_function fncode = BUILT_IN_VAL_COMPARE_AND_SWAP_N;
 
-  if (!INTEGRAL_TYPE_P (t))
+  if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
     goto incompatible;
   size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
   if (size != 1 && size != 2 && size != 4 && size != 8)
@@ -4807,6 +4811,8 @@ m3cg_val_compare_and_swap (void)
   m3_pop_param (t);
   m3_pop_param (t);
   m3_pop_param (t_addr);
+  CALL_TOP_ARG() = nreverse(CALL_TOP_ARG());
+  CALL_TOP_TYPE() = nreverse(CALL_TOP_TYPE());
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t);
   return;
 
@@ -4829,7 +4835,7 @@ m3cg_lock_test_and_set (void)
   int size;
   enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
 
-  if (!INTEGRAL_TYPE_P (t))
+  if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
     goto incompatible;
   size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
   if (size != 1 && size != 2 && size != 4 && size != 8)
@@ -4838,6 +4844,8 @@ m3cg_lock_test_and_set (void)
   m3_start_call ();
   m3_pop_param (t);
   m3_pop_param (t_addr);
+  CALL_TOP_ARG() = nreverse(CALL_TOP_ARG());
+  CALL_TOP_TYPE() = nreverse(CALL_TOP_TYPE());
   m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t);
   return;
 
@@ -4853,7 +4861,7 @@ m3cg_lock_release (void)
   int size;
   enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
 
-  if (!INTEGRAL_TYPE_P (t))
+  if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
     goto incompatible;
   size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
   if (size != 1 && size != 2 && size != 4 && size != 8)
