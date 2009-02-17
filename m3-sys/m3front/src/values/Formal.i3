@@ -25,7 +25,8 @@ TYPE
 
 PROCEDURE New (READONLY info: Info): Value.T;
 
-PROCEDURE NewBuiltin (name: TEXT;  offset: INTEGER;  type: Type.T): Value.T;
+PROCEDURE NewBuiltin (name: TEXT;  offset: INTEGER;  type: Type.T;
+                      mode := Mode.mVALUE): Value.T;
 
 PROCEDURE Split (formal: Value.T;  VAR info: Info);
 
