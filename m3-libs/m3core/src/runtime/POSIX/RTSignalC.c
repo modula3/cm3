@@ -71,10 +71,10 @@ size_t GetPC(void *Info, void* Context);
 size_t GetPC(void *VoidInfo, void* VoidContext)
 {
     size_t pc = 0;
-
-#if defined(__APPLE__)
     siginfo_t *Info = (siginfo_t *)VoidInfo;
     ucontext_t *Context = (ucontext_t *)VoidContext;
+
+#if defined(__APPLE__)
     if (Context != NULL) {
 #if defined(__i386__)
 #if __DARWIN_UNIX03
@@ -109,7 +109,11 @@ size_t GetPC(void *VoidInfo, void* VoidContext)
       if ((void *)pc != Info->si_addr)
 	pc = 0;
 #endif
-#endif /* __APPLE__ */
+#elif defined(__sparc)
+    if (Context != NULL) {
+      pc = Context->uc_mcontext.gregs[REG_PC];
+    }
+#endif
 
 #if 0 /* FUTURE, each or at least some of these need investigation and testing */
     ucontext_t* Context = (ucontext_t*) VoidContext;
@@ -125,8 +129,6 @@ size_t GetPC(void *VoidInfo, void* VoidContext)
         pc = Context->uc_mcontext->scp_eip;
 #elif defined(__powerpc)
         pc = Context->uc_mcontext->ss.srr0;
-#elif defined(__sparc)
-        pc = Context->uc_mcontext->gregs.pc;
 #elif defined(__mips)
         pc = Context->uc_mcontext->scp_pc.lo;
 #elif defined(__hpux) && defined(__hppa)
