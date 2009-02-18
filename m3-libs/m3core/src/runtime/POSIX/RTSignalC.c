@@ -190,8 +190,6 @@ void InstallOneHandler(size_t Index)
 }
 
 void InstallHandlers(void)
-/* Texts are passed down from Modula-3 so that we don't know how to create them.
-Maybe change that. */
 {
     size_t i = { 0 };
 
