@@ -60,6 +60,7 @@ if equal (TARGET, "SPARC64_OPENBSD") or equal (TARGET, "PPC32_OPENBSD")
     or equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
     or equal (TARGET, "AMD64_FREEBSD") or equal (TARGET, "I386_DARWIN")
     or equal (TARGET, "AMD64_DARWIN") or equal (TARGET, "PPC_DARWIN")
+    or equal (TARGET, "SOLgnu") or equal (TARGET, "SOLsun")
     or equal (TARGET, "NT386")
 
 interface      ("RTSignalPrivate")
