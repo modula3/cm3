@@ -52,7 +52,7 @@ extern "C" {
 #define Shutdown PRIVATE(Shutdown)
 #define SegV PRIVATE(SegV)
 
-#define GetProgramCounterFromSignalContext PRIVATE(GetProgramCounterFromSignalContext)
+#define GetPC PRIVATE(GetPC)
 #define SignalActionHandler PRIVATE(SignalActionHandler)
 
 typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
@@ -66,17 +66,51 @@ void Quit(int Signal, siginfo_t* SignalInfo, void* Context);
 
 void InstallOneHandler(size_t Index);
 void RestoreOneHandler(size_t Index);
-size_t GetProgramCounterFromSignalContext(void* Context);
+size_t GetPC(void *Info, void* Context);
 
-size_t GetProgramCounterFromSignalContext(void* VoidContext)
+size_t GetPC(void *VoidInfo, void* VoidContext)
 {
     size_t pc = 0;
+
+#if defined(__APPLE__)
+    siginfo_t *Info = (siginfo_t *)VoidInfo;
+    ucontext_t *Context = (ucontext_t *)VoidContext;
+    if (Context != NULL) {
+#if defined(__i386__)
+#if __DARWIN_UNIX03
+      pc = Context->uc_mcontext->__ss.__eip;
+#else
+      pc = Context->uc_mcontext->ss.eip;
+#endif
+#elif defined(__x86_64__)
+#if __DARWIN_UNIX03
+      pc = Context->uc_mcontext->__ss.__rip;
+#else
+      pc = Context->uc_mcontext->ss.rip;
+#endif
+#elif defined(__ppc__) || defined(__ppc64__)
+#if __DARWIN_UNIX03
+      pc = Context->uc_mcontext->__ss.__srr0;
+#else
+      pc = Context->uc_mcontext->ss.srr0;
+#endif
+#elif defined(__arm__)
+#error
+#else
+#error
+#endif
+    }
+    if (Info != NULL)
+      if ((void *)pc != Info->si_addr)
+	pc = 0;
+#endif /* __APPLE__ */
+
 #if 0 /* FUTURE, each or at least some of these need investigation and testing */
     ucontext_t* Context = (ucontext_t*) VoidContext;
     if (Context != NULL)
     {
 #if defined(__CYGWIN__)
-#error update GetProgramCounterFromSignalContext
+#error update GetPC
 #elif defined(__amd64)
         pc = Context->uc_mcontext->ss.rip;
 #elif defined(__i386) && defined(__linux)
@@ -92,7 +126,7 @@ size_t GetProgramCounterFromSignalContext(void* VoidContext)
 #elif defined(__hpux) && defined(__hppa)
         pc = Context->uc_mcontext->scp_pc;
 #else
-#error update GetProgramCounterFromSignalContext
+#error update GetPC
 #endif
     }
 #endif
@@ -213,12 +247,12 @@ void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context)
 
 void Quit(int Signal, siginfo_t* SignalInfo, void* Context)
 {
-    MsgPCAbort (GetProgramCounterFromSignalContext(Context));
+    MsgPCAbort (GetPC(SignalInfo, Context));
 }
 
 void SegV(int Signal, siginfo_t* SignalInfo, void* Context)
 {
-    MsgPCSegV (GetProgramCounterFromSignalContext(Context));
+    MsgPCSegV (GetPC(SignalInfo, Context));
 }
 
 #ifdef __cplusplus
