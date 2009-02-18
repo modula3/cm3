@@ -3530,6 +3530,12 @@ PROCEDURE MapWindowPoints (hWndFrom: HWND;
 <*EXTERNAL WindowFromPoint:WINAPI*>
 PROCEDURE WindowFromPoint (Point: POINT): HWND;
 
+(* The Modula-3 backend is not naming WindowFromPoint correctly.
+   It is calling it WindowFromPoint@4 instead of WindowFromPoint@8
+*)
+<*EXTERNAL WinUser__WindowFromPointWorkaround:WINAPI*>
+PROCEDURE WindowFromPointWorkaround (VAR Point: POINT): HWND;
+
 <*EXTERNAL ChildWindowFromPoint:WINAPI*>
 PROCEDURE ChildWindowFromPoint (hWndParent: HWND; Point: POINT): HWND;
 

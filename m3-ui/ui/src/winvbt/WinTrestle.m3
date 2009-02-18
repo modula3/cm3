@@ -1854,7 +1854,7 @@ PROCEDURE ButtonEvent (hwnd  : WinDef.HWND;
        to be the window handle of this window, and translate "clientPos" to
        be in the coordinate space of this window. *)
     IF trsl.mouseFocus # NIL THEN
-      WITH topHwnd = WinUser.WindowFromPoint (screenPos) DO
+      WITH topHwnd = WinUser.WindowFromPointWorkaround (screenPos) DO
         IF topHwnd # NIL THEN
           hwnd := topHwnd;
           clientPos := screenPos;
