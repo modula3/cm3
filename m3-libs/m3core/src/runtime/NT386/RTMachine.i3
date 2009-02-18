@@ -25,7 +25,6 @@ CONST
 
 (*--------------------------------------------------------- thread stacks ---*)
 
-CONST
   PointerAlignment = 1;
   (* The C compiler allocates all pointers on 'PointerAlignment'-byte
      boundaries.  The garbage collector scans thread stacks, but only
@@ -37,7 +36,6 @@ CONST
 (*----------------------------------------------- exception stack walking ---*)
 (* The "FrameInfo" type must minimally include fields named "pc" and "sp". *)
 
-CONST
   Has_stack_walker = FALSE;
   (* Indicates whether this platform supports the stack walking functions
      defined in the "RTStack" interface. *)
@@ -45,5 +43,3 @@ CONST
 TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
 
 END RTMachine.
-
-
