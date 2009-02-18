@@ -6,12 +6,7 @@
 
 <*EXTERNAL*> UNSAFE INTERFACE RTSignalC;
 
-TYPE Texts_t = RECORD
-    aborted := "aborted";
-    segv := "Segmentation violation - possible attempt to dereference NIL";
-END;
-
-<*EXTERNAL "RTSignalC_InstallHandlers"*> PROCEDURE InstallHandlers(VAR Texts:Texts_t);
+<*EXTERNAL "RTSignalC_InstallHandlers"*> PROCEDURE InstallHandlers();
 <*EXTERNAL "RTSignalC_RestoreHandlers"*> PROCEDURE RestoreHandlers();
 
 END RTSignalC.
