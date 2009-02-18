@@ -11,6 +11,7 @@ INTERFACE RTMachine;
 
 IMPORT Csetjmp;
 FROM Upthread IMPORT pthread_t;
+IMPORT Word;
 
 (*--------------------------------------------------------- thread state ---*)
 
@@ -35,7 +36,7 @@ CONST
    FALSE. Otherwise, 8192 bytes is a reasonable page size. The page size must
    be a power of two. *)
 
-  BytesPerHeapPage    = 8192;               (* bytes per page *)
+  BytesPerHeapPage    = Word.LeftShift(1, LogBytesPerHeapPage); (* bytes per page *)
   LogBytesPerHeapPage = 13;
   AdrPerHeapPage      = BytesPerHeapPage;   (* addresses per page *)
   LogAdrPerHeapPage   = LogBytesPerHeapPage;
