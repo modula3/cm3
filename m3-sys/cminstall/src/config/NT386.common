@@ -164,7 +164,7 @@ SYSTEM_LIBS_GNU =
               LibIn("X11") ],
 }
 
-SYSTEM_LIBS = { "MS" : SYSTEM_LIBS_MS, "GNU" : SYSTEM_LIBS_GNU }{LINKER}
+SYSTEM_LIBS = { "WIN32" : SYSTEM_LIBS_MS, "POSIX" : SYSTEM_LIBS_GNU }{OS_TYPE}
 
 %------------------------------------------------------------------------------
 
