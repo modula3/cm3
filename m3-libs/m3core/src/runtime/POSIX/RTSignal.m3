@@ -4,22 +4,30 @@
 
 (* derived from LINUXLIBC6 *)
 
-UNSAFE MODULE RTSignal;
+UNSAFE MODULE RTSignal EXPORTS RTSignal, RTSignalPrivate;
 
-IMPORT RTSignalC;
-
-(* const *)
-VAR Texts: RTSignalC.Texts_t;
+IMPORT RTSignalC, RTError;
 
 PROCEDURE InstallHandlers () =
   BEGIN
-    RTSignalC.InstallHandlers(Texts);
+    RTSignalC.InstallHandlers();
   END InstallHandlers;
 
 PROCEDURE RestoreHandlers () =
   BEGIN
     RTSignalC.RestoreHandlers();
   END RestoreHandlers;
+
+PROCEDURE MsgPCSegV (pc: INTEGER) =
+  BEGIN
+    RTError.MsgPC (pc,
+      "Segmentation violation - possible attempt to dereference NIL");
+  END MsgPCSegV;
+
+PROCEDURE MsgPCAbort (pc: INTEGER) =
+  BEGIN
+    RTError.MsgPC (pc, "aborted");
+  END MsgPCAbort;
 
 BEGIN
 END RTSignal.
