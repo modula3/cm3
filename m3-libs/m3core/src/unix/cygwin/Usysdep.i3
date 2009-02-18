@@ -12,7 +12,7 @@ FROM Cstdint IMPORT uint8_t, uint16_t, uint32_t, int16_t, int32_t;
 
 (* This is the only system that uses this. *)
 (* CONST *)
-<*EXTERNAL "Usysdep_P_NOWAIT"*> VAR P_NOWAIT: int;
+<*EXTERNAL "Usysdep__P_NOWAIT"*> VAR P_NOWAIT: int;
 <*EXTERNAL*> PROCEDURE spawnve (mode: int; name: const_char_star; argv, envp: char_star_star): int;
 
 (* Unix.i3 *)
