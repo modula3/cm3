@@ -4,6 +4,7 @@
 
 /* derived from LINUXLIBC6 */
 
+#define _GNU_SOURCE
 #include <unistd.h>
 #include <signal.h>
 typedef struct sigaction sigaction_t;
