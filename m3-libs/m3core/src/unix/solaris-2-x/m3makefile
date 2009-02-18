@@ -33,7 +33,3 @@ Interface ("Uucontext")
 Interface ("Uugid")
 Interface ("Uuio")
 Interface ("Uutsname")
-
-% Dir.c is buggy on '/net'.
-% c_source ("Dir")
-
