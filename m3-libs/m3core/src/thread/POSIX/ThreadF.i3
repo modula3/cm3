@@ -24,10 +24,6 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS));
    of the stack.  All other threads must be suspended.  ProcessStacks
    exists solely for the garbage collector.  *)
 
-PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool));
-(* Apply p to each thread allocation pool.  All other threads must be
-   suspended.  ProcessPools exists solely for the garbage collector.  *)
-
 PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState;
 
 (*------------------------------------------------ floating point support ---*)

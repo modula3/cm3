@@ -28,10 +28,6 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS));
 (* Feature:  Windows threads not created by Thread.Fork are not suspended
     or resumed, and their stacks are not processed. *)
 
-PROCEDURE ProcessPools (p: PROCEDURE (VAR pool: RTHeapRep.AllocPool));
-(* Apply p to each thread allocation pool.  All other threads must be
-   suspended.  ProcessPools exists solely for the garbage collector.  *)
-
 PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState;
 
 (*------------------------------------------------------------ preemption ---*)
