@@ -74,8 +74,8 @@ size_t GetPC(void *VoidInfo, void* VoidContext)
     siginfo_t *Info = (siginfo_t *)VoidInfo;
     ucontext_t *Context = (ucontext_t *)VoidContext;
 
-#if defined(__APPLE__)
     if (Context != NULL) {
+#if defined(__APPLE__)
 #if defined(__i386__)
 #if __DARWIN_UNIX03
       pc = Context->uc_mcontext->__ss.__eip;
@@ -97,23 +97,18 @@ size_t GetPC(void *VoidInfo, void* VoidContext)
 #else
 #error Unknown __APPLE__ target
 #endif
-    }
-# if 0
-    /* si_addr is only the faulting PC on SIGILL or SIGFPE.  For SIGBUS and
-     * SIGSEGV, si_addr contains the address of the faulting reference.  So,
-     * why would be check equality for other signals?  This may have been for
-     * a historically broken signal handling implementation in an earlier
-     * version of Mac OS X.
-     */
-    if (Info != NULL)
-      if ((void *)pc != Info->si_addr)
-	pc = 0;
-#endif
 #elif defined(__sparc)
-    if (Context != NULL) {
       pc = Context->uc_mcontext.gregs[REG_PC];
-    }
+#elif defined(__linux)
+#if defined(__i386)
+      pc = Context->uc_mcontext.gregs[REG_EIP];
+#elif defined(__amd64)
+      pc = Context->uc_mcontext.gregs[REG_RIP];
+#else
+#error Unknown __linux target
 #endif
+#endif
+    }
 
 #if 0 /* FUTURE, each or at least some of these need investigation and testing */
     ucontext_t* Context = (ucontext_t*) VoidContext;
