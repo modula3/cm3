@@ -4,6 +4,7 @@
 
 /* derived from LINUXLIBC6 */
 
+#undef _GNU_SOURCE
 #define _GNU_SOURCE
 #include <unistd.h>
 #include <signal.h>
