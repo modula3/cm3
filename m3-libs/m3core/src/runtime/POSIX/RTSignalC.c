@@ -18,6 +18,10 @@ typedef void ucontext_t;
 #include <string.h>
 #define ZeroMemory(a,b) (memset((a), 0, (b)))
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* EXPORTS RTSignalC */
 void RTSignalC_InstallHandlers(void);
 void RTSignalC_RestoreHandlers(void);
@@ -37,10 +41,6 @@ RTProcess__InterruptHandler RTProcess__OnInterrupt(RTProcess__InterruptHandler);
 #define OnInterrupt RTProcess__OnInterrupt
 #define InterruptHandler RTProcess__InterruptHandler
 #define InvokeExitors RTProcess__InvokeExitors
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define PRIVATE(x) RTSignalCPrivate_ ## x
 
@@ -67,12 +67,12 @@ void Quit(int Signal, siginfo_t* SignalInfo, void* Context);
 
 void InstallOneHandler(size_t Index);
 void RestoreOneHandler(size_t Index);
-size_t GetPC(void *Info, void* Context);
+size_t GetPC(void* Context);
 
-size_t GetPC(void *VoidInfo, void* VoidContext)
+size_t GetPC(void* VoidContext)
+/* PC: program counter aka instruction pointer, etc. */
 {
     size_t pc = 0;
-    siginfo_t *Info = (siginfo_t *)VoidInfo;
     ucontext_t *Context = (ucontext_t *)VoidContext;
 
     if (Context != NULL) {
@@ -251,12 +251,12 @@ void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context)
 
 void Quit(int Signal, siginfo_t* SignalInfo, void* Context)
 {
-    MsgPCAbort (GetPC(SignalInfo, Context));
+    MsgPCAbort (GetPC(Context));
 }
 
 void SegV(int Signal, siginfo_t* SignalInfo, void* Context)
 {
-    MsgPCSegV (GetPC(SignalInfo, Context));
+    MsgPCSegV (GetPC(Context));
 }
 
 #ifdef __cplusplus
