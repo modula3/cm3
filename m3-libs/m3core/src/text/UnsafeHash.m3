@@ -11,7 +11,7 @@ UNSAFE MODULE UnsafeHash EXPORTS Text;
 IMPORT TextF, Word;
 
 (* "Hash" is the only unsafe procedure in the "Text" interface,
-   so me move it into its own module.
+   so we move it into its own module.
 *)
 
 (*
