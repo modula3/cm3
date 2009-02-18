@@ -1,5 +1,5 @@
 %
-% $Id: NT386.common,v 1.49 2009-02-18 11:20:48 jkrell Exp $
+% $Id: NT386.common,v 1.50 2009-02-18 11:21:33 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -164,7 +164,7 @@ SYSTEM_LIBS_GNU =
               LibIn("X11") ],
 }
 
-SYSTEM_LIBS = { "MS" : SYSTEM_LIBS_MS, "GNU" : SYSTEM_LIBS_GNU }{LINKER}
+SYSTEM_LIBS = { "WIN32" : SYSTEM_LIBS_MS, "POSIX" : SYSTEM_LIBS_GNU }{OS_TYPE}
 
 %------------------------------------------------------------------------------
 
