@@ -17,20 +17,25 @@ typedef void ucontext_t;
 #include <string.h>
 #define ZeroMemory(a,b) (memset((a), 0, (b)))
 
-#include "RTSignalC.h"
+/* EXPORTS RTSignalC */
+void RTSignalC_InstallHandlers(void);
+void RTSignalC_RestoreHandlers(void);
 #define InstallHandlers RTSignalC_InstallHandlers
 #define RestoreHandlers RTSignalC_RestoreHandlers
-#define Texts_t RTSignalC_Texts_t
+
+/* FROM RTSignalPrivate IMPORT MsgSegV, MsgAbort */
+void RTSignalPrivate__MsgPCSegV (size_t);
+void RTSignalPrivate__MsgPCAbort (size_t);
+#define MsgPCSegV RTSignalPrivate__MsgPCSegV
+#define MsgPCAbort RTSignalPrivate__MsgPCAbort
 
 /* FROM RTProcess IMPORT OnInterrupt, InterruptHandler, InvokeExitors */
-#include "RTProcess.h"
+typedef void (*RTProcess__InterruptHandler)(void);
+void RTProcess__InvokeExitors(void);
+RTProcess__InterruptHandler RTProcess__OnInterrupt(RTProcess__InterruptHandler);
 #define OnInterrupt RTProcess__OnInterrupt
 #define InterruptHandler RTProcess__InterruptHandler
 #define InvokeExitors RTProcess__InvokeExitors
-
-/* FROM RTError IMPORT MsgPC */
-#include "RTError.h"
-#define MsgPC RTError__MsgPC
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,16 +52,12 @@ extern "C" {
 #define Shutdown PRIVATE(Shutdown)
 #define SegV PRIVATE(SegV)
 
-#define Texts PRIVATE(Texts)
-
 #define GetProgramCounterFromSignalContext PRIVATE(GetProgramCounterFromSignalContext)
 #define SignalActionHandler PRIVATE(SignalActionHandler)
 
 typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
 
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
-
-Texts_t* Texts;
 
 void SegV(int Signal, siginfo_t* SignalInfo, void* Context);
 void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context);
@@ -117,6 +118,7 @@ Handlers[] =
     { SIGSEGV, SegV },
     { SIGPIPE, IgnoreSignal },
     { SIGTERM, Shutdown },
+    { SIGBUS,  SegV },
 };
 
 sigaction_t InitialHandlers[NUMBER_OF(Handlers)];
@@ -148,13 +150,11 @@ void InstallOneHandler(size_t Index)
     }
 }
 
-void InstallHandlers(Texts_t* M3Texts)
+void InstallHandlers(void)
 /* Texts are passed down from Modula-3 so that we don't know how to create them.
 Maybe change that. */
 {
     size_t i = { 0 };
-
-    Texts = M3Texts;
 
     for (i = 0 ; i != NUMBER_OF(Handlers) ; ++i)
     {
@@ -211,19 +211,14 @@ void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context)
     }
 }
 
-void RTSignalCPrivate_CommonFatalSignalHandler(void* Context, TEXT Message)
-{
-    MsgPC(GetProgramCounterFromSignalContext(Context), Message);
-}
-
 void Quit(int Signal, siginfo_t* SignalInfo, void* Context)
 {
-    RTSignalCPrivate_CommonFatalSignalHandler(Context, Texts->aborted);
+    MsgPCAbort (GetProgramCounterFromSignalContext(Context));
 }
 
 void SegV(int Signal, siginfo_t* SignalInfo, void* Context)
 {
-    RTSignalCPrivate_CommonFatalSignalHandler(Context, Texts->segv);
+    MsgPCSegV (GetProgramCounterFromSignalContext(Context));
 }
 
 #ifdef __cplusplus

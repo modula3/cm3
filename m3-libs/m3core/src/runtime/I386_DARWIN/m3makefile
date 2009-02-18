@@ -1,7 +1,6 @@
 % Copyright according to COPYRIGHT-CMASS.
 
 Interface      ("RTMachine")
-implementation ("RTSignal")
 implementation ("RTThread")
 c_source       ("RTThreadC")
 c_source       ("RTMachineC")
