@@ -8,5 +8,4 @@
 implementation ("RTArgs")
 implementation ("RTOS")
 module         ("RTPerfTool")
-implementation ("RTProcessWin32")
 c_source ("RTOSc")
