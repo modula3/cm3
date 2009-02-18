@@ -9,11 +9,8 @@
 
 INTERFACE RTMachine;
 
+IMPORT Word;
 FROM Upthread IMPORT pthread_t;
-
-(*--------------------------------------------------------------------------*)
-
-CONST
 
 (*------------------------------------------------------------------ heap ---*)
 
@@ -23,14 +20,13 @@ CONST
    be a power of two. *)
 
 CONST
-  BytesPerHeapPage    = 8192;               (* bytes per page *)
+  BytesPerHeapPage    = Word.LeftShift(1, LogBytesPerHeapPage); (* bytes per page *)
   LogBytesPerHeapPage = 13;
   AdrPerHeapPage      = BytesPerHeapPage;   (* addresses per page *)
   LogAdrPerHeapPage   = LogBytesPerHeapPage;
 
 (*--------------------------------------------------------- thread stacks ---*)
 
-CONST
   PointerAlignment = 1;
   (* The C compiler allocates all pointers on 'PointerAlignment'-byte
      boundaries.  The garbage collector scans thread stacks, but only
@@ -42,7 +38,6 @@ CONST
 (*----------------------------------------------- exception stack walking ---*)
 (* The "FrameInfo" type must minimally include fields named "pc" and "sp". *)
 
-CONST
   Has_stack_walker = FALSE;
   (* Indicates whether this platform supports the stack walking functions
      defined in the "RTStack" interface. *)
