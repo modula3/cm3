@@ -94,15 +94,21 @@ size_t GetPC(void *VoidInfo, void* VoidContext)
 #else
       pc = Context->uc_mcontext->ss.srr0;
 #endif
-#elif defined(__arm__)
-#error
 #else
-#error
+#error Unknown __APPLE__ target
 #endif
     }
+# if 0
+    /* si_addr is only the faulting PC on SIGILL or SIGFPE.  For SIGBUS and
+     * SIGSEGV, si_addr contains the address of the faulting reference.  So,
+     * why would be check equality for other signals?  This may have been for
+     * a historically broken signal handling implementation in an earlier
+     * version of Mac OS X.
+     */
     if (Info != NULL)
       if ((void *)pc != Info->si_addr)
 	pc = 0;
+#endif
 #endif /* __APPLE__ */
 
 #if 0 /* FUTURE, each or at least some of these need investigation and testing */
