@@ -5,7 +5,6 @@
 <*EXTERNAL*> INTERFACE Upthread;
 
 FROM Ctypes IMPORT int;
-FROM Utypes IMPORT size_t;
 IMPORT Usysdep;
 
 TYPE
@@ -19,6 +18,7 @@ TYPE
 
 <*EXTERNAL "Upthread__PTHREAD_MUTEX_INITIALIZER"*>
 VAR PTHREAD_MUTEX_INITIALIZER : pthread_mutex_t;
+
 <*EXTERNAL "Upthread__PTHREAD_COND_INITIALIZER"*>
 VAR PTHREAD_COND_INITIALIZER : pthread_cond_t;
 
@@ -31,6 +31,7 @@ VAR PTHREAD_COND_INITIALIZER : pthread_cond_t;
 <*EXTERNAL pthread_mutex_lock*> PROCEDURE mutex_lock (VAR mutex: pthread_mutex_t): int;
 <*EXTERNAL pthread_mutex_unlock*> PROCEDURE mutex_unlock (VAR mutex: pthread_mutex_t): int;
 <*EXTERNAL pthread_cond_init*> PROCEDURE cond_init (VAR cond: pthread_cond_t; attr: ADDRESS := NIL): int;
+<*EXTERNAL pthread_cond_broadcast*> PROCEDURE cond_broadcast (VAR cond: pthread_cond_t): int;
 <*EXTERNAL pthread_cond_destroy*> PROCEDURE cond_destroy (VAR cond: pthread_cond_t): int;
 <*EXTERNAL pthread_cond_wait*> PROCEDURE cond_wait (VAR cond: pthread_cond_t; VAR mutex: pthread_mutex_t): int;
 <*EXTERNAL pthread_cond_signal*> PROCEDURE cond_signal (VAR cond: pthread_cond_t): int;
