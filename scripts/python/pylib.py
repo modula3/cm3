@@ -175,6 +175,7 @@ def _MapTarget(a):
         "I386_LINUX" : "LINUXLIBC6",
         "I386_NT" : "NT386",
         "I386_CYGWIN" : "NT386GNU",
+        "I386_MINGW" : "NT386MINGNU",
         "PPC32_DARWIN" : "PPC_DARWIN",
         "PPC32_LINUX" : "PPC_LINUX",
         "I386_FREEBSD" : "FreeBSD4",
