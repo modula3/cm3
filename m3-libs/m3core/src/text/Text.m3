@@ -280,15 +280,15 @@ PROCEDURE FindCharR (t: T;  c: CHAR;  start := LAST (INTEGER)): INTEGER =
     ELSIF (i.start = NIL) THEN
       RETURN FindCharRBuf (t, VAL (ORD (c), WIDECHAR), start, i.length);
     ELSIF NOT i.wide THEN
-      RETURN String8.FindCharR (i.start, MIN (i.length, start), c);
+      RETURN String8.FindCharR (i.start, MIN (i.length-1, start)+1, c);
     ELSE
-      RETURN String16.FindCharR (i.start, MIN (i.length, start),
+      RETURN String16.FindCharR (i.start, MIN (i.length-1, start)+1,
                                  VAL (ORD (c), WIDECHAR));
     END;
   END FindCharR;
 
 PROCEDURE FindWideCharR (t: T;  c: WIDECHAR;  start := LAST (INTEGER)): INTEGER =
-  VAR i: Info;
+  VAR i: Info; 
   BEGIN
     t.get_info (i);
     IF (start < 0) THEN
@@ -296,10 +296,10 @@ PROCEDURE FindWideCharR (t: T;  c: WIDECHAR;  start := LAST (INTEGER)): INTEGER 
     ELSIF (i.start = NIL) THEN
       RETURN FindCharRBuf (t, c, start, i.length);
     ELSIF NOT i.wide THEN
-      RETURN String8.FindCharR (i.start, MIN (i.length, start),
+      RETURN String8.FindCharR (i.start, MIN (i.length-1, start)+1,
                                 VAL (Word.And (ORD (c), 16_ff), CHAR));
     ELSE
-      RETURN String16.FindCharR (i.start, MIN (i.length, start), c);
+      RETURN String16.FindCharR (i.start, MIN (i.length-1, start)+1, c);
     END;
   END FindWideCharR;
 
