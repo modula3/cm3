@@ -762,7 +762,7 @@
         <literal>TextLiteral.T</literal>.
         Here, it takes the length of the text from the appropriate field, 
         instead of from the declared type, which contains a fixed array whose
-        length is amost always far too long. 
+        length is almost always far too long. 
       </para> 
 
       <para>
