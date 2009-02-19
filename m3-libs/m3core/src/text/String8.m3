@@ -50,9 +50,10 @@ PROCEDURE FindChar (a: ADDRESS;  len: CARDINAL;  c: CHAR): INTEGER =
   END FindChar;
 
 PROCEDURE FindCharR (a: ADDRESS;  len: CARDINAL;  c: CHAR): INTEGER =
-  VAR p := LOOPHOLE (a + len * ADRSIZE (CHAR), Ptr);
+  VAR p: Ptr;
   BEGIN
-    IF (p = NIL) THEN RETURN -1; END;
+    IF (a = NIL) THEN RETURN -1; END;
+    p := LOOPHOLE (a + len * ADRSIZE (CHAR), Ptr);
     WHILE (len > 0) DO
       DEC (p, ADRSIZE (p^));  DEC (len);
       IF (p^ = c) THEN RETURN len; END;
