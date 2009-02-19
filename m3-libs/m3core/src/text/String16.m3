@@ -85,6 +85,50 @@ PROCEDURE FindCharR (a: ADDRESS;  len: CARDINAL;  c: WIDECHAR): INTEGER =
     RETURN -1;
   END FindCharR;
 
+CONST WideCharBitsize = BITSIZE (WIDECHAR);
+CONST WideCharsPerWord = BITSIZE (Word.T) DIV BITSIZE (WIDECHAR);
+CONST CharMask = Word.Not (16_FF); 
+CONST CharMask1 = Word.Not (Word.Shift (16_FF, WideCharBitsize)); 
+CONST CharMask2 = Word.Not (Word.Shift (16_FF, 2*WideCharBitsize)); 
+CONST CharMask3 = Word.Not (Word.Shift (16_FF, 3*WideCharBitsize)); 
+CONST CharsInWordMask = Word.And ( Word.And (CharMask, CharMask1)
+                                 , Word.And (CharMask2, CharMask3)  
+                                 ); 
+
+TYPE WordPtr = UNTRACED REF Word.T;  
+
+PROCEDURE HasWideChars (a: ADDRESS; len: CARDINAL): BOOLEAN =
+(* Return ORD(a[i] > LAST (CHAR), for some "i" in "[0~..~len-1]". *) 
+(* PRE: a MOD ADRSIZE(WIDECHAR) = 0 *)
+(* This algorithm assumes ADRSIZE(Word.T) MOD ADRSIZE(WIDECHAR) = 0. *)  
+(* This algorithm assumes FIRST(CHAR) = 0 AND LAST(CHAR) = 16_FF. *)  
+  BEGIN
+    (* Do non-word-aligned WIDECHARs at the left. *) 
+    WHILE Word.Mod (LOOPHOLE(a, Word.T), ADRSIZE (Word.T)) # 0 AND len > 0 DO
+      IF Word.And (ORD (LOOPHOLE (a, Ptr)^), CharMask) # 0 
+      THEN RETURN TRUE; END;
+      INC (a, ADRSIZE (WIDECHAR));
+      DEC (len);  
+    END;  
+    (* Do word-aligned WIDECHARs in the middle. *) 
+    WHILE len >= WideCharsPerWord DO 
+      IF Word.And (ORD (LOOPHOLE (a, WordPtr)^), CharsInWordMask) # 0 
+      THEN 
+        RETURN TRUE; 
+      END;
+      INC (a, ADRSIZE (Word.T));
+      DEC (len, WideCharsPerWord);
+    END; 
+    (* Do remaining non-word-aligned WIDECHARs at the right. *) 
+    WHILE len > 0 DO
+      IF Word.And (ORD (LOOPHOLE (a, Ptr)^), CharMask) # 0 
+      THEN RETURN TRUE; END;
+      INC (a, ADRSIZE (WIDECHAR));
+      DEC (len);  
+    END;  
+    RETURN FALSE; 
+  END HasWideChars; 
+
 PROCEDURE ArrayStart (READONLY a: ARRAY OF WIDECHAR): ADDRESS =
 (* Returns the address of the first character of "a" if it is
    non-empty, otherwise returns "NIL".  WARNING: the returned
