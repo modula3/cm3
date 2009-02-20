@@ -92,7 +92,7 @@ CONST WordMask = 16_FF00FF00;
 
 TYPE WordPtr = UNTRACED REF Word.T;  
 
-PROCEDURE HasWideValue (a: ADDRESS; len: CARDINAL): BOOLEAN =
+PROCEDURE HasWideChars (a: ADDRESS; len: CARDINAL): BOOLEAN =
 (* Return ORD(a[i] > LAST (CHAR), for some "i" in "[0~..~len-1]". *) 
 (* PRE: a MOD ADRSIZE(WIDECHAR) = 0 *)
 (* This algorithm assumes ADRSIZE(Word.T) MOD ADRSIZE(WIDECHAR) = 0. *)  
@@ -121,7 +121,7 @@ PROCEDURE HasWideValue (a: ADDRESS; len: CARDINAL): BOOLEAN =
       DEC (len);  
     END;  
     RETURN FALSE; 
-  END HasWideValue; 
+  END HasWideChars; 
 
 PROCEDURE ArrayStart (READONLY a: ARRAY OF WIDECHAR): ADDRESS =
 (* Returns the address of the first character of "a" if it is

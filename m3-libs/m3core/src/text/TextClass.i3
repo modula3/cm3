@@ -11,7 +11,7 @@ IMPORT Text8Short, Text8, Text16Short, Text16, TextSub, TextCat;
 CONST Brand = "Text-2.0";
 
 VAR Old: BOOLEAN := FALSE;
-VAR Flatten: BOOLEAN := FALSE; 
+VAR Flatten: BOOLEAN := TRUE; 
 VAR MaxFlat8 : CARDINAL := 32;    (* CHARSs, Including the terminating null. *) 
 VAR MaxFlatWide : CARDINAL := 16; (* WIDECHARs, Including terminating null. *) 
 

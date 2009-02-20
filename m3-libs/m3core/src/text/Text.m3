@@ -436,7 +436,9 @@ PROCEDURE HasWideChars (t: T): BOOLEAN =
     TextClass.NoteGround (TextClass.Op.HasWideChars); 
     IF TextClass.Old 
     THEN Result := NewHasWideChars (t);
-(* Since OldHasWideChars is buggy but very efficient, we don't use it. *) 
+(* Since OldHasWideChars is buggy but very efficient, we don't use it
+   in timing measurements. 
+*) 
     ELSE Result := NewHasWideChars (t);
     END;
     TextClass.NoteFinished (TextClass.Op.HasWideChars); 
@@ -456,7 +458,7 @@ PROCEDURE NewHasWideChars (t: T): BOOLEAN =
     t.get_info (i);
     IF NOT i.wide THEN RETURN FALSE;
     ELSIF i.start = NIL THEN RETURN HasWideCharsBuf16 (t, i.length);
-    ELSE RETURN String16.HasWideValue (i.start, i.length);
+    ELSE RETURN String16.HasWideChars (i.start, i.length);
     END;
   END NewHasWideChars;
 
@@ -470,7 +472,7 @@ PROCEDURE HasWideCharsBuf16 (t: T;  len: CARDINAL): BOOLEAN =
       TextClass.NoteGround (TextClass.Op.get_wide_chars); 
       t.get_wide_chars (buf, start);
       TextClass.NoteFinished (TextClass.Op.get_wide_chars); 
-      IF String16.HasWideValue 
+      IF String16.HasWideChars 
            (ADR (buf[0]), MIN (len - start, NUMBER (buf)))
       THEN RETURN TRUE; 
       ELSE 
@@ -814,9 +816,9 @@ PROCEDURE OldFindCharR (t: T;  c: CHAR;  start := LAST (INTEGER)): INTEGER =
     ELSIF (i.start = NIL) THEN
       RETURN FindCharRBuf (t, VAL (ORD (c), WIDECHAR), start, i.length);
     ELSIF NOT i.wide THEN
-      RETURN String8.FindCharR (i.start, MIN (i.length, start+1), c);
+      RETURN String8.FindCharR (i.start, MIN (i.length-1, start)+1, c);
     ELSE
-      RETURN String16.FindCharR (i.start, MIN (i.length, start+1),
+      RETURN String16.FindCharR (i.start, MIN (i.length-1, start)+1,
                                  VAL (ORD (c), WIDECHAR));
     END;
   END OldFindCharR;
@@ -831,10 +833,10 @@ PROCEDURE OldFindWideCharR
     ELSIF (i.start = NIL) THEN
       RETURN FindCharRBuf (t, c, start, i.length);
     ELSIF NOT i.wide THEN
-      RETURN String8.FindCharR (i.start, MIN (i.length, start+1),
+      RETURN String8.FindCharR (i.start, MIN (i.length-1, start)+1,
                                 VAL (Word.And (ORD (c), 16_ff), CHAR));
     ELSE
-      RETURN String16.FindCharR (i.start, MIN (i.length, start+1), c);
+      RETURN String16.FindCharR (i.start, MIN (i.length-1, start)+1, c);
     END;
   END OldFindWideCharR;
 
@@ -872,14 +874,14 @@ PROCEDURE NewFindCharR (t: T;  c: CHAR;  start := LAST (INTEGER)): INTEGER =
         ELSE
           RETURN 
             String16.FindCharR 
-              (i.start, MIN (i.length, start+1), VAL (ORD(c), WIDECHAR))
+              (i.start, MIN (i.length-1, start)+1, VAL (ORD(c), WIDECHAR))
         END
       ELSE (* No wide chars in t. *) 
         IF i.start = NIL 
         THEN
           RETURN FindCharRBuf8 (t, c, start, i.length)
         ELSE 
-          RETURN String8.FindCharR (i.start, MIN (i.length, start+1), c)
+          RETURN String8.FindCharR (i.start, MIN (i.length-1, start)+1, c)
         END 
       END
     END
@@ -898,7 +900,7 @@ PROCEDURE NewFindWideCharR
         THEN
           RETURN FindCharRBufAny (t, c, start, i.length)
         ELSE 
-          RETURN String16.FindCharR (i.start, MIN (i.length, start+1), c)
+          RETURN String16.FindCharR (i.start, MIN (i.length-1, start)+1, c)
         END 
       ELSE (* No wide chars in t. *) 
         IF ORD (c) > ORD (LAST (CHAR)) 
@@ -909,7 +911,7 @@ PROCEDURE NewFindWideCharR
         ELSE
           RETURN 
             String8.FindCharR 
-              (i.start, MIN (i.length, start+1), VAL (ORD(c), CHAR))
+              (i.start, MIN (i.length-1, start)+1, VAL (ORD(c), CHAR))
         END
       END
     END 
