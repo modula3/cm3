@@ -1450,6 +1450,7 @@ PROCEDURE WaitHeap () =
     DEC(inCritical);
     <*ASSERT inCritical = 0*>
     WITH r = Upthread.cond_wait(heapCond, heapMu) DO <*ASSERT r=0*> END;
+    holder := me;
     <*ASSERT inCritical = 0*>
     INC(inCritical);
   END WaitHeap;
