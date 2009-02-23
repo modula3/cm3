@@ -56,7 +56,7 @@ standard := standard & "          C350, C351, C352, C353, C354, C355, C356, C357
 standard := standard & "          C360, C361, C362, C363, C364, C365, C366, C367,\n";
 standard := standard & "          C370, C371, C372, C373, C374, C375, C376, C377};\n";
 
-standard := standard & "  TEXT <: REFANY;\n";
+standard := standard & "  TEXT <: ROOT;\n";
 standard := standard & "  MUTEX <: ROOT;\n";
 
 standard := standard & "CONST\n";
