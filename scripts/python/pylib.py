@@ -179,6 +179,14 @@ def _MapTarget(a):
         "PPC32_DARWIN" : "PPC_DARWIN",
         "PPC32_LINUX" : "PPC_LINUX",
         "I386_FREEBSD" : "FreeBSD4",
+
+        #
+        # both options sensible, double HP a bit redundant in the HPUX names
+        #
+        "HPPA32_HPUX"  : "PA32_HPUX",
+        "HPPA64_HPUX"  : "PA64_HPUX",
+        "HPPA32_LINUX" : "PA32_LINUX",
+        "HPPA64_LINUX" : "PA64_LINUX",
     }.get(a) or a
 
 #-----------------------------------------------------------------------------
@@ -203,7 +211,7 @@ def _GetAllTargets():
         for os in [ "OPENBSD", "NETBSD", "FREEBSD" ]:
             Targets += [proc + "_" + os]
 
-    for proc in [ "MIPS64", "I386", "AMD64", "PPC32", "PPC64", "SPARC32", "SPARC64", "ARM", "HPPA32", "HPPA64"]:
+    for proc in [ "MIPS64", "I386", "AMD64", "PPC32", "PPC64", "SPARC32", "SPARC64", "ARM", "PA32", "PA64"]:
         for os in [ "LINUX" ]:
             Targets += [proc + "_" + os]
 
@@ -231,13 +239,7 @@ def _GetAllTargets():
         for os in [ "SOLARIS" ]:
             Targets += [proc + "_" + os]
 
-    #
-    # "HP" in "HPPA(32|64)" and "HPUX" is redundant, the names
-    # could just be PA32_HPUX and PA64_HPUX, but the redundancy
-    # is not n HPPA(32|64)_LINUX, so leave "HP" in.
-    #
-
-    for proc in [ "HPPA32", "HPPA64", "IA64" ]:
+    for proc in [ "PA32", "PA64", "IA64" ]:
         for os in [ "HPUX" ]:
             Targets += [proc + "_" + os]
 
@@ -572,10 +574,10 @@ elif UName.startswith("irix"):
 
 elif UName.startswith("hp-ux"):
 
-    Host = "HPPA32_HPUX"
+    Host = "PA32_HPUX"
     #
     # no good way found to sniff for 64bit, not even from 64bit Python
-    # user will have to say HPPA64_HPUX manually on the command line
+    # user will have to say PA64_HPUX manually on the command line
     #
 
 else:
