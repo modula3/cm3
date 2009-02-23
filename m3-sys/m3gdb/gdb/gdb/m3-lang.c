@@ -2387,17 +2387,17 @@ _initialize_m3_language ( )
   TYPE_M3_SIZE (builtin_type_m3_widechar) = 2*TARGET_CHAR_BIT;
 
   builtin_type_m3_real =
-    init_type (TYPE_CODE_FLT, TARGET_FLOAT_BIT / TARGET_CHAR_BIT, 0,
+    init_type (TYPE_CODE_M3_REAL, TARGET_FLOAT_BIT / TARGET_CHAR_BIT, 0,
 	       "REAL", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_real) = TARGET_FLOAT_BIT;
 
   builtin_type_m3_longreal =
-    init_type (TYPE_CODE_FLT, TARGET_DOUBLE_BIT / TARGET_CHAR_BIT, 0,
+    init_type (TYPE_CODE_M3_LONGREAL, TARGET_DOUBLE_BIT / TARGET_CHAR_BIT, 0,
 	       "LONGREAL", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_longreal) = TARGET_DOUBLE_BIT;
 
   builtin_type_m3_extended =
-    init_type (TYPE_CODE_FLT, TARGET_DOUBLE_BIT / TARGET_CHAR_BIT, 0,
+    init_type (TYPE_CODE_M3_EXTENDED, TARGET_DOUBLE_BIT / TARGET_CHAR_BIT, 0,
 	       "EXTENDED", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_extended) = TARGET_DOUBLE_BIT;
 
