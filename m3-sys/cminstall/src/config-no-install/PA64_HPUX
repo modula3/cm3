@@ -14,6 +14,15 @@ readonly SYSTEM_ASM = "/usr/local/bin/64/gas" % Assembler
 %
 readonly proc GetGcWrapFlags() is return "" end
 readonly proc FixM3GcDefs(x) is return x end
-readonly proc GetM3BackFlag(x) is return x end
+
+readonly proc GetM3BackFlag(x) is
+    if equal (x, "-fno-reorder-blocks")
+        return x
+    end
+    if equal (x, "-m32") or equal (x, "-m64")
+        return ""
+    end
+    error ("unknown flag: " & x)
+end
 
 include("Unix.common")
