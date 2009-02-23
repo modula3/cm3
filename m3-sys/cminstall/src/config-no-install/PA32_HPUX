@@ -1,0 +1,17 @@
+readonly TARGET = "PA32_HPUX" % code generation target
+readonly WORD_SIZE = "32BITS" % { "32BITS" or "64BITS" }
+readonly GNU_PLATFORM = "hppa2.0w-hp-hpux11"
+
+readonly m3back_flags = "-gstabs+ -quiet -fPIC"
+readonly SYSTEM_CC = "/usr/local/bin/32/gcc -gstabs+ -fPIC" % C compiler
+readonly SYSTEM_ASM = "/usr/local/bin/32/gas" % Assembler
+
+%
+% newer platforms never needed these workarounds for
+% bootstrapping with older builds
+%
+readonly proc GetGcWrapFlags() is return "" end
+readonly proc FixM3GcDefs(x) is return x end
+readonly proc GetM3BackFlag(x) is return x end
+
+include("Unix.common")
