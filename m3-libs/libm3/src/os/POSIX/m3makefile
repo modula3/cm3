@@ -81,6 +81,8 @@ local readonly DefaultOSName = {
    "SPARC64_SOLARIS" : "Solaris",
    "I386_OPENBSD" : "OpenBSD",
    "AMD64_FREEBSD" : "FreeBSD",
+   "PA32_HPUX" : "HPUX",
+   "PA364_HPUX" : "HPUX",
 }
 
 local readonly DefaultArch = {
@@ -130,6 +132,8 @@ local readonly DefaultArch = {
    "SPARC64_SOLARIS" : "sparc64",
    "I386_OPENBSD" : "i686",
    "AMD64_FREEBSD" : "AMD64",
+   "PA32_HPUX" : "hppa",
+   "PA364_HPUX" : "hppa64",
 }
 
 local readonly proc MakeInterfaceForConstant(Name, Value) is
