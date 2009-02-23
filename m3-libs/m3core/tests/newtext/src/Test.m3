@@ -78,7 +78,6 @@ MODULE Test EXPORTS Main
 ; VAR GDoDisplayHelp : BOOLEAN := FALSE 
 ; VAR GDoDisplayVersion : BOOLEAN := FALSE 
 ; VAR GBaseLength : CARDINAL := 0 
-; CONST MaxBaseLength = 1000 
 
 ; CONST StatsInterval = 10000000
 
@@ -138,7 +137,7 @@ MODULE Test EXPORTS Main
                       LValue := Lex . Int ( LRdT ) 
                     ; IF Rd . EOF ( LRdT ) 
                       THEN 
-                        Result := MIN ( MAX ( LValue , 0 ) , MaxBaseLength )
+                        Result := MAX ( LValue , 0 ) 
                       ; RETURN TRUE  
                       ELSE RAISE Lex . Error 
                       END (* IF *)  
@@ -392,8 +391,6 @@ MODULE Test EXPORTS Main
     ; GOldTextsTick := 0.0D0 
     ; GOldTextsTime := 0.0D0 
     END EstimateTimingOverhead 
-
-; CONST MaxLine = 80 
 
 ; PROCEDURE HexAddr ( Addr : REFANY ) : TEXT 
 
@@ -1279,34 +1276,19 @@ MODULE Test EXPORTS Main
       END (* IF *)  
     END DisplayTextMeasures 
 
-; PROCEDURE SingleTextMeasures ( Value : TEXT ) 
+; <* UNUSED *> (* This is here to be called in m3gdb. *) 
+  PROCEDURE SingleTextMeasures ( Value : TEXT ) 
 
   = VAR Depth : INTEGER := 0  
   ; VAR LeafCt : INTEGER := 0
   ; VAR Imbalance : REAL := 0.0
   ; VAR LengthDiff : INTEGER := 0 
-  ; VAR LIterCt : INTEGER
-  ; VAR Unused : INTEGER := 0 
 
   ; BEGIN 
       IF Value # NIL 
       THEN 
         TextUtils . MeasureText 
           ( Value , Depth , LeafCt , Imbalance , LengthDiff ) 
-
-; IF TextClass . NewOps # NIL 
-  THEN 
-    LIterCt := TextClass . NewOps ^ [ TextClass . Op . Cat ] . CurIterCt 
-  ; IF LIterCt > Depth  
-    THEN
-      Unused := 149
-    END (* IF *) 
-  END (* IF *) 
-
-; IF Imbalance > 1.1 
-  THEN
-    Unused := 237
-  END (* IF *) 
       END (* IF *) 
     END SingleTextMeasures 
 
@@ -1335,6 +1317,7 @@ MODULE Test EXPORTS Main
   = <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
       RTCollector . Disable ( ) 
+    ; Wr . PutText ( PWrT , Wr . EOL ) 
     ; Wr . PutText 
         ( PWrT , "Garbage collection disabled for better timing." ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
@@ -1351,7 +1334,7 @@ MODULE Test EXPORTS Main
     ; RTCollector . Enable ( ) 
     ; RTCollectorSRC . StartCollection ( ) 
     ; RTCollectorSRC . FinishCollection ( ) 
-    ; Thread . Pause ( 2.0D0 ) 
+    ; Thread . Pause ( 2.0D0 )  
       (* ^Hopefully, this will get weakRef cleanups all processed. *) 
     ; Wr . PutText ( PWrT , "Garbage collection completed." ) 
     ; Wr . PutText ( PWrT , Wr . EOL ) 
@@ -1370,6 +1353,23 @@ MODULE Test EXPORTS Main
   ; VAR LCharsRef : REF ARRAY OF CHAR
   ; VAR LWidesRef : REF ARRAY OF WIDECHAR
 
+  ; PROCEDURE FillTextLiteral ( Value : TEXT )
+
+    = BEGIN 
+        IF GStoredTextCt >= MaxTexts 
+        THEN LSs := RandV . integer ( 1 , MaxTexts )   
+        ELSE
+          LSs := GStoredTextCt 
+        ; INC ( GStoredTextCt ) 
+        END (* IF *)
+      ; GOldTexts [ LSs ] := Value
+      ; GNewTexts [ LSs ] := Value    
+      ; GTextNos [ LSs ] := GTotalTextCt 
+      ; INC ( GTotalTextCt ) 
+      ; DEC ( N )  
+      ; NoteProgress ( (* VAR *) GFillCt ) 
+      END FillTextLiteral 
+
   ; <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN
       ResetProgress ( ) 
@@ -1377,8 +1377,71 @@ MODULE Test EXPORTS Main
     ; GLastCheckpointCt := 0  
     ; GOldTexts [ 0 ] := ""
     ; GNewTexts [ 0 ] := "" 
-    ; GStoredTextCt := 1 
-    ; StopCollection ( ) 
+    ; GStoredTextCt := 1
+    ; StopCollection ( )   
+
+    ; FillTextLiteral ( "a" ) 
+    ; FillTextLiteral ( "ab" ) 
+    ; FillTextLiteral ( "abc" ) 
+    ; FillTextLiteral ( "abcd" ) 
+    ; FillTextLiteral ( "abcde" ) 
+    ; FillTextLiteral ( "abcdef" ) 
+    ; FillTextLiteral ( "abcdefg" ) 
+    ; FillTextLiteral ( "abcdefgh" ) 
+    ; FillTextLiteral ( "abcdefghi" ) 
+    ; FillTextLiteral ( "abcdefghij" ) 
+    ; FillTextLiteral ( "abcdefghijk" ) 
+    ; FillTextLiteral ( "abcdefghijkl" ) 
+    ; FillTextLiteral ( "abcdefghijklm" ) 
+    ; FillTextLiteral ( "abcdefghijklmn" ) 
+    ; FillTextLiteral ( "abcdefghijklmno" ) 
+    ; FillTextLiteral ( "abcdefghijklmnop" ) 
+    ; FillTextLiteral ( "abcdefghijklmnopq" ) 
+    ; FillTextLiteral ( "abcdefghijklmnopqr" ) 
+    ; FillTextLiteral ( "abcdefghijklmnopqrs" ) 
+    ; FillTextLiteral ( "abcdefghijklmnopqrst" ) 
+    ; FillTextLiteral ( "abcdefghijklmnopqrstu" ) 
+    ; FillTextLiteral ( "abcdefghijklmnopqrstuv" ) 
+    ; FillTextLiteral ( "abcdefghijklmnopqrstuvw" ) 
+    ; FillTextLiteral ( "abcdefghijklmnopqrstuvwx" ) 
+    ; FillTextLiteral ( "abcdefghijklmnopqrstuvwxy" ) 
+    ; FillTextLiteral ( "abcdefghijklmnopqrstuvwxyz" ) 
+    ; FillTextLiteral ( W"A" ) 
+    ; FillTextLiteral ( W"AB" ) 
+    ; FillTextLiteral ( W"ABC" ) 
+    ; FillTextLiteral ( W"ABCD" ) 
+    ; FillTextLiteral ( W"ABCDE" ) 
+    ; FillTextLiteral ( W"ABCDEF" ) 
+    ; FillTextLiteral ( W"ABCDEFG" ) 
+    ; FillTextLiteral ( W"ABCDEFGH" ) 
+    ; FillTextLiteral ( W"ABCDEFGHI" ) 
+    ; FillTextLiteral ( W"ABCDEFGHIJ" ) 
+    ; FillTextLiteral ( "z" ) 
+    ; FillTextLiteral ( "yz" ) 
+    ; FillTextLiteral ( "xyz" ) 
+    ; FillTextLiteral ( "wxyz" ) 
+    ; FillTextLiteral ( "vwxyz" ) 
+    ; FillTextLiteral ( "uvwxyz" ) 
+    ; FillTextLiteral ( "tuvwxyz" ) 
+    ; FillTextLiteral ( "stuvwxyz" ) 
+    ; FillTextLiteral ( "rstuvwxyz" ) 
+    ; FillTextLiteral ( "qrstuvwxyz" ) 
+    ; FillTextLiteral ( "pqrstuvwxyz" ) 
+    ; FillTextLiteral ( "opqrstuvwxyz" ) 
+    ; FillTextLiteral ( "nopqrstuvwxyz" ) 
+    ; FillTextLiteral ( "mnopqrstuvwxyz" ) 
+    ; FillTextLiteral ( "lmnopqrstuvwxyz" ) 
+    ; FillTextLiteral ( "klmnopqrstuvwxyz" ) 
+    ; FillTextLiteral ( "jklmnopqrstuvwxyz" ) 
+    ; FillTextLiteral ( "ijklmnopqrstuvwxyz" ) 
+    ; FillTextLiteral ( "hijklmnopqrstuvwxyz" ) 
+    ; FillTextLiteral ( "ghijklmnopqrstuvwxyz" ) 
+    ; FillTextLiteral ( "fghijklmnopqrstuvwxyz" ) 
+    ; FillTextLiteral ( "efghijklmnopqrstuvwxyz" ) 
+    ; FillTextLiteral ( "defghijklmnopqrstuvwxyz" ) 
+    ; FillTextLiteral ( "cdefghijklmnopqrstuvwxyz" ) 
+    ; FillTextLiteral ( "bcdefghijklmnopqrstuvwxyz" ) 
+    ; FillTextLiteral ( "abcdefghijklmnopqrstuvwxyz" ) 
     ; FOR RI := 1 TO N 
       DO 
         IF GStoredTextCt >= MaxTexts 
@@ -1678,7 +1741,6 @@ MODULE Test EXPORTS Main
 ; PROCEDURE RandOperations ( N : CARDINAL ; MinSs : CARDINAL ) 
 
   = VAR LN : INTEGER 
-  ; VAR Unused : INTEGER 
 
   ; <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
@@ -1694,10 +1756,6 @@ MODULE Test EXPORTS Main
         ELSE
           LN := GStoredTextCt 
         END (* IF *)
-; IF RI > 50000 
-  THEN 
-    Unused := 492
-  END 
       ; CASE RandV . integer ( 0 , 9 ) <* NOWARN *> 
         OF 0 .. 8 => DoCat ( LN ) 
         | 9 => DoSub ( LN )  
@@ -1778,7 +1836,6 @@ MODULE Test EXPORTS Main
                 , GTextNos [ LSs ] , GTextNos [ LSs ] 
                 ) 
             END (* IF *) 
-; SingleTextMeasures ( LNewResult ) 
           ; LOldPartial := LOldResult 
           ; LNewPartial := LNewResult 
           ; DEC ( LLeafCt ) 
@@ -2405,7 +2462,7 @@ MODULE Test EXPORTS Main
 
   ; <* FATAL Thread . Alerted , Wr . Failure *> 
     BEGIN 
-      WrT := Stdio . stdout 
+      WrT := Stdio . stdout
     ; PWrT := Stdio . stderr 
 
     ; GetParams ( ) 
@@ -2473,8 +2530,8 @@ MODULE Test EXPORTS Main
       ; Wr . PutText ( PWrT , Wr . EOL ) 
       ; Wr . Flush ( PWrT ) 
       ; IF GDoUnbal 
-        THEN AsymCats ( OperationCt , BaseTextCt , GDoLToR ) 
-        ELSE RandOperations ( OperationCt , BaseTextCt ) 
+        THEN AsymCats ( OperationCt , OperationCt , GDoLToR ) 
+        ELSE RandOperations ( OperationCt , OperationCt ) 
         END (* IF *) 
 
       ; Wr . PutText ( WrT , Wr . EOL ) 
