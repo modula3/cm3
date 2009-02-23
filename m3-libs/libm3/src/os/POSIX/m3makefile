@@ -82,7 +82,7 @@ local readonly DefaultOSName = {
    "I386_OPENBSD" : "OpenBSD",
    "AMD64_FREEBSD" : "FreeBSD",
    "PA32_HPUX" : "HPUX",
-   "PA364_HPUX" : "HPUX",
+   "PA64_HPUX" : "HPUX",
 }
 
 local readonly DefaultArch = {
@@ -133,7 +133,7 @@ local readonly DefaultArch = {
    "I386_OPENBSD" : "i686",
    "AMD64_FREEBSD" : "AMD64",
    "PA32_HPUX" : "hppa",
-   "PA364_HPUX" : "hppa64",
+   "PA64_HPUX" : "hppa64",
 }
 
 local readonly proc MakeInterfaceForConstant(Name, Value) is
