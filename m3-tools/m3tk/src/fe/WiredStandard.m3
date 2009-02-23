@@ -14,7 +14,7 @@ IMPORT StandardAsText;
 IMPORT Date;
 
 CONST
-  Version = Date.T{1993, Date.Month.Apr, 2, 0, 0, 0, 0, "", Date.WeekDay.Fri};
+  Version = Date.T{2009, Date.Month.Feb, 23, 0, 48, 4, 0, "UTC", Date.WeekDay.Mon};
   (* increase this when StandardAsText changes *)
 
 PROCEDURE Set(c: M3Context.T) RAISES {}=
