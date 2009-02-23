@@ -52,7 +52,9 @@ readonly _DateImpls = {
   "I386_OPENBSD" : "DateBsd",
   "MIPS64_OPENBSD" : "DateBsd",
   "SPARC64_OPENBSD" : "DateBsd",
-  "PPC32_OPENBSD" : "DateBsd"
+  "PPC32_OPENBSD" : "DateBsd",
+  "PA32_HPUX" : "DatePosix",
+  "PA64_HPUX" : "DatePosix",
 }
 
 if _DateImpls contains TARGET
