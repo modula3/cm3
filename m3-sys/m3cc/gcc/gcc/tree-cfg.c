@@ -1743,7 +1743,13 @@ remove_useless_stmts_bind (tree *stmt_p, struct rus_data *data)
       && (! block
 	  || ! BLOCK_ABSTRACT_ORIGIN (block)
 	  || (TREE_CODE (BLOCK_ABSTRACT_ORIGIN (block))
-	      != FUNCTION_DECL)))
+	      != FUNCTION_DECL))
+      /* Removing the BIND_EXPR will break Modula-3 debug information by  
+         making explicitly programmed blocks disappear. */ 
+      && ( write_symbols == NO_DEBUG
+           || debug_info_level == DINFO_LEVEL_NONE
+           || debug_info_level == DINFO_LEVEL_TERSE ))
+
     {
       *stmt_p = BIND_EXPR_BODY (*stmt_p);
       data->repeat = true;
