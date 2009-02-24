@@ -2840,10 +2840,12 @@ no enclosing block"));
 			     _("block start larger than block end"));
 		  new->start_addr = valu;
 		}
-	      /* Make a block for the local symbols within.  */
-	      finish_block (0, &local_symbols, new->old_blocks,
-			    new->start_addr, valu, objfile);
 	    }
+          /* Make a block for the local symbols within.  Do this even if
+             there are none, because the complete block structure is needed
+             to relink procedures nested inside blocks. */
+	  finish_block (0, &local_symbols, new->old_blocks,
+			    new->start_addr, valu, objfile);
 	}
       else
 	{
