@@ -10,6 +10,7 @@ MODULE Test EXPORTS Main
 ; IMPORT RTCollectorSRC 
 ; IMPORT Stdio
 ; IMPORT Text 
+; IMPORT TextCat 
 ; IMPORT TextClass 
 ; IMPORT TextRd 
 ; IMPORT Tick
@@ -738,6 +739,7 @@ MODULE Test EXPORTS Main
       | TextClass . Op . FindWideChar =>   RETURN "FindWCh  "
       | TextClass . Op . FindCharR =>      RETURN "FindChR  "
       | TextClass . Op . FindWideCharR =>  RETURN "FindWChR "
+      | TextClass . Op . MultiCat =>       RETURN "MultiCat "
       | TextClass . Op . get_char =>       RETURN "get_ch   "
       | TextClass . Op . get_wide_char =>  RETURN "get_w_ch "
       | TextClass . Op . get_chars =>      RETURN "get_chs  "
@@ -821,7 +823,7 @@ MODULE Test EXPORTS Main
       ; TotalOldTime2 := 0.0 
       ; TotalNewTime1 := 0.0 
       ; TotalNewTime2 := 0.0 
-      ; FOR ROp := FIRST ( TextClass . Op ) TO TextClass . Op . FindWideCharR
+      ; FOR ROp := FIRST ( TextClass . Op ) TO TextClass . Op . MultiCat
         DO
           IF OldOps # NIL 
           THEN 
@@ -1738,6 +1740,54 @@ MODULE Test EXPORTS Main
     ; GNewTexts [ Ss ] := LNewResult
     END DoSub 
 
+; PROCEDURE DoMultiCat ( Ss : CARDINAL ) 
+
+  = CONST MaxMulti = 5 
+  ; VAR LSs : CARDINAL 
+  ; VAR LOldResult , LNewResult : TEXT 
+  ; VAR OldOpnds , NewOpnds : ARRAY [ 0 .. MaxMulti - 1 ] OF TEXT
+
+  ; BEGIN 
+      FOR RI := FIRST ( OldOpnds ) TO LAST ( OldOpnds ) 
+      DO
+        LSs := RandSs ( )
+      ; OldOpnds [ RI ] := GOldTexts [ LSs ]     
+      ; NewOpnds [ RI ] := GNewTexts [ LSs ]     
+      ; IF GDoCompareOperands 
+        THEN 
+          CompareTexts 
+            ( OldOpnds [ RI ] , NewOpnds [ RI ] , "Sub-op" , GTextNos [ LSs ] ) 
+        END (* IF *) 
+      END (* FOR *) 
+    ; FOR RI := FIRST ( OldOpnds ) TO LAST ( OldOpnds ) 
+      DO
+        IF GDoOld 
+        THEN 
+          TextClass . Old := TRUE 
+        ; StartTimingOld ( ) 
+        ; LOldResult := TextCat . NewMulti ( SUBARRAY ( OldOpnds , 0 , RI ) )  
+        ; StopTimingOld ( ) 
+        ; CheckText ( LOldResult , "Multi-old" , GTotalTextCt ) 
+        END (* IF *) 
+      ; IF GDoNew 
+        THEN 
+          TextClass . Old := FALSE 
+        ; StartTimingNew ( ) 
+        ; LNewResult := TextCat . NewMulti ( SUBARRAY ( NewOpnds , 0 , RI ) )  
+
+        ; StopTimingNew ( ) 
+        ; TextClass . Old := TRUE
+        ; CheckText ( LNewResult , "Mulit-new" , GTotalTextCt ) 
+        END (* IF *) 
+      ; IF GDoCompareResults 
+        THEN 
+          CompareTexts ( LOldResult , LNewResult , "Multi" , GTotalTextCt ) 
+        END (* IF *) 
+      END (* FOR *) 
+    ; GOldTexts [ Ss ] := LOldResult
+    ; GNewTexts [ Ss ] := LNewResult
+    END DoMultiCat 
+
 ; PROCEDURE RandOperations ( N : CARDINAL ; MinSs : CARDINAL ) 
 
   = VAR LN : INTEGER 
@@ -1757,8 +1807,9 @@ MODULE Test EXPORTS Main
           LN := GStoredTextCt 
         END (* IF *)
       ; CASE RandV . integer ( 0 , 9 ) <* NOWARN *> 
-        OF 0 .. 8 => DoCat ( LN ) 
-        | 9 => DoSub ( LN )  
+        OF 0 .. 7 => DoCat ( LN ) 
+        | 8 => DoSub ( LN )  
+        | 9 => DoMultiCat ( LN )  
         END (* CASE *) 
       ; GTextNos [ LN ] := GTotalTextCt 
       ; INC ( GTotalTextCt ) 
