@@ -58,7 +58,8 @@ PROCEDURE GetWideChars (t: TEXT;  VAR a: ARRAY OF WIDECHAR;  start: CARDINAL);
 TYPE Op = { FromChar, FromWideChar, FromChars, FromWideChars,
             Cat, Sub, Equal, Compare, Hash, HasWideChars, 
             GetChar, GetWideChar, SetChars, SetWideChars, 
-            FindChar, FindWideChar, FindCharR, FindWideCharR, 
+            FindChar, FindWideChar, FindCharR, FindWideCharR,
+            MultiCat,  
             get_char, get_wide_char, get_chars, get_wide_chars }; 
 
 TYPE OpInfo = RECORD

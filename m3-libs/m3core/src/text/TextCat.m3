@@ -589,6 +589,40 @@ PROCEDURE NewMulti (READONLY x: ARRAY OF TEXT): TEXT =
 PROCEDURE MultiCat (READONLY x: ARRAY OF TEXT): TEXT =
   VAR result: TEXT;
   BEGIN
+    TextClass.NoteGround (TextClass.Op.MultiCat); 
+    IF TextClass.Old THEN result := OldMultiCat (x)
+    ELSE result := NewMultiCat(x)
+    END; 
+    TextClass.NoteFinished (TextClass.Op.MultiCat); 
+    RETURN result;
+  END MultiCat;
+
+PROCEDURE OldMultiCat (READONLY x: ARRAY OF TEXT): TEXT =
+  VAR result: TEXT;
+  VAR r_info, xi_info: TextClass.Info; 
+  BEGIN
+    IF NUMBER (x) <= 0 THEN RETURN "";   END;
+    IF NUMBER (x) = 1  THEN RETURN x[0]; END;
+
+    result := x[LAST(x)];
+    result.get_info (r_info); 
+    FOR i := LAST(x) - 1 TO 0 BY -1 DO
+      WITH xi = x[i] DO
+        xi.get_info(xi_info);
+        r_info.wide := r_info.wide OR xi_info.wide;
+        result := NEW (T, a := xi, a_len := xi_info.length, 
+                          b := result, b_len := r_info.length,
+                          a_or_b_wide := r_info.wide);
+        INC(r_info.length, xi_info.length);
+        TextClass.NoteIter (TextClass.Op.MultiCat); 
+      END; 
+    END;
+    RETURN result;
+  END OldMultiCat;
+
+PROCEDURE NewMultiCat (READONLY x: ARRAY OF TEXT): TEXT =
+  VAR result: TEXT;
+  BEGIN
     IF NUMBER (x) <= 0 THEN RETURN "";   END;
     IF NUMBER (x) = 1  
     THEN 
@@ -600,9 +634,10 @@ PROCEDURE MultiCat (READONLY x: ARRAY OF TEXT): TEXT =
     result := x[LAST(x)];
     FOR i := LAST(x) - 1 TO 0 BY -1 DO
       result := Concat (x[i], result);
+      TextClass.NoteIter (TextClass.Op.MultiCat); 
     END;
     RETURN result;
-  END MultiCat;
+  END NewMultiCat;
 
 PROCEDURE CatGetInfo (t: T;  VAR info: TextClass.Info) =
   BEGIN
