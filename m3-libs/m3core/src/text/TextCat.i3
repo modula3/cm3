@@ -18,6 +18,6 @@ PROCEDURE New (t, u: TEXT): TEXT;
 (* Return the concatenation of "t" and "u". *)
 
 PROCEDURE NewMulti (READONLY x: ARRAY OF TEXT): TEXT;
-(* Return the concatenation of "t" and "u". *)
+(* Return the concatenation of all elements of x. *)
 
 END TextCat.
