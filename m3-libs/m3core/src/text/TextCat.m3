@@ -53,7 +53,6 @@ PROCEDURE MultiCat (READONLY x: ARRAY OF TEXT): TEXT =
                           b := result, b_len := r_info.length,
                           a_or_b_wide := r_info.wide);
         INC(r_info.length, xi_info.length);
-        TextClass.NoteIter (TextClass.Op.MultiCat); 
       END; 
     END;
     RETURN result;
