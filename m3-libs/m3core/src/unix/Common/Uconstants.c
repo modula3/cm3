@@ -41,8 +41,8 @@ typedef union {
 #define X(x) char a##x[x];
 #include "UerrorX.h"
 } CheckMax_t;
-/* check that Uerror.Max=151 is enough; if you get an error here, raise it in Uerror.i3 and here */
-typedef int CheckMax[151 - sizeof(CheckMax_t)];
+/* check that Uerror.Max=248 is enough; if you get an error here, raise it in Uerror.i3 and here */
+typedef int CheckMax[248 - sizeof(CheckMax_t)];
 
 #undef X
 #define X(x) const int Uerror__##x = x;
