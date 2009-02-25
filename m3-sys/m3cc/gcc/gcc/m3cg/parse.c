@@ -2028,11 +2028,7 @@ m3_call_direct (tree p, tree t)
   tree call;
   tree *slot = (tree *)htab_find_slot (builtins, p, NO_INSERT);
   if (slot) p = *slot;
-  if (TREE_USED (p) == 0)
-  {
-      TREE_USED (p) = 1;
-      assemble_external (p);
-  }
+  TREE_USED (p) = 1;
   call = build_call_list (t, proc_addr (p), CALL_TOP_ARG ());
   CALL_EXPR_STATIC_CHAIN (call) = CALL_TOP_STATIC_CHAIN ();
   if (VOID_TYPE_P(t)) {
