@@ -26,14 +26,14 @@ time_t Utime__get_timezone(void)
 #endif
 }
 
-#if defined(__CYGWIN__) || defined(__sun)
+#if defined(__CYGWIN__) || defined(__sun) || defined(__hpux)
 
 time_t Utime__get_altzone(void)
 {
-#ifdef __CYGWIN__
-    return Utime__get_timezone(); /* ? */
-#else
+#ifdef __sun
     return altzone;
+#else
+    return Utime__get_timezone(); /* ? */
 #endif
 }
 
