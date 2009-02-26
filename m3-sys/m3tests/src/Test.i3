@@ -5,10 +5,43 @@
 INTERFACE Test;
 
 IMPORT Text;
+IMPORT Usysdep;
+IMPORT Csetjmp;
 
 VAR
   errors:   INTEGER := 0;
   warnings: INTEGER := 0;
+
+TYPE
+  T = RECORD
+    f := ARRAY [1..12] OF     REAL { 0.0e0, 1.0e0, 2.0e0, 3.0e0, -1.0e0, -2.0e0, -3.0e0, 12.34e0, -124.456e0, 1000.0e0, -10000.0e0, -123456.789e0 };
+    d := ARRAY [1..12] OF LONGREAL { 0.0d0, 1.0d0, 2.0d0, 3.0d0, -1.0d0, -2.0d0, -3.0d0, 12.34d0, -124.456d0, 1000.0d0, -10000.0d0,  123456.789d0 };
+    sizes : RECORD
+      (* keep these sorted by name for easier human comprehension *)
+      gid := BYTESIZE(Usysdep.gid_t);
+      hostent_addrtype_t := BYTESIZE(Usysdep.hostent_addrtype_t);
+      hostent_length_t := BYTESIZE(Usysdep.hostent_length_t);
+      linger := BYTESIZE(Usysdep.struct_linger);
+      mode := BYTESIZE(Usysdep.mode_t);
+      pid := BYTESIZE(Usysdep.pid_t);
+      socklen := BYTESIZE(Usysdep.socklen_t);
+      time := BYTESIZE(Usysdep.time_t);
+      timeval := BYTESIZE(Usysdep.struct_timeval);
+      tm := BYTESIZE(Usysdep.struct_tm);
+      uid := BYTESIZE(Usysdep.uid_t);
+      (* pthreads omitted on purpose *)
+    END;
+    (* keep these sorted by name for easier human comprehension *)
+    (*max_fdset := Usysdep.MAX_FDSET;*)
+    linger := Usysdep.struct_linger {1, 2};
+    pad1 := 10;
+    timeval := Usysdep.struct_timeval {1, 2};
+    pad2 := 20;
+    tm := Usysdep.struct_tm {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    pad3 := 30;
+  END;
+
+<*EXTERNAL "Test__CheckFloatsAndTypes"*> PROCEDURE CheckFloatsAndTypes(READONLY t:T; size := BYTESIZE(T); jbsize := BYTESIZE(Csetjmp.jmp_buf));
 
 PROCEDURE msg (t: Text.T);
 PROCEDURE msgB (b: BOOLEAN);

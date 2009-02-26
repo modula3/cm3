@@ -6,7 +6,11 @@
 
 MODULE Main;
 IMPORT Wr, Stdio;
+IMPORT Test;
 <*FATAL ANY*>
+
+VAR t:Test.T;
 BEGIN
+  Test.CheckFloatsAndTypes(t);
   Wr.PutText (Stdio.stdout, "Hello world!\n");
 END Main.
