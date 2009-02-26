@@ -41,6 +41,8 @@ const int SIG_SUSPEND = 0;
 const int SIG_SUSPEND = SIGUSR2;
 #elif defined(__linux)
 const int SIG_SUSPEND = NSIG - 1;
+#elif defined(__hpux)
+const int SIG_SUSPEND = _SIGRTMAX;
 #elif defined(SIGRTMAX)
 /* This might be a function call, in which case try _SIGRTMAX or initializing it somewhere. */
 const int SIG_SUSPEND = SIGRTMAX;
@@ -146,6 +148,7 @@ int ThreadPThread__sigsuspend()
 }
 
 #define VAR(t) t*
+#undef MAX
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 typedef void* (*start_routine_t)(void*);
 
