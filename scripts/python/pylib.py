@@ -1148,6 +1148,7 @@ def Boot():
     Link = {
         "SOLsun"                : Compile + SunLink,
         "SPARC64_SOLARIS"       : Compile + SunLink,
+        "PA32_HPUX"             : Compile + " -lrt",
         }.get(Target) or Link
 
     # not in Link
