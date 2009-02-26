@@ -31,6 +31,7 @@ end
 %
 import ("libm3")
 Module ("Test")
+c_source("TestC")
 build_standalone ()
 library ("test")
 
