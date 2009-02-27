@@ -138,7 +138,7 @@ TYPE Complex = RECORD x, y: LONGREAL END;
 
 <*EXTERNAL*> PROCEDURE frexp (x: LONGREAL;  VAR exp: INTEGER): LONGREAL;
 (* returns a value y and sets exp such that x = y * 2^exp,
-    where ABS(X) is in the interval [0.5, 1). *)
+    where ABS(y) is in the interval [0.5, 1). *)
 
 <*EXTERNAL*> PROCEDURE ldexp (x: LONGREAL; exp: INTEGER): LONGREAL;
 (* returns x * 2^exp. *)
