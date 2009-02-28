@@ -210,9 +210,10 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 (*    Systems.AMD64_NT,
       Systems.AMD64_SOLARIS,
 
-      Systems.HPPA64_LINUX,
-      Systems.HPPA64_HPUX,
-
+      Systems.PA64_LINUX,
+*)
+      Systems.PA64_HPUX,
+(*
       Systems.IA64_FREEBSD,
       Systems.IA64_HPUX,
       Systems.IA64_LINUX,
@@ -242,10 +243,10 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     CASE System OF
     | 
-(*    Systems.HPPA32_HPUX,
-      Systems.HPPA32_LINUX,
-      Systems.HPPA64_HPUX,
-      Systems.HPPA64_LINUX,
+      Systems.PA32_HPUX,
+      Systems.PA64_HPUX,
+(*    Systems.PA32_LINUX,
+      Systems.PA64_LINUX,
 
       Systems.MIPS32_LINUX,
       Systems.MIPS32_IRIX,
@@ -368,6 +369,22 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  First_readable_addr       := 16_1000;
                  Jumpbuf_size              := 53 * Address.size;
                  Jumpbuf_align             := max_align;
+                 Aligned_procedures        := FALSE;
+
+    |  Systems.PA32_HPUX =>
+                 Structure_size_boundary   := 16;
+                 First_readable_addr       := 16_1000;
+                 (* 200 bytes with 8 byte alignment *)
+                 Jumpbuf_size              := 50 * Address.size;
+                 Jumpbuf_align             := 8;
+                 Aligned_procedures        := FALSE;
+
+    |  Systems.PA64_HPUX =>
+                 Structure_size_boundary   := 16;
+                 First_readable_addr       := 16_1000;
+                 (* 640 bytes with 16 byte alignment *)
+                 Jumpbuf_size              := 80 * Address.size;
+                 Jumpbuf_align             := 128;
                  Aligned_procedures        := FALSE;
 
     |  Systems.IBMR2 =>
