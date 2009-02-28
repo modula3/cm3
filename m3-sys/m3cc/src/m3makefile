@@ -6,7 +6,7 @@
 
 readonly Platform_info = {
   "AIX386"    : "i486-ibm-aix",
-  "ALPHA_FREEBSD" : "alpha-freebsd",
+  "ALPHA_FREEBSD" : "alpha-freebsd6",
   "ALPHA_LINUX" : "alpha-linux",
   "ALPHA_NETBSD" : "alpha-netbsd",
   "ALPHA_OPENBSD" : "alpha-openbsd",
@@ -24,7 +24,7 @@ readonly Platform_info = {
   "ARM_LINUX" : "arm-linux-uclibc",
   "BSDI4"     : "i386-unknown-freebsdelf",
   "DS3100"    : "decstation",
-  "FBSD_ALPHA": "alpha-unknown-freebsd",
+  "FBSD_ALPHA": "alpha-unknown-freebsd6",
   "FreeBSD"   : "i486-unknown-bsd",
   "FreeBSD2"  : "i486-unknown-freebsd",
   "FreeBSD3"  : "i386-unknown-freebsd3",
@@ -38,7 +38,7 @@ readonly Platform_info = {
   "I386_NT"     : "i686-pc-mingw32",
   "I386_MINGW"	: "i686-pc-mingw32",
   "I386_CYGWIN" : "i686-pc-cygwin",
-  "IA64_FREEBSD" : "ia64-freebsd",
+  "IA64_FREEBSD" : "ia64-freebsd7",
   "IA64_HPUX" : "ia64-hpux",
   "IA64_LINUX" : "ia64-linux",
   "IA64_NT" : "ia64-nt",
@@ -152,6 +152,14 @@ readonly proc GNU_platform (x) is
 end
 
 readonly m3cc_config = {
+%
+% Note about configuring which assembler to use:
+%  When building m3cg and not gcc driver, the configured assembler is never going
+%  to be run (by m3cg) but it does matter.
+%  Cconfiguration in the "gcc/gcc" directory, which is done as part of
+%  building m3cg, does locate and test an assembler. Building on HP-UX will
+%  fail and say the GNU assembler is required, if it is not the one found.
+%
 
   %
   % The NT386GNU hosted tools work.
@@ -189,6 +197,38 @@ readonly m3cc_config = {
   % If m3cg omits the .register psuedo ops, assembly completely fails, with lots of errors.
   %
   "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes",
+
+  %
+  % Bootstrap procedure for gcc on HPPA{64}-HPUX:
+  % See http://gcc.gnu.org/install/specific.html.
+  % Lots of caveats for GNU ld, so use vendor ld.
+  %  Build gcc 3.3.6 with bundled cc.
+  %    32bit: CC="cc       -Wp,-H16376 -D_CLASSIC_TYPES -D_HPUX_SOURCE"
+  %    64bit: CC="cc +DD64 -Wp,-H16376 -D_CLASSIC_TYPES -D_HPUX_SOURCE"
+  %  Getting patches for ld can help, esp. if building libstdc++.
+  %  This gcc won't support -g.
+  %  Build current binutils with gcc -- just gas.
+  %     http://gcc.gnu.org/install/specific.html offers building
+  %     binutils first but current binutils doesn't work that way.
+  %  Rebuild gcc 3.3.6 with -with-as=path -with-gnu-as.
+  %  Build current gcc also with -with-as=path -with-gnu-as.
+  %  32bit and 64bit HPPA-HPUX require separate -prefix.
+  %    -program-suffix=32 does not suffice.
+  %  I use /usr/local/32 and /usr/local/64.
+  %  Also, vendor tar often can't extract all of gcc, e.g. libstdc++,
+  %  so use GNU tar. And vendor make often can't build gcc, get GNU make.
+  %
+  % m3cg is not actually ever going to run as, only the gcc driver does,
+  % but build/configure is still picky about it -- it affects
+  % the generated assembly for SPARC64, whether or not some versions
+  % of gcc will support -g on HP-UX, and I think whether or not
+  % configure will even succeed on HP-UX (with newer gcc).
+  %
+  "PA32_HPUX"  : "-with-gnu-as -with-as=/usr/local/32/bin/gas",
+  "PA64_HPUX"  : "-with-gnu-as -with-as=/usr/local/64/bin/gas",
+  % If this suffices, good, otherwise specify the full path to the GNU assembler.
+  %"PA32_HPUX"  : "-with-gnu-as",
+  %"PA64_HPUX"  : "-with-gnu-as",
 
   "HPPA"  : "-with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
@@ -355,6 +395,20 @@ if not defined ("no_config")
           Configure = Configure & " -with-sysroot"
           Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
         end
+    end
+
+    %
+    % Config.guess on SPARC32_LINUX yields sparc64 so be explicit.
+    % This is reasonable in all builds, but let's not upset that apple cart.
+    % We still let host and build be sniffed, leading to a typically sparc64 hosted cm3cg.
+    % Actual sparc32 systems (vs. sparc64) are rare so this should be ok.
+    % If we really wanted sparc32 cm3 to produce a sparc32 hosted cm3cg, we could
+    % be explicit about host and/or build.
+    %
+    if equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD) and equal (M3CC_BUILD, "SPARC32_LINUX")
+          Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+          %Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
+          %Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
     end
     Configure = Configure & " -srcdir=../gcc"
     Configure = Configure & " -disable-bootstrap"
