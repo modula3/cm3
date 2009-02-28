@@ -12,4 +12,6 @@ SYSTEM_LIBS = {
 
 SYSTEM_LIBORDER = [ "OPENGL", "MOTIF", "X11", "TCP", "LEX-YACC", "LIBC" ]
 
+M3_SHARED_LIB_ARG = ""
+
 include ("Unix.common")
