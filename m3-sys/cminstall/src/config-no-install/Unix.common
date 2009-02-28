@@ -268,6 +268,11 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         return 0
     end
 
+    local soname = "-Wl,-soname," & lib_sox
+    if equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
+      soname = ""
+    end
+
     % build the shared library
     local pg = ""
     if M3_PROFILING
@@ -279,7 +284,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
             GetGcWrapFlags(),
             pg,
             "-shared",
-            "-Wl,-soname," & lib_sox,
+            soname,
             "-o", lib_sox,
             objects,
             GetM3CoreStaticObjs(lib))
