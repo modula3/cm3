@@ -878,7 +878,7 @@ static GTY((param_is (union tree_node))) htab_t builtins;
 static hashval_t
 htab_hash_builtin (const PTR p)
 {
-  tree t = (tree)p;
+  const_tree t = (const_tree)p;
 
   return htab_hash_pointer(DECL_NAME(t));
 }
@@ -886,8 +886,8 @@ htab_hash_builtin (const PTR p)
 static int
 htab_eq_builtin (const PTR p1, const PTR p2)
 {
-  tree t1 = (tree)p1;
-  tree t2 = (tree)p2;
+  const_tree t1 = (const_tree)p1;
+  const_tree t2 = (const_tree)p2;
 
   return DECL_NAME(t1) == DECL_NAME(t2);
 }
@@ -1613,7 +1613,7 @@ fmt_uid (unsigned long x, char *buf)
 
 static int IsHostBigEndian(void)
 {
-    const static union
+    static const union
     {
         short i;
         char c[sizeof(short)];
