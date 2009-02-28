@@ -242,6 +242,10 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local lib_so   = format("lib%s.so", lib)
     local lib_sox  = format("lib%s.so.5", lib)
 
+    if equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
+      shared = FALSE 
+    end
+
     % first build the non-shared library in the usual ar/ranlib way
 
     local S = ""
@@ -268,11 +272,6 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         return 0
     end
 
-    local soname = "-Wl,-soname," & lib_sox
-    if equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
-      soname = ""
-    end
-
     % build the shared library
     local pg = ""
     if M3_PROFILING
@@ -284,7 +283,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
             GetGcWrapFlags(),
             pg,
             "-shared",
-            soname,
+            "-Wl,-soname," & lib_sox,
             "-o", lib_sox,
             objects,
             GetM3CoreStaticObjs(lib))
@@ -317,6 +316,10 @@ if not defined("skip_lib")
 proc skip_lib(lib, shared) is
     local lib_so   = format("lib%s.so", lib)
     local lib_sox  = format("lib%s.so.5", lib)
+
+    if equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
+      shared = FALSE 
+    end
 
     if shared
         % make sure the shared library stuff gets installed properly
