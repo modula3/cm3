@@ -1,0 +1,15 @@
+readonly SYSTEM_AR = "ar"
+
+SYSTEM_LIBS = {
+    "LIBC"      : [ "-lrt", "-lm", "-lc" ],
+    "LEX-YACC"   : [ "-ll" ],
+    "FLEX-BISON" : [ ],
+    "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
+    "MOTIF"      : [ "-lXm" ],
+    "X11"        : [ "-lXaw", "-lXmu", "-lXext", "-lXt", "-lX11" ],
+    "TCP"        : [ ]
+}
+
+SYSTEM_LIBORDER = [ "OPENGL", "MOTIF", "X11", "TCP", "LEX-YACC", "LIBC" ]
+
+include ("Unix.common")

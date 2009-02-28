@@ -5,8 +5,8 @@ readonly GNU_PLATFORM = "hppa64-hp-hpux11"
 % stabs not supported
 readonly m3back_flags = "-quiet -fPIC"
 %readonly SYSTEM_CC = "cc +DD64" % C compiler
-readonly SYSTEM_CC = "/usr/local/bin/64/gcc -g -fPIC" % C compiler
-readonly SYSTEM_ASM = "/usr/local/bin/64/gas" % Assembler
+readonly SYSTEM_CC = "/usr/local/64/bin/gcc -g -fPIC" % C compiler
+readonly SYSTEM_ASM = "/usr/local/64/bin/gas" % Assembler
 
 %
 % newer platforms never needed these workarounds for
@@ -25,4 +25,4 @@ readonly proc GetM3BackFlag(x) is
     error ("unknown flag: " & x)
 end
 
-include("Unix.common")
+include("HPUX.common")
