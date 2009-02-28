@@ -2,9 +2,9 @@ readonly TARGET = "PA32_HPUX" % code generation target
 readonly WORD_SIZE = "32BITS" % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "hppa2.0w-hp-hpux11"
 
-readonly m3back_flags = "-gstabs+ -quiet -fPIC"
-readonly SYSTEM_CC = "/usr/local/bin/32/gcc -gstabs+ -fPIC" % C compiler
-readonly SYSTEM_ASM = "/usr/local/bin/32/gas" % Assembler
+readonly m3back_flags = "-gstabs+ -quiet"
+readonly SYSTEM_CC = "/usr/local/32/bin/gcc -gstabs+" % C compiler
+readonly SYSTEM_ASM = "/usr/local/32/bin/gas" % Assembler
 
 %
 % newer platforms never needed these workarounds for
@@ -23,4 +23,4 @@ readonly proc GetM3BackFlag(x) is
     error ("unknown flag: " & x)
 end
 
-include("Unix.common")
+include("HPUX.common")
