@@ -91,13 +91,23 @@ struct nesting_info
   tree context;
   tree new_local_var_chain;
   tree debug_var_chain;
-  tree frame_type;
-  tree frame_decl;
-  tree chain_field;
-  tree chain_decl;
+  tree frame_type;  /* Type of the non-local frame struct. */
+  tree frame_decl;  /* Vardecl of the non-local frame struct. */
+  tree chain_field; /* A field of the non-local frame struct that contains 
+                       a copy of the static link.  Used at runtime when 
+                       we followed one SL to get here (and thus we know the 
+                       address of only the non-local frame struct, not of the 
+                       activation record that contains it), and we need to 
+                       follow another static link. */ 
+  tree chain_decl;  /* Vardecl of the static link stored in the activation 
+                       record itself.  This is not contained in the non-local
+                       frame struct.  It is used to follow the first static
+                       link from the executing frame. */ 
   tree nl_goto_field;
 
-  bool any_parm_remapped;
+  bool any_parm_remapped; /* The non-local frame struct contains a pointer
+                             to a parameter.  This will be a copy of the
+                             pointer that was passed by the caller. */ 
   bool any_tramp_created;
   char static_chain_added;
 };
@@ -190,9 +200,9 @@ insert_field_into_struct (tree type, tree field)
    m3-util.c */ 
 static const char * nonlocal_var_rec_name = "_nonlocal_var_rec"; 
 
-/* Build or return the RECORD_TYPE that describes the frame state that is
-   shared between INFO->CONTEXT and its nested functions.  This record will
-   not be complete until finalize_nesting_tree; up until that point we'll
+/* Build or return the RECORD_TYPE that describes the non-local frame struct 
+   that is shared between INFO->CONTEXT and its nested functions.  This record 
+   will not be complete until finalize_nesting_tree; up until that point we'll
    be adding fields as necessary.
 
    We also build the DECL that represents this frame in the function.  */
@@ -347,7 +357,7 @@ get_chain_decl (struct nesting_info *info)
    m3_util.c */ 
 static const char * static_link_copy_field_name = "_static_link_copy_field"; 
 
-/* Build or return the field within the non-local frame state that holds
+/* Build or return the field within the non-local frame struct that holds
    the static chain for INFO->CONTEXT.  This is the way to walk back up
    multiple nesting levels.  */
 
@@ -488,7 +498,7 @@ lookup_tramp_for_decl (struct nesting_info *info, tree decl,
   return *slot;
 } 
 
-/* Build or return the field within the non-local frame state that holds
+/* Build or return the field within the non-local frame struct that holds
    the non-local goto "jmp_buf".  The buffer itself is maintained by the
    rtl middle-end as dynamic stack space is allocated.  */
 
@@ -1810,13 +1820,22 @@ convert_call_expr (tree *tp, int *walk_subtrees, void *data)
   return NULL_TREE;
 }
 
+static bool
+debug_static_links (void) 
+{ return
+    write_symbols != NO_DEBUG
+    && debug_info_level != DINFO_LEVEL_NONE
+    && debug_info_level != DINFO_LEVEL_TERSE;
+
+} /* debug_static_links */ 
+
 /* Walk the nesting tree starting with ROOT, depth first.  Convert all
    trampolines and call expressions.  On the way back up, determine if
    a nested function actually uses its static chain; if not, remember that.  */
 
 static void
 convert_all_function_calls (struct nesting_info *root)
-{
+{ 
   do
     {
       if (root->inner)
@@ -1825,20 +1844,11 @@ convert_all_function_calls (struct nesting_info *root)
       walk_function (convert_tramp_reference, root);
       walk_function (convert_call_expr, root);
 
-      /* If this is a nested function and we are supporting debugging via
-         m3gdb, we always need a chain_decl, so m3gdb can find the static 
-         chain, even if the programmer's code doesn't use it.  This will 
-         also ensure that !DECL_NO_STATIC_CHAIN (root->context), which will 
-         in turn ensure that the static chain value is passed at runtime
-         in calls to function root->context. */ 
-      if (root->outer 
-          && (write_symbols != NO_DEBUG
-              && debug_info_level != DINFO_LEVEL_NONE
-              && debug_info_level != DINFO_LEVEL_TERSE))
-        { (void) get_chain_decl (root); } 
-
       /* If the function does not use a static chain, then remember that.  */
-      if (root->outer && !root->chain_decl && !root->chain_field)
+      if (root->outer && !root->chain_decl && !root->chain_field
+/* REMOVE ME: */ 
+          /* && !debug_static_links () */ 
+         )
 	DECL_NO_STATIC_CHAIN (root->context) = 1;
       else
 	gcc_assert (!DECL_NO_STATIC_CHAIN (root->context));
@@ -1859,6 +1869,21 @@ finalize_nesting_tree_1 (struct nesting_info *root)
   tree stmt_list = NULL;
   tree context = root->context;
   struct function *sf;
+
+/* REMOVEME: */ 
+  /* If this is a nested function and we are supporting debugging via
+     m3gdb, we always need a chain_decl, so m3gdb can find the static 
+     chain, even if the programmer's code doesn't use it. */ 
+  if (false && root->outer && debug_static_links () )
+    { tree static_chain_decl, temp, stmt;
+      /* This is a desperate attempt to get later code generation to 
+         store the static link.  If it works, it'll be a miracle. */ 
+      static_chain_decl = get_chain_decl (root); 
+      stmt = build_addr (static_chain_decl, root->context); 
+      temp = create_tmp_var_for (root, TREE_TYPE (static_chain_decl), NULL);
+      stmt = build_gimple_modify_stmt (temp, static_chain_decl);
+      append_to_statement_list (stmt, &stmt_list);
+    } 
 
   /* If we created a non-local frame type or decl, we need to lay them
      out at this time.  */
