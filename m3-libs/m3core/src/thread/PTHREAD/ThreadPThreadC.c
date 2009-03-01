@@ -13,6 +13,10 @@ not to call (statically, but the compiler can't or won't tell). */
 #include <signal.h>
 #include <semaphore.h>
 #include <string.h>
+#ifdef __hpux
+#include <stdio.h>
+#include <errno.h>
+#endif /* hpux */
 #endif
 #include <pthread.h>
 
@@ -159,6 +163,12 @@ int ThreadPThread__thread_create(VAR(pthread_t) pthread, size_t stackSize, start
     pthread_attr_t attr;
 
     r = pthread_attr_init(&attr);
+#ifdef __hpux
+    if (r == ENOSYS)
+    {
+	fprintf(stderr, "You forgot -pthread or -lpthread.\n");
+    }
+#endif
     assert(r == 0);
     
     r = pthread_attr_getstacksize(&attr, &bytes);
