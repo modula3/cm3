@@ -278,7 +278,7 @@ end
 %------------------------------------------------------------------------------
 
 GNU_CC     = "gcc"
-GNU_CFLAGS = "-g"
+%GNU_CFLAGS = "-g"
 if not defined ("GNU_MAKE")
     GNU_MAKE   = "make"
 end
