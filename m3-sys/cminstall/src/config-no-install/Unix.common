@@ -243,8 +243,8 @@ if not defined("make_lib")
 proc make_lib(lib, options, objects, imported_libs, shared) is
     local suffix = "so"
     local hpux_flags = ""
-    local soname_flags = "-soname"
-    if equal (TARGET, "PA32_HPUX")
+    local soname_flag = "-soname"
+    if equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
       suffix = "sl"
       soname_flag = "+h"
     end
