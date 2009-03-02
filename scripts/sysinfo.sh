@@ -243,6 +243,8 @@ case "${UNAME}" in
     GCWRAPFLAGS="-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
     if [ "${UNAMEM}" = "ppc" ] ; then
       CM3_TARGET=PPC_LINUX
+    elif [ "${UNAMEM}" = "x86_64" ] ; then
+      CM3_TARGET=AMD64_LINUX
     else
       CM3_TARGET=LINUXLIBC6
     fi
