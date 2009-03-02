@@ -166,7 +166,7 @@ int ThreadPThread__thread_create(VAR(pthread_t) pthread, size_t stackSize, start
 #ifdef __hpux
     if (r == ENOSYS)
     {
-	fprintf(stderr, "You forgot -pthread or -lpthread.\n");
+	fprintf(stderr, "You got the nonfunctional pthread stubs on HP-UX. You need to adjust your build commands, such as to link to -lpthread or use -pthread, and not link explicitly to -lc.\n");
     }
 #endif
     assert(r == 0);
