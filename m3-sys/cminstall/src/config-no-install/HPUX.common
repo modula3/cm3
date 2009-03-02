@@ -1,12 +1,12 @@
 readonly SYSTEM_AR = "ar"
 
 SYSTEM_LIBS = {
-    "LIBC"      : [ "-lrt", "-lm", "-lc" ],
+    "LIBC"      : [ "-lrt", "-lm", "-lpthread" ],
     "LEX-YACC"   : [ "-ll" ],
     "FLEX-BISON" : [ ],
     "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
     "MOTIF"      : [ "-lXm" ],
-    "X11"        : [ "-lXaw", "-lXmu", "-lXext", "-lXt", "-lX11" ],
+    "X11"        : [ "-lXext", "-lXt", "-lX11" ],
     "TCP"        : [ ]
 }
 
