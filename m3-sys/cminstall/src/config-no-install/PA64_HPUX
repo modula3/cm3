@@ -1,6 +1,6 @@
 readonly TARGET = "PA64_HPUX" % code generation target
 readonly WORD_SIZE = "64BITS" % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "hppa64-hp-hpux11"
+readonly GNU_PLATFORM = "hppa64-hpux"
 
 % stabs not supported
 readonly m3back_flags = "-quiet -fPIC"

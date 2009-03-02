@@ -17,6 +17,10 @@ readonly SYSTEM_LD = SYSTEM_CC
   & " -static-libgcc -Wl,+s,+vnoshlibunsats,+Oprocelim -B direct -B immediate"
 
 SYSTEM_LIBS = {
+    %
+    % Do not put -lc here. It breaks pthreads.
+    % See http://docs.hp.com/en/1896/pthreads.html
+    %
     "LIBC"      : ["-lrt", "-lm", "-lpthread"],
     "LEX-YACC"   : ["-ll" ],
     "FLEX-BISON" : [],
