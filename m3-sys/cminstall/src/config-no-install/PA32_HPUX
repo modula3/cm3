@@ -1,9 +1,13 @@
 readonly TARGET = "PA32_HPUX" % code generation target
 readonly WORD_SIZE = "32BITS" % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "hppa2.0w-hp-hpux11"
+readonly GNU_PLATFORM = "hppa-hpux"
 
-readonly m3back_flags = "-gstabs+ -quiet"
-readonly SYSTEM_CC = "/usr/local/32/bin/gcc -gstabs+" % C compiler
+%
+% PA/RISC 2.0 has apparently been around a while,
+% but for older machines, remove it.
+%
+readonly m3back_flags = "-fPIC -gstabs+ -quiet -mpa-risc-2-0"
+readonly SYSTEM_CC = "/usr/local/32/bin/gcc -fPIC -gstabs+ -mpa-risc-2-0" % C compiler
 readonly SYSTEM_ASM = "/usr/local/32/bin/gas" % Assembler
 
 %
