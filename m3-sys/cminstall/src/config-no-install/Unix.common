@@ -51,6 +51,10 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
 
 end
 
+if not defined("SYSTEM_LD")
+  SYSTEM_LD = SYSTEM_CC
+end
+
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
@@ -237,14 +241,17 @@ end
 if not defined("make_lib")
 
 proc make_lib(lib, options, objects, imported_libs, shared) is
-    local ret_code = 0
-    local lib_a    = format("lib%s.a", lib)
-    local lib_so   = format("lib%s.so", lib)
-    local lib_sox  = format("lib%s.so.5", lib)
-
-    if equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
-      shared = FALSE 
+    local suffix = "so"
+    local hpux_flags = ""
+    local soname_flags = "-soname"
+    if equal (TARGET, "PA32_HPUX")
+      suffix = "sl"
+      soname_flag = "+h"
     end
+    local ret_code = 0
+    local lib_a   = format("lib%s.a", lib)
+    local lib_so  = format("lib%s.%s", lib, suffix)
+    local lib_sox = format("lib%s.%s.5", lib, suffix)
 
     % first build the non-shared library in the usual ar/ranlib way
 
@@ -279,14 +286,15 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     end
     ret_code =
         try_exec(
-            "@" & SYSTEM_CC,
+            "@" & SYSTEM_LD,
             GetGcWrapFlags(),
             pg,
             "-shared",
-            "-Wl,-soname," & lib_sox,
+            "-Wl," & soname_flag & "," & lib_sox,
             "-o", lib_sox,
             objects,
-            GetM3CoreStaticObjs(lib))
+            GetM3CoreStaticObjs(lib),
+            imported_libs)
     if not equal(ret_code, 0)
         return ret_code
     end
@@ -314,12 +322,12 @@ end
 if not defined("skip_lib")
 
 proc skip_lib(lib, shared) is
-    local lib_so   = format("lib%s.so", lib)
-    local lib_sox  = format("lib%s.so.5", lib)
-
-    if equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
-      shared = FALSE 
+    local suffix = "so"
+    if equal (TARGET, "PA32_HPUX")
+      suffix = "sl" 
     end
+    local lib_so = format("lib%s.%s", lib, suffix)
+    local lib_sox = format("lib%s.%s.5", lib, suffix)
 
     if shared
         % make sure the shared library stuff gets installed properly
@@ -355,7 +363,7 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
     if M3_PROFILING
         args += "-pg"
     end
-    return try_exec("@" & SYSTEM_CC, args)
+    return try_exec("@" & SYSTEM_LD, args)
 end
 
 end
