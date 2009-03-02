@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.65 2009-01-22 00:58:29 jkrell Exp $
+# $Id: sysinfo.sh,v 1.66 2009-03-02 02:48:55 rodney Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -243,6 +243,8 @@ case "${UNAME}" in
     GCWRAPFLAGS="-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
     if [ "${UNAMEM}" = "ppc" ] ; then
       CM3_TARGET=PPC_LINUX
+    elif [ "${UNAMEM}" = "x86_64" ] ; then
+      CM3_TARGET=AMD64_LINUX
     else
       CM3_TARGET=LINUXLIBC6
     fi
