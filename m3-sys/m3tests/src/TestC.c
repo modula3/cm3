@@ -35,12 +35,6 @@ typedef struct T
         size_t uid;
         /* pthreads omitted on purpose */
     } sizes;
-    /* keep these sorted by name for easier human comprehension */
-    /*size_t max_fdset;*/
-    linger_t linger;
-    size_t pad1;
-    timeval_t timeval;
-    size_t pad2;
 } T;
 
 #define SIZEOF_FIELD(t, f) (((t*)0)->f)
@@ -60,11 +54,6 @@ const T t1 =
     sizeof(timeval_t),
     sizeof(tm_t),
     sizeof(uid_t),
-    /*FD_SETSIZE,*/
-    /* linger */ {1, 2},
-    10,
-    /* timeval */ {1, 2},
-    20,
 };
 
 typedef unsigned U;
@@ -83,7 +72,6 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
         U8* a = (U8*)&t1;
         U8* b = (U8*)t2;
         printf("FD_SETSIZE 0x%x\n", (U)FD_SETSIZE);
-        /*printf("offset of max_fdset 0x%x\n", (U)offsetof(T, max_fdset));*/
         for (i = 0; i != sizeof(t1); ++i)
         {
             if (a[i] != b[i])
