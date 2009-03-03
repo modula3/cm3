@@ -31,12 +31,6 @@ TYPE
       uid := BYTESIZE(Usysdep.uid_t);
       (* pthreads omitted on purpose *)
     END;
-    (* keep these sorted by name for easier human comprehension *)
-    (*max_fdset := Usysdep.MAX_FDSET;*)
-    linger := Usysdep.struct_linger {1, 2};
-    pad1 := 10;
-    timeval := Usysdep.struct_timeval {1, 2};
-    pad2 := 20;
   END;
 
 <*EXTERNAL "Test__CheckFloatsAndTypes"*> PROCEDURE CheckFloatsAndTypes(READONLY t:T; size := BYTESIZE(T); jbsize := BYTESIZE(Csetjmp.jmp_buf));
