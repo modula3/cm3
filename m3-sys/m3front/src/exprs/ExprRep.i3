@@ -24,8 +24,8 @@ REVEAL
     evaluate     (): M3.Expr                       := NoValue;
     getBounds    (VAR min, max: Target.Int)        := NoBounds;
     isWritable   (lhs: BOOLEAN): BOOLEAN           := IsNever;
-    isDesignator (lhs := FALSE): BOOLEAN           := IsNever;
-    isZeroes     (lhs := FALSE): BOOLEAN           := IsNever;
+    isDesignator (<*UNUSED*> lhs := FALSE): BOOLEAN:= IsNever;
+    isZeroes     (<*UNUSED*> lhs := FALSE): BOOLEAN:= IsNever;
     need_addr    ()                                := NotAddressable;
     genFPLiteral (mbuf: M3Buf.T)                   := NoFPLiteral;
     prepLiteral  (type: M3.Type;  is_const: BOOLEAN) := NoPrepLiteral;
@@ -33,7 +33,7 @@ REVEAL
     prep         ()                                := NoCompile;
     compile      ()                                := NoCompile;
     prepLV       (lhs: BOOLEAN)                    := NotLValue;
-    compileLV    (lhs := FALSE)                    := NotLValue;
+    compileLV    (lhs: BOOLEAN)                    := NotLValue;
     prepBR       (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     compileBR    (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     note_write   ()                                := NotWritable;
@@ -53,7 +53,7 @@ PROCEDURE NoCheck        (e: M3.Expr;  VAR cs: M3.CheckState);
 PROCEDURE NoValue        (e: M3.Expr): M3.Expr;
 PROCEDURE Self           (e: M3.Expr): M3.Expr;
 PROCEDURE NoBounds       (e: M3.Expr;  VAR min, max: Target.Int);
-PROCEDURE IsNever        (e: M3.Expr;  lhs := FALSE): BOOLEAN;
+PROCEDURE IsNever        (e: M3.Expr;  lhs: BOOLEAN): BOOLEAN;
 PROCEDURE IsAlways       (e: M3.Expr;  lhs: BOOLEAN): BOOLEAN;
 PROCEDURE NeverEq        (e: M3.Expr; x: M3.Expr; z: M3.EqAssumption): BOOLEAN;
 PROCEDURE NoFPLiteral    (e: M3.Expr;  mbuf: M3Buf.T);

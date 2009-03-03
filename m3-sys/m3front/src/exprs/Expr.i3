@@ -75,10 +75,10 @@ PROCEDURE Compile (t: T);
 (* emits code to evaluate the expression onto the top of stack *)
 
 PROCEDURE PrepLValue (t: T; lhs: BOOLEAN);
-PROCEDURE CompileLValue (t: T);
+PROCEDURE CompileLValue (t: T; lhs: BOOLEAN);
 (* emits code to evaluate 't's L-value into s0.A. *)
 
-PROCEDURE CompileAddress (t: T);
+PROCEDURE CompileAddress (t: T; lhs: BOOLEAN);
 (* emits code to evaluate 't's byte address onto the top of stack.
    Use PrepLValue to prep these expressions. *)
 

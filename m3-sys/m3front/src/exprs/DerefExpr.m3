@@ -115,17 +115,17 @@ PROCEDURE Prep (p: P) =
 PROCEDURE Compile (p: P) =
   VAR t := p.type;  info: Type.Info;
   BEGIN
-    IF p.tmp = NIL THEN
-      Expr.Compile (p.a);
-      EVAL Type.CheckInfo (t, info);
-      CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
-      CG.Boost_alignment (info.alignment);
-      Type.LoadScalar (t);
-    ELSE
+    IF p.tmp # NIL THEN
       CG.Push (p.tmp);
       CG.Free (p.tmp);
       p.tmp := NIL;
-    END
+      RETURN;
+    END;
+    Expr.Compile (p.a);
+    EVAL Type.CheckInfo (t, info);
+    CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
+    CG.Boost_alignment (info.alignment);
+    Type.LoadScalar (t);
   END Compile;
 
 PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
@@ -137,7 +137,8 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
       IF NOT info.isTraced THEN RETURN END;
       EVAL Type.CheckInfo (Expr.TypeOf (p.a), info);
       IF NOT info.isTraced THEN RETURN END;
-      CompileLV (p, lhs := TRUE);
+      Expr.Compile (p.a);
+      RunTyme.EmitCheckStoreTraced ();
       p.tmp := CG.Pop ();
     END
   END PrepLV;
@@ -145,19 +146,17 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
 PROCEDURE CompileLV (p: P; lhs: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
-    IF p.tmp = NIL THEN
-      Expr.Compile (p.a);
-      EVAL Type.CheckInfo (p.type, info);
-      CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
-      IF lhs AND Host.doGenGC THEN
-        RunTyme.EmitCheckStoreTraced ();
-      END;
-      CG.Boost_alignment (info.alignment);
-    ELSE
+    IF p.tmp # NIL THEN
+      <*ASSERT lhs*>
       CG.Push (p.tmp);
       CG.Free (p.tmp);
       p.tmp := NIL;
+    ELSE
+      Expr.Compile (p.a);
     END;
+    EVAL Type.CheckInfo (p.type, info);
+    CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
+    CG.Boost_alignment (info.alignment);
   END CompileLV;
 
 PROCEDURE NoteWrites (p: P) =

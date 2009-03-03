@@ -97,7 +97,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
       END;
     END;
 
-    Expr.CompileLValue (lhs);
+    Expr.CompileLValue (lhs, lhs := TRUE);
     lvalue := CG.Pop ();
     CG.Push (lvalue);
 
