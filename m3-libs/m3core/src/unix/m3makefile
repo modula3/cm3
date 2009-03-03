@@ -30,7 +30,7 @@ readonly _UnixPieces = {
   "IRIX5"           : [ "irix-5.2",                                "uin-common", "big-endian" ],
   "LINUX"           : [ "linux",                                   "uin-common", "little-endian" ],
   "LINUXELF"        : [ "linux",                                   "uin-common", "little-endian" ],
-  "LINUXLIBC6"      : [ "linux-libc6", "linux-i386", "linux-32",   "uin-common", "little-endian" ],
+  "LINUXLIBC6"      : [ "linux-common", "linux-libc6", "linux-i386", "linux-32",   "uin-common", "little-endian" ],
   "MIPS64_OPENBSD"  : [ "openbsd-common",                          "uin-len",    "big-endian" ],
   "NEXT"            : [ "ultrix-3-1.generic", "ultrix-3-1.NEXT",   "uin-common", "big-endian" ],
   "NT386"           : [ "cygwin",                                  "uin-common", "little-endian" ],

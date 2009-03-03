@@ -37,8 +37,6 @@ TYPE
     pad1 := 10;
     timeval := Usysdep.struct_timeval {1, 2};
     pad2 := 20;
-    tm := Usysdep.struct_tm {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    pad3 := 30;
   END;
 
 <*EXTERNAL "Test__CheckFloatsAndTypes"*> PROCEDURE CheckFloatsAndTypes(READONLY t:T; size := BYTESIZE(T); jbsize := BYTESIZE(Csetjmp.jmp_buf));

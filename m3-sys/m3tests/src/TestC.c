@@ -41,8 +41,6 @@ typedef struct T
     size_t pad1;
     timeval_t timeval;
     size_t pad2;
-    tm_t tm;
-    size_t pad3;
 } T;
 
 #define SIZEOF_FIELD(t, f) (((t*)0)->f)
@@ -67,8 +65,6 @@ const T t1 =
     10,
     /* timeval */ {1, 2},
     20,
-    /* tm */ {1, 2, 3, 4, 5, 6, 7, 8, 9},
-    30
 };
 
 typedef unsigned U;
