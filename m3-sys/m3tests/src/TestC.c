@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <assert.h>
 #include <setjmp.h>
+#include <stdio.h>
 
 typedef struct linger linger_t;
 typedef struct timeval timeval_t;
@@ -96,9 +97,15 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
         }
         assert(memcmp(&t1, t2, sizeof(t1)) == 0);
     }
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__)
     assert(jbsize >= (sizeof(jmp_buf) / 4));
+#elif defined(__sun)
+    assert(jbsize >= sizeof(jmp_buf));
 #else
-    assert(jbsize == sizeof(jmp_buf));
+    if (jbsize != sizeof(jmp_buf))
+    {
+        fprintf(stderr, "%x vs. %x\n", (U)jbsize, (U)sizeof(jmp_buf));
+        assert(jbsize == sizeof(jmp_buf));
+    }
 #endif
 }
