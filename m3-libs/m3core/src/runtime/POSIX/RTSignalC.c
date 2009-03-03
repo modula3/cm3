@@ -160,7 +160,7 @@ Handlers[] =
     { SIGBUS,  SegV },
 };
 
-sigaction_t InitialHandlers[NUMBER_OF(Handlers)];
+static sigaction_t InitialHandlers[NUMBER_OF(Handlers)];
 
 void InstallOneHandler(size_t Index)
 {
