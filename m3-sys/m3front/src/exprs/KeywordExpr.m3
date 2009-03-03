@@ -104,9 +104,9 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
     Expr.PrepLValue (p.expr, lhs);
   END PrepLV;
 
-PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
+PROCEDURE CompileLV (p: P;  lhs: BOOLEAN) =
   BEGIN
-    Expr.CompileLValue (p.expr);
+    Expr.CompileLValue (p.expr, lhs);
   END CompileLV;
 
 PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =

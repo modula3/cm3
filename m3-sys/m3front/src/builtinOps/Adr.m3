@@ -41,7 +41,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
 
 PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
-    Expr.CompileLValue (ce.args[0]);
+    Expr.CompileLValue (ce.args[0], lhs := FALSE);
     CG.Check_byte_aligned ();
   END Compile;
 

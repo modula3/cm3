@@ -208,7 +208,7 @@ PROCEDURE Prep (p: P) =
     | Kind.D_to_A =>
         INC (p.tmp_cnt);
         Expr.PrepLValue (e, lhs := FALSE);
-        Expr.CompileAddress (e);
+        Expr.CompileAddress (e, lhs := FALSE);
         p.tmp := BuildArray (p, sz);
     | Kind.S_to_A =>
         INC (p.tmp_cnt);
@@ -273,7 +273,7 @@ PROCEDURE Compile (p: P) =
       Kind.V_to_A =>
         PushTmp (p, t_align);
     | Kind.D_to_S =>
-        Expr.CompileAddress (e);
+        Expr.CompileAddress (e, lhs := FALSE);
         CG.Boost_alignment (t_align);
     | Kind.S_to_S =>
         Expr.Compile (e);
@@ -360,7 +360,7 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
     | Kind.D_to_A =>
         INC (p.tmp_cnt);
         Expr.PrepLValue (e, lhs);
-        Expr.CompileLValue (e);
+        Expr.CompileLValue (e, lhs);
         p.tmp := BuildArray (p, sz);
     | Kind.S_to_A =>
         INC (p.tmp_cnt);
@@ -388,7 +388,7 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
     END;
   END PrepLV;
 
-PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
+PROCEDURE CompileLV (p: P; lhs: BOOLEAN) =
   VAR
     e  := p.expr;
     u  := Expr.TypeOf (e);
@@ -414,7 +414,7 @@ PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
       Kind.D_to_V,
       Kind.S_to_V,
       Kind.V_to_V =>
-        Expr.CompileLValue (p.expr);
+        Expr.CompileLValue (p.expr, lhs);
         CG.Boost_alignment (t_align);
 
     | Kind.D_to_A,
@@ -444,7 +444,7 @@ PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =
     IF TInt.LT (max1, max) THEN max := max1 END;
   END Bounder;
 
-PROCEDURE IsDesignator (p: P; <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
+PROCEDURE IsDesignator (p: P;  <*UNUSED*> lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsDesignator (p.expr);
   END IsDesignator;

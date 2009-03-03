@@ -63,7 +63,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
 PROCEDURE Compile (ce: CallExpr.T) =
   VAR lhs := ce.args[0];
   BEGIN
-    Expr.CompileAddress (lhs); CG.Force ();
+    Expr.CompileAddress (lhs, lhs := TRUE); CG.Force ();
     Expr.Compile (ce.args[1]); CG.Force ();
     Expr.Compile (ce.args[2]); CG.Force ();
     CG.CasP (Type.CGType (Expr.TypeOf (lhs), in_memory := TRUE),

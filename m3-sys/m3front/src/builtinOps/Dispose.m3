@@ -47,13 +47,13 @@ PROCEDURE Prep (ce: CallExpr.T) =
     Expr.PrepLValue (e, lhs := TRUE);
     t := Type.CheckInfo (t, info);
     IF info.isTraced THEN
-      Expr.CompileLValue (e);
+      Expr.CompileLValue (e, lhs := TRUE);
       CG.Load_nil ();
       CG.Store_indirect (CG.Type.Addr, 0, Target.Address.size);
     ELSE
       proc := RunTyme.LookUpProc (PHook [Type.IsSubtype (t, ObjectAdr.T)]);
       Procedure.StartCall (proc);
-      Expr.CompileAddress (e);
+      Expr.CompileAddress (e, lhs := TRUE);
       CG.Pop_param (CG.Type.Addr);
       Procedure.EmitCall (proc);
     END;

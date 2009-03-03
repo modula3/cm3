@@ -111,7 +111,7 @@ PROCEDURE LookUp (name: M3ID.T): Value.T =
 PROCEDURE EmitCheckLoadTracedRef () =
   VAR
     proc := LookUpProc (Hook.CheckLoadTracedRef);
-    ref := CG.Pop (); 
+    ref := CG.Pop_temp (); 
     skip := CG.Next_label ();
   BEGIN
     CG.Push (ref);
@@ -132,7 +132,7 @@ PROCEDURE EmitCheckLoadTracedRef () =
 PROCEDURE EmitCheckStoreTraced () =
   VAR
     proc := LookUpProc (Hook.CheckStoreTraced);
-    ref := CG.Pop ();
+    ref := CG.Pop_temp ();
     skip := CG.Next_label ();
   BEGIN
     CG.Push (ref);

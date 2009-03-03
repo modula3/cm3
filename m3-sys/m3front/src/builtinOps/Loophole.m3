@@ -53,9 +53,9 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
     Expr.PrepLValue (ce.args[0], lhs);
   END PrepLV;
 
-PROCEDURE CompileLV (ce: CallExpr.T; <*UNUSED*> lhs: BOOLEAN) =
+PROCEDURE CompileLV (ce: CallExpr.T; lhs: BOOLEAN) =
   BEGIN
-    Expr.CompileLValue (ce.args[0]);
+    Expr.CompileLValue (ce.args[0], lhs);
   END CompileLV;
 
 PROCEDURE IsWritable (ce: CallExpr.T;  lhs: BOOLEAN): BOOLEAN =
