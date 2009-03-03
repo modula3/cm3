@@ -202,7 +202,7 @@ PROCEDURE Compile (p: P) =
     END
   END Compile;
 
-PROCEDURE CompileLV (p: P; <*UNUSED*> lhs := FALSE) =
+PROCEDURE CompileLV (p: P; lhs := FALSE) =
   VAR
     ti, te    : Type.T;
     subscript : INTEGER;
@@ -220,7 +220,7 @@ PROCEDURE CompileLV (p: P; <*UNUSED*> lhs := FALSE) =
     <* ASSERT b *>
 
     IF Expr.IsDesignator (p.a)
-      THEN Expr.CompileLValue (p.a);
+      THEN Expr.CompileLValue (p.a, lhs);
       ELSE Expr.Compile (p.a);
     END;
 

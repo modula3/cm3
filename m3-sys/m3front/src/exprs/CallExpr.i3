@@ -64,7 +64,7 @@ PROCEDURE NewMethodList
 PROCEDURE Is (e: Expr.T): BOOLEAN;
 PROCEDURE IsUserProc (e: Expr.T): BOOLEAN;
 
-PROCEDURE IsNever        (t: T;  lhs := FALSE): BOOLEAN;
+PROCEDURE IsNever        (t: T;  lhs: BOOLEAN): BOOLEAN;
 PROCEDURE IsAlways       (t: T): BOOLEAN;
 PROCEDURE NoValue        (t: T): Expr.T;
 PROCEDURE NoBounds       (t: T;  VAR min, max: Target.Int);

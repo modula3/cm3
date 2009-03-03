@@ -153,18 +153,18 @@ PROCEDURE PrepLValue (t: T; lhs: BOOLEAN) =
     t.prepLV (lhs);
   END PrepLValue;
 
-PROCEDURE CompileLValue (t: T) =
+PROCEDURE CompileLValue (t: T; lhs: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
     <* ASSERT t.checked *>
-    t.compileLV ();
+    t.compileLV (lhs);
   END CompileLValue;
 
-PROCEDURE CompileAddress (t: T) =
+PROCEDURE CompileAddress (t: T; lhs: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
     <* ASSERT t.checked *>
-    t.compileLV ();
+    t.compileLV (lhs);
     CG.Check_byte_aligned ();
   END CompileAddress;
 

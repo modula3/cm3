@@ -68,7 +68,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
   BEGIN
     Expr.PrepLValue (p.lhs, lhs := TRUE);
     PrepForEmit (tlhs, p.rhs, initializing := FALSE);
-    Expr.CompileLValue (p.lhs);
+    Expr.CompileLValue (p.lhs, lhs := TRUE);
     DoEmit (tlhs, p.rhs);
     Expr.NoteWrite (p.lhs);
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
@@ -350,7 +350,7 @@ PROCEDURE AssignRecord (tlhs: Type.T;  rhs: Expr.T;
   BEGIN
     AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Expr.IsDesignator (rhs)
-      THEN Expr.CompileLValue (rhs);
+      THEN Expr.CompileLValue (rhs, lhs := FALSE);
       ELSE Expr.Compile (rhs);
     END;
     CG.Copy (lhs_info.size, overlap := FALSE);
@@ -362,7 +362,7 @@ PROCEDURE AssignSet (tlhs: Type.T;  rhs: Expr.T;
     AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Type.IsStructured (tlhs) THEN
       IF Expr.IsDesignator (rhs)
-        THEN Expr.CompileLValue (rhs);
+        THEN Expr.CompileLValue (rhs, lhs := FALSE);
         ELSE Expr.Compile (rhs);
       END;
       CG.Copy (lhs_info.size, overlap := FALSE);
@@ -397,7 +397,7 @@ PROCEDURE AssignArray (tlhs: Type.T;  e_rhs: Expr.T;
     (* capture the lhs & rhs pointers *)
     IF (openRHS) OR (openLHS) THEN lhs := CG.Pop (); END;
     IF Expr.IsDesignator (e_rhs)
-      THEN Expr.CompileLValue (e_rhs);
+      THEN Expr.CompileLValue (e_rhs, lhs := FALSE);
       ELSE Expr.Compile (e_rhs);
     END;
     IF (openRHS) OR (openLHS) THEN rhs := CG.Pop (); END;
@@ -563,7 +563,7 @@ PROCEDURE DoCheckRecord (tlhs: Type.T;  rhs: Expr.T) =
   BEGIN
     AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Expr.IsDesignator (rhs)
-      THEN Expr.CompileLValue (rhs);
+      THEN Expr.CompileLValue (rhs, lhs := FALSE);
       ELSE Expr.Compile (rhs);
     END;
   END DoCheckRecord;
@@ -573,7 +573,7 @@ PROCEDURE DoCheckSet (tlhs: Type.T;  rhs: Expr.T) =
     AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Type.IsStructured (tlhs) THEN
       IF Expr.IsDesignator (rhs)
-        THEN Expr.CompileLValue (rhs);
+        THEN Expr.CompileLValue (rhs, lhs := FALSE);
         ELSE Expr.Compile (rhs);
       END;
     ELSE (* small set *)
@@ -590,7 +590,7 @@ PROCEDURE DoCheckArray (tlhs: Type.T;  e_rhs: Expr.T) =
   BEGIN
     (* evaluate the right-hand side *)
     IF Expr.IsDesignator (e_rhs)
-      THEN Expr.CompileLValue (e_rhs);
+      THEN Expr.CompileLValue (e_rhs, lhs := FALSE);
       ELSE Expr.Compile (e_rhs);
     END;
 

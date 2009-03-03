@@ -108,7 +108,7 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     | Kind.designator =>
         Variable.Split (p.var, tlhs, global, indirect, lhs);
         Expr.PrepLValue (p.expr, lhs);
-        Expr.CompileAddress (p.expr);
+        Expr.CompileAddress (p.expr, lhs);
         val := CG.Pop ();
     | Kind.structure =>
         AssignStmt.PrepForEmit (Value.TypeOf (p.var), p.expr,
