@@ -41,7 +41,7 @@ readonly _UnixPieces = {
   "PA32_HPUX"       : [ "hpux-common",                             "uin-common", "big-endian" ],
   "PA64_HPUX"       : [ "hpux-common",                             "uin-common", "big-endian" ],
   "PPC32_OPENBSD"   : [ "openbsd-common",                           "uin-len",    "big-endian" ],
-  "PPC_DARWIN"      : [ "darwin-generic", "darwin-ppc",             "uin-len",    "big-endian" ],
+  "PPC_DARWIN"      : [ "darwin-common", "darwin-generic", "darwin-ppc", "uin-len",    "big-endian" ],
   "PPC_LINUX"       : [ "linux-common", "linux-32",                 "uin-common", "big-endian" ],
   "SEQUENT"         : [ "ultrix-3-1.generic", "ultrix-3-1.SEQUENT","uin-common", "little-endian" ],
   "SOLgnu"          : [ "solaris-common", "solaris-2-x",           "uin-common", "big-endian" ],

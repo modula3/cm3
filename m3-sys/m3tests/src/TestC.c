@@ -2,9 +2,11 @@
 /* All rights reserved.                               */
 /* See the file COPYRIGHT for a full description.     */
 
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/socket.h>
 #include <stddef.h>
 #include <time.h>
-#include <sys/socket.h>
 #include <netdb.h>
 #include <assert.h>
 #include <setjmp.h>
