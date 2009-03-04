@@ -11,17 +11,23 @@
 #include <assert.h>
 #include <setjmp.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef struct linger linger_t;
 typedef struct timeval timeval_t;
 typedef struct tm tm_t;
 typedef struct hostent hostent_t;
+typedef unsigned U;
+typedef unsigned char U8;
+
+#define SIZEOF_FIELD(t, f) (((t*)0)->f)
+#define OFFSET(a, b) ((U)offsetof(a, b))
+#define SIZE(a) ((U)sizeof(a))
 
 typedef struct T
 {
-    /* If these are both 11, then the sizes don't match between Modula-3 and C */
-    float f[12];
-    double d[12];
+    double d[11];
+    float f[11];
     struct {
         /* keep these sorted by name for easier human comprehension */
         size_t gid;
@@ -39,59 +45,59 @@ typedef struct T
     } sizes;
 } T;
 
-#define SIZEOF_FIELD(t, f) (((t*)0)->f)
-
 const T t1 =
 {
-    { 0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 12.34, -124.456, 1000.0, -10000.0, -123456.789e0 },
-    { 0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 12.34, -124.456, 1000.0, -10000.0,  123456.789e0 },
-    sizeof(gid_t),
-    sizeof(SIZEOF_FIELD(hostent_t, h_addrtype)),
-    sizeof(SIZEOF_FIELD(hostent_t, h_length)),
-    sizeof(linger_t),
-    sizeof(mode_t),
-    sizeof(pid_t),
-    sizeof(socklen_t),
-    sizeof(time_t),
-    sizeof(timeval_t),
-    sizeof(tm_t),
-    sizeof(uid_t),
+    { 0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 12.34, -124.456, 1000.0, -10000.0 },
+    { 0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 12.34, -124.456, 1000.0, -10000.0 },
+    {
+    SIZE(gid_t),
+    SIZE(SIZEOF_FIELD(hostent_t, h_addrtype)),
+    SIZE(SIZEOF_FIELD(hostent_t, h_length)),
+    SIZE(linger_t),
+    SIZE(mode_t),
+    SIZE(pid_t),
+    SIZE(socklen_t),
+    SIZE(time_t),
+    SIZE(timeval_t),
+    SIZE(tm_t),
+    SIZE(uid_t)
+    }
 };
-
-typedef unsigned U;
-typedef unsigned char U8;
 
 void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
 {
-    if (size != sizeof(t1))
+    if (size != SIZE(t1))
     {
-        printf("%x vs. %x\n", (U)size, (U)sizeof(t1));
-        assert(size == sizeof(t1));
+        printf("%x vs. %x\n", (U)size, SIZE(t1));
+        assert(size == SIZE(t1));
     }
-    if (memcmp(&t1, t2, sizeof(t1)) != 0)
+    if (memcmp(&t1, t2, SIZE(t1)) != 0)
     {
         U i = 0;
         U8* a = (U8*)&t1;
         U8* b = (U8*)t2;
         printf("FD_SETSIZE 0x%x\n", (U)FD_SETSIZE);
-        for (i = 0; i != sizeof(t1); ++i)
+        printf("t1 d[0], d[1]: %x, %x\n", OFFSET(T, d[0]), OFFSET(T, d[1]));
+        printf("t1 f[0], f[1]: %x, %x\n", OFFSET(T, f[0]), OFFSET(T, f[1]));
+        printf("sizes: %x\n", OFFSET(T, sizes));
+        for (i = 0; i != SIZE(t1); ++i)
         {
             if (a[i] != b[i])
             {
                 printf("different at offset 0x%x\n", i);
             }
         }
-        assert(memcmp(&t1, t2, sizeof(t1)) == 0);
+        assert(memcmp(&t1, t2, SIZE(t1)) == 0);
     }
 #if defined(__CYGWIN__)
-    assert(jbsize >= (sizeof(jmp_buf) / 4));
+    assert(jbsize >= (SIZE(jmp_buf) / 4));
 #elif defined(__sun)
-    assert((jbsize == sizeof(jmp_buf)) || (jbsize == sizeof(sigjmp_buf)));
+    assert((jbsize == SIZE(jmp_buf)) || (jbsize == SIZE(sigjmp_buf)));
 #else
-    if (jbsize != sizeof(jmp_buf))
+    if (jbsize != SIZE(jmp_buf))
     {
-        fprintf(stderr, "%x vs. %x\n", (U)jbsize, (U)sizeof(jmp_buf));
-        assert(jbsize == sizeof(jmp_buf));
+        fprintf(stderr, "%x vs. %x\n", (U)jbsize, SIZE(jmp_buf));
+        assert(jbsize == SIZE(jmp_buf));
     }
 #endif
 }
