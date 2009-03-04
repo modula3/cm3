@@ -1613,11 +1613,12 @@ fmt_uid (unsigned long x, char *buf)
 
 static int IsHostBigEndian(void)
 {
-    const static union
+    union
     {
         int i;
         char c[sizeof(int)];
-    } u = { 1 };
+    } u;
+    u.i = 1;
     return (u.c[0] == 0);
 }
 
