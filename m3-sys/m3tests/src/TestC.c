@@ -45,7 +45,7 @@ typedef struct T
     } sizes;
 } T;
 
-const T t1 =
+static const T t1 =
 {
     { 0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 12.34, -124.456, 1000.0, -10000.0 },
     { 0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 12.34, -124.456, 1000.0, -10000.0 },
@@ -84,7 +84,7 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
         {
             if (a[i] != b[i])
             {
-                printf("different at offset 0x%x\n", i);
+                printf("different at offset 0x%x (%x %x)\n", i, a[i], b[i]);
             }
         }
         assert(memcmp(&t1, t2, SIZE(t1)) == 0);
