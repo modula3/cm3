@@ -1671,14 +1671,11 @@ scan_float (unsigned *out_Kind)
 
   /* When crossing and host/target different endian, swap the longs. */
 
-  if (Size == 8)
+  if ((Size == 8) && (IsHostBigEndian() != FLOAT_WORDS_BIG_ENDIAN))
   {
-      if (IsHostBigEndian() != FLOAT_WORDS_BIG_ENDIAN)
-      {
-          long t = Longs[0];
-          Longs[0] = Longs[1];
-          Longs[1] = t;
-      }
+      long t = Longs[0];
+      Longs[0] = Longs[1];
+      Longs[1] = t;
   }
 
   if (option_trace_all)
