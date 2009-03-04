@@ -1616,7 +1616,7 @@ static int IsHostBigEndian(void)
     const static union
     {
         int i;
-        char c[sizeof(short)];
+        char c[sizeof(int)];
     } u = { 1 };
     return (u.c[0] == 0);
 }
