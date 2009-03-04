@@ -1615,7 +1615,7 @@ static int IsHostBigEndian(void)
 {
     const static union
     {
-        short i;
+        int i;
         char c[sizeof(short)];
     } u = { 1 };
     return (u.c[0] == 0);
@@ -1673,11 +1673,7 @@ scan_float (unsigned *out_Kind)
 
   if (Size == 8)
   {
-#if FLOAT_WORDS_BIG_ENDIAN
-      if (IsHostBigEndian() == 0)
-#else
-      if (IsHostBigEndian() == 1)
-#endif
+      if (IsHostBigEndian() != FLOAT_WORDS_BIG_ENDIAN)
       {
           long t = Longs[0];
           Longs[0] = Longs[1];
