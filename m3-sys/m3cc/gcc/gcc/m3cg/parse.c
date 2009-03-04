@@ -1611,6 +1611,16 @@ fmt_uid (unsigned long x, char *buf)
 
 /*----------------------------------------------------------------- float ---*/
 
+static int IsHostBigEndian(void)
+{
+    const static union
+    {
+        short i;
+        char c[sizeof(short)];
+    } u = { 1 };
+    return (u.c[0] == 0);
+}
+
 #define FLOAT(x, fkind)  unsigned fkind;  tree x = scan_float(&fkind)
 
 static tree
@@ -1658,6 +1668,22 @@ scan_float (unsigned *out_Kind)
     {
       Bytes[i / 4 * sizeof(long) + i % 4] = (unsigned char) (0xFF & get_int ());
     }
+
+  /* When crossing and host/target different endian, swap the longs. */
+
+  if (Size == 8)
+  {
+#if FLOAT_WORDS_BIG_ENDIAN
+      if (IsHostBigEndian() == 0)
+#else
+      if (IsHostBigEndian() == 1)
+#endif
+      {
+          long t = Longs[0];
+          Longs[0] = Longs[1];
+          Longs[1] = t;
+      }
+  }
 
   if (option_trace_all)
     {
