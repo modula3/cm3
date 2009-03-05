@@ -285,7 +285,7 @@ PROCEDURE FinishTypecell (def: RT0.TypeDefn;  m: RT0.ModulePtr) =
 
       (* allocate my default method list *)
       IF (odef.methodSize > 0) AND (odef.defaultMethods = NIL) THEN
-        odef.defaultMethods := Malloc (odef.methodSize);
+        odef.defaultMethods := Calloc (1, odef.methodSize);
 
         (* initialize my method suite from my parent *)
         IF (t.common.kind = ORD (TK.Obj)) AND (t.defaultMethods # NIL) THEN
@@ -668,7 +668,7 @@ PROCEDURE NewInfo (): InfoPtr =
   VAR p: InfoPtr;
   BEGIN
     IF (n_info >= InfoChunk) THEN
-      info_pool := Malloc (InfoChunk * BYTESIZE (Info));
+      info_pool := Calloc (InfoChunk, BYTESIZE (Info));
       n_info := 0;
     END;
     p := info_pool + n_info * ADRSIZE (Info);
@@ -721,14 +721,14 @@ PROCEDURE Expand (VAR m: InfoMap) =
       m.cnt  := 0;
       m.max  := m.initial_size;  (* must be a power of two *)
       m.mask := m.max - 1;
-      m.map  := Malloc (m.max * BYTESIZE (InfoPtr));
+      m.map  := Calloc (m.max, BYTESIZE (InfoPtr));
     ELSE
       new := m;
       new.cnt  := 0;
       new.full := m.full + m.full;
       new.max  := m.max + m.max;
       new.mask := new.max - 1;
-      new.map  := Malloc (new.max * BYTESIZE (InfoPtr));
+      new.map  := Calloc (new.max, BYTESIZE (InfoPtr));
 
       (* re-insert the existing elements *)
       pi := m.map;
@@ -812,13 +812,12 @@ PROCEDURE HashBrand (b: RT0.BrandPtr): INTEGER =
     RETURN hash;
   END HashBrand;
 
-PROCEDURE Malloc (n_bytes: INTEGER): ADDRESS =
-  VAR res := Cstdlib.malloc (n_bytes);
+PROCEDURE Calloc (n: INTEGER; n_bytes: INTEGER): ADDRESS =
+  VAR res := Cstdlib.calloc (n, n_bytes);
   BEGIN
     IF (res = NIL) THEN RAISE RuntimeError.E (RTE.OutOfMemory); END;
-    RTMisc.Zero (res, n_bytes);
     RETURN res;
-  END Malloc;
+  END Calloc;
 
 (*-------------------------------------------------------- runtime errors ---*)
 
