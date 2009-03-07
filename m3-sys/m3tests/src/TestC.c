@@ -26,8 +26,8 @@ typedef unsigned char U8;
 
 typedef struct T
 {
-    double d[11];
-    float f[11];
+    double d[10];
+    float f[10];
     struct {
         /* keep these sorted by name for easier human comprehension */
         size_t gid;
@@ -46,8 +46,8 @@ typedef struct T
 
 static const T t1 =
 {
-    { 0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 12.34, -124.456, 1000.0, -10000.0 },
-    { 0.0, 1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 12.34, -124.456, 1000.0, -10000.0 },
+    { 0.0, 0.5, 1.0, 2.0, -1.0, -3.0, 12.34, -124.456, 1000.0, -10000.0 },
+    { 0.0, 0.5, 1.0, 2.0, -1.0, -3.5, 12.34, -124.456, 1000.0, -10000.0 },
     {
     SIZE(gid_t),
     SIZE(SIZEOF_FIELD(hostent_t, h_addrtype)),
