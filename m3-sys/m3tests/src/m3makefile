@@ -279,6 +279,8 @@ end
 %p_test ("p2", "p210", "open array initializers runtime failure")
 
 p_test ("p0", "p001", "Hello world")
+p_test ("p2", "p211", "float and double constants work")
+p_test ("p2", "p212", "float and double constants, jmpbuf, Usysdep")
 p_test ("p0", "p002", "Text")
 p_test ("p0", "p003", "Fmt")
 p_test ("p0", "p004", "exception mechanism")
@@ -489,7 +491,6 @@ p_test ("p2", "p207", "subrange declarations")
 p_test ("p2", "p208", "catching runtime errors")
 p_test ("p2", "p209", "open array initializers compile failure")
 p_test ("p2", "p210", "open array initializers runtime failure")
-p_test ("p2", "p211", "float and double constants work")
 
 %------------------------------------------------------------------- rtests ---
 %  RUNTIME tests: modules containing runtime error where the generated

@@ -1,13 +1,11 @@
 (* Copyright (C) 1994, Digital Equipment Corporation. *)
 (* All rights reserved.                               *)
 (* See the file COPYRIGHT for a full description.     *)
- 
-(* Test: Hello world *)
 
 MODULE Main;
-IMPORT Wr, Stdio;
-<*FATAL ANY*>
+IMPORT Test;
 
+VAR t:Test.T;
 BEGIN
-  Wr.PutText (Stdio.stdout, "Hello world!\n");
+  Test.CheckFloatsAndTypes(t);
 END Main.
