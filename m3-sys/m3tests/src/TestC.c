@@ -34,7 +34,6 @@ typedef struct T
         size_t hostent_addrtype;
         size_t hostent_length;
         size_t linger;
-        size_t mode;
         size_t pid;
         size_t socklen;
         size_t time;
