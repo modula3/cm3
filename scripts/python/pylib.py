@@ -2148,7 +2148,7 @@ def CopyConfigForDistribution(To):
         if os.path.isfile(File):
             #print(File + " => " + To + "\n")
             CopyFile(File, To)
-    for File in glob.glob(os.path.join(a, "config-no-install", Target + "*.common")):
+    for File in glob.glob(os.path.join(a, "config-no-install", "*.common")):
         if os.path.isfile(File):
             #print(File + " => " + To + "\n")
             CopyFile(File, To)
