@@ -39,7 +39,7 @@ EOF
 
 # echo $TARGETS
 for t in ${TARGETS}; do
-  all=`eval ls -1t cm3-*${t}-* 2>/dev/null`
+  all=`eval ls -1t cm3-*${t}-* 2>/dev/null | sort`
   echo "<h3>Target Platform ${t}</h3>"
   echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
   for f in ${all}; do
