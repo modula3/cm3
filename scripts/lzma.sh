@@ -7,4 +7,7 @@
 # .tar.gz files first.
 #
 
-sh -exc 'for a in *.tar.gz ; do gzcat $a | lzma > `echo $a | sed s/\.gz$/\.lzma/` ; done'
+set -e
+set -x
+for a in *.tar.gz; do gzip -cd $a > `echo $a | sed s/\.gz$//`; done
+for a in *.tar; do lzma $a; done
