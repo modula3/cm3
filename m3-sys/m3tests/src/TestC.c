@@ -54,7 +54,6 @@ static const T t1 =
     SIZE(SIZEOF_FIELD(hostent_t, h_addrtype)),
     SIZE(SIZEOF_FIELD(hostent_t, h_length)),
     SIZE(linger_t),
-    SIZE(mode_t),
     SIZE(pid_t),
     SIZE(socklen_t),
     SIZE(time_t),

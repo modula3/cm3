@@ -22,7 +22,6 @@ TYPE
       hostent_addrtype_t := BYTESIZE(Usysdep.hostent_addrtype_t);
       hostent_length_t := BYTESIZE(Usysdep.hostent_length_t);
       linger := BYTESIZE(Usysdep.struct_linger);
-      mode := BYTESIZE(Usysdep.mode_t);
       pid := BYTESIZE(Usysdep.pid_t);
       socklen := BYTESIZE(Usysdep.socklen_t);
       time := BYTESIZE(Usysdep.time_t);
