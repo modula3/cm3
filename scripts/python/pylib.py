@@ -2051,6 +2051,10 @@ GenericCommand:
 #-----------------------------------------------------------------------------
 
 def DeleteFile(a):
+    if os.name != "nt":
+        print("rm -f " + a)
+    else:
+        print("del /f /a " + a)
     if os.path.isfile(a):
         os.chmod(a, 0700)
         os.remove(a)
@@ -2058,11 +2062,11 @@ def DeleteFile(a):
 #-----------------------------------------------------------------------------
 
 def CreateDirectory(a):
+    if os.name != "nt":
+        print("mkdir -p " + a)
+    else:
+        print("mkdir " + a)
     if not os.path.isdir(a):
-        Command = "mkdir"
-        if os.name != "nt":
-            Command = "mkdir -p"
-        print(Command + " " + a)
         os.makedirs(a)
     return True
 
@@ -2114,9 +2118,20 @@ def CopyConfigForDevelopment():
     #
     # The development environment depends on having a source tree, at least the cminstall\src\config directory.
     #
+
     To = os.path.join(InstallRoot, "bin")
-    CopyFile(os.path.join(Root, "m3-sys", "cminstall", "src", "config", "cm3.cfg"),
-             os.path.join(To)) or FatalError()
+
+    #
+    # First delete all the "distribution config files".
+    #
+    a = os.path.join(Root, "m3-sys", "cminstall", "src")
+
+    for b in ["config", "config-no-install"]: 
+        for File in glob.glob(os.path.join(a, b, "*")):
+            if os.path.isfile(File):
+                DeleteFile(os.path.join(To, os.path.basename(File)))
+
+    CopyFile(os.path.join(Root, a, "config", "cm3.cfg"), To) or FatalError()
     return True
 
 #-----------------------------------------------------------------------------
@@ -2515,6 +2530,9 @@ if __name__ == "__main__":
     #
     # run test code if module run directly
     #
+
+    CopyConfigForDevelopment();
+    sys.exit(1)
 
     CheckForLinkSwitch("DELAYLOAD")
     sys.exit(1)
