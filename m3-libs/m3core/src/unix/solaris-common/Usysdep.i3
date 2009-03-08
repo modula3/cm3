@@ -19,8 +19,6 @@ CONST
     MAX_FDSET = (X32 * 1024) + (X64 * 65536);
 
 TYPE
-    mode_t = uint32_t;
-
 (* INTERFACE Upthread; *)
 
     pthread_t = int32_t; (* opaque *)
