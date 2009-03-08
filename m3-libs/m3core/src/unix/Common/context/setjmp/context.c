@@ -1,6 +1,7 @@
 /*
 see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
 */
+
 #include "context.h"
 #include <stdarg.h>
 #include <string.h>
@@ -43,6 +44,11 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
 #define CONTEXT_PC 21 /* experimentally derived */
 #define CONTEXT_STACK 0 /* experimentally derived */
 #endif
+
+#define getcontext Uucontext__getcontext
+#define makecontext Uucontext__makecontext
+#define setcontext Uucontext__setcontext
+#define swapcontext Uucontext__swapcontext
 
 #if 0
 static void print_context(const char* name, const ucontext_t* context)
@@ -95,7 +101,7 @@ the later stack-based parameters for the actual parameters
 OpenBSD/powerpc also does not preserve a bunch of registers in the
   setjmp code, but the prolog/epilog appears to handle them.
 */
-void internal_setcontext(
+static void internal_setcontext(
     size_t r3,
     size_t r4,
     size_t r5,
@@ -176,3 +182,6 @@ int swapcontext(ucontext_t* old_context, const ucontext_t* new_context)
     setcontext(new_context);
     return 0;
 }
+
+#endif
+
