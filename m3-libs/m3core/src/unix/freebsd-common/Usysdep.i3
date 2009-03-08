@@ -17,8 +17,6 @@ CONST
   MAX_FDSET = 1024;
 
 TYPE
-  mode_t = uint16_t;
-
 (* INTERFACE Upthread; *)
 
   pthread_t = ADDRESS;
