@@ -15,7 +15,7 @@ CONST
          + 3  (* hour *)
          + 3  (* minutes *)
          + 3  (* seconds *)
-         + 40 (* time zone *)
+         + 48 (* time zone *)
          + 5  (* year *)
          ;
 
