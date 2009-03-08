@@ -13,10 +13,12 @@ VAR
 TYPE
     ucontext_t_star = ADDRESS;
 
-<*EXTERNAL "Uucontext_set_stack"*>PROCEDURE set_stack(a: ucontext_t_star; Start: ADDRESS; Size: INTEGER);
-<*EXTERNAL*>PROCEDURE getcontext(a: ucontext_t_star);
-<*EXTERNAL*>PROCEDURE setcontext(a: ucontext_t_star): int;
-<*EXTERNAL*>PROCEDURE makecontext(a: ucontext_t_star; b: PROCEDURE (); argc: int := 0);
-<*EXTERNAL*>PROCEDURE swapcontext(a, b: ucontext_t_star): int;
+<*EXTERNAL Uucontext__set_stack*>
+PROCEDURE set_stack(a: ucontext_t_star; Start: ADDRESS; Size: INTEGER);
+<*EXTERNAL Uucontext__getcontext*>PROCEDURE getcontext(a: ucontext_t_star);
+<*EXTERNAL Uucontext__setcontext*>PROCEDURE setcontext(a: ucontext_t_star): int;
+<*EXTERNAL Uucontext__makecontext*>
+PROCEDURE makecontext(a: ucontext_t_star; b: PROCEDURE (); argc: int := 0);
+<*EXTERNAL Uucontext__swapcontext*>PROCEDURE swapcontext(a, b: ucontext_t_star): int;
 
 END Uucontext.
