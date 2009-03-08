@@ -13,6 +13,7 @@ Systems with make/set/get/swapcontext include:
     MacOS X 10.5
     NetBSD
     FreeBSD
+    Solaris
 
 There is much prior art to using setjmp/longjmp for similar purposes.
 Layer over them.
@@ -47,7 +48,6 @@ typedef unsigned char _JBTYPE __attribute__((aligned(4)));
 
 #ifdef __cplusplus
 extern "C"
-
 {
 #endif
 
@@ -83,10 +83,10 @@ struct _ucontext_t
     sigset_t uc_sigmask;
 };
 
-int  getcontext(ucontext_t*);
-int  setcontext(const ucontext_t*);
-void makecontext(ucontext_t*, void(*)(), int, ...);
-int  swapcontext(ucontext_t*, const ucontext_t*);
+int  Uucontext__getcontext(ucontext_t*);
+int  Uucontext__setcontext(const ucontext_t*);
+void Uucontext__makecontext(ucontext_t*, void(*)(), int, ...);
+int  Uucontext__swapcontext(ucontext_t*, const ucontext_t*);
 
 #ifdef __cplusplus
 } /* extern "C" */
