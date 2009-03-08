@@ -7,7 +7,7 @@
 FROM Cstddef IMPORT size_t;
 FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star;
 FROM Utime IMPORT struct_timeval;
-FROM Utypes IMPORT mode_t, off_t;
+FROM Utypes IMPORT off_t;
 IMPORT Usysdep;
 
 CONST
@@ -68,7 +68,8 @@ PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
 PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
 <*EXTERNAL "Unix__lseek"*>
 PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
-PROCEDURE mkdir (path: const_char_star; mode: mode_t): int;
+<*EXTERNAL Unix__mkdir*>
+PROCEDURE mkdir (path: const_char_star; mode: int(*mode_t*)): int;
 
 (* CONST *)
 <*EXTERNAL "Unix__O_RDONLY"*>    VAR O_RDONLY: int;
@@ -81,9 +82,7 @@ PROCEDURE mkdir (path: const_char_star; mode: mode_t): int;
 <*EXTERNAL "Unix__M3_NONBLOCK"*> VAR M3_NONBLOCK: int; (* compat *)
 
 <*EXTERNAL "Unix__open"*>
-PROCEDURE open (name: const_char_star; flags: int; mode: mode_t): int;
-<*EXTERNAL "Unix__creat"*>
-PROCEDURE creat (name: const_char_star; mode: mode_t): int;
+PROCEDURE open (name: const_char_star; flags: int; mode: int(*mode_t*)): int;
 
 CONST
   readEnd = 0;
@@ -107,5 +106,7 @@ TYPE
   FDSet = SET OF [0 .. MAX_FDSET - 1];
 
 PROCEDURE select (nfds: int; readfds, writefds, exceptfds: UNTRACED REF FDSet; timeout: UNTRACED REF struct_timeval): int;
+
+<*EXTERNAL "Unix__Assertions"*> PROCEDURE Assertions();
 
 END Unix.

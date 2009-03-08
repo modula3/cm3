@@ -35,7 +35,7 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
     Interface ("Uugid")
     Interface ("Uprocess")
 
-    Interface("Unix")
+    Module("Unix")
     Interface("Utime")
     Interface("Utypes")
 

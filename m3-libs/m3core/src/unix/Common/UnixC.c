@@ -36,18 +36,24 @@ C wrappers are being used to reduce functionality -- 32 bit offsets instead of 6
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <assert.h>
+
+void Unix__Assertions()
+{
+    assert(sizeof(mode_t) >= sizeof(int));
+}
 
 /* open doesn't take any off_t parameter, but there is open64, that
 #define _FILE_OFFSET_BITS 64 maps open to. */
-int Unix__open(const char* path, int flags, mode_t mode)
+int Unix__open(const char* path, int flags, /*mode_t*/int mode)
 {
     return open(path, flags, mode);
 }
 
-/* likewise for creat (see open) */
-int Unix__creat(const char* path, mode_t mode)
+/* wrapped in case passing mode_t vs. int varies */
+int Unix__mkdir(const char* path, /*mode_t*/int mode)
 {
-    return creat(path, mode);
+    return mkdir(path, mode);
 }
 
 int Unix__ftruncate(int fd, off_t length)

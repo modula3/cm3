@@ -38,7 +38,6 @@ TYPE
   (* Ideally this is always 64 bits, else time runs out in 2038. *)
   time_t = Usysdep.time_t;
 
-  mode_t = Usysdep.mode_t;
   gid_t = Usysdep.gid_t;
   pid_t = Usysdep.pid_t;
   uid_t = Usysdep.uid_t;
