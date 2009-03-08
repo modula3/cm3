@@ -18,16 +18,13 @@ It might take a #define to expose those names to C.
 Therefore, saying, e.g.
 <*EXTERNAL*> PROCEDURE ftruncate (fd: int; length: off_t): int;
 
-is wrong, unless you constrain off_t to 32 bits, which is no good.
+is wrong, unless you constrain off_t to 32 bits, which is not good.
 
 It would be correct to say:
-<*EXTERNAL "ftruncate64"*> PROCEDURE ftruncate (fd: int; length: off_t): int;
+<*EXTERNAL ftruncate64*> PROCEDURE ftruncate (fd: int; length: off_t): int;
 
-However that removes our ability to have more portable source.
+However that is not portable.
 So use these wrappers instead.
-
-Darwin is similar with its off_t_wrap.c except there it appears
-C wrappers are being used to reduce functionality -- 32 bit offsets instead of 64 bit.
 */
 
 /* This is the point. */
