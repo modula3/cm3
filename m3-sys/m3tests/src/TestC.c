@@ -75,8 +75,8 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
         U8* a = (U8*)&t1;
         U8* b = (U8*)t2;
         printf("FD_SETSIZE 0x%x\n", (U)FD_SETSIZE);
-        printf("t1 d[0], d[1]: %x, %x\n", OFFSET(T, d[0]), OFFSET(T, d[1]));
-        printf("t1 f[0], f[1]: %x, %x\n", OFFSET(T, f[0]), OFFSET(T, f[1]));
+        printf("d[0], d[1]: %x, %x\n", OFFSET(T, d[0]), OFFSET(T, d[1]));
+        printf("f[0], f[1]: %x, %x\n", OFFSET(T, f[0]), OFFSET(T, f[1]));
         printf("sizes: %x\n", OFFSET(T, sizes));
         for (i = 0; i != SIZE(t1); ++i)
         {
