@@ -62,9 +62,9 @@ Uucontext__makecontext(
     makecontext(context, function, argc, a1, a2, a3, a4, a5, a6, a7, a8);
 }
 
-int Uucontext__swapcontext(ucontext_t* old, const ucontext_t* new)
+int Uucontext__swapcontext(ucontext_t* Old, const ucontext_t* New)
 {
-    return swapcontext(old, new);
+    return swapcontext(Old, New);
 }
 
 #endif
