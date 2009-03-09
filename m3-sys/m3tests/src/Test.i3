@@ -19,8 +19,6 @@ TYPE
     sizes : RECORD
       (* keep these sorted by name for easier human comprehension *)
       gid := BYTESIZE(Usysdep.gid_t);
-      hostent_addrtype_t := BYTESIZE(Usysdep.hostent_addrtype_t);
-      hostent_length_t := BYTESIZE(Usysdep.hostent_length_t);
       linger := BYTESIZE(Usysdep.struct_linger);
       pid := BYTESIZE(Usysdep.pid_t);
       socklen := BYTESIZE(Usysdep.socklen_t);

@@ -62,7 +62,5 @@ TYPE
   uid_t = uint32_t;
 
   socklen_t = uint32_t;
-  hostent_addrtype_t = int32_t;
-  hostent_length_t = int32_t;
 
 END Usysdep.

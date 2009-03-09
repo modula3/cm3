@@ -90,10 +90,11 @@ VAR mu := NEW(MUTEX);
 
 PROCEDURE PredictIPGetHostAddrSuccess(): BOOLEAN =
   VAR hname: ARRAY [0..255] OF CHAR;
+      hostent: Unetdb.struct_hostent;
   BEGIN
     LOCK mu DO
       RETURN (Unix.gethostname(ADR(hname[0]), BYTESIZE(hname)) = 0)
-        AND (Unetdb.gethostbyname(ADR(hname[0])) # NIL);
+        AND (Unetdb.gethostbyname(ADR(hname[0]), ADR(hostent)) # NIL);
     END;
   END PredictIPGetHostAddrSuccess;
 

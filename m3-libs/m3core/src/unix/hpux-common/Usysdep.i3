@@ -4,7 +4,7 @@
 
 INTERFACE Usysdep;
 
-FROM Cstdint IMPORT uint16_t, int32_t;
+FROM Cstdint IMPORT int32_t;
 FROM Ctypes IMPORT int;
 FROM Cstddef IMPORT size_t;
 
@@ -61,7 +61,5 @@ TYPE
     uid_t = int32_t;
 
     socklen_t = size_t;
-    hostent_addrtype_t = int32_t; (* hostent_t.h_addrtype *)
-    hostent_length_t = int32_t; (* hostent_t.h_length *)
 
 END Usysdep.

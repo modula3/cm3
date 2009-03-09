@@ -54,9 +54,10 @@ TYPE
 
 PROCEDURE Open (t: T; name: TEXT): Midi.T RAISES {Failure} =
   VAR hp: Unetdb.struct_hostent_star;
+      hostent: Unetdb.struct_hostent;
   BEGIN
     WITH string = M3toC.CopyTtoS(name) DO
-      hp := Unetdb.gethostbyname(string);
+      hp := Unetdb.gethostbyname(string, ADR(hostent));
       M3toC.FreeCopiedS(string);
     END;
     IF hp = NIL THEN RAISE Failure("host name unknown"); END;

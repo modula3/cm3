@@ -12,7 +12,6 @@ Interface ("Ugrp")
 %--- Interface ("Uipc") -- not supported?
 Interface ("Umman")
 %--- Module    ("Umsg") -- not supported?
-Module    ("Unetdb")
 Interface ("Unix")
 Interface ("Uprocess")
 Interface ("Upwd")

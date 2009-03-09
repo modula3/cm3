@@ -7,6 +7,9 @@ c_source ("UnixC")
 Interface("Uexec")
 c_source("Uexec")
 
+Interface ("Unetdb")
+c_source ("Unetdb")
+
 if         equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "LINUXLIBC6")
     c_source("Uucontext")
@@ -15,9 +18,7 @@ end
 
 include_dir("context")
 
-if equal (TARGET, "LINUXLIBC6")
-    c_source("Uconstants")
-end
+c_source("Uconstants")
 
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
@@ -31,7 +32,6 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
     c_source("UstatC")
     Interface ("Uuio")
     Interface ("Upwd")
-    Interface ("Unetdb")
     Interface ("Uugid")
     Interface ("Uprocess")
 

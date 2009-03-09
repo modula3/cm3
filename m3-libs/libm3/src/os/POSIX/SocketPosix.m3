@@ -402,6 +402,7 @@ PROCEDURE GetHostAddr (): Address
   RAISES {OSError.E} =
   VAR
     host : ARRAY [0..255] OF CHAR;
+    hostent: Unetdb.struct_hostent;
     info : Unetdb.struct_hostent_star;
     ua   : Uin.struct_in_addr;
   BEGIN
@@ -409,7 +410,7 @@ PROCEDURE GetHostAddr (): Address
       IOError (Unexpected);
     END;
 
-    info := Unetdb.gethostbyname (ADR (host[0]));
+    info := Unetdb.gethostbyname (ADR (host[0]), ADR (hostent));
     IF info = NIL THEN IOError (Unexpected); END;
     <* ASSERT info.h_length <= BYTESIZE (Address) *>
 
