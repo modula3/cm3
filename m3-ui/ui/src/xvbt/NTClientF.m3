@@ -334,6 +334,7 @@ PROCEDURE Connect (inst: TEXT; trsl: T := NIL): Trestle.T
     dpy, hackdpy : X.DisplayStar := NIL;
     cpos         : INTEGER;
     machine, rest: TEXT;
+    hostent: Unetdb.struct_hostent;
   BEGIN
     IF inst = NIL THEN inst := Env.Get("DISPLAY"); END;
     IF inst = NIL THEN inst := ":0" END;
@@ -343,7 +344,7 @@ PROCEDURE Connect (inst: TEXT; trsl: T := NIL): Trestle.T
       machine := Text.Sub(inst, 0, cpos);
       rest := Text.Sub(inst, cpos, 999999);
       WITH s  = M3toC.TtoS(machine),
-           he = Unetdb.gethostbyname(s) DO
+           he = Unetdb.gethostbyname(s, ADR(hostent)) DO
         IF he # NIL THEN
           machine := M3toC.CopyStoT(he.h_name);
           inst := Text.Cat(machine, rest)
