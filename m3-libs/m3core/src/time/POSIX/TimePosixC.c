@@ -31,7 +31,6 @@ typedef double T;
 #define ComputeGrain Time__ComputeGrain
 
 #define M (1000000)
-#define Mf ((T)M)
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define ANSI(x) x
