@@ -2,6 +2,7 @@
 /* All rights reserved.                                       */
 /* See the file COPYRIGHT for a full description.             */
 
+#include <stddef.h>
 #include <netdb.h>
 typedef struct hostent hostent_t;
 
@@ -13,12 +14,14 @@ extern "C" {
 the types are the same across platforms. We copy
 the native struct to this form to smooth out platform
 differences. We  also sort by size to avoid padding
-for alignment, and then by name. */
+for alignment, and then by name.
+
+"h_" prefix is omitted from the names in case they are macros. */
 
 typedef struct m3_hostent_t {
     char** addr_list;
     char** aliases;
-    char* name;
+    const char* name;
     int addrtype; /* varies between int16_t and int32_t */
     int length;   /* varies between int16_t and int32_t */
 } m3_hostent_t;
