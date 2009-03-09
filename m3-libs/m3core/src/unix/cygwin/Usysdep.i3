@@ -8,7 +8,7 @@ INTERFACE Usysdep;
 
 IMPORT Ctypes;
 FROM Ctypes IMPORT int, const_char_star, char_star_star, char, unsigned_int;
-FROM Cstdint IMPORT uint8_t, uint16_t, uint32_t, int16_t, int32_t;
+FROM Cstdint IMPORT uint8_t, uint16_t, uint32_t, int32_t;
 
 (* This is the only system that uses this. *)
 (* CONST *)
@@ -23,8 +23,6 @@ CONST
   MAX_FDSET = 1024;
 
 TYPE
-  mode_t = int;
-
 (* INTERFACE Upthread; *)
 
   pthread_t = ADDRESS; (* opaque *)
@@ -72,8 +70,6 @@ TYPE
   gid_t = uint32_t;
 
   socklen_t = int32_t;
-  hostent_addrtype_t = int16_t;
-  hostent_length_t = int16_t;
 
 (* INTERFACE Utermio *)
 

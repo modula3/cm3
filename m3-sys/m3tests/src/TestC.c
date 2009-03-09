@@ -31,8 +31,6 @@ typedef struct T
     struct {
         /* keep these sorted by name for easier human comprehension */
         size_t gid;
-        size_t hostent_addrtype;
-        size_t hostent_length;
         size_t linger;
         size_t pid;
         size_t socklen;
@@ -50,8 +48,6 @@ static const T t1 =
     { 0.0, 0.5, 1.0, 2.0, -1.0, -3.5, 12.34, -124.456, 1000.0, -10000.0 },
     {
     SIZE(gid_t),
-    SIZE(SIZEOF_FIELD(hostent_t, h_addrtype)),
-    SIZE(SIZEOF_FIELD(hostent_t, h_length)),
     SIZE(linger_t),
     SIZE(pid_t),
     SIZE(socklen_t),

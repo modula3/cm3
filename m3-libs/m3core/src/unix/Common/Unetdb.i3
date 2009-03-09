@@ -2,18 +2,19 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-<*EXTERNAL*> INTERFACE Unetdb;
+UNSAFE INTERFACE Unetdb;
 
 FROM Ctypes IMPORT int, char_star, char_star_star, const_char_star;
-FROM Utypes IMPORT socklen_t, hostent_addrtype_t, hostent_length_t;
 
 TYPE
+(* This is a portable idealized form that need not match the
+underlying platform. This is sorted by size and then by name. *)
   struct_hostent = RECORD
-    h_name:       char_star;
-    h_aliases:    char_star_star;
-    h_addrtype:   hostent_addrtype_t;
-    h_length:     hostent_length_t;
     h_addr_list:  char_star_star;
+    h_aliases:    char_star_star;
+    h_name:       char_star;
+    h_addrtype:   int; (* underlying implementation varies here *)
+    h_length:     int; (* underlying implementation varies here *)
   END;
   struct_hostent_star = UNTRACED REF struct_hostent;
 
@@ -22,7 +23,23 @@ TYPE
 <*EXTERNAL "Unetdb__NO_RECOVERY"*> VAR NO_RECOVERY: int;
 <*EXTERNAL "Unetdb__NO_ADDRESS"*>  VAR NO_ADDRESS:  int;
 
-PROCEDURE gethostbyname (name: const_char_star): struct_hostent_star;
-PROCEDURE gethostbyaddr (addr: const_char_star; len: socklen_t; type: int): struct_hostent_star;
+(* These are thin C wrappers that do not quite match the underlying
+   function, but are very close.
+success:
+    native struct is copied into provided struct, and pointer to provided
+    struct returned
+failure:
+    null returned
 
+Despite the result buffer provided, the functions are no more thread safe
+than their underlying implementation.
+*)
+
+<*EXTERNAL Unetdb__gethostbyname*>
+PROCEDURE gethostbyname (name: const_char_star;
+                         result: struct_hostent_star): struct_hostent_star;
+
+<*EXTERNAL Unetdb__gethostbyaddr*>
+PROCEDURE gethostbyaddr (addr: const_char_star; len: int; type: int;
+                         result: struct_hostent_star): struct_hostent_star;
 END Unetdb.

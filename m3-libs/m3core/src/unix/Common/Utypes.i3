@@ -43,7 +43,5 @@ TYPE
   uid_t = Usysdep.uid_t;
 
   socklen_t = Usysdep.socklen_t;
-  hostent_addrtype_t = Usysdep.hostent_addrtype_t;
-  hostent_length_t = Usysdep.hostent_length_t;
 
 END Utypes.
