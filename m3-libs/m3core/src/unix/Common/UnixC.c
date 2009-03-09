@@ -31,9 +31,14 @@ So use these wrappers instead.
 #define _FILE_OFFSET_BITS 64
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <assert.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void Unix__Assertions()
 {
@@ -62,3 +67,8 @@ off_t Unix__lseek(int fd, off_t offset, int whence)
 {
     return lseek(fd, offset, whence);
 }
+
+#ifdef __cplusplus
+} /* extern C */
+#endif
+
