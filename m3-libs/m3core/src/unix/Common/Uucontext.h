@@ -9,6 +9,8 @@
 #ifndef UUCONTEXT_INCLUDED
 #define UUCONTEXT_INCLUDED
 
+#include <stddef.h>
+
 #if defined(__OpenBSD__)
 #include "context.h"
 #else
@@ -18,8 +20,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stddef.h>
 
 void Uucontext__set_stack(ucontext_t* a, void* Start, size_t Size);
 
