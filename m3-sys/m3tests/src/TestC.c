@@ -89,7 +89,7 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
     }
 #if defined(__CYGWIN__)
     assert(jbsize >= (SIZE(jmp_buf) / 4));
-#elif defined(__sun)
+#elif defined(__sun) || defined(__FreeBSD__)
     assert((jbsize == SIZE(jmp_buf)) || (jbsize == SIZE(sigjmp_buf)));
 #else
     if (jbsize != SIZE(jmp_buf))
