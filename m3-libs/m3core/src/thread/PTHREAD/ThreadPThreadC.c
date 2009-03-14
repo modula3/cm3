@@ -184,6 +184,31 @@ int ThreadPThread__thread_create(VAR(pthread_t) pthread, size_t stackSize, start
     return r;
 }
 
+static pthread_mutex_t activeMu = PTHREAD_MUTEX_INITIALIZER; /* global lock for list of active threads */
+static pthread_mutex_t slotMu   = PTHREAD_MUTEX_INITIALIZER; /* global lock for thread slot table */
+static pthread_mutex_t initMu   = PTHREAD_MUTEX_INITIALIZER; /* global lock for initializers */
+static pthread_mutex_t perfMu   = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t heapMu   = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t  heapCond = PTHREAD_COND_INITIALIZER;
+
+int ThreadPThread__pthread_mutex_lock_active()   { return pthread_mutex_lock(&activeMu); }
+int ThreadPThread__pthread_mutex_unlock_active() { return pthread_mutex_unlock(&activeMu); }
+
+int ThreadPThread__pthread_mutex_lock_slot()   { return pthread_mutex_lock(&slotMu); }
+int ThreadPThread__pthread_mutex_unlock_slot() { return pthread_mutex_unlock(&slotMu); }
+
+int ThreadPThread__pthread_mutex_lock_init()   { return pthread_mutex_lock(&initMu); }
+int ThreadPThread__pthread_mutex_unlock_init() { return pthread_mutex_unlock(&initMu); }
+
+int ThreadPThread__pthread_mutex_lock_perf()   { return pthread_mutex_lock(&perfMu); }
+int ThreadPThread__pthread_mutex_unlock_perf() { return pthread_mutex_unlock(&perfMu); }
+
+int ThreadPThread__pthread_mutex_lock_heap()   { return pthread_mutex_lock(&heapMu); }
+int ThreadPThread__pthread_mutex_unlock_heap() { return pthread_mutex_unlock(&heapMu); }
+
+int ThreadPThread__pthread_cond_broadcast_heap() { return pthread_cond_broadcast(&heapCond); }
+int ThreadPThread__pthread_cond_wait_heap() { return pthread_cond_wait(&heapCond, &heapMu); }
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
