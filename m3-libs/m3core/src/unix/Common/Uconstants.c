@@ -103,13 +103,6 @@ Y(Mrwrwrw, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
 
 
 #undef X
-#define X(type, x) const type Upthread__##x = x;
-
-X(pthread_mutex_t, PTHREAD_MUTEX_INITIALIZER)
-X(pthread_cond_t, PTHREAD_COND_INITIALIZER)
-
-
-#undef X
 #define X(x) const int Usocket__##x = x;
 
 X(SOCK_STREAM)
