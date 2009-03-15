@@ -47,6 +47,7 @@ then use them. */
 #include <time.h>
 #include <signal.h>
 #include <sys/param.h>
+#include <sys/time.h>
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
