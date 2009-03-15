@@ -12,7 +12,7 @@ IMPORT Cerrno, FloatMode, MutexRep,
        Unix, Utime, Word, Upthread, Usched,
        Uerror, Uexec;
 FROM Upthread
-IMPORT pthread_t, pthread_cond_t, pthread_key_t, pthread_mutex_t;
+IMPORT pthread_t, pthread_key_t;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 
@@ -25,14 +25,14 @@ VAR
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "Mutex Pthread-1.0" OBJECT
-    mutex: UNTRACED REF pthread_mutex_t := NIL;
+    mutex: pthread_mutex_t := NIL;
   OVERRIDES
     acquire := LockMutex;
     release := UnlockMutex;
   END;
 
   Condition = BRANDED "Thread.Condition Pthread-1.0" OBJECT
-    mutex: UNTRACED REF pthread_mutex_t := NIL;
+    mutex: pthread_mutex_t := NIL;
     waiters: T := NIL;			 (* LL = mutex *)
   END;
 
@@ -53,7 +53,7 @@ REVEAL
     nextWaiter: T := NIL;		 (* LL = waitingOn.mutex *)
 
     (* condition for blocking during "Wait" *)
-    waitCond: UNTRACED REF pthread_cond_t;
+    waitCond: pthread_cond_t := NIL;
 
     (* the alert flag *)
     alerted : BOOLEAN := FALSE;		 (* LL = mutex *)
@@ -118,18 +118,18 @@ PROCEDURE Release (m: Mutex) =
 PROCEDURE CleanMutex (r: REFANY) =
   VAR m := NARROW(r, Mutex);
   BEGIN
-    WITH r = Upthread.mutex_destroy (m.mutex^) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_destroy (m.mutex) DO <*ASSERT r=0*> END;
     DISPOSE(m.mutex);
   END CleanMutex;
 
 PROCEDURE InitMutex (m: Mutex) =
-  VAR mutex: UNTRACED REF pthread_mutex_t;
+  VAR mutex: pthread_mutex_t;
   BEGIN
     TRY
       WITH r = pthread_mutex_lock_init() DO <*ASSERT r=0*> END;
       IF m.mutex # NIL THEN RETURN END;
-      mutex := NEW(UNTRACED REF pthread_mutex_t);
-      WITH r = Upthread.mutex_init(mutex^, NIL) DO <*ASSERT r=0*> END;
+      mutex := NEW(pthread_mutex_t, sizeof_pthread_mutex_t);
+      WITH r = pthread_mutex_init(mutex) DO <*ASSERT r=0*> END;
       m.mutex := mutex;
     FINALLY
       WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
@@ -145,7 +145,7 @@ PROCEDURE LockMutex (m: Mutex) =
     END;
     IF m.mutex = NIL THEN InitMutex(m) END;
     IF perfOn THEN PerfChanged(self.id, State.locking) END;
-    WITH r = Upthread.mutex_lock(m.mutex^) DO
+    WITH r = pthread_mutex_lock(m.mutex) DO
       IF r # 0 THEN
         RTError.MsgI(ThisFile(), ThisLine(),
                      "Thread client error: pthread_mutex_lock error: ", r);
@@ -161,7 +161,7 @@ PROCEDURE UnlockMutex (m: Mutex) =
     IF self = NIL THEN
       Die(ThisLine(), "UnlockMutex called from a non-Modula-3 thread");
     END;
-    WITH r = Upthread.mutex_unlock(m.mutex^) DO
+    WITH r = pthread_mutex_unlock(m.mutex) DO
       IF r # 0 THEN
         RTError.MsgI(ThisFile(), ThisLine(),
                      "Thread client error: pthread_mutex_unlock error: ", r);
@@ -174,18 +174,18 @@ PROCEDURE UnlockMutex (m: Mutex) =
 PROCEDURE CleanCondition (r: REFANY) =
   VAR c := NARROW(r, Condition);
   BEGIN
-    WITH r = Upthread.mutex_destroy (c.mutex^) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_destroy (c.mutex) DO <*ASSERT r=0*> END;
     DISPOSE(c.mutex);
   END CleanCondition;
 
 PROCEDURE InitCondition (c: Condition) =
-  VAR mutex: UNTRACED REF pthread_mutex_t;
+  VAR mutex: pthread_mutex_t;
   BEGIN
     TRY
       WITH r = pthread_mutex_lock_init() DO <*ASSERT r=0*> END;
       IF c.mutex # NIL THEN RETURN END;
-      mutex := NEW(UNTRACED REF pthread_mutex_t);
-      WITH r = Upthread.mutex_init(mutex^, NIL) DO <*ASSERT r=0*> END;
+      mutex := NEW(pthread_mutex_t, sizeof_pthread_mutex_t);
+      WITH r = pthread_mutex_init(mutex) DO <*ASSERT r=0*> END;
       c.mutex := mutex;
     FINALLY
       WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
@@ -203,7 +203,7 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
       <*ASSERT self.waitingOn = NIL*>
       <*ASSERT self.nextWaiter = NIL*>
       IF perfOn THEN PerfChanged(self.id, State.waiting) END;
-      WITH r = Upthread.mutex_lock(c.mutex^) DO <*ASSERT r=0*> END;
+      WITH r = pthread_mutex_lock(c.mutex) DO <*ASSERT r=0*> END;
       BEGIN
         self.waitingOn := c;
         next := c.waiters;
@@ -216,10 +216,10 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
           prev.nextWaiter := self;
         END;
       END;
-      WITH r = Upthread.mutex_unlock(c.mutex^) DO <*ASSERT r=0*> END;
+      WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
       IF alertable AND XTestAlert(self) THEN RAISE Alerted; END;
       LOOP
-        WITH r = Upthread.cond_wait(self.waitCond^, m.mutex^) DO
+        WITH r = pthread_cond_wait(self.waitCond, m.mutex) DO
           IF r # 0 THEN
             RTError.MsgI(ThisFile(), ThisLine(),
                          "Thread client error: pthread_cond_wait error ", r);
@@ -229,7 +229,7 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
         IF self.waitingOn = NIL THEN RETURN END;
       END;
     FINALLY
-      WITH r = Upthread.mutex_lock(c.mutex^) DO <*ASSERT r=0*> END;
+      WITH r = pthread_mutex_lock(c.mutex) DO <*ASSERT r=0*> END;
       IF self.waitingOn # NIL THEN
         <*ASSERT self.waitingOn = c*>
         (* alerted: dequeue from condition *)
@@ -245,7 +245,7 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
         self.nextWaiter := NIL;
         self.waitingOn := NIL;
       END;
-      WITH r = Upthread.mutex_unlock(c.mutex^) DO <*ASSERT r=0*> END;
+      WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
       IF perfOn THEN PerfRunning(self.id) END;
       <*ASSERT self.waitingOn = NIL*>
       <*ASSERT self.nextWaiter = NIL*>
@@ -280,23 +280,23 @@ PROCEDURE DequeueHead(c: Condition) =
     t := c.waiters; c.waiters := t.nextWaiter;
     t.nextWaiter := NIL;
     t.waitingOn := NIL;
-    WITH r = Upthread.cond_signal(t.waitCond^) DO <*ASSERT r=0*> END;
+    WITH r = pthread_cond_signal(t.waitCond) DO <*ASSERT r=0*> END;
   END DequeueHead;
 
 PROCEDURE Signal (c: Condition) =
   BEGIN
     IF c.mutex = NIL THEN InitCondition(c) END;
-    WITH r = Upthread.mutex_lock(c.mutex^) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(c.mutex) DO <*ASSERT r=0*> END;
     IF c.waiters # NIL THEN DequeueHead(c) END;
-    WITH r = Upthread.mutex_unlock(c.mutex^) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
   END Signal;
 
 PROCEDURE Broadcast (c: Condition) =
   BEGIN
     IF c.mutex = NIL THEN InitCondition(c) END;
-    WITH r = Upthread.mutex_lock(c.mutex^) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(c.mutex) DO <*ASSERT r=0*> END;
     WHILE c.waiters # NIL DO DequeueHead(c) END;
-    WITH r = Upthread.mutex_unlock(c.mutex^) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
   END Broadcast;
 
 PROCEDURE Alert (t: T) =
@@ -304,7 +304,7 @@ PROCEDURE Alert (t: T) =
     LOCK t DO
       t.alerted := TRUE;
       IF t.waitCond # NIL THEN
-        WITH r = Upthread.cond_signal(t.waitCond^) DO <*ASSERT r=0*> END;
+        WITH r = pthread_cond_signal(t.waitCond) DO <*ASSERT r=0*> END;
       END;
     END;
   END Alert;
@@ -485,8 +485,8 @@ PROCEDURE CreateT (act: Activation): T =
      which will try to acquire "activeMu". *)
   VAR t := NEW(T, act := act);
   BEGIN
-    t.waitCond := NEW(UNTRACED REF pthread_cond_t);
-    WITH r = Upthread.cond_init (t.waitCond^, NIL) DO <*ASSERT r=0*> END;
+    t.waitCond := NEW(pthread_cond_t, sizeof_pthread_cond_t);
+    WITH r = pthread_cond_init (t.waitCond) DO <*ASSERT r=0*> END;
     t.cond     := NEW(Condition);
     FloatMode.InitThread (act.floatState);
     AssignSlot (t);
@@ -538,7 +538,7 @@ PROCEDURE RunThread (me: Activation) =
       (* mark "self" done and clean it up a bit *)
       self.completed := TRUE;
       Broadcast(self.cond); (* let everybody know that "self" is done *)
-      WITH r = Upthread.cond_destroy(self.waitCond^) DO <*ASSERT r=0*> END;
+      WITH r = pthread_cond_destroy(self.waitCond) DO <*ASSERT r=0*> END;
       DISPOSE(self.waitCond);
     END;
 

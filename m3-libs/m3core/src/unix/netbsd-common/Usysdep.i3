@@ -18,8 +18,6 @@ TYPE
 (* INTERFACE Upthread; *)
 
   pthread_t = INTEGER;
-  pthread_mutex_t = RECORD opaque: ARRAY[1..7] OF INTEGER; END;
-  pthread_cond_t = RECORD opaque: ARRAY[1..6] OF INTEGER; END;
   pthread_key_t = INTEGER;
 
 (* INTERFACE Usocket; *)

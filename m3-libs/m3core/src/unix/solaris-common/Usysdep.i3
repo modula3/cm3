@@ -22,8 +22,6 @@ TYPE
 (* INTERFACE Upthread; *)
 
     pthread_t = int32_t; (* opaque *)
-    pthread_mutex_t = RECORD opaque: ARRAY [1..4] OF LONGINT; END; (* 32 bytes with 64 bit alignment *)
-    pthread_cond_t = RECORD opaque: ARRAY [1..2] OF LONGINT; END; (* 16 bytes with 64 bit alignment *)
     pthread_key_t = int32_t; (* opaque *)
 
 (* INTERFACE Usocket; *)
