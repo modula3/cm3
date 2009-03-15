@@ -15,10 +15,20 @@ not to call (statically, but the compiler can't or won't tell). */
 #include <string.h>
 #ifdef __hpux
 #include <stdio.h>
-#include <errno.h>
 #endif /* hpux */
+#if defined(__hpux) || defined(__osf)
+#include <errno.h>
+#endif /* hpux || osf */
 #endif
 #include <pthread.h>
+
+/* const is extern const in C, but static const in C++,
+ * but gcc gives a warning for the correct portable form "extern const" */
+#if defined(__cplusplus) || !defined(__GNUC__)
+#define EXTERN_CONST extern const
+#else
+#define EXTERN_CONST const
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -208,6 +218,30 @@ int ThreadPThread__pthread_mutex_unlock_heap() { return pthread_mutex_unlock(&he
 
 int ThreadPThread__pthread_cond_broadcast_heap() { return pthread_cond_broadcast(&heapCond); }
 int ThreadPThread__pthread_cond_wait_heap() { return pthread_cond_wait(&heapCond, &heapMu); }
+
+EXTERN_CONST
+int ThreadPThread__sizeof_pthread_mutex_t = sizeof(pthread_mutex_t);
+
+EXTERN_CONST
+int ThreadPThread__sizeof_pthread_cond_t = sizeof(pthread_cond_t);
+
+int ThreadPThread__pthread_mutex_destroy(pthread_mutex_t* mutex)
+{
+    int e;
+    do
+    {
+        e = pthread_mutex_destroy(mutex);
+    }
+#if defined(__hpux) || defined(__osf)
+    /* workaround Tru64 5.1 and HP-UX bug
+    pthread_mutex_destroy() intermittently returns
+    EBUSY even when there are no threads accessing the mutex. */
+    while (e == EBUSY);
+#else
+    while (0);
+#endif
+    return e;
+}
 
 #ifdef __cplusplus
 } /* extern "C" */
