@@ -45,13 +45,23 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
 
     Interface("Upthread")
     Interface("Usched")
-    Interface("Uucontext")
 
     Interface("Usignal")
     Interface("Usocket")
 
     Interface ("Ustat")
     Interface ("Udir")
+end
+
+if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
+        or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
+        or equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
+        or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
+        or equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
+        or equal (TARGET, "NT386") or equal (TARGET, "AMD64_FREEBSD")
+
+    Interface("Uucontext")
+
 end
 
 if equal (TARGET, "NT386")
