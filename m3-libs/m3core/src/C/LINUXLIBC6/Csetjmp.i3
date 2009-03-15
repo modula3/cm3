@@ -6,11 +6,18 @@
 
 INTERFACE Csetjmp;		(* for LINUX *)
 
-FROM Ctypes IMPORT int;
+FROM Ctypes IMPORT long, int, void_star;
+IMPORT Usignal;
+
 
 TYPE 
+  ptr_t = void_star;
+
   jmp_buf = RECORD
-    opaque : ARRAY [1..39] OF INTEGER;
+        bx, si, di: long;
+        bp, sp, pc: ptr_t;
+        mask_was_saved : long;
+        saved_mask : Usignal.sigset_t; 
   END;
 
 <*EXTERNAL*> PROCEDURE setjmp (VAR env: jmp_buf): int;
