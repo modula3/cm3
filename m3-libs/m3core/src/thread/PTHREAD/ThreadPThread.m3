@@ -11,8 +11,7 @@ IMPORT Cerrno, FloatMode, MutexRep,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched,
        Uerror, Uexec;
-FROM Upthread
-IMPORT pthread_t, pthread_key_t;
+FROM Upthread IMPORT pthread_t;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 
@@ -20,7 +19,6 @@ FROM Ctypes IMPORT int;
 
 VAR
   stack_grows_down: BOOLEAN;
-
   nextId: CARDINAL := 1;
 
 REVEAL
@@ -334,7 +332,6 @@ PROCEDURE TestAlert (): BOOLEAN =
 
 VAR
   initActivations := TRUE;
-  activations: pthread_key_t;		 (* TLS index *)
 
 VAR (* LL = slotMu *)
   n_slotted := 0;
@@ -344,8 +341,8 @@ VAR (* LL = slotMu *)
 PROCEDURE InitActivations () =
   VAR me := NEW(Activation);
   BEGIN
-    WITH r = Upthread.key_create(activations, NIL) DO <*ASSERT r=0*> END;
-    WITH r = Upthread.setspecific(activations, me) DO <*ASSERT r=0*> END;
+    WITH r = pthread_key_create_activations() DO <*ASSERT r=0*> END;
+    WITH r = pthread_setspecific_activations(me) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
       <* ASSERT allThreads = NIL *>
       me.handle := Upthread.self();
@@ -361,7 +358,7 @@ PROCEDURE SetActivation (act: Activation) =
   VAR v := LOOPHOLE(act, ADDRESS);
   BEGIN
     IF initActivations THEN InitActivations() END;
-    WITH r = Upthread.setspecific(activations, v) DO <*ASSERT r=0*> END;
+    WITH r = pthread_setspecific_activations(v) DO <*ASSERT r=0*> END;
   END SetActivation;
 
 PROCEDURE GetActivation (): Activation =
@@ -369,7 +366,7 @@ PROCEDURE GetActivation (): Activation =
   (* LL = 0 *)
   BEGIN
     IF initActivations THEN InitActivations() END;
-    RETURN LOOPHOLE(Upthread.getspecific(activations), Activation);
+    RETURN LOOPHOLE(pthread_getspecific_activations(), Activation);
   END GetActivation;
 
 PROCEDURE Self (): T =
@@ -1456,18 +1453,17 @@ PROCEDURE BroadcastHeap () =
 
 VAR
   initHandlers := TRUE;
-  handlers: pthread_key_t;
 
 PROCEDURE GetCurrentHandlers (): ADDRESS =
   BEGIN
     IF initHandlers THEN InitHandlers() END;
-    RETURN Upthread.getspecific(handlers);
+    RETURN pthread_getspecific_handlers();
   END GetCurrentHandlers;
 
 PROCEDURE SetCurrentHandlers (h: ADDRESS) =
   BEGIN
     IF initHandlers THEN InitHandlers() END;
-    WITH r = Upthread.setspecific(handlers, h) DO <*ASSERT r=0*> END;
+    WITH r = pthread_setspecific_handlers(h) DO <*ASSERT r=0*> END;
   END SetCurrentHandlers;
 
 (*RTHooks.PushEFrame*)
@@ -1476,21 +1472,21 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
   VAR f := LOOPHOLE (frame, Frame);
   BEGIN
     IF initHandlers THEN InitHandlers() END;
-    f.next := Upthread.getspecific(handlers);
-    WITH r = Upthread.setspecific(handlers, f) DO <*ASSERT r=0*> END;
+    f.next := pthread_getspecific_handlers();
+    WITH r = pthread_setspecific_handlers(f) DO <*ASSERT r=0*> END;
   END PushEFrame;
 
 (*RTHooks.PopEFrame*)
 PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
     IF initHandlers THEN InitHandlers() END;
-    WITH r = Upthread.setspecific(handlers, frame) DO <*ASSERT r=0*> END;
+    WITH r = pthread_setspecific_handlers(frame) DO <*ASSERT r=0*> END;
   END PopEFrame;
 
 PROCEDURE InitHandlers () =
   BEGIN
-    WITH r = Upthread.key_create(handlers, NIL) DO <*ASSERT r=0*> END;
-    WITH r = Upthread.setspecific(handlers, NIL) DO <*ASSERT r=0*> END;
+    WITH r = pthread_key_create_handlers() DO <*ASSERT r=0*> END;
+    WITH r = pthread_setspecific_handlers(NIL) DO <*ASSERT r=0*> END;
     initHandlers := FALSE;
   END InitHandlers;
 

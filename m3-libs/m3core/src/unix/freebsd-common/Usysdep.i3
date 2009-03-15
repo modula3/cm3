@@ -20,7 +20,6 @@ TYPE
 (* INTERFACE Upthread; *)
 
   pthread_t = ADDRESS;
-  pthread_key_t = int;
 
 (* INTERFACE Usocket; *)
 
