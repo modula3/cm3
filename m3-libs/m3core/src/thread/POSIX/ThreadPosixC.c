@@ -28,7 +28,7 @@ extern "C" {
 #define Init ThreadPosixC__Init
 #define ThreadSwitchSignal ThreadPosixC__ThreadSwitchSignal
 
-sigset_t ThreadSwitchSignal;
+static sigset_t ThreadSwitchSignal;
 
 #ifdef __CYGWIN__
 #define SIG_TIMESLICE SIGALRM
