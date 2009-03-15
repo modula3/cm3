@@ -29,7 +29,9 @@ PROCEDURE SignalHandler(sig: int; sip, uap: ADDRESS);
 
 <*EXTERNAL "ThreadPThread__sem_wait"*> PROCEDURE sem_wait (): int;
 <*EXTERNAL "ThreadPThread__sem_post"*> PROCEDURE sem_post (): int;
-<*EXTERNAL "ThreadPThread__sem_getvalue"*> PROCEDURE sem_getvalue (VAR value: int): int;
+
+<*EXTERNAL "ThreadPThread__sem_getvalue"*>
+PROCEDURE sem_getvalue (VAR value: int): int;
 
 (*---------------------------------------------------------------------------*)
 
@@ -59,23 +61,41 @@ This reduces platform specific code as it removes
 the need for the Modula-3 code to define the static mutexes and condition variable(s).
 *)
 
-<*EXTERNAL ThreadPThread__pthread_mutex_lock_active*> PROCEDURE pthread_mutex_lock_active():int;
-<*EXTERNAL ThreadPThread__pthread_mutex_unlock_active*> PROCEDURE pthread_mutex_unlock_active():int;
+<*EXTERNAL ThreadPThread__pthread_mutex_lock_active*>
+PROCEDURE pthread_mutex_lock_active():int;
 
-<*EXTERNAL ThreadPThread__pthread_mutex_lock_slot*> PROCEDURE pthread_mutex_lock_slot():int;
-<*EXTERNAL ThreadPThread__pthread_mutex_unlock_slot*> PROCEDURE pthread_mutex_unlock_slot():int;
+<*EXTERNAL ThreadPThread__pthread_mutex_unlock_active*>
+PROCEDURE pthread_mutex_unlock_active():int;
 
-<*EXTERNAL ThreadPThread__pthread_mutex_lock_init*> PROCEDURE pthread_mutex_lock_init():int;
-<*EXTERNAL ThreadPThread__pthread_mutex_unlock_init*> PROCEDURE pthread_mutex_unlock_init():int;
+<*EXTERNAL ThreadPThread__pthread_mutex_lock_slot*>
+PROCEDURE pthread_mutex_lock_slot():int;
 
-<*EXTERNAL ThreadPThread__pthread_mutex_lock_perf*> PROCEDURE pthread_mutex_lock_perf():int;
-<*EXTERNAL ThreadPThread__pthread_mutex_unlock_perf*> PROCEDURE pthread_mutex_unlock_perf():int;
+<*EXTERNAL ThreadPThread__pthread_mutex_unlock_slot*>
+PROCEDURE pthread_mutex_unlock_slot():int;
 
-<*EXTERNAL ThreadPThread__pthread_mutex_lock_heap*> PROCEDURE pthread_mutex_lock_heap():int;
-<*EXTERNAL ThreadPThread__pthread_mutex_unlock_heap*> PROCEDURE pthread_mutex_unlock_heap():int;
+<*EXTERNAL ThreadPThread__pthread_mutex_lock_init*>
+PROCEDURE pthread_mutex_lock_init():int;
 
-<*EXTERNAL ThreadPThread__pthread_cond_broadcast_heap*> PROCEDURE pthread_cond_broadcast_heap():int;
-<*EXTERNAL ThreadPThread__pthread_cond_wait_heap*> PROCEDURE pthread_cond_wait_heap():int;
+<*EXTERNAL ThreadPThread__pthread_mutex_unlock_init*>
+PROCEDURE pthread_mutex_unlock_init():int;
+
+<*EXTERNAL ThreadPThread__pthread_mutex_lock_perf*>
+PROCEDURE pthread_mutex_lock_perf():int;
+
+<*EXTERNAL ThreadPThread__pthread_mutex_unlock_perf*>
+PROCEDURE pthread_mutex_unlock_perf():int;
+
+<*EXTERNAL ThreadPThread__pthread_mutex_lock_heap*>
+PROCEDURE pthread_mutex_lock_heap():int;
+
+<*EXTERNAL ThreadPThread__pthread_mutex_unlock_heap*>
+PROCEDURE pthread_mutex_unlock_heap():int;
+
+<*EXTERNAL ThreadPThread__pthread_cond_broadcast_heap*>
+PROCEDURE pthread_cond_broadcast_heap():int;
+
+<*EXTERNAL ThreadPThread__pthread_cond_wait_heap*>
+PROCEDURE pthread_cond_wait_heap():int;
 
 (*---------------------------------------------------------------------------*)
 
