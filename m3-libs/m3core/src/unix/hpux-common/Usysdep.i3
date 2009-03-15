@@ -19,7 +19,6 @@ TYPE
 (* INTERFACE Upthread; *)
 
     pthread_t = int32_t; (* opaque *)
-    pthread_key_t = int32_t; (* opaque *)
 
 (* INTERFACE Usocket; *)
 

@@ -18,7 +18,6 @@ TYPE
 (* INTERFACE Upthread; *)
 
   pthread_t = INTEGER;
-  pthread_key_t = INTEGER;
 
 (* INTERFACE Usocket; *)
 
