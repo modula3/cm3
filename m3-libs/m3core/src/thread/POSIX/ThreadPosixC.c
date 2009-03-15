@@ -14,6 +14,7 @@ Some use BSD sigvec which is similar to sigaction.
 #include <signal.h>
 #include <assert.h>
 #include <setjmp.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
