@@ -58,7 +58,8 @@ const int SIG_SUSPEND = NSIG - 1;
 #elif defined(__hpux)
 const int SIG_SUSPEND = _SIGRTMAX;
 #elif defined(SIGRTMAX)
-/* This might be a function call, in which case try _SIGRTMAX or initializing it somewhere. */
+/* This might be a function call, in which case try _SIGRTMAX or
+initializing it somewhere. */
 const int SIG_SUSPEND = SIGRTMAX;
 #elif defined(SIGUSR2)
 const int SIG_SUSPEND = SIGUSR2;
@@ -79,15 +80,11 @@ static sigset_t mask;
 /* Signal based suspend/resume */
 static sem_t ackSem;
 
-#ifdef __STDC__
 void SignalHandler(int, siginfo_t*, void* /* ucontext_t* */);
-#else
-void SignalHandler();
-#endif
 
 #endif /* Apple */
 
-void ThreadPThread__SetupHandlers()
+void ThreadPThread__SetupHandlers(void)
 {
 #ifdef __APPLE__
     APPLE_ASSERT_FALSE
@@ -124,7 +121,7 @@ void ThreadPThread__SetupHandlers()
 #endif
 }
 
-int ThreadPThread__sem_wait()
+int ThreadPThread__sem_wait(void)
 {
 #ifdef __APPLE__
     APPLE_ASSERT_FALSE
@@ -133,7 +130,7 @@ int ThreadPThread__sem_wait()
 #endif
 }
 
-int ThreadPThread__sem_post()
+int ThreadPThread__sem_post(void)
 {
 #ifdef __APPLE__
     APPLE_ASSERT_FALSE
@@ -152,7 +149,7 @@ int ThreadPThread__sem_getvalue(value)
 #endif
 }
 
-int ThreadPThread__sigsuspend()
+int ThreadPThread__sigsuspend(void)
 {
 #ifdef __APPLE__
     APPLE_ASSERT_FALSE
@@ -161,12 +158,15 @@ int ThreadPThread__sigsuspend()
 #endif
 }
 
-#define VAR(t) t*
-#undef MAX
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
 typedef void* (*start_routine_t)(void*);
 
-int ThreadPThread__thread_create(VAR(pthread_t) pthread, size_t stackSize, start_routine_t start_routine, void* arg)
+int
+ThreadPThread__thread_create(
+    pthread_t* pthread,
+    size_t stackSize,
+    start_routine_t start_routine,
+    void* arg)
 {
     int r;
     size_t bytes;
@@ -176,7 +176,11 @@ int ThreadPThread__thread_create(VAR(pthread_t) pthread, size_t stackSize, start
 #ifdef __hpux
     if (r == ENOSYS)
     {
-	fprintf(stderr, "You got the nonfunctional pthread stubs on HP-UX. You need to adjust your build commands, such as to link to -lpthread or use -pthread, and not link explicitly to -lc.\n");
+        fprintf(
+            stderr,
+            "You got the nonfunctional pthread stubs on HP-UX. You need to"
+            " adjust your build commands, such as to link to -lpthread or"
+            " use -pthread, and not link explicitly to -lc.\n");
     }
 #endif
     assert(r == 0);
@@ -184,7 +188,7 @@ int ThreadPThread__thread_create(VAR(pthread_t) pthread, size_t stackSize, start
     r = pthread_attr_getstacksize(&attr, &bytes);
     assert(r == 0);
 
-    bytes = MAX(bytes, stackSize);
+    bytes = M3_MAX(bytes, stackSize);
     pthread_attr_setstacksize(&attr, bytes);
 
     r = pthread_create(pthread, &attr, start_routine, arg);
@@ -194,30 +198,46 @@ int ThreadPThread__thread_create(VAR(pthread_t) pthread, size_t stackSize, start
     return r;
 }
 
-static pthread_mutex_t activeMu = PTHREAD_MUTEX_INITIALIZER; /* global lock for list of active threads */
-static pthread_mutex_t slotMu   = PTHREAD_MUTEX_INITIALIZER; /* global lock for thread slot table */
-static pthread_mutex_t initMu   = PTHREAD_MUTEX_INITIALIZER; /* global lock for initializers */
-static pthread_mutex_t perfMu   = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t heapMu   = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t  heapCond = PTHREAD_COND_INITIALIZER;
+#define STATIC_MUTEX(name) \
+static pthread_mutex_t name##Mu = PTHREAD_MUTEX_INITIALIZER; \
+int \
+ThreadPThread__pthread_mutex_lock_##name( \
+    void) \
+{ \
+    return pthread_mutex_lock(&name##Mu); \
+} \
+ \
+int \
+ThreadPThread__pthread_mutex_unlock_##name( \
+    void) \
+{ \
+    return pthread_mutex_unlock(&name##Mu); \
+} \
 
-int ThreadPThread__pthread_mutex_lock_active()   { return pthread_mutex_lock(&activeMu); }
-int ThreadPThread__pthread_mutex_unlock_active() { return pthread_mutex_unlock(&activeMu); }
+#define STATIC_CONDITION_VARIABLE(name) \
+static pthread_cond_t name##Cond = PTHREAD_COND_INITIALIZER; \
+int \
+ThreadPThread__pthread_cond_broadcast_##name( \
+    void) \
+{ \
+    return pthread_cond_broadcast(&name##Cond); \
+} \
+ \
+int \
+ThreadPThread__pthread_cond_wait_##name( \
+    void) \
+{ \
+    return pthread_cond_wait(&name##Cond, &name##Mu); \
+} \
 
-int ThreadPThread__pthread_mutex_lock_slot()   { return pthread_mutex_lock(&slotMu); }
-int ThreadPThread__pthread_mutex_unlock_slot() { return pthread_mutex_unlock(&slotMu); }
+/* activeMu slotMu initMu perfMu heapMu heapCond */
 
-int ThreadPThread__pthread_mutex_lock_init()   { return pthread_mutex_lock(&initMu); }
-int ThreadPThread__pthread_mutex_unlock_init() { return pthread_mutex_unlock(&initMu); }
-
-int ThreadPThread__pthread_mutex_lock_perf()   { return pthread_mutex_lock(&perfMu); }
-int ThreadPThread__pthread_mutex_unlock_perf() { return pthread_mutex_unlock(&perfMu); }
-
-int ThreadPThread__pthread_mutex_lock_heap()   { return pthread_mutex_lock(&heapMu); }
-int ThreadPThread__pthread_mutex_unlock_heap() { return pthread_mutex_unlock(&heapMu); }
-
-int ThreadPThread__pthread_cond_broadcast_heap() { return pthread_cond_broadcast(&heapCond); }
-int ThreadPThread__pthread_cond_wait_heap() { return pthread_cond_wait(&heapCond, &heapMu); }
+STATIC_MUTEX(active) /* global lock for list of active threads */
+STATIC_MUTEX(slot)   /* global lock for thread slot table */
+STATIC_MUTEX(init)   /* global lock for initializers */
+STATIC_MUTEX(perf)
+STATIC_MUTEX(heap)
+STATIC_CONDITION_VARIABLE(heap)
 
 EXTERN_CONST
 int ThreadPThread__sizeof_pthread_mutex_t = sizeof(pthread_mutex_t);
@@ -225,22 +245,24 @@ int ThreadPThread__sizeof_pthread_mutex_t = sizeof(pthread_mutex_t);
 EXTERN_CONST
 int ThreadPThread__sizeof_pthread_cond_t = sizeof(pthread_cond_t);
 
-int ThreadPThread__pthread_mutex_destroy(pthread_mutex_t* mutex)
+int
+ThreadPThread__pthread_mutex_destroy(
+    pthread_mutex_t* mutex)
 {
+#if defined(__hpux) || defined(__osf)
+    /* workaround Tru64 5.1 and HP-UX bug
+    pthread_mutex_destroy() intermittently returns
+    EBUSY even when there are no threads accessing the mutex. */
     int e;
     do
     {
         e = pthread_mutex_destroy(mutex);
     }
-#if defined(__hpux) || defined(__osf)
-    /* workaround Tru64 5.1 and HP-UX bug
-    pthread_mutex_destroy() intermittently returns
-    EBUSY even when there are no threads accessing the mutex. */
     while (e == EBUSY);
-#else
-    while (0);
-#endif
     return e;
+#else
+    return pthread_mutex_destroy(mutex);
+#endif
 }
 
 #ifdef __cplusplus
