@@ -139,8 +139,7 @@ int ThreadPThread__sem_post(void)
 #endif
 }
 
-int ThreadPThread__sem_getvalue(value)
-    int* value;
+int ThreadPThread__sem_getvalue(int* value)
 {
 #ifdef __APPLE__
     APPLE_ASSERT_FALSE
@@ -198,7 +197,7 @@ ThreadPThread__thread_create(
     return r;
 }
 
-#define STATIC_MUTEX(name) \
+#define MUTEX(name) \
 static pthread_mutex_t name##Mu = PTHREAD_MUTEX_INITIALIZER; \
 int \
 ThreadPThread__pthread_mutex_lock_##name( \
@@ -214,7 +213,8 @@ ThreadPThread__pthread_mutex_unlock_##name( \
     return pthread_mutex_unlock(&name##Mu); \
 } \
 
-#define STATIC_CONDITION_VARIABLE(name) \
+
+#define CONDITION_VARIABLE(name) \
 static pthread_cond_t name##Cond = PTHREAD_COND_INITIALIZER; \
 int \
 ThreadPThread__pthread_cond_broadcast_##name( \
@@ -230,14 +230,32 @@ ThreadPThread__pthread_cond_wait_##name( \
     return pthread_cond_wait(&name##Cond, &name##Mu); \
 } \
 
+
+#define THREAD_LOCAL(name) \
+static pthread_key_t name; \
+int ThreadPThread__pthread_key_create_##name(void) \
+{ \
+    return pthread_key_create(&name, NULL); \
+} \
+int ThreadPThread__pthread_setspecific_##name(void* value) \
+{ \
+    return pthread_setspecific(name, value); \
+} \
+void* ThreadPThread__pthread_getspecific_##name(void) \
+{ \
+    return pthread_getspecific(name); \
+} \
+
 /* activeMu slotMu initMu perfMu heapMu heapCond */
 
-STATIC_MUTEX(active) /* global lock for list of active threads */
-STATIC_MUTEX(slot)   /* global lock for thread slot table */
-STATIC_MUTEX(init)   /* global lock for initializers */
-STATIC_MUTEX(perf)
-STATIC_MUTEX(heap)
-STATIC_CONDITION_VARIABLE(heap)
+MUTEX(active) /* global lock for list of active threads */
+MUTEX(slot)   /* global lock for thread slot table */
+MUTEX(init)   /* global lock for initializers */
+MUTEX(perf)
+MUTEX(heap)
+CONDITION_VARIABLE(heap)
+THREAD_LOCAL(activations)
+THREAD_LOCAL(handlers)
 
 EXTERN_CONST
 int ThreadPThread__sizeof_pthread_mutex_t = sizeof(pthread_mutex_t);
