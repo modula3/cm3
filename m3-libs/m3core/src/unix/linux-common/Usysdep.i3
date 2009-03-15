@@ -6,7 +6,6 @@ INTERFACE Usysdep;
 
 FROM Cstdint IMPORT uint32_t;
 FROM Ctypes IMPORT char_star, int;
-IMPORT Upthreadtypes;
 
 (* INTERFACE Unix; *)
 
@@ -19,8 +18,6 @@ TYPE
 (* INTERFACE Upthread; *)
 
   pthread_t = ADDRESS;
-  pthread_mutex_t = Upthreadtypes.pthread_mutex_t;
-  pthread_cond_t = RECORD data: ARRAY[1..6] OF LONGINT; END;
   pthread_key_t = uint32_t;
 
 (* INTERFACE Usocket; *)

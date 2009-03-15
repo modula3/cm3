@@ -79,4 +79,43 @@ the need for the Modula-3 code to define the static mutexes and condition variab
 
 (*---------------------------------------------------------------------------*)
 
+(* support for dynamically allocated mutexes and condition variables *)
+
+TYPE
+    pthread_mutex_t = UNTRACED REF ARRAY OF CHAR;
+    pthread_cond_t = UNTRACED REF ARRAY OF CHAR;
+
+<*EXTERNAL ThreadPThread__sizeof_pthread_mutex_t*>
+(*CONST*) VAR sizeof_pthread_mutex_t:int;
+
+<*EXTERNAL ThreadPThread__sizeof_pthread_cond_t*>
+(*CONST*) VAR sizeof_pthread_cond_t:int;
+
+<*EXTERNAL*>
+PROCEDURE pthread_mutex_init(mutex: pthread_mutex_t; attr:ADDRESS:=NIL):int;
+
+(* This wrapper has some OS-specific bug workarounds. *)
+<*EXTERNAL ThreadPThread__pthread_mutex_destroy*>
+PROCEDURE pthread_mutex_destroy(mutex: pthread_mutex_t):int;
+
+<*EXTERNAL*>
+PROCEDURE pthread_mutex_lock(mutex: pthread_mutex_t):int;
+
+<*EXTERNAL*>
+PROCEDURE pthread_mutex_unlock(mutex: pthread_mutex_t):int;
+
+<*EXTERNAL*>
+PROCEDURE pthread_cond_init(cond: pthread_cond_t; attr:ADDRESS:=NIL):int;
+
+<*EXTERNAL*>
+PROCEDURE pthread_cond_destroy(cond: pthread_cond_t):int;
+
+<*EXTERNAL*>
+PROCEDURE pthread_cond_wait(cond: pthread_cond_t; mutex: pthread_mutex_t):int;
+
+<*EXTERNAL*>
+PROCEDURE pthread_cond_signal(cond: pthread_cond_t):int;
+
+(*---------------------------------------------------------------------------*)
+
 END ThreadPThread.
