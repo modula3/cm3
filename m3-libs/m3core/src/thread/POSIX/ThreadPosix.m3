@@ -1524,8 +1524,6 @@ PROCEDURE Init()=
       gWriteFDS := NEW(FDS, 1);
       gExceptFDS := NEW(FDS, 1);
 
-      mutex := NEW(MUTEX);
-      condition := NEW(Condition);
     inCritical := 0;
 
     PerfStart ();
@@ -1549,8 +1547,6 @@ PROCEDURE QQ(): ADDRESS =
    and collector. *)
 
 VAR
-  lock_cnt  := 0;      (* LL = inCritical *)
-  do_signal := FALSE;  (* LL = inCritical *)
   heapCond: Condition;
 
 PROCEDURE LockHeap () =
