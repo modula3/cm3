@@ -26,6 +26,7 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
         or equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
         or equal (TARGET, "NT386") or equal (TARGET, "AMD64_FREEBSD")
+	or equal (TARGET, "LINUXLIBC6")
 
     Interface ("Umman")
     Interface("Uutmp")
@@ -46,7 +47,6 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
     Interface("Upthread")
     Interface("Usched")
 
-    Interface("Usignal")
     Interface("Usocket")
 
     Interface ("Ustat")
@@ -61,6 +61,7 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "NT386") or equal (TARGET, "AMD64_FREEBSD")
 
     Interface("Uucontext")
+    Interface("Usignal")
 
 end
 
