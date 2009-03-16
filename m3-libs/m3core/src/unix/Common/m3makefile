@@ -27,7 +27,7 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
         or equal (TARGET, "NT386") or equal (TARGET, "AMD64_FREEBSD")
 	or equal (TARGET, "LINUXLIBC6")
-        or equal (TARGET, "PPC_DARWIN")
+        or equal (TARGET, "xPPC_DARWIN")
 
     Interface ("Umman")
     Interface("Uutmp")
