@@ -4,15 +4,9 @@
 (*                                                                 *)
 (* Portions Copyright 1996-2000, Critical Mass, Inc.               *)
 (* See file COPYRIGHT-CMASS for details.                           *)
-(*                                                                 *)
-(* Last modified on Thu Jun 15 09:06:37 PDT 1995 by kalsow         *)
-(*      modified on Tue Oct  4 10:34:00 PDT 1994 by isard          *)
-(*      modified on Tue May  4 10:20:03 PDT 1993 by mjordan        *)
-(*      modified on Wed Apr 21 16:31:21 PDT 1993 by mcjones        *)
-(*      modified on Fri Mar 26 15:04:39 PST 1993 by birrell        *)
 
 UNSAFE MODULE ThreadWin32
-EXPORTS Scheduler, Thread, ThreadF, RTOS, RTHooks;
+EXPORTS ThreadInternal, Scheduler, Thread, ThreadF, RTOS, RTHooks;
 
 IMPORT RTError, WinBase, WinDef, WinGDI, WinNT, RTParams;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
@@ -346,17 +340,23 @@ PROCEDURE Alert(t: T) =
     WinBase.LeaveCriticalSection(cm);
   END Alert;
 
+PROCEDURE XTestAlert (self: T): BOOLEAN =
+     VAR result: BOOLEAN;
+   BEGIN
+       WinBase.EnterCriticalSection(cm);
+       result := self.alerted; IF result THEN self.alerted := FALSE END;
+       WinBase.LeaveCriticalSection(cm);
+       RETURN result;
+   END XTestAlert;
+
 PROCEDURE TestAlert(): BOOLEAN =
-    VAR self := Self(); result: BOOLEAN;
+    VAR self := Self();
   BEGIN
     IF self = NIL THEN
       (* Not created by Fork; not alertable *)
       RETURN FALSE
     ELSE
-      WinBase.EnterCriticalSection(cm);
-      result := self.alerted; IF result THEN self.alerted := FALSE END;
-      WinBase.LeaveCriticalSection(cm);
-      RETURN result
+      RETURN XTestAlert(self);
     END;
   END TestAlert;
 
@@ -976,7 +976,7 @@ PROCEDURE Choke (lineno: INTEGER) =
 
 VAR
   perfW : RTPerfTool.Handle;
-  perfOn: BOOLEAN := FALSE;                             (* LL = perfMu *)
+  (* perfOn: BOOLEAN := FALSE;                          (* LL = perfMu *) *)
   perfMu := MyInitializeCriticalSection(ADR(perfMu_x)); (* read-only *)
   perfMu_x: WinBase.CRITICAL_SECTION;
 
