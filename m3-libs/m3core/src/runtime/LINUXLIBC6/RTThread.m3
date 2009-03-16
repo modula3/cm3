@@ -82,30 +82,25 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
 
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
 
-VAR ThreadSwitchSignal: Usignal.sigset_t;
-
-PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
+PROCEDURE MovedToThreadPosix()=
   BEGIN
-    EVAL Usignal.signal(Usignal.SIGVTALRM, handler);
+    <* ASSERT FALSE *>
+  END MovedToThreadPosix;
+
+PROCEDURE setup_sigvtalrm (<* UNUSED *> handler: Usignal.SignalHandler) =
+  BEGIN
+    MovedToThreadPosix();
   END setup_sigvtalrm;
 
 PROCEDURE allow_sigvtalrm () =
-  VAR old: Usignal.sigset_t;
   BEGIN
-    WITH i = Usignal.sigprocmask(Usignal.SIG_UNBLOCK, ThreadSwitchSignal, old) DO
-      <* ASSERT i = 0 *>
-    END;
+    MovedToThreadPosix();
   END allow_sigvtalrm;
 
 PROCEDURE disallow_sigvtalrm () =
-  VAR old: Usignal.sigset_t;
   BEGIN
-    WITH i = Usignal.sigprocmask(Usignal.SIG_BLOCK, ThreadSwitchSignal, old) DO
-      <* ASSERT i = 0 *>
-    END;
+    MovedToThreadPosix();
   END disallow_sigvtalrm;
 
 BEGIN
-  WITH i = Usignal.sigemptyset(ThreadSwitchSignal) DO <* ASSERT i = 0 *> END;
-  WITH i = Usignal.sigaddset(ThreadSwitchSignal, Usignal.SIGVTALRM) DO <* ASSERT i = 0 *> END;
 END RTThread.
