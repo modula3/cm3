@@ -22,12 +22,11 @@ extern "C" {
 
 #define ZeroMemory(address, size) (memset((address), 0, (size)))
 
-#define SignalHandler1 ThreadPosixC__SignalHandler1
-#define setup_sigvtalrm ThreadPosixC__setup_sigvtalrm
-#define allow_sigvtalrm ThreadPosixC__allow_sigvtalrm
-#define disallow_sigvtalrm ThreadPosixC__disallow_sigvtalrm
-#define Init ThreadPosixC__Init
-#define ThreadSwitchSignal ThreadPosixC__ThreadSwitchSignal
+#define SignalHandler1 ThreadPosix__SignalHandler1
+#define setup_sigvtalrm ThreadPosix__setup_sigvtalrm
+#define allow_sigvtalrm ThreadPosix__allow_sigvtalrm
+#define disallow_sigvtalrm ThreadPosix__disallow_sigvtalrm
+#define InitC ThreadPosix__InitC
 
 static sigset_t ThreadSwitchSignal;
 
@@ -55,17 +54,12 @@ void disallow_sigvtalrm(void)
     assert(i == 0);
 }
 
-void Init(void)
+void InitC(void)
 {
     int i = sigemptyset(&ThreadSwitchSignal);
     assert(i == 0);
     i = sigaddset(&ThreadSwitchSignal, SIG_TIMESLICE);
     assert(i == 0);
-}
-
-void RTThread__Transfer(jmp_buf* from, jmp_buf* to)
-{
-    assert(0);
 }
 
 #ifdef __cplusplus

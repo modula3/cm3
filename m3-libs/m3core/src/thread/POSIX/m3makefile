@@ -8,6 +8,5 @@
 %      modified on Tue Feb 11 15:07:32 PST 1992 by muller
 
 Interface ("ThreadF")
-implementation ("ThreadPosix")
-interface ("ThreadPosixC")
+module ("ThreadPosix")
 c_source ("ThreadPosixC")
