@@ -107,6 +107,7 @@ readonly Uutmp2 = {
   "FreeBSD2"  : 1,
   "FreeBSD3"  : 1,
   "FreeBSD4"  : 1,
+  "PPC_DARWIN" : 1,
   "AMD64_DARWIN" : 1,
   "I386_DARWIN" : 1,
   "PPC64_DARWIN" : 1,
