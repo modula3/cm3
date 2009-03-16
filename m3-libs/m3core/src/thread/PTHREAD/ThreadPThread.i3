@@ -147,8 +147,8 @@ PROCEDURE pthread_getspecific_handlers(): ADDRESS;
 (* support for dynamically allocated mutexes and condition variables *)
 
 TYPE
-    pthread_mutex_t = UNTRACED REF ARRAY OF CHAR;
-    pthread_cond_t = UNTRACED REF ARRAY OF CHAR;
+    pthread_mutex_t = ADDRESS;
+    pthread_cond_t = ADDRESS;
 
 <*EXTERNAL ThreadPThread__sizeof_pthread_mutex_t*>
 (*CONST*) VAR sizeof_pthread_mutex_t:int;
