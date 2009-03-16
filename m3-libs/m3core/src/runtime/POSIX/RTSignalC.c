@@ -43,34 +43,20 @@ RTProcess__InterruptHandler RTProcess__OnInterrupt(RTProcess__InterruptHandler);
 #define InterruptHandler RTProcess__InterruptHandler
 #define InvokeExitors RTProcess__InvokeExitors
 
-#define PRIVATE(x) RTSignalCPrivate_ ## x
-
-#define Handlers PRIVATE(Handlers)
-#define InitialHandlers PRIVATE(InitialHandlers)
-#define InstallOneHandler PRIVATE(InstallOneHandler)
-
-#define Quit PRIVATE(Quit)
-#define Interrupt PRIVATE(Interrupt)
-#define Shutdown PRIVATE(Shutdown)
-#define SegV PRIVATE(SegV)
-
-#define GetPC PRIVATE(GetPC)
-#define SignalActionHandler PRIVATE(SignalActionHandler)
-
 typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
 
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
 
-void SegV(int Signal, siginfo_t* SignalInfo, void* Context);
-void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context);
-void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context);
-void Quit(int Signal, siginfo_t* SignalInfo, void* Context);
+static void SegV(int Signal, siginfo_t* SignalInfo, void* Context);
+static void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context);
+static void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context);
+static void Quit(int Signal, siginfo_t* SignalInfo, void* Context);
 
-void InstallOneHandler(size_t Index);
-void RestoreOneHandler(size_t Index);
-size_t GetPC(void* Context);
+static void InstallOneHandler(size_t Index);
+static void RestoreOneHandler(size_t Index);
+static size_t GetPC(void* Context);
 
-size_t GetPC(void* VoidContext)
+static size_t GetPC(void* VoidContext)
 /* PC: program counter aka instruction pointer, etc. */
 {
     size_t pc = 0;
@@ -141,10 +127,7 @@ size_t GetPC(void* VoidContext)
 #define DefaultHandler ((SignalActionHandler) SIG_DFL)
 #define IgnoreSignal   ((SignalActionHandler) SIG_IGN)
 
-#ifdef __cplusplus
-extern
-#endif
-const struct
+static const struct
 {
     int Signal;
     SignalActionHandler Handler;
@@ -162,7 +145,7 @@ Handlers[] =
 
 static sigaction_t InitialHandlers[NUMBER_OF(Handlers)];
 
-void InstallOneHandler(size_t Index)
+static void InstallOneHandler(size_t Index)
 {
     sigaction_t New;
     int i = { 0 };
@@ -199,7 +182,7 @@ void InstallHandlers(void)
     }
 }
 
-void RestoreOneHandler(size_t Index)
+static void RestoreOneHandler(size_t Index)
 {
     int Signal = Handlers[Index].Signal;
     sigaction_t Old;
@@ -218,7 +201,7 @@ void RestoreHandlers(void)
     }
 }
 
-void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context)
+static void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context)
 {
     sigaction_t New;
     sigaction_t Old;
@@ -233,7 +216,7 @@ void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context)
     kill(getpid(), Signal);         /* and resend the signal */
 }
 
-void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context)
+static void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context)
 {
     InterruptHandler Handler = OnInterrupt(NULL);
 
@@ -248,12 +231,12 @@ void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context)
     }
 }
 
-void Quit(int Signal, siginfo_t* SignalInfo, void* Context)
+static void Quit(int Signal, siginfo_t* SignalInfo, void* Context)
 {
     MsgPCAbort (GetPC(Context));
 }
 
-void SegV(int Signal, siginfo_t* SignalInfo, void* Context)
+static void SegV(int Signal, siginfo_t* SignalInfo, void* Context)
 {
     MsgPCSegV (GetPC(Context));
 }
