@@ -42,7 +42,7 @@ extern "C" {
 
 void Unix__Assertions()
 {
-    assert(sizeof(mode_t) >= sizeof(int));
+    assert(sizeof(mode_t) <= sizeof(int));
 }
 
 /* open doesn't take any off_t parameter, but there is open64, that
