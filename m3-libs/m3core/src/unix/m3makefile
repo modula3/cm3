@@ -90,11 +90,15 @@ readonly Uutmp1 = {
   "SPARC32_LINUX" : 1,
   "SPARC64_LINUX" : 1,
   "PPC_LINUX" : 1,
+  "LINUXLIBC6" : 1,
 
   % cygwin
   "I386_CYGWIN" : 1,
   "NT386"       : 1,
   "NT386GNU"    : 1,
+
+  % darwin-common
+  "PPC_DARWIN" : 1,
 }
 
 readonly Uutmp2 = {
@@ -103,7 +107,6 @@ readonly Uutmp2 = {
   "FreeBSD2"  : 1,
   "FreeBSD3"  : 1,
   "FreeBSD4"  : 1,
-  "PPC_DARWIN" : 1,
   "AMD64_DARWIN" : 1,
   "I386_DARWIN" : 1,
   "PPC64_DARWIN" : 1,
@@ -136,11 +139,10 @@ readonly Uutmp3 = {
 }
 
 readonly UutmpCustom = {
-  % hpux-7-0, irix-5.2, linux-libc6
+  % hpux-7-0, irix-5.2
   "HP300" : 1,
   "HPPA" : 1,
   "IRIX5" : 1,
-  "LINUXLIBC6" : 1,
 }
 
 if Uutmp1 contains TARGET
