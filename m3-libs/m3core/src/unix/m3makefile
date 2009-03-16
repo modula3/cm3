@@ -149,11 +149,11 @@ readonly UutmpCustom = {
 if Uutmp1 contains TARGET
   % nothing -- it is in common
 else if Uutmp2 contains TARGET
-  include_dir("Uutmp2")
+  % include_dir("Uutmp2")
 else if Uutmp3 contains TARGET
-  include_dir("Uutmp3")
+  % include_dir("Uutmp3")
 else if UutmpCustom contains TARGET
   % nothing
 else
-    error("platform not found in any Uutmp data")
+  % error("platform not found in any Uutmp data")
 end end end end

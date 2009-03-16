@@ -3,10 +3,8 @@
 
 c_source ("UtimeC")
 c_source ("UnixC")
-
 Interface("Uexec")
 c_source("Uexec")
-
 Interface ("Unetdb")
 c_source ("Unetdb")
 
@@ -17,8 +15,8 @@ if         equal (TARGET, "I386_OPENBSD")
 end
 
 include_dir("context")
-
 c_source("Uconstants")
+Interface("Uutmp")
 
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
@@ -30,7 +28,6 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "xPPC_DARWIN")
 
     Interface ("Umman")
-    Interface("Uutmp")
     c_source("UstatC")
     Interface ("Uuio")
     Interface ("Upwd")
