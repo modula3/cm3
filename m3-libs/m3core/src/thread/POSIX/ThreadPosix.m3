@@ -11,12 +11,13 @@
 (*|      modified on Mon Feb 22 10:08:49 PST 1993 by jdd     *)
 
 UNSAFE MODULE ThreadPosix
-EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks;
+EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks,
+        ThreadPosix;
 
 IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
        RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
        RTProcess, RTThread, RTIO, ThreadEvent, Time, TimePosix,
-       Unix, Usignal, Utime, Word, Uexec;
+       Unix, Utime, Word, Uexec;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 
@@ -751,19 +752,19 @@ PROCEDURE StartSwitching () =
   VAR it, oit: Utime.struct_itimerval;
   BEGIN
     IF preemption THEN
-      RTThread.setup_sigvtalrm (LOOPHOLE(switch_thread,Usignal.SignalHandler));
+      setup_sigvtalrm (switch_thread);
       it.it_interval := selected_interval;
       it.it_value    := selected_interval;
       IF Utime.setitimer (Utime.ITIMER_VIRTUAL, it, oit) # 0 THEN
         RAISE InternalError;
       END;
-      RTThread.allow_sigvtalrm ();
+      allow_sigvtalrm ();
     END;
   END StartSwitching;
 
 PROCEDURE switch_thread (<*UNUSED*> sig: INTEGER) RAISES {Alerted} =
   BEGIN
-    RTThread.allow_sigvtalrm ();
+    allow_sigvtalrm ();
     IF inCritical = 0 AND heapState.inCritical = 0 THEN InternalYield () END;
   END switch_thread;
 
@@ -1144,7 +1145,7 @@ PROCEDURE StartThread () =
   <*FATAL Alerted*>
   BEGIN
     Cerrno.SetErrno(self.context.errno);
-    RTThread.allow_sigvtalrm ();
+    allow_sigvtalrm ();
     DEC (inCritical);
 
     IF debug THEN
@@ -1236,12 +1237,12 @@ PROCEDURE Transfer (VAR from, to: Context;  new_self: T) =
     **********)
 
     IF (ADR (from) # ADR (to)) THEN
-      RTThread.disallow_sigvtalrm ();
+      disallow_sigvtalrm ();
       from.errno := Cerrno.GetErrno();
       self := new_self;
       RTThread.Transfer (from.buf, to.buf);
       Cerrno.SetErrno(from.errno);
-      RTThread.allow_sigvtalrm ();
+      allow_sigvtalrm ();
     END;
   END Transfer;
 
@@ -1523,7 +1524,6 @@ PROCEDURE Init()=
       gReadFDS := NEW(FDS, 1);
       gWriteFDS := NEW(FDS, 1);
       gExceptFDS := NEW(FDS, 1);
-
     inCritical := 0;
 
     PerfStart ();
@@ -1629,4 +1629,5 @@ PROCEDURE OutInt(s: TEXT; a: INTEGER) =
 VAR debug := RTParams.IsPresent ("debugthreads");
 
 BEGIN
+  InitC();
 END ThreadPosix.
