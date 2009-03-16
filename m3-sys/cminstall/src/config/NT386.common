@@ -1,6 +1,4 @@
 %
-% $Id$
-%
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
 %
@@ -289,6 +287,8 @@ proc compile_c_ms(source, object, options, optimize, debug) is
 % This is bigger/slower but has advantages too.
 % Debug information does not inhibit optimization so always generate it.
 %
+% Remove this to "bootstrap backwards" -- build with newer toolsets
+% such that you can subsequently build with older toolsets.
         "-Z7",
 %
 % needed for older headers such as with Visual C++ 2.0
@@ -552,6 +552,9 @@ proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, 
             " ",
             [
                 m3_link_flags,
+% Put this in to "bootstrap backwards" -- build with newer toolsets
+% such that you can subsequently build with older toolsets.
+%               "-link50compat",
                 "-def:" & def_file,
                 "-dll",
                 "-out:" & dll_file,
