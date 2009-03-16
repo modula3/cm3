@@ -31,54 +31,54 @@ REVEAL
 
   Condition = BRANDED "Thread.Condition Pthread-1.0" OBJECT
     mutex: pthread_mutex_t := NIL;
-    waiters: T := NIL;			 (* LL = mutex *)
+    waiters: T := NIL;                  (* LL = mutex *)
   END;
 
   T = MUTEX BRANDED "Thread.T Pthread-1.6" OBJECT
     (* live thread data *)
-    act: Activation := NIL;		 (* LL = mutex *)
+    act: Activation := NIL;             (* LL = mutex *)
 
     (* our work and its result *)
-    closure: Closure := NIL;		 (* LL = mutex *)
-    result: REFANY := NIL;		 (* LL = mutex *)
+    closure: Closure := NIL;            (* LL = mutex *)
+    result: REFANY := NIL;              (* LL = mutex *)
 
     (* wait here to join *)
-    cond: Condition := NIL;		 (* LL = mutex *)
+    cond: Condition := NIL;             (* LL = mutex *)
 
     (* CV that we're blocked on *)
-    waitingOn: Condition := NIL;	 (* LL = waitingOn.mutex *)
+    waitingOn: Condition := NIL;        (* LL = waitingOn.mutex *)
     (* queue of threads waiting on the same CV *)
-    nextWaiter: T := NIL;		 (* LL = waitingOn.mutex *)
+    nextWaiter: T := NIL;               (* LL = waitingOn.mutex *)
 
     (* condition for blocking during "Wait" *)
     waitCond: pthread_cond_t := NIL;
 
     (* the alert flag *)
-    alerted : BOOLEAN := FALSE;		 (* LL = mutex *)
+    alerted : BOOLEAN := FALSE;         (* LL = mutex *)
 
     (* indicates that "result" is set *)
-    completed: BOOLEAN := FALSE;	 (* LL = mutex *)
+    completed: BOOLEAN := FALSE;        (* LL = mutex *)
 
     (* unique Id of this thread *)
-    id: Id := 0;			 (* LL = mutex *)
+    id: Id := 0;                        (* LL = mutex *)
   END;
 
 TYPE
   ActState = { Starting, Started, Stopping, Stopped };
   Activation = UNTRACED REF RECORD
     (* global doubly-linked, circular list of all active threads *)
-    next, prev: Activation := NIL;	 (* LL = activeMu *)
+    next, prev: Activation := NIL;      (* LL = activeMu *)
     (* thread handle *)
-    handle: pthread_t;			 (* LL = activeMu *)
+    handle: pthread_t;                  (* LL = activeMu *)
     (* base of thread stack for use by GC *)
-    stackbase: ADDRESS := NIL;		 (* LL = activeMu *)
-    sp: ADDRESS := NIL;			 (* LL = activeMu *)
-    size: INTEGER;			 (* LL = activeMu *)
+    stackbase: ADDRESS := NIL;          (* LL = activeMu *)
+    sp: ADDRESS := NIL;                 (* LL = activeMu *)
+    size: INTEGER;                      (* LL = activeMu *)
 
-    state := ActState.Started;		 (* LL = activeMu *)
+    state := ActState.Started;          (* LL = activeMu *)
 
     (* index into global array of active, slotted threads *)
-    slot: INTEGER;			 (* LL = slotMu *)
+    slot: INTEGER;                      (* LL = slotMu *)
 
     (* state that is available to the floating point routines *)
     floatState : FloatMode.ThreadState;
@@ -336,7 +336,7 @@ VAR
 VAR (* LL = slotMu *)
   n_slotted := 0;
   next_slot := 1;
-  slots: REF ARRAY OF T;		 (* NOTE: we don't use slots[0] *)
+  slots: REF ARRAY OF T;                (* NOTE: we don't use slots[0] *)
 
 PROCEDURE InitActivations () =
   VAR me := NEW(Activation);
@@ -474,7 +474,7 @@ PROCEDURE DumpThreads () =
 (*------------------------------------------------------------ Fork, Join ---*)
 
 VAR (* LL=activeMu *)
-  allThreads: Activation := NIL;	 (* global list of active threads *)
+  allThreads: Activation := NIL;        (* global list of active threads *)
 
 PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
@@ -883,7 +883,7 @@ PROCEDURE IncDefaultStackSize (inc: CARDINAL) =
    that acquire "cm", it'll be deadlocked.
 *)
 
-VAR suspended: BOOLEAN := FALSE;	 (* LL=activeMu *)
+VAR suspended: BOOLEAN := FALSE;        (* LL=activeMu *)
 
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu" *)
@@ -1318,7 +1318,7 @@ PROCEDURE Die (lineno: INTEGER; msg: TEXT) =
 
 VAR
   perfW : RTPerfTool.Handle;
-  perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
+  perfOn: BOOLEAN := FALSE;             (* LL = perfMu *)
 
 PROCEDURE PerfStart () =
   BEGIN
