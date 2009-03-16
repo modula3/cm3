@@ -5,7 +5,7 @@
 
 if equal(TARGET, "PPC_DARWIN")
 
-Interface ("Usignal")
+Module ("Usignal")
 
 else
 
