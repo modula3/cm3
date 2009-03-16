@@ -120,12 +120,12 @@ PROCEDURE MemAlloc (size: INTEGER): ADDRESS =
 
 PROCEDURE MemFree (VAR a: ADDRESS) =
   BEGIN
-    Scheduler.DisableSwitching();
     IF a # NIL THEN
+      Scheduler.DisableSwitching();
       Cstdlib.free(a);
       a := NIL;
+      Scheduler.EnableSwitching();
     END;
-    Scheduler.EnableSwitching();
   END MemFree;
 
 (*----------------------------------------------------------------- Mutex ---*)
