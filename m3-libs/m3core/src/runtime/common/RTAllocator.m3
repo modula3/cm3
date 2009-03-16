@@ -154,21 +154,24 @@ PROCEDURE AllocateUntracedOpenArray (defn : ADDRESS;
 
 PROCEDURE DisposeUntracedRef (VAR a: ADDRESS) =
   BEGIN
-    Scheduler.DisableSwitching();
-    IF a # NIL THEN Cstdlib.free(a); a := NIL; END;
-    Scheduler.EnableSwitching();
+    IF a # NIL THEN
+      Scheduler.DisableSwitching();
+      Cstdlib.free(a);
+      a := NIL;
+      Scheduler.EnableSwitching();
+    END;
   END DisposeUntracedRef;
 
 PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
   VAR def: RT0.TypeDefn;
   BEGIN
-    Scheduler.DisableSwitching();
     IF a # NIL THEN
+      Scheduler.DisableSwitching();
       def := RTType.Get (TYPECODE (a));
       Cstdlib.free (a - MAX(BYTESIZE(Header), def.dataAlignment));
       a := NIL;
+      Scheduler.EnableSwitching();
     END;
-    Scheduler.EnableSwitching();
   END DisposeUntracedObj;
 
 (*-------------------------------------------------------------- internal ---*)
