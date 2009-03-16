@@ -10,7 +10,7 @@ The users of sigaction() vary as to which flags they use.
 Some use BSD sigvec which is similar to sigaction.
 */
 
-#include "ThreadPosixC.h"
+#include "ThreadPosix.h"
 #include <signal.h>
 #include <assert.h>
 #include <setjmp.h>
@@ -38,6 +38,7 @@ static sigset_t ThreadSwitchSignal;
 
 void setup_sigvtalrm(SignalHandler1 handler)
 {
+    /* This should really use sigaction, right? */
     void* old = signal(SIG_TIMESLICE, handler);
     assert(old != SIG_ERR);
 }
