@@ -7,7 +7,7 @@
 INTERFACE Uucontext;
 
 FROM Ctypes IMPORT int, void_star, unsigned_int, unsigned_long, double;
-FROM Utypes IMPORT size_t, u_int32_t;
+FROM Utypes IMPORT size_t, uint32_t;
 
 (*** <mach/ppc/thread_state.h> ***)
 
@@ -243,7 +243,7 @@ TYPE
 (*** <sys/ucontext.h> ***)
 
 TYPE
-  sigset_t = u_int32_t;
+  sigset_t = uint32_t;
   struct_ucontext = RECORD
     uc_onstack:  int;
     uc_sigmask:  sigset_t;       	 (* signal mask used by this context *)
