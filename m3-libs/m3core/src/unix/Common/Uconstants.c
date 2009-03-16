@@ -50,7 +50,8 @@ typedef int CheckMax[248 - sizeof(CheckMax_t)];
 
 
 #undef X
-#define X(x) const int Uexec__##x = x;
+#define X(x) const int Uexec__##x = x; \
+             const int Uexec_##x = x;
 X(WNOHANG)
 
 
