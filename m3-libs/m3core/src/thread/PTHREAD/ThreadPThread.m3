@@ -10,10 +10,11 @@ IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError,  RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched,
-       Uerror, Uexec;
+       Uerror, Uexec, Scheduler, Cstdlib;
 FROM Upthread IMPORT pthread_t;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
+IMPORT RuntimeError AS RTE;
 
 (*----------------------------------------------------- types and globals ---*)
 
@@ -101,6 +102,32 @@ PROCEDURE SetState (act: Activation;  state: ActState) =
     END;
   END SetState;    
 
+(*---------------------------------------------------------------------------*)
+
+(* direct unsafe heap allocation *)
+
+PROCEDURE MemAlloc (size: INTEGER): ADDRESS =
+  VAR res: ADDRESS;
+  BEGIN
+    Scheduler.DisableSwitching();
+    res := Cstdlib.calloc(1, size);
+    Scheduler.EnableSwitching();
+    IF (res = NIL) THEN
+      RAISE RTE.E (RTE.T.OutOfMemory);
+    END;
+    RETURN res;
+  END MemAlloc;
+
+PROCEDURE MemFree (VAR a: ADDRESS) =
+  BEGIN
+    Scheduler.DisableSwitching();
+    IF a # NIL THEN
+      Cstdlib.free(a);
+      a := NIL;
+    END;
+    Scheduler.EnableSwitching();
+  END MemFree;
+
 (*----------------------------------------------------------------- Mutex ---*)
          
 PROCEDURE Acquire (m: Mutex) =
@@ -117,7 +144,7 @@ PROCEDURE CleanMutex (r: REFANY) =
   VAR m := NARROW(r, Mutex);
   BEGIN
     WITH r = pthread_mutex_destroy (m.mutex) DO <*ASSERT r=0*> END;
-    DISPOSE(m.mutex);
+    MemFree(m.mutex);
   END CleanMutex;
 
 PROCEDURE InitMutex (m: Mutex) =
@@ -126,7 +153,7 @@ PROCEDURE InitMutex (m: Mutex) =
     TRY
       WITH r = pthread_mutex_lock_init() DO <*ASSERT r=0*> END;
       IF m.mutex # NIL THEN RETURN END;
-      mutex := NEW(pthread_mutex_t, sizeof_pthread_mutex_t);
+      mutex := MemAlloc(sizeof_pthread_mutex_t);
       WITH r = pthread_mutex_init(mutex) DO <*ASSERT r=0*> END;
       m.mutex := mutex;
     FINALLY
@@ -173,7 +200,7 @@ PROCEDURE CleanCondition (r: REFANY) =
   VAR c := NARROW(r, Condition);
   BEGIN
     WITH r = pthread_mutex_destroy (c.mutex) DO <*ASSERT r=0*> END;
-    DISPOSE(c.mutex);
+    MemFree(c.mutex);
   END CleanCondition;
 
 PROCEDURE InitCondition (c: Condition) =
@@ -182,7 +209,7 @@ PROCEDURE InitCondition (c: Condition) =
     TRY
       WITH r = pthread_mutex_lock_init() DO <*ASSERT r=0*> END;
       IF c.mutex # NIL THEN RETURN END;
-      mutex := NEW(pthread_mutex_t, sizeof_pthread_mutex_t);
+      mutex := MemAlloc(sizeof_pthread_mutex_t);
       WITH r = pthread_mutex_init(mutex) DO <*ASSERT r=0*> END;
       c.mutex := mutex;
     FINALLY
@@ -482,7 +509,7 @@ PROCEDURE CreateT (act: Activation): T =
      which will try to acquire "activeMu". *)
   VAR t := NEW(T, act := act);
   BEGIN
-    t.waitCond := NEW(pthread_cond_t, sizeof_pthread_cond_t);
+    t.waitCond := MemAlloc(sizeof_pthread_cond_t);
     WITH r = pthread_cond_init (t.waitCond) DO <*ASSERT r=0*> END;
     t.cond     := NEW(Condition);
     FloatMode.InitThread (act.floatState);
@@ -536,7 +563,7 @@ PROCEDURE RunThread (me: Activation) =
       self.completed := TRUE;
       Broadcast(self.cond); (* let everybody know that "self" is done *)
       WITH r = pthread_cond_destroy(self.waitCond) DO <*ASSERT r=0*> END;
-      DISPOSE(self.waitCond);
+      MemFree(self.waitCond);
     END;
 
     IF perfOn THEN PerfDeleted(self.id) END;
