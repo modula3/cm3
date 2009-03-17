@@ -468,7 +468,7 @@ PROCEDURE InitStream (fd: CARDINAL)
   RAISES {OSError.E} =
   (* We assume that the runtime ignores SIGPIPE signals *)
   VAR
-    one := 1;
+    one : Ctypes.int := 1;
     linger := Usocket.struct_linger{1, 1};
   BEGIN
     (*****
