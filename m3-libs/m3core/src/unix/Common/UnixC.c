@@ -77,6 +77,12 @@ See http://edoofus.blogspot.com/2008/08/interesting-bug-unbreaking-cvsupamd64.ht
     return fcntl(fd, request, arg);
 }
 
+int Unix__ioctl(int fd, int request, void* argp)
+/* ioctl is varargs. See fcntl. */
+{
+    return ioctl(fd, request, argp);
+}
+
 #ifdef __cplusplus
 } /* extern C */
 #endif

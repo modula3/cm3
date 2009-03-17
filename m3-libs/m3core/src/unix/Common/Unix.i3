@@ -65,7 +65,7 @@ PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
 (* CONST *)
 <*EXTERNAL Unix__FIONREAD*> VAR FIONREAD: int;
 
-PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
+<*EXTERNAL Unix__ioctl*> PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
 <*EXTERNAL Unix__lseek*>
 PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
 <*EXTERNAL Unix__mkdir*>
