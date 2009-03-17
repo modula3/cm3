@@ -42,6 +42,6 @@ TYPE
   pid_t = Usysdep.pid_t;
   uid_t = Usysdep.uid_t;
 
-  socklen_t = Usysdep.socklen_t;
+  socklen_t = uint32_t; (* int32_t on Cygwin, size_t on HP-UX, but ok via wrappers *)
 
 END Utypes.

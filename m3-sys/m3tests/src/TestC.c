@@ -50,7 +50,6 @@ static const T t1 =
     SIZE(gid_t),
     SIZE(linger_t),
     SIZE(pid_t),
-    SIZE(socklen_t),
     SIZE(time_t),
     SIZE(timeval_t),
     SIZE(tm_t),
