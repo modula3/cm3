@@ -264,7 +264,7 @@ PROCEDURE EOF(t: T) : BOOLEAN =
 PROCEDURE InitFD(fd: CARDINAL) =
   (* We assume that the runtime ignores SIGPIPE signals *)
   VAR
-    one := 1;
+    one: int := 1;
     linger := Usocket.struct_linger{1, 1};
   BEGIN
     EVAL Usocket.setsockopt(fd, SockOpt.SOL_SOCKET, SockOpt.SO_LINGER,
