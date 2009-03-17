@@ -55,7 +55,7 @@ PROCEDURE exit (i: int);
 <*EXTERNAL Unix__F_GETFL*> VAR F_GETFL: int; (* Get fd status flags *)
 <*EXTERNAL Unix__F_SETFL*> VAR F_SETFL: int; (* Set fd status flags *)
 
-PROCEDURE fcntl (fd, request, arg: int): int;
+<*EXTERNAL Unix__fcntl*> PROCEDURE fcntl (fd, request, arg: int): int;
 PROCEDURE fsync (fd: int): int;
 PROCEDURE getdtablesize (): int;
 PROCEDURE gethostname (name: char_star; namelen: size_t): int;
