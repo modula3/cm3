@@ -6,12 +6,12 @@
 (*      modified on Fri Jan  7 13:31:11 PST 1994 by msm    *)
 (*      modified on Sun Jan 12 16:16:54 PST 1992 by meehan *)
 (*      modified on Sat Jan 11 16:55:00 PST 1992 by gnelson *)
-(* $Id: TCP.m3,v 1.6 2009-03-17 11:55:13 jkrell Exp $ *)
+(* $Id: TCP.m3,v 1.7 2009-03-17 12:07:40 jkrell Exp $ *)
 
 UNSAFE MODULE TCP EXPORTS TCP, TCPMisc, TCPSpecial;
 
 IMPORT Atom, AtomList, IP, Rd, Wr, Thread;
-IMPORT Usocket, SockOpt, Uerror, Uin, Unix, Uuio, Utypes,
+IMPORT Usocket, Uerror, Uin, Unix, Uuio, Utypes,
        SchedulerPosix, Fmt, Word;
 IMPORT ConnFD;
 IMPORT Cerrno;
@@ -64,7 +64,7 @@ PROCEDURE NewConnector (ep: IP.Endpoint): Connector RAISES {IP.Error} =
       END
     END;
     MakeNonBlocking (res.fd);
-    EVAL Usocket.setsockopt(res.fd, SockOpt.SOL_SOCKET, SockOpt.SO_REUSEADDR,
+    EVAL Usocket.setsockopt(res.fd, Usocket.SOL_SOCKET, Usocket.SO_REUSEADDR,
       ADR(True), BYTESIZE(True));
     name.sin_family := Usocket.AF_INET;
     name.sin_port := Uin.htons(ep.port);
@@ -138,7 +138,7 @@ PROCEDURE StartConnect(to: IP.Endpoint;
     InitFD(fd);
 
     IF from # IP.NullEndPoint THEN  (* Bind to the "from" address. *)
-      EVAL Usocket.setsockopt(fd, SockOpt.SOL_SOCKET, SockOpt.SO_REUSEADDR,
+      EVAL Usocket.setsockopt(fd, Usocket.SOL_SOCKET, Usocket.SO_REUSEADDR,
         ADR(True), BYTESIZE(True));
       fromName.sin_family := Usocket.AF_INET;
       fromName.sin_port := Uin.htons(from.port);
@@ -267,7 +267,7 @@ PROCEDURE InitFD(fd: CARDINAL) =
     one: int := 1;
     linger := Usocket.struct_linger{1, 1};
   BEGIN
-    EVAL Usocket.setsockopt(fd, SockOpt.SOL_SOCKET, SockOpt.SO_LINGER,
+    EVAL Usocket.setsockopt(fd, Usocket.SOL_SOCKET, Usocket.SO_LINGER,
                             ADR(linger), BYTESIZE(linger));
     EVAL Usocket.setsockopt(
            fd, Uin.IPPROTO_TCP, TCP_NODELAY, ADR(one), BYTESIZE(one));
@@ -553,7 +553,7 @@ PROCEDURE KeepAlive(tcp: T; allow: BOOLEAN)
       IF tcp.closed THEN
         RAISE IP.Error(AtomList.List1(Closed));
       END;
-      IF Usocket.setsockopt(tcp.fd, SockOpt.SOL_SOCKET, SockOpt.SO_KEEPALIVE,
+      IF Usocket.setsockopt(tcp.fd, Usocket.SOL_SOCKET, Usocket.SO_KEEPALIVE,
         ADR(keepAlive), BYTESIZE(keepAlive)) = -1 THEN
         RaiseUnexpected();
       END;
@@ -577,7 +577,7 @@ PROCEDURE LingerOnClose(tcp: T; allow: BOOLEAN)
       IF tcp.closed THEN
         RAISE IP.Error(AtomList.List1(Closed));
       END;
-      IF Usocket.setsockopt(tcp.fd, SockOpt.SOL_SOCKET, SockOpt.SO_LINGER,
+      IF Usocket.setsockopt(tcp.fd, Usocket.SOL_SOCKET, Usocket.SO_LINGER,
         ADR(linger), BYTESIZE(linger)) = -1 THEN
         RaiseUnexpected();
       END;
