@@ -6,7 +6,7 @@
 (*      modified on Fri Jan  7 13:31:11 PST 1994 by msm    *)
 (*      modified on Sun Jan 12 16:16:54 PST 1992 by meehan *)
 (*      modified on Sat Jan 11 16:55:00 PST 1992 by gnelson *)
-(* $Id: TCP.m3,v 1.5 2009-01-19 11:16:10 jkrell Exp $ *)
+(* $Id: TCP.m3,v 1.6 2009-03-17 11:55:13 jkrell Exp $ *)
 
 UNSAFE MODULE TCP EXPORTS TCP, TCPMisc, TCPSpecial;
 
@@ -264,7 +264,7 @@ PROCEDURE EOF(t: T) : BOOLEAN =
 PROCEDURE InitFD(fd: CARDINAL) =
   (* We assume that the runtime ignores SIGPIPE signals *)
   VAR
-    one := 1;
+    one: int := 1;
     linger := Usocket.struct_linger{1, 1};
   BEGIN
     EVAL Usocket.setsockopt(fd, SockOpt.SOL_SOCKET, SockOpt.SO_LINGER,
