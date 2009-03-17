@@ -57,6 +57,4 @@ TYPE
 
   uid_t = uint32_t;
 
-  socklen_t = uint32_t;
-
 END Usysdep.
