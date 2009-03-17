@@ -56,6 +56,4 @@ TYPE
     time_t = INTEGER;
     uid_t = int32_t;
 
-    socklen_t = uint32_t;
-
 END Usysdep.
