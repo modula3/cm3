@@ -55,7 +55,9 @@ PROCEDURE exit (i: int);
 <*EXTERNAL Unix__F_GETFL*> VAR F_GETFL: int; (* Get fd status flags *)
 <*EXTERNAL Unix__F_SETFL*> VAR F_SETFL: int; (* Set fd status flags *)
 
-<*EXTERNAL Unix__fcntl*> PROCEDURE fcntl (fd, request, arg: int): int;
+<*EXTERNAL Unix__fcntl*>
+PROCEDURE fcntl (fd, request, arg: int): int;
+
 PROCEDURE fsync (fd: int): int;
 PROCEDURE getdtablesize (): int;
 PROCEDURE gethostname (name: char_star; namelen: size_t): int;
@@ -65,9 +67,12 @@ PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
 (* CONST *)
 <*EXTERNAL Unix__FIONREAD*> VAR FIONREAD: int;
 
-<*EXTERNAL Unix__ioctl*> PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
+<*EXTERNAL Unix__ioctl*>
+PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
+
 <*EXTERNAL Unix__lseek*>
 PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
+
 <*EXTERNAL Unix__mkdir*>
 PROCEDURE mkdir (path: const_char_star; mode: int(*mode_t*)): int;
 
@@ -107,6 +112,7 @@ TYPE
 
 PROCEDURE select (nfds: int; readfds, writefds, exceptfds: UNTRACED REF FDSet; timeout: UNTRACED REF struct_timeval): int;
 
-<*EXTERNAL Unix__Assertions*> PROCEDURE Assertions();
+<*EXTERNAL Unix__Assertions*>
+PROCEDURE Assertions();
 
 END Unix.
