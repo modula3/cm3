@@ -20,7 +20,7 @@ IMPORT Usysdep;
 
 <*EXTERNAL "Usocket__SOL_SOCKET"*>   VAR SOL_SOCKET: int;
 
-<*EXTERNAL "Usocket__SOL_SOCKET"*>   VAR AF_INET: int;
+<*EXTERNAL "Usocket__AF_INET"*>      VAR AF_INET: int;
 <*EXTERNAL "Usocket__MSG_PEEK"*>     VAR MSG_PEEK: int;
 
 TYPE
