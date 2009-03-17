@@ -15,6 +15,7 @@ UNSAFE MODULE TCP EXPORTS TCP, TCPMisc, TCPSpecial;
 
 IMPORT Atom, AtomList, ConnFD, IP, IPError, Rd, Wr, Thread;
 IMPORT Ctypes, WinSock, TCPWin32, Fmt;
+FROM WinDef IMPORT BOOL;
 
 REVEAL
   Connector = MUTEX BRANDED "TCP.Connector" OBJECT
@@ -302,7 +303,7 @@ VAR SysRcvBufSize: INTEGER := 65535;
 PROCEDURE InitSock(sock: WinSock.SOCKET) =
   (* We assume that the runtime ignores SIGPIPE signals *)
   VAR
-    one := 1;
+    one : BOOL := 1;
     linger := WinSock.struct_linger{0, 0};
   BEGIN
 (*
