@@ -9,6 +9,7 @@ FROM Cstdint IMPORT uint32_t;
 FROM Cstddef IMPORT size_t;
 FROM Uin IMPORT struct_sockaddr_in;
 IMPORT Usysdep;
+IMPORT Utypes;
 
 (* CONST *)
 <*EXTERNAL "Usocket__SOCK_STREAM"*>  VAR SOCK_STREAM: int;
@@ -25,7 +26,7 @@ IMPORT Usysdep;
 
 TYPE
   struct_linger = Usysdep.struct_linger;
-  socklen_t = uint32_t; (* int32_t on Cygwin, size_t on HP-UX, but ok via wrappers *)
+  socklen_t = Utypes.socklen_t;
   socklen_t_star = UNTRACED REF socklen_t;
 
 <*EXTERNAL Usocket__accept*>
