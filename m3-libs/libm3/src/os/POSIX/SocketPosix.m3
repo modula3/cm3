@@ -500,7 +500,7 @@ PROCEDURE RefetchError(fd: INTEGER) =
 (* Awful hack to retrieve a meaningful error from a TCP accept
    socket.  Only works on Ultrix and OSF.  Leaves result
    in Cerrno.GetErrno().  *)
-  VAR optbuf: INTEGER := 0;   optlen := BYTESIZE(optbuf);
+  VAR optbuf: Ctypes.int := 0;   optlen := BYTESIZE(optbuf);
   BEGIN
     IF SocketPosix_IsUltrixOrOSF.Value THEN
       EVAL Usocket.getsockopt (fd, Uin.IPPROTO_TCP, TCP_NODELAY,
