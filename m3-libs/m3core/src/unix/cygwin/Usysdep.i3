@@ -26,7 +26,6 @@ TYPE
 (* INTERFACE Upthread; *)
 
   pthread_t = ADDRESS; (* opaque *)
-  pthread_key_t = ADDRESS; (* opaque *)
 
 (* INTERFACE Usocket; *)
 

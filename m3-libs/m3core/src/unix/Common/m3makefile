@@ -46,6 +46,7 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
     Interface("Usched")
 
     Interface("Usocket")
+    c_source("Usocket")
 
     Interface ("Ustat")
     Interface ("Udir")
