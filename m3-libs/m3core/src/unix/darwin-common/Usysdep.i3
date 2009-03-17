@@ -54,7 +54,7 @@ TYPE
   pid_t = int32_t;
 
   (* ideally always 64 bits *)
-  time_t = int32_t;
+  time_t = INTEGER;
 
   uid_t = uint32_t;
 
