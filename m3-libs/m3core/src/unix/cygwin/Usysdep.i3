@@ -66,8 +66,6 @@ TYPE
   pid_t = int32_t;
   gid_t = uint32_t;
 
-  socklen_t = int32_t;
-
 (* INTERFACE Utermio *)
 
 TYPE

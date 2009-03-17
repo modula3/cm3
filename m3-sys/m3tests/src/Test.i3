@@ -21,7 +21,6 @@ TYPE
       gid := BYTESIZE(Usysdep.gid_t);
       linger := BYTESIZE(Usysdep.struct_linger);
       pid := BYTESIZE(Usysdep.pid_t);
-      socklen := BYTESIZE(Usysdep.socklen_t);
       time := BYTESIZE(Usysdep.time_t);
       timeval := BYTESIZE(Usysdep.struct_timeval);
       tm := BYTESIZE(Usysdep.struct_tm);
