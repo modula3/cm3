@@ -68,6 +68,15 @@ off_t Unix__lseek(int fd, off_t offset, int whence)
     return lseek(fd, offset, whence);
 }
 
+int Unix__fcntl(int fd, int request, int arg)
+/* fcntl is actually fcntl(fd, request, ...).
+Wrapper is needed on some systems to handle varargs.
+See http://edoofus.blogspot.com/2008/08/interesting-bug-unbreaking-cvsupamd64.html.
+*/
+{
+    return fcntl(fd, request, arg);
+}
+
 #ifdef __cplusplus
 } /* extern C */
 #endif
