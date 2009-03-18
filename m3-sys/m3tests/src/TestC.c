@@ -33,7 +33,6 @@ typedef struct T
         size_t gid;
         size_t linger;
         size_t pid;
-        size_t socklen;
         size_t time;
         size_t timeval;
         size_t tm;
