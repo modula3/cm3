@@ -35,6 +35,11 @@ So use these wrappers instead.
 #include <fcntl.h>
 #include <unistd.h>
 #include <assert.h>
+#ifdef __sun
+#include <errno.h>
+#else
+#include <sys/ioctl.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,22 +73,53 @@ off_t Unix__lseek(int fd, off_t offset, int whence)
     return lseek(fd, offset, whence);
 }
 
+#ifndef __sun
+
 int Unix__fcntl(int fd, int request, int arg)
 /* fcntl is actually fcntl(fd, request, ...).
 Wrapper is needed on some systems to handle varargs.
 See http://edoofus.blogspot.com/2008/08/interesting-bug-unbreaking-cvsupamd64.html.
 */
 {
+#ifdef __sun
+/*
+ * This is to work around a bug in the Solaris-2 'libsocket' library 
+ * which redefines 'fcntl' in such a way as to zero out 'errno' if the
+ * call is successful.
+ * See m3-libs/m3core/src/unix/solaris-2-x/Unix.m3.
+ */
+    int e = errno;
+    int r = fcntl(fd, request, arg);
+    if (r == 0)
+        errno = e;
+    return r;
+#else
     return fcntl(fd, request, arg);
+#endif
 }
 
 int Unix__ioctl(int fd, int request, void* argp)
 /* ioctl is varargs. See fcntl. */
 {
+#ifdef __sun
+/*
+ * This is to work around a bug in the Solaris-2 'libsocket' library 
+ * which redefines 'ioctl' in such a way as to zero out 'errno' if the
+ * call is successful.
+ * See m3-libs/m3core/src/unix/solaris-2-x/Unix.m3.
+ */
+    int e = errno;
+    int r = ioctl(fd, request, argp);
+    if (r == 0)
+        errno = e;
+    return r;
+#else
     return ioctl(fd, request, argp);
+#endif
 }
+
+#endif
 
 #ifdef __cplusplus
 } /* extern C */
 #endif
-
