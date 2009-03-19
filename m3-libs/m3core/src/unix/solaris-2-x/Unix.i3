@@ -879,7 +879,7 @@ CONST (* howto *)
 (*** select - synchronous I/O mutiplexing ***)
 
 CONST
-  MAX_FDSET = 64;
+  MAX_FDSET = 1024;
 
 TYPE
   FDSet = SET OF [0 .. MAX_FDSET - 1];
