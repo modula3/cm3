@@ -33,8 +33,8 @@ TYPE
 (* INTERFACE Utime; *)
 
     struct_timeval = RECORD
-        tv_sec: int32_t;
-        tv_usec: int32_t;
+        tv_sec: INTEGER;
+        tv_usec: INTEGER;
     END;
 
     struct_tm = RECORD
