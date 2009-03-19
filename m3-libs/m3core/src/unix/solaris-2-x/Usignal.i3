@@ -10,7 +10,6 @@ INTERFACE Usignal;
 
 IMPORT Uucontext;
 FROM Ctypes IMPORT int, void_star;
-FROM Utypes IMPORT caddr_t;
 FROM Uucontext IMPORT ucontext_t_star;
 
 TYPE
@@ -85,7 +84,7 @@ TYPE
     si_signo   : int;			 (* signal number *)
     si_code    : int;			 (* signal code *)
     si_errno   : int;			 (* error number *)
-    si_addr    : caddr_t;		 (* faulting address *)
+    si_addr    : ADDRESS;		 (* faulting address *)
     si_trapno  : int;			 (* illegal trap number *)
   END;
   siginfo_t_fault_star = UNTRACED REF siginfo_t_fault;
