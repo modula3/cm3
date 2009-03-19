@@ -6,14 +6,13 @@
 
 INTERFACE Uucontext;
 
-FROM Ctypes IMPORT int, long, char_star, unsigned_int, unsigned_char, double;
-FROM Utypes IMPORT u_long, caddr_t;
+FROM Ctypes IMPORT unsigned_long, int, long, char_star, unsigned_int, unsigned_char, double;
 
 (* ucontext.h *)
 
 TYPE
   sigset_t = RECORD 
-    sigbits : ARRAY [0..3] OF u_long;  
+    sigbits : ARRAY [0..3] OF unsigned_long;  
   END;
 
   struct_sigaltstack = RECORD
@@ -57,7 +56,7 @@ TYPE
 
   xrs_t = RECORD
     xrs_id     : unsigned_int;		 (* indicates xrs_ptr validity *)
-    xrs_ptr    : caddr_t;		 (* ptr to extra reg state *)
+    xrs_ptr    : ADDRESS;		 (* ptr to extra reg state *)
   END;
 
   mcontext_t = RECORD
@@ -69,7 +68,7 @@ TYPE
   END;
 
   struct_ucontext = RECORD
-    uc_flags   : u_long;
+    uc_flags   : unsigned_long;
     uc_link    : UNTRACED REF struct_ucontext;
     uc_sigmask : sigset_t;
     uc_stack   : stack_t;
