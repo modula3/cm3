@@ -322,6 +322,7 @@ PROCEDURE PaintViewWithShadows (v: T) =
     r := Rect.Inset(stripe, v.shadowPixels);
     ShadowPaint.Border(v, Region.Full, v.shadow, Shadow.Style.Raised,
       r, stripe);
+    <* ASSERT v.shadow # NIL *>
     VBT.PaintTint(v, r, v.shadow.bg);
   END PaintViewWithShadows;
 
