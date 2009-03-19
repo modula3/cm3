@@ -26,6 +26,7 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "NT386") or equal (TARGET, "AMD64_FREEBSD")
 	or equal (TARGET, "LINUXLIBC6")
         or equal (TARGET, "PPC_DARWIN")
+        or equal (TARGET, "SOLgnu") or equal (TARGET, "SOLsun")
 
     Interface ("Umman")
     c_source("UstatC")

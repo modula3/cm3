@@ -6,6 +6,14 @@
 %      modified on Mon Oct 31 13:25:59 PST 1994 by kalsow
 %      modified on Tue Mar 24 21:36:54 PST 1992 by muller
 
+if TRUE
+
+Interface ("Usignal")
+Interface ("Uucontext")
+Interface ("Uframe")
+
+else
+
 Interface ("Udir")
 Interface ("Uerror")
 Interface ("Uframe")
@@ -32,3 +40,5 @@ Interface ("Uucontext")
 Interface ("Uugid")
 Interface ("Uuio")
 Interface ("Uutsname")
+
+end
