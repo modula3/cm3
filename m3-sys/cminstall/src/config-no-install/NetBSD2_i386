@@ -1,0 +1,18 @@
+readonly TARGET = "NetBSD2_i386"
+readonly WORD_SIZE = "32BITS"
+
+readonly m3back_flags = "-gstabs+ -quiet -m32 -fPIC"
+readonly SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"
+readonly SYSTEM_ASM = "as -32"
+
+%
+% newer platforms never needed these workarounds for
+% bootstrapping with older builds
+%
+readonly proc GetGcWrapFlags() is return "" end
+readonly proc FixM3GcDefs(x) is return x end
+readonly proc GetM3BackFlag(x) is return x end
+
+GNU_MAKE = "gmake"
+
+include("Unix.common")
