@@ -2,6 +2,7 @@
 /* All rights reserved.                                       */
 /* See the file COPYRIGHT for a full description.             */
 
+#include <sys/types.h>
 #include <dirent.h>
 
 #ifdef __cplusplus
