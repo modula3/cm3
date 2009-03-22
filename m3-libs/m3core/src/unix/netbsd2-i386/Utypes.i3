@@ -42,7 +42,7 @@ TYPE
   u_int16_t = u_short;
   int32_t   = int;
   u_int32_t = u_int;
-  int64_t   = RECORD val := ARRAY [0..1] OF int32_t {0,0}; END;
+  int64_t   = LONGINT;
   u_int64_t = int64_t;
 
 (* #ifdef vax *)
