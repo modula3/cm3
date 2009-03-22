@@ -8,8 +8,8 @@
 
 INTERFACE Usignal;
 
-FROM Ctypes IMPORT int;
-FROM Utypes IMPORT pid_t, u_int32_t;
+FROM Ctypes IMPORT int, unsigned_int;
+FROM Utypes IMPORT pid_t;
 
 (*** <signal.h> ***)
 
@@ -76,7 +76,7 @@ TYPE
   SignalHandler = PROCEDURE (sig, code: int;
                              scp: UNTRACED REF struct_sigcontext);
 
-  sigset_t = ARRAY [0..3] OF u_int32_t;
+  sigset_t = ARRAY [0..3] OF unsigned_int;
   sigset_t_star = UNTRACED REF sigset_t;
   const_sigset_t_star = sigset_t_star;
 
