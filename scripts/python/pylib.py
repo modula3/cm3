@@ -179,6 +179,7 @@ def _MapTarget(a):
         "PPC32_DARWIN" : "PPC_DARWIN",
         "PPC32_LINUX" : "PPC_LINUX",
         "I386_FREEBSD" : "FreeBSD4",
+        "I386_NETBSD" : "NetBSD2_i386",
 
         #
         # both options sensible, double HP a bit redundant in the HPUX names
@@ -195,7 +196,7 @@ def _GetAllTargets():
 
     # legacy naming
 
-    Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4" ]
+    Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4", "NetBSD2_i386" ]
 
     for proc in [ "PPC", ]:
         for os in [ "OPENBSD", "NETBSD", "FREEBSD", "DARWIN", "LINUX", "NT" ]:
@@ -1108,9 +1109,9 @@ def _MakeArchive(a):
     #
     # OpenBSD doesn't have bzip2 in base, so use gzip instead.
     #
+    DeleteFile(a + ".tar.gz")
     b = "tar cfz " + a + ".tar.gz " + a
     print(b + "\n");
-    DeleteFile(a + ".tar.gz")
     os.system(b)
 
 #-----------------------------------------------------------------------------
