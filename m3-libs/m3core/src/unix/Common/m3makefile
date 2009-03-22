@@ -11,8 +11,11 @@ c_source ("Unetdb")
 if         equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "LINUXLIBC6")
     c_source("Uucontext")
-    h_source("Uucontext")
 end
+
+h_source("Uucontext")
+h_source("UerrorX")
+h_source("m3unix")
 
 include_dir("context")
 c_source("Uconstants")
