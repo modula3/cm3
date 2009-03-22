@@ -62,6 +62,7 @@ if equal (TARGET, "SPARC64_OPENBSD") or equal (TARGET, "PPC32_OPENBSD")
     or equal (TARGET, "AMD64_DARWIN") or equal (TARGET, "PPC_DARWIN")
     or equal (TARGET, "SOLgnu") or equal (TARGET, "SOLsun")
     or equal (TARGET, "NT386") or equal (TARGET, "LINUXLIBC6")
+    or equal (TARGET, "NetBSD2_i386")
 
 interface      ("RTSignalPrivate")
 c_source       ("RTSignalC")
@@ -78,6 +79,7 @@ if equal (TARGET, "SPARC64_OPENBSD") or equal (TARGET, "PPC32_OPENBSD")
     or equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
     or equal (TARGET, "AMD64_FREEBSD")
     or equal (TARGET, "NT386")
+    or equal (TARGET, "NetBSD2_i386")
 
 implementation ("RTThread")
 

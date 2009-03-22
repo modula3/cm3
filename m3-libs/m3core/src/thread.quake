@@ -60,7 +60,7 @@ readonly USE_PTHREADS = {
   "I386_DARWIN": TRUE,
   "PPC_DARWIN" : TRUE,
   "PPC_LINUX"  : TRUE,
-  "NetBSD2_i386"  : FALSE
+  "NetBSD2_i386"  : TRUE,
 }
 
 % pthreads or cygwin
