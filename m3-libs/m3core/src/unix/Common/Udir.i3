@@ -10,7 +10,7 @@ TYPE
   (* DIR is opaque *)
   DIR_star = ADDRESS;
 
-PROCEDURE opendir (filename: const_char_star): DIR_star;
-<*EXTERNAL Udir__opendir*> PROCEDURE closedir(dirp: DIR_star): int;
+<*EXTERNAL Udir__opendir*> PROCEDURE opendir (filename: const_char_star): DIR_star;
+<*EXTERNAL*> PROCEDURE closedir(dirp: DIR_star): int;
 
 END Udir.
