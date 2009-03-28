@@ -18,7 +18,7 @@ GNU_MAKE = "gmake"
 
 %
 % Do not record build-time paths for searching at runtime.
-% Users should set LD_LIBRARY_PATH%. (Still need to try "origin".)
+% Users should set LD_LIBRARY_PATH.
 %
 
 M3_SHARED_LIB_ARG = "-Wl,-rpath-link,"
