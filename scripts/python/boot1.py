@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: boot1.py,v 1.1 2008-05-25 01:16:59 jkrell Exp $
+# $Id: boot1.py,v 1.2 2009-03-29 02:50:32 jkrell Exp $
 
 import sys
 import os.path
@@ -8,14 +8,13 @@ from pylib import *
 
 #
 #
-# Having used python\do-cm3-front boot platform
-# this script archives up the files needed on the target.
+# Having used ".\do-cm3-front.py boot <platform>"
+# this script archives up the files needed on the target,
+# along with a makefile and script.
 #
 # It is assumed the target has a full source tree.
-# It is assumed building a native cm3cg is easy enough.
-# The trick/goal of bootstrapping is to produce a cm3 on the new target.
-# From there, the tree can be rebuilt normally from m3core and on up.
-# (We don't care about "shipping" during boot.)
+# The goal of bootstrapping is to produce a cm3 on the new target.
+# From there, the tree can be rebuilt normally from cm3cg, m3core and on up.
 #
 #
 
