@@ -183,7 +183,7 @@ PROCEDURE CheckTypeFailed () =
 
 PROCEDURE CheckType (def: RT0.TypeDefn; traced: INTEGER; kind: TK) =
   BEGIN
-    (* These are all separate so that the line numbers in th debugger
+    (* These are all separate so that the line numbers in the debugger
     tell you which one failed. *)
     IF def.typecode = 0 THEN
       CheckTypeFailed();
