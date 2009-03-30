@@ -255,7 +255,6 @@ MUTEX(perf)
 MUTEX(heap)
 CONDITION_VARIABLE(heap)
 THREAD_LOCAL(activations)
-THREAD_LOCAL(handlers)
 
 EXTERN_CONST
 int ThreadPThread__sizeof_pthread_mutex_t = sizeof(pthread_mutex_t);

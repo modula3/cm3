@@ -7,7 +7,7 @@ EXPORTS
 Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep,
-       RTCollectorSRC, RTError,  RTHeapRep, RTIO, RTMachine, RTParams,
+       RTCollectorSRC, RTError, RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched,
        Uerror, Uexec, Scheduler, Cstdlib;
@@ -65,8 +65,14 @@ REVEAL
   END;
 
 TYPE
+
+  Frame = UNTRACED REF RECORD next: ADDRESS END; (* exception handling support *)
+
   ActState = { Starting, Started, Stopping, Stopped };
-  Activation = UNTRACED REF RECORD
+  ActivationRecord = RECORD
+
+    frame: Frame := NIL; (* exception handling support *)
+
     (* global doubly-linked, circular list of all active threads *)
     next, prev: Activation := NIL;      (* LL = activeMu *)
     (* thread handle *)
@@ -87,6 +93,7 @@ TYPE
     (* state that is available to the heap routines *)
     heapState : RTHeapRep.ThreadState;
   END;
+  Activation = UNTRACED REF ActivationRecord;
 
 PROCEDURE SetState (act: Activation;  state: ActState) =
   CONST text = ARRAY ActState OF TEXT
@@ -106,6 +113,14 @@ PROCEDURE SetState (act: Activation;  state: ActState) =
 
 (* direct unsafe heap allocation *)
 
+PROCEDURE RAISE_RTE_E_RTE_T_OutOfMemory() =
+(* This is a separate function to avoid establishing a exception
+handling frame in the common success case, for performance,
+and to prevent infinite recursion. *)
+  BEGIN
+    RAISE RTE.E(RTE.T.OutOfMemory);
+  END RAISE_RTE_E_RTE_T_OutOfMemory;
+
 PROCEDURE MemAlloc (size: INTEGER): ADDRESS =
   VAR res: ADDRESS;
   BEGIN
@@ -113,7 +128,7 @@ PROCEDURE MemAlloc (size: INTEGER): ADDRESS =
     res := Cstdlib.calloc(1, size);
     Scheduler.EnableSwitching();
     IF (res = NIL) THEN
-      RAISE RTE.E (RTE.T.OutOfMemory);
+      RAISE_RTE_E_RTE_T_OutOfMemory();
     END;
     RETURN res;
   END MemAlloc;
@@ -358,7 +373,9 @@ PROCEDURE TestAlert (): BOOLEAN =
 (*------------------------------------------------------------------ Self ---*)
 
 VAR
-  initActivations := TRUE;
+  (* If we do this, the initializer runs again after InitActivations
+  FirstActivation: ActivationRecord; *)
+  FirstActivation: Activation;
 
 VAR (* LL = slotMu *)
   n_slotted := 0;
@@ -366,17 +383,25 @@ VAR (* LL = slotMu *)
   slots: REF ARRAY OF T;                (* NOTE: we don't use slots[0] *)
 
 PROCEDURE InitActivations () =
-  VAR me := NEW(Activation);
+(* We cannot use NEW because it does not work this early.
+  VAR me := NEW(Activation); *)
+(* This causes problems because the initializer runs too late.
+  VAR me: Activation := ADR(FirstActivation); *)
+  VAR me: Activation := LOOPHOLE(MemAlloc(BYTESIZE(ActivationRecord)), Activation);
+      init: ActivationRecord;
   BEGIN
+    me^ := init;
+    me.handle := Upthread.self();
+    me.next := me;
+    me.prev := me;
     WITH r = pthread_key_create_activations() DO <*ASSERT r=0*> END;
     WITH r = pthread_setspecific_activations(me) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
-      <* ASSERT allThreads = NIL *>
-      me.handle := Upthread.self();
-      me.next := me;
-      me.prev := me;
+      <* ASSERT next_slot = 1 *> (* no threads created yet *)
+      <* ASSERT slots = NIL *> (* no threads created yet *)
+      <* ASSERT n_slotted = 0 *> (* no threads created yet *)
+      <* ASSERT allThreads = NIL *> (* no threads created yet *)
       allThreads := me;
-      initActivations := FALSE;
     WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
   END InitActivations;
 
@@ -384,7 +409,7 @@ PROCEDURE SetActivation (act: Activation) =
   (* LL = 0 *)
   VAR v := LOOPHOLE(act, ADDRESS);
   BEGIN
-    IF initActivations THEN InitActivations() END;
+    IF allThreads = NIL THEN InitActivations() END;
     WITH r = pthread_setspecific_activations(v) DO <*ASSERT r=0*> END;
   END SetActivation;
 
@@ -392,7 +417,7 @@ PROCEDURE GetActivation (): Activation =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
   BEGIN
-    IF initActivations THEN InitActivations() END;
+    IF allThreads = NIL THEN InitActivations() END;
     RETURN LOOPHOLE(pthread_getspecific_activations(), Activation);
   END GetActivation;
 
@@ -501,7 +526,7 @@ PROCEDURE DumpThreads () =
 (*------------------------------------------------------------ Fork, Join ---*)
 
 VAR (* LL=activeMu *)
-  allThreads: Activation := NIL;        (* global list of active threads *)
+  allThreads: Activation;               (* global list of active threads *)
 
 PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
@@ -535,6 +560,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     RunThread(me);
     me.stackbase := NIL;              (* disable GC scanning of my stack *)
 
+    <* ASSERT me # FirstActivation *>
     DISPOSE (me);
     RETURN NIL;
   END ThreadBase;
@@ -905,7 +931,7 @@ PROCEDURE IncDefaultStackSize (inc: CARDINAL) =
       the handler called SuspendOthers,
       SuspendOthers tried to acquire cm.
 
-   So, SuspendOthers doesn't grab "cm" before shutting down the other
+   So, SuspendOthers does not grab "cm" before shutting down the other
    threads.  If the collector tries to use any of the thread functions
    that acquire "cm", it'll be deadlocked.
 *)
@@ -1478,44 +1504,30 @@ PROCEDURE BroadcastHeap () =
 
 (*--------------------------------------------- exception handling support --*)
 
-VAR
-  initHandlers := TRUE;
-
 PROCEDURE GetCurrentHandlers (): ADDRESS =
   BEGIN
-    IF initHandlers THEN InitHandlers() END;
-    RETURN pthread_getspecific_handlers();
+    RETURN GetActivation().frame;
   END GetCurrentHandlers;
 
 PROCEDURE SetCurrentHandlers (h: ADDRESS) =
   BEGIN
-    IF initHandlers THEN InitHandlers() END;
-    WITH r = pthread_setspecific_handlers(h) DO <*ASSERT r=0*> END;
+    GetActivation().frame := h;
   END SetCurrentHandlers;
 
 (*RTHooks.PushEFrame*)
 PROCEDURE PushEFrame (frame: ADDRESS) =
-  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
-  VAR f := LOOPHOLE (frame, Frame);
+VAR me := GetActivation();
+    f := LOOPHOLE (frame, Frame);
   BEGIN
-    IF initHandlers THEN InitHandlers() END;
-    f.next := pthread_getspecific_handlers();
-    WITH r = pthread_setspecific_handlers(f) DO <*ASSERT r=0*> END;
+    f.next := me.frame;
+    me.frame := f;
   END PushEFrame;
 
 (*RTHooks.PopEFrame*)
 PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
-    IF initHandlers THEN InitHandlers() END;
-    WITH r = pthread_setspecific_handlers(frame) DO <*ASSERT r=0*> END;
+    GetActivation().frame := frame;
   END PopEFrame;
-
-PROCEDURE InitHandlers () =
-  BEGIN
-    WITH r = pthread_key_create_handlers() DO <*ASSERT r=0*> END;
-    WITH r = pthread_setspecific_handlers(NIL) DO <*ASSERT r=0*> END;
-    initHandlers := FALSE;
-  END InitHandlers;
 
 VAR DEBUG := RTParams.IsPresent("debugthreads");
 
