@@ -27,6 +27,7 @@ TYPE
       uid := BYTESIZE(Usysdep.uid_t);
       (* pthreads omitted on purpose *)
     END;
+    align := 0;
   END;
 
 <*EXTERNAL "Test__CheckFloatsAndTypes"*> PROCEDURE CheckFloatsAndTypes(READONLY t:T; size := BYTESIZE(T); jbsize := BYTESIZE(Csetjmp.jmp_buf));
