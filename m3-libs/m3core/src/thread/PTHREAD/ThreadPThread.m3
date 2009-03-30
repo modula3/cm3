@@ -391,6 +391,12 @@ PROCEDURE InitActivations () =
       init: ActivationRecord;
   BEGIN
     me^ := init;
+    <* ASSERT me.frame = NIL *>
+    <* ASSERT me.next = NIL *>
+    <* ASSERT me.prev = NIL *>
+    <* ASSERT me.stackbase = NIL *>
+    <* ASSERT me.sp = NIL *>
+    <* ASSERT me.state = ActState.Started *>
     me.handle := Upthread.self();
     me.next := me;
     me.prev := me;
