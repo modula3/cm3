@@ -16,11 +16,9 @@
 typedef struct linger linger_t;
 typedef struct timeval timeval_t;
 typedef struct tm tm_t;
-typedef struct hostent hostent_t;
 typedef unsigned U;
 typedef unsigned char U8;
 
-#define SIZEOF_FIELD(t, f) (((t*)0)->f)
 #define OFFSET(a, b) ((U)offsetof(a, b))
 #define SIZE(a) ((U)sizeof(a))
 
@@ -39,6 +37,7 @@ typedef struct T
         size_t uid;
         /* pthreads omitted on purpose */
     } sizes;
+    size_t align;
 } T;
 
 static const T t1 =
@@ -53,34 +52,41 @@ static const T t1 =
     SIZE(timeval_t),
     SIZE(tm_t),
     SIZE(uid_t)
-    }
+    },
+    0
 };
 
 void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
 {
     if (size != SIZE(t1))
     {
-        printf("%x vs. %x\n", (U)size, SIZE(t1));
-        assert(size == SIZE(t1));
+        printf("size: %x vs. %x\n", (U)size, SIZE(t1));
     }
     if (memcmp(&t1, t2, SIZE(t1)) != 0)
     {
         U i = 0;
-        U8* a = (U8*)&t1;
-        U8* b = (U8*)t2;
+        U8* c = (U8*)&t1;
+        U8* m3 = (U8*)t2;
         printf("FD_SETSIZE 0x%x\n", (U)FD_SETSIZE);
         printf("d[0], d[1]: %x, %x\n", OFFSET(T, d[0]), OFFSET(T, d[1]));
         printf("f[0], f[1]: %x, %x\n", OFFSET(T, f[0]), OFFSET(T, f[1]));
-        printf("sizes: %x\n", OFFSET(T, sizes));
-        for (i = 0; i != SIZE(t1); ++i)
+        printf("d[8], d[9]: %x, %x\n", OFFSET(T, d[8]), OFFSET(T, d[9]));
+        printf("gid: %x\n", OFFSET(T, sizes.gid));
+        printf("linger: %x\n", OFFSET(T, sizes.linger));
+        printf("time: %x\n", OFFSET(T, sizes.time));
+        printf("timeval: %x\n", OFFSET(T, sizes.timeval));
+        printf("tm: %x\n", OFFSET(T, sizes.tm));
+        printf("uid: %x\n", OFFSET(T, sizes.uid));
+        for (i = 0; i < SIZE(t1); ++i)
         {
-            if (a[i] != b[i])
+            if (c[i] != m3[i])
             {
-                printf("different at offset 0x%x (%x %x)\n", i, a[i], b[i]);
+                printf("different at offset 0x%x (c:%x m3:%x)\n", i, c[i], m3[i]);
             }
         }
         assert(memcmp(&t1, t2, SIZE(t1)) == 0);
     }
+    assert(size == SIZE(t1));
 #if defined(__CYGWIN__)
     assert(jbsize >= (SIZE(jmp_buf) / 4));
 #elif defined(__FreeBSD__) && defined(__i386__)
