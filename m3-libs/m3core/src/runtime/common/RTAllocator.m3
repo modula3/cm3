@@ -205,7 +205,7 @@ PROCEDURE GetTraced (def: RT0.TypeDefn): REFANY =
     | ORD(TK.Ref) => RETURN GetTracedRef(def);
     | ORD(TK.Obj) => RETURN GetTracedObj(def);
     ELSE
-      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
+      CheckTypeFailed()
     END;
   END GetTraced;      
 
