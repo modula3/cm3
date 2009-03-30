@@ -129,19 +129,6 @@ PROCEDURE pthread_setspecific_activations(value: ADDRESS): int;
 <*EXTERNAL ThreadPThread__pthread_getspecific_activations*>
 PROCEDURE pthread_getspecific_activations(): ADDRESS;
 
-
-(* thread local "handlers" *)
-
-<*EXTERNAL ThreadPThread__pthread_key_create_handlers*>
-PROCEDURE pthread_key_create_handlers(): int;
-
-<*EXTERNAL ThreadPThread__pthread_setspecific_handlers*>
-PROCEDURE pthread_setspecific_handlers(value: ADDRESS): int;
-
-<*EXTERNAL ThreadPThread__pthread_getspecific_handlers*>
-PROCEDURE pthread_getspecific_handlers(): ADDRESS;
-
-
 (*---------------------------------------------------------------------------*)
 
 (* support for dynamically allocated mutexes and condition variables *)
