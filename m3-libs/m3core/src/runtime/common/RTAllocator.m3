@@ -176,6 +176,29 @@ PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
 
 (*-------------------------------------------------------------- internal ---*)
 
+PROCEDURE CheckTypeFailed () =
+  BEGIN
+    <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
+  END CheckTypeFailed;
+
+PROCEDURE CheckType (def: RT0.TypeDefn; traced: INTEGER; kind: TK) =
+  BEGIN
+    (* These are all separate so that the line numbers in th debugger
+    tell you which one failed. *)
+    IF def.typecode = 0 THEN
+      CheckTypeFailed();
+    END;
+    IF (traced # 0) AND (def.traced = 0) THEN
+      CheckTypeFailed();
+    END;
+    IF (traced = 0) AND (def.traced # 0) THEN
+      CheckTypeFailed();
+    END;
+    IF def.kind # ORD(kind) THEN
+      CheckTypeFailed();
+    END;
+  END CheckType;
+
 PROCEDURE GetTraced (def: RT0.TypeDefn): REFANY =
   BEGIN
     CASE def.kind OF
@@ -188,9 +211,7 @@ PROCEDURE GetTraced (def: RT0.TypeDefn): REFANY =
 
 PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
   BEGIN
-    IF (def.typecode = 0) OR (def.traced = 0) OR (def.kind # ORD (TK.Ref)) THEN
-      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
-    END;
+    CheckType(def, 1, TK.Ref);
     WITH res = AllocTraced(def, def.dataSize, def.dataAlignment, def.initProc) DO
       IF (callback # NIL) THEN callback (res) END;
       RETURN res;
@@ -203,25 +224,29 @@ PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
       InitObj (res, LOOPHOLE(def, RT0.ObjectTypeDefn));
     END initProc;
   BEGIN
-    IF (def.typecode = 0) OR (def.traced = 0) OR (def.kind # ORD (TK.Obj)) THEN
-      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
-    END;
+    CheckType(def, 1, TK.Obj);
     WITH res = AllocTraced(def, def.dataSize, def.dataAlignment, initProc) DO
       IF (callback # NIL) THEN callback (res) END;
       RETURN res;
     END;
   END GetTracedObj;
 
+PROCEDURE RAISE_RTE_E_RTE_T_OutOfMemory() =
+(* This is a separate function to avoid establishing a exception
+handling frame in the common success case, for performance,
+and possibly to avoid infinite recursion during startup/initialization. *)
+  BEGIN
+    RAISE RTE.E(RTE.T.OutOfMemory);
+  END RAISE_RTE_E_RTE_T_OutOfMemory;
+
 PROCEDURE GetUntracedRef (def: RT0.TypeDefn): ADDRESS =
   VAR res : ADDRESS;
   BEGIN
-    IF (def.typecode = 0) OR (def.traced # 0) OR (def.kind # ORD (TK.Ref)) THEN
-      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
-    END;
+    CheckType(def, 0, TK.Ref);
     Scheduler.DisableSwitching();
     res := Cstdlib.calloc(1, def.dataSize);
     Scheduler.EnableSwitching();
-    IF res = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory) END;
+    IF res = NIL THEN RAISE_RTE_E_RTE_T_OutOfMemory() END;
     IF def.initProc # NIL THEN def.initProc(res); END;
     IF countsOn THEN BumpCnt(def.typecode) END;
     RETURN res;
@@ -233,13 +258,11 @@ PROCEDURE GetUntracedObj (def: RT0.TypeDefn): UNTRACED ROOT =
     hdrSize := MAX(BYTESIZE(Header), def.dataAlignment);
     res     : ADDRESS;
   BEGIN
-    IF (def.typecode = 0) OR (def.traced # 0) OR (def.kind # ORD (TK.Obj)) THEN
-      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
-    END;
+    CheckType(def, 0, TK.Obj);
     Scheduler.DisableSwitching();
     res := Cstdlib.malloc(hdrSize + def.dataSize);
     Scheduler.EnableSwitching();
-    IF res = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory) END;
+    IF res = NIL THEN RAISE_RTE_E_RTE_T_OutOfMemory() END;
     res := res + hdrSize;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
         Header{typecode := def.typecode};
@@ -264,9 +287,7 @@ PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
       InitArray (res, LOOPHOLE(def, RT0.ArrayTypeDefn), s);
     END initProc;
   BEGIN
-    IF (def.typecode = 0) OR (def.traced = 0) OR (def.kind # ORD(TK.Array)) THEN
-      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
-    END;
+    CheckType(def, 1, TK.Array);
     WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s),
          res = AllocTraced(def, nBytes, def.dataAlignment, initProc) DO
       IF (callback # NIL) THEN callback (res) END;
@@ -277,14 +298,12 @@ PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
 PROCEDURE GetUntracedOpenArray (def: RT0.TypeDefn; READONLY s: Shape): ADDRESS =
   VAR res : ADDRESS;
   BEGIN
-    IF (def.typecode = 0) OR (def.traced # 0) OR (def.kind # ORD(TK.Array)) THEN
-      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
-    END;
+    CheckType(def, 0, TK.Array);
     WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s) DO
       Scheduler.DisableSwitching();
       res := Cstdlib.calloc(1, nBytes);
       Scheduler.EnableSwitching();
-      IF res = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory) END;
+      IF res = NIL THEN RAISE_RTE_E_RTE_T_OutOfMemory() END;
       InitArray (res, LOOPHOLE(def, RT0.ArrayTypeDefn), s);
       IF countsOn THEN BumpSize (def.typecode, nBytes) END;
     END;
@@ -379,7 +398,7 @@ PROCEDURE Malloc (size: INTEGER): ADDRESS =
     Scheduler.DisableSwitching();
     res := Cstdlib.calloc(1, size);
     Scheduler.EnableSwitching();
-    IF (res = NIL) THEN RAISE RTE.E (RTE.T.OutOfMemory); END;
+    IF res = NIL THEN RAISE_RTE_E_RTE_T_OutOfMemory() END;
     RETURN res;
   END Malloc;
 
