@@ -69,6 +69,64 @@ for t in ${TARGETS}; do
   echo "</tbody></table>"
 done >> ${INDEX}
 
+# copied from snapshot index script in a hurry
+FNPAT1=${FNPAT1:-"cm3-min-${CM3_OSTYPE}-"}
+FNPATSUF=${FNPATSUF:-.tgz}
+FNPATLS=${FNPAT:-${FNPAT1}'*-*'${FNPATSUF}}
+FNPATSRCSTART=${FNPATSRCSTART:-cm3-src}
+FNPATSRCEND=${FNPATSRCEND:-*.tgz}
+FNPATSRC=${FNPATSRC:-${FNPATSRCHEAD}-*.tgz}
+
+tablerow() {
+  f="$1"
+  echo "<tr>"
+  ls -hl "$f" | awk ' {
+    printf "<td width=\"15%%\" align=\"right\">\n"
+    printf "%s", $6
+    printf "</td><td width=\"6%%\" align=\"left\">\n"
+    printf "%s", $7
+    printf "</td><td width=\"6%%\" align=\"right\">\n"
+    printf "%s", $5
+  }'
+  echo "</td><td width=\"63%\" align=\"left\">"
+  echo "<a href=\"$f\">$f</a>"
+  echo "</td><td width=\"10%\" align=\"center\">"
+  if [ -r "$f.README" ]; then
+    echo "<a href=\"$f.README\">README</a>"
+  elif [ -r "$f.html" ]; then
+    echo "<a href=\"$f.html\">Notes</a>"
+  elif [ -r "$f.txt" ]; then
+    echo "<a href=\"$f.txt\">Notes</a>"
+  else
+    echo "-"
+  fi
+  echo "</td></tr>"
+}
+
+(
+  echo "<hr>"
+  echo "<h3>Source Archives</h3>"
+  echo "<p style=\"margin-left:2em\">"
+  echo "ALL -- all sources<br>"
+  echo "STD -- sources for the standard set of packages<br>"
+  echo "GNU -- sources for all GNU packages<br>"
+  echo "SYS -- sources for all CM3 system packages<br>"
+  echo "</p>"
+  echo "<hr>"
+) >> ${INDEX}
+
+for d in all std gnu sys; do
+  DIST=`echo ${d} | tr '[:lower:]' '[:upper:]'`
+  echo "<h4>Source Archives ${DIST}</h4>"
+
+  echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
+  for f in `ls -1t -- ${FNPATSRCSTART}-${d}-${FNPATSRCEND}`; do
+    tablerow $f
+  done
+  echo "</tbody></table>"
+  echo ""
+done >> ${INDEX}
+
 cat >> ${INDEX} <<EOF
     <hr>
     <address><a href="mailto:m3-support{at}elego.de">m3-support{at}elego.de</a></address>
