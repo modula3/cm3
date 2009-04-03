@@ -95,13 +95,17 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     % build the shared library
     ret_code = try_exec (
         "@" & SYSTEM_CC, "-dynamiclib",
-        "-multiply_defined suppress",
+        "-multiply_defined error",
         "-twolevel_namespace",
         "-compatibility_version", vmaj,
         "-current_version", version,
-        "-install_name", lib_pn,
+        %"-install_name", lib_sox,
+        "-install_name", "@executable_path/../lib/" & lib_sox,
         "-lgcc",
         "-o", lib_soxx,
+        "-dead_strip",
+        % "-dead_strip_dylibs", % 10.5
+        "-headerpad_max_install_names",
         objects,
         imported_libs
         )
@@ -173,9 +177,13 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     options,
     objects,
     imported_libs,
-    "-multiply_defined suppress",
+    "-multiply_defined suppress", % unfortunately needed for __cxa_atexit?
     "-bind_at_load",
     "-shared-libgcc",
+    % "-pie", % requires 10.5
+    "-dead_strip",
+    %"-dead_strip_dylibs", % requires 10.5
+    "-headerpad_max_install_names",
   ]
   if M3_PROFILING args += "-pg" end
   return try_exec ("@" & SYSTEM_CC, args)
