@@ -9,6 +9,14 @@
 
 #include <stdlib.h>
 
+#if defined(__STDC__) || defined(__cplusplus)
+#define ANSI(x) x
+#define KR(x)
+#else
+#define ANSI(x)
+#define KR(x) x
+#endif
+
 /* TYPE Frame = RECORD pc, sp: ADDRESS END; */
 typedef struct {
   unsigned long pc;
@@ -22,9 +30,8 @@ typedef struct {
    [start .. start+len).  Returns with f.pc=NIL on failure. */
 
 void RTStack__GetThreadFrame (f, start, len)
-     Frame *f;
-     char *start;
-     int  len;
+    ANSI((Frame *f, char *start, int len))
+      KR((f, start, len) Frame *f; char *start; int len;)
 {
   abort ();
 }
@@ -33,8 +40,9 @@ void RTStack__GetThreadFrame (f, start, len)
 /* PROCEDURE CurrentFrame (VAR(*OUT*) f: Frame);
    Return in "f" the frame of its caller.  Returns with pc = NIL on failure. */
 
-void RTStack__CurFrame (f)
-     Frame *f;
+void RTStack__CurFrame
+     ANSI((Frame *f))
+     KR((f) Frame *f;)
 {
   abort ();
 }
@@ -44,9 +52,9 @@ void RTStack__CurFrame (f)
    Return the stack frame that called "f".  Returns with pc = NIL if
    "f" is the first frame on the stack or its predecessor is ill-formed. */
 
-RTStack__PrevFrame (callee, caller)
-     Frame *callee;
-     Frame *caller;
+RTStack__PrevFrame
+    ANSI((Frame *callee, Frame *caller))
+    KR((callee, caller) Frame *callee; Frame *caller;)
 {
   abort ();
 }
@@ -57,8 +65,9 @@ RTStack__PrevFrame (callee, caller)
    registers must be restored to the state they were in when frame "f"
    made its last call. */
 
-void RTStack__Unwind (target)
-     Frame *target;
+void RTStack__Unwind
+    ANSI((Frame *target))
+    KR((target) Frame *target;)
 {
   abort ();
 }
@@ -69,11 +78,9 @@ void RTStack__Unwind (target)
    corresponding to the stack frame "f".  Returns NIL if no name is
    known. */
 
-char* RTStack__ProcName (f)
-     Frame *f;
+char* RTStack__ProcName
+    ANSI((Frame *f))
+    KR((f) Frame *f;)
 {
   return (char*)0;
 }
-
-
-
