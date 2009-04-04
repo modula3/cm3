@@ -12,3 +12,7 @@ or Service Pack 1:
 Or if you use Visual C++ 2008 (9.0)
 
 http://www.microsoft.com/downloads/details.aspx?familyid=9B2DA534-3E03-4391-8A4D-074B9F2BC1BF&displaylang=en
+
+or 2008 Service Pack 1:
+
+http://www.microsoft.com/downloads/details.aspx?familyid=A5C84275-3B97-4AB7-A40D-3802B2AF5FC2&displaylang=en
