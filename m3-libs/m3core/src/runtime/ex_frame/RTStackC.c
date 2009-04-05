@@ -29,7 +29,7 @@ typedef struct {
    Return in "f" the frame of the thread whose machine state is in bytes
    [start .. start+len).  Returns with f.pc=NIL on failure. */
 
-void RTStack__GetThreadFrame (f, start, len)
+void RTStack__GetThreadFrame
     ANSI((Frame *f, char *start, int len))
       KR((f, start, len) Frame *f; char *start; int len;)
 {
