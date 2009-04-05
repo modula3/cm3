@@ -9,6 +9,17 @@ readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
 readonly m3back_flags = "-quiet -gstabs+ -m64 -fPIC -mno-align-double"
 readonly SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC -mno-align-double" % C compiler
+readonly SYSTEM_LD = SYSTEM_CC
+  & " -z now"
+  & " -z origin"
+  & " -Bsymbolic"
+  & " -Wl,--as-needed"
+  & " -Wl,--fatal-warnings"
+% & " -Wl,-no-allow-shlib-undefined"
+  & " -Wl,-rpath,\\$ORIGIN/../lib"
+  & " -Wl,--warn-common"
+readonly POSITION_INDEPENDENT_EXECUTABLE = "-pie"
+readonly USE_ORIGIN = TRUE
 readonly SYSTEM_ASM = "as --64" % Assembler
 
 %
