@@ -30,4 +30,6 @@ readonly proc GetGcWrapFlags() is return "" end
 readonly proc FixM3GcDefs(x) is return x end
 readonly proc GetM3BackFlag(x) is return x end
 
+M3_SHARED_LIB_ARG = "-Wl,-rpath,"
+
 include("Unix.common")
