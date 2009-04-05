@@ -139,7 +139,7 @@ proc GetM3Back() is
     end
     % probe all of these?
     % rationale:
-    %  probe the built one ahead of the installed on
+    %  probe the built one ahead of the installed one
     %  probe host/target ahead of just target
     %  probe slash ahead of dash
     %  I favor slash; gcc precedent is dash.
@@ -165,58 +165,60 @@ proc GetM3Back() is
     % INSTALL_ROOT/bin/cm3cg.exe
     % INSTALL_ROOT/bin/cm3cg
 
+    local bin = INSTALL_ROOT & SL & "bin" & SL
+    local m3cc = ""
     if defined("ROOT")
+        m3cc = ROOT & SL & "m3-sys" & SL & "m3cc" & SL
+    end
+    local Cache = { }
 
-        local bin = INSTALL_ROOT & SL & "bin" & SL
-        local m3cc = ROOT & SL & "m3-sys" & SL & "m3cc" & SL
-        local Cache = { }
-
-        %
-        % Not all these combinations are meant to be used,
-        % and the order isn't always right.
-        %
-        % We do not intend to look at, for example:
-        %   /home/jay/dev2/cm3/m3-sys/m3cc/AMD64_LINUX/AMD64_LINUX-gcc/m3cgc1.exe
-        % Target- is only a prefix on file names, not directories.
-        %
-        %   /cm3/bin/AMD64_LINUX/AMD64_LINUX-gcc/m3cgc1.exe
-        % The installed file is always renamed to cm3cg.
-        %
-        % Work on this more later.
-        %
-        if not defined("HOST")
-            HOST = TARGET
-        end
-        local ALTHOST = HOST
-        local ALTTARGET = TARGET
-        if equal (HOST, "NT386")
-          ALTHOST = "NT386GNU"
-        end
-        if equal (HOST, "SOLsun")
-          ALTHOST = "SOLgnu"
-        end
-        if equal (HOST, "SOLgnu")
-          ALTHOST = "SOLsun"
-        end
-        if equal (TARGET, "SOLsun")
-          ALTTARGET = "SOLgnu"
-        end
-        if equal (TARGET, "SOLgnu")
-          ALTTARGET = "SOLsun"
-        end
-        %
-        % NOTE that if you share one file system across multiple hosts, then
-        % host and target can get confused, if one is empty. For that reason,
-        % we should probe all variants where both are non-empty before we probe
-        % any where either is empty, but we don't.
-        %
-        foreach host in [ HOST & SL, HOST & "-", ALTHOST & SL, ALTHOST & "-", ""]
-            if not equal (host, "-")
-                foreach target in [ TARGET & SL, TARGET & "-", ALTTARGET & SL, ALTTARGET & "-", ""]
-                    if not equal (target, "-")
-                        if not equal (target, "") or equal (HOST, TARGET)
-                            if not equal (host, "") or equal (HOST, TARGET)
-                                foreach root in [ m3cc, bin ]
+    %
+    % Not all these combinations are meant to be used,
+    % and the order isn't always right.
+    %
+    % We do not intend to look at, for example:
+    %   /home/jay/dev2/cm3/m3-sys/m3cc/AMD64_LINUX/AMD64_LINUX-gcc/m3cgc1.exe
+    % Target- is only a prefix on file names, not directories.
+    %
+    %   /cm3/bin/AMD64_LINUX/AMD64_LINUX-gcc/m3cgc1.exe
+    % The installed file is always renamed to cm3cg.
+    %
+    % Work on this more later.
+    %
+    if not defined("HOST")
+        HOST = TARGET
+    end
+    local ALTHOST = HOST
+    local ALTTARGET = TARGET
+    if equal (HOST, "NT386")
+      ALTHOST = "NT386GNU"
+    end
+    if equal (HOST, "SOLsun")
+      ALTHOST = "SOLgnu"
+    end
+    if equal (HOST, "SOLgnu")
+      ALTHOST = "SOLsun"
+    end
+    if equal (TARGET, "SOLsun")
+      ALTTARGET = "SOLgnu"
+    end
+    if equal (TARGET, "SOLgnu")
+      ALTTARGET = "SOLsun"
+    end
+    %
+    % NOTE that if you share one file system across multiple hosts, then
+    % host and target can get confused, if one is empty. For that reason,
+    % we should probe all variants where both are non-empty before we probe
+    % any where either is empty, but we don't.
+    %
+    foreach host in [ HOST & SL, HOST & "-", ALTHOST & SL, ALTHOST & "-", ""]
+        if not equal (host, "-")
+            foreach target in [ TARGET & SL, TARGET & "-", ALTTARGET & SL, ALTTARGET & "-", ""]
+                if not equal (target, "-")
+                    if not equal (target, "") or equal (HOST, TARGET)
+                        if not equal (host, "") or equal (HOST, TARGET)
+                            foreach root in [ m3cc, bin ]
+                                if root
                                     foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
                                         foreach exe in [".exe", ""]
                                             local a = root & host & target & gcc & exe
