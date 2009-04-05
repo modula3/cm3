@@ -29,8 +29,7 @@ typedef struct {
    Return in "f" the frame of the thread whose machine state is in bytes
    [start .. start+len).  Returns with f.pc=NIL on failure. */
 
-void RTStack__GetThreadFrame
-    ANSI((Frame *f, char *start, int len))
+void RTStack__GetThreadFrame ANSI((Frame *f, char *start, int len))
       KR((f, start, len) Frame *f; char *start; int len;)
 {
   abort ();
@@ -40,8 +39,7 @@ void RTStack__GetThreadFrame
 /* PROCEDURE CurrentFrame (VAR(*OUT*) f: Frame);
    Return in "f" the frame of its caller.  Returns with pc = NIL on failure. */
 
-void RTStack__CurFrame
-     ANSI((Frame *f))
+void RTStack__CurFrame ANSI((Frame *f))
      KR((f) Frame *f;)
 {
   abort ();
@@ -52,8 +50,7 @@ void RTStack__CurFrame
    Return the stack frame that called "f".  Returns with pc = NIL if
    "f" is the first frame on the stack or its predecessor is ill-formed. */
 
-RTStack__PrevFrame
-    ANSI((Frame *callee, Frame *caller))
+RTStack__PrevFrame ANSI((Frame *callee, Frame *caller))
     KR((callee, caller) Frame *callee; Frame *caller;)
 {
   abort ();
@@ -65,8 +62,7 @@ RTStack__PrevFrame
    registers must be restored to the state they were in when frame "f"
    made its last call. */
 
-void RTStack__Unwind
-    ANSI((Frame *target))
+void RTStack__Unwind ANSI((Frame *target))
     KR((target) Frame *target;)
 {
   abort ();
@@ -78,8 +74,7 @@ void RTStack__Unwind
    corresponding to the stack frame "f".  Returns NIL if no name is
    known. */
 
-char* RTStack__ProcName
-    ANSI((Frame *f))
+char* RTStack__ProcName ANSI((Frame *f))
     KR((f) Frame *f;)
 {
   return (char*)0;
