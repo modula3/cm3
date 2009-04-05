@@ -363,6 +363,9 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
     if M3_PROFILING
         args += "-pg"
     end
+    if defined("POSITION_INDEPENDENT_EXECUTABLE")
+        args += POSITION_INDEPENDENT_EXECUTABLE
+    end
     return try_exec("@" & SYSTEM_LD, args)
 end
 
