@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.49 2009-01-19 22:57:53 jkrell Exp $
+# $Id: make-dist.py,v 1.50 2009-04-06 09:08:12 jkrell Exp $
 
 import sys
 import os.path
@@ -252,8 +252,9 @@ for a in RuntimeToCopy:
         os.path.join(InstallRoot, "pkg", a),
         os.path.join(InstallRoot_CompilerWithPrevious, "pkg", a)) or FatalError()
 
+NewLib = os.path.join(InstallRoot_CompilerWithPrevious, "lib")
+
 if Config != "NT386":
-    NewLib = os.path.join(InstallRoot_CompilerWithPrevious, "lib")
     CreateDirectory(NewLib)
     for a in glob.glob(os.path.join(InstallRoot, "lib", "libm3gcdefs.*")):
         CopyFile(a, NewLib) or FatalError()
