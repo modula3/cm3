@@ -108,9 +108,9 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     end
 end
 
-include ("Unix.common")
+% don't build up large RPATH
+M3_SHARED_LIB_ARG = ""
 
-M3_SHARED_LIB_ARG = "-R"
-% --- pass "-R" flags to the linker too.
+include ("Unix.common")
 
 M3_MAIN_IN_C = TRUE
