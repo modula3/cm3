@@ -24,7 +24,7 @@ if equal (C_COMPILER, "GNU")
 end
 
 readonly SYSTEM_LD = SYSTEM_CC & " -B direct -z ignore -z combreloc -z defs -z text"
-    & " -z now -z origin -R \\$ORIGIN/../lib"
+    & " -i -z now -z origin -R \\$ORIGIN/../lib"
 
 SYSTEM_LIBS = {
     "LIBC"      : [ "-lsocket", "-lnsl",
