@@ -27,16 +27,10 @@ include_dir	("rsrc")
 m3_option	("-times")
 
 
-% ---------------------------
-% PklFonts.exe - Entry Point Not Found
-% ---------------------------
-% The procedure entry point OSWin32__Win95 could not be located in the dynamic link library m3.dll. 
-% ---------------------------
-% OK   
-% ---------------------------
-if equal (TARGET, "NT386")
-    build_standalone ()
-end
+%
+% allow unshipped PklFonts to work independent of RPATH, etc.
+%
+build_standalone ()
 
 % the "PklFonts" executable
 program		("PklFonts")
