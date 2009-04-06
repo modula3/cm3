@@ -8,6 +8,11 @@ c_source("Uexec")
 Interface ("Unetdb")
 c_source ("Unetdb")
 
+%
+% This is meant to be all systems with user-thread support,
+% when it is implemented using get/set/make/swapcontext instead of setjmp/longjmp.
+%
+
 if         equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "LINUXLIBC6")
     c_source("Uucontext")
@@ -19,6 +24,12 @@ h_source("UerrorX")
 include_dir("context")
 c_source("Uconstants")
 Interface("Uutmp")
+
+%
+% This is meant to be all systems but isn't yet.
+% It is systems using the newer/smaller/more portable Unix/*.i3 files.
+% Is nearly everything now, but still missing: I386_DARWIN, AMD64_DARWIN, FreeBSD4
+%
 
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
@@ -56,6 +67,10 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
     Interface ("Udir")
     c_source("UdirC")
 end
+
+%
+% This is systems that don't provide user-thread support.
+%
 
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
