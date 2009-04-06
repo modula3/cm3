@@ -252,8 +252,9 @@ for a in RuntimeToCopy:
         os.path.join(InstallRoot, "pkg", a),
         os.path.join(InstallRoot_CompilerWithPrevious, "pkg", a)) or FatalError()
 
+NewLib = os.path.join(InstallRoot_CompilerWithPrevious, "lib")
+
 if Config != "NT386":
-    NewLib = os.path.join(InstallRoot_CompilerWithPrevious, "lib")
     CreateDirectory(NewLib)
     for a in glob.glob(os.path.join(InstallRoot, "lib", "libm3gcdefs.*")):
         CopyFile(a, NewLib) or FatalError()
