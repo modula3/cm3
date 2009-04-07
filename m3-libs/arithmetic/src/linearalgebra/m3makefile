@@ -1,4 +1,0 @@
-
-include_dir("vector")
-include_dir("matrix")
-include_dir("fourier")

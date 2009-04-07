@@ -1,5 +1,0 @@
-import("synthesizer")
-
-implementation("Main")
-
-program("plot")

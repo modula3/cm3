@@ -1,4 +1,0 @@
-PROC res := Two() IS res := 2 END;
-
-PRED IsTwo(y) IS y = Two() END;
-
