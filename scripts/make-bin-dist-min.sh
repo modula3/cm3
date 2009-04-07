@@ -27,7 +27,10 @@ fi
 STAGE="${STAGE:-${TMPDIR}}"
 [ -d "${STAGE}" ] || mkdir "${STAGE}" || mkdir -p "${STAGE}" || exit 1
 INSTALLROOT="${STAGE}/cm3"
+DIST="${DIST:-std}" # may be min, core, std, all
 header "building CM3 installation in ${INSTALLROOT}"
+
+NEWCFG=${NEWCFG:-y}
 
 #-----------------------------------------------------------------------------
 # create the basic directories
@@ -98,24 +101,34 @@ fi
 #-----------------------------------------------------------------------------
 # configure a temporary config file
 echo configuring temporary config file "${INSTALLROOT}/bin/cm3.cfg"
-if [ "${TARGET}" = "NT386" -o "${TARGET}" = "NT386GNU" ]; then
-  CFG1="${ROOT}/m3-sys/cm3/src/config/${TARGET}.main"
-  CFG2="${ROOT}/m3-sys/cminstall/src/config/${TARGET}.main"
-  CFG3="${ROOT}/m3-sys/cminstall/src/config/${TARGET}.common"
-  cp "${CFG3}" "${INSTALLROOT}/bin"
+if [ "${NEWCFG}" = "y" ]; then
+  # old style installation
+  if [ "${TARGET}" = "NT386" -o "${TARGET}" = "NT386GNU" ]; then
+    CFG1="${ROOT}/m3-sys/cm3/src/config/${TARGET}.main"
+    CFG2="${ROOT}/m3-sys/cminstall/src/config/${TARGET}.main"
+    CFG3="${ROOT}/m3-sys/cminstall/src/config/${TARGET}.common"
+    cp "${CFG3}" "${INSTALLROOT}/bin"
+  else
+    CFG1="${ROOT}/m3-sys/cm3/src/config/${TARGET}"
+  fi
+  sed -e '
+    /^INSTALL_ROOT[ \t]*=/s;^.*$;INSTALL_ROOT = "'${INSTALLROOT}${SL}'";
+    /^readonly DEV_LIB[ \t]*=/s;^.*$;readonly DEV_LIB = "'${DEV_LIB}${SL}'";
+    /^readonly DEV_BIN[ \t]*=/s;^.*$;readonly DEV_BIN = "'${DEV_BIN}${SL}'";
+  ' "${CFG1}" > "${INSTALLROOT}/bin/cm3.cfg"
 else
-  CFG1="${ROOT}/m3-sys/cm3/src/config/${TARGET}"
+  # new installation files
+  cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin"
+  (
+    echo "INSTALL_ROOT = \"${INSTALLROOT}\""
+    echo "include(\"${TARGET}\")"
+  ) > "${INSTALLROOT}/bin/cm3.cfg"
 fi
-sed -e '
-  /^INSTALL_ROOT[ \t]*=/s;^.*$;INSTALL_ROOT = "'${INSTALLROOT}${SL}'";
-  /^readonly DEV_LIB[ \t]*=/s;^.*$;readonly DEV_LIB = "'${DEV_LIB}${SL}'";
-  /^readonly DEV_BIN[ \t]*=/s;^.*$;readonly DEV_BIN = "'${DEV_BIN}${SL}'";
-' "${CFG1}" > "${INSTALLROOT}/bin/cm3.cfg"
 
 #-----------------------------------------------------------------------------
 # clean everything
 header "clean everything for build with new compiler"
-"${ROOT}/scripts/do-cm3-min.sh" realclean || exit 1
+OMIT_GCC=yes "${ROOT}/scripts/do-cm3-${DIST}.sh" realclean || exit 1
 
 #-----------------------------------------------------------------------------
 # compile and install all needed packages
@@ -129,21 +142,25 @@ SHIP="${CM3} -ship -DROOT='${CM3ROOT}'"
 export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 
 [ ${TARGET} != NT386 ] && "${ROOT}/scripts/do-pkg.sh" buildship
-"${ROOT}/scripts/do-cm3-min.sh" buildlocal || exit 1
+"${ROOT}/scripts/do-cm3-${DIST}.sh" buildlocal || exit 1
 
 header "stage 4: installing libraries using new cm3 compiler"
-"${ROOT}/scripts/do-cm3-min.sh" buildglobal || exit 1
+"${ROOT}/scripts/do-cm3-${DIST}.sh" buildglobal || exit 1
 
-header "stage 5: re-adjusting cm3.cfg"
-echo "${CFG2} -->" "${INSTALLROOT}/bin/cm3.cfg"
-cp "${CFG2}" "${INSTALLROOT}/bin/cm3.cfg"
-echo "${CFG1} -->" "${INSTALLROOT}/bin/cm3.cfg--default"
-cp "${CFG1}" "${INSTALLROOT}/bin/cm3.cfg--default"
+if [ "${NEWCFG}" = "y" ]; then
+  header "stage 5: re-adjusting cm3.cfg"
+  echo "${CFG2} -->" "${INSTALLROOT}/bin/cm3.cfg"
+  cp "${CFG2}" "${INSTALLROOT}/bin/cm3.cfg"
+  echo "${CFG1} -->" "${INSTALLROOT}/bin/cm3.cfg--default"
+  cp "${CFG1}" "${INSTALLROOT}/bin/cm3.cfg--default"
+else
+  echo "no new config"
+fi
 
 #-----------------------------------------------------------------------------
 # build binary distribution archives
 ARCHIVE1="system.tgz"
-ARCHIVE2="cm3-min-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tgz"
+ARCHIVE2="cm3-bin-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tgz"
 ABSARCH1="`cygpath -u ${STAGE}/${ARCHIVE1}`"
 ABSARCH2="`cygpath -u ${STAGE}/${ARCHIVE2}`"
 INSTDATA="cminstall${EXE} COPYRIGHT-CMASS ${ARCHIVE1}"

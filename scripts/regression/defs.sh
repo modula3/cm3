@@ -752,8 +752,12 @@ testall()
     checkout
   fi
   # build everything with the last-ok version
-  ( test_build_core_lastok ) || \
-  echo " >>> KO: simple build with last version failed, full upgrade needed..."
+  if ( test_build_core_lastok ); then
+    true
+  else
+    echo " >>> KO: simple build with last version failed, full upgrade needed..."
+    true
+  fi
 
   # try to build everything with the last release / perform regular upgrade
   test_build_core_rel
