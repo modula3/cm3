@@ -101,7 +101,7 @@ fi
 #-----------------------------------------------------------------------------
 # configure a temporary config file
 echo configuring temporary config file "${INSTALLROOT}/bin/cm3.cfg"
-if [ "${NEWCFG}" = "y" ]; then
+if [ "${NEWCFG}" != "y" ]; then
   # old style installation
   if [ "${TARGET}" = "NT386" -o "${TARGET}" = "NT386GNU" ]; then
     CFG1="${ROOT}/m3-sys/cm3/src/config/${TARGET}.main"
@@ -147,7 +147,7 @@ export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 header "stage 4: installing libraries using new cm3 compiler"
 "${ROOT}/scripts/do-cm3-${DIST}.sh" buildglobal || exit 1
 
-if [ "${NEWCFG}" = "y" ]; then
+if [ "${NEWCFG}" != "y" ]; then
   header "stage 5: re-adjusting cm3.cfg"
   echo "${CFG2} -->" "${INSTALLROOT}/bin/cm3.cfg"
   cp "${CFG2}" "${INSTALLROOT}/bin/cm3.cfg"
