@@ -1,7 +1,0 @@
-if not equal (OS_TYPE, "WIN32")
-	override("events", "/proj/graphics/arm3")
-	override("rdwr", "/proj/graphics/arm3")
-else
-	override("events", "g:\\arm3")
-	override("rdwr", "g:\\arm3")
-end

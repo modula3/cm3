@@ -1,6 +1,0 @@
-%char [abcd()|+*?\n]
-
-%const ASSIGN PROD
-
-COUNT IDENTIFIER CHAR_RANGE STRING
-MACRO RULE
