@@ -13,7 +13,7 @@ CONST
   DefaultInstallDir = ARRAY BOOLEAN OF TEXT
     { "c:\\cm3", "/usr/local/cm3" } [OnUnix];
 
-  MinDiskSpace = 75; (* megabytes *)
+  MinDiskSpace = 250; (* megabytes *)
 
   (* until we get the permission...
   REACTOR_EXE = ARRAY BOOLEAN OF TEXT <*NOWARN*>
