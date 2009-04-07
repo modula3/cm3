@@ -4,6 +4,7 @@ IMPORT Bundle, (* CMKey, CMCurrent, *) Compiler, Env, File, Fmt, FS, Glob;
 IMPORT M3ID, Msg, OS, OSError, Params, Pathname, Pipe, Process;
 IMPORT Quake, QScanner, QToken, RegEx, Registry, RegularFile, Setup;
 IMPORT Text, Text2, TextSeq, TextWr, Thread, Wr;
+IMPORT InstallTarget, TextUtils;
 FROM Msg IMPORT Out, OutS, Ask, AskBool, AskChoice;
 
 CONST
@@ -51,6 +52,7 @@ VAR
   tar               : TEXT (* = OS.MakePath (cminstall_root, TAR_EXE) *);
   interactive       : BOOLEAN := FALSE;
   dumpConfig        : BOOLEAN := FALSE;
+  oldConfig         : BOOLEAN := FALSE;
 
 PROCEDURE DoIt () =
   BEGIN
@@ -137,9 +139,25 @@ PROCEDURE DoIt () =
     Msg.AttachDrain (install_log);
 
     (* process the cfg prototype *)
-    Msg.Debug ("processsing config script");
-    initial_cfg := GenConfig ();
+    IF oldConfig THEN
+      Msg.Debug ("processsing config script");
+      initial_cfg := GenConfig ();
+    ELSE
+      initial_cfg := "";
+    END;
 
+    VAR
+      line1 := "INSTALL_ROOT = \"" & install_root & "\"";
+      line2 := "include(\"" & InstallTarget.Target & "\")";
+    BEGIN
+      IF NOT TextUtils.Contains (initial_cfg, "INSTALL_ROOT") THEN
+        initial_cfg := initial_cfg & "\n" & line1 & "\n";
+      END;
+      IF NOT TextUtils.Contains (initial_cfg, "m3_backend") AND
+        NOT TextUtils.Contains (initial_cfg, line2) THEN
+        initial_cfg := initial_cfg & "\n" & line2 & "\n\n";
+      END;
+    END;
     IF dumpConfig THEN
       Msg.Quiet := FALSE;
       Out (initial_cfg);
@@ -278,6 +296,7 @@ PROCEDURE ParseParams () =
         Out("          |  -quiet       | -q");
         Out("          |  -interactive | -i");
         Out("          |  -dumpcfg     | -c");
+        Out("          |  -oldcfg      | -o");
         Out("          |  -help        | -h");
         Out("");
         Out("  will try to install CM3 from the given <installfrom>, if any.");
@@ -304,6 +323,9 @@ PROCEDURE ParseParams () =
         dumpConfig := TRUE;
         Msg.Quiet := TRUE;
         interactive := FALSE;
+      ELSIF Text.Equal (arg, "-oldcfg") OR 
+            Text.Equal (arg, "-o") THEN
+        oldConfig := TRUE;
       ELSIF Text.GetChar (arg, 0) = '-'THEN 
         Msg.Error (NIL, "Unrecognized option: ", arg);
       ELSE
