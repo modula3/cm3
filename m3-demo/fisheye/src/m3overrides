@@ -1,2 +1,0 @@
-override ("formsvbt", ROOT & "/m3-ui")
-build_standalone()

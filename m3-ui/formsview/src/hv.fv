@@ -1,6 +1,0 @@
-
-(VBox
-  (HBox
-    (Rim (Pen 10) (Frame Chiseled (Text (BgColor "VeryLightBlue") "10")))
-    (Rim (Pen 10) (Button (Text (BgColor "Red") (Color "White") "Red Alert"))))
-      (Rim (Pen 10)  (Frame Lowered "Some kind of information...")))
