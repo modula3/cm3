@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.30 2009-04-07 22:18:51 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.31 2009-04-07 22:25:48 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -160,7 +160,7 @@ fi
 #-----------------------------------------------------------------------------
 # build binary distribution archives
 ARCHIVE1="system.tgz"
-ARCHIVE2="cm3-bin-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tgz"
+ARCHIVE2="cm3-bin-${DIST}-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tgz"
 ABSARCH1="`cygpath -u ${STAGE}/${ARCHIVE1}`"
 ABSARCH2="`cygpath -u ${STAGE}/${ARCHIVE2}`"
 INSTDATA="cminstall${EXE} COPYRIGHT-CMASS ${ARCHIVE1}"
