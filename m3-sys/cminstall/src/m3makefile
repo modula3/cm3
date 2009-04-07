@@ -7,7 +7,13 @@ import ("patternmatching")
 import ("sysutils")
 %import ("cmkey")
 
-resource_named ("config", "config" & SL & TARGET)
+configfn = ".." & SL & "src" & SL & "config" & SL & TARGET
+if not stale(configfn, configfn)
+  resource_named ("config", configfn)
+else
+  configfn = ".." & SL & "src" & SL & "config-no-install" & SL & TARGET
+  resource_named ("config", configfn)
+end
 bundle ("Setup")
 
 module ("Msg")
