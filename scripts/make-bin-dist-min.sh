@@ -160,7 +160,7 @@ fi
 #-----------------------------------------------------------------------------
 # build binary distribution archives
 ARCHIVE1="system.tgz"
-ARCHIVE2="cm3-bin-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tgz"
+ARCHIVE2="cm3-bin-${DIST}-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tgz"
 ABSARCH1="`cygpath -u ${STAGE}/${ARCHIVE1}`"
 ABSARCH2="`cygpath -u ${STAGE}/${ARCHIVE2}`"
 INSTDATA="cminstall${EXE} COPYRIGHT-CMASS ${ARCHIVE1}"
