@@ -190,8 +190,13 @@ CONST (* bit offsets and sizes of the fields within a REF's header word *)
   RH_gray_size        = 1;
 
 CONST (* builtin, constant typecodes *)
-  NULL_typecode = 0;
-  TEXT_typecode = 1;
+  NULL_typecode          = 0;
+  TEXT_typecode          = 1;
+  ADDRESS_typecode       = 2;
+  REFANY_typecode        = 3;
+  ROOT_typecode          = 4;
+  UNTRACED_ROOT_typecode = 5;
+  MUTEX_typecode         = 6;
 
 VAR (* offsets in a MUTEX method list *)
   MUTEX_acquire : CARDINAL; (*: PROC() *)
