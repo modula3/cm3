@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.15 2008-04-13 21:57:39 wagner Exp $
+# $Id: upgrade.sh,v 1.16 2009-04-08 18:04:53 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -96,10 +96,20 @@ if [ "${UPGRADE_CM3_CFG}" = "yes" -o "${ret}" != 0 ]; then (
       done
       cp ${CFGS}/${TARGET} ${CFG}
     fi
-  else
+  elif grep m3_backend "${CFG}"; then
     "${INSTALLROOT}/pkg/cminstall/${TARGET}/cminstall" -c "${INSTALLROOT}" \
-      > "${CFG}" || exit 1
+      -o > "${CFG}" || exit 1
     echo "new config file generated in ${CFG}, backup in ${CFGBAK}"
+  else
+    CFGS="${ROOT}/m3-sys/cminstall/src/config-no-install"
+    for f in ${CFGS}/*; do
+      b=`basename ${f}`
+      cp -v ${f} ${CFGD}/${b}
+    done
+    ( echo "INSTALL_ROOT = \"${INSTALLROOT}\""
+      echo "include(\"${TARGET}\")"
+    ) > ${CFG}
+    echo "new config files copied/generated in ${CFG}, backup in ${CFGBAK}"
   fi
 
   echo "trying recompile after cleanup..."
