@@ -143,7 +143,7 @@ PROCEDURE Open(p: Pathname.T;
     rf := NEW(T);
     rf.buf := UnixMisc.MapFile(p, statbuf);
     rf.attr := FileAttr.FromStat(statbuf);
-    rf.size := statbuf.st_size;
+    rf.size := ORD(statbuf.st_size);
     rf.start := rf.buf;
     rf.limit := rf.start + rf.size;
 
