@@ -45,5 +45,7 @@ TYPE
   socklen_t = Cstdint.uint32_t; (* int32_t on Cygwin, size_t on HP-UX, but ok via wrappers (see Usocket.i3) *)
 
   mode_t = INTEGER;
+  dev_t = LONGINT;
+  ino_t = LONGINT;
 
 END Utypes.

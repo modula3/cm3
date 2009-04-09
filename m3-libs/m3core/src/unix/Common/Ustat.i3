@@ -35,8 +35,8 @@ TYPE
 Limit on LONGINT is compatibility with existing Modula-3 code. Blowing up the sizes
 larger than necessary is a slight deoptimization for the sake of simplicity and
 commonality. *)
-    st_dev   : LONGINT;
-    st_ino   : LONGINT;
+    st_dev   : Utypes.dev_t(*LONGINT*);
+    st_ino   : Utypes.ino_t(*LONGINT*);
     st_mtime : LONGINT;
     st_rdev  : LONGINT;
     st_size  : LONGINT;
