@@ -4,6 +4,7 @@
 
 <*EXTERNAL*> INTERFACE Ustat;
 
+IMPORT Utypes;
 FROM Ctypes IMPORT int, char_star;
 
 (*CONST*)
@@ -34,11 +35,13 @@ TYPE
 Limit on LONGINT is compatibility with existing Modula-3 code. Blowing up the sizes
 larger than necessary is a slight deoptimization for the sake of simplicity and
 commonality. *)
+    st_dev   : LONGINT;
+    st_ino   : LONGINT;
     st_mtime : LONGINT;
     st_rdev  : LONGINT;
     st_size  : LONGINT;
     st_gid   : INTEGER;
-    st_mode  : INTEGER;
+    st_mode  : Utypes.mode_t(*INTEGER*);
     st_uid   : INTEGER;
   END;
   struct_stat_star = UNTRACED REF struct_stat;
