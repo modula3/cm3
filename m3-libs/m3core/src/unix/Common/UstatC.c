@@ -14,6 +14,8 @@ commonality.
     
 "st_" prefix is omitted from the names in case they are macros, which does happen */
 
+    LONGINT dev;
+    LONGINT ino;
     LONGINT mtime;
     LONGINT rdev;
     LONGINT size;
@@ -27,6 +29,8 @@ static int m3stat_from_stat(int result, m3_stat_t* m3st, stat_t* st)
     assert(result == 0 || result == -1);
     if (result == 0)
     {
+        m3st->dev = st->st_dev;
+        m3st->ino = st->st_ino;
         m3st->mtime = st->st_mtime;
         m3st->rdev = st->st_rdev;
         m3st->size = st->st_size;
