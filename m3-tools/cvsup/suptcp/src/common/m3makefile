@@ -1,0 +1,16 @@
+/* Makefile for tcp library (generic) */
+/* Copyright 1993 Digital Equipment Corporation. */
+/* Distributed only by permission. */
+/* Last modified on Tue Jan 25 18:07:39 PST 1994 by wobber     */
+/* $Id: m3makefile,v 1.1.1.1 2009-04-09 17:02:03 jkrell Exp $ */
+
+Interface("SupErrno")
+c_source("SupErrnoC")
+Interface("StreamRd")
+Module("StreamRdClass")
+Interface("StreamWr")
+Module("StreamWrClass")
+Interface("SupConnFD")
+Interface("SupTCP")
+Interface("TCPMisc")
+Module("SupConnRW")
