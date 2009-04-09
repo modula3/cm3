@@ -5,7 +5,7 @@
 /* $Id$ */
 
 Interface("SupTCPPosix")
-implementation("SupTCP")
+% implementation("SupTCP")
 interface("SupTCPHack")
 interface("SockOpt")
 
