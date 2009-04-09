@@ -6,7 +6,7 @@
 (*      modified on Fri Jan  7 13:31:11 PST 1994 by msm    *)
 (*      modified on Sun Jan 12 16:16:54 PST 1992 by meehan *)
 (*      modified on Sat Jan 11 16:55:00 PST 1992 by gnelson *)
-(* $Id: SupTCP.m3,v 1.1.1.1 2009-04-09 17:02:04 jkrell Exp $ *)
+(* $Id: SupTCP.m3,v 1.2 2009-04-09 19:24:45 jkrell Exp $ *)
 
 UNSAFE MODULE SupTCP EXPORTS SupTCP, TCPMisc;
 
@@ -201,17 +201,28 @@ PROCEDURE CheckConnect(fd: INTEGER; ep: IP.Endpoint) : BOOLEAN
         IF TCPHack.RefetchError(fd) THEN seenBadFBug := TRUE END;
       END;
     END;
-    CASE Cerrno.GetErrno() OF
-    | Uerror.EISCONN => RETURN TRUE;
-    | Uerror.EADDRNOTAVAIL,  Uerror.ECONNREFUSED, Uerror.EINVAL,
-               Uerror.ECONNRESET, Uerror.EBADF =>
+    WITH errno = Cerrno.GetErrno() DO
+      IF (errno = Uerror.EISCONN) THEN
+        RETURN TRUE;
+      ELSIF  (errno = Uerror.EADDRNOTAVAIL)
+          OR (errno = Uerror.ECONNREFUSED)
+          OR (errno = Uerror.EINVAL)
+          OR (errno = Uerror.ECONNRESET)
+          OR (errno = Uerror.EBADF) THEN
         Raise(Refused);
-    | Uerror.ETIMEDOUT =>
+      ELSIF (errno = Uerror.ETIMEDOUT) THEN
         Raise(Timeout);
-    | Uerror.ENETUNREACH, Uerror.EHOSTUNREACH,  Uerror.EHOSTDOWN, Uerror.ENETDOWN =>
+      ELSIF  (errno = Uerror.ENETUNREACH)
+          OR (errno = Uerror.EHOSTUNREACH)
+          OR (errno = Uerror.EHOSTDOWN)
+          OR (errno = Uerror.ENETDOWN) THEN
         Raise(IP.Unreachable);
-    | Uerror.EWOULDBLOCK, Uerror.EAGAIN,  Uerror.EINPROGRESS, Uerror.EALREADY =>  <*NOWARN*>
-    ELSE RaiseUnexpected();
+      ELSIF  (errno = Uerror.EWOULDBLOCK)
+          OR (errno = Uerror.EAGAIN)
+          OR (errno = Uerror.EINPROGRESS)
+          OR (errno = Uerror.EALREADY) THEN
+      ELSE RaiseUnexpected();
+      END;
     END;
     RETURN FALSE;
   END CheckConnect;
@@ -256,7 +267,7 @@ FIXME *)
 PROCEDURE InitFD(fd: CARDINAL) =
   (* We assume that the runtime ignores SIGPIPE signals *)
   VAR
-    one := 1;
+    one: int := 1;
     linger := Usocket.struct_linger{1, 1};
   BEGIN
     EVAL Usocket.setsockopt(fd, SockOpt.SOL_SOCKET, SockOpt.SO_LINGER,
@@ -300,20 +311,29 @@ PROCEDURE GetBytesFD(
       IF len >= 0 THEN
         RETURN len;
       ELSE
-        CASE Cerrno.GetErrno() OF
-        | Uerror.ECONNRESET => RETURN 0;
-        | Uerror.EPIPE, Uerror.ENETRESET => SetError(t,ConnLost);
-        | Uerror.ETIMEDOUT => SetError(t,Timeout);
-        | Uerror.ENETUNREACH, Uerror.EHOSTUNREACH,
-             Uerror.EHOSTDOWN, Uerror.ENETDOWN => SetError(t,IP.Unreachable);
-        | Uerror.EWOULDBLOCK, Uerror.EAGAIN =>  <*NOWARN*>
+        WITH errno = Cerrno.GetErrno() DO
+          IF (errno = Uerror.ECONNRESET) THEN
+            RETURN 0;
+          ELSIF  (errno = Uerror.EPIPE)
+              OR (errno = Uerror.ENETRESET) THEN
+            SetError(t,ConnLost);
+          ELSIF (errno = Uerror.ETIMEDOUT) THEN
+            SetError(t,Timeout);
+          ELSIF (errno = Uerror.ENETUNREACH)
+              OR (errno = Uerror.EHOSTUNREACH)
+              OR (errno = Uerror.EHOSTDOWN)
+              OR (errno = Uerror.ENETDOWN) THEN
+            SetError(t,IP.Unreachable);
+          ELSIF (errno = Uerror.EWOULDBLOCK)
+             OR (errno = Uerror.EAGAIN) THEN
             IF timeout = 0.0D0 OR
                    SchedulerPosix.IOAlertWait(t.fd, TRUE, timeout) =
                        SchedulerPosix.WaitResult.Timeout THEN
               RAISE ConnFD.TimedOut;
             END;
-        ELSE
+          ELSE
             SetError(t,Unexpected);
+          END;
         END;
       END;
     END;
@@ -332,16 +352,25 @@ PROCEDURE PutBytesFD(t: T; READONLY arr: ARRAY OF CHAR)
       IF len >= 0 THEN
         INC(pos, len)
       ELSE
-        CASE Cerrno.GetErrno() OF
-        | Uerror.EPIPE, Uerror.ECONNRESET, Uerror.ENETRESET => SetError(t,ConnLost);
-        | Uerror.ETIMEDOUT => SetError(t,Timeout);
-        | Uerror.ENETUNREACH, Uerror.EHOSTUNREACH,
-             Uerror.EHOSTDOWN, Uerror.ENETDOWN => SetError(t,IP.Unreachable);
-        | Uerror.EWOULDBLOCK, Uerror.EAGAIN =>  <*NOWARN*>
-             EVAL SchedulerPosix.IOAlertWait(t.fd, FALSE);
-             (* IF Thread.TestAlert() THEN RAISE Thread.Alerted END *)
-        ELSE
+        WITH errno = Cerrno.GetErrno() DO
+          IF     (errno = Uerror.EPIPE)
+              OR (errno = Uerror.ECONNRESET)
+              OR (errno = Uerror.ENETRESET) THEN
+            SetError(t,ConnLost);
+          ELSIF (errno = Uerror.ETIMEDOUT) THEN
+            SetError(t,Timeout);
+          ELSIF  (errno = Uerror.ENETUNREACH)
+              OR (errno = Uerror.EHOSTUNREACH)
+              OR (errno = Uerror.EHOSTDOWN)
+              OR (errno = Uerror.ENETDOWN) THEN
+            SetError(t,IP.Unreachable);
+          ELSIF  (errno = Uerror.EWOULDBLOCK)
+              OR (errno = Uerror.EAGAIN) THEN
+            EVAL SchedulerPosix.IOAlertWait(t.fd, FALSE);
+            (* IF Thread.TestAlert() THEN RAISE Thread.Alerted END *)
+          ELSE
             SetError(t,Unexpected);
+          END
         END
       END
     END;
