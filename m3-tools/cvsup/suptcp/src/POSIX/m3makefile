@@ -2,10 +2,10 @@
 /* Copyright 1993 Digital Equipment Corporation. */
 /* Distributed only by permission. */
 /* Last modified on Thu Feb  9 15:55:57 PST 1995 by wobber     */
-/* $Id: m3makefile,v 1.1.1.1 2009-04-09 17:02:04 jkrell Exp $ */
+/* $Id: m3makefile,v 1.2 2009-04-09 19:15:47 jkrell Exp $ */
 
 Interface("SupTCPPosix")
-implementation("SupTCP")
+% implementation("SupTCP")
 interface("SupTCPHack")
 interface("SockOpt")
 
