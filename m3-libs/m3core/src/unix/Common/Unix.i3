@@ -83,6 +83,7 @@ PROCEDURE mkdir (path: const_char_star; mode: int(*mode_t*)): int;
 <*EXTERNAL Unix__O_EXCL*>      VAR O_EXCL: int;
 <*EXTERNAL Unix__O_TRUNC*>     VAR O_TRUNC: int;
 <*EXTERNAL Unix__O_NONBLOCK*>  VAR O_NONBLOCK: int;
+<*EXTERNAL Unix__O_APPEND*>    VAR O_APPEND: int; (* append on each write *)
 <*EXTERNAL Unix__O_NDELAY*>    VAR O_NDELAY: int; (* compat *)
 <*EXTERNAL Unix__M3_NONBLOCK*> VAR M3_NONBLOCK: int; (* compat *)
 
