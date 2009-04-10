@@ -261,9 +261,9 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
       Systems.PPC_DARWIN,
 (*    Systems.PPC32_AIX,
       Systems.PPC32_FREEBSD,
-      Systems.PPC32_NETBSD,
+      Systems.PPC32_NETBSD, *)
       Systems.PPC32_OPENBSD,
-      Systems.PPC64_AIX,
+(*    Systems.PPC64_AIX,
       Systems.PPC64_LINUX,
       Systems.PPC64_DARWIN, *)
 
