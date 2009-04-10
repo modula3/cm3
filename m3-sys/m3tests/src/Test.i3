@@ -18,16 +18,12 @@ TYPE
     f := ARRAY [1..10] OF     REAL {0.0e0, 0.5e0, 1.0e0, 2.0e0, -1.0e0, -3.5e0, 12.34e0, -124.456e0, 1000.0e0, -10000.0e0};
     sizes : RECORD
       (* keep these sorted by name for easier human comprehension *)
-      gid := BYTESIZE(Usysdep.gid_t);
       linger := BYTESIZE(Usysdep.struct_linger);
-      pid := BYTESIZE(Usysdep.pid_t);
       time := BYTESIZE(Usysdep.time_t);
       timeval := BYTESIZE(Usysdep.struct_timeval);
       tm := BYTESIZE(Usysdep.struct_tm);
-      uid := BYTESIZE(Usysdep.uid_t);
-      (* pthreads omitted on purpose *)
     END;
-    align := 0;
+    align := 0.0d0;
   END;
 
 <*EXTERNAL "Test__CheckFloatsAndTypes"*> PROCEDURE CheckFloatsAndTypes(READONLY t:T; size := BYTESIZE(T); jbsize := BYTESIZE(Csetjmp.jmp_buf));
