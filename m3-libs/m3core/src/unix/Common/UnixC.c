@@ -141,6 +141,41 @@ m3_mode_t Unix__umask(m3_mode_t newmask)
     return umask(newmask);
 }
 
+int Unix__link(const char* name1, const char* name2)
+{
+    return link(name1, name2);
+}
+
+int Unix__chmod(const char* path, mode_t mode)
+{
+    return chmod(path, mode);
+}
+
+int Unix__fchmod(int fd, mode_t mode)
+{
+    return fchmod(fd, mode);
+}
+
+int Unix__chown(const char* path, uid_t owner, gid_t group)
+{
+    return chown(path, owner, group);
+}
+
+int Unix__fchown(int fd, uid_t owner, gid_t group)
+{
+    return fchown(fd, owner, group);
+}
+
+int Unix__creat(const char* path, mode_t mode)
+{
+    return creat(path, mode);
+}
+
+int Unix__dup(int oldd)
+{
+    return dup(oldd);
+}
+
 #ifdef __cplusplus
 } /* extern C */
 #endif

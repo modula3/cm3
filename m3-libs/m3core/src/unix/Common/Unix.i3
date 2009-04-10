@@ -7,7 +7,7 @@
 FROM Cstddef IMPORT size_t;
 FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star;
 FROM Utime IMPORT struct_timeval;
-FROM Utypes IMPORT off_t, mode_t, dev_t;
+FROM Utypes IMPORT off_t, mode_t, dev_t, uid_t, gid_t;
 IMPORT Usysdep;
 
 CONST
@@ -44,6 +44,7 @@ PROCEDURE access (path: const_char_star; mode: int): int;
 PROCEDURE sbrk (inc: INTEGER): char_star;
 PROCEDURE chdir (path: const_char_star): int;
 PROCEDURE close (d: int): int;
+<*EXTERNAL Unix__dup*> PROCEDURE dup (oldd: int): int;
 PROCEDURE dup2 (oldd, newd: int): int;
 PROCEDURE execve (name: const_char_star;  argv, envp: char_star_star): int;
 
@@ -118,6 +119,13 @@ PROCEDURE mknod (path: const_char_star; mode: mode_t; dev: dev_t): int;
 
 <*EXTERNAL Unix__umask*>
 PROCEDURE umask (numask: mode_t): mode_t;
+
+<*EXTERNAL Unix__link*> PROCEDURE link (name1, name2: const_char_star): int;
+<*EXTERNAL Unix__chmod*> PROCEDURE chmod (path: const_char_star; mode: mode_t): int;
+<*EXTERNAL Unix__fchmod*> PROCEDURE fchmod (fd, mode: int): int;
+<*EXTERNAL Unix__chown*> PROCEDURE chown (path: const_char_star; owner: uid_t; group: gid_t): int;
+<*EXTERNAL Unix__fchown*> PROCEDURE fchown (fd: int; owner: uid_t; group: gid_t): int;
+<*EXTERNAL Unix__creat*> PROCEDURE creat (name: const_char_star; mode: mode_t): int;
 
 <*EXTERNAL Unix__Assertions*>
 PROCEDURE Assertions();
