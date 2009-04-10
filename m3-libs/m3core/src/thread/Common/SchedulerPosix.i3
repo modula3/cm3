@@ -84,12 +84,4 @@ PROCEDURE IOAlertWait(fd: CARDINAL; read: BOOLEAN;
       END;
 *)
 
-(* compatibility *)
-<*EXTERNAL "Scheduler__DisableSwitching"*>
-PROCEDURE DisableSwitching ();
-
-(* compatibility *)
-<*EXTERNAL "Scheduler__EnableSwitching"*>
-PROCEDURE EnableSwitching ();
-
 END SchedulerPosix.
