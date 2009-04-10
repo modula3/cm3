@@ -38,11 +38,11 @@ TYPE
   (* Ideally this is always 64 bits, else time runs out in 2038. *)
   time_t = Usysdep.time_t;
 
-  gid_t = Usysdep.gid_t;
-  pid_t = Usysdep.pid_t;
-  uid_t = Usysdep.uid_t;
+  gid_t = INTEGER; (* signed on some systems, unsigned on some systems, portable code cannot depend on either *)
+  pid_t = INTEGER; (* generally only 32 bits but ok *)
+  uid_t = INTEGER; (* signed on some systems, unsigned on some systems, portable code cannot depend on either *)
 
-  socklen_t = Cstdint.uint32_t; (* int32_t on Cygwin, size_t on HP-UX, but ok via wrappers (see Usocket.i3) *)
+  socklen_t = uint32_t; (* int32_t on Cygwin, size_t on HP-UX, but ok via wrappers (see Usocket.i3) *)
 
   mode_t = INTEGER;
   dev_t = LONGINT;

@@ -27,48 +27,62 @@ However that is not portable.
 So use these wrappers instead.
 */
 
-/* This is the point. */
-#define _FILE_OFFSET_BITS 64
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <assert.h>
-#ifdef __sun
-#include <errno.h>
-#else
-#include <sys/ioctl.h>
-#endif
+#include "m3unix.h"
+#include <limits.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-void Unix__Assertions()
+void Unix__Assertions(void)
 {
-    assert(sizeof(mode_t) <= sizeof(int));
+    /* make sure all the Modula-3 types are large enough */
+
+#define CHECK_M3_TYPE_SIZE(x) assert(sizeof(m3_##x) >= sizeof(x))
+#define IS_TYPE_SIGNED(x)  (((x)-1) < (x)0)
+
+    CHECK_M3_TYPE_SIZE(mode_t);
+    CHECK_M3_TYPE_SIZE(dev_t);
+    CHECK_M3_TYPE_SIZE(ino_t);
+    CHECK_M3_TYPE_SIZE(off_t);
+    CHECK_M3_TYPE_SIZE(pthread_t);
+    CHECK_M3_TYPE_SIZE(gid_t);
+    CHECK_M3_TYPE_SIZE(pid_t);
+    CHECK_M3_TYPE_SIZE(uid_t);
+
+    assert(IS_TYPE_SIGNED(pid_t) == 1);
+
+    assert(CHAR_BIT == 8);
+    assert(sizeof(short) == 1);
+    assert(sizeof(int) == 4);
+    assert((sizeof(long) == 4) || (sizeof(long) == 8));
+#ifdef _MSC_VER
+    assert((sizeof(__int64) == 8));
+#else
+    assert((sizeof(long long) == 8));
+#endif
 }
 
 /* open doesn't take any off_t parameter, but there is open64, that
 #define _FILE_OFFSET_BITS 64 maps open to. */
-int Unix__open(const char* path, int flags, /*mode_t*/int mode)
+int Unix__open(const char* path, int flags, m3_mode_t mode)
 {
     return open(path, flags, mode);
 }
 
 /* wrapped in case passing mode_t vs. int varies */
-int Unix__mkdir(const char* path, /*mode_t*/int mode)
+int Unix__mkdir(const char* path, m3_mode_t mode)
 {
     return mkdir(path, mode);
 }
 
-int Unix__ftruncate(int fd, off_t length)
+int Unix__ftruncate(int fd, m3_off_t length)
 {
     return ftruncate(fd, length);
 }
 
-off_t Unix__lseek(int fd, off_t offset, int whence)
+m3_off_t Unix__lseek(int fd, m3_off_t offset, int whence)
 {
     return lseek(fd, offset, whence);
 }
@@ -114,6 +128,17 @@ int Unix__ioctl(int fd, int request, void* argp)
 #else
     return ioctl(fd, request, argp);
 #endif
+}
+
+int Unix__mknod(const char* path, m3_mode_t mode, m3_dev_t dev)
+/* no good reason to wrap this */
+{
+    return mknod(path, mode, dev);
+}
+
+m3_mode_t Unix__umask(m3_mode_t newmask)
+{
+    return umask(newmask);
 }
 
 #ifdef __cplusplus

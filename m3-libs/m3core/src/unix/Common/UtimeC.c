@@ -1,8 +1,8 @@
 #include "m3unix.h"
-#include <time.h>
-#include <assert.h>
-#include <sys/time.h>
-typedef struct itimerval itimerval_t;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* to address libtool: file: UtimeC.o has no symbols */
 void UtimeC__dummy(void) { }
@@ -55,3 +55,7 @@ const char* Utime__get_tzname(unsigned a)
 }
 
 #endif /* M3BSD */
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

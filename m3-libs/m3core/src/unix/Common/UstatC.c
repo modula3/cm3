@@ -1,13 +1,15 @@
 #include "m3unix.h"
-#include <assert.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
-typedef struct stat stat_t;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-typedef struct _m3_stat_t {
-/* Sorted by size, then by name; make everything LONGINT if possible, else INTEGER;
+struct _m3_stat_t
+{
+/*
+This MUST match Ustat.i3.
+
+Sorted by size, then by name; make everything LONGINT if possible, else INTEGER;
 Limit on LONGINT is compatibility with existing Modula-3 code. Blowing up the sizes
 larger than necessary is a slight deoptimization for the sake of simplicity and
 commonality.
@@ -22,7 +24,7 @@ commonality.
     INTEGER gid;
     INTEGER mode;
     INTEGER uid;
-} m3_stat_t;
+};
 
 static int m3stat_from_stat(int result, m3_stat_t* m3st, stat_t* st)
 {
@@ -58,3 +60,7 @@ int Ustat__fstat(int fd, m3_stat_t* m3st)
     stat_t st;
     return m3stat_from_stat(fstat(fd, &st), m3st, &st);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
