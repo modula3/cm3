@@ -28,16 +28,12 @@ typedef struct T
     float f[10];
     struct {
         /* keep these sorted by name for easier human comprehension */
-        size_t gid;
         size_t linger;
-        size_t pid;
         size_t time;
         size_t timeval;
         size_t tm;
-        size_t uid;
-        /* pthreads omitted on purpose */
     } sizes;
-    size_t align;
+    double align;
 } T;
 
 static const T t1 =
@@ -45,13 +41,10 @@ static const T t1 =
     { 0.0, 0.5, 1.0, 2.0, -1.0, -3.0, 12.34, -124.456, 1000.0, -10000.0 },
     { 0.0, 0.5, 1.0, 2.0, -1.0, -3.5, 12.34, -124.456, 1000.0, -10000.0 },
     {
-    SIZE(gid_t),
     SIZE(linger_t),
-    SIZE(pid_t),
     SIZE(time_t),
     SIZE(timeval_t),
     SIZE(tm_t),
-    SIZE(uid_t)
     },
     0
 };
@@ -71,12 +64,10 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
         printf("d[0], d[1]: %x, %x\n", OFFSET(T, d[0]), OFFSET(T, d[1]));
         printf("f[0], f[1]: %x, %x\n", OFFSET(T, f[0]), OFFSET(T, f[1]));
         printf("d[8], d[9]: %x, %x\n", OFFSET(T, d[8]), OFFSET(T, d[9]));
-        printf("gid: %x\n", OFFSET(T, sizes.gid));
         printf("linger: %x\n", OFFSET(T, sizes.linger));
         printf("time: %x\n", OFFSET(T, sizes.time));
         printf("timeval: %x\n", OFFSET(T, sizes.timeval));
         printf("tm: %x\n", OFFSET(T, sizes.tm));
-        printf("uid: %x\n", OFFSET(T, sizes.uid));
         for (i = 0; i < SIZE(t1); ++i)
         {
             if (c[i] != m3[i])
