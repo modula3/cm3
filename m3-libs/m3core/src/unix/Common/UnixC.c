@@ -54,7 +54,7 @@ void Unix__Assertions(void)
     assert(IS_TYPE_SIGNED(pid_t) == 1);
 
     assert(CHAR_BIT == 8);
-    assert(sizeof(short) == 1);
+    assert(sizeof(short) == 2);
     assert(sizeof(int) == 4);
     assert((sizeof(long) == 4) || (sizeof(long) == 8));
 #ifdef _MSC_VER
