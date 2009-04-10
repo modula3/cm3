@@ -7,7 +7,7 @@
 FROM Cstddef IMPORT size_t;
 FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star;
 FROM Utime IMPORT struct_timeval;
-FROM Utypes IMPORT off_t;
+FROM Utypes IMPORT off_t, mode_t, dev_t;
 IMPORT Usysdep;
 
 CONST
@@ -112,6 +112,12 @@ TYPE
   FDSet = SET OF [0 .. MAX_FDSET - 1];
 
 PROCEDURE select (nfds: int; readfds, writefds, exceptfds: UNTRACED REF FDSet; timeout: UNTRACED REF struct_timeval): int;
+
+<*EXTERNAL Unix__mknod*>
+PROCEDURE mknod (path: const_char_star; mode: mode_t; dev: dev_t): int;
+
+<*EXTERNAL Unix__umask*>
+PROCEDURE umask (numask: mode_t): mode_t;
 
 <*EXTERNAL Unix__Assertions*>
 PROCEDURE Assertions();

@@ -15,14 +15,9 @@ CONST
 (* INTERFACE Unix; *)
 
     MaxPathLen = 1024;
-
     MAX_FDSET = (X32 * 1024) + (X64 * 65536);
 
 TYPE
-(* INTERFACE Upthread; *)
-
-    pthread_t = int32_t; (* opaque *)
-
 (* INTERFACE Usocket; *)
 
     struct_linger = RECORD
@@ -51,9 +46,6 @@ TYPE
 
 (* INTERFACE Utypes; *)
 
-    gid_t = int32_t;
-    pid_t = int32_t;
-    time_t = INTEGER;
-    uid_t = int32_t;
+    time_t = INTEGER; (* ideally always 64 bits *)
 
 END Usysdep.

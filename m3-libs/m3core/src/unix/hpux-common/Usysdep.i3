@@ -6,20 +6,14 @@ INTERFACE Usysdep;
 
 FROM Cstdint IMPORT int32_t;
 FROM Ctypes IMPORT int;
-FROM Cstddef IMPORT size_t;
 
 CONST
 (* INTERFACE Unix; *)
 
     MaxPathLen = 1024;
-
     MAX_FDSET = 1024;
 
 TYPE
-(* INTERFACE Upthread; *)
-
-    pthread_t = int32_t; (* opaque *)
-
 (* INTERFACE Usocket; *)
 
     struct_linger = RECORD
@@ -48,9 +42,6 @@ TYPE
 
 (* INTERFACE Utypes; *)
 
-    gid_t = int32_t;
-    pid_t = int32_t;
-    time_t = INTEGER;
-    uid_t = int32_t;
+    time_t = INTEGER; (* ideally always 64 bits *)
 
 END Usysdep.

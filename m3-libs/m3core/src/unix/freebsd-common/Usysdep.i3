@@ -13,14 +13,9 @@ FROM Cstdint IMPORT uint16_t, uint32_t, int32_t;
 
 CONST
   MaxPathLen = 1024;
-
   MAX_FDSET = 1024;
 
 TYPE
-(* INTERFACE Upthread; *)
-
-  pthread_t = ADDRESS;
-
 (* INTERFACE Usocket; *)
 
   struct_linger = RECORD
@@ -52,15 +47,6 @@ TYPE
 (* INTERFACE Utypes; *)
 
   (* ideally always 64 bits *)
-  clock_t = int32_t;
-
-  gid_t = uint32_t;
-
-  pid_t = int32_t;
-
-  (* ideally always 64 bits *)
   time_t = INTEGER;
-
-  uid_t = uint32_t;
 
 END Usysdep.

@@ -2,7 +2,7 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-<*EXTERNAL*> INTERFACE Ustat;
+INTERFACE Ustat;
 
 IMPORT Utypes;
 FROM Ctypes IMPORT int, char_star;
@@ -31,7 +31,10 @@ FROM Ctypes IMPORT int, char_star;
 
 TYPE
   struct_stat = RECORD
-(* Sorted by size, then by name; make everything LONGINT if possible, else INTEGER;
+(*
+This MUST match UstatC.c.
+
+Sorted by size, then by name; make everything LONGINT if possible, else INTEGER;
 Limit on LONGINT is compatibility with existing Modula-3 code. Blowing up the sizes
 larger than necessary is a slight deoptimization for the sake of simplicity and
 commonality. *)

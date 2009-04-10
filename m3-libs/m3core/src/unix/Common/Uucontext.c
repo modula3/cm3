@@ -2,6 +2,7 @@
 /* All rights reserved.                                       */
 /* See the file COPYRIGHT for a full description.             */
 
+#include "m3unix.h"
 #include "Uucontext.h"
 
 #ifdef __cplusplus
@@ -28,8 +29,6 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
     || defined(__NetBSD__) \
     || defined(__hpux) \
     || defined(__FreeBSD__) \
-
-#include <assert.h>
 
 int Uucontext__getcontext(ucontext_t* context)
 {

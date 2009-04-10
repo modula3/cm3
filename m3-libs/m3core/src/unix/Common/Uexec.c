@@ -2,12 +2,7 @@
 /* All rights reserved.                                        */
 /* See the file COPYRIGHT for a full description.              */
 
-#define _FILE_OFFSET_BITS 64
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <assert.h>
-#include <stddef.h>
+#include "m3unix.h"
 
 void Uexec__RepackStatus(int* var_status)
 {

@@ -11,14 +11,9 @@ FROM Ctypes IMPORT char_star, int;
 
 CONST
   MaxPathLen = 1024;
-
   MAX_FDSET = 1024;
 
 TYPE
-(* INTERFACE Upthread; *)
-
-  pthread_t = ADDRESS;
-
 (* INTERFACE Usocket; *)
 
   struct_linger = RECORD
@@ -49,9 +44,6 @@ TYPE
 
 (* INTERFACE Utypes; *)
 
-  gid_t = uint32_t;
-  pid_t = int;
   time_t = INTEGER; (* ideally always 64 bits *)
-  uid_t = uint32_t;
 
 END Usysdep.

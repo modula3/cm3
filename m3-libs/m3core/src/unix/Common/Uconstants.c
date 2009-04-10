@@ -2,7 +2,7 @@
 /* All rights reserved.                                       */
 /* See the file COPYRIGHT for a full description.             */
 
-#define _FILE_OFFSET_BITS 64
+#include "m3unix.h"
 #if defined(__OpenBSD__)
 #include "context.h"
 #define HAS_UCONTEXT_T
@@ -12,23 +12,9 @@
 #else
 /*#include <ucontext.h>*/
 #endif
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <assert.h>
-#include <stddef.h>
-#include <errno.h>
 #include <signal.h>
-#include <fcntl.h>
-#include <sys/socket.h>
 #include <netinet/tcp.h>
-#include <pthread.h>
-#include <netdb.h>
 #include <netinet/in.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <sys/time.h>
-#include <sys/mman.h>
 #ifdef __sun
 #include <sys/filio.h>
 #endif
@@ -176,6 +162,42 @@ X(PROT_NONE)
 X(PROT_READ)
 X(PROT_WRITE)
 
+#ifdef PROT_EXEC
+     X(PROT_EXEC)
+#endif
+#ifdef MAP_SHARED
+     X(MAP_SHARED)
+#endif
+#ifdef MAP_PRIVATE
+     X(MAP_PRIVATE)
+#endif
+#ifdef MAP_FIXED
+     X(MAP_FIXED)
+#endif
+#ifdef MAP_RENAME
+     X(MAP_RENAME)
+#endif
+#ifdef MAP_NORESERVE
+     X(MAP_NORESERVE)
+#endif
+#ifdef MAP_HASSEMAPHORE
+     X(MAP_HASSEMAPHORE)
+#endif
+#ifdef MAP_STACK
+     X(MAP_STACK)
+#endif
+#ifdef MAP_NOSYNC
+     X(MAP_NOSYNC)
+#endif
+#ifdef MAP_FILE
+     X(MAP_FILE)
+#endif
+#ifdef MAP_ANON
+     X(MAP_ANON)
+#endif
+#ifdef MAP_NOCORE
+     X(MAP_NOCORE)
+#endif
 
 #ifdef HAS_UCONTEXT_T
 #undef X
