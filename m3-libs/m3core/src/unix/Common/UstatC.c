@@ -19,6 +19,7 @@ commonality.
     LONGINT dev;
     LONGINT ino;
     LONGINT mtime;
+    LONGINT nlink;
     LONGINT rdev;
     LONGINT size;
     INTEGER gid;
@@ -34,6 +35,7 @@ static int m3stat_from_stat(int result, m3_stat_t* m3st, stat_t* st)
         m3st->dev = st->st_dev;
         m3st->ino = st->st_ino;
         m3st->mtime = st->st_mtime;
+        m3st->nlink = st->st_nlink;
         m3st->rdev = st->st_rdev;
         m3st->size = st->st_size;
         m3st->gid = st->st_gid;
