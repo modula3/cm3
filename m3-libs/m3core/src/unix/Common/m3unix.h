@@ -161,6 +161,14 @@ void Ugrp__setgrent(void);
 void Ugrp__endgrent(void);
 
 
+int Unix__link(const char* name1, const char* name2);
+int Unix__chmod(const char* path, mode_t mode);
+int Unix__fchmod(int fd, mode_t mode);
+int Unix__chown(const char* path, uid_t owner, gid_t group);
+int Unix__fchown(int fd, uid_t owner, gid_t group);
+int Unix__creat(const char* path, mode_t mode);
+int Unix__dup(int oldd);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
