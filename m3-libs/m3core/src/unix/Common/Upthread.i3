@@ -5,10 +5,9 @@
 <*EXTERNAL*> INTERFACE Upthread;
 
 FROM Ctypes IMPORT int;
-IMPORT Usysdep;
 
 TYPE
-  pthread_t = Usysdep.pthread_t;
+  pthread_t = ADDRESS;
   destructor_t = PROCEDURE(arg: ADDRESS);
   start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;
 

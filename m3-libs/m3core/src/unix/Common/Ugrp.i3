@@ -16,10 +16,10 @@ FROM Utypes IMPORT gid_t;
 
 TYPE
   struct_group = RECORD
-    gr_name:    char_star;
-    gr_passwd:  char_star;
-    gr_gid:     gid_t;
+  (* This MUST match Ugrp.c. *)
     gr_mem:     char_star_star;
+    gr_name:    char_star;
+    gr_gid:     gid_t;
   END;
 
   struct_group_star = UNTRACED REF struct_group;
@@ -27,12 +27,10 @@ TYPE
 (*** getgrent, getgrgid, getgrnam, setgrent, endgrent
      - get group file entry ***)
 
-<*EXTERNAL*> PROCEDURE getgrent(): struct_group_star;
-<*EXTERNAL*> PROCEDURE getgrgid(gid: gid_t): struct_group_star;
-<*EXTERNAL*> PROCEDURE getgrnam(name: char_star): struct_group_star;
-<*EXTERNAL*> PROCEDURE setgrent();
-<*EXTERNAL*> PROCEDURE endgrent();
+<*EXTERNAL Ugrp__getgrent*> PROCEDURE getgrent(a: struct_group_star): struct_group_star;
+<*EXTERNAL Ugrp__getgrgid*> PROCEDURE getgrgid(a: struct_group_star; gid: gid_t): struct_group_star;
+<*EXTERNAL Ugrp__getgrnam*> PROCEDURE getgrnam(a: struct_group_star; name: char_star): struct_group_star;
+<*EXTERNAL Ugrp__setgrent*> PROCEDURE setgrent();
+<*EXTERNAL Ugrp__endgrent*> PROCEDURE endgrent();
 
 END Ugrp.
-
-

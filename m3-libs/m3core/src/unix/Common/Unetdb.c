@@ -2,9 +2,7 @@
 /* All rights reserved.                                       */
 /* See the file COPYRIGHT for a full description.             */
 
-#include <stddef.h>
-#include <netdb.h>
-typedef struct hostent hostent_t;
+#include "m3unix.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,16 +16,16 @@ for alignment, and then by name.
 
 "h_" prefix is omitted from the names in case they are macros. */
 
-typedef struct m3_hostent_t {
+struct _m3_hostent_t
+{
     char** addr_list;
     char** aliases;
     const char* name;
     int addrtype; /* varies between int16_t and int32_t */
     int length;   /* varies between int16_t and int32_t */
-} m3_hostent_t;
+};
 
-static m3_hostent_t*
-native_to_m3(const hostent_t* native, m3_hostent_t* m3)
+static m3_hostent_t* native_to_m3(const hostent_t* native, m3_hostent_t* m3)
 {
     if (native == NULL)
         return NULL;

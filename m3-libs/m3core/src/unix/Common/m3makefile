@@ -8,6 +8,11 @@ c_source("Uexec")
 Interface ("Unetdb")
 c_source ("Unetdb")
 
+c_source ("Umman")
+
+Interface ("Ugrp")
+c_source ("Ugrp")
+
 %
 % This is meant to be all systems with user-thread support,
 % when it is implemented using get/set/make/swapcontext instead of setjmp/longjmp.
