@@ -57,6 +57,9 @@ void Unix__Assertions(void)
     assert(sizeof(short) == 2);
     assert(sizeof(int) == 4);
     assert((sizeof(long) == 4) || (sizeof(long) == 8));
+    assert((sizeof(size_t) == 4) || (sizeof(size_t) == 8));
+    assert((sizeof(void*) == 4) || (sizeof(void*) == 8));
+    assert(sizeof(void*) == sizeof(size_t));
 #ifdef _MSC_VER
     assert((sizeof(__int64) == 8));
 #else
