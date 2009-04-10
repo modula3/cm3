@@ -18,12 +18,13 @@
 
 <p>This document is published under the same license as cm3 (Critical Mass Modula3), which basically means that it is free to change and/or distribute under certain conditions, and that there is NO WARRANTY OR RELIABILITY of any kind. Refer to CM3's license information for further details.</p>
 
-<p>Last update: 2008-February-16</p>
-<p>Authors: Neels Janosch Hofmeyr (neels@elego.de)</p>
+<p>Last full review: 2008-February-16</p>
+<p>Last minor update: 2009-April-10</p>
+<p>Author: Neels Janosch Hofmeyr (neels@elego.de)</p>
 
 <p>This document is based on these installation notes:</p>
 
-<pre> http://modula3.elegosoft.com/cm3/installation.html</pre>
+<pre> <a href="http://www.opencm3.net/installation.html">http://www.opencm3.net/installation.html</a></pre>
 
 <p>However, this document gives more specific information that applies to Ubuntu 7.10 and possibly other Ubuntus and GNU/Linux distributions. Here we go...</p>
 
@@ -75,7 +76,12 @@
 <p>First, let's do the minimal binary installation.</p>
 
 <p>Download a cm3-min-POSIX package to your Desktop, from</p>
-<pre>  http://modula3.elegosoft.com/cm3/snaps/snapshot-index.html</pre>
+<pre>  <a href="http://www.opencm3.net">http://www.opencm3.net</a></pre>
+<p>(i.e. one of
+<pre>  <a href="http://www.opencm3.net/download.html">http://www.opencm3.net/download.html</a></pre>
+<pre>  <a href="http://www.opencm3.net/uploaded-archives/index.html">http://www.opencm3.net/uploaded-archives/index.html</a></pre>
+<pre>  <a href="http://www.opencm3.net/snaps/snapshot-index.html">http://www.opencm3.net/snaps/snapshot-index.html</a></pre>
+<p>).</p>
 <p>Note that most earlier minimal binaries do <i>not</i> work, so stick with d5.5.1 or later. The following versions are known to succeed:</p>
 
 <pre>  cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz</pre>
@@ -83,13 +89,13 @@
 
 
 <p>You will find an appropriate checksum on</p>
-<pre>  http://modula3.elegosoft.com/cm3/checksums.php3</pre>
+<pre>  <a href="http://www.opencm3.net/checksums.php3">http://www.opencm3.net/checksums.php3</a></pre>
 <p>or just use the commands from this screenshot:</p>
 <p>"</p>
 <pre>  $ md5sum cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz
   b3235f920e35f7b2f472d12c5bd8478d  cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz
   
-  $ wget -q -O - http://modula3.elegosoft.com/cm3/checksums.php3 | grep cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz
+  $ wget -q -O - http://www.opencm3.net/checksums.php3 | grep cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz
   -rw-r--r-- 1 wagner   wagner  7034105 2008-01-24 04:55 snaps/cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz
   lrwxrwxrwx 1 m3       m3           55 2008-01-25 01:05 snaps/cm3-min-POSIX-LINUXLIBC6.tgz -> cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz
   1801216045 7034105 snaps/cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz
@@ -193,7 +199,7 @@
 <p>Let's continue with downloading and compiling the full cm3 sources.</p>
 
 <p>Upon writing this file, the newest available stable tarballs (version 5.4.0) are too old. So, you have to go about downloading the cm3 sources from CVS like this:</p>
-<p>(CVS instructions adapted from http://modula3.elegosoft.com/cm3/cvs-cm3.html )</p>
+<p>(CVS instructions adapted from <a href="http://www.opencm3.net/cvs-cm3.html">http://www.opencm3.net/cvs-cm3.html</a> )</p>
 
 <pre>  cd   # (go to your home directory)</pre>
 <pre>  cvs -d :pserver:anonymous@modula3.elegosoft.com:/usr/cvs login</pre>
