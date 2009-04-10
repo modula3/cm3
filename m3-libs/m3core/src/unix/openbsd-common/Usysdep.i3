@@ -5,7 +5,7 @@
 INTERFACE Usysdep;
 
 FROM Ctypes IMPORT int, char_star;
-FROM Cstdint IMPORT uint32_t, int32_t;
+FROM Cstdint IMPORT int32_t;
 
 (* INTERFACE Unix; *)
 
