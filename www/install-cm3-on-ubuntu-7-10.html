@@ -27,6 +27,7 @@
 <pre> <a href="http://www.opencm3.net/installation.html">http://www.opencm3.net/installation.html</a></pre>
 
 <p>However, this document gives more specific information that applies to Ubuntu 7.10 and possibly other Ubuntus and GNU/Linux distributions. Here we go...</p>
+<p>(It has been reported to work for Ubuntu 8.04).</p>
 
 
 <p>=========================================================================</p>
@@ -43,6 +44,8 @@
   chmod -R g+rw  /usr/local
   exit  # exits root shell to become fred</pre>
 
+<p>In order for the group changes to take effect, you might have to relogin
+your user (end X session and login again)</p>
 <p>Now, you are user fred and can run the commands given here as they are.</p>
 
 <br>
@@ -62,10 +65,9 @@
 <pre>  libx11-dev (for a series of libX*.so files)</pre>
 
 <p>Also, in order for cminstall (below) to find some of the X11 libraries, you have to create symbolic links:</p>
-<pre>  sudo -s</pre>
 <pre>  cd /usr/lib</pre>
-<pre>  ln -s libXmu.so.6 libXmu.so</pre>
-<pre>  ln -s libXaw.so.7 libXaw.so</pre>
+<pre>  sudo ln -s libXmu.so.6 libXmu.so</pre>
+<pre>  sudo ln -s libXaw.so.7 libXaw.so</pre>
 
 <p>(If any other library file is not found, try to locate it using packages.ubuntu.com and install the appropriate package or add symbolic links to account for slight name differences as above)</p>
 
@@ -75,7 +77,7 @@
 
 <p>First, let's do the minimal binary installation.</p>
 
-<p>Download a cm3-min-POSIX package to your Desktop, from</p>
+<p>Download a cm3-min-POSIX-LINUXLIBC6* (or cm3-min-LINUXLIBC6*) package to your Desktop, from</p>
 <pre>  <a href="http://www.opencm3.net">http://www.opencm3.net</a></pre>
 <p>(i.e. one of
 <pre>  <a href="http://www.opencm3.net/download.html">http://www.opencm3.net/download.html</a></pre>
@@ -86,23 +88,24 @@
 
 <pre>  cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz</pre>
 <pre>  cm3-min-POSIX-LINUXLIBC6-d5.6.0-2008-02-13-03-35-02.tgz</pre>
+<pre>  cm3-min-POSIX-LINUXLIBC6-d5.7.0-2008-04-24-14-00-04.tgz</pre>
 
 
 <p>You will find an appropriate checksum on</p>
 <pre>  <a href="http://www.opencm3.net/checksums.php3">http://www.opencm3.net/checksums.php3</a></pre>
 <p>or just use the commands from this screenshot:</p>
 <p>"</p>
-<pre>  $ md5sum cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz
-  b3235f920e35f7b2f472d12c5bd8478d  cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz
-  
-  $ wget -q -O - http://www.opencm3.net/checksums.php3 | grep cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz
-  -rw-r--r-- 1 wagner   wagner  7034105 2008-01-24 04:55 snaps/cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz
-  lrwxrwxrwx 1 m3       m3           55 2008-01-25 01:05 snaps/cm3-min-POSIX-LINUXLIBC6.tgz -> cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz
-  1801216045 7034105 snaps/cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz
-  b3235f920e35f7b2f472d12c5bd8478d  snaps/cm3-min-POSIX-LINUXLIBC6-d5.5.1-2008-01-24-03-35-01.tgz</pre>
+<pre>  $ md5sum cm3-min-POSIX-LINUXLIBC6-d5.7.0-2008-04-24-14-00-04.tgz 
+  ba70f9511a2bd3da912935dbcf3df423  cm3-min-POSIX-LINUXLIBC6-d5.7.0-2008-04-24-14-00-04.tgz
+
+  neels@dub:~/elego/SafeCVS/install 
+  $ wget -q -O - http://www.opencm3.net/checksums.php3 | grep cm3-min-POSIX-LINUXLIBC6-d5.7.0-2008-04-24-14-00-04.tgz
+  -rw-r--r-- 1 neels   m3  8215951 2009-04-11 22:51 uploaded-archives/cm3-min-POSIX-LINUXLIBC6-d5.7.0-2008-04-24-14-00-04.tgz
+  596342621 8215951 uploaded-archives/cm3-min-POSIX-LINUXLIBC6-d5.7.0-2008-04-24-14-00-04.tgz
+  ba70f9511a2bd3da912935dbcf3df423  uploaded-archives/cm3-min-POSIX-LINUXLIBC6-d5.7.0-2008-04-24-14-00-04.tgz</pre>
 <p>"</p>
 
-<p>Note that <b>the tarballs do not unpack to a subdirectory but to the current directory</b>, and run these commands:</p>
+<p>Note that <b>the tarballs do not unpack to a subdirectory but to the current directory</b>, so run these commands:</p>
 
 <pre>  mkdir ~/cm3-min</pre>
 <pre>  cd ~/cm3-min</pre>
