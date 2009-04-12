@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: TokScan.m3,v 1.2 2009-04-12 04:20:26 jkrell Exp $ *)
+ * $Id: TokScan.m3,v 1.3 2009-04-12 04:22:05 jkrell Exp $ *)
 
 MODULE TokScan;
 
@@ -316,7 +316,7 @@ PROCEDURE AtoL(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Long.T
   RAISES {Error} =
   VAR
     len := Text.Length(t);
-    val: Long.T := 0;
+    val: Long.T := 0L;
     digit: INTEGER;
   BEGIN
     IF len = 0 THEN RAISE
@@ -343,7 +343,7 @@ PROCEDURE AtoL(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Long.T
 PROCEDURE AtoI(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Word.T
   RAISES {Error} =
   BEGIN
-    RETURN ORD(AtoL(text, what, radix));
+    RETURN ORD(AtoL(t, what, radix));
   END AtoI;
 
 PROCEDURE DecodeTime(text: TEXT): Time.T
