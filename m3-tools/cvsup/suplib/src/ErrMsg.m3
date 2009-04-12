@@ -33,7 +33,7 @@ UNSAFE MODULE ErrMsg;
 IMPORT
   Atom, AtomList, Cstring, EscapedRd, IO, IP, M3toC, Process, Text, TokScan;
 
-IMPORT SupTCP AS TCP;
+IMPORT TCP;
 
 FROM Stdio IMPORT stderr;
 

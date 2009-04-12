@@ -36,7 +36,7 @@ INTERFACE SupMisc;
 IMPORT
   Glob, GlobTree, IP, OSError, Pathname, Rd, RegEx, SupFileRec,
   TextSeq, Thread, Wr;
-IMPORT SupTCP AS TCP;
+IMPORT TCP;
 
 TYPE
   ExitCode = { Success, TransientFailure, Failure };

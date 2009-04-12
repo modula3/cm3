@@ -34,7 +34,7 @@ IMPORT
   FileAttr, Fmt, FS, Glob, GlobTree, IP, OSError, OSErrorPosix,
   Pathname, Process, Random, Rd, RdClass, RegEx, SupFileRec, Text,
   TextArraySort, TextSeq, Thread, TokScan, Uerror;
-IMPORT SupTCP AS TCP;
+IMPORT TCP;
 
 TYPE
   AtomicCounter = MUTEX OBJECT
