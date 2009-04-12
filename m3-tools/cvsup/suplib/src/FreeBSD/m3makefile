@@ -28,7 +28,9 @@
 %
 % $Id$
 
+if IS_FREEBSD
 import_lib("util", "/usr/lib")
+end
 
 module("FileAttrOS")
 interface("UProcTitle")
