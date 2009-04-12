@@ -128,3 +128,12 @@ proc findlib(fn) is
            "/opt/lib"]
   return findpath(paths, fn)
 end
+
+%
+% workaround
+%
+if equal(TARGET, "PPC_DARWIN") or equal(TARGET, "I386_DARWIN") or equal(TARGET, "AMD64_DARWIN")
+  SYSTEM_LIBS{"LIBC"} += "-lz"
+end
+
+
