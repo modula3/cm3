@@ -26,13 +26,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: TokScan.m3,v 1.1.1.1 2009-04-09 17:02:01 jkrell Exp $ *)
+ * $Id: TokScan.m3,v 1.2 2009-04-12 04:20:26 jkrell Exp $ *)
 
 MODULE TokScan;
 
 IMPORT
   ASCII, Fmt, IP, MD5Digest, RCSDate, RCSError, SupMisc, Text, Time,
-  Word;
+  Word, Long;
 
 (*****************************************************************************)
 (* Code common to all subtypes. *)
@@ -312,11 +312,11 @@ PROCEDURE NewDec(t: TEXT): T =
 (* Handy utility procedures. *)
 (*****************************************************************************)
 
-PROCEDURE AtoI(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Word.T
+PROCEDURE AtoL(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Long.T
   RAISES {Error} =
   VAR
     len := Text.Length(t);
-    val: Word.T := 0;
+    val: Long.T := 0;
     digit: INTEGER;
   BEGIN
     IF len = 0 THEN RAISE
@@ -334,10 +334,16 @@ PROCEDURE AtoI(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Word.T
 	IF digit >= radix THEN
 	  RAISE Error("Invalid " & what);
 	END;
-	val := Word.Plus(Word.Times(val, radix), digit);
+	val := Long.Plus(Long.Times(val, VAL(radix, LONGINT)), VAL(digit, LONGINT));
       END;
     END;
     RETURN val;
+  END AtoL;
+
+PROCEDURE AtoI(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Word.T
+  RAISES {Error} =
+  BEGIN
+    RETURN ORD(AtoL(text, what, radix));
   END AtoI;
 
 PROCEDURE DecodeTime(text: TEXT): Time.T

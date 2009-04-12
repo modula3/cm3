@@ -26,14 +26,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: TokScan.i3,v 1.1.1.1 2009-04-09 17:02:01 jkrell Exp $ *)
+ * $Id: TokScan.i3,v 1.2 2009-04-12 04:20:26 jkrell Exp $ *)
 
 (* The "TokScan" interface provides rudimentary facilities for scanning
    tokens from a line of text. *)
 
 INTERFACE TokScan;
 
-IMPORT IP, MD5Digest, Time, Word;
+IMPORT IP, MD5Digest, Time, Word, Long;
 
 EXCEPTION Error(TEXT);
 
@@ -113,6 +113,10 @@ PROCEDURE NewDec(t: TEXT): T;
 (* This interface also provides the following useful procedures. *)
 
 PROCEDURE AtoI(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Word.T
+  RAISES {Error};
+(* Converts the given text to an unsigned number. *)
+
+PROCEDURE AtoL(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Long.T
   RAISES {Error};
 (* Converts the given text to an unsigned number. *)
 
