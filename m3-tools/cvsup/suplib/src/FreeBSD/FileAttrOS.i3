@@ -30,8 +30,7 @@
 
 INTERFACE FileAttrOS;
 
-FROM Ctypes IMPORT const_char_star, int;
-FROM Utypes IMPORT u_long;
+FROM Ctypes IMPORT const_char_star, int, unsigned_long;
 
 CONST
   (* Definitions of flags stored in file flags word. *)
@@ -49,9 +48,9 @@ CONST
   SF_APPEND    = 16_00040000;      (* writes to file may only append *)
 
 <*EXTERNAL*>
-PROCEDURE chflags(path: const_char_star; flags: u_long): int;
+PROCEDURE chflags(path: const_char_star; flags: unsigned_long): int;
 
 <*EXTERNAL*>
-PROCEDURE fchflags(fd: int; flags: u_long): int;
+PROCEDURE fchflags(fd: int; flags: unsigned_long): int;
 
 END FileAttrOS.
