@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: TCPMisc.i3,v 1.1.1.1 2009-04-09 17:02:04 jkrell Exp $ *)
+ * $Id: TCPMisc.i3,v 1.2 2009-04-12 07:21:14 jkrell Exp $ *)
 
 (* The "TCPMisc" interface provides miscellaneous TCP-related services. *)
 
@@ -34,7 +34,7 @@ INTERFACE TCPMisc;
 
 IMPORT IP, Thread;
 
-IMPORT SupTCP AS TCP;
+IMPORT TCP;
 
 PROCEDURE AcceptFrom(c: TCP.Connector; VAR (*OUT*) peer: IP.Endpoint): TCP.T
     RAISES {IP.Error, Thread.Alerted};

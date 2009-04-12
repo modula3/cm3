@@ -26,14 +26,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: ChannelMux.m3,v 1.1.1.1 2009-04-09 17:01:52 jkrell Exp $ *)
+ * $Id: ChannelMux.m3,v 1.2 2009-04-12 07:21:14 jkrell Exp $ *)
 <* PRAGMA LL *>
 
 MODULE ChannelMux;
 
 IMPORT
   Atom, AtomList, IP, Rd, RefSeq, TCP, Thread, Word, Wr;
-IMPORT SupConnFD AS ConnFD;
+IMPORT ConnFD;
 
 (**)
 IMPORT Fmt, IO;
