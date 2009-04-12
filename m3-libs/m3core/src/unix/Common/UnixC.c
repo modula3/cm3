@@ -42,13 +42,14 @@ void Unix__Assertions(void)
 #define CHECK_M3_TYPE_SIZE(x) assert(sizeof(m3_##x) >= sizeof(x))
 #define IS_TYPE_SIGNED(x)  (((x)-1) < (x)0)
 
-    CHECK_M3_TYPE_SIZE(mode_t);
     CHECK_M3_TYPE_SIZE(dev_t);
-    CHECK_M3_TYPE_SIZE(ino_t);
-    CHECK_M3_TYPE_SIZE(off_t);
-    CHECK_M3_TYPE_SIZE(pthread_t);
     CHECK_M3_TYPE_SIZE(gid_t);
+    CHECK_M3_TYPE_SIZE(ino_t);
+    CHECK_M3_TYPE_SIZE(mode_t);
+    CHECK_M3_TYPE_SIZE(nlink_t);
+    CHECK_M3_TYPE_SIZE(off_t);
     CHECK_M3_TYPE_SIZE(pid_t);
+    CHECK_M3_TYPE_SIZE(pthread_t);
     CHECK_M3_TYPE_SIZE(uid_t);
 
     assert(IS_TYPE_SIGNED(pid_t) == 1);
@@ -57,13 +58,17 @@ void Unix__Assertions(void)
     assert(sizeof(short) == 2);
     assert(sizeof(int) == 4);
     assert((sizeof(long) == 4) || (sizeof(long) == 8));
-    assert((sizeof(size_t) == 4) || (sizeof(size_t) == 8));
     assert((sizeof(void*) == 4) || (sizeof(void*) == 8));
+    assert((sizeof(size_t) == 4) || (sizeof(size_t) == 8));
     assert(sizeof(void*) == sizeof(size_t));
+#ifndef _WIN64
+    assert(sizeof(void*) == sizeof(long));
+    assert(sizeof(size_t) == sizeof(long));
+#endif
 #ifdef _MSC_VER
-    assert((sizeof(__int64) == 8));
+    assert(sizeof(__int64) == 8);
 #else
-    assert((sizeof(long long) == 8));
+    assert(sizeof(long long) == 8);
 #endif
 }
 
