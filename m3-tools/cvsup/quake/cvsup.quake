@@ -26,7 +26,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: cvsup.quake,v 1.2 2009-04-12 06:43:09 jkrell Exp $
+% $Id: cvsup.quake,v 1.3 2009-04-12 06:54:08 jkrell Exp $
 
 % This chunk of quake code is included into the m3makefiles for the
 % various components.
@@ -50,9 +50,17 @@ proc version_impl(name) is
   local cmd = ""
   local ret = 0
   if defined("_all")
+
     > tempname in
       write("MODULE Version;", CR, CR, "BEGIN", CR, "  Name := ")
     end
+
+    if defined("datetime")
+        >> tempname in
+          write("\"" & datetime() & "\";")
+        end
+    else
+
     if equal("$Name: not supported by cvs2svn $", "$" & "Name:  $")
       cmd = "date -u +'\"U_%Y_%m_%d_%H_%M_%S\";'"
     else
@@ -64,6 +72,9 @@ proc version_impl(name) is
     else
       exec("@" & cmd)
     end
+
+    end
+
     >> tempname in
       write("  Target := \"", TARGET, "\";", CR)
     end
