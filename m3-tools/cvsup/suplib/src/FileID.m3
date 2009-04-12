@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: FileID.m3,v 1.1.1.1 2009-04-09 17:01:54 jkrell Exp $ *)
+ * $Id: FileID.m3,v 1.2 2009-04-12 04:57:52 jkrell Exp $ *)
 
 MODULE FileID;
 
@@ -55,7 +55,7 @@ PROCEDURE Equal(a, b: T): BOOLEAN =
 
 PROCEDURE Hash(fid: T): Word.T =
   BEGIN
-    RETURN Word.Xor(DevT.Hash(fid.device), fid.inode);
+    RETURN Word.Xor(DevT.Hash(fid.device), DevT.Hash(fid.inode));
   END Hash;
 
 BEGIN
