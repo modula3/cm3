@@ -553,13 +553,19 @@ PROCEDURE FromPathname(path: Pathname.T; follow: BOOLEAN): T
 PROCEDURE FromStat(READONLY stat: Ustat.struct_stat): T =
   VAR
     fa := NEW(T, stat := stat);
+    type: INTEGER;
   BEGIN
-    CASE Word.And(fa.stat.st_mode, Ustat.S_IFMT) OF
-    | Ustat.S_IFREG => fa.fileType := FileType.File;
-    | Ustat.S_IFDIR => fa.fileType := FileType.Directory;
-    | Ustat.S_IFCHR => fa.fileType := FileType.CharDevice;
-    | Ustat.S_IFBLK => fa.fileType := FileType.BlockDevice;
-    | Ustat.S_IFLNK => fa.fileType := FileType.SymLink;
+    type := Word.And(fa.stat.st_mode, Ustat.S_IFMT);
+    IF type = Ustat.S_IFREG THEN
+      fa.fileType := FileType.File;
+    ELSIF type = Ustat.S_IFDIR THEN
+      fa.fileType := FileType.Directory;
+    ELSIF type = Ustat.S_IFCHR THEN
+      fa.fileType := FileType.CharDevice;
+    ELSIF type = Ustat.S_IFBLK THEN
+      fa.fileType := FileType.BlockDevice;
+    ELSIF type = Ustat.S_IFLNK THEN
+      fa.fileType := FileType.SymLink;
     ELSE
       fa.fileType := FileType.Unknown;
     END;
