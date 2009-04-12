@@ -30,7 +30,7 @@
 
 UNSAFE MODULE Ugzip;
 
-IMPORT Cstdlib, CText, SchedulerPosix, UgzipP;
+IMPORT Cstdlib, CText, Scheduler AS SchedulerPosix, UgzipP;
 
 FROM Ctypes IMPORT int, unsigned_int, void_star;
 
