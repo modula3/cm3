@@ -55,7 +55,7 @@ PROCEDURE Equal(a, b: T): BOOLEAN =
 
 PROCEDURE Hash(fid: T): Word.T =
   BEGIN
-    RETURN Word.Xor(DevT.Hash(fid.device), fid.inode);
+    RETURN Word.Xor(DevT.Hash(fid.device), DevT.Hash(fid.inode));
   END Hash;
 
 BEGIN
