@@ -136,6 +136,83 @@ Y(S_OREAD, S_IROTH)
 Y(S_OWRITE, S_IWOTH)
 Y(S_OEXEC, S_IXOTH)
 
+#ifdef HAS_STAT_FLAGS
+
+#ifdef UF_NODUMP
+X(UF_NODUMP)
+#else
+Y(UF_NODUMP, 0)
+#endif
+
+#ifdef UF_IMMUTABLE
+X(UF_IMMUTABLE)
+#else
+Y(UF_IMMUTABLE, 0)
+#endif
+
+#ifdef UF_APPEND
+X(UF_APPEND)
+#else
+Y(UF_APPEND, 0)
+#endif
+
+#ifdef UF_NOUNLINK
+X(UF_NOUNLINK)
+#else
+Y(UF_NOUNLINK, 0)
+#endif
+
+#ifdef UF_OPAQUE
+X(UF_OPAQUE)
+#else
+Y(UF_OPAQUE, 0)
+#endif
+
+#ifdef SF_ARCHIVED
+X(SF_ARCHIVED)
+#else
+Y(SF_ARCHIVED, 0)
+#endif
+
+#ifdef SF_IMMUTABLE
+X(SF_IMMUTABLE)
+#else
+Y(SF_IMMUTABLE, 0)
+#endif
+
+#ifdef SF_APPEND
+X(SF_APPEND)
+#else
+Y(SF_APPEND, 0)
+#endif
+
+#ifdef SF_NOUNLINK
+X(SF_NOUNLINK)
+#else
+Y(SF_NOUNLINK, 0)
+#endif
+
+#ifdef SF_SNAPSHOT
+X(SF_SNAPSHOT)
+#else
+Y(SF_SNAPSHOT, 0)
+#endif
+
+#else
+
+Y(UF_NODUMP, 0)
+Y(UF_IMMUTABLE, 0)
+Y(UF_APPEND, 0)
+Y(UF_NOUNLINK, 0)
+Y(UF_OPAQUE, 0)
+Y(SF_ARCHIVED, 0)
+Y(SF_IMMUTABLE, 0)
+Y(SF_APPEND, 0)
+Y(SF_NOUNLINK, 0)
+Y(SF_SNAPSHOT, 0)
+
+#endif
+
 #undef X
 #define X(x) const int Unetdb__##x = x;
 X(TRY_AGAIN)
