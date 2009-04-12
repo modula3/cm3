@@ -277,12 +277,16 @@ PROCEDURE IterNextWithStatus(
 TYPE NamePrefix = UNTRACED REF ARRAY [0..2] OF Ctypes.char;
 
 PROCEDURE IterRaw(iter: Iterator; VAR (*OUT*) name: TEXT): BOOLEAN =
+  VAR n: Ctypes.const_char_star;
   BEGIN
     IF iter.closed THEN RAISE IterClosed END;
     LOOP (* to ignore "." and ".." *)
       IF iter.d = NIL THEN RETURN FALSE
       ELSE
-        WITH n = FSPosixC.m3_readdir_name(iter.d) DO
+      (* cvsup source says readdir needs EnableSwitching/DisableSwitching *)
+        Scheduler.DisableSwitching ();
+          n := FSPosixC.m3_readdir_name(iter.d);
+        Scheduler.EnableSwitching ();
           IF n = NIL THEN
             Scheduler.DisableSwitching ();
               (* closedir() calls free() => not user-thread safe *)
