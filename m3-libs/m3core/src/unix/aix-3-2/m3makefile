@@ -8,7 +8,7 @@
 
 Module    ("Udir")
 Interface ("Uerror")
-Interface ("Ugrp")
+%Interface ("Ugrp")
 Interface ("Uipc")
 Interface ("Umman")
 Module    ("Umsg")
