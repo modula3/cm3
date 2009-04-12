@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: FSClient.m3,v 1.1.1.1 2009-04-09 17:01:39 jkrell Exp $ *)
+ * $Id: FSClient.m3,v 1.2 2009-04-12 07:21:13 jkrell Exp $ *)
 
 MODULE FSClient;
 
@@ -38,8 +38,8 @@ IMPORT
   Thread, TokScan, TreeList, UnixMisc, Updater, Usignal, Version,
   WatchDog, Wr;
 
-IMPORT SupConnRW AS ConnRW;
-IMPORT SupTCP AS TCP;
+IMPORT ConnRW;
+IMPORT TCP;
 
 EXCEPTION
   Error(TEXT);

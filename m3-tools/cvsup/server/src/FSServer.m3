@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: FSServer.m3,v 1.1.1.1 2009-04-09 17:01:49 jkrell Exp $ *)
+ * $Id: FSServer.m3,v 1.2 2009-04-12 07:21:14 jkrell Exp $ *)
 
 MODULE FSServer EXPORTS FSServer, FSServerRep;
 
@@ -39,9 +39,9 @@ IMPORT
   Text, Thread, Time, TokScan, TreeComp, Uerror, Unix, Usignal,
   Utypes, Version, WatchDog, Wr;
 
-IMPORT SupConnRW AS ConnRW;
-IMPORT SupErrno AS Cerrno;
-IMPORT SupTCP AS TCP;
+IMPORT ConnRW;
+IMPORT Cerrno;
+IMPORT TCP;
 
 REVEAL
   T = Rep BRANDED OBJECT
@@ -154,9 +154,10 @@ PROCEDURE Run(self: T)
 	  EXIT;
 	EXCEPT IP.Error(list) =>
 	  IF ErrMsg.GetErrno(list, errno) THEN
-	    CASE errno OF
-	    | Uerror.ENFILE, Uerror.ECONNABORTED, Uerror.ECONNRESET,
-	      Uerror.ENOBUFS =>
+        IF   (errno = Uerror.ENFILE)
+          OR (errno = Uerror.ECONNABORTED)
+          OR (errno = Uerror.ECONNRESET)
+          OR (errno = Uerror.ENOBUFS) THEN
 		(* Warn and discard the aborted connection. *)
 		self.log("Accept failed: " & ErrMsg.StrError(list),
 		  Logger.Priority.Warning);

@@ -26,14 +26,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: FSServerRep.i3,v 1.1.1.1 2009-04-09 17:01:49 jkrell Exp $ *)
+ * $Id: FSServerRep.i3,v 1.2 2009-04-12 07:21:14 jkrell Exp $ *)
 
 (* This interface reveals the intimate details of the "FSServer.T" object. *)
 
 INTERFACE FSServerRep;
 
 IMPORT FSServer, IP, Logger, Process, SigHandler, Time;
-IMPORT SupTCP AS TCP;
+IMPORT TCP;
 
 REVEAL
   FSServer.T <: Rep;
