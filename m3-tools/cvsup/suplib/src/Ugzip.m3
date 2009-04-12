@@ -26,11 +26,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: Ugzip.m3,v 1.1.1.1 2009-04-09 17:02:01 jkrell Exp $ *)
+ * $Id: Ugzip.m3,v 1.2 2009-04-12 03:12:38 jkrell Exp $ *)
 
 UNSAFE MODULE Ugzip;
 
-IMPORT Cstdlib, CText, SchedulerPosix, UgzipP;
+IMPORT Cstdlib, CText, Scheduler AS SchedulerPosix, UgzipP;
 
 FROM Ctypes IMPORT int, unsigned_int, void_star;
 
