@@ -33,7 +33,7 @@
 
 INTERFACE TokScan;
 
-IMPORT IP, MD5Digest, Time, Word;
+IMPORT IP, MD5Digest, Time, Word, Long;
 
 EXCEPTION Error(TEXT);
 
@@ -113,6 +113,10 @@ PROCEDURE NewDec(t: TEXT): T;
 (* This interface also provides the following useful procedures. *)
 
 PROCEDURE AtoI(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Word.T
+  RAISES {Error};
+(* Converts the given text to an unsigned number. *)
+
+PROCEDURE AtoL(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Long.T
   RAISES {Error};
 (* Converts the given text to an unsigned number. *)
 
