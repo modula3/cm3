@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: FileAttr.m3,v 1.5 2009-04-12 04:42:34 jkrell Exp $ *)
+ * $Id: FileAttr.m3,v 1.6 2009-04-12 04:50:41 jkrell Exp $ *)
 
 UNSAFE MODULE FileAttr EXPORTS FileAttr, FileAttrRep;
 
@@ -77,7 +77,7 @@ PROCEDURE Init(self: T;
       self.mask := self.mask + AttrTypes{AttrType.Mode};
     END;
     IF modTime >= 0.0d0 THEN
-      self.stat.st_mtime := ROUND(modTime);
+      self.stat.st_mtime := VAL(ROUND(modTime), LONGINT);
       self.mask := self.mask + AttrTypes{AttrType.ModTime};
     END;
     IF size # LAST(CARDINAL) THEN
@@ -114,10 +114,10 @@ PROCEDURE Decode(t: TEXT): T
     END;
     fa.mask := fa.mask * Supported[fa.fileType];
     IF AttrType.ModTime IN fa.mask THEN
-      fa.stat.st_mtime := ScanInt(t, pos, ModTimeRadix, "modTime");
+      fa.stat.st_mtime := ScanLong(t, pos, ModTimeRadix, "modTime");
     END;
     IF AttrType.Size IN fa.mask THEN
-      fa.stat.st_size := VAL(ScanInt(t, pos, SizeRadix, "size"), off_t);
+      fa.stat.st_size := ScanLong(t, pos, SizeRadix, "size");
     END;
     IF AttrType.LinkTarget IN fa.mask THEN
       fa.linkTarget := ScanText(t, pos);
@@ -164,7 +164,7 @@ PROCEDURE Decode(t: TEXT): T
       fa.stat.st_dev := DevT.Decode(ScanText(t, pos));
     END;
     IF AttrType.Inode IN fa.mask THEN
-      fa.stat.st_ino := ScanInt(t, pos, InodeRadix, "inode");
+      fa.stat.st_ino := ScanLong(t, pos, InodeRadix, "inode");
     END;
     RETURN fa;
   END Decode;
@@ -186,11 +186,11 @@ PROCEDURE Encode(fa: T;
 	pieces, nextPiece);
     END;
     IF AttrType.ModTime IN mask THEN
-      EncodeCounted(Fmt.Unsigned(fa.stat.st_mtime, ModTimeRadix),
+      EncodeCounted(Fmt.LongUnsigned(fa.stat.st_mtime, ModTimeRadix),
 	pieces, nextPiece);
     END;
     IF AttrType.Size IN mask THEN
-      EncodeCounted(Fmt.Unsigned(ORD(fa.stat.st_size), SizeRadix),
+      EncodeCounted(Fmt.LongUnsigned(fa.stat.st_size, SizeRadix),
 	pieces, nextPiece);
     END;
     IF AttrType.LinkTarget IN mask THEN
@@ -242,7 +242,7 @@ PROCEDURE Encode(fa: T;
       EncodeCounted(DevT.Encode(fa.stat.st_dev), pieces, nextPiece);
     END;
     IF AttrType.Inode IN mask THEN
-      EncodeCounted(Fmt.Unsigned(fa.stat.st_ino, InodeRadix),
+      EncodeCounted(Fmt.LongUnsigned(fa.stat.st_ino, InodeRadix),
         pieces, nextPiece);
     END;
     nPieces := nextPiece;
@@ -758,10 +758,9 @@ PROCEDURE Install(fa: T; to: Pathname.T; from: Pathname.T := NIL): BOOLEAN
       IF AttrType.ModTime IN mask THEN
 	VAR
 	  times: ARRAY [0..1] OF Utime.struct_timeval;
-	  tz: Utime.struct_timezone;
 	BEGIN
-	  EVAL Utime.gettimeofday(times[0], tz);  (* Access time. *)
-	  times[1].tv_sec := fa.stat.st_mtime;
+	  EVAL Utime.gettimeofday(times[0], NIL);  (* Access time. *)
+	  times[1].tv_sec := ORD(fa.stat.st_mtime);
 	  times[1].tv_usec := 0;
 	  EVAL Unix.utimes(fromStr, ADR(times));
 	END;
@@ -974,6 +973,7 @@ PROCEDURE DecodeGroup(name: TEXT; VAR gid: Utypes.gid_t): BOOLEAN
   VAR
     igid: INTEGER;
     nameStr: Ctypes.char_star;
+    group: Ugrp.struct_group;
     grp: Ugrp.struct_group_star;
   BEGIN
     LOCK gidLock DO
@@ -983,7 +983,7 @@ PROCEDURE DecodeGroup(name: TEXT; VAR gid: Utypes.gid_t): BOOLEAN
 	RETURN TRUE;
       END;
       nameStr := CText.SharedTtoS(name);
-      grp := Ugrp.getgrnam(nameStr);
+      grp := Ugrp.getgrnam(ADR(group), nameStr);
       CText.FreeSharedS(name, nameStr);
       IF grp = NIL THEN  (* First lookup of this unknown group. *)
 	EVAL nameToGidTbl.put(name, UnknownID);
@@ -997,10 +997,10 @@ PROCEDURE DecodeGroup(name: TEXT; VAR gid: Utypes.gid_t): BOOLEAN
   END DecodeGroup;
 
 PROCEDURE EncodeGroup(gid: Utypes.gid_t; VAR name: TEXT): BOOLEAN =
+  VAR group: Ugrp.struct_group;
+	  tName: TEXT;
   BEGIN
     LOCK gidLock DO
-      VAR
-	tName: TEXT;
       BEGIN
 	IF gidToNameTbl.get(gid, tName) THEN
 	  IF tName = UnknownName THEN RETURN FALSE END;
@@ -1008,7 +1008,7 @@ PROCEDURE EncodeGroup(gid: Utypes.gid_t; VAR name: TEXT): BOOLEAN =
 	  RETURN TRUE;
 	END;
       END;
-      WITH grp = Ugrp.getgrgid(gid) DO
+      WITH grp = Ugrp.getgrgid(ADR(group), gid) DO
 	IF grp = NIL THEN
 	  EVAL gidToNameTbl.put(gid, UnknownName);
 	  RETURN FALSE;
