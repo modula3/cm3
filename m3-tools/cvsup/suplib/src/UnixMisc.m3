@@ -34,6 +34,7 @@ IMPORT
   CText, Ctypes, File, FilePosix, IP, M3toC, OSError, OSErrorPosix,
   Pathname, Uerror, Umman, Unetdb, Unix, Usocket, Ustat, Utypes,
   Uutmp, Word;
+FROM Utypes IMPORT off_t;
 
 VAR
   TheUmask: Utypes.mode_t;  (* Set once at module initialization time. *)
@@ -62,13 +63,14 @@ PROCEDURE FStat(file: File.T;
 PROCEDURE GetHostAddrs(host: TEXT): REF ARRAY OF IP.Address =
   VAR
     hostStr: Ctypes.char_star;
+    hostent: Unetdb.struct_hostent;
     h: Unetdb.struct_hostent_star;
     app: Ctypes.char_star_star;
     addrs: REF ARRAY OF IP.Address;
     numAddrs := 0;
   BEGIN
     hostStr := CText.SharedTtoS(host);
-    h := Unetdb.gethostbyname(hostStr);
+    h := Unetdb.gethostbyname(hostStr, ADR(hostent));
     CText.FreeSharedS(host, hostStr);
     IF h = NIL OR h.h_addrtype # Usocket.AF_INET OR h.h_addr_list = NIL THEN
       RETURN NIL;
@@ -144,9 +146,9 @@ PROCEDURE MapFile(p: Pathname.T;
       IF Word.And(statbuf.st_mode, Ustat.S_IFMT) # Ustat.S_IFREG THEN
 	OSErrorPosix.Raise0(Uerror.EINVAL);
       END;
-      IF statbuf.st_size # 0 THEN
-	addr := Umman.mmap(NIL, statbuf.st_size, Umman.PROT_READ,
-	  Umman.MAP_SHARED, fd, 0);
+      IF statbuf.st_size # VAL(0, off_t) THEN
+	addr := Umman.mmap(NIL, ORD(statbuf.st_size), Umman.PROT_READ,
+	  Umman.MAP_SHARED, fd, VAL(0, off_t));
 	IF addr = LOOPHOLE(-1, ADDRESS) THEN OSErrorPosix.Raise() END;
       ELSE
 	addr := NIL;
