@@ -35,6 +35,7 @@ IMPORT
   OSError, OSErrorPosix, Pathname, SupMisc, Text, TextIntTbl, Time,
   TokScan, Uerror, Ugrp, Unix, UnixMisc, Upwd, Ustat, Utime, Utypes,
   Word, Long;
+FROM Utypes IMPORT nlink_t;
 
 REVEAL
   T = Rep BRANDED OBJECT
@@ -86,7 +87,7 @@ PROCEDURE Init(self: T;
     (* If the LinkCount attribute is supported for this file type,
        set it to 1. *)
     IF AttrType.LinkCount IN Supported[fileType] THEN
-      self.stat.st_nlink := 1;
+      self.stat.st_nlink := VAL(1, nlink_t);
       self.mask := self.mask + AttrTypes{AttrType.LinkCount};
     END;
     RETURN self;
@@ -151,11 +152,11 @@ PROCEDURE Decode(t: TEXT): T
       SetFlags(fa, ScanInt(t, pos, FlagsRadix, "flags"));
     END;
     IF AttrType.LinkCount IN fa.mask THEN
-      fa.stat.st_nlink := ScanInt(t, pos, LinkCountRadix, "linkCount");
+      fa.stat.st_nlink := VAL(ScanInt(t, pos, LinkCountRadix, "linkCount"), nlink_t);
     ELSE
       (* If the link count is missing but supported, fake it as 1. *)
       IF AttrType.LinkCount IN Supported[fa.fileType] THEN
-	fa.stat.st_nlink := 1;
+	fa.stat.st_nlink := VAL(1, nlink_t);
 	fa.mask := fa.mask + AttrTypes{AttrType.LinkCount};
       END;
     END;
@@ -230,10 +231,10 @@ PROCEDURE Encode(fa: T;
 	 reconstruct it again at Decode time.  This also helps us to
 	 deal properly with older checkouts files that didn't contain
 	 the link count. *)
-      IF fa.stat.st_nlink = 1 THEN
+      IF fa.stat.st_nlink = VAL(1, nlink_t) THEN
 	mask := mask - AttrTypes{AttrType.LinkCount};
       ELSE
-	EncodeCounted(Fmt.Unsigned(fa.stat.st_nlink, LinkCountRadix),
+	EncodeCounted(Fmt.Unsigned(ORD(fa.stat.st_nlink), LinkCountRadix),
 	  pieces, nextPiece);
       END;
     END;
@@ -896,7 +897,7 @@ PROCEDURE GetLinkTarget(fa: T): Pathname.T =
 PROCEDURE GetLinkCount(fa: T): CARDINAL =
   BEGIN
     <* ASSERT AttrType.LinkCount IN fa.mask *>
-    RETURN fa.stat.st_nlink;
+    RETURN ORD(fa.stat.st_nlink);
   END GetLinkCount;
 
 (*****************************************************************************)
