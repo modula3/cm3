@@ -18,3 +18,6 @@ readonly proc GetM3BackFlag(x) is return x end
 GNU_MAKE = "gmake"
 
 include("Unix.common")
+
+SYSTEM_LIBS{"ODBC"} = [ "-Wl,-R/usr/local/lib", "-L/usr/local/lib", "-lodbc" ]
+SYSTEM_LIBS{"POSTGRES95"} = [ "-Wl,-R/usr/local/lib", "-L/usr/local/lib", "-lpq" ]
