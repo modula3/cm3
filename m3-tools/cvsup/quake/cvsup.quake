@@ -32,7 +32,7 @@
 % various components.
 
 % Determine which compiler variant we have.
-if defined("INITIAL_REACTOR_EDITOR")
+if defined("INITIAL_REACTOR_EDITOR") or defined("CM3_VERSION")
   M3_VARIANT = "CM3"
 else
   if not defined("build_standalone")
