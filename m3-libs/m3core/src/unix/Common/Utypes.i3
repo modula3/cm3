@@ -44,8 +44,9 @@ TYPE
 
   socklen_t = uint32_t; (* int32_t on Cygwin, size_t on HP-UX, but ok via wrappers (see Usocket.i3) *)
 
-  mode_t = INTEGER;
-  dev_t = LONGINT;
-  ino_t = LONGINT;
+  mode_t = INTEGER; (* often only 16 bits but ok *)
+  dev_t = LONGINT; (* sometimes 32 bits, sometimes 64 bits *)
+  ino_t = LONGINT;(* sometimes 32 bits, sometimes 64 bits *)
+  nlink_t = LONGINT; (* sometimes 16 bits, sometimes 32, unknown if ever 64, ok *)
 
 END Utypes.

@@ -41,7 +41,7 @@ commonality. *)
     st_dev   : Utypes.dev_t(*LONGINT*);
     st_ino   : Utypes.ino_t(*LONGINT*);
     st_mtime : LONGINT;
-    st_nlink : LONGINT;
+    st_nlink : Utypes.nlink_t(*LONGINT*);
     st_rdev  : LONGINT;
     st_size  : LONGINT;
     st_gid   : INTEGER;
