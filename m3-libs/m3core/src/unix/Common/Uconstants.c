@@ -47,6 +47,9 @@ X(SIGINT)
 X(SIGKILL)
 X(SIGCHLD)
 X(SIGALRM)
+X(SIGHUP)
+X(SIGTERM)
+
 
 #undef X
 #define X(x) const int Unix__##x = x;
