@@ -43,6 +43,8 @@ FROM Ctypes IMPORT int;
 <*EXTERNAL "Uerror__ERANGE"*>        VAR ERANGE: int;
 <*EXTERNAL "Uerror__ETIMEDOUT"*>     VAR ETIMEDOUT: int;
 <*EXTERNAL "Uerror__EWOULDBLOCK"*>   VAR EWOULDBLOCK: int;
+<*EXTERNAL "Uerror__ENOBUFS"*>       VAR ENOBUFS: int;
+<*EXTERNAL "Uerror__ENOTDIR"*>       VAR ENOTDIR: int;
 
 CONST
   Max = 248; (* approx, verified to be adequate in Uconstants.c *)

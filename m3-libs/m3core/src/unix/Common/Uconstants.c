@@ -45,7 +45,8 @@ X(WNOHANG)
 #define X(x) const int Usignal__##x = x;
 X(SIGINT)
 X(SIGKILL)
-
+X(SIGCHLD)
+X(SIGALRM)
 
 #undef X
 #define X(x) const int Unix__##x = x;
