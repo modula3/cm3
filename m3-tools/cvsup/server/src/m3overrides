@@ -26,49 +26,6 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: m3makefile,v 1.3 2009-04-12 11:18:54 jkrell Exp $
+% $Id: m3overrides,v 1.1 2009-04-12 11:18:54 jkrell Exp $
 
-include(path() & "/../../quake/cvsup.quake")
-
-if defined("STATIC")
-  build_standalone()
-end
-
-import("libm3")
-import("suplib")
-import("tcp")
-
-interface("Version")
-version_impl("Version")
-
-module("FileInfo")
-merger("FileInfo", "FileInfo")
-
-table("Link", "FileID", "Text")
-
-merger("RCSDelta", "RCSDelta")
-merger("RCSTag", "RCSTag")
-sequence("SupFileRec", "SupFileRec")
-sequence("FileAttr", "FileAttr") % FIXME - Remove after CVTree is fixed
-
-module("ParsedDelta")
-list("ParsedDelta", "ParsedDelta")
-
-module("AccessRules")
-module("Passwd")
-module("ClientClass")
-module("ClassDB")
-
-module("RCSComp")
-module("TreeComp")
-
-interface("FSServer")
-interface("FSServerRep")
-implementation("FSServer")
-implementation("FSServerU")
-
-implementation("Main")
-
-Program("cvsupd")
-ManPage("cvsupd","8")
-ManPage("cvsupd.class","5")
+override("suplib", path() & "/../..")
