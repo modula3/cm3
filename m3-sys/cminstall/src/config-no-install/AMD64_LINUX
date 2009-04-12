@@ -18,7 +18,7 @@ readonly SYSTEM_LD = SYSTEM_CC
 % & " -Wl,-no-allow-shlib-undefined"
   & " -Wl,-rpath,\\$ORIGIN/../lib"
   & " -Wl,--warn-common"
-readonly POSITION_INDEPENDENT_EXECUTABLE = "-pie"
+%readonly POSITION_INDEPENDENT_EXECUTABLE = "-pie"
 readonly USE_ORIGIN = TRUE
 readonly SYSTEM_ASM = "as --64" % Assembler
 
