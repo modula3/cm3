@@ -38,7 +38,13 @@ import("libm3")
 import("set")
 import("suptcp")
 import("tempfiles")
-import_lib("z", "/usr/local/lib")
+
+if SYSTEM_LIBS contains "Z"
+  import_sys_lib("Z")
+else
+  import_lib("z", "/usr/local/lib")
+end
+
 if not equal(M3_VARIANT, "PM3")
   Module("RegEx")
 end
