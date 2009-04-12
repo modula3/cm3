@@ -33,7 +33,7 @@ include(path() & "/../../quake/cvsup.quake")
 no_shared_lib()
 
 %m3_option("-commands")
-override("suptcp", path() & "/../..")
+%override("suptcp", path() & "/../..")
 import("libm3")
 import("set")
 import("tcp")

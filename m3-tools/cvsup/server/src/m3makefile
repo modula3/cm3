@@ -34,7 +34,6 @@ if defined("STATIC")
   build_standalone()
 end
 
-override("suplib", path() & "/../..")
 import("libm3")
 import("suplib")
 import("tcp")
@@ -70,6 +69,6 @@ implementation("FSServerU")
 
 implementation("Main")
 
-program("cvsupd")
+Program("cvsupd")
 ManPage("cvsupd","8")
 ManPage("cvsupd.class","5")
