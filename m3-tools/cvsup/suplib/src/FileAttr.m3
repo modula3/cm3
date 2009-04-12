@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: FileAttr.m3,v 1.4 2009-04-12 04:40:07 jkrell Exp $ *)
+ * $Id: FileAttr.m3,v 1.5 2009-04-12 04:42:34 jkrell Exp $ *)
 
 UNSAFE MODULE FileAttr EXPORTS FileAttr, FileAttrRep;
 
@@ -35,7 +35,7 @@ IMPORT
   OSError, OSErrorPosix, Pathname, SupMisc, Text, TextIntTbl, Time,
   TokScan, Uerror, Ugrp, Unix, UnixMisc, Upwd, Ustat, Utime, Utypes,
   Word, Long;
-FROM Utypes IMPORT nlink_t;
+FROM Utypes IMPORT nlink_t, off_t;
 
 REVEAL
   T = Rep BRANDED OBJECT
@@ -81,7 +81,7 @@ PROCEDURE Init(self: T;
       self.mask := self.mask + AttrTypes{AttrType.ModTime};
     END;
     IF size # LAST(CARDINAL) THEN
-      self.stat.st_size := size;
+      self.stat.st_size := VAL(size, off_t);
       self.mask := self.mask + AttrTypes{AttrType.Size};
     END;
     (* If the LinkCount attribute is supported for this file type,
@@ -117,7 +117,7 @@ PROCEDURE Decode(t: TEXT): T
       fa.stat.st_mtime := ScanInt(t, pos, ModTimeRadix, "modTime");
     END;
     IF AttrType.Size IN fa.mask THEN
-      fa.stat.st_size := ScanInt(t, pos, SizeRadix, "size");
+      fa.stat.st_size := VAL(ScanInt(t, pos, SizeRadix, "size"), off_t);
     END;
     IF AttrType.LinkTarget IN fa.mask THEN
       fa.linkTarget := ScanText(t, pos);
@@ -190,7 +190,7 @@ PROCEDURE Encode(fa: T;
 	pieces, nextPiece);
     END;
     IF AttrType.Size IN mask THEN
-      EncodeCounted(Fmt.Unsigned(fa.stat.st_size, SizeRadix),
+      EncodeCounted(Fmt.Unsigned(ORD(fa.stat.st_size), SizeRadix),
 	pieces, nextPiece);
     END;
     IF AttrType.LinkTarget IN mask THEN
@@ -866,13 +866,13 @@ PROCEDURE GetModTime(fa: T): Time.T =
 PROCEDURE GetSize(fa: T): CARDINAL =
   BEGIN
     <* ASSERT AttrType.Size IN fa.mask *>
-    RETURN fa.stat.st_size;
+    RETURN ORD(fa.stat.st_size);
   END GetSize;
 
 PROCEDURE SetSize(fa: T; size: CARDINAL) =
   BEGIN
     <* ASSERT AttrType.Size IN fa.mask *>
-    fa.stat.st_size := size;
+    fa.stat.st_size := VAL(size, off_t);
   END SetSize;
 
 PROCEDURE GetMode(fa: T): Word.T =
