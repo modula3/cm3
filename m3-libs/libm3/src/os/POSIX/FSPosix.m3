@@ -300,7 +300,6 @@ PROCEDURE IterRaw(iter: Iterator; VAR (*OUT*) name: TEXT): BOOLEAN =
               RETURN TRUE
             END
           END
-        END
       END
     END
   END IterRaw;
