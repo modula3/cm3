@@ -29,11 +29,16 @@ FROM Ctypes IMPORT int, char_star;
 <*EXTERNAL "Ustat__S_OEXEC"*>  VAR S_OEXEC: int;
 
 (* st_flags, only on some systems, else 0 *)
+  (* Super-user and owner changeable flags. *)
+<*EXTERNAL "Ustat__UF_SETTABLE"*>   VAR UF_SETTABLE: int;   (* mask of owner changeable flags *)
 <*EXTERNAL "Ustat__UF_NODUMP"*>     VAR UF_NODUMP: int;     (* Do not dump the file. *)
 <*EXTERNAL "Ustat__UF_IMMUTABLE"*>  VAR UF_IMMUTABLE: int;  (* The file may not be changed. *)
 <*EXTERNAL "Ustat__UF_APPEND"*>     VAR UF_APPEND: int;     (* The file may only be appended to. *)
 <*EXTERNAL "Ustat__UF_NOUNLINK"*>   VAR UF_NOUNLINK: int;   (* The file may not be renamed or deleted. *)
 <*EXTERNAL "Ustat__UF_OPAQUE"*>     VAR UF_OPAQUE: int;     (* The directory is opaque when viewed through a union stack. *)
+
+  (* Super-user changeable flags. *)
+<*EXTERNAL "Ustat__SF_SETTABLE"*>   VAR SF_SETTABLE: int;   (* mask of superuser changeable flags *)
 <*EXTERNAL "Ustat__SF_ARCHIVED"*>   VAR SF_ARCHIVED: int;   (* The file may be archived. *)
 <*EXTERNAL "Ustat__SF_IMMUTABLE"*>  VAR SF_IMMUTABLE: int;  (* The file may not be changed. *)
 <*EXTERNAL "Ustat__SF_APPEND"*>     VAR SF_APPEND: int;     (* The file may only be appended to. *)

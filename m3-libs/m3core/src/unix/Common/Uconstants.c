@@ -138,6 +138,14 @@ Y(S_OEXEC, S_IXOTH)
 
 #ifdef HAS_STAT_FLAGS
 
+/* Super-user and owner changeable flags. */
+
+#ifdef UF_SETTABLE
+X(UF_SETTABLE) /* mask of owner changeable flags */
+#else
+Y(UF_SETTABLE, 0)
+#endif
+
 #ifdef UF_NODUMP
 X(UF_NODUMP)
 #else
@@ -166,6 +174,14 @@ Y(UF_NOUNLINK, 0)
 X(UF_OPAQUE)
 #else
 Y(UF_OPAQUE, 0)
+#endif
+
+/* Super-user changeable flags. */
+
+#ifdef SF_SETTABLE
+X(SF_SETTABLE) /* mask of superuser changeable flags */
+#else
+Y(SF_SETTABLE, 0)
 #endif
 
 #ifdef SF_ARCHIVED
