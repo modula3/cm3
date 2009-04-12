@@ -26,14 +26,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: ErrMsg.m3,v 1.1.1.1 2009-04-09 17:01:53 jkrell Exp $ *)
+ * $Id: ErrMsg.m3,v 1.2 2009-04-12 05:33:20 jkrell Exp $ *)
 
 UNSAFE MODULE ErrMsg;
 
 IMPORT
   Atom, AtomList, Cstring, EscapedRd, IO, IP, M3toC, Process, Text, TokScan;
 
-IMPORT SupTCP AS TCP;
+IMPORT TCP;
 
 FROM Stdio IMPORT stderr;
 

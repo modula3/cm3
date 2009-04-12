@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: SupMisc.m3,v 1.1.1.1 2009-04-09 17:02:00 jkrell Exp $ *)
+ * $Id: SupMisc.m3,v 1.2 2009-04-12 05:33:21 jkrell Exp $ *)
 
 MODULE SupMisc;
 
@@ -34,7 +34,7 @@ IMPORT
   FileAttr, Fmt, FS, Glob, GlobTree, IP, OSError, OSErrorPosix,
   Pathname, Process, Random, Rd, RdClass, RegEx, SupFileRec, Text,
   TextArraySort, TextSeq, Thread, TokScan, Uerror;
-IMPORT SupTCP AS TCP;
+IMPORT TCP;
 
 TYPE
   AtomicCounter = MUTEX OBJECT
