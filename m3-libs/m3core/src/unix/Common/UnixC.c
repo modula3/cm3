@@ -184,6 +184,11 @@ int Unix__dup(int oldd)
     return dup(oldd);
 }
 
+m3_pid_t Unix__fork(void)
+{
+    return fork();
+}
+
 #ifdef __cplusplus
 } /* extern C */
 #endif

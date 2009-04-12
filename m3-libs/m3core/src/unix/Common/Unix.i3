@@ -7,7 +7,7 @@
 FROM Cstddef IMPORT size_t;
 FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star;
 FROM Utime IMPORT struct_timeval;
-FROM Utypes IMPORT off_t, mode_t, dev_t, uid_t, gid_t;
+FROM Utypes IMPORT off_t, mode_t, dev_t, uid_t, gid_t, pid_t;
 IMPORT Usysdep;
 
 CONST
@@ -105,6 +105,7 @@ PROCEDURE ftruncate (fd: int; length: off_t): int;
 PROCEDURE unlink (path: const_char_star): int;
 PROCEDURE utimes (file: const_char_star; tvp: UNTRACED REF ARRAY [0..1] OF struct_timeval): int;
 PROCEDURE vfork (): int;
+<*EXTERNAL Unix__fork*> PROCEDURE fork (): pid_t;
 
 CONST
   MAX_FDSET = Usysdep.MAX_FDSET;

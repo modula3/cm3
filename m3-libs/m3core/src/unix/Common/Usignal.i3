@@ -10,6 +10,8 @@ FROM Utypes IMPORT pid_t;
 (*CONST*)
 <*EXTERNAL "Usignal__SIGINT"*> VAR SIGINT: int;
 <*EXTERNAL "Usignal__SIGKILL"*> VAR SIGKILL: int;
+<*EXTERNAL "Usignal__SIGALRM"*> VAR SIGALRM: int;
+<*EXTERNAL "Usignal__SIGCHLD"*> VAR SIGCHLD: int;
 
 TYPE
   SignalHandler = PROCEDURE (sig: int);
