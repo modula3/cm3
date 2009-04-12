@@ -22,6 +22,7 @@ commonality.
     LONGINT nlink;
     LONGINT rdev;
     LONGINT size;
+    INTEGER flags;
     INTEGER gid;
     INTEGER mode;
     INTEGER uid;
@@ -41,6 +42,11 @@ static int m3stat_from_stat(int result, m3_stat_t* m3st, stat_t* st)
         m3st->gid = st->st_gid;
         m3st->mode = st->st_mode;
         m3st->uid = st->st_uid;
+#ifdef HAS_STAT_FLAGS
+        m3st->flags = st->st_flags;
+#else
+        m3st->flags = 0;
+#endif
     }
     return result;
 }
@@ -62,6 +68,20 @@ int Ustat__fstat(int fd, m3_stat_t* m3st)
     stat_t st;
     return m3stat_from_stat(fstat(fd, &st), m3st, &st);
 }
+
+#ifdef HAS_STAT_FLAGS
+
+int Ustat__chflags(const char* path, unsigned long flags)
+{
+    return chflags(path, flags);
+}
+
+int Ustat__fchflags(int fd, unsigned long flags)
+{
+    return fchflags(fd, flags);
+}
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

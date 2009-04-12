@@ -28,6 +28,18 @@ FROM Ctypes IMPORT int, char_star;
 <*EXTERNAL "Ustat__S_OWRITE"*> VAR S_OWRITE: int;
 <*EXTERNAL "Ustat__S_OEXEC"*>  VAR S_OEXEC: int;
 
+(* st_flags, only on some systems, else 0 *)
+<*EXTERNAL "Ustat__UF_NODUMP"*>     VAR UF_NODUMP: int;     (* Do not dump the file. *)
+<*EXTERNAL "Ustat__UF_IMMUTABLE"*>  VAR UF_IMMUTABLE: int;  (* The file may not be changed. *)
+<*EXTERNAL "Ustat__UF_APPEND"*>     VAR UF_APPEND: int;     (* The file may only be appended to. *)
+<*EXTERNAL "Ustat__UF_NOUNLINK"*>   VAR UF_NOUNLINK: int;   (* The file may not be renamed or deleted. *)
+<*EXTERNAL "Ustat__UF_OPAQUE"*>     VAR UF_OPAQUE: int;     (* The directory is opaque when viewed through a union stack. *)
+<*EXTERNAL "Ustat__SF_ARCHIVED"*>   VAR SF_ARCHIVED: int;   (* The file may be archived. *)
+<*EXTERNAL "Ustat__SF_IMMUTABLE"*>  VAR SF_IMMUTABLE: int;  (* The file may not be changed. *)
+<*EXTERNAL "Ustat__SF_APPEND"*>     VAR SF_APPEND: int;     (* The file may only be appended to. *)
+<*EXTERNAL "Ustat__SF_NOUNLINK"*>   VAR SF_NOUNLINK: int;   (* The file may not be renamed or deleted. *)
+<*EXTERNAL "Ustat__SF_SNAPSHOT"*>   VAR SF_SNAPSHOT: int;   (* The file is a snapshot file. *)
+
 TYPE
   struct_stat = RECORD
 (*
@@ -43,6 +55,7 @@ commonality. *)
     st_nlink : LONGINT; (* Utypes.nlink_t *)
     st_rdev  : LONGINT; (* Utypes.dev_t   *)
     st_size  : LONGINT; (* Utypes.off_t   *)
+    st_flags : INTEGER; (* only on some platforms: Darwin, FreeBSD, OpenBSD, NetBSD, else 0 *)
     st_gid   : INTEGER; (* Utypes.gid_t   *)
     st_mode  : INTEGER; (* Utypes.mode_t  *)
     st_uid   : INTEGER; (* Utypes.uid_t   *)
@@ -51,9 +64,17 @@ commonality. *)
 
 <*EXTERNAL "Ustat__stat"*>
 PROCEDURE stat (path: char_star; buf: struct_stat_star): int;
-<*EXTERNAL "Ustat__lstat"*>
-PROCEDURE lstat (path: char_star; buf: struct_stat_star): int;
+
 <*EXTERNAL "Ustat__fstat"*>
 PROCEDURE fstat (fd: int;  buf: struct_stat_star): int;
+
+<*EXTERNAL "Ustat__lstat"*>
+PROCEDURE lstat (path: char_star; buf: struct_stat_star): int;
+
+<*EXTERNAL "Ustat__chflags"*> (* only on some platforms *)
+PROCEDURE chflags (path: char_star; flags: INTEGER): int;
+
+<*EXTERNAL "Ustat__fchflags"*> (* only on some platforms *)
+PROCEDURE fchflags (fd: int; flags: INTEGER): int;
 
 END Ustat.
