@@ -26,13 +26,13 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: cvsup.quake,v 1.1.1.1 2009-04-09 17:01:45 jkrell Exp $
+% $Id: cvsup.quake,v 1.2 2009-04-12 06:43:09 jkrell Exp $
 
 % This chunk of quake code is included into the m3makefiles for the
 % various components.
 
 % Determine which compiler variant we have.
-if defined("INITIAL_REACTOR_EDITOR")
+if defined("INITIAL_REACTOR_EDITOR") or defined("CM3_VERSION")
   M3_VARIANT = "CM3"
 else
   if not defined("build_standalone")
