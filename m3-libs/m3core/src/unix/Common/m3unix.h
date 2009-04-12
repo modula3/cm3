@@ -68,12 +68,20 @@ typedef ADDRESS m3_pthread_t;
 typedef LONGINT m3_off_t;
 typedef INTEGER m3_uid_t;
 
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#define HAS_STAT_FLAGS
+#endif
+
 struct _m3_stat_t;
 typedef struct _m3_stat_t m3_stat_t;
 
 int Ustat__fstat(int fd, m3_stat_t* m3st);
 int Ustat__lstat(const char* path, m3_stat_t* m3st);
 int Ustat__stat(const char* path, m3_stat_t* m3st);
+#ifdef HAS_STAT_FLAGS
+int Ustat__fchflags(int fd, unsigned long flags)
+int Ustat__chflags(const char* path, unsigned long flags);
+#endif
 
 /*
 socklen_t
