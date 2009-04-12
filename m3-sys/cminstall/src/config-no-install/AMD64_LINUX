@@ -13,7 +13,7 @@ readonly SYSTEM_LD = SYSTEM_CC
   & " -z now"
   & " -z origin"
   & " -Bsymbolic"
-  & " -Wl,--as-needed"
+% & " -Wl,--as-needed"
   & " -Wl,--fatal-warnings"
 % & " -Wl,-no-allow-shlib-undefined"
   & " -Wl,-rpath,\\$ORIGIN/../lib"
