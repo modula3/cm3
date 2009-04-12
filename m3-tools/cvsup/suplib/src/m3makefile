@@ -42,10 +42,11 @@ import("tempfiles")
 if SYSTEM_LIBS contains "Z"
   import_sys_lib("Z")
 else
-  if equal(TARGET, "PPC_DARWIN") or equal(TARGET, "I386_DARWIN")
+  if equal(TARGET, "PPC_DARWIN") or equal(TARGET, "I386_DARWIN") or equal(TARGET, "AMD64_DARWIN")
     LibZPath = findlib("libz.dylib")
     %import_lib("z", LibZPath) % cannot be linked statically on Darwin
     % must be added to cm3.cfg SYSTEM_LIBS[LIBC] as a work around
+    % (cvsup.quake does that unconditionally)
   else
     LibZPath = findlib("libz.a")
     import_lib("z", LibZPath)
