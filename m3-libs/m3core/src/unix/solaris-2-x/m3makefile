@@ -17,7 +17,7 @@ else
 Interface ("Udir")
 Interface ("Uerror")
 Interface ("Uframe")
-Interface ("Ugrp")
+%Interface ("Ugrp")
 Interface ("Uipc")
 Interface ("Umman")
 Module    ("Umsg")

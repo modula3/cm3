@@ -9,6 +9,7 @@ Interface ("Unetdb")
 c_source ("Unetdb")
 
 c_source ("Umman")
+Interface ("Ugrp")
 c_source ("Ugrp")
 
 %
@@ -44,8 +45,6 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "PPC_DARWIN")
         or equal (TARGET, "SOLgnu") or equal (TARGET, "SOLsun")
         or equal (TARGET, "NetBSD2_i386")
-
-    Interface ("Ugrp")
 
     Interface ("Umman")
     c_source("UstatC")
