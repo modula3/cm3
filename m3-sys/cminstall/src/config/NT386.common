@@ -933,9 +933,13 @@ proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, listin
                     [
                         "--output",
                         pgm_file,
+                        "--disable-auto-import",
+                        "--disable-runtime-pseudo-reloc",
+                        "--large-address-aware",
                         options,
                         objects,
                         EscapeList(imported_libs),
+                        escape(UseUconstants),
                         %escape(UseHand),
                     ]),
             "2>&1",
