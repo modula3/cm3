@@ -56,14 +56,17 @@ typedef INT64 LONGINT;
 
 typedef void* ADDRESS;
 
-typedef INTEGER m3_pid_t;
-typedef INTEGER m3_gid_t;
-typedef INTEGER m3_uid_t;
-typedef INTEGER m3_mode_t;
+/* see Utypes.i3; we assert that these are large enough, they don't have
+be exactly correctly sizes, and often are not */
 typedef LONGINT m3_dev_t;
+typedef INTEGER m3_gid_t;
 typedef LONGINT m3_ino_t;
-typedef LONGINT m3_off_t;
+typedef INTEGER m3_mode_t;
+typedef LONGINT m3_nlink_t;
+typedef INTEGER m3_pid_t;
 typedef ADDRESS m3_pthread_t;
+typedef LONGINT m3_off_t;
+typedef INTEGER m3_uid_t;
 
 struct _m3_stat_t;
 typedef struct _m3_stat_t m3_stat_t;
