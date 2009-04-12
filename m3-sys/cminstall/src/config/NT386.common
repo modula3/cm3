@@ -922,6 +922,10 @@ proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, listin
     %   options += "-mconsole"
     % end
 
+    if not shared
+        UseUconstants = ""
+    end
+
     return try_exec(
             "@gcc",
             "-gstabs+",
