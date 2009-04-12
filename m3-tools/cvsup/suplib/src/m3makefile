@@ -76,13 +76,39 @@ proc doPieces(tbl, key) is
   end
 end
 
-if equal(TARGET, "FreeBSD2") or equal(TARGET, "FreeBSD2p")
-or equal(TARGET, "FreeBSD3") or equal(TARGET, "FreeBSD4")
-or equal(TARGET, "FBSD_ALPHA") or equal(TARGET, "FBSD_SPARC64")
+local AllArch = ["I386","AMD64","PPC","IA64","SPARC","ALPHA","MIPS","ARM"]
+local IS_FREEBSD = equal(TARGET, "FreeBSD2") or equal(TARGET, "FreeBSD2p")
+                    or equal(TARGET, "FreeBSD3") or equal(TARGET, "FreeBSD4")
+                    or equal(TARGET, "FBSD_ALPHA") or equal(TARGET, "FBSD_SPARC64")
+local HAS_STAT_FLAGS = IS_FREEBSD
+foreach arch in AllArch
+  foreach bits in ["","32","64"]
+    foreach os in ["FREEBSD","OPENBSD","NETBSD","DARWIN"]
+      if equal (TARGET, arch & bits & "_" & os)
+        HAS_STAT_FLAGS = TRUE
+      end
+    end
+  end
+end
+foreach arch in AllArch
+  foreach bits in ["","32","64"]
+    foreach os in ["FREEBSD"]
+      if equal (TARGET, arch & bits & "_" & os)
+        IS_FREEBSD = TRUE
+      end
+    end
+  end
+end
+
+if HAS_STAT_FLAGS
   include_dir("FreeBSD")
-  import_lib("md", "/usr/lib")
 else
   include_dir("POSIX")
+end
+
+if IS_FREEBSD
+  import_lib("md", "/usr/lib")
+else
   include_dir("libmd")
 end
 
