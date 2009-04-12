@@ -47,7 +47,7 @@ UNSAFE MODULE SigHandler;
 IMPORT
   Ctypes, SchedulerPosix, Thread, Uerror, Unix, UnixMisc, Uuio, Word;
 
-IMPORT SupErrno AS Cerrno;
+IMPORT Cerrno;
 
 TYPE
   Dispatcher = Thread.Closure OBJECT

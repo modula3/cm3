@@ -38,8 +38,8 @@ IMPORT
   Thread, TokScan, TreeList, UnixMisc, Updater, Usignal, Version,
   WatchDog, Wr;
 
-IMPORT SupConnRW AS ConnRW;
-IMPORT SupTCP AS TCP;
+IMPORT ConnRW;
+IMPORT TCP;
 
 EXCEPTION
   Error(TEXT);

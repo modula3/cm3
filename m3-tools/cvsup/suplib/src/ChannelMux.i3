@@ -31,7 +31,7 @@
 INTERFACE ChannelMux;
 
 IMPORT Atom, IP, Rd, Thread, Wr;
-IMPORT SupConnFD AS ConnFD;
+IMPORT ConnFD;
 
 TYPE
   T <: ROOT;

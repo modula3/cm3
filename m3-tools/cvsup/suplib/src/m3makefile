@@ -36,7 +36,7 @@ no_shared_lib()
 override("suptcp", path() & "/../..")
 import("libm3")
 import("set")
-import("suptcp")
+import("tcp")
 import("tempfiles")
 
 if SYSTEM_LIBS contains "Z"

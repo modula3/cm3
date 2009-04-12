@@ -39,9 +39,9 @@ IMPORT
   Text, Thread, Time, TokScan, TreeComp, Uerror, Unix, Usignal,
   Utypes, Version, WatchDog, Wr;
 
-IMPORT SupConnRW AS ConnRW;
-IMPORT SupErrno AS Cerrno;
-IMPORT SupTCP AS TCP;
+IMPORT ConnRW;
+IMPORT Cerrno;
+IMPORT TCP;
 
 REVEAL
   T = Rep BRANDED OBJECT
@@ -154,9 +154,10 @@ PROCEDURE Run(self: T)
 	  EXIT;
 	EXCEPT IP.Error(list) =>
 	  IF ErrMsg.GetErrno(list, errno) THEN
-	    CASE errno OF
-	    | Uerror.ENFILE, Uerror.ECONNABORTED, Uerror.ECONNRESET,
-	      Uerror.ENOBUFS =>
+        IF   (errno = Uerror.ENFILE)
+          OR (errno = Uerror.ECONNABORTED)
+          OR (errno = Uerror.ECONNRESET)
+          OR (errno = Uerror.ENOBUFS) THEN
 		(* Warn and discard the aborted connection. *)
 		self.log("Accept failed: " & ErrMsg.StrError(list),
 		  Logger.Priority.Warning);

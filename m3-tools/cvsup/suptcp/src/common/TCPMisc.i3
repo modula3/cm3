@@ -34,7 +34,7 @@ INTERFACE TCPMisc;
 
 IMPORT IP, Thread;
 
-IMPORT SupTCP AS TCP;
+IMPORT TCP;
 
 PROCEDURE AcceptFrom(c: TCP.Connector; VAR (*OUT*) peer: IP.Endpoint): TCP.T
     RAISES {IP.Error, Thread.Alerted};

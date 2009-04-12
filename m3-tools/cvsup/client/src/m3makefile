@@ -35,12 +35,11 @@ if defined("STATIC")
 end
 
 override("suplib", path() & "/../..")
-override("suptcp", path() & "/../..")
 
 import("libm3")
 import("tempfiles")
 import("suplib")
-import("suptcp")
+import("tcp")
 
 interface("Version")
 version_impl("Version")

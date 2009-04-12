@@ -33,7 +33,7 @@
 INTERFACE FSServerRep;
 
 IMPORT FSServer, IP, Logger, Process, SigHandler, Time;
-IMPORT SupTCP AS TCP;
+IMPORT TCP;
 
 REVEAL
   FSServer.T <: Rep;

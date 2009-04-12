@@ -33,7 +33,7 @@ MODULE ChannelMux;
 
 IMPORT
   Atom, AtomList, IP, Rd, RefSeq, TCP, Thread, Word, Wr;
-IMPORT SupConnFD AS ConnFD;
+IMPORT ConnFD;
 
 (**)
 IMPORT Fmt, IO;
