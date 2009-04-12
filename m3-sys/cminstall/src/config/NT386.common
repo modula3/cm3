@@ -214,7 +214,7 @@ else
 end
 
 if equal(OS_TYPE, "POSIX")
-    SYSTEM_LIBORDER = [SYSTEM_LIBORDER, "Z"]
+    SYSTEM_LIBORDER += ["Z"]
 end
 
 %--------------------------------------------------------- Modula-3 backend ---
