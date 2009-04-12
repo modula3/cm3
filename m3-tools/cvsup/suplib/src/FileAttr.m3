@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: FileAttr.m3,v 1.2 2009-04-12 04:27:13 jkrell Exp $ *)
+ * $Id: FileAttr.m3,v 1.3 2009-04-12 04:36:06 jkrell Exp $ *)
 
 UNSAFE MODULE FileAttr EXPORTS FileAttr, FileAttrRep;
 
@@ -34,7 +34,7 @@ IMPORT
   CText, Ctypes, DevT, File, FilePosix, Fmt, IntTextTbl, M3toC,
   OSError, OSErrorPosix, Pathname, SupMisc, Text, TextIntTbl, Time,
   TokScan, Uerror, Ugrp, Unix, UnixMisc, Upwd, Ustat, Utime, Utypes,
-  Word;
+  Word, Long;
 
 REVEAL
   T = Rep BRANDED OBJECT
@@ -304,14 +304,15 @@ PROCEDURE ScanText(t: TEXT; VAR pos: CARDINAL): TEXT
     RETURN at;
   END ScanText;
 
-PROCEDURE ScanInt(t: TEXT;
+PROCEDURE ScanLong(t: TEXT;
                   VAR pos: CARDINAL;
                   radix: [2..16] := 10;
-                  what: TEXT := "counted integer"): Word.T
+                  what: TEXT := "counted integer"): Long.T
   RAISES {TokScan.Error} =
   VAR
     tLen := Text.Length(t);
-    count, val: Word.T := 0;
+    count: Word.T := 0;
+    val: Long.T := 0L;
     ch: CHAR;
     digit: INTEGER;
   BEGIN
@@ -340,9 +341,18 @@ PROCEDURE ScanInt(t: TEXT;
       IF digit >= radix THEN
 	RAISE TokScan.Error("Invalid " & what);
       END;
-      val := Word.Plus(Word.Times(val, radix), digit);
+      val := Long.Plus(Long.Times(val, VAL(radix, LONGINT)), VAL(digit, LONGINT));
     END;
     RETURN val;
+  END ScanLong;
+
+PROCEDURE ScanInt(t: TEXT;
+                  VAR pos: CARDINAL;
+                  radix: [2..16] := 10;
+                  what: TEXT := "counted integer"): Word.T
+  RAISES {TokScan.Error} =
+  BEGIN
+    RETURN ORD(ScanLong(t, pos, radix, what));
   END ScanInt;
 
 PROCEDURE IsSupported(fa: T; READONLY support: SupportInfo): BOOLEAN =
