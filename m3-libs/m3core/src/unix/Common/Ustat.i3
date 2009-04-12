@@ -4,7 +4,6 @@
 
 INTERFACE Ustat;
 
-IMPORT Utypes;
 FROM Ctypes IMPORT int, char_star;
 
 (*CONST*)
@@ -38,15 +37,15 @@ Sorted by size, then by name; make everything LONGINT if possible, else INTEGER;
 Limit on LONGINT is compatibility with existing Modula-3 code. Blowing up the sizes
 larger than necessary is a slight deoptimization for the sake of simplicity and
 commonality. *)
-    st_dev   : Utypes.dev_t(*LONGINT*);
-    st_ino   : Utypes.ino_t(*LONGINT*);
-    st_mtime : LONGINT;
-    st_nlink : Utypes.nlink_t(*LONGINT*);
-    st_rdev  : LONGINT;
-    st_size  : LONGINT;
-    st_gid   : INTEGER;
-    st_mode  : Utypes.mode_t(*INTEGER*);
-    st_uid   : INTEGER;
+    st_dev   : LONGINT; (* Utypes.dev_t   *)
+    st_ino   : LONGINT; (* Utypes.ino_t   *)
+    st_mtime : LONGINT; (* not time_t     *)
+    st_nlink : LONGINT; (* Utypes.nlink_t *)
+    st_rdev  : LONGINT; (* Utypes.dev_t   *)
+    st_size  : LONGINT; (* Utypes.off_t   *)
+    st_gid   : INTEGER; (* Utypes.gid_t   *)
+    st_mode  : INTEGER; (* Utypes.mode_t  *)
+    st_uid   : INTEGER; (* Utypes.uid_t   *)
   END;
   struct_stat_star = UNTRACED REF struct_stat;
 
