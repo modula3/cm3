@@ -26,13 +26,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: CVTree.m3,v 1.1.1.1 2009-04-09 17:01:52 jkrell Exp $ *)
+ * $Id: CVTree.m3,v 1.2 2009-04-12 03:12:38 jkrell Exp $ *)
 
 MODULE CVTree;
 
 IMPORT
   DirEntry, DirEntryList, DirEntryListSort, ErrMsg, FileAttr, FS,
-  GlobTree, OSError, Pathname, RefSeq, SchedulerPosix, SupMisc, Text;
+  GlobTree, OSError, Pathname, RefSeq, Scheduler AS SchedulerPosix, SupMisc, Text;
 
 TYPE
   UniIterator = Iterator OBJECT
