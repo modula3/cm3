@@ -26,12 +26,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: FileAttrOS.i3,v 1.1.1.1 2009-04-09 17:02:02 jkrell Exp $ *)
+ * $Id: FileAttrOS.i3,v 1.2 2009-04-12 08:57:51 jkrell Exp $ *)
 
 INTERFACE FileAttrOS;
 
-FROM Ctypes IMPORT const_char_star, int;
-FROM Utypes IMPORT u_long;
+FROM Ctypes IMPORT const_char_star, int, unsigned_long;
 
 CONST
   (* Definitions of flags stored in file flags word. *)
@@ -49,9 +48,9 @@ CONST
   SF_APPEND    = 16_00040000;      (* writes to file may only append *)
 
 <*EXTERNAL*>
-PROCEDURE chflags(path: const_char_star; flags: u_long): int;
+PROCEDURE chflags(path: const_char_star; flags: unsigned_long): int;
 
 <*EXTERNAL*>
-PROCEDURE fchflags(fd: int; flags: u_long): int;
+PROCEDURE fchflags(fd: int; flags: unsigned_long): int;
 
 END FileAttrOS.

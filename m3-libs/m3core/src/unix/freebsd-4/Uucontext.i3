@@ -7,13 +7,12 @@
 INTERFACE Uucontext;
 
 FROM Ctypes IMPORT int, char_star, unsigned_long, unsigned_char;
-FROM Utypes IMPORT u_long;
 
 (* ucontext.h *)
 
 TYPE
   sigset_t = RECORD 
-    sigbits : ARRAY [0..3] OF u_long;  
+    sigbits : ARRAY [0..3] OF unsigned_long;  
   END;
 
   struct_sigaltstack = RECORD
