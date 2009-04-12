@@ -31,17 +31,17 @@
 UNSAFE MODULE DevT;
 
 IMPORT
-  CText, Ctypes, Fmt, OSError, OSErrorPosix, TokScan, Unix, Utypes, Word;
+  CText, Ctypes, Fmt, OSError, OSErrorPosix, TokScan, Unix, Utypes, Word, Long;
 
 PROCEDURE Decode(t: TEXT): T
   RAISES {TokScan.Error} =
   BEGIN
-    RETURN TokScan.AtoI(t, "dev_t", 16);
+    RETURN TokScan.AtoL(t, "dev_t", 16);
   END Decode;
 
 PROCEDURE Encode(READONLY dev: T): TEXT =
   BEGIN
-    RETURN Fmt.Unsigned(dev, 16);
+    RETURN Fmt.LongUnsigned(dev, 16);
   END Encode;
 
 PROCEDURE Equal(READONLY a, b: T): BOOLEAN =
@@ -51,7 +51,7 @@ PROCEDURE Equal(READONLY a, b: T): BOOLEAN =
 
 PROCEDURE Hash(READONLY dev: T): Word.T =
   BEGIN
-    RETURN dev;
+    RETURN Word.Xor(ORD(Long.RightShift(dev, 32)), ORD(Long.And(dev, 16_FFFFFFFFL)));
   END Hash;
 
 PROCEDURE Mknod(path: TEXT;
