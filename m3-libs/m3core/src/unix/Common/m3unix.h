@@ -79,7 +79,7 @@ int Ustat__fstat(int fd, m3_stat_t* m3st);
 int Ustat__lstat(const char* path, m3_stat_t* m3st);
 int Ustat__stat(const char* path, m3_stat_t* m3st);
 #ifdef HAS_STAT_FLAGS
-int Ustat__fchflags(int fd, unsigned long flags)
+int Ustat__fchflags(int fd, unsigned long flags);
 int Ustat__chflags(const char* path, unsigned long flags);
 #endif
 
