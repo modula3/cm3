@@ -160,6 +160,8 @@ SYSTEM_LIBS_GNU =
               LibIn("SM"),
               LibIn("ICE"),
               LibIn("X11") ],
+
+   "Z" : [ "-lz" ],
 }
 
 SYSTEM_LIBS = { "WIN32" : SYSTEM_LIBS_MS, "POSIX" : SYSTEM_LIBS_GNU }{OS_TYPE}
@@ -209,6 +211,10 @@ if equal (WINDOW_LIBRARY, "X")
     SYSTEM_LIBORDER = ["OPENGL", "MOTIF", "X11", "TCP", "ODBC", "LIBC"]
 else
     SYSTEM_LIBORDER = ["OPENGL",                 "TCP", "ODBC", "LIBC"]
+end
+
+if equal(OS_TYPE, "POSIX")
+    SYSTEM_LIBORDER = [SYSTEM_LIBORDER, "Z"]
 end
 
 %--------------------------------------------------------- Modula-3 backend ---
