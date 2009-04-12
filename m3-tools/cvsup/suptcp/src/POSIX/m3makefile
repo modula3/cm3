@@ -4,8 +4,8 @@
 /* Last modified on Thu Feb  9 15:55:57 PST 1995 by wobber     */
 /* $Id$ */
 
-Interface("SupTCPPosix")
-% implementation("SupTCP")
+%Interface("SupTCPPosix")
+%implementation("SupTCP")
 interface("SupTCPHack")
 interface("SockOpt")
 
