@@ -42,7 +42,14 @@ import("tempfiles")
 if SYSTEM_LIBS contains "Z"
   import_sys_lib("Z")
 else
-  import_lib("z", "/usr/local/lib")
+  if equal(TARGET, "PPC_DARWIN") or equal(TARGET, "I386_DARWIN")
+    LibZPath = findlib("libz.dylib")
+    %import_lib("z", LibZPath) % cannot be linked statically on Darwin
+    % must be added to cm3.cfg SYSTEM_LIBS[LIBC] as a work around
+  else
+    LibZPath = findlib("libz.a")
+    import_lib("z", LibZPath)
+  end
 end
 
 if not equal(M3_VARIANT, "PM3")

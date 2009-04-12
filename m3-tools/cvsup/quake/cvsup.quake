@@ -109,3 +109,22 @@ end
 if defined("STATIC")
   build_standalone()
 end
+
+proc exists(fn) is
+  return not stale(fn, fn)
+end
+
+proc findpath(paths, fn) is
+  foreach p in paths
+    if exists(p & "/" & fn)
+      return p
+    end
+  end
+  error("file " & fn & " not found in " & paths)
+end
+
+proc findlib(fn) is
+  paths = ["/usr/lib", "/usr/local/lib", "/lib", "/usr/contrib/lib", 
+           "/opt/lib"]
+  return findpath(paths, fn)
+end
