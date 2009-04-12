@@ -50,9 +50,17 @@ proc version_impl(name) is
   local cmd = ""
   local ret = 0
   if defined("_all")
+
     > tempname in
       write("MODULE Version;", CR, CR, "BEGIN", CR, "  Name := ")
     end
+
+    if defined("datetime")
+        >> tempname in
+          write("\"" & datetime() & "\";")
+        end
+    else
+
     if equal("$Name$", "$" & "Name:  $")
       cmd = "date -u +'\"U_%Y_%m_%d_%H_%M_%S\";'"
     else
@@ -64,6 +72,9 @@ proc version_impl(name) is
     else
       exec("@" & cmd)
     end
+
+    end
+
     >> tempname in
       write("  Target := \"", TARGET, "\";", CR)
     end
