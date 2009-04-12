@@ -316,7 +316,7 @@ PROCEDURE AtoL(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Long.T
   RAISES {Error} =
   VAR
     len := Text.Length(t);
-    val: Long.T := 0;
+    val: Long.T := 0L;
     digit: INTEGER;
   BEGIN
     IF len = 0 THEN RAISE
@@ -343,7 +343,7 @@ PROCEDURE AtoL(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Long.T
 PROCEDURE AtoI(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Word.T
   RAISES {Error} =
   BEGIN
-    RETURN ORD(AtoL(text, what, radix));
+    RETURN ORD(AtoL(t, what, radix));
   END AtoI;
 
 PROCEDURE DecodeTime(text: TEXT): Time.T
