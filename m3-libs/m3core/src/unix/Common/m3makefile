@@ -32,19 +32,9 @@ Interface("Uutmp")
 %
 % This is meant to be all systems but isn't yet.
 % It is systems using the newer/smaller/more portable Unix/*.i3 files.
-% Is nearly everything now, but still missing: I386_DARWIN, AMD64_DARWIN, FreeBSD4
 %
 
-if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
-        or equal (TARGET, "PPC32_OPENBSD") or equal (TARGET, "SPARC64_OPENBSD")
-        or equal (TARGET, "AMD64_LINUX") or equal (TARGET, "PPC_LINUX")
-        or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
-        or equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
-        or equal (TARGET, "NT386") or equal (TARGET, "AMD64_FREEBSD")
-        or equal (TARGET, "LINUXLIBC6")
-        or equal (TARGET, "PPC_DARWIN")
-        or equal (TARGET, "SOLgnu") or equal (TARGET, "SOLsun")
-        or equal (TARGET, "NetBSD2_i386")
+if not (equal (TARGET, "I386_DARWIN") or equal (TARGET, "AMD64_DARWIN"))
 
     Interface ("Umman")
     c_source("UstatC")
