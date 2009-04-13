@@ -43,7 +43,6 @@ PROCEDURE Build (src_dir: TEXT): TEXT =
       Out (wr, "set_config_options ()");
       Out (wr, "readonly ", ModeFlag [M3Options.major_mode],
            " = TRUE % cm3 ", ModeName [M3Options.major_mode]);
-
       CASE M3Options.major_mode OF
       | MM.Find => Out (wr, "M3_FIND_UNITS = []")
       | MM.Build, MM.Clean, MM.RealClean, MM.Ship, MM.Depend =>  (* skip *)
@@ -501,6 +500,7 @@ PROCEDURE IncludeMakefile (VAR s: State;  makefile, dir: TEXT)
 
 PROCEDURE ScanCommandLine () : TextTextTbl.T =
   VAR 
+    use_overrides := FALSE;
     cnt := 0;  arg: TEXT;
   BEGIN
     FOR i := 1 TO Params.Count-1 DO
@@ -527,6 +527,8 @@ PROCEDURE ScanCommandLine () : TextTextTbl.T =
         Msg.SetLevel (Msg.Level.Debug);
       ELSIF Text.Equal (arg, "-profile") THEN
         EVAL defs.put("M3_PROFILING", "TRUE");
+      ELSIF Text.Equal (arg, "-x") OR Text.Equal (arg, "-override") THEN
+        use_overrides := TRUE;
       ELSIF Text.Equal (arg, "-pretend") THEN
         IF i < Params.Count - 1 THEN
           EVAL defs.put("CM3_VERSION", Params.Get(i+1));
@@ -536,6 +538,7 @@ PROCEDURE ScanCommandLine () : TextTextTbl.T =
       END;
     END;
     IF (cnt <= 0) THEN SetMode (cnt, MM.Build); END;
+    EVAL defs.put("M3_USE_OVERRIDES", ARRAY BOOLEAN OF TEXT {"FALSE", "TRUE"}[use_overrides]);
     RETURN defs;
   END ScanCommandLine;
 
