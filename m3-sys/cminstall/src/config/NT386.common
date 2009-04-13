@@ -458,16 +458,6 @@ end
 
 %------------------------------------------------------------------------------
 
-% A "pdb' is a "program database", that is, a Microsoft symbol file.
-
-readonly proc PdbExport(pdb) is
-    if FileExists(pdb)
-        BindExport(pdb)
-    end
-end
-
-%------------------------------------------------------------------------------
-
 readonly proc ManifestTool(DllOrExe, ManifestFile, ResourceId) is
     local ret = 0
     %

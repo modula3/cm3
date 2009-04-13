@@ -336,6 +336,15 @@ M3_NEED_STANDALONE_LINKS = FALSE
 % --- linker is broken and we need to build a directory of symbolic
 %     links pointing to the non-shared libraries.
 
+%------------------------------------------------------------------------------
+
+% A "pdb' is a "program database", that is, a Microsoft symbol file.
+
+readonly proc PdbExport(pdb) is
+    if FileExists(pdb)
+        BindExport(pdb)
+    end
+end
 
 %-------------------------------------------------------------------
 % "skip_link" is called when the compiler decides it doesn't need to
@@ -362,7 +371,7 @@ proc skip_link(prog, shared) is
 
     BindExport(pgm_file)
     DeleteFile(manifest_file)
-    BindExport(pdb_file)
+    PdbExport(pdb_file)
 
     return 0
 end
