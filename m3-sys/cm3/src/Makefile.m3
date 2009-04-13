@@ -538,7 +538,7 @@ PROCEDURE ScanCommandLine () : TextTextTbl.T =
       END;
     END;
     IF (cnt <= 0) THEN SetMode (cnt, MM.Build); END;
-    EVAL defs.put("M3_USE_OVERRIDES", ARRAY BOOLEAN OF TEXT {"FALSE", "TRUE"}[use_overrides]);
+    EVAL defs.put("M3_USE_OVERRIDES", ARRAY BOOLEAN OF TEXT {"", "TRUE"}[use_overrides]);
     RETURN defs;
   END ScanCommandLine;
 
