@@ -336,4 +336,34 @@ M3_NEED_STANDALONE_LINKS = FALSE
 % --- linker is broken and we need to build a directory of symbolic
 %     links pointing to the non-shared libraries.
 
+
+%-------------------------------------------------------------------
+% "skip_link" is called when the compiler decides it doesn't need to
+% call "m3_link", but it wants to discover the names of the derived
+% files that should be deleted or shipped.
+
+proc skip_link(prog, shared) is
+    local readonly pgm_file = format(FormatExe, prog)
+    local readonly manifest_file = pgm_file & ".manifest"
+    local readonly pdb_file = prog & ".pdb"
+    local readonly listing  = prog & ".lst"
+
+    local readonly Outputs = [
+        pgm_file,
+        listing,
+        manifest_file,
+        pdb_file,
+        prog & ".ilk"]
+
+    % make sure files get cleaned up
+    deriveds("", Outputs)
+
+    BindExport(pgm_file)
+    DeleteFile(manifest_file)
+    BindExport(pdb_file)
+
+    return 0
+end
+
+
 %------------------------------------------------------------------------------
