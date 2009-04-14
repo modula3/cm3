@@ -1,4 +1,0 @@
-import("libm3")
-import("db")
-implementation("DemoPG")
-program("demo")
