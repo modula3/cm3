@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.32 2009-04-07 22:34:28 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.33 2009-04-14 10:32:58 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -31,6 +31,8 @@ DIST="${DIST:-std}" # may be min, core, std, all
 header "building CM3 installation in ${INSTALLROOT}"
 
 NEWCFG=${NEWCFG:-y}
+
+DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
 
 #-----------------------------------------------------------------------------
 # create the basic directories
@@ -160,12 +162,17 @@ fi
 #-----------------------------------------------------------------------------
 # build binary distribution archives
 ARCHIVE1="system.tgz"
-ARCHIVE2="cm3-bin-${DIST}-${M3OSTYPE}-${TARGET}-${CM3VERSION}.tgz"
+ARCHIVE2="cm3-bin-${DIST}-${TARGET}-${CM3VERSION}-${DS}.tgz"
 ABSARCH1="`cygpath -u ${STAGE}/${ARCHIVE1}`"
 ABSARCH2="`cygpath -u ${STAGE}/${ARCHIVE2}`"
-INSTDATA="cminstall${EXE} COPYRIGHT-CMASS ${ARCHIVE1}"
+DUSK="du-sk"
+ABSDUSK="`cygpath -u ${STAGE}/du-sk`"
+INSTDATA="cminstall${EXE} COPYRIGHT-CMASS ${ARCHIVE1} ${DUSK}"
 header "stage 6: building archive in ${ARCHIVE2}"
 echo "creating system archive in ${ABSARCH1}"
+du -sk "${INSTALLROOT}" > "${ABSDUSK}"
+echo "cat ${DUSK}"
+cat "${DUSK}"
 ${TAR} -C "${INSTALLROOT}" -czf "${ABSARCH1}" . || exit 1
 echo ".../cminstall/${TARGET}/cminstall${EXE} -->" "${STAGE}"
 cp "${ROOT}/m3-sys/cminstall/${TARGET}/cminstall${EXE}" "${STAGE}" ||  exit 1
