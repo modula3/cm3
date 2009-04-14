@@ -13,8 +13,6 @@ CONST
   DefaultInstallDir = ARRAY BOOLEAN OF TEXT
     { "c:\\cm3", "/usr/local/cm3" } [OnUnix];
 
-  MinDiskSpace = 250; (* megabytes *)
-
   (* until we get the permission...
   REACTOR_EXE = ARRAY BOOLEAN OF TEXT <*NOWARN*>
     { "reactor.exe", "reactor" } [OnUnix];
@@ -53,6 +51,8 @@ VAR
   interactive       : BOOLEAN := FALSE;
   dumpConfig        : BOOLEAN := FALSE;
   oldConfig         : BOOLEAN := FALSE;
+  MinDiskSpace      : INTEGER := 50; (* megabytes *)
+
 
 PROCEDURE DoIt () =
   BEGIN
@@ -121,6 +121,7 @@ PROCEDURE DoIt () =
         (* verify the disk space *)
         disk_space := OS.GetDiskSpace (install_root);
         Msg.Debug ("available disk space: ", Fmt.Int (disk_space), " megabytes");
+        MinDiskSpace := OS.FileContentAsInt("du-sk") DIV 1024;
         IF disk_space >= MinDiskSpace THEN EXIT; END;
         Out ("It appears that there is only about ", Fmt.Int (disk_space),
              " megabytes of space");

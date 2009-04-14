@@ -30,6 +30,8 @@ PROCEDURE WriteFile (name, contents: TEXT);
 PROCEDURE RemoveFile (file: TEXT);
 PROCEDURE MoveFile (src, dest: TEXT);
 
+PROCEDURE FileContentAsInt(fn: TEXT): INTEGER;
+
 PROCEDURE Err (ec: AtomList.T): TEXT;
 
 PROCEDURE FilenameWithoutSpaces (fn: TEXT): TEXT;

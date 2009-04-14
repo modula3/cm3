@@ -1,10 +1,12 @@
 (* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
 (* See file COPYRIGHT-CMASS for details. *)
 
-MODULE OS;
+MODULE OS EXPORTS OS;
 
-IMPORT Atom, AtomList, Env, File, FileWr, FS, Msg, Pathname;
-IMPORT OSError, RegularFile, Text2, Text, Thread, Wr;
+IMPORT Atom, AtomList, Env, File, FileWr, FloatMode, FS, FSUtils, Lex, Msg, Pathname;
+IMPORT OSError, RegularFile, Scan, Text2, Text, Thread, Wr;
+
+<* FATAL FloatMode.Trap *>
 
 PROCEDURE IsDirectory (file: TEXT): BOOLEAN =
   BEGIN
@@ -208,6 +210,23 @@ PROCEDURE CopyFile (src, dest: TEXT) RAISES {OSError.E} =
       IF (rd # NIL) THEN rd.close (); END;
     END;
   END CopyFile;
+
+PROCEDURE FileContentAsInt(fn: TEXT): INTEGER =
+  VAR
+    res := 0;
+    data: TEXT;
+  BEGIN
+    TRY
+      data := FSUtils.FileContents(fn);
+      res := Scan.Int(data);
+    EXCEPT
+    | Lex.Error =>
+      Msg.Warn("Cannot parse result of disk space query");
+    | FSUtils.E(e) =>
+      Msg.Warn("Cannot read file with free disk space: " & e);
+    END;
+    RETURN res;
+  END FileContentAsInt;
 
 PROCEDURE OpenDestination (dest: TEXT;  src: File.T): File.T RAISES {OSError.E} =
   BEGIN
