@@ -189,22 +189,18 @@ struct _m3_group_t;
 typedef struct _m3_group_t m3_group_t;
 
 m3_group_t* Ugrp__getgrent(m3_group_t* m3group);
-#ifndef _WIN32
-m3_group_t* Ugrp__getgrgid(m3_group_t* m3group, gid_t gid);
-#endif
+m3_group_t* Ugrp__getgrgid(m3_group_t* m3group, m3_gid_t gid);
 m3_group_t* Ugrp__getgrnam(m3_group_t* m3group, const char* name);
 void Ugrp__setgrent(void);
 void Ugrp__endgrent(void);
 
 
 int Unix__link(const char* name1, const char* name2);
-#ifndef _WIN32
-int Unix__chmod(const char* path, mode_t mode);
-int Unix__fchmod(int fd, mode_t mode);
-int Unix__chown(const char* path, uid_t owner, gid_t group);
-int Unix__fchown(int fd, uid_t owner, gid_t group);
-int Unix__creat(const char* path, mode_t mode);
-#endif
+int Unix__chmod(const char* path, m3_mode_t mode);
+int Unix__fchmod(int fd, m3_mode_t mode);
+int Unix__chown(const char* path, m3_uid_t owner, m3_gid_t group);
+int Unix__fchown(int fd, m3_uid_t owner, m3_gid_t group);
+int Unix__creat(const char* path, m3_mode_t mode);
 int Unix__dup(int oldd);
 
 UINT32 Uin_ntohl(UINT32 x);
