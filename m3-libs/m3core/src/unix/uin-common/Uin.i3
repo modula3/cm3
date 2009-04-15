@@ -21,9 +21,9 @@ TYPE
     sin_zero: ARRAY [0..7] OF char;
   END;
 
-PROCEDURE ntohl(x: unsigned): unsigned;
-PROCEDURE ntohs(x: unsigned_short): unsigned_short;
-PROCEDURE htonl(x: unsigned): unsigned;
-PROCEDURE htons(x: unsigned_short): unsigned_short;
+<*EXTERNAL "Uin__ntohl"*> PROCEDURE ntohl(x: unsigned): unsigned;
+<*EXTERNAL "Uin__ntohs"*> PROCEDURE ntohs(x: unsigned_short): unsigned_short;
+<*EXTERNAL "Uin__htonl"*> PROCEDURE htonl(x: unsigned): unsigned;
+<*EXTERNAL "Uin__htons"*> PROCEDURE htons(x: unsigned_short): unsigned_short;
 
 END Uin.
