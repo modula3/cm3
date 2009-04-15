@@ -271,11 +271,7 @@ ThreadPThread__pthread_mutex_destroy(
     pthread_mutex_destroy() intermittently returns
     EBUSY even when there are no threads accessing the mutex. */
     int e;
-    do
-    {
-        e = pthread_mutex_destroy(mutex);
-    }
-    while (e == EBUSY);
+    while ((e = pthread_mutex_destroy(mutex)) == EBUSY) { }
     return e;
 #else
     return pthread_mutex_destroy(mutex);
