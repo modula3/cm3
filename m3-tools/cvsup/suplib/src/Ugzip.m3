@@ -30,7 +30,7 @@
 
 UNSAFE MODULE Ugzip;
 
-IMPORT Cstdlib, CText, Scheduler AS SchedulerPosix, UgzipP;
+IMPORT Cstdlib, CText, Scheduler, UgzipP;
 
 FROM Ctypes IMPORT int, unsigned_int, void_star;
 
@@ -60,22 +60,22 @@ PROCEDURE SafeAlloc(<*UNUSED*> opaque: void_star;
                     items: unsigned_int;
 		    size: unsigned_int): void_star =
   BEGIN
-    SchedulerPosix.DisableSwitching();
+    Scheduler.DisableSwitching();
     TRY
       RETURN Cstdlib.malloc(items * size);
     FINALLY
-      SchedulerPosix.EnableSwitching();
+      Scheduler.EnableSwitching();
     END;
   END SafeAlloc;
 
 PROCEDURE SafeFree(<*UNUSED*> opaque: void_star;
                    address: void_star) =
   BEGIN
-    SchedulerPosix.DisableSwitching();
+    Scheduler.DisableSwitching();
     TRY
       Cstdlib.free(address);
     FINALLY
-      SchedulerPosix.EnableSwitching();
+      Scheduler.EnableSwitching();
     END;
   END SafeFree;
 

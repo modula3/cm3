@@ -32,7 +32,7 @@ MODULE CVTree;
 
 IMPORT
   DirEntry, DirEntryList, DirEntryListSort, ErrMsg, FileAttr, FS,
-  GlobTree, OSError, Pathname, RefSeq, Scheduler AS SchedulerPosix, SupMisc, Text;
+  GlobTree, OSError, Pathname, RefSeq, Scheduler, SupMisc, Text;
 
 TYPE
   UniIterator = Iterator OBJECT
@@ -312,31 +312,31 @@ PROCEDURE ReadDir(iter: UniIterator;
 PROCEDURE SafeIterate(path: Pathname.T): FS.Iterator
   RAISES {OSError.E} =
   BEGIN
-    SchedulerPosix.DisableSwitching();
+    Scheduler.DisableSwitching();
     TRY
       RETURN FS.Iterate(path);
     FINALLY
-      SchedulerPosix.EnableSwitching();
+      Scheduler.EnableSwitching();
     END;
   END SafeIterate;
 
 PROCEDURE SafeNext(iter: FS.Iterator; VAR name: TEXT): BOOLEAN =
   BEGIN
-    SchedulerPosix.DisableSwitching();
+    Scheduler.DisableSwitching();
     TRY
       RETURN iter.next(name);
     FINALLY
-      SchedulerPosix.EnableSwitching();
+      Scheduler.EnableSwitching();
     END;
   END SafeNext;
 
 PROCEDURE SafeIterClose(iter: FS.Iterator) =
   BEGIN
-    SchedulerPosix.DisableSwitching();
+    Scheduler.DisableSwitching();
     TRY
       iter.close();
     FINALLY
-      SchedulerPosix.EnableSwitching();
+      Scheduler.EnableSwitching();
     END;
   END SafeIterClose;
 
