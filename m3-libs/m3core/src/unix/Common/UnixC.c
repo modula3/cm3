@@ -87,9 +87,9 @@ int Unix__open(const char* path, int flags, m3_mode_t mode)
 int Unix__mkdir(const char* path, m3_mode_t mode)
 {
 #ifdef _WIN32
-    return mkdir(path);
+    return _mkdir(path);
 #else
-    return _mkdir(path, mode);
+    return mkdir(path, mode);
 #endif
 }
 
