@@ -42,6 +42,10 @@ else
   end
 end
 
+% just alwys use CM3
+M3_VARIANT = "CM3"
+
+
 % Generate the "Version.m3" implementation file.  It contains the release
 % name, if any, else the compilation date and time.
 proc version_impl(name) is
