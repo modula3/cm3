@@ -195,7 +195,7 @@ int Unix__chown(const char* path, m3_uid_t owner, m3_gid_t group)
     return chown(path, owner, group);
 }
 
-int Unix__fchown(int fd, uid_t owner, m3_gid_t group)
+int Unix__fchown(int fd, m3_uid_t owner, m3_gid_t group)
 {
     return fchown(fd, owner, group);
 }
