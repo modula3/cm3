@@ -35,10 +35,10 @@ CONST
 <*EXTERNAL Unix__Mrwrwrw*> VAR Mrwrwrw: int; (* MROWNER + MWOWNER + MRGROUP + MWGROUP + MROTHER + MWOTHER *)
 
 (* CONST *)
-<*EXTERNAL Unix__F_OK*> VAR F_OK: int;
-<*EXTERNAL Unix__X_OK*> VAR X_OK: int;
-<*EXTERNAL Unix__W_OK*> VAR W_OK: int;
-<*EXTERNAL Unix__R_OK*> VAR R_OK: int;
+<*EXTERNAL Unix__F_OK*> VAR F_OK: int; (* existance *)
+<*EXTERNAL Unix__X_OK*> VAR X_OK: int; (* executable *)
+<*EXTERNAL Unix__W_OK*> VAR W_OK: int; (* writable *)
+<*EXTERNAL Unix__R_OK*> VAR R_OK: int; (* readable *)
 PROCEDURE access (path: const_char_star; mode: int): int;
 
 PROCEDURE sbrk (inc: INTEGER): char_star;

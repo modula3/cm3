@@ -13,14 +13,20 @@
 /*#include <ucontext.h>*/
 #endif
 #include <signal.h>
+#ifndef _WIN32
 #include <netinet/tcp.h>
 #include <netinet/in.h>
+#endif
 #ifdef __sun
 #include <sys/filio.h>
 #endif
 #ifdef __CYGWIN__
 #include <process.h>
 #include <sys/termios.h>
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 typedef union {
@@ -34,6 +40,7 @@ typedef int CheckMax[248 - sizeof(CheckMax_t)];
 #define X(x) const int Uerror__##x = x;
 #include "UerrorX.h"
 
+#ifndef _WIN32
 
 #undef X
 #define X(x) const int Uexec__##x = x; \
@@ -41,15 +48,18 @@ typedef int CheckMax[248 - sizeof(CheckMax_t)];
 X(WNOHANG)
 
 
+#endif
+
 #undef X
 #define X(x) const int Usignal__##x = x;
 X(SIGINT)
+X(SIGTERM)
+#ifndef _WIN32
 X(SIGKILL)
 X(SIGCHLD)
 X(SIGALRM)
 X(SIGHUP)
-X(SIGTERM)
-
+#endif
 
 #undef X
 #define X(x) const int Unix__##x = x;
@@ -63,15 +73,25 @@ X(O_RDWR)
 X(O_CREAT)
 X(O_EXCL)
 X(O_TRUNC)
-X(O_NONBLOCK)
 X(O_APPEND)
+#ifndef _WIN32
+X(O_NONBLOCK)
 Y(O_NDELAY, O_NONBLOCK) /* compat */
 Y(M3_NONBLOCK, O_NONBLOCK) /* compat */
+#endif
 
+#ifndef _WIN32
 X(F_OK)
 X(X_OK)
 X(W_OK)
 X(R_OK)
+#else
+Y(F_OK, 0)
+Y(W_OK, 2)
+Y(R_OK, 4)
+#endif
+
+#ifndef _WIN32
 
 X(F_SETFD) /* Set close-on-exec flag */
 X(F_GETFL) /* Get fd status flags */
@@ -93,6 +113,7 @@ Y(MXOTHER, S_IXOTH) /* executable by other */
 /* readable/writable by all, executable by none */
 Y(Mrwrwrw, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
 
+#endif
 
 #undef X
 #define X(x) const int Usocket__##x = x;
@@ -115,26 +136,33 @@ X(MSG_PEEK)
 #define Y(x, y) const int Ustat__##x = y;
 
 X(S_IFMT)
-X(S_IFSOCK)
-X(S_IFLNK)
 X(S_IFREG)
-X(S_IFBLK)
 X(S_IFDIR)
 X(S_IFCHR)
+#ifndef _WIN32
 X(S_IFIFO)
+X(S_IFSOCK)
+X(S_IFLNK)
+X(S_IFBLK)
 X(S_ISUID)
 X(S_ISGID)
 X(S_ISVTX)
+#endif
 
-Y(S_IREAD, S_IRUSR)
-Y(S_IWRITE, S_IWUSR)
-Y(S_IEXEC, S_IXUSR)
+X(S_IREAD)
+X(S_IWRITE)
+X(S_IEXEC)
+
+#ifndef _WIN32
+
 Y(S_GREAD, S_IRGRP)
 Y(S_GWRITE, S_IWGRP)
 Y(S_GEXEC, S_IXGRP)
 Y(S_OREAD, S_IROTH)
 Y(S_OWRITE, S_IWOTH)
 Y(S_OEXEC, S_IXOTH)
+
+#endif
 
 #ifdef HAS_STAT_FLAGS
 
@@ -246,18 +274,22 @@ X(IPPROTO_TCP)
 #define X(x) const int Utime__##x = x;
 #define Y(x, y) const int Utime__##x = y;
 /* Cygwin only supports real time whereas Modula-3 only uses virtual time. Lie. */
+#ifndef _WIN32
 #ifdef __CYGWIN__
 Y(ITIMER_VIRTUAL, ITIMER_REAL)
 #else
 X(ITIMER_VIRTUAL) /* virtual time intervals */
 #endif
-
+#endif
 
 #undef X
 #define X(x) const int Umman__##x = x;
+
+#ifndef _WIN32
 X(PROT_NONE)
 X(PROT_READ)
 X(PROT_WRITE)
+#endif
 
 #ifdef PROT_EXEC
      X(PROT_EXEC)
@@ -358,3 +390,7 @@ X(VTIME)
 X(TCSANOW)
 
 #endif /* cygwin */
+
+#ifdef __cplusplus
+}
+#endif

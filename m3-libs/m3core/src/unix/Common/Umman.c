@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+#ifndef _WIN32
+
 int Umman__mprotect(ADDRESS addr, size_t length, int prot)
 {
     return mprotect(addr, length, prot);
@@ -22,6 +24,8 @@ int Umman__munmap(ADDRESS addr, size_t length)
 {
     return munmap(addr, length);
 }
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

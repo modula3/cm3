@@ -42,6 +42,8 @@ void Unix__Assertions(void)
 #define CHECK_M3_TYPE_SIZE(x) assert(sizeof(m3_##x) >= sizeof(x))
 #define IS_TYPE_SIGNED(x)  (((x)-1) < (x)0)
 
+#ifndef _WIN32
+
     CHECK_M3_TYPE_SIZE(dev_t);
     CHECK_M3_TYPE_SIZE(gid_t);
     CHECK_M3_TYPE_SIZE(ino_t);
@@ -53,6 +55,8 @@ void Unix__Assertions(void)
     CHECK_M3_TYPE_SIZE(uid_t);
 
     assert(IS_TYPE_SIGNED(pid_t) == 1);
+
+#endif
 
     assert(CHAR_BIT == 8);
     assert(sizeof(short) == 2);
@@ -82,18 +86,32 @@ int Unix__open(const char* path, int flags, m3_mode_t mode)
 /* wrapped in case passing mode_t vs. int varies */
 int Unix__mkdir(const char* path, m3_mode_t mode)
 {
-    return mkdir(path, mode);
+#ifdef _WIN32
+    return mkdir(path);
+#else
+    return _mkdir(path, mode);
+#endif
 }
+
+#ifndef _WIN32
 
 int Unix__ftruncate(int fd, m3_off_t length)
 {
     return ftruncate(fd, length);
 }
 
+#endif
+
 m3_off_t Unix__lseek(int fd, m3_off_t offset, int whence)
 {
+#ifdef _WIN32
+    return _lseeki64(fd, offset, whence);
+#else
     return lseek(fd, offset, whence);
+#endif
 }
+
+#ifndef _WIN32
 
 int Unix__fcntl(int fd, int request, int arg)
 /* fcntl is actually fcntl(fd, request, ...).
@@ -144,37 +162,47 @@ int Unix__mknod(const char* path, m3_mode_t mode, m3_dev_t dev)
     return mknod(path, mode, dev);
 }
 
+#endif
+
 m3_mode_t Unix__umask(m3_mode_t newmask)
 {
     return umask(newmask);
 }
+
+#ifndef _WIN32
 
 int Unix__link(const char* name1, const char* name2)
 {
     return link(name1, name2);
 }
 
-int Unix__chmod(const char* path, mode_t mode)
+#endif
+
+int Unix__chmod(const char* path, m3_mode_t mode)
 {
     return chmod(path, mode);
 }
 
-int Unix__fchmod(int fd, mode_t mode)
+#ifndef _WIN32
+
+int Unix__fchmod(int fd, m3_mode_t mode)
 {
     return fchmod(fd, mode);
 }
 
-int Unix__chown(const char* path, uid_t owner, gid_t group)
+int Unix__chown(const char* path, m3_uid_t owner, m3_gid_t group)
 {
     return chown(path, owner, group);
 }
 
-int Unix__fchown(int fd, uid_t owner, gid_t group)
+int Unix__fchown(int fd, uid_t m3_owner, m3_gid_t group)
 {
     return fchown(fd, owner, group);
 }
 
-int Unix__creat(const char* path, mode_t mode)
+#endif
+
+int Unix__creat(const char* path, m3_mode_t mode)
 {
     return creat(path, mode);
 }
@@ -184,10 +212,14 @@ int Unix__dup(int oldd)
     return dup(oldd);
 }
 
+#ifndef _WIN32
+
 m3_pid_t Unix__fork(void)
 {
     return fork();
 }
+
+#endif
 
 #ifdef __cplusplus
 } /* extern C */
