@@ -203,10 +203,10 @@ int Unix__fchown(int fd, m3_uid_t owner, m3_gid_t group);
 int Unix__creat(const char* path, m3_mode_t mode);
 int Unix__dup(int oldd);
 
-UINT32 Uin_ntohl(UINT32 x);
-UINT16 Uin_ntohs(UINT16 x);
-UINT32 Uin_htonl(UINT32 x);
-UINT16 Uin_htons(UINT16 x);
+UINT32 Uin__ntohl(UINT32 x);
+UINT16 Uin__ntohs(UINT16 x);
+UINT32 Uin__htonl(UINT32 x);
+UINT16 Uin__htons(UINT16 x);
 
 
 #ifdef __cplusplus
