@@ -7,23 +7,27 @@
 #ifndef INCLUDED_M3UNIX_H
 #define INCLUDED_M3UNIX_H
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <assert.h>
 #include <stddef.h>
 #include <time.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
+
+#ifndef _WIN32
 #include <sys/ioctl.h>
-#include <pthread.h>
-#include <netdb.h>
-#include <sys/wait.h>
 #include <sys/mman.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/wait.h>
+#include <dirent.h>
 #include <grp.h>
+#include <netdb.h>
+#include <pthread.h>
+#include <unistd.h>
+#endif
+
 typedef struct sockaddr sockaddr_t;
 typedef struct itimerval itimerval_t;
 typedef struct hostent hostent_t;
@@ -179,6 +183,12 @@ int Unix__chown(const char* path, uid_t owner, gid_t group);
 int Unix__fchown(int fd, uid_t owner, gid_t group);
 int Unix__creat(const char* path, mode_t mode);
 int Unix__dup(int oldd);
+
+UINT32 Uin_ntohl(UINT32 x);
+UINT16 Uin_ntohs(UINT16 x);
+UINT32 Uin_htonl(UINT32 x);
+UINT16 Uin_htons(UINT16 x);
+
 
 #ifdef __cplusplus
 } /* extern "C" */
