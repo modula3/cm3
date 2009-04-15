@@ -1,8 +1,4 @@
-#ifdef _WIN32
-#include <winsock2.h>
-#else
 #include "m3unix.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
