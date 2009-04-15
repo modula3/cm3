@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+#ifndef _WIN32
+
 /* direct references to opendir on NetBSD:
 
 $ cat 1.c
@@ -27,6 +29,9 @@ DIR* Udir__opendir(const char* a)
 {
     return opendir(a);
 }
+
+
+#endif
 
 
 #ifdef __cplusplus

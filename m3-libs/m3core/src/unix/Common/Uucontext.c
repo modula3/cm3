@@ -3,6 +3,7 @@
 /* See the file COPYRIGHT for a full description.             */
 
 #include "m3unix.h"
+#ifndef _WIN32
 #include "Uucontext.h"
 
 #ifdef __cplusplus
@@ -65,6 +66,8 @@ int Uucontext__swapcontext(ucontext_t* Old, const ucontext_t* New)
 {
     return swapcontext(Old, New);
 }
+
+#endif
 
 #endif
 

@@ -57,11 +57,13 @@ int Ustat__stat(const char* path, m3_stat_t* m3st)
     return m3stat_from_stat(stat(path, &st), m3st, &st);
 }
 
+#ifndef _WIN32
 int Ustat__lstat(const char* path, m3_stat_t* m3st)
 {
     stat_t st;
     return m3stat_from_stat(lstat(path, &st), m3st, &st);
 }
+#endif
 
 int Ustat__fstat(int fd, m3_stat_t* m3st)
 {

@@ -7,6 +7,20 @@
 #ifndef INCLUDED_M3UNIX_H
 #define INCLUDED_M3UNIX_H
 
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_DEPRECATE
+#define _CRT_NONSTDC_NO_DEPRECATE
+struct IRpcStubBuffer; /* warning 4115: named type definition in parentheses */
+#pragma warning(disable:4100) /* unused parameter*/
+#pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
+#pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */
+#pragma warning(disable:4514) /* unused inline function removed */
+#if _MSC_VER < 1000
+#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
+#pragma warning(disable:4226) /* nonstandard extension: __export */
+#endif
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
@@ -15,7 +29,11 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <direct.h>
+#include <io.h>
+#include <winsock.h>
+#else
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
@@ -111,7 +129,7 @@ m3_socklen_t is equivalent to socklen_t, when socklen_t is 32 bits.
 It is a reasonable facsimile to the type the Modula-3 code uses -- the
 same size and usually the same signedness.
 */
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__) || defined(_WIN32)
 typedef int m3_socklen_t;
 #else
 typedef unsigned m3_socklen_t;
@@ -132,8 +150,9 @@ int Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_
 int Usocket__recvfrom(int s, void* buf, size_t len, int flags, sockaddr_t* from, m3_socklen_t* plen);
 
 
+#ifndef _WIN32
 DIR* Udir__opendir(const char* a);
-
+#endif
 
 int Umman__mprotect(ADDRESS addr, size_t len, int prot);
 ADDRESS Umman__mmap(ADDRESS addr, size_t len, int prot, int flags, int fd, m3_off_t off);
@@ -170,18 +189,22 @@ struct _m3_group_t;
 typedef struct _m3_group_t m3_group_t;
 
 m3_group_t* Ugrp__getgrent(m3_group_t* m3group);
+#ifndef _WIN32
 m3_group_t* Ugrp__getgrgid(m3_group_t* m3group, gid_t gid);
+#endif
 m3_group_t* Ugrp__getgrnam(m3_group_t* m3group, const char* name);
 void Ugrp__setgrent(void);
 void Ugrp__endgrent(void);
 
 
 int Unix__link(const char* name1, const char* name2);
+#ifndef _WIN32
 int Unix__chmod(const char* path, mode_t mode);
 int Unix__fchmod(int fd, mode_t mode);
 int Unix__chown(const char* path, uid_t owner, gid_t group);
 int Unix__fchown(int fd, uid_t owner, gid_t group);
 int Unix__creat(const char* path, mode_t mode);
+#endif
 int Unix__dup(int oldd);
 
 UINT32 Uin_ntohl(UINT32 x);

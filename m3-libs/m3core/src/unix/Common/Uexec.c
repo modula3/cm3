@@ -4,6 +4,12 @@
 
 #include "m3unix.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef _WIN32
+
 void Uexec__RepackStatus(int* var_status)
 {
     int status;
@@ -19,3 +25,9 @@ void Uexec__RepackStatus(int* var_status)
 }
 
 /* If needed, define functions Uexec_WTERMSIG, Uexec_WEXITSTATUS, etc. */
+
+#endif
+
+#ifdef __cplusplus
+}
+#endif
