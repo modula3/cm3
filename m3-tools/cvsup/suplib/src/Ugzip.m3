@@ -26,11 +26,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: Ugzip.m3,v 1.2 2009-04-12 03:12:38 jkrell Exp $ *)
+ * $Id: Ugzip.m3,v 1.3 2009-04-15 14:20:11 jkrell Exp $ *)
 
 UNSAFE MODULE Ugzip;
 
-IMPORT Cstdlib, CText, Scheduler AS SchedulerPosix, UgzipP;
+IMPORT Cstdlib, CText, Scheduler, UgzipP;
 
 FROM Ctypes IMPORT int, unsigned_int, void_star;
 
@@ -60,22 +60,22 @@ PROCEDURE SafeAlloc(<*UNUSED*> opaque: void_star;
                     items: unsigned_int;
 		    size: unsigned_int): void_star =
   BEGIN
-    SchedulerPosix.DisableSwitching();
+    Scheduler.DisableSwitching();
     TRY
       RETURN Cstdlib.malloc(items * size);
     FINALLY
-      SchedulerPosix.EnableSwitching();
+      Scheduler.EnableSwitching();
     END;
   END SafeAlloc;
 
 PROCEDURE SafeFree(<*UNUSED*> opaque: void_star;
                    address: void_star) =
   BEGIN
-    SchedulerPosix.DisableSwitching();
+    Scheduler.DisableSwitching();
     TRY
       Cstdlib.free(address);
     FINALLY
-      SchedulerPosix.EnableSwitching();
+      Scheduler.EnableSwitching();
     END;
   END SafeFree;
 

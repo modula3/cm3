@@ -26,13 +26,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: CVTree.m3,v 1.2 2009-04-12 03:12:38 jkrell Exp $ *)
+ * $Id: CVTree.m3,v 1.3 2009-04-15 14:20:11 jkrell Exp $ *)
 
 MODULE CVTree;
 
 IMPORT
   DirEntry, DirEntryList, DirEntryListSort, ErrMsg, FileAttr, FS,
-  GlobTree, OSError, Pathname, RefSeq, Scheduler AS SchedulerPosix, SupMisc, Text;
+  GlobTree, OSError, Pathname, RefSeq, Scheduler, SupMisc, Text;
 
 TYPE
   UniIterator = Iterator OBJECT
@@ -312,31 +312,31 @@ PROCEDURE ReadDir(iter: UniIterator;
 PROCEDURE SafeIterate(path: Pathname.T): FS.Iterator
   RAISES {OSError.E} =
   BEGIN
-    SchedulerPosix.DisableSwitching();
+    Scheduler.DisableSwitching();
     TRY
       RETURN FS.Iterate(path);
     FINALLY
-      SchedulerPosix.EnableSwitching();
+      Scheduler.EnableSwitching();
     END;
   END SafeIterate;
 
 PROCEDURE SafeNext(iter: FS.Iterator; VAR name: TEXT): BOOLEAN =
   BEGIN
-    SchedulerPosix.DisableSwitching();
+    Scheduler.DisableSwitching();
     TRY
       RETURN iter.next(name);
     FINALLY
-      SchedulerPosix.EnableSwitching();
+      Scheduler.EnableSwitching();
     END;
   END SafeNext;
 
 PROCEDURE SafeIterClose(iter: FS.Iterator) =
   BEGIN
-    SchedulerPosix.DisableSwitching();
+    Scheduler.DisableSwitching();
     TRY
       iter.close();
     FINALLY
-      SchedulerPosix.EnableSwitching();
+      Scheduler.EnableSwitching();
     END;
   END SafeIterClose;
 
