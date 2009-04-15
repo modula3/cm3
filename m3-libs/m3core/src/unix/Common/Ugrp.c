@@ -39,7 +39,7 @@ m3_group_t* Ugrp__getgrent(m3_group_t* m3group)
     return native_to_m3(getgrent(), m3group);
 }
 
-m3_group_t* Ugrp__getgrgid(m3_group_t* m3group, gid_t gid)
+m3_group_t* Ugrp__getgrgid(m3_group_t* m3group, m3_gid_t gid)
 {
     return native_to_m3(getgrgid(gid), m3group);
 }
