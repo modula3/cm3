@@ -1397,8 +1397,8 @@ TYPE
     ProcessLocksList     : LIST_ENTRY;
     EntryCount           : UINT32;
     ContentionCount      : UINT32;
-    Depth                : UINT32;
-    OwnerBackTrace       : ARRAY [0 .. 4] OF PVOID;
+    Spare0               : UINT32;
+    Spare1               : UINT32;
   END;
 
 CONST
@@ -1431,7 +1431,7 @@ TYPE
     RecursionCount : INT32;
     OwningThread   : HANDLE;  (* from the thread's ClientId->UniqueThread *)
     LockSemaphore  : HANDLE;
-    Reserved       : SIZE_T;
+    SpinCount      : SIZE_T; (* force size on 64-bit systems when packed *)
   END;
 
 CONST
@@ -2508,6 +2508,7 @@ TYPE
 
 CONST
  IMAGE_ORDINAL_FLAG = 16_80000000;
+ IMAGE_ORDINAL_FLAG32 = 16_80000000;
 
 TYPE
 <* INLINE *>
