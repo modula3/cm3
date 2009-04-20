@@ -2,6 +2,7 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
+#include <stddef.h>
 #include <assert.h>
 
 #ifdef __APPLE__
