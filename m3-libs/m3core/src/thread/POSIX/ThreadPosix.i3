@@ -23,4 +23,7 @@ PROCEDURE disallow_sigvtalrm();
 <*EXTERNAL ThreadPosix__InitC*>
 PROCEDURE InitC();
 
+PROCEDURE PushEFrame (frame: ADDRESS);
+PROCEDURE PopEFrame (frame: ADDRESS);
+
 END ThreadPosix.

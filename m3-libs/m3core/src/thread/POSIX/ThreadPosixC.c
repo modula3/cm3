@@ -22,11 +22,11 @@ extern "C" {
 
 #define ZeroMemory(address, size) (memset((address), 0, (size)))
 
-#define SignalHandler1 ThreadPosix__SignalHandler1
-#define setup_sigvtalrm ThreadPosix__setup_sigvtalrm
-#define allow_sigvtalrm ThreadPosix__allow_sigvtalrm
-#define disallow_sigvtalrm ThreadPosix__disallow_sigvtalrm
-#define InitC ThreadPosix__InitC
+#define SignalHandler1      ThreadPosix__SignalHandler1
+#define setup_sigvtalrm     ThreadPosix__setup_sigvtalrm
+#define allow_sigvtalrm     ThreadPosix__allow_sigvtalrm
+#define disallow_sigvtalrm  ThreadPosix__disallow_sigvtalrm
+#define InitC               ThreadPosix__InitC
 
 static sigset_t ThreadSwitchSignal;
 
@@ -53,6 +53,16 @@ void disallow_sigvtalrm(void)
 {
     int i = sigprocmask(SIG_BLOCK, &ThreadSwitchSignal, NULL);
     assert(i == 0);
+}
+
+void RTHooks__PushEFrame(void* frame)
+{
+    ThreadPosix__PushEFrame(frame);
+}
+
+void RTHooks__PopEFrame(void* frame)
+{
+    ThreadPosix__PopEFrame(frame);
 }
 
 void InitC(void)
