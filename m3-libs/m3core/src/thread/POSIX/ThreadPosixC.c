@@ -39,7 +39,7 @@ static sigset_t ThreadSwitchSignal;
 void setup_sigvtalrm(SignalHandler1 handler)
 {
     /* This should really use sigaction, right? */
-    void* old = signal(SIG_TIMESLICE, handler);
+    void (*old)(int) = signal(SIG_TIMESLICE, handler);
     assert(old != SIG_ERR);
 }
 
