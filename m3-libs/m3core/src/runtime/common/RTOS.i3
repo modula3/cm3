@@ -21,17 +21,21 @@ PROCEDURE Crash ();
 PROCEDURE GetMemory (size: INTEGER): ADDRESS;
 (* Return the address of "size" bytes of unused storage *)
 
+<* EXTERNAL RTOS__LockHeap*>
 PROCEDURE LockHeap ();
 (* Enters an allocator/collector critical section; the same thread may
    enter the critical section multiple times.  *)
 
+<* EXTERNAL RTOS__UnlockHeap*>
 PROCEDURE UnlockHeap ();
 (* Leaves the critical section.  *)
 
+<* EXTERNAL RTOS__BroadcastHeap*>
 PROCEDURE BroadcastHeap ();
 (* Restarts all threads that called "WaitHeap" sometime after the
    allocator/collector critical section is released. *)
 
+<* EXTERNAL RTOS__WaitHeap*>
 PROCEDURE WaitHeap ();
 (* Blocks the caller until "BroadcastHeap" has been called and
    the allocator/collector critical section is released.   The
