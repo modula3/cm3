@@ -10,8 +10,7 @@ IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError, RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched,
-       Uerror, Uexec, Scheduler, Cstdlib;
-FROM Upthread IMPORT pthread_t;
+       Uerror, Uexec, Cstdlib;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 IMPORT RuntimeError AS RTE;
@@ -62,32 +61,6 @@ REVEAL
 
     (* unique Id of this thread *)
     id: Id := 0;                        (* LL = mutex *)
-  END;
-
-TYPE
-  ActState = { Starting, Started, Stopping, Stopped };
-  Activation = RECORD
-    (* exception handling support *)
-    frame: ADDRESS := NIL;
-    (* global doubly-linked, circular list of all active threads *)
-    next, prev: UNTRACED REF Activation := NIL; (* LL = activeMu *)
-    (* thread handle *)
-    handle: pthread_t;                  (* LL = activeMu *)
-    (* base of thread stack for use by GC *)
-    stackbase: ADDRESS := NIL;          (* LL = activeMu *)
-    sp: ADDRESS := NIL;                 (* LL = activeMu *)
-    size: INTEGER;                      (* LL = activeMu *)
-
-    state := ActState.Started;          (* LL = activeMu *)
-
-    (* index into global array of active, slotted threads *)
-    slot: INTEGER;                      (* LL = slotMu *)
-
-    (* state that is available to the floating point routines *)
-    floatState : FloatMode.ThreadState;
-
-    (* state that is available to the heap routines *)
-    heapState : RTHeapRep.ThreadState;
   END;
 
 PROCEDURE SetState (act: UNTRACED REF Activation;  state: ActState) =
@@ -396,22 +369,6 @@ PROCEDURE InitActivations () =
     WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
   END InitActivations;
 
-PROCEDURE SetActivation (act: UNTRACED REF Activation) =
-  (* LL = 0 *)
-  VAR v: ADDRESS := act;
-  BEGIN
-    IF allThreads = NIL THEN InitActivations() END;
-    WITH r = pthread_setspecific_activations(v) DO <*ASSERT r=0*> END;
-  END SetActivation;
-
-PROCEDURE GetActivation (): UNTRACED REF Activation =
-  (* If not the initial thread and not created by Fork, returns NIL *)
-  (* LL = 0 *)
-  BEGIN
-    IF allThreads = NIL THEN InitActivations() END;
-    RETURN pthread_getspecific_activations();
-  END GetActivation;
-
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
@@ -515,9 +472,6 @@ PROCEDURE DumpThreads () =
   END DumpThreads;
 
 (*------------------------------------------------------------ Fork, Join ---*)
-
-VAR (* LL=activeMu *)
-  allThreads: UNTRACED REF Activation; (* global list of active threads *)
 
 PROCEDURE CreateT (act: UNTRACED REF Activation): T =
   (* LL = 0, because allocating a traced reference may cause
@@ -1448,87 +1402,6 @@ PROCEDURE XX (): ADDRESS =
   BEGIN
     RETURN ADR(xx);
   END XX;
-
-(*------------------------------------------------------------- collector ---*)
-(* These procedures provide synchronization primitives for the allocator
-   and collector. *)
-
-VAR
-  holder: ADDRESS;
-  inCritical := 0;
-
-PROCEDURE LockHeap () =
-  VAR me := GetActivation();
-  BEGIN
-    IF holder # me THEN
-      WITH r = pthread_mutex_lock_heap() DO <*ASSERT r=0*> END;
-      holder := me;
-    END;
-    INC(inCritical);
-  END LockHeap;
-
-PROCEDURE UnlockHeap () =
-  VAR me := GetActivation();
-  BEGIN
-    <*ASSERT holder = me*>
-    DEC(inCritical);
-    IF inCritical = 0 THEN
-      holder := NIL;
-      WITH r = pthread_mutex_unlock_heap() DO <*ASSERT r=0*> END;
-    END;
-  END UnlockHeap;
-
-PROCEDURE WaitHeap () =
-  VAR me := GetActivation();
-  BEGIN
-    <*ASSERT holder = me*>
-    DEC(inCritical);
-    <*ASSERT inCritical = 0*>
-    WITH r = pthread_cond_wait_heap() DO <*ASSERT r=0*> END;
-    holder := me;
-    <*ASSERT inCritical = 0*>
-    INC(inCritical);
-  END WaitHeap;
-
-PROCEDURE BroadcastHeap () =
-  BEGIN
-    WITH r = pthread_cond_broadcast_heap() DO <*ASSERT r=0*> END;
-  END BroadcastHeap;
-
-(*--------------------------------------------- exception handling support --*)
-
-PROCEDURE GetCurrentHandlers (): ADDRESS =
-  BEGIN
-    WITH me = GetActivation() DO
-      RETURN me.frame;
-    END;
-  END GetCurrentHandlers;
-
-PROCEDURE SetCurrentHandlers (h: ADDRESS) =
-  BEGIN
-    WITH me = GetActivation() DO
-      me.frame := h;
-    END;
-  END SetCurrentHandlers;
-
-(*RTHooks.PushEFrame*)
-PROCEDURE PushEFrame (frame: ADDRESS) =
-  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
-  VAR f: Frame := frame;
-  BEGIN
-    WITH me = GetActivation() DO
-      f.next := me.frame;
-      me.frame := f;
-    END;
-  END PushEFrame;
-
-(*RTHooks.PopEFrame*)
-PROCEDURE PopEFrame (frame: ADDRESS) =
-  BEGIN
-    WITH me = GetActivation() DO
-      me.frame := frame;
-    END;
-  END PopEFrame;
 
 VAR DEBUG := RTParams.IsPresent("debugthreads");
 

@@ -6,41 +6,23 @@
 (* See file COPYRIGHT-CMASS for details.                           *)
 
 UNSAFE MODULE ThreadWin32
-EXPORTS ThreadInternal, Scheduler, Thread, ThreadF, RTOS, RTHooks;
+EXPORTS ThreadWin32, ThreadInternal, Scheduler, Thread, ThreadF, RTHooks;
 
 IMPORT RTError, WinBase, WinDef, WinGDI, WinNT, RTParams;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
 IMPORT ThreadEvent, RTPerfTool, RTProcess;
 FROM Compiler IMPORT ThisFile, ThisLine;
+FROM WinNT IMPORT HANDLE;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
 
 VAR
-  cm := MyInitializeCriticalSection(ADR(cm_x)); (* read-only *)
-  cm_x: WinBase.CRITICAL_SECTION;
-    (* Global lock for internals of Mutex and Condition *)
-
   default_stack: WinDef.DWORD := 8192;
 
   nextId: Id := 1;
 
   threadMu: Mutex;
     (* Global lock for internal fields of Thread.T *)
-
-  activeMu := MyInitializeCriticalSection(ADR(activeMu_x));
-  activeMu_x: WinBase.CRITICAL_SECTION;
-    (* Global lock for list of active threads *)
-    (* It is illegal to touch *any* traced references while
-       holding activeMu because it is needed by SuspendOthers
-       which is called by the collector's page fault handler. *)
-
-  idleMu := MyInitializeCriticalSection(ADR(idleMu_x));
-  idleMu_x: WinBase.CRITICAL_SECTION;
-    (* Global lock for list of idle threads *)
-
-  slotMu := MyInitializeCriticalSection(ADR(slotMu_x));
-  slotMu_x: WinBase.CRITICAL_SECTION;
-    (* Global lock for thread slot table *)
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
@@ -74,7 +56,7 @@ REVEAL
         (* LL = cm; CV that we're blocked on *)
       nextWaiter: T := NIL;
         (* LL = cm; queue of threads waiting on the same CV *)
-      waitSema: WinNT.HANDLE := NIL;
+      waitSema: HANDLE := NIL;
         (* binary semaphore for blocking during "Wait" *)
       alertable: BOOLEAN := FALSE;
         (* LL = cm; distinguishes between "Wait" and "AlertWait" *)
@@ -87,37 +69,6 @@ REVEAL
       id: Id;
         (* LL = threadMu; unique ID of this thread *)
     END;
-
-TYPE
-  Activation = UNTRACED REF RECORD
-      next, prev: Activation := NIL;
-        (* LL = activeMu; global doubly-linked, circular list of all active threads *)
-      handle: WinNT.HANDLE := NIL;
-        (* LL = activeMu; thread handle in Windows *)
-      stackbase: ADDRESS := NIL;
-        (* LL = activeMu; base of thread stack for use by GC *)
-      slot: INTEGER;
-        (* LL = slotMu;  index into global array of active, slotted threads *)
-
-      (* thread state *)
-      heapState: RTHeapRep.ThreadState;
-    END;
-
-(* ---- initialization helpers -------------------------------------------- *)
-
-PROCEDURE MyTlsAlloc (): WinDef.DWORD =
-  BEGIN
-    WITH Index = WinBase.TlsAlloc() DO
-      IF Index = WinBase.TLS_OUT_OF_INDEXES THEN Choke(ThisLine()) END;
-      RETURN Index;
-    END;
-  END MyTlsAlloc;
-
-PROCEDURE MyInitializeCriticalSection (cs: WinBase.LPCRITICAL_SECTION): WinBase.LPCRITICAL_SECTION =
-  BEGIN
-    WinBase.InitializeCriticalSection(cs);
-    RETURN cs;
-  END MyInitializeCriticalSection;
 
 (*----------------------------------------------------------------- Mutex ---*)
          
@@ -362,10 +313,6 @@ PROCEDURE TestAlert(): BOOLEAN =
 
 (*------------------------------------------------------------------ Self ---*)
 
-VAR
-  threadIndex := MyTlsAlloc ();
-    (* read-only;  TLS (Thread Local Storage) index *)
-
 VAR (* LL = slotMu *)
   n_slotted := 0;
   next_slot := 1;
@@ -373,40 +320,21 @@ VAR (* LL = slotMu *)
 
 PROCEDURE InitActivations () =
   VAR
-    CurrentThread := WinBase.GetCurrentThread();
-    CurrentProcess := WinBase.GetCurrentProcess();
-    CurrentThreadHandle : WinNT.HANDLE;
     me := NEW(Activation);
   BEGIN
     IF WinBase.TlsSetValue(threadIndex, LOOPHOLE (me, WinDef.DWORD)) = 0 THEN
       Choke(ThisLine());
     END;
-    IF WinBase.DuplicateHandle(CurrentProcess, CurrentThread, CurrentProcess,
-                               LOOPHOLE(ADR(CurrentThreadHandle), WinNT.PHANDLE), 0,
-                               0, WinNT.DUPLICATE_SAME_ACCESS) = 0 THEN
+    IF WinBase.DuplicateHandle(WinBase.GetCurrentProcess(), WinBase.GetCurrentThread(),
+            WinBase.GetCurrentProcess(), ADR(me.handle), 0, 0,
+            WinNT.DUPLICATE_SAME_ACCESS) = 0 THEN
       Choke(ThisLine());
     END;
-    me.handle := CurrentThreadHandle;
     me.next := me;
     me.prev := me;
     <* ASSERT allThreads = NIL *>
     allThreads := me;
   END InitActivations;
-
-PROCEDURE SetActivation (act: Activation) =
-  (* LL = 0 *)
-  BEGIN
-    IF WinBase.TlsSetValue(threadIndex, LOOPHOLE (act, WinDef.DWORD)) = 0 THEN
-      Choke(ThisLine());
-    END;
-  END SetActivation;
-
-PROCEDURE GetActivation (): Activation =
-  (* If not the initial thread and not created by Fork, returns NIL *)
-  (* LL = 0 *)
-  BEGIN
-    RETURN LOOPHOLE (WinBase.TlsGetValue(threadIndex), Activation);
-  END GetActivation;
 
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
@@ -533,7 +461,7 @@ PROCEDURE CreateT (act: Activation): T =
 PROCEDURE ThreadBase (param: WinDef.LPVOID): WinDef.DWORD =
   VAR
     me       : Activation   := LOOPHOLE (param, Activation);
-    waitSema : WinNT.HANDLE := NIL;
+    waitSema : HANDLE := NIL;
   BEGIN
     SetActivation (me);
     (* We need to establish this binding before this thread touches any
@@ -555,7 +483,7 @@ PROCEDURE ThreadBase (param: WinDef.LPVOID): WinDef.DWORD =
     RETURN 0;
   END ThreadBase;
 
-PROCEDURE RunThread (me: Activation): WinNT.HANDLE =
+PROCEDURE RunThread (me: Activation): HANDLE =
   VAR self, next_self: T;  cl: Closure; res: REFANY;
   BEGIN
     WinBase.EnterCriticalSection (slotMu);
@@ -977,8 +905,6 @@ PROCEDURE Choke (lineno: INTEGER) =
 VAR
   perfW : RTPerfTool.Handle;
   (* perfOn: BOOLEAN := FALSE;                          (* LL = perfMu *) *)
-  perfMu := MyInitializeCriticalSection(ADR(perfMu_x)); (* read-only *)
-  perfMu_x: WinBase.CRITICAL_SECTION;
 
 PROCEDURE PerfStart () =
   BEGIN
@@ -1034,6 +960,8 @@ PROCEDURE Init() =
     self: T;
     me: Activation;
   BEGIN
+
+    InitC();
     InitActivations();
 
     me := GetActivation();
@@ -1088,22 +1016,7 @@ PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
    and collector. *)
 
 VAR
-  cs        := MyInitializeCriticalSection(ADR(csstorage)); (* read-only *)
-  csstorage : WinNT.RTL_CRITICAL_SECTION;
-  inCritical:= 0;      (* LL = cs *)
   heapCond: Condition;
-
-PROCEDURE LockHeap () =
-  BEGIN
-    WinBase.EnterCriticalSection(cs);
-    INC(inCritical);
-  END LockHeap;
-
-PROCEDURE UnlockHeap () =
-  BEGIN
-    DEC(inCritical);
-    WinBase.LeaveCriticalSection(cs);
-  END UnlockHeap;
 
 PROCEDURE WaitHeap () =
   VAR self := Self();
@@ -1133,36 +1046,6 @@ PROCEDURE BroadcastHeap () =
   BEGIN
     Broadcast(heapCond);
   END BroadcastHeap;
-
-(*--------------------------------------------- exception handling support --*)
-
-VAR handlersIndex := MyTlsAlloc ();
-  (* read-only *)
-
-PROCEDURE GetCurrentHandlers(): ADDRESS=
-  BEGIN
-    RETURN LOOPHOLE (WinBase.TlsGetValue(handlersIndex), ADDRESS);
-  END GetCurrentHandlers;
-
-PROCEDURE SetCurrentHandlers(h: ADDRESS)=
-  BEGIN
-    EVAL WinBase.TlsSetValue(handlersIndex, LOOPHOLE (h, WinDef.DWORD));
-  END SetCurrentHandlers;
-
-(*RTHooks.PushEFrame*)
-PROCEDURE PushEFrame (frame: ADDRESS) =
-  TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
-  VAR f := LOOPHOLE (frame, Frame);
-  BEGIN
-    f.next := LOOPHOLE (WinBase.TlsGetValue(handlersIndex), ADDRESS);
-    EVAL WinBase.TlsSetValue(handlersIndex, LOOPHOLE (f, WinDef.DWORD));
-  END PushEFrame;
-
-(*RTHooks.PopEFrame*)
-PROCEDURE PopEFrame (frame: ADDRESS) =
-  BEGIN
-    EVAL WinBase.TlsSetValue(handlersIndex, LOOPHOLE (frame, WinDef.DWORD));
-  END PopEFrame;
 
 BEGIN
 END ThreadWin32.
