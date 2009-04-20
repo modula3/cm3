@@ -119,9 +119,7 @@ and to prevent infinite recursion. *)
 PROCEDURE MemAlloc (size: INTEGER): ADDRESS =
   VAR res: ADDRESS;
   BEGIN
-    Scheduler.DisableSwitching();
     res := Cstdlib.calloc(1, size);
-    Scheduler.EnableSwitching();
     IF (res = NIL) THEN
       RAISE_RTE_E_RTE_T_OutOfMemory();
     END;
@@ -131,10 +129,8 @@ PROCEDURE MemAlloc (size: INTEGER): ADDRESS =
 PROCEDURE MemFree (VAR a: ADDRESS) =
   BEGIN
     IF a # NIL THEN
-      Scheduler.DisableSwitching();
       Cstdlib.free(a);
       a := NIL;
-      Scheduler.EnableSwitching();
     END;
   END MemFree;
 
