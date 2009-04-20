@@ -69,9 +69,14 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
         return ret_code
     end
 
+    local shared_option = ""
+    if shared and equal(C_COMPILER, "GNU")
+        shared_option = "-shared"
+    end
+
     if shared
         % then, build the shared library
-        ret_code = try_exec ("@" & SYSTEM_LD, "-shared", "-G", "-o",
+        ret_code = try_exec ("@" & SYSTEM_LD, shared_option, "-G", "-o",
                              lib_sox, "-h", lib_sox, objects,
                              imported_libs)
         if not equal (ret_code, 0)
