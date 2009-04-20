@@ -395,7 +395,9 @@ PROCEDURE Move (<*UNUSED*> self: Mover;  cp: ADDRESS) =
     hdr    : RefHeader;
     page   : RefPage;
   BEGIN
-    IF ref = NIL THEN RETURN; END;
+    IF ref = NIL THEN RETURN END;
+    (* ignore low-bit tagged pseudo-references *)
+    IF Word.And (LOOPHOLE(ref, Word.T), 1) # 0 THEN RETURN END;
 
     (* INLINE: hdr := HeaderOf(ref); *)
     hdr := LOOPHOLE(ref - ADRSIZE(Header), RefHeader);
@@ -467,6 +469,8 @@ PROCEDURE Moved (ref: RefReferent): BOOLEAN =
     page: RefPage;
   BEGIN
     IF ref = NIL THEN RETURN TRUE; END;
+    (* ignore low-bit tagged pseudo-references *)
+    IF Word.And (LOOPHOLE(ref, Word.T), 1) # 0 THEN RETURN TRUE END;
 
     (* INLINE: hdr := HeaderOf(ref); *)
     hdr := LOOPHOLE(ref - ADRSIZE(Header), RefHeader);

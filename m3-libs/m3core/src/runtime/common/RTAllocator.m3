@@ -214,6 +214,7 @@ PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
     CheckType(def, 1, TK.Ref);
     WITH res = AllocTraced(def, def.dataSize, def.dataAlignment, def.initProc) DO
       IF (callback # NIL) THEN callback (res) END;
+      <*ASSERT Word.And(LOOPHOLE(res, Word.T), 1) = 0*>
       RETURN res;
     END;
   END GetTracedRef;
@@ -227,6 +228,7 @@ PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
     CheckType(def, 1, TK.Obj);
     WITH res = AllocTraced(def, def.dataSize, def.dataAlignment, initProc) DO
       IF (callback # NIL) THEN callback (res) END;
+      <*ASSERT Word.And(LOOPHOLE(res, Word.T), 1) = 0*>
       RETURN res;
     END;
   END GetTracedObj;
