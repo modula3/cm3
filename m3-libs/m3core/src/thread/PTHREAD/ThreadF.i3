@@ -60,10 +60,10 @@ PROCEDURE MyId(): Id RAISES {};
 
 (*---------------------------------------------------- exception delivery ---*)
 
-PROCEDURE GetCurrentHandlers(): ADDRESS;
+<*EXTERNAL ThreadF__GetCurrentHandlers*>PROCEDURE GetCurrentHandlers(): ADDRESS;
 (* == RETURN Upthread.getspecific(handlersIndex) *)
 
-PROCEDURE SetCurrentHandlers(h: ADDRESS);
+<*EXTERNAL ThreadF__SetCurrentHandlers*>PROCEDURE SetCurrentHandlers(h: ADDRESS);
 (* == Upthread.setspecific(handlersIndex, h) *)
 
 PROCEDURE Init();
