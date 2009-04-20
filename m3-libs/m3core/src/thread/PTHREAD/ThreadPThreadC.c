@@ -96,28 +96,19 @@ void ThreadPThread__SetupHandlers(void)
     ZeroMemory(&act, sizeof(act));
     ZeroMemory(&oact, sizeof(oact));
 
-    r = sem_init(&ackSem, 0, 0);
-    assert(r == 0);
+    r = sem_init(&ackSem, 0, 0); assert(r == 0);
 
-    r = sigfillset(&mask);
-    assert(r == 0);
-    r = sigdelset(&mask, SIG_SUSPEND);
-    assert(r == 0);
-    r = sigdelset(&mask, SIGINT);
-    assert(r == 0);
-    r = sigdelset(&mask, SIGQUIT);
-    assert(r == 0);
-    r = sigdelset(&mask, SIGABRT);
-    assert(r == 0);
-    r = sigdelset(&mask, SIGTERM);
-    assert(r == 0);
+    r = sigfillset(&mask); assert(r == 0);
+    r = sigdelset(&mask, SIG_SUSPEND); assert(r == 0);
+    r = sigdelset(&mask, SIGINT); assert(r == 0);
+    r = sigdelset(&mask, SIGQUIT); assert(r == 0);
+    r = sigdelset(&mask, SIGABRT); assert(r == 0);
+    r = sigdelset(&mask, SIGTERM); assert(r == 0);
 
     act.sa_flags = SA_RESTART | SA_SIGINFO;
     act.sa_sigaction = SignalHandler;
-    r = sigfillset(&act.sa_mask);
-    assert(r == 0);
-    r = sigaction(SIG_SUSPEND, &act, &oact);
-    assert(r == 0);
+    r = sigfillset(&act.sa_mask); assert(r == 0);
+    r = sigaction(SIG_SUSPEND, &act, &oact); assert(r == 0);
 #endif
 }
 
@@ -184,8 +175,7 @@ ThreadPThread__thread_create(
 #endif
     assert(r == 0);
     
-    r = pthread_attr_getstacksize(&attr, &bytes);
-    assert(r == 0);
+    r = pthread_attr_getstacksize(&attr, &bytes); assert(r == 0);
 
     bytes = M3_MAX(bytes, stackSize);
     pthread_attr_setstacksize(&attr, bytes);
