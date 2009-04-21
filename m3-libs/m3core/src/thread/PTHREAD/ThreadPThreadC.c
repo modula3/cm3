@@ -8,7 +8,7 @@
 /* MacOSX diverges in a good way and therefore many functions
 in this file are just stubs for it, that other code dynamically choses
 not to call (statically, but the compiler can't or won't tell). */
-#define APPLE_ASSERT_FALSE assert(!"MacOS X should not get here.");
+#define APPLE_ASSERT_FALSE assert(0 && "MacOS X should not get here.");
 #else
 #include <signal.h>
 #include <semaphore.h>
@@ -34,8 +34,11 @@ not to call (statically, but the compiler can't or won't tell). */
 extern "C" {
 #endif
 
-
-#define SIG_SUSPEND ThreadPThread__SIG_SUSPEND
+#define SignalHandler           ThreadPThread__SignalHandler
+#define SetupHandlers           ThreadPThread__SetupHandlers
+#define sizeof_pthread_mutex_t  ThreadPThread__sizeof_pthread_mutex_t
+#define sizeof_pthread_cond_t   ThreadPThread__sizeof_pthread_cond_t
+#define SIG_SUSPEND             ThreadPThread__SIG_SUSPEND
  
 /* expected values for compat, if compat matters:
     Solaris: 17 (at least 32bit SPARC?)
@@ -50,19 +53,19 @@ extern "C" {
   SIG was shorthand.
 */
 #if defined(__APPLE__)
-const int SIG_SUSPEND = 0;
+EXTERN_CONST int SIG_SUSPEND = 0;
 #elif defined(__sun) || defined(__CYGWIN__) || defined(__FreeBSD__)
-const int SIG_SUSPEND = SIGUSR2;
+EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #elif defined(__linux)
-const int SIG_SUSPEND = NSIG - 1;
+EXTERN_CONST int SIG_SUSPEND = NSIG - 1;
 #elif defined(__hpux)
-const int SIG_SUSPEND = _SIGRTMAX;
+EXTERN_CONST int SIG_SUSPEND = _SIGRTMAX;
 #elif defined(SIGRTMAX)
 /* This might be a function call, in which case try _SIGRTMAX or
 initializing it somewhere. */
-const int SIG_SUSPEND = SIGRTMAX;
+EXTERN_CONST int SIG_SUSPEND = SIGRTMAX;
 #elif defined(SIGUSR2)
-const int SIG_SUSPEND = SIGUSR2;
+EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #else
 #error Unable to determine SIG_SUSPEND.
 #endif
@@ -73,8 +76,6 @@ const int SIG_SUSPEND = SIGUSR2;
 
 typedef struct sigaction sigaction_t;
 
-#define SignalHandler ThreadPThread__SignalHandler
-
 static sigset_t mask;
 
 /* Signal based suspend/resume */
@@ -82,13 +83,8 @@ static sem_t ackSem;
 
 void SignalHandler(int, siginfo_t*, void* /* ucontext_t* */);
 
-#endif /* Apple */
-
-void ThreadPThread__SetupHandlers(void)
+void SetupHandlers(void)
 {
-#ifdef __APPLE__
-    APPLE_ASSERT_FALSE
-#else
     sigaction_t act;
     sigaction_t oact;
     int r;
@@ -109,44 +105,22 @@ void ThreadPThread__SetupHandlers(void)
     act.sa_sigaction = SignalHandler;
     r = sigfillset(&act.sa_mask); assert(r == 0);
     r = sigaction(SIG_SUSPEND, &act, &oact); assert(r == 0);
-#endif
 }
 
-int ThreadPThread__sem_wait(void)
-{
-#ifdef __APPLE__
-    APPLE_ASSERT_FALSE
-#else
-    return sem_wait(&ackSem);
-#endif
-}
+int ThreadPThread__sem_wait(void)           { return sem_wait(&ackSem); }
+int ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
+int ThreadPThread__sem_getvalue(int* value) { return sem_getvalue(&ackSem, value); }
+int ThreadPThread__sigsuspend(void)         { return sigsuspend(&mask); }
 
-int ThreadPThread__sem_post(void)
-{
-#ifdef __APPLE__
-    APPLE_ASSERT_FALSE
-#else
-    return sem_post(&ackSem);
-#endif
-}
+#else /* Apple */
 
-int ThreadPThread__sem_getvalue(int* value)
-{
-#ifdef __APPLE__
-    APPLE_ASSERT_FALSE
-#else
-    return sem_getvalue(&ackSem, value);
-#endif
-}
+void SetupHandlers(void)                { APPLE_ASSERT_FALSE }
+void ThreadPThread__sem_wait(void)      { APPLE_ASSERT_FALSE }
+void ThreadPThread__sem_post(void)      { APPLE_ASSERT_FALSE }
+void ThreadPThread__sem_getvalue(void)  { APPLE_ASSERT_FALSE }
+void ThreadPThread__sigsuspend(void)    { APPLE_ASSERT_FALSE }
 
-int ThreadPThread__sigsuspend(void)
-{
-#ifdef __APPLE__
-    APPLE_ASSERT_FALSE
-#else
-    return sigsuspend(&mask);
-#endif
-}
+#endif /* Apple */
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
 typedef void* (*start_routine_t)(void*);
@@ -189,16 +163,12 @@ ThreadPThread__thread_create(
 
 #define MUTEX(name) \
 static pthread_mutex_t name##Mu = PTHREAD_MUTEX_INITIALIZER; \
-int \
-ThreadPThread__pthread_mutex_lock_##name( \
-    void) \
+int ThreadPThread__pthread_mutex_lock_##name(void) \
 { \
     return pthread_mutex_lock(&name##Mu); \
 } \
  \
-int \
-ThreadPThread__pthread_mutex_unlock_##name( \
-    void) \
+int ThreadPThread__pthread_mutex_unlock_##name(void) \
 { \
     return pthread_mutex_unlock(&name##Mu); \
 } \
@@ -206,16 +176,12 @@ ThreadPThread__pthread_mutex_unlock_##name( \
 
 #define CONDITION_VARIABLE(name) \
 static pthread_cond_t name##Cond = PTHREAD_COND_INITIALIZER; \
-int \
-ThreadPThread__pthread_cond_broadcast_##name( \
-    void) \
+int ThreadPThread__pthread_cond_broadcast_##name(void) \
 { \
     return pthread_cond_broadcast(&name##Cond); \
 } \
  \
-int \
-ThreadPThread__pthread_cond_wait_##name( \
-    void) \
+int ThreadPThread__pthread_cond_wait_##name(void) \
 { \
     return pthread_cond_wait(&name##Cond, &name##Mu); \
 } \
@@ -246,11 +212,8 @@ MUTEX(heap)
 CONDITION_VARIABLE(heap)
 THREAD_LOCAL(activations)
 
-EXTERN_CONST
-int ThreadPThread__sizeof_pthread_mutex_t = sizeof(pthread_mutex_t);
-
-EXTERN_CONST
-int ThreadPThread__sizeof_pthread_cond_t = sizeof(pthread_cond_t);
+EXTERN_CONST int sizeof_pthread_mutex_t = sizeof(pthread_mutex_t);
+EXTERN_CONST int sizeof_pthread_cond_t = sizeof(pthread_cond_t);
 
 int
 ThreadPThread__pthread_mutex_destroy(
