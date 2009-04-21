@@ -64,58 +64,6 @@ REVEAL
     id: Id := 0;                        (* LL = mutex *)
   END;
 
- TYPE   
-   ActState = { Starting, Started, Stopping, Stopped };   
-   Activation = RECORD   
-     (* exception handling support *)   
-     frame: ADDRESS := NIL;   
-     (* global doubly-linked, circular list of all active threads *)   
-     next, prev: UNTRACED REF Activation := NIL; (* LL = activeMu *)   
-     (* thread handle *)   
-     handle: pthread_t;                  (* LL = activeMu *)   
-     (* base of thread stack for use by GC *)   
-     stackbase: ADDRESS := NIL;          (* LL = activeMu *)   
-     sp: ADDRESS := NIL;                 (* LL = activeMu *)   
-     size: INTEGER;                      (* LL = activeMu *)   
-    
-     state := ActState.Started;          (* LL = activeMu *)   
-    
-     (* index into global array of active, slotted threads *)   
-     slot: INTEGER;                      (* LL = slotMu *)   
-    
-     (* state that is available to the floating point routines *)   
-     floatState : FloatMode.ThreadState;   
-    
-     (* state that is available to the heap routines *)   
-     heapState : RTHeapRep.ThreadState;   
-   END; 
-
-TYPE
-  ActState = { Starting, Started, Stopping, Stopped };
-  Activation = RECORD
-    (* exception handling support *)
-    frame: ADDRESS := NIL;
-    (* global doubly-linked, circular list of all active threads *)
-    next, prev: UNTRACED REF Activation := NIL; (* LL = activeMu *)
-    (* thread handle *)
-    handle: pthread_t;                  (* LL = activeMu *)
-    (* base of thread stack for use by GC *)
-    stackbase: ADDRESS := NIL;          (* LL = activeMu *)
-    sp: ADDRESS := NIL;                 (* LL = activeMu *)
-    size: INTEGER;                      (* LL = activeMu *)
-
-    state := ActState.Started;          (* LL = activeMu *)
-
-    (* index into global array of active, slotted threads *)
-    slot: INTEGER;                      (* LL = slotMu *)
-
-    (* state that is available to the floating point routines *)
-    floatState : FloatMode.ThreadState;
-
-    (* state that is available to the heap routines *)
-    heapState : RTHeapRep.ThreadState;
-  END;
-
 TYPE
   ActState = { Starting, Started, Stopping, Stopped };
   Activation = RECORD
