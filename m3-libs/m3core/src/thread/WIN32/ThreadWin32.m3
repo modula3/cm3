@@ -405,7 +405,7 @@ PROCEDURE MemAlloc (size: INTEGER): ADDRESS =
 (*------------------------------------------------------------------ Self ---*)
 
 VAR
-  threadIndex: DWORD;
+  threadIndex: DWORD := TLS_OUT_OF_INDEXES;
     (* read-only;  TLS (Thread Local Storage) index *)
 
 VAR (* LL = slotMu *)
@@ -414,9 +414,8 @@ VAR (* LL = slotMu *)
   slots     : REF ARRAY OF T;  (* NOTE: we don't use slots[0]. *)
 
 PROCEDURE InitActivations () =
-  VAR
-    me: Activation := MemAlloc(BYTESIZE(ActivationRecord));
-    init: ActivationRecord;
+  VAR me: Activation := MemAlloc(BYTESIZE(ActivationRecord));
+      init: ActivationRecord;
   BEGIN
     threadIndex := MyTlsAlloc ();
     MyInitializeCriticalSection(activeMu);
@@ -447,6 +446,13 @@ PROCEDURE SetActivation (act: Activation) =
     END;
   END SetActivation;
 
+PROCEDURE GetActivationUnsafeFast (): Activation =
+  (* Must be initialized. *)
+  (* LL = 0 *)
+  BEGIN
+    RETURN LOOPHOLE (TlsGetValue(threadIndex), Activation);
+  END GetActivationUnsafeFast;
+
 PROCEDURE GetActivation (): Activation =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
@@ -458,12 +464,14 @@ PROCEDURE GetActivation (): Activation =
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
-  VAR
-    me := LOOPHOLE (TlsGetValue(threadIndex), Activation);
-    (** me := GetActivation(); **)
-    t: T;
+  VAR me: Activation;
+      t: T;
   BEGIN
-    IF (me = NIL) THEN RETURN NIL; END;
+    IF threadIndex = TLS_OUT_OF_INDEXES THEN RETURN NIL; END;
+    (** me := GetActivation(); **)
+    me := LOOPHOLE (TlsGetValue(threadIndex), Activation);
+    IF me = NIL THEN RETURN NIL; END;
+
     MyEnterCriticalSection (slotMu);
       t := slots[me.slot];
     MyLeaveCriticalSection (slotMu);
@@ -1200,7 +1208,7 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
 (*RTHooks.PopEFrame*)
 PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
-    GetActivation().frame := frame;
+    GetActivationUnsafeFast().frame := frame;
   END PopEFrame;
 
 BEGIN

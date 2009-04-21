@@ -404,6 +404,13 @@ PROCEDURE SetActivation (act: UNTRACED REF Activation) =
     WITH r = pthread_setspecific_activations(v) DO <*ASSERT r=0*> END;
   END SetActivation;
 
+PROCEDURE GetActivationUnsafeFast (): UNTRACED REF Activation =
+  (* Must be initialized. *)
+  (* LL = 0 *)
+  BEGIN
+    RETURN pthread_getspecific_activations();
+  END GetActivationUnsafeFast;
+
 PROCEDURE GetActivation (): UNTRACED REF Activation =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
@@ -415,11 +422,14 @@ PROCEDURE GetActivation (): UNTRACED REF Activation =
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
-  VAR
-    me := GetActivation();
-    t: T;
+  VAR me: UNTRACED REF Activation;
+      t: T;
   BEGIN
+    IF allThreads = NIL THEN RETURN NIL END;
+    (* me := GetActivation(); *)
+    me := pthread_getspecific_activations();
     IF me = NIL THEN RETURN NIL END;
+
     WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
       t := slots[me.slot];
     WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
@@ -1525,7 +1535,7 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
 (*RTHooks.PopEFrame*)
 PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
-    WITH me = GetActivation() DO
+    WITH me = GetActivationUnsafeFast() DO
       me.frame := frame;
     END;
   END PopEFrame;
