@@ -46,11 +46,9 @@ PROCEDURE MyId (): Id RAISES {};
 
 (*---------------------------------------------------- exception delivery ---*)
 
-<*EXTERNAL ThreadF__GetCurrentHandlers*>
 PROCEDURE GetCurrentHandlers(): ADDRESS;
 (* == RETURN WinBase.TlsGetValue(handlersIndex) *)
 
-<*EXTERNAL ThreadF__SetCurrentHandlers*>
 PROCEDURE SetCurrentHandlers(h: ADDRESS);
 (* == WinBase.TlsSetValue(handlersIndex, h) *)
 

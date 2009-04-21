@@ -55,16 +55,6 @@ void disallow_sigvtalrm(void)
     assert(i == 0);
 }
 
-void RTHooks__PushEFrame(void* frame)
-{
-    ThreadPosix__PushEFrame(frame);
-}
-
-void RTHooks__PopEFrame(void* frame)
-{
-    ThreadPosix__PopEFrame(frame);
-}
-
 void InitC(void)
 {
     int i = sigemptyset(&ThreadSwitchSignal);
