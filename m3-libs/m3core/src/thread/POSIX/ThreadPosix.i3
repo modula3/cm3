@@ -18,10 +18,10 @@ PROCEDURE allow_sigvtalrm();
 <*EXTERNAL ThreadPosix__disallow_sigvtalrm*>
 PROCEDURE disallow_sigvtalrm();
 
-(* There is already ThreadF.Init exported by the same module that exports this interface,
-   so we chose an arbitrary different name here. *)
 <*EXTERNAL ThreadPosix__InitC*>
 PROCEDURE InitC();
+(* There is already ThreadF.Init exported by the same module that exports this
+   interface, so we chose an arbitrary different name here. *)
 
 PROCEDURE PushEFrame (frame: ADDRESS);
 PROCEDURE PopEFrame (frame: ADDRESS);
