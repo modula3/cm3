@@ -292,22 +292,21 @@ PROCEDURE Alert(t: T) =
   END Alert;
 
 PROCEDURE XTestAlert (self: T): BOOLEAN =
-     VAR result: BOOLEAN;
-   BEGIN
-       WinBase.EnterCriticalSection(cm);
-       result := self.alerted; IF result THEN self.alerted := FALSE END;
-       WinBase.LeaveCriticalSection(cm);
-       RETURN result;
-   END XTestAlert;
+  VAR result: BOOLEAN;
+  BEGIN
+    WinBase.EnterCriticalSection(cm);
+    result := self.alerted; IF result THEN self.alerted := FALSE END;
+    WinBase.LeaveCriticalSection(cm);
+    RETURN result;
+  END XTestAlert;
 
 PROCEDURE TestAlert(): BOOLEAN =
-    VAR self := Self();
+  VAR self := Self();
   BEGIN
-    IF self = NIL THEN
+    IF self = NIL
       (* Not created by Fork; not alertable *)
-      RETURN FALSE
-    ELSE
-      RETURN XTestAlert(self);
+      THEN RETURN FALSE
+      ELSE RETURN XTestAlert(self);
     END;
   END TestAlert;
 
@@ -325,9 +324,11 @@ PROCEDURE InitActivations () =
     IF WinBase.TlsSetValue(threadIndex, LOOPHOLE (me, WinDef.DWORD)) = 0 THEN
       Choke(ThisLine());
     END;
-    IF WinBase.DuplicateHandle(WinBase.GetCurrentProcess(), WinBase.GetCurrentThread(),
-            WinBase.GetCurrentProcess(), ADR(me.handle), 0, 0,
-            WinNT.DUPLICATE_SAME_ACCESS) = 0 THEN
+    IF WinBase.DuplicateHandle(WinBase.GetCurrentProcess(),
+                               WinBase.GetCurrentThread(),
+                               WinBase.GetCurrentProcess(),
+                               ADR(me.handle), 0, 0,
+                               WinNT.DUPLICATE_SAME_ACCESS) = 0 THEN
       Choke(ThisLine());
     END;
     me.next := me;
@@ -960,7 +961,6 @@ PROCEDURE Init() =
     self: T;
     me: Activation;
   BEGIN
-
     InitC();
     InitActivations();
 
@@ -1015,8 +1015,7 @@ PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
 (* These procedures provide synchronization primitives for the allocator
    and collector. *)
 
-VAR
-  heapCond: Condition;
+VAR heapCond: Condition;
 
 PROCEDURE WaitHeap () =
   VAR self := Self();
