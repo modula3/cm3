@@ -47,8 +47,8 @@ PROCEDURE SignalHandler(sig: int; sip, uap: ADDRESS);
 
 (*---------------------------------------------------------------------------*)
 
-(*CONST*)
-<*EXTERNAL "ThreadPThread__SIG_SUSPEND"*>VAR SIG_SUSPEND: int;
+<*EXTERNAL "ThreadPThread__SIG_SUSPEND"*>
+(*CONST*) VAR SIG_SUSPEND: int;
 
 (*---------------------------------------------------------------------------*)
 
