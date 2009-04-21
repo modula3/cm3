@@ -192,7 +192,8 @@ PROCEDURE SetActivation (act: UNTRACED REF Activation);
 (*------------------------------------------------------------ Fork, Join ---*)
 
 (* LL=activeMu *)
-<*EXTERNAL ThreadPThread__allThreads*> VAR allThreads: UNTRACED REF Activation; (* global list of active threads *)
+<*EXTERNAL ThreadPThread__allThreads*>
+VAR allThreads: UNTRACED REF Activation; (* global list of active threads *)
 
 (*---------------------------------------------------------------------------*)
 
