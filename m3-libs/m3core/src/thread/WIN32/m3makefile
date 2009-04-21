@@ -4,8 +4,9 @@
 
 Interface ("ThreadF")
 Interface ("ThreadContext")
-implementation ("ThreadWin32")
+module ("ThreadWin32")
 interface("ThreadInternal")
+c_source("ThreadWin32C")
 
 if equal (OS_TYPE, "POSIX")   
     implementation("SchedulerPosix")   

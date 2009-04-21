@@ -6,64 +6,30 @@
 (* See file COPYRIGHT-CMASS for details.                           *)
 
 UNSAFE MODULE ThreadWin32
-EXPORTS ThreadInternal, Scheduler, Thread, ThreadF, RTOS, RTHooks;
+EXPORTS ThreadWin32, ThreadInternal, Scheduler, Thread, ThreadF, RTOS, RTHooks;
 
 IMPORT RTError, WinGDI, RTParams;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
 IMPORT ThreadEvent, RTPerfTool, RTProcess;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Cstdlib IMPORT calloc;
+IMPORT RuntimeError AS RTE;
 FROM WinNT IMPORT HANDLE, LONG, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
     MEMORY_BASIC_INFORMATION, PAGE_READWRITE, PAGE_READONLY;
-IMPORT RuntimeError AS RTE;
-FROM WinBase IMPORT CRITICAL_SECTION, InitializeCriticalSection,
-    EnterCriticalSection, LeaveCriticalSection, TlsAlloc, TLS_OUT_OF_INDEXES,
-    WaitForSingleObject, INFINITE, ReleaseSemaphore, TlsGetValue, TlsSetValue,
+FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     GetCurrentProcess, DuplicateHandle, GetCurrentThread, CreateSemaphore,
     CloseHandle, CreateThread, ResumeThread, Sleep, SuspendThread,
     GetThreadContext, VirtualQuery, GetLastError, CREATE_SUSPENDED;
 
-(*---------------------------------------------------------------------------*)
-
-PROCEDURE MyInitializeCriticalSection(VAR cs: CRITICAL_SECTION)=
-BEGIN
-    InitializeCriticalSection(ADR(cs));
-END MyInitializeCriticalSection;
-
-PROCEDURE MyEnterCriticalSection(VAR cs: CRITICAL_SECTION)=
-BEGIN
-    EnterCriticalSection(ADR(cs));
-END MyEnterCriticalSection;
-
-PROCEDURE MyLeaveCriticalSection(VAR cs: CRITICAL_SECTION)=
-BEGIN
-    LeaveCriticalSection(ADR(cs));
-END MyLeaveCriticalSection;
-
 (*----------------------------------------- Exceptions, types and globals ---*)
 
 VAR
-  cm: CRITICAL_SECTION;
-    (* Global lock for internals of Mutex and Condition *)
-
   default_stack: DWORD := 8192;
 
   nextId: Id := 1;
 
   threadMu: Mutex;
     (* Global lock for internal fields of Thread.T *)
-
-  activeMu: CRITICAL_SECTION;
-    (* Global lock for list of active threads *)
-    (* It is illegal to touch *any* traced references while
-       holding activeMu because it is needed by SuspendOthers
-       which is called by the collector's page fault handler. *)
-
-  idleMu: CRITICAL_SECTION;
-    (* Global lock for list of idle threads *)
-
-  slotMu: CRITICAL_SECTION;
-    (* Global lock for thread slot table *)
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
@@ -129,16 +95,6 @@ TYPE
       heapState: RTHeapRep.ThreadState;
     END;
 
-(* ---- initialization helpers -------------------------------------------- *)
-
-PROCEDURE MyTlsAlloc (): DWORD =
-  BEGIN
-    WITH Index = TlsAlloc() DO
-      IF Index = TLS_OUT_OF_INDEXES THEN Choke(ThisLine()) END;
-      RETURN Index;
-    END;
-  END MyTlsAlloc;
-
 (*----------------------------------------------------------------- Mutex ---*)
          
 PROCEDURE Acquire (m: Mutex) =
@@ -157,7 +113,7 @@ PROCEDURE LockMutex (m: Mutex) =
     IF self = NIL THEN Die(ThisLine(), "LockMutex called from non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(self.id, State.locking) END;
 
-    MyEnterCriticalSection(cm);
+    EnterCriticalSection_cm();
 
       self.alertable := FALSE;
       IF (m.holder = NIL) THEN
@@ -179,7 +135,7 @@ PROCEDURE LockMutex (m: Mutex) =
         END;
       END;
 
-    MyLeaveCriticalSection(cm);
+    LeaveCriticalSection_cm();
 
     IF wait THEN
       (* I didn't get the mutex, I need to wait for my turn... *)
@@ -196,7 +152,7 @@ PROCEDURE UnlockMutex(m: Mutex) =
   VAR self := Self();  prevCount: LONG;  next: T;
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "UnlockMutex called from non-Modula-3 thread") END;
-    MyEnterCriticalSection(cm);
+    EnterCriticalSection_cm();
 
       (* Make sure I'm allowed to release this mutex. *)
       IF m.holder = self THEN
@@ -220,13 +176,13 @@ PROCEDURE UnlockMutex(m: Mutex) =
         END;
       END;
 
-    MyLeaveCriticalSection(cm);
+    LeaveCriticalSection_cm();
   END UnlockMutex;
 
 (**********
 PROCEDURE DumpSlots () =
   VAR
-    me := LOOPHOLE (TlsGetValue(threadIndex), Activation);
+    me := LOOPHOLE (TlsGetValue_threadIndex(), Activation);
   BEGIN
     RTIO.PutText ("me = ");
     RTIO.PutAddr (me);
@@ -256,7 +212,7 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
     self.waitingOn := c;
     self.nextWaiter := c.waiters;
     c.waiters := self;
-    MyLeaveCriticalSection(cm);
+    LeaveCriticalSection_cm();
     UnlockMutex(m);
     IF WaitForSingleObject(self.waitSema, INFINITE) # 0 THEN
       Choke(ThisLine());
@@ -271,7 +227,7 @@ PROCEDURE InnerTestAlert(self: T) RAISES {Alerted} =
   BEGIN
     IF self.alerted THEN
       self.alerted := FALSE;
-      MyLeaveCriticalSection(cm);
+      LeaveCriticalSection_cm();
       RAISE Alerted
     END;
   END InnerTestAlert;
@@ -282,13 +238,13 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(self.id, State.waiting) END;
-    MyEnterCriticalSection(cm);
+    EnterCriticalSection_cm();
     InnerTestAlert(self);
     self.alertable := TRUE;
     InnerWait(m, c, self);
-    MyEnterCriticalSection(cm);
+    EnterCriticalSection_cm();
     InnerTestAlert(self);
-    MyLeaveCriticalSection(cm);
+    LeaveCriticalSection_cm();
     IF perfOn THEN PerfChanged(self.id, State.alive) END;
   END AlertWait;
 
@@ -298,7 +254,7 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(self.id, State.waiting) END;
-    MyEnterCriticalSection(cm);
+    EnterCriticalSection_cm();
     InnerWait(m, c, self);
     IF perfOn THEN PerfChanged(self.id, State.alive) END;
   END Wait;
@@ -318,23 +274,23 @@ PROCEDURE DequeueHead(c: Condition) =
 
 PROCEDURE Signal (c: Condition) =
   BEGIN
-    MyEnterCriticalSection(cm);
+    EnterCriticalSection_cm();
     IF c.waiters # NIL THEN DequeueHead(c) END;
-    MyLeaveCriticalSection(cm);
+    LeaveCriticalSection_cm();
   END Signal;
 
 PROCEDURE Broadcast (c: Condition) =
   BEGIN
-    MyEnterCriticalSection(cm);
+    EnterCriticalSection_cm();
     WHILE c.waiters # NIL DO DequeueHead(c) END;
-    MyLeaveCriticalSection(cm);
+    LeaveCriticalSection_cm();
   END Broadcast;
 
 PROCEDURE Alert(t: T) =
     VAR prevCount: LONG; prev, next: T;
   BEGIN
     IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
-    MyEnterCriticalSection(cm);
+    EnterCriticalSection_cm();
     t.alerted := TRUE;
     IF t.alertable THEN
       (* Dequeue from any CV and unblock from the semaphore *)
@@ -357,15 +313,15 @@ PROCEDURE Alert(t: T) =
         Choke(ThisLine());
       END;
     END;
-    MyLeaveCriticalSection(cm);
+    LeaveCriticalSection_cm();
   END Alert;
 
 PROCEDURE XTestAlert (self: T): BOOLEAN =
      VAR result: BOOLEAN;
    BEGIN
-       MyEnterCriticalSection(cm);
+       EnterCriticalSection_cm();
        result := self.alerted; IF result THEN self.alerted := FALSE END;
-       MyLeaveCriticalSection(cm);
+       LeaveCriticalSection_cm();
        RETURN result;
    END XTestAlert;
 
@@ -404,10 +360,6 @@ PROCEDURE MemAlloc (size: INTEGER): ADDRESS =
 
 (*------------------------------------------------------------------ Self ---*)
 
-VAR
-  threadIndex: DWORD := TLS_OUT_OF_INDEXES;
-    (* read-only;  TLS (Thread Local Storage) index *)
-
 VAR (* LL = slotMu *)
   n_slotted := 0;
   next_slot := 1;
@@ -417,15 +369,9 @@ PROCEDURE InitActivations () =
   VAR me: Activation := MemAlloc(BYTESIZE(ActivationRecord));
       init: ActivationRecord;
   BEGIN
-    threadIndex := MyTlsAlloc ();
-    MyInitializeCriticalSection(activeMu);
-    MyInitializeCriticalSection(cm);
-    MyInitializeCriticalSection(cs);
-    MyInitializeCriticalSection(idleMu);
-    MyInitializeCriticalSection(perfMu);
-    MyInitializeCriticalSection(slotMu);
+    InitC();
     me^ := init;
-    IF TlsSetValue(threadIndex, LOOPHOLE (me, SIZE_T)) = 0 THEN
+    IF TlsSetValue_threadIndex(LOOPHOLE (me, SIZE_T)) = 0 THEN
       Choke(ThisLine());
     END;
     IF DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
@@ -441,7 +387,7 @@ PROCEDURE InitActivations () =
 PROCEDURE SetActivation (act: Activation) =
   (* LL = 0 *)
   BEGIN
-    IF TlsSetValue(threadIndex, LOOPHOLE (act, SIZE_T)) = 0 THEN
+    IF TlsSetValue_threadIndex(LOOPHOLE (act, SIZE_T)) = 0 THEN
       Choke(ThisLine());
     END;
   END SetActivation;
@@ -450,7 +396,7 @@ PROCEDURE GetActivationUnsafeFast (): Activation =
   (* Must be initialized. *)
   (* LL = 0 *)
   BEGIN
-    RETURN LOOPHOLE (TlsGetValue(threadIndex), Activation);
+    RETURN LOOPHOLE (TlsGetValue_threadIndex(), Activation);
   END GetActivationUnsafeFast;
 
 PROCEDURE GetActivation (): Activation =
@@ -458,7 +404,7 @@ PROCEDURE GetActivation (): Activation =
   (* LL = 0 *)
   BEGIN
     IF allThreads = NIL THEN InitActivations() END;
-    RETURN LOOPHOLE (TlsGetValue(threadIndex), Activation);
+    RETURN LOOPHOLE (TlsGetValue_threadIndex(), Activation);
   END GetActivation;
 
 PROCEDURE Self (): T =
@@ -467,14 +413,13 @@ PROCEDURE Self (): T =
   VAR me: Activation;
       t: T;
   BEGIN
-    IF threadIndex = TLS_OUT_OF_INDEXES THEN RETURN NIL; END;
     (** me := GetActivation(); **)
-    me := LOOPHOLE (TlsGetValue(threadIndex), Activation);
+    me := LOOPHOLE (TlsGetValue_threadIndex(), Activation);
     IF me = NIL THEN RETURN NIL; END;
 
-    MyEnterCriticalSection (slotMu);
+    EnterCriticalSection_slotMu();
       t := slots[me.slot];
-    MyLeaveCriticalSection (slotMu);
+    LeaveCriticalSection_slotMu();
     IF (t.act # me) THEN Die (ThisLine(), "thread with bad slot!"); END;
     RETURN t;
   END Self;
@@ -483,19 +428,19 @@ PROCEDURE AssignSlot (t: T) =
   (* LL = 0, cause we allocate stuff with NEW! *)
   VAR n: CARDINAL;  new_slots: REF ARRAY OF T;
   BEGIN
-    MyEnterCriticalSection(slotMu);
+    EnterCriticalSection_slotMu();
 
       (* make sure we have room to register this guy *)
       IF (slots = NIL) THEN
-        MyLeaveCriticalSection(slotMu);
+        LeaveCriticalSection_slotMu();
           slots := NEW (REF ARRAY OF T, 20);
-        MyEnterCriticalSection(slotMu);
+        EnterCriticalSection_slotMu();
       END;
       IF (n_slotted >= LAST (slots^)) THEN
         n := NUMBER (slots^);
-        MyLeaveCriticalSection(slotMu);
+        LeaveCriticalSection_slotMu();
           new_slots := NEW (REF ARRAY OF T, n+n);
-        MyEnterCriticalSection(slotMu);
+        EnterCriticalSection_slotMu();
         IF (n = NUMBER (slots^)) THEN
           (* we won any races that may have occurred. *)
           SUBARRAY (new_slots^, 0, n) := slots^;
@@ -505,7 +450,7 @@ PROCEDURE AssignSlot (t: T) =
              and the new table has room for us. *)
         ELSE
           (* ouch, the new table is full too!   Bail out and retry *)
-          MyLeaveCriticalSection(slotMu);
+          LeaveCriticalSection_slotMu();
           AssignSlot (t);
         END;
       END;
@@ -520,13 +465,13 @@ PROCEDURE AssignSlot (t: T) =
       t.act.slot := next_slot;
       slots [next_slot] := t;
 
-    MyLeaveCriticalSection(slotMu);
+    LeaveCriticalSection_slotMu();
   END AssignSlot;
 
 PROCEDURE FreeSlot (t: T) =
   (* LL = 0 *)
   BEGIN
-    MyEnterCriticalSection(slotMu);
+    EnterCriticalSection_slotMu();
     
       DEC (n_slotted);
       WITH z = slots [t.act.slot] DO
@@ -535,7 +480,7 @@ PROCEDURE FreeSlot (t: T) =
       END;
       t.act.slot := 0;
 
-    MyLeaveCriticalSection(slotMu);
+    LeaveCriticalSection_slotMu();
   END FreeSlot;
 
 PROCEDURE CheckSlot (t: T) =
@@ -544,9 +489,9 @@ PROCEDURE CheckSlot (t: T) =
   BEGIN
     <*ASSERT me # NIL *>
     <*ASSERT me.slot > 0 *>
-    MyEnterCriticalSection(slotMu);
+    EnterCriticalSection_slotMu();
        <*ASSERT slots[me.slot] = t *>
-    MyLeaveCriticalSection(slotMu);
+    LeaveCriticalSection_slotMu();
   END CheckSlot;
 
 (*------------------------------------------------------------ Fork, Join ---*)
@@ -614,9 +559,9 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 PROCEDURE RunThread (me: Activation): HANDLE =
   VAR self, next_self: T;  cl: Closure; res: REFANY;
   BEGIN
-    MyEnterCriticalSection (slotMu);
+    EnterCriticalSection_slotMu();
       self := slots [me.slot];
-    MyLeaveCriticalSection (slotMu);
+    LeaveCriticalSection_slotMu();
 
     LOCK threadMu DO
       cl := self.closure;
@@ -644,9 +589,9 @@ PROCEDURE RunThread (me: Activation): HANDLE =
       next_self.cond     := self.cond;
 
       (* hijack "self"s entry in the slot table *)
-      MyEnterCriticalSection (slotMu);
+      EnterCriticalSection_slotMu();
         slots[me.slot] := next_self;
-      MyLeaveCriticalSection (slotMu);
+      LeaveCriticalSection_slotMu();
     END;
 
     LOCK threadMu DO
@@ -662,11 +607,11 @@ PROCEDURE RunThread (me: Activation): HANDLE =
     IF next_self # NIL THEN
       (* we're going to be reborn! *)
       (* put "next_self" on the list of idle threads *)
-      MyEnterCriticalSection(idleMu);
+      EnterCriticalSection_idleMu();
         next_self.nextIdle := idleThreads;
         idleThreads := next_self;
         INC(nIdle);
-      MyLeaveCriticalSection(idleMu);
+      LeaveCriticalSection_idleMu();
       (* let the rebirth loop in ThreadBase know where to wait... *)
       RETURN next_self.waitSema;
     ELSE
@@ -680,7 +625,7 @@ PROCEDURE RunThread (me: Activation): HANDLE =
       (* Since we're no longer slotted, we cannot touch traced refs. *)
 
       (* remove ourself from the list of active threads *)
-      MyEnterCriticalSection(activeMu);
+      LeaveCriticalSection_activeMu();
         IF allThreads = me THEN allThreads := me.next; END;
         me.next.prev := me.prev;
         me.prev.next := me.next;
@@ -688,7 +633,7 @@ PROCEDURE RunThread (me: Activation): HANDLE =
         me.prev := NIL;
         IF CloseHandle(me.handle) = 0 THEN Choke(ThisLine()) END;
         me.handle := NIL;
-      MyLeaveCriticalSection(activeMu);
+      LeaveCriticalSection_activeMu();
 
       RETURN NIL; (* let the rebirth loop know we're dying. *)
     END;
@@ -712,7 +657,7 @@ PROCEDURE Fork(closure: Closure): T =
     END;
 
     (* try the cache for a thread *)
-    MyEnterCriticalSection(idleMu);
+    EnterCriticalSection_idleMu();
       IF nIdle > 0 THEN
         new_born := FALSE;
         <* ASSERT(idleThreads # NIL) *>
@@ -722,20 +667,20 @@ PROCEDURE Fork(closure: Closure): T =
         t.nextIdle := NIL;
       ELSE (* empty cache => we need a fresh thread *)
         new_born := TRUE;
-        MyLeaveCriticalSection(idleMu);
+        LeaveCriticalSection_idleMu();
           t := CreateT(NEW(Activation));
-        MyEnterCriticalSection(idleMu);
+        EnterCriticalSection_idleMu();
         act := t.act;
         act.handle := CreateThread(NIL, stack_size, ThreadBase,
                          act, CREATE_SUSPENDED, ADR(id));
-        MyEnterCriticalSection(activeMu);
+        LeaveCriticalSection_activeMu();
           act.next := allThreads;
           act.prev := allThreads.prev;
           allThreads.prev.next := act;
           allThreads.prev := act;
-        MyLeaveCriticalSection(activeMu);
+        LeaveCriticalSection_activeMu();
       END;
-    MyLeaveCriticalSection(idleMu);
+    LeaveCriticalSection_idleMu();
 
     t.closure := closure;
 
@@ -819,13 +764,13 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
     WHILE amount > 0.0D0 DO
       thisTime := MIN (Limit, amount);
       amount := amount - thisTime;
-      MyEnterCriticalSection(cm);
+      EnterCriticalSection_cm();
       InnerTestAlert(self);
       self.alertable := TRUE;
       <* ASSERT(self.waitingOn = NIL) *>
-      MyLeaveCriticalSection(cm);
+      LeaveCriticalSection_cm();
       EVAL WaitForSingleObject(self.waitSema, ROUND(thisTime*1000.0D0));
-      MyEnterCriticalSection(cm);
+      EnterCriticalSection_cm();
       self.alertable := FALSE;
       IF self.alerted THEN
         (* Sadly, the alert might have happened after we timed out on the
@@ -834,7 +779,7 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
         EVAL WaitForSingleObject(self.waitSema, 0);
         InnerTestAlert(self);
       END;
-      MyLeaveCriticalSection(cm);
+      LeaveCriticalSection_cm();
     END;
     IF perfOn THEN PerfChanged(self.id, State.alive) END;
   END AlertPause;
@@ -893,7 +838,7 @@ PROCEDURE SuspendOthers () =
   VAR me := GetActivation();
   BEGIN
     <*ASSERT me # NIL*>
-    MyEnterCriticalSection(activeMu);
+    LeaveCriticalSection_activeMu();
 
     INC (suspend_cnt);
     IF (suspend_cnt = 1) THEN StopWorld(me) END;
@@ -934,7 +879,7 @@ PROCEDURE ResumeOthers () =
       END;
     END;
 
-    MyLeaveCriticalSection(activeMu);
+    LeaveCriticalSection_activeMu();
   END ResumeOthers;
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
@@ -1033,7 +978,6 @@ PROCEDURE Choke (lineno: INTEGER) =
 VAR
   perfW : RTPerfTool.Handle;
   (* perfOn: BOOLEAN := FALSE;                          (* LL = perfMu *) *)
-  perfMu: CRITICAL_SECTION;
 
 PROCEDURE PerfStart () =
   BEGIN
@@ -1059,27 +1003,27 @@ PROCEDURE PerfChanged (id: Id; s: State) =
   (* LL = threadMu *)
   VAR e := ThreadEvent.T {kind := TE.Changed, id := id, state := s};
   BEGIN
-    MyEnterCriticalSection(perfMu);
+    EnterCriticalSection_perfMu();
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    MyLeaveCriticalSection(perfMu);
+    LeaveCriticalSection_perfMu();
   END PerfChanged;
 
 PROCEDURE PerfDeleted (id: Id) =
   (* LL = threadMu *)
   VAR e := ThreadEvent.T {kind := TE.Deleted, id := id};
   BEGIN
-    MyEnterCriticalSection(perfMu);
+    EnterCriticalSection_perfMu();
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    MyLeaveCriticalSection(perfMu);
+    LeaveCriticalSection_perfMu();
   END PerfDeleted;
 
 PROCEDURE PerfRunning (id: Id) =
   (* LL = threadMu *)
   VAR e := ThreadEvent.T {kind := TE.Running, id := id};
   BEGIN
-    MyEnterCriticalSection(perfMu);
+    EnterCriticalSection_perfMu();
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    MyLeaveCriticalSection(perfMu);
+    LeaveCriticalSection_perfMu();
   END PerfRunning;
 
 (*-------------------------------------------------------- Initialization ---*)
@@ -1139,42 +1083,41 @@ PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
    and collector. *)
 
 VAR
-  cs: CRITICAL_SECTION;
   inCritical := 0;      (* LL = cs *)
   heapCond: Condition;
 
 PROCEDURE LockHeap () =
   BEGIN
-    MyEnterCriticalSection(cs);
+    EnterCriticalSection_cs();
     INC(inCritical);
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
   BEGIN
     DEC(inCritical);
-    MyLeaveCriticalSection(cs);
+    LeaveCriticalSection_cs();
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
   VAR self := Self();
   BEGIN
-    MyEnterCriticalSection(cm);
+    EnterCriticalSection_cm();
 
     <* ASSERT( (self.waitingOn=NIL) AND (self.nextWaiter=NIL) ) *>
     self.waitingOn := heapCond;
     self.nextWaiter := heapCond.waiters;
     heapCond.waiters := self;
-    MyLeaveCriticalSection(cm);
+    LeaveCriticalSection_cm();
 
     DEC(inCritical);
     <*ASSERT inCritical = 0*>
-    MyLeaveCriticalSection(cs);
+    LeaveCriticalSection_cs();
 
     IF WaitForSingleObject(self.waitSema, INFINITE) # 0 THEN
       Choke(ThisLine());
     END;
 
-    MyEnterCriticalSection(cs);
+    EnterCriticalSection_cs();
     <*ASSERT inCritical = 0*>
     INC(inCritical);
   END WaitHeap;
