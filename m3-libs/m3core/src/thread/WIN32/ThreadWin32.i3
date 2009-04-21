@@ -49,8 +49,10 @@ TYPE
 (*------------------------------------------------------------------ Self ---*)
 
 <*EXTERNAL ThreadWin32__threadIndex*> VAR threadIndex: DWORD;
-<*EXTERNAL ThreadWin32__SetActivation*> PROCEDURE SetActivation (act: Activation);
-<*EXTERNAL ThreadWin32__GetActivation*> PROCEDURE GetActivation (): Activation;
+<*EXTERNAL ThreadWin32__SetActivation*>
+PROCEDURE SetActivation (act: Activation);
+<*EXTERNAL ThreadWin32__GetActivation*>
+PROCEDURE GetActivation (): Activation;
 
 (*------------------------------------------------------ ShowThread hooks ---*)
 
@@ -66,8 +68,7 @@ TYPE
 <*EXTERNAL ThreadWin32__inCritical*> VAR inCritical: INTEGER; (* LL = cs *)
 
 (* These are implemented in Modula-3 and the C code calls them.
-   This is so the pthread version can implement directly in C (extern)
-*)
+   This is so the pthread version can implement directly in C (extern) *)
 PROCEDURE WaitHeap ();
 PROCEDURE BroadcastHeap ();
 
