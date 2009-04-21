@@ -4,8 +4,7 @@
 
 Interface ("ThreadF")
 Interface ("ThreadContext")
-module ("ThreadWin32")
-c_source ("ThreadWin32C")
+implementation ("ThreadWin32")
 interface("ThreadInternal")
 
 if equal (OS_TYPE, "POSIX")   

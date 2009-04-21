@@ -44,11 +44,9 @@ PROCEDURE Raise (ex     : ADDRESS; (*RT0.ExceptionPtr*)
 PROCEDURE ResumeRaise (a: ADDRESS (*VAR RT0.RaiseActivation*)) RAISES ANY;
 (* called by the compiler to resume the raising of 'a.exception(a.arg)'. *)
 
-<*EXTERNAL RTHooks__PushEFrame*>
 PROCEDURE PushEFrame (frame: ADDRESS);
 (* called by the compiler to push an exception frame. *)
 
-<*EXTERNAL RTHooks__PopEFrame*>
 PROCEDURE PopEFrame (frame: ADDRESS);
 (* called by the compiler to pop an exception frame. *)
 
