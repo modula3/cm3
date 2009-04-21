@@ -4,13 +4,13 @@
 
 UNSAFE MODULE ThreadPThread
 EXPORTS
-Thread, ThreadF, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
+Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError, RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched,
-       Uerror, Uexec, Cstdlib;
+       Uerror, Uexec, Scheduler, Cstdlib;
 FROM Upthread IMPORT pthread_t;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
@@ -396,38 +396,6 @@ PROCEDURE InitActivations () =
     WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
   END InitActivations;
 
-PROCEDURE SetActivation (act: UNTRACED REF Activation) =   
- (* LL = 0 *)   
- VAR v: ADDRESS := act;   
- BEGIN   
-    IF allThreads = NIL THEN InitActivations() END;   
-    WITH r = pthread_setspecific_activations(v) DO <*ASSERT r=0*> END;   
-  END SetActivation;   
-    
-PROCEDURE GetActivation (): UNTRACED REF Activation =   
- (* If not the initial thread and not created by Fork, returns NIL *)   
- (* LL = 0 *)   
-BEGIN   
-  IF allThreads = NIL THEN InitActivations() END;   
-  RETURN pthread_getspecific_activations();   
-END GetActivation; 
-
-PROCEDURE SetActivation (act: UNTRACED REF Activation) =
-  (* LL = 0 *)
-  VAR v: ADDRESS := act;
-  BEGIN
-    IF allThreads = NIL THEN InitActivations() END;
-    WITH r = pthread_setspecific_activations(v) DO <*ASSERT r=0*> END;
-  END SetActivation;
-
-PROCEDURE GetActivation (): UNTRACED REF Activation =
-  (* If not the initial thread and not created by Fork, returns NIL *)
-  (* LL = 0 *)
-  BEGIN
-    IF allThreads = NIL THEN InitActivations() END;
-    RETURN pthread_getspecific_activations();
-  END GetActivation;
-
 PROCEDURE SetActivation (act: UNTRACED REF Activation) =
   (* LL = 0 *)
   VAR v: ADDRESS := act;
@@ -547,12 +515,6 @@ PROCEDURE DumpThreads () =
   END DumpThreads;
 
 (*------------------------------------------------------------ Fork, Join ---*)
-
-VAR (* LL=activeMu *)
-   allThreads: UNTRACED REF Activation; (* global list of active threads *)
-
-VAR (* LL=activeMu *)
-  allThreads: UNTRACED REF Activation; (* global list of active threads *)
 
 VAR (* LL=activeMu *)
   allThreads: UNTRACED REF Activation; (* global list of active threads *)
