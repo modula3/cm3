@@ -23,7 +23,4 @@ PROCEDURE InitC();
 (* There is already ThreadF.Init exported by the same module that exports this
    interface, so we chose an arbitrary different name here. *)
 
-PROCEDURE PushEFrame (frame: ADDRESS);
-PROCEDURE PopEFrame (frame: ADDRESS);
-
 END ThreadPosix.
