@@ -10,7 +10,7 @@ IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError, RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched,
-       Uerror, Uexec, Scheduler, Cstdlib;
+       Uerror, Uexec, Cstdlib;
 FROM Upthread IMPORT pthread_t;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
