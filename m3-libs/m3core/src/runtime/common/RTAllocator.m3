@@ -14,7 +14,7 @@
 UNSAFE MODULE RTAllocator
 EXPORTS RTAllocator, RTAllocCnts, RTHooks, RTHeapRep;
 
-IMPORT Cstdlib, RT0, RTHeap, RTMisc, RTOS, RTType, Scheduler;
+IMPORT Cstdlib, RT0, RTMisc, RTOS, RTType, Scheduler;
 IMPORT RuntimeError AS RTE, Word;
 FROM RTType IMPORT Typecode;
 
@@ -88,30 +88,29 @@ PROCEDURE NewUntracedArray(tc: Typecode; READONLY s: Shape): ADDRESS
 
 PROCEDURE Clone (ref: REFANY): REFANY
   RAISES {OutOfMemory} =
-  VAR x: REFANY;  defn: RT0.TypeDefn;  tc: INTEGER;
+  VAR hdr: RefHeader;  def: RT0.TypeDefn;  dataSize: CARDINAL;
+  PROCEDURE initProc (res: ADDRESS) =
+    BEGIN
+      RTMisc.Copy(LOOPHOLE(ref, ADDRESS), res, dataSize);
+      IF def.kind = ORD (TK.Array) THEN
+        (* open array: update the internal pointer *)
+        LOOPHOLE(res, UNTRACED REF ADDRESS)^ := res + def.dataSize;
+      END;
+    END initProc;
   BEGIN
     IF (ref = NIL) THEN RETURN NIL; END;
+    IF Word.And(LOOPHOLE(ref, Word.T), 1) # 0 THEN RETURN ref; END;
 
-    tc := TYPECODE (ref);
-    defn := RTType.Get (tc);
-
-    CASE defn.kind OF
-    | ORD (RT0.TypeKind.Ref), ORD (RT0.TypeKind.Obj) =>
-        x := NewTraced (tc);
-    | ORD (RT0.TypeKind.Array) =>
-        VAR nDims: INTEGER;  shape: UnsafeArrayShape;  BEGIN
-          UnsafeGetShape (ref, nDims, shape);
-          x := NewTracedArray (tc, SUBARRAY (shape^, 0, nDims));
-        END;
-    ELSE
-        x := NIL; (* force a crash *)
+    hdr := LOOPHOLE(ref, ADDRESS) - ADRSIZE(Header);
+    def := RTType.Get(hdr.typecode);
+    dataSize := ReferentSize(hdr);
+    TRY
+      RETURN AllocTraced(def, dataSize, def.dataAlignment, initProc);
+    EXCEPT RTE.E(v) =>
+      IF v = RTE.T.OutOfMemory THEN RAISE OutOfMemory;
+      ELSE RAISE RTE.E(v);
+      END;
     END;
-
-    (* finally, copy the data into the new object *)
-    RTMisc.Copy (RTHeap.GetDataAdr (ref), RTHeap.GetDataAdr (x),
-                 RTHeap.GetDataSize (ref));
-
-    RETURN x;
   END Clone;
 
 (*--------------------------------------------------------------- RTHooks ---*)
@@ -176,47 +175,24 @@ PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
 
 (*-------------------------------------------------------------- internal ---*)
 
-PROCEDURE CheckTypeFailed () =
-  BEGIN
-    <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
-  END CheckTypeFailed;
-
-PROCEDURE CheckType (def: RT0.TypeDefn; traced: INTEGER; kind: TK) =
-  BEGIN
-    (* These are all separate so that the line numbers in the debugger
-    tell you which one failed. *)
-    IF def.typecode = 0 THEN
-      CheckTypeFailed();
-    END;
-    IF (traced # 0) AND (def.traced = 0) THEN
-      CheckTypeFailed();
-    END;
-    IF (traced = 0) AND (def.traced # 0) THEN
-      CheckTypeFailed();
-    END;
-    IF def.kind # ORD(kind) THEN
-      CheckTypeFailed();
-    END;
-  END CheckType;
-
 PROCEDURE GetTraced (def: RT0.TypeDefn): REFANY =
   BEGIN
-    CASE def.kind OF
-    | ORD(TK.Ref) => RETURN GetTracedRef(def);
-    | ORD(TK.Obj) => RETURN GetTracedObj(def);
-    ELSE
-      <*NOWARN*> EVAL VAL (-1, CARDINAL); (* force a range fault *)
+    IF    def.kind = ORD(TK.Ref) THEN RETURN GetTracedRef(def)
+    ELSIF def.kind = ORD(TK.Obj) THEN RETURN GetTracedObj(def)
     END;
+    <*NOWARN*> RaiseRTE(RTE.T.ValueOutOfRange);
   END GetTraced;      
 
 PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
+  VAR res: REFANY;
   BEGIN
-    CheckType(def, 1, TK.Ref);
-    WITH res = AllocTraced(def, def.dataSize, def.dataAlignment, def.initProc) DO
-      IF (callback # NIL) THEN callback (res) END;
-      <*ASSERT Word.And(LOOPHOLE(res, Word.T), 1) = 0*>
-      RETURN res;
+    IF def.typecode = 0 OR def.traced # 1 OR def.kind # ORD(TK.Ref) THEN
+      RaiseRTE(RTE.T.ValueOutOfRange);
     END;
+    res := AllocTraced(def, def.dataSize, def.dataAlignment, def.initProc);
+    IF countsOn THEN BumpCnt(def.typecode) END;
+    IF (callback # NIL) THEN callback (res) END;
+    RETURN res;
   END GetTracedRef;
 
 PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
@@ -224,31 +200,35 @@ PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
     BEGIN
       InitObj (res, LOOPHOLE(def, RT0.ObjectTypeDefn));
     END initProc;
+  VAR res: REFANY;
   BEGIN
-    CheckType(def, 1, TK.Obj);
-    WITH res = AllocTraced(def, def.dataSize, def.dataAlignment, initProc) DO
-      IF (callback # NIL) THEN callback (res) END;
-      <*ASSERT Word.And(LOOPHOLE(res, Word.T), 1) = 0*>
-      RETURN res;
+    IF def.typecode = 0 OR def.traced # 1 OR def.kind # ORD(TK.Obj) THEN
+      RaiseRTE(RTE.T.ValueOutOfRange);
     END;
+    res := AllocTraced(def, def.dataSize, def.dataAlignment, initProc);
+    IF countsOn THEN BumpCnt(def.typecode) END;
+    IF (callback # NIL) THEN callback (res) END;
+    RETURN res;
   END GetTracedObj;
 
-PROCEDURE RAISE_RTE_E_RTE_T_OutOfMemory() =
-(* This is a separate function to avoid establishing a exception
-handling frame in the common success case, for performance,
-and possibly to avoid infinite recursion during startup/initialization. *)
+PROCEDURE RaiseRTE(e: RTE.T) =
+  (* This is a separate function to avoid establishing an exception handling
+     frame in the common success case, for performance, AND possibly to avoid
+     infinite recursion during startup/initialization. *)
   BEGIN
-    RAISE RTE.E(RTE.T.OutOfMemory);
-  END RAISE_RTE_E_RTE_T_OutOfMemory;
+    RAISE RTE.E(e);
+  END RaiseRTE;
 
 PROCEDURE GetUntracedRef (def: RT0.TypeDefn): ADDRESS =
   VAR res : ADDRESS;
   BEGIN
-    CheckType(def, 0, TK.Ref);
+    IF def.typecode = 0 OR def.traced # 0 OR def.kind # ORD(TK.Ref) THEN
+      RaiseRTE(RTE.T.ValueOutOfRange);
+    END;
     Scheduler.DisableSwitching();
     res := Cstdlib.calloc(1, def.dataSize);
     Scheduler.EnableSwitching();
-    IF res = NIL THEN RAISE_RTE_E_RTE_T_OutOfMemory() END;
+    IF res = NIL THEN RaiseRTE(RTE.T.OutOfMemory) END;
     IF def.initProc # NIL THEN def.initProc(res); END;
     IF countsOn THEN BumpCnt(def.typecode) END;
     RETURN res;
@@ -260,11 +240,13 @@ PROCEDURE GetUntracedObj (def: RT0.TypeDefn): UNTRACED ROOT =
     hdrSize := MAX(BYTESIZE(Header), def.dataAlignment);
     res     : ADDRESS;
   BEGIN
-    CheckType(def, 0, TK.Obj);
+    IF def.typecode = 0 OR def.traced # 0 OR def.kind # ORD(TK.Obj) THEN
+      RaiseRTE(RTE.T.ValueOutOfRange);
+    END;
     Scheduler.DisableSwitching();
     res := Cstdlib.malloc(hdrSize + def.dataSize);
     Scheduler.EnableSwitching();
-    IF res = NIL THEN RAISE_RTE_E_RTE_T_OutOfMemory() END;
+    IF res = NIL THEN RaiseRTE(RTE.T.OutOfMemory) END;
     res := res + hdrSize;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
         Header{typecode := def.typecode};
@@ -288,24 +270,31 @@ PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
     BEGIN
       InitArray (res, LOOPHOLE(def, RT0.ArrayTypeDefn), s);
     END initProc;
+  VAR
+    res: REFANY;
+    nBytes: CARDINAL;
   BEGIN
-    CheckType(def, 1, TK.Array);
-    WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s),
-         res = AllocTraced(def, nBytes, def.dataAlignment, initProc) DO
-      IF (callback # NIL) THEN callback (res) END;
-      RETURN res;
+    IF def.typecode = 0 OR def.traced # 1 OR def.kind # ORD(TK.Array) THEN
+      RaiseRTE(RTE.T.ValueOutOfRange);
     END;
+    nBytes := ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s);
+    res := AllocTraced(def, nBytes, def.dataAlignment, initProc);
+    IF countsOn THEN BumpSize (def.typecode, nBytes) END;
+    IF (callback # NIL) THEN callback (res) END;
+    RETURN res;
   END GetOpenArray;
 
 PROCEDURE GetUntracedOpenArray (def: RT0.TypeDefn; READONLY s: Shape): ADDRESS =
   VAR res : ADDRESS;
   BEGIN
-    CheckType(def, 0, TK.Array);
+    IF def.typecode = 0 OR def.traced # 0 OR def.kind # ORD(TK.Array) THEN
+      RaiseRTE(RTE.T.ValueOutOfRange);
+    END;
     WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s) DO
       Scheduler.DisableSwitching();
       res := Cstdlib.calloc(1, nBytes);
       Scheduler.EnableSwitching();
-      IF res = NIL THEN RAISE_RTE_E_RTE_T_OutOfMemory() END;
+      IF res = NIL THEN RaiseRTE(RTE.T.OutOfMemory) END;
       InitArray (res, LOOPHOLE(def, RT0.ArrayTypeDefn), s);
       IF countsOn THEN BumpSize (def.typecode, nBytes) END;
     END;
@@ -400,7 +389,7 @@ PROCEDURE Malloc (size: INTEGER): ADDRESS =
     Scheduler.DisableSwitching();
     res := Cstdlib.calloc(1, size);
     Scheduler.EnableSwitching();
-    IF res = NIL THEN RAISE_RTE_E_RTE_T_OutOfMemory() END;
+    IF res = NIL THEN RaiseRTE(RTE.T.OutOfMemory) END;
     RETURN res;
   END Malloc;
 

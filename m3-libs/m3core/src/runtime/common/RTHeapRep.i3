@@ -172,43 +172,16 @@ PROCEDURE AllocTraced (def: TypeDefn; size, alignment: CARDINAL;
    'alignment' byte boundary from the thread's allocation pool, initializing
    the result using 'initializer' (if not "NIL"). *)
 
-(* Objects in the traced heap are allocated from one of three "pools".
-   A pool is collection of pages with similar properties.  A "NewPool"
-   contains NEWed objects.  The "pureCopy" pool contains objects that
-   were copied by the collector into new space, but that contain no
-   internal REFs.  Similarly, the "impureCopy" pool is for copied
-   objects that contain REFs.  *)
-
+(* Objects in the traced heap are allocated from "pools". *)
 TYPE
   AllocPool = RECORD
-    desc       : Desc;           (* descriptor for new pages in this pool *)
-    notAfter   : Notes;          (* if possible avoid following these pages *)
     page       : RefPage := NIL; (* current allocation page of the pool *)
     next       : ADDRESS := NIL; (* address of next available byte *)
     limit      : ADDRESS := NIL; (* address of first unavailable byte *)
-    filePage   : RefPage := NIL; (* page last filed *)
   END;
 
-CONST
-  NewPool = AllocPool {
-    desc := Desc {space := Space.Current, generation := Generation.Younger,
-                  pure := FALSE, note := Note.Allocated, gray := FALSE,
-                  clean := FALSE, locked := FALSE },
-    notAfter := Notes {Note.Copied} };
-
 VAR (* LL >= LockHeap *)
-  pureCopy := AllocPool {
-    desc := Desc {space := Space.Current, generation := Generation.Younger,
-                  pure := TRUE, note := Note.Copied, gray := FALSE,
-                  clean := FALSE, locked := FALSE },
-    notAfter := Notes {Note.Allocated} };
-
-VAR (* LL >= LockHeap *)
-  impureCopy := AllocPool {
-    desc := Desc {space := Space.Current, generation := Generation.Younger,
-                  pure := FALSE, note := Note.Copied, gray := TRUE,
-                  clean := TRUE, locked := FALSE },
-    notAfter := Notes {Note.Allocated} };
+  pureCopy, impureCopy: AllocPool;
 
 TYPE
   ThreadState = RECORD
@@ -217,10 +190,10 @@ TYPE
        GC until it is done allocating from its pool.  Otherwise, the
        GC could see incoherent object state in the pool's page. *)
     inCritical: INTEGER := 0;
-    newPool := NewPool;
+    newPool: AllocPool;
   END;
 
-(* Flush cached thread state (must happen when thread is stopped for GC) *)
+(* Flush cached thread state, on GC flip and thread death *)
 PROCEDURE FlushThreadState (VAR thread: ThreadState);
 
 (* RegisterFinalCleanup is available for low-level cleanup by the thread
