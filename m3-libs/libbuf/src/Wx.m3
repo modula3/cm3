@@ -168,7 +168,7 @@ PROCEDURE GetLength (t: T): INTEGER =
 
 (*----------------------------------------------------------------------*)
 PROCEDURE ToText (t: T): TEXT =
-  VAR txt := Text8.Create(t.nFull * ChunkSize + t.next + 1);
+  VAR txt := Text8.Create(t.nFull * ChunkSize + t.next);
       c := t.head;   n := 0;
   BEGIN
     FOR i := 1 TO t.nFull DO
