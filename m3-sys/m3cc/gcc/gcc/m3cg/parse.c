@@ -2383,10 +2383,8 @@ m3cg_set_source_file (void)
   NAME (s);
 
 #ifdef USE_MAPPED_LOCATION
-  source_location l;
   linemap_add (line_table, LC_RENAME, false, s, 1);
-  l = linemap_line_start (line_table, 1, 80);
-  input_location = l;
+  input_location = linemap_line_start (line_table, 1, 80);
 #else
   input_filename = s;
 #endif
@@ -2399,8 +2397,7 @@ m3cg_set_source_line (void)
 
   if (option_source_line_trace) fprintf(stderr, "  source line %4ld\n", i);
 #ifdef USE_MAPPED_LOCATION
-  source_location s = linemap_line_start (line_table, i, 80);
-  input_location = s;
+  input_location = linemap_line_start (line_table, i, 80);
 #else
   input_line = i;
 #endif
