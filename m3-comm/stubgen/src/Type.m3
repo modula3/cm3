@@ -288,6 +288,8 @@ BEGIN
 
   char := NEW(Char, name := NEW(Qid, intf := nullAtm,
                                 item := Atom.FromText("CHAR")));
+  widechar := NEW(Char, name := NEW(Qid, intf := nullAtm,
+                                item := Atom.FromText("WIDECHAR")));
   real := NEW(Real, name := NEW(Qid, intf := nullAtm,
                                 item := Atom.FromText("REAL")));
   longreal :=
