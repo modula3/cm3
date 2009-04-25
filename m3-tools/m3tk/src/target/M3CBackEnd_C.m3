@@ -27,7 +27,11 @@ MODULE M3CBackEnd_C  EXPORTS M3CBackEnd, M3CBackEnd_C;
 (* This module defines the interface for the information required by
 the compiler front-end from a back-end . *)
 
-(* ToDo: all the bootstrap things like FIRST(REAL) *)
+(* ToDo: all the bootstrap things like FIRST(REAL) 
+
+  4/25/09: fixed FIRST(REAL) etc. but not sure about what this might
+  break w.r.t. cross-compiling and such things. 
+*)
 
 (* Version targeted to C back-end for a variety of machines *)
 
@@ -879,10 +883,12 @@ PROCEDURE StdUnaryTypeOp_C(
             er := M3CBackEnd_Int_Longint.New_value(FIRST(LONGINT));
         | M3AST_AS.WideChar_type =>
             er := M3CBackEnd_Int_Integer.New_value(ORD(FIRST(WIDECHAR)));
-        | M3AST_AS.Real_type,
-          M3AST_AS.LongReal_type,
-          M3AST_AS.Extended_type =>
-            er := M3CBackEnd_Int_Integer.New_value(0);
+        | M3AST_AS.Real_type =>
+          er := M3CBackEnd_Float_Real.New_value(FIRST(REAL))
+        | M3AST_AS.LongReal_type =>
+          er := M3CBackEnd_Float_LongReal.New_value(FIRST(LONGREAL))
+        | M3AST_AS.Extended_type =>
+          er := M3CBackEnd_Float_Extended.New_value(FIRST(EXTENDED))
         END; (* typecase *)
     | M3CStdProcs.T.Last =>
         TYPECASE ts OF <*NOWARN*>
@@ -892,10 +898,12 @@ PROCEDURE StdUnaryTypeOp_C(
             er := M3CBackEnd_Int_Longint.New_value(LAST(LONGINT));
         | M3AST_AS.WideChar_type =>
             er := M3CBackEnd_Int_Integer.New_value(ORD(LAST(WIDECHAR)));
-        | M3AST_AS.Real_type,
-          M3AST_AS.LongReal_type,
-          M3AST_AS.Extended_type =>
-            er := M3CBackEnd_Int_Integer.New_value(0);
+        | M3AST_AS.Real_type =>
+          er := M3CBackEnd_Float_Real.New_value(LAST(REAL))
+        | M3AST_AS.LongReal_type =>
+          er := M3CBackEnd_Float_LongReal.New_value(LAST(LONGREAL))
+        | M3AST_AS.Extended_type =>
+          er := M3CBackEnd_Float_Extended.New_value(LAST(EXTENDED))
         END; (* typecase *)
     ELSE
       RETURN NotImplemented();        
