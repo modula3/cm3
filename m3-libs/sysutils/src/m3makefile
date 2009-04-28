@@ -43,6 +43,7 @@ import("libm3")
 %  import("http")
 %end
 
+c_source("SystemC")
 module("EnvUtils")
 module("FingerprintFmt")
 module("FSUtils")
