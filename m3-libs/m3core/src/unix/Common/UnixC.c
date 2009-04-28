@@ -242,6 +242,11 @@ m3_pid_t Unix__fork(void)
 
 #endif
 
+int Unix__system(const char* s)
+{
+    return system(s);
+}
+
 #ifdef __cplusplus
 } /* extern C */
 #endif
