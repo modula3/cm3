@@ -2766,7 +2766,6 @@ PROCEDURE Init () =
     IF RTParams.IsPresent("paranoidgc") THEN InstallSanityCheck(); END;
     IF RTParams.IsPresent("heapstats") THEN heap_stats := TRUE; END;
     GetMaxHeap();
-    GetGCRatio();
     PerfStart();
   END Init;
 
@@ -2881,4 +2880,5 @@ PROCEDURE FinishBench() =
   END FinishBench;
 
 BEGIN
+    GetGCRatio();
 END RTCollector.
