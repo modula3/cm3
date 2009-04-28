@@ -53,6 +53,7 @@ typedef struct itimerval itimerval_t;
 typedef struct hostent hostent_t;
 typedef struct group group_t;
 typedef struct stat stat_t;
+typedef struct timeval timeval_t;
 
 #ifdef __cplusplus
 extern "C" {

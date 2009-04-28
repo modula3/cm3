@@ -29,6 +29,8 @@ So use these wrappers instead.
 
 #include "m3unix.h"
 #include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -240,21 +242,36 @@ int Unix__dup(int oldd)
 
 #ifndef _WIN32
 
-m3_pid_t Unix__fork(void)
-{
-    return fork();
-}
+m3_pid_t Unix__fork(void) { return fork(); }
+m3_pid_t Unix__vfork(void) { return vfork(); }
 
 #endif
 
-int Unix__system(const char* s)
-{
-    return system(s);
-}
+int Unix__system(const char* s) { return system(s); }
 
-int Unix__isatty(int file)
+int Unix__isatty(int file) { return isatty(file); }
+
+#ifndef _WIN32
+
+INTEGER Unix__readlink(const char* path, void* buf, INTEGER bufsize) { return readlink(path, buf, bufsize); }
+
+int Unix__symlink(const char* name1, const char* name2) { return symlink(name1, name2); }
+
+int Unix__utimes(const char* file, const timeval_t* tvp) { return utimes(file, tvp); }
+
+int Unix__pipe(int files[2]) { return pipe(files); }
+
+#endif
+
+int Unix__rename(const char* from, const char* to) { return rename(from, to); }
+
+int Unix__rmdir(const char* path) { return rmdir(path); }
+
+int Unix__unlink(const char* path) { return unlink(path); }
+
+int Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout)
 {
-    return isatty(s);
+    return select(nfds, readfds, writefds, exceptfds, timeout);
 }
 
 #ifdef __cplusplus

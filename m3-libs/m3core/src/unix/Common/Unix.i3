@@ -96,15 +96,15 @@ CONST
   writeEnd = 1;
 PROCEDURE pipe (VAR fildes: ARRAY [0..1] OF int): int;
 
-PROCEDURE readlink (path: const_char_star; buf: ADDRESS; bufsize: int): int;
-PROCEDURE rename (from, to: const_char_star): int;
-PROCEDURE rmdir (path: const_char_star): int;
-PROCEDURE symlink (name1, name2: const_char_star): int;
+<*EXTERNAL Unix__readlink*> PROCEDURE readlink (path: const_char_star; buf: ADDRESS; bufsize: INTEGER): INTEGER;
+<*EXTERNAL Unix__rename*> PROCEDURE rename (from, to: const_char_star): int;
+<*EXTERNAL Unix__rmdir*> PROCEDURE rmdir (path: const_char_star): int;
+<*EXTERNAL Unix__symlink*> PROCEDURE symlink (name1, name2: const_char_star): int;
 <*EXTERNAL Unix__truncate*>  PROCEDURE  truncate (file: const_char_star; length: off_t): int;
 <*EXTERNAL Unix__ftruncate*> PROCEDURE ftruncate (file: int;             length: off_t): int;
-PROCEDURE unlink (path: const_char_star): int;
-PROCEDURE utimes (file: const_char_star; tvp: UNTRACED REF ARRAY [0..1] OF struct_timeval): int;
-PROCEDURE vfork (): int;
+<*EXTERNAL Unix__unlink*> PROCEDURE unlink (path: const_char_star): int;
+<*EXTERNAL Unix__utimes*> PROCEDURE utimes (file: const_char_star; tvp: UNTRACED REF ARRAY [0..1] OF struct_timeval): int;
+<*EXTERNAL Unix__vfork*> PROCEDURE vfork (): pid_t;
 <*EXTERNAL Unix__fork*> PROCEDURE fork (): pid_t;
 
 CONST
@@ -113,7 +113,7 @@ CONST
 TYPE
   FDSet = SET OF [0 .. MAX_FDSET - 1];
 
-PROCEDURE select (nfds: int; readfds, writefds, exceptfds: UNTRACED REF FDSet; timeout: UNTRACED REF struct_timeval): int;
+<*EXTERNAL Unix__select*> PROCEDURE select (nfds: int; readfds, writefds, exceptfds: UNTRACED REF FDSet; timeout: UNTRACED REF struct_timeval): int;
 
 <*EXTERNAL Unix__mknod*>
 PROCEDURE mknod (path: const_char_star; mode: mode_t; dev: dev_t): int;
