@@ -2880,5 +2880,5 @@ PROCEDURE FinishBench() =
   END FinishBench;
 
 BEGIN
-    GetGCRatio();
+    (*GetGCRatio();*)
 END RTCollector.
