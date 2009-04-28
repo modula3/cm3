@@ -1506,6 +1506,7 @@ PROCEDURE Init()=
   BEGIN
     inCritical := 1;
       topThread := NEW (T, state := State.alive, id := nextId);
+      heapCond := NEW(Condition);
       FloatMode.InitThread (topThread.floatState);
 
       INC (nextId);
