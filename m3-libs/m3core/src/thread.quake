@@ -37,7 +37,7 @@ readonly USE_PTHREADS = {
   "FreeBSD"    : FALSE,
   "FreeBSD2"   : FALSE,
   "FreeBSD3"   : FALSE,
-  "FreeBSD4"   : TRUE,
+  "FreeBSD4"   : FALSE,
   "HP300"      : FALSE,
   "HPPA"       : FALSE,
   "IBMR2"      : FALSE,
