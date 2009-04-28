@@ -128,6 +128,8 @@ PROCEDURE umask (numask: mode_t): mode_t;
 <*EXTERNAL Unix__fchown*> PROCEDURE fchown (fd: int; owner: uid_t; group: gid_t): int;
 <*EXTERNAL Unix__creat*> PROCEDURE creat (name: const_char_star; mode: mode_t): int;
 
+<*EXTERNAL Unix__system*> PROCEDURE system (string: const_char_star): int;
+
 <*EXTERNAL Unix__Assertions*>
 PROCEDURE Assertions();
 
