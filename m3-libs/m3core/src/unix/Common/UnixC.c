@@ -29,6 +29,9 @@ So use these wrappers instead.
 
 #include "m3unix.h"
 #include <limits.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 #ifdef __cplusplus
 extern "C"
@@ -169,14 +172,32 @@ m3_mode_t Unix__umask(m3_mode_t newmask)
     return umask(newmask);
 }
 
-#ifndef _WIN32
-
-int Unix__link(const char* name1, const char* name2)
+int Unix__link(const char* ExistingFile, const char* NewLink)
 {
-    return link(name1, name2);
-}
-
+#ifdef _WIN32
+    typedef BOOL (__stdcall * PFNCreateHardLinkA)(PCSTR NewLink, PCSTR ExistingFile, void* reserved);
+    static PFNCreateHardLinkA pfnCreateHardLinkA;
+    
+    if (pfnCreateHardLinkA == NULL)
+    {
+        const static WCHAR Kernel32Name[] = L"Kernel32.dll";
+        HMODULE Kernel32Handle = LoadLibraryW(Kernel32Name);
+        if (Kernel32Handle == NULL)
+            goto Error;
+        pfnCreateHardLinkA = (PFNCreateHardLinkA)GetProcAddress(Kernel32Handle, "CreateHardLinkA");
+        if (pfnCreateHardLinkA == NULL)
+            goto Error;
+    }
+    if (pfnCreateHardLinkA(NewLink, ExistingFile, NULL) == FALSE)
+        goto Error;
+    return 0;
+Error:
+    errno = GetLastError();
+    return -1;
+#else
+    return link(ExistingFile, NewLink);
 #endif
+}
 
 int Unix__chmod(const char* path, m3_mode_t mode)
 {
