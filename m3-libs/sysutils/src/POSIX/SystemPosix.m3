@@ -21,12 +21,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: SystemPosix.m3,v 1.9 2009-01-13 14:20:19 jkrell Exp $ *)
+ * $Id: SystemPosix.m3,v 1.10 2009-04-28 10:57:00 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
 
-IMPORT Unix, Text, Ctypes, Uexec, Process, Fmt, Cerrno, Uerror;
+IMPORT Unix, Text, Ctypes, Uexec, Process, Fmt, Uerror;
 IMPORT (*SchedulerPosix*) Word;
 
 (*---------------------------------------------------------------------------*)
@@ -59,7 +59,7 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
     (* 0 should be WNOHANG on user threads platforms, which there are presently none of *)
     result := Uexec.waitpid (pid, ADR(status), 0);
     IF result < 0 THEN 
-      e := Cerrno.GetErrno();
+      e := GetErrno();
       IF (e = Uerror.ECHILD) THEN err := "The process specified in pid does not exist or is not a child of the calling process.";
       ELSIF (e = Uerror.EINTR) THEN err := "WNOHANG was not set and an unblocked signal or a SIGCHLD was caught.";
       ELSIF (e = Uerror.EINVAL) THEN err := "The options argument was invalid.";

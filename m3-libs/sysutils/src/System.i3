@@ -20,14 +20,20 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: System.i3,v 1.2 2008-02-21 00:06:59 wagner Exp $ *)
-
+ *)
 (*---------------------------------------------------------------------------*)
+(* Copyright (C) 1990, Digital Equipment Corporation           *)
+(* All rights reserved.                                        *)
+(* See the file COPYRIGHT for a full description.              *)
+(*---------------------------------------------------------------------------
+ * $Id: System.i3,v 1.3 2009-04-28 10:56:59 jkrell Exp $ *)
+(*---------------------------------------------------------------------------*)
+
 INTERFACE System;
 
 IMPORT Thread, AtomList, TextSeq, Rd, Wr, File, Process;
 IMPORT ProcessEnv, MsgIF;
+FROM Ctypes IMPORT int;
 
 (*---------------------------------------------------------------------------*)
 EXCEPTION
@@ -167,5 +173,18 @@ PROCEDURE Wait(p: Process.T) : Process.ExitCode RAISES {Error};
      `Wait` (on POSIX).
 
      On WIN32 `Wait` is just a wrapper for Process.Wait. *)
+
+
+(*---------------------------------------------------------------------------*)
+
+(* We cannot access "errno" directly as a variable, because on some systems
+   it is a C macro that expands to something more complicated.
+
+   The "errno" value is preserved across thread switches.
+
+copied from m3core/src/C/Common/Cerrno.i3 for bootstrapping against older releases *)
+
+<*EXTERNAL System__GetErrno*>
+PROCEDURE GetErrno(): int;
 
 END System.
