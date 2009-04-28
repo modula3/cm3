@@ -812,10 +812,18 @@ PROCEDURE HashBrand (b: RT0.BrandPtr): INTEGER =
     RETURN hash;
   END HashBrand;
 
+PROCEDURE RAISE_RuntimeError_E_RTE_OutOfMemory() =
+(* This is a separate function to avoid establishing an exception
+handling frame in the common success case, for performance,
+and possibly to avoid making PushEFrame perform initialization on demand. *)
+  BEGIN
+    RAISE RuntimeError.E (RTE.OutOfMemory);
+  END RAISE_RuntimeError_E_RTE_OutOfMemory;
+
 PROCEDURE Calloc (n: INTEGER; n_bytes: INTEGER): ADDRESS =
   VAR res := Cstdlib.calloc (n, n_bytes);
   BEGIN
-    IF (res = NIL) THEN RAISE RuntimeError.E (RTE.OutOfMemory); END;
+    IF (res = NIL) THEN RAISE_RuntimeError_E_RTE_OutOfMemory(); END;
     RETURN res;
   END Calloc;
 
