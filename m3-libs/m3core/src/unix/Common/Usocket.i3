@@ -4,15 +4,43 @@
 
 INTERFACE Usocket;
 
-FROM Ctypes IMPORT int, void_star, const_void_star;
+FROM Ctypes IMPORT int, void_star, const_void_star, const_char_star, char_star;
 FROM Cstddef IMPORT size_t;
 FROM Uin IMPORT struct_sockaddr_in;
 IMPORT Usysdep;
 IMPORT Utypes;
 
 (* CONST *)
+
+(* ai_protocol *)
+<*EXTERNAL "Usocket__IPPROTO_TCP"*>  VAR IPPROTO_TCP: int;
+<*EXTERNAL "Usocket__IPPROTO_UDP"*>  VAR IPPROTO_UDP: int;
+<*EXTERNAL "Usocket__IPPROTO_RM"*>   VAR IPPROTO_RM: int;
+<*EXTERNAL "Usocket__IPPROTO_RM"*>   VAR IPPROTO_PGM: int; (* synonym for previous *)
+
+(* ai_socktype *)
 <*EXTERNAL "Usocket__SOCK_STREAM"*>  VAR SOCK_STREAM: int;
 <*EXTERNAL "Usocket__SOCK_DGRAM"*>   VAR SOCK_DGRAM: int;
+<*EXTERNAL "Usocket__SOCK_RAW"*>     VAR SOCK_RAW: int;
+<*EXTERNAL "Usocket__SOCK_RDM"*>     VAR SOCK_RDM: int; (* reliable message datagram *)
+<*EXTERNAL "Usocket__SOCK_SEQPACKET"*> VAR SOCK_SEQPACKET: int; (* reliable message datagram *)
+
+(* ai_family *)
+<*EXTERNAL "Usocket__AF_UNSPEC"*>    VAR AF_UNSPEC: int; (* unspecified *)
+<*EXTERNAL "Usocket__AF_INET"*>      VAR AF_INET: int; (* IPv4 *)
+<*EXTERNAL "Usocket__AF_INET6"*>     VAR AF_INET6: int; (* IPv6 *)
+<*EXTERNAL "Usocket__AF_NETBIOS"*>   VAR AF_NETBIOS: int;
+<*EXTERNAL "Usocket__AF_IRDA"*>      VAR AF_IRDA: int; (* infrared data association *)
+<*EXTERNAL "Usocket__AF_BTH"*>       VAR AF_BTH: int; (* Bluetooth *)
+
+(* ai_flags *)
+<*EXTERNAL "Usocket__AI_PASSIVE"*>           VAR AI_PASSIVE: int;
+<*EXTERNAL "Usocket__AI_CANONNAME"*>         VAR AI_CANONNAME: int;
+<*EXTERNAL "Usocket__AI_NUMERIC_HOST"*>      VAR AI_NUMERIC_HOST: int;
+<*EXTERNAL "Usocket__AI_ADDRCONFIG"*>        VAR AI_ADDRCONFIG: int;
+<*EXTERNAL "Usocket__AI_NON_AUTHORITATIVE"*> VAR AI_NON_AUTHORITATIVE: int;
+<*EXTERNAL "Usocket__AI_SECURE"*>            VAR AI_SECURE: int;
+<*EXTERNAL "Usocket__AI_RETURN_PREFERRED_NAMES"*> VAR AI_RETURN_PREFERRED_NAMES: int;
 
 <*EXTERNAL "Usocket__SO_REUSEADDR"*> VAR SO_REUSEADDR: int;
 <*EXTERNAL "Usocket__SO_KEEPALIVE"*> VAR SO_KEEPALIVE: int;
@@ -20,7 +48,6 @@ IMPORT Utypes;
 
 <*EXTERNAL "Usocket__SOL_SOCKET"*>   VAR SOL_SOCKET: int;
 
-<*EXTERNAL "Usocket__AF_INET"*>      VAR AF_INET: int;
 <*EXTERNAL "Usocket__MSG_PEEK"*>     VAR MSG_PEEK: int;
 
 TYPE
@@ -63,5 +90,23 @@ PROCEDURE shutdown(s, how: int): int RAISES {};
 
 <*EXTERNAL Usocket__socket*>
 PROCEDURE socket(af, type, protocol: int): int RAISES {};
+
+TYPE
+  addrinfo_t = RECORD
+    ai_flags: int;
+    ai_family: int;
+    ai_socktype: int;
+    ai_protocol: int;
+    ai_addrlen: size_t;
+    ai_canonname: char_star;
+    ai_addr: UNTRACED REF struct_sockaddr_in;
+    ai_next: UNTRACED REF addrinfo_t;
+  END;
+
+<*EXTERNAL Usocket__getaddrinfo*>
+PROCEDURE getaddrinfo(nodename: const_char_star; servname: const_char_star; hints: UNTRACED REF addrinfo_t; res: UNTRACED REF addrinfo_t): int;
+
+<*EXTERNAL Usocket__freeaddrinfo*>
+PROCEDURE freeaddrinfo(addrinfo: UNTRACED REF addrinfo_t);
 
 END Usocket.
