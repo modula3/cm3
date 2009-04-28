@@ -100,8 +100,8 @@ PROCEDURE readlink (path: const_char_star; buf: ADDRESS; bufsize: int): int;
 PROCEDURE rename (from, to: const_char_star): int;
 PROCEDURE rmdir (path: const_char_star): int;
 PROCEDURE symlink (name1, name2: const_char_star): int;
-<*EXTERNAL Unix__ftruncate*>
-PROCEDURE ftruncate (fd: int; length: off_t): int;
+<*EXTERNAL Unix__truncate*>  PROCEDURE  truncate (file: const_char_star; length: off_t): int;
+<*EXTERNAL Unix__ftruncate*> PROCEDURE ftruncate (file: int;             length: off_t): int;
 PROCEDURE unlink (path: const_char_star): int;
 PROCEDURE utimes (file: const_char_star; tvp: UNTRACED REF ARRAY [0..1] OF struct_timeval): int;
 PROCEDURE vfork (): int;
@@ -127,6 +127,8 @@ PROCEDURE umask (numask: mode_t): mode_t;
 <*EXTERNAL Unix__chown*> PROCEDURE chown (path: const_char_star; owner: uid_t; group: gid_t): int;
 <*EXTERNAL Unix__fchown*> PROCEDURE fchown (fd: int; owner: uid_t; group: gid_t): int;
 <*EXTERNAL Unix__creat*> PROCEDURE creat (name: const_char_star; mode: mode_t): int;
+
+<*EXTERNAL Unix__isatty*> PROCEDURE isatty (file: int): int;
 
 <*EXTERNAL Unix__system*> PROCEDURE system (string: const_char_star): int;
 

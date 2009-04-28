@@ -98,9 +98,14 @@ int Unix__mkdir(const char* path, m3_mode_t mode)
 
 #ifndef _WIN32
 
-int Unix__ftruncate(int fd, m3_off_t length)
+int Unix__truncate(const char* file, m3_off_t length)
 {
-    return ftruncate(fd, length);
+    return truncate(file, length);
+}
+
+int Unix__ftruncate(int file, m3_off_t length)
+{
+    return ftruncate(file, length);
 }
 
 #endif
@@ -245,6 +250,11 @@ m3_pid_t Unix__fork(void)
 int Unix__system(const char* s)
 {
     return system(s);
+}
+
+int Unix__isatty(int file)
+{
+    return isatty(s);
 }
 
 #ifdef __cplusplus
