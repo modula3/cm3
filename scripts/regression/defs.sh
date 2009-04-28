@@ -2,6 +2,10 @@
 #----------------------------------------------------------------------------
 # global definitions
 
+# nice, but need more testing
+#set -e
+set -x
+
 # our hostname
 TESTHOSTNAME=${TESTHOSTNAME:-`hostname | sed -e 's/\..*//'`}
 # a user-local temporary files directory
@@ -28,7 +32,12 @@ INSTROOT_POK=${INSTROOT_OK:-${INSTBASE}/prev-ok}
 INSTROOT_CUR=${INSTROOT_CUR:-${INSTBASE}/current}
 
 # repository definitions
-CM3CVSSERVER=${CM3CVSSERVER:-birch.elegosoft.com}
+if test "x${CM3CVSUSER}" != "x"; then
+  CM3CVSUSER_AT="${CM3CVSUSER}@"
+else
+  CM3CVSUSER_AT=""
+fi
+CM3CVSSERVER=${CM3CVSSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
 CM3CVSROOT=${CM3CVSROOT:-${CM3CVSSERVER}:/usr/cvs}
 
 # WWW server site
@@ -144,6 +153,7 @@ echo "CM3CVSSERVER=${CM3CVSSERVER}"
 echo "CM3CVSROOT=${CM3CVSROOT}"
 echo "BINDISTMIN_NAME=${BINDISTMIN_NAME}"
 echo "BINDISTMIN=${BINDISTMIN}"
+echo "CM3CVSUSER=${CM3CVSUSER}"
 
 #----------------------------------------------------------------------------
 # checks
@@ -401,7 +411,12 @@ install_bin_dist() {
 download_bin_dist() {
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` downloading ${BINDISTMIN_URL}/${BINDISTMIN_NAME} into ${BINDISTMIN_LOC}"
 
-  wget "${BINDISTMIN_URL}/${BINDISTMIN_NAME}" -O "${BINDISTMIN_LOC}/${BINDISTMIN_NAME}"
+  if type wget >/dev/null; then
+    wget "${BINDISTMIN_URL}/${BINDISTMIN_NAME}" -O "${BINDISTMIN_LOC}/${BINDISTMIN_NAME}"
+  else
+    mkdir -p "${BINDISTMIN_LOC}" || true
+    (cd "${BINDISTMIN_LOC}"; ftp "${BINDISTMIN_URL}/${BINDISTMIN_NAME}")
+  fi
   
   if [ "$?" = 0 ]; then
     echo " >>> OK"
