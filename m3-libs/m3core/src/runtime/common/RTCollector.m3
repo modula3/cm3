@@ -1370,6 +1370,34 @@ PROCEDURE StackEmpty (s: Stacker): BOOLEAN =
 
 (* Allocate space in the traced heap for NEW *)
 
+PROCEDURE AllocTracedSlow (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
+                       initProc: TypeInitProc;
+                       thread: UNTRACED REF ThreadState): REFANY =
+  (* Allocates space in the traced heap -- slow path.
+  This is broken out of AllocTraced so that the fast path does not
+  incur a slow TRY. *)
+  (* LL = 0 *)
+  VAR
+    res       : ADDRESS;
+  BEGIN
+      TRY
+        RTOS.LockHeap();
+
+        (* make sure the collector gets a chance to keep up with NEW... *)
+        CollectEnough(allocator := TRUE);
+
+        res := LongAlloc (dataSize, dataAlignment, thread.newPool,
+                          Note.Allocated, pure := FALSE);
+        LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
+            Header{typecode := def.typecode, dirty := TRUE};
+        IF initProc # NIL THEN initProc (res) END;
+        <*ASSERT Word.And(LOOPHOLE(res, Word.T), 1) = 0*>
+        RETURN LOOPHOLE(res, REFANY);
+      FINALLY
+        RTOS.UnlockHeap();
+      END;
+  END AllocTracedSlow;
+
 PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
                        initProc: TypeInitProc): REFANY =
   (* Allocates space in the traced heap. *)
@@ -1392,23 +1420,7 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
       (* not enough space left in the pool, take the long route *)
       res := NIL;  nextPtr := NIL;  (* in case of GC... *)
       DEC(thread.inCritical);
-
-      TRY
-        RTOS.LockHeap();
-
-        (* make sure the collector gets a chance to keep up with NEW... *)
-        CollectEnough(allocator := TRUE);
-
-        res := LongAlloc (dataSize, dataAlignment, thread.newPool,
-                          Note.Allocated, pure := FALSE);
-        LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
-            Header{typecode := def.typecode, dirty := TRUE};
-        IF initProc # NIL THEN initProc (res) END;
-        <*ASSERT Word.And(LOOPHOLE(res, Word.T), 1) = 0*>
-        RETURN LOOPHOLE(res, REFANY);
-      FINALLY
-        RTOS.UnlockHeap();
-      END;
+      RETURN AllocTracedSlow(def, dataSize, dataAlignment, initProc, thread);
     END;
 
     (* Align the referent *)
@@ -2798,7 +2810,7 @@ PROCEDURE GetMaxHeap () =
     IF n >= 0 THEN max_heap := n END;
   END GetMaxHeap;
 
-PROCEDURE GetGCRatio () =
+<*NOWARN*>PROCEDURE GetGCRatio () =
   <*FATAL Convert.Failed*>
   VAR
     txt := RTParams.Value ("gcRatio");
