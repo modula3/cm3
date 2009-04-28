@@ -45,4 +45,8 @@ include_dir ("word")
 
 % m3_option ("-times")
 
-Library ("m3core")
+if KernelThreads
+  Library("m3core")
+else
+  Library("m3coreuserthreads")
+end
