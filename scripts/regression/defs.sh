@@ -4,7 +4,7 @@
 
 # nice, but need more testing
 #set -e
-set -x
+#set -x
 
 # our hostname
 TESTHOSTNAME=${TESTHOSTNAME:-`hostname | sed -e 's/\..*//'`}
