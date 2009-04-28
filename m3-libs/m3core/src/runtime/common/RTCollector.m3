@@ -1368,6 +1368,14 @@ PROCEDURE StackEmpty (s: Stacker): BOOLEAN =
     RETURN s.xA = s.x0;
   END StackEmpty;
 
+PROCEDURE RAISE_RuntimeError_E_RuntimeError_T_OutOfMemory() =
+(* This is a separate function to avoid establishing an exception
+handling frame in the common success case, for performance,
+and to avoid making PushEFrame perform initialization on demand. *)
+  BEGIN
+    RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
+  END RAISE_RuntimeError_E_RuntimeError_T_OutOfMemory;
+
 (* Allocate space in the traced heap for NEW *)
 
 PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
@@ -1393,22 +1401,22 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
       res := NIL;  nextPtr := NIL;  (* in case of GC... *)
       DEC(thread.inCritical);
 
-      TRY
-        RTOS.LockHeap();
+      RTOS.LockHeap();
 
-        (* make sure the collector gets a chance to keep up with NEW... *)
-        CollectEnough(allocator := TRUE);
+      (* make sure the collector gets a chance to keep up with NEW... *)
+      CollectEnough(allocator := TRUE);
 
-        res := LongAlloc (dataSize, dataAlignment, thread.newPool,
-                          Note.Allocated, pure := FALSE);
-        LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
-            Header{typecode := def.typecode, dirty := TRUE};
-        IF initProc # NIL THEN initProc (res) END;
-        <*ASSERT Word.And(LOOPHOLE(res, Word.T), 1) = 0*>
-        RETURN LOOPHOLE(res, REFANY);
-      FINALLY
-        RTOS.UnlockHeap();
+      res := LongAlloc (dataSize, dataAlignment, thread.newPool,
+                        Note.Allocated, pure := FALSE);
+      RTOS.UnlockHeap();
+      IF res = NIL THEN
+        RAISE_RuntimeError_E_RuntimeError_T_OutOfMemory();
       END;
+      LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
+          Header{typecode := def.typecode, dirty := TRUE};
+      IF initProc # NIL THEN initProc (res) END;
+      <*ASSERT Word.And(LOOPHOLE(res, Word.T), 1) = 0*>
+      RETURN LOOPHOLE(res, REFANY);
     END;
 
     (* Align the referent *)
@@ -1441,7 +1449,11 @@ PROCEDURE AllocCopy (dataSize, dataAlignment: CARDINAL;
   BEGIN
     IF nextPtr > pool.limit THEN
       (* not enough space left in the pool, take the long route *)
-      RETURN LongAlloc (dataSize, dataAlignment, pool, Note.Copied, pure);
+      res := LongAlloc (dataSize, dataAlignment, pool, Note.Copied, pure);
+      IF res = NIL THEN
+        RAISE_RuntimeError_E_RuntimeError_T_OutOfMemory();
+      END;
+      RETURN res;
     END;
 
     (* Align the referent *)
@@ -1475,7 +1487,8 @@ PROCEDURE LongAlloc (dataSize, dataAlignment: CARDINAL;
     newPtr   : ADDRESS := newPage;
     newLimit : ADDRESS := newPage + BytesPerPage;
   BEGIN
-    IF newPage = NIL THEN RAISE RuntimeError.E (RuntimeError.T.OutOfMemory) END;
+    (* caller should call RAISE_RuntimeError_E_RuntimeError_T_OutOfMemory *)
+    IF newPage = NIL THEN RETURN NIL END;
 
     <*ASSERT initialized*>
 
@@ -2798,7 +2811,7 @@ PROCEDURE GetMaxHeap () =
     IF n >= 0 THEN max_heap := n END;
   END GetMaxHeap;
 
-PROCEDURE GetGCRatio () =
+<*NOWARN*>PROCEDURE GetGCRatio () =
   <*FATAL Convert.Failed*>
   VAR
     txt := RTParams.Value ("gcRatio");
