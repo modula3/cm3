@@ -42,7 +42,12 @@ if [ -f ~/cm3/`hostname`.conf ]; then
 fi
 
 # checkout the current cm3 regression script and source it
-CVSROOT=${CVSROOT:-":ext:modula3.elegosoft.com:/usr/cvs"}
+if test "x${CM3CVSUSER}" != "x"; then
+  CM3CVSUSER_AT="${CM3CVSUSER}@"
+else
+  CM3CVSUSER_AT=""
+fi
+CVSROOT=${CVSROOT:-":ext:${CM3CVSUSER_AT}modula3.elegosoft.com:/usr/cvs"}
 
 cvs -d ${CVSROOT} checkout -A \
   -d ${REGRESSION_SCRIPTS_DIR} cm3/scripts/regression/defs.sh
