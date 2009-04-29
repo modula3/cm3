@@ -551,6 +551,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     RunThread(me);
     me.stackbase := NIL;              (* disable GC scanning of my stack *)
 
+    <*ASSERT allThreads # me*>
     DISPOSE (me);
     RETURN NIL;
   END ThreadBase;
