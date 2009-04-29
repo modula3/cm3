@@ -37,7 +37,7 @@ REVEAL
 
   T = MUTEX BRANDED "Thread.T Pthread-1.6" OBJECT
     (* live thread data *)
-    act: UNTRACED REF Activation := NIL;(* LL = mutex *)
+    act: Activation := NIL;(* LL = mutex *)
 
     (* our work and its result *)
     closure: Closure := NIL;            (* LL = mutex *)
@@ -66,11 +66,11 @@ REVEAL
 
 TYPE
   ActState = { Starting, Started, Stopping, Stopped };
-  Activation = RECORD
+  Activation = UNTRACED REF RECORD
     (* exception handling support *)
     frame: ADDRESS := NIL;
     (* global doubly-linked, circular list of all active threads *)
-    next, prev: UNTRACED REF Activation := NIL; (* LL = activeMu *)
+    next, prev: Activation := NIL; (* LL = activeMu *)
     (* thread handle *)
     handle: pthread_t;                  (* LL = activeMu *)
     (* base of thread stack for use by GC *)
@@ -90,7 +90,7 @@ TYPE
     heapState : RTHeapRep.ThreadState;
   END;
 
-PROCEDURE SetState (act: UNTRACED REF Activation;  state: ActState) =
+PROCEDURE SetState (act: Activation;  state: ActState) =
   CONST text = ARRAY ActState OF TEXT
     { "Starting", "Started", "Stopping", "Stopped" };
   BEGIN
@@ -117,6 +117,7 @@ and to prevent infinite recursion. *)
   END RAISE_RTE_E_RTE_T_OutOfMemory;
 
 PROCEDURE MemAlloc (size: INTEGER): ADDRESS =
+(* This can be replaced now with NEW(UNTRACED REF ARRAY OF CHAR, size). *)
   VAR res: ADDRESS;
   BEGIN
     res := Cstdlib.calloc(1, size);
@@ -127,6 +128,7 @@ PROCEDURE MemAlloc (size: INTEGER): ADDRESS =
   END MemAlloc;
 
 PROCEDURE MemFree (VAR a: ADDRESS) =
+(* This can be replaced now with DISPOSE once MemAlloc changed to NEW. *)
   BEGIN
     IF a # NIL THEN
       Cstdlib.free(a);
@@ -368,14 +370,10 @@ VAR (* LL = slotMu *)
   next_slot := 1;
   slots: REF ARRAY OF T;                (* NOTE: we don't use slots[0] *)
 
-PROCEDURE InitActivations () =
+PROCEDURE InitActivations ():Activation =
   VAR
-    (* We cannot use NEW because it does not work this early. *)
-    (* me := NEW(UNTRACED REF Activation); *)
-    me: UNTRACED REF Activation := MemAlloc(BYTESIZE(Activation));
-    init: Activation;
+    me := NEW(Activation);
   BEGIN
-    me^ := init;
     <* ASSERT me.frame = NIL *>
     <* ASSERT me.next = NIL *>
     <* ASSERT me.prev = NIL *>
@@ -394,35 +392,27 @@ PROCEDURE InitActivations () =
       <* ASSERT allThreads = NIL *> (* no threads created yet *)
       allThreads := me;
     WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
+    RETURN me;
   END InitActivations;
 
-PROCEDURE SetActivation (act: UNTRACED REF Activation) =
+PROCEDURE SetActivation (act: Activation) =
   (* LL = 0 *)
   VAR v: ADDRESS := act;
   BEGIN
-    IF allThreads = NIL THEN InitActivations() END;
     WITH r = pthread_setspecific_activations(v) DO <*ASSERT r=0*> END;
   END SetActivation;
 
-PROCEDURE GetActivationUnsafeFast (): UNTRACED REF Activation =
-  (* Must be initialized. *)
-  (* LL = 0 *)
-  BEGIN
-    RETURN pthread_getspecific_activations();
-  END GetActivationUnsafeFast;
-
-PROCEDURE GetActivation (): UNTRACED REF Activation =
+PROCEDURE GetActivation (): Activation =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
   BEGIN
-    IF allThreads = NIL THEN InitActivations() END;
     RETURN pthread_getspecific_activations();
   END GetActivation;
 
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
-  VAR me: UNTRACED REF Activation;
+  VAR me: Activation;
       t: T;
   BEGIN
     IF allThreads = NIL THEN RETURN NIL END;
@@ -527,9 +517,9 @@ PROCEDURE DumpThreads () =
 (*------------------------------------------------------------ Fork, Join ---*)
 
 VAR (* LL=activeMu *)
-  allThreads: UNTRACED REF Activation; (* global list of active threads *)
+  allThreads: Activation; (* global list of active threads *)
 
-PROCEDURE CreateT (act: UNTRACED REF Activation): T =
+PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
      the allocator to start a collection which will call "SuspendOthers"
      which will try to acquire "activeMu". *)
@@ -550,7 +540,7 @@ PROCEDURE CreateT (act: UNTRACED REF Activation): T =
 PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   VAR
     xx: INTEGER;
-    me: UNTRACED REF Activation := param;
+    me: Activation := param;
   BEGIN
     SetActivation (me);
     (* We need to establish this binding before this thread touches any
@@ -561,12 +551,11 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     RunThread(me);
     me.stackbase := NIL;              (* disable GC scanning of my stack *)
 
-    <* ASSERT allThreads # me *>
     DISPOSE (me);
     RETURN NIL;
   END ThreadBase;
 
-PROCEDURE RunThread (me: UNTRACED REF Activation) =
+PROCEDURE RunThread (me: Activation) =
   VAR self: T;  cl: Closure;
   BEGIN
     WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
@@ -614,7 +603,7 @@ PROCEDURE RunThread (me: UNTRACED REF Activation) =
 
 PROCEDURE Fork (closure: Closure): T =
   VAR
-    act := NEW(UNTRACED REF Activation);
+    act := NEW(Activation);
     t := CreateT(act);
     size := defaultStackSize;
   BEGIN
@@ -961,7 +950,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR
     me := GetActivation();
-    act: UNTRACED REF Activation;
+    act: Activation;
   BEGIN
     ProcessMe(me, p);
     act := me.next;
@@ -977,7 +966,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
     WAIT_UNIT = 1000000;
   VAR
     me := GetActivation();
-    act: UNTRACED REF Activation;
+    act: Activation;
     acks: int;
     wait, remaining: Utime.struct_timespec;
   BEGIN
@@ -1027,7 +1016,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
     WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
   END ProcessEachStack;
 
-PROCEDURE ProcessMe (me: UNTRACED REF Activation;
+PROCEDURE ProcessMe (me: Activation;
                      p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu *)
   VAR
@@ -1053,7 +1042,7 @@ PROCEDURE ProcessMe (me: UNTRACED REF Activation;
     WITH z = state DO p(ADR(z), ADR(z) + ADRSIZE(z)) END;
   END ProcessMe;
 
-PROCEDURE ProcessOther (act: UNTRACED REF Activation;
+PROCEDURE ProcessOther (act: Activation;
                         p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu *)
   VAR
@@ -1082,7 +1071,7 @@ PROCEDURE ProcessOther (act: UNTRACED REF Activation;
 
 (* Signal based suspend/resume *)
 
-PROCEDURE SignalThread(act: UNTRACED REF Activation; state: ActState): BOOLEAN =
+PROCEDURE SignalThread(act: Activation; state: ActState): BOOLEAN =
   BEGIN
     IF SIG_SUSPEND = 0 THEN RETURN FALSE END;
     SetState(act, state);
@@ -1095,7 +1084,7 @@ PROCEDURE SignalThread(act: UNTRACED REF Activation; state: ActState): BOOLEAN =
     END;
   END SignalThread;
 
-PROCEDURE StopThread (act: UNTRACED REF Activation): BOOLEAN =
+PROCEDURE StopThread (act: Activation): BOOLEAN =
   BEGIN
     <*ASSERT act.state # ActState.Stopped*>
     IF RTMachine.SuspendThread = NIL THEN RETURN FALSE END;
@@ -1109,7 +1098,7 @@ PROCEDURE StopThread (act: UNTRACED REF Activation): BOOLEAN =
     RETURN TRUE;
   END StopThread;
 
-PROCEDURE StartThread (act: UNTRACED REF Activation): BOOLEAN =
+PROCEDURE StartThread (act: Activation): BOOLEAN =
   BEGIN
     <*ASSERT act.state = ActState.Stopped*>
     IF RTMachine.RestartThread = NIL THEN RETURN FALSE END;
@@ -1126,7 +1115,7 @@ PROCEDURE StopWorld () =
     RETRY_INTERVAL = 10000000;
   VAR
     me := GetActivation();
-    act: UNTRACED REF Activation;
+    act: Activation;
     acks: int;
     nLive, newlySent: INTEGER;
     retry: BOOLEAN;
@@ -1218,7 +1207,7 @@ PROCEDURE StartWorld () =
     RETRY_INTERVAL = 10000000;
   VAR
     me := GetActivation();
-    act: UNTRACED REF Activation;
+    act: Activation;
     acks: int;
     nDead, newlySent: INTEGER;
     retry: BOOLEAN;
@@ -1426,8 +1415,9 @@ PROCEDURE Init ()=
   VAR
     xx: INTEGER;
     self: T;
-    me := GetActivation();
+    me := InitActivations();
   BEGIN
+
     IF RTMachine.SuspendThread = NIL OR RTMachine.RestartThread = NIL THEN
       <*ASSERT RTMachine.SuspendThread = NIL*>
       <*ASSERT RTMachine.RestartThread = NIL*>
@@ -1535,7 +1525,7 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
 (*RTHooks.PopEFrame*)
 PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
-    WITH me = GetActivationUnsafeFast() DO
+    WITH me = GetActivation() DO
       me.frame := frame;
     END;
   END PopEFrame;
