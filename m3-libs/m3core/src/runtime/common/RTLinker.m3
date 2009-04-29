@@ -11,7 +11,7 @@
 UNSAFE MODULE RTLinker EXPORTS RTLinker, RTModule;
 
 IMPORT Cstdlib, Cstring;
-IMPORT RT0, RTParams, RTDebug, RTHeapRep, RTCollectorSRC;
+IMPORT RT0, RTParams, RTDebug, RTHeapRep, RTCollector, RTCollectorSRC;
 IMPORT RTTypeSRC, RTSignal, ThreadF, RTHeapInfo, RTLinkerX, 
        RTIO, Word;
 
@@ -57,6 +57,7 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     RTParams.Init ();
     RTHeapRep.Init ();
     ThreadF.Init ();
+    RTCollector.GetGCRatio();
     RTDebug.Init ();
     RTHeapInfo.Init ();
     IF RTParams.IsPresent("tracelinker") THEN
