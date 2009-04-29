@@ -10,7 +10,7 @@ IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError, RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched,
-       Uerror, Uexec;
+       Uerror, Uexec, Cstdlib;
 FROM Upthread IMPORT pthread_t;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
@@ -104,6 +104,38 @@ PROCEDURE SetState (act: Activation;  state: ActState) =
     END;
   END SetState;    
 
+(*---------------------------------------------------------------------------*)
+
+(* direct unsafe heap allocation *)
+
+PROCEDURE RAISE_RTE_E_RTE_T_OutOfMemory() =
+(* This is a separate function to avoid establishing a exception
+handling frame in the common success case, for performance,
+and to prevent infinite recursion. *)
+  BEGIN
+    RAISE RTE.E(RTE.T.OutOfMemory);
+  END RAISE_RTE_E_RTE_T_OutOfMemory;
+
+PROCEDURE MemAlloc (size: INTEGER): ADDRESS =
+(* This can be replaced now with NEW(UNTRACED REF ARRAY OF CHAR, size). *)
+  VAR res: ADDRESS;
+  BEGIN
+    res := Cstdlib.calloc(1, size);
+    IF (res = NIL) THEN
+      RAISE_RTE_E_RTE_T_OutOfMemory();
+    END;
+    RETURN res;
+  END MemAlloc;
+
+PROCEDURE MemFree (VAR a: ADDRESS) =
+(* This can be replaced now with DISPOSE once MemAlloc changed to NEW. *)
+  BEGIN
+    IF a # NIL THEN
+      Cstdlib.free(a);
+      a := NIL;
+    END;
+  END MemFree;
+
 (*----------------------------------------------------------------- Mutex ---*)
          
 PROCEDURE Acquire (m: Mutex) =
@@ -119,8 +151,8 @@ PROCEDURE Release (m: Mutex) =
 PROCEDURE CleanMutex (r: REFANY) =
   VAR m := NARROW(r, Mutex);
   BEGIN
-    pthread_mutex_delete (m.mutex);
-    m.mutex := NIL;
+    WITH r = pthread_mutex_destroy (m.mutex) DO <*ASSERT r=0*> END;
+    MemFree(m.mutex);
   END CleanMutex;
 
 PROCEDURE InitMutex (m: Mutex) =
@@ -129,8 +161,8 @@ PROCEDURE InitMutex (m: Mutex) =
     TRY
       WITH r = pthread_mutex_lock_init() DO <*ASSERT r=0*> END;
       IF m.mutex # NIL THEN RETURN END;
-      mutex := pthread_mutex_new();
-      IF mutex = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory); END;
+      mutex := MemAlloc(sizeof_pthread_mutex_t);
+      WITH r = pthread_mutex_init(mutex) DO <*ASSERT r=0*> END;
       m.mutex := mutex;
     FINALLY
       WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
@@ -175,8 +207,8 @@ PROCEDURE UnlockMutex (m: Mutex) =
 PROCEDURE CleanCondition (r: REFANY) =
   VAR c := NARROW(r, Condition);
   BEGIN
-    pthread_mutex_delete (c.mutex);
-    c.mutex := NIL;
+    WITH r = pthread_mutex_destroy (c.mutex) DO <*ASSERT r=0*> END;
+    MemFree(c.mutex);
   END CleanCondition;
 
 PROCEDURE InitCondition (c: Condition) =
@@ -185,8 +217,8 @@ PROCEDURE InitCondition (c: Condition) =
     TRY
       WITH r = pthread_mutex_lock_init() DO <*ASSERT r=0*> END;
       IF c.mutex # NIL THEN RETURN END;
-      mutex := pthread_mutex_new();
-      IF mutex = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory); END;
+      mutex := MemAlloc(sizeof_pthread_mutex_t);
+      WITH r = pthread_mutex_init(mutex) DO <*ASSERT r=0*> END;
       c.mutex := mutex;
     FINALLY
       WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
@@ -492,10 +524,9 @@ PROCEDURE CreateT (act: Activation): T =
      the allocator to start a collection which will call "SuspendOthers"
      which will try to acquire "activeMu". *)
   VAR t := NEW(T, act := act);
-      c := pthread_cond_new();
   BEGIN
-    IF c = NIL THEN RAISE RTE.E(RTE.T.OutOfMemory); END;
-    t.waitCond := c;
+    t.waitCond := MemAlloc(sizeof_pthread_cond_t);
+    WITH r = pthread_cond_init (t.waitCond) DO <*ASSERT r=0*> END;
     t.cond     := NEW(Condition);
     FloatMode.InitThread (act.floatState);
     AssignSlot (t);
@@ -548,8 +579,8 @@ PROCEDURE RunThread (me: Activation) =
       (* mark "self" done and clean it up a bit *)
       self.completed := TRUE;
       Broadcast(self.cond); (* let everybody know that "self" is done *)
-      pthread_cond_delete(self.waitCond);
-      self.waitCond := NIL;
+      WITH r = pthread_cond_destroy(self.waitCond) DO <*ASSERT r=0*> END;
+      MemFree(self.waitCond);
     END;
 
     IF perfOn THEN PerfDeleted(self.id) END;
