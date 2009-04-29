@@ -9,4 +9,27 @@
 
 Interface ("ThreadF")
 module ("ThreadPThread")
+
+if defined("_all")
+  delete_file(["tls.o", "tls.obj", "a.exe", "a.out", "tls.exe", "m3conf.h"])
+  > "m3conf.h" in
+    write("#undef M3CONFIG_THREAD_LOCAL_STORAGE\n")
+  end
+  if defined("SYSTEM_CC") and not defined("M3_BOOTSTRAP")
+    if equal(try_exec("@" & SYSTEM_CC, path_of("config/tls.c"), "-lpthread"), 0)
+      if equal(try_exec("@./a.out"), 0) % or equal(try_exec("@./a.exe"), 0)
+        > "m3conf.h" in
+          write("#define M3CONFIG_THREAD_LOCAL_STORAGE 1\n")
+        end
+      else
+        % write("a.out failed\n")
+      end
+    else
+      % write("compile config/tls.c failed\n")
+    end
+  else
+    % write("SYSTEM_CC not defined or bootstrapping\n")
+  end
+end
+
 c_source ("ThreadPThreadC")
