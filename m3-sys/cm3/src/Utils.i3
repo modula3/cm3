@@ -29,7 +29,8 @@ PROCEDURE Remove (file: TEXT);
 PROCEDURE Copy (old_file, new_file: TEXT);
 PROCEDURE CopyText (old_file, new_file: TEXT);
 PROCEDURE IsEqual (a, b: TEXT): BOOLEAN;
-PROCEDURE LinkFile (from, to: TEXT);
+PROCEDURE SymbolicLinkFile (from, to: TEXT);
+PROCEDURE HardLinkFile (from, to: TEXT);
 PROCEDURE IsFile (file: TEXT): BOOLEAN;
 PROCEDURE IsDir (file: TEXT): BOOLEAN;
 
