@@ -4,19 +4,30 @@
 UNSAFE MODULE UtilsPosix EXPORTS Utils;
 
 IMPORT Ctypes, Unix, M3toC, Msg, Pathname, Text;
+FROM Ctypes IMPORT const_char_star, int;
 
-PROCEDURE LinkFile (from, to: TEXT) =
+PROCEDURE SymbolicOrHardLink (link: PROCEDURE(name1, name2: const_char_star):int; s_for_sym, from, to: TEXT) =
   VAR s_from, s_to: Ctypes.char_star;
   BEGIN
-    Remove (to);
     MakeRelative (from, to);
-    Msg.Commands ("link -s ", from, " ", to);
+    Msg.Commands ("ln ", s_for_sym, from, " ", to);
     s_from := M3toC.SharedTtoS (from);
     s_to   := M3toC.SharedTtoS (to);
-    EVAL Unix.symlink (s_from, s_to);
+    EVAL link(s_from, s_to);
     M3toC.FreeSharedS (from, s_from);
     M3toC.FreeSharedS (to, s_to);
-  END LinkFile;
+  END SymbolicOrHardLink;
+
+PROCEDURE SymbolicLinkFile (from, to: TEXT) =
+  BEGIN
+    Remove (to);
+    SymbolicOrHardLink(Unix.symlink, "-s ", from, to);
+  END SymbolicLinkFile;
+
+PROCEDURE HardLinkFile (from, to: TEXT) =
+  BEGIN
+    SymbolicOrHardLink(Unix.link, "", from, to);
+  END HardLinkFile;
 
 PROCEDURE MakeRelative (VAR from: TEXT;  to: TEXT) =
   VAR
