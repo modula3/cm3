@@ -2811,7 +2811,7 @@ PROCEDURE GetMaxHeap () =
     IF n >= 0 THEN max_heap := n END;
   END GetMaxHeap;
 
-<*NOWARN*>PROCEDURE GetGCRatio () =
+PROCEDURE GetGCRatio () =
   <*FATAL Convert.Failed*>
   VAR
     txt := RTParams.Value ("gcRatio");
@@ -2893,5 +2893,4 @@ PROCEDURE FinishBench() =
   END FinishBench;
 
 BEGIN
-    (*GetGCRatio();*)
 END RTCollector.
