@@ -3,9 +3,6 @@
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
 #include <assert.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <pthread.h>
 
 #ifdef __APPLE__
 /* MacOSX diverges in a good way and therefore many functions
@@ -19,7 +16,11 @@ not to call (statically, but the compiler can't or won't tell). */
 #ifdef __hpux
 #include <stdio.h>
 #endif /* hpux */
+#if defined(__hpux) || defined(__osf)
+#include <errno.h>
+#endif /* hpux || osf */
 #endif
+#include <pthread.h>
 
 /* const is extern const in C, but static const in C++,
  * but gcc gives a warning for the correct portable form "extern const" */
@@ -216,7 +217,7 @@ void* ThreadPThread__pthread_getspecific_##name(void) \
     return pthread_getspecific(name); \
 } \
 
-#if 0 /* M3CONFIG_THREAD_LOCAL_STORAGE */
+#if 0 /* CONFIG_UNDERUNDER_THREAD */
 #define THREAD_LOCAL(name) THREAD_LOCAL_FAST(name)
 #else
 #define THREAD_LOCAL(name) THREAD_LOCAL_SLOW(name)
@@ -232,56 +233,23 @@ MUTEX(heap)
 CONDITION_VARIABLE(heap)
 THREAD_LOCAL(activations)
 
-/* This could be a function, but then we'd have to cast the init parameter
-and casting function parameters is a little bit dangerous and in this case
-probably not worthwhile. */
-#define THREADPTHREAD__PTHREAD_GENERIC_NEW(type, init) \
-    int r; \
-    type* p = (type*)calloc(1, sizeof(*p)); \
-    if (p == NULL) \
-        return p; \
-    r = init(p, NULL); \
-    if (r == ENOMEM) \
-    { \
-        free(p); \
-        return NULL; \
-    } \
-    assert(r == 0); \
-    return p; \
+EXTERN_CONST int sizeof_pthread_mutex_t = sizeof(pthread_mutex_t);
+EXTERN_CONST int sizeof_pthread_cond_t = sizeof(pthread_cond_t);
 
-void* ThreadPThread__pthread_mutex_new(void)
+int
+ThreadPThread__pthread_mutex_destroy(
+    pthread_mutex_t* mutex)
 {
-    THREADPTHREAD__PTHREAD_GENERIC_NEW(pthread_mutex_t, pthread_mutex_init);
-}
-
-void* ThreadPThread__pthread_cond_new(void)
-{
-    THREADPTHREAD__PTHREAD_GENERIC_NEW(pthread_cond_t, pthread_cond_init);
-}
-
-void ThreadPThread__pthread_mutex_delete(pthread_mutex_t* p)
-{
-    int e;
-    if (p == NULL) return;
 #if defined(__hpux) || defined(__osf)
     /* workaround Tru64 5.1 and HP-UX bug
     pthread_mutex_destroy() intermittently returns
     EBUSY even when there are no threads accessing the mutex. */
-    while ((e = pthread_mutex_destroy(p)) == EBUSY) { }
+    int e;
+    while ((e = pthread_mutex_destroy(mutex)) == EBUSY) { }
+    return e;
 #else
-    e = pthread_mutex_destroy(p);
+    return pthread_mutex_destroy(mutex);
 #endif
-    assert(e == 0);
-    free(p);
-}
-
-void ThreadPThread__pthread_cond_delete(pthread_cond_t* p)
-{
-    int r;
-    if (p == NULL) return;
-    r = pthread_cond_destroy(p);
-    assert(r == 0);
-    free(p);
 }
 
 #ifdef __cplusplus
