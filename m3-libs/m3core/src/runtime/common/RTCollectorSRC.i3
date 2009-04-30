@@ -85,4 +85,8 @@ PROCEDURE StartForegroundCollection();
 PROCEDURE StartBench();
 PROCEDURE FinishBench();
 
+(* This is just a helper to deal with initialization ordering and only
+exposed for RTLinker to call. *)
+PROCEDURE GetGCRatio();
+
 END RTCollectorSRC.
