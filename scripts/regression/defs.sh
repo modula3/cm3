@@ -411,10 +411,10 @@ install_bin_dist() {
 download_bin_dist() {
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` downloading ${BINDISTMIN_URL}/${BINDISTMIN_NAME} into ${BINDISTMIN_LOC}"
 
+  mkdir -p "${BINDISTMIN_LOC}" || true
   if type wget >/dev/null; then
     wget "${BINDISTMIN_URL}/${BINDISTMIN_NAME}" -O "${BINDISTMIN_LOC}/${BINDISTMIN_NAME}"
   else
-    mkdir -p "${BINDISTMIN_LOC}" || true
     (cd "${BINDISTMIN_LOC}"; ftp "${BINDISTMIN_URL}/${BINDISTMIN_NAME}")
   fi
   
