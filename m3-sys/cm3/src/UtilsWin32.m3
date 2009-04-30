@@ -1,25 +1,15 @@
 (* Copyright 1996-2000 Critical Mass, Inc. All rights reserved.    *)
 (* See file COPYRIGHT-CMASS for details. *)
 
-MODULE UtilsWin32 EXPORTS Utils;
+UNSAFE MODULE UtilsWin32 EXPORTS Utils;
 
-IMPORT Msg, OSError, Fmt, M3File;
-
-PROCEDURE SymbolicOrHardLink (link: PROCEDURE(name1, name2: const_char_star); s_for_sym, from, to: TEXT) =
-  VAR s_from, s_to: Ctypes.char_star;
-  BEGIN
-    MakeRelative (from, to);
-    Msg.Commands ("ln ", s_for_sym, from, " ", to);
-    s_from := M3toC.SharedTtoS (from);
-    s_to   := M3toC.SharedTtoS (to);
-    EVAL link(s_from, s_to);
-    M3toC.FreeSharedS (from, s_from);
-    M3toC.FreeSharedS (to, s_to);
-  END SymbolicOrHardLink;
+IMPORT Msg, OSError, Fmt, M3File(*, Unix*);
 
 PROCEDURE HardLinkFile (from, to: TEXT) =
   BEGIN
-    SymbolicOrHardLink(Unix.link, "", from, to);
+    (*SymbolicOrHardLink(Unix.link, "", from, to);
+    temporary due to bootstrapping*)
+    SymbolicLinkFile(from, to);
   END HardLinkFile;
 
 PROCEDURE SymbolicLinkFile (from, to: TEXT) =
