@@ -7,6 +7,7 @@
 INTERFACE Utils;
 
 IMPORT File, Wr, Arg, Thread;
+FROM Ctypes IMPORT const_char_star, int;
 
 PROCEDURE OpenWriter   (name: TEXT;  fatal: BOOLEAN): Wr.T;
 PROCEDURE AppendWriter (name: TEXT;  fatal: BOOLEAN): Wr.T;
@@ -45,5 +46,7 @@ CONST NO_TIME = 0;
 PROCEDURE PrepArgs (program: TEXT;  args: Arg.List): REF ARRAY OF TEXT;
 PROCEDURE Execute  (program: TEXT;  args: Arg.List;
                      stdout: TEXT;  fatal: BOOLEAN): INTEGER;
+
+PROCEDURE SymbolicOrHardLink (link: PROCEDURE(name1, name2: const_char_star):int; s_for_sym, from, to: TEXT);
 
 END Utils.
