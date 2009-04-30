@@ -243,7 +243,6 @@ int Unix__dup(int oldd)
 #ifndef _WIN32
 
 m3_pid_t Unix__fork(void) { return fork(); }
-m3_pid_t Unix__vfork(void) { return vfork(); }
 
 #endif
 
