@@ -102,10 +102,6 @@ PROCEDURE EnableMotion();
 PROCEDURE Collect();
 (* Maybe collect now. *)
 
-(* This is just a helper to deal with initialization ordering and only
-exposed for RTLinker to call. *)
-PROCEDURE GetGCRatio();
-
 END RTCollector.
 
 (*
