@@ -3,6 +3,9 @@
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
 #include <assert.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <pthread.h>
 
 #ifdef __APPLE__
 /* MacOSX diverges in a good way and therefore many functions
@@ -16,11 +19,7 @@ not to call (statically, but the compiler can't or won't tell). */
 #ifdef __hpux
 #include <stdio.h>
 #endif /* hpux */
-#if defined(__hpux) || defined(__osf)
-#include <errno.h>
-#endif /* hpux || osf */
 #endif
-#include <pthread.h>
 
 /* const is extern const in C, but static const in C++,
  * but gcc gives a warning for the correct portable form "extern const" */
@@ -217,7 +216,7 @@ void* ThreadPThread__pthread_getspecific_##name(void) \
     return pthread_getspecific(name); \
 } \
 
-#if 0 /* CONFIG_UNDERUNDER_THREAD */
+#if 0 /* M3CONFIG_THREAD_LOCAL_STORAGE */
 #define THREAD_LOCAL(name) THREAD_LOCAL_FAST(name)
 #else
 #define THREAD_LOCAL(name) THREAD_LOCAL_SLOW(name)
@@ -251,6 +250,72 @@ ThreadPThread__pthread_mutex_destroy(
     return pthread_mutex_destroy(mutex);
 #endif
 }
+
+typedef int (*generic_init_t)(void*, const void*);
+
+void* ThreadPThread_pthread_generic_new(size_t size, generic_init_t init)
+{
+    int r;
+    void* p = calloc(1, size);
+    if (p == NULL)
+        return p;
+    r = init(p, NULL);
+    if (r == EAGAIN)
+        r = init(p, NULL);
+    if (r == ENOMEM)
+        goto Error;
+    assert(r == 0);
+    if (r != 0)
+        goto Error;
+    return p;
+Error:
+    free(p);
+    return NULL;
+}
+
+#define THREADPTHREAD__PTHREAD_GENERIC_NEW(type) \
+    typedef pthread_##type##_t T; \
+    typedef pthread_##type##attr_t attr_t; \
+    typedef int (*init_t)(T*, const attr_t*); \
+    /* make sure the type matches */ \
+    init_t init = pthread_##type##_init; \
+    return ThreadPThread_pthread_generic_new(sizeof(T), (generic_init_t)init);
+
+void* ThreadPThread__pthread_mutex_new(void)
+{
+    THREADPTHREAD__PTHREAD_GENERIC_NEW(mutex);
+}
+
+void* ThreadPThread__pthread_cond_new(void)
+{
+    THREADPTHREAD__PTHREAD_GENERIC_NEW(cond);
+}
+
+void ThreadPThread__pthread_mutex_delete(pthread_mutex_t* p)
+{
+    int e;
+    if (p == NULL) return;
+#if defined(__hpux) || defined(__osf)
+    /* workaround Tru64 5.1 and HP-UX bug
+    pthread_mutex_destroy() intermittently returns
+    EBUSY even when there are no threads accessing the mutex. */
+    while ((e = pthread_mutex_destroy(p)) == EBUSY) { }
+#else
+    e = pthread_mutex_destroy(p);
+#endif
+    assert(e == 0);
+    free(p);
+}
+
+void ThreadPThread__pthread_cond_delete(pthread_cond_t* p)
+{
+    int r;
+    if (p == NULL) return;
+    r = pthread_cond_destroy(p);
+    assert(r == 0);
+    free(p);
+}
+
 
 #ifdef __cplusplus
 } /* extern "C" */
