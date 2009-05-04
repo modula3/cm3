@@ -78,8 +78,7 @@ REVEAL
     END;
 
 TYPE
-  Activation = UNTRACED REF ActivationRecord;
-  ActivationRecord = RECORD
+  Activation = UNTRACED REF RECORD
       (* exception handling support *)
       frame: ADDRESS := NIL;
       next, prev: Activation := NIL;
@@ -336,28 +335,6 @@ PROCEDURE TestAlert(): BOOLEAN =
     END;
   END TestAlert;
 
-(*---------------------------------------------------------------------------*)
-
-(* direct unsafe heap allocation *)
-
-PROCEDURE RAISE_RTE_E_RTE_T_OutOfMemory() =
-(* This is a separate function to avoid establishing a exception
-handling frame in the common success case, for performance,
-and to prevent infinite recursion. *)
-  BEGIN
-    RAISE RTE.E(RTE.T.OutOfMemory);
-  END RAISE_RTE_E_RTE_T_OutOfMemory;
-
-PROCEDURE MemAlloc (size: INTEGER): ADDRESS =
-  VAR res: ADDRESS;
-  BEGIN
-    res := calloc(1, size);
-    IF (res = NIL) THEN
-      RAISE_RTE_E_RTE_T_OutOfMemory();
-    END;
-    RETURN res;
-  END MemAlloc;
-
 (*------------------------------------------------------------------ Self ---*)
 
 VAR (* LL = slotMu *)
@@ -365,12 +342,10 @@ VAR (* LL = slotMu *)
   next_slot := 1;
   slots     : REF ARRAY OF T;  (* NOTE: we don't use slots[0]. *)
 
-PROCEDURE InitActivations () =
-  VAR me: Activation := MemAlloc(BYTESIZE(ActivationRecord));
-      init: ActivationRecord;
+PROCEDURE InitActivations ():Activation =
+  VAR me: Activation := NEW(Activation);
   BEGIN
     InitC();
-    me^ := init;
     IF TlsSetValue_threadIndex(LOOPHOLE (me, SIZE_T)) = 0 THEN
       Choke(ThisLine());
     END;
@@ -382,6 +357,7 @@ PROCEDURE InitActivations () =
     me.prev := me;
     <* ASSERT allThreads = NIL *>
     allThreads := me;
+    RETURN me;
   END InitActivations;
 
 PROCEDURE SetActivation (act: Activation) =
@@ -392,29 +368,19 @@ PROCEDURE SetActivation (act: Activation) =
     END;
   END SetActivation;
 
-PROCEDURE GetActivationUnsafeFast (): Activation =
-  (* Must be initialized. *)
-  (* LL = 0 *)
-  BEGIN
-    RETURN LOOPHOLE (TlsGetValue_threadIndex(), Activation);
-  END GetActivationUnsafeFast;
-
 PROCEDURE GetActivation (): Activation =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
   BEGIN
-    IF allThreads = NIL THEN InitActivations() END;
     RETURN LOOPHOLE (TlsGetValue_threadIndex(), Activation);
   END GetActivation;
 
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
-  VAR me: Activation;
+  VAR me := GetActivation();
       t: T;
   BEGIN
-    (** me := GetActivation(); **)
-    me := LOOPHOLE (TlsGetValue_threadIndex(), Activation);
     IF me = NIL THEN RETURN NIL; END;
 
     EnterCriticalSection_slotMu();
@@ -1031,7 +997,7 @@ PROCEDURE PerfRunning (id: Id) =
 PROCEDURE Init() =
   VAR
     self: T;
-    me := GetActivation();
+    me := InitActivations();
   BEGIN
     threadMu := NEW(Mutex);
     self := CreateT(me);
@@ -1151,7 +1117,7 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
 (*RTHooks.PopEFrame*)
 PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
-    GetActivationUnsafeFast().frame := frame;
+    GetActivation().frame := frame;
   END PopEFrame;
 
 BEGIN
