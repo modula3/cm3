@@ -137,18 +137,11 @@ TYPE
     pthread_mutex_t = ADDRESS;
     pthread_cond_t = ADDRESS;
 
-<*EXTERNAL ThreadPThread__sizeof_pthread_mutex_t*>
-(*CONST*) VAR sizeof_pthread_mutex_t:int;
+<*EXTERNAL ThreadPThread__pthread_mutex_new*>
+PROCEDURE pthread_mutex_new():pthread_mutex_t;
 
-<*EXTERNAL ThreadPThread__sizeof_pthread_cond_t*>
-(*CONST*) VAR sizeof_pthread_cond_t:int;
-
-<*EXTERNAL*>
-PROCEDURE pthread_mutex_init(mutex: pthread_mutex_t; attr:ADDRESS:=NIL):int;
-
-(* This wrapper has some OS-specific bug workarounds. *)
-<*EXTERNAL ThreadPThread__pthread_mutex_destroy*>
-PROCEDURE pthread_mutex_destroy(mutex: pthread_mutex_t):int;
+<*EXTERNAL ThreadPThread__pthread_mutex_delete*>
+PROCEDURE pthread_mutex_delete(a:pthread_mutex_t);
 
 <*EXTERNAL*>
 PROCEDURE pthread_mutex_lock(mutex: pthread_mutex_t):int;
@@ -156,11 +149,11 @@ PROCEDURE pthread_mutex_lock(mutex: pthread_mutex_t):int;
 <*EXTERNAL*>
 PROCEDURE pthread_mutex_unlock(mutex: pthread_mutex_t):int;
 
-<*EXTERNAL*>
-PROCEDURE pthread_cond_init(cond: pthread_cond_t; attr:ADDRESS:=NIL):int;
+<*EXTERNAL ThreadPThread__pthread_cond_new*>
+PROCEDURE pthread_cond_new():pthread_mutex_t;
 
-<*EXTERNAL*>
-PROCEDURE pthread_cond_destroy(cond: pthread_cond_t):int;
+<*EXTERNAL ThreadPThread__pthread_cond_delete*>
+PROCEDURE pthread_cond_delete(a:pthread_cond_t);
 
 <*EXTERNAL*>
 PROCEDURE pthread_cond_wait(cond: pthread_cond_t; mutex: pthread_mutex_t):int;
