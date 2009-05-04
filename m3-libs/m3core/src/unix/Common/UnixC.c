@@ -85,7 +85,11 @@ void Unix__Assertions(void)
 #define _FILE_OFFSET_BITS 64 maps open to. */
 int Unix__open(const char* path, int flags, m3_mode_t mode)
 {
+#ifdef _WIN32
+    return _open(path, flags, mode);
+#else
     return open(path, flags, mode);
+#endif
 }
 
 /* wrapped in case passing mode_t vs. int varies */
@@ -176,7 +180,11 @@ int Unix__mknod(const char* path, m3_mode_t mode, m3_dev_t dev)
 
 m3_mode_t Unix__umask(m3_mode_t newmask)
 {
+#ifdef _WIN32
+    return _umask(newmask);
+#else
     return umask(newmask);
+#endif
 }
 
 int Unix__link(const char* ExistingFile, const char* NewLink)
@@ -208,7 +216,11 @@ Error:
 
 int Unix__chmod(const char* path, m3_mode_t mode)
 {
+#ifdef _WIN32
+    return _chmod(path, mode);
+#else
     return chmod(path, mode);
+#endif
 }
 
 #ifndef _WIN32
@@ -232,23 +244,36 @@ int Unix__fchown(int fd, m3_uid_t owner, m3_gid_t group)
 
 int Unix__creat(const char* path, m3_mode_t mode)
 {
+#ifdef _WIN32
+    return _creat(path, mode);
+#else
     return creat(path, mode);
+#endif
 }
 
 int Unix__dup(int oldd)
 {
+#ifdef _WIN32
+    return _dup(oldd);
+#else
     return dup(oldd);
+#endif
 }
 
 #ifndef _WIN32
-
 m3_pid_t Unix__fork(void) { return fork(); }
-
 #endif
 
 int Unix__system(const char* s) { return system(s); }
 
-int Unix__isatty(int file) { return isatty(file); }
+int Unix__isatty(int file)
+{
+#ifdef _WIN32
+    return _isatty(file);
+#else
+    return isatty(file);
+#endif
+}
 
 #ifndef _WIN32
 
@@ -264,9 +289,23 @@ int Unix__pipe(int files[2]) { return pipe(files); }
 
 int Unix__rename(const char* from, const char* to) { return rename(from, to); }
 
-int Unix__rmdir(const char* path) { return rmdir(path); }
+int Unix__rmdir(const char* path)
+{
+#ifdef _WIN32
+    return _rmdir(path);
+#else
+    return rmdir(path);
+#endif
+}
 
-int Unix__unlink(const char* path) { return unlink(path); }
+int Unix__unlink(const char* path)
+{
+#ifdef _WIN32
+    return _unlink(path);
+#else
+    return unlink(path);
+#endif
+}
 
 int Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout)
 {
