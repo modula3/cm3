@@ -70,6 +70,7 @@ proc m3_backend(source, object, optimize, debug) is
     if equal (WORD_SIZE, "32BITS")
         args += GetM3BackFlag("-m32")
     end
+     args += GetM3BackFlag("-funwind-tables")
     local m3back = GetM3Back()
     return try_exec (m3back, args, source, "-o", object)
 end
