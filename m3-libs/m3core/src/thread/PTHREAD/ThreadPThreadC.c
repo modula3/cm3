@@ -232,25 +232,6 @@ MUTEX(heap)
 CONDITION_VARIABLE(heap)
 THREAD_LOCAL(activations)
 
-EXTERN_CONST int sizeof_pthread_mutex_t = sizeof(pthread_mutex_t);
-EXTERN_CONST int sizeof_pthread_cond_t = sizeof(pthread_cond_t);
-
-int
-ThreadPThread__pthread_mutex_destroy(
-    pthread_mutex_t* mutex)
-{
-#if defined(__hpux) || defined(__osf)
-    /* workaround Tru64 5.1 and HP-UX bug
-    pthread_mutex_destroy() intermittently returns
-    EBUSY even when there are no threads accessing the mutex. */
-    int e;
-    while ((e = pthread_mutex_destroy(mutex)) == EBUSY) { }
-    return e;
-#else
-    return pthread_mutex_destroy(mutex);
-#endif
-}
-
 typedef int (*generic_init_t)(void*, const void*);
 
 void* ThreadPThread_pthread_generic_new(size_t size, generic_init_t init)
@@ -258,7 +239,7 @@ void* ThreadPThread_pthread_generic_new(size_t size, generic_init_t init)
     int r;
     void* p = calloc(1, size);
     if (p == NULL)
-        return p;
+        goto Error;
     r = init(p, NULL);
     if (r == EAGAIN)
         r = init(p, NULL);
@@ -269,7 +250,7 @@ void* ThreadPThread_pthread_generic_new(size_t size, generic_init_t init)
         goto Error;
     return p;
 Error:
-    free(p);
+    if (p) free(p);
     return NULL;
 }
 
