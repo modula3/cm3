@@ -132,19 +132,28 @@ PROCEDURE CleanMutex (r: REFANY) =
     m.mutex := NIL;
   END CleanMutex;
 
-PROCEDURE InitMutex (m: Mutex) =
-  VAR mutex: pthread_mutex_t;
+PROCEDURE InitMutexHelper (root: REFANY; VAR result: pthread_mutex_t; Clean: PROCEDURE(r: REFANY)) =
+  VAR mutex := pthread_mutex_new();
   BEGIN
-    TRY
-      WITH r = pthread_mutex_lock_init() DO <*ASSERT r=0*> END;
-      IF m.mutex # NIL THEN RETURN END;
-      mutex := pthread_mutex_new();
-      IF mutex = NIL THEN RAISE_RTE_E_RTE_T_OutOfMemory(); END;
-      m.mutex := mutex;
-    FINALLY
+    WITH r = pthread_mutex_lock_init() DO <*ASSERT r=0*> END;
+    IF result = NIL THEN (* We won the race. *)
+      IF mutex = NIL THEN (* But we failed. *)
+        WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
+        RAISE_RTE_E_RTE_T_OutOfMemory();
+      ELSE (* We won the race and succeeded. *)
+        result := mutex;
+        WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
+        RTHeapRep.RegisterFinalCleanup (root, Clean);
+      END;
+    ELSE (* another thread beat us in the race, ok *)
       WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
+      pthread_mutex_delete(mutex);
     END;
-    RTHeapRep.RegisterFinalCleanup (m, CleanMutex);
+  END InitMutexHelper;
+
+<*INLINE*>PROCEDURE InitMutex (m: Mutex) =
+  BEGIN
+    InitMutexHelper(m, m.mutex, CleanMutex);
   END InitMutex;
 
 PROCEDURE LockMutex (m: Mutex) =
@@ -188,19 +197,9 @@ PROCEDURE CleanCondition (r: REFANY) =
     c.mutex := NIL;
   END CleanCondition;
 
-PROCEDURE InitCondition (c: Condition) =
-  VAR mutex: pthread_mutex_t;
+<*INLINE*>PROCEDURE InitCondition (c: Condition) =
   BEGIN
-    TRY
-      WITH r = pthread_mutex_lock_init() DO <*ASSERT r=0*> END;
-      IF c.mutex # NIL THEN RETURN END;
-      mutex := pthread_mutex_new();
-      IF mutex = NIL THEN RAISE_RTE_E_RTE_T_OutOfMemory(); END;
-      c.mutex := mutex;
-    FINALLY
-      WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
-    END;
-    RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
+    InitMutexHelper(c, c.mutex, CleanCondition);
   END InitCondition;
 
 PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
