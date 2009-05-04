@@ -3,13 +3,11 @@
 
 UNSAFE MODULE UtilsWin32 EXPORTS Utils;
 
-IMPORT Msg, OSError, Fmt, M3File(*, Unix*);
+IMPORT Msg, OSError, Fmt, M3File(*, Unix*)(*bootstrap hack*);
 
 PROCEDURE HardLinkFile (from, to: TEXT) =
   BEGIN
-    (*SymbolicOrHardLink(Unix.link, "", from, to);
-    temporary due to bootstrapping*)
-    SymbolicLinkFile(from, to);
+    SymbolicOrHardLink((*Unix.*)(*bootstrap hack*)link, "", from, to);
   END HardLinkFile;
 
 PROCEDURE SymbolicLinkFile (from, to: TEXT) =

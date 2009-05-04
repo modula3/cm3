@@ -49,4 +49,7 @@ PROCEDURE Execute  (program: TEXT;  args: Arg.List;
 
 PROCEDURE SymbolicOrHardLink (link: PROCEDURE(name1, name2: const_char_star):int; s_for_sym, from, to: TEXT);
 
+(*bootstrap hack*)
+<*EXTERNAL Win32__link*> PROCEDURE link (name1, name2: const_char_star): int;
+
 END Utils.
