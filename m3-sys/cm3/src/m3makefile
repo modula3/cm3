@@ -26,6 +26,7 @@ if equal (OS_TYPE, "POSIX")
   implementation ("UtilsPosix")
 else
   implementation ("UtilsWin32")
+  c_source("../../../m3-libs/m3core/src/unix/Common/UnixC")
 end
 
 module ("Arg")

@@ -214,6 +214,13 @@ Error:
 #endif
 }
 
+#ifdef _WIN32
+int Win32__link(const char* ExistingFile, const char* NewLink)
+{
+    return Unix__link(ExistingFile, NewLink);
+}
+#endif
+
 int Unix__chmod(const char* path, m3_mode_t mode)
 {
 #ifdef _WIN32
