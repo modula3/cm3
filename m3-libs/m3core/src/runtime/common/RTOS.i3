@@ -17,7 +17,7 @@ PROCEDURE Exit (n: INTEGER);
 PROCEDURE Crash ();
 (* Terminate current process with a crash *)
 
-<*EXTERNAL "RTOS__GetMemory"*>
+<* EXTERNAL "RTOS__GetMemory" *>
 PROCEDURE GetMemory (size: INTEGER): ADDRESS;
 (* Return the address of "size" bytes of unused storage *)
 
