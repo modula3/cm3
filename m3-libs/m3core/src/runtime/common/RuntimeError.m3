@@ -58,5 +58,10 @@ PROCEDURE Tag (t: T): TEXT =
     RETURN Msg[t];
   END Tag;
 
+PROCEDURE Raise (t: T) =
+  BEGIN
+    RAISE E(t);
+  END Raise;
+
 BEGIN
 END RuntimeError.
