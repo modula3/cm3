@@ -316,22 +316,21 @@ PROCEDURE Alert(t: T) =
   END Alert;
 
 PROCEDURE XTestAlert (self: T): BOOLEAN =
-     VAR result: BOOLEAN;
-   BEGIN
-       EnterCriticalSection_cm();
-       result := self.alerted; IF result THEN self.alerted := FALSE END;
-       LeaveCriticalSection_cm();
-       RETURN result;
-   END XTestAlert;
+  VAR result: BOOLEAN;
+  BEGIN
+    EnterCriticalSection_cm();
+    result := self.alerted; IF result THEN self.alerted := FALSE END;
+    LeaveCriticalSection_cm();
+    RETURN result;
+  END XTestAlert;
 
 PROCEDURE TestAlert(): BOOLEAN =
-    VAR self := Self();
+  VAR self := Self();
   BEGIN
-    IF self = NIL THEN
+    IF self = NIL
       (* Not created by Fork; not alertable *)
-      RETURN FALSE
-    ELSE
-      RETURN XTestAlert(self);
+      THEN RETURN FALSE
+      ELSE RETURN XTestAlert(self);
     END;
   END TestAlert;
 
@@ -342,8 +341,8 @@ VAR (* LL = slotMu *)
   next_slot := 1;
   slots     : REF ARRAY OF T;  (* NOTE: we don't use slots[0]. *)
 
-PROCEDURE InitActivations ():Activation =
-  VAR me: Activation := NEW(Activation);
+PROCEDURE InitActivations (): Activation =
+  VAR me := NEW(Activation);
   BEGIN
     InitC();
     IF TlsSetValue_threadIndex(LOOPHOLE (me, SIZE_T)) = 0 THEN
@@ -378,11 +377,11 @@ PROCEDURE GetActivation (): Activation =
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
-  VAR me := GetActivation();
-      t: T;
+  VAR
+    me := GetActivation();
+    t: T;
   BEGIN
     IF me = NIL THEN RETURN NIL; END;
-
     EnterCriticalSection_slotMu();
       t := slots[me.slot];
     LeaveCriticalSection_slotMu();
