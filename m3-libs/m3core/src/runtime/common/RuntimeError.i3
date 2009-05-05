@@ -60,8 +60,7 @@ PROCEDURE Self (): RT0.ExceptionPtr;
 PROCEDURE Tag (t: T): TEXT;
 (* Returns a message describing "t". *)
 
+PROCEDURE Raise (t: T);
+(* RAISE(t). *)
+
 END RuntimeError.
-
-
-
-
