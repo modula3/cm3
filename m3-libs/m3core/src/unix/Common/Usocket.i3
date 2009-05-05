@@ -55,40 +55,40 @@ TYPE
   socklen_t = Utypes.socklen_t;
   socklen_t_star = UNTRACED REF socklen_t;
 
-<*EXTERNAL Usocket__accept*>
+<*EXTERNAL "Usocket__accept"*>
 PROCEDURE accept(s: int; addr: UNTRACED REF struct_sockaddr_in; addrlen: socklen_t_star) : int RAISES {};
 
-<*EXTERNAL Usocket__bind*>
+<*EXTERNAL "Usocket__bind"*>
 PROCEDURE bind(s: int; name: (*const*) UNTRACED REF struct_sockaddr_in; namelen: socklen_t) : int RAISES {};
 
-<*EXTERNAL Usocket__connect*>
+<*EXTERNAL "Usocket__connect"*>
 PROCEDURE connect(s: int; name: (*const*) UNTRACED REF struct_sockaddr_in; namelen: socklen_t) : int RAISES {};
 
-<*EXTERNAL Usocket__getpeername*>
+<*EXTERNAL "Usocket__getpeername"*>
 PROCEDURE getpeername(s: int; name: UNTRACED REF struct_sockaddr_in; namelen: socklen_t_star) : int RAISES {};
 
-<*EXTERNAL Usocket__getsockname*>
+<*EXTERNAL "Usocket__getsockname"*>
 PROCEDURE getsockname(s: int; name: UNTRACED REF struct_sockaddr_in; namelen: socklen_t_star) : int RAISES {};
 
-<*EXTERNAL Usocket__getsockopt*>
+<*EXTERNAL "Usocket__getsockopt"*>
 PROCEDURE getsockopt(s, level, optname: int; optval: void_star; optlen: socklen_t_star) : int RAISES {};
 
-<*EXTERNAL Usocket__listen*>
+<*EXTERNAL "Usocket__listen"*>
 PROCEDURE listen(s, backlog: int): int RAISES {};
 
-<*EXTERNAL Usocket__recvfrom*>
+<*EXTERNAL "Usocket__recvfrom"*>
 PROCEDURE recvfrom(s: int; buf: void_star; len: size_t; flags: int; from: UNTRACED REF struct_sockaddr_in; fromlen: socklen_t_star) : int RAISES {};
 
-<*EXTERNAL Usocket__sendto*>
+<*EXTERNAL "Usocket__sendto"*>
 PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int; to: UNTRACED REF struct_sockaddr_in; tolen: socklen_t) : int RAISES {};
 
-<*EXTERNAL Usocket__setsockopt*>
+<*EXTERNAL "Usocket__setsockopt"*>
 PROCEDURE setsockopt(s, level, optname: int; optval: const_void_star; optlen: socklen_t) : int RAISES {};
 
-<*EXTERNAL Usocket__shutdown*>
+<*EXTERNAL "Usocket__shutdown"*>
 PROCEDURE shutdown(s, how: int): int RAISES {};
 
-<*EXTERNAL Usocket__socket*>
+<*EXTERNAL "Usocket__socket"*>
 PROCEDURE socket(af, type, protocol: int): int RAISES {};
 
 TYPE
@@ -103,10 +103,10 @@ TYPE
     ai_next: UNTRACED REF addrinfo_t;
   END;
 
-<*EXTERNAL Usocket__getaddrinfo*>
+<*EXTERNAL "Usocket__getaddrinfo"*>
 PROCEDURE getaddrinfo(nodename: const_char_star; servname: const_char_star; hints: UNTRACED REF addrinfo_t; res: UNTRACED REF addrinfo_t): int;
 
-<*EXTERNAL Usocket__freeaddrinfo*>
+<*EXTERNAL "Usocket__freeaddrinfo"*>
 PROCEDURE freeaddrinfo(addrinfo: UNTRACED REF addrinfo_t);
 
 END Usocket.
