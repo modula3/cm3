@@ -37,31 +37,31 @@ REVEAL
 
   T = MUTEX BRANDED "Thread.T Pthread-1.6" OBJECT
     (* live thread data *)
-    act: Activation := NIL;(* LL = mutex *)
+    act: Activation := NIL;		 (* LL = mutex *)
 
     (* our work and its result *)
-    closure: Closure := NIL;            (* LL = mutex *)
-    result: REFANY := NIL;              (* LL = mutex *)
+    closure: Closure := NIL;		 (* LL = mutex *)
+    result: REFANY := NIL;		 (* LL = mutex *)
 
     (* wait here to join *)
-    cond: Condition := NIL;             (* LL = mutex *)
+    cond: Condition := NIL;		 (* LL = mutex *)
 
     (* CV that we're blocked on *)
-    waitingOn: Condition := NIL;        (* LL = waitingOn.mutex *)
+    waitingOn: Condition := NIL;	 (* LL = waitingOn.mutex *)
     (* queue of threads waiting on the same CV *)
-    nextWaiter: T := NIL;               (* LL = waitingOn.mutex *)
+    nextWaiter: T := NIL;		 (* LL = waitingOn.mutex *)
 
     (* condition for blocking during "Wait" *)
     waitCond: pthread_cond_t := NIL;
 
     (* the alert flag *)
-    alerted : BOOLEAN := FALSE;         (* LL = mutex *)
+    alerted : BOOLEAN := FALSE;		 (* LL = mutex *)
 
     (* indicates that "result" is set *)
-    completed: BOOLEAN := FALSE;        (* LL = mutex *)
+    completed: BOOLEAN := FALSE;	 (* LL = mutex *)
 
     (* unique Id of this thread *)
-    id: Id := 0;                        (* LL = mutex *)
+    id: Id := 0;			 (* LL = mutex *)
   END;
 
 TYPE
@@ -70,18 +70,18 @@ TYPE
     (* exception handling support *)
     frame: ADDRESS := NIL;
     (* global doubly-linked, circular list of all active threads *)
-    next, prev: Activation := NIL; (* LL = activeMu *)
+    next, prev: Activation := NIL;	 (* LL = activeMu *)
     (* thread handle *)
-    handle: pthread_t;                  (* LL = activeMu *)
+    handle: pthread_t;			 (* LL = activeMu *)
     (* base of thread stack for use by GC *)
-    stackbase: ADDRESS := NIL;          (* LL = activeMu *)
-    sp: ADDRESS := NIL;                 (* LL = activeMu *)
-    size: INTEGER;                      (* LL = activeMu *)
+    stackbase: ADDRESS := NIL;		 (* LL = activeMu *)
+    sp: ADDRESS := NIL;			 (* LL = activeMu *)
+    size: INTEGER;			 (* LL = activeMu *)
 
-    state := ActState.Started;          (* LL = activeMu *)
+    state := ActState.Started;		 (* LL = activeMu *)
 
     (* index into global array of active, slotted threads *)
-    slot: INTEGER;                      (* LL = slotMu *)
+    slot: INTEGER;			 (* LL = slotMu *)
 
     (* state that is available to the floating point routines *)
     floatState : FloatMode.ThreadState;
@@ -104,15 +104,6 @@ PROCEDURE SetState (act: Activation;  state: ActState) =
     END;
   END SetState;    
 
-(*---------------------------------------------------------------------------*)
-
-PROCEDURE RAISE_RTE_E_RTE_T_OutOfMemory() =
-(* This is a separate function to avoid establishing a exception
-handling frame in the common success case, for performance. *)
-  BEGIN
-    RAISE RTE.E(RTE.T.OutOfMemory);
-  END RAISE_RTE_E_RTE_T_OutOfMemory;
-
 (*----------------------------------------------------------------- Mutex ---*)
          
 PROCEDURE Acquire (m: Mutex) =
@@ -132,14 +123,15 @@ PROCEDURE CleanMutex (r: REFANY) =
     m.mutex := NIL;
   END CleanMutex;
 
-PROCEDURE InitMutexHelper (root: REFANY; VAR result: pthread_mutex_t; Clean: PROCEDURE(r: REFANY)) =
+PROCEDURE InitMutexHelper (root: REFANY; VAR result: pthread_mutex_t;
+                           Clean: PROCEDURE(r: REFANY)) =
   VAR mutex := pthread_mutex_new();
   BEGIN
     WITH r = pthread_mutex_lock_init() DO <*ASSERT r=0*> END;
     IF result = NIL THEN (* We won the race. *)
       IF mutex = NIL THEN (* But we failed. *)
         WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
-        RAISE_RTE_E_RTE_T_OutOfMemory();
+        RTE.Raise (RTE.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
         result := mutex;
         WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
@@ -151,7 +143,7 @@ PROCEDURE InitMutexHelper (root: REFANY; VAR result: pthread_mutex_t; Clean: PRO
     END;
   END InitMutexHelper;
 
-<*INLINE*>PROCEDURE InitMutex (m: Mutex) =
+PROCEDURE InitMutex (m: Mutex) =
   BEGIN
     InitMutexHelper(m, m.mutex, CleanMutex);
   END InitMutex;
@@ -197,7 +189,7 @@ PROCEDURE CleanCondition (r: REFANY) =
     c.mutex := NIL;
   END CleanCondition;
 
-<*INLINE*>PROCEDURE InitCondition (c: Condition) =
+PROCEDURE InitCondition (c: Condition) =
   BEGIN
     InitMutexHelper(c, c.mutex, CleanCondition);
   END InitCondition;
@@ -344,11 +336,10 @@ PROCEDURE TestAlert (): BOOLEAN =
 VAR (* LL = slotMu *)
   n_slotted := 0;
   next_slot := 1;
-  slots: REF ARRAY OF T;                (* NOTE: we don't use slots[0] *)
+  slots: REF ARRAY OF T;		 (* NOTE: we don't use slots[0] *)
 
-PROCEDURE InitActivations ():Activation =
-  VAR
-    me := NEW(Activation);
+PROCEDURE InitActivations (): Activation =
+  VAR me := NEW(Activation);
   BEGIN
     <* ASSERT me.frame = NIL *>
     <* ASSERT me.next = NIL *>
@@ -388,14 +379,13 @@ PROCEDURE GetActivation (): Activation =
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
-  VAR me: Activation;
-      t: T;
+  VAR
+    me: Activation;
+    t: T;
   BEGIN
     IF allThreads = NIL THEN RETURN NIL END;
-    (* me := GetActivation(); *)
     me := pthread_getspecific_activations();
     IF me = NIL THEN RETURN NIL END;
-
     WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
       t := slots[me.slot];
     WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
@@ -493,16 +483,17 @@ PROCEDURE DumpThreads () =
 (*------------------------------------------------------------ Fork, Join ---*)
 
 VAR (* LL=activeMu *)
-  allThreads: Activation; (* global list of active threads *)
+  allThreads: Activation := NIL;	 (* global list of active threads *)
 
 PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
      the allocator to start a collection which will call "SuspendOthers"
      which will try to acquire "activeMu". *)
-  VAR t := NEW(T, act := act);
-      cond := pthread_cond_new();
+  VAR
+    t := NEW(T, act := act);
+    cond := pthread_cond_new();
   BEGIN
-    IF cond = NIL THEN RAISE_RTE_E_RTE_T_OutOfMemory(); END;
+    IF cond = NIL THEN RTE.Raise(RTE.T.OutOfMemory); END;
     t.waitCond := cond;
     t.cond     := NEW(Condition);
     FloatMode.InitThread (act.floatState);
@@ -904,7 +895,7 @@ PROCEDURE IncDefaultStackSize (inc: CARDINAL) =
    that acquire "cm", it'll be deadlocked.
 *)
 
-VAR suspended: BOOLEAN := FALSE;        (* LL=activeMu *)
+VAR suspended: BOOLEAN := FALSE;	 (* LL=activeMu *)
 
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu" *)
@@ -994,8 +985,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
     WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
   END ProcessEachStack;
 
-PROCEDURE ProcessMe (me: Activation;
-                     p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu *)
   VAR
     sp: ADDRESS;
@@ -1020,8 +1010,7 @@ PROCEDURE ProcessMe (me: Activation;
     WITH z = state DO p(ADR(z), ADR(z) + ADRSIZE(z)) END;
   END ProcessMe;
 
-PROCEDURE ProcessOther (act: Activation;
-                        p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu *)
   VAR
     sp: ADDRESS;
@@ -1341,7 +1330,7 @@ PROCEDURE Die (lineno: INTEGER; msg: TEXT) =
 
 VAR
   perfW : RTPerfTool.Handle;
-  perfOn: BOOLEAN := FALSE;             (* LL = perfMu *)
+  perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
 
 PROCEDURE PerfStart () =
   BEGIN
@@ -1395,7 +1384,6 @@ PROCEDURE Init ()=
     self: T;
     me := InitActivations();
   BEGIN
-
     IF RTMachine.SuspendThread = NIL OR RTMachine.RestartThread = NIL THEN
       <*ASSERT RTMachine.SuspendThread = NIL*>
       <*ASSERT RTMachine.RestartThread = NIL*>
