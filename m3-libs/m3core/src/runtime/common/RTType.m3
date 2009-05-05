@@ -164,10 +164,7 @@ PROCEDURE AddTypecell (def: RT0.TypeDefn;  m: RT0.ModulePtr) =
   BEGIN
     IF (pi^ = NIL) THEN
       (* this is a new type *)
-      in  := NewInfo ();
-      in.def := def;
-      in.module := m;
-      in.opaqueID := 0;
+      in := NewInfo (def, m, 0);
       pi^ := in;  INC (uids.cnt);  (* record him in the UID map *)
       AssignTypecode (in);
       IF (def.brand_ptr # NIL) THEN NoteBrand (in); END;
@@ -285,7 +282,10 @@ PROCEDURE FinishTypecell (def: RT0.TypeDefn;  m: RT0.ModulePtr) =
 
       (* allocate my default method list *)
       IF (odef.methodSize > 0) AND (odef.defaultMethods = NIL) THEN
-        odef.defaultMethods := Calloc (1, odef.methodSize);
+        odef.defaultMethods := Cstdlib.calloc (1, odef.methodSize);
+        IF odef.defaultMethods = NIL THEN
+          Fail (RTE.OutOfMemory, m, odef, NIL);
+        END;
 
         (* initialize my method suite from my parent *)
         IF (t.common.kind = ORD (TK.Obj)) AND (t.defaultMethods # NIL) THEN
@@ -461,12 +461,9 @@ PROCEDURE AssignBuiltinTypes () =
   END AssignBuiltinTypes;
 
 PROCEDURE GenBuiltin (def: RT0.TypeDefn;  nm: TEXT) =
-  VAR pi: SlotPtr;  in := NewInfo ();
+  VAR pi: SlotPtr;  in := NewInfo (def, NIL, 0);
   BEGIN
-    def.name    := LOOPHOLE (M3toC.FlatTtoS (nm), RT0.String);
-    in.module   := NIL;
-    in.def      := def;
-    in.opaqueID := 0;
+    def.name := LOOPHOLE (M3toC.FlatTtoS (nm), RT0.String);
     pi := FindSlot (uids, def.selfID, NIL);
     <*ASSERT pi^ = NIL*>
     pi^ := in;  INC (uids.cnt);
@@ -476,11 +473,8 @@ PROCEDURE GenBuiltin (def: RT0.TypeDefn;  nm: TEXT) =
   END GenBuiltin;
 
 PROCEDURE GenOpaque (uid: INTEGER;  typecode: INTEGER) =
-  VAR pi: SlotPtr;  in := NewInfo ();
+  VAR pi: SlotPtr;  in := NewInfo (NIL, NIL, uid);
   BEGIN
-    in.def := NIL;
-    in.module := NIL;
-    in.opaqueID := uid;
     pi := FindSlot (uids, uid, NIL);
     <*ASSERT pi^ = NIL*>
     pi^ := in;  INC (uids.cnt);
@@ -664,15 +658,21 @@ VAR
   n_info    : CARDINAL := InfoChunk;
   info_pool : InfoVec  := NIL;
 
-PROCEDURE NewInfo (): InfoPtr =
+PROCEDURE NewInfo (def: RT0.TypeDefn; m: RT0.ModulePtr; uid: INTEGER): InfoPtr =
   VAR p: InfoPtr;
   BEGIN
     IF (n_info >= InfoChunk) THEN
-      info_pool := Calloc (InfoChunk, BYTESIZE (Info));
+      info_pool := Cstdlib.calloc (InfoChunk, BYTESIZE (Info));
+      IF info_pool = NIL THEN
+        Fail (RTE.OutOfMemory, m, def, NIL);
+      END;
       n_info := 0;
     END;
     p := info_pool + n_info * ADRSIZE (Info);
     INC (n_info);
+    p.def := def;
+    p.module := m;
+    p.opaqueID := uid;
     RETURN p;
   END NewInfo;
 
@@ -721,14 +721,20 @@ PROCEDURE Expand (VAR m: InfoMap) =
       m.cnt  := 0;
       m.max  := m.initial_size;  (* must be a power of two *)
       m.mask := m.max - 1;
-      m.map  := Calloc (m.max, BYTESIZE (InfoPtr));
+      m.map  := Cstdlib.calloc (m.max, BYTESIZE (InfoPtr));
+      IF m.map = NIL THEN
+        Fail (RTE.OutOfMemory, NIL, NIL, NIL);
+      END;
     ELSE
       new := m;
       new.cnt  := 0;
       new.full := m.full + m.full;
       new.max  := m.max + m.max;
       new.mask := new.max - 1;
-      new.map  := Calloc (new.max, BYTESIZE (InfoPtr));
+      new.map  := Cstdlib.calloc (new.max, BYTESIZE (InfoPtr));
+      IF new.map = NIL THEN
+        Fail (RTE.OutOfMemory, NIL, NIL, NIL);
+      END;
 
       (* re-insert the existing elements *)
       pi := m.map;
@@ -811,21 +817,6 @@ PROCEDURE HashBrand (b: RT0.BrandPtr): INTEGER =
     END;
     RETURN hash;
   END HashBrand;
-
-PROCEDURE RAISE_RuntimeError_E_RTE_OutOfMemory() =
-(* This is a separate function to avoid establishing an exception
-handling frame in the common success case, for performance,
-and possibly to avoid making PushEFrame perform initialization on demand. *)
-  BEGIN
-    RAISE RuntimeError.E (RTE.OutOfMemory);
-  END RAISE_RuntimeError_E_RTE_OutOfMemory;
-
-PROCEDURE Calloc (n: INTEGER; n_bytes: INTEGER): ADDRESS =
-  VAR res := Cstdlib.calloc (n, n_bytes);
-  BEGIN
-    IF (res = NIL) THEN RAISE_RuntimeError_E_RTE_OutOfMemory(); END;
-    RETURN res;
-  END Calloc;
 
 (*-------------------------------------------------------- runtime errors ---*)
 
