@@ -1408,14 +1408,15 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
 
       res := LongAlloc (dataSize, dataAlignment, thread.newPool,
                         Note.Allocated, pure := FALSE);
-      RTOS.UnlockHeap();
       IF res = NIL THEN
+        RTOS.UnlockHeap();
         RAISE_RuntimeError_E_RuntimeError_T_OutOfMemory();
       END;
       LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
           Header{typecode := def.typecode, dirty := TRUE};
       IF initProc # NIL THEN initProc (res) END;
       <*ASSERT Word.And(LOOPHOLE(res, Word.T), 1) = 0*>
+      RTOS.UnlockHeap();
       RETURN LOOPHOLE(res, REFANY);
     END;
 
@@ -1487,7 +1488,6 @@ PROCEDURE LongAlloc (dataSize, dataAlignment: CARDINAL;
     newPtr   : ADDRESS := newPage;
     newLimit : ADDRESS := newPage + BytesPerPage;
   BEGIN
-    (* caller should call RAISE_RuntimeError_E_RuntimeError_T_OutOfMemory *)
     IF newPage = NIL THEN RETURN NIL END;
 
     <*ASSERT initialized*>
