@@ -29,7 +29,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.19 2008-06-09 05:05:20 jkrell Exp $
+% $Id: version.quake,v 1.20 2009-05-06 11:28:59 jkrell Exp $
 
 
 %------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ proc version_impl(name) is
                     Changed += Name
                     AnyChanged = TRUE
                 else
-                    write("missing " & Name & " will read sysinfo.sh" & CR)
+                    write("missing " & Name & " will read version file" & CR)
                     Missing += Name
                     AnyMissing = TRUE
                 end
@@ -142,7 +142,7 @@ proc version_impl(name) is
                     % The useof %~dp0 in sysinfo.cmd is oddly not working, it is resolving
                     % to the cm3/src/<TARGET> directory of this calling .cmd file.
                     %
-                    write("call ..\\..\\..\\scripts\\win\\sysinfo GetDefaultsFromSh ..\\..\\..\\scripts\\sysinfo.sh || exit /b 1", CR)
+                    write("call ..\\..\\..\\scripts\\win\\sysinfo GetVersions ..\\..\\..\\scripts\\version || exit /b 1", CR)
                 end
                 foreach Name in Missing
                     write("echo ", Name, " = \"%", Map{Name}{"EnvName"}, "%\"", CR)
