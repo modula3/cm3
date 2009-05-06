@@ -13,21 +13,20 @@ PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 #-----------------------------------------------------------------------------
 # set some defaults
 #
-# These three lines must be carefully formed as they are parsed by other code.
+
+get_version() {
+  if [ -n "$(eval echo \$$1)" ] ; then
+    return
+  fi
+  eval "$1=\"$(echo $(grep "$1 " $root/scripts/version | awk '{print $2}'))\""
+}
+
+get_version CM3VERSION
+get_version CM3VERSIONNUM
+get_version CM3LASTCHANGED
+
 #
-# For cmd:
-#  They must start with a name and an equals sign.
-#  They must contain one and only one colon.
-#  They must contain one and only one equals sign.
-#  The content to the right of the colon, minus the first two
-#  and last two characters, is the value.
-#
-# For Python, we have much more flexibility. Currently the code
-# looks for fairly precisely A=${A:-"value"}, but this can be easily
-# relaxed or changed.
-#
-# Refer to scripts/win/sysinfo.cmd and scripts/python/lib.py.
-# Specifically look for "DefaultsFromSh".
+# Leave these lines in TEMPORARILY for compat with cmd, Python, Quake.
 #
 CM3VERSION=${CM3VERSION:-"d5.7.1"}
 CM3VERSIONNUM=${CM3VERSIONNUM:-"050701"}
@@ -356,6 +355,9 @@ debug "DEV_BIN     = $DEV_BIN"
 debug "DEV_LIB     = $DEV_LIB"
 debug "TAR         = $TAR"
 debug "CM3ROOT     = $CM3ROOT"
+debug "CM3VERSION  = $CM3VERSION"
+debug "CM3VERSIONNUM = $CM3VERSIONNUM"
+debug "CM3LASTCHANGED = $CM3LASTCHANGED"
 
 export ROOT M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB
 export GREP TMPDIR EXE SL CM3VERSION SYSLIBDIR SYSLIB DEV_BIN DEV_LIB TAR
