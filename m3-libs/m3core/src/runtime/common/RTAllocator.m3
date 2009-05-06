@@ -180,14 +180,15 @@ PROCEDURE GetTraced (def: RT0.TypeDefn): REFANY =
     IF    def.kind = ORD(TK.Ref) THEN RETURN GetTracedRef(def)
     ELSIF def.kind = ORD(TK.Obj) THEN RETURN GetTracedObj(def)
     END;
-    <*NOWARN*> RaiseRTE(RTE.T.ValueOutOfRange);
+    RTE.Raise(RTE.T.ValueOutOfRange);
+    RETURN NIL;
   END GetTraced;      
 
 PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
   VAR res: REFANY;
   BEGIN
     IF def.typecode = 0 OR def.traced # 1 OR def.kind # ORD(TK.Ref) THEN
-      RaiseRTE(RTE.T.ValueOutOfRange);
+      RTE.Raise(RTE.T.ValueOutOfRange);
     END;
     res := AllocTraced(def, def.dataSize, def.dataAlignment, def.initProc);
     IF countsOn THEN BumpCnt(def.typecode) END;
@@ -203,7 +204,7 @@ PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
   VAR res: REFANY;
   BEGIN
     IF def.typecode = 0 OR def.traced # 1 OR def.kind # ORD(TK.Obj) THEN
-      RaiseRTE(RTE.T.ValueOutOfRange);
+      RTE.Raise(RTE.T.ValueOutOfRange);
     END;
     res := AllocTraced(def, def.dataSize, def.dataAlignment, initProc);
     IF countsOn THEN BumpCnt(def.typecode) END;
@@ -211,24 +212,16 @@ PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
     RETURN res;
   END GetTracedObj;
 
-PROCEDURE RaiseRTE(e: RTE.T) =
-  (* This is a separate function to avoid establishing an exception handling
-     frame in the common success case, for performance, AND possibly to avoid
-     infinite recursion during startup/initialization. *)
-  BEGIN
-    RAISE RTE.E(e);
-  END RaiseRTE;
-
 PROCEDURE GetUntracedRef (def: RT0.TypeDefn): ADDRESS =
   VAR res : ADDRESS;
   BEGIN
     IF def.typecode = 0 OR def.traced # 0 OR def.kind # ORD(TK.Ref) THEN
-      RaiseRTE(RTE.T.ValueOutOfRange);
+      RTE.Raise(RTE.T.ValueOutOfRange);
     END;
     Scheduler.DisableSwitching();
     res := Cstdlib.calloc(1, def.dataSize);
     Scheduler.EnableSwitching();
-    IF res = NIL THEN RaiseRTE(RTE.T.OutOfMemory) END;
+    IF res = NIL THEN RTE.Raise(RTE.T.OutOfMemory) END;
     IF def.initProc # NIL THEN def.initProc(res); END;
     IF countsOn THEN BumpCnt(def.typecode) END;
     RETURN res;
@@ -241,12 +234,12 @@ PROCEDURE GetUntracedObj (def: RT0.TypeDefn): UNTRACED ROOT =
     res     : ADDRESS;
   BEGIN
     IF def.typecode = 0 OR def.traced # 0 OR def.kind # ORD(TK.Obj) THEN
-      RaiseRTE(RTE.T.ValueOutOfRange);
+      RTE.Raise(RTE.T.ValueOutOfRange);
     END;
     Scheduler.DisableSwitching();
     res := Cstdlib.malloc(hdrSize + def.dataSize);
     Scheduler.EnableSwitching();
-    IF res = NIL THEN RaiseRTE(RTE.T.OutOfMemory) END;
+    IF res = NIL THEN RTE.Raise(RTE.T.OutOfMemory) END;
     res := res + hdrSize;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
         Header{typecode := def.typecode};
@@ -275,7 +268,7 @@ PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
     nBytes: CARDINAL;
   BEGIN
     IF def.typecode = 0 OR def.traced # 1 OR def.kind # ORD(TK.Array) THEN
-      RaiseRTE(RTE.T.ValueOutOfRange);
+      RTE.Raise(RTE.T.ValueOutOfRange);
     END;
     nBytes := ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s);
     res := AllocTraced(def, nBytes, def.dataAlignment, initProc);
@@ -288,13 +281,13 @@ PROCEDURE GetUntracedOpenArray (def: RT0.TypeDefn; READONLY s: Shape): ADDRESS =
   VAR res : ADDRESS;
   BEGIN
     IF def.typecode = 0 OR def.traced # 0 OR def.kind # ORD(TK.Array) THEN
-      RaiseRTE(RTE.T.ValueOutOfRange);
+      RTE.Raise(RTE.T.ValueOutOfRange);
     END;
     WITH nBytes = ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s) DO
       Scheduler.DisableSwitching();
       res := Cstdlib.calloc(1, nBytes);
       Scheduler.EnableSwitching();
-      IF res = NIL THEN RaiseRTE(RTE.T.OutOfMemory) END;
+      IF res = NIL THEN RTE.Raise(RTE.T.OutOfMemory) END;
       InitArray (res, LOOPHOLE(def, RT0.ArrayTypeDefn), s);
       IF countsOn THEN BumpSize (def.typecode, nBytes) END;
     END;
@@ -389,7 +382,7 @@ PROCEDURE Malloc (size: INTEGER): ADDRESS =
     Scheduler.DisableSwitching();
     res := Cstdlib.calloc(1, size);
     Scheduler.EnableSwitching();
-    IF res = NIL THEN RaiseRTE(RTE.T.OutOfMemory) END;
+    IF res = NIL THEN RTE.Raise(RTE.T.OutOfMemory) END;
     RETURN res;
   END Malloc;
 
