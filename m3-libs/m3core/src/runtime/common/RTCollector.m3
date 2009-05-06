@@ -60,8 +60,8 @@ PROCEDURE Enable () =
       CollectEnough();
     FINALLY
       RTOS.UnlockHeap();
+      IF perfOn THEN PerfAllow(); END;
     END;
-    IF perfOn THEN PerfAllow(); END;
   END Enable;
 
 PROCEDURE DisableMotion () =
@@ -83,8 +83,8 @@ PROCEDURE EnableMotion () =
       CollectEnough();
     FINALLY
       RTOS.UnlockHeap();
+      IF perfOn THEN PerfAllow(); END;
     END;
-    IF perfOn THEN PerfAllow(); END;
   END EnableMotion;
 
 PROCEDURE Collect () =
@@ -1368,14 +1368,6 @@ PROCEDURE StackEmpty (s: Stacker): BOOLEAN =
     RETURN s.xA = s.x0;
   END StackEmpty;
 
-PROCEDURE RAISE_RuntimeError_E_RuntimeError_T_OutOfMemory() =
-(* This is a separate function to avoid establishing an exception
-handling frame in the common success case, for performance,
-and to avoid making PushEFrame perform initialization on demand. *)
-  BEGIN
-    RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
-  END RAISE_RuntimeError_E_RuntimeError_T_OutOfMemory;
-
 (* Allocate space in the traced heap for NEW *)
 
 PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
@@ -1401,22 +1393,25 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
       res := NIL;  nextPtr := NIL;  (* in case of GC... *)
       DEC(thread.inCritical);
 
-      RTOS.LockHeap();
+      TRY
+        RTOS.LockHeap();
 
-      (* make sure the collector gets a chance to keep up with NEW... *)
-      CollectEnough(allocator := TRUE);
+        (* make sure the collector gets a chance to keep up with NEW... *)
+        CollectEnough(allocator := TRUE);
 
-      res := LongAlloc (dataSize, dataAlignment, thread.newPool,
-                        Note.Allocated, pure := FALSE);
-      IF res = NIL THEN
+        res := LongAlloc (dataSize, dataAlignment, thread.newPool,
+                          Note.Allocated, pure := FALSE);
+        IF res = NIL THEN RuntimeError.Raise(RuntimeError.T.OutOfMemory) END;
+      FINALLY
         RTOS.UnlockHeap();
-        RAISE_RuntimeError_E_RuntimeError_T_OutOfMemory();
       END;
+
+      INC(thread.inCritical);
       LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
           Header{typecode := def.typecode, dirty := TRUE};
       IF initProc # NIL THEN initProc (res) END;
       <*ASSERT Word.And(LOOPHOLE(res, Word.T), 1) = 0*>
-      RTOS.UnlockHeap();
+      DEC(thread.inCritical);
       RETURN LOOPHOLE(res, REFANY);
     END;
 
@@ -1451,9 +1446,7 @@ PROCEDURE AllocCopy (dataSize, dataAlignment: CARDINAL;
     IF nextPtr > pool.limit THEN
       (* not enough space left in the pool, take the long route *)
       res := LongAlloc (dataSize, dataAlignment, pool, Note.Copied, pure);
-      IF res = NIL THEN
-        RAISE_RuntimeError_E_RuntimeError_T_OutOfMemory();
-      END;
+      IF res = NIL THEN RuntimeError.Raise(RuntimeError.T.OutOfMemory) END;
       RETURN res;
     END;
 
@@ -1591,12 +1584,16 @@ VAR foregroundWaiting := FALSE;
 
 PROCEDURE ForegroundThread (<* UNUSED *> closure: Thread.Closure): REFANY =
   BEGIN
-    RTOS.LockHeap();
-    LOOP
-      foregroundWaiting := TRUE;
-      RTOS.WaitHeap();
-      foregroundWaiting := FALSE;
-      CollectEnough();
+    TRY
+      RTOS.LockHeap();
+      LOOP
+        foregroundWaiting := TRUE;
+        RTOS.WaitHeap();
+        foregroundWaiting := FALSE;
+        CollectEnough();
+      END;
+    FINALLY
+      RTOS.UnlockHeap();
     END;
   END ForegroundThread;
 
