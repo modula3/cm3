@@ -25,13 +25,6 @@ get_version CM3VERSION
 get_version CM3VERSIONNUM
 get_version CM3LASTCHANGED
 
-#
-# Leave these lines in TEMPORARILY for compat with cmd, Python, Quake.
-#
-CM3VERSION=${CM3VERSION:-"d5.7.1"}
-CM3VERSIONNUM=${CM3VERSIONNUM:-"050701"}
-CM3LASTCHANGED=${CM3LASTCHANGED:-"2009-01-21"}
-
 CM3_GCC_BACKEND=yes
 CM3_GDB=no
 #
