@@ -14,16 +14,11 @@ PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 # set some defaults
 #
 
-get_version() {
-  if [ -n "$(eval echo \$$1)" ] ; then
-    return
-  fi
-  eval "$1=\"$(echo $(grep "$1 " $root/scripts/version | awk '{print $2}'))\""
-}
+eval `awk '{ print "default_" $1 "=" $2 }' < $root/scripts/version`
 
-get_version CM3VERSION
-get_version CM3VERSIONNUM
-get_version CM3LASTCHANGED
+CM3VERSION=${CM3VERSION:-${default_CM3VERSION}}
+CM3VERSIONNUM=${CM3VERSIONNUM:-${default_CM3VERSIONNUM}}
+CM3LASTCHANGED=${CM3LASTCHANGED:-${default_CM3LASTCHANGED}}
 
 CM3_GCC_BACKEND=yes
 CM3_GDB=no
