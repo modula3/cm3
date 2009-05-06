@@ -646,6 +646,23 @@ PROCEDURE CollectEnough (allocator := FALSE) =
     END;
   END CollectEnough;
 
+PROCEDURE LockedCollectEnough (allocator := FALSE) =
+  BEGIN
+    TRY
+      CollectEnough(allocator);
+    FINALLY
+      RTOS.UnlockHeap();
+    END;
+  END LockedCollectEnough;
+
+PROCEDURE UnlockedCollectEnough (allocator := FALSE) =
+  BEGIN
+    RTOS.LockHeap();
+    IF collectorOn THEN RTOS.UnlockHeap(); RETURN END; (* duplicated from CollectEnough *)
+    IF NOT Behind() THEN RTOS.UnlockHeap(); RETURN END; (* duplicated from CollectEnough *)
+    LockedCollectEnough(allocator);
+  END UnlockedCollectEnough;
+
 PROCEDURE Behind (): BOOLEAN =
   BEGIN
     IF disableCount + disableMotionCount > 0
@@ -1393,23 +1410,23 @@ PROCEDURE AllocTraced (def: TypeDefn; dataSize, dataAlignment: CARDINAL;
       res := NIL;  nextPtr := NIL;  (* in case of GC... *)
       DEC(thread.inCritical);
 
-      TRY
-        RTOS.LockHeap();
+      (* make sure the collector gets a chance to keep up with NEW... *)
+      UnlockedCollectEnough(allocator := TRUE);
 
-        (* make sure the collector gets a chance to keep up with NEW... *)
-        CollectEnough(allocator := TRUE);
+      RTOS.LockHeap();
 
-        res := LongAlloc (dataSize, dataAlignment, thread.newPool,
-                          Note.Allocated, pure := FALSE);
-        IF res = NIL THEN RuntimeError.Raise(RuntimeError.T.OutOfMemory) END;
-      FINALLY
+      res := LongAlloc (dataSize, dataAlignment, thread.newPool,
+                        Note.Allocated, pure := FALSE);
+      IF res = NIL THEN
         RTOS.UnlockHeap();
+        RuntimeError.Raise(RuntimeError.T.OutOfMemory);
       END;
 
       INC(thread.inCritical);
       LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
           Header{typecode := def.typecode, dirty := TRUE};
       IF initProc # NIL THEN initProc (res) END;
+      RTOS.UnlockHeap();
       <*ASSERT Word.And(LOOPHOLE(res, Word.T), 1) = 0*>
       DEC(thread.inCritical);
       RETURN LOOPHOLE(res, REFANY);
