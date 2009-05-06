@@ -1,8 +1,9 @@
 #! /usr/bin/env python
-# $Id: do-cm3-core.py,v 1.12 2008-05-25 01:16:59 jkrell Exp $
+# $Id: do-cm3-core.py,v 1.13 2009-05-06 10:58:19 jkrell Exp $
 
 import sys
 import os.path
+import pylib
 from pylib import *
 
 SetupEnvironment()
