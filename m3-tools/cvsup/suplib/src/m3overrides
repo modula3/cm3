@@ -1,5 +1,4 @@
 override ("libm3", ROOT & SL & "m3-libs")
 override ("tcp", ROOT & SL & "m3-comm")
-override ("suplib", ROOT & SL & "m3-tools" & SL & "cvsup")
+override ("set", ROOT & SL & "m3-libs")
 override ("tempfiles", ROOT & SL & "m3-libs")
-override ("formsvbt", ROOT & SL & "m3-ui")
