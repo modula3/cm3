@@ -3,6 +3,7 @@
 
 import sys
 import os.path
+import pylib
 from pylib import *
 
 SetupEnvironment()
