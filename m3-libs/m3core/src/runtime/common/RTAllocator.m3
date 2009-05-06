@@ -177,10 +177,12 @@ PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
 
 PROCEDURE GetTraced (def: RT0.TypeDefn): REFANY =
   BEGIN
-    IF    def.kind = ORD(TK.Ref) THEN RETURN GetTracedRef(def)
-    ELSIF def.kind = ORD(TK.Obj) THEN RETURN GetTracedObj(def)
+    CASE def.kind OF
+    | ORD(TK.Ref) => RETURN GetTracedRef(def);
+    | ORD(TK.Obj) => RETURN GetTracedObj(def);
+    ELSE
+      RTE.Raise(RTE.T.ValueOutOfRange);
     END;
-    RTE.Raise(RTE.T.ValueOutOfRange);
     RETURN NIL;
   END GetTraced;      
 
