@@ -772,7 +772,8 @@ def ConvertPath(a):
 SetEnvironmentVariable("CM3_TARGET", Target);
 SetEnvironmentVariable("CM3_INSTALL", ConvertPath(InstallRoot))
 SetEnvironmentVariable("M3CONFIG", ConvertPath(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
-SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "\\\\"))
+#SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "\\\\"))
+SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "/"))
 
 # sys.exit(1)
 
@@ -786,7 +787,8 @@ DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
 DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
 
 NativeRoot = Root
-Root = ConvertPath(Root).replace("\\", "\\\\")
+#Root = ConvertPath(Root).replace("\\", "\\\\")
+Root = ConvertPath(Root).replace("\\", "/")
 DEFS = (DEFS % vars())
 Root = NativeRoot
 
