@@ -29,7 +29,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.20 2009-05-06 11:28:59 jkrell Exp $
+% $Id: version.quake,v 1.21 2009-05-06 11:48:06 jkrell Exp $
 
 
 %------------------------------------------------------------------------------
@@ -81,59 +81,59 @@ proc version_impl(name) is
         NOW = "not available"
     end
 
-    if equal ($OS, "Windows_NT") and equal (SL, "\\")
-        %
-        % why two names for these?
-        %
-        local readonly Map =
-        {
-            "CM3_VERSION_NUMBER" : 
-                { "EnvName"  : "CM3VERSIONNUM",
-                  "EnvValue" : $CM3VERSIONNUM,
-                },
+    %
+    % why two names for these?
+    %
+    local readonly Map =
+    {
+        "CM3_VERSION_NUMBER" : 
+            { "EnvName"  : "CM3VERSIONNUM",
+              "EnvValue" : $CM3VERSIONNUM,
+            },
 
-            "CM3_VERSION_TEXT" : 
-                { "EnvName"  : "CM3VERSION",
-                  "EnvValue" : $CM3VERSION,
-                },
+        "CM3_VERSION_TEXT" : 
+            { "EnvName"  : "CM3VERSION",
+              "EnvValue" : $CM3VERSION,
+            },
 
-            "CM3_LAST_CHANGED" : 
-                { "EnvName"  : "CM3LASTCHANGED",
-                  "EnvValue" : $CM3LASTCHANGED,
-                },
-        }
+        "CM3_LAST_CHANGED" : 
+            { "EnvName"  : "CM3LASTCHANGED",
+              "EnvValue" : $CM3LASTCHANGED,
+            },
+    }
 
-        %
-        % are any not defined, and not in the environment
-        % if so, we need to run sysinfo.cmd to look at sysinfo.sh
-        %
-        local Missing = [ ]
-        local AnyMissing = FALSE
+    %
+    % are any not defined, and not in the environment
+    % if so, we need to run sysinfo.cmd to look at sysinfo.sh
+    %
+    local Missing = [ ]
+    local AnyMissing = FALSE
 
-        %
-        % were any initially missing, but then gotten from environment
-        % we still need to write and include a file for this
-        %
-        local AnyChanged = FALSE
-        local Changed = [ ]
+    %
+    % were any initially missing, but then gotten from environment
+    % we still need to write and include a file for this
+    %
+    local AnyChanged = FALSE
+    local Changed = [ ]
 
-        foreach Name in Map
-            if not defined(Name)
-                EnvValue = Map{Name}{"EnvValue"}
-                if not equal(EnvValue, "")
-                    write("getting " & Name & " from environment " & Map{Name}{"EnvName"} & "=" & EnvValue & CR)
-                    Map{Name}{"Value"} = EnvValue
-                    Changed += Name
-                    AnyChanged = TRUE
-                else
-                    write("missing " & Name & " will read version file" & CR)
-                    Missing += Name
-                    AnyMissing = TRUE
-                end
+    foreach Name in Map
+        if not defined(Name)
+            EnvValue = Map{Name}{"EnvValue"}
+            if not equal(EnvValue, "")
+                write("getting " & Name & " from environment " & Map{Name}{"EnvName"} & "=" & EnvValue & CR)
+                Map{Name}{"Value"} = EnvValue
+                Changed += Name
+                AnyChanged = TRUE
+            else
+                write("missing " & Name & " will read version file" & CR)
+                Missing += Name
+                AnyMissing = TRUE
             end
         end
+    end
 
-        if (AnyChanged or AnyMissing)
+    if (AnyChanged or AnyMissing)
+        if equal ($OS, "Windows_NT") and equal (SL, "\\")
             > "_m3version.cmd" in
                 write("@echo off", CR)
                 if AnyMissing
@@ -152,6 +152,20 @@ proc version_impl(name) is
                 end
             end
             exec("@.\\_m3version.cmd > " & datefn)
+        else
+            > "_m3version.sh" in
+                if AnyMissing
+                    write(". ../../../scripts/sysinfo.sh || exit 1", CR)
+                end
+                foreach Name in Missing
+                    write("echo ", Name, " = \\\"$", Map{Name}{"EnvName"}, "\\\"", CR)
+                end
+                foreach Name in Changed
+                    write("echo ", Name, " = \\\"", Map{Name}{"Value"}, "\\\"", CR)
+                end
+            end
+            exec("@chmod +x ./_m3version.sh")
+            exec("@./_m3version.sh > " & datefn)
         end
     end
     if FileExists(datefn)
