@@ -323,7 +323,7 @@ proc compile_c_ms(source, object, options, optimize, debug) is
     % Therefore, redirect to a file and only be noisy upon errors.
     %
     local readonly Listing = Path_GetBase (source) & ".lst"
-    local readonly Command = ["cl", escape(args), "-c", escape(source)]
+    local readonly Command = ["cl", escape(subst_chars(args, "\\", "/")), "-c", escape(source)]
     ret = try_exec("@" & Command, ">", Listing)
     if not equal (ret, 0)
         write (Command & CR)
