@@ -414,12 +414,12 @@ def GetDefaultFromSh(Key):
     if Value:
         return Value
     #
-    # CM3VERSION=${CM3VERSION:-"d5.5.1"}
-    # CM3VERSIONNUM=${CM3VersionNum:-"050501"}
-    # CM3LASTCHANGED=${CM3LASTCHANGED:-"2007-12-30"}
+    # CM3VERSION d5.7.1
+    # CM3VERSIONNUM 050701
+    # CM3LASTCHANGED 2009-01-21
     #
-    RegExp = re.compile("(" + "|".join(DefaultsFromSh.keys()) + ")=\\$\\{\\1:-\"([^\"]+)\"\\}$", re.IGNORECASE)
-    ShFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sysinfo.sh")
+    RegExp = re.compile("(" + "|".join(DefaultsFromSh.keys()) + ") (.+)$", re.IGNORECASE)
+    ShFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "version")
     for Line in open(ShFilePath):
         Match = RegExp.match(Line)
         if Match:
@@ -2532,6 +2532,13 @@ if __name__ == "__main__":
     # run test code if module run directly
     #
 
+    print("CM3VERSION is " + GetDefaultFromSh("CM3VERSION"))
+    print("CM3VERSIONNUM is " + GetDefaultFromSh("CM3VERSIONNUM"))
+    print("CM3LASTCHANGED is " + GetDefaultFromSh("CM3LASTCHANGED"))
+    #sys.stdout.flush()
+    #os.system("set")
+    sys.exit(1)
+
     CopyConfigForDevelopment();
     sys.exit(1)
 
@@ -2576,12 +2583,6 @@ if __name__ == "__main__":
     print("\n\nbase: " + str(OrderPackages(PackageSets["base"])))
     print("\n\nmin: " + str(OrderPackages(PackageSets["min"])))
     print("\n\nstd: " + str(OrderPackages(PackageSets["std"])))
-    sys.exit(1)
-
-    GetDefaultFromSh("CM3VERSION")
-    #sys.stdout.flush()
-    os.system("set")
-
     sys.exit(1)
 
     #print(listpkgs("libm3"))
