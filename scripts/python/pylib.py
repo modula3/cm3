@@ -373,13 +373,13 @@ Variables = [
 
 #-----------------------------------------------------------------------------
 
-DefaultsFromSh = {
+Versions = {
     "CM3VERSION" : None,
     "CM3VERSIONNUM" : None,
     "CM3LASTCHANGED" : None,
     }
 
-Variables += DefaultsFromSh.keys()
+Variables += Versions.keys()
 
 #
 # Ensure all variables have some value.
@@ -389,8 +389,8 @@ for a in Variables:
     b += ("%s = os.getenv(\"%s\") or \"\"\n" % (a, a.upper()))
 exec(b)
 
-for a in DefaultsFromSh.keys():
-    DefaultsFromSh[a] = eval(a)
+for a in Versions.keys():
+    Versions[a] = eval(a)
 
 #-----------------------------------------------------------------------------
 
@@ -404,13 +404,13 @@ def header(a):
 #-----------------------------------------------------------------------------
 # set some defaults
 
-def GetDefaultFromSh(Key):
+def GetVersion(Key):
     #
     # Only read the file if an environment variable is "missing" (they
     # usually all are, ok), and only read it once.
     #
     #print("WriteVariablesIntoEnvironment:3")
-    Value = DefaultsFromSh.get(Key)
+    Value = Versions.get(Key)
     if Value:
         return Value
     #
@@ -418,7 +418,7 @@ def GetDefaultFromSh(Key):
     # CM3VERSIONNUM 050701
     # CM3LASTCHANGED 2009-01-21
     #
-    RegExp = re.compile("(" + "|".join(DefaultsFromSh.keys()) + ") (.+)$", re.IGNORECASE)
+    RegExp = re.compile("(" + "|".join(Versions.keys()) + ") (.+)$", re.IGNORECASE)
     ShFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "version")
     for Line in open(ShFilePath):
         Match = RegExp.match(Line)
@@ -428,9 +428,9 @@ def GetDefaultFromSh(Key):
             # We are here because one of them wasn't found, but we should be
             # sure only to overwrite what we don't have.
             #
-            if not DefaultsFromSh[MatchKey]:
+            if not Versions[MatchKey]:
                 Value = Match.group(2)
-                DefaultsFromSh[MatchKey] = Value
+                Versions[MatchKey] = Value
                 exec("%s = \"%s\"" % (MatchKey, Value), locals(), globals())
 
     #
@@ -438,7 +438,7 @@ def GetDefaultFromSh(Key):
     # not defined in the environment)
     #
     MissingKey = None
-    for Item in DefaultsFromSh.iteritems():
+    for Item in Versions.iteritems():
         #print(Item)
         if Item[1] is None:
             MissingKey = Item[0]
@@ -448,11 +448,11 @@ def GetDefaultFromSh(Key):
     if MissingKey:
         sys.exit(1)
 
-    return DefaultsFromSh.get(Key)
+    return Versions.get(Key)
 
-CM3VERSION = getenv("CM3VERSION") or GetDefaultFromSh("CM3VERSION")
-CM3VERSIONNUM = getenv("CM3VERSIONNUM") or GetDefaultFromSh("CM3VERSIONNUM")
-CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetDefaultFromSh("CM3LASTCHANGED")
+CM3VERSION = getenv("CM3VERSION") or GetVersion("CM3VERSION")
+CM3VERSIONNUM = getenv("CM3VERSIONNUM") or GetVersion("CM3VERSIONNUM")
+CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetVersion("CM3LASTCHANGED")
 
 CM3_GDB = False
 
@@ -2532,9 +2532,9 @@ if __name__ == "__main__":
     # run test code if module run directly
     #
 
-    print("CM3VERSION is " + GetDefaultFromSh("CM3VERSION"))
-    print("CM3VERSIONNUM is " + GetDefaultFromSh("CM3VERSIONNUM"))
-    print("CM3LASTCHANGED is " + GetDefaultFromSh("CM3LASTCHANGED"))
+    print("CM3VERSION is " + GetVersion("CM3VERSION"))
+    print("CM3VERSIONNUM is " + GetVersion("CM3VERSIONNUM"))
+    print("CM3LASTCHANGED is " + GetVersion("CM3LASTCHANGED"))
     #sys.stdout.flush()
     #os.system("set")
     sys.exit(1)
