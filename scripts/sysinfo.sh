@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.67 2009-05-06 11:05:08 jkrell Exp $
+# $Id: sysinfo.sh,v 1.68 2009-05-06 11:49:14 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -24,13 +24,6 @@ get_version() {
 get_version CM3VERSION
 get_version CM3VERSIONNUM
 get_version CM3LASTCHANGED
-
-#
-# Leave these lines in TEMPORARILY for compat with cmd, Python, Quake.
-#
-CM3VERSION=${CM3VERSION:-"d5.7.1"}
-CM3VERSIONNUM=${CM3VERSIONNUM:-"050701"}
-CM3LASTCHANGED=${CM3LASTCHANGED:-"2009-01-21"}
 
 CM3_GCC_BACKEND=yes
 CM3_GDB=no
