@@ -86,6 +86,10 @@ formsvbt std gui
 formsview std gui
 formsedit std gui
 codeview std
+cvsup/suplib std
+cvsup/client std
+cvsup/server std
+cvsup/cvpasswd std
 mg std
 mgkit std
 opengl std
