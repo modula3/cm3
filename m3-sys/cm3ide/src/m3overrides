@@ -3,6 +3,7 @@
 %WORKDIR = XXDIR {OS_TYPE}
 WORKDIR = ROOT & SL & "m3-sys"
 LIBDIR = ROOT & SL & "m3-libs"
+COMMDIR = ROOT & SL & "m3-comm"
 
 if not defined("BOOT")
   override ("m3core", LIBDIR)
@@ -13,4 +14,4 @@ override ("m3middle", WORKDIR)
 override ("m3quake",  WORKDIR)
 override ("m3tools",  WORKDIR)
 override ("cmkey",    WORKDIR)
-override ("tcp",      LIBDIR)
+override ("tcp",      COMMDIR)
