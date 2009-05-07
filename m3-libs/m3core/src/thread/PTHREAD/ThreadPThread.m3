@@ -1423,20 +1423,20 @@ VAR
   holder: ADDRESS;
   inCritical := 0;
 
-PROCEDURE LockHeap () =
-  VAR me := GetActivation();
+PROCEDURE LockHeap (VAR me: RTHeapRep.ThreadState) =
   BEGIN
-    IF holder # me THEN
+    IF holder # ADR(me) THEN
       WITH r = pthread_mutex_lock_heap() DO <*ASSERT r=0*> END;
-      holder := me;
+      holder := ADR(me);
     END;
     INC(inCritical);
+    INC(me.inCritical);
   END LockHeap;
 
-PROCEDURE UnlockHeap () =
-  VAR me := GetActivation();
+PROCEDURE UnlockHeap (VAR me: RTHeapRep.ThreadState) =
   BEGIN
-    <*ASSERT holder = me*>
+    <*ASSERT holder = ADR(me)*>
+    DEC(me.inCritical);
     DEC(inCritical);
     IF inCritical = 0 THEN
       holder := NIL;
@@ -1444,16 +1444,17 @@ PROCEDURE UnlockHeap () =
     END;
   END UnlockHeap;
 
-PROCEDURE WaitHeap () =
-  VAR me := GetActivation();
+PROCEDURE WaitHeap (VAR me: RTHeapRep.ThreadState) =
   BEGIN
-    <*ASSERT holder = me*>
+    <*ASSERT holder = ADR(me)*>
+    DEC(me.inCritical);
     DEC(inCritical);
     <*ASSERT inCritical = 0*>
     WITH r = pthread_cond_wait_heap() DO <*ASSERT r=0*> END;
-    holder := me;
+    holder := ADR(me);
     <*ASSERT inCritical = 0*>
     INC(inCritical);
+    INC(me.inCritical);
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =

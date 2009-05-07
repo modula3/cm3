@@ -1048,22 +1048,21 @@ PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
    and collector. *)
 
 VAR
-  inCritical := 0;      (* LL = cs *)
   heapCond: Condition;
 
-PROCEDURE LockHeap () =
+PROCEDURE LockHeap (VAR thread: RTHeapRep.ThreadState) =
   BEGIN
     EnterCriticalSection_cs();
-    INC(inCritical);
+    INC(thread.inCritical);
   END LockHeap;
 
-PROCEDURE UnlockHeap () =
+PROCEDURE UnlockHeap (VAR thread: RTHeapRep.ThreadState) =
   BEGIN
-    DEC(inCritical);
+    DEC(thread.inCritical);
     LeaveCriticalSection_cs();
   END UnlockHeap;
 
-PROCEDURE WaitHeap () =
+PROCEDURE WaitHeap (VAR thread: RTHeapRep.ThreadState) =
   VAR self := Self();
   BEGIN
     EnterCriticalSection_cm();
@@ -1074,8 +1073,8 @@ PROCEDURE WaitHeap () =
     heapCond.waiters := self;
     LeaveCriticalSection_cm();
 
-    DEC(inCritical);
-    <*ASSERT inCritical = 0*>
+    DEC(thread.inCritical);
+    <*ASSERT thread.inCritical = 0*>
     LeaveCriticalSection_cs();
 
     IF WaitForSingleObject(self.waitSema, INFINITE) # 0 THEN
@@ -1083,8 +1082,8 @@ PROCEDURE WaitHeap () =
     END;
 
     EnterCriticalSection_cs();
-    <*ASSERT inCritical = 0*>
-    INC(inCritical);
+    <*ASSERT thread.inCritical = 0*>
+    INC(thread.inCritical);
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =

@@ -6,30 +6,32 @@
 (*      modified on Thu Dec 21 11:24:22 1989 by kalsow        *)
 
 MODULE CConvert;
-IMPORT RTOS;
+IMPORT RTOS, ThreadF;
 
 VAR
   locked := ARRAY[0..1] OF BOOLEAN {FALSE, ..};
   waiters := ARRAY[0..1] OF BOOLEAN {FALSE, ..};
 
 PROCEDURE Acquire (n: INTEGER) =
+  VAR thread := ThreadF.MyHeapState();
   BEGIN
     TRY
-      RTOS.LockHeap();
+      RTOS.LockHeap(thread^);
       WHILE locked[n] DO
         waiters[n] := TRUE;
-        RTOS.WaitHeap();
+        RTOS.WaitHeap(thread^);
       END;
       locked[n] := TRUE;
     FINALLY
-      RTOS.UnlockHeap();
+      RTOS.UnlockHeap(thread^);
     END;
   END Acquire;
 
 PROCEDURE Release (n: INTEGER) =
+  VAR thread := ThreadF.MyHeapState();
   BEGIN
     TRY
-      RTOS.LockHeap();
+      RTOS.LockHeap(thread^);
       <*ASSERT locked[n]*>
       locked[n] := FALSE;
       IF waiters[n] THEN
@@ -37,7 +39,7 @@ PROCEDURE Release (n: INTEGER) =
         RTOS.BroadcastHeap();
       END;
     FINALLY
-      RTOS.UnlockHeap();
+      RTOS.UnlockHeap(thread^);
     END;
   END Release;
 

@@ -19,7 +19,7 @@ INTERFACE RTHeapRep;
    elsewhere. *)
 
 IMPORT RT0, RTMachine, Word;
-FROM RT0 IMPORT Typecode, TypeDefn, TypeInitProc;
+FROM RT0 IMPORT Typecode;
 
 (* The allocator and collector maintain two heaps of objects.  One heap is
    "traced" (its objects are collected); the other is "untraced".
@@ -166,8 +166,8 @@ PROCEDURE UnsafeGetShape (    r          : REFANY;
 
 (****** LOW-LEVEL ALLOCATOR/COLLECTOR *****)
 
-PROCEDURE AllocTraced (def: TypeDefn; size, alignment: CARDINAL;
-                       initializer: TypeInitProc): REFANY;
+PROCEDURE AllocTraced (size, alignment: CARDINAL;
+                       VAR pool: AllocPool): ADDRESS;
 (* Allocate 'size' zeroed bytes of traced storage of type 'def' on an
    'alignment' byte boundary from the thread's allocation pool, initializing
    the result using 'initializer' (if not "NIL"). *)
@@ -175,13 +175,16 @@ PROCEDURE AllocTraced (def: TypeDefn; size, alignment: CARDINAL;
 (* Objects in the traced heap are allocated from "pools". *)
 TYPE
   AllocPool = RECORD
+    note       : [Note.Allocated..Note.Copied];
+    pure       : BOOLEAN;
     page       : RefPage := NIL; (* current allocation page of the pool *)
     next       : ADDRESS := NIL; (* address of next available byte *)
     limit      : ADDRESS := NIL; (* address of first unavailable byte *)
   END;
 
 VAR (* LL >= LockHeap *)
-  pureCopy, impureCopy: AllocPool;
+  pureCopy   := AllocPool { pure := TRUE,  note := Note.Copied };
+  impureCopy := AllocPool { pure := FALSE, note := Note.Copied };
 
 TYPE
   ThreadState = RECORD
@@ -189,8 +192,8 @@ TYPE
        This permits the thread to decline being suspended for
        GC until it is done allocating from its pool.  Otherwise, the
        GC could see incoherent object state in the pool's page. *)
-    inCritical: INTEGER := 0;
-    newPool: AllocPool;
+    inCritical : INTEGER := 0;
+    pool := AllocPool { pure := FALSE, note := Note.Allocated };
   END;
 
 (* Flush cached thread state, on GC flip and thread death *)
@@ -213,9 +216,10 @@ PROCEDURE RegisterFinalCleanup (r: REFANY; p: PROCEDURE (r: REFANY));
 (* There are various status variables. *)
 
 VAR
-  disableCount: CARDINAL := 0;   (* how many more Disables than Enables *)
-  disableMotionCount: CARDINAL := 0; (* how many more DisableMotions than
-                                        EnableMotions *)
+  (* how many more Disables than Enables *)
+  disableCount: CARDINAL := 1;		 (* initially disabled *)
+  (* how many more DisableMotions than EnableMotions *)
+  disableMotionCount: CARDINAL := 0;
 
 PROCEDURE Crash (): BOOLEAN;
 (* Crash is called by the runtime when the program is about to crash.  When

@@ -57,7 +57,6 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     RTParams.Init ();
     RTHeapRep.Init ();
     ThreadF.Init ();
-    RTCollectorSRC.GetGCRatio();
     RTDebug.Init ();
     RTHeapInfo.Init ();
     IF RTParams.IsPresent("tracelinker") THEN
