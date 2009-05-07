@@ -5,7 +5,7 @@
 UNSAFE MODULE RTExStack EXPORTS RTException, RTExStack;
 
 IMPORT RT0, RTError, RTProcedureSRC, RTIO, RTModule, RTOS, RTStack;
-IMPORT Thread, Cstring, RTProcedure, RTParams;
+IMPORT Thread, Cstring, RTProcedure, RTParams, ThreadF;
 FROM RT0 IMPORT RaiseActivation;
 
 VAR
