@@ -218,11 +218,12 @@ PROCEDURE FindScope (pc: ADDRESS): Scope =
     lo, hi, mid, limit: CARDINAL;
     p: UNTRACED REF MapEntry;
     s: Scope;
+    thread := ThreadF.MyHeapState();
   BEGIN
     IF (pc_map = NIL) THEN
-      RTOS.LockHeap ();
+      RTOS.LockHeap (thread^);
         BuildPCMap ();
-      RTOS.UnlockHeap ();
+      RTOS.UnlockHeap (thread^);
     END;
 
     (* binary search of the sorted table *)
