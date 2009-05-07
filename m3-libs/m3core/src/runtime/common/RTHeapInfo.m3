@@ -7,7 +7,7 @@
 UNSAFE MODULE RTHeapInfo;
 
 IMPORT RT0, RTAllocCnts, RTOS, RTParams, RTPerfTool, RTType;
-IMPORT Text, Thread, Cstring, Word;
+IMPORT Text, Thread, Cstring, Word, ThreadF;
 
 TYPE Closure = Thread.Closure OBJECT OVERRIDES apply := Producer END;
 
@@ -20,10 +20,12 @@ VAR
   n_types_sent : CARDINAL := 0;
 
 PROCEDURE Producer (<*UNUSED*> self: Thread.Closure): REFANY =
-  VAR n: INTEGER;  nTypes: RT0.Typecode;
+  VAR
+    n: INTEGER;  nTypes: RT0.Typecode;
+    thread := ThreadF.MyHeapState();
   BEGIN
     LOOP
-      RTOS.LockHeap ();
+      RTOS.LockHeap (thread^);
         nTypes := MIN (RTAllocCnts.n_types, RTType.MaxTypecode()+1);
 
         SendTypes (nTypes);
@@ -48,7 +50,7 @@ PROCEDURE Producer (<*UNUSED*> self: Thread.Closure): REFANY =
           END;
         END;
         Flush ();
-      RTOS.UnlockHeap ();
+      RTOS.UnlockHeap (thread^);
 
       Thread.Pause (update);
     END;
