@@ -335,21 +335,21 @@ PROCEDURE Convert (nm: TEXT): TEXT =
 
 PROCEDURE DoConvert (nm: TEXT;  len: CARDINAL;  VAR buf: ARRAY OF CHAR): TEXT =
   VAR changed := FALSE;
-	  c: CHAR;
+      c: CHAR;
   BEGIN
     Text.SetChars (buf, nm);
     FOR i := 0 TO len-1 DO
       c := buf[i];
       IF c = BackSlash THEN
-		changed := TRUE;
+        changed := TRUE;
         buf[i] := Slash;
       END;
     END;
-	IF changed THEN
+    IF changed THEN
       RETURN Text.FromChars (SUBARRAY (buf, 0, len));
-	ELSE
-	  RETURN nm;
-	END;
+    ELSE
+      RETURN nm;
+    END;
   END DoConvert;
 
 PROCEDURE IsDirSep (ch: CHAR; d_sep: CHAR): BOOLEAN =
