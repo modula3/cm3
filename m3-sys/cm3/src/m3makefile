@@ -61,6 +61,5 @@ end
 %cp_if (format ("..%ssrc%sconfig%s%s", SL, SL, SL, TARGET), "cm3.cfg")
 %BindExport ("cm3.cfg")
 
-%-- the man page is *very* stale, don't bother.
-% ManPage ("m3","1")
+ManPage ("cm3","1")
 
