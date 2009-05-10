@@ -2,6 +2,32 @@
 % See file COPYRIGHT-CMASS for details.
 %
 
+%-------------------------------------------------------------------
+
+%
+% fPIC is not usually needed here.
+% It is the default for Apple gcc and left
+% here in case user is using a self-built FSF gcc.
+%
+if equal(WORD_SIZE, "32BITS")
+    readonly SYSTEM_CC  = "gcc -fPIC -m32"
+else
+    readonly SYSTEM_CC  = "gcc -fPIC -m64"
+end
+readonly SYSTEM_LIBTOOL = "libtool"
+readonly SYSTEM_ASM = "as"
+
+%
+% fPIC really is needed here, despite man gcc saying it is the default.
+% This is because man gcc is about Apple's gcc but m3cg is
+% built from FSF source.
+%
+if equal(WORD_SIZE, "32BITS")
+    readonly m3back_flags = "-fPIC -gstabs+ -quiet -m32"
+else
+    readonly m3back_flags = "-fPIC -gstabs+ -quiet -m64"
+end
+
 %------------------------------------------------ external system libraries ---
 % SYSTEM_LIBS provides a mapping from Modula-3 names for the common
 % external libraries to site-dependent information about how they
