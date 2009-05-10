@@ -15,7 +15,6 @@ else
     readonly SYSTEM_CC  = "gcc -fPIC -m64"
 end
 readonly SYSTEM_LIBTOOL = "libtool"
-readonly SYSTEM_ASM = "as"
 
 %
 % fPIC really is needed here, despite man gcc saying it is the default.
