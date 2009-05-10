@@ -25,7 +25,7 @@ proc configure_assembler() is
     if defined("SYSTEM_ASM")
       return
     end
-    local a = try_exec("@echo \"rep movsl\" | as >/dev/null 2>/dev/null ")
+    local a = try_exec("@echo \"rep movsl\" | as -o /dev/null >/dev/null")
     % write("a is " & a & CR)
     if equal(a, 0)
         SYSTEM_ASM = "as"
