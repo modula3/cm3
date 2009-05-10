@@ -5,5 +5,10 @@
 readonly TARGET       = "PPC_DARWIN"
 readonly WORD_SIZE    = "32BITS"
 readonly GNU_PLATFORM = "powerpc-apple-darwin6.3"
+readonly SYSTEM_ASM = "as"
+
+proc assemble(source, object) is
+    return try_exec("@" & SYSTEM_ASM, source, "-o", object)
+end
 
 include("Darwin.common")
