@@ -6,20 +6,4 @@ readonly TARGET       = "PPC_DARWIN"
 readonly WORD_SIZE    = "32BITS"
 readonly GNU_PLATFORM = "powerpc-apple-darwin6.3"
 
-%
-% fPIC is not usually needed here.
-% It is the default for Apple gcc and left
-% here in case user is using a self-built FSF gcc.
-%
-readonly SYSTEM_CC  = "gcc -fPIC -m32"
-readonly SYSTEM_LIBTOOL = "libtool"
-readonly SYSTEM_ASM = "as"
-
-%
-% fPIC really is needed here, despite man gcc saying it is the default.
-% This is because man gcc is about Apple's gcc but m3cg is
-% built from FSF source.
-%
-readonly m3back_flags = "-fPIC -gstabs+ -quiet -m32"
-
 include("Darwin.common")
