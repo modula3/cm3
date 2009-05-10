@@ -2,9 +2,9 @@
 % See file COPYRIGHT-CMASS for details.
 %
 
-readonly TARGET       = "PPC_DARWIN"
+readonly TARGET       = "I386_DARWIN"
 readonly WORD_SIZE    = "32BITS"
-readonly GNU_PLATFORM = "powerpc-apple-darwin6.3"
+readonly GNU_PLATFORM = "i386-apple-darwin8.0.1"
 
 %
 % fPIC is not usually needed here.
