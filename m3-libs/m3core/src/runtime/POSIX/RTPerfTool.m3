@@ -102,6 +102,7 @@ PROCEDURE StartTool (name: TEXT; VAR r, w: Handle): BOOLEAN =
       args [1] := NIL;
       execResult := Uexec.execvp (args [0], ADR (args [0]));
       Unix.underscore_exit (99);
+      RETURN FALSE;
   
     ELSE (* in the parent, after the child has been forked *)
   
@@ -117,9 +118,9 @@ PROCEDURE StartTool (name: TEXT; VAR r, w: Handle): BOOLEAN =
       r := fromTool [readPort];
       w := toTool [writePort];
 
+      RETURN (execResult >= 0);
     END; (*CASE*)
 
-    RETURN (execResult >= 0);
   END StartTool;
 
 BEGIN
