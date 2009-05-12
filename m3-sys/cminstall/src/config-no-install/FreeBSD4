@@ -40,8 +40,6 @@ if defined("M3_USE_OVERRIDES")
     SYSTEM_LD = SYSTEM_LD
       & " -z origin"
       & " -Wl,-rpath,\\$ORIGIN/../lib" % installroot/bin to installroot/lib
-      & " -Wl,-rpath,\\$ORIGIN/../../lib" % insurance betwen the two
-      & " -Wl,-rpath,\\$ORIGIN/../../../lib" % installroot/pkg/package/target to installroot/lib
     if equal($M3_PORTABLE_RUN_PATH, "")
       SYSTEM_LD = SYSTEM_LD
         & " -Wl,-rpath," & INSTALL_ROOT & "/lib" % non-portable
