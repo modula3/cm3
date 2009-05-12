@@ -34,7 +34,7 @@ Interface("Uutmp")
 % It is systems using the newer/smaller/more portable Unix/*.i3 files.
 %
 
-if not (equal (TARGET, "I386_DARWIN") or equal (TARGET, "AMD64_DARWIN"))
+if not equal (TARGET, "AMD64_DARWIN")
 
     Interface ("Umman")
     c_source("UstatC")
