@@ -47,8 +47,8 @@ PROCEDURE PrepArgs (program: TEXT;  args: Arg.List): REF ARRAY OF TEXT;
 PROCEDURE Execute  (program: TEXT;  args: Arg.List;
                      stdout: TEXT;  fatal: BOOLEAN): INTEGER;
 
+PROCEDURE MakeRelative (VAR from: TEXT;  to: TEXT);
 PROCEDURE SymbolicOrHardLink (link: PROCEDURE(name1, name2: const_char_star):int; s_for_sym, from, to: TEXT);
-
 (*bootstrap hack*)
 <*EXTERNAL Utils__link*> PROCEDURE link (name1, name2: const_char_star): int;
 
