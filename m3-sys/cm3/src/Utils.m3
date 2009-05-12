@@ -446,7 +446,7 @@ PROCEDURE MakeRelative (VAR from: TEXT;  to: TEXT) =
 PROCEDURE SymbolicOrHardLink (link: PROCEDURE(name1, name2: const_char_star):int; s_for_sym, from, to: TEXT) =
   VAR s_from, s_to: char_star;
   BEGIN
-    MakeRelative (from, to);
+    Remove (to);
     Msg.Commands ("ln ", s_for_sym, from, " ", to);
     s_from := M3toC.SharedTtoS (from);
     s_to   := M3toC.SharedTtoS (to);

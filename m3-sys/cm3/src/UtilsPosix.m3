@@ -7,7 +7,7 @@ IMPORT Unix;
 
 PROCEDURE SymbolicLinkFile (from, to: TEXT) =
   BEGIN
-    Remove (to);
+    MakeRelative (from, to);
     SymbolicOrHardLink(Unix.symlink, "-s ", from, to);
   END SymbolicLinkFile;
 
