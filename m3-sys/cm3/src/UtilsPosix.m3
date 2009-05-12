@@ -13,7 +13,7 @@ PROCEDURE SymbolicLinkFile (from, to: TEXT) =
 
 PROCEDURE HardLinkFile (from, to: TEXT) =
   BEGIN
-    SymbolicOrHardLink(Unix.link, "", from, to);
+    SymbolicOrHardLink((*Unix.*)(*bootstrap hack*)link, "", from, to);
   END HardLinkFile;
 
 BEGIN
