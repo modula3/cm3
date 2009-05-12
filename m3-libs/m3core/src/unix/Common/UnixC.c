@@ -187,42 +187,6 @@ m3_mode_t Unix__umask(m3_mode_t newmask)
 #endif
 }
 
-int Unix__link(const char* ExistingFile, const char* NewLink)
-{
-#ifdef _WIN32
-    typedef BOOL (__stdcall * PFNCreateHardLinkA)(PCSTR NewLink, PCSTR ExistingFile, void* reserved);
-    static PFNCreateHardLinkA pfnCreateHardLinkA;
-    
-    if (pfnCreateHardLinkA == NULL)
-    {
-        const static WCHAR Kernel32Name[] = L"Kernel32.dll";
-        HMODULE Kernel32Handle = LoadLibraryW(Kernel32Name);
-        if (Kernel32Handle == NULL)
-            goto Error;
-        pfnCreateHardLinkA = (PFNCreateHardLinkA)GetProcAddress(Kernel32Handle, "CreateHardLinkA");
-        if (pfnCreateHardLinkA == NULL)
-            goto Error;
-    }
-    if (pfnCreateHardLinkA(NewLink, ExistingFile, NULL) == FALSE)
-        goto Error;
-    return 0;
-Error:
-    errno = GetLastError();
-    return -1;
-#else
-    return link(ExistingFile, NewLink);
-#endif
-}
-
-/* Win32__link and Utils__link are temporary
- * for compat/bootstrapping.
- */
-int Win32__link(const char* ExistingFile, const char* NewLink)
-{ return Unix__link(ExistingFile, NewLink); }
-
-int Utils__link(const char* ExistingFile, const char* NewLink)
-{ return Unix__link(ExistingFile, NewLink); }
-
 int Unix__chmod(const char* path, m3_mode_t mode)
 {
 #ifdef _WIN32
