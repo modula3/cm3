@@ -214,12 +214,14 @@ Error:
 #endif
 }
 
-#ifdef _WIN32
+/* Win32__link and Utils__link are temporary
+ * for compat/bootstrapping.
+ */
 int Win32__link(const char* ExistingFile, const char* NewLink)
-{
-    return Unix__link(ExistingFile, NewLink);
-}
-#endif
+{ return Unix__link(ExistingFile, NewLink); }
+
+int Utils__link(const char* ExistingFile, const char* NewLink)
+{ return Unix__link(ExistingFile, NewLink); }
 
 int Unix__chmod(const char* path, m3_mode_t mode)
 {
