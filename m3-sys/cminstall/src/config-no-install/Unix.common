@@ -95,12 +95,11 @@ end
 % is only called if your program or library explicitly includes assembly source
 % code, the system distributed by Critical Mass does not.
 
-if not defined ("assemble")
-
 proc assemble(source, object) is
+    if defined("configure_assembler")
+        configure_assembler()
+    end
     return try_exec("@" & SYSTEM_ASM, source, "-o", object)
-end
-
 end
 
 %------------------------------------------------------------------------------
