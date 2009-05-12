@@ -15,7 +15,7 @@ readonly proc FixM3GcDefs(x) is return x end
 readonly proc GetM3BackFlag(x) is return x end
 
 %
-% The assembler on Darwon 8.0.1 (10.4) cannot handle the rep
+% The assembler on Darwin 8.0.1 (10.4) cannot handle the rep
 % prefix. cctools 698.1 can. Exactly what is the earliest
 % version that can is not known. A newline or slash after
 % the rep also works.
@@ -43,11 +43,6 @@ proc configure_assembler() is
     %
     % another good option is probably to put an assembler next to cm3cg
     %
-end
-
-proc assemble(source, object) is
-    configure_assembler()
-    return try_exec("@" & SYSTEM_ASM, source, "-o", object)
 end
 
 include("Darwin.common")
