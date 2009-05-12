@@ -6,7 +6,7 @@ readonly m3back_flags = "-quiet -gstabs+ -fPIC -mno-align-double"
 readonly SYSTEM_CC       = "@gcc -gstabs+ -m32 -fPIC -mno-align-double" % C compiler
 readonly SYSTEM_ASM = "@as --32" % Assembler
 
-readonly SYSTEM_LD = SYSTEM_CC
+SYSTEM_LD = SYSTEM_CC
   & " -z now"
   & " -z origin"
   & " -Bsymbolic"
@@ -21,7 +21,5 @@ readonly SYSTEM_LD = SYSTEM_CC
 %
 readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
-% don't build up large RPATH
-M3_SHARED_LIB_ARG = ""
-
 include("Unix.common")
+include("gnuld.common")
