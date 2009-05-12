@@ -3,6 +3,7 @@
 
 c_source ("UtimeC")
 c_source ("UnixC")
+c_source ("UnixLink")
 Interface("Uexec")
 c_source("Uexec")
 Interface ("Unetdb")
