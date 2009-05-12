@@ -29,7 +29,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.21 2009-05-06 11:48:06 jkrell Exp $
+% $Id: version.quake,v 1.22 2009-05-12 06:38:25 jkrell Exp $
 
 
 %------------------------------------------------------------------------------
@@ -155,6 +155,7 @@ proc version_impl(name) is
         else
             > "_m3version.sh" in
                 if AnyMissing
+                    write("root=" & ROOT & CR)
                     write(". ../../../scripts/sysinfo.sh || exit 1", CR)
                 end
                 foreach Name in Missing
