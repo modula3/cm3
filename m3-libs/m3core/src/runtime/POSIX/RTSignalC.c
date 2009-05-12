@@ -68,7 +68,7 @@ static size_t GetPC(void* VoidContext)
 #if __DARWIN_UNIX03
       pc = Context->uc_mcontext->__ss.__eip;
 #else
-      pc = Context->uc_mcontext->ss.eip;
+      pc = Context->uc_mcontext->sc.sc_eip;
 #endif
 #elif defined(__x86_64__)
 #if __DARWIN_UNIX03
