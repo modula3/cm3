@@ -26,6 +26,12 @@ TYPE
   u_short = uint16_t;
   u_int = uint32_t;
 
+  (* synonyms for compatibility *)
+  u_int8_t = uint8_t;
+  u_int16_t = uint16_t;
+  u_int32_t = uint32_t;
+  u_int64_t = uint64_t;
+
  (* Exactly pointer-sized integers, unsigned and signed *)
   size_t = Cstddef.size_t;
   ssize_t = Cstddef.ptrdiff_t;
