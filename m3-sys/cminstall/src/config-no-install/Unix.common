@@ -306,8 +306,8 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     % make sure the shared library stuff gets installed properly
     install_derived(lib_sox)
     install_derived_link(lib_sox, lib_so)
-    install_link_to_derived(lib_sox, LIB_INSTALL)
-    install_link_to_derived(lib_so, LIB_INSTALL)
+    install_hard_link_to_derived(lib_sox, LIB_INSTALL)
+    install_hard_link_to_derived(lib_so, LIB_INSTALL)
     ShipM3CoreStaticObjs(lib)
 
     return 0
@@ -334,8 +334,8 @@ proc skip_lib(lib, shared) is
         % make sure the shared library stuff gets installed properly
         install_derived(lib_sox)
         install_derived(lib_so)
-        install_link_to_derived(lib_sox, LIB_INSTALL)
-        install_link_to_derived(lib_so, LIB_INSTALL)
+        install_hard_link_to_derived(lib_sox, LIB_INSTALL)
+        install_hard_link_to_derived(lib_so, LIB_INSTALL)
     else
         delete_file(lib_so)
         delete_file(lib_sox)
