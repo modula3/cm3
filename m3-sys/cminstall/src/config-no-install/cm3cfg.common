@@ -105,6 +105,14 @@ end
 
 %------------------------------------------------------------------------------
 
+if not defined("install_hard_link_to_derived")
+    proc install_hard_link_to_derived(a, b) is
+        install_link_to_derived(a, b)
+    end
+end
+
+%------------------------------------------------------------------------------
+
 if not defined("subst_chars")
     %
     % Ok, some cross builds will fail with older tools, but
