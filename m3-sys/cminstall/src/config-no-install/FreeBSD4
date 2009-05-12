@@ -24,6 +24,7 @@ SYSTEM_LIBS{"POSTGRES95"} = [ "-Wl,-R/usr/local/lib", "-L/usr/local/lib", "-lpq"
 
 SYSTEM_LD = SYSTEM_CC
   & " -z now"
+  & " -z origin"
   & " -Bsymbolic"
 % I thought -as-needed was generally considered good, but it is
 % breaking Linux/x86 so disable here for now.
@@ -31,20 +32,6 @@ SYSTEM_LD = SYSTEM_CC
   & " -Wl,--fatal-warnings"
 % & " -Wl,-no-allow-shlib-undefined"
   & " -Wl,--warn-common"
+  & " -Wl,-rpath,\\$ORIGIN/../lib"
 
-if defined("M3_USE_OVERRIDES")
-  if M3_USE_OVERRIDES
-    M3_SHARED_LIB_ARG = "-Wl,-rpath,"
-  else
-    M3_SHARED_LIB_ARG = ""
-    SYSTEM_LD = SYSTEM_LD
-      & " -z origin"
-      & " -Wl,-rpath,\\$ORIGIN/../lib" % installroot/bin to installroot/lib
-    if equal($M3_PORTABLE_RUN_PATH, "")
-      SYSTEM_LD = SYSTEM_LD
-        & " -Wl,-rpath," & INSTALL_ROOT & "/lib" % non-portable
-    end
-  end
-else
-  M3_SHARED_LIB_ARG = "-Wl,-rpath,"
-end
+include("gnuld.common")
