@@ -14,8 +14,6 @@ readonly SYSTEM_LD = SYSTEM_CC
   & " -Wl,--fatal-warnings"
 % & " -Wl,-no-allow-shlib-undefined"
   & " -Wl,-rpath,\\$ORIGIN/../lib"
-  & " -Wl,-rpath,\\$ORIGIN/../../lib"
-  & " -Wl,-rpath,\\$ORIGIN/../../../lib"
   & " -Wl,--warn-common"
 
 %
