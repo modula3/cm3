@@ -1,3 +1,0 @@
-INTERFACE LongRep;
-TYPE T = LONGINT;
-END LongRep.
