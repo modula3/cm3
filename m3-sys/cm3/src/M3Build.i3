@@ -21,5 +21,7 @@ PROCEDURE RealClean ();
 
 VAR
   done := FALSE;
+  noM3ShipResolution := FALSE;
+  groupWritable := FALSE;
 END M3Build.
 
