@@ -87,10 +87,21 @@ CONST
   M3Overrides = ".M3OVERRIDES"; (* marker to indicate override use *)
   M3Web       = ".M3WEB";       (* compiler support for browser *)
   M3TFile     = ".M3IMPTAB";    (* import table for external compilers *)
+  ModeGroupR  = "0644";
+  ModeGroupW  = "0664";
+  ModeXGroupR = "0755";
+  ModeXGroupW = "0775";
 
 VAR
+  RPCR  := ")" & Wr.EOL;   (* right paren, carriage return *)
   QRPCR := "\")" & Wr.EOL; (* quote, right paren, carriage return *)
+  QC    := "\", ";         (* quote, comma *)
+  CQ    := ", \"";         (* comma, quote *)
   QCQ   := "\", \"";       (* quote, comma, quote *)
+  ASAQ  := " & SL & \"";   (* and, slash, and, quote *)
+  QASA  := "\" & SL & ";   (* quote, and, slash, and *)
+  ModeF := ModeGroupR;
+  ModeX := ModeXGroupR;
 
 TYPE
   TxtList = RECORD
@@ -129,6 +140,10 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     t.build_dir       := M3ID.Add (build_dir);
 
     t.pkg_use         := GetConfig (t, "PKG_USE");
+(* not in Quake.Machine
+    t.bin_use         := GetConfig (t, "BIN_USE");
+    t.lib_use         := GetConfig (t, "LIB_USE");
+*)
     t.pkg_install     := GetConfig (t, "PKG_INSTALL");
     t.bin_install     := GetConfig (t, "BIN_INSTALL");
     t.lib_install     := GetConfig (t, "LIB_INSTALL");
@@ -168,6 +183,10 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
 PROCEDURE Run (t: T;  makefile: TEXT)
   RAISES {Quake.Error, Thread.Alerted} =
   BEGIN
+    IF groupWritable THEN
+      ModeF := ModeGroupW;
+      ModeX := ModeXGroupW;
+    END;
     t.mode := M3Options.major_mode;
 
     IF (t.mode = MM.Build) THEN
@@ -1683,8 +1702,13 @@ PROCEDURE InstallSources (t: T) =
           last_loc := uu.loc;
         END;
         src := M3Unit.FullPath (uu);
-        Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
-        Out (wr, M3Path.Convert (dest), QCQ, "0644", QRPCR);
+        IF noM3ShipResolution THEN
+          Out (wr, "install_file(\"", M3Path.Convert (src), QC);
+          Out (wr, Unresolve (t, dest), CQ, ModeF, QRPCR);
+        ELSE
+          Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
+          Out (wr, M3Path.Convert (dest), QCQ, ModeF, QRPCR);
+        END;
       END;
     END Emit;
 
@@ -1829,14 +1853,47 @@ PROCEDURE MakeRoom (t: T;  space: INTEGER) =
 
 (*---------------------------------------------- internal export utilities --*)
 
+PROCEDURE Unresolve (t: T;  pn: TEXT): TEXT =
+  VAR
+    pkg_use := t.pkg_use;
+    build_dir := M3ID.ToText (t.build_dir);
+    res := "\"" & pn & "\"";
+  BEGIN
+    res := TextUtils.Substitute(res, t.bin_install, "\" & BIN_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.lib_install, "\" & LIB_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.doc_install, "\" & DOC_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.man_install, "\" & MAN_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.html_install, "\" & HTML_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.emacs_install, "\" & EMACS_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.pkg_install, "\" & PKG_INSTALL & \"");
+    res := TextUtils.Substitute(res, build_dir, "\" & TARGET & \"");
+    res := TextUtils.Substitute(res, pkg_use, "\" & PKG_USE & \"");
+    res := TextUtils.Substitute(res, "/", "\" & SL & \"");
+    res := TextUtils.Substitute(res, "& \"\" &", "&");
+    res := TextUtils.Substitute(res, "\"\" &", "", 1);
+    res := TextUtils.Substitute(res, "& \"\"", "", 1);
+    RETURN res;
+  END Unresolve;
+
 PROCEDURE InstallDerived (t: T;  name: TEXT) =
 
   PROCEDURE Emit (wr: Wr.T) RAISES {Wr.Failure, Thread.Alerted} =
     VAR dest := InstallDerivedDir (t);
     BEGIN
       InstallDir (t, dest, wr);
-      Out (wr, "install_file(\"", M3Path.Convert (name), QCQ);
-      Out (wr, M3Path.Convert (dest), QCQ, "0644", QRPCR);
+      IF noM3ShipResolution THEN
+        VAR 
+          pkg := M3ID.ToText (t.build_pkg);
+        BEGIN
+          Out (wr, "make_dir(", Unresolve(t, dest), RPCR);
+          Out (wr, "install_file(\"", M3Path.Convert (name));
+          Out (wr, QC, "PKG_INSTALL" & ASAQ &
+               pkg & QASA & "TARGET", CQ, ModeF, QRPCR);
+        END;
+      ELSE
+        Out (wr, "install_file(\"", M3Path.Convert (name));
+        Out (wr, QCQ, M3Path.Convert (dest), QCQ, ModeF, QRPCR);
+      END;
     END Emit;
 
   BEGIN
@@ -1853,8 +1910,21 @@ PROCEDURE InstallDerivedLink (t: T;  from, to: TEXT; ship_function: TEXT) =
       from_file := M3Path.New (UseDerivedDir (t), from);
     BEGIN
       InstallDir (t, dest_dir, wr);
-      Out (wr, ship_function, "(\"", M3Path.Convert (from_file), QCQ);
-      Out (wr, M3Path.Convert (to_file), QRPCR);
+      IF noM3ShipResolution THEN
+        VAR 
+          pkg := M3ID.ToText (t.build_pkg);
+        BEGIN
+          Out (wr, "make_dir(", "PKG_INSTALL" & ASAQ & pkg & QASA &
+               "TARGET", RPCR);
+          Out (wr, ship_function, "(PKG_USE" & ASAQ &
+               pkg & QASA & "TARGET" & ASAQ, M3Path.Convert (from), QC);
+          Out (wr, "PKG_INSTALL" & ASAQ & pkg & QASA & "TARGET" & ASAQ &
+               M3Path.Convert (to), QRPCR);
+        END;
+      ELSE
+        Out (wr, ship_function, "(\"", M3Path.Convert (from_file), QCQ);
+        Out (wr, M3Path.Convert (to_file), QRPCR);
+      END;
     END Emit;
 
   BEGIN
@@ -1883,13 +1953,25 @@ PROCEDURE InstallLinkToDerived (t: T;   src, dest: TEXT; ship_function: TEXT)
       link   := M3Path.New (dest, src);
     BEGIN
       InstallDir (t, dest, wr);
-      Out (wr, ship_function, "(\"", M3Path.Convert (target), QCQ);
-      Out (wr, M3Path.Convert (link), QRPCR)
+      IF noM3ShipResolution THEN
+        VAR 
+          pkg := M3ID.ToText (t.build_pkg);
+        BEGIN
+          Out (wr, "make_dir(", Unresolve (t, dest), RPCR);
+          Out (wr, ship_function, "(\"", M3Path.Convert (pkg),
+               QASA & "TARGET" & ASAQ & M3Path.Convert (src), QC);
+          Out (wr, Unresolve (t, dest) & ASAQ & M3Path.Convert (src),
+               QRPCR)
+        END;
+      ELSE
+        Out (wr, ship_function, "(\"", M3Path.Convert (target), QCQ);
+        Out (wr, M3Path.Convert (link), QRPCR)
+      END;
     END Emit;
 
   BEGIN
     IF t.have_pkgtools THEN
-      InstallFile (t, src, dest, "0755", derived := TRUE);
+      InstallFile (t, src, dest, ModeX, derived := TRUE);
     ELSE
       Utils.WriteFile (M3Ship, Emit, append := TRUE);
     END;
@@ -1902,7 +1984,10 @@ PROCEDURE InstallDir (t: T;  dir: TEXT;  wr: Wr.T)
       IF t.have_pkgtools THEN
         Out (wr, "-l ", dir, "\n");
       ELSIF NOT t.all_ship_dirs.put (M3ID.Add (dir), NIL) THEN
-        Out (wr, "make_dir(\"", M3Path.Convert (dir), QRPCR);
+        IF noM3ShipResolution THEN
+        ELSE
+          Out (wr, "make_dir(\"", M3Path.Convert (dir), QRPCR);
+        END;
       END;
       t.last_ship_dir := dir;
     END;
@@ -1921,8 +2006,17 @@ PROCEDURE InstallFile (t: T;  src, dest, mode: TEXT;  derived: BOOLEAN)
       IF t.have_pkgtools THEN
         Out (wr, M3ID.ToText (t.build_dir), "/", src, "\n");
       ELSE
-        Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
-        Out (wr, M3Path.Convert (dest), QCQ, mode, QRPCR);
+        IF noM3ShipResolution THEN
+          VAR d := Unresolve (t, dest);
+          BEGIN
+            Out (wr, "make_dir(", d, RPCR);
+            Out (wr, "install_file(\"", Unresolve (t, src), QCQ);
+            Out (wr, d, QCQ, mode, QRPCR);
+          END;
+        ELSE
+          Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
+          Out (wr, M3Path.Convert (dest), QCQ, mode, QRPCR);
+        END;
       END;
     END Emit;
 
@@ -1963,7 +2057,7 @@ PROCEDURE InstallMan (t: T;  page, sec: TEXT;  derived: BOOLEAN)
    src  := page & "." & sec;
    dest := M3Path.New (t.man_install, "man" & sec);
   BEGIN
-    InstallFile (t, src, dest, "0644", derived);
+    InstallFile (t, src, dest, ModeF, derived);
   END InstallMan;
 
 PROCEDURE InstallSource (t: T;  src, dest, mode: TEXT) =
@@ -1975,8 +2069,17 @@ PROCEDURE InstallSource (t: T;  src, dest, mode: TEXT) =
       IF t.have_pkgtools THEN
         Out (wr, src, "\n");
       ELSE
-        Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
-        Out (wr, M3Path.Convert (dest), QCQ, mode, QRPCR);
+        IF noM3ShipResolution THEN
+          VAR d := Unresolve (t, dest);
+          BEGIN
+            Out (wr, "make_dir(", d, RPCR);
+            Out (wr, "install_file(\"", Unresolve (t, src), QCQ);
+            Out (wr, d, QCQ, mode, QRPCR);
+          END;
+        ELSE
+          Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
+          Out (wr, M3Path.Convert (dest), QCQ, mode, QRPCR);
+        END;
       END;
     END Emit;
     
@@ -2015,28 +2118,28 @@ PROCEDURE DoBindExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
 PROCEDURE BindExport (t: T;  file: TEXT)
   RAISES {Quake.Error} =
   BEGIN
-    InstallFile (t, file, t.bin_install, "0755", derived := TRUE);
+    InstallFile (t, file, t.bin_install, ModeX, derived := TRUE);
   END BindExport;
 
 PROCEDURE DoBinExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
   VAR t := Self (m);  file := PopText (t);
   BEGIN
-    InstallFile (t, file, t.bin_install, "0755", derived := FALSE);
+    InstallFile (t, file, t.bin_install, ModeX, derived := FALSE);
   END DoBinExport;
 
 PROCEDURE DoLibdExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
   VAR t := Self (m);  file := PopText (t);
   BEGIN
-    InstallFile (t, file, t.lib_install, "0755", derived := TRUE);
+    InstallFile (t, file, t.lib_install, ModeX, derived := TRUE);
   END DoLibdExport;
 
 PROCEDURE DoLibExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
   VAR t := Self (m);  file := PopText (t);
   BEGIN
-    InstallFile (t, file, t.lib_install, "0755", derived := FALSE);
+    InstallFile (t, file, t.lib_install, ModeX, derived := FALSE);
   END DoLibExport;
 
 PROCEDURE DoEmacsdExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
@@ -2049,7 +2152,7 @@ PROCEDURE DoEmacsdExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
 PROCEDURE EmacsdExport (t: T;  file: TEXT)
   RAISES {Quake.Error} =
   BEGIN
-    InstallFile (t, file, t.emacs_install, "0644", derived := TRUE);
+    InstallFile (t, file, t.emacs_install, ModeF, derived := TRUE);
   END EmacsdExport;
 
 PROCEDURE DoEmacsExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
@@ -2062,21 +2165,21 @@ PROCEDURE DoEmacsExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
 PROCEDURE EmacsExport (t: T;  file: TEXT)
   RAISES {Quake.Error} =
   BEGIN
-    InstallFile (t, file, t.emacs_install, "0644", derived := FALSE);
+    InstallFile (t, file, t.emacs_install, ModeF, derived := FALSE);
   END EmacsExport;
 
 PROCEDURE DoDocdExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
   VAR t := Self (m);  file := PopText (t);
   BEGIN
-    InstallFile (t, file, t.doc_install, "0644", derived := TRUE);
+    InstallFile (t, file, t.doc_install, ModeF, derived := TRUE);
   END DoDocdExport;
 
 PROCEDURE DoDocExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
   VAR t := Self (m);  file := PopText (t);
   BEGIN
-    InstallFile (t, file, t.doc_install, "0644", derived := FALSE);
+    InstallFile (t, file, t.doc_install, ModeF, derived := FALSE);
   END DoDocExport;
 
 PROCEDURE DoMandExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
@@ -2101,7 +2204,7 @@ PROCEDURE DoHtmlExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
   VAR t := Self (m);  file := PopText (t);
   BEGIN
-    InstallSource (t, file, t.html_install, "0644");
+    InstallSource (t, file, t.html_install, ModeF);
   END DoHtmlExport;
 
 (*------------------------------------------------------------- .M3EXPORTS --*)

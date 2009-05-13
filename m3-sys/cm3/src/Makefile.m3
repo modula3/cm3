@@ -4,7 +4,7 @@
 MODULE Makefile;
 
 IMPORT FS, M3File, M3Timers, OSError, Params, Process, Text, Thread, Wr;
-IMPORT Arg, M3Options, M3Path, Msg, Utils, TextSeq, TextTextTbl;
+IMPORT Arg, M3Build, M3Options, M3Path, Msg, Utils, TextSeq, TextTextTbl;
 IMPORT MxConfig AS M3Config;
 IMPORT Dirs, Version;
 
@@ -114,16 +114,19 @@ PROCEDURE Build (src_dir: TEXT): TEXT =
 
 PROCEDURE ConvertArgList (VAR s: State)
   RAISES {Wr.Failure, Thread.Alerted} =
-  VAR len: INTEGER;  arg: TEXT;
+  VAR len: INTEGER;  arg: TEXT; noMoreOptions := FALSE;
   BEGIN
     WHILE (s.args.cnt > 0) DO
       arg := Arg.Pop (s.args);
       len := Text.Length (arg);
       IF (len < 1) THEN
         (* empty argument ignore *)
-      ELSIF (Text.GetChar (arg, 0) # '-') OR (len < 2) THEN
+      ELSIF (Text.GetChar (arg, 0) # '-') OR (len < 2) OR noMoreOptions THEN
         NoteSourceFile (s, NIL, arg, cmd_line := TRUE);
-      ELSE (* it's an option *)
+      ELSIF Text.Equal (arg, "--") THEN
+        noMoreOptions := TRUE;
+      ELSIF NOT noMoreOptions THEN 
+        (* it's an option *)
         ConvertOption (s, arg, len);
       END;
     END;
@@ -133,6 +136,9 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
   RAISES {Wr.Failure, Thread.Alerted} =
   VAR ok := FALSE;  wr := s.wr;
   BEGIN
+    IF Text.GetChar (arg, 1) = '-' THEN
+      arg := Text.Sub (arg, 1);
+    END;
     CASE Text.GetChar (arg, 1) OF
 
     | '?' => IF (arg_len = 2) THEN
@@ -206,6 +212,9 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
                Out (wr, "m3_debug (TRUE)");  ok := TRUE;
              ELSIF Text.Equal(arg, "-gui") THEN
                Out (wr, "M3_WINDOWS_GUI = TRUE");  ok := TRUE;
+             ELSIF Text.Equal(arg, "-gw") OR
+                   Text.Equal(arg, "-group-writable") THEN
+               M3Build.groupWritable := TRUE; ok := TRUE;
              END;
 
     | 'h' => IF Text.Equal (arg, "-heap_stats") THEN
@@ -223,6 +232,10 @@ PROCEDURE ConvertOption (VAR s: State;  arg: TEXT;  arg_len: INTEGER)
                Out (wr, "M3_LAZY_MODULE_INIT = TRUE");  ok := TRUE;
              ELSIF Text.Equal (arg, "-linkall") THEN
                Out (wr, "M3_LAZY_MODULE_INIT = FALSE");  ok := TRUE;
+             END;
+
+    | 'n' => IF Text.Equal (arg, "-no-m3ship-resolution") THEN
+               M3Build.noM3ShipResolution := TRUE; ok := TRUE;
              END;
 
     | 'o' => IF (arg_len = 2) THEN
@@ -505,6 +518,9 @@ PROCEDURE ScanCommandLine () : TextTextTbl.T =
   BEGIN
     FOR i := 1 TO Params.Count-1 DO
       arg := Params.Get (i);
+      IF Text.GetChar (arg, 1) = '-' THEN
+        arg := Text.Sub (arg, 1);
+      END;
       IF    Text.Equal (arg, "-build")     THEN  SetMode (cnt, MM.Build);
       ELSIF Text.Equal (arg, "-clean")     THEN  SetMode (cnt, MM.Clean);
       ELSIF Text.Equal (arg, "-realclean") THEN  SetMode (cnt, MM.RealClean);
@@ -559,6 +575,7 @@ PROCEDURE PrintVersion (exit: BOOLEAN) =
     Msg.Out ("  last updated: ", Val("CM3_CHANGED"), Wr.EOL);
     Msg.Out ("  compiled: ", Val("CM3_COMPILED"), Wr.EOL);
     Msg.Out ("  configuration: ", M3Config.FindFile(), Wr.EOL);
+    Msg.Out ("  target: ", M3Config.Get("TARGET"), Wr.EOL);
     Msg.Out (Wr.EOL);
     IF exit THEN Process.Exit (0); END;
   END PrintVersion;
@@ -620,6 +637,7 @@ CONST
     "  -config        print the version number header",
     "",
     "misc:",
+    "  --             end of options",
     "  -keep          preserve intermediate and temporary files",
     "  -times         produce a dump of elapsed times",
     "  -override      include the \"m3overrides\" file",
@@ -635,6 +653,9 @@ CONST
     "  -gui           produce a Windows GUI subsystem program",
     "  -windows       produce a Windows GUI subsystem program",
     "  -pretend <val> pretend to run as CM3_Version <val>",
+    "  -gw            install group writable files",
+    "  -group-writable \"",
+    "  -no-m3ship-resolution use quake variables in .M3SHIP (experimental)",
     "",
     "environment variables:",
     "  M3CONFIG       platform dependent configuration file to use (cm3.cfg)",
