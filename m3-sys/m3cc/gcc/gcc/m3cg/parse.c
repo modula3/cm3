@@ -835,6 +835,7 @@ insert_block (tree block)
   TREE_USED (block) = 1;
   BLOCK_SUBBLOCKS (current_block)
     = chainon (BLOCK_SUBBLOCKS (current_block), block);
+  BLOCK_SUPERCONTEXT(block) = current_block;
 }
 
 /* Records a ..._DECL node DECL as belonging to the current lexical scope.
@@ -2030,6 +2031,44 @@ m3_start_call (void)
   CALL_PUSH (NULL_TREE, NULL_TREE, NULL_TREE);
 }
 
+static tree m3_build_volatilized_type (tree type)
+{
+  tree t;
+
+  /* Check if we have not constructed the desired variant already. */
+  for (t = TYPE_MAIN_VARIANT (type); t; t = TYPE_NEXT_VARIANT (t))
+    {
+      /* The type qualifiers must (obviously) match up. */
+      if (!TYPE_VOLATILE (t)
+	  || (TYPE_READONLY (t) != TYPE_READONLY (type))
+	  || (TYPE_RESTRICT (t) != TYPE_RESTRICT (type)))
+	continue;
+      /* For pointer types, the pointees (and hence their TYPE_LANG_SPECIFIC
+	 info, if any) must match up. */
+      if (POINTER_TYPE_P (t)
+	  && (TREE_TYPE (t) != TREE_TYPE (type)))
+	continue;
+
+      /* Everything matches up! */
+      return t;
+    }
+
+  /* Ok we could not re-use any of the pre-existing variants.  Create
+     a new one. */
+  t = build_variant_type_copy (type);
+  TYPE_VOLATILE (t) = 1;
+
+  /* Set up the canonical type information. */
+  if (TYPE_STRUCTURAL_EQUALITY_P (type))
+    SET_TYPE_STRUCTURAL_EQUALITY (t);
+  else if (TYPE_CANONICAL (type) != type)
+    TYPE_CANONICAL (t) = m3_build_volatilized_type (TYPE_CANONICAL (type));
+  else
+    TYPE_CANONICAL (t) = t;
+
+  return t;
+}
+
 static void
 m3_pop_param (tree t)
 {
@@ -2043,10 +2082,24 @@ m3_pop_param (tree t)
 }
 
 static void
+m3_volatilize_decl (tree decl)
+{
+  if (!TYPE_VOLATILE(TREE_TYPE(decl)) && !TREE_STATIC(decl)
+      && (TREE_CODE(decl) == VAR_DECL
+	  || TREE_CODE(decl) == PARM_DECL)) {
+    TREE_TYPE(decl) = m3_build_volatilized_type(TREE_TYPE(decl));
+    TREE_THIS_VOLATILE(decl) = 1;
+    TREE_SIDE_EFFECTS(decl) = 1;
+    DECL_REGISTER(decl) = 0;
+  }
+}
+
+static void
 m3_call_direct (tree p, tree t)
 {
   tree call;
   tree *slot = (tree *)htab_find_slot (builtins, p, NO_INSERT);
+  int flags;
   if (slot) p = *slot;
   if (TREE_USED (p) == 0)
   {
@@ -2062,6 +2115,23 @@ m3_call_direct (tree p, tree t)
     EXPR_PUSH (call);
   }
   CALL_POP ();
+  flags = call_expr_flags (call);
+  if (flags & ECF_RETURNS_TWICE) {
+    tree block, decl;
+    /* call to setjmp: make locals volatile */
+    for (block = current_block;
+	 block != current_function_decl;
+	 block = BLOCK_SUPERCONTEXT(block)) {
+      for (decl = BLOCK_VARS(block); decl; decl = TREE_CHAIN(decl)) {
+	m3_volatilize_decl(decl);
+      }
+    }
+    /* and arguments */
+    for (decl = DECL_ARGUMENTS(current_function_decl);
+	 decl; decl = TREE_CHAIN(decl)) {
+      m3_volatilize_decl(decl);
+    }
+  }
 }
 
 static void
@@ -3442,6 +3512,7 @@ m3cg_begin_block (void)
   tree b = build_block (NULL_TREE, NULL_TREE, current_block, NULL_TREE);
   BLOCK_SUBBLOCKS (current_block)
     = chainon (BLOCK_SUBBLOCKS (current_block), b);
+  BLOCK_SUPERCONTEXT(b) = current_block;
   TREE_USED (b) = 1;
   pending_blocks = tree_cons (NULL_TREE, current_block, pending_blocks);
   current_block = b;
