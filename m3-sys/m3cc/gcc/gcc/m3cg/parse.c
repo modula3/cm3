@@ -657,8 +657,7 @@ m3_do_fixed_extract (tree x, int i, int n, tree t)
     }
 
   c = m3_build1 (CONVERT_EXPR, m3_unsigned_type (t), x);
-  d = (b == 0) ? c : m3_build2 (LSHIFT_EXPR, m3_unsigned_type (t), c,
-				build_int_cst (t_int, b));
+  d = (b == 0) ? c : m3_build2 (LSHIFT_EXPR, t, c, build_int_cst (t_int, b));
   e = (a == 0) ? d :
     m3_build2 (RSHIFT_EXPR, t, d, build_int_cst (t_int, a));
   return e;
