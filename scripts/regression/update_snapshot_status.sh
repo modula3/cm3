@@ -12,17 +12,25 @@ fi
 SNAPS=${SNAPS:-/var/www/modula3.elegosoft.com/cm3/snaps}
 CM3_OSTYPE=${CM3_OSTYPE:-POSIX}
 FNPAT1=${FNPAT1:-"cm3-min-${CM3_OSTYPE}-"}
+FNPAT2=${FNPAT2:-"cm3-bin-*-${CM3_OSTYPE}-"}
+FNPAT2s=${FNPAT2s:-"cm3-bin-[^-]*-${CM3_OSTYPE}-"}
 FNPATSUF=${FNPATSUF:-.tgz}
-FNPATLS=${FNPAT:-${FNPAT1}'*-*'${FNPATSUF}}
+FNPATLS=${FNPATLS:-${FNPAT1}'*-*'${FNPATSUF}}
+FNPATLS2=${FNPATLS2:-${FNPAT2}'*-*'${FNPATSUF}}
 FNPATSRCSTART=${FNPATSRCSTART:-cm3-src}
 FNPATSRCEND=${FNPATSRCEND:-*.tgz}
 FNPATSRC=${FNPATSRC:-${FNPATSRCHEAD}-*.tgz}
 INDEX=${INDEX:-snapshot-index.html}
 cd $SNAPS || exit 1
 
-TARGETS=`ls -1 ${FNPATLS} |
+TARGETS1=`ls -1 ${FNPATLS} |
   sed -e "s/${FNPAT1}\([A-Za-z0-9_]*\)-.*${FNPATSUF}/\1/" |
   sort -u`
+TARGETS2=`ls -1 ${FNPATLS2} |
+  sed -e "s/${FNPAT2s}\([A-Za-z0-9_]*\)-.*${FNPATSUF}/\1/" |
+  sort -u`
+TARGETS=`echo ${TARGETS1} ${TARGETS2} | xargs -n 1 echo | sort -u`
+echo $TARGETS
 
 if [ -f "${INDEX}" ]; then
   mv ${INDEX} ${INDEX}.old
@@ -74,9 +82,9 @@ tablerow() {
 }
 
 for t in ${TARGETS}; do
-  all=`ls -1 ${FNPAT1}${t}-*${FNPATSUF}`
-  last=`ls -1 ${FNPAT1}${t}-*${FNPATSUF} | tail -1`
-  last10=`ls -1 ${FNPAT1}${t}-*${FNPATSUF} | tail -10`
+  all=`ls -1 ${FNPAT1}${t}-*${FNPATSUF} ${FNPAT2}${t}-*${FNPATSUF}`
+  last=`ls -1 ${FNPAT1}${t}-*${FNPATSUF} ${FNPAT2}${t}-*${FNPATSUF} | tail -1`
+  last10=`ls -1 ${FNPAT1}${t}-*${FNPATSUF} ${FNPAT2}${t}-*${FNPATSUF}| tail -10`
   ln -sf "${last}" "${FNPAT1}${t}${FNPATSUF}"
   echo "<h4>Target Platform ${t}</h4>"
   echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
