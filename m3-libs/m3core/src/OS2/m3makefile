@@ -1,9 +1,0 @@
-% Copyright (C) 1995, Klaus Preschern
-% All rights reserved.
-%
-
-Interface ("OS2Def")
-Interface ("OS2Process")
-Interface ("OS2FileSys")
-Interface ("OS2Error")
-
