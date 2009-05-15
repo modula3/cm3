@@ -803,6 +803,7 @@ convert_to_complex (tree type, tree expr)
     }
 }
 
+#if 0 /* remove from cm3 -- we don't have build_stmt, store_init_value, which are I think part of the C frontend */
 /* APPLE LOCAL begin AltiVec */
 /* Build a COMPOUND_LITERAL_EXPR.  TYPE is the type given in the compound
    literal.  INIT is a CONSTRUCTOR that initializes the compound literal.  */
@@ -827,6 +828,7 @@ build_compound_literal_vector (tree type, tree init)
   return complit;
 }
 /* APPLE LOCAL end AltiVec */
+#endif /* remove from cm3 */
 
 /* Convert EXPR to the vector type TYPE in the usual ways.  */
 
@@ -842,6 +844,7 @@ convert_to_vector (tree type, tree expr)
 	  error ("can't convert between vector values of different size");
 	  return error_mark_node;
 	}
+#if 0 /* remove from cm3 -- we don't have the code it needs */
       /* APPLE LOCAL begin AltiVec */
       if (TREE_CODE (type) == VECTOR_TYPE  
 	  && TREE_CODE (TREE_TYPE (expr)) == VECTOR_TYPE
@@ -849,7 +852,7 @@ convert_to_vector (tree type, tree expr)
 	  /* converting a constant vector to new vector type with Motorola Syntax. */
 	  return convert (type, build_compound_literal_vector (TREE_TYPE (expr), expr));
       /* APPLE LOCAL end AltiVec */
-
+#endif /* remove from cm3 -- we don't have the code it needs */
       return build1 (VIEW_CONVERT_EXPR, type, expr);
 
     default:
