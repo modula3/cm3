@@ -27,8 +27,8 @@ gcc/config/i386/cygwin2.c
 gcc/config/i386/djgpp.h
 gcc/config/i386/djgpp.opt
 gcc/config/i386/freebsd.h
-gcc/config/i386/freebsd64.h 
-gcc/config/i386/gas.h 
+gcc/config/i386/freebsd64.h
+gcc/config/i386/gas.h
 gcc/config/i386/gmon-sol2.c
 gcc/config/i386/gnu.h
 gcc/config/i386/gthr-win32.c
