@@ -10,7 +10,7 @@ MODULE Narrow;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Error, TypeExpr;
 IMPORT Procedure, ObjectType, Reff, Null, M3RT, RefType;
-IMPORT Target, RunTyme;
+IMPORT Target, RunTyme, TInt;
 
 VAR Z: CallExpr.MethodList;
 
@@ -76,7 +76,7 @@ PROCEDURE Emit (tlhs, trhs: Type.T) =
 
 PROCEDURE EmitCore (tlhs, trhs: Type.T): CG.Val =
   VAR
-    ok: CG.Label;
+    ok, tagged: CG.Label;
     ref: CG.Val;
     is_object := ObjectType.Is (tlhs);
     target: Type.T;
@@ -100,7 +100,7 @@ PROCEDURE EmitCore (tlhs, trhs: Type.T): CG.Val =
 
     (* capture the right-hand side *)
     ref := CG.Pop ();
-    ok := CG.Next_label (1);
+    ok := CG.Next_label ();
 
     (* check for ref = NIL *)
     CG.Push (ref);
@@ -108,6 +108,14 @@ PROCEDURE EmitCore (tlhs, trhs: Type.T): CG.Val =
     CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, ok, CG.Maybe);
 
     IF NOT Type.IsEqual (tlhs, Null.T, NIL) THEN
+      tagged := CG.Next_label ();
+
+      CG.Push (ref);
+      CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
+      CG.Load_integer (Target.Integer.cg_type, TInt.One);
+      CG.And (Target.Integer.cg_type);
+      CG.If_true (tagged, CG.Maybe);
+
       (* check for TYPECODE(ref) = TYPECODE(type) *)
       CG.Push (ref);
       CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
@@ -132,8 +140,14 @@ PROCEDURE EmitCore (tlhs, trhs: Type.T): CG.Val =
         Procedure.EmitCall (proc);
         CG.If_true (ok, CG.Always);
       END;
+      CG.Abort (CG.RuntimeError.NarrowFailed);
+
+      CG.Set_label (tagged);
+      CG.Load_intt (M3RT.REFANY_typecode);
+      Type.LoadInfo (tlhs, M3RT.TC_typecode);
+      CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, ok, CG.Always);
     END;
-  
+
     CG.Abort (CG.RuntimeError.NarrowFailed);
     CG.Set_label (ok);
 

@@ -9,7 +9,7 @@
 MODULE Typecode;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Procedure, Card, Error;
-IMPORT Reff, TypeExpr, ObjectType, M3RT, Target;
+IMPORT Reff, TypeExpr, ObjectType, M3RT, Target, TInt;
 
 VAR Z: CallExpr.MethodList;
 
@@ -34,7 +34,7 @@ PROCEDURE Check (ce: CallExpr.T;  <*UNUSED*> VAR cs: Expr.CheckState) =
   END Check;
 
 PROCEDURE Prep (ce: CallExpr.T) =
-  VAR e := ce.args[0];  t: Type.T;  nil: CG.Label;
+  VAR e := ce.args[0];  t: Type.T;  nil, tagged: CG.Label;
   BEGIN
     IF TypeExpr.Split (e, t) THEN
       (* get the typecode from the typecell *)
@@ -43,14 +43,30 @@ PROCEDURE Prep (ce: CallExpr.T) =
       Expr.Prep (e);
       Expr.Compile (e);
       ce.tmp := CG.Pop_temp ();
+      tagged := CG.Next_label ();
       nil := CG.Next_label ();
+
       CG.Push (ce.tmp);
       CG.Load_nil ();
       CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, nil, CG.Never);
+
+      CG.Push (ce.tmp);
+      CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
+      CG.Load_integer (Target.Integer.cg_type, TInt.One);
+      CG.And (Target.Integer.cg_type);
+      CG.If_true (tagged, CG.Maybe);
+
       CG.Push (ce.tmp);
       CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
       CG.Loophole (Target.Integer.cg_type, CG.Type.Addr);
       CG.Store_temp (ce.tmp);
+      CG.Jump (nil);
+
+      CG.Set_label (tagged);
+      CG.Load_intt (M3RT.REFANY_typecode);
+      CG.Loophole (Target.Integer.cg_type, CG.Type.Addr);
+      CG.Store_temp (ce.tmp);
+
       CG.Set_label (nil);
     END;
   END Prep;
