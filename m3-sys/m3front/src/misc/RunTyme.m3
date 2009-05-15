@@ -5,7 +5,7 @@
 MODULE RunTyme;
 
 IMPORT M3, M3ID, Value, ValueRep, Scope, Module, Error, Procedure;
-IMPORT CG, M3RT;
+IMPORT CG, M3RT, Target, TInt;
 
 CONST
   RunTimeModuleName = "RTHooks";
@@ -117,6 +117,11 @@ PROCEDURE EmitCheckLoadTracedRef () =
     CG.Push (ref);
     CG.Load_nil ();
     CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, skip, CG.Maybe);
+    CG.Push (ref);
+    CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
+    CG.Load_integer (Target.Integer.cg_type, TInt.One);
+    CG.And (Target.Integer.cg_type);
+    CG.If_true (skip, CG.Maybe);
     CG.Push (ref);
     CG.Ref_to_info (M3RT.RH_gray_offset, M3RT.RH_gray_size);
     CG.If_false (skip, CG.Maybe);
