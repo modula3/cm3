@@ -10,6 +10,7 @@ MODULE IsType;
 
 IMPORT CG, CallExpr, Expr, ExprRep, Type, Error, TypeExpr, Reff, RefType;
 IMPORT Procedure, Bool, ObjectType, Null, Value, M3RT, Target, RunTyme;
+IMPORT TInt;
 
 VAR Z: CallExpr.MethodList;
 
@@ -39,7 +40,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
     e := ce.args[0];
     t, u: Type.T;
     ptr: CG.Val;
-    true: CG.Label;
+    true, false, tagged: CG.Label;
     proc: Procedure.T;
   BEGIN
     IF NOT TypeExpr.Split (ce.args[1], t) THEN
@@ -65,6 +66,8 @@ PROCEDURE Prep (ce: CallExpr.T) =
 
     ELSIF RefType.Is (t) THEN
       Expr.Compile (ce.args[0]);
+      tagged := CG.Next_label ();
+      false := CG.Next_label ();
       true := CG.Next_label ();
       ptr := CG.Pop ();
       Value.Load (Bool.True);
@@ -75,14 +78,27 @@ PROCEDURE Prep (ce: CallExpr.T) =
       CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, true, CG.Maybe);
 
       CG.Push (ptr);
+      CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
+      CG.Load_integer (Target.Integer.cg_type, TInt.One);
+      CG.And (Target.Integer.cg_type);
+      CG.If_true (tagged, CG.Maybe);
+
+      CG.Push (ptr);
       CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
       Type.LoadInfo (t, M3RT.TC_typecode);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, true, CG.Always);
+      CG.Jump (false);
+      
+      CG.Set_label (tagged);
+      CG.Load_intt (M3RT.REFANY_typecode);
+      Type.LoadInfo (t, M3RT.TC_typecode);
+      CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, true, CG.Always);
 
+      CG.Set_label (false);
       Value.Load (Bool.False);
       CG.Store_temp (ce.tmp);
-      CG.Set_label (true);
 
+      CG.Set_label (true);
       CG.Free (ptr);
 
     ELSE (* general object type *)
@@ -116,7 +132,7 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
     e := ce.args[0];
     t, u: Type.T;
     ptr: CG.Val;
-    skip: CG.Label;
+    skip, tagged: CG.Label;
     proc: Procedure.T;
   BEGIN
     IF NOT TypeExpr.Split (ce.args[1], t) THEN
@@ -143,6 +159,7 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
 
     ELSIF RefType.Is (t) THEN
       Expr.Compile (ce.args[0]);
+      tagged := CG.Next_label ();
       skip := CG.Next_label ();
       ptr := CG.Pop ();
       CG.Push (ptr);
@@ -153,9 +170,21 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
       END;
 
       CG.Push (ptr);
+      CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
+      CG.Load_integer (Target.Integer.cg_type, TInt.One);
+      CG.And (Target.Integer.cg_type);
+      CG.If_true (tagged, CG.Maybe);
+
+      CG.Push (ptr);
       CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
       Type.LoadInfo (t, M3RT.TC_typecode);
       CG.If_then (Target.Integer.cg_type, CG.Cmp.EQ, true, false, freq);
+
+      CG.Set_label (tagged);
+      CG.Load_intt (M3RT.REFANY_typecode);
+      Type.LoadInfo (t, M3RT.TC_typecode);
+      CG.If_then (Target.Integer.cg_type, CG.Cmp.EQ, true, false, freq);
+
       CG.Set_label (skip);
       CG.Free (ptr);
 
