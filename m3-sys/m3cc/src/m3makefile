@@ -368,7 +368,6 @@ env = env & " AUTOMAKE=:"
 env = env & " LEX='touch lex.yy.c'"
 env = env & " MAKEINFO=:"
 M3CC_MAKE = M3CC_MAKE & " " & env
-M3CC_CONFIG = M3CC_CONFIG & " " & env
 
 ApplyPatches (M3CC_TARGET)
 
@@ -431,8 +430,7 @@ if not defined ("no_config")
     Configure = Configure & " -disable-decimal-float"
     Configure = Configure & " -disable-fixed-point"
 
-    %m3cc_Run (["cd", build_dir, "&&", "../gcc/configure", M3CC_CONFIG, Configure, " | tee -a _m3.log"])
-    m3cc_Run (["cd", build_dir, "&&", "../gcc/configure", M3CC_CONFIG, Configure])
+    m3cc_Run (["cd", build_dir, "&&", env, "../gcc/configure", M3CC_CONFIG, Configure, " | tee -a _m3.log"])
     > done in
       write("done")
     end
