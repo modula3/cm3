@@ -60,6 +60,19 @@
 
 #include "debug.h"
 
+#ifndef NOTE_KIND /* sleazy version detection */
+#define GCC42
+/*typedef const union tree_node *const_tree;*/
+#define const_tree tree
+#define allocate_struct_function(a, b) allocate_struct_function(a)
+/* This is not merely copied from 4.3's tree.h, though it is.
+It also matches what convert_call_expr does. */
+/*#define CALL_EXPR_STATIC_CHAIN(NODE) TREE_OPERAND (CALL_EXPR_CHECK (NODE), 2) */
+
+/* are we missing an #include? */
+int arm_float_words_big_endian (void);
+#endif
+
 /*================================================================= TREES ===*/
 
 typedef enum
@@ -2030,6 +2043,8 @@ m3_start_call (void)
   CALL_PUSH (NULL_TREE, NULL_TREE, NULL_TREE);
 }
 
+#ifndef GCC42
+
 static tree m3_build_volatilized_type (tree type)
 {
   tree t;
@@ -2068,6 +2083,8 @@ static tree m3_build_volatilized_type (tree type)
   return t;
 }
 
+#endif
+
 static void
 m3_pop_param (tree t)
 {
@@ -2079,6 +2096,48 @@ m3_pop_param (tree t)
 	       build_tree_list (NULL_TREE, t));
   EXPR_POP ();
 }
+
+#ifdef GCC42
+
+static void
+m3_call_direct (tree p, tree t)
+{
+  tree call;
+
+  TREE_USED (p) = 1;
+  call = fold_build3 (CALL_EXPR, t, proc_addr (p), CALL_TOP_ARG (),
+		      CALL_TOP_STATIC_CHAIN ());
+  if (t == t_void) {
+    add_stmt (call);
+  } else {
+    TREE_SIDE_EFFECTS (call) = 1;
+    EXPR_PUSH (call);
+  }
+  CALL_POP ();
+}
+
+static void
+m3_call_indirect (tree t, tree cc ATTRIBUTE_UNUSED)
+{
+  tree argtypes = chainon (CALL_TOP_TYPE (),
+			   tree_cons (NULL_TREE, t_void, NULL_TREE));
+  tree fntype = build_pointer_type (build_function_type (t, argtypes));
+  tree call;
+  tree fnaddr = EXPR_REF (-1);
+  EXPR_POP ();
+
+  call = build3 (CALL_EXPR, t, m3_cast (fntype, fnaddr), CALL_TOP_ARG (),
+		 CALL_TOP_STATIC_CHAIN ());
+  if (t == t_void) {
+    add_stmt (call);
+  } else {
+    TREE_SIDE_EFFECTS (call) = 1;
+    EXPR_PUSH (call);
+  }
+  CALL_POP ();
+}
+
+#else
 
 static void
 m3_volatilize_decl (tree decl)
@@ -2154,6 +2213,8 @@ m3_call_indirect (tree t, tree cc)
   }
   CALL_POP ();
 }
+
+#endif
 
 static void
 m3_swap (void)
