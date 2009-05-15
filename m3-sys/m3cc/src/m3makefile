@@ -93,6 +93,7 @@ readonly proc Platform_WordSize (Platform) is
   if {"ALPHA_OSF":1,"AMD64_DARWIN":1,"AMD64_LINUX":1,"AMD64_NT":1,
       "AMD64_FREEBSD":1,"AMD64_NETBSD":1,"AMD64_OPENBSD":1,"AMD64_SOLARIS":1,
       "IA64_NT":1,"FBSD_ALPHA":1,"Tru64v5":1,"SPARC64_LINUX":1,
+      "PPC64_AIX":1,"PPC64_DARWIN":1,"PPC64_LINUX":1,
       "SPARC64_OPENBSD":1,"SPARC64_SOLARIS":1,"MIPS64_IRIX":1,"MIPS64_OPENBSD":1} contains Platform
     return "64"
   end
