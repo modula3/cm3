@@ -5382,6 +5382,18 @@ m3_finish (void)
     }
 }
 
+#ifdef GCC42
+int flag_iasm_blocks;
+enum iasm_states iasm_state;
+bool iasm_in_operands;
+struct cpp_reader* parse_in;
+#define add_stmt c_add_stmt
+#include "../stub-objc.c"
+c_language_kind c_language;
+/* This is used by cfstring code; providing it here makes us not have to #if 0 out a few bits. */
+tree pushdecl_top_level (tree x) { gcc_unreachable(); return NULL_TREE; }
+#endif
+
 /* New garbage collection regime see gty.texi.  */
 #include "debug.h"
 #include "gtype-m3cg.h"
