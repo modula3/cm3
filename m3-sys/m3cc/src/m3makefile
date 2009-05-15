@@ -21,6 +21,7 @@ readonly Platform_info = {
   "AMD64_SOLARIS" : "amd64-sun-solaris2",
   "AP3000"    : "apollo68-bsd",
   "ARM"       : "arm-riscos",
+  "ARM_DARWIN" : "arm-apple-darwin9",
   "ARM_LINUX" : "arm-linux-uclibc",
   "BSDI4"     : "i386-unknown-freebsdelf",
   "DS3100"    : "decstation",
@@ -301,28 +302,59 @@ if not defined ("M3CC_CFLAGS")  M3CC_CFLAGS = GNU_CFLAGS end
 if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
+local SourceDir = "../gcc"
+if equal(M3CC_TARGET, "ARM_DARWIN")
+    SourceDir = "../gcc-apple"
+    fs_mkdir("../gcc-apple/gcc/m3cg")
+    foreach a in ["config-lang.in", "lang-options.h", "lang-specs.h", "lang.opt", "m3-convert.c", "m3cg.h", "Make-lang.in", "parse.c"]
+        cp_if("../gcc/gcc/m3cg/" & a, "../gcc-apple/gcc/m3cg/" & a)
+    end
+end
+
 % figure out where we're going to build gcc
 local build_dir = "."  % let m3build set the build directory
 
 local Native = equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD)
-
+local Log = ""
 if not Native
   build_dir = "../" & M3CC_HOST & "-" & M3CC_TARGET
   % make sure the derived directory exists
   fs_mkdir (build_dir)
+  Log = path() & "/" & build_dir & "/_m3.log"
+else
+  Log = path() & "/../" & BUILD_DIR & "/_m3.log"
 end
+Log = subst_chars(Log, "\\", "/")
 
-m3cc_ResponseFileCounter = "0"
+m3cc_ResponseFileCounter0 = "0"
+m3cc_ResponseFileCounter1 = "0"
+m3cc_ResponseFileCounter2 = "0"
 
 readonly proc m3cc_Run (x) is
-  if HostIsNT ()
-    x = "sh -c \"" & x & "\""
-  end
-  write(x & CR)
-  %>> build_dir & SL & "_m3.log" in
-  %  write(x & CR)
-  %end
-  exec(x)
+    local ShLeaf = "_m3" & m3cc_ResponseFileCounter0 & m3cc_ResponseFileCounter1 & m3cc_ResponseFileCounter2 & ".sh"
+    local Sh = build_dir & "/" & ShLeaf
+    >> Log in
+        write(x & "\n")
+    end
+    if not HostIsNT()
+        write(x & "\n")
+        exec(x)
+        return
+    end
+    write(ShLeaf & ":" & x & "\n")
+    > Sh in
+        write(x & "\n")
+    end
+    exec("@sh -ec " & Sh)
+    local Inc = { "0":"1","1":"2","2":"3","3":"4","4":"5",
+                  "5":"6","6":"7","7":"8","8":"9","9":"0" }
+    m3cc_ResponseFileCounter2 = Inc{m3cc_ResponseFileCounter2}
+    if equal(m3cc_ResponseFileCounter2, "0")
+        m3cc_ResponseFileCounter1 = Inc{m3cc_ResponseFileCounter1}
+        if equal(m3cc_ResponseFileCounter1, "0")
+            m3cc_ResponseFileCounter0 = Inc{m3cc_ResponseFileCounter0}
+        end
+    end
 end
 
 done = build_dir & "/.configure-done"
@@ -338,7 +370,7 @@ if defined ("FORCE")
   if FileExists (build_dir & "/Makefile")
     exec("-cd " & build_dir & " && " & M3CC_MAKE & " distclean")
   end
-  foreach a in ["cm3cg", "cm3cg.exe", "confdefs.h", "config.log", "cm3cg", ".M3SHIP", done, "_m3.log", "_m3sh0.sh"]
+  foreach a in ["cm3cg", "cm3cg.exe", "confdefs.h", "config.log", "cm3cg", ".M3SHIP", done, Log, "_m3sh0.sh"]
     delete_file(build_dir & "/" & a)
   end
   %
@@ -410,7 +442,7 @@ if not defined ("no_config")
           %Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
           %Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
     end
-    Configure = Configure & " -srcdir=../gcc"
+    Configure = Configure & " -srcdir=" & SourceDir
     Configure = Configure & " -disable-bootstrap"
     Configure = Configure & " -disable-intl"
     Configure = Configure & " -disable-libgomp"
@@ -430,7 +462,7 @@ if not defined ("no_config")
     Configure = Configure & " -disable-decimal-float"
     Configure = Configure & " -disable-fixed-point"
 
-    m3cc_Run (["cd", build_dir, "&&", env, "../gcc/configure", M3CC_CONFIG, Configure, " | tee -a _m3.log"])
+    m3cc_Run (["cd", build_dir, "&&", env, SourceDir & "/configure", M3CC_CONFIG, Configure, " | tee -a " & Log])
     > done in
       write("done")
     end
@@ -480,7 +512,7 @@ end
 % configure
 %
 
-m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host | tee -a _m3.log"])
+m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host | tee -a " & Log])
 
 proc Sed (file0, find, replace) is
   if FileExists (file0)
@@ -491,37 +523,59 @@ proc Sed (file0, find, replace) is
 end
 
 foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
-  foreach file in ["Makefile", "auto-host.h", "config.h"]
-    local file = build_dir & "/" & dir & "/" & file
-    if FileExists (file)
-      %
-      % remove libiconv dependency
-      % It isn't needed, and stock Solaris install lacks it.
-      %
-      Sed (file, "^LIBICONV =.+$", "LIBICONV =")
-      Sed (file, "^LIBICONV_DEP =.+$", "LIBICONV_DEP =")
-      Sed (file, "^#define HAVE_ICONV 1$", "")
-      Sed (file, "^#define HAVE_ICONV_H 1$", "")
-      %
-      % Configure is for some reason unable to find Cygwin /usr/bin/libtool.
-      %
-      if HostIsNT ()
-        Sed (file, "@LIBTOOL@", "libtool")
-      end
+    foreach leaf in ["Makefile", "auto-host.h", "config.h"]
+        local file = build_dir & "/" & dir & "/" & leaf
+        if FileExists(file)
+            %
+            % remove libiconv dependency
+            % It isn't needed, and stock Solaris install lacks it.
+            %
+            if equal(leaf, "Makefile")
+                Sed(file, "^LIBICONV =.+$", "LIBICONV =")
+                Sed(file, "^LIBICONV =.\\+$", "LIBICONV =")
+                Sed(file, "^LIBICONV_DEP =.+$", "LIBICONV_DEP =")
+                Sed(file, "^LIBICONV_DEP =.\\+$", "LIBICONV_DEP =")
+            end
+            if not equal(leaf, "Makefile")
+                Sed(file, "^#define HAVE_ICONV 1$", "")
+                Sed(file, "^#define HAVE_ICONV_H 1$", "")
+            end
+            %
+            % gcc 4.2 seems to have some optional dependency on gmp/mpfr, and doesn't
+            % have the support in the makefile to build the source if it is there.
+            % When Apple moves to 4.3 or newer, we'll symlink the gmp/mpfr directories
+            % from mainline to Apple.
+            %
+            if equal(M3CC_TARGET, "ARM_DARWIN") and equal(leaf, "Makefile")
+                Sed(file, "^GMPLIBS =.\+$", "GMPLIBS =")
+                Sed(file, "^GMPLIBS =.\\+$", "GMPLIBS =")
+                Sed(file, "^GMPINC =.+$", "GMPINC =")
+                Sed(file, "^GMPINC =.\\+$", "GMPINC =")
+            end
+            %
+            % Configure is for some reason unable to find Cygwin /usr/bin/libtool.
+            %
+            if HostIsNT() and equal(leaf, "Makefile")
+                Sed(file, "@LIBTOOL@", "libtool")
+            end
+        end
     end
-  end
 end
 
 %
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
 % User can still cd into build directory and run make to get gcc/cc1/libgcc.
 %
-m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-mpfr all-build-libiberty all-libiberty all-libdecnumber | tee -a _m3.log"])
+if equal(M3CC_TARGET, "ARM_DARWIN")
+    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-libiberty all-libdecnumber | tee -a " & Log])
+else
+    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-mpfr all-build-libiberty all-libiberty all-libdecnumber | tee -a " & Log])
+end
 
 %
 % make just libcpp.a, don't bother with makedepend.exe
 %
-m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & " libcpp.a | tee -a _m3.log"])
-m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes insn-config.h m3cg | tee -a _m3.log"])
+m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & " libcpp.a | tee -a " & Log])
+m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes insn-config.h m3cg | tee -a " & Log])
 
 postcp ()
