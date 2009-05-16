@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.33 2009-04-14 10:32:58 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.34 2009-05-16 16:54:06 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -18,9 +18,6 @@ fi
 
 . "$sysinfo"
 # if a datestamp is set for the build of snapshots, include this, too
-if [ -n "$DS" ]; then
-  CM3VERSION="${CM3VERSION}-${DS}"
-fi
 . "$ROOT/scripts/pkginfo.sh"
 . "$ROOT/scripts/pkgcmds.sh"
 
@@ -29,6 +26,7 @@ STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 DIST="${DIST:-std}" # may be min, core, std, all
 header "building CM3 installation in ${INSTALLROOT}"
+NOCLEAN=${NOCLEAN:-""}
 
 NEWCFG=${NEWCFG:-y}
 
@@ -171,8 +169,8 @@ INSTDATA="cminstall${EXE} COPYRIGHT-CMASS ${ARCHIVE1} ${DUSK}"
 header "stage 6: building archive in ${ARCHIVE2}"
 echo "creating system archive in ${ABSARCH1}"
 du -sk "${INSTALLROOT}" > "${ABSDUSK}"
-echo "cat ${DUSK}"
-cat "${DUSK}"
+echo "cat ${ABSDUSK}"
+cat "${ABSDUSK}"
 ${TAR} -C "${INSTALLROOT}" -czf "${ABSARCH1}" . || exit 1
 echo ".../cminstall/${TARGET}/cminstall${EXE} -->" "${STAGE}"
 cp "${ROOT}/m3-sys/cminstall/${TARGET}/cminstall${EXE}" "${STAGE}" ||  exit 1
@@ -209,6 +207,12 @@ if [ -n "${DOSHIP}" ]; then
   WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
   scp "${ABSARCH2}" "${WWWDEST}" < /dev/null
 fi
-echo "cleaning up"
-cd "${STAGE}" && rm -f ${INSTDATA}
-rm -rf "${INSTALLROOT}"
+if [ -z "${NOCLEAN}" ]; then
+  echo "cleaning up"
+  cd "${STAGE}" && rm -f ${INSTDATA}
+  rm -rf "${INSTALLROOT}"
+else
+  echo "NOT cleaning up. Don't forget to"
+  echo "cd ${STAGE} && rm -f ${INSTDATA}"
+  echo "rm -rf ${INSTALLROOT}"
+fi
