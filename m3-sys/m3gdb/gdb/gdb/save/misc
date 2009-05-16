@@ -1,3 +1,0 @@
-#define print(x) value_print (x, stdout, 0, Val_pretty_default)
-#define printx(y) value_print (y, stdout, 'x', Val_pretty_default)
-

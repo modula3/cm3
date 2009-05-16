@@ -1,8 +1,0 @@
-if not defined("TOP")
-  TOP = PACKAGE_DIR & SL & ".." 
-end
-
-import("cit_util")
-import("m3tk")
-implementation("Main")
-Program("m3browserhack")
