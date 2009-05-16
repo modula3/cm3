@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgcmds.sh,v 1.11 2008-01-14 01:24:26 wagner Exp $
+# $Id: pkgcmds.sh,v 1.12 2009-05-16 16:54:06 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -19,11 +19,11 @@ fi
 
 # define build and ship programs for Critical Mass Modula-3
 DEFS="-DROOT='${CM3ROOT}' -DCM3_VERSION_TEXT='${CM3VERSION}' -DCM3_VERSION_NUMBER='${CM3VERSIONNUM}' -DCM3_LAST_CHANGED='${CM3LASTCHANGED}'"
-CM3_BUILDLOCAL="${BUILDLOCAL:-${CM3} -build -override ${DEFS} ${BUILDARGS}}"
-CM3_CLEANLOCAL="${CLEANLOCAL:-${CM3} -clean -override ${DEFS} ${CLEANARGS}}"
-CM3_BUILDGLOBAL="${BUILDGLOBAL:-${CM3} -build ${DEFS} ${BUILDARGS}}"
-CM3_CLEANGLOBAL="${CLEANGLOBAL:-${CM3} -clean ${DEFS} ${CLEANARGS}}"
-CM3_SHIP="${SHIP:-${CM3} -ship ${DEFS} ${SHIPARGS}}"
+CM3_BUILDLOCAL="${BUILDLOCAL:-${CM3} -build -override \$RARGS ${DEFS} ${BUILDARGS}}"
+CM3_CLEANLOCAL="${CLEANLOCAL:-${CM3} -clean -override \$RARGS ${DEFS} ${CLEANARGS}}"
+CM3_BUILDGLOBAL="${BUILDGLOBAL:-${CM3} -build ${DEFS} \$RARGS ${BUILDARGS}}"
+CM3_CLEANGLOBAL="${CLEANGLOBAL:-${CM3} -clean ${DEFS} \$RARGS ${CLEANARGS}}"
+CM3_SHIP="${SHIP:-${CM3} -ship \$RARGS ${DEFS} ${SHIPARGS}}"
 
 # define build and ship programs for Poly. Modula-3 from Montreal
 PM3_BUILDLOCAL="${BUILDLOCAL:-${M3BUILD} -O ${DEFS} ${BUILDARGS}}"

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.29 2008-04-19 19:04:28 jkrell Exp $
+# $Id: pkgmap.sh,v 1.30 2009-05-16 16:54:06 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -26,39 +26,71 @@ exec_cmd() {
 }
 
 PKGS=""
-while [ -n "$1" ] ; do
-  if [ x-k = x"$1" ] ; then
-    KEEP_GOING="yes"
-  elif [ x-n = x"$1" ] ; then
-    NO_ACTION="yes"
-  elif [ x-report = x"$1" ] ; then
-    REPORT="yes"
-  elif [ x-l = x"$1" ] ; then
-    LIST_ONLY="yes"
-  elif [ x-c = x"$1" ] ; then
-    if [ -z "${PKG_ACTION}" ] ; then
-      PKG_ACTION="$2"
-    else
-      PKG_ACTION="${PKG_ACTION} ; $2"
-    fi
-    shift
-  elif [ -d "$ROOT/$1" ] ; then
-    PKGS="${PKGS} $ROOT/$1"
-  elif [ -d "$1" ] ; then
-    PKGS="${PKGS} $1"
-  else
-    p=`pkgpath $1`
-    if [ -d "$p" ] ; then
-      PKGS="${PKGS} $p"
-    elif [ -n "$p" -a -d "$ROOT/$p" ] ; then
-      PKGS="${PKGS} $ROOT/$p"
-    else
-      echo " *** cannot find package $1 / $p" 1>&2
-      exit 1
-    fi
-  fi
-  shift
+RARGS=""
+# collect RARGS
+for a in "$@"; do
+  case "$a" in
+    -*)
+      if [ x-k = x"$a" ] ; then
+        KEEP_GOING="yes"
+      elif [ x-n = x"$a" ] ; then
+        NO_ACTION="yes"
+      elif [ x-report = x"$a" ] ; then
+        REPORT="yes"
+      elif [ x-l = x"$a" ] ; then
+        LIST_ONLY="yes"
+      elif [ x-c = x"$a" ] ; then
+      else
+        RARGS="${RARGS} $a"
+      fi
+    ;;
+  esac
 done
+while [ -n "$1" ] ; do
+  case "$1" in
+    -*)
+      if [ x-k = x"$1" ] ; then
+        KEEP_GOING="yes"
+      elif [ x-n = x"$1" ] ; then
+        NO_ACTION="yes"
+      elif [ x-report = x"$1" ] ; then
+        REPORT="yes"
+      elif [ x-l = x"$1" ] ; then
+        LIST_ONLY="yes"
+      elif [ x-c = x"$1" ] ; then
+        if [ -z "${PKG_ACTION}" ] ; then
+          PKG_ACTION="$2"
+        else
+          PKG_ACTION="${PKG_ACTION}; $2"
+        fi
+        shift
+      else
+      fi
+      shift
+    ;;
+    *)
+      if [ -d "$ROOT/$1" ] ; then
+        PKGS="${PKGS} $ROOT/$1"
+      elif [ -d "$1" ] ; then
+        PKGS="${PKGS} $1"
+      else
+        p=`pkgpath $1`
+        if [ -d "$p" ] ; then
+          PKGS="${PKGS} $p"
+        elif [ -n "$p" -a -d "$ROOT/$p" ] ; then
+          PKGS="${PKGS} $ROOT/$p"
+        else
+          echo " *** cannot find package $1 / $p" 1>&2
+          exit 1
+        fi
+      fi
+      shift
+    ;;
+  esac
+done
+if [ -n "${RARGS}" ]; then
+  export RARGS
+fi
 
 if [ -n "${REPORT}" ]; then
   DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
