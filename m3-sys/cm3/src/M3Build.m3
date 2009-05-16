@@ -1699,6 +1699,9 @@ PROCEDURE InstallSources (t: T) =
           dest := M3Path.New (t.pkg_install, M3ID.ToText (uu.loc.pkg),
                               M3ID.ToText (uu.loc.subdir));
           InstallDir (t, dest, wr);
+          IF noM3ShipResolution THEN
+            Out (wr, "make_dir(", Unresolve (t, dest), ")");
+          END;
           last_loc := uu.loc;
         END;
         src := M3Unit.FullPath (uu);
@@ -1859,19 +1862,41 @@ PROCEDURE Unresolve (t: T;  pn: TEXT): TEXT =
     build_dir := M3ID.ToText (t.build_dir);
     res := "\"" & pn & "\"";
   BEGIN
-    res := TextUtils.Substitute(res, t.bin_install, "\" & BIN_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.lib_install, "\" & LIB_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.doc_install, "\" & DOC_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.man_install, "\" & MAN_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.html_install, "\" & HTML_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.emacs_install, "\" & EMACS_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.pkg_install, "\" & PKG_INSTALL & \"");
-    res := TextUtils.Substitute(res, build_dir, "\" & TARGET & \"");
-    res := TextUtils.Substitute(res, pkg_use, "\" & PKG_USE & \"");
+    res := TextUtils.Substitute(res, t.bin_install, "BIN_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.lib_install, "LIB_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.doc_install, "DOC_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.man_install, "MAN_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.html_install, "HTML_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.emacs_install, "EMACS_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.pkg_install, "PKG_INSTALL & \"");
+    res := TextUtils.Substitute(res, build_dir & "/", "\" & TARGET & \"");
+    res := TextUtils.Substitute(res, build_dir, "\" & TARGET");
+    res := TextUtils.Substitute(res, pkg_use, "PKG_USE & \"");
+    res := TextUtils.Substitute(res, "\"TARGET", "TARGET");
+    res := TextUtils.Substitute(res, "\"PKG_USE", "PKG_USE");
+    res := TextUtils.Substitute(res, "\"PKG_INSTALL", "PKG_INSTALL");
+    res := TextUtils.Substitute(res, "\"BIN_INSTALL", "BIN_INSTALL");
+    res := TextUtils.Substitute(res, "\"LIB_INSTALL", "LIB_INSTALL");
+    res := TextUtils.Substitute(res, "\"DOC_INSTALL", "DOC_INSTALL");
+    res := TextUtils.Substitute(res, "\"MAN_INSTALL", "MAN_INSTALL");
+    res := TextUtils.Substitute(res, "\"HTML_INSTALL", "HTML_INSTALL");
+    res := TextUtils.Substitute(res, "\"EMACS_INSTALL", "EMACS_INSTALL");
+    res := TextUtils.Substitute(res, "TARGET\"", "TARGET");
+    res := TextUtils.Substitute(res, "PKG_USE\"", "PKG_USE");
+    res := TextUtils.Substitute(res, "PKG_INSTALL\"", "PKG_INSTALL");
+    res := TextUtils.Substitute(res, "BIN_INSTALL\"", "BIN_INSTALL");
+    res := TextUtils.Substitute(res, "LIB_INSTALL\"", "LIB_INSTALL");
+    res := TextUtils.Substitute(res, "DOC_INSTALL\"", "DOC_INSTALL");
+    res := TextUtils.Substitute(res, "MAN_INSTALL\"", "MAN_INSTALL");
+    res := TextUtils.Substitute(res, "HTML_INSTALL\"", "HTML_INSTALL");
+    res := TextUtils.Substitute(res, "EMACS_INSTALL\"", "EMACS_INSTALL");
+(*
+    res := TextUtils.Substitute(res, "\"/", "SL & \"");
     res := TextUtils.Substitute(res, "/", "\" & SL & \"");
     res := TextUtils.Substitute(res, "& \"\" &", "&");
     res := TextUtils.Substitute(res, "\"\" &", "", 1);
     res := TextUtils.Substitute(res, "& \"\"", "", 1);
+*)
     RETURN res;
   END Unresolve;
 
@@ -2010,8 +2035,8 @@ PROCEDURE InstallFile (t: T;  src, dest, mode: TEXT;  derived: BOOLEAN)
           VAR d := Unresolve (t, dest);
           BEGIN
             Out (wr, "make_dir(", d, RPCR);
-            Out (wr, "install_file(\"", Unresolve (t, src), QCQ);
-            Out (wr, d, QCQ, mode, QRPCR);
+            Out (wr, "install_file(", Unresolve (t, src), ",");
+            Out (wr, d, CQ, mode, QRPCR);
           END;
         ELSE
           Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
@@ -2073,8 +2098,8 @@ PROCEDURE InstallSource (t: T;  src, dest, mode: TEXT) =
           VAR d := Unresolve (t, dest);
           BEGIN
             Out (wr, "make_dir(", d, RPCR);
-            Out (wr, "install_file(\"", Unresolve (t, src), QCQ);
-            Out (wr, d, QCQ, mode, QRPCR);
+            Out (wr, "install_file(", Unresolve (t, src), ",");
+            Out (wr, d, CQ, mode, QRPCR);
           END;
         ELSE
           Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
