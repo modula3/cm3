@@ -8,7 +8,7 @@
 
 INTERFACE RTThread;
 
-IMPORT Usignal, RTMachine;
+IMPORT RTMachine;
 
 (*--------------------------------------------------------- machine state ---*)
 
@@ -91,5 +91,7 @@ PROCEDURE UpdateStateForNewSP (VAR s: State;  offset: INTEGER);
 PROCEDURE UpdateFrameForNewSP (a: ADDRESS;  offset: INTEGER);
 (* Update the stack frame.  "a" is the correct value for the "SP"
      on the stack that contains that frame. *)
+
+(*---------------------------------------------------------------------------*)
 
 END RTThread.
