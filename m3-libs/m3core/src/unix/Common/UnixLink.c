@@ -12,9 +12,7 @@ extern "C"
 {
 #endif
 
-/* This is a separate file from UnixC.c for bootstrap purposes combined
-with needing to work with Solaris linker.
-This file is #included by m3-sys/cm3 for bootstrapping on systems
+/* This file is #included by m3-sys/cm3 for bootstrapping on systems
 whose older m3core does not have Unix.link. m3-sys/cm3 #defines
 Unix__link to be Utils__link. */
 
