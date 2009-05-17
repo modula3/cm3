@@ -92,10 +92,4 @@ PROCEDURE UpdateFrameForNewSP (a: ADDRESS;  offset: INTEGER);
 (* Update the stack frame.  "a" is the correct value for the "SP"
      on the stack that contains that frame. *)
 
-(*------------------------------------ manipulating the SIGVTALRM handler ---*)
-
-PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler);
-PROCEDURE allow_sigvtalrm ();
-PROCEDURE disallow_sigvtalrm ();
-
 END RTThread.

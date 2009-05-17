@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTThread EXPORTS RTThread;
 
-IMPORT Usignal, Unix, RTMisc, Umman;
+IMPORT Unix, RTMisc, Umman;
 
 CONST
   SP_pos = 2;
@@ -78,27 +78,7 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
   BEGIN
   END UpdateFrameForNewSP;
 
-(*------------------------------------ manipulating the SIGVTALRM handler ---*)
-
-PROCEDURE MovedToThreadPosix()=
-BEGIN
-  <* ASSERT FALSE *>
-END MovedToThreadPosix;
-
-PROCEDURE setup_sigvtalrm (<*UNUSED*>handler: Usignal.SignalHandler) =
-  BEGIN
-    MovedToThreadPosix();
-  END setup_sigvtalrm;
-
-PROCEDURE allow_sigvtalrm () =
-  BEGIN
-    MovedToThreadPosix();
-  END allow_sigvtalrm;
-
-PROCEDURE disallow_sigvtalrm () =
-  BEGIN
-    MovedToThreadPosix();
-  END disallow_sigvtalrm;
+(*---------------------------------------------------------------------------*)
 
 BEGIN
 END RTThread.

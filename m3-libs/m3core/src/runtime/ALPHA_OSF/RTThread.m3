@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
-IMPORT Word, Usignal, Unix, Umman, RTMisc;
+IMPORT Unix, Umman, RTMisc;
 
 CONST 
   SP_pos = 34;
@@ -85,43 +85,8 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
   BEGIN
   END UpdateFrameForNewSP;
 
-(*------------------------------------ manipulating the SIGVTALRM handler ---*)
-
-VAR ThreadSwitchSignal: Usignal.sigset_t;
-
-PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
-  VAR new, old: Usignal.struct_sigaction;
-  BEGIN
-    new.sa_handler := handler;
-    new.sa_flags := Word.Or(Usignal.SA_RESTART, Usignal.SA_SIGINFO);
-    WITH i = Usignal.sigemptyset(new.sa_mask) DO
-      <* ASSERT i = 0 *>
-    END;
-    WITH i = Usignal.sigaction (Usignal.SIGVTALRM, new, old) DO
-      <* ASSERT i = 0 *>
-    END;
-  END setup_sigvtalrm;
-
-PROCEDURE allow_sigvtalrm () =
-  BEGIN
-    WITH i = Usignal.sigprocmask(Usignal.SIG_UNBLOCK, ThreadSwitchSignal) DO
-      <* ASSERT i = 0 *>
-    END;
-  END allow_sigvtalrm;
-
-PROCEDURE disallow_sigvtalrm () =
-  BEGIN
-    WITH i = Usignal.sigprocmask(Usignal.SIG_BLOCK, ThreadSwitchSignal) DO
-      <* ASSERT i = 0 *>
-    END;
-  END disallow_sigvtalrm;
+(*---------------------------------------------------------------------------*)
 
 BEGIN
-  WITH i = Usignal.sigemptyset(ThreadSwitchSignal) DO
-    <* ASSERT i = 0 *>
-  END;
-  WITH i = Usignal.sigaddset(ThreadSwitchSignal, Usignal.SIGVTALRM) DO
-    <* ASSERT i = 0 *>
-  END;
 END RTThread.
 
