@@ -324,7 +324,10 @@ if not Native
 else
   Log = path() & "/../" & BUILD_DIR & "/_m3.log"
 end
-Log = subst_chars(Log, "\\", "/")
+if defined("subst_chars")
+    % only some scenarios need this so ok without
+    Log = subst_chars(Log, "\\", "/")
+end
 
 m3cc_ResponseFileCounter0 = "0"
 m3cc_ResponseFileCounter1 = "0"
