@@ -52,17 +52,7 @@ end
 interface ("RTThread")
 implementation ("RTThreadStk")
 
-if equal (TARGET, "SPARC64_OPENBSD") or equal (TARGET, "PPC32_OPENBSD")
-    or equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
-    or equal (TARGET, "MIPS32_IRIX") or equal (TARGET, "MIPS64_IRIX")
-    or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
-    or equal (TARGET, "PPC_LINUX") or equal (TARGET, "AMD64_LINUX")
-    or equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
-    or equal (TARGET, "AMD64_FREEBSD") or equal (TARGET, "I386_DARWIN")
-    or equal (TARGET, "AMD64_DARWIN") or equal (TARGET, "PPC_DARWIN")
-    or equal (TARGET, "SOLgnu") or equal (TARGET, "SOLsun")
-    or equal (TARGET, "NT386") or equal (TARGET, "LINUXLIBC6")
-    or equal (TARGET, "NetBSD2_i386")
+if not equal (TARGET, "FreeBSD4")
 
 interface      ("RTSignalPrivate")
 c_source       ("RTSignalC")
