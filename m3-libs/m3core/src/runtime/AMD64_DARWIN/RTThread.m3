@@ -7,7 +7,7 @@
 
 UNSAFE MODULE RTThread EXPORTS RTThread;
 
-IMPORT Word, Usignal, Unix, RTMisc, Umman;
+IMPORT Unix, RTMisc, Umman;
 
 CONST
   SP_pos = 2;
@@ -80,33 +80,7 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
   BEGIN
   END UpdateFrameForNewSP;
 
-(*------------------------------------ manipulating the SIGVTALRM handler ---*)
-
-VAR ThreadSwitchSignal: Usignal.sigset_t;
-
-PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
-  VAR old := Usignal.signal(Usignal.SIGVTALRM, handler);
-  BEGIN
-    <*ASSERT old # LOOPHOLE(Usignal.SIG_ERR, Usignal.SignalHandler) *>
-  END setup_sigvtalrm;
-
-PROCEDURE allow_sigvtalrm () =
-  VAR old: Usignal.sigset_t;
-  BEGIN
-    WITH i = Usignal.sigprocmask(Usignal.SIG_UNBLOCK, ThreadSwitchSignal, old) DO
-      <* ASSERT i = 0 *>
-    END;
-  END allow_sigvtalrm;
-
-PROCEDURE disallow_sigvtalrm () =
-  VAR old: Usignal.sigset_t;
-  BEGIN
-    WITH i = Usignal.sigprocmask(Usignal.SIG_BLOCK, ThreadSwitchSignal, old) DO
-      <* ASSERT i = 0 *>
-    END;
-  END disallow_sigvtalrm;
+(*---------------------------------------------------------------------------*)
 
 BEGIN
-  WITH i = Usignal.sigemptyset(ThreadSwitchSignal) DO <* ASSERT i = 0 *> END;
-  WITH i = Usignal.sigaddset(ThreadSwitchSignal, Usignal.SIGVTALRM) DO <* ASSERT i=0 *> END;
 END RTThread.

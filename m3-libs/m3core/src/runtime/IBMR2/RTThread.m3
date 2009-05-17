@@ -8,8 +8,6 @@
 
 UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
-IMPORT Usignal;
-
 CONST 
   SP_pos = 3;
   SP_copy_pos = 23;  (* gcc uses r31 for stack ops *)
@@ -53,45 +51,7 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
   BEGIN
   END UpdateFrameForNewSP;
 
-(*------------------------------------ manipulating the SIGVTALRM handler ---*)
-
-VAR ThreadSwitchSignal: Usignal.sigset_t;
-
-PROCEDURE mask_sigvtalrm (VAR i: Usignal.sigset_t) =
-  BEGIN
-    IF Usignal.SIGVTALRM <= 32 THEN
-      i.losigs := Usignal.sigmask (Usignal.SIGVTALRM);
-      i.hisigs := 0
-    ELSE
-      i.losigs := 0;
-      i.hisigs := Usignal.sigmask (Usignal.SIGVTALRM-32)
-    END
-  END mask_sigvtalrm;
+(*---------------------------------------------------------------------------*)
   
-PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
-  VAR sa, osa: Usignal.struct_sigaction;  i: INTEGER;
-  BEGIN
-    sa.sa_handler := handler;
-    sa.sa_mask    := Usignal.empty_sigset_t;
-    sa.sa_flags   := Usignal.SA_RESTART;
-    i := Usignal.sigaction (Usignal.SIGVTALRM, sa, osa);
-    <* ASSERT i = 0 *>
-  END setup_sigvtalrm;
-
-PROCEDURE allow_sigvtalrm () =
-  VAR i : Usignal.sigset_t;
-  BEGIN
-    EVAL Usignal.sigprocmask(Usignal.SIG_UNBLOCK, ThreadSwitchSignal, i)
-  END allow_sigvtalrm;
-
-PROCEDURE disallow_sigvtalrm () =
-  VAR i : Usignal.sigset_t;
-  BEGIN
-    EVAL Usignal.sigprocmask(Usignal.SIG_BLOCK, ThreadSwitchSignal, i)
-  END disallow_sigvtalrm;
-
 BEGIN
-  mask_sigvtalrm(ThreadSwitchSignal);
 END RTThread.
-
-

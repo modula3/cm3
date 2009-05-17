@@ -7,8 +7,6 @@
 
 UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
-IMPORT Usignal;
-
 PROCEDURE SP (READONLY s: State): ADDRESS =
   BEGIN
     RETURN LOOPHOLE (s.sp, ADDRESS);
@@ -50,29 +48,7 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
   BEGIN
   END UpdateFrameForNewSP;
 
-(*------------------------------------ manipulating the SIGVTALRM handler ---*)
-
-PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
-  VAR x: Usignal.struct_sigaction;
-  BEGIN
-    x.sa_handler := LOOPHOLE (handler, Usignal.SignalActionHandler);
-    x.sa_mask := 0;
-    x.sa_flags := Usignal.SA_RESTART;
-    EVAL Usignal.sigaction (Usignal.SIGVTALRM, ADR (x), NIL);
-  END setup_sigvtalrm;
-
-PROCEDURE allow_sigvtalrm () =
-  BEGIN
-    EVAL Usignal.sigprocmask(Usignal.SIG_UNBLOCK,ADR(sigvtalrmMask),NIL);
-  END allow_sigvtalrm;
-
-PROCEDURE disallow_sigvtalrm () =
-  BEGIN
-    EVAL Usignal.sigprocmask(Usignal.SIG_BLOCK,ADR(sigvtalrmMask),NIL);
-  END disallow_sigvtalrm;
-
-VAR
-  sigvtalrmMask: Usignal.sigset_t := Usignal.sigmask(Usignal.SIGVTALRM);
+(*---------------------------------------------------------------------------*)
 
 BEGIN
 END RTThread.
