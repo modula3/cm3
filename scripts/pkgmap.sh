@@ -27,25 +27,6 @@ exec_cmd() {
 
 PKGS=""
 RARGS=""
-# collect RARGS
-for a in "$@"; do
-  case "$a" in
-    -*)
-      if [ x-k = x"$a" ] ; then
-        KEEP_GOING="yes"
-      elif [ x-n = x"$a" ] ; then
-        NO_ACTION="yes"
-      elif [ x-report = x"$a" ] ; then
-        REPORT="yes"
-      elif [ x-l = x"$a" ] ; then
-        LIST_ONLY="yes"
-      elif [ x-c = x"$a" ] ; then
-      else
-        RARGS="${RARGS} $a"
-      fi
-    ;;
-  esac
-done
 while [ -n "$1" ] ; do
   case "$1" in
     -*)
@@ -65,6 +46,8 @@ while [ -n "$1" ] ; do
         fi
         shift
       else
+        # collect RARGS
+        RARGS="${RARGS} $1"
       fi
       shift
     ;;
