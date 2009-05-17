@@ -15,6 +15,18 @@ readonly HAS_STACK_WALKER = {
 include_dir ("common")
 include_dir (OS_TYPE)
 
+%
+% platforms with no user thread implementation?
+% no or not entirely, native NT386 isn't here
+% platforms that are ok with common:
+%  ?signal based thread interruption (non-Darwin)
+%  common stack walker (NT386 uses IsBadReadPtr, so not here)
+%  other stuff
+% If this is related to user threads though, consider restoring
+% their support for PPC_LINUX (broken due to common glibc problem) and NetBSD_i386.
+% Historically pagesize was here, but with VM-synchronized GC gone, pagesize
+% has a reduced meaning and need not be "correct".
+%
 if equal (TARGET, "SPARC64_OPENBSD") or equal (TARGET, "PPC32_OPENBSD")
     or equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
     or equal (TARGET, "MIPS32_IRIX") or equal (TARGET, "MIPS64_IRIX")
