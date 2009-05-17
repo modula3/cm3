@@ -82,34 +82,24 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
 
 (*------------------------------------ manipulating the SIGVTALRM handler ---*)
 
-PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
-  VAR sv, osv: Usignal.struct_sigvec;  i: INTEGER;
+PROCEDURE MovedToThreadPosix()=
+BEGIN
+  <* ASSERT FALSE *>
+END MovedToThreadPosix;
+
+PROCEDURE setup_sigvtalrm (<*UNUSED*>handler: Usignal.SignalHandler) =
   BEGIN
-    sv.sv_handler := handler;
-    sv.sv_mask    := Usignal.empty_sv_mask;
-    sv.sv_flags   := 0;
-    i := Usignal.sigvec (Usignal.SIGVTALRM, sv, osv);
-    <* ASSERT i = 0 *>
+    MovedToThreadPosix();
   END setup_sigvtalrm;
 
 PROCEDURE allow_sigvtalrm () =
-  VAR svt, old : Usignal.sigset_t;
-      i        : INTEGER;
   BEGIN
-    EVAL Usignal.sigemptyset(svt);
-    EVAL Usignal.sigaddset(svt, Usignal.SIGVTALRM);
-    i := Usignal.sigprocmask(Usignal.SIG_UNBLOCK, svt, old);
-    <*ASSERT i = 0 *>
+    MovedToThreadPosix();
   END allow_sigvtalrm;
 
 PROCEDURE disallow_sigvtalrm () =
-  VAR svt, old : Usignal.sigset_t;
-      i        : INTEGER;
   BEGIN
-    EVAL Usignal.sigemptyset(svt);
-    EVAL Usignal.sigaddset(svt, Usignal.SIGVTALRM);
-    i := Usignal.sigprocmask(Usignal.SIG_BLOCK, svt, old);
-    <*ASSERT i = 0 *>
+    MovedToThreadPosix();
   END disallow_sigvtalrm;
 
 BEGIN
