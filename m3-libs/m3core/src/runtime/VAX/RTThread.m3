@@ -8,7 +8,7 @@
 
 UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
-IMPORT Word, Usignal, Unix, Umman, RTMisc;
+IMPORT Unix, Umman, RTMisc;
 
 CONST 
   SP_pos = 1;
@@ -86,35 +86,7 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
   BEGIN
   END UpdateFrameForNewSP;
 
-(*------------------------------------ manipulating the SIGVTALRM handler ---*)
-
-PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
-  VAR sv, osv: Usignal.struct_sigvec;  i: INTEGER;
-  BEGIN
-    sv.sv_handler := handler;
-    sv.sv_mask    := Usignal.empty_sv_mask;
-    sv.sv_flags   := 0;
-    i := Usignal.sigvec (Usignal.SIGVTALRM, sv, osv);
-    <* ASSERT i = 0 *>
-  END setup_sigvtalrm;
-
-PROCEDURE allow_sigvtalrm () =
-  VAR i : Word.T;
-  BEGIN
-    i := Usignal.sigsetmask (0);
-    i := Word.And (i, Word.Not (Usignal.sigmask (Usignal.SIGVTALRM)));
-    EVAL Usignal.sigsetmask (i);
-  END allow_sigvtalrm;
-
-PROCEDURE disallow_sigvtalrm () =
-  VAR i : Word.T;
-  BEGIN
-    i := Usignal.sigsetmask (0);
-    i := Word.Or (i, Usignal.sigmask (Usignal.SIGVTALRM));
-    EVAL Usignal.sigsetmask (i);
-  END disallow_sigvtalrm;
+(*---------------------------------------------------------------------------*)
 
 BEGIN
 END RTThread.
-
-

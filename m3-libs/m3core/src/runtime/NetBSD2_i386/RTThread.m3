@@ -9,7 +9,7 @@
 
 UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
-IMPORT Usignal, Unix, Umman, RTMisc;
+IMPORT Unix, Umman, RTMisc;
 
 CONST 
   SP_pos = 2;
@@ -80,37 +80,7 @@ PROCEDURE UpdateFrameForNewSP (<*UNUSED*> a: ADDRESS;
   BEGIN
   END UpdateFrameForNewSP;
 
-(*------------------------------------ manipulating the SIGVTALRM handler ---*)
-
-PROCEDURE setup_sigvtalrm (handler: Usignal.SignalHandler) =
-  VAR sa, osa: Usignal.struct_sigaction;  i: INTEGER;
-  BEGIN
-    sa.sa_handler := handler;
-    sa.sa_flags   := 0;
-    EVAL Usignal.sigemptyset(sa.sa_mask);
-    i := Usignal.sigaction (Usignal.SIGVTALRM, ADR(sa), ADR(osa));
-    <* ASSERT i = 0 *>
-  END setup_sigvtalrm;
-
-PROCEDURE allow_sigvtalrm () =
-  VAR set, oset : Usignal.sigset_t;
-      i   : INTEGER;
-  BEGIN
-    EVAL Usignal.sigemptyset(set);
-    EVAL Usignal.sigaddset(set, Usignal.SIGVTALRM);
-    i := Usignal.sigprocmask(Usignal.SIG_UNBLOCK, ADR(set), ADR(oset));
-    <* ASSERT i = 0 *>
-  END allow_sigvtalrm;
-
-PROCEDURE disallow_sigvtalrm () =
-  VAR set, oset : Usignal.sigset_t;
-      i   : INTEGER;
-  BEGIN
-    EVAL Usignal.sigemptyset(set);
-    EVAL Usignal.sigaddset(set, Usignal.SIGVTALRM);
-    i := Usignal.sigprocmask(Usignal.SIG_BLOCK, ADR(set), ADR(oset));
-    <* ASSERT i = 0 *>
-  END disallow_sigvtalrm;
+(*---------------------------------------------------------------------------*)
 
 BEGIN
 END RTThread.
