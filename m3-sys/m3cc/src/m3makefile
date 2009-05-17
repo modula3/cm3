@@ -323,6 +323,8 @@ if not Native
   Log = path() & "/" & build_dir & "/_m3.log"
 else
   Log = path() & "/../" & BUILD_DIR & "/_m3.log"
+  % no fs_mkdir here -- not available with older tools
+  % and compiler will make this one for us
 end
 if defined("subst_chars")
     % only some scenarios need this so ok without
