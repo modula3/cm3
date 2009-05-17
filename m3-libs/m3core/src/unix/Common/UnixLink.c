@@ -19,6 +19,10 @@ Unix__link to be Utils__link. */
 int Unix__link(const char* ExistingFile, const char* NewLink)
 {
 #ifdef _WIN32
+#ifdef _WIN64
+    if (CreateHardLinkA(NewLink, ExistingFile, NULL) == FALSE)
+        goto Error;
+#else
     typedef BOOL (__stdcall * PFNCreateHardLinkA)(PCSTR NewLink, PCSTR ExistingFile, void* reserved);
     static PFNCreateHardLinkA pfnCreateHardLinkA;
     
@@ -34,6 +38,7 @@ int Unix__link(const char* ExistingFile, const char* NewLink)
     }
     if (pfnCreateHardLinkA(NewLink, ExistingFile, NULL) == FALSE)
         goto Error;
+#endif
     return 0;
 Error:
     errno = GetLastError();
