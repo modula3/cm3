@@ -1,0 +1,10 @@
+% Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
+% See file COPYRIGHT-CMASS for details.
+%
+
+readonly TARGET       = "PPC_DARWIN"
+readonly WORD_SIZE    = "32BITS"
+readonly GNU_PLATFORM = "powerpc-apple-darwin6.3"
+readonly SYSTEM_ASM = "as"
+
+include("Darwin.common")
