@@ -559,6 +559,10 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 19 * Address.size;
                  Setjmp                    := "setjmp";
 
+    |  Systems.ARM_DARWIN =>
+                 Jumpbuf_size              := 28 * Address.size; (* sigjmpbuf, just in case.. *)
+                 Setjmp                    := "setjmp";
+
     |  Systems.PPC_DARWIN =>
                  Jumpbuf_size              := (26 + 36 + 129 + 1 + 1) * 
                                               Address.size;

@@ -9,22 +9,28 @@
 % It is the default for Apple gcc and left
 % here in case user is using a self-built FSF gcc.
 %
-if equal(WORD_SIZE, "32BITS")
-    readonly SYSTEM_CC  = "gcc -fPIC -m32"
-else
-    readonly SYSTEM_CC  = "gcc -fPIC -m64"
+if not defined("SYSTEM_CC")
+    if equal(WORD_SIZE, "32BITS")
+        readonly SYSTEM_CC  = "gcc -fPIC -m32"
+    else
+        readonly SYSTEM_CC  = "gcc -fPIC -m64"
+    end
 end
-readonly SYSTEM_LIBTOOL = "libtool"
+if not defined("SYSTEM_LIBTOOL")
+    readonly SYSTEM_LIBTOOL = "libtool"
+end
 
 %
 % fPIC really is needed here, despite man gcc saying it is the default.
 % This is because man gcc is about Apple's gcc but m3cg is
 % built from FSF source.
 %
-if equal(WORD_SIZE, "32BITS")
-    readonly m3back_flags = "-fPIC -gstabs+ -quiet -m32"
-else
-    readonly m3back_flags = "-fPIC -gstabs+ -quiet -m64"
+if not defined("m3back_flags")
+    if equal(WORD_SIZE, "32BITS")
+        readonly m3back_flags = "-fPIC -gstabs+ -quiet -m32"
+    else
+        readonly m3back_flags = "-fPIC -gstabs+ -quiet -m64"
+    end
 end
 
 %------------------------------------------------ external system libraries ---

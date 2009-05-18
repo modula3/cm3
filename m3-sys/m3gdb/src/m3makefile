@@ -19,6 +19,7 @@ readonly Platform_info = {
   "AMD64_LINUX" : "amd64-pc-linux-gnu",
   "AP3000"    : "apollo68-bsd",
   "ARM"       : "arm--riscos",
+  "ARM_DARWIN" : "arm-apple-darwin9",
   "BSDI4"     : "i686-unknown-freebsdelf",
   "DS3100"    : "decstation",
   "FBSD_ALPHA": "alpha-unknown-freebsd",

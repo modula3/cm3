@@ -17,6 +17,7 @@ readonly _FloatPieces = {
   "AMD64_LINUX": _float_le,
   "AP3000"     : _float_le,
   "ARM"        : _float_le,
+  "ARM_DARWIN" : _float_le,
   "DS3100"     : [ "IEEE", "IEEE-le", "DS3100" ],
   "DS3100_OSF" : [ "IEEE", "IEEE-le", "DS3100" ],
   "FreeBSD"    : _float_le,
