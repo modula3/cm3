@@ -14,6 +14,7 @@ readonly _CSupportPieces = {
   "AMD64_FREEBSD": [ "little-endian" ],
   "AMD64_LINUX": [ "little-endian" ],
   "AP3000"     : [ "little-endian" ],
+  "ARM_DARWIN": [ "little-endian" ],
   "ARM"        : [ "little-endian" ],
   "DS3100"     : [ "little-endian" ],
   "DS3100_OSF" : [ "little-endian" ],
