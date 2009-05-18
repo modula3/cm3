@@ -63,7 +63,9 @@ VAR
 
 TYPE 
   Port = [0..65535];
-  Address = RECORD a: ARRAY [0..3] OF BITS 8 FOR [0..255]; END;
+  Address4 = RECORD a: ARRAY [0..3] OF BITS 8 FOR [0..255]; END;
+  Address16 = RECORD a: ARRAY [0..16] OF BITS 8 FOR [0..255]; END;
+  Address = Address4;
   Endpoint = RECORD addr: Address; port: Port END;
 
 (* The type "Address" is an IP address in network byte order.
@@ -72,7 +74,9 @@ TYPE
 
 CONST 
   NullPort: Port = 0;
-  NullAddress = Address{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0}};
+  NullAddress4 = Address{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0}};
+  NullAddress16 = Address{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
+  NullAddress = NullAddress4;
   NullEndPoint = Endpoint{NullAddress, NullPort};
 
 PROCEDURE GetHostByName(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
