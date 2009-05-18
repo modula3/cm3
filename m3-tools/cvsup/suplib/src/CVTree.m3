@@ -262,13 +262,13 @@ PROCEDURE ReadDir(iter: UniIterator;
       path := iter.path;
     END;
     TRY
-      fsIter := SafeIterate(path);
+      fsIter := FS.Iterate(path);
     EXCEPT OSError.E(l) =>
       RAISE Error("Cannot read directory \"" & path & "\": " &
 	ErrMsg.StrError(l));
     END;
     TRY
-      WHILE SafeNext(fsIter, e.name) DO
+      WHILE fsIter.next(e.name) DO
 	WITH filePath = SupMisc.CatPath(path, e.name),
 	  relPath = Text.Sub(filePath, iter.relPathStart),
 	  follow = iter.follow.test(relPath)
@@ -294,51 +294,10 @@ PROCEDURE ReadDir(iter: UniIterator;
 	END;
       END;
     FINALLY
-      SafeIterClose(fsIter);
+      fsIter.close();
     END;
     RETURN entries;
   END ReadDir;
-
-(*****************************************************************************)
-(* FIXME - The following procedures work around a bug in SRC Modula-3 thru
-   version 3.6, at least.  The FS.Iterator operations call the Unix
-   opendir, readdir, and closedir functions, which in turn usually call
-   malloc.  This is done without any mutual exclusion, and malloc is normally
-   not thread-safe.  I have observed memory corruption and have traced it
-   to this cause.  As a work-around, these wrappers disable thread switching
-   while the offending functions are executing. *)
-(*****************************************************************************)
-
-PROCEDURE SafeIterate(path: Pathname.T): FS.Iterator
-  RAISES {OSError.E} =
-  BEGIN
-    Scheduler.DisableSwitching();
-    TRY
-      RETURN FS.Iterate(path);
-    FINALLY
-      Scheduler.EnableSwitching();
-    END;
-  END SafeIterate;
-
-PROCEDURE SafeNext(iter: FS.Iterator; VAR name: TEXT): BOOLEAN =
-  BEGIN
-    Scheduler.DisableSwitching();
-    TRY
-      RETURN iter.next(name);
-    FINALLY
-      Scheduler.EnableSwitching();
-    END;
-  END SafeNext;
-
-PROCEDURE SafeIterClose(iter: FS.Iterator) =
-  BEGIN
-    Scheduler.DisableSwitching();
-    TRY
-      iter.close();
-    FINALLY
-      Scheduler.EnableSwitching();
-    END;
-  END SafeIterClose;
 
 BEGIN
 END CVTree.
