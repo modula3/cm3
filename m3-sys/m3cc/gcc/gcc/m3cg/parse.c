@@ -61,7 +61,8 @@
 #include "debug.h"
 
 #ifndef NOTE_KIND /* sleazy version detection */
-#define GCC42
+#define GCC_APPLE /* currently gcc 4.2 based, and has Apple changes; we use this for ARM_DARWIN currently,
+                     maybe other Darwins later */
 /*typedef const union tree_node *const_tree;*/
 #define const_tree tree
 #define allocate_struct_function(a, b) allocate_struct_function(a)
@@ -320,6 +321,17 @@ static void m3_write_globals (void);
 
 #undef LANG_HOOKS_WRITE_GLOBALS
 #define LANG_HOOKS_WRITE_GLOBALS m3_write_globals
+
+#ifdef GCC_APPLE
+static void
+m3_expand_function (tree fndecl)
+{
+  /* We have nothing special to do while expanding functions for Modula-3.  */
+  tree_rest_of_compilation (fndecl);
+}
+#undef LANG_HOOKS_CALLGRAPH_EXPAND_FUNCTION
+#define LANG_HOOKS_CALLGRAPH_EXPAND_FUNCTION m3_expand_function
+#endif
 
 /* Hook routines and data unique to Modula-3 back-end.  */
 
@@ -2043,7 +2055,7 @@ m3_start_call (void)
   CALL_PUSH (NULL_TREE, NULL_TREE, NULL_TREE);
 }
 
-#ifndef GCC42
+#ifndef GCC_APPLE
 
 static tree m3_build_volatilized_type (tree type)
 {
@@ -2097,7 +2109,7 @@ m3_pop_param (tree t)
   EXPR_POP ();
 }
 
-#ifdef GCC42
+#ifdef GCC_APPLE
 
 static void
 m3_call_direct (tree p, tree t)
@@ -3601,6 +3613,18 @@ m3cg_note_procedure_origin (void)
   fatal_error("note_procedure_origin psuedo-op encountered.");
 }
 
+static tree
+m3cg_build_empty_asm_expr(
+    void)
+{
+  /* Apple added a 5th node to asm_expr and if we give only 4 we fail an assertion. */
+#ifdef GCC_APPLE
+  return build5 (ASM_EXPR, t_void, build_string (0, ""), NULL, NULL, NULL, NULL);
+#else
+  return build4 (ASM_EXPR, t_void, build_string (0, ""), NULL, NULL, NULL);
+#endif
+}
+
 static void
 m3cg_set_label (void)
 {
@@ -3624,11 +3648,11 @@ m3cg_set_label (void)
       DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels
 	= gen_rtx_EXPR_LIST (VOIDmode, r, list);
 
-      bar = build4 (ASM_EXPR, t_void, build_string (0, ""), NULL, NULL, NULL);
+      bar = m3cg_build_empty_asm_expr();
       ASM_VOLATILE_P (bar) = 1;
       add_stmt (bar);
       add_stmt (build1 (LABEL_EXPR, t_void, l));
-      bar = build4 (ASM_EXPR, t_void, build_string (0, ""), NULL, NULL, NULL);
+      bar = m3cg_build_empty_asm_expr();
       ASM_VOLATILE_P (bar) = 1;
       add_stmt (bar);
     }
@@ -5382,7 +5406,7 @@ m3_finish (void)
     }
 }
 
-#ifdef GCC42
+#ifdef GCC_APPLE
 int flag_iasm_blocks;
 enum iasm_states iasm_state;
 bool iasm_in_operands;
@@ -5390,8 +5414,10 @@ struct cpp_reader* parse_in;
 #define add_stmt c_add_stmt
 #include "../stub-objc.c"
 c_language_kind c_language;
+
 /* This is used by cfstring code; providing it here makes us not have to #if 0 out a few bits. */
-tree pushdecl_top_level (tree x) { gcc_unreachable(); return NULL_TREE; }
+tree pushdecl_top_level (tree x ATTRIBUTE_UNUSED) { gcc_unreachable(); return NULL_TREE; }
+
 #endif
 
 /* New garbage collection regime see gty.texi.  */
