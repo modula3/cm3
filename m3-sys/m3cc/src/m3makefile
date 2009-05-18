@@ -339,9 +339,8 @@ m3cc_ResponseFileCounter2 = "0"
 readonly proc m3cc_Run (x) is
     local ShLeaf = "_m3" & m3cc_ResponseFileCounter0 & m3cc_ResponseFileCounter1 & m3cc_ResponseFileCounter2 & ".sh"
     local Sh = build_dir & "/" & ShLeaf
-    >> Log in
-        write(x & "\n")
-    end
+    if not FileExists(Log) > Log in write("") end end
+    >> Log in write(x & "\n") end
     if not HostIsNT()
         write(x & "\n")
         exec(x)
