@@ -1129,36 +1129,45 @@ def Boot():
     # TBD: put it only in one place.
     # The older bootstraping method does get that right.
 
-    Compile = ("gcc -g -fPIC " + ({
-        "AMD64_LINUX"       : " -m64 -mno-align-double ",
-        "LINUXLIBC6"        : " -m32 -mno-align-double ",
-        "MIPS64_OPENBSD"    : " -mabi=64 ",
-        "SPARC32_LINUX"     : " -m32 -munaligned-doubles ",
-        "SPARC64_LINUX"     : " -m64 -munaligned-doubles ",
-        }.get(Target) or ""))
-
-    Link = Compile + " -lm -lpthread "
-
-    SunCompile = "cc -g -mt -xcode=pic32 -xldscope=symbolic"
+    GnuCompile = "gcc -g -fPIC "
+    SunCompile = "cc -g -mt -xcode=pic32 -xldscope=symbolic "
 
     Compile = {
-        "SOLsun"                : SunCompile + " -xarch=v8plus ",
-        "SPARC64_SOLARIS"       : SunCompile + " -xarch=v9 ",
-        }.get(Target) or Compile
+        "SOLsun"          : SunCompile,
+        "SPARC64_SOLARIS" : SunCompile,
+        }.get(Target) or GnuCompile
 
-    SunLink = " -lrt -lm -lnsl -lsocket "
+    Compile = Compile + ({
+        "AMD64_LINUX"     : " -m64 -mno-align-double ",
+        "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
+        "LINUXLIBC6"      : " -m32 -mno-align-double ",
+        "MIPS64_OPENBSD"  : " -mabi=64 ",
+        "SOLsun"          : " -xarch=v8plus ",
+        "SPARC32_LINUX"   : " -m32 -munaligned-doubles ",
+        "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
+        "SPARC64_SOLARIS" : " -xarch=v9 ",
+        }.get(Target) or " ")
 
-    Link = {
-        "SOLsun"                : Compile + SunLink,
-        "SPARC64_SOLARIS"       : Compile + SunLink,
-        "PA32_HPUX"             : Compile + " -lrt -lm",
-        }.get(Target) or Link
+    SunLink = " -lrt -lm -lnsl -lsocket -lpthread "
+
+    Link = Compile + ({
+        "ARM_DARWIN"      : " ",
+        "AMD64_DARWIN"    : " ",
+        "I386_DARWIN"     : " ",
+        "PPC_DARWIN"      : " ",
+        "PPC64_DARWIN"    : " ",
+        # SOLgnu?
+        "SOLsun"          : SunLink,
+        "SPARC64_SOLARIS" : SunLink,
+        "PA32_HPUX"       : " -lrt -lm ",
+        }.get(Target) or " -lm -lpthread ")
 
     # not in Link
     Compile += " -c "
 
     Assemble = ("as " + ({
         "AMD64_LINUX"       : " --64 ",
+        "ARM_DARWIN"        : " -arch armv6 ",
         "LINUXLIBC6"        : " --32 ",
         "SPARC32_LINUX"     : " -32 ",
         "SPARC64_LINUX"     : " -64 ",
@@ -1167,12 +1176,23 @@ def Boot():
         "SPARC64_SOLARIS"   : " -s -K PIC -xarch=v9 ",
         }.get(Target) or ""))
 
+    GnuPlatformPrefix = {
+        "ARM_DARWIN"      : "arm-apple-darwin9-",
+        }.get(Target) or ""
+
+    Compile = GnuPlatformPrefix + Compile
+    Link = GnuPlatformPrefix + Link
+    Assemble = GnuPlatformPrefix + Assemble
+
     #
-    # squeeze runs of spaces
+    # squeeze runs of spaces and spaces at end
     #
     Compile = re.sub("  +", " ", Compile)
+    Compile = re.sub(" +$", "", Compile)
     Link = re.sub("  +", " ", Link)
+    Link = re.sub(" +$", "", Link)
     Assemble = re.sub("  +", " ", Assemble)
+    Assemble = re.sub(" +$", "", Assemble)
 
     BootDir = "./cm3-boot-" + Target + "-" + Version
 
@@ -1206,7 +1226,9 @@ def Boot():
         a.write("#!/bin/sh\n\nset -e\nset -x\n\n")
 
     for a in [Makefile]:
+        a.write("# edit up here\n\n")
         a.write("Assemble=" + Assemble + "\nCompile=" + Compile + "\nLink=" + Link + "\n")
+        a.write("\n\n# no more editing should be needed\n\n")
 
     for a in [Make]:
         a.write("Assemble=\"" + Assemble + "\"\nCompile=\"" + Compile + "\"\nLink=\"" + Link + "\"\n")
