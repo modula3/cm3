@@ -318,17 +318,18 @@ local Native = equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD)
 local Log = ""
 if not Native
   build_dir = "../" & M3CC_HOST & "-" & M3CC_TARGET
-  % make sure the derived directory exists
-  fs_mkdir (build_dir)
   Log = path() & "/" & build_dir & "/_m3.log"
 else
   Log = path() & "/../" & BUILD_DIR & "/_m3.log"
-  % no fs_mkdir here -- not available with older tools
-  % and compiler will make this one for us
 end
+
 if defined("subst_chars")
     % only some scenarios need this so ok without
     Log = subst_chars(Log, "\\", "/")
+end
+
+if defined("fs_mkdir")
+  fs_mkdir (build_dir)
 end
 
 m3cc_ResponseFileCounter0 = "0"
