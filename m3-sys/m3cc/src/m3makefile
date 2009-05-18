@@ -435,12 +435,14 @@ if not defined ("no_config")
     end
 
     %
-    % Config.guess on SPARC32_LINUX yields sparc64 so be explicit.
+    % Config.guess on SPARC32_LINUX yields sparc64 and m3cg
+    % then just always fails with internal errors, so be explicit.
     % This is reasonable in all builds, but let's not upset that apple cart.
-    % We still let host and build be sniffed, leading to a typically sparc64 hosted cm3cg.
-    % Actual sparc32 systems (vs. sparc64) are rare so this should be ok.
-    % If we really wanted sparc32 cm3 to produce a sparc32 hosted cm3cg, we could
-    % be explicit about host and/or build.
+    % We still let host and build be guessed, leading to a typically
+    % sparc64 hosted cm3cg. Actual sparc32 systems (vs. sparc64) are rare
+    % (Linux kernel no longer supports such hardware) so this should be ok.
+    % If we really wanted sparc32 cm3 to produce a sparc32 hosted cm3cg,
+    % we could be explicit about host and/or build.
     %
     if equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD) and equal (M3CC_BUILD, "SPARC32_LINUX")
           Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
