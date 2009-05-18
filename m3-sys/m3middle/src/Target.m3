@@ -503,6 +503,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
                  | Systems.SPARC64_LINUX =>
                    Jumpbuf_size := 16_280 * Char.size;
+                   Jumpbuf_align := 16 * Char.size;
                    Aligned_procedures := FALSE;
 
                  | Systems.SPARC64_SOLARIS =>
