@@ -9,6 +9,11 @@
 % remove_m3_option ("-gui")
 % m3_option ("-times")
 
+cp_if(ROOT & "/m3-libs/m3core/src/unix/Common/UnixLink.c", ".")
+cp_if(ROOT & "/m3-libs/m3core/src/unix/Common/m3unix.h", ".")
+cp_if("../src/cm3unix.c", ".")
+c_source("../" & BUILD_DIR & "/cm3unix")
+
 import ("libm3")
 import ("m3middle")
 import ("m3linker")
@@ -27,7 +32,6 @@ if equal (OS_TYPE, "POSIX")
 else
   implementation ("UtilsWin32")
 end
-c_source("cm3unix")
 module ("Arg")
 module ("Builder")
 module ("Dirs")
