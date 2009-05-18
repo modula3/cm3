@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.12 2008-04-23 12:31:24 jkrell Exp $
+% $Id: m3makefile,v 1.13 2009-05-18 01:59:44 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -19,6 +19,7 @@ readonly Platform_info = {
   "AMD64_LINUX" : "amd64-pc-linux-gnu",
   "AP3000"    : "apollo68-bsd",
   "ARM"       : "arm--riscos",
+  "ARM_DARWIN" : "arm-apple-darwin9",
   "BSDI4"     : "i686-unknown-freebsdelf",
   "DS3100"    : "decstation",
   "FBSD_ALPHA": "alpha-unknown-freebsd",

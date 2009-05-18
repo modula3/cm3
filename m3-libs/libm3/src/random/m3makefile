@@ -15,6 +15,7 @@ readonly _RandomPieces = {
   "AMD64_LINUX": [ _LittleEndian ],
   "AP3000"     : [ _LittleEndian ],
   "ARM"        : [ _LittleEndian ],
+  "ARM_DARWIN" : [ _LittleEndian ],
   "BSDI4"      : [ _LittleEndian ],
   "DS3100"     : [ _LittleEndian ],
   "DS3100_OSF" : [ _LittleEndian ],
