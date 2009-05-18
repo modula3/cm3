@@ -10,7 +10,7 @@
 #include <signal.h>
 typedef struct sigaction sigaction_t;
 #include <assert.h>
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__) || (defined(__APPLE__) && defined(__arm))
 typedef void ucontext_t;
 #else
 #include <ucontext.h>
@@ -82,6 +82,8 @@ static size_t GetPC(void* VoidContext)
 #else
       pc = Context->uc_mcontext->ss.srr0;
 #endif
+#elif defined(__arm)
+      /* Apparently missing support? Revisit when I get an official toolset. */
 #else
 #error Unknown __APPLE__ target
 #endif
