@@ -54,21 +54,21 @@ static int m3stat_from_stat(int result, m3_stat_t* m3st, stat_t* st)
 int Ustat__stat(const char* path, m3_stat_t* m3st)
 {
     stat_t st;
-    return m3stat_from_stat(stat(path, &st), m3st, &st);
+    return m3stat_from_stat(stat(path, (struct stat*)&st), m3st, (struct stat*)&st);
 }
 
 #ifndef _WIN32
 int Ustat__lstat(const char* path, m3_stat_t* m3st)
 {
     stat_t st;
-    return m3stat_from_stat(lstat(path, &st), m3st, &st);
+    return m3stat_from_stat(lstat(path, (struct stat*)&st), m3st, (struct stat*)&st);
 }
 #endif
 
 int Ustat__fstat(int fd, m3_stat_t* m3st)
 {
     stat_t st;
-    return m3stat_from_stat(fstat(fd, &st), m3st, &st);
+    return m3stat_from_stat(fstat(fd, (struct stat*)&st), m3st, (struct stat*)&st);
 }
 
 #ifdef HAS_STAT_FLAGS

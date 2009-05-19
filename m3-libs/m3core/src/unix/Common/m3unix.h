@@ -52,12 +52,7 @@ typedef struct sockaddr sockaddr_t;
 typedef struct itimerval itimerval_t;
 typedef struct hostent hostent_t;
 typedef struct group group_t;
-typedef struct stat stat_t;
 typedef struct timeval timeval_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 typedef   signed char       INT8;
 typedef unsigned char      UINT8;
@@ -71,6 +66,50 @@ typedef unsigned __int64 UINT64;
 #else
 typedef   signed long long  INT64;
 typedef unsigned long long UINT64;
+#endif
+
+/* My headers have this wrong so we fix it here. */
+
+typedef struct _arm_darwin_stat_t {
+/* size must be 108 */
+/* 00 */    UINT32 st_dev;
+/* 04 */    UINT16 st_mode;
+/* 06 */    UINT16 st_nlink;
+/* 08 */    UINT64 st_ino;
+/* 10 */    UINT32 st_uid;
+/* 14 */    UINT32 st_gid;
+/* 18 */    UINT32 st_rdev;
+/* 1C */    UINT32 st_atime;
+/* 20 */    UINT32 st_atimensec;
+/* 24 */    UINT32 st_mtime;
+/* 28 */    UINT32 st_mtimensec;
+/* 2C */    UINT32 st_ctime;
+/* 30 */    UINT32 st_ctimensec;
+/* 34 */    UINT32 st_birthtime;
+/* 38 */    UINT32 st_birthtimensec;
+/* 3C */    UINT64 st_size;
+/* 44 */    UINT64 st_blocks;
+/* 4C */    UINT32 st_blksize;
+/* 50 */    UINT32 st_flags;
+/* 54 */    UINT32 st_gen;
+/* 58 */    UINT32 st_lspare;
+/* 5C */    UINT64 st_qspare[2];
+/* 6C */
+} arm_darwin_stat_t;
+
+#if defined(__APPLE__) && defined(__arm)
+
+typedef arm_darwin_stat_t stat_t;
+
+#else
+
+typedef struct stat stat_t;
+
+#endif
+
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 /* INTEGER is always signed and exactly the same size as a pointer */
