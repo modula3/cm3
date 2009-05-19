@@ -161,7 +161,7 @@ sgml devlib
 deckscape webdev
 webscape webdev
 webcat webdev
-m3-ui/bicycle gui game
+m3-ui/bicycle gui
 m3-games/badbricks game
 m3-games/columns game
 m3-games/fours game
