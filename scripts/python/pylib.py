@@ -1177,7 +1177,7 @@ def Boot():
         }.get(Target) or ""))
 
     GnuPlatformPrefix = {
-        "ARM_DARWIN"      : "arm-apple-darwin9-",
+        "ARM_DARWIN"      : "arm-apple-darwin8-",
         }.get(Target) or ""
 
     Compile = GnuPlatformPrefix + Compile
