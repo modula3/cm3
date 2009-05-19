@@ -12,19 +12,15 @@ RTMachine__SuspendThread (pthread_t t)
 }
 
 void *
-RTMachine__GetState (pthread_t t, x86_thread_state64_t *state)
+RTMachine__GetState (pthread_t t, arm_thread_state_t *state)
 {
   mach_port_t mach_thread = pthread_mach_thread_np(t);
-  mach_msg_type_number_t thread_state_count = x86_THREAD_STATE64_COUNT;
-  if (thread_get_state(mach_thread, x86_THREAD_STATE64,
+  mach_msg_type_number_t thread_state_count = ARM_THREAD_STATE_COUNT;
+  if (thread_get_state(mach_thread, ARM_THREAD_STATE,
 		       (thread_state_t)state, &thread_state_count)
       != KERN_SUCCESS) abort();
-  if (thread_state_count != x86_THREAD_STATE64_COUNT) abort();
-#if __DARWIN_UNIX03
-  return (void *)(state->__rsp - 128);
-#else
-  return (void *)(state->rsp - 128);
-#endif
+  if (thread_state_count != ARM_THREAD_STATE_COUNT) abort();
+  return (void *)(state->r13);
 }
 
 void
