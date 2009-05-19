@@ -538,10 +538,8 @@ foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
             % It isn't needed, and stock Solaris install lacks it.
             %
             if equal(leaf, "Makefile")
-                Sed(file, "^LIBICONV =.+$", "LIBICONV =")
-                Sed(file, "^LIBICONV =.\\+$", "LIBICONV =")
-                Sed(file, "^LIBICONV_DEP =.+$", "LIBICONV_DEP =")
-                Sed(file, "^LIBICONV_DEP =.\\+$", "LIBICONV_DEP =")
+                Sed(file, "^LIBICONV =.*$", "LIBICONV =")
+                Sed(file, "^LIBICONV_DEP =.*$", "LIBICONV_DEP =")
             end
             if not equal(leaf, "Makefile")
                 Sed(file, "^#define HAVE_ICONV 1$", "")
@@ -554,10 +552,8 @@ foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
             % from mainline to Apple.
             %
             if equal(M3CC_TARGET, "ARM_DARWIN") and equal(leaf, "Makefile")
-                Sed(file, "^GMPLIBS =.\+$", "GMPLIBS =")
-                Sed(file, "^GMPLIBS =.\\+$", "GMPLIBS =")
-                Sed(file, "^GMPINC =.+$", "GMPINC =")
-                Sed(file, "^GMPINC =.\\+$", "GMPINC =")
+                Sed(file, "^GMPLIBS =.*$", "GMPLIBS =")
+                Sed(file, "^GMPINC =.*$", "GMPINC =")
             end
             %
             % Configure is for some reason unable to find Cygwin /usr/bin/libtool.
