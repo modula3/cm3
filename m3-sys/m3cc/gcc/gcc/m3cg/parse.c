@@ -3613,18 +3613,6 @@ m3cg_note_procedure_origin (void)
   fatal_error("note_procedure_origin psuedo-op encountered.");
 }
 
-static tree
-m3cg_build_empty_asm_expr(
-    void)
-{
-  /* Apple added a 5th node to asm_expr and if we give only 4 we fail an assertion. */
-#ifdef GCC_APPLE
-  return build5 (ASM_EXPR, t_void, build_string (0, ""), NULL, NULL, NULL, NULL);
-#else
-  return build4 (ASM_EXPR, t_void, build_string (0, ""), NULL, NULL, NULL);
-#endif
-}
-
 static void
 m3cg_set_label (void)
 {
@@ -3648,11 +3636,17 @@ m3cg_set_label (void)
       DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels
 	= gen_rtx_EXPR_LIST (VOIDmode, r, list);
 
-      bar = m3cg_build_empty_asm_expr();
+      bar = make_node(ASM_EXPR);
+      TREE_TYPE(t) = t_void;
+      ASM_STRING(bar) = build_string (0, "");
       ASM_VOLATILE_P (bar) = 1;
       add_stmt (bar);
+
       add_stmt (build1 (LABEL_EXPR, t_void, l));
-      bar = m3cg_build_empty_asm_expr();
+
+      bar = make_node(ASM_EXPR);
+      TREE_TYPE(t) = t_void;
+      ASM_STRING(bar) = build_string (0, "");
       ASM_VOLATILE_P (bar) = 1;
       add_stmt (bar);
     }
