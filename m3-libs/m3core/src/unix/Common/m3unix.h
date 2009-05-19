@@ -72,28 +72,28 @@ typedef unsigned long long UINT64;
 
 typedef struct _arm_darwin_stat_t {
 /* size must be 108 */
-/* 00 */    UINT32 st_dev;
-/* 04 */    UINT16 st_mode;
-/* 06 */    UINT16 st_nlink;
-/* 08 */    UINT64 st_ino;
-/* 10 */    UINT32 st_uid;
-/* 14 */    UINT32 st_gid;
-/* 18 */    UINT32 st_rdev;
-/* 1C */    UINT32 st_atime;
-/* 20 */    UINT32 st_atimensec;
-/* 24 */    UINT32 st_mtime;
-/* 28 */    UINT32 st_mtimensec;
-/* 2C */    UINT32 st_ctime;
-/* 30 */    UINT32 st_ctimensec;
-/* 34 */    UINT32 st_birthtime;
-/* 38 */    UINT32 st_birthtimensec;
-/* 3C */    UINT64 st_size;
-/* 44 */    UINT64 st_blocks;
-/* 4C */    UINT32 st_blksize;
-/* 50 */    UINT32 st_flags;
-/* 54 */    UINT32 st_gen;
-/* 58 */    UINT32 st_lspare;
-/* 5C */    UINT64 st_qspare[2];
+/* 00 */    UINT32 dev;
+/* 04 */    UINT16 mode;
+/* 06 */    UINT16 nlink;
+/* 08 */    UINT64 ino;
+/* 10 */    UINT32 uid;
+/* 14 */    UINT32 gid;
+/* 18 */    UINT32 rdev;
+/* 1C */    UINT32 atime;
+/* 20 */    UINT32 atimensec;
+/* 24 */    UINT32 mtime;
+/* 28 */    UINT32 mtimensec;
+/* 2C */    UINT32 ctime;
+/* 30 */    UINT32 ctimensec;
+/* 34 */    UINT32 birthtime;
+/* 38 */    UINT32 birthtimensec;
+/* 3C */    UINT64 size;
+/* 44 */    UINT64 blocks;
+/* 4C */    UINT32 blksize;
+/* 50 */    UINT32 flags;
+/* 54 */    UINT32 gen;
+/* 58 */    UINT32 lspare;
+/* 5C */    UINT64 qspare[2];
 /* 6C */
 } arm_darwin_stat_t;
 
