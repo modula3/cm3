@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-dist.sh,v 1.2 2009-05-19 06:12:25 wagner Exp $
+# $Id: make-dist.sh,v 1.3 2009-05-19 20:56:48 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -64,6 +64,6 @@ for c in ${PKG_COLLECTIONS}; do
     -czf "${ARCHIVE}" install.sh ${PKGS}
   ls -l "${ARCHIVE}"
 done
-if [ "$DOSHIP" = "y" -o "$DOSHIP" = "yes" ]; then
+if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
   scp ${STAGE}/cm3-*-${DS}.tgz birch:/var/www/modula3.elegosoft.com/cm3/releng
 fi
