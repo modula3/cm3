@@ -11,8 +11,7 @@ FROM Ctypes IMPORT unsigned_int;
 (*** <mach/arm/thread_status.h> ***)
 
 TYPE
-  arm_thread_state_t = struct_arm_thread_state;
-  struct_arm_thread_state = RECORD
+  arm_thread_state_t = RECORD
     r0: unsigned_int;
     r1: unsigned_int;
     r2: unsigned_int;
