@@ -2239,7 +2239,7 @@ m3_swap (void)
 static void
 m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
-#if 1
+#ifndef GCC_APPLE
   if (o != 0 || TREE_TYPE (v) != src_t) {
     v = m3_build3 (BIT_FIELD_REF, src_t, v, TYPE_SIZE (src_t),
 		   bitsize_int (o));
@@ -2264,7 +2264,7 @@ static void
 m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
   tree val;
-#if 1
+#ifndef GCC_APPLE
   if (o != 0 || TREE_TYPE (v) != dst_t) {
     v = m3_build3 (BIT_FIELD_REF, dst_t, v, TYPE_SIZE (dst_t),
 		   bitsize_int (o));
