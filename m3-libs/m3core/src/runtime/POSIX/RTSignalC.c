@@ -10,7 +10,9 @@
 #include <signal.h>
 typedef struct sigaction sigaction_t;
 #include <assert.h>
-#if defined(__CYGWIN__) || (defined(__APPLE__) && defined(__arm))
+#if defined(__APPLE__) && defined(__arm)
+/* nothing -- ucontext_t is from signal.h and #including ucontext.h gives #error */
+#elif defined(__CYGWIN__)
 typedef void ucontext_t;
 #else
 #include <ucontext.h>
