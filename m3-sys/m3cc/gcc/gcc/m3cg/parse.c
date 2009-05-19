@@ -3637,7 +3637,7 @@ m3cg_set_label (void)
 	= gen_rtx_EXPR_LIST (VOIDmode, r, list);
 
       bar = make_node(ASM_EXPR);
-      TREE_TYPE(t) = t_void;
+      TREE_TYPE(bar) = t_void;
       ASM_STRING(bar) = build_string (0, "");
       ASM_VOLATILE_P (bar) = 1;
       add_stmt (bar);
@@ -3645,7 +3645,7 @@ m3cg_set_label (void)
       add_stmt (build1 (LABEL_EXPR, t_void, l));
 
       bar = make_node(ASM_EXPR);
-      TREE_TYPE(t) = t_void;
+      TREE_TYPE(bar) = t_void;
       ASM_STRING(bar) = build_string (0, "");
       ASM_VOLATILE_P (bar) = 1;
       add_stmt (bar);
