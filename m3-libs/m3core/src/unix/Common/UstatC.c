@@ -33,6 +33,22 @@ static int m3stat_from_stat(int result, m3_stat_t* m3st, stat_t* st)
     assert(result == 0 || result == -1);
     if (result == 0)
     {
+#if defined(__APPLE__) && defined(__arm)
+        m3st->dev = st->dev;
+        m3st->ino = st->ino;
+        m3st->mtime = st->mtime;
+        m3st->nlink = st->nlink;
+        m3st->rdev = st->rdev;
+        m3st->size = st->size;
+        m3st->gid = st->gid;
+        m3st->mode = st->mode;
+        m3st->uid = st->uid;
+#ifdef HAS_STAT_FLAGS
+        m3st->flags = st->flags;
+#else
+        m3st->flags = 0;
+#endif
+#else
         m3st->dev = st->st_dev;
         m3st->ino = st->st_ino;
         m3st->mtime = st->st_mtime;
@@ -46,6 +62,7 @@ static int m3stat_from_stat(int result, m3_stat_t* m3st, stat_t* st)
         m3st->flags = st->st_flags;
 #else
         m3st->flags = 0;
+#endif
 #endif
     }
     return result;
