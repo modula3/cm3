@@ -12,7 +12,7 @@ readonly _UnixPieces = {
   "AMD64_OPENBSD"   : [ "openbsd-common",                          "uin-len" ],
   "AP3000"          : [ "ultrix-3-1.generic", "ultrix-3-1.AP3000", "uin-common" ],
   "ARM"             : [ "ultrix-3-1.generic", "ultrix-3-1.ARM",    "uin-common" ],
-  "ARM_DARWIN"      : [ "darwin-common",                           "uin-len" ],
+  "ARM_DARWIN"      : [ "darwin-common", "darwin-arm",             "uin-len" ],
   "DS3100"          : [ "ultrix-3-1.generic", "ultrix-3-1.DS3100", "uin-common" ],
   "DS3100_OSF"      : [ "osf-1.generic", "osf-1.DS3100",           "uin-common" ],
   "FreeBSD"         : [ "freebsd-1",                               "uin-common" ],
