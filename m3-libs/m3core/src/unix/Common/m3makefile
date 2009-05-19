@@ -65,6 +65,7 @@ end
 
 %
 % This is systems that don't provide user-thread support.
+% And non-Darwin.
 %
 
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
@@ -73,9 +74,16 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
         or equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
         or equal (TARGET, "NT386") or equal (TARGET, "AMD64_FREEBSD")
-        or equal (TARGET, "ARM_DARWIN")
 
     Interface("Uucontext")
+    Interface("Usignal")
+
+end
+
+% all platforms should switch to this
+
+if equal (TARGET, "ARM_DARWIN")
+
     Interface("Usignal")
 
 end
