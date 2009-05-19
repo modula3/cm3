@@ -64,6 +64,6 @@ for c in ${PKG_COLLECTIONS}; do
     -czf "${ARCHIVE}" install.sh ${PKGS}
   ls -l "${ARCHIVE}"
 done
-if [ "$DOSHIP" = "y" -o "$DOSHIP" = "yes" ]; then
+if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
   scp ${STAGE}/cm3-*-${DS}.tgz birch:/var/www/modula3.elegosoft.com/cm3/releng
 fi
