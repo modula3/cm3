@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-dist.sh,v 1.1 2009-05-16 16:54:06 wagner Exp $
+# $Id: make-dist.sh,v 1.2 2009-05-19 06:12:25 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -30,7 +30,7 @@ DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
 PATH="${INSTALLROOT}/bin:${PATH}"
 "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
 
-PKG_COLLECTIONS="devlib m3devtool m3gdb webdev gui anim database cvsup obliq juno caltech-parser demo tool math game"
+PKG_COLLECTIONS="devlib m3devtool m3gdb webdev gui anim database cvsup obliq juno caltech-parser demo tool math game core"
 
 cd "${ROOT}"
 for c in ${PKG_COLLECTIONS}; do
@@ -49,8 +49,21 @@ for c in ${PKG_COLLECTIONS}; do
       fi
     fi
   done
+  (
+    echo '#!/bin/sh'
+    echo 'HERE=`pwd`'
+    echo "for p in ${PKGS}; do"
+      echo 'cd $p'
+      echo 'cm3 -ship ${SHIPARGS}'
+      echo 'cd $HERE'
+    echo "done"
+  ) > install.sh
+  chmod 755 install.sh
   ARCHIVE="${STAGE}/cm3-bin-ws-${c}-${TARGET}-${CM3VERSION}-${DS}.tgz"
   "${TAR}"  --exclude '*.o' --exclude '*.mo' --exclude '*.io' \
-    -czf "${ARCHIVE}" ${PKGS}
+    -czf "${ARCHIVE}" install.sh ${PKGS}
   ls -l "${ARCHIVE}"
 done
+if [ "$DOSHIP" = "y" -o "$DOSHIP" = "yes" ]; then
+  scp ${STAGE}/cm3-*-${DS}.tgz birch:/var/www/modula3.elegosoft.com/cm3/releng
+fi
