@@ -956,11 +956,13 @@ m3_write_globals (void)
   for (ctors = pending_inits; ctors; ctors = TREE_CHAIN(ctors)) {
     VEC(constructor_elt,gc) *elts = CONSTRUCTOR_ELTS (TREE_VALUE (ctors));
     unsigned HOST_WIDE_INT idx;
-    tree value;
+    tree index, value;
 
-    FOR_EACH_CONSTRUCTOR_VALUE (elts, idx, value) {
-      if (TREE_CODE(value) == VAR_DECL) {
-	gcc_assert (TREE_ADDRESSABLE (value)); /* ensure optimizers play fair */
+    FOR_EACH_CONSTRUCTOR_ELT (elts, idx, index, value) {
+      tree var = DECL_LANG_SPECIFIC(index);
+      if (var) {
+	gcc_assert(TREE_CODE(var) == VAR_DECL);
+	gcc_assert (TREE_ADDRESSABLE (var)); /* ensure optimizers play fair */
 	/* take apart the rtx, which is of the form
 	   (insn n m p (use (mem: (plus: (reg: r $fp)
 	   (const_int offset))) ...)
@@ -969,7 +971,7 @@ m3_write_globals (void)
 	   for offset 0. */
 	{
 	  int j;
-	  rtx r = DECL_RTL (value);	/* (mem ...) */
+	  rtx r = DECL_RTL (var);	/* (mem ...) */
 	  r = XEXP (r, 0);	/* (plus ...) or (reg ...) */
 	  if (REG_P (r)) {
 	    j = 0;
@@ -2211,7 +2213,7 @@ m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 		   m3_cast (build_pointer_type (src_t), v));
   }
 #endif
-  TREE_THIS_VOLATILE (v) = 1;	/* force this to avoid aliasing problems */
+  TREE_THIS_VOLATILE(v) = TREE_SIDE_EFFECTS(v) = 1; /* force this to avoid aliasing problems */
   if (src_T != dst_T) {
     v = m3_build1 (CONVERT_EXPR, dst_t, v);
   }
@@ -2236,7 +2238,7 @@ m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 		   m3_cast (build_pointer_type (dst_t), v));
   }
 #endif
-  TREE_THIS_VOLATILE (v) = 1;	/* force this to avoid aliasing problems */
+  TREE_THIS_VOLATILE(v) = TREE_SIDE_EFFECTS(v) = 1; /* force this to avoid aliasing problems */
   val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T) {
     val = m3_build1 (CONVERT_EXPR, dst_t, val);
@@ -3316,10 +3318,11 @@ m3cg_init_offset (void)
 
   tree f, v;
   TREE_USED (var) = 1;
-  /* M3 hack to preserve TREE_ADDRESSABLE: see setup_pointers_and_addressables */
+  /* M3 hack to preserve TREE_ADDRESSABLE: see tree-ssa.c, tree-ssa-alias.c */
   TREE_THIS_VOLATILE (var) = 1;
   one_field (o, t_int, &f, &v);
-  TREE_VALUE (v) = var;	   /* we will fix the offset later once we have rtl */
+  DECL_LANG_SPECIFIC(f) = var; /* we will fix the offset later once we have rtl */
+  TREE_VALUE (v) = v_zero;
 }
 
 static void
