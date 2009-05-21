@@ -1469,6 +1469,7 @@ execute_update_addresses_taken (void)
     if (!is_global_var (var)
 	&& TREE_CODE (var) != RESULT_DECL
 	&& TREE_ADDRESSABLE (var)
+	&& !TREE_THIS_VOLATILE (var) /* M3 hack to preserve TREE_ADDRESSABLE */
 	&& !bitmap_bit_p (addresses_taken, DECL_UID (var)))
       {
         TREE_ADDRESSABLE (var) = 0;
