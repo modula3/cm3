@@ -2055,48 +2055,6 @@ m3_start_call (void)
   CALL_PUSH (NULL_TREE, NULL_TREE, NULL_TREE);
 }
 
-#ifndef GCC_APPLE
-
-static tree m3_build_volatilized_type (tree type)
-{
-  tree t;
-
-  /* Check if we have not constructed the desired variant already. */
-  for (t = TYPE_MAIN_VARIANT (type); t; t = TYPE_NEXT_VARIANT (t))
-    {
-      /* The type qualifiers must (obviously) match up. */
-      if (!TYPE_VOLATILE (t)
-	  || (TYPE_READONLY (t) != TYPE_READONLY (type))
-	  || (TYPE_RESTRICT (t) != TYPE_RESTRICT (type)))
-	continue;
-      /* For pointer types, the pointees (and hence their TYPE_LANG_SPECIFIC
-	 info, if any) must match up. */
-      if (POINTER_TYPE_P (t)
-	  && (TREE_TYPE (t) != TREE_TYPE (type)))
-	continue;
-
-      /* Everything matches up! */
-      return t;
-    }
-
-  /* Ok we could not re-use any of the pre-existing variants.  Create
-     a new one. */
-  t = build_variant_type_copy (type);
-  TYPE_VOLATILE (t) = 1;
-
-  /* Set up the canonical type information. */
-  if (TYPE_STRUCTURAL_EQUALITY_P (type))
-    SET_TYPE_STRUCTURAL_EQUALITY (t);
-  else if (TYPE_CANONICAL (type) != type)
-    TYPE_CANONICAL (t) = m3_build_volatilized_type (TYPE_CANONICAL (type));
-  else
-    TYPE_CANONICAL (t) = t;
-
-  return t;
-}
-
-#endif
-
 static void
 m3_pop_param (tree t)
 {
@@ -2157,7 +2115,7 @@ m3_volatilize_decl (tree decl)
   if (!TYPE_VOLATILE(TREE_TYPE(decl)) && !TREE_STATIC(decl)
       && (TREE_CODE(decl) == VAR_DECL
 	  || TREE_CODE(decl) == PARM_DECL)) {
-    TREE_TYPE(decl) = m3_build_volatilized_type(TREE_TYPE(decl));
+    TREE_TYPE(decl) = build_qualified_type(TREE_TYPE(decl), TYPE_QUAL_VOLATILE);
     TREE_THIS_VOLATILE(decl) = 1;
     TREE_SIDE_EFFECTS(decl) = 1;
     DECL_REGISTER(decl) = 0;
