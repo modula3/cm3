@@ -142,7 +142,7 @@ PROCEDURE StartBackgroundCollection () =
   VAR
     start := FALSE; 
     thread := ThreadF.MyHeapState();
- BEGIN
+  BEGIN
     TRY
       RTOS.LockHeap(thread^);
       IF NOT startedBackground THEN
