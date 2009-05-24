@@ -2244,7 +2244,6 @@ PROCEDURE CheckLoadTracedRef (ref: REFANY) =
      to heap state. *)
   VAR
     p := Word.RightShift (LOOPHOLE(ref, Word.T), LogBytesPerPage);
-    t0: Time.T;
     thread := ThreadF.MyHeapState();
   BEGIN
     INC(checkLoadTracedRef);		 (* race, so only approximate *)
