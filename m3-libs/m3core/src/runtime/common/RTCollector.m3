@@ -2252,11 +2252,18 @@ PROCEDURE CheckLoadTracedRef (ref: REFANY) =
       <*ASSERT h.typecode # RT0.TextLitTypecode*>
       TRY
         RTOS.LockHeap(thread^);
-        CollectorOn(t0);
+        <*ASSERT NOT collectorOn*>
+        collectorOn := TRUE;
         (* just clean this object *)
         CleanBetween (h, h + ADRSIZE(Header), page.desc.clean);
       FINALLY
-        CollectorOff(t0);
+        <*ASSERT collectorOn*>
+        collectorOn := FALSE;
+        IF signalBackground OR signalWeak THEN
+          signalBackground := FALSE;
+          signalWeak := FALSE;
+          RTOS.BroadcastHeap();
+        END;
         RTOS.UnlockHeap(thread^);
       END;
     END;
