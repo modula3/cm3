@@ -64,13 +64,16 @@ proc m3_backend(source, object, optimize, debug) is
     % These flags are local instead of global to avoid the probe when we compile nothing.
     %
     local args = [ GetM3BackFlag ("-fno-reorder-blocks") ]
+    if optimize
+        args += "-O3"
+    end
     if M3_PROFILING
         args += "-p"
-     end
+    end
     if equal (WORD_SIZE, "32BITS")
         args += GetM3BackFlag("-m32")
     end
-     args += GetM3BackFlag("-funwind-tables")
+    args += GetM3BackFlag("-funwind-tables")
     local m3back = GetM3Back()
     return try_exec (m3back, args, source, "-o", object)
 end
