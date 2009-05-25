@@ -425,6 +425,11 @@ c_val_print (struct type *type, const gdb_byte *valaddr, int embedded_offset,
       break;
 
     case TYPE_CODE_FLT:
+#ifdef _LANG_m3
+    case TYPE_CODE_M3_REAL:
+    case TYPE_CODE_M3_LONGREAL:
+    case TYPE_CODE_M3_EXTENDED:
+#endif 
       if (format)
 	{
 	  print_scalar_formatted (valaddr + embedded_offset, type, format, 0, stream);
