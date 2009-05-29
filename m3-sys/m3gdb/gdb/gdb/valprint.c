@@ -412,8 +412,38 @@ print_floating (const gdb_byte *valaddr, struct type *type,
   unsigned len = TYPE_LENGTH (type);
 
   /* If it is a floating-point, check for obvious problems.  */
-  if (TYPE_CODE (type) == TYPE_CODE_FLT)
-    fmt = floatformat_from_type (type);
+  switch (TYPE_CODE (type)) 
+    { 
+    case TYPE_CODE_FLT:
+      { fmt = floatformat_from_type (type); 
+        break;
+      }
+#ifdef _LANG_m3
+      /* FIXME: This is a mess.  The prexisting gdb code for printing
+         floating values expects struct type nodes with the cplus_stuff
+         variant of type_specific, which is overlayed by m3_stuff, which
+         overlays m3_specific_size where TYPE_FLOATFORMAT lies in cplus_stuff.
+         This will require some rework.  For now, just force it to use
+         the C/++ builtin types instead of the M3 builtin types.  */ 
+    case TYPE_CODE_M3_REAL:
+      { fmt = floatformat_from_type (builtin_type_float); 
+        type = builtin_type_float;
+        break;
+      }
+    case TYPE_CODE_M3_LONGREAL:
+      { fmt = floatformat_from_type (builtin_type_double); 
+        type = builtin_type_double;
+        break;
+      }
+    case TYPE_CODE_M3_EXTENDED:
+      { fmt = floatformat_from_type (builtin_type_double); 
+        /* M3: builtin_type_long_double is NOT equivalent to EXTENTED,
+               at least not on x86. */ 
+        type = builtin_type_double;
+        break;
+      }
+#endif 
+    }
   if (fmt != NULL && floatformat_is_nan (fmt, valaddr))
     {
       if (floatformat_is_negative (fmt, valaddr))

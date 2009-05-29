@@ -454,6 +454,8 @@ print_scalar_formatted (const void *valaddr, struct type *type,
       break;
 
     case 'f':
+      /* NOTE for Modula-3: If we ever actually fix m3gdb to do something
+         specific for M3 floating types, this will have to change. */ 
       if (len == TYPE_LENGTH (builtin_type_float))
         type = builtin_type_float;
       else if (len == TYPE_LENGTH (builtin_type_double))

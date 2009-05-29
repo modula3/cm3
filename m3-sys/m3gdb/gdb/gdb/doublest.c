@@ -714,6 +714,8 @@ const struct floatformat *
 floatformat_from_type (const struct type *type)
 {
   gdb_assert (TYPE_CODE (type) == TYPE_CODE_FLT);
+  /* NOTE for Modula-3.  This will NOT work on M3 builtin float types, as they
+     overlay TYPE_FLOATFORMAT with m3_specific_size. */ 
   if (TYPE_FLOATFORMAT (type) != NULL)
     return TYPE_FLOATFORMAT (type);
   else
