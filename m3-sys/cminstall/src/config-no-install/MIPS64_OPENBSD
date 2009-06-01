@@ -12,7 +12,13 @@ readonly SYSTEM_ASM = "as"
 %
 readonly proc GetGcWrapFlags() is return "" end
 readonly proc FixM3GcDefs(x) is return x end
-readonly proc GetM3BackFlag(x) is return x end
+
+readonly proc GetM3BackFlag(x) is
+    if equal (x, "-funwind-tables")
+        return "" % causes internal compiler errors
+    end
+    return x
+end
 
 GNU_MAKE = "gmake"
 
