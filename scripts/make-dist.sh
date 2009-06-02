@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-dist.sh,v 1.3 2009-05-19 20:56:48 wagner Exp $
+# $Id: make-dist.sh,v 1.4 2009-06-02 09:27:40 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -29,6 +29,9 @@ DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
 
 PATH="${INSTALLROOT}/bin:${PATH}"
 "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
+
+# keep short runpaths
+export M3_PORTABLE_RUN_PATH=1
 
 PKG_COLLECTIONS="devlib m3devtool m3gdb webdev gui anim database cvsup obliq juno caltech-parser demo tool math game core"
 
