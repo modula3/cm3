@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.34 2009-05-16 16:54:06 wagner Exp $
+# $Id: make-bin-dist-min.sh,v 1.35 2009-06-02 09:27:40 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -31,6 +31,9 @@ NOCLEAN=${NOCLEAN:-""}
 NEWCFG=${NEWCFG:-y}
 
 DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
+
+# keep short runpaths
+export M3_PORTABLE_RUN_PATH=1
 
 #-----------------------------------------------------------------------------
 # create the basic directories
