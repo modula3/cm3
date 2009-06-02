@@ -30,6 +30,9 @@ DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
 PATH="${INSTALLROOT}/bin:${PATH}"
 "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
 
+# keep short runpaths
+export M3_PORTABLE_RUN_PATH=1
+
 PKG_COLLECTIONS="devlib m3devtool m3gdb webdev gui anim database cvsup obliq juno caltech-parser demo tool math game core"
 
 cd "${ROOT}"

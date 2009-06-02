@@ -32,6 +32,9 @@ NEWCFG=${NEWCFG:-y}
 
 DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
 
+# keep short runpaths
+export M3_PORTABLE_RUN_PATH=1
+
 #-----------------------------------------------------------------------------
 # create the basic directories
 . "${ROOT}/scripts/create-skel.sh"
