@@ -118,6 +118,8 @@ Y(Mrwrwrw, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
 #undef X
 #define X(x) const int Usocket__##x = x;
 
+/* core Usocket that m3core/libm3 use */
+
 X(SOCK_STREAM)
 X(SOCK_DGRAM)
 
@@ -129,6 +131,121 @@ X(SOL_SOCKET)
 X(AF_INET)
 X(MSG_PEEK)
 
+/* other Usocket that others might use, maybe less portable? */
+
+#ifdef AF_UNSPEC
+X(AF_UNSPEC)
+#endif
+#ifdef AF_INET6
+X(AF_INET6)
+#endif
+#ifdef AF_NETBIOS
+X(AF_NETBIOS)
+#endif
+#ifdef AF_IRDA
+X(AF_IRDA) /* infrared */
+#endif
+#ifdef AF_BTH
+X(AF_BTH) /* bluetooth */
+#endif
+#ifdef AF_UNIX
+X(AF_UNIX)
+#endif
+#ifdef AF_LOCAL
+X(AF_LOCAL)
+#endif
+#ifdef AF_IPX
+X(AF_IPX)
+#endif
+
+#ifdef AI_PASSIVE
+X(AI_PASSIVE)
+#endif
+#ifdef AI_CANONNAME
+X(AI_CANONNAME)
+#endif
+#ifdef AI_NUMERIC_HOST
+X(AI_NUMERIC_HOST)
+#endif
+#ifdef AI_ADDRCONFIG
+X(AI_ADDRCONFIG)
+#endif
+#ifdef AI_NON_AUTHORITATIVE
+X(AI_NON_AUTHORITATIVE)
+#endif
+#ifdef AI_SECURE
+X(AI_SECURE)
+#endif
+#ifdef AI_RETURN_PREFERRED_NAMES
+X(AI_RETURN_PREFERRED_NAMES)
+#endif
+
+X(IPPROTO_TCP)
+#ifdef IPPROTO_UDP
+X(IPPROTO_UDP)
+#endif
+#ifdef IPPROTO_RM
+X(IPPROTO_RM)
+#endif
+#ifdef IPPROTO_PGM
+X(IPPROTO_PGM)
+#endif
+#ifdef IPPROTO_IGMP
+X(IPPROTO_IGMP)
+#endif
+
+#ifdef SOCK_RAW
+X(SOCK_RAW)
+#endif
+#ifdef SOCK_RDM
+X(SOCK_RDM)
+#endif
+#ifdef SOCK_SEQPACKET
+X(SOCK_SEQPACKET)
+#endif
+
+#ifdef SO_TYPE
+X(SO_TYPE)
+#endif
+#ifdef SO_ERROR
+X(SO_ERROR)
+#endif
+#ifdef SO_DONTROUTE
+X(SO_DONTROUTE)
+#endif
+#ifdef SO_BROADCAST
+X(SO_BROADCAST)
+#endif
+#ifdef SO_SNDBUF
+X(SO_SNDBUF)
+#endif
+#ifdef SO_RCVBUF
+X(SO_RCVBUF)
+#endif
+#ifdef SO_OOBINLINE
+X(SO_OOBINLINE)
+#endif
+#ifdef SO_NO_CHECK
+X(SO_NO_CHECK)
+#endif
+#ifdef SO_PRIORITY
+X(SO_PRIORITY)
+#endif
+#ifdef SO_BSDCOMPAT
+X(SO_BSDCOMPAT)
+#endif
+#ifdef SO_ACCEPTCON
+X(SO_ACCEPTCON)
+#endif
+#ifdef SO_CONDITIONAL_ACCEPT
+X(SO_CONDITIONAL_ACCEPT)
+#endif
+#ifdef SO_EXCLUSIVEADDRUSE
+X(SO_EXCLUSIVEADDRUSE)
+#endif
+#ifdef SO_PORT_SCALABILITY
+X(SO_PORT_SCALABILITY)
+#endif
 
 #undef X
 #define X(x) const int Ustat__##x = x;
