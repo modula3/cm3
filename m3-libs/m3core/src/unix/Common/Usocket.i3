@@ -23,29 +23,29 @@ IMPORT Utypes;
 *)
 
 (* ai_protocol *)
-<*EXTERNAL "Usocket__IPPROTO_TCP"*>  VAR IPPROTO_TCP: int; (* portable *)
-<*EXTERNAL "Usocket__IPPROTO_UDP"*>  VAR IPPROTO_UDP: int;
-<*EXTERNAL "Usocket__IPPROTO_RM"*>   VAR IPPROTO_RM: int;
-<*EXTERNAL "Usocket__IPPROTO_PGM"*>  VAR IPPROTO_PGM: int; (* synonym for previous? *)
-<*EXTERNAL "Usocket__IPPROTO_IGMP"*> VAR IPPROTO_IGMP: int;
+<*EXTERNAL "Usocket__IPPROTO_TCP"*> VAR IPPROTO_TCP: int; (* portable *)
+<*EXTERNAL "Usocket__IPPROTO_UDP"*> VAR IPPROTO_UDP: int;
+<*EXTERNAL "Usocket__IPPROTO_RM"*>  VAR IPPROTO_RM: int;
+<*EXTERNAL "Usocket__IPPROTO_PGM"*> VAR IPPROTO_PGM: int; (* synonym for previous? *)
+<*EXTERNAL "Usocket__IPPROTO_IGMP"*>VAR IPPROTO_IGMP: int;
 
 (* ai_socktype *)
-<*EXTERNAL "Usocket__SOCK_STREAM"*>  VAR SOCK_STREAM: int; (* portable *)
-<*EXTERNAL "Usocket__SOCK_DGRAM"*>   VAR SOCK_DGRAM: int;
-<*EXTERNAL "Usocket__SOCK_RAW"*>     VAR SOCK_RAW: int;
-<*EXTERNAL "Usocket__SOCK_RDM"*>     VAR SOCK_RDM: int; (* reliable message datagram *)
+<*EXTERNAL "Usocket__SOCK_STREAM"*> VAR SOCK_STREAM: int; (* portable *)
+<*EXTERNAL "Usocket__SOCK_DGRAM"*>  VAR SOCK_DGRAM: int;
+<*EXTERNAL "Usocket__SOCK_RAW"*>    VAR SOCK_RAW: int;
+<*EXTERNAL "Usocket__SOCK_RDM"*>    VAR SOCK_RDM: int; (* reliable message datagram *)
 <*EXTERNAL "Usocket__SOCK_SEQPACKET"*> VAR SOCK_SEQPACKET: int; (* reliable message datagram *)
 
 (* ai_family *)
-<*EXTERNAL "Usocket__AF_UNSPEC"*>    VAR AF_UNSPEC: int; (* unspecified *)
-<*EXTERNAL "Usocket__AF_INET"*>      VAR AF_INET: int; (* IPv4 *) (* portable *) (* internetwork: UDP, TCP, etc. *)
-<*EXTERNAL "Usocket__AF_INET6"*>     VAR AF_INET6: int; (* IPv6 *)
-<*EXTERNAL "Usocket__AF_NETBIOS"*>   VAR AF_NETBIOS: int;
-<*EXTERNAL "Usocket__AF_IRDA"*>      VAR AF_IRDA: int; (* infrared data association *)
-<*EXTERNAL "Usocket__AF_BTH"*>       VAR AF_BTH: int; (* Bluetooth *)
-<*EXTERNAL "Usocket__AF_UNIX"*>      VAR AF_UNIX: int;(* local to host (pipes, portals) *)
-<*EXTERNAL "Usocket__AF_LOCAL"*>     VAR AF_LOCAL: int;
-<*EXTERNAL "Usocket__AF_IPX"*>       VAR AF_IPX: int; (* Novell IPX *)
+<*EXTERNAL "Usocket__AF_UNSPEC"*>   VAR AF_UNSPEC: int; (* unspecified *)
+<*EXTERNAL "Usocket__AF_INET"*>     VAR AF_INET: int; (* IPv4 *) (* portable *) (* internetwork: UDP, TCP, etc. *)
+<*EXTERNAL "Usocket__AF_INET6"*>    VAR AF_INET6: int; (* IPv6 *)
+<*EXTERNAL "Usocket__AF_NETBIOS"*>  VAR AF_NETBIOS: int;
+<*EXTERNAL "Usocket__AF_IRDA"*>     VAR AF_IRDA: int; (* infrared data association *)
+<*EXTERNAL "Usocket__AF_BTH"*>      VAR AF_BTH: int; (* Bluetooth *)
+<*EXTERNAL "Usocket__AF_UNIX"*>     VAR AF_UNIX: int;(* local to host (pipes, portals) *)
+<*EXTERNAL "Usocket__AF_LOCAL"*>    VAR AF_LOCAL: int;
+<*EXTERNAL "Usocket__AF_IPX"*>      VAR AF_IPX: int; (* Novell IPX *)
 <*EXTERNAL "Usocket__AF_AX25"*>     VAR AF_AX25: int; (* Amateur Radio AX.25 *)
 <*EXTERNAL "Usocket__AF_NETROM"*>   VAR AF_NETROM: int; (* Amateur radio NetROM *)
 <*EXTERNAL "Usocket__AF_BRIDGE"*>   VAR AF_BRIDGE: int; (* Multiprotocol bridge *)
