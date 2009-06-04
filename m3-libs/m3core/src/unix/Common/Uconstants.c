@@ -158,6 +158,70 @@ X(AF_LOCAL)
 X(AF_IPX)
 #endif
 
+#ifdef AF_AX25
+X(AF_AX25)
+#endif
+#ifdef AF_NETROM
+X(AF_NETROM)
+#endif
+#ifdef AF_BRIDGE
+X(AF_BRIDGE)
+#endif
+#ifdef AF_AAL5
+X(AF_AAL5)
+#endif
+#ifdef AF_X25
+X(AF_X25)
+#endif
+#ifdef AF_IMPLINK
+X(AF_IMPLINK)
+#endif
+#ifdef AF_PUP
+X(AF_PUP)
+#endif
+#ifdef AF_CHAOS
+X(AF_CHAOS)
+#endif
+#ifdef AF_NS
+X(AF_NS)
+#endif
+#ifdef AF_NBS
+X(AF_NBS)
+#endif
+#ifdef AF_ECMA
+X(AF_ECMA)
+#endif
+#ifdef AF_DATAKIT
+X(AF_DATAKIT)
+#endif
+#ifdef AF_CCITT
+X(AF_CCITT)
+#endif
+#ifdef AF_SNA
+X(AF_SNA)
+#endif
+#ifdef AF_DECnet
+X(AF_DECnet)
+#endif
+#ifdef AF_DLI
+X(AF_DLI)
+#endif
+#ifdef AF_LAT
+X(AF_LAT)
+#endif
+#ifdef AF_HYLINK
+X(AF_HYLINK)
+#endif
+#ifdef AF_APPLETALK
+X(AF_APPLETALK)
+#endif
+#ifdef AF_BSC
+X(AF_BSC)
+#endif
+#ifdef AF_DSS
+X(AF_DSS)
+#endif
+
 #ifdef AI_PASSIVE
 X(AI_PASSIVE)
 #endif
@@ -246,6 +310,54 @@ X(SO_EXCLUSIVEADDRUSE)
 #ifdef SO_PORT_SCALABILITY
 X(SO_PORT_SCALABILITY)
 #endif
+#ifdef SO_PASSCRED
+X(SO_PASSCRED)
+#endif
+#ifdef SO_PEERCRED
+X(SO_PEERCRED)
+#endif
+#ifdef SO_RCVLOWAT
+X(SO_RCVLOWAT)
+#endif
+#ifdef SO_SNDLOWAT
+X(SO_SNDLOWAT)
+#endif
+#ifdef SO_REUSEPORT
+X(SO_REUSEPORT)
+#endif
+#ifdef SO_RCVTIMEO
+X(SO_RCVTIMEO)
+#endif
+#ifdef SO_SNDTIMEO
+X(SO_SNDTIMEO)
+#endif
+#ifdef SO_SECURITY_AUTHENTICATION
+X(SO_SECURITY_AUTHENTICATION)
+#endif
+#ifdef SO_SECURITY_ENCRYPTION_TRANSPORT
+X(SO_SECURITY_ENCRYPTION_TRANSPORT)
+#endif
+#ifdef SO_SECURITY_ENCRYPTION_NETWORK
+X(SO_SECURITY_ENCRYPTION_NETWORK)
+#endif
+
+#ifdef MSG_OOB
+X(MSG_OOB)
+#endif
+#ifdef MSG_DONTROUTE 
+X(MSG_DONTROUTE)
+#endif
+#ifdef MSG_CTRUNC
+X(MSG_CTRUNC)
+#endif
+#ifdef MSG_PROXY
+X(MSG_PROXY)
+#endif
+
+#ifdef SOMAXCONN
+X(SOMAXCONN)
+#endif
+
 
 #undef X
 #define X(x) const int Ustat__##x = x;
