@@ -12,11 +12,14 @@ IMPORT Utypes;
 
 (* CONST *)
 
+(* not all constants are necessarily available on all platforms *)
+
 (* ai_protocol *)
 <*EXTERNAL "Usocket__IPPROTO_TCP"*>  VAR IPPROTO_TCP: int;
 <*EXTERNAL "Usocket__IPPROTO_UDP"*>  VAR IPPROTO_UDP: int;
 <*EXTERNAL "Usocket__IPPROTO_RM"*>   VAR IPPROTO_RM: int;
-<*EXTERNAL "Usocket__IPPROTO_RM"*>   VAR IPPROTO_PGM: int; (* synonym for previous *)
+<*EXTERNAL "Usocket__IPPROTO_PGM"*>  VAR IPPROTO_PGM: int; (* synonym for previous? *)
+<*EXTERNAL "Usocket__IPPROTO_IGMP"*> VAR IPPROTO_IGMP: int;
 
 (* ai_socktype *)
 <*EXTERNAL "Usocket__SOCK_STREAM"*>  VAR SOCK_STREAM: int;
@@ -32,6 +35,9 @@ IMPORT Utypes;
 <*EXTERNAL "Usocket__AF_NETBIOS"*>   VAR AF_NETBIOS: int;
 <*EXTERNAL "Usocket__AF_IRDA"*>      VAR AF_IRDA: int; (* infrared data association *)
 <*EXTERNAL "Usocket__AF_BTH"*>       VAR AF_BTH: int; (* Bluetooth *)
+<*EXTERNAL "Usocket__AF_UNIX"*>      VAR AF_UNIX: int;
+<*EXTERNAL "Usocket__AF_LOCAL"*>     VAR AF_LOCAL: int;
+<*EXTERNAL "Usocket__AF_IPX"*>       VAR AF_IPX: int;
 
 (* ai_flags *)
 <*EXTERNAL "Usocket__AI_PASSIVE"*>           VAR AI_PASSIVE: int;
@@ -45,6 +51,21 @@ IMPORT Utypes;
 <*EXTERNAL "Usocket__SO_REUSEADDR"*> VAR SO_REUSEADDR: int;
 <*EXTERNAL "Usocket__SO_KEEPALIVE"*> VAR SO_KEEPALIVE: int;
 <*EXTERNAL "Usocket__SO_LINGER"*>    VAR SO_LINGER: int;
+
+<*EXTERNAL "Usocket__SO_TYPE"*>      VAR SO_TYPE: int;
+<*EXTERNAL "Usocket__SO_ERROR"*>     VAR SO_ERROR: int;
+<*EXTERNAL "Usocket__SO_DONTROUTE"*> VAR SO_DONTROUTE: int;
+<*EXTERNAL "Usocket__SO_BROADCAST"*> VAR SO_BROADCAST: int;
+<*EXTERNAL "Usocket__SO_SNDBUF"*>    VAR SO_SNDBUF: int;
+<*EXTERNAL "Usocket__SO_RCVBUF"*>    VAR SO_RCVBUF: int;
+<*EXTERNAL "Usocket__SO_OOBINLINE"*> VAR SO_OOBINLINE: int;
+<*EXTERNAL "Usocket__SO_NO_CHECK"*>  VAR SO_NO_CHECK: int;
+<*EXTERNAL "Usocket__SO_PRIORITY"*>  VAR SO_PRIORITY: int;
+<*EXTERNAL "Usocket__SO_BSDCOMPAT"*> VAR SO_BSDCOMPAT: int;
+<*EXTERNAL "Usocket__SO_ACCEPTCON"*> VAR SO_ACCEPTCON: int;
+<*EXTERNAL "Usocket__SO_CONDITIONAL_ACCEPT"*> VAR SO_CONDITIONAL_ACCEPT: int;
+<*EXTERNAL "Usocket__SO_EXCLUSIVEADDRUSE"*> VAR SO_EXCLUSIVEADDRUSE: int;
+<*EXTERNAL "Usocket__SO_PORT_SCALABILITY"*> VAR SO_PORT_SCALABILITY: int;
 
 <*EXTERNAL "Usocket__SOL_SOCKET"*>   VAR SOL_SOCKET: int;
 
