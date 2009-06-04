@@ -97,9 +97,9 @@ X(F_SETFD) /* Set close-on-exec flag */
 X(F_GETFL) /* Get fd status flags */
 X(F_SETFL) /* Set fd status flags */
 
-Y(MSETUID, S_ISUID)	/* set user id on execution */
-Y(MSETGID, S_ISGID)	/* set group id on execution */
-Y(MSTICKY, S_ISVTX)	/* save swapped text even after use */
+Y(MSETUID, S_ISUID) /* set user id on execution */
+Y(MSETGID, S_ISGID) /* set group id on execution */
+Y(MSTICKY, S_ISVTX) /* save swapped text even after use */
 Y(MROWNER, S_IRUSR) /* readable by owner */
 Y(MWOWNER, S_IWUSR) /* writable by owner */
 Y(MXOWNER, S_IXUSR) /* executable by owner */
