@@ -1,7 +1,0 @@
-INTERFACE Cstdio;
-
-TYPE
-    FILE = RECORD END;
-    FILE_star = UNTRACED REF FILE;
-
-END Cstdio.

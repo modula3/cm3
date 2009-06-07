@@ -1,1 +1,0 @@
-override("synthesizer", $PWD & SL & ".." & SL & ".." & SL & "..")
