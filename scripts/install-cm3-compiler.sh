@@ -1,8 +1,9 @@
 #!/bin/sh
-# $Id: install-cm3-compiler.sh,v 1.6 2008-04-13 21:57:39 wagner Exp $
+# $Id: install-cm3-compiler.sh,v 1.7 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
 else
   root=`pwd`
   while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do

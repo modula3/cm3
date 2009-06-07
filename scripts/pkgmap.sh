@@ -1,9 +1,10 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.31 2009-05-17 03:40:35 jkrell Exp $
+# $Id: pkgmap.sh,v 1.32 2009-06-07 16:03:50 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
 else
   root=`pwd`
   while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do

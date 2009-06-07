@@ -1,8 +1,9 @@
 #!/bin/sh
-# $Id: make-doc-dist.sh,v 1.2 2002-04-07 15:46:20 wagner Exp $
+# $Id: make-doc-dist.sh,v 1.3 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
 else
   root=`pwd`
   while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do
