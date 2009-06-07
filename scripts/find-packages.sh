@@ -1,8 +1,9 @@
 #!/bin/sh
-# $Id: find-packages.sh,v 1.8 2009-03-07 18:44:33 jkrell Exp $
+# $Id: find-packages.sh,v 1.9 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
 else
   root=`pwd`
   while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do

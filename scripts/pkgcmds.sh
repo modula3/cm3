@@ -1,8 +1,9 @@
 #!/bin/sh
-# $Id: pkgcmds.sh,v 1.12 2009-05-16 16:54:06 wagner Exp $
+# $Id: pkgcmds.sh,v 1.13 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
 else
   root=`pwd`
   while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do

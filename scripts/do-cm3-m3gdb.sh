@@ -2,6 +2,7 @@
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
 else
   root=`pwd`
   while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do

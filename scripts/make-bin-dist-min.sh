@@ -1,8 +1,9 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.35 2009-06-02 09:27:40 jkrell Exp $
+# $Id: make-bin-dist-min.sh,v 1.36 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
 else
   root=`pwd`
   while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do

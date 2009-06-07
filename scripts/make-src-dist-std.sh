@@ -1,8 +1,9 @@
 #!/bin/sh
-# $Id: make-src-dist-std.sh,v 1.8 2008-03-16 13:06:17 jkrell Exp $
+# $Id: make-src-dist-std.sh,v 1.9 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
 else
   root=`pwd`
   while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do

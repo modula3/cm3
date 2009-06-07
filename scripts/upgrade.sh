@@ -1,8 +1,9 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.16 2009-04-08 18:04:53 wagner Exp $
+# $Id: upgrade.sh,v 1.17 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
 else
   root=`pwd`
   while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do

@@ -1,8 +1,9 @@
 #!/bin/sh
-# $Id: boot-cm3-core.sh,v 1.9 2008-04-13 18:22:32 hosking Exp $
+# $Id: boot-cm3-core.sh,v 1.10 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
 else
   root=`pwd`
   while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do

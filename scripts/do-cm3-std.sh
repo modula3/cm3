@@ -1,8 +1,9 @@
 #!/bin/sh
-# $Id: do-cm3-std.sh,v 1.13 2008-03-10 03:43:22 hosking Exp $
+# $Id: do-cm3-std.sh,v 1.14 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
 else
   root=`pwd`
   while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do

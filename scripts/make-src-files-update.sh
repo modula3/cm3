@@ -1,8 +1,9 @@
 #!/bin/sh
-# $Id: make-src-files-update.sh,v 1.2 2001-03-11 14:32:05 wagner Exp $
+# $Id: make-src-files-update.sh,v 1.3 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
 else
   root=`pwd`
   while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do
