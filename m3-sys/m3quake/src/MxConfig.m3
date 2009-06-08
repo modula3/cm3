@@ -36,7 +36,7 @@ PROCEDURE Get (param: TEXT): TEXT =
 
 PROCEDURE FindConfig () =
   (* LL = mu *)
-  VAR txt: TEXT;  s0, s1: INTEGER;  sep: CHAR;
+  VAR txt: TEXT;
   BEGIN
     IF (found) THEN RETURN END;
 
@@ -62,14 +62,38 @@ PROCEDURE FindConfig () =
       IF TryConfig (txt, Filename) THEN RETURN END;
     END;
 
+    (* try the directories named by the PATH environment variable. *)
+    txt := Env.Get ("PATH");
+    FindConfigInPath (txt);
+    IF found THEN RETURN END;
+
+    (* try the etc directories *)
+    IF TryConfig("/usr/local/cm3/etc", Filename) THEN RETURN END;
+    IF TryConfig("/usr/cm3/etc", Filename) THEN RETURN END; 
+    IF TryConfig("/cm3/etc", Filename) THEN RETURN END; 
+    IF TryConfig("/usr/contrib/etc", Filename) THEN RETURN END; 
+    IF TryConfig("/usr/local/etc", Filename) THEN RETURN END; 
+    IF TryConfig("/usr/etc", Filename) THEN RETURN END; 
+    IF TryConfig("/opt/etc", Filename) THEN RETURN END; 
+    IF TryConfig("/sw/etc", Filename) THEN RETURN END; 
+    IF TryConfig("/etc", Filename) THEN RETURN END;
+
+    (* oh well, make sure we don't try this silly exercise again... *)
+    config := NIL;
+    found := TRUE;
+  END FindConfig;
+
+PROCEDURE FindConfigInPath (txt: TEXT) =
+  VAR
+    s0, s1: INTEGER;
+    sep: CHAR;
+  BEGIN
     (* what's the convention for search paths?   Unix or Win32 *)
     CONST XX = ARRAY BOOLEAN OF CHAR { ';', ':' };
     BEGIN
       sep := XX [Text.Equal (Pathname.Join ("a", "b", NIL), "a/b")];
     END;
 
-    (* try the directories named by the PATH environment variable. *)
-    txt := Env.Get ("PATH");
     IF (txt # NIL) THEN
       s0 := 0;
       WHILE (s0 < Text.Length (txt)) DO
@@ -81,11 +105,7 @@ PROCEDURE FindConfig () =
         s0 := s1 + 1;
       END;
     END;
-
-    (* oh well, make sure we don't try this silly exercise again... *)
-    config := NIL;
-    found := TRUE;
-  END FindConfig;
+  END FindConfigInPath;
 
 PROCEDURE TryConfig (a, b, c: TEXT := NIL): BOOLEAN =
   BEGIN
