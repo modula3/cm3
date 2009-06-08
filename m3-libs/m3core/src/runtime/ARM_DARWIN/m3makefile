@@ -1,4 +1,0 @@
-% Copyright according to COPYRIGHT-CMASS.
-
-Interface      ("RTMachine")
-c_source       ("RTMachineC")

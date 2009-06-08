@@ -1,8 +1,0 @@
-
-<program> ::= <stmt> { ";" <stmt> } .
-<stmt>    ::= Id "=" <expr> .
-<expr>    ::= <term> { "+" <term> } .
-<term>    ::= <factor> { "*" <factor> } .
-<factor>  ::= Id | "(" <expr> ")" .
-
-
