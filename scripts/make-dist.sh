@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-dist.sh,v 1.5 2009-06-07 16:03:50 wagner Exp $
+# $Id: make-dist.sh,v 1.6 2009-06-08 13:06:24 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -27,6 +27,7 @@ rm -rf ${INSTALLROOT}
 DS="RC1"; export DS
 DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
 DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
+SYSINFO_DONE="" "$ROOT/scripts/make-src-dist-all.sh"
 
 PATH="${INSTALLROOT}/bin:${PATH}"
 "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
