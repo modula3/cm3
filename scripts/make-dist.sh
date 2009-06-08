@@ -27,6 +27,7 @@ rm -rf ${INSTALLROOT}
 DS="RC1"; export DS
 DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
 DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
+SYSINFO_DONE="" "$ROOT/scripts/make-src-dist-all.sh"
 
 PATH="${INSTALLROOT}/bin:${PATH}"
 "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
