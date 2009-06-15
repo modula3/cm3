@@ -224,16 +224,12 @@ def _GetAllTargets():
         for os in [ "AIX" ]:
             Targets += [proc + "_" + os]
 
-    for proc in [ "I386", "AMD64", "IA64", "PPC32", "MIPS", "MIPS32", "ALPHA32", "ALPHA64" ]:
-        for os in [ "NT" ]:
-            Targets += [proc + "_" + os]
-
     for proc in [ "I386", "PPC32", "MIPS32", "ARM", "SH" ]:
         for os in [ "CE" ]:
             Targets += [proc + "_" + os]
 
     for proc in [ "I386", "AMD64", "IA64" ]:
-        for os in [ "CYGWIN" ]:
+        for os in [ "CYGWIN", "INTERIX", "NT" ]:
             Targets += [proc + "_" + os]
 
     for proc in [ "I386", "AMD64", "SPARC32", "SPARC64" ]:
