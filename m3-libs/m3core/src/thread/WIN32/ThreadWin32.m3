@@ -12,8 +12,6 @@ IMPORT RTError, WinGDI, RTParams;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
 IMPORT ThreadEvent, RTPerfTool, RTProcess;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM Cstdlib IMPORT calloc;
-IMPORT RuntimeError AS RTE;
 FROM WinNT IMPORT HANDLE, LONG, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
     MEMORY_BASIC_INFORMATION, PAGE_READWRITE, PAGE_READONLY;
 FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
