@@ -268,7 +268,7 @@ end
 % These are meant to come from the config file, but it can omit them
 %
 if not defined("GNU_CC")     GNU_CC     = "*"    end
-if not defined("GNU_CFLAGS") GNU_CFLAGS = "*"    end
+if not defined("GNU_CFLAGS") GNU_CFLAGS = "-g -O2"    end
 if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
 
 if defined("HOST_GNU_MAKE")
