@@ -40,12 +40,6 @@ Boston, MA 02110-1301, USA.  */
 #define HANDLE_SYSV_PRAGMA 1
 #undef HANDLE_PRAGMA_WEAK  /* until the link format can handle it */
 
-/*
- * Mayank Old
- */
-/* Masks for subtarget switches used by other files.  */
-#define MASK_MS_BITFIELD_LAYOUT 0x10000000 /* Use native (MS) bitfield layout */
-
 /* Tell i386.c to put a target-specific specialization of
    ms_bitfield_layout_p in struct gcc_target targetm.  */
 #define TARGET_USE_MS_BITFIELD_LAYOUT  \
