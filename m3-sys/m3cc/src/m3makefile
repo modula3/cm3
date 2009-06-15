@@ -309,9 +309,11 @@ if equal(M3CC_TARGET, "ARM_DARWIN") or equal(M3CC_TARGET, "I386_INTERIX")
     GCC42 = TRUE
     if equal(M3CC_TARGET, "ARM_DARWIN")
         SourceDir = "../gcc-apple"
+        M3CC_CC = M3CC_CC & " -DGCC_APPLE -DGCC42"
     end
     if equal(M3CC_TARGET, "I386_INTERIX")
         SourceDir = "../gcc-interix"
+        M3CC_CC = M3CC_CC & " -DGCC42"
     end
     fs_mkdir(SourceDir & "/gcc/m3cg")
     foreach a in ["config-lang.in", "lang-options.h", "lang-specs.h", "lang.opt", "m3-convert.c", "m3cg.h", "Make-lang.in", "parse.c"]
