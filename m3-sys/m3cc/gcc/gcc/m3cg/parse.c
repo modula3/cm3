@@ -60,9 +60,7 @@
 
 #include "debug.h"
 
-#ifndef NOTE_KIND /* sleazy version detection */
-#define GCC_APPLE /* currently gcc 4.2 based, and has Apple changes; we use this for ARM_DARWIN currently,
-                     maybe other Darwins later */
+#ifdef GCC42
 /*typedef const union tree_node *const_tree;*/
 #define const_tree tree
 #define allocate_struct_function(a, b) allocate_struct_function(a)
@@ -322,7 +320,7 @@ static void m3_write_globals (void);
 #undef LANG_HOOKS_WRITE_GLOBALS
 #define LANG_HOOKS_WRITE_GLOBALS m3_write_globals
 
-#ifdef GCC_APPLE
+#ifdef GCC42
 static void
 m3_expand_function (tree fndecl)
 {
@@ -2069,7 +2067,7 @@ m3_pop_param (tree t)
   EXPR_POP ();
 }
 
-#ifdef GCC_APPLE
+#ifdef GCC42
 
 static void
 m3_call_direct (tree p, tree t)
@@ -2199,7 +2197,7 @@ m3_swap (void)
 static void
 m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
-#ifndef GCC_APPLE
+#ifndef GCC42
   if (o != 0 || TREE_TYPE (v) != src_t) {
     v = m3_build3 (BIT_FIELD_REF, src_t, v, TYPE_SIZE (src_t),
 		   bitsize_int (o));
@@ -2224,7 +2222,7 @@ static void
 m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 {
   tree val;
-#ifndef GCC_APPLE
+#ifndef GCC42
   if (o != 0 || TREE_TYPE (v) != dst_t) {
     v = m3_build3 (BIT_FIELD_REF, dst_t, v, TYPE_SIZE (dst_t),
 		   bitsize_int (o));
