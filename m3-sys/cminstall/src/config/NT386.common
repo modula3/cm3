@@ -351,7 +351,7 @@ proc compile_c_gnu(source, object, options, optimize, debug) is
     if M3_PROFILING
         args += "-pg"
     end
-    return try_exec("@gcc", "-gstabs+", escape(args), "-c", subst_chars(source, "\\", "/"), "-o", object)
+    return try_exec("@gcc", "-gstabs+", escape(subst_chars(args, "\\", "/")), "-c", subst_chars(source, "\\", "/"), "-o", object)
 end
 
 proc compile_c(source, object, options, optimize, debug) is
