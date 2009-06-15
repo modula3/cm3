@@ -307,18 +307,25 @@ local SourceDir = "../gcc"
 local GCC42 = FALSE
 if equal(M3CC_TARGET, "ARM_DARWIN") or equal(M3CC_TARGET, "I386_INTERIX")
     GCC42 = TRUE
+    local Defines = ""
     if equal(M3CC_TARGET, "ARM_DARWIN")
         SourceDir = "../gcc-apple"
-        M3CC_CC = M3CC_CC & " -DGCC_APPLE -DGCC42"
+	Defines = "#define GCC_APPLE\n#define GCC42\n"
     end
     if equal(M3CC_TARGET, "I386_INTERIX")
         SourceDir = "../gcc-interix"
-        M3CC_CC = M3CC_CC & " -DGCC42"
+	Defines = "#define GCC42\n"
     end
     fs_mkdir(SourceDir & "/gcc/m3cg")
-    foreach a in ["config-lang.in", "lang-options.h", "lang-specs.h", "lang.opt", "m3-convert.c", "m3cg.h", "Make-lang.in", "parse.c"]
+    foreach a in ["config-lang.in", "lang-options.h", "lang-specs.h", "lang.opt", "m3-convert.c", "m3cg.h", "Make-lang.in"]
         cp_if("../gcc/gcc/m3cg/" & a, SourceDir & "/gcc/m3cg/" & a)
     end
+    local a = Defines & fs_contents("../gcc/gcc/m3cg/parse.c")
+    local b = SourceDir & "/gcc/m3cg/parse.c"
+    > b & ".temp" in
+        write(a)
+    end
+    cp_if(b & ".temp", b)
 end
 
 % figure out where we're going to build gcc
