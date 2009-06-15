@@ -33,6 +33,7 @@ readonly Platform_info = {
   "HP300"     : "m68k-hp-hpux",
   "HPPA"      : "hppa1.1-hp-hpux",
   "I386_DARWIN" : "i686-apple-darwin8.7.1",
+  "I386_INTERIX" : "i686-pc-interix3",
   "I386_MSDOS" : "i586-pc-msdosdjgpp",
   "I386_OPENBSD" : "i686-openbsd",
   "I386_SOLARIS" : "i686-sun-solaris2",
@@ -303,11 +304,18 @@ if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
 local SourceDir = "../gcc"
-if equal(M3CC_TARGET, "ARM_DARWIN")
-    SourceDir = "../gcc-apple"
-    fs_mkdir("../gcc-apple/gcc/m3cg")
+local GCC42 = FALSE
+if equal(M3CC_TARGET, "ARM_DARWIN") or equal(M3CC_TARGET, "I386_INTERIX")
+    GCC42 = TRUE
+    if equal(M3CC_TARGET, "ARM_DARWIN")
+        SourceDir = "../gcc-apple"
+    end
+    if equal(M3CC_TARGET, "I386_INTERIX")
+        SourceDir = "../gcc-interix"
+    end
+    fs_mkdir(SourceDir & "/gcc/m3cg")
     foreach a in ["config-lang.in", "lang-options.h", "lang-specs.h", "lang.opt", "m3-convert.c", "m3cg.h", "Make-lang.in", "parse.c"]
-        cp_if("../gcc/gcc/m3cg/" & a, "../gcc-apple/gcc/m3cg/" & a)
+        cp_if("../gcc/gcc/m3cg/" & a, SourceDir & "/gcc/m3cg/" & a)
     end
 end
 
@@ -551,7 +559,7 @@ foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
             % When Apple moves to 4.3 or newer, we'll symlink the gmp/mpfr directories
             % from mainline to Apple.
             %
-            if equal(M3CC_TARGET, "ARM_DARWIN") and equal(leaf, "Makefile")
+            if GCC42 and equal(leaf, "Makefile")
                 Sed(file, "^GMPLIBS =.*$", "GMPLIBS =")
                 Sed(file, "^GMPINC =.*$", "GMPINC =")
             end
@@ -569,7 +577,7 @@ end
 % Build only what is needed to build m3 backend, e.g. not the C frontend.
 % User can still cd into build directory and run make to get gcc/cc1/libgcc.
 %
-if equal(M3CC_TARGET, "ARM_DARWIN")
+if GCC42
     m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-libiberty all-libdecnumber | tee -a " & Log])
 else
     m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-mpfr all-build-libiberty all-libiberty all-libdecnumber | tee -a " & Log])
