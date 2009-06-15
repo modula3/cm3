@@ -541,18 +541,30 @@ foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
     foreach leaf in ["Makefile", "auto-host.h", "config.h"]
         local file = build_dir & "/" & dir & "/" & leaf
         if FileExists(file)
+
             %
-            % remove libiconv dependency
+            % Remove unnecessary patsubst use for compatibility
+            % with older make.
+            %
+
+            if equal(leaf, "Makefile")
+                Sed(file, "^CATALOGS = .*$", "CATALOGS =")
+            end
+
+            %
+            % Remove libiconv dependency
             % It isn't needed, and stock Solaris install lacks it.
             %
+
             if equal(leaf, "Makefile")
-                Sed(file, "^LIBICONV =.*$", "LIBICONV =")
-                Sed(file, "^LIBICONV_DEP =.*$", "LIBICONV_DEP =")
+                Sed(file, "^LIBICONV = .*$", "LIBICONV =")
+                Sed(file, "^LIBICONV_DEP = .*$", "LIBICONV_DEP =")
             end
             if not equal(leaf, "Makefile")
                 Sed(file, "^#define HAVE_ICONV 1$", "")
                 Sed(file, "^#define HAVE_ICONV_H 1$", "")
             end
+
             %
             % gcc 4.2 seems to have some optional dependency on gmp/mpfr, and doesn't
             % have the support in the makefile to build the source if it is there.
