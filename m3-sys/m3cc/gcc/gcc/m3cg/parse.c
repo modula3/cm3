@@ -1830,6 +1830,9 @@ scan_label (void)
 {
   int i = get_int ();
 
+  if (option_trace_all)
+    fprintf(stderr, "  label %d\n", i);
+
   if (i < 0) { return 0; }
   VARRAY_EXTEND (all_labels, i + 1);
   if (VARRAY_TREE (all_labels, i) == NULL)
