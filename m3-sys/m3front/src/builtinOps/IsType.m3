@@ -179,12 +179,12 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
       CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
       Type.LoadInfo (t, M3RT.TC_typecode);
       CG.If_then (Target.Integer.cg_type, CG.Cmp.EQ, true, false, freq);
+      CG.Jump (skip);
 
       CG.Set_label (tagged);
       CG.Load_intt (M3RT.REFANY_typecode);
       Type.LoadInfo (t, M3RT.TC_typecode);
       CG.If_then (Target.Integer.cg_type, CG.Cmp.EQ, true, false, freq);
-
       CG.Set_label (skip);
       CG.Free (ptr);
 
