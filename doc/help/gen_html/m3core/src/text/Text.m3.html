@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/text/Text.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/text/Text.m3</H2></A><HR>
 <inModule>
@@ -151,8 +151,29 @@ PROCEDURE <A NAME="HasWideChars"><procedure>HasWideChars</procedure></A> (t: T):
   VAR i: Info;
   BEGIN
     t.get_info (i);
-    RETURN i.wide;
+    IF NOT i.wide THEN RETURN FALSE;
+    ELSIF i.start = NIL THEN RETURN HasWideCharsBuf16 (t, i.length);
+    ELSE RETURN String16.HasWideChars (i.start, i.length);
+    END;
   END HasWideChars;
+
+PROCEDURE <A NAME="HasWideCharsBuf16"><procedure>HasWideCharsBuf16</procedure></A> (t: T;  len: CARDINAL): BOOLEAN =
+  (* PRE: len = Length(t). *)
+  VAR
+    start  : CARDINAL := 0;
+    buf    : ARRAY [0..127] OF WIDECHAR;
+  BEGIN
+    WHILE start &lt; len DO
+      t.get_wide_chars (buf, start);
+      IF String16.HasWideChars
+           (ADR (buf[0]), MIN (len - start, NUMBER (buf)))
+      THEN RETURN TRUE;
+      ELSE
+        INC (start, NUMBER (buf));
+      END;
+    END;
+    RETURN FALSE;
+  END HasWideCharsBuf16;
 
 PROCEDURE <A NAME="GetChar"><procedure>GetChar</procedure></A> (t: T; i: CARDINAL): CHAR =
   BEGIN
@@ -273,9 +294,9 @@ PROCEDURE <A NAME="FindCharR"><procedure>FindCharR</procedure></A> (t: T;  c: CH
     ELSIF (i.start = NIL) THEN
       RETURN FindCharRBuf (t, VAL (ORD (c), WIDECHAR), start, i.length);
     ELSIF NOT i.wide THEN
-      RETURN String8.FindCharR (i.start, MIN (i.length, start), c);
+      RETURN String8.FindCharR (i.start, MIN (i.length-1, start)+1, c);
     ELSE
-      RETURN String16.FindCharR (i.start, MIN (i.length, start),
+      RETURN String16.FindCharR (i.start, MIN (i.length-1, start)+1,
                                  VAL (ORD (c), WIDECHAR));
     END;
   END FindCharR;
@@ -289,10 +310,10 @@ PROCEDURE <A NAME="FindWideCharR"><procedure>FindWideCharR</procedure></A> (t: T
     ELSIF (i.start = NIL) THEN
       RETURN FindCharRBuf (t, c, start, i.length);
     ELSIF NOT i.wide THEN
-      RETURN String8.FindCharR (i.start, MIN (i.length, start),
+      RETURN String8.FindCharR (i.start, MIN (i.length-1, start)+1,
                                 VAL (Word.And (ORD (c), 16_ff), CHAR));
     ELSE
-      RETURN String16.FindCharR (i.start, MIN (i.length, start), c);
+      RETURN String16.FindCharR (i.start, MIN (i.length-1, start)+1, c);
     END;
   END FindWideCharR;
 

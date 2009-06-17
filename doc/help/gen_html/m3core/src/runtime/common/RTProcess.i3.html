@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTProcess.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTProcess.i3</H2></A><HR>
 <inInterface>
@@ -12,7 +12,7 @@
  Last modified on Tue Aug  9 09:54:25 PDT 1994 by kalsow     
       modified on Wed Mar 13 01:21:53 1991 by muller         
 
-<P><PRE>INTERFACE <interface><A HREF="RTProcess.m3.html">RTProcess</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="#x1">RTProcess</A></interface>;
 </PRE> This interface provides the runtime shutdown routines. 
 
 <P><PRE>PROCEDURE <A HREF="RTProcess.m3.html#RegisterExitor">RegisterExitor</A> (p: PROCEDURE ());
@@ -47,6 +47,13 @@ PROCEDURE <A HREF="RTProcess.m3.html#RegisterInterruptSetup">RegisterInterruptSe
 END RTProcess.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">RTProcess's implementation  is in:
+</A><UL>
+<LI><A HREF="../POSIX/RTProcessPosix.m3.html#0TOP0">m3core/src/runtime/POSIX/RTProcessPosix.m3</A>
+<LI><A HREF="RTProcess.m3.html#0TOP0">m3core/src/runtime/common/RTProcess.m3</A>
+</UL>
+<P>
 <PRE>
 
 

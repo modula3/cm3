@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: webvbt/src/Images.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>webvbt/src/Images.m3</H2></A><HR>
 <inModule>
@@ -39,7 +39,7 @@ PROCEDURE <A NAME="FromXBM"><procedure>FromXBM</procedure></A> (bits: TEXT): Pix
   END FromXBM;
 </PRE> This simple version of GetPixmap doesn't use pipes, which means that the
    bits get fondled an extra time as they go into a TEXT after being
-   converted into pbm format. On the other hand, there isn't any thread 
+   converted into pbm format. On the other hand, there isn't any thread
    creation, and the version with pipes seems fragile (crashes with a
    <CODE>Thread.Alerted not handled</CODE>) so perhaps this is the version to use. --mhb 7/22/95 
 <PRE>PROCEDURE <A NAME="GetPixmap"><procedure>GetPixmap</procedure></A> (bits: TEXT; format: Format): Pixmap.T

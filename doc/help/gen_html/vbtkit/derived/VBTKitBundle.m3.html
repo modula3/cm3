@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/derived/VBTKitBundle.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/derived/VBTKitBundle.m3</H2></A><HR>
 <inModule>
@@ -50,11 +50,6 @@ PROCEDURE <A NAME="LookUp"><procedure>LookUp</procedure></A> (&lt;*UNUSED*&gt; s
   END LookUp;
 
 CONST Names = ARRAY [0..22] OF TEXT {
-  &quot;NWDiagonal&quot;,
-  &quot;Close.pbm&quot;,
-  &quot;checkOff&quot;,
-  &quot;IvyScrollH&quot;,
-  &quot;radioOffExcited&quot;,
   &quot;checkMarkOffExcited&quot;,
   &quot;Grow.pbm&quot;,
   &quot;Grid&quot;,
@@ -72,6 +67,11 @@ CONST Names = ARRAY [0..22] OF TEXT {
   &quot;checkMarkOn&quot;,
   &quot;minusOff&quot;,
   &quot;checkOnExcited&quot;,
+  &quot;NWDiagonal&quot;,
+  &quot;Close.pbm&quot;,
+  &quot;checkOff&quot;,
+  &quot;IvyScrollH&quot;,
+  &quot;radioOffExcited&quot;,
   NIL
 };
 
@@ -86,12 +86,12 @@ VAR Elements := ARRAY [0..22] OF TEXT {
   E7,
   E8,
   E9,
-  E10,
+  NIL (* E10 .. E10_15 *),
   E11,
   E12,
   E13,
   E14,
-  NIL (* E15 .. E15_15 *),
+  E15,
   E16,
   E17,
   E18,
@@ -106,92 +106,71 @@ PROCEDURE <A NAME="GetElt"><procedure>GetElt</procedure></A> (n: INTEGER): TEXT 
   VAR wr := TextWr.New ();
   BEGIN
     CASE n OF
-    | 15 =&gt;
-        Wr.PutText (wr, E15);
-        Wr.PutText (wr, E15_0);
-        Wr.PutText (wr, E15_1);
-        Wr.PutText (wr, E15_2);
-        Wr.PutText (wr, E15_3);
-        Wr.PutText (wr, E15_4);
-        Wr.PutText (wr, E15_5);
-        Wr.PutText (wr, E15_6);
-        Wr.PutText (wr, E15_7);
-        Wr.PutText (wr, E15_8);
-        Wr.PutText (wr, E15_9);
-        Wr.PutText (wr, E15_10);
-        Wr.PutText (wr, E15_11);
-        Wr.PutText (wr, E15_12);
-        Wr.PutText (wr, E15_13);
-        Wr.PutText (wr, E15_14);
-        Wr.PutText (wr, E15_15);
+    | 10 =&gt;
+        Wr.PutText (wr, E10);
+        Wr.PutText (wr, E10_0);
+        Wr.PutText (wr, E10_1);
+        Wr.PutText (wr, E10_2);
+        Wr.PutText (wr, E10_3);
+        Wr.PutText (wr, E10_4);
+        Wr.PutText (wr, E10_5);
+        Wr.PutText (wr, E10_6);
+        Wr.PutText (wr, E10_7);
+        Wr.PutText (wr, E10_8);
+        Wr.PutText (wr, E10_9);
+        Wr.PutText (wr, E10_10);
+        Wr.PutText (wr, E10_11);
+        Wr.PutText (wr, E10_12);
+        Wr.PutText (wr, E10_13);
+        Wr.PutText (wr, E10_14);
+        Wr.PutText (wr, E10_15);
     ELSE (*skip*)
     END;
     RETURN TextWr.ToText (wr);
   END GetElt;
 
 CONST E0 =
-   &quot;P4\n16 16\n\210\210DD\&quot;\&quot;\021\021\210\210DD\&quot;\&quot;\021\021\210\210DD\&quot;\&quot;\021&quot;
- &amp; &quot;\021\210\210DD\&quot;\&quot;\021\021&quot;;
-
-CONST E1 =
-   &quot;P4\n# created by \'xv &lt;nil&gt;\'\n14 17\n\000\003\000\003\377\377\200\007\200&quot;
- &amp; &quot;\007\207\307\217\347\237\367\237\367\237\367\237\367\237\367\217\347\207&quot;
- &amp; &quot;\307\200\007\377\377\000\003&quot;;
-
-CONST E2 =
-   &quot;P4\n16 16\n\000\000\000\000\000\000\037\370\020\010\020\010\020\010\020&quot;
- &amp; &quot;\010\020\010\020\010\020\010\020\010\037\370\000\000\000\000\000\000&quot;;
-
-CONST E3 =
-   &quot;P4\n16 16\n\210\210\&quot;\&quot;\210\210\&quot;\&quot;\210\210\&quot;\&quot;\210\210\&quot;\&quot;\210\210\&quot;\&quot;&quot;
- &amp; &quot;\210\210\&quot;\&quot;\210\210\&quot;\&quot;\210\210\&quot;\&quot;&quot;;
-
-CONST E4 =
-   &quot;P4\n16 16\n\000\000\000\000\007\300\017\360\0348\030\0300\f0\f0\f0\f\030&quot;
- &amp; &quot;\030\0348\017\360\007\300\000\000\000\000&quot;;
-
-CONST E5 =
    &quot;P4\n16 16\n\000\000\000\000\000\004\000\n\000\022\000$\000H \220Q J@$\200&quot;
  &amp; &quot;\021\000\n\000\004\000\000\000\000\000&quot;;
 
-CONST E6 =
+CONST E1 =
    &quot;P4\n# created by \'xv &lt;nil&gt;\'\n18 18\n\000\000?\000\000??\377?!\021?!\021&quot;
  &amp; &quot;?!\021?!\021??\021? \021? \021? \021??\361? \001? \001? \001??\377?\000&quot;
  &amp; &quot;\000?\000\000?&quot;;
 
-CONST E7 =
+CONST E2 =
    &quot;P4\n16 16\n\252\252\000\000\200\000\000\000\200\200\000\000\200\000\000&quot;
  &amp; &quot;\000\210\210\000\000\200\000\000\000\200\200\000\000\200\000\000\000&quot;;
 
-CONST E8 =
+CONST E3 =
    &quot;P4\n16 16\n\000\000\000\000\000\000\037\370\030\030\024(\022H\021\210\021&quot;
  &amp; &quot;\210\022H\024(\030\030\037\370\000\000\000\000\000\000&quot;;
 
-CONST E9 =
+CONST E4 =
    &quot;P4\n16 16\n\021\021\&quot;\&quot;DD\210\210\021\021\&quot;\&quot;DD\210\210\021\021\&quot;\&quot;DD\210&quot;
  &amp; &quot;\210\021\021\&quot;\&quot;DD\210\210&quot;;
 
-CONST E10 =
+CONST E5 =
    &quot;P4\n16 16\n\000\000\000\000\007\300\017\360\0348\033\3307\3547\3547\354&quot;
  &amp; &quot;7\354\033\330\0348\017\360\007\300\000\000\000\000&quot;;
 
-CONST E11 =
+CONST E6 =
    &quot;P4\n16 16\n\000\000\000\000\000\004\000\016\000\036\000&lt;\000x \360q\340&quot;
  &amp; &quot;{\300?\200\037\000\016\000\004\000\000\000\000\000&quot;;
 
-CONST E12 =
+CONST E7 =
    &quot;P4\n16 16\n\000\000\000\000\000\000\003\300\002@\002@\036x\020\010\020\010&quot;
  &amp; &quot;\036x\002@\002@\003\300\000\000\000\000\000\000&quot;;
 
-CONST E13 =
+CONST E8 =
    &quot;P4\n16 16\n\000\000\000\000\000\000\003\300\f0\010\020\020\010\020\010\020&quot;
  &amp; &quot;\010\020\010\010\020\f0\003\300\000\000\000\000\000\000&quot;;
 
-CONST E14 =
+CONST E9 =
    &quot;P4\n16 16\n\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000&quot;
  &amp; &quot;\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000&quot;;
 
-CONST E15 =
+CONST E10 =
    &quot;P1\n# created by \'xv /tmp_mnt/bamboozle/r/dlusers6/bharat/foo.ppm\'\n1&quot;
  &amp; &quot;95 85\n0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &quot;
  &amp; &quot;0 0 0 \n0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0&quot;
@@ -222,7 +201,7 @@ CONST E15 =
  &amp; &quot; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &quot;
  &amp; &quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 &quot;;
 
-CONST E15_0 =
+CONST E10_0 =
    &quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0&quot;
  &amp; &quot; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 &quot;
  &amp; &quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0&quot;
@@ -253,7 +232,7 @@ CONST E15_0 =
  &amp; &quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n&quot;
  &amp; &quot;0 0 0 0 0 0 0 0 0 0 0 &quot;;
 
-CONST E15_1 =
+CONST E10_1 =
    &quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 0 0 0&quot;
  &amp; &quot; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 0 0 &quot;
  &amp; &quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 0 0&quot;
@@ -284,7 +263,7 @@ CONST E15_1 =
  &amp; &quot;1 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 \n&quot;
  &amp; &quot;0 0 1 0 0 0 1 1 0 0 0 1 1 0 0 0 0 &quot;;
 
-CONST E15_2 =
+CONST E10_2 =
    &quot;0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 \n1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0&quot;
  &amp; &quot; 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 \n1 1 1 0 0 0 1 1 1 1 1 1 1 1 1 1 &quot;
  &amp; &quot;1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 \n1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1&quot;
@@ -315,7 +294,7 @@ CONST E15_2 =
  &amp; &quot; 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 1 0 0 \n0 1 0 &quot;
  &amp; &quot;0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &quot;;
 
-CONST E15_3 =
+CONST E10_3 =
    &quot;1 1 1 1 1 1 1 1 1 1 1 1 \n1 1 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 1 1 1 1&quot;
  &amp; &quot; 1 1 1 1 1 1 1 1 1 1 0 0 \n0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 &quot;
  &amp; &quot;1 0 0 0 1 1 1 1 1 1 1 1 1 \n1 1 1 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 1 1&quot;
@@ -346,7 +325,7 @@ CONST E15_3 =
  &amp; &quot; 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 0 &quot;
  &amp; &quot;0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 &quot;;
 
-CONST E15_4 =
+CONST E10_4 =
    &quot;1 1 1 1 0 0 \n0 0 1 1 1 0 0 0 1 1 1 1 1 1 1 1 1 0 0 1 1 1 1 1 1 1 1 1 0&quot;
  &amp; &quot; 0 0 1 1 1 1 \n1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 1 &quot;
  &amp; &quot;1 1 0 0 1 1 1 \n1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 1 1 1 1 1 1 1&quot;
@@ -377,7 +356,7 @@ CONST E15_4 =
  &amp; &quot; 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 &quot;
  &amp; &quot;1 1 1 1 0 0 0 0 0 0 0 0 1 0 0 0 0 1 1 1 &quot;;
 
-CONST E15_5 =
+CONST E10_5 =
    &quot;\n0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 0 0 0&quot;
  &amp; &quot; \n0 0 0 0 0 1 0 0 0 0 1 1 1 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 1 1 1 1 1 1 &quot;
  &amp; &quot;1 \n1 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 0 0 0 1 1 1 1 1 0&quot;
@@ -408,7 +387,7 @@ CONST E15_5 =
  &amp; &quot; 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 1 1 1 1 1 &quot;
  &amp; &quot;1 0 0 0 0 0 1 1 1 0 0 0 1 1 \n1 1 1 1 1 1&quot;;
 
-CONST E15_6 =
+CONST E10_6 =
    &quot; 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 0 0 0 0 1 1 1 1 1 1 \n0 0 0 0 0 &quot;
  &amp; &quot;1 1 1 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 1 \n1 1 1 1 1&quot;
  &amp; &quot; 1 1 0 0 0 0 1 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 \n1 1 0 0 &quot;
@@ -439,7 +418,7 @@ CONST E15_6 =
  &amp; &quot;0 0 0 1 1 1 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 1 1 1 0 0 0 1 1 1 1 1 1 1 \n&quot;
  &amp; &quot;1 0 0 0 0 1 1 1 1 1 1 1&quot;;
 
-CONST E15_7 =
+CONST E10_7 =
    &quot; 1 0 0 0 1 1 1 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 \n1 1 1 0 0 0 1 1 1 1 1 &quot;
  &amp; &quot;1 1 1 0 0 0 0 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 \n1 1 0 0 0 0 1 1 1 1 1&quot;
  &amp; &quot; 1 1 1 1 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 1 0 0 0 \n0 1 1 1 0 0 0 1 1 1 &quot;
@@ -470,7 +449,7 @@ CONST E15_7 =
  &amp; &quot;1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 1 1 1 1 1 1 1 1 0 0 0 0 \n&quot;
  &amp; &quot;1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 0 0 0&quot;;
 
-CONST E15_8 =
+CONST E10_8 =
    &quot; 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 0 \n0 1 1 1 1 1 1 1 1 0 0 0 0 1 1 1 1 &quot;
  &amp; &quot;1 1 1 1 0 0 0 1 1 1 1 1 1 1 1 0 0 0 \n0 0 0 0 0 1 1 1 1 1 0 0 0 1 1 1 0&quot;
  &amp; &quot; 0 0 0 0 1 1 0 0 0 0 0 0 0 0 1 1 1 0 \n0 0 1 1 1 1 1 1 1 1 0 0 0 0 1 1 &quot;
@@ -501,7 +480,7 @@ CONST E15_8 =
  &amp; &quot;1 1 1 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 \n1 1 1 0&quot;
  &amp; &quot; 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0&quot;;
 
-CONST E15_9 =
+CONST E10_9 =
    &quot; 0 1 1 1 0 0 0 1 1 1 1 \n1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 &quot;
  &amp; &quot;1 1 1 1 1 1 1 1 1 1 1 1 \n1 1 1 1 1 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1&quot;
  &amp; &quot; 1 1 1 1 1 1 0 0 0 1 1 1 \n1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 &quot;
@@ -532,7 +511,7 @@ CONST E15_9 =
  &amp; &quot;0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 \n0 1 1 1 1 1 0 0 0 0&quot;
  &amp; &quot; 0 0 0 0 0 0 0 0 1 1 1 1 1 0 0 0 1 1 1 1&quot;;
 
-CONST E15_10 =
+CONST E10_10 =
    &quot; 1 1 1 1 1 \n1 1 1 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 &quot;
  &amp; &quot;1 1 1 1 1 1 \n0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 1 1&quot;
  &amp; &quot; 1 1 1 1 1 1 \n1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &quot;
@@ -563,7 +542,7 @@ CONST E15_10 =
  &amp; &quot;1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 \n1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1&quot;
  &amp; &quot; 1 1 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 \n&quot;;
 
-CONST E15_11 =
+CONST E10_11 =
    &quot;1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 1 1 \n&quot;
  &amp; &quot;1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 \n&quot;
  &amp; &quot;1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n&quot;
@@ -594,7 +573,7 @@ CONST E15_11 =
  &amp; &quot;0 0 0 0 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n&quot;
  &amp; &quot;0 0 0 0 0 0 &quot;;
 
-CONST E15_12 =
+CONST E10_12 =
    &quot;0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 \n1 0 0 0 0 0&quot;
  &amp; &quot; 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 &quot;
  &amp; &quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 \n0 0 0 0 1&quot;
@@ -625,7 +604,7 @@ CONST E15_12 =
  &amp; &quot;0 1 0 0 0 0 0 1 1 1 1 1 0 0 0 1 1 1 0 0 0 1 1 1 1 1 0 0 1 0 0 0 1 0 0 \n&quot;
  &amp; &quot;1 0 0 0 0 0 1 0 0 0 0 0 &quot;;
 
-CONST E15_13 =
+CONST E10_13 =
    &quot;0 1 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 \n1 1 1 1 0 0 1 0 0 0 1 0&quot;
  &amp; &quot; 0 0 1 0 0 0 0 1 1 1 1 1 0 0 1 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 0 0 0 &quot;
  &amp; &quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 \n0 0 1 0 0 0 1 0 0 0 0&quot;
@@ -656,7 +635,7 @@ CONST E15_13 =
  &amp; &quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n&quot;
  &amp; &quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &quot;;
 
-CONST E15_14 =
+CONST E10_14 =
    &quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0&quot;
  &amp; &quot; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &quot;
  &amp; &quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 \n1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0&quot;
@@ -687,7 +666,7 @@ CONST E15_14 =
  &amp; &quot; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 &quot;
  &amp; &quot;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &quot;;
 
-CONST E15_15 =
+CONST E10_15 =
    &quot;0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0&quot;
  &amp; &quot; 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 &quot;
  &amp; &quot;0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0&quot;
@@ -714,29 +693,50 @@ CONST E15_15 =
  &amp; &quot; 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \n0 0 0 0 0 0 0 0 0 0 0 0 &quot;
  &amp; &quot;0 0 0 0 0 0 0 0 &quot;;
 
-CONST E16 =
+CONST E11 =
    &quot;P4\n16 16\n\000\000\000\000?\374?\3740\f0\f0\f0\f0\f0\f0\f0\f?\374?\374&quot;
  &amp; &quot;\000\000\000\000&quot;;
 
-CONST E17 =
+CONST E12 =
    &quot;P4\n16 16\nUU\000\000\252\252\000\000UU\000\000\252\252\000\000UU\000\000&quot;
  &amp; &quot;\252\252\000\000UU\000\000\252\252\000\000&quot;;
 
-CONST E18 =
+CONST E13 =
    &quot;P4\n16 16\n\000\000\000\000\000\000\003\300\f0\013\320\027\350\027\350\027&quot;
  &amp; &quot;\350\027\350\013\320\f0\003\300\000\000\000\000\000\000&quot;;
 
-CONST E19 =
+CONST E14 =
    &quot;P4\n16 16\n\000\000\000\000\000\000\000\004\000\f\000\030\0000\000` \300&quot;
  &amp; &quot;1\200\033\000\016\000\004\000\000\000\000\000\000\000&quot;;
 
-CONST E20 =
+CONST E15 =
    &quot;P4\n16 16\n\000\000\000\000\000\000\000\000\000\000\000\000\037\370\020&quot;
  &amp; &quot;\010\020\010\037\370\000\000\000\000\000\000\000\000\000\000\000\000&quot;;
 
-CONST E21 =
+CONST E16 =
    &quot;P4\n16 16\n\000\000\000\000?\374?\3748\0344,2L1\2141\2142L4,8\034?\374?&quot;
  &amp; &quot;\374\000\000\000\000&quot;;
+
+CONST E17 =
+   &quot;P4\n16 16\n\210\210DD\&quot;\&quot;\021\021\210\210DD\&quot;\&quot;\021\021\210\210DD\&quot;\&quot;\021&quot;
+ &amp; &quot;\021\210\210DD\&quot;\&quot;\021\021&quot;;
+
+CONST E18 =
+   &quot;P4\n# created by \'xv &lt;nil&gt;\'\n14 17\n\000\003\000\003\377\377\200\007\200&quot;
+ &amp; &quot;\007\207\307\217\347\237\367\237\367\237\367\237\367\237\367\217\347\207&quot;
+ &amp; &quot;\307\200\007\377\377\000\003&quot;;
+
+CONST E19 =
+   &quot;P4\n16 16\n\000\000\000\000\000\000\037\370\020\010\020\010\020\010\020&quot;
+ &amp; &quot;\010\020\010\020\010\020\010\020\010\037\370\000\000\000\000\000\000&quot;;
+
+CONST E20 =
+   &quot;P4\n16 16\n\210\210\&quot;\&quot;\210\210\&quot;\&quot;\210\210\&quot;\&quot;\210\210\&quot;\&quot;\210\210\&quot;\&quot;&quot;
+ &amp; &quot;\210\210\&quot;\&quot;\210\210\&quot;\&quot;\210\210\&quot;\&quot;&quot;;
+
+CONST E21 =
+   &quot;P4\n16 16\n\000\000\000\000\007\300\017\360\0348\030\0300\f0\f0\f0\f\030&quot;
+ &amp; &quot;\030\0348\017\360\007\300\000\000\000\000&quot;;
 
 BEGIN
 END VBTKitBundle.

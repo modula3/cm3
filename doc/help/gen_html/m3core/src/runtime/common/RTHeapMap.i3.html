@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTHeapMap.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTHeapMap.i3</H2></A><HR>
 <inInterface>
@@ -26,6 +26,10 @@ TYPE ObjectPtr = UNTRACED REF RT0.RefHeader;
 PROCEDURE <A HREF="RTHeapMap.m3.html#WalkRef">WalkRef</A> (h: ObjectPtr;  v: Visitor);
 </PRE><BLOCKQUOTE><EM> For each traced reference at address 'x' in the object referenced by 'h',
    call 'v(x)'. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RTHeapMap.m3.html#DoWalkRef">DoWalkRef</A>(t: RT0.TypeDefn;  a: ADDRESS;  v: Visitor);
+</PRE><BLOCKQUOTE><EM> For each traced reference at address 'x' in the object of type 't'
+   starting at address 'a', call 'v(x)'. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="RTHeapMap.m3.html#WalkGlobals">WalkGlobals</A> (v: Visitor);
 </PRE><BLOCKQUOTE><EM> For each traced reference at address 'x' in a global var, call 'v(x)'. </EM></BLOCKQUOTE><PRE>

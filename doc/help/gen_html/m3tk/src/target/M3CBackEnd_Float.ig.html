@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/target/M3CBackEnd_Float.ig</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/target/M3CBackEnd_Float.ig</H2></A><HR>
 <inInterface>
@@ -23,6 +23,7 @@ PROCEDURE <A HREF="M3CBackEnd_Float.mg.html#StdUnaryOp">StdUnaryOp</A>(
     f: M3CStdProcs.Func;
     e: T;
     VAR (*out*) er: M3AST_SM.Exp_value;
+    it: M3AST_AS.INT_TYPE := NIL;
     ft: M3AST_AS.FLOAT_TYPE := NIL
     ): M3CBackEnd.NumStatus RAISES {};
 

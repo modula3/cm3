@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: jvideo/src/POSIX/jvprotocol.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>jvideo/src/POSIX/jvprotocol.i3</H2></A><HR>
 <inInterface>
@@ -14,7 +14,7 @@
       modified on Thu Aug 19 10:29:32 PDT 1993 by sfreeman 
 <PRE>INTERFACE <interface>jvprotocol</interface>;
 
-IMPORT <A HREF="../../../m3core/src/unix/linux-libc6/Utime.i3.html">Utime</A>;
+IMPORT <A HREF="#x1">Utime</A>;
 FROM <A HREF="../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int, unsigned_int, unsigned_short_int;
 </PRE> The ports were once upon a time htons'ed.  INET ports are in local
    endian (yes I know its wrong) unlike addreses which are never messed
@@ -273,6 +273,14 @@ TYPE
 END jvprotocol.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">interface Utime is in:
+</A><UL>
+<LI><A HREF="../../../m3core/src/unix/Common/Utime.i3.html#0TOP0">m3core/src/unix/Common/Utime.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-common/Utime.i3.html#0TOP0">m3core/src/unix/linux-common/Utime.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-libc6/Utime.i3.html#0TOP0">m3core/src/unix/linux-libc6/Utime.i3</A>
+</UL>
+<P>
 <PRE>
 
 

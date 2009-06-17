@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-machine/src/RedundantLSolve.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-machine/src/RedundantLSolve.i3</H2></A><HR>
 <inInterface>
@@ -15,21 +15,21 @@
       modified on Mon Oct 31 18:13:52 PST 1994 by isard                    
 
 <P><PRE>INTERFACE <interface><A HREF="RedundantLSolve.m3.html">RedundantLSolve</A></interface>;
-</PRE> This interface provides a procedure <CODE>P</CODE> that approximately solves 
-   a set of simultaneous linear equations.  <CODE>P</CODE> is designed to be 
-   used as a subroutine to solve simultaneous nonlinear equations 
-   by Newton interation: at each stage of the iteration, the nonlinear 
-   equations are approximated by linear ones around the current point, 
-   these linear equations are solved, and the current point is moved 
-   to the solution found. 
+</PRE> This interface provides a procedure <CODE>P</CODE> that approximately solves
+   a set of simultaneous linear equations.  <CODE>P</CODE> is designed to be
+   used as a subroutine to solve simultaneous nonlinear equations
+   by Newton interation: at each stage of the iteration, the nonlinear
+   equations are approximated by linear ones around the current point,
+   these linear equations are solved, and the current point is moved
+   to the solution found.
 <P>
-   The reason that <CODE>P</CODE> finds only an approximate solution instead 
-   of an exact one is that the approximate solution works better 
-   in the case that the nonlinear equations are redundant but consistent 
-   (for example, <CODE>x^2=4 AND x^3=8</CODE>).  In this case the linear approximation 
-   often produces inconsistent or very ill-conditioned linear systems. 
+   The reason that <CODE>P</CODE> finds only an approximate solution instead
+   of an exact one is that the approximate solution works better
+   in the case that the nonlinear equations are redundant but consistent
+   (for example, <CODE>x^2=4 AND x^3=8</CODE>).  In this case the linear approximation
+   often produces inconsistent or very ill-conditioned linear systems.
 <P>
-   So, instead of solving 
+   So, instead of solving
 <P>
 <PRE>
       x : Ax = b
@@ -37,19 +37,19 @@
     the procedure <CODE>P</CODE> solves
 <P>
 <PRE>
-       x : | b - Ax | &lt; |b| / 2 
+       x : | b - Ax | &lt; |b| / 2
 </PRE>
     That is, it sets <CODE>x</CODE> so that the norm of <CODE>b - Ax</CODE> is less than half the
     norm of <CODE>b</CODE>.  This criterion guarantees that progress in made in the
-    overall Newton iteration on the non-linear problem. 
-    <P>
+    overall Newton iteration on the non-linear problem.
+<P>
     The procedure <CODE>P</CODE> attempts to find a small <CODE>x</CODE> that satisfies the
     constraint.  It is not guaranteed to find the smallest <CODE>x</CODE> in any
     precise sense, but if <CODE>A</CODE> is very ill-conditioned (as in the case
     where the nonlinear problem is redundant but consistent) the
     procedure avoids the directions of motion corresponding to the
     small singular values of <CODE>A</CODE>, and if <CODE>A</CODE> is very underconstrained,
-    so that there are many dimensions worth of <CODE>x</CODE>s that will solve the 
+    so that there are many dimensions worth of <CODE>x</CODE>s that will solve the
     constraint, then the Gram-Schmidt algorithm is used to find
     the one that is shortest in the Euclidean norm. 
 

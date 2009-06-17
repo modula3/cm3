@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/xvbt/XInput.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/xvbt/XInput.m3</H2></A><HR>
 <inModule>
@@ -21,7 +21,7 @@
 UNSAFE MODULE <module><implements><A HREF="XInput.i3.html">XInput</A></implements></module>;
 
 IMPORT <A HREF="XClient.i3.html">XClient</A>, <A HREF="XClientF.i3.html">XClientF</A>, <A HREF="XEventQueue.i3.html">XEventQueue</A>, <A HREF="XScrollQueue.i3.html">XScrollQueue</A>, <A HREF="../../../X11R4/src/Common/X.i3.html">X</A>,
-       <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>, <A HREF="../../../m3core/src/thread/POSIX/SchedulerPosix.i3.html">SchedulerPosix</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../../libm3/src/geometry/Rect.i3.html">Rect</A>, <A HREF="../../../libm3/src/geometry/Region.i3.html">Region</A>,
+       <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="#x1">Unix</A>, <A HREF="#x2">SchedulerPosix</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../../libm3/src/geometry/Rect.i3.html">Rect</A>, <A HREF="../../../libm3/src/geometry/Region.i3.html">Region</A>,
        <A HREF="../vbt/TrestleClass.i3.html">TrestleClass</A>, <A HREF="../vbt/VBTClass.i3.html">VBTClass</A>, <A HREF="../vbt/VBT.i3.html">VBT</A>, <A HREF="../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>;
 
 PROCEDURE <A NAME="Start"><procedure>Start</procedure></A> (trsl: XClient.T; stackSize := 20000) =
@@ -368,6 +368,21 @@ BEGIN
 END XInput.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Unix is in:
+</A><UL>
+<LI><A HREF="../../../m3core/src/unix/Common/Unix.i3.html#0TOP0">m3core/src/unix/Common/Unix.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-common/Unix.i3.html#0TOP0">m3core/src/unix/linux-common/Unix.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-libc6/Unix.i3.html#0TOP0">m3core/src/unix/linux-libc6/Unix.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface SchedulerPosix is in:
+</A><UL>
+<LI><A HREF="../../../m3core/src/thread/Common/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/Common/SchedulerPosix.i3</A>
+<LI><A HREF="../../../m3core/src/thread/POSIX/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/POSIX/SchedulerPosix.i3</A>
+</UL>
+<P>
 <PRE>
 
 

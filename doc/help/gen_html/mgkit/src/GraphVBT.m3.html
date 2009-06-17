@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: mgkit/src/GraphVBT.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>mgkit/src/GraphVBT.m3</H2></A><HR>
 <inModule>
@@ -2663,8 +2663,8 @@ PROCEDURE <A NAME="RefreshGraph"><procedure>RefreshGraph</procedure></A> (graph:
         TRY
           ScaleFilter.Scale(graph, hs, vs);
         FINALLY
-          Thread.Acquire(graph.mgv.mu);
           Thread.Acquire(graph.mu);
+          Thread.Acquire(graph.mgv.mu);
         END;
       END;
     END;

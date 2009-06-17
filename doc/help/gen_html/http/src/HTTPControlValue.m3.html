@@ -2,13 +2,20 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: http/src/HTTPControlValue.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>http/src/HTTPControlValue.m3</H2></A><HR>
 <inModule>
 <PRE></PRE> Copyright (C) 1995, Digital Equipment Corporation. 
  All rights reserved. 
- Last modified on Thu Oct 24 16:23:43 PDT 1996 by steveg 
+ created by steveg 
+                                                                           
+ Parts Copyright (C) 1997, Columbia University                             
+ All rights reserved.                                                      
+
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:50:25 1997
+ 
 
 <P><PRE>MODULE <module>HTTPControlValue</module> EXPORTS <A HREF="HTTPControlValue.i3.html"><implements>HTTPControlValue</A></implements>, <A HREF="../../m3core/src/main/Main.i3.html"><implements>Main</A></implements>;
 
@@ -18,7 +25,8 @@ IMPORT <A HREF="App.i3.html">App</A>, <A HREF="../../m3core/src/float/IEEE-defau
 &lt;* PRAGMA LL *&gt;
 
 REVEAL
-  <A NAME="BooleanValue">BooleanValue</A> = BooleanValuePublic BRANDED OBJECT
+  <A NAME="BooleanValue">BooleanValue</A> = BooleanValuePublic BRANDED
+  &quot;HTTPControlValue.BooleanValue&quot; OBJECT
                  OVERRIDES
                    getText       := BooleanGetText;
                    get           := BooleanGetNull;
@@ -102,7 +110,8 @@ PROCEDURE <A NAME="BooleanWriteFormItem"><procedure>BooleanWriteFormItem</proced
   END BooleanWriteFormItem;
 
 REVEAL
-  <A NAME="ChoiceValue">ChoiceValue</A> = ChoiceValuePublic BRANDED OBJECT
+  <A NAME="ChoiceValue">ChoiceValue</A> = ChoiceValuePublic BRANDED
+  &quot;HTTPControlValue.ChoiceValue&quot; OBJECT
                 OVERRIDES
                   init          := ChoiceInit;
                   getText       := ChoiceGetText;
@@ -200,7 +209,7 @@ PROCEDURE <A NAME="ChoiceWriteFormItem"><procedure>ChoiceWriteFormItem</procedur
   END ChoiceWriteFormItem;
 </PRE> a form value is a link to another form 
 <PRE>REVEAL
-  <A NAME="FormValue">FormValue</A> = FormValuePublic BRANDED OBJECT
+  <A NAME="FormValue">FormValue</A> = FormValuePublic BRANDED &quot;HTTPControlValue.FormValue&quot; OBJECT
               OVERRIDES
                 init          := FormValueInit;
                 getText       := FormGetText;
@@ -268,7 +277,8 @@ PROCEDURE <A NAME="FormWriteFormItem"><procedure>FormWriteFormItem</procedure></
   END FormWriteFormItem;
 
 REVEAL
-  <A NAME="IntegerValue">IntegerValue</A> = IntegerValuePublic BRANDED OBJECT
+  <A NAME="IntegerValue">IntegerValue</A> = IntegerValuePublic BRANDED
+  &quot;HTTPControlValue.IntegerValue&quot; OBJECT
                  OVERRIDES
                    getText       := IntegerGetText;
                    get           := IntegerGetNull;
@@ -340,7 +350,7 @@ PROCEDURE <A NAME="IntegerWriteFormItem"><procedure>IntegerWriteFormItem</proced
   END IntegerWriteFormItem;
 
 REVEAL
-  <A NAME="RealValue">RealValue</A> = RealValuePublic BRANDED OBJECT
+  <A NAME="RealValue">RealValue</A> = RealValuePublic BRANDED &quot;HTTPControlValue.RealValue&quot; OBJECT
               OVERRIDES
                 getText       := RealGetText;
                 get           := RealGetNull;
@@ -412,7 +422,7 @@ PROCEDURE <A NAME="RealWriteFormItem"><procedure>RealWriteFormItem</procedure></
   END RealWriteFormItem;
 
 REVEAL
-  <A NAME="TextValue">TextValue</A> = TextValuePublic BRANDED OBJECT
+  <A NAME="TextValue">TextValue</A> = TextValuePublic BRANDED &quot;HTTPControlValue.TextValue&quot; OBJECT
               OVERRIDES
                 getText       := TextGetText;
                 get           := TextGetNull;
@@ -487,7 +497,7 @@ PROCEDURE <A NAME="TextWriteFormItem"><procedure>TextWriteFormItem</procedure></
   END TextWriteFormItem;
 
 REVEAL
-  <A NAME="URLValue">URLValue</A> = URLValuePublic BRANDED OBJECT
+  <A NAME="URLValue">URLValue</A> = URLValuePublic BRANDED &quot;HTTPControlValue.URLValue&quot; OBJECT
                url: TEXT;
              OVERRIDES
                init          := URLInit;
@@ -550,7 +560,7 @@ PROCEDURE <A NAME="URLWriteFormItem"><procedure>URLWriteFormItem</procedure></A>
   END URLWriteFormItem;
 
 REVEAL
-  <A NAME="ImageValue">ImageValue</A> = ImageValuePublic BRANDED OBJECT
+  <A NAME="ImageValue">ImageValue</A> = ImageValuePublic BRANDED &quot;HTTPControlValue.ImageValue&quot; OBJECT
                OVERRIDES
                  getText       := ImageGetText;
                  get           := ImageGetNull;
@@ -605,7 +615,7 @@ PROCEDURE <A NAME="ImageWriteFormItem"><procedure>ImageWriteFormItem</procedure>
   END ImageWriteFormItem;
 
 REVEAL
-  <A NAME="TableValue">TableValue</A> = TableValuePublic BRANDED OBJECT
+  <A NAME="TableValue">TableValue</A> = TableValuePublic BRANDED &quot;HTTPControlValue.TableValue&quot; OBJECT
                OVERRIDES
                  getText       := TableGetText;
                  get           := TableGet;
@@ -691,7 +701,8 @@ PROCEDURE <A NAME="TableSetValues"><procedure>TableSetValues</procedure></A> (se
   END TableSetValues;
 
 REVEAL
-  <A NAME="MessageValue">MessageValue</A> = MessageValuePublic BRANDED OBJECT
+  <A NAME="MessageValue">MessageValue</A> = MessageValuePublic BRANDED
+  &quot;HTTPControlValue.MessageValue&quot; OBJECT
                    msg: TEXT;
                  OVERRIDES
                    init          := MessageInit;

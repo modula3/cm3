@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/Font.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/Font.i3</H2></A><HR>
 <inInterface>
@@ -15,7 +15,7 @@
 <PRE>&lt;*PRAGMA LL*&gt;
 </PRE> A <CODE>Font.T</CODE> is a screen-independent specification of a typeface.  There
    is one predefined <CODE>Font.T</CODE>, which yields the built-in font of the
-   screentype.  
+   screentype.
 <P>
    The locking level is <CODE>LL.sup &lt;= VBT.mu</CODE> for all of the procedures
    in this interface. 
@@ -36,7 +36,7 @@ PROCEDURE <A HREF="Font.m3.html#FromName">FromName</A>(READONLY names: ARRAY OF 
    in order and returns an arbitrary match from the first name that
    matches anything.  If no name has any matches, it returns the
    built-in font.
-   <P>
+<P>
    Standard X screentypes give fonts long ``names'' that encode their
    properties, so with X it is almost always desirable to include
    wild-card characters in the names.  For example,
@@ -45,9 +45,9 @@ PROCEDURE <A HREF="Font.m3.html#FromName">FromName</A>(READONLY names: ARRAY OF 
       FromName(
        ARRAY OF TEXT{&quot;-*-times-medium-r-*-*-*-10?-*-*-*-*-*-*&quot;})
 </PRE>
-  will return a font that, on an X server containing the standard fonts, 
-  is some Times Roman medium-weight unslanted font sized 10 to 10.9 points, 
-  and behaves like <CODE>Font.BuiltIn</CODE> on any screentye that doesn't have a font 
+  will return a font that, on an X server containing the standard fonts,
+  is some Times Roman medium-weight unslanted font sized 10 to 10.9 points,
+  and behaves like <CODE>Font.BuiltIn</CODE> on any screentye that doesn't have a font
   whose name matches the pattern.  
 
 <P><PRE>END Font.

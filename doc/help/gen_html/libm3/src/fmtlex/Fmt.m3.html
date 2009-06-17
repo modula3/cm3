@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/fmtlex/Fmt.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/fmtlex/Fmt.m3</H2></A><HR>
 <inModule>
@@ -17,7 +17,7 @@
 
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="Fmt.i3.html">Fmt</A></implements></module>;
 
-IMPORT <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../m3core/src/text/Text8.i3.html">Text8</A>, <A HREF="../../../m3core/src/text/Text8Short.i3.html">Text8Short</A>, (**Text8Literal,**) <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../../m3core/src/convert/Convert.i3.html">Convert</A>, <A HREF="FmtBuf.i3.html">FmtBuf</A>, <A HREF="FmtBufF.i3.html">FmtBufF</A>;
+IMPORT <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../m3core/src/text/Text8.i3.html">Text8</A>, <A HREF="../../../m3core/src/text/Text8Short.i3.html">Text8Short</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../../m3core/src/word/Long.i3.html">Long</A>, <A HREF="../../../m3core/src/convert/Convert.i3.html">Convert</A>, <A HREF="FmtBuf.i3.html">FmtBuf</A>, <A HREF="FmtBufF.i3.html">FmtBufF</A>;
 IMPORT <A HREF="../../../m3core/src/float/IEEE/Real.i3.html">Real</A> AS R, <A HREF="../../../m3core/src/float/IEEE/LongReal.i3.html">LongReal</A> AS LR, <A HREF="../../../m3core/src/float/IEEE/Extended.i3.html">Extended</A> AS ER;
 IMPORT <A HREF="../../../m3core/src/float/Common/RealFloat.i3.html">RealFloat</A>, <A HREF="../../../m3core/src/float/Common/LongFloat.i3.html">LongFloat</A>, <A HREF="../../../m3core/src/float/Common/ExtendedFloat.i3.html">ExtendedFloat</A>;
 </PRE> Boolean, character values ----------------------------------------------- 
@@ -83,6 +83,36 @@ PROCEDURE <A NAME="AnyUnsigned"><procedure>AnyUnsigned</procedure></A> (n: Word.
     used := Convert.FromUnsigned (chars, n, base, prefix := FALSE);
     RETURN Text.FromChars(SUBARRAY(chars, 0, used))
   END AnyUnsigned;
+
+PROCEDURE <A NAME="LongInt"><procedure>LongInt</procedure></A>(n: LONGINT; base: Base := 10): TEXT =
+  BEGIN
+    IF VAL(FIRST(SmallInts), LONGINT) &lt;= n AND n &lt;= VAL(LAST(SmallInts), LONGINT) AND base = 10
+      THEN RETURN SmallInts[ORD(n)]
+      ELSE RETURN AnyLongInt(n, base)
+    END
+  END LongInt;
+
+PROCEDURE <A NAME="AnyLongInt"><procedure>AnyLongInt</procedure></A> (n: LONGINT; base: Base := 10): TEXT =
+  &lt;* FATAL Convert.Failed *&gt;
+  VAR chars: ARRAY [0..BITSIZE(LONGINT)] OF CHAR; used: INTEGER; BEGIN
+    used := Convert.FromLongInt(chars, n, base, prefix := FALSE);
+    RETURN Text.FromChars(SUBARRAY(chars, 0, used))
+  END AnyLongInt;
+
+PROCEDURE <A NAME="LongUnsigned"><procedure>LongUnsigned</procedure></A> (n: Long.T; base: Base := 10): TEXT =
+  BEGIN
+    IF 0L &lt;= n AND n &lt;= VAL(LAST(SmallInts), LONGINT) AND base = 10
+      THEN RETURN SmallInts[ORD(n)]
+      ELSE RETURN AnyLongUnsigned (n, base)
+    END
+  END LongUnsigned;
+
+PROCEDURE <A NAME="AnyLongUnsigned"><procedure>AnyLongUnsigned</procedure></A> (n: Long.T; base: Base := 10): TEXT =
+  &lt;* FATAL Convert.Failed *&gt;
+  VAR chars: ARRAY [0..BITSIZE(LONGINT)-1] OF CHAR; used: INTEGER; BEGIN
+    used := Convert.FromLongUnsigned (chars, n, base, prefix := FALSE);
+    RETURN Text.FromChars(SUBARRAY(chars, 0, used))
+  END AnyLongUnsigned;
 </PRE> Floating-point values --------------------------------------------------- 
 
 <P><PRE>PROCEDURE <A NAME="Real"><procedure>Real</procedure></A>(x: REAL; style := Style.Auto;

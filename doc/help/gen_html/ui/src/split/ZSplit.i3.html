@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/ZSplit.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/ZSplit.i3</H2></A><HR>
 <inInterface>
@@ -16,14 +16,14 @@
       modified on Wed Dec 11 18:29:58 PST 1991 by gnelson 
       modified on Fri Feb  2 14:08:01 PST 1990 by glassman 
 <PRE>&lt;*PRAGMA LL*&gt;
-</PRE> A <CODE>ZSplit.T</CODE> is a parent window with overlapping child windows. 
-   <P>
+</PRE> A <CODE>ZSplit.T</CODE> is a parent window with overlapping child windows.
+<P>
    Each child has a stacking order given (conceptually) by a <CODE>z</CODE>
    coordinate.  A pixel of the parent's screen that is in the domain
    of more than one child is controlled by whichever of these children
    is highest in the <CODE>z</CODE> coordinate.  The portions of the domains of
    the children that extend outside the parent domain will be clipped.
-   <P>
+<P>
    <CODE>Split.Succ</CODE> enumerates the children from top to bottom.
 <P>
    The bottom child is called the {\it background}.  An initial
@@ -35,14 +35,14 @@
    different from the parent domain, there may be some parent pixels
    that are not controlled by any child.  The <CODE>ZSplit</CODE> will ignore these
    pixels when asked to repaint.
-   <P>
+<P>
    The shape of a <CODE>ZSplit</CODE> is the shape of its background child (if
    it has no children its shape is the default shape for a <CODE>VBT</CODE>).  When
    the preferred shape of a non-background child changes, the <CODE>ZSplit</CODE>
-   reshapes the child to its new preferred shape, preserving its 
-   {\it offset}, which is the vector between the northwest corners 
+   reshapes the child to its new preferred shape, preserving its
+   {\it offset}, which is the vector between the northwest corners
    of the parent and child.  
-   
+
 <P><PRE>INTERFACE <interface><A HREF="ZSplit.m3.html">ZSplit</A></interface>;
 
 IMPORT <A HREF="../vbt/VBT.i3.html">VBT</A>, <A HREF="../../../libm3/src/geometry/Rect.i3.html">Rect</A>, <A HREF="Split.i3.html">Split</A>, <A HREF="../../../libm3/src/geometry/Point.i3.html">Point</A>;
@@ -86,8 +86,8 @@ TYPE
 <P> The default <CODE>Split.Insert</CODE> call is rarely useful for a <CODE>ZSplit</CODE>: it
    inserts the new child at the parent's northwest corner, unmapped.
    <CODE>Split.AddChild</CODE> is even less useful, since it adds children as the
-   background, which is almost certainly not what you want.  The 
-   following procedures are more useful for inserting children into a 
+   background, which is almost certainly not what you want.  The
+   following procedures are more useful for inserting children into a
    <CODE>ZSplit</CODE>: 
 
 <P><PRE>PROCEDURE <A HREF="ZSplit.m3.html#InsertAfter">InsertAfter</A>(
@@ -104,10 +104,10 @@ TYPE
    contraints, then the height and width of the child are projected
    into range; its offset is preserved.  This is a checked runtime error
    if <CODE>ch</CODE> is not detached.  If <CODE>alsoMap</CODE> is <CODE>TRUE</CODE>, <CODE>ch</CODE> is mapped,
-   otherwise it is unmapped. 
-   <P>
-   It is occasionally useful to insert a new child below all existing 
-   children except the background, in which case the following 
+   otherwise it is unmapped.
+<P>
+   It is occasionally useful to insert a new child below all existing
+   children except the background, in which case the following
    procedure is handy:  
 
 <P><PRE>TYPE Altitude = {Top, Bot};
@@ -142,8 +142,8 @@ PROCEDURE <A HREF="ZSplit.m3.html#Insert">Insert</A>(
     nw: Point.T;
     alt := Altitude.Top;
     alsoMap: BOOLEAN := TRUE); &lt;* LL.sup = VBT.mu *&gt;
-</PRE><BLOCKQUOTE><EM>  Insert <CODE>ch</CODE> with its preferred shape and its northwest corner 
-    at <CODE>nw</CODE>.  The <CODE>alt</CODE> and <CODE>alsoMap</CODE> parameters are interpreted as 
+</PRE><BLOCKQUOTE><EM>  Insert <CODE>ch</CODE> with its preferred shape and its northwest corner
+    at <CODE>nw</CODE>.  The <CODE>alt</CODE> and <CODE>alsoMap</CODE> parameters are interpreted as
     in <CODE>Insert</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> \subsubsection{Moving, lifting, and lowering children} 
 
@@ -155,7 +155,7 @@ PROCEDURE <A HREF="ZSplit.m3.html#Insert">Insert</A>(
    constraints, then they are projected into range, preserving the
    northwest corner of <CODE>dom</CODE>.  The stacking order of <CODE>ch</CODE> is not
    changed.  <CODE>Move</CODE> is a checked runtime error if <CODE>ch</CODE>'s parent is not
-   a <CODE>ZSplit</CODE>.  Note that this has nothing to do with <CODE>Split.Move</CODE>, 
+   a <CODE>ZSplit</CODE>.  Note that this has nothing to do with <CODE>Split.Move</CODE>,
    unlike the next procedure. 
 
 <P>
@@ -208,9 +208,9 @@ PROCEDURE <A HREF="ZSplit.m3.html#IsMapped">IsMapped</A>(ch: VBT.T): BOOLEAN;
    the domain that <CODE>ch</CODE> will receive when the redisplay happens, or
    (2) if the domain of the parent is <CODE>Rect.Empty</CODE>, <CODE>GetDomain</CODE> returns
    the domain <CODE>ch</CODE> would receive if the parent were reshaped to its
-   last non-empty domain, or (3) if the child is unmapped, <CODE>GetDomain</CODE> 
+   last non-empty domain, or (3) if the child is unmapped, <CODE>GetDomain</CODE>
    returns the domain the child would have if it were mapped.
-   <P>
+<P>
    <CODE>GetDomain</CODE> is a checked runtime error if the parent of <CODE>ch</CODE> is not
    a <CODE>ZSplit</CODE>.  
 
@@ -235,11 +235,11 @@ PROCEDURE <A HREF="ZSplit.m3.html#IsMapped">IsMapped</A>(ch: VBT.T): BOOLEAN;
    and offsets of the other children.
 <P>
    In the unusual case that the initial background child is deleted,
-   subsequent background children do not automatically inherit the 
-   special reshaping behavior of the initial background child.  
-   <P>
+   subsequent background children do not automatically inherit the
+   special reshaping behavior of the initial background child.
+<P>
    To override the default behavior, use <CODE>SetReshapeControl</CODE>:  
-   
+
 <P>
 <P><PRE>PROCEDURE <A HREF="ZSplit.m3.html#SetReshapeControl">SetReshapeControl</A>(
     ch: VBT.T;
@@ -256,14 +256,14 @@ END;
    <CODE>rc.apply(ch, old, new, prev)</CODE> (if this rectangle doesn't satisfy
    <CODE>ch</CODE>'s size constraints, its height and width will be projected into
    range, preserving its offset).
-   <P>
+<P>
    These methods of the <CODE>ReshapeControl</CODE> objects may be called concurrently
-   for different children.  (This is why the apply method has only a 
+   for different children.  (This is why the apply method has only a
    share of <CODE>VBT.mu</CODE>.) The stacking order is not changed by
    reshaping.
 <P>
    When a <CODE>ZSplit</CODE> child is replaced by <CODE>Split.Replace</CODE>, the new child
-   inherits the old child's reshape control object.  
+   inherits the old child's reshape control object.
 <P>
    <CODE>SetReshapeControl</CODE> is a checked runtime error if the parent of <CODE>ch</CODE>
    is not a <CODE>ZSplit</CODE>.
@@ -272,7 +272,7 @@ END;
    children to <CODE>Rect.Empty</CODE> without calling their reshape control
    methods.  Similarly, if the parent is subsequently reshaped to its
    original rectangle, it will restore the children's previous domains
-   without calling the methods.  
+   without calling the methods.
 <P>
    By default, the background is chained absolutely to the parent
    domain, using <CODE>Background</CODE>: 
@@ -308,16 +308,16 @@ VAR (*CONST*)
   WNChains, ENChains, WENChains, SChains,
   WSChains, ESChains, WESChains, NSChains,
   WNSChains, ENSChains, WENSChains: ChainReshapeControl;
-</PRE> The ``variables'' above are constants for the following reshape 
-   control objects: 
+</PRE> The ``variables'' above are constants for the following reshape
+   control objects:
 <P>
     <PRE>
-      NEW(ChainReshapeControl, chains := ChainSet{}), 
+      NEW(ChainReshapeControl, chains := ChainSet{}),
           NEW(ChainReshapeControl, chains := ChainSet{Ch.W}),
           
           ...
           
-          NEW(ChainReshapeControl, 
+          NEW(ChainReshapeControl,
               chains := ChainSet{Ch.W,Ch.E,Ch.N,Ch.S})
 </PRE>
  
@@ -339,7 +339,7 @@ VAR (*CONST*)
 
 <P> The default behavior for the initial background child
    is <CODE>Background</CODE>, and the default behavior for all other children
-   is <CODE>WNChains</CODE>. 
+   is <CODE>WNChains</CODE>.
 <P>
    One final reshape control method is sometimes useful: 
 
@@ -354,7 +354,7 @@ VAR (*CONST*)
    of the changing parent domain.  </EM></BLOCKQUOTE><PRE>
 
 VAR (*CONST*) Scaled: ReshapeControl;
-</PRE> This ``variable'' is really a constant for the following reshape 
+</PRE> This ``variable'' is really a constant for the following reshape
    control object:
 <P>
 <PRE>

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/TSplit.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/TSplit.i3</H2></A><HR>
 <inInterface>
@@ -39,7 +39,7 @@ TYPE
    this intersection is empty, the children's maxsizes are increased
    until the intersection is non-empty). The preferred size of <CODE>v</CODE> is
    the the maximum of the preferred sizes of its children, projected
-   into <CODE>v</CODE>'s size range.  If <CODE>v</CODE> has no children, its shape is a 
+   into <CODE>v</CODE>'s size range.  If <CODE>v</CODE> has no children, its shape is a
    <CODE>VBT</CODE>'s default shape.  
 
 <P>
@@ -57,7 +57,7 @@ PROCEDURE <A HREF="TSplit.m3.html#Cons">Cons</A>(ch0, ch1, ch2, ch3, ch4: VBT.T 
 <P>
 <PRE>
       v := NEW(T).init(fickle);
-      Split.AddChild(v, ch0, ch1, ch2, ch3, ch4);  
+      Split.AddChild(v, ch0, ch1, ch2, ch3, ch4);
       IF ch0 # NIL THEN SetCurrent(v, ch0) END;
       RETURN v
 </PRE>

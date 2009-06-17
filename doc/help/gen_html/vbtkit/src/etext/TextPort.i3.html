@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/etext/TextPort.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/etext/TextPort.i3</H2></A><HR>
 <inInterface>
@@ -19,10 +19,10 @@
 </PRE> A textport is a <CODE>VBT</CODE> that allows the user to type and edit text.
 <P>
    The methods and procedures in this interface fall into several categories,
-   each dealing with different aspects of the text-editor. 
+   each dealing with different aspects of the text-editor.
 <P>
    \begin{description}
-   <P>
+<P>
    \item[Appearance] The client can choose the font, colors, margins,
    and whether long lines should be clipped or wrapped. The fonts and
    colors can be changed dynamically.
@@ -111,7 +111,7 @@ TYPE
    {\it delete}, and so on should be understood as having the
    restriction that <CODE>v</CODE> is not read-only.
 <P>
-   If <CODE>model</CODE> is <CODE>Model.Default</CODE>, then the default model (see below) 
+   If <CODE>model</CODE> is <CODE>Model.Default</CODE>, then the default model (see below)
    will be used.
 <P>
    <CODE>v.getModel()</CODE> returns the name of the current model; note that the
@@ -153,7 +153,7 @@ TYPE
 
 <P>
 <P> \subsubsection{Access to the text}
-   <P>
+<P>
    The textport's initial read-only status depends on the <CODE>readOnly</CODE>
    parameter to the <CODE>init</CODE> method. The <CODE>getReadOnly</CODE> method returns
    it; the <CODE>setReadOnly</CODE> method sets it.

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/Expr.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/Expr.i3</H2></A><HR>
 <inInterface>
@@ -45,7 +45,7 @@ PROCEDURE <A HREF="Expr.m3.html#GetBounds">GetBounds</A> (t: T;  VAR min, max: T
 PROCEDURE <A HREF="Expr.m3.html#IsDesignator">IsDesignator</A> (t: T): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> TRUE iff t is a designator </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="Expr.m3.html#IsWritable">IsWritable</A> (t: T): BOOLEAN;
+PROCEDURE <A HREF="Expr.m3.html#IsWritable">IsWritable</A> (t: T; lhs: BOOLEAN): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> TRUE iff t is a writable designator </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="Expr.m3.html#IsZeroes">IsZeroes</A> (t: T): BOOLEAN;
@@ -78,11 +78,11 @@ PROCEDURE <A HREF="Expr.m3.html#IsMarkedForDirectAssignment">IsMarkedForDirectAs
 PROCEDURE <A HREF="Expr.m3.html#Compile">Compile</A> (t: T);
 </PRE><BLOCKQUOTE><EM> emits code to evaluate the expression onto the top of stack </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="Expr.m3.html#PrepLValue">PrepLValue</A> (t: T);
-PROCEDURE <A HREF="Expr.m3.html#CompileLValue">CompileLValue</A> (t: T);
+PROCEDURE <A HREF="Expr.m3.html#PrepLValue">PrepLValue</A> (t: T; lhs: BOOLEAN);
+PROCEDURE <A HREF="Expr.m3.html#CompileLValue">CompileLValue</A> (t: T; lhs: BOOLEAN);
 </PRE><BLOCKQUOTE><EM> emits code to evaluate 't's L-value into s0.A. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="Expr.m3.html#CompileAddress">CompileAddress</A> (t: T);
+PROCEDURE <A HREF="Expr.m3.html#CompileAddress">CompileAddress</A> (t: T; lhs: BOOLEAN);
 </PRE><BLOCKQUOTE><EM> emits code to evaluate 't's byte address onto the top of stack.
    Use PrepLValue to prep these expressions. </EM></BLOCKQUOTE><PRE>
 

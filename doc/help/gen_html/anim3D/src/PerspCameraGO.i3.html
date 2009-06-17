@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/PerspCameraGO.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/PerspCameraGO.i3</H2></A><HR>
 <inInterface>
@@ -13,9 +13,9 @@
  Last modified on Thu Jun 23 14:29:02 PDT 1994 by najork                   
        Created on Thu Feb 10 11:51:21 PST 1994 by najork                   
 
-<P> A <CODE>PerspCameraGO.T</CODE> is a perspective camera, i.e.\ a camera which shows 
+<P> A <CODE>PerspCameraGO.T</CODE> is a perspective camera, i.e.\ a camera which shows
    a scene from a certain point (and depicts perspective relations naturally).
-   The volume of space observed by such a camera forms an (infinitely high) 
+   The volume of space observed by such a camera forms an (infinitely high)
    pyramid. The shape of the pyramid is determined by the following parameters:
    \begin{itemize}
    \item The position of the camera (which determines the tip of the pyramid)
@@ -29,10 +29,10 @@
    \end{itemize}
 <P>
    The figure below illustrates the role of the parameters:
-   <P>
+<P>
    \begin{center}
    \begin{tabular}{c}
-   \psfig{figure=images/PerspCamera.ps,width=4in,silent=} 
+   \psfig{figure=images/PerspCamera.ps,width=4in,silent=}
    \end{tabular}
    \end{center}
 
@@ -50,7 +50,7 @@ TYPE
 </PRE><BLOCKQUOTE><EM> <CODE>pc.init()</CODE> initializes a new perspective camera and returns it. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="PerspCameraGO.m3.html#New">New</A> (from, to, up : Point3.T; fovy : REAL) : T;
-</PRE><BLOCKQUOTE><EM> <CODE>New(from,to,up,fovy)</CODE> creates a new perspective camera <CODE>cam</CODE> and 
+</PRE><BLOCKQUOTE><EM> <CODE>New(from,to,up,fovy)</CODE> creates a new perspective camera <CODE>cam</CODE> and
    returns it. It also attaches the following properties to <CODE>cam</CODE>:
    \begin{verbatim}
       (CameraGO.From,PointProp.NewConst(from))
@@ -63,13 +63,13 @@ PROCEDURE <A HREF="PerspCameraGO.m3.html#New">New</A> (from, to, up : Point3.T; 
 
 VAR
   Fovy : RealProp.Name;
-</PRE><BLOCKQUOTE><EM> In addition to the properties observed by all \type{GO}{T}'s and 
-   \type{CameraGO}{T}'s, there is one additional property that is observed 
-   by <CODE>PerspCameraGO.T</CODE>'s. 
+</PRE><BLOCKQUOTE><EM> In addition to the properties observed by all \type{GO}{T}'s and
+   \type{CameraGO}{T}'s, there is one additional property that is observed
+   by <CODE>PerspCameraGO.T</CODE>'s.
    <CODE>Fovy</CODE> is the name of a property that determines the field-of-vision,
    i.e.\ the angle (in degree radians) between the ``up'' and the ``down''
-   wall of the pyramid; it associates with a property value of type 
-   \type{RealProp}{Val}. The angle between ``left'' and ``right'' wall is 
+   wall of the pyramid; it associates with a property value of type
+   \type{RealProp}{Val}. The angle between ``left'' and ``right'' wall is
    determined by the aspect ratio. </EM></BLOCKQUOTE><PRE>
 
 END PerspCameraGO.

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-machine/src/RedundantSolve.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-machine/src/RedundantSolve.m3</H2></A><HR>
 <inModule>
@@ -90,7 +90,7 @@ VAR
   MinDelta := 1.0e-7;
   RoundFudge := FLOAT(16.0, JunoValue.Real);
 </PRE> A constraint is considered satisfied if its error is at most <CODE>RoundFudge</CODE>
-   times the estimated round-off error involved in computing it. 
+   times the estimated round-off error involved in computing it.
 <P>
    A change to a coordinate of the solution that has relative value less than
    <CODE>MinDelta</CODE> is considered tiny.  When all changes are tiny, the iteration
@@ -261,13 +261,13 @@ PROCEDURE <A NAME="P"><procedure>P</procedure></A>(
 <PRE>
       ON ENTRY:
       
-      	    v[]                
-      	  ________                   
-      	 |        |                  
-      	 |  True  |                  
-      	 |  Vars  |                  
-      	 |        |        c[] 
-      	 |________|    _____________ 
+      	    v[]
+      	  ________
+      	 |        |
+      	 |  True  |
+      	 |  Vars  |
+      	 |        |        c[]
+      	 |________|    _____________
        nn -&gt; |        |   |             |
       	 |        |   |             |
       	 |  Ghost |   |    Ghost    |
@@ -284,13 +284,13 @@ PROCEDURE <A NAME="P"><procedure>P</procedure></A>(
       MATRIX ORGANIZATION:
       
       		x[]
-      	____________________         __ 
+      	____________________         __
            |                    |       |..|
            |____________________|       |..| = unused
                                         |__|
            | &lt;------ nn ------&gt; |
-         
-         
+      
+      
       	       a[][]             errorVec[]
             _______________________      __
        ^   |                    |  |    |..|

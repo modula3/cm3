@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-machine/src/RedundantSolve.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-machine/src/RedundantSolve.i3</H2></A><HR>
 <inInterface>
@@ -77,12 +77,12 @@ PROCEDURE <A HREF="RedundantSolve.m3.html#P">P</A>(
    constraints in the arrays <CODE>v</CODE> and <CODE>c</CODE>:
 <P>
 <PRE>
-      	    v[]                
-      	  ________                   
-      	 |        |                  
-      	 |  True  |                  
-      	 |  Vars  |        c[]          
-      	 |________|    _____________ 
+      	    v[]
+      	  ________
+      	 |        |
+      	 |  True  |
+      	 |  Vars  |        c[]
+      	 |________|    _____________
         m -&gt; |        |   |             |
       	 |  Ghost |   |    Ghost    |
       	 |  Vars  |   | Constraints |
@@ -92,7 +92,7 @@ PROCEDURE <A HREF="RedundantSolve.m3.html#P">P</A>(
       	 |________|   | Constraints |
       	 |        |   |_____________|
       	 | Knowns |
-      	 |________|                  
+      	 |________|
 </PRE>
    The running time of the solver is <CODE>O(n^3)</CODE>, where <CODE>n</CODE> is the number of true
    variables. Hence, although the solver functions identically independent of

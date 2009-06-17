@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: zeus/src/ZFmt.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>zeus/src/ZFmt.i3</H2></A><HR>
 <inInterface>
@@ -16,7 +16,7 @@
 
 <P> The procedure in the <CODE>ZFmt</CODE> interface are intended for use
    as the ``formatting functions'' in <CODE>m3zume</CODE> event-specification
-   files. The locking-level on all procedures in this interface 
+   files. The locking-level on all procedures in this interface
    is arbitrary. 
 
 <P><PRE>INTERFACE <interface><A HREF="ZFmt.m3.html">ZFmt</A></interface>;
@@ -31,11 +31,11 @@ PROCEDURE <A HREF="ZFmt.m3.html#Char">Char</A>(c: CHAR): TEXT;
 </PRE><BLOCKQUOTE><EM> <CODE>ZFmt.Char(c)</CODE> returns <CODE>Fmt.Char(c)</CODE> </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="ZFmt.m3.html#Real">Real</A> (r: REAL): TEXT;
-</PRE><BLOCKQUOTE><EM> <CODE>ZFmt.Real(r)</CODE> returns 
+</PRE><BLOCKQUOTE><EM> <CODE>ZFmt.Real(r)</CODE> returns
      <CODE>Fmt.Real(r, style := Fmt.Style.Fix, literal := TRUE)</CODE> </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="ZFmt.m3.html#LongReal">LongReal</A> (r: LONGREAL): TEXT;
-</PRE><BLOCKQUOTE><EM> <CODE>ZFmt.LongReal(r)</CODE> returns 
+</PRE><BLOCKQUOTE><EM> <CODE>ZFmt.LongReal(r)</CODE> returns
      <CODE>Fmt.LongReal(r, style := Fmt.Style.Fix, literal := TRUE)</CODE> </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="ZFmt.m3.html#Text">Text</A> (t: TEXT): TEXT;

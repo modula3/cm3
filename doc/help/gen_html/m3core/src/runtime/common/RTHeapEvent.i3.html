@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTHeapEvent.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTHeapEvent.i3</H2></A><HR>
 <inInterface>
@@ -37,8 +37,8 @@ TYPE
         desc := RTHeapRep.Desc{
                   space := RTHeapRep.Space.Unallocated, generation :=
                   RTHeapRep.Generation.Younger, pure := FALSE, note :=
-                  RTHeapRep.Note.Allocated, gray := FALSE, protected :=
-                  FALSE, continued := FALSE};
+                  RTHeapRep.Note.Allocated, gray := FALSE,
+                  clean := FALSE, locked := FALSE };
       END;
 
 END RTHeapEvent.

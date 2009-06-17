@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3quake/src/QMachine.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3quake/src/QMachine.i3</H2></A><HR>
 <inInterface>
@@ -55,6 +55,8 @@ PROCEDURE <A HREF="QMachine.m3.html#PopBool">PopBool</A> (t: T): BOOLEAN    RAIS
 PROCEDURE <A HREF="QMachine.m3.html#PopText">PopText</A> (t: T): TEXT       RAISES {Error};
 PROCEDURE <A HREF="QMachine.m3.html#PopInt">PopInt</A>  (t: T): INTEGER    RAISES {Error};
 PROCEDURE <A HREF="QMachine.m3.html#PopID">PopID</A>   (t: T): ID         RAISES {Error};
+
+PROCEDURE <A HREF="QMachine.m3.html#GetEnv">GetEnv</A> (default, v0, v1, v2, v3, v4: TEXT := NIL): TEXT;
 
 END QMachine.
 </PRE>

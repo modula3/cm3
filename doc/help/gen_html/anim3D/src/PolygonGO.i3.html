@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/PolygonGO.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/PolygonGO.i3</H2></A><HR>
 <inInterface>
@@ -24,22 +24,22 @@ TYPE <A HREF="PolygonGO.m3.html#T">T</A> &lt;: SurfaceGO.T;
 
 PROCEDURE <A HREF="PolygonGO.m3.html#NewStatic">NewStatic</A> (READONLY pts : ARRAY OF Point3.T;
                      s := GO.Shape.Unknown) : T;
-</PRE><BLOCKQUOTE><EM> Creates a new polygon <CODE>pg</CODE> and returns it. <CODE>pg</CODE> is defined by the array of 
-   points <CODE>pts</CODE>. <CODE>s</CODE> is a ``shape hint'', i.e.\ a hint whether the polygon is 
-   convex, non-convex, or complex. Refer to the \interface{GO} interface 
+</PRE><BLOCKQUOTE><EM> Creates a new polygon <CODE>pg</CODE> and returns it. <CODE>pg</CODE> is defined by the array of
+   points <CODE>pts</CODE>. <CODE>s</CODE> is a ``shape hint'', i.e.\ a hint whether the polygon is
+   convex, non-convex, or complex. Refer to the \interface{GO} interface
    for details on shape hints. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="PolygonGO.m3.html#New">New</A> (READONLY pts : ARRAY OF PointProp.Val;
                s := GO.Shape.Unknown) : T;
-</PRE><BLOCKQUOTE><EM> Creates a new polygon <CODE>pg</CODE> and returns it. The point property values in 
-   <CODE>pts</CODE> are used as the corner points of the polygon. The optional argument 
+</PRE><BLOCKQUOTE><EM> Creates a new polygon <CODE>pg</CODE> and returns it. The point property values in
+   <CODE>pts</CODE> are used as the corner points of the polygon. The optional argument
    <CODE>s</CODE> indicates the shape of the polygon. </EM></BLOCKQUOTE><PRE>
-</PRE> {\sl 
-     Note: Things would be even more general if we could dynamically add 
-     points to a polygon or remove them. One idea would be to introduce 
-     a new property value <CODE>PointSequenceProp.Val</CODE>, which contains an array 
-     of <CODE>PointProp.Val</CODE>'s. <CODE>PointSequence</CODE> should be non-animatable, but 
-     provide methods to access its elements. For <CODE>QuadMeshGO.T</CODE>'s, there 
+</PRE> {\sl
+     Note: Things would be even more general if we could dynamically add
+     points to a polygon or remove them. One idea would be to introduce
+     a new property value <CODE>PointSequenceProp.Val</CODE>, which contains an array
+     of <CODE>PointProp.Val</CODE>'s. <CODE>PointSequence</CODE> should be non-animatable, but
+     provide methods to access its elements. For <CODE>QuadMeshGO.T</CODE>'s, there
      should be similar types <CODE>PointField</CODE> and <CODE>ColorField</CODE>.
    } 
 

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/AddressExpr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/AddressExpr.m3</H2></A><HR>
 <inModule>
@@ -37,10 +37,10 @@ TYPE
         getBounds    := Bounder;
         isWritable   := ExprRep.IsNever;
         isDesignator := ExprRep.IsNever;
-	isZeroes     := IsZeroes;
-	genFPLiteral := GenFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := GenLiteral;
+        isZeroes     := IsZeroes;
+        genFPLiteral := GenFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
       END;
 
@@ -68,9 +68,9 @@ PROCEDURE <A NAME="Split"><procedure>Split</procedure></A> (e: Expr.T;  VAR valu
   END Split;
 
 PROCEDURE <A NAME="Add"><procedure>Add</procedure></A> (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR i, j: Target.Int;
+  VAR i, j: Target.Int;  t: Type.T;
   BEGIN
-    IF NOT IntegerExpr.Split (b, i) THEN RETURN FALSE END;
+    IF NOT IntegerExpr.Split (b, i, t) THEN RETURN FALSE END;
     TYPECASE a OF
     | NULL =&gt; RETURN FALSE;
     | P(p) =&gt; TWord.Add (p.value, i, j);  c := New (j);  RETURN TRUE;
@@ -79,7 +79,7 @@ PROCEDURE <A NAME="Add"><procedure>Add</procedure></A> (a, b: Expr.T;  VAR c: Ex
   END Add;
 
 PROCEDURE <A NAME="Subtract"><procedure>Subtract</procedure></A> (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR i, j, k: Target.Int;
+  VAR i, j, k: Target.Int;  t: Type.T;
   BEGIN
     TYPECASE a OF
     | NULL =&gt; RETURN FALSE;
@@ -87,13 +87,13 @@ PROCEDURE <A NAME="Subtract"><procedure>Subtract</procedure></A> (a, b: Expr.T; 
     ELSE      RETURN FALSE;
     END;
 
-    IF IntegerExpr.Split (b, j) THEN
+    IF IntegerExpr.Split (b, j, t) THEN
       TWord.Subtract (i, j, k);
       c := New (k);
     ELSE (* address - address *)
       TYPECASE b OF
       | NULL =&gt; RETURN FALSE;
-      | P(p) =&gt; TWord.Subtract (i, p.value, k);  c := IntegerExpr.New (k);
+      | P(p) =&gt; TWord.Subtract (i, p.value, k);  c := IntegerExpr.New (t, k);
       ELSE      RETURN FALSE;
       END;
     END;
@@ -152,7 +152,7 @@ PROCEDURE <A NAME="Bounder"><procedure>Bounder</procedure></A> (p: P;   VAR min,
     max := p.value;
   END Bounder;
 
-PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (p: P): BOOLEAN =
+PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (p: P;  &lt;*UNUSED*&gt; lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN p = Null.Nil OR TInt.EQ (p.value, TInt.Zero);
   END IsZeroes;
@@ -180,6 +180,7 @@ END AddressExpr.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

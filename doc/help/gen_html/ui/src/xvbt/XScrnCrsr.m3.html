@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/xvbt/XScrnCrsr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/xvbt/XScrnCrsr.m3</H2></A><HR>
 <inModule>
@@ -184,7 +184,7 @@ PROCEDURE <A NAME="CursorLookup"><procedure>CursorLookup</procedure></A> (orc: C
 
 PROCEDURE <A NAME="CursorBuiltIn"><procedure>CursorBuiltIn</procedure></A> (orc: CursorOracle; cs: Cursor.Predefined):
   ScrnCursor.T =
-  VAR xid: X.Cursor;
+  VAR ret: ScrnCursor.T := ScrnCursor.DontCare;
   BEGIN
     WITH st   = orc.st,
          trsl = st.trsl,
@@ -193,22 +193,24 @@ PROCEDURE <A NAME="CursorBuiltIn"><procedure>CursorBuiltIn</procedure></A> (orc:
         TrestleOnX.Enter(trsl);
         TRY
           CASE cs OF
-            Cursor.DontCare.cs =&gt; RETURN ScrnCursor.DontCare
+          | Cursor.DontCare.cs =&gt;
           | Cursor.TextPointer.cs =&gt;
-              xid := X.XCreateFontCursor(dpy, 68 (*X.XC_left_ptr*))
+            ret := NEW(XCursor,
+                       id := X.XCreateFontCursor(dpy, 68 (*X.XC_left_ptr*)));
           | Cursor.NotReady.cs =&gt;
-              xid := X.XCreateFontCursor(dpy, 150 (*X.XC_watch*))
+            ret := NEW(XCursor,
+                       id := X.XCreateFontCursor(dpy, 150 (*X.XC_watch*)));
           ELSE
-            xid := X.None
+            ret := NEW(XCursor, id := X.None);
           END
         FINALLY
           TrestleOnX.Exit(trsl)
         END
       EXCEPT
-        X.Error, TrestleComm.Failure =&gt; RETURN ScrnCursor.DontCare
+      | X.Error, TrestleComm.Failure =&gt;
       END
     END;
-    RETURN NEW(XCursor, id := xid)
+    RETURN ret;
   END CursorBuiltIn;
 
 PROCEDURE <A NAME="CursorLocalize"><procedure>CursorLocalize</procedure></A> (&lt;*UNUSED*&gt; cs: XCursor): ScrnCursor.Raw

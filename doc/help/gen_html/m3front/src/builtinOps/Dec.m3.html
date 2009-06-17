@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/builtinOps/Dec.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/builtinOps/Dec.m3</H2></A><HR>
 <inModule>
@@ -16,7 +16,7 @@
 
 <P><PRE>MODULE <module><implements><A HREF="Dec.i3.html">Dec</A></implements></module>;
 
-IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../exprs/ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../values/Module.i3.html">Module</A>;
+IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../exprs/ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../builtinTypes/LInt.i3.html">LInt</A>, <A HREF="../values/Module.i3.html">Module</A>;
 IMPORT <A HREF="#x2">M3ID</A>, <A HREF="../builtinTypes/Addr.i3.html">Addr</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="../exprs/IntegerExpr.i3.html">IntegerExpr</A>, <A HREF="../misc/Host.i3.html">Host</A>, <A HREF="../exprs/NamedExpr.i3.html">NamedExpr</A>;
 
 VAR Z: CallExpr.MethodList;
@@ -38,9 +38,10 @@ PROCEDURE <A NAME="DoCheck"><procedure>DoCheck</procedure></A> (name: TEXT;  ce:
       ELSE
         Error.Txt (name, &quot;first argument must be of an ordinal type&quot;);
       END;
-    ELSIF (NOT Expr.IsDesignator (e)) THEN
+    END;
+    IF (NOT Expr.IsDesignator (e)) THEN
       Error.Txt (name, &quot;first argument must be a variable&quot;);
-    ELSIF (NOT Expr.IsWritable (e)) THEN
+    ELSIF (NOT Expr.IsWritable (e, lhs := TRUE)) THEN
       Error.Txt (name, &quot;first argument must be writable&quot;);
     ELSIF NamedExpr.SplitName (e, nm) THEN
       (* simple scalar =&gt; we don't need an explicit address
@@ -49,9 +50,16 @@ PROCEDURE <A NAME="DoCheck"><procedure>DoCheck</procedure></A> (name: TEXT;  ce:
       Expr.NeedsAddress (e);
     END;
     IF (NUMBER (ce.args^) &gt; 1) THEN
-      t := Type.Base (Expr.TypeOf (ce.args[1]));
-      IF (t # Int.T) THEN
-        Error.Txt (name, &quot;second argument must be an integer&quot;);
+      IF Type.IsSubtype (t, LInt.T) THEN
+        t := Type.Base (Expr.TypeOf (ce.args[1]));
+        IF (t # LInt.T) THEN
+          Error.Txt (name, &quot;second argument must be a LONGINT&quot;);
+        END;
+      ELSE
+        t := Type.Base (Expr.TypeOf (ce.args[1]));
+        IF (t # Int.T) THEN
+          Error.Txt (name, &quot;second argument must be an INTEGER&quot;);
+        END;
       END;
     END;
     ce.type := NIL;
@@ -59,7 +67,7 @@ PROCEDURE <A NAME="DoCheck"><procedure>DoCheck</procedure></A> (name: TEXT;  ce:
 
 PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (ce: CallExpr.T) =
   BEGIN
-    Expr.PrepLValue (ce.args[0]);
+    Expr.PrepLValue (ce.args[0], lhs := TRUE);
     IF (NUMBER (ce.args^) &gt; 1) THEN Expr.Prep (ce.args[1]); END;
   END Prep;
 
@@ -76,19 +84,28 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (ce: CallExpr.T) 
     EVAL Type.CheckInfo (tlhs, info);
     IF (NUMBER (ce.args^) &gt; 1)
       THEN dec := ce.args[1];
-      ELSE dec := IntegerExpr.New (TInt.One);  Expr.Prep (dec);
+    ELSIF Type.IsSubtype (tlhs, LInt.T)
+      THEN dec := IntegerExpr.New (LInt.T, TInt.One);  Expr.Prep (dec);
+      ELSE dec := IntegerExpr.New (Int.T,  TInt.One);  Expr.Prep (dec);
     END;
     Expr.GetBounds (lhs, bmin, bmax);
     Expr.GetBounds (dec, imin, imax);
 
     IF Host.doRangeChk THEN
-      IF NOT TInt.EQ (bmin, Target.Integer.min)
-         AND TInt.LT (TInt.Zero, imax) THEN INC (check) END;
-      IF NOT TInt.EQ (bmax, Target.Integer.max)
-         AND TInt.LT (imin, TInt.Zero) THEN INC (check, 2) END;
+      IF Type.IsSubtype (tlhs, LInt.T) THEN
+        IF NOT TInt.EQ (bmin, Target.Longint.min)
+           AND TInt.LT (TInt.Zero, imax) THEN INC (check) END;
+        IF NOT TInt.EQ (bmax, Target.Longint.max)
+           AND TInt.LT (imin, TInt.Zero) THEN INC (check, 2) END;
+      ELSE
+        IF NOT TInt.EQ (bmin, Target.Integer.min)
+           AND TInt.LT (TInt.Zero, imax) THEN INC (check) END;
+        IF NOT TInt.EQ (bmax, Target.Integer.max)
+           AND TInt.LT (imin, TInt.Zero) THEN INC (check, 2) END;
+      END;
     END;
 
-    Expr.CompileLValue (lhs);
+    Expr.CompileLValue (lhs, lhs := TRUE);
     lvalue := CG.Pop ();
     CG.Push (lvalue);
 
@@ -98,14 +115,15 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (ce: CallExpr.T) 
 
     IF (info.stk_type = CG.Type.Addr)
       THEN CG.Index_bytes (-Target.Byte);  check := 0;
-      ELSE CG.Subtract (Target.Integer.cg_type);
+      ELSE CG.Subtract (info.stk_type);
     END;
 
     CASE check OF
     | 0 =&gt; (* no range checking *)
-    | 1 =&gt; CG.Check_lo (bmin, CG.RuntimeError.ValueOutOfRange);
-    | 2 =&gt; CG.Check_hi (bmax, CG.RuntimeError.ValueOutOfRange);
-    | 3 =&gt; CG.Check_range (bmin, bmax, CG.RuntimeError.ValueOutOfRange);
+    | 1 =&gt; CG.Check_lo (info.stk_type, bmin, CG.RuntimeError.ValueOutOfRange);
+    | 2 =&gt; CG.Check_hi (info.stk_type, bmax, CG.RuntimeError.ValueOutOfRange);
+    | 3 =&gt; CG.Check_range (info.stk_type, bmin, bmax,
+                           CG.RuntimeError.ValueOutOfRange);
     END;
 
     CG.Store_indirect (info.stk_type, 0, info.size);
@@ -140,6 +158,7 @@ END Dec.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

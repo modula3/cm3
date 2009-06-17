@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/misc/RunTyme.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/misc/RunTyme.i3</H2></A><HR>
 <inInterface>
@@ -22,12 +22,13 @@ TYPE
     CheckIsType, ScanTypecase,
     RaiseEx, ResumeRaiseEx, PushEFrame, PopEFrame,
     Concat, MultiCat,
-    NewTracedRef, NewTracedArray,
+    NewTracedObj, NewTracedRef, NewTracedArray,
     NewUntracedObj, NewUntracedRef, NewUntracedArray,
     DisposeRef, DisposeObj,
     Abort, AssertFailed, DebugMsg,
     TextLitInfo, TextLitGetChar, TextLitGetWideChar,
-    TextLitGetChars, TextLitGetWideChars
+    TextLitGetChars, TextLitGetWideChars,
+    CheckLoadTracedRef, CheckStoreTraced
   };
 
 PROCEDURE <A HREF="RunTyme.m3.html#Import">Import</A> ();
@@ -40,6 +41,9 @@ PROCEDURE <A HREF="RunTyme.m3.html#LookUpProc">LookUpProc</A> (h: Hook): Procedu
 </PRE><BLOCKQUOTE><EM> return a handle on the procedure that implements hook 'h' </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="RunTyme.m3.html#Reset">Reset</A> ();
+
+PROCEDURE <A HREF="RunTyme.m3.html#EmitCheckLoadTracedRef">EmitCheckLoadTracedRef</A> ();
+PROCEDURE <A HREF="RunTyme.m3.html#EmitCheckStoreTraced">EmitCheckStoreTraced</A> ();
 
 END RunTyme.
 </PRE>

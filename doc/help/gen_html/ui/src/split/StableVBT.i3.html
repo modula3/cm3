@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/StableVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/StableVBT.i3</H2></A><HR>
 <inInterface>
@@ -22,7 +22,7 @@
    satisfies its max and min size, then its preferred size is its own
    size, otherwise its preferred size is its child's preference,
    unless the filter is projecting, in which case the preferred size
-   is the projection of the VBTs own size into the child's size range.  Its 
+   is the projection of the VBTs own size into the child's size range.  Its
    <CODE>own size</CODE> is its current size if this is non-empty, or its last non-empty
    size otherwise, unless. SetShape has been called the next calls to the
    shape procedures use the values set.
@@ -30,7 +30,7 @@
    Thus when the child changes its preferred shape, the parent generally
    does not.  To allow a new preferred shape of a child to get through
    the filter, the filter can be temporarily disabled.
-   <P>
+<P>
    
 
 <P><PRE>INTERFACE <interface><A HREF="StableVBT.m3.html">StableVBT</A></interface>;
@@ -52,7 +52,7 @@ TYPE
 PROCEDURE <A HREF="StableVBT.m3.html#Disable">Disable</A>(v: VBT.T); &lt;* LL.sup &lt; v *&gt;
 </PRE><BLOCKQUOTE><EM> Temporarily disable the lowest (possibly improper) ancestor of <CODE>v</CODE>
    that is a <CODE>StableVBT.T</CODE>, if any.  </EM></BLOCKQUOTE><PRE>
-</PRE> While disabled, the filter reports its preferred size as the 
+</PRE> While disabled, the filter reports its preferred size as the
    child's preferred size.  The filter will be reenabled as soon
    as it is reshaped to a non-empty domain. 
 

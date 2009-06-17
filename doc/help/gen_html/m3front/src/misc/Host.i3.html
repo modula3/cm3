@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/misc/Host.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/misc/Host.i3</H2></A><HR>
 <inInterface>
@@ -68,6 +68,10 @@ VAR (* runtime checks *)
   doProcChk   : BOOLEAN := FALSE;
   doDebugs    : BOOLEAN := TRUE;
 
+VAR (* GC checks *)
+  doIncGC := TRUE;
+  doGenGC := TRUE;
+
 VAR
   new_adr      : BOOLEAN := FALSE;  (* TRUE =&gt;  &quot;ADR (t: T): UNTRACED REF T&quot; *)
   report_stats : BOOLEAN := FALSE;
@@ -78,9 +82,6 @@ PROCEDURE <A HREF="Host.m3.html#OpenUnit">OpenUnit</A> (name: M3ID.T; interface,
                       VAR(*OUT*) filename: TEXT): File.T;
 
 PROCEDURE <A HREF="Host.m3.html#CloseFile">CloseFile</A> (rd: File.T);
-
-PROCEDURE <A HREF="Host.m3.html#FileTail">FileTail</A> (path: TEXT): TEXT;
-</PRE><BLOCKQUOTE><EM> returns the tail of 'path' </EM></BLOCKQUOTE><PRE>
 
 END Host.
 </PRE>

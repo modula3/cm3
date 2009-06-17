@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/text/TextLiteral.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/text/TextLiteral.i3</H2></A><HR>
 <inInterface>
@@ -20,7 +20,10 @@
 IMPORT <A HREF="../runtime/common/RTHooks.i3.html">RTHooks</A>, <A HREF="TextClass.i3.html">TextClass</A>;
 
 CONST
-  MaxBytes = LAST (INTEGER) DIV BITSIZE (Byte) - 32;
+ (* BUG: The front end should do target arithmetic so this is legal,
+ but declaring that a text cannot be larger than 4G isn't terrible. *)
+ (* MaxBytes = LAST (INTEGER) DIV BITSIZE (Byte) - 32; *)
+ MaxBytes = 16_0FFFFFF0;
 
 TYPE
   T = RTHooks.TextLiteral;

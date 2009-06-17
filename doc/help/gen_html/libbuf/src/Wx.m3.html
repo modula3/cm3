@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libbuf/src/Wx.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libbuf/src/Wx.m3</H2></A><HR>
 <inModule>
@@ -12,7 +12,7 @@
                                                              
  Last modified on Thu Dec  8 09:51:33 PST 1994 by kalsow     
 
-<P><PRE>MODULE <module><implements><A HREF="Wx.i3.html">Wx</A></implements></module>;
+<P><PRE>MODULE <module><implements><A HREF="#x1">Wx</A></implements></module>;
 
 IMPORT <A HREF="../../m3core/src/convert/Convert.i3.html">Convert</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../m3core/src/text/Text8.i3.html">Text8</A>;
 IMPORT <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>;
@@ -167,7 +167,7 @@ CONST digits_100B = ARRAY [0..99] OF CHAR {
   END GetLength;
 </PRE>----------------------------------------------------------------------
 <PRE>PROCEDURE <A NAME="ToText"><procedure>ToText</procedure></A> (t: T): TEXT =
-  VAR txt := Text8.Create(t.nFull * ChunkSize + t.next + 1);
+  VAR txt := Text8.Create(t.nFull * ChunkSize + t.next);
       c := t.head;   n := 0;
   BEGIN
     FOR i := 1 TO t.nFull DO
@@ -219,6 +219,13 @@ BEGIN
 END Wx.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Wx is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/utils/Wx.i3.html#0TOP0">cm3ide/src/utils/Wx.i3</A>
+<LI><A HREF="Wx.i3.html#0TOP0">libbuf/src/Wx.i3</A>
+</UL>
+<P>
 <PRE>
 
 

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/misc/CG.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/misc/CG.m3</H2></A><HR>
 <inModule>
@@ -20,6 +20,7 @@ IMPORT <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../
 IMPORT <A HREF="Scanner.i3.html">Scanner</A>, <A HREF="Error.i3.html">Error</A>, <A HREF="../values/Module.i3.html">Module</A>, <A HREF="RunTyme.i3.html">RunTyme</A>, <A HREF="WebInfo.i3.html">WebInfo</A>;
 IMPORT <A HREF="M3.i3.html">M3</A>, <A HREF="../../../m3middle/src/M3CG.i3.html">M3CG</A>, <A HREF="../../../m3middle/src/M3CG_Ops.i3.html">M3CG_Ops</A>, <A HREF="../../../m3middle/src/M3CG_Check.i3.html">M3CG_Check</A>;
 IMPORT <A HREF="Host.i3.html">Host</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="../../../m3middle/src/TFloat.i3.html">TFloat</A>, <A HREF="../../../m3middle/src/TWord.i3.html">TWord</A>, <A HREF="../../../m3middle/src/TargetMap.i3.html">TargetMap</A>, <A HREF="../../../m3middle/src/M3RT.i3.html">M3RT</A> (**, RTObject **);
+IMPORT <A HREF="../../../m3core/src/runtime/common/RTIO.i3.html">RTIO</A>;
 
 CONST
   Max_init_chars = 256; (* max size of a single init_chars string *)
@@ -96,7 +97,7 @@ VAR
   fields      : ARRAY BOOLEAN OF Node;
   in_init     : BOOLEAN     := FALSE;
   init_pc     : INTEGER     := 0;
-  init_bits   : Target.Int  := TInt.Zero;
+  init_bits   : Target.Int;
   free_temps  : TempWrapper := NIL;
   busy_temps  : TempWrapper := NIL;
   free_values : Val         := NIL;
@@ -113,13 +114,16 @@ VAR (*CONST*)
 </PRE>---------------------------------------------------------------------------
 
 <P><PRE>PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> () =
+  VAR ZeroI := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   BEGIN
     Max_alignment := Target.Alignments [LAST (Target.Alignments)];
 
     FOR t := FIRST (Type) TO LAST (Type) DO StackType[t] := t; END;
-    FOR t := Type.Word8 TO Type.Int64 DO
+    FOR t := Type.Word8 TO Type.Int32 DO
       StackType[t] := Target.Integer.cg_type;
     END;
+    StackType[Type.Int64]  := Type.Int64;
+    StackType[Type.Word64] := Type.Int64;
 
     cg_wr := Host.env.init_code_generator ();
     IF (cg_wr = NIL) THEN
@@ -147,7 +151,7 @@ VAR (*CONST*)
     fields[TRUE]   := NIL;
     in_init        := FALSE;
     init_pc        := 0;
-    init_bits      := TInt.Zero;
+    init_bits      := ZeroI;
     free_temps     := NIL;
     busy_temps     := NIL;
     free_values    := NIL;
@@ -688,7 +692,17 @@ PROCEDURE <A NAME="Force"><procedure>Force</procedure></A> () =
       CASE (x.kind) OF
 
       | VKind.Integer =&gt;
-          x.type := Target.Integer.cg_type;
+          IF x.type = Target.Word.cg_type THEN
+            x.type := Target.Integer.cg_type;
+          ELSIF x.type = Target.Long.cg_type THEN
+            x.type := Target.Longint.cg_type;
+          ELSIF x.type = Target.Integer.cg_type THEN
+            (* ok *)
+          ELSIF x.type = Target.Longint.cg_type THEN
+            (* ok *)
+          ELSE
+            &lt;*ASSERT FALSE*&gt;
+          END;
           cg.load_integer (x.type, x.int);
 
       | VKind.Float =&gt;
@@ -777,11 +791,12 @@ PROCEDURE <A NAME="Force2"><procedure>Force2</procedure></A> (tag: TEXT;  commut
 </PRE>---------------------------------------- static variable initialization ---
 
 <P><PRE>PROCEDURE <A NAME="Begin_init"><procedure>Begin_init</procedure></A> (v: Var) =
+  VAR ZeroI := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   BEGIN
     cg.begin_init (v);
     in_init := TRUE;
     init_pc := 0;
-    init_bits := TInt.Zero;
+    init_bits := ZeroI;
   END Begin_init;
 
 PROCEDURE <A NAME="End_init"><procedure>End_init</procedure></A> (v: Var) =
@@ -819,19 +834,19 @@ PROCEDURE <A NAME="QuickSort"><procedure>QuickSort</procedure></A> (VAR a: ARRAY
       i := (hi + lo) DIV 2;
       IF (a[lo].o &lt; a[i].o) THEN
         IF (a[i].o &lt; a[hi-1].o) THEN
-	  key := a[i];
+          key := a[i];
         ELSIF (a[lo].o &lt; a[hi-1].o) THEN
           key := a[hi-1];  a[hi-1] := a[i];  a[i] := key;
         ELSE
-	  key := a[lo];  a[lo] := a[hi-1];  a[hi-1] := a[i];  a[i] := key;
+          key := a[lo];  a[lo] := a[hi-1];  a[hi-1] := a[i];  a[i] := key;
         END;
       ELSE
         IF (a[hi-1].o &lt; a[i].o) THEN
-	  key := a[i];  tmp := a[hi-1];  a[hi-1] := a[lo];  a[lo] := tmp;
+          key := a[i];  tmp := a[hi-1];  a[hi-1] := a[lo];  a[lo] := tmp;
         ELSIF (a[lo].o &lt; a[hi-1].o) THEN
-	  key := a[lo];  a[lo] := a[i];  a[i] := key;
+          key := a[lo];  a[lo] := a[i];  a[i] := key;
         ELSE
-	  key := a[hi-1];  a[hi-1] := a[lo];  a[lo] := a[i];  a[i] := key;
+          key := a[hi-1];  a[hi-1] := a[lo];  a[lo] := a[i];  a[i] := key;
         END;
       END;
 
@@ -909,9 +924,10 @@ PROCEDURE <A NAME="DumpNode"><procedure>DumpNode</procedure></A> (&lt;*UNUSED*&g
 PROCEDURE <A NAME="AdvanceInit"><procedure>AdvanceInit</procedure></A> (o: Offset) =
   VAR
     n_bytes := (o - init_pc) DIV Target.Byte;
-    base, n_bits, tmp, new_bits: Target.Int;
-    b_size: INTEGER;
+    tmp, new_bits: Target.Int;
+    size, n_bits: CARDINAL;
     t: Type;
+    ZeroI := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   BEGIN
     &lt;*ASSERT n_bytes &gt;= 0*&gt;
     &lt;*ASSERT in_init*&gt;
@@ -923,27 +939,24 @@ PROCEDURE <A NAME="AdvanceInit"><procedure>AdvanceInit</procedure></A> (o: Offse
       ELSE
         (* send out some number of bytes *)
         EVAL FindInitType (n_bytes, init_pc, t);
-        b_size := TargetMap.CG_Bytes[t];
-        IF (b_size = Target.Integer.bytes) THEN
+        size := TargetMap.CG_Size[t];
+        n_bits := Target.Integer.size - size;
+        IF (n_bits = 0) THEN
           cg.init_int (init_pc DIV Target.Byte, init_bits, t);
-          init_bits := TInt.Zero;
+          init_bits := ZeroI;
         ELSIF Target.Little_endian
-          AND TInt.FromInt (b_size * Target.Byte, base)
-          AND TInt.FromInt (Target.Integer.size - b_size*Target.Byte, n_bits)
-          AND TWord.Extract (init_bits, TInt.Zero, base, tmp)
-          AND TWord.Extract (init_bits, base, n_bits, new_bits) THEN
+          AND TWord.Extract (init_bits, 0, size, tmp)
+          AND TWord.Extract (init_bits, size, n_bits, new_bits) THEN
           cg.init_int (init_pc DIV Target.Byte, tmp, t);
           init_bits := new_bits;
         ELSIF (NOT Target.Little_endian)
-          AND TInt.FromInt (Target.Integer.size - b_size * Target.Byte, base)
-          AND TInt.FromInt (b_size*Target.Byte, n_bits)
-          AND TWord.Extract (init_bits, base, n_bits, tmp) THEN
-          TWord.Shift (init_bits, n_bits, new_bits);
+          AND TWord.Extract (init_bits, n_bits, size, tmp) THEN
+          TWord.Shift (init_bits, size, new_bits);
           cg.init_int (init_pc DIV Target.Byte, tmp, t);
           init_bits := new_bits;
         ELSE
           Err (&quot;unable to convert or initialize bit field value??  n_bytes=&quot;
-                &amp; Fmt.Int(n_bytes) &amp; &quot;  b_size=&quot; &amp; Fmt.Int (b_size));
+                &amp; Fmt.Int(n_bytes) &amp; &quot;  size=&quot; &amp; Fmt.Int (size));
           (** &lt;*ASSERT FALSE*&gt; **)
         END;
         DEC (n_bytes, TargetMap.CG_Bytes[t]);
@@ -971,7 +984,7 @@ PROCEDURE <A NAME="FindInitType"><procedure>FindInitType</procedure></A> (n_byte
 
 PROCEDURE <A NAME="Init_int"><procedure>Init_int</procedure></A> (o: Offset;  s: Size;  READONLY value: Target.Int;
                     is_const: BOOLEAN) =
-  VAR bit_offset: INTEGER;  itype: Type;  base, n_bits, tmp: Target.Int;
+  VAR bit_offset: CARDINAL;  itype: Type;  tmp: Target.Int;
   BEGIN
     IF (NOT in_init) THEN
       PushPending (NEW (IntNode, o := o, s := s, v := value), is_const);
@@ -990,9 +1003,7 @@ PROCEDURE <A NAME="Init_int"><procedure>Init_int</procedure></A> (o: Offset;  s:
       AND (TargetMap.CG_Size[itype] = s) THEN
       (* simple, aligned integer initialization *)
       cg.init_int (o DIV Target.Byte, value, itype);
-    ELSIF TInt.FromInt (bit_offset, base)
-      AND TInt.FromInt (s, n_bits)
-      AND TWord.Insert (init_bits, value, base, n_bits, tmp) THEN
+    ELSIF TWord.Insert (init_bits, value, bit_offset, s, tmp) THEN
       init_bits := tmp;
     ELSE
       Err (&quot;unable to stuff bit field value??&quot;);
@@ -1001,7 +1012,7 @@ PROCEDURE <A NAME="Init_int"><procedure>Init_int</procedure></A> (o: Offset;  s:
   END Init_int;
 
 PROCEDURE <A NAME="Init_intt"><procedure>Init_intt</procedure></A> (o: Offset;  s: Size;  value: INTEGER;  is_const: BOOLEAN) =
-  VAR val: Target.Int;  b := TInt.FromInt (value, val);
+  VAR val: Target.Int;  b := TInt.FromInt (value, Target.Integer.bytes, val);
   BEGIN
     IF NOT b THEN ErrI (value, &quot;integer const not representable&quot;) END;
     Init_int (o, s, val, is_const);
@@ -1015,10 +1026,10 @@ PROCEDURE <A NAME="DumpInt"><procedure>DumpInt</procedure></A> (x: IntNode) =
 
 PROCEDURE <A NAME="Init_proc"><procedure>Init_proc</procedure></A> (o: Offset;  value: Proc;  is_const: BOOLEAN) =
   BEGIN
+    &lt;*ASSERT o MOD Target.Address.align = 0 *&gt;
     IF (in_init) THEN
       AdvanceInit (o);
       &lt;*ASSERT o = init_pc*&gt;
-      &lt;*ASSERT o MOD Target.Address.align = 0 *&gt;
       cg.init_proc (AsBytes (o), value);
     ELSE
       PushPending (NEW (ProcNode, o := o, v := value), is_const);
@@ -1033,10 +1044,10 @@ PROCEDURE <A NAME="DumpProc"><procedure>DumpProc</procedure></A> (x: ProcNode) =
 
 PROCEDURE <A NAME="Init_label"><procedure>Init_label</procedure></A> (o: Offset;  value: Label;  is_const: BOOLEAN) =
   BEGIN
+    &lt;*ASSERT o MOD Target.Address.align = 0 *&gt;
     IF (in_init) THEN
       AdvanceInit (o);
       &lt;*ASSERT o = init_pc*&gt;
-      &lt;*ASSERT o MOD Target.Address.align = 0 *&gt;
       cg.init_label (AsBytes (o), value);
     ELSE
       PushPending (NEW (LabelNode, o := o, v := value), is_const);
@@ -1051,11 +1062,20 @@ PROCEDURE <A NAME="DumpLabel"><procedure>DumpLabel</procedure></A> (x: LabelNode
 
 PROCEDURE <A NAME="Init_var"><procedure>Init_var</procedure></A> (o: Offset;  value: Var;  bias: Offset;  is_const: BOOLEAN) =
   BEGIN
+    IF NOT (((o MOD Target.Address.align) = 0)
+        AND ((bias MOD Target.Byte) = 0)) THEN
+      RTIO.PutText (&quot;o is 0x&quot; &amp; Fmt.Unsigned(o) &amp; &quot;\n&quot;);
+      RTIO.PutText (&quot;init_pc is 0x&quot; &amp; Fmt.Unsigned(init_pc) &amp; &quot;\n&quot;);
+      RTIO.PutText (&quot;bias is 0x&quot; &amp; Fmt.Unsigned(bias) &amp; &quot;\n&quot;);
+      RTIO.PutText (&quot;Target.Address.align is 0x&quot; &amp; Fmt.Unsigned(Target.Address.align) &amp; &quot;\n&quot;);
+      RTIO.PutText (&quot;Target.Byte is 0x&quot; &amp; Fmt.Unsigned(Target.Byte) &amp; &quot;\n&quot;);
+      RTIO.Flush ();
+    END;
+    &lt;* ASSERT ((o MOD Target.Address.align) = 0) *&gt;
+    &lt;* ASSERT ((bias MOD Target.Byte) = 0) *&gt;
     IF (in_init) THEN
       AdvanceInit (o);
-      &lt;*ASSERT o = init_pc*&gt;
-      &lt;*ASSERT o MOD Target.Address.align = 0 *&gt;
-      &lt;*ASSERT bias MOD Target.Byte = 0*&gt;
+      &lt;* ASSERT (o = init_pc) *&gt;
       cg.init_var (AsBytes (o), value, AsBytes (bias));
     ELSE
       PushPending (NEW (VarNode, o := o, v := value, b := bias), is_const);
@@ -1070,10 +1090,10 @@ PROCEDURE <A NAME="DumpVar"><procedure>DumpVar</procedure></A> (x: VarNode) =
 
 PROCEDURE <A NAME="Init_offset"><procedure>Init_offset</procedure></A> (o: Offset;  value: Var;  is_const: BOOLEAN) =
   BEGIN
+    &lt;*ASSERT o MOD Target.Integer.align = 0 *&gt;
     IF (in_init) THEN
       AdvanceInit (o);
       &lt;*ASSERT o = init_pc*&gt;
-      &lt;*ASSERT o MOD Target.Integer.align = 0 *&gt;
       cg.init_offset (AsBytes (o), value);
     ELSE
       PushPending (NEW (OffsetNode, o := o, v := value), is_const);
@@ -1089,10 +1109,10 @@ PROCEDURE <A NAME="DumpOffset"><procedure>DumpOffset</procedure></A> (x: OffsetN
 PROCEDURE <A NAME="Init_chars"><procedure>Init_chars</procedure></A> (o: Offset;  value: TEXT;  is_const: BOOLEAN) =
   VAR len, start: INTEGER;
   BEGIN
+    &lt;*ASSERT o MOD Target.Char.align = 0 *&gt;
     IF (in_init) THEN
       AdvanceInit (o);
       &lt;*ASSERT o = init_pc*&gt;
-      &lt;*ASSERT o MOD Target.Char.align = 0 *&gt;
       start := 0;
       len := Text.Length (value);
       WHILE (len - start &gt; Max_init_chars) DO
@@ -1116,10 +1136,10 @@ PROCEDURE <A NAME="DumpChars"><procedure>DumpChars</procedure></A> (x: CharsNode
 
 PROCEDURE <A NAME="Init_float"><procedure>Init_float</procedure></A> (o: Offset;  READONLY f: Target.Float;  is_const: BOOLEAN) =
   BEGIN
+    &lt;*ASSERT o MOD Target.Real.align = 0 *&gt;
     IF (in_init) THEN
       AdvanceInit (o);
       &lt;*ASSERT o = init_pc*&gt;
-      &lt;*ASSERT o MOD Target.Real.align = 0 *&gt;
       cg.init_float (AsBytes (o), f);
     ELSE
       PushPending (NEW (FloatNode, o := o, f := f), is_const);
@@ -1340,16 +1360,10 @@ PROCEDURE <A NAME="Load_addr_of_temp"><procedure>Load_addr_of_temp</procedure></
     stack[tos-1].temp_base := TRUE;
   END Load_addr_of_temp;
 
-PROCEDURE <A NAME="Load_int"><procedure>Load_int</procedure></A> (v: Var;  o: Offset := 0) =
+PROCEDURE <A NAME="Load_int"><procedure>Load_int</procedure></A> (t: IType;  v: Var;  o: Offset := 0) =
   BEGIN
-    SimpleLoad (v, o, Target.Integer.cg_type);
+    SimpleLoad (v, o, t);
   END Load_int;
-
-PROCEDURE <A NAME="Load_int_temp"><procedure>Load_int_temp</procedure></A> (v: Var;  o: Offset := 0) =
-  BEGIN
-    SimpleLoad (v, o, Target.Integer.cg_type);
-    stack [tos-1].temp_base := TRUE;
-  END Load_int_temp;
 
 PROCEDURE <A NAME="Load_addr"><procedure>Load_addr</procedure></A> (v: Var;  o: Offset) =
   BEGIN
@@ -1559,9 +1573,9 @@ PROCEDURE <A NAME="Store"><procedure>Store</procedure></A> (v: Var;  o: Offset; 
     SPop (1, &quot;Store&quot;);
   END Store;
 
-PROCEDURE <A NAME="Store_int"><procedure>Store_int</procedure></A> (v: Var;  o: Offset := 0) =
+PROCEDURE <A NAME="Store_int"><procedure>Store_int</procedure></A> (t: IType;  v: Var;  o: Offset := 0) =
   BEGIN
-    Store (v, o, Target.Integer.size, Target.Integer.align, Target.Integer.cg_type);
+    Store (v, o, TargetMap.CG_Size[t], TargetMap.CG_Align[t], t);
   END Store_int;
 
 PROCEDURE <A NAME="Store_addr"><procedure>Store_addr</procedure></A> (v: Var;  o: Offset := 0) =
@@ -1793,15 +1807,15 @@ PROCEDURE <A NAME="Load_byte_address"><procedure>Load_byte_address</procedure></
   END Load_byte_address;
 
 PROCEDURE <A NAME="Load_intt"><procedure>Load_intt</procedure></A> (i: INTEGER) =
-  VAR val: Target.Int;  b := TInt.FromInt (i, val);
+  VAR val: Target.Int;  b := TInt.FromInt (i, Target.Integer.bytes, val);
   BEGIN
     IF NOT b THEN ErrI (i, &quot;integer not representable&quot;) END;
-    Load_integer (val);
+    Load_integer (Target.Integer.cg_type, val);
   END Load_intt;
 
-PROCEDURE <A NAME="Load_integer"><procedure>Load_integer</procedure></A> (READONLY i: Target.Int) =
+PROCEDURE <A NAME="Load_integer"><procedure>Load_integer</procedure></A> (t: IType;  READONLY i: Target.Int) =
   BEGIN
-    SPush (Target.Integer.cg_type);
+    SPush (t);
     WITH x = stack[tos-1] DO
       x.kind := VKind.Integer;
       x.int  := i;
@@ -1893,12 +1907,12 @@ PROCEDURE <A NAME="Min"><procedure>Min</procedure></A> (t: ZType) =
     SPush (t);
   END Min;
 
-PROCEDURE <A NAME="Cvt_int"><procedure>Cvt_int</procedure></A> (t: RType;  op: Cvt) =
+PROCEDURE <A NAME="Cvt_int"><procedure>Cvt_int</procedure></A> (t: RType;  u: IType;  op: Cvt) =
   BEGIN
     Force ();
-    cg.cvt_int (t, Target.Integer.cg_type, op);
+    cg.cvt_int (t, u, op);
     SPop (1, &quot;Cvt_int&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (u);
   END Cvt_int;
 
 PROCEDURE <A NAME="Cvt_float"><procedure>Cvt_float</procedure></A> (t: AType;  u: RType) =
@@ -1993,16 +2007,71 @@ PROCEDURE <A NAME="Set_member"><procedure>Set_member</procedure></A> (s: Size) =
   END Set_member;
 
 PROCEDURE <A NAME="Set_compare"><procedure>Set_compare</procedure></A> (s: Size;  op: Cmp) =
+  VAR a: Val := NIL;
+      b: Val := NIL;
+      tword := Target.Word.cg_type;
+      tint := Target.Integer.cg_type;
   BEGIN
+
+    (* a op b =&gt; BOOLEAN *)
+
+    (* Comparison is commutative in that the comparison can be reversed
+    if it is profitable to reverse the parameter order. *)
+
     IF Force_pair (commute := TRUE) THEN
       op := M3CG.SwappedCompare [op];
     END;
-    IF (s &lt;= Target.Integer.size)
-      THEN cg.compare (Target.Word.cg_type, Target.Integer.cg_type, op);
-      ELSE cg.set_compare (AsBytes (s), op, Target.Integer.cg_type);
+
+    IF (s &lt;= Target.Integer.size) THEN
+
+      (* The set fits in an integer, so handle things inline with integer operations
+      NOTE that for the sake of code size, we should perhaps implement these with functions. *)
+
+      IF (op = Cmp.EQ) OR (op = Cmp.NE) THEN
+
+        Compare (tword, op);
+
+      ELSE
+
+        (* Set a is less than or equal to set b, if all of set a's members are in set b.
+        (a &lt;= b) = ((a &amp; b) = a)
+        (a &lt;  b) = (a &lt;= b AND a # b)
+        (b &gt;  a) = (a &lt; b)
+        *)
+
+        IF (op = Cmp.GT) OR (op = Cmp.GE) THEN
+          a := Pop ();
+          b := Pop ();
+        ELSE
+          b := Pop ();
+          a := Pop ();
+        END;
+
+        Push (a);
+        Push (b);
+        And (tword);
+
+        Push (a);
+        Compare (tword, Cmp.EQ);
+
+        (* NOTE that short circuiting for &lt; and &gt; is probably desirable, if one
+        knows how to set up the labels and branches. *)
+
+        IF (op = Cmp.LT) OR (op = Cmp.GT) THEN
+          Push (b);
+          Push (a);
+          Compare (tword, Cmp.EQ);
+          And (tint);
+        END;
+
+        Free (a);
+        Free (b);
+      END;
+    ELSE
+      cg.set_compare (AsBytes (s), op, tint);
+      SPop (2, &quot;Set_compare&quot;);
+      SPush (Type.Int32);
     END;
-    SPop (2, &quot;Set_eq&quot;);
-    SPush (Type.Int32);
   END Set_compare;
 
 PROCEDURE <A NAME="Set_range"><procedure>Set_range</procedure></A> (s: Size) =
@@ -2050,134 +2119,134 @@ PROCEDURE <A NAME="Set_singleton"><procedure>Set_singleton</procedure></A> (s: S
       SPop (2, &quot;Set_single-b&quot;);
     END;
   END Set_singleton;
-</PRE>------------------------------------------------- Word.T bit operations ---
+</PRE>------------------------------------------ Word.T/Long.T bit operations ---
 
-<P><PRE>PROCEDURE <A NAME="Not"><procedure>Not</procedure></A> () =
+<P><PRE>PROCEDURE <A NAME="Not"><procedure>Not</procedure></A> (t: IType) =
   BEGIN
     Force ();
-    cg.not (Target.Integer.cg_type);
+    cg.not (t);
     SPop (1, &quot;Not&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Not;
 
-PROCEDURE <A NAME="And"><procedure>And</procedure></A> () =
+PROCEDURE <A NAME="And"><procedure>And</procedure></A> (t: IType) =
   BEGIN
     EVAL Force_pair (commute := TRUE);
-    cg.and (Target.Integer.cg_type);
+    cg.and (t);
     SPop (2, &quot;And&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END And;
 
-PROCEDURE <A NAME="Or"><procedure>Or</procedure></A> () =
+PROCEDURE <A NAME="Or"><procedure>Or</procedure></A> (t: IType) =
   BEGIN
     EVAL Force_pair (commute := TRUE);
-    cg.or (Target.Integer.cg_type);
+    cg.or (t);
     SPop (2, &quot;Or&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Or;
 
-PROCEDURE <A NAME="Xor"><procedure>Xor</procedure></A> () =
+PROCEDURE <A NAME="Xor"><procedure>Xor</procedure></A> (t: IType) =
   BEGIN
     EVAL Force_pair (commute := TRUE);
-    cg.xor (Target.Integer.cg_type);
+    cg.xor (t);
     SPop (2, &quot;Xor&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Xor;
 
-PROCEDURE <A NAME="Shift"><procedure>Shift</procedure></A> () =
+PROCEDURE <A NAME="Shift"><procedure>Shift</procedure></A> (t: IType) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
-    cg.shift (Target.Integer.cg_type);
+    cg.shift (t);
     SPop (2, &quot;Shift&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Shift;
 
-PROCEDURE <A NAME="Shift_left"><procedure>Shift_left</procedure></A> () =
+PROCEDURE <A NAME="Shift_left"><procedure>Shift_left</procedure></A> (t: IType) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
-    cg.shift_left (Target.Integer.cg_type);
+    cg.shift_left (t);
     SPop (2, &quot;Shift_left&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Shift_left;
 
-PROCEDURE <A NAME="Shift_right"><procedure>Shift_right</procedure></A> () =
+PROCEDURE <A NAME="Shift_right"><procedure>Shift_right</procedure></A> (t: IType) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
-    cg.shift_right (Target.Integer.cg_type);
+    cg.shift_right (t);
     SPop (2, &quot;Shift_right&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Shift_right;
 
-PROCEDURE <A NAME="Rotate"><procedure>Rotate</procedure></A> () =
+PROCEDURE <A NAME="Rotate"><procedure>Rotate</procedure></A> (t: IType) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
-    cg.rotate (Target.Integer.cg_type);
+    cg.rotate (t);
     SPop (2, &quot;Rotate&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Rotate;
 
-PROCEDURE <A NAME="Rotate_left"><procedure>Rotate_left</procedure></A> () =
+PROCEDURE <A NAME="Rotate_left"><procedure>Rotate_left</procedure></A> (t: IType) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
-    cg.rotate_left (Target.Integer.cg_type);
+    cg.rotate_left (t);
     SPop (2, &quot;Rotate_left&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Rotate_left;
 
-PROCEDURE <A NAME="Rotate_right"><procedure>Rotate_right</procedure></A> () =
+PROCEDURE <A NAME="Rotate_right"><procedure>Rotate_right</procedure></A> (t: IType) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
-    cg.rotate_right (Target.Integer.cg_type);
+    cg.rotate_right (t);
     SPop (2, &quot;Rotate_right&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Rotate_right;
 
-PROCEDURE <A NAME="Extract"><procedure>Extract</procedure></A> (sign: BOOLEAN) =
+PROCEDURE <A NAME="Extract"><procedure>Extract</procedure></A> (t: IType; sign: BOOLEAN) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
-    cg.extract (Target.Integer.cg_type, sign);
+    cg.extract (t, sign);
     SPop (3, &quot;Extract&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Extract;
 
-PROCEDURE <A NAME="Extract_n"><procedure>Extract_n</procedure></A> (sign: BOOLEAN;  n: INTEGER) =
+PROCEDURE <A NAME="Extract_n"><procedure>Extract_n</procedure></A> (t: IType; sign: BOOLEAN;  n: INTEGER) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
-    cg.extract_n (Target.Integer.cg_type, sign, n);
+    cg.extract_n (t, sign, n);
     SPop (2, &quot;Extract_n&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Extract_n;
 
-PROCEDURE <A NAME="Extract_mn"><procedure>Extract_mn</procedure></A> (sign: BOOLEAN;  m, n: INTEGER) =
+PROCEDURE <A NAME="Extract_mn"><procedure>Extract_mn</procedure></A> (t: IType; sign: BOOLEAN;  m, n: INTEGER) =
   BEGIN
     Force ();
-    cg.extract_mn (Target.Integer.cg_type, sign, m, n);
+    cg.extract_mn (t, sign, m, n);
     SPop (1, &quot;Extract_mn&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Extract_mn;
 
-PROCEDURE <A NAME="Insert"><procedure>Insert</procedure></A> () =
+PROCEDURE <A NAME="Insert"><procedure>Insert</procedure></A> (t: IType) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
-    cg.insert (Target.Integer.cg_type);
+    cg.insert (t);
     SPop (4, &quot;Insert&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Insert;
 
-PROCEDURE <A NAME="Insert_n"><procedure>Insert_n</procedure></A> (n: INTEGER) =
+PROCEDURE <A NAME="Insert_n"><procedure>Insert_n</procedure></A> (t: IType; n: INTEGER) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
-    cg.insert_n (Target.Integer.cg_type, n);
+    cg.insert_n (t, n);
     SPop (3, &quot;Insert_n&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Insert_n;
 
-PROCEDURE <A NAME="Insert_mn"><procedure>Insert_mn</procedure></A> (m, n: INTEGER) =
+PROCEDURE <A NAME="Insert_mn"><procedure>Insert_mn</procedure></A> (t: IType; m, n: INTEGER) =
   BEGIN
     EVAL Force_pair (commute := FALSE);
-    cg.insert_mn (Target.Integer.cg_type, m, n);
+    cg.insert_mn (t, m, n);
     SPop (2, &quot;Insert_mn&quot;);
-    SPush (Target.Integer.cg_type);
+    SPush (t);
   END Insert_mn;
 </PRE>------------------------------------------------ misc. stack/memory ops ---
 
@@ -2194,7 +2263,7 @@ PROCEDURE <A NAME="Insert_mn"><procedure>Insert_mn</procedure></A> (m, n: INTEGE
         cg.swap (xa.type, xb.type);
       END;
 
-      (* exchnage the local copies *)
+      (* exchange the local copies *)
       tmp := xa;  xa := xb;  xb := tmp;
     END;
   END Swap;
@@ -2290,25 +2359,26 @@ PROCEDURE <A NAME="Check_nil"><procedure>Check_nil</procedure></A> (code: Runtim
     cg.check_nil (code);
   END Check_nil;
 
-PROCEDURE <A NAME="Check_lo"><procedure>Check_lo</procedure></A> (READONLY i: Target.Int;  code: RuntimeError) =
+PROCEDURE <A NAME="Check_lo"><procedure>Check_lo</procedure></A> (t: IType;  READONLY i: Target.Int;  code: RuntimeError) =
   BEGIN
     EVAL RunTyme.LookUpProc (RunTyme.Hook.Abort);
     Force ();
-    cg.check_lo (Target.Integer.cg_type, i, code);
+    cg.check_lo (t, i, code);
   END Check_lo;
 
-PROCEDURE <A NAME="Check_hi"><procedure>Check_hi</procedure></A> (READONLY i: Target.Int;  code: RuntimeError) =
+PROCEDURE <A NAME="Check_hi"><procedure>Check_hi</procedure></A> (t: IType;  READONLY i: Target.Int;  code: RuntimeError) =
   BEGIN
     EVAL RunTyme.LookUpProc (RunTyme.Hook.Abort);
     Force ();
-    cg.check_hi (Target.Integer.cg_type, i, code);
+    cg.check_hi (t, i, code);
   END Check_hi;
 
-PROCEDURE <A NAME="Check_range"><procedure>Check_range</procedure></A> (READONLY a, b: Target.Int;  code: RuntimeError) =
+PROCEDURE <A NAME="Check_range"><procedure>Check_range</procedure></A> (t: IType;  READONLY a, b: Target.Int;
+                       code: RuntimeError) =
   BEGIN
     EVAL RunTyme.LookUpProc (RunTyme.Hook.Abort);
     Force ();
-    cg.check_range (Target.Integer.cg_type, a, b, code);
+    cg.check_range (t, a, b, code);
   END Check_range;
 
 PROCEDURE <A NAME="Check_index"><procedure>Check_index</procedure></A> (code: RuntimeError) =
@@ -2319,11 +2389,11 @@ PROCEDURE <A NAME="Check_index"><procedure>Check_index</procedure></A> (code: Ru
     SPop (1, &quot;Check_index&quot;);
   END Check_index;
 
-PROCEDURE <A NAME="Check_eq"><procedure>Check_eq</procedure></A> (code: RuntimeError) =
+PROCEDURE <A NAME="Check_eq"><procedure>Check_eq</procedure></A> (t: IType;  code: RuntimeError) =
   BEGIN
     EVAL RunTyme.LookUpProc (RunTyme.Hook.Abort);
     EVAL Force_pair (commute := TRUE);
-    cg.check_eq (Target.Integer.cg_type, code);
+    cg.check_eq (t, code);
     SPop (2, &quot;Check_eq&quot;);
   END Check_eq;
 
@@ -2484,21 +2554,29 @@ PROCEDURE <A NAME="Load_static_link"><procedure>Load_static_link</procedure></A>
   END Load_static_link;
 </PRE>------------------------------------------------ builtin type operations --
 
-<P><PRE>PROCEDURE <A NAME="Ref_to_typecode"><procedure>Ref_to_typecode</procedure></A> () =
-  VAR base: INTEGER;
+<P><PRE>PROCEDURE <A NAME="Ref_to_hdr"><procedure>Ref_to_hdr</procedure></A> () =
   BEGIN
     Boost_alignment (Target.Address.align);
     Load_indirect (Target.Integer.cg_type, -Target.Address.pack, Target.Address.size);
+  END Ref_to_hdr;
+
+PROCEDURE <A NAME="Hdr_to_info"><procedure>Hdr_to_info</procedure></A> (offset, size: INTEGER) =
+  VAR base: INTEGER;
+  BEGIN
     Force ();
     IF Target.Little_endian THEN
-      base := M3RT.RH_typecode_offset;
+      base := offset;
     ELSE
-      base := Target.Integer.size
-                  - M3RT.RH_typecode_offset
-                  - M3RT.RH_typecode_size;
+      base := Target.Integer.size - offset - size;
     END;
-    cg.extract_mn (Target.Integer.cg_type, FALSE, base, M3RT.RH_typecode_size);
-  END Ref_to_typecode;
+    cg.extract_mn (Target.Integer.cg_type, FALSE, base, size);
+  END Hdr_to_info;
+
+PROCEDURE <A NAME="Ref_to_info"><procedure>Ref_to_info</procedure></A> (offset, size: INTEGER) =
+  BEGIN
+    Ref_to_hdr ();
+    Hdr_to_info (offset, size);
+  END Ref_to_info;
 </PRE>------------------------------------------------------------ open arrays --
 
 <P><PRE>PROCEDURE <A NAME="Open_elt_ptr"><procedure>Open_elt_ptr</procedure></A> (a: Alignment) =
@@ -2527,7 +2605,7 @@ PROCEDURE <A NAME="Open_size"><procedure>Open_size</procedure></A> (n: INTEGER) 
       Push (proc);
       Force ();
       cg.loophole (Type.Addr, Target.Integer.cg_type);
-      Push_int (3);
+      Push_int (TargetMap.CG_Align_bytes[Target.Integer.cg_type] - 1);
       cg.and (Target.Integer.cg_type);
       cg.if_true (Target.Integer.cg_type, nope, Always - freq);
       SPop (1, &quot;If_closure-unaligned&quot;);
@@ -2576,6 +2654,21 @@ PROCEDURE <A NAME="DumpComment"><procedure>DumpComment</procedure></A> (x: Comme
     DumpNode (x);
     cg.comment (x.a, x.b, x.c, x.d);
   END DumpComment;
+</PRE>--------------------------------------------------------------- atomics ---
+
+<P><PRE>PROCEDURE <A NAME="Cas"><procedure>Cas</procedure></A> (t: MType) =
+  BEGIN
+    cg.val_compare_and_swap (t);
+    SPop (3, &quot;CAS&quot;);
+    SPush (t);
+  END Cas;
+
+PROCEDURE <A NAME="CasP"><procedure>CasP</procedure></A> (t: MType;  u: IType) =
+  BEGIN
+    cg.bool_compare_and_swap (t, u);
+    SPop (3, &quot;CASP&quot;);
+    SPush (u);
+  END CasP;
 </PRE>-------------------------------------------------------------- internal ---
 
 <P><PRE>PROCEDURE <A NAME="FixAlign"><procedure>FixAlign</procedure></A> (a: Alignment): Alignment =
@@ -2626,7 +2719,7 @@ PROCEDURE <A NAME="AsBytes"><procedure>AsBytes</procedure></A> (n: INTEGER): INT
   END AsBytes;
 
 PROCEDURE <A NAME="Push_int"><procedure>Push_int</procedure></A> (i: INTEGER) =
-  VAR val: Target.Int;  b := TInt.FromInt (i, val);
+  VAR val: Target.Int;  b := TInt.FromInt (i, Target.Integer.bytes, val);
   BEGIN
     IF NOT b THEN ErrI (i, &quot;integer not representable&quot;) END;
     cg.load_integer (Target.Integer.cg_type, val);

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: webvbt/src/URLCache.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>webvbt/src/URLCache.i3</H2></A><HR>
 <inInterface>
@@ -16,7 +16,7 @@
 
 <P><PRE>INTERFACE <interface><A HREF="URLCache.m3.html">URLCache</A></interface>;
 
-IMPORT <A HREF="HTML.i3.html">HTML</A>, <A HREF="../../web/src/Web.i3.html">Web</A>;
+IMPORT <A HREF="#x1">HTML</A>, <A HREF="../../web/src/Web.i3.html">Web</A>;
 
 PROCEDURE <A HREF="URLCache.m3.html#Put">Put</A>(url: TEXT; READONLY header: Web.Header; contents: TEXT);
 </PRE><BLOCKQUOTE><EM> Store <CODE>header</CODE> and <CODE>contents</CODE> into cache under the key <CODE>url</CODE>. </EM></BLOCKQUOTE><PRE>
@@ -48,6 +48,13 @@ PROCEDURE <A HREF="URLCache.m3.html#FlushHTML">FlushHTML</A>();
 END URLCache.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">interface HTML is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/misc/HTML.i3.html#0TOP0">cm3ide/src/misc/HTML.i3</A>
+<LI><A HREF="HTML.i3.html#0TOP0">webvbt/src/HTML.i3</A>
+</UL>
+<P>
 <PRE>
 
 

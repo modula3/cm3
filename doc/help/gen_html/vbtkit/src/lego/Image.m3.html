@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/Image.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/Image.m3</H2></A><HR>
 <inModule>
@@ -33,6 +33,21 @@ TYPE
 
 TYPE Closure = Palette.PixmapClosure OBJECT raw: Raw END;
 
+VAR forceUnscaledBehavior: BOOLEAN := FALSE;
+
+PROCEDURE <A NAME="ForceUnScaledBehavior"><procedure>ForceUnScaledBehavior</procedure></A> (useUnscaled: BOOLEAN) =
+</PRE><BLOCKQUOTE><EM> If useUnscaled=TRUE, subsequent calls to Scaled() will instead operate as
+   Unscaled().  Calling this procedure again with useUnscaled=FALSE will
+   restore the defined behavior for subsequent calls to Scaled().  The reason
+   for adding this procedure is that the implementation of most of FormsVBT
+   uses Scaled().  By calling this procedure the programmer can override the
+   Scaled() behavior to produce Unscaled() behavior, even for library
+   components, without having to modify the source code.
+</EM></BLOCKQUOTE><PRE>
+BEGIN (* ForceUnScaledBehavior *)
+   forceUnscaledBehavior := useUnscaled;
+END ForceUnScaledBehavior;
+
 PROCEDURE <A NAME="Unscaled"><procedure>Unscaled</procedure></A> (raw: Raw): T =
   BEGIN
     RETURN
@@ -48,8 +63,15 @@ PROCEDURE <A NAME="ApplyUnscaled"><procedure>ApplyUnscaled</procedure></A> (cl: 
 
 PROCEDURE <A NAME="Scaled"><procedure>Scaled</procedure></A> (raw: Raw): T =
   BEGIN
-    RETURN Palette.FromPixmapClosure(
-             NEW(Closure, apply := ApplyScaled1, raw := raw))
+    IF forceUnscaledBehavior
+    THEN
+       RETURN
+         Palette.FromPixmapClosure(
+           NEW(Closure, apply := ApplyUnscaled, raw := raw))
+    ELSE
+       RETURN Palette.FromPixmapClosure(
+                NEW(Closure, apply := ApplyScaled1, raw := raw))
+    END; (* if *)
   END Scaled;
 
 PROCEDURE <A NAME="ApplyScaled1"><procedure>ApplyScaled1</procedure></A> (cl: Closure; st: ScreenType.T):
@@ -71,14 +93,14 @@ PROCEDURE <A NAME="ApplyScaled1"><procedure>ApplyScaled1</procedure></A> (cl: Cl
    and
       ABS(error) &lt; tolerance
    where
-      error = 
+      error =
         (&lt;screen resolution&gt; - scale * &lt;resolution(raw[i])&gt;) / &lt;screen resolution&gt;
 <P>
    If no <CODE>i</CODE> satisfies the tolerance, then the <CODE>i</CODE> is chosen to give the
    smallest error.
 <P>
    Intention of tolerance is to give some preference to scalings which give
-      very good approximations to the screen resolution over smaller 
+      very good approximations to the screen resolution over smaller
       scalings which give unacceptable errors.
 <P>
       ex: screen resolution = 300
@@ -90,7 +112,7 @@ PROCEDURE <A NAME="ApplyScaled1"><procedure>ApplyScaled1</procedure></A> (cl: Cl
 <P>
       ex: screen resolution = 300
           pixmap resolutions of 50 and 200
-          if maxScale &lt;= 4 then 200 will be chosen over 50 
+          if maxScale &lt;= 4 then 200 will be chosen over 50
           (even if tolerance is &lt; 1/3 )
  
 
@@ -101,9 +123,9 @@ PROCEDURE <A NAME="ApplyScaled1"><procedure>ApplyScaled1</procedure></A> (cl: Cl
     maxScale: CARDINAL := 4): T =
   VAR new := NEW(REF ARRAY OF Raw, NUMBER(raws));
   BEGIN
-    new^ := raws;
-    RETURN Palette.FromPixmapClosure(
-             NEW(ScaledNClosure, raws := new,
+     new^ := raws;
+     RETURN Palette.FromPixmapClosure(
+              NEW(ScaledNClosure, raws := new,
                  tolerance := MAX(tolerance, 0.00001),
                  maxScale := maxScale))
   END ScaledN;

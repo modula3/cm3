@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: tcp/src/common/TCPSpecial.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>tcp/src/common/TCPSpecial.i3</H2></A><HR>
 <inInterface>
@@ -20,7 +20,8 @@ IMPORT <A HREF="TCP.i3.html">TCP</A>, <A HREF="IP.i3.html">IP</A>, <A HREF="../.
    this connection, and the connection indicates end-of-file (e.g.
    the other side closed it. 
 
-<P><PRE>PROCEDURE <A HREF="../POSIX/TCP.m3.html#StartConnect">StartConnect</A>(ep: IP.Endpoint) : TCP.T
+<P><PRE>PROCEDURE <A HREF="../POSIX/TCP.m3.html#StartConnect">StartConnect</A>(to: IP.Endpoint;
+                       from: IP.Endpoint := IP.NullEndPoint): TCP.T
     RAISES {IP.Error};
 </PRE> <CODE>StartConnect</CODE> initiates a request to connect to the destination
    specified by <CODE>ep</CODE>.  If <CODE>msgT</CODE> is <CODE>TRUE</CODE> then the results reader

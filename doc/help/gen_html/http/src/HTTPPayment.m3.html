@@ -2,13 +2,20 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: http/src/HTTPPayment.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>http/src/HTTPPayment.m3</H2></A><HR>
 <inModule>
 <PRE></PRE> Copyright (C) 1995, Digital Equipment Corporation. 
  All rights reserved. 
- Last modified on Fri Jan 17 16:05:29 PST 1997 by steveg 
+ created by steveg 
+                                                                           
+ Parts Copyright (C) 1997, Columbia University                             
+ All rights reserved.                                                      
+
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:50:11 1997
+ 
 
 <P><PRE>MODULE <module><implements><A HREF="HTTPPayment.i3.html">HTTPPayment</A></implements></module>;
 
@@ -45,7 +52,7 @@ PROCEDURE <A NAME="AppendValue"><procedure>AppendValue</procedure></A>(VAR (* in
   END AppendValue;
 
 REVEAL
-  <A NAME="Reply">Reply</A> = ReplyPublic BRANDED OBJECT
+  <A NAME="Reply">Reply</A> = ReplyPublic BRANDED &quot;HTTPPayment.Reply&quot; OBJECT
   OVERRIDES
     init := InitReply;
     toReply := ToReply;
@@ -118,7 +125,7 @@ PROCEDURE <A NAME="IsPaymentReply"><procedure>IsPaymentReply</procedure></A>(rep
   END IsPaymentReply;
 
 REVEAL
-  <A NAME="Request">Request</A> = RequestPublic BRANDED OBJECT
+  <A NAME="Request">Request</A> = RequestPublic BRANDED &quot;HTTPPayment.Request&quot; OBJECT
   OVERRIDES
     init := InitRequest;
     toRequest := ToRequest;

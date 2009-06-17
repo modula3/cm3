@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/os/POSIX/PathnamePosix.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/os/POSIX/PathnamePosix.m3</H2></A><HR>
 <inModule>
@@ -21,7 +21,7 @@ CONST
   DirSepChar = '/'; ExtSepChar = '.';
   DirSepText = &quot;/&quot;; ExtSepText = &quot;.&quot;;
 
-CONST Legal = SET OF CHAR {'\001' .. '\177'} - SET OF CHAR {DirSepChar};
+CONST Illegal = SET OF CHAR {DirSepChar, '\000'};
 
 PROCEDURE <A NAME="Valid"><procedure>Valid</procedure></A>(pn: T): BOOLEAN =
   PROCEDURE Ignore(&lt;* UNUSED *&gt; start, end: CARDINAL) = BEGIN END Ignore;
@@ -59,7 +59,7 @@ PROCEDURE <A NAME="Compose"><procedure>Compose</procedure></A>(a: Arcs): T RAISE
       WITH arc = a.get(i) DO
 	IF arc = NIL THEN RAISE Invalid END;
 	FOR i := 0 TO Text.Length(arc) - 1 DO
-	  IF NOT Text.GetChar(arc, i) IN Legal THEN RAISE Invalid END
+	  IF Text.GetChar(arc, i) IN Illegal THEN RAISE Invalid END
 	END;
 	t := t &amp; arc
       END;
@@ -165,7 +165,7 @@ PROCEDURE <A NAME="ReplaceExt"><procedure>ReplaceExt</procedure></A>(pn: T; ext:
           IF c = DirSepChar THEN
             visit(s, e);
             s := e + 1
-          ELSIF NOT c IN Legal THEN
+          ELSIF c IN Illegal THEN
             RAISE Invalid
           END
         END;

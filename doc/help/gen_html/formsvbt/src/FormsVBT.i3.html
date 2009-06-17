@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: formsvbt/src/FormsVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>formsvbt/src/FormsVBT.i3</H2></A><HR>
 <inInterface>
@@ -23,10 +23,10 @@
    make use of the user interfaces.
 <P>
    The locking level for any procedure in this interface that may
-   alter an installed <CODE>VBT</CODE> is <CODE>LL.sup = VBT.mu</CODE>. (See the 
+   alter an installed <CODE>VBT</CODE> is <CODE>LL.sup = VBT.mu</CODE>. (See the
    {\it Trestle Reference Manual\/} for a complete description
-   of locking levels~\cite{TrestleTutorial}.) Most applications 
-   don't need to worry about <CODE>VBT.mu</CODE> because their event-handlers 
+   of locking levels~\cite{TrestleTutorial}.) Most applications
+   don't need to worry about <CODE>VBT.mu</CODE> because their event-handlers
    don't fork any threads that call FormsVBT. 
 
 <P><PRE>INTERFACE <interface><A HREF="#x1">FormsVBT</A></interface>;
@@ -308,7 +308,7 @@ PROCEDURE <A HREF="FVRuntime.m3.html#AddUniqueSymbol">AddUniqueSymbol</A> (fv: T
    component that does not have a value.
 <P>
    \subsection{Access to the {\tt Main} and {\tt Value} properties}
- 
+
 
 <P><PRE>PROCEDURE <A HREF="FVRuntime.m3.html#GetText">GetText</A> (fv: T; name: TEXT): TEXT
   RAISES {Error, Unimplemented};
@@ -355,7 +355,7 @@ to retrieve that value, or
       PutIntegerProperty(fv, name, &quot;Min&quot;, 6)
    </PRE>
 to change the value to 6.
- <P>
+<P>
    \vspace {5mm}
   {\bf WARNING: The current implementation provides access
    only to the inherited properties, and even that access is limited.}
@@ -373,7 +373,7 @@ to change the value to 6.
 PROCEDURE <A HREF="FVRuntime.m3.html#PutTextProperty">PutTextProperty</A> (fv: T; name, propertyName: TEXT; value: TEXT)
   RAISES {Error, Unimplemented};
 </PRE><BLOCKQUOTE><EM> This is implemented for the <CODE>Color</CODE>, <CODE>BgColor</CODE>, <CODE>Font</CODE>, and
-   <CODE>LabelFont</CODE> properties for all components, as well as the <CODE>Items</CODE> and <CODE>Select</CODE> 
+   <CODE>LabelFont</CODE> properties for all components, as well as the <CODE>Items</CODE> and <CODE>Select</CODE>
    properties of <CODE>Browser</CODE>s. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="FVRuntime.m3.html#GetIntegerProperty">GetIntegerProperty</A> (fv: T; name, propertyName: TEXT):
@@ -469,16 +469,16 @@ PROCEDURE <A HREF="FVRuntime.m3.html#PutGeneric">PutGeneric</A> (fv: T; genericN
    are ``grayed out.'' Dormant is often to be preferred over Passive,
    because it provide additional feedback to the user.  In the
    Vanished state, the component becomes unreactive and disappears
-   entirely. 
+   entirely.
 <P>
    A cursor is specified when the state is set, and the name is interpretted
    by the Trestle implementation. An empty string (the default value)
-   indicates that you don't care about the cursor shape. 
-   <P>
+   indicates that you don't care about the cursor shape.
+<P>
    Standard X screentypes support the cursors named in {\it X Window
    System} by Scheifler et.  al. \cite{XSpec} Appendix B. Therefore, for
-   example, <CODE>XC_arrow</CODE> returns a cursor that behaves like the X arrow 
-   cursor on X screentypes, and like the default cursor on screentypes 
+   example, <CODE>XC_arrow</CODE> returns a cursor that behaves like the X arrow
+   cursor on X screentypes, and like the default cursor on screentypes
    that have no cursor named <CODE>XC_arrow</CODE>. 
 
 <P>
@@ -487,7 +487,7 @@ PROCEDURE <A HREF="FVRuntime.m3.html#MakePassive">MakePassive</A> (fv: T; name: 
 PROCEDURE <A HREF="FVRuntime.m3.html#MakeDormant">MakeDormant</A> (fv: T; name: TEXT; cursor:= &quot;&quot;) RAISES {Error};
 PROCEDURE <A HREF="FVRuntime.m3.html#MakeVanish">MakeVanish</A>  (fv: T; name: TEXT; cursor:= &quot;&quot;) RAISES {Error};
 </PRE><BLOCKQUOTE><EM> Find the nearest ancestor of the named component that is of
-   type <CODE>FVFilter</CODE>, and set its state and cursor as indicated. 
+   type <CODE>FVFilter</CODE>, and set its state and cursor as indicated.
    The exception is raised if no such ancestor can be found. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="FVRuntime.m3.html#IsActive">IsActive</A>   (fv: T; name: TEXT): BOOLEAN RAISES {Error};
@@ -532,7 +532,7 @@ PROCEDURE <A HREF="FVRuntime.m3.html#IsVanished">IsVanished</A> (fv: T; name: TE
    unmapping.  (Unfortunately, this doesn't cause the keyboard
    focus to be lost.)  The exception is raised if <CODE>name</CODE> is not
    the name of an element of <CODE>fv</CODE>. </EM></BLOCKQUOTE><PRE>
-</PRE> \subsection{Special controls for text-interactors}  
+</PRE> \subsection{Special controls for text-interactors} 
 
 <P><PRE>PROCEDURE <A HREF="FVRuntime.m3.html#TakeFocus">TakeFocus</A> (fv       : T;
                      name     : TEXT;
@@ -549,7 +549,7 @@ PROCEDURE <A HREF="FVRuntime.m3.html#IsVanished">IsVanished</A> (fv: T; name: TE
 
 <P> FormsVBT allows clients
    to save and restore the entire state of a
-   form. 
+   form.
 <P>
    A {\em snapshot\/} is an S-expression that captures the state of components
    in a form.  The call <CODE>fv.snapshot(wr)</CODE> writes a snapshot of <CODE>fv</CODE> to the

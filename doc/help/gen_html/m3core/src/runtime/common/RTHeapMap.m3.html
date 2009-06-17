@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTHeapMap.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTHeapMap.m3</H2></A><HR>
 <inModule>
@@ -70,12 +70,21 @@ PROCEDURE <A NAME="DoWalkRef"><procedure>DoWalkRef</procedure></A> (t: RT0.TypeD
   END DoWalkRef;
 </PRE>------------------------------------------------ walking of the globals ---
 
-<P><PRE>TYPE ModuleMap = UNTRACED REF ARRAY OF RT0.ModulePtr;
-VAR global_map: ModuleMap := NIL;
+<P><PRE>TYPE
+  ModuleMap = UNTRACED REF ARRAY OF RT0.ModulePtr;
+VAR
+  n_modules: CARDINAL := 0;
+  global_map: ModuleMap := NIL;
 
 PROCEDURE <A NAME="WalkGlobals"><procedure>WalkGlobals</procedure></A> (v: Visitor) =
   VAR m: RT0.ModulePtr;
   BEGIN
+    WITH n = RTModule.Count() DO
+      IF n # n_modules THEN
+        DISPOSE(global_map);
+        n_modules := n;
+      END;
+    END;
     IF (global_map = NIL) THEN BuildGlobalMap () END;
     FOR i := 0 TO LAST (global_map^) DO
       m := global_map[i];

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/os/POSIX/FilePosix.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/os/POSIX/FilePosix.m3</H2></A><HR>
 <inModule>
@@ -17,8 +17,8 @@
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="FilePosix.i3.html">FilePosix</A></implements></module>;
 
 IMPORT <A HREF="../../../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../Common/File.i3.html">File</A>, <A HREF="../Common/FS.i3.html">FS</A>, <A HREF="../../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../Common/OSError.i3.html">OSError</A>, <A HREF="OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../Common/Pipe.i3.html">Pipe</A>,
-  <A HREF="../Common/RegularFile.i3.html">RegularFile</A>, <A HREF="../../../../m3core/src/thread/POSIX/SchedulerPosix.i3.html">SchedulerPosix</A>, <A HREF="../Common/Terminal.i3.html">Terminal</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uerror.i3.html">Uerror</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Ustat.i3.html">Ustat</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uuio.i3.html">Uuio</A>,
-  <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>;
+  <A HREF="../Common/RegularFile.i3.html">RegularFile</A>, <A HREF="#x1">SchedulerPosix</A>, <A HREF="../Common/Terminal.i3.html">Terminal</A>, <A HREF="#x2">Uerror</A>, <A HREF="#x3">Unix</A>, <A HREF="#x4">Ustat</A>, <A HREF="#x5">Uuio</A>,
+  <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="#x6">Utypes</A>, <A HREF="FilePosixC.i3.html">FilePosixC</A>;
 
 REVEAL
   File.<A NAME="T">T</A> = T BRANDED OBJECT OVERRIDES
@@ -46,21 +46,22 @@ REVEAL
 PROCEDURE <A NAME="FileTypeFromStatbuf"><procedure>FileTypeFromStatbuf</procedure></A>(READONLY statbuf: Ustat.struct_stat)
   : File.Type =
   BEGIN
-    CASE Word.And(statbuf.st_mode, Ustat.S_IFMT) OF
-    | Ustat.S_IFCHR =&gt;
+    WITH type = Word.And(statbuf.st_mode, Ustat.S_IFMT) DO
+      IF type = Ustat.S_IFCHR THEN
         IF IsDevNull(statbuf)
           THEN RETURN RegularFile.FileType
           ELSE RETURN Terminal.FileType
-        END
-    | Ustat.S_IFPIPE, Ustat.S_IFPORT, Ustat.S_IFSOCK =&gt;
-        RETURN Pipe.FileType
-    | Ustat.S_IFREG =&gt;
+        END;
+      ELSIF (type = Ustat.S_IFIFO) OR (type = Ustat.S_IFSOCK) THEN
+        RETURN Pipe.FileType;
+      ELSIF type = Ustat.S_IFREG THEN
         RETURN RegularFile.FileType
-    | Ustat.S_IFDIR =&gt;
+      ELSIF type = Ustat.S_IFDIR THEN
         RETURN FS.DirectoryFileType
-    ELSE
+      ELSE
         RETURN RegularFile.FileType
-    END
+      END
+    END;
   END FileTypeFromStatbuf;
 
 PROCEDURE <A NAME="New"><procedure>New</procedure></A>(fd: INTEGER; ds: DirectionSet): File.T RAISES {OSError.E} =
@@ -107,7 +108,10 @@ PROCEDURE <A NAME="FileStatus"><procedure>FileStatus</procedure></A>(h: File.T):
     ELSE &lt;* ASSERT FALSE *&gt;
     END;
     status.modificationTime := FLOAT(statBuf.st_mtime, LONGREAL);
-    status.size := statBuf.st_size;
+    WITH size = statBuf.st_size DO
+      IF size &lt; VAL(0, Utypes.off_t) THEN OSErrorPosix.Raise() END;
+      status.size := ORD(size);
+    END;
     RETURN status
   END FileStatus;
 </PRE>---------------------------RegularFile methods-----------------------------
@@ -150,9 +154,9 @@ PROCEDURE <A NAME="RegularFileSeek"><procedure>RegularFileSeek</procedure></A>(
     h: RegularFile.T; origin: RegularFile.Origin; offset: INTEGER)
   : INTEGER RAISES {OSError.E} =
   BEGIN
-    WITH result = Unix.lseek(h.fd, offset, ORD(origin)) DO
-      IF result &lt; 0 THEN OSErrorPosix.Raise() END;
-      RETURN result
+    WITH result = Unix.lseek(h.fd, VAL(offset, Utypes.off_t), ORD(origin)) DO
+      IF result &lt; VAL(0, Utypes.off_t) THEN OSErrorPosix.Raise() END;
+      RETURN ORD(result)
     END
   END RegularFileSeek;
 
@@ -162,45 +166,22 @@ PROCEDURE <A NAME="RegularFileFlush"><procedure>RegularFileFlush</procedure></A>
   END RegularFileFlush;
 
 PROCEDURE <A NAME="RegularFileLock"><procedure>RegularFileLock</procedure></A>(h: RegularFile.T): BOOLEAN RAISES {OSError.E} =
-  (* The following initialization is a bit sleazy.  It doesn't
-     initialize all the fields.  We depend on each Unix.i3 giving
-     a static initialization for any other fields.
-     (e.g. freebsd-2/Unix.i3) *)
-  VAR flock := Unix.struct_flock {
-    l_type := Unix.F_WRLCK,
-    l_whence := Unix.L_SET,
-    l_start := 0,
-    l_len := 0, (* i.e., whole file *)
-    l_pid := 0}; (* don't care *)
+  VAR i: INTEGER;
   BEGIN
-    IF Unix.fcntl(h.fd, Unix.F_SETLK, LOOPHOLE(ADR(flock), Ctypes.long)) &lt; 0
-     THEN
-      WITH errno = Cerrno.GetErrno() DO
-        IF errno = Uerror.EACCES OR errno = Uerror.EAGAIN THEN
-          RETURN FALSE
-        END;
-      END;
-      OSErrorPosix.Raise()
+    i := FilePosixC.RegularFileLockC(h.fd);
+    IF i &lt; 0 THEN
+      OSErrorPosix.Raise();
     END;
-    RETURN TRUE
+    RETURN (i # 0);
   END RegularFileLock;
 
 PROCEDURE <A NAME="RegularFileUnlock"><procedure>RegularFileUnlock</procedure></A>(h: RegularFile.T) RAISES {OSError.E} =
-  (* The following initialization is a bit sleazy.  It doesn't
-     initialize all the fields.  We depend on each Unix.i3 giving
-     a static initialization for any other fields.
-     (e.g. freebsd-2/Unix.i3) *)
-  VAR flock := Unix.struct_flock {
-    l_type := Unix.F_UNLCK,
-    l_whence := Unix.L_SET,
-    l_start := 0,
-    l_len := 0, (* i.e., whole file *)
-    l_pid := 0}; (* don't care *)
+  VAR i: INTEGER;
   BEGIN
-    IF Unix.fcntl(h.fd, Unix.F_SETLK, LOOPHOLE(ADR(flock), Ctypes.long)) &lt; 0
-    THEN
-      OSErrorPosix.Raise()
-    END
+    i := FilePosixC.RegularFileUnlockC(h.fd);
+    IF i &lt; 0 THEN
+      OSErrorPosix.Raise();
+    END;
   END RegularFileUnlock;
 </PRE>---------------------IntermittentFile methods------------------------------
 
@@ -223,21 +204,21 @@ PROCEDURE <A NAME="RegularFileUnlock"><procedure>RegularFileUnlock</procedure></
          unexpected state in the case of a core dump elsewhere. *)
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, new_mode) # 0 THEN
-	OSErrorPosix.Raise()
+        OSErrorPosix.Raise()
       END;
 
       status := Uuio.read(h.fd, p_b, NUMBER(b));
       errno := Cerrno.GetErrno();
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) # 0 THEN
-	OSErrorPosix.Raise()
+        OSErrorPosix.Raise()
       END;
 
       IF status &gt;= 0 THEN
         RETURN status
-      ELSIF status = -1
-         AND errno # Uerror.EWOULDBLOCK
-         AND errno # Uerror.EAGAIN THEN
+      ELSIF (status = -1)
+         AND (errno # Uerror.EWOULDBLOCK)
+         AND (errno # Uerror.EAGAIN) THEN
         OSErrorPosix.Raise0(errno)
       ELSIF NOT mayBlock THEN
         RETURN -1
@@ -264,23 +245,23 @@ PROCEDURE <A NAME="IntermittentWrite"><procedure>IntermittentWrite</procedure></
          unexpected state in the case of a core dump elsewhere. *)
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, new_mode) # 0 THEN
-	OSErrorPosix.Raise()
+        OSErrorPosix.Raise()
       END;
 
       status := Uuio.write(h.fd, p, n);
       errno := Cerrno.GetErrno();
 
       IF Unix.fcntl(h.fd, Unix.F_SETFL, old_mode) # 0 THEN
-	OSErrorPosix.Raise()
+        OSErrorPosix.Raise()
       END;
 
       IF status &gt;= 0 THEN
         p := LOOPHOLE(LOOPHOLE(p, INTEGER) + status, Ctypes.char_star);
         n := n - status;
         IF n = 0 THEN EXIT END
-      ELSIF status = -1
-         AND errno # Uerror.EWOULDBLOCK
-         AND errno # Uerror.EAGAIN THEN
+      ELSIF (status = -1)
+         AND (errno # Uerror.EWOULDBLOCK)
+         AND (errno # Uerror.EAGAIN) THEN
         OSErrorPosix.Raise0(errno)
       END;
 
@@ -298,13 +279,18 @@ PROCEDURE <A NAME="IsDevNull"><procedure>IsDevNull</procedure></A>(READONLY stat
   VAR result: INTEGER;
   BEGIN
     IF NOT null_done THEN
+      null_fd := Unix.open(M3toC.FlatTtoS(&quot;/dev/null&quot;), Unix.O_RDONLY, Unix.Mrwrwrw);
+      IF null_fd &lt; 0 THEN
+        null_done := TRUE;
+        RETURN FALSE
+      ELSE
+        result := Ustat.fstat(null_fd, ADR(null_stat));
+        EVAL Unix.close(null_fd);
+        IF result # 0 THEN
+          null_fd := -1
+        END
+      END;
       null_done := TRUE;
-      null_fd := Unix.open(
-        M3toC.FlatTtoS(&quot;/dev/null&quot;), Unix.O_RDONLY, Unix.Mrwrwrw);
-      IF null_fd &lt; 0 THEN RETURN FALSE END;
-      result := Ustat.fstat(null_fd, ADR(null_stat));
-      EVAL Unix.close(null_fd);
-      IF result # 0 THEN null_fd := -1 END
     END;
     RETURN null_fd &gt;= 0 AND statbuf.st_rdev = null_stat.st_rdev
   END IsDevNull;
@@ -321,6 +307,52 @@ BEGIN
 END FilePosix.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface SchedulerPosix is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/thread/Common/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/Common/SchedulerPosix.i3</A>
+<LI><A HREF="../../../../m3core/src/thread/POSIX/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/POSIX/SchedulerPosix.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Uerror is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Uerror.i3.html#0TOP0">m3core/src/unix/Common/Uerror.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-common/Uerror.i3.html#0TOP0">m3core/src/unix/linux-common/Uerror.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Uerror.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uerror.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface Unix is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Unix.i3.html#0TOP0">m3core/src/unix/Common/Unix.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-common/Unix.i3.html#0TOP0">m3core/src/unix/linux-common/Unix.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html#0TOP0">m3core/src/unix/linux-libc6/Unix.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x4">interface Ustat is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Ustat.i3.html#0TOP0">m3core/src/unix/Common/Ustat.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Ustat.i3.html#0TOP0">m3core/src/unix/linux-libc6/Ustat.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x5">interface Uuio is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Uuio.i3.html#0TOP0">m3core/src/unix/Common/Uuio.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-common/Uuio.i3.html#0TOP0">m3core/src/unix/linux-common/Uuio.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Uuio.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uuio.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x6">interface Utypes is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Utypes.i3.html#0TOP0">m3core/src/unix/Common/Utypes.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-common/Utypes.i3.html#0TOP0">m3core/src/unix/linux-common/Utypes.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Utypes.i3.html#0TOP0">m3core/src/unix/linux-libc6/Utypes.i3</A>
+</UL>
+<P>
 <PRE>
 
 

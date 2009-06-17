@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/ZMoveVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/ZMoveVBT.i3</H2></A><HR>
 <inInterface>
@@ -32,8 +32,8 @@
 IMPORT <A HREF="../../../libm3/src/geometry/Rect.i3.html">Rect</A>, <A HREF="SourceVBT.i3.html">SourceVBT</A>;
 
 TYPE <A HREF="ZMoveVBT.m3.html#T">T</A> &lt;: SourceVBT.T;
-</PRE> The following procedure is useful for subclasses, such as <CODE>ZGrowVBT</CODE>, 
-   to control the shape of the outline of <CODE>v</CODE>'s subwindow as the 
+</PRE> The following procedure is useful for subclasses, such as <CODE>ZGrowVBT</CODE>,
+   to control the shape of the outline of <CODE>v</CODE>'s subwindow as the
    mouse is being dragged. 
 
 <P><PRE>PROCEDURE <A HREF="ZMoveVBT.m3.html#MoveAndHighlight">MoveAndHighlight</A> (v: T; READONLY rect: Rect.T);
@@ -55,7 +55,7 @@ TYPE <A HREF="ZMoveVBT.m3.html#T">T</A> &lt;: SourceVBT.T;
    <CODE>SourceVBT.GetHighlighter(v)</CODE>.  An appropriate paint op is
    constructed by examing the colors of the background child of
    the subwindow's parent.  Those colors are found using the
-   <CODE>VBTColors</CODE> interface; be sure to use that interface to 
+   <CODE>VBTColors</CODE> interface; be sure to use that interface to
    record the background child's primary foreground and background
    colors. 
 

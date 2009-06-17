@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tools/src/M3Const.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tools/src/M3Const.m3</H2></A><HR>
 <inModule>
@@ -663,9 +663,10 @@ PROCEDURE <A NAME="EvalAdd"><procedure>EvalAdd</procedure></A> (VAR s: State;  V
     EvalPair (s, a, b);
 
     IF (a.class = Class.Integer) AND (b.class = Class.Integer)
+      AND (a.type = b.type)
       AND TInt.Add (a.int, b.int, val.int) THEN
       val.class := Class.Integer;
-      val.type  := M3Type.Integer;
+      val.type  := a.type;
 
     ELSIF (a.class = Class.Float) AND (b.class = Class.Float)
       AND (a.float.pre = b.float.pre)
@@ -694,9 +695,10 @@ PROCEDURE <A NAME="EvalSubtract"><procedure>EvalSubtract</procedure></A> (VAR s:
     EvalPair (s, a, b);
 
     IF (a.class = Class.Integer) AND (b.class = Class.Integer)
+      AND (a.type = b.type)
       AND TInt.Subtract (a.int, b.int, val.int) THEN
       val.class := Class.Integer;
-      val.type  := M3Type.Integer;
+      val.type  := a.type;
 
     ELSIF (a.class = Class.Float) AND (b.class = Class.Float)
       AND (a.float.pre = b.float.pre)
@@ -739,9 +741,10 @@ PROCEDURE <A NAME="EvalMultiply"><procedure>EvalMultiply</procedure></A> (VAR s:
     EvalPair (s, a, b);
 
     IF (a.class = Class.Integer) AND (b.class = Class.Integer)
+      AND (a.type = b.type)
       AND TInt.Multiply (a.int, b.int, val.int) THEN
       val.class := Class.Integer;
-      val.type  := M3Type.Integer;
+      val.type  := a.type;
 
     ELSIF (a.class = Class.Float) AND (b.class = Class.Float)
       AND (a.float.pre = b.float.pre)
@@ -786,9 +789,10 @@ PROCEDURE <A NAME="EvalDiv"><procedure>EvalDiv</procedure></A> (VAR s: State;  V
     EvalPair (s, a, b);
 
     IF (a.class = Class.Integer) AND (b.class = Class.Integer)
+      AND (a.type = b.type)
       AND TInt.Div (a.int, b.int, val.int) THEN
       val.class := Class.Integer;
-      val.type  := M3Type.Integer;
+      val.type  := a.type;
     ELSE
       Err (&quot;bad operand for 'DIV'&quot;);
     END;
@@ -801,9 +805,10 @@ PROCEDURE <A NAME="EvalMod"><procedure>EvalMod</procedure></A> (VAR s: State;  V
     EvalPair (s, a, b);
 
     IF (a.class = Class.Integer) AND (b.class = Class.Integer)
+      AND (a.type = b.type)
       AND TInt.Mod (a.int, b.int, val.int) THEN
       val.class := Class.Integer;
-      val.type  := M3Type.Integer;
+      val.type  := a.type;
 
     ELSIF (a.class = Class.Float) AND (b.class = Class.Float)
       AND (a.float.pre = b.float.pre)
@@ -831,7 +836,7 @@ PROCEDURE <A NAME="EvalUnaryMinus"><procedure>EvalUnaryMinus</procedure></A> (VA
     IF (a.class = Class.Integer)
       AND TInt.Subtract (TInt.Zero, a.int, val.int) THEN
       val.class := Class.Integer;
-      val.type  := M3Type.Integer;
+      val.type  := a.type;
 
     ELSIF (a.class = Class.Float) THEN
       IF    (a.float.pre = Target.Precision.Short) THEN zero := TFloat.ZeroR;
@@ -861,7 +866,8 @@ PROCEDURE <A NAME="EvalSubscript"><procedure>EvalSubscript</procedure></A> (VAR 
       Err (&quot;bad operand for subscript operation&quot;);
     ELSIF (b.class = Class.Integer) THEN
       (* ok *)
-    ELSIF (b.class = Class.Enum) AND TInt.FromInt (b.info, b.int) THEN
+    ELSIF (b.class = Class.Enum)
+      AND TInt.FromInt (b.info, Target.Integer.bytes, b.int) THEN
       (* ok *)
     ELSE
       Err (&quot;bad operand for subscript operation&quot;);
@@ -1159,10 +1165,20 @@ PROCEDURE <A NAME="EvalInt"><procedure>EvalInt</procedure></A> (VAR s: State;  V
   BEGIN
     val.class := Class.Integer;
     val.type  := M3Type.Integer;
-    IF NOT TInt.FromInt (s.info, val.int) THEN
+    IF NOT TInt.FromInt (s.info, Target.Integer.bytes, val.int) THEN
       Err (&quot;illegal integer value&quot;);
     END;
   END EvalInt;
+
+PROCEDURE <A NAME="EvalLInt"><procedure>EvalLInt</procedure></A> (VAR s: State;  VAR val: T)
+  RAISES {Error} =
+  BEGIN
+    val.class := Class.Integer;
+    val.type  := M3Type.Longint;
+    IF NOT TInt.FromInt (s.info, Target.Longint.bytes, val.int) THEN
+      Err (&quot;illegal integer value&quot;);
+    END;
+  END EvalLInt;
 
 PROCEDURE <A NAME="EvalBigInt"><procedure>EvalBigInt</procedure></A> (VAR s: State;  VAR val: T) =
   BEGIN
@@ -1170,6 +1186,13 @@ PROCEDURE <A NAME="EvalBigInt"><procedure>EvalBigInt</procedure></A> (VAR s: Sta
     val.type  := M3Type.Integer;
     val.int   := s.ast.ints [s.info];
   END EvalBigInt;
+
+PROCEDURE <A NAME="EvalBigLInt"><procedure>EvalBigLInt</procedure></A> (VAR s: State;  VAR val: T) =
+  BEGIN
+    val.class := Class.Integer;
+    val.type  := M3Type.Longint;
+    val.int   := s.ast.ints [s.info];
+  END EvalBigLInt;
 
 PROCEDURE <A NAME="EvalReal"><procedure>EvalReal</procedure></A> (VAR s: State;  VAR val: T) =
   BEGIN
@@ -1327,11 +1350,11 @@ Out (<CODE>***??? Didn't find a type for </CODE>, M3ID.ToText (id), <CODE> =&gt;
 </PRE>------------------------------------------- built-in types and procedures ---
 
 <P><PRE>CONST
-  BuiltinNames = ARRAY [0..40] OF TEXT {
+  BuiltinNames = ARRAY [0..41] OF TEXT {
     &quot;ABS&quot;, &quot;ADDRESS&quot;, &quot;ADR&quot;, &quot;ADRSIZE&quot;, &quot;BITSIZE&quot;, &quot;BOOLEAN&quot;,
     &quot;BYTESIZE&quot;, &quot;CARDINAL&quot;, &quot;CEILING&quot;, &quot;CHAR&quot;, &quot;DEC&quot;, &quot;DISPOSE&quot;,
     &quot;EXTENDED&quot;, &quot;FALSE&quot;, &quot;FIRST&quot;, &quot;FLOAT&quot;, &quot;FLOOR&quot;, &quot;INC&quot;,
-    &quot;INTEGER&quot;, &quot;ISTYPE&quot;, &quot;LAST&quot;, &quot;LONGREAL&quot;, &quot;LOOPHOLE&quot;,
+    &quot;INTEGER&quot;, &quot;ISTYPE&quot;, &quot;LAST&quot;, &quot;LONGINT&quot;, &quot;LONGREAL&quot;, &quot;LOOPHOLE&quot;,
     &quot;MAX&quot;, &quot;MIN&quot;, &quot;MUTEX&quot;, &quot;NARROW&quot;, &quot;NEW&quot;, &quot;NIL&quot;, &quot;NULL&quot;,
     &quot;NUMBER&quot;, &quot;ORD&quot;, &quot;REAL&quot;, &quot;REFANY&quot;, &quot;ROUND&quot;, &quot;SUBARRAY&quot;,
     &quot;TEXT&quot;, &quot;TRUE&quot;, &quot;TRUNC&quot;, &quot;TYPECODE&quot;, &quot;VAL&quot;
@@ -1339,7 +1362,7 @@ Out (<CODE>***??? Didn't find a type for </CODE>, M3ID.ToText (id), <CODE> =&gt;
 
 VAR
   init_builtins := FALSE;
-  BuiltinIDs : ARRAY [0..40] OF M3ID.T;
+  BuiltinIDs : ARRAY [0..41] OF M3ID.T;
 
 PROCEDURE <A NAME="InitBuiltins"><procedure>InitBuiltins</procedure></A> () =
   BEGIN
@@ -1461,104 +1484,108 @@ PROCEDURE <A NAME="FindBuiltin"><procedure>FindBuiltin</procedure></A> (id: M3ID
                 val.info  := ORD (M3Builtin.Proc.Last);
                 RETURN TRUE;
 
-        | 21 =&gt; (* LONGREAL *)
+        | 21 =&gt; (* LONGINT *)
+                val.class := Class.Type;
+                val.type := M3Type.Longint;
+
+        | 22 =&gt; (* LONGREAL *)
                 val.class := Class.Type;
                 val.type := M3Type.LongReal;
                 RETURN TRUE;
 
-        | 22 =&gt; (* LOOPHOLE *)
+        | 23 =&gt; (* LOOPHOLE *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Loophole);
                 RETURN TRUE;
 
-        | 23 =&gt; (* MAX *)
+        | 24 =&gt; (* MAX *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Max);
                 RETURN TRUE;
 
-        | 24 =&gt; (* MIN *)
+        | 25 =&gt; (* MIN *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Min);
                 RETURN TRUE;
 
-        | 25 =&gt; (* MUTEX *)
+        | 26 =&gt; (* MUTEX *)
                 val.class := Class.Type;
                 val.type := M3Type.Mutex;
                 RETURN TRUE;
 
-        | 26 =&gt; (* NARROW *)
+        | 27 =&gt; (* NARROW *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Narrow);
                 RETURN TRUE;
 
-        | 27 =&gt; (* NEW *)
+        | 28 =&gt; (* NEW *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.New);
                 RETURN TRUE;
 
-        | 28 =&gt; (* NIL *)
+        | 29 =&gt; (* NIL *)
                 val.class := Class.Addr;
                 val.info  := 0;
                 val.type  := M3Type.Null;
                 RETURN TRUE;
 
-        | 29 =&gt; (* NULL *)
+        | 30 =&gt; (* NULL *)
                 val.class := Class.Type;
                 val.type := M3Type.Null;
                 RETURN TRUE;
 
-        | 30 =&gt; (* NUMBER *)
+        | 31 =&gt; (* NUMBER *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Number);
                 RETURN TRUE;
 
-        | 31 =&gt; (* ORD *)
+        | 32 =&gt; (* ORD *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Ord);
                 RETURN TRUE;
 
-        | 32 =&gt; (* REAL *)
+        | 33 =&gt; (* REAL *)
                 val.class := Class.Type;
                 val.type := M3Type.Real;
                 RETURN TRUE;
 
-        | 33 =&gt; (* REFANY *)
+        | 34 =&gt; (* REFANY *)
                 val.class := Class.Type;
                 val.type := M3Type.Refany;
                 RETURN TRUE;
 
-        | 34 =&gt; (* ROUND *)
+        | 35 =&gt; (* ROUND *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Round);
                 RETURN TRUE;
 
-        | 35 =&gt; (* SUBARRAY *)
+        | 36 =&gt; (* SUBARRAY *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Subarray);
                 RETURN TRUE;
 
-        | 36 =&gt; (* TEXT *)
+        | 37 =&gt; (* TEXT *)
                 val.class := Class.Type;
                 val.type := M3Type.Txt;
                 RETURN TRUE;
 
-        | 37 =&gt; (* TRUE *)
+        | 38 =&gt; (* TRUE *)
                 val.class := Class.Enum;
                 val.info  := ORD (TRUE);
                 val.type  := M3Type.Boolean;
                 RETURN TRUE;
 
-        | 38 =&gt; (* TRUNC *)
+        | 39 =&gt; (* TRUNC *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Trunc);
                 RETURN TRUE;
 
-        | 39 =&gt; (* TYPECODE *)
+        | 40 =&gt; (* TYPECODE *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Typecode);
                 RETURN TRUE;
 
-        | 40 =&gt; (* VAL *)
+        | 41 =&gt; (* VAL *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Val);
                 RETURN TRUE;
@@ -1690,7 +1717,9 @@ PROCEDURE <A NAME="Err"><procedure>Err</procedure></A> (msg: TEXT) RAISES {Error
 
     eval_procs [M3AST.OP_Id]           := EvalId;
     eval_procs [M3AST.OP_Int]          := EvalInt;
+    eval_procs [M3AST.OP_LInt]         := EvalLInt;
     eval_procs [M3AST.OP_BigInt]       := EvalBigInt;
+    eval_procs [M3AST.OP_BigLInt]      := EvalBigLInt;
     eval_procs [M3AST.OP_Real]         := EvalReal;
     eval_procs [M3AST.OP_LReal]        := EvalLReal;
     eval_procs [M3AST.OP_EReal]        := EvalEReal;

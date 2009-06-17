@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/win32/WinDef.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/win32/WinDef.m3</H2></A><HR>
 <inModule>
@@ -22,7 +22,7 @@
 
 <P><PRE>MODULE <module><implements><A HREF="WinDef.i3.html">WinDef</A></implements></module>;
 
-IMPORT <A HREF="../word/Word.i3.html">Word</A>, <A HREF="../C/Common/Ctypes.i3.html">Ctypes</A>;
+IMPORT <A HREF="../word/Word.i3.html">Word</A>;
 </PRE>*************************************
 REVEAL
   HANDLE       = UNTRACED ROOT BRANDED <CODE>HANDLE</CODE> OBJECT END;
@@ -53,7 +53,7 @@ REVEAL
 ***************************************
 
 <P><PRE>TYPE
-  dummy = RECORD unused: Ctypes.int; END;
+  dummy = RECORD unused: INT32; END;
 
 REVEAL
   <A NAME="HWND">HWND</A>         = UNTRACED BRANDED &quot;HWND&quot; REF dummy;
@@ -82,37 +82,37 @@ REVEAL
   <A NAME="HKL">HKL</A>          = UNTRACED BRANDED &quot;HKL&quot; REF dummy;
 
 &lt;* INLINE *&gt;
-PROCEDURE <A NAME="MAKEWORD"><procedure>MAKEWORD</procedure></A> (a, b: BYTE): WORD =
+PROCEDURE <A NAME="MAKEWORD"><procedure>MAKEWORD</procedure></A> (a, b: UINT8): UINT16 =
   BEGIN
     RETURN Word.Or(a, Word.Shift(b, 8));
   END MAKEWORD;
 
 &lt;* INLINE *&gt;
-PROCEDURE <A NAME="MAKELONG"><procedure>MAKELONG</procedure></A> (a, b: WORD): LONG =
+PROCEDURE <A NAME="MAKELONG"><procedure>MAKELONG</procedure></A> (a, b: UINT16): INT32 =
   BEGIN
     RETURN Word.Or(a, Word.Shift(b, 16));
   END MAKELONG;
 
 &lt;* INLINE *&gt;
-PROCEDURE <A NAME="LOWORD"><procedure>LOWORD</procedure></A> (l: LONG): WORD =
+PROCEDURE <A NAME="LOWORD"><procedure>LOWORD</procedure></A> (l: INT32): UINT16 =
   BEGIN
     RETURN Word.And(l, 16_ffff);
   END LOWORD;
 
 &lt;* INLINE *&gt;
-PROCEDURE <A NAME="HIWORD"><procedure>HIWORD</procedure></A> (l: LONG): WORD =
+PROCEDURE <A NAME="HIWORD"><procedure>HIWORD</procedure></A> (l: INT32): UINT16 =
   BEGIN
     RETURN Word.And(Word.Shift(l, -16), 16_ffff);
   END HIWORD;
 
 &lt;* INLINE *&gt;
-PROCEDURE <A NAME="LOBYTE"><procedure>LOBYTE</procedure></A> (w: WORD): BYTE =
+PROCEDURE <A NAME="LOBYTE"><procedure>LOBYTE</procedure></A> (w: UINT16): UINT8 =
   BEGIN
     RETURN Word.And(w, 16_ff)
   END LOBYTE;
 
 &lt;* INLINE *&gt;
-PROCEDURE <A NAME="HIBYTE"><procedure>HIBYTE</procedure></A> (w: WORD): BYTE =
+PROCEDURE <A NAME="HIBYTE"><procedure>HIBYTE</procedure></A> (w: UINT16): UINT8 =
   BEGIN
     RETURN Word.And(Word.Shift(w, -8), 16_ff);
   END HIBYTE;

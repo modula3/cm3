@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/misc/Host.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/misc/Host.m3</H2></A><HR>
 <inModule>
@@ -49,6 +49,8 @@ PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A> (READONLY o
     doDebugs             := TRUE;
     new_adr              := FALSE;
     report_stats         := FALSE;
+    doIncGC              := TRUE;
+    doGenGC              := TRUE;
 
     FOR i := 0 TO LAST (options) DO
       IF NOT ProcessArg (options[i]) THEN RETURN FALSE; END;
@@ -110,6 +112,10 @@ PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A> (READONLY o
       doNilChk    := FALSE;
       doRaisesChk := FALSE;
       doDebugs    := FALSE;
+    ELSIF (Text.Equal (t, &quot;-NoIncGC&quot;)) THEN
+      doIncGC := FALSE;
+    ELSIF (Text.Equal (t, &quot;-NoGenGC&quot;)) THEN
+      doGenGC := FALSE;
     ELSIF (Text.Equal (t, &quot;-InitFloats&quot;)) THEN
       init_floats := TRUE;
     ELSIF (Text.Equal (t, &quot;-load_map&quot;)) THEN
@@ -191,23 +197,6 @@ PROCEDURE <A NAME="CloseFile"><procedure>CloseFile</procedure></A> (rd: File.T) 
       TRY rd.close () EXCEPT ELSE END;
     END;
   END CloseFile;
-
-PROCEDURE <A NAME="FileTail"><procedure>FileTail</procedure></A> (path: TEXT): TEXT =
-  VAR c: CHAR;
-  BEGIN
-    IF (path = NIL) THEN RETURN NIL END;
-
-    (* search for the last slash or blank in the string *)
-    FOR x := Text.Length (path) - 1 TO 0 BY -1 DO
-      c := Text.GetChar (path, x);
-      IF (c = '/') OR (c = ' ') OR (c = '\\') THEN
-        RETURN Text.Sub (path, x+1);
-      END;
-    END;
-
-    (* no slashes *)
-    RETURN path;
-  END FileTail;
 
 BEGIN
 END Host.

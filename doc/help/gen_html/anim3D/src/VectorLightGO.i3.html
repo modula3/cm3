@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/VectorLightGO.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/VectorLightGO.i3</H2></A><HR>
 <inInterface>
@@ -14,12 +14,12 @@
        Created on Fri Feb  4 15:23:40 PST 1994 by najork                   
 
 <P>
-<P> A <CODE>VectorLightGO.T</CODE> is a geometric object that is emitting directed light 
-   and is infinitely far away from all other scene objects, so that all light 
-   rays falling onto the scene are parallel to each other. 
+<P> A <CODE>VectorLightGO.T</CODE> is a geometric object that is emitting directed light
+   and is infinitely far away from all other scene objects, so that all light
+   rays falling onto the scene are parallel to each other.
 <P>
-   The common real-world example of a vector light source is the sun 
-   (the Earth-Sun distance being so large that all sun rays falling onto 
+   The common real-world example of a vector light source is the sun
+   (the Earth-Sun distance being so large that all sun rays falling onto
    earth are close to parallel). 
 
 <P><PRE>INTERFACE <interface><A HREF="VectorLightGO.m3.html">VectorLightGO</A></interface>;
@@ -38,7 +38,7 @@ PROCEDURE <A HREF="VectorLightGO.m3.html#New">New</A> (c : Color.T; dir : Point3
 </PRE><BLOCKQUOTE><EM> <CODE>New(c,dir)</CODE> creates a new vector light source <CODE>l</CODE> and returns it.
    It also attaches attaches the following properties to <CODE>l</CODE>:
    \begin{verbatim}
-     (LightGO.Colour,ColourProp.NewConst(c)) 
+     (LightGO.Colour,ColourProp.NewConst(c))
      (LightGO.Switch,BooleanProp.NewConst(TRUE))
      (Direction,PointProp.NewConst(dir))
    \end{verbatim}
@@ -46,15 +46,15 @@ PROCEDURE <A HREF="VectorLightGO.m3.html#New">New</A> (c : Color.T; dir : Point3
 
 VAR
   Direction : PointProp.Name;
-</PRE><BLOCKQUOTE><EM> In addition to the properties observed by all \type{GO}{T}'s and 
-   \type{LightGO}{T}'s, there is one additional property that is observed 
-   by <CODE>VectorLightGO.T</CODE>'s. <CODE>Direction</CODE> is the name of a property that 
-   determines the direction of the light emitted by the light sources; 
+</PRE><BLOCKQUOTE><EM> In addition to the properties observed by all \type{GO}{T}'s and
+   \type{LightGO}{T}'s, there is one additional property that is observed
+   by <CODE>VectorLightGO.T</CODE>'s. <CODE>Direction</CODE> is the name of a property that
+   determines the direction of the light emitted by the light sources;
    it associates with a property value of type \type{PointProp}{Val}. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="VectorLightGO.m3.html#SetDirection">SetDirection</A> (o : GO.T; dir : Point3.T);
-</PRE><BLOCKQUOTE><EM> <CODE>SetDirection</CODE> is a convenience procedure. The expression 
-   <CODE>SetDirection(o,dir)</CODE> is equivalent to 
+</PRE><BLOCKQUOTE><EM> <CODE>SetDirection</CODE> is a convenience procedure. The expression
+   <CODE>SetDirection(o,dir)</CODE> is equivalent to
    <CODE>o.setProp(Direction.bind(PointProp.NewConst(dir)))</CODE>. </EM></BLOCKQUOTE><PRE>
 
 END VectorLightGO.

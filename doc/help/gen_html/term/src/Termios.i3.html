@@ -1,0 +1,58 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: term/src/Termios.i3</TITLE>
+</HEAD>
+<BODY bgcolor="#ffffff">
+<A NAME="0TOP0">
+<H2>term/src/Termios.i3</H2></A><HR>
+<inInterface>
+<PRE></PRE> $Id: Termios.i3.html,v 1.1 2009-06-17 18:53:09 wagner Exp $ 
+<PRE>UNSAFE INTERFACE <interface>Termios</interface>;
+
+CONST
+  Stdin = 0;
+  Stdout = 1;
+  Stderr = 2;
+
+  Tcsanow = 0;
+  Tcsadrain = 1;
+  Tcsaflush = 2;
+  Tcsasoft = 16;
+
+TYPE
+  T = REF ARRAY [0..511] OF CHAR;
+
+&lt;*EXTERNAL tcgetattr*&gt; PROCEDURE tcgetattr(fd: INTEGER; t: T);
+&lt;*EXTERNAL cfmakeraw*&gt; PROCEDURE cfmakeraw(t: T);
+&lt;*EXTERNAL tcsetattr*&gt; PROCEDURE tcsetattr(fd, action: INTEGER; t: T);
+
+END Termios.
+</PRE>
+</inInterface>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

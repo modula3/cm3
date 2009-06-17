@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/CallExpr.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/CallExpr.i3</H2></A><HR>
 <inInterface>
@@ -40,9 +40,9 @@ TYPE
   TypeChecker = PROCEDURE (t: T;  VAR cs: Expr.CheckState);
   Evaluator   = PROCEDURE (t: T): Expr.T;
   Bounder     = PROCEDURE (t: T;  VAR min, max: Target.Int);
-  Predicate   = PROCEDURE (t: T): BOOLEAN;
+  Predicate   = PROCEDURE (t: T; lhs := FALSE): BOOLEAN;
   Compiler    = PROCEDURE (t: T);
-  CompilerLV  = PROCEDURE (t: T);
+  CompilerLV  = PROCEDURE (t: T; lhs: BOOLEAN);
   CompilerBR  = PROCEDURE (t: T;  true, false: CG.Label;  freq: CG.Frequency);
   NoteWriter  = PROCEDURE (t: T);
 
@@ -71,13 +71,13 @@ PROCEDURE <A HREF="CallExpr.m3.html#NewMethodList">NewMethodList</A>
 PROCEDURE <A HREF="CallExpr.m3.html#Is">Is</A> (e: Expr.T): BOOLEAN;
 PROCEDURE <A HREF="CallExpr.m3.html#IsUserProc">IsUserProc</A> (e: Expr.T): BOOLEAN;
 
-PROCEDURE <A HREF="CallExpr.m3.html#IsNever">IsNever</A>        (t: T): BOOLEAN;
+PROCEDURE <A HREF="CallExpr.m3.html#IsNever">IsNever</A>        (t: T;  lhs: BOOLEAN): BOOLEAN;
 PROCEDURE <A HREF="CallExpr.m3.html#IsAlways">IsAlways</A>       (t: T): BOOLEAN;
 PROCEDURE <A HREF="CallExpr.m3.html#NoValue">NoValue</A>        (t: T): Expr.T;
 PROCEDURE <A HREF="CallExpr.m3.html#NoBounds">NoBounds</A>       (t: T;  VAR min, max: Target.Int);
 PROCEDURE <A HREF="CallExpr.m3.html#NotAddressable">NotAddressable</A> (t: T);
 PROCEDURE <A HREF="CallExpr.m3.html#PrepArgs">PrepArgs</A>       (t: T);
-PROCEDURE <A HREF="CallExpr.m3.html#NoLValue">NoLValue</A>       (t: T);
+PROCEDURE <A HREF="CallExpr.m3.html#NoLValue">NoLValue</A>       (t: T; lhs: BOOLEAN);
 PROCEDURE <A HREF="CallExpr.m3.html#NotBoolean">NotBoolean</A>     (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE <A HREF="CallExpr.m3.html#PrepNoBranch">PrepNoBranch</A>   (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE <A HREF="CallExpr.m3.html#NoBranch">NoBranch</A>       (t: T;  true, false: CG.Label;  freq: CG.Frequency);
@@ -89,6 +89,7 @@ END CallExpr.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

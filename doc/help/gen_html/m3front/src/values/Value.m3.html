@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/values/Value.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/values/Value.m3</H2></A><HR>
 <inModule>
@@ -285,6 +285,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (t: T;  name: M3ID.T;  
     t.class      := c;
     t.checked    := FALSE;
     t.readonly   := FALSE;
+    t.lhs        := FALSE;
     t.external   := FALSE;
     t.unused     := FALSE;
     t.obsolete   := FALSE;
@@ -386,8 +387,9 @@ PROCEDURE <A NAME="IsImported"><procedure>IsImported</procedure></A> (t: T): BOO
     RETURN (t # NIL) AND (t.imported);
   END IsImported;
 
-PROCEDURE <A NAME="IsWritable"><procedure>IsWritable</procedure></A> (t: T): BOOLEAN =
+PROCEDURE <A NAME="IsWritable"><procedure>IsWritable</procedure></A> (t: T;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
+    IF lhs THEN t.lhs := TRUE END;
     RETURN NOT t.readonly;
   END IsWritable;
 
@@ -429,6 +431,7 @@ END Value.
 <HR>
 <A NAME="x3">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/C/Common/Cstdlib.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/C/Common/Cstdlib.i3</H2></A><HR>
 <inInterface>
@@ -31,6 +31,8 @@ FROM <A HREF="Cstddef.i3.html">Cstddef</A> IMPORT size_t;
 &lt;*EXTERNAL*&gt; PROCEDURE system (string: const_char_star): int;
 
 &lt;*EXTERNAL*&gt; PROCEDURE malloc (size: size_t): void_star;
+
+&lt;*EXTERNAL*&gt; PROCEDURE calloc (count, size: size_t): void_star;
 
 &lt;*EXTERNAL*&gt; PROCEDURE free (ptr: void_star);
 

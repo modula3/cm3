@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/M3CG_Check.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/M3CG_Check.m3</H2></A><HR>
 <inModule>
@@ -20,7 +20,7 @@ IMPORT <A HREF="#x1">M3ID</A>, <A HREF="M3CG.i3.html">M3CG</A>, <A HREF="M3CG_Op
 
 FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT Name, ByteOffset, CallingConvention;
 FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT ByteSize, Alignment, Frequency, RuntimeError;
-FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT Var, Proc, Label, Sign, CompareOp, ConvertOp;
+FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT Var, Proc, Label, Sign, CompareOp, ConvertOp, AtomicOp;
 FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT Type, ZType, AType, RType, IType, MType;
 
 TYPE (* stack data types *)
@@ -29,13 +29,7 @@ TYPE (* stack data types *)
          Any, Missing, DontCare, Match };
 
 VAR (* CONST after &quot;begin_unit&quot; call *)
-  T_to_ST := ARRAY Type OF ST {
-    ST.Int32, ST.Int32, ST.Int32, ST.Int32,  (* Word8, Int8, Word16, Int16 *)
-    ST.Int32, ST.Int32, ST.Int64, ST.Int64,  (* Word32, Int32, Word64, Int64 *)
-    ST.Reel, ST.LReel, ST.XReel,             (* Reel, LReel, XReel *)
-    ST.Addr, ST.Addr,                        (* Addr, Struct *)
-    ST.Void
-  };
+  T_to_ST := ARRAY Type OF ST {ST.Void,..};
 
 CONST
   ST_name = ARRAY ST OF TEXT {
@@ -174,6 +168,13 @@ TYPE
         pop_static_link := pop_static_link;
         load_procedure := load_procedure;
         load_static_link := load_static_link;
+        fetch_and_op := fetch_and_op;
+        op_and_fetch := op_and_fetch;
+        bool_compare_and_swap := bool_compare_and_swap;
+        val_compare_and_swap := val_compare_and_swap;
+        synchronize := synchronize;
+        lock_test_and_set := lock_test_and_set;
+        lock_release := lock_release;
       END;
 </PRE>----------------------------------------------- binary/ASCII conversion ---
 
@@ -334,13 +335,17 @@ PROCEDURE <A NAME="CrashAndBurn"><procedure>CrashAndBurn</procedure></A> (msg: T
 
 <P><PRE>PROCEDURE <A NAME="begin_unit"><procedure>begin_unit</procedure></A> (self: U;  optimize : INTEGER) =
   (* called before any other method to initialize the compilation unit *)
+  CONST IntMap = ARRAY [0..1] OF ST {ST.Int32, ST.Int64};
+  VAR ST_Int := IntMap[Target.Integer.bytes DIV 8];
   BEGIN
-    IF Target.Integer.size # 32 THEN
-      (* fix the mapping of stack types *)
-      FOR i := FIRST (T_to_ST) TO LAST (T_to_ST) DO
-        IF T_to_ST[i] = ST.Int32 THEN T_to_ST[i] := ST.Int64; END;
-      END;
-    END;
+    (* initialize the mapping of stack types *)
+    T_to_ST := ARRAY Type OF ST
+        {ST_Int, ST_Int, ST_Int, ST_Int,      (* Word8, Int8, Word16, Int16 *)
+         ST_Int, ST_Int, ST.Int64, ST.Int64,  (* Word32, Int32, Word64, Int64 *)
+         ST.Reel, ST.LReel, ST.XReel,         (* Reel, LReel, XReel *)
+         ST.Addr, ST.Addr,                    (* Addr, Struct *)
+         ST.Void};
+
     self.s_empty ();
     self.child.begin_unit (optimize);
   END begin_unit;
@@ -963,42 +968,48 @@ PROCEDURE <A NAME="xor"><procedure>xor</procedure></A> (self: U;  t: IType) =
 PROCEDURE <A NAME="shift"><procedure>shift</procedure></A> (self: U;  t: IType) =
   (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST [t]);
+    self.s_push (t);
     self.child.shift (t);
   END shift;
 
 PROCEDURE <A NAME="shift_left"><procedure>shift_left</procedure></A> (self: U;  t: IType) =
   (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST [t]);
+    self.s_push (t);
     self.child.shift_left (t);
   END shift_left;
 
 PROCEDURE <A NAME="shift_right"><procedure>shift_right</procedure></A>  (self: U;  t: IType) =
   (* s1.t := Word.Shift  (s1.t, -s0.t) ; pop *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST [t]);
+    self.s_push (t);
     self.child.shift_right (t);
   END shift_right;
 
 PROCEDURE <A NAME="rotate"><procedure>rotate</procedure></A> (self: U;  t: IType) =
   (* s1.t := Word.Rotate (s1.t, s0.t) ; pop *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST [t]);
+    self.s_push (t);
     self.child.rotate (t);
   END rotate;
 
 PROCEDURE <A NAME="rotate_left"><procedure>rotate_left</procedure></A>  (self: U;  t: IType) =
   (* s1.t := Word.Rotate (s1.t, s0.t) ; pop *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST [t]);
+    self.s_push (t);
     self.child.rotate_left (t);
   END rotate_left;
 
 PROCEDURE <A NAME="rotate_right"><procedure>rotate_right</procedure></A> (self: U;  t: IType) =
   (* s1.t := Word.Rotate (s1.t, -s0.t) ; pop *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST [t]);
+    self.s_push (t);
     self.child.rotate_right (t);
   END rotate_right;
 
@@ -1022,7 +1033,9 @@ PROCEDURE <A NAME="extract"><procedure>extract</procedure></A> (self: U;  t: ITy
   (* s2.t := Word.Extract(s2.t, s1.t, s0.t);
      IF sign THEN SignExtend s2 END; pop(2) *)
   BEGIN
-    self.s_pop (T_to_ST[t], T_to_ST[t], T_to_ST [t]);
+    self.s_pop (T_to_ST[Target.Integer.cg_type],
+                T_to_ST[Target.Integer.cg_type],
+                T_to_ST [t]);
     self.s_push (t);
     self.child.extract (t, sign);
   END extract;
@@ -1031,7 +1044,9 @@ PROCEDURE <A NAME="extract_n"><procedure>extract_n</procedure></A> (self: U;  t:
   (* s1.t := Word.Extract(s1.t, s0.t, n);
      IF sign THEN SignExtend s1 END; pop(1) *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type],
+                T_to_ST [t]);
+    self.s_push (t);
     self.child.extract_n (t, sign, n);
   END extract_n;
 
@@ -1046,7 +1061,9 @@ PROCEDURE <A NAME="extract_mn"><procedure>extract_mn</procedure></A> (self: U;  
 PROCEDURE <A NAME="insert"><procedure>insert</procedure></A>  (self: U;  t: IType) =
   (* s3.t := Word.Insert (s3.t, s2.t, s1.t, s0.t) ; pop(3) *)
   BEGIN
-    self.s_pop (T_to_ST[t], T_to_ST[t], T_to_ST[t], T_to_ST[t]);
+    self.s_pop (T_to_ST[Target.Integer.cg_type],
+                T_to_ST[Target.Integer.cg_type],
+                T_to_ST[t], T_to_ST[t]);
     self.s_push (t);
     self.child.insert (t);
   END insert;
@@ -1054,7 +1071,7 @@ PROCEDURE <A NAME="insert"><procedure>insert</procedure></A>  (self: U;  t: ITyp
 PROCEDURE <A NAME="insert_n"><procedure>insert_n</procedure></A>  (self: U;  t: IType;  n: INTEGER) =
   (* s2.t := Word.Insert (s2.t, s1.t, s0.t, n) ; pop(2) *)
   BEGIN
-    self.s_pop (T_to_ST[t], T_to_ST[t], T_to_ST[t]);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST[t], T_to_ST[t]);
     self.s_push (t);
     self.child.insert_n (t, n);
   END insert_n;
@@ -1062,7 +1079,8 @@ PROCEDURE <A NAME="insert_n"><procedure>insert_n</procedure></A>  (self: U;  t: 
 PROCEDURE <A NAME="insert_mn"><procedure>insert_mn</procedure></A>  (self: U;  t: IType;  m, n: INTEGER) =
   (* s1.t := Word.Insert (s1.t, s0.t, m, n) ; pop(2) *)
   BEGIN
-    Binary (self, t, t);
+    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST[t]);
+    self.s_push (t);
     self.child.insert_mn (t, m, n);
   END insert_mn;
 </PRE>------------------------------------------------ misc. stack/memory ops ---
@@ -1282,6 +1300,53 @@ PROCEDURE <A NAME="load_static_link"><procedure>load_static_link</procedure></A>
     self.s_push (Type.Addr);
     self.child.load_static_link (p);
   END load_static_link;
+</PRE>--------------------------------------------------------------- atomics ---
+
+<P><PRE>PROCEDURE <A NAME="fetch_and_op"><procedure>fetch_and_op</procedure></A> (self: U;  op: AtomicOp;  t: MType) =
+  BEGIN
+    self.s_pop (ST.Addr);
+    self.s_push (t);
+    self.child.fetch_and_op (op, t);
+  END fetch_and_op;
+
+PROCEDURE <A NAME="op_and_fetch"><procedure>op_and_fetch</procedure></A> (self: U;  op: AtomicOp;  t: MType) =
+  BEGIN
+    self.s_pop (ST.Addr);
+    self.s_push (t);
+    self.child.op_and_fetch (op, t);
+  END op_and_fetch;
+
+PROCEDURE <A NAME="bool_compare_and_swap"><procedure>bool_compare_and_swap</procedure></A> (self: U;  t: MType;  u: IType) =
+  BEGIN
+    self.s_pop (T_to_ST [t], ST.Match, ST.Addr);
+    self.s_push (u);
+    self.child.bool_compare_and_swap (t, u);
+  END bool_compare_and_swap;
+
+PROCEDURE <A NAME="val_compare_and_swap"><procedure>val_compare_and_swap</procedure></A> (self: U;  t: MType) =
+  BEGIN
+    self.s_pop (T_to_ST [t], ST.Match, ST.Addr);
+    self.s_push (t);
+    self.child.val_compare_and_swap (t);
+  END val_compare_and_swap;
+
+PROCEDURE <A NAME="synchronize"><procedure>synchronize</procedure></A> (self: U) =
+  BEGIN
+    self.child.synchronize ();
+  END synchronize;
+
+PROCEDURE <A NAME="lock_test_and_set"><procedure>lock_test_and_set</procedure></A> (self: U;  t: MType) =
+  BEGIN
+    self.s_pop (T_to_ST [t], ST.Addr);
+    self.s_push (t);
+    self.child.lock_test_and_set (t);
+  END lock_test_and_set;
+
+PROCEDURE <A NAME="lock_release"><procedure>lock_release</procedure></A> (self: U;  t: MType) =
+  BEGIN
+    self.s_pop (ST.Addr);
+    self.child.lock_release (t);
+  END lock_release;
 
 BEGIN
 END M3CG_Check.

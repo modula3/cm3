@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/values/Variable.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/values/Variable.m3</H2></A><HR>
 <inModule>
@@ -20,7 +20,8 @@
 IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="#x1">M3ID</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="#x2">Value</A>, <A HREF="ValueRep.i3.html">ValueRep</A>, <A HREF="#x3">Type</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../misc/RunTyme.i3.html">RunTyme</A>;
 IMPORT <A HREF="../misc/Scope.i3.html">Scope</A>, <A HREF="../stmts/AssignStmt.i3.html">AssignStmt</A>, <A HREF="Formal.i3.html">Formal</A>, <A HREF="../../../m3middle/src/M3RT.i3.html">M3RT</A>, <A HREF="../exprs/IntegerExpr.i3.html">IntegerExpr</A>, <A HREF="../misc/TipeMap.i3.html">TipeMap</A>, <A HREF="../misc/M3String.i3.html">M3String</A>;
 IMPORT <A HREF="../types/OpenArrayType.i3.html">OpenArrayType</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="#x4">Token</A>, <A HREF="Ident.i3.html">Ident</A>, <A HREF="Module.i3.html">Module</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>;
-IMPORT <A HREF="Decl.i3.html">Decl</A>, <A HREF="../builtinTypes/Null.i3.html">Null</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="Procedure.i3.html">Procedure</A>, <A HREF="../misc/Tracer.i3.html">Tracer</A>, <A HREF="../exprs/TextExpr.i3.html">TextExpr</A>, <A HREF="../exprs/NamedExpr.i3.html">NamedExpr</A>;
+IMPORT <A HREF="#x5">Decl</A>, <A HREF="../builtinTypes/Null.i3.html">Null</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../builtinTypes/LInt.i3.html">LInt</A>, <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="Procedure.i3.html">Procedure</A>, <A HREF="../misc/Tracer.i3.html">Tracer</A>, <A HREF="../exprs/TextExpr.i3.html">TextExpr</A>, <A HREF="../exprs/NamedExpr.i3.html">NamedExpr</A>;
+IMPORT <A HREF="../types/PackedType.i3.html">PackedType</A>;
 FROM <A HREF="../misc/Scanner.i3.html">Scanner</A> IMPORT GetToken, Match, cur;
 
 CONST
@@ -52,10 +53,10 @@ REVEAL
         need_addr   : M3.Flag;
         no_type     : M3.Flag;
         global      : M3.Flag;
-	initDone    : M3.Flag;
-	initZero    : M3.Flag;
+        initDone    : M3.Flag;
+        initZero    : M3.Flag;
         initPending : M3.Flag;
-	initStatic  : M3.Flag;
+        initStatic  : M3.Flag;
       OVERRIDES
         typeCheck   := Check;
         set_globals := SetGlobals;
@@ -65,8 +66,8 @@ REVEAL
         need_init   := NeedInit;
         lang_init   := LangInit;
         user_init   := UserInit;
-	toExpr      := ValueRep.NoExpr;
-	toType      := ValueRep.NoType;
+        toExpr      := ValueRep.NoExpr;
+        toType      := ValueRep.NoType;
         typeOf      := TypeOf;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
@@ -140,18 +141,18 @@ PROCEDURE <A NAME="ParseDecl"><procedure>ParseDecl</procedure></A> (READONLY att
       FOR i := 0 TO n - 1 DO
         t := New (Ident.stack[j + i], FALSE);
         t.origin   := Ident.offset[j + i];
-	t.external := att.isExternal;
+        t.external := att.isExternal;
         t.unused   := att.isUnused;
         t.obsolete := att.isObsolete;
         t.tipe     := type;
         t.init     := expr;
         t.no_type  := (type = NIL);
-	IF (att.isExternal) THEN
-	  IF (alias # M3ID.NoID)
-	    THEN t.extName := alias;  alias := M3ID.NoID;
-	    ELSE t.extName := t.name;
-	  END;
-	END;
+        IF (att.isExternal) THEN
+          IF (alias # M3ID.NoID)
+            THEN t.extName := alias;  alias := M3ID.NoID;
+            ELSE t.extName := t.name;
+          END;
+        END;
         Scope.Insert (t);
         BindTrace (t, trace);
       END;
@@ -216,12 +217,14 @@ PROCEDURE <A NAME="NewFormal"><procedure>NewFormal</procedure></A> (formal: Valu
     RETURN t;
   END NewFormal;
 
-PROCEDURE <A NAME="Split"><procedure>Split</procedure></A> (t: T;  VAR type: Type.T;  VAR indirect, readonly: BOOLEAN) =
+PROCEDURE <A NAME="Split"><procedure>Split</procedure></A> (t: T;  VAR type: Type.T;
+                 VAR global, indirect, lhs: BOOLEAN) =
   BEGIN
     &lt;* ASSERT t.checked *&gt;
     type     := t.tipe;
+    global   := t.global;
     indirect := t.indirect;
-    readonly := t.readonly;
+    lhs      := t.lhs;
   END Split;
 
 PROCEDURE <A NAME="BindType"><procedure>BindType</procedure></A> (t: T; type: Type.T;
@@ -266,6 +269,11 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (t: T;  VAR cs: Value
   VAR dfault: Expr.T;  min, max: Target.Int;  info: Type.Info;  ref: Type.T;
   BEGIN
     t.tipe     := Type.CheckInfo (TypeOf (t), info);
+    IF (info.class = Type.Class.Packed)
+      AND (t.formal # NIL)
+      AND (NOT t.indirect) THEN
+      EVAL Type.CheckInfo (PackedType.Base (t.tipe), info);
+    END;
     t.size     := info.size;
     t.align    := info.alignment;
     t.mem_type := info.mem_type;
@@ -315,7 +323,7 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (t: T;  VAR cs: Value
       IF (dfault = NIL) THEN
         IF Module.IsInterface () THEN
           Error.ID (t.name, &quot;initial value is not a constant&quot;);
-	END;
+        END;
         IF (t.global) AND (info.size &gt; Max_zero_global * Target.Integer.size) THEN
           &lt;*ASSERT NOT t.indirect*&gt;
           t.indirect := TRUE;
@@ -347,7 +355,10 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (t: T;  VAR cs: Value
         t.initDone := TRUE;
       ELSIF Type.GetBounds (t.tipe, min, max) THEN
         (* synthesize an initialization expression *)
-        t.init := IntegerExpr.New (min);
+        IF Type.IsSubtype (t.tipe, LInt.T)
+          THEN t.init := IntegerExpr.New (LInt.T, min);
+          ELSE t.init := IntegerExpr.New (Int.T, min);
+        END;
       END;
     END;
 
@@ -714,7 +725,7 @@ PROCEDURE <A NAME="CopyOpenArray"><procedure>CopyOpenArray</procedure></A> (t: T
     (*** CG.Check_byte_aligned (); ****)
     CG.Store_addr (sizes, M3RT.OA_elt_ptr);
     CG.Load_intt (depth);
-    CG.Store_int (sizes, M3RT.OA_size_0);
+    CG.Store_int (Target.Integer.cg_type, sizes, M3RT.OA_size_0);
 
     (* allocate the storage *)
     proc := RunTyme.LookUpProc (RunTyme.Hook.NewTracedArray);
@@ -928,6 +939,7 @@ END Variable.
 <HR>
 <A NAME="x3">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
@@ -939,6 +951,13 @@ END Variable.
 </A><UL>
 <LI><A HREF="../misc/Token.i3.html#0TOP0">m3front/src/misc/Token.i3</A>
 <LI><A HREF="../../../mentor/src/parse/Token.i3.html#0TOP0">mentor/src/parse/Token.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x5">interface Decl is in:
+</A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Decl.i3.html#0TOP0">cm3ide/src/nodes/Decl.i3</A>
+<LI><A HREF="Decl.i3.html#0TOP0">m3front/src/values/Decl.i3</A>
 </UL>
 <P>
 <PRE>

@@ -1,0 +1,21 @@
+<HTML><HEAD><TITLE>
+sysutils/src/SystemC.c</TITLE></HEAD><BODY BGCOLOR="#ffffff">
+<H2>
+sysutils/src/SystemC.c</H2><HR>
+<PRE>
+/*
+ * Helper functions for accessing standard C's &quot;errno&quot; value.
+
+copied from m3core/src/C/Common/Cerrno.i3 for bootstrapping against older releases 
+ */
+
+#include &lt;errno.h&gt;
+
+int
+System__GetErrno(void)
+{
+    return errno;
+}
+</PRE>
+</BODY>
+</HTML>

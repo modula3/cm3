@@ -1,0 +1,41 @@
+<HTML><HEAD><TITLE>
+m3core/src/unix/Common/Uexec.c</TITLE></HEAD><BODY BGCOLOR="#ffffff">
+<H2>
+m3core/src/unix/Common/Uexec.c</H2><HR>
+<PRE>
+/* Copyright (C) 1990, Digital Equipment Corporation           */
+/* All rights reserved.                                        */
+/* See the file COPYRIGHT for a full description.              */
+
+#include &quot;m3unix.h&quot;
+
+#ifdef __cplusplus
+extern &quot;C&quot; {
+#endif
+
+#ifndef _WIN32
+
+void Uexec__RepackStatus(int* var_status)
+{
+    int status;
+
+    assert(var_status != NULL);
+
+    /* Posix says you must pass &quot;the original&quot; to the macros. */
+    status = ((WTERMSIG(*var_status) &lt;&lt; 8) | WEXITSTATUS(*var_status));
+#ifdef WCOREDUMP
+    status |= (WCOREDUMP(*var_status) ? 0x8000 : 0);
+#endif
+    *var_status = status;
+}
+
+/* If needed, define functions Uexec_WTERMSIG, Uexec_WEXITSTATUS, etc. */
+
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+</PRE>
+</BODY>
+</HTML>

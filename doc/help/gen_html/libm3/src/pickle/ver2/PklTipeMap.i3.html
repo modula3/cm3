@@ -2,17 +2,20 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/pickle/ver2/PklTipeMap.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/pickle/ver2/PklTipeMap.i3</H2></A><HR>
 <inInterface>
 <PRE></PRE> <P>
- * For more information on this program, contact Blair MacIntyre          
+ * For information about this program, contact Blair MacIntyre            
  * (bm@cs.columbia.edu) or Steven Feiner (feiner@cs.columbia.edu)         
  * at the Computer Science Dept., Columbia University,                    
- * 500 W 120th St, Room 450, New York, NY, 10027.                         
+ * 1214 Amsterdam Ave. Mailstop 0401, New York, NY, 10027.                
  *                                                                        
- * Copyright (C) Blair MacIntyre 1995, Columbia University 1995           
+ * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
+ * City of New York.  Blair MacIntyre, Computer Science Department.       
+ *
+ * This file is released under the same conditions as Pickle.m3. See COPYRIGHT.
  * 
  
 
@@ -37,7 +40,8 @@ PROCEDURE <A HREF="PklTipeMap.m3.html#Read">Read</A> (v: ConvertPacking.ReadVisi
    handle the incoming data.  
 
 <P><PRE>PROCEDURE <A HREF="PklTipeMap.m3.html#Write">Write</A> (v: ConvertPacking.WriteVisitor; r: REFANY; tc: TypeCode;
-                from: RTPacking.T;  READONLY shape: ARRAY OF INTEGER; n: INTEGER)
+                 from: RTPacking.T;  READONLY shape: ARRAY OF INTEGER;
+                 n: INTEGER)
     RAISES { Error, Wr.Failure, Thread.Alerted };
 </PRE> Write <CODE>r</CODE> using <CODE>v</CODE>.  The data is writen in the local data format. 
 

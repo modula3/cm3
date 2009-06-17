@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3markup/src/XFormat.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3markup/src/XFormat.m3</H2></A><HR>
 <inModule>
@@ -22,9 +22,9 @@
       modified on Mon Apr 22 17:34:37 1991 by nichols@xerox.com            
       modified on Tue May  2 10:32:50 1989 by ellis                        
 
-<P><PRE>MODULE <module><implements><A HREF="XFormat.i3.html">XFormat</A></implements></module>;
+<P><PRE>MODULE <module><implements><A HREF="#x1">XFormat</A></implements></module>;
 
-IMPORT <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../libbuf/src/Wx.i3.html">Wx</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../m3core/src/thread/Common/Scheduler.i3.html">Scheduler</A>;
+IMPORT <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="#x2">Wx</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../m3core/src/thread/Common/Scheduler.i3.html">Scheduler</A>;
 
 TYPE
   (* RefStream = ARRAY [0..LAST(CARDINAL)] OF REFANY; *)
@@ -1430,6 +1430,20 @@ BEGIN
 END XFormat.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface XFormat is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/markup/XFormat.i3.html#0TOP0">cm3ide/src/markup/XFormat.i3</A>
+<LI><A HREF="XFormat.i3.html#0TOP0">m3markup/src/XFormat.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Wx is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/utils/Wx.i3.html#0TOP0">cm3ide/src/utils/Wx.i3</A>
+<LI><A HREF="../../libbuf/src/Wx.i3.html#0TOP0">libbuf/src/Wx.i3</A>
+</UL>
+<P>
 <PRE>
 
 

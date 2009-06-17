@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/etext/MacModel.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/etext/MacModel.m3</H2></A><HR>
 <inModule>
@@ -398,7 +398,14 @@ PROCEDURE <A NAME="ArrowKey"><procedure>ArrowKey</procedure></A> (m: T; READONLY
   BEGIN
     IF NOT VBT.Modifier.Shift IN cd.modifiers THEN
       CancelHighlight (m);
-      TextPortClass.Model.arrowKey (m, cd)
+      TextPortClass.Model.arrowKey (m, cd);
+      WITH rec = m.selection [Primary] DO
+        rec.anchor.l := m.v.index();
+        rec.anchor.r := m.v.index();
+        rec.cursor := m.v.index();
+        rec.replaceMode := FALSE;
+        m.dragging := FALSE;
+      END;
     ELSE
       CONST name = &quot;Arrow Key&quot;;
       TYPE End = {Left, Right};
@@ -433,6 +440,7 @@ PROCEDURE <A NAME="ArrowKey"><procedure>ArrowKey</procedure></A> (m: T; READONLY
           WITH ext = m.getSelection (Primary) DO
             oldr := extentToIRange (ext, VAL (ORD (here = ext.r), End))
           END;
+          m.selection [Primary].replaceMode := TRUE;
           IF VBT.Modifier.Option IN cd.modifiers THEN
             m.selection [Primary].mode := VText.SelectionMode.WordSelection;
             CASE ch OF

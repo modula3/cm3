@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/SphereGO.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/SphereGO.i3</H2></A><HR>
 <inInterface>
@@ -27,15 +27,15 @@ TYPE
     init (prec := 30) : T;
   END;
 </PRE><BLOCKQUOTE><EM> <CODE>sph.init(prec)</CODE> initializes a new sphere <CODE>sph</CODE>, whose surface is composed
-   of <CODE>prec</CODE> strips of <CODE>prec</CODE> triangles,  and returns it. The location and 
-   radius of the sphere are determined by the two properties <CODE>Center</CODE> and 
+   of <CODE>prec</CODE> strips of <CODE>prec</CODE> triangles,  and returns it. The location and
+   radius of the sphere are determined by the two properties <CODE>Center</CODE> and
    <CODE>Radius</CODE>. </EM></BLOCKQUOTE><PRE>
 
 VAR
   Center : PointProp.Name;
   Radius : RealProp.Name;
 </PRE> In addition to the properties observed by all \type{GO}{T}'s and
-   \type{SurfaceGO}{T}'s, there are two additional properties that 
+   \type{SurfaceGO}{T}'s, there are two additional properties that
    are observed by <CODE>SphereGO.T</CODE>'s:
 <P>
    <CODE>Center</CODE> is the name of a property that describes the center of the sphere.
@@ -49,15 +49,15 @@ VAR
 <P>
 <P><PRE>PROCEDURE <A HREF="SphereGO.m3.html#New">New</A> (center : Point3.T; radius : REAL; prec := 30) : T;
 </PRE><BLOCKQUOTE><EM> <CODE>New(center,radius,prec)</CODE> creates a new sphere, whose surface is composed of
-   <CODE>prec</CODE> strips of <CODE>prec</CODE> triangles, and returns it. It also attaches the 
+   <CODE>prec</CODE> strips of <CODE>prec</CODE> triangles, and returns it. It also attaches the
    following properties to the new sphere:
    \begin{verbatim}
      (Center,PointProp.NewConst(center))
      (Radius,RealProp.NewConst(radius))
    \end{verbatim}
 </EM></BLOCKQUOTE><PRE>
-</PRE> The following two procedures provide sugaring to attach 
-   <CODE>Center</CODE> and <CODE>Radius</CODE> properties with non-animated 
+</PRE> The following two procedures provide sugaring to attach
+   <CODE>Center</CODE> and <CODE>Radius</CODE> properties with non-animated
    property values to geometric objects: 
 
 <P><PRE>PROCEDURE <A HREF="SphereGO.m3.html#SetCenter">SetCenter</A> (o : GO.T; center : Point3.T);

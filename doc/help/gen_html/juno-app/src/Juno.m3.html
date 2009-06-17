@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-app/src/Juno.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-app/src/Juno.m3</H2></A><HR>
 <inModule>
@@ -18,8 +18,8 @@
 
 MODULE <module>Juno</module> EXPORTS <A HREF="../../m3core/src/main/Main.i3.html"><implements>Main</A></implements>;
 
-IMPORT <A HREF="Source.i3.html">Source</A>, <A HREF="Drawing.i3.html">Drawing</A>, <A HREF="Editor.i3.html">Editor</A>, <A HREF="EditorUI.i3.html">EditorUI</A>, <A HREF="SaveState.i3.html">SaveState</A>, <A HREF="PublicView.i3.html">PublicView</A>, <A HREF="CurrCmd.i3.html">CurrCmd</A>;
-IMPORT   <A HREF="Marquee.i3.html">Marquee</A>, <A HREF="#x1">View</A>, <A HREF="JunoError.i3.html">JunoError</A>, <A HREF="JunoWM.i3.html">JunoWM</A>, <A HREF="ToolBox.i3.html">ToolBox</A>, <A HREF="../../ui/src/split/DblBufferVBT.i3.html">DblBufferVBT</A>, <A HREF="Drag.i3.html">Drag</A>;
+IMPORT <A HREF="#x1">Source</A>, <A HREF="Drawing.i3.html">Drawing</A>, <A HREF="#x2">Editor</A>, <A HREF="EditorUI.i3.html">EditorUI</A>, <A HREF="SaveState.i3.html">SaveState</A>, <A HREF="PublicView.i3.html">PublicView</A>, <A HREF="CurrCmd.i3.html">CurrCmd</A>;
+IMPORT   <A HREF="Marquee.i3.html">Marquee</A>, <A HREF="#x3">View</A>, <A HREF="JunoError.i3.html">JunoError</A>, <A HREF="JunoWM.i3.html">JunoWM</A>, <A HREF="ToolBox.i3.html">ToolBox</A>, <A HREF="../../ui/src/split/DblBufferVBT.i3.html">DblBufferVBT</A>, <A HREF="Drag.i3.html">Drag</A>;
 IMPORT   <A HREF="JunoUIImpl.i3.html">JunoUIImpl</A>, <A HREF="PrintImpl.i3.html">PrintImpl</A>, <A HREF="PSImpl.i3.html">PSImpl</A>, <A HREF="RandomImpl.i3.html">RandomImpl</A>, <A HREF="TextImpl.i3.html">TextImpl</A>, <A HREF="TimeImpl.i3.html">TimeImpl</A>;
 IMPORT   <A HREF="UnitImpl.i3.html">UnitImpl</A>;
 IMPORT   <A HREF="FVFilter.i3.html">FVFilter</A>, <A HREF="JunoConfig.i3.html">JunoConfig</A>, <A HREF="JunoRsrc.i3.html">JunoRsrc</A>, <A HREF="JunoVersion.i3.html">JunoVersion</A>, <A HREF="JunoZeus.i3.html">JunoZeus</A>;
@@ -59,11 +59,11 @@ TYPE
   OVERRIDES
     misc := Misc
   END;
-</PRE> If <CODE>w: Window</CODE>, then <CODE>w.fileName</CODE> is the complete absolute pathname 
-   of the current module file, and <CODE>w.fileStale</CODE> iff the disk file 
-   is out-of-date with respect to the contents of the current module 
-   editor.  The value of <CODE>checkPointStale</CODE> is <CODE>TRUE</CODE> if the checkpoint file 
-   differs from the state of the editor and source view.  
+</PRE> If <CODE>w: Window</CODE>, then <CODE>w.fileName</CODE> is the complete absolute pathname
+   of the current module file, and <CODE>w.fileStale</CODE> iff the disk file
+   is out-of-date with respect to the contents of the current module
+   editor.  The value of <CODE>checkPointStale</CODE> is <CODE>TRUE</CODE> if the checkpoint file
+   differs from the state of the editor and source view. 
 
 <P><PRE>EXCEPTION OpenFailure;
 </PRE><BLOCKQUOTE><EM> An attempt was made to open something other than a file </EM></BLOCKQUOTE><PRE>
@@ -232,8 +232,8 @@ PROCEDURE <A NAME="CompileModules"><procedure>CompileModules</procedure></A>(
    For each named file, the corresponding module name is shown in the
    <CODE>initModule</CODE> text field of the <CODE>startup</CODE> screen.
 <P>
-   If an error occurs in any file, then <CODE>w.fileName</CODE> is changed to the 
-   name of the file containing the error, and the rest of the files 
+   If an error occurs in any file, then <CODE>w.fileName</CODE> is changed to the
+   name of the file containing the error, and the rest of the files
    are ignored. In these error cases, the name of the offending module
    is not appended to <CODE>modList</CODE>.
 </EM></BLOCKQUOTE><PRE>
@@ -1099,7 +1099,7 @@ PROCEDURE <A NAME="DoSaveWork"><procedure>DoSaveWork</procedure></A>(cl: MenuRec
     EXCEPT OSError.E =&gt;
       (* file does not exist -- so save it directly *)
 </PRE><BLOCKQUOTE><EM><P>
-      EVAL Thread.Fork(NEW(FileIOClosure, fv := fv, ts := ts, 
+      EVAL Thread.Fork(NEW(FileIOClosure, fv := fv, ts := ts,
 	fname := fname, apply := DoSaveAsWork))
 </EM></BLOCKQUOTE><PRE>
       EVAL DoSaveAsWork(NEW(FileIORec, fv := fv, ts := ts,
@@ -1114,7 +1114,7 @@ PROCEDURE <A NAME="DoSaveAsOverwrite"><procedure>DoSaveAsOverwrite</procedure></
    indeed like to overwrite the file. </EM></BLOCKQUOTE><PRE>
   VAR fname := NARROW(fv, Window).saveAsFName; BEGIN
 </PRE><BLOCKQUOTE><EM><P>
-      EVAL Thread.Fork(NEW(FileIOClosure, fv := fv, ts := ts, 
+      EVAL Thread.Fork(NEW(FileIOClosure, fv := fv, ts := ts,
 	fname := fname, apply := DoSaveAsWork))
 </EM></BLOCKQUOTE><PRE>
       EVAL DoSaveAsWork(NEW(FileIORec, fv := fv, ts := ts,
@@ -2187,7 +2187,21 @@ END Juno.
 </PRE>
 </inModule>
 <HR>
-<A NAME="x1">interface View is in:
+<A NAME="x1">interface Source is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/nodes/Source.i3.html#0TOP0">cm3ide/src/nodes/Source.i3</A>
+<LI><A HREF="Source.i3.html#0TOP0">juno-app/src/Source.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Editor is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/misc/Editor.i3.html#0TOP0">cm3ide/src/misc/Editor.i3</A>
+<LI><A HREF="Editor.i3.html#0TOP0">juno-app/src/Editor.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface View is in:
 </A><UL>
 <LI><A HREF="View.i3.html#0TOP0">juno-app/src/View.i3</A>
 <LI><A HREF="../../zeus/src/View.i3.html#0TOP0">zeus/src/View.i3</A>

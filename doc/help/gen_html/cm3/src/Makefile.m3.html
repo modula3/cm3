@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: cm3/src/Makefile.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>cm3/src/Makefile.m3</H2></A><HR>
 <inModule>
@@ -12,9 +12,9 @@
 <P><PRE>MODULE <module><implements><A HREF="Makefile.i3.html">Makefile</A></implements></module>;
 
 IMPORT <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../m3middle/src/M3File.i3.html">M3File</A>, <A HREF="../../m3middle/src/M3Timers.i3.html">M3Timers</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../libm3/src/params/Params.i3.html">Params</A>, <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>;
-IMPORT <A HREF="Arg.i3.html">Arg</A>, <A HREF="M3Options.i3.html">M3Options</A>, <A HREF="M3Path.i3.html">M3Path</A>, <A HREF="#x1">Msg</A>, <A HREF="Utils.i3.html">Utils</A>, <A HREF="../../libm3/derived/TextSeq.i3.html">TextSeq</A>, <A HREF="../../libm3/derived/TextTextTbl.i3.html">TextTextTbl</A>;
+IMPORT <A HREF="Arg.i3.html">Arg</A>, <A HREF="M3Build.i3.html">M3Build</A>, <A HREF="M3Options.i3.html">M3Options</A>, <A HREF="M3Path.i3.html">M3Path</A>, <A HREF="#x1">Msg</A>, <A HREF="Utils.i3.html">Utils</A>, <A HREF="../../libm3/derived/TextSeq.i3.html">TextSeq</A>, <A HREF="../../libm3/derived/TextTextTbl.i3.html">TextTextTbl</A>;
 IMPORT <A HREF="../../m3quake/src/MxConfig.i3.html">MxConfig</A> AS M3Config;
-IMPORT <A HREF="Dirs.i3.html">Dirs</A>;
+IMPORT <A HREF="Dirs.i3.html">Dirs</A>, <A HREF="#x2">Version</A>;
 
 TYPE
   NK = M3Path.Kind;
@@ -22,9 +22,9 @@ TYPE
 
 CONST
   ModeName = ARRAY MM OF TEXT { &quot;-build&quot;, &quot;-clean&quot;, &quot;-ship&quot;, &quot;-find&quot;,
-                                &quot;-depend&quot; };
+                                &quot;-depend&quot;, &quot;-realclean&quot; };
   ModeFlag = ARRAY MM OF TEXT { &quot;_all&quot;,   &quot;_clean&quot;, &quot;_ship&quot;, &quot;_find&quot;,
-                                &quot;_depend&quot; };
+                                &quot;_depend&quot;, &quot;_realclean&quot; };
 
 TYPE
   State = RECORD
@@ -51,10 +51,9 @@ PROCEDURE <A NAME="Build"><procedure>Build</procedure></A> (src_dir: TEXT): TEXT
       Out (wr, &quot;set_config_options ()&quot;);
       Out (wr, &quot;readonly &quot;, ModeFlag [M3Options.major_mode],
            &quot; = TRUE % cm3 &quot;, ModeName [M3Options.major_mode]);
-
       CASE M3Options.major_mode OF
       | MM.Find =&gt; Out (wr, &quot;M3_FIND_UNITS = []&quot;)
-      | MM.Build, MM.Clean, MM.Ship, MM.Depend =&gt;  (* skip *)
+      | MM.Build, MM.Clean, MM.RealClean, MM.Ship, MM.Depend =&gt;  (* skip *)
       END;
 
       ConvertArgList (s);
@@ -65,6 +64,7 @@ PROCEDURE <A NAME="Build"><procedure>Build</procedure></A> (src_dir: TEXT): TEXT
       | MM.Find   =&gt; Out (wr, &quot;M3_MODE = &quot;, &quot;\&quot;find\&quot;&quot;);
       | MM.Depend =&gt; Out (wr, &quot;M3_MODE = &quot;, &quot;\&quot;depend\&quot;&quot;);
       | MM.Ship   =&gt; Out (wr, &quot;M3_MODE = &quot;, &quot;\&quot;ship\&quot;&quot;);
+      | MM.RealClean  =&gt; Out (wr, &quot;M3_MODE = &quot;, &quot;\&quot;realclean\&quot;&quot;);
       ELSE
         Out (wr, &quot;M3_MODE = &quot;, &quot;\&quot;other\&quot;&quot;);
       END;
@@ -90,10 +90,14 @@ PROCEDURE <A NAME="Build"><procedure>Build</procedure></A> (src_dir: TEXT): TEXT
           Out (wr, &quot;include (\&quot;.M3SHIP\&quot;)&quot;);
           s.found_work := TRUE;
         END;
+
+      | MM.RealClean =&gt;
+        (* we don't bother to include anything since it will be erased soon *)
       END;
     END Emit;
 
   BEGIN
+    Msg.Debug( &quot;Build(&quot;, src_dir, &quot;)&quot;, Wr.EOL );
     s.args := Arg.NewList ();
     s.prepend_files := NEW(TextSeq.T).init();
     s.append_files := NEW(TextSeq.T).init();
@@ -104,7 +108,8 @@ PROCEDURE <A NAME="Build"><procedure>Build</procedure></A> (src_dir: TEXT): TEXT
     Utils.WriteFile (Makefile, Emit, append := FALSE);
 
     IF s.found_work THEN
-      IF NOT s.keep_files THEN Utils.NoteTempFile (Makefile); END;
+      IF NOT s.keep_files AND M3Options.major_mode # MM.RealClean THEN
+        Utils.NoteTempFile (Makefile); END;
       RETURN Makefile;
     ELSE
       Msg.Out (&quot;cm3: found nothing to build.&quot;, Wr.EOL);
@@ -116,16 +121,19 @@ PROCEDURE <A NAME="Build"><procedure>Build</procedure></A> (src_dir: TEXT): TEXT
 
 <P><PRE>PROCEDURE <A NAME="ConvertArgList"><procedure>ConvertArgList</procedure></A> (VAR s: State)
   RAISES {Wr.Failure, Thread.Alerted} =
-  VAR len: INTEGER;  arg: TEXT;
+  VAR len: INTEGER;  arg: TEXT; noMoreOptions := FALSE;
   BEGIN
     WHILE (s.args.cnt &gt; 0) DO
       arg := Arg.Pop (s.args);
       len := Text.Length (arg);
       IF (len &lt; 1) THEN
         (* empty argument ignore *)
-      ELSIF (Text.GetChar (arg, 0) # '-') OR (len &lt; 2) THEN
+      ELSIF (Text.GetChar (arg, 0) # '-') OR (len &lt; 2) OR noMoreOptions THEN
         NoteSourceFile (s, NIL, arg, cmd_line := TRUE);
-      ELSE (* it's an option *)
+      ELSIF Text.Equal (arg, &quot;--&quot;) THEN
+        noMoreOptions := TRUE;
+      ELSIF NOT noMoreOptions THEN
+        (* it's an option *)
         ConvertOption (s, arg, len);
       END;
     END;
@@ -135,6 +143,9 @@ PROCEDURE <A NAME="ConvertOption"><procedure>ConvertOption</procedure></A> (VAR 
   RAISES {Wr.Failure, Thread.Alerted} =
   VAR ok := FALSE;  wr := s.wr;
   BEGIN
+    IF Text.GetChar (arg, 1) = '-' THEN
+      arg := Text.Sub (arg, 1);
+    END;
     CASE Text.GetChar (arg, 1) OF
 
     | '?' =&gt; IF (arg_len = 2) THEN
@@ -208,6 +219,9 @@ PROCEDURE <A NAME="ConvertOption"><procedure>ConvertOption</procedure></A> (VAR 
                Out (wr, &quot;m3_debug (TRUE)&quot;);  ok := TRUE;
              ELSIF Text.Equal(arg, &quot;-gui&quot;) THEN
                Out (wr, &quot;M3_WINDOWS_GUI = TRUE&quot;);  ok := TRUE;
+             ELSIF Text.Equal(arg, &quot;-gw&quot;) OR
+                   Text.Equal(arg, &quot;-group-writable&quot;) THEN
+               M3Build.groupWritable := TRUE; ok := TRUE;
              END;
 
     | 'h' =&gt; IF Text.Equal (arg, &quot;-heap_stats&quot;) THEN
@@ -225,6 +239,10 @@ PROCEDURE <A NAME="ConvertOption"><procedure>ConvertOption</procedure></A> (VAR 
                Out (wr, &quot;M3_LAZY_MODULE_INIT = TRUE&quot;);  ok := TRUE;
              ELSIF Text.Equal (arg, &quot;-linkall&quot;) THEN
                Out (wr, &quot;M3_LAZY_MODULE_INIT = FALSE&quot;);  ok := TRUE;
+             END;
+
+    | 'n' =&gt; IF Text.Equal (arg, &quot;-no-m3ship-resolution&quot;) THEN
+               M3Build.noM3ShipResolution := TRUE; ok := TRUE;
              END;
 
     | 'o' =&gt; IF (arg_len = 2) THEN
@@ -249,6 +267,11 @@ PROCEDURE <A NAME="ConvertOption"><procedure>ConvertOption</procedure></A> (VAR 
 
     | 'O' =&gt; IF (arg_len = 2) THEN
                Out (wr, &quot;m3_optimize (TRUE)&quot;);  ok := TRUE;
+             END;
+
+    | 'r' =&gt; IF Text.Equal(arg, &quot;-realclean&quot;) THEN
+               ok := TRUE;  (* mode set during the pre-scan *)
+               s.found_work := TRUE;
              END;
 
     | 's' =&gt; IF Text.Equal (arg, &quot;-silent&quot;) THEN
@@ -367,21 +390,20 @@ PROCEDURE <A NAME="NoteSourceFile"><procedure>NoteSourceFile</procedure></A> (VA
   RAISES {Wr.Failure, Thread.Alerted} =
   VAR
     file := M3Path.New (dir, name);
-    info := M3Path.Parse (file, host := TRUE);
+    info := M3Path.Parse (file);
     tag  : TEXT;
   BEGIN
     Msg.Debug (&quot;  file &quot;, file, Wr.EOL);
 
     IF (M3Options.major_mode = MM.Find) AND (cmd_line) THEN
-      Out (s.wr, &quot;M3_FIND_UNITS += \&quot;&quot;, M3Path.Join (NIL, info.base, info.kind,
-                                             host := TRUE), &quot;\&quot;&quot;);
+      Out (s.wr, &quot;M3_FIND_UNITS += \&quot;&quot;, M3Path.Join (NIL, info.base, info.kind), &quot;\&quot;&quot;);
       s.found_work := TRUE;
       RETURN;
     END;
 
     tag := SourceTag [info.kind];
     IF (tag # NIL) THEN
-      file := M3Path.Escape (M3Path.New (info.dir, info.base));
+      file := M3Path.Convert (M3Path.New (info.dir, info.base));
       Out (s.wr, tag, &quot; (\&quot;&quot;, file, &quot;\&quot;)&quot;);
       s.found_work := TRUE;
     ELSE
@@ -441,7 +463,7 @@ PROCEDURE <A NAME="IncludeOverrides"><procedure>IncludeOverrides</procedure></A>
   BEGIN
     IF M3File.IsReadable (overrides) THEN
       IF (s.use_overrides) THEN
-        Out (s.wr, &quot;include (\&quot;&quot;, M3Path.Escape (overrides), &quot;\&quot;)&quot;);
+        Out (s.wr, &quot;include (\&quot;&quot;, M3Path.Convert (overrides), &quot;\&quot;)&quot;);
         s.found_work := TRUE;
       ELSE
         IF (M3Options.major_mode = MM.Depend) THEN
@@ -467,7 +489,7 @@ PROCEDURE <A NAME="IncludeFile"><procedure>IncludeFile</procedure></A> (VAR s: S
   RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN
     IF M3File.IsReadable (file) THEN
-      Out (s.wr, &quot;include (\&quot;&quot;, M3Path.Escape (file), &quot;\&quot;)&quot;);
+      Out (s.wr, &quot;include (\&quot;&quot;, M3Path.Convert (file), &quot;\&quot;)&quot;);
       s.found_work := TRUE;
     ELSE
       IF (M3Options.major_mode = MM.Depend) THEN
@@ -482,7 +504,7 @@ PROCEDURE <A NAME="IncludeMakefile"><procedure>IncludeMakefile</procedure></A> (
   RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN
     IF M3File.IsReadable (makefile) THEN
-      Out (s.wr, &quot;include_dir (\&quot;&quot;, M3Path.Escape (dir), &quot;\&quot;)&quot;);
+      Out (s.wr, &quot;include_dir (\&quot;&quot;, M3Path.Convert (dir), &quot;\&quot;)&quot;);
       s.found_work := TRUE;
     ELSE
       Msg.Debug (&quot;Dirs.derived   = &quot;, Dirs.derived, Wr.EOL);
@@ -497,21 +519,38 @@ PROCEDURE <A NAME="IncludeMakefile"><procedure>IncludeMakefile</procedure></A> (
 
 <P><PRE>PROCEDURE <A NAME="ScanCommandLine"><procedure>ScanCommandLine</procedure></A> () : TextTextTbl.T =
   VAR
+    use_overrides := FALSE;
     cnt := 0;  arg: TEXT;
   BEGIN
     FOR i := 1 TO Params.Count-1 DO
       arg := Params.Get (i);
-      IF    Text.Equal (arg, &quot;-build&quot;)   THEN  SetMode (cnt, MM.Build);
-      ELSIF Text.Equal (arg, &quot;-clean&quot;)   THEN  SetMode (cnt, MM.Clean);
-      ELSIF Text.Equal (arg, &quot;-find&quot;)    THEN  SetMode (cnt, MM.Find);
-      ELSIF Text.Equal (arg, &quot;-ship&quot;)    THEN  SetMode (cnt, MM.Ship);
-      ELSIF Text.Equal (arg, &quot;-depend&quot;)  THEN  SetMode (cnt, MM.Depend);
-      ELSIF Text.Equal (arg, &quot;-?&quot;)       THEN  PrintHelp ();
-      ELSIF Text.Equal (arg, &quot;-help&quot;)    THEN  PrintHelp ();
-      ELSIF Text.Equal (arg, &quot;-config&quot;)  THEN  PrintVersion (TRUE);
-      ELSIF Text.Equal (arg, &quot;-version&quot;) THEN  PrintVersion (TRUE);
+      IF Text.GetChar (arg, 1) = '-' THEN
+        arg := Text.Sub (arg, 1);
+      END;
+      IF    Text.Equal (arg, &quot;-build&quot;)     THEN  SetMode (cnt, MM.Build);
+      ELSIF Text.Equal (arg, &quot;-clean&quot;)     THEN  SetMode (cnt, MM.Clean);
+      ELSIF Text.Equal (arg, &quot;-realclean&quot;) THEN  SetMode (cnt, MM.RealClean);
+      ELSIF Text.Equal (arg, &quot;-find&quot;)      THEN  SetMode (cnt, MM.Find);
+      ELSIF Text.Equal (arg, &quot;-ship&quot;)      THEN  SetMode (cnt, MM.Ship);
+      ELSIF Text.Equal (arg, &quot;-depend&quot;)    THEN  SetMode (cnt, MM.Depend);
+      ELSIF Text.Equal (arg, &quot;-?&quot;)         THEN  PrintHelp ();
+      ELSIF Text.Equal (arg, &quot;-help&quot;)      THEN  PrintHelp ();
+      ELSIF Text.Equal (arg, &quot;-config&quot;)    THEN  PrintVersion (TRUE);
+      ELSIF Text.Equal (arg, &quot;-version&quot;)   THEN  PrintVersion (TRUE);
+      ELSIF Text.Equal (arg, &quot;-silent&quot;) THEN
+        Msg.SetLevel (Msg.Level.Silent);
+      ELSIF Text.Equal (arg, &quot;-why&quot;) THEN
+        Msg.SetLevel (Msg.Level.Explain);
+      ELSIF Text.Equal (arg, &quot;-commands&quot;) THEN
+        Msg.SetLevel (Msg.Level.Commands);
+      ELSIF Text.Equal (arg, &quot;-verbose&quot;) THEN
+        Msg.SetLevel (Msg.Level.Verbose);
+      ELSIF Text.Equal (arg, &quot;-debug&quot;) THEN
+        Msg.SetLevel (Msg.Level.Debug);
       ELSIF Text.Equal (arg, &quot;-profile&quot;) THEN
         EVAL defs.put(&quot;M3_PROFILING&quot;, &quot;TRUE&quot;);
+      ELSIF Text.Equal (arg, &quot;-x&quot;) OR Text.Equal (arg, &quot;-override&quot;) THEN
+        use_overrides := TRUE;
       ELSIF Text.Equal (arg, &quot;-pretend&quot;) THEN
         IF i &lt; Params.Count - 1 THEN
           EVAL defs.put(&quot;CM3_VERSION&quot;, Params.Get(i+1));
@@ -521,6 +560,7 @@ PROCEDURE <A NAME="IncludeMakefile"><procedure>IncludeMakefile</procedure></A> (
       END;
     END;
     IF (cnt &lt;= 0) THEN SetMode (cnt, MM.Build); END;
+    EVAL defs.put(&quot;M3_USE_OVERRIDES&quot;, ARRAY BOOLEAN OF TEXT {&quot;&quot;, &quot;TRUE&quot;}[use_overrides]);
     RETURN defs;
   END ScanCommandLine;
 
@@ -538,8 +578,10 @@ PROCEDURE <A NAME="SetMode"><procedure>SetMode</procedure></A> (VAR cnt: INTEGER
 PROCEDURE <A NAME="PrintVersion"><procedure>PrintVersion</procedure></A> (exit: BOOLEAN) =
   BEGIN
     Msg.Out (&quot;Critical Mass Modula-3 version &quot;, Val(&quot;CM3_RELEASE&quot;), Wr.EOL);
-    Msg.Out (&quot;  last updated: &quot;, Val(&quot;CM3_CREATED&quot;), Wr.EOL);
+    Msg.Out (&quot;  last updated: &quot;, Val(&quot;CM3_CHANGED&quot;), Wr.EOL);
+    Msg.Out (&quot;  compiled: &quot;, Val(&quot;CM3_COMPILED&quot;), Wr.EOL);
     Msg.Out (&quot;  configuration: &quot;, M3Config.FindFile(), Wr.EOL);
+    Msg.Out (&quot;  target: &quot;, M3Config.Get(&quot;TARGET&quot;), Wr.EOL);
     Msg.Out (Wr.EOL);
     IF exit THEN Process.Exit (0); END;
   END PrintVersion;
@@ -561,6 +603,7 @@ CONST
     &quot;  -build         compile and link&quot;,
     &quot;  -ship          install package&quot;,
     &quot;  -clean         delete derived files&quot;,
+    &quot;  -realclean     delete derived target directory&quot;,
     &quot;  -find          locate source files&quot;,
     &quot;  -depend        output package dependencies&quot;,
     &quot;&quot;,
@@ -600,10 +643,11 @@ CONST
     &quot;  -config        print the version number header&quot;,
     &quot;&quot;,
     &quot;misc:&quot;,
+    &quot;  --             end of options&quot;,
     &quot;  -keep          preserve intermediate and temporary files&quot;,
     &quot;  -times         produce a dump of elapsed times&quot;,
-    &quot;  -override      include the \&quot;.m3overrides\&quot; file&quot;,
-    &quot;  -x             include the \&quot;.m3overrides\&quot; file&quot;,
+    &quot;  -override      include the \&quot;m3overrides\&quot; file&quot;,
+    &quot;  -x             include the \&quot;m3overrides\&quot; file&quot;,
     &quot;  -D&lt;symbol&gt;     define &lt;symbol&gt; with the value TRUE&quot;,
     &quot;  -D&lt;sym&gt;=&lt;val&gt;  define &lt;sym&gt; with the value &lt;val&gt;&quot;,
     &quot;  -F &lt;fn&gt;        prepend the quake code of file &lt;fn&gt;&quot;,
@@ -615,6 +659,9 @@ CONST
     &quot;  -gui           produce a Windows GUI subsystem program&quot;,
     &quot;  -windows       produce a Windows GUI subsystem program&quot;,
     &quot;  -pretend &lt;val&gt; pretend to run as CM3_Version &lt;val&gt;&quot;,
+    &quot;  -gw            install group writable files&quot;,
+    &quot;  -group-writable \&quot;&quot;,
+    &quot;  -no-m3ship-resolution use quake variables in .M3SHIP (experimental)&quot;,
     &quot;&quot;,
     &quot;environment variables:&quot;,
     &quot;  M3CONFIG       platform dependent configuration file to use (cm3.cfg)&quot;,
@@ -622,6 +669,9 @@ CONST
     &quot;  QUAKE_SHELL    shell to be used by the quake interpreter for exec()&quot;,
     &quot;  QUAKE_SHELL_OPTION command option for quake shell (-c, /c)&quot;,
     &quot;  QUAKE_TMPDIR   directory for temporary files used by quake&quot;,
+    &quot;  &quot;,
+    &quot;  CM3_INSTALL_PREFIX path prefix to prepend to filenames being installed,&quot;,
+    &quot;                 \&quot;make DESTDIR=\&quot; behaviour for cm3&quot;,
     &quot;  &quot;
   };
 </PRE>---------------------------------------------------------- misc ---
@@ -647,9 +697,11 @@ PROCEDURE <A NAME="Val"><procedure>Val</procedure></A>(name: TEXT) : TEXT =
 VAR
   defs := NEW(TextTextTbl.Default).init();
 BEGIN
-  EVAL defs.put(&quot;CM3_RELEASE&quot;, &quot;5.2.6&quot;);       (* readable release version *)
-  EVAL defs.put(&quot;CM3_VERSION&quot;, &quot;050206&quot;);      (* version as number *)
-  EVAL defs.put(&quot;CM3_CREATED&quot;, &quot;2003-06-27&quot;);  (* date of last change *)
+  EVAL defs.put(&quot;CM3_RELEASE&quot;, Version.Text);  (* readable release version *)
+  EVAL defs.put(&quot;CM3_VERSION&quot;, Version.Number);(* version as number *)
+  EVAL defs.put(&quot;CM3_CHANGED&quot;, Version.LastChanged); (* date of last change *)
+  EVAL defs.put(&quot;CM3_CREATED&quot;, Version.LastChanged); (* backw. compatibility *)
+  EVAL defs.put(&quot;CM3_COMPILED&quot;, Version.Created); (* date of compilation *)
   EVAL defs.put(&quot;M3_PROFILING&quot;, &quot;&quot;);           (* no profiling by default *)
   EVAL defs.put(&quot;EOL&quot;, Wr.EOL);
 END Makefile.
@@ -659,7 +711,16 @@ END Makefile.
 <A NAME="x1">interface Msg is in:
 </A><UL>
 <LI><A HREF="Msg.i3.html#0TOP0">cm3/src/Msg.i3</A>
+<LI><A HREF="../../cminstall/src/Msg.i3.html#0TOP0">cminstall/src/Msg.i3</A>
 <LI><A HREF="../../m3tohtml/src/Msg.i3.html#0TOP0">m3tohtml/src/Msg.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Version is in:
+</A><UL>
+<LI><A HREF="../../client/src/Version.i3.html#0TOP0">client/src/Version.i3</A>
+<LI><A HREF="../derived/Version.i3.html#0TOP0">cm3/derived/Version.i3</A>
+<LI><A HREF="../../server/src/Version.i3.html#0TOP0">server/src/Version.i3</A>
 </UL>
 <P>
 <PRE>

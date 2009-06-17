@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/time/POSIX/TimePosix.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/time/POSIX/TimePosix.m3</H2></A><HR>
 <inModule>
@@ -16,13 +16,12 @@
 
 <P><PRE>MODULE <module>TimePosix</module> EXPORTS <A HREF="../Common/Time.i3.html"><implements>Time</A></implements>, <A HREF="TimePosix.i3.html"><implements>TimePosix</A></implements>;
 
-IMPORT <A HREF="../../unix/linux-libc6/Utime.i3.html">Utime</A>;
+IMPORT <A HREF="#x1">Utime</A>;
 
 PROCEDURE <A NAME="Now"><procedure>Now</procedure></A>(): T =
   VAR
     tv: Utime.struct_timeval;
-    tz: Utime.struct_timezone;
-    i := Utime.gettimeofday(tv, tz);
+    i := Utime.gettimeofday(tv);
   BEGIN
     &lt;* ASSERT i=0 *&gt;
     RETURN FromUtime(tv);
@@ -52,6 +51,14 @@ BEGIN
 END TimePosix.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Utime is in:
+</A><UL>
+<LI><A HREF="../../unix/Common/Utime.i3.html#0TOP0">m3core/src/unix/Common/Utime.i3</A>
+<LI><A HREF="../../unix/linux-common/Utime.i3.html#0TOP0">m3core/src/unix/linux-common/Utime.i3</A>
+<LI><A HREF="../../unix/linux-libc6/Utime.i3.html#0TOP0">m3core/src/unix/linux-libc6/Utime.i3</A>
+</UL>
+<P>
 <PRE>
 
 

@@ -2,32 +2,32 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: X11R4/src/Common/X.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>X11R4/src/Common/X.i3</H2></A><HR>
 <inInterface>
-<PRE></PRE> Copyright (C) 1989, 1990 Digital Equipment Corporation	
- All rights reserved.						
- See the file COPYRIGHT for a full description.		
+<PRE></PRE> Copyright (C) 1989, 1990 Digital Equipment Corporation       
+ All rights reserved.                                         
+ See the file COPYRIGHT for a full description.               
 
-<P> File: X.i3							
- Last modified on Fri May 20 19:28:17 PDT 1994 by msm     	
-      modified on Wed Nov 24 15:22:31 PST 1993 by steveg  	
-      modified on Wed Aug 25 09:38:13 PDT 1993 by kalsow  	
-      modified on Tue May 11 09:21:55 PDT 1993 by muller  	
-      modified on Fri May  7 15:55:30 PDT 1993 by mjordan 	
-      modified on Mon Apr  8 22:18:20 PDT 1991 by gnelson	
-      modified on Thu Mar  8 16:44:51 1990 by jerome  	
-      modified on Sun Feb 18 14:00:55 1990 by harrison	
+<P> File: X.i3                                                   
+ Last modified on Fri May 20 19:28:17 PDT 1994 by msm         
+      modified on Wed Nov 24 15:22:31 PST 1993 by steveg      
+      modified on Wed Aug 25 09:38:13 PDT 1993 by kalsow      
+      modified on Tue May 11 09:21:55 PDT 1993 by muller      
+      modified on Fri May  7 15:55:30 PDT 1993 by mjordan     
+      modified on Mon Apr  8 22:18:20 PDT 1991 by gnelson     
+      modified on Thu Mar  8 16:44:51 1990 by jerome          
+      modified on Sun Feb 18 14:00:55 1990 by harrison        
 
 <P>
 <P><PRE>UNSAFE INTERFACE <interface>X</interface>;
 </PRE>==============================================================
-	The X11 R4 Interface for Modula 3			
-								
-	contains:	/usr/include/X11/X.h			
-			/usr/include/X11/Xlib.h			
-			/usr/include/X11/Xutil.h		
+  The X11 R4 Interface for Modula 3                           
+                                                              
+  contains:   /usr/include/X11/X.h                            
+              /usr/include/X11/Xlib.h                         
+              /usr/include/X11/Xutil.h                        
 ==============================================================
 
 <P>**********************************************************
@@ -36,13 +36,13 @@ and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
 <P>
                         All Rights Reserved
 <P>
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the names of Digital or MIT not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 <P>
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -75,8 +75,8 @@ EXCEPTION Error;
 <P> Definitions for the X window system likely to be used by applications 
 
 <P><PRE>CONST
-  X_PROTOCOL 		=        11;             (* current protocol version *)
-  X_PROTOCOL_REVISION 	=        0;             (* current minor version *)
+  X_PROTOCOL            =  11;  (* current protocol version *)
+  X_PROTOCOL_REVISION   =  0;   (* current minor version *)
 </PRE> Resources 
 
 <P><PRE>TYPE
@@ -84,43 +84,43 @@ EXCEPTION Error;
 
   Argv = UNTRACED REF ARRAY [0..255] OF char_star;
 
-  Enumeration		=  Int;
+  Enumeration   =  Int;
 
-  XID			=  XMachine.XID;
+  XID           =  XMachine.XID;
 
-  Window		=  XID;
-  WindowStar    	=  UNTRACED REF Window;
-  WindowStarStar	=  UNTRACED REF WindowStar;
+  Window        =  XID;
+  WindowStar    =  UNTRACED REF Window;
+  WindowStarStar    =  UNTRACED REF WindowStar;
 
-  Drawable		=  XID;
-  Font		  	=  XID;
-  Pixmap	  	=  XID;
-  PixmapStar		=  UNTRACED REF Pixmap;
-  Cursor	  	=  XID;
-  Colormap	  	=  XID;
-  ColormapStar		=  UNTRACED REF Colormap;
-  GContext	  	=  XID;
-  KeySym	  	=  XMachine.KeySym;
-  KeySymStar		=  UNTRACED REF KeySym;
+  Drawable      =  XID;
+  Font          =  XID;
+  Pixmap        =  XID;
+  PixmapStar    =  UNTRACED REF Pixmap;
+  Cursor        =  XID;
+  Colormap      =  XID;
+  ColormapStar  =  UNTRACED REF Colormap;
+  GContext      =  XID;
+  KeySym        =  XMachine.KeySym;
+  KeySymStar    =  UNTRACED REF KeySym;
 
-  Mask		  	=  unsigned_long;
+  Mask          =  unsigned_long;
 
-  Atom		  	=  unsigned_long;
-  AtomStar		=  UNTRACED REF Atom;
-  AtomStarStar		=  UNTRACED REF AtomStar;
+  Atom          =  unsigned_long;
+  AtomStar      =  UNTRACED REF Atom;
+  AtomStarStar  =  UNTRACED REF AtomStar;
 
-  VisualID		=  unsigned_long;
+  VisualID      =  unsigned_long;
 
-  Time			=  XMachine.Time;
-  TimeStar		=  UNTRACED REF Time;
+  Time          =  XMachine.Time;
+  TimeStar      =  UNTRACED REF Time;
 
-  KeyCode		=  unsigned_char;
-  KeyCodeStar		=  UNTRACED REF KeyCode;
-  KeyCodeStarStar	=  UNTRACED REF KeyCodeStar;
+  KeyCode       =  unsigned_char;
+  KeyCodeStar   =  UNTRACED REF KeyCode;
+  KeyCodeStarStar   =  UNTRACED REF KeyCodeStar;
 
 TYPE
-  RetIntProc    	=  PROCEDURE (): Int;
-  Retchar_starProc	=  PROCEDURE (): char_star;
+  RetIntProc        =  PROCEDURE (): Int;
+  Retchar_starProc  =  PROCEDURE (): char_star;
 </PRE>****************************************************************
  * RESERVED RESOURCE AND CONSTANT DEFINITIONS
  ****************************************************************
@@ -142,8 +142,8 @@ TYPE
   AllTemporary  =               0;      (* special Resource ID passed to KillClient *)
   CurrentTime  =                0;      (* special Time *)
   NoSymbol  =                   0;      (* special KeySym *)
-</PRE>**************************************************************** 
- * EVENT DEFINITIONS 
+</PRE>****************************************************************
+ * EVENT DEFINITIONS
  ****************************************************************
 
 <P> Input Event Masks. Used as event-mask window attribute and as arguments
@@ -323,7 +323,7 @@ are reserved in the protocol for errors and replies.
   RevertToPointerRoot =         PointerRoot;
   RevertToParent =              2;
 </PRE>****************************************************************
- * ERROR CODES 
+ * ERROR CODES
  ****************************************************************
 
 <P>  <PRE>Success =                     0;      (* everything's okay *)
@@ -356,7 +356,7 @@ are reserved in the protocol for errors and replies.
   FirstExtensionError =         128;
   LastExtensionError =          255;
 </PRE>****************************************************************
- * WINDOW DEFINITIONS 
+ * WINDOW DEFINITIONS
  ****************************************************************
 
 <P> Window classes used by CreateWindow 
@@ -541,7 +541,7 @@ are reserved in the protocol for errors and replies.
 
   GCLastBit =                   22;
 </PRE>****************************************************************
- * FONTS 
+ * FONTS
  ****************************************************************
 
 <P> used in QueryFont -- draw direction 
@@ -551,7 +551,7 @@ are reserved in the protocol for errors and replies.
 
   FontChange =                  255;
 </PRE>****************************************************************
- *  IMAGING 
+ *  IMAGING
  ****************************************************************
 
 <P> ImageFormat -- PutImage, GetImage 
@@ -560,7 +560,7 @@ are reserved in the protocol for errors and replies.
   XYPixmap =                    1;      (* depth == drawable depth *)
   ZPixmap =                     2;      (* depth == drawable depth *)
 </PRE>****************************************************************
- *  COLOR MAP STUFF 
+ *  COLOR MAP STUFF
  ****************************************************************
 
 <P> For CreateColormap 
@@ -581,7 +581,7 @@ are reserved in the protocol for errors and replies.
 <P>  <PRE>CursorShape =                 0;      (* largest size that can be displayed *)
   TileShape =                   1;      (* size tiled fastest *)
   StippleShape =                2;      (* size stippled fastest *)
-</PRE>**************************************************************** 
+</PRE>****************************************************************
  * KEYBOARD/POINTER STUFF
  ****************************************************************
 
@@ -610,7 +610,7 @@ are reserved in the protocol for errors and replies.
   MappingKeyboard =             1;
   MappingPointer =              2;
 </PRE>****************************************************************
- * SCREEN SAVER STUFF 
+ * SCREEN SAVER STUFF
  ****************************************************************
 
 <P>  <PRE>DontPreferBlanking =          0;
@@ -639,7 +639,7 @@ are reserved in the protocol for errors and replies.
 
 <P>  <PRE>EnableAccess =                1;
   DisableAccess =               0;
-</PRE> Display classes  used in opening the connection 
+</PRE> Display classes  used in opening the connection
  * Note that the statically allocated ones are even numbered and the
  * dynamically changeable ones are odd numbered 
 
@@ -664,16 +664,16 @@ are reserved in the protocol for errors and replies.
  **************************************************************
 
 <P> $XConsortium: Xlib.h,v 11.179 89/12/12 13:57:19 jim Exp $ 
- 
+
  * Copyright 1985, 1986, 1987 by the Massachusetts Institute of Technology
  *
  * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose and without fee is hereby granted, provided 
- * that the above copyright notice appear in all copies and that both that 
- * copyright notice and this permission notice appear in supporting 
+ * documentation for any purpose and without fee is hereby granted, provided
+ * that the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
  * documentation, and that the name of M.I.T. not be used in advertising
- * or publicity pertaining to distribution of the software without specific, 
- * written prior permission. M.I.T. makes no representations about the 
+ * or publicity pertaining to distribution of the software without specific,
+ * written prior permission. M.I.T. makes no representations about the
  * suitability of this software for any purpose.  It is provided <CODE>as is</CODE>
  * without express or implied warranty.
  *
@@ -689,13 +689,13 @@ are reserved in the protocol for errors and replies.
  
 
 <P><PRE>TYPE
-  Bool		= Int;
-  BoolStar	= UNTRACED REF Bool;
-  Status	= Int;
+  Bool      = Int;
+  BoolStar  = UNTRACED REF Bool;
+  Status    = Int;
 
 CONST
-  True   	= 1;
-  False  	= 0;
+  True      = 1;
+  False     = 0;
 
 CONST
   QueuedAlready        = 0;
@@ -762,10 +762,10 @@ CONST
 
 <P><PRE>TYPE
   XExtData = RECORD
-        number: Int;              (* number returned by XRegisterExtension *)
-        next: XExtDataStar;	  (* next item on list of data for structure *)
-        free_private: RetIntProc; (* called to free private storage *)
-        private_data: char_star;   (* data private to this extension. *)
+        number: Int;                (* number returned by XRegisterExtension *)
+        next: XExtDataStar;         (* next item on list of data for structure *)
+        free_private: RetIntProc;   (* called to free private storage *)
+        private_data: char_star;    (* data private to this extension. *)
   END;
   XExtDataStar     =  UNTRACED REF XExtData;
   XExtDataStarStar =  UNTRACED REF XExtDataStar;
@@ -850,7 +850,7 @@ TYPE
  * Graphics context.  All Xlib routines deal in this rather than
  * in raw protocol GContext ID's.  This is so that the library can keep
  * a <CODE>shadow</CODE> set of values, and thus avoid passing values over the
- * wire which are not in fact changing. 
+ * wire which are not in fact changing.
  
 
 <P><PRE>TYPE
@@ -878,7 +878,7 @@ TYPE
   VisualStar   =  UNTRACED REF Visual;
 </PRE><P>
  * Depth structure; contains information for each possible depth.
-      
+ 
 
 <P><PRE>TYPE
   Depth = RECORD
@@ -1024,7 +1024,7 @@ TYPE
     END;
   END;
   XImageStar  =  UNTRACED REF XImage;
-</PRE> <P>
+</PRE><P>
  * Data structure for XReconfigureWindow
  
 
@@ -1049,7 +1049,7 @@ TYPE
     pad: Char;
   END;
   XColorStar = UNTRACED REF XColor;
-</PRE> <P>
+</PRE><P>
  * Data structures for graphics operations.  On most machines, these are
  * congruent with the wire protocol structures, so reformatting the data
  * can be avoided on these architectures.
@@ -1057,28 +1057,28 @@ TYPE
 
 <P><PRE>TYPE
 
-  XSegment	=  RECORD
-		     x1, y1, x2, y2: Short;
-		   END;
-  XSegmentStar	=  UNTRACED REF XSegment;
+  XSegment = RECORD
+    x1, y1, x2, y2: Short;
+  END;
+  XSegmentStar =  UNTRACED REF XSegment;
 
-  XPoint	=  RECORD
-		     x, y: Short;
-		   END;
-  XPoint_star	=  UNTRACED REF XPoint;
+  XPoint = RECORD
+    x, y: Short;
+  END;
+  XPoint_star = UNTRACED REF XPoint;
 
-  XRectangle	=  RECORD
-		     x, y: Short;
-		     width, height: unsigned_short;
-		   END;
-  XRectangleStar=  UNTRACED REF XRectangle;
+  XRectangle = RECORD
+    x, y: Short;
+    width, height: unsigned_short;
+  END;
+  XRectangleStar = UNTRACED REF XRectangle;
 
-  XArc		=  RECORD
-		     x, y: Short;
-		     width, height: unsigned_short;
-		     angle1, angle2: Short;
-		   END;
-  XArcStar	=  UNTRACED REF XArc;
+  XArc = RECORD
+    x, y: Short;
+    width, height: unsigned_short;
+    angle1, angle2: Short;
+  END;
+  XArcStar = UNTRACED REF XArc;
 </PRE> Data structure for XChangeKeyboardControl 
 
 <P><PRE>TYPE
@@ -1171,7 +1171,7 @@ TYPE
         bufptr: char_star;        (* Output buffer index pointer. *)
         bufmax: char_star;        (* Output buffer maximum+1 address. *)
         max_request_size: unsigned_int; (* max number 32 bit words in request*)
-        db: ADDRESS;		 (*?!? wrong ?!?*)
+        db: ADDRESS;             (*?!? wrong ?!?*)
         synchandler: XSynchronize;(* Synchronization handler *)
         display_name: char_star; (* &quot;host:display&quot; string used on this connect*)
         default_screen: Int;     (* default screen for operations *)
@@ -1219,14 +1219,14 @@ TYPE
   END;
   DisplayStar   =   UNTRACED REF Display;
 </PRE><P>
- * A <CODE>XEvent</CODE> structure always  has type as the first entry.  This 
+ * A <CODE>XEvent</CODE> structure always  has type as the first entry.  This
  * uniquely identifies what  kind of event it is.  The second entry
  * is always a pointer to the display the event was read from.
  * The third entry is always a window of one type or another,
  * carefully selected to be useful to toolkit dispatchers.  (Except
  * for keymap events, which have no window.) You
  * must not change the order of the three elements or toolkits will
- * break! The pointer to the generic event must be cast before use to 
+ * break! The pointer to the generic event must be cast before use to
  * access any other information in the structure.
  
 
@@ -1235,70 +1235,70 @@ TYPE
  
 <PRE>TYPE
   XKeyEvent = RECORD
-     type: Int;                (* of event *)
-     serial: unsigned_long;     (* # of last request processed by server *)
-     send_event: Bool;         (* true if this came from a SendEvent request *)
-     display: DisplayStar;     (* Display the event was read from *)
-     window: Window;           (* &quot;event&quot; window it is reported relative to *)
-     root: Window;             (* root window that the event occured on *)
-     subwindow: Window;        (* child window *)
-     time: Time;               (* milliseconds *)
-     x, y: Int;                (* pointer x, y coordinates in event window *)
-     x_root, y_root: Int;      (* coordinates relative to root *)
-     state: unsigned_int;       (* key or button mask *)
-     keycode: unsigned_int;     (* detail *)
-     same_screen: Bool         (* same screen flag *)
-              END;
+     type: Int;             (* of event *)
+     serial: unsigned_long; (* # of last request processed by server *)
+     send_event: Bool;      (* true if this came from a SendEvent request *)
+     display: DisplayStar;  (* Display the event was read from *)
+     window: Window;        (* &quot;event&quot; window it is reported relative to *)
+     root: Window;          (* root window that the event occured on *)
+     subwindow: Window;     (* child window *)
+     time: Time;            (* milliseconds *)
+     x, y: Int;             (* pointer x, y coordinates in event window *)
+     x_root, y_root: Int;   (* coordinates relative to root *)
+     state: unsigned_int;   (* key or button mask *)
+     keycode: unsigned_int; (* detail *)
+     same_screen: Bool      (* same screen flag *)
+  END;
 
-  XKeyEventStar			= UNTRACED REF XKeyEvent;
-  XKeyPressedEvent		= XKeyEvent;
-  XKeyPressedEventStar		= UNTRACED REF XKeyPressedEvent;
-  XKeyReleasedEvent		= XKeyEvent;
-  XKeyReleasedEventStar		= UNTRACED REF XKeyReleasedEvent;
+  XKeyEventStar         = UNTRACED REF XKeyEvent;
+  XKeyPressedEvent      = XKeyEvent;
+  XKeyPressedEventStar  = UNTRACED REF XKeyPressedEvent;
+  XKeyReleasedEvent     = XKeyEvent;
+  XKeyReleasedEventStar = UNTRACED REF XKeyReleasedEvent;
 
 TYPE
   XButtonEvent = RECORD
-     type: Int;                (* of event *)
-     serial: unsigned_long;     (* # of last request processed by server *)
-     send_event: Bool;         (* true if this came from a SendEvent request *)
-     display: DisplayStar;     (* Display the event was read from *)
-     window: Window;           (* &quot;event&quot; window it is reported relative to *)
-     root: Window;             (* root window that the event occured on *)
-     subwindow: Window;        (* child window *)
-     time: Time;               (* milliseconds *)
-     x, y: Int;                (* poInter x, y coordinates in event window *)
-     x_root, y_root: Int;      (* coordinates relative to root *)
-     state: unsigned_int;       (* key or button mask *)
-     button: unsigned_int;      (* detail *)
-     same_screen: Bool         (* same screen flag *)
-              END;
+     type: Int;             (* of event *)
+     serial: unsigned_long; (* # of last request processed by server *)
+     send_event: Bool;      (* true if this came from a SendEvent request *)
+     display: DisplayStar;  (* Display the event was read from *)
+     window: Window;        (* &quot;event&quot; window it is reported relative to *)
+     root: Window;          (* root window that the event occured on *)
+     subwindow: Window;     (* child window *)
+     time: Time;            (* milliseconds *)
+     x, y: Int;             (* poInter x, y coordinates in event window *)
+     x_root, y_root: Int;   (* coordinates relative to root *)
+     state: unsigned_int;   (* key or button mask *)
+     button: unsigned_int;  (* detail *)
+     same_screen: Bool      (* same screen flag *)
+  END;
 
-  XButtonEventStar		= UNTRACED REF   XButtonEvent;
-  XButtonPressedEvent		= XButtonEvent;
-  XButtonPressedEventStar	= UNTRACED REF  XButtonPressedEvent;
-  XButtonReleasedEvent		= XButtonEvent;
-  XButtonReleasedEventStar	= UNTRACED REF  XButtonReleasedEvent;
+  XButtonEventStar          = UNTRACED REF  XButtonEvent;
+  XButtonPressedEvent       = XButtonEvent;
+  XButtonPressedEventStar   = UNTRACED REF  XButtonPressedEvent;
+  XButtonReleasedEvent      = XButtonEvent;
+  XButtonReleasedEventStar  = UNTRACED REF  XButtonReleasedEvent;
 
 TYPE
   XMotionEvent = RECORD
-     type: Int;                (* of event *)
-     serial: unsigned_long;     (* # of last request processed by server *)
-     send_event: Bool;         (* true if this came from a SendEvent request *)
-     display: DisplayStar;     (* Display the event was read from *)
-     window: Window;           (* &quot;event&quot; window reported relative to *)
-     root: Window;             (* root window that the event occured on *)
-     subwindow: Window;        (* child window *)
-     time: Time;               (* milliseconds *)
-     x, y: Int;                (* pointer x, y coordinates in event window *)
-     x_root, y_root: Int;      (* coordinates relative to root *)
-     state: unsigned_int;       (* key or button mask *)
-     is_hint: Char;            (* detail *)
-     same_screen: Bool         (* same screen flag *)
-              END;
+     type: Int;             (* of event *)
+     serial: unsigned_long; (* # of last request processed by server *)
+     send_event: Bool;      (* true if this came from a SendEvent request *)
+     display: DisplayStar;  (* Display the event was read from *)
+     window: Window;        (* &quot;event&quot; window reported relative to *)
+     root: Window;          (* root window that the event occured on *)
+     subwindow: Window;     (* child window *)
+     time: Time;            (* milliseconds *)
+     x, y: Int;             (* pointer x, y coordinates in event window *)
+     x_root, y_root: Int;   (* coordinates relative to root *)
+     state: unsigned_int;   (* key or button mask *)
+     is_hint: Char;         (* detail *)
+     same_screen: Bool      (* same screen flag *)
+  END;
 
-  XMotionEventStar		= UNTRACED REF   XMotionEvent;
-  XPointerMovedEvent		= XMotionEvent ;
-  XPointerMovedEventStar	= UNTRACED REF  XPointerMovedEvent;
+  XMotionEventStar          = UNTRACED REF  XMotionEvent;
+  XPointerMovedEvent        = XMotionEvent;
+  XPointerMovedEventStar    = UNTRACED REF  XPointerMovedEvent;
 
 TYPE
   XCrossingEvent = RECORD
@@ -1323,11 +1323,11 @@ TYPE
      state: unsigned_int        (* key or button mask *)
               END;
 
-  XCrossingEventStar		= UNTRACED REF   XCrossingEvent;
-  XEnterWindowEvent		= XCrossingEvent;
-  XEnterWindowEventStar		= UNTRACED REF XEnterWindowEvent;
-  XLeaveWindowEvent		= XCrossingEvent;
-  XLeaveWindowEventStar		= UNTRACED REF XLeaveWindowEvent;
+  XCrossingEventStar        = UNTRACED REF   XCrossingEvent;
+  XEnterWindowEvent         = XCrossingEvent;
+  XEnterWindowEventStar     = UNTRACED REF XEnterWindowEvent;
+  XLeaveWindowEvent         = XCrossingEvent;
+  XLeaveWindowEventStar     = UNTRACED REF XLeaveWindowEvent;
 
 TYPE
   XFocusChangeEvent = RECORD
@@ -1343,13 +1343,13 @@ TYPE
      * NotifyNonLinear,NotifyNonLinearVirtual, NotifyPointer,
      * NotifyPointerRoot, NotifyDetailNone
      *)
-              END;
+  END;
 
-  XFocusChangeEventStar		= UNTRACED REF   XFocusChangeEvent;
-  XFocusInEvent			= XFocusChangeEvent;
-  XFocusInEventStar		= UNTRACED REF XFocusInEvent;
-  XFocusOutEvent		= XFocusChangeEvent;
-  XFocusOutEventStar		= UNTRACED REF XFocusOutEvent;
+  XFocusChangeEventStar     = UNTRACED REF   XFocusChangeEvent;
+  XFocusInEvent             = XFocusChangeEvent;
+  XFocusInEventStar         = UNTRACED REF XFocusInEvent;
+  XFocusOutEvent            = XFocusChangeEvent;
+  XFocusOutEventStar        = UNTRACED REF XFocusOutEvent;
 </PRE> generated on EnterWindow and FocusIn  when KeyMapState selected 
 
 <P><PRE>TYPE
@@ -1362,7 +1362,7 @@ TYPE
      key_vector: ARRAY [0..31] OF Char
               END;
 
-  XKeymapEventStar		= UNTRACED REF   XKeymapEvent;
+  XKeymapEventStar  = UNTRACED REF   XKeymapEvent;
 
 TYPE
   XExposeEvent = RECORD
@@ -1374,9 +1374,9 @@ TYPE
      x, y: Int;
      width, height: Int;
      count: Int                (* if non-zero, at least this many more *)
-              END;
+  END;
 
-  XExposeEventStar		= UNTRACED REF   XExposeEvent;
+  XExposeEventStar      = UNTRACED REF   XExposeEvent;
 
 TYPE
   XGraphicsExposeEvent = RECORD
@@ -1392,7 +1392,7 @@ TYPE
      minor_code: Int           (* not defined in the core *)
               END;
 
-  XGraphicsExposeEventStar	= UNTRACED REF   XGraphicsExposeEvent;
+  XGraphicsExposeEventStar  = UNTRACED REF   XGraphicsExposeEvent;
 
 TYPE
   XNoExposeEvent = RECORD
@@ -1405,7 +1405,7 @@ TYPE
      minor_code: Int           (* not defined in the core *)
               END;
 
-  XNoExposeEventStar		= UNTRACED REF   XNoExposeEvent;
+  XNoExposeEventStar    = UNTRACED REF   XNoExposeEvent;
 
 TYPE
   XVisibilityEvent = RECORD
@@ -1415,9 +1415,9 @@ TYPE
      display: DisplayStar;     (* Display the event was read from *)
      window: Window;
      state: Int                (* Visibility state *)
-              END;
+  END;
 
-  XVisibilityEventStar		= UNTRACED REF   XVisibilityEvent;
+  XVisibilityEventStar  = UNTRACED REF   XVisibilityEvent;
 
 TYPE
   XCreateWindowEvent = RECORD
@@ -1431,21 +1431,21 @@ TYPE
      width, height: Int;       (* size of window *)
      border_width: Int;        (* border width *)
      override_redirect: Bool   (* creation should be overridden *)
-              END;
+  END;
 
-  XCreateWindowEventStar	= UNTRACED REF   XCreateWindowEvent;
+  XCreateWindowEventStar    = UNTRACED REF   XCreateWindowEvent;
 
 TYPE
   XDestroyWindowEvent = RECORD
      type: Int;
-     serial: unsigned_long;     (* # of last request processed by server *)
-     send_event: Bool;         (* true if this came from a SendEvent request *)
-     display: DisplayStar;     (* Display the event was read from *)
+     serial: unsigned_long; (* # of last request processed by server *)
+     send_event: Bool;      (* true if this came from a SendEvent request *)
+     display: DisplayStar;  (* Display the event was read from *)
      event: Window;
      window: Window
-              END;
+  END;
 
-  XDestroyWindowEventStar	= UNTRACED REF   XDestroyWindowEvent;
+  XDestroyWindowEventStar   = UNTRACED REF   XDestroyWindowEvent;
 
 TYPE
   XUnmapEvent = RECORD
@@ -1456,9 +1456,9 @@ TYPE
      event: Window;
      window: Window;
      from_configure: Bool
-              END;
+  END;
 
-  XUnmapEventStar		= UNTRACED REF   XUnmapEvent;
+  XUnmapEventStar       = UNTRACED REF   XUnmapEvent;
 
 TYPE
   XMapEvent = RECORD
@@ -1469,9 +1469,9 @@ TYPE
      event: Window;
      window: Window;
      override_redirect: Bool (* boolean, is override set... *)
-              END;
+  END;
 
-  XMapEventStar			= UNTRACED REF   XMapEvent;
+  XMapEventStar = UNTRACED REF   XMapEvent;
 
 TYPE
   XMapRequestEvent = RECORD
@@ -1483,7 +1483,7 @@ TYPE
      window: Window
               END;
 
-  XMapRequestEventStar		= UNTRACED REF   XMapRequestEvent;
+  XMapRequestEventStar      = UNTRACED REF   XMapRequestEvent;
 
 TYPE
   XReparentEvent = RECORD
@@ -1496,9 +1496,9 @@ TYPE
      parent: Window;
      x, y: Int;
      override_redirect: Bool
-              END;
+  END;
 
-  XReparentEventStar		= UNTRACED REF   XReparentEvent;
+  XReparentEventStar    = UNTRACED REF   XReparentEvent;
 
 TYPE
   XConfigureEvent = RECORD
@@ -1515,7 +1515,7 @@ TYPE
      override_redirect: Bool
               END;
 
-  XConfigureEventStar		= UNTRACED REF   XConfigureEvent;
+  XConfigureEventStar       = UNTRACED REF   XConfigureEvent;
 
 TYPE
   XGravityEvent = RECORD
@@ -1526,9 +1526,9 @@ TYPE
      event: Window;
      window: Window;
      x, y: Int
-              END;
+  END;
 
-  XGravityEventStar		= UNTRACED REF   XGravityEvent;
+  XGravityEventStar     = UNTRACED REF   XGravityEvent;
 
 TYPE
   XResizeRequestEvent = RECORD
@@ -1540,7 +1540,7 @@ TYPE
      width, height: Int
               END;
 
-  XResizeRequestEventStar	= UNTRACED REF   XResizeRequestEvent;
+  XResizeRequestEventStar   = UNTRACED REF   XResizeRequestEvent;
 
 TYPE
   XConfigureRequestEvent = RECORD
@@ -1556,22 +1556,22 @@ TYPE
      above: Window;
      detail: Int;              (* Above, Below, TopIf, BottomIf, Opposite *)
      value_mask: unsigned_long
-              END;
+  END;
 
-  XConfigureRequestEventStar	= UNTRACED REF   XConfigureRequestEvent;
+  XConfigureRequestEventStar    = UNTRACED REF   XConfigureRequestEvent;
 
 TYPE
   XCirculateEvent = RECORD
      type: Int;
-     serial: unsigned_long;     (* # of last request processed by server *)
-     send_event: Bool;         (* true if this came from a SendEvent request *)
-     display: DisplayStar;     (* Display the event was read from *)
+     serial: unsigned_long; (* # of last request processed by server *)
+     send_event: Bool;      (* true if this came from a SendEvent request *)
+     display: DisplayStar;  (* Display the event was read from *)
      event: Window;
      window: Window;
-     place: Int                (* PlaceOnTop, PlaceOnBottom *)
-              END;
+     place: Int             (* PlaceOnTop, PlaceOnBottom *)
+  END;
 
-  XCirculateEventStar		= UNTRACED REF   XCirculateEvent;
+  XCirculateEventStar       = UNTRACED REF   XCirculateEvent;
 
 TYPE
   XCirculateRequestEvent = RECORD
@@ -1582,36 +1582,36 @@ TYPE
      parent: Window;
      window: Window;
      place: Int                (* PlaceOnTop, PlaceOnBottom *)
-              END;
+  END;
 
-  XCirculateRequestEventStar	= UNTRACED REF   XCirculateRequestEvent;
+  XCirculateRequestEventStar    = UNTRACED REF   XCirculateRequestEvent;
 
 TYPE
   XPropertyEvent = RECORD
      type: Int;
-     serial: unsigned_long;     (* # of last request processed by server *)
-     send_event: Bool;         (* true if this came from a SendEvent request *)
-     display: DisplayStar;     (* Display the event was read from *)
+     serial: unsigned_long; (* # of last request processed by server *)
+     send_event: Bool;      (* true if this came from a SendEvent request *)
+     display: DisplayStar;  (* Display the event was read from *)
      window: Window;
      atom: Atom;
      time: Time;
-     state: Int                (* NewValue, Deleted *)
-              END;
+     state: Int             (* NewValue, Deleted *)
+  END;
 
-  XPropertyEventStar		= UNTRACED REF   XPropertyEvent;
+  XPropertyEventStar        = UNTRACED REF   XPropertyEvent;
 
 TYPE
   XSelectionClearEvent = RECORD
      type: Int;
-     serial: unsigned_long;     (* # of last request processed by server *)
-     send_event: Bool;         (* true if this came from a SendEvent request *)
-     display: DisplayStar;     (* Display the event was read from *)
+     serial: unsigned_long; (* # of last request processed by server *)
+     send_event: Bool;      (* true if this came from a SendEvent request *)
+     display: DisplayStar;  (* Display the event was read from *)
      window: Window;
      selection: Atom;
      time: Time
-              END;
+  END;
 
-  XSelectionClearEventStar	= UNTRACED REF   XSelectionClearEvent;
+  XSelectionClearEventStar  = UNTRACED REF   XSelectionClearEvent;
 
 TYPE
   XSelectionRequestEvent = RECORD
@@ -1625,22 +1625,22 @@ TYPE
      target: Atom;
      property: Atom;
      time: Time
-              END;
+  END;
 
-  XSelectionRequestEventStar	= UNTRACED REF   XSelectionRequestEvent;
+  XSelectionRequestEventStar = UNTRACED REF XSelectionRequestEvent;
 
 TYPE
   XSelectionEvent = RECORD
      type: Int;
-     serial: unsigned_long;     (* # of last request processed by server *)
-     send_event: Bool;         (* true if this came from a SendEvent request *)
-     display: DisplayStar;     (* Display the event was read from *)
+     serial: unsigned_long; (* # of last request processed by server *)
+     send_event: Bool;      (* true if this came from a SendEvent request *)
+     display: DisplayStar;  (* Display the event was read from *)
      requestor: Window;
      selection: Atom;
      target: Atom;
-     property: Atom;           (* ATOM or None *)
+     property: Atom;        (* ATOM or None *)
      time: Time
-              END;
+  END;
 
   XSelectionEventStar		= UNTRACED REF   XSelectionEvent;
 
@@ -1735,14 +1735,14 @@ TYPE
      minor_code: unsigned_char   (* Minor op-code of failed request *)
                  END;
 
-   XErrorEventStar		=  UNTRACED REF XErrorEvent;
+   XErrorEventStar =  UNTRACED REF XErrorEvent;
 
 TYPE
   XAnyEvent = RECORD
      type: Int;
-     serial: unsigned_long;     (* # of last request processed by server *)
-     send_event: Bool;	       (* true if this came from a SendEvent request *)
-     display: DisplayStar;     (* Display the event was read from *)
+     serial: unsigned_long; (* # of last request processed by server *)
+     send_event: Bool;      (* true if this came from a SendEvent request *)
+     display: DisplayStar;  (* Display the event was read from *)
      window: Window	(* window on which event was requested in event mask *)
               END;
 
@@ -1963,7 +1963,7 @@ typedef union { DisplayStar display;
         dest_x:           Int;
         dest_y:           Int
 ): XImageStar RAISES {Error};
-</PRE> <P>
+</PRE><P>
  * X function declarations.
  
 
@@ -2012,10 +2012,9 @@ TYPE
 
 TYPE
   XSetLocalProc      =  PROCEDURE (display: DisplayStar): Int;
-  XSetAfterFunction  =  PROCEDURE (
-			        display:    DisplayStar;
-			        procedure:  XSetLocalProc
-): Int;
+  XSetAfterFunction  =  PROCEDURE (display:    DisplayStar;
+                                   procedure:  XSetLocalProc
+                                   ): Int;
 
 &lt;*EXTERNAL*&gt; PROCEDURE XInternAtom(
         display:          DisplayStar;
@@ -4041,20 +4040,20 @@ TYPE XIfEventProc = PROCEDURE (
  **************************************************************
 
 <P>
-<P> 
+<P>
  * Bitmask returned by XParseGeometry().  Each bit tells if the corresponding
  * value (x, y, width, height) was found in the parsed string.
  
 
 <P><PRE>CONST
-  NoValue =		16_0000;
-  XValue = 	 	16_0001;
-  YValue =		16_0002;
-  WidthValue =  	16_0004;
-  HeightValue =  	16_0008;
-  AllValues = 		16_000F;
-  XNegative = 		16_0010;
-  YNegative = 		16_0020;
+  NoValue =     16_0000;
+  XValue =      16_0001;
+  YValue =      16_0002;
+  WidthValue =  16_0004;
+  HeightValue = 16_0008;
+  AllValues =   16_000F;
+  XNegative =   16_0010;
+  YNegative =   16_0020;
 </PRE><P>
  * new version containing base_width, base_height, and win_gravity fields;
  * used with WM_NORMAL_HINTS.
@@ -4062,18 +4061,18 @@ TYPE XIfEventProc = PROCEDURE (
 
 <P><PRE>TYPE
   XSizeHints = RECORD
-    	flags: Long;	(* marks which fields in this structure are defined *)
-	x, y: Int;		(* obsolete for new window mgrs, but clients *)
-	width, height: Int;	(* should set so old wm's don't mess up *)
-	min_width, min_height: Int;
-	max_width, max_height: Int;
-    	width_inc, height_inc: Int;
-	min_aspect, max_aspect: RECORD
-		x: Int;	(* numerator *)
-		y: Int;	(* denominator *)
-	END;
-	base_width, base_height: Int;		(* added by ICCCM version 1 *)
-	win_gravity: Int;			(* added by ICCCM version 1 *)
+    flags: Long;    (* marks which fields in this structure are defined *)
+    x, y: Int;      (* obsolete for new window mgrs, but clients *)
+    width, height: Int; (* should set so old wm's don't mess up *)
+    min_width, min_height: Int;
+    max_width, max_height: Int;
+    width_inc, height_inc: Int;
+    min_aspect, max_aspect: RECORD
+        x: Int; (* numerator *)
+        y: Int; (* denominator *)
+    END;
+    base_width, base_height: Int;   (* added by ICCCM version 1 *)
+    win_gravity: Int;               (* added by ICCCM version 1 *)
   END;
   XSizeHintsStar = UNTRACED REF XSizeHints;
 </PRE><P>
@@ -4083,17 +4082,17 @@ TYPE XIfEventProc = PROCEDURE (
 
 <P> flags argument in size hints 
 <PRE>CONST
-  USPosition =	Word.Shift(1, 0); (* user specified x, y *)
-  USSize =	Word.Shift(1, 1); (* user specified width, height *)
+  USPosition =  Word.Shift(1, 0); (* user specified x, y *)
+  USSize =  Word.Shift(1, 1); (* user specified width, height *)
 
-  PPosition =	Word.Shift(1, 2); (* program specified position *)
-  PSize	=	Word.Shift(1, 3); (* program specified size *)
-  PMinSize =	Word.Shift(1, 4); (* program specified minimum size *)
-  PMaxSize =	Word.Shift(1, 5); (* program specified maximum size *)
-  PResizeInc =	Word.Shift(1, 6); (* program specified resize increments *)
-  PAspect =	Word.Shift(1, 7); (* program specified min and max aspect ratios *)
-  PBaseSize =	Word.Shift(1, 8); (* program specified base for incrementing *)
-  PWinGravity =	Word.Shift(1, 9); (* program specified window gravity *)
+  PPosition =   Word.Shift(1, 2); (* program specified position *)
+  PSize     =   Word.Shift(1, 3); (* program specified size *)
+  PMinSize  =   Word.Shift(1, 4); (* program specified minimum size *)
+  PMaxSize  =   Word.Shift(1, 5); (* program specified maximum size *)
+  PResizeInc =  Word.Shift(1, 6); (* program specified resize increments *)
+  PAspect   =   Word.Shift(1, 7); (* program specified min and max aspect ratios *)
+  PBaseSize =   Word.Shift(1, 8); (* program specified base for incrementing *)
+  PWinGravity = Word.Shift(1, 9); (* program specified window gravity *)
 </PRE>?!?!?!
 (* obsolete 
 <PRE>#define PAllHints (PPosition|PSize|PMinSize|PMaxSize|PResizeInc|PAspect)
@@ -4101,82 +4100,82 @@ TYPE XIfEventProc = PROCEDURE (
 
 TYPE
   XWMHints = RECORD
-	flags: Long;	(* marks which fields in this structure are defined *)
-	input: Bool;	(* does this application rely on the window manager to
-			get keyboard input? *)
-	initial_state: Int;	(* see below *)
-	icon_pixmap: Pixmap;	(* pixmap to be used as icon *)
-	icon_window: Window; 	(* window to be used as icon *)
-	icon_x, icon_y: Int; 	(* initial position of icon *)
-	icon_mask: Pixmap;	(* icon mask bitmap *)
-	window_group: XID;	(* id of related window group *)
-	(* this structure may be extended in the future *)
+    flags: Long;    (* marks which fields in this structure are defined *)
+    input: Bool;    (* does this application rely on the window manager to
+                        get keyboard input? *)
+    initial_state: Int; (* see below *)
+    icon_pixmap: Pixmap;    (* pixmap to be used as icon *)
+    icon_window: Window;    (* window to be used as icon *)
+    icon_x, icon_y: Int;    (* initial position of icon *)
+    icon_mask: Pixmap;      (* icon mask bitmap *)
+    window_group: XID;      (* id of related window group *)
+    (* this structure may be extended in the future *)
   END;
   XWMHintsStar = UNTRACED REF XWMHints;
 </PRE> definition for flags of XWMHints 
 
 <P><PRE>CONST
-  InputHint = 		Word.Shift(1, 0);
-  StateHint =		Word.Shift(1, 1);
-  IconPixmapHint =	Word.Shift(1, 2);
-  IconWindowHint =	Word.Shift(1, 3);
-  IconPositionHint = 	Word.Shift(1, 4);
-  IconMaskHint =	Word.Shift(1, 5);
-  WindowGroupHint =	Word.Shift(1, 6);
-  AllHints = 		Word.Or(InputHint, Word.Or(StateHint, Word.Or(IconPixmapHint, Word.Or(IconWindowHint, Word.Or(IconPositionHint, Word.Or(IconMaskHint, WindowGroupHint))))));
+  InputHint        = Word.Shift(1, 0);
+  StateHint        = Word.Shift(1, 1);
+  IconPixmapHint   = Word.Shift(1, 2);
+  IconWindowHint   = Word.Shift(1, 3);
+  IconPositionHint = Word.Shift(1, 4);
+  IconMaskHint     = Word.Shift(1, 5);
+  WindowGroupHint  = Word.Shift(1, 6);
+  AllHints         = Word.Or(InputHint, Word.Or(StateHint, Word.Or(IconPixmapHint, Word.Or(IconWindowHint, Word.Or(IconPositionHint, Word.Or(IconMaskHint, WindowGroupHint))))));
 </PRE> definitions for initial window state 
-  <PRE>WithdrawnState = 0;	(* for windows that are not mapped *)
-  NormalState = 1;	(* most applications want to start this way *)
-  IconicState = 3;	(* application wants to start as an icon *)
+  <PRE>WithdrawnState = 0;   (* for windows that are not mapped *)
+  NormalState = 1;      (* most applications want to start this way *)
+  IconicState = 3;      (* application wants to start as an icon *)
 </PRE><P>
  * Obsolete states no longer defined by ICCCM
  
-  <PRE>DontCareState = 0;	(* don't know or care *)
-  ZoomState = 2;	(* application wants to start zoomed *)
-  InactiveState = 4;	(* application believes it is seldom used; *)
-			(* some wm's may put it on inactive menu *)
+  <PRE>DontCareState = 0;    (* don't know or care *)
+  ZoomState = 2;        (* application wants to start zoomed *)
+  InactiveState = 4;    (* application believes it is seldom used; *)
+                        (* some wm's may put it on inactive menu *)
 </PRE><P>
- * new structure for manipulating TEXT properties; used with WM_NAME, 
+ * new structure for manipulating TEXT properties; used with WM_NAME,
  * WM_ICON_NAME, WM_CLIENT_MACHINE, and WM_COMMAND.
  
 <PRE>TYPE
   XTextProperty = RECORD
-    value: unsigned_char_star;		(* same as Property routines *)
-    encoding: Atom;			(* prop type *)
-    format: Int;			(* prop data format: 8, 16, or 32 *)
-    nitems: unsigned_long;		(* number of data items in value *)
+    value: unsigned_char_star;  (* same as Property routines *)
+    encoding: Atom;             (* prop type *)
+    format: Int;                (* prop data format: 8, 16, or 32 *)
+    nitems: unsigned_long;      (* number of data items in value *)
   END;
   XTextPropertyStar = UNTRACED REF XTextProperty;
 
   XIconSize = RECORD
-	        min_width, min_height: Int;
-	        max_width, max_height: Int;
-	        width_inc, height_inc: Int
-              END;
-  XIconSizeStar		= UNTRACED REF XIconSize;
-  XIconSizeStarStar	= UNTRACED REF XIconSizeStar;
+    min_width, min_height: Int;
+    max_width, max_height: Int;
+   width_inc, height_inc: Int
+  END;
+  XIconSizeStar     = UNTRACED REF XIconSize;
+  XIconSizeStarStar = UNTRACED REF XIconSizeStar;
 
   XClassHint = RECORD
-	         res_name: char_star;
-	         res_class: char_star
-               END;
+    res_name: char_star;
+    res_class: char_star
+  END;
 
-  XClassHint_star	= UNTRACED REF XClassHint;
+  XClassHint_star   = UNTRACED REF XClassHint;
 </PRE> ?!?!?!
 (*
  * These macros are used to give some sugar to the image routines so that
  * naive people are more comfortable with them.
  
 <PRE>#define XDestroyImage(ximage) \
-	(( *((ximage)-&gt;f.destroy_image))((ximage)))
+        (( *((ximage)-&gt;f.destroy_image))((ximage)))
 #define XGetPixel(ximage, x, y) \
-	(( *((ximage)-&gt;f.get_pixel))((ximage), (x), (y)))
+        (( *((ximage)-&gt;f.get_pixel))((ximage), (x), (y)))
 #define XPutPixel(ximage, x, y, pixel) \
-	(( *((ximage)-&gt;f.put_pixel))((ximage), (x), (y), (pixel)))
+        (( *((ximage)-&gt;f.put_pixel))((ximage), (x), (y), (pixel)))
 #define XSubImage(ximage, x, y, width, height)  \
-	(( *((ximage)-&gt;f.sub_image))((ximage), (x), (y), (width), (height)))
+        (( *((ximage)-&gt;f.sub_image))((ximage), (x), (y), (width), (height)))
 #define XAddPixel(ximage, value) \
-	(( *((ximage)-&gt;f.add_pixel))((ximage), (value)))
+        (( *((ximage)-&gt;f.add_pixel))((ximage), (value)))
 
 ?!?!?! *)
 </PRE><P>
@@ -4185,8 +4184,8 @@ TYPE
 
 <P><PRE>TYPE
   XComposeStatus = RECORD
-    compose_ptr: char_star;	(* state table pointer *)
-    chars_matched: Int;		(* match state *)
+    compose_ptr: char_star; (* state table pointer *)
+    chars_matched: Int;     (* match state *)
   END;
   XComposeStatusStar = UNTRACED REF XComposeStatus;
 </PRE> ?!?!?!
@@ -4211,7 +4210,7 @@ TYPE
 #define IsModifierKey(keysym) \
   (((unsigned)(keysym) &gt;= XK_Shift_L)  &amp;&amp; ((unsigned)(keysym) &lt;= XK_Hyper_R))
 </PRE><P>
- * opaque reference to Region data type 
+ * opaque reference to Region data type
  
 <PRE>typedef struct _XRegion *Region;
 ?!?!? *)
@@ -4219,7 +4218,7 @@ TYPE
 TYPE
   Region = ADDRESS;
 </PRE> Return values from XRectInRegion() 
- 
+
 <P><PRE>CONST
   RectangleOut = 0;
   RectangleIn =  1;
@@ -4245,17 +4244,17 @@ TYPE
   XVisualInfoStar = UNTRACED REF XVisualInfo;
 
 CONST
-  VisualNoMask =		16_0;
-  VisualIDMask = 		16_1;
-  VisualScreenMask =		16_2;
-  VisualDepthMask =		16_4;
-  VisualClassMask =		16_8;
-  VisualRedMaskMask =		16_10;
-  VisualGreenMaskMask =		16_20;
-  VisualBlueMaskMask =		16_40;
-  VisualColormapSizeMask =	16_80;
-  VisualBitsPerRGBMask =	16_100;
-  VisualAllMask =		16_1FF;
+  VisualNoMask          =   16_0;
+  VisualIDMask          =   16_1;
+  VisualScreenMask      =   16_2;
+  VisualDepthMask       =   16_4;
+  VisualClassMask       =   16_8;
+  VisualRedMaskMask     =   16_10;
+  VisualGreenMaskMask   =   16_20;
+  VisualBlueMaskMask    =   16_40;
+  VisualColormapSizeMask =  16_80;
+  VisualBitsPerRGBMask  =   16_100;
+  VisualAllMask         =   16_1FF;
 </PRE><P>
  * This defines a window manager property that clients may use to
  * share standard color maps of type RGB_COLOR_MAP:
@@ -4263,16 +4262,16 @@ CONST
 
 <P><PRE>TYPE
   XStandardColormap = RECORD
-	colormap: Colormap;
-	red_max: unsigned_long;
-	red_mult: unsigned_long;
-	green_max: unsigned_long;
-	green_mult: unsigned_long;
-	blue_max: unsigned_long;
-	blue_mult: unsigned_long;
-	base_pixel: unsigned_long;
-	visualid: VisualID;		(* added by ICCCM version 1 *)
-	killid: XID;			(* added by ICCCM version 1 *)
+    colormap: Colormap;
+    red_max: unsigned_long;
+    red_mult: unsigned_long;
+    green_max: unsigned_long;
+    green_mult: unsigned_long;
+    blue_max: unsigned_long;
+    blue_mult: unsigned_long;
+    base_pixel: unsigned_long;
+    visualid: VisualID;     (* added by ICCCM version 1 *)
+    killid: XID;            (* added by ICCCM version 1 *)
   END;
   XStandardColormapStar   = UNTRACED REF XStandardColormap;
   XStandardColormapStarStar   = UNTRACED REF XStandardColormapStar;
@@ -4284,10 +4283,10 @@ CONST
  
 
 <P><PRE>CONST
-  BitmapSuccess =		0;
-  BitmapOpenFailed = 		1;
-  BitmapFileInvalid = 		2;
-  BitmapNoMemory =		3;
+  BitmapSuccess     = 0;
+  BitmapOpenFailed  = 1;
+  BitmapFileInvalid = 2;
+  BitmapNoMemory    = 3;
 </PRE><P>
  * Declare the routines that don't return int.
  
@@ -4302,9 +4301,9 @@ CONST
 <P> Associative lookup table return codes 
 
 <P><PRE>CONST
-  XCSUCCESS = 0;	(* No error. *)
-  XCNOMEM =   1;	(* Out of memory *)
-  XCNOENT =   2;    	(* No entry in table *)
+  XCSUCCESS = 0;    (* No error. *)
+  XCNOMEM =   1;    (* Out of memory *)
+  XCNOENT =   2;    (* No entry in table *)
 
 TYPE
   XContext = Int;

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/ComposeKey.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/ComposeKey.i3</H2></A><HR>
 <inInterface>
@@ -53,9 +53,9 @@ END ComposeKey.
       TYPE
         MyTextEditor =
           TextEditingVBT.T OBJECT
-              comp: ComposeKey.T 
+              comp: ComposeKey.T
             OVERRIDES
-              key := Key 
+              key := Key
             END;
       
       PROCEDURE Key (v: MyTextEditor; READONLY inputCd; VBT.KeyRec) =
@@ -92,7 +92,7 @@ END ComposeKey.
    default, the <CODE>compose</CODE> method uses VT220-style composition of ISO
    Latin-1 characters.  A client can override the <CODE>compose</CODE> method to
    produce some other style of composition.
-  <P>
+<P>
    The default <CODE>compose</CODE> method ignores case where there is no
    ambiguity.  For example, <CODE>c</CODE> and <CODE>o</CODE> can be combined to produce the
    copyright symbol; so can <CODE>C</CODE> and <CODE>O</CODE>, <CODE>c</CODE> and <CODE>O</CODE>, or <CODE>C</CODE> and <CODE>o</CODE>.
@@ -140,7 +140,7 @@ END ComposeKey.
 |  XO    CURRENCY SIGN [also g$]
 |  Y-    YEN SIGN [also y$, y=]
 |  ||    BROKEN BAR [also vb, |^]
-|  SO    SECTION SIGN [also SS (not ss!), s!] 
+|  SO    SECTION SIGN [also SS (not ss!), s!]
 |  </KBD><KBD>    DIAERESIS
 |  co    COPYRIGHT SIGN
 |  a_    FEMININE ORDINAL INDICATOR [also sa]
@@ -173,25 +173,25 @@ END ComposeKey.
        A*    LATIN CAPITAL LETTER A WITH RING ABOVE [also oA]
        AE    CAPITAL DIPHTHONG AE
        C,    LATIN CAPITAL LETTER C WITH CEDILLA
-       E<KBD>    LATIN CAPITAL LETTER E WITH GRAVE ACCENT 
-|  E'    LATIN CAPITAL LETTER E WITH ACUTE ACCENT 
+       E<KBD>    LATIN CAPITAL LETTER E WITH GRAVE ACCENT
+|  E'    LATIN CAPITAL LETTER E WITH ACUTE ACCENT
 |  E^    LATIN CAPITAL LETTER E WITH CIRCUMFLEX ACCENT [also E&gt;]
 |  E</KBD>    LATIN CAPITAL LETTER E WITH DIAERESIS
-|  I</KBD>    LATIN CAPITAL LETTER I WITH GRAVE ACCENT 
-       I'    LATIN CAPITAL LETTER I WITH ACUTE ACCENT 
+|  I</KBD>    LATIN CAPITAL LETTER I WITH GRAVE ACCENT
+       I'    LATIN CAPITAL LETTER I WITH ACUTE ACCENT
        I^    LATIN CAPITAL LETTER I WITH CIRCUMFLEX ACCENT [also I&gt;]
        I&quot;    LATIN CAPITAL LETTER I WITH DIAERESIS
        D-    CAPITAL ICELANDIC LETTER ETH
        N~    LATIN CAPITAL LETTER N WITH TILDE [also N-]
-       O<KBD>    LATIN CAPITAL LETTER O WITH GRAVE ACCENT 
-|  O'    LATIN CAPITAL LETTER O WITH ACUTE ACCENT 
+       O<KBD>    LATIN CAPITAL LETTER O WITH GRAVE ACCENT
+|  O'    LATIN CAPITAL LETTER O WITH ACUTE ACCENT
 |  O^    LATIN CAPITAL LETTER O WITH CIRCUMFLEX ACCENT [also O&gt;]
 |  O~    LATIN CAPITAL LETTER O WITH TILDE [also O-]
 |  O</KBD>    LATIN CAPITAL LETTER O WITH DIAERESIS
 |  xx    MULTIPLICATION SIGN [also mu]
 |  O/    LATIN CAPITAL LETTER O WITH OBLIQUE STROKE
-|  U</KBD>    LATIN CAPITAL LETTER U WITH GRAVE ACCENT 
-       U'    LATIN CAPITAL LETTER U WITH ACUTE ACCENT 
+|  U</KBD>    LATIN CAPITAL LETTER U WITH GRAVE ACCENT
+       U'    LATIN CAPITAL LETTER U WITH ACUTE ACCENT
        U^    LATIN CAPITAL LETTER U WITH CIRCUMFLEX [also U&gt;]
        U&quot;    LATIN CAPITAL LETTER U WITH DIAERESIS
        Y'    LATIN CAPITAL LETTER Y WITH ACUTE ACCEN

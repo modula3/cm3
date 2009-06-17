@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/MultiSplit.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/MultiSplit.i3</H2></A><HR>
 <inInterface>
@@ -49,8 +49,8 @@ TYPE T = VBT.T;
   RAISES {NotAChild};
 &lt;* LL &gt;= {VBT.mu} *&gt;
 </PRE><BLOCKQUOTE><EM> Return the child of <CODE>v</CODE> that follows the child <CODE>ch</CODE>. </EM></BLOCKQUOTE><PRE>
-</PRE> The successor of <CODE>NIL</CODE> is the first child; the successor of 
-   the last child is <CODE>NIL</CODE>; the successor of <CODE>NIL</CODE> is <CODE>NIL</CODE> if there 
+</PRE> The successor of <CODE>NIL</CODE> is the first child; the successor of
+   the last child is <CODE>NIL</CODE>; the successor of <CODE>NIL</CODE> is <CODE>NIL</CODE> if there
    are no children. 
 
 <P><PRE>PROCEDURE <A HREF="MultiSplit.m3.html#Pred">Pred</A> (v: VBT.T; ch: VBT.T): VBT.T
@@ -114,9 +114,9 @@ PROCEDURE <A HREF="MultiSplit.m3.html#AddChildArray">AddChildArray</A> (
     v: VBT.T;
     READONLY new: ARRAY OF VBT.T);
 &lt;* LL.sup = VBT.mu *&gt;
-</PRE><BLOCKQUOTE><EM> Insert the non-<CODE>NIL</CODE> elements of <CODE>new</CODE> at the end of <CODE>v</CODE>'s 
+</PRE><BLOCKQUOTE><EM> Insert the non-<CODE>NIL</CODE> elements of <CODE>new</CODE> at the end of <CODE>v</CODE>'s
    list of children. </EM></BLOCKQUOTE><PRE>
-</PRE> Procedure <CODE>AddChildArray</CODE> is equivalent to 
+</PRE> Procedure <CODE>AddChildArray</CODE> is equivalent to
 <PRE>
        pred := Pred(v, NIL);
        FOR i := FIRST(new) TO LAST(new) DO
@@ -132,7 +132,7 @@ PROCEDURE <A HREF="MultiSplit.m3.html#AddChildArray">AddChildArray</A> (
     n0, n1, n2, n3, n4, n5, n6, n7, n8, n9: VBT.T := NIL);
 &lt;* LL.sup = VBT.mu *&gt;
 </PRE><BLOCKQUOTE><EM> Insert the non-<CODE>NIL</CODE> parameters as children to <CODE>v</CODE>. </EM></BLOCKQUOTE><PRE>
-</PRE> Procedure <CODE>AddChild</CODE> is equivalent to 
+</PRE> Procedure <CODE>AddChild</CODE> is equivalent to
 <PRE>
        AddChildArray(v,
          ARRAY OF VBT.T{n0, n1, n2, n3, n4, n5, n6, n7, n8, n9})

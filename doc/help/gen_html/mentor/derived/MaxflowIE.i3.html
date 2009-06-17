@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: mentor/derived/MaxflowIE.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>mentor/derived/MaxflowIE.i3</H2></A><HR>
 <inInterface>
@@ -16,7 +16,7 @@
 
 <P>********************************************************************
 <PRE>
-      *  NOTE: This file is generated automatically from the event 
+      *  NOTE: This file is generated automatically from the event
       *        definition file Maxflow.evt.
       ********************************************************************
 
@@ -25,8 +25,8 @@
 
 INTERFACE <interface><A HREF="MaxflowIE.m3.html">MaxflowIE</A></interface>;
 
-&lt;*NOWARN*&gt; IMPORT <A HREF="../src/maxflow/MFAlgs.i3.html">MFAlgs</A>, <A HREF="../../libm3/derived/RefList.i3.html">RefList</A>, <A HREF="../src/maxflow/MFFmt.i3.html">MFFmt</A>, <A HREF="../../mg/src/R2.i3.html">R2</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../src/maxflow/MFViews.i3.html">MFViews</A>;
-&lt;*NOWARN*&gt; IMPORT <A HREF="../src/maxflow/MFGraph.i3.html">MFGraph</A>, <A HREF="../../zeus/src/Algorithm.i3.html">Algorithm</A>, <A HREF="#x1">GraphVBT</A>, <A HREF="#x2">View</A>;
+&lt;*NOWARN*&gt; IMPORT <A HREF="../../mg/src/R2.i3.html">R2</A>, <A HREF="../src/maxflow/MFGraph.i3.html">MFGraph</A>, <A HREF="../../zeus/src/Algorithm.i3.html">Algorithm</A>, <A HREF="#x1">View</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../src/maxflow/MFAlgs.i3.html">MFAlgs</A>;
+&lt;*NOWARN*&gt; IMPORT <A HREF="../src/maxflow/MFViews.i3.html">MFViews</A>, <A HREF="#x2">GraphVBT</A>, <A HREF="../../libm3/derived/RefList.i3.html">RefList</A>, <A HREF="../src/maxflow/MFFmt.i3.html">MFFmt</A>;
 </PRE> call the following to generate an event: 
 
 <P><PRE>PROCEDURE <A HREF="MaxflowIE.m3.html#Setup">Setup</A> (
@@ -99,17 +99,17 @@ END MaxflowIE.
 </PRE>
 </inInterface>
 <HR>
-<A NAME="x1">interface GraphVBT is in:
-</A><UL>
-<LI><A HREF="../../fisheye/src/GraphVBT.i3.html#0TOP0">fisheye/src/GraphVBT.i3</A>
-<LI><A HREF="../../mgkit/src/GraphVBT.i3.html#0TOP0">mgkit/src/GraphVBT.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">interface View is in:
+<A NAME="x1">interface View is in:
 </A><UL>
 <LI><A HREF="../../juno-app/src/View.i3.html#0TOP0">juno-app/src/View.i3</A>
 <LI><A HREF="../../zeus/src/View.i3.html#0TOP0">zeus/src/View.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface GraphVBT is in:
+</A><UL>
+<LI><A HREF="../../fisheye/src/GraphVBT.i3.html#0TOP0">fisheye/src/GraphVBT.i3</A>
+<LI><A HREF="../../mgkit/src/GraphVBT.i3.html#0TOP0">mgkit/src/GraphVBT.i3</A>
 </UL>
 <P>
 <PRE>

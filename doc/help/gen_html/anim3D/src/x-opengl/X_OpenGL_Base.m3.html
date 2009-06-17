@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/x-opengl/X_OpenGL_Base.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/x-opengl/X_OpenGL_Base.m3</H2></A><HR>
 <inModule>
@@ -15,23 +15,23 @@
 
 <P> Limitations:
 <P>
-     drawPolygon, drawQuadMesh, drawColoredQuadMesh methods: 
+     drawPolygon, drawQuadMesh, drawColoredQuadMesh methods:
          surface edges have slight artifacts
 <P>
-     drawMarker method: 
+     drawMarker method:
          marker types are ignored; markers are drawn as dots
 <P>
      setDistinguishFacetsFlag method:
          not implemented
 <P>
-     pushMatrix, popMatrix methods: 
-         I use the native OpenGL matrix stack, which allows only for a fixed 
-         number of matrices to be pushed. This number is guaranteed to be at 
-         least 32. 
+     pushMatrix, popMatrix methods:
+         I use the native OpenGL matrix stack, which allows only for a fixed
+         number of matrices to be pushed. This number is guaranteed to be at
+         least 32.
 <P>
-     setDepthCueing method: 
-         The arguments <CODE>frontScale</CODE> and <CODE>backScale</CODE> are ignored, since OpenGL 
-         does not have the concept of a fog scaling factor. 
+     setDepthCueing method:
+         The arguments <CODE>frontScale</CODE> and <CODE>backScale</CODE> are ignored, since OpenGL
+         does not have the concept of a fog scaling factor.
 <P>
    Bugs:
 <P>
@@ -315,7 +315,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (self: T; title: TEXT; 
                              LOOPHOLE (cstr,
                                        Ctypes.unsigned_char_star),
                              Text.Length (title));
-	  M3toC.FreeSharedS(title, cstr);
+          M3toC.FreeSharedS(title, cstr);
           (* ask the WM to send ClientMessage events when f.kill is chosen *)
           EVAL X.XSetWMProtocols (dpy, window, ADR (conn.wm_delete_window), 1);
 
@@ -624,7 +624,7 @@ PROCEDURE <A NAME="AddSpotLight"><procedure>AddSpotLight</procedure></A> (self: 
 
         GL.glLightfv (l, GL.GL_SPOT_DIRECTION, ADR (d));
         GL.glLightf (l, GL.GL_SPOT_EXPONENT, conc);
-        GL.glLightf (l, GL.GL_SPOT_CUTOFF, 180.0 * spread / Math.Pi);
+        GL.glLightf (l, GL.GL_SPOT_CUTOFF, spread / FLOAT (Math.Degree, REAL));
 
         GL.glLightf (l, GL.GL_CONSTANT_ATTENUATION,  att0);
         GL.glLightf (l, GL.GL_LINEAR_ATTENUATION,    att1);
@@ -750,7 +750,7 @@ PROCEDURE <A NAME="PopMatrix"><procedure>PopMatrix</procedure></A> (&lt;*UNUSED*
                       M[0][3], M[1][3], M[2][3], M[3][3]};
   END FromMatrix4;
 
-PROCEDURE <A NAME="ToMatrix4"><procedure>ToMatrix4</procedure></A> (M: GLmatrixf): Matrix4.T =
+PROCEDURE <A NAME="ToMatrix4"><procedure>ToMatrix4</procedure></A> (READONLY M: GLmatrixf): Matrix4.T =
   BEGIN
     RETURN Matrix4.T {Matrix4.Row {M[0], M[4], M[ 8], M[12]},
                       Matrix4.Row {M[1], M[5], M[ 9], M[13]},
@@ -801,7 +801,7 @@ PROCEDURE <A NAME="SetupCamera"><procedure>SetupCamera</procedure></A> (self: T)
     WITH aspect = self.aspect * FLOAT(self.winWidth) / FLOAT(self.winHeight) DO
       CASE self.projType OF
       | ProjType.Persp =&gt;
-        GLu.gluPerspective (FLOAT (self.fovy / Math.Pi * 180.0, LONGREAL),
+        GLu.gluPerspective (FLOAT (self.fovy, LONGREAL) / Math.Degree,
                             FLOAT (aspect, LONGREAL),
                             FLOAT (self.near, LONGREAL),
                             FLOAT (self.far, LONGREAL));
@@ -935,7 +935,8 @@ PROCEDURE <A NAME="SetRasterMode"><procedure>SetRasterMode</procedure></A> (self
     self.rasterMode := val;
   END SetRasterMode;
 
-PROCEDURE <A NAME="SetDistinguishFacetsFlag"><procedure>SetDistinguishFacetsFlag</procedure></A> (self : T; val : BOOLEAN) =
+PROCEDURE <A NAME="SetDistinguishFacetsFlag"><procedure>SetDistinguishFacetsFlag</procedure></A> (&lt;*UNUSED*&gt; self : T;
+                                    &lt;*UNUSED*&gt; val : BOOLEAN) =
   BEGIN
     IO.Put (&quot;### SetDistinguishFacetsFlag not implemented \n&quot;);
   END SetDistinguishFacetsFlag;
@@ -2139,11 +2140,9 @@ PROCEDURE <A NAME="ComputeUnitTorus"><procedure>ComputeUnitTorus</procedure></A>
     IF CheckTypedWindowEvent (self, X.ClientMessage, ev) = X.True THEN
       WITH e = ClientMessageEvent(ev) DO
         IF e.message_type = conn.wm_protocols AND e.format = 32 THEN
-          WITH data = LOOPHOLE (e.data, ARRAY [0 .. 4] OF Ctypes.long) DO
-            IF data[0] = conn.wm_delete_window THEN
-              self.destroy ();
-              RETURN;
-            END;
+          IF e.data[0] = conn.wm_delete_window THEN
+            self.destroy ();
+            RETURN;
           END;
         END;
       END;
@@ -2274,21 +2273,21 @@ PROCEDURE <A NAME="GetKeySym"><procedure>GetKeySym</procedure></A> (VAR ev : X.X
   END GetKeySym;
 
 &lt;* INLINE *&gt;
-PROCEDURE <A NAME="MotionEvent"><procedure>MotionEvent</procedure></A>(VAR ev : X.XEvent) : X.XMotionEvent =
+PROCEDURE <A NAME="MotionEvent"><procedure>MotionEvent</procedure></A>(VAR ev : X.XEvent) : X.XMotionEventStar =
   BEGIN
-    RETURN LOOPHOLE (ADR (ev), X.XMotionEventStar)^;
+    RETURN LOOPHOLE (ADR (ev), X.XMotionEventStar);
   END MotionEvent;
 
 &lt;* INLINE *&gt;
-PROCEDURE <A NAME="ButtonEvent"><procedure>ButtonEvent</procedure></A>(VAR ev : X.XEvent) : X.XButtonEvent =
+PROCEDURE <A NAME="ButtonEvent"><procedure>ButtonEvent</procedure></A>(VAR ev : X.XEvent) : X.XButtonEventStar =
   BEGIN
-    RETURN LOOPHOLE (ADR (ev), X.XButtonEventStar)^;
+    RETURN LOOPHOLE (ADR (ev), X.XButtonEventStar);
   END ButtonEvent;
 
 &lt;* INLINE *&gt;
-PROCEDURE <A NAME="ClientMessageEvent"><procedure>ClientMessageEvent</procedure></A>(VAR ev : X.XEvent) : X.XClientMessageEvent =
+PROCEDURE <A NAME="ClientMessageEvent"><procedure>ClientMessageEvent</procedure></A>(VAR ev : X.XEvent) : X.XClientMessageEvent_l_star =
   BEGIN
-    RETURN LOOPHOLE (ADR (ev), X.XClientMessageEventStar)^;
+    RETURN LOOPHOLE (ADR (ev), X.XClientMessageEvent_l_star);
   END ClientMessageEvent;
 </PRE>***************************************************************************
  Animation Server                                                          

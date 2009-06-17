@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/arith/POSIX/Math.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/arith/POSIX/Math.i3</H2></A><HR>
 <inInterface>
@@ -35,11 +35,11 @@
 <P>---- miscellaneous useful constants ----
 
 <P><PRE>CONST
-  Pi     = 3.1415926535897932384626433833;
-  LogPi  = 1.1447298858494001741434273514;
-  SqrtPi = 1.7724538509055160272981674833;
-  E      = 2.7182818284590452353602874714;
-  Degree = 0.017453292519943295769236907684;  (* One degree in radians *)
+  Pi     = 3.1415926535897932384626433833D0;
+  LogPi  = 1.1447298858494001741434273514D0;
+  SqrtPi = 1.7724538509055160272981674833D0;
+  E      = 2.7182818284590452353602874714D0;
+  Degree = 0.017453292519943295769236907684D0;  (* One degree in radians *)
 </PRE>---- Exponential and Logarithm functions ----
 
 <P><PRE>&lt;*EXTERNAL*&gt; PROCEDURE exp (x: LONGREAL): LONGREAL;
@@ -132,7 +132,7 @@ TYPE Complex = RECORD x, y: LONGREAL END;
 
 <P><PRE>&lt;*EXTERNAL*&gt; PROCEDURE frexp (x: LONGREAL;  VAR exp: INTEGER): LONGREAL;
 </PRE><BLOCKQUOTE><EM> returns a value y and sets exp such that x = y * 2^exp,
-    where ABS(X) is in the interval [0.5, 1). </EM></BLOCKQUOTE><PRE>
+    where ABS(y) is in the interval [0.5, 1). </EM></BLOCKQUOTE><PRE>
 
 &lt;*EXTERNAL*&gt; PROCEDURE ldexp (x: LONGREAL; exp: INTEGER): LONGREAL;
 </PRE><BLOCKQUOTE><EM> returns x * 2^exp. </EM></BLOCKQUOTE><PRE>

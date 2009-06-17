@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/vbtkitutils/Rsrc.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/vbtkitutils/Rsrc.i3</H2></A><HR>
 <inInterface>
@@ -81,12 +81,12 @@ The implementation is slightly more efficient, because it
    <CODE>Rd.GetText</CODE>. 
 
 <P><PRE>PROCEDURE <A HREF="Rsrc.m3.html#BuildPath">BuildPath</A> (a1, a2, a3, a4: REFANY := NIL): Path;
-</PRE><BLOCKQUOTE><EM> Build a <CODE>Path</CODE> from the non-<CODE>NIL</CODE> elements. Each element must be
-   either a <CODE>Bundle.T</CODE> or a <CODE>TEXT</CODE>.  If it is a <CODE>TEXT</CODE>, is assumed to
+</PRE><BLOCKQUOTE><EM> Build a <CODE>Path</CODE> from the non-<CODE>NIL</CODE> elements.  Each element must be
+   either a <CODE>Bundle.T</CODE> or a <CODE>TEXT</CODE>.  If it is a <CODE>TEXT</CODE>, it is assumed to
    be the pathname of a directory, unless it starts with a dollar
-   sign, in which case it is assumed to be environment variable whose
+   sign, in which case it is assumed to be an environment variable whose
    value is the name of a directory; the value is retrieved using
-   <CODE>Env.Get</CODE>. It is a checked runtime error of the pathname is not
+   <CODE>Env.Get</CODE>.  It is a checked runtime error if the pathname is not
    valid. </EM></BLOCKQUOTE><PRE>
 
 END Rsrc.

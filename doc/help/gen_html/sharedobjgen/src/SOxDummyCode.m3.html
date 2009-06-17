@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: sharedobjgen/src/SOxDummyCode.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>sharedobjgen/src/SOxDummyCode.m3</H2></A><HR>
 <inModule>
@@ -24,12 +24,21 @@
  * Update Count    : 20
  * 
  * $Source: /opt/cvs/cm3/doc/help/gen_html/sharedobjgen/src/SOxDummyCode.m3.html,v $
- * $Date: 2003-07-16 13:18:05 $
+ * $Date: 2009-06-17 18:52:57 $
  * $Author: wagner $
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  * 
  * $Log: not supported by cvs2svn $
- * Revision 1.2  2001/12/03 17:23:37  wagner
+ * Revision 1.4  2008-03-10 13:34:32  hosking
+ * Eliminate warnings in compile.
+ *
+ * Revision 1.3  2008-01-13 03:57:47  jkrell
+ * fix some but not all of the warnings here
+ * it would be nice if UNUSED could be turned off for an entire file
+ * it is not a particularly useful warning, as it falls out of certain
+ * common designs and I turn it off all the time in my C and C++ code..
+ *
+ * Revision 1.2  2001-12-03 17:23:37  wagner
  * add copyright notes and overrides
  *
  * added: sharedobjgen/COPYRIGHT
@@ -92,7 +101,7 @@ VAR
         ARRAY [1..1] OF Atom.T{Atom.FromText(&quot;SharedObj&quot;)};
 
 PROCEDURE <A NAME="initImports"><procedure>initImports</procedure></A>(&lt;*UNUSED*&gt;self: T;
-                      basename: TEXT;
+                      &lt;*UNUSED*&gt;basename: TEXT;
                       imports: ImportList.T) =
   BEGIN
     CodeForType.AugmentImportList(imports, extraImports);
@@ -107,39 +116,39 @@ PROCEDURE <A NAME="import"><procedure>import</procedure></A>(&lt;*UNUSED*&gt;sel
     CodeForType.ImportLst(type, imports, methods, umethods);
   END import;
 
-PROCEDURE <A NAME="head"><procedure>head</procedure></A>(self: T;
+PROCEDURE <A NAME="head"><procedure>head</procedure></A>(&lt;*UNUSED*&gt;self: T;
                wr: Formatter.T;
                fname: TEXT;
-               basename: TEXT;
-               imports: ImportList.T) =
+               &lt;*UNUSED*&gt;basename: TEXT;
+               &lt;*UNUSED*&gt;imports: ImportList.T) =
   BEGIN
     SOxCodeUtils.HeaderComment(wr, fname);
   END head;
 
-PROCEDURE <A NAME="decls"><procedure>decls</procedure></A>(self: T;
-                wr: Formatter.T;
-                typeID: Type.Qid;
-                stypeID: Type.Qid;
-                implName: TEXT;
-                methods: ImportList.MethodList;
-                umethods: AtomList.T) RAISES {SOxCodeGenError.E} =
+PROCEDURE <A NAME="decls"><procedure>decls</procedure></A>(&lt;*UNUSED*&gt;self: T;
+                &lt;*UNUSED*&gt;wr: Formatter.T;
+                &lt;*UNUSED*&gt;typeID: Type.Qid;
+                &lt;*UNUSED*&gt;stypeID: Type.Qid;
+                &lt;*UNUSED*&gt;implName: TEXT;
+                &lt;*UNUSED*&gt;methods: ImportList.MethodList;
+                &lt;*UNUSED*&gt;umethods: AtomList.T) RAISES &lt;*NOWARN*&gt; {SOxCodeGenError.E} =
   BEGIN
   END decls;
 
-PROCEDURE <A NAME="main"><procedure>main</procedure></A>(self: T;
-               wr: Formatter.T;
-               typeID: Type.Qid;
-               type: Type.Object;
-               stypeID: Type.Qid;
-               implName: TEXT;
-               methods: ImportList.MethodList;
-               umethods: AtomList.T) RAISES {SOxCodeGenError.E} =
+PROCEDURE <A NAME="main"><procedure>main</procedure></A>(&lt;*UNUSED*&gt;self: T;
+               &lt;*UNUSED*&gt;wr: Formatter.T;
+               &lt;*UNUSED*&gt;typeID: Type.Qid;
+               &lt;*UNUSED*&gt;type: Type.Object;
+               &lt;*UNUSED*&gt;stypeID: Type.Qid;
+               &lt;*UNUSED*&gt;implName: TEXT;
+               &lt;*UNUSED*&gt;methods: ImportList.MethodList;
+               &lt;*UNUSED*&gt;umethods: AtomList.T) RAISES &lt;*NOWARN*&gt; {SOxCodeGenError.E} =
   BEGIN
   END main;
 
-PROCEDURE <A NAME="bottom"><procedure>bottom</procedure></A>(self: T;
-                 wr: Formatter.T;
-                 fname: TEXT) =
+PROCEDURE <A NAME="bottom"><procedure>bottom</procedure></A>(&lt;*UNUSED*&gt;self: T;
+                 &lt;*UNUSED*&gt;wr: Formatter.T;
+                 &lt;*UNUSED*&gt;fname: TEXT) =
   BEGIN
   END bottom;
 
@@ -157,6 +166,7 @@ END SOxDummyCode.
 <HR>
 <A NAME="x2">interface Type is in:
 </A><UL>
+<LI><A HREF="../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../../m3front/src/types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

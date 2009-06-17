@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/HVSplit.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/HVSplit.i3</H2></A><HR>
 <inInterface>
@@ -21,16 +21,16 @@
    row or column of child windows, depending on the {\it axis} of
    the split.
 <P>
-   If the axis is horizontal, <CODE>Split.Succ</CODE> enumerates the children 
-   from west to east; if the axis is vertical, it enumerates them 
+   If the axis is horizontal, <CODE>Split.Succ</CODE> enumerates the children
+   from west to east; if the axis is vertical, it enumerates them
    from north to south.
 <P>
-   An <CODE>HVSplit</CODE> can be {\it adjustable} or {\it unadjustable}, a 
-   property that affects the way its space is divided between its children.    
+   An <CODE>HVSplit</CODE> can be {\it adjustable} or {\it unadjustable}, a
+   property that affects the way its space is divided between its children.
 <P>
-   The {\it size} of a child is the extent of its domain in the 
-   axis of split, the {\it cross-size} is its extent in the other axis.  
-   For example, for a vertical split, a child's size is its height 
+   The {\it size} of a child is the extent of its domain in the
+   axis of split, the {\it cross-size} is its extent in the other axis.
+   For example, for a vertical split, a child's size is its height
    and its cross-size is its width.
 <P>
    The children of an <CODE>HVSplit</CODE> all have the same cross-size as the
@@ -86,7 +86,7 @@
 <P>
    A split is {\it infeasible} if it is overfull or underfull, and {\it
    feasible} otherwise.
-    <P>
+<P>
    The shape of an <CODE>HVSplit</CODE> is computed as follows: its maximum,
    minimum, and preferred sizes are obtained by adding up the
    corresponding values of its children.  The cross-size range is the
@@ -96,7 +96,7 @@
    cross-size of <CODE>v</CODE> is the maximum of the preferred cross-sizes
    of its children, projected into <CODE>v</CODE>'s cross-size range.  
 
-<P>   
+<P>
 <P><PRE>INTERFACE <interface><A HREF="HVSplit.m3.html">HVSplit</A></interface>;
 
 IMPORT <A HREF="../vbt/VBT.i3.html">VBT</A>, <A HREF="Split.i3.html">Split</A>, <A HREF="../../../libm3/src/geometry/Axis.i3.html">Axis</A>, <A HREF="../../../libm3/src/geometry/Interval.i3.html">Interval</A>;
@@ -111,7 +111,7 @@ TYPE
       parlim := -1;
       adjustable := TRUE): T
   END;
-</PRE> The call <CODE>v.init(...)</CODE> initializes <CODE>v</CODE> as an <CODE>HVSplit</CODE> with axis 
+</PRE> The call <CODE>v.init(...)</CODE> initializes <CODE>v</CODE> as an <CODE>HVSplit</CODE> with axis
    <CODE>hv</CODE> and no children.
 <P>
    If <CODE>saveBits</CODE> is <CODE>TRUE</CODE>, the implementation will try to save the
@@ -135,7 +135,7 @@ PROCEDURE <A HREF="HVSplit.m3.html#AxisOf">AxisOf</A>(v: T): Axis.T;
 </PRE><BLOCKQUOTE><EM> Return the axis of <CODE>v</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> \subsubsection{Inserting children} 
 
-<P> See the <CODE>Split</CODE> interface to insert and reorder children.  
+<P> See the <CODE>Split</CODE> interface to insert and reorder children. 
 
 <P><PRE>PROCEDURE <A HREF="HVSplit.m3.html#Cons">Cons</A>(
     hv: Axis.T;
@@ -177,7 +177,7 @@ PROCEDURE <A HREF="HVSplit.m3.html#AxisOf">AxisOf</A>(v: T): Axis.T;
 
 <P> The {\it division point after a child} is the sum of the sizes of
    all children up to and including the child. 
-   
+
 <P>
 <P><PRE>PROCEDURE <A HREF="HVSplit.m3.html#Adjust">Adjust</A>(v: T; ch: VBT.T; totsz: INTEGER)
 RAISES {Split.NotAChild}; &lt;* LL.sup = VBT.mu *&gt;
@@ -203,8 +203,8 @@ PROCEDURE <A HREF="HVSplit.m3.html#AvailSize">AvailSize</A>(v: T): CARDINAL;
 &lt;* LL.sup = VBT.mu *&gt;
 </PRE><BLOCKQUOTE><EM> Return the largest size of a child that can be inserted into <CODE>v</CODE>
    without making <CODE>v</CODE> infeasible. </EM></BLOCKQUOTE><PRE>
-</PRE> If the split is infeasible, <CODE>AvailSize</CODE> returns 0 and <CODE>FeasibleRange</CODE> 
-   returns the empty interval.  Both procedures assume the 
+</PRE> If the split is infeasible, <CODE>AvailSize</CODE> returns 0 and <CODE>FeasibleRange</CODE>
+   returns the empty interval.  Both procedures assume the
    total size available is the total of all child sizes. 
 
 <P>

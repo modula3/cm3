@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-app/src/Drawing.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-app/src/Drawing.m3</H2></A><HR>
 <inModule>
@@ -19,9 +19,9 @@
 MODULE <module><implements><A HREF="Drawing.i3.html">Drawing</A></implements></module>;
 
 IMPORT <A HREF="CurrCmd.i3.html">CurrCmd</A>, <A HREF="#x1">View</A>, <A HREF="JunoError.i3.html">JunoError</A>, <A HREF="JunoBuild.i3.html">JunoBuild</A>, <A HREF="Drag.i3.html">Drag</A>, <A HREF="PSImpl.i3.html">PSImpl</A>, <A HREF="JunoPt.i3.html">JunoPt</A>;
-IMPORT   <A HREF="Editor.i3.html">Editor</A>, <A HREF="ToolBox.i3.html">ToolBox</A>, <A HREF="JunoConfig.i3.html">JunoConfig</A>;
+IMPORT   <A HREF="#x2">Editor</A>, <A HREF="ToolBox.i3.html">ToolBox</A>, <A HREF="JunoConfig.i3.html">JunoConfig</A>;
 IMPORT <A HREF="../../juno-compiler/src/JunoAST.i3.html">JunoAST</A>, <A HREF="../../juno-compiler/src/JunoASTUtils.i3.html">JunoASTUtils</A>, <A HREF="../../juno-compiler/src/JunoCompileErr.i3.html">JunoCompileErr</A>;
-IMPORT <A HREF="#x2">JunoValue</A>, <A HREF="../../juno-machine/src/JunoRT.i3.html">JunoRT</A>;
+IMPORT <A HREF="#x3">JunoValue</A>, <A HREF="../../juno-machine/src/JunoRT.i3.html">JunoRT</A>;
 IMPORT <A HREF="../../vbtkit/src/etext/TextEditVBT.i3.html">TextEditVBT</A>, <A HREF="../../vbtkit/src/etext/KeyTrans.i3.html">KeyTrans</A>;
 IMPORT <A HREF="../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="../../ui/src/vbt/VBTClass.i3.html">VBTClass</A>, <A HREF="../../ui/src/vbt/PaintOp.i3.html">PaintOp</A>, <A HREF="../../libm3/src/geometry/Point.i3.html">Point</A>, <A HREF="../../libm3/src/geometry/Region.i3.html">Region</A>, <A HREF="../../libm3/src/geometry/Rect.i3.html">Rect</A>, <A HREF="../../libm3/src/geometry/Path.i3.html">Path</A>;
 IMPORT   <A HREF="../../libm3/src/geometry/Axis.i3.html">Axis</A>, <A HREF="../../ui/src/split/Filter.i3.html">Filter</A>, <A HREF="../../ui/src/vbt/Pixmap.i3.html">Pixmap</A>, <A HREF="../../ui/src/split/DblBufferVBT.i3.html">DblBufferVBT</A>;
@@ -1395,7 +1395,14 @@ END Drawing.
 </UL>
 <P>
 <HR>
-<A NAME="x2">interface JunoValue is in:
+<A NAME="x2">interface Editor is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/misc/Editor.i3.html#0TOP0">cm3ide/src/misc/Editor.i3</A>
+<LI><A HREF="Editor.i3.html#0TOP0">juno-app/src/Editor.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface JunoValue is in:
 </A><UL>
 <LI><A HREF="../../juno-machine/src/JunoValue.i3.html#0TOP0">juno-machine/src/JunoValue.i3</A>
 <LI><A HREF="../../pkl-fonts/src/JunoValue.i3.html#0TOP0">pkl-fonts/src/JunoValue.i3</A>

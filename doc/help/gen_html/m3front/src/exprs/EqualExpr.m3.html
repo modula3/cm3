@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/EqualExpr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/EqualExpr.m3</H2></A><HR>
 <inModule>
@@ -55,10 +55,10 @@ TYPE
         getBounds    := ExprRep.NoBounds;
         isWritable   := ExprRep.IsNever;
         isDesignator := ExprRep.IsNever;
-	isZeroes     := ExprRep.IsNever;
-	genFPLiteral := ExprRep.NoFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := ExprRep.NoLiteral;
+        isZeroes     := ExprRep.IsNever;
+        genFPLiteral := ExprRep.NoFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
       END;
 
@@ -108,6 +108,7 @@ PROCEDURE <A NAME="Classify"><procedure>Classify</procedure></A> (ta, tb: Type.T
     CASE ia.class OF
     | Type.Class.Error,
       Type.Class.Integer,
+      Type.Class.Longint,
       Type.Class.Real,
       Type.Class.Longreal,
       Type.Class.Extended,
@@ -180,11 +181,11 @@ PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (p: P) =
       (* use the branching code to compute a value *)
       false := CG.Next_label (2);
       PrepBR (p, CG.No_label, false, CG.Maybe);
-      CG.Load_integer (TInt.One);
+      Value.Load (Bool.True);
       p.tmp := CG.Pop_temp ();
       CG.Jump (false+1);
       CG.Set_label (false);
-      CG.Load_integer (TInt.Zero);
+      Value.Load (Bool.False);
       CG.Store_temp (p.tmp);
       CG.Set_label (false+1);
     END;
@@ -231,7 +232,10 @@ PROCEDURE <A NAME="CompileSolidUnrolled"><procedure>CompileSolidUnrolled</proced
       CG.Load_indirect (cmp_type, i * chunk_size, chunk_size);
       CG.Compare (Target.Word.cg_type, p.op);
       IF (i &gt; 0) THEN
-        IF (p.op = CG.Cmp.EQ) THEN  CG.And ();  ELSE  CG.Or ();  END;
+        IF (p.op = CG.Cmp.EQ)
+          THEN CG.And (Target.Word.cg_type);
+          ELSE CG.Or  (Target.Word.cg_type);
+        END;
       END;
     END;
 
@@ -524,13 +528,13 @@ PROCEDURE <A NAME="GenShapeCheck"><procedure>GenShapeCheck</procedure></A> (p1, 
         CG.Push (p1);
         CG.Open_size (n);
       ELSE
-        CG.Load_integer (Type.Number (i1));
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (i1));
       END;
       IF (i2 = NIL) THEN
         CG.Push (p2);
         CG.Open_size (n);
       ELSE
-        CG.Load_integer (Type.Number (i2));
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (i2));
       END;
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.NE, false, freq);
 
@@ -623,14 +627,14 @@ PROCEDURE <A NAME="GenOpenValueCheck"><procedure>GenOpenValueCheck</procedure></
 
     (* decrement the count *)
     CG.Push (cnt);
-    CG.Load_integer (TInt.One);
+    CG.Load_integer (Target.Integer.cg_type, TInt.One);
     CG.Subtract (Target.Integer.cg_type);
     CG.Store_temp (cnt);
 
     (* test for completion *)
     CG.Set_label (top+1);
     CG.Push (cnt);
-    CG.Load_integer (TInt.Zero);
+    CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
     CG.If_compare (Target.Integer.cg_type, CG.Cmp.GE, top, CG.Likely);
 
     CG.Free (cnt);
@@ -673,14 +677,14 @@ PROCEDURE <A NAME="GenFixedValueCheck"><procedure>GenFixedValueCheck</procedure>
 
     (* decrement the count *)
     CG.Push (cnt);
-    CG.Load_integer (TInt.One);
+    CG.Load_integer (Target.Integer.cg_type, TInt.One);
     CG.Subtract (Target.Integer.cg_type);
     CG.Store_temp (cnt);
 
     (* test for completion *)
     CG.Set_label (top+1);
     CG.Push (cnt);
-    CG.Load_integer (TInt.Zero);
+    CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
     CG.If_compare (Target.Integer.cg_type, CG.Cmp.GE, top, CG.Likely);
 
     CG.Free (cnt);
@@ -767,14 +771,14 @@ PROCEDURE <A NAME="CompileSolid"><procedure>CompileSolid</procedure></A> (p1, p2
 
       (* decrement the count *)
       CG.Push (cnt);
-      CG.Load_integer (TInt.One);
+      CG.Load_integer (Target.Integer.cg_type, TInt.One);
       CG.Subtract (Target.Integer.cg_type);
       CG.Store_temp (cnt);
 
       (* test for completion *)
       CG.Set_label (top+1);
       CG.Push (cnt);
-      CG.Load_integer (TInt.Zero);
+      CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.GE, top, CG.Likely);
 
       CG.Free (cnt);
@@ -847,6 +851,7 @@ END EqualExpr.
 <HR>
 <A NAME="x2">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

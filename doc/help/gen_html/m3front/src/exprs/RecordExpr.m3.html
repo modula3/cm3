@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/RecordExpr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/RecordExpr.m3</H2></A><HR>
 <inModule>
@@ -42,8 +42,8 @@ TYPE
         typeOf       := ExprRep.NoType;
         check        := Check;
         need_addr    := NeedsAddress;
-        prep         := PrepLV;
-        compile      := CompileLV;
+        prep         := Prep;
+        compile      := Compile;
         prepLV       := PrepLV;
         compileLV    := CompileLV;
         prepBR       := ExprRep.NotBoolean;
@@ -53,10 +53,10 @@ TYPE
         getBounds    := ExprRep.NoBounds;
         isWritable   := ExprRep.IsNever;
         isDesignator := ExprRep.IsNever;
-	isZeroes     := IsZeroes;
-	genFPLiteral := GenFPLiteral;
-	prepLiteral  := PrepLiteral;
-	genLiteral   := GenLiteral;
+        isZeroes     := IsZeroes;
+        genFPLiteral := GenFPLiteral;
+        prepLiteral  := PrepLiteral;
+        genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
       END;
 
@@ -175,7 +175,7 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (p: P;  VAR cs: Expr.
           Error.Msg (&quot;positional values must precede keyword values&quot;);
         END;
         IF (i &gt;= n)
-	  THEN  Error.Msg (&quot;too many values&quot;);  offset := n - 1;
+          THEN  Error.Msg (&quot;too many values&quot;);  offset := n - 1;
           ELSE  offset := i;
         END;
       END;
@@ -229,7 +229,12 @@ PROCEDURE <A NAME="NeedsAddress"><procedure>NeedsAddress</procedure></A> (&lt;*U
     (* yep, all records get memory addresses *)
   END NeedsAddress;
 
-PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P) =
+PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (p: P) =
+  BEGIN
+    PrepLV (p, lhs := FALSE);
+  END Prep;
+
+PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN) =
   VAR
     info: Type.Info;
     field: Field.Info;
@@ -245,6 +250,7 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P) =
      * been prepped and compiled -- save it.
      *)
     IF p.do_direct THEN
+      &lt;* ASSERT NOT lhs *&gt;               (* CHECK ME? *)
       p.tmp := CG.Pop ();
     ELSE
       t1 := CG.Declare_temp (info.size, info.alignment,
@@ -273,7 +279,12 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P) =
     END;
   END PrepLV;
 
-PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P) =
+PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
+  BEGIN
+    CompileLV (p, lhs := FALSE);
+  END Compile;
+
+PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; &lt;*UNUSED*&gt; lhs: BOOLEAN) =
   VAR info: Type.Info;  offset: INTEGER;
   BEGIN
     IF (p.is_const) THEN
@@ -309,7 +320,7 @@ PROCEDURE <A NAME="Fold"><procedure>Fold</procedure></A> (p: P): Expr.T =
     END;
   END Fold;
 
-PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (p: P): BOOLEAN =
+PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (p: P;  &lt;*UNUSED*&gt; lhs: BOOLEAN): BOOLEAN =
   BEGIN
     &lt;* ASSERT p.map # NIL *&gt; (* must already be checked *)
     FOR i := 0 TO LAST (p.map^) DO
@@ -373,6 +384,7 @@ END RecordExpr.
 <HR>
 <A NAME="x2">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

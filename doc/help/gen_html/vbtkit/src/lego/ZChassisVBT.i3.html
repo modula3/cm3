@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/ZChassisVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/ZChassisVBT.i3</H2></A><HR>
 <inInterface>
@@ -31,13 +31,13 @@
    isn't allowed to make the interior of the chassis smaller or larger
    than its reported bounds along each dimension.  
 
-<P><PRE>INTERFACE <interface><A HREF="ZChassisVBT.m3.html">ZChassisVBT</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="#x1">ZChassisVBT</A></interface>;
 
 IMPORT <A HREF="Shadow.i3.html">Shadow</A>, <A HREF="../../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="ZChildVBT.i3.html">ZChildVBT</A>, <A HREF="../../../ui/src/split/ZSplit.i3.html">ZSplit</A>;
 
 TYPE
   &lt;* SUBTYPE T &lt;: MultiFilter.T *&gt;
-  <A HREF="ZChassisVBT.m3.html#T">T</A> &lt;: Public;
+  <A HREF="#x2">T</A> &lt;: Public;
   Public =
     ZChildVBT.T OBJECT
     METHODS
@@ -89,7 +89,7 @@ END ZChassisVBT.
    structure (using FormsVBT notation):
 <P>
 <PRE>
-       (Stable 
+       (Stable
          (Border
            (VBox
              (HBox (CloseButton &quot;C&quot;)
@@ -98,7 +98,7 @@ END ZChassisVBT.
              (Frame <KBD>{\it ch}</KBD>)))))
 </PRE>
    See Figure~\ref{fig:zchassis}.
-   <P>
+<P>
    However, don't try to traverse the VBT tree directly; it is subject
    to change.  To retrieve the contents of a chassis <CODE>v</CODE>, use
    <CODE>MultiFilter.Child(v)</CODE>.
@@ -115,6 +115,20 @@ END ZChassisVBT.
 <P>
 <P>
 </inInterface>
+<HR>
+<A NAME="x1">ZChassisVBT's implementation  is in:
+</A><UL>
+<LI><A HREF="POSIX/ZChassisVBT.m3.html#0TOP0">vbtkit/src/lego/POSIX/ZChassisVBT.m3</A>
+<LI><A HREF="ZChassisVBT.m3.html#0TOP0">vbtkit/src/lego/ZChassisVBT.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">opaque type ZChassisVBT.T is in:
+</A><UL>
+<LI><A HREF="POSIX/ZChassisVBT.m3.html#T">vbtkit/src/lego/POSIX/ZChassisVBT.m3</A>
+<LI><A HREF="ZChassisVBT.m3.html#T">vbtkit/src/lego/ZChassisVBT.m3</A>
+</UL>
+<P>
 <PRE>
 
 

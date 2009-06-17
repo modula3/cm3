@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: obliqlibemb/src/ObSharedObj.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>obliqlibemb/src/ObSharedObj.m3</H2></A><HR>
 <inModule>
@@ -45,7 +45,7 @@
 
 IMPORT <A HREF="../../obliqrt/src/ObCommand.i3.html">ObCommand</A>, <A HREF="../../obliqrt/src/ObLib.i3.html">ObLib</A>, <A HREF="ObLoader.i3.html">ObLoader</A>, <A HREF="../../obliqrt/src/ObValue.i3.html">ObValue</A>, <A HREF="../../obliqrt/src/Obliq.i3.html">Obliq</A>, <A HREF="../../libm3/src/params/Env.i3.html">Env</A>,
        <A HREF="ObEmbProxiedObj.i3.html">ObEmbProxiedObj</A>, <A HREF="../../synloc/src/SynLocation.i3.html">SynLocation</A>, <A HREF="../../sharedobj/src/SharedObj.i3.html">SharedObj</A>, <A HREF="../../sharedobj/src/SharedObjRT.i3.html">SharedObjRT</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>,
-       <A HREF="ObText.i3.html">ObText</A>, <A HREF="ObInt.i3.html">ObInt</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../tcp/src/common/IP.i3.html">IP</A>, <A HREF="../../sharedobj/src/ObjectSpace.i3.html">ObjectSpace</A>, <A HREF="ObError.i3.html">ObError</A>;
+       <A HREF="#x1">ObText</A>, <A HREF="#x2">ObInt</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../tcp/src/common/IP.i3.html">IP</A>, <A HREF="../../sharedobj/src/ObjectSpace.i3.html">ObjectSpace</A>, <A HREF="ObError.i3.html">ObError</A>;
 </PRE> When a new proxied object is created, we first want to check to see
    if there already is a proxied obj.  If so, just use it.
    This can happen if the obliq value is pickled across the network.
@@ -286,6 +286,20 @@ BEGIN
 END ObSharedObj.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface ObText is in:
+</A><UL>
+<LI><A HREF="../../obliqlib3D/src/ObText.i3.html#0TOP0">obliqlib3D/src/ObText.i3</A>
+<LI><A HREF="ObText.i3.html#0TOP0">obliqlibemb/src/ObText.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface ObInt is in:
+</A><UL>
+<LI><A HREF="../../obliqlib3D/src/ObInt.i3.html#0TOP0">obliqlib3D/src/ObInt.i3</A>
+<LI><A HREF="ObInt.i3.html#0TOP0">obliqlibemb/src/ObInt.i3</A>
+</UL>
+<P>
 <PRE>
 
 

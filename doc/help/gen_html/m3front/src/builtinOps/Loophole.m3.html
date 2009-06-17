@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/builtinOps/Loophole.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/builtinOps/Loophole.m3</H2></A><HR>
 <inModule>
@@ -56,22 +56,22 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (ce: CallExpr.T) 
     Expr.Compile (ce.args[0]);
   END Compile;
 
-PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T) =
+PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T; lhs: BOOLEAN) =
   BEGIN
-    Expr.PrepLValue (ce.args[0]);
+    Expr.PrepLValue (ce.args[0], lhs);
   END PrepLV;
 
-PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (ce: CallExpr.T) =
+PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (ce: CallExpr.T; lhs: BOOLEAN) =
   BEGIN
-    Expr.CompileLValue (ce.args[0]);
+    Expr.CompileLValue (ce.args[0], lhs);
   END CompileLV;
 
-PROCEDURE <A NAME="IsWritable"><procedure>IsWritable</procedure></A> (ce: CallExpr.T): BOOLEAN =
+PROCEDURE <A NAME="IsWritable"><procedure>IsWritable</procedure></A> (ce: CallExpr.T;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    RETURN Expr.IsWritable (ce.args[0]);
+    RETURN Expr.IsWritable (ce.args[0], lhs);
   END IsWritable;
 
-PROCEDURE <A NAME="IsDesignator"><procedure>IsDesignator</procedure></A> (ce: CallExpr.T): BOOLEAN =
+PROCEDURE <A NAME="IsDesignator"><procedure>IsDesignator</procedure></A> (ce: CallExpr.T;  &lt;*UNUSED*&gt; lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsDesignator (ce.args[0]);
   END IsDesignator;
@@ -108,6 +108,7 @@ END Loophole.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

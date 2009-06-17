@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/VBTClass.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/VBTClass.m3</H2></A><HR>
 <inModule>
@@ -780,7 +780,7 @@ PROCEDURE <A NAME="MiscCodeDefault"><procedure>MiscCodeDefault</procedure></A>(v
 
 <P> The following method defaults recurse on their parent in
    and obvious way. 
-    
+
 <P><PRE>PROCEDURE <A NAME="NewShapeDefault"><procedure>NewShapeDefault</procedure></A>(v: VBT.Split; &lt;*UNUSED*&gt;ch: VBT.T) RAISES {} =
   BEGIN
     VBT.NewShape(v)
@@ -799,9 +799,9 @@ PROCEDURE <A NAME="SyncDefault"><procedure>SyncDefault</procedure></A>(v: VBT.Sp
       IF v.batch # NIL THEN VBTRep.ForceBatch(v) END;
       WITH p = v.parent DO
         IF p # NIL THEN p.sync(v, wait) END
-      END
+      END;
     END;
-    Thread.Acquire(ch)
+    Thread.Acquire(ch);
   END SyncDefault;
 
 PROCEDURE <A NAME="CaptureDefault"><procedure>CaptureDefault</procedure></A>(

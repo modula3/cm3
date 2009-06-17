@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-machine/src/JunoByteCode.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-machine/src/JunoByteCode.i3</H2></A><HR>
 <inInterface>
@@ -136,12 +136,12 @@
    <CODE>CONG</CODE>, <CODE>PARA</CODE>: Pop the top two items from the stack and perform a CONG or
    PARA, respectively, on them. If the two elements are the segments <CODE>(a, b)</CODE>
    and <CODE>(c, d)</CODE>, where <CODE>a</CODE>, <CODE>b</CODE>, <CODE>c</CODE>, and <CODE>d</CODE> are points, then set the machine
-   flag <CODE>cond</CODE> iff the two segments are congruent or parallel, respectively. 
+   flag <CODE>cond</CODE> iff the two segments are congruent or parallel, respectively.
 <P>
    <CODE>HOR</CODE>, <CODE>VER</CODE>: Pop the top two items from the stack and perform a HOR or
    VER, respectively, on them. If the two elements are the points <CODE>(a, b)</CODE>
    and <CODE>(c, d)</CODE>, where <CODE>a</CODE>, <CODE>b</CODE>, <CODE>c</CODE>, and <CODE>d</CODE> are reals, then set the machine
-   flag <CODE>cond</CODE> iff the two segments are horizontal or vertical, respectively. 
+   flag <CODE>cond</CODE> iff the two segments are horizontal or vertical, respectively.
 <P>
    <CODE>NEWCL p</CODE>: Pushes a new closure value for the procedure in slot <CODE>p</CODE>
    taking 0 arguments.
@@ -183,7 +183,7 @@
    stack, but leaves the INOUT parameters on the stack. The machine flag
    <CODE>cond</CODE> is set to TRUE iff the solve was successful.
 <P>
-   <CODE>u3</CODE> is the total number of constraints to solve for; it must be positive. 
+   <CODE>u3</CODE> is the total number of constraints to solve for; it must be positive.
    Each constraint in the <CODE>constraints</CODE> bytes takes the following form:
 <P>
 <PRE>

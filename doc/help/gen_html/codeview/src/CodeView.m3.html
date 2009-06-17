@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: codeview/src/CodeView.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>codeview/src/CodeView.m3</H2></A><HR>
 <inModule>
@@ -21,7 +21,7 @@
 
 MODULE <module><implements><A HREF="CodeView.i3.html">CodeView</A></implements></module>;
 
-IMPORT <A HREF="../../libm3/src/geometry/Axis.i3.html">Axis</A>, <A HREF="../../ui/src/split/BorderedVBT.i3.html">BorderedVBT</A>, <A HREF="../../libm3/src/types/ASCII.i3.html">ASCII</A>, <A HREF="../../vbtkit/src/color/ColorName.i3.html">ColorName</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../../ui/src/vbt/Font.i3.html">Font</A>, <A HREF="IntRef.i3.html">IntRef</A>,
+IMPORT <A HREF="../../libm3/src/geometry/Axis.i3.html">Axis</A>, <A HREF="../../ui/src/split/BorderedVBT.i3.html">BorderedVBT</A>, <A HREF="../../libm3/src/types/ASCII.i3.html">ASCII</A>, <A HREF="../../vbtkit/src/color/ColorName.i3.html">ColorName</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../../ui/src/vbt/Font.i3.html">Font</A>, <A HREF="#x1">IntRef</A>,
        <A HREF="IntRefSort.i3.html">IntRefSort</A>, <A HREF="../../libm3/derived/IntRefTbl.i3.html">IntRefTbl</A>, <A HREF="../../libm3/src/fmtlex/Lex.i3.html">Lex</A>, <A HREF="../../libm3/derived/RefList.i3.html">RefList</A>, <A HREF="../../ui/src/vbt/PaintOp.i3.html">PaintOp</A>, <A HREF="../../ui/src/vbt/Pixmap.i3.html">Pixmap</A>, <A HREF="../../libm3/src/geometry/Point.i3.html">Point</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>,
        <A HREF="../../formsvbt/src/RefListUtils.i3.html">RefListUtils</A>, <A HREF="../../libm3/src/geometry/Rect.i3.html">Rect</A>, <A HREF="../../ui/src/split/Split.i3.html">Split</A>, <A HREF="../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../vbtkit/src/etext/TextPort.i3.html">TextPort</A>, <A HREF="../../libm3/derived/TextRefTbl.i3.html">TextRefTbl</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>,
        <A HREF="TextRef.i3.html">TextRef</A>, <A HREF="TextRefSort.i3.html">TextRefSort</A>, <A HREF="../../libm3/src/rw/TextRd.i3.html">TextRd</A>, <A HREF="../../libm3/src/rw/TextWr.i3.html">TextWr</A>, <A HREF="../../ui/src/split/TextureVBT.i3.html">TextureVBT</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../ui/src/vbt/VBT.i3.html">VBT</A>,
@@ -66,7 +66,7 @@ TYPE
 &lt;* FATAL ColorName.NotFound *&gt;
 VAR
   replaceTags: BOOLEAN := FALSE;       (* JK, 07-JUN-96 *)
-	
+
   highlightStyle := VText.MakeIntervalOptions (
                       VText.IntervalStyle.InverseStyle,
                       PaintOp.MakeColorScheme (
@@ -494,6 +494,13 @@ BEGIN
 END CodeView.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface IntRef is in:
+</A><UL>
+<LI><A HREF="../../cit_util/derived/IntRef.i3.html#0TOP0">cit_util/derived/IntRef.i3</A>
+<LI><A HREF="IntRef.i3.html#0TOP0">codeview/src/IntRef.i3</A>
+</UL>
+<P>
 <PRE>
 
 

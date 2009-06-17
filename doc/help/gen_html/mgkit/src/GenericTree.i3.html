@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: mgkit/src/GenericTree.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>mgkit/src/GenericTree.i3</H2></A><HR>
 <inInterface>
@@ -166,7 +166,7 @@ PROCEDURE <A HREF="GenericTree.m3.html#SetRoot">SetRoot</A>(root: SubTree; v: V)
 </PRE><BLOCKQUOTE><EM><PRE>
       equivalent to:
     </PRE>
-LOCK v.mu 
+LOCK v.mu
       v.setRoot(root);
       RelayoutAncestors(root);
     END;
@@ -179,8 +179,8 @@ PROCEDURE <A HREF="GenericTree.m3.html#AddChild">AddChild</A>(node: SubTree; v: 
 </PRE><BLOCKQUOTE><EM><PRE>
       equivalent to:
     </PRE>
-LOCK v.mu 
-      node.addChild(v, pred, new); 
+LOCK v.mu
+      node.addChild(v, pred, new);
       RelayoutAncestors(node, v);
     END;
     VBT.NewShape(v);
@@ -192,8 +192,8 @@ PROCEDURE <A HREF="GenericTree.m3.html#RemoveChild">RemoveChild</A>(node: SubTre
 </PRE><BLOCKQUOTE><EM><PRE>
       equivalent to:
     </PRE>
-LOCK v.mu 
-      node.removeChild(v, child); 
+LOCK v.mu
+      node.removeChild(v, child);
       RelayoutAncestors(node, v);
     END;
     VBT.NewShape(v);

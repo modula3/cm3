@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RuntimeError.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RuntimeError.m3</H2></A><HR>
 <inModule>
@@ -65,6 +65,11 @@ PROCEDURE <A NAME="Tag"><procedure>Tag</procedure></A> (t: T): TEXT =
   BEGIN
     RETURN Msg[t];
   END Tag;
+
+PROCEDURE <A NAME="Raise"><procedure>Raise</procedure></A> (t: T) =
+  BEGIN
+    RAISE E(t);
+  END Raise;
 
 BEGIN
 END RuntimeError.

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/DiskGO.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/DiskGO.i3</H2></A><HR>
 <inInterface>
@@ -26,9 +26,9 @@ TYPE
   METHODS
     init (prec := 10) : T;
   END;
-</PRE><BLOCKQUOTE><EM> <CODE>disk.init(prec)</CODE>  initializes a new disk <CODE>disk</CODE>, whose surface is 
+</PRE><BLOCKQUOTE><EM> <CODE>disk.init(prec)</CODE>  initializes a new disk <CODE>disk</CODE>, whose surface is
    approximated by a polygon with <CODE>prec</CODE> edges, and returns it. The location,
-   orientation, and radius of the disk is determined by the three properties 
+   orientation, and radius of the disk is determined by the three properties
    <CODE>Center</CODE>, <CODE>Normal</CODE>, and <CODE>Radius</CODE>. </EM></BLOCKQUOTE><PRE>
 
 VAR
@@ -36,26 +36,26 @@ VAR
   Normal : PointProp.Name;
   Radius : RealProp.Name;
 </PRE><BLOCKQUOTE><EM> In addition to the properties observed by all \type{GO}{T}'s and
-   \type{SurfaceGO}{T}'s, there are three additional properties that 
+   \type{SurfaceGO}{T}'s, there are three additional properties that
    are observed by <CODE>DiskGO.T</CODE>'s:
 <P>
-   <CODE>Center</CODE> is the name of a property that describes the center  
-   of the disk. It associates with a \type{PointProp}{Val}. If no <CODE>Center</CODE> 
+   <CODE>Center</CODE> is the name of a property that describes the center
+   of the disk. It associates with a \type{PointProp}{Val}. If no <CODE>Center</CODE>
    property is specified, the disk is centered around the origin.
 <P>
-   <CODE>Normal</CODE> is the name of a property that describes the normal vector 
-   of the disk. It associates with a \type{PointProp}{Val}. If no <CODE>Normal</CODE> 
+   <CODE>Normal</CODE> is the name of a property that describes the normal vector
+   of the disk. It associates with a \type{PointProp}{Val}. If no <CODE>Normal</CODE>
    property is specified, the normal vector is taken to be (0,0,1).
 <P>
-   <CODE>Radius</CODE> is the name of a property that describes the radius of the 
+   <CODE>Radius</CODE> is the name of a property that describes the radius of the
    disk. It associates with a \type{RealProp}{Val}. If no <CODE>Radius</CODE> property
-   is specified, the disk has a radius of 1. 
+   is specified, the disk has a radius of 1.
 <P>
-   Assume that in a given context and at a given point in time, the property 
-   mapping is such that <CODE>Center</CODE> maps to a point property value which 
-   evaluates to <CODE>p</CODE>, <CODE>Normal</CODE> maps to a point property value which evaluates 
+   Assume that in a given context and at a given point in time, the property
+   mapping is such that <CODE>Center</CODE> maps to a point property value which
+   evaluates to <CODE>p</CODE>, <CODE>Normal</CODE> maps to a point property value which evaluates
    to <CODE>n</CODE>, and <CODE>Radius</CODE> maps to a real property value which evaluates to <CODE>r</CODE>.
-   <CODE>p</CODE>, <CODE>n</CODE>, and <CODE>r</CODE> define the position and shape of the disk 
+   <CODE>p</CODE>, <CODE>n</CODE>, and <CODE>r</CODE> define the position and shape of the disk
    in this context and at this time as shown below:
    \begin{center}
    \begin{tabular}{c}
@@ -65,8 +65,8 @@ VAR
 </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="DiskGO.m3.html#New">New</A> (p : Point3.T; n : Point3.T; r : REAL; prec := 10) : T;
-</PRE><BLOCKQUOTE><EM> <CODE>New(p,n,r,prec)</CODE> creates a new disk, whose surface is approximated by a 
-   polygon with <CODE>prec</CODE> edges, and returns it. It also attaches the following 
+</PRE><BLOCKQUOTE><EM> <CODE>New(p,n,r,prec)</CODE> creates a new disk, whose surface is approximated by a
+   polygon with <CODE>prec</CODE> edges, and returns it. It also attaches the following
    properties to the new cone:
     \begin{verbatim}
      (Center,PointProp.NewConst(p))
@@ -74,8 +74,8 @@ PROCEDURE <A HREF="DiskGO.m3.html#New">New</A> (p : Point3.T; n : Point3.T; r : 
      (Radius,RealProp.NewConst(r))
    \end{verbatim}
 </EM></BLOCKQUOTE><PRE>
-</PRE> The following three procedures provide sugaring to attach 
-   <CODE>Center</CODE>, <CODE>Normal</CODE>, and <CODE>Radius</CODE> properties with non-animated 
+</PRE> The following three procedures provide sugaring to attach
+   <CODE>Center</CODE>, <CODE>Normal</CODE>, and <CODE>Radius</CODE> properties with non-animated
    property values to geometric objects: 
 
 <P><PRE>PROCEDURE <A HREF="DiskGO.m3.html#SetCenter">SetCenter</A> (o : GO.T; p : Point3.T);

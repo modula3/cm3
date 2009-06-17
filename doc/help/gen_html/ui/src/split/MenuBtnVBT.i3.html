@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/MenuBtnVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/MenuBtnVBT.i3</H2></A><HR>
 <inInterface>
@@ -27,7 +27,7 @@
 IMPORT <A HREF="ButtonVBT.i3.html">ButtonVBT</A>, <A HREF="../vbt/VBT.i3.html">VBT</A>;
 
 TYPE <A HREF="MenuBtnVBT.m3.html#T">T</A> &lt;: ButtonVBT.T;
-</PRE> The call <CODE>v.init(ch, action, ref)</CODE> initializes <CODE>v</CODE> as a menu button 
+</PRE> The call <CODE>v.init(ch, action, ref)</CODE> initializes <CODE>v</CODE> as a menu button
    with child <CODE>ch</CODE> and action procedure <CODE>action</CODE>, and adds <CODE>ref</CODE> to
    <CODE>v</CODE>'s property set if it is not <CODE>NIL</CODE>. 
 
@@ -46,7 +46,7 @@ PROCEDURE <A HREF="MenuBtnVBT.m3.html#TextItem">TextItem</A>(
    precisely, <CODE>TextItem</CODE> is equivalent to:
 <P>
 <PRE>
-      New(TextVBT.New(name, 0.0, 0.5, 3.0, 0.5), 
+      New(TextVBT.New(name, 0.0, 0.5, 3.0, 0.5),
           action, ref)
 </PRE>
 

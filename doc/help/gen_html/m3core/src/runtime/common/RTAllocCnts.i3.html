@@ -2,16 +2,21 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTAllocCnts.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTAllocCnts.i3</H2></A><HR>
 <inInterface>
 <PRE></PRE> Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. 
  See file COPYRIGHT-CMASS for details. 
 
-<P><PRE>UNSAFE INTERFACE <interface><A HREF="RTAllocator.m3.html">RTAllocCnts</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="RTAllocator.m3.html">RTAllocCnts</A></interface>;
 
 IMPORT <A HREF="RT0.i3.html">RT0</A>;
+
+VAR countsOn := FALSE;
+
+PROCEDURE <A HREF="RTAllocator.m3.html#BumpCnt">BumpCnt</A> (tc: RT0.Typecode);
+PROCEDURE <A HREF="RTAllocator.m3.html#BumpSize">BumpSize</A> (tc: RT0.Typecode; size: INTEGER);
 
 VAR (*READONLY*)
   n_types   : CARDINAL := 0;

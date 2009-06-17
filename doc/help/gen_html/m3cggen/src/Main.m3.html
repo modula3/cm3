@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3cggen/src/Main.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3cggen/src/Main.m3</H2></A><HR>
 <inModule>
@@ -195,7 +195,25 @@ CONST
 
     Desc { &quot;load_procedure&quot;, Op.load_procedure },
     Desc { &quot;load_static_link&quot;, Op.load_static_link },
-    Desc { &quot;comment&quot;, Op.comment }
+    Desc { &quot;comment&quot;, Op.comment },
+
+    Desc { &quot;fetch_and_add&quot;, Op.fetch_and_add },
+    Desc { &quot;fetch_and_sub&quot;, Op.fetch_and_sub },
+    Desc { &quot;fetch_and_or&quot;, Op.fetch_and_or },
+    Desc { &quot;fetch_and_and&quot;, Op.fetch_and_and },
+    Desc { &quot;fetch_and_xor&quot;, Op.fetch_and_xor },
+    Desc { &quot;fetch_and_nand&quot;, Op.fetch_and_nand },
+    Desc { &quot;add_and_fetch&quot;, Op.add_and_fetch },
+    Desc { &quot;sub_and_fetch&quot;, Op.sub_and_fetch },
+    Desc { &quot;or_and_fetch&quot;, Op.or_and_fetch },
+    Desc { &quot;and_and_fetch&quot;, Op.and_and_fetch },
+    Desc { &quot;xor_and_fetch&quot;, Op.xor_and_fetch },
+    Desc { &quot;nand_and_fetch&quot;, Op.nand_and_fetch },
+    Desc { &quot;bool_compare_and_swap&quot;, Op.bool_compare_and_swap },
+    Desc { &quot;val_compare_and_swap&quot;, Op.val_compare_and_swap },
+    Desc { &quot;synchronize&quot;, Op.synchronize },
+    Desc { &quot;lock_test_and_set&quot;, Op.lock_test_and_set },
+    Desc { &quot;lock_release&quot;, Op.lock_release }
   };
 
 PROCEDURE <A NAME="Out"><procedure>Out</procedure></A> (a, b, c, d, e, f, g : TEXT := NIL) =
@@ -272,7 +290,7 @@ BEGIN
   Out (&quot;  LAST_OPCODE } M3CG_opcode;&quot;);
   Out (&quot;&quot;);
 
-  Out (&quot;static char *M3CG_opnames[] = {&quot;);
+  Out (&quot;static const char *M3CG_opnames[] = {&quot;);
   FOR op := FIRST(Map) TO LAST(Map) DO
     &lt;*ASSERT op = Map[op].op*&gt;
     Out (&quot;  \&quot;&quot;, Map[op].name, &quot;\&quot;, &quot;,

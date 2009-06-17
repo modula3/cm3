@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/thread/Common/Thread.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/thread/Common/Thread.i3</H2></A><HR>
 <inInterface>
@@ -15,12 +15,12 @@
       modified on Mon Dec 14 09:13:01 PST 1992 by kalsow         
       modified on Tue Jun 16 21:06:18 PDT 1992 by muller         
 
-<P><PRE>INTERFACE <interface><A HREF="../POSIX/ThreadPosix.m3.html">Thread</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="#x1">Thread</A></interface>;
 
 TYPE
-  <A HREF="../POSIX/ThreadPosix.m3.html#T">T</A> &lt;: ROOT;
+  <A HREF="#x2">T</A> &lt;: ROOT;
   Mutex = MUTEX;
-  <A HREF="../POSIX/ThreadPosix.m3.html#Condition">Condition</A> &lt;: ROOT;
+  <A HREF="#x3">Condition</A> &lt;: ROOT;
 </PRE> A <CODE>Thread.T</CODE> is a handle on a thread.  A <CODE>Mutex</CODE> is locked by some
    thread, or unlocked.  A <CODE>Condition</CODE> is a set of waiting threads.  A
    newly-allocated <CODE>Mutex</CODE> is unlocked; a newly-allocated <CODE>Condition</CODE>
@@ -29,30 +29,30 @@ TYPE
 
 <P><PRE>TYPE Closure = OBJECT METHODS apply(): REFANY END;
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#Fork">Fork</A>(cl: Closure): T;
+PROCEDURE <A HREF="#x4">Fork</A>(cl: Closure): T;
 </PRE><BLOCKQUOTE><EM> Return a handle on a newly-created thread executing <CODE>cl.apply()</CODE>. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#Join">Join</A>(t: T): REFANY;
+PROCEDURE <A HREF="#x5">Join</A>(t: T): REFANY;
 </PRE><BLOCKQUOTE><EM> Wait until <CODE>t</CODE> has terminated and return its result. It is a
    checked runtime error to call this more than once for any <CODE>t</CODE>. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#Wait">Wait</A>(m: Mutex; c: Condition);
+PROCEDURE <A HREF="#x6">Wait</A>(m: Mutex; c: Condition);
 </PRE><BLOCKQUOTE><EM> The calling thread must have <CODE>m</CODE> locked. Atomically unlocks <CODE>m</CODE> and
    waits on <CODE>c</CODE>.  Then relocks <CODE>m</CODE> and returns. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#Acquire">Acquire</A>(m: Mutex);
+PROCEDURE <A HREF="#x7">Acquire</A>(m: Mutex);
 </PRE><BLOCKQUOTE><EM> Wait until <CODE>m</CODE> is unlocked and then lock it. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#Release">Release</A>(m: Mutex);
+PROCEDURE <A HREF="#x8">Release</A>(m: Mutex);
 </PRE><BLOCKQUOTE><EM> The calling thread must have <CODE>m</CODE> locked.  Unlocks <CODE>m</CODE>. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#Broadcast">Broadcast</A>(c: Condition);
+PROCEDURE <A HREF="#x9">Broadcast</A>(c: Condition);
 </PRE><BLOCKQUOTE><EM> All threads waiting on <CODE>c</CODE> become eligible to run. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#Signal">Signal</A>(c: Condition);
+PROCEDURE <A HREF="#x10">Signal</A>(c: Condition);
 </PRE><BLOCKQUOTE><EM> One or more threads waiting on <CODE>c</CODE> become eligible to run. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#Pause">Pause</A>(n: LONGREAL);
+PROCEDURE <A HREF="#x11">Pause</A>(n: LONGREAL);
 </PRE><BLOCKQUOTE><EM> Wait for <CODE>n</CODE> seconds to elapse. </EM></BLOCKQUOTE><PRE>
 </PRE> To wait until a specified point in time in the future, say <CODE>t</CODE>,
    you can use the call
@@ -61,28 +61,28 @@ PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#Pause">Pause</A>(n: LONGREAL);
       Pause(t - Time.Now())
 
 
-<P><PRE>PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#Self">Self</A>(): T;
+<P><PRE>PROCEDURE <A HREF="#x12">Self</A>(): T;
 </PRE><BLOCKQUOTE><EM> Return the handle of the calling thread. </EM></BLOCKQUOTE><PRE>
 
 EXCEPTION Alerted;
 </PRE><BLOCKQUOTE><EM> Used to approximate asynchronous interrupts. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#Alert">Alert</A>(t: T);
+PROCEDURE <A HREF="#x13">Alert</A>(t: T);
 </PRE><BLOCKQUOTE><EM> Mark <CODE>t</CODE> as an alerted thread. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#TestAlert">TestAlert</A>(): BOOLEAN;
+PROCEDURE <A HREF="#x14">TestAlert</A>(): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> If the calling thread has been marked alerted, return <CODE>TRUE</CODE> and
    unmark it. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#AlertWait">AlertWait</A>(m: Mutex; c: Condition) RAISES {Alerted};
+PROCEDURE <A HREF="#x15">AlertWait</A>(m: Mutex; c: Condition) RAISES {Alerted};
 </PRE><BLOCKQUOTE><EM> Like <CODE>Wait</CODE>, but if the thread is marked alerted at the time of
    call or sometime during the wait, lock <CODE>m</CODE> and raise <CODE>Alerted</CODE>. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#AlertJoin">AlertJoin</A>(t: T): REFANY RAISES {Alerted};
+PROCEDURE <A HREF="#x16">AlertJoin</A>(t: T): REFANY RAISES {Alerted};
 </PRE><BLOCKQUOTE><EM> Like <CODE>Join</CODE>, but if the thread is marked alerted at the time of
    call or sometime during the wait, raise <CODE>Alerted</CODE>. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#AlertPause">AlertPause</A>(n: LONGREAL) RAISES {Alerted};
+PROCEDURE <A HREF="#x17">AlertPause</A>(n: LONGREAL) RAISES {Alerted};
 </PRE><BLOCKQUOTE><EM> Like <CODE>Pause</CODE>, but if the thread is marked alerted at the time of
    the call or sometime during the wait, raise <CODE>Alerted</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> \paragraph*{Specifying thread stack size.} Normally <CODE>Fork</CODE> uses a
@@ -93,14 +93,14 @@ PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#AlertPause">AlertPause</A>(n: LO
    <CODE>Word.T</CODE>s.
 
 
-<P><PRE>PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#GetDefaultStackSize">GetDefaultStackSize</A>(): CARDINAL;
+<P><PRE>PROCEDURE <A HREF="#x18">GetDefaultStackSize</A>(): CARDINAL;
 </PRE><BLOCKQUOTE><EM> Return the current default stack size for new threads. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#MinDefaultStackSize">MinDefaultStackSize</A>(min: CARDINAL);
+PROCEDURE <A HREF="#x19">MinDefaultStackSize</A>(min: CARDINAL);
 </PRE><BLOCKQUOTE><EM> Change the default stack size for newly forked threads to the
    greater of <CODE>min</CODE> and the current default stack size. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="../POSIX/ThreadPosix.m3.html#IncDefaultStackSize">IncDefaultStackSize</A>(inc: CARDINAL);
+PROCEDURE <A HREF="#x20">IncDefaultStackSize</A>(inc: CARDINAL);
 </PRE><BLOCKQUOTE><EM> Increment the default stack size for newly forked threads by <CODE>inc</CODE>.
    </EM></BLOCKQUOTE><PRE>
 
@@ -126,6 +126,146 @@ TYPE
 END Thread.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">Thread's implementation  is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#0TOP0">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">opaque type Thread.T is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#T">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#T">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">opaque type Thread.Condition is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#Condition">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#Condition">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x4">procedure Thread.Fork is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#Fork">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#Fork">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x5">procedure Thread.Join is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#Join">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#Join">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x6">procedure Thread.Wait is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#Wait">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#Wait">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x7">procedure Thread.Acquire is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#Acquire">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#Acquire">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x8">procedure Thread.Release is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#Release">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#Release">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x9">procedure Thread.Broadcast is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#Broadcast">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#Broadcast">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x10">procedure Thread.Signal is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#Signal">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#Signal">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x11">procedure Thread.Pause is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#Pause">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#Pause">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x12">procedure Thread.Self is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#Self">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#Self">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x13">procedure Thread.Alert is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#Alert">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#Alert">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x14">procedure Thread.TestAlert is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#TestAlert">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#TestAlert">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x15">procedure Thread.AlertWait is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#AlertWait">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#AlertWait">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x16">procedure Thread.AlertJoin is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#AlertJoin">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#AlertJoin">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x17">procedure Thread.AlertPause is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#AlertPause">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#AlertPause">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x18">procedure Thread.GetDefaultStackSize is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#GetDefaultStackSize">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#GetDefaultStackSize">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x19">procedure Thread.MinDefaultStackSize is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#MinDefaultStackSize">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#MinDefaultStackSize">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x20">procedure Thread.IncDefaultStackSize is in:
+</A><UL>
+<LI><A HREF="../POSIX/ThreadPosix.m3.html#IncDefaultStackSize">m3core/src/thread/POSIX/ThreadPosix.m3</A>
+<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#IncDefaultStackSize">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
+</UL>
+<P>
 <PRE>
 
 

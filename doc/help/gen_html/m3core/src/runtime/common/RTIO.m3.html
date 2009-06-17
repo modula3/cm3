@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTIO.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTIO.m3</H2></A><HR>
 <inModule>
@@ -19,7 +19,7 @@ IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTOS.i3.html">RTOS</A>, <A HREF="
 
 VAR
   len : INTEGER := 0;
-  buf : ARRAY [0..1023] OF CHAR;
+  buf : ARRAY [0..4095] OF CHAR;
 
 PROCEDURE <A NAME="PutChar"><procedure>PutChar</procedure></A> (c: CHAR) =
   BEGIN

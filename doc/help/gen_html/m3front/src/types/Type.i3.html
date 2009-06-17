@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/types/Type.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/types/Type.i3</H2></A><HR>
 <inInterface>
@@ -24,7 +24,7 @@ TYPE
   <A HREF="Type.m3.html#ModuleInfo">ModuleInfo</A> &lt;: REFANY;
 
 TYPE
-  Class = { Error, Named, Integer, Real, Longreal, Extended,
+  Class = { Error, Named, Integer, Longint, Real, Longreal, Extended,
             Array, Enum, Object, Opaque, OpenArray, Packed,
             Procedure, Record, Ref, Set, Subrange };
 
@@ -85,7 +85,7 @@ PROCEDURE <A HREF="Type.m3.html#Base">Base</A> (t: T): T;
 PROCEDURE <A HREF="Type.m3.html#CGType">CGType</A> (t: T;  in_memory: BOOLEAN := FALSE): CG.Type;
 </PRE><BLOCKQUOTE><EM> returns the code generator's representation for 't', either
    as a variable in memory or as an operand on the evaluation stack
-   depending on 'im_memory' </EM></BLOCKQUOTE><PRE>
+   depending on 'in_memory' </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="Type.m3.html#IsStructured">IsStructured</A> (t: T): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> &lt;=&gt; rec, set, or array &lt;=&gt; is represented as an address on the CG stack </EM></BLOCKQUOTE><PRE>
@@ -195,6 +195,7 @@ END Type.
 <HR>
 <A NAME="x1">Type's implementation  is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.m3.html#0TOP0">cm3ide/src/nodes/Type.m3</A>
 <LI><A HREF="Type.m3.html#0TOP0">m3front/src/types/Type.m3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.m3.html#0TOP0">sharedobjgen/src/Type.m3</A>
 <LI><A HREF="../../../stablegen/src/Type.m3.html#0TOP0">stablegen/src/Type.m3</A>

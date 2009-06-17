@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/pickle/ver2/Pickle2.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/pickle/ver2/Pickle2.m3</H2></A><HR>
 <inModule>
@@ -20,7 +20,7 @@
 
 IMPORT <A HREF="../../rw/Rd.i3.html">Rd</A>, <A HREF="../../../../m3core/src/runtime/common/RT0.i3.html">RT0</A>, <A HREF="../../../../m3core/src/runtime/common/RTAllocator.i3.html">RTAllocator</A>, <A HREF="../../../../m3core/src/runtime/common/RTCollector.i3.html">RTCollector</A>, <A HREF="../../../../m3core/src/runtime/common/RTHeap.i3.html">RTHeap</A>, <A HREF="../../../../m3core/src/runtime/common/RTHeapRep.i3.html">RTHeapRep</A>, <A HREF="../../../../m3core/src/runtime/common/RTType.i3.html">RTType</A>, <A HREF="../../../../m3core/src/runtime/common/RTTypeFP.i3.html">RTTypeFP</A>,
        <A HREF="../../../../m3core/src/runtime/common/RTTypeMap.i3.html">RTTypeMap</A>, <A HREF="../../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../rw/Wr.i3.html">Wr</A>, <A HREF="../../../../m3core/src/fingerprint/Fingerprint.i3.html">Fingerprint</A>, <A HREF="../../../../m3core/src/runtime/common/RTPacking.i3.html">RTPacking</A>,
-       <A HREF="ConvertPacking.i3.html">ConvertPacking</A>, <A HREF="PklTipeMap.i3.html">PklTipeMap</A>, <A HREF="../../uid/Common/Swap.i3.html">Swap</A>, <A HREF="PickleRd.i3.html">PickleRd</A>, <A HREF="BuiltinSpecials2.i3.html">BuiltinSpecials2</A>;
+       <A HREF="ConvertPacking.i3.html">ConvertPacking</A>, <A HREF="PklTipeMap.i3.html">PklTipeMap</A>, <A HREF="../../uid/Common/Swap.i3.html">Swap</A>, <A HREF="PickleRd.i3.html">PickleRd</A>, <A HREF="BuiltinSpecials2.i3.html">BuiltinSpecials2</A>, <A HREF="../../fmtlex/Fmt.i3.html">Fmt</A>;
 </PRE> 
  Syntax of a pickle, and constants pertaining thereto 
  
@@ -214,6 +214,23 @@ VAR v2_header: Header;            (* header for the pickles we write *)
 VAR myPackingCode: INTEGER;       (* our local packing. *)
 VAR myTrailer: Trailer;           (* trailer for pickles we write *)
 VAR nullReaderRef: REF INTEGER;   (* null value for reader.refs entries *)
+
+PROCEDURE <A NAME="FPImage"><procedure>FPImage</procedure></A>(READONLY fp: Fingerprint.T): TEXT =
+  (* Return a readable image of &quot;fp&quot;. *)
+
+  BEGIN
+    RETURN
+      &quot;{&quot;
+      &amp; Fmt.Int(fp.byte[0]) &amp; &quot;,&quot;
+      &amp; Fmt.Int(fp.byte[1]) &amp; &quot;,&quot;
+      &amp; Fmt.Int(fp.byte[2]) &amp; &quot;,&quot;
+      &amp; Fmt.Int(fp.byte[3]) &amp; &quot;,&quot;
+      &amp; Fmt.Int(fp.byte[4]) &amp; &quot;,&quot;
+      &amp; Fmt.Int(fp.byte[5]) &amp; &quot;,&quot;
+      &amp; Fmt.Int(fp.byte[6]) &amp; &quot;,&quot;
+      &amp; Fmt.Int(fp.byte[7])
+      &amp; &quot;}&quot;
+  END FPImage;
 </PRE> 
  Top-level sugar: Write and Read 
  
@@ -472,8 +489,13 @@ PROCEDURE <A NAME="ReadFP"><procedure>ReadFP</procedure></A>(reader: Reader): Ty
     END;
     tc := RTTypeFP.FromFingerprint(fp);
     IF tc = RTType.NoSuchType THEN
+      tc := ReadPm3FP (fp);
+    END;
+    IF tc = RTType.NoSuchType THEN
       RAISE Error(
-             &quot;Can't read pickle (type not known in this program)&quot;)
+             &quot;Can't read pickle, Fingerprint &quot;
+             &amp; FPImage(fp) &amp;
+             &quot; not known in this program&quot;)
     END;
     reader.pklToTC[reader.tcCount] := tc;
     RETURN tc
@@ -586,7 +608,10 @@ PROCEDURE <A NAME="StartRead"><procedure>StartRead</procedure></A> (reader: Read
 
       reader.packingCode := GetPacking(hdr);
       reader.packing := RTPacking.Decode(reader.packingCode);
-      reader.conversion := ConvertPacking.GetKind(reader.packing, myPacking);
+      reader.wordConvKind
+        := ConvertPacking.GetWordKind(reader.packing, myPacking);
+      reader.longConvKind
+        := ConvertPacking.GetLongintKind(reader.packing, myPacking);
       IF reader.packing.float # myPacking.float THEN
         RAISE Error(&quot;Can't read pickle (REAL rep)&quot;)
       END;
@@ -1052,6 +1077,81 @@ PROCEDURE <A NAME="InitHeader"><procedure>InitHeader</procedure></A>() =
     myTrailer[HT.t1] := Trailer1;
     myTrailer[HT.t2] := Trailer2;
   END InitHeader;
+</PRE> Adaptation to some builtin fingerprints that have different byte order in
+   Pm3 and Cm3.
+ 
+
+<P><PRE>TYPE FPA =  ARRAY [0..7] OF BITS 8 FOR [0..255];
+     (* Give a short name to anonymous type of Fingerprint.T.byte. *)
+
+CONST NULL_uid = 16_48ec756e;
+CONST pm3_NULL_Fp = FPA {16_24,16_80,16_00,16_00,16_6c,16_6c,16_75,16_6e};
+CONST cm3_NULL_Fp = FPA {16_6e,16_75,16_6c,16_6c,16_00,16_00,16_80,16_24};
+
+CONST ROOT_uid = 16_9d8fb489;
+CONST pm3_ROOT_Fp = FPA {16_f8,16_09,16_19,16_c8,16_65,16_86,16_ad,16_41};
+CONST cm3_ROOT_Fp = FPA {16_41,16_ad,16_86,16_65,16_c8,16_19,16_09,16_f8};
+
+CONST UNTRACED_ROOT_uid = 16_898ea789;
+CONST pm3_UNTRACED_ROOT_Fp = FPA {16_f8,16_09,16_19,16_c8,16_71,16_87,16_be,16_41};
+CONST cm3_UNTRACED_ROOT_Fp = FPA {16_41,16_be,16_87,16_71,16_c8,16_19,16_09,16_f8};
+</PRE> Can the following two occur in a pickle?  Maybe if somebody registered a
+   special for them?  
+<PRE>CONST ADDRESS_uid = 16_08402063;
+CONST pm3_ADDRESS_Fp = FPA {16_91,16_21,16_8a,16_62,16_f2,16_01,16_ca,16_6a};
+CONST cm3_ADDRESS_Fp = FPA {16_f2,16_01,16_ca,16_6a,16_91,16_21,16_8a,16_62};
+
+CONST REFANY_uid = 16_1c1c45e6;
+CONST pm3_REFANY_Fp = FPA {16_65,16_72,16_24,16_80,16_79,16_6e,16_61,16_66};
+CONST cm3_REFANY_Fp = FPA {16_66,16_61,16_6e,16_79,16_80,16_24,16_72,16_65};
+
+TYPE TE =
+  RECORD
+    uid : INTEGER;
+    pm3_fp : Fingerprint.T;
+    cm3_fp : Fingerprint.T;
+  END;
+
+TYPE FP = Fingerprint.T;
+
+TYPE pm3_cm3_table_T = ARRAY [ 0 .. 4 ] OF TE;
+
+CONST pm3_cm3_table = pm3_cm3_table_T
+        { TE { uid := NULL_uid,
+               pm3_fp := FP { byte := pm3_NULL_Fp },
+               cm3_fp := FP { byte := cm3_NULL_Fp } },
+          TE { uid := ROOT_uid,
+               pm3_fp := FP { byte := pm3_ROOT_Fp },
+               cm3_fp := FP { byte := cm3_ROOT_Fp } },
+          TE { uid := UNTRACED_ROOT_uid,
+               pm3_fp := FP { byte := pm3_UNTRACED_ROOT_Fp },
+               cm3_fp := FP { byte := cm3_UNTRACED_ROOT_Fp } },
+          TE { uid := ADDRESS_uid,
+               pm3_fp := FP { byte := pm3_ADDRESS_Fp },
+               cm3_fp := FP { byte := cm3_ADDRESS_Fp } },
+          TE { uid := REFANY_uid,
+               pm3_fp := FP { byte := pm3_REFANY_Fp },
+               cm3_fp := FP { byte := cm3_REFANY_Fp } }
+        };
+
+PROCEDURE <A NAME="ReadPm3FP"><procedure>ReadPm3FP</procedure></A> (READONLY fp: Fingerprint.T): TypeCode =
+  VAR i: INTEGER; tc: TypeCode; t: RT0.TypeDefn;
+  BEGIN
+    i := 0;
+    LOOP
+      IF i &gt; LAST (pm3_cm3_table) THEN RETURN RTType.NoSuchType; END;
+      WITH te = pm3_cm3_table[i] DO
+        IF fp.byte = te.pm3_fp.byte THEN
+          tc := RTTypeFP.FromFingerprint(te.cm3_fp);
+          IF tc # RTType.NoSuchType THEN
+            t := RTType.Get(tc);
+            IF t^.selfID = te.uid THEN RETURN tc; END;
+          END;
+        END;
+      END;
+      INC (i);
+    END;
+  END ReadPm3FP;
 
 BEGIN
 

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/win32/WinNT.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/win32/WinNT.m3</H2></A><HR>
 <inModule>
@@ -19,12 +19,11 @@
 
 IMPORT <A HREF="../C/Common/M3toC.i3.html">M3toC</A>;
 FROM <A HREF="../word/Word.i3.html">Word</A> IMPORT And, Or, Not, Shift;
-FROM <A HREF="WinDef.i3.html">WinDef</A> IMPORT WORD;
 </PRE> Basic Type of x 
  #define BTYPE(x) ((x) &amp; N_BTMASK) 
 
 <P><PRE>&lt;* INLINE *&gt;
-PROCEDURE <A NAME="BTYPE"><procedure>BTYPE</procedure></A> (x: WORD): WORD =
+PROCEDURE <A NAME="BTYPE"><procedure>BTYPE</procedure></A> (x: UINT16): UINT16 =
   BEGIN
     RETURN And(x, N_BTMASK);
   END BTYPE;
@@ -32,14 +31,14 @@ PROCEDURE <A NAME="BTYPE"><procedure>BTYPE</procedure></A> (x: WORD): WORD =
  #define ISPTR(x) (((x) &amp; N_TMASK) == (IMAGE_SYM_DTYPE_POINTER &lt;&lt; N_BTSHFT)) 
 
 <P><PRE>&lt;* INLINE *&gt;
-PROCEDURE <A NAME="ISPTR"><procedure>ISPTR</procedure></A> (x: WORD): BOOLEAN =
+PROCEDURE <A NAME="ISPTR"><procedure>ISPTR</procedure></A> (x: UINT16): BOOLEAN =
   BEGIN
     RETURN And(x, N_TMASK) = Shift(IMAGE_SYM_DTYPE_POINTER, N_BTSHFT);
   END ISPTR;
 </PRE> Is x a function? 
  #define ISFCN(x) (((x) &amp; N_TMASK) == (IMAGE_SYM_DTYPE_FUNCTION &lt;&lt; N_BTSHFT)) 
 <PRE>&lt;* INLINE *&gt;
-PROCEDURE <A NAME="ISFCN"><procedure>ISFCN</procedure></A> (x: WORD): BOOLEAN =
+PROCEDURE <A NAME="ISFCN"><procedure>ISFCN</procedure></A> (x: UINT16): BOOLEAN =
   BEGIN
     RETURN And(x, N_TMASK) = Shift(IMAGE_SYM_DTYPE_FUNCTION, N_BTSHFT);
   END ISFCN;
@@ -47,7 +46,7 @@ PROCEDURE <A NAME="ISFCN"><procedure>ISFCN</procedure></A> (x: WORD): BOOLEAN =
  #define ISARY(x) (((x) &amp; N_TMASK) == (IMAGE_SYM_DTYPE_ARRAY &lt;&lt; N_BTSHFT)) 
 
 <P><PRE>&lt;* INLINE *&gt;
-PROCEDURE <A NAME="ISARY"><procedure>ISARY</procedure></A> (x: WORD): BOOLEAN =
+PROCEDURE <A NAME="ISARY"><procedure>ISARY</procedure></A> (x: UINT16): BOOLEAN =
   BEGIN
     RETURN And(x, N_TMASK) = Shift(IMAGE_SYM_DTYPE_ARRAY, N_BTSHFT);
   END ISARY;
@@ -55,7 +54,7 @@ PROCEDURE <A NAME="ISARY"><procedure>ISARY</procedure></A> (x: WORD): BOOLEAN =
  #define ISTAG(x) ((x)==IMAGE_SYM_CLASS_STRUCT_TAG || (x)==IMAGE_SYM_CLASS_UNION_TAG || (x)==IMAGE_SYM_CLASS_ENUM_TAG) 
 
 <P><PRE>&lt;* INLINE *&gt;
-PROCEDURE <A NAME="ISTAG"><procedure>ISTAG</procedure></A> (x: WORD): BOOLEAN =
+PROCEDURE <A NAME="ISTAG"><procedure>ISTAG</procedure></A> (x: UINT16): BOOLEAN =
   BEGIN
     RETURN x = IMAGE_SYM_CLASS_STRUCT_TAG OR x = IMAGE_SYM_CLASS_UNION_TAG
              OR x = IMAGE_SYM_CLASS_ENUM_TAG;
@@ -63,7 +62,7 @@ PROCEDURE <A NAME="ISTAG"><procedure>ISTAG</procedure></A> (x: WORD): BOOLEAN =
 </PRE> #define INCREF(x) ((((x)&amp;~N_BTMASK)&lt;&lt;N_TSHIFT)|(IMAGE_SYM_DTYPE_POINTER&lt;&lt;N_BTSHFT)|(x&amp;N_BTMASK)) 
 
 <P><PRE>&lt;* INLINE *&gt;
-PROCEDURE <A NAME="INCREF"><procedure>INCREF</procedure></A> (x: WORD): WORD =
+PROCEDURE <A NAME="INCREF"><procedure>INCREF</procedure></A> (x: UINT16): UINT16 =
   BEGIN
     RETURN
       Or(Or(Shift(And(x, Not(N_BTMASK)), N_TSHIFT),
@@ -72,19 +71,19 @@ PROCEDURE <A NAME="INCREF"><procedure>INCREF</procedure></A> (x: WORD): WORD =
 </PRE> #define DECREF(x) ((((x)&gt;&gt;N_TSHIFT)&amp;~N_BTMASK)|((x)&amp;N_BTMASK)) 
 
 <P><PRE>&lt;* INLINE *&gt;
-PROCEDURE <A NAME="DECREF"><procedure>DECREF</procedure></A> (x: WORD): WORD =
+PROCEDURE <A NAME="DECREF"><procedure>DECREF</procedure></A> (x: UINT16): UINT16 =
   BEGIN
     RETURN Or(And(Shift(x, -N_TSHIFT), Not(N_BTMASK)), And(x, N_BTMASK));
   END DECREF;
 
 &lt;* INLINE *&gt;
-PROCEDURE <A NAME="IMAGE_SNAP_BY_ORDINAL"><procedure>IMAGE_SNAP_BY_ORDINAL</procedure></A> (Ordinal: WORD): BOOLEAN =
+PROCEDURE <A NAME="IMAGE_SNAP_BY_ORDINAL"><procedure>IMAGE_SNAP_BY_ORDINAL</procedure></A> (Ordinal: UINT16): BOOLEAN =
   BEGIN
     RETURN And(Ordinal, IMAGE_ORDINAL_FLAG) # 0;
   END IMAGE_SNAP_BY_ORDINAL;
 
 &lt;* INLINE *&gt;
-PROCEDURE <A NAME="IMAGE_ORDINAL"><procedure>IMAGE_ORDINAL</procedure></A> (Ordinal: WORD): WORD =
+PROCEDURE <A NAME="IMAGE_ORDINAL"><procedure>IMAGE_ORDINAL</procedure></A> (Ordinal: UINT16): UINT16 =
   BEGIN
     RETURN And(Ordinal, 16_ffff);
   END IMAGE_ORDINAL;

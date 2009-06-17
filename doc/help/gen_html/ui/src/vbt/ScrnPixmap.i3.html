@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/ScrnPixmap.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/ScrnPixmap.i3</H2></A><HR>
 <inInterface>
@@ -22,16 +22,16 @@
    named handle is valid forever; the pixmap referenced by an anonymous
    handle will be garbage-collected when all handles to it have been
    dropped.  
-   
+
 <P><PRE>INTERFACE <interface><A HREF="ScrnPixmap.m3.html">ScrnPixmap</A></interface>;
 
-IMPORT <A HREF="../../../libm3/src/geometry/Point.i3.html">Point</A>, <A HREF="../../../libm3/src/geometry/Rect.i3.html">Rect</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="TrestleComm.i3.html">TrestleComm</A>, <A HREF="Pixmap.i3.html">Pixmap</A>, <A HREF="../../../m3core/src/C/32BITS/BasicCtypes.i3.html">BasicCtypes</A>;
+IMPORT <A HREF="../../../libm3/src/geometry/Point.i3.html">Point</A>, <A HREF="../../../libm3/src/geometry/Rect.i3.html">Rect</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="TrestleComm.i3.html">TrestleComm</A>, <A HREF="Pixmap.i3.html">Pixmap</A>, <A HREF="#x1">BasicCtypes</A>;
 
 EXCEPTION Failure;
 
 TYPE Raw = Pixmap.Raw;
-</PRE> The raw representation of a pixmap is revealed at the end of this 
-   interface. 
+</PRE> The raw representation of a pixmap is revealed at the end of this
+   interface.
 <P>
 \subsubsection{Obtaining handles from the oracle} 
 
@@ -47,7 +47,7 @@ TYPE Raw = Pixmap.Raw;
     builtIn(pm: Pixmap.Predefined): T;
   END;
   <A HREF="ScrnPixmap.m3.html#Private">Private</A> &lt;: ROOT;
-</PRE> For a screentype <CODE>st</CODE>, the field <CODE>st.pixmap</CODE> is an <CODE>Oracle</CODE> that 
+</PRE> For a screentype <CODE>st</CODE>, the field <CODE>st.pixmap</CODE> is an <CODE>Oracle</CODE> that
    produces pixmaps owned by <CODE>st</CODE>.
 <P>
    The method call <CODE>st.pixmap.load(r, nm)</CODE> allocates and returns
@@ -68,7 +68,7 @@ TYPE Raw = Pixmap.Raw;
    The method call <CODE>st.pixmap.builtIn(pm)</CODE> returns the screen-dependent
    pixmap valid for <CODE>st</CODE> that corresponds to the predefined
    screen-independent <CODE>Pixmap.T{pm}</CODE>.
-   <P>
+<P>
    The locking level for all methods is <CODE>LL.sup &lt;= VBT.mu</CODE>. 
 
 <P> \subsubsection{The handle object} 
@@ -90,12 +90,12 @@ TYPE Raw = Pixmap.Raw;
    interpretation depends on the screentype that owns <CODE>pm</CODE>.  The field
    <CODE>pm.depth</CODE> is the number of bits in each pixel of <CODE>pm</CODE>, and
    <CODE>pm.bounds</CODE> is the rectangular extent of <CODE>pm</CODE>.
-    <P>
+<P>
    The method call <CODE>pm.localize(rect)</CODE> returns a raw pixmap equal to
    a rectangualr subpixmap of the one on which <CODE>pm</CODE> is a handle.  The
    bounds of the raw pixmap returned by <CODE>localize</CODE> is <CODE>Rect.Meet(rect,
    pm.bounds)</CODE>.
-    <P>
+<P>
    The method call <CODE>pm.unload()</CODE> causes <CODE>pm</CODE> to become anonymous.
 <P>
    Pixmaps consume large amounts of memory.  The method call <CODE>pm.free()</CODE>
@@ -109,7 +109,7 @@ TYPE Raw = Pixmap.Raw;
    A raw pixmap allows the client to directly locate and modify the
    bits of the pixmap.  The following procedure produces a new raw
    pixmap: 
-      
+
 <P><PRE>PROCEDURE <A HREF="ScrnPixmap.m3.html#NewRaw">NewRaw</A>(dpth: INTEGER;
   READONLY bnds: Rect.T): Raw;
 &lt;* LL arbitrary *&gt;
@@ -142,7 +142,7 @@ TYPE
 </PRE> The methods provide the easiest way to operate on a raw pixmap, and
    we will explain them first.  Let <CODE>pm</CODE> be a <CODE>ScrnPixmap.Raw</CODE>, then:
 <P>
-   The method call 
+   The method call
 <P>
 <PRE>
       pm.get(pt)
@@ -150,7 +150,7 @@ TYPE
    returns the pixel value at the point <CODE>pt</CODE> in the pixmap.  The result
    is undefined if <CODE>pt</CODE> is not in <CODE>pm.bounds</CODE>.
 <P>
-   The method call 
+   The method call
 <P>
 <PRE>
       pm.set(pt, pix)
@@ -158,8 +158,8 @@ TYPE
    sets the pixel value at the point <CODE>pt</CODE> of the pixmap <CODE>pm</CODE> to the
    value <CODE>pix</CODE>.  It is a noop if <CODE>pt</CODE> is not in <CODE>pm.bounds</CODE>.
 <P>
-   The method call 
-   <P>
+   The method call
+<P>
 <PRE>
       pm.sub(rect)
 </PRE>
@@ -169,7 +169,7 @@ TYPE
    It is also possible to bypass the methods and access the
    data in the raw pixmap directly. Here is the specification
    for the internal layout of pixels in a raw pixmap:
-   <P>
+<P>
    A value <CODE>pm</CODE> of type <CODE>Pixmap.Raw</CODE> is a rectangular subregion of a
    larger rectangular pixmap, which we shall call the {\it surround}.
    The surround is a word-aligned pixmap, stored in raster-scan order
@@ -184,7 +184,7 @@ TYPE
    that are needed to store one row of the surround.
 <P>
    The value <CODE>pm.bitsPerPixel</CODE> might be greater than <CODE>pm.depth</CODE>; for
-   example, a twelve-bit deep pixmap might be stored with 
+   example, a twelve-bit deep pixmap might be stored with
    sixteen bits per pixel.
 <P>
    The pixels of the surround are stored in the array <CODE>pm.pixels</CODE>.  Each
@@ -207,8 +207,8 @@ TYPE
       <KBD>pixel </KBD>1<KBD>:  bits</KBD> bpp..2*bpp-1
       ...
       <KBD>pixel </KBD>i<KBD>:  bits</KBD> i*bpp..(i+1)*bpp-1
-   </PRE>
-   If <CODE>pm.pixelOrder = MSBFirst</CODE>, the pixels are stored in reverse order, 
+</PRE>
+   If <CODE>pm.pixelOrder = MSBFirst</CODE>, the pixels are stored in reverse order,
    so that pixel <CODE>i</CODE> occupies the same bits as pixel <CODE>pixelsPerWord-i-1</CODE>
    occupies for <CODE>LSBFirst</CODE>.
 <P>
@@ -216,7 +216,7 @@ TYPE
    gives the pixel's value.  If the word size does not contain an
    integral number of pixels, the unused bits in the word have
    undefined values.
-   <P>
+<P>
    The pixmap <CODE>pm</CODE> itself is a rectangular region selected from the surround;
    the value <CODE>pm.bounds</CODE>, of type <CODE>Rect.T</CODE>, specifies the domain of <CODE>pm</CODE>.  The
    value <CODE>pm.offset</CODE> specifies where in <CODE>pm.pixels</CODE> the words containing the
@@ -226,16 +226,16 @@ TYPE
 <PRE>
       h = pm.bounds.west <KBD>and</KBD> v = pm.bounds.north,
 </PRE>
-   is stored in word <CODE>pm.pixels[pm.offset]</CODE>.  The pixel is the 
-   <CODE>(pm.bounds.west MOD pixelsPerWord)</CODE>'th pixel of the word.  
+   is stored in word <CODE>pm.pixels[pm.offset]</CODE>.  The pixel is the
+   <CODE>(pm.bounds.west MOD pixelsPerWord)</CODE>'th pixel of the word.
    Its bits can be found by the earlier formulas.
 <P>
-   The general formula for the word containing the pixel with position 
+   The general formula for the word containing the pixel with position
    <CODE>h, v</CODE> is
 <P>
 <PRE>
       pm.pixels[
-       (v - pm.bounds.north) * pm.wordsPerRow + 
+       (v - pm.bounds.north) * pm.wordsPerRow +
        (h - pm.westRounded) DIV pixelsPerWord) + pm.offset].
 </PRE>
    Here is another useful formula.  The surround rectangle must be at
@@ -245,8 +245,8 @@ TYPE
    word boundary.  As a result, we have the inequality:
 <P>
 <PRE>
-       pm.wordsPerRow &gt;= 
-         ((pm.bounds.east - 1) DIV pixelsPerWord) - 
+       pm.wordsPerRow &gt;=
+         ((pm.bounds.east - 1) DIV pixelsPerWord) -
          (pm.bounds.west DIV pixelsPerWord) + 1
 </PRE>
 <P>
@@ -262,6 +262,13 @@ that is, the western boundary moved west to the nearest word boundary.
 <P><PRE>END ScrnPixmap.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">interface BasicCtypes is in:
+</A><UL>
+<LI><A HREF="../../../m3core/src/C/32BITS/BasicCtypes.i3.html#0TOP0">m3core/src/C/32BITS/BasicCtypes.i3</A>
+<LI><A HREF="../../../m3core/src/C/64BITS/BasicCtypes.i3.html#0TOP0">m3core/src/C/64BITS/BasicCtypes.i3</A>
+</UL>
+<P>
 <PRE>
 
 

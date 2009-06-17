@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: patternmatching/src/GlobTree.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>patternmatching/src/GlobTree.m3</H2></A><HR>
 <inModule>
@@ -34,11 +34,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: GlobTree.m3.html,v 1.2 2003-07-16 13:17:55 wagner Exp $ 
+ * $Id: GlobTree.m3.html,v 1.3 2009-06-17 18:52:48 wagner Exp $ 
 
-<P><PRE>MODULE <module><implements><A HREF="GlobTree.i3.html">GlobTree</A></implements></module>;
+<P><PRE>MODULE <module><implements><A HREF="#x1">GlobTree</A></implements></module>;
 
-IMPORT <A HREF="Glob.i3.html">Glob</A>, <A HREF="RegEx.i3.html">RegEx</A>;
+IMPORT <A HREF="#x2">Glob</A>, <A HREF="#x3">RegEx</A>;
 
 TYPE
   MatchNode = T OBJECT
@@ -144,6 +144,27 @@ BEGIN
 END GlobTree.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface GlobTree is in:
+</A><UL>
+<LI><A HREF="GlobTree.i3.html#0TOP0">patternmatching/src/GlobTree.i3</A>
+<LI><A HREF="../../suplib/src/GlobTree.i3.html#0TOP0">suplib/src/GlobTree.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Glob is in:
+</A><UL>
+<LI><A HREF="Glob.i3.html#0TOP0">patternmatching/src/Glob.i3</A>
+<LI><A HREF="../../suplib/src/Glob.i3.html#0TOP0">suplib/src/Glob.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface RegEx is in:
+</A><UL>
+<LI><A HREF="RegEx.i3.html#0TOP0">patternmatching/src/RegEx.i3</A>
+<LI><A HREF="../../suplib/src/RegEx.i3.html#0TOP0">suplib/src/RegEx.i3</A>
+</UL>
+<P>
 <PRE>
 
 

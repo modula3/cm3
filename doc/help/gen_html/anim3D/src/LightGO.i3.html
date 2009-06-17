@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/LightGO.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/LightGO.i3</H2></A><HR>
 <inInterface>
@@ -22,9 +22,9 @@
    or of one of its ancestors in the scene changes, the light source
    moves.
 <P>
-   Light sources affect all geometric objects of type \type{SurfaceGO}{T} 
-   in the scene, by illuminating their surfaces. However, they are invisible 
-   themselves. 
+   Light sources affect all geometric objects of type \type{SurfaceGO}{T}
+   in the scene, by illuminating their surfaces. However, they are invisible
+   themselves.
 <P>
    <CODE>LightGO.T</CODE> is the abstract class of all light sources. 
 
@@ -35,29 +35,29 @@ IMPORT <A HREF="BooleanProp.i3.html">BooleanProp</A>, <A HREF="ColorProp.i3.html
 
 TYPE
   <A HREF="LightGO.m3.html#T">T</A> &lt;: GO.T;
-</PRE><BLOCKQUOTE><EM> <CODE>LightGO.T</CODE> is a subtype of \type{GO}{T}. No additional fiels or methods 
+</PRE><BLOCKQUOTE><EM> <CODE>LightGO.T</CODE> is a subtype of \type{GO}{T}. No additional fiels or methods
    are defined. </EM></BLOCKQUOTE><PRE>
 
 VAR
   Colour : ColorProp.Name;
   Switch : BooleanProp.Name;
 </PRE><BLOCKQUOTE><EM> In addition to the properties observed by all \type{GO}{T}'s, there are two
-   additional properties that are observed by all <CODE>LightGO.T</CODE>'s. 
-   <CODE>Colour</CODE> is the name of a property that determines the colour of the light 
-   emitted by the <CODE>LightGO.T</CODE>; it associates with a property value of type 
+   additional properties that are observed by all <CODE>LightGO.T</CODE>'s.
+   <CODE>Colour</CODE> is the name of a property that determines the colour of the light
+   emitted by the <CODE>LightGO.T</CODE>; it associates with a property value of type
    \type{ColourProp}{Val}.
-   <CODE>Switch</CODE> is the name of a property that determines if the light source 
-   is on or off; it associates with a property value of type 
+   <CODE>Switch</CODE> is the name of a property that determines if the light source
+   is on or off; it associates with a property value of type
    \type{BooleanProp}{Val}. </EM></BLOCKQUOTE><PRE>
 </PRE> The following two procedures make it more convenient to modify the
    <CODE>Colour</CODE> and <CODE>Switch</CODE> properties of a light: 
 
 <P><PRE>PROCEDURE <A HREF="LightGO.m3.html#SetColour">SetColour</A> (o : GO.T; c : Color.T);
-</PRE><BLOCKQUOTE><EM> The expression <CODE>SetColour(o,c)</CODE> is equivalent to 
+</PRE><BLOCKQUOTE><EM> The expression <CODE>SetColour(o,c)</CODE> is equivalent to
    <CODE>o.setProp(Colour.bind(ColorProp.NewConst(c)))</CODE>. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="LightGO.m3.html#SetSwitch">SetSwitch</A> (o : GO.T; switch : BOOLEAN);
-</PRE><BLOCKQUOTE><EM> The expression <CODE>SetSwitch(o,b)</CODE> is equivalent to 
+</PRE><BLOCKQUOTE><EM> The expression <CODE>SetSwitch(o,b)</CODE> is equivalent to
    <CODE>o.setProp(Switch.bind(BooleanProp.NewConst(b)))</CODE>. </EM></BLOCKQUOTE><PRE>
 
 END LightGO.

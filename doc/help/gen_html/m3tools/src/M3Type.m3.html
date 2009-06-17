@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tools/src/M3Type.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tools/src/M3Type.m3</H2></A><HR>
 <inModule>
@@ -52,10 +52,11 @@ PROCEDURE <A NAME="IsOrdinal"><procedure>IsOrdinal</procedure></A> (t: T): BOOLE
 
 PROCEDURE <A NAME="Number"><procedure>Number</procedure></A> (t: T): Target.Int =
   VAR min, max, tmp: Target.Int;
+      One := Target.Int{Target.Integer.bytes, TInt.One.x};
   BEGIN
     IF t.get_bounds (min, max)
       AND TInt.Subtract (max, min, tmp)
-      AND TInt.Add (tmp, TInt.One, max) THEN
+      AND TInt.Add (tmp, One, max) THEN
       RETURN max;
     END;
     RETURN Target.Integer.max;
@@ -251,7 +252,7 @@ REVEAL
 PROCEDURE <A NAME="GetEnumInfo"><procedure>GetEnumInfo</procedure></A> (self: Enum;  VAR x: Info) RAISES {Error} =
   VAR n_elts := NUMBER (self.elements^);   max: Target.Int;  rep: EnumRep;
   BEGIN
-    IF NOT TInt.FromInt (n_elts-1, max) THEN
+    IF NOT TInt.FromInt (n_elts-1, Target.Integer.bytes, max) THEN
       Err (&quot;enumeration type too large&quot;);
     END;
     rep := FindEnumRep (max);
@@ -292,7 +293,8 @@ PROCEDURE <A NAME="EnumBounds"><procedure>EnumBounds</procedure></A> (self: Enum
   VAR b: BOOLEAN;
   BEGIN
     min := TInt.Zero;
-    b := TInt.FromInt (NUMBER (self.elements^) - 1, max);  &lt;*ASSERT b*&gt;
+    b := TInt.FromInt (NUMBER (self.elements^) - 1, Target.Integer.size, max);
+    &lt;*ASSERT b*&gt;
     RETURN TRUE;
   END EnumBounds;
 </PRE>**************************** NOT IMPLEMENTED ******************************
@@ -701,7 +703,7 @@ REVEAL
   END;
 
 PROCEDURE <A NAME="GetSubrangeInfo"><procedure>GetSubrangeInfo</procedure></A> (self: Subrange;  VAR x: Info) =
-  VAR rep := FindRangeRep (self.min, self.max);
+  VAR rep := FindRangeRep (self);
   BEGIN
     x.size      := TargetMap.CG_Size[rep];
     x.min_size  := MinIntegerSize (self.min, self.max);
@@ -712,14 +714,13 @@ PROCEDURE <A NAME="GetSubrangeInfo"><procedure>GetSubrangeInfo</procedure></A> (
     x.is_solid  := TRUE;
   END GetSubrangeInfo;
 
-PROCEDURE <A NAME="FindRangeRep"><procedure>FindRangeRep</procedure></A> (READONLY min, max: Target.Int): Target.CGType =
+PROCEDURE <A NAME="FindRangeRep"><procedure>FindRangeRep</procedure></A> (self: Subrange): Target.CGType =
   BEGIN
-    IF TInt.LE (TInt.Zero, min) THEN
+    IF TInt.LE (TInt.Zero, self.min) THEN
       (* look for an unsigned type *)
       FOR i := FIRST (TargetMap.Word_types) TO LAST (TargetMap.Word_types) DO
         WITH z = TargetMap.Word_types[i] DO
-          IF (z.size &lt;= Target.Word.size)
-            AND TWord.LE (max, z.max) THEN
+          IF TWord.LE (self.max, z.max) THEN
             RETURN z.cg_type;
           END;
         END;
@@ -728,16 +729,17 @@ PROCEDURE <A NAME="FindRangeRep"><procedure>FindRangeRep</procedure></A> (READON
       (* look for a signed type *)
       FOR i := FIRST (TargetMap.Integer_types) TO LAST (TargetMap.Integer_types) DO
         WITH z = TargetMap.Integer_types[i] DO
-          IF (z.size &lt;= Target.Integer.size)
-            AND TInt.LE (z.min, min)
-            AND TInt.LE (max, z.max) THEN
+          IF TInt.LE (z.min, self.min) AND TInt.LE (self.max, z.max) THEN
             RETURN z.cg_type;
           END;
         END;
       END;
     END;
 
-    RETURN Target.Integer.cg_type;
+    IF self.super = Longint
+      THEN RETURN Target.Longint.cg_type;
+      ELSE RETURN Target.Integer.cg_type;
+    END;
   END FindRangeRep;
 
 PROCEDURE <A NAME="SubrangeBase"><procedure>SubrangeBase</procedure></A> (self: Subrange): T =
@@ -751,10 +753,13 @@ PROCEDURE <A NAME="SubrangeBounds"><procedure>SubrangeBounds</procedure></A> (se
     max := self.max;
     RETURN TRUE;
   END SubrangeBounds;
-</PRE>------------------------------------------------------------- INTEGER ---
+</PRE>----------------------------------------------------- INTEGER/LONGINT ---
 
 <P><PRE>TYPE
-  IntType = T BRANDED &quot;M3Type.IntType&quot; OBJECT OVERRIDES
+  Precision = {Integer, Longint};
+  IntType = T BRANDED &quot;M3Type.IntType&quot; OBJECT
+    prec: Precision;
+  OVERRIDES
     get_info   := GetIntInfo;
     base       := SelfBase;
     is_ordinal := IsAlways;
@@ -765,22 +770,41 @@ PROCEDURE <A NAME="SubrangeBounds"><procedure>SubrangeBounds</procedure></A> (se
     ********************)
   END;
 
-PROCEDURE <A NAME="GetIntInfo"><procedure>GetIntInfo</procedure></A> (&lt;*UNUSED*&gt; self: IntType;  VAR x: Info) =
+PROCEDURE <A NAME="GetIntInfo"><procedure>GetIntInfo</procedure></A> (self: IntType;  VAR x: Info) =
   BEGIN
-    x.size      := Target.Integer.size;
-    x.min_size  := Target.Integer.size;
-    x.alignment := Target.Integer.align;
+    CASE self.prec OF
+    | Precision.Integer =&gt;
+      x.size      := Target.Integer.size;
+      x.min_size  := Target.Integer.size;
+      x.alignment := Target.Integer.align;
+    | Precision.Longint =&gt;
+      x.size      := Target.Longint.size;
+      x.min_size  := Target.Longint.size;
+      x.alignment := Target.Longint.align;
+    END;
     x.class     := Class.Integer;
     x.is_traced := FALSE;
     x.is_empty  := FALSE;
     x.is_solid  := TRUE;
   END GetIntInfo;
 
-PROCEDURE <A NAME="IntBounds"><procedure>IntBounds</procedure></A> (&lt;*UNUSED*&gt; t: T;  VAR min, max: Target.Int): BOOLEAN =
+PROCEDURE <A NAME="IntBounds"><procedure>IntBounds</procedure></A> (t: T;  VAR min, max: Target.Int): BOOLEAN =
   BEGIN
-    min := Target.Integer.min;
-    max := Target.Integer.max;
-    RETURN TRUE;
+    TYPECASE t OF
+    | IntType (z) =&gt;
+      CASE z.prec OF
+      | Precision.Integer =&gt;
+        min := Target.Integer.min;
+        max := Target.Integer.max;
+        RETURN TRUE;
+      | Precision.Longint =&gt;
+        min := Target.Longint.min;
+        max := Target.Longint.max;
+        RETURN TRUE;
+      END;
+    ELSE
+      RETURN FALSE;
+    END;
   END IntBounds;
 </PRE>-------------------------------------------------------------- FLOATS ---
 
@@ -827,7 +851,7 @@ PROCEDURE <A NAME="GetFloatInfo"><procedure>GetFloatInfo</procedure></A> (self: 
   END MinIntegerSize;
 
 PROCEDURE <A NAME="BitWidth"><procedure>BitWidth</procedure></A> (n: Target.Int;  VAR width: INTEGER;  VAR neg: BOOLEAN) =
-  (***  valid for  Target.Integer.min &lt;= n &lt;= Target.Integer.max ***)
+  (***  valid for  Target.Longint.min &lt;= n &lt;= Target.Longint.max ***)
   VAR tmp: Target.Int;
   BEGIN
     neg := TInt.LT (n, TInt.Zero);
@@ -835,13 +859,13 @@ PROCEDURE <A NAME="BitWidth"><procedure>BitWidth</procedure></A> (n: Target.Int;
       IF NOT TInt.Add (n, TInt.One, tmp)
         OR NOT TInt.Subtract (TInt.Zero, tmp, n) THEN
         (* value too large??? *)
-        width := Target.Integer.size;
+        width := Target.Longint.size;
         RETURN;
       END;
     END;
 
     IF NOT powers_done THEN BuildPowerTables () END;
-    width := Target.Integer.size;
+    width := Target.Longint.size;
     FOR i := 0 TO LAST (power) DO
       IF TInt.LE (n, power[i]) THEN width := i;  EXIT END;
     END;
@@ -856,7 +880,7 @@ PROCEDURE <A NAME="BuildPowerTables"><procedure>BuildPowerTables</procedure></A>
     power [0] := TInt.One;
     FOR i := 1 TO LAST (power) DO
       IF NOT TInt.Add (power[i-1], power[i-1], power[i]) THEN
-        power[i] := Target.Integer.max;
+        power[i] := Target.Longint.max;
       END;
     END;
     powers_done := TRUE;
@@ -904,7 +928,8 @@ PROCEDURE <A NAME="Err"><procedure>Err</procedure></A> (msg: TEXT) RAISES {Error
 
 <P><PRE>PROCEDURE <A NAME="InitBuiltins"><procedure>InitBuiltins</procedure></A> () =
   BEGIN
-    Integer  := NEW (IntType);
+    Integer  := NEW (IntType, prec := Precision.Integer);
+    Longint  := NEW (IntType, prec := Precision.Longint);
     Real     := NEW (FloatType, prec := Target.Precision.Short);
     LongReal := NEW (FloatType, prec := Target.Precision.Long);
     Extended := NEW (FloatType, prec := Target.Precision.Extended);

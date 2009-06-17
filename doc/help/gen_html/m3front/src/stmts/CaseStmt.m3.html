@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/stmts/CaseStmt.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/stmts/CaseStmt.m3</H2></A><HR>
 <inModule>
@@ -25,14 +25,14 @@ TYPE
         expr     : Expr.T   := NIL;
         tree     : Tree     := NIL;
         bodies   : StmtList := NIL;
-	complete : BOOLEAN  := FALSE;
+        complete : BOOLEAN  := FALSE;
         hasElse  : BOOLEAN  := FALSE;
         badLabels: BOOLEAN  := FALSE;
         elseBody : Stmt.T   := NIL;
         nCases   : INTEGER  := 0;
       OVERRIDES
         check       := Check;
-	compile     := Compile;
+        compile     := Compile;
         outcomes    := GetOutcome;
       END;
 
@@ -211,7 +211,7 @@ PROCEDURE <A NAME="CheckLabel"><procedure>CheckLabel</procedure></A> (p: P;  tre
       tree.bad := TRUE;
     END;
     i := TInt.Zero;
-    IF IntegerExpr.Split (e, i) OR EnumExpr.Split (e, i, t) THEN END;
+    IF IntegerExpr.Split (e, i, t) OR EnumExpr.Split (e, i, t) THEN END;
     RETURN i;
   END CheckLabel;
 
@@ -255,6 +255,7 @@ PROCEDURE <A NAME="AddToTree"><procedure>AddToTree</procedure></A> (p: P;  old, 
 
 PROCEDURE <A NAME="CompleteTree"><procedure>CompleteTree</procedure></A> (t: Tree;  min, max: Target.Int): BOOLEAN =
   VAR x, y: Target.Int;
+      One := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
   BEGIN
     WHILE (t # NIL) DO
       IF TInt.LT (t.max, min) OR TInt.LT (max, t.min) THEN
@@ -263,21 +264,21 @@ PROCEDURE <A NAME="CompleteTree"><procedure>CompleteTree</procedure></A> (t: Tre
       IF    TInt.Subtract (t.min, min, x)
         AND TInt.Subtract (max, t.max, y)
         AND TInt.LT (y, x) THEN
-        IF TInt.Add (t.max, TInt.One, x) THEN
+        IF TInt.Add (t.max, One, x) THEN
           IF NOT CompleteTree (t.greater, x, max) THEN RETURN FALSE END;
         END;
-        IF NOT TInt.Subtract (t.min, TInt.One, max) THEN
+        IF NOT TInt.Subtract (t.min, One, max) THEN
           RETURN TRUE;
         END;
-	t := t.less;
+        t := t.less;
       ELSE
-        IF TInt.Subtract (t.min, TInt.One, x) THEN
+        IF TInt.Subtract (t.min, One, x) THEN
           IF NOT CompleteTree (t.less, min, x) THEN RETURN FALSE END;
         END;
-        IF NOT TInt.Add (t.max, TInt.One, min) THEN
+        IF NOT TInt.Add (t.max, One, min) THEN
           RETURN TRUE;
         END;
-	t := t.greater;
+        t := t.greater;
       END;
     END;
     RETURN TInt.LT (max, min);
@@ -416,7 +417,7 @@ PROCEDURE <A NAME="GenIndexedBranch"><procedure>GenIndexedBranch</procedure></A>
       (* upper bound is OK *)
       x := CG.Pop ();
       CG.Push (x);
-      CG.Load_integer (TInt.Zero);
+      CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.LT, l_else, CG.Never);
       CG.Push (x);
       CG.Free (x);
@@ -424,7 +425,7 @@ PROCEDURE <A NAME="GenIndexedBranch"><procedure>GenIndexedBranch</procedure></A>
       (* need to check both bounds *)
       x := CG.Pop ();
       CG.Push (x);
-      CG.Load_integer (TInt.Zero);
+      CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.LT, l_else, CG.Never);
       CG.Push (x);
       CG.Load_intt (l_max - l_min);
@@ -465,6 +466,7 @@ PROCEDURE <A NAME="GenIfTable"><procedure>GenIfTable</procedure></A> (p: P): Stm
     next: Target.Int;
     oc, xc: Stmt.Outcomes;
     l_bodies, l_else, l_end: INTEGER;
+    One := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
   BEGIN
     p.tree := CollapseTree (p.tree);
     l_bodies := CG.Next_label (p.nCases);
@@ -485,13 +487,13 @@ PROCEDURE <A NAME="GenIfTable"><procedure>GenIfTable</procedure></A> (p: P): Stm
       CG.Gen_location (t.origin);
       IF TInt.LT (next, t.min) THEN
         CG.Push (x);
-        CG.Load_integer (t.min);
+        CG.Load_integer (Target.Integer.cg_type, t.min);
         CG.If_compare (Target.Integer.cg_type, CG.Cmp.LT, l_else, CG.Never);
       END;
       CG.Push (x);
-      CG.Load_integer (t.max);
+      CG.Load_integer (Target.Integer.cg_type, t.max);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.LE, l_bodies+t.body, CG.Maybe);
-      IF NOT TInt.Add (t.max, TInt.One, next) THEN
+      IF NOT TInt.Add (t.max, One, next) THEN
         IF (t.greater # NIL) THEN Error.Msg (&quot;case label too large&quot;) END;
         next := t.max;
       END;
@@ -560,6 +562,7 @@ END CaseStmt.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

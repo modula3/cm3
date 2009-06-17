@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTTipe.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTTipe.m3</H2></A><HR>
 <inModule>
@@ -17,7 +17,7 @@
 
 IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTType.i3.html">RTType</A>, <A HREF="RTTypeSRC.i3.html">RTTypeSRC</A>, <A HREF="RTPacking.i3.html">RTPacking</A>, <A HREF="../../word/Word.i3.html">Word</A>;
 
-TYPE (* This list must be kept in sync with the compiler *)
+TYPE (* This list must be kept in sync with TipeDesc.m3.Op, in m3front. *)
   Op = {
   (* opcode         -- op  --- operands ------------------- *)
      Address,       (* 00                                   *)
@@ -28,21 +28,23 @@ TYPE (* This list must be kept in sync with the compiler *)
      Enum,          (* 05, #elements: INT                   *)
      Extended,      (* 06                                   *)
      Integer,       (* 07                                   *)
-     Longreal,      (* 08                                   *)
-     Null,          (* 09                                   *)
-     Object,        (* 0a, #fields: INT, {fields: TYPE}     *)
-     OpenArray,     (* 0b, #dimensions: INT, element: TYPE  *)
-     Packed,        (* 0c, bit size: INT, base type: TYPE   *)
-     Proc,          (* 0d                                   *)
-     Real,          (* 0e                                   *)
-     Record,        (* 0f, #fields: INT, {fields: TYPE}     *)
-     Ref,           (* 10, self id: UID                     *)
-     Refany,        (* 11                                   *)
-     Set,           (* 12, #elements: INT                   *)
-     Subrange,      (* 13, min, max: INT                    *)
-     UntracedRef,   (* 14, self id: UID                     *)
-     OldN,          (* 15, node #: INT                      *)
-     Old0           (* 16                                   *)
+     Longint,       (* 08                                   *)
+     Longreal,      (* 09                                   *)
+     Null,          (* 0a                                   *)
+     Object,        (* 0b, #fields: INT, {fields: TYPE}     *)
+     OpenArray,     (* 0c, #dimensions: INT, element: TYPE  *)
+     Packed,        (* 0d, bit size: INT, base type: TYPE   *)
+     Proc,          (* 0e                                   *)
+     Real,          (* 0f                                   *)
+     Record,        (* 10, #fields: INT, {fields: TYPE}     *)
+     Ref,           (* 11, self id: UID                     *)
+     Refany,        (* 12                                   *)
+     Set,           (* 13, #elements: INT                   *)
+     Subrange,      (* 14, min, max: INT                    *)
+     UntracedRef,   (* 15, self id: UID                     *)
+  (* Widechar is denoted as Enum, with #elements = 2^16.    *)
+     OldN,          (* 16, node #: INT                      *)
+     Old0           (* 17                                   *)
   };(* Old1, Old2, ... Old(255-ORD(Old0)) *)
 
 TYPE Byte  = BITS 8 FOR [0..255];
@@ -61,13 +63,17 @@ TYPE
 
 TYPE
   Packing = RECORD
-    max_align    : INTEGER;
-    struct_align : INTEGER;
-    word_size    : INTEGER;
-    word_align   : INTEGER;
+    max_align     : INTEGER;
+    struct_align  : INTEGER;
+    word_size     : INTEGER;
+    word_align    : INTEGER;
+    longint_size  : INTEGER;
+    lazy_align    : BOOLEAN
+  (* FIXME: ^ Use this below. *)
   END;
 
-PROCEDURE <A NAME="Get"><procedure>Get</procedure></A> (typecode: INTEGER;  READONLY packing: RTPacking.T): T =
+PROCEDURE <A NAME="Get"><procedure>Get</procedure></A>
+    (typecode: INTEGER;  READONLY packing: RTPacking.T): T =
   VAR t: T := NIL;  s: State;  p: Packing;
   BEGIN
     IF (typecode &lt; 0) OR (RTType.MaxTypecode() &lt; typecode) THEN RETURN NIL; END;
@@ -84,10 +90,20 @@ PROCEDURE <A NAME="Get"><procedure>Get</procedure></A> (typecode: INTEGER;  READ
     &lt;*ASSERT s.next = s.n_types*&gt;
 
     (* add the sizes, alignments, and field offsets *)
-    p.max_align    := packing.max_align;
-    p.struct_align := packing.struct_align;
-    p.word_size    := packing.word_size;
-    p.word_align   := MIN (p.word_size, p.max_align);
+    p.max_align     := packing.max_align;
+    p.struct_align  := packing.struct_align;
+    p.word_size     := packing.word_size;
+    p.word_align    := MIN (p.word_size, p.max_align);
+    p.lazy_align    := packing.lazy_align;
+    IF packing.longint_size = 8
+    THEN p.longint_size := BITSIZE(LONGINT)
+         (* ^Compatibility:  This can can happen if we read an old pickle that
+            was written before RTPacking was updated to support LONGINT.
+            This will preserve the behaviour that existed after addition of
+            LONGINT to the compiler, but before LONGINT support in Pickles.
+         *)
+    ELSE p.longint_size  := packing.longint_size;
+    END;
     FixSizes (t, p);
 
     RETURN t;
@@ -105,6 +121,7 @@ PROCEDURE <A NAME="Get"><procedure>Get</procedure></A> (typecode: INTEGER;  READ
     | ORD (Op.Char)     =&gt; t := NEW (Builtin, kind := Kind.Char);
     | ORD (Op.Extended) =&gt; t := NEW (Builtin, kind := Kind.Extended);
     | ORD (Op.Integer)  =&gt; t := NEW (Builtin, kind := Kind.Integer);
+    | ORD (Op.Longint)  =&gt; t := NEW (Builtin, kind := Kind.Longint);
     | ORD (Op.Longreal) =&gt; t := NEW (Builtin, kind := Kind.Longreal);
     | ORD (Op.Null)     =&gt; t := NEW (Builtin, kind := Kind.Null);
     | ORD (Op.Proc)     =&gt; t := NEW (Builtin, kind := Kind.Proc);
@@ -165,8 +182,8 @@ PROCEDURE <A NAME="Get"><procedure>Get</procedure></A> (typecode: INTEGER;  READ
     | ORD (Op.Subrange) =&gt;
         VAR subr := NEW (Subrange, kind := Kind.Subrange);  BEGIN
           t := subr;
-          subr.min := GetInt (s.ptr);
-          subr.max := GetInt (s.ptr);
+          subr.min := GetDoubleInt (s.ptr);
+          subr.max := GetDoubleInt (s.ptr);
         END;
 
     | ORD (Op.UntracedRef) =&gt;
@@ -220,15 +237,15 @@ PROCEDURE <A NAME="GetFields"><procedure>GetFields</procedure></A> (VAR s: State
 <P>
           (x=0)             value = sign(s) * v
           (x=1) (v=1..8)    value = sign(s) * (SUM(i=1 to v) xi&lt;&lt;8*i)
-    (s=0) (x=1) (v=16_3e)   value = +16_7fffffff  = +2^31 - 1
-    (s=1) (x=1) (v=16_3e)   value = -16_80000000  = -2^31
+    (s=0) (x=1) (v=16_3e)   value = +16_7fffffff          = +2^31 - 1
+    (s=1) (x=1) (v=16_3e)   value = -16_7ffffff-1         = -2^31
     (s=0) (x=1) (v=16_3f)   value = +16_7fffffffffffffff  = +2^63 - 1
-    (s=1) (x=1) (v=16_3f)   value = -16_8000000000000000  = -2^63
+    (s=1) (x=1) (v=16_3f)   value =  16_8000000000000000  = -2^63
 <P>
    where sign(0)=+1, sign(1)=-1.
 <P>
 
-<PRE>PROCEDURE <A NAME="GetInt"><procedure>GetInt</procedure></A> (VAR ptr: Ptr): INTEGER =
+<PRE>PROCEDURE <A NAME="GetDoubleInt"><procedure>GetDoubleInt</procedure></A> (VAR ptr: Ptr): DoubleInt =
   CONST SignBit = 16_80;  SpecialBit = 16_40;  ValueBits = 16_3f;
   CONST Sign = ARRAY BOOLEAN OF INTEGER { -1, +1 };
   VAR
@@ -236,34 +253,75 @@ PROCEDURE <A NAME="GetFields"><procedure>GetFields</procedure></A> (VAR s: State
     sign    : INTEGER := Sign [Word.And (x, SignBit) = 0];
     special : BOOLEAN := Word.And (x, SpecialBit) # 0;
     val     : INTEGER := Word.And (x, ValueBits);
+    hiword  : INTEGER;
   BEGIN
+    IF sign &lt; 0 THEN hiword := -1 ELSE hiword := 0 END;
     INC (ptr, ADRSIZE (ptr^));
     IF NOT special THEN
       (* small value:  -63..+63 *)
-      RETURN sign * val;
+      RETURN DoubleInt {Hi := hiword, Lo := sign * val};
     ELSIF (val = 16_3e) THEN
       (* 32-bit FIRST/LAST of integer *)
       IF (sign &lt; 0)
-        THEN RETURN -16_7fffffff-1;
-        ELSE RETURN 16_7fffffff;
+        THEN RETURN DoubleInt {Hi := -1, Lo := -16_7fffffff-1};
+        ELSE RETURN DoubleInt {Hi := 0, Lo := 16_7fffffff};
       END;
     ELSIF (val = 16_3f) THEN
       (* 64-bit FIRST/LAST of integer *)
-      IF BITSIZE (INTEGER) # 64 THEN &lt;*ASSERT FALSE*&gt;
-      ELSIF (sign &lt; 0)          THEN RETURN FIRST (INTEGER);
-      ELSE                           RETURN LAST (INTEGER);
+      IF BITSIZE (INTEGER) = 32
+      THEN
+        IF (sign &lt; 0)
+        THEN RETURN DoubleInt {Hi := -16_7fffffff-1, Lo := 0};
+        ELSE RETURN DoubleInt {Hi := 16_7fffffff, Lo := 16_ffffffff};
+        END;
+      ELSE
+        IF (sign &lt; 0)
+        THEN RETURN DoubleInt {Hi := -1, Lo := FIRST (INTEGER)};
+        ELSE RETURN DoubleInt {Hi := 0, Lo := LAST (INTEGER)};
+        END;
       END;
     ELSE
-      (* arbitrary value *)
-      &lt;*ASSERT BYTESIZE (INTEGER) &gt;= val *&gt;
-      VAR res := 0;  shift := 0;  BEGIN
-        FOR i := 1 TO val DO
-          res := Word.Or (res, Word.LeftShift (ptr^, shift));
-          INC (shift, 8);
-          INC (ptr, ADRSIZE (ptr^));
+      (* arbitrary large value in val following bytes.  *)
+      IF BITSIZE (INTEGER) = 32
+      THEN
+        VAR resLo, resHi := 0;  shift := 0;  BEGIN
+          FOR i := 1 TO MIN (4, val) DO
+            resLo := Word.Or (resLo, Word.LeftShift (ptr^, shift));
+            INC (shift, 8);
+            INC (ptr, ADRSIZE (ptr^));
+          END;
+          shift := 0;
+          FOR i := 5 TO val DO
+            resHi := Word.Or (resHi, Word.LeftShift (ptr^, shift));
+            INC (shift, 8);
+            INC (ptr, ADRSIZE (ptr^));
+          END;
+          IF sign &lt; 0
+          THEN resLo := - resLo; resHi := - resHi - ORD ( resLo # 0 )
+          END;
+          RETURN DoubleInt {Hi := resHi, Lo := resLo};
         END;
-        RETURN sign * res;
+      ELSE
+        VAR res := 0;  shift := 0;  BEGIN
+          FOR i := 1 TO val DO
+            res := Word.Or (res, Word.LeftShift (ptr^, shift));
+            INC (shift, 8);
+            INC (ptr, ADRSIZE (ptr^));
+          END;
+          RETURN DoubleInt {Hi := hiword, Lo := sign * res};
+        END;
       END;
+    END;
+  END GetDoubleInt;
+
+PROCEDURE <A NAME="GetInt"><procedure>GetInt</procedure></A> (VAR ptr: Ptr): INTEGER =
+
+  VAR doubleVal : DoubleInt := GetDoubleInt (ptr);
+  BEGIN
+    IF doubleVal.Hi = 0 AND doubleVal.Lo &gt;= 0
+       OR doubleVal.Hi = -1 AND doubleVal.Lo &lt; 0
+    THEN RETURN doubleVal.Lo
+    ELSE &lt;* ASSERT FALSE *&gt;
     END;
   END GetInt;
 
@@ -280,6 +338,13 @@ PROCEDURE <A NAME="GetUID"><procedure>GetUID</procedure></A> (VAR ptr: Ptr): INT
   END GetUID;
 </PRE>----------------------------------------------------------------- sizes ---
 
+<P> The following procedures compute sizes, alignments, and field offsets, 
+   for types, as these would be computed by the compiler on a target machine
+   whose characteristics are defined by p.   When reading a pickle, this
+   will sometimes be the target on which the pickle was written, possibly
+   different from the one doing the reading.  
+  
+
 <P><PRE>PROCEDURE <A NAME="FixSizes"><procedure>FixSizes</procedure></A> (t: T;  READONLY p: Packing) =
   BEGIN
     IF (t = NIL) OR (t.align # 0) THEN RETURN; END;
@@ -295,18 +360,28 @@ PROCEDURE <A NAME="GetUID"><procedure>GetUID</procedure></A> (VAR ptr: Ptr): INT
         t.size  := p.word_size;
         t.align := p.word_align;
 
-    | Kind.Boolean,
-      Kind.Char =&gt;
-        t.size  := 8;
-        t.align := 8;
-
-    | Kind.Real =&gt;
-        t.size  := 32;
+    | Kind.Longint =&gt;
+        t.size := p.longint_size;
         t.align := MIN (t.size, p.max_align);
 
-    | Kind.Longreal,
-      Kind.Extended =&gt;
-        t.size  := 64;
+    | Kind.Boolean =&gt;
+        t.size  := BITSIZE(BOOLEAN);
+        t.align := MIN (t.size, p.max_align);
+
+    | Kind.Char =&gt;
+        t.size  := BITSIZE(CHAR);
+        t.align := MIN (t.size, p.max_align);
+
+    | Kind.Real =&gt;
+        t.size  := BITSIZE(REAL);
+        t.align := MIN (t.size, p.max_align);
+
+    | Kind.Longreal =&gt;
+        t.size  := BITSIZE(LONGREAL);
+        t.align := p.max_align;
+
+    | Kind.Extended =&gt;
+        t.size  := BITSIZE(EXTENDED);
         t.align := p.max_align;
 
     | Kind.Enum =&gt;
@@ -321,15 +396,34 @@ PROCEDURE <A NAME="GetUID"><procedure>GetUID</procedure></A> (VAR ptr: Ptr): INT
 
     | Kind.Subrange =&gt;
         VAR sub: Subrange := t; BEGIN
-          IF    (0 &lt;= sub.min) AND (sub.max &lt;= 255)         THEN t.size := 8;
-          ELSIF (-128 &lt;= sub.min) AND (sub.max &lt;= 127)      THEN t.size := 8;
-          ELSIF (0 &lt;= sub.min) AND (sub.max &lt;= 65535)       THEN t.size := 16;
-          ELSIF (-32768 &lt;= sub.min) AND (sub.max &lt;= 32767)  THEN t.size := 16;
-          ELSIF (p.word_size &lt;= 32)                         THEN t.size := 32;
-          ELSIF (0 &lt;= sub.min) AND (sub.max &lt;= 16_ffffffff) THEN t.size := 32;
-          ELSIF (-16_7fffffff-1 &lt;= sub.min)
-                            AND (sub.max &lt;= 16_7fffffff)    THEN t.size := 32;
-          ELSE                                                   t.size := 64;
+          IF sub.min.Hi # 0 AND sub.min.Lo &gt;= 0
+             OR sub.min.Hi # -1 AND sub.min.Lo &lt; 0
+             OR sub.max.Hi # 0 AND sub.max.Lo &gt;= 0
+             OR sub.max.Hi # -1 AND sub.max.Lo &lt; 0
+          THEN (* This can only happen if BITSIZE(INTEGER) &gt; 32 on the machine
+                  we are executing on.  A bound of the subrange exceeds the
+                  range of 32-bit INTEGER.  In this case, the compiler will
+                  always have allocated 64 bits.
+               *)
+            t.size := 64;
+          (* Below here, sub.min.Hi and sub.max.Hi are just sign extensions
+             of sub.min.Lo and sub.max.Lo, so can be ignored.
+          *)
+          ELSIF (0 &lt;= sub.min.Lo) AND (sub.max.Lo &lt;= 255)
+          THEN t.size := 8;
+          ELSIF (-128 &lt;= sub.min.Lo) AND (sub.max.Lo &lt;= 127)
+          THEN t.size := 8;
+          ELSIF (0 &lt;= sub.min.Lo) AND (sub.max.Lo &lt;= 65535)
+          THEN t.size := 16;
+          ELSIF (-32768 &lt;= sub.min.Lo) AND (sub.max.Lo &lt;= 32767)
+          THEN t.size := 16;
+          ELSIF (p.word_size &lt;= 32)
+          THEN t.size := 32;
+          ELSIF (0 &lt;= sub.min.Lo) AND (sub.max.Lo &lt;= 16_ffffffff)
+          THEN t.size := 32;
+          ELSIF (-16_7fffffff-1 &lt;= sub.min.Lo) AND (sub.max.Lo &lt;= 16_7fffffff)
+          THEN t.size := 32;
+          ELSE t.size := 64;
           END;
           t.align := MIN (t.size, p.max_align);
         END;
@@ -473,6 +567,7 @@ PROCEDURE <A NAME="IsAlignedOK"><procedure>IsAlignedOK</procedure></A> (t: T;  o
     | Kind.Address,
       Kind.Cardinal,
       Kind.Integer,
+      Kind.Longint,
       Kind.Null,
       Kind.Proc,
       Kind.Ref,
@@ -490,16 +585,24 @@ PROCEDURE <A NAME="IsAlignedOK"><procedure>IsAlignedOK</procedure></A> (t: T;  o
       Kind.Boolean,
       Kind.Char =&gt;
         (* ok as long as they can be loaded from a single word *)
-        VAR z0 := offset DIV p.word_align * p.word_align;  BEGIN
-          RETURN (offset + t.size) &lt;= (z0 + p.word_size);
+        VAR z0 : INTEGER;  BEGIN
+          IF p.lazy_align
+          THEN z0 := offset DIV 8 * 8;
+          ELSE z0 := offset DIV p.word_align * p.word_align;
+          END;
+        RETURN (offset + t.size) &lt;= (z0 + p.word_size);
         END;
 
     | Kind.Packed =&gt;
         VAR
           pack: Packed := t;
-          z0 := offset DIV p.word_align * p.word_align;
+          z0 : INTEGER;
         BEGIN
           IF IsAlignedOK (pack.base, offset, p) THEN RETURN TRUE END;
+          IF p.lazy_align
+          THEN z0 := offset DIV 8 * 8;
+          ELSE z0 := offset DIV p.word_align * p.word_align;
+          END;
           RETURN (offset + pack.size) &lt;= (z0 + p.word_size);
         END;
 

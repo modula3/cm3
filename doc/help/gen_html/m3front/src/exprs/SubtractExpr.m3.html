@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/SubtractExpr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/SubtractExpr.m3</H2></A><HR>
 <inModule>
@@ -16,12 +16,12 @@
 
 <P><PRE>MODULE <module><implements><A HREF="SubtractExpr.i3.html">SubtractExpr</A></implements></module>;
 
-IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="Expr.i3.html">Expr</A>, <A HREF="ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../builtinTypes/Reel.i3.html">Reel</A>, <A HREF="../types/EnumType.i3.html">EnumType</A>;
+IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="Expr.i3.html">Expr</A>, <A HREF="ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../builtinTypes/LInt.i3.html">LInt</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../builtinTypes/Reel.i3.html">Reel</A>, <A HREF="../types/EnumType.i3.html">EnumType</A>;
 IMPORT <A HREF="../types/SetType.i3.html">SetType</A>, <A HREF="../builtinTypes/Addr.i3.html">Addr</A>, <A HREF="../values/Module.i3.html">Module</A>, <A HREF="AddressExpr.i3.html">AddressExpr</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="EnumExpr.i3.html">EnumExpr</A>;
 IMPORT <A HREF="IntegerExpr.i3.html">IntegerExpr</A>, <A HREF="ReelExpr.i3.html">ReelExpr</A>, <A HREF="SetExpr.i3.html">SetExpr</A>, <A HREF="../builtinTypes/LReel.i3.html">LReel</A>, <A HREF="../builtinTypes/EReel.i3.html">EReel</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="../builtinTypes/ErrType.i3.html">ErrType</A>;
 
 TYPE
-  Class = { cINT, cREAL, cLONG, cEXTND, cADDR, cSET, cENUM };
+  Class = { cINT, cLINT, cREAL, cLONG, cEXTND, cADDR, cSET, cENUM };
 
 CONST
   FPType = ARRAY [Class.cREAL .. Class.cEXTND] OF CG.Type {
@@ -47,10 +47,10 @@ TYPE
         getBounds    := GetBounds;
         isWritable   := ExprRep.IsNever;
         isDesignator := ExprRep.IsNever;
-	isZeroes     := ExprRep.IsNever;
-	genFPLiteral := ExprRep.NoFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := ExprRep.NoLiteral;
+        isZeroes     := ExprRep.IsNever;
+        genFPLiteral := ExprRep.NoFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
       END;
 
@@ -88,6 +88,8 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (p: P;  VAR cs: Expr.
     tb := Type.Base (Expr.TypeOf (p.b));
     IF    (ta = Int.T)   AND (tb = Int.T)   THEN
       p.class := Class.cINT;
+    ELSIF (ta = LInt.T)  AND (tb = LInt.T)  THEN
+      p.class := Class.cLINT;
     ELSIF (ta = Reel.T)  AND (tb = Reel.T)  THEN
       p.class := Class.cREAL;
     ELSIF (ta = LReel.T) AND (tb = LReel.T) THEN
@@ -149,6 +151,10 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
         Expr.Compile (p.a);
         Expr.Compile (p.b);
         CG.Subtract (Target.Integer.cg_type);
+    | Class.cLINT =&gt;
+        Expr.Compile (p.a);
+        Expr.Compile (p.b);
+        CG.Subtract (Target.Longint.cg_type);
     | Class.cREAL, Class.cLONG, Class.cEXTND =&gt;
         Expr.Compile (p.a);
         Expr.Compile (p.b);
@@ -190,9 +196,9 @@ PROCEDURE <A NAME="Fold"><procedure>Fold</procedure></A> (p: P): Expr.T =
     ELSIF IntegerExpr.Subtract (e1, e2, e3) THEN
     ELSIF (p.extended)
       AND EnumExpr.Split (e1, x1, t1)
-      AND IntegerExpr.Split (e2, x2)
+      AND IntegerExpr.Split (e2, x2, t1)
       AND TInt.Subtract (x1, x2, x3) THEN
-      e3 := IntegerExpr.New (x3);
+      e3 := IntegerExpr.New (t1, x3);
     ELSIF ReelExpr.Subtract    (e1, e2, e3) THEN
     ELSIF AddressExpr.Subtract (e1, e2, e3) THEN
     ELSIF SetExpr.Difference   (e1, e2, e3) THEN
@@ -221,6 +227,7 @@ END SubtractExpr.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

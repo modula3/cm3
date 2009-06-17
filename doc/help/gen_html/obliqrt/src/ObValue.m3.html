@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: obliqrt/src/ObValue.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>obliqrt/src/ObValue.m3</H2></A><HR>
 <inModule>
@@ -2443,14 +2443,14 @@ PROCEDURE <A NAME="CopyError"><procedure>CopyError</procedure></A> (           s
    object special for the replicated objects 
 
 <P><PRE>PROCEDURE <A NAME="WriteFields"><procedure>WriteFields</procedure></A> (out: Pickle.Writer; fields: REF ObjFields;
-                       pkl: REF ObjFields)
+                       &lt;*UNUSED*&gt; pkl: REF ObjFields)
   RAISES {Pickle.Error, Wr.Failure, Thread.Alerted} =
   BEGIN
     PickleStubs.OutInteger(out, NUMBER(fields^));
     PickleStubs.OutRef(out, fields);
   END WriteFields;
 
-PROCEDURE <A NAME="ReadFields"><procedure>ReadFields</procedure></A> (in: Pickle.Reader; pkl: REF ObjFields): REF ObjFields
+PROCEDURE <A NAME="ReadFields"><procedure>ReadFields</procedure></A> (in: Pickle.Reader; &lt;*UNUSED*&gt; pkl: REF ObjFields): REF ObjFields
   RAISES {Pickle.Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
   VAR ret : REF ObjFields;
   BEGIN

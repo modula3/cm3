@@ -1,0 +1,37 @@
+<HTML><HEAD><TITLE>
+m3core/src/unix/Common/Uin.c</TITLE></HEAD><BODY BGCOLOR="#ffffff">
+<H2>
+m3core/src/unix/Common/Uin.c</H2><HR>
+<PRE>
+#include &quot;m3unix.h&quot;
+
+#ifdef __cplusplus
+extern &quot;C&quot; {
+#endif
+
+UINT32 Uin__ntohl(UINT32 x)
+{
+    return ntohl(x);
+}
+
+UINT16 Uin__ntohs(UINT16 x)
+{
+    return ntohs(x);
+}
+
+UINT32 Uin__htonl(UINT32 x)
+{
+    return htonl(x);
+}
+
+UINT16 Uin__htons(UINT16 x)
+{
+    return htons(x);
+}
+
+#ifdef __cplusplus
+}
+#endif
+</PRE>
+</BODY>
+</HTML>

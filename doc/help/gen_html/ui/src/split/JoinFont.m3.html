@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/JoinFont.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/JoinFont.m3</H2></A><HR>
 <inModule>
@@ -73,7 +73,7 @@ TYPE
       *)
       END;
 </PRE><P>
-PROCEDURE FontMatch(orc: FontOracle; 
+PROCEDURE FontMatch(orc: FontOracle;
                     family: TEXT;
                     pointSize: INTEGER;
                     slant: ScrnFont.Slant;
@@ -96,7 +96,7 @@ PROCEDURE FontMatch(orc: FontOracle;
                              pixelsize, hres, vres, spacing,
                              averageWidth, charsetRegistry, charsetEncoding);
   END FontMatch;
-                    <P>
+<P>
 PROCEDURE FontBuiltIn(orc: FontOracle; id: Font.Predefined): ScrnFont.T =
   BEGIN
     IF orc.st.sts = NIL THEN Crash(); END;

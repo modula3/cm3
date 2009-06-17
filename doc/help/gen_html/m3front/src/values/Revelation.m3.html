@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/values/Revelation.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/values/Revelation.m3</H2></A><HR>
 <inModule>
@@ -16,8 +16,8 @@
 
 <P><PRE>MODULE <module><implements><A HREF="Revelation.i3.html">Revelation</A></implements></module>;
 
-IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="#x1">M3ID</A>, <A HREF="#x2">Value</A>, <A HREF="#x3">Type</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../types/OpaqueType.i3.html">OpaqueType</A>, <A HREF="../misc/Scope.i3.html">Scope</A>, <A HREF="Decl.i3.html">Decl</A>, <A HREF="../misc/Host.i3.html">Host</A>;
-IMPORT <A HREF="../types/ObjectType.i3.html">ObjectType</A>, <A HREF="../types/RefType.i3.html">RefType</A>, <A HREF="../misc/Scanner.i3.html">Scanner</A>, <A HREF="#x4">Token</A>, <A HREF="Module.i3.html">Module</A>, <A HREF="ValueRep.i3.html">ValueRep</A>, <A HREF="../misc/CG.i3.html">CG</A>;
+IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="#x1">M3ID</A>, <A HREF="#x2">Value</A>, <A HREF="#x3">Type</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../types/OpaqueType.i3.html">OpaqueType</A>, <A HREF="../misc/Scope.i3.html">Scope</A>, <A HREF="#x4">Decl</A>, <A HREF="../misc/Host.i3.html">Host</A>;
+IMPORT <A HREF="../types/ObjectType.i3.html">ObjectType</A>, <A HREF="../types/RefType.i3.html">RefType</A>, <A HREF="../misc/Scanner.i3.html">Scanner</A>, <A HREF="#x5">Token</A>, <A HREF="Module.i3.html">Module</A>, <A HREF="ValueRep.i3.html">ValueRep</A>, <A HREF="../misc/CG.i3.html">CG</A>;
 IMPORT <A HREF="../../../m3middle/src/M3RT.i3.html">M3RT</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>;
 FROM <A HREF="../misc/Scanner.i3.html">Scanner</A> IMPORT GetToken, Fail, Match, MatchID, cur;
 
@@ -37,8 +37,8 @@ TYPE
 TYPE
   List = BRANDED &quot;Revelation.List&quot; REF RECORD
            next  : List;
-	   ident : T;
-	   local : BOOLEAN; (* as opposed to inherited *)
+           ident : T;
+           local : BOOLEAN; (* as opposed to inherited *)
            used  : BOOLEAN;
            home  : Value.T; (* External.T that caused the import *)
          END;
@@ -644,6 +644,7 @@ END Revelation.
 <HR>
 <A NAME="x3">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
@@ -651,7 +652,14 @@ END Revelation.
 </UL>
 <P>
 <HR>
-<A NAME="x4">interface Token is in:
+<A NAME="x4">interface Decl is in:
+</A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Decl.i3.html#0TOP0">cm3ide/src/nodes/Decl.i3</A>
+<LI><A HREF="Decl.i3.html#0TOP0">m3front/src/values/Decl.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x5">interface Token is in:
 </A><UL>
 <LI><A HREF="../misc/Token.i3.html#0TOP0">m3front/src/misc/Token.i3</A>
 <LI><A HREF="../../../mentor/src/parse/Token.i3.html#0TOP0">mentor/src/parse/Token.i3</A>

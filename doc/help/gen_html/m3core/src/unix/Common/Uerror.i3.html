@@ -1,0 +1,88 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: m3core/src/unix/Common/Uerror.i3</TITLE>
+</HEAD>
+<BODY bgcolor="#ffffff">
+<A NAME="0TOP0">
+<H2>m3core/src/unix/Common/Uerror.i3</H2></A><HR>
+<inInterface>
+<PRE></PRE> Copyright (C) 1990, Digital Equipment Corporation.         
+ All rights reserved.                                       
+ See the file COPYRIGHT for a full description.             
+
+<P><PRE>INTERFACE <interface><A HREF="../linux-libc6/Uerror.m3.html">Uerror</A></interface>;
+
+FROM <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int;
+</PRE> CONST 
+<PRE>&lt;*EXTERNAL &quot;Uerror__EACCES&quot;*&gt;        VAR EACCES: int;
+&lt;*EXTERNAL &quot;Uerror__EADDRINUSE&quot;*&gt;    VAR EADDRINUSE: int;
+&lt;*EXTERNAL &quot;Uerror__EADDRNOTAVAIL&quot;*&gt; VAR EADDRNOTAVAIL: int;
+&lt;*EXTERNAL &quot;Uerror__EAGAIN&quot;*&gt;        VAR EAGAIN: int;
+&lt;*EXTERNAL &quot;Uerror__EALREADY&quot;*&gt;      VAR EALREADY: int;
+&lt;*EXTERNAL &quot;Uerror__EBADF&quot;*&gt;         VAR EBADF: int;
+&lt;*EXTERNAL &quot;Uerror__ECHILD&quot;*&gt;        VAR ECHILD: int;
+&lt;*EXTERNAL &quot;Uerror__ECONNABORTED&quot;*&gt;  VAR ECONNABORTED: int;
+&lt;*EXTERNAL &quot;Uerror__ECONNREFUSED&quot;*&gt;  VAR ECONNREFUSED: int;
+&lt;*EXTERNAL &quot;Uerror__ECONNRESET&quot;*&gt;    VAR ECONNRESET: int;
+&lt;*EXTERNAL &quot;Uerror__EDOM&quot;*&gt;          VAR EDOM: int;
+&lt;*EXTERNAL &quot;Uerror__EEXIST&quot;*&gt;        VAR EEXIST: int;
+&lt;*EXTERNAL &quot;Uerror__EHOSTDOWN&quot;*&gt;     VAR EHOSTDOWN: int;
+&lt;*EXTERNAL &quot;Uerror__EHOSTUNREACH&quot;*&gt;  VAR EHOSTUNREACH: int;
+&lt;*EXTERNAL &quot;Uerror__EINPROGRESS&quot;*&gt;   VAR EINPROGRESS: int;
+&lt;*EXTERNAL &quot;Uerror__EINTR&quot;*&gt;         VAR EINTR: int;
+&lt;*EXTERNAL &quot;Uerror__EINVAL&quot;*&gt;        VAR EINVAL: int;
+&lt;*EXTERNAL &quot;Uerror__EIO&quot;*&gt;           VAR EIO: int;
+&lt;*EXTERNAL &quot;Uerror__EISCONN&quot;*&gt;       VAR EISCONN: int;
+&lt;*EXTERNAL &quot;Uerror__EISDIR&quot;*&gt;        VAR EISDIR: int;
+&lt;*EXTERNAL &quot;Uerror__EMFILE&quot;*&gt;        VAR EMFILE: int;
+&lt;*EXTERNAL &quot;Uerror__ENAMETOOLONG&quot;*&gt;  VAR ENAMETOOLONG: int;
+&lt;*EXTERNAL &quot;Uerror__ENETDOWN&quot;*&gt;      VAR ENETDOWN: int;
+&lt;*EXTERNAL &quot;Uerror__ENETRESET&quot;*&gt;     VAR ENETRESET: int;
+&lt;*EXTERNAL &quot;Uerror__ENETUNREACH&quot;*&gt;   VAR ENETUNREACH: int;
+&lt;*EXTERNAL &quot;Uerror__ENFILE&quot;*&gt;        VAR ENFILE: int;
+&lt;*EXTERNAL &quot;Uerror__ENOENT&quot;*&gt;        VAR ENOENT: int;
+&lt;*EXTERNAL &quot;Uerror__ENOEXEC&quot;*&gt;       VAR ENOEXEC: int;
+&lt;*EXTERNAL &quot;Uerror__ENOMEM&quot;*&gt;        VAR ENOMEM: int;
+&lt;*EXTERNAL &quot;Uerror__ENOTEMPTY&quot;*&gt;     VAR ENOTEMPTY: int;
+&lt;*EXTERNAL &quot;Uerror__ENOTSOCK&quot;*&gt;      VAR ENOTSOCK: int;
+&lt;*EXTERNAL &quot;Uerror__EPERM&quot;*&gt;         VAR EPERM: int;
+&lt;*EXTERNAL &quot;Uerror__EPIPE&quot;*&gt;         VAR EPIPE: int;
+&lt;*EXTERNAL &quot;Uerror__ERANGE&quot;*&gt;        VAR ERANGE: int;
+&lt;*EXTERNAL &quot;Uerror__ETIMEDOUT&quot;*&gt;     VAR ETIMEDOUT: int;
+&lt;*EXTERNAL &quot;Uerror__EWOULDBLOCK&quot;*&gt;   VAR EWOULDBLOCK: int;
+&lt;*EXTERNAL &quot;Uerror__ENOBUFS&quot;*&gt;       VAR ENOBUFS: int;
+&lt;*EXTERNAL &quot;Uerror__ENOTDIR&quot;*&gt;       VAR ENOTDIR: int;
+
+CONST
+  Max = 248; (* approx, verified to be adequate in Uconstants.c *)
+
+END Uerror.
+</PRE>
+</inInterface>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

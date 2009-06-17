@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/ShadingProp.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/ShadingProp.i3</H2></A><HR>
 <inInterface>
@@ -20,23 +20,23 @@ IMPORT <A HREF="AnimHandle.i3.html">AnimHandle</A>, <A HREF="Prop.i3.html">Prop<
 
 TYPE
   Kind = {Flat, Gouraud};
-</PRE> <CODE>Kind</CODE> enumerates the supported shading methods. Here is what they do, 
+</PRE> <CODE>Kind</CODE> enumerates the supported shading methods. Here is what they do,
    straight from the PEX manual:
 <P>
    <CODE>Flat</CODE>: The color resulting from a single light source computation
    is used for the entire surface. No interpolation will be preformed
-   across surface interiors or edges. In PEXlib, this is called 
+   across surface interiors or edges. In PEXlib, this is called
    PEXSurfaceInterpNone; in OpenGL, it is called GL_FLAT.
 <P>
    <CODE>Gouraud</CODE>: The colors are computed at the vertices of the surface according
-   to the current reflection model. These color values are then interpolated 
-   across the interior of the surface or edges. In PEXlib, this is called 
+   to the current reflection model. These color values are then interpolated
+   across the interior of the surface or edges. In PEXlib, this is called
    PEXSurfaceInterpColour; in OpenGL, it is called GL_SMOOTH.
 <P>
    The PEX 5.0 standard provides two more shading methods, dot-product shading
    (PEXSurfaceInterpDotProduct) and Phong shading (PEXSurfaceInterpNormal).
    However, most existing implementations of PEX (including the ones available
-   at SRC) do not support these two methods, and OpenGL does not provide them 
+   at SRC) do not support these two methods, and OpenGL does not provide them
    at all. So, we chose not to include them into Anim3D. 
 
 <P>

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/Target.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/Target.i3</H2></A><HR>
 <inInterface>
@@ -36,7 +36,10 @@
     NT386, OKI, OS2, SEQUENT, SOLgnu, SOLsun,
     SPARC, SUN3, SUN386, UMAX, VAX, FreeBSD3,
     FreeBSD4, FBSD_ALPHA, LINUXLIBC6, I386_DARWIN,
-    PPC_DARWIN, BSDI4, NT386GNU, PPC_LINUX, Undefined
+    PPC_DARWIN, BSDI4, NT386GNU, PPC_LINUX, NetBSD2_i386,
+    AMD64_DARWIN, AMD64_LINUX, SPARC32_LINUX, SPARC64_LINUX,
+    SPARC64_OPENBSD, PPC32_OPENBSD, MIPS64_OPENBSD, SPARC64_SOLARIS,
+    I386_OPENBSD, AMD64_FREEBSD, PA32_HPUX, PA64_HPUX, ARM_DARWIN, Undefined
   };
 
 CONST
@@ -75,11 +78,48 @@ CONST
     (* 31 *) &quot;PPC_DARWIN&quot;,
     (* 32 *) &quot;BSDI4&quot;,
     (* 33 *) &quot;NT386GNU&quot;,
-    (* 34 *) &quot;PPC_LINUX&quot;
+    (* 34 *) &quot;PPC_LINUX&quot;,
+    (* 35 *) &quot;NetBSD2_i386&quot;,
+    (* 36 *) &quot;AMD64_DARWIN&quot;,
+    (* 37 *) &quot;AMD64_LINUX&quot;,
+    (* 38 *) &quot;SPARC32_LINUX&quot;,
+    (* 39 *) &quot;SPARC64_LINUX&quot;,
+    (* 40 *) &quot;SPARC64_OPENBSD&quot;,
+    (* 41 *) &quot;PPC32_OPENBSD&quot;,
+    (* 42 *) &quot;MIPS64_OPENBSD&quot;,
+    (* 43 *) &quot;SPARC64_SOLARIS&quot;,
+    (* 44 *) &quot;I386_OPENBSD&quot;,
+    (* 45 *) &quot;AMD64_FREEBSD&quot;,
+    (* 46 *) &quot;PA32_HPUX&quot;,
+    (* 47 *) &quot;PA64_HPUX&quot;,
+    (* 48 *) &quot;ARM_DARWIN&quot;
   };
+
+CONST
+  OSNames = ARRAY OF TEXT { &quot;POSIX&quot;, &quot;WIN32&quot; };
+
+TYPE
+  M3BackendMode_t =
+  {
+    (* The primary modes are currently 0 and 3. *)
+    IntegratedObject,   (* &quot;0&quot;  -- don't call m3_backend, M3CG produces object code *)
+    IntegratedAssembly, (* &quot;1&quot;  -- don't call m3_backend, M3CG produces assembly code *)
+    ExternalObject,     (* &quot;2&quot;  -- call m3_backend, it produces object code *)
+    ExternalAssembly    (* &quot;3&quot;  -- call m3_backend, it produces assembly code *)
+  };
+
+CONST
+  BackendModeStrings = ARRAY M3BackendMode_t OF TEXT
+  { &quot;IntegratedObject&quot;,
+    &quot;IntegratedAssembly&quot;,
+    &quot;ExternalObject&quot;,
+    &quot;ExternalAssembly&quot; };
+
+  BackendIntegrated = ARRAY M3BackendMode_t OF BOOLEAN { TRUE, TRUE, FALSE, FALSE };
+  BackendAssembly = ARRAY M3BackendMode_t OF BOOLEAN { FALSE, TRUE, FALSE, TRUE };
 </PRE>-------------------------------------------------------- initialization ---
 
-<P><PRE>PROCEDURE <A HREF="Target.m3.html#Init">Init</A> (system: TEXT): BOOLEAN;
+<P><PRE>PROCEDURE <A HREF="Target.m3.html#Init">Init</A> (system: TEXT; osname := &quot;POSIX&quot;; backend_mode := M3BackendMode_t.ExternalAssembly): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> Initialize the variables of this interface to reflect the architecture
    of <CODE>system</CODE>.  Returns TRUE iff the <CODE>system</CODE> was known and the initialization
    was successful.  </EM></BLOCKQUOTE><PRE>
@@ -89,6 +129,9 @@ VAR (*CONST*)
 
 VAR (*CONST*)
   System_name: TEXT := NIL; (* initialized by &quot;Init&quot; *)
+
+VAR (*CONST*)
+  OS_name: TEXT := NIL; (* initialized by &quot;Init&quot; *)
 </PRE>------------------------------------------ machine/code generator types ---
 
 <P><PRE>TYPE (* machine supported types *)
@@ -146,17 +189,13 @@ CONST
    an array of small host values, with the low order bits in the first
    element of the array. 
 
-<P><PRE>CONST
-  ChunkSize = 16;  (* # of bits per array element *)
-
-TYPE
-  Int = (* OPAQUE *) RECORD x: IChunks END;
-  IChunks = ARRAY [0..3] OF IChunk;
-  IChunk = BITS ChunkSize FOR [0..16_ffff];
-
-VAR
-  last_chunk: [0..LAST(IChunks)];
-  (* only chunks in the range [0..last_chunk] contain valid bits. *)
+<P><PRE>TYPE
+  Int = (* OPAQUE *) RECORD
+    n: CARDINAL;          (* only bytes [0..n-1] contain valid bits *)
+    x := IBytes{0,..};    (* default is Zero *)
+  END;
+  IBytes = ARRAY [0..7] OF IByte;
+  IByte = BITS 8 FOR [0..16_ff];
 
 TYPE
   Int_type = RECORD
@@ -193,7 +232,9 @@ TYPE
 <P><PRE>VAR (*CONST*)
   Address   : Int_type;
   Integer   : Int_type;
+  Longint   : Int_type;
   Word      : Int_type;
+  Long      : Int_type;
   Real      : Float_type;
   Longreal  : Float_type;
   Extended  : Float_type;
@@ -239,7 +280,7 @@ PROCEDURE <A HREF="Target.m3.html#ConventionFromID">ConventionFromID</A> (id: IN
                         left-&gt;right or right-&gt;left.
 <P>
   results_on_left =&gt; when the front-end is passing structures the return
-                     result is the left-most parameter.  Otherwise, it's
+                     result is the left-most parameter.  Otherwise, it is
                      the right-most parameter.
 <P>
   standard_structs =&gt;
@@ -260,6 +301,8 @@ PROCEDURE <A HREF="Target.m3.html#ConventionFromID">ConventionFromID</A> (id: IN
 
 <P>--------------------------------------------------- misc. configuration ---
 
+<P> sizes are specified in bits 
+
 <P><PRE>CONST
   Byte = 8;  (* minimum addressable unit (in bits) *)
 
@@ -277,13 +320,11 @@ VAR (*CONST*)
   Structure_size_boundary: CARDINAL;
   (* every structure size must be a multiple of this *)
 
-  Bitfield_can_overlap: BOOLEAN;
-  (* a C bit field cannot overlap two adjacent storage units *)
-
-	Allow_packed_byte_aligned: BOOLEAN;
-	(* Allow the compiler to align scalar types on byte boundaries when packing.
-	   The target processor must support byte alignment of scalar store and loads. This
-     does not remove the restriction that bitfields may not cross word boundaries. *)
+  Allow_packed_byte_aligned: BOOLEAN;
+ (* Allow the compiler to align scalar types on byte boundaries when packing.
+    The target processor must support byte alignment of scalar store and
+    loads. This does not remove the restriction that bitfields may not cross
+    word boundaries. *)
 
   (* NIL checking *)
   First_readable_addr: CARDINAL;
@@ -294,13 +335,6 @@ VAR (*CONST*)
   (* Thread stacks *)
   Jumpbuf_size     : CARDINAL; (* size of a &quot;jmp_buf&quot; *)
   Jumpbuf_align    : CARDINAL; (* alignment of a &quot;jmp_buf&quot; *)
-  Fixed_frame_size : CARDINAL; (* size of an &quot;empty&quot; stack frame *)
-  Guard_page_size  : CARDINAL; (* size of the &quot;unmapped&quot; region at the
-                                            end of a thread stack *)
-  (* These parameters are used to estimate the size each procedure's
-     frame.  If the estimated size of a procedure's frame is less
-     than the guard page's size, no explict check for stack overflow
-     is needed.  *)
 
   (* floating point values *)
   All_floats_legal : BOOLEAN;
@@ -314,13 +348,6 @@ VAR (*CONST*)
   Setjmp: TEXT;
   (* The C name of the routine used to capture the machine state in
        an exception handler frame. *)
-
-  Checks_integer_ops: BOOLEAN;
-  (* TRUE =&gt; integer overflow checking is possible *)
-
-  Global_handler_stack: BOOLEAN;
-  (* TRUE =&gt; exception frames are linked through RTThread.handlerStack.
-     Otherwise, call RTHooks.{Push,Pop}EFrame to manipulate the stack. *)
 
   Aligned_procedures: BOOLEAN;
   (* TRUE =&gt; all procedure values are aligned to at least Integer.align

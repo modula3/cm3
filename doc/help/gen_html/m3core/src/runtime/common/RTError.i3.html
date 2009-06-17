@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTError.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTError.i3</H2></A><HR>
 <inInterface>
@@ -19,7 +19,7 @@ PROCEDURE <A HREF="RTError.m3.html#Msg">Msg</A> (file: TEXT; line: INTEGER; a, b
 PROCEDURE <A HREF="RTError.m3.html#MsgS">MsgS</A> (file: ADDRESS; line: INTEGER; a, b, c: TEXT := NIL);
 </PRE><BLOCKQUOTE><EM> report an error (file = C-style null-terminated string)  </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="RTError.m3.html#MsgI">MsgI</A> (msg: TEXT := NIL; i: INTEGER);
+PROCEDURE <A HREF="RTError.m3.html#MsgI">MsgI</A> (file: TEXT; line: INTEGER; msg: TEXT := NIL; i: INTEGER);
 </PRE><BLOCKQUOTE><EM> report an error with an integer argument </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="RTError.m3.html#MsgPC">MsgPC</A> (pc: INTEGER; a, b, c: TEXT := NIL);

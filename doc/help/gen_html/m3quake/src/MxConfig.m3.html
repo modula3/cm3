@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3quake/src/MxConfig.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3quake/src/MxConfig.m3</H2></A><HR>
 <inModule>
@@ -12,6 +12,7 @@
 <P><PRE>MODULE <module><implements><A HREF="MxConfig.i3.html">MxConfig</A></implements></module>;
 
 IMPORT <A HREF="../../libm3/src/params/Env.i3.html">Env</A>, <A HREF="../../libm3/src/params/Params.i3.html">Params</A>, <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HREF="../../m3middle/src/M3File.i3.html">M3File</A>, <A HREF="#x1">M3ID</A>, <A HREF="Quake.i3.html">Quake</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>;
+IMPORT <A HREF="QMachine.i3.html">QMachine</A>;
 
 VAR
   mu     : MUTEX         := NEW (MUTEX);
@@ -42,7 +43,7 @@ PROCEDURE <A NAME="Get"><procedure>Get</procedure></A> (param: TEXT): TEXT =
 
 <P><PRE>PROCEDURE <A NAME="FindConfig"><procedure>FindConfig</procedure></A> () =
   (* LL = mu *)
-  VAR txt: TEXT;  s0, s1: INTEGER;  sep: CHAR;
+  VAR txt: TEXT;
   BEGIN
     IF (found) THEN RETURN END;
 
@@ -56,7 +57,7 @@ PROCEDURE <A NAME="Get"><procedure>Get</procedure></A> (param: TEXT): TEXT =
     IF TryConfig (&quot;..&quot;, &quot;src&quot;, Filename) THEN RETURN END;
 
     (* try the M3CONFIG environment variable *)
-    txt := Env.Get (&quot;M3CONFIG&quot;);
+    txt := QMachine.GetEnv (NIL, &quot;M3CONFIG&quot;);
     IF (txt # NIL) THEN
       IF TryConfig (txt) THEN RETURN END;
       IF TryConfig (txt, Filename) THEN RETURN END;
@@ -68,14 +69,38 @@ PROCEDURE <A NAME="Get"><procedure>Get</procedure></A> (param: TEXT): TEXT =
       IF TryConfig (txt, Filename) THEN RETURN END;
     END;
 
+    (* try the directories named by the PATH environment variable. *)
+    txt := Env.Get (&quot;PATH&quot;);
+    FindConfigInPath (txt);
+    IF found THEN RETURN END;
+
+    (* try the etc directories *)
+    IF TryConfig(&quot;/usr/local/cm3/etc&quot;, Filename) THEN RETURN END;
+    IF TryConfig(&quot;/usr/cm3/etc&quot;, Filename) THEN RETURN END;
+    IF TryConfig(&quot;/cm3/etc&quot;, Filename) THEN RETURN END;
+    IF TryConfig(&quot;/usr/contrib/etc&quot;, Filename) THEN RETURN END;
+    IF TryConfig(&quot;/usr/local/etc&quot;, Filename) THEN RETURN END;
+    IF TryConfig(&quot;/usr/etc&quot;, Filename) THEN RETURN END;
+    IF TryConfig(&quot;/opt/etc&quot;, Filename) THEN RETURN END;
+    IF TryConfig(&quot;/sw/etc&quot;, Filename) THEN RETURN END;
+    IF TryConfig(&quot;/etc&quot;, Filename) THEN RETURN END;
+
+    (* oh well, make sure we don't try this silly exercise again... *)
+    config := NIL;
+    found := TRUE;
+  END FindConfig;
+
+PROCEDURE <A NAME="FindConfigInPath"><procedure>FindConfigInPath</procedure></A> (txt: TEXT) =
+  VAR
+    s0, s1: INTEGER;
+    sep: CHAR;
+  BEGIN
     (* what's the convention for search paths?   Unix or Win32 *)
     CONST XX = ARRAY BOOLEAN OF CHAR { ';', ':' };
     BEGIN
       sep := XX [Text.Equal (Pathname.Join (&quot;a&quot;, &quot;b&quot;, NIL), &quot;a/b&quot;)];
     END;
 
-    (* try the directories named by the PATH environment variable. *)
-    txt := Env.Get (&quot;PATH&quot;);
     IF (txt # NIL) THEN
       s0 := 0;
       WHILE (s0 &lt; Text.Length (txt)) DO
@@ -87,11 +112,7 @@ PROCEDURE <A NAME="Get"><procedure>Get</procedure></A> (param: TEXT): TEXT =
         s0 := s1 + 1;
       END;
     END;
-
-    (* oh well, make sure we don't try this silly exercise again... *)
-    config := NIL;
-    found := TRUE;
-  END FindConfig;
+  END FindConfigInPath;
 
 PROCEDURE <A NAME="TryConfig"><procedure>TryConfig</procedure></A> (a, b, c: TEXT := NIL): BOOLEAN =
   BEGIN

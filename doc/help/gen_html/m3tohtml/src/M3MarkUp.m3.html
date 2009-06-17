@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tohtml/src/M3MarkUp.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tohtml/src/M3MarkUp.m3</H2></A><HR>
 <inModule>
@@ -100,7 +100,7 @@ PROCEDURE <A NAME="Get"><procedure>Get</procedure></A> (rd: Rd.T;  path: TEXT): 
     (* build a list of insertions for the header *)
     AddH (z, &quot;&lt;HTML&gt;\n&lt;HEAD&gt;\n&lt;TITLE&gt;Critical Mass Modula-3: &quot;);
     AddH (z, path);
-    AddH (z, &quot;&lt;/TITLE&gt;\n&lt;/HEAD&gt;\n&lt;BODY bgcolor=\&quot;#eeeeee\&quot;&gt;\n&quot;);
+    AddH (z, &quot;&lt;/TITLE&gt;\n&lt;/HEAD&gt;\n&lt;BODY bgcolor=\&quot;#ffffff\&quot;&gt;\n&quot;);
     AddH (z, &quot;&lt;A NAME=\&quot;0TOP0\&quot;&gt;\n&lt;H2&gt;&quot;);
     AddH (z, path);
     AddH (z, &quot;&lt;/H2&gt;&lt;/A&gt;&lt;HR&gt;\n&quot;);
@@ -722,6 +722,7 @@ END M3MarkUp.
 <HR>
 <A NAME="x1">interface M3MarkUp is in:
 </A><UL>
+<LI><A HREF="../../cm3ide/src/markup/M3MarkUp.i3.html#0TOP0">cm3ide/src/markup/M3MarkUp.i3</A>
 <LI><A HREF="../../m3markup/src/M3MarkUp.i3.html#0TOP0">m3markup/src/M3MarkUp.i3</A>
 <LI><A HREF="M3MarkUp.i3.html#0TOP0">m3tohtml/src/M3MarkUp.i3</A>
 </UL>

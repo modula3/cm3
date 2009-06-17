@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/etext/TextPortClass.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/etext/TextPortClass.i3</H2></A><HR>
 <inInterface>
@@ -128,16 +128,16 @@ TYPE
    commands that depend on context are the ``vertical'' commands that
    call <CODE>UpOneLine</CODE> and <CODE>DownOneLine</CODE>. The column to which they move
    is stored in <CODE>v.wishCol</CODE>.
-   <P>
+<P>
    <CODE>v.cur</CODE> holds the information needed to reverse or reinstate the
    effects of editing operations that change the text.
 <P>
    <CODE>v.owns[vtype]</CODE> is <CODE>TRUE</CODE> when <CODE>v</CODE> owns the <CODE>VBT.Selection</CODE>
    corresponding to <CODE>vtype</CODE>: keyboard focus, Source selection, or
    Target selection.
-   <P>
+<P>
    <CODE>v.lastNonEmptyWidth</CODE> is used by the <CODE>shape</CODE> and <CODE>reshape</CODE> methods.
-   <P>
+<P>
    <CODE>v.replace</CODE> tests <CODE>v.readOnly</CODE>; if that is <CODE>TRUE</CODE>, then it
    returns the constant <CODE>TextPort.NotFound</CODE>.  Otherwise it calls
    <CODE>v.unsafeReplace</CODE>, which is the only routine that actually
@@ -171,7 +171,7 @@ TYPE
    ``compose character.'' The last link calls <CODE>v.filter(cd)</CODE>, which
    calls <CODE>m.controlChord</CODE> or <CODE>m.optionChord</CODE> for ``command-keys'',
    or <CODE>m.arrowKey</CODE> for cursor-keys.
-   <P>
+<P>
    {\em Text-selections}
 <P>
    As explained on page~\pageref{TextPortSelections}, the model
@@ -211,7 +211,7 @@ TYPE
    defined not merely in terms of the underlying text, but also in
    terms of the effects they have on the local and global selections.
    Indeed, they are not functions at all; Copy does not return a copy
-   of anything. 
+   of anything.
 <P>
    \begin{description}
 <P>
@@ -297,7 +297,7 @@ TYPE
    <CODE>m.close()</CODE> releases the <CODE>VBT</CODE> selections (Source, Target, and
    KBFocus) and deletes highlighting intervals.
 <P>
-   <CODE>m.seek(position)</CODE> sets the type-in point. 
+   <CODE>m.seek(position)</CODE> sets the type-in point.
 <P>
    The type <CODE>TextPort.T</CODE> overrides the <CODE>VBT</CODE> <CODE>mouse</CODE>, <CODE>position</CODE>,
    <CODE>misc</CODE>, <CODE>read</CODE>, and <CODE>write</CODE> methods with procedures that lock
@@ -421,7 +421,7 @@ PROCEDURE <A HREF="TextPortClass.m3.html#FindPrevWord">FindPrevWord</A> (v: T): 
    All these procedures return an <CODE>Extent</CODE> indicating the range of
    characters that were deleted, or <CODE>TextPort.NotFound</CODE> if no
    characters were deleted. 
- 
+
 <P><PRE>PROCEDURE <A HREF="TextPortClass.m3.html#DeletePrevChar">DeletePrevChar</A> (v: T): TextPort.Extent;
 PROCEDURE <A HREF="TextPortClass.m3.html#DeleteNextChar">DeleteNextChar</A> (v: T): TextPort.Extent;
 

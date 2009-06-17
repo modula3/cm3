@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/BoxGO.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/BoxGO.i3</H2></A><HR>
 <inInterface>
@@ -28,19 +28,19 @@ TYPE
     init () : T;
   END;
 </PRE> <CODE>box.init()</CODE>  initializes a new parallelopiped <CODE>box</CODE> and returns it.
-   The sides of the parallelopiped are axis-aligned, its corners are 
+   The sides of the parallelopiped are axis-aligned, its corners are
    determined by the <CODE>Corner1</CODE> and <CODE>Corner2</CODE> properties. 
 
 <P><PRE>VAR
   Corner1 : PointProp.Name;
   Corner2 : PointProp.Name;
 </PRE> In addition to the properties observed by all \type{GO}{T}'s and
-   \type{SurfaceGO}{T}'s, there are two additional properties that 
+   \type{SurfaceGO}{T}'s, there are two additional properties that
    are observed by <CODE>BoxGO.T</CODE>'s:
 <P>
-   <CODE>Corner1</CODE> and <CODE>Corner2</CODE> are the names of two point properties that 
-   describe the two cornerpoints of the box. They associate with 
-   \type{PointProp}{Val}s. If they are not specified, (0,0,0) and (1,1,1) 
+   <CODE>Corner1</CODE> and <CODE>Corner2</CODE> are the names of two point properties that
+   describe the two cornerpoints of the box. They associate with
+   \type{PointProp}{Val}s. If they are not specified, (0,0,0) and (1,1,1)
    are used as cornerpoints. 
 
 <P><PRE>PROCEDURE <A HREF="BoxGO.m3.html#New">New</A> (a, b : Point3.T) : T;
@@ -51,8 +51,8 @@ TYPE
      (Corner2,PointProp.NewConst(b))
    \end{verbatim}
 </EM></BLOCKQUOTE><PRE>
-</PRE> The following two procedures provide sugaring to attach <CODE>Corner1</CODE> and 
-   <CODE>Corner2</CODE> properties with non-animated property values to geometric 
+</PRE> The following two procedures provide sugaring to attach <CODE>Corner1</CODE> and
+   <CODE>Corner2</CODE> properties with non-animated property values to geometric
    objects: 
 
 <P><PRE>PROCEDURE <A HREF="BoxGO.m3.html#SetCorner1">SetCorner1</A> (o : GO.T; p : Point3.T);

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/QuickBtnVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/QuickBtnVBT.i3</H2></A><HR>
 <inInterface>
@@ -12,12 +12,12 @@
                                                                            
  Last modified on Mon Feb 24 13:54:07 PST 1992 by muller                   
 <PRE>&lt;*PRAGMA LL*&gt;
-</PRE> A <CODE>QuickBtnVBT.T</CODE> is a button that activates immediately on down-clicks. 
-   Quick buttons are useful for boolean toggles and radio buttons. 
+</PRE> A <CODE>QuickBtnVBT.T</CODE> is a button that activates immediately on down-clicks.
+   Quick buttons are useful for boolean toggles and radio buttons.
 <P>
-   A <CODE>QuickBtnVBT</CODE> has its <CODE>pre</CODE>, <CODE>action</CODE>, and <CODE>post</CODE> methods called on 
-   every mouse click of type <CODE>FirstDown</CODE> in its domain.  Its <CODE>cancel</CODE> 
-   method is never called.  Its default <CODE>pre</CODE> and <CODE>post</CODE> methods are 
+   A <CODE>QuickBtnVBT</CODE> has its <CODE>pre</CODE>, <CODE>action</CODE>, and <CODE>post</CODE> methods called on
+   every mouse click of type <CODE>FirstDown</CODE> in its domain.  Its <CODE>cancel</CODE>
+   method is never called.  Its default <CODE>pre</CODE> and <CODE>post</CODE> methods are
    no-ops. 
 
 <P>
@@ -26,10 +26,10 @@
 IMPORT <A HREF="ButtonVBT.i3.html">ButtonVBT</A>, <A HREF="../vbt/VBT.i3.html">VBT</A>;
 
 TYPE <A HREF="QuickBtnVBT.m3.html#T">T</A> &lt;: ButtonVBT.T;
-</PRE> The call <CODE>v.init(ch, action, ref)</CODE> initializes <CODE>v</CODE> as a quick button 
+</PRE> The call <CODE>v.init(ch, action, ref)</CODE> initializes <CODE>v</CODE> as a quick button
    with child <CODE>ch</CODE> and action procedure <CODE>action</CODE>, and adds <CODE>ref</CODE> to
    <CODE>v</CODE>'s property set if it is not <CODE>NIL</CODE>. 
-   
+
 <P><PRE>PROCEDURE <A HREF="QuickBtnVBT.m3.html#New">New</A>(
   ch: VBT.T;
   action: ButtonVBT.Proc;

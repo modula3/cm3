@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/syn/M3CToken.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/syn/M3CToken.i3</H2></A><HR>
 <inInterface>
@@ -58,7 +58,7 @@ does not allow subtyping of enumeration types.
        FINALLY_, FOR_, FROM_,
        GENERIC_,
        IF_, IMPORT_, IN_, INTEGER_, INTERFACE_,
-       LOCK_, LONGREAL_, LOOP_,
+       LOCK_, LONGINT_, LONGREAL_, LOOP_,
        METHODS_, MOD_, MODULE_,
        NIL_, NOT_, NULL_,
        OBJECT_, OF_, OR_, OVERRIDES_,
@@ -124,6 +124,7 @@ CONST
   INTEGER_: T = ORD(E.INTEGER_);
   INTERFACE_: T = ORD(E.INTERFACE_);
   LOCK_: T = ORD(E.LOCK_);
+  LONGINT_: T = ORD(E.LONGINT_);
   LONGREAL_: T = ORD(E.LONGREAL_);
   LOOP_: T = ORD(E.LOOP_);
   METHODS_: T = ORD(E.METHODS_);
@@ -206,8 +207,8 @@ CONST
       &quot;BY&quot;, &quot;CASE&quot;,  &quot;CONST&quot;, &quot;DIV&quot;, &quot;DO&quot;, &quot;ELSE&quot;, &quot;ELSIF&quot;, &quot;END&quot;, &quot;EVAL&quot;,
       &quot;EXCEPT&quot;, &quot;EXCEPTION&quot;, &quot;EXIT&quot;, &quot;EXPORTS&quot;, &quot;EXTENDED&quot;, &quot;FINALLY&quot;, &quot;FOR&quot;,
       &quot;FROM&quot;, &quot;GENERIC&quot;, &quot;IF&quot;, &quot;IMPORT&quot;,
-      &quot;IN&quot;, &quot;INTEGER&quot;, &quot;INTERFACE&quot;, &quot;LOCK&quot;, &quot;LONGREAL&quot;, &quot;LOOP&quot;, &quot;METHODS&quot;,
-      &quot;MOD&quot;, &quot;MODULE&quot;, &quot;NIL&quot;, &quot;NOT&quot;, &quot;NULL&quot;, &quot;OBJECT&quot;, &quot;OF&quot;, &quot;OR&quot;,
+      &quot;IN&quot;, &quot;INTEGER&quot;, &quot;INTERFACE&quot;, &quot;LOCK&quot;, &quot;LONGINT&quot;, &quot;LONGREAL&quot;, &quot;LOOP&quot;,
+      &quot;METHODS&quot;, &quot;MOD&quot;, &quot;MODULE&quot;, &quot;NIL&quot;, &quot;NOT&quot;, &quot;NULL&quot;, &quot;OBJECT&quot;, &quot;OF&quot;, &quot;OR&quot;,
       &quot;OVERRIDES&quot;, &quot;PROCEDURE&quot;,
       &quot;RAISE&quot;, &quot;RAISES&quot;, &quot;READONLY&quot;, &quot;REAL&quot;, &quot;RECORD&quot;, &quot;REF&quot;, &quot;REFANY&quot;,
       &quot;REPEAT&quot;, &quot;RETURN&quot;, &quot;REVEAL&quot;, &quot;ROOT&quot;, &quot;SET&quot;, &quot;THEN&quot;, &quot;TO&quot;, &quot;TRY&quot;, &quot;TYPE&quot;,

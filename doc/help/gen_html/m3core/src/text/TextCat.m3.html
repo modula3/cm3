@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/text/TextCat.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/text/TextCat.m3</H2></A><HR>
 <inModule>
@@ -44,13 +44,22 @@ PROCEDURE <A NAME="NewMulti"><procedure>NewMulti</procedure></A> (READONLY x: AR
 </PRE> RTHooks.MultiCat 
 <PRE>PROCEDURE <A NAME="MultiCat"><procedure>MultiCat</procedure></A> (READONLY x: ARRAY OF TEXT): TEXT =
   VAR result: TEXT;
+  VAR r_info, xi_info: TextClass.Info;
   BEGIN
     IF NUMBER (x) &lt;= 0 THEN RETURN &quot;&quot;;   END;
     IF NUMBER (x) = 1  THEN RETURN x[0]; END;
 
     result := x[LAST(x)];
+    result.get_info (r_info);
     FOR i := LAST(x) - 1 TO 0 BY -1 DO
-      result := NEW (T, a := x[i], b := result);
+      WITH xi = x[i] DO
+        xi.get_info(xi_info);
+        r_info.wide := r_info.wide OR xi_info.wide;
+        result := NEW (T, a := xi, a_len := xi_info.length,
+                          b := result, b_len := r_info.length,
+                          a_or_b_wide := r_info.wide);
+        INC(r_info.length, xi_info.length);
+      END;
     END;
     RETURN result;
   END MultiCat;

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: obliqrt/src/POSIX/OpSys.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>obliqrt/src/POSIX/OpSys.m3</H2></A><HR>
 <inModule>
@@ -11,7 +11,7 @@
 
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="../OpSys.i3.html">OpSys</A></implements></module>;
 
-IMPORT <A HREF="../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>;
+IMPORT <A HREF="../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="#x1">Unix</A>;
 
 PROCEDURE <A NAME="GetHostName"><procedure>GetHostName</procedure></A> (): TEXT RAISES {Error} =
   VAR
@@ -29,6 +29,14 @@ BEGIN
 END OpSys.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Unix is in:
+</A><UL>
+<LI><A HREF="../../../m3core/src/unix/Common/Unix.i3.html#0TOP0">m3core/src/unix/Common/Unix.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-common/Unix.i3.html#0TOP0">m3core/src/unix/linux-common/Unix.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-libc6/Unix.i3.html#0TOP0">m3core/src/unix/linux-libc6/Unix.i3</A>
+</UL>
+<P>
 <PRE>
 
 

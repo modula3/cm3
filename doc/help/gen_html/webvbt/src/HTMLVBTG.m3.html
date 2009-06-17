@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: webvbt/src/HTMLVBTG.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>webvbt/src/HTMLVBTG.m3</H2></A><HR>
 <inModule>
@@ -17,7 +17,7 @@
 
 IMPORT <A HREF="../../libm3/src/geometry/Axis.i3.html">Axis</A>, <A HREF="../../vbtkit/src/lego/BooleanVBT.i3.html">BooleanVBT</A>, <A HREF="../../ui/src/split/BorderedVBT.i3.html">BorderedVBT</A>, <A HREF="../derived/ResourceBundle.i3.html">ResourceBundle</A>, <A HREF="../../libm3/src/bundleintf/Bundle.i3.html">Bundle</A>, <A HREF="../../ui/src/split/ButtonVBT.i3.html">ButtonVBT</A>,
        <A HREF="CIText.i3.html">CIText</A>, <A HREF="../../vbtkit/src/color/Color.i3.html">Color</A>, <A HREF="../../vbtkit/src/color/ColorName.i3.html">ColorName</A>, <A HREF="../../ui/src/vbt/Cursor.i3.html">Cursor</A>, <A HREF="../../vbtkit/src/lego/FeedbackVBT.i3.html">FeedbackVBT</A>, <A HREF="../../ui/src/split/Filter.i3.html">Filter</A>, <A HREF="../../vbtkit/src/lego/FlexVBT.i3.html">FlexVBT</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>,
-       <A HREF="../../ui/src/vbt/Font.i3.html">Font</A>, <A HREF="../../ui/src/split/HighlightVBT.i3.html">HighlightVBT</A>, <A HREF="HTML.i3.html">HTML</A>, <A HREF="HTMLVBT.i3.html">HTMLVBT</A>, <A HREF="../../ui/src/split/HVSplit.i3.html">HVSplit</A>, <A HREF="../../vbtkit/src/lego/Image.i3.html">Image</A>, <A HREF="Images.i3.html">Images</A>, <A HREF="../../libm3/src/fmtlex/Lex.i3.html">Lex</A>, <A HREF="../../ui/src/vbt/PaintOp.i3.html">PaintOp</A>,
+       <A HREF="../../ui/src/vbt/Font.i3.html">Font</A>, <A HREF="../../ui/src/split/HighlightVBT.i3.html">HighlightVBT</A>, <A HREF="#x1">HTML</A>, <A HREF="HTMLVBT.i3.html">HTMLVBT</A>, <A HREF="../../ui/src/split/HVSplit.i3.html">HVSplit</A>, <A HREF="../../vbtkit/src/lego/Image.i3.html">Image</A>, <A HREF="Images.i3.html">Images</A>, <A HREF="../../libm3/src/fmtlex/Lex.i3.html">Lex</A>, <A HREF="../../ui/src/vbt/PaintOp.i3.html">PaintOp</A>,
        <A HREF="../../ui/src/split/PackSplit.i3.html">PackSplit</A>, <A HREF="../../ui/src/vbt/Pixmap.i3.html">Pixmap</A>, <A HREF="../../vbtkit/src/lego/PixmapVBT.i3.html">PixmapVBT</A>, <A HREF="../../libm3/src/geometry/Point.i3.html">Point</A>, <A HREF="../../vbtkit/src/vbtkitutils/Pts.i3.html">Pts</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../vbtkit/src/lego/ReactivityVBT.i3.html">ReactivityVBT</A>,
        <A HREF="../../libm3/src/geometry/Rect.i3.html">Rect</A>, <A HREF="../../libm3/derived/RefList.i3.html">RefList</A>, <A HREF="../../vbtkit/src/vbtkitutils/Rsrc.i3.html">Rsrc</A>, <A HREF="../../vbtkit/src/lego/Shadow.i3.html">Shadow</A>, <A HREF="../../vbtkit/src/lego/ShadowedVBT.i3.html">ShadowedVBT</A>, <A HREF="../../ui/src/split/Split.i3.html">Split</A>, <A HREF="../../vbtkit/src/lego/SwitchVBT.i3.html">SwitchVBT</A>,
        <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../vbtkit/src/etext/TextPort.i3.html">TextPort</A>, <A HREF="../../libm3/src/rw/TextRd.i3.html">TextRd</A>, <A HREF="../../ui/src/split/TextVBT.i3.html">TextVBT</A>, <A HREF="../../ui/src/split/TextureVBT.i3.html">TextureVBT</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>,
@@ -484,19 +484,19 @@ PROCEDURE <A NAME="WalkHeading"><procedure>WalkHeading</procedure></A> (v: T; vs
 <P>
    (HeaderBoxTSplit
      empty1
-     (VBox1 
+     (VBox1
        preglue
-       (HBox 
-         toggler 
-         (VBox2 
+       (HBox
+         toggler
+         (VBox2
            heading
-           (HideawayTSplit 
+           (HideawayTSplit
              empty2
              (ContentsVBox postglue ..stuff..))))))
 <P>
 
 
-<P> HideawayTSplit - Like a TSplit, except when the current child is NIL, 
+<P> HideawayTSplit - Like a TSplit, except when the current child is NIL,
    the shape is empty rather than a VBT's default shape. 
 
 <P><PRE>TYPE HideawayTSplit = TSplit.T OBJECT
@@ -935,7 +935,7 @@ PROCEDURE <A NAME="DisplayImage"><procedure>DisplayImage</procedure></A> (v: T; 
       END
     END
   END DisplayImage;
-</PRE> <P>
+</PRE><P>
 PROCEDURE LoadImage (info: ImageInfo; page: Web.Page)
   RAISES {Thread.Alerted} =
   VAR pm: Pixmap.T;
@@ -967,7 +967,7 @@ PROCEDURE LoadImage (info: ImageInfo; page: Web.Page)
           END;
         ELSE
           RAISE Images.Error
-        END;  
+        END;
         Images.ToCache(info.url, pm);
         LOCK VBT.mu DO PixmapVBT.Put(info.vbt, pm) END
       END
@@ -1098,17 +1098,17 @@ PROCEDURE <A NAME="LookupColors"><procedure>LookupColors</procedure></A>(bgName,
     fgOp := PaintOp.FromRGB(fg.r, fg.g, fg.b, mode:=PaintOp.Mode.Accurate, bw:=PaintOp.BW.UseFg);
     quad := PaintOp.MakeColorQuad(bgOp, fgOp);
 </PRE><BLOCKQUOTE><EM><P>
-  TYPE 
+  TYPE
     ColorQuint = PaintOp.ColorQuad OBJECT
       bgBg: PaintOp.T;
     END;
 </EM></BLOCKQUOTE><PRE>
   BEGIN
 </PRE><BLOCKQUOTE><EM><P>
-     RETURN NEW(ColorQuint, 
-          bg := quad.bg, 
-          fg := quad.fg, 
-          bgFg := quad.bgFg, 
+     RETURN NEW(ColorQuint,
+          bg := quad.bg,
+          fg := quad.fg,
+          bgFg := quad.bgFg,
           transparentFg := quad.transparentFg,
           bgBg := PaintOp.Pair(bgOp, bgOp))
 </EM></BLOCKQUOTE><PRE>
@@ -1218,6 +1218,13 @@ BEGIN
 END HTMLVBTG.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface HTML is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/misc/HTML.i3.html#0TOP0">cm3ide/src/misc/HTML.i3</A>
+<LI><A HREF="HTML.i3.html#0TOP0">webvbt/src/HTML.i3</A>
+</UL>
+<P>
 <PRE>
 
 

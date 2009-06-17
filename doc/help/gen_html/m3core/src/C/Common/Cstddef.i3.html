@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/C/Common/Cstddef.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/C/Common/Cstddef.i3</H2></A><HR>
 <inInterface>
@@ -10,14 +10,13 @@
  All rights reserved.                                        
  See the file COPYRIGHT for a full description.              
 
-<P> File: Cstddef.i3                                            
- Last modified on Tue Nov 20 04:02:50 1990 by muller         
-
-<P>
 <P><PRE>INTERFACE <interface>Cstddef</interface>;
+IMPORT <A HREF="Ctypes.i3.html">Ctypes</A>;
 
 TYPE
-  size_t = INTEGER;
+  size_t = Ctypes.unsigned_long;
+  ssize_t = Ctypes.long;
+  ptrdiff_t = Ctypes.long;
 
 END Cstddef.
 </PRE>

@@ -2,13 +2,20 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: http/src/HTTPControl.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>http/src/HTTPControl.m3</H2></A><HR>
 <inModule>
 <PRE></PRE> Copyright (C) 1995, Digital Equipment Corporation. 
  All rights reserved. 
- Last modified on Sat Jan 11 22:04:17 PST 1997 by steveg 
+ Created by steveg 
+                                                                           
+ Parts Copyright (C) 1997, Columbia University                             
+ All rights reserved.                                                      
+
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:50:35 1997
+ 
 
 <P><PRE>MODULE <module>HTTPControl</module> EXPORTS <A HREF="HTTPControl.i3.html"><implements>HTTPControl</A></implements>;
 
@@ -22,7 +29,7 @@ VAR
   mu                   := NEW(MUTEX);
 
 REVEAL
-  <A NAME="Form">Form</A> = FormPublic BRANDED OBJECT
+  <A NAME="Form">Form</A> = FormPublic BRANDED &quot;HTTPControl.Form&quot; OBJECT
            nameF: TEXT;
          OVERRIDES
            init    := FormInitDefault;
@@ -61,7 +68,7 @@ PROCEDURE <A NAME="FormRespondDefault"><procedure>FormRespondDefault</procedure>
   END FormRespondDefault;
 
 REVEAL
-  <A NAME="Iterator">Iterator</A> = IteratorPublic BRANDED OBJECT
+  <A NAME="Iterator">Iterator</A> = IteratorPublic BRANDED &quot;HTTPControl.Iterator&quot; OBJECT
              OVERRIDES
                next := IteratorDefaultNext;
              END;
@@ -109,7 +116,7 @@ PROCEDURE <A NAME="ValuesAddValue"><procedure>ValuesAddValue</procedure></A> (se
   END ValuesAddValue;
 
 REVEAL
-  <A NAME="StaticForm">StaticForm</A> = StaticFormPublic BRANDED OBJECT
+  <A NAME="StaticForm">StaticForm</A> = StaticFormPublic BRANDED &quot;HTTPControl.StaticForm&quot; OBJECT
                  values       : Values;
                  urlSF, urlSet: TEXT;
                OVERRIDES
@@ -160,7 +167,7 @@ PROCEDURE <A NAME="StaticFormAccept"><procedure>StaticFormAccept</procedure></A>
   END StaticFormAccept;
 
 REVEAL
-  <A NAME="Value">Value</A> = ValuePublic BRANDED OBJECT
+  <A NAME="Value">Value</A> = ValuePublic BRANDED &quot;HTTPControl.Value&quot; OBJECT
           OVERRIDES
             setText       := SetTextNull;
             getText       := GetTextNull;
@@ -200,7 +207,8 @@ PROCEDURE <A NAME="WriteFormItemNull"><procedure>WriteFormItemNull</procedure></
   END WriteFormItemNull;
 
 REVEAL
-  <A NAME="ContainerValue">ContainerValue</A> = ContainerValuePublic BRANDED OBJECT
+  <A NAME="ContainerValue">ContainerValue</A> = ContainerValuePublic BRANDED
+  &quot;HTTPControl.ContainerValue&quot; OBJECT
                    OVERRIDES
                      setValues := ContainerValueSetValuesNull;
                    END;

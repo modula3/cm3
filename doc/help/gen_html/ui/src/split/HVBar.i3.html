@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/HVBar.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/HVBar.i3</H2></A><HR>
 <inInterface>
@@ -28,14 +28,14 @@
    position.  If the user tries to move the bar outside the range of
    positions that are consistent with the size constraints of the
    children of the parent <CODE>HVSplit</CODE>, the highlighted bar will not
-   follow the cursor.  If the user chords while dragging, then adjusting 
+   follow the cursor.  If the user chords while dragging, then adjusting
    mode is cancelled.
 <P>
    The bar has methods that you can override that are called each
    time the bar is moved, or continuously during adjustment.
 <P>
    In order for the bar to highlight correctly, some ancestor of the
-   <CODE>HVSplit</CODE> on which it is installed must be a <CODE>HighlightVBT</CODE>. 
+   <CODE>HVSplit</CODE> on which it is installed must be a <CODE>HighlightVBT</CODE>.
    Since <CODE>Trestle.Install</CODE> automatically inserts a <CODE>HighlightVBT</CODE>
    over top-level windows, you usually don't have to worry about this.
    
@@ -59,21 +59,21 @@ TYPE
 </PRE> The call <CODE>v.init(...)</CODE> initializes <CODE>v</CODE> as an <CODE>HVBar</CODE> with
    the given properties and returns <CODE>v</CODE>.  This includes
    calling  <CODE>TextureVBT.T.init(v, op, txt)</CODE>.
-    <P>
+<P>
    The argument <CODE>size</CODE> gives the number of millimeters that the bar
-   will occupy in the parent <CODE>HVSplit</CODE>.  
+   will occupy in the parent <CODE>HVSplit</CODE>.
 <P>
    An adjusting bar <CODE>b</CODE> calls <CODE>b.pre(cd)</CODE> when it begins adjusting
    in response to a mouse click <CODE>cd</CODE>.  It calls <CODE>b.during(k)</CODE> each
-   time the mouse moves during dragging, where <CODE>k</CODE> is the coordinate that 
-   the <CODE>lo</CODE> (i.e., west or north) edge of the bar would move to if 
+   time the mouse moves during dragging, where <CODE>k</CODE> is the coordinate that
+   the <CODE>lo</CODE> (i.e., west or north) edge of the bar would move to if
    dragging were stopped at that instant.  Finally, the bar calls
    <CODE>b.post(cd)</CODE> when it stops adjusting in response to an upclick
    or chord <CODE>cd</CODE>.  The <CODE>HVSplit</CODE> will be adjusted (but not redisplayed)
-   before <CODE>b.post(cd)</CODE> is called. 
+   before <CODE>b.post(cd)</CODE> is called.
 <P>
    The default <CODE>pre</CODE> and <CODE>during</CODE> methods highlight the position the
-   bar would move to if dragging were stopped.  The default <CODE>post</CODE> 
+   bar would move to if dragging were stopped.  The default <CODE>post</CODE>
    method removes the highlighting.  
 
 <P><PRE>CONST

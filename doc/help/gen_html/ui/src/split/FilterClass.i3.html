@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/FilterClass.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/FilterClass.i3</H2></A><HR>
 <inInterface>
@@ -19,7 +19,7 @@
 <P><PRE>&lt;*PRAGMA LL*&gt;
 </PRE> The <CODE>FilterClass</CODE> interface reveals the representation
    of a filter.   If you are implementing a subtype of <CODE>Filter.T</CODE>,
-   you can import <CODE>FilterClass</CODE> to gain access to the 
+   you can import <CODE>FilterClass</CODE> to gain access to the
    child field. 
 
 <P><PRE>INTERFACE <interface><A HREF="FilterClass.m3.html">FilterClass</A></interface>;
@@ -33,7 +33,7 @@ TYPE Public =
     ch: VBT.T
   END;
 </PRE> A filter <CODE>f</CODE> is a split with the single child <CODE>f.ch</CODE>, or
-   with no children if <CODE>f.ch=NIL</CODE>.  
+   with no children if <CODE>f.ch=NIL</CODE>.
 <P>
    The <CODE>beChild</CODE> method initializes <CODE>ch</CODE> and calls <CODE>Split.T.beChild</CODE>.
    The <CODE>succ</CODE>, <CODE>pred</CODE>, <CODE>nth</CODE>, <CODE>index</CODE>, and <CODE>locate</CODE> methods use the

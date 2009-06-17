@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/stmts/WithStmt.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/stmts/WithStmt.m3</H2></A><HR>
 <inModule>
@@ -29,10 +29,10 @@ TYPE
         expr    : Expr.T;
         scope   : Scope.T;
         body    : Stmt.T;
-	kind    : Kind;
+        kind    : Kind;
       OVERRIDES
         check       := Check;
-	compile     := Compile;
+        compile     := Compile;
         outcomes    := GetOutcome;
       END;
 
@@ -89,7 +89,7 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (p: P;  VAR cs: Stmt.
     END;
 
     Variable.BindType (p.var, t, indirect := (p.kind = Kind.designator),
-                       readonly := NOT Expr.IsWritable (p.expr),
+                       readonly := NOT Expr.IsWritable (p.expr, lhs := FALSE),
                        open_array_ok := TRUE,  needs_init := FALSE);
 
     Scope.TypeCheck (p.scope, cs);
@@ -102,19 +102,21 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (p: P;  VAR cs: Stmt.
 PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P): Stmt.Outcomes =
   VAR
     oc: Stmt.Outcomes;
-    t: Type.T;
     zz: Scope.T;
     info: Type.Info;
     val: CG.Val;
     dope_size: INTEGER;
+    t, tlhs: Type.T;
+    global, indirect, lhs: BOOLEAN;
   BEGIN
     t := Type.CheckInfo (Value.TypeOf (p.var), info);
 
     (* evaluate the expr outside the new scope and capture its value *)
     CASE p.kind OF
     | Kind.designator =&gt;
-        Expr.PrepLValue (p.expr);
-        Expr.CompileAddress (p.expr);
+        Variable.Split (p.var, tlhs, global, indirect, lhs);
+        Expr.PrepLValue (p.expr, lhs);
+        Expr.CompileAddress (p.expr, lhs);
         val := CG.Pop ();
     | Kind.structure =&gt;
         AssignStmt.PrepForEmit (Value.TypeOf (p.var), p.expr,
@@ -187,6 +189,7 @@ END WithStmt.
 <HR>
 <A NAME="x3">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

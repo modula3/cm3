@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: mgkit/src/GraphVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>mgkit/src/GraphVBT.i3</H2></A><HR>
 <inInterface>
@@ -47,7 +47,7 @@
 <P>
    All positions and sizes are given in world coordinates.
 <P>
-   The preferred size is the size of the graph vbt when it is first created.  
+   The preferred size is the size of the graph vbt when it is first created.
    Any changes by the user to the size of the window take precedence.
    The world coordinate system is automatically scaled to fit the current
    size of the window and all objects and fonts are scaled appropriately.
@@ -73,7 +73,7 @@
    size and colors of the vertex.  The vertex has an optional inset border
    of a specified size and color.
 <P>
-   The actual point size of the font used to display the label is the 
+   The actual point size of the font used to display the label is the
    closest available font size to the scaled world size.
 <P>
    Edges are painted as colored lines connecting the centers of their
@@ -147,7 +147,7 @@
    should be 0; for subsequent animations for the same event, t0 should be
    the previous animation's t1.
 <P>
-   If t0 = t1, the animation appears to happen immediately. 
+   If t0 = t1, the animation appears to happen immediately.
 <P>
    Animations may be aborted by a Thread.Alert on the thread that called
    graph.animate.  The animation checks for an alert at the end of each frame in
@@ -185,8 +185,8 @@
 <P>
    Vertices' inset borders are drawn in fontColor, nor borderColor.
 <P>
-   The verticesAt/edgesAt/vertexHighlightsAt/polygonsAt operations have an 
-   internal model distinct from the actual renderer's, and sometimes return 
+   The verticesAt/edgesAt/vertexHighlightsAt/polygonsAt operations have an
+   internal model distinct from the actual renderer's, and sometimes return
    the wrong answers near boundaries.
 <P>
    GraphVBT must be used under Zeus. 

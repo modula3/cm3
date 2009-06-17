@@ -1,0 +1,47 @@
+<HTML><HEAD><TITLE>
+m3core/src/unix/Common/UdirC.c</TITLE></HEAD><BODY BGCOLOR="#ffffff">
+<H2>
+m3core/src/unix/Common/UdirC.c</H2><HR>
+<PRE>
+/* Copyright (C) 1990, Digital Equipment Corporation.         */
+/* All rights reserved.                                       */
+/* See the file COPYRIGHT for a full description.             */
+
+#include &quot;m3unix.h&quot;
+
+#ifdef __cplusplus
+extern &quot;C&quot; {
+#endif
+
+#ifndef _WIN32
+
+/* direct references to opendir on NetBSD:
+
+$ cat 1.c
+#include &lt;stdio.h&gt;
+void opendir(void);
+int main()
+{ printf(&quot;%p\n&quot;, &amp;opendir);
+  return 0;
+}
+$ cc 1.c
+/var/tmp//ccCjD8oF.o: In function `main':
+1.c:(.text+0x15): warning: warning: reference to compatibility opendir(); include &lt;dirent.h&gt; for correct reference
+
+*/
+
+DIR* Udir__opendir(const char* a)
+{
+    return opendir(a);
+}
+
+
+#endif
+
+
+#ifdef __cplusplus
+}
+#endif
+</PRE>
+</BODY>
+</HTML>

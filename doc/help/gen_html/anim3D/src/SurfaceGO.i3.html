@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/SurfaceGO.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/SurfaceGO.i3</H2></A><HR>
 <inInterface>
@@ -15,7 +15,7 @@
 
 <P>
 <P> A <CODE>SurfaceGO.T</CODE> is a geometric objects which is composed of surfaces
-   (as opposed to lines). Surfaces differ from non-surfaces in a number of 
+   (as opposed to lines). Surfaces differ from non-surfaces in a number of
    ways:
    \begin{itemize}
    \item Surfaces interact with light sources, non-surfaces don't
@@ -29,7 +29,7 @@ IMPORT <A HREF="BooleanProp.i3.html">BooleanProp</A>, <A HREF="../../vbtkit/src/
        <A HREF="RealProp.i3.html">RealProp</A>, <A HREF="ShadingProp.i3.html">ShadingProp</A>;
 
 TYPE <A HREF="SurfaceGO.m3.html#T">T</A> &lt;: GO.T;
-</PRE><BLOCKQUOTE><EM> A <CODE>SurfaceGO.T</CODE> is a subtype of \type{GO}{T}. No additional fields or 
+</PRE><BLOCKQUOTE><EM> A <CODE>SurfaceGO.T</CODE> is a subtype of \type{GO}{T}. No additional fields or
    methods are revealed to the user. </EM></BLOCKQUOTE><PRE>
 
 VAR
@@ -49,74 +49,74 @@ VAR
   EdgeColour               : ColorProp.Name;
   EdgeType                 : LineTypeProp.Name;
   EdgeWidth                : RealProp.Name;
-</PRE> In addition to the properties observed by all \type{GO}{T}'s, there are 
+</PRE> In addition to the properties observed by all \type{GO}{T}'s, there are
    various additional properties that are observed by <CODE>SurfaceGO.T</CODE>'s:
 <P>
-   <CODE>DistinguishFacets</CODE> is the name of a boolean property that decides whether 
+   <CODE>DistinguishFacets</CODE> is the name of a boolean property that decides whether
    front- and back-faces of surfaces should be distinguished. If this property
-   is not specified, front- and back-faces are not distinguished. 
+   is not specified, front- and back-faces are not distinguished.
 <P>
    {\em NOTE: In order for this property to make sense, I should introduce
    other surface-related properties: All properties from <CODE>Colour</CODE> to
    <CODE>Shading</CODE> could have backface analogs.}
 <P>
-   <CODE>Color</CODE> is the name of a color property that specifies the color of the 
+   <CODE>Color</CODE> is the name of a color property that specifies the color of the
    surface. If this property is not specified, the surface is drawn in white.
 <P>
-   <CODE>RasterMode</CODE> is the name of an raster mode property that specifies what 
-   rasterization technique is used to draw the surface (solid, hollow, or 
+   <CODE>RasterMode</CODE> is the name of an raster mode property that specifies what
+   rasterization technique is used to draw the surface (solid, hollow, or
    empty). If this property is not specified, the surface is drawn solid.
 <P>
    <CODE>AmbientReflectionCoeff</CODE> is the name of a real property that specifies the
-   ambient reflection coefficient of the surface. If this property is not 
+   ambient reflection coefficient of the surface. If this property is not
    specified, the ambient reflection coefficient is taken to be 0.5.
 <P>
    <CODE>DiffuseReflectionCoeff</CODE> is the name of a real property that specifies the
-   diffuse reflection coefficient of the surface. If this property is not 
+   diffuse reflection coefficient of the surface. If this property is not
    specified, the diffuse reflection coefficient is taken to be 1.
 <P>
    <CODE>SpecularReflectionCoeff</CODE> is the name of a real property that specifies the
-   specular reflection coefficient of the surface. If this property is not 
+   specular reflection coefficient of the surface. If this property is not
    specified, the specular reflection coefficient is taken to be 0.
 <P>
-   <CODE>SpecularReflectionConc</CODE> is the name of a real property that specifies the 
+   <CODE>SpecularReflectionConc</CODE> is the name of a real property that specifies the
    specular reflection concentration of the surface. If this property is not
    specified, the specular reflection concentration is taken to be 0.
 <P>
-   <CODE>TransmissionCoeff</CODE> is the name of a real property that specifies the 
-   transparency of the surface (with 0 being completely opaque and 1 being 
-   completely transparent). If this property is not specified, the 
+   <CODE>TransmissionCoeff</CODE> is the name of a real property that specifies the
+   transparency of the surface (with 0 being completely opaque and 1 being
+   completely transparent). If this property is not specified, the
    transmission coefficient is taken to be 0.
 <P>
-   <CODE>SpecularReflectionColour</CODE> is the name of a color property that specifies 
-   the color of specular reflected light. If this property is not specified, 
+   <CODE>SpecularReflectionColour</CODE> is the name of a color property that specifies
+   the color of specular reflected light. If this property is not specified,
    the specular reflection color is taken to be white.
 <P>
-   <CODE>Lighting</CODE> is the name of a boolean property that decides whether or not 
-   lighting and shading computations shall be performed. If this property is 
+   <CODE>Lighting</CODE> is the name of a boolean property that decides whether or not
+   lighting and shading computations shall be performed. If this property is
    not specified, lighting and shading computations are performed.
 <P>
-   <CODE>Shading</CODE> is the name of a shading property that specifies what shading 
-   method shall be used. If this property is not specified, flat shading is 
+   <CODE>Shading</CODE> is the name of a shading property that specifies what shading
+   method shall be used. If this property is not specified, flat shading is
    used.
 <P>
    <CODE>EdgeVisibility</CODE> is the name of a boolean property that specifies whether
-   or not the edges of the individual polygons of the surface shall be 
+   or not the edges of the individual polygons of the surface shall be
    outlined. If this property is not specified, no surface edges will be drawn.
 <P>
    <CODE>EdgeColour</CODE> is the name of a color property that determines the color
-   of the surface edges (if they are visible). If this property is not 
+   of the surface edges (if they are visible). If this property is not
    specified and edges are visible, they are drawn in white.
 <P>
    <CODE>EdgeType</CODE> is the name of a line type property that determines the line
-   type of the surface edges (provided they are visible). If this property 
+   type of the surface edges (provided they are visible). If this property
    is not specified and edges are visible, they are drawn solid.
 <P>
-   <CODE>EdgeWidth</CODE> is the name of a real property that determines the width of the 
+   <CODE>EdgeWidth</CODE> is the name of a real property that determines the width of the
    surface edges (provided they are visible). If this property is not specified
-   and edges are visible, they are drawn with a width of 1. 
+   and edges are visible, they are drawn with a width of 1.
 <P>
-   The following procedures provide sugaring to attach surface-related 
+   The following procedures provide sugaring to attach surface-related
    properties to geometric objects: 
 
 <P><PRE>PROCEDURE <A HREF="SurfaceGO.m3.html#SetDistinguishFacets">SetDistinguishFacets</A> (o : GO.T; v : BOOLEAN);
