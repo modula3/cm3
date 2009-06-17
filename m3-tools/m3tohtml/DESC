@@ -5,17 +5,17 @@
   hyperrefs pointing to the appropriate definition.
 </p>
 <pre>
-  m3tohtml [<options>] <pkg>+
+  m3tohtml [&lt;options&gt;] &lt;pkg&gt;+
 or
-  m3tohtml [<options>]  <  <file-list>
+  m3tohtml [&lt;options&gt;]  &lt;  &lt;file-list&gt;
 
   options:
 
     -force|-F                        overwrite existing HTML.index
-    -root|-pkgroot <package root>    defined package root directory
+    -root|-pkgroot &lt;package root&gt;    defined package root directory
                                      (default: PKG_USE from cm3.cfg)
-    -dir|-dest <outdir>              create output in directory outdir
+    -dir|-dest &lt;outdir&gt;              create output in directory outdir
     -d|-debug                        display debug output
     -v|-verbose                      be verbose
-    -p <pre-process-filter>          filter the sources before processing
+    -p &lt;pre-process-filter&gt;          filter the sources before processing
 </pre>
