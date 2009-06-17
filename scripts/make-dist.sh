@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.7 2009-06-17 18:03:49 wagner Exp $
+# $Id: make-dist.sh,v 1.8 2009-06-17 20:54:57 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -262,5 +262,5 @@ for c in ${PKG_COLLECTIONS}; do
 done
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
   scp ${STAGE}/cm3-*-${DS}.tgz birch:/var/www/modula3.elegosoft.com/cm3/releng
-  scp collection/*.html birch:/var/www/modula3.elegosoft.com/cm3/releng
+  scp collection-*.html birch:/var/www/modula3.elegosoft.com/cm3/releng
 fi
