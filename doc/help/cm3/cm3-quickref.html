@@ -15,9 +15,9 @@
   <body class="stdbgnav">
     <h3>CM3 Quick Reference</h3>
     <pre>
-Critical Mass Modula-3 version d5.7.0
-  last updated: 2008-03-16
-  compiled: 2008-06-28 14:39:36
+Critical Mass Modula-3 version d5.8.1
+  last updated: 2009-05-16
+  compiled: 2009-06-17 10:04:22
   configuration: /usr/local/cm3/bin/cm3.cfg
 
 command line options:
@@ -66,6 +66,7 @@ information and help:
   -config        print the version number header
 
 misc:
+  --             end of options
   -keep          preserve intermediate and temporary files
   -times         produce a dump of elapsed times
   -override      include the "m3overrides" file
@@ -81,6 +82,9 @@ misc:
   -gui           produce a Windows GUI subsystem program
   -windows       produce a Windows GUI subsystem program
   -pretend &lt;val&gt; pretend to run as CM3_Version &lt;val&gt;
+  -gw            install group writable files
+  -group-writable "
+  -no-m3ship-resolution use quake variables in .M3SHIP (experimental)
 
 environment variables:
   M3CONFIG       platform dependent configuration file to use (cm3.cfg)
@@ -91,6 +95,7 @@ environment variables:
   
   CM3_INSTALL_PREFIX path prefix to prepend to filenames being installed,
                  "make DESTDIR=" behaviour for cm3
+  
   </pre>
   </body>
 </html>
