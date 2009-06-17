@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/builtinOps/Typecode.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/builtinOps/Typecode.m3</H2></A><HR>
 <inModule>
@@ -16,8 +16,8 @@
 
 <P><PRE>MODULE <module><implements><A HREF="Typecode.i3.html">Typecode</A></implements></module>;
 
-IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../exprs/ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="../builtinTypes/Card.i3.html">Card</A>, <A HREF="../misc/Error.i3.html">Error</A>;
-IMPORT <A HREF="../builtinTypes/Reff.i3.html">Reff</A>, <A HREF="../exprs/TypeExpr.i3.html">TypeExpr</A>, <A HREF="../types/ObjectType.i3.html">ObjectType</A>, <A HREF="../../../m3middle/src/M3RT.i3.html">M3RT</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>;
+IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../exprs/ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="#x2">Card</A>, <A HREF="../misc/Error.i3.html">Error</A>;
+IMPORT <A HREF="../builtinTypes/Reff.i3.html">Reff</A>, <A HREF="../exprs/TypeExpr.i3.html">TypeExpr</A>, <A HREF="../types/ObjectType.i3.html">ObjectType</A>, <A HREF="../../../m3middle/src/M3RT.i3.html">M3RT</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>;
 
 VAR Z: CallExpr.MethodList;
 
@@ -42,7 +42,7 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (ce: CallExpr.T;  &lt
   END Check;
 
 PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (ce: CallExpr.T) =
-  VAR e := ce.args[0];  t: Type.T;  nil: CG.Label;
+  VAR e := ce.args[0];  t: Type.T;  nil, tagged: CG.Label;
   BEGIN
     IF TypeExpr.Split (e, t) THEN
       (* get the typecode from the typecell *)
@@ -51,14 +51,30 @@ PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (ce: CallExpr.T) =
       Expr.Prep (e);
       Expr.Compile (e);
       ce.tmp := CG.Pop_temp ();
+      tagged := CG.Next_label ();
       nil := CG.Next_label ();
+
       CG.Push (ce.tmp);
       CG.Load_nil ();
       CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, nil, CG.Never);
+
       CG.Push (ce.tmp);
-      CG.Ref_to_typecode ();
+      CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
+      CG.Load_integer (Target.Integer.cg_type, TInt.One);
+      CG.And (Target.Integer.cg_type);
+      CG.If_true (tagged, CG.Maybe);
+
+      CG.Push (ce.tmp);
+      CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
       CG.Loophole (Target.Integer.cg_type, CG.Type.Addr);
       CG.Store_temp (ce.tmp);
+      CG.Jump (nil);
+
+      CG.Set_label (tagged);
+      CG.Load_intt (M3RT.REFANY_typecode);
+      CG.Loophole (Target.Integer.cg_type, CG.Type.Addr);
+      CG.Store_temp (ce.tmp);
+
       CG.Set_label (nil);
     END;
   END Prep;
@@ -106,10 +122,18 @@ END Typecode.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
 <LI><A HREF="../../../stubgen/src/Type.i3.html#0TOP0">stubgen/src/Type.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Card is in:
+</A><UL>
+<LI><A HREF="../../../bicycle/src/Card.i3.html#0TOP0">bicycle/src/Card.i3</A>
+<LI><A HREF="../builtinTypes/Card.i3.html#0TOP0">m3front/src/builtinTypes/Card.i3</A>
 </UL>
 <P>
 <PRE>

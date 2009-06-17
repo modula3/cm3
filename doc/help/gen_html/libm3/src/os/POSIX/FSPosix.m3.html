@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/os/POSIX/FSPosix.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/os/POSIX/FSPosix.m3</H2></A><HR>
 <inModule>
@@ -19,10 +19,10 @@
 <P><PRE>UNSAFE MODULE <module>FSPosix</module> EXPORTS <A HREF="../Common/FS.i3.html"><implements>FS</A></implements>;
 
 IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="../../../derived/AtomList.i3.html">AtomList</A>, <A HREF="../../../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../Common/File.i3.html">File</A>, <A HREF="FilePosix.i3.html">FilePosix</A>, <A HREF="../../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../Common/OSError.i3.html">OSError</A>,
-       <A HREF="OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../Common/Pathname.i3.html">Pathname</A>, <A HREF="../Common/Process.i3.html">Process</A>, <A HREF="../../../../m3core/src/runtime/common/RTOS.i3.html">RTOS</A>, <A HREF="../../../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../derived/TextSeq.i3.html">TextSeq</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>,
-       <A HREF="../../../../m3core/src/unix/linux-libc6/Udir.i3.html">Udir</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uerror.i3.html">Uerror</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Ustat.i3.html">Ustat</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Utime.i3.html">Utime</A>, <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>;
+       <A HREF="OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../Common/Pathname.i3.html">Pathname</A>, <A HREF="../Common/Process.i3.html">Process</A>, <A HREF="../../../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../derived/TextSeq.i3.html">TextSeq</A>, <A HREF="#x1">Unix</A>,
+       <A HREF="#x2">Udir</A>, <A HREF="#x3">Uerror</A>, <A HREF="#x4">Ustat</A>, <A HREF="#x5">Utime</A>, <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../../../m3core/src/thread/Common/Scheduler.i3.html">Scheduler</A>, <A HREF="FSPosixC.i3.html">FSPosixC</A>;
 
-FROM <A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A> IMPORT O_RDWR, O_CREAT, O_TRUNC, O_EXCL;
+FROM <A HREF="#x1">Unix</A> IMPORT O_RDWR, O_CREAT, O_TRUNC, O_EXCL;
 
 PROCEDURE <A NAME="GetAbsolutePathname"><procedure>GetAbsolutePathname</procedure></A>(pn: Pathname.T): Pathname.T RAISES {OSError.E} =
   VAR arcs, prefix: Pathname.Arcs;
@@ -132,21 +132,21 @@ PROCEDURE <A NAME="CheckLink"><procedure>CheckLink</procedure></A>(arcs: Pathnam
   END CheckLink;
 
 TYPE ABW = ARRAY BOOLEAN OF Word.T;
-
-CONST OpenFlags = ARRAY CreateOption OF ABW{
+</PRE> CONST 
+<PRE>VAR OpenFlags := ARRAY CreateOption OF ABW{
   (* truncate =    FALSE                  TRUE                 *)
   (* Never  *) ABW{O_RDWR,                O_RDWR+O_TRUNC        },
   (* Ok     *) ABW{O_RDWR+O_CREAT,        O_RDWR+O_CREAT+O_TRUNC},
   (* Always *) ABW{O_RDWR+O_CREAT+O_EXCL, O_RDWR+O_CREAT+O_EXCL }
   };
-
-CONST AllAccessModes =
+</PRE> CONST 
+<PRE>VAR AllAccessModes :=
   Unix.MSETUID + Unix.MSETGID + Unix.MSTICKY +
   Unix.MROWNER + Unix.MWOWNER + Unix.MXOWNER +
   Unix.MRGROUP + Unix.MWGROUP + Unix.MXGROUP +
   Unix.MROTHER + Unix.MWOTHER + Unix.MXOTHER;
-
-CONST OpenMode = ARRAY AccessOption OF Ctypes.int{
+</PRE> CONST 
+<PRE>VAR OpenMode := ARRAY AccessOption OF Ctypes.int{
   (*OnlyOwnerCanRead*) Unix.MROWNER+Unix.MWOWNER,
   (*ReadOnly*)         Unix.MROWNER+Unix.MRGROUP+Unix.MROTHER,
   (*Default*)          Unix.Mrwrwrw (* should this be AllAccessModes? *)
@@ -187,12 +187,13 @@ PROCEDURE <A NAME="OpenFileReadonly"><procedure>OpenFileReadonly</procedure></A>
   END OpenFileReadonly;
 
 PROCEDURE <A NAME="CreateDirectory"><procedure>CreateDirectory</procedure></A>(pn: Pathname.T) RAISES {OSError.E}=
-  CONST
+  VAR
     (* Default access is rwxrwxrwx. The umask is applied by Unix *)
-    RWXRWXRWX = Ustat.S_IREAD + Ustat.S_IWRITE + Ustat.S_IEXEC +
+    (*CONST*)
+    RWXRWXRWX := Ustat.S_IREAD + Ustat.S_IWRITE + Ustat.S_IEXEC +
         Ustat.S_GREAD + Ustat.S_GWRITE + Ustat.S_GEXEC +
         Ustat.S_OREAD + Ustat.S_OWRITE + Ustat.S_OEXEC;
-  VAR fname := M3toC.SharedTtoS(pn);
+    fname := M3toC.SharedTtoS(pn);
   BEGIN
     IF Unix.mkdir(fname, RWXRWXRWX) &lt; 0 THEN Fail(pn, fname); END;
     M3toC.FreeSharedS(pn, fname);
@@ -247,9 +248,10 @@ PROCEDURE <A NAME="Iterate"><procedure>Iterate</procedure></A>(pn: Pathname.T): 
       pn := Pathname.Join(Process.GetWorkingDirectory(), pn, NIL)
     END;
     fname := M3toC.SharedTtoS(pn);
-    RTOS.LockHeap ();(*HACK -- opendir() calls malloc() =&gt; not thread safe *)
+    Scheduler.DisableSwitching();
+      (* opendir() calls malloc() =&gt; not user-thread safe *)
       d := Udir.opendir(fname);
-    RTOS.UnlockHeap ();
+    Scheduler.EnableSwitching();
     IF d = NIL THEN Fail(pn, fname); END;
     M3toC.FreeSharedS(pn, fname);
     RETURN NEW(Iterator, d := d, pn := pn)
@@ -279,27 +281,29 @@ PROCEDURE <A NAME="IterNextWithStatus"><procedure>IterNextWithStatus</procedure>
 TYPE NamePrefix = UNTRACED REF ARRAY [0..2] OF Ctypes.char;
 
 PROCEDURE <A NAME="IterRaw"><procedure>IterRaw</procedure></A>(iter: Iterator; VAR (*OUT*) name: TEXT): BOOLEAN =
+  VAR n: Ctypes.const_char_star;
   BEGIN
     IF iter.closed THEN RAISE IterClosed END;
     LOOP (* to ignore &quot;.&quot; and &quot;..&quot; *)
       IF iter.d = NIL THEN RETURN FALSE
       ELSE
-        WITH e = Udir.readdir(iter.d) DO
-          IF e = NIL THEN
-            RTOS.LockHeap ();(*HACK -- closedir() calls free() =&gt; not thread safe *)
-            EVAL Udir.closedir(iter.d);
-            RTOS.UnlockHeap ();
+      (* cvsup source says readdir needs EnableSwitching/DisableSwitching *)
+        Scheduler.DisableSwitching ();
+          n := FSPosixC.m3_readdir_name(iter.d);
+        Scheduler.EnableSwitching ();
+          IF n = NIL THEN
+            Scheduler.DisableSwitching ();
+              (* closedir() calls free() =&gt; not user-thread safe *)
+              EVAL Udir.closedir(iter.d);
+            Scheduler.EnableSwitching ();
             iter.d := NIL;
             RETURN FALSE
           ELSE
-            WITH sp = ADR(e.d_name) DO
-              IF NOT DotOrDotDot(LOOPHOLE(sp, NamePrefix)) THEN
-                name := M3toC.CopyStoT(LOOPHOLE (sp, ADDRESS));
-                RETURN TRUE
-              END
+            IF NOT DotOrDotDot(LOOPHOLE(n, NamePrefix)) THEN
+              name := M3toC.CopyStoT(n);
+              RETURN TRUE
             END
           END
-        END
       END
     END
   END IterRaw;
@@ -313,9 +317,10 @@ PROCEDURE <A NAME="DotOrDotDot"><procedure>DotOrDotDot</procedure></A>(n: NamePr
 PROCEDURE <A NAME="IterClose"><procedure>IterClose</procedure></A>(iter: Iterator) =
   BEGIN
     IF iter.d # NIL THEN
-      RTOS.LockHeap ();(*HACK -- closedir() calls free() =&gt; not thread safe *)
-      EVAL Udir.closedir(iter.d);
-      RTOS.UnlockHeap ();
+      Scheduler.DisableSwitching ();
+        (* closedir() calls free() =&gt; not user-thread safe *)
+        EVAL Udir.closedir(iter.d);
+      Scheduler.EnableSwitching ();
       iter.d := NIL;
     END;
     iter.closed := TRUE
@@ -333,19 +338,13 @@ PROCEDURE <A NAME="CStatus"><procedure>CStatus</procedure></A>(s: Ctypes.char_st
   VAR statBuf: Ustat.struct_stat;
   BEGIN
     IF Ustat.stat(s, ADR(statBuf)) &lt; 0 THEN RETURN -1 END;
-    StatBufToStatus(statBuf, status);
-    RETURN 0
-  END CStatus;
-
-&lt;*INLINE*&gt;
-PROCEDURE <A NAME="StatBufToStatus"><procedure>StatBufToStatus</procedure></A>(
-    READONLY statBuf: Ustat.struct_stat; VAR (*OUT*) status: File.Status) =
-  BEGIN
     status.type := FilePosix.FileTypeFromStatbuf(statBuf);
     (* Could make following assignments conditional on type: *)
     status.modificationTime := FLOAT(statBuf.st_mtime, LONGREAL);
-    status.size := statBuf.st_size
-  END StatBufToStatus;
+    status.size := ORD(statBuf.st_size);
+    IF status.size &lt; 0 THEN RETURN -1 END;
+    RETURN 0
+  END CStatus;
 
 PROCEDURE <A NAME="SetModificationTime"><procedure>SetModificationTime</procedure></A>(pn: Pathname.T; READONLY t: Time.T)
   RAISES {OSError.E}=
@@ -370,6 +369,44 @@ BEGIN
 END FSPosix.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Unix is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Unix.i3.html#0TOP0">m3core/src/unix/Common/Unix.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-common/Unix.i3.html#0TOP0">m3core/src/unix/linux-common/Unix.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html#0TOP0">m3core/src/unix/linux-libc6/Unix.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Udir is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Udir.i3.html#0TOP0">m3core/src/unix/Common/Udir.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Udir.i3.html#0TOP0">m3core/src/unix/linux-libc6/Udir.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface Uerror is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Uerror.i3.html#0TOP0">m3core/src/unix/Common/Uerror.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-common/Uerror.i3.html#0TOP0">m3core/src/unix/linux-common/Uerror.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Uerror.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uerror.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x4">interface Ustat is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Ustat.i3.html#0TOP0">m3core/src/unix/Common/Ustat.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Ustat.i3.html#0TOP0">m3core/src/unix/linux-libc6/Ustat.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x5">interface Utime is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Utime.i3.html#0TOP0">m3core/src/unix/Common/Utime.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-common/Utime.i3.html#0TOP0">m3core/src/unix/linux-common/Utime.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Utime.i3.html#0TOP0">m3core/src/unix/linux-libc6/Utime.i3</A>
+</UL>
+<P>
 <PRE>
 
 

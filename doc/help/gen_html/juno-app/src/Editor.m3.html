@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-app/src/Editor.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-app/src/Editor.m3</H2></A><HR>
 <inModule>
@@ -15,9 +15,9 @@
       modified on Fri Aug  7 21:51:56 PDT 1992 by myers                    
 <PRE>&lt;* PRAGMA LL *&gt;
 
-MODULE <module>Editor</module> EXPORTS <A HREF="Editor.i3.html"><implements>Editor</A></implements>, <A HREF="JunoHandleLexErr.i3.html"><implements>JunoHandleLexErr</A></implements>, <A HREF="EditorUI.i3.html"><implements>EditorUI</A></implements>;
+MODULE <module>Editor</module> EXPORTS <A HREF="#x1"><implements>Editor</A></implements>, <A HREF="JunoHandleLexErr.i3.html"><implements>JunoHandleLexErr</A></implements>, <A HREF="EditorUI.i3.html"><implements>EditorUI</A></implements>;
 
-IMPORT <A HREF="JunoError.i3.html">JunoError</A>, <A HREF="#x1">View</A>, <A HREF="Drawing.i3.html">Drawing</A>, <A HREF="ToolBox.i3.html">ToolBox</A>, <A HREF="EditorXtra.i3.html">EditorXtra</A>, <A HREF="JunoConfig.i3.html">JunoConfig</A>;
+IMPORT <A HREF="JunoError.i3.html">JunoError</A>, <A HREF="#x2">View</A>, <A HREF="Drawing.i3.html">Drawing</A>, <A HREF="ToolBox.i3.html">ToolBox</A>, <A HREF="EditorXtra.i3.html">EditorXtra</A>, <A HREF="JunoConfig.i3.html">JunoConfig</A>;
 IMPORT <A HREF="../../juno-compiler/src/JunoParse.i3.html">JunoParse</A>, <A HREF="../../juno-compiler/src/JunoLex.i3.html">JunoLex</A>, <A HREF="../../juno-compiler/src/JunoAST.i3.html">JunoAST</A>, <A HREF="../../juno-compiler/src/JunoUnparse.i3.html">JunoUnparse</A>, <A HREF="../../juno-compiler/src/JunoToken.i3.html">JunoToken</A>;
 IMPORT   <A HREF="../../juno-compiler/src/JunoScope.i3.html">JunoScope</A>, <A HREF="../../juno-compiler/src/JunoCompile.i3.html">JunoCompile</A>;
 FROM <A HREF="../../juno-compiler/src/JunoCompileErr.i3.html">JunoCompileErr</A> IMPORT Error, Raise;
@@ -1046,7 +1046,14 @@ END Editor.
 </PRE>
 </inModule>
 <HR>
-<A NAME="x1">interface View is in:
+<A NAME="x1">interface Editor is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/misc/Editor.i3.html#0TOP0">cm3ide/src/misc/Editor.i3</A>
+<LI><A HREF="Editor.i3.html#0TOP0">juno-app/src/Editor.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface View is in:
 </A><UL>
 <LI><A HREF="View.i3.html#0TOP0">juno-app/src/View.i3</A>
 <LI><A HREF="../../zeus/src/View.i3.html#0TOP0">zeus/src/View.i3</A>

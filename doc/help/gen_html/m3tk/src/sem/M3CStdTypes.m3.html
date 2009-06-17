@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/sem/M3CStdTypes.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/sem/M3CStdTypes.m3</H2></A><HR>
 <inModule>
@@ -36,6 +36,7 @@ IMPORT <A HREF="../syn/M3CSrcPos.i3.html">M3CSrcPos</A>;
 
 VAR
   integer: M3AST_AS.Integer_type;
+  longint: M3AST_AS.Longint_type;
   real: M3AST_AS.Real_type;
   longReal: M3AST_AS.LongReal_type;
   extended: M3AST_AS.Extended_type;
@@ -60,6 +61,11 @@ PROCEDURE <A NAME="Integer"><procedure>Integer</procedure></A>(): M3AST_AS.Integ
   BEGIN
     RETURN integer;
   END Integer;
+
+PROCEDURE <A NAME="Longint"><procedure>Longint</procedure></A>(): M3AST_AS.Longint_type RAISES {}=
+  BEGIN
+    RETURN longint;
+  END Longint;
 
 PROCEDURE <A NAME="Real"><procedure>Real</procedure></A>(): M3AST_AS.Real_type RAISES {}=
   BEGIN
@@ -180,6 +186,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A>(n: M3AST_AS.SRC_NODE) R
 BEGIN
   charpos := 0;
   integer := NEW(M3AST_AS.Integer_type).init(); Init(integer);
+  longint := NEW(M3AST_AS.Longint_type).init(); Init(longint);
   widechar := NEW(M3AST_AS.WideChar_type).init(); Init(widechar);
   real := NEW(M3AST_AS.Real_type).init(); Init(real);
   longReal := NEW(M3AST_AS.LongReal_type).init(); Init(longReal);

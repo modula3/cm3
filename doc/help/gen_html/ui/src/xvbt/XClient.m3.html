@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/xvbt/XClient.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/xvbt/XClient.m3</H2></A><HR>
 <inModule>
@@ -36,7 +36,7 @@ IMPORT <A HREF="../../../X11R4/src/Common/X.i3.html">X</A>, <A HREF="../vbt/VBT.
        <A HREF="XScreenType.i3.html">XScreenType</A>, <A HREF="../../../libm3/src/geometry/Point.i3.html">Point</A>, <A HREF="../../../libm3/src/geometry/Rect.i3.html">Rect</A>, <A HREF="../split/ProperSplit.i3.html">ProperSplit</A>, <A HREF="../vbt/Trestle.i3.html">Trestle</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../vbt/VBTClass.i3.html">VBTClass</A>,
        <A HREF="../../../libm3/src/geometry/Axis.i3.html">Axis</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../split/Split.i3.html">Split</A>, <A HREF="../vbt/ScrnCursor.i3.html">ScrnCursor</A>, <A HREF="../vbt/ScrnColorMap.i3.html">ScrnColorMap</A>, <A HREF="../vbt/VBTRep.i3.html">VBTRep</A>, <A HREF="XClientF.i3.html">XClientF</A>,
        <A HREF="XPaint.i3.html">XPaint</A>, <A HREF="../trestle/TrestleImpl.i3.html">TrestleImpl</A>, <A HREF="../../../libm3/src/types/ASCII.i3.html">ASCII</A>, <A HREF="XProperties.i3.html">XProperties</A>, <A HREF="TrestleOnX.i3.html">TrestleOnX</A>, <A HREF="XScrnCmap.i3.html">XScrnCmap</A>,
-       <A HREF="../../../m3core/src/C/LINUXLIBC6/Cstring.i3.html">Cstring</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>, <A HREF="../../../X11R4/src/Common/Xatom.i3.html">Xatom</A>, <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="XScrnPxmp.i3.html">XScrnPxmp</A>;
+       <A HREF="#x1">Cstring</A>, <A HREF="#x2">Unix</A>, <A HREF="../../../X11R4/src/Common/Xatom.i3.html">Xatom</A>, <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="XScrnPxmp.i3.html">XScrnPxmp</A>;
 
 FROM <A HREF="../vbt/TrestleClass.i3.html">TrestleClass</A> IMPORT Decoration;
 FROM <A HREF="XClientF.i3.html">XClientF</A> IMPORT Child, SimpleWaitFor;
@@ -888,7 +888,7 @@ PROCEDURE <A NAME="Sync"><procedure>Sync</procedure></A> (v: T; ch: VBT.T; wait 
         END
       FINALLY
         Exit(v);
-        Thread.Acquire(ch)
+        Thread.Acquire(ch);
       END
     EXCEPT
       X.Error, TrestleComm.Failure =&gt;     (* skip *)
@@ -1528,6 +1528,21 @@ BEGIN
 END XClient.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Cstring is in:
+</A><UL>
+<LI><A HREF="../../../m3core/src/C/Common/Cstring.i3.html#0TOP0">m3core/src/C/Common/Cstring.i3</A>
+<LI><A HREF="../../../m3core/src/C/LINUXLIBC6/Cstring.i3.html#0TOP0">m3core/src/C/LINUXLIBC6/Cstring.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Unix is in:
+</A><UL>
+<LI><A HREF="../../../m3core/src/unix/Common/Unix.i3.html#0TOP0">m3core/src/unix/Common/Unix.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-common/Unix.i3.html#0TOP0">m3core/src/unix/linux-common/Unix.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-libc6/Unix.i3.html#0TOP0">m3core/src/unix/linux-libc6/Unix.i3</A>
+</UL>
+<P>
 <PRE>
 
 

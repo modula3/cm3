@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/ast/M3AST_AS_F.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/ast/M3AST_AS_F.i3</H2></A><HR>
 <inInterface>
@@ -326,8 +326,10 @@ TYPE
 
   TYPE_SPEC = M3AST_AS.M3TYPE OBJECT END;
 
-  Integer_type = M3AST_AS.TYPE_SPEC OBJECT END;
-  WideChar_type = M3AST_AS.TYPE_SPEC OBJECT END;
+  INT_TYPE = M3AST_AS.TYPE_SPEC OBJECT END;
+  Integer_type = M3AST_AS.INT_TYPE OBJECT END;
+  Longint_type = M3AST_AS.INT_TYPE OBJECT END;
+  WideChar_type = M3AST_AS.INT_TYPE OBJECT END;
   FLOAT_TYPE = M3AST_AS.TYPE_SPEC OBJECT END;
   Real_type = M3AST_AS.FLOAT_TYPE OBJECT END;
   LongReal_type = M3AST_AS.FLOAT_TYPE OBJECT END;
@@ -443,7 +445,9 @@ REVEAL
   M3AST_AS.M3TYPE &lt;: M3TYPE;
   M3AST_AS.Named_type &lt;: Named_type;
   M3AST_AS.TYPE_SPEC &lt;: TYPE_SPEC;
+  M3AST_AS.INT_TYPE &lt;: INT_TYPE;
   M3AST_AS.Integer_type &lt;: Integer_type;
+  M3AST_AS.Longint_type &lt;: Longint_type;
   M3AST_AS.WideChar_type &lt;: WideChar_type;
   M3AST_AS.FLOAT_TYPE &lt;: FLOAT_TYPE;
   M3AST_AS.Real_type &lt;: Real_type;
@@ -491,6 +495,7 @@ TYPE
   END;
 
   Integer_literal = M3AST_AS.NUMERIC_LITERAL OBJECT END;
+  Longint_literal = M3AST_AS.NUMERIC_LITERAL OBJECT END;
   Real_literal = M3AST_AS.NUMERIC_LITERAL OBJECT END;
   LongReal_literal = M3AST_AS.NUMERIC_LITERAL OBJECT END;
   Extended_literal = M3AST_AS.NUMERIC_LITERAL OBJECT END;
@@ -596,6 +601,7 @@ REVEAL
   M3AST_LX.LITERAL &lt;: LITERAL;
   M3AST_AS.NUMERIC_LITERAL &lt;: NUMERIC_LITERAL;
   M3AST_AS.Integer_literal &lt;: Integer_literal;
+  M3AST_AS.Longint_literal &lt;: Longint_literal;
   M3AST_AS.Real_literal &lt;: Real_literal;
   M3AST_AS.LongReal_literal &lt;: LongReal_literal;
   M3AST_AS.Extended_literal &lt;: Extended_literal;

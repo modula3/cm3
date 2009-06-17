@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/TFloat.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/TFloat.m3</H2></A><HR>
 <inModule>
@@ -16,11 +16,11 @@
 
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="TFloat.i3.html">TFloat</A></implements></module>;
 
-IMPORT <A HREF="../../m3core/src/convert/Convert.i3.html">Convert</A>, <A HREF="TInt.i3.html">TInt</A>, <A HREF="TargetMap.i3.html">TargetMap</A>;
-FROM <A HREF="Target.i3.html">Target</A> IMPORT Int, Float, Precision;
+IMPORT <A HREF="../../m3core/src/convert/Convert.i3.html">Convert</A>, <A HREF="TargetMap.i3.html">TargetMap</A>;
+FROM <A HREF="Target.i3.html">Target</A> IMPORT Float, Precision;
 
 PROCEDURE <A NAME="New"><procedure>New</procedure></A> (READONLY chars: ARRAY OF CHAR;  pre: Precision;
-                                                       VAR f: Float): BOOLEAN =
+               VAR f: Float): BOOLEAN =
   VAR used: INTEGER;
   BEGIN
     f.pre      := pre;
@@ -114,57 +114,47 @@ PROCEDURE <A NAME="FloatF"><procedure>FloatF</procedure></A> (READONLY a: Float;
     RETURN Normalize (f);
   END FloatF;
 
-PROCEDURE <A NAME="FloatI"><procedure>FloatI</procedure></A> (READONLY iI: Int;  p: Precision;  VAR f: Float): BOOLEAN =
-  VAR i: INTEGER;
+PROCEDURE <A NAME="FloatI"><procedure>FloatI</procedure></A> (READONLY i: INTEGER;  p: Precision;  VAR f: Float): BOOLEAN =
   BEGIN
-    IF NOT TInt.ToInt (iI, i) THEN RETURN FALSE; END;
     f.pre      := p;
     f.exponent := 0;
     f.fraction := FLOAT (i, EXTENDED);
     RETURN Normalize (f);
   END FloatI;
 
-PROCEDURE <A NAME="Trunc"><procedure>Trunc</procedure></A> (READONLY a: Float;  VAR r: Int): BOOLEAN =
+PROCEDURE <A NAME="Trunc"><procedure>Trunc</procedure></A> (READONLY a: Float): INTEGER =
   BEGIN
-    IF (a.pre = Precision.Short) THEN
-      RETURN TInt.FromInt (TRUNC (ToReal (a)), r);
-    ELSIF (a.pre = Precision.Long) THEN
-      RETURN TInt.FromInt (TRUNC (ToLongreal (a)), r);
-    ELSE
-      RETURN TInt.FromInt (TRUNC (ToExtended (a)), r);
+    CASE a.pre OF
+    | Precision.Short    =&gt; RETURN TRUNC (ToReal (a));
+    | Precision.Long     =&gt; RETURN TRUNC (ToLongreal (a));
+    | Precision.Extended =&gt; RETURN TRUNC (ToExtended (a));
     END;
   END Trunc;
 
-PROCEDURE <A NAME="Round"><procedure>Round</procedure></A> (READONLY a: Float;  VAR r: Int): BOOLEAN =
+PROCEDURE <A NAME="Round"><procedure>Round</procedure></A> (READONLY a: Float): INTEGER =
   BEGIN
-    IF (a.pre = Precision.Short) THEN
-      RETURN TInt.FromInt (ROUND (ToReal (a)), r);
-    ELSIF (a.pre = Precision.Long) THEN
-      RETURN TInt.FromInt (ROUND (ToLongreal (a)), r);
-    ELSE
-      RETURN TInt.FromInt (ROUND (ToExtended (a)), r);
+    CASE a.pre OF
+    | Precision.Short    =&gt; RETURN ROUND (ToReal (a));
+    | Precision.Long     =&gt; RETURN ROUND (ToLongreal (a));
+    | Precision.Extended =&gt; RETURN ROUND (ToExtended (a));
     END;
   END Round;
 
-PROCEDURE <A NAME="Floor"><procedure>Floor</procedure></A> (READONLY a: Float;  VAR r: Int): BOOLEAN =
+PROCEDURE <A NAME="Floor"><procedure>Floor</procedure></A> (READONLY a: Float): INTEGER =
   BEGIN
-    IF (a.pre = Precision.Short) THEN
-      RETURN TInt.FromInt (FLOOR (ToReal (a)), r);
-    ELSIF (a.pre = Precision.Long) THEN
-      RETURN TInt.FromInt (FLOOR (ToLongreal (a)), r);
-    ELSE
-      RETURN TInt.FromInt (FLOOR (ToExtended (a)), r);
+    CASE a.pre OF
+    | Precision.Short    =&gt; RETURN FLOOR (ToReal (a));
+    | Precision.Long     =&gt; RETURN FLOOR (ToLongreal (a));
+    | Precision.Extended =&gt; RETURN FLOOR (ToExtended (a));
     END;
   END Floor;
 
-PROCEDURE <A NAME="Ceiling"><procedure>Ceiling</procedure></A> (READONLY a: Float;  VAR r: Int): BOOLEAN =
+PROCEDURE <A NAME="Ceiling"><procedure>Ceiling</procedure></A> (READONLY a: Float): INTEGER =
   BEGIN
-    IF (a.pre = Precision.Short) THEN
-      RETURN TInt.FromInt (CEILING (ToReal (a)), r);
-    ELSIF (a.pre = Precision.Long) THEN
-      RETURN TInt.FromInt (CEILING (ToLongreal (a)), r);
-    ELSE
-      RETURN TInt.FromInt (CEILING (ToExtended (a)), r);
+    CASE a.pre OF
+    | Precision.Short    =&gt; RETURN CEILING (ToReal (a));
+    | Precision.Long     =&gt; RETURN CEILING (ToLongreal (a));
+    | Precision.Extended =&gt; RETURN CEILING (ToExtended (a));
     END;
   END Ceiling;
 
@@ -180,7 +170,7 @@ PROCEDURE <A NAME="ToChars"><procedure>ToChars</procedure></A> (READONLY f: Floa
   END ToChars;
 
 TYPE
-  Ptr = UNTRACED REF ARRAY [0..BITSIZE (Float)] OF Byte;
+  Ptr = UNTRACED REF ARRAY [0..BITSIZE(EXTENDED) DIV BITSIZE(Byte) - 1] OF Byte;
 
 PROCEDURE <A NAME="ToBytes"><procedure>ToBytes</procedure></A> (READONLY f: Float;  VAR buf: ARRAY OF Byte): INTEGER =
   VAR

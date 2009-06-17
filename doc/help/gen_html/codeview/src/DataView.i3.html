@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: codeview/src/DataView.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>codeview/src/DataView.i3</H2></A><HR>
 <inInterface>
@@ -15,7 +15,7 @@
 <P><PRE>INTERFACE <interface><A HREF="DataView.m3.html">DataView</A></interface>;
 </PRE><P>
     A DataView.T provides simple display of variables.
-    It is intended for - but not limited to - use with Zeus and the 
+    It is intended for - but not limited to - use with Zeus and the
     Modula-3 compiler's TRACE pragma.
 <P>
     The compiler will generate calls to user-specified trace routines
@@ -53,8 +53,8 @@
           WITH  alias = x DO  INC(alias) END
 <P>
     will not generate any tracing.
-    <P>
-    Here is an example of a traced Zeus algorithm procedure:    
+<P>
+    Here is an example of a traced Zeus algorithm procedure:
 <P>
         PROCEDURE Run (alg: T) RAISES {Thread.Alerted} =
           VAR
@@ -71,16 +71,16 @@
             BinpackIE.Setup(alg, B, N);
             bins := NEW(Bins, B);
             FOR b := 0 TO B-1 DO bins[b] := 0.0 END;
-            FOR i := 1 TO N DO 
+            FOR i := 1 TO N DO
               wt := Random.Real();
               BinpackIE.NewWeight (alg, wt);
-              bin := 0; 
+              bin := 0;
               WHILE (bin &lt; B) AND (bins[bin] + wt &gt; 1.0) DO INC(bin) END;
-              IF bin = B THEN 
+              IF bin = B THEN
                 BinpackIE.Ignore(alg);
-              ELSE  
+              ELSE
                 bins[bin] := bins[bin] + wt;
-                BinpackIE.Pack(alg, bin, bins[bin]) 
+                BinpackIE.Pack(alg, bin, bins[bin])
               END
             END
           END Run;
@@ -102,15 +102,15 @@
                 (TextArea ReadOnly %N)
                 (TextArea ReadOnly %wt)
                 (TextArea ReadOnly %bin))))
-    <P>
-    If using a DataView within Zeus, all you need to do is to 
-    set the <CODE>varRsrc</CODE> field on the Algorithm.T to name a resource 
+<P>
+    If using a DataView within Zeus, all you need to do is to
+    set the <CODE>varRsrc</CODE> field on the Algorithm.T to name a resource
     containing a valid FormsVBT s-expression.
 <P>
 
 
 <P><PRE>IMPORT <A HREF="../../formsvbt/src/FormsVBT.i3.html">FormsVBT</A>;
-</PRE> Basic types.  If you need something that isn't here, 
+</PRE> Basic types.  If you need something that isn't here,
    don't hesitate to add it. 
 
 <P><PRE>TYPE

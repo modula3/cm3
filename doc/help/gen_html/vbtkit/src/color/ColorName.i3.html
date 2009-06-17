@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/color/ColorName.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/color/ColorName.i3</H2></A><HR>
 <inInterface>
@@ -17,8 +17,8 @@
 
 <P> The <CODE>ColorName</CODE> interface provides a standard mapping between color
    names and linear RGB triples. The implementation recognizes
-   the following names, based on those found in 
-   <CODE>/usr/lib/X11/rgb.txt</CODE>: 
+   the following names, based on those found in
+   <CODE>/usr/lib/X11/rgb.txt</CODE>:
 <P>
     \begin{center}
     \begin{tt}
@@ -56,67 +56,67 @@
     The dagger (\dag) indicates that the implementation recognizes
     a name along with the suffixes <CODE>1</CODE>--<CODE>4</CODE>; e.g., <CODE>Red</CODE>, <CODE>Red1</CODE>, <CODE>Red2</CODE>,
     <CODE>Red3</CODE>, and <CODE>Red4</CODE>.
-    <P>
-   The double dagger (\ddag) indicates that the 
-   implementation also recognizes the names with the 
+<P>
+   The double dagger (\ddag) indicates that the
+   implementation also recognizes the names with the
    suffixes <CODE>0</CODE> through <CODE>100</CODE>. That is, <CODE>Gray0</CODE>, <CODE>Gray1</CODE>, \dots,
    <CODE>Gray100</CODE>, as well as <CODE>Grey0</CODE>, <CODE>Grey1</CODE>, \dots, <CODE>Grey100</CODE>.
-   <P>
+<P>
    In addition, the name of a color $C$ from this list
    can be prefixed by one or more of the following modifiers:
 <P>
 <P>
 \begin{center}
 \begin{tabular}{l|l}
-% 
+%
   \it Term &amp; \it Meaning\\ \hline
 <P>
-  \strut\begin{tabular}[c]{l} 
-  <CODE>Light</CODE> \\ 
-  <CODE>Pale</CODE> 
-  \end{tabular} 
+  \strut\begin{tabular}[c]{l}
+  <CODE>Light</CODE> \\
+  <CODE>Pale</CODE>
+  \end{tabular}
     &amp;  1/3 of the way from $C$ to white \\ \hline
 <P>
-  \strut\begin{tabular}[c]{l} 
-  <CODE>Dark</CODE> \\ 
-  <CODE>Dim</CODE> 
-  \end{tabular} 
+  \strut\begin{tabular}[c]{l}
+  <CODE>Dark</CODE> \\
+  <CODE>Dim</CODE>
+  \end{tabular}
     &amp;  1/3 of the way from $C$ to black \\ \hline
 <P>
-  \strut\begin{tabular}[c]{l} 
-  <CODE>Drab</CODE> \\ 
-  <CODE>Weak</CODE> \\ 
-  <CODE>Dull</CODE> 
-  \end{tabular} 
+  \strut\begin{tabular}[c]{l}
+  <CODE>Drab</CODE> \\
+  <CODE>Weak</CODE> \\
+  <CODE>Dull</CODE>
+  \end{tabular}
     &amp; $\vcenter{\hbox{ 1/3 of the way from $C$ to the gray\strut}
                \hbox{with the same brightness as $C$\strut}}$ \\ \hline
 <P>
-  \strut\begin{tabular}[c]{l} 
-  <CODE>Vivid</CODE> \\ 
-  <CODE>Strong</CODE> \\ 
-  <CODE>Bright</CODE> 
-  \end{tabular} 
+  \strut\begin{tabular}[c]{l}
+  <CODE>Vivid</CODE> \\
+  <CODE>Strong</CODE> \\
+  <CODE>Bright</CODE>
+  \end{tabular}
     &amp; $\vcenter{\hbox{1/3 of the way from $C$ to the purest color\strut}
                \hbox{with the same hue as $C$\strut}}$ \\ \hline
 <P>
-  \strut\begin{tabular}[c]{l} 
-  <CODE>Reddish</CODE> 
-  \end{tabular}  
+  \strut\begin{tabular}[c]{l}
+  <CODE>Reddish</CODE>
+  \end{tabular}
      &amp;  1/3 of the way from $C$ to red \\ \hline
 <P>
-  \strut\begin{tabular}[c]{l} 
-  <CODE>Greenish</CODE> 
-  \end{tabular}  
+  \strut\begin{tabular}[c]{l}
+  <CODE>Greenish</CODE>
+  \end{tabular}
     &amp;  1/3 of the way from $C$ to green \\ \hline
 <P>
-  \strut\begin{tabular}[c]{l} 
-  <CODE>Bluish</CODE> 
-  \end{tabular}  
+  \strut\begin{tabular}[c]{l}
+  <CODE>Bluish</CODE>
+  \end{tabular}
     &amp;  1/3 of the way from $C$ to blue \\ \hline
 <P>
-  \strut\begin{tabular}[c]{l} 
-  <CODE>Yellowish</CODE> 
-  \end{tabular}  
+  \strut\begin{tabular}[c]{l}
+  <CODE>Yellowish</CODE>
+  \end{tabular}
     &amp;  1/3 of the way from $C$ to yellow \\
 %
 \end{tabular}
@@ -131,8 +131,8 @@
       <CODE>VeryVerySlightly</CODE>   &amp; 1/16 of the way   &amp;  6\% \\
       <CODE>VerySlightly</CODE>       &amp; 1/8 of the way    &amp; 13\% \\
       <CODE>Slightly</CODE>           &amp; 1/4 of the way    &amp; 25\% \\
-      <CODE>Somewhat</CODE>           &amp; 3/8 of the way    &amp; 38\% \\ 
-      <CODE>Rather</CODE>             &amp; 1/2 of the way    &amp; 50\% \\ 
+      <CODE>Somewhat</CODE>           &amp; 3/8 of the way    &amp; 38\% \\
+      <CODE>Rather</CODE>             &amp; 1/2 of the way    &amp; 50\% \\
       <CODE>Quite</CODE>              &amp; 5/8 of the way    &amp; 63\% \\
       <CODE>Very</CODE>               &amp; 3/4 of the way    &amp; 75\% \\
       <CODE>VeryVery</CODE>           &amp; 7/8 of the way    &amp; 88\% \\

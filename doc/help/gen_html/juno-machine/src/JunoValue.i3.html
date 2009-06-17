@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-machine/src/JunoValue.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-machine/src/JunoValue.i3</H2></A><HR>
 <inInterface>
@@ -31,17 +31,17 @@ TYPE
   Pair = RECORD car, cdr: T END;
 </PRE> The following three declarations control the precision of Juno-2's
    calculations. Currently they are set to use single precision. 
-   
+
 <P><PRE>TYPE
   Real = REAL;
 
 CONST Zero = 0.0;
 
 VAR HalfEps: Real;
-</PRE> <CODE>Zero</CODE> and <CODE>HalfEps</CODE> are the zero and the relative error for type 
-   <CODE>Real</CODE>. That is, the difference between a real number <CODE>x</CODE> and 
+</PRE> <CODE>Zero</CODE> and <CODE>HalfEps</CODE> are the zero and the relative error for type
+   <CODE>Real</CODE>. That is, the difference between a real number <CODE>x</CODE> and
    the result of rounding it to a <CODE>Real</CODE> is at most <CODE>HalfEps*x</CODE>.
-   <CODE>HalfEps</CODE> is initialized in the body of the <CODE>JunoValue</CODE> module.  
+   <CODE>HalfEps</CODE> is initialized in the body of the <CODE>JunoValue</CODE> module. 
 
 <P><PRE>VAR (*CONST*)
   Nil: Null;

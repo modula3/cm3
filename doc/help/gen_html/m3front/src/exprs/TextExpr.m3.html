@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/TextExpr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/TextExpr.m3</H2></A><HR>
 <inModule>
@@ -38,10 +38,10 @@ TYPE
         getBounds    := ExprRep.NoBounds;
         isWritable   := ExprRep.IsNever;
         isDesignator := ExprRep.IsNever;
-	isZeroes     := IsZeroes;
-	genFPLiteral := GenFPLiteral;
-	prepLiteral  := PrepLiteral;
-	genLiteral   := GenLiteral;
+        isZeroes     := IsZeroes;
+        genFPLiteral := GenFPLiteral;
+        prepLiteral  := PrepLiteral;
+        genLiteral   := GenLiteral;
         note_write   := ExprRep.NotWritable;
       END;
 
@@ -238,7 +238,7 @@ PROCEDURE <A NAME="Cat"><procedure>Cat</procedure></A> (a, b: Expr.T;  VAR c: Ex
     RETURN TRUE;
   END Cat;
 
-PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (&lt;*UNUSED*&gt;p: P): BOOLEAN =
+PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (&lt;*UNUSED*&gt;p: P;  &lt;*UNUSED*&gt; lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN FALSE;
   END IsZeroes;
@@ -281,6 +281,7 @@ END TextExpr.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

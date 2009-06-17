@@ -1,5 +1,5 @@
 <HTML><HEAD><TITLE>
-m3core/src/C/Common/CerrnoC.c</TITLE></HEAD><BODY BGCOLOR="#eeeeee">
+m3core/src/C/Common/CerrnoC.c</TITLE></HEAD><BODY BGCOLOR="#ffffff">
 <H2>
 m3core/src/C/Common/CerrnoC.c</H2><HR>
 <PRE>
@@ -10,13 +10,13 @@ m3core/src/C/Common/CerrnoC.c</H2><HR>
 #include &lt;errno.h&gt;
 
 int
-m3_Cerrno_GetErrno(void)
+Cerrno__GetErrno(void)
 {
     return errno;
 }
 
 void
-m3_Cerrno_SetErrno(int e)
+Cerrno__SetErrno(int e)
 {
     errno = e;
 }

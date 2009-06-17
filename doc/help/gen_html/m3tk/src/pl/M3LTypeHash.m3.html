@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/pl/M3LTypeHash.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/pl/M3LTypeHash.m3</H2></A><HR>
 <inModule>
@@ -112,6 +112,8 @@ IMPORT <A HREF="../../../m3tk-misc/src/FingerPrint.i3.html">FingerPrint</A>;
         RETURN Class.Packed;
     | M3AST_AS.Integer_type =&gt;
         RETURN Class.Integer;
+    | M3AST_AS.Longint_type =&gt;
+        RETURN Class.Longint;
     | M3AST_AS.WideChar_type =&gt;
         RETURN Class.WideChar;
     | M3AST_AS.Real_type =&gt;

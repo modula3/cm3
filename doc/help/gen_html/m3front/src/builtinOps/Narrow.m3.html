@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/builtinOps/Narrow.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/builtinOps/Narrow.m3</H2></A><HR>
 <inModule>
@@ -18,7 +18,7 @@
 
 IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../exprs/ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../exprs/TypeExpr.i3.html">TypeExpr</A>;
 IMPORT <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="../types/ObjectType.i3.html">ObjectType</A>, <A HREF="../builtinTypes/Reff.i3.html">Reff</A>, <A HREF="../builtinTypes/Null.i3.html">Null</A>, <A HREF="../../../m3middle/src/M3RT.i3.html">M3RT</A>, <A HREF="../types/RefType.i3.html">RefType</A>;
-IMPORT <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../misc/RunTyme.i3.html">RunTyme</A>;
+IMPORT <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../misc/RunTyme.i3.html">RunTyme</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>;
 
 VAR Z: CallExpr.MethodList;
 
@@ -84,7 +84,7 @@ PROCEDURE <A NAME="Emit"><procedure>Emit</procedure></A> (tlhs, trhs: Type.T) =
 
 PROCEDURE <A NAME="EmitCore"><procedure>EmitCore</procedure></A> (tlhs, trhs: Type.T): CG.Val =
   VAR
-    ok: CG.Label;
+    ok, tagged: CG.Label;
     ref: CG.Val;
     is_object := ObjectType.Is (tlhs);
     target: Type.T;
@@ -108,7 +108,7 @@ PROCEDURE <A NAME="EmitCore"><procedure>EmitCore</procedure></A> (tlhs, trhs: Ty
 
     (* capture the right-hand side *)
     ref := CG.Pop ();
-    ok := CG.Next_label (1);
+    ok := CG.Next_label ();
 
     (* check for ref = NIL *)
     CG.Push (ref);
@@ -116,9 +116,17 @@ PROCEDURE <A NAME="EmitCore"><procedure>EmitCore</procedure></A> (tlhs, trhs: Ty
     CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, ok, CG.Maybe);
 
     IF NOT Type.IsEqual (tlhs, Null.T, NIL) THEN
+      tagged := CG.Next_label ();
+
+      CG.Push (ref);
+      CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
+      CG.Load_integer (Target.Integer.cg_type, TInt.One);
+      CG.And (Target.Integer.cg_type);
+      CG.If_true (tagged, CG.Maybe);
+
       (* check for TYPECODE(ref) = TYPECODE(type) *)
       CG.Push (ref);
-      CG.Ref_to_typecode ();
+      CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
       Type.LoadInfo (tlhs, M3RT.TC_typecode);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, ok, CG.Always);
 
@@ -140,6 +148,12 @@ PROCEDURE <A NAME="EmitCore"><procedure>EmitCore</procedure></A> (tlhs, trhs: Ty
         Procedure.EmitCall (proc);
         CG.If_true (ok, CG.Always);
       END;
+      CG.Abort (CG.RuntimeError.NarrowFailed);
+
+      CG.Set_label (tagged);
+      CG.Load_intt (M3RT.REFANY_typecode);
+      Type.LoadInfo (tlhs, M3RT.TC_typecode);
+      CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, ok, CG.Always);
     END;
 
     CG.Abort (CG.RuntimeError.NarrowFailed);
@@ -185,6 +199,7 @@ END Narrow.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

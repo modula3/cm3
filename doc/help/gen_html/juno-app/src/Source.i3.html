@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-app/src/Source.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-app/src/Source.i3</H2></A><HR>
 <inInterface>
@@ -16,12 +16,12 @@
 
 <P> A <CODE>Source.T</CODE> represents the state of the source view. 
 
-<P><PRE>INTERFACE <interface><A HREF="Source.m3.html">Source</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="#x1">Source</A></interface>;
 
-IMPORT <A HREF="#x1">View</A>, <A HREF="../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="../../juno-compiler/src/JunoAST.i3.html">JunoAST</A>, <A HREF="../../juno-compiler/src/JunoCompileErr.i3.html">JunoCompileErr</A>;
+IMPORT <A HREF="#x2">View</A>, <A HREF="../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="../../juno-compiler/src/JunoAST.i3.html">JunoAST</A>, <A HREF="../../juno-compiler/src/JunoCompileErr.i3.html">JunoCompileErr</A>;
 
 TYPE
-  <A HREF="Source.m3.html#T">T</A> &lt;: Public;
+  <A HREF="#x3">T</A> &lt;: Public;
   Public = View.T OBJECT METHODS
     init(root: View.Root): T;
   END;
@@ -68,10 +68,24 @@ END Source.
 </PRE>
 </inInterface>
 <HR>
-<A NAME="x1">interface View is in:
+<A NAME="x1">Source's implementation  is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/nodes/Source.m3.html#0TOP0">cm3ide/src/nodes/Source.m3</A>
+<LI><A HREF="Source.m3.html#0TOP0">juno-app/src/Source.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface View is in:
 </A><UL>
 <LI><A HREF="View.i3.html#0TOP0">juno-app/src/View.i3</A>
 <LI><A HREF="../../zeus/src/View.i3.html#0TOP0">zeus/src/View.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">opaque type Source.T is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/nodes/Source.m3.html#T">cm3ide/src/nodes/Source.m3</A>
+<LI><A HREF="Source.m3.html#T">juno-app/src/Source.m3</A>
 </UL>
 <P>
 <PRE>

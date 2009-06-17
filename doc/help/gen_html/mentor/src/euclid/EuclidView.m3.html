@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: mentor/src/euclid/EuclidView.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>mentor/src/euclid/EuclidView.m3</H2></A><HR>
 <inModule>
@@ -249,7 +249,7 @@ PROCEDURE <A NAME="Shear"><procedure>Shear</procedure></A> (t: T; p1, p2, from, 
   END Shear;
 
 CONST
-  TwoPi = 2.0 * Math.Pi;
+  TwoPi = FLOAT(2.0D0 * Math.Pi, REAL);
 
 PROCEDURE <A NAME="RotationAngle"><procedure>RotationAngle</procedure></A> (t: T; pivot, pFrom: Id; pTo: Id): REAL =
   VAR
@@ -281,7 +281,7 @@ PROCEDURE <A NAME="RotateLine"><procedure>RotateLine</procedure></A> (t: T; pivo
   BEGIN
     MGV.AddAnimation(
       t.v, NEW(Animate.Rotate, origin := MGPublic.Pos(t.pts[pivot], t.v),
-               angle := (180.0 / Math.Pi) * ang).init(), line);
+               angle := ang / FLOAT(Math.Degree, REAL)).init(), line);
     MGV.Animation(t.v);
   END RotateLine;
 
@@ -297,7 +297,7 @@ PROCEDURE <A NAME="RotateTriangle"><procedure>RotateTriangle</procedure></A> (  
   BEGIN
     MGV.AddAnimation(
       t.v, NEW(Animate.Rotate, origin := MGPublic.Pos(t.pts[pivot], t.v),
-               angle := (180.0 / Math.Pi) * ang).init(), triangle);
+               angle := ang / FLOAT(Math.Degree, REAL)).init(), triangle);
     MGV.Animation(t.v);
   END RotateTriangle;
 
@@ -313,7 +313,7 @@ PROCEDURE <A NAME="RotateAngle"><procedure>RotateAngle</procedure></A> (        
   BEGIN
     MGV.AddAnimation(
       t.v, NEW(Animate.Rotate, origin := MGPublic.Pos(t.pts[pivot], t.v),
-               angle := (180.0 / Math.Pi) * ang).init(), angle);
+               angle := ang / FLOAT(Math.Degree, REAL)).init(), angle);
     MGV.Animation(t.v);
   END RotateAngle;
 

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/pl/M3LTextToType.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/pl/M3LTextToType.m3</H2></A><HR>
 <inModule>
@@ -597,6 +597,7 @@ PROCEDURE <A NAME="FillinTypeSpec"><procedure>FillinTypeSpec</procedure></A>(t: 
     | M3LTypeToText.CharCh =&gt;
     | M3LTypeToText.CardinalCh =&gt;
     | M3LTypeToText.IntegerCh =&gt;
+    | M3LTypeToText.LongintCh =&gt;
     | M3LTypeToText.RealCh =&gt;
     | M3LTypeToText.LongRealCh =&gt;
     | M3LTypeToText.ExtendedCh =&gt;
@@ -642,6 +643,8 @@ PROCEDURE <A NAME="FillinTypeSpec"><procedure>FillinTypeSpec</procedure></A>(t: 
         RETURN M3CStdTypes.Cardinal();
     | M3LTypeToText.IntegerCh =&gt;
         RETURN M3CStdTypes.Integer();
+    | M3LTypeToText.LongintCh =&gt;
+        RETURN M3CStdTypes.Longint();
     | M3LTypeToText.RealCh =&gt;
         RETURN M3CStdTypes.Real();
     | M3LTypeToText.LongRealCh =&gt;

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/stmts/AssignStmt.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/stmts/AssignStmt.m3</H2></A><HR>
 <inModule>
@@ -25,11 +25,11 @@ IMPORT <A HREF="../exprs/ProcExpr.i3.html">ProcExpr</A>, <A HREF="../types/ProcT
 
 TYPE
   P = Stmt.T OBJECT
-	lhs     : Expr.T;
-	rhs     : Expr.T;
+        lhs     : Expr.T;
+        rhs     : Expr.T;
       OVERRIDES
         check       := CheckMethod;
-	compile     := Compile;
+        compile     := Compile;
         outcomes    := GetOutcome;
       END;
 
@@ -39,12 +39,12 @@ PROCEDURE <A NAME="Parse"><procedure>Parse</procedure></A> (): Stmt.T =
     e := Expr.Parse ();
     IF (Scanner.cur.token # Token.T.tASSIGN) THEN
       IF NOT CallExpr.Is (e) THEN
-	Error.Msg (&quot;Expression is not a statement&quot;);
+        Error.Msg (&quot;Expression is not a statement&quot;);
       END;
       s := CallStmt.New (e);
       s.origin := here;
       RETURN s;
-    END;	
+    END;
 
     p := NEW (P);
     StmtRep.Init (p);
@@ -64,7 +64,7 @@ PROCEDURE <A NAME="CheckMethod"><procedure>CheckMethod</procedure></A> (p: P;  V
     tlhs := Expr.TypeOf (p.lhs);
     IF  NOT Expr.IsDesignator (p.lhs) THEN
       Error.Msg (&quot;left-hand side is not a designator&quot;);
-    ELSIF NOT Expr.IsWritable (p.lhs) THEN
+    ELSIF NOT Expr.IsWritable (p.lhs, lhs := TRUE) THEN
       Error.Msg (&quot;left-hand side is read-only&quot;);
     END;
 
@@ -74,9 +74,9 @@ PROCEDURE <A NAME="CheckMethod"><procedure>CheckMethod</procedure></A> (p: P;  V
 PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P): Stmt.Outcomes =
   VAR tlhs := Expr.TypeOf (p.lhs);
   BEGIN
-    Expr.PrepLValue (p.lhs);
+    Expr.PrepLValue (p.lhs, lhs := TRUE);
     PrepForEmit (tlhs, p.rhs, initializing := FALSE);
-    Expr.CompileLValue (p.lhs);
+    Expr.CompileLValue (p.lhs, lhs := TRUE);
     DoEmit (tlhs, p.rhs);
     Expr.NoteWrite (p.lhs);
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
@@ -131,7 +131,7 @@ PROCEDURE <A NAME="CheckOrdinal"><procedure>CheckOrdinal</procedure></A> (tlhs: 
     EVAL Type.GetBounds (tlhs, lmin, lmax);
     IF TInt.LE (lmin, lmax) AND TInt.LE (rmin, rmax)
       AND (TInt.LT (lmax, rmin) OR TInt.LT (rmax, lmin)) THEN
-      (* non-overlappling, non-empty ranges *)
+      (* non-overlapping, non-empty ranges *)
       Error.Warn (2, &quot;value not assignable (range fault)&quot;);
     END;
   END CheckOrdinal;
@@ -166,7 +166,7 @@ PROCEDURE <A NAME="NeedsClosureCheck"><procedure>NeedsClosureCheck</procedure></
   BEGIN
     IF NOT (NamedExpr.Split (proc, name, obj)
             OR QualifyExpr.Split (proc, obj)
-	    OR ProcExpr.Split (proc, obj)) THEN
+            OR ProcExpr.Split (proc, obj)) THEN
       (* non-constant, non-variable =&gt; OK *)
       RETURN FALSE;
     END;
@@ -279,7 +279,8 @@ PROCEDURE <A NAME="DoEmit"><procedure>DoEmit</procedure></A> (tlhs: Type.T;  rhs
     END;
 
     CASE t_info.class OF
-    | Type.Class.Integer, Type.Class.Subrange, Type.Class.Enum =&gt;
+    | Type.Class.Integer, Type.Class.Longint, Type.Class.Subrange,
+      Type.Class.Enum =&gt;
         AssignOrdinal (tlhs, rhs, lhs_info);
     | Type.Class.Real, Type.Class.Longreal, Type.Class.Extended =&gt;
         AssignFloat (rhs, lhs_info);
@@ -293,7 +294,8 @@ PROCEDURE <A NAME="DoEmit"><procedure>DoEmit</procedure></A> (tlhs: Type.T;  rhs
         AssignRecord (tlhs, rhs, lhs_info);
     | Type.Class.Set =&gt;
         AssignSet (tlhs, rhs, lhs_info);
-    ELSE &lt;* ASSERT FALSE *&gt;
+    | Type.Class.Error =&gt;
+    ELSE &lt;*ASSERT FALSE*&gt;
     END;
   END DoEmit;
 
@@ -353,7 +355,7 @@ PROCEDURE <A NAME="AssignRecord"><procedure>AssignRecord</procedure></A> (tlhs: 
   BEGIN
     AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Expr.IsDesignator (rhs)
-      THEN Expr.CompileLValue (rhs);
+      THEN Expr.CompileLValue (rhs, lhs := FALSE);
       ELSE Expr.Compile (rhs);
     END;
     CG.Copy (lhs_info.size, overlap := FALSE);
@@ -365,7 +367,7 @@ PROCEDURE <A NAME="AssignSet"><procedure>AssignSet</procedure></A> (tlhs: Type.T
     AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Type.IsStructured (tlhs) THEN
       IF Expr.IsDesignator (rhs)
-        THEN Expr.CompileLValue (rhs);
+        THEN Expr.CompileLValue (rhs, lhs := FALSE);
         ELSE Expr.Compile (rhs);
       END;
       CG.Copy (lhs_info.size, overlap := FALSE);
@@ -400,7 +402,7 @@ PROCEDURE <A NAME="AssignArray"><procedure>AssignArray</procedure></A> (tlhs: Ty
     (* capture the lhs &amp; rhs pointers *)
     IF (openRHS) OR (openLHS) THEN lhs := CG.Pop (); END;
     IF Expr.IsDesignator (e_rhs)
-      THEN Expr.CompileLValue (e_rhs);
+      THEN Expr.CompileLValue (e_rhs, lhs := FALSE);
       ELSE Expr.Compile (e_rhs);
     END;
     IF (openRHS) OR (openLHS) THEN rhs := CG.Pop (); END;
@@ -456,19 +458,19 @@ PROCEDURE <A NAME="GenOpenArraySizeChecks"><procedure>GenOpenArraySizeChecks</pr
       ELSIF (ilhs # NIL) THEN
         CG.Push (rhs);
         CG.Open_size (n);
-        CG.Load_integer (Type.Number (ilhs));
-        CG.Check_eq (CG.RuntimeError.IncompatibleArrayShape);
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (ilhs));
+        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
       ELSIF (irhs # NIL) THEN
         CG.Push (lhs);
         CG.Open_size (n);
-        CG.Load_integer (Type.Number (irhs));
-        CG.Check_eq (CG.RuntimeError.IncompatibleArrayShape);
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (irhs));
+        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
       ELSE (* both arrays are open *)
         CG.Push (lhs);
         CG.Open_size (n);
         CG.Push (rhs);
         CG.Open_size (n);
-        CG.Check_eq (CG.RuntimeError.IncompatibleArrayShape);
+        CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
       END;
       INC (n);
       tlhs := elhs;
@@ -506,7 +508,8 @@ PROCEDURE <A NAME="GenOpenArrayCopy"><procedure>GenOpenArrayCopy</procedure></A>
     tlhs := Type.CheckInfo (tlhs, lhs_info);
 
     CASE t_info.class OF
-    | Type.Class.Integer, Type.Class.Subrange, Type.Class.Enum =&gt;
+    | Type.Class.Integer, Type.Class.Longint, Type.Class.Subrange,
+      Type.Class.Enum =&gt;
         DoCheckOrdinal (tlhs, rhs);
     | Type.Class.Real, Type.Class.Longreal, Type.Class.Extended =&gt;
         DoCheckFloat (rhs);
@@ -564,7 +567,7 @@ PROCEDURE <A NAME="DoCheckRecord"><procedure>DoCheckRecord</procedure></A> (tlhs
   BEGIN
     AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Expr.IsDesignator (rhs)
-      THEN Expr.CompileLValue (rhs);
+      THEN Expr.CompileLValue (rhs, lhs := FALSE);
       ELSE Expr.Compile (rhs);
     END;
   END DoCheckRecord;
@@ -574,7 +577,7 @@ PROCEDURE <A NAME="DoCheckSet"><procedure>DoCheckSet</procedure></A> (tlhs: Type
     AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Type.IsStructured (tlhs) THEN
       IF Expr.IsDesignator (rhs)
-        THEN Expr.CompileLValue (rhs);
+        THEN Expr.CompileLValue (rhs, lhs := FALSE);
         ELSE Expr.Compile (rhs);
       END;
     ELSE (* small set *)
@@ -591,7 +594,7 @@ PROCEDURE <A NAME="DoCheckArray"><procedure>DoCheckArray</procedure></A> (tlhs: 
   BEGIN
     (* evaluate the right-hand side *)
     IF Expr.IsDesignator (e_rhs)
-      THEN Expr.CompileLValue (e_rhs);
+      THEN Expr.CompileLValue (e_rhs, lhs := FALSE);
       ELSE Expr.Compile (e_rhs);
     END;
 
@@ -622,8 +625,8 @@ PROCEDURE <A NAME="GenOpenArraySizeChk"><procedure>GenOpenArraySizeChk</procedur
 
       CG.Push (rhs);
       CG.Open_size (n);
-      CG.Load_integer (Type.Number (ilhs));
-      CG.Check_eq (CG.RuntimeError.IncompatibleArrayShape);
+      CG.Load_integer (Target.Integer.cg_type, Type.Number (ilhs));
+      CG.Check_eq (Target.Integer.cg_type, CG.RuntimeError.IncompatibleArrayShape);
 
       INC (n);
       tlhs := elhs;
@@ -638,6 +641,7 @@ END AssignStmt.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

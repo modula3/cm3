@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/ListVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/ListVBT.i3</H2></A><HR>
 <inInterface>
@@ -22,7 +22,7 @@
    column, with a scrollbar. The location of the scrollbar is
    governed by the environment variable <CODE>SCROLLBARLOC</CODE>, described
    in the <CODE>VBTKitEnv</CODE> interface.
- <P>
+<P>
    The <CODE>ListVBT</CODE> itself deals with the details of being a VBT,
    maintains a table that maps a cell-number to a cell-value, and
    maintains the {\em selection}, a distinguished subset of the
@@ -65,7 +65,7 @@
    internal mutex held.  <CODE>Painter</CODE> methods must not call any of the
    <CODE>ListVBT.T</CODE> methods; their locking level is such that <CODE>LL.sup =
    list</CODE>.
-   <P>
+<P>
    The <CODE>TextPainter</CODE> class uses its own internal lock for font
    information; \linebreak <CODE>TextPainter.setFont(v,font)</CODE> has <CODE>LL.sup &lt; v</CODE>.
 <P>
@@ -194,8 +194,8 @@ Subsequent cells are renumbered appropriately.  The VBT will
 at the top of <CODE>v</CODE>'s domain.
 <P>
    The call <CODE>v.scrollToShow(this)</CODE> adjusts the list's scrolling
-   position to make <CODE>this</CODE> visible. 
-   <P>
+   position to make <CODE>this</CODE> visible.
+<P>
    The <CODE>ListVBT</CODE> will call <CODE>v.reportVisible(first, num)</CODE> whenever
    the set of visible cells changes (either because of scrolling
    or because of reshaping).  (A cell is ``visible'' if it
@@ -244,14 +244,14 @@ at the top of <CODE>v</CODE>'s domain.
    the list's screen changes.
 <P>
    The call <CODE>p.paint(v, r, value, index, select, bad)</CODE> paints the cell
-   with the given index and value in the given rectangle (whose height 
-   will equal that returned  by <CODE>p.height()</CODE>, and some part of which will be 
+   with the given index and value in the given rectangle (whose height
+   will equal that returned  by <CODE>p.height()</CODE>, and some part of which will be
    visible).  If <CODE>selected</CODE> is <CODE>TRUE</CODE>, highlight the painted cell to indicate
    that it is in the set of selected cells.  <CODE>bad</CODE> is the subset
    of <CODE>r</CODE> that actually needs to be painted; <CODE>bad</CODE> is wholly
    contained in <CODE>r</CODE>.
 <P>
-   The call <CODE>p.select(v, r, value, index, selected)</CODE> changes the 
+   The call <CODE>p.select(v, r, value, index, selected)</CODE> changes the
    highlight of the cell with the given index and value,
    according to <CODE>selected</CODE>, to show whether it is
    in the set of selected cells.  The cell has previously been

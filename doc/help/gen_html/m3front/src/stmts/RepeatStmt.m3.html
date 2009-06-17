@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/stmts/RepeatStmt.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/stmts/RepeatStmt.m3</H2></A><HR>
 <inModule>
@@ -17,7 +17,7 @@
 <P><PRE>MODULE <module><implements><A HREF="RepeatStmt.i3.html">RepeatStmt</A></implements></module>;
 
 IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="#x1">Type</A>, <A HREF="../builtinTypes/Bool.i3.html">Bool</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="Stmt.i3.html">Stmt</A>, <A HREF="StmtRep.i3.html">StmtRep</A>;
-IMPORT <A HREF="#x2">Token</A>, <A HREF="../misc/Scanner.i3.html">Scanner</A>, <A HREF="../misc/Marker.i3.html">Marker</A>;
+IMPORT <A HREF="#x2">Token</A>, <A HREF="../misc/Scanner.i3.html">Scanner</A>, <A HREF="#x3">Marker</A>;
 
 TYPE
   P = Stmt.T OBJECT
@@ -26,7 +26,7 @@ TYPE
         e_origin: INTEGER;
       OVERRIDES
         check       := Check;
-	compile     := Compile;
+        compile     := Compile;
         outcomes    := GetOutcome;
       END;
 
@@ -94,6 +94,7 @@ END RepeatStmt.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
@@ -105,6 +106,13 @@ END RepeatStmt.
 </A><UL>
 <LI><A HREF="../misc/Token.i3.html#0TOP0">m3front/src/misc/Token.i3</A>
 <LI><A HREF="../../../mentor/src/parse/Token.i3.html#0TOP0">mentor/src/parse/Token.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface Marker is in:
+</A><UL>
+<LI><A HREF="../../../cm3ide/src/markup/Marker.i3.html#0TOP0">cm3ide/src/markup/Marker.i3</A>
+<LI><A HREF="../misc/Marker.i3.html#0TOP0">m3front/src/misc/Marker.i3</A>
 </UL>
 <P>
 <PRE>

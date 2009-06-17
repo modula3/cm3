@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/types/ObjectType.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/types/ObjectType.m3</H2></A><HR>
 <inModule>
@@ -154,7 +154,7 @@ PROCEDURE <A NAME="New"><procedure>New</procedure></A> (super: Type.T;  traced: 
     IF (super = NIL) THEN
       IF (traced)
         THEN super := ObjectRef.T;
-	ELSE super := ObjectAdr.T;
+        ELSE super := ObjectAdr.T;
       END;
     END;
     p := NEW (P);
@@ -289,11 +289,11 @@ PROCEDURE <A NAME="LookUp"><procedure>LookUp</procedure></A> (t: Type.T; id: M3I
 
       ELSIF (info.class = Type.Class.Opaque) THEN
         (* try any revelations that are visible *)
-	z := Revelation.LookUp (t);
-	IF (z # NIL) THEN
-	  (* use the concrete type *)
-	  t := z;
-	ELSE
+        z := Revelation.LookUp (t);
+        IF (z # NIL) THEN
+          (* use the concrete type *)
+          t := z;
+        ELSE
           (* try any subtype revelations that are visible *)
           Revelation.LookUpAll (t, x);
           FOR i := 0 TO x.cnt-1 DO
@@ -304,7 +304,7 @@ PROCEDURE <A NAME="LookUp"><procedure>LookUp</procedure></A> (t: Type.T; id: M3I
             x.others := x.others.next;
           END;
           t := OpaqueType.Super (t);
-	END;
+        END;
 
       ELSE (* ??? *)
         RETURN FALSE;
@@ -1176,6 +1176,7 @@ END ObjectType.
 <HR>
 <A NAME="x2">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

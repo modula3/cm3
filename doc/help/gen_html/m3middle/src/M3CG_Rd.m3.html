@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/M3CG_Rd.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/M3CG_Rd.m3</H2></A><HR>
 <inModule>
@@ -17,7 +17,7 @@
 
 IMPORT <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/derived/IntIntTbl.i3.html">IntIntTbl</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../m3core/src/convert/Convert.i3.html">Convert</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>;
 IMPORT <A HREF="#x1">M3ID</A>, <A HREF="M3CG.i3.html">M3CG</A>, <A HREF="M3CG_Ops.i3.html">M3CG_Ops</A>, <A HREF="Target.i3.html">Target</A>, <A HREF="TInt.i3.html">TInt</A>, <A HREF="TFloat.i3.html">TFloat</A>;
-FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT CompareOp, ConvertOp, RuntimeError;
+FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 
 CONST
   EOF = '\000';
@@ -46,7 +46,7 @@ TYPE
   END;
 
 CONST
-  CmdMap = ARRAY [0..151] OF Cmd {
+  CmdMap = ARRAY [0..168] OF Cmd {
     Cmd {&quot;begin_unit&quot;, begin_unit},
     Cmd {&quot;end_unit&quot;, end_unit},
     Cmd {&quot;import_unit&quot;, import_unit},
@@ -198,7 +198,24 @@ CONST
     Cmd {&quot;pop_static_link&quot;, pop_static_link},
     Cmd {&quot;load_procedure&quot;, load_procedure},
     Cmd {&quot;load_static_link&quot;, load_static_link},
-    Cmd {&quot;#&quot;, comment}
+    Cmd {&quot;#&quot;, comment},
+    Cmd {&quot;fetch_and_add&quot;,  fetch_and_add},
+    Cmd {&quot;fetch_and_sub&quot;,  fetch_and_sub},
+    Cmd {&quot;fetch_and_or&quot;,   fetch_and_or},
+    Cmd {&quot;fetch_and_and&quot;,  fetch_and_and},
+    Cmd {&quot;fetch_and_xor&quot;,  fetch_and_xor},
+    Cmd {&quot;fetch_and_nand&quot;, fetch_and_nand},
+    Cmd {&quot;add_and_fetch&quot;,  add_and_fetch},
+    Cmd {&quot;sub_and_fetch&quot;,  sub_and_fetch},
+    Cmd {&quot;or_and_fetch&quot;,   or_and_fetch},
+    Cmd {&quot;and_and_fetch&quot;,  and_and_fetch},
+    Cmd {&quot;xor_and_fetch&quot;,  xor_and_fetch},
+    Cmd {&quot;nand_and_fetch&quot;, nand_and_fetch},
+    Cmd {&quot;bool_compare_and_swap&quot;, bool_compare_and_swap},
+    Cmd {&quot;val_compare_and_swap&quot;, val_compare_and_swap},
+    Cmd {&quot;synchronize&quot;, synchronize},
+    Cmd {&quot;lock_test_and_set&quot;, lock_test_and_set},
+    Cmd {&quot;lock_release&quot;, lock_release}
   };
 
 VAR
@@ -360,12 +377,14 @@ PROCEDURE <A NAME="Scan_Tint"><procedure>Scan_Tint</procedure></A> (VAR s: State
       result, tmp: Target.Int;   value, used: INTEGER;
   BEGIN
     value := Convert.ToInt (SUBARRAY (buf, 0, len), used);
-    IF (used = len) AND TInt.FromInt (value, result) THEN
+    IF (used = len) AND TInt.FromInt (value, NUMBER (result.x), result) THEN
       RETURN result;
     ELSIF (buf[0] # '-') THEN
-      IF TInt.New (SUBARRAY (buf, 0, len), result) THEN RETURN result END;
+      IF TInt.New (SUBARRAY (buf, 0, len), NUMBER (result.x), result) THEN
+        RETURN result;
+      END;
     ELSE (* Target doesn't handle negative values *)
-      IF TInt.New (SUBARRAY (buf, 1, len-1), tmp)
+      IF TInt.New (SUBARRAY (buf, 1, len-1), NUMBER (tmp.x), tmp)
         AND TInt.Subtract (TInt.Zero, tmp, result) THEN
         RETURN result;
       END;
@@ -1733,6 +1752,109 @@ PROCEDURE <A NAME="load_static_link"><procedure>load_static_link</procedure></A>
     x := Scan_line (s);
     s.cg.comment (x);
   END comment;
+</PRE>--------------------------------------------------------------- atomics ---
+
+<P><PRE>PROCEDURE <A NAME="fetch_and_op"><procedure>fetch_and_op</procedure></A> (VAR s: State;  op: AtomicOp) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.fetch_and_op (op, type);
+  END fetch_and_op;
+
+PROCEDURE <A NAME="fetch_and_add"><procedure>fetch_and_add</procedure></A> (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Add);
+  END fetch_and_add;
+
+PROCEDURE <A NAME="fetch_and_sub"><procedure>fetch_and_sub</procedure></A> (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Sub);
+  END fetch_and_sub;
+
+PROCEDURE <A NAME="fetch_and_or"><procedure>fetch_and_or</procedure></A> (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Or);
+  END fetch_and_or;
+
+PROCEDURE <A NAME="fetch_and_and"><procedure>fetch_and_and</procedure></A> (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.And);
+  END fetch_and_and;
+
+PROCEDURE <A NAME="fetch_and_xor"><procedure>fetch_and_xor</procedure></A> (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Xor);
+  END fetch_and_xor;
+
+PROCEDURE <A NAME="fetch_and_nand"><procedure>fetch_and_nand</procedure></A> (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Nand);
+  END fetch_and_nand;
+
+PROCEDURE <A NAME="op_and_fetch"><procedure>op_and_fetch</procedure></A> (VAR s: State;  op: AtomicOp) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.op_and_fetch (op, type);
+  END op_and_fetch;
+
+PROCEDURE <A NAME="add_and_fetch"><procedure>add_and_fetch</procedure></A> (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Add);
+  END add_and_fetch;
+
+PROCEDURE <A NAME="sub_and_fetch"><procedure>sub_and_fetch</procedure></A> (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Sub);
+  END sub_and_fetch;
+
+PROCEDURE <A NAME="or_and_fetch"><procedure>or_and_fetch</procedure></A> (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Or);
+  END or_and_fetch;
+
+PROCEDURE <A NAME="and_and_fetch"><procedure>and_and_fetch</procedure></A> (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.And);
+  END and_and_fetch;
+
+PROCEDURE <A NAME="xor_and_fetch"><procedure>xor_and_fetch</procedure></A> (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Xor);
+  END xor_and_fetch;
+
+PROCEDURE <A NAME="nand_and_fetch"><procedure>nand_and_fetch</procedure></A> (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Nand);
+  END nand_and_fetch;
+
+PROCEDURE <A NAME="bool_compare_and_swap"><procedure>bool_compare_and_swap</procedure></A> (VAR s: State) =
+  VAR src    := Scan_type (s);
+      dest   := Scan_type (s);
+  BEGIN
+    s.cg.bool_compare_and_swap (src, dest);
+  END bool_compare_and_swap;
+
+PROCEDURE <A NAME="val_compare_and_swap"><procedure>val_compare_and_swap</procedure></A> (VAR s: State) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.val_compare_and_swap (type);
+  END val_compare_and_swap;
+
+PROCEDURE <A NAME="synchronize"><procedure>synchronize</procedure></A> (VAR s: State) =
+  BEGIN
+    s.cg.synchronize ();
+  END synchronize;
+
+PROCEDURE <A NAME="lock_test_and_set"><procedure>lock_test_and_set</procedure></A> (VAR s: State) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.lock_test_and_set (type);
+  END lock_test_and_set;
+
+PROCEDURE <A NAME="lock_release"><procedure>lock_release</procedure></A> (VAR s: State) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.lock_release (type);
+  END lock_release;
 
 BEGIN
 END M3CG_Rd.

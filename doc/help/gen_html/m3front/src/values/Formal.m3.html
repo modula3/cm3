@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/values/Formal.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/values/Formal.m3</H2></A><HR>
 <inModule>
@@ -40,8 +40,8 @@ TYPE
         need_init   := ValueRep.Never;
         lang_init   := Compile;
         user_init   := ValueRep.NoInit;
-	toExpr      := ValueRep.NoExpr;
-	toType      := ValueRep.NoType;
+        toExpr      := ValueRep.NoExpr;
+        toType      := ValueRep.NoType;
         typeOf      := TypeOf;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
@@ -57,13 +57,14 @@ TYPE
     errored : BOOLEAN;
   END;
 
-PROCEDURE <A NAME="NewBuiltin"><procedure>NewBuiltin</procedure></A> (name: TEXT;  offset: INTEGER;  type: Type.T): Value.T =
+PROCEDURE <A NAME="NewBuiltin"><procedure>NewBuiltin</procedure></A> (name: TEXT;  offset: INTEGER;  type: Type.T;
+                      mode: Mode): Value.T =
   VAR t := NEW (T);
   BEGIN
     ValueRep.Init (t, M3ID.Add (name), Value.Class.Formal);
     t.readonly := FALSE;
     t.offset   := offset;
-    t.mode     := Mode.mVALUE;
+    t.mode     := mode;
     t.tipe     := type;
     t.dfault   := NIL;
     t.unused   := FALSE;
@@ -357,7 +358,7 @@ PROCEDURE <A NAME="DoCheckArgs"><procedure>DoCheckArgs</procedure></A> (VAR cs  
             IF NOT Expr.IsDesignator (e) THEN
               Err (slots[i], &quot;VAR actual must be a designator&quot;);
               ok := FALSE;
-            ELSIF NOT Expr.IsWritable (e) THEN
+            ELSIF NOT Expr.IsWritable (e, lhs := TRUE) THEN
               Err (slots[i], &quot;VAR actual must be writable&quot;);
               ok := FALSE;
             ELSIF Type.IsEqual (t, te, NIL) THEN
@@ -435,12 +436,12 @@ PROCEDURE <A NAME="ProcName"><procedure>ProcName</procedure></A> (proc: Expr.T):
     | Mode.mVALUE =&gt;
         Expr.Prep (actual);
     | Mode.mVAR =&gt;
-        Expr.PrepLValue (actual);
+        Expr.PrepLValue (actual, lhs := TRUE);
     | Mode.mCONST =&gt;
         IF NOT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
           Expr.Prep (actual);
         ELSIF Expr.IsDesignator (actual) THEN
-          Expr.PrepLValue (actual);
+          Expr.PrepLValue (actual, lhs := FALSE);
         ELSE (* non-designator, same type *)
           Expr.Prep (actual);
         END;
@@ -453,7 +454,8 @@ PROCEDURE <A NAME="EmitArg"><procedure>EmitArg</procedure></A> (proc: Expr.T;  f
     CASE t.kind OF
     | Type.Class.Error, Type.Class.Named, Type.Class.Packed
         =&gt;  &lt;*ASSERT FALSE*&gt;
-    | Type.Class.Integer, Type.Class.Enum, Type.Class.Subrange
+    | Type.Class.Integer, Type.Class.Enum, Type.Class.Subrange,
+      Type.Class.Longint
         =&gt;  GenOrdinal (t, actual);
     | Type.Class.Real, Type.Class.Longreal, Type.Class.Extended
         =&gt;  GenFloat (t, actual);
@@ -494,13 +496,13 @@ PROCEDURE <A NAME="GenOrdinal"><procedure>GenOrdinal</procedure></A> (t: T;  act
     | Mode.mVALUE =&gt;
         CheckExpr.EmitChecks (actual, min, max, CG.RuntimeError.ValueOutOfRange);
     | Mode.mVAR =&gt;
-        Expr.CompileAddress (actual);
+        Expr.CompileAddress (actual, lhs := TRUE);
     | Mode.mCONST =&gt;
         IF NOT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
           CheckExpr.EmitChecks (actual, min, max, CG.RuntimeError.ValueOutOfRange);
           GenCopy (t.tipe);
         ELSIF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual);
+          Expr.CompileAddress (actual, lhs := FALSE);
         ELSE (* non-designator, same type *)
           Expr.Compile (actual);
           GenCopy (t.tipe);
@@ -514,10 +516,10 @@ PROCEDURE <A NAME="GenFloat"><procedure>GenFloat</procedure></A> (t: T;  actual:
     | Mode.mVALUE =&gt;
         Expr.Compile (actual);
     | Mode.mVAR =&gt;
-        Expr.CompileAddress (actual);
+        Expr.CompileAddress (actual, lhs := TRUE);
     | Mode.mCONST =&gt;
         IF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual);
+          Expr.CompileAddress (actual, lhs := FALSE);
         ELSE
           Expr.Compile (actual);
           GenCopy (t.tipe);
@@ -532,13 +534,13 @@ PROCEDURE <A NAME="GenReference"><procedure>GenReference</procedure></A> (t: T; 
     | Mode.mVALUE =&gt;
         Expr.Compile (actual);
     | Mode.mVAR =&gt;
-        Expr.CompileAddress (actual);
+        Expr.CompileAddress (actual, lhs := TRUE);
     | Mode.mCONST =&gt;
         IF NOT Type.IsEqual (t.tipe, t_actual, NIL) THEN
           Expr.Compile (actual);
           GenCopy (t.tipe);
         ELSIF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual);
+          Expr.CompileAddress (actual, lhs := FALSE);
         ELSE
           Expr.Compile (actual);
           GenCopy (t.tipe);
@@ -553,10 +555,10 @@ PROCEDURE <A NAME="GenProcedure"><procedure>GenProcedure</procedure></A> (t: T; 
         Expr.Compile (actual);
         GenClosure (actual, proc);
     | Mode.mVAR =&gt;
-        Expr.CompileAddress (actual);
+        Expr.CompileAddress (actual, lhs := TRUE);
     | Mode.mCONST =&gt;
         IF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual);
+          Expr.CompileAddress (actual, lhs := FALSE);
         ELSE
           Expr.Compile (actual);
           GenClosure (actual, proc);
@@ -583,7 +585,7 @@ PROCEDURE <A NAME="GenClosure"><procedure>GenClosure</procedure></A> (actual: Ex
       (* and fill it in *)
       CG.Store_addr (tmp, M3RT.CL_proc);
       CG.Load_intt  (M3RT.CL_marker_value);
-      CG.Store_int (tmp, M3RT.CL_marker);
+      CG.Store_int (Target.Integer.cg_type, tmp, M3RT.CL_marker);
       Procedure.LoadStaticLink (proc_v);
       CG.Store_addr (tmp, M3RT.CL_frame);
       CG.Load_addr_of_temp (tmp,  0, Target.Address.align);
@@ -608,10 +610,10 @@ PROCEDURE <A NAME="GenRecord"><procedure>GenRecord</procedure></A> (t: T;  actua
     | Mode.mVALUE =&gt;
         Expr.Compile (actual);
     | Mode.mVAR =&gt;
-        Expr.CompileAddress (actual);
+        Expr.CompileAddress (actual, lhs := TRUE);
     | Mode.mCONST =&gt;
         IF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual);
+          Expr.CompileAddress (actual, lhs := FALSE);
         ELSE
           Expr.Compile (actual);
           (* not needed because of the ASSERT above: GenCopy (t.tipe); *)
@@ -626,10 +628,10 @@ PROCEDURE <A NAME="GenSet"><procedure>GenSet</procedure></A> (t: T;  actual: Exp
     | Mode.mVALUE =&gt;
         Expr.Compile (actual);
     | Mode.mVAR =&gt;
-        Expr.CompileAddress (actual);
+        Expr.CompileAddress (actual, lhs := TRUE);
     | Mode.mCONST =&gt;
         IF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual);
+          Expr.CompileAddress (actual, lhs := FALSE);
         ELSIF Type.IsStructured (t.tipe) THEN
           Expr.Compile (actual);
           (* not needed because of the ASSERT above: GenCopy (t.tipe); *)
@@ -648,14 +650,14 @@ PROCEDURE <A NAME="GenArray"><procedure>GenArray</procedure></A> (t: T;  actual:
         Expr.Compile (actual);
         ReshapeArray (t.tipe, t_actual);
     | Mode.mVAR =&gt;
-        Expr.CompileAddress (actual);
+        Expr.CompileAddress (actual, lhs := TRUE);
         ReshapeArray (t.tipe, t_actual);
     | Mode.mCONST =&gt;
         IF NOT Type.IsEqual (t.tipe, t_actual, NIL) THEN
           Expr.Compile (actual);
           ReshapeArray (t.tipe, t_actual);
         ELSIF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual);
+          Expr.CompileAddress (actual, lhs := FALSE);
         ELSE
           Expr.Compile (actual);
         END;
@@ -696,9 +698,10 @@ PROCEDURE <A NAME="ReshapeArray"><procedure>ReshapeArray</procedure></A> (tlhs, 
           CG.Push (rhs);
           CG.Open_size (i);
         ELSE
-          CG.Load_integer (Type.Number (index));
+          CG.Load_integer (Target.Integer.cg_type, Type.Number (index));
         END;
-        CG.Store_int (tmp, M3RT.OA_sizes + i * Target.Integer.pack);
+        CG.Store_int (Target.Integer.cg_type,
+                      tmp, M3RT.OA_sizes + i * Target.Integer.pack);
         trhs := elt;
       END;
 
@@ -715,8 +718,9 @@ PROCEDURE <A NAME="ReshapeArray"><procedure>ReshapeArray</procedure></A> (tlhs, 
         &lt;*ASSERT index # NIL*&gt;
         CG.Push (rhs);
         CG.Open_size (i);
-        CG.Load_integer (Type.Number (index));
-        CG.Check_eq (CG.RuntimeError.IncompatibleArrayShape);
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (index));
+        CG.Check_eq (Target.Integer.cg_type,
+                     CG.RuntimeError.IncompatibleArrayShape);
       END;
 
       (* leave the old dope vector as the result *)
@@ -772,6 +776,7 @@ END Formal.
 <HR>
 <A NAME="x3">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

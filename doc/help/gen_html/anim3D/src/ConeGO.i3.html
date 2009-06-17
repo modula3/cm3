@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/ConeGO.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/ConeGO.i3</H2></A><HR>
 <inInterface>
@@ -28,7 +28,7 @@ TYPE
   END;
 </PRE><BLOCKQUOTE><EM> <CODE>cone.init(prec)</CODE>  initializes a new cone <CODE>cone</CODE>, whose surface
    is composed of <CODE>prec</CODE> triangles, and returns it. The location and radius of
-   the cone is determined by the three properties <CODE>Base</CODE>, <CODE>Tip</CODE>, and <CODE>Radius</CODE>. 
+   the cone is determined by the three properties <CODE>Base</CODE>, <CODE>Tip</CODE>, and <CODE>Radius</CODE>.
 </EM></BLOCKQUOTE><PRE>
 
 VAR
@@ -36,24 +36,24 @@ VAR
   Tip    : PointProp.Name;
   Radius : RealProp.Name;
 </PRE><BLOCKQUOTE><EM> In addition to the properties observed by all \type{GO}{T}'s and
-   \type{SurfaceGO}{T}'s, there are three additional properties that 
+   \type{SurfaceGO}{T}'s, there are three additional properties that
    are observed by <CODE>ConeGO.T</CODE>'s:
 <P>
-   <CODE>Base</CODE> is the name of a property that describes the center of the base  
-   of the cone. It associates with a \type{PointProp}{Val}. If no <CODE>Base</CODE> 
+   <CODE>Base</CODE> is the name of a property that describes the center of the base
+   of the cone. It associates with a \type{PointProp}{Val}. If no <CODE>Base</CODE>
    property is specified, the base of the cone lies at the origin.
 <P>
-   <CODE>Tip</CODE> is the name of a property that describes the tip 
-   of the cone. It associates with a \type{PointProp}{Val}. If no <CODE>Tip</CODE> 
+   <CODE>Tip</CODE> is the name of a property that describes the tip
+   of the cone. It associates with a \type{PointProp}{Val}. If no <CODE>Tip</CODE>
    property is specified, the tip of the cone is at point (1,0,0).
 <P>
-   <CODE>Radius</CODE> is the name of a property that describes the radius of the 
+   <CODE>Radius</CODE> is the name of a property that describes the radius of the
    cone. It associates with a \type{RealProp}{Val}. If no <CODE>Radius</CODE> property
-   is specified, the cone has a radius of 1.  
+   is specified, the cone has a radius of 1.
 <P>
-   Assume that in a given context and at a given point in time, the property 
-   mapping is such that <CODE>Base</CODE> maps to a point property value which 
-   evaluates to <CODE>base</CODE>, <CODE>Tip</CODE> maps to a point property value which evaluates 
+   Assume that in a given context and at a given point in time, the property
+   mapping is such that <CODE>Base</CODE> maps to a point property value which
+   evaluates to <CODE>base</CODE>, <CODE>Tip</CODE> maps to a point property value which evaluates
    to <CODE>tip</CODE>, and <CODE>Radius</CODE> maps to a real property value which evaluates to <CODE>r</CODE>.
    <CODE>base</CODE>, <CODE>tip</CODE>, and <CODE>r</CODE> define the position and shape of the cone in this c
    ontext and at this time as shown below:
@@ -65,7 +65,7 @@ VAR
 </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="ConeGO.m3.html#New">New</A> (base, tip : Point3.T; r : REAL; prec := 30) : T;
-</PRE><BLOCKQUOTE><EM> <CODE>New(base,tip,r,prec)</CODE> creates a new cone, whose surface is composed of 
+</PRE><BLOCKQUOTE><EM> <CODE>New(base,tip,r,prec)</CODE> creates a new cone, whose surface is composed of
    <CODE>prec</CODE> triangles, and returns it. It also attaches the following properties
    to the new cone:
    \begin{verbatim}
@@ -74,8 +74,8 @@ PROCEDURE <A HREF="ConeGO.m3.html#New">New</A> (base, tip : Point3.T; r : REAL; 
      (Radius,RealProp.NewConst(r))
    \end{verbatim}
 </EM></BLOCKQUOTE><PRE>
-</PRE> The following three procedures provide sugaring to attach 
-   <CODE>Base</CODE>, <CODE>Tip</CODE>, and <CODE>Radius</CODE> properties with non-animated 
+</PRE> The following three procedures provide sugaring to attach
+   <CODE>Base</CODE>, <CODE>Tip</CODE>, and <CODE>Radius</CODE> properties with non-animated
    property values to geometric objects: 
 
 <P><PRE>PROCEDURE <A HREF="ConeGO.m3.html#SetBase">SetBase</A> (o : GO.T; p : Point3.T);

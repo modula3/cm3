@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/VBTRep.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/VBTRep.i3</H2></A><HR>
 <inInterface>
@@ -39,15 +39,15 @@ TYPE
     oldDomain := Rect.Empty;
     link: MiscRef := NIL
   END;
-</PRE> To save space in a <CODE>VBT</CODE>, the <CODE>cage</CODE>, <CODE>badRgn</CODE>, <CODE>rpseqno</CODE>, and 
-   <CODE>oldDomain</CODE> fields are only stored if at least one of them has an 
-   ``unusual'' value.  This is achieved by including a <CODE>MiscRef</CODE> in the 
+</PRE> To save space in a <CODE>VBT</CODE>, the <CODE>cage</CODE>, <CODE>badRgn</CODE>, <CODE>rpseqno</CODE>, and
+   <CODE>oldDomain</CODE> fields are only stored if at least one of them has an
+   ``unusual'' value.  This is achieved by including a <CODE>MiscRef</CODE> in the
    <CODE>VBT</CODE> object.  If the <CODE>MiscRef</CODE> is <CODE>NIL</CODE>, then the <CODE>badRgn</CODE> and <CODE>oldDomain</CODE>
    are empty, the <CODE>rpseqno</CODE> is irrelevant, and the cage is determined
    from the <CODE>cagetype</CODE> field as follows: if the <CODE>cagetype</CODE> is
    <CODE>VBT.CageType.Rectangle</CODE>, then the cage rectangle is assumed to be
    <CODE>Rect.Empty</CODE>; otherwise the rectangle is irrelevant.
-   <P>
+<P>
    The <CODE>rpseqno</CODE> field is the {\it repainting sequence number}.  It is
    incremented whenever the <CODE>badRgn</CODE> is expanded and recorded before
    activating a <CODE>repaint</CODE> method.  Thus when the repaint method returns,
@@ -93,21 +93,21 @@ CONST
    many small batches across <CODE>RPC</CODE>.
 <P>
    <CODE>ShortCircuit</CODE>:  Set on a <CODE>VBT</CODE> when painting on the VBT can be
-   implemented by clipping to the <CODE>VBT</CODE>'s domain and painting on its 
+   implemented by clipping to the <CODE>VBT</CODE>'s domain and painting on its
    parent.
 <P>
    <CODE>Marked</CODE>: set by <CODE>VBT.Mark</CODE>.
 <P>
-   <CODE>CageCovered</CODE>: <CODE>VBTClass.PutPosition</CODE> sets this bit on a <CODE>VBT</CODE> before 
-   calling its position method; after calling the position method, 
-   the procedure relays the child's cage to the parent and clears 
-   the bit.  <CODE>VBTClass.SetCage</CODE> notices the bit and omits relaying the 
-   cage to the parent.  
+   <CODE>CageCovered</CODE>: <CODE>VBTClass.PutPosition</CODE> sets this bit on a <CODE>VBT</CODE> before
+   calling its position method; after calling the position method,
+   the procedure relays the child's cage to the parent and clears
+   the bit.  <CODE>VBTClass.SetCage</CODE> notices the bit and omits relaying the
+   cage to the parent.
 <P>
    <CODE>ExcessBegins</CODE>: Set when <CODE>excessBegins &gt; 0</CODE>.
 <P>
    <CODE>HasNewShape</CODE> is set when <CODE>VBT.NewShape</CODE> is called, and cleared by
-   a call to <CODE>VBTClass.HasNewShape</CODE> or <CODE>VBTClass.GetShape</CODE>. 
+   a call to <CODE>VBTClass.HasNewShape</CODE> or <CODE>VBTClass.GetShape</CODE>.
 <P>
    If <CODE>BlockNewShape</CODE> is set, <CODE>VBT.NewShape</CODE> calls will not be relayed
    to the parent of the <CODE>VBT</CODE>.
@@ -159,7 +159,7 @@ TYPE STPub =
    resource is built-in.  The default values for these return the result of
    invoking the closure or the built-in method; your procedure must not
    return NIL when invoked on a built-in. 
-   
+
 <P><PRE>TYPE OffscreenType = VBT.ScreenType OBJECT st: VBT.ScreenType END;
 </PRE> An <CODE>OffscreenType</CODE> <CODE>s</CODE>, is a screen type that is derived from the screen
    type <CODE>s.st</CODE>.  An OffscreenType will be replaced by its associated
@@ -208,7 +208,7 @@ PROCEDURE <A HREF="VBTRep.m3.html#ExpandBadRect">ExpandBadRect</A>(w: VBT.T;
    expansion is caused by (a) using out-of-domain bits as source (b)
    painting into the old domain (c) scrolling an existing bad rectangle.
    
-     
+
 <P><PRE>PROCEDURE <A HREF="VBTRep.m3.html#ExtendBatch">ExtendBatch</A>(v: VBT.T; VAR ba: Batch.T);
 </PRE><BLOCKQUOTE><EM> Extend <CODE>v</CODE>'s batch to include the painting operations in <CODE>ba</CODE>, and free
    <CODE>ba</CODE>. It is assumed that <CODE>v</CODE> has a non-empty batch which has room for
@@ -251,10 +251,10 @@ PROCEDURE <A HREF="VBTRep.m3.html#Redisplay">Redisplay</A>(); &lt;* LL.sup = VBT
         WITH m = <KBD>an array containing all marked windows</KBD> DO
           IF NUMBER(m) = 0 THEN EXIT END;
           <KBD>Sort </KBD>m<KBD> in order of non-decreasing depth</KBD>;
-          FOR i := 0 TO LAST(m) DO 
+          FOR i := 0 TO LAST(m) DO
             IF IsMarked(m[i]) AND m[i].st # NIL THEN
                Unmark(m[i]);
-               m[i].redisplay() 
+               m[i].redisplay()
             END
           END
         END
@@ -266,7 +266,7 @@ PROCEDURE <A HREF="VBTRep.m3.html#Redisplay">Redisplay</A>(); &lt;* LL.sup = VBT
     is that redisplaying an ancestor window often reshapes its
     descendants, and if a descendant is going to be reshaped it would
     be wasteful to redisplay it in its old position.
-    <P>
+<P>
    Ordinarily when a window is marked, a thread is forked that will
    call <CODE>Redisplay</CODE>.  This is wasteful if <CODE>Redisplay</CODE> will be called
    soon anyway.  Therefore, if you know that <CODE>Redisplay</CODE> will be called
@@ -276,7 +276,7 @@ PROCEDURE <A HREF="VBTRep.m3.html#Redisplay">Redisplay</A>(); &lt;* LL.sup = VBT
    acquire the obligation to ensure that <CODE>Redisplay</CODE> will be called
    soon.  Calling <CODE>UncoverRedisplay</CODE> decrements the counter and calls
    <CODE>Redisplay</CODE> if the result is zero.  
-    
+
 <P><PRE>PROCEDURE <A HREF="VBTRep.m3.html#CoverRedisplay">CoverRedisplay</A>(); &lt;* LL.sup = VBT.mu *&gt;
 </PRE><BLOCKQUOTE><EM> Increment the redisplay coverage counter. </EM></BLOCKQUOTE><PRE>
 

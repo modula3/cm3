@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/target/M3CBackEnd_C.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/target/M3CBackEnd_C.m3</H2></A><HR>
 <inModule>
@@ -35,6 +35,10 @@
 the compiler front-end from a back-end . 
 
 <P> ToDo: all the bootstrap things like FIRST(REAL) 
+<P>
+  4/25/09: fixed FIRST(REAL) etc. but not sure about what this might
+  break w.r.t. cross-compiling and such things. 
+
 
 <P> Version targeted to C back-end for a variety of machines 
 
@@ -52,8 +56,9 @@ IMPORT <A HREF="../sem/M3CStdProcs.i3.html">M3CStdProcs</A>, <A HREF="../sem/M3C
 IMPORT <A HREF="../sem/M3CExpValue.i3.html">M3CExpValue</A>, <A HREF="../sem/M3CTypesMisc.i3.html">M3CTypesMisc</A>, <A HREF="../sem/M3ASTNext.i3.html">M3ASTNext</A>;
 FROM <A HREF="M3CBackEnd_C_cc.i3.html">M3CBackEnd_C_cc</A> IMPORT a32, a64, a16, a8, minAlignment, recAlignment,
   arrayAlignment, ptrA, ptrS, realA, realS, longRealA, longRealS, intA, intS,
-  wideCharA, wideCharS;
+  longintA, longintS, wideCharA, wideCharS;
 
+IMPORT <A HREF="M3CBackEnd_Int_Integer.i3.html">M3CBackEnd_Int_Integer</A>, <A HREF="M3CBackEnd_Int_Longint.i3.html">M3CBackEnd_Int_Longint</A>;
 IMPORT <A HREF="M3CBackEnd_Float_Real.i3.html">M3CBackEnd_Float_Real</A>, <A HREF="M3CBackEnd_Float_LongReal.i3.html">M3CBackEnd_Float_LongReal</A>,
     <A HREF="M3CBackEnd_Float_Extended.i3.html">M3CBackEnd_Float_Extended</A>;
 </PRE> For FATAL 
@@ -63,8 +68,6 @@ IMPORT <A HREF="M3CBackEnd_Float_Real.i3.html">M3CBackEnd_Float_Real</A>, <A HRE
 
 CONST
   NilValue = 0;
-  False = ORD(FALSE);
-  True = ORD(TRUE);
 </PRE> This does the alignments for ordinals. 
 <PRE>PROCEDURE <A NAME="OrdAlign"><procedure>OrdAlign</procedure></A>(size: INTEGER): INTEGER RAISES {}=
   BEGIN
@@ -73,7 +76,8 @@ CONST
     ELSIF size &lt;= 8 THEN RETURN a8
     ELSIF size &lt;= 16 THEN RETURN a16
     ELSIF size &lt;= 32 THEN RETURN a32
-    ELSE  RETURN a64
+    ELSIF size &lt;= 64 THEN RETURN a64
+    ELSE &lt;*ASSERT FALSE*&gt;
 
     END; (* if *)
   END OrdAlign;
@@ -111,32 +115,6 @@ PROCEDURE <A NAME="RegisterProcs"><procedure>RegisterProcs</procedure></A>() RAI
     M3CBackEnd.TextToExpValue := TextToExpValue_C;
   END RegisterProcs;
 
-&lt;*INLINE*&gt; PROCEDURE <A NAME="SimpleNewInteger_value"><procedure>SimpleNewInteger_value</procedure></A>(int: INTEGER): Integer_value RAISES {}=
-  BEGIN
-    RETURN NEW(Integer_value, sm_value := int);
-  END SimpleNewInteger_value;
-
-VAR
-  smallIntegers_g := ARRAY [0..255] OF Integer_value {NIL, ..};
-  firstInteger_g := SimpleNewInteger_value(FIRST(INTEGER));
-  lastInteger_g := SimpleNewInteger_value(LAST(INTEGER));
-
-PROCEDURE <A NAME="NewInteger_value"><procedure>NewInteger_value</procedure></A>(int: INTEGER): Integer_value RAISES {}=
-  BEGIN
-    IF FIRST(smallIntegers_g) &lt;= int AND int &lt;= LAST(smallIntegers_g) THEN
-      WITH result = smallIntegers_g[int] DO
-        IF result = NIL THEN result := SimpleNewInteger_value(int) END;
-        RETURN result;
-      END;
-    ELSIF int = FIRST(INTEGER) THEN
-      RETURN firstInteger_g;
-    ELSIF int = LAST(INTEGER) THEN
-      RETURN lastInteger_g;
-    ELSE
-      RETURN SimpleNewInteger_value(int);
-    END;
-  END NewInteger_value;
-
 CONST
   BadBits = -1;
 
@@ -161,7 +139,6 @@ PROCEDURE <A NAME="MayBeExactBitSizeAndAlign"><procedure>MayBeExactBitSizeAndAli
   VAR
     array_element, array_index: M3AST_SM.TYPE_SPEC_UNSET;
     size, align: INTEGER;
-    s1, s2: INTEGER;
     isopen: BOOLEAN;
   BEGIN
     size := 0; align := 0;
@@ -181,6 +158,10 @@ PROCEDURE <A NAME="MayBeExactBitSizeAndAlign"><procedure>MayBeExactBitSizeAndAli
         size := intS;
         align := intA;
 
+    | M3AST_AS.Longint_type =&gt;
+        size := longintS;
+        align := longintA;
+
     | M3AST_AS.WideChar_type =&gt;
         size := wideCharS;
         align := wideCharA;
@@ -194,31 +175,55 @@ PROCEDURE <A NAME="MayBeExactBitSizeAndAlign"><procedure>MayBeExactBitSizeAndAli
         align := longRealA;
 
     | M3AST_AS.Enumeration_type(t) =&gt;
-        size := BitsForOrd(t.sm_num_elements-1, exact);
+        size := BitsForInt(t.sm_num_elements-1, exact);
         align := OrdAlign(size);
 
     | M3AST_AS.Subrange_type(t) =&gt;
-        WITH range = t.as_range DO
-          s1 := NARROW(range.as_exp1.sm_exp_value, Integer_value).sm_value;
-          s2 := NARROW(range.as_exp2.sm_exp_value, Integer_value).sm_value;
-        END;
-        IF s1 &lt;= s2 THEN
-          IF s1 &gt;= 0 THEN
-            size := BitsForOrd(s2, exact);
-          ELSE
-            IF s2 &lt; 0 THEN s2 := 0; END;
-            size := 1 + MAX(BitsForOrd(-(s1+1), TRUE), BitsForOrd(s2, TRUE));
-            IF NOT exact THEN size := ChooseByteHalfFull(size); END;
+        TYPECASE t.sm_base_type_spec OF
+        | M3AST_AS.Longint_type =&gt;
+          WITH range = t.as_range,
+               s1 = NARROW(range.as_exp1.sm_exp_value, Longint_value).sm_value,
+               s2 = NARROW(range.as_exp1.sm_exp_value, Longint_value).sm_value
+           DO
+            IF s1 &lt;= s2 THEN
+              IF s1 &gt;= 0L THEN
+                size := BitsForLongint(s2, exact);
+              ELSE
+                IF s2 &lt; 0L THEN s2 := 0L; END;
+                size := 1 + MAX(BitsForLongint(-(s1+1L), TRUE),
+                                BitsForLongint(s2, TRUE));
+                IF NOT exact THEN size := ChooseByteHalfFull(size); END;
+              END;
+            END; (* if *)
+            align := OrdAlign(size);
           END;
-        END; (* if *)
-        align := OrdAlign(size);
+        ELSE
+          WITH range = t.as_range,
+               s1 = NARROW(range.as_exp1.sm_exp_value, Integer_value).sm_value,
+               s2 = NARROW(range.as_exp2.sm_exp_value, Integer_value).sm_value
+           DO
+            IF s1 &lt;= s2 THEN
+              IF s1 &gt;= 0 THEN
+                size := BitsForInt(s2, exact);
+              ELSE
+                IF s2 &lt; 0 THEN s2 := 0; END;
+                size := 1 + MAX(BitsForInt(-(s1+1), TRUE),
+                                BitsForInt(s2, TRUE));
+                IF NOT exact THEN size := ChooseByteHalfFull(size); END;
+              END;
+            END; (* if *)
+            align := OrdAlign(size);
+          END;
+        END;
 
     | M3AST_AS.Set_type(t) =&gt;
+      VAR s1, s2: INTEGER; BEGIN
         GetSetBounds(t, s1, s2);
         IF s1 &lt;= s2 THEN
           size := 1 + s2 - s1;
         END; (* if *)
         align := SetAlign(size, exact);
+      END;
 
     | M3AST_AS.Packed_type(t) =&gt;
         (* the check for legality is done elsewhere *)
@@ -314,7 +319,7 @@ PROCEDURE <A NAME="LiteralValue_C"><procedure>LiteralValue_C</procedure></A>(lit
           ELSE
             cvi := ORD(Text.GetChar(t, 1));
           END; (* if *)
-          er := NewInteger_value(cvi);
+          er := M3CBackEnd_Int_Integer.New_value(cvi);
         END;
 
     | M3AST_AS.WideChar_literal =&gt;
@@ -350,7 +355,7 @@ PROCEDURE <A NAME="LiteralValue_C"><procedure>LiteralValue_C</procedure></A>(lit
           ELSE
             cvi := ORD(Text.GetChar(t, 1));
           END; (* if *)
-          er := NewInteger_value(cvi);
+          er := M3CBackEnd_Int_Integer.New_value(cvi);
         END;
 
     | M3AST_AS.Text_literal =&gt;
@@ -372,7 +377,7 @@ PROCEDURE <A NAME="LiteralValue_C"><procedure>LiteralValue_C</procedure></A>(lit
         END;
 
     | M3AST_AS.Nil_literal =&gt;
-        er := NewInteger_value(NilValue);
+        er := M3CBackEnd_Int_Integer.New_value(NilValue);
 
     | M3AST_AS.Integer_literal =&gt;
         VAR
@@ -380,10 +385,22 @@ PROCEDURE <A NAME="LiteralValue_C"><procedure>LiteralValue_C</procedure></A>(lit
               NARROW(lit, M3AST_AS.Integer_literal).lx_litrep);
           int: INTEGER;
         BEGIN
-          IF NOT TextTo_Int(t, int) THEN
+          IF NOT TextTo_Integer(t, int) THEN
             RETURN M3CBackEnd.NumStatus.Overflow;
           END;
-          er := NewInteger_value(int);
+          er := M3CBackEnd_Int_Integer.New_value(int);
+        END;
+
+    | M3AST_AS.Longint_literal =&gt;
+        VAR
+          t: TEXT := M3CLiteral.ToText(
+              NARROW(lit, M3AST_AS.Longint_literal).lx_litrep);
+          int: LONGINT;
+        BEGIN
+          IF NOT TextTo_Longint(t, int) THEN
+            RETURN M3CBackEnd.NumStatus.Overflow;
+          END;
+          er := M3CBackEnd_Int_Longint.New_value(int);
         END;
 
     | M3AST_AS.Real_literal =&gt;
@@ -532,16 +549,24 @@ PROCEDURE <A NAME="ConstructorOriginal_C"><procedure>ConstructorOriginal_C</proc
 
 PROCEDURE <A NAME="IsOrdinal_C"><procedure>IsOrdinal_C</procedure></A>(e: M3AST_SM.Exp_value): BOOLEAN RAISES {}=
   BEGIN
-    RETURN e # NIL AND ISTYPE(e, Integer_value);
+    RETURN e # NIL AND (ISTYPE(e, Integer_value) OR ISTYPE(e, Longint_value));
   END IsOrdinal_C;
 
 PROCEDURE <A NAME="Val_C"><procedure>Val_C</procedure></A>(n: INTEGER;
-                &lt;*UNUSED*&gt; ts: M3AST_SM.TYPE_SPEC_UNSET;
+                ts: M3AST_SM.TYPE_SPEC_UNSET;
     VAR (*out*) er: M3AST_SM.Exp_value): M3CBackEnd.NumStatus RAISES {}=
   BEGIN
     (* ORD(n) = n for all types *)
-    er := NewInteger_value(n);
-    RETURN M3CBackEnd.NumStatus.Valid;
+    TYPECASE ts OF
+    | M3AST_AS.Longint_type =&gt;
+      er := M3CBackEnd_Int_Longint.New_value(VAL(n, LONGINT));
+      RETURN M3CBackEnd.NumStatus.Valid;
+    | M3AST_AS.Subrange_type(subrange) =&gt;
+      RETURN Val_C(n, subrange.sm_base_type_spec, er);
+    ELSE
+      er := M3CBackEnd_Int_Integer.New_value(VAL(n, INTEGER));
+      RETURN M3CBackEnd.NumStatus.Valid;
+    END;
   END Val_C;
 
 PROCEDURE <A NAME="Ord_C"><procedure>Ord_C</procedure></A>(
@@ -554,17 +579,47 @@ PROCEDURE <A NAME="Ord_C"><procedure>Ord_C</procedure></A>(
     | Integer_value(iv) =&gt;
         i := iv.sm_value;
         RETURN M3CBackEnd.NumStatus.Valid;
+    | Longint_value(iv) =&gt;
+        IF iv.sm_value &lt; VAL(FIRST(INTEGER), LONGINT) THEN
+          RETURN M3CBackEnd.NumStatus.Overflow;
+        END;
+        IF iv.sm_value &gt; VAL(LAST(INTEGER), LONGINT) THEN
+          RETURN M3CBackEnd.NumStatus.Overflow;
+        END;
+        i := ORD(iv.sm_value);
+        RETURN M3CBackEnd.NumStatus.Valid;
     END;
   END Ord_C;
 
 PROCEDURE <A NAME="ConvertOrdinal_C"><procedure>ConvertOrdinal_C</procedure></A>(
     e: M3AST_SM.Exp_value;
-    &lt;*UNUSED*&gt; ts: M3AST_AS.TYPE_SPEC;
+    ts: M3AST_AS.TYPE_SPEC;
     VAR (* out *) er: M3AST_SM.Exp_value)
     : M3CBackEnd.NumStatus
     RAISES {}=
   BEGIN
-    er := e;
+    TYPECASE ts OF
+    | M3AST_AS.Longint_type =&gt;
+      TYPECASE e OF &lt;*NOWARN*&gt;
+      | Integer_value(iv) =&gt;
+        er := M3CBackEnd_Int_Longint.New_value(VAL(iv.sm_value, LONGINT));
+      | Longint_value =&gt; er := e;
+      END;
+    | M3AST_AS.Subrange_type(subrange) =&gt;
+      RETURN ConvertOrdinal_C(e, subrange.sm_base_type_spec, er);
+    ELSE
+      TYPECASE e OF &lt;*NOWARN*&gt;
+      | Integer_value =&gt; er := e;
+      | Longint_value(iv) =&gt;
+        IF iv.sm_value &lt; VAL(FIRST(INTEGER), LONGINT) THEN
+          RETURN M3CBackEnd.NumStatus.Overflow;
+        END;
+        IF iv.sm_value &gt; VAL(LAST(INTEGER), LONGINT) THEN
+          RETURN M3CBackEnd.NumStatus.Overflow;
+        END;
+        er := M3CBackEnd_Int_Integer.New_value(ORD(iv.sm_value));
+      END;
+    END;
     RETURN M3CBackEnd.NumStatus.Valid;
   END ConvertOrdinal_C;
 
@@ -577,43 +632,13 @@ PROCEDURE <A NAME="BinaryOp_C"><procedure>BinaryOp_C</procedure></A>(op: M3AST_A
     END;
     (* Now the real work, computing values *)
     TYPECASE e2 OF
-    | Integer_value(integerValue2) =&gt;
-        VAR
-          integerValue1 := NARROW(e1, Integer_value);
-          int1 := integerValue1.sm_value;
-          int2 := integerValue2.sm_value;
-          intr: INTEGER;
-        BEGIN
-          TYPECASE op OF &lt;*NOWARN*&gt;
-          | M3AST_AS.Plus =&gt; intr := int1 + int2;
-          | M3AST_AS.Minus =&gt; intr := int1 - int2;
-          | M3AST_AS.Times =&gt; intr := int1 * int2;
-          | M3AST_AS.Div =&gt;
-              IF int2 = 0 THEN RETURN M3CBackEnd.NumStatus.Overflow END;
-              intr := int1 DIV int2;
-          | M3AST_AS.Mod =&gt;
-              IF int2 = 0 THEN RETURN M3CBackEnd.NumStatus.Overflow END;
-              intr := int1 MOD int2;
-          | M3AST_AS.Eq =&gt; intr := ORD(int1 = int2);
-          | M3AST_AS.Ne =&gt; intr := ORD(int1 # int2);
-          | M3AST_AS.Gt =&gt; intr := ORD(int1 &gt; int2);
-          | M3AST_AS.Lt =&gt; intr := ORD(int1 &lt; int2);
-          | M3AST_AS.Ge =&gt; intr := ORD(int1 &gt;= int2);
-          | M3AST_AS.Le =&gt; intr := ORD(int1 &lt;= int2);
-          | M3AST_AS.And =&gt;
-              intr := ORD((int1 = True) AND (int2 = True));
-          | M3AST_AS.Or =&gt;
-              intr := ORD((int1 = True) OR (int2 = True));
-          ELSE RETURN M3CBackEnd.NumStatus.Unknown;
-          END; (* case *)
-          IF intr = int1 THEN
-            er := integerValue1;
-          ELSIF intr = int2 THEN
-            er := integerValue2;
-          ELSE
-            er := NewInteger_value(intr);
-          END;
-        END;
+    | Integer_value(iv2) =&gt;
+        RETURN M3CBackEnd_Int_Integer.BinaryOp(op, NARROW(e1, Integer_value),
+                                               iv2, er);
+
+    | Longint_value(liv2) =&gt;
+        RETURN M3CBackEnd_Int_Longint.BinaryOp(op, NARROW(e1, Longint_value),
+                                               liv2, er);
 
     | Text_value(textValue2) =&gt;
         VAR
@@ -724,7 +749,7 @@ PROCEDURE <A NAME="BinaryOp_C"><procedure>BinaryOp_C</procedure></A>(op: M3AST_A
                     END;
                   END;
                 END;
-                er := NewInteger_value(ORD(result));
+                er := M3CBackEnd_Int_Integer.New_value(ORD(result));
               END;
           END; (* case *)
         END; (* begin *)
@@ -746,7 +771,7 @@ PROCEDURE <A NAME="InOp_C"><procedure>InOp_C</procedure></A>(e1, e2: M3AST_SM.Ex
     WITH i = int - set.sm_low, s = set.sm_value DO
       bool := Word.Extract(s[i DIV Word.Size], i MOD Word.Size, 1) # 0;
     END;
-    er := NewInteger_value(ORD(bool));
+    er := M3CBackEnd_Int_Integer.New_value(ORD(bool));
     RETURN M3CBackEnd.NumStatus.Valid;
   END InOp_C;
 
@@ -754,22 +779,11 @@ PROCEDURE <A NAME="UnaryOp_C"><procedure>UnaryOp_C</procedure></A>(op: M3AST_AS.
     VAR (*out*) er: M3AST_SM.Exp_value): M3CBackEnd.NumStatus RAISES {}=
   BEGIN
     TYPECASE e OF
-    | Integer_value(eiv) =&gt;
-        VAR
-          intr: INTEGER;
-        BEGIN
-          TYPECASE op OF
-          | M3AST_AS.Unaryplus =&gt;
-              intr := eiv.sm_value;
-          | M3AST_AS.Unaryminus =&gt;
-              intr := -eiv.sm_value;
-          | M3AST_AS.Not =&gt;
-              intr := ORD(eiv.sm_value = False);
-          ELSE
-            RETURN M3CBackEnd.NumStatus.Unknown;
-          END; (* case *)
-          er := NewInteger_value(intr);
-        END;
+    | Integer_value(iv) =&gt;
+        RETURN M3CBackEnd_Int_Integer.UnaryOp(op, iv, er);
+
+    | Longint_value(liv) =&gt;
+        RETURN M3CBackEnd_Int_Longint.UnaryOp(op, liv, er);
 
     | Real_value(rv) =&gt;
         RETURN M3CBackEnd_Float_Real.UnaryOp(op, rv, er);
@@ -783,49 +797,33 @@ PROCEDURE <A NAME="UnaryOp_C"><procedure>UnaryOp_C</procedure></A>(op: M3AST_AS.
     ELSE
       RETURN M3CBackEnd.NumStatus.Unknown;
     END; (* case *)
-    RETURN M3CBackEnd.NumStatus.Valid;
   END UnaryOp_C;
 
 PROCEDURE <A NAME="StdUnaryOp_C"><procedure>StdUnaryOp_C</procedure></A>(f: M3CStdProcs.Func;
     e: M3AST_SM.Exp_value;
     VAR (*out*) er: M3AST_SM.Exp_value;
-    ft: M3AST_AS.FLOAT_TYPE := NIL): M3CBackEnd.NumStatus RAISES {}=
+    it: M3AST_AS.INT_TYPE := NIL;
+    ft: M3AST_AS.FLOAT_TYPE := NIL):
+  M3CBackEnd.NumStatus RAISES {}=
   BEGIN
     TYPECASE e OF
-    | Integer_value(eiv) =&gt;
-        VAR
-          eint: INTEGER := eiv.sm_value;
-        BEGIN
-          CASE f OF
-          | M3CStdProcs.T.Abs =&gt;
-              IF eint &lt; 0 THEN eint := -eint; END; (* if *)
-              er := NewInteger_value(eint);
-          | M3CStdProcs.T.Float =&gt;
-              TYPECASE ft OF &lt;*NOWARN*&gt;
-              | M3AST_AS.Real_type =&gt;
-  	          er := M3CBackEnd_Float_Real.New_value(FLOAT(eint));
-              | M3AST_AS.LongReal_type =&gt;
-                  er := M3CBackEnd_Float_LongReal.New_value(FLOAT(eint, LONGREAL));
-              | M3AST_AS.Extended_type =&gt;
-                  er := M3CBackEnd_Float_Extended.New_value(FLOAT(eint, EXTENDED));
-              END; (* typecase *)
-	  ELSE
-            RETURN NotImplemented();
-          END; (* case *)
-        END;
+    | Integer_value(iv) =&gt;
+        RETURN M3CBackEnd_Int_Integer.StdUnaryOp(f, iv, er, it, ft);
+
+    | Longint_value(liv) =&gt;
+        RETURN M3CBackEnd_Int_Longint.StdUnaryOp(f, liv, er, it, ft);
 
     | Real_value(rv) =&gt;
-        RETURN M3CBackEnd_Float_Real.StdUnaryOp(f, rv, er, ft);
+        RETURN M3CBackEnd_Float_Real.StdUnaryOp(f, rv, er, it, ft);
 
     | LongReal_value(lrv) =&gt;
-        RETURN M3CBackEnd_Float_LongReal.StdUnaryOp(f, lrv, er, ft);
+        RETURN M3CBackEnd_Float_LongReal.StdUnaryOp(f, lrv, er, it, ft);
 
     | Extended_value(ev) =&gt;
-        RETURN M3CBackEnd_Float_Extended.StdUnaryOp(f, ev, er, ft);
+        RETURN M3CBackEnd_Float_Extended.StdUnaryOp(f, ev, er, it, ft);
     ELSE
       RETURN NotImplemented();
     END; (* case *)
-    RETURN M3CBackEnd.NumStatus.Valid;
   END StdUnaryOp_C;
 
 PROCEDURE <A NAME="StdBinaryOp_C"><procedure>StdBinaryOp_C</procedure></A>(f: M3CStdProcs.Func;
@@ -836,25 +834,13 @@ PROCEDURE <A NAME="StdBinaryOp_C"><procedure>StdBinaryOp_C</procedure></A>(f: M3
       M3CBackEnd.NumStatus.Unknown;
     END;
     TYPECASE e1 OF
-    | Integer_value(eiv1) =&gt;
-        VAR
-          eiv2 := NARROW(e2, Integer_value);
-        BEGIN
-          CASE f OF &lt;*NOWARN*&gt;
-          | M3CStdProcs.T.Min =&gt;
-              IF eiv1.sm_value &lt; eiv2.sm_value THEN
-                er := eiv1;
-              ELSE
-                er := eiv2;
-              END;
-          | M3CStdProcs.T.Max =&gt;
-              IF eiv1.sm_value &gt; eiv2.sm_value THEN
-                er := eiv1;
-              ELSE
-                er := eiv2;
-              END;
-          END; (* case *)
-        END;
+    | Integer_value(iv1) =&gt;
+        RETURN M3CBackEnd_Int_Integer.StdBinaryOp(f, iv1,
+            NARROW(e2, Integer_value), er);
+
+    | Longint_value(liv1) =&gt;
+        RETURN M3CBackEnd_Int_Longint.StdBinaryOp(f, liv1,
+            NARROW(e2, Longint_value), er);
 
     | Real_value(rv1) =&gt;
         RETURN M3CBackEnd_Float_Real.StdBinaryOp(f, rv1,
@@ -871,46 +857,52 @@ PROCEDURE <A NAME="StdBinaryOp_C"><procedure>StdBinaryOp_C</procedure></A>(f: M3
     ELSE
       RETURN NotImplemented();
     END; (* case *)
-    RETURN M3CBackEnd.NumStatus.Valid;
   END StdBinaryOp_C;
 
 PROCEDURE <A NAME="StdUnaryTypeOp_C"><procedure>StdUnaryTypeOp_C</procedure></A>(
     pf: M3CStdProcs.Func;
     ts: M3AST_SM.TYPE_SPEC_UNSET;
     VAR (*out*) er: M3AST_SM.Exp_value): M3CBackEnd.NumStatus RAISES {}=
-  VAR
-    eint: INTEGER;
   BEGIN
     CASE pf OF
     | M3CStdProcs.T.BitSize =&gt;
-        eint := SizeInBits(ts);
+        er := M3CBackEnd_Int_Integer.New_value(SizeInBits(ts));
     | M3CStdProcs.T.ByteSize,
       M3CStdProcs.T.AdrSize =&gt;
-        eint := RoundToByte(SizeInBits(ts));
+        er := M3CBackEnd_Int_Integer.New_value(RoundToByte(SizeInBits(ts)));
     | M3CStdProcs.T.First =&gt;
         TYPECASE ts OF &lt;*NOWARN*&gt;
         | M3AST_AS.Integer_type =&gt;
-            eint := FIRST(INTEGER);
+            er := M3CBackEnd_Int_Integer.New_value(FIRST(INTEGER));
+        | M3AST_AS.Longint_type =&gt;
+            er := M3CBackEnd_Int_Longint.New_value(FIRST(LONGINT));
         | M3AST_AS.WideChar_type =&gt;
-            eint := ORD(FIRST(WIDECHAR));
+            er := M3CBackEnd_Int_Integer.New_value(ORD(FIRST(WIDECHAR)));
         | M3AST_AS.Real_type =&gt;
+          er := M3CBackEnd_Float_Real.New_value(FIRST(REAL))
         | M3AST_AS.LongReal_type =&gt;
+          er := M3CBackEnd_Float_LongReal.New_value(FIRST(LONGREAL))
         | M3AST_AS.Extended_type =&gt;
+          er := M3CBackEnd_Float_Extended.New_value(FIRST(EXTENDED))
         END; (* typecase *)
     | M3CStdProcs.T.Last =&gt;
         TYPECASE ts OF &lt;*NOWARN*&gt;
         | M3AST_AS.Integer_type =&gt;
-            eint := LAST(INTEGER);
+            er := M3CBackEnd_Int_Integer.New_value(LAST(INTEGER));
+        | M3AST_AS.Longint_type =&gt;
+            er := M3CBackEnd_Int_Longint.New_value(LAST(LONGINT));
         | M3AST_AS.WideChar_type =&gt;
-            eint := ORD(LAST(WIDECHAR));
+            er := M3CBackEnd_Int_Integer.New_value(ORD(LAST(WIDECHAR)));
         | M3AST_AS.Real_type =&gt;
+          er := M3CBackEnd_Float_Real.New_value(LAST(REAL))
         | M3AST_AS.LongReal_type =&gt;
+          er := M3CBackEnd_Float_LongReal.New_value(LAST(LONGREAL))
         | M3AST_AS.Extended_type =&gt;
+          er := M3CBackEnd_Float_Extended.New_value(LAST(EXTENDED))
         END; (* typecase *)
     ELSE
       RETURN NotImplemented();
     END; (* case *)
-    er := NewInteger_value(eint);
     RETURN M3CBackEnd.NumStatus.Valid;
   END StdUnaryTypeOp_C;
 
@@ -932,73 +924,15 @@ PROCEDURE <A NAME="WordOp_C"><procedure>WordOp_C</procedure></A>(
     VAR (* out *) er: M3AST_SM.Exp_value)
     : M3CBackEnd.NumStatus
     RAISES {}=
-  VAR
-    res: Word.T;
-    arg0 := NARROW(args[0], Integer_value).sm_value;
   BEGIN
-    IF w = M3CWordProcs.T.Not THEN
-      res := Word.Not(arg0);
+    TYPECASE args[0] OF
+    | Integer_value =&gt;
+      RETURN M3CBackEnd_Int_Integer.WordOp(w, args, er);
+    | Longint_value =&gt;
+      RETURN M3CBackEnd_Int_Longint.WordOp(w, args, er);
     ELSE
-      VAR
-        arg1 := NARROW(args[1], Integer_value).sm_value;
-      BEGIN
-        CASE w OF &lt;*NOWARN*&gt;
-        | M3CWordProcs.T.Plus =&gt;
-            res := Word.Plus(arg0, arg1);
-        | M3CWordProcs.T.Times =&gt;
-            res := Word.Times(arg0, arg1);
-        | M3CWordProcs.T.Minus =&gt;
-            res := Word.Minus(arg0, arg1);
-        | M3CWordProcs.T.Divide =&gt;
-            res := Word.Divide(arg0, arg1);
-        | M3CWordProcs.T.Mod =&gt;
-            res := Word.Mod(arg0, arg1);
-        | M3CWordProcs.T.LT =&gt;
-            res := ORD(Word.LT(arg0, arg1));
-        | M3CWordProcs.T.LE =&gt;
-            res := ORD(Word.LE(arg0, arg1));
-        | M3CWordProcs.T.GT =&gt;
-            res := ORD(Word.GT(arg0, arg1));
-        | M3CWordProcs.T.GE =&gt;
-            res := ORD(Word.GE(arg0, arg1));
-        | M3CWordProcs.T.And =&gt;
-            res := Word.And(arg0, arg1);
-        | M3CWordProcs.T.Or =&gt;
-            res := Word.Or(arg0, arg1);
-        | M3CWordProcs.T.Xor =&gt;
-            res := Word.Xor(arg0, arg1);
-        | M3CWordProcs.T.Shift =&gt;
-            res := Word.Shift(arg0, arg1);
-        | M3CWordProcs.T.RightShift =&gt;
-            res := Word.RightShift(arg0, arg1);
-        | M3CWordProcs.T.Rotate =&gt;
-            res := Word.Rotate(arg0, arg1);
-        | M3CWordProcs.T.RightRotate =&gt;
-            res := Word.RightRotate(arg0, arg1);
-        | M3CWordProcs.T.Extract =&gt;
-            VAR
-              arg2 := NARROW(args[2], Integer_value).sm_value;
-            BEGIN
-              IF arg1 &lt; 0 OR arg2 &lt; 0 OR arg1 + arg2 &gt; Word.Size THEN
-                RETURN M3CBackEnd.NumStatus.Unknown;
-              END;
-              res := Word.Extract(arg0, arg1, arg2);
-            END;
-        | M3CWordProcs.T.Insert =&gt;
-            VAR
-              arg2 := NARROW(args[2], Integer_value).sm_value;
-              arg3 := NARROW(args[3], Integer_value).sm_value;
-            BEGIN
-              IF arg2 &lt; 0 OR arg3 &lt; 0 OR arg2 + arg3 &gt; Word.Size THEN
-                RETURN M3CBackEnd.NumStatus.Unknown;
-              END;
-              res := Word.Insert(arg0, arg1, arg2, arg3);
-            END;
-        END;
-      END;
+      RETURN NotImplemented();
     END;
-    er := NewInteger_value(res);
-    RETURN M3CBackEnd.NumStatus.Valid;
   END WordOp_C;
 
 PROCEDURE <A NAME="LoopholeOK_C"><procedure>LoopholeOK_C</procedure></A>(&lt;*UNUSED*&gt; e: M3AST_AS.EXP;
@@ -1020,7 +954,7 @@ PROCEDURE <A NAME="AlignTo"><procedure>AlignTo</procedure></A>(size, align: CARD
     END; (* if *)
   END AlignTo;
 
-PROCEDURE <A NAME="BitsForOrd"><procedure>BitsForOrd</procedure></A>(n: INTEGER; exact := FALSE): CARDINAL RAISES {}=
+PROCEDURE <A NAME="BitsForInt"><procedure>BitsForInt</procedure></A>(n: INTEGER; exact := FALSE): CARDINAL RAISES {}=
   VAR i, c: CARDINAL;
   BEGIN
     IF n &lt;= 0 THEN RETURN 0 END;
@@ -1033,13 +967,29 @@ PROCEDURE <A NAME="BitsForOrd"><procedure>BitsForOrd</procedure></A>(n: INTEGER;
       i := ChooseByteHalfFull(i);
     END;
     RETURN i;
-  END BitsForOrd;
+  END BitsForInt;
+
+PROCEDURE <A NAME="BitsForLongint"><procedure>BitsForLongint</procedure></A>(n: LONGINT; exact := FALSE): CARDINAL RAISES {}=
+  VAR i: CARDINAL;
+  BEGIN
+    IF n &lt;= 0L THEN RETURN 0 END;
+    i := 0;
+    WHILE n # 0L DO
+      INC(i); n := n DIV 2L;
+    END; (* while *)
+    IF NOT exact THEN
+      i := ChooseByteHalfFull(i);
+    END;
+    RETURN i;
+  END BitsForLongint;
 
 PROCEDURE <A NAME="ChooseByteHalfFull"><procedure>ChooseByteHalfFull</procedure></A>(i: INTEGER): INTEGER=
   BEGIN
     IF i &lt;= 8 THEN i := 8
     ELSIF i &lt;= 16 THEN i := 16;
-    ELSE i := AlignTo(i, 32);
+    ELSIF i &lt;= 32 THEN i := 32;
+    ELSIF i &lt;= 64 THEN i := 64;
+    ELSE &lt;*ASSERT FALSE*&gt;
     END; (* if *)
     RETURN i;
   END ChooseByteHalfFull;
@@ -1065,6 +1015,20 @@ PROCEDURE <A NAME="Compare_C"><procedure>Compare_C</procedure></A>(e1, e2: M3AST
     | Integer_value(eiv1) =&gt;
         TYPECASE e2 OF
         | Integer_value(eiv2) =&gt;
+            IF eiv1.sm_value = eiv2.sm_value THEN
+              RETURN 0
+            ELSIF eiv1.sm_value &lt; eiv2.sm_value THEN
+              RETURN -1
+            ELSE
+              RETURN 1
+            END; (* if *)
+        ELSE
+          RETURN 1;
+        END;
+
+    | Longint_value(eiv1) =&gt;
+        TYPECASE e2 OF
+        | Longint_value(eiv2) =&gt;
             IF eiv1.sm_value = eiv2.sm_value THEN
               RETURN 0
             ELSIF eiv1.sm_value &lt; eiv2.sm_value THEN
@@ -1157,6 +1121,7 @@ CONST
   RealCh = 'r';      RealText = &quot;r&quot;;
   TextCh = 't';      TextText = &quot;t&quot;;
   ProcCh = 'p';      ProcText = &quot;p&quot;;
+  LongintCh = 'i';   LongintText = &quot;i&quot;;
   (* Integer values, hopefully the most common, are just hex numbers *)
 
 PROCEDURE <A NAME="ExpValueToText_C"><procedure>ExpValueToText_C</procedure></A>(e: M3AST_SM.Exp_value): TEXT RAISES {}=
@@ -1164,6 +1129,8 @@ PROCEDURE <A NAME="ExpValueToText_C"><procedure>ExpValueToText_C</procedure></A>
     TYPECASE e OF &lt;*NOWARN*&gt;
     | Integer_value(intValue) =&gt;
         RETURN Fmt.Int(intValue.sm_value, 16);
+    | Longint_value(intValue) =&gt;
+        RETURN LongintText &amp; Fmt.LongInt(intValue.sm_value, 16);
     | Set_constructor_value(setValue) =&gt;
         VAR
           s := TextWr.New();
@@ -1221,11 +1188,17 @@ PROCEDURE <A NAME="TextToExpValue_C"><procedure>TextToExpValue_C</procedure></A>
         RETURN NEW(Proc_value, sm_value := Text.Sub(t, 1, length - 1));
     | TextCh =&gt;
         RETURN NEW(Text_value, sm_value := Text.Sub(t, 1, length - 1));
+    | LongintCh =&gt;
+      VAR new := NEW(Longint_value);
+      BEGIN
+        IF NOT TextTo_Longint(t, new.sm_value, 16) THEN RAISE Fatal END;
+        RETURN new;
+      END;
     ELSE
       VAR
         new := NEW(Integer_value);
       BEGIN
-        IF NOT TextTo_Int(t, new.sm_value, 16) THEN RAISE Fatal END;
+        IF NOT TextTo_Integer(t, new.sm_value, 16) THEN RAISE Fatal END;
         RETURN new;
       END;
     END
@@ -1249,11 +1222,11 @@ PROCEDURE <A NAME="SetTextToExpValue"><procedure>SetTextToExpValue</procedure></
 PROCEDURE <A NAME="GetInt"><procedure>GetInt</procedure></A>(s: Rd.T; base: CARDINAL): INTEGER=
   VAR t := RdExtras.GetText(s); result: INTEGER;
   BEGIN
-    EVAL TextTo_Int(t, result, base);
+    EVAL TextTo_Integer(t, result, base);
     RETURN result;
   END GetInt;
 
-PROCEDURE <A NAME="TextTo_Int"><procedure>TextTo_Int</procedure></A>(t: Text.T;
+PROCEDURE <A NAME="TextTo_Integer"><procedure>TextTo_Integer</procedure></A>(t: Text.T;
     VAR i: INTEGER;
     &lt;*UNUSED*&gt; base: Fmt.Base := 10)
     : BOOLEAN=
@@ -1270,7 +1243,26 @@ PROCEDURE <A NAME="TextTo_Int"><procedure>TextTo_Int</procedure></A>(t: Text.T;
       i := Convert.ToInt(SUBARRAY(buf, 0, l), used);
     END;
     RETURN used = l;
-  END TextTo_Int;
+  END TextTo_Integer;
+
+PROCEDURE <A NAME="TextTo_Longint"><procedure>TextTo_Longint</procedure></A>(t: Text.T;
+    VAR i: LONGINT;
+    &lt;*UNUSED*&gt; base: Fmt.Base := 10)
+    : BOOLEAN=
+  VAR used: INTEGER; l: INTEGER;  buf: ARRAY [0..63] OF CHAR;
+  BEGIN
+    M3Assert.Check(t # NIL);
+    l := Text.Length(t);
+    M3Assert.Check(l &lt;= NUMBER(buf));
+    Text.SetChars(buf, t);
+    IF l&gt;2 AND buf[2] = '_' OR
+       l&gt;1 AND buf[1] = '_' THEN
+      i := Convert.ToLongUnsigned(SUBARRAY(buf, 0, l), used);
+    ELSE
+      i := Convert.ToLongInt(SUBARRAY(buf, 0, l), used);
+    END;
+    RETURN used = l;
+  END TextTo_Longint;
 
 PROCEDURE <A NAME="TextTo_Real"><procedure>TextTo_Real</procedure></A>(t: Text.T; VAR real: REAL): BOOLEAN=
   VAR used: INTEGER;  buf: ARRAY [0..63] OF CHAR;  len := Text.Length(t);

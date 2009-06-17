@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTType.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTType.m3</H2></A><HR>
 <inModule>
@@ -12,7 +12,7 @@
 <P><PRE>UNSAFE MODULE <module>RTType</module> EXPORTS <A HREF="RTType.i3.html"><implements>RTType</A></implements>, <A HREF="RTTypeSRC.i3.html"><implements>RTTypeSRC</A></implements>, <A HREF="RTHooks.i3.html"><implements>RTHooks</A></implements>;
 
 IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTMisc.i3.html">RTMisc</A>, <A HREF="RTException.i3.html">RTException</A>, <A HREF="RTHeapRep.i3.html">RTHeapRep</A>, <A HREF="RTModule.i3.html">RTModule</A>, <A HREF="../../C/Common/M3toC.i3.html">M3toC</A>;
-IMPORT <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../../C/Common/Cstdlib.i3.html">Cstdlib</A>, <A HREF="../../C/LINUXLIBC6/Cstring.i3.html">Cstring</A>, <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="RuntimeError.i3.html">RuntimeError</A>;
+IMPORT <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../../C/Common/Cstdlib.i3.html">Cstdlib</A>, <A HREF="#x1">Cstring</A>, <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="RuntimeError.i3.html">RuntimeError</A>;
 
 TYPE
   TK  = RT0.TypeKind;
@@ -40,10 +40,7 @@ VAR
 PROCEDURE <A NAME="IsSubtype"><procedure>IsSubtype</procedure></A> (a, b: Typecode): BOOLEAN =
   VAR t: RT0.TypeDefn;
   BEGIN
-    IF (a = 0) THEN RETURN TRUE END;
-    IF (a &gt;= types.cnt) THEN
-      &lt;*NOWARN*&gt; EVAL VAL (-1, CARDINAL);  (* force a range fault *)
-    END;
+    IF (a = RT0.NilTypecode) THEN RETURN TRUE END;
     t := Get (a);
     IF (t = NIL) THEN RETURN FALSE; END;
     IF (t.typecode = b) THEN RETURN TRUE END;
@@ -170,10 +167,7 @@ PROCEDURE <A NAME="ScanTypecase"><procedure>ScanTypecase</procedure></A> (ref: R
   BEGIN
     IF (pi^ = NIL) THEN
       (* this is a new type *)
-      in  := NewInfo ();
-      in.def := def;
-      in.module := m;
-      in.opaqueID := 0;
+      in := NewInfo (def, m, 0);
       pi^ := in;  INC (uids.cnt);  (* record him in the UID map *)
       AssignTypecode (in);
       IF (def.brand_ptr # NIL) THEN NoteBrand (in); END;
@@ -291,7 +285,10 @@ PROCEDURE <A NAME="FinishTypecell"><procedure>FinishTypecell</procedure></A> (de
 
       (* allocate my default method list *)
       IF (odef.methodSize &gt; 0) AND (odef.defaultMethods = NIL) THEN
-        odef.defaultMethods := Malloc (odef.methodSize);
+        odef.defaultMethods := Cstdlib.calloc (1, odef.methodSize);
+        IF odef.defaultMethods = NIL THEN
+          Fail (RTE.OutOfMemory, m, odef, NIL);
+        END;
 
         (* initialize my method suite from my parent *)
         IF (t.common.kind = ORD (TK.Obj)) AND (t.defaultMethods # NIL) THEN
@@ -466,12 +463,9 @@ PROCEDURE <A NAME="VerifyPartialRevelation"><procedure>VerifyPartialRevelation</
   END AssignBuiltinTypes;
 
 PROCEDURE <A NAME="GenBuiltin"><procedure>GenBuiltin</procedure></A> (def: RT0.TypeDefn;  nm: TEXT) =
-  VAR pi: SlotPtr;  in := NewInfo ();
+  VAR pi: SlotPtr;  in := NewInfo (def, NIL, 0);
   BEGIN
-    def.name    := LOOPHOLE (M3toC.FlatTtoS (nm), RT0.String);
-    in.module   := NIL;
-    in.def      := def;
-    in.opaqueID := 0;
+    def.name := LOOPHOLE (M3toC.FlatTtoS (nm), RT0.String);
     pi := FindSlot (uids, def.selfID, NIL);
     &lt;*ASSERT pi^ = NIL*&gt;
     pi^ := in;  INC (uids.cnt);
@@ -481,11 +475,8 @@ PROCEDURE <A NAME="GenBuiltin"><procedure>GenBuiltin</procedure></A> (def: RT0.T
   END GenBuiltin;
 
 PROCEDURE <A NAME="GenOpaque"><procedure>GenOpaque</procedure></A> (uid: INTEGER;  typecode: INTEGER) =
-  VAR pi: SlotPtr;  in := NewInfo ();
+  VAR pi: SlotPtr;  in := NewInfo (NIL, NIL, uid);
   BEGIN
-    in.def := NIL;
-    in.module := NIL;
-    in.opaqueID := uid;
     pi := FindSlot (uids, uid, NIL);
     &lt;*ASSERT pi^ = NIL*&gt;
     pi^ := in;  INC (uids.cnt);
@@ -498,7 +489,8 @@ VAR
   Dummy1_typecell := RT0.Typecell {
     typecode      := 0,
     selfID        := -1,
-    fp            := RT0.Fingerprint {-1, -1},
+    fp            := RT0.Fingerprint {16_ff, 16_ff, 16_ff, 16_ff,
+                                      16_ff, 16_ff, 16_ff, 16_ff},
     traced        := 0,
     kind          := ORD (TK.Ref),
     link_state    := 0,
@@ -515,7 +507,8 @@ VAR
   Dummy3_typecell := RT0.Typecell {
     typecode      := 0,
     selfID        := -3,
-    fp            := RT0.Fingerprint {-3, -3},
+    fp            := RT0.Fingerprint {16_fd, 16_ff, 16_ff, 16_ff,
+                                      16_fd, 16_ff, 16_ff, 16_ff},
     traced        := 0,
     kind          := ORD (TK.Ref),
     link_state    := 0,
@@ -534,7 +527,8 @@ VAR
   NULL_typecell := RT0.Typecell {
     typecode      := RT0.NilTypecode,
     selfID        := 16_48ec756e,
-    fp            := RT0.Fingerprint {16_24800000, 16_6c6c756e},
+    fp            := RT0.Fingerprint {16_6e, 16_75, 16_6c, 16_6c,
+                                      16_00, 16_00, 16_80, 16_24},
     traced        := 0,
     kind          := ORD (TK.Ref),
     link_state    := 0,
@@ -554,7 +548,8 @@ VAR
     common := RT0.Typecell {
       typecode      := RT0.UnRootTypecode,
       selfID        := -1987139703,
-      fp            := RT0.Fingerprint {-133621304(*16_f80919c8*), 16_7187be41},
+      fp            := RT0.Fingerprint {16_41, 16_be, 16_87, 16_71,
+                                        16_c8, 16_19, 16_09, 16_f8},
       traced        := 0,
       kind          := ORD (TK.Obj),
       link_state    := 0,
@@ -581,7 +576,8 @@ VAR
     common := RT0.Typecell {
       typecode      := RT0.RootTypecode,
       selfID        := -1651526519,
-      fp            := RT0.Fingerprint {-133621304(*16_f80919c8*), 16_6586ad41},
+      fp            := RT0.Fingerprint {16_41, 16_ad, 16_86, 16_65,
+                                        16_c8, 16_19, 16_09, 16_f8},
       traced        := 1,
       kind          := ORD (TK.Obj),
       link_state    := 0,
@@ -609,7 +605,8 @@ VAR
   REFANY_typecell := RT0.Typecell {
     typecode      := RT0.RefanyTypecode,
     selfID        := REFANY_uid,
-    fp            := RT0.Fingerprint {16_65722480, 16_796e6166},
+    fp            := RT0.Fingerprint {16_66, 16_61, 16_6e, 16_79,
+                                      16_80, 16_24, 16_72, 16_65},
     traced        := 1,
     kind          := ORD (TK.Ref),
     link_state    := 0,
@@ -630,7 +627,8 @@ VAR
   ADDRESS_typecell := RT0.Typecell {
     typecode      := RT0.AddressTypecode,
     selfID        := ADDRESS_uid,
-    fp            := RT0.Fingerprint {16_628a2191, 16_6aca01f2},
+    fp            := RT0.Fingerprint {16_f2, 16_01, 16_ca, 16_6a,
+                                      16_91, 16_21, 16_8a, 16_62},
     traced        := 0,
     kind          := ORD (TK.Ref),
     link_state    := 0,
@@ -656,15 +654,21 @@ VAR
   n_info    : CARDINAL := InfoChunk;
   info_pool : InfoVec  := NIL;
 
-PROCEDURE <A NAME="NewInfo"><procedure>NewInfo</procedure></A> (): InfoPtr =
+PROCEDURE <A NAME="NewInfo"><procedure>NewInfo</procedure></A> (def: RT0.TypeDefn; m: RT0.ModulePtr; uid: INTEGER): InfoPtr =
   VAR p: InfoPtr;
   BEGIN
     IF (n_info &gt;= InfoChunk) THEN
-      info_pool := Malloc (InfoChunk * BYTESIZE (Info));
+      info_pool := Cstdlib.calloc (InfoChunk, BYTESIZE (Info));
+      IF info_pool = NIL THEN
+        Fail (RTE.OutOfMemory, m, def, NIL);
+      END;
       n_info := 0;
     END;
     p := info_pool + n_info * ADRSIZE (Info);
     INC (n_info);
+    p.def := def;
+    p.module := m;
+    p.opaqueID := uid;
     RETURN p;
   END NewInfo;
 </PRE>---------------------------------------------------- key-&gt;InfoPtr maps ---
@@ -712,14 +716,20 @@ PROCEDURE <A NAME="Expand"><procedure>Expand</procedure></A> (VAR m: InfoMap) =
       m.cnt  := 0;
       m.max  := m.initial_size;  (* must be a power of two *)
       m.mask := m.max - 1;
-      m.map  := Malloc (m.max * BYTESIZE (InfoPtr));
+      m.map  := Cstdlib.calloc (m.max, BYTESIZE (InfoPtr));
+      IF m.map = NIL THEN
+        Fail (RTE.OutOfMemory, NIL, NIL, NIL);
+      END;
     ELSE
       new := m;
       new.cnt  := 0;
       new.full := m.full + m.full;
       new.max  := m.max + m.max;
       new.mask := new.max - 1;
-      new.map  := Malloc (new.max * BYTESIZE (InfoPtr));
+      new.map  := Cstdlib.calloc (new.max, BYTESIZE (InfoPtr));
+      IF new.map = NIL THEN
+        Fail (RTE.OutOfMemory, NIL, NIL, NIL);
+      END;
 
       (* re-insert the existing elements *)
       pi := m.map;
@@ -802,14 +812,6 @@ PROCEDURE <A NAME="HashBrand"><procedure>HashBrand</procedure></A> (b: RT0.Brand
     END;
     RETURN hash;
   END HashBrand;
-
-PROCEDURE <A NAME="Malloc"><procedure>Malloc</procedure></A> (n_bytes: INTEGER): ADDRESS =
-  VAR res := Cstdlib.malloc (n_bytes);
-  BEGIN
-    IF (res = NIL) THEN RAISE RuntimeError.E (RTE.OutOfMemory); END;
-    RTMisc.Zero (res, n_bytes);
-    RETURN res;
-  END Malloc;
 </PRE>-------------------------------------------------------- runtime errors ---
 
 <P><PRE>PROCEDURE <A NAME="UndefinedMethod"><procedure>UndefinedMethod</procedure></A> (self: REFANY) =
@@ -846,6 +848,13 @@ BEGIN
 END RTType.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Cstring is in:
+</A><UL>
+<LI><A HREF="../../C/Common/Cstring.i3.html#0TOP0">m3core/src/C/Common/Cstring.i3</A>
+<LI><A HREF="../../C/LINUXLIBC6/Cstring.i3.html#0TOP0">m3core/src/C/LINUXLIBC6/Cstring.i3</A>
+</UL>
+<P>
 <PRE>
 
 

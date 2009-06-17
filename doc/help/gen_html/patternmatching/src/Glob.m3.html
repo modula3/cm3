@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: patternmatching/src/Glob.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>patternmatching/src/Glob.m3</H2></A><HR>
 <inModule>
@@ -36,10 +36,10 @@
  *
  * $Id$ 
 
-<P><PRE>UNSAFE MODULE <module><implements><A HREF="Glob.i3.html">Glob</A></implements></module>;
+<P><PRE>UNSAFE MODULE <module><implements><A HREF="#x1">Glob</A></implements></module>;
 
-IMPORT <A HREF="../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="Uglob.i3.html">Uglob</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>;
-IMPORT <A HREF="RegEx.i3.html">RegEx</A>;
+IMPORT <A HREF="../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="#x2">Uglob</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>;
+IMPORT <A HREF="#x3">RegEx</A>;
 
 PROCEDURE <A NAME="Match"><procedure>Match</procedure></A>(pattern, string: TEXT;
                 options := MatchOptions{}): BOOLEAN RAISES {RegEx.Error} =
@@ -88,6 +88,27 @@ BEGIN
 END Glob.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Glob is in:
+</A><UL>
+<LI><A HREF="Glob.i3.html#0TOP0">patternmatching/src/Glob.i3</A>
+<LI><A HREF="../../suplib/src/Glob.i3.html#0TOP0">suplib/src/Glob.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Uglob is in:
+</A><UL>
+<LI><A HREF="Uglob.i3.html#0TOP0">patternmatching/src/Uglob.i3</A>
+<LI><A HREF="../../suplib/src/Uglob.i3.html#0TOP0">suplib/src/Uglob.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface RegEx is in:
+</A><UL>
+<LI><A HREF="RegEx.i3.html#0TOP0">patternmatching/src/RegEx.i3</A>
+<LI><A HREF="../../suplib/src/RegEx.i3.html#0TOP0">suplib/src/RegEx.i3</A>
+</UL>
+<P>
 <PRE>
 
 

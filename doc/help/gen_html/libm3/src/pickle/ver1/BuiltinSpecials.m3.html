@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/pickle/ver1/BuiltinSpecials.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/pickle/ver1/BuiltinSpecials.m3</H2></A><HR>
 <inModule>
@@ -12,7 +12,7 @@
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="BuiltinSpecials.i3.html">BuiltinSpecials</A></implements></module>;
 
 IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="Pickle.i3.html">Pickle</A>, <A HREF="../../rw/Rd.i3.html">Rd</A>, <A HREF="../../../derived/RefList.i3.html">RefList</A>;
-IMPORT <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../../m3core/src/text/Text8.i3.html">Text8</A>, <A HREF="../../../../m3core/src/text/Text16.i3.html">Text16</A>, <A HREF="../../../../m3core/src/text/TextLiteral.i3.html">TextLiteral</A>, <A HREF="../../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../rw/Wr.i3.html">Wr</A>;
+IMPORT <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../../m3core/src/text/Text8.i3.html">Text8</A>, <A HREF="../../../../m3core/src/text/Text16.i3.html">Text16</A>, <A HREF="../../../../m3core/src/text/TextLiteral.i3.html">TextLiteral</A>, <A HREF="../../../../m3core/src/text/Text8CString.i3.html">Text8CString</A>, <A HREF="../../../../m3core/src/text/TextClass.i3.html">TextClass</A>, <A HREF="../../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../rw/Wr.i3.html">Wr</A>;
 
 FROM <A HREF="Pickle.i3.html">Pickle</A> IMPORT Error, RefID, Special, Reader, Writer;
 
@@ -23,40 +23,44 @@ PROCEDURE <A NAME="Register"><procedure>Register</procedure></A> () =
     IF init_done THEN RETURN; END;
     Pickle.RegisterSpecial (NEW (Special, sc := TYPECODE (TextLiteral.T),
                                  write := TextPklWrite, read  := TextPklRead));
+    Pickle.RegisterSpecial (NEW (Special, sc := TYPECODE (Text8CString.T),
+                                 write := TextPklWrite, read  := TextPklRead));
     Pickle.RegisterSpecial (NEW (Special, sc := TYPECODE (Atom.T),
                                  write := AtomPklWrite, read  := AtomPklRead));
     Pickle.RegisterSpecial (NEW (Special, sc := TYPECODE (RefList.T),
                                  write := ListPklWrite, read  := ListPklRead));
     init_done := TRUE;
   END Register;
-</PRE>-------------------------------------------------------- TextLiteral.T ---
+</PRE>-------------------------------------------------------- TEXT specials ---
 
 <P><PRE>PROCEDURE <A NAME="TextPklWrite"><procedure>TextPklWrite</procedure></A> (&lt;*UNUSED*&gt; sp: Special;  r: REFANY;  pwr: Writer)
   RAISES {Error, Wr.Failure, Thread.Alerted} =
   TYPE CPtr  = UNTRACED REF ARRAY [0..TextLiteral.MaxBytes] OF CHAR;
   TYPE WCPtr = UNTRACED REF ARRAY [0..TextLiteral.MaxBytes DIV 2] OF WIDECHAR;
-  VAR txt := NARROW (r, TextLiteral.T);  cp: CPtr;  wcp: WCPtr;
+  VAR txt := LOOPHOLE (r, TEXT);  cp: CPtr;  wcp: WCPtr;  info: TextClass.Info;
   BEGIN
-    IF TYPECODE (r) # TYPECODE (TextLiteral.T) THEN
-      (* subtypes cannot be pickled by the default specials because
-         they'll try to write something that matches the type
-         declaration with a gazillion characters *)
-      RAISE Error (&quot;cannot pickle TextLiteral.T subtypes&quot;);
-    END;
-    pwr.writeInt (txt.cnt);
-    IF (txt.cnt &gt;= 0) THEN
-      cp := LOOPHOLE (ADR (txt.buf[0]), CPtr);
-      Wr.PutString (pwr.wr, SUBARRAY (cp^, 0, txt.cnt));
+    TYPECASE (txt) OF
+    | TextLiteral.T  =&gt; (* ok *)
+    | Text8CString.T =&gt; (* ok *)
     ELSE
-      wcp := LOOPHOLE (ADR (txt.buf[0]), WCPtr);
-      Wr.PutWideString (pwr.wr, SUBARRAY (wcp^, 0, -txt.cnt));
+      RAISE Error (&quot;cannot pickle subtypes of TextLiteral.T or Text8CString.T&quot;);
+    END;
+    txt.get_info (info);
+    IF info.wide THEN
+      pwr.writeInt (-info.length);
+      wcp := LOOPHOLE (info.start, WCPtr);
+      Wr.PutWideString (pwr.wr, SUBARRAY (wcp^, 0, info.length));
+    ELSE
+      pwr.writeInt (info.length);
+      cp := LOOPHOLE (info.start, CPtr);
+      Wr.PutString (pwr.wr, SUBARRAY (cp^, 0, info.length));
     END;
   END TextPklWrite;
 
 PROCEDURE <A NAME="TextPklRead"><procedure>TextPklRead</procedure></A> (&lt;*UNUSED*&gt; sp: Special;  prd: Reader;
-                        &lt;*UNUSED*&gt; id: RefID): REFANY
+                              &lt;*UNUSED*&gt; id: RefID): REFANY
   RAISES {Error, Rd.EndOfFile, Rd.Failure, Thread.Alerted} =
-  VAR len := ReadLength  (prd);
+  VAR len: INTEGER := prd.readInt ();
   BEGIN
     IF (len &gt;= 0)
       THEN RETURN Text8Read (prd, len);

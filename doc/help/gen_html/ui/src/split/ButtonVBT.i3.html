@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/ButtonVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/ButtonVBT.i3</H2></A><HR>
 <inInterface>
@@ -25,7 +25,7 @@
 <PRE>
       ( (pre cancel) | (pre action post) )*
 </PRE>
-   The minimum, maximum, and preferred size of a <CODE>ButtonVBT</CODE> 
+   The minimum, maximum, and preferred size of a <CODE>ButtonVBT</CODE>
    are all equal to the minimum size of its child, in each axis.  
 
 <P><PRE>INTERFACE <interface><A HREF="ButtonVBT.m3.html">ButtonVBT</A></interface>;
@@ -61,14 +61,14 @@ TYPE
    moves the mouse out of the button.  Otherwise they call the action
    procedure <CODE>proc</CODE> if the user releases the mouse button.
 <P>
-   The default <CODE>pre</CODE> method highlights the button, the default <CODE>post</CODE> and 
-   <CODE>cancel</CODE> methods unhighlight it.  Consequently there should be a 
+   The default <CODE>pre</CODE> method highlights the button, the default <CODE>post</CODE> and
+   <CODE>cancel</CODE> methods unhighlight it.  Consequently there should be a
    <CODE>HighlightVBT</CODE> somewhere above the button.  Since <CODE>Trestle.Install</CODE>
    automatically inserts a <CODE>HighlightVBT</CODE>, you usually don't have
    to worry about this.
 <P>
-   The action procedure is a field rather than a method in order to 
-   allow buttons with different action procedures to share their 
+   The action procedure is a field rather than a method in order to
+   allow buttons with different action procedures to share their
    method suites. 
 
 <P><PRE>PROCEDURE <A HREF="ButtonVBT.m3.html#New">New</A>(

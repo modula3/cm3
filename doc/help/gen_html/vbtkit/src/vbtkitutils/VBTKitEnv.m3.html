@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/vbtkitutils/VBTKitEnv.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/vbtkitutils/VBTKitEnv.m3</H2></A><HR>
 <inModule>
@@ -12,7 +12,7 @@
                                                               
  Last modified on Fri May 17 11:18:09 PDT 1996 by mhb         
 
-<P><PRE>MODULE <module><implements><A HREF="VBTKitEnv.i3.html">VBTKitEnv</A></implements></module>;
+<P><PRE>MODULE <module><implements><A HREF="#x1">VBTKitEnv</A></implements></module>;
 
 IMPORT <A HREF="../../../libm3/src/params/Env.i3.html">Env</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>;
 
@@ -35,6 +35,7 @@ BEGIN
       IF Text.Equal (s, &quot;ivy&quot;) THEN TextPortModel := &quot;ivy&quot;
       ELSIF Text.Equal (s, &quot;mac&quot;) THEN TextPortModel := &quot;mac&quot;
       ELSIF Text.Equal (s, &quot;xterm&quot;) THEN TextPortModel := &quot;xterm&quot;
+      ELSIF Text.Equal (s, &quot;emacs&quot;) THEN TextPortModel := &quot;emacs&quot;
       END
     END
   END;
@@ -42,6 +43,13 @@ BEGIN
 END VBTKitEnv.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface VBTKitEnv is in:
+</A><UL>
+<LI><A HREF="POSIX/VBTKitEnv.i3.html#0TOP0">vbtkit/src/vbtkitutils/POSIX/VBTKitEnv.i3</A>
+<LI><A HREF="VBTKitEnv.i3.html#0TOP0">vbtkit/src/vbtkitutils/VBTKitEnv.i3</A>
+</UL>
+<P>
 <PRE>
 
 

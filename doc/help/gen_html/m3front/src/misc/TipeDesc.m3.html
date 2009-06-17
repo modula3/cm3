@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/misc/TipeDesc.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/misc/TipeDesc.m3</H2></A><HR>
 <inModule>
@@ -113,7 +113,7 @@ PROCEDURE <A NAME="AddI"><procedure>AddI</procedure></A> (i: INTEGER) =
     ELSE (* i &lt; 0 *)
       IF    (i &gt;= -16_3f)        THEN Stuff (16_80-i);
       ELSIF (i &gt;= -16_ff)        THEN Stuff (16_c1); Stuff (i);
-      ELSIF (i = 16_80000000)    THEN Stuff (16_fe);
+      ELSIF (i = -16_7fffffff-1) THEN Stuff (16_fe);
       ELSIF (i = FIRST(INTEGER)) THEN Stuff (16_ff);
       ELSE  AddBigInt (i);
       END;
@@ -153,7 +153,8 @@ PROCEDURE <A NAME="AddX"><procedure>AddX</procedure></A> (READONLY i: Target.Int
 
 PROCEDURE <A NAME="AddBigX"><procedure>AddBigX</procedure></A> (READONLY ii: Target.Int) =
   CONST Sign = ARRAY BOOLEAN OF INTEGER { 16_40, 16_c0 };
-  VAR x: TInt.ByteArray;  key, n_bytes: INTEGER;  i := ii;
+  VAR x: ARRAY [0..LAST (Target.IBytes)] OF [0..255];
+      key, n_bytes: INTEGER;  i := ii;
   BEGIN
     key := Sign [TInt.LT (i, TInt.Zero)];
     IF (key # 16_40) THEN TWord.Subtract (TInt.Zero, ii, i); END;
@@ -204,6 +205,7 @@ END TipeDesc.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

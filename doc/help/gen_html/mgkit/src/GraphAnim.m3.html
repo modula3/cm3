@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: mgkit/src/GraphAnim.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>mgkit/src/GraphAnim.m3</H2></A><HR>
 <inModule>
@@ -46,7 +46,8 @@ PROCEDURE <A NAME="DoStepRotate"><procedure>DoStepRotate</procedure></A> (      
     center                    := anim.center.pos;
     m := Matrix2D.Concat3(
            Matrix2D.Translate(-center[0], -center[1]),
-           Matrix2D.Rotate((time - timePrev) * -anim.angle * Math.Degree),
+           Matrix2D.Rotate((time - timePrev) * -anim.angle *
+             FLOAT(Math.Degree, REAL)),
            Matrix2D.Translate(center[0], center[1]));
   BEGIN
     LOCK anim.center.graph.mu DO

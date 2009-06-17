@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-machine/src/RTVal.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-machine/src/RTVal.i3</H2></A><HR>
 <inInterface>
@@ -16,7 +16,7 @@
 <P> An <CODE>RTVal.T</CODE> represents a <CODE>JunoValue.T</CODE>.  <CODE>RTVals</CODE> are used in the Juno
    machine while it is running.  The procedure <CODE>Dispose</CODE> reclaims the space
    for all RTVals. 
-   
+
 <P><PRE>INTERFACE <interface><A HREF="RTVal.m3.html">RTVal</A></interface>;
 
 IMPORT <A HREF="#x1">JunoValue</A>;
@@ -33,7 +33,7 @@ TYPE
 </PRE> Invariant: The <CODE>val</CODE> field of a <CODE>Text</CODE> and the <CODE>car</CODE> and <CODE>cdr</CODE> fields of a
    <CODE>Pair</CODE> are required to be non-NIL. For Juno NIL, use the global variable
    <CODE>nil</CODE>: 
-  
+
 <P><PRE>VAR (* READONLY *) nil: Null;
 
 PROCEDURE <A HREF="RTVal.m3.html#FromReal">FromReal</A>(r: Real): Number;

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/trestle/TrestleGoo.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/trestle/TrestleGoo.i3</H2></A><HR>
 <inInterface>
@@ -21,17 +21,17 @@
 IMPORT <A HREF="../vbt/VBT.i3.html">VBT</A>;
 
 PROCEDURE <A HREF="TrestleGoo.m3.html#PutProp">PutProp</A>(v: VBT.T; ref: REFANY); &lt;* LL.sup &lt; v *&gt;
-</PRE><BLOCKQUOTE><EM> Add <CODE>ref</CODE> to <CODE>v</CODE>'s property set, replacing any existing reference of 
-   the same type as <CODE>ref</CODE>.  This is a checked runtime error if <CODE>ref</CODE> is 
+</PRE><BLOCKQUOTE><EM> Add <CODE>ref</CODE> to <CODE>v</CODE>'s property set, replacing any existing reference of
+   the same type as <CODE>ref</CODE>.  This is a checked runtime error if <CODE>ref</CODE> is
    <CODE>NIL</CODE>. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="TrestleGoo.m3.html#GetProp">GetProp</A>(v: VBT.T; tc: INTEGER): REFANY;
 &lt;* LL.sup &lt; v *&gt;
-</PRE><BLOCKQUOTE><EM> Return the element of <CODE>v</CODE>'s property set with typecode <CODE>tc</CODE>, or  
+</PRE><BLOCKQUOTE><EM> Return the element of <CODE>v</CODE>'s property set with typecode <CODE>tc</CODE>, or
    <CODE>NIL</CODE> if no such element exists. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="TrestleGoo.m3.html#RemProp">RemProp</A>(v: VBT.T; tc: INTEGER); &lt;* LL.sup &lt; v *&gt;
-</PRE><BLOCKQUOTE><EM> Remove the element with typecode <CODE>tc</CODE> from <CODE>v</CODE>'s property set, if one 
+</PRE><BLOCKQUOTE><EM> Remove the element with typecode <CODE>tc</CODE> from <CODE>v</CODE>'s property set, if one
    exists. </EM></BLOCKQUOTE><PRE>
 
 TYPE <A HREF="TrestleGoo.m3.html#Enum">Enum</A> &lt;: REFANY;

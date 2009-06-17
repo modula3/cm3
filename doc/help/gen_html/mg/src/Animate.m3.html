@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: mg/src/Animate.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>mg/src/Animate.m3</H2></A><HR>
 <inModule>
@@ -320,7 +320,7 @@ PROCEDURE <A NAME="Furthest"><procedure>Furthest</procedure></A> (pt: R2.T; boun
   END Furthest;
 
 CONST
-  DToR = Math.Pi / 180.0;
+  DToR = FLOAT(Math.Pi, REAL) / 180.0;
 </PRE> 2 * pi * r * angle / 360 
 <PRE>PROCEDURE <A NAME="LengthRotate"><procedure>LengthRotate</procedure></A> (t: Rotate; v: MG.V; mg: MG.T): INTEGER =
   VAR

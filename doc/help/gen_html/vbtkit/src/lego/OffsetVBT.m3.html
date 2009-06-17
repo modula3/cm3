@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/OffsetVBT.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/OffsetVBT.m3</H2></A><HR>
 <inModule>
@@ -308,15 +308,15 @@ PROCEDURE <A NAME="Move"><procedure>Move</procedure></A> (prnt: T; north, west: 
   END SetCursor3;
 </PRE> Cage setting depends on the following invariants:
 <P>
-   (R1) v's cage is contained in the intersection of its children's 
-        cages.  This guarantees that v will get a position whenever 
+   (R1) v's cage is contained in the intersection of its children's
+        cages.  This guarantees that v will get a position whenever
         any child is owed one.
 <P>
-   (R2) v's cage is contained in v.cache.  This guarantees that v will 
+   (R2) v's cage is contained in v.cache.  This guarantees that v will
         get a position whenever <CODE>current</CODE> should be changed.
 <P>
    (R3) v.tracking OR for each ch # v.mouseFocus AND ch # v.current,
-        ch.cage contains GoneCage.  
+        ch.cage contains GoneCage.
 <P>
     When the parent receives a position its cage is set arbitrarily,
     so the invariants are destroyed.  It sets its cage to satisfy R2,
@@ -615,8 +615,8 @@ PROCEDURE <A NAME="SimpleMove"><procedure>SimpleMove</procedure></A> (prnt: Simp
 </PRE>    VBTClass.Reshape(prnt, prnt.domain, prnt.domain);
 <P>
     IF prnt.ch # NIL THEN
-      delta := Point.T{ 
-          prnt.domain.west - 
+      delta := Point.T{
+          prnt.domain.west -
           ROUND(VBT.MMToPixels(prnt, prnt.west, Axis.T.Hor)),
           prnt.domain.north -
           ROUND(VBT.MMToPixels(prnt, prnt.north, Axis.T.Ver))};

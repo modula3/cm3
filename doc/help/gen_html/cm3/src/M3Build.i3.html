@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: cm3/src/M3Build.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>cm3/src/M3Build.i3</H2></A><HR>
 <inInterface>
@@ -24,8 +24,13 @@ PROCEDURE <A HREF="M3Build.m3.html#SetUp">SetUp</A> (t: T;  pkg, to_pkg, build_d
 PROCEDURE <A HREF="M3Build.m3.html#Run">Run</A> (t: T;  makefile: TEXT) RAISES {Quake.Error, Thread.Alerted};
 </PRE><BLOCKQUOTE><EM> Evaluate the specified makefile... </EM></BLOCKQUOTE><PRE>
 
+PROCEDURE <A HREF="M3Build.m3.html#RealClean">RealClean</A> ();
+</PRE><BLOCKQUOTE><EM> Remove the complete target directory for derived files </EM></BLOCKQUOTE><PRE>
+
 VAR
   done := FALSE;
+  noM3ShipResolution := FALSE;
+  groupWritable := FALSE;
 END M3Build.
 </PRE>
 </inInterface>

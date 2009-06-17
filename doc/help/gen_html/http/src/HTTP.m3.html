@@ -2,18 +2,25 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: http/src/HTTP.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>http/src/HTTP.m3</H2></A><HR>
 <inModule>
 <PRE></PRE> Copyright (C) 1995, Digital Equipment Corporation. 
  All rights reserved. 
- Last modified on Wed Feb 12 14:15:57 PST 1997 by steveg 
+ Created by steveg 
+                                                                           
+ Parts Copyright (C) 1997, Columbia University                             
+ All rights reserved.                                                      
+
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:50:55 1997
+ 
 
 <P><PRE>MODULE <module><implements><A HREF="HTTP.i3.html">HTTP</A></implements></module>;
 
 IMPORT
-  <A HREF="App.i3.html">App</A>, <A HREF="../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="../../m3core/src/time/Common/Date.i3.html">Date</A>, <A HREF="FastLex.i3.html">FastLex</A>, <A HREF="../../m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="HTTPApp.i3.html">HTTPApp</A>, <A HREF="../../libm3/src/rw/IO.i3.html">IO</A>, <A HREF="../../libm3/src/fmtlex/Lex.i3.html">Lex</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/src/rw/RdCopy.i3.html">RdCopy</A>,
+  <A HREF="App.i3.html">App</A>, <A HREF="../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="../../m3core/src/time/Common/Date.i3.html">Date</A>, <A HREF="#x1">FastLex</A>, <A HREF="../../m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="HTTPApp.i3.html">HTTPApp</A>, <A HREF="../../libm3/src/rw/IO.i3.html">IO</A>, <A HREF="../../libm3/src/fmtlex/Lex.i3.html">Lex</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/src/rw/RdCopy.i3.html">RdCopy</A>,
   <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../libm3/src/text/TextExtras.i3.html">TextExtras</A>, <A HREF="../../libm3/src/rw/TextRd.i3.html">TextRd</A>, <A HREF="../../libm3/src/rw/TextWr.i3.html">TextWr</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="../../libm3/src/rw/UnsafeRd.i3.html">UnsafeRd</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>;
 
 VAR
@@ -112,7 +119,7 @@ PROCEDURE <A NAME="GetRestOfLine"><procedure>GetRestOfLine</procedure></A> (rd: 
   END GetRestOfLine;
 
 REVEAL
-  <A NAME="Field">Field</A> = FieldPublic BRANDED OBJECT
+  <A NAME="Field">Field</A> = FieldPublic BRANDED &quot;HTTP.Field&quot; OBJECT
   OVERRIDES
     init := InitField;
   END;
@@ -131,7 +138,7 @@ TYPE
   END;
 
 REVEAL
-  <A NAME="Header">Header</A> = HeaderPublic BRANDED OBJECT
+  <A NAME="Header">Header</A> = HeaderPublic BRANDED &quot;HTPP.Header&quot; OBJECT
              fields: FieldList;  (* protected by fieldMu *)
            OVERRIDES
              lookupField   := LookupHeaderField;
@@ -213,7 +220,7 @@ PROCEDURE <A NAME="RemoveHeaderField"><procedure>RemoveHeaderField</procedure></
   END RemoveHeaderField;
 
 REVEAL
-  <A NAME="FieldIterator">FieldIterator</A> = FieldIteratorPublic BRANDED OBJECT
+  <A NAME="FieldIterator">FieldIterator</A> = FieldIteratorPublic BRANDED &quot;HTTP.FieldIterator&quot; OBJECT
     list: FieldList;
   OVERRIDES
     next := NextFieldIterator;
@@ -252,7 +259,7 @@ PROCEDURE <A NAME="CopyHeaderFields"><procedure>CopyHeaderFields</procedure></A>
   END CopyHeaderFields;
 
 REVEAL
-  <A NAME="Request">Request</A> = RequestPublic BRANDED OBJECT
+  <A NAME="Request">Request</A> = RequestPublic BRANDED &quot;HTTP.Request&quot; OBJECT
   OVERRIDES
     parse := ParseRequest;
     write := WriteRequest;
@@ -260,7 +267,7 @@ REVEAL
   END;
 
 REVEAL
-  <A NAME="Reply">Reply</A> = ReplyPublic BRANDED OBJECT
+  <A NAME="Reply">Reply</A> = ReplyPublic BRANDED &quot;HTTP.Reply&quot; OBJECT
   OVERRIDES
     parse := ParseReply;
     write := WriteReply;
@@ -576,7 +583,7 @@ PROCEDURE <A NAME="ReplyToText"><procedure>ReplyToText</procedure></A> (self: Re
   END ReplyToText;
 
 REVEAL
-  <A NAME="URL">URL</A> = URLPublic BRANDED OBJECT
+  <A NAME="URL">URL</A> = URLPublic BRANDED &quot;HTTP.URL&quot; OBJECT
   OVERRIDES
     init := InitURL;
     initFromRd := InitURLFromRd;
@@ -993,7 +1000,7 @@ PROCEDURE <A NAME="ReadItem"><procedure>ReadItem</procedure></A>(rd: Rd.T; stop:
   END ReadItem;
 
 REVEAL
-  <A NAME="FormQuery">FormQuery</A> = FormQueryPublic BRANDED OBJECT
+  <A NAME="FormQuery">FormQuery</A> = FormQueryPublic BRANDED &quot;HTTP.FormQuery&quot; OBJECT
               OVERRIDES
                 init       := InitFormQueryFromURL;
                 initFromRd := InitFormQueryFromRd;
@@ -1330,7 +1337,7 @@ PROCEDURE <A NAME="BasicAuthField"><procedure>BasicAuthField</procedure></A>(acc
   END BasicAuthField;
 
 REVEAL
-  <A NAME="RdSrc">RdSrc</A> = RdSrcPublic BRANDED OBJECT
+  <A NAME="RdSrc">RdSrc</A> = RdSrcPublic BRANDED &quot;HTTP.RdSrc&quot; OBJECT
     rd: Rd.T;
   OVERRIDES
     init := InitRdSrc;
@@ -1350,7 +1357,7 @@ PROCEDURE <A NAME="FillRdSrc"><procedure>FillRdSrc</procedure></A> (self: RdSrc;
   END FillRdSrc;
 
 REVEAL
-  <A NAME="WrDest">WrDest</A> = WrDestPublic BRANDED OBJECT
+  <A NAME="WrDest">WrDest</A> = WrDestPublic BRANDED &quot;HTTP.WrDest&quot; OBJECT
     wr: Wr.T;
   OVERRIDES
     init := InitWrDest;
@@ -1758,6 +1765,13 @@ BEGIN
 END HTTP.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface FastLex is in:
+</A><UL>
+<LI><A HREF="FastLex.i3.html#0TOP0">http/src/FastLex.i3</A>
+<LI><A HREF="../../sysutils/src/FastLex.i3.html#0TOP0">sysutils/src/FastLex.i3</A>
+</UL>
+<P>
 <PRE>
 
 

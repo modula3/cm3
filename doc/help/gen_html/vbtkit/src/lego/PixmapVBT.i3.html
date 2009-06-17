@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/PixmapVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/PixmapVBT.i3</H2></A><HR>
 <inInterface>
@@ -14,7 +14,7 @@
       modified on Fri Jun 11 16:07:37 PDT 1993 by meehan     
       modified on Tue Jun 16 13:08:31 PDT 1992 by muller     
 <PRE>&lt;*PRAGMA LL*&gt;
-</PRE> A <CODE>PixmapVBT.T</CODE> is a VBT that displays a pixmap. 
+</PRE> A <CODE>PixmapVBT.T</CODE> is a VBT that displays a pixmap.
 <P>
    The minimum size of a <CODE>PixmapVBT</CODE> is just large enough to display
    its pixmap (surrounded by any margins that were supplied when the
@@ -38,7 +38,7 @@ TYPE
             bg: PaintOp.T := PaintOp.Bg): T
     END;
 </PRE> The call <CODE>v.init(...)</CODE> initializes <CODE>v</CODE> as a <CODE>PixmapVBT</CODE> displaying
-   pixmap <CODE>pm</CODE> using the paint op <CODE>op</CODE>, and returns <CODE>v</CODE>.  
+   pixmap <CODE>pm</CODE> using the paint op <CODE>op</CODE>, and returns <CODE>v</CODE>.
 <P>
    If <CODE>halign = 0.0</CODE>, the west boundary of the pixmap will be indented
    by the given <CODE>hmargin</CODE> (in millimeters) from the west boundary of
@@ -47,7 +47,7 @@ TYPE
    for other values of <CODE>halign</CODE>, the horizontal position of the text
    is computed by linear interpolation.  In particular, <CODE>halign = 0.5</CODE>
    centers the pixmap horizontally.  The vertical position is determined
-   by <CODE>vmargin</CODE> and <CODE>valign</CODE> in a similar way.  
+   by <CODE>vmargin</CODE> and <CODE>valign</CODE> in a similar way.
 <P>
    If the domain of <CODE>v</CODE> is larger than the pixmap, the background is
    painted using the tint <CODE>bg</CODE>.

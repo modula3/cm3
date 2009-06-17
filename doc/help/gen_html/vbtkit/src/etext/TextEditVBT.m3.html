@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/etext/TextEditVBT.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/etext/TextEditVBT.m3</H2></A><HR>
 <inModule>
@@ -27,7 +27,7 @@ MODULE <module><implements><A HREF="TextEditVBT.i3.html">TextEditVBT</A></implem
 
 IMPORT <A HREF="../../../libm3/src/geometry/Axis.i3.html">Axis</A>, <A HREF="../../../ui/src/split/HVSplit.i3.html">HVSplit</A>, <A HREF="../../../ui/src/vbt/PaintOp.i3.html">PaintOp</A>, <A HREF="../../../ui/src/vbt/Pixmap.i3.html">Pixmap</A>, <A HREF="../vbtkitutils/Pts.i3.html">Pts</A>, <A HREF="../../../libm3/src/rw/Rd.i3.html">Rd</A>,
        <A HREF="../lego/ScrollerVBTClass.i3.html">ScrollerVBTClass</A>, <A HREF="../../../ui/src/split/Split.i3.html">Split</A>, <A HREF="TextPort.i3.html">TextPort</A>, <A HREF="TextPortClass.i3.html">TextPortClass</A>,
-       <A HREF="../../../ui/src/split/TextureVBT.i3.html">TextureVBT</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="../vbtkitutils/VBTKitEnv.i3.html">VBTKitEnv</A>, <A HREF="../vtext/VTDef.i3.html">VTDef</A>, <A HREF="../vtext/VText.i3.html">VText</A>;
+       <A HREF="../../../ui/src/split/TextureVBT.i3.html">TextureVBT</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="#x1">VBTKitEnv</A>, <A HREF="../vtext/VTDef.i3.html">VTDef</A>, <A HREF="../vtext/VText.i3.html">VText</A>;
 
 REVEAL
   <A NAME="T">T</A> = Public BRANDED OBJECT OVERRIDES init := Init END;
@@ -201,6 +201,13 @@ BEGIN
 END TextEditVBT.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface VBTKitEnv is in:
+</A><UL>
+<LI><A HREF="../vbtkitutils/POSIX/VBTKitEnv.i3.html#0TOP0">vbtkit/src/vbtkitutils/POSIX/VBTKitEnv.i3</A>
+<LI><A HREF="../vbtkitutils/VBTKitEnv.i3.html#0TOP0">vbtkit/src/vbtkitutils/VBTKitEnv.i3</A>
+</UL>
+<P>
 <PRE>
 
 

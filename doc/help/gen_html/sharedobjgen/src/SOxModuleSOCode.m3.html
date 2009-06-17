@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: sharedobjgen/src/SOxModuleSOCode.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>sharedobjgen/src/SOxModuleSOCode.m3</H2></A><HR>
 <inModule>
@@ -29,6 +29,9 @@
  * $Revision$
  * 
  * $Log$
+ * Revision 1.3  2008-03-17 16:36:44  hosking
+ * Update for LONGINT.  Match code base with stubgen.
+ *
  * Revision 1.2  2001/12/03 17:23:37  wagner
  * add copyright notes and overrides
  *
@@ -130,10 +133,10 @@ VAR
                     Atom.FromText(&quot;EmbProxiedObj&quot;),
                     Atom.FromText(&quot;PickleStubs&quot;),
                     Atom.FromText(&quot;ObjectSpace&quot;)
-                    (*
-                    Atom.FromText(&quot;Time&quot;), Atom.FromText(&quot;Fmt&quot;),
-                    Atom.FromText(&quot;IO&quot;)
-                    *)
+</PRE><BLOCKQUOTE><EM><P>
+                    Atom.FromText(<CODE>Time</CODE>), Atom.FromText(<CODE>Fmt</CODE>),
+                    Atom.FromText(<CODE>IO</CODE>)
+</EM></BLOCKQUOTE><PRE>
                     };
 PROCEDURE <A NAME="initImports"><procedure>initImports</procedure></A> (&lt;*UNUSED*&gt; self    : T;
                                   basename: TEXT;
@@ -475,18 +478,18 @@ PROCEDURE <A NAME="Surrogates"><procedure>Surrogates</procedure></A> (self: T;
           PutLine(wr, &quot;id := ThreadF.MyId();&quot;);
           EndLine(wr, &quot;dataPresent: BOOLEAN; &lt;* NOWARN *&gt;&quot;);
           (* PutLine(wr, &quot;stubProt: StubLib.StubProtocol;&quot;); *)
-          (*
-            IF methods[i].sig.result # NIL THEN
-              PutLine(wr, &quot;res: &quot; &amp;
-                CodeForType.ToText(methods[i].sig.result) &amp; &quot;;&quot;);
-            END;
-          *)
-          (*
-            IF StubUtils.perfMon THEN
-              PutLine(wr, &quot;wridx, rdidx: INTEGER;&quot; &amp; PerfComment);
-            END;
-          *)
-        END;
+</PRE><BLOCKQUOTE><EM><P>
+          IF methods[i].sig.result # NIL THEN
+            PutLine(wr, <CODE>res: </CODE> &amp;
+              CodeForType.ToText(methods[i].sig.result) &amp; <CODE>;</CODE>);
+          END;
+</EM></BLOCKQUOTE><PRE>
+</PRE><P>
+          IF StubUtils.perfMon THEN
+            PutLine(wr, <CODE>wridx, rdidx: INTEGER;</CODE> &amp; PerfComment);
+          END;
+
+        <PRE>END;
         Tab(wr, 2);
         PutLine(wr, &quot;BEGIN&quot;);
         IF Text.Equal(&quot;init&quot;, Atom.ToText(methods[i].name)) THEN
@@ -534,24 +537,24 @@ PROCEDURE <A NAME="Surrogates"><procedure>Surrogates</procedure></A> (self: T;
 
           Tab(wr, 2);
           PutLine(wr, &quot;TRY&quot;);
-          (*
-            IF StubUtils.perfMon THEN
-            PutLine(wr, &quot;IF NetObjPerf.enabled THEN&quot; &amp; PerfComment);
-            PutLine(wr, &quot;  NetObjPerf.StartCall(PerfUtil.ThreadId(), &quot; &amp;
-              Fmt.Int(NUMBER(methods[i].sig.formals^)) &amp; &quot;);&quot;);
-            PutLine(wr, &quot;END;&quot;);
-            END;
-          *)
+</PRE><BLOCKQUOTE><EM><P>
+          IF StubUtils.perfMon THEN
+            PutLine(wr, <CODE>IF NetObjPerf.enabled THEN</CODE> &amp; PerfComment);
+            PutLine(wr, <CODE>  NetObjPerf.StartCall(PerfUtil.ThreadId(), </CODE> &amp;
+              Fmt.Int(NUMBER(methods[i].sig.formals^)) &amp; <CODE>);</CODE>);
+            PutLine(wr, <CODE>END;</CODE>);
+          END;
+</EM></BLOCKQUOTE><PRE>
           PutLine(wr, &quot;out := SharedObjStubLib.StartCall(self);&quot;);
           Tab(wr, 2);
           PutLine(wr, &quot;IF SharedObjStubLib.MarshalArgs(out) THEN&quot;);
           PutLine(wr, &quot;SharedObjStubLib.OutInt32(out, ORD(&quot; &amp;
             identfTxt &amp; &quot;_SOMethods.&quot; &amp; Atom.ToText(methods[i].name) &amp; &quot;));&quot;);
-          (*
-            IF StubUtils.perfMon THEN
-              PutLine(wr, &quot;wridx := Wr.Index(c.wr);&quot; &amp; PerfComment);
-            END;
-          *)
+</PRE><BLOCKQUOTE><EM><P>
+          IF StubUtils.perfMon THEN
+            PutLine(wr, <CODE>wridx := Wr.Index(c.wr);</CODE> &amp; PerfComment);
+          END;
+</EM></BLOCKQUOTE><PRE>
           FOR j := 0 TO LAST(methods[i].sig.formals^) DO
             WITH f = methods[i].sig.formals[j] DO
               MarshalTypedVal(wr, Atom.ToText(f.name) &amp; &quot;_arg&quot;,
@@ -559,11 +562,11 @@ PROCEDURE <A NAME="Surrogates"><procedure>Surrogates</procedure></A> (self: T;
                               calling := TRUE, maySuppress := TRUE);
             END;
           END;
-          (*
-            IF StubUtils.perfMon THEN
-              PutLine(wr, &quot;wridx := Wr.Index(c.wr) - wridx;&quot; &amp; PerfComment);
-            END;
-          *)
+</PRE><BLOCKQUOTE><EM><P>
+          IF StubUtils.perfMon THEN
+            PutLine(wr, <CODE>wridx := Wr.Index(c.wr) - wridx;</CODE> &amp; PerfComment);
+          END;
+</EM></BLOCKQUOTE><PRE>
           EndTab(wr);
           PutLine(wr, &quot;END;&quot;);
           PutLine(wr, &quot;SharedObjStubLib.SequenceCall(out, SharedObj_Protocol);&quot;);
@@ -625,13 +628,12 @@ PROCEDURE <A NAME="Surrogates"><procedure>Surrogates</procedure></A> (self: T;
             PutLine(wr, &quot;;&quot;);
           END;
           EndLine(wr, &quot;END;&quot;);
+</PRE><P>
+          IF StubUtils.perfMon THEN
+            PutLine(wr, <CODE>rdidx := Rd.Index(c.rd);</CODE> &amp; PerfComment);
+          END;
 
-          (*
-            IF StubUtils.perfMon THEN
-              PutLine(wr, &quot;rdidx := Rd.Index(c.rd);&quot; &amp; PerfComment);
-            END;
-          *)
-        ELSE
+        <PRE>ELSE
           Tab(wr, 2);
           PutLine(wr, &quot;TRY&quot;);
           PutLine(wr, &quot;SharedObjStubLib.AcquireReadLock(self);&quot;);
@@ -783,10 +785,10 @@ PROCEDURE <A NAME="Callbacks"><procedure>Callbacks</procedure></A> (self: T;
             CodeForType.PrintSig(wr, sig, NIL, suffix := &quot;_arg&quot;,
                                 exports := SOexports);
             EndLine(wr, &quot;) =&quot;);
-            (*
+</PRE><BLOCKQUOTE><EM><P>
             CodeForType.ProcHeader(wr, t, procedureName, sig,
-                                   suffix := &quot;_arg&quot;, exports := SOexports);
-            *)
+                                   suffix := <CODE>_arg</CODE>, exports := SOexports); 
+</EM></BLOCKQUOTE><PRE>
             PutLine(wr, &quot;VAR cbs := self.callbacks;&quot;);
             Tab(wr, 2);
             PutLine(wr, &quot;BEGIN&quot;);
@@ -935,12 +937,11 @@ PROCEDURE <A NAME="Picklers"><procedure>Picklers</procedure></A> (self: T;
       EndLine(wr, &quot;tc := TYPECODE(ref);&quot;);
       Tab(wr, 2);
       PutLine(wr, &quot;BEGIN&quot;);
+</PRE><P>
+      PutLine(wr, <CODE>IO.Put(\</CODE>Pickle.Special for <CODE> &amp; 
+        self.basename &amp; </CODE>.<CODE> &amp; identfsTxt &amp; </CODE>\\n\<CODE>);</CODE>);
 
-      (*
-      PutLine(wr, &quot;IO.Put(\&quot;Pickle.Special for &quot; &amp;
-        self.basename &amp; &quot;.&quot; &amp; identfsTxt &amp; &quot;\\n\&quot;);&quot;);
-      *)
-      Tab(wr, 2);
+      <PRE>Tab(wr, 2);
       PutLine(wr, &quot;IF tc # TYPECODE(&quot; &amp; identfsTxt &amp;
         &quot;) AND tc # TYPECODE(&quot; &amp; identfTxt &amp; &quot;) THEN&quot;);
       EndLine(wr, &quot;RAISE Pickle.Error(\&quot;Can't pickle subtypes of &quot; &amp;
@@ -948,10 +949,10 @@ PROCEDURE <A NAME="Picklers"><procedure>Picklers</procedure></A> (self: T;
       PutLine(wr, &quot;END;&quot;);
       PutLine(wr, &quot;obj := NARROW(ref, &quot; &amp; identfsTxt &amp; &quot;);&quot;);
       PutLine(wr, &quot;out.writeType(tc);&quot;);
-      (*
-      PutLine(wr, &quot;IO.Put(\&quot;Pickle.Special.wr for &quot; &amp;
-        self.basename &amp; &quot;.&quot; &amp; identfsTxt &amp; &quot;: writing shared obj\\n\&quot;);&quot;);
-      *)
+</PRE><BLOCKQUOTE><EM><P>
+      PutLine(wr, <CODE>IO.Put(\</CODE>Pickle.Special.wr for <CODE> &amp; 
+        self.basename &amp; </CODE>.<CODE> &amp; identfsTxt &amp; </CODE>: writing shared obj\\n\<CODE>);</CODE>);
+</EM></BLOCKQUOTE><PRE>
       PutLine(wr, &quot;SharedObjStubLib.StartWritePickle(obj, out);&quot;);
       Tab(wr,2);
       PutLine(wr, &quot;LOCK sp&quot; &amp; identfTxt &amp; &quot;.mu DO&quot;);
@@ -960,10 +961,10 @@ PROCEDURE <A NAME="Picklers"><procedure>Picklers</procedure></A> (self: T;
       PutLine(wr, &quot;sp.write(obj, out);&quot;);
 
       EndLine(wr, &quot;SharedObjStubLib.EndWritePickle(obj, out);&quot;);
-      (*
-      EndLine(wr, &quot;IO.Put(\&quot;Pickle.Special.wr for &quot; &amp;
-        self.basename &amp; &quot;.&quot; &amp; identfsTxt &amp; &quot;: wrote shared obj\\n\&quot;);&quot;);
-      *)
+</PRE><BLOCKQUOTE><EM><P>
+      EndLine(wr, <CODE>IO.Put(\</CODE>Pickle.Special.wr for <CODE> &amp; 
+        self.basename &amp; </CODE>.<CODE> &amp; identfsTxt &amp; </CODE>: wrote shared obj\\n\<CODE>);</CODE>);
+</EM></BLOCKQUOTE><PRE>
       EndLine(wr, &quot;END &quot; &amp; procedureName &amp; &quot;;&quot;);
       Nl(wr, freshLine := FALSE);
 
@@ -1047,33 +1048,32 @@ PROCEDURE <A NAME="Picklers"><procedure>Picklers</procedure></A> (self: T;
       PutLine(wr, &quot;BEGIN&quot;);
       Tab(wr, 2);
       PutLine(wr, &quot;IF tc = TYPECODE(&quot; &amp; identfTxt &amp; &quot;) THEN&quot;);
-      (*
-      PutLine(wr, &quot;IO.Put(\&quot;Pickle.Special.rd for &quot; &amp;
-        self.basename &amp; &quot;.&quot; &amp; identfsTxt &amp; &quot;: shared obj\\n\&quot;);&quot;);
-      *)
+</PRE><BLOCKQUOTE><EM><P>
+      PutLine(wr, <CODE>IO.Put(\</CODE>Pickle.Special.rd for <CODE> &amp; 
+        self.basename &amp; </CODE>.<CODE> &amp; identfsTxt &amp; </CODE>: shared obj\\n\<CODE>);</CODE>);
+</EM></BLOCKQUOTE><PRE>
       EndLine(wr, &quot;obj := NEW(&quot; &amp; identfTxt &amp; &quot;);&quot;);
       Tab(wr, 2);
       PutLine(wr, &quot;ELSIF tc = TYPECODE(&quot; &amp; identfsTxt &amp; &quot;) THEN&quot;);
-      (*
-      PutLine(wr, &quot;IO.Put(\&quot;Pickle.Special.rd for &quot; &amp;
-        self.basename &amp; &quot;.&quot; &amp; identfsTxt &amp; &quot;: non-shared obj\\n\&quot;);&quot;);
-      *)
+</PRE><BLOCKQUOTE><EM><P>
+      PutLine(wr, <CODE>IO.Put(\</CODE>Pickle.Special.rd for <CODE> &amp; 
+        self.basename &amp; </CODE>.<CODE> &amp; identfsTxt &amp; </CODE>: non-shared obj\\n\<CODE>);</CODE>);
+</EM></BLOCKQUOTE><PRE>
       EndLine(wr, &quot;obj := NEW(&quot; &amp; identfsTxt &amp; &quot;);&quot;);
       Tab(wr, 2);
       PutLine(wr, &quot;ELSE&quot;);
       EndLine(wr, &quot;RAISE Pickle.Error(\&quot;Can't unpickle subtypes of &quot; &amp;
         self.basename &amp; &quot;.&quot; &amp; identfTxt &amp; &quot;\&quot;);&quot;);
       PutLine(wr, &quot;END;&quot;);
+</PRE><P>
+      PutLine(wr, <CODE>IO.Put(\</CODE>Pickle.Special.rd for <CODE> &amp; 
+        self.basename &amp; </CODE>.<CODE> &amp; identfsTxt &amp; </CODE>: reading space\\n\<CODE>);</CODE>);
 
-      (*
-      PutLine(wr, &quot;IO.Put(\&quot;Pickle.Special.rd for &quot; &amp;
-        self.basename &amp; &quot;.&quot; &amp; identfsTxt &amp; &quot;: reading space\\n\&quot;);&quot;);
-      *)
-      PutLine(wr, &quot;space := in.read();&quot;);
-      (*
-      PutLine(wr, &quot;IO.Put(\&quot;Pickle.Special.rd for &quot; &amp;
-        self.basename &amp; &quot;.&quot; &amp; identfsTxt &amp; &quot;: reading shared obj\\n\&quot;);&quot;);
-      *)
+      <PRE>PutLine(wr, &quot;space := in.read();&quot;);
+</PRE><BLOCKQUOTE><EM><P>
+      PutLine(wr, <CODE>IO.Put(\</CODE>Pickle.Special.rd for <CODE> &amp; 
+        self.basename &amp; </CODE>.<CODE> &amp; identfsTxt &amp; </CODE>: reading shared obj\\n\<CODE>);</CODE>);
+</EM></BLOCKQUOTE><PRE>
       PutLine(wr, &quot;SharedObjStubLib.StartReadPickle(obj, in, space);&quot;);
 
       Tab(wr,2);
@@ -1084,10 +1084,10 @@ PROCEDURE <A NAME="Picklers"><procedure>Picklers</procedure></A> (self: T;
 
       Tab(wr, 2);
       PutLine(wr, &quot;IF tc = TYPECODE(&quot; &amp; identfTxt &amp; &quot;) THEN&quot;);
-      (*
-      PutLine(wr, &quot;IO.Put(\&quot;Pickle.Special.rd for &quot; &amp;
-        self.basename &amp; &quot;.&quot; &amp; identfsTxt &amp; &quot;: setup shared obj\\n\&quot;);&quot;);
-      *)
+</PRE><BLOCKQUOTE><EM><P>
+      PutLine(wr, <CODE>IO.Put(\</CODE>Pickle.Special.rd for <CODE> &amp; 
+        self.basename &amp; </CODE>.<CODE> &amp; identfsTxt &amp; </CODE>: setup shared obj\\n\<CODE>);</CODE>);
+</EM></BLOCKQUOTE><PRE>
       PutLine(wr, &quot;obj := SharedObjStubLib.SetupNewCopy(obj, in, id, space);&quot;);
       PutLine(wr, &quot;proxy := PickleStubs.InRef(in);&quot;);
       Tab(wr, 2);
@@ -1100,12 +1100,11 @@ PROCEDURE <A NAME="Picklers"><procedure>Picklers</procedure></A> (self: T;
       PutLine(wr, &quot;obj.proxy := NIL;&quot;);
       EndLine(wr, &quot;obj.proxy := PickleStubs.InRef(in);&quot;);
       PutLine(wr, &quot;END;&quot;);
+</PRE> <P>
+      PutLine(wr, <CODE>IO.Put(\</CODE>Pickle.Special.rd for <CODE> &amp; 
+        self.basename &amp; </CODE>.<CODE> &amp; identfsTxt &amp; </CODE>: done\\n\<CODE>);</CODE>);
 
-      (*
-      PutLine(wr, &quot;IO.Put(\&quot;Pickle.Special.rd for &quot; &amp;
-        self.basename &amp; &quot;.&quot; &amp; identfsTxt &amp; &quot;: done\\n\&quot;);&quot;);
-      *)
-      EndLine(wr, &quot;RETURN obj;&quot;);
+      <PRE>EndLine(wr, &quot;RETURN obj;&quot;);
       EndLine(wr, &quot;END &quot; &amp; procedureName &amp; &quot;;&quot;);
       Nl(wr, freshLine := FALSE);
 
@@ -1176,10 +1175,10 @@ PROCEDURE <A NAME="MarshalTypedVal"><procedure>MarshalTypedVal</procedure></A> (
     | Type.Subrange (sub) =&gt;
         IF t = Type.integer THEN
           StubLibCall(fmtWr, &quot;Integer&quot;, varName, libName, d);
+        ELSIF t = Type.longint THEN
+          StubLibCall(fmtWr, &quot;Longint&quot;, varName, libName, d);
         ELSE
-          SubRange(fmtWr, varName, libName, t, d,
-                   NARROW(sub.min, Value.Ordinal).ord,
-                   NARROW(sub.max, Value.Ordinal).ord);
+          SubRange(fmtWr, varName, libName, t, d, sub.min, sub.max);
         END;
     | Type.Real =&gt; StubLibCall(fmtWr, &quot;Real&quot;, varName, libName, d);
     | Type.LongReal =&gt; StubLibCall(fmtWr, &quot;Longreal&quot;, varName, libName, d);
@@ -1257,17 +1256,29 @@ PROCEDURE <A NAME="SubRange"><procedure>SubRange</procedure></A> (fmtWr   : Form
                     libName : TEXT;
                     t       : Type.Subrange;
                     d       : Direction;
-                    min, max: INTEGER        ) RAISES {SOxCodeGenError.E}=
+                    min, max: Value.T) RAISES {SOxCodeGenError.E}=
   BEGIN
-    IF t.base = Type.integer OR t.base = t THEN
-      StubLibCall(fmtWr, &quot;Integer&quot;, varName, libName, d,
-                  &quot;, &quot; &amp; Fmt.Int(min) &amp; &quot;, &quot; &amp; Fmt.Int(max));
+    IF t = Type.longint OR t.base = Type.longint THEN
+      WITH min = NARROW(min, Value.Longint).val,
+           max = NARROW(max, Value.Longint).val DO
+        StubLibCall(fmtWr, &quot;Longint&quot;, varName, libName, d,
+                    &quot;, &quot; &amp; Fmt.LongInt(min) &amp; &quot;, &quot; &amp; Fmt.LongInt(max));
+      END;
+    ELSIF t = Type.integer OR t.base = Type.integer THEN
+      WITH min = NARROW(min, Value.Integer).val,
+           max = NARROW(max, Value.Integer).val DO
+        StubLibCall(fmtWr, &quot;Integer&quot;, varName, libName, d,
+                    &quot;, &quot; &amp; Fmt.Int(min) &amp; &quot;, &quot; &amp; Fmt.Int(max));
+      END;
     ELSE
       TYPECASE t.base OF
       | Type.Enumeration =&gt;
+        WITH min = NARROW(min, Value.Integer).val,
+             max = NARROW(max, Value.Integer).val DO
           Enumeration(fmtWr, varName, libName, t.base, d, min, max);
+        END;
       | Type.Subrange =&gt;
-          SubRange(fmtWr, varName, libName, t.base, d, min, max);
+        SubRange(fmtWr, varName, libName, t.base, d, min, max);
       ELSE
         RAISE SOxCodeGenError.E(&quot;Run time error -- shouldn't occur&quot;);
       END;
@@ -1434,6 +1445,7 @@ END SOxModuleSOCode.
 <HR>
 <A NAME="x2">interface Type is in:
 </A><UL>
+<LI><A HREF="../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../../m3front/src/types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

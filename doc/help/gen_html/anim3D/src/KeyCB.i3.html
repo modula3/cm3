@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/KeyCB.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/KeyCB.i3</H2></A><HR>
 <inInterface>
@@ -14,7 +14,7 @@
        Created on Fri Feb 18 09:53:07 PST 1994 by najork                   
 
 <P>
-<P> In accordance with the terminology used by Trestle, we refer to key 
+<P> In accordance with the terminology used by Trestle, we refer to key
    transitions as to {\em key events}. A key event is represented
    by a record <CODE>KeyCB.Rec</CODE>.
 <P>
@@ -37,8 +37,8 @@ TYPE
     init () : T;
     invoke (kr : Rec) RAISES {CB.BadMethod};
   END;
-</PRE><BLOCKQUOTE><EM> <CODE>KeyCB.T</CODE> is the abstract class of key callback objects. If <CODE>o</CODE> is a 
-   geometric object, <CODE>c</CODE> is the top object in its key callback stack, and 
+</PRE><BLOCKQUOTE><EM> <CODE>KeyCB.T</CODE> is the abstract class of key callback objects. If <CODE>o</CODE> is a
+   geometric object, <CODE>c</CODE> is the top object in its key callback stack, and
    a key event <CODE>kr</CODE> gets relayed to <CODE>o</CODE>, then <CODE>cb.invoke(kr)</CODE> will be called.
    It is up to the user to create subclasses of <CODE>KeyCB.T</CODE> that handle
    key events in a given context appropriately. </EM></BLOCKQUOTE><PRE>
@@ -49,9 +49,9 @@ TYPE
     modifiers   : VBT.Modifiers;
   END;
 </PRE><BLOCKQUOTE><EM> <CODE>KeyCB.Rec</CODE> is a record type containing information about a key event.
-   <CODE>whatChanged</CODE> is the key that went up or down, <CODE>wentDown</CODE> indicates 
+   <CODE>whatChanged</CODE> is the key that went up or down, <CODE>wentDown</CODE> indicates
    whether it went down or up.
-   <CODE>modifiers</CODE> is the set of modifiers (Shift, Control, Mouse Buttons, etc.) 
+   <CODE>modifiers</CODE> is the set of modifiers (Shift, Control, Mouse Buttons, etc.)
    that was active when the transition took place.
 <P>
    {\em NOTE: There is a fair chance that I will add other fields to <CODE>Rec</CODE>,

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/sem/M3COrdinal.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/sem/M3COrdinal.m3</H2></A><HR>
 <inModule>
@@ -44,7 +44,7 @@ PROCEDURE <A NAME="Is"><procedure>Is</procedure></A>(
     | NULL =&gt;
         baseType := t;
         RETURN TRUE;
-    | M3AST_AS.Integer_type, M3AST_AS.WideChar_type, M3AST_AS.Enumeration_type =&gt;
+    | M3AST_AS.INT_TYPE, M3AST_AS.WideChar_type, M3AST_AS.Enumeration_type =&gt;
         baseType := t;
         RETURN TRUE;
     | M3AST_AS.Subrange_type(subrange) =&gt;
@@ -101,6 +101,8 @@ PROCEDURE <A NAME="SameSupertype"><procedure>SameSupertype</procedure></A>(
           RETURN ISTYPE(base2, M3AST_AS.WideChar_type);
       | M3AST_AS.Integer_type =&gt;
           RETURN ISTYPE(base2, M3AST_AS.Integer_type);
+      | M3AST_AS.Longint_type =&gt;
+          RETURN ISTYPE(base2, M3AST_AS.Longint_type);
       ELSE
         RETURN FALSE;
       END;
@@ -151,7 +153,7 @@ PROCEDURE <A NAME="CompareM3TYPEs"><procedure>CompareM3TYPEs</procedure></A>(
     M3CTypesMisc.GetTYPE_SPECFromM3TYPE(m2, t2);
     IF t1 = NIL THEN RETURN TRUE END;
     TYPECASE t1 OF
-    | M3AST_AS.Integer_type,
+    | M3AST_AS.INT_TYPE,
       M3AST_AS.WideChar_type,
       M3AST_AS.Enumeration_type,
       M3AST_AS.Subrange_type,
@@ -175,7 +177,7 @@ PROCEDURE <A NAME="Identical"><procedure>Identical</procedure></A>(t1, t2: M3AST
 
     (* assert: 't1' and 't2' are of the same form and neither is NIL *)
     TYPECASE t1 OF
-    | M3AST_AS.Integer_type, M3AST_AS.WideChar_type =&gt;
+    | M3AST_AS.INT_TYPE, M3AST_AS.WideChar_type =&gt;
         RETURN TRUE;
     | M3AST_AS.Enumeration_type =&gt;
         RETURN IdenticalEnumerations(t1, t2);
@@ -220,6 +222,8 @@ PROCEDURE <A NAME="SubType"><procedure>SubType</procedure></A>(t1, t2: M3AST_SM.
       TYPECASE t1 OF
       | M3AST_AS.Integer_type =&gt;
           RETURN ISTYPE(t2, M3AST_AS.Integer_type);
+      | M3AST_AS.Longint_type =&gt;
+          RETURN ISTYPE(t2, M3AST_AS.Longint_type);
       | M3AST_AS.WideChar_type =&gt;
           RETURN ISTYPE(t2, M3AST_AS.WideChar_type);
       | M3AST_AS.Enumeration_type =&gt;
@@ -250,6 +254,8 @@ PROCEDURE <A NAME="SubType"><procedure>SubType</procedure></A>(t1, t2: M3AST_SM.
               RETURN unset OR ISTYPE(base1, M3AST_AS.WideChar_type);
           | M3AST_AS.Integer_type =&gt;
               RETURN unset OR ISTYPE(base1, M3AST_AS.Integer_type);
+          | M3AST_AS.Longint_type =&gt;
+              RETURN unset OR ISTYPE(base1, M3AST_AS.Longint_type);
           ELSE
             RETURN FALSE;
           END; (* case *)

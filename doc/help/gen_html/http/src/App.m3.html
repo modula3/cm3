@@ -2,13 +2,20 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: http/src/App.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>http/src/App.m3</H2></A><HR>
 <inModule>
 <PRE></PRE> Copyright (C) 1995, Digital Equipment Corporation. 
  All rights reserved. 
- Last modified on Thu Mar 20 15:57:07 PST 1997 by steveg 
+ Created by steveg 
+                                                                           
+ Parts Copyright (C) 1997, Columbia University                             
+ All rights reserved.                                                      
+
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:51:14 1997
+ 
 
 <P><PRE>MODULE <module><implements><A HREF="App.i3.html">App</A></implements></module>;
 
@@ -85,7 +92,7 @@ PROCEDURE <A NAME="WriteUnlock"><procedure>WriteUnlock</procedure></A>() =
   END WriteUnlock;
 
 REVEAL
-  <A NAME="Log">Log</A> = LogPublic BRANDED OBJECT
+  <A NAME="Log">Log</A> = LogPublic BRANDED &quot;App.Log&quot; OBJECT
   OVERRIDES
     log := LogMsg;
   END;
@@ -101,7 +108,7 @@ PROCEDURE <A NAME="LogMsg"><procedure>LogMsg</procedure></A>(&lt;* UNUSED *&gt; 
 PROCEDURE <A NAME="FormatIPAddress"><procedure>FormatIPAddress</procedure></A>(addr: IP.Address): TEXT =
   BEGIN
     RETURN Fmt.F(&quot;%s.%s.%s.%s&quot;, Fmt.Int(addr.a[0]), Fmt.Int(addr.a[1]),
-                Fmt.Int(addr.a[1]), Fmt.Int(addr.a[1]));
+                Fmt.Int(addr.a[2]), Fmt.Int(addr.a[3]));
   END FormatIPAddress;
 
 PROCEDURE <A NAME="LockedGetHostName"><procedure>LockedGetHostName</procedure></A> (ipAddr: BOOLEAN := FALSE): TEXT =
@@ -227,7 +234,7 @@ TYPE
   END;
 
 REVEAL
-  <A NAME="ArgHandler">ArgHandler</A> = ArgHandlerPublic BRANDED OBJECT
+  <A NAME="ArgHandler">ArgHandler</A> = ArgHandlerPublic BRANDED &quot;App.ArgHandler&quot; OBJECT
     atoms: ARRAY ArgSource OF Atom.T;
     src := ArgSource.None;
   OVERRIDES

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/AnchorHelpVBT.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/AnchorHelpVBT.m3</H2></A><HR>
 <inModule>
@@ -27,10 +27,10 @@ IMPORT <A HREF="../../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="../../../ui/s
 
 REVEAL
   <A NAME="T">T</A> = Public BRANDED OBJECT
-    n: CARDINAL;		(* number of ZSplit to skip *)
-    hfudge, vfudge: REAL;	(* where to pop the help window *)
-    active: BOOLEAN;            (* help window popped *)
-    in: BOOLEAN;                (* position is inside *)
+    n: CARDINAL;            (* number of ZSplit to skip *)
+    hfudge, vfudge: REAL;   (* where to pop the help window *)
+    active: BOOLEAN;        (* help window popped *)
+    in: BOOLEAN;            (* position is inside *)
   OVERRIDES
     position := Position;
     init := Be
@@ -98,7 +98,7 @@ PROCEDURE <A NAME="New"><procedure>New</procedure></A>(
       z := z.parent;
     END;
   END GetZSplit;
-</PRE> Pop up the help window and remember that it is active.     
+</PRE> Pop up the help window and remember that it is active. 
 
 <P><PRE>PROCEDURE <A NAME="Activate"><procedure>Activate</procedure></A>(v: T) =
   VAR
@@ -192,10 +192,10 @@ PROCEDURE <A NAME="Get"><procedure>Get</procedure></A>(v: T; VAR n: CARDINAL; VA
 
 <P><PRE>TYPE
   HelpTimer = MUTEX OBJECT
-      inHelp: INTEGER;		(* number of nested T we are in *)
+      inHelp: INTEGER;          (* number of nested T we are in *)
       help: T;                  (* innermost T visited *)
       inHelpTime: LONGREAL;     (* entry time in T *)
-      outHelpTime: LONGREAL;	(* time of exit of T *)
+      outHelpTime: LONGREAL;    (* time of exit of T *)
       inDelay: LONGREAL;        (* delay before entering help mode *)
       outDelay: LONGREAL;       (* delay before leaving help mode *)
       helpMode: BOOLEAN;        (* are we in help mode *)

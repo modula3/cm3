@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/ProperSplit.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/ProperSplit.i3</H2></A><HR>
 <inInterface>
@@ -21,7 +21,7 @@
 </PRE> A <CODE>ProperSplit.T</CODE> is a type of <CODE>VBT.Split</CODE> that contains a
    circularly-linked list of its children.  All of Trestle's built-in
    splits that are not filters are subclasses of <CODE>ProperSplit</CODE>.  
-   
+
 <P><PRE>INTERFACE <interface><A HREF="ProperSplit.m3.html">ProperSplit</A></interface>;
 
 IMPORT <A HREF="../vbt/VBT.i3.html">VBT</A>, <A HREF="Split.i3.html">Split</A>;
@@ -43,20 +43,20 @@ TYPE
    children.  The <CODE>succ</CODE> links are circular; the <CODE>pred</CODE> links are
    linear.  The parent's <CODE>lastChild</CODE> field is is <CODE>NIL</CODE> if there are
    no children; otherwise it points to the last child in <CODE>succ</CODE> order.
-   <P>
+<P>
    The locking level comments imply that to write any of the links,
    a thread must have both <CODE>VBT.mu</CODE> and the parent locked.
-   <P>
+<P>
    If <CODE>v</CODE> is a <CODE>T</CODE>, the call <CODE>v.beChild(ch)</CODE> sets <CODE>ch.upref</CODE>
    to <CODE>NEW(Child)</CODE> if it is <CODE>NIL</CODE>.  In any case it sets
-   <CODE>ch.upref.ch := ch</CODE> and calls <CODE>VBT.Split.beChild(v, ch)</CODE>. 
+   <CODE>ch.upref.ch := ch</CODE> and calls <CODE>VBT.Split.beChild(v, ch)</CODE>.
 <P>
    A <CODE>T</CODE> provides replace, insert, and move methods that preserve the linked
    list structure of children, but allocates no screen space or event
    dispatching to the children.  These methods use the procedures below;
    the replace method uses the default insert method to add the new child,
    which may be inappropriate for some class layout policies. 
-   
+
 <P> The following procedures are useful for implementing subtypes
    of <CODE>ProperSplit.T</CODE>: 
 

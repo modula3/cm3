@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/SetExpr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/SetExpr.m3</H2></A><HR>
 <inModule>
@@ -254,7 +254,7 @@ PROCEDURE <A NAME="ConstElt"><procedure>ConstElt</procedure></A> (elt: Expr.T;  
   BEGIN
     elt := Expr.ConstValue (elt);
     IF (elt = NIL) THEN RETURN FALSE END;
-    RETURN (IntegerExpr.Split (elt, int) OR EnumExpr.Split (elt, int, t))
+    RETURN (IntegerExpr.Split (elt, int, t) OR EnumExpr.Split (elt, int, t))
        AND TInt.ToInt (int, i);
   END ConstElt;
 
@@ -346,7 +346,8 @@ PROCEDURE <A NAME="BuildMap"><procedure>BuildMap</procedure></A> (e: Expr.T;  VA
       IF (elt = NIL) THEN
         (* not a constant *)
         AddOther (p, p.args[i]);
-      ELSIF IntegerExpr.Split (elt, from) OR EnumExpr.Split (elt, from, t) THEN
+      ELSIF IntegerExpr.Split (elt, from, t)
+        OR EnumExpr.Split (elt, from, t) THEN
         IF TInt.LT (from, min) OR TInt.LT (max, from) THEN
           Error.Warn (2, &quot;set element out of range&quot;);
           AddOther (p, elt);
@@ -359,8 +360,10 @@ PROCEDURE <A NAME="BuildMap"><procedure>BuildMap</procedure></A> (e: Expr.T;  VA
         eMin := Expr.ConstValue (eMin);
         eMax := Expr.ConstValue (eMax);
         IF (eMin # NIL) AND (eMax # NIL)
-          AND (IntegerExpr.Split (eMin,from) OR EnumExpr.Split (eMin, from, t))
-          AND (IntegerExpr.Split (eMax, to)  OR EnumExpr.Split (eMax, to, t))
+          AND (IntegerExpr.Split (eMin, from, t)
+               OR EnumExpr.Split (eMin, from, t))
+          AND (IntegerExpr.Split (eMax, to, t)
+               OR EnumExpr.Split (eMax, to, t))
           THEN
           IF TInt.LT (from, min) OR TInt.LT (max, from) THEN
             Error.Warn (2, &quot;set element out of range&quot;);
@@ -490,8 +493,10 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (p: P;  VAR cs: Expr.
       END;
 
       IF (min # NIL) AND (max # NIL)
-        AND (IntegerExpr.Split (min, minE) OR EnumExpr.Split (min, minE, t))
-        AND (IntegerExpr.Split (max, maxE) OR EnumExpr.Split (max, maxE, t))
+        AND (IntegerExpr.Split (min, minE, t)
+             OR EnumExpr.Split (min, minE, t))
+        AND (IntegerExpr.Split (max, maxE, t)
+             OR EnumExpr.Split (max, maxE, t))
         THEN
         IF TInt.LT (minE, minT) OR TInt.LT (maxT, maxE) THEN
           Error.Msg (&quot;illegal set value&quot;);
@@ -652,18 +657,20 @@ PROCEDURE <A NAME="CompileBig"><procedure>CompileBig</procedure></A> (p: P;  VAR
 PROCEDURE <A NAME="EmitAssign"><procedure>EmitAssign</procedure></A> (set: CG.Var;  index: INTEGER;
                       READONLY value: Target.Int) =
   BEGIN
-    CG.Load_integer (value);
-    CG.Store_int (set, index * Grain);
+    CG.Load_integer (Target.Integer.cg_type, value);
+    CG.Store_int (Target.Integer.cg_type, set, index * Grain);
     &lt;* ASSERT Grain = Target.Integer.size *&gt;
   END EmitAssign;
 
 PROCEDURE <A NAME="GenElement"><procedure>GenElement</procedure></A> (e: Expr.T;  READONLY min, max: Target.Int) =
+  VAR cg_type := Type.CGType (Type.Base (Expr.TypeOf (e)));
   BEGIN
     CheckExpr.EmitChecks (e, min, max, CG.RuntimeError.ValueOutOfRange);
     IF NOT TInt.EQ (min, TInt.Zero) THEN
-      CG.Load_integer (min);
-      CG.Subtract (Target.Integer.cg_type);
+      CG.Load_integer (cg_type, min);
+      CG.Subtract (cg_type);
     END;
+    CG.Loophole (cg_type, Target.Integer.cg_type);
   END GenElement;
 
 PROCEDURE <A NAME="CompileSmall"><procedure>CompileSmall</procedure></A> (p: P;  VAR info: Type.Info) =
@@ -705,7 +712,7 @@ PROCEDURE <A NAME="CompileSmall"><procedure>CompileSmall</procedure></A> (p: P; 
     END; (* while *)
 
     (* push the mask *)
-    CG.Load_integer (curMask);
+    CG.Load_integer (Target.Integer.cg_type, curMask);
     CG.Force ();
 
     (* finally, add the non-constant elements *)
@@ -731,7 +738,7 @@ PROCEDURE <A NAME="Fold"><procedure>Fold</procedure></A> (e: Expr.T): Expr.T =
     END;
   END Fold;
 
-PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (p: P): BOOLEAN =
+PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (p: P;  &lt;*UNUSED*&gt; lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN (p.args = NIL) OR (NUMBER (p.args^) &lt;= 0);
   END IsZeroes;
@@ -813,15 +820,13 @@ PROCEDURE <A NAME="GenLiteral"><procedure>GenLiteral</procedure></A> (p: P;  off
   END GenLiteral;
 
 PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> () =
-  VAR b: BOOLEAN;  s: Target.Int;
+  VAR Zero := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   BEGIN
     Grain := MAX (Target.Integer.size, Target.Set_grain);
-    TWord.Not (TInt.Zero, full);
+    TWord.Not (Zero, full);
     FOR i := 0 TO Grain - 1 DO
-      b := TInt.FromInt (i + 1 - Grain, s);  &lt;*ASSERT b*&gt;
-      TWord.Shift (full, s, right [i]);
-      b := TInt.FromInt (i, s);  &lt;*ASSERT b*&gt;
-      TWord.Shift (full, s, left [i]);
+      TWord.Shift (full, i + 1 - Grain, right [i]);
+      TWord.Shift (full, i, left [i]);
     END;
   END Init;
 
@@ -832,6 +837,7 @@ END SetExpr.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

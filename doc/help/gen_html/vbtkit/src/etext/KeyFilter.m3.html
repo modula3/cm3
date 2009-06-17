@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/etext/KeyFilter.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/etext/KeyFilter.m3</H2></A><HR>
 <inModule>
@@ -310,12 +310,12 @@ PROCEDURE <A NAME="Set"><procedure>Set</procedure></A> (a, b: CHAR; c: VBT.KeySy
     END
   END Set;
 </PRE><P>
-    2/ a mode based entry method which is language specific. This 
-       should be settable through an environment variable (not LANG!, 
-       but a new one: KEYBOARD_MODE (values are American (default), 
+    2/ a mode based entry method which is language specific. This
+       should be settable through an environment variable (not LANG!,
+       but a new one: KEYBOARD_MODE (values are American (default),
        French, ...).
-    <P>
-       For French, this mode defines a set of <CODE>non spacing diacritical 
+<P>
+       For French, this mode defines a set of <CODE>non spacing diacritical
        marks</CODE> (mark for short):
            '    acute
            `    grave
@@ -323,12 +323,12 @@ PROCEDURE <A NAME="Set"><procedure>Set</procedure></A> (a, b: CHAR; c: VBT.KeySy
            <CODE>    diaeresis
            ~    tilde
            ,    cedilla
-           <P>
-       any of those marks, followed by a vowel, n, or c, produces 
-       the corresponding accented character (or c cedilla)(not all 
-       combinations are legal, if the character cannot be accented, 
-       then the mark, followed by the character, are produced). The 
-       mark followed by a space produces the mark itself. 
+<P>
+       any of those marks, followed by a vowel, n, or c, produces
+       the corresponding accented character (or c cedilla)(not all
+       combinations are legal, if the character cannot be accented,
+       then the mark, followed by the character, are produced). The
+       mark followed by a space produces the mark itself.
 
 
 <P><PRE>PROCEDURE <A NAME="ApplyDiacritical"><procedure>ApplyDiacritical</procedure></A> (d: Diacritical; v: VBT.T; cd: VBT.KeyRec) =

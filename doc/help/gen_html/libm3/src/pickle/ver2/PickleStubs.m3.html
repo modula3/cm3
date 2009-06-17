@@ -2,18 +2,21 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/pickle/ver2/PickleStubs.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/pickle/ver2/PickleStubs.m3</H2></A><HR>
 <inModule>
 <PRE></PRE> <P>
- * For more information on this program, contact Blair MacIntyre          
+ * For information about this program, contact Blair MacIntyre            
  * (bm@cs.columbia.edu) or Steven Feiner (feiner@cs.columbia.edu)         
  * at the Computer Science Dept., Columbia University,                    
- * 500 W 120th St, Room 450, New York, NY, 10027.                         
+ * 1214 Amsterdam Ave. Mailstop 0401, New York, NY, 10027.                
  *                                                                        
- * Copyright (C) Blair MacIntyre 1995, Columbia University 1995           
- * 
+ * Copyright (C) 1995, 1996 by The Trustees of Columbia University in the 
+ * City of New York.  Blair MacIntyre, Computer Science Department.       
+ *
+ * This file is released under the same conditions as Pickle.m3. See COPYRIGHT.
+ *
  
 
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="PickleStubs.i3.html">PickleStubs</A></implements></module>;
@@ -78,7 +81,7 @@ PROCEDURE <A NAME="InWideChars"><procedure>InWideChars</procedure></A>(reader: P
       END;
       INC(p, ADRSIZE(p^));  DEC(cnt, NUMBER(p^));
     END;
-    CASE reader.conversion OF
+    CASE reader.wordConvKind OF
     | Kind.Copy, Kind.Copy32to64, Kind.Copy64to32 =&gt;
         (* ok *)
     | Kind.Swap, Kind.Swap32to64, Kind.Swap64to32 =&gt;
@@ -134,7 +137,7 @@ PROCEDURE <A NAME="OutBytes"><procedure>OutBytes</procedure></A>(writer: Pickle.
     RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
   VAR i: INTEGER;
   BEGIN
-    CASE reader.conversion OF
+    CASE reader.wordConvKind OF
     | Kind.Copy, Kind.Swap =&gt;
       VAR c := LOOPHOLE(ADR(i),
                         UNTRACED REF ARRAY [1..BYTESIZE(INTEGER)] OF CHAR);
@@ -142,7 +145,7 @@ PROCEDURE <A NAME="OutBytes"><procedure>OutBytes</procedure></A>(writer: Pickle.
         IF reader.rd.getSub(c^) # NUMBER(c^) THEN
           RaiseUnmarshalFailure();
         END;
-        IF reader.conversion = Kind.Swap THEN
+        IF reader.wordConvKind = Kind.Swap THEN
           CASE myPacking.word_size OF
           | 32 =&gt; i := Swap.Swap4(i);
           | 64 =&gt;
@@ -165,7 +168,7 @@ PROCEDURE <A NAME="OutBytes"><procedure>OutBytes</procedure></A>(writer: Pickle.
 	IF reader.rd.getSub(c32^) # NUMBER(c32^) THEN
 	  RaiseUnmarshalFailure();
 	END;
-	IF reader.conversion = Kind.Swap32to64 THEN
+	IF reader.wordConvKind = Kind.Swap32to64 THEN
 	  i32 := Swap.Swap4(i32);
 	END;
 	i := i32;
@@ -191,7 +194,7 @@ PROCEDURE <A NAME="OutBytes"><procedure>OutBytes</procedure></A>(writer: Pickle.
 	END;
 
 	(* Now, swap it if need be. *)
-	IF reader.conversion = Kind.Swap64to32 THEN
+	IF reader.wordConvKind = Kind.Swap64to32 THEN
 	  i := Swap.Swap4(i);
 	END;
       END;
@@ -211,7 +214,7 @@ PROCEDURE <A NAME="InInt32"><procedure>InInt32</procedure></A>(reader: Pickle.Re
     IF reader.rd.getSub(c32^) # NUMBER(c32^) THEN
       RaiseUnmarshalFailure();
     END;
-    CASE reader.conversion OF
+    CASE reader.wordConvKind OF
     | Kind.Swap, Kind.Swap64to32, Kind.Swap32to64 =&gt;
       i32 := Swap.Swap4(i32);
     | Kind.Copy, Kind.Copy64to32, Kind.Copy32to64 =&gt;

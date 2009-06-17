@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTStack.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTStack.i3</H2></A><HR>
 <inInterface>
@@ -15,7 +15,7 @@
 
 <P><PRE>UNSAFE INTERFACE <interface>RTStack</interface>;
 
-IMPORT <A HREF="../LINUXLIBC6/RTMachine.i3.html">RTMachine</A>;
+IMPORT <A HREF="#x1">RTMachine</A>;
 </PRE> This interface defines the low-level routines used to traverse
    the runtime stack.  Not all platforms support these routines.
 
@@ -60,6 +60,14 @@ PROCEDURE ProcName (READONLY f: Frame): ADDRESS;
 END RTStack.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">interface RTMachine is in:
+</A><UL>
+<LI><A HREF="../AMD64_LINUX/RTMachine.i3.html#0TOP0">m3core/src/runtime/AMD64_LINUX/RTMachine.i3</A>
+<LI><A HREF="../LINUXLIBC6/RTMachine.i3.html#0TOP0">m3core/src/runtime/LINUXLIBC6/RTMachine.i3</A>
+<LI><A HREF="RTMachine.i3.html#0TOP0">m3core/src/runtime/common/RTMachine.i3</A>
+</UL>
+<P>
 <PRE>
 
 

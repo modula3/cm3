@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTHeapRep.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTHeapRep.m3</H2></A><HR>
 <inModule>
@@ -20,7 +20,8 @@
 IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTType.i3.html">RTType</A>;
 </PRE>----------------------------------------------------------- open arrays ---
 
-<P><PRE>PROCEDURE <A NAME="UnsafeGetShape"><procedure>UnsafeGetShape</procedure></A> (r: REFANY;  VAR nDims: INTEGER;  VAR s: ArrayShape) =
+<P><PRE>PROCEDURE <A NAME="UnsafeGetShape"><procedure>UnsafeGetShape</procedure></A> (r: REFANY;  VAR nDims: INTEGER;
+                          VAR s: UnsafeArrayShape) =
   TYPE TK = RT0.TypeKind;
   VAR def := RTType.Get (TYPECODE (r));
   BEGIN
@@ -28,7 +29,8 @@ IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTType.i3.html">RTType</A>;
     IF (def.kind = ORD (TK.Array)) THEN
       nDims := LOOPHOLE (def, RT0.ArrayTypeDefn).nDimensions;
       IF nDims # 0 THEN
-        s := LOOPHOLE(LOOPHOLE(r, ADDRESS) + ADRSIZE(ADDRESS), ArrayShape);
+        s := LOOPHOLE(LOOPHOLE(r, ADDRESS) + ADRSIZE(ADDRESS),
+                      UnsafeArrayShape);
       END;
     END;
   END UnsafeGetShape;

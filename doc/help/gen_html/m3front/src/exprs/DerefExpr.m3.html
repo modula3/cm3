@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/DerefExpr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/DerefExpr.m3</H2></A><HR>
 <inModule>
@@ -16,18 +16,19 @@
 
 <P><PRE>MODULE <module><implements><A HREF="DerefExpr.i3.html">DerefExpr</A></implements></module>;
 
-IMPORT <A HREF="Expr.i3.html">Expr</A>, <A HREF="ExprRep.i3.html">ExprRep</A>, <A HREF="../types/RefType.i3.html">RefType</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="#x1">Type</A>;
-IMPORT <A HREF="NilChkExpr.i3.html">NilChkExpr</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../builtinTypes/ErrType.i3.html">ErrType</A>;
+IMPORT <A HREF="Expr.i3.html">Expr</A>, <A HREF="ExprRep.i3.html">ExprRep</A>, <A HREF="../types/RefType.i3.html">RefType</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="#x1">Type</A>, <A HREF="../misc/RunTyme.i3.html">RunTyme</A>;
+IMPORT <A HREF="NilChkExpr.i3.html">NilChkExpr</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../builtinTypes/ErrType.i3.html">ErrType</A>, <A HREF="../misc/Host.i3.html">Host</A>;
 
 TYPE
   P = ExprRep.Ta BRANDED &quot;DerefExpr.P&quot; OBJECT
+        tmp: CG.Val;
       OVERRIDES
         typeOf       := TypeOf;
         check        := Check;
         need_addr    := NeedsAddress;
         prep         := Prep;
         compile      := Compile;
-        prepLV       := Prep;
+        prepLV       := PrepLV;
         compileLV    := CompileLV;
         prepBR       := ExprRep.PrepNoBranch;
         compileBR    := ExprRep.NoBranch;
@@ -36,10 +37,10 @@ TYPE
         getBounds    := ExprRep.NoBounds;
         isWritable   := ExprRep.IsAlways;
         isDesignator := ExprRep.IsAlways;
-	isZeroes     := ExprRep.IsNever;
-	genFPLiteral := ExprRep.NoFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := ExprRep.NoLiteral;
+        isZeroes     := ExprRep.IsNever;
+        genFPLiteral := ExprRep.NoFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := ExprRep.NoLiteral;
         note_write   := NoteWrites;
       END;
 
@@ -50,6 +51,7 @@ PROCEDURE <A NAME="New"><procedure>New</procedure></A> (a: Expr.T): Expr.T =
     ExprRep.Init (p);
     p.a := NilChkExpr.New (a);
     p.origin := p.a.origin;
+    p.tmp := NIL;
     RETURN p;
   END New;
 
@@ -100,13 +102,33 @@ PROCEDURE <A NAME="NeedsAddress"><procedure>NeedsAddress</procedure></A> (&lt;*U
   END NeedsAddress;
 
 PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (p: P) =
+  VAR info: Type.Info;
   BEGIN
     Expr.Prep (p.a);
+    IF Host.doIncGC THEN
+      EVAL Type.CheckInfo (p.type, info);
+      IF info.isTraced THEN
+        CASE info.class OF
+        | Type.Class.Object, Type.Class.Opaque, Type.Class.Ref =&gt;
+          Compile (p);
+          RunTyme.EmitCheckLoadTracedRef ();
+          p.tmp := CG.Pop ();
+        ELSE
+          (* no check *)
+        END
+      END
+    END
   END Prep;
 
 PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
   VAR t := p.type;  info: Type.Info;
   BEGIN
+    IF p.tmp # NIL THEN
+      CG.Push (p.tmp);
+      CG.Free (p.tmp);
+      p.tmp := NIL;
+      RETURN;
+    END;
     Expr.Compile (p.a);
     EVAL Type.CheckInfo (t, info);
     CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
@@ -114,10 +136,32 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
     Type.LoadScalar (t);
   END Compile;
 
-PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P) =
+PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
-    Expr.Compile (p.a);
+    Expr.Prep (p.a);
+    IF lhs AND Host.doGenGC THEN
+      EVAL Type.CheckInfo (p.type, info);
+      IF NOT info.isTraced THEN RETURN END;
+      EVAL Type.CheckInfo (Expr.TypeOf (p.a), info);
+      IF NOT info.isTraced THEN RETURN END;
+      Expr.Compile (p.a);
+      RunTyme.EmitCheckStoreTraced ();
+      p.tmp := CG.Pop ();
+    END
+  END PrepLV;
+
+PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; lhs: BOOLEAN) =
+  VAR info: Type.Info;
+  BEGIN
+    IF p.tmp # NIL THEN
+      &lt;*ASSERT lhs*&gt;
+      CG.Push (p.tmp);
+      CG.Free (p.tmp);
+      p.tmp := NIL;
+    ELSE
+      Expr.Compile (p.a);
+    END;
     EVAL Type.CheckInfo (p.type, info);
     CG.Force ();  (*'cause alignment applies to the referent, not the pointer*)
     CG.Boost_alignment (info.alignment);
@@ -135,6 +179,7 @@ END DerefExpr.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

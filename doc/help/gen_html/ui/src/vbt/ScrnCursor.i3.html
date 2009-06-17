@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/ScrnCursor.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/ScrnCursor.i3</H2></A><HR>
 <inInterface>
@@ -32,7 +32,7 @@ EXCEPTION Failure;
 VAR DontCare: T;
 
 TYPE Raw = Cursor.Raw;
-</PRE> See the <CODE>Cursor</CODE> interface for the raw representation of a cursor 
+</PRE> See the <CODE>Cursor</CODE> interface for the raw representation of a cursor
    shape as a pair of bitmaps, color information, and hotspot offset.
 <P>
 \subsubsection{Obtaining handles from the oracle} 
@@ -54,11 +54,11 @@ TYPE Raw = Cursor.Raw;
 </PRE> For a screentype <CODE>st</CODE>, the field <CODE>st.cursor</CODE> is an <CODE>Oracle</CODE> that
    produces cursors owned by <CODE>st</CODE>:
 <P>
-   The integers <CODE>st.cursor.width</CODE> and <CODE>st.cursor.height</CODE> are the 
-   dimensions in pixels of the largest cursor image that the screentype <CODE>st</CODE> 
+   The integers <CODE>st.cursor.width</CODE> and <CODE>st.cursor.height</CODE> are the
+   dimensions in pixels of the largest cursor image that the screentype <CODE>st</CODE>
    supports. Larger images will be cropped; smaller images will be padded.
-   <P>
-   The method call 
+<P>
+   The method call
 <P>
 <PRE>
       st.cursor.load(r, nm)
@@ -68,7 +68,7 @@ TYPE Raw = Cursor.Raw;
    <CODE>nm</CODE>, and any cursor handle owned by <CODE>st</CODE> that previously had the
    name <CODE>nm</CODE> becomes anonymous.
 <P>
-   The method call 
+   The method call
 <P>
 <PRE>
       st.cursor.list(pat, maxResults)
@@ -78,8 +78,8 @@ TYPE Raw = Cursor.Raw;
    A <CODE>*</CODE> matches any number of characters and a <CODE>?</CODE> matches a single
    character.
 <P>
-   The method call 
-   <P>
+   The method call
+<P>
 <PRE>
       st.cursor.lookup(name)
 </PRE>
@@ -93,7 +93,7 @@ TYPE Raw = Cursor.Raw;
 </PRE>
    returns the screen-dependent cursor valid for <CODE>st</CODE> that corresponds
    to the predefined screen-independent cursor <CODE>Cursor.T{cs}</CODE> .
-   <P>
+<P>
    The locking level for all methods is <CODE>LL.sup &lt;= VBT.mu</CODE>. 
 
 <P> \subsubsection{The handle object} 

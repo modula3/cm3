@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/CompareExpr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/CompareExpr.m3</H2></A><HR>
 <inModule>
@@ -16,19 +16,20 @@
 
 <P><PRE>MODULE <module><implements><A HREF="CompareExpr.i3.html">CompareExpr</A></implements></module>;
 
-IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="Expr.i3.html">Expr</A>, <A HREF="ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../builtinTypes/Reel.i3.html">Reel</A>, <A HREF="../builtinTypes/LReel.i3.html">LReel</A>, <A HREF="../builtinTypes/EReel.i3.html">EReel</A>;
+IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="Expr.i3.html">Expr</A>, <A HREF="ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../builtinTypes/LInt.i3.html">LInt</A>, <A HREF="../builtinTypes/Reel.i3.html">Reel</A>, <A HREF="../builtinTypes/LReel.i3.html">LReel</A>, <A HREF="../builtinTypes/EReel.i3.html">EReel</A>;
 IMPORT <A HREF="../types/EnumType.i3.html">EnumType</A>, <A HREF="../types/SetType.i3.html">SetType</A>, <A HREF="../builtinTypes/Bool.i3.html">Bool</A>, <A HREF="../values/Module.i3.html">Module</A>, <A HREF="../builtinTypes/Addr.i3.html">Addr</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>;
 IMPORT <A HREF="IntegerExpr.i3.html">IntegerExpr</A>, <A HREF="EnumExpr.i3.html">EnumExpr</A>, <A HREF="ReelExpr.i3.html">ReelExpr</A>, <A HREF="AddressExpr.i3.html">AddressExpr</A>;
 IMPORT <A HREF="SetExpr.i3.html">SetExpr</A>, <A HREF="../misc/Error.i3.html">Error</A>;
 
 CONST
   cINT   = 0;
-  cREAL  = 1;
-  cLONG  = 2;
-  cEXTND = 3;
-  cADDR  = 4;
-  cENUM  = 5;
-  cSET   = 6;
+  cLINT  = 1;
+  cREAL  = 2;
+  cLONG  = 3;
+  cEXTND = 4;
+  cADDR  = 5;
+  cENUM  = 6;
+  cSET   = 7;
 
 CONST
   CGType = ARRAY [cREAL..cADDR] OF CG.Type {
@@ -67,10 +68,10 @@ TYPE
         getBounds    := ExprRep.NoBounds;
         isWritable   := ExprRep.IsNever;
         isDesignator := ExprRep.IsNever;
-	isZeroes     := ExprRep.IsNever;
-	genFPLiteral := ExprRep.NoFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := ExprRep.NoLiteral;
+        isZeroes     := ExprRep.IsNever;
+        genFPLiteral := ExprRep.NoFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
       END;
 
@@ -96,6 +97,7 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (p: P;  VAR cs: Expr.
     tb := Type.Base (Expr.TypeOf (p.b));
     p.class := cINT;
     IF    (ta = Int.T)   AND (tb = Int.T)    THEN  p.class := cINT;
+    ELSIF (ta = LInt.T)  AND (tb = LInt.T)   THEN  p.class := cLINT;
     ELSIF (ta = Reel.T)  AND (tb = Reel.T)   THEN  p.class := cREAL;
     ELSIF (ta = LReel.T) AND (tb = LReel.T)  THEN  p.class := cLONG;
     ELSIF (ta = EReel.T) AND (tb = EReel.T)  THEN  p.class := cEXTND;
@@ -128,7 +130,7 @@ PROCEDURE <A NAME="EqCheck"><procedure>EqCheck</procedure></A> (a: P;  e: Expr.T
     | NULL =&gt; RETURN FALSE;
     | P(b) =&gt; RETURN (a.class = b.class)
                  AND (a.op = b.op)
-		 AND Expr.IsEqual (a.a, b.a, x)
+                 AND Expr.IsEqual (a.a, b.a, x)
                  AND Expr.IsEqual (a.b, b.b, x);
     ELSE RETURN FALSE;
     END;
@@ -146,9 +148,12 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
     IF (p.class # cSET) THEN
       Expr.Compile (p.a);
       Expr.Compile (p.b);
-      IF (p.class = cINT) OR (p.class = cENUM)
-        THEN type := Target.Integer.cg_type;
-        ELSE type := CGType [p.class];
+      IF (p.class = cINT) OR (p.class = cENUM) THEN
+        type := Target.Integer.cg_type;
+      ELSIF (p.class = cLINT) THEN
+        type := Target.Longint.cg_type;
+      ELSE
+        type := CGType [p.class];
       END;
       CG.Compare (type, p.op);
 
@@ -161,10 +166,10 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
       CG.Compare (Target.Word.cg_type, CG.Cmp.NE);
       CG.Push (ta);
       CG.Push (tb);
-      CG.Or ();
+      CG.Or (Target.Word.cg_type);
       CG.Push (tb);
       CG.Compare (Target.Word.cg_type, CG.Cmp.EQ);
-      CG.And ();
+      CG.And (Target.Word.cg_type);
       CG.Free (ta);
       CG.Free (tb);
 
@@ -186,9 +191,12 @@ PROCEDURE <A NAME="PrepBR"><procedure>PrepBR</procedure></A> (p: P;  true, false
     IF (p.class # cSET) THEN
       Expr.Compile (p.a);
       Expr.Compile (p.b);
-      IF (p.class = cINT) OR (p.class = cENUM)
-        THEN type := Target.Integer.cg_type;
-        ELSE type := CGType [p.class];
+      IF (p.class = cINT) OR (p.class = cENUM) THEN
+        type := Target.Integer.cg_type;
+      ELSIF (p.class = cLINT) THEN
+        type := Target.Longint.cg_type;
+      ELSE
+        type := CGType [p.class];
       END;
       CG.If_then (type, p.op, true, false, freq);
 
@@ -201,11 +209,11 @@ PROCEDURE <A NAME="PrepBR"><procedure>PrepBR</procedure></A> (p: P;  true, false
       CG.Compare (Target.Word.cg_type, CG.Cmp.NE);
       CG.Push (ta);
       CG.Push (tb);
-      CG.Not ();
-      CG.And ();
-      CG.Load_integer (TInt.Zero);
+      CG.Not (Target.Word.cg_type);
+      CG.And (Target.Word.cg_type);
+      CG.Load_integer (Target.Word.cg_type, TInt.Zero);
       CG.Compare (Target.Word.cg_type, CG.Cmp.EQ);
-      CG.And ();
+      CG.And (Target.Word.cg_type);
       IF (true # CG.No_label)
         THEN CG.If_true  (true,  freq);
         ELSE CG.If_false (false, freq);
@@ -250,6 +258,7 @@ END CompareExpr.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

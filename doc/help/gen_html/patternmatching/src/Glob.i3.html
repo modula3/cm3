@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: patternmatching/src/Glob.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>patternmatching/src/Glob.i3</H2></A><HR>
 <inInterface>
@@ -39,9 +39,9 @@
 <P> <CODE>Glob</CODE> provides shell-style pattern matching for filenames. 
  Extended to provide regular expression matching as option by Olaf Wagner
 
-<P><PRE>INTERFACE <interface><A HREF="Glob.m3.html">Glob</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="#x1">Glob</A></interface>;
 
-IMPORT <A HREF="RegEx.i3.html">RegEx</A>;
+IMPORT <A HREF="#x2">RegEx</A>;
 
 TYPE
   MatchOption = {
@@ -58,7 +58,7 @@ TYPE
 
   MatchOptions = SET OF MatchOption;
 
-PROCEDURE <A HREF="Glob.m3.html#Match">Match</A>(pattern, string: TEXT;
+PROCEDURE <A HREF="#x3">Match</A>(pattern, string: TEXT;
                 options := MatchOptions{}): BOOLEAN RAISES {RegEx.Error};
 </PRE><BLOCKQUOTE><EM> Return <CODE>TRUE</CODE> if the filename given by <CODE>string</CODE> matches the pattern
    given by <CODE>pattern</CODE>. </EM></BLOCKQUOTE><PRE>
@@ -66,6 +66,27 @@ PROCEDURE <A HREF="Glob.m3.html#Match">Match</A>(pattern, string: TEXT;
 END Glob.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">Glob's implementation  is in:
+</A><UL>
+<LI><A HREF="Glob.m3.html#0TOP0">patternmatching/src/Glob.m3</A>
+<LI><A HREF="../../suplib/src/Glob.m3.html#0TOP0">suplib/src/Glob.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface RegEx is in:
+</A><UL>
+<LI><A HREF="RegEx.i3.html#0TOP0">patternmatching/src/RegEx.i3</A>
+<LI><A HREF="../../suplib/src/RegEx.i3.html#0TOP0">suplib/src/RegEx.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">procedure Glob.Match is in:
+</A><UL>
+<LI><A HREF="Glob.m3.html#Match">patternmatching/src/Glob.m3</A>
+<LI><A HREF="../../suplib/src/Glob.m3.html#Match">suplib/src/Glob.m3</A>
+</UL>
+<P>
 <PRE>
 
 

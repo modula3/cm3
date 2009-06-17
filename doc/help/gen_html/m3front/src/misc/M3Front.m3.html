@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/misc/M3Front.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/misc/M3Front.m3</H2></A><HR>
 <inModule>
@@ -19,9 +19,10 @@
 IMPORT <A HREF="../../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>(** , RTCollector, RTCollectorSRC **);
 IMPORT <A HREF="#x1">Token</A>, <A HREF="Error.i3.html">Error</A>, <A HREF="Scanner.i3.html">Scanner</A>, <A HREF="#x2">Value</A>, <A HREF="Scope.i3.html">Scope</A>, <A HREF="M3String.i3.html">M3String</A>, <A HREF="M3WString.i3.html">M3WString</A>, <A HREF="../types/Brand.i3.html">Brand</A>;
 IMPORT <A HREF="../values/Module.i3.html">Module</A>, <A HREF="#x3">Type</A>, <A HREF="../builtinTypes/BuiltinTypes.i3.html">BuiltinTypes</A>, <A HREF="Host.i3.html">Host</A>, <A HREF="Tracer.i3.html">Tracer</A>, <A HREF="M3Header.i3.html">M3Header</A>, <A HREF="../builtinInfo/InfoModule.i3.html">InfoModule</A>;
-IMPORT <A HREF="../builtinOps/BuiltinOps.i3.html">BuiltinOps</A>, <A HREF="../builtinWord/WordModule.i3.html">WordModule</A>, <A HREF="M3.i3.html">M3</A>, <A HREF="../../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="Coverage.i3.html">Coverage</A>, <A HREF="Marker.i3.html">Marker</A>, <A HREF="../types/TypeFP.i3.html">TypeFP</A>;
+IMPORT <A HREF="../builtinOps/BuiltinOps.i3.html">BuiltinOps</A>, <A HREF="../builtinWord/WordModule.i3.html">WordModule</A>, <A HREF="../builtinLong/LongModule.i3.html">LongModule</A>, <A HREF="M3.i3.html">M3</A>, <A HREF="../../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="Coverage.i3.html">Coverage</A>, <A HREF="#x4">Marker</A>, <A HREF="../types/TypeFP.i3.html">TypeFP</A>;
 IMPORT <A HREF="../values/Ident.i3.html">Ident</A>, <A HREF="../exprs/TextExpr.i3.html">TextExpr</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="../exprs/SetExpr.i3.html">SetExpr</A>, <A HREF="TipeDesc.i3.html">TipeDesc</A>, <A HREF="../../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>;
-IMPORT <A HREF="ESet.i3.html">ESet</A>, <A HREF="CG.i3.html">CG</A>, <A HREF="../../../libm3/src/rw/TextWr.i3.html">TextWr</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="ProcBody.i3.html">ProcBody</A>, <A HREF="RunTyme.i3.html">RunTyme</A>, <A HREF="#x4">M3ID</A>, <A HREF="../values/Variable.i3.html">Variable</A>;
+IMPORT <A HREF="ESet.i3.html">ESet</A>, <A HREF="CG.i3.html">CG</A>, <A HREF="../../../libm3/src/rw/TextWr.i3.html">TextWr</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="ProcBody.i3.html">ProcBody</A>, <A HREF="RunTyme.i3.html">RunTyme</A>, <A HREF="#x5">M3ID</A>, <A HREF="../values/Variable.i3.html">Variable</A>;
+IMPORT <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>;
 
 VAR mu         : MUTEX    := NEW (MUTEX);
 VAR builtins   : Module.T := NIL;
@@ -92,6 +93,10 @@ PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A> () =
       WordModule.Initialize ();
     Scanner.Pop ();
 
+    Scanner.Push (&quot;Long.i3&quot;, NIL, is_main := Host.emitBuiltins);
+      LongModule.Initialize ();
+    Scanner.Pop ();
+
     Scanner.Push (&quot;Compiler.i3&quot;, NIL, is_main := Host.emitBuiltins);
       InfoModule.Initialize ();
     Scanner.Pop ();
@@ -145,6 +150,30 @@ RTCollector.Disable ();
     m_name := Module.Name (m);
     filename := M3ID.Add (Pathname.LastBase (Host.filename));
     IF (m_name # filename) THEN
+      (* This can trigger due to forward/backward slash confusion,
+         so do a looser check here. *)
+      VAR
+        LastForwardSlash := Text.FindCharR(Host.filename, '/');
+        LastBackwardSlash := Text.FindCharR(Host.filename, '\\');
+        LastSlash := MAX(LastForwardSlash, LastBackwardSlash);
+        Dot : INTEGER;
+        Name1 : TEXT;
+        Name2 : TEXT;
+      BEGIN
+        IF LastSlash # -1 THEN
+          Dot := Text.FindCharR(Host.filename, '.');
+          IF Dot &lt; LastSlash THEN
+            Dot := Text.Length(Host.filename);
+          END;
+          Name1 := Text.Sub(Host.filename, LastSlash + 1, Dot - LastSlash - 1);
+          Name2 := M3ID.ToText(m_name);
+          IF Text.Equal(Name1, Name2) THEN
+            m_name := filename;
+          END
+        END;
+      END;
+    END;
+    IF (m_name # filename) THEN
       Error.Warn (2, &quot;file name (&quot; &amp; Pathname.Last (Host.filename)
                     &amp; &quot;) doesn't match module name (&quot;
                     &amp; M3ID.ToText (m_name) &amp; &quot;)&quot;);
@@ -164,9 +193,11 @@ RTCollector.Enable ();
     IF (Host.emitBuiltins) THEN
       Module.MakeCurrent (builtins);
       Module.MakeCurrent (WordModule.M);
+      Module.MakeCurrent (LongModule.M);
       Module.MakeCurrent (InfoModule.M);
       Module.Compile (builtins);
       Module.Compile (WordModule.M);
+      Module.Compile (LongModule.M);
       Module.Compile (InfoModule.M);
     ELSE
       Module.Compile (m);
@@ -179,6 +210,7 @@ PROCEDURE <A NAME="CheckBuiltins"><procedure>CheckBuiltins</procedure></A> () =
   BEGIN
     Value.TypeCheck (builtins, cs);
     Value.TypeCheck (WordModule.M, cs);
+    Value.TypeCheck (LongModule.M, cs);
     Value.TypeCheck (InfoModule.M, cs);
   END CheckBuiltins;
 
@@ -270,6 +302,7 @@ END M3Front.
 <HR>
 <A NAME="x3">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
@@ -277,7 +310,14 @@ END M3Front.
 </UL>
 <P>
 <HR>
-<A NAME="x4">interface M3ID is in:
+<A NAME="x4">interface Marker is in:
+</A><UL>
+<LI><A HREF="../../../cm3ide/src/markup/Marker.i3.html#0TOP0">cm3ide/src/markup/Marker.i3</A>
+<LI><A HREF="Marker.i3.html#0TOP0">m3front/src/misc/Marker.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x5">interface M3ID is in:
 </A><UL>
 <LI><A HREF="../../../m3middle/src/M3ID.i3.html#0TOP0">m3middle/src/M3ID.i3</A>
 <LI><A HREF="../../../m3scan/src/M3ID.i3.html#0TOP0">m3scan/src/M3ID.i3</A>

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/chartool/M3CharPreds.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/chartool/M3CharPreds.m3</H2></A><HR>
 <inModule>
@@ -261,7 +261,7 @@ PROCEDURE <A NAME="TmW"><procedure>TmW</procedure></A> (ts: M3AST_AS.M3TYPE; rs:
     TRY
       TYPECASE ts OF
       | M3AST_AS.Named_type (x) =&gt; RETURN TmW(x.sm_type_spec, rs);
-      | M3AST_AS.FLOAT_TYPE, M3AST_AS.Integer_type,
+      | M3AST_AS.FLOAT_TYPE, M3AST_AS.INT_TYPE,
           M3AST_AS.Null_type, M3AST_AS.RefAny_type,
           M3AST_AS.Address_type, M3AST_AS.Root_type =&gt;
           RETURN FALSE;

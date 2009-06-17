@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: db/src/odbc/ODBCDB.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>db/src/odbc/ODBCDB.m3</H2></A><HR>
 <inModule>
@@ -19,7 +19,7 @@ FROM <A HREF="../../../odbc/src/POSIX/SQLtypes.i3.html">SQLtypes</A> IMPORT
   SFLOAT, SWORD, SQLCHAR_star;
 
 FROM <A HREF="../DB.i3.html">DB</A> IMPORT
-	Results, ResultDesc, DescList, ColumnDesc, Nullable, DataType, RefString,
+	Results, ResultDesc, DescList, Nullable, DataType, RefString,
 	RefBigInt, RefDate, RefTime, RefTimestamp, ErrorDesc, Error;
 </PRE> This module (ab)uses two compiler-dependent features of the code:
 <P>
@@ -72,7 +72,7 @@ END GetInterface;
 PROCEDURE <A NAME="Connect"><procedure>Connect</procedure></A> (
 	&lt;*UNUSED*&gt;this: Interface;
 	database, user_id, password: TEXT;
-	server: TEXT := NIL
+	&lt;*UNUSED*&gt;server: TEXT := NIL
 ): DB.T  RAISES {Error} =
   VAR
     t    := NEW (T);

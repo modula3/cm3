@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: mg/src/MGV.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>mg/src/MGV.i3</H2></A><HR>
 <inInterface>
@@ -151,7 +151,7 @@ VAR
      &quot;pos&quot; in its bounding box or the element whose bounding box is closest
      to &quot;pos&quot; *)
 </PRE> ------------------------------------------------------------------
-    See the TypeSelector interface for generating some types of selectors 
+    See the TypeSelector interface for generating some types of selectors
 ------------------------------------------------------------------ 
 
 <P><PRE>TYPE
@@ -166,18 +166,18 @@ VAR
       *)
     END;
 </PRE><PRE>
-      Here are 2 potential Shape methods.  ShapeStretchy is the default 
+      Here are 2 potential Shape methods.  ShapeStretchy is the default
     </PRE>
 for an MGV.T
 <P>
    ShapeFixed returns a size range of {pref, pref, pref + 1}
 <P>
-   ShapeStretchy returns a size range of 
+   ShapeStretchy returns a size range of
      {0, pref, MAX(pref + 1, VBT.DefaultShape.hi)}
  
 <PRE>PROCEDURE <A HREF="MGV.m3.html#ShapeFixed">ShapeFixed</A>(v: V; ax: Axis.T; n: CARDINAL): VBT.SizeRange;
 PROCEDURE <A HREF="MGV.m3.html#ShapeStretchy">ShapeStretchy</A>(v: V; ax: Axis.T; n: CARDINAL): VBT.SizeRange;
-</PRE> Here are 2 potential Reshape methods.  ReshapeSWOrigin is the 
+</PRE> Here are 2 potential Reshape methods.  ReshapeSWOrigin is the
    default for an MGV.T.
 <P>
    ReshapeSWOrigin moves the MG graphical origin to the south west
@@ -186,7 +186,7 @@ PROCEDURE <A HREF="MGV.m3.html#ShapeStretchy">ShapeStretchy</A>(v: V; ax: Axis.T
    ReshapeLeaveOrigin leaves the MG graphical origin alone when
    <CODE>v</CODE> is reshaped.  It leaves the v.nw value unchanged so
    that views that display themselves relative to the NW corner
-   of the window or which set v.nw should use this reshape 
+   of the window or which set v.nw should use this reshape
    method.
 
 <PRE>PROCEDURE <A HREF="MGV.m3.html#ReshapeSWOrigin">ReshapeSWOrigin</A>(v: V; READONLY cd: VBT.ReshapeRec);
@@ -204,7 +204,7 @@ PROCEDURE <A HREF="MGV.m3.html#AddAnimationLocked">AddAnimationLocked</A> (v: V;
 
 PROCEDURE <A HREF="MGV.m3.html#Animation">Animation</A>(v: V; duration := 1.0) RAISES {Thread.Alerted};
 &lt;* LL &lt; v.mu *&gt;
-</PRE><BLOCKQUOTE><EM> Play the pending animations on <CODE>v</CODE> in duration seconds. If 
+</PRE><BLOCKQUOTE><EM> Play the pending animations on <CODE>v</CODE> in duration seconds. If
    <CODE>duration</CODE> = 0.0 then the animation will occur in a single
    update.  </EM></BLOCKQUOTE><PRE>
 </PRE> the following definitions are for interface structural reasons 

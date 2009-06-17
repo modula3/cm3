@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/Cursor.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/Cursor.i3</H2></A><HR>
 <inInterface>
@@ -12,9 +12,9 @@
                                                                            
  Last modified on Mon Feb 24 14:01:20 PST 1992 by muller                   
 <PRE>&lt;*PRAGMA LL*&gt;
-</PRE> A <CODE>Cursor.T</CODE> is a screen-independent specification of a cursor shape. 
+</PRE> A <CODE>Cursor.T</CODE> is a screen-independent specification of a cursor shape.
    The call <CODE>VBT.SetCursor(v, cs)</CODE> sets the cursor of <CODE>v</CODE> to
-   be <CODE>cs</CODE>. 
+   be <CODE>cs</CODE>.
 <P>
    The locking level is <CODE>LL.sup &lt;= VBT.mu</CODE> for all of the procedures
    in this interface. 
@@ -45,8 +45,8 @@ CONST
     gray := -1.0;
     bw := BW.UseIntensity
   END;
-</PRE> A <CODE>Raw</CODE> represents a cursor with explicit offset, 
-   bitmaps, and colors.    
+</PRE> A <CODE>Raw</CODE> represents a cursor with explicit offset,
+   bitmaps, and colors.
 <P>
    The <CODE>plane1</CODE> and <CODE>plane2</CODE> are depth-1 pixmaps.  They must
    have the same bounding rectangle, and the hotspot must lie
@@ -73,9 +73,9 @@ CONST
    selection of cursor colors that the screentype supports.  If the
    screentype allows only two colors for the cursor, then the pixels that
    would have been <CODE>color3</CODE> will be <CODE>color1</CODE>.  The <CODE>gray</CODE> and <CODE>bw</CODE>
-   values control the color on gray-scale and monochrome displays, 
+   values control the color on gray-scale and monochrome displays,
    according to the same rule used in <CODE>PaintOp.FromRGB</CODE>.  
-     
+
 <P><PRE>PROCEDURE <A HREF="Cursor.m3.html#FromRaw">FromRaw</A>(READONLY r: Raw): T;
 </PRE><BLOCKQUOTE><EM> Return a cursor that looks like <CODE>r</CODE> on all screens. </EM></BLOCKQUOTE><PRE>
 </PRE> If the screentype does not support <CODE>r</CODE>'s colors or size, <CODE>FromRaw</CODE>
@@ -99,8 +99,8 @@ CONST
 <PRE>
       FromName(ARRAY OF TEXT{&quot;XC_arrow&quot;})
 </PRE>
-   returns a cursor that behaves like the X arrow cursor on 
-   X screentypes, and like <CODE>DontCare</CODE> on screentypes 
+   returns a cursor that behaves like the X arrow cursor on
+   X screentypes, and like <CODE>DontCare</CODE> on screentypes
    that have no cursor named <CODE>XC_arrow</CODE>.  
 
 <P><PRE>END Cursor.

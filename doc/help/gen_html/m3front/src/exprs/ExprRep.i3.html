@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/ExprRep.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/ExprRep.i3</H2></A><HR>
 <inInterface>
@@ -31,17 +31,17 @@ REVEAL
     isEqual      (e: M3.Expr; x: M3.EqAssumption): BOOLEAN := NeverEq;
     evaluate     (): M3.Expr                       := NoValue;
     getBounds    (VAR min, max: Target.Int)        := NoBounds;
-    isWritable   (): BOOLEAN                       := IsNever;
-    isDesignator (): BOOLEAN                       := IsNever;
-    isZeroes     (): BOOLEAN                       := IsNever;
+    isWritable   (lhs: BOOLEAN): BOOLEAN           := IsNever;
+    isDesignator (&lt;*UNUSED*&gt; lhs := FALSE): BOOLEAN:= IsNever;
+    isZeroes     (&lt;*UNUSED*&gt; lhs := FALSE): BOOLEAN:= IsNever;
     need_addr    ()                                := NotAddressable;
     genFPLiteral (mbuf: M3Buf.T)                   := NoFPLiteral;
     prepLiteral  (type: M3.Type;  is_const: BOOLEAN) := NoPrepLiteral;
     genLiteral   (offset: INTEGER;  type: M3.Type;  is_const: BOOLEAN) := NoLiteral;
     prep         ()                                := NoCompile;
     compile      ()                                := NoCompile;
-    prepLV       ()                                := NotLValue;
-    compileLV    ()                                := NotLValue;
+    prepLV       (lhs: BOOLEAN)                    := NotLValue;
+    compileLV    (lhs: BOOLEAN)                    := NotLValue;
     prepBR       (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     compileBR    (true, false: CG.Label;  freq: CG.Frequency) := NotBoolean;
     note_write   ()                                := NotWritable;
@@ -60,15 +60,15 @@ PROCEDURE <A HREF="Expr.m3.html#NoCheck">NoCheck</A>        (e: M3.Expr;  VAR cs
 PROCEDURE <A HREF="Expr.m3.html#NoValue">NoValue</A>        (e: M3.Expr): M3.Expr;
 PROCEDURE <A HREF="Expr.m3.html#Self">Self</A>           (e: M3.Expr): M3.Expr;
 PROCEDURE <A HREF="Expr.m3.html#NoBounds">NoBounds</A>       (e: M3.Expr;  VAR min, max: Target.Int);
-PROCEDURE <A HREF="Expr.m3.html#IsNever">IsNever</A>        (e: M3.Expr): BOOLEAN;
-PROCEDURE <A HREF="Expr.m3.html#IsAlways">IsAlways</A>       (e: M3.Expr): BOOLEAN;
+PROCEDURE <A HREF="Expr.m3.html#IsNever">IsNever</A>        (e: M3.Expr;  lhs: BOOLEAN): BOOLEAN;
+PROCEDURE <A HREF="Expr.m3.html#IsAlways">IsAlways</A>       (e: M3.Expr;  lhs: BOOLEAN): BOOLEAN;
 PROCEDURE <A HREF="Expr.m3.html#NeverEq">NeverEq</A>        (e: M3.Expr; x: M3.Expr; z: M3.EqAssumption): BOOLEAN;
 PROCEDURE <A HREF="Expr.m3.html#NoFPLiteral">NoFPLiteral</A>    (e: M3.Expr;  mbuf: M3Buf.T);
 PROCEDURE <A HREF="Expr.m3.html#NoPrepLiteral">NoPrepLiteral</A>  (e: M3.Expr;  type: M3.Type;  is_const: BOOLEAN);
 PROCEDURE <A HREF="Expr.m3.html#NoLiteral">NoLiteral</A>      (e: M3.Expr;  offset: INTEGER;  type: M3.Type;  is_const: BOOLEAN);
 PROCEDURE <A HREF="Expr.m3.html#NoPrep">NoPrep</A>         (e: M3.Expr);
 PROCEDURE <A HREF="Expr.m3.html#NoCompile">NoCompile</A>      (e: M3.Expr);
-PROCEDURE <A HREF="Expr.m3.html#NotLValue">NotLValue</A>      (e: M3.Expr);
+PROCEDURE <A HREF="Expr.m3.html#NotLValue">NotLValue</A>      (e: M3.Expr; lhs: BOOLEAN);
 PROCEDURE <A HREF="Expr.m3.html#NotBoolean">NotBoolean</A>     (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE <A HREF="Expr.m3.html#PrepNoBranch">PrepNoBranch</A>   (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);
 PROCEDURE <A HREF="Expr.m3.html#NoBranch">NoBranch</A>       (e: M3.Expr; t,f: CG.Label; freq: CG.Frequency);

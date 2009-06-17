@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tools/src/M3Lexer.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tools/src/M3Lexer.m3</H2></A><HR>
 <inModule>
@@ -15,7 +15,7 @@ IMPORT <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../m3middle/s
 IMPORT <A HREF="#x1">M3ID</A>, <A HREF="#x2">M3Scanner</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>;
 
 FROM <A HREF="#x2">M3Scanner</A> IMPORT TK_Comment, TK_Error, TK_EOF,
-  TK_Ident, TK_Card_const, TK_Real_const, TK_Longreal_const,
+  TK_Ident, TK_Card_const, TK_Long_const, TK_Real_const, TK_Longreal_const,
   TK_Extended_const, TK_Char_const, TK_Text_const,
   TK_Begin_pragma, TK_End_pragma, TK_Comma;
 
@@ -97,7 +97,8 @@ PROCEDURE <A NAME="NextToken"><procedure>NextToken</procedure></A> (t: T) =
         SUPER.next (t);
         CASE t.token OF
         | TK_Ident          =&gt; FixID (t);
-        | TK_Card_const     =&gt; FixInt (t);
+        | TK_Card_const     =&gt; FixInt (t, Target.Integer.bytes);
+        | TK_Long_const     =&gt; FixInt (t, Target.Longint.bytes);
         | TK_Real_const     =&gt; FixFloat (t, Target.Precision.Short);
         | TK_Longreal_const =&gt; FixFloat (t, Target.Precision.Long);
         | TK_Extended_const =&gt; FixFloat (t, Target.Precision.Extended);
@@ -115,7 +116,7 @@ PROCEDURE <A NAME="FixID"><procedure>FixID</procedure></A> (t: T) =
     t.id := M3ID.FromStr (SUBARRAY (t.buffer^, t.offset, t.length));
   END FixID;
 
-PROCEDURE <A NAME="FixInt"><procedure>FixInt</procedure></A> (t: T) =
+PROCEDURE <A NAME="FixInt"><procedure>FixInt</procedure></A> (t: T;  bytes: CARDINAL) =
   VAR break := -1;  base: INTEGER;
   BEGIN
     FOR i := t.offset TO t.offset + t.length - 1 DO
@@ -127,16 +128,16 @@ PROCEDURE <A NAME="FixInt"><procedure>FixInt</procedure></A> (t: T) =
     END;
 
     IF (break &lt; 0) THEN (* scan a simple integer *)
-      IF NOT TInt.New (SUBARRAY (t.buffer^, t.offset, t.length), t.int) THEN
+      IF NOT TInt.New (SUBARRAY (t.buffer^, t.offset, t.length), bytes, t.int) THEN
         Err (t, &quot;illegal integer literal&quot;);
       END;
-    ELSIF NOT TInt.New (SUBARRAY (t.buffer^, t.offset, break - t.offset), t.int)
+    ELSIF NOT TInt.New (SUBARRAY (t.buffer^, t.offset, break - t.offset), bytes, t.int)
        OR NOT TInt.ToInt (t.int, base)
        OR (base &lt; 2) OR (16 &lt; base) THEN
       Err (t, &quot;illegal base for integer literal&quot;);
     ELSIF NOT TWord.New (SUBARRAY (t.buffer^, break+1,
                                    t.offset + t.length - break - 1),
-                         base, t.int) THEN
+                         base, bytes, t.int) THEN
       Err (t, &quot;illegal based integer literal&quot;);
     END;
   END FixInt;

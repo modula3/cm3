@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/Palette.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/Palette.i3</H2></A><HR>
 <inInterface>
@@ -18,7 +18,7 @@
 <P><PRE>&lt;*PRAGMA LL*&gt;
 </PRE> The <CODE>Palette</CODE> interface allows you to implement your own
    screen-independent resources by registering a closure to
-   produce an appropriate screen-dependent resource for any given 
+   produce an appropriate screen-dependent resource for any given
    screentype.  
 
 <P><PRE>INTERFACE <interface><A HREF="Palette.m3.html">Palette</A></interface>;
@@ -26,7 +26,7 @@
 IMPORT <A HREF="VBT.i3.html">VBT</A>, <A HREF="PaintOp.i3.html">PaintOp</A>, <A HREF="Cursor.i3.html">Cursor</A>, <A HREF="Pixmap.i3.html">Pixmap</A>, <A HREF="Font.i3.html">Font</A>,
   <A HREF="ScrnPaintOp.i3.html">ScrnPaintOp</A>, <A HREF="ScrnCursor.i3.html">ScrnCursor</A>, <A HREF="ScrnPixmap.i3.html">ScrnPixmap</A>, <A HREF="ScrnFont.i3.html">ScrnFont</A>;
 </PRE> Translating a screen-independent resource into its screen-dependent
-   form is called {\it resolving} the resource.  Here are the closure 
+   form is called {\it resolving} the resource.  Here are the closure
    types for resolving resources: 
 
 <P><PRE>TYPE
@@ -56,7 +56,7 @@ IMPORT <A HREF="VBT.i3.html">VBT</A>, <A HREF="PaintOp.i3.html">PaintOp</A>, <A 
 <P>
   The following procedures produce screen-independent resources
   from closures: 
-   
+
 <P><PRE>PROCEDURE <A HREF="Palette.m3.html#FromOpClosure">FromOpClosure</A>(cl: OpClosure): PaintOp.T;
 &lt;* LL.sup &lt;= VBT.mu *&gt;
 </PRE><BLOCKQUOTE><EM> Return a <CODE>PaintOp.T</CODE> that behaves like <CODE>cl.apply(st)</CODE> on <CODE>st</CODE>. </EM></BLOCKQUOTE><PRE>
@@ -75,7 +75,7 @@ PROCEDURE <A HREF="Palette.m3.html#FromFontClosure">FromFontClosure</A>(cl: Font
 </PRE> If your apply method that resolves a resource needs to resolve some
    other resource, you should use one of the following procedures to
    do so.  In all cases, <CODE>st</CODE> must be non-<CODE>NIL</CODE>. 
-   
+
 <P><PRE>PROCEDURE <A HREF="Palette.m3.html#ResolveOp">ResolveOp</A>(st: VBT.ScreenType; op: PaintOp.T)
   : ScrnPaintOp.T;
 </PRE><BLOCKQUOTE><EM> Resolve <CODE>op</CODE> for <CODE>st</CODE>. </EM></BLOCKQUOTE><PRE>
@@ -91,9 +91,9 @@ PROCEDURE <A HREF="Palette.m3.html#ResolvePixmap">ResolvePixmap</A>(st: VBT.Scre
 PROCEDURE <A HREF="Palette.m3.html#ResolveFont">ResolveFont</A>(st: VBT.ScreenType; font: Font.T)
   : ScrnFont.T;
 </PRE><BLOCKQUOTE><EM> Resolve <CODE>font</CODE> for <CODE>st</CODE>. </EM></BLOCKQUOTE><PRE>
-</PRE> If you create a cycle of screen-independent resources each of which 
-   tries to resolve the next resource in the cycle, then the program 
-   will deadlock. 
+</PRE> If you create a cycle of screen-independent resources each of which
+   tries to resolve the next resource in the cycle, then the program
+   will deadlock.
 <P>
    To implement screen-independent resources, every screentype includes
    a {\it palette}, which is a table of screen-dependent resources

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/text/String8.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/text/String8.m3</H2></A><HR>
 <inModule>
@@ -11,7 +11,7 @@
 
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="String8.i3.html">String8</A></implements></module>;
 
-IMPORT <A HREF="../C/LINUXLIBC6/Cstring.i3.html">Cstring</A>, <A HREF="../word/Word.i3.html">Word</A>;
+IMPORT <A HREF="#x1">Cstring</A>, <A HREF="../word/Word.i3.html">Word</A>;
 
 TYPE Ptr = UNTRACED REF CHAR;
 
@@ -58,9 +58,10 @@ PROCEDURE <A NAME="FindChar"><procedure>FindChar</procedure></A> (a: ADDRESS;  l
   END FindChar;
 
 PROCEDURE <A NAME="FindCharR"><procedure>FindCharR</procedure></A> (a: ADDRESS;  len: CARDINAL;  c: CHAR): INTEGER =
-  VAR p := LOOPHOLE (a + len * ADRSIZE (CHAR), Ptr);
+  VAR p: Ptr;
   BEGIN
-    IF (p = NIL) THEN RETURN -1; END;
+    IF (a = NIL) THEN RETURN -1; END;
+    p := LOOPHOLE (a + len * ADRSIZE (CHAR), Ptr);
     WHILE (len &gt; 0) DO
       DEC (p, ADRSIZE (p^));  DEC (len);
       IF (p^ = c) THEN RETURN len; END;
@@ -78,6 +79,13 @@ BEGIN
 END String8.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Cstring is in:
+</A><UL>
+<LI><A HREF="../C/Common/Cstring.i3.html#0TOP0">m3core/src/C/Common/Cstring.i3</A>
+<LI><A HREF="../C/LINUXLIBC6/Cstring.i3.html#0TOP0">m3core/src/C/LINUXLIBC6/Cstring.i3</A>
+</UL>
+<P>
 <PRE>
 
 

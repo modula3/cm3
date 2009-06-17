@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/builtinOps/BitSize.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/builtinOps/BitSize.m3</H2></A><HR>
 <inModule>
@@ -17,7 +17,7 @@
 <P><PRE>MODULE <module><implements><A HREF="BitSize.i3.html">BitSize</A></implements></module>;
 
 IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../exprs/ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="../exprs/IntegerExpr.i3.html">IntegerExpr</A>;
-IMPORT <A HREF="../exprs/TypeExpr.i3.html">TypeExpr</A>, <A HREF="../types/OpenArrayType.i3.html">OpenArrayType</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../builtinTypes/Card.i3.html">Card</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>;
+IMPORT <A HREF="../exprs/TypeExpr.i3.html">TypeExpr</A>, <A HREF="../types/OpenArrayType.i3.html">OpenArrayType</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="#x2">Card</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>;
 
 VAR Z: CallExpr.MethodList;
 
@@ -119,12 +119,12 @@ PROCEDURE <A NAME="DoFold"><procedure>DoFold</procedure></A> (e: Expr.T;  unit: 
       IF (info.class = Type.Class.OpenArray) THEN RETURN NIL END;
     END;
     t := Type.CheckInfo (t, info);
-    IF    TInt.FromInt (info.size, size)
-      AND TInt.FromInt (unit, a)
-      AND TInt.FromInt (unit - 1, b)
+    IF    TInt.FromInt (info.size, Target.Integer.bytes, size)
+      AND TInt.FromInt (unit, Target.Integer.bytes, a)
+      AND TInt.FromInt (unit - 1, Target.Integer.bytes, b)
       AND TInt.Add (size, b, c)
       AND TInt.Div (c, a, d)
-      THEN RETURN IntegerExpr.New (d);
+      THEN RETURN IntegerExpr.New (Int.T, d);
       ELSE RETURN NIL;
     END;
   END DoFold;
@@ -156,10 +156,18 @@ END BitSize.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
 <LI><A HREF="../../../stubgen/src/Type.i3.html#0TOP0">stubgen/src/Type.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Card is in:
+</A><UL>
+<LI><A HREF="../../../bicycle/src/Card.i3.html#0TOP0">bicycle/src/Card.i3</A>
+<LI><A HREF="../builtinTypes/Card.i3.html#0TOP0">m3front/src/builtinTypes/Card.i3</A>
 </UL>
 <P>
 <PRE>

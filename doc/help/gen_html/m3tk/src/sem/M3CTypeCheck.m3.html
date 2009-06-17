@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/sem/M3CTypeCheck.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/sem/M3CTypeCheck.m3</H2></A><HR>
 <inModule>
@@ -102,7 +102,7 @@ PROCEDURE <A NAME="IsException"><procedure>IsException</procedure></A>(
         ok := M3CTypeChkUtil.IsSubTypeOfBoolean(type);
     | M3AST_AS.Unaryplus, M3AST_AS.Unaryminus =&gt;
         ok := (ISTYPE(type, M3AST_AS.FLOAT_TYPE)) OR
-            (ISTYPE(type, M3AST_AS.Integer_type));
+            (ISTYPE(type, M3AST_AS.INT_TYPE));
     | M3AST_AS.Deref =&gt;
         ok := TRUE; (* already checked *)
     END; (* case *)
@@ -146,7 +146,7 @@ PROCEDURE <A NAME="Binary"><procedure>Binary</procedure></A>(h: Handle; b: M3AST
     | M3AST_AS.Plus, M3AST_AS.Minus,
       M3AST_AS.Times, M3AST_AS.Rdiv =&gt;
         TYPECASE type1 OF
-        | M3AST_AS.Integer_type, M3AST_AS.FLOAT_TYPE  =&gt;
+        | M3AST_AS.INT_TYPE, M3AST_AS.FLOAT_TYPE  =&gt;
             ok := (TYPECODE(type1) = TYPECODE(type2));
         | M3AST_AS.Set_type =&gt;
             ok := (TYPECODE(type1) = TYPECODE(type2)) AND
@@ -156,13 +156,13 @@ PROCEDURE <A NAME="Binary"><procedure>Binary</procedure></A>(h: Handle; b: M3AST
           IF (NOT safe) AND
                 (ISTYPE(b, M3AST_AS.Plus) OR ISTYPE(b, M3AST_AS.Minus)) AND
                 M3CTypeChkUtil.IsSubTypeOfAddress(type1) THEN
-              ok := ISTYPE(type2, M3AST_AS.Integer_type) OR
+              ok := ISTYPE(type2, M3AST_AS.INT_TYPE) OR
                   (ISTYPE(b, M3AST_AS.Minus) AND
                       M3CTypeChkUtil.IsSubTypeOfAddress(type2));
             END; (* if *)
         END; (* case *)
     | M3AST_AS.Div, M3AST_AS.Mod =&gt;
-        ok := (ISTYPE(type1, M3AST_AS.Integer_type) OR
+        ok := (ISTYPE(type1, M3AST_AS.INT_TYPE) OR
                    (ISTYPE(b, M3AST_AS.Mod) AND
                     ISTYPE(type1, M3AST_AS.FLOAT_TYPE))) AND
             (TYPECODE(type1) = TYPECODE(type2));
@@ -171,7 +171,7 @@ PROCEDURE <A NAME="Binary"><procedure>Binary</procedure></A>(h: Handle; b: M3AST
         IF ISTYPE(b, M3AST_AS.Eq) OR ISTYPE(b, M3AST_AS.Ne) THEN
           ok := TRUE;
         ELSE
-          ok := (ISTYPE(type1, M3AST_AS.Integer_type)) OR
+          ok := (ISTYPE(type1, M3AST_AS.INT_TYPE)) OR
               (ISTYPE(type1, M3AST_AS.Enumeration_type)) OR
               (ISTYPE(type1, M3AST_AS.FLOAT_TYPE)) OR
               (ISTYPE(type1, M3AST_AS.Set_type)) OR
@@ -375,9 +375,9 @@ PROCEDURE <A NAME="For"><procedure>For</procedure></A>(f: M3AST_AS.For_st) RAISE
     END; (* if *)
     IF f.as_by # NIL THEN
       byType := BaseType(f.as_by.as_exp);
-      IF byType # NIL AND NOT ISTYPE(byType, M3AST_AS.Integer_type) THEN
+      IF byType # NIL AND NOT ISTYPE(byType, M3AST_AS.INT_TYPE) THEN
         M3Error.Report(f.as_by.as_exp,
-            &quot;For loop BY expression is not subtype of INTEGER&quot;);
+            &quot;For loop BY expression is not an integer value&quot;);
       END; (* if *)
     END; (* if *)
   END For;

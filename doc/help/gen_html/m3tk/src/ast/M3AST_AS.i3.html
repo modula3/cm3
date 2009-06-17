@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/ast/M3AST_AS.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/ast/M3AST_AS.i3</H2></A><HR>
 <inInterface>
@@ -347,7 +347,9 @@ subtype (<CODE>Enumeration_type</CODE> for <CODE>BOOLEAN</CODE>).
   <A HREF="../astall/M3AST_all.i3.html#LongReal_type">LongReal_type</A> &lt;: FLOAT_TYPE;           (* LONGREAL *)
   <A HREF="../astall/M3AST_all.i3.html#Extended_type">Extended_type</A> &lt;: FLOAT_TYPE;           (* EXTENDED *)
 
-  <A HREF="../astall/M3AST_all.i3.html#Integer_type">Integer_type</A> &lt;: TYPE_SPEC;             (* INTEGER *)
+  <A HREF="../astall/M3AST_all.i3.html#INT_TYPE">INT_TYPE</A> &lt;: TYPE_SPEC;
+  <A HREF="../astall/M3AST_all.i3.html#Integer_type">Integer_type</A> &lt;: INT_TYPE;              (* INTEGER *)
+  <A HREF="../astall/M3AST_all.i3.html#Longint_type">Longint_type</A> &lt;: INT_TYPE;              (* LONGINT *)
   <A HREF="../astall/M3AST_all.i3.html#WideChar_type">WideChar_type</A> &lt;: TYPE_SPEC;            (* WIDECHAR *)
   <A HREF="../astall/M3AST_all.i3.html#Null_type">Null_type</A> &lt;: TYPE_SPEC;                (* NULL *)
   <A HREF="../astall/M3AST_all.i3.html#RefAny_type">RefAny_type</A> &lt;: TYPE_SPEC;              (* REFANY *)
@@ -506,6 +508,7 @@ TYPE
   <A HREF="../astall/M3AST_all.i3.html#NUMERIC_LITERAL">NUMERIC_LITERAL</A> &lt;: M3AST_LX.LITERAL;
 
   <A HREF="../astall/M3AST_all.i3.html#Integer_literal">Integer_literal</A> &lt;: NUMERIC_LITERAL;
+  <A HREF="../astall/M3AST_all.i3.html#Longint_literal">Longint_literal</A> &lt;: NUMERIC_LITERAL;
   <A HREF="../astall/M3AST_all.i3.html#Real_literal">Real_literal</A> &lt;: NUMERIC_LITERAL;
   <A HREF="../astall/M3AST_all.i3.html#LongReal_literal">LongReal_literal</A> &lt;: NUMERIC_LITERAL;
   <A HREF="../astall/M3AST_all.i3.html#Extended_literal">Extended_literal</A> &lt;: NUMERIC_LITERAL;

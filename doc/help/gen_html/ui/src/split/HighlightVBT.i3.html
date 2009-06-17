@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/HighlightVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/HighlightVBT.i3</H2></A><HR>
 <inInterface>
@@ -22,7 +22,7 @@
    The parent screen is obtained from the child screen by
    texturing an outline inset in a rectangle, using an inverting
    painting operation.
-    <P>
+<P>
    The parent keeps its screen correct as the child paints.  Since the
    parent screen is always correct, it never needs to mark itself
    for redisplay.  
@@ -40,18 +40,18 @@ TYPE
       txt: Pixmap.T := Pixmap.Gray;
       READONLY delta := Point.T{h := 0, v := 1}): T
   END;
-</PRE> The call <CODE>v.init(ch, ...)</CODE> initializes <CODE>v</CODE> as a <CODE>HighlightVBT</CODE> with 
+</PRE> The call <CODE>v.init(ch, ...)</CODE> initializes <CODE>v</CODE> as a <CODE>HighlightVBT</CODE> with
    child <CODE>ch</CODE> and the given parameters, and returns <CODE>v</CODE>.
 <P>
-   The highlight rectangle is initially empty.  The filter brings up 
-   the highlight by calling 
-   <P>
+   The highlight rectangle is initially empty.  The filter brings up
+   the highlight by calling
+<P>
 <PRE>
       VBT.PaintTexture(v, <KBD>highlight region</KBD>, op, txt, delta)
 </PRE>
-   and brings down the highlight the same way; therefore the painting 
+   and brings down the highlight the same way; therefore the painting
    operation must be its own inverse for the filter to work correctly.
-   <P>
+<P>
    The default values for the texture and delta are such that the
    highlight will be visible over white, black, or the standard gray
    texture.  (If delta were <CODE>(0,0)</CODE> instead of <CODE>(0,1)</CODE>, the highlight
@@ -84,7 +84,7 @@ PROCEDURE <A HREF="HighlightVBT.m3.html#SetRect">SetRect</A>(
   READONLY delta := Point.Origin;
   op := PaintOp.TransparentSwap);
  &lt;* LL.sup = VBT.mu *&gt;
-</PRE><BLOCKQUOTE><EM> Set the <CODE>txt</CODE>, <CODE>delta</CODE>, and <CODE>op</CODE> of <CODE>Find(v)</CODE> to the given 
+</PRE><BLOCKQUOTE><EM> Set the <CODE>txt</CODE>, <CODE>delta</CODE>, and <CODE>op</CODE> of <CODE>Find(v)</CODE> to the given
    values.  </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="HighlightVBT.m3.html#Get">Get</A>(

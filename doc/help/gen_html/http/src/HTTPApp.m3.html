@@ -2,13 +2,20 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: http/src/HTTPApp.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>http/src/HTTPApp.m3</H2></A><HR>
 <inModule>
 <PRE></PRE> Copyright (C) 1995, Digital Equipment Corporation. 
  All rights reserved. 
- Last modified on Thu Mar 20 17:04:39 PST 1997 by steveg 
+ Created by steveg 
+                                                                           
+ Parts Copyright (C) 1997, Columbia University                             
+ All rights reserved.                                                      
+
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:50:46 1997
+ 
 
 <P><PRE>MODULE <module><implements><A HREF="HTTPApp.i3.html">HTTPApp</A></implements></module>;
 
@@ -111,7 +118,8 @@ PROCEDURE <A NAME="WriteUnlock"><procedure>WriteUnlock</procedure></A>() =
   END WriteUnlock;
 
 REVEAL
-  <A NAME="RequestHandler">RequestHandler</A> = RequestHandlerPublic BRANDED OBJECT
+  <A NAME="RequestHandler">RequestHandler</A> = RequestHandlerPublic BRANDED
+  &quot;HTTPApp.RequestHandler&quot; OBJECT
     port: INTEGER;
   OVERRIDES
     accept := DefaultAccept;
@@ -139,7 +147,7 @@ PROCEDURE <A NAME="DefaultRequest"><procedure>DefaultRequest</procedure></A>(&lt
   END DefaultRequest;
 
 REVEAL
-  <A NAME="ReplyHandler">ReplyHandler</A> = ReplyHandlerPublic BRANDED OBJECT
+  <A NAME="ReplyHandler">ReplyHandler</A> = ReplyHandlerPublic BRANDED &quot;HTTPApp.ReplyHandler&quot; OBJECT
   OVERRIDES
     reply := DefaultReply;
   END;
@@ -154,7 +162,7 @@ PROCEDURE <A NAME="DefaultReply"><procedure>DefaultReply</procedure></A>(&lt;* U
   END DefaultReply;
 
 REVEAL
-  <A NAME="Proxy">Proxy</A> = ProxyPublic BRANDED OBJECT
+  <A NAME="Proxy">Proxy</A> = ProxyPublic BRANDED &quot;HTTPApp.Proxy&quot; OBJECT
           OVERRIDES
             init := InitProxy;
             add  := AddProxy;
@@ -225,7 +233,7 @@ PROCEDURE <A NAME="AddProxy"><procedure>AddProxy</procedure></A> (self: Proxy; r
   END AddProxy;
 
 REVEAL
-  <A NAME="Server">Server</A> = ServerPublic BRANDED OBJECT
+  <A NAME="Server">Server</A> = ServerPublic BRANDED &quot;HTTPApp.Server&quot; OBJECT
   OVERRIDES
     init := InitServer;
     initParse := InitParseServer;

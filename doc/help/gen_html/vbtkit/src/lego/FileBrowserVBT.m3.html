@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/FileBrowserVBT.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/FileBrowserVBT.m3</H2></A><HR>
 <inModule>
@@ -826,7 +826,7 @@ PROCEDURE ShowDirInMenu (v: T) =
     vbox := dm.vbox;
     arcs := Pathname.Decompose (v.dir);
     WITH curr = arcs.remhi () DO
-      IF curr = NIL THEN 
+      IF curr = NIL THEN
         TextVBT.Put (dm.top, <CODE>????</CODE>)
       ELSE
         TextVBT.Put (dm.top, curr)

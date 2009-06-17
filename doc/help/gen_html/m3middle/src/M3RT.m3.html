@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/M3RT.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/M3RT.m3</H2></A><HR>
 <inModule>
@@ -139,7 +139,8 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> () =
     MI_imports        := MI_gc_map + AP;         (* : ADDRESS *)
     MI_link_state     := MI_imports + AP;        (* : INTEGER *)
     MI_binder         := MI_link_state + IP;     (* : PROC()  *)
-    MI_SIZE           := MI_binder + AP;
+    MI_gc_flags       := MI_binder + AP;         (* : INTEGER  *)
+    MI_SIZE           := MI_gc_flags + IP;
 
     (* offsets and size of an RT0.ImportInfo record *)
     II_import := 0;               (* : ADDRESS (ModulePtr) *)

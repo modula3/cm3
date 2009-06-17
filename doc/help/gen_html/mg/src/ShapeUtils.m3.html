@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: mg/src/ShapeUtils.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>mg/src/ShapeUtils.m3</H2></A><HR>
 <inModule>
@@ -25,7 +25,7 @@ PROCEDURE <A NAME="RegularPolygon"><procedure>RegularPolygon</procedure></A>(sid
   BEGIN
     path.init();
     FOR i := 1 TO sides DO
-      WITH theta = 2.0 * Math.Pi * FLOAT(i) / FLOAT(sides),
+      WITH theta = 2.0 * FLOAT(Math.Pi, REAL) * FLOAT(i) / FLOAT(sides),
            x = radius * FLOAT(Math.cos(FLOAT(theta, LONGREAL))),
            y = radius * FLOAT(Math.sin(FLOAT(theta, LONGREAL))),
            p = R2.T{x, y} DO

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-app/src/EditorUI.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-app/src/EditorUI.i3</H2></A><HR>
 <inInterface>
@@ -18,7 +18,7 @@
 
 <P><PRE>INTERFACE <interface><A HREF="Editor.m3.html">EditorUI</A></interface>;
 
-IMPORT <A HREF="#x1">View</A>, <A HREF="Editor.i3.html">Editor</A>, <A HREF="../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="../../juno-compiler/src/JunoScope.i3.html">JunoScope</A>;
+IMPORT <A HREF="#x1">View</A>, <A HREF="#x2">Editor</A>, <A HREF="../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="../../juno-compiler/src/JunoScope.i3.html">JunoScope</A>;
 
 PROCEDURE <A HREF="Editor.m3.html#CompileUI">CompileUI</A>(
     rt: View.Root;
@@ -26,7 +26,7 @@ PROCEDURE <A HREF="Editor.m3.html#CompileUI">CompileUI</A>(
     time: VBT.TimeStamp;
     scp: JunoScope.T;
     ): BOOLEAN;
-</PRE><BLOCKQUOTE><EM> Should be called immediately after <CODE>Editor.Compile(e, ts, scp, nm, ent)</CODE> 
+</PRE><BLOCKQUOTE><EM> Should be called immediately after <CODE>Editor.Compile(e, ts, scp, nm, ent)</CODE>
    returns TRUE, and should be called with <CODE>scp := ent.scp</CODE>.  Processes the
    <CODE>UI</CODE> declarations in <CODE>e</CODE> and creates and installs the appropriate buttons
    and  menus and returns <CODE>TRUE</CODE>, or displays an error to the user and returns
@@ -40,6 +40,13 @@ END EditorUI.
 </A><UL>
 <LI><A HREF="View.i3.html#0TOP0">juno-app/src/View.i3</A>
 <LI><A HREF="../../zeus/src/View.i3.html#0TOP0">zeus/src/View.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Editor is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/misc/Editor.i3.html#0TOP0">cm3ide/src/misc/Editor.i3</A>
+<LI><A HREF="Editor.i3.html#0TOP0">juno-app/src/Editor.i3</A>
 </UL>
 <P>
 <PRE>

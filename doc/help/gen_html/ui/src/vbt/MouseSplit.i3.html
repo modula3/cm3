@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/MouseSplit.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/MouseSplit.i3</H2></A><HR>
 <inInterface>
@@ -17,10 +17,10 @@
 <PRE>&lt;*PRAGMA LL*&gt;
 
 INTERFACE <interface><A HREF="MouseSplit.m3.html">MouseSplit</A></interface>;
-</PRE> The procedures in this interface implement the semantics described 
-   in the VBT interface for delivering mouseclicks and positions to 
-   split children, and for setting the cursor and cage of a split 
-   parent.   
+</PRE> The procedures in this interface implement the semantics described
+   in the VBT interface for delivering mouseclicks and positions to
+   split children, and for setting the cursor and cage of a split
+   parent.  
 
 <P><PRE>IMPORT <A HREF="VBT.i3.html">VBT</A>, <A HREF="ScrnCursor.i3.html">ScrnCursor</A>, <A HREF="VBTClass.i3.html">VBTClass</A>;
 
@@ -46,8 +46,8 @@ PROCEDURE <A HREF="MouseSplit.m3.html#Setcursor">Setcursor</A>(v: VBT.Split; ch:
 PROCEDURE <A HREF="MouseSplit.m3.html#Getcursor">Getcursor</A>(v: VBT.Split): ScrnCursor.T;
 
 PROCEDURE <A HREF="MouseSplit.m3.html#InvalidateCache">InvalidateCache</A>(v: VBT.Split);
-</PRE><BLOCKQUOTE><EM> Clear any cached results of the child locate method.  If v's methods 
-   come from this interface, you must call this procedure whenever 
+</PRE><BLOCKQUOTE><EM> Clear any cached results of the child locate method.  If v's methods
+   come from this interface, you must call this procedure whenever
    the geometry of v changes.  </EM></BLOCKQUOTE><PRE>
 
 END MouseSplit.

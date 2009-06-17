@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/M3RT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/M3RT.i3</H2></A><HR>
 <inInterface>
@@ -164,6 +164,7 @@ VAR (* opaque revelations *)
   MI_imports        : CARDINAL; (* : ADDRESS *)
   MI_link_state     : CARDINAL; (* : INTEGER *)
   MI_binder         : CARDINAL; (* : PROC()  *)
+  MI_gc_flags       : CARDINAL; (* : INTEGER *)
   MI_SIZE           : CARDINAL;
 
 VAR (* offsets and size of an RT0.ImportInfo record *)
@@ -179,12 +180,23 @@ VAR (* offsets and size of an RT0.ProcInfo record *)
 </PRE>----------------------------------------------------------- ref headers ---
 
 <P><PRE>CONST (* bit offsets and sizes of the fields within a REF's header word *)
-  RH_typecode_offset  = 1;
+  RH_forwarded_offset = 0;
+  RH_forwarded_size   = 1;
+  RH_typecode_offset  = RH_forwarded_offset + RH_forwarded_size;
   RH_typecode_size    = 20;
+  RH_dirty_offset     = RH_typecode_offset + RH_typecode_size;
+  RH_dirty_size       = 1;
+  RH_gray_offset      = RH_dirty_offset + RH_dirty_size;
+  RH_gray_size        = 1;
 
 CONST (* builtin, constant typecodes *)
-  NULL_typecode = 0;
-  TEXT_typecode = 1;
+  NULL_typecode          = 0;
+  TEXT_typecode          = 1;
+  ADDRESS_typecode       = 2;
+  REFANY_typecode        = 3;
+  ROOT_typecode          = 4;
+  UNTRACED_ROOT_typecode = 5;
+  MUTEX_typecode         = 6;
 
 VAR (* offsets in a MUTEX method list *)
   MUTEX_acquire : CARDINAL; (*: PROC() *)

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/xvbt/XClientF.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/xvbt/XClientF.m3</H2></A><HR>
 <inModule>
@@ -30,7 +30,7 @@
 IMPORT <A HREF="XClient.i3.html">XClient</A>, <A HREF="TrestleOnX.i3.html">TrestleOnX</A>, <A HREF="../vbt/TrestleClass.i3.html">TrestleClass</A>, <A HREF="../vbt/Trestle.i3.html">Trestle</A>, <A HREF="../../../libm3/src/geometry/Rect.i3.html">Rect</A>, <A HREF="../split/ProperSplit.i3.html">ProperSplit</A>,
        <A HREF="../../../libm3/derived/IntRefTbl.i3.html">IntRefTbl</A>, <A HREF="../../../libm3/derived/IntTextTbl.i3.html">IntTextTbl</A>, <A HREF="../../../libm3/derived/TextIntTbl.i3.html">TextIntTbl</A>, <A HREF="../../../X11R4/src/Common/X.i3.html">X</A>, <A HREF="XEventQueue.i3.html">XEventQueue</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>,
        <A HREF="XAtomQueue.i3.html">XAtomQueue</A>, <A HREF="XScreenType.i3.html">XScreenType</A>, <A HREF="../vbt/VBT.i3.html">VBT</A>, <A HREF="../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../vbt/TrestleComm.i3.html">TrestleComm</A>, <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="XProperties.i3.html">XProperties</A>,
-       <A HREF="../../../m3core/src/runtime/common/RTParams.i3.html">RTParams</A>, <A HREF="../vbt/KeyboardKey.i3.html">KeyboardKey</A>, <A HREF="../../../m3core/src/runtime/common/RTHeapRep.i3.html">RTHeapRep</A>, <A HREF="../../../m3core/src/runtime/common/RTCollectorSRC.i3.html">RTCollectorSRC</A>, <A HREF="../../../m3core/src/runtime/common/RTHeapDep.i3.html">RTHeapDep</A>,
+       <A HREF="../../../m3core/src/runtime/common/RTParams.i3.html">RTParams</A>, <A HREF="../vbt/KeyboardKey.i3.html">KeyboardKey</A>, <A HREF="../../../m3core/src/runtime/common/RTHeapRep.i3.html">RTHeapRep</A>,
        <A HREF="../vbt/VBTClass.i3.html">VBTClass</A>, <A HREF="../../../libm3/src/params/Env.i3.html">Env</A>, <A HREF="../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="XInput.i3.html">XInput</A>, <A HREF="XMessenger.i3.html">XMessenger</A>, <A HREF="../split/Split.i3.html">Split</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>,
        <A HREF="../../../tcp/src/common/IP.i3.html">IP</A>, <A HREF="../../../libm3/src/types/ASCII.i3.html">ASCII</A>, <A HREF="XExtensions.i3.html">XExtensions</A>, <A HREF="../../../libm3/derived/IntIntTbl.i3.html">IntIntTbl</A>, <A HREF="XClientExt.i3.html">XClientExt</A>, <A HREF="TrslOnXF.i3.html">TrslOnXF</A>;
 
@@ -470,7 +470,7 @@ PROCEDURE <A NAME="Connect"><procedure>Connect</procedure></A> (inst: TEXT; trsl
         TRY
           LOCK openMu DO
             IF firstTime THEN
-	      TrslOnXF.Init();
+              TrslOnXF.Init();
               firstTime := FALSE;
               EVAL Thread.Fork(NEW(InitClosure))
             END;
@@ -721,13 +721,10 @@ PROCEDURE <A NAME="Error"><procedure>Error</procedure></A> (dpy: X.DisplayStar; 
   END Error;
 
 VAR
-  doHack := NOT RTParams.IsPresent(&quot;StarTrek&quot;)
-              AND NOT ((RTCollectorSRC.incremental AND RTHeapDep.VM
-                          AND RTHeapRep.disableVMCount = 0));
+  doHack := RTParams.IsPresent(&quot;StarTrek&quot;);
 </PRE><BLOCKQUOTE><EM> If doHack is TRUE, XClient will change the cursor of every installed
    window to the Star Trek cursor whenever the garbage collector is
-   running.  At runtime, you can force no StarTrek cursor by running your
-   program @M3StarTrek. </EM></BLOCKQUOTE><PRE>
+   running.  You can enable this with @M3StarTrek. </EM></BLOCKQUOTE><PRE>
 
 TYPE
   GCClosure = RTHeapRep.MonitorClosure OBJECT
@@ -748,11 +745,8 @@ VAR hacking := FALSE;
 
 PROCEDURE <A NAME="HackOn"><procedure>HackOn</procedure></A> (&lt;*UNUSED*&gt; cl: GCClosure) =
   BEGIN
-    IF NOT ((RTCollectorSRC.incremental AND RTHeapDep.VM
-               AND RTHeapRep.disableVMCount = 0)) THEN
-      HackToggle(TRUE);
-      hacking := TRUE
-    END
+    HackToggle(TRUE);
+    hacking := TRUE
   END HackOn;
 
 PROCEDURE <A NAME="HackOff"><procedure>HackOff</procedure></A> (&lt;*UNUSED*&gt; cl: GCClosure) =

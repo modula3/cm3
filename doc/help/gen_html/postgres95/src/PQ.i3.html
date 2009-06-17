@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: postgres95/src/PQ.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>postgres95/src/PQ.i3</H2></A><HR>
 <inInterface>
@@ -24,7 +24,7 @@
  * ----------------
  
 
-<P><PRE>UNSAFE INTERFACE <interface>PQ</interface>;
+<P><PRE>UNSAFE INTERFACE <interface><A HREF="PQ.m3.html">PQ</A></interface>;
 
 IMPORT <A HREF="PQcomm.i3.html">PQcomm</A>;
 FROM <A HREF="../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A> IMPORT char_star, int, char, short, int_star;
@@ -159,12 +159,20 @@ CONST CMDSTATUS_LEN = 40;
   END;
   PGresult_star = UNTRACED REF PGresult;
 
-&lt;*EXTERNAL*&gt; PROCEDURE PQsetdb (pghost: char_star;
+&lt;*EXTERNAL*&gt; PROCEDURE PQsetdbLogin(pghost: char_star;
+                                    pgport: char_star;
+                                    pgoptions: char_star;
+                                    pgtty: char_star;
+                                    dbName: char_star;
+                                    login: char_star;
+                                    pwd: char_star): PGconn_star;
+  (* Make a new client connection to the backend *)
+</PRE> PQsetdb is just there for compatibility 
+             <PRE>PROCEDURE <A HREF="PQ.m3.html#PQsetdb">PQsetdb</A> (pghost: char_star;
                                 pgport: char_star;
                                 pgoptions: char_star;
                                 pgtty: char_star;
                                 dbName: char_star): PGconn_star;
-  (* Make a new client connection to the backend *)
 
 &lt;*EXTERNAL*&gt; PROCEDURE PQfinish (conn: PGconn_star);
   (* close the current connection and free the PGconn data structure

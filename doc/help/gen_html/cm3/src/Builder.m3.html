@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: cm3/src/Builder.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>cm3/src/Builder.m3</H2></A><HR>
 <inModule>
@@ -20,6 +20,9 @@ IMPORT <A HREF="../../m3linker/src/Mx.i3.html">Mx</A>, <A HREF="../../m3linker/s
 IMPORT <A HREF="#x3">Msg</A>, <A HREF="Arg.i3.html">Arg</A>, <A HREF="Utils.i3.html">Utils</A>, <A HREF="M3Path.i3.html">M3Path</A>, <A HREF="M3Backend.i3.html">M3Backend</A>, <A HREF="../../m3front/src/misc/M3Compiler.i3.html">M3Compiler</A>;
 IMPORT <A HREF="../../m3quake/src/Quake.i3.html">Quake</A>, <A HREF="../../m3quake/src/QMachine.i3.html">QMachine</A>, <A HREF="../../m3quake/src/QValue.i3.html">QValue</A>, <A HREF="../../m3quake/src/QVal.i3.html">QVal</A>, <A HREF="../../m3quake/derived/QVSeq.i3.html">QVSeq</A>;
 IMPORT <A HREF="M3Loc.i3.html">M3Loc</A>, <A HREF="M3Unit.i3.html">M3Unit</A>, <A HREF="M3Options.i3.html">M3Options</A>, <A HREF="../../m3quake/src/MxConfig.i3.html">MxConfig</A> AS M3Config;
+IMPORT <A HREF="../../m3quake/src/QIdent.i3.html">QIdent</A>;
+FROM <A HREF="../../m3middle/src/Target.i3.html">Target</A> IMPORT M3BackendMode_t, BackendAssembly, BackendModeStrings;
+FROM <A HREF="M3Path.i3.html">M3Path</A> IMPORT OSKind, OSKindStrings;
 
 TYPE
   UK = M3Unit.Kind;
@@ -106,9 +109,9 @@ PROCEDURE <A NAME="EmitPkgImports"><procedure>EmitPkgImports</procedure></A> (RE
     main          : M3ID.T;             (* &quot;Main&quot; *)
     m3env         : Env;                (* the compiler's environment closure *)
     target        : TEXT;               (* target machine *)
-    host_os       : M3Path.OSKind;      (* host system *)
-    target_os     : M3Path.OSKind;      (* target os *)
-    m3backend_mode: [0..3];             (* tells how to turn M3CG -&gt; object *)
+    (* target_os is misused; needs work *)
+    target_os    := M3Path.OSKind.Unix; (* target os *)
+    m3backend_mode: M3BackendMode_t;    (* tells how to turn M3CG -&gt; object *)
     m3backend     : ConfigProc;         (* translate M3CG -&gt; ASM or OBJ *)
     c_compiler    : ConfigProc;         (* compile C code *)
     assembler     : ConfigProc;         (* assemble  *)
@@ -124,7 +127,6 @@ PROCEDURE <A NAME="EmitPkgImports"><procedure>EmitPkgImports</procedure></A> (RE
     has_loader    : BOOLEAN;            (* gen loader info file *)
     skip_link     : BOOLEAN;            (* don't bother linking final exe *)
     keep_resolved : BOOLEAN;            (* pass resolved library names to linker *)
-    split_if_shared: BOOLEAN;   (* pass resolved library names to linker only if linking static *)
     m3main_in_c   : BOOLEAN;            (* generate a C main program *)
     gui           : BOOLEAN;            (* generate a Windows GUI subsystem prog *)
     do_coverage   : BOOLEAN;            (* compile and link for coverage *)
@@ -144,21 +146,117 @@ TYPE
     binding : QValue.Binding;
   END;
 
+PROCEDURE <A NAME="SetupNamingConventionsInternal"><procedure>SetupNamingConventionsInternal</procedure></A> (VAR s : State; mach : Quake.Machine) =
+  VAR
+    value : QValue.Binding;
+  BEGIN
+
+    s.machine       := mach;
+
+    (* This area seems to always been messed up, and more work is needed.  In
+       particular NAMING_CONVENTIONS and TARGET_NAMING seem to have been
+       confused.
+
+       Really, neither one should be configurable in Quake.  The host's naming
+       conventions are not relevant. It only cares about slashes.  The
+       target's naming conventions should map directly from what the target
+       is.  Granted, how to form linker commands is not clearly a host or
+       target decision.
+
+       The host has always been probed correctly, and the Quake variables were
+       not checked at the right time. Host and target naming conventions rarely
+       varied.  Current uses of target_os need attention. *)
+
+    value := GetDefn (s, &quot;NAMING_CONVENTIONS&quot;);
+    IF value # NIL THEN
+      M3Path.SetOS (ConvertNamingConventionStringToEnum (s, value), host := FALSE);
+    END;
+
+    value := GetDefn (s, &quot;TARGET_NAMING&quot;);
+    IF value # NIL THEN
+      WITH target_os = ConvertNamingConventionStringToEnum (s, value) DO
+        s.target_os := target_os;
+        M3Path.SetOS (target_os, host := FALSE);
+      END;
+    END;
+
+  END SetupNamingConventionsInternal;
+
+PROCEDURE <A NAME="ConvertStringToEnum"><procedure>ConvertStringToEnum</procedure></A>(s: State; name : TEXT; binding: QValue.Binding;
+                              min, max: INTEGER; READONLY map: ARRAY OF TEXT):
+  INTEGER =
+  VAR
+    i : INTEGER;
+    value := BindingToText (s, binding);
+  BEGIN
+
+    IF Text.Length (value) = 0 THEN
+        Msg.FatalError (NIL, &quot;unrecognized &quot; &amp; name &amp; &quot;: &quot;, &quot;(empty)&quot;);
+    END;
+
+    TRY
+      i := QVal.ToInt (s.machine, binding.value);
+      IF (i &lt; min) OR (i &gt; max) THEN
+        Msg.FatalError (NIL, &quot;unrecognized &quot; &amp; name &amp; &quot;: &quot;, value);
+      END;
+      RETURN i;
+    EXCEPT Quake.Error =&gt;
+    END;
+
+    FOR i := min TO max DO
+      IF Text.Equal(value, map[i]) THEN
+        RETURN i;
+      END;
+    END;
+
+    Msg.FatalError (NIL, &quot;unrecognized &quot; &amp; name &amp; &quot;: &quot;, value);
+    RETURN -1;
+
+  END ConvertStringToEnum;
+
+PROCEDURE <A NAME="ConvertBackendModeStringToEnum"><procedure>ConvertBackendModeStringToEnum</procedure></A>(s: State; binding: QValue.Binding):
+  M3BackendMode_t =
+  BEGIN
+    RETURN VAL(ConvertStringToEnum(s, &quot;backend mode&quot;, binding,
+                                   ORD(FIRST(M3BackendMode_t)),
+                                   ORD(LAST(M3BackendMode_t)),
+                                   BackendModeStrings),
+               M3BackendMode_t);
+  END ConvertBackendModeStringToEnum;
+
+PROCEDURE <A NAME="ConvertNamingConventionStringToEnum"><procedure>ConvertNamingConventionStringToEnum</procedure></A>(s: State;
+                                              binding: QValue.Binding):
+  OSKind =
+  BEGIN
+    RETURN VAL(ConvertStringToEnum(s, &quot;naming convention&quot;, binding,
+                                   ORD(FIRST(OSKind)),
+                                   ORD(LAST(OSKind)),
+                                   OSKindStrings),
+               OSKind);
+  END ConvertNamingConventionStringToEnum;
+
+PROCEDURE <A NAME="SetupNamingConventions"><procedure>SetupNamingConventions</procedure></A> (mach : Quake.Machine) =
+  VAR s := NEW (State);
+  BEGIN
+    SetupNamingConventionsInternal (s, mach);
+  END SetupNamingConventions;
+
 PROCEDURE <A NAME="CompileUnits"><procedure>CompileUnits</procedure></A> (main     : TEXT;
                READONLY units    : M3Unit.Set;
                         sys_libs : Arg.List;
                         info_kind: UK;
                         mach     : Quake.Machine): State =
-  VAR s := NEW (State);  nm := M3Path.Parse (main, host := TRUE);
+  VAR
+    s := NEW (State);  nm := M3Path.Parse (main);
+    value : QValue.Binding;
   BEGIN
     DumpUnits (units);
     ETimer.ResetAll ();
 
+    SetupNamingConventionsInternal (s, mach);
     s.result_name   := main;
-    s.info_name     := M3Path.Join (NIL, nm.base, info_kind, host := TRUE);
     s.config_file   := M3Config.FindFile ();
     s.sys_libs      := sys_libs;
-    s.machine       := mach;
     s.units         := units;
     s.link_base     := NIL;
     s.magic         := NEW (IntRefTbl.Default).init (100);
@@ -170,22 +268,32 @@ PROCEDURE <A NAME="CompileUnits"><procedure>CompileUnits</procedure></A> (main  
     s.m3env.globals := s;
 
     s.target := GetConfigItem (s, &quot;TARGET&quot;);
-    IF NOT Target.Init (s.target) THEN
+
+    value := GetDefn (s, &quot;M3_BACKEND_MODE&quot;);
+    IF value = NIL THEN
+      value := GetDefn (s, &quot;BACKEND_MODE&quot;);
+    END;
+    IF value = NIL THEN
+        ConfigErr (s, &quot;BACKEND_MODE or M3_BACKEND_MODE&quot;, &quot;not defined&quot;);
+    END;
+    s.m3backend_mode := ConvertBackendModeStringToEnum(s, value);
+
+    value := GetDefn (s, &quot;TARGET_NAMING&quot;);
+    IF value # NIL THEN
+      WITH target_os = ConvertNamingConventionStringToEnum (s, value) DO
+        s.target_os := target_os;
+        M3Path.SetOS (target_os, host := FALSE);
+      END;
+    END;
+
+    IF NOT Target.Init (s.target, GetConfigItem (s, &quot;OS_TYPE&quot;, &quot;POSIX&quot;), s.m3backend_mode) THEN
       Msg.FatalError (NIL, &quot;unrecognized target machine: TARGET = &quot;, s.target);
     END;
+
     Target.Has_stack_walker := GetConfigBool(s, &quot;M3_USE_STACK_WALKER&quot;,
                                              Target.Has_stack_walker);
 
-    s.host_os := GetOSType (s, &quot;NAMING_CONVENTIONS&quot;);
-    IF (GetDefn (s, &quot;TARGET_NAMING&quot;) = NIL)
-      THEN s.target_os := s.host_os;
-      ELSE s.target_os := GetOSType (s, &quot;TARGET_NAMING&quot;);
-    END;
-    M3Path.SetOS (s.host_os, host := TRUE);
-    M3Path.SetOS (s.target_os, host := FALSE);
-
-    s.m3backend_mode := MAX (0, MIN (GetConfigInt (s, &quot;M3_BACKEND_MODE&quot;), 3));
-
+    s.info_name   := M3Path.Join (NIL, nm.base, info_kind);
     s.m3backend   := GetConfigProc (s, &quot;m3_backend&quot;, 4);
     s.c_compiler  := GetConfigProc (s, &quot;compile_c&quot;, 5);
     s.assembler   := GetConfigProc (s, &quot;assemble&quot;, 2);
@@ -202,7 +310,6 @@ PROCEDURE <A NAME="CompileUnits"><procedure>CompileUnits</procedure></A> (main  
     s.has_loader     := GetConfigBool (s, &quot;SYS_HAS_LOADER&quot;);
     s.skip_link      := GetConfigBool (s, &quot;M3_SKIP_LINK&quot;);
     s.keep_resolved  := NOT GetConfigBool (s, &quot;M3_SPLIT_LIBNAMES&quot;);
-    s.split_if_shared:= GetConfigBool (s, &quot;M3_SPLIT_LIBNAMES_IF_SHARED&quot;, FALSE);
     s.m3main_in_c    := GetConfigBool (s, &quot;M3_MAIN_IN_C&quot;);
     s.gui            := GetConfigBool (s, &quot;M3_WINDOWS_GUI&quot;);
     s.do_coverage    := GetConfigBool (s, &quot;M3_COVERAGE&quot;);
@@ -228,27 +335,25 @@ PROCEDURE <A NAME="CompileUnits"><procedure>CompileUnits</procedure></A> (main  
     RETURN s;
   END CompileUnits;
 
-PROCEDURE <A NAME="GetOSType"><procedure>GetOSType</procedure></A> (s: State;  sym: TEXT): M3Path.OSKind =
-  VAR val := GetConfigItem (s, sym);
+PROCEDURE <A NAME="BindingToText"><procedure>BindingToText</procedure></A> (s: State; bind: QValue.Binding; default: TEXT := NIL): TEXT =
   BEGIN
-    IF    Text.Equal (val, &quot;0&quot;)   THEN RETURN M3Path.OSKind.Unix;
-    ELSIF Text.Equal (val, &quot;1&quot;)   THEN RETURN M3Path.OSKind.GrumpyUnix;
-    ELSIF Text.Equal (val, &quot;2&quot;)   THEN RETURN M3Path.OSKind.Win32;
+    IF bind = NIL THEN
+      IF default # NIL THEN
+        RETURN default;
+      END;
+      ConfigErr (s, s.machine.map.id2txt(bind.name), &quot;not defined&quot;);
     END;
-    ConfigErr (s, sym, &quot;unrecognized naming convention: &quot; &amp; val);
-    RETURN M3Path.OSKind.Unix;
-  END GetOSType;
-
-PROCEDURE <A NAME="GetConfigItem"><procedure>GetConfigItem</procedure></A> (s: State;  symbol: TEXT): TEXT =
-  VAR bind := GetDefn (s, symbol);
-  BEGIN
-    IF (bind = NIL) THEN ConfigErr (s, symbol, &quot;not defined&quot;); END;
     TRY
       RETURN QVal.ToText (s.machine, bind.value);
     EXCEPT Quake.Error (msg) =&gt;
-      ConfigErr (s, symbol, msg);
+      ConfigErr (s, s.machine.map.id2txt(bind.name), msg);
     END;
     RETURN NIL;
+  END BindingToText;
+
+PROCEDURE <A NAME="GetConfigItem"><procedure>GetConfigItem</procedure></A> (s: State;  symbol: TEXT; default: TEXT := NIL): TEXT =
+  BEGIN
+    RETURN BindingToText (s, GetDefn (s, symbol), default);
   END GetConfigItem;
 
 PROCEDURE <A NAME="GetConfigProc"><procedure>GetConfigProc</procedure></A> (s: State;  symbol: TEXT;
@@ -260,11 +365,11 @@ PROCEDURE <A NAME="GetConfigProc"><procedure>GetConfigProc</procedure></A> (s: S
     x.binding := GetDefn (s, symbol);
     RETURN x;
   END GetConfigProc;
-
-PROCEDURE <A NAME="GetConfigInt"><procedure>GetConfigInt</procedure></A> (s: State;  symbol: TEXT): INTEGER =
+</PRE><P>
+PROCEDURE GetConfigInt (s: State;  symbol: TEXT): INTEGER =
   VAR bind := GetDefn (s, symbol);
   BEGIN
-    IF (bind = NIL) THEN ConfigErr (s, symbol, &quot;not defined&quot;); END;
+    IF (bind = NIL) THEN ConfigErr (s, symbol, <CODE>not defined</CODE>); END;
     TRY
       RETURN QVal.ToInt (s.machine, bind.value);
     EXCEPT Quake.Error (msg) =&gt;
@@ -273,7 +378,8 @@ PROCEDURE <A NAME="GetConfigInt"><procedure>GetConfigInt</procedure></A> (s: Sta
     RETURN 0;
   END GetConfigInt;
 
-PROCEDURE <A NAME="GetConfigBool"><procedure>GetConfigBool</procedure></A> (s: State;  symbol: TEXT; default := FALSE): BOOLEAN =
+
+<P><PRE>PROCEDURE <A NAME="GetConfigBool"><procedure>GetConfigBool</procedure></A> (s: State;  symbol: TEXT; default := FALSE): BOOLEAN =
   VAR bind := GetDefn (s, symbol);
   BEGIN
     IF (bind = NIL) THEN RETURN default; END;
@@ -981,21 +1087,21 @@ PROCEDURE <A NAME="CompileC"><procedure>CompileC</procedure></A> (s: State;  u: 
       Utils.NoteNewFile (u.object);
     ELSIF s.bootstrap_mode THEN
       CASE s.m3backend_mode OF
-      | 0, 1 =&gt;
+      | M3BackendMode_t.IntegratedObject, M3BackendMode_t.IntegratedAssembly =&gt;
           Msg.FatalError (NIL, &quot;this compiler cannot compile .ic or .mc files&quot;);
-      | 2, 3 =&gt;
+      | M3BackendMode_t.ExternalObject, M3BackendMode_t.ExternalAssembly =&gt;
           EVAL RunM3Back (s, UnitPath (u), u.object, u.debug, u.optimize);
           Utils.NoteNewFile (u.object);
       END;
     ELSE (* UK.IC or UK.MC *)
       CASE s.m3backend_mode OF
-      | 0, 1 =&gt;
+      | M3BackendMode_t.IntegratedObject, M3BackendMode_t.IntegratedAssembly =&gt;
           Msg.FatalError (NIL, &quot;this compiler cannot compile .ic or .mc files&quot;);
-      | 2 =&gt;
+      | M3BackendMode_t.ExternalObject =&gt;
           EVAL RunM3Back (s, UnitPath (u), u.object, u.debug, u.optimize);
           Utils.NoteNewFile (u.object);
-      | 3 =&gt;
-          tmpS := TempSName (s, u);
+      | M3BackendMode_t.ExternalAssembly =&gt;
+          tmpS := TempSName (u);
           IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpS) END;
           IF  RunM3Back (s, UnitPath (u), tmpS, u.debug, u.optimize)
           AND RunAsm (s, tmpS, u.object) THEN
@@ -1047,7 +1153,7 @@ PROCEDURE <A NAME="PushOneM3"><procedure>PushOneM3</procedure></A> (s: State;  u
   VAR
     tmpC, tmpS: TEXT;
     need_merge := FALSE;
-    plan: [0..7] := s.m3backend_mode;
+    plan: [0..7] := ORD(s.m3backend_mode);
   BEGIN
     u.link_info := NIL;
     ResetExports (s, u);
@@ -1064,7 +1170,7 @@ PROCEDURE <A NAME="PushOneM3"><procedure>PushOneM3</procedure></A> (s: State;  u
         END;
 
     | 1 =&gt;  (* -bootstrap, -m3back, +asm *)
-        tmpS := TempSName (s, u);
+        tmpS := TempSName (u);
         IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpS) END;
         IF RunM3 (s, u, tmpS) THEN
           EVAL RunAsm (s, tmpS, u.object);
@@ -1073,7 +1179,7 @@ PROCEDURE <A NAME="PushOneM3"><procedure>PushOneM3</procedure></A> (s: State;  u
         IF (NOT s.keep_files) THEN Utils.Remove (tmpS) END;
 
     | 2 =&gt;  (* -bootstrap, +m3back, -asm *)
-        tmpC := TempCName (s, u);
+        tmpC := TempCName (u);
         IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpC) END;
         IF RunM3 (s, u, tmpC) THEN
           EVAL RunM3Back (s, tmpC, u.object, u.debug, u.optimize);
@@ -1082,8 +1188,8 @@ PROCEDURE <A NAME="PushOneM3"><procedure>PushOneM3</procedure></A> (s: State;  u
         IF (NOT s.keep_files) THEN Utils.Remove (tmpC) END;
 
     | 3 =&gt;  (* -bootstrap, +m3back, +asm *)
-        tmpC := TempCName (s, u);
-        tmpS := TempSName (s, u);
+        tmpC := TempCName (u);
+        tmpS := TempSName (u);
         IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpC) END;
         IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpS) END;
         IF RunM3 (s, u, tmpC) THEN
@@ -1097,7 +1203,7 @@ PROCEDURE <A NAME="PushOneM3"><procedure>PushOneM3</procedure></A> (s: State;  u
 
     | 6,    (* +bootstrap, +m3back, -asm *)
       7 =&gt;  (* +bootstrap, +m3back, +asm *)
-        tmpC := TempCName (s, u);
+        tmpC := TempCName (u);
         IF (NOT s.keep_files) THEN Utils.NoteTempFile (tmpC) END;
         IF RunM3 (s, u, tmpC) THEN
           EVAL RunM3Back (s, tmpC, u.object, u.debug, u.optimize);
@@ -1285,7 +1391,7 @@ PROCEDURE <A NAME="FindGeneric"><procedure>FindGeneric</procedure></A> (s: State
   BEGIN
     IF (unit = NIL) THEN
       Msg.FatalError (NIL, &quot;cannot find generic source: &quot;,
-                      M3Path.Join (NIL, name, kind, host := TRUE));
+                      M3Path.Join (NIL, name, kind));
       RETURN Utils.NO_TIME;
     ELSE
       RETURN Utils.ModificationTime (UnitPath (unit));
@@ -1392,9 +1498,12 @@ PROCEDURE <A NAME="RunM3"><procedure>RunM3</procedure></A> (s: State;  u: M3Unit
     END;
 
     (* open the input file *)
-    input  := Utils.OpenReader (UnitPath (u), fatal := FALSE);
-    ok := (input # NIL);
     source.name := UnitPath (u);
+    input  := Utils.OpenReader (source.name, fatal := FALSE);
+    ok := (input # NIL);
+    IF NOT ok THEN
+      Msg.Error (NIL, &quot;open failed on: &quot;, source.name);
+    END;
     source.contents := input;
 
     IF (ok) AND ((u.stale_src) OR (u.missing_info)) THEN
@@ -1446,7 +1555,7 @@ PROCEDURE <A NAME="Pass0_InitCodeGenerator"><procedure>Pass0_InitCodeGenerator</
     env.cg     := NIL;
     env.output := Utils.OpenWriter (env.object, fatal := FALSE);
     IF (env.output # NIL) THEN
-      env.cg := M3Backend.Open (env.output, env.object);
+      env.cg := M3Backend.Open (env.output, env.object, env.globals.m3backend_mode);
     END;
     RETURN env.cg;
   END Pass0_InitCodeGenerator;
@@ -1509,7 +1618,7 @@ PROCEDURE <A NAME="Pass0_Open"><procedure>Pass0_Open</procedure></A> (env: Env; 
       file.name := UnitPath (unit);
       file.contents := Utils.OpenReader (file.name, fatal := TRUE);
     ELSE
-      file.name := M3Path.Join (NIL, M3ID.ToText (name), kind, host := TRUE);
+      file.name := M3Path.Join (NIL, M3ID.ToText (name), kind);
       file.contents := NIL;
     END;
     RETURN file;
@@ -1779,6 +1888,7 @@ PROCEDURE <A NAME="Pass0_GetImplementations"><procedure>Pass0_GetImplementations
     PushBool  (s, debug);
     IF CallProc (s, s.c_compiler) THEN
       s.compile_failed := TRUE;
+      Msg.Error (NIL, &quot;C compiler failed compiling: &quot;, source);
       Utils.Remove (object);
     END;
     ETimer.Pop ();
@@ -1797,6 +1907,7 @@ PROCEDURE <A NAME="RunM3Back"><procedure>RunM3Back</procedure></A> (s: State;  s
     failed := CallProc (s, s.m3backend);
     IF failed THEN
       s.compile_failed := TRUE;
+      Msg.Error (NIL, &quot;m3cc (aka cm3cg) failed compiling: &quot;, source);
       Utils.Remove (object);
     END;
     ETimer.Pop ();
@@ -1813,6 +1924,7 @@ PROCEDURE <A NAME="RunAsm"><procedure>RunAsm</procedure></A> (s: State;  source,
     failed := CallProc (s, s.assembler);
     IF failed THEN
       s.compile_failed := TRUE;
+      Msg.Error (NIL, &quot;assembler failed assembling: &quot;, source);
       Utils.Remove (object);
     END;
     ETimer.Pop ();
@@ -1825,7 +1937,7 @@ PROCEDURE <A NAME="RunAsm"><procedure>RunAsm</procedure></A> (s: State;  source,
 
 PROCEDURE <A NAME="GenerateCMain"><procedure>GenerateCMain</procedure></A> (s: State;  Main_O: TEXT) =
   VAR
-    Main_C   := M3Path.Join (NIL, M3Main, UK.C, host := FALSE);
+    Main_C   := M3Path.Join (NIL, M3Main, UK.C);
     Main_XX  := M3Main &amp; &quot;.new&quot;;
     init_code: TEXT := NIL;
     time_O   : INTEGER;
@@ -1848,6 +1960,8 @@ PROCEDURE <A NAME="GenerateCMain"><procedure>GenerateCMain</procedure></A> (s: S
     Msg.Commands (&quot;generate &quot;, init_code);
     wr := Utils.OpenWriter (init_code, fatal := TRUE);
     MxGen.GenerateMain (s.link_base, wr, NIL, Msg.level &gt;= Msg.Level.Debug,
+                        (* Use of target_os needs work:
+                           NT386GNU can generate Windowed apps. *)
                         s.gui AND (s.target_os = M3Path.OSKind.Win32),
                         s.lazy_init);
     Utils.CloseWriter (wr, init_code);
@@ -1873,8 +1987,8 @@ PROCEDURE <A NAME="GenerateCMain"><procedure>GenerateCMain</procedure></A> (s: S
 
 PROCEDURE <A NAME="GenerateCGMain"><procedure>GenerateCGMain</procedure></A> (s: State;  Main_O: TEXT) =
   VAR
-    Main_MC  := M3Path.Join (NIL, M3Main, UK.MC, host := FALSE);
-    Main_MS  := M3Path.Join (NIL, M3Main, UK.MS, host := FALSE);
+    Main_MC  := M3Path.Join (NIL, M3Main, UK.MC);
+    Main_MS  := M3Path.Join (NIL, M3Main, UK.MS);
     Main_XX  := M3Main &amp; &quot;.new&quot;;
     init_code: TEXT := NIL;
     time_O   : INTEGER;
@@ -1882,11 +1996,11 @@ PROCEDURE <A NAME="GenerateCGMain"><procedure>GenerateCGMain</procedure></A> (s:
     plan     : [0..3] := 0;
   BEGIN
     CASE s.m3backend_mode OF
-    | 0 =&gt;  (* -m3back, -asm =&gt; cg produces object code *)
+    | M3BackendMode_t.IntegratedObject =&gt;  (* -m3back, -asm =&gt; cg produces object code *)
         GenCGMain (s, Main_O);
         Utils.NoteNewFile (Main_O);
 
-    | 1 =&gt;  (* -m3back, +asm =&gt; cg produces assembly code *)
+    | M3BackendMode_t.IntegratedAssembly =&gt;  (* -m3back, +asm =&gt; cg produces assembly code *)
         (* don't mess with a file comparison, just build the stupid thing... *)
         GenCGMain (s, Main_MS);
         ETimer.Pop ();
@@ -1896,8 +2010,8 @@ PROCEDURE <A NAME="GenerateCGMain"><procedure>GenerateCGMain</procedure></A> (s:
         IF (NOT s.keep_files) THEN Utils.Remove (Main_MS); END;
         Utils.NoteNewFile (Main_O);
 
-    | 2,    (* +m3back, -asm =&gt; cg produces il, m3back produces object *)
-      3 =&gt;  (* +m3back, +asm =&gt; cg produces il, m3back produces assembly *)
+    | M3BackendMode_t.ExternalObject,    (* +m3back, -asm =&gt; cg produces il, m3back produces object *)
+      M3BackendMode_t.ExternalAssembly =&gt;  (* +m3back, +asm =&gt; cg produces il, m3back produces assembly *)
         (* check for an up-to-date Main_O *)
         time_O  := Utils.LocalModTime (Main_O);
         time_MC := Utils.LocalModTime (Main_MC);
@@ -1944,9 +2058,11 @@ PROCEDURE <A NAME="GenCGMain"><procedure>GenCGMain</procedure></A> (s: State;  o
     ETimer.Push (M3Timers.genMain);
     Msg.Commands (&quot;generate &quot;, object);
     wr := Utils.OpenWriter (object, fatal := TRUE);
-    cg := M3Backend.Open (wr, object);
+    cg := M3Backend.Open (wr, object, s.m3backend_mode);
     IF (cg # NIL) THEN
       MxGen.GenerateMain (s.link_base, NIL, cg, Msg.level &gt;= Msg.Level.Debug,
+                          (* Use of target_os needs work:
+                             NT386GNU can generate Windowed apps. *)
                           s.gui AND (s.target_os = M3Path.OSKind.Win32),
                           s.lazy_init);
       M3Backend.Close(cg);
@@ -1961,8 +2077,8 @@ PROCEDURE <A NAME="GenCGMain"><procedure>GenCGMain</procedure></A> (s: State;  o
 
 <P><PRE>PROCEDURE <A NAME="BuildCProgram"><procedure>BuildCProgram</procedure></A> (s: State;  shared: BOOLEAN) =
   VAR
-    name        := M3Path.Parse (s.result_name, host := FALSE);
-    pgm_file    := M3Path.ProgramName (name.base, host := FALSE);
+    name        := M3Path.Parse (s.result_name);
+    pgm_file    := M3Path.ProgramName (name.base);
     pgmTime     : INTEGER;
     pgmValid    : BOOLEAN;
     pgm_objects : Arg.List;
@@ -1991,13 +2107,10 @@ PROCEDURE <A NAME="GenCGMain"><procedure>GenCGMain</procedure></A> (s: State;  o
       Arg.Append (pgm_objects, s.link_coverage);
     END;
 
-    IF s.split_if_shared AND shared THEN
-      s.keep_resolved := FALSE;
-    END;
     IF s.skip_link
-      THEN import_libs := GetLibraries (s, pgmTime, pgmValid, NIL, NIL, FALSE);
+      THEN import_libs := GetLibraries (s, pgmTime, pgmValid, NIL, NIL, FALSE, shared);
       ELSE import_libs := GetLibraries (s, pgmTime, pgmValid, &quot;linking &quot;, pgm_file,
-                                        NOT shared AND s.broken_linker);
+                                        NOT shared AND s.broken_linker, shared);
     END;
 
     IF pgmValid OR s.skip_link THEN
@@ -2014,6 +2127,7 @@ PROCEDURE <A NAME="GenCGMain"><procedure>GenCGMain</procedure></A> (s: State;  o
       PushBool  (s, shared);
       IF CallProc (s, s.linker) THEN
         s.compile_failed := TRUE;
+        Msg.Error (NIL, &quot;linker failed linking: &quot;, name.base);
       END;
     ETimer.Pop ();
   END BuildCProgram;
@@ -2021,13 +2135,13 @@ PROCEDURE <A NAME="GenCGMain"><procedure>GenCGMain</procedure></A> (s: State;  o
 PROCEDURE <A NAME="BuildProgram"><procedure>BuildProgram</procedure></A> (s: State;  shared: BOOLEAN) =
   CONST Desc_file = &quot;.M3LINK&quot;;
   VAR
-    name        := M3Path.Parse (s.result_name, host := FALSE);
-    pgm_file    := M3Path.ProgramName (name.base, host := FALSE);
+    name        := M3Path.Parse (s.result_name);
+    pgm_file    := M3Path.ProgramName (name.base);
     pgmTime     : INTEGER;
     pgmValid    : BOOLEAN;
     pgm_objects : Arg.List;
     import_libs : Arg.List;
-    Main_O      := M3Path.Join (NIL, M3Main, UK.O, host := FALSE);
+    Main_O      := M3Path.Join (NIL, M3Main, UK.O);
   BEGIN
     &lt;*ASSERT NOT s.bootstrap_mode *&gt;
 
@@ -2054,13 +2168,10 @@ PROCEDURE <A NAME="BuildProgram"><procedure>BuildProgram</procedure></A> (s: Sta
       Arg.Append (pgm_objects, s.link_coverage);
     END;
 
-    IF s.split_if_shared AND shared THEN
-      s.keep_resolved := FALSE;
-    END;
     IF s.skip_link
-      THEN import_libs := GetLibraries (s, pgmTime, pgmValid, NIL, NIL, FALSE);
+      THEN import_libs := GetLibraries (s, pgmTime, pgmValid, NIL, NIL, FALSE, shared);
       ELSE import_libs := GetLibraries (s, pgmTime, pgmValid, &quot;linking &quot;, pgm_file,
-                                        NOT shared AND s.broken_linker);
+                                        NOT shared AND s.broken_linker, shared);
     END;
 
     IF pgmValid THEN
@@ -2097,6 +2208,7 @@ PROCEDURE <A NAME="BuildProgram"><procedure>BuildProgram</procedure></A> (s: Sta
       PushBool  (s, shared);
       IF CallProc (s, s.linker) THEN
         s.compile_failed := TRUE;
+        Msg.Error (NIL, &quot;linker failed linking: &quot;, name.base);
       END;
     ETimer.Pop ();
   END BuildProgram;
@@ -2130,7 +2242,7 @@ PROCEDURE <A NAME="GetObjects"><procedure>GetObjects</procedure></A> (s: State; 
 
 PROCEDURE <A NAME="GetLibraries"><procedure>GetLibraries</procedure></A> (s: State;  result_time: INTEGER;
                          VAR valid: BOOLEAN;  verb, result: TEXT;
-                         use_links: BOOLEAN): Arg.List =
+                         use_links: BOOLEAN; shared: BOOLEAN): Arg.List =
   VAR
     u := s.units.head;
     libs := Arg.NewList ();
@@ -2160,10 +2272,10 @@ PROCEDURE <A NAME="GetLibraries"><procedure>GetLibraries</procedure></A> (s: Sta
           END;
           IF (u.loc.path # NIL) THEN
             lib_link := M3Path.New (link_dir, M3Unit.FileName (u));
-            Utils.LinkFile (lib_file, lib_link);
+            Utils.SymbolicLinkFile (lib_file, lib_link);
           END;
           Arg.Prepend (libs, &quot;-l&quot; &amp; M3ID.ToText (u.name));
-        ELSIF (s.keep_resolved) THEN
+        ELSIF (NOT shared OR s.keep_resolved) THEN
           Arg.Prepend (libs, lib_file);
         ELSE
           Arg.Prepend (libs, &quot;-l&quot; &amp; M3ID.ToText (u.name));
@@ -2189,6 +2301,7 @@ PROCEDURE <A NAME="WriteProgramDesc"><procedure>WriteProgramDesc</procedure></A>
 
   PROCEDURE Emit (wr: Wr.T) RAISES {Wr.Failure, Thread.Alerted} =
     BEGIN
+      (* Use of target_os needs work. *)
       IF (s.target_os = M3Path.OSKind.Win32) THEN
         Wr.PutText (wr, &quot;-out:&quot;);
         Wr.PutText (wr, s.result_name);
@@ -2258,7 +2371,7 @@ PROCEDURE <A NAME="BuildBootProgram"><procedure>BuildBootProgram</procedure></A>
       Wr.PutText (wr, &quot;# objects for program &quot; &amp; s.result_name);
       Wr.PutText (wr, Target.EOL);
       Wr.PutText (wr, Target.EOL);
-      GenObjectList (s, wr, M3Path.Join (NIL, &quot;_m3main&quot;, UK.O, host := FALSE));
+      GenObjectList (s, wr, M3Path.Join (NIL, &quot;_m3main&quot;, UK.O));
       Wr.PutText (wr, Target.EOL);
 
       Wr.PutText (wr, &quot;# libraries for program &quot; &amp; s.result_name);
@@ -2271,6 +2384,8 @@ PROCEDURE <A NAME="BuildBootProgram"><procedure>BuildBootProgram</procedure></A>
   PROCEDURE EmitMain (wr: Wr.T) RAISES {} =
     BEGIN
       MxGen.GenerateMain (s.link_base, wr, NIL, Msg.level &gt;=Msg.Level.Debug,
+                          (* Use of target_os needs work:
+                             NT386GNU can generate Windowed apps. *)
                           s.gui AND (s.target_os = M3Path.OSKind.Win32),
                           s.lazy_init);
     END EmitMain;
@@ -2293,7 +2408,7 @@ PROCEDURE <A NAME="BuildBootProgram"><procedure>BuildBootProgram</procedure></A>
 
     (* produce the module init list *)
     ETimer.Push (M3Timers.genMain);
-    Main_C := M3Path.Join (NIL, &quot;_m3main&quot;, UK.C, host := FALSE);
+    Main_C := M3Path.Join (NIL, &quot;_m3main&quot;, UK.C);
     Msg.Commands (&quot;generate &quot;, Main_C);
     Utils.WriteFile (Main_C, EmitMain, append := FALSE);
     ETimer.Pop ();
@@ -2317,11 +2432,9 @@ PROCEDURE <A NAME="GenLibraryList"><procedure>GenLibraryList</procedure></A> (s:
         IF (u.loc.path = NIL) THEN
           Wr.PutText (wr, &quot;-l&quot; &amp; M3ID.ToText (u.name));
         ELSE
-          Wr.PutText (wr, M3Path.Escape (
-                            M3Path.Convert (
+          Wr.PutText (wr, M3Path.Convert (
                               M3Path.Join (u.loc.path, M3ID.ToText (u.name),
-                                          u.kind, host := FALSE),
-                              host := FALSE)));
+                                           u.kind)));
         END;
         IF (u.next # NIL) OR (s.sys_libs.cnt &gt; 0) THEN
           Wr.PutText (wr, &quot;\134&quot;);
@@ -2349,8 +2462,8 @@ PROCEDURE <A NAME="GenLibraryList"><procedure>GenLibraryList</procedure></A> (s:
 
 PROCEDURE <A NAME="BuildLibrary"><procedure>BuildLibrary</procedure></A> (s: State;  shared: BOOLEAN) =
   VAR
-    name        := M3Path.Parse (s.result_name, host := FALSE);
-    lib_file    := M3Path.LibraryName (name.base, host := FALSE);
+    name        := M3Path.Parse (s.result_name);
+    lib_file    := M3Path.LibraryName (name.base);
     lib_time    : INTEGER;
     libValid    : BOOLEAN;
     lib_objects : Arg.List;
@@ -2372,12 +2485,9 @@ PROCEDURE <A NAME="BuildLibrary"><procedure>BuildLibrary</procedure></A> (s: Sta
       libValid := FALSE;
     END;
 
-    IF s.split_if_shared AND shared THEN
-      s.keep_resolved := FALSE;
-    END;
     lib_objects := GetObjects   (s, lib_time, libValid, &quot;archiving &quot;, lib_file);
     import_libs := GetLibraries (s, lib_time, libValid, &quot;archiving &quot;, lib_file,
-                                 FALSE);
+                                 FALSE, shared);
 
     IF libValid THEN
       DontBuildLibrary (s, name.base, shared);
@@ -2406,6 +2516,7 @@ PROCEDURE <A NAME="BuildLibrary"><procedure>BuildLibrary</procedure></A> (s: Sta
       PushBool  (s, shared);
       IF CallProc (s, s.librarian) THEN
         s.compile_failed := TRUE;
+        Msg.Error (NIL, &quot;librarian failed building: &quot;, name.base);
       END;
     ETimer.Pop ();
   END BuildLibrary;
@@ -2551,7 +2662,7 @@ PROCEDURE <A NAME="GenObjectList"><procedure>GenObjectList</procedure></A> (s: S
     | UK.PGM, UK.PGMX   =&gt;  kind := UK.PGMX;
     ELSE Msg.FatalError (NIL, &quot;Builder.GetUnitLinkInfo:  mysterious unit type&quot;);
     END;
-    info := M3Path.Join (u.loc.path, M3ID.ToText (u.name), kind, host := TRUE);
+    info := M3Path.Join (u.loc.path, M3ID.ToText (u.name), kind);
     RETURN GetLinkUnits (info, UnitPath (u), imported);
   END GetUnitLinkInfo;
 
@@ -2634,8 +2745,7 @@ PROCEDURE <A NAME="MergeUnit"><procedure>MergeUnit</procedure></A> (s: State;  u
       ELSE
         IF (NOT optional) THEN
           Msg.FatalError (NIL, &quot;bad version stamps: &quot;,
-                          M3Path.Join (NIL, M3ID.ToText (x.name),
-                                       kind, host := FALSE));
+                          M3Path.Join (NIL, M3ID.ToText (x.name), kind));
         END;
         ok := FALSE
       END;
@@ -2665,40 +2775,32 @@ PROCEDURE <A NAME="AddMagic"><procedure>AddMagic</procedure></A> (s: State;  u: 
     RETURN path;
   END UnitPath;
 
-PROCEDURE <A NAME="TempCName"><procedure>TempCName</procedure></A> (s: State;  u: M3Unit.T): TEXT =
-  VAR ext := u.kind;  base: TEXT;  shorten := FALSE;
+PROCEDURE <A NAME="TempCName"><procedure>TempCName</procedure></A> (u: M3Unit.T): TEXT =
+  VAR ext := u.kind;
   BEGIN
     CASE ext OF
     | UK.I3, UK.IC =&gt; ext := UK.IC;
-    | UK.IS        =&gt; ext := UK.IS;  shorten := TRUE;
+    | UK.IS        =&gt; ext := UK.IS;
     | UK.M3, UK.MC =&gt; ext := UK.MC;
-    | UK.MS        =&gt; ext := UK.MS;  shorten := TRUE;
+    | UK.MS        =&gt; ext := UK.MS;
     ELSE &lt;* ASSERT FALSE *&gt;
     END;
-    base := M3ID.ToText (u.name);
-    IF (shorten) AND (s.target_os = M3Path.OSKind.Win32) THEN
-      base := ShortenName (M3ID.ToText (u.name));
-    END;
-    RETURN M3Path.Join (NIL, base, ext, host := FALSE);
+    RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext);
   END TempCName;
 
-PROCEDURE <A NAME="TempSName"><procedure>TempSName</procedure></A> (s: State;  u: M3Unit.T): TEXT =
-  VAR ext := u.kind;  base: TEXT;
+PROCEDURE <A NAME="TempSName"><procedure>TempSName</procedure></A> (u: M3Unit.T): TEXT =
+  VAR ext := u.kind;
   BEGIN
     CASE ext OF
     | UK.I3, UK.IC =&gt; ext := UK.IS;
     | UK.M3, UK.MC =&gt; ext := UK.MS;
     ELSE &lt;* ASSERT FALSE *&gt;
     END;
-    base := M3ID.ToText (u.name);
-    IF (s.target_os = M3Path.OSKind.Win32) THEN
-      base := ShortenName (M3ID.ToText (u.name));
-    END;
-    RETURN M3Path.Join (NIL, base, ext, host := TRUE);
+    RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext);
   END TempSName;
 
 PROCEDURE <A NAME="ObjectName"><procedure>ObjectName</procedure></A> (s: State;  u: M3Unit.T): TEXT =
-  VAR ext := u.kind;  base: TEXT;  shorten: BOOLEAN := FALSE;
+  VAR ext := u.kind;
   BEGIN
     IF NOT s.bootstrap_mode THEN
       (* produce object modules *)
@@ -2710,11 +2812,11 @@ PROCEDURE <A NAME="ObjectName"><procedure>ObjectName</procedure></A> (s: State; 
       ELSE RETURN NIL;
       END;
 
-    ELSIF (s.m3backend_mode = 1) OR (s.m3backend_mode = 3) THEN
+    ELSIF BackendAssembly[s.m3backend_mode] THEN
       (* bootstrap with an assembler *)
       CASE ext OF
-      | UK.I3, UK.IC, UK.IS =&gt;  ext :=  UK.IS;  shorten := TRUE;
-      | UK.M3, UK.MC, UK.MS =&gt;  ext :=  UK.MS;  shorten := TRUE;
+      | UK.I3, UK.IC, UK.IS =&gt;  ext :=  UK.IS;
+      | UK.M3, UK.MC, UK.MS =&gt;  ext :=  UK.MS;
       | UK.C, UK.S, UK.H    =&gt;  (* skip *)
       | UK.IO, UK.MO, UK.O  =&gt;  (* skip *)
       ELSE RETURN NIL;
@@ -2732,71 +2834,8 @@ PROCEDURE <A NAME="ObjectName"><procedure>ObjectName</procedure></A> (s: State; 
 
     END;
 
-    base := M3ID.ToText (u.name);
-    IF (s.target_os = M3Path.OSKind.Win32) AND (shorten) THEN
-      base := ShortenName (M3ID.ToText (u.name));
-    END;
-    RETURN M3Path.Join (NIL, base, ext, host := FALSE);
+    RETURN M3Path.Join (NIL, M3ID.ToText (u.name), ext);
   END ObjectName;
-</PRE>---------------------------------------------------------------------------
- HACK: Masm 5.1 on NT doesn't generate case sensitive labels
-         if the file name is longer than 13+3 !! 
-<PRE>TYPE
-  TruncatedName = REF RECORD
-    full, short : TEXT;
-    next : TruncatedName;
-  END;
-
-VAR long_names: IntRefTbl.T := NIL;
-PROCEDURE <A NAME="ShortenName"><procedure>ShortenName</procedure></A> (n: TEXT): TEXT =
-  CONST MaxName = 8;
-  VAR
-    buf: ARRAY [0..MaxName-1] OF CHAR;
-    short_id: M3ID.T;
-    ref: REFANY;
-    cnt: INTEGER;
-    name_list, t: TruncatedName;
-  BEGIN
-    IF Text.Length (n) &lt; MaxName THEN RETURN n; END;
-
-    IF (long_names = NIL) THEN
-      long_names := NEW (IntRefTbl.Default).init ();
-    END;
-
-    (* fetch the list of truncations *)
-    Text.SetChars (buf, n);
-    short_id := M3ID.FromStr (buf);
-    IF long_names.get (short_id, ref)
-      THEN name_list := ref;
-      ELSE name_list := NIL;
-    END;
-
-    (* search for a match *)
-    t := name_list;  cnt := 0;
-    WHILE (t # NIL) DO
-      IF Text.Equal (n, t.full) THEN RETURN t.short END;
-      t := t.next;  INC (cnt);
-    END;
-
-    (* need to create a new name *)
-    IF (cnt &gt; 0) THEN
-      VAR
-        new := Fmt.Int (cnt);
-        len := Text.Length (new);
-        num : ARRAY [0..LAST(buf)] OF CHAR;
-      BEGIN
-        Text.SetChars (num, new);
-        FOR i := 0 TO len - 1 DO
-          buf[NUMBER(buf) - len + i] := num[i];
-        END;
-      END;
-    END;
-    t := NEW (TruncatedName, full := n, short := Text.FromChars (buf),
-                next := name_list);
-    EVAL long_names.put (short_id, t);
-    Msg.Verbose (&quot;long name: &quot;, n, &quot; -&gt; &quot;, t.short);
-    RETURN t.short;
-  END ShortenName;
 </PRE>------------------------------------------------------------------ misc ---
 
 <P><PRE>PROCEDURE <A NAME="PullForBootstrap"><procedure>PullForBootstrap</procedure></A> (u: M3Unit.T;  text_file: BOOLEAN) =
@@ -2837,15 +2876,20 @@ PROCEDURE <A NAME="CallProc"><procedure>CallProc</procedure></A> (s: State;  REA
       s.machine.pop (v);
       EVAL s.machine.exec_echo (sav);
       exit_code := QVal.ToInt (s.machine, v);
+      IF exit_code # 0 THEN
+        Msg.Error (NIL, &quot;  &quot;, p.name, &quot; =&gt; &quot;, Fmt.Int (exit_code));
+      END;
     EXCEPT
     | Quake.Error (msg) =&gt;
         Msg.Out (msg, Wr.EOL);
         Msg.FatalError (NIL, &quot;procedure \&quot;&quot;, p.name,
                         &quot;\&quot; defined in \&quot;&quot; &amp; s.config_file,
                         &quot;\&quot; failed.&quot;);
+        exit_code := LAST(INTEGER);
     | Thread.Alerted =&gt;
         Msg.FatalError (NIL, &quot;interrupted while calling \&quot;&quot;, p.name,
                         &quot;\&quot; defined in \&quot;&quot; &amp; s.config_file, &quot;\&quot;&quot;);
+        exit_code := LAST(INTEGER)-1;
     END;
     Msg.Verbose (&quot;  &quot;, p.name, &quot; =&gt; &quot;, Fmt.Int (exit_code));
     RETURN (exit_code # 0);
@@ -2911,10 +2955,10 @@ PROCEDURE <A NAME="FName"><procedure>FName</procedure></A> (u: M3Unit.T): TEXT =
     ELSIF (M3Unit.FileName (u) # NIL) THEN
       RETURN M3Unit.FileName (u);
     ELSIF (u.library # NIL) THEN
-      RETURN M3Path.Join (u.loc.path, M3ID.ToText (u.name), u.kind, host := TRUE)
+      RETURN M3Path.Join (u.loc.path, M3ID.ToText (u.name), u.kind)
              &amp; &quot; in library &quot; &amp; M3Unit.FullPath (u.library);
     ELSIF (M3ID.ToText (u.name) # NIL) THEN
-      RETURN M3Path.Join (u.loc.path, M3ID.ToText (u.name), u.kind, host := TRUE)
+      RETURN M3Path.Join (u.loc.path, M3ID.ToText (u.name), u.kind)
     ELSE
       RETURN &quot;???&quot;;
     END;
@@ -2928,6 +2972,7 @@ END Builder.
 <A NAME="x1">interface Builder is in:
 </A><UL>
 <LI><A HREF="Builder.i3.html#0TOP0">cm3/src/Builder.i3</A>
+<LI><A HREF="../../cm3ide/src/misc/Builder.i3.html#0TOP0">cm3ide/src/misc/Builder.i3</A>
 <LI><A HREF="../../metasyn/src/Builder.i3.html#0TOP0">metasyn/src/Builder.i3</A>
 </UL>
 <P>
@@ -2942,6 +2987,7 @@ END Builder.
 <A NAME="x3">interface Msg is in:
 </A><UL>
 <LI><A HREF="Msg.i3.html#0TOP0">cm3/src/Msg.i3</A>
+<LI><A HREF="../../cminstall/src/Msg.i3.html#0TOP0">cminstall/src/Msg.i3</A>
 <LI><A HREF="../../m3tohtml/src/Msg.i3.html#0TOP0">m3tohtml/src/Msg.i3</A>
 </UL>
 <P>

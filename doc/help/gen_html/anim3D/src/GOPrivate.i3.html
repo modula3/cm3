@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/GOPrivate.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/GOPrivate.i3</H2></A><HR>
 <inInterface>
@@ -44,13 +44,13 @@ TYPE
 
     undamage();
   END;
-</PRE> <CODE>go.damageIfDependent(pn)</CODE> leaves a damage trail from <CODE>go</CODE> to all 
-   descendants of <CODE>go</CODE> (including <CODE>go</CODE>) that depend on <CODE>pn</CODE>. 
+</PRE> <CODE>go.damageIfDependent(pn)</CODE> leaves a damage trail from <CODE>go</CODE> to all
+   descendants of <CODE>go</CODE> (including <CODE>go</CODE>) that depend on <CODE>pn</CODE>.
 <P>
    <CODE>go.adjust(time)</CODE> reevaluates all property values attached to <CODE>go</CODE> and
-   its descendants, based on the given time. It also might add damages to 
+   its descendants, based on the given time. It also might add damages to
    the scene, either to <CODE>go</CODE> or to some of its children. Damaging a node
-   causes damage to all its ancestors as well. 
+   causes damage to all its ancestors as well.
 <P>
    <CODE>go.undamage</CODE> erases the damage-flags of <CODE>go</CODE> and its descendents. 
 

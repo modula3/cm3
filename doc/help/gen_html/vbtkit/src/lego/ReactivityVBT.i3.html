@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/ReactivityVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/ReactivityVBT.i3</H2></A><HR>
 <inInterface>
@@ -19,7 +19,7 @@
    passive, dormant, and invisible.  The {\em active\/} state does
    nothing; mouse and keyboard events are relayed to child. The {\em
    passive\/} state doesn't allow mouse or keyboard events to go to
-   the child. 
+   the child.
    The {\em dormant\/} state doesn't send mouse or keyboard events to
    the child; it also grays out the child.  The {\em vanish\/} state
    also doesn't send mouse or keyboard events to go to the child; in
@@ -27,7 +27,7 @@
    making it invisible.
 <P>
    When the state of a <CODE>ReactivityVBT</CODE> is set, the caller also
-   specifies a cursor to be used. 
+   specifies a cursor to be used.
 <P>
    If a VBT-descendant of a <CODE>ReactivityVBT</CODE> is painted, it will appear
    correctly.  For example, if the <CODE>ReactivityVBT</CODE> is in the vanished
@@ -57,7 +57,7 @@ TYPE
 </PRE> The call <CODE>v.init(..)</CODE> initializes <CODE>v</CODE> as a <CODE>ReactivityVBT</CODE>
    with child <CODE>ch</CODE> and with an initial state of <CODE>Active</CODE>.  If
    <CODE>colors</CODE> is <CODE>NIL</CODE>, then <CODE>PaintOp.bgFg</CODE> is used instead.  The
-   <CODE>colors</CODE> are used to draw the vanished and dormant states. 
+   <CODE>colors</CODE> are used to draw the vanished and dormant states.
 <P>
    The implementation calls <CODE>v.paintDormant(r, colors)</CODE> to paint
    the part of <CODE>ch</CODE> bounded by rectangle <CODE>r</CODE> when <CODE>v</CODE>'s state

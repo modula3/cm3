@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3quake/src/QValue.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3quake/src/QValue.i3</H2></A><HR>
 <inInterface>
@@ -31,7 +31,8 @@ TYPE
   Kind = {    (*    int         ref     *)
     Var,      (*    Quake.ID    Binding *)
     Integer,  (*    value       ----    *)
-    String,   (*    Quake.ID    ----    *)
+    String,   (*    Quake.ID    ----    length &lt;= 1024 *)
+              (*    NoID        TEXT    length &gt;  1024 *)
     Table,    (*    ------      QVTbl.T *)
     Array,    (*    ------      QVSeq.T *)
     Proc      (*    ------      Proc    *)

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/BorderedVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/BorderedVBT.i3</H2></A><HR>
 <inInterface>
@@ -16,7 +16,7 @@
       modified on Wed Sep 11 15:02:21 PDT 1991 by msm 
 <PRE>&lt;*PRAGMA LL*&gt;
 </PRE> A <CODE>BorderedVBT.T</CODE> is a filter whose parent's screen consists of the
-   child's screen surrounded by a border.  The parent's shape is determined 
+   child's screen surrounded by a border.  The parent's shape is determined
    from the child's shape by adding the border size.  
 
 <P><PRE>INTERFACE <interface><A HREF="BorderedVBT.m3.html">BorderedVBT</A></interface>;
@@ -32,12 +32,12 @@ TYPE
       op: PaintOp.T := PaintOp.BgFg;
       txt: Pixmap.T := Pixmap.Solid): T
   END;
-</PRE> The call <CODE>v.init(...)</CODE> initializes  <CODE>v</CODE> as a <CODE>BorderedVBT</CODE> with 
-   child <CODE>ch</CODE> and marks <CODE>v</CODE> for redisplay. 
+</PRE> The call <CODE>v.init(...)</CODE> initializes  <CODE>v</CODE> as a <CODE>BorderedVBT</CODE> with
+   child <CODE>ch</CODE> and marks <CODE>v</CODE> for redisplay.
 <P>
    The border size is given in millimeters.  The border will be painted
    in the untranslated texture <CODE>txt</CODE> using the paint op <CODE>op</CODE>.  
-   
+
 <P><PRE>CONST Default = 0.5;
 
 PROCEDURE <A HREF="BorderedVBT.m3.html#New">New</A>(

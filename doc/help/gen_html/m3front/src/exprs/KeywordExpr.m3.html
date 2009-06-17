@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/KeywordExpr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/KeywordExpr.m3</H2></A><HR>
 <inModule>
@@ -21,7 +21,7 @@ IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="#x1">M3ID</A>, <A HREF="Exp
 TYPE
   P = Expr.T OBJECT
         expr : Expr.T;
-	key  : M3ID.T;
+        key  : M3ID.T;
       OVERRIDES
         typeOf       := TypeOf;
         check        := Check;
@@ -37,10 +37,10 @@ TYPE
         getBounds    := Bounder;
         isWritable   := IsWritable;
         isDesignator := IsDesignator;
-	isZeroes     := IsZeroes;
-	genFPLiteral := ExprRep.NoFPLiteral;
-	prepLiteral  := PrepLiteral;
-	genLiteral   := GenLiteral;
+        isZeroes     := IsZeroes;
+        genFPLiteral := ExprRep.NoFPLiteral;
+        prepLiteral  := PrepLiteral;
+        genLiteral   := GenLiteral;
         note_write   := NoteWrites;
       END;
 
@@ -107,14 +107,14 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
     Expr.Compile (p.expr);
   END Compile;
 
-PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P) =
+PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN) =
   BEGIN
-    Expr.PrepLValue (p.expr);
+    Expr.PrepLValue (p.expr, lhs);
   END PrepLV;
 
-PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P) =
+PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P;  lhs: BOOLEAN) =
   BEGIN
-    Expr.CompileLValue (p.expr);
+    Expr.CompileLValue (p.expr, lhs);
   END CompileLV;
 
 PROCEDURE <A NAME="Bounder"><procedure>Bounder</procedure></A> (p: P;  VAR min, max: Target.Int) =
@@ -122,14 +122,14 @@ PROCEDURE <A NAME="Bounder"><procedure>Bounder</procedure></A> (p: P;  VAR min, 
     Expr.GetBounds (p.expr, min, max);
   END Bounder;
 
-PROCEDURE <A NAME="IsDesignator"><procedure>IsDesignator</procedure></A> (p: P): BOOLEAN =
+PROCEDURE <A NAME="IsDesignator"><procedure>IsDesignator</procedure></A> (p: P;  &lt;*UNUSED*&gt; lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsDesignator (p.expr);
   END IsDesignator;
 
-PROCEDURE <A NAME="IsWritable"><procedure>IsWritable</procedure></A> (p: P): BOOLEAN =
+PROCEDURE <A NAME="IsWritable"><procedure>IsWritable</procedure></A> (p: P;  lhs: BOOLEAN): BOOLEAN =
   BEGIN
-    RETURN Expr.IsWritable (p.expr);
+    RETURN Expr.IsWritable (p.expr, lhs);
   END IsWritable;
 
 PROCEDURE <A NAME="Fold"><procedure>Fold</procedure></A> (p: P): Expr.T =
@@ -144,7 +144,7 @@ PROCEDURE <A NAME="Fold"><procedure>Fold</procedure></A> (p: P): Expr.T =
     END;
   END Fold;
 
-PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (p: P): BOOLEAN =
+PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (p: P;  &lt;*UNUSED*&gt; lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsZeroes (p.expr);
   END IsZeroes;
@@ -178,6 +178,7 @@ END KeywordExpr.
 <HR>
 <A NAME="x2">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

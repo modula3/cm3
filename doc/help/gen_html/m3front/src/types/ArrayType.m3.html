@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/types/ArrayType.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/types/ArrayType.m3</H2></A><HR>
 <inModule>
@@ -58,7 +58,7 @@ PROCEDURE <A NAME="Parse"><procedure>Parse</procedure></A> (): Type.T =
         p.index := Type.Parse ();
         IF (cur.token # TK.tCOMMA) THEN EXIT END;
         GetToken (); (* , *)
-	p.element := New (NIL, NIL);
+        p.element := New (NIL, NIL);
         p := p.element;
       END;
       Match (TK.tOF);
@@ -317,7 +317,9 @@ PROCEDURE <A NAME="InitCoster"><procedure>InitCoster</procedure></A> (p: P; zero
   VAR n, m, res: Target.Int;  x: INTEGER;
   BEGIN
     x := Type.InitCost (p.element, zeroed);
-    IF NOT TInt.FromInt (x, m) THEN RETURN LAST (INTEGER) END;
+    IF NOT TInt.FromInt (x, Target.Integer.bytes, m) THEN
+      RETURN LAST (INTEGER);
+    END;
     n := Type.Number (p.index);
     IF TInt.LT (n, TInt.Zero) THEN (*open array?*) RETURN 20 * x END;
     IF NOT TInt.Multiply (m, n, res) THEN RETURN LAST (INTEGER) END;
@@ -332,7 +334,7 @@ PROCEDURE <A NAME="GenInit"><procedure>GenInit</procedure></A> (p: P;  zeroed: B
     array := CG.Pop ();  (* capture the array's l-value *)
   BEGIN
     (* put down a loop to initialize the additional elements *)
-    CG.Load_integer (TInt.Zero);
+    CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
     cnt := CG.Pop_temp ();
     top := CG.Next_label ();
     CG.Set_label (top);
@@ -345,7 +347,7 @@ PROCEDURE <A NAME="GenInit"><procedure>GenInit</procedure></A> (p: P;  zeroed: B
 
     (* cnt := cnt + 1 *)
     CG.Push (cnt);
-    CG.Load_integer (TInt.One);
+    CG.Load_integer (Target.Integer.cg_type, TInt.One);
     CG.Add (Target.Integer.cg_type);
     CG.Store_temp (cnt);
 
@@ -392,6 +394,7 @@ END ArrayType.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

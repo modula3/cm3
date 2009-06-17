@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: mg/src/MG.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>mg/src/MG.m3</H2></A><HR>
 <inModule>
@@ -1599,7 +1599,7 @@ PROCEDURE <A NAME="Rotate"><procedure>Rotate</procedure></A>(t: T; v: V; angle: 
   END Rotate;
 
 CONST
-  DToR = Math.Pi / 180.0;
+  DToR = FLOAT(Math.Degree, REAL);
 
 PROCEDURE <A NAME="RotateLocked"><procedure>RotateLocked</procedure></A> (         t     : T;
                                  v     : V;

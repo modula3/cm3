@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tools/src/M3AST.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tools/src/M3AST.i3</H2></A><HR>
 <inInterface>
@@ -106,17 +106,19 @@ CONST
   OP_RangeExpr     = 102;   OP_NameBind      = 103;   OP_Qualify       = 104;
 
   (* literals *)
-  OP_Id            = 105;   OP_Int           = 106;   OP_BigInt        = 107;
-  OP_Real          = 108;   OP_LReal         = 109;   OP_EReal         = 110;
-  OP_Char          = 111;   OP_Text          = 112;
+  OP_Id            = 105;
+  OP_Int           = 106;   OP_LInt          = 107;
+  OP_BigInt        = 108;   OP_BigLInt       = 109;
+  OP_Real          = 110;   OP_LReal         = 111;   OP_EReal         = 112;
+  OP_Char          = 113;   OP_Text          = 114;
 
   (* pragmas *)
-  OP_Attributes    = 113;   OP_Inline        = 114;   OP_Unused        = 115;
-  OP_Obsolete      = 116;   OP_External      = 117;   OP_Alias         = 118;
-  OP_CallConv      = 119;   OP_Fatal         = 120;   OP_FatalAny      = 121;
+  OP_Attributes    = 115;   OP_Inline        = 116;   OP_Unused        = 117;
+  OP_Obsolete      = 118;   OP_External      = 119;   OP_Alias         = 120;
+  OP_CallConv      = 121;   OP_Fatal         = 122;   OP_FatalAny      = 123;
 
 TYPE
-  OP = [0..121];
+  OP = [0..123];
 
 TYPE
   XX = RECORD
@@ -271,7 +273,9 @@ CONST
   (* literals *)
   XX{OP_Id,            5, 1, 0, 0   }, (*                                      *)
   XX{OP_Int,           5, 3, 0, 0   }, (*                                      *)
+  XX{OP_LInt,          5, 3, 0, 0   }, (*                                      *)
   XX{OP_BigInt,        5, 4, 0, 0   }, (*                                      *)
+  XX{OP_BigLInt,       5, 4, 0, 0   }, (*                                      *)
   XX{OP_Real,          5, 5, 0, 0   }, (*                                      *)
   XX{OP_LReal,         5, 5, 0, 0   }, (*                                      *)
   XX{OP_EReal,         5, 5, 0, 0   }, (*                                      *)

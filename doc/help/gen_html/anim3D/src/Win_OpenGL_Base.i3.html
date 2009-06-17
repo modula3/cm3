@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/Win_OpenGL_Base.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/Win_OpenGL_Base.i3</H2></A><HR>
 <inInterface>
@@ -13,8 +13,8 @@
  Last modified on Tue Oct  3 16:31:28 PDT 1995 by najork                   
        Created on Wed Feb 16 17:12:53 PST 1994 by najork                   
 
-<P> <CODE>Win_OpenGL_Base.T</CODE> is a subtype of \type{GraphicsBase}{T}. 
-   An object of this type provides an abstract interface to 
+<P> <CODE>Win_OpenGL_Base.T</CODE> is a subtype of \type{GraphicsBase}{T}.
+   An object of this type provides an abstract interface to
    Microsoft Windows NT and OpenGL. 
 
 <P><PRE>INTERFACE <interface><A HREF="no-win-opengl/Win_OpenGL_Base.m3.html">Win_OpenGL_Base</A></interface>;
@@ -33,13 +33,13 @@ TYPE
   END;
 </PRE> <CODE>gb.init</CODE> initializes a new graphics base and returns it. As a side
    effect, it creates a window <CODE>win_w</CODE> by <CODE>win_h</CODE> pixels in size, and
-   <CODE>win_x</CODE>,<CODE>win_y</CODE> pixels offset from the upper left corner of the screen. 
+   <CODE>win_x</CODE>,<CODE>win_y</CODE> pixels offset from the upper left corner of the screen.
 <P>
    <CODE>gb.changeTitle(title)</CODE> changes the title of the window associated
-   with <CODE>gb</CODE> to <CODE>title</CODE>. 
+   with <CODE>gb</CODE> to <CODE>title</CODE>.
 <P>
    Calling <CODE>gb.awaitDelete ()</CODE> suspends the calling thread until the window
-   associated with <CODE>gb</CODE> gets destroyed. 
+   associated with <CODE>gb</CODE> gets destroyed.
 <P>
    Calling <CODE>gb.destroy()</CODE> destroys the window. 
 

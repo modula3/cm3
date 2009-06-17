@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/builtinOps/Number.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/builtinOps/Number.m3</H2></A><HR>
 <inModule>
@@ -16,7 +16,7 @@
 
 <P><PRE>MODULE <module><implements><A HREF="Number.i3.html">Number</A></implements></module>;
 
-IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../exprs/ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="../builtinTypes/Card.i3.html">Card</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../exprs/ArrayExpr.i3.html">ArrayExpr</A>;
+IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../exprs/ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="#x2">Card</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../exprs/ArrayExpr.i3.html">ArrayExpr</A>;
 IMPORT <A HREF="../types/ArrayType.i3.html">ArrayType</A>, <A HREF="../exprs/TypeExpr.i3.html">TypeExpr</A>, <A HREF="../exprs/IntegerExpr.i3.html">IntegerExpr</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../types/EnumType.i3.html">EnumType</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>;
 
 VAR Z: CallExpr.MethodList;
@@ -72,6 +72,7 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (ce: CallExpr.T) 
     e := ce.args[0];
     t, index, element: Type.T;
     min, max, tmp, num: Target.Int;
+    One := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
   BEGIN
     IF NOT TypeExpr.Split (e, t) THEN t := Expr.TypeOf (e) END;
     IF ArrayType.Split (t, index, element) THEN t := index END;
@@ -82,20 +83,22 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (ce: CallExpr.T) 
     ELSE
       EVAL Type.GetBounds (t, min, max);
       IF TInt.LT (max, min) THEN
-        CG.Load_integer (TInt.Zero);
+        CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
       ELSIF TInt.Subtract (max, min, tmp)
-        AND TInt.Add (tmp, TInt.One, num) THEN
-        CG.Load_integer (num);
+        AND TInt.Add (tmp, One, num) THEN
+        CG.Load_integer (Target.Integer.cg_type, num);
       ELSE
         Error.Warn (2, &quot;result of NUMBER too large&quot;);
-        CG.Load_integer (Target.Integer.max);
-        CG.Check_hi (TInt.Zero, CG.RuntimeError.ValueOutOfRange);
+        CG.Load_integer (Target.Integer.cg_type, Target.Integer.max);
+        CG.Check_hi (Target.Integer.cg_type, TInt.Zero,
+                     CG.RuntimeError.ValueOutOfRange);
       END;
     END;
   END Compile;
 
 PROCEDURE <A NAME="Fold"><procedure>Fold</procedure></A> (ce: CallExpr.T): Expr.T =
   VAR min, max, tmp, num: Target.Int;  t, index, elem: Type.T;  e: Expr.T;
+      One := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
   BEGIN
     e := ce.args[0];
     IF NOT TypeExpr.Split (e, t) THEN
@@ -107,8 +110,8 @@ PROCEDURE <A NAME="Fold"><procedure>Fold</procedure></A> (ce: CallExpr.T): Expr.
         IF (e = NIL) THEN RETURN NIL END;
         IF ArrayExpr.GetBounds (e, min, max)
           AND TInt.Subtract (max, min, tmp)
-          AND TInt.Add (tmp, TInt.One, num)
-          THEN RETURN IntegerExpr.New (num);
+          AND TInt.Add (tmp, One, num)
+          THEN RETURN IntegerExpr.New (Int.T, num);
           ELSE RETURN NIL;
         END;
       END;
@@ -117,10 +120,10 @@ PROCEDURE <A NAME="Fold"><procedure>Fold</procedure></A> (ce: CallExpr.T): Expr.
     IF NOT Type.GetBounds (t, min, max) THEN RETURN NIL; END;
 
     IF TInt.LT (max, min) THEN
-      RETURN IntegerExpr.New (TInt.Zero);
+      RETURN IntegerExpr.New (Int.T, TInt.Zero);
     ELSIF TInt.Subtract (max, min, tmp)
-      AND TInt.Add (tmp, TInt.One, num) THEN
-      RETURN IntegerExpr.New (num);
+      AND TInt.Add (tmp, One, num) THEN
+      RETURN IntegerExpr.New (Int.T, num);
     ELSE
       RETURN NIL;
     END;
@@ -153,10 +156,18 @@ END Number.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
 <LI><A HREF="../../../stubgen/src/Type.i3.html#0TOP0">stubgen/src/Type.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Card is in:
+</A><UL>
+<LI><A HREF="../../../bicycle/src/Card.i3.html#0TOP0">bicycle/src/Card.i3</A>
+<LI><A HREF="../builtinTypes/Card.i3.html#0TOP0">m3front/src/builtinTypes/Card.i3</A>
 </UL>
 <P>
 <PRE>

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: X11R4/src/Common/Xt.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>X11R4/src/Common/Xt.i3</H2></A><HR>
 <inInterface>
@@ -45,7 +45,7 @@ FROM <A HREF="X.i3.html">X</A>       IMPORT	Atom, AtomStar, Cursor, DisplayStar,
 IMPORT <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="Xrm.i3.html">Xrm</A>, <A HREF="../Vanilla/XMachine.i3.html">XMachine</A>;
 
 TYPE Int = int; Short = short; Char = char;
-</PRE> <P>
+</PRE><P>
     Size of a <CODE>regular</CODE> List of objects
 
 
@@ -57,13 +57,13 @@ and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
 <P>
 			All Rights Reserved
 <P>
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the names of Digital or MIT not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 <P>
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -420,9 +420,9 @@ TYPE
     FallbackResList	=  UNTRACED REF ARRAY [0..MaxSizeList] OF FallbackRes;
 </PRE><P>
  * Routine to get the value of a selection as a given type.  Returns
- * TRUE if it successfully got the value as requested, FALSE otherwise.  
- * selection is the atom describing the type of selection (e.g. 
- * primary or secondary). value is set to the pointer of the converted 
+ * TRUE if it successfully got the value as requested, FALSE otherwise.
+ * selection is the atom describing the type of selection (e.g.
+ * primary or secondary). value is set to the pointer of the converted
  * value, with length elements of data, each of size indicated by format.
  * (This pointer will be freed using XtFree when the selection has
  *  been delivered to the requestor.)  target is
@@ -519,7 +519,7 @@ TYPE
      from_type:              ConstString;
      from:                   Xrm.ValueStar;
      to_type:                ConstString;
-     to_in_out:              Xrm.ValueStar		
+     to_in_out:              Xrm.ValueStar
 ): Boolean;
 
 &lt;* EXTERNAL XtCallConverter *&gt;
@@ -530,46 +530,46 @@ TYPE
      num_args:               Cardinal;
      from:                   Xrm.ValuePtr;
      to_return:              Xrm.ValueStar;
-     cache_ref_return:       CacheRefStar		
+     cache_ref_return:       CacheRefStar
 ): Boolean;
 
 &lt;* EXTERNAL XtDispatchEvent *&gt;
    PROCEDURE DispatchEvent (
-     event:                  XEventStar 		
+     event:                  XEventStar
 ): Boolean;
 
 &lt;* EXTERNAL XtCallAcceptFocus *&gt;
    PROCEDURE CallAcceptFocus (
      widget:                 Widget;
-     t:                      TimeStar		
+     t:                      TimeStar
 ): Boolean;
 
 &lt;* EXTERNAL XtPeekEvent *&gt;
    PROCEDURE PeekEvent (
-     event:                  XEventStar		
+     event:                  XEventStar
 ): Boolean;
 
 &lt;* EXTERNAL XtAppPeekEvent *&gt;
    PROCEDURE AppPeekEvent (
      appContext:             AppContext;
-     event:                  XEventStar		
+     event:                  XEventStar
 ): Boolean;
 
 &lt;* EXTERNAL XtIsSubclass *&gt;
    PROCEDURE IsSubclass (
      widget:                 Widget;
-     widgetClass:            WidgetClass 	
+     widgetClass:            WidgetClass
 ): Boolean;
 
 &lt;* EXTERNAL XtIsObject *&gt;
    PROCEDURE IsObject (
-     object:                 Widget 		
+     object:                 Widget
 ): Boolean;
 
 &lt;* EXTERNAL &quot;_XtCheckSubclassFlag&quot; *&gt;
    PROCEDURE CheckSubclassFlag ( (* implementation-private *)
      object:                 Widget;
-     type_flag:              Enum		
+     type_flag:              Enum
 ): Boolean;
 
 &lt;* EXTERNAL &quot;_XtIsSubclassOf&quot; *&gt;
@@ -577,22 +577,22 @@ TYPE
      object:                 Widget;
      widget_class:           WidgetClass;
      flag_class:             WidgetClass;
-     type_flag:              Enum		
+     type_flag:              Enum
 ): Boolean;
 
 &lt;* EXTERNAL XtIsManaged *&gt;
    PROCEDURE IsManaged (
-     rectobj:                Widget 		
+     rectobj:                Widget
 ): Boolean;
 
 &lt;* EXTERNAL XtIsRealized *&gt;
    PROCEDURE IsRealized (
-     widget:                 Widget 		
+     widget:                 Widget
 ): Boolean;
 
 &lt;* EXTERNAL XtIsSensitive *&gt;
    PROCEDURE IsSensitive (
-     widget:                 Widget 		
+     widget:                 Widget
 ): Boolean;
 </PRE><P>
  * Set the given widget to own the selection.  The convertProc should
@@ -625,7 +625,7 @@ TYPE
      lose_callback:          LoseSelectionIncrProc;
      done_callback:          SelectionDoneIncrProc;
      cancel_callback:        CancelConvertSelectionProc;
-     client_data:            Pointer 		
+     client_data:            Pointer
 ): Boolean;
 
 &lt;* EXTERNAL XtMakeResizeRequest *&gt;
@@ -634,7 +634,7 @@ TYPE
      width:                  Dimension;
      height:                 Dimension;
      replyWidth:             DimensionStar;
-     replyHeight:            DimensionStar		
+     replyHeight:            DimensionStar
 ): GeometryResult;
 
 &lt;* EXTERNAL XtTransformCoords *&gt;
@@ -643,7 +643,7 @@ TYPE
      x:                      Position;
      y:                      Position;
      rootx:                  PositionStar;
-     rooty:                  PositionStar		
+     rooty:                  PositionStar
 );
 </PRE> %%% Caution: don't declare any functions past this point that
  * return one of the following types or take a pointer to one of
@@ -675,7 +675,7 @@ externalref XtConvertArgRec screenConvertArg[];
      to_type:                ConstString;
      converter:              Converter;
      convert_args:           ConvertArgList;
-     num_args:               Cardinal 		
+     num_args:               Cardinal
 );
 
 &lt;* EXTERNAL XtAddConverter *&gt;
@@ -684,7 +684,7 @@ externalref XtConvertArgRec screenConvertArg[];
      to_type:                ConstString;
      converter:              Converter;
      convert_args:           ConvertArgList;
-     num_args:               Cardinal 		
+     num_args:               Cardinal
 );
 
 &lt;* EXTERNAL XtSetTypeConverter *&gt;
@@ -695,7 +695,7 @@ externalref XtConvertArgRec screenConvertArg[];
      convert_args:           ConvertArgList;
      num_args:               Cardinal;
      cache_type:             CacheType;
-     destructor:             Destructor 	
+     destructor:             Destructor
 );
 
 &lt;* EXTERNAL XtAppSetTypeConverter *&gt;
@@ -707,7 +707,7 @@ externalref XtConvertArgRec screenConvertArg[];
      convert_args:           ConvertArgList;
      num_args:               Cardinal;
      cache_type:             CacheType;
-     destructor:             Destructor 	
+     destructor:             Destructor
 );
 
 &lt;* EXTERNAL XtConvert *&gt;
@@ -716,7 +716,7 @@ externalref XtConvertArgRec screenConvertArg[];
      from_type:              ConstString;
      from:                   Xrm.ValueStar;
      to_type:                ConstString;
-     to_return:              Xrm.ValueStar		
+     to_return:              Xrm.ValueStar
 );
 
 &lt;* EXTERNAL XtDirectConvert *&gt;
@@ -725,7 +725,7 @@ externalref XtConvertArgRec screenConvertArg[];
      args:                   Xrm.ValuePtr;
      num_args:               Cardinal;
      from:                   Xrm.ValuePtr;
-     to_return:              Xrm.ValueStar		
+     to_return:              Xrm.ValueStar
 );
 </PRE>***************************************************************
  *
@@ -735,41 +735,41 @@ externalref XtConvertArgRec screenConvertArg[];
 
 <P><PRE>&lt;* EXTERNAL XtParseTranslationTable *&gt;
    PROCEDURE ParseTranslationTable (
-     source:                 ConstString	
+     source:                 ConstString
 ): Translations;
 
 &lt;* EXTERNAL XtParseAcceleratorTable *&gt;
    PROCEDURE ParseAcceleratorTable (
-     source:                 ConstString	
+     source:                 ConstString
 ): Accelerators;
 
 &lt;* EXTERNAL XtOverrideTranslations *&gt;
    PROCEDURE OverrideTranslations (
      widget:                 Widget;
-     new:                    Translations 	
+     new:                    Translations
 );
 
 &lt;* EXTERNAL XtAugmentTranslations *&gt;
    PROCEDURE AugmentTranslations (
      widget:                 Widget;
-     new:                    Translations 	
+     new:                    Translations
 );
 
 &lt;* EXTERNAL XtInstallAccelerators *&gt;
    PROCEDURE InstallAccelerators (
      destination:            Widget;
-     source:                 Widget		
+     source:                 Widget
 );
 
 &lt;* EXTERNAL XtInstallAllAccelerators *&gt;
    PROCEDURE InstallAllAccelerators (
      destination:            Widget;
-     source:                 Widget		
+     source:                 Widget
 );
 
 &lt;* EXTERNAL XtUninstallTranslations *&gt;
    PROCEDURE UninstallTranslations (
-     widget:                 Widget 		
+     widget:                 Widget
 );
 
 &lt;* EXTERNAL XtAppAddActions *&gt;
@@ -782,19 +782,19 @@ externalref XtConvertArgRec screenConvertArg[];
 &lt;* EXTERNAL XtAddActions *&gt;
    PROCEDURE AddActions (
      actions:                ActionList;
-     num_actions:            Cardinal 		
+     num_actions:            Cardinal
 );
 
 &lt;* EXTERNAL XtAppAddActionHook *&gt;
    PROCEDURE AppAddActionHook (
      app:                    AppContext;
      proc:                   ActionHookProc;
-     client_data:            Pointer 		
+     client_data:            Pointer
 ): ActionHookId;
 
 &lt;* EXTERNAL XtRemoveActionHook *&gt;
    PROCEDURE RemoveActionHook (
-     id:                     ActionHookId 	
+     id:                     ActionHookId
 );
 
 &lt;* EXTERNAL XtCallActionProc *&gt;
@@ -803,7 +803,7 @@ externalref XtConvertArgRec screenConvertArg[];
      action:                 ConstString;
      event:                  XEventStar;
      params:                 StringStar;
-     num_params:             Cardinal		
+     num_params:             Cardinal
 );
 
 &lt;* EXTERNAL XtRegisterGrabAction *&gt;
@@ -812,24 +812,24 @@ externalref XtConvertArgRec screenConvertArg[];
      owner_events:           Boolean;
      event_mask:             unsigned_int;
      pointer_mode:           Int;
-     keyboard_mode:          Int	 		
+     keyboard_mode:          Int
 );
 
 &lt;* EXTERNAL XtSetMultiClickTime *&gt;
    PROCEDURE SetMultiClickTime (
      dpy:                    DisplayStar;
-     milliseconds:           Int 		
+     milliseconds:           Int
 );
 
 &lt;* EXTERNAL XtGetMultiClickTime *&gt;
    PROCEDURE GetMultiClickTime (
-     dpy:                    DisplayStar		
+     dpy:                    DisplayStar
 ): Int;
 
 &lt;* EXTERNAL XtGetActionKeysym *&gt;
    PROCEDURE GetActionKeysym (
      event:                  XEventStar;
-     modifiers_return:       ModifiersStar		
+     modifiers_return:       ModifiersStar
 ): KeySym;
 </PRE>**************************************************************
  *
@@ -843,7 +843,7 @@ externalref XtConvertArgRec screenConvertArg[];
      keycode:                KeyCode;
      modifiers:              Modifiers;
      modifiers_return:       ModifiersStar;
-     keysym_return:          KeySymStar		
+     keysym_return:          KeySymStar
 );
 
 &lt;* EXTERNAL XtTranslateKey *&gt;
@@ -852,13 +852,13 @@ externalref XtConvertArgRec screenConvertArg[];
      keycode:                KeyCodeStar;
      modifiers:              ModifiersStar;
      modifiers_return:       ModifiersStar;
-     keysym_return:          KeySymStar		
+     keysym_return:          KeySymStar
 );
 
 &lt;* EXTERNAL XtSetKeyTranslator *&gt;
    PROCEDURE SetKeyTranslator (
      dpy:                    DisplayStar;
-     proc:                   KeyProc 		
+     proc:                   KeyProc
 );
 
 &lt;* EXTERNAL XtRegisterCaseConverter *&gt;
@@ -866,7 +866,7 @@ externalref XtConvertArgRec screenConvertArg[];
      dpy:                    DisplayStar;
      proc:                   CaseProc;
      start:                  KeySym;
-     stop:                   KeySym 		
+     stop:                   KeySym
 );
 
 &lt;* EXTERNAL XtConvertCase *&gt;
@@ -874,14 +874,14 @@ externalref XtConvertArgRec screenConvertArg[];
      dpy:                    DisplayStar;
      keysym:                 KeySym;
      lower_return:           KeySymStar;
-     upper_return:           KeySymStar		
+     upper_return:           KeySymStar
 );
 
 &lt;* EXTERNAL XtGetKeysymTable *&gt;
    PROCEDURE GetKeysymTable (
      dpy:                    DisplayStar;
      min_keycode_return:     KeyCodeStar;
-     keysyms_per_keycode_return: int_star		
+     keysyms_per_keycode_return: int_star
 ): KeySymStar;
 
 &lt;* EXTERNAL XtKeysymToKeycodeList *&gt;
@@ -889,7 +889,7 @@ externalref XtConvertArgRec screenConvertArg[];
      dpy:                    DisplayStar;
      keysym:                 KeySym;
      keycodes_return:        KeyCodeStarStar;
-     keycount_return:        CardinalStar		
+     keycount_return:        CardinalStar
 );
 </PRE>***************************************************************
  *
@@ -907,7 +907,7 @@ externalref XtConvertArgRec screenConvertArg[];
      nonmaskable:            Boolean;
      proc:                   EventHandler;
      closure:                Pointer;
-     position:               ListPosition 	
+     position:               ListPosition
 );
 
 &lt;* EXTERNAL XtInsertRawEventHandler *&gt;
@@ -917,7 +917,7 @@ externalref XtConvertArgRec screenConvertArg[];
      nonmaskable:            Boolean;
      proc:                   EventHandler;
      closure:                Pointer;
-     position:               ListPosition 	
+     position:               ListPosition
 );
 
 &lt;* EXTERNAL XtAddEventHandler *&gt;
@@ -963,7 +963,7 @@ externalref XtConvertArgRec screenConvertArg[];
      nonmaskable:            Boolean;
      proc:                   EventHandler;
      closure:                Pointer;
-     position:               ListPosition 	
+     position:               ListPosition
 );
 <P>
 &lt;* EXTERNAL XtInsertRawEventHandler *&gt;
@@ -973,36 +973,36 @@ externalref XtConvertArgRec screenConvertArg[];
      nonmaskable:            Boolean;
      proc:                   EventHandler;
      closure:                Pointer;
-     position:               ListPosition 	
+     position:               ListPosition
 );
    !!!!! double definition in Intrinsic.h !!!!! 
 
 <P><PRE>&lt;* EXTERNAL XtBuildEventMask *&gt;
    PROCEDURE BuildEventMask (
-     widget:                 Widget 		
+     widget:                 Widget
 ): EventMask;
 
 &lt;* EXTERNAL XtAddGrab *&gt;
    PROCEDURE AddGrab (
      widget:                 Widget;
      exclusive:              Boolean;
-     spring_loaded:          Boolean 		
+     spring_loaded:          Boolean
 );
 
 &lt;* EXTERNAL XtRemoveGrab *&gt;
    PROCEDURE RemoveGrab (
-     widget:                 Widget 		
+     widget:                 Widget
 );
 
 &lt;* EXTERNAL XtProcessEvent *&gt;
    PROCEDURE ProcessEvent (
-     mask:                   InputMask 		
+     mask:                   InputMask
 );
 
 &lt;* EXTERNAL XtAppProcessEvent *&gt;
    PROCEDURE AppProcessEvent (
      app:                    AppContext;
-     mask:                   InputMask 		
+     mask:                   InputMask
 );
 
 &lt;* EXTERNAL XtMainLoop *&gt;
@@ -1010,24 +1010,24 @@ externalref XtConvertArgRec screenConvertArg[];
 
 &lt;* EXTERNAL XtAppMainLoop *&gt;
    PROCEDURE AppMainLoop (
-     app:                    AppContext 		
+     app:                    AppContext
 );
 
 &lt;* EXTERNAL XtAddExposureToRegion *&gt;
    PROCEDURE AddExposureToRegion (
      event:                  XEventStar;
-     region:                 Region 		
+     region:                 Region
 );
 
 &lt;* EXTERNAL XtSetKeyboardFocus *&gt;
    PROCEDURE SetKeyboardFocus (
      subtree:                Widget;
-     descendent:             Widget 		
+     descendent:             Widget
 );
 
 &lt;* EXTERNAL XtLastTimestampProcessed *&gt;
    PROCEDURE LastTimestampProcessed (
-     dpy:                    DisplayStar		
+     dpy:                    DisplayStar
 ): Time;
 </PRE>***************************************************************
  *
@@ -1052,7 +1052,7 @@ externalref XtConvertArgRec screenConvertArg[];
 
 &lt;* EXTERNAL XtRemoveTimeOut *&gt;
    PROCEDURE RemoveTimeOut (
-     timer:                  IntervalId 	
+     timer:                  IntervalId
 );
 
 &lt;* EXTERNAL XtAddInput *&gt;
@@ -1074,18 +1074,18 @@ externalref XtConvertArgRec screenConvertArg[];
 
 &lt;* EXTERNAL XtRemoveInput *&gt;
    PROCEDURE RemoveInput (
-     id:                     InputId 		
+     id:                     InputId
 );
 
 &lt;* EXTERNAL XtNextEvent *&gt;
    PROCEDURE NextEvent (
-     event:                  XEventStar 		
+     event:                  XEventStar
 );
 
 &lt;* EXTERNAL XtAppNextEvent *&gt;
    PROCEDURE AppNextEvent (
      appContext:             AppContext;
-     event:                  XEventStar		
+     event:                  XEventStar
 );
 
 CONST
@@ -1099,7 +1099,7 @@ CONST
 
 &lt;* EXTERNAL XtAppPending *&gt;
    PROCEDURE AppPending (
-     appContext:             AppContext 	
+     appContext:             AppContext
 ): InputMask;
 </PRE>***************************************************************
  *
@@ -1131,41 +1131,41 @@ CONST
 
 <P><PRE>&lt;* EXTERNAL XtRealizeWidget *&gt;
    PROCEDURE RealizeWidget (
-     widget:                 Widget 		
+     widget:                 Widget
 );
 
 &lt;* EXTERNAL XtUnrealizeWidget *&gt;
    PROCEDURE UnrealizeWidget (
-     widget:                 Widget 		
+     widget:                 Widget
 );
 
 &lt;* EXTERNAL XtDestroyWidget *&gt;
    PROCEDURE DestroyWidget (
-     widget:                 Widget 		
+     widget:                 Widget
 );
 
 &lt;* EXTERNAL XtSetSensitive *&gt;
    PROCEDURE SetSensitive (
      widget:                 Widget;
-     sensitive:              Boolean 		
+     sensitive:              Boolean
 );
 
 &lt;* EXTERNAL XtSetMappedWhenManaged *&gt;
    PROCEDURE SetMappedWhenManaged (
      widget:                 Widget;
-     mappedWhenManaged:      Boolean 		
+     mappedWhenManaged:      Boolean
 );
 
 &lt;* EXTERNAL XtNameToWidget *&gt;
    PROCEDURE NameToWidget (
      root:                   Widget;
-     name:                   ConstString	
+     name:                   ConstString
 ): Widget;
 
 &lt;* EXTERNAL XtWindowToWidget *&gt;
    PROCEDURE WindowToWidget (
      display:                DisplayStar;
-     window:                 Window 		
+     window:                 Window
 ): Widget;
 </PRE>**************************************************************
  *
@@ -1183,7 +1183,7 @@ CONST
      args1:                  ArgList;
      num_args1:              Cardinal;
      args2:                  ArgList;
-     num_args2:              Cardinal 		
+     num_args2:              Cardinal
 ): ArgList;
 </PRE>**************************************************************
  *
@@ -1210,52 +1210,52 @@ CONST
 
 <P><PRE>&lt;* EXTERNAL XtDisplay *&gt;
    PROCEDURE Display (
-     widget:                 Widget 		
+     widget:                 Widget
 ): DisplayStar;
 
 &lt;* EXTERNAL XtDisplayOfObject *&gt;
    PROCEDURE DisplayOfObject (
-     object:                 Widget 		
+     object:                 Widget
 ): DisplayStar;
 
 &lt;* EXTERNAL XtScreen *&gt;
    PROCEDURE Screen (
-     widget:                 Widget 		
+     widget:                 Widget
 ): ScreenStar;
 
 &lt;* EXTERNAL XtScreenOfObject *&gt;
    PROCEDURE ScreenOfObject (
-     object:                 Widget 		
+     object:                 Widget
 ): ScreenStar;
 
 &lt;* EXTERNAL XtWindow *&gt;
    PROCEDURE XtWindow (
-     widget:                 Widget 		
+     widget:                 Widget
 ): Window;
 
 &lt;* EXTERNAL XtWindowOfObject *&gt;
    PROCEDURE WindowOfObject (
-     object:                 Widget 		
+     object:                 Widget
 ): Window;
 
 &lt;* EXTERNAL XtName *&gt;
    PROCEDURE Name (
-     object:                 Widget 		
+     object:                 Widget
 ): String;
 
 &lt;* EXTERNAL XtSuperclass *&gt;
    PROCEDURE Superclass (
-     object:                 Widget 		
+     object:                 Widget
 ): WidgetClass;
 
 &lt;* EXTERNAL XtClass *&gt;
    PROCEDURE Class (
-     object:                 Widget 		
+     object:                 Widget
 ): WidgetClass;
 
 &lt;* EXTERNAL XtParent *&gt;
    PROCEDURE Parent (
-     widget:                 Widget 		
+     widget:                 Widget
 ): Widget;
 </PRE> ?!?!?!?
 #define XtMapWidget(widget)	XMapWindow(XtDisplay(widget), XtWindow(widget))
@@ -1283,40 +1283,40 @@ CONST
    PROCEDURE AddCallbacks (
      widget:                 Widget;
      callback_name:          ConstString;
-     callbacks:              CallbackList 	
+     callbacks:              CallbackList
 );
 
 &lt;* EXTERNAL XtRemoveCallbacks *&gt;
    PROCEDURE RemoveCallbacks (
      widget:                 Widget;
      callback_name:          ConstString;
-     callbacks:              CallbackList 	
+     callbacks:              CallbackList
 );
 
 &lt;* EXTERNAL XtRemoveAllCallbacks *&gt;
    PROCEDURE RemoveAllCallbacks (
      widget:                 Widget;
-     callback_name:          ConstString 	
+     callback_name:          ConstString
 );
 
 &lt;* EXTERNAL XtCallCallbacks *&gt;
    PROCEDURE CallCallbacks (
      widget:                 Widget;
      callback_name:          ConstString;
-     call_data:              Pointer 		
+     call_data:              Pointer
 );
 
 &lt;* EXTERNAL XtCallCallbackList *&gt;
    PROCEDURE CallCallbackList (
      widget:                 Widget;
      callbacks:              CallbackList;
-     call_data:              Pointer 		
+     call_data:              Pointer
 );
 
 &lt;* EXTERNAL XtHasCallbacks *&gt;
    PROCEDURE HasCallbacks (
      widget:                 Widget;
-     callback_name:          ConstString 	
+     callback_name:          ConstString
 ): CallbackStatus;
 </PRE>***************************************************************
  *
@@ -1328,14 +1328,14 @@ CONST
    PROCEDURE MakeGeometryRequest (
      widget:                 Widget;
      request:                WidgetGeometryStar;
-     reply_return:           WidgetGeometryStar	
+     reply_return:           WidgetGeometryStar
 ): GeometryResult;
 
 &lt;* EXTERNAL XtQueryGeometry *&gt;
    PROCEDURE QueryGeometry (
      widget:                 Widget;
      intended:               WidgetGeometryStar;
-     reply_return:           WidgetGeometryStar	
+     reply_return:           WidgetGeometryStar
 ): GeometryResult;
 
 &lt;* EXTERNAL XtCreatePopupShell *&gt;
@@ -1358,12 +1358,12 @@ CONST
 &lt;* EXTERNAL XtPopup *&gt;
    PROCEDURE Popup (
      widget:                 Widget;
-     grab_kind:              GrabKind 		
+     grab_kind:              GrabKind
 );
 
 &lt;* EXTERNAL XtPopupSpringLoaded *&gt;
    PROCEDURE PopupSpringLoaded (
-     widget:                 Widget 		
+     widget:                 Widget
 );
 
 &lt;* EXTERNAL XtCallbackNone *&gt;
@@ -1389,7 +1389,7 @@ CONST
 
 &lt;* EXTERNAL XtPopdown *&gt;
    PROCEDURE Popdown (
-     widget:                 Widget 		
+     widget:                 Widget
 );
 
 &lt;* EXTERNAL XtCallbackPopdown *&gt;
@@ -1404,7 +1404,7 @@ CONST
      widget:                 Widget;
      event:                  XEventStar;
      params:                 StringStar;
-     num_params:             CardinalStar		
+     num_params:             CardinalStar
 );
 
 &lt;* EXTERNAL XtCreateWidget *&gt;
@@ -1493,9 +1493,9 @@ CONST
      VAR app_context_return: AppContext;
      application_class:      ConstString;
      options:                Xrm.OptionDescList;
-     num_options:            Cardinal;		
-     VAR argc_in_out:        Cardinal;	
-     argv_in_out:            Argv;		
+     num_options:            Cardinal;
+     VAR argc_in_out:        Cardinal;
+     argv_in_out:            Argv;
      fallback_resources:     FallbackResList	:= NIL;
      args:                   ArgList		:= NIL;
      num_args:               Cardinal		:= 0
@@ -1507,7 +1507,7 @@ CONST
      application_class:      ConstString;
      options:                Xrm.OptionDescList;
      num_options:            Cardinal;
-     VAR argc_in_out:        Cardinal;	
+     VAR argc_in_out:        Cardinal;
      argv_in_out:            Argv;
      fallback_resources:     ConstStringStar;
 </PRE><BLOCKQUOTE><EM>    ...  </EM></BLOCKQUOTE><PRE>
@@ -1541,78 +1541,78 @@ CONST
 &lt;* EXTERNAL XtAppSetFallbackResources *&gt;
    PROCEDURE AppSetFallbackResources (
      app_context:            AppContext;
-     specification_list:     ConstStringStar 	
+     specification_list:     ConstStringStar
 );
 
 &lt;* EXTERNAL XtDestroyApplicationContext *&gt;
    PROCEDURE DestroyApplicationContext (
-     appContext:             AppContext 	
+     appContext:             AppContext
 );
 
 &lt;* EXTERNAL XtInitializeWidgetClass *&gt;
    PROCEDURE InitializeWidgetClass (
-     widget_class:           WidgetClass 	
+     widget_class:           WidgetClass
 );
 
 &lt;* EXTERNAL XtWidgetToApplicationContext *&gt;
    PROCEDURE WidgetToApplicationContext (
-     widget:                 Widget 		
+     widget:                 Widget
 ): AppContext;
 
 &lt;* EXTERNAL XtDisplayToApplicationContext *&gt;
    PROCEDURE DisplayToApplicationContext (
-     dpy:                    DisplayStar		
+     dpy:                    DisplayStar
 ): AppContext;
 
 &lt;* EXTERNAL XtDatabase *&gt;
    PROCEDURE Database (
-     dpy:                    DisplayStar		
+     dpy:                    DisplayStar
 ): Xrm.Database;
 
 &lt;* EXTERNAL XtCloseDisplay *&gt;
    PROCEDURE CloseDisplay (
-     dpy:                    DisplayStar		
+     dpy:                    DisplayStar
 );
 
 &lt;* EXTERNAL XtCopyFromParent *&gt;
    PROCEDURE CopyFromParent (
      widget:                 Widget;
      offset:                 Int;
-     value:                  Xrm.ValueStar		
+     value:                  Xrm.ValueStar
 );
 
 &lt;* EXTERNAL XtCopyDefaultDepth *&gt;
    PROCEDURE CopyDefaultDepth (
      widget:                 Widget;
      offset:                 Int;
-     value:                  Xrm.ValueStar		
+     value:                  Xrm.ValueStar
 );
 
 &lt;* EXTERNAL XtCopyDefaultColormap *&gt;
    PROCEDURE CopyDefaultColormap (
      widget:                 Widget;
      offset:                 Int;
-     value:                  Xrm.ValueStar		
+     value:                  Xrm.ValueStar
 );
 
 &lt;* EXTERNAL XtCopyAncestorSensitive *&gt;
    PROCEDURE CopyAncestorSensitive (
      widget:                 Widget;
      offset:                 Int;
-     value:                  Xrm.ValueStar		
+     value:                  Xrm.ValueStar
 );
 
 &lt;* EXTERNAL XtCopyScreen *&gt;
    PROCEDURE CopyScreen (
      widget:                 Widget;
      offset:                 Int;
-     value:                  Xrm.ValueStar 		
+     value:                  Xrm.ValueStar
 );
 
 &lt;* EXTERNAL XrmCompileResourceList *&gt;
    PROCEDURE mCompileResourceList (
      resources:              ResourceList;
-     num_resources:          Cardinal 		
+     num_resources:          Cardinal
 );
 
 &lt;* EXTERNAL XtGetApplicationResources *&gt;
@@ -1721,14 +1721,14 @@ CONST
    PROCEDURE GetResourceList (
      widget_class:           WidgetClass;
      resources_return:       ResourceList;
-     num_resources_return:   CardinalStar		
+     num_resources_return:   CardinalStar
 );
 
 &lt;* EXTERNAL XtGetConstraintResourceList *&gt;
    PROCEDURE GetConstraintResourceList (
      widget_class:           WidgetClass;
      resources_return:       ResourceList;
-     num_resources_return:   CardinalStar		
+     num_resources_return:   CardinalStar
 );
 </PRE> ?!?!?!
 #define XtUnspecifiedPixmap	((Pixmap)2)
@@ -1752,23 +1752,23 @@ CONST
 <P><PRE>&lt;* EXTERNAL XtAppSetErrorMsgHandler *&gt;
    PROCEDURE AppSetErrorMsgHandler (
      app:                    AppContext;
-     handler:                ErrorMsgHandler 	
+     handler:                ErrorMsgHandler
 ): ErrorMsgHandler;
 
 &lt;* EXTERNAL XtSetErrorMsgHandler *&gt;
    PROCEDURE SetErrorMsgHandler (
-     handler:                ErrorMsgHandler 	
+     handler:                ErrorMsgHandler
 );
 
 &lt;* EXTERNAL XtAppSetWarningMsgHandler *&gt;
    PROCEDURE AppSetWarningMsgHandler (
      app:                    AppContext;
-     handler:                ErrorMsgHandler 	
+     handler:                ErrorMsgHandler
 ): ErrorMsgHandler;
 
 &lt;* EXTERNAL XtSetWarningMsgHandler *&gt;
    PROCEDURE SetWarningMsgHandler (
-     handler:                ErrorMsgHandler 	
+     handler:                ErrorMsgHandler
 );
 
 &lt;* EXTERNAL XtAppErrorMsg *&gt;
@@ -1779,7 +1779,7 @@ CONST
      class:                  ConstString;
      defaultp:               ConstString;
      params:                 StringStar;
-     num_params:             CardinalStar		
+     num_params:             CardinalStar
 );
 
 &lt;* EXTERNAL XtErrorMsg *&gt;
@@ -1789,7 +1789,7 @@ CONST
      class:                  ConstString;
      defaultp:               ConstString;
      params:                 StringStar;
-     num_params:             CardinalStar		
+     num_params:             CardinalStar
 );
 
 &lt;* EXTERNAL XtAppWarningMsg *&gt;
@@ -1800,7 +1800,7 @@ CONST
      class:                  ConstString;
      defaultp:               ConstString;
      params:                 StringStar;
-     num_params:             CardinalStar		
+     num_params:             CardinalStar
 );
 
 &lt;* EXTERNAL XtWarningMsg *&gt;
@@ -1810,56 +1810,56 @@ CONST
      class:                  ConstString;
      defaultp:               ConstString;
      params:                 StringStar;
-     num_params:             CardinalStar		
+     num_params:             CardinalStar
 );
 
 &lt;* EXTERNAL XtAppSetErrorHandler *&gt;
    PROCEDURE AppSetErrorHandler (
      app:                    AppContext;
-     handler:                ErrorHandler 	
+     handler:                ErrorHandler
 ): ErrorHandler;
 
 &lt;* EXTERNAL XtSetErrorHandler *&gt;
    PROCEDURE SetErrorHandler (
-     handler:                ErrorHandler 	
+     handler:                ErrorHandler
 );
 
 &lt;* EXTERNAL XtAppSetWarningHandler *&gt;
    PROCEDURE AppSetWarningHandler (
      app:                    AppContext;
-     handler:                ErrorHandler 	
+     handler:                ErrorHandler
 ): ErrorHandler;
 
 &lt;* EXTERNAL XtSetWarningHandler *&gt;
    PROCEDURE SetWarningHandler (
-     handler:                ErrorHandler 	
+     handler:                ErrorHandler
 );
 
 &lt;* EXTERNAL XtAppError *&gt;
    PROCEDURE AppError (
      app:                    AppContext;
-     message:                ConstString	
+     message:                ConstString
 );
 
 &lt;* EXTERNAL XtError *&gt;
    PROCEDURE Error (
-     message:                ConstString	
+     message:                ConstString
 );
 
 &lt;* EXTERNAL XtAppWarning *&gt;
    PROCEDURE AppWarning (
      app:                    AppContext;
-     message:                ConstString	
+     message:                ConstString
 );
 
 &lt;* EXTERNAL XtWarning *&gt;
    PROCEDURE Warning (
-     message:                ConstString	
+     message:                ConstString
 );
 
 &lt;* EXTERNAL XtAppGetErrorDatabase *&gt;
    PROCEDURE AppGetErrorDatabase (
-     app:                    AppContext 	
+     app:                    AppContext
 ): Xrm.DatabaseStar;
 
 &lt;* EXTERNAL XtGetErrorDatabase *&gt;
@@ -1874,7 +1874,7 @@ CONST
      defaultp:               ConstString;
      buffer:                 String;
      nbytes:                 Int;
-     database:               Xrm.Database 	
+     database:               Xrm.Database
 );
 
 &lt;* EXTERNAL XtGetErrorDatabaseText *&gt;
@@ -1884,7 +1884,7 @@ CONST
      class:                  ConstString;
      defaultp:               ConstString;
      buffer:                 String;
-     nbytes:                 Int 		
+     nbytes:                 Int
 );
 </PRE>***************************************************************
  *
@@ -1900,24 +1900,24 @@ CONST
 
 <P><PRE>&lt;* EXTERNAL XtMalloc *&gt;
    PROCEDURE Malloc (
-     size:                   Cardinal 		
+     size:                   Cardinal
 ): char_star;
 
 &lt;* EXTERNAL XtCalloc *&gt;
    PROCEDURE Calloc (
      num:                    Cardinal;
-     size:                   Cardinal 		
+     size:                   Cardinal
 ): char_star;
 
 &lt;* EXTERNAL XtRealloc *&gt;
    PROCEDURE Realloc (
      ptr:                    char_star;
-     num:                    Cardinal 		
+     num:                    Cardinal
 ): char_star;
 
 &lt;* EXTERNAL XtFree *&gt;
    PROCEDURE Free (
-     ptr:                    char_star		
+     ptr:                    char_star
 );
 </PRE>************************************************************
  *
@@ -1928,19 +1928,19 @@ CONST
 <P><PRE>&lt;* EXTERNAL XtAddWorkProc *&gt;
    PROCEDURE AddWorkProc (
      proc:                   WorkProc;
-     closure:                Pointer 		
+     closure:                Pointer
 ): WorkProcId;
 
 &lt;* EXTERNAL XtAppAddWorkProc *&gt;
    PROCEDURE AppAddWorkProc (
      app:                    AppContext;
      proc:                   WorkProc;
-     closure:                Pointer 		
+     closure:                Pointer
 ): WorkProcId;
 
 &lt;* EXTERNAL  XtRemoveWorkProc *&gt;
    PROCEDURE tRemoveWorkProc (
-     id:                     WorkProcId 	
+     id:                     WorkProcId
 );
 </PRE>***************************************************************
  *
@@ -1952,44 +1952,44 @@ CONST
    PROCEDURE GetGC (
      widget:                 Widget;
      valueMask:              GCMask;
-     values:                 XGCValuesStar 		
+     values:                 XGCValuesStar
 ): GC;
 
 &lt;* EXTERNAL XtDestroyGC *&gt;
    PROCEDURE DestroyGC (
-     gc:                     GC 			
+     gc:                     GC
 );
 
 &lt;* EXTERNAL XtReleaseGC *&gt;
    PROCEDURE ReleaseGC (
      object:                 Widget;
-     gc:                     GC 			
+     gc:                     GC
 );
 
 &lt;* EXTERNAL XtReleaseCacheRef *&gt;
    PROCEDURE ReleaseCacheRef (
-     cache_ref:              CacheRefStar		
+     cache_ref:              CacheRefStar
 );
 
 &lt;* EXTERNAL XtCallbackReleaseCacheRef *&gt;
    PROCEDURE CallbackReleaseCacheRef (
      widget:                 Widget;
      closure:                Pointer;	(* CacheRef *)
-     call_data:              Pointer 		
+     call_data:              Pointer
 );
 
 &lt;* EXTERNAL XtCallbackReleaseCacheRefList *&gt;
    PROCEDURE CallbackReleaseCacheRefList (
      widget:                 Widget;
      closure:                Pointer;	(* CacheRefStar *)
-     call_data:              Pointer 		
+     call_data:              Pointer
 );
 
 &lt;* EXTERNAL XtSetWMColormapWindows *&gt;
    PROCEDURE SetWMColormapWindows (
      widget:                 Widget;
      list:                   WidgetStar;
-     count:                  Cardinal		
+     count:                  Cardinal
 );
 
 &lt;* EXTERNAL XtFindFile *&gt;
@@ -1997,7 +1997,7 @@ CONST
      path:                   ConstString;
      substitutions:          SubstitutionStar;
      num_substitutions:      Cardinal;
-     predicate:              FilePredicate	
+     predicate:              FilePredicate
 ): String;
 
 &lt;* EXTERNAL XtResolvePathname *&gt;
@@ -2007,7 +2007,7 @@ CONST
      filename:               ConstString;
      suffix:                 ConstString;
      path:                   ConstString;
-     predicate:              FilePredicate 	
+     predicate:              FilePredicate
 ): String;
 </PRE>***************************************************************
  *
@@ -2030,10 +2030,10 @@ CONST
    PROCEDURE DisownSelection (
      widget:                 Widget;
      selection:              Atom;
-     time:                   Time 		
+     time:                   Time
 );
 </PRE><P>
- * Get the value of the given selection.  
+ * Get the value of the given selection.
  
 
 <P><PRE>&lt;* EXTERNAL XtGetSelectionValue *&gt;
@@ -2043,7 +2043,7 @@ CONST
      target:                 Atom;
      callback:               SelectionCallbackProc;
      closure:                Pointer;
-     time:                   Time 		
+     time:                   Time
 );
 
 &lt;* EXTERNAL XtGetSelectionValues *&gt;
@@ -2054,26 +2054,26 @@ CONST
      count:                  Int;
      callback:               SelectionCallbackProc;
      closures:               PointerStar;
-     time:                   Time 		
+     time:                   Time
 );
 </PRE> Set the selection timeout value, in units of milliseconds 
 
 <P><PRE>&lt;* EXTERNAL XtAppSetSelectionTimeout *&gt;
    PROCEDURE AppSetSelectionTimeout (
      app:                    AppContext;
-     timeout:                unsigned_long 	
+     timeout:                unsigned_long
 );
 
 &lt;* EXTERNAL XtSetSelectionTimeout *&gt;
    PROCEDURE SetSelectionTimeout (
-     timeout:                unsigned_long 	
+     timeout:                unsigned_long
 );
 
  (* Return the selection timeout value, in units of milliseconds *)
 
 &lt;* EXTERNAL XtAppGetSelectionTimeout *&gt;
    PROCEDURE AppGetSelectionTimeout(
-     app:                    AppContext 	
+     app:                    AppContext
 ): unsigned_int;
 
 &lt;* EXTERNAL XtGetSelectionTimeout *&gt;
@@ -2083,7 +2083,7 @@ CONST
    PROCEDURE GetSelectionRequest (
      widget:                 Widget;
      selection:              Atom;
-     request_id:             RequestId 	
+     request_id:             RequestId
 ): XSelectionRequestEventStar;
 
 &lt;* EXTERNAL XtGetSelectionValueIncremental *&gt;
@@ -2093,7 +2093,7 @@ CONST
      target:                 Atom;
      selection_callback:     SelectionCallbackProc;
      client_data:            Pointer;
-     time:                   Time 		
+     time:                   Time
 );
 
 &lt;* EXTERNAL XtGetSelectionValuesIncremental *&gt;
@@ -2104,7 +2104,7 @@ CONST
      count:                  Int;
      callback:               SelectionCallbackProc;
      client_data:            PointerStar;
-     time:                   Time 		
+     time:                   Time
 );
 
 &lt;* EXTERNAL XtGrabKey *&gt;
@@ -2114,14 +2114,14 @@ CONST
      modifiers:              Modifiers;
      owner_events:           Boolean;
      pointer_mode:           Int;
-     keyboard_mode:          Int 		
+     keyboard_mode:          Int
 );
 
 &lt;* EXTERNAL XtUngrabKey *&gt;
    PROCEDURE UngrabKey (
      widget:                 Widget;
      keysym:                 KeySym;
-     modifiers:              Modifiers	 	
+     modifiers:              Modifiers
 );
 
 &lt;* EXTERNAL XtGrabKeyboard *&gt;
@@ -2130,13 +2130,13 @@ CONST
      owner_events:           Boolean;
      pointer_mode:           Int;
      keyboard_mode:          Int;
-     time:                   Time 		
+     time:                   Time
 ): Int;
 
 &lt;* EXTERNAL XtUngrabKeyboard *&gt;
    PROCEDURE UngrabKeyboard (
      widget:                 Widget;
-     time:                   Time 		
+     time:                   Time
 );
 
 &lt;* EXTERNAL XtGrabButton *&gt;
@@ -2149,14 +2149,14 @@ CONST
      pointer_mode:           Int;
      keyboard_mode:          Int;
      confine_to:             Window;
-     cursor:                 Cursor 		
+     cursor:                 Cursor
 );
 
 &lt;* EXTERNAL XtUngrabButton *&gt;
    PROCEDURE UngrabButton (
      widget:                 Widget;
      button:                 unsigned_int;
-     modifiers:              Modifiers	 	
+     modifiers:              Modifiers
 );
 
 &lt;* EXTERNAL XtGrabPointer *&gt;
@@ -2168,20 +2168,20 @@ CONST
      keyboard_mode:          Int;
      confine_to:             Window;
      cursor:                 Cursor;
-     time:                   Time 		
+     time:                   Time
 ): Int;
 
 &lt;* EXTERNAL XtUngrabPointer *&gt;
    PROCEDURE UngrabPointer (
      widget:                 Widget;
-     time:                   Time 		
+     time:                   Time
 );
 
 &lt;* EXTERNAL XtGetApplicationNameAndClass *&gt;
    PROCEDURE GetApplicationNameAndClass (
      dpy:                    DisplayStar;
      name_return:            StringStar;
-     class_return:           StringStar		
+     class_return:           StringStar
 );
 </PRE>===================================================================
  * $XConsortium: Composite.h,v 1.10 89/12/12 20:08:44 swick Exp $ *

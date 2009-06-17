@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/M3CG_BinRd.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/M3CG_BinRd.m3</H2></A><HR>
 <inModule>
@@ -14,7 +14,7 @@
 IMPORT <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>;
 IMPORT <A HREF="#x1">M3ID</A>, <A HREF="M3CG.i3.html">M3CG</A>, <A HREF="M3CG_Ops.i3.html">M3CG_Ops</A>, <A HREF="M3CG_Binary.i3.html">M3CG_Binary</A>;
 IMPORT <A HREF="Target.i3.html">Target</A>, <A HREF="TargetMap.i3.html">TargetMap</A>, <A HREF="TInt.i3.html">TInt</A>, <A HREF="TFloat.i3.html">TFloat</A>, <A HREF="TWord.i3.html">TWord</A>;
-FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT CompareOp, ConvertOp, RuntimeError;
+FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 
 TYPE
   Bop = M3CG_Binary.Op;
@@ -196,7 +196,24 @@ CONST
     Cmd {Bop.pop_static_link, pop_static_link},
     Cmd {Bop.load_procedure, load_procedure},
     Cmd {Bop.load_static_link, load_static_link},
-    Cmd {Bop.comment, comment}
+    Cmd {Bop.comment, comment},
+    Cmd {Bop.fetch_and_add,  fetch_and_add},
+    Cmd {Bop.fetch_and_sub,  fetch_and_sub},
+    Cmd {Bop.fetch_and_or,   fetch_and_or},
+    Cmd {Bop.fetch_and_and,  fetch_and_and},
+    Cmd {Bop.fetch_and_xor,  fetch_and_xor},
+    Cmd {Bop.fetch_and_nand, fetch_and_nand},
+    Cmd {Bop.add_and_fetch,  add_and_fetch},
+    Cmd {Bop.sub_and_fetch,  sub_and_fetch},
+    Cmd {Bop.or_and_fetch,   or_and_fetch},
+    Cmd {Bop.and_and_fetch,  and_and_fetch},
+    Cmd {Bop.xor_and_fetch,  xor_and_fetch},
+    Cmd {Bop.nand_and_fetch, nand_and_fetch},
+    Cmd {Bop.bool_compare_and_swap, bool_compare_and_swap},
+    Cmd {Bop.val_compare_and_swap, val_compare_and_swap},
+    Cmd {Bop.synchronize, synchronize},
+    Cmd {Bop.lock_test_and_set, lock_test_and_set},
+    Cmd {Bop.lock_release, lock_release}
   };
 
 PROCEDURE <A NAME="Inhale"><procedure>Inhale</procedure></A> (rd: Rd.T;  cg: M3CG.T) =
@@ -242,6 +259,7 @@ PROCEDURE <A NAME="Error"><procedure>Error</procedure></A> (&lt;*UNUSED*&gt; VAR
     IF (c # NIL) THEN msg := msg &amp; c END;
     msg := msg &amp; &quot; **&quot; &amp; Target.EOL;
     Wr.PutText (Stdio.stdout, msg);
+    Wr.Flush(Stdio.stdout);
   END Error;
 </PRE>--------------------------------------------------------------- parsing ---
 
@@ -265,6 +283,7 @@ PROCEDURE <A NAME="Scan_text"><procedure>Scan_text</procedure></A> (VAR s: State
     WHILE (len &gt; NUMBER (buf)) DO
       FOR i := 0 TO LAST(buf) DO buf[i] := VAL (GetByte (s), CHAR); END;
       txt := txt &amp; Text.FromChars (buf);
+      DEC (len, NUMBER (buf));
     END;
     IF (len &gt; 0) THEN
       FOR i := 0 TO len-1 DO buf[i] := VAL (GetByte (s), CHAR); END;
@@ -389,34 +408,32 @@ PROCEDURE <A NAME="Scan_Tint"><procedure>Scan_Tint</procedure></A> (VAR s: State
   VAR
     i : INTEGER := GetByte (s);
     n_bytes, sign, shift: INTEGER;
-    val, byte, tmp: Target.Int;
+    val, byte: Target.Int;
     ok: BOOLEAN;
   BEGIN
     CASE i OF
-    | M3CG_Binary.Int1  =&gt;  n_bytes := 0;  i := GetByte (s);
-    | M3CG_Binary.NInt1 =&gt;  n_bytes := 0;  i := - GetByte (s);
+    | M3CG_Binary.Int1  =&gt;  n_bytes := 1;  sign := +1;
+    | M3CG_Binary.NInt1 =&gt;  n_bytes := 1;  sign := -1;
     | M3CG_Binary.Int2  =&gt;  n_bytes := 2;  sign := +1;
     | M3CG_Binary.NInt2 =&gt;  n_bytes := 2;  sign := -1;
     | M3CG_Binary.Int4  =&gt;  n_bytes := 4;  sign := +1;
     | M3CG_Binary.NInt4 =&gt;  n_bytes := 4;  sign := -1;
     | M3CG_Binary.Int8  =&gt;  n_bytes := 8;  sign := +1;
     | M3CG_Binary.NInt8 =&gt;  n_bytes := 8;  sign := -1;
-    ELSE                    n_bytes := 0;
+    ELSE
+      ok := TInt.FromInt (i, NUMBER (val.x), val);  &lt;*ASSERT ok*&gt;
+      RETURN val;
     END;
 
-    IF (n_bytes = 0) THEN
-      ok := TInt.FromInt (i, val);
-      &lt;*ASSERT ok*&gt;
-    ELSE
-      val := TInt.Zero;  shift := 0;
-      FOR i := 0 TO n_bytes-1 DO
-        ok := TInt.FromInt (GetByte (s), byte);  &lt;*ASSERT ok*&gt;
-        ok := TInt.FromInt (shift, tmp);  &lt;*ASSERT ok*&gt;
-        TWord.Shift (byte, tmp, byte);
-        TWord.Or (val, byte, val);
-        INC (shift, 8);
-      END;
-      IF (sign &lt; 0) THEN TWord.Subtract (TInt.Zero, val, val); END;
+    val := TInt.Zero;  shift := 0;
+    FOR i := 0 TO n_bytes-1 DO
+      ok := TInt.FromInt (GetByte (s), NUMBER (byte.x), byte);  &lt;*ASSERT ok*&gt;
+      TWord.Shift (byte, shift, byte);
+      TWord.Or (val, byte, val);
+      INC (shift, 8);
+    END;
+    IF (sign &lt; 0) THEN
+      TWord.Subtract (TInt.Zero, val, val);
     END;
 
     RETURN val;
@@ -1609,6 +1626,109 @@ PROCEDURE <A NAME="load_static_link"><procedure>load_static_link</procedure></A>
   BEGIN
     s.cg.comment (x);
   END comment;
+</PRE>--------------------------------------------------------------- atomics ---
+
+<P><PRE>PROCEDURE <A NAME="fetch_and_op"><procedure>fetch_and_op</procedure></A> (VAR s: State;  op: AtomicOp) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.fetch_and_op (op, type);
+  END fetch_and_op;
+
+PROCEDURE <A NAME="fetch_and_add"><procedure>fetch_and_add</procedure></A> (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Add);
+  END fetch_and_add;
+
+PROCEDURE <A NAME="fetch_and_sub"><procedure>fetch_and_sub</procedure></A> (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Sub);
+  END fetch_and_sub;
+
+PROCEDURE <A NAME="fetch_and_or"><procedure>fetch_and_or</procedure></A> (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Or);
+  END fetch_and_or;
+
+PROCEDURE <A NAME="fetch_and_and"><procedure>fetch_and_and</procedure></A> (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.And);
+  END fetch_and_and;
+
+PROCEDURE <A NAME="fetch_and_xor"><procedure>fetch_and_xor</procedure></A> (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Xor);
+  END fetch_and_xor;
+
+PROCEDURE <A NAME="fetch_and_nand"><procedure>fetch_and_nand</procedure></A> (VAR s: State) =
+  BEGIN
+    fetch_and_op (s, AtomicOp.Nand);
+  END fetch_and_nand;
+
+PROCEDURE <A NAME="op_and_fetch"><procedure>op_and_fetch</procedure></A> (VAR s: State;  op: AtomicOp) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.op_and_fetch (op, type);
+  END op_and_fetch;
+
+PROCEDURE <A NAME="add_and_fetch"><procedure>add_and_fetch</procedure></A> (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Add);
+  END add_and_fetch;
+
+PROCEDURE <A NAME="sub_and_fetch"><procedure>sub_and_fetch</procedure></A> (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Sub);
+  END sub_and_fetch;
+
+PROCEDURE <A NAME="or_and_fetch"><procedure>or_and_fetch</procedure></A> (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Or);
+  END or_and_fetch;
+
+PROCEDURE <A NAME="and_and_fetch"><procedure>and_and_fetch</procedure></A> (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.And);
+  END and_and_fetch;
+
+PROCEDURE <A NAME="xor_and_fetch"><procedure>xor_and_fetch</procedure></A> (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Xor);
+  END xor_and_fetch;
+
+PROCEDURE <A NAME="nand_and_fetch"><procedure>nand_and_fetch</procedure></A> (VAR s: State) =
+  BEGIN
+    op_and_fetch (s, AtomicOp.Nand);
+  END nand_and_fetch;
+
+PROCEDURE <A NAME="bool_compare_and_swap"><procedure>bool_compare_and_swap</procedure></A> (VAR s: State) =
+  VAR src    := Scan_type (s);
+      dest   := Scan_type (s);
+  BEGIN
+    s.cg.bool_compare_and_swap (src, dest);
+  END bool_compare_and_swap;
+
+PROCEDURE <A NAME="val_compare_and_swap"><procedure>val_compare_and_swap</procedure></A> (VAR s: State) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.val_compare_and_swap (type);
+  END val_compare_and_swap;
+
+PROCEDURE <A NAME="synchronize"><procedure>synchronize</procedure></A> (VAR s: State) =
+  BEGIN
+    s.cg.synchronize ();
+  END synchronize;
+
+PROCEDURE <A NAME="lock_test_and_set"><procedure>lock_test_and_set</procedure></A> (VAR s: State) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.lock_test_and_set (type);
+  END lock_test_and_set;
+
+PROCEDURE <A NAME="lock_release"><procedure>lock_release</procedure></A> (VAR s: State) =
+  VAR type   := Scan_type (s);
+  BEGIN
+    s.cg.lock_release (type);
+  END lock_release;
 
 BEGIN
   FOR op := FIRST (CmdMap) TO LAST (CmdMap) DO

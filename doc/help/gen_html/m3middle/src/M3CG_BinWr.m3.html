@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/M3CG_BinWr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/M3CG_BinWr.m3</H2></A><HR>
 <inModule>
@@ -19,7 +19,7 @@ FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT Name, ByteOffset, TypeUID, CallingCo
 FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT Var, Proc, Label, Sign, BitOffset;
 FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT Type, ZType, AType, RType, IType, MType;
-FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT CompareOp, ConvertOp, RuntimeError;
+FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
 
 TYPE Bop    = M3CG_Binary.Op;
 TYPE WrVar  = Var    OBJECT tag: INTEGER END;
@@ -180,6 +180,13 @@ TYPE
         load_procedure := load_procedure;
         load_static_link := load_static_link;
         comment := comment;
+        fetch_and_op := fetch_and_op;
+        op_and_fetch := op_and_fetch;
+        bool_compare_and_swap := bool_compare_and_swap;
+        val_compare_and_swap := val_compare_and_swap;
+        synchronize := synchronize;
+        lock_test_and_set := lock_test_and_set;
+        lock_release := lock_release;
       END;
 </PRE>------------------------------------------------------------------- I/O ---
 
@@ -328,8 +335,8 @@ PROCEDURE <A NAME="OutI"><procedure>OutI</procedure></A>  (u: U;  i: INTEGER) =
 TYPE
   IntDesc = RECORD
     negative : BOOLEAN;
-    n_bytes  : [0 .. NUMBER (TargetInt.ByteArray)];
-    bytes    : TargetInt.ByteArray;
+    n_bytes  : CARDINAL;
+    bytes    : ARRAY [0..7] OF [0..255];
   END;
 
 PROCEDURE <A NAME="AddBigInt"><procedure>AddBigInt</procedure></A> (u: U;  i: INTEGER) =
@@ -1577,6 +1584,57 @@ PROCEDURE <A NAME="load_static_link"><procedure>load_static_link</procedure></A>
     Cmd (u, Bop.comment);
     Txt (u, msg);
   END comment;
+</PRE>--------------------------------------------------------------- atomics ---
+
+<P><PRE>PROCEDURE <A NAME="fetch_and_op"><procedure>fetch_and_op</procedure></A> (u: U;  op: AtomicOp;  t: MType) =
+  CONST
+    OpName = ARRAY AtomicOp OF Bop { Bop.fetch_and_add, Bop.fetch_and_sub,
+                                     Bop.fetch_and_or,  Bop.fetch_and_and,
+                                     Bop.fetch_and_xor, Bop.fetch_and_nand };
+  BEGIN
+    Cmd   (u, OpName [op]);
+    TName (u, t);
+  END fetch_and_op;
+
+PROCEDURE <A NAME="op_and_fetch"><procedure>op_and_fetch</procedure></A> (u: U;  op: AtomicOp;  t: MType) =
+  CONST
+    OpName = ARRAY AtomicOp OF Bop { Bop.add_and_fetch, Bop.sub_and_fetch,
+                                     Bop.or_and_fetch,  Bop.and_and_fetch,
+                                     Bop.xor_and_fetch, Bop.nand_and_fetch };
+  BEGIN
+    Cmd   (u, OpName [op]);
+    TName (u, t);
+  END op_and_fetch;
+
+PROCEDURE <A NAME="bool_compare_and_swap"><procedure>bool_compare_and_swap</procedure></A> (u: U;  t: MType;  z: IType) =
+  BEGIN
+    Cmd   (u, Bop.bool_compare_and_swap);
+    TName (u, t);
+    TName (u, z);
+  END bool_compare_and_swap;
+
+PROCEDURE <A NAME="val_compare_and_swap"><procedure>val_compare_and_swap</procedure></A> (u: U;  t: MType) =
+  BEGIN
+    Cmd   (u, Bop.val_compare_and_swap);
+    TName (u, t);
+  END val_compare_and_swap;
+
+PROCEDURE <A NAME="synchronize"><procedure>synchronize</procedure></A> (u: U) =
+  BEGIN
+    Cmd (u, Bop.synchronize);
+  END synchronize;
+
+PROCEDURE <A NAME="lock_test_and_set"><procedure>lock_test_and_set</procedure></A> (u: U;  t: MType) =
+  BEGIN
+    Cmd   (u, Bop.lock_test_and_set);
+    TName (u, t);
+  END lock_test_and_set;
+
+PROCEDURE <A NAME="lock_release"><procedure>lock_release</procedure></A> (u: U;  t: MType) =
+  BEGIN
+    Cmd   (u, Bop.lock_release);
+    TName (u, t);
+  END lock_release;
 
 BEGIN
 END M3CG_BinWr.

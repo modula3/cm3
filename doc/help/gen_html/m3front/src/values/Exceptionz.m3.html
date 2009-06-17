@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/values/Exceptionz.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/values/Exceptionz.m3</H2></A><HR>
 <inModule>
@@ -17,13 +17,13 @@
 <P><PRE>MODULE <module><implements><A HREF="Exceptionz.i3.html">Exceptionz</A></implements></module>;
 
 IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="#x1">M3ID</A>, <A HREF="../../../m3middle/src/M3FP.i3.html">M3FP</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="#x2">Value</A>, <A HREF="ValueRep.i3.html">ValueRep</A>, <A HREF="#x3">Type</A>, <A HREF="../misc/Scope.i3.html">Scope</A>, <A HREF="Formal.i3.html">Formal</A>, <A HREF="../../../m3middle/src/M3RT.i3.html">M3RT</A>;
-IMPORT <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="#x4">Token</A>, <A HREF="Decl.i3.html">Decl</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="Procedure.i3.html">Procedure</A>, <A HREF="../stmts/AssignStmt.i3.html">AssignStmt</A>, <A HREF="../builtinTypes/Addr.i3.html">Addr</A>, <A HREF="../misc/Scanner.i3.html">Scanner</A>;
-IMPORT <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../types/RefType.i3.html">RefType</A>, <A HREF="../misc/ProcBody.i3.html">ProcBody</A>, <A HREF="Module.i3.html">Module</A>, <A HREF="../misc/RunTyme.i3.html">RunTyme</A>, <A HREF="../misc/Marker.i3.html">Marker</A>, <A HREF="../../../m3middle/src/M3Buf.i3.html">M3Buf</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>;
+IMPORT <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="#x4">Token</A>, <A HREF="#x5">Decl</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="Procedure.i3.html">Procedure</A>, <A HREF="../stmts/AssignStmt.i3.html">AssignStmt</A>, <A HREF="../builtinTypes/Addr.i3.html">Addr</A>, <A HREF="../misc/Scanner.i3.html">Scanner</A>;
+IMPORT <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../types/RefType.i3.html">RefType</A>, <A HREF="../misc/ProcBody.i3.html">ProcBody</A>, <A HREF="Module.i3.html">Module</A>, <A HREF="../misc/RunTyme.i3.html">RunTyme</A>, <A HREF="#x6">Marker</A>, <A HREF="../../../m3middle/src/M3Buf.i3.html">M3Buf</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>;
 FROM <A HREF="../misc/Scanner.i3.html">Scanner</A> IMPORT GetToken, Match, MatchID, cur;
 
 TYPE
   T = Value.T BRANDED &quot;Exceptionz.T&quot; OBJECT
-	tipe    : Type.T;
+        tipe    : Type.T;
         refTipe : Type.T;
         offset  : INTEGER;
         coffset : INTEGER;
@@ -39,8 +39,8 @@ TYPE
         need_init   := ValueRep.Never;
         lang_init   := ValueRep.NoInit;
         user_init   := ValueRep.NoInit;
-	toExpr      := ValueRep.NoExpr;
-	toType      := ValueRep.NoType;
+        toExpr      := ValueRep.NoExpr;
+        toType      := ValueRep.NoType;
         typeOf      := ValueRep.TypeVoid;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
@@ -381,10 +381,10 @@ PROCEDURE <A NAME="EmitBody"><procedure>EmitBody</procedure></A> (x: Raiser) =
       CG.Pop_param (CG.Type.Addr);
       CG.Load_addr (x.module);
       CG.Pop_param (CG.Type.Addr);
-      CG.Load_int (x.line);
+      CG.Load_int (Target.Integer.cg_type, x.line);
       CG.Pop_param (Target.Integer.cg_type);
     ELSE
-      CG.Load_int (x.line);
+      CG.Load_int (Target.Integer.cg_type, x.line);
       CG.Pop_param (Target.Integer.cg_type);
       CG.Load_addr (x.module);
       CG.Pop_param (CG.Type.Addr);
@@ -444,6 +444,7 @@ END Exceptionz.
 <HR>
 <A NAME="x3">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
@@ -455,6 +456,20 @@ END Exceptionz.
 </A><UL>
 <LI><A HREF="../misc/Token.i3.html#0TOP0">m3front/src/misc/Token.i3</A>
 <LI><A HREF="../../../mentor/src/parse/Token.i3.html#0TOP0">mentor/src/parse/Token.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x5">interface Decl is in:
+</A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Decl.i3.html#0TOP0">cm3ide/src/nodes/Decl.i3</A>
+<LI><A HREF="Decl.i3.html#0TOP0">m3front/src/values/Decl.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x6">interface Marker is in:
+</A><UL>
+<LI><A HREF="../../../cm3ide/src/markup/Marker.i3.html#0TOP0">cm3ide/src/markup/Marker.i3</A>
+<LI><A HREF="../misc/Marker.i3.html#0TOP0">m3front/src/misc/Marker.i3</A>
 </UL>
 <P>
 <PRE>

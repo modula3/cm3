@@ -1,0 +1,93 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: m3front/src/builtinLong/LongModule.m3</TITLE>
+</HEAD>
+<BODY bgcolor="#ffffff">
+<A NAME="0TOP0">
+<H2>m3front/src/builtinLong/LongModule.m3</H2></A><HR>
+<inModule>
+<PRE></PRE> Copyright (C) 1992, Digital Equipment Corporation           
+ All rights reserved.                                        
+ See the file COPYRIGHT for a full description.              
+
+<P> File: LongModule.m3                                         
+ Last Modified On Tue Mar  2 09:13:12 PST 1993 By kalsow     
+      Modified On Thu Jul 27 17:10:39 1989 By muller         
+
+<P><PRE>MODULE <module><implements><A HREF="LongModule.i3.html">LongModule</A></implements></module>;
+
+IMPORT <A HREF="../misc/Scope.i3.html">Scope</A>, <A HREF="../values/Tipe.i3.html">Tipe</A>, <A HREF="../values/Module.i3.html">Module</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../exprs/IntegerExpr.i3.html">IntegerExpr</A>, <A HREF="../values/Constant.i3.html">Constant</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="../types/NamedType.i3.html">NamedType</A>;
+IMPORT <A HREF="LongPlus.i3.html">LongPlus</A> AS Plus, <A HREF="LongMinus.i3.html">LongMinus</A> AS Minus, <A HREF="LongTimes.i3.html">LongTimes</A> AS Times;
+IMPORT <A HREF="LongLT.i3.html">LongLT</A> AS LT, <A HREF="LongLE.i3.html">LongLE</A> AS LE, <A HREF="LongGT.i3.html">LongGT</A> AS GT, <A HREF="LongGE.i3.html">LongGE</A> AS GE;
+IMPORT <A HREF="LongAnd.i3.html">LongAnd</A> AS And, <A HREF="LongOr.i3.html">LongOr</A> AS Or, <A HREF="LongXor.i3.html">LongXor</A> AS Xor;
+IMPORT <A HREF="LongShift.i3.html">LongShift</A> AS Shift, <A HREF="LongRotate.i3.html">LongRotate</A> AS Rotate;
+IMPORT <A HREF="LongExtract.i3.html">LongExtract</A> AS Extract, <A HREF="LongInsert.i3.html">LongInsert</A> AS Insert;
+IMPORT <A HREF="LongNot.i3.html">LongNot</A> AS Not, <A HREF="LongDivide.i3.html">LongDivide</A> AS Divide, <A HREF="LongMod.i3.html">LongMod</A> AS Mod;
+FROM <A HREF="../builtinTypes/LInt.i3.html">LInt</A> IMPORT T;
+
+PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A> () =
+  VAR zz: Scope.T;  size: Target.Int;  b: BOOLEAN;
+  BEGIN
+
+    b := TInt.FromInt (Target.Longint.size, Target.Integer.bytes, size);
+    &lt;*ASSERT b*&gt;
+    M := Module.NewDefn (&quot;Long&quot;, TRUE, NIL);
+
+    (* WARNING: The following list must be in the same order
+        as the actual Long.i3 file, otherwise the version
+        stamps will be messed up! *)
+
+    zz := Scope.Push (Module.ExportScope (M));
+    Tipe.Define (&quot;T&quot;, NamedType.New (T), FALSE);
+    Constant.Declare (&quot;Size&quot;, IntegerExpr.New (Int.T, size), FALSE);
+    Plus.Initialize ();
+    Times.Initialize ();
+    Minus.Initialize ();
+    Divide.Initialize ();
+    Mod.Initialize ();
+    LT.Initialize ();
+    LE.Initialize ();
+    GT.Initialize ();
+    GE.Initialize ();
+    And.Initialize ();
+    Or.Initialize ();
+    Xor.Initialize ();
+    Not.Initialize ();
+    Shift.Initialize ();
+    Rotate.Initialize ();
+    Extract.Initialize ();
+    Insert.Initialize ();
+    Scope.Pop (zz);
+  END Initialize;
+
+BEGIN
+END LongModule.
+</PRE>
+</inModule>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

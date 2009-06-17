@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: tcp/src/common/IP.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>tcp/src/common/IP.i3</H2></A><HR>
 <inInterface>
@@ -68,7 +68,9 @@ EXCEPTION Error(EC);
 <P>
 <P><PRE>TYPE
   Port = [0..65535];
-  Address = RECORD a: ARRAY [0..3] OF BITS 8 FOR [0..255]; END;
+  Address4 = RECORD a: ARRAY [0..3] OF BITS 8 FOR [0..255]; END;
+  Address16 = RECORD a: ARRAY [0..16] OF BITS 8 FOR [0..255]; END;
+  Address = Address4;
   Endpoint = RECORD addr: Address; port: Port END;
 </PRE> The type <CODE>Address</CODE> is an IP address in network byte order.
    The type <CODE>Port</CODE> is an IP port number in host byte order.
@@ -76,7 +78,9 @@ EXCEPTION Error(EC);
 
 <P><PRE>CONST
   NullPort: Port = 0;
-  NullAddress = Address{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0}};
+  NullAddress4 = Address{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0}};
+  NullAddress16 = Address{a := ARRAY OF BITS 8 FOR [0..255] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}};
+  NullAddress = NullAddress4;
   NullEndPoint = Endpoint{NullAddress, NullPort};
 
 PROCEDURE <A HREF="../POSIX/IP.m3.html#GetHostByName">GetHostByName</A>(nm: TEXT; VAR (*out*) res: Address): BOOLEAN

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/ExprParse.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/ExprParse.m3</H2></A><HR>
 <inModule>
@@ -22,7 +22,7 @@ IMPORT <A HREF="DivideExpr.i3.html">DivideExpr</A>, <A HREF="ModExpr.i3.html">Mo
 IMPORT <A HREF="NegateExpr.i3.html">NegateExpr</A>, <A HREF="NotExpr.i3.html">NotExpr</A>, <A HREF="ConcatExpr.i3.html">ConcatExpr</A>, <A HREF="IntegerExpr.i3.html">IntegerExpr</A>, <A HREF="ReelExpr.i3.html">ReelExpr</A>;
 IMPORT <A HREF="TextExpr.i3.html">TextExpr</A>, <A HREF="DerefExpr.i3.html">DerefExpr</A>, <A HREF="QualifyExpr.i3.html">QualifyExpr</A>, <A HREF="SubscriptExpr.i3.html">SubscriptExpr</A>, <A HREF="TypeExpr.i3.html">TypeExpr</A>;
 IMPORT <A HREF="CallExpr.i3.html">CallExpr</A>, <A HREF="ConsExpr.i3.html">ConsExpr</A>, <A HREF="RangeExpr.i3.html">RangeExpr</A>, <A HREF="NamedExpr.i3.html">NamedExpr</A>, <A HREF="KeywordExpr.i3.html">KeywordExpr</A>, <A HREF="EnumExpr.i3.html">EnumExpr</A>;
-IMPORT <A HREF="../types/NamedType.i3.html">NamedType</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="../builtinTypes/WCharr.i3.html">WCharr</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../types/Brand.i3.html">Brand</A>;
+IMPORT <A HREF="../types/NamedType.i3.html">NamedType</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="../builtinTypes/WCharr.i3.html">WCharr</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../types/Brand.i3.html">Brand</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../builtinTypes/LInt.i3.html">LInt</A>;
 
 FROM <A HREF="../misc/Scanner.i3.html">Scanner</A> IMPORT Match, MatchID, GetToken, Fail, cur, offset;
 
@@ -177,19 +177,19 @@ PROCEDURE <A NAME="E6"><procedure>E6</procedure></A> (types: BOOLEAN; ): Expr.T 
   END E6;
 
 PROCEDURE <A NAME="E8"><procedure>E8</procedure></A> (types: BOOLEAN): Expr.T =
-  TYPE RP = ReelExpr.Precision;
   VAR a: Expr.T;  here := offset;
   BEGIN
     CASE cur.token OF
     | TK.tIDENT        =&gt; a := NamedExpr.New (cur.id, cur.defn);    GetToken ();
-    | TK.tCARDCONST    =&gt; a := IntegerExpr.New (cur.int);           GetToken ();
+    | TK.tINTEGERCONST =&gt; a := IntegerExpr.New (Int.T, cur.int);    GetToken ();
+    | TK.tLONGINTCONST =&gt; a := IntegerExpr.New (LInt.T, cur.int);   GetToken ();
     | TK.tCHARCONST    =&gt; a := EnumExpr.New (Charr.T, cur.int);     GetToken ();
     | TK.tWCHARCONST   =&gt; a := EnumExpr.New (WCharr.T, cur.int);    GetToken ();
     | TK.tTEXTCONST    =&gt; a := TextExpr.New8 (cur.str);             GetToken ();
     | TK.tWTEXTCONST   =&gt; a := TextExpr.New16 (cur.wstr);           GetToken ();
-    | TK.tREALCONST    =&gt; a := ReelExpr.New (cur.float, RP.Short);  GetToken ();
-    | TK.tLONGREALCONST=&gt; a := ReelExpr.New (cur.float,RP.Long);    GetToken ();
-    | TK.tEXTENDEDCONST=&gt; a := ReelExpr.New(cur.float, RP.Extended); GetToken();
+    | TK.tREALCONST    =&gt; a := ReelExpr.New (cur.float);            GetToken ();
+    | TK.tLONGREALCONST=&gt; a := ReelExpr.New (cur.float);            GetToken ();
+    | TK.tEXTENDEDCONST=&gt; a := ReelExpr.New (cur.float);            GetToken();
 
     | TK.tLPAREN =&gt;
         GetToken ();
@@ -210,7 +210,7 @@ PROCEDURE <A NAME="E8"><procedure>E8</procedure></A> (types: BOOLEAN): Expr.T =
         a.origin := here;
 
     ELSE
-        Fail (&quot;bad expression&quot;); a := IntegerExpr.New (TInt.Zero);
+        Fail (&quot;bad expression&quot;); a := IntegerExpr.New (Int.T, TInt.Zero);
     END;
     RETURN a;
   END E8;
@@ -257,7 +257,7 @@ PROCEDURE <A NAME="ESelector"><procedure>ESelector</procedure></A> (types: BOOLE
         a.origin := here;
     | TK.tBRANDED, TK.tOBJECT =&gt;
         IF (types) THEN
-	  brand := Brand.Parse ();
+          brand := Brand.Parse ();
           IF NamedExpr.SplitName (a, name) THEN
             t := NamedType.Create (M3ID.NoID, name);
           ELSIF QualifyExpr.SplitQID (a, module, name) THEN
@@ -266,7 +266,7 @@ PROCEDURE <A NAME="ESelector"><procedure>ESelector</procedure></A> (types: BOOLE
             t := NIL;
             Fail (&quot;bad selector&quot;);
           END;
-	  a := TypeExpr.New (ObjectType.Parse (t, TRUE, brand));
+          a := TypeExpr.New (ObjectType.Parse (t, TRUE, brand));
           a.origin := here;
         END;
     ELSE Fail (&quot;bad selector&quot;);
@@ -415,6 +415,7 @@ END ExprParse.
 <HR>
 <A NAME="x3">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-machine/src/JunoRT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-machine/src/JunoRT.i3</H2></A><HR>
 <inInterface>
@@ -71,17 +71,17 @@ TYPE
   Sig = RECORD outs, inouts, ins: CARDINAL END;
 </PRE> If <CODE>p: ProcAttr</CODE>, <CODE>p.name</CODE> must be non-NIL, but <CODE>p.modName</CODE> may be
    NIL to indicate an anonymous module. 
-   
+
 <P><PRE>PROCEDURE <A HREF="JunoRT.m3.html#GetCodeIndex">GetCodeIndex</A>(READONLY pa: ProcAttr): CARDINAL;
 </PRE><BLOCKQUOTE><EM> Return the code index previously allocated to the internal procedure
-   with the name in <CODE>pa</CODE>, or allocate and return an index 
-   for that procedure if one has not been allocated for it previously. 
+   with the name in <CODE>pa</CODE>, or allocate and return an index
+   for that procedure if one has not been allocated for it previously.
    Requires that <CODE>pa</CODE> be valid. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="JunoRT.m3.html#GetExtCodeIndex">GetExtCodeIndex</A>(READONLY pa: ProcAttr): CARDINAL;
 </PRE><BLOCKQUOTE><EM> Return the code index previously allocated to the external procedure
-   with the name in <CODE>pa</CODE>, or allocate and return an index 
-   for that procedure if one has not been allocated for it previously. 
+   with the name in <CODE>pa</CODE>, or allocate and return an index
+   for that procedure if one has not been allocated for it previously.
    Requires that <CODE>pa</CODE> be valid. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="JunoRT.m3.html#GetProcAttr">GetProcAttr</A>(s: CARDINAL): ProcAttr;

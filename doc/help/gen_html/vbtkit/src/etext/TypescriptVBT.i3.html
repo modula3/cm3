@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/etext/TypescriptVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/etext/TypescriptVBT.i3</H2></A><HR>
 <inInterface>
@@ -25,7 +25,7 @@
       reader(v)           <KBD>an intermittent, unseekable reader</KBD>
       writer(v)           <KBD>a buffered, unseekable writer</KBD>
       readingThread(v)    <KBD>a thread</KBD>
-   </PRE>
+</PRE>
    <CODE>reader(v)</CODE> provides the client with input that the user typed.
    <CODE>writer(v)</CODE> is used to display output. The reader and writer are
    paired such that the writer is flushed whenever a seek blocks on
@@ -79,7 +79,7 @@ TYPE
 <P>
    The call <CODE>v.interrupt(time)</CODE> simulates an interrupt by
    flushing any pending type-in, writing the characters <CODE>^C</CODE>, and then
-   calling <CODE>v.handleInterrupt(time)</CODE>. 
+   calling <CODE>v.handleInterrupt(time)</CODE>.
 <P>
    The call <CODE>v.handleInterrupt(time)</CODE> alerts <CODE>readingThread(v)</CODE>.
 <P>

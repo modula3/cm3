@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/Anim3D.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/Anim3D.i3</H2></A><HR>
 <inInterface>
@@ -15,9 +15,9 @@
 
 <P>
 <P> This interface provides access to the ``animation clock'', the clock that
-   is used to drive animations. Clients can inquire the current time, and can 
+   is used to drive animations. Clients can inquire the current time, and can
    change the clock that is used. The default animation clock is a real-time
-   clock; one particular alternative is <CODE>ZeusClock.T</CODE>, a clock that is 
+   clock; one particular alternative is <CODE>ZeusClock.T</CODE>, a clock that is
    controlled by the Zeus algorithm animation system. 
 
 <P><PRE>INTERFACE <interface><A HREF="Anim3D.m3.html">Anim3D</A></interface>;
@@ -28,7 +28,7 @@ PROCEDURE <A HREF="Anim3D.m3.html#Now">Now</A> () : LONGREAL;
 </PRE><BLOCKQUOTE><EM> Return the current value of the animation clock. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="Anim3D.m3.html#ChangeClock">ChangeClock</A> (clock : Clock.T);
-</PRE><BLOCKQUOTE><EM> Let <CODE>clock</CODE> be the new animation clock. This procedure should not be 
+</PRE><BLOCKQUOTE><EM> Let <CODE>clock</CODE> be the new animation clock. This procedure should not be
    called while an animation is in progress; terrible things might happen. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="Anim3D.m3.html#SetErrorWr">SetErrorWr</A> (wr : Wr.T);
@@ -36,9 +36,9 @@ PROCEDURE <A HREF="Anim3D.m3.html#SetErrorWr">SetErrorWr</A> (wr : Wr.T);
    be <CODE>wr</CODE>. By default, error messages are written to <CODE>Stdio.stderr</CODE>. </EM></BLOCKQUOTE><PRE>
 
 VAR lock : MUTEX;
-</PRE><BLOCKQUOTE><EM> A client that wants to prevent the animation server from rendering an 
-   inconsistent scene should protect the critical section during which 
-   the scene is inconsistent by acquiring <CODE>lock</CODE>. Not acquiring <CODE>lock</CODE> 
+</PRE><BLOCKQUOTE><EM> A client that wants to prevent the animation server from rendering an
+   inconsistent scene should protect the critical section during which
+   the scene is inconsistent by acquiring <CODE>lock</CODE>. Not acquiring <CODE>lock</CODE>
    will never crash a program. <CODE>lock</CODE> may not be held when <CODE>ah.animate()</CODE>
    is called for some animation handle <CODE>ah</CODE>. </EM></BLOCKQUOTE><PRE>
 
