@@ -1,0 +1,21 @@
+<p>
+  m3tohtml reads one or more CM3 packages and creates an HTML tree of all
+  interfaces and modules together with a complete index structure.
+  All interface, module, procedure, and type names are converted into
+  hyperrefs pointing to the appropriate definition.
+</p>
+<pre>
+  m3tohtml [<options>] <pkg>+
+or
+  m3tohtml [<options>]  <  <file-list>
+
+  options:
+
+    -force|-F                        overwrite existing HTML.index
+    -root|-pkgroot <package root>    defined package root directory
+                                     (default: PKG_USE from cm3.cfg)
+    -dir|-dest <outdir>              create output in directory outdir
+    -d|-debug                        display debug output
+    -v|-verbose                      be verbose
+    -p <pre-process-filter>          filter the sources before processing
+</pre>
