@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: tcp/src/POSIX/IP.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>tcp/src/POSIX/IP.m3</H2></A><HR>
 <inModule>
@@ -16,17 +16,18 @@
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="../common/IP.i3.html">IP</A></implements></module>;
 
 IMPORT <A HREF="Herrno.i3.html">Herrno</A>, <A HREF="../common/IPError.i3.html">IPError</A>, <A HREF="../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>,
-       <A HREF="../../../m3core/src/unix/linux-libc6/Unetdb.i3.html">Unetdb</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Usocket.i3.html">Usocket</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Uin.i3.html">Uin</A>, <A HREF="../../../m3core/src/unix/linux-libc6/Utypes.i3.html">Utypes</A>;
+       <A HREF="#x1">Unetdb</A>, <A HREF="#x2">Usocket</A>, <A HREF="#x3">Unix</A>, <A HREF="#x4">Uin</A>, <A HREF="#x5">Utypes</A>;
 
 VAR mu := NEW(MUTEX);
 
 PROCEDURE <A NAME="GetHostByName"><procedure>GetHostByName</procedure></A>(nm: TEXT; VAR (*out*) res: Address): BOOLEAN
     RAISES {Error} =
+VAR hostent: Unetdb.struct_hostent;
   BEGIN
     LOCK mu DO
       VAR
         s := M3toC.SharedTtoS(nm);
-        h := Unetdb.gethostbyname(s);
+        h := Unetdb.gethostbyname(s, ADR(hostent));
       BEGIN
         M3toC.FreeSharedS(nm, s);
         IF h = NIL THEN InterpretError(); RETURN FALSE; END;
@@ -37,11 +38,12 @@ PROCEDURE <A NAME="GetHostByName"><procedure>GetHostByName</procedure></A>(nm: T
   END GetHostByName;
 
 PROCEDURE <A NAME="GetCanonicalByName"><procedure>GetCanonicalByName</procedure></A>(nm: TEXT): TEXT RAISES {Error} =
+VAR hostent: Unetdb.struct_hostent;
   BEGIN
     LOCK mu DO
       VAR
         s := M3toC.SharedTtoS(nm);
-        h := Unetdb.gethostbyname(s);
+        h := Unetdb.gethostbyname(s, ADR(hostent));
       BEGIN
         M3toC.FreeSharedS(nm, s);
         IF h # NIL THEN
@@ -55,11 +57,12 @@ PROCEDURE <A NAME="GetCanonicalByName"><procedure>GetCanonicalByName</procedure>
 
 PROCEDURE <A NAME="GetCanonicalByAddr"><procedure>GetCanonicalByAddr</procedure></A>(addr: Address): TEXT RAISES {Error} =
   VAR ua: Uin.struct_in_addr;
+      hostent: Unetdb.struct_hostent;
   BEGIN
     ua.s_addr := LOOPHOLE(addr, Utypes.u_int);
     LOCK mu DO
       VAR h := Unetdb.gethostbyaddr(
-                   ADR(ua), BYTESIZE(ua), Usocket.AF_INET);
+                   ADR(ua), BYTESIZE(ua), Usocket.AF_INET, ADR(hostent));
       BEGIN
         IF h # NIL THEN
           RETURN M3toC.CopyStoT(h.h_name);
@@ -81,12 +84,14 @@ PROCEDURE <A NAME="GetAddress"><procedure>GetAddress</procedure></A> (ent: Unetd
 
 PROCEDURE <A NAME="GetHostAddr"><procedure>GetHostAddr</procedure></A>(): Address =
   VAR hname: ARRAY [0..255] OF CHAR;
+      hostent: Unetdb.struct_hostent;
   BEGIN
     LOCK mu DO
       IF Unix.gethostname(ADR(hname[0]), BYTESIZE(hname)) # 0 THEN
         IPError.Die ();
       END;
-      VAR h := Unetdb.gethostbyname(ADR(hname[0])); BEGIN
+      VAR h := Unetdb.gethostbyname(ADR(hname[0]), ADR(hostent));
+      BEGIN
         IF h = NIL THEN IPError.Die(); END;
         RETURN GetAddress(h);
       END;
@@ -94,11 +99,10 @@ PROCEDURE <A NAME="GetHostAddr"><procedure>GetHostAddr</procedure></A>(): Addres
   END GetHostAddr;
 
 PROCEDURE <A NAME="InterpretError"><procedure>InterpretError</procedure></A>() RAISES {Error} =
+  VAR err := Herrno.Get_h_errno();
   BEGIN
-    CASE Herrno.Get_h_errno() OF
-    | Unetdb.TRY_AGAIN, Unetdb.NO_RECOVERY, Unetdb.NO_ADDRESS =&gt;
+    IF (err = Unetdb.TRY_AGAIN) OR (err = Unetdb.NO_RECOVERY) OR (err = Unetdb.NO_ADDRESS) THEN
         IPError.Raise (LookupFailure);
-    ELSE
     END;
   END InterpretError;
 
@@ -106,6 +110,45 @@ BEGIN
 END IP.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Unetdb is in:
+</A><UL>
+<LI><A HREF="../../../m3core/src/unix/Common/Unetdb.i3.html#0TOP0">m3core/src/unix/Common/Unetdb.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-common/Unetdb.i3.html#0TOP0">m3core/src/unix/linux-common/Unetdb.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-libc6/Unetdb.i3.html#0TOP0">m3core/src/unix/linux-libc6/Unetdb.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Usocket is in:
+</A><UL>
+<LI><A HREF="../../../m3core/src/unix/Common/Usocket.i3.html#0TOP0">m3core/src/unix/Common/Usocket.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-common/Usocket.i3.html#0TOP0">m3core/src/unix/linux-common/Usocket.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-libc6/Usocket.i3.html#0TOP0">m3core/src/unix/linux-libc6/Usocket.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface Unix is in:
+</A><UL>
+<LI><A HREF="../../../m3core/src/unix/Common/Unix.i3.html#0TOP0">m3core/src/unix/Common/Unix.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-common/Unix.i3.html#0TOP0">m3core/src/unix/linux-common/Unix.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-libc6/Unix.i3.html#0TOP0">m3core/src/unix/linux-libc6/Unix.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x4">interface Uin is in:
+</A><UL>
+<LI><A HREF="../../../m3core/src/unix/linux-libc6/Uin.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uin.i3</A>
+<LI><A HREF="../../../m3core/src/unix/uin-common/Uin.i3.html#0TOP0">m3core/src/unix/uin-common/Uin.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x5">interface Utypes is in:
+</A><UL>
+<LI><A HREF="../../../m3core/src/unix/Common/Utypes.i3.html#0TOP0">m3core/src/unix/Common/Utypes.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-common/Utypes.i3.html#0TOP0">m3core/src/unix/linux-common/Utypes.i3</A>
+<LI><A HREF="../../../m3core/src/unix/linux-libc6/Utypes.i3.html#0TOP0">m3core/src/unix/linux-libc6/Utypes.i3</A>
+</UL>
+<P>
 <PRE>
 
 

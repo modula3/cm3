@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/sem/M3CBitSize.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/sem/M3CBitSize.m3</H2></A><HR>
 <inModule>
@@ -151,7 +151,7 @@ PROCEDURE <A NAME="CheckOrdinal"><procedure>CheckOrdinal</procedure></A>(
     IF M3COrdinal.Is(ts, baseType) THEN
       TYPECASE baseType OF
       | NULL =&gt;
-      | M3AST_AS.Integer_type =&gt;
+      | M3AST_AS.INT_TYPE =&gt;
           RETURN;
       | M3AST_AS.WideChar_type,
         M3AST_AS.Enumeration_type =&gt;

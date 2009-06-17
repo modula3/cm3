@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/convert/CConvert.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/convert/CConvert.m3</H2></A><HR>
 <inModule>
@@ -11,13 +11,57 @@
  See the file COPYRIGHT for a full description.             
 
 <P> Last modified on Thu Jan  4 02:29:41 1990 by muller        
-      modified on Thu Dec 21 11:24:22 1989 by kalsow         
+      modified on Thu Dec 21 11:24:22 1989 by kalsow        
 
 <P><PRE>MODULE <module><implements><A HREF="CConvert.i3.html">CConvert</A></implements></module>;
+IMPORT <A HREF="../runtime/common/RTOS.i3.html">RTOS</A>, <A HREF="#x1">ThreadF</A>;
+
+VAR
+  locked := ARRAY[0..1] OF BOOLEAN {FALSE, ..};
+  waiters := ARRAY[0..1] OF BOOLEAN {FALSE, ..};
+
+PROCEDURE <A NAME="Acquire"><procedure>Acquire</procedure></A> (n: INTEGER) =
+  VAR thread := ThreadF.MyHeapState();
+  BEGIN
+    TRY
+      RTOS.LockHeap(thread^);
+      WHILE locked[n] DO
+        waiters[n] := TRUE;
+        RTOS.WaitHeap(thread^);
+      END;
+      locked[n] := TRUE;
+    FINALLY
+      RTOS.UnlockHeap(thread^);
+    END;
+  END Acquire;
+
+PROCEDURE <A NAME="Release"><procedure>Release</procedure></A> (n: INTEGER) =
+  VAR thread := ThreadF.MyHeapState();
+  BEGIN
+    TRY
+      RTOS.LockHeap(thread^);
+      &lt;*ASSERT locked[n]*&gt;
+      locked[n] := FALSE;
+      IF waiters[n] THEN
+        waiters[n] := FALSE;
+        RTOS.BroadcastHeap();
+      END;
+    FINALLY
+      RTOS.UnlockHeap(thread^);
+    END;
+  END Release;
+
 BEGIN
 END CConvert.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface ThreadF is in:
+</A><UL>
+<LI><A HREF="../thread/POSIX/ThreadF.i3.html#0TOP0">m3core/src/thread/POSIX/ThreadF.i3</A>
+<LI><A HREF="../thread/PTHREAD/ThreadF.i3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadF.i3</A>
+</UL>
+<P>
 <PRE>
 
 

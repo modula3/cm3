@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/OffsetVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/OffsetVBT.i3</H2></A><HR>
 <inInterface>
@@ -17,7 +17,7 @@
 </PRE> An <CODE>OffsetVBT.T</CODE> is a filter that maintains a translation
    between the coordinate systems of the child and parent.
    The parent's domain has its northwest corner at an arbitrary
-   offset from the child's. The child's domain width and height 
+   offset from the child's. The child's domain width and height
    correspond to the child's preferred size.
 <P>
    The parent's domain may be a different size than the child's.
@@ -26,7 +26,7 @@
    show a portion of the child, displays in a background color.
 <P>
    For <CODE>Simple</CODE>, there is no restriction on the coordinates
-   of the northwest corner. For <CODE>T</CODE>, the child's domain has its 
+   of the northwest corner. For <CODE>T</CODE>, the child's domain has its
    northwest corner at (0, 0); this is used when a child
    is connected to several JoinParent which are viewing the
    same child at several locations on the scree.
@@ -52,7 +52,7 @@ TYPE
     END;
 </PRE> The call <CODE>v.init(ch)</CODE> initializes <CODE>v</CODE> as an <CODE>OffsetVBT</CODE> with
    child <CODE>ch</CODE>.  And the northwest corner of the parent is aligned
-   at co-ordinate (<CODE>north</CODE>, <CODE>west</CODE>) mm in the child domain. 
+   at co-ordinate (<CODE>north</CODE>, <CODE>west</CODE>) mm in the child domain.
 <P>
    The call <CODE>v.move(north, west)</CODE> adjusts the co-ordinate system
    so that the <CODE>v</CODE>s northwest corner is positioned at co-ordinate

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/trestle/Trestle.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/trestle/Trestle.m3</H2></A><HR>
 <inModule>
@@ -65,9 +65,9 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A>() =
   BEGIN
     IF NOT inited THEN
       LOCK initMu DO
-      	IF NOT inited THEN
+        IF NOT inited THEN
           TrestleOS.Init();
-	  (* Add other classes of window system here *)
+          (* Add other classes of window system here *)
           TrestleConf.Init(CreateUser);
           defaultUser := Env.Get(&quot;ARGOUSER&quot;);
           IF defaultUser = NIL THEN defaultUser := TrestleOS.UserName() END;
@@ -1013,7 +1013,7 @@ PROCEDURE <A NAME="Crash"><procedure>Crash</procedure></A>() =
 
 <P> PROCEDURE Swap(v, w: VBT.T) RAISES {TrestleComm.Failure, Unimplemented} = BEGIN RAISE Unimplemented END Swap; 
 
-<P> PROCEDURE GetName(v: VBT.T): TEXT RAISES {TrestleComm.Failure} = 
+<P> PROCEDURE GetName(v: VBT.T): TEXT RAISES {TrestleComm.Failure} =
   BEGIN RAISE Unimplemented END GetName; 
 
 <P> PROCEDURE NameList(
@@ -1022,13 +1022,13 @@ PROCEDURE <A NAME="Crash"><procedure>Crash</procedure></A>() =
     : REF ARRAY OF TEXT
   RAISES {TrestleComm.Failure} = BEGIN RAISE Unimplemented END NameList; 
 
-<P> PROCEDURE MoveNearByName(v: VBT.T; nm: TEXT) RAISES {TrestleComm.Failure} = 
+<P> PROCEDURE MoveNearByName(v: VBT.T; nm: TEXT) RAISES {TrestleComm.Failure} =
   BEGIN RAISE Unimplemented END MoveNearByName; 
 
 <P> PROCEDURE SwapByName(
     v: VBT.T;
     nm: TEXT)
-  RAISES {TrestleComm.Failure, Unimplemented} = 
+  RAISES {TrestleComm.Failure, Unimplemented} =
   BEGIN RAISE Unimplemented END SwapByName; 
 
 <P> PROCEDURE DeleteByName(nm: TEXT; trsl: T := NIL) RAISES {TrestleComm.Failure} = BEGIN RAISE Unimplemented END DeleteByName; 
@@ -1037,23 +1037,23 @@ PROCEDURE <A NAME="Crash"><procedure>Crash</procedure></A>() =
     id: ScreenID;
     v: VBT.T;
     trsl: T := NIL)
-  RAISES {TrestleComm.Failure, Unimplemented} = 
+  RAISES {TrestleComm.Failure, Unimplemented} =
   BEGIN RAISE Unimplemented END TakeOver; 
 
 <P> PROCEDURE Restore(
     id: ScreenID;
     v: VBT.T)
-  RAISES {TrestleComm.Failure, Unimplemented} = 
+  RAISES {TrestleComm.Failure, Unimplemented} =
   BEGIN RAISE Unimplemented END Restore; 
 
 <P> PROCEDURE TakeOverMouse(
     id: ScreenID;
     v: VBT.T;
     trsl: T := NIL)
-  RAISES {TrestleComm.Failure} = 
+  RAISES {TrestleComm.Failure} =
   BEGIN RAISE Unimplemented END TakeOverMouse; 
 
-<P> PROCEDURE ReleaseMouse(id: ScreenID; v: VBT.T) RAISES {TrestleComm.Failure} = 
+<P> PROCEDURE ReleaseMouse(id: ScreenID; v: VBT.T) RAISES {TrestleComm.Failure} =
   BEGIN RAISE Unimplemented END ReleaseMouse; 
 
 <P> PROCEDURE SetHighlight(
@@ -1067,14 +1067,14 @@ PROCEDURE <A NAME="Crash"><procedure>Crash</procedure></A>() =
     prnt: VBT.T;
     id: ScreenID;
     trsl: T := NIL)
-  RAISES {TrestleComm.Failure, Unimplemented} = 
+  RAISES {TrestleComm.Failure, Unimplemented} =
   BEGIN RAISE Unimplemented END AddParent; 
 
 <P> PROCEDURE RemParent(
     prnt: VBT.T;
     id: ScreenID;
     trsl: T := NIL)
-  RAISES {TrestleComm.Failure, Unimplemented} = 
+  RAISES {TrestleComm.Failure, Unimplemented} =
   BEGIN RAISE Unimplemented END RemParent; 
 
 <P> PROCEDURE WarpCursor(
@@ -1086,10 +1086,10 @@ PROCEDURE <A NAME="Crash"><procedure>Crash</procedure></A>() =
 <P> PROCEDURE LastCeded(
     trsl: T := NIL)
     : VBT.TimeStamp
-  RAISES {TrestleComm.Failure, Unimplemented} = 
+  RAISES {TrestleComm.Failure, Unimplemented} =
   BEGIN RAISE Unimplemented END LastCeded; 
 
-<P> PROCEDURE GetParameters(trsl: T := NIL): Parameters 
+<P> PROCEDURE GetParameters(trsl: T := NIL): Parameters
   RAISES {TrestleComm.Failure} = BEGIN RAISE Unimplemented END GetParameters; 
 
 <P> PROCEDURE SetParameters(

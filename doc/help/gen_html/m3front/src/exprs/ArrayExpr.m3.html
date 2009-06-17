@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/ArrayExpr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/ArrayExpr.m3</H2></A><HR>
 <inModule>
@@ -105,13 +105,14 @@ PROCEDURE <A NAME="Subscript"><procedure>Subscript</procedure></A> (array, index
     ELSE      RETURN FALSE;
     END;
     index := Expr.ConstValue (index);
-    IF (NOT IntegerExpr.Split (index, int))
+    IF (NOT IntegerExpr.Split (index, int, t))
       AND (NOT EnumExpr.Split (index, int, t)) THEN
       RETURN FALSE;
     END;
     IF p.index = NIL THEN
       min := TInt.Zero (* FIRST (p.args^) *);
-      b := TInt.FromInt (LAST (p.args^), max);  &lt;* ASSERT b *&gt;
+      b := TInt.FromInt (LAST (p.args^), Target.Integer.bytes, max);
+      &lt;* ASSERT b *&gt;
     ELSE
       EVAL Type.GetBounds (p.index, min, max);
     END;
@@ -135,7 +136,8 @@ PROCEDURE <A NAME="GetBounds"><procedure>GetBounds</procedure></A> (array: Expr.
     | P(p) =&gt; IF p.index = NIL THEN
                 (* open array type *)
                 min := TInt.Zero (* FIRST (p.args^) *);
-                b := TInt.FromInt (LAST (p.args^), max); &lt;*ASSERT b*&gt;
+                b := TInt.FromInt (LAST (p.args^), Target.Integer.bytes, max);
+                &lt;*ASSERT b*&gt;
                 RETURN TRUE;
               ELSE
                 RETURN Type.GetBounds (p.index, min, max);
@@ -218,7 +220,8 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (p: P;  VAR cs: Expr.
         END;
       END;
 
-      IF (solidElt # NIL) AND TInt.FromInt (LAST (p.args^), nn) THEN
+      IF (solidElt # NIL)
+        AND TInt.FromInt (LAST (p.args^), Target.Integer.bytes, nn) THEN
         p.kind := Kind.FixedOpen;
         index := SubrangeType.New (TInt.Zero, nn, Int.T, FALSE);
         p.solidType := ArrayType.New (index, solidElt);
@@ -339,7 +342,7 @@ PROCEDURE <A NAME="DoFixed"><procedure>DoFixed</procedure></A> (p: P;  element: 
     EVAL Type.CheckInfo (p.tipe, info);
     align := info.alignment;
     b := TInt.ToInt (nn_elts, n_elts);    &lt;*ASSERT b*&gt;
-    b := TInt.FromInt (n_args, nn_args);  &lt;*ASSERT b*&gt;
+    b := TInt.FromInt (n_args, Target.Integer.bytes, nn_args);  &lt;*ASSERT b*&gt;
 
     (* If this is a direct structure assignment, the LHS has already
      * been prepped and compiled -- save it.
@@ -360,7 +363,7 @@ PROCEDURE <A NAME="DoFixed"><procedure>DoFixed</procedure></A> (p: P;  element: 
 
     (* fill in the '..' section *)
     IF (p.dots) AND (n_elts &gt; n_args) THEN
-      CG.Load_integer (nn_args);
+      CG.Load_integer (Target.Integer.cg_type, nn_args);
       t2 := CG.Pop_temp ();
       top := CG.Next_label ();
       CG.Set_label (top);
@@ -379,13 +382,13 @@ PROCEDURE <A NAME="DoFixed"><procedure>DoFixed</procedure></A> (p: P;  element: 
 
       (* t2 := t2 + 1 *)
       CG.Push (t2);
-      CG.Load_integer (TInt.One);
+      CG.Load_integer (Target.Integer.cg_type, TInt.One);
       CG.Add (Target.Integer.cg_type);
       CG.Store_temp (t2);
 
       (* IF (t2 &lt; NUMBER(ARRAY) GOTO TOP-OF-LOOP *)
       CG.Push (t2);
-      CG.Load_integer (nn_elts);
+      CG.Load_integer (Target.Integer.cg_type, nn_elts);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.LT, top, CG.Likely);
 
       CG.Free (t2);
@@ -418,8 +421,8 @@ PROCEDURE <A NAME="DoEmpty"><procedure>DoEmpty</procedure></A> (p: P) =
                            in_memory := TRUE);
     CG.Load_nil ();
     CG.Store_addr (t1, M3RT.OA_elt_ptr);
-    CG.Load_integer (TInt.Zero);
-    CG.Store_int (t1, M3RT.OA_size_0);
+    CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
+    CG.Store_int (Target.Integer.cg_type, t1, M3RT.OA_size_0);
 
     (* remember the result *)
     CG.Load_addr_of_temp (t1, 0, Target.Address.align);
@@ -457,7 +460,7 @@ PROCEDURE <A NAME="DoFixedOpen"><procedure>DoFixedOpen</procedure></A> (p: P;  e
 
     (* initialize size[0] of the dope vector *)
     CG.Load_intt (n_args);
-    CG.Store_int (t1, M3RT.OA_size_0);
+    CG.Store_int (Target.Integer.cg_type, t1, M3RT.OA_size_0);
 
     (* initialize the remaining sizes of the dope vector *)
     EVAL ArrayType.Split (p.solidType, index, element);
@@ -465,8 +468,8 @@ PROCEDURE <A NAME="DoFixedOpen"><procedure>DoFixedOpen</procedure></A> (p: P;  e
     FOR i := 1 TO openDepth-1 DO
       EVAL ArrayType.Split (element, index, element);
       &lt;*ASSERT index # NIL*&gt;
-      CG.Load_integer (Type.Number (index));
-      CG.Store_int (t1, offset);
+      CG.Load_integer (Target.Integer.cg_type, Type.Number (index));
+      CG.Store_int (Target.Integer.cg_type, t1, offset);
       INC (offset, Target.Integer.pack);
     END;
 
@@ -511,10 +514,10 @@ PROCEDURE <A NAME="DoOpen"><procedure>DoOpen</procedure></A> (p: P;  elt_pack, e
     CG.Store_addr (t1, M3RT.OA_elt_ptr);
 
     CG.Load_intt (openDepth);
-    CG.Store_int (t1, M3RT.OA_size_0);
+    CG.Store_int (Target.Integer.cg_type, t1, M3RT.OA_size_0);
 
     CG.Load_intt (n_args);
-    CG.Store_int (t1, M3RT.OA_size_1);
+    CG.Store_int (Target.Integer.cg_type, t1, M3RT.OA_size_1);
 
     element := Expr.TypeOf (p.args[0]);
     offset := M3RT.OA_size_1 + Target.Integer.pack;
@@ -524,9 +527,9 @@ PROCEDURE <A NAME="DoOpen"><procedure>DoOpen</procedure></A> (p: P;  elt_pack, e
         CG.Push (t2);
         CG.Open_size (i - 1);
       ELSE
-        CG.Load_integer (Type.Number (index));
+        CG.Load_integer (Target.Integer.cg_type, Type.Number (index));
       END;
-      CG.Store_int (t1, offset);
+      CG.Store_int (Target.Integer.cg_type, t1, offset);
       INC (offset, Target.Integer.pack);
     END;
 
@@ -551,13 +554,16 @@ PROCEDURE <A NAME="DoOpen"><procedure>DoOpen</procedure></A> (p: P;  elt_pack, e
     CG.Open_elt_ptr (Target.Integer.align);
     CG.Store_addr (t1, M3RT.OA_elt_ptr);
     FOR i := 0 TO openDepth-2 DO
-      CG.Load_int (t1, M3RT.OA_sizes + (i + 2) * Target.Integer.pack);
-      CG.Store_int (t1, M3RT.OA_sizes + i * Target.Integer.pack);
+      CG.Load_int (Target.Integer.cg_type,
+                   t1, M3RT.OA_sizes + (i + 2) * Target.Integer.pack);
+      CG.Store_int (Target.Integer.cg_type,
+                    t1, M3RT.OA_sizes + i * Target.Integer.pack);
     END;
 
     (* compute the size of each element in &quot;elt_pack&quot; units *)
     FOR i := 0 TO openDepth-2 DO
-      CG.Load_int (t1, M3RT.OA_sizes + i * Target.Integer.pack);
+      CG.Load_int (Target.Integer.cg_type,
+                   t1, M3RT.OA_sizes + i * Target.Integer.pack);
       IF (i # 0) THEN CG.Multiply (Target.Integer.cg_type) END;
     END;
     t4 := CG.Pop ();
@@ -610,7 +616,7 @@ PROCEDURE <A NAME="Fold"><procedure>Fold</procedure></A> (p: P): Expr.T =
     END;
   END Fold;
 
-PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (p: P): BOOLEAN =
+PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (p: P;  &lt;*UNUSED*&gt; lhs: BOOLEAN): BOOLEAN =
   BEGIN
     FOR i := 0 TO LAST (p.args^) DO
       IF NOT Expr.IsZeroes (p.args[i]) THEN RETURN FALSE END;
@@ -784,6 +790,7 @@ END ArrayExpr.
 <HR>
 <A NAME="x2">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

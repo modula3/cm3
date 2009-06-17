@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: sharedobjgen/src/Main.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>sharedobjgen/src/Main.m3</H2></A><HR>
 <inModule>
@@ -18,11 +18,11 @@
    that cn legitimately be marshalled.
 
 
-<P><PRE>IMPORT <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../m3core/src/runtime/common/RTCollector.i3.html">RTCollector</A>, <A HREF="SOxCodeUtils.i3.html">SOxCodeUtils</A>;
-IMPORT <A HREF="../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>;
+<P><PRE>IMPORT <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../m3core/src/runtime/common/RTCollector.i3.html">RTCollector</A>;
+IMPORT <A HREF="../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>;
 IMPORT <A HREF="#x1">AstToType</A>;
 IMPORT <A HREF="#x2">TypeNames</A>, <A HREF="#x3">StubGenTool</A>;
-IMPORT <A HREF="../../m3tk-misc/src/M3Args.i3.html">M3Args</A>, <A HREF="../../m3tk/src/toolmisc/M3Context.i3.html">M3Context</A>, <A HREF="../../m3tk/src/toolmisc/M3Conventions.i3.html">M3Conventions</A>, <A HREF="../../m3tk/src/ast/M3AST_AS.i3.html">M3AST_AS</A>, <A HREF="../../m3tk/src/toolmisc/M3CUnit.i3.html">M3CUnit</A>, <A HREF="../../m3tk/src/fe/M3CFETool.i3.html">M3CFETool</A>,
+IMPORT <A HREF="../../m3tk/src/toolmisc/M3Context.i3.html">M3Context</A>, <A HREF="../../m3tk/src/toolmisc/M3Conventions.i3.html">M3Conventions</A>, <A HREF="../../m3tk/src/ast/M3AST_AS.i3.html">M3AST_AS</A>, <A HREF="../../m3tk/src/toolmisc/M3CUnit.i3.html">M3CUnit</A>, <A HREF="../../m3tk/src/fe/M3CFETool.i3.html">M3CFETool</A>,
        <A HREF="../../m3tk/src/toolframe/M3ToolFrame.i3.html">M3ToolFrame</A>;
 IMPORT <A HREF="../../m3tk/src/astall/M3AST_all.i3.html">M3AST_all</A>; (* this cannot be omitted; it defines the particular
                      revelations for all the AST nodes *)

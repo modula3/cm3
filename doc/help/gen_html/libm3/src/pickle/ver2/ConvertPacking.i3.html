@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/pickle/ver2/ConvertPacking.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/pickle/ver2/ConvertPacking.i3</H2></A><HR>
 <inInterface>
@@ -126,7 +126,11 @@ TYPE
 <PRE>TYPE
   Kind = {Copy, Swap, Copy32to64, Copy64to32, Swap32to64, Swap64to32};
 
-PROCEDURE <A HREF="ConvertPacking.m3.html#GetKind">GetKind</A>(from: RTPacking.T; local: RTPacking.T): Kind;
+PROCEDURE <A HREF="ConvertPacking.m3.html#GetWordKind">GetWordKind</A>(from: RTPacking.T; local: RTPacking.T): Kind;
+</PRE><BLOCKQUOTE><EM> The result is good for all ordinal types except LONGINT. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="ConvertPacking.m3.html#GetLongintKind">GetLongintKind</A>(from: RTPacking.T; local: RTPacking.T): Kind;
+</PRE><BLOCKQUOTE><EM> The result is good only for LONGINT. </EM></BLOCKQUOTE><PRE>
 
 END ConvertPacking.
 </PRE>

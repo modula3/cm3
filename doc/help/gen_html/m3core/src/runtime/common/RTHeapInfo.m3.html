@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTHeapInfo.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTHeapInfo.m3</H2></A><HR>
 <inModule>
@@ -18,7 +18,7 @@ All rights reserved.
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="RTHeapInfo.i3.html">RTHeapInfo</A></implements></module>;
 
 IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTAllocCnts.i3.html">RTAllocCnts</A>, <A HREF="RTOS.i3.html">RTOS</A>, <A HREF="RTParams.i3.html">RTParams</A>, <A HREF="../POSIX/RTPerfTool.i3.html">RTPerfTool</A>, <A HREF="RTType.i3.html">RTType</A>;
-IMPORT <A HREF="../../text/Text.i3.html">Text</A>, <A HREF="../../thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../C/LINUXLIBC6/Cstring.i3.html">Cstring</A>, <A HREF="../../word/Word.i3.html">Word</A>;
+IMPORT <A HREF="../../text/Text.i3.html">Text</A>, <A HREF="../../thread/Common/Thread.i3.html">Thread</A>, <A HREF="#x1">Cstring</A>, <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="#x2">ThreadF</A>;
 
 TYPE Closure = Thread.Closure OBJECT OVERRIDES apply := Producer END;
 
@@ -31,10 +31,12 @@ VAR
   n_types_sent : CARDINAL := 0;
 
 PROCEDURE <A NAME="Producer"><procedure>Producer</procedure></A> (&lt;*UNUSED*&gt; self: Thread.Closure): REFANY =
-  VAR n: INTEGER;  nTypes: RT0.Typecode;
+  VAR
+    n: INTEGER;  nTypes: RT0.Typecode;
+    thread := ThreadF.MyHeapState();
   BEGIN
     LOOP
-      RTOS.LockHeap ();
+      RTOS.LockHeap (thread^);
         nTypes := MIN (RTAllocCnts.n_types, RTType.MaxTypecode()+1);
 
         SendTypes (nTypes);
@@ -59,7 +61,7 @@ PROCEDURE <A NAME="Producer"><procedure>Producer</procedure></A> (&lt;*UNUSED*&g
           END;
         END;
         Flush ();
-      RTOS.UnlockHeap ();
+      RTOS.UnlockHeap (thread^);
 
       Thread.Pause (update);
     END;
@@ -154,6 +156,7 @@ PROCEDURE <A NAME="SetUpdate"><procedure>SetUpdate</procedure></A> (txt: TEXT) =
 PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> () =
   BEGIN
     IF RTPerfTool.Start (&quot;shownew&quot;, drain) THEN
+      RTAllocCnts.countsOn := TRUE;
       SetUpdate (RTParams.Value (&quot;update&quot;));
       self := Thread.Fork (NEW (Closure));
     END;
@@ -163,6 +166,20 @@ BEGIN
 END RTHeapInfo.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Cstring is in:
+</A><UL>
+<LI><A HREF="../../C/Common/Cstring.i3.html#0TOP0">m3core/src/C/Common/Cstring.i3</A>
+<LI><A HREF="../../C/LINUXLIBC6/Cstring.i3.html#0TOP0">m3core/src/C/LINUXLIBC6/Cstring.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface ThreadF is in:
+</A><UL>
+<LI><A HREF="../../thread/POSIX/ThreadF.i3.html#0TOP0">m3core/src/thread/POSIX/ThreadF.i3</A>
+<LI><A HREF="../../thread/PTHREAD/ThreadF.i3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadF.i3</A>
+</UL>
+<P>
 <PRE>
 
 

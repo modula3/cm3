@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/builtinOps/BuiltinOps.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/builtinOps/BuiltinOps.m3</H2></A><HR>
 <inModule>
@@ -17,7 +17,7 @@
 <P><PRE>MODULE <module><implements><A HREF="BuiltinOps.i3.html">BuiltinOps</A></implements></module>;
 
 IMPORT <A HREF="Abs.i3.html">Abs</A>, <A HREF="Adr.i3.html">Adr</A>, <A HREF="AdrSize.i3.html">AdrSize</A>, <A HREF="BitSize.i3.html">BitSize</A>;
-IMPORT <A HREF="ByteSize.i3.html">ByteSize</A>, <A HREF="Ceiling.i3.html">Ceiling</A>, <A HREF="Dec.i3.html">Dec</A>, <A HREF="Dispose.i3.html">Dispose</A>, <A HREF="First.i3.html">First</A>, <A HREF="Floatt.i3.html">Floatt</A>, <A HREF="Floor.i3.html">Floor</A>;
+IMPORT <A HREF="ByteSize.i3.html">ByteSize</A>, <A HREF="Cas.i3.html">Cas</A>, <A HREF="CasP.i3.html">CasP</A>, <A HREF="Ceiling.i3.html">Ceiling</A>, <A HREF="Dec.i3.html">Dec</A>, <A HREF="Dispose.i3.html">Dispose</A>, <A HREF="First.i3.html">First</A>, <A HREF="Floatt.i3.html">Floatt</A>, <A HREF="Floor.i3.html">Floor</A>;
 IMPORT <A HREF="Inc.i3.html">Inc</A>, <A HREF="IsType.i3.html">IsType</A>, <A HREF="Last.i3.html">Last</A>, <A HREF="Loophole.i3.html">Loophole</A>, <A HREF="Max.i3.html">Max</A>, <A HREF="Min.i3.html">Min</A>, <A HREF="Narrow.i3.html">Narrow</A>;
 IMPORT <A HREF="New.i3.html">New</A>, <A HREF="Number.i3.html">Number</A>, <A HREF="Ord.i3.html">Ord</A>, <A HREF="Round.i3.html">Round</A>, <A HREF="Subarray.i3.html">Subarray</A>, <A HREF="Trunc.i3.html">Trunc</A>, <A HREF="Typecode.i3.html">Typecode</A>, <A HREF="Val.i3.html">Val</A>;
 
@@ -30,6 +30,8 @@ PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A> () =
     AdrSize.Initialize ();
     BitSize.Initialize ();
     ByteSize.Initialize ();
+    Cas.Initialize ();
+    CasP.Initialize ();
     Ceiling.Initialize ();
     Dec.Initialize ();
     Dispose.Initialize ();

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTTipe.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTTipe.i3</H2></A><HR>
 <inInterface>
@@ -22,16 +22,18 @@ TYPE
 TYPE
   Kind = {
     Address, Array, Boolean, Cardinal, Char, Enum, Extended,
-    Integer, Longreal, Null, Object, OpenArray, Packed, Proc, Real,
+    Integer, Longint, Longreal, Null, Object, OpenArray, Packed, Proc, Real,
     Record, Ref, Refany, Set, Subrange, UntracedRef };
 
 CONST
   BuiltinKinds = SET OF Kind {
     Kind.Address, Kind.Boolean, Kind.Cardinal, Kind.Char, Kind.Extended,
-    Kind.Integer, Kind.Longreal, Kind.Null, Kind.Proc, Kind.Real, Kind.Refany
+    Kind.Integer, Kind.Longint, Kind.Longreal, Kind.Null, Kind.Proc, Kind.Real,
+    Kind.Refany
   };
 
 TYPE
+  DoubleInt = RECORD Lo , Hi : INTEGER END; (* Two-word integer. *)
   Builtin   = T OBJECT END;
   Array     = T OBJECT n_elts: INTEGER; element: T; elt_pack: INTEGER; END;
   Enum      = T OBJECT n_elts: INTEGER; END;
@@ -42,7 +44,7 @@ TYPE
   Record    = T OBJECT fields: Field;  END;
   Ref       = T OBJECT traced: BOOLEAN; uid: INTEGER; self: RT0.TypeDefn; END;
   Set       = T OBJECT n_elts: INTEGER; END;
-  Subrange  = T OBJECT min, max: INTEGER; END;
+  Subrange  = T OBJECT min, max: DoubleInt; END;
 
   Field = REF RECORD type: T;  next: Field;  offset: INTEGER := 0; END;
 

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTDebug.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTDebug.m3</H2></A><HR>
 <inModule>
@@ -18,7 +18,12 @@ CONST
 
 VAR
   handler: Handler := NIL;
-  mu := NEW (MUTEX);
+  mu: MUTEX;
+
+PROCEDURE <A NAME="Init"><procedure>Init</procedure></A>() =
+  BEGIN
+    mu := NEW (MUTEX);
+  END Init;
 
 PROCEDURE <A NAME="RegisterHandler"><procedure>RegisterHandler</procedure></A> (p: Handler) =
   BEGIN

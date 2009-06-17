@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/TextVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/TextVBT.i3</H2></A><HR>
 <inInterface>
@@ -39,7 +39,7 @@ TYPE
       fnt: Font.T := Font.BuiltIn;
       bgFg: PaintOp.ColorQuad := NIL): T
   END;
-</PRE> The call <CODE>v.init(...)</CODE> initializes <CODE>v</CODE> as a <CODE>TextVBT</CODE> that displays the 
+</PRE> The call <CODE>v.init(...)</CODE> initializes <CODE>v</CODE> as a <CODE>TextVBT</CODE> that displays the
    text <CODE>txt</CODE> in the font <CODE>fnt</CODE>, and returns <CODE>v</CODE>.
 <P>
    The text will be painted with <CODE>bgFg</CODE>'s foreground; the background
@@ -53,8 +53,8 @@ TYPE
    for other values of <CODE>halign</CODE>, the horizontal position of the text
    is computed by linear interpolation.  In particular, <CODE>halign = 0.5</CODE>
    centers the text horizontally.  The vertical position is determined
-   by <CODE>vmargin</CODE> and <CODE>valign</CODE> in a similar way.  
-   <P>
+   by <CODE>vmargin</CODE> and <CODE>valign</CODE> in a similar way.
+<P>
    Control-left-click in the text sets the source selection to be a
    readonly version of the text.  Thus you can copy the text out of
    any <CODE>TextVBT</CODE>.  
@@ -80,7 +80,7 @@ PROCEDURE <A HREF="TextVBT.m3.html#SetFont">SetFont</A>(
   fnt: Font.T;
   bgFg : PaintOp.ColorQuad := NIL);
 &lt;* LL.sup = VBT.mu *&gt;
-</PRE><BLOCKQUOTE><EM> Set <CODE>v</CODE>'s <CODE>font</CODE> and <CODE>bgFg</CODE> to the given values and mark <CODE>v</CODE> 
+</PRE><BLOCKQUOTE><EM> Set <CODE>v</CODE>'s <CODE>font</CODE> and <CODE>bgFg</CODE> to the given values and mark <CODE>v</CODE>
    for redisplay. If <CODE>bgFg</CODE> is defaulted, <CODE>PaintOp.bgFg</CODE> is used. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="TextVBT.m3.html#GetFont">GetFont</A>(v: T): Font.T; &lt;* LL.sup = VBT.mu *&gt;

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/Cursor.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/Cursor.m3</H2></A><HR>
 <inModule>
@@ -41,7 +41,7 @@ PROCEDURE <A NAME="FromRaw"><procedure>FromRaw</procedure></A> (READONLY r: Raw)
   END FromRaw;
 
 PROCEDURE <A NAME="FixRGB"><procedure>FixRGB</procedure></A>(VAR c: RGB) =
-</PRE><BLOCKQUOTE><EM> adjust c.gray so that it is in [0..1], and c.bw so 
+</PRE><BLOCKQUOTE><EM> adjust c.gray so that it is in [0..1], and c.bw so
    that it is not UseIntensity. </EM></BLOCKQUOTE><PRE>
   BEGIN
     IF c.gray &lt; 0.0 THEN

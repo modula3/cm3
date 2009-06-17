@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-compiler/src/JunoAST.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-compiler/src/JunoAST.i3</H2></A><HR>
 <inInterface>
@@ -16,13 +16,13 @@
 <P><PRE>INTERFACE <interface><A HREF="JunoAST.m3.html">JunoAST</A></interface>;
 </PRE> Juno Abstract Syntax Trees
 <P>
-   This interface defines a data structure for Juno parse trees. 
+   This interface defines a data structure for Juno parse trees.
 <P>
    An AST.T (or <CODE>node</CODE>) represents a syntactically valid sequence of tokens
    from a Juno program or program fragment.  This interface reveals enough
    information to reconstruct the sequence of tokens in the concrete syntax
    that corresponds to an abstract tree, except that the tree reflects only
-   the values of literals; not the source that produced them. 
+   the values of literals; not the source that produced them.
 <P>
    The remainder of this interface consists mostly of declarations for various
    node types (see the end of this file for a summary of the type hierarchy).
@@ -563,7 +563,7 @@ TYPE
 
   QId = AtomicExpr BRANDED &quot;JunoAST.QId&quot; OBJECT
     id0: Id := NIL;			 (* may be NilId *)
-    id1: Id := NIL;			
+    id1: Id := NIL;
     type := IdType.None;		 (* set by JunoCompile.AnnotateAtoms *)
     index: INTEGER := 0;		 (* set by JunoCompile.AnnotateAtoms *)
   END;

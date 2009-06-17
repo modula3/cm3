@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: cm3/src/Builder.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>cm3/src/Builder.i3</H2></A><HR>
 <inInterface>
@@ -11,7 +11,7 @@
 
 <P><PRE>INTERFACE <interface><A HREF="#x1">Builder</A></interface>;
 
-IMPORT <A HREF="Arg.i3.html">Arg</A>, <A HREF="M3Unit.i3.html">M3Unit</A>, <A HREF="../../m3quake/src/Quake.i3.html">Quake</A>;
+IMPORT <A HREF="Arg.i3.html">Arg</A>, <A HREF="M3Unit.i3.html">M3Unit</A>, <A HREF="../../m3quake/src/Quake.i3.html">Quake</A>, <A HREF="../../m3quake/src/QMachine.i3.html">QMachine</A>;
 
 PROCEDURE <A HREF="Builder.m3.html#BuildPgm">BuildPgm</A> (prog: TEXT;  READONLY units: M3Unit.Set;
                     sys_libs: Arg.List;  shared: BOOLEAN;  m: Quake.Machine);
@@ -35,6 +35,8 @@ PROCEDURE <A HREF="Builder.m3.html#CleanUp">CleanUp</A> ();
 PROCEDURE <A HREF="Builder.m3.html#EmitPkgImports">EmitPkgImports</A> (READONLY units: M3Unit.Set);
 </PRE><BLOCKQUOTE><EM> Output all imported packages </EM></BLOCKQUOTE><PRE>
 
+PROCEDURE <A HREF="Builder.m3.html#SetupNamingConventions">SetupNamingConventions</A> (mach : QMachine.T);
+
 END Builder.
 </PRE>
 </inInterface>
@@ -42,6 +44,7 @@ END Builder.
 <A NAME="x1">Builder's implementation  is in:
 </A><UL>
 <LI><A HREF="Builder.m3.html#0TOP0">cm3/src/Builder.m3</A>
+<LI><A HREF="../../cm3ide/src/misc/Builder.m3.html#0TOP0">cm3ide/src/misc/Builder.m3</A>
 <LI><A HREF="../../metasyn/src/Builder.m3.html#0TOP0">metasyn/src/Builder.m3</A>
 </UL>
 <P>

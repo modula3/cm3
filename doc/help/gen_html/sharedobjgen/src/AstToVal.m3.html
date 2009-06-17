@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: sharedobjgen/src/AstToVal.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>sharedobjgen/src/AstToVal.m3</H2></A><HR>
 <inModule>
@@ -22,7 +22,9 @@ PROCEDURE <A NAME="ProcessExp"><procedure>ProcessExp</procedure></A>(
   BEGIN
     TYPECASE exp.sm_exp_value OF
       |  M3CBackEnd_C.Integer_value (int) =&gt;
-           RETURN NEW(Value.Ordinal, ord := int.sm_value)
+           RETURN NEW(Value.Integer, val := int.sm_value)
+      |  M3CBackEnd_C.Longint_value (int) =&gt;
+           RETURN NEW(Value.Longint, val := int.sm_value)
       |  M3CBackEnd_C.Text_value (txt) =&gt;
            RETURN NEW(Value.Txt, val := txt.sm_value)
       |  M3CBackEnd_C.Real_value (real) =&gt;
@@ -31,11 +33,12 @@ PROCEDURE <A NAME="ProcessExp"><procedure>ProcessExp</procedure></A>(
            RETURN NEW(Value.LongFloat, val := lreal.sm_value);
       |  M3CBackEnd_C.Extended_value (ereal) =&gt;
            RETURN NEW(Value.Extended, val := ereal.sm_value);
-      (*
-      |  M3CBackEnd_C.Set_constructor_value =&gt;
-      |  M3CBackEnd_C.Array_or_record_constructor_value =&gt;
-      |  M3CBackEnd_C.Proc_value =&gt;
-      *)
+</PRE><BLOCKQUOTE><EM><P>
+      <PRE>
+       M3CBackEnd_C.Set_constructor_value =&gt; 
+             M3CBackEnd_C.Array_or_record_constructor_value =&gt; 
+             M3CBackEnd_C.Proc_value =&gt; 
+</EM></BLOCKQUOTE><PRE>
       ELSE RAISE SOxCodeUtils.Error(&quot;Runtime error -- shouldn't occur &quot;)
     END;
   END ProcessExp;

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/ast/M3AST_AS_Name.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/ast/M3AST_AS_Name.m3</H2></A><HR>
 <inModule>
@@ -284,6 +284,11 @@ PROCEDURE <A NAME="Integer_type"><procedure>Integer_type</procedure></A>(&lt;*UN
     RETURN &quot;Integer_type&quot;;
   END Integer_type;
 
+PROCEDURE <A NAME="Longint_type"><procedure>Longint_type</procedure></A>(&lt;*UNUSED*&gt; n: M3AST_AS_F.Longint_type): TEXT RAISES {}=
+  BEGIN
+    RETURN &quot;Longint_type&quot;;
+  END Longint_type;
+
 PROCEDURE <A NAME="WideChar_type"><procedure>WideChar_type</procedure></A>(&lt;*UNUSED*&gt; n: M3AST_AS_F.Integer_type): TEXT RAISES {}=
   BEGIN
     RETURN &quot;WideChar_type&quot;;
@@ -428,6 +433,11 @@ PROCEDURE <A NAME="Integer_literal"><procedure>Integer_literal</procedure></A>(&
   BEGIN
     RETURN &quot;Integer_literal&quot;;
   END Integer_literal;
+
+PROCEDURE <A NAME="Longint_literal"><procedure>Longint_literal</procedure></A>(&lt;*UNUSED*&gt; n: M3AST_AS_F.Longint_literal): TEXT RAISES {}=
+  BEGIN
+    RETURN &quot;Longint_literal&quot;;
+  END Longint_literal;
 
 PROCEDURE <A NAME="Real_literal"><procedure>Real_literal</procedure></A>(&lt;*UNUSED*&gt; n: M3AST_AS_F.Real_literal): TEXT RAISES {}=
   BEGIN

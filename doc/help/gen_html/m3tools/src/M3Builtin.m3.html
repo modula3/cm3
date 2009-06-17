@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tools/src/M3Builtin.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tools/src/M3Builtin.m3</H2></A><HR>
 <inModule>
@@ -87,7 +87,7 @@ PROCEDURE <A NAME="Eval"><procedure>Eval</procedure></A> (p: Proc;  READONLY arg
         WITH z = args[0] DO
           IF z.class = M3Const.Class.Integer THEN
             val.class := z.class;
-            val.type  := M3Type.Integer;
+            val.type  := z.type;
             IF TInt.LT (z.int, TInt.Zero)
               THEN MustBe (TInt.Subtract (TInt.Zero, z.int, val.int));
               ELSE val.int := z.int;
@@ -119,7 +119,7 @@ PROCEDURE <A NAME="Eval"><procedure>Eval</procedure></A> (p: Proc;  READONLY arg
               val.type  := M3Type.Integer;
               val.class := M3Const.Class.Integer;
               MustBe (info.size &gt;= 0);
-              MustBe (TInt.FromInt (info.size, val.int));
+              MustBe (TInt.FromInt (info.size, Target.Integer.bytes, val.int));
             END;
           ELSE
             NotImpl (&quot;BYTESIZE(expr)&quot;);
@@ -137,8 +137,9 @@ PROCEDURE <A NAME="Eval"><procedure>Eval</procedure></A> (p: Proc;  READONLY arg
         WITH a = args[0], b = args[0] DO
           MustBe (a.class = b.class);
           IF a.class = M3Const.Class.Integer THEN
+            MustBe (a.type = b.type);
             val.class := a.class;
-            val.type  := M3Type.Integer;
+            val.type  := a.type;
             IF TInt.LT (a.int, b.int)
               THEN val.int := b.int
               ELSE val.int := a.int;
@@ -164,8 +165,9 @@ PROCEDURE <A NAME="Eval"><procedure>Eval</procedure></A> (p: Proc;  READONLY arg
         WITH a = args[0], b = args[0] DO
           MustBe (a.class = b.class);
           IF a.class = M3Const.Class.Integer THEN
+            MustBe (a.type = b.type);
             val.class := a.class;
-            val.type  := M3Type.Integer;
+            val.type  := a.type;
             IF TInt.LT (a.int, b.int)
               THEN val.int := a.int
               ELSE val.int := b.int;

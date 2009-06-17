@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/os/POSIX/SocketPosix.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/os/POSIX/SocketPosix.m3</H2></A><HR>
 <inModule>
@@ -11,9 +11,9 @@
 
 <P><PRE>UNSAFE MODULE <module>SocketPosix</module> EXPORTS <A HREF="../Common/Socket.i3.html"><implements>Socket</A></implements>;
 
-IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="../../../derived/AtomList.i3.html">AtomList</A>, <A HREF="../../../../m3core/derived/Compiler.i3.html">Compiler</A>, <A HREF="../../../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../Common/File.i3.html">File</A>, <A HREF="FilePosix.i3.html">FilePosix</A>;
-IMPORT <A HREF="../Common/OSError.i3.html">OSError</A>, <A HREF="OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../../../../m3core/src/thread/POSIX/SchedulerPosix.i3.html">SchedulerPosix</A>, <A HREF="../../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html">Unix</A>;
-IMPORT <A HREF="../../../../m3core/src/unix/linux-libc6/Uin.i3.html">Uin</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uuio.i3.html">Uuio</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Uerror.i3.html">Uerror</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Usocket.i3.html">Usocket</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Ustat.i3.html">Ustat</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Unetdb.i3.html">Unetdb</A>, <A HREF="../../../../m3core/src/unix/linux-libc6/Utypes.i3.html">Utypes</A>, <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>;
+IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="../../../derived/AtomList.i3.html">AtomList</A>, <A HREF="../../../derived/SocketPosix_IsUltrixOrOSF.i3.html">SocketPosix_IsUltrixOrOSF</A>, <A HREF="../../../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../Common/File.i3.html">File</A>, <A HREF="FilePosix.i3.html">FilePosix</A>;
+IMPORT <A HREF="../Common/OSError.i3.html">OSError</A>, <A HREF="OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="#x1">SchedulerPosix</A>, <A HREF="../../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="#x2">Unix</A>;
+IMPORT <A HREF="#x3">Uin</A>, <A HREF="#x4">Uuio</A>, <A HREF="#x5">Uerror</A>, <A HREF="#x6">Usocket</A>, <A HREF="#x7">Ustat</A>, <A HREF="#x8">Unetdb</A>, <A HREF="#x9">Utypes</A>, <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>;
 
 CONST
   TCP_NODELAY = 1;
@@ -44,9 +44,8 @@ TYPE SockAddrIn = Uin.struct_sockaddr_in;
 
 PROCEDURE <A NAME="Create"><procedure>Create</procedure></A> (reliable: BOOLEAN): T
   RAISES {OSError.E} =
-  CONST
-    Map = ARRAY BOOLEAN OF INTEGER { Usocket.SOCK_DGRAM, Usocket.SOCK_STREAM };
   VAR
+    (*CONST*) Map := ARRAY BOOLEAN OF INTEGER { Usocket.SOCK_DGRAM, Usocket.SOCK_STREAM };
     t    := NEW (T, ds := FilePosix.ReadWrite);
     True := 1;
   BEGIN
@@ -84,7 +83,8 @@ PROCEDURE <A NAME="Status"><procedure>Status</procedure></A> (t: T): File.Status
     IF Ustat.fstat (t.fd, ADR (statBuf)) &lt; 0 THEN IOError (Unexpected); END;
     status.type             := FileType;
     status.modificationTime := FLOAT (statBuf.st_mtime, LONGREAL);
-    status.size             := statBuf.st_size;
+    status.size             := ORD(statBuf.st_size);
+    IF status.size &lt; 0 THEN IOError (Unexpected); END;
     RETURN status
   END Status;
 
@@ -135,29 +135,30 @@ PROCEDURE <A NAME="Connect"><procedure>Connect</procedure></A> (t: T;  READONLY 
         END;
       END;
 
-      CASE Cerrno.GetErrno() OF
-      | Uerror.EISCONN =&gt;
+      WITH errno = Cerrno.GetErrno() DO
+        IF errno = Uerror.EISCONN THEN
           EXIT;
-      | Uerror.EADDRNOTAVAIL,
-        Uerror.ECONNREFUSED,
-        Uerror.EINVAL,
-        Uerror.ECONNRESET,
-        Uerror.EBADF =&gt;
+        ELSIF  (errno = Uerror.EADDRNOTAVAIL)
+            OR (errno = Uerror.ECONNREFUSED)
+            OR (errno = Uerror.EINVAL)
+            OR (errno = Uerror.ECONNRESET)
+            OR (errno = Uerror.EBADF) THEN
           IOError (Refused);
-      | Uerror.ETIMEDOUT =&gt;
+        ELSIF (errno = Uerror.ETIMEDOUT) THEN
           IOError (Timeout);
-      | Uerror.ENETUNREACH,
-        Uerror.EHOSTUNREACH,
-        Uerror.EHOSTDOWN,
-        Uerror.ENETDOWN =&gt;
+        ELSIF  (errno = Uerror.ENETUNREACH)
+            OR (errno = Uerror.EHOSTUNREACH)
+            OR (errno = Uerror.EHOSTDOWN)
+            OR (errno = Uerror.ENETDOWN) THEN
           IOError (Unreachable);
-      | Uerror.EWOULDBLOCK,  &lt;*NOWARN*&gt;
-        Uerror.EAGAIN,       &lt;*NOWARN*&gt;
-        Uerror.EINPROGRESS,
-        Uerror.EALREADY =&gt;
+        ELSIF (errno = Uerror.EWOULDBLOCK)
+           OR (errno = Uerror.EAGAIN)
+           OR (errno = Uerror.EINPROGRESS)
+           OR (errno = Uerror.EALREADY) THEN
           (* nope, not yet *)
-      ELSE
+        ELSE
           IOError (Unexpected);
+        END;
       END;
 
       EVAL SchedulerPosix.IOAlertWait (t.fd, FALSE);
@@ -176,15 +177,16 @@ PROCEDURE <A NAME="Accept"><procedure>Accept</procedure></A> (t: T): T
       fd := Usocket.accept (t.fd, ADR (name), ADR (len));
       IF fd &gt;= 0 THEN EXIT; END;
 
-      CASE Cerrno.GetErrno() OF
-      | Uerror.EMFILE,
-        Uerror.ENFILE =&gt;
+      WITH errno = Cerrno.GetErrno() DO
+        IF  (errno = Uerror.EMFILE)
+            OR (errno = Uerror.ENFILE) THEN
           IOError (NoResources);
-      | Uerror.EWOULDBLOCK,  &lt;*NOWARN*&gt;
-        Uerror.EAGAIN =&gt;     &lt;*NOWARN*&gt;
+        ELSIF  (errno = Uerror.EWOULDBLOCK)
+            OR (errno = Uerror.EAGAIN) THEN
           (* nope, not yet *)
-      ELSE
+        ELSE
           IOError (Unexpected);
+        END;
       END;
 
       EVAL SchedulerPosix.IOAlertWait (t.fd, TRUE);
@@ -215,24 +217,25 @@ PROCEDURE <A NAME="ReceiveFrom"><procedure>ReceiveFrom</procedure></A> (t: T;  V
         RETURN len;
       END;
 
-      CASE Cerrno.GetErrno() OF
-      | Uerror.ECONNRESET =&gt;
+      WITH errno = Cerrno.GetErrno() DO
+        IF (errno = Uerror.ECONNRESET) THEN
           RETURN 0;
-      | Uerror.EPIPE,
-        Uerror.ENETRESET =&gt;
+        ELSIF (errno = Uerror.EPIPE)
+           OR (errno = Uerror.ENETRESET) THEN
           IOError (ConnLost);
-      | Uerror.ETIMEDOUT =&gt;
+        ELSIF (errno = Uerror.ETIMEDOUT) THEN
           IOError (Timeout);
-      | Uerror.ENETUNREACH,
-        Uerror.EHOSTUNREACH,
-        Uerror.EHOSTDOWN,
-        Uerror.ENETDOWN =&gt;
+        ELSIF (errno = Uerror.ENETUNREACH)
+           OR (errno = Uerror.EHOSTUNREACH)
+           OR (errno = Uerror.EHOSTDOWN)
+           OR (errno = Uerror.ENETDOWN) THEN
           IOError (Unreachable);
-      | Uerror.EWOULDBLOCK, &lt;*NOWARN*&gt;
-        Uerror.EAGAIN =&gt;    &lt;*NOWARN*&gt;
+        ELSIF (errno = Uerror.EWOULDBLOCK)
+           OR (errno = Uerror.EAGAIN) THEN
           IF NOT mayBlock THEN RETURN -1; END;
-      ELSE
+        ELSE
           IOError (Unexpected);
+        END;
       END;
 
       EVAL SchedulerPosix.IOWait (t.fd, TRUE);
@@ -247,24 +250,25 @@ PROCEDURE <A NAME="Read"><procedure>Read</procedure></A> (t: T;  VAR(*OUT*) b: A
       len := Uuio.read (t.fd, p_b, NUMBER (b));
       IF len &gt;= 0 THEN RETURN len; END;
 
-      CASE Cerrno.GetErrno() OF
-      | Uerror.ECONNRESET =&gt;
+      WITH errno = Cerrno.GetErrno() DO
+        IF (errno = Uerror.ECONNRESET) THEN
           RETURN 0;
-      | Uerror.EPIPE,
-        Uerror.ENETRESET =&gt;
+        ELSIF (errno = Uerror.EPIPE)
+           OR (errno = Uerror.ENETRESET) THEN
           IOError (ConnLost);
-      | Uerror.ETIMEDOUT =&gt;
+        ELSIF (errno = Uerror.ETIMEDOUT) THEN
           IOError (Timeout);
-      | Uerror.ENETUNREACH,
-        Uerror.EHOSTUNREACH,
-        Uerror.EHOSTDOWN,
-        Uerror.ENETDOWN =&gt;
+        ELSIF (errno = Uerror.ENETUNREACH)
+           OR (errno = Uerror.EHOSTUNREACH)
+           OR (errno = Uerror.EHOSTDOWN)
+           OR (errno = Uerror.ENETDOWN) THEN
           IOError (Unreachable);
-      | Uerror.EWOULDBLOCK, &lt;*NOWARN*&gt;
-        Uerror.EAGAIN =&gt;    &lt;*NOWARN*&gt;
+        ELSIF (errno = Uerror.EWOULDBLOCK)
+           OR (errno = Uerror.EAGAIN) THEN
           IF NOT mayBlock THEN RETURN -1; END;
-      ELSE
+        ELSE
           IOError (Unexpected);
+        END;
       END;
 
       EVAL SchedulerPosix.IOWait (t.fd, TRUE);
@@ -287,23 +291,24 @@ PROCEDURE <A NAME="SendTo"><procedure>SendTo</procedure></A> (t: T;  READONLY ep
       IF len &gt;= 0 THEN
         INC (p, len);  DEC (n, len);
       ELSE
-        CASE Cerrno.GetErrno() OF
-        | Uerror.EPIPE,
-          Uerror.ECONNRESET,
-          Uerror.ENETRESET =&gt;
+        WITH errno = Cerrno.GetErrno() DO
+          IF     (errno = Uerror.EPIPE)
+              OR (errno = Uerror.ECONNRESET)
+              OR (errno = Uerror.ENETRESET) THEN
             IOError (ConnLost);
-        | Uerror.ETIMEDOUT =&gt;
+          ELSIF (errno = Uerror.ETIMEDOUT) THEN
             IOError (Timeout);
-        | Uerror.ENETUNREACH,
-          Uerror.EHOSTUNREACH,
-          Uerror.EHOSTDOWN,
-          Uerror.ENETDOWN =&gt;
+          ELSIF  (errno = Uerror.ENETUNREACH)
+              OR (errno = Uerror.EHOSTUNREACH)
+              OR (errno = Uerror.EHOSTDOWN)
+              OR (errno = Uerror.ENETDOWN) THEN
             IOError (Unreachable);
-        | Uerror.EWOULDBLOCK, &lt;*NOWARN*&gt;
-          Uerror.EAGAIN =&gt;    &lt;*NOWARN*&gt;
-            (* OK, wait to write out a bit more... *)
-        ELSE
+          ELSIF  (errno = Uerror.EWOULDBLOCK)
+              OR (errno = Uerror.EAGAIN) THEN
+              (* OK, wait to write out a bit more... *)
+          ELSE
             IOError (Unexpected);
+          END;
         END;
       END;
 
@@ -327,23 +332,24 @@ PROCEDURE <A NAME="Write"><procedure>Write</procedure></A> (t: T;  READONLY b: A
       IF len &gt;= 0 THEN
         INC (p, len);  DEC (n, len);
       ELSE
-        CASE Cerrno.GetErrno() OF
-        | Uerror.EPIPE,
-          Uerror.ECONNRESET,
-          Uerror.ENETRESET =&gt;
+        WITH errno = Cerrno.GetErrno() DO
+          IF     (errno = Uerror.EPIPE)
+              OR (errno = Uerror.ECONNRESET)
+              OR (errno = Uerror.ENETRESET) THEN
             IOError (ConnLost);
-        | Uerror.ETIMEDOUT =&gt;
+          ELSIF (errno = Uerror.ETIMEDOUT) THEN
             IOError (Timeout);
-        | Uerror.ENETUNREACH,
-          Uerror.EHOSTUNREACH,
-          Uerror.EHOSTDOWN,
-          Uerror.ENETDOWN =&gt;
+          ELSIF  (errno = Uerror.ENETUNREACH)
+              OR (errno = Uerror.EHOSTUNREACH)
+              OR (errno = Uerror.EHOSTDOWN)
+              OR (errno = Uerror.ENETDOWN) THEN
             IOError (Unreachable);
-        | Uerror.EWOULDBLOCK, &lt;*NOWARN*&gt;
-          Uerror.EAGAIN =&gt;    &lt;*NOWARN*&gt;
+          ELSIF  (errno = Uerror.EWOULDBLOCK)
+              OR (errno = Uerror.EAGAIN) THEN
             (* OK, wait to write out a bit more... *)
-        ELSE
+          ELSE
             IOError (Unexpected);
+          END;
         END;
       END;
 
@@ -404,6 +410,7 @@ PROCEDURE <A NAME="GetHostAddr"><procedure>GetHostAddr</procedure></A> (): Addre
   RAISES {OSError.E} =
   VAR
     host : ARRAY [0..255] OF CHAR;
+    hostent: Unetdb.struct_hostent;
     info : Unetdb.struct_hostent_star;
     ua   : Uin.struct_in_addr;
   BEGIN
@@ -411,7 +418,7 @@ PROCEDURE <A NAME="GetHostAddr"><procedure>GetHostAddr</procedure></A> (): Addre
       IOError (Unexpected);
     END;
 
-    info := Unetdb.gethostbyname (ADR (host[0]));
+    info := Unetdb.gethostbyname (ADR (host[0]), ADR (hostent));
     IF info = NIL THEN IOError (Unexpected); END;
     &lt;* ASSERT info.h_length &lt;= BYTESIZE (Address) *&gt;
 
@@ -467,7 +474,7 @@ VAR SysRcvBufSize: INTEGER := 128000;
   RAISES {OSError.E} =
   (* We assume that the runtime ignores SIGPIPE signals *)
   VAR
-    one := 1;
+    one : Ctypes.int := 1;
     linger := Usocket.struct_linger{1, 1};
   BEGIN
     (*****
@@ -499,10 +506,9 @@ PROCEDURE <A NAME="RefetchError"><procedure>RefetchError</procedure></A>(fd: INT
 </PRE><BLOCKQUOTE><EM> Awful hack to retrieve a meaningful error from a TCP accept
    socket.  Only works on Ultrix and OSF.  Leaves result
    in Cerrno.GetErrno().  </EM></BLOCKQUOTE><PRE>
-  VAR optbuf: INTEGER := 0;   optlen := BYTESIZE(optbuf);
+  VAR optbuf: Ctypes.int := 0;   optlen := BYTESIZE(optbuf);
   BEGIN
-    IF Compiler.ThisPlatform = Compiler.Platform.ALPHA_OSF
-    OR Compiler.ThisPlatform = Compiler.Platform.DS3100 THEN
+    IF SocketPosix_IsUltrixOrOSF.Value THEN
       EVAL Usocket.getsockopt (fd, Uin.IPPROTO_TCP, TCP_NODELAY,
                                  ADR(optbuf), ADR(optlen));
     END;
@@ -521,6 +527,75 @@ BEGIN
 END SocketPosix.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface SchedulerPosix is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/thread/Common/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/Common/SchedulerPosix.i3</A>
+<LI><A HREF="../../../../m3core/src/thread/POSIX/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/POSIX/SchedulerPosix.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Unix is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Unix.i3.html#0TOP0">m3core/src/unix/Common/Unix.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-common/Unix.i3.html#0TOP0">m3core/src/unix/linux-common/Unix.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html#0TOP0">m3core/src/unix/linux-libc6/Unix.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface Uin is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Uin.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uin.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/uin-common/Uin.i3.html#0TOP0">m3core/src/unix/uin-common/Uin.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x4">interface Uuio is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Uuio.i3.html#0TOP0">m3core/src/unix/Common/Uuio.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-common/Uuio.i3.html#0TOP0">m3core/src/unix/linux-common/Uuio.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Uuio.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uuio.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x5">interface Uerror is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Uerror.i3.html#0TOP0">m3core/src/unix/Common/Uerror.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-common/Uerror.i3.html#0TOP0">m3core/src/unix/linux-common/Uerror.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Uerror.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uerror.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x6">interface Usocket is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Usocket.i3.html#0TOP0">m3core/src/unix/Common/Usocket.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-common/Usocket.i3.html#0TOP0">m3core/src/unix/linux-common/Usocket.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Usocket.i3.html#0TOP0">m3core/src/unix/linux-libc6/Usocket.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x7">interface Ustat is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Ustat.i3.html#0TOP0">m3core/src/unix/Common/Ustat.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Ustat.i3.html#0TOP0">m3core/src/unix/linux-libc6/Ustat.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x8">interface Unetdb is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Unetdb.i3.html#0TOP0">m3core/src/unix/Common/Unetdb.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-common/Unetdb.i3.html#0TOP0">m3core/src/unix/linux-common/Unetdb.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Unetdb.i3.html#0TOP0">m3core/src/unix/linux-libc6/Unetdb.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x9">interface Utypes is in:
+</A><UL>
+<LI><A HREF="../../../../m3core/src/unix/Common/Utypes.i3.html#0TOP0">m3core/src/unix/Common/Utypes.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-common/Utypes.i3.html#0TOP0">m3core/src/unix/linux-common/Utypes.i3</A>
+<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Utypes.i3.html#0TOP0">m3core/src/unix/linux-libc6/Utypes.i3</A>
+</UL>
+<P>
 <PRE>
 
 

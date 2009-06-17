@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/misc/Scanner.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/misc/Scanner.m3</H2></A><HR>
 <inModule>
@@ -10,7 +10,7 @@
  All rights reserved.                                          
  See the file COPYRIGHT for a full description.                
 
-<P> portions Copyright 1996-2000, Critical Mass, Inc.                  
+<P> portions Copyright 1996-2000, Critical Mass, Inc.             
 
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="Scanner.i3.html">Scanner</A></implements></module>;
 
@@ -58,7 +58,7 @@ TYPE
 TYPE
   FileState = RECORD
     ch      : CHAR;
-    offs    : INTEGER;	(* fileno * MaxLines + lineno *)
+    offs    : INTEGER;  (* fileno * MaxLines + lineno *)
     input   : File.T;
     buf     : InputBuffer;
     buf_ptr : InputBufferIndex;
@@ -240,7 +240,7 @@ PROCEDURE <A NAME="LocalHere"><procedure>LocalHere</procedure></A> (VAR file: TE
   VAR fnum := offset DIV MaxLines;
   BEGIN
     IF (local_files[fnum] = NIL) THEN
-      local_files[fnum] := Host.FileTail (files[fnum]);
+      local_files[fnum] := files[fnum];
     END;
     file := local_files [fnum];
     line := offset MOD MaxLines;
@@ -296,7 +296,7 @@ PROCEDURE <A NAME="DoFail"><procedure>DoFail</procedure></A> (msg: TEXT;  stop: 
           Error.Txt (M3WString.ToLiteral (cur.wstr), t);
       | TK.tREALCONST, TK.tLONGREALCONST, TK.tEXTENDEDCONST =&gt;
           Error.Txt (&quot;&lt;float&gt;&quot;, t);
-      | TK.tCARDCONST =&gt;
+      | TK.tINTEGERCONST, TK.tLONGINTCONST =&gt;
           IF TInt.ToInt (cur.int, i)
             THEN Error.Int (i, t);
             ELSE Error.Txt (&quot;&lt;integer&gt;&quot;, t);
@@ -407,7 +407,7 @@ PROCEDURE <A NAME="GetToken"><procedure>GetToken</procedure></A> () =
           END;
           WHILE (AlphaNumerics[ch]) DO
             buf [len] := ch;  INC (len);
-	    GetCh ();
+            GetCh ();
           END;
           cur.id    := M3ID.FromStr (buf, len);
           cur.token := TK.tIDENT;
@@ -443,43 +443,43 @@ PROCEDURE <A NAME="GetToken"><procedure>GetToken</procedure></A> () =
       | EOFChar  =&gt; cur.token := TK.tEOF;                   RETURN;
 
       | '*' =&gt; (* '*&gt;' '*' *)
-	    GetCh ();
+            GetCh ();
             IF (ch = '&gt;')
-	      THEN  cur.token := TK.tENDPRAGMA;  GetCh ();
+              THEN  cur.token := TK.tENDPRAGMA;  GetCh ();
               ELSE  cur.token := TK.tASTERISK;
             END;
             RETURN;
       | '=' =&gt; (*  '='  '=&gt;'  *)
             GetCh ();
             IF (ch = '&gt;')
-	      THEN  cur.token := TK.tIMPLIES;  GetCh ();
+              THEN  cur.token := TK.tIMPLIES;  GetCh ();
               ELSE  cur.token := TK.tEQUAL;
             END;
             RETURN;
       | ':' =&gt; (*  ':'  ':='  *)
             GetCh ();
             IF (ch = '=')
-	      THEN  cur.token := TK.tASSIGN;  GetCh ();
+              THEN  cur.token := TK.tASSIGN;  GetCh ();
               ELSE  cur.token := TK.tCOLON;
             END;
             RETURN;
       | '.' =&gt; (*  '.'  '..'  *)
             GetCh ();
             IF (ch = '.')
-	      THEN  cur.token := TK.tDOTDOT;  GetCh ();
+              THEN  cur.token := TK.tDOTDOT;  GetCh ();
               ELSE  cur.token := TK.tDOT;
             END;
             RETURN;
       | '(' =&gt; (*  '('*'  '('  *)
             GetCh ();
             IF (ch = '*')
-	      THEN  ScanComment ();
+              THEN  ScanComment ();
               ELSE  cur.token := TK.tLPAREN;  RETURN;
             END;
       | '&gt;' =&gt; (*  '&gt;'  '&gt;='  *)
             GetCh ();
             IF (ch = '=')
-	      THEN  cur.token := TK.tGREQUAL;  GetCh ();
+              THEN  cur.token := TK.tGREQUAL;  GetCh ();
               ELSE  cur.token := TK.tGREATER;
             END;
             RETURN;
@@ -516,7 +516,7 @@ PROCEDURE <A NAME="ScanNumber"><procedure>ScanNumber</procedure></A> () =
 
     IF (ch = '_') THEN
       (* scan a based integer *)
-      IF    NOT TInt.New (SUBARRAY (buf, 0, len), val)
+      IF    NOT TInt.New (SUBARRAY (buf, 0, len), Target.Integer.bytes, val)
          OR NOT TInt.ToInt (val, base)
          OR (base &lt; 2)
          OR (16 &lt; base) THEN
@@ -529,12 +529,24 @@ PROCEDURE <A NAME="ScanNumber"><procedure>ScanNumber</procedure></A> () =
         IF NOT (HexDigits[ch]) THEN EXIT END;
         buf [len] := ch;  INC (len);
       END;
-      IF (len = 0) OR NOT TWord.New (SUBARRAY (buf, 0, len), base, val) THEN
-        Error.Msg (&quot;illegal based integer literal, zero used&quot;);
-        val := TInt.Zero;
+      IF (ch = 'l') OR (ch = 'L') THEN
+        GetCh (); (* eat the precision character *)
+        IF (len = 0) OR NOT (TWord.New (SUBARRAY (buf, 0, len), base,
+                                        Target.Long.bytes, val)) THEN
+          Error.Msg (&quot;illegal based LONGINT literal, zero used&quot;);
+          val := TInt.Zero;
+        END;
+        cur.token := TK.tLONGINTCONST;
+        cur.int   := val;
+      ELSE
+        IF (len = 0) OR NOT (TWord.New (SUBARRAY (buf, 0, len), base,
+                                        Target.Word.bytes, val)) THEN
+          Error.Msg (&quot;illegal based INTEGER literal, zero used&quot;);
+          val := TInt.Zero;
+        END;
+        cur.token := TK.tINTEGERCONST;
+        cur.int   := val;
       END;
-      cur.token := TK.tCARDCONST;
-      cur.int   := val;
 
     ELSIF (ch = '.') THEN
       (* scan a floating point number *)
@@ -543,14 +555,15 @@ PROCEDURE <A NAME="ScanNumber"><procedure>ScanNumber</procedure></A> () =
       IF (ch = '.') THEN
         (* we saw  &quot;dddd..&quot; *)
 
-	(*****  Rd.UnGetChar (input);  *****)
+        (*****  Rd.UnGetChar (input);  *****)
         DEC (input_ptr);  input_buf[input_ptr] := ORD ('.');
 
-        IF NOT TInt.New (SUBARRAY (buf, 0, len-1), val) THEN
-          Error.Msg (&quot;illegal integer literal, zero used&quot;);
+        IF NOT TInt.New (SUBARRAY (buf, 0, len-1),
+                         Target.Integer.bytes, val) THEN
+          Error.Msg (&quot;illegal INTEGER literal, zero used&quot;);
           val := TInt.Zero;
         END;
-        cur.token := TK.tCARDCONST;
+        cur.token := TK.tINTEGERCONST;
         cur.int   := val;
         RETURN;
       END;
@@ -563,7 +576,6 @@ PROCEDURE <A NAME="ScanNumber"><procedure>ScanNumber</procedure></A> () =
       WHILE (Digits[ch]) DO  buf[len] := ch; INC (len); GetCh ()  END;
 
       (* check for the exponent *)
-      pre := Target.Precision.Short;
       IF (ch = 'e') OR (ch = 'E') THEN
         buf[len] := 'e';  INC (len);
         cur.token := TK.tREALCONST;
@@ -581,6 +593,7 @@ PROCEDURE <A NAME="ScanNumber"><procedure>ScanNumber</procedure></A> () =
           Error.Msg (&quot;illegal floating-point literal&quot;);
         END;
         cur.token := TK.tREALCONST;
+        pre := Target.Precision.Short;
         RETURN;
       END;
       GetCh (); (* eat the exponent entry char *)
@@ -609,12 +622,24 @@ PROCEDURE <A NAME="ScanNumber"><procedure>ScanNumber</procedure></A> () =
 
     ELSE
       (* already scanned a decimal integer *)
-      IF NOT TInt.New (SUBARRAY (buf, 0, len), val) THEN
-        Error.Msg (&quot;illegal integer literal, zero used&quot;);
-        val := TInt.Zero;
+      IF (ch = 'l') OR (ch = 'L') THEN
+        GetCh (); (* eat the precision character *)
+        IF NOT TInt.New (SUBARRAY (buf, 0, len),
+                         Target.Longint.bytes, val) THEN
+          Error.Msg (&quot;illegal LONGINT literal, zero used&quot;);
+          val := TInt.Zero;
+        END;
+        cur.token := TK.tLONGINTCONST;
+        cur.int   := val;
+      ELSE
+        IF NOT TInt.New (SUBARRAY (buf, 0, len),
+                         Target.Integer.bytes, val) THEN
+          Error.Msg (&quot;illegal INTEGER literal, zero used&quot;);
+          val := TInt.Zero;
+        END;
+        cur.token := TK.tINTEGERCONST;
+        cur.int   := val;
       END;
-      cur.token := TK.tCARDCONST;
-      cur.int   := val;
     END;
 
   END ScanNumber;
@@ -657,7 +682,7 @@ PROCEDURE <A NAME="ScanChar"><procedure>ScanChar</procedure></A> (wide: BOOLEAN)
       THEN Error.Msg (&quot;missing closing quote on character literal&quot;);
       ELSE GetCh ();
     END;
-    IF NOT TInt.FromInt (val, cur.int) THEN
+    IF NOT TInt.FromInt (val, Target.Integer.bytes, cur.int) THEN
       Error.Msg (&quot;illegal character literal&quot;);
     END;
   END ScanChar;
@@ -850,9 +875,9 @@ PROCEDURE <A NAME="ScanComment"><procedure>ScanComment</procedure></A> () =
         GetCh ();  IF (ch = '*') THEN INC (nest); GetCh ();  END;
       ELSIF (ch = EOFChar) THEN
         save := offset;
-	offset := start;
+        offset := start;
         Error.Msg (&quot;EOF encountered in comment&quot;);
-	offset := save;
+        offset := save;
         nest := 0;
       ELSIF (ch = '\n') THEN
         INC (offset);  INC (nLines);
@@ -890,7 +915,7 @@ PROCEDURE <A NAME="ScanPragma"><procedure>ScanPragma</procedure></A> () =
 
     IF (cur.id = LINE) THEN
       GetToken (); (* LINE *)
-      IF (cur.token # TK.tCARDCONST) THEN
+      IF (cur.token # TK.tINTEGERCONST) THEN
         Error.Msg (&quot;missing line number on LINE pragma; skipping to \'*&gt;\'&quot;);
         WHILE (cur.token # TK.tENDPRAGMA) AND (cur.token # TK.tEOF) DO
           GetToken ();
@@ -958,13 +983,13 @@ PROCEDURE <A NAME="ScanPragma"><procedure>ScanPragma</procedure></A> () =
         GetCh();  IF (ch = '*') THEN INC(nest); GetCh(); END;
       ELSIF (ch = EOFChar) THEN
         save := offset;
-	offset := start;
+        offset := start;
         Error.Msg (&quot;EOF encountered in pragma&quot;);
-	offset := save;
-	nest := 0;
+        offset := save;
+        nest := 0;
       ELSIF (ch = '\n') THEN
         INC (offset);  INC (nLines);
-	GetCh();
+        GetCh();
       ELSE
         GetCh();
       END;

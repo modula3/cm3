@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/pl/M3LTypeToText.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/pl/M3LTypeToText.m3</H2></A><HR>
 <inModule>
@@ -440,7 +440,7 @@ PROCEDURE <A NAME="ComponentType"><procedure>ComponentType</procedure></A>(s: Wr
   BEGIN
     M3CTypesMisc.GetTYPE_SPECFromM3TYPE(t, ts);
     TYPECASE ts OF
-    | M3AST_AS.Integer_type, M3AST_AS.WideChar_type, M3AST_AS.FLOAT_TYPE,
+    | M3AST_AS.INT_TYPE, M3AST_AS.WideChar_type, M3AST_AS.FLOAT_TYPE,
       M3AST_AS.RefAny_type,
       M3AST_AS.Address_type, M3AST_AS.Null_type,
       M3AST_AS.Root_type =&gt;
@@ -469,6 +469,8 @@ PROCEDURE <A NAME="TypeSpec"><procedure>TypeSpec</procedure></A>(
     TYPECASE t OF &lt;*NOWARN*&gt;
     | M3AST_AS.Integer_type =&gt;
         Wr.PutChar(s, IntegerCh);
+    | M3AST_AS.Longint_type =&gt;
+        Wr.PutChar(s, LongintCh);
     | M3AST_AS.WideChar_type =&gt;
         Wr.PutChar(s, WideCharCh);
     | M3AST_AS.Real_type =&gt;

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/builtinOps/New.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/builtinOps/New.m3</H2></A><HR>
 <inModule>
@@ -299,14 +299,14 @@ PROCEDURE <A NAME="GenOpenArray"><procedure>GenOpenArray</procedure></A> (t: Typ
 
     (* initialize the count of array sizes *)
     CG.Load_intt (n);
-    CG.Store_int (sizes, M3RT.OA_size_0);
+    CG.Store_int (Target.Integer.cg_type, sizes, M3RT.OA_size_0);
 
     (* initialize each array size *)
     offset := M3RT.OA_size_1;
     FOR i := 1 TO n DO
       Expr.Prep (ce.args[i]);
       Expr.Compile (ce.args[i]);
-      CG.Store_int (sizes, offset);
+      CG.Store_int (Target.Integer.cg_type, sizes, offset);
       INC (offset, Target.Integer.pack);
     END;
 
@@ -364,7 +364,7 @@ PROCEDURE <A NAME="GenRecord"><procedure>GenRecord</procedure></A> (t, r: Type.T
 
 PROCEDURE <A NAME="GenObject"><procedure>GenObject</procedure></A> (t: Type.T;  ce: CallExpr.T) =
   CONST PHook = ARRAY BOOLEAN OF RunTyme.Hook { RunTyme.Hook.NewUntracedObj,
-                                                RunTyme.Hook.NewTracedRef };
+                                                RunTyme.Hook.NewTracedObj };
   VAR
     key: M3ID.T;
     value: Expr.T;
@@ -449,6 +449,7 @@ END New.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

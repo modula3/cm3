@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/Pixmap.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/Pixmap.i3</H2></A><HR>
 <inInterface>
@@ -12,7 +12,7 @@
                                                                            
  Last modified on Mon Feb 24 14:01:18 PST 1992 by muller                   
 <PRE>&lt;*PRAGMA LL*&gt;
-</PRE> A <CODE>Pixmap.T</CODE> is a screen-independent specification of a pixmap.  
+</PRE> A <CODE>Pixmap.T</CODE> is a screen-independent specification of a pixmap.
    Many procedures interpret <CODE>Pixmap.Ts</CODE> as textures, by tiling the
    plane with translated copies of the pixmap. There are three
    predefined pixmaps:
@@ -28,13 +28,13 @@ CONST
   Solid = T{0};
   Empty = T{1};
   Gray = T{2};
-</PRE> <CODE>Solid</CODE> represents a pixmap of all ones. 
-   <CODE>Empty</CODE> represents a pixmap of all zeros. 
-   <CODE>Gray</CODE> represents a checkerboard of ones and zeros. 
-   <P>
+</PRE> <CODE>Solid</CODE> represents a pixmap of all ones.
+   <CODE>Empty</CODE> represents a pixmap of all zeros.
+   <CODE>Gray</CODE> represents a checkerboard of ones and zeros.
+<P>
    The domains of these pixmaps may vary from screentype to
    screentype, but they will always be non-empty.
-   <P>
+<P>
    When used on a screentype <CODE>st</CODE>, they will have type <CODE>st.bits</CODE>
    (see the <CODE>PaintOp</CODE> interface). 
 
@@ -44,7 +44,7 @@ CONST
 
 <P><PRE>PROCEDURE <A HREF="Pixmap.m3.html#FromBitmap">FromBitmap</A>(bits: Raw): T;
 </PRE><BLOCKQUOTE><EM> Return a pixmap that looks like <CODE>bits</CODE> on all screens. </EM></BLOCKQUOTE><PRE>
-</PRE> <CODE>FromBitmap</CODE> causes a checked runtime error if the depth of 
+</PRE> <CODE>FromBitmap</CODE> causes a checked runtime error if the depth of
    <CODE>bits</CODE> is not one.  On a screentype <CODE>st</CODE>, it will have type
    <CODE>st.bits</CODE>. 
 

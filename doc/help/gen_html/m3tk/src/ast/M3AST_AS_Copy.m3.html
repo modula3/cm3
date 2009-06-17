@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/ast/M3AST_AS_Copy.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/ast/M3AST_AS_Copy.m3</H2></A><HR>
 <inModule>
@@ -618,6 +618,13 @@ PROCEDURE <A NAME="Integer_type"><procedure>Integer_type</procedure></A>(
     RETURN SRC_NODE(n, NEW(M3AST_AS.Integer_type).init());
   END Integer_type;
 
+PROCEDURE <A NAME="Longint_type"><procedure>Longint_type</procedure></A>(
+    n: M3AST_AS_F.Longint_type; &lt;*UNUSED*&gt; h: AST_CopyRep.Handle;
+    ): AST.NODE=
+  BEGIN
+    RETURN SRC_NODE(n, NEW(M3AST_AS.Longint_type).init());
+  END Longint_type;
+
 PROCEDURE <A NAME="WideChar_type"><procedure>WideChar_type</procedure></A>(
     n: M3AST_AS_F.WideChar_type; &lt;*UNUSED*&gt; h: AST_CopyRep.Handle;
     ): AST.NODE=
@@ -960,6 +967,13 @@ PROCEDURE <A NAME="Integer_literal"><procedure>Integer_literal</procedure></A>(
   BEGIN
     RETURN LITERAL(n, SRC_NODE(n, NEW(M3AST_AS.Integer_literal).init()));
   END Integer_literal;
+
+PROCEDURE <A NAME="Longint_literal"><procedure>Longint_literal</procedure></A>(
+    n: M3AST_AS_F.Longint_literal; &lt;*UNUSED*&gt; h: AST_CopyRep.Handle;
+    ): AST.NODE=
+  BEGIN
+    RETURN LITERAL(n, SRC_NODE(n, NEW(M3AST_AS.Longint_literal).init()));
+  END Longint_literal;
 
 PROCEDURE <A NAME="Real_literal"><procedure>Real_literal</procedure></A>(
     n: M3AST_AS_F.Real_literal; &lt;*UNUSED*&gt; h: AST_CopyRep.Handle;

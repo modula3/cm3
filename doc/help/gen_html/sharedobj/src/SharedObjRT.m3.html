@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: sharedobj/src/SharedObjRT.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>sharedobj/src/SharedObjRT.m3</H2></A><HR>
 <inModule>
@@ -24,9 +24,9 @@
  * Update Count    : 456
  * 
  * $Source: /opt/cvs/cm3/doc/help/gen_html/sharedobj/src/SharedObjRT.m3.html,v $
- * $Date: 2003-07-16 13:18:01 $
+ * $Date: 2009-06-17 18:52:56 $
  * $Author: wagner $
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  * 
  * $Log: not supported by cvs2svn $
  * Revision 1.2  2001/12/02 13:41:17  wagner
@@ -126,9 +126,9 @@
 
 IMPORT <A HREF="../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="../../libm3/derived/AtomList.i3.html">AtomList</A>, <A HREF="../../netobj/src/netobjrt/NetObj.i3.html">NetObj</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../events/src/EventWireRep.i3.html">EventWireRep</A>,
        <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../events/src/EventCounter.i3.html">EventCounter</A>, <A HREF="../../events/src/EventStubLib.i3.html">EventStubLib</A>, <A HREF="ObjectInfo.i3.html">ObjectInfo</A>, <A HREF="../../libm3/src/rw/IO.i3.html">IO</A>, <A HREF="SharedObjRep.i3.html">SharedObjRep</A>,
-       <A HREF="../../events/derived/EventConnList.i3.html">EventConnList</A>, <A HREF="../../events/derived/EventConnListFuncs.i3.html">EventConnListFuncs</A>, <A HREF="../../debug/src/Debug.i3.html">Debug</A>, <A HREF="../../events/src/RdWrMutex.i3.html">RdWrMutex</A>,
+       <A HREF="../../events/derived/EventConnList.i3.html">EventConnList</A>, <A HREF="../../events/derived/EventConnListFuncs.i3.html">EventConnListFuncs</A>, <A HREF="#x1">Debug</A>, <A HREF="../../events/src/RdWrMutex.i3.html">RdWrMutex</A>,
        <A HREF="../../events/src/EventPort.i3.html">EventPort</A>, <A HREF="Message.i3.html">Message</A>, <A HREF="../derived/ObjectInfoTbl.i3.html">ObjectInfoTbl</A>, <A HREF="SpaceConn.i3.html">SpaceConn</A>,
-       <A HREF="../../events/src/EventNumber.i3.html">EventNumber</A>, <A HREF="../../events/src/EventNumberF.i3.html">EventNumberF</A>, <A HREF="../../m3core/src/weakref/WeakRef.i3.html">WeakRef</A>, <A HREF="../../m3core/src/thread/POSIX/ThreadF.i3.html">ThreadF</A>,
+       <A HREF="../../events/src/EventNumber.i3.html">EventNumber</A>, <A HREF="../../events/src/EventNumberF.i3.html">EventNumberF</A>, <A HREF="../../m3core/src/weakref/WeakRef.i3.html">WeakRef</A>, <A HREF="#x2">ThreadF</A>,
        <A HREF="ObjectSpace.i3.html">ObjectSpace</A>, <A HREF="../../events/src/Event.i3.html">Event</A>, <A HREF="ObjCopy.i3.html">ObjCopy</A>, <A HREF="../derived/ObjCopyList.i3.html">ObjCopyList</A>, <A HREF="../derived/ObjCopyListFuncs.i3.html">ObjCopyListFuncs</A>,
        <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../events/src/EventProtocol.i3.html">EventProtocol</A>, <A HREF="../../events/derived/EventSeq.i3.html">EventSeq</A>;
 
@@ -1487,6 +1487,20 @@ BEGIN
 END SharedObjRT.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Debug is in:
+</A><UL>
+<LI><A HREF="../../cit_util/src/Debug.i3.html#0TOP0">cit_util/src/Debug.i3</A>
+<LI><A HREF="../../debug/src/Debug.i3.html#0TOP0">debug/src/Debug.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface ThreadF is in:
+</A><UL>
+<LI><A HREF="../../m3core/src/thread/POSIX/ThreadF.i3.html#0TOP0">m3core/src/thread/POSIX/ThreadF.i3</A>
+<LI><A HREF="../../m3core/src/thread/PTHREAD/ThreadF.i3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadF.i3</A>
+</UL>
+<P>
 <PRE>
 
 

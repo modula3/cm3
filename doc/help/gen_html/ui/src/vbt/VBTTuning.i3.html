@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/VBTTuning.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/VBTTuning.i3</H2></A><HR>
 <inInterface>
@@ -16,9 +16,9 @@
       modified on Fri Feb  2 14:08:01 PST 1990 by glassman 
       modified on Mon Jan 12 17:12:01 1987 by msm 
 <PRE>&lt;*PRAGMA LL*&gt;
-</PRE> This interface defines values that can be changed to 
+</PRE> This interface defines values that can be changed to
    maximize Trestle's performance on particular systems. 
-   
+
 <P><PRE>INTERFACE <interface>VBTTuning</interface>;
 
 IMPORT <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>;
@@ -34,19 +34,19 @@ CONST
 </PRE> The value <CODE>BatchSize</CODE> is the number of <CODE>Word.T</CODE>'s in a standard
    painting batch.
 <P>
-   The value <CODE>BatchLatency</CODE> is the number of microseconds before a 
+   The value <CODE>BatchLatency</CODE> is the number of microseconds before a
    paint batch is automatically forced.
 <P>
    The values <CODE>HVParlim</CODE> and <CODE>ZParlim</CODE> are the default
-   minimum child areas (in pixels) for which <CODE>ZSplit</CODE> and <CODE>HVSplit</CODE> 
-   will fork separate repaint or reshaping threads. 
+   minimum child areas (in pixels) for which <CODE>ZSplit</CODE> and <CODE>HVSplit</CODE>
+   will fork separate repaint or reshaping threads.
 <P>
    <CODE>ResumeLength</CODE> is the size that a queue of paint batches must
    shrink to before a cross-address space filter will unblock a
    thread that painted into an overfull queue.  It must
-   be at least 1. 
-   <P>
-   The value <CODE>CombineLimit</CODE> is the number of addressable 
+   be at least 1.
+<P>
+   The value <CODE>CombineLimit</CODE> is the number of addressable
    units (e.g., bytes) in a batch beyond which Trestle will
    not consider combining another batch into it. 
 

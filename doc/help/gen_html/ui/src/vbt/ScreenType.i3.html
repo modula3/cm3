@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/ScreenType.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/ScreenType.i3</H2></A><HR>
 <inInterface>
@@ -17,8 +17,8 @@
 <PRE>&lt;*PRAGMA LL*&gt;
 </PRE> A <CODE>ScreenType.T</CODE> represents a class of screens that have a common
    pixel depth, a common set of operations on the pixels, and common
-   repositories for cursors, pixmaps, and fonts.  
-   <P>
+   repositories for cursors, pixmaps, and fonts.
+<P>
    When the screentype of a <CODE>VBT</CODE> changes, any screen-dependent
    resources for the old screentype become useless.  The application
    must use the new screentype's {\it oracles} to look up resources
@@ -61,7 +61,7 @@ TYPE
 <P>
    The oracles <CODE>st.op</CODE>, <CODE>st.font</CODE>, <CODE>st.cursor</CODE>, and <CODE>st.pixmap</CODE>
    contains methods that provide screen-dependent resources appropriate
-   for <CODE>st</CODE>---for example, <CODE>st.font</CODE> has a method that will look up 
+   for <CODE>st</CODE>---for example, <CODE>st.font</CODE> has a method that will look up
    fonts by name.
 <P>
    If <CODE>st.cmap # NIL</CODE>, <CODE>st</CODE> is a color-mapped screen, which means that

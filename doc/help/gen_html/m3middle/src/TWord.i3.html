@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/TWord.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/TWord.i3</H2></A><HR>
 <inInterface>
@@ -27,7 +27,7 @@
 
 <P><PRE>FROM <A HREF="Target.i3.html">Target</A> IMPORT Int;
 
-PROCEDURE <A HREF="TWord.m3.html#New">New</A> (READONLY chars: ARRAY OF CHAR;  base: INTEGER;
+PROCEDURE <A HREF="TWord.m3.html#New">New</A> (READONLY chars: ARRAY OF CHAR;  base: [2..16];  n: CARDINAL;
                VAR i: Int): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> converts the string of characters in 'chars' representing a base 'base'
    number to an integer value in 'i' </EM></BLOCKQUOTE><PRE>
@@ -68,17 +68,17 @@ PROCEDURE <A HREF="TWord.m3.html#Xor">Xor</A> (READONLY a, b: Int;  VAR i: Int);
 PROCEDURE <A HREF="TWord.m3.html#Not">Not</A> (READONLY a: Int;  VAR i: Int);
 </PRE><BLOCKQUOTE><EM> returns 'Word.Not (a)' </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="TWord.m3.html#Shift">Shift</A> (READONLY a, b: Int;  VAR i: Int);
-</PRE><BLOCKQUOTE><EM> returns 'Word.Shift (a, b)' </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="TWord.m3.html#Shift">Shift</A> (READONLY x: Int;  n: INTEGER;  VAR r: Int);
+</PRE><BLOCKQUOTE><EM> returns 'Word.Shift (x, n)' </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="TWord.m3.html#Rotate">Rotate</A> (READONLY a, b: Int;  VAR i: Int);
-</PRE><BLOCKQUOTE><EM> returns 'Word.Rotate (a, b)' </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="TWord.m3.html#Rotate">Rotate</A> (READONLY x: Int;  n: INTEGER;  VAR r: Int);
+</PRE><BLOCKQUOTE><EM> returns 'Word.Rotate (x, n)' </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="TWord.m3.html#Extract">Extract</A> (READONLY a, b, c: Int;  VAR i: Int): BOOLEAN;
-</PRE><BLOCKQUOTE><EM> returns 'Word.Extract (a, b, c)' </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="TWord.m3.html#Extract">Extract</A> (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> returns 'Word.Extract (x, i, n)' </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="TWord.m3.html#Insert">Insert</A> (READONLY a, b, c, d: Int;  VAR i: Int): BOOLEAN;
-</PRE><BLOCKQUOTE><EM> returns 'Word.Insert (a, b, c, d)' </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="TWord.m3.html#Insert">Insert</A> (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> returns 'Word.Insert (x, y, i, n)' </EM></BLOCKQUOTE><PRE>
 
 END TWord.
 </PRE>

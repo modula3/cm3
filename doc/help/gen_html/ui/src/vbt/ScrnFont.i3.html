@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/ScrnFont.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/ScrnFont.i3</H2></A><HR>
 <inInterface>
@@ -18,10 +18,10 @@
       modified on Sat Dec 21 16:36:41 PST 1991 by gnelson  
 <PRE>&lt;*PRAGMA LL*&gt;
 </PRE> A <CODE>ScrnFont.T</CODE> is a handle on a typeface that is valid for some
-   particular screentype, called the {\it owner} of the handle.  All 
+   particular screentype, called the {\it owner} of the handle.  All
    handles have names, which are highly conventionalized strings
    encoding the size, style, and other properties of the typeface. 
-   
+
 <P><PRE>INTERFACE <interface><A HREF="ScrnFont.m3.html">ScrnFont</A></interface>;
 
 IMPORT <A HREF="ScrnPixmap.i3.html">ScrnPixmap</A>, <A HREF="../../../libm3/src/geometry/Rect.i3.html">Rect</A>, <A HREF="TrestleComm.i3.html">TrestleComm</A>, <A HREF="Font.i3.html">Font</A>, <A HREF="../../../m3core/src/fingerprint/Fingerprint.i3.html">Fingerprint</A>;
@@ -70,8 +70,8 @@ EXCEPTION Failure;
    character.
 <P>
    The arguments to the <CODE>match</CODE> method specify various font attributes,
-   as explained below.  The method call 
-   <P>
+   as explained below.  The method call
+<P>
 <PRE>
       st.font.match(...)
 </PRE>
@@ -84,8 +84,8 @@ EXCEPTION Failure;
    also possible: a <CODE>*</CODE> matches any number of characters and <CODE>?</CODE> matches
    a single character.
 <P>
-   The method call 
-   <P>
+   The method call
+<P>
 <PRE>
       st.font.lookup(name)
 </PRE>
@@ -93,14 +93,14 @@ EXCEPTION Failure;
    <CODE>name</CODE> should be one of the names returned by the <CODE>list</CODE> or
    <CODE>match</CODE> method.
 <P>
-   The method call 
-   <P>
+   The method call
+<P>
 <PRE>
       st.font.builtIn(f)
 </PRE>
    returns the screen-dependent font valid for <CODE>st</CODE> that corresponds
    to the predefined screen-independent font <CODE>Font.T{f}</CODE>.
-   <P>
+<P>
    The locking level for all methods is <CODE>LL.sup &lt;= VBT.mu</CODE>. 
 
 <P> \subsubsection{Font attributes} 
@@ -113,13 +113,13 @@ EXCEPTION Failure;
 <P>
    The argument <CODE>family</CODE> specifies the family of the typeface.  To find
    out what fonts your X server has, run the <CODE>xlsfonts</CODE> program.  Most
-   servers support the families <CODE>Courier</CODE>, <CODE>Helvetica</CODE>, and <CODE>Times</CODE>, 
+   servers support the families <CODE>Courier</CODE>, <CODE>Helvetica</CODE>, and <CODE>Times</CODE>,
    among others.
 <P>
-   The argument <CODE>pointsize</CODE> is ten times the font's size in 
+   The argument <CODE>pointsize</CODE> is ten times the font's size in
    points; e.g., 120 for a standard 12-point font.
 <P>
-   The argument <CODE>slant</CODE> is an element of the following enumeration 
+   The argument <CODE>slant</CODE> is an element of the following enumeration
    type: 
 
 <P><PRE>TYPE
@@ -146,23 +146,23 @@ EXCEPTION Failure;
 <CODE>Other</CODE>: None of the above
 <P>
 \medskip\nobulletitem
-<CODE>Any</CODE>: Any of the above (including <CODE>Other</CODE>).  
+<CODE>Any</CODE>: Any of the above (including <CODE>Other</CODE>).
 <P>
 \medskip
 <P>
 The argument <CODE>weightName</CODE> is the foundry's name for the font's weight;
-e.g.,  <CODE>Bold</CODE>, <CODE>DemiBold</CODE>, or <CODE>Medium</CODE>. 
-       <P>
+e.g.,  <CODE>Bold</CODE>, <CODE>DemiBold</CODE>, or <CODE>Medium</CODE>.
+<P>
 The argument <CODE>version</CODE> specifies the version of the {\it X Logical
 Font Description Conventions} that describes the format of a font's
 name.  If the argument is omitted, Version 1.3 is assumed.  (Version
 1.3 is the only version as these words are written.)
-   <P>
+<P>
 The argument <CODE>foundry</CODE> specifies the X registered name for the font's
 foundry, e.g., <CODE>Adobe</CODE>, <CODE>B&amp;H</CODE>, <CODE>Bitstream</CODE>, <CODE>DEC</CODE>.
 <P>
 The argument <CODE>width</CODE> specifies the foundry's name for the font's width; e.g., <CODE>Normal</CODE> or <CODE>Condensed</CODE>.
-       <P>
+<P>
 The argument <CODE>pixelsize</CODE> specifies the size of the font in pixels.
 The size in points depends on the vertical resolution of the device:
 A pixelsize of 20 could represent a 20-point font at 75 pixels per
@@ -191,7 +191,7 @@ the <CODE>VBT</CODE> interface.
 arithmetic mean of the widths of all glyphs in the font, measured in
 tenths of a pixel.
 <P>
-The arguments <CODE>charsetRegistry</CODE> and <CODE>charsetEncoding</CODE> are the X names of the 
+The arguments <CODE>charsetRegistry</CODE> and <CODE>charsetEncoding</CODE> are the X names of the
 font's character set and encoding scheme;  e.g., <CODE>ISO8859</CODE> and <CODE>1</CODE> for
 ISO Latin-1 fonts.  See Appendix G of \cite{XSpec}. 
 
@@ -206,7 +206,7 @@ ISO Latin-1 fonts.  See Appendix G of \cite{XSpec}.
    with the screentype that owns the font.  
 
 <P> \subsubsection{Registering fonts} 
-  
+
 <P> Some screentypes allow the client to register fonts.  The client registers
    the font's strike (bits) and metrics (description) with the <CODE>StrikeOracle</CODE>.
    The name of the font is implied by the attributes in the metrics, so
@@ -222,7 +222,7 @@ ISO Latin-1 fonts.  See Appendix G of \cite{XSpec}.
 </PRE> The method call <CODE>st.font.load(strike, metrics)</CODE> creates a font
    owned by <CODE>st</CODE> with the given strike and metrics and returns a handle
    to it.
-   <P>
+<P>
    The <CODE>metrics</CODE> argument must define all of the initial fields of the
    font metrics record: <CODE>family</CODE>, <CODE>pointSize</CODE>, ..., <CODE>isAscii</CODE>, and
    <CODE>defaultChar</CODE>.  The values <CODE>minBounds</CODE> and <CODE>maxBounds</CODE> must be provided
@@ -230,7 +230,7 @@ ISO Latin-1 fonts.  See Appendix G of \cite{XSpec}.
    <CODE>load</CODE> method will compute them from <CODE>charMetrics</CODE>.  If any of
    the remaining fields have the value <CODE>AnyValue</CODE>, the <CODE>load</CODE> method
    will compute them. 
-         
+
 <P> \subsubsection{The handle object}  
 
 <P><PRE>TYPE
@@ -259,7 +259,7 @@ TYPE Strike = OBJECT
    the character <CODE>ch</CODE>.  This will be empty except for characters in
    the range <CODE>[m.firstChar..m.lastChar]</CODE>, where <CODE>m</CODE> is the metrics (see
    below) for the font of which <CODE>str</CODE> is the strike.  
-   
+
 <P><PRE>PROCEDURE <A HREF="ScrnFont.m3.html#BoundingBox">BoundingBox</A>(txt: TEXT; fnt: T): Rect.T;
 &lt;* LL arbitrary *&gt;
 </PRE><BLOCKQUOTE><EM> Return the smallest rectangle that contains the bounding boxes
@@ -333,28 +333,28 @@ PROCEDURE <A HREF="ScrnFont.m3.html#TextWidth">TextWidth</A>(txt: TEXT; fnt: T):
    specify the attributes that were defined for the <CODE>lookup</CODE> method.
    A value of <CODE>*</CODE> or <CODE>Any</CODE> in one of these fields means that the
    corresponding attribute is unknown.
-   <P>
-   The integers <CODE>firstChar</CODE> and <CODE>lastChar</CODE> are the indices of the 
-   first and last characters defined in the font. 
-   <P>
+<P>
+   The integers <CODE>firstChar</CODE> and <CODE>lastChar</CODE> are the indices of the
+   first and last characters defined in the font.
+<P>
    The array <CODE>charMetrics</CODE> specifies the metrics of the
-   individual characters.  The metrics for character <CODE>ch</CODE> 
-   are in <CODE>charMetrics[ch-firstChar]</CODE>.  If all characters have 
+   individual characters.  The metrics for character <CODE>ch</CODE>
+   are in <CODE>charMetrics[ch-firstChar]</CODE>.  If all characters have
    the same <CODE>printWidth</CODE> and <CODE>boundingBox</CODE>, then these values
-   are stored in <CODE>minBounds</CODE> and <CODE>maxBounds</CODE> and the <CODE>charMetrics</CODE> 
-   field is <CODE>NIL</CODE>. 
-       <P>
+   are stored in <CODE>minBounds</CODE> and <CODE>maxBounds</CODE> and the <CODE>charMetrics</CODE>
+   field is <CODE>NIL</CODE>.
+<P>
    The flag <CODE>selfClearing</CODE> indicates whether the font is self-clearing,
    as defined in the <CODE>VBT</CODE> interface, and the two kerning flags indicate
    the present of right and left kerning in the font.
-       <P>
+<P>
    The flag <CODE>isAscii</CODE> indicates that character codes 32-126 (base 10)
    have their normal ASCII meanings.
-       <P>
+<P>
    The integer <CODE>defaultChar</CODE> is the code for the recommended character
    to display in the place of a character that isn't defined for the
    font.
-    <P>
+<P>
    The rectangles <CODE>minBounds.boundingBox</CODE> and <CODE>maxBounds.boundingBox</CODE>
    contain the meet and join, respectively, of the bounding boxes of
    all characters in the font when they are positioned with their

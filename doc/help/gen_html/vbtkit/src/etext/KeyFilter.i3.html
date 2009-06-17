@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/etext/KeyFilter.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/etext/KeyFilter.i3</H2></A><HR>
 <inInterface>
@@ -113,7 +113,7 @@ END KeyFilter.
           TextEditingVBT.T OBJECT
               comp: KeyFilter.ComposeChar
             OVERRIDES
-              key := Key 
+              key := Key
             END;
         Parent = Keyfilter.T OBJECT
                      OVERRIDES
@@ -127,8 +127,8 @@ END KeyFilter.
           END
         END Key;
       
-      PROCEDURE ApplyParent (self : MyParent; 
-                             v    : VBT.T; 
+      PROCEDURE ApplyParent (self : MyParent;
+                             v    : VBT.T;
                              cd   : VBT.KeyRec) =
         BEGIN
           TextEditingVBT.T.key (v, cd)

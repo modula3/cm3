@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: stablegen/src/Value.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>stablegen/src/Value.i3</H2></A><HR>
 <inInterface>
@@ -22,11 +22,12 @@
 
 <P><PRE>TYPE
   <A HREF="#x2">T</A> &lt;: ROOT;
-  (* Ordinal | Float | LongFloat | Extended | Array | Set | Record |
+  (* Integer | Longint | Float | LongFloat | Extended | Array | Set | Record |
      Text | Null *)
 
-    Ordinal = T OBJECT ord: INTEGER END;
-    (* ORD(the value) *)
+    Integer = T OBJECT val: INTEGER END;
+
+    Longint = T OBJECT val: LONGINT END;
 
     Float = T OBJECT val: REAL END;
 

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/fmtlex/Lex.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/fmtlex/Lex.m3</H2></A><HR>
 <inModule>
@@ -16,7 +16,7 @@
       modified on Thu Apr 29 16:40:03 PDT 1993 by muller                   
 
 <P><PRE>MODULE <module><implements><A HREF="Lex.i3.html">Lex</A></implements></module>;
-IMPORT <A HREF="../../../m3core/src/float/Common/IEEESpecial.i3.html">IEEESpecial</A>, <A HREF="../../../m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../rw/Rd.i3.html">Rd</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>;
+IMPORT <A HREF="../../../m3core/src/float/Common/IEEESpecial.i3.html">IEEESpecial</A>, <A HREF="../../../m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../rw/Rd.i3.html">Rd</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../../m3core/src/word/Long.i3.html">Long</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>;
 IMPORT <A HREF="../../../m3core/src/float/Common/RealFloat.i3.html">RealFloat</A>, <A HREF="../../../m3core/src/float/Common/LongFloat.i3.html">LongFloat</A>, <A HREF="../../../m3core/src/float/Common/ExtendedFloat.i3.html">ExtendedFloat</A>;
 FROM <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A> IMPORT Alerted;
 
@@ -247,6 +247,122 @@ PROCEDURE <A NAME="Int"><procedure>Int</procedure></A>(rd: Rd.T; defaultBase: [2
 PROCEDURE <A NAME="Unsigned"><procedure>Unsigned</procedure></A>(rd: Rd.T; defaultBase: [2..16] := 16): Word.T
     RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted} =
   BEGIN RETURN ReadNumber(rd, defaultBase, signed := FALSE) END Unsigned;
+
+PROCEDURE <A NAME="ReadLongUnsigned"><procedure>ReadLongUnsigned</procedure></A>(rd: Rd.T; c: CHAR; base: [2..16];
+                           noBasedInt := FALSE):
+    Long.T RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted} =
+</PRE><BLOCKQUOTE><EM> Read an unsigned integer of the form <CODE>SmallBaseNum</CODE> or <CODE>BigBaseNum</CODE> (see
+   the specification for <CODE>Lex.Integer</CODE>) as <CODE>base</CODE> is at most 10 or exceeds 10,
+   respectively. If <CODE>noBasedInt</CODE>, then don't allow an explicit base prefix
+   (i.e., read an unsigned integer of the form <CODE>DecVal</CODE> or <CODE>HexVal</CODE> as <CODE>base</CODE>
+   is at most 10 or exceeds 10, respectively).
+<P>
+   Raises <CODE>Error</CODE> if no legal digits were read, or if some digit in the stream
+   is not a legal digit in the chosen base. Raises <CODE>FloatMode.Trap</CODE> with
+   argument <CODE>FloatMode.Flag.IntOverflow</CODE> if the value exceeds the largest
+   value representable by a <CODE>Word.T</CODE>. </EM></BLOCKQUOTE><PRE>
+  CONST
+    MaxWord = Long.Not(0L);
+  VAR
+    digit: [0..15];
+    digitsSeen, specBase: CARDINAL := 0;
+    seenUnderscore := noBasedInt;
+    badDigit, overflow := FALSE;
+    fastUB := Long.Divide(Long.Minus(MaxWord, VAL(base, LONGINT)-1L),
+                          VAL(base, LONGINT));
+    slowUB := Long.Divide(MaxWord, VAL(base, LONGINT));
+    res: Long.T := 0L;
+  BEGIN
+    LOOP
+      CASE c OF
+        '0'..'9' =&gt;
+          digit := ORD(c) - ORD('0');
+          IF digitsSeen &lt; 2 THEN specBase := specBase * 10 + digit END
+      | 'a'..'f' =&gt;
+          IF base &lt;= 10 THEN Rd.UnGetChar(rd); EXIT END;
+          digit := ORD(c) - ORD('a') + 10;
+      | 'A'..'F' =&gt;
+          IF base &lt;= 10 THEN Rd.UnGetChar(rd); EXIT END;
+          digit := ORD(c) - ORD('A') + 10;
+      | '_' =&gt;
+          (* finish if the preceeding base is not one of &quot;2&quot;, &quot;3&quot;, ..., &quot;16&quot; *)
+          IF seenUnderscore OR digitsSeen &gt; 2
+             OR specBase &lt; 2 OR specBase &gt; 16
+             OR (digitsSeen &gt; 1 AND specBase &lt; 10) THEN
+            Rd.UnGetChar(rd); EXIT
+          END;
+          seenUnderscore := TRUE;
+          (* reinitialize state for new base*)
+          base := specBase;
+          fastUB := Long.Divide(Long.Minus(MaxWord, VAL(base, LONGINT)-1L),
+                                VAL(base, LONGINT));
+          slowUB := Long.Divide(MaxWord, VAL(base, LONGINT));
+          digitsSeen := 0;
+          badDigit := FALSE;
+          overflow := FALSE;
+          res := 0L;
+      ELSE Rd.UnGetChar(rd); EXIT
+      END;
+      IF c # '_' THEN
+	INC(digitsSeen);
+	IF digit &gt;= base THEN
+	  badDigit := TRUE
+	ELSIF Long.LE(res, fastUB) THEN
+          (* fast path *)
+	  res := Long.Plus(Long.Times(res, VAL(base, LONGINT)),
+                           VAL(digit, LONGINT))
+        ELSIF Long.LE(res, slowUB) THEN
+          (* slow path *)
+          res := Long.Times(res, VAL(base, LONGINT));
+          IF VAL(digit, LONGINT) &lt;= Long.Minus(MaxWord, res)
+            THEN res := Long.Plus(res, VAL(digit, LONGINT))
+            ELSE overflow := TRUE
+          END
+        ELSE
+	  overflow := TRUE
+	END
+      END;
+      TRY c := Rd.GetChar(rd) EXCEPT Rd.EndOfFile =&gt; EXIT END
+    END;
+    IF digitsSeen = 0 OR badDigit THEN RAISE Error END;
+    IF overflow THEN RAISE FloatMode.Trap(FloatMode.Flag.IntOverflow) END;
+    RETURN res
+  END ReadLongUnsigned;
+
+PROCEDURE <A NAME="ReadLongNumber"><procedure>ReadLongNumber</procedure></A>(rd: Rd.T; defaultBase: [2..16]; signed: BOOLEAN):
+    Long.T RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted} =
+</PRE><BLOCKQUOTE><EM> Raises <CODE>FloatMode.Trap(FloatMode.Flag.IntOverflow)</CODE> if the read number
+   exceeds a <CODE>Word.T</CODE> or if <CODE>signed = TRUE</CODE> and the read number exceeds
+   <CODE>LAST(LONGINT)</CODE> when the sign is positive or exceeds <CODE>-FIRST(LONGINT)</CODE> when
+   the sign is negative. </EM></BLOCKQUOTE><PRE>
+  VAR c: CHAR; sign: [0..1]; res: Long.T; BEGIN
+    Skip(rd, Blanks);
+    TRY
+      c := Rd.GetChar(rd);
+      IF signed
+        THEN sign := ReadSign(rd, c)
+        ELSE sign := 0
+      END
+    EXCEPT
+      Rd.EndOfFile =&gt; RAISE Error
+    END;
+    res := ReadLongUnsigned(rd, c, defaultBase);
+    IF signed AND
+       ((sign = 0 AND Long.GT(res, LAST(LONGINT))) OR
+        (sign = 1 AND Long.GT(res, -FIRST(LONGINT)))) THEN
+      RAISE FloatMode.Trap(FloatMode.Flag.IntOverflow)
+    END;
+    IF sign = 1 THEN res := - res END;
+    RETURN res
+  END ReadLongNumber;
+
+PROCEDURE <A NAME="LongInt"><procedure>LongInt</procedure></A>(rd: Rd.T; defaultBase: [2..16] := 10): LONGINT
+    RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted} =
+  BEGIN RETURN ReadLongNumber(rd, defaultBase, signed := TRUE) END LongInt;
+
+PROCEDURE <A NAME="LongUnsigned"><procedure>LongUnsigned</procedure></A>(rd: Rd.T; defaultBase: [2..16] := 16): Long.T
+    RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted} =
+  BEGIN RETURN ReadLongNumber(rd, defaultBase, signed := FALSE) END LongUnsigned;
 
 CONST
   DigitBufSz = 40;

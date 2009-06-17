@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: cmvbt/src/AnimateVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>cmvbt/src/AnimateVBT.i3</H2></A><HR>
 <inInterface>
@@ -10,13 +10,13 @@
 INTERFACE <interface><A HREF="AnimateVBT.m3.html">AnimateVBT</A></interface>;
 IMPORT <A HREF="../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="../../ui/src/vbt/PaintOp.i3.html">PaintOp</A>;
 IMPORT <A HREF="IntervalTimer.i3.html">IntervalTimer</A>;
-</PRE> <CODE>AnimateVBT</CODE> cycles through its children VBTs, 
-    waiting for <CODE>duration</CODE> seconds each time. 
+</PRE> <CODE>AnimateVBT</CODE> cycles through its children VBTs,
+    waiting for <CODE>duration</CODE> seconds each time.
 <P>
     Animated VBTs belong to a ``group'', so that
     all of the animations can change in a single
-    lockstep. 
-    <P>
+    lockstep.
+<P>
     Each animation must include at least one snapshot. 
 
 <P><PRE>TYPE

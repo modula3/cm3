@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/misc/CG.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/misc/CG.i3</H2></A><HR>
 <inInterface>
@@ -412,11 +412,8 @@ PROCEDURE <A HREF="CG.m3.html#Load_addr_of_temp">Load_addr_of_temp</A> (v: Var; 
 PROCEDURE <A HREF="CG.m3.html#Load_indirect">Load_indirect</A> (t: Type;  o: Offset;  s: Size);
 </PRE><BLOCKQUOTE><EM> s0.t := Mem [s0.A + o : s] </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="CG.m3.html#Load_int">Load_int</A> (v: Var;  o: Offset := 0);
-</PRE><BLOCKQUOTE><EM> == Load (v, o, Target.Integer.size, Target.Integer.align, Type.Int) </EM></BLOCKQUOTE><PRE>
-
-PROCEDURE <A HREF="CG.m3.html#Load_int_temp">Load_int_temp</A> (v: Var;  o: Offset := 0);
-</PRE><BLOCKQUOTE><EM> == Load_int (v, o); free v when this R-value is consumed </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="CG.m3.html#Load_int">Load_int</A> (t: IType;  v: Var;  o: Offset := 0);
+</PRE><BLOCKQUOTE><EM> == Load (v, o, t.size, t.align, t) </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="CG.m3.html#Load_addr">Load_addr</A> (v: Var;  o: Offset := 0);
 </PRE><BLOCKQUOTE><EM> == Load (v, o, Target.Address.size, Target.Address.align, Type.Addr) </EM></BLOCKQUOTE><PRE>
@@ -427,8 +424,8 @@ PROCEDURE <A HREF="CG.m3.html#Store">Store</A> (v: Var;  o: Offset;  s: Size;  a
 PROCEDURE <A HREF="CG.m3.html#Store_indirect">Store_indirect</A> (t: Type;  o: Offset;  s: Size);
 </PRE><BLOCKQUOTE><EM> Mem [s1.A + o : s] := s0.t ; pop (2) </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="CG.m3.html#Store_int">Store_int</A> (v: Var;  o: Offset := 0);
-</PRE><BLOCKQUOTE><EM> == Store (v, o, Target.Integer.size, Target.Integer.align, Type.Int) </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="CG.m3.html#Store_int">Store_int</A> (t: IType;  v: Var;  o: Offset := 0);
+</PRE><BLOCKQUOTE><EM> == Store (v, o, t.size, t.align, t) </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="CG.m3.html#Store_addr">Store_addr</A> (v: Var;  o: Offset := 0);
 </PRE><BLOCKQUOTE><EM> == Store (v, o, Target.Address.size, Target.Address.align, Type.Addr) </EM></BLOCKQUOTE><PRE>
@@ -438,7 +435,7 @@ PROCEDURE <A HREF="CG.m3.html#Store_addr">Store_addr</A> (v: Var;  o: Offset := 
 <P><PRE>PROCEDURE <A HREF="CG.m3.html#Load_nil">Load_nil</A>     ();                         (*push ; s0.A := NIL*)
 PROCEDURE <A HREF="CG.m3.html#Load_byte_address">Load_byte_address</A> (x: INTEGER);          (*push ; s0.A := x *)
 PROCEDURE <A HREF="CG.m3.html#Load_intt">Load_intt</A>    (i: INTEGER);               (*push;  s0.I := i *)
-PROCEDURE <A HREF="CG.m3.html#Load_integer">Load_integer</A> (READONLY i: Target.Int);   (*push ; s0.I := i *)
+PROCEDURE <A HREF="CG.m3.html#Load_integer">Load_integer</A> (t: IType; READONLY i: Target.Int); (*push ; s0.t := i *)
 PROCEDURE <A HREF="CG.m3.html#Load_float">Load_float</A>   (READONLY f: Target.Float); (*push ; s0.t := f *)
 </PRE>------------------------------------------------------------ arithmetic ---
 
@@ -457,7 +454,7 @@ PROCEDURE <A HREF="CG.m3.html#Negate">Negate</A>    (t: AType);  (* s0.t := - s0
 PROCEDURE <A HREF="CG.m3.html#Abs">Abs</A>       (t: AType);  (* s0.t := ABS (s0.t) (noop on Words) *)
 PROCEDURE <A HREF="CG.m3.html#Max">Max</A>       (t: ZType);  (* s1.t := MAX (s1.t, s0.t) ; pop *)
 PROCEDURE <A HREF="CG.m3.html#Min">Min</A>       (t: ZType);  (* s1.t := MIN (s1.t, s0.t) ; pop *)
-PROCEDURE <A HREF="CG.m3.html#Cvt_int">Cvt_int</A>   (t: RType;  op: Cvt);  (* s0.I := op (s0.t) *)
+PROCEDURE <A HREF="CG.m3.html#Cvt_int">Cvt_int</A>   (t: RType;  u: IType;  op: Cvt);  (* s0.u := op (s0.t) *)
 PROCEDURE <A HREF="CG.m3.html#Cvt_float">Cvt_float</A> (t: AType;  u: RType);   (* s0.u := FLOAT (s0.t, u) *)
 PROCEDURE <A HREF="CG.m3.html#Div">Div</A>       (t: IType;  a, b: Sign); (* s1.t := s1.t DIV s0.t;pop*)
 PROCEDURE <A HREF="CG.m3.html#Mod">Mod</A>       (t: IType;  a, b: Sign); (* s1.t := s1.t MOD s0.t;pop*)
@@ -478,40 +475,40 @@ PROCEDURE <A HREF="CG.m3.html#Set_compare">Set_compare</A>        (s: Size;  op:
 PROCEDURE <A HREF="CG.m3.html#Set_singleton">Set_singleton</A>      (s: Size);  (* s1.A [s0.I] := 1; pop(2) *)
 PROCEDURE <A HREF="CG.m3.html#Set_range">Set_range</A>          (s: Size);  (* s2.A[s1.I..s0.I] := 1; pop(3)
                                              --- S2.A must be forced *)
-</PRE>------------------------------------------------- Word.T bit operations ---
+</PRE>------------------------------------------ Word.T/Long.T bit operations ---
 
-<P><PRE>PROCEDURE <A HREF="CG.m3.html#Not">Not</A> ();  (* s0.I := Word.Not (s0.I) *)
-PROCEDURE <A HREF="CG.m3.html#And">And</A> ();  (* s1.I := Word.And (s1.I, s0.I) ; pop *)
-PROCEDURE <A HREF="CG.m3.html#Or">Or</A>  ();  (* s1.I := Word.Or  (s1.I, s0.I) ; pop *)
-PROCEDURE <A HREF="CG.m3.html#Xor">Xor</A> ();  (* s1.I := Word.Xor (s1.I, s0.I) ; pop *)
+<P><PRE>PROCEDURE <A HREF="CG.m3.html#Not">Not</A> (t: IType);  (* s0.t := Word.Not (s0.t) *)
+PROCEDURE <A HREF="CG.m3.html#And">And</A> (t: IType);  (* s1.t := Word.And (s1.t, s0.t) ; pop *)
+PROCEDURE <A HREF="CG.m3.html#Or">Or</A>  (t: IType);  (* s1.t := Word.Or  (s1.t, s0.t) ; pop *)
+PROCEDURE <A HREF="CG.m3.html#Xor">Xor</A> (t: IType);  (* s1.t := Word.Xor (s1.t, s0.t) ; pop *)
 
-PROCEDURE <A HREF="CG.m3.html#Shift">Shift</A>        ();  (* s1.I := Word.Shift  (s1.I, s0.I) ; pop *)
-PROCEDURE <A HREF="CG.m3.html#Shift_left">Shift_left</A>   ();  (* s1.I := Word.Shift  (s1.I, s0.I) ; pop *)
-PROCEDURE <A HREF="CG.m3.html#Shift_right">Shift_right</A>  ();  (* s1.I := Word.Shift  (s1.I, -s0.I) ; pop *)
-PROCEDURE <A HREF="CG.m3.html#Rotate">Rotate</A>       ();  (* s1.I := Word.Rotate (s1.I, s0.I) ; pop *)
-PROCEDURE <A HREF="CG.m3.html#Rotate_left">Rotate_left</A>  ();  (* s1.I := Word.Rotate (s1.I, s0.I) ; pop *)
-PROCEDURE <A HREF="CG.m3.html#Rotate_right">Rotate_right</A> ();  (* s1.I := Word.Rotate (s1.I, -s0.I) ; pop *)
+PROCEDURE <A HREF="CG.m3.html#Shift">Shift</A>       (t: IType); (* s1.t := Word.Shift  (s1.t, s0.I) ; pop *)
+PROCEDURE <A HREF="CG.m3.html#Shift_left">Shift_left</A>  (t: IType); (* s1.t := Word.Shift  (s1.t, s0.I) ; pop *)
+PROCEDURE <A HREF="CG.m3.html#Shift_right">Shift_right</A> (t: IType); (* s1.t := Word.Shift  (s1.t, -s0.I) ; pop *)
+PROCEDURE <A HREF="CG.m3.html#Rotate">Rotate</A>      (t: IType); (* s1.t := Word.Rotate (s1.t, s0.I) ; pop *)
+PROCEDURE <A HREF="CG.m3.html#Rotate_left">Rotate_left</A> (t: IType); (* s1.t := Word.Rotate (s1.t, s0.I) ; pop *)
+PROCEDURE <A HREF="CG.m3.html#Rotate_right">Rotate_right</A>(t: IType); (* s1.t := Word.Rotate (s1.t, -s0.I) ; pop *)
 
-PROCEDURE <A HREF="CG.m3.html#Extract">Extract</A> (sign: BOOLEAN);
-  (* s2.I := Word.Extract(s2.I, s1.I, s0.I);
-     IF sign THEN SignExtend s2 ; pop(2) *)
+PROCEDURE <A HREF="CG.m3.html#Extract">Extract</A> (t: IType; sign: BOOLEAN);
+</PRE><BLOCKQUOTE><EM> s2.t := Word.Extract(s2.t, s1.I, s0.I);
+   IF sign THEN SignExtend s2 ; pop(2) </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="CG.m3.html#Extract_n">Extract_n</A> (sign: BOOLEAN;  n: INTEGER);
-</PRE><BLOCKQUOTE><EM> s1.I := Word.Extract(s1.I, s0.I, n);
+PROCEDURE <A HREF="CG.m3.html#Extract_n">Extract_n</A> (t: IType; sign: BOOLEAN;  n: INTEGER);
+</PRE><BLOCKQUOTE><EM> s1.t := Word.Extract(s1.t, s0.I, n);
    IF sign THEN SignExtend s1; pop(1) </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="CG.m3.html#Extract_mn">Extract_mn</A> (sign: BOOLEAN;  m, n: INTEGER);
-</PRE><BLOCKQUOTE><EM> s0.I := Word.Extract(s0.I, m, n);
+PROCEDURE <A HREF="CG.m3.html#Extract_mn">Extract_mn</A> (t: IType; sign: BOOLEAN;  m, n: INTEGER);
+</PRE><BLOCKQUOTE><EM> s0.t := Word.Extract(s0.t, m, n);
    IF sign THEN SignExtend s0 </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="CG.m3.html#Insert">Insert</A>  ();
-  (* s3.I := Word.Insert (s3.I, s2.I, s1.I, s0.I) ; pop(3) *)
+PROCEDURE <A HREF="CG.m3.html#Insert">Insert</A>  (t: IType);
+</PRE><BLOCKQUOTE><EM> s3.t := Word.Insert (s3.t, s2.t, s1.I, s0.I) ; pop(3) </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="CG.m3.html#Insert_n">Insert_n</A> (n: INTEGER);
-</PRE><BLOCKQUOTE><EM> s2.I := Word.Insert (s2.I, s1.I, s0.I, n); pop(2) </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="CG.m3.html#Insert_n">Insert_n</A> (t: IType; n: INTEGER);
+</PRE><BLOCKQUOTE><EM> s2.t := Word.Insert (s2.t, s1.t, s0.I, n); pop(2) </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="CG.m3.html#Insert_mn">Insert_mn</A> (m, n: INTEGER);
-</PRE><BLOCKQUOTE><EM> s1.I := Word.Insert (s1.I, s0.I, m, n); pop(1) </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="CG.m3.html#Insert_mn">Insert_mn</A> (t: IType; m, n: INTEGER);
+</PRE><BLOCKQUOTE><EM> s1.t := Word.Insert (s1.t, s0.t, m, n); pop(1) </EM></BLOCKQUOTE><PRE>
 </PRE>------------------------------------------------ misc. stack/memory ops ---
 
 <P><PRE>PROCEDURE <A HREF="CG.m3.html#Swap">Swap</A> ();           (* tmp := s1; s1 := s0; s0 := tmp *)
@@ -541,20 +538,20 @@ PROCEDURE <A HREF="CG.m3.html#Zero">Zero</A> (s: Size);
 PROCEDURE <A HREF="CG.m3.html#Check_nil">Check_nil</A> (code: RuntimeError);
 </PRE><BLOCKQUOTE><EM> IF (s0.A = NIL) THEN abort(code) </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="CG.m3.html#Check_lo">Check_lo</A> (READONLY i: Target.Int;  code: RuntimeError);
+PROCEDURE <A HREF="CG.m3.html#Check_lo">Check_lo</A> (t: IType;  READONLY i: Target.Int;  code: RuntimeError);
 </PRE><BLOCKQUOTE><EM> IF (s0.I &lt; i) THEN abort(code) </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="CG.m3.html#Check_hi">Check_hi</A> (READONLY i: Target.Int;  code: RuntimeError);
+PROCEDURE <A HREF="CG.m3.html#Check_hi">Check_hi</A> (t: IType;  READONLY i: Target.Int;  code: RuntimeError);
 </PRE><BLOCKQUOTE><EM> IF (i &lt; s0.I) THEN abort(code) </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="CG.m3.html#Check_range">Check_range</A> (READONLY a, b: Target.Int;  code: RuntimeError);
+PROCEDURE <A HREF="CG.m3.html#Check_range">Check_range</A> (t: IType; READONLY a, b: Target.Int; code: RuntimeError);
 </PRE><BLOCKQUOTE><EM> IF (s0.I &lt; a) OR (b &lt; s0.I) THEN abort(code) </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="CG.m3.html#Check_index">Check_index</A> (code: RuntimeError);
 </PRE><BLOCKQUOTE><EM> IF NOT (0 &lt;= s1.I &lt; s0.I) THEN abort(code) END; pop </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="CG.m3.html#Check_eq">Check_eq</A> (code: RuntimeError);
-</PRE><BLOCKQUOTE><EM> IF (s0.I # s1.I) THEN abort(code);  Pop (2) </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="CG.m3.html#Check_eq">Check_eq</A> (t: IType;  code: RuntimeError);
+</PRE><BLOCKQUOTE><EM> IF (s0.t # s1.t) THEN abort(code);  Pop (2) </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="CG.m3.html#Check_byte_aligned">Check_byte_aligned</A> ();
 </PRE><BLOCKQUOTE><EM> IF unaligned(s0.A) THEN abort(RuntimeError.UnalignedAddress); </EM></BLOCKQUOTE><PRE>
@@ -638,13 +635,7 @@ PROCEDURE <A HREF="CG.m3.html#Load_static_link">Load_static_link</A> (p: Proc);
 </PRE><BLOCKQUOTE><EM> push; s0.A := (static link need to call p, NIL for top-level procs) </EM></BLOCKQUOTE><PRE>
 </PRE>------------------------------------------------ builtin type operations --
 
-<P><PRE>PROCEDURE <A HREF="CG.m3.html#Ref_to_typecode">Ref_to_typecode</A> ();
-</PRE><BLOCKQUOTE><EM> s0.I := TYPECODE (s0.A)  for non-NIL s0.A
-   == Load_indirect (Type.Int, -Target.Address.pack,
-                        Target.Address.align, Target.Address.size);
-      Load_integer (1);
-      Shift_right ();
-</EM></BLOCKQUOTE><PRE>
+<P><PRE>PROCEDURE <A HREF="CG.m3.html#Ref_to_info">Ref_to_info</A> (offset, size: INTEGER);
 </PRE>------------------------------------------------------------ open arrays --
 
 <P><PRE>PROCEDURE <A HREF="CG.m3.html#Open_elt_ptr">Open_elt_ptr</A> (a: Alignment);
@@ -670,6 +661,17 @@ PROCEDURE <A HREF="CG.m3.html#Closure_frame">Closure_frame</A> ();
 
 <P><PRE>PROCEDURE <A HREF="CG.m3.html#Comment">Comment</A> (offset: INTEGER;  is_const: BOOLEAN;  a, b, c, d: TEXT := NIL);
 </PRE><BLOCKQUOTE><EM> annotate the output with a&amp;b&amp;c&amp;d as a comment </EM></BLOCKQUOTE><PRE>
+</PRE>--------------------------------------------------------------- atomics ---
+
+<P><PRE>PROCEDURE <A HREF="CG.m3.html#Cas">Cas</A> (t: MType);
+</PRE><BLOCKQUOTE><EM> tmp := Mem [s2.A].t;
+   IF tmp = s1.t THEN Mem [s2.A].t := s0.t; END;
+   s2.t := tmp; pop(2) </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="CG.m3.html#CasP">CasP</A> (t: MType;  u: IType);
+</PRE><BLOCKQUOTE><EM> tmp := Mem [s2.A].t;
+   IF tmp = s1.t THEN Mem [s2.A].t := s0.t; END;
+   s2.t := (tmp = s1.t); pop(2) </EM></BLOCKQUOTE><PRE>
 
 END CG.
 </PRE>

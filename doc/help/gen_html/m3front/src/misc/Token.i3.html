@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/misc/Token.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/misc/Token.i3</H2></A><HR>
 <inInterface>
@@ -23,7 +23,7 @@ TYPE
 
        (* lexical classes *)
        tIDENT,
-       tCARDCONST,
+       tINTEGERCONST, tLONGINTCONST,
        tREALCONST, tLONGREALCONST, tEXTENDEDCONST,
        tCHARCONST, tWCHARCONST,
        tTEXTCONST, tWTEXTCONST,
@@ -84,18 +84,19 @@ CONST
   TypeStart = Set {T.tIDENT, T.tARRAY, T.tBITS, T.tBRANDED, T.tLBRACE,
                    T.tLAZYALIGN, T.tSTRICTALIGN,
                    T.tUNTRACED, T.tOBJECT, T.tPROCEDURE, T.tRECORD,
-		   T.tREF, T.tSET, T.tLBRACKET, T.tLPAREN};
+                   T.tREF, T.tSET, T.tLBRACKET, T.tLPAREN};
 
-  ExprStart = Set {T.tNOT, T.tPLUS, T.tMINUS, T.tIDENT, T.tCARDCONST,
+  ExprStart = Set {T.tNOT, T.tPLUS, T.tMINUS, T.tIDENT,
+                   T.tINTEGERCONST, T.tLONGINTCONST,
                    T.tLONGREALCONST, T.tREALCONST, T.tEXTENDEDCONST,
                    T.tCHARCONST, T.tWCHARCONST, T.tTEXTCONST, T.tWTEXTCONST,
                    T.tLPAREN, T.tARRAY, T.tBITS, T.tRECORD, T.tSET};
 
   StmtStart = Set {T.tCASE, T.tEXIT, T.tEVAL, T.tFOR, T.tIF, T.tLOCK,
                    T.tLOOP, T.tRAISE, T.tREPEAT, T.tRETURN, T.tTRY,
-		   T.tTYPECASE, T.tWHILE, T.tWITH, T.tBEGIN, T.tASSERT,
+                   T.tTYPECASE, T.tWHILE, T.tWITH, T.tBEGIN, T.tASSERT,
                    T.tIDENT, T.tLPAREN, T.tARRAY, T.tRECORD, T.tDEBUG}
-		   + DeclStart;
+                   + DeclStart;
 
 VAR (*CONST*)
   name: ARRAY T OF M3ID.T;

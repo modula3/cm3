@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: cmvbt/src/GridSplit.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>cmvbt/src/GridSplit.m3</H2></A><HR>
 <inModule>
@@ -74,11 +74,11 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A>(v: T;
 </PRE><P>
 <P>
 &lt;*UNUSED*&gt; PROCEDURE DumpSizes (v: T) =
-BEGIN 
+BEGIN
 <P>
-  IO.Put (Fmt.F (<CODE>Domain: (%s,%s)-(%s,%s)\n</CODE> , Fmt.Int(v.domain.west), 
-                              Fmt.Int(v.domain.east), 
-                              Fmt.Int(v.domain.north), 
+  IO.Put (Fmt.F (<CODE>Domain: (%s,%s)-(%s,%s)\n</CODE> , Fmt.Int(v.domain.west),
+                              Fmt.Int(v.domain.east),
+                              Fmt.Int(v.domain.north),
                               Fmt.Int(v.domain.south)));
   IO.Put (<CODE>Rows : </CODE>);
   FOR i := 0 TO v.nrows-1 DO
@@ -169,7 +169,7 @@ PROCEDURE <A NAME="RemoveRow"><procedure>RemoveRow</procedure></A>(v: T; row: CA
     END;
     VBT.NewShape(v);
   END RemoveRow;
-</PRE>PROCEDURE RemoveRow (v: T; start, n: CARDINAL) = 
+</PRE>PROCEDURE RemoveRow (v: T; start, n: CARDINAL) =
   (* Remove <CODE>n</CODE> rows starting with <CODE>start</CODE>. 
   <PRE>BEGIN
     SUBARRAY(v.tbl, start, n) := SUBARRAY(v.tbl, start + n, n);

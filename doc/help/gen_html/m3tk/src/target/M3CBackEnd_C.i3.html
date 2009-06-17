@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/target/M3CBackEnd_C.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/target/M3CBackEnd_C.i3</H2></A><HR>
 <inInterface>
@@ -27,8 +27,9 @@
 *************************************************************************
 
 <P><PRE>IMPORT <A HREF="../ast/M3AST_AS.i3.html">M3AST_AS</A>, <A HREF="../ast/M3AST_SM.i3.html">M3AST_SM</A>;
+IMPORT <A HREF="M3CBackEnd_Int_Integer.i3.html">M3CBackEnd_Int_Integer</A>, <A HREF="M3CBackEnd_Int_Longint.i3.html">M3CBackEnd_Int_Longint</A>;
 IMPORT <A HREF="M3CBackEnd_Float_Real.i3.html">M3CBackEnd_Float_Real</A>, <A HREF="M3CBackEnd_Float_LongReal.i3.html">M3CBackEnd_Float_LongReal</A>,
-    <A HREF="M3CBackEnd_Float_Extended.i3.html">M3CBackEnd_Float_Extended</A>;
+       <A HREF="M3CBackEnd_Float_Extended.i3.html">M3CBackEnd_Float_Extended</A>;
 </PRE> This interface provides a 'friends' interface to the implementation
 of M3CBackEnd for the C-code generator. 
 
@@ -52,12 +53,11 @@ TYPE
     sm_constructor: M3AST_AS.Constructor;
   END;
 
-  (* Note - Integer_value is used for all ordinals, including enumerations
-  and the CHAR enumeration *)
+  (* Note - Integer_value is used for all INTEGER-based ordinals, including
+  enumerations and the CHAR enumeration *)
+  Integer_value = M3CBackEnd_Int_Integer.T;
 
-  Integer_value = M3AST_SM.Exp_value BRANDED OBJECT
-    sm_value: INTEGER;
-  END;
+  Longint_value = M3CBackEnd_Int_Longint.T;
 
   Proc_value = M3AST_SM.Exp_value BRANDED OBJECT
     sm_value: TEXT;  (* &quot;I.P&quot; *)
@@ -74,9 +74,6 @@ TYPE
   Real_value = M3CBackEnd_Float_Real.T;
   LongReal_value = M3CBackEnd_Float_LongReal.T;
   Extended_value = M3CBackEnd_Float_Extended.T;
-
-PROCEDURE <A HREF="M3CBackEnd_C.m3.html#NewInteger_value">NewInteger_value</A>(i: INTEGER): Integer_value RAISES {};
-</PRE><BLOCKQUOTE><EM> use this to create 'Integer_value' types </EM></BLOCKQUOTE><PRE>
 
 END M3CBackEnd_C.
 </PRE>

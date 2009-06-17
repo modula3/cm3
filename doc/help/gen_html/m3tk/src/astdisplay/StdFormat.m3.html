@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/astdisplay/StdFormat.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/astdisplay/StdFormat.m3</H2></A><HR>
 <inModule>
@@ -249,6 +249,7 @@ PROCEDURE <A NAME="DoIt"><procedure>DoIt</procedure></A>(h: Handle; parent, n: M
     | M3AST_AS.Subtype_reveal(q) =&gt; Subtype_reveal(h, q);
     | M3AST_AS.Named_type(q) =&gt; Named_type(h, q)
     | M3AST_AS.Integer_type(q) =&gt; Integer_type(h, q)
+    | M3AST_AS.Longint_type(q) =&gt; Longint_type(h, q)
     | M3AST_AS.WideChar_type(q) =&gt; WideChar_type(h, q)
     | M3AST_AS.Real_type(q) =&gt; Real_type(h, q)
     | M3AST_AS.LongReal_type(q) =&gt; LongReal_type(h, q)
@@ -632,6 +633,12 @@ PROCEDURE <A NAME="Integer_type"><procedure>Integer_type</procedure></A>(
   BEGIN
     Append(h, n, NewToken(M3CToken.INTEGER_));
   END Integer_type;
+
+PROCEDURE <A NAME="Longint_type"><procedure>Longint_type</procedure></A>(
+    h: Handle; n: M3AST_AS.Longint_type)=
+  BEGIN
+    Append(h, n, NewToken(M3CToken.LONGINT_));
+  END Longint_type;
 
 PROCEDURE <A NAME="WideChar_type"><procedure>WideChar_type</procedure></A>(
     h: Handle; n: M3AST_AS.WideChar_type)=

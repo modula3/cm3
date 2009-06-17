@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3scan/src/M3Scanner.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3scan/src/M3Scanner.m3</H2></A><HR>
 <inModule>
@@ -244,7 +244,14 @@ PROCEDURE <A NAME="ScanNumber"><procedure>ScanNumber</procedure></A> (t: Default
       INC (offset);  ch := t.buffer [offset];
       IF HexDigits[ch] THEN
         WHILE HexDigits[ch] DO  INC (offset);  ch := t.buffer [offset];  END;
-        t.token := TK.Card_const;
+        IF (ch = 'L') OR (ch = 'l') THEN
+          t.token := TK.Long_const;
+          t.length := offset - t.offset;
+          t.next_offset := offset + 1;
+          RETURN;
+        ELSE
+          t.token := TK.Card_const;
+        END;
       ELSE
         Err (t, offset, &quot;illegal based integer: missing digits&quot;);
         RETURN;
@@ -295,8 +302,13 @@ PROCEDURE <A NAME="ScanNumber"><procedure>ScanNumber</procedure></A> (t: Default
 
     ELSE
       (* scanned a simple decimal integer *)
-      t.token := TK.Card_const;
-
+      IF (ch = 'L') OR (ch = 'l') THEN
+        t.token := TK.Long_const;
+        t.length := offset - t.offset;
+        t.next_offset := offset + 1;
+      ELSE
+        t.token := TK.Card_const;
+      END;
     END;
 
     t.length := offset - t.offset;

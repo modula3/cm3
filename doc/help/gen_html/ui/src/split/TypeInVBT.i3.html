@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/TypeInVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/TypeInVBT.i3</H2></A><HR>
 <inInterface>
@@ -20,7 +20,7 @@
 
 INTERFACE <interface><A HREF="TypeInVBT.m3.html">TypeInVBT</A></interface>;
 </PRE> A <CODE>TypeInVBT.T</CODE> is a <CODE>VBT</CODE> into which the user can type a one-line
-   text string using ISO-Latin 1 keycodes.   
+   text string using ISO-Latin 1 keycodes.
 <P>
    A <CODE>TypeInVBT</CODE> acquires the keyboard focus when the user clicks on it
    with the mouse, or whenever the program directs it to by
@@ -28,13 +28,13 @@ INTERFACE <interface><A HREF="TypeInVBT.m3.html">TypeInVBT</A></interface>;
    acquires the primary selection, and primary-selects the text string in
    the <CODE>VBT</CODE>.
 <P>
-   When it has the keyboard focus, the user can append to the text by 
+   When it has the keyboard focus, the user can append to the text by
    typing graphic characters, and can backspace by typing the key
-   labelled <CODE>&lt;X]</CODE>.  Associated with every TypeInVBT is an action 
+   labelled <CODE>&lt;X]</CODE>.  Associated with every TypeInVBT is an action
    procedure that is called whenever the user types
    a non-graphic character (such as <CODE>RETURN</CODE>).
 <P>
-   When a <CODE>TypeInVBT</CODE> it has the keyboard focus, it responds to 
+   When a <CODE>TypeInVBT</CODE> it has the keyboard focus, it responds to
    the following editing commands:
      control-q deletes the entire text (primary selection);
      control-w copies the secondary selection to the end of the text;

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/builtinOps/IsType.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/builtinOps/IsType.m3</H2></A><HR>
 <inModule>
@@ -17,7 +17,8 @@
 <P><PRE>MODULE <module><implements><A HREF="IsType.i3.html">IsType</A></implements></module>;
 
 IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../exprs/ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../exprs/TypeExpr.i3.html">TypeExpr</A>, <A HREF="../builtinTypes/Reff.i3.html">Reff</A>, <A HREF="../types/RefType.i3.html">RefType</A>;
-IMPORT <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="../builtinTypes/Bool.i3.html">Bool</A>, <A HREF="../types/ObjectType.i3.html">ObjectType</A>, <A HREF="../builtinTypes/Null.i3.html">Null</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="../../../m3middle/src/M3RT.i3.html">M3RT</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../misc/RunTyme.i3.html">RunTyme</A>;
+IMPORT <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="../builtinTypes/Bool.i3.html">Bool</A>, <A HREF="../types/ObjectType.i3.html">ObjectType</A>, <A HREF="../builtinTypes/Null.i3.html">Null</A>, <A HREF="#x2">Value</A>, <A HREF="../../../m3middle/src/M3RT.i3.html">M3RT</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../misc/RunTyme.i3.html">RunTyme</A>;
+IMPORT <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>;
 
 VAR Z: CallExpr.MethodList;
 
@@ -47,7 +48,7 @@ PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (ce: CallExpr.T) =
     e := ce.args[0];
     t, u: Type.T;
     ptr: CG.Val;
-    true: CG.Label;
+    true, false, tagged: CG.Label;
     proc: Procedure.T;
   BEGIN
     IF NOT TypeExpr.Split (ce.args[1], t) THEN
@@ -62,7 +63,7 @@ PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (ce: CallExpr.T) =
       (* the test succeeds statically *)
       Expr.Compile (ce.args[0]);
       CG.Discard (CG.Type.Addr);
-      CG.Load_integer (TInt.One);
+      Value.Load (Bool.True);
       ce.tmp := CG.Pop ();
 
     ELSIF Type.IsEqual (t, Null.T, NIL) THEN
@@ -73,9 +74,11 @@ PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (ce: CallExpr.T) =
 
     ELSIF RefType.Is (t) THEN
       Expr.Compile (ce.args[0]);
+      tagged := CG.Next_label ();
+      false := CG.Next_label ();
       true := CG.Next_label ();
       ptr := CG.Pop ();
-      CG.Load_integer (TInt.One);
+      Value.Load (Bool.True);
       CG.Force (); (* we need a temp *)
       ce.tmp := CG.Pop_temp ();
       CG.Push (ptr);
@@ -83,14 +86,27 @@ PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (ce: CallExpr.T) =
       CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, true, CG.Maybe);
 
       CG.Push (ptr);
-      CG.Ref_to_typecode ();
+      CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
+      CG.Load_integer (Target.Integer.cg_type, TInt.One);
+      CG.And (Target.Integer.cg_type);
+      CG.If_true (tagged, CG.Maybe);
+
+      CG.Push (ptr);
+      CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
+      Type.LoadInfo (t, M3RT.TC_typecode);
+      CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, true, CG.Always);
+      CG.Jump (false);
+
+      CG.Set_label (tagged);
+      CG.Load_intt (M3RT.REFANY_typecode);
       Type.LoadInfo (t, M3RT.TC_typecode);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.EQ, true, CG.Always);
 
-      CG.Load_integer (TInt.Zero);
+      CG.Set_label (false);
+      Value.Load (Bool.False);
       CG.Store_temp (ce.tmp);
-      CG.Set_label (true);
 
+      CG.Set_label (true);
       CG.Free (ptr);
 
     ELSE (* general object type *)
@@ -124,7 +140,7 @@ PROCEDURE <A NAME="PrepBR"><procedure>PrepBR</procedure></A> (ce: CallExpr.T;  t
     e := ce.args[0];
     t, u: Type.T;
     ptr: CG.Val;
-    skip: CG.Label;
+    skip, tagged: CG.Label;
     proc: Procedure.T;
   BEGIN
     IF NOT TypeExpr.Split (ce.args[1], t) THEN
@@ -151,6 +167,7 @@ PROCEDURE <A NAME="PrepBR"><procedure>PrepBR</procedure></A> (ce: CallExpr.T;  t
 
     ELSIF RefType.Is (t) THEN
       Expr.Compile (ce.args[0]);
+      tagged := CG.Next_label ();
       skip := CG.Next_label ();
       ptr := CG.Pop ();
       CG.Push (ptr);
@@ -161,7 +178,19 @@ PROCEDURE <A NAME="PrepBR"><procedure>PrepBR</procedure></A> (ce: CallExpr.T;  t
       END;
 
       CG.Push (ptr);
-      CG.Ref_to_typecode ();
+      CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
+      CG.Load_integer (Target.Integer.cg_type, TInt.One);
+      CG.And (Target.Integer.cg_type);
+      CG.If_true (tagged, CG.Maybe);
+
+      CG.Push (ptr);
+      CG.Ref_to_info (M3RT.RH_typecode_offset, M3RT.RH_typecode_size);
+      Type.LoadInfo (t, M3RT.TC_typecode);
+      CG.If_then (Target.Integer.cg_type, CG.Cmp.EQ, true, false, freq);
+      CG.Jump (skip);
+
+      CG.Set_label (tagged);
+      CG.Load_intt (M3RT.REFANY_typecode);
       Type.LoadInfo (t, M3RT.TC_typecode);
       CG.If_then (Target.Integer.cg_type, CG.Cmp.EQ, true, false, freq);
       CG.Set_label (skip);
@@ -216,10 +245,20 @@ END IsType.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
 <LI><A HREF="../../../stubgen/src/Type.i3.html#0TOP0">stubgen/src/Type.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Value is in:
+</A><UL>
+<LI><A HREF="../values/Value.i3.html#0TOP0">m3front/src/values/Value.i3</A>
+<LI><A HREF="../../../sharedobjgen/src/Value.i3.html#0TOP0">sharedobjgen/src/Value.i3</A>
+<LI><A HREF="../../../stablegen/src/Value.i3.html#0TOP0">stablegen/src/Value.i3</A>
+<LI><A HREF="../../../stubgen/src/Value.i3.html#0TOP0">stubgen/src/Value.i3</A>
 </UL>
 <P>
 <PRE>

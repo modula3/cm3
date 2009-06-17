@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/AnimHandle.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/AnimHandle.i3</H2></A><HR>
 <inInterface>
@@ -15,25 +15,25 @@
 
 <P>
 <P> The 3D animation library supports two kinds of animations: synchronous
-   and asynchronous ones. 
+   and asynchronous ones.
 <P>
    An asynchronous animation is performed by attaching an {\em unsynchronized
-   time-variant property value} <CODE>pv</CODE> to a geometric object <CODE>go</CODE>. Attaching 
-   <CODE>pv</CODE> to <CODE>go</CODE> immediately starts to animate <CODE>go</CODE> in some fashion, the 
-   animation ends once <CODE>pv</CODE> is again detached. 
-   <P>
+   time-variant property value} <CODE>pv</CODE> to a geometric object <CODE>go</CODE>. Attaching
+   <CODE>pv</CODE> to <CODE>go</CODE> immediately starts to animate <CODE>go</CODE> in some fashion, the
+   animation ends once <CODE>pv</CODE> is again detached.
+<P>
    A synchronous animation, on the other hand, is performed by attaching a
    {\em synchronized time-variant property value} <CODE>pv</CODE> to a geometric object
-   <CODE>go</CODE>, and then issuing an animation request to <CODE>pv</CODE>. Associated with each 
-   synchronous property value is an <CODE>AnimHandle.T</CODE>. However, <CODE>pv</CODE> will not 
-   immediately start to change. 
+   <CODE>go</CODE>, and then issuing an animation request to <CODE>pv</CODE>. Associated with each
+   synchronous property value is an <CODE>AnimHandle.T</CODE>. However, <CODE>pv</CODE> will not
+   immediately start to change.
 <P>
-   The message <CODE>ah.animate()</CODE> will start to animate all time-varying property 
-   values tied to <CODE>ah</CODE>. The call to <CODE>ah.animate()</CODE> will return only after 
-   these animations are completed. 
+   The message <CODE>ah.animate()</CODE> will start to animate all time-varying property
+   values tied to <CODE>ah</CODE>. The call to <CODE>ah.animate()</CODE> will return only after
+   these animations are completed.
 <P>
    Animation handles are monitored: only one thread can call <CODE>animate</CODE> at any
-   given time, and no thread can insert requests into the request queue of a 
+   given time, and no thread can insert requests into the request queue of a
    synchronous property value while <CODE>animate</CODE> is in progress.
 
 
@@ -48,12 +48,12 @@ TYPE
     init () : T;
     animate ();
   END;
-</PRE><BLOCKQUOTE><EM> <CODE>ah.init()</CODE> initializes a new animation handle <CODE>ah</CODE> and returns it. 
+</PRE><BLOCKQUOTE><EM> <CODE>ah.init()</CODE> initializes a new animation handle <CODE>ah</CODE> and returns it.
    <CODE>ah.animate()</CODE> triggers the animation of all synchronous property values
    that are tied to <CODE>ah</CODE>. It returns when the animation is completed. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="AnimHandle.m3.html#New">New</A> () : T;
-</PRE><BLOCKQUOTE><EM> <CODE>New</CODE> is a convenience procedure. The expression <CODE>New()</CODE> is equivalent 
+</PRE><BLOCKQUOTE><EM> <CODE>New</CODE> is a convenience procedure. The expression <CODE>New()</CODE> is equivalent
    to <CODE>NEW(T).init()</CODE> </EM></BLOCKQUOTE><PRE>
 
 END AnimHandle.

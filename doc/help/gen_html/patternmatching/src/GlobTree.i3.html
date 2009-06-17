@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: patternmatching/src/GlobTree.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>patternmatching/src/GlobTree.i3</H2></A><HR>
 <inInterface>
@@ -34,15 +34,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: GlobTree.i3.html,v 1.2 2003-07-16 13:17:54 wagner Exp $ 
+ * $Id: GlobTree.i3.html,v 1.3 2009-06-17 18:52:48 wagner Exp $ 
 
 <P> The <CODE>GlobTree</CODE> interface allows one to construct arbitrarily complex
    boolean expressions for evaluating whether to accept or reject a
    filename. 
 
-<P><PRE>INTERFACE <interface><A HREF="GlobTree.m3.html">GlobTree</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="#x1">GlobTree</A></interface>;
 
-IMPORT <A HREF="Glob.i3.html">Glob</A>, <A HREF="RegEx.i3.html">RegEx</A>;
+IMPORT <A HREF="#x2">Glob</A>, <A HREF="#x3">RegEx</A>;
 
 TYPE
   T = OBJECT METHODS
@@ -68,23 +68,72 @@ VAR
    Expressions can be combined with the boolean operators AND, OR, and
    NOT, to form more complex expressions. 
 
-<P><PRE>PROCEDURE <A HREF="GlobTree.m3.html#Match">Match</A>(pattern: TEXT; options := Glob.MatchOptions{}): T;
+<P><PRE>PROCEDURE <A HREF="#x4">Match</A>(pattern: TEXT; options := Glob.MatchOptions{}): T;
 </PRE><BLOCKQUOTE><EM> Return a <CODE>match</CODE> primitive for the given pattern.  Matching is
    performed by <CODE>Glob.Match</CODE>, using the specified options. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="GlobTree.m3.html#And">And</A>(left, right: T): T;
+PROCEDURE <A HREF="#x5">And</A>(left, right: T): T;
 </PRE><BLOCKQUOTE><EM> Return an AND expression. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="GlobTree.m3.html#Or">Or</A>(left, right: T): T;
+PROCEDURE <A HREF="#x6">Or</A>(left, right: T): T;
 </PRE><BLOCKQUOTE><EM> Return an OR expression. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="GlobTree.m3.html#Not">Not</A>(child: T): T;
+PROCEDURE <A HREF="#x7">Not</A>(child: T): T;
 </PRE><BLOCKQUOTE><EM> Return an expression that evaluates the logical negation of its
    subexpression. </EM></BLOCKQUOTE><PRE>
 
 END GlobTree.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">GlobTree's implementation  is in:
+</A><UL>
+<LI><A HREF="GlobTree.m3.html#0TOP0">patternmatching/src/GlobTree.m3</A>
+<LI><A HREF="../../suplib/src/GlobTree.m3.html#0TOP0">suplib/src/GlobTree.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Glob is in:
+</A><UL>
+<LI><A HREF="Glob.i3.html#0TOP0">patternmatching/src/Glob.i3</A>
+<LI><A HREF="../../suplib/src/Glob.i3.html#0TOP0">suplib/src/Glob.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface RegEx is in:
+</A><UL>
+<LI><A HREF="RegEx.i3.html#0TOP0">patternmatching/src/RegEx.i3</A>
+<LI><A HREF="../../suplib/src/RegEx.i3.html#0TOP0">suplib/src/RegEx.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x4">procedure GlobTree.Match is in:
+</A><UL>
+<LI><A HREF="GlobTree.m3.html#Match">patternmatching/src/GlobTree.m3</A>
+<LI><A HREF="../../suplib/src/GlobTree.m3.html#Match">suplib/src/GlobTree.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x5">procedure GlobTree.And is in:
+</A><UL>
+<LI><A HREF="GlobTree.m3.html#And">patternmatching/src/GlobTree.m3</A>
+<LI><A HREF="../../suplib/src/GlobTree.m3.html#And">suplib/src/GlobTree.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x6">procedure GlobTree.Or is in:
+</A><UL>
+<LI><A HREF="GlobTree.m3.html#Or">patternmatching/src/GlobTree.m3</A>
+<LI><A HREF="../../suplib/src/GlobTree.m3.html#Or">suplib/src/GlobTree.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x7">procedure GlobTree.Not is in:
+</A><UL>
+<LI><A HREF="GlobTree.m3.html#Not">patternmatching/src/GlobTree.m3</A>
+<LI><A HREF="../../suplib/src/GlobTree.m3.html#Not">suplib/src/GlobTree.m3</A>
+</UL>
+<P>
 <PRE>
 
 

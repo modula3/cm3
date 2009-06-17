@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-app/src/Editor.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-app/src/Editor.i3</H2></A><HR>
 <inInterface>
@@ -21,7 +21,7 @@
    trees of type <CODE>JunoAST.Block</CODE> resulting from successfully parsing
    <CODE>src[te]</CODE>. 
 
-<P><PRE>INTERFACE <interface><A HREF="Editor.m3.html">Editor</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="#x1">Editor</A></interface>;
 
 IMPORT <A HREF="../../juno-compiler/src/JunoAST.i3.html">JunoAST</A>, <A HREF="../../juno-compiler/src/JunoScope.i3.html">JunoScope</A>;
 IMPORT <A HREF="../../vbtkit/src/etext/TextPort.i3.html">TextPort</A>, <A HREF="../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="../../libm3/src/atom/Atom.i3.html">Atom</A>;
@@ -44,7 +44,7 @@ TYPE
 <P>
    The <CODE>txtModified</CODE> method is called whenever the text of the editor has been
    modified since the last time the TextPort's modified bit was reset. The
-   default <CODE>txtModified</CODE> method is a no-op. 
+   default <CODE>txtModified</CODE> method is a no-op.
 <P>
    The call <CODE>ed.getToolType(nm, type)</CODE> sets <CODE>type</CODE> to <CODE>PointToolSym</CODE>,
    <CODE>TextToolSym</CODE>, <CODE>TemplToolSym</CODE>, or <CODE>SetToolSym</CODE> and returns <CODE>TRUE</CODE> if <CODE>nm</CODE>
@@ -134,7 +134,7 @@ PROCEDURE <A HREF="Editor.m3.html#Compile">Compile</A>(
    appear in <CODE>scp</CODE>.
 <P>
    This procedure does not pretty-print the contents of <CODE>e</CODE> or process
-   the UI declarations in <CODE>e</CODE>.  See <CODE>Unparse</CODE> and <CODE>EditorUI.CompileUI</CODE>. 
+   the UI declarations in <CODE>e</CODE>.  See <CODE>Unparse</CODE> and <CODE>EditorUI.CompileUI</CODE>.
 <P>
    If successful, this procedure also has a side-effect on the Juno machine:
    it stores compiled versions of the predicates, functions and procedures
@@ -152,6 +152,13 @@ PROCEDURE <A HREF="Editor.m3.html#RestoreSlots">RestoreSlots</A>(rd: Rd.T);
 END Editor.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">Editor's implementation  is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/misc/Editor.m3.html#0TOP0">cm3ide/src/misc/Editor.m3</A>
+<LI><A HREF="Editor.m3.html#0TOP0">juno-app/src/Editor.m3</A>
+</UL>
+<P>
 <PRE>
 
 

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: cm3/src/Msg.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>cm3/src/Msg.m3</H2></A><HR>
 <inModule>
@@ -109,15 +109,15 @@ PROCEDURE <A NAME="OutL"><procedure>OutL</procedure></A> (a, b: TEXT;  l: Arg.Li
 
 PROCEDURE <A NAME="OutE"><procedure>OutE</procedure></A> (a, b, c, d, e, f, g: TEXT := NIL) =
   BEGIN
-    OutX (Stdio.stderr, a, b, c, d, e, f, g);
+    OutX (&quot;&lt;stderr&gt;&quot;, Stdio.stderr, a, b, c, d, e, f, g);
   END OutE;
 
 PROCEDURE <A NAME="Out"><procedure>Out</procedure></A> (a, b, c, d, e, f, g: TEXT := NIL) =
   BEGIN
-    OutX (Stdio.stdout, a, b, c, d, e, f, g);
+    OutX (&quot;&lt;stdout&gt;&quot;, Stdio.stdout, a, b, c, d, e, f, g);
   END Out;
 
-PROCEDURE <A NAME="OutX"><procedure>OutX</procedure></A> (wr : Wr.T; a, b, c, d, e, f, g: TEXT := NIL) =
+PROCEDURE <A NAME="OutX"><procedure>OutX</procedure></A> (name: TEXT; wr : Wr.T; a, b, c, d, e, f, g: TEXT := NIL) =
   BEGIN
     TRY
       IF (a # NIL) THEN Wr.PutText (wr, a) END;
@@ -127,15 +127,15 @@ PROCEDURE <A NAME="OutX"><procedure>OutX</procedure></A> (wr : Wr.T; a, b, c, d,
       IF (e # NIL) THEN Wr.PutText (wr, e) END;
       IF (f # NIL) THEN Wr.PutText (wr, f) END;
       IF (g # NIL) THEN Wr.PutText (wr, g) END;
-      Utils.FlushWriter (wr, &quot;&lt;stdout&gt;&quot;);
+      Utils.FlushWriter (wr, name);
     EXCEPT
     | Wr.Failure (args) =&gt;
         IF NOT crashing THEN
-          FatalError (args, &quot;unable to write file: &lt;stdout&gt;&quot;);
+          FatalError (args, &quot;unable to write file: &quot; &amp; name);
         END;
     | Thread.Alerted =&gt;
         IF NOT crashing THEN
-          FatalError (NIL, &quot;interrupted -- unable to write file: &lt;stdout&gt;&quot;);
+          FatalError (NIL, &quot;interrupted -- unable to write file: &quot; &amp; name);
         END;
     END;
   END OutX;
@@ -148,6 +148,7 @@ END Msg.
 <A NAME="x1">interface Msg is in:
 </A><UL>
 <LI><A HREF="Msg.i3.html#0TOP0">cm3/src/Msg.i3</A>
+<LI><A HREF="../../cminstall/src/Msg.i3.html#0TOP0">cminstall/src/Msg.i3</A>
 <LI><A HREF="../../m3tohtml/src/Msg.i3.html#0TOP0">m3tohtml/src/Msg.i3</A>
 </UL>
 <P>

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/M3CG.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/M3CG.i3</H2></A><HR>
 <inInterface>
@@ -66,6 +66,7 @@ TYPE
 TYPE
   CompareOp = { EQ, NE, GT, GE, LT, LE };
   ConvertOp = { Round, Trunc, Floor, Ceiling };
+  AtomicOp = { Add, Sub, Or, And, Xor, Nand };
 
 CONST (*  A op B  ===  B SwappedCompare[op] A  *)
   SwappedCompare = ARRAY CompareOp OF CompareOp {

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/sem/M3CExpTypeSpec.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/sem/M3CExpTypeSpec.m3</H2></A><HR>
 <inModule>
@@ -132,9 +132,21 @@ PROCEDURE <A NAME="IRL"><procedure>IRL</procedure></A>(
     | M3AST_AS.FLOAT_TYPE =&gt;
         (* Includes null case; result type is argument type *)
         RETURN ts;
-    | M3AST_AS.Subrange_type, M3AST_AS.Integer_type =&gt;
+    | M3AST_AS.Subrange_type =&gt;
+        IF intok THEN
+          RETURN IRL(BaseType(ts), intok);
+        ELSE
+          RETURN NIL;
+        END;
+    | M3AST_AS.Integer_type =&gt;
         IF intok THEN
           RETURN M3CStdTypes.Integer();
+        ELSE
+          RETURN NIL;
+        END;
+    | M3AST_AS.Longint_type =&gt;
+        IF intok THEN
+          RETURN M3CStdTypes.Longint();
         ELSE
           RETURN NIL;
         END;
@@ -151,7 +163,7 @@ PROCEDURE <A NAME="IRL"><procedure>IRL</procedure></A>(
    BEGIN
      LOOP
        TYPECASE ts OF
-       | M3AST_AS.Integer_type, M3AST_AS.WideChar_type, M3AST_AS.Enumeration_type =&gt;
+       | M3AST_AS.INT_TYPE, M3AST_AS.WideChar_type, M3AST_AS.Enumeration_type =&gt;
            RETURN ts; (* includes the NULL case *)
        | M3AST_AS.Packed_type(packedType) =&gt;
            ts := M3CTypesMisc.Unpack(packedType);
@@ -493,6 +505,8 @@ PROCEDURE <A NAME="InternalSet"><procedure>InternalSet</procedure></A>(
 
     | M3AST_AS.Integer_literal =&gt;
         ts := M3CStdTypes.Integer();
+    | M3AST_AS.Longint_literal =&gt;
+        ts := M3CStdTypes.Longint();
     | M3AST_AS.Real_literal =&gt;
         ts := M3CStdTypes.Real();
     | M3AST_AS.LongReal_literal =&gt;
@@ -564,7 +578,7 @@ PROCEDURE <A NAME="InternalSet"><procedure>InternalSet</procedure></A>(
                     IF NOT safe AND addressOp THEN
                       TYPECASE componentTypeSpec OF
                       | NULL =&gt;
-                      | M3AST_AS.Subrange_type, M3AST_AS.Integer_type =&gt;
+                      | M3AST_AS.Subrange_type, M3AST_AS.INT_TYPE =&gt;
                           (* Int on rhs is not enough to resolve recursion *)
                           map.recursedTo := save;
                           componentTypeSpec := NIL;
@@ -686,7 +700,7 @@ PROCEDURE <A NAME="InternalSet"><procedure>InternalSet</procedure></A>(
                   index: M3AST_SM.TYPE_SPEC_UNSET;
                 BEGIN
                   TYPECASE actualTypeSpec OF
-                  | M3AST_AS.Integer_type, M3AST_AS.Subrange_type,
+                  | M3AST_AS.INT_TYPE, M3AST_AS.Subrange_type,
                     M3AST_AS.FLOAT_TYPE,
                     M3AST_AS.Enumeration_type =&gt;
                       (* Result type is argument type; NIL case harmless *)

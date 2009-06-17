@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: X11R4/src/Common/Xaw.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>X11R4/src/Common/Xaw.i3</H2></A><HR>
 <inInterface>
@@ -10,7 +10,7 @@
  All rights reserved.						
  See the file COPYRIGHT for a full description.		
 
-<P> Last modified on Fri May  7 16:20:32 PDT 1993 by mjordan       
+<P> Last modified on Fri May  7 16:20:32 PDT 1993 by mjordan     
       modified on Tue Feb 11 17:33:16 PST 1992 by muller      
       modified on Tue Apr 24 17:41:54 1990 by jerome		
 
@@ -64,7 +64,7 @@ FROM <A HREF="Xt.i3.html">Xt</A> 	IMPORT AppContext, Boolean, CallbackProc, Card
                        Dimension,  Position, String, StringStar,
                        Widget, WidgetClass;
 IMPORT <A HREF="Xmu.i3.html">Xmu</A>;
-</PRE> <P>
+</PRE><P>
     Size of a <CODE>regular</CODE> List of objects
 
 
@@ -76,13 +76,13 @@ and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
 <P>
                         All Rights Reserved
 <P>
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the names of Digital or MIT not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 <P>
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -124,7 +124,7 @@ SOFTWARE.
  #define XtCVisual <CODE>Visual</CODE>                                  in XtC.i3 
  #define XtNtitleEncoding <CODE>titleEncoding</CODE>                    in XtN.i3 
  #define XtCTitleEncoding <CODE>TitleEncoding</CODE>                    in XtC.i3 
- 
+
 <P> #define XtNsaveUnder <CODE>saveUnder</CODE>                            in XtN.i3 
  #define XtCSaveUnder <CODE>SaveUnder</CODE>                            in XtC.i3 
  #define XtNtransient <CODE>transient</CODE>                            in XtN.i3 
@@ -147,8 +147,8 @@ SOFTWARE.
 
 <P> #define XtRAtom <CODE>Atom</CODE>                                      in XtR.i3 
 
-<P> 
- * The following are only used at creation and can not be changed via 
+<P>
+ * The following are only used at creation and can not be changed via
  * SetValues.
  
 
@@ -270,7 +270,7 @@ CONST
   AsciiString	= 1;
 </PRE>***********************************************************
  *
- * Public routines 
+ * Public routines
  *
  ***********************************************************
 
@@ -309,7 +309,7 @@ CONST
 <P><PRE>&lt;* EXTERNAL XawAsciiSourceChanged *&gt;
    PROCEDURE AsciiSourceChanged (w: Widget): Boolean;
 </PRE>================================================================
- * $XConsortium: AsciiText.h,v 1.15 89/07/06 16:00:35 kit Exp $ 
+ * $XConsortium: AsciiText.h,v 1.15 89/07/06 16:00:35 kit Exp $
  *================================================================
 
 <P>***************************************************************
@@ -515,7 +515,7 @@ CONST
 &lt;* EXTERNAL *&gt; VAR
    commandWidgetClass: WidgetClass;
 </PRE>==================================================================
- * $XConsortium: Dialog.h,v 1.20 89/11/12 14:02:57 kit Exp $ 
+ * $XConsortium: Dialog.h,v 1.20 89/11/12 14:02:57 kit Exp $
  *==================================================================
 
 <P>**********************************************************************
@@ -558,7 +558,7 @@ CONST
 &lt;* EXTERNAL XawDialogGetValueString *&gt;
    PROCEDURE DialogGetValueString (w: Widget): String;
 </PRE>============================================================
- * $XConsortium: Form.h,v 1.22 89/07/21 01:51:26 kit Exp $ 
+ * $XConsortium: Form.h,v 1.22 89/07/21 01:51:26 kit Exp $
  *============================================================
 
 <P>**********************************************************************
@@ -647,7 +647,7 @@ CONST
 
 <P>**************************************************************************
  *
- * Grip Widget 
+ * Grip Widget
  *
  *************************************************************************
 
@@ -728,7 +728,7 @@ CONST
  #define XtNinternalHeight <CODE>internalHeight</CODE>                  in XtN.i3 
  #define XtNresize <CODE>resize</CODE>                                  in XtN.i3 
  #define XtCResize <CODE>Resize</CODE>                                  in XtC.i3 
- 
+
 <P> #define XtCBitmap <CODE>Bitmap</CODE>                                  in XtC.i3 
 
 <P> Class record constants 
@@ -740,7 +740,7 @@ CONST
  *============================================================
 
 <P>  This is the List widget, it is useful to display a list, without the
- *  overhead of having a widget for each item in the list.  It allows 
+ *  overhead of having a widget for each item in the list.  It allows
  *  the user to select an item in a list and notifies the application through
  *  a callback function.
  *
@@ -766,7 +766,7 @@ CONST
  columnSpacing       Spacing            Dimension       6
  cursor		     Cursor		Cursor		left_ptr
  defaultColumns      Columns            int             2          **5
- destroyCallback     Callback		Pointer		NULL 
+ destroyCallback     Callback		Pointer		NULL
  font		     Font		XFontStruct*	XtDefaultFont
  forceColumns        Columns            Boolean         False      **5
  foreground	     Foreground		Pixel		XtDefaultForeground
@@ -790,35 +790,35 @@ CONST
        is set to the minimum size necessay to fit the entire list.
 <P>
        If both Width and Height are zero then they are adjusted to fit the
-       entire list that is created width the number of default columns 
+       entire list that is created width the number of default columns
        specified in the defaultColumns resource.
 <P>
  **2 - This is an array of strings the specify elements of the list.
-       This resource must be specified. 
+       This resource must be specified.
        (What good is a list widget without a list??  :-)
 <P>
  **3 - Longest is the length of the widest string in pixels.
 <P>
  **4 - If either of these values are zero (0) then the list widget calculates
-       the correct value. 
+       the correct value.
 <P>
-       (This allows you to make startup faster if you already have 
+       (This allows you to make startup faster if you already have
         this information calculated)
 <P>
-       NOTE: If the numberStrings value is zero the list must 
+       NOTE: If the numberStrings value is zero the list must
              be NULL terminated.
 <P>
  **5 - By setting the List.Columns resource you can force the application to
-       have a given number of columns.	     
-        <P>
- **6 - This returns the name and index of the item selected in an 
+       have a given number of columns.
+<P>
+ **6 - This returns the name and index of the item selected in an
        XawListReturnStruct that is pointed to by the client_data
        in the CallbackProc.
 <P>
 
 
 <P>
- * Value returned when there are no highlighted objects. 
+ * Value returned when there are no highlighted objects.
  
 
 <P><PRE>CONST
@@ -839,7 +839,7 @@ CONST
  #define XtNpasteBuffer <CODE>pasteBuffer</CODE>                        in XtN.i3 
  #define XtNrowSpacing <CODE>rowSpacing</CODE>                          in XtN.i3 
  #define XtNverticalList <CODE>verticalList</CODE>                      in XtN.i3 
- 
+
 <P> Class record constants 
 
 <P><PRE>&lt;* EXTERNAL *&gt; VAR
@@ -975,7 +975,7 @@ CONST
  * Date:    May 2, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  
 
@@ -1125,7 +1125,7 @@ CONSTRAINT RESOURCES:
    panedWidgetClass: WidgetClass;
 </PRE>***********************************************************
  *
- *  Public Procedures 
+ *  Public Procedures
  *
  ***********************************************************
 
@@ -1148,7 +1148,7 @@ CONSTRAINT RESOURCES:
 <P><PRE>&lt;* EXTERNAL XawPanedGetMinMax *&gt;
    PROCEDURE PanedGetMinMax (widget: Widget; min, max: int_star);
 </PRE>	Function Name: Xaw.PanedSetRefigureMode
- *	Description: Allows a flag to be set the will inhibit 
+ *	Description: Allows a flag to be set the will inhibit
  *                   the paned widgets relayout routine.
  *	Arguments: w - the paned widget.
  *                 mode - if FALSE then inhibit refigure.
@@ -1217,8 +1217,8 @@ CONSTRAINT RESOURCES:
 <P>
 
 
-<P> 
- * Most things we need are in StringDefs.h 
+<P>
+ * Most things we need are in StringDefs.h
  
 
 <P> #define XtCMinimumThumb <CODE>MinimumThumb</CODE>                      in XtC.i3 
@@ -1285,7 +1285,7 @@ CONSTRAINT RESOURCES:
  * Date:    April 3, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  
 
@@ -1377,12 +1377,12 @@ CONSTRAINT RESOURCES:
  * Sme.h - Public Header file for Sme object.
  *
  * This is the public header file for the Athena Sme object.
- * It is intended to be used with the simple menu widget.  
+ * It is intended to be used with the simple menu widget.
  *
  * Date:    April 3, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  
 
@@ -1421,7 +1421,7 @@ CONSTRAINT RESOURCES:
  * Date:    April 3, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  
 
@@ -1462,12 +1462,12 @@ CONSTRAINT RESOURCES:
  * SmeLine.h - Public Header file for SmeLine object.
  *
  * This is the public header file for the Athena SmeLine object.
- * It is intended to be used with the simple menu widget.  
+ * It is intended to be used with the simple menu widget.
  *
  * Date:    April 3, 1989
  *
  * By:      Chris D. Peterson
- *          MIT X Consortium 
+ *          MIT X Consortium
  *          kit@expo.lcs.mit.edu
  
 
@@ -1543,11 +1543,11 @@ CONSTRAINT RESOURCES:
  #define XtNscale <CODE>scale</CODE>                                    in XtN.i3 
  #define XtNupdate <CODE>update</CODE>                                  in XtN.i3 
  #define XtNvmunix <CODE>vmunix</CODE>                                  in XtN.i3 
- 
+
 <P><PRE>&lt;* EXTERNAL *&gt; VAR
    stripChartWidgetClass: WidgetClass;
 </PRE>===================================================================
- * $XConsortium: Template.h,v 1.4 89/07/21 01:41:49 kit Exp $ 
+ * $XConsortium: Template.h,v 1.4 89/07/21 01:41:49 kit Exp $
  *===================================================================
 
 <P>***************************************************************
@@ -1797,7 +1797,7 @@ TYPE
  background          Background      Pixel              XtDefaultBackground
 <P>
 
- 
+
 <P> Class record constants 
 
 <P><PRE>&lt;* EXTERNAL *&gt; VAR
@@ -1815,7 +1815,7 @@ CONST
  ***********************************************************
 
 <P>	Function Name: Xaw.TextSinkDisplayText
- *	Description: Stub function that in subclasses will display text. 
+ *	Description: Stub function that in subclasses will display text.
  *	Arguments: w - the TextSink Object.
  *                 x, y - location to start drawing text.
  *                 pos1, pos2 - location of starting and ending points
@@ -1927,7 +1927,7 @@ CONST
 <P><PRE>&lt;* EXTERNAL XawTextSinkMaxLines *&gt;
    PROCEDURE TextSinkMaxLines (w: Widget; height: Dimension): INTEGER;
 </PRE>	Function Name: Xaw.TextSinkMaxHeight
- *	Description: Finds the Minium height that will contain a given number 
+ *	Description: Finds the Minium height that will contain a given number
  *                   lines.
  *	Arguments: w - the TextSink Object.
  *                 lines - the number of lines.
@@ -1946,15 +1946,14 @@ CONST
 <PRE>
 &lt;* EXTERNAL XawTextSinkSetTabs *&gt;
    PROCEDURE TextSinkSetTabs (w: Widget; tab_count: INTEGER; tabs: int_star);
-						
-</PRE><BLOCKQUOTE><EM>	Function Name: Xaw.TextSinkGetCursorBounds
+</PRE>	Function Name: Xaw.TextSinkGetCursorBounds
  *	Description: Finds the bounding box for the insert curor (caret).
  *	Arguments: w - the TextSinkObject.
  *                 rect - an X rectance containing the cursor bounds.
  *	Returns: none (fills in rect).
- </EM></BLOCKQUOTE><PRE>
+ 
 
-&lt;* EXTERNAL XawTextSinkGetCursorBounds *&gt;
+<P><PRE>&lt;* EXTERNAL XawTextSinkGetCursorBounds *&gt;
    PROCEDURE TextSinkGetCursorBounds (w: Widget; rect: XRectangleStar);
 </PRE>=================================================================
  * $XConsortium: TextSrc.h,v 1.4 89/10/31 17:12:42 kit Exp $
@@ -1973,7 +1972,7 @@ CONST
  editType	     EditType		XawTextEditType	XawtextRead
 <P>
 
- 
+
 <P> Class record constants 
 
 <P><PRE>&lt;* EXTERNAL *&gt; VAR
@@ -2056,7 +2055,7 @@ TYPE
  *                 dir - direction to scan.
  *                 count - which occurance if this thing to search for.
  *                 include - whether or not to include the character found in
- *                           the position that is returned. 
+ *                           the position that is returned.
  *	Returns: The position of the text.
  *
  
@@ -2178,11 +2177,11 @@ TYPE
 <P><PRE>&lt;* EXTERNAL *&gt; VAR
    toggleWidgetClass: WidgetClass;
 </PRE>***********************************************************
- * 
+ *
  * Public Functions
  *
  ***********************************************************
-   
+
 <P>	Function Name: Xaw.ToggleChangeRadioGroup
  *	Description: Allows a toggle widget to change radio lists.
  *	Arguments: w - The toggle widget to change lists.

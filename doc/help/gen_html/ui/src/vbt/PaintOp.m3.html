@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/PaintOp.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/PaintOp.m3</H2></A><HR>
 <inModule>
@@ -83,11 +83,11 @@ PROCEDURE <A NAME="RGBApply"><procedure>RGBApply</procedure></A>(cl: RGBClosure;
                 pix := st.cmap.standard().fromRGB(rgb, Mode.Normal)
               EXCEPT
                 ScrnColorMap.Failure =&gt;
-		  IF cl.bw = BW.UseBg THEN
+                  IF cl.bw = BW.UseBg THEN
                     RETURN Palette.ResolveOp(st, Bg)
-		  ELSE
-		    RETURN Palette.ResolveOp(st, Fg)
-		  END
+                  ELSE
+                    RETURN Palette.ResolveOp(st, Fg)
+                  END
               END
           END;
           RETURN st.op.opaque(pix)

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTLinker.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTLinker.m3</H2></A><HR>
 <inModule>
@@ -18,11 +18,10 @@
 
 <P><PRE>UNSAFE MODULE <module>RTLinker</module> EXPORTS <A HREF="RTLinker.i3.html"><implements>RTLinker</A></implements>, <A HREF="RTModule.i3.html"><implements>RTModule</A></implements>;
 
-IMPORT <A HREF="../../C/Common/Cstdlib.i3.html">Cstdlib</A>, <A HREF="../../C/LINUXLIBC6/Cstring.i3.html">Cstring</A>;
-IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTParams.i3.html">RTParams</A>, <A HREF="RTHeapRep.i3.html">RTHeapRep</A>;
-IMPORT <A HREF="RTTypeSRC.i3.html">RTTypeSRC</A>, <A HREF="RTSignal.i3.html">RTSignal</A>, <A HREF="RTThreadInit.i3.html">RTThreadInit</A>, <A HREF="RTHeapInfo.i3.html">RTHeapInfo</A>, <A HREF="RTLinkerX.i3.html">RTLinkerX</A>,
-       <A HREF="RTIO.i3.html">RTIO</A>;
-</PRE><BLOCKQUOTE><EM> IMPORT RTHeapDebug; </EM></BLOCKQUOTE><PRE>
+IMPORT <A HREF="../../C/Common/Cstdlib.i3.html">Cstdlib</A>, <A HREF="#x1">Cstring</A>;
+IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTParams.i3.html">RTParams</A>, <A HREF="RTDebug.i3.html">RTDebug</A>, <A HREF="RTHeapRep.i3.html">RTHeapRep</A>, <A HREF="RTCollectorSRC.i3.html">RTCollectorSRC</A>;
+IMPORT <A HREF="RTTypeSRC.i3.html">RTTypeSRC</A>, <A HREF="RTSignal.i3.html">RTSignal</A>, <A HREF="#x2">ThreadF</A>, <A HREF="RTHeapInfo.i3.html">RTHeapInfo</A>, <A HREF="RTLinkerX.i3.html">RTLinkerX</A>,
+       <A HREF="RTIO.i3.html">RTIO</A>, <A HREF="../../word/Word.i3.html">Word</A>;
 
 VAR
   traceInit   := FALSE;
@@ -44,7 +43,7 @@ PROCEDURE <A NAME="InitRuntime"><procedure>InitRuntime</procedure></A> (p_argc: 
     (* expose the global environment *)
     argc := p_argc;
     argv := p_argv;
-    envp := p_envp;
+    envp := GetEnvironmentStrings (p_envp);
     instance := p_instance;
 
     (* initialize the rest of the modules we'll be calling *)
@@ -55,16 +54,18 @@ PROCEDURE <A NAME="InitRuntime"><procedure>InitRuntime</procedure></A> (p_argc: 
     AddUnit (RTLinkerX.RTDebug_I3);
     AddUnit (RTLinkerX.RTError_I3);
     AddUnit (RTLinkerX.RTHeapRep_I3);
-    AddUnit (RTLinkerX.RTThreadInit_I3);
+    AddUnit (RTLinkerX.ThreadF_I3);
     AddUnit (RTLinkerX.RTHeapInfo_I3);
-    AddUnit (RTLinkerX.RTHeapDebug_I3);
     AddUnit (RTLinkerX.RTIO_I3);
+    AddUnit (RTLinkerX.RTCollectorSRC_I3);
+    AddUnit (RTLinkerX.Word_I3);
 
     (* finally, initialize the runtime. *)
     RTSignal.InstallHandlers ();
     RTParams.Init ();
     RTHeapRep.Init ();
-    RTThreadInit.Init ();
+    ThreadF.Init ();
+    RTDebug.Init ();
     RTHeapInfo.Init ();
     IF RTParams.IsPresent(&quot;tracelinker&quot;) THEN
       traceInit := TRUE;
@@ -102,6 +103,18 @@ PROCEDURE <A NAME="AddUnitI"><procedure>AddUnitI</procedure></A> (m: RT0.ModuleP
   BEGIN
     IF (m = NIL) THEN RETURN END;
     TraceModule(&quot;AddUnitI: &quot;, m);
+    IF generational AND (Word.And(m.gc_flags, RT0.GC_gen) = 0) THEN
+      generational := FALSE;
+      IF RTCollectorSRC.generational THEN
+        RTCollectorSRC.FinishCollection ();
+      END;
+    END;
+    IF incremental AND (Word.And(m.gc_flags, RT0.GC_inc) = 0) THEN
+      incremental := FALSE;
+      IF RTCollectorSRC.incremental THEN
+        RTCollectorSRC.FinishCollection ();
+      END;
+    END;
     IF (m.link_state = LS_Initial) THEN FindModules (m);  END;
     IF (m.link_state = LS_Linked)  THEN FixTypes ();      END;
     IF (m.link_state = LS_TypesOK) THEN RunMainBody (m);  END;
@@ -113,7 +126,6 @@ PROCEDURE <A NAME="AddUnit"><procedure>AddUnit</procedure></A> (b: RT0.Binder) =
     IF (b = NIL) THEN RETURN END;
     m := b(0);
     IF (m = NIL) THEN RETURN END;
-    (* RTHeapDebug.CheckHeap(); *)
     AddUnitI(m);
   END AddUnit;
 
@@ -539,6 +551,20 @@ BEGIN
 END RTLinker.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Cstring is in:
+</A><UL>
+<LI><A HREF="../../C/Common/Cstring.i3.html#0TOP0">m3core/src/C/Common/Cstring.i3</A>
+<LI><A HREF="../../C/LINUXLIBC6/Cstring.i3.html#0TOP0">m3core/src/C/LINUXLIBC6/Cstring.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface ThreadF is in:
+</A><UL>
+<LI><A HREF="../../thread/POSIX/ThreadF.i3.html#0TOP0">m3core/src/thread/POSIX/ThreadF.i3</A>
+<LI><A HREF="../../thread/PTHREAD/ThreadF.i3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadF.i3</A>
+</UL>
+<P>
 <PRE>
 
 

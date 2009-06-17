@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/CylinderGO.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/CylinderGO.i3</H2></A><HR>
 <inInterface>
@@ -28,7 +28,7 @@ TYPE
   END;
 </PRE><BLOCKQUOTE><EM> <CODE>cyl.init(prec)</CODE>  initializes a new cylinder <CODE>cyl</CODE>, whose
    surface is composed of <CODE>prec</CODE> rectangles, and returns it.
-   The location and radius of the cylinder is determined by the 
+   The location and radius of the cylinder is determined by the
    three properties <CODE>Point1</CODE>, <CODE>Point2</CODE>, and <CODE>Radius</CODE>. </EM></BLOCKQUOTE><PRE>
 
 VAR
@@ -36,26 +36,26 @@ VAR
   Point2 : PointProp.Name;
   Radius : RealProp.Name;
 </PRE><BLOCKQUOTE><EM> In addition to the properties observed by all \type{GO}{T}'s and
-   \type{SurfaceGO}{T}'s, there are three additional properties that 
+   \type{SurfaceGO}{T}'s, there are three additional properties that
    are observed by <CODE>CylinderGO.T</CODE>'s:
 <P>
-   <CODE>Point1</CODE> is the name of a property that describes the first endpoint 
-   of the cylinder. It associates with a \type{PointProp}{Val}. If no <CODE>Point1</CODE> 
+   <CODE>Point1</CODE> is the name of a property that describes the first endpoint
+   of the cylinder. It associates with a \type{PointProp}{Val}. If no <CODE>Point1</CODE>
    property is specified, the cylinder starts at the origin.
 <P>
-   <CODE>Point2</CODE> is the name of a property that describes the second endpoint 
-   of the cylinder. It associates with a \type{PointProp}{Val}. If no <CODE>Point2</CODE> 
+   <CODE>Point2</CODE> is the name of a property that describes the second endpoint
+   of the cylinder. It associates with a \type{PointProp}{Val}. If no <CODE>Point2</CODE>
    property is specified, the cylinder ends at point (1,0,0).
 <P>
-   <CODE>Radius</CODE> is the name of a property that describes the radius of the 
+   <CODE>Radius</CODE> is the name of a property that describes the radius of the
    cylinder. It associates with a \type{RealProp}{Val}. If no <CODE>Radius</CODE> property
-   is specified, the cylinder has a radius of 1. 
+   is specified, the cylinder has a radius of 1.
 <P>
-   Assume that in a given context and at a given point in time, the property 
-   mapping is such that <CODE>Point1</CODE> maps to a point property value which 
-   evaluates to <CODE>p1</CODE>, <CODE>Point2</CODE> maps to a point property value which evaluates 
-   to <CODE>p2</CODE>, and <CODE>Radius</CODE> maps to a real property value which evaluates to <CODE>r</CODE>. 
-   <CODE>p1</CODE>, <CODE>p2</CODE>, and <CODE>r</CODE> define the position and shape of the cylinder 
+   Assume that in a given context and at a given point in time, the property
+   mapping is such that <CODE>Point1</CODE> maps to a point property value which
+   evaluates to <CODE>p1</CODE>, <CODE>Point2</CODE> maps to a point property value which evaluates
+   to <CODE>p2</CODE>, and <CODE>Radius</CODE> maps to a real property value which evaluates to <CODE>r</CODE>.
+   <CODE>p1</CODE>, <CODE>p2</CODE>, and <CODE>r</CODE> define the position and shape of the cylinder
    in this context and at this time as shown below:
    \begin{center}
    \begin{tabular}{c}
@@ -65,8 +65,8 @@ VAR
 </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="CylinderGO.m3.html#New">New</A> (p1, p2 : Point3.T; r : REAL; prec := 30) : T;
-</PRE><BLOCKQUOTE><EM> <CODE>New(p1,p2,r,prec)</CODE>  creates a new cylinder, whose surface is composed 
-   of <CODE>prec</CODE> rectangles, and returns it. It also attaches the following 
+</PRE><BLOCKQUOTE><EM> <CODE>New(p1,p2,r,prec)</CODE>  creates a new cylinder, whose surface is composed
+   of <CODE>prec</CODE> rectangles, and returns it. It also attaches the following
    properties to the new cylinder:
    \begin{verbatim}
      (Point1,PointProp.NewConst(p1))
@@ -74,8 +74,8 @@ PROCEDURE <A HREF="CylinderGO.m3.html#New">New</A> (p1, p2 : Point3.T; r : REAL;
      (Radius,RealProp.NewConst(r))
    \end{verbatim}
 </EM></BLOCKQUOTE><PRE>
-</PRE> The following three procedures provide sugaring to attach 
-   <CODE>Point1</CODE>, <CODE>Point2</CODE>, and <CODE>Radius</CODE> properties with non-animated 
+</PRE> The following three procedures provide sugaring to attach
+   <CODE>Point1</CODE>, <CODE>Point2</CODE>, and <CODE>Radius</CODE> properties with non-animated
    property values to geometric objects: 
 
 <P><PRE>PROCEDURE <A HREF="CylinderGO.m3.html#SetPoint1">SetPoint1</A> (o : GO.T; p : Point3.T);

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/MultiFilter.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/MultiFilter.i3</H2></A><HR>
 <inInterface>
@@ -15,15 +15,15 @@
       modified on Tue Jun 16 13:08:36 PDT 1992 by muller 
       modified on Fri Mar 27 01:47:38 1992 by steveg
 <PRE>&lt;* PRAGMA LL *&gt;
-</PRE> The <CODE>MultiFilter</CODE> interface defines the functionality that is common 
-   to all clients of multi-filters; namely, retrieving and changing a 
-   multi-filter's multi-child. 
+</PRE> The <CODE>MultiFilter</CODE> interface defines the functionality that is common
+   to all clients of multi-filters; namely, retrieving and changing a
+   multi-filter's multi-child.
 <P>
    A multi-filter is a multi-split with at most one child. Thus,
    you can use the procedures in the <CODE>MultiSplit</CODE> interface on a VBT
    that is a multi-filter. The semantics of the <CODE>MultiSplit</CODE> procedures
-   on a multi-filter should be obvious, with the following exceptions: 
-   <CODE>MultiSplit.Move</CODE> on a multi-filter is a no-op, and <CODE>MultiSplit.Insert</CODE> 
+   on a multi-filter should be obvious, with the following exceptions:
+   <CODE>MultiSplit.Move</CODE> on a multi-filter is a no-op, and <CODE>MultiSplit.Insert</CODE>
    on a multi-filter replaces the child, if any. 
 
 <P><PRE>INTERFACE <interface><A HREF="MultiFilter.m3.html">MultiFilter</A></interface>;

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: patternmatching/src/RegEx.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>patternmatching/src/RegEx.i3</H2></A><HR>
 <inInterface>
@@ -29,11 +29,11 @@
    Xerox Corporation makes no warranty about the software, its performance
    or its conformity to any specification. 
 
-<P><PRE>INTERFACE <interface><A HREF="RegEx.m3.html">RegEx</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="#x1">RegEx</A></interface>;
 
 EXCEPTION Error(TEXT);
 
-TYPE <A HREF="RegEx.m3.html#Pattern">Pattern</A> &lt;: ROOT;
+TYPE <A HREF="#x2">Pattern</A> &lt;: ROOT;
 
 CONST MEM_SIZE = 9;
 
@@ -46,19 +46,19 @@ TYPE
 </PRE> The Memory array stores the positions where \(pat\) pairs occured or -1
    if none. 
 
-<P><PRE>PROCEDURE <A HREF="RegEx.m3.html#Compile">Compile</A> (pat: TEXT): Pattern RAISES {Error};
+<P><PRE>PROCEDURE <A HREF="#x3">Compile</A> (pat: TEXT): Pattern RAISES {Error};
 </PRE><BLOCKQUOTE><EM> Compile the regex(3) style regular expression in pat and returns a
    Pattern for later use. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="RegEx.m3.html#Decompile">Decompile</A> (READONLY pat: Pattern): TEXT;
+PROCEDURE <A HREF="#x4">Decompile</A> (READONLY pat: Pattern): TEXT;
 </PRE><BLOCKQUOTE><EM> Decompile the Pattern 'pat' into a regular expression TEXT and
    return. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="RegEx.m3.html#Dump">Dump</A> (READONLY pat: Pattern): TEXT;
+PROCEDURE <A HREF="#x5">Dump</A> (READONLY pat: Pattern): TEXT;
 </PRE><BLOCKQUOTE><EM> Dump the Pattern 'pat' into raw bytes formatted as a TEXT (for
    debugging). </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="RegEx.m3.html#Execute">Execute</A> (READONLY pat  : Pattern;
+PROCEDURE <A HREF="#x6">Execute</A> (READONLY pat  : Pattern;
                             data : TEXT;
                             start: CARDINAL := 0;
                             len  : CARDINAL := LAST(CARDINAL);
@@ -72,6 +72,48 @@ PROCEDURE <A HREF="RegEx.m3.html#Execute">Execute</A> (READONLY pat  : Pattern;
 <P><PRE>END RegEx.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">RegEx's implementation  is in:
+</A><UL>
+<LI><A HREF="RegEx.m3.html#0TOP0">patternmatching/src/RegEx.m3</A>
+<LI><A HREF="../../suplib/src/RegEx.m3.html#0TOP0">suplib/src/RegEx.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">opaque type RegEx.Pattern is in:
+</A><UL>
+<LI><A HREF="RegEx.m3.html#Pattern">patternmatching/src/RegEx.m3</A>
+<LI><A HREF="../../suplib/src/RegEx.m3.html#Pattern">suplib/src/RegEx.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">procedure RegEx.Compile is in:
+</A><UL>
+<LI><A HREF="RegEx.m3.html#Compile">patternmatching/src/RegEx.m3</A>
+<LI><A HREF="../../suplib/src/RegEx.m3.html#Compile">suplib/src/RegEx.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x4">procedure RegEx.Decompile is in:
+</A><UL>
+<LI><A HREF="RegEx.m3.html#Decompile">patternmatching/src/RegEx.m3</A>
+<LI><A HREF="../../suplib/src/RegEx.m3.html#Decompile">suplib/src/RegEx.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x5">procedure RegEx.Dump is in:
+</A><UL>
+<LI><A HREF="RegEx.m3.html#Dump">patternmatching/src/RegEx.m3</A>
+<LI><A HREF="../../suplib/src/RegEx.m3.html#Dump">suplib/src/RegEx.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x6">procedure RegEx.Execute is in:
+</A><UL>
+<LI><A HREF="RegEx.m3.html#Execute">patternmatching/src/RegEx.m3</A>
+<LI><A HREF="../../suplib/src/RegEx.m3.html#Execute">suplib/src/RegEx.m3</A>
+</UL>
+<P>
 <PRE>
 
 

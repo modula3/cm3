@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: bitvector/src/BitVector.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>bitvector/src/BitVector.m3</H2></A><HR>
 <inModule>
@@ -128,7 +128,7 @@ PROCEDURE <A NAME="InitImpl"><procedure>InitImpl</procedure></A>(self: T; sizeHi
       IF freeMem OR wdCnt &gt; NUMBER(self.word^) THEN
         (* re-allocate the &quot;word&quot; array *)
         self.word := NIL;
-	IF wdCnt &gt; 0 THEN
+        IF wdCnt &gt; 0 THEN
           Extend(self, wdCnt, doPreserve := FALSE)
         END;
         zeroWds := wdCnt;
@@ -1098,21 +1098,20 @@ PROCEDURE <A NAME="IterNext"><procedure>IterNext</procedure></A>(self: Iterator;
         IF wd = 0 THEN
           INC(self.bitIndex, BitsPerWd)
         ELSE
-      	  WHILE self.mask # 0 DO
+          WHILE self.mask # 0 DO
             VAR bit := (Word.And(self.mask, wd) # 0); BEGIN
-      	      self.mask := Word.LeftShift(self.mask, 1);
-      	      INC(self.bitIndex);
+              self.mask := Word.LeftShift(self.mask, 1);
               IF bit THEN
                 res := self.bitIndex;
                 INC(self.bitIndex);
                 RETURN TRUE
               END;
-      	      INC(self.bitIndex);
+              INC(self.bitIndex);
             END
-      	  END
+          END
         END;
-      	INC(self.wordIndex);
-      	self.mask := 1
+        INC(self.wordIndex);
+        self.mask := 1
       END
     END;
     RETURN FALSE

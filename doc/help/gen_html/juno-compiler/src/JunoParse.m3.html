@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-compiler/src/JunoParse.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-compiler/src/JunoParse.m3</H2></A><HR>
 <inModule>
@@ -411,7 +411,7 @@ PROCEDURE <A NAME="ConstDeclItem"><procedure>ConstDeclItem</procedure></A>(
     VAR (*IO*) la: LookAhead;
     VAR (*OUT*) item: JunoAST.ConstDeclItem)
   RAISES {Error, JunoLex.Error, Rd.Failure} =
-</PRE><BLOCKQUOTE><EM> <P>
+</PRE><BLOCKQUOTE><EM><P>
 <PRE>
        ConstDeclItem = Id &quot;=&quot; ConstExpr.
 </EM></BLOCKQUOTE><PRE>
@@ -1220,7 +1220,7 @@ PROCEDURE <A NAME="Expr2"><procedure>Expr2</procedure></A>(
     VAR (*OUT*) ast: JunoAST.Expr;
     READONLY qid: JunoAST.QId := NIL)
   RAISES {Error, JunoLex.Error, Rd.Failure} =
-</PRE><BLOCKQUOTE><EM> <P>
+</PRE><BLOCKQUOTE><EM><P>
 <PRE>
        Expr2    = Expr3 [ Expr2Tail ].
        Expr2QId = Expr4QId [ Expr2Tail ].
@@ -1670,7 +1670,7 @@ PROCEDURE <A NAME="QID"><procedure>QID</procedure></A>(VAR (*IO*) la: LookAhead;
    If the identifier is not qualified (i.e., no JunoToken.Kind.Dot appears in
    the token stream after the first identifier), then the single identifier is
    stored in <CODE>qid.id1</CODE>, and <CODE>qid.id0</CODE> is set to the special value
-   <CODE>JunoAST.NilId</CODE>. 
+   <CODE>JunoAST.NilId</CODE>.
 <P>
 <PRE>
        QID = Id [ &quot;.&quot; Id ].

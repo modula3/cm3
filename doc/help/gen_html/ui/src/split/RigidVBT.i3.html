@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/RigidVBT.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/RigidVBT.i3</H2></A><HR>
 <inInterface>
@@ -14,8 +14,8 @@
 <PRE>&lt;*PRAGMA LL*&gt;
 </PRE> A <CODE>RigidVBT.T</CODE> is a filter whose size range is set explicitly,
    independently of its child's size range.  In spite of its name,
-   it size range does not have to be fixed to a single value. 
-   <P>
+   it size range does not have to be fixed to a single value.
+<P>
    All dimensions in this interface are specified in millimeters. 
 
 <P><PRE>INTERFACE <interface><A HREF="RigidVBT.m3.html">RigidVBT</A></interface>;
@@ -32,11 +32,11 @@ TYPE
 TYPE
   SizeRange = RECORD lo, pref, hi: REAL END;
   Shape = ARRAY Axis.T OF SizeRange;
-</PRE> The call <CODE>v.init(...)</CODE> initializes <CODE>v</CODE> as a rigid <CODE>VBT</CODE> with 
+</PRE> The call <CODE>v.init(...)</CODE> initializes <CODE>v</CODE> as a rigid <CODE>VBT</CODE> with
    child <CODE>ch</CODE> and shape <CODE>sh</CODE>.
 <P>
-   A <CODE>RigidVBT.SizeRange</CODE> is like a <CODE>VBT.SizeRange</CODE>, but in millimeters 
-   instead of pixels, using <CODE>REAL</CODE>s instead of <CODE>INTEGER</CODE>s, and the 
+   A <CODE>RigidVBT.SizeRange</CODE> is like a <CODE>VBT.SizeRange</CODE>, but in millimeters
+   instead of pixels, using <CODE>REAL</CODE>s instead of <CODE>INTEGER</CODE>s, and the
    range is <CODE>[lo..hi]</CODE> instead of <CODE>[lo..hi-1]</CODE>. 
 
 <P>
@@ -50,15 +50,15 @@ PROCEDURE <A HREF="RigidVBT.m3.html#FromHV">FromHV</A>(
   &lt;* LL.sup &lt;= VBT.mu *&gt;
 </PRE><BLOCKQUOTE><EM> Return a <CODE>RigidVBT</CODE> with child <CODE>ch</CODE> and the given shape. </EM></BLOCKQUOTE><PRE>
 </PRE> If <CODE>hMax</CODE> or <CODE>hPref</CODE> are defaulted, they are assumed to be the
-   same as <CODE>hMin</CODE>, and similarly for <CODE>vMax</CODE>, <CODE>vPref</CODE> and <CODE>vMin</CODE>.  
-   That is, <CODE>FromHV</CODE> is equivalent to: 
+   same as <CODE>hMin</CODE>, and similarly for <CODE>vMax</CODE>, <CODE>vPref</CODE> and <CODE>vMin</CODE>.
+   That is, <CODE>FromHV</CODE> is equivalent to:
 <P>
 <PRE>
       IF hMax = -1.0 THEN hMax := hMin END;
       IF vMax = -1.0 THEN vMax := vMin END;
       IF hPref = -1.0 THEN hPref := hMin END;
       IF vPref = -1.0 THEN vPref := vMin END;
-      RETURN New(ch, 
+      RETURN New(ch,
         Shape{SizeRange{h, hMax, hPref},
               SizeRange{v, vMax, vPref}})
 </PRE>

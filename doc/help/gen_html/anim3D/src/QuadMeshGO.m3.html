@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/QuadMeshGO.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/QuadMeshGO.m3</H2></A><HR>
 <inModule>
@@ -114,7 +114,7 @@ PROCEDURE <A NAME="Draw"><procedure>Draw</procedure></A> (self : T; state : Grap
       state.growBoundingVolume (self.bs.center, self.bs.radius);
     END;
 <P>
-    IF self.cols = NIL THEN 
+    IF self.cols = NIL THEN
       state.drawQuadMesh (self.pts^, self.shape);
     ELSE
       state.drawColoredQuadMesh (self.pts^, self.cols^, self.shape);

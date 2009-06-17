@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTTypeMap.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTTypeMap.m3</H2></A><HR>
 <inModule>
@@ -14,7 +14,7 @@
 
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="RTTypeMap.i3.html">RTTypeMap</A></implements></module>;
 
-IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTMapOp.i3.html">RTMapOp</A>, <A HREF="RTType.i3.html">RTType</A>;
+IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTMapOp.i3.html">RTMapOp</A>, <A HREF="RTType.i3.html">RTType</A>, <A HREF="RTHooks.i3.html">RTHooks</A>;
 
 TYPE
   Byte = RTMapOp.Byte;
@@ -37,6 +37,8 @@ PROCEDURE <A NAME="WalkRef"><procedure>WalkRef</procedure></A> (r: REFANY;  m: M
     IF (r = NIL) THEN RETURN END;
     tc := TYPECODE (r);
     t := RTType.Get (tc);
+    (* assume the worst (REFs get written) if the visitor messes with REFs *)
+    IF Kind.Ref IN m THEN RTHooks.CheckStoreTraced (r) END;
     DoWalkRef (t, LOOPHOLE (r, ADDRESS), m, v);
   END WalkRef;
 

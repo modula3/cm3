@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTHeapRep.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTHeapRep.i3</H2></A><HR>
 <inInterface>
@@ -23,12 +23,12 @@ All rights reserved.
 <P> <CODE>RTHeapRep</CODE> is a private, implementation-dependent extension to
    <CODE>RTAllocator</CODE>, <CODE>RTCollector</CODE>, and <CODE>RTHeap</CODE>. 
 
-<P><PRE>UNSAFE INTERFACE <interface><A HREF="#x1">RTHeapRep</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="#x1">RTHeapRep</A></interface>;
 </PRE> This interface provides low-level access to the storage allocator and
    garbage collector.  Some items here should be made private or moved
    elsewhere. 
 
-<P><PRE>IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTHeapDep.i3.html">RTHeapDep</A>;
+<P><PRE>IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="#x2">RTMachine</A>, <A HREF="../../word/Word.i3.html">Word</A>;
 FROM <A HREF="RT0.i3.html">RT0</A> IMPORT Typecode;
 </PRE> The allocator and collector maintain two heaps of objects.  One heap is
    <CODE>traced</CODE> (its objects are collected); the other is <CODE>untraced</CODE>.
@@ -43,8 +43,7 @@ FROM <A HREF="RT0.i3.html">RT0</A> IMPORT Typecode;
 <P> The (traced) heap consists of a number of aligned pages, divided among
    three spaces: Free, Previous, and Current.  All other pages in the
    address space are in the <CODE>Unallocated</CODE> space.  Pages are numbered 0, 1,
-   2, ....  The pagesize used is fixed; if incremental or generational
-   collection is to be allowed, it must be at least the VM page size.
+   2, ....  The pagesize used is fixed and must be a power of two.
 <P>
    The global variable p0 and p1 hold the bounds of the heap pages: only
    pages in the range [p0, p1) are in a space other than Unallocated.  For
@@ -52,12 +51,12 @@ FROM <A HREF="RT0.i3.html">RT0</A> IMPORT Typecode;
    state for page <CODE>p</CODE>. 
 
 <P><PRE>CONST
-  BytesPerPage    = RTHeapDep.BytesPerPage;
-  LogBytesPerPage = RTHeapDep.LogBytesPerPage;
-  AdrPerPage      = RTHeapDep.AdrPerPage;
-  LogAdrPerPage   = RTHeapDep.LogAdrPerPage;
+  BytesPerPage    = RTMachine.BytesPerHeapPage;
+  LogBytesPerPage = RTMachine.LogBytesPerHeapPage;
+  AdrPerPage      = RTMachine.AdrPerHeapPage;
+  LogAdrPerPage   = RTMachine.LogAdrPerHeapPage;
 
-TYPE Page = RTHeapDep.Page;
+TYPE Page = [0 .. Word.Divide(-1, AdrPerPage)];
 
 CONST
   Nil: Page = 0;                 (* page 0 cannot be part of the traced
@@ -65,11 +64,9 @@ CONST
 
 VAR p0, p1: Page := Nil;
 
-VAR desc: UNTRACED REF ARRAY OF Desc;
-
-VAR max_heap_size: INTEGER := -1;
-</PRE><BLOCKQUOTE><EM>* If <CODE>max_heap_size</CODE> is non-negative, the traced heap will not be
-    extended beyond <CODE>max_heap_size</CODE> bytes.  If <CODE>max_heap_size</CODE> is
+VAR max_heap: INTEGER := -1;
+</PRE><BLOCKQUOTE><EM>* If <CODE>max_heap</CODE> is non-negative, the traced heap will not be
+    extended beyond <CODE>max_heap</CODE> bytes.  If <CODE>max_heap</CODE> is
     negative, the traced heap will be allowed to grow until the
     underlying OS refuses to provide more memory.  </EM></BLOCKQUOTE><PRE>
 
@@ -80,10 +77,15 @@ TYPE
            pure      : BITS 1 FOR BOOLEAN;
            note      : BITS 3 FOR Note;
            gray      : BITS 1 FOR BOOLEAN;
-           protected : BITS 1 FOR BOOLEAN;
-           continued : BITS 1 FOR BOOLEAN;
+           clean     : BITS 1 FOR BOOLEAN;
+           locked    : BITS 1 FOR BOOLEAN;
            link: BITS BITSIZE(ADDRESS) - LogAdrPerPage FOR Page := Nil;
          END;
+  PageHdr = RECORD
+           desc: Desc;
+           nb: CARDINAL := 1;
+         END;
+  RefPage = UNTRACED REF PageHdr;
 
 TYPE Space = {Unallocated, Free, Previous, Current};
 </PRE> Each page has a short note attached, describing why it is in its current
@@ -113,6 +115,9 @@ TYPE Space = {Unallocated, Free, Previous, Current};
 VAR
   allocatedPages: CARDINAL := 0; (* the number of pages in the Free,
                                     Previous, or Current spaces *)
+
+PROCEDURE <A HREF="RTCollector.m3.html#ReferentSize">ReferentSize</A> (h: RefHeader): CARDINAL;
+PROCEDURE <A HREF="RTCollector.m3.html#AddressToPage">AddressToPage</A> (r: ADDRESS): RefPage;
 </PRE>***** HEAP OBJECTS *****
 
 <P> An object is a contiguous array of words on the heap.  The first word of
@@ -137,25 +142,26 @@ VAR
   RefHeader = UNTRACED REF Header;
 
 CONST
-  Fill_1_type: Typecode = LAST(Typecode); (* 1 word filler *)
-  FillHeader1: Header = Header{typecode := Fill_1_type, forwarded := FALSE};
+  (* 1 word filler *)
+  Fill_1_type: Typecode = 0; (* = NilTypecode, for zero-filled pages *)
+  FillHeader1 = Header{typecode := Fill_1_type, dirty := FALSE};
 
 CONST
-  Fill_N_type: Typecode = LAST(Typecode) - 1;
-  FillHeaderN: Header = Header{typecode := Fill_N_type, forwarded := FALSE};
-</PRE><BLOCKQUOTE><EM> multi-word filler, the second word is the total size of the object,
-   in bytes </EM></BLOCKQUOTE><PRE>
+  (* multi-word filler, the second word is the total size of the object,
+     in bytes *)
+  Fill_N_type: Typecode = LAST(Typecode);
+  FillHeaderN = Header{typecode := Fill_N_type, dirty := FALSE};
 </PRE>***** OPEN ARRAYS *****
 
 <P> An open array object with N open dimensions contains a header, then a
    pointer to the first data element, then N integers that hold the
    dimensions. 
 
-<P><PRE>TYPE ArrayShape = UNTRACED REF ARRAY [0 .. (*N-1*) 999] OF INTEGER;
+<P><PRE>TYPE UnsafeArrayShape = UNTRACED REF ARRAY [0 .. (*N-1*) 999] OF INTEGER;
 
 PROCEDURE <A HREF="RTHeapRep.m3.html#UnsafeGetShape">UnsafeGetShape</A> (    r          : REFANY;
                           VAR nDimensions: INTEGER;
-                          VAR s          : ArrayShape);
+                          VAR s          : UnsafeArrayShape);
 </PRE><BLOCKQUOTE><EM> if r is a reference to an open array, the number of open dimensions,
    nDimensions, and size of each dimension, s, is returned.  The array's
    shape vector is valid as long as r exists.  If r is not a reference to
@@ -164,60 +170,36 @@ PROCEDURE <A HREF="RTHeapRep.m3.html#UnsafeGetShape">UnsafeGetShape</A> (    r  
    garbage collected. </EM></BLOCKQUOTE><PRE>
 </PRE>***** LOW-LEVEL ALLOCATOR/COLLECTOR ****
 
-<P><PRE>PROCEDURE <A HREF="RTCollector.m3.html#AllocUntraced">AllocUntraced</A> (size: INTEGER): ADDRESS;
-</PRE><BLOCKQUOTE><EM> Return the address of <CODE>size</CODE> bytes of untraced, un-zeroed storage,
-   if possible.  Otherwise, return <CODE>NIL</CODE>.  </EM></BLOCKQUOTE><PRE>
-
-PROCEDURE <A HREF="RTCollector.m3.html#AllocTraced">AllocTraced</A> (size, alignment: CARDINAL;  VAR pool: AllocPool): ADDRESS;
-</PRE><BLOCKQUOTE><EM> Return the address of <CODE>size</CODE> bytes of traced storage on an
-   <CODE>alignment</CODE> byte boundary from the allocation pool <CODE>pool</CODE>.
-   The storage is not zeroed.  If the request cannot be satisfied,
-   <CODE>NIL</CODE> is returned.  LL &gt;= RTOS.LockHeap. </EM></BLOCKQUOTE><PRE>
-</PRE> Objects in the traced heap are allocated from one of three <CODE>pools</CODE>.
-   A pool is collection of pages with similar properties.  The <CODE>newPool</CODE>
-   contains NEWed objects.  The <CODE>pureCopy</CODE> pool contains objects that
-   were copied by the collector into new space, but that contain no
-   internal REFs.  Similarly, the <CODE>impureCopy</CODE> pool is for copied
-   objects that contain REFs.  
-
-<P><PRE>TYPE
+<P><PRE>PROCEDURE <A HREF="RTCollector.m3.html#AllocTraced">AllocTraced</A> (size, alignment: CARDINAL;
+                       VAR pool: AllocPool): ADDRESS;
+</PRE><BLOCKQUOTE><EM> Allocate 'size' zeroed bytes of traced storage of type 'def' on an
+   'alignment' byte boundary from the thread's allocation pool, initializing
+   the result using 'initializer' (if not <CODE>NIL</CODE>). </EM></BLOCKQUOTE><PRE>
+</PRE> Objects in the traced heap are allocated from <CODE>pools</CODE>. 
+<PRE>TYPE
   AllocPool = RECORD
-    desc       : Desc;           (* descriptor for new pages in this pool *)
-    notAfter   : Notes;          (* if possible avoid following these pages *)
-    page       : Page    := Nil; (* current allocation page of the pool *)
-    stack      : Page    := Nil; (* linked list of new pages from this pool *)
+    note       : [Note.Allocated..Note.Copied];
+    pure       : BOOLEAN;
+    page       : RefPage := NIL; (* current allocation page of the pool *)
     next       : ADDRESS := NIL; (* address of next available byte *)
     limit      : ADDRESS := NIL; (* address of first unavailable byte *)
-    n_small    : INTEGER := 0;   (* # of &quot;small&quot; pages allocated via this pool *)
-    n_big      : INTEGER := 0;   (* # of &quot;big&quot; and &quot;continued&quot; pages allocated *)
   END;
 
-VAR (* LL &gt;= RTOS.HeapLock *)
-  newPool := AllocPool {
-    desc := Desc {space := Space.Current, generation := Generation.Younger,
-                  pure := FALSE, note := Note.Allocated, gray := FALSE,
-                  protected := FALSE, continued := FALSE },
-    notAfter := Notes {Note.Copied} };
+VAR (* LL &gt;= LockHeap *)
+  pureCopy   := AllocPool { pure := TRUE,  note := Note.Copied };
+  impureCopy := AllocPool { pure := FALSE, note := Note.Copied };
 
-VAR (* LL &gt;= RTOS.HeapLock *)
-  pureCopy := AllocPool {
-    desc := Desc {space := Space.Current, generation := Generation.Younger,
-                  pure := TRUE, note := Note.Copied, gray := FALSE,
-                  protected := FALSE, continued := FALSE },
-    notAfter := Notes {Note.Allocated} };
-
-VAR (* LL &gt;= RTOS.HeapLock *)
-  impureCopy := AllocPool {
-    desc := Desc {space := Space.Current, generation := Generation.Younger,
-                  pure := FALSE, note := Note.Copied, gray := TRUE,
-                  protected := FALSE, continued := FALSE },
-    notAfter := Notes {Note.Allocated} };
-</PRE>***** MODULE OBJECTS *****
-
-<P> A Modula-3 object is appears to the collector like any other object.
-   The first word of its body is a pointer to its method list. 
-
-<P><PRE>CONST MethodListOffset = 0;      (* byte offset in the object's body *)
+TYPE
+  ThreadState = RECORD
+    (* BEWARE: a thread cannot be suspended while inCritical # 0
+       This permits the thread to decline being suspended for
+       GC until it is done allocating from its pool.  Otherwise, the
+       GC could see incoherent object state in the pool's page. *)
+    inCritical : INTEGER := 0;
+    pool := AllocPool { pure := FALSE, note := Note.Allocated };
+  END;
+</PRE> Flush cached thread state, on GC flip and thread death 
+<PRE>PROCEDURE <A HREF="RTCollector.m3.html#FlushThreadState">FlushThreadState</A> (VAR thread: ThreadState);
 </PRE> RegisterFinalCleanup is available for low-level cleanup by the thread
    package.  If <CODE>r</CODE> is registered for cleanup, then just before <CODE>r</CODE> is
    freed, the cleanup procedure <CODE>p</CODE> is called.  This procedure is allowed
@@ -233,14 +215,11 @@ VAR (* LL &gt;= RTOS.HeapLock *)
 
 <P> There are various status variables. 
 
-<P><PRE>VAR collections := 0;            (* the number of collections begun *)
-
-VAR
-  disableCount: CARDINAL := 0;   (* how many more Disables than Enables *)
-  disableMotionCount: CARDINAL := 0; (* how many more DisableMotions than
-                                        EnableMotions *)
-  disableVMCount: CARDINAL := 0; (* how many more DisableVMs than
-                                    EnableVMs *)
+<P><PRE>VAR
+  (* how many more Disables than Enables *)
+  disableCount: CARDINAL := 1;		 (* initially disabled *)
+  (* how many more DisableMotions than EnableMotions *)
+  disableMotionCount: CARDINAL := 0;
 
 PROCEDURE <A HREF="RTCollector.m3.html#Crash">Crash</A> (): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> Crash is called by the runtime when the program is about to crash.  When
@@ -268,15 +247,7 @@ PROCEDURE <A HREF="RTHeapRep.m3.html#InvokeMonitors">InvokeMonitors</A> (before:
 </PRE><BLOCKQUOTE><EM> called by the collector to trigger the registered monitors.
    If <CODE>before</CODE> is <CODE>TRUE</CODE>, the <CODE>before</CODE> methods are called, otherwise
    the <CODE>after</CODE> methods are called. </EM></BLOCKQUOTE><PRE>
-</PRE>** VM support **
-
-<P><PRE>PROCEDURE <A HREF="RTCollector.m3.html#Fault">Fault</A> (addr: ADDRESS): BOOLEAN;
-</PRE> Fault is called from the RTHeapDep when a VM fault occurs.  If Fault
-   returns TRUE, protection has been changed and the operation should be
-   retried.  If Fault returns FALSE, the faulting address is not part of
-   the traced heap, and the fault should be treated as an error. 
-
-<P>***** DEBUGGING *****
+</PRE>***** DEBUGGING *****
 
 <P> There are various routines for collecting or printing out information on
    the objects on the heap. 
@@ -303,8 +274,17 @@ END RTHeapRep.
 <HR>
 <A NAME="x1">RTHeapRep's implementation  is in:
 </A><UL>
+<LI><A HREF="RTAllocator.m3.html#0TOP0">m3core/src/runtime/common/RTAllocator.m3</A>
 <LI><A HREF="RTCollector.m3.html#0TOP0">m3core/src/runtime/common/RTCollector.m3</A>
 <LI><A HREF="RTHeapRep.m3.html#0TOP0">m3core/src/runtime/common/RTHeapRep.m3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface RTMachine is in:
+</A><UL>
+<LI><A HREF="../AMD64_LINUX/RTMachine.i3.html#0TOP0">m3core/src/runtime/AMD64_LINUX/RTMachine.i3</A>
+<LI><A HREF="../LINUXLIBC6/RTMachine.i3.html#0TOP0">m3core/src/runtime/LINUXLIBC6/RTMachine.i3</A>
+<LI><A HREF="RTMachine.i3.html#0TOP0">m3core/src/runtime/common/RTMachine.i3</A>
 </UL>
 <P>
 <PRE>

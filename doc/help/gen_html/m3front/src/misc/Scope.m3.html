@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/misc/Scope.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/misc/Scope.m3</H2></A><HR>
 <inModule>
@@ -72,6 +72,10 @@ PROCEDURE <A NAME="PushNew"><procedure>PushNew</procedure></A> (open: BOOLEAN;  
     t.proc_frame := (open) AND (NOT module) AND (NOT nested);
     t.home       := Module.Current ();
     top := t;
+    EVAL ScopeName(t); (* Force every anonymous block to have a number, even
+                          if not used in a prefix of a procedure name.
+                          without this, m3gdb can't figure out what block
+                          a nested procedure is inside of. *)
     RETURN t;
   END PushNew;
 
@@ -290,7 +294,7 @@ PROCEDURE <A NAME="WarnUnused"><procedure>WarnUnused</procedure></A> (t: T) =
           END;
           Scanner.offset := v.origin;
           Error.WarnID (level, v.name, &quot;not used&quot;);
-	END;
+        END;
       END;
       v := v.next;
     END;

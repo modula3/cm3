@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/RootGOPrivate.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/RootGOPrivate.i3</H2></A><HR>
 <inInterface>
@@ -29,22 +29,22 @@ TYPE
   END;
 </PRE> <CODE>root.repair(damaged)</CODE> redraws the scene rooted at <CODE>root</CODE>. Only those
    nodes that were marked as damaged are re-rendered, for the other nodes,
-   cached values are used. 
+   cached values are used.
 <P>
-   Nodes can be damaged in two ways: 
+   Nodes can be damaged in two ways:
    \begin{enumerate}
    \item By operations that change the scene DAG (i.e.\ the group operations
          <CODE>add</CODE>, <CODE>remove</CODE>, and <CODE>flush</CODE>).
-   \item By changes in the value of an attached property. 
+   \item By changes in the value of an attached property.
    \end{enumerate}
 <P>
-   Calling <CODE>root.adjust(time)</CODE> serves two purposes: It reevaluates all the 
-   properties attached to all descendants of <CODE>root</CODE>, and damages those nodes 
+   Calling <CODE>root.adjust(time)</CODE> serves two purposes: It reevaluates all the
+   properties attached to all descendants of <CODE>root</CODE>, and damages those nodes
    whose properties have changed since the last round of rendering. It also
    propagates damages up the scene DAGs.
        <CODE>
-   </CODE>root.repair(damaged)<CODE> is called after all roots have been adjusted. The 
-   VAR parameter </CODE>damaged<CODE> is set to TRUE if there were any damages in the 
+   </CODE>root.repair(damaged)<CODE> is called after all roots have been adjusted. The
+   VAR parameter </CODE>damaged<CODE> is set to TRUE if there were any damages in the
    scene, otherwise, it remains unchanged. 
 
 <P><PRE>END RootGOPrivate.

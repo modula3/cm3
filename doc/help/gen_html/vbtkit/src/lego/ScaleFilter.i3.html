@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/ScaleFilter.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/ScaleFilter.i3</H2></A><HR>
 <inInterface>
@@ -33,22 +33,22 @@ TYPE
              init (ch: VBT.T): T
            END;
 </PRE> The call <CODE>v.init(ch)</CODE> initializes <CODE>v</CODE> as a <CODE>ScaleFilter</CODE> with
-   multi-child <CODE>ch</CODE> and with horizontal and vertical scale factors 
+   multi-child <CODE>ch</CODE> and with horizontal and vertical scale factors
    both equal to 1.0. 
 
 <P> There are two ways you can use a <CODE>ScaleFilter</CODE>: Procedure <CODE>Scale</CODE> allows
    you to explicitly set a horizontal and vertical scale factor.
-   Procedure <CODE>AutoScale</CODE> looks at the preferred size of the child and 
-   dynamically sets the scale factors such that the child's preferred 
+   Procedure <CODE>AutoScale</CODE> looks at the preferred size of the child and
+   dynamically sets the scale factors such that the child's preferred
    size always fills its domain. 
- 
+
 <P><PRE>PROCEDURE <A HREF="ScaleFilter.m3.html#Scale">Scale</A> (v: T; hscale, vscale: REAL);
 &lt;* LL.sup = VBT.mu.v *&gt;
 </PRE><BLOCKQUOTE><EM> Set <CODE>v</CODE>'s horizontal and vertical scale factors to be <CODE>hscale</CODE>
    and <CODE>vscale</CODE> respectively, and mark <CODE>v</CODE> for redisplay. </EM></BLOCKQUOTE><PRE>
 </PRE> Thus, if the <CODE>v</CODE> has resolution of <CODE>px</CODE> and <CODE>py</CODE> horizontally
    and vertically, then the resolution of <CODE>v</CODE>'s multi-child will
-   be <CODE>hscale*px</CODE> and <CODE>vscale*py</CODE>. 
+   be <CODE>hscale*px</CODE> and <CODE>vscale*py</CODE>.
 <P>
    Note that the locking level of <CODE>Scale</CODE> does not
    require the full share of <CODE>VBT.mu</CODE>.  Therefore, it can be

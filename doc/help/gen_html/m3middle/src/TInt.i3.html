@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/TInt.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/TInt.i3</H2></A><HR>
 <inInterface>
@@ -25,20 +25,24 @@
     otherwise they return FALSE.
 
 
-<P><PRE>FROM <A HREF="Target.i3.html">Target</A> IMPORT Int, IChunks;
+<P><PRE>FROM <A HREF="Target.i3.html">Target</A> IMPORT Int, IBytes;
 
 CONST
-  Zero = Int { IChunks {16_0000, 16_0000, 16_0000, 16_0000}};
-  One  = Int { IChunks {16_0001, 16_0000, 16_0000, 16_0000}};
-  MOne = Int { IChunks {16_ffff, 16_ffff, 16_ffff, 16_ffff}};
+  Zero = Int{NUMBER (IBytes), IBytes{16_00,16_00,..}};
+  One  = Int{NUMBER (IBytes), IBytes{16_01,16_00,..}};
+  MOne = Int{NUMBER (IBytes), IBytes{16_ff,16_ff,..}};
 
-PROCEDURE <A HREF="TInt.m3.html#FromInt">FromInt</A> (x: INTEGER;  VAR i: Int): BOOLEAN;
+PROCEDURE <A HREF="TInt.m3.html#FromInt">FromInt</A> (x: INTEGER;  n: CARDINAL;  VAR i: Int): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> converts a host integer 'x' to a target integer 'i' </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TInt.m3.html#IntI">IntI</A> (READONLY x: Int;  n: CARDINAL;  VAR i: Int): BOOLEAN;
+</PRE><BLOCKQUOTE><EM> converts a target integer 'x' to a target integer 'i' </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="TInt.m3.html#ToInt">ToInt</A> (READONLY i: Int;  VAR x: INTEGER): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> converts a target integer 'i' to a host integer 'x' </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="TInt.m3.html#New">New</A> (READONLY chars: ARRAY OF CHAR;  VAR i: Int): BOOLEAN;
+PROCEDURE <A HREF="TInt.m3.html#New">New</A> (READONLY chars: ARRAY OF CHAR;  n: CARDINAL;
+               VAR i: Int): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> converts the string of decimal characters in 'chars' to an integer
    value in 'i' </EM></BLOCKQUOTE><PRE>
 
@@ -70,11 +74,10 @@ PROCEDURE <A HREF="TInt.m3.html#ToChars">ToChars</A> (READONLY i: Int;  VAR buf:
 </PRE><BLOCKQUOTE><EM> converts 'i' to a printable string in 'buf'.  Returns the
    number of characters in the string.  Returns -1 if 'buf' is too short. </EM></BLOCKQUOTE><PRE>
 
-TYPE ByteArray = ARRAY [0..7] OF [0..255];
-PROCEDURE <A HREF="TInt.m3.html#ToBytes">ToBytes</A> (READONLY i: Int;  VAR buf: ByteArray): INTEGER;
+PROCEDURE <A HREF="TInt.m3.html#ToBytes">ToBytes</A> (READONLY i: Int;  VAR buf: ARRAY OF [0..255]): INTEGER;
 </PRE><BLOCKQUOTE><EM> converts 'i' to the shortest sequence of bytes in little-endian order
    which when sign-extended equal 'i'.  Returns the number of
-   significant bytes in the result. </EM></BLOCKQUOTE><PRE>
+   significant bytes in the result.  Returns -1 if 'buf' is too short. </EM></BLOCKQUOTE><PRE>
 
 END TInt.
 </PRE>

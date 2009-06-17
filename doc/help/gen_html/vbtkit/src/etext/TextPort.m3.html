@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/etext/TextPort.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/etext/TextPort.m3</H2></A><HR>
 <inModule>
@@ -27,7 +27,7 @@ MODULE <module><implements><A HREF="TextPort.i3.html">TextPort</A></implements><
 IMPORT <A HREF="../../../libm3/src/geometry/Axis.i3.html">Axis</A>, <A HREF="../../../ui/src/split/AnchorBtnVBT.i3.html">AnchorBtnVBT</A>, <A HREF="../../../ui/src/vbt/Cursor.i3.html">Cursor</A>, <A HREF="../../../libm3/src/params/Env.i3.html">Env</A>, <A HREF="../../../ui/src/vbt/Font.i3.html">Font</A>, <A HREF="ISOChar.i3.html">ISOChar</A>, <A HREF="../../../ui/src/vbt/KeyboardKey.i3.html">KeyboardKey</A>,
        <A HREF="KeyFilter.i3.html">KeyFilter</A>, <A HREF="KeyTrans.i3.html">KeyTrans</A>, <A HREF="MacModel.i3.html">MacModel</A>, <A HREF="../mtext/MText.i3.html">MText</A>, <A HREF="MTextUnit.i3.html">MTextUnit</A>, <A HREF="../../../ui/src/vbt/PaintOp.i3.html">PaintOp</A>, <A HREF="../../../ui/src/vbt/Palette.i3.html">Palette</A>,
        <A HREF="../vbtkitutils/Pts.i3.html">Pts</A>, <A HREF="../../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../../libm3/src/rw/RdUtils.i3.html">RdUtils</A>, <A HREF="../../../libm3/src/geometry/Rect.i3.html">Rect</A>, <A HREF="../../../libm3/src/geometry/Region.i3.html">Region</A>, <A HREF="../lego/ScrollerVBTClass.i3.html">ScrollerVBTClass</A>, <A HREF="../../../ui/src/split/Split.i3.html">Split</A>, <A HREF="../../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>,
-       <A HREF="TextPortClass.i3.html">TextPortClass</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="../vbtkitutils/VBTKitEnv.i3.html">VBTKitEnv</A>, <A HREF="../../../ui/src/vbt/VBTRep.i3.html">VBTRep</A>, <A HREF="../vtext/VTDef.i3.html">VTDef</A>, <A HREF="../vtext/VText.i3.html">VText</A>, <A HREF="../../../libm3/src/rw/Wr.i3.html">Wr</A>;
+       <A HREF="TextPortClass.i3.html">TextPortClass</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="#x1">VBTKitEnv</A>, <A HREF="../../../ui/src/vbt/VBTRep.i3.html">VBTRep</A>, <A HREF="../vtext/VTDef.i3.html">VTDef</A>, <A HREF="../vtext/VText.i3.html">VText</A>, <A HREF="../../../libm3/src/rw/Wr.i3.html">Wr</A>;
 
 FROM <A HREF="TextPortClass.i3.html">TextPortClass</A> IMPORT IRange;
 
@@ -408,7 +408,7 @@ PROCEDURE <A NAME="SetFontDimensions"><procedure>SetFontDimensions</procedure></
       END
     END
   END SetFontDimensions;
-</PRE> UNUSED 
+</PRE> UNUSED
 PROCEDURE Width (v: T): CARDINAL =
    (* Return the number of characters that will fit on a line, given the current
    size of <CODE>v</CODE>.  If <CODE>v</CODE> has no width (because its window is iconic, for
@@ -776,13 +776,36 @@ PROCEDURE <A NAME="Filter"><procedure>Filter</procedure></A> (v: T; cd: VBT.KeyR
         BEGIN
           (* Treat an empty interval as if it were not replace-mode *)
           IF v.isReplaceMode () AND interval.left () # interval.right () THEN
-            m.putSelectedText (&quot;&quot;)
+            (* m.putSelectedText (&quot;&quot;) *)
+            EVAL v.unsafeReplace (interval.left(), interval.right(), &quot;&quot;);
+            WITH rec = m.selection [Primary] DO
+              rec.replaceMode := FALSE;
+              rec.anchor.l := m.v.index();
+              rec.anchor.r := m.v.index();
+              rec.cursor := m.v.index();
+            END;
+            m.dragging := FALSE;
           ELSE
             EVAL TextPortClass.DeletePrevChar (v)
           END
         END
       ELSIF ch IN ISOChar.Graphics THEN
-        v.insert (Text.FromChar (ch))
+        IF v.isReplaceMode() THEN
+          VAR interval := v.m.selection [Primary].interval;
+          BEGIN
+            EVAL v.unsafeReplace (interval.left(), interval.right(),
+                                  Text.FromChar (ch));
+            WITH rec = m.selection [Primary] DO
+              rec.replaceMode := FALSE;
+              rec.anchor.l := m.v.index();
+              rec.anchor.r := m.v.index();
+              rec.cursor := m.v.index();
+            END;
+            m.dragging := FALSE;
+          END
+        ELSE
+          v.insert (Text.FromChar (ch))
+        END
       ELSE
         (* including NullKey, for untranslatable keys *)
         RETURN
@@ -1096,6 +1119,13 @@ PROCEDURE <A NAME="Error"><procedure>Error</procedure></A> (&lt;* UNUSED *&gt; v
 END TextPort.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface VBTKitEnv is in:
+</A><UL>
+<LI><A HREF="../vbtkitutils/POSIX/VBTKitEnv.i3.html#0TOP0">vbtkit/src/vbtkitutils/POSIX/VBTKitEnv.i3</A>
+<LI><A HREF="../vbtkitutils/VBTKitEnv.i3.html#0TOP0">vbtkit/src/vbtkitutils/VBTKitEnv.i3</A>
+</UL>
+<P>
 <PRE>
 
 

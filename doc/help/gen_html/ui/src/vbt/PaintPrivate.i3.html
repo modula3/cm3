@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/PaintPrivate.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/PaintPrivate.i3</H2></A><HR>
 <inInterface>
@@ -31,9 +31,9 @@ TYPE
 </PRE> In a paint batch, <CODE>PaintOps</CODE>, <CODE>Pixmaps</CODE>, and <CODE>Fonts</CODE> are represented
    by integers in a screentype-dependent way.  During rescreening an
    old batch might find its way to a screen of the wrong type, causing
-   garbage to be painted; but the garbage will be painted over with 
+   garbage to be painted; but the garbage will be painted over with
    the correct pixels promptly.  
-  
+
 <P><PRE>TYPE
   PaintCommand = {RepeatCom, TintCom, TextureCom,
     PixmapCom, ScrollCom, TrapCom, TextCom,
@@ -46,10 +46,10 @@ TYPE
 
 VAR (*CONST*)
   HostByteOrder: ByteOrder;
-</PRE> There are eight types of entries; each of which begins with a word 
+</PRE> There are eight types of entries; each of which begins with a word
    containing a <CODE>PaintCommand</CODE> that indicates which type of entry it is.
 <P>
-   Entries of type <CODE>TintCom</CODE>, <CODE>TextureCom</CODE>, <CODE>PixmapCom</CODE>, <CODE>ScrollCom</CODE>, 
+   Entries of type <CODE>TintCom</CODE>, <CODE>TextureCom</CODE>, <CODE>PixmapCom</CODE>, <CODE>ScrollCom</CODE>,
    <CODE>TrapCom</CODE>, and <CODE>TextCom</CODE> are used to implement the <CODE>VBT</CODE> operations
    <CODE>PaintTint</CODE>, <CODE>PaintTexture</CODE>, <CODE>PaintPixmap</CODE>, <CODE>Scroll</CODE>, <CODE>PaintTrapezoid</CODE>,
    and <CODE>PaintText/PaintSub</CODE>.
@@ -61,12 +61,12 @@ VAR (*CONST*)
    are some restrictions on where <CODE>RepeatCom</CODE> entries can occur.
 <P>
    <CODE>ExtensionCom</CODE> entries can be used to implement additional painting
-   operations beyond those that are built into Trestle. 
+   operations beyond those that are built into Trestle.
 <P>
    Some of the entries are fixed size; that is, the size of the entry
    is determined by their type.  The following array gives the sizes
    of the fixed-size commands: 
-   
+
 <P><PRE>CONST
   WS = BYTESIZE(Word.T);
   ComSize =
@@ -79,7 +79,7 @@ VAR (*CONST*)
      (BYTESIZE(TrapRec) + WS-1) DIV WS};
 </PRE> <CODE>ComSize[c]</CODE> equals the size in <CODE>Word.T</CODE>s of a paint batch entry for
    the command <CODE>c</CODE>. 
-     
+
 <P><PRE>TYPE
   CommandRec =
     RECORD command: PackedCommand; clip: Rect.T END;
@@ -107,7 +107,7 @@ VAR (*CONST*)
   PaintPtr = UNTRACED REF PaintRec;
 </PRE> The following four entry types correspond to <CODE>PaintTint</CODE>, <CODE>PaintPixmap</CODE>,
    <CODE>Scroll</CODE>, and <CODE>PaintTrapezoid</CODE> operations.  
-   
+
 <P>  <PRE>TintRec = RECORD
     command: PackedCommand;
     clip: Rect.T;
@@ -151,11 +151,11 @@ VAR (*CONST*)
    The slopes are given as <CODE>(delta v) / (delta h)</CODE>.  A zero denominator
    represents an infinite slope; i.e., a vertical edge.  A zero
    numerator is illegal.  
-       
+
 <P> The entries that are not fixed-size are pseudo-subtypes of
    <CODE>VarSzRec</CODE>, which contains a <CODE>size</CODE> field with the number of
    <CODE>Word.T</CODE>'s in the entire entry.  
- 
+
 <P>  <PRE>VarSzRec = RECORD
     command: PackedCommand;
     clip: Rect.T;
@@ -163,7 +163,7 @@ VAR (*CONST*)
     szOfRec: INTEGER;
   END;
   VarSzPtr = UNTRACED REF VarSzRec;
-</PRE> <CODE>PaintText</CODE> and <CODE>PaintSub</CODE> operations result in the following entry 
+</PRE> <CODE>PaintText</CODE> and <CODE>PaintSub</CODE> operations result in the following entry
    type, in which <CODE>command</CODE> will equal <CODE>TextCom</CODE>: 
 
 <P><PRE>TYPE Prop = {Clipped, FontSub};
@@ -182,7 +182,7 @@ VAR (*CONST*)
 </PRE><P>
 <PRE>
       (* dl: ARRAY [0..dlsz-1] OF VBT.Displacement 
- 
+
 <PRE>| (* chars: ARRAY [0..txtsz-1] OF CHAR *)
 *)
 
@@ -203,7 +203,7 @@ VAR (*CONST*)
    paint batches can be transported across address spaces and merged,
    the byte order could be different for different records in a paint
    batch.) 
-   
+
 <P>  <PRE>ExtensionRec = RECORD
     command: PackedCommand;
     clip: Rect.T;

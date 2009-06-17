@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTMisc.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTMisc.m3</H2></A><HR>
 <inModule>
@@ -18,12 +18,12 @@
 
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="RTMisc.i3.html">RTMisc</A></implements></module>;
 
-IMPORT <A HREF="../../C/LINUXLIBC6/Cstring.i3.html">Cstring</A>;
+IMPORT <A HREF="#x1">Cstring</A>;
 </PRE>------------------------------- byte copying ------------------------------
 
 <P><PRE>PROCEDURE <A NAME="Copy"><procedure>Copy</procedure></A> (src, dest: ADDRESS;  len: INTEGER) =
   BEGIN
-    EVAL Cstring.memcpy (dest, src, len);
+    EVAL Cstring.memmove (dest, src, len);
   END Copy;
 
 PROCEDURE <A NAME="Zero"><procedure>Zero</procedure></A> (dest: ADDRESS;  len: INTEGER) =
@@ -46,6 +46,13 @@ BEGIN
 END RTMisc.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Cstring is in:
+</A><UL>
+<LI><A HREF="../../C/Common/Cstring.i3.html#0TOP0">m3core/src/C/Common/Cstring.i3</A>
+<LI><A HREF="../../C/LINUXLIBC6/Cstring.i3.html#0TOP0">m3core/src/C/LINUXLIBC6/Cstring.i3</A>
+</UL>
+<P>
 <PRE>
 
 

@@ -2,20 +2,28 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: http/src/HTTPProxy.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>http/src/HTTPProxy.m3</H2></A><HR>
 <inModule>
 <PRE></PRE> Copyright (C) 1995, Digital Equipment Corporation. 
  All rights reserved. 
- Last modified on Sat Jan 11 22:04:02 PST 1997 by steveg 
+ Created by steveg 
+                                                                           
+ Parts Copyright (C) 1997, Columbia University                             
+ All rights reserved.                                                      
+
+ * Last Modified By: Blair MacIntyre
+ * Last Modified On: Mon Aug  4 14:49:57 1997
+ 
 
 <P><PRE>MODULE <module><implements><A HREF="HTTPProxy.i3.html">HTTPProxy</A></implements></module>;
 
 IMPORT <A HREF="App.i3.html">App</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="HTTP.i3.html">HTTP</A>, <A HREF="HTTPApp.i3.html">HTTPApp</A>, <A HREF="../../libm3/src/rw/IO.i3.html">IO</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/src/rw/RdCopy.i3.html">RdCopy</A>, <A HREF="../../libm3/src/rw/TextRd.i3.html">TextRd</A>, <A HREF="../../libm3/src/rw/TextWr.i3.html">TextWr</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>;
 
 REVEAL
-  <A NAME="RequestHandler">RequestHandler</A> = RequestHandlerPublic BRANDED OBJECT
+  <A NAME="RequestHandler">RequestHandler</A> = RequestHandlerPublic BRANDED
+  &quot;HTTPProxy.RequestHandler&quot; OBJECT
   OVERRIDES
     request := Request;
     accept := Accept;
@@ -74,7 +82,7 @@ PROCEDURE <A NAME="Request"><procedure>Request</procedure></A> (self            
   END Request;
 
 REVEAL
-  <A NAME="ReplyHandler">ReplyHandler</A> = HTTPApp.ReplyHandler BRANDED OBJECT
+  <A NAME="ReplyHandler">ReplyHandler</A> = HTTPApp.ReplyHandler BRANDED &quot;HTTPProxy.ReplyHandler&quot; OBJECT
     logReply: BOOLEAN;
   OVERRIDES
     reply := Reply;

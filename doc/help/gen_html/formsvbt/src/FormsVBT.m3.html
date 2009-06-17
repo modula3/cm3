@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: formsvbt/src/FormsVBT.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>formsvbt/src/FormsVBT.m3</H2></A><HR>
 <inModule>
@@ -206,11 +206,11 @@ PROCEDURE <A NAME="FindTChild"><procedure>FindTChild</procedure></A> (vbt: VBT.T
 </PRE> The <CODE>state</CODE> data structure, about 132 bytes, could be made
    much more efficient. Currently, a copy of the data structure is
    made each time that a component is encountered. (Further, a copy from
-   the heap is made on each component that has a name, so that the 
-   inheritable props can be changed at runtime.) 
+   the heap is made on each component that has a name, so that the
+   inheritable props can be changed at runtime.)
 <P>
-   For instance, a copy of the entire data structure isn't needed, 
-   just those variables that have actually changed. Other (more) 
+   For instance, a copy of the entire data structure isn't needed,
+   just those variables that have actually changed. Other (more)
    efficient schemes are possible. --mhb 1/24/94 
 
 <P>
@@ -1928,7 +1928,7 @@ PROCEDURE <A NAME="ItemsFromFile"><procedure>ItemsFromFile</procedure></A> (name
     accurate            := NEW(BooleanPP, name := <CODE>Accurate</CODE>);
     gamma               := NEW(BooleanPP, name := <CODE>NeedsGamma</CODE>);
     res     : FVImage;
-    len: INTEGER; 
+    len: INTEGER;
 ****************</EM></BLOCKQUOTE><PRE>
   BEGIN
     RAISE Error (&quot;Image not currently supported.&quot;);
@@ -2735,7 +2735,7 @@ PROCEDURE <A NAME="pAudio"><procedure>pAudio</procedure></A> (         cl  : Par
    Likewise, the DarkShadow should be computed by multiplying the BgColor
    values by 0.5.  The values in an RGB will be <CODE>gamma-corrected</CODE>
    by Trestle, so we use <CODE>true RGB</CODE> values here. 
-   
+
 <P><PRE>CONST
   rgb155      = 155.0 / 255.0;
   rgb175      = 175.0 / 255.0;

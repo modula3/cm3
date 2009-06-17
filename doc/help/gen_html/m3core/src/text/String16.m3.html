@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/text/String16.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/text/String16.m3</H2></A><HR>
 <inModule>
@@ -16,7 +16,10 @@ IMPORT <A HREF="../word/Word.i3.html">Word</A>;
 TYPE Ptr = UNTRACED REF WIDECHAR;
 
 PROCEDURE <A NAME="Equal"><procedure>Equal</procedure></A> (a, b: ADDRESS;  len: CARDINAL): BOOLEAN =
-  VAR pa := LOOPHOLE (a, Ptr);  pb := LOOPHOLE (b, Ptr);
+</PRE><BLOCKQUOTE><EM> Return <CODE>TRUE</CODE> if the strings of <CODE>len</CODE> characters starting
+   at <CODE>a</CODE> and <CODE>b</CODE> have the same (case-sensitive) contents. </EM></BLOCKQUOTE><PRE>
+</PRE> PRE: a MOD ADRSIZE(WIDECHAR) = 0 AND b MOD ADRSIZE(WIDECHAR) = 0  
+  <PRE>VAR pa := LOOPHOLE (a, Ptr);  pb := LOOPHOLE (b, Ptr);
   BEGIN
     IF (len = 0) THEN RETURN TRUE; END;
     IF (a = NIL) OR (b = NIL) THEN RETURN FALSE; END;
@@ -28,7 +31,11 @@ PROCEDURE <A NAME="Equal"><procedure>Equal</procedure></A> (a, b: ADDRESS;  len:
 
 PROCEDURE <A NAME="Compare"><procedure>Compare</procedure></A> (a: ADDRESS;  len_a: CARDINAL;
                    b: ADDRESS;  len_b: CARDINAL): [-1..1] =
-  CONST Map = ARRAY BOOLEAN OF [-1..+1] { +1, -1 };
+</PRE><BLOCKQUOTE><EM> Return <CODE>-1</CODE> if string <CODE>a</CODE> occurs before string <CODE>b</CODE>, <CODE>0</CODE> if the
+   strings are equal, and <CODE>+1</CODE> if <CODE>a</CODE> occurs after <CODE>b</CODE> in
+   lexicographic order. </EM></BLOCKQUOTE><PRE>
+</PRE> PRE: a MOD ADRSIZE(WIDECHAR) = 0 AND b MOD ADRSIZE(WIDECHAR) = 0  
+  <PRE>CONST Map = ARRAY BOOLEAN OF [-1..+1] { +1, -1 };
   VAR
     pa  := LOOPHOLE (a, Ptr);
     pb  := LOOPHOLE (b, Ptr);
@@ -44,7 +51,10 @@ PROCEDURE <A NAME="Compare"><procedure>Compare</procedure></A> (a: ADDRESS;  len
   END Compare;
 
 PROCEDURE <A NAME="Hash"><procedure>Hash</procedure></A> (a: ADDRESS;  len: CARDINAL;  initial: INTEGER): INTEGER =
-  VAR p := LOOPHOLE (a, Ptr);  result := initial;
+</PRE><BLOCKQUOTE><EM> Return a hash function of the contents of string <CODE>a</CODE> starting
+   with the value <CODE>initial</CODE>. </EM></BLOCKQUOTE><PRE>
+</PRE> PRE: a MOD ADRSIZE(WIDECHAR) = 0  
+  <PRE>VAR p := LOOPHOLE (a, Ptr);  result := initial;
   BEGIN
     IF (p = NIL) THEN RETURN result; END;
     WHILE (len &gt; 0) DO
@@ -55,7 +65,10 @@ PROCEDURE <A NAME="Hash"><procedure>Hash</procedure></A> (a: ADDRESS;  len: CARD
   END Hash;
 
 PROCEDURE <A NAME="FindChar"><procedure>FindChar</procedure></A> (a: ADDRESS;  len: CARDINAL;  c: WIDECHAR): INTEGER =
-  VAR p := LOOPHOLE (a, Ptr);  cnt := len;
+</PRE><BLOCKQUOTE><EM> If <CODE>c = a[i]</CODE> for some <CODE>i</CODE> in <CODE>[0~..~len-1]</CODE>, return the
+   smallest such <CODE>i</CODE>; otherwise, return <CODE>-1</CODE>. </EM></BLOCKQUOTE><PRE>
+</PRE> PRE: a MOD ADRSIZE(WIDECHAR) = 0  
+  <PRE>VAR p := LOOPHOLE (a, Ptr);  cnt := len;
   BEGIN
     IF (p = NIL) THEN RETURN -1; END;
     WHILE (cnt &gt; 0) DO
@@ -66,9 +79,13 @@ PROCEDURE <A NAME="FindChar"><procedure>FindChar</procedure></A> (a: ADDRESS;  l
   END FindChar;
 
 PROCEDURE <A NAME="FindCharR"><procedure>FindCharR</procedure></A> (a: ADDRESS;  len: CARDINAL;  c: WIDECHAR): INTEGER =
-  VAR p := LOOPHOLE (a + len * ADRSIZE (WIDECHAR), Ptr);
+</PRE><BLOCKQUOTE><EM> If <CODE>c = a[i]</CODE> for some <CODE>i</CODE> in <CODE>[0~..~len-1]</CODE>, return the
+   largest such <CODE>i</CODE>; otherwise, return <CODE>-1</CODE>. </EM></BLOCKQUOTE><PRE>
+</PRE> PRE: a MOD ADRSIZE(WIDECHAR) = 0  
+  <PRE>VAR p: Ptr;
   BEGIN
-    IF (p = NIL) THEN RETURN -1; END;
+    IF (a = NIL) THEN RETURN -1; END;
+    p := LOOPHOLE (a + len * ADRSIZE (WIDECHAR), Ptr);
     WHILE (len &gt; 0) DO
       DEC (p, ADRSIZE (p^));  DEC (len);
       IF (p^ = c) THEN RETURN len; END;
@@ -76,7 +93,56 @@ PROCEDURE <A NAME="FindCharR"><procedure>FindCharR</procedure></A> (a: ADDRESS; 
     RETURN -1;
   END FindCharR;
 
+CONST WideCharBitsize = BITSIZE (WIDECHAR);
+CONST WideCharsPerWord = BITSIZE (Word.T) DIV BITSIZE (WIDECHAR);
+CONST CharMask = Word.Not (16_FF);
+CONST CharMask1 = Word.Not (Word.Shift (16_FF, WideCharBitsize));
+CONST CharMask2 = Word.Not (Word.Shift (16_FF, 2*WideCharBitsize));
+CONST CharMask3 = Word.Not (Word.Shift (16_FF, 3*WideCharBitsize));
+CONST CharsInWordMask = Word.And ( Word.And (CharMask, CharMask1)
+                                 , Word.And (CharMask2, CharMask3)
+                                 );
+
+TYPE WordPtr = UNTRACED REF Word.T;
+
+PROCEDURE <A NAME="HasWideChars"><procedure>HasWideChars</procedure></A> (a: ADDRESS; len: CARDINAL): BOOLEAN =
+</PRE><BLOCKQUOTE><EM> Return ORD(a[i] &gt; LAST (CHAR), for some <CODE>i</CODE> in <CODE>[0~..~len-1]</CODE>. </EM></BLOCKQUOTE><PRE>
+</PRE> PRE: a MOD ADRSIZE(WIDECHAR) = 0 
+ This algorithm assumes ADRSIZE(Word.T) MOD ADRSIZE(WIDECHAR) = 0.   
+ This algorithm assumes FIRST(CHAR) = 0 AND LAST(CHAR) = 16_FF.   
+  <PRE>BEGIN
+    (* Do non-word-aligned WIDECHARs at the left. *)
+    WHILE Word.Mod (LOOPHOLE(a, Word.T), ADRSIZE (Word.T)) # 0 AND len &gt; 0 DO
+      IF Word.And (ORD (LOOPHOLE (a, Ptr)^), CharMask) # 0
+      THEN RETURN TRUE; END;
+      INC (a, ADRSIZE (WIDECHAR));
+      DEC (len);
+    END;
+    (* Do word-aligned WIDECHARs in the middle. *)
+    WHILE len &gt;= WideCharsPerWord DO
+      IF Word.And (ORD (LOOPHOLE (a, WordPtr)^), CharsInWordMask) # 0
+      THEN
+        RETURN TRUE;
+      END;
+      INC (a, ADRSIZE (Word.T));
+      DEC (len, WideCharsPerWord);
+    END;
+    (* Do remaining non-word-aligned WIDECHARs at the right. *)
+    WHILE len &gt; 0 DO
+      IF Word.And (ORD (LOOPHOLE (a, Ptr)^), CharMask) # 0
+      THEN RETURN TRUE; END;
+      INC (a, ADRSIZE (WIDECHAR));
+      DEC (len);
+    END;
+    RETURN FALSE;
+  END HasWideChars;
+
 PROCEDURE <A NAME="ArrayStart"><procedure>ArrayStart</procedure></A> (READONLY a: ARRAY OF WIDECHAR): ADDRESS =
+</PRE><BLOCKQUOTE><EM> Returns the address of the first character of <CODE>a</CODE> if it is
+   non-empty, otherwise returns <CODE>NIL</CODE>.  WARNING: the returned
+   address is only valid as long as <CODE>a</CODE> does not move.  To
+   prevent heap allocated arrays from moving, keep the returned
+   address on the stack. </EM></BLOCKQUOTE><PRE>
   BEGIN
     IF NUMBER (a) &lt; 1 THEN RETURN NIL; END;
     RETURN ADR (a[0]);

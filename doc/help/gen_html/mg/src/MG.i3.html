@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: mg/src/MG.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>mg/src/MG.i3</H2></A><HR>
 <inInterface>
@@ -160,7 +160,7 @@ TYPE
          screen pixels (mostly for internal use) *)
     END;
 </PRE> ------------------------------------------------------------------
-    See the Appearances interface for some predefined appearances 
+    See the Appearances interface for some predefined appearances
 ------------------------------------------------------------------ 
 
 <P><PRE>TYPE
@@ -361,7 +361,7 @@ PROCEDURE <A HREF="MG.m3.html#MGCToScreenRect">MGCToScreenRect</A> (v: V; READON
   Rect.T;
 </PRE><BLOCKQUOTE><EM> MGCToScreenRect will produce Rect.Empty if the screen points of corner1 and corner2
    coincide.  Use:
-     Rect.Join(Rect.FromPoint(MGCToScreenPoint(corner1)), 
+     Rect.Join(Rect.FromPoint(MGCToScreenPoint(corner1)),
                Rect.FromPoint(MGCScreenPoint(corner2)))
    if you need a non-empty rectangle </EM></BLOCKQUOTE><PRE>
 

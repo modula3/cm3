@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: vbtkit/src/lego/MultiClass.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>vbtkit/src/lego/MultiClass.i3</H2></A><HR>
 <inInterface>
@@ -71,9 +71,9 @@ Before calling the method, the generic code in the <CODE>MultiSplit</CODE>
    was not <CODE>NIL</CODE>.
 <P>
    Similarly, the method call <CODE>mc.insert(pred,new)</CODE> implements the
-   operation 
+   operation
 <PRE>
-      MultiSplit.Insert(mc.vbt, pred, new) 
+      MultiSplit.Insert(mc.vbt, pred, new)
    </PRE>
 Before calling the method, the generic code in <CODE>MultiSplit</CODE> checks
    that <CODE>pred</CODE> is a multi-child of <CODE>mc.vbt</CODE> and calls <CODE>BeChild(mc.vbt,
@@ -104,7 +104,7 @@ Before calling the method, the generic code in <CODE>MultiSplit</CODE>
    reallocating the screen layout of its children) that is not
    ``undone'' by the subsequent call to the <CODE>insert</CODE> method.
 <P>
-   The method calls 
+   The method calls
 <P>
 <PRE>
       mc.succ(ch)
@@ -159,7 +159,7 @@ PROCEDURE <A HREF="MultiClass.m3.html#Resolve">Resolve</A> (v: VBT.T): T;
 PROCEDURE <A HREF="MultiClass.m3.html#BeChild">BeChild</A> (v: VBT.T; ch: VBT.T);
 &lt;* LL.sup &lt; ch *&gt;
 </PRE><BLOCKQUOTE><EM> Make <CODE>ch</CODE> into one of <CODE>v</CODE>'s children that is exposed to the
-   client via the <CODE>MultiSplit</CODE> or <CODE>MultiFilter</CODE> interfaces.  
+   client via the <CODE>MultiSplit</CODE> or <CODE>MultiFilter</CODE> interfaces.
    It is possible for <CODE>ch</CODE> to
    be a child of more than one multi, and it is possible that
    <CODE>ch</CODE> is not related to <CODE>v</CODE> in the VBT hierarchy. </EM></BLOCKQUOTE><PRE>

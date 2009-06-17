@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3browser/src/Main.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3browser/src/Main.m3</H2></A><HR>
 <inModule>
@@ -20,10 +20,10 @@
 <P><PRE>MODULE <module><implements><A HREF="../../m3core/src/main/Main.i3.html">Main</A></implements></module>;
 
 IMPORT <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../libm3/src/rw/TextRd.i3.html">TextRd</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../libm3/derived/IntRefTbl.i3.html">IntRefTbl</A>, <A HREF="../../libm3/derived/IntList.i3.html">IntList</A>;
-IMPORT <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../libm3/src/params/Params.i3.html">Params</A>, <A HREF="../../libm3/src/fmtlex/Lex.i3.html">Lex</A>, <A HREF="OS.i3.html">OS</A>, <A HREF="../../m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../libm3/derived/IntIntTbl.i3.html">IntIntTbl</A>, <A HREF="../../libm3/derived/TextIntTbl.i3.html">TextIntTbl</A>;
+IMPORT <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../libm3/src/params/Params.i3.html">Params</A>, <A HREF="../../libm3/src/fmtlex/Lex.i3.html">Lex</A>, <A HREF="#x1">OS</A>, <A HREF="../../m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../libm3/derived/IntIntTbl.i3.html">IntIntTbl</A>, <A HREF="../../libm3/derived/TextIntTbl.i3.html">TextIntTbl</A>;
 IMPORT <A HREF="../../libm3/src/rw/FileWr.i3.html">FileWr</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="../../m3core/src/time/Common/FmtTime.i3.html">FmtTime</A>, <A HREF="../../libm3/derived/M3Config.i3.html">M3Config</A>, <A HREF="../../m3core/src/runtime/common/RTParams.i3.html">RTParams</A>, <A HREF="../../m3core/src/runtime/common/RTCollector.i3.html">RTCollector</A>;
-IMPORT <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../libm3/derived/RefList.i3.html">RefList</A>, <A HREF="../../libm3/derived/IntSeq.i3.html">IntSeq</A>, <A HREF="../../m3markup/src/XFormat.i3.html">XFormat</A>, <A HREF="../../libm3/derived/RefSeq.i3.html">RefSeq</A>, <A HREF="../../libm3/derived/TextRefTbl.i3.html">TextRefTbl</A>, <A HREF="../../m3markup/src/CharMap.i3.html">CharMap</A>, <A HREF="../../tcp/src/common/IP.i3.html">IP</A>;
-IMPORT <A HREF="../../libbuf/src/Buf.i3.html">Buf</A>, <A HREF="../../m3markup/src/ID.i3.html">ID</A>, <A HREF="../../libbuf/src/Wx.i3.html">Wx</A>, <A HREF="#x1">MarkUp</A>, <A HREF="../../m3markup/src/CMarkUp.i3.html">CMarkUp</A>, <A HREF="TCPServer.i3.html">TCPServer</A>, <A HREF="../../m3markup/src/ErrLog.i3.html">ErrLog</A>, <A HREF="../../m3core/src/runtime/common/RTutils.i3.html">RTutils</A>, <A HREF="../../m3core/src/runtime/common/RTHeapStats.i3.html">RTHeapStats</A>;
+IMPORT <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../libm3/derived/RefList.i3.html">RefList</A>, <A HREF="../../libm3/derived/IntSeq.i3.html">IntSeq</A>, <A HREF="#x2">XFormat</A>, <A HREF="../../libm3/derived/RefSeq.i3.html">RefSeq</A>, <A HREF="../../libm3/derived/TextRefTbl.i3.html">TextRefTbl</A>, <A HREF="../../m3markup/src/CharMap.i3.html">CharMap</A>, <A HREF="../../tcp/src/common/IP.i3.html">IP</A>;
+IMPORT <A HREF="#x3">Buf</A>, <A HREF="#x4">ID</A>, <A HREF="#x5">Wx</A>, <A HREF="#x6">MarkUp</A>, <A HREF="#x7">CMarkUp</A>, <A HREF="#x8">TCPServer</A>, <A HREF="#x9">ErrLog</A>, <A HREF="../../m3core/src/runtime/common/RTutils.i3.html">RTutils</A>, <A HREF="../../m3core/src/runtime/common/RTHeapStats.i3.html">RTHeapStats</A>;
 
 CONST
   Title_page = &quot;m3browser.html&quot;;
@@ -123,6 +123,7 @@ TYPE
 
 CONST
   INTEGER_UID = 16_195c2a74;
+  LONGINT_UID = 16_05562176;
   REFANY_UID  = 16_1c1c45e6;
   ADDRESS_UID = 16_08402063;
   ROOT_UID    = 16_9d8fb489;
@@ -850,6 +851,7 @@ CONST
     &amp; &quot;@**PREDEFINED**\n&quot;
     &amp; &quot;BM3_BUILTIN\n&quot;
     &amp; &quot;?195c2a74 INTEGER\n&quot;
+    &amp; &quot;?05562176 LONGINT\n&quot;
     &amp; &quot;?97e237e2 CARDINAL\n&quot;
     &amp; &quot;?1e59237d BOOLEAN\n&quot;
     &amp; &quot;?08402063 ADDRESS\n&quot;
@@ -2553,7 +2555,7 @@ PROCEDURE <A NAME="GenTypeExpr"><procedure>GenTypeExpr</procedure></A> (defn    
                fmt.putText (&quot; .. &quot;);
                fmt.putText (idX);
                fmt.putText (&quot; ]&quot;);
-               IF (a # INTEGER_UID) THEN
+               IF (a # INTEGER_UID) OR (a # LONGINT_UID) THEN
                  fmt.putChar (' ');
                  fmt.break ();
                  fmt.putText (&quot;(OF &quot;);
@@ -3276,10 +3278,68 @@ END Main.
 </PRE>
 </inModule>
 <HR>
-<A NAME="x1">interface MarkUp is in:
+<A NAME="x1">interface OS is in:
 </A><UL>
+<LI><A HREF="../../cm3ide/src/utils/OS.i3.html#0TOP0">cm3ide/src/utils/OS.i3</A>
+<LI><A HREF="../../cminstall/src/OS.i3.html#0TOP0">cminstall/src/OS.i3</A>
+<LI><A HREF="OS.i3.html#0TOP0">m3browser/src/OS.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface XFormat is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/markup/XFormat.i3.html#0TOP0">cm3ide/src/markup/XFormat.i3</A>
+<LI><A HREF="../../m3markup/src/XFormat.i3.html#0TOP0">m3markup/src/XFormat.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface Buf is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/utils/Buf.i3.html#0TOP0">cm3ide/src/utils/Buf.i3</A>
+<LI><A HREF="../../libbuf/src/Buf.i3.html#0TOP0">libbuf/src/Buf.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x4">interface ID is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/utils/ID.i3.html#0TOP0">cm3ide/src/utils/ID.i3</A>
+<LI><A HREF="../../m3markup/src/ID.i3.html#0TOP0">m3markup/src/ID.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x5">interface Wx is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/utils/Wx.i3.html#0TOP0">cm3ide/src/utils/Wx.i3</A>
+<LI><A HREF="../../libbuf/src/Wx.i3.html#0TOP0">libbuf/src/Wx.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x6">interface MarkUp is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/markup/MarkUp.i3.html#0TOP0">cm3ide/src/markup/MarkUp.i3</A>
 <LI><A HREF="../../m3markup/src/MarkUp.i3.html#0TOP0">m3markup/src/MarkUp.i3</A>
 <LI><A HREF="../../m3tohtml/src/MarkUp.i3.html#0TOP0">m3tohtml/src/MarkUp.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x7">interface CMarkUp is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/markup/CMarkUp.i3.html#0TOP0">cm3ide/src/markup/CMarkUp.i3</A>
+<LI><A HREF="../../m3markup/src/CMarkUp.i3.html#0TOP0">m3markup/src/CMarkUp.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x8">interface TCPServer is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/server/TCPServer.i3.html#0TOP0">cm3ide/src/server/TCPServer.i3</A>
+<LI><A HREF="TCPServer.i3.html#0TOP0">m3browser/src/TCPServer.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x9">interface ErrLog is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/utils/ErrLog.i3.html#0TOP0">cm3ide/src/utils/ErrLog.i3</A>
+<LI><A HREF="../../m3markup/src/ErrLog.i3.html#0TOP0">m3markup/src/ErrLog.i3</A>
 </UL>
 <P>
 <PRE>

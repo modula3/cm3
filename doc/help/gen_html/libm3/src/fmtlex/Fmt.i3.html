@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/fmtlex/Fmt.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/fmtlex/Fmt.i3</H2></A><HR>
 <inInterface>
@@ -24,7 +24,7 @@
 
 <P><PRE>INTERFACE <interface><A HREF="Fmt.m3.html">Fmt</A></interface>;
 
-IMPORT <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../../m3core/src/float/IEEE/Real.i3.html">Real</A> AS R, <A HREF="../../../m3core/src/float/IEEE/LongReal.i3.html">LongReal</A> AS LR, <A HREF="../../../m3core/src/float/IEEE/Extended.i3.html">Extended</A> AS ER;
+IMPORT <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../../m3core/src/word/Long.i3.html">Long</A>, <A HREF="../../../m3core/src/float/IEEE/Real.i3.html">Real</A> AS R, <A HREF="../../../m3core/src/float/IEEE/LongReal.i3.html">LongReal</A> AS LR, <A HREF="../../../m3core/src/float/IEEE/Extended.i3.html">Extended</A> AS ER;
 
 PROCEDURE <A HREF="Fmt.m3.html#Bool">Bool</A>(b: BOOLEAN): TEXT;
 </PRE><BLOCKQUOTE><EM> Format <CODE>b</CODE> as {\tt "TRUE"} or  {\tt "FALSE"}. </EM></BLOCKQUOTE><PRE>
@@ -43,6 +43,17 @@ PROCEDURE <A HREF="Fmt.m3.html#Unsigned">Unsigned</A>(n: Word.T; base: Base := 1
    legal Modula-3 literal, you must write something like:
 <PRE>
       &quot;16_&quot; &amp; Fmt.Unsigned(N, 16)
+
+
+<P><PRE>PROCEDURE <A HREF="Fmt.m3.html#LongInt">LongInt</A>(n: LONGINT; base: Base := 10): TEXT;
+PROCEDURE <A HREF="Fmt.m3.html#LongUnsigned">LongUnsigned</A>(n: Long.T; base: Base := 16): TEXT;
+</PRE><BLOCKQUOTE><EM> Format the signed or unsigned number <CODE>n</CODE> in the specified base. </EM></BLOCKQUOTE><PRE>
+</PRE> The value returned by <CODE>LongInt</CODE> or <CODE>LongUnsigned</CODE> never contains upper-case
+   letters, never starts with an explicit base and underscore, and never ends
+   with a trailing <CODE>L</CODE>.  For example, to render an unsigned number <CODE>N</CODE> in
+   hexadecimal as a legal Modula-3 literal, you must write something like:
+<PRE>
+      &quot;16_&quot; &amp; Fmt.Unsigned(N, 16) &amp; &quot;L&quot;
 
 
 <P><PRE>TYPE Style = {Sci, Fix, Auto};

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: stubgen/src/AstToVal.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>stubgen/src/AstToVal.m3</H2></A><HR>
 <inModule>
@@ -21,7 +21,9 @@ PROCEDURE <A NAME="ProcessExp"><procedure>ProcessExp</procedure></A>(
   BEGIN
     TYPECASE exp.sm_exp_value OF
       |  M3CBackEnd_C.Integer_value (int) =&gt;
-           RETURN NEW(Value.Ordinal, ord := int.sm_value)
+           RETURN NEW(Value.Integer, val := int.sm_value)
+      |  M3CBackEnd_C.Longint_value (int) =&gt;
+           RETURN NEW(Value.Longint, val := int.sm_value)
       |  M3CBackEnd_C.Text_value (txt) =&gt;
            RETURN NEW(Value.Txt, val := txt.sm_value)
       |  M3CBackEnd_C.Real_value (real) =&gt;

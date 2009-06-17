@@ -2,15 +2,15 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: http/src/App.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>http/src/App.i3</H2></A><HR>
 <inInterface>
-<PRE></PRE> Copyright (C) 1995, Digital Equipment Corporation. 
- All rights reserved. 
- Last modified on Thu Oct 24 14:08:55 PDT 1996 by steveg 
+<PRE></PRE> Copyright (C) 1995, Digital Equipment Corporation. <PRE>
+</PRE><BLOCKQUOTE><EM> All rights reserved. </EM></BLOCKQUOTE><PRE>
+</PRE><BLOCKQUOTE><EM> Last modified on Thu Oct 24 14:08:55 PDT 1996 by steveg </EM></BLOCKQUOTE><PRE>
 
-<P><PRE>INTERFACE <interface><A HREF="App.m3.html">App</A></interface>;
+INTERFACE <interface><A HREF="App.m3.html">App</A></interface>;
 
 EXCEPTION
   Error(TEXT); (* Error is almost never raised directly.  It
@@ -65,7 +65,7 @@ TYPE
     init(switchName, envName, configName: TEXT := NIL;
          register := TRUE): ArgHandler;
     (* initialize an arg handler. The names give the name of the
-       element that is the source of the argument in that
+       element that is the source of the argument in that 
        environment. If
        register is TRUE, then call RegisterArgHandler with
        the handler. *)
@@ -74,38 +74,41 @@ TYPE
     (* the &quot;set&quot; method is called at startup time.  It is
        only called with a single &quot;src&quot;, but might be called
        multiple times if there are multiple instances of an
-       argument.
+       argument.  
 
        The different argument sources have different
-       priority.  The command line switches have top priority, then
+       priority.  The command line switches have top priority, then 
        environment variables, then config file entries and finally
-       default values.
+       default values. 
 
-       If &quot;switchName&quot; is &quot;AnyArgument&quot; then &quot;set&quot; is called
+       If &quot;switchName&quot; is &quot;AnyArgument&quot; then &quot;set&quot; is called 
        once for each unnamed argument in the command line.
 
-       &quot;src&quot; is the source of the initialization.
-       &quot;value&quot; is the value of the argument.  If &quot;self.hasParam&quot; is
+       &quot;src&quot; is the source of the initialization.  
+       &quot;value&quot; is the value of the argument.  If &quot;self.hasParam&quot; is 
          FALSE, the &quot;value&quot; is &quot;TRUE&quot; if the option is mentioned.
 
     *)
   END;
-</PRE> There is a pre-defined argument giving the config file name:
+
+
+</PRE><BLOCKQUOTE><EM> There is a pre-defined argument giving the config file name:
      switch argument:   -config &lt;configFile&gt;
      env argument:      HTTP_CONFIG &lt;configFile&gt;
      default value:     .http_config
- 
-<PRE>PROCEDURE <A HREF="App.m3.html#RegisterArgHandler">RegisterArgHandler</A>(handler: ArgHandler);
-</PRE> Initialize the program arguments from the command line
+ </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="App.m3.html#RegisterArgHandler">RegisterArgHandler</A>(handler: ArgHandler);
+
+</PRE><BLOCKQUOTE><EM> Initialize the program arguments from the command line
    switches, environment variables, config file and defaults.
    If log = NIL then log := HTTP.defaultLog
    If defaultConfigFile = NIL then defaultConfigFile := <CODE>.http_config</CODE>
    If logConfiguration then all of the argument values are written
       to the log 
-
-<PRE>PROCEDURE <A HREF="App.m3.html#InitializeArguments">InitializeArguments</A>(log: Log := NIL;
+</EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="App.m3.html#InitializeArguments">InitializeArguments</A>(log: Log := NIL; 
                               defaultConfigFile: TEXT := NIL;
-                              logConfiguration: BOOLEAN := TRUE)
+                              logConfiguration: BOOLEAN := TRUE) 
   RAISES {Error};
 
 PROCEDURE <A HREF="App.m3.html#Debug">Debug</A>(): BOOLEAN;
@@ -118,7 +121,7 @@ TYPE
 PROCEDURE <A HREF="App.m3.html#SetValue">SetValue</A>(value: Value; f: BOOLEAN);
 </PRE><BLOCKQUOTE><EM> These procedures check the value of the standard arguments for debug
    and verbose modes.   There are arguments for setting debug and verbose.
-<P>
+
    switch     env            config     default
    -debug     APP_DEBUG      debug:     <CODE>FALSE</CODE>
    -noDebug   APP_NODEBUG    noDebug:   <CODE>FALSE</CODE>

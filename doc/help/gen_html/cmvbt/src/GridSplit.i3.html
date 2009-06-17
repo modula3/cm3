@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: cmvbt/src/GridSplit.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>cmvbt/src/GridSplit.i3</H2></A><HR>
 <inInterface>
@@ -13,7 +13,7 @@
 <P><PRE>INTERFACE <interface><A HREF="GridSplit.m3.html">GridSplit</A></interface>;
 </PRE> A <CODE>GridSplit</CODE> is a split which lays its
    children on a rectangular grid. The size
-   of the grid is not determined by the 
+   of the grid is not determined by the
    children, however. 
 
 <P><PRE>IMPORT <A HREF="../../ui/src/vbt/VBT.i3.html">VBT</A>, <A HREF="../../ui/src/vbt/Pixmap.i3.html">Pixmap</A>, <A HREF="../../ui/src/vbt/PaintOp.i3.html">PaintOp</A>, <A HREF="../../libm3/src/geometry/Point.i3.html">Point</A>, <A HREF="../../ui/src/split/Split.i3.html">Split</A>, <A HREF="../../libm3/src/geometry/Rect.i3.html">Rect</A>;
@@ -67,7 +67,7 @@ PROCEDURE <A HREF="GridSplit.m3.html#GrowRows">GrowRows</A>(v: T; nrows: CARDINA
 PROCEDURE <A HREF="GridSplit.m3.html#Dim">Dim</A> (v: T; VAR nrows, ncols: CARDINAL);
 PROCEDURE <A HREF="GridSplit.m3.html#NumRows">NumRows</A>(v: T): CARDINAL;
 PROCEDURE <A HREF="GridSplit.m3.html#NumCols">NumCols</A>(v: T): CARDINAL;
-</PRE><BLOCKQUOTE><EM> <CODE>Dim</CODE>, <CODE>NumRows</CODE> and <CODE>NumCols</CODE> return the number of 
+</PRE><BLOCKQUOTE><EM> <CODE>Dim</CODE>, <CODE>NumRows</CODE> and <CODE>NumCols</CODE> return the number of
    rows and columns for <CODE>v</CODE>. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="GridSplit.m3.html#GetColWidth">GetColWidth</A> (v: T; col: CARDINAL): CARDINAL;
@@ -87,7 +87,7 @@ PROCEDURE <A HREF="GridSplit.m3.html#GetCoord">GetCoord</A> (v: T;
      and <CODE>[bottom,right]</CODE>. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="GridSplit.m3.html#Locate">Locate</A>(v: T; p: Point.T): Location;
-</PRE><BLOCKQUOTE><EM> Find out the location of a point within the VBT. If 
+</PRE><BLOCKQUOTE><EM> Find out the location of a point within the VBT. If
    the point is within the outer left or top margin,
    <CODE>row</CODE> or <CODE>col</CODE> may be set to -1. The type <CODE>Location</CODE>
    describes where, within <CODE>v</CODE> is the cursor located. </EM></BLOCKQUOTE><PRE>

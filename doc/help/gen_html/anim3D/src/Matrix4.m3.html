@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/Matrix4.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/Matrix4.m3</H2></A><HR>
 <inModule>
@@ -24,7 +24,7 @@ PROCEDURE <A NAME="Identity"><procedure>Identity</procedure></A> () : T =
   END Identity;
 </PRE>**
 PROCEDURE Translate (READONLY M : T; x, y, z : REAL) : T =
-  VAR 
+  VAR
     N := T {Row {1.0, 0.0, 0.0, x},
             Row {0.0, 1.0, 0.0, y},
             Row {0.0, 0.0, 1.0, z},
@@ -94,7 +94,7 @@ PROCEDURE <A NAME="RotateZ"><procedure>RotateZ</procedure></A> (READONLY M : T; 
   BEGIN
     RETURN Multiply (N, M);
   END RotateZ;
-</PRE>*** 
+</PRE>***
 PROCEDURE TransformPoint3 (READONLY M : T; READONLY p : Point3.T) : Point3.T =
   BEGIN
     RETURN Point3.T {M[0][0] * p.x + M[0][1] * p.y + M[0][2] * p.z + M[0][3],
@@ -216,13 +216,13 @@ PROCEDURE <A NAME="Multiply"><procedure>Multiply</procedure></A> (READONLY M, N 
     END;
     RETURN B;
   END Invert;
-</PRE> <P>
-   In the old version of <CODE>TransformUnitCube</CODE>, I computed the result matrix <CODE>M</CODE> 
-   by using trigonometric functions (and I would be very embarrassed to tell 
-   just how long it took me to get this function right). This approach was 
-   of course motivated by the geometric interpretation on the function 
-   (projecting the unit cube through scaling, rotations, and translation 
-   onto the cube with corners <CODE>p0</CODE>,<CODE>a0</CODE>,<CODE>b0</CODE>,<CODE>c0</CODE>). 
+</PRE><P>
+   In the old version of <CODE>TransformUnitCube</CODE>, I computed the result matrix <CODE>M</CODE>
+   by using trigonometric functions (and I would be very embarrassed to tell
+   just how long it took me to get this function right). This approach was
+   of course motivated by the geometric interpretation on the function
+   (projecting the unit cube through scaling, rotations, and translation
+   onto the cube with corners <CODE>p0</CODE>,<CODE>a0</CODE>,<CODE>b0</CODE>,<CODE>c0</CODE>).
 
 
 <P>
@@ -242,7 +242,7 @@ PROCEDURE TransformUnitCube (p0, a0, b0, c0 : Point3.T) : T =
     c := TransformPoint3 (M, c0);
 <P>
     M := Identity ();
-    (* We want to rotate vector <CODE>a</CODE> around the y axis such that it falls into 
+    (* We want to rotate vector <CODE>a</CODE> around the y axis such that it falls into
        the x-y plane. So, we need to find the angle <CODE>angle1</CODE> between the
        projection of <CODE>a</CODE> onto the x-z plane and the x axis. 
     <PRE>IF a.z = 0.0 THEN
@@ -604,7 +604,7 @@ PROCEDURE <A NAME="PerspProjMatrix"><procedure>PerspProjMatrix</procedure></A> (
     eyedist := distance - near;
     depth   := near - far;
     frac    := 1.0 + near / eyedist;
-    fovy2   := MIN (ABS(fovy), Math.Pi) / 2.0;
+    fovy2   := MIN (ABS(fovy), FLOAT (Math.Pi, REAL)) / 2.0;
     height  := 2.0 * eyedist * FLOAT (Math.tan (FLOAT (fovy2, LONGREAL)));
     width   := height * aspect;
   BEGIN
@@ -614,21 +614,21 @@ PROCEDURE <A NAME="PerspProjMatrix"><procedure>PerspProjMatrix</procedure></A> (
               Row {0.0,         0.0,           1.0 / depth,   -far / depth},
               Row {0.0,         0.0,          -1.0 / eyedist,  frac}};
   END PerspProjMatrix;
-</PRE> The matrix returned by this function can be thought of as having 2 parts.  
-   The first part (next to the coordinate point when it is being transformed) 
-   moves the <CODE>to</CODE> point to the origin.  The second part performs the rotation 
+</PRE> The matrix returned by this function can be thought of as having 2 parts.
+   The first part (next to the coordinate point when it is being transformed)
+   moves the <CODE>to</CODE> point to the origin.  The second part performs the rotation
    of the data.
 <P>
    The three basis vectors of the rotation are obtained as follows:
 <P>
    - The Z basis vector <CODE>b</CODE> is determined by subtracting <CODE>from</CODE> from <CODE>to</CODE> and
-     normalizing it to unit length.  
-   - The Y basis vector <CODE>e</CODE> is determined by calculating the vector 
+     normalizing it to unit length.
+   - The Y basis vector <CODE>e</CODE> is determined by calculating the vector
      perpendicular to <CODE>b</CODE> and in the plane defined by the Z basis vector
-     and the <CODE>up</CODE> vector and then normalizing it.  
+     and the <CODE>up</CODE> vector and then normalizing it.
    - The X basis vector <CODE>f</CODE> is calculated by <CODE>e CROSS b</CODE>.
 <P>
-   This method is called the <CODE>Gram-Schmidt process</CODE>. 
+   This method is called the <CODE>Gram-Schmidt process</CODE>.
    See Foley/van Dam/Feiner/Hughes pages 1102f and 1112 for details.
 <P>
    The resulting matrix looks like this:

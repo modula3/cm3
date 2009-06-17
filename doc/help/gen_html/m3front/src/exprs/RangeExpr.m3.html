@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/RangeExpr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/RangeExpr.m3</H2></A><HR>
 <inModule>
@@ -36,10 +36,10 @@ TYPE
         getBounds    := Bounder;
         isWritable   := ExprRep.IsNever;
         isDesignator := ExprRep.IsNever;
-	isZeroes     := IsZeroes;
-	genFPLiteral := GenFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := ExprRep.NoLiteral;
+        isZeroes     := IsZeroes;
+        genFPLiteral := GenFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
       END;
 
@@ -98,13 +98,13 @@ PROCEDURE <A NAME="Bounder"><procedure>Bounder</procedure></A> (p: P;  VAR min, 
     EVAL Type.GetBounds (p.type, min, max);
     e := Expr.ConstValue (p.a);
     IF (e = NIL) THEN (* can't improve lower bound *)
-    ELSIF IntegerExpr.Split (e, i) THEN  min := i;
-    ELSIF EnumExpr.Split (e, i, t) THEN  min := i;
+    ELSIF IntegerExpr.Split (e, i, t) THEN  min := i;
+    ELSIF EnumExpr.Split (e, i, t)    THEN  min := i;
     END;
     e := Expr.ConstValue (p.a);
     IF (e = NIL) THEN (* can't improve upper bound *)
-    ELSIF IntegerExpr.Split (e, i) THEN  max := i;
-    ELSIF EnumExpr.Split (e, i, t) THEN  max := i;
+    ELSIF IntegerExpr.Split (e, i, t) THEN  max := i;
+    ELSIF EnumExpr.Split (e, i, t)    THEN  max := i;
     END;
   END Bounder;
 
@@ -130,7 +130,7 @@ PROCEDURE <A NAME="GenFPLiteral"><procedure>GenFPLiteral</procedure></A> (p: P; 
     M3Buf.PutChar (buf, '&gt;');
   END GenFPLiteral;
 
-PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (p: P): BOOLEAN =
+PROCEDURE <A NAME="IsZeroes"><procedure>IsZeroes</procedure></A> (p: P;  &lt;*UNUSED*&gt; lhs: BOOLEAN): BOOLEAN =
   BEGIN
     RETURN Expr.IsZeroes (p.a) AND Expr.IsZeroes (p.b);
   END IsZeroes;
@@ -142,6 +142,7 @@ END RangeExpr.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

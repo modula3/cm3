@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/vbt/Trestle.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/vbt/Trestle.i3</H2></A><HR>
 <inInterface>
@@ -17,7 +17,7 @@
       modified on Thu Jul 26 14:53:37 PDT 1990 by steveg 
 <PRE>&lt;*PRAGMA LL*&gt;
 </PRE> The <CODE>Trestle</CODE> interface provides routines for connecting to window
-   systems; installing, decorating, and moving top-level windows, and 
+   systems; installing, decorating, and moving top-level windows, and
    performing related operations.  
 
 <P><PRE>INTERFACE <interface><A HREF="../trestle/Trestle.m3.html">Trestle</A></interface>;
@@ -26,7 +26,7 @@ IMPORT <A HREF="VBT.i3.html">VBT</A>, <A HREF="../../../libm3/src/geometry/Rect.
 
 TYPE
   <A HREF="../trestle/Trestle.m3.html#T">T</A> &lt;: ROOT;
-</PRE> A <CODE>Trestle.T</CODE> identifies an instance of a window system.  All the 
+</PRE> A <CODE>Trestle.T</CODE> identifies an instance of a window system.  All the
    routines in this interface that take a <CODE>Trestle.T</CODE> accept the value <CODE>NIL</CODE>,
    which represents the default window system obtained by calling
    <CODE>Connect(NIL)</CODE>. 
@@ -53,9 +53,9 @@ TYPE
    The text <CODE>applName</CODE> is the application name; it defaults to the
    application name from the process environment.
 <P>
-   The text <CODE>inst</CODE> distinguishes windows with the same application name. 
-   For example, a text editor might use the full path name of the 
-   file being edited as the instance. The default is the value of 
+   The text <CODE>inst</CODE> distinguishes windows with the same application name.
+   For example, a text editor might use the full path name of the
+   file being edited as the instance. The default is the value of
    the environment variable <CODE>WINSTANCE</CODE>.
 <P>
    Trestle does not require that the pair <CODE>(applName, inst)</CODE> be unique, but
@@ -69,7 +69,7 @@ TYPE
    The icon for the window will contain the text <CODE>iconTitle</CODE> together
    with <CODE>iconWindow</CODE> (if it is not <CODE>NIL</CODE>).  For example, <CODE>iconWindow</CODE>
    might be a small <CODE>BitmapVBT</CODE>.  Some window managers ignore
-   <CODE>iconWindow</CODE>.  The default for <CODE>iconTitle</CODE> is <CODE>inst</CODE>, or 
+   <CODE>iconWindow</CODE>.  The default for <CODE>iconTitle</CODE> is <CODE>inst</CODE>, or
    <CODE>applName</CODE> if <CODE>inst</CODE> is <CODE>NIL</CODE>.
 <P>
    The triple <CODE>bgColorR</CODE>, <CODE>bgColorG</CODE>, <CODE>bgColorB</CODE> specify the red, green,
@@ -86,7 +86,7 @@ TYPE
    window's current size satisfies the new max and min constraints.
    Use <CODE>StableVBT.Disable</CODE> to force a new preferred size.
 <P>
-   It is a checked runtime error if either <CODE>v</CODE> or <CODE>iconWindow</CODE> is 
+   It is a checked runtime error if either <CODE>v</CODE> or <CODE>iconWindow</CODE> is
    already installed.
 <P>
    Installing a window inserts one or more filters above it, including
@@ -135,7 +135,7 @@ TYPE
   VAR instance, windowTitle, iconTitle, applName: TEXT;
   VAR bgColorR, bgColorG, bgColorB: REAL;
   VAR iconWindow: VBT.T): BOOLEAN; &lt;* LL.sup = VBT.mu *&gt;
-</PRE><BLOCKQUOTE><EM> If <CODE>v</CODE> is decorated, fetch <CODE>v</CODE>'s decorations, and return <CODE>TRUE</CODE>.  
+</PRE><BLOCKQUOTE><EM> If <CODE>v</CODE> is decorated, fetch <CODE>v</CODE>'s decorations, and return <CODE>TRUE</CODE>.
   Otherwise, return <CODE>FALSE</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> \subsection{Window placement} 
 
@@ -168,14 +168,14 @@ TYPE
 PROCEDURE <A HREF="../trestle/Trestle.m3.html#MoveNear">MoveNear</A>(v, w: VBT.T)
   RAISES {TrestleComm.Failure}; &lt;* LL.sup = VBT.mu *&gt;
 </PRE><BLOCKQUOTE><EM> Move the window <CODE>v</CODE> to be near the window <CODE>w</CODE>.  </EM></BLOCKQUOTE><PRE>
-</PRE> The exact effect of <CODE>MoveNear</CODE> depends on the window manager.  
+</PRE> The exact effect of <CODE>MoveNear</CODE> depends on the window manager.
    If <CODE>w</CODE> is <CODE>NIL</CODE> or is not installed where <CODE>v</CODE> is, then
    <CODE>MoveNear</CODE> will attempt to bring <CODE>v</CODE> to the attention of the user;
    in particular, if <CODE>v</CODE> is an overlapping window, <CODE>v</CODE> will be brought
    to the top; if <CODE>v</CODE> is an icon, it will be deiconized; if <CODE>v</CODE> is
-   in the invisible state produced by <CODE>Attach</CODE>, it will be opened in some 
-   visible place.  
-   <P>
+   in the invisible state produced by <CODE>Attach</CODE>, it will be opened in some
+   visible place.
+<P>
    <CODE>Overlap</CODE>, <CODE>Iconize</CODE>, and <CODE>MoveNear</CODE> are all no-ops if <CODE>v</CODE> is not
    installed.  The effects of <CODE>Iconize</CODE> and <CODE>MoveNear</CODE> are undefined
    for undecorated windows.  
@@ -216,19 +216,19 @@ PROCEDURE <A HREF="../trestle/Trestle.m3.html#ScreenOf">ScreenOf</A>(
   : ScreenOfRec; &lt;* LL.sup &lt; v *&gt;
 </PRE><BLOCKQUOTE><EM> Return information about where <CODE>v</CODE> is installed. </EM></BLOCKQUOTE><PRE>
 </PRE> If <CODE>v</CODE> is an installed window, or a child of an installed window,
-    then after <CODE>res := ScreenOf(v, p)</CODE> we have 
+    then after <CODE>res := ScreenOf(v, p)</CODE> we have
 <P>
 \medskip\bulletitem <CODE>res.id</CODE> is the <CODE>ID</CODE> of the screen currently
 containing <CODE>v</CODE>;
-   <P>
+<P>
 \medskip\bulletitem <CODE>res.q</CODE> is the point in screen coordinates that
  corresponds to the point <CODE>p</CODE> in window coordinates;
 <P>
 \medskip\bulletitem <CODE>res.trsl</CODE> is the window system on which <CODE>v</CODE> is
 installed; and
-   <P>
+<P>
 \medskip\bulletitem
-<CODE>res.dom</CODE> is the domain of the screen <CODE>res.id</CODE>.  
+<CODE>res.dom</CODE> is the domain of the screen <CODE>res.id</CODE>.
 <P>
 \medskip The point <CODE>p</CODE> need not be in the domain of <CODE>v</CODE>.  If <CODE>v</CODE> is
 not installed, then <CODE>res.trsl</CODE> will be <CODE>NIL</CODE>, <CODE>res.id</CODE> will be
@@ -272,8 +272,8 @@ PROCEDURE <A HREF="../trestle/Trestle.m3.html#GetScreens">GetScreens</A>(trsl: T
   RAISES {TrestleComm.Failure};
   &lt;* LL.sup = VBT.mu *&gt;
 </PRE><BLOCKQUOTE><EM> Read the contents of <CODE>clip</CODE> from screen <CODE>id</CODE> of <CODE>trsl</CODE>.  </EM></BLOCKQUOTE><PRE>
-</PRE> <CODE>Capture(id, clip, br, trsl)</CODE> is like <CODE>VBT.Capture(r, clip, br)</CODE>, 
-   where <CODE>r</CODE> is the <CODE>VBT</CODE> at the root of screen <CODE>id</CODE> of the window 
+</PRE> <CODE>Capture(id, clip, br, trsl)</CODE> is like <CODE>VBT.Capture(r, clip, br)</CODE>,
+   where <CODE>r</CODE> is the <CODE>VBT</CODE> at the root of screen <CODE>id</CODE> of the window
    system <CODE>trsl</CODE>.  
 
 <P> \subsection{Checking on recent input activity} 
@@ -303,14 +303,14 @@ PROCEDURE <A HREF="../trestle/Trestle.m3.html#GetScreens">GetScreens</A>(trsl: T
   RAISES {TrestleComm.Failure}; &lt;* LL.sup &lt;= VBT.mu *&gt;
 </PRE><BLOCKQUOTE><EM> Connect to the window system named <CODE>inst</CODE>.  </EM></BLOCKQUOTE><PRE>
 </PRE> In general, the format and interpretation of <CODE>inst</CODE> are
-   implementation-dependent.  Here are the rules when using an 
+   implementation-dependent.  Here are the rules when using an
    X server:
-   <P>
+<P>
    If <CODE>inst</CODE> is <CODE>NIL</CODE>, it defaults to the value of the environment
    variable <CODE>DISPLAY</CODE>, unless this variable is undefined, in which
    case it defaults to <CODE>:0</CODE>.
-   <P>
-   The syntax of <CODE>inst</CODE> should be: 
+<P>
+   The syntax of <CODE>inst</CODE> should be:
 <P>
 <PRE>
       &lt;machine name&gt;(&quot;:&quot; | &quot;::&quot;)&lt;number&gt;(&quot;&quot; | &quot;.&quot; &lt;number&gt;)
@@ -327,7 +327,7 @@ PROCEDURE <A HREF="../trestle/Trestle.m3.html#GetScreens">GetScreens</A>(trsl: T
 <P>
    The exception is raised if the designated window system doesn't
    exist or cannot be connected to. 
-   
+
 <P><PRE>END Trestle.
 </PRE>
 </inInterface>

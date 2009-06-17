@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/values/Value.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/values/Value.i3</H2></A><HR>
 <inInterface>
@@ -56,7 +56,7 @@ PROCEDURE <A HREF="Value.m3.html#UserInit">UserInit</A> (t: T);
 PROCEDURE <A HREF="Value.m3.html#ClassOf">ClassOf</A>          (t: T): Class;
 PROCEDURE <A HREF="Value.m3.html#IsExternal">IsExternal</A>       (t: T): BOOLEAN;
 PROCEDURE <A HREF="Value.m3.html#IsImported">IsImported</A>       (t: T): BOOLEAN;
-PROCEDURE <A HREF="Value.m3.html#IsWritable">IsWritable</A>       (t: T): BOOLEAN;
+PROCEDURE <A HREF="Value.m3.html#IsWritable">IsWritable</A>       (t: T;  lhs: BOOLEAN): BOOLEAN;
 PROCEDURE <A HREF="Value.m3.html#ToExpr">ToExpr</A>           (t: T): M3.Expr;
 PROCEDURE <A HREF="Value.m3.html#ToType">ToType</A>           (t: T): M3.Type;
 PROCEDURE <A HREF="Value.m3.html#Base">Base</A>             (t: T): T;

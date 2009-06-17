@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RTDebug.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RTDebug.i3</H2></A><HR>
 <inInterface>
@@ -20,6 +20,8 @@ PROCEDURE <A HREF="RTDebug.m3.html#RegisterHandler">RegisterHandler</A> (p: Hand
 TYPE
   Handler = PROCEDURE (m: RT0.ModulePtr; line: INTEGER;
                        READONLY msg: ARRAY OF TEXT) RAISES ANY;
+
+PROCEDURE <A HREF="RTDebug.m3.html#Init">Init</A>();
 
 END RTDebug.
 </PRE>

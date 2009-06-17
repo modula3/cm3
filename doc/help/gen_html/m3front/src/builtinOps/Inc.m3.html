@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/builtinOps/Inc.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/builtinOps/Inc.m3</H2></A><HR>
 <inModule>
@@ -17,7 +17,7 @@
 <P><PRE>MODULE <module><implements><A HREF="Inc.i3.html">Inc</A></implements></module>;
 
 IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="#x1">Type</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="Dec.i3.html">Dec</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>;
-IMPORT <A HREF="../exprs/IntegerExpr.i3.html">IntegerExpr</A>, <A HREF="../misc/Host.i3.html">Host</A>;
+IMPORT <A HREF="../exprs/IntegerExpr.i3.html">IntegerExpr</A>, <A HREF="../misc/Host.i3.html">Host</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../builtinTypes/LInt.i3.html">LInt</A>;
 
 VAR Z: CallExpr.MethodList;
 
@@ -28,7 +28,7 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (ce: CallExpr.T;  VAR
 
 PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (ce: CallExpr.T) =
   BEGIN
-    Expr.PrepLValue (ce.args[0]);
+    Expr.PrepLValue (ce.args[0], lhs := TRUE);
     IF (NUMBER (ce.args^) &gt; 1) THEN Expr.Prep (ce.args[1]); END;
   END Prep;
 
@@ -45,19 +45,28 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (ce: CallExpr.T) 
     tlhs := Type.CheckInfo (tlhs, info);
     IF (NUMBER (ce.args^) &gt; 1)
       THEN inc := ce.args[1];
-      ELSE inc := IntegerExpr.New (TInt.One);  Expr.Prep (inc);
+    ELSIF Type.IsSubtype (tlhs, LInt.T)
+      THEN inc := IntegerExpr.New (LInt.T, TInt.One);  Expr.Prep (inc);
+      ELSE inc := IntegerExpr.New (Int.T,  TInt.One);  Expr.Prep (inc);
     END;
     Expr.GetBounds (lhs, bmin, bmax);
     Expr.GetBounds (inc, imin, imax);
 
     IF Host.doRangeChk THEN
-      IF NOT TInt.EQ (bmin, Target.Integer.min)
-         AND TInt.LT (imin, TInt.Zero) THEN INC (check) END;
-      IF NOT TInt.EQ (bmax, Target.Integer.max)
-         AND TInt.LT (TInt.Zero, imax) THEN INC (check, 2) END;
+      IF Type.IsSubtype (tlhs, LInt.T) THEN
+        IF NOT TInt.EQ (bmin, Target.Longint.min)
+           AND TInt.LT (imin, TInt.Zero) THEN INC (check) END;
+        IF NOT TInt.EQ (bmax, Target.Longint.max)
+           AND TInt.LT (TInt.Zero, imax) THEN INC (check, 2) END;
+      ELSE
+         IF NOT TInt.EQ (bmin, Target.Integer.min)
+            AND TInt.LT (imin, TInt.Zero) THEN INC (check) END;
+         IF NOT TInt.EQ (bmax, Target.Integer.max)
+            AND TInt.LT (TInt.Zero, imax) THEN INC (check, 2) END;
+      END;
     END;
 
-    Expr.CompileLValue (lhs);
+    Expr.CompileLValue (lhs, lhs := TRUE);
     lvalue := CG.Pop ();
     CG.Push (lvalue);
 
@@ -67,14 +76,15 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (ce: CallExpr.T) 
 
     IF (info.stk_type = CG.Type.Addr)
       THEN CG.Index_bytes (Target.Byte);  check := 0;
-      ELSE CG.Add (Target.Integer.cg_type);
+      ELSE CG.Add (info.stk_type);
     END;
 
     CASE check OF
     | 0 =&gt; (* no range checking *)
-    | 1 =&gt; CG.Check_lo (bmin, CG.RuntimeError.ValueOutOfRange);
-    | 2 =&gt; CG.Check_hi (bmax, CG.RuntimeError.ValueOutOfRange);
-    | 3 =&gt; CG.Check_range (bmin, bmax, CG.RuntimeError.ValueOutOfRange);
+    | 1 =&gt; CG.Check_lo (info.stk_type, bmin, CG.RuntimeError.ValueOutOfRange);
+    | 2 =&gt; CG.Check_hi (info.stk_type, bmax, CG.RuntimeError.ValueOutOfRange);
+    | 3 =&gt; CG.Check_range (info.stk_type, bmin, bmax,
+                           CG.RuntimeError.ValueOutOfRange);
     END;
 
     CG.Store_indirect (info.stk_type, 0, info.size);
@@ -109,6 +119,7 @@ END Inc.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

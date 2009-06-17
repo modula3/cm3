@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/C/Common/Ctypes.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/C/Common/Ctypes.i3</H2></A><HR>
 <inInterface>
@@ -15,7 +15,7 @@
 
 <P><PRE>INTERFACE <interface>Ctypes</interface>;
 
-IMPORT <A HREF="../32BITS/BasicCtypes.i3.html">BasicCtypes</A>;
+IMPORT <A HREF="#x1">BasicCtypes</A>;
 
 TYPE
   char                       = BasicCtypes.char;
@@ -23,10 +23,12 @@ TYPE
   short_int                  = BasicCtypes.short_int;
   int                        = BasicCtypes.int;
   long_int                   = BasicCtypes.long_int;
+  long_long                  = BasicCtypes.long_long;
   unsigned_char              = BasicCtypes.unsigned_char;
   unsigned_short_int         = BasicCtypes.unsigned_short_int;
   unsigned_int               = BasicCtypes.unsigned_int;
   unsigned_long_int          = BasicCtypes.unsigned_long_int;
+  unsigned_long_long         = BasicCtypes.unsigned_long_long;
   float                      = BasicCtypes.float;
   double                     = BasicCtypes.double;
   long_double                = BasicCtypes.long_double;
@@ -40,6 +42,7 @@ TYPE
   signed_short               = short_int;
   signed_short_int           = short_int;
   unsigned_short             = unsigned_short_int;
+  unsigned                   = unsigned_int;
   signed                     = int;
   signed_int                 = int;
   long                       = long_int;
@@ -75,6 +78,13 @@ TYPE
 END Ctypes.
 </PRE>
 </inInterface>
+<HR>
+<A NAME="x1">interface BasicCtypes is in:
+</A><UL>
+<LI><A HREF="../32BITS/BasicCtypes.i3.html#0TOP0">m3core/src/C/32BITS/BasicCtypes.i3</A>
+<LI><A HREF="../64BITS/BasicCtypes.i3.html#0TOP0">m3core/src/C/64BITS/BasicCtypes.i3</A>
+</UL>
+<P>
 <PRE>
 
 

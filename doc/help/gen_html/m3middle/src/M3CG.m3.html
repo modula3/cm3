@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/M3CG.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/M3CG.m3</H2></A><HR>
 <inModule>
@@ -155,6 +155,13 @@ REVEAL
     load_procedure := load_procedure;
     load_static_link := load_static_link;
     comment := comment;
+    fetch_and_op := fetch_and_op;
+    op_and_fetch := op_and_fetch;
+    bool_compare_and_swap := bool_compare_and_swap;
+    val_compare_and_swap := val_compare_and_swap;
+    synchronize := synchronize;
+    lock_test_and_set := lock_test_and_set;
+    lock_release := lock_release;
   END;
 </PRE>----------------------------------------------------------- ID counters ---
 
@@ -888,6 +895,42 @@ PROCEDURE <A NAME="load_static_link"><procedure>load_static_link</procedure></A>
   BEGIN
     xx.child.comment (a, b, c, d);
   END comment;
+</PRE>--------------------------------------------------------------- atomics ---
+
+<P><PRE>PROCEDURE <A NAME="fetch_and_op"><procedure>fetch_and_op</procedure></A> (xx: T;  op: AtomicOp;  t: MType) =
+  BEGIN
+    xx.child.fetch_and_op (op, t);
+  END fetch_and_op;
+
+PROCEDURE <A NAME="op_and_fetch"><procedure>op_and_fetch</procedure></A> (xx: T;  op: AtomicOp;  t: MType) =
+  BEGIN
+    xx.child.op_and_fetch (op, t);
+  END op_and_fetch;
+
+PROCEDURE <A NAME="bool_compare_and_swap"><procedure>bool_compare_and_swap</procedure></A> (xx: T;  t: MType;  u: IType) =
+  BEGIN
+    xx.child.bool_compare_and_swap (t, u);
+  END bool_compare_and_swap;
+
+PROCEDURE <A NAME="val_compare_and_swap"><procedure>val_compare_and_swap</procedure></A> (xx: T;  t: MType) =
+  BEGIN
+    xx.child.val_compare_and_swap (t);
+  END val_compare_and_swap;
+
+PROCEDURE <A NAME="synchronize"><procedure>synchronize</procedure></A> (xx: T) =
+  BEGIN
+    xx.child.synchronize ();
+  END synchronize;
+
+PROCEDURE <A NAME="lock_test_and_set"><procedure>lock_test_and_set</procedure></A> (xx: T;  t: MType) =
+  BEGIN
+    xx.child.lock_test_and_set (t);
+  END lock_test_and_set;
+
+PROCEDURE <A NAME="lock_release"><procedure>lock_release</procedure></A> (xx: T;  t: MType) =
+  BEGIN
+    xx.child.lock_release (t);
+  END lock_release;
 
 BEGIN
 END M3CG.

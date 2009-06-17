@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/builtinWord/WordLT.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/builtinWord/WordLT.m3</H2></A><HR>
 <inModule>
@@ -17,7 +17,9 @@
 <P><PRE>MODULE <module><implements><A HREF="WordLT.i3.html">WordLT</A></implements></module>;
 
 IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../exprs/ExprRep.i3.html">ExprRep</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TWord.i3.html">TWord</A>;
-IMPORT <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../builtinTypes/Bool.i3.html">Bool</A>, <A HREF="WordPlus.i3.html">WordPlus</A>, <A HREF="#x1">Value</A>, <A HREF="../values/Formal.i3.html">Formal</A>, <A HREF="../types/ProcType.i3.html">ProcType</A>;
+IMPORT <A HREF="../builtinTypes/Bool.i3.html">Bool</A>, <A HREF="#x1">Value</A>, <A HREF="../values/Formal.i3.html">Formal</A>, <A HREF="../types/ProcType.i3.html">ProcType</A>;
+FROM <A HREF="../builtinTypes/Int.i3.html">Int</A> IMPORT T;
+IMPORT <A HREF="WordPlus.i3.html">WordPlus</A> AS Plus;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -47,7 +49,7 @@ PROCEDURE <A NAME="PrepBR"><procedure>PrepBR</procedure></A> (ce: CallExpr.T;  t
 PROCEDURE <A NAME="Fold"><procedure>Fold</procedure></A> (ce: CallExpr.T): Expr.T =
   VAR w0, w1: Target.Int;
   BEGIN
-    IF WordPlus.GetArgs (ce.args, w0, w1)
+    IF Plus.GetArgs (ce.args, w0, w1)
       THEN RETURN Bool.Map [TWord.LT (w0, w1)];
       ELSE RETURN NIL;
     END;
@@ -55,8 +57,8 @@ PROCEDURE <A NAME="Fold"><procedure>Fold</procedure></A> (ce: CallExpr.T): Expr.
 
 PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A> () =
   VAR
-    x1 := Formal.NewBuiltin (&quot;x&quot;, 0, Int.T);
-    y1 := Formal.NewBuiltin (&quot;y&quot;, 1, Int.T);
+    x1 := Formal.NewBuiltin (&quot;x&quot;, 0, T);
+    y1 := Formal.NewBuiltin (&quot;y&quot;, 1, T);
     t1 := ProcType.New (Bool.T, x1, y1);
   BEGIN
     Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, Bool.T,

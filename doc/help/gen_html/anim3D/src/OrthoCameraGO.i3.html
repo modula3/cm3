@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/OrthoCameraGO.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/OrthoCameraGO.i3</H2></A><HR>
 <inInterface>
@@ -14,16 +14,16 @@
        Created on Mon Feb 14 15:56:41 PST 1994 by najork                   
 
 <P> An <CODE>OrthoCameraGO</CODE> is an orthographic camera, i.e. a camera which shows
-   a scene as if it were infinitely far away --- lines that are parallel in 
+   a scene as if it were infinitely far away --- lines that are parallel in
    the scene appear parallel in the image. The volume of space observed by
    such a camera forms a parallelopiped. The shape of the parallelopiped
    is determined by the camera position, its viewing direction, its up-vector,
    and the parallelopiped's height and width (which is determined by height
    and aspect ratio). The figure below illustrates the role of the parameters:
-   <P>
+<P>
    \begin{center}
    \begin{tabular}{c}
-   \psfig{figure=images/OrthoCamera.ps,width=4in,silent=} 
+   \psfig{figure=images/OrthoCamera.ps,width=4in,silent=}
    \end{tabular}
    \end{center}
 
@@ -41,7 +41,7 @@ TYPE
 </PRE><BLOCKQUOTE><EM> <CODE>oc.init()</CODE> initializes a new orthographic camera and returns it. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="OrthoCameraGO.m3.html#New">New</A> (from, to, up : Point3.T; height : REAL) : T;
-</PRE><BLOCKQUOTE><EM> <CODE>New(from,to,up,height)</CODE> creates a new orthographic camera <CODE>cam</CODE> and 
+</PRE><BLOCKQUOTE><EM> <CODE>New(from,to,up,height)</CODE> creates a new orthographic camera <CODE>cam</CODE> and
    returns it. It also attaches the following properties to <CODE>cam</CODE>:
    \begin{verbatim}
       (CameraGO.From,PointProp.NewConst(from))
@@ -54,12 +54,12 @@ PROCEDURE <A HREF="OrthoCameraGO.m3.html#New">New</A> (from, to, up : Point3.T; 
 
 VAR
   Height : RealProp.Name;
-</PRE><BLOCKQUOTE><EM> In addition to the properties observed by all \type{GO}{T}'s and 
-   \type{CameraGO}{T}'s, there is one additional property that is 
-   observed by <CODE>OrthoCameraGO.T</CODE>'s. 
-   <CODE>Height</CODE> is the name of a property that determines the height 
-   of the viewing parallelopiped; it associates with a property value of 
-   type \type{RealProp}{Val}. The width of the parallelopiped is the height 
+</PRE><BLOCKQUOTE><EM> In addition to the properties observed by all \type{GO}{T}'s and
+   \type{CameraGO}{T}'s, there is one additional property that is
+   observed by <CODE>OrthoCameraGO.T</CODE>'s.
+   <CODE>Height</CODE> is the name of a property that determines the height
+   of the viewing parallelopiped; it associates with a property value of
+   type \type{RealProp}{Val}. The width of the parallelopiped is the height
    times the aspect ratio. </EM></BLOCKQUOTE><PRE>
 
 END OrthoCameraGO.

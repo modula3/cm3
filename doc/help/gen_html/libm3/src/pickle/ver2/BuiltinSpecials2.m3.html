@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/pickle/ver2/BuiltinSpecials2.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/pickle/ver2/BuiltinSpecials2.m3</H2></A><HR>
 <inModule>
@@ -12,7 +12,7 @@
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="BuiltinSpecials2.i3.html">BuiltinSpecials2</A></implements></module>;
 
 IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="Pickle2.i3.html">Pickle2</A> AS Pickle, <A HREF="PickleStubs.i3.html">PickleStubs</A>, <A HREF="../../rw/Rd.i3.html">Rd</A>, <A HREF="../../../derived/RefList.i3.html">RefList</A>;
-IMPORT <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../../m3core/src/text/Text8.i3.html">Text8</A>, <A HREF="../../../../m3core/src/text/Text16.i3.html">Text16</A>, <A HREF="../../../../m3core/src/text/TextLiteral.i3.html">TextLiteral</A>, <A HREF="../../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../rw/Wr.i3.html">Wr</A>;
+IMPORT <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../../m3core/src/text/Text8.i3.html">Text8</A>, <A HREF="../../../../m3core/src/text/Text16.i3.html">Text16</A>, <A HREF="../../../../m3core/src/text/TextLiteral.i3.html">TextLiteral</A>, <A HREF="../../../../m3core/src/text/Text8CString.i3.html">Text8CString</A>, <A HREF="../../../../m3core/src/text/TextClass.i3.html">TextClass</A>, <A HREF="../../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../rw/Wr.i3.html">Wr</A>;
 
 FROM <A HREF="Pickle2.i3.html">Pickle2</A> IMPORT Error, RefID, Special, Reader, Writer;
 
@@ -22,6 +22,8 @@ PROCEDURE <A NAME="Register"><procedure>Register</procedure></A> () =
   BEGIN
     IF init_done THEN RETURN; END;
     Pickle.RegisterSpecial (NEW (Special, sc := TYPECODE (TextLiteral.T),
+                                 write := TextPklWrite, read  := TextPklRead));
+    Pickle.RegisterSpecial (NEW (Special, sc := TYPECODE (Text8CString.T),
                                  write := TextPklWrite, read  := TextPklRead));
     Pickle.RegisterSpecial (NEW (Special, sc := TYPECODE (Atom.T),
                                  write := AtomPklWrite, read  := AtomPklRead));
@@ -35,21 +37,23 @@ PROCEDURE <A NAME="Register"><procedure>Register</procedure></A> () =
   RAISES {Error, Wr.Failure, Thread.Alerted} =
   TYPE CPtr  = UNTRACED REF ARRAY [0..TextLiteral.MaxBytes] OF CHAR;
   TYPE WCPtr = UNTRACED REF ARRAY [0..TextLiteral.MaxBytes DIV 2] OF WIDECHAR;
-  VAR txt := NARROW (r, TextLiteral.T);  cp: CPtr;  wcp: WCPtr;
+  VAR txt := LOOPHOLE (r, TEXT);  cp: CPtr;  wcp: WCPtr;  info: TextClass.Info;
   BEGIN
-    IF TYPECODE (r) # TYPECODE (TextLiteral.T) THEN
-      (* subtypes cannot be pickled by the default specials because
-         they'll try to write something that matches the type
-         declaration with a gazillion characters *)
-      RAISE Error (&quot;cannot pickle TextLiteral.T subtypes&quot;);
-    END;
-    PickleStubs.OutInteger(pwr, txt.cnt);
-    IF (txt.cnt &gt;= 0) THEN
-      cp := LOOPHOLE (ADR (txt.buf[0]), CPtr);
-      PickleStubs.OutChars (pwr, SUBARRAY (cp^, 0, txt.cnt));
+    TYPECASE (txt) OF
+    | TextLiteral.T  =&gt; (* ok *)
+    | Text8CString.T =&gt; (* ok *)
     ELSE
-      wcp := LOOPHOLE (ADR (txt.buf[0]), WCPtr);
-      PickleStubs.OutWideChars (pwr, SUBARRAY (wcp^, 0, -txt.cnt));
+      RAISE Error (&quot;cannot pickle subtypes of TextLiteral.T or Text8CString.T&quot;);
+    END;
+    txt.get_info (info);
+    IF info.wide THEN
+      PickleStubs.OutInteger (pwr, -info.length);
+      wcp := LOOPHOLE (info.start, WCPtr);
+      PickleStubs.OutWideChars (pwr, SUBARRAY (wcp^, 0, info.length));
+    ELSE
+      PickleStubs.OutInteger (pwr, info.length);
+      cp := LOOPHOLE (info.start, CPtr);
+      PickleStubs.OutChars (pwr, SUBARRAY (cp^, 0, info.length));
     END;
   END TextPklWrite;
 

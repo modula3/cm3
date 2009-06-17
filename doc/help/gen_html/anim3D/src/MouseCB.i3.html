@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/MouseCB.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/MouseCB.i3</H2></A><HR>
 <inInterface>
@@ -14,7 +14,7 @@
        Created on Fri Feb 18 09:37:37 PST 1994 by najork                   
 
 <P>
-<P> In accordance with the terminology used by Trestle, we refer to mouse 
+<P> In accordance with the terminology used by Trestle, we refer to mouse
    button transitions as to {\em mouse events}. A mouse event is represented
    by a record <CODE>MouseCB.Rec</CODE>.
 <P>
@@ -37,8 +37,8 @@ TYPE
     init () : T;
     invoke (mr : Rec) RAISES {CB.BadMethod};
   END;
-</PRE><BLOCKQUOTE><EM> <CODE>MouseCB.T</CODE> is the abstract class of mouse callback objects. If <CODE>o</CODE> is a 
-   geometric object, <CODE>c</CODE> is the top object in its mouse callback stack, and 
+</PRE><BLOCKQUOTE><EM> <CODE>MouseCB.T</CODE> is the abstract class of mouse callback objects. If <CODE>o</CODE> is a
+   geometric object, <CODE>c</CODE> is the top object in its mouse callback stack, and
    a mouse event <CODE>mr</CODE> gets relayed to <CODE>o</CODE>, then <CODE>cb.invoke(mr)</CODE> will be called.
    It is up to the user to create subclasses of <CODE>MouseCB.T</CODE> that handle
    mouse events in a given context appropriately. </EM></BLOCKQUOTE><PRE>
@@ -52,9 +52,9 @@ TYPE
 </PRE><BLOCKQUOTE><EM> <CODE>MouseCB.Rec</CODE> is a record type containing information about a mouse event.
    <CODE>pos2D</CODE> is the position of the mouse when the button transition occurred.
    <CODE>whatChanged</CODE> is the button that went up or down.
-   <CODE>modifiers</CODE> is the set of modifiers (Shift, Control, Mouse Buttons, etc.) 
+   <CODE>modifiers</CODE> is the set of modifiers (Shift, Control, Mouse Buttons, etc.)
    that was active when the transition took place.
-   <CODE>clickType</CODE> indicates whether the button went down or up, and whether 
+   <CODE>clickType</CODE> indicates whether the button went down or up, and whether
    any other button was already or still down.
 <P>
    {\em NOTE: There is a fair chance that I will add other fields to <CODE>Rec</CODE>,

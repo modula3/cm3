@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: db/src/DB.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>db/src/DB.m3</H2></A><HR>
 <inModule>
@@ -89,12 +89,12 @@ BEGIN
 	END;
 END Connect;
 
-PROCEDURE <A NAME="GetDataSources"><procedure>GetDataSources</procedure></A> (): DescList  =
+PROCEDURE <A NAME="GetDataSources"><procedure>GetDataSources</procedure></A> (): DescList RAISES {Error} =
 BEGIN
 	RETURN Default.get_data_sources();
 END GetDataSources;
 
-PROCEDURE <A NAME="GetDrivers"><procedure>GetDrivers</procedure></A> (): DescList  =
+PROCEDURE <A NAME="GetDrivers"><procedure>GetDrivers</procedure></A> (): DescList RAISES {Error} =
 BEGIN
 	RETURN Default.get_drivers();
 END GetDrivers;

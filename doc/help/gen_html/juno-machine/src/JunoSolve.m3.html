@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-machine/src/JunoSolve.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-machine/src/JunoSolve.m3</H2></A><HR>
 <inModule>
@@ -539,7 +539,7 @@ PROCEDURE <A NAME="NumericSolve"><procedure>NumericSolve</procedure></A>(READONL
    Q7: The variable <CODE>hvl</CODE> is the list of hinted unlabeled variables (possibly
        containing some variables which have become labeled), and <CODE>uvl</CODE> is the
        list of unhinted, unlabeled variables (also possible containing some
-       variables which have become labeled). 
+       variables which have become labeled).
 <P>
    Q8: numeric_cnt &lt;= NUMBER(numeric_con).
 <P>
@@ -560,7 +560,7 @@ PROCEDURE <A NAME="NumericSolve"><procedure>NumericSolve</procedure></A>(READONL
 <PRE>
       DURING VARIABLE PROCESSING:
       
-                  numeric_vars[]           __ 
+                  numeric_vars[]           __
                      ________	      |..|
                     |        |	      |..| = unused
                     |  True  |	      |__|
@@ -576,9 +576,9 @@ PROCEDURE <A NAME="NumericSolve"><procedure>NumericSolve</procedure></A>(READONL
          var_cnt -&gt; |........|   |.............| &lt;- c_lo
                     |........|   |.............|
       next_const -&gt; |________|   |_____________| &lt;- c_hi
-                    |        |   |             |        
-                    | Consts |   |     True    |        
-                    |________|   | Constraints |        
+                    |        |   |             |
+                    | Consts |   |     True    |
+                    |________|   | Constraints |
       			     |_____________|
                                  |.............| &lt;- numeric_cnt
                                  |.............|
@@ -586,13 +586,13 @@ PROCEDURE <A NAME="NumericSolve"><procedure>NumericSolve</procedure></A>(READONL
       
       AFTER VARIABLE PROCESSING:
       
-                  numeric_vars[] numeric_vals[]                
-                     ________       ________                   
-                    |        |     |        |                  
-                    |  True  |     |  True  |                  
-                    |  Vars  |     |  Vals  |                  
-                    |        |     |        |    numeric_con[] 
-              hi -&gt; |________|     |________|    _____________ 
+                  numeric_vars[] numeric_vals[]
+                     ________       ________
+                    |        |     |        |
+                    |  True  |     |  True  |
+                    |  Vars  |     |  Vals  |
+                    |        |     |        |    numeric_con[]
+              hi -&gt; |________|     |________|    _____________
               lo -&gt; |        |     |        |   |             |
                     |        |     |        |   |    Ghost    |
                     |        |     |        |   | Constraints |

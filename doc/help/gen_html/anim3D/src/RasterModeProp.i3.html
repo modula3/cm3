@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/RasterModeProp.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/RasterModeProp.i3</H2></A><HR>
 <inInterface>
@@ -20,16 +20,16 @@ IMPORT <A HREF="AnimHandle.i3.html">AnimHandle</A>, <A HREF="Prop.i3.html">Prop<
 
 TYPE
   Kind = {Hollow, Solid, Empty};
-</PRE><BLOCKQUOTE><EM> <CODE>Kind</CODE> enumerates the three possible ways a surface can be shown: 
+</PRE><BLOCKQUOTE><EM> <CODE>Kind</CODE> enumerates the three possible ways a surface can be shown:
    <CODE>Solid</CODE>, which means that the surface is filled with the surface color,
-   <CODE>Hollow</CODE>, which means that only the edges of the polygons forming the 
-   surface are drawn, again in the surface colour, and <CODE>Empty</CODE>, which means 
+   <CODE>Hollow</CODE>, which means that only the edges of the polygons forming the
+   surface are drawn, again in the surface colour, and <CODE>Empty</CODE>, which means
    that the surface is not drawn at all.
 <P>
-   PEX 5.0 defines these three rasterization modes (or ``Interior Style'' 
-   in PEX terminology) for surfaces, plus two more, <CODE>Pattern</CODE> and <CODE>Hatch</CODE>. 
+   PEX 5.0 defines these three rasterization modes (or ``Interior Style''
+   in PEX terminology) for surfaces, plus two more, <CODE>Pattern</CODE> and <CODE>Hatch</CODE>.
    However, Digital's implementation of PEX does not support those two styles,
-   so we don't support them either. 
+   so we don't support them either.
 <P>
    OpenGL has a more general way of defining rasterization modes (or ``Polygon
    Modes'' in OpenGL terminology). Therefore, it is likely that we will extend

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: ui/src/split/Split.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>ui/src/split/Split.i3</H2></A><HR>
 <inInterface>
@@ -15,11 +15,11 @@
       modified on Sat Dec 21 16:13:22 PST 1991 by gnelson    
 
 <P><PRE>&lt;*PRAGMA LL*&gt;
-</PRE> The Split interface provides the functionality that is common 
-   to all splits; for example, enumerating and deleting children.  
-   <P>
+</PRE> The Split interface provides the functionality that is common
+   to all splits; for example, enumerating and deleting children.
+<P>
    This interface is for clients of splits; see the <CODE>VBTClass</CODE> and
-   <CODE>ProperSplit</CODE> interfaces for information about implementing your own 
+   <CODE>ProperSplit</CODE> interfaces for information about implementing your own
    split classes.  
 
 <P><PRE>INTERFACE <interface><A HREF="Split.m3.html">Split</A></interface>;
@@ -29,8 +29,8 @@ IMPORT <A HREF="../vbt/VBT.i3.html">VBT</A>, <A HREF="../../../libm3/src/geometr
 TYPE T = VBT.Split;
 
 EXCEPTION NotAChild;
-</PRE> A <CODE>Split.T</CODE> is a <CODE>VBT</CODE> that divides its screen up between one or more 
-   child <CODE>VBTs</CODE>.  
+</PRE> A <CODE>Split.T</CODE> is a <CODE>VBT</CODE> that divides its screen up between one or more
+   child <CODE>VBTs</CODE>.
    The children of a split are ordered; they can be enumerated
    with the <CODE>Succ</CODE> and <CODE>Pred</CODE> procedures: 
 
@@ -67,13 +67,13 @@ PROCEDURE <A HREF="Split.m3.html#Nth">Nth</A>(v: T; n: CARDINAL): VBT.T;
 <P><PRE>PROCEDURE <A HREF="Split.m3.html#Index">Index</A>(v: T; ch: VBT.T): CARDINAL
 RAISES {NotAChild}; &lt;* LL &gt;= {VBT.mu} *&gt;
 </PRE><BLOCKQUOTE><EM> Return the index of <CODE>v</CODE>'s child <CODE>ch</CODE>. </EM></BLOCKQUOTE><PRE>
-</PRE> <CODE>Index(v, ch)</CODE> is the value <CODE>n</CODE> such that <CODE>Nth(v, n) = ch</CODE>.  
+</PRE> <CODE>Index(v, ch)</CODE> is the value <CODE>n</CODE> such that <CODE>Nth(v, n) = ch</CODE>.
    <CODE>Index(v, NIL)</CODE> equals <CODE>NumChildren(v)</CODE>.  
 
 <P>
 <P><PRE>PROCEDURE <A HREF="Split.m3.html#Locate">Locate</A>(v: T; READONLY pt: Point.T): VBT.T;
 &lt;* LL.sup = VBT.mu *&gt;
-</PRE><BLOCKQUOTE><EM> Return the child of <CODE>v</CODE> that controls the point <CODE>pt</CODE>, 
+</PRE><BLOCKQUOTE><EM> Return the child of <CODE>v</CODE> that controls the point <CODE>pt</CODE>,
    or <CODE>NIL</CODE> if there is no such child. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="Split.m3.html#Delete">Delete</A>(v: T; ch: VBT.T) RAISES {NotAChild};
@@ -100,16 +100,16 @@ RAISES {NotAChild}; &lt;* LL.sup = VBT.mu *&gt;
 
 <P><PRE>PROCEDURE <A HREF="Split.m3.html#Move">Move</A>(v: T; pred, ch: VBT.T)
 RAISES {NotAChild}; &lt;* LL.sup = VBT.mu *&gt;
-</PRE><BLOCKQUOTE><EM> Move child <CODE>ch</CODE> of <CODE>v</CODE> to follow <CODE>pred</CODE>.  Both <CODE>ch</CODE> and (if non-<CODE>NIL</CODE>) 
+</PRE><BLOCKQUOTE><EM> Move child <CODE>ch</CODE> of <CODE>v</CODE> to follow <CODE>pred</CODE>.  Both <CODE>ch</CODE> and (if non-<CODE>NIL</CODE>)
    <CODE>pred</CODE> must be children of <CODE>v</CODE>.  </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="Split.m3.html#AddChildArray">AddChildArray</A>(v: T;
   READONLY new: ARRAY OF VBT.T);
 &lt;* LL.sup = VBT.mu *&gt;
-</PRE><BLOCKQUOTE><EM> Insert the non-<CODE>NIL</CODE> elements of <CODE>new</CODE> at the end of the <CODE>v</CODE>'s 
+</PRE><BLOCKQUOTE><EM> Insert the non-<CODE>NIL</CODE> elements of <CODE>new</CODE> at the end of the <CODE>v</CODE>'s
    list of children.  </EM></BLOCKQUOTE><PRE>
 </PRE> <CODE>AddChildArray</CODE> is equivalent to
-   <P>
+<P>
 <PRE>
        pred := Pred(v, NIL);
        FOR i := 0 TO LAST(new) DO
@@ -124,9 +124,9 @@ PROCEDURE <A HREF="Split.m3.html#AddChildArray">AddChildArray</A>(v: T;
   v0, v1, v2, v3, v4, v5, v6, v7, v8, v9: VBT.T := NIL);
 &lt;* LL.sup = VBT.mu *&gt;
 </PRE><BLOCKQUOTE><EM> Add the given children to <CODE>v</CODE>. </EM></BLOCKQUOTE><PRE>
-</PRE> <CODE>AddChild</CODE> is equivalent to 
+</PRE> <CODE>AddChild</CODE> is equivalent to
 <PRE>
-       AddChildArray(v, 
+       AddChildArray(v,
          ARRAY OF VBT.T{v0, v1, ..., v9})
 
 

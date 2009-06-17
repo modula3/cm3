@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: libm3/src/fmtlex/Lex.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>libm3/src/fmtlex/Lex.i3</H2></A><HR>
 <inInterface>
@@ -22,7 +22,7 @@
 
 <P><PRE>INTERFACE <interface><A HREF="Lex.m3.html">Lex</A></interface>;
 
-IMPORT <A HREF="../../../m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../rw/Rd.i3.html">Rd</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>;
+IMPORT <A HREF="../../../m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../rw/Rd.i3.html">Rd</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../../m3core/src/word/Long.i3.html">Long</A>;
 FROM <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A> IMPORT Alerted;
 
 EXCEPTION Error;
@@ -72,6 +72,10 @@ PROCEDURE <A HREF="Lex.m3.html#Bool">Bool</A>(rd: Rd.T): BOOLEAN RAISES {Error, 
   : INTEGER RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted};
 PROCEDURE <A HREF="Lex.m3.html#Unsigned">Unsigned</A>(rd: Rd.T; defaultBase: [2..16] := 16)
   : Word.T RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted};
+PROCEDURE <A HREF="Lex.m3.html#LongInt">LongInt</A>(rd: Rd.T; defaultBase: [2..16] := 10)
+  : LONGINT RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted};
+PROCEDURE <A HREF="Lex.m3.html#LongUnsigned">LongUnsigned</A>(rd: Rd.T; defaultBase: [2..16] := 16)
+  : Long.T RAISES {Error, FloatMode.Trap, Rd.Failure, Alerted};
 </PRE><BLOCKQUOTE><EM> Read a number from <CODE>rd</CODE> and return its value. </EM></BLOCKQUOTE><PRE>
 </PRE> Each procedure skips blanks, then reads the longest prefix of <CODE>rd</CODE>
    that is a prefix of a <CODE>Number</CODE> as defined by the grammar below.  If

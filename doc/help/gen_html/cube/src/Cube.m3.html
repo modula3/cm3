@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: cube/src/Cube.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>cube/src/Cube.m3</H2></A><HR>
 <inModule>
@@ -417,7 +417,7 @@ PROCEDURE <A NAME="BuildPath"><procedure>BuildPath</procedure></A> (p: Path.T; R
 
 PROCEDURE <A NAME="DegToRadians"><procedure>DegToRadians</procedure></A> (deg: REAL): LONGREAL =
   BEGIN
-    RETURN FLOAT (Math.Degree * deg, LONGREAL);
+    RETURN Math.Degree * FLOAT (deg, LONGREAL);
   END DegToRadians;
 
 PROCEDURE <A NAME="InitCRM"><procedure>InitCRM</procedure></A> (VAR crm: CRM) =

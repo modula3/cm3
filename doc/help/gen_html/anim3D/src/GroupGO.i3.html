@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: anim3D/src/GroupGO.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>anim3D/src/GroupGO.i3</H2></A><HR>
 <inInterface>
@@ -18,27 +18,27 @@
 <P>
    Groups serve two purposes: They allow the user to group indiviual
    geometric objects together, and they provide a mechanism for property
-   inheritance. 
+   inheritance.
 <P>
-   Groups allow the user to organize individual geometric objects into 
-   a graph structure. A {\em scene} is described by a {\em root node} 
-   (a \type{RootGO}{T}, which is a subtype of <CODE>GroupGO.T</CODE>), and contains 
-   all the geometric objects reacheable from the root. Usually, this 
-   structure forms a tree. However, geometric objects may occur in more 
-   than one group, so in general, the objects in a scene form a DAG 
-   (the rendering process does not terminate for cyclic graphs). 
+   Groups allow the user to organize individual geometric objects into
+   a graph structure. A {\em scene} is described by a {\em root node}
+   (a \type{RootGO}{T}, which is a subtype of <CODE>GroupGO.T</CODE>), and contains
+   all the geometric objects reacheable from the root. Usually, this
+   structure forms a tree. However, geometric objects may occur in more
+   than one group, so in general, the objects in a scene form a DAG
+   (the rendering process does not terminate for cyclic graphs).
 <P>
-   During rendering, the DAG is travered in a depth-first fashion. Whenever 
-   a node <CODE>o</CODE> is visited, there is a unique traversal path between <CODE>o</CODE> and 
-   the root. We call the nodes on this path the {\em ancestors} of <CODE>o</CODE>. 
+   During rendering, the DAG is travered in a depth-first fashion. Whenever
+   a node <CODE>o</CODE> is visited, there is a unique traversal path between <CODE>o</CODE> and
+   the root. We call the nodes on this path the {\em ancestors} of <CODE>o</CODE>.
 <P>
    Associated with each geometric object <CODE>o</CODE> is a property mapping $M_o$,
    a partial function from property names $n$ to property values $n$
-   (see the \interface{GO} interface for details). 
+   (see the \interface{GO} interface for details).
    When the scene is traversed, the property mappings of the nodes on the
-   traversal path are composed together. Composition of property mappings 
+   traversal path are composed together. Composition of property mappings
    is defined as follows:
-   \[ (M_i \circ M_{i+1})(n) = 
+   \[ (M_i \circ M_{i+1})(n) =
      \left\{
       \begin{array}{ll}
        M_i(n) &amp; \mbox{if $M_{i+1}(n)$ is undefined} \\
@@ -48,16 +48,16 @@
      \right.
    \]
    $\oplus$ is the {\em property value composition operator}. Its semantics
-   depends of the type of the property values. At the moment, for all 
+   depends of the type of the property values. At the moment, for all
    properties except transformation properties, $v \oplus v' = v'$.
    A transformation property value $v$ is internally described by a $4\times4$
-   matrix $A_v$. For transformation property values, 
+   matrix $A_v$. For transformation property values,
    $v \oplus v' = v''$ where $A_{v''} = A_v A_{v'}$.
-   <P>
+<P>
    Here is an example of how this property inheritance mechanism works:
    \begin{center}
    \begin{tabular}{c}
-   \psfig{figure=images/PropInheritance.ps,width=4in,silent=} 
+   \psfig{figure=images/PropInheritance.ps,width=4in,silent=}
    \end{tabular}
    \end{center}
    The actual scene contains three objects, a sphere, a box, and a cone.
@@ -88,10 +88,10 @@ TYPE
 <P>
    <CODE>g.add(o)</CODE> adds a new geometric object <CODE>o</CODE> to the group <CODE>g</CODE>.
 <P>
-   <CODE>g.remove(o)</CODE> removes the geometric object <CODE>o</CODE> from the group <CODE>g</CODE>. If <CODE>o</CODE> 
+   <CODE>g.remove(o)</CODE> removes the geometric object <CODE>o</CODE> from the group <CODE>g</CODE>. If <CODE>o</CODE>
    is not contained in <CODE>g</CODE>, the exception <CODE>BadElement</CODE> is raised.
 <P>
-   <CODE>g.flush()</CODE> removes all geometric objects from <CODE>g</CODE>. 
+   <CODE>g.flush()</CODE> removes all geometric objects from <CODE>g</CODE>.
 <P>
    <CODE>g.content()</CODE> returns an array containing all the elements of <CODE>g</CODE>.
 </EM></BLOCKQUOTE><PRE>

@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/builtinOps/ByteSize.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/builtinOps/ByteSize.m3</H2></A><HR>
 <inModule>
@@ -16,7 +16,7 @@
 
 <P><PRE>MODULE <module><implements><A HREF="ByteSize.i3.html">ByteSize</A></implements></module>;
 
-IMPORT <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="BitSize.i3.html">BitSize</A>, <A HREF="../builtinTypes/Card.i3.html">Card</A>;
+IMPORT <A HREF="../exprs/CallExpr.i3.html">CallExpr</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="BitSize.i3.html">BitSize</A>, <A HREF="#x1">Card</A>;
 
 VAR Z: CallExpr.MethodList;
 
@@ -34,14 +34,14 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (ce: CallExpr.T) 
   BEGIN
     BitSize.DoCompile (ce.args[0], 8);
     (* Note: the language defines &quot;8 bit bytes&quot; otherwise, we'd use
-       Target.Byte or Target.Char.size as a byte... *)
+       Target.ByteSize or Target.Char.size as a byte... *)
   END Compile;
 
 PROCEDURE <A NAME="Fold"><procedure>Fold</procedure></A> (ce: CallExpr.T): Expr.T =
   BEGIN
     RETURN BitSize.DoFold (ce.args[0], 8);
     (* Note: the language defines &quot;8 bit bytes&quot; otherwise, we'd use
-       Target.Byte or Target.Char.size as a byte... *)
+       Target.ByteSize or Target.Char.size as a byte... *)
   END Fold;
 
 PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A> () =
@@ -68,6 +68,13 @@ BEGIN
 END ByteSize.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface Card is in:
+</A><UL>
+<LI><A HREF="../../../bicycle/src/Card.i3.html#0TOP0">bicycle/src/Card.i3</A>
+<LI><A HREF="../builtinTypes/Card.i3.html#0TOP0">m3front/src/builtinTypes/Card.i3</A>
+</UL>
+<P>
 <PRE>
 
 

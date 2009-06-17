@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/values/EnumElt.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/values/EnumElt.m3</H2></A><HR>
 <inModule>
@@ -20,8 +20,8 @@ IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="#x1">M3ID</A>, <A HREF="../
 
 TYPE
   T = Value.T BRANDED OBJECT
-	value  : Target.Int;
-	parent : Type.T;
+        value  : Target.Int;
+        parent : Type.T;
       OVERRIDES
         typeCheck   := Check;
         set_globals := ValueRep.NoInit;
@@ -31,8 +31,8 @@ TYPE
         need_init   := ValueRep.Never;
         lang_init   := ValueRep.NoInit;
         user_init   := ValueRep.NoInit;
-	toExpr      := ToExpr;
-	toType      := ValueRep.NoType;
+        toExpr      := ToExpr;
+        toType      := ValueRep.NoType;
         typeOf      := TypeOf;
         base        := ValueRep.Self;
         add_fp_tag  := AddFPTag;
@@ -63,7 +63,7 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (&lt;*UNUSED*&gt; t: 
 
 PROCEDURE <A NAME="Load"><procedure>Load</procedure></A> (t: T) =
   BEGIN
-    CG.Load_integer (t.value);
+    CG.Load_integer (Target.Integer.cg_type, t.value);
   END Load;
 
 PROCEDURE <A NAME="ToExpr"><procedure>ToExpr</procedure></A> (t: T): Expr.T =
@@ -101,6 +101,7 @@ END EnumElt.
 <HR>
 <A NAME="x2">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>

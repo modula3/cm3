@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3markup/src/M3MarkUp.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3markup/src/M3MarkUp.m3</H2></A><HR>
 <inModule>
@@ -19,7 +19,7 @@
 
 <P><PRE>MODULE <module><implements><A HREF="#x1">M3MarkUp</A></implements></module>;
 
-IMPORT <A HREF="../../libbuf/src/Buf.i3.html">Buf</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="#x2">M3Scanner</A>, <A HREF="../../m3scan/src/M3Token.i3.html">M3Token</A>;
+IMPORT <A HREF="#x2">Buf</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="#x3">M3Scanner</A>, <A HREF="../../m3scan/src/M3Token.i3.html">M3Token</A>;
 
 CONST
   End_Anchor      = &quot;&lt;/A&gt;&quot;;
@@ -412,9 +412,10 @@ PROCEDURE <A NAME="MarkUpQualTypeIdent"><procedure>MarkUpQualTypeIdent</procedur
     IF Text.Equal (id, &quot;ADDRESS&quot;) OR Text.Equal (id, &quot;BOOLEAN&quot;) OR
       Text.Equal (id, &quot;CARDINAL&quot;) OR Text.Equal (id, &quot;CHAR&quot;) OR
       Text.Equal (id, &quot;EXTENDED&quot;) OR Text.Equal (id, &quot;INTEGER&quot;) OR
-      Text.Equal (id, &quot;LONGREAL&quot;) OR Text.Equal (id, &quot;MUTEX&quot;) OR
-      Text.Equal (id, &quot;NULL&quot;) OR Text.Equal (id, &quot;REAL&quot;) OR
-      Text.Equal (id, &quot;REFANY&quot;) OR Text.Equal (id, &quot;TEXT&quot;) THEN
+      Text.Equal (id, &quot;LONGINT&quot;) OR Text.Equal (id, &quot;LONGREAL&quot;) OR
+      Text.Equal (id, &quot;MUTEX&quot;) OR Text.Equal (id, &quot;NULL&quot;) OR
+      Text.Equal (id, &quot;REAL&quot;) OR Text.Equal (id, &quot;REFANY&quot;) OR
+      Text.Equal (id, &quot;TEXT&quot;) THEN
       Add (ins, id_offs, id);
     ELSE
       Add (ins, id_offs, unit &amp; &quot;.&quot; &amp; id);
@@ -486,12 +487,20 @@ END M3MarkUp.
 <HR>
 <A NAME="x1">interface M3MarkUp is in:
 </A><UL>
+<LI><A HREF="../../cm3ide/src/markup/M3MarkUp.i3.html#0TOP0">cm3ide/src/markup/M3MarkUp.i3</A>
 <LI><A HREF="M3MarkUp.i3.html#0TOP0">m3markup/src/M3MarkUp.i3</A>
 <LI><A HREF="../../m3tohtml/src/M3MarkUp.i3.html#0TOP0">m3tohtml/src/M3MarkUp.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x2">interface M3Scanner is in:
+<A NAME="x2">interface Buf is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/utils/Buf.i3.html#0TOP0">cm3ide/src/utils/Buf.i3</A>
+<LI><A HREF="../../libbuf/src/Buf.i3.html#0TOP0">libbuf/src/Buf.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface M3Scanner is in:
 </A><UL>
 <LI><A HREF="../../m3scan/src/M3Scanner.i3.html#0TOP0">m3scan/src/M3Scanner.i3</A>
 <LI><A HREF="../../m3scanner/src/M3Scanner.i3.html#0TOP0">m3scanner/src/M3Scanner.i3</A>

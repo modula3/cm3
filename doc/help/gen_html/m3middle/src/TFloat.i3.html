@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/TFloat.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/TFloat.i3</H2></A><HR>
 <inInterface>
@@ -25,7 +25,7 @@
     otherwise they return FALSE.
 
 
-<P><PRE>FROM <A HREF="Target.i3.html">Target</A> IMPORT Int, Float, Precision;
+<P><PRE>FROM <A HREF="Target.i3.html">Target</A> IMPORT Float, Precision;
 
 CONST
   ZeroR = Float { Precision.Short,    0, 0.0x0 };
@@ -68,20 +68,20 @@ PROCEDURE <A HREF="TFloat.m3.html#LE">LE</A> (READONLY a, b: Float): BOOLEAN;
 PROCEDURE <A HREF="TFloat.m3.html#FloatF">FloatF</A> (READONLY a: Float;  p: Precision;  VAR f: Float): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> returns 'FLOAT (a, p)' unless there's an overflow </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="TFloat.m3.html#FloatI">FloatI</A> (READONLY i: Int;  p: Precision;  VAR f: Float): BOOLEAN;
+PROCEDURE <A HREF="TFloat.m3.html#FloatI">FloatI</A> (READONLY i: INTEGER;  p: Precision;  VAR f: Float): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> returns 'FLOAT (i, p)' unless there's an overflow </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="TFloat.m3.html#Trunc">Trunc</A> (READONLY a: Float;  VAR i: Int): BOOLEAN;
-</PRE><BLOCKQUOTE><EM> returns 'TRUNC(a)' unless there's an overflow </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="TFloat.m3.html#Trunc">Trunc</A> (READONLY a: Float): INTEGER;
+</PRE><BLOCKQUOTE><EM> returns 'TRUNC(a)' </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="TFloat.m3.html#Round">Round</A> (READONLY a: Float;  VAR i: Int): BOOLEAN;
-</PRE><BLOCKQUOTE><EM> returns 'ROUND(a)' unless there's an overflow </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="TFloat.m3.html#Round">Round</A> (READONLY a: Float): INTEGER;
+</PRE><BLOCKQUOTE><EM> returns 'ROUND(a)' </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="TFloat.m3.html#Floor">Floor</A> (READONLY a: Float;  VAR i: Int): BOOLEAN;
+PROCEDURE <A HREF="TFloat.m3.html#Floor">Floor</A> (READONLY a: Float): INTEGER;
 </PRE><BLOCKQUOTE><EM> returns 'FLOOR(a)' unless there's an overflow </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="TFloat.m3.html#Ceiling">Ceiling</A> (READONLY a: Float;  VAR i: Int): BOOLEAN;
-</PRE><BLOCKQUOTE><EM> returns 'CEILING(a)' unless there's an overflow </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="TFloat.m3.html#Ceiling">Ceiling</A> (READONLY a: Float): INTEGER;
+</PRE><BLOCKQUOTE><EM> returns 'CEILING(a)' </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="TFloat.m3.html#ToChars">ToChars</A> (READONLY f: Float;  VAR buf: ARRAY OF CHAR): INTEGER;
 </PRE><BLOCKQUOTE><EM> converts 'f' to a printable string in 'buf'.  Returns the

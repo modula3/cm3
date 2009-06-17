@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/exprs/OrExpr.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/exprs/OrExpr.m3</H2></A><HR>
 <inModule>
@@ -16,7 +16,7 @@
 
 <P><PRE>MODULE <module><implements><A HREF="OrExpr.i3.html">OrExpr</A></implements></module>;
 
-IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="Expr.i3.html">Expr</A>, <A HREF="ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../builtinTypes/Bool.i3.html">Bool</A>, <A HREF="EnumExpr.i3.html">EnumExpr</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>;
+IMPORT <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="Expr.i3.html">Expr</A>, <A HREF="ExprRep.i3.html">ExprRep</A>, <A HREF="#x1">Type</A>, <A HREF="../builtinTypes/Bool.i3.html">Bool</A>, <A HREF="EnumExpr.i3.html">EnumExpr</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="#x2">Value</A>;
 
 TYPE
   P = ExprRep.Tab BRANDED &quot;OrExpr.P&quot; OBJECT
@@ -36,10 +36,10 @@ TYPE
         getBounds    := ExprRep.NoBounds;
         isWritable   := ExprRep.IsNever;
         isDesignator := ExprRep.IsNever;
-	isZeroes     := ExprRep.IsNever;
-	genFPLiteral := ExprRep.NoFPLiteral;
-	prepLiteral  := ExprRep.NoPrepLiteral;
-	genLiteral   := ExprRep.NoLiteral;
+        isZeroes     := ExprRep.IsNever;
+        genFPLiteral := ExprRep.NoFPLiteral;
+        prepLiteral  := ExprRep.NoPrepLiteral;
+        genLiteral   := ExprRep.NoLiteral;
         note_write   := ExprRep.NotWritable;
       END;
 
@@ -70,10 +70,10 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (p: P;  VAR cs: Expr.
 PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (p: P) =
   VAR true := CG.Next_label ();
   BEGIN
-    CG.Load_integer (TInt.One);
+    Value.Load (Bool.True);
     p.tmp := CG.Pop_temp ();
     PrepBR (p, true, CG.No_label, CG.Maybe);
-    CG.Load_integer (TInt.Zero);
+    Value.Load (Bool.False);
     CG.Store_temp (p.tmp);
     CG.Set_label (true);
   END Prep;
@@ -128,10 +128,20 @@ END OrExpr.
 <HR>
 <A NAME="x1">interface Type is in:
 </A><UL>
+<LI><A HREF="../../../cm3ide/src/nodes/Type.i3.html#0TOP0">cm3ide/src/nodes/Type.i3</A>
 <LI><A HREF="../types/Type.i3.html#0TOP0">m3front/src/types/Type.i3</A>
 <LI><A HREF="../../../sharedobjgen/src/Type.i3.html#0TOP0">sharedobjgen/src/Type.i3</A>
 <LI><A HREF="../../../stablegen/src/Type.i3.html#0TOP0">stablegen/src/Type.i3</A>
 <LI><A HREF="../../../stubgen/src/Type.i3.html#0TOP0">stubgen/src/Type.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Value is in:
+</A><UL>
+<LI><A HREF="../values/Value.i3.html#0TOP0">m3front/src/values/Value.i3</A>
+<LI><A HREF="../../../sharedobjgen/src/Value.i3.html#0TOP0">sharedobjgen/src/Value.i3</A>
+<LI><A HREF="../../../stablegen/src/Value.i3.html#0TOP0">stablegen/src/Value.i3</A>
+<LI><A HREF="../../../stubgen/src/Value.i3.html#0TOP0">stubgen/src/Value.i3</A>
 </UL>
 <P>
 <PRE>

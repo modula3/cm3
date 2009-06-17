@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: juno-compiler/src/JunoScope.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>juno-compiler/src/JunoScope.i3</H2></A><HR>
 <inInterface>
@@ -17,10 +17,10 @@
 </PRE> A Scope.T is a mapping that associates names with constants, variables,
    predicates, functions, procedures, interfaces, and modules (that is, with
    any of the things that a name can denote in Juno). When an abstract syntax
-   tree (or JunoAST.T) is decorated by the type checker, each node of the AST 
+   tree (or JunoAST.T) is decorated by the type checker, each node of the AST
    that introduces a scope is labelled with a Scope.T that records the
    bindings of the names introduced at that scope level.
-   <P>
+<P>
    Scopes are arranged in a tree structure that reflects their nesting in the
    program text; if a look-up on an identifier fails in a scope, the
    implementation continues by looking up the identifier in the parent scope,
@@ -57,7 +57,7 @@ TYPE
   <A HREF="JunoScope.m3.html#T">T</A> &lt;: ROOT;
 
 PROCEDURE <A HREF="JunoScope.m3.html#New">New</A>(p: T; size: CARDINAL := 1): T;
-</PRE><BLOCKQUOTE><EM> Return a new scope with parent scope <CODE>p</CODE> in which no names are bound. 
+</PRE><BLOCKQUOTE><EM> Return a new scope with parent scope <CODE>p</CODE> in which no names are bound.
    If p is NIL, the new scope is a root scope. Initially, the scope is created
    with size <CODE>size</CODE>, but it will grow dynamically to accommodate any number of
    bindings. </EM></BLOCKQUOTE><PRE>
@@ -69,9 +69,9 @@ PROCEDURE <A HREF="JunoScope.m3.html#SetParent">SetParent</A>(scp, parent: T);
 </PRE><BLOCKQUOTE><EM> Set the parent scope of <CODE>scp</CODE> to <CODE>parent</CODE>. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="JunoScope.m3.html#Lookup">Lookup</A>(scp: T; id: Atom.T; localOnly := FALSE): Entity;
-</PRE><BLOCKQUOTE><EM> Return the entity associated with the name id in the scope scp.  
-   Returns NIL if id is unbound. If localOnly is FALSE, then all 
-   scopes on the path from scp to scp's root are searched in order; 
+</PRE><BLOCKQUOTE><EM> Return the entity associated with the name id in the scope scp.
+   Returns NIL if id is unbound. If localOnly is FALSE, then all
+   scopes on the path from scp to scp's root are searched in order;
    otherwise only <CODE>scp</CODE> is searched. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="JunoScope.m3.html#LookupQId">LookupQId</A>(
@@ -92,7 +92,7 @@ PROCEDURE <A HREF="JunoScope.m3.html#LocalArgs">LocalArgs</A>(scp: T; kinds: SET
 EXCEPTION NameClash; NotFound;
 
 PROCEDURE <A HREF="JunoScope.m3.html#Bind">Bind</A>(scp: T; id: Atom.T; e: Entity) RAISES { NameClash };
-</PRE><BLOCKQUOTE><EM> Bind <CODE>id</CODE> to <CODE>e</CODE> in <CODE>scp</CODE>.  This creates a new binding in <CODE>scp</CODE>; it never 
+</PRE><BLOCKQUOTE><EM> Bind <CODE>id</CODE> to <CODE>e</CODE> in <CODE>scp</CODE>.  This creates a new binding in <CODE>scp</CODE>; it never
    affects <CODE>scp</CODE>'s ancestors.  Bind raises the exception <CODE>NameClash</CODE> if <CODE>id</CODE>
    is already bound to something in <CODE>scp</CODE>. </EM></BLOCKQUOTE><PRE>
 

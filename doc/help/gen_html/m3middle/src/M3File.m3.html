@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3middle/src/M3File.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3middle/src/M3File.m3</H2></A><HR>
 <inModule>
@@ -15,13 +15,13 @@
 
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="M3File.i3.html">M3File</A></implements></module>;
 
-IMPORT <A HREF="POSIX/CoffTime.i3.html">CoffTime</A>, <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../libm3/src/os/Common/File.i3.html">File</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>;
+IMPORT <A HREF="../../m3core/derived/Compiler.i3.html">Compiler</A>, <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../libm3/src/os/Common/File.i3.html">File</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>;
 
 TYPE
   BufPtr = UNTRACED REF ARRAY BufferLength OF File.Byte;
 
 CONST
-  OnUnix = (CoffTime.EpochAdjust = 0.0d0);
+  OnUnix = (Compiler.ThisOS = Compiler.OS.POSIX);
   (* We need to preserve permission bits on Unix.  On Win32 it's
      too hard (Win95 doesn't have security, and WinNT w/o NTFS
      is broken too!), so we don't bother.  *)
@@ -46,6 +46,10 @@ PROCEDURE <A NAME="Copy"><procedure>Copy</procedure></A> (src, dest: TEXT) RAISE
   BEGIN
     TRY
       rd := FS.OpenFileReadonly (src);
+      (* delete in case someone else is reading *)
+      TRY FS.DeleteFile (dest);
+      EXCEPT OSError.E =&gt; (* nope *)
+      END;
       wr := OpenDestination (dest, rd);
       status := FS.Status(src);
       LOOP
@@ -78,6 +82,10 @@ PROCEDURE <A NAME="CopyText"><procedure>CopyText</procedure></A> (src, dest: TEX
     FOR i := 0 TO eol_last DO eol_buf[i] := ORD(Text.GetChar (eol, i)); END;
     TRY
       rd := FS.OpenFileReadonly (src);
+      (* delete in case someone else is reading *)
+      TRY FS.DeleteFile (dest);
+      EXCEPT OSError.E =&gt; (* nope *)
+      END;
       wr := OpenDestination (dest, rd);
       status := FS.Status(src);
       out_len := 0;

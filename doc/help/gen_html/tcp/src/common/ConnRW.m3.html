@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: tcp/src/common/ConnRW.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>tcp/src/common/ConnRW.m3</H2></A><HR>
 <inModule>
@@ -16,17 +16,20 @@
 
 <P><PRE>MODULE <module><implements><A HREF="ConnRW.i3.html">ConnRW</A></implements></module>;
 
-IMPORT <A HREF="ConnFD.i3.html">ConnFD</A>, <A HREF="../../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../../libm3/src/rw/RdClass.i3.html">RdClass</A>, <A HREF="../../../libm3/src/rw/WrClass.i3.html">WrClass</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>;
+IMPORT
+  <A HREF="../../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="StreamRd.i3.html">StreamRd</A>, <A HREF="../../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="StreamWr.i3.html">StreamWr</A>, <A HREF="../../../libm3/src/rw/RdClass.i3.html">RdClass</A>, <A HREF="StreamRdClass.i3.html">StreamRdClass</A>, <A HREF="../../../libm3/src/rw/WrClass.i3.html">WrClass</A>,
+  <A HREF="StreamWrClass.i3.html">StreamWrClass</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>;
+IMPORT <A HREF="ConnFD.i3.html">ConnFD</A>;
 
 TYPE
-   RdT = Rd.T BRANDED OBJECT
+   RdT = StreamRd.T BRANDED OBJECT
     fd: ConnFD.T;
   OVERRIDES
     seek := RdSeek;
     close := RdClose
   END;
 
-  WrT = Wr.T BRANDED OBJECT
+  WrT = StreamWr.T BRANDED OBJECT
     fd: ConnFD.T;
   OVERRIDES
     seek := WrSeek;
@@ -36,7 +39,7 @@ TYPE
 
 CONST BufferSize = 8192;
 
-PROCEDURE <A NAME="NewRd"><procedure>NewRd</procedure></A>(fd: ConnFD.T) : Rd.T =
+PROCEDURE <A NAME="NewRd"><procedure>NewRd</procedure></A>(fd: ConnFD.T) : StreamRd.T =
   BEGIN
     RETURN NEW(RdT, fd := fd,
         buff := NEW(REF ARRAY OF CHAR, BufferSize),
@@ -49,7 +52,7 @@ PROCEDURE <A NAME="NewRd"><procedure>NewRd</procedure></A>(fd: ConnFD.T) : Rd.T 
         closed := FALSE);
   END NewRd;
 
-PROCEDURE <A NAME="NewWr"><procedure>NewWr</procedure></A>(fd: ConnFD.T) : Wr.T =
+PROCEDURE <A NAME="NewWr"><procedure>NewWr</procedure></A>(fd: ConnFD.T) : StreamWr.T =
   BEGIN
     RETURN NEW(WrT, fd := fd,
         buff := NEW(REF ARRAY OF CHAR, BufferSize),
@@ -79,6 +82,7 @@ PROCEDURE <A NAME="RdSeek"><procedure>RdSeek</procedure></A>(rd: RdT; &lt;*UNUSE
     IF len &gt; 0 THEN
       rd.lo := rd.cur;
       rd.hi := rd.cur + len;
+      StreamRdClass.DontOverflow(rd);
       RETURN RdClass.SeekResult.Ready
     ELSE
       RETURN RdClass.SeekResult.Eof;
@@ -100,6 +104,7 @@ PROCEDURE <A NAME="WrFlush"><procedure>WrFlush</procedure></A>(wr: WrT) RAISES {
     wr.fd.put(SUBARRAY(wr.buff^, 0, wr.cur-wr.lo));
     wr.lo := wr.cur;
     wr.hi := wr.lo + NUMBER(wr.buff^);
+    StreamWrClass.DontOverflow(wr);
   END WrFlush;
 
 PROCEDURE <A NAME="WrClose"><procedure>WrClose</procedure></A>(wr: WrT) RAISES {Wr.Failure} =

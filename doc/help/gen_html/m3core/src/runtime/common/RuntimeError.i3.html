@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3core/src/runtime/common/RuntimeError.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3core/src/runtime/common/RuntimeError.i3</H2></A><HR>
 <inInterface>
@@ -67,6 +67,9 @@ PROCEDURE <A HREF="RuntimeError.m3.html#Self">Self</A> (): RT0.ExceptionPtr;
 
 PROCEDURE <A HREF="RuntimeError.m3.html#Tag">Tag</A> (t: T): TEXT;
 </PRE><BLOCKQUOTE><EM> Returns a message describing <CODE>t</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RuntimeError.m3.html#Raise">Raise</A> (t: T);
+</PRE><BLOCKQUOTE><EM> RAISE(t). </EM></BLOCKQUOTE><PRE>
 
 END RuntimeError.
 </PRE>

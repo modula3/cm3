@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: tcp/src/common/TCP.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>tcp/src/common/TCP.i3</H2></A><HR>
 <inInterface>
@@ -12,6 +12,7 @@
  Last modified on Thu Jun  3 10:04:16 PDT 1993 by wobber 
       modified on Sun Jan 12 16:16:54 PST 1992 by meehan 
       modified on Sat Jan 11 16:55:00 PST 1992 by gnelson 
+ $Id: TCP.i3.html,v 1.3 2009-06-17 18:53:08 wagner Exp $ 
 
 <P><PRE>INTERFACE <interface><A HREF="../POSIX/TCP.m3.html">TCP</A></interface>;
 </PRE> A TCP connection is a bidirectional byte stream between two
@@ -32,7 +33,8 @@
    at the heads of their queues are unblocked and a connection is 
    created between them. 
 
-<P><PRE>IMPORT <A HREF="../../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="ConnFD.i3.html">ConnFD</A>, <A HREF="IP.i3.html">IP</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>;
+<P><PRE>IMPORT <A HREF="../../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="IP.i3.html">IP</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>;
+IMPORT <A HREF="ConnFD.i3.html">ConnFD</A> AS ConnFD;
 
 TYPE
   <A HREF="../POSIX/TCP.m3.html#Connector">Connector</A> &lt;: ROOT;
@@ -44,7 +46,7 @@ TYPE
    following atoms: 
 
 <P><PRE>VAR
-  Refused, Closed, Timeout, ConnLost: Atom.T;
+  Refused, Closed, Timeout, ConnLost, Unexpected: Atom.T;
 </PRE> <CODE>Refused</CODE> indicates that the destination endpoint does not
    exist, or has been closed.
 <P>
@@ -83,7 +85,7 @@ TYPE
 </PRE><BLOCKQUOTE><EM> Return the endpoint of <CODE>c</CODE>. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="../POSIX/TCP.m3.html#CloseConnector">CloseConnector</A>(c: Connector);
-</PRE><BLOCKQUOTE><EM> Close the connector <CODE>c</CODE>.  Not yet implemented. </EM></BLOCKQUOTE><PRE>
+</PRE><BLOCKQUOTE><EM> Close the connector <CODE>c</CODE>. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="../POSIX/TCP.m3.html#Connect">Connect</A> (ep: IP.Endpoint): T
     RAISES {IP.Error, Thread.Alerted};

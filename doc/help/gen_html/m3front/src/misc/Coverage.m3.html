@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3front/src/misc/Coverage.m3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3front/src/misc/Coverage.m3</H2></A><HR>
 <inModule>
@@ -65,7 +65,7 @@ PROCEDURE <A NAME="Expand"><procedure>Expand</procedure></A> () =
     ELSE
       WITH new = NEW (REF ARRAY OF LineSeen, 2 * NUMBER (used^)) DO
         FOR i := 0 TO LAST (used^) DO new[i] := used[i] END;
-	used := new;
+        used := new;
       END;
     END;
   END Expand;
@@ -85,9 +85,8 @@ PROCEDURE <A NAME="NoteProcedure"><procedure>NoteProcedure</procedure></A> (v: V
 PROCEDURE <A NAME="GenerateTables"><procedure>GenerateTables</procedure></A> () =
   VAR
     nLines    := MAX (0, maxLine - minLine) + 1;
-    fname     := Host.FileTail (Host.filename);
     l_header  := TLen (Header);
-    l_fname   := TLen (fname);
+    l_fname   := TLen (Host.filename);
     l_trailer := TLen (Trailer);
     size    : INTEGER;
     p       : ProcHead;
@@ -133,10 +132,10 @@ PROCEDURE <A NAME="GenerateTables"><procedure>GenerateTables</procedure></A> () 
     (* CG.Init_int (size, Target.Integer.size, TInt.Zero, FALSE); *)
     INC (size, Target.Integer.size);             (*timestamp*)
 
-    CG.Init_intt (size, Target.Integer.size, Text.Length (fname), FALSE);
+    CG.Init_intt (size, Target.Integer.size, Text.Length (Host.filename), FALSE);
     INC (size, Target.Integer.size);             (*fileLen*)
 
-    CG.Init_chars (size, fname, FALSE);
+    CG.Init_chars (size, Host.filename, FALSE);
     INC (size, l_fname * Target.Char.size);      (*file*)
 
     CG.Init_intt (size, Target.Integer.size, minLine, FALSE);
@@ -198,10 +197,10 @@ PROCEDURE <A NAME="CountLine"><procedure>CountLine</procedure></A> () =
     IF used [line] = LineSeen.generated THEN RETURN END;
     &lt;*ASSERT tbl # NIL*&gt;
     offset := lines_offset + (line - minLine) * Target.Integer.size;
-    CG.Load_int (tbl, offset);
-    CG.Load_integer (TInt.One);
+    CG.Load_int (Target.Integer.cg_type, tbl, offset);
+    CG.Load_integer (Target.Integer.cg_type, TInt.One);
     CG.Add (Target.Word.cg_type);
-    CG.Store_int (tbl, offset);
+    CG.Store_int (Target.Integer.cg_type, tbl, offset);
     used [line] := LineSeen.generated;
   END CountLine;
 
@@ -219,10 +218,10 @@ PROCEDURE <A NAME="CountProcedure"><procedure>CountProcedure</procedure></A> (v:
     END;
     &lt;*ASSERT p # NIL *&gt;
 
-    CG.Load_int (tbl, p.offset);
-    CG.Load_integer (TInt.One);
+    CG.Load_int (Target.Integer.cg_type, tbl, p.offset);
+    CG.Load_integer (Target.Integer.cg_type, TInt.One);
     CG.Add (Target.Word.cg_type);
-    CG.Store_int (tbl, p.offset);
+    CG.Store_int (Target.Integer.cg_type, tbl, p.offset);
   END CountProcedure;
 
 PROCEDURE <A NAME="Reset"><procedure>Reset</procedure></A> () =

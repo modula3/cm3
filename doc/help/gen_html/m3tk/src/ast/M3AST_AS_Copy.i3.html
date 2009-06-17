@@ -2,7 +2,7 @@
 <HEAD>
 <TITLE>Critical Mass Modula-3: m3tk/src/ast/M3AST_AS_Copy.i3</TITLE>
 </HEAD>
-<BODY bgcolor="#eeeeee">
+<BODY bgcolor="#ffffff">
 <A NAME="0TOP0">
 <H2>m3tk/src/ast/M3AST_AS_Copy.i3</H2></A><HR>
 <inInterface>
@@ -184,6 +184,9 @@ PROCEDURE <A HREF="M3AST_AS_Copy.m3.html#Named_type">Named_type</A>(
 PROCEDURE <A HREF="M3AST_AS_Copy.m3.html#Integer_type">Integer_type</A>(
     n: M3AST_AS_F.Integer_type; h: AST_CopyRep.Handle;
     ): AST.NODE RAISES ANY;
+PROCEDURE <A HREF="M3AST_AS_Copy.m3.html#Longint_type">Longint_type</A>(
+    n: M3AST_AS_F.Longint_type; h: AST_CopyRep.Handle;
+    ): AST.NODE RAISES ANY;
 PROCEDURE <A HREF="M3AST_AS_Copy.m3.html#WideChar_type">WideChar_type</A>(
     n: M3AST_AS_F.WideChar_type; h: AST_CopyRep.Handle;
     ): AST.NODE RAISES ANY;
@@ -270,6 +273,9 @@ PROCEDURE <A HREF="M3AST_AS_Copy.m3.html#Range">Range</A>(
     ): AST.NODE RAISES ANY;
 PROCEDURE <A HREF="M3AST_AS_Copy.m3.html#Integer_literal">Integer_literal</A>(
     n: M3AST_AS_F.Integer_literal; h: AST_CopyRep.Handle;
+    ): AST.NODE RAISES ANY;
+PROCEDURE <A HREF="M3AST_AS_Copy.m3.html#Longint_literal">Longint_literal</A>(
+    n: M3AST_AS_F.Longint_literal; h: AST_CopyRep.Handle;
     ): AST.NODE RAISES ANY;
 PROCEDURE <A HREF="M3AST_AS_Copy.m3.html#Real_literal">Real_literal</A>(
     n: M3AST_AS_F.Real_literal; h: AST_CopyRep.Handle;
