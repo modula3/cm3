@@ -679,13 +679,18 @@ def GetConfigForDistribution(Target):
 #
 # Favor the config-no-install directory, else fallback to config.
 #
-    a = os.path.join(Root, "m3-sys", "cminstall", "src")
-    b = os.path.join(a, "config-no-install", Target)
-    if os.path.isfile(b):
+    if False:
+        a = os.path.join(Root, "m3-sys", "cminstall", "src")
+        b = os.path.join(a, "config-no-install", Target)
+        if os.path.isfile(b):
+            return b
+        b = os.path.join(a, "config", Target)
+        # print("GetConfigForDistribution:" + b)
         return b
-    b = os.path.join(a, "config", Target)
-    # print("GetConfigForDistribution:" + b)
-    return b
+    else:
+        b = os.path.join(Root, "m3-sys", "cminstall", "src", "config-no-install", Target)
+        # print("GetConfigForDistribution:" + b)
+        return b
 
 #-----------------------------------------------------------------------------
 
