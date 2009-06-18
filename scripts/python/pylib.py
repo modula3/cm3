@@ -2145,7 +2145,8 @@ def CopyConfigForDevelopment():
     #
     a = os.path.join(Root, "m3-sys", "cminstall", "src")
 
-    for b in ["config", "config-no-install"]: 
+    #for b in ["config", "config-no-install"]: 
+    for b in ["config-no-install"]: 
         for File in glob.glob(os.path.join(a, b, "*")):
             if os.path.isfile(File):
                 DeleteFile(os.path.join(To, os.path.basename(File)))
