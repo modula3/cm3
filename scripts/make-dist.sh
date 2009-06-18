@@ -275,5 +275,7 @@ if [ `hostname` = 'birch' ]; then
 fi
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
   scp ${STAGE}/cm3-*-${DS}.tgz birch:/var/www/modula3.elegosoft.com/cm3/releng
-  scp collection-*.html birch:/var/www/modula3.elegosoft.com/cm3/releng
+  if [ `hostname` = 'birch' ]; then
+    scp collection-*.html birch:/var/www/modula3.elegosoft.com/cm3/releng
+  fi
 fi
