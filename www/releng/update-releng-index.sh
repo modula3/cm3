@@ -57,7 +57,7 @@ for rc in RC1 RC2 RC3 RC4 RC5 RC6 RC7 RC8 RC9; do
   echo "  <h2><a name=\"doc-${rc}\">Documentation and Support Scripts ${rc}</a></h2>" >> ${INDEX}
   echo "" >> ${INDEX}
   echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>" >> ${INDEX}
-  for f in cm3-doc-*.tgz cm3-scripts-*.tgz; do
+  for f in cm3-src-*.tgz cm3-doc-*.tgz cm3-scripts-*.tgz; do
     tablerow $f
   done >> ${INDEX}
   echo "</tbody></table>" >> ${INDEX}
