@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.9 2009-06-18 09:57:18 wagner Exp $
+# $Id: make-dist.sh,v 1.10 2009-06-18 11:27:04 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -275,5 +275,7 @@ if [ `hostname` = 'birch' ]; then
 fi
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
   scp ${STAGE}/cm3-*-${DS}.tgz birch:/var/www/modula3.elegosoft.com/cm3/releng
-  scp collection-*.html birch:/var/www/modula3.elegosoft.com/cm3/releng
+  if [ `hostname` = 'birch' ]; then
+    scp collection-*.html birch:/var/www/modula3.elegosoft.com/cm3/releng
+  fi
 fi
