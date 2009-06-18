@@ -28,8 +28,9 @@ DS="RC1"; export DS
 if [ -z "${NOBUILD}" ]; then
   DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
   DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
-  SYSINFO_DONE="" "$ROOT/scripts/make-src-dist-all.sh"
-
+  if [ `hostname` = 'birch' ]; then
+    SYSINFO_DONE="" "$ROOT/scripts/make-src-dist-all.sh"
+  fi
   PATH="${INSTALLROOT}/bin:${PATH}"
   "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
 fi
@@ -260,6 +261,18 @@ for c in ${PKG_COLLECTIONS}; do
     -czf "${ARCHIVE}" collection-${c}.html install.sh ${PKGS}
   ls -l "${ARCHIVE}"
 done
+
+if [ `hostname` = 'birch' ]; then
+  ARCHIVE="${STAGE}/cm3-scripts-${CM3VERSION}-${DS}.tgz"
+  "${TAR}"  --exclude '*.o' --exclude '*.mo' --exclude '*.io' \
+    -czf "${ARCHIVE}" scripts
+  ls -l "${ARCHIVE}"
+
+  ARCHIVE="${STAGE}/cm3-doc-${CM3VERSION}-${DS}.tgz"
+  "${TAR}"  --exclude '*.o' --exclude '*.mo' --exclude '*.io' \
+    -czf "${ARCHIVE}" doc www
+  ls -l "${ARCHIVE}"
+fi
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
   scp ${STAGE}/cm3-*-${DS}.tgz birch:/var/www/modula3.elegosoft.com/cm3/releng
   scp collection-*.html birch:/var/www/modula3.elegosoft.com/cm3/releng
