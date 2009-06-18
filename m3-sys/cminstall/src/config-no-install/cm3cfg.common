@@ -285,7 +285,19 @@ readonly proc emacs_compile(el) is
     return q_exec("emacs -batch -f batch-byte-compile", el)
 end
 
-%------------------------------------------------------------------------------
+%------------------------------------------------------------- GNU variants ---
+% The two large pieces of GNU software used by the Modula-3 system
+% gcc(=m3cc) and gdb(=m3gdb) often require slightly different C compilers
+% or flags.  They are specified here.  Note that they may be overridden
+% from the cm3 command line.
+%
+% To use the GNU defaults for CC and CFLAGS, specify "*".
+%
+
+% GNU_CC     = "gcc"
+% GNU_CFLAGS = "-g"
+
+% The most common values here are make and gmake.
 
 if not defined ("GNU_MAKE")
     GNU_MAKE   = "make"
