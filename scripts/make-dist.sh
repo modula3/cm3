@@ -1,6 +1,8 @@
 #bash
 # $Id$
 
+DESTHOST=${DESTHOST:-birch,elegosoft.com}
+
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
   root="${ROOT}"; export root
@@ -274,8 +276,8 @@ if [ `hostname` = 'birch' ]; then
   ls -l "${ARCHIVE}"
 fi
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
-  scp ${STAGE}/cm3-*-${DS}.tgz birch:/var/www/modula3.elegosoft.com/cm3/releng
+  scp ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
   if [ `hostname` = 'birch' ]; then
-    scp collection-*.html birch:/var/www/modula3.elegosoft.com/cm3/releng
+    scp collection-*.html $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
   fi
 fi
