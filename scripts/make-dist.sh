@@ -37,7 +37,8 @@ if [ -z "${NOBUILD}" ]; then
   "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
 fi
 # keep short runpaths
-export M3_PORTABLE_RUN_PATH=1
+M3_PORTABLE_RUN_PATH=1
+export M3_PORTABLE_RUN_PATH
 
 PKG_COLLECTIONS="devlib m3devtool m3gdb webdev gui anim database cvsup obliq juno caltech-parser demo tool math game core"
 

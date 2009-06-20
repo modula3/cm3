@@ -34,7 +34,8 @@ NEWCFG=${NEWCFG:-y}
 DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
 
 # keep short runpaths
-export M3_PORTABLE_RUN_PATH=1
+M3_PORTABLE_RUN_PATH=1
+export M3_PORTABLE_RUN_PATH
 
 #-----------------------------------------------------------------------------
 # create the basic directories
