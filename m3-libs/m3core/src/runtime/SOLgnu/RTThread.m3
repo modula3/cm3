@@ -9,7 +9,7 @@
 
 UNSAFE MODULE RTThread EXPORTS RTThread, RTHooks;
 
-IMPORT Uframe, Unix, Umman, Uucontext, RTMisc;
+IMPORT Uframe, Unix, Umman, RTMisc;
 
 PROCEDURE SP (READONLY s: State): ADDRESS =
   BEGIN
