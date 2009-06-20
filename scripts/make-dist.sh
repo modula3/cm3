@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.11 2009-06-18 22:26:59 wagner Exp $
+# $Id: make-dist.sh,v 1.12 2009-06-20 19:23:31 jkrell Exp $
 
 DESTHOST=${DESTHOST:-birch,elegosoft.com}
 
@@ -37,7 +37,8 @@ if [ -z "${NOBUILD}" ]; then
   "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
 fi
 # keep short runpaths
-export M3_PORTABLE_RUN_PATH=1
+M3_PORTABLE_RUN_PATH=1
+export M3_PORTABLE_RUN_PATH
 
 PKG_COLLECTIONS="devlib m3devtool m3gdb webdev gui anim database cvsup obliq juno caltech-parser demo tool math game core"
 
