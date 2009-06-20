@@ -684,7 +684,8 @@ def GetConfigForDistribution(Target):
         b = os.path.join(a, "config-no-install", Target)
         if os.path.isfile(b):
             return b
-        b = os.path.join(a, "config", Target)
+        # b = os.path.join(a, "config", Target)
+        b = os.path.join(a, "config-no-install", Target)
         # print("GetConfigForDistribution:" + b)
         return b
     else:
@@ -2156,7 +2157,8 @@ def CopyConfigForDevelopment():
             if os.path.isfile(File):
                 DeleteFile(os.path.join(To, os.path.basename(File)))
 
-    CopyFile(os.path.join(Root, a, "config", "cm3.cfg"), To) or FatalError()
+    # CopyFile(os.path.join(Root, a, "config", "cm3.cfg"), To) or FatalError()
+    CopyFile(os.path.join(Root, a, "config-no-install", "cm3.cfg"), To) or FatalError()
     return True
 
 #-----------------------------------------------------------------------------
