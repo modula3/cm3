@@ -43,7 +43,19 @@ tablerow() {
   elif [ -r "$f.txt" ]; then
     echo "<a href=\"$f.txt\">Notes</a>"
   else
-    echo "-"
+    case "$f" in
+      *-bin-core-*)
+        echo '<a href="collection-core.html">standard, recommended</a>';;
+      *-bin-min-*)
+        echo '<a href="collection-min.html">minimal</a>';;
+      *-bin-ws-m3devtool*)
+        echo '<a href="collection-m3devtool.html">recommended</a>';;
+      *-bin-ws-*)
+        coll=`echo $f | awk -F- '{print $4}'`
+        echo "<a href=\"collection-${coll}.html\">optional</a>"
+      ;;
+      *) echo "-";;
+    esac
   fi
   echo "</td></tr>"
 }
