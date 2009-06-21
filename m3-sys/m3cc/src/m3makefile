@@ -310,11 +310,11 @@ if equal(M3CC_TARGET, "ARM_DARWIN") or equal(M3CC_TARGET, "I386_INTERIX")
     local Defines = ""
     if equal(M3CC_TARGET, "ARM_DARWIN")
         SourceDir = "../gcc-apple"
-	Defines = "#define GCC_APPLE\n#define GCC42\n"
+        Defines = "#define GCC_APPLE\n#define GCC42\n"
     end
     if equal(M3CC_TARGET, "I386_INTERIX")
         SourceDir = "../gcc-interix"
-	Defines = "#define GCC42\n"
+        Defines = "#define GCC42\n"
     end
     fs_mkdir(SourceDir & "/gcc/m3cg")
     foreach a in ["config-lang.in", "lang-options.h", "lang-specs.h", "lang.opt", "m3-convert.c", "m3cg.h", "Make-lang.in"]
