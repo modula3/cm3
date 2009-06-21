@@ -229,6 +229,16 @@ extern void i386_pe_asm_file_end PARAMS ((FILE *));
 #undef DEFAULT_PCC_STRUCT_RETURN
 #define DEFAULT_PCC_STRUCT_RETURN 0
 
+/* Biggest alignment supported by the object file format of this
+   machine.  Use this macro to limit the alignment which can be
+   specified using the `__attribute__ ((aligned (N)))' construct.  If
+   not defined, the default value is `BIGGEST_ALIGNMENT'.  */
+/* IMAGE_SCN_ALIGN_8192BYTES is the largest section alignment flag
+   specified in the PECOFF60 spec.  Native MS compiler also limits
+   user-specified alignment to 8192 bytes.  */
+#undef MAX_OFILE_ALIGNMENT
+#define MAX_OFILE_ALIGNMENT (8192 * 8)
+
 /* A bitfield declared as `int' forces `int' alignment for the struct.  */
 #undef PCC_BITFIELD_TYPE_MATTERS 
 #define PCC_BITFIELD_TYPE_MATTERS 1
