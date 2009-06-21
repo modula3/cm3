@@ -65,7 +65,7 @@ if equal (TARGET, "SPARC64_OPENBSD") or equal (TARGET, "PPC32_OPENBSD")
      or equal (TARGET, "PPC_LINUX") or equal (TARGET, "AMD64_LINUX")   
      or equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")   
      or equal (TARGET, "AMD64_FREEBSD") or (equal(TARGET, "NT386") and equal(OS_TYPE, "POSIX"))   
-     or equal (TARGET, "NetBSD2_i386")
+     or equal (TARGET, "NetBSD2_i386") or equal (TARGET, "I386_INTERIX")
     
  Interface      ("RTMachine")   
     

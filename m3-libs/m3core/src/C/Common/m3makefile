@@ -31,6 +31,7 @@ if     equal (TARGET, "AMD64_LINUX")
     or equal (TARGET, "PA32_HPUX")
     or equal (TARGET, "PA64_HPUX")
     or equal (TARGET, "ARM_DARWIN")
+    or equal (TARGET, "I386_INTERIX")
   Interface ("Cstring")
   Interface ("Cstdio")
 end
