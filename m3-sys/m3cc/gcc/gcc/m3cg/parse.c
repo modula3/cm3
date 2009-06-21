@@ -257,10 +257,10 @@ struct lang_type GTY(())
 
 /* Language-specific declaration information.  */
 
-struct lang_decl GTY(())
+typedef struct lang_decl GTY(())
 {
   char junk; /* dummy field to ensure struct is not empty */
-};
+} lang_decl_t;
 
 struct language_function GTY(())
 {
@@ -957,7 +957,7 @@ m3_write_globals (void)
     tree index, value;
 
     FOR_EACH_CONSTRUCTOR_ELT (elts, idx, index, value) {
-      tree var = DECL_LANG_SPECIFIC(index);
+      tree var = (tree)DECL_LANG_SPECIFIC(index);
       if (var) {
 	gcc_assert(TREE_CODE(var) == VAR_DECL);
 	gcc_assert (TREE_ADDRESSABLE (var)); /* ensure optimizers play fair */
@@ -1541,7 +1541,7 @@ scan_target_int (void)
 {
   unsigned HOST_WIDE_INT low;
   HOST_WIDE_INT hi;
-  long i, n_bytes, original_n_bytes, sign, shift;
+  long i, n_bytes, original_n_bytes = { 0 }, sign, shift;
   tree res, t = long_long_integer_type_node;
 
   i = (long) get_byte ();
@@ -3322,7 +3322,7 @@ m3cg_init_offset (void)
   /* M3 hack to preserve TREE_ADDRESSABLE: see tree-ssa.c, tree-ssa-alias.c */
   TREE_THIS_VOLATILE (var) = 1;
   one_field (o, t_int, &f, &v);
-  DECL_LANG_SPECIFIC(f) = var; /* we will fix the offset later once we have rtl */
+  DECL_LANG_SPECIFIC(f) = (lang_decl_t*)var; /* we will fix the offset later once we have rtl */
   TREE_VALUE (v) = v_zero;
 }
 
@@ -3347,7 +3347,7 @@ m3cg_init_float (void)
   BYTEOFFSET (o);
   FLOAT      (val, fkind);
 
-  tree f, v, t;
+  tree f, v, t = { 0 };
 
   switch (fkind) {
   case 0: t = t_reel;   break;
