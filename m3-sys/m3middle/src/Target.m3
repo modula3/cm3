@@ -418,6 +418,12 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Structure_size_boundary   := 16;
                  Jumpbuf_size              := 39 * Address.size;
 
+    | Systems.I386_INTERIX =>
+
+                (* Visual C++'s 16, plus two ints, one to say if sigmask saved, and one to possibly save it. *)
+
+                Jumpbuf_size := 18 * Address.size;
+
     | Systems.NT386, Systems.NT386GNU =>
 
                  (* Cygwin is 13, Visual C++ is 16. Always use 16
