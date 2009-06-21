@@ -53,6 +53,7 @@ readonly _CSupportPieces = {
   "UMAX"       : [ "UMAX", "little-endian" ],
   "VAX"        : [ "VAX" ],
   "I386_DARWIN": [ "little-endian" ],
+  "I386_INTERIX": [ "little-endian" ],
   "I386_OPENBSD": [ "little-endian" ],
   "PPC_DARWIN" : [ "big-endian" ],
   "PPC_LINUX"  : [ "big-endian" ],

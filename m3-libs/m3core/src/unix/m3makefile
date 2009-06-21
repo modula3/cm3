@@ -22,6 +22,7 @@ readonly _UnixPieces = {
   "HP300"           : [ "hpux-7-0",                                "uin-common" ],
   "HPPA"            : [ "hpux-7-0",                                "uin-common" ],
   "I386_DARWIN"     : [ "darwin-common", "darwin-generic", "darwin-i386", "uin-len" ],
+  "I386_INTERIX"    : [ "interix-common", "uin-common" ],
   "I386_FREEBSD"    : [ "freebsd-common",                          "uin-len" ],
   "I386_LINUX"      : [ "linux-common", "linux-32",                "uin-common" ],
   "I386_NETBSD"     : [ "netbsd-common",                           "uin-len" ],

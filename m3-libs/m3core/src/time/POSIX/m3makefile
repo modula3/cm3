@@ -24,6 +24,7 @@ readonly _DateImpls = {
   "FreeBSD4"   : "DateBsd",
   "HP300"      : "DateBsd",
   "HPPA"       : "DatePosix",
+  "I386_INTERIX" : "DatePosix",
   "IBMR2"      : "DateBsd",
   "IBMRT"      : "DateBsd",
   "IRIX5"      : "DatePosix",
