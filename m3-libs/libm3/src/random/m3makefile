@@ -26,6 +26,7 @@ readonly _RandomPieces = {
   "FreeBSD4"   : [ _LittleEndian ],
   "HP300"      : [ _BigEndian ],
   "HPPA"       : [ _BigEndian ],
+  "I386_INTERIX" : [ _LittleEndian ],
   "IBMR2"      : [ _BigEndian ],
   "IBMRT"      : [ _BigEndian ],
   "IRIX5"      : [ _BigEndian ],
