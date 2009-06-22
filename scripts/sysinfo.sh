@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.69 2009-05-06 12:51:13 jkrell Exp $
+# $Id: sysinfo.sh,v 1.70 2009-06-22 13:15:25 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -232,6 +232,8 @@ case "${UNAME}" in
       CM3_TARGET=PPC_LINUX
     elif [ "${UNAMEM}" = "x86_64" ] ; then
       CM3_TARGET=AMD64_LINUX
+    elif [ "${UNAMEM}" = "sparc64" ] ; then
+      CM3_TARGET=SPARC32_LINUX
     else
       CM3_TARGET=LINUXLIBC6
     fi
@@ -272,6 +274,7 @@ if [ -n "$root" ] ; then
 else
   ROOT=${ROOT:-${PRJ_ROOT}/cm3}
 fi
+CM3_ROOT=${CM3_ROOT:-${ROOT}}
 M3GDB=${M3GDB:-${CM3_GDB}}
 M3OSTYPE=${M3OSTYPE:-${CM3_OSTYPE}}
 TARGET=${TARGET:-${CM3_TARGET}}
@@ -326,6 +329,7 @@ fi
 #-----------------------------------------------------------------------------
 # debug output
 debug "ROOT        = $ROOT"
+debug "CM3_ROOT    = $CM3_ROOT"
 debug "M3GDB       = $M3GDB"
 debug "M3OSTYPE    = $M3OSTYPE"
 debug "TARGET      = $TARGET"
@@ -349,7 +353,7 @@ debug "CM3LASTCHANGED = $CM3LASTCHANGED"
 
 export ROOT M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB
 export GREP TMPDIR EXE SL CM3VERSION SYSLIBDIR SYSLIB DEV_BIN DEV_LIB TAR
-export CM3BINSEARCHPATH CM3ROOT CM3
+export CM3BINSEARCHPATH CM3ROOT CM3 CM3_ROOT
 export SYSINFO_DONE CM3VERSIONNUM CM3LASTCHANGED
 
 fi
