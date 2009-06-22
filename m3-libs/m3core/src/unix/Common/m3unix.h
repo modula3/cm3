@@ -52,7 +52,7 @@ struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses *
 #include <unistd.h>
 #endif
 
-#if defined(__INTERIX)
+#ifdef __INTERIX
 #include <utime.h>
 #endif
 
@@ -64,6 +64,7 @@ typedef struct timeval timeval_t;
 typedef struct timespec timespec_t;
 typedef struct timezone timezone_t;
 typedef struct tm tm_t;
+typedef struct utimbuf utimbuf_t;
 
 typedef   signed char       INT8;
 typedef unsigned char      UINT8;
