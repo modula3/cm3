@@ -29,6 +29,7 @@ int MachineIDPosixC__CanGet(char *id)
     struct ifreq req;
     struct ifconf list;
     int s;
+    int e;
     struct ifreq buf[10];
 
     /* try to find an ethernet hardware address */
@@ -44,11 +45,11 @@ int MachineIDPosixC__CanGet(char *id)
             {
                 strcpy(req.ifr_name, buf[i].ifr_name);
 #if defined(__linux__) || defined(__CYGWIN__)
-                s = ioctl(s, SIOCGIFHWADDR, &req);
+                e = ioctl(s, SIOCGIFHWADDR, &req);
 #elif defined(__osf__)
-                s = ioctl(s, SIOCRPHYSADDR, &req);
+                e = ioctl(s, SIOCRPHYSADDR, &req);
 #endif
-                if (s >= 0)
+                if (e >= 0)
                 {
                     int j;
                     for (j = 0; j < 6; j++)
