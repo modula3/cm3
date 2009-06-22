@@ -5,6 +5,8 @@
 /* Last modified on Mon Sep 20 11:46:17 PDT 1993 by kalsow     */
 /*      modified on Thu Jul 15 16:23:08 PDT 1993 by swart      */
 
+#if defined(__linux__) || defined(__osf__) || defined(__CYGWIN__)
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -13,12 +15,20 @@
 #include <netdb.h>
 #include <string.h>
 
+#else
+
+#include <unistd.h>
+#include <netdb.h>
+
+#endif
+
 int MachineIDPosixC__CanGet(char *id) {
   int i;
   char hostname[128];
   struct hostent *hostent;
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__CYGWIN__)
+
   struct ifreq req;
   struct ifconf list;
   int s;
@@ -86,3 +96,19 @@ int MachineIDPosixC__CanGet(char *id) {
     id[i] = 0;
   return 0;
 }
+
+
+#if 0 /* test code */
+
+int main()
+{
+    unsigned char id[6];
+    int i;
+    
+    i = MachineIDPosixC__CanGet((char*)id);
+    printf("%d %02x%02x%02x%02x%02x%02x\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
+
+    return 0;
+}
+
+#endif
