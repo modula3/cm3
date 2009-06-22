@@ -199,7 +199,7 @@ def _GetAllTargets():
     Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4", "NetBSD2_i386" ]
 
     for proc in [ "PPC", ]:
-        for os in [ "OPENBSD", "NETBSD", "FREEBSD", "DARWIN", "LINUX", "NT" ]:
+        for os in [ "OPENBSD", "NETBSD", "FREEBSD", "DARWIN", "LINUX" ]:
             Targets += [proc + "_" + os]
 
     # systematic naming
@@ -497,6 +497,10 @@ if (UName.startswith("windows")
 
     Host = "NT386"
     # Host = "I386_NT"
+
+elif UName.startswith("interix"):
+
+    Host = "I386_INTERIX"
 
 elif UName.startswith("freebsd"):
 
