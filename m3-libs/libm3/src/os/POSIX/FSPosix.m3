@@ -285,7 +285,7 @@ PROCEDURE IterRaw(iter: Iterator; VAR (*OUT*) name: TEXT): BOOLEAN =
       ELSE
       (* cvsup source says readdir needs EnableSwitching/DisableSwitching *)
         Scheduler.DisableSwitching ();
-          n := FSPosixC.m3_readdir_name(iter.d);
+          n := FSPosixC.readdir_name(iter.d);
         Scheduler.EnableSwitching ();
           IF n = NIL THEN
             Scheduler.DisableSwitching ();

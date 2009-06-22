@@ -8,7 +8,7 @@
 #include <dirent.h>
 typedef struct dirent dirent_t;
 
-const char* m3_readdir_name(DIR* dir)
+const char* FSPosixC__readdir_name(DIR* dir)
 {
     dirent_t* e;
 
