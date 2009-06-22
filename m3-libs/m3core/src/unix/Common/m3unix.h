@@ -34,6 +34,7 @@ struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses *
 #include <time.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <string.h>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -65,6 +66,8 @@ typedef struct timespec timespec_t;
 typedef struct timezone timezone_t;
 typedef struct tm tm_t;
 typedef struct utimbuf utimbuf_t;
+
+#define ZeroMemory(a,b) (memset((a), 0, (b)))
 
 typedef   signed char       INT8;
 typedef unsigned char      UINT8;
