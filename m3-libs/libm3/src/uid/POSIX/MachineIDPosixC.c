@@ -7,6 +7,7 @@
 
 #include <unistd.h>
 #include <netdb.h>
+#include <string.h>
 
 #if defined(__linux__) || defined(__osf__) || defined(__CYGWIN__)
 
@@ -14,7 +15,6 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
-#include <string.h>
 
 #endif
 
