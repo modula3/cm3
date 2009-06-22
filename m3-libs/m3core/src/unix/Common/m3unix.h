@@ -52,6 +52,10 @@ struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses *
 #include <unistd.h>
 #endif
 
+#if defined(__INTERIX)
+#include <utime.h>
+#endif
+
 typedef struct sockaddr sockaddr_t;
 typedef struct itimerval itimerval_t;
 typedef struct hostent hostent_t;
