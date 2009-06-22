@@ -6,6 +6,9 @@
 
 #undef _GNU_SOURCE
 #define _GNU_SOURCE
+#if defined(__INTERIX) && !defined(_ALL_SOURCE)
+#define _ALL_SOURCE
+#endif
 #include <unistd.h>
 #include <signal.h>
 typedef struct sigaction sigaction_t;
@@ -16,6 +19,10 @@ typedef struct sigaction sigaction_t;
 typedef void ucontext_t;
 #else
 #include <ucontext.h>
+#endif
+
+#if !defined(__INTERIX) && !defined(SA_SIGINFO)
+#define SA_SIGINFO SA_SIGINFO
 #endif
 
 #include <string.h>
@@ -45,17 +52,25 @@ RTProcess__InterruptHandler RTProcess__OnInterrupt(RTProcess__InterruptHandler);
 #define InterruptHandler RTProcess__InterruptHandler
 #define InvokeExitors RTProcess__InvokeExitors
 
-typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
-
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
 
+#ifdef SA_SIGINFO
 static void SegV(int Signal, siginfo_t* SignalInfo, void* Context);
 static void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context);
 static void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context);
 static void Quit(int Signal, siginfo_t* SignalInfo, void* Context);
+#else
+static void SegV(int Signal);
+static void Shutdown(int Signal);
+static void Interrupt(int Signal);
+static void Quit(int Signal);
+#endif
 
 static void InstallOneHandler(size_t Index);
 static void RestoreOneHandler(size_t Index);
+
+#ifdef SA_SIGINFO
+
 static size_t GetPC(void* Context);
 
 static size_t GetPC(void* VoidContext)
@@ -128,13 +143,30 @@ static size_t GetPC(void* VoidContext)
     return pc;
 }
 
+#endif
+
+#ifdef SA_SIGINFO
+
+typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
+
 #define DefaultHandler ((SignalActionHandler) SIG_DFL)
 #define IgnoreSignal   ((SignalActionHandler) SIG_IGN)
+
+#else
+
+#define DefaultHandler (SIG_DFL)
+#define IgnoreSignal   (SIG_IGN)
+
+#endif
 
 static const struct
 {
     int Signal;
+#ifdef SA_SIGINFO
     SignalActionHandler Handler;
+#else
+    sighandler_t Handler;
+#endif
 }
 Handlers[] =
 {
@@ -154,22 +186,30 @@ static void InstallOneHandler(size_t Index)
     sigaction_t New;
     int i = { 0 };
     int Signal = Handlers[i].Signal;
-    SignalActionHandler Handler = Handlers[i].Handler;
 
     ZeroMemory(&New, sizeof(New));
     i = sigemptyset(&New.sa_mask);
     assert(i == 0);
 
     /* What if Handler == SIG_IGN? */
-    New.sa_sigaction = Handler;
+#ifdef SA_SIGINFO
+    New.sa_sigaction = Handlers[i].Handler;
     New.sa_flags = SA_SIGINFO;
+#else
+    New.sa_handler = Handlers[i].Handler;
+    New.sa_flags = 0;
+#endif
 
     i = sigaction(Signal, &New, &InitialHandlers[Index]);
     assert(i == 0);
 
     /* Don't override inherited, non-default handlers.
        That is, if the old handler is not the default handler, put it back. */
+#ifdef SA_SIGINFO
     if (InitialHandlers[Index].sa_sigaction != DefaultHandler)
+#else
+    if (InitialHandlers[Index].sa_handler != DefaultHandler)
+#endif
     {
         i = sigaction(Signal, &InitialHandlers[Index], &New);
         assert(i == 0);
@@ -204,6 +244,8 @@ void RestoreHandlers(void)
         RestoreOneHandler(i);
     }
 }
+
+#ifdef SA_SIGINFO
 
 static void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context)
 {
@@ -244,6 +286,50 @@ static void SegV(int Signal, siginfo_t* SignalInfo, void* Context)
 {
     MsgPCSegV (GetPC(Context));
 }
+
+#else
+
+static void Shutdown(int Signal)
+{
+    sigaction_t New;
+    sigaction_t Old;
+
+    ZeroMemory(&Old, sizeof(Old));
+    ZeroMemory(&New, sizeof(New));
+    New.sa_handler = DefaultHandler;
+    New.sa_flags = 0;
+    sigemptyset(&New.sa_mask);
+    InvokeExitors();     /* flush stdio */
+    sigaction(Signal, &New, &Old);  /* restore default handler */
+    kill(getpid(), Signal);         /* and resend the signal */
+}
+
+static void Interrupt(int Signal)
+{
+    InterruptHandler Handler = OnInterrupt(NULL);
+
+    if (Handler == NULL)
+    {
+        Shutdown(Signal);
+    }
+    else
+    {
+        OnInterrupt(Handler); /* reinstall the handler */
+        Handler();
+    }
+}
+
+static void Quit(int Signal)
+{
+    MsgPCAbort (0);
+}
+
+static void SegV(int Signal)
+{
+    MsgPCSegV (0);
+}
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
