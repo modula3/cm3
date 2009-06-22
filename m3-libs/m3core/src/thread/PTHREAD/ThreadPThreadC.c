@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <pthread.h>
+#include <time.h>
+typedef struct timespec timespec_t;
 
 #ifdef __APPLE__
 /* MacOSX diverges in a good way and therefore many functions
@@ -297,6 +299,22 @@ void ThreadPThread__pthread_cond_delete(pthread_cond_t* p)
     free(p);
 }
 
+
+int ThreadPThread__Nanosleep(timespec_t* req, timespec_t* rem)
+{
+#ifdef __INTERIX
+    /* This is only an approximation. */
+    if (rem != NULL)
+        *rem = 0;
+    if (req->tv_sec > 0)
+        sleep(req->tv_sec);
+    else
+        usleep(req->tv_nsec / 1000);
+    return 0;
+#else
+    return nanosleep(req, rem);
+#endif
+}
 
 #ifdef __cplusplus
 } /* extern "C" */

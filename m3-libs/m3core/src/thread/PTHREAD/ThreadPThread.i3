@@ -9,6 +9,7 @@ UNSAFE INTERFACE ThreadPThread;
 FROM Ctypes IMPORT int;
 FROM Cstddef IMPORT size_t;
 FROM Upthread IMPORT pthread_t, start_routine_t;
+FROM Utime IMPORT struct_timespec;
 
 (*---------------------------------------------------------------------------*)
 
@@ -165,6 +166,11 @@ PROCEDURE pthread_cond_wait(cond: pthread_cond_t; mutex: pthread_mutex_t):int;
 
 <*EXTERNAL*>
 PROCEDURE pthread_cond_signal(cond: pthread_cond_t):int;
+
+(*---------------------------------------------------------------------------*)
+
+<*EXTERNAL "ThreadPThread__Nanosleep"*>
+PROCEDURE Nanosleep (READONLY req: struct_timespec; VAR rem: struct_timespec): int;
 
 (*---------------------------------------------------------------------------*)
 
