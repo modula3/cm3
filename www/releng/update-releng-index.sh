@@ -79,7 +79,7 @@ for rc in RC1 RC2 RC3 RC4 RC5 RC6 RC7 RC8 RC9; do
 
 
   for t in ${TARGETS}; do
-    all=`ls -1 cm3-bin-*-${t}-*-${rc}.tgz`
+    all=`ls -1 cm3-bin-*-${t}-*-${rc}.tgz cm3-bin-*-${t}-*-${rc}.tar.gz cm3-bin-*-${t}-*-${rc}.tar.lzma cm3-bin-*-${t}-*-${rc}.tar.xz`
     #ln -sf "${last}" "${FNPAT1}${t}${FNPATSUF}"
     echo "<h3>Target Platform ${t}</h3>"
     echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
