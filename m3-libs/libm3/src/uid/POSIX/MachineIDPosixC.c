@@ -18,6 +18,10 @@
 
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int MachineIDPosixC__CanGet(char *id)
 {
     int i;
@@ -60,14 +64,14 @@ int MachineIDPosixC__CanGet(char *id)
     }
 #endif
 
+    memset(id, 0, 6);
+
     /* try using the machine's internet address */
     if (gethostname(hostname, 128) == 0)
     {
         hostent = gethostbyname(hostname);
         if (hostent && hostent->h_length == 4)
         {
-            id[0] = 0;
-            id[1] = 0;
             id[2] = hostent->h_addr[0];
             id[3] = hostent->h_addr[1];
             id[4] = hostent->h_addr[2];
@@ -76,11 +80,13 @@ int MachineIDPosixC__CanGet(char *id)
         }
     }
 
-    for (i = 0; i < 6; i++)
-        id[i] = 0;
     return 0;
 }
 
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #if 0 /* test code */
 
