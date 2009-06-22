@@ -54,24 +54,27 @@ RTProcess__InterruptHandler RTProcess__OnInterrupt(RTProcess__InterruptHandler);
 
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
 
+static void ShutdownCommon(int Signal);
+
 #ifdef SA_SIGINFO
-static void SegV(int Signal, siginfo_t* SignalInfo, void* Context);
-static void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context);
-static void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context);
-static void Quit(int Signal, siginfo_t* SignalInfo, void* Context);
+#define SIGNAL_HANDLER_SIGNATURE (int Signal, siginfo_t* SignalInfo, void* Context)
+#define SIGNAL_HANDLER_FIELD sa_sigaction
+#define SIGNAL_HANDLER_TYPE SignalActionHandler
 #else
-static void SegV(int Signal);
-static void Shutdown(int Signal);
-static void Interrupt(int Signal);
-static void Quit(int Signal);
+#define SIGNAL_HANDLER_SIGNATURE (int Signal)
+#define SIGNAL_HANDLER_FIELD sa_handler
+#define SIGNAL_HANDLER_TYPE sighandler_t
 #endif
+
+static void SegV SIGNAL_HANDLER_SIGNATURE;
+static void Shutdown SIGNAL_HANDLER_SIGNATURE;
+static void Interrupt SIGNAL_HANDLER_SIGNATURE;
+static void Quit SIGNAL_HANDLER_SIGNATURE;
 
 static void InstallOneHandler(size_t Index);
 static void RestoreOneHandler(size_t Index);
 
 #ifdef SA_SIGINFO
-
-static size_t GetPC(void* Context);
 
 static size_t GetPC(void* VoidContext)
 /* PC: program counter aka instruction pointer, etc. */
@@ -143,30 +146,21 @@ static size_t GetPC(void* VoidContext)
     return pc;
 }
 
-#endif
-
-#ifdef SA_SIGINFO
-
 typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
-
-#define DefaultHandler ((SignalActionHandler) SIG_DFL)
-#define IgnoreSignal   ((SignalActionHandler) SIG_IGN)
 
 #else
 
-#define DefaultHandler (SIG_DFL)
-#define IgnoreSignal   (SIG_IGN)
+#define GetPC(x) 0
 
 #endif
+
+#define DefaultHandler ((SIGNAL_HANDLER_TYPE) SIG_DFL)
+#define IgnoreSignal   ((SIGNAL_HANDLER_TYPE) SIG_IGN)
 
 static const struct
 {
     int Signal;
-#ifdef SA_SIGINFO
-    SignalActionHandler Handler;
-#else
-    sighandler_t Handler;
-#endif
+    SIGNAL_HANDLER_TYPE Handler;
 }
 Handlers[] =
 {
@@ -192,11 +186,10 @@ static void InstallOneHandler(size_t Index)
     assert(i == 0);
 
     /* What if Handler == SIG_IGN? */
+    New.SIGNAL_HANDLER_FIELD = Handlers[i].Handler;
 #ifdef SA_SIGINFO
-    New.sa_sigaction = Handlers[i].Handler;
     New.sa_flags = SA_SIGINFO;
 #else
-    New.sa_handler = Handlers[i].Handler;
     New.sa_flags = 0;
 #endif
 
@@ -205,11 +198,7 @@ static void InstallOneHandler(size_t Index)
 
     /* Don't override inherited, non-default handlers.
        That is, if the old handler is not the default handler, put it back. */
-#ifdef SA_SIGINFO
-    if (InitialHandlers[Index].sa_sigaction != DefaultHandler)
-#else
-    if (InitialHandlers[Index].sa_handler != DefaultHandler)
-#endif
+    if (InitialHandlers[Index].SIGNAL_HANDLER_FIELD != DefaultHandler)
     {
         i = sigaction(Signal, &InitialHandlers[Index], &New);
         assert(i == 0);
@@ -245,16 +234,14 @@ void RestoreHandlers(void)
     }
 }
 
-#ifdef SA_SIGINFO
-
-static void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context)
+static void ShutdownCommon(int Signal)
 {
     sigaction_t New;
     sigaction_t Old;
 
     ZeroMemory(&Old, sizeof(Old));
     ZeroMemory(&New, sizeof(New));
-    New.sa_sigaction = DefaultHandler;
+    New.sa_handler = SIG_DFL;
     New.sa_flags = 0;
     sigemptyset(&New.sa_mask);
     InvokeExitors();     /* flush stdio */
@@ -262,13 +249,18 @@ static void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context)
     kill(getpid(), Signal);         /* and resend the signal */
 }
 
-static void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context)
+static void Shutdown SIGNAL_HANDLER_SIGNATURE
+{
+    ShutdownCommon(Signal);
+}
+
+static void Interrupt SIGNAL_HANDLER_SIGNATURE
 {
     InterruptHandler Handler = OnInterrupt(NULL);
 
     if (Handler == NULL)
     {
-        Shutdown(Signal, SignalInfo, Context);
+        ShutdownCommon(Signal);
     }
     else
     {
@@ -277,59 +269,15 @@ static void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context)
     }
 }
 
-static void Quit(int Signal, siginfo_t* SignalInfo, void* Context)
+static void Quit SIGNAL_HANDLER_SIGNATURE
 {
     MsgPCAbort (GetPC(Context));
 }
 
-static void SegV(int Signal, siginfo_t* SignalInfo, void* Context)
+static void SegV SIGNAL_HANDLER_SIGNATURE
 {
     MsgPCSegV (GetPC(Context));
 }
-
-#else
-
-static void Shutdown(int Signal)
-{
-    sigaction_t New;
-    sigaction_t Old;
-
-    ZeroMemory(&Old, sizeof(Old));
-    ZeroMemory(&New, sizeof(New));
-    New.sa_handler = DefaultHandler;
-    New.sa_flags = 0;
-    sigemptyset(&New.sa_mask);
-    InvokeExitors();     /* flush stdio */
-    sigaction(Signal, &New, &Old);  /* restore default handler */
-    kill(getpid(), Signal);         /* and resend the signal */
-}
-
-static void Interrupt(int Signal)
-{
-    InterruptHandler Handler = OnInterrupt(NULL);
-
-    if (Handler == NULL)
-    {
-        Shutdown(Signal);
-    }
-    else
-    {
-        OnInterrupt(Handler); /* reinstall the handler */
-        Handler();
-    }
-}
-
-static void Quit(int Signal)
-{
-    MsgPCAbort (0);
-}
-
-static void SegV(int Signal)
-{
-    MsgPCSegV (0);
-}
-
-#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
