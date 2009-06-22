@@ -9,21 +9,19 @@ saves us from having to declare struct flock, which is gnarled up in #ifdefs.
 see http://www.opengroup.org/onlinepubs/009695399/functions/fcntl.html
 */
 
-#define _FILE_OFFSET_BITS 64
-
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
+#include "m3unix.h"
 #include <string.h>
-#include <stddef.h>
 
-typedef ptrdiff_t INTEGER;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct flock flock_t;
 #define FALSE 0
 #define TRUE 1
 #define ZeroMemory(a,b) (memset((a), 0, (b)))
 
-INTEGER RegularFileLockC(int fd)
+INTEGER FilePosixC__RegularFileLock(int fd)
 {
     flock_t lock;
     int err;
@@ -42,7 +40,7 @@ INTEGER RegularFileLockC(int fd)
     return TRUE;
 }
 
-INTEGER RegularFileUnlockC(int fd)
+INTEGER FilePosixC__RegularFileUnlock(int fd)
 {
     flock_t lock;
 
@@ -52,3 +50,7 @@ INTEGER RegularFileUnlockC(int fd)
 
     return fcntl(fd, F_SETLK, &lock);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
