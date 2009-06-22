@@ -2,6 +2,9 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
+#if defined(__INTERIX) && !defined(_ALL_SOURCE)
+#define _ALL_SOURCE
+#endif
 #include <assert.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -305,7 +308,7 @@ int ThreadPThread__Nanosleep(timespec_t* req, timespec_t* rem)
 #ifdef __INTERIX
     /* This is only an approximation. */
     if (rem != NULL)
-        *rem = 0;
+        memset(rem, 0, sizeof(*rem));
     if (req->tv_sec > 0)
         sleep(req->tv_sec);
     else
