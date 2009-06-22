@@ -5,20 +5,16 @@
 /* Last modified on Mon Sep 20 11:46:17 PDT 1993 by kalsow     */
 /*      modified on Thu Jul 15 16:23:08 PDT 1993 by swart      */
 
+#include <unistd.h>
+#include <netdb.h>
+
 #if defined(__linux__) || defined(__osf__) || defined(__CYGWIN__)
 
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
-#include <netdb.h>
 #include <string.h>
-
-#else
-
-#include <unistd.h>
-#include <netdb.h>
 
 #endif
 
@@ -27,7 +23,7 @@ int MachineIDPosixC__CanGet(char *id) {
   char hostname[128];
   struct hostent *hostent;
 
-#if defined(__linux__) || defined(__CYGWIN__)
+#if defined(__linux__) || defined(__osf__) || defined(__CYGWIN__)
 
   struct ifreq req;
   struct ifconf list;
@@ -43,34 +39,19 @@ int MachineIDPosixC__CanGet(char *id) {
     if (ioctl(s, SIOCGIFCONF, &list) >= 0) {
       for (i = 0; i < list.ifc_len / sizeof(struct ifreq); i++) {
 	strcpy(req.ifr_name, buf[i].ifr_name);
-	if (ioctl(s, SIOCGIFHWADDR, &req) >= 0) {
-	  int j;
-	  for (j = 0; j < 6; j++)
-	    id[j] = req.ifr_hwaddr.sa_data[j];
-	  return 1;
-	}
-      }
-    }
-  }
+#if defined(__linux__) || defined(__CYGWIN__)
+	s = ioctl(s, SIOCGIFHWADDR, &req);
 #elif defined(__osf__)
-  struct ifdevea req;
-  struct ifconf list;
-  int s;
-  struct ifreq buf[10];
-
-  /* try to find an ethernet hardware address */
-  s = socket(PF_UNIX, SOCK_STREAM, AF_UNSPEC);
-  if (s >= 0) {
-    list.ifc_len = sizeof buf;
-    list.ifc_req = buf;
-
-    if (ioctl(s, SIOCGIFCONF, &list) >= 0) {
-      for (i = 0; i < list.ifc_len / sizeof(struct ifreq); i++) {
-	strcpy(req.ifr_name, buf[i].ifr_name);
-	if (ioctl(s, SIOCRPHYSADDR, &req) >= 0) {
+	s = ioctl(s, SIOCRPHYSADDR, &req);
+#endif
+    if (s >= 0) {
 	  int j;
 	  for (j = 0; j < 6; j++)
+#if defined(__linux__) || defined(__CYGWIN__)
+	    id[j] = req.ifr_hwaddr.sa_data[j];
+#elif defined(__osf__)
 	    id[j] = req.default_pa[j];
+#endif
 	  return 1;
 	}
       }
@@ -98,7 +79,9 @@ int MachineIDPosixC__CanGet(char *id) {
 }
 
 
-#if 0 /* test code */
+#if 1 /* test code */
+
+#include <stdio.h>
 
 int main()
 {
