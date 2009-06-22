@@ -34,21 +34,27 @@ if os.environ.get("M3CONFIG", "").lower().find("m3-syscminstallsrcconfig") != -1
     print("backslash problem; environment variable M3CONFIG is " + getenv("M3CONFIG"))
     sys.exit(1)
 
+def IsInterix():
+    return os.uname()[0].lower().startswith("interix")
+
 env_OS = getenv("OS")
 if env_OS == "Windows_NT":
-    def uname():
-        PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
-        return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
-    #
-    # cmd can run extensionless executables if this code is enabled.
-    # This can be useful for example with NT386GNU following more Posix-ish
-    # naming styles than even Cygwin usually does.
-    #
-    #pathext = getenv("PATHEXT");
-    #if pathext and not "." in pathext.split(";"):
-    #    pathext = ".;" + pathext
-    #    os.environ["PATHEXT"] = pathext
-    #    print("set PATHEXT=.;%PATHEXT%")
+    if IsInterix():
+        from os import uname
+    else:
+        def uname():
+            PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
+            return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
+        #
+        # cmd can run extensionless executables if this code is enabled.
+        # This can be useful for example with NT386GNU following more Posix-ish
+        # naming styles than even Cygwin usually does.
+        #
+        #pathext = getenv("PATHEXT");
+        #if pathext and not "." in pathext.split(";"):
+        #    pathext = ".;" + pathext
+        #    os.environ["PATHEXT"] = pathext
+        #    print("set PATHEXT=.;%PATHEXT%")
 else:
     from os import uname
 
@@ -80,7 +86,7 @@ def SearchPath(name, paths = getenv("PATH")):
     if paths == "":
         return None
     (base, exts) = os.path.splitext(name)
-    if not exts:
+    if not exts and not IsInterix():
         exts = (getenv("PATHEXT") or "").lower()
     for ext in exts.split(";"):
         if ext == ".":
@@ -498,7 +504,7 @@ if (UName.startswith("windows")
     Host = "NT386"
     # Host = "I386_NT"
 
-elif UName.startswith("interix"):
+elif IsInterix():
 
     Host = "I386_INTERIX"
 
@@ -2102,6 +2108,10 @@ def CreateDirectory(a):
 #-----------------------------------------------------------------------------
 
 def MakeTempDir():
+    if getenv("TMPDIR"):
+        if not os.path.exists(getenv("TMPDIR")):
+            CreateDirectory(getenv("TMPDIR"))
+        return
     if getenv("TEMP") and not os.path.exists(getenv("TEMP")):
         CreateDirectory(getenv("TEMP"))
 
