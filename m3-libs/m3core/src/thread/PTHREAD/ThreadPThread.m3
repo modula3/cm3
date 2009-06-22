@@ -1259,7 +1259,7 @@ PROCEDURE StartWorld () =
     END;
   END StartWorld;
 
-PROCEDURE SignalHandler (sig: int; <*UNUSED*> sip, uap: ADDRESS) =
+PROCEDURE SignalHandler (sig: int) =
   VAR
     errno := Cerrno.GetErrno();
     xx: INTEGER;

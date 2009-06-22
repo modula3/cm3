@@ -80,7 +80,7 @@ static sigset_t mask;
 /* Signal based suspend/resume */
 static sem_t ackSem;
 
-void SignalHandler(int, siginfo_t*, void* /* ucontext_t* */);
+void SignalHandler(int);
 
 void SetupHandlers(void)
 {
@@ -100,8 +100,8 @@ void SetupHandlers(void)
     r = sigdelset(&mask, SIGABRT); assert(r == 0);
     r = sigdelset(&mask, SIGTERM); assert(r == 0);
 
-    act.sa_flags = SA_RESTART | SA_SIGINFO;
-    act.sa_sigaction = SignalHandler;
+    act.sa_flags = SA_RESTART;
+    act.sa_handler = SignalHandler;
     r = sigfillset(&act.sa_mask); assert(r == 0);
     r = sigaction(SIG_SUSPEND, &act, &oact); assert(r == 0);
 }
