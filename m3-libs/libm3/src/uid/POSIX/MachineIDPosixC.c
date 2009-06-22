@@ -18,68 +18,77 @@
 
 #endif
 
-int MachineIDPosixC__CanGet(char *id) {
-  int i;
-  char hostname[128];
-  struct hostent *hostent;
+int MachineIDPosixC__CanGet(char *id)
+{
+    int i;
+    char hostname[128];
+    struct hostent *hostent;
 
 #if defined(__linux__) || defined(__osf__) || defined(__CYGWIN__)
 
-  struct ifreq req;
-  struct ifconf list;
-  int s;
-  struct ifreq buf[10];
+    struct ifreq req;
+    struct ifconf list;
+    int s;
+    struct ifreq buf[10];
 
-  /* try to find an ethernet hardware address */
-  s = socket(PF_UNIX, SOCK_STREAM, AF_UNSPEC);
-  if (s >= 0) {
-    list.ifc_len = sizeof buf;
-    list.ifc_req = buf;
+    /* try to find an ethernet hardware address */
+    s = socket(PF_UNIX, SOCK_STREAM, AF_UNSPEC);
+    if (s >= 0)
+    {
+        list.ifc_len = sizeof buf;
+        list.ifc_req = buf;
 
-    if (ioctl(s, SIOCGIFCONF, &list) >= 0) {
-      for (i = 0; i < list.ifc_len / sizeof(struct ifreq); i++) {
-	strcpy(req.ifr_name, buf[i].ifr_name);
+        if (ioctl(s, SIOCGIFCONF, &list) >= 0)
+        {
+            for (i = 0; i < list.ifc_len / sizeof(struct ifreq); i++)
+            {
+                strcpy(req.ifr_name, buf[i].ifr_name);
 #if defined(__linux__) || defined(__CYGWIN__)
-	s = ioctl(s, SIOCGIFHWADDR, &req);
+                s = ioctl(s, SIOCGIFHWADDR, &req);
 #elif defined(__osf__)
-	s = ioctl(s, SIOCRPHYSADDR, &req);
+                s = ioctl(s, SIOCRPHYSADDR, &req);
 #endif
-    if (s >= 0) {
-	  int j;
-	  for (j = 0; j < 6; j++)
+                if (s >= 0)
+                {
+                    int j;
+                    for (j = 0; j < 6; j++)
+                    {
 #if defined(__linux__) || defined(__CYGWIN__)
-	    id[j] = req.ifr_hwaddr.sa_data[j];
+                        id[j] = req.ifr_hwaddr.sa_data[j];
 #elif defined(__osf__)
-	    id[j] = req.default_pa[j];
+                        id[j] = req.default_pa[j];
 #endif
-	  return 1;
-	}
-      }
+                    }
+                    return 1;
+                }
+            }
+        }
     }
-  }
 #endif
 
-  /* try using the machine's internet address */
-  if (gethostname(hostname, 128) == 0) {
-    hostent = gethostbyname(hostname);
-    if (hostent && hostent->h_length == 4) {
-      id[0] = 0;
-      id[1] = 0;
-      id[2] = hostent->h_addr[0];
-      id[3] = hostent->h_addr[1];
-      id[4] = hostent->h_addr[2];
-      id[5] = hostent->h_addr[3];
-      return 1;
+    /* try using the machine's internet address */
+    if (gethostname(hostname, 128) == 0)
+    {
+        hostent = gethostbyname(hostname);
+        if (hostent && hostent->h_length == 4)
+        {
+            id[0] = 0;
+            id[1] = 0;
+            id[2] = hostent->h_addr[0];
+            id[3] = hostent->h_addr[1];
+            id[4] = hostent->h_addr[2];
+            id[5] = hostent->h_addr[3];
+            return 1;
+        }
     }
-  }
 
-  for (i = 0; i < 6; i++)
-    id[i] = 0;
-  return 0;
+    for (i = 0; i < 6; i++)
+        id[i] = 0;
+    return 0;
 }
 
 
-#if 1 /* test code */
+#if 0 /* test code */
 
 #include <stdio.h>
 
