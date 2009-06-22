@@ -648,7 +648,7 @@ PROCEDURE CommonSleep() =
   BEGIN
     wait.tv_sec := 0;
     wait.tv_nsec := WAIT_UNIT;
-    WHILE Utime.nanosleep(wait, remaining) # 0 DO
+    WHILE Nanosleep(wait, remaining) # 0 DO
       wait := remaining;
     END;
   END CommonSleep;
@@ -666,7 +666,7 @@ PROCEDURE XPause (self: T; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
     ToNTime(n, amount);
     IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
     LOOP
-      WITH r = Utime.nanosleep(amount, remaining) DO
+      WITH r = Nanosleep(amount, remaining) DO
         IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
         IF r = 0 THEN EXIT END;
         amount := remaining;
