@@ -7,19 +7,10 @@ readonly GNU_PLATFORM = "sparc-linux-gnu"
 %
 readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
-if TRUE % defined("M3_BOOTSTRAP")
- %
- % -fPIC seems to be causing problems, and isn't needed for booting.
- % We get MUCH further without -fPIC. -fPIC fails the first line RTLinker__InitRuntime.
- % -m32 seems to cause stuff at the end of the assembly that as 2.18 warns about.
- %
- readonly m3back_flags = "-quiet -gstabs+ -munaligned-doubles"
- readonly SYSTEM_CC = "gcc -gstabs+ -m32 -munaligned-doubles" % C compiler
-else
- readonly m3back_flags = "-quiet -gstabs+ -m32 -fPIC -munaligned-doubles"
- readonly SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC -munaligned-doubles" % C compiler
-end
+% -fPIC leads to a crash I haven't been able to debug yet
 
+readonly m3back_flags = "-quiet -gstabs+ -m32 -munaligned-doubles"
+readonly SYSTEM_CC = "gcc -gstabs+ -m32 -munaligned-doubles" % C compiler
 readonly SYSTEM_ASM = "as -32" % Assembler
 
 %
