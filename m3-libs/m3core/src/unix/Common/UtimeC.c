@@ -26,7 +26,7 @@ time_t Utime__get_timezone(void)
 #endif
 }
 
-#if defined(__CYGWIN__) || defined(__sun) || defined(__hpux)
+#if defined(__CYGWIN__) || defined(__sun) || defined(__hpux) || defined(__INTERIX)
 
 time_t Utime__get_altzone(void)
 {
