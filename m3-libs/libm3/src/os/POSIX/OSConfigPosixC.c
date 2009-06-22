@@ -4,6 +4,11 @@
 #include <sys/utsname.h>
 typedef struct utsname utsname_t;
 
+#ifdef __cplusplus
+extern "C"
+{           
+#endif
+
 typedef void* TEXT;
 
 TEXT M3toC__CopyStoT(const char*);
@@ -30,3 +35,7 @@ OSConfigPosixC__Init(
 Exit:
     return result;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
