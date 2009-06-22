@@ -12,7 +12,7 @@ FROM Upthread IMPORT pthread_t, start_routine_t;
 
 (*---------------------------------------------------------------------------*)
 
-PROCEDURE SignalHandler(sig: int; sip, uap: ADDRESS);
+PROCEDURE SignalHandler(sig: int);
 
 (*---------------------------------------------------------------------------*)
 
