@@ -32,7 +32,7 @@ MODULE CVTree;
 
 IMPORT
   DirEntry, DirEntryList, DirEntryListSort, ErrMsg, FileAttr, FS,
-  GlobTree, OSError, Pathname, RefSeq, Scheduler, SupMisc, Text;
+  GlobTree, OSError, Pathname, RefSeq, SupMisc, Text;
 
 TYPE
   UniIterator = Iterator OBJECT
