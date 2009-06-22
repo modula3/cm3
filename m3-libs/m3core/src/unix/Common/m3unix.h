@@ -61,6 +61,9 @@ typedef struct itimerval itimerval_t;
 typedef struct hostent hostent_t;
 typedef struct group group_t;
 typedef struct timeval timeval_t;
+typedef struct timespec timespec_t;
+typedef struct timezone timezone_t;
+typedef struct tm tm_t;
 
 typedef   signed char       INT8;
 typedef unsigned char      UINT8;
