@@ -162,7 +162,7 @@ PROCEDURE RegularFileFlush(h: RegularFile.T) RAISES {OSError.E} =
 PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E} =
   VAR i: INTEGER;
   BEGIN
-    i := FilePosixC.RegularFileLockC(h.fd);
+    i := FilePosixC.RegularFileLock(h.fd);
     IF i < 0 THEN
       OSErrorPosix.Raise();
     END;
@@ -172,7 +172,7 @@ PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E} =
 PROCEDURE RegularFileUnlock(h: RegularFile.T) RAISES {OSError.E} =
   VAR i: INTEGER;
   BEGIN
-    i := FilePosixC.RegularFileUnlockC(h.fd);
+    i := FilePosixC.RegularFileUnlock(h.fd);
     IF i < 0 THEN
       OSErrorPosix.Raise();
     END;
