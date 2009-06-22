@@ -96,10 +96,14 @@ tm_t* Utime__gmtime(time_t* clock)
     return gmtime(clock);
 }
 
+#ifndef __sun /* Solaris ctime_r is different than Posix. */
+
 char* Utime__ctime_r(time_t* clock, char* buffer)
 {
     return ctime_r(clock, buffer);
 }
+
+#endif
 
 tm_t* Utime__localtime_r(time_t* clock, tm_t* result)
 {
