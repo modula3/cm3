@@ -43,7 +43,7 @@ int MachineIDPosixC__CanGet(char *id)
         {
             for (i = 0; i < list.ifc_len / sizeof(struct ifreq); i++)
             {
-                strcpy(req.ifr_name, buf[i].ifr_name);
+                strncpy(req.ifr_name, buf[i].ifr_name, IFNAMSIZ);
 #if defined(__linux__) || defined(__CYGWIN__)
                 e = ioctl(s, SIOCGIFHWADDR, &req);
 #elif defined(__osf__)
