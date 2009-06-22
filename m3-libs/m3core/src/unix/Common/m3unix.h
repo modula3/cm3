@@ -7,6 +7,10 @@
 #ifndef INCLUDED_M3UNIX_H
 #define INCLUDED_M3UNIX_H
 
+#if defined(__INTERIX) && !defined(_ALL_SOURCE)
+#define _ALL_SOURCE
+#endif
+
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_NONSTDC_NO_DEPRECATE
