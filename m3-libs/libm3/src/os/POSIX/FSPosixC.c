@@ -24,7 +24,7 @@ const char* FSPosixC__readdir_name(DIR* dir)
 int FSPosixC__SetModificationTime(const char* path, INTEGER updated, INTEGER accessed)
 {
 #ifdef __INTERIX
-    utimbuf_t buf;
+    utimbuf_t t;
 
     memset(&t, 0, sizeof(t));
     t.actime = accessed;
