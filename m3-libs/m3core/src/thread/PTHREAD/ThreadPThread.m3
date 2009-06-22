@@ -18,6 +18,10 @@ IMPORT RuntimeError AS RTE;
 
 (*----------------------------------------------------- types and globals ---*)
 
+CONST
+  WAIT_UNIT = 1000000; (* one million nanoseconds, one hundredth of a second *)
+  RETRY_INTERVAL = 10000000; (* 10 million nanoseconds, one tenth of a second *)
+
 VAR
   stack_grows_down: BOOLEAN;
   nextId: CARDINAL := 1;
@@ -931,8 +935,6 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
 
 PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=0 *)
-  CONST
-    WAIT_UNIT = 1000000;
   VAR
     me := GetActivation();
     act: Activation;
@@ -1077,9 +1079,6 @@ PROCEDURE StartThread (act: Activation): BOOLEAN =
 
 PROCEDURE StopWorld () =
   (* LL=activeMu *)
-  CONST
-    WAIT_UNIT = 1000000;
-    RETRY_INTERVAL = 10000000;
   VAR
     me := GetActivation();
     act: Activation;
@@ -1169,9 +1168,6 @@ PROCEDURE StopWorld () =
 
 PROCEDURE StartWorld () =
   (* LL=activeMu *)
-  CONST
-    WAIT_UNIT = 1000000;
-    RETRY_INTERVAL = 10000000;
   VAR
     me := GetActivation();
     act: Activation;
