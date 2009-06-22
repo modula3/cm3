@@ -7,8 +7,13 @@
 #ifndef INCLUDED_M3UNIX_H
 #define INCLUDED_M3UNIX_H
 
-#if defined(__INTERIX) && !defined(_ALL_SOURCE)
+#ifdef __INTERIX
+#ifndef _ALL_SOURCE
 #define _ALL_SOURCE
+#endif
+#ifndef _REENTRANT
+#define _REENTRANT
+#endif
 #endif
 
 #ifdef _MSC_VER
