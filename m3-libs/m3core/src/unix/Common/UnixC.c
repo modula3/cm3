@@ -256,19 +256,9 @@ int Unix__symlink(const char* name1, const char* name2) { return symlink(name1, 
 
 int Unix__pipe(int files[2]) { return pipe(files); }
 
-int Unix__utimes(const char* file, const timeval_t* tvp)
-{
-#ifdef __INTERIX
-    struct utimbuf a;
-
-    a.actime = tvp[0].tv_sec;
-    a.modtime = tvp[1].tv_sec;
-
-    return utime(file, &a);
-#else
-    return utimes(file, tvp);
+#ifndef __INTERIX
+int Unix__utimes(const char* file, const timeval_t* tvp) { return utimes(file, tvp); }
 #endif
-}
 
 #endif
 
