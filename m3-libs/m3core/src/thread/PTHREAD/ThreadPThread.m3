@@ -20,7 +20,7 @@ IMPORT RuntimeError AS RTE;
 
 CONST
   WAIT_UNIT = 1000000; (* one million nanoseconds, one thousandth of a second *)
-  RETRY_INTERVAL = 10000000; (* 10 million nanoseconds, one hundreth of a second *)
+  RETRY_INTERVAL = 10000000; (* 10 million nanoseconds, one hundredth of a second *)
 
 VAR
   stack_grows_down: BOOLEAN;
