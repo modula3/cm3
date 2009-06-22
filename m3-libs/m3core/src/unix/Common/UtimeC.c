@@ -116,10 +116,14 @@ int Utime__setitimer(int which, itimerval_t* new_value, itimerval_t* old_value)
     return setitimer(which, new_value, old_value);
 }
 
+#ifndef __INTERIX
+
 int Utime__nanosleep(timespec_t* req, timespec_t* rem)
 {
     return nanosleep(req, rem);
 }
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
