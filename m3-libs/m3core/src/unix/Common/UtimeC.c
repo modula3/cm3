@@ -56,6 +56,71 @@ const char* Utime__get_tzname(unsigned a)
 
 #endif /* M3BSD */
 
+int Utime__gettimeofday (timeval_t* t, timezone_t* z)
+{
+    return gettimeofday(t, z);
+}
+
+int Utime__settimeofday (timeval_t* t, timezone_t* z)
+{
+    return settimeofday(t, z);
+}
+
+int Utime__getitimer(int which, itimerval_t* value)
+{
+    return getitimer(which, value);
+}
+
+time_t Utime__time(time_t* tloc)
+{
+    return time(tloc);
+}
+
+time_t Utime__mktime(tm_t* tm)
+{
+    return mktime(tm);
+}
+
+char* Utime__ctime(time_t* clock)
+{
+    return ctime(clock);
+}
+
+tm_t* Utime__localtime(time_t* clock)
+{
+    return localtime(clock);
+}
+
+tm_t* Utime__gmtime(time_t* clock)
+{
+    return gmtime(clock);
+}
+
+char* Utime__ctime_r(time_t* clock, char* buffer)
+{
+    return ctime_r(clock, buffer);
+}
+
+tm_t* Utime__localtime_r(time_t* clock, tm_t* result)
+{
+    return localtime_r(clock, result);
+}
+
+tm_t* Utime__gmtime_r(time_t* clock, tm_t* result)
+{
+    return gmtime_r(clock, result);
+}
+
+int Utime__setitimer(int which, itimerval_t* new_value, itimerval_t* old_value)
+{
+    return setitimer(which, new_value, old_value);
+}
+
+int Utime__nanosleep(timespec_t* req, timespec_t* rem)
+{
+    return nanosleep(req, rem);
+}
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
