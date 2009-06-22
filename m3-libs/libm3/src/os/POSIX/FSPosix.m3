@@ -12,7 +12,7 @@ UNSAFE MODULE FSPosix EXPORTS FS;
 
 IMPORT Atom, AtomList, Cerrno, Ctypes, File, FilePosix, M3toC, OSError,
        OSErrorPosix, Pathname, Process, Time, Text, TextSeq, Unix,
-       Udir, Uerror, Ustat, Utime, Word, Scheduler, FSPosixC;
+       Udir, Uerror, Ustat, Word, Scheduler, FSPosixC;
 
 FROM Unix IMPORT O_RDWR, O_CREAT, O_TRUNC, O_EXCL;
 
@@ -344,13 +344,9 @@ PROCEDURE CStatus(s: Ctypes.char_star; VAR status: File.Status): INTEGER =
 
 PROCEDURE SetModificationTime(pn: Pathname.T; READONLY t: Time.T)
   RAISES {OSError.E}=
-  CONST Accessed = 0; Updated = 1;
-  VAR u: ARRAY [Accessed .. Updated] OF Utime.struct_timeval;
-      fname := M3toC.SharedTtoS(pn);
+  VAR fname := M3toC.SharedTtoS(pn);
   BEGIN
-    u[Updated].tv_sec := ROUND(t); u[Updated].tv_usec := 0;
-    u[Accessed].tv_sec := ROUND(Time.Now()); u[Accessed].tv_usec := 0;
-    IF Unix.utimes(fname, ADR(u)) < 0 THEN Fail(pn, fname); END;
+    IF FSPosixC.SetModificationTime(fname, ROUND(t), ROUND(Time.Now())) < 0 THEN Fail(pn, fname); END;
     M3toC.FreeSharedS(pn, fname);
   END SetModificationTime;
 
