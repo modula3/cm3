@@ -643,6 +643,16 @@ PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
 
 (*---------------------------------------------------- Scheduling support ---*)
 
+PROCEDURE CommonSleep() =
+  VAR wait, remaining: Utime.struct_timespec;
+  BEGIN
+    wait.tv_sec := 0;
+    wait.tv_nsec := WAIT_UNIT;
+    WHILE Utime.nanosleep(wait, remaining) # 0 DO
+      wait := remaining;
+    END;
+  END CommonSleep;
+
 PROCEDURE ToNTime (n: LONGREAL; VAR ts: Utime.struct_timespec) =
   BEGIN
     ts.tv_sec := TRUNC(n);
@@ -939,7 +949,6 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
     me := GetActivation();
     act: Activation;
     acks: int;
-    wait, remaining: Utime.struct_timespec;
   BEGIN
     WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
 
@@ -959,9 +968,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
             EXIT;
           END;
         END;
-        wait.tv_sec := 0;
-        wait.tv_nsec := WAIT_UNIT;
-        WHILE Utime.nanosleep(wait, remaining) # 0 DO wait := remaining END;
+        CommonSleep();
       END;
       (* process *)
       ProcessOther(act, p);
@@ -977,9 +984,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
             EXIT;
           END;
         END;
-        wait.tv_sec := 0;
-        wait.tv_nsec := WAIT_UNIT;
-        WHILE Utime.nanosleep(wait, remaining) # 0 DO wait := remaining END;
+        CommonSleep();
       END;
       act := act.next;
     END;
@@ -1086,7 +1091,6 @@ PROCEDURE StopWorld () =
     nLive, newlySent: INTEGER;
     retry: BOOLEAN;
     wait_nsecs := RETRY_INTERVAL;
-    wait, remaining: Utime.struct_timespec;
   BEGIN
     IF DEBUG THEN
       RTIO.PutText("Stopping from act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
@@ -1110,11 +1114,7 @@ PROCEDURE StopWorld () =
         act := act.next;
       END;
       IF NOT retry THEN EXIT END;
-      wait.tv_sec := 0;
-      wait.tv_nsec := WAIT_UNIT;
-      WHILE Utime.nanosleep(wait, remaining) # 0 DO
-        wait := remaining;
-      END;
+      CommonSleep();
     END;
     WHILE nLive > 0 DO
       WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
@@ -1139,11 +1139,7 @@ PROCEDURE StopWorld () =
         END;
         wait_nsecs := RETRY_INTERVAL;
       ELSE
-        wait.tv_sec := 0;
-        wait.tv_nsec := WAIT_UNIT;
-        WHILE Utime.nanosleep(wait, remaining) # 0 DO
-          wait := remaining;
-        END;
+        CommonSleep();
         DEC(wait_nsecs, WAIT_UNIT);
       END;
     END;
@@ -1175,7 +1171,6 @@ PROCEDURE StartWorld () =
     nDead, newlySent: INTEGER;
     retry: BOOLEAN;
     wait_nsecs := RETRY_INTERVAL;
-    wait, remaining: Utime.struct_timespec;
   BEGIN
     IF DEBUG THEN
       RTIO.PutText("Starting from act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
@@ -1199,11 +1194,7 @@ PROCEDURE StartWorld () =
         act := act.next;
       END;
       IF NOT retry THEN EXIT END;
-      wait.tv_sec := 0;
-      wait.tv_nsec := WAIT_UNIT;
-      WHILE Utime.nanosleep(wait, remaining) # 0 DO
-        wait := remaining;
-      END;
+      CommonSleep();
     END;
     WHILE nDead > 0 DO
       WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
@@ -1228,11 +1219,7 @@ PROCEDURE StartWorld () =
         END;
         wait_nsecs := RETRY_INTERVAL;
       ELSE
-        wait.tv_sec := 0;
-        wait.tv_nsec := WAIT_UNIT;
-        WHILE Utime.nanosleep(wait, remaining) # 0 DO
-          wait := remaining;
-        END;
+        CommonSleep();
         DEC(wait_nsecs, WAIT_UNIT);
       END;
     END;
