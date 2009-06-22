@@ -2,10 +2,13 @@
 /* All rights reserved. */
 /* See the file COPYRIGHT for a full description. */
 
-#define _FILE_OFFSET_BITS 64
+#include "m3unix.h"
 
-#include <sys/types.h>
-#include <dirent.h>
+#ifdef __cplusplus
+extern "C"
+{           
+#endif
+
 typedef struct dirent dirent_t;
 
 const char* FSPosixC__readdir_name(DIR* dir)
@@ -17,3 +20,31 @@ const char* FSPosixC__readdir_name(DIR* dir)
 
     return 0;
 }
+
+int FSPosixC__SetModificationTime(const char* path, INTEGER updated, INTEGER accessed)
+{
+#ifdef __INTERIX
+    utimbuf_t buf;
+
+    memset(&t, 0, sizeof(t));
+    t.actime = accessed;
+    t.modtime = updated;
+
+    return utime(path, &t);
+#else
+    timeval_t t[2];
+
+    memset(&t, 0, sizeof(t));
+    t[0].tv_sec = accessed;
+    t[0].tv_usec = 0;
+    t[1].tv_sec = updated;
+    t[1].tv_usec = 0;
+
+    return utimes(path, t);
+#endif
+}
+
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
