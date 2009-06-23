@@ -282,6 +282,11 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         return 0
     end
 
+    local soname_opt = "-Wl," & soname_flag & "," & lib_sox
+    if equal (TARGET, "I386_INTERIX")
+        soname_opt = ""
+    end
+
     % build the shared library
     local pg = ""
     if M3_PROFILING
@@ -293,7 +298,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
             GetGcWrapFlags(),
             pg,
             "-shared",
-            "-Wl," & soname_flag & "," & lib_sox,
+            soname_opt,
             "-o", lib_sox,
             objects,
             GetM3CoreStaticObjs(lib),
