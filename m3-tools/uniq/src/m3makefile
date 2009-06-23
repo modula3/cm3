@@ -1,4 +1,5 @@
-import ("libm3")
-implementation ("Main")
-build_standalone ()
-program ("uniq")
+% This utility often causes problems and provides very little value.
+%import ("libm3")
+%implementation ("Main")
+%build_standalone ()
+%program ("uniq")
