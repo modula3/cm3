@@ -64,7 +64,7 @@ proc m3_backend(source, object, optimize, debug) is
     % These flags are local instead of global to avoid the probe when we compile nothing.
     %
     local args = [ GetM3BackFlag ("-fno-reorder-blocks") ]
-    if optimize
+    if optimize and not equal(TARGET, "I386_INTERIX")
         args += "-O3"
     end
     if M3_PROFILING
