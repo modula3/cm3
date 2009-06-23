@@ -21,6 +21,17 @@ readonly proc GetM3BackFlag(x) is return x end
 
 GNU_MAKE = "gmake"
 
-include("Unix.common")
+SYSTEM_LIBS =
+{
+    "LIBC"       : [ "-lm" ],
+    "LEX-YACC"   : [ "-ll" ],
+    "FLEX-BISON" : [ "-lfl" ],
+%   "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
+    "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
+%   "ODBC"       : [ "-lodbc" ],
+    "MOTIF"      : [ "-lXm" ],
+    "TCP"        : [ ],
+%   "X11" :      [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
+}
 
-SYSTEM_LIBS{"LIBC"} = ["-lm"]
+include("Unix.common")
