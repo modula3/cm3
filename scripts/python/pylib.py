@@ -1141,8 +1141,11 @@ def Boot():
     # TBD: put it only in one place.
     # The older bootstraping method does get that right.
 
-    GnuCompile = "gcc -g -fPIC "
     SunCompile = "cc -g -mt -xcode=pic32 -xldscope=symbolic "
+
+    GnuCompile = {
+        "I386_INTERIX"    : "gcc -g "
+        }.get(Target) or "gcc -g -fPIC "
 
     Compile = {
         "SOLsun"          : SunCompile,
