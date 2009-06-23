@@ -21,7 +21,7 @@ CM3VERSIONNUM=${CM3VERSIONNUM:-${default_CM3VERSIONNUM}}
 CM3LASTCHANGED=${CM3LASTCHANGED:-${default_CM3LASTCHANGED}}
 
 CM3_GCC_BACKEND=yes
-CM3_GDB=no
+CM3_GDB=${CM3_GDB:-yes}
 #
 # Utility function to find first occurrence of executable file in
 # $PATH.

@@ -48,8 +48,7 @@ UsePackage()
  
     m3gdb)
       ([ "${M3GDB}" = yes ] || [ "${CM3_GDB}" = yes ]) \
-         && ([ ${TARGET} = FreeBSD4 ] || [ ${TARGET} = LINUXLIBC6 ] \
-         || [ ${TARGET} = SOLgnu ] || [ ${TARGET} = NetBSD2_i386 ]) ;;
+         && [ "${TARGET}" != "NT386" ] ;;
 
     *) true;;
   esac
