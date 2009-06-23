@@ -7,7 +7,7 @@ readonly GNU_PLATFORM = "i686-pc-interix3" % "cpu-vendor-os" string for GNU
 %
 readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
-readonly m3back_flags = "-quiet -gstabs+ -m32"
+readonly m3back_flags = "-quiet -gstabs+ -fPIC -m32"
 readonly SYSTEM_CC = "gcc -gstabs+" % C compiler
 readonly SYSTEM_ASM = "as" % Assembler
 
@@ -19,4 +19,8 @@ readonly proc GetGcWrapFlags() is return "" end
 readonly proc FixM3GcDefs(x) is return x end
 readonly proc GetM3BackFlag(x) is return x end
 
+GNU_MAKE = "gmake"
+
 include("Unix.common")
+
+SYSTEM_LIBS{"LIBC"} = [ ]
