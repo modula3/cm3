@@ -1153,7 +1153,7 @@ def Boot():
         "ARM_DARWIN"      : " ",
         "AMD64_DARWIN"    : " ",
         "I386_DARWIN"     : " ",
-        "I386_INTERIX"    : " ",
+        "I386_INTERIX"    : " -lm ",
         "PPC_DARWIN"      : " ",
         "PPC64_DARWIN"    : " ",
         # SOLgnu?
