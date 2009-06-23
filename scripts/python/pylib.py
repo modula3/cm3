@@ -35,7 +35,7 @@ if os.environ.get("M3CONFIG", "").lower().find("m3-syscminstallsrcconfig") != -1
     sys.exit(1)
 
 def IsInterix():
-    return os.uname()[0].lower().startswith("interix")
+    return os.name == "posix" and os.uname()[0].lower().startswith("interix")
 
 env_OS = getenv("OS")
 if env_OS == "Windows_NT" and not IsInterix():
@@ -81,6 +81,7 @@ def SearchPath(name, paths = getenv("PATH")):
         if os.path.isfile(name):
             return name
     if paths == "":
+        print("SearchPath returning None 1")
         return None
     (base, exts) = os.path.splitext(name)
     if not exts and not IsInterix():
@@ -93,6 +94,8 @@ def SearchPath(name, paths = getenv("PATH")):
             candidate = os.path.join(path, name)
             if os.path.isfile(candidate):
                 return os.path.abspath(candidate)
+    print("SearchPath returning None 2")
+    return None
 
 #-----------------------------------------------------------------------------
 
