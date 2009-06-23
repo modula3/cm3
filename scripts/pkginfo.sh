@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.18 2009-06-07 16:03:50 wagner Exp $
+# $Id: pkginfo.sh,v 1.19 2009-06-23 13:59:05 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -48,8 +48,7 @@ UsePackage()
  
     m3gdb)
       ([ "${M3GDB}" = yes ] || [ "${CM3_GDB}" = yes ]) \
-         && ([ ${TARGET} = FreeBSD4 ] || [ ${TARGET} = LINUXLIBC6 ] \
-         || [ ${TARGET} = SOLgnu ] || [ ${TARGET} = NetBSD2_i386 ]) ;;
+         && [ "${TARGET}" != "NT386" ] ;;
 
     *) true;;
   esac

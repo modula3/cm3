@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.70 2009-06-22 13:15:25 jkrell Exp $
+# $Id: sysinfo.sh,v 1.71 2009-06-23 13:59:05 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -21,7 +21,7 @@ CM3VERSIONNUM=${CM3VERSIONNUM:-${default_CM3VERSIONNUM}}
 CM3LASTCHANGED=${CM3LASTCHANGED:-${default_CM3LASTCHANGED}}
 
 CM3_GCC_BACKEND=yes
-CM3_GDB=no
+CM3_GDB=${CM3_GDB:-yes}
 #
 # Utility function to find first occurrence of executable file in
 # $PATH.
