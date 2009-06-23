@@ -38,23 +38,20 @@ def IsInterix():
     return os.uname()[0].lower().startswith("interix")
 
 env_OS = getenv("OS")
-if env_OS == "Windows_NT":
-    if IsInterix():
-        from os import uname
-    else:
-        def uname():
-            PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
-            return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
-        #
-        # cmd can run extensionless executables if this code is enabled.
-        # This can be useful for example with NT386GNU following more Posix-ish
-        # naming styles than even Cygwin usually does.
-        #
-        #pathext = getenv("PATHEXT");
-        #if pathext and not "." in pathext.split(";"):
-        #    pathext = ".;" + pathext
-        #    os.environ["PATHEXT"] = pathext
-        #    print("set PATHEXT=.;%PATHEXT%")
+if env_OS == "Windows_NT" and not IsInterix():
+    def uname():
+        PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
+        return (env_OS, "", PROCESSOR_ARCHITECTURE, "", PROCESSOR_ARCHITECTURE)
+    #
+    # cmd can run extensionless executables if this code is enabled.
+    # This can be useful for example with NT386GNU following more Posix-ish
+    # naming styles than even Cygwin usually does.
+    #
+    #pathext = getenv("PATHEXT");
+    #if pathext and not "." in pathext.split(";"):
+    #    pathext = ".;" + pathext
+    #    os.environ["PATHEXT"] = pathext
+    #    print("set PATHEXT=.;%PATHEXT%")
 else:
     from os import uname
 
@@ -667,19 +664,6 @@ elif Target.find("LINUX") != -1:
 
 #-----------------------------------------------------------------------------
 
-GMAKE = "gmake"
-
-if ((Host.find("DARWIN") != -1)
-    or (Host.find("LINUX") != -1)
-    or (Host.find("NT386") != -1)):
-
-    GMAKE = "make"
-
-else:
-    pass
-
-#-----------------------------------------------------------------------------
-
 M3GDB = (M3GDB or CM3_GDB)
 PKGSDB = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "PKGS")
 
@@ -713,7 +697,7 @@ def SetEnvironmentVariable(Name, Value):
 #-----------------------------------------------------------------------------
 
 def IsCygwinBinary(a):
-    if env_OS != "Windows_NT":
+    if IsInterix() or env_OS != "Windows_NT":
         return False
     if not os.path.isfile(a):
         FatalError(a + " does not exist")
@@ -726,7 +710,7 @@ def IsCygwinBinary(a):
 #-----------------------------------------------------------------------------
 
 def _ConvertToCygwinPath(a):
-    if env_OS != "Windows_NT":
+    if IsInterix() or env_OS != "Windows_NT":
         return a
     if (a.find('\\') == -1) and (a.find(':') == -1):
         return a
@@ -738,7 +722,7 @@ def _ConvertToCygwinPath(a):
 #-----------------------------------------------------------------------------
 
 def _ConvertFromCygwinPath(a):
-    if env_OS != "Windows_NT":
+    if IsInterix() or env_OS != "Windows_NT":
         return a
     a = a.replace("/", "\\")
     #a = a.replace("\\", "/")
