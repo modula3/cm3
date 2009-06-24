@@ -224,6 +224,12 @@ case "${UNAME}" in
     #CM3_TARGET=${CM3_TARGET:-"SOLsun"}
   ;;
 
+  Interix*)
+    CM3_OSTYPE=POSIX
+    GMAKE=${GMAKE:-gmake}
+    CM3_TARGET=I386_INTERIX
+  ;;
+
   Linux*)
     CM3_OSTYPE=POSIX
     GMAKE=${GMAKE:-make}
