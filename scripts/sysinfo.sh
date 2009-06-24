@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.71 2009-06-23 13:59:05 jkrell Exp $
+# $Id: sysinfo.sh,v 1.72 2009-06-24 00:21:06 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -222,6 +222,12 @@ case "${UNAME}" in
     CM3_OSTYPE=POSIX
     CM3_TARGET=${CM3_TARGET:-"SOLgnu"}
     #CM3_TARGET=${CM3_TARGET:-"SOLsun"}
+  ;;
+
+  Interix*)
+    CM3_OSTYPE=POSIX
+    GMAKE=${GMAKE:-gmake}
+    CM3_TARGET=I386_INTERIX
   ;;
 
   Linux*)
