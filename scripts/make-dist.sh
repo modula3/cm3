@@ -1,7 +1,7 @@
 #bash
-# $Id: make-dist.sh,v 1.12 2009-06-20 19:23:31 jkrell Exp $
+# $Id: make-dist.sh,v 1.13 2009-06-24 00:44:24 jkrell Exp $
 
-DESTHOST=${DESTHOST:-birch,elegosoft.com}
+DESTHOST=${DESTHOST:-birch.elegosoft.com}
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -40,7 +40,12 @@ fi
 M3_PORTABLE_RUN_PATH=1
 export M3_PORTABLE_RUN_PATH
 
-PKG_COLLECTIONS="devlib m3devtool m3gdb webdev gui anim database cvsup obliq juno caltech-parser demo tool math game core"
+
+if [ `uname` = 'Interix' ]; then
+  PKG_COLLECTIONS="devlib m3devtool webdev obliq caltech-parser tool math game core"
+else
+  PKG_COLLECTIONS="devlib m3devtool m3gdb webdev gui anim database cvsup obliq juno caltech-parser demo tool math game core"
+fi
 
 DESC_devlib='<p>
 Miscellaneous development libraries
