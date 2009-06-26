@@ -18,9 +18,9 @@
 
 <P><PRE>UNSAFE MODULE <module>RTLinker</module> EXPORTS <A HREF="RTLinker.i3.html"><implements>RTLinker</A></implements>, <A HREF="RTModule.i3.html"><implements>RTModule</A></implements>;
 
-IMPORT <A HREF="../../C/Common/Cstdlib.i3.html">Cstdlib</A>, <A HREF="#x1">Cstring</A>;
+IMPORT <A HREF="../../C/Common/Cstdlib.i3.html">Cstdlib</A>, <A HREF="../../C/Common/Cstring.i3.html">Cstring</A>;
 IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTParams.i3.html">RTParams</A>, <A HREF="RTDebug.i3.html">RTDebug</A>, <A HREF="RTHeapRep.i3.html">RTHeapRep</A>, <A HREF="RTCollectorSRC.i3.html">RTCollectorSRC</A>;
-IMPORT <A HREF="RTTypeSRC.i3.html">RTTypeSRC</A>, <A HREF="RTSignal.i3.html">RTSignal</A>, <A HREF="#x2">ThreadF</A>, <A HREF="RTHeapInfo.i3.html">RTHeapInfo</A>, <A HREF="RTLinkerX.i3.html">RTLinkerX</A>,
+IMPORT <A HREF="RTTypeSRC.i3.html">RTTypeSRC</A>, <A HREF="RTSignal.i3.html">RTSignal</A>, <A HREF="../../thread/PTHREAD/ThreadF.i3.html">ThreadF</A>, <A HREF="RTHeapInfo.i3.html">RTHeapInfo</A>, <A HREF="RTLinkerX.i3.html">RTLinkerX</A>,
        <A HREF="RTIO.i3.html">RTIO</A>, <A HREF="../../word/Word.i3.html">Word</A>;
 
 VAR
@@ -551,20 +551,6 @@ BEGIN
 END RTLinker.
 </PRE>
 </inModule>
-<HR>
-<A NAME="x1">interface Cstring is in:
-</A><UL>
-<LI><A HREF="../../C/Common/Cstring.i3.html#0TOP0">m3core/src/C/Common/Cstring.i3</A>
-<LI><A HREF="../../C/LINUXLIBC6/Cstring.i3.html#0TOP0">m3core/src/C/LINUXLIBC6/Cstring.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">interface ThreadF is in:
-</A><UL>
-<LI><A HREF="../../thread/POSIX/ThreadF.i3.html#0TOP0">m3core/src/thread/POSIX/ThreadF.i3</A>
-<LI><A HREF="../../thread/PTHREAD/ThreadF.i3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadF.i3</A>
-</UL>
-<P>
 <PRE>
 
 

@@ -21,7 +21,7 @@
    statements.
 
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">DB</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="DB.m3.html">DB</A></interface>;
 </PRE>------------------------------------------------------- connections ---
 
 <P><PRE>TYPE
@@ -51,18 +51,18 @@ PROCEDURE <A HREF="DB.m3.html#FindInterface">FindInterface</A>(name: TEXT): Inte
 </PRE>  The following functions are provided for compatibily with the previous version of the interface. 
 		The methods of the Interface object should be used instead. 
 
-<P><PRE>PROCEDURE <A HREF="#x2">Connect</A> (
+<P><PRE>PROCEDURE <A HREF="DB.m3.html#Connect">Connect</A> (
 	database, user_id, password: TEXT; (* Establish a connection to the named &quot;database&quot; using &quot;user_id&quot; and
 																				&quot;password&quot; as authentication credentials. *)
 	server: TEXT := NIL;	(* Connect to the server running on this host. May be a host name or IP number *)
 	interface: Interface := NIL; (* Use this interface to connect. If not specified the default interface is used *)
 ): T  RAISES {Error};
 
-PROCEDURE <A HREF="#x3">GetDataSources</A> (): DescList  RAISES {Error};
+PROCEDURE <A HREF="DB.m3.html#GetDataSources">GetDataSources</A> (): DescList  RAISES {Error};
 </PRE><BLOCKQUOTE><EM> Returns the names and descriptions of the data sources that are
    available from the local server. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x4">GetDrivers</A> (): DescList  RAISES {Error};
+PROCEDURE <A HREF="DB.m3.html#GetDrivers">GetDrivers</A> (): DescList  RAISES {Error};
 </PRE><BLOCKQUOTE><EM> Returns the names and descriptions of the drivers that are
    available from the local server. </EM></BLOCKQUOTE><PRE>
 
@@ -246,34 +246,6 @@ TYPE
 END DB.
 </PRE>
 </inInterface>
-<HR>
-<A NAME="x1">DB's implementation  is in:
-</A><UL>
-<LI><A HREF="DB.m3.html#0TOP0">db/src/DB.m3</A>
-<LI><A HREF="odbc/DB.m3.html#0TOP0">db/src/odbc/DB.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure DB.Connect is in:
-</A><UL>
-<LI><A HREF="DB.m3.html#Connect">db/src/DB.m3</A>
-<LI><A HREF="odbc/DB.m3.html#Connect">db/src/odbc/DB.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">procedure DB.GetDataSources is in:
-</A><UL>
-<LI><A HREF="DB.m3.html#GetDataSources">db/src/DB.m3</A>
-<LI><A HREF="odbc/DB.m3.html#GetDataSources">db/src/odbc/DB.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">procedure DB.GetDrivers is in:
-</A><UL>
-<LI><A HREF="DB.m3.html#GetDrivers">db/src/DB.m3</A>
-<LI><A HREF="odbc/DB.m3.html#GetDrivers">db/src/odbc/DB.m3</A>
-</UL>
-<P>
 <PRE>
 
 

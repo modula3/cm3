@@ -53,7 +53,7 @@
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="SigHandler.i3.html">SigHandler</A></implements></module>;
 
 IMPORT
-  <A HREF="../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="#x1">SchedulerPosix</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="#x2">Uerror</A>, <A HREF="#x3">Unix</A>, <A HREF="UnixMisc.i3.html">UnixMisc</A>, <A HREF="#x4">Uuio</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>;
+  <A HREF="../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../../m3core/src/thread/Common/SchedulerPosix.i3.html">SchedulerPosix</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="#x1">Uerror</A>, <A HREF="#x2">Unix</A>, <A HREF="UnixMisc.i3.html">UnixMisc</A>, <A HREF="#x3">Uuio</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>;
 
 IMPORT <A HREF="../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>;
 
@@ -261,34 +261,24 @@ END SigHandler.
 </PRE>
 </inModule>
 <HR>
-<A NAME="x1">interface SchedulerPosix is in:
-</A><UL>
-<LI><A HREF="../../m3core/src/thread/Common/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/Common/SchedulerPosix.i3</A>
-<LI><A HREF="../../m3core/src/thread/POSIX/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/POSIX/SchedulerPosix.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">interface Uerror is in:
+<A NAME="x1">interface Uerror is in:
 </A><UL>
 <LI><A HREF="../../m3core/src/unix/Common/Uerror.i3.html#0TOP0">m3core/src/unix/Common/Uerror.i3</A>
 <LI><A HREF="../../m3core/src/unix/linux-common/Uerror.i3.html#0TOP0">m3core/src/unix/linux-common/Uerror.i3</A>
-<LI><A HREF="../../m3core/src/unix/linux-libc6/Uerror.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uerror.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x3">interface Unix is in:
+<A NAME="x2">interface Unix is in:
 </A><UL>
 <LI><A HREF="../../m3core/src/unix/Common/Unix.i3.html#0TOP0">m3core/src/unix/Common/Unix.i3</A>
 <LI><A HREF="../../m3core/src/unix/linux-common/Unix.i3.html#0TOP0">m3core/src/unix/linux-common/Unix.i3</A>
-<LI><A HREF="../../m3core/src/unix/linux-libc6/Unix.i3.html#0TOP0">m3core/src/unix/linux-libc6/Unix.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x4">interface Uuio is in:
+<A NAME="x3">interface Uuio is in:
 </A><UL>
 <LI><A HREF="../../m3core/src/unix/Common/Uuio.i3.html#0TOP0">m3core/src/unix/Common/Uuio.i3</A>
 <LI><A HREF="../../m3core/src/unix/linux-common/Uuio.i3.html#0TOP0">m3core/src/unix/linux-common/Uuio.i3</A>
-<LI><A HREF="../../m3core/src/unix/linux-libc6/Uuio.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uuio.i3</A>
 </UL>
 <P>
 <PRE>

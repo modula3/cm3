@@ -96,7 +96,7 @@
 <P><PRE>INTERFACE <interface><A HREF="SharedObjRep.m3.html">SharedObjRep</A></interface>;
 
 IMPORT <A HREF="SharedObj.i3.html">SharedObj</A>, <A HREF="../../events/src/RdWrMutex.i3.html">RdWrMutex</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../events/src/EventWireRep.i3.html">EventWireRep</A>, <A HREF="../../events/src/EventCounter.i3.html">EventCounter</A>,
-       <A HREF="../derived/WeakRefList.i3.html">WeakRefList</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../events/src/Event.i3.html">Event</A>, <A HREF="../../events/src/EventStubLib.i3.html">EventStubLib</A>, <A HREF="#x1">ThreadF</A>;
+       <A HREF="../derived/WeakRefList.i3.html">WeakRefList</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../events/src/Event.i3.html">Event</A>, <A HREF="../../events/src/EventStubLib.i3.html">EventStubLib</A>, <A HREF="../../m3core/src/thread/PTHREAD/ThreadF.i3.html">ThreadF</A>;
 
 TYPE WireRep = EventWireRep.T;
 </PRE><BLOCKQUOTE><EM> The wire representation of our objects is represented using the
@@ -136,13 +136,6 @@ REVEAL
 END SharedObjRep.
 </PRE>
 </inInterface>
-<HR>
-<A NAME="x1">interface ThreadF is in:
-</A><UL>
-<LI><A HREF="../../m3core/src/thread/POSIX/ThreadF.i3.html#0TOP0">m3core/src/thread/POSIX/ThreadF.i3</A>
-<LI><A HREF="../../m3core/src/thread/PTHREAD/ThreadF.i3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadF.i3</A>
-</UL>
-<P>
 <PRE>
 
 

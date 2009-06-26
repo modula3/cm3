@@ -21,7 +21,7 @@
 
 IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTCollector.i3.html">RTCollector</A>, <A HREF="RTModule.i3.html">RTModule</A>, <A HREF="RTIO.i3.html">RTIO</A>, <A HREF="RTHeapMap.i3.html">RTHeapMap</A>, <A HREF="RTHeapRep.i3.html">RTHeapRep</A>, <A HREF="RTMisc.i3.html">RTMisc</A>;
 IMPORT <A HREF="RTOS.i3.html">RTOS</A>, <A HREF="RTType.i3.html">RTType</A>, <A HREF="RTTypeSRC.i3.html">RTTypeSRC</A>, <A HREF="RTProcedure.i3.html">RTProcedure</A>, <A HREF="RTProcedureSRC.i3.html">RTProcedureSRC</A>, <A HREF="#x1">RTMachine</A>;
-IMPORT <A HREF="RTStack.i3.html">RTStack</A>, <A HREF="#x2">ThreadF</A>, <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="../../text/Text.i3.html">Text</A>;
+IMPORT <A HREF="RTStack.i3.html">RTStack</A>, <A HREF="../../thread/PTHREAD/ThreadF.i3.html">ThreadF</A>, <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="../../text/Text.i3.html">Text</A>;
 FROM <A HREF="RTIO.i3.html">RTIO</A> IMPORT PutInt, PutAddr, PutText;
 
 TYPE
@@ -712,15 +712,7 @@ END RTHeapStats.
 <A NAME="x1">interface RTMachine is in:
 </A><UL>
 <LI><A HREF="../AMD64_LINUX/RTMachine.i3.html#0TOP0">m3core/src/runtime/AMD64_LINUX/RTMachine.i3</A>
-<LI><A HREF="../LINUXLIBC6/RTMachine.i3.html#0TOP0">m3core/src/runtime/LINUXLIBC6/RTMachine.i3</A>
 <LI><A HREF="RTMachine.i3.html#0TOP0">m3core/src/runtime/common/RTMachine.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">interface ThreadF is in:
-</A><UL>
-<LI><A HREF="../../thread/POSIX/ThreadF.i3.html#0TOP0">m3core/src/thread/POSIX/ThreadF.i3</A>
-<LI><A HREF="../../thread/PTHREAD/ThreadF.i3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadF.i3</A>
 </UL>
 <P>
 <PRE>

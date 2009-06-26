@@ -11,42 +11,21 @@
  See the file COPYRIGHT for a full description.             
  Last modified on Sun Feb 18 07:22:28 PST 1996 by steveg    
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">FastLex</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="FastLex.m3.html">FastLex</A></interface>;
 
 IMPORT <A HREF="../../libm3/src/fmtlex/Lex.i3.html">Lex</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>;
 
-PROCEDURE <A HREF="#x2">Scan</A>(
+PROCEDURE <A HREF="FastLex.m3.html#Scan">Scan</A>(
     rd: Rd.T; READONLY cs: SET OF CHAR := Lex.NonBlanks): TEXT
   RAISES {Rd.Failure, Thread.Alerted};
 
-PROCEDURE <A HREF="#x3">Skip</A>(
+PROCEDURE <A HREF="FastLex.m3.html#Skip">Skip</A>(
     rd: Rd.T; READONLY cs: SET OF CHAR := Lex.Blanks)
   RAISES {Rd.Failure, Thread.Alerted};
 
 END FastLex.
 </PRE>
 </inInterface>
-<HR>
-<A NAME="x1">FastLex's implementation  is in:
-</A><UL>
-<LI><A HREF="../../http/src/FastLex.m3.html#0TOP0">http/src/FastLex.m3</A>
-<LI><A HREF="FastLex.m3.html#0TOP0">sysutils/src/FastLex.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure FastLex.Scan is in:
-</A><UL>
-<LI><A HREF="../../http/src/FastLex.m3.html#Scan">http/src/FastLex.m3</A>
-<LI><A HREF="FastLex.m3.html#Scan">sysutils/src/FastLex.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">procedure FastLex.Skip is in:
-</A><UL>
-<LI><A HREF="../../http/src/FastLex.m3.html#Skip">http/src/FastLex.m3</A>
-<LI><A HREF="FastLex.m3.html#Skip">sysutils/src/FastLex.m3</A>
-</UL>
-<P>
 <PRE>
 
 

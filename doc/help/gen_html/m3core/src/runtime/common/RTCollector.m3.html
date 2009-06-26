@@ -24,7 +24,7 @@
 
 IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTHeapEvent.i3.html">RTHeapEvent</A>, <A HREF="RTHeapMap.i3.html">RTHeapMap</A>, <A HREF="RTIO.i3.html">RTIO</A>, <A HREF="#x1">RTMachine</A>;
 IMPORT <A HREF="RTMisc.i3.html">RTMisc</A>, <A HREF="RTOS.i3.html">RTOS</A>, <A HREF="RTParams.i3.html">RTParams</A>, <A HREF="../POSIX/RTPerfTool.i3.html">RTPerfTool</A>, <A HREF="RTProcess.i3.html">RTProcess</A>, <A HREF="RTType.i3.html">RTType</A>;
-IMPORT <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="../../thread/Common/Thread.i3.html">Thread</A>, <A HREF="#x2">ThreadF</A>, <A HREF="RuntimeError.i3.html">RuntimeError</A>;
+IMPORT <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="../../thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../thread/PTHREAD/ThreadF.i3.html">ThreadF</A>, <A HREF="RuntimeError.i3.html">RuntimeError</A>;
 IMPORT <A HREF="../../text/TextLiteral.i3.html">TextLiteral</A> AS TextLit, <A HREF="RTLinker.i3.html">RTLinker</A>, <A HREF="../../time/Common/Time.i3.html">Time</A>;
 
 FROM <A HREF="RT0.i3.html">RT0</A> IMPORT Typecode, TypeDefn;
@@ -2812,15 +2812,7 @@ END RTCollector.
 <A NAME="x1">interface RTMachine is in:
 </A><UL>
 <LI><A HREF="../AMD64_LINUX/RTMachine.i3.html#0TOP0">m3core/src/runtime/AMD64_LINUX/RTMachine.i3</A>
-<LI><A HREF="../LINUXLIBC6/RTMachine.i3.html#0TOP0">m3core/src/runtime/LINUXLIBC6/RTMachine.i3</A>
 <LI><A HREF="RTMachine.i3.html#0TOP0">m3core/src/runtime/common/RTMachine.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">interface ThreadF is in:
-</A><UL>
-<LI><A HREF="../../thread/POSIX/ThreadF.i3.html#0TOP0">m3core/src/thread/POSIX/ThreadF.i3</A>
-<LI><A HREF="../../thread/PTHREAD/ThreadF.i3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadF.i3</A>
 </UL>
 <P>
 <PRE>

@@ -15,7 +15,7 @@
       modified on Thu Jan 28 10:14:15 PST 1993 by mjordan    
       modified on Mon Nov 18 14:41:43 PST 1991 by muller     
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">SchedulerPosix</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="../PTHREAD/ThreadPThread.m3.html">SchedulerPosix</A></interface>;
 
 IMPORT <A HREF="Thread.i3.html">Thread</A>;
 FROM <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int;
@@ -26,10 +26,10 @@ TYPE
 PROCEDURE <A HREF="../PTHREAD/ThreadPThread.m3.html#WaitProcess">WaitProcess</A>(pid: int; VAR status: int): int;
 </PRE><BLOCKQUOTE><EM> This is a wrapper for POSIX waitpid. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x2">IOWait</A>(fd: CARDINAL; read: BOOLEAN;
+PROCEDURE <A HREF="../PTHREAD/ThreadPThread.m3.html#IOWait">IOWait</A>(fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult;
 
-PROCEDURE <A HREF="#x3">IOAlertWait</A>(fd: CARDINAL; read: BOOLEAN;
+PROCEDURE <A HREF="../PTHREAD/ThreadPThread.m3.html#IOAlertWait">IOAlertWait</A>(fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult
                   RAISES {Thread.Alerted};
 </PRE> These procedures are functionally equivalent to calling <CODE>select(2)</CODE>
@@ -94,27 +94,6 @@ PROCEDURE <A HREF="#x3">IOAlertWait</A>(fd: CARDINAL; read: BOOLEAN;
 END SchedulerPosix.
 </PRE>
 </inInterface>
-<HR>
-<A NAME="x1">SchedulerPosix's implementation  is in:
-</A><UL>
-<LI><A HREF="../POSIX/ThreadPosix.m3.html#0TOP0">m3core/src/thread/POSIX/ThreadPosix.m3</A>
-<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure SchedulerPosix.IOWait is in:
-</A><UL>
-<LI><A HREF="../POSIX/ThreadPosix.m3.html#IOWait">m3core/src/thread/POSIX/ThreadPosix.m3</A>
-<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#IOWait">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">procedure SchedulerPosix.IOAlertWait is in:
-</A><UL>
-<LI><A HREF="../POSIX/ThreadPosix.m3.html#IOAlertWait">m3core/src/thread/POSIX/ThreadPosix.m3</A>
-<LI><A HREF="../PTHREAD/ThreadPThread.m3.html#IOAlertWait">m3core/src/thread/PTHREAD/ThreadPThread.m3</A>
-</UL>
-<P>
 <PRE>
 
 
