@@ -84,20 +84,7 @@ if [ "${UPGRADE_CM3_CFG}" = "yes" -o "${ret}" != 0 ]; then (
   CFG="${INSTALLROOT}/bin/cm3.cfg"
   CFGBAK="${CFG}--${DS}"
   cp -p "${CFG}" "${CFGBAK}" || exit 1
-  if [ "${TARGET}" = "NT386" -o "${TARGET}" = "NT386GNU" ]; then
-    if false; then # for now, don't touch the configuration...
-      CFGD="${INSTALLROOT}/bin"
-      for f in ${CFGD}/NT386*; do
-	cp -pv ${f} ${f}--${DS}
-      done
-      CFGS="${ROOT}/m3-sys/cminstall/src/config"
-      for f in ${CFGS}/NT386*; do
-	b=`basename ${f}`
-	cp -v ${f} ${CFGD}/${b}
-      done
-      cp ${CFGS}/${TARGET} ${CFG}
-    fi
-  elif grep m3_backend "${CFG}"; then
+  if grep m3_backend "${CFG}"; then
     "${INSTALLROOT}/pkg/cminstall/${TARGET}/cminstall" -c "${INSTALLROOT}" \
       -o > "${CFG}" || exit 1
     echo "new config file generated in ${CFG}, backup in ${CFGBAK}"
