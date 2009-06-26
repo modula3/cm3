@@ -8,7 +8,7 @@ if not defined ("SYSTEM_LIBS")
 SYSTEM_LIBS =
 {
     "LIBC"       : [ "-lm", "-lpthread" ],
-    "LEX-YACC"   : [ "-ll" ],
+    "LEX-YACC"   : [ "-lfl" ],
     "FLEX-BISON" : [ "-lfl" ],
     "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
     "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
