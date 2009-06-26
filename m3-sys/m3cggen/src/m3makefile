@@ -3,5 +3,4 @@ import ("m3middle")
 
 implementation ("Main")
 
-build_standalone()
 program ("m3cggen")
