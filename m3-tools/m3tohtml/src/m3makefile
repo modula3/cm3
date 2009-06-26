@@ -24,7 +24,6 @@ module ("MarkUp")
 module ("M3MarkUp")
 
 implementation ("Main")
-build_standalone()
 
 Program ("m3tohtml")
 
