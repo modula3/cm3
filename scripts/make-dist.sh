@@ -194,7 +194,7 @@ support tools like m3bundle and some general useful libraries.
 <li><a href="http://www.opencm3.net/doc/help/cm3/quake.html">Quake Reference</a></li>
 <li><a href="http://www.opencm3.net/doc/tutorial/m3/m3_toc.html">M3 Tutorial</a></li>
 <li><a href="http://www.opencm3.net/doc/src_reports/blue_paper/index.html">CM3 IDE</a></li>
-<li><a href="http://www.opencm3.net/doc/src_reports/src-113.pdf">Some Useful odula-3 Interfaces</a></li>
+<li><a href="http://www.opencm3.net/doc/src_reports/src-113.pdf">Some Useful Modula-3 Interfaces</a></li>
 <li><a href="http://www.opencm3.net/doc/src_reports/m3poster.pdf">M3 Syntax Diagrams Poster</a></li>
 <li><a href="http://www.opencm3.net/doc/src_reports/m3syntax.pdf">M3 Syntax Diagrams, Non-Terminal</a></li>
 <li><a href="http://www.opencm3.net/doc/src_reports/m3tokens.pdf">M3 Syntax Diagrams, Terminals</a></li>
@@ -230,7 +230,20 @@ for c in ${PKG_COLLECTIONS}; do
   ) > install.sh
   chmod 755 install.sh
   (
-    echo "<html><body><h1>CM3 Package Collection $c</h1>"
+    echo "<html>"
+    cat <<EOF
+  <head>
+    <title>CM3 Package Collection $c</title>
+    <META HTTP-EQUIV="Content-Type" CONTENT="text/html">
+    <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+    <META HTTP-EQUIV="Resource-type" CONTENT="document">
+    <META HTTP-EQUIV="Reply-to" CONTENT="m3-support@elego.de">
+    <LINK HREF="http://www.opencm3.net/normal.css" REL="stylesheet" TYPE="text/css">
+    <META NAME="robots" content="noindex">
+  </head>
+  <body>
+    <h1>CM3 Package Collection $c</h1>
+EOF
     ddd=''
     ddd=${ddd:=DESC_${c}}
     echo ${!ddd}
@@ -238,7 +251,8 @@ for c in ${PKG_COLLECTIONS}; do
     echo "<ul>"
     for p in ${PKGS}; do
       b=`basename ${p}`
-      echo "<dt>$p</dt>"
+      # FIXME: something like this should be in the style sheet normal.css
+      echo "<dt style=\"font-size:1.2em; font-weight:bold; padding-top:0.5em;\">$p</dt>"
       echo "<dd>"
       if [ -r ${p}/DESC ]; then
         cat ${p}/DESC
@@ -266,6 +280,9 @@ for c in ${PKG_COLLECTIONS}; do
   ) > collection-${c}.html
   ARCHIVE="${STAGE}/cm3-bin-ws-${c}-${TARGET}-${CM3VERSION}-${DS}.tgz"
   "${TAR}"  --exclude '*.o' --exclude '*.mo' --exclude '*.io' \
+    --exclude '*/CVS/*' --exclude '*/CVS' --exclude '*~' \
+    --exclude '*.tar.*' --exclude '*.tgz' --exclude "*/${TARGET}/gcc" \
+    --exclude "*/${TARGET}/*/*" \
     -czf "${ARCHIVE}" collection-${c}.html install.sh ${PKGS}
   ls -l "${ARCHIVE}"
 done
