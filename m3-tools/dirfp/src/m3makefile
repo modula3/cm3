@@ -1,5 +1,4 @@
 
 import ("libm3")
 implementation ("Main")
-build_standalone ()
 Program ("dirfp")
