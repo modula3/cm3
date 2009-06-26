@@ -89,7 +89,7 @@ if [ "${UPGRADE_CM3_CFG}" = "yes" -o "${ret}" != 0 ]; then (
       -o > "${CFG}" || exit 1
     echo "new config file generated in ${CFG}, backup in ${CFGBAK}"
   else
-    mkdir ${INSTALLROOT}/bin/config 2>/dev/null
+    mkdir "${INSTALLROOT}/bin/config" 2>/dev/null
     CFGS="${ROOT}/m3-sys/cminstall/src/config-no-install"
     for f in ${CFGS}/*; do
       b=`basename ${f}`
