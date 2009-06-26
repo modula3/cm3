@@ -2187,7 +2187,7 @@ def CopyConfigForDistribution(To):
     a = os.path.join(Root, "m3-sys", "cminstall", "src")
     To = os.path.join(To, "bin/config")
     CreateDirectory(To)
-    for a in [Target + "*", "*.common"]
+    for a in [Target + "*", "*.common"]:
         for File in glob.glob(os.path.join(a, "config-no-install", a)):
             if os.path.isfile(File):
                 #print(File + " => " + To + "\n")
