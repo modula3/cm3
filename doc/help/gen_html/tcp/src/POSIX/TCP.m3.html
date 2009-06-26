@@ -14,13 +14,13 @@
       modified on Fri Jan  7 13:31:11 PST 1994 by msm    
       modified on Sun Jan 12 16:16:54 PST 1992 by meehan 
       modified on Sat Jan 11 16:55:00 PST 1992 by gnelson 
- $Id: TCP.m3.html,v 1.4 2009-06-17 18:53:08 wagner Exp $ 
+ $Id: TCP.m3.html,v 1.5 2009-06-26 16:36:02 wagner Exp $ 
 
 <P><PRE>UNSAFE MODULE <module>TCP</module> EXPORTS <A HREF="../common/TCP.i3.html"><implements>TCP</A></implements>, <A HREF="../common/TCPMisc.i3.html"><implements>TCPMisc</A></implements>, <A HREF="../common/TCPSpecial.i3.html"><implements>TCPSpecial</A></implements>;
 
 IMPORT <A HREF="../../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="../../../libm3/derived/AtomList.i3.html">AtomList</A>, <A HREF="../common/IP.i3.html">IP</A>, <A HREF="../../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>;
-IMPORT <A HREF="#x1">Usocket</A>, <A HREF="#x2">Uerror</A>, <A HREF="#x3">Uin</A>, <A HREF="#x4">Unix</A>, <A HREF="#x5">Uuio</A>, <A HREF="#x6">Utypes</A>,
-       <A HREF="#x7">SchedulerPosix</A>, <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>;
+IMPORT <A HREF="#x1">Usocket</A>, <A HREF="#x2">Uerror</A>, <A HREF="../../../m3core/src/unix/uin-common/Uin.i3.html">Uin</A>, <A HREF="#x3">Unix</A>, <A HREF="#x4">Uuio</A>, <A HREF="#x5">Utypes</A>,
+       <A HREF="../../../m3core/src/thread/Common/SchedulerPosix.i3.html">SchedulerPosix</A>, <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>;
 IMPORT <A HREF="../common/ConnFD.i3.html">ConnFD</A>;
 IMPORT <A HREF="../../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>;
 IMPORT <A HREF="TCPHack.i3.html">TCPHack</A>;
@@ -603,7 +603,6 @@ END TCP.
 </A><UL>
 <LI><A HREF="../../../m3core/src/unix/Common/Usocket.i3.html#0TOP0">m3core/src/unix/Common/Usocket.i3</A>
 <LI><A HREF="../../../m3core/src/unix/linux-common/Usocket.i3.html#0TOP0">m3core/src/unix/linux-common/Usocket.i3</A>
-<LI><A HREF="../../../m3core/src/unix/linux-libc6/Usocket.i3.html#0TOP0">m3core/src/unix/linux-libc6/Usocket.i3</A>
 </UL>
 <P>
 <HR>
@@ -611,45 +610,27 @@ END TCP.
 </A><UL>
 <LI><A HREF="../../../m3core/src/unix/Common/Uerror.i3.html#0TOP0">m3core/src/unix/Common/Uerror.i3</A>
 <LI><A HREF="../../../m3core/src/unix/linux-common/Uerror.i3.html#0TOP0">m3core/src/unix/linux-common/Uerror.i3</A>
-<LI><A HREF="../../../m3core/src/unix/linux-libc6/Uerror.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uerror.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x3">interface Uin is in:
-</A><UL>
-<LI><A HREF="../../../m3core/src/unix/linux-libc6/Uin.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uin.i3</A>
-<LI><A HREF="../../../m3core/src/unix/uin-common/Uin.i3.html#0TOP0">m3core/src/unix/uin-common/Uin.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">interface Unix is in:
+<A NAME="x3">interface Unix is in:
 </A><UL>
 <LI><A HREF="../../../m3core/src/unix/Common/Unix.i3.html#0TOP0">m3core/src/unix/Common/Unix.i3</A>
 <LI><A HREF="../../../m3core/src/unix/linux-common/Unix.i3.html#0TOP0">m3core/src/unix/linux-common/Unix.i3</A>
-<LI><A HREF="../../../m3core/src/unix/linux-libc6/Unix.i3.html#0TOP0">m3core/src/unix/linux-libc6/Unix.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x5">interface Uuio is in:
+<A NAME="x4">interface Uuio is in:
 </A><UL>
 <LI><A HREF="../../../m3core/src/unix/Common/Uuio.i3.html#0TOP0">m3core/src/unix/Common/Uuio.i3</A>
 <LI><A HREF="../../../m3core/src/unix/linux-common/Uuio.i3.html#0TOP0">m3core/src/unix/linux-common/Uuio.i3</A>
-<LI><A HREF="../../../m3core/src/unix/linux-libc6/Uuio.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uuio.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x6">interface Utypes is in:
+<A NAME="x5">interface Utypes is in:
 </A><UL>
 <LI><A HREF="../../../m3core/src/unix/Common/Utypes.i3.html#0TOP0">m3core/src/unix/Common/Utypes.i3</A>
 <LI><A HREF="../../../m3core/src/unix/linux-common/Utypes.i3.html#0TOP0">m3core/src/unix/linux-common/Utypes.i3</A>
-<LI><A HREF="../../../m3core/src/unix/linux-libc6/Utypes.i3.html#0TOP0">m3core/src/unix/linux-libc6/Utypes.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x7">interface SchedulerPosix is in:
-</A><UL>
-<LI><A HREF="../../../m3core/src/thread/Common/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/Common/SchedulerPosix.i3</A>
-<LI><A HREF="../../../m3core/src/thread/POSIX/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/POSIX/SchedulerPosix.i3</A>
 </UL>
 <P>
 <PRE>

@@ -12,14 +12,14 @@
 
 <P><PRE>UNSAFE MODULE <module>ThreadPThread</module>
 EXPORTS
-<A HREF="../Common/Thread.i3.html"><implements>Thread</A></implements>, <A HREF="#x1"><implements>ThreadF</A></implements>, <A HREF="../Common/Scheduler.i3.html"><implements>Scheduler</A></implements>, <A HREF="#x2"><implements>SchedulerPosix</A></implements>, <A HREF="../../runtime/common/RTOS.i3.html"><implements>RTOS</A></implements>, <A HREF="../../runtime/common/RTHooks.i3.html"><implements>RTHooks</A></implements>, <A HREF="ThreadPThread.i3.html"><implements>ThreadPThread</A></implements>;
+<A HREF="../Common/Thread.i3.html"><implements>Thread</A></implements>, <A HREF="ThreadF.i3.html"><implements>ThreadF</A></implements>, <A HREF="../Common/Scheduler.i3.html"><implements>Scheduler</A></implements>, <A HREF="../Common/SchedulerPosix.i3.html"><implements>SchedulerPosix</A></implements>, <A HREF="../../runtime/common/RTOS.i3.html"><implements>RTOS</A></implements>, <A HREF="../../runtime/common/RTHooks.i3.html"><implements>RTHooks</A></implements>, <A HREF="ThreadPThread.i3.html"><implements>ThreadPThread</A></implements>;
 
 IMPORT <A HREF="../../C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../Common/MutexRep.i3.html">MutexRep</A>,
-       <A HREF="../../runtime/common/RTCollectorSRC.i3.html">RTCollectorSRC</A>, <A HREF="../../runtime/common/RTError.i3.html">RTError</A>, <A HREF="../../runtime/common/RTHeapRep.i3.html">RTHeapRep</A>, <A HREF="../../runtime/common/RTIO.i3.html">RTIO</A>, <A HREF="#x3">RTMachine</A>, <A HREF="../../runtime/common/RTParams.i3.html">RTParams</A>,
-       <A HREF="../../runtime/POSIX/RTPerfTool.i3.html">RTPerfTool</A>, <A HREF="../../runtime/common/RTProcess.i3.html">RTProcess</A>, <A HREF="#x4">ThreadEvent</A>, <A HREF="../../time/Common/Time.i3.html">Time</A>,
-       <A HREF="#x5">Unix</A>, <A HREF="#x6">Utime</A>, <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="#x7">Upthread</A>, <A HREF="#x8">Usched</A>,
-       <A HREF="#x9">Uerror</A>, <A HREF="#x10">Uexec</A>;
-FROM <A HREF="#x7">Upthread</A> IMPORT pthread_t;
+       <A HREF="../../runtime/common/RTCollectorSRC.i3.html">RTCollectorSRC</A>, <A HREF="../../runtime/common/RTError.i3.html">RTError</A>, <A HREF="../../runtime/common/RTHeapRep.i3.html">RTHeapRep</A>, <A HREF="../../runtime/common/RTIO.i3.html">RTIO</A>, <A HREF="#x1">RTMachine</A>, <A HREF="../../runtime/common/RTParams.i3.html">RTParams</A>,
+       <A HREF="../../runtime/POSIX/RTPerfTool.i3.html">RTPerfTool</A>, <A HREF="../../runtime/common/RTProcess.i3.html">RTProcess</A>, <A HREF="../Common/ThreadEvent.i3.html">ThreadEvent</A>, <A HREF="../../time/Common/Time.i3.html">Time</A>,
+       <A HREF="#x2">Unix</A>, <A HREF="#x3">Utime</A>, <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="#x4">Upthread</A>, <A HREF="#x5">Usched</A>,
+       <A HREF="#x6">Uerror</A>, <A HREF="#x7">Uexec</A>;
+FROM <A HREF="#x4">Upthread</A> IMPORT pthread_t;
 FROM <A HREF="../../../derived/Compiler.i3.html">Compiler</A> IMPORT ThisFile, ThisLine;
 FROM <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int;
 IMPORT <A HREF="../../runtime/common/RuntimeError.i3.html">RuntimeError</A> AS RTE;
@@ -1494,78 +1494,52 @@ END ThreadPThread.
 </PRE>
 </inModule>
 <HR>
-<A NAME="x1">interface ThreadF is in:
-</A><UL>
-<LI><A HREF="../POSIX/ThreadF.i3.html#0TOP0">m3core/src/thread/POSIX/ThreadF.i3</A>
-<LI><A HREF="ThreadF.i3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadF.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">interface SchedulerPosix is in:
-</A><UL>
-<LI><A HREF="../Common/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/Common/SchedulerPosix.i3</A>
-<LI><A HREF="../POSIX/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/POSIX/SchedulerPosix.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">interface RTMachine is in:
+<A NAME="x1">interface RTMachine is in:
 </A><UL>
 <LI><A HREF="../../runtime/AMD64_LINUX/RTMachine.i3.html#0TOP0">m3core/src/runtime/AMD64_LINUX/RTMachine.i3</A>
-<LI><A HREF="../../runtime/LINUXLIBC6/RTMachine.i3.html#0TOP0">m3core/src/runtime/LINUXLIBC6/RTMachine.i3</A>
 <LI><A HREF="../../runtime/common/RTMachine.i3.html#0TOP0">m3core/src/runtime/common/RTMachine.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x4">interface ThreadEvent is in:
-</A><UL>
-<LI><A HREF="../Common/ThreadEvent.i3.html#0TOP0">m3core/src/thread/Common/ThreadEvent.i3</A>
-<LI><A HREF="../POSIX/ThreadEvent.i3.html#0TOP0">m3core/src/thread/POSIX/ThreadEvent.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x5">interface Unix is in:
+<A NAME="x2">interface Unix is in:
 </A><UL>
 <LI><A HREF="../../unix/Common/Unix.i3.html#0TOP0">m3core/src/unix/Common/Unix.i3</A>
 <LI><A HREF="../../unix/linux-common/Unix.i3.html#0TOP0">m3core/src/unix/linux-common/Unix.i3</A>
-<LI><A HREF="../../unix/linux-libc6/Unix.i3.html#0TOP0">m3core/src/unix/linux-libc6/Unix.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x6">interface Utime is in:
+<A NAME="x3">interface Utime is in:
 </A><UL>
 <LI><A HREF="../../unix/Common/Utime.i3.html#0TOP0">m3core/src/unix/Common/Utime.i3</A>
 <LI><A HREF="../../unix/linux-common/Utime.i3.html#0TOP0">m3core/src/unix/linux-common/Utime.i3</A>
-<LI><A HREF="../../unix/linux-libc6/Utime.i3.html#0TOP0">m3core/src/unix/linux-libc6/Utime.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x7">interface Upthread is in:
+<A NAME="x4">interface Upthread is in:
 </A><UL>
 <LI><A HREF="../../unix/Common/Upthread.i3.html#0TOP0">m3core/src/unix/Common/Upthread.i3</A>
 <LI><A HREF="../../unix/linux-common/Upthread.i3.html#0TOP0">m3core/src/unix/linux-common/Upthread.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x8">interface Usched is in:
+<A NAME="x5">interface Usched is in:
 </A><UL>
 <LI><A HREF="../../unix/Common/Usched.i3.html#0TOP0">m3core/src/unix/Common/Usched.i3</A>
 <LI><A HREF="../../unix/linux-common/Usched.i3.html#0TOP0">m3core/src/unix/linux-common/Usched.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x9">interface Uerror is in:
+<A NAME="x6">interface Uerror is in:
 </A><UL>
 <LI><A HREF="../../unix/Common/Uerror.i3.html#0TOP0">m3core/src/unix/Common/Uerror.i3</A>
 <LI><A HREF="../../unix/linux-common/Uerror.i3.html#0TOP0">m3core/src/unix/linux-common/Uerror.i3</A>
-<LI><A HREF="../../unix/linux-libc6/Uerror.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uerror.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x10">interface Uexec is in:
+<A NAME="x7">interface Uexec is in:
 </A><UL>
 <LI><A HREF="../../unix/Common/Uexec.i3.html#0TOP0">m3core/src/unix/Common/Uexec.i3</A>
 <LI><A HREF="../../unix/linux-common/Uexec.i3.html#0TOP0">m3core/src/unix/linux-common/Uexec.i3</A>
-<LI><A HREF="../../unix/linux-libc6/Uexec.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uexec.i3</A>
 </UL>
 <P>
 <PRE>

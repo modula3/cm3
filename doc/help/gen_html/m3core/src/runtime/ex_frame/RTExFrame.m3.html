@@ -12,8 +12,8 @@
 
 <P><PRE>UNSAFE MODULE <module>RTExFrame</module> EXPORTS <A HREF="../common/RTException.i3.html"><implements>RTException</A></implements>, <A HREF="RTExFrame.i3.html"><implements>RTExFrame</A></implements>;
 
-IMPORT <A HREF="../common/RT0.i3.html">RT0</A>, <A HREF="../common/RTError.i3.html">RTError</A>, <A HREF="../common/RTIO.i3.html">RTIO</A>, <A HREF="../common/RTParams.i3.html">RTParams</A>, <A HREF="../common/RTOS.i3.html">RTOS</A>, <A HREF="#x1">ThreadF</A>;
-IMPORT <A HREF="../../thread/Common/Thread.i3.html">Thread</A>, <A HREF="#x2">Csetjmp</A>;
+IMPORT <A HREF="../common/RT0.i3.html">RT0</A>, <A HREF="../common/RTError.i3.html">RTError</A>, <A HREF="../common/RTIO.i3.html">RTIO</A>, <A HREF="../common/RTParams.i3.html">RTParams</A>, <A HREF="../common/RTOS.i3.html">RTOS</A>, <A HREF="../../thread/PTHREAD/ThreadF.i3.html">ThreadF</A>;
+IMPORT <A HREF="../../thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../C/AMD64_LINUX/Csetjmp.i3.html">Csetjmp</A>;
 
 VAR
   DEBUG := FALSE;
@@ -289,20 +289,6 @@ BEGIN
 END RTExFrame.
 </PRE>
 </inModule>
-<HR>
-<A NAME="x1">interface ThreadF is in:
-</A><UL>
-<LI><A HREF="../../thread/POSIX/ThreadF.i3.html#0TOP0">m3core/src/thread/POSIX/ThreadF.i3</A>
-<LI><A HREF="../../thread/PTHREAD/ThreadF.i3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadF.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">interface Csetjmp is in:
-</A><UL>
-<LI><A HREF="../../C/AMD64_LINUX/Csetjmp.i3.html#0TOP0">m3core/src/C/AMD64_LINUX/Csetjmp.i3</A>
-<LI><A HREF="../../C/LINUXLIBC6/Csetjmp.i3.html#0TOP0">m3core/src/C/LINUXLIBC6/Csetjmp.i3</A>
-</UL>
-<P>
 <PRE>
 
 
