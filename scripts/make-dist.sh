@@ -271,7 +271,7 @@ EOF
         if [ -n "${manpages}" ]; then
           for m in ${manpages}; do
             mb=`basename ${m} .${section}`
-            echo "<a href=\"http://www.opencm3.net/man/man${section}/${mb}.${section}\">Manual Page ${mb}</a><br>"
+            echo "<a href=\"http://modula3.elegosoft.com/cm3/cgi-bin/man2html.cgi?local=/usr/local/cm3/man/man${section}/${mb}.${section}\">Manual Page ${mb}</a><br>"
           done
         fi
       done
