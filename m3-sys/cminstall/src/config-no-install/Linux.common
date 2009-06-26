@@ -1,0 +1,23 @@
+% Copyright 1996 Critical Mass, Inc. All rights reserved.
+% 
+% common configuration file for various Linux platforms
+%
+
+if not defined ("SYSTEM_LIBS")
+
+SYSTEM_LIBS =
+{
+    "LIBC"       : [ "-lm", "-lpthread" ],
+    "LEX-YACC"   : [ "-ll" ],
+    "FLEX-BISON" : [ "-lfl" ],
+    "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
+    "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
+    "ODBC"       : [ "-lodbc" ],
+    "MOTIF"      : [ "-lXm" ],
+    "TCP"        : [ ],
+    "X11" :      [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
+}
+
+end
+
+include("Unix.common")

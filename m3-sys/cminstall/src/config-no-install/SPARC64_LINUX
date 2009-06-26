@@ -25,4 +25,4 @@ readonly proc GetGcWrapFlags() is return "" end
 readonly proc FixM3GcDefs(x) is return x end
 readonly proc GetM3BackFlag(x) is return x end
 
-include("Unix.common")
+include("Linux.common")
