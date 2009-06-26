@@ -2192,7 +2192,7 @@ def CopyConfigForDistribution(To):
             if os.path.isfile(File):
                 #print(File + " => " + To + "\n")
                 CopyFile(File, To)
-    open(os.path.join(To, "cm3.cfg"), "w").write("include(path() & \"/config/" + Config + "\")\n")
+    open(os.path.join(To, "cm3.cfg"), "w").write("INSTALL_ROOT = (path() & SL & \"..\")\ninclude(path() & \"/config/" + Config + "\")\n")
     return True
 
 #-----------------------------------------------------------------------------
