@@ -115,7 +115,7 @@ static size_t GetPC(void* VoidContext)
 #elif defined(__amd64)
       pc = Context->uc_mcontext.gregs[REG_RIP];
 #elif defined(__powerpc)
-      pc = Context->uc_mcontext.regs->nip;
+      pc = Context->uc_mcontext.uc_regs->gregs[PT_NIP];
 #else
 #error Unknown __linux target
 #endif
