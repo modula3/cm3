@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.37 2009-06-20 19:23:31 jkrell Exp $
+# $Id: make-bin-dist-min.sh,v 1.38 2009-06-26 06:56:12 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -122,11 +122,17 @@ if [ "${NEWCFG}" != "y" ]; then
     /^readonly DEV_BIN[ \t]*=/s;^.*$;readonly DEV_BIN = "'${DEV_BIN}${SL}'";
   ' "${CFG1}" > "${INSTALLROOT}/bin/cm3.cfg"
 else
-  # new installation files
-  cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin"
+  # delete old config files
+  for f in ${ROOT}/m3-sys/cminstall/src/config-no-install/*; do
+    b=`basename ${f}`
+    if [ -f "${INSTALLROOT}/bin/${b}" ] ; then
+      rm "${INSTALLROOT}/bin/${b}" > /dev/null
+  done
+  # new config files
+  cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin/config"
   (
     echo "INSTALL_ROOT = \"${INSTALLROOT}\""
-    echo "include(\"${TARGET}\")"
+    echo "include(path() & \"/config/${TARGET}\")"
   ) > "${INSTALLROOT}/bin/cm3.cfg"
 fi
 

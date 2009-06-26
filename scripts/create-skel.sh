@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: create-skel.sh,v 1.2 2009-06-07 16:03:50 wagner Exp $
+# $Id: create-skel.sh,v 1.3 2009-06-26 06:56:12 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -33,6 +33,7 @@ md() {
 
 md "${INSTALLROOT}"
 md "${INSTALLROOT}/bin"
+md "${INSTALLROOT}/bin/config"
 md "${INSTALLROOT}/doc"
 md "${INSTALLROOT}/elisp"
 md "${INSTALLROOT}/examples"
