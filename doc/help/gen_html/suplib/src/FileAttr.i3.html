@@ -34,11 +34,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: FileAttr.i3.html,v 1.1 2009-06-17 18:53:03 wagner Exp $ 
+ * $Id: FileAttr.i3.html,v 1.2 2009-06-26 16:35:46 wagner Exp $ 
 
 <P><PRE>INTERFACE <interface><A HREF="#x1">FileAttr</A></interface>;
 
-IMPORT <A HREF="../../libm3/src/os/Common/File.i3.html">File</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HREF="../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="TokScan.i3.html">TokScan</A>, <A HREF="#x2">Ustat</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>;
+IMPORT <A HREF="../../libm3/src/os/Common/File.i3.html">File</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HREF="../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="TokScan.i3.html">TokScan</A>, <A HREF="../../m3core/src/unix/Common/Ustat.i3.html">Ustat</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>;
 
 CONST
   Brand = &quot;FileAttr&quot;;
@@ -271,13 +271,6 @@ END FileAttr.
 </A><UL>
 <LI><A HREF="FileAttr.m3.html#0TOP0">suplib/src/FileAttr.m3</A>
 <LI><A HREF="POSIX/FileAttrOS.m3.html#0TOP0">suplib/src/POSIX/FileAttrOS.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">interface Ustat is in:
-</A><UL>
-<LI><A HREF="../../m3core/src/unix/Common/Ustat.i3.html#0TOP0">m3core/src/unix/Common/Ustat.i3</A>
-<LI><A HREF="../../m3core/src/unix/linux-libc6/Ustat.i3.html#0TOP0">m3core/src/unix/linux-libc6/Ustat.i3</A>
 </UL>
 <P>
 <PRE>

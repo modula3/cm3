@@ -19,8 +19,8 @@
 
 IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="../../../derived/AtomList.i3.html">AtomList</A>, <A HREF="../../../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../../params/Env.i3.html">Env</A>, <A HREF="../Common/File.i3.html">File</A>, <A HREF="FilePosix.i3.html">FilePosix</A>, <A HREF="../../../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../Common/OSError.i3.html">OSError</A>,
   <A HREF="OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../Common/Pathname.i3.html">Pathname</A>, <A HREF="../../../../m3core/src/runtime/common/RTLinker.i3.html">RTLinker</A>, <A HREF="../../../../m3core/src/runtime/common/RTProcess.i3.html">RTProcess</A>, <A HREF="../../../../m3core/src/runtime/common/RTSignal.i3.html">RTSignal</A>,
-  <A HREF="../../../../m3core/src/thread/Common/Scheduler.i3.html">Scheduler</A>, <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="#x1">SchedulerPosix</A>, <A HREF="#x2">Unix</A>, <A HREF="#x3">Uerror</A>, <A HREF="#x4">Uexec</A>, <A HREF="#x5">Uprocess</A>, <A HREF="#x6">Ustat</A>,
-  <A HREF="#x7">Utime</A>, <A HREF="#x8">Uugid</A>, <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../Common/Process.i3.html">Process</A>;
+  <A HREF="../../../../m3core/src/thread/Common/Scheduler.i3.html">Scheduler</A>, <A HREF="../../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../../../m3core/src/thread/Common/SchedulerPosix.i3.html">SchedulerPosix</A>, <A HREF="#x1">Unix</A>, <A HREF="#x2">Uerror</A>, <A HREF="#x3">Uexec</A>, <A HREF="#x4">Uprocess</A>, <A HREF="../../../../m3core/src/unix/Common/Ustat.i3.html">Ustat</A>,
+  <A HREF="#x5">Utime</A>, <A HREF="#x6">Uugid</A>, <A HREF="../../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../Common/Process.i3.html">Process</A>;
 
 CONST
   NoFileDescriptor: INTEGER = -1;
@@ -382,65 +382,45 @@ END ProcessPosixCommon.
 </PRE>
 </inModule>
 <HR>
-<A NAME="x1">interface SchedulerPosix is in:
-</A><UL>
-<LI><A HREF="../../../../m3core/src/thread/Common/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/Common/SchedulerPosix.i3</A>
-<LI><A HREF="../../../../m3core/src/thread/POSIX/SchedulerPosix.i3.html#0TOP0">m3core/src/thread/POSIX/SchedulerPosix.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">interface Unix is in:
+<A NAME="x1">interface Unix is in:
 </A><UL>
 <LI><A HREF="../../../../m3core/src/unix/Common/Unix.i3.html#0TOP0">m3core/src/unix/Common/Unix.i3</A>
 <LI><A HREF="../../../../m3core/src/unix/linux-common/Unix.i3.html#0TOP0">m3core/src/unix/linux-common/Unix.i3</A>
-<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Unix.i3.html#0TOP0">m3core/src/unix/linux-libc6/Unix.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x3">interface Uerror is in:
+<A NAME="x2">interface Uerror is in:
 </A><UL>
 <LI><A HREF="../../../../m3core/src/unix/Common/Uerror.i3.html#0TOP0">m3core/src/unix/Common/Uerror.i3</A>
 <LI><A HREF="../../../../m3core/src/unix/linux-common/Uerror.i3.html#0TOP0">m3core/src/unix/linux-common/Uerror.i3</A>
-<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Uerror.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uerror.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x4">interface Uexec is in:
+<A NAME="x3">interface Uexec is in:
 </A><UL>
 <LI><A HREF="../../../../m3core/src/unix/Common/Uexec.i3.html#0TOP0">m3core/src/unix/Common/Uexec.i3</A>
 <LI><A HREF="../../../../m3core/src/unix/linux-common/Uexec.i3.html#0TOP0">m3core/src/unix/linux-common/Uexec.i3</A>
-<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Uexec.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uexec.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x5">interface Uprocess is in:
+<A NAME="x4">interface Uprocess is in:
 </A><UL>
 <LI><A HREF="../../../../m3core/src/unix/Common/Uprocess.i3.html#0TOP0">m3core/src/unix/Common/Uprocess.i3</A>
 <LI><A HREF="../../../../m3core/src/unix/linux-common/Uprocess.i3.html#0TOP0">m3core/src/unix/linux-common/Uprocess.i3</A>
-<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Uprocess.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uprocess.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x6">interface Ustat is in:
-</A><UL>
-<LI><A HREF="../../../../m3core/src/unix/Common/Ustat.i3.html#0TOP0">m3core/src/unix/Common/Ustat.i3</A>
-<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Ustat.i3.html#0TOP0">m3core/src/unix/linux-libc6/Ustat.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x7">interface Utime is in:
+<A NAME="x5">interface Utime is in:
 </A><UL>
 <LI><A HREF="../../../../m3core/src/unix/Common/Utime.i3.html#0TOP0">m3core/src/unix/Common/Utime.i3</A>
 <LI><A HREF="../../../../m3core/src/unix/linux-common/Utime.i3.html#0TOP0">m3core/src/unix/linux-common/Utime.i3</A>
-<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Utime.i3.html#0TOP0">m3core/src/unix/linux-libc6/Utime.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x8">interface Uugid is in:
+<A NAME="x6">interface Uugid is in:
 </A><UL>
 <LI><A HREF="../../../../m3core/src/unix/Common/Uugid.i3.html#0TOP0">m3core/src/unix/Common/Uugid.i3</A>
 <LI><A HREF="../../../../m3core/src/unix/linux-common/Uugid.i3.html#0TOP0">m3core/src/unix/linux-common/Uugid.i3</A>
-<LI><A HREF="../../../../m3core/src/unix/linux-libc6/Uugid.i3.html#0TOP0">m3core/src/unix/linux-libc6/Uugid.i3</A>
 </UL>
 <P>
 <PRE>

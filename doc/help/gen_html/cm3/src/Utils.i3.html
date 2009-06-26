@@ -54,7 +54,7 @@ PROCEDURE <A HREF="Utils.m3.html#PrepArgs">PrepArgs</A> (program: TEXT;  args: A
 PROCEDURE <A HREF="Utils.m3.html#Execute">Execute</A>  (program: TEXT;  args: Arg.List;
                      stdout: TEXT;  fatal: BOOLEAN): INTEGER;
 
-PROCEDURE <A HREF="#x2">MakeRelative</A> (VAR from: TEXT;  to: TEXT);
+PROCEDURE <A HREF="Utils.m3.html#MakeRelative">MakeRelative</A> (VAR from: TEXT;  to: TEXT);
 PROCEDURE <A HREF="Utils.m3.html#SymbolicOrHardLink">SymbolicOrHardLink</A> (link: PROCEDURE(name1, name2: const_char_star):int; s_for_sym, from, to: TEXT);
 </PRE><BLOCKQUOTE><EM>bootstrap hack</EM></BLOCKQUOTE><PRE>
 &lt;*EXTERNAL Utils__link*&gt; PROCEDURE link (name1, name2: const_char_star): int;
@@ -67,13 +67,6 @@ END Utils.
 </A><UL>
 <LI><A HREF="Utils.m3.html#0TOP0">cm3/src/Utils.m3</A>
 <LI><A HREF="UtilsPosix.m3.html#0TOP0">cm3/src/UtilsPosix.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure Utils.MakeRelative is in:
-</A><UL>
-<LI><A HREF="Utils.m3.html#MakeRelative">cm3/src/Utils.m3</A>
-<LI><A HREF="UtilsPosix.m3.html#MakeRelative">cm3/src/UtilsPosix.m3</A>
 </UL>
 <P>
 <PRE>

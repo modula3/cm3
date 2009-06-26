@@ -18,7 +18,7 @@
 </PRE> The <CODE>ScrollerVBTClass</CODE> interface allows you to customize the
    user interface of a scrollbar. 
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">ScrollerVBTClass</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="POSIX/ScrollerVBTClass.m3.html">ScrollerVBTClass</A></interface>;
 
 IMPORT <A HREF="../../../libm3/src/geometry/Axis.i3.html">Axis</A>, <A HREF="../../../ui/src/vbt/PaintOp.i3.html">PaintOp</A>, <A HREF="../../../ui/src/vbt/Pixmap.i3.html">Pixmap</A>, <A HREF="ScrollerVBT.i3.html">ScrollerVBT</A>, <A HREF="../../../ui/src/vbt/VBT.i3.html">VBT</A>;
 
@@ -26,7 +26,7 @@ REVEAL
   ScrollerVBT.Private &lt;: T;
 
 TYPE
-  <A HREF="#x2">T</A> &lt;: Public;
+  <A HREF="POSIX/ScrollerVBTClass.m3.html#T">T</A> &lt;: Public;
   Public =
     VBT.Leaf OBJECT
     METHODS
@@ -89,7 +89,7 @@ on the up-click.  <CODE>cd</CODE> is the mouse event; <CODE>height</CODE> is the
    of the stripe.  This is done using the following procedure: 
 
 <P>
-<P><PRE>PROCEDURE <A HREF="#x3">Update</A> (v: T; start, end, length: CARDINAL);
+<P><PRE>PROCEDURE <A HREF="POSIX/ScrollerVBTClass.m3.html#Update">Update</A> (v: T; start, end, length: CARDINAL);
 &lt;* LL.sup &lt; v *&gt;
 </PRE><BLOCKQUOTE><EM> Set new values of the stripe and (if they've changed) mark <CODE>v</CODE> for
    redisplay. </EM></BLOCKQUOTE><PRE>
@@ -119,16 +119,16 @@ on the up-click.  <CODE>cd</CODE> is the mouse event; <CODE>height</CODE> is the
                  stripeBorderPixmap : Pixmap.T;
                END;
 
-PROCEDURE <A HREF="#x4">GetAttributes</A> (v: T): Attributes;
+PROCEDURE <A HREF="POSIX/ScrollerVBTClass.m3.html#GetAttributes">GetAttributes</A> (v: T): Attributes;
 </PRE><BLOCKQUOTE><EM> Return the attribute currently in effect for <CODE>v</CODE>. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x5">SetAttributes</A> (v: T; READONLY a: Attributes);
+PROCEDURE <A HREF="POSIX/ScrollerVBTClass.m3.html#SetAttributes">SetAttributes</A> (v: T; READONLY a: Attributes);
 &lt;* LL.sup = VBT.mu *&gt;
 </PRE><BLOCKQUOTE><EM> Change the attributes on <CODE>v</CODE> to be <CODE>a</CODE>.  Mark <CODE>v</CODE> for
    redisplay and notify <CODE>v</CODE>'s parent that its shape might have
    changed. </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="#x6">Colorize</A> (v: T; colors: PaintOp.ColorQuad);
+PROCEDURE <A HREF="POSIX/ScrollerVBTClass.m3.html#Colorize">Colorize</A> (v: T; colors: PaintOp.ColorQuad);
 &lt;* LL.sup = VBT.mu *&gt;
 </PRE><BLOCKQUOTE><EM> Sets the paint op of all the scroller's textures and borders
    to be <CODE>colors.bgFg</CODE>.  Mark <CODE>v</CODE> for redisplay. </EM></BLOCKQUOTE><PRE>
@@ -136,48 +136,6 @@ PROCEDURE <A HREF="#x6">Colorize</A> (v: T; colors: PaintOp.ColorQuad);
 END ScrollerVBTClass.
 </PRE>
 </inInterface>
-<HR>
-<A NAME="x1">ScrollerVBTClass's implementation  is in:
-</A><UL>
-<LI><A HREF="POSIX/ScrollerVBTClass.m3.html#0TOP0">vbtkit/src/lego/POSIX/ScrollerVBTClass.m3</A>
-<LI><A HREF="ScrollerVBTClass.m3.html#0TOP0">vbtkit/src/lego/ScrollerVBTClass.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">opaque type ScrollerVBTClass.T is in:
-</A><UL>
-<LI><A HREF="POSIX/ScrollerVBTClass.m3.html#T">vbtkit/src/lego/POSIX/ScrollerVBTClass.m3</A>
-<LI><A HREF="ScrollerVBTClass.m3.html#T">vbtkit/src/lego/ScrollerVBTClass.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">procedure ScrollerVBTClass.Update is in:
-</A><UL>
-<LI><A HREF="POSIX/ScrollerVBTClass.m3.html#Update">vbtkit/src/lego/POSIX/ScrollerVBTClass.m3</A>
-<LI><A HREF="ScrollerVBTClass.m3.html#Update">vbtkit/src/lego/ScrollerVBTClass.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">procedure ScrollerVBTClass.GetAttributes is in:
-</A><UL>
-<LI><A HREF="POSIX/ScrollerVBTClass.m3.html#GetAttributes">vbtkit/src/lego/POSIX/ScrollerVBTClass.m3</A>
-<LI><A HREF="ScrollerVBTClass.m3.html#GetAttributes">vbtkit/src/lego/ScrollerVBTClass.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x5">procedure ScrollerVBTClass.SetAttributes is in:
-</A><UL>
-<LI><A HREF="POSIX/ScrollerVBTClass.m3.html#SetAttributes">vbtkit/src/lego/POSIX/ScrollerVBTClass.m3</A>
-<LI><A HREF="ScrollerVBTClass.m3.html#SetAttributes">vbtkit/src/lego/ScrollerVBTClass.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x6">procedure ScrollerVBTClass.Colorize is in:
-</A><UL>
-<LI><A HREF="POSIX/ScrollerVBTClass.m3.html#Colorize">vbtkit/src/lego/POSIX/ScrollerVBTClass.m3</A>
-<LI><A HREF="ScrollerVBTClass.m3.html#Colorize">vbtkit/src/lego/ScrollerVBTClass.m3</A>
-</UL>
-<P>
 <PRE>
 
 

@@ -12,38 +12,17 @@
                                                              
  Last modified on Tue Sep 27 11:02:16 PDT 1994 by kalsow     
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">M3Backend</A></interface>;
+<P><PRE>INTERFACE <interface><A HREF="M3Backend.m3.html">M3Backend</A></interface>;
 
 IMPORT <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../m3middle/src/M3CG.i3.html">M3CG</A>;
 FROM <A HREF="../../m3middle/src/Target.i3.html">Target</A> IMPORT M3BackendMode_t;
 
-PROCEDURE <A HREF="#x2">Open</A> (target: Wr.T;  target_name: TEXT;  backend_mode: M3BackendMode_t): M3CG.T;
-PROCEDURE <A HREF="#x3">Close</A> (cg: M3CG.T);
+PROCEDURE <A HREF="M3Backend.m3.html#Open">Open</A> (target: Wr.T;  target_name: TEXT;  backend_mode: M3BackendMode_t): M3CG.T;
+PROCEDURE <A HREF="M3Backend.m3.html#Close">Close</A> (cg: M3CG.T);
 
 END M3Backend.
 </PRE>
 </inInterface>
-<HR>
-<A NAME="x1">M3Backend's implementation  is in:
-</A><UL>
-<LI><A HREF="M3BackPosix.m3.html#0TOP0">cm3/src/M3BackPosix.m3</A>
-<LI><A HREF="M3Backend.m3.html#0TOP0">cm3/src/M3Backend.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x2">procedure M3Backend.Open is in:
-</A><UL>
-<LI><A HREF="M3BackPosix.m3.html#Open">cm3/src/M3BackPosix.m3</A>
-<LI><A HREF="M3Backend.m3.html#Open">cm3/src/M3Backend.m3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">procedure M3Backend.Close is in:
-</A><UL>
-<LI><A HREF="M3BackPosix.m3.html#Close">cm3/src/M3BackPosix.m3</A>
-<LI><A HREF="M3Backend.m3.html#Close">cm3/src/M3Backend.m3</A>
-</UL>
-<P>
 <PRE>
 
 

@@ -22,7 +22,7 @@
 <P><PRE>UNSAFE MODULE <module>RTAllocator</module>
 EXPORTS <A HREF="RTAllocator.i3.html"><implements>RTAllocator</A></implements>, <A HREF="RTAllocCnts.i3.html"><implements>RTAllocCnts</A></implements>, <A HREF="RTHooks.i3.html"><implements>RTHooks</A></implements>, <A HREF="RTHeapRep.i3.html"><implements>RTHeapRep</A></implements>;
 
-IMPORT <A HREF="../../C/Common/Cstdlib.i3.html">Cstdlib</A>, <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTMisc.i3.html">RTMisc</A>, <A HREF="RTOS.i3.html">RTOS</A>, <A HREF="RTType.i3.html">RTType</A>, <A HREF="../../thread/Common/Scheduler.i3.html">Scheduler</A>, <A HREF="#x1">ThreadF</A>;
+IMPORT <A HREF="../../C/Common/Cstdlib.i3.html">Cstdlib</A>, <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTMisc.i3.html">RTMisc</A>, <A HREF="RTOS.i3.html">RTOS</A>, <A HREF="RTType.i3.html">RTType</A>, <A HREF="../../thread/Common/Scheduler.i3.html">Scheduler</A>, <A HREF="../../thread/PTHREAD/ThreadF.i3.html">ThreadF</A>;
 IMPORT <A HREF="RuntimeError.i3.html">RuntimeError</A> AS RTE, <A HREF="../../word/Word.i3.html">Word</A>;
 FROM <A HREF="RTType.i3.html">RTType</A> IMPORT Typecode;
 </PRE> In the following procedures, <CODE>RTType.Get(tc)</CODE> will fail if <CODE>tc</CODE> is not
@@ -422,13 +422,6 @@ BEGIN
 END RTAllocator.
 </PRE>
 </inModule>
-<HR>
-<A NAME="x1">interface ThreadF is in:
-</A><UL>
-<LI><A HREF="../../thread/POSIX/ThreadF.i3.html#0TOP0">m3core/src/thread/POSIX/ThreadF.i3</A>
-<LI><A HREF="../../thread/PTHREAD/ThreadF.i3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadF.i3</A>
-</UL>
-<P>
 <PRE>
 
 
