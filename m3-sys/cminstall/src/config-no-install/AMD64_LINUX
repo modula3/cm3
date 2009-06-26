@@ -24,7 +24,6 @@ SYSTEM_LD = SYSTEM_CC
 % such as libz.a by cvsup on birch (elegosoft machine).
 % Imho position-dependent code should just never exist, oh well.
 %readonly POSITION_INDEPENDENT_EXECUTABLE = "-pie"
-readonly USE_ORIGIN = TRUE
 readonly SYSTEM_ASM = "as --64" % Assembler
 
 %
