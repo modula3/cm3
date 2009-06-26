@@ -4,8 +4,6 @@
 import ("libm3")
 import ("m3quake")
 import ("patternmatching")
-import ("sysutils")
-%import ("cmkey")
 
 configfn = ".." & SL & "src" & SL & "config" & SL & TARGET
 if not stale(configfn, configfn)
