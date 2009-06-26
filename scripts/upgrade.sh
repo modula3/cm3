@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.18 2009-06-26 06:39:17 jkrell Exp $
+# $Id: upgrade.sh,v 1.19 2009-06-26 09:10:00 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -89,13 +89,15 @@ if [ "${UPGRADE_CM3_CFG}" = "yes" -o "${ret}" != 0 ]; then (
       -o > "${CFG}" || exit 1
     echo "new config file generated in ${CFG}, backup in ${CFGBAK}"
   else
+    mkdir ${INSTALLROOT}/bin/config 2>/dev/null
     CFGS="${ROOT}/m3-sys/cminstall/src/config-no-install"
     for f in ${CFGS}/*; do
       b=`basename ${f}`
-      cp -v ${f} ${CFGD}/${b}
+      rm ${CFGD}/${b} 2>/dev/null
+      cp -v ${f} ${CFGD}/config/${b}
     done
     ( echo "INSTALL_ROOT = \"${INSTALLROOT}\""
-      echo "include(\"${TARGET}\")"
+      echo "include(path() & \"/config/${TARGET}\")"
     ) > ${CFG}
     echo "new config files copied/generated in ${CFG}, backup in ${CFGBAK}"
   fi
