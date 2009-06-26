@@ -27,4 +27,16 @@ readonly proc GetM3BackFlag(x) is
     return x
 end
 
+
+SYSTEM_LD = SYSTEM_CC
+  & " -Wl,-z,now"
+  & " -Wl,-z,origin"
+  & " -Bsymbolic"
+  & " -Wl,--fatal-warnings"
+  & " -Wl,-rpath,\\$ORIGIN/../lib"
+  & " -Wl,--warn-common"
+readonly POSITION_INDEPENDENT_EXECUTABLE = "-pie"
+
 include("Linux.common")
+include("gnuld.common")
+
