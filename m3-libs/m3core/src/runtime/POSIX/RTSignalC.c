@@ -71,8 +71,8 @@ static void Shutdown SIGNAL_HANDLER_SIGNATURE;
 static void Interrupt SIGNAL_HANDLER_SIGNATURE;
 static void Quit SIGNAL_HANDLER_SIGNATURE;
 
-static void InstallOneHandler(size_t Index);
-static void RestoreOneHandler(size_t Index);
+static void InstallOneHandler(size_t i);
+static void RestoreOneHandler(size_t i);
 
 #ifdef SA_SIGINFO
 
@@ -114,6 +114,8 @@ static size_t GetPC(void* VoidContext)
       pc = Context->uc_mcontext.gregs[REG_EIP];
 #elif defined(__amd64)
       pc = Context->uc_mcontext.gregs[REG_RIP];
+#elif defined(__powerpc)
+      pc = Context->uc_mcontext.regs->nip;
 #else
 #error Unknown __linux target
 #endif
@@ -175,15 +177,15 @@ Handlers[] =
 
 static sigaction_t InitialHandlers[NUMBER_OF(Handlers)];
 
-static void InstallOneHandler(size_t Index)
+static void InstallOneHandler(size_t i)
 {
     sigaction_t New;
-    int i = { 0 };
+    int r;
     int Signal = Handlers[i].Signal;
 
     ZeroMemory(&New, sizeof(New));
-    i = sigemptyset(&New.sa_mask);
-    assert(i == 0);
+    r = sigemptyset(&New.sa_mask);
+    assert(r == 0);
 
     /* What if Handler == SIG_IGN? */
     New.SIGNAL_HANDLER_FIELD = Handlers[i].Handler;
@@ -193,15 +195,15 @@ static void InstallOneHandler(size_t Index)
     New.sa_flags = 0;
 #endif
 
-    i = sigaction(Signal, &New, &InitialHandlers[Index]);
-    assert(i == 0);
+    r = sigaction(Signal, &New, &InitialHandlers[i]);
+    assert(r == 0);
 
     /* Don't override inherited, non-default handlers.
        That is, if the old handler is not the default handler, put it back. */
-    if (InitialHandlers[Index].SIGNAL_HANDLER_FIELD != DefaultHandler)
+    if (InitialHandlers[i].SIGNAL_HANDLER_FIELD != DefaultHandler)
     {
-        i = sigaction(Signal, &InitialHandlers[Index], &New);
-        assert(i == 0);
+        r = sigaction(Signal, &InitialHandlers[i], &New);
+        assert(r == 0);
     }
 }
 
@@ -209,26 +211,26 @@ void InstallHandlers(void)
 {
     size_t i = { 0 };
 
-    for (i = 0 ; i != NUMBER_OF(Handlers) ; ++i)
+    for (; i < NUMBER_OF(Handlers); ++i)
     {
         InstallOneHandler(i);
     }
 }
 
-static void RestoreOneHandler(size_t Index)
+static void RestoreOneHandler(size_t i)
 {
-    int Signal = Handlers[Index].Signal;
+    int Signal = Handlers[i].Signal;
     sigaction_t Old;
 
     ZeroMemory(&Old, sizeof(Old));
-    sigaction(Signal, &InitialHandlers[Index], &Old);
+    sigaction(Signal, &InitialHandlers[i], &Old);
 }
 
 void RestoreHandlers(void)
 {
     size_t i = { 0 };
 
-    for (i = 0 ; i != NUMBER_OF(Handlers) ; ++i)
+    for (; i != NUMBER_OF(Handlers) ; ++i)
     {
         RestoreOneHandler(i);
     }
