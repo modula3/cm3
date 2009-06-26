@@ -33,6 +33,7 @@ md() {
 
 md "${INSTALLROOT}"
 md "${INSTALLROOT}/bin"
+md "${INSTALLROOT}/bin/config"
 md "${INSTALLROOT}/doc"
 md "${INSTALLROOT}/elisp"
 md "${INSTALLROOT}/examples"
