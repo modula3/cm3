@@ -139,18 +139,21 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     t.build_pkg_dir   := M3ID.Add (pkg);
     t.build_dir       := M3ID.Add (build_dir);
 
-    t.pkg_use         := GetConfig (t, "PKG_USE");
+    (* M3Path.New is used to canonicalize the paths -- to remove dots *)
+
+    t.pkg_use         := M3Path.New (GetConfig (t, "PKG_USE"));
 (* not in Quake.Machine
-    t.bin_use         := GetConfig (t, "BIN_USE");
-    t.lib_use         := GetConfig (t, "LIB_USE");
+    t.bin_use         := M3Path.New (GetConfig (t, "BIN_USE"));
+    t.lib_use         := M3Path.New (GetConfig (t, "LIB_USE"));
 *)
-    t.pkg_install     := GetConfig (t, "PKG_INSTALL");
-    t.bin_install     := GetConfig (t, "BIN_INSTALL");
-    t.lib_install     := GetConfig (t, "LIB_INSTALL");
-    t.emacs_install   := GetConfig (t, "EMACS_INSTALL");
-    t.doc_install     := GetConfig (t, "DOC_INSTALL");
-    t.man_install     := GetConfig (t, "MAN_INSTALL");
-    t.html_install    := GetConfig (t, "HTML_INSTALL");
+
+    t.pkg_install     := M3Path.New (GetConfig (t, "PKG_INSTALL"));
+    t.bin_install     := M3Path.New (GetConfig (t, "BIN_INSTALL"));
+    t.lib_install     := M3Path.New (GetConfig (t, "LIB_INSTALL"));
+    t.emacs_install   := M3Path.New (GetConfig (t, "EMACS_INSTALL"));
+    t.doc_install     := M3Path.New (GetConfig (t, "DOC_INSTALL"));
+    t.man_install     := M3Path.New (GetConfig (t, "MAN_INSTALL"));
+    t.html_install    := M3Path.New (GetConfig (t, "HTML_INSTALL"));
     t.have_pkgtools   := GetConfigBool (t, "HAVE_PKGTOOLS");
     t.at_SRC          := GetConfigBool (t, "AT_SRC");
     t.system_liborder := QVal.ToArray (t, ConfigDefn (t, "SYSTEM_LIBORDER").value);
@@ -1823,7 +1826,7 @@ PROCEDURE DoInstallFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
       IF NOT Text.Equal (dest, t.last_install_dir)
         OR NOT Text.Equal (src_dir, t.last_src_dir) THEN
         MakeRoom (t, 99999);
-        Msg.Explain (src_dir, " => ", dest);
+        Msg.Explain (src_dir, " => ", M3Path.New(dest));
         t.last_install_dir := dest;
         t.last_src_dir := src_dir;
         t.listing_width := 0;

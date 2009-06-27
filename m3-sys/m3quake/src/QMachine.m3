@@ -1698,7 +1698,7 @@ PROCEDURE DoMakeDir (t: T;  n_args: INTEGER) RAISES {Error} =
     IF prefix # NIL THEN
       dir := prefix & dir;
     END;
-    MakeDir (t, dir);
+    MakeDir (t, Normalize (t, "", dir));
   END DoMakeDir;
 
 PROCEDURE MakeDir (t: T;  dir: TEXT)  RAISES {Error} =
