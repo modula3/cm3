@@ -2552,13 +2552,16 @@ def CheckForLinkSwitch(Switch):
 
 # packaging support
 
-STAGE = getenv("STAGE")
+def GetStage():
+    global STAGE
+    STAGE = getenv("STAGE")
 
-if (not STAGE):
-    #tempfile.tempdir = os.path.join(tempfile.gettempdir(), "cm3", "make-dist")
-    #CreateDirectory(tempfile.tempdir)
-    STAGE = tempfile.mkdtemp()
-    SetEnvironmentVariable("STAGE", STAGE)
+    if (not STAGE):
+        #tempfile.tempdir = os.path.join(tempfile.gettempdir(), "cm3", "make-dist")
+        #CreateDirectory(tempfile.tempdir)
+        STAGE = tempfile.mkdtemp()
+        SetEnvironmentVariable("STAGE", STAGE)
+    return STAGE
 
 #
 # The way this SHOULD work is we build the union of all desired,
@@ -2566,7 +2569,7 @@ if (not STAGE):
 # For now though, we only build min.
 #
 def FormInstallRoot(PackageSetName):
-    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
+    return os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
 
 def MakeIExpressPackage(input, output):
 #
@@ -2604,6 +2607,33 @@ def MakeIExpressPackage(input, output):
     commmand = "start /wait iexpress /n " + output + ".sed"
     print(command)
     os.system(command)
+
+def IsSymlink(a):
+    return os.path.islink(a)
+
+def BreakAndMarkLinks(input, prefix):
+    result = []
+    lib = input + prefix + "/lib/"
+    pkg = input + prefix + "/pkg/"
+    candidates = dict.fromkeys(os.listdir(lib), 1)
+    for root, dirs, files in os.walk(pkg):
+        for f in files:
+            if f in candidates:
+                p = root + "/" + f
+                q = lib + f
+                if not IsSymlink(p) and not IsSymlink(q) and os.path.samefile(q, p):
+                    print("temporarily unlinking " + p + " <=> " + q)
+                    result += [p]
+                    os.remove(p)
+                    open(p, "w") # replace with zero length marker
+    return result
+
+def RestoreLinks(input, prefix, links):
+    lib = input + prefix + "/lib/"
+    for a in links:
+        print("restoring " + a)
+        os.remove(a)
+        os.link(lib + GetLastPathElement(a), a)
 
 def MoveSkel(prefix):
     CreateDirectory("." + prefix)
@@ -2648,6 +2678,10 @@ def MakeDebianPackage(name, input, output, prefix):
 #     payload
 # User has no choice where the install goes.
 #
+    compresser = "lzma"
+    compressed_extension = "lzma"
+    compresser = "gzip"
+    compressed_extension = "gz"
     print("cd " + input)
     os.chdir(input)
     CreateDirectory("./debian")
@@ -2662,23 +2696,50 @@ def MakeDebianPackage(name, input, output, prefix):
     + "Maintainer: somebody@somewhere.com" + newline
     + "Architecture: " + architecture + newline
     + "Description: good stuff" + newline)
-    command = "tar cfz ../control.tar.gz ."
+
+    #
+    # There seems to be an inability to install a tar file
+    # that contains hard links, so we create them upon install.
+    # In order for uninstall to know which files to delete,
+    # we leave stub empty files. We know the links all
+    # involve files in lib, so we look for any file in pkg
+    # whose name matches a file in lib and is of zero size,
+    # and we delete the zero sized file and link it to lib.
+    #
+
+    links = BreakAndMarkLinks(input, prefix)
+
+    open("./postinst", "w").write(
+  "#!/bin/sh" + newline
++ "for a in " + prefix + "/lib/*so;" + newline
++ "do" + newline
++ "  find " + prefix + "/pkg -name `basename $a` \\" + newline
++ "  -exec sh -cex \"rm {} && ln $a {}\" \\;" + newline
++ "done" + newline)
+    command = "chmod +x ./postinst"
+    print(command)
+    os.system(command)
+
+    command = "tar cfz ../control.tar.gz ."    
     print(command)
     os.system(command)
     os.chdir(input)
     command = "tar cf data.tar ." + prefix
-    if os.path.isfile("data.tar.lzma") or os.path.isfile("data.tar"):
+    if os.path.isfile("data.tar." + compressed_extension) or os.path.isfile("data.tar"):
         print("skipping " + command)
     else:
         print(command)
         os.system(command)
-    command = "lzma data.tar"
-    if os.path.isfile("data.tar.lzma"):
+    command = compresser + " data.tar"
+    if os.path.isfile("data.tar." + compressed_extension):
         print("skipping " + command)
     else:
         print(command)
         os.system(command)
-    command = "ar cr " + input + ".deb debian-binary control.tar.gz data.tar.lzma "
+
+    RestoreLinks(input, prefix, links)
+
+    command = "ar cr " + input + ".deb debian-binary control.tar.gz data.tar." + compressed_extension
     print(command)
     os.system(command)
     RestoreSkel(prefix)

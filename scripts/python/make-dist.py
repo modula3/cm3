@@ -158,6 +158,8 @@ def FatalError():
 
 InstallRoot_Previous = InstallRoot
 
+STAGE = GetStage()
+
 InstallRoot_CompilerWithPrevious = os.path.join(STAGE, "compiler_with_previous")
 InstallRoot_CompilerWithSelf = os.path.join(STAGE, "compiler_with_self")
 

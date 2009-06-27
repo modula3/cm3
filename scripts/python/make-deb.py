@@ -11,9 +11,10 @@ from pylib import *
 #
 
 SetEnvironmentVariable("STAGE", sys.argv[1])
-reload(pylib)
 
-for name in ["min", "std"]:
-    MakeDebianPackage(name, FormInstallRoot(name), STAGE + "/cm3-" + name + ".deb", "/usr/local/cm3")
+for name in ["min",
+           # "std"
+            ]:
+    MakeDebianPackage(name, FormInstallRoot(name), GetStage() + "/cm3-" + name + ".deb", "/usr/local/cm3")
 
 print("%s: Success." % os.path.basename(sys.argv[0]))

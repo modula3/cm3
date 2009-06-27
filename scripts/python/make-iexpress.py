@@ -11,9 +11,8 @@ from pylib import *
 #
 
 SetEnvironmentVariable("STAGE", sys.argv[1])
-reload(pylib)
 
 for name in ["min", "std"]:
-    MakeIExpressPackage(FormInstallRoot(name), STAGE + "/cm3-" + name + ".exe")
+    MakeIExpressPackage(FormInstallRoot(name), GetStage() + "/cm3-" + name + ".exe")
 
 print("%s: Success." % os.path.basename(sys.argv[0]))
