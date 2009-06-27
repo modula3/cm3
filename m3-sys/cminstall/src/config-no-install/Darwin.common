@@ -169,10 +169,14 @@ proc skip_lib (lib, shared) is
   local lib_soxx = format ("lib%s.%s.dylib", lib, version)
 
   if shared
+    % create the version aliases
+    link_file(lib_soxx, lib_sox)
+    link_file(lib_sox, lib_so)
+
     % make sure the shared library stuff gets installed properly
     install_derived (lib_soxx)
-    install_derived (lib_sox)
-    install_derived (lib_so)
+    install_derived_link (lib_soxx, lib_sox)
+    install_derived_link (lib_sox, lib_so)
     install_link_to_derived (lib_soxx, LIB_INSTALL)
     install_link_to_derived (lib_sox, LIB_INSTALL)
     install_link_to_derived (lib_so, LIB_INSTALL)
