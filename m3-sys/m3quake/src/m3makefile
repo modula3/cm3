@@ -25,6 +25,7 @@ Sequence ("QV", "QValue")
 Module   ("QMachine")
 Module   ("QVal")
 Module   ("MxConfig")
+Module   ("M3Path")
 
 build_standalone ()
 Library("m3quake")
