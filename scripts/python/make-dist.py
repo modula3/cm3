@@ -226,7 +226,7 @@ def CopyRecursive(From, To):
         shutil.rmtree(To)
     else:
         CreateDirectory(ToParent)
-    shutil.copytree(From, To)
+    shutil.copytree(From, To, symlinks=True)
     return True
 
 #
