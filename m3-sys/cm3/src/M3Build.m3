@@ -20,6 +20,7 @@ REVEAL
     build_pkg         : M3ID.T; (* the name of the package we're building *)
     build_pkg_dir     : M3ID.T; (* full path to the package we're building *)
     build_dir         : M3ID.T; (* name of the derived directory *)
+    text_build_dir    : TEXT;   (* " *)
 
     (* READONLY state that is fixed by the configuration file *)
     pkg_use           : TEXT;     (* Root directory for public packages *)
@@ -92,14 +93,15 @@ CONST
   ModeXGroupR = "0755";
   ModeXGroupW = "0775";
 
+CONST
+  RPCR  = ")" & Wr.EOL;   (* right paren, carriage return *)
+  QRPCR = "\")" & Wr.EOL; (* quote, right paren, carriage return *)
+  C     = ", ";           (* comma *)
+  CQ    = ", \"";         (* comma, quote *)
+  QC    = "\", ";         (* quote, comma *)
+  QCQ   = "\", \"";       (* quote, comma, quote *)
+
 VAR
-  RPCR  := ")" & Wr.EOL;   (* right paren, carriage return *)
-  QRPCR := "\")" & Wr.EOL; (* quote, right paren, carriage return *)
-  QC    := "\", ";         (* quote, comma *)
-  CQ    := ", \"";         (* comma, quote *)
-  QCQ   := "\", \"";       (* quote, comma, quote *)
-  ASAQ  := " & SL & \"";   (* and, slash, and, quote *)
-  QASA  := "\" & SL & ";   (* quote, and, slash, and *)
   ModeF := ModeGroupR;
   ModeX := ModeXGroupR;
 
@@ -138,6 +140,7 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     t.build_pkg       := M3ID.Add (Pathname.Last (pkg));
     t.build_pkg_dir   := M3ID.Add (pkg);
     t.build_dir       := M3ID.Add (build_dir);
+    t.text_build_dir  := build_dir;
 
     (* M3Path.New is used to canonicalize the paths -- to remove dots *)
 
@@ -1702,19 +1705,11 @@ PROCEDURE InstallSources (t: T) =
           dest := M3Path.New (t.pkg_install, M3ID.ToText (uu.loc.pkg),
                               M3ID.ToText (uu.loc.subdir));
           InstallDir (t, dest, wr);
-          IF noM3ShipResolution THEN
-            Out (wr, "make_dir(", Unresolve (t, dest), ")");
-          END;
           last_loc := uu.loc;
         END;
         src := M3Unit.FullPath (uu);
-        IF noM3ShipResolution THEN
-          Out (wr, "install_file(\"", M3Path.Convert (src), QC);
-          Out (wr, Unresolve (t, dest), CQ, ModeF, QRPCR);
-        ELSE
-          Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
-          Out (wr, M3Path.Convert (dest), QCQ, ModeF, QRPCR);
-        END;
+        Out (wr, "install_file(\"", M3Path.Convert (src), QC);
+        Out (wr, Unresolve (t, M3Path.Convert (dest)), CQ, ModeF, QRPCR);
       END;
     END Emit;
 
@@ -1859,48 +1854,34 @@ PROCEDURE MakeRoom (t: T;  space: INTEGER) =
 
 (*---------------------------------------------- internal export utilities --*)
 
-PROCEDURE Unresolve (t: T;  pn: TEXT): TEXT =
-  VAR
-    pkg_use := t.pkg_use;
-    build_dir := M3ID.ToText (t.build_dir);
-    res := "\"" & pn & "\"";
+PROCEDURE DoUnresolve (t: T;  res: TEXT): TEXT =
   BEGIN
-    res := TextUtils.Substitute(res, t.bin_install, "BIN_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.lib_install, "LIB_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.doc_install, "DOC_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.man_install, "MAN_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.html_install, "HTML_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.emacs_install, "EMACS_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.pkg_install, "PKG_INSTALL & \"");
-    res := TextUtils.Substitute(res, build_dir & "/", "\" & TARGET & \"");
-    res := TextUtils.Substitute(res, build_dir, "\" & TARGET");
-    res := TextUtils.Substitute(res, pkg_use, "PKG_USE & \"");
-    res := TextUtils.Substitute(res, "\"TARGET", "TARGET");
-    res := TextUtils.Substitute(res, "\"PKG_USE", "PKG_USE");
-    res := TextUtils.Substitute(res, "\"PKG_INSTALL", "PKG_INSTALL");
-    res := TextUtils.Substitute(res, "\"BIN_INSTALL", "BIN_INSTALL");
-    res := TextUtils.Substitute(res, "\"LIB_INSTALL", "LIB_INSTALL");
-    res := TextUtils.Substitute(res, "\"DOC_INSTALL", "DOC_INSTALL");
-    res := TextUtils.Substitute(res, "\"MAN_INSTALL", "MAN_INSTALL");
-    res := TextUtils.Substitute(res, "\"HTML_INSTALL", "HTML_INSTALL");
-    res := TextUtils.Substitute(res, "\"EMACS_INSTALL", "EMACS_INSTALL");
-    res := TextUtils.Substitute(res, "TARGET\"", "TARGET");
-    res := TextUtils.Substitute(res, "PKG_USE\"", "PKG_USE");
-    res := TextUtils.Substitute(res, "PKG_INSTALL\"", "PKG_INSTALL");
-    res := TextUtils.Substitute(res, "BIN_INSTALL\"", "BIN_INSTALL");
-    res := TextUtils.Substitute(res, "LIB_INSTALL\"", "LIB_INSTALL");
-    res := TextUtils.Substitute(res, "DOC_INSTALL\"", "DOC_INSTALL");
-    res := TextUtils.Substitute(res, "MAN_INSTALL\"", "MAN_INSTALL");
-    res := TextUtils.Substitute(res, "HTML_INSTALL\"", "HTML_INSTALL");
-    res := TextUtils.Substitute(res, "EMACS_INSTALL\"", "EMACS_INSTALL");
+    
+    res := TextUtils.Substitute(res, t.lib_install, "\" & LIB_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.doc_install, "\" & DOC_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.man_install, "\" & MAN_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.html_install, "\" & HTML_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.emacs_install, "\" & EMACS_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.pkg_install, "\" & PKG_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.pkg_use, "\" & PKG_USE & \"");
+    res := TextUtils.Substitute(res, t.text_build_dir, "\" & TARGET & \"");
+    res := TextUtils.Substitute(res, "\"\" & ", "");
+    res := TextUtils.Substitute(res, " & \"\"", "");
 (*
     res := TextUtils.Substitute(res, "\"/", "SL & \"");
     res := TextUtils.Substitute(res, "/", "\" & SL & \"");
     res := TextUtils.Substitute(res, "& \"\" &", "&");
-    res := TextUtils.Substitute(res, "\"\" &", "", 1);
-    res := TextUtils.Substitute(res, "& \"\"", "", 1);
 *)
     RETURN res;
+  END DoUnresolve;
+
+PROCEDURE Unresolve (t: T;  pn: TEXT): TEXT =
+  BEGIN
+    pn := "\"" & pn & "\"";
+    IF noM3ShipResolution THEN
+      pn := DoUnresolve(t, pn);
+    END;
+    RETURN pn;
   END Unresolve;
 
 PROCEDURE InstallDerived (t: T;  name: TEXT) =
@@ -1909,19 +1890,8 @@ PROCEDURE InstallDerived (t: T;  name: TEXT) =
     VAR dest := InstallDerivedDir (t);
     BEGIN
       InstallDir (t, dest, wr);
-      IF noM3ShipResolution THEN
-        VAR 
-          pkg := M3ID.ToText (t.build_pkg);
-        BEGIN
-          Out (wr, "make_dir(", Unresolve(t, dest), RPCR);
-          Out (wr, "install_file(\"", M3Path.Convert (name));
-          Out (wr, QC, "PKG_INSTALL" & ASAQ &
-               pkg & QASA & "TARGET", CQ, ModeF, QRPCR);
-        END;
-      ELSE
-        Out (wr, "install_file(\"", M3Path.Convert (name));
-        Out (wr, QCQ, M3Path.Convert (dest), QCQ, ModeF, QRPCR);
-      END;
+      Out (wr, "install_file(\"", M3Path.Convert (name));
+      Out (wr, QC, Unresolve (t, M3Path.Convert (dest)), CQ, ModeF, QRPCR);
     END Emit;
 
   BEGIN
@@ -1938,21 +1908,8 @@ PROCEDURE InstallDerivedLink (t: T;  from, to: TEXT; ship_function: TEXT) =
       from_file := M3Path.New (UseDerivedDir (t), from);
     BEGIN
       InstallDir (t, dest_dir, wr);
-      IF noM3ShipResolution THEN
-        VAR 
-          pkg := M3ID.ToText (t.build_pkg);
-        BEGIN
-          Out (wr, "make_dir(", "PKG_INSTALL" & ASAQ & pkg & QASA &
-               "TARGET", RPCR);
-          Out (wr, ship_function, "(PKG_USE" & ASAQ &
-               pkg & QASA & "TARGET" & ASAQ, M3Path.Convert (from), QC);
-          Out (wr, "PKG_INSTALL" & ASAQ & pkg & QASA & "TARGET" & ASAQ &
-               M3Path.Convert (to), QRPCR);
-        END;
-      ELSE
-        Out (wr, ship_function, "(\"", M3Path.Convert (from_file), QCQ);
-        Out (wr, M3Path.Convert (to_file), QRPCR);
-      END;
+      Out (wr, ship_function, "(", Unresolve (t, M3Path.Convert (from_file)), C);
+      Out (wr, Unresolve (t, M3Path.Convert (to_file)), RPCR);
     END Emit;
 
   BEGIN
@@ -1981,20 +1938,8 @@ PROCEDURE InstallLinkToDerived (t: T;   src, dest: TEXT; ship_function: TEXT)
       link   := M3Path.New (dest, src);
     BEGIN
       InstallDir (t, dest, wr);
-      IF noM3ShipResolution THEN
-        VAR 
-          pkg := M3ID.ToText (t.build_pkg);
-        BEGIN
-          Out (wr, "make_dir(", Unresolve (t, dest), RPCR);
-          Out (wr, ship_function, "(\"", M3Path.Convert (pkg),
-               QASA & "TARGET" & ASAQ & M3Path.Convert (src), QC);
-          Out (wr, Unresolve (t, dest) & ASAQ & M3Path.Convert (src),
-               QRPCR)
-        END;
-      ELSE
-        Out (wr, ship_function, "(\"", M3Path.Convert (target), QCQ);
-        Out (wr, M3Path.Convert (link), QRPCR)
-      END;
+      Out (wr, ship_function, "(", Unresolve (t, M3Path.Convert (target)), C);
+      Out (wr, Unresolve (t, M3Path.Convert (link)), RPCR)
     END Emit;
 
   BEGIN
@@ -2012,10 +1957,7 @@ PROCEDURE InstallDir (t: T;  dir: TEXT;  wr: Wr.T)
       IF t.have_pkgtools THEN
         Out (wr, "-l ", dir, "\n");
       ELSIF NOT t.all_ship_dirs.put (M3ID.Add (dir), NIL) THEN
-        IF noM3ShipResolution THEN
-        ELSE
-          Out (wr, "make_dir(\"", M3Path.Convert (dir), QRPCR);
-        END;
+        Out (wr, "make_dir(", Unresolve (t, M3Path.Convert (dir)), RPCR);
       END;
       t.last_ship_dir := dir;
     END;
@@ -2034,17 +1976,8 @@ PROCEDURE InstallFile (t: T;  src, dest, mode: TEXT;  derived: BOOLEAN)
       IF t.have_pkgtools THEN
         Out (wr, M3ID.ToText (t.build_dir), "/", src, "\n");
       ELSE
-        IF noM3ShipResolution THEN
-          VAR d := Unresolve (t, dest);
-          BEGIN
-            Out (wr, "make_dir(", d, RPCR);
-            Out (wr, "install_file(", Unresolve (t, src), ",");
-            Out (wr, d, CQ, mode, QRPCR);
-          END;
-        ELSE
-          Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
-          Out (wr, M3Path.Convert (dest), QCQ, mode, QRPCR);
-        END;
+        Out (wr, "install_file(", Unresolve (t, M3Path.Convert (src)), C); (* Unresolve needed here? *)
+        Out (wr, Unresolve(t, M3Path.Convert (dest)), CQ, mode, QRPCR);
       END;
     END Emit;
 
@@ -2097,17 +2030,8 @@ PROCEDURE InstallSource (t: T;  src, dest, mode: TEXT) =
       IF t.have_pkgtools THEN
         Out (wr, src, "\n");
       ELSE
-        IF noM3ShipResolution THEN
-          VAR d := Unresolve (t, dest);
-          BEGIN
-            Out (wr, "make_dir(", d, RPCR);
-            Out (wr, "install_file(", Unresolve (t, src), ",");
-            Out (wr, d, CQ, mode, QRPCR);
-          END;
-        ELSE
-          Out (wr, "install_file(\"", M3Path.Convert (src), QCQ);
-          Out (wr, M3Path.Convert (dest), QCQ, mode, QRPCR);
-        END;
+        Out (wr, "install_file(", Unresolve (t, M3Path.Convert (src)), C); (* Unresolve needed here? *)
+        Out (wr, Unresolve (t, M3Path.Convert (dest)), CQ, mode, QRPCR);
       END;
     END Emit;
     
