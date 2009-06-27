@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.39 2009-06-26 09:20:07 jkrell Exp $
+# $Id: make-bin-dist-min.sh,v 1.40 2009-06-27 01:49:51 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -127,6 +127,7 @@ else
     b=`basename ${f}`
     if [ -f "${INSTALLROOT}/bin/${b}" ] ; then
       rm "${INSTALLROOT}/bin/${b}" > /dev/null
+    fi
   done
   # new config files
   cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin/config"
