@@ -1206,7 +1206,7 @@ def Boot():
 
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
-        
+
     try:
         shutil.rmtree(BootDir)
     except:
@@ -1251,7 +1251,7 @@ def Boot():
             if a.endswith(".h"):
                 CopyFile(os.path.join(Root, dir, Config, a), BootDir)
 
-    Makefile.write("cm3: $(Objects)\n\t")    
+    Makefile.write("cm3: $(Objects)\n\t")
     for a in [Make, Makefile]:
         a.write("$(Link) -o cm3 *.o\n")
 
@@ -2156,7 +2156,7 @@ def CopyConfigForDevelopment():
     #
     a = os.path.join(Root, "m3-sys", "cminstall", "src")
 
-    for b in ["config", "config-no-install"]: 
+    for b in ["config", "config-no-install"]:
         for File in glob.glob(os.path.join(a, b, "*")):
             if os.path.isfile(File):
                 DeleteFile(os.path.join(To, os.path.basename(File)))
@@ -2547,6 +2547,100 @@ def CheckForLinkSwitch(Switch):
         EnvValue = "1"
     os.environ[EnvName] = EnvValue
     print("set " + EnvName + "=" + EnvValue)
+
+#-----------------------------------------------------------------------------
+
+# packaging support
+
+STAGE = getenv("STAGE")
+
+if (not STAGE):
+    #tempfile.tempdir = os.path.join(tempfile.gettempdir(), "cm3", "make-dist")
+    #CreateDirectory(tempfile.tempdir)
+    STAGE = tempfile.mkdtemp()
+    SetEnvironmentVariable("STAGE", STAGE)
+
+#
+# The way this SHOULD work is we build the union of all desired,
+# and then pick and chose from the output into the .zip/.tar.bz2.
+# For now though, we only build min.
+#
+def FormInstallRoot(PackageSetName):
+    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
+
+def MakeIExpressPackage(input, output):
+#
+# Iexpress is builtin on XP and newer.
+# When run without parameters, it presents a gui wizard.
+# Iexpress /? for help.
+# The gui wizard produces a textual ".sed" file, that
+# can be fed back to iexpress non-interactively.
+# It produces an .exe with a .cab inside it.
+# Many more options are available here including
+# an installer, a post-install command, use of .inf files, etc.
+# This is just a start.
+#
+    file = open(output + ".sed", "w")
+    newline = "\015\012" # take no chances
+    file.write(
+        "[Version]" + newline
+        + "Class=IEXPRESS" + newline
+        + "SEDVersion=3" + newline
+        + "[Options]" + newline
+        + "TargetName=" + output + newline
+        + "FriendlyName=Modula-3 installer" + newline
+        + "AppLaunched=<None>" + newline
+        + "SourceFiles=SourceFiles" + newline
+        + "[SourceFiles]" + newline
+        + "SourceFiles0=" + newline
+        + "[SourceFiles0]" + newline)
+
+    def Callback(Result, Directory, Names):
+        for a in Names:
+            file.write("\"" + Directory + "\\" + a)
+
+    os.path.walk(intput, Callback, None)
+    commmand = "start /wait iexpress /n " + output + ".sed"
+    print(command)
+    os.system(command)
+
+def MoveSkel(target):
+    for a in ["bin", "pkg", "lib", "www", "man"]:
+        os.file.rename(a, target + "/" + a)
+
+def RestoreSkel(target):
+    for a in ["bin", "pkg", "lib", "www", "man"]:
+        os.file.rename(target + "/" + a, a)
+
+def MakeDebianPackage(name, input, output, prefix):
+#
+# .deb file format:
+# an ar archive containing (I think the order matters):
+#   debian-binary:
+#     text file that just says "2.0\n"
+#   control.tar.gz:
+#     metadata, minimum is control file
+#   data.tar.gz or .bz2 or .lzma
+#     payload
+# User has no choice where the install goes.
+#
+    os.chdir(input)
+    CreateDirectory(prefix + "/debian")
+    MoveSkel(prefix)
+    newline = "\012" # take no chances
+    open("debian-binary", "w").write("2.0" + newline)
+    os.chdir("debian")
+    open("control", "w").write(
+      "Package: cm3-" + name + newline
+    + "Version: 1.0" + newline
+    + "Maintainer: somebody@somewhere.com" + newline
+    + "Architecture: All" + newline
+    + "Description: good stuff" + newline)
+    os.system("tar cfz ../control.tar.gz .")
+    os.chdir(input)
+    os.system("tar cf data.tar ./" + prefix)
+    os.system("lzma data.tar")
+    RestoreSkel(prefix)
 
 #-----------------------------------------------------------------------------
 
