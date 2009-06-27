@@ -2698,32 +2698,6 @@ def MakeDebianPackage(name, input, output, prefix):
     + "Architecture: " + architecture + newline
     + "Description: good stuff" + newline)
 
-    #
-    # There seems to be an inability to install a tar file
-    # that contains hard links, so we create them upon install.
-    # In order for uninstall to know which files to delete,
-    # we leave stub empty files.
-    #
-
-    links = DiscoverHardLinks(input + prefix)
-    BreakHardLinks(links)
-
-    postinst = open("./postinst", "w")
-    postinst.write(
-  "#!/bin/sh" + newline
-+ "set -e" + newline
-+ "set -x" + newline + newline)
-
-    for inode in links:
-        first = links[inode][0][len(input):]
-        for other in links[inode][1:]:
-            postinst.write("ln -f " + first + " " + other[len(input):]  + newline)
-    postinst.close()
-
-    command = "chmod +x ./postinst"
-    print(command)
-    os.system(command)
-
     command = "tar cfz ../control.tar.gz ."    
     print(command)
     os.system(command)
@@ -2740,8 +2714,6 @@ def MakeDebianPackage(name, input, output, prefix):
     else:
         print(command)
         os.system(command)
-
-    RestoreHardLinks(links)
 
     command = "ar cr " + input + ".deb debian-binary control.tar.gz data.tar." + compressed_extension
     print(command)
