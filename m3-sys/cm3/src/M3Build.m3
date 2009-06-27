@@ -92,8 +92,6 @@ CONST
   ModeGroupW  = "0664";
   ModeXGroupR = "0755";
   ModeXGroupW = "0775";
-
-CONST
   RPCR  = ")" & Wr.EOL;   (* right paren, carriage return *)
   QRPCR = "\")" & Wr.EOL; (* quote, right paren, carriage return *)
   C     = ", ";           (* comma *)
