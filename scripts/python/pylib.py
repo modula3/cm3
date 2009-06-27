@@ -2713,11 +2713,10 @@ def MakeDebianPackage(name, input, output, prefix):
 + "set -e" + newline
 + "set -x" + newline + newline)
 
-    i = len(input)
     for inode in links:
-        first = links[inode][0][len:]
+        first = links[inode][0][len(input):]
         for other in links[inode][1:]:
-            postinst.write("ln -f " + first + " " + other[len:]  + newline)
+            postinst.write("ln -f " + first + " " + other[len(input):]  + newline)
     postinst.close()
 
     command = "chmod +x ./postinst"
