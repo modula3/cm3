@@ -1698,7 +1698,7 @@ PROCEDURE DoMakeDir (t: T;  n_args: INTEGER) RAISES {Error} =
     IF prefix # NIL THEN
       dir := prefix & dir;
     END;
-    MakeDir (t, Normalize (t, "", dir));
+    MakeDir (t, Pathname.Compose (CanonicalizePath (Pathname.Decompose (dir))));
   END DoMakeDir;
 
 PROCEDURE MakeDir (t: T;  dir: TEXT)  RAISES {Error} =
