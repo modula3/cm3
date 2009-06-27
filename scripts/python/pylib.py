@@ -2607,16 +2607,34 @@ def MakeIExpressPackage(input, output):
 
 def MoveSkel(prefix):
     CreateDirectory("." + prefix)
-    for a in ["bin", "pkg", "lib", "www", "man"]:
+    for a in ["bin", "pkg", "lib", "www", "man", "etc"]:
         if os.path.isdir(a):
             print("mv " + a + " ." + prefix + "/" + a)
             os.rename(a, "." + prefix + "/" + a)
 
 def RestoreSkel(prefix):
-    for a in ["bin", "pkg", "lib", "www", "man"]:
+    for a in ["bin", "pkg", "lib", "www", "man", "etc"]:
         if os.path.isdir("." + prefix + "/" + a):
             print("mv ." + prefix + "/" + a + " " + a)
             os.rename("." + prefix + "/" + a, a)
+
+# Debian architecture strings:
+# see http://www.debian.org/doc/debian-policy/footnotes.html#f73
+
+DebianArchitecture = {
+  "LINUXLIBC6" : "i386",
+  "I386_LINUX" : "i386",
+  "IA64_LINUX" : "ia64",
+  "ALPHA_LINUX" : "alpha",
+  "AMD64_LINUX" : "amd64",
+  "PA32_LINUX" : "hppa",
+  "PA64_LINUX" : "hppa",
+  "MIPS32_LINUX" : "mips",
+  "MIPS64_LINUX" : "mips",
+  "PPC_LINUX" : "powerpc",
+  "PPC64_LINUX" : "ppc",
+  "SPARC32_LINUX" : "sparc",
+  "SPARC64_LINUX" : "sparc" }
 
 def MakeDebianPackage(name, input, output, prefix):
 #
@@ -2637,20 +2655,30 @@ def MakeDebianPackage(name, input, output, prefix):
     newline = "\012" # take no chances
     open("./debian-binary", "w").write("2.0" + newline)
     os.chdir("./debian")
+    architecture = DebianArchitecture.get(Target)
     open("./control", "w").write(
       "Package: cm3-" + name + newline
     + "Version: 1.0" + newline
     + "Maintainer: somebody@somewhere.com" + newline
-    + "Architecture: All" + newline
+    + "Architecture: " + architecture + newline
     + "Description: good stuff" + newline)
     command = "tar cfz ../control.tar.gz ."
     print(command)
     os.system(command)
     os.chdir(input)
     command = "tar cf data.tar ." + prefix
-    print(command)
-    os.system(command)
+    if os.path.isfile("data.tar.lzma") or os.path.isfile("data.tar"):
+        print("skipping " + command)
+    else:
+        print(command)
+        os.system(command)
     command = "lzma data.tar"
+    if os.path.isfile("data.tar.lzma"):
+        print("skipping " + command)
+    else:
+        print(command)
+        os.system(command)
+    command = "ar cr " + input + ".deb debian-binary control.tar.gz data.tar.lzma "
     print(command)
     os.system(command)
     RestoreSkel(prefix)
