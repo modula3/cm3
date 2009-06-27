@@ -2626,7 +2626,7 @@ def BreakHardLinks(links):
             open(other, "w")
     pass
 
-def RestoreHardLink(links):
+def RestoreHardLinks(links):
     for inode in links:
         first = links[inode][0]
         for other in links[inode][1:]:
@@ -2740,7 +2740,7 @@ def MakeDebianPackage(name, input, output, prefix):
         print(command)
         os.system(command)
 
-    RestoreLinks(links)
+    RestoreHardLinks(links)
 
     command = "ar cr " + input + ".deb debian-binary control.tar.gz data.tar." + compressed_extension
     print(command)
