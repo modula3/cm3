@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.52 2009-06-27 04:30:31 jkrell Exp $
+# $Id: make-dist.py,v 1.53 2009-06-27 10:45:15 jkrell Exp $
 
 import sys
 import os.path
@@ -157,6 +157,8 @@ def FatalError():
 #LogCounter = 1
 
 InstallRoot_Previous = InstallRoot
+
+STAGE = GetStage()
 
 InstallRoot_CompilerWithPrevious = os.path.join(STAGE, "compiler_with_previous")
 InstallRoot_CompilerWithSelf = os.path.join(STAGE, "compiler_with_self")
