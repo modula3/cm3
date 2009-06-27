@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-iexpress.py,v 1.2 2009-06-27 10:45:15 jkrell Exp $
+# $Id: make-iexpress.py,v 1.3 2009-06-27 20:27:26 jkrell Exp $
 
 import sys
 import os.path
@@ -12,7 +12,9 @@ from pylib import *
 
 SetEnvironmentVariable("STAGE", sys.argv[1])
 
-for name in ["min", "std"]:
+for name in ["min", 
+    #"std"
+    ]:
     MakeIExpressPackage(FormInstallRoot(name), GetStage() + "/cm3-" + name + ".exe")
 
 print("%s: Success." % os.path.basename(sys.argv[0]))
