@@ -15,8 +15,7 @@ FROM Quake IMPORT Error, ID, IDMap, NoID;
 IMPORT Date, Time;
 IMPORT TextUtils, FSUtils, System, DirStack; (* sysutils *)
 IMPORT Compiler;
-
-(* IMPORT IO; *)
+IMPORT M3Path;
 
 CONST
   OnUnix = (Compiler.ThisOS = Compiler.OS.POSIX);
@@ -1698,7 +1697,7 @@ PROCEDURE DoMakeDir (t: T;  n_args: INTEGER) RAISES {Error} =
     IF prefix # NIL THEN
       dir := prefix & dir;
     END;
-    MakeDir (t, Pathname.Compose (CanonicalizePath (Pathname.Decompose (dir))));
+    MakeDir (t, M3Path.New (dir));
   END DoMakeDir;
 
 PROCEDURE MakeDir (t: T;  dir: TEXT)  RAISES {Error} =
