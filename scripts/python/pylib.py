@@ -2623,7 +2623,7 @@ DisplayLicense=
 FinishMessage=
 TargetName=""" + output.replace("/", "\\") + """
 FriendlyName=installer
-AppLaunched="wscript.exe setup.js"
+AppLaunched="setup.cmd"
 PostInstallCmd=<None>
 AdminQuietInstCmd=
 UserQuietInstCmd=
@@ -2649,16 +2649,14 @@ UserQuietInstCmd=
     i = 0
     j = 0
 
-    setup = open(os.path.join(input, "setup.js"), "w")
-    setup.write("var fs = new ActiveXObject(\"Scripting.FileSystemObject\");\n")
+    setup = open(os.path.join(input, "setup.cmd"), "w")
+    #setup.write("cd\npause\n")
 
     for root, dirs, f in os.walk(input):
         if len(f) > 0:
             directories += "SourceFiles" + str(j) + "=" + root + "\\\n"
             files += "[SourceFiles" + str(j) + "]\n"
-            c = "c:\\\\cm3\\\\" + root[len(input)+1:].replace("\\", "\\\\");
-            setup.write("if (!fs.FolderExists(\"" + c + "\"))\n")
-            setup.write("  fs.CreateFolder(\"c:\\\\cm3\\\\" + root[len(input)+1:].replace("\\", "\\\\") + "\");\n")
+            setup.write("mkdir c:\\cm3\\" + root[len(input)+1:] + "\n")
             j += 1
             for a in f:
                 b = a
@@ -2678,22 +2676,21 @@ UserQuietInstCmd=
                         s[a] = 1
                     strings += "FILE" + str(i) + "=\"" + a + "\"\n"
                     files += "%FILE" + str(i) + "%=\n"
-                    if b != "setup.js":
-                        c = "c:\\\\cm3\\\\" + root[len(input) + 1:].replace("\\", "\\\\") + "\\\\" + b
-                        setup.write("if (fs.FileExists(\"" + c + "\"))\n")
-                        setup.write("  fs.DeleteFile(\"" + c + "\");\n")
-                        setup.write("fs.MoveFile(\"" + b + "\", \"" + c + "\");\n")
+                    if b != "setup.cmd":
+                        # There is something totally wierd where sometimes the file destination is randomly changed.
+                        # Throwing in the || pause seems to fix it..
+                        # acutally no we still end abruptly, let's try copy instead of move, ugh
+                        setup.write("move " + a + " \"c:\\cm3\\" + root[len(input) + 1:] + "\\" + b + "\" || pause \n")
                     i += 1
+                #setup.write("pause \n")
 
-    c = "c:\\\\cm3\\\\setup.js"
-    setup.write("if (fs.FileExists(\"" + c + "\"))\n")
-    setup.write("  fs.DeleteFile(\"" + c + "\");\n")
-    setup.write("fs.MoveFile(\"setup.js\", \"" + c + "\");\n")
+    setup.write("move setup.cmd \"c:\\cm3\" || pause \n")
+    setup.write("pause\n")
+    setup.write("pause\n")
     file.write(strings)
     file.write(directories)
     file.write(files)
     file.close()
-    setup.close()
     command = "start /wait iexpress /n " + output.replace("/", "\\") + ".sed"
     print(command)
     os.system(command)
