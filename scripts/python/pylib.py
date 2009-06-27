@@ -2599,7 +2599,8 @@ def MakeIExpressPackage(input, output):
         for a in Names:
             file.write("\"" + Directory + "\\" + a)
 
-    os.path.walk(intput, Callback, None)
+    os.path.walk(input, Callback, None)
+    file.close()
     commmand = "start /wait iexpress /n " + output + ".sed"
     print(command)
     os.system(command)
