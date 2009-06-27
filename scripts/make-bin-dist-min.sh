@@ -127,6 +127,7 @@ else
     b=`basename ${f}`
     if [ -f "${INSTALLROOT}/bin/${b}" ] ; then
       rm "${INSTALLROOT}/bin/${b}" > /dev/null
+    fi
   done
   # new config files
   cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin/config"
