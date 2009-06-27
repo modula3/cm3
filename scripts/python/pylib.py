@@ -2650,7 +2650,7 @@ UserQuietInstCmd=
     j = 0
 
     setup = open(os.path.join(input, "setup.cmd"), "w")
-    #setup.write("cd\npause\n")
+    setup.write("pause\n")
 
     for root, dirs, f in os.walk(input):
         if len(f) > 0:
@@ -2677,20 +2677,17 @@ UserQuietInstCmd=
                     strings += "FILE" + str(i) + "=\"" + a + "\"\n"
                     files += "%FILE" + str(i) + "%=\n"
                     if b != "setup.cmd":
-                        # There is something totally wierd where sometimes the file destination is randomly changed.
-                        # Throwing in the || pause seems to fix it..
-                        # acutally no we still end abruptly, let's try copy instead of move, ugh
-                        setup.write("move " + a + " \"c:\\cm3\\" + root[len(input) + 1:] + "\\" + b + "\" || pause \n")
+                        setup.write("move " + a + " \"c:\\cm3\\" + root[len(input) + 1:] + "\\" + b + "\" || pause\n")
                     i += 1
                 #setup.write("pause \n")
 
+    setup.write("pause\n")
     setup.write("move setup.cmd \"c:\\cm3\" || pause \n")
-    setup.write("pause\n")
-    setup.write("pause\n")
     file.write(strings)
     file.write(directories)
     file.write(files)
     file.close()
+    setup.close();
     command = "start /wait iexpress /n " + output.replace("/", "\\") + ".sed"
     print(command)
     os.system(command)
