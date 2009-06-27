@@ -338,11 +338,15 @@ proc skip_lib(lib, shared) is
     local lib_sox = format("lib%s.%s.5", lib, suffix)
 
     if shared
+        % create the version aliases
+        link_file(lib_sox, lib_so)
+
         % make sure the shared library stuff gets installed properly
         install_derived(lib_sox)
-        install_derived(lib_so)
+        install_derived_link(lib_sox, lib_so)
         install_hard_link_to_derived(lib_sox, LIB_INSTALL)
         install_hard_link_to_derived(lib_so, LIB_INSTALL)
+        ShipM3CoreStaticObjs(lib)
     else
         delete_file(lib_so)
         delete_file(lib_sox)
