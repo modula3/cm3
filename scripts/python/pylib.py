@@ -47,7 +47,7 @@ if env_OS == "Windows_NT" and not IsInterix():
     # This can be useful for example with NT386GNU following more Posix-ish
     # naming styles than even Cygwin usually does.
     #
-    #pathext = getenv("PATHEXT");
+    #pathext = getenv("PATHEXT")
     #if pathext and not "." in pathext.split(";"):
     #    pathext = ".;" + pathext
     #    os.environ["PATHEXT"] = pathext
@@ -276,7 +276,7 @@ if not CM3 and not InstallRoot:
             print("using " + CM3)
             InstallRoot = os.path.dirname(bin)
             _SetupEnvironmentVariableAll("PATH", ["cm3"], bin)
-            break;
+            break
 
 if not InstallRoot:
     if CM3:
@@ -695,7 +695,7 @@ def GetConfigForDistribution(Target):
 def SetEnvironmentVariable(Name, Value):
     if not os.environ.get(Name) or (os.environ[Name] != Value):
         os.environ[Name] = Value
-        print("set " + Name + "=" + Value);
+        print("set " + Name + "=" + Value)
 
 #-----------------------------------------------------------------------------
 
@@ -768,7 +768,7 @@ def ConvertPath(a):
 # reflect what we decided back into the environment
 #
 
-SetEnvironmentVariable("CM3_TARGET", Target);
+SetEnvironmentVariable("CM3_TARGET", Target)
 SetEnvironmentVariable("CM3_INSTALL", ConvertPath(InstallRoot))
 SetEnvironmentVariable("M3CONFIG", ConvertPath(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
 #SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "\\\\"))
@@ -1112,7 +1112,7 @@ def _MakeArchive(a):
     #
     DeleteFile(a + ".tar.gz")
     b = "tar cfz " + a + ".tar.gz " + a
-    print(b + "\n");
+    print(b + "\n")
     os.system(b)
 
 #-----------------------------------------------------------------------------
@@ -2608,32 +2608,32 @@ def MakeIExpressPackage(input, output):
     print(command)
     os.system(command)
 
-def IsSymlink(a):
-    return os.path.islink(a)
-
-def BreakAndMarkLinks(input, prefix):
-    result = []
-    lib = input + prefix + "/lib/"
-    pkg = input + prefix + "/pkg/"
-    candidates = dict.fromkeys(os.listdir(lib), 1)
-    for root, dirs, files in os.walk(pkg):
+def DiscoverHardLinks(r):
+    result = { }
+    for root, dirs, files in os.walk(r):
         for f in files:
-            if f in candidates:
-                p = root + "/" + f
-                q = lib + f
-                if not IsSymlink(p) and not IsSymlink(q) and os.path.samefile(q, p):
-                    print("temporarily unlinking " + p + " <=> " + q)
-                    result += [p]
-                    os.remove(p)
-                    open(p, "w") # replace with zero length marker
+            p = root + "/" + f
+            if not os.path.islink(p):
+                result.setdefault(os.stat(p).st_ino, []).append(p)
     return result
 
-def RestoreLinks(input, prefix, links):
-    lib = input + prefix + "/lib/"
-    for a in links:
-        print("restoring " + a)
-        os.remove(a)
-        os.link(lib + GetLastPathElement(a), a)
+def BreakHardLinks(links):
+    for inode in links:
+        first = links[inode][0]
+        for other in links[inode][1:]:
+            print("breaking link " + other + " <=> " + first)
+            os.remove(other)
+            open(other, "w")
+    pass
+
+def RestoreHardLink(links):
+    for inode in links:
+        first = links[inode][0]
+        for other in links[inode][1:]:
+            print("restoring link " + other + " <=> " + first)
+            os.remove(other)
+            os.link(first, other)
+    pass
 
 def MoveSkel(prefix):
     CreateDirectory("." + prefix)
@@ -2701,21 +2701,25 @@ def MakeDebianPackage(name, input, output, prefix):
     # There seems to be an inability to install a tar file
     # that contains hard links, so we create them upon install.
     # In order for uninstall to know which files to delete,
-    # we leave stub empty files. We know the links all
-    # involve files in lib, so we look for any file in pkg
-    # whose name matches a file in lib and is of zero size,
-    # and we delete the zero sized file and link it to lib.
+    # we leave stub empty files.
     #
 
-    links = BreakAndMarkLinks(input, prefix)
+    links = DiscoverHardLinks(input + prefix)
+    BreakHardLinks(links)
 
-    open("./postinst", "w").write(
+    postinst = open("./postinst", "w")
+    postinst.write(
   "#!/bin/sh" + newline
-+ "for a in " + prefix + "/lib/*so;" + newline
-+ "do" + newline
-+ "  find " + prefix + "/pkg -name `basename $a` \\" + newline
-+ "  -exec sh -cex \"rm {} && ln $a {}\" \\;" + newline
-+ "done" + newline)
++ "set -e" + newline
++ "set -x" + newline + newline)
+
+    i = len(input)
+    for inode in links:
+        first = links[inode][0][len:]
+        for other in links[inode][1:]:
+            postinst.write("ln -f " + first + " " + other[len:]  + newline)
+    postinst.close()
+
     command = "chmod +x ./postinst"
     print(command)
     os.system(command)
@@ -2737,7 +2741,7 @@ def MakeDebianPackage(name, input, output, prefix):
         print(command)
         os.system(command)
 
-    RestoreLinks(input, prefix, links)
+    RestoreLinks(links)
 
     command = "ar cr " + input + ".deb debian-binary control.tar.gz data.tar." + compressed_extension
     print(command)
@@ -2759,7 +2763,7 @@ if __name__ == "__main__":
     #os.system("set")
     sys.exit(1)
 
-    CopyConfigForDevelopment();
+    CopyConfigForDevelopment()
     sys.exit(1)
 
     CheckForLinkSwitch("DELAYLOAD")
@@ -2784,16 +2788,16 @@ if __name__ == "__main__":
     print(_ConvertFromCygwinPath("//foo"))
     sys.exit(1)
 
-    print(SearchPath("juno"));
+    print(SearchPath("juno"))
     sys.exit(1)
 
-    print(_ConvertToCygwinPath("a"));
-    print(_ConvertToCygwinPath("a\\b"));
-    print(_ConvertToCygwinPath("//a\\b"));
-    print(_ConvertToCygwinPath("c:\\b"));
-    print(_ConvertToCygwinPath("c:/b"));
-    print(_ConvertToCygwinPath("/b"));
-    print(_ConvertToCygwinPath("\\b"));
+    print(_ConvertToCygwinPath("a"))
+    print(_ConvertToCygwinPath("a\\b"))
+    print(_ConvertToCygwinPath("//a\\b"))
+    print(_ConvertToCygwinPath("c:\\b"))
+    print(_ConvertToCygwinPath("c:/b"))
+    print(_ConvertToCygwinPath("/b"))
+    print(_ConvertToCygwinPath("\\b"))
     sys.exit(1)
     print(IsCygwinBinary("c:\\cygwin\\bin\\gcc.exe"))
     print(IsCygwinBinary("c:\\bin\\cdb.exe"))
