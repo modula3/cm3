@@ -345,6 +345,9 @@ else:
 
 MakeArchives()
 
+for name in ["min", "std"]:
+    MakeDebianPackage(name, FormInstallRoot(name), GetStage() + "/cm3-" + name + ".deb", "/usr/local/cm3")
+
 for a in glob.glob(os.path.join(STAGE, "*")):
     if (a and os.path.isfile(a)):
         print("Output is " + a)
