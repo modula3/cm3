@@ -2605,13 +2605,18 @@ def MakeIExpressPackage(input, output):
     print(command)
     os.system(command)
 
-def MoveSkel(target):
+def MoveSkel(prefix):
+    CreateDirectory("." + prefix)
     for a in ["bin", "pkg", "lib", "www", "man"]:
-        os.file.rename(a, target + "/" + a)
+        if os.path.isdir(a):
+            print("mv " + a + " ." + prefix + "/" + a)
+            os.rename(a, "." + prefix + "/" + a)
 
-def RestoreSkel(target):
+def RestoreSkel(prefix):
     for a in ["bin", "pkg", "lib", "www", "man"]:
-        os.file.rename(target + "/" + a, a)
+        if os.path.isdir("." + prefix + "/" + a):
+            print("mv ." + prefix + "/" + a + " " + a)
+            os.rename("." + prefix + "/" + a, a)
 
 def MakeDebianPackage(name, input, output, prefix):
 #
@@ -2625,22 +2630,29 @@ def MakeDebianPackage(name, input, output, prefix):
 #     payload
 # User has no choice where the install goes.
 #
+    print("cd " + input)
     os.chdir(input)
-    CreateDirectory(prefix + "/debian")
+    CreateDirectory("./debian")
     MoveSkel(prefix)
     newline = "\012" # take no chances
-    open("debian-binary", "w").write("2.0" + newline)
-    os.chdir("debian")
-    open("control", "w").write(
+    open("./debian-binary", "w").write("2.0" + newline)
+    os.chdir("./debian")
+    open("./control", "w").write(
       "Package: cm3-" + name + newline
     + "Version: 1.0" + newline
     + "Maintainer: somebody@somewhere.com" + newline
     + "Architecture: All" + newline
     + "Description: good stuff" + newline)
-    os.system("tar cfz ../control.tar.gz .")
+    command = "tar cfz ../control.tar.gz ."
+    print(command)
+    os.system(command)
     os.chdir(input)
-    os.system("tar cf data.tar ./" + prefix)
-    os.system("lzma data.tar")
+    command = "tar cf data.tar ." + prefix
+    print(command)
+    os.system(command)
+    command = "lzma data.tar"
+    print(command)
+    os.system(command)
     RestoreSkel(prefix)
 
 #-----------------------------------------------------------------------------
