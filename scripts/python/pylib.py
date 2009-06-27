@@ -64,6 +64,14 @@ def FatalError(a = ""):
     if __name__ != "__main__":
         sys.exit(1)
 
+def GetPathExtension(a):
+    b = a.rfind(".")
+    c = a.rfind("/")
+    d = a.rfind("\\");
+    if (b > c) and (b > d):
+        return a[b + 1:]
+    return ""
+
 def GetLastPathElement(a):
     return a[max(a.rfind("/"), a.rfind("\\")) + 1:]
 
@@ -2587,27 +2595,91 @@ def MakeIExpressPackage(input, output):
 # This is just a start.
 #
     file = open(output + ".sed", "w")
-    newline = "\015\012" # take no chances
-    file.write(
-        "[Version]" + newline
-        + "Class=IEXPRESS" + newline
-        + "SEDVersion=3" + newline
-        + "[Options]" + newline
-        + "TargetName=" + output + newline
-        + "FriendlyName=Modula-3 installer" + newline
-        + "AppLaunched=<None>" + newline
-        + "SourceFiles=SourceFiles" + newline
-        + "[SourceFiles]" + newline
-        + "SourceFiles0=" + newline
-        + "[SourceFiles0]" + newline)
+    newline = "\n" # take no chances
+    file.write("""[Version]
+Class=IEXPRESS
+SEDVersion=3
+[Options]
+PackagePurpose=ExtractOnly
+ShowInstallProgramWindow=0
+HideExtractAnimation=0
+UseLongFileName=1
+InsideCompressed=0
+CAB_FixedSize=0
+CAB_ResvCodeSigning=0
+RebootMode=I
+InstallPrompt=%InstallPrompt%
+DisplayLicense=%DisplayLicense%
+FinishMessage=%FinishMessage%
+TargetName=%TargetName%
+FriendlyName=%FriendlyName%
+AppLaunched=%AppLaunched%
+PostInstallCmd=%PostInstallCmd%
+AdminQuietInstCmd=%AdminQuietInstCmd%
+UserQuietInstCmd=%UserQuietInstCmd%
+SourceFiles=SourceFiles
+[Strings]
+InstallPrompt=
+DisplayLicense=
+FinishMessage=
+TargetName=""" + output.replace("/", "\\") + """
+FriendlyName=installer
+AppLaunched=
+PostInstallCmd=
+AdminQuietInstCmd=
+UserQuietInstCmd=
+""")
 
-    def Callback(Result, Directory, Names):
-        for a in Names:
-            file.write("\"" + Directory + "\\" + a)
+#FILE0="advapi32.lib"
+#[SourceFiles]
+#SourceFiles0=C:\stage1\cm3-min-NT386-d5.8.1\lib\
+#SourceFiles1=C:\stage1\cm3-min-NT386-d5.8.1\pkg\m3core\src\convert\
+#[SourceFiles0]
+#%FILE0%=
+#%FILE1%=
+#%FILE2%=
+#%FILE12%=
+#[SourceFiles1]
+#%FILE13%=
+#%FILE14%=
 
-    os.path.walk(input, Callback, None)
+    strings = ""
+    s = dict()
+    directories = "[SourceFiles]\n"
+    files = ""
+    i = 0
+    j = 0
+
+    for root, dirs, f in os.walk(input):
+        if len(f) > 0:
+            directories += "SourceFiles" + str(j) + "=" + root + "\\\n"
+            files += "[SourceFiles" + str(j) + "]\n"
+            j += 1
+            for a in f:
+                if a == ".M3WEB" or a == ".M3EXPORTS":
+                    b = a
+                    a = GetLastPathElement(RemoveLastPathElement(root)) + a
+                    CopyFile(os.path.join(root, b), os.path.join(root, a))
+                elif GetPathExtension(a).startswith("M3WEB") or GetPathExtension(a).startswith("M3EXPORTS"):
+                    print("skipping " + a)
+                else:
+                    # append numbers, but this doesn't happen
+                    if s.get(a, None):
+                        b = a
+                        s[b] += 1
+                        a += str(s[b])
+                        CopyFile(os.path.join(root, b), os.path.join(root, a))
+                    else:
+                        s[a] = 1
+                    strings += "FILE" + str(i) + "=\"" + a + "\"\n"
+                    files += "%FILE" + str(i) + "%=\n"
+                    i += 1
+
+    file.write(strings)
+    file.write(directories)
+    file.write(files)
     file.close()
-    commmand = "start /wait iexpress /n " + output + ".sed"
+    command = "start /wait iexpress /n " + output.replace("/", "\\") + ".sed"
     print(command)
     os.system(command)
 
