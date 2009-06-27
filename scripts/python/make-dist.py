@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.56 2009-06-27 17:23:30 jkrell Exp $
+# $Id: make-dist.py,v 1.57 2009-06-27 20:27:26 jkrell Exp $
 
 import sys
 import os.path
@@ -345,8 +345,18 @@ else:
 
 MakeArchives()
 
-for name in ["min", "std"]:
-    MakeDebianPackage(name, FormInstallRoot(name), GetStage() + "/cm3-" + name + ".deb", "/usr/local/cm3")
+t = Target.lower()
+
+def contains(s, t):
+    return s.find(t) != -1
+
+if contains(t, "linux"):
+    for name in ["min", "std"]:
+        MakeDebianPackage(name, FormInstallRoot(name), GetStage() + "/cm3-" + name + ".deb", "/usr/local/cm3")
+
+if contains(t, "nt386") or contains(t, "interix") or contains(t, "cygwin") or contains(t, "mingw")  or contains(t, "uwin") or t.endswith("_nt"):
+    for name in ["min", "std"]:
+        MakeIExpressPackage(FormInstallRoot(name), GetStage() + "/cm3-" + name + ".exe",)
 
 for a in glob.glob(os.path.join(STAGE, "*")):
     if (a and os.path.isfile(a)):

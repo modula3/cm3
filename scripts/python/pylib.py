@@ -2584,7 +2584,7 @@ def FormInstallRoot(PackageSetName):
 
 def MakeIExpressPackage(input, output):
 #
-# Iexpress is builtin on XP and newer.
+# IExpress is builtin on XP and newer.
 # When run without parameters, it presents a gui wizard.
 # Iexpress /? for help.
 # The gui wizard produces a textual ".sed" file, that
