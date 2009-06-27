@@ -150,13 +150,6 @@ def FatalError():
     print("fatal error")
     sys.exit(1)
 
-STAGE = getenv("STAGE")
-
-if (not STAGE):
-    #tempfile.tempdir = os.path.join(tempfile.gettempdir(), "cm3", "make-dist")
-    #CreateDirectory(tempfile.tempdir)
-    STAGE = tempfile.mkdtemp()
-
 # doesn't work yet
 #Logs = os.path.join(STAGE, "logs")
 #os.makedirs(Logs)
@@ -167,14 +160,6 @@ InstallRoot_Previous = InstallRoot
 
 InstallRoot_CompilerWithPrevious = os.path.join(STAGE, "compiler_with_previous")
 InstallRoot_CompilerWithSelf = os.path.join(STAGE, "compiler_with_self")
-
-#
-# The way this SHOULD work is we build the union of all desired,
-# and then pick and chose from the output into the .zip/.tar.bz2.
-# For now though, we only build min.
-#
-def FormInstallRoot(PackageSetName):
-    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
 
 def FormArchiveName(PackageSetName, Suffix):
     return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION + Suffix)
