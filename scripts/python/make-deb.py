@@ -13,7 +13,7 @@ from pylib import *
 SetEnvironmentVariable("STAGE", sys.argv[1])
 
 for name in ["min",
-           # "std"
+             "std"
             ]:
     MakeDebianPackage(name, FormInstallRoot(name), GetStage() + "/cm3-" + name + ".deb", "/usr/local/cm3")
 
