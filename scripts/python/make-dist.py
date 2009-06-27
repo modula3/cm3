@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.55 2009-06-27 16:15:36 jkrell Exp $
+# $Id: make-dist.py,v 1.56 2009-06-27 17:23:30 jkrell Exp $
 
 import sys
 import os.path
@@ -344,6 +344,9 @@ else:
 # ----------------------------------------------------------------------------------------------------------------------------------
 
 MakeArchives()
+
+for name in ["min", "std"]:
+    MakeDebianPackage(name, FormInstallRoot(name), GetStage() + "/cm3-" + name + ".deb", "/usr/local/cm3")
 
 for a in glob.glob(os.path.join(STAGE, "*")):
     if (a and os.path.isfile(a)):
