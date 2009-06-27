@@ -162,8 +162,6 @@ proc skip_lib (lib, shared) is
   local vmaj     = "5"
   local vmin     = "2"
   local version  = vmaj & "." & vmin
-  local ret_code = 0
-  local lib_a    = format ("lib%s.a", lib)
   local lib_so   = format ("lib%s.dylib", lib)
   local lib_sox  = format ("lib%s.%s.dylib", lib, vmaj)
   local lib_soxx = format ("lib%s.%s.dylib", lib, version)
