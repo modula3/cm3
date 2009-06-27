@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.53 2009-06-27 10:45:15 jkrell Exp $
+# $Id: make-dist.py,v 1.54 2009-06-27 15:14:56 jkrell Exp $
 
 import sys
 import os.path
@@ -226,7 +226,7 @@ def CopyRecursive(From, To):
         shutil.rmtree(To)
     else:
         CreateDirectory(ToParent)
-    shutil.copytree(From, To)
+    shutil.copytree(From, To, symlinks=True)
     return True
 
 #
