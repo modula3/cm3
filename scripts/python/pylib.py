@@ -2681,8 +2681,9 @@ def MakeDebianPackage(name, input, output, prefix):
 #
     compresser = "lzma"
     compressed_extension = "lzma"
-    compresser = "gzip"
-    compressed_extension = "gz"
+    # while testing, gzip is much faster
+    #compresser = "gzip"
+    #compressed_extension = "gz"
     print("cd " + input)
     os.chdir(input)
     CreateDirectory("./debian")
