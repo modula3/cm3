@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.16 2009-06-26 19:36:49 wagner Exp $
+# $Id: make-dist.sh,v 1.17 2009-06-27 11:24:36 wagner Exp $
 
 DESTHOST=${DESTHOST:-birch.elegosoft.com}
 
@@ -258,10 +258,15 @@ EOF
         cat ${p}/DESC
       fi
       if [ -r ${p}/index.html ]; then
-        echo "<a href=\"${p}/index.html\">Description</a><br>"
+        echo "<a href=\"ws/${p}/index.html\">Description</a><br>"
       fi
-      if [ -r ${p}/README ]; then
-        echo "<a href=\"${p}/README\">README</a><br>"
+      readmes=`find "${p}" -type f -name README -print`
+      if [ -n "$readmes" ]; then
+        for f in $readmes; do
+          if [ -r ${f} ]; then
+            echo "<a href=\"ws/${f}\">${f}</a><br>"
+          fi
+        done
       fi
       if [ "$b" != "import-libs" -a "$b" != "m3cc" -a "$b" != "m3gdb" ]; then
         echo "<a href=\"http://www.opencm3.net/doc/help/gen_html/${b}/INDEX.html\">Browse Sources Online</a><br>"
@@ -280,13 +285,16 @@ EOF
     echo "</ul>"
     echo "</body></html>"
   ) > collection-${c}.html
+  echo "collection-${c}.html"
   ARCHIVE="${STAGE}/cm3-bin-ws-${c}-${TARGET}-${CM3VERSION}-${DS}.tgz"
-  "${TAR}"  --exclude '*.o' --exclude '*.mo' --exclude '*.io' \
-    --exclude '*/CVS/*' --exclude '*/CVS' --exclude '*~' \
-    --exclude '*.tar.*' --exclude '*.tgz' --exclude "*/${TARGET}/gcc" \
-    --exclude "*/${TARGET}/*/*" \
-    -czf "${ARCHIVE}" collection-${c}.html install.sh ${PKGS}
-  ls -l "${ARCHIVE}"
+  if [ -z "${NOARCHIVE}" ]; then
+    "${TAR}"  --exclude '*.o' --exclude '*.mo' --exclude '*.io' \
+      --exclude '*/CVS/*' --exclude '*/CVS' --exclude '*~' \
+      --exclude '*.tar.*' --exclude '*.tgz' --exclude "*/${TARGET}/gcc" \
+      --exclude "*/${TARGET}/*/*" \
+      -czf "${ARCHIVE}" collection-${c}.html install.sh ${PKGS}
+      ls -l "${ARCHIVE}"
+  fi
 done
 
 if [ `hostname` = 'birch' ]; then
