@@ -2595,12 +2595,11 @@ def MakeIExpressPackage(input, output):
 # This is just a start.
 #
     file = open(output + ".sed", "w")
-    newline = "\n" # take no chances
     file.write("""[Version]
 Class=IEXPRESS
 SEDVersion=3
 [Options]
-PackagePurpose=ExtractOnly
+PackagePurpose=InstallApp
 ShowInstallProgramWindow=0
 HideExtractAnimation=0
 UseLongFileName=1
@@ -2624,8 +2623,8 @@ DisplayLicense=
 FinishMessage=
 TargetName=""" + output.replace("/", "\\") + """
 FriendlyName=installer
-AppLaunched=
-PostInstallCmd=
+AppLaunched="setup.cmd"
+PostInstallCmd=<None>
 AdminQuietInstCmd=
 UserQuietInstCmd=
 """)
@@ -2650,22 +2649,26 @@ UserQuietInstCmd=
     i = 0
     j = 0
 
+    setup = open(os.path.join(input, "setup.cmd"), "w")
+    #setup.write("cd\npause\n")
+
     for root, dirs, f in os.walk(input):
         if len(f) > 0:
             directories += "SourceFiles" + str(j) + "=" + root + "\\\n"
             files += "[SourceFiles" + str(j) + "]\n"
+            setup.write("mkdir c:\\cm3\\" + root[len(input)+1:] + "\n")
             j += 1
             for a in f:
+                b = a
                 if a == ".M3WEB" or a == ".M3EXPORTS":
-                    b = a
                     a = GetLastPathElement(RemoveLastPathElement(root)) + a
                     CopyFile(os.path.join(root, b), os.path.join(root, a))
                 elif GetPathExtension(a).startswith("M3WEB") or GetPathExtension(a).startswith("M3EXPORTS"):
                     print("skipping " + a)
-                else:
+                    a = None
+                if a:
                     # append numbers, but this doesn't happen
                     if s.get(a, None):
-                        b = a
                         s[b] += 1
                         a += str(s[b])
                         CopyFile(os.path.join(root, b), os.path.join(root, a))
@@ -2673,8 +2676,17 @@ UserQuietInstCmd=
                         s[a] = 1
                     strings += "FILE" + str(i) + "=\"" + a + "\"\n"
                     files += "%FILE" + str(i) + "%=\n"
+                    if b != "setup.cmd":
+                        # There is something totally wierd where sometimes the file destination is randomly changed.
+                        # Throwing in the || pause seems to fix it..
+                        # acutally no we still end abruptly, let's try copy instead of move, ugh
+                        setup.write("move " + a + " \"c:\\cm3\\" + root[len(input) + 1:] + "\\" + b + "\" || pause \n")
                     i += 1
+                #setup.write("pause \n")
 
+    setup.write("move setup.cmd \"c:\\cm3\" || pause \n")
+    setup.write("pause\n")
+    setup.write("pause\n")
     file.write(strings)
     file.write(directories)
     file.write(files)
