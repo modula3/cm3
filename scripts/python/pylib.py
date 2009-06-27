@@ -2187,15 +2187,15 @@ def CopyConfigForDistribution(To):
     #
     # The distributed environment does not require a source tree.
     #
-    a = os.path.join(Root, "m3-sys", "cminstall", "src")
-    To = os.path.join(To, "bin/config")
-    CreateDirectory(To)
-    for a in [Target + "*", "*.common"]:
-        for File in glob.glob(os.path.join(a, "config-no-install", a)):
+    Bin  = os.path.join(To, "bin")
+    Config = os.path.join(Bin, "config")
+    CreateDirectory(Config)
+    for b in [Target + "*", "*.common"]:
+        for File in glob.glob(os.path.join(Root, "m3-sys", "cminstall", "src", "config-no-install", b)):
             if os.path.isfile(File):
-                #print(File + " => " + To + "\n")
-                CopyFile(File, To)
-    open(os.path.join(To, "cm3.cfg"), "w").write("INSTALL_ROOT = (path() & SL & \"..\")\ninclude(path() & \"/config/" + Config + "\")\n")
+                #print(File + " => " + Config + "\n")
+                CopyFile(File, Config)
+    open(os.path.join(Bin, "cm3.cfg"), "w").write("INSTALL_ROOT = (path() & SL & \"..\")\ninclude(path() & \"/config/" + Config + "\")\n")
     return True
 
 #-----------------------------------------------------------------------------
