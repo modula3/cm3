@@ -262,12 +262,9 @@ def Setup(ExistingCompilerRoot, NewRoot):
         os.environ["LIB"] = os.path.join(NewRoot, "lib") + OriginalLIB
     os.environ["PATH"] = (os.path.join(NewRoot, "bin") + OriginalPATH)
 
-    if ((NewRoot != InstallRoot_CompilerWithPrevious)
-            and (NewRoot != InstallRoot_CompilerWithSelf)
-            and (NewRoot != InstallRoot_Min)):
-        CopyRecursive(InstallRoot_Min, NewRoot) or FatalError()
-    else:
-        CopyCompiler(ExistingCompilerRoot, NewRoot) or FatalError()
+    CopyCompiler(ExistingCompilerRoot, NewRoot) or FatalError()
+
+    if NewRoot == InstallRoot_CompilerWithPrevious:
         NewLib = os.path.join(NewRoot, "lib")
         CreateDirectory(NewLib)
         for a in glob.glob(os.path.join(ExistingCompilerRoot, "lib", "*.obj")):

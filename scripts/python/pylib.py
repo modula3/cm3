@@ -2128,7 +2128,10 @@ def CopyFile(From, To):
     if os.name != "nt":
         CopyCommand = "cp -Pv"
     print(CopyCommand + " " + From + " " + To)
-    shutil.copy(From, To)
+    if os.path.islink(From):
+        os.symlink(os.readlink(From), To)
+    else:
+        shutil.copy(From, To)
     return True
 
 #-----------------------------------------------------------------------------
@@ -2624,7 +2627,6 @@ def BreakHardLinks(links):
             print("breaking link " + other + " <=> " + first)
             os.remove(other)
             open(other, "w")
-    pass
 
 def RestoreHardLinks(links):
     for inode in links:
@@ -2633,7 +2635,6 @@ def RestoreHardLinks(links):
             print("restoring link " + other + " <=> " + first)
             os.remove(other)
             os.link(first, other)
-    pass
 
 def MoveSkel(prefix):
     CreateDirectory("." + prefix)
