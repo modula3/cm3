@@ -2656,7 +2656,7 @@ def MakeMSIWithWix(input):
 
     wix.close()
 
-    ProgramFiles = environ.get("ProgramFiles", "C:\\Program Files")
+    ProgramFiles = os.environ.get("ProgramFiles", "C:\\Program Files")
     candle = SearchPath("candle") or "\"" + ProgramFiles + "\\Windows Installer XML v3\\bin\\candle.exe\""
     light =  SearchPath("light") or "\"" + ProgramFiles + "\\Windows Installer XML v3\\bin\\light.exe\""
 
