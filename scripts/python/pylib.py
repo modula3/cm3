@@ -2640,6 +2640,10 @@ def MakeMSIWithWix(input):
             else:
                 wix.write("""<Component Id='c%s' Guid='%s'>\n""" % (str(state.componentID), str(uuid.uuid4())))
                 state.componentID += 1
+                if state.componentID == 1:
+                    wix.write("""<Environment Id="envPath" Action="set" Name="PATH" Part="last" Permanent="no" Separator=";" Value='[INSTALLDIR]bin'/>\n""")
+
+
                 wix.write("""<File Id='f%d' Name='%s' Source='%s'/>\n""" % (state.fileID, a, b))
                 state.fileID += 1
                 wix.write("</Component>\n")
