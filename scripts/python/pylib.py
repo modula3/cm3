@@ -2654,30 +2654,27 @@ UserQuietInstCmd=
     setup.write("pause\n")
 
     for root, dirs, f in os.walk(input):
-        if len(f) > 0:
+        if len(f) > 0 and root != os.path.join(input, "rename"):
             directories += "SourceFiles" + str(j) + "=" + root + "\\\n"
             files += "[SourceFiles" + str(j) + "]\n"
             setup.write("mkdir c:\\cm3\\" + root[len(input)+1:] + "\n")
             j += 1
             for a in f:
-                if root == os.path.join(input, "rename"):
-                    pass
+                b = a
+                # append numbers for uniquness and copy to dups
+                if s.get(b, None):
+                    s[b] += 1
+                    a += "." + str(s[b])
+                    CreateDirectory(os.path.join(input, "rename"))
+                    CopyFile(os.path.join(root, b), os.path.join(input, "rename", a))
+                    renames += "%FILE" + str(i) + "%=\n"
                 else:
-                    b = a
-                    # append numbers for uniquness and copy to dups
-                    if s.get(b, None):
-                        s[b] += 1
-                        a += "." + str(s[b])
-                        CreateDirectory(os.path.join(input, "rename"))
-                        CopyFile(os.path.join(root, b), os.path.join(input, "rename", a))
-                        renames += "%FILE" + str(i) + "%=\n"
-                    else:
-                        s[b] = 1
-                        files += "%FILE" + str(i) + "%=\n"
-                    strings += "FILE" + str(i) + "=\"" + a + "\"\n"
-                    if b != "setup.cmd":
-                        setup.write("move " + a + " \"c:\\cm3\\" + root[len(input) + 1:] + "\\" + b + "\" || pause\n")
-                    i += 1
+                    s[b] = 1
+                    files += "%FILE" + str(i) + "%=\n"
+                strings += "FILE" + str(i) + "=\"" + a + "\"\n"
+                if b != "setup.cmd":
+                    setup.write("move " + a + " \"c:\\cm3\\" + root[len(input) + 1:] + "\\" + b + "\" || pause\n")
+                i += 1
                 #setup.write("pause \n")
 
     setup.write("pause\n")
@@ -2686,9 +2683,11 @@ UserQuietInstCmd=
     file.write(renames)
     file.write(directories)
     if renames != "":
-        file.write("[SourceFilesRenames]\n")
-        file.write(renames)
+        file.write("SourceFiles" + str(j) + "=" + os.path.join(input, "renames") + "\\\n")
     file.write(files)
+    if renames != "":
+        file.write("[SourceFiles" + str(j) + "]\n")
+        file.write(renames)
     file.close()
     setup.close();
     command = "start /wait iexpress /n " + output.replace("/", "\\") + ".sed"
