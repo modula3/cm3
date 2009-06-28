@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.60 2009-06-28 14:13:09 jkrell Exp $
+# $Id: make-dist.py,v 1.61 2009-06-28 14:29:58 jkrell Exp $
 
 import sys
 import os.path
@@ -84,6 +84,25 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+""")
+
+    open(os.path.join(license, "COPYRIGHT-OLIVETTI"), "w").write(
+"""                      Copyright (C) Olivetti 1989 
+                          All Rights reserved
+
+Use and copy of this software and preparation of derivative works based
+upon this software are permitted to any person, provided this same
+copyright notice and the following Olivetti warranty disclaimer are
+included in any copy of the software or any modification thereof or
+derivative work therefrom made by any person.
+
+This software is made available AS IS and Olivetti disclaims all
+warranties with respect to this software, whether expressed or implied
+under any law, including all implied warranties of merchantibility and
+fitness for any purpose. In no event shall Olivetti be liable for any
+damages whatsoever resulting from loss of use, data or profits or
+otherwise arising out of or in connection with the use or performance
+of this software.
 """)
 
     class State():
