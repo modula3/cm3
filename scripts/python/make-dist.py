@@ -54,10 +54,23 @@ def MakeArchive(PackageSetName, Command, Extension):
     CreateDirectory(os.path.join(InstallRoot, "license"))
 
     for a in glob.glob(os.path.join(Root, "COPYRIGHT*")):
-        CopyFile(a, os.path.join(InstallRoot, "license", a) or FatalError()
+        CopyFile(a, os.path.join(InstallRoot, "license", a)) or FatalError()
 
-    os.path.join(Root, "m3-libs", "arithmetic", "copyrite.txt")
-        CopyFile(os.path.join(Root, "m3-libs", "arithmetic", "copyrite.txt"), os.path.join(InstallRoot, "license", "COPYRIGHT-m3na")) or FatalError()
+    CopyFile(os.path.join(Root, "m3-libs", "arithmetic", "copyrite.txt"), os.path.join(InstallRoot, "license", "COPYRIGHT-M3NA")) or FatalError()
+
+    class State():
+        pass
+
+    state = State()
+    state.id = 0
+
+    def Callback(state, dir, entries):
+        for a in entries:
+            if a == "COPYRIGHT":
+                state.id += 1
+                CopyFile(os.path.join(dir, a), InstallRoot, "license",  "COPYRIGHT-CALTECH-" + str(state.id))
+
+    os.path.walk(os.path.join(Root, "caltech-parser"), Callback, state)
 
     #
     # delete .m3 and .m3web files, they aren't needed
@@ -361,7 +374,8 @@ if contains(t, "linux"):
 
 if contains(t, "nt386") or contains(t, "interix") or contains(t, "cygwin") or contains(t, "mingw")  or contains(t, "uwin") or t.endswith("_nt"):
     for name in ["min", "std"]:
-        MakeMSIWithWix(FormInstallRoot(name))
+        pass
+        #MakeMSIWithWix(FormInstallRoot(name))
 
 for a in glob.glob(os.path.join(STAGE, "*")):
     if (a and os.path.isfile(a)):
