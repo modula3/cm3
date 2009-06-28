@@ -172,8 +172,8 @@ def MakeArchives():
 def BuildShip(Packages):
     # This is more indirect than necessary.
     CreateSkel()
-    # return Do("buildship", Packages)
-    return True
+    return Do("buildship", Packages)
+    #return True
 
 def RealClean(Packages):
     # This is more indirect than necessary.
