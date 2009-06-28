@@ -2646,6 +2646,7 @@ UserQuietInstCmd=
     s = dict()
     directories = "[SourceFiles]\n"
     files = ""
+    renames = ""
     i = 0
     j = 0
 
@@ -2659,23 +2660,21 @@ UserQuietInstCmd=
             setup.write("mkdir c:\\cm3\\" + root[len(input)+1:] + "\n")
             j += 1
             for a in f:
-                b = a
-                if a == ".M3WEB" or a == ".M3EXPORTS":
-                    a = GetLastPathElement(RemoveLastPathElement(root)) + a
-                    CopyFile(os.path.join(root, b), os.path.join(root, a))
-                elif GetPathExtension(a).startswith("M3WEB") or GetPathExtension(a).startswith("M3EXPORTS"):
-                    print("skipping " + a)
-                    a = None
-                if a:
-                    # append numbers, but this doesn't happen
-                    if s.get(a, None):
+                if root == os.path.join(input, "rename"):
+                    pass
+                else:
+                    b = a
+                    # append numbers for uniquness and copy to dups
+                    if s.get(b, None):
                         s[b] += 1
-                        a += str(s[b])
-                        CopyFile(os.path.join(root, b), os.path.join(root, a))
+                        a += "." + str(s[b])
+                        CreateDirectory(os.path.join(input, "rename"))
+                        CopyFile(os.path.join(root, b), os.path.join(input, "rename", a))
+                        renames += "%FILE" + str(i) + "%=\n"
                     else:
-                        s[a] = 1
+                        s[b] = 1
+                        files += "%FILE" + str(i) + "%=\n"
                     strings += "FILE" + str(i) + "=\"" + a + "\"\n"
-                    files += "%FILE" + str(i) + "%=\n"
                     if b != "setup.cmd":
                         setup.write("move " + a + " \"c:\\cm3\\" + root[len(input) + 1:] + "\\" + b + "\" || pause\n")
                     i += 1
@@ -2684,7 +2683,11 @@ UserQuietInstCmd=
     setup.write("pause\n")
     setup.write("move setup.cmd \"c:\\cm3\" || pause \n")
     file.write(strings)
+    file.write(renames)
     file.write(directories)
+    if renames != "":
+        file.write("[SourceFilesRenames]\n")
+        file.write(renames)
     file.write(files)
     file.close()
     setup.close();
