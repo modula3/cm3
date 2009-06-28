@@ -10,6 +10,7 @@ import platform
 import re
 import tempfile
 import shutil
+import uuid
 
 #-----------------------------------------------------------------------------
 # Several important variables are gotten from the environment or probed.
@@ -64,19 +65,24 @@ def FatalError(a = ""):
     if __name__ != "__main__":
         sys.exit(1)
 
-def GetPathExtension(a):
-    b = a.rfind(".")
-    c = a.rfind("/")
-    d = a.rfind("\\");
-    if (b > c) and (b > d):
-        return a[b + 1:]
-    return ""
-
 def GetLastPathElement(a):
     return a[max(a.rfind("/"), a.rfind("\\")) + 1:]
 
 def RemoveLastPathElement(a):
     return a[0:max(a.rfind("/"), a.rfind("\\"))]
+
+def GetPathExtension(a):
+    a = GetLastPathElement(a)
+    b = a.rfind(".")
+    if b < 0:
+        return ""
+    return a[b + 1:]
+
+# print("1:" + GetPathExtension("a"))
+# print("2:" + GetPathExtension("a.b"))
+# print("3:" + GetPathExtension("a.b/c.d"))
+# print("4:" + GetPathExtension("a.b/c"))
+# sys.exit(1)
 
 #-----------------------------------------------------------------------------
 #
@@ -2582,6 +2588,122 @@ def GetStage():
 def FormInstallRoot(PackageSetName):
     return os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
 
+def MakeMSIWithCaphyonAdvancedInstaller(input, output):
+    def _nextId():
+        id = 0
+        while True:
+            id += 1
+            yield str(id)
+
+    __nextId = _nextId()
+
+    def nextId():
+        return __nextId.next()
+
+    idToDir = dict()
+    dirToId = dict()
+    fileToId = dict()
+    idToFile = dict()
+
+    for dir, d, f in os.walk(input):
+        for a in f:
+            id = nextId()
+            p = os.path.join(dir, a)
+            fileToId[p] = id
+            idToFile[id] = p
+        for a in d:
+            id = nextId()
+            p = os.path.join(dir, a)
+            dirToId[p] = id
+            idToDir[id] = p
+
+    dirToId[input] = "APPDIR"
+    idToDir["APPDIR"] = input
+
+    aip = open(input + ".aip", "w")
+    productCode = uuid.uuid4()
+    upgradeCode = uuid.uuid4()
+    aip.write(
+"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<DOCUMENT type="Advanced Installer" CreateVersion="7.0.1" version="7.0.1" modules="freeware" RootPath="." Language="en">
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiPropsComponent">
+    <ROW Property="ALLUSERS" Value="2"/>
+    <ROW Property="ARPCOMMENTS" Value="This installer database contains the logic and data required to install [|ProductName]." ValueLocId="*"/>
+    <ROW Property="BannerBitmap" MultiBuildValue="DefaultBuild:default_banner.bmp" Type="1"/>
+    <ROW Property="DialogBitmap" MultiBuildValue="DefaultBuild:default_dialog.bmp" Type="1"/>
+    <ROW Property="Manufacturer" Value="" ValueLocId="*"/>
+    <ROW Property="ProductCode" Value="1033:{%s} " "Type="16"/>
+    <ROW Property="ProductLanguage" Value="1033"/>
+    <ROW Property="ProductName" Value="Modula-3" ValueLocId="*"/>
+    <ROW Property="ProductVersion" Value="1.0.0"/>
+    <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
+    <ROW Property="UpgradeCode" Value="%s"/>
+</COMPONENT>
+    <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1"/>
+    <ROW Directory="TARGETDIR" DefaultDir="SourceDir"/>
+""" % (str(productCode).upper(), str(upgradeCode).upper()))
+    for a in dirToId.iteritems():
+        if a[0] != input:
+            # <ROW Directory="BITS_DIR" Directory_Parent="C_DIR" DefaultDir="32BITS"/>
+            aip.write("""<ROW Directory="%s" Directory_Parent="%s" DefaultDir="%s|%s"/>\n""" % (a[1], dirToId[RemoveLastPathElement(a[0])], a[1], GetLastPathElement(a[0])))
+
+    aip.write(
+"""</COMPONENT>
+<COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
+""")
+    for a in fileToId.iteritems():
+    #<ROW Component="ASCII.i3" ComponentId="{ADBF4E64-ED85-40D0-82F4-48DD385CE76E}" Directory_="types_DIR" Attributes="0" KeyPath="ASCII.i3" Type="0"/>
+        aip.write("""<ROW Component="%s" ComponentId="{%s}" Directory_="%s" Attributes="0" KeyPath="%s" Type="0"/>\n""" % (a[1], str(uuid.uuid4()).upper(), dirToId[RemoveLastPathElement(a[0])], a[1]))
+
+    aip.write(
+"""</COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
+    <ROW Feature="MainFeature" Title="MainFeature" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0" Components=\"""")
+
+    for a in fileToId.iteritems():
+        aip.write(a[1])
+        aip.write(" ")
+    
+    aip.write(""""/>
+<ATTRIBUTE name="CurrentFeature" value="MainFeature"/>
+  </COMPONENT>
+  <COMPONENT cid="caphyon.advinst.msicomp.MsiFilesComponent">
+""")
+    for a in fileToId.iteritems():
+    # <ROW File="ASCII.i3" Component_="ASCII.i3" FileName="ASCII.i3" Attributes="0" SourcePath="cm3-min-NT386-d5.8.1\pkg\libm3\src\types\ASCII.i3" SelfReg="false" Sequence="338"/>
+        aip.write("""<ROW File="%s" Component_="%s" FileName="%s" Attributes="0" SourcePath="%s" SelfReg="false" Sequence="%s"/>\n""" % ())
+
+    # not finished, give up, the file schema doesn't seem to be documented. There are parts
+    # I don't understand. We will not be chained to a gui.
+
+    sys.exit(1)
+
+def MakeMSIWithWix(input):
+
+    wix = open(input + ".wxs", "w")
+    wix.write(
+"""<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+    <Product Name='Modula-3' Id='%s' Language='1033' Codepage='1252' Version='1.0.0' Manufacturer='.'>
+        <Package Id='*' Keywords='.' Description="." Comments='.' Manufacturer='.' InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252'/>
+        <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes'/>
+        <UIRef Id="WixUI_Mondo" />
+        <UIRef Id="WixUI_ErrorProgressText" />
+        <Feature Id='Complete' Title='Modula-3' Description='everything.' Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR'>
+        <Directory Id='TARGETDIR' Name='SourceDir'>
+            <Directory Id='INSTALLDIR' Name='cm3'>
+""" % (str(uuid.uuid4()).upper()))
+
+    for a in os.listdir(input):
+        print(a)
+
+    candle = "C:\\Program Files\\Windows Installer XML v3\\bin\\candle.exe"
+    light =  "C:\\Program Files\\Windows Installer XML v3\\bin\\light.exe"
+
+
+#MakeMSIWithWix("C:\\stage1\\cm3-min-NT386-d5.8.1")
+#sys.exit(1)
+
 def MakeIExpressPackage(input, output):
 #
 # IExpress is builtin on XP and newer.
@@ -2593,6 +2715,8 @@ def MakeIExpressPackage(input, output):
 # Many more options are available here including
 # an installer, a post-install command, use of .inf files, etc.
 # This is just a start.
+#
+# IExpress appears to have a limit on the number of files it can package. Give up.
 #
     file = open(output + ".sed", "w")
     file.write("""[Version]
