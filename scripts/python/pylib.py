@@ -108,7 +108,7 @@ def SearchPath(name, paths = getenv("PATH")):
             candidate = os.path.join(path, name)
             if os.path.isfile(candidate):
                 return os.path.abspath(candidate)
-    print("SearchPath returning None 2")
+    print("SearchPath " + name + " returning None 2")
     return None
 
 #-----------------------------------------------------------------------------
@@ -2589,7 +2589,10 @@ def FormInstallRoot(PackageSetName):
     return os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
 
 def MakeMSIWithWix(input):
-
+#
+# input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1
+# The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)
+#
     wix = open(input + ".wxs", "w")
     wix.write("""<?xml version='1.0' encoding='windows-1252'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
@@ -2613,14 +2616,14 @@ def MakeMSIWithWix(input):
         for a in os.listdir(dir):
             b = os.path.join(dir, a)
             if os.path.isdir(b):
-                wix.write("""<Directory Id='d%s' Name='%s'>\n""" % (str(state.dirID), a))
+                wix.write("""<Directory Id='d%d' Name='%s'>\n""" % (state.dirID, a))
                 state.dirID += 1
-                HandleDir(state, b)
+                HandleDir(state, b) # recursion!
                 wix.write("</Directory>\n")
             else:
                 wix.write("""<Component Id='c%s' Guid='%s'>\n""" % (str(state.componentID), str(uuid.uuid4())))
                 state.componentID += 1
-                wix.write("""<File Id='f%s' Name='%s' Source='%s'/>\n""" % (str(state.fileID), a, b))
+                wix.write("""<File Id='f%d' Name='%s' Source='%s'/>\n""" % (state.fileID, a, b))
                 state.fileID += 1
                 wix.write("</Component>\n")
 
@@ -2632,7 +2635,7 @@ def MakeMSIWithWix(input):
     wix.write("<Feature Id='Complete' Title='Modula-3' Description='everything.' Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR'>\n")
 
     for a in range(0, state.componentID):
-        wix.write("<ComponentRef Id='c%s'/>\n" % str(a))
+        wix.write("<ComponentRef Id='c%d'/>\n" % a)
 
     wix.write("""
         </Feature>
@@ -2643,21 +2646,49 @@ def MakeMSIWithWix(input):
 </Wix>
 """)
 
-    candle = "\"C:\\Program Files\\Windows Installer XML v3\\bin\\candle.exe\""
-    light =  "\"C:\\Program Files\\Windows Installer XML v3\\bin\\light.exe\""
-
     wix.close()
+
+    ProgramFiles = environ.get("ProgramFiles", "C:\\Program Files")
+    candle = SearchPath("candle") or "\"" + ProgramFiles + "\\Windows Installer XML v3\\bin\\candle.exe\""
+    light =  SearchPath("light") or "\"" + ProgramFiles + "\\Windows Installer XML v3\\bin\\light.exe\""
+
     command = candle + " " + input + ".wxs"
     print(command)
     os.system(command)
-    command = light + " -out " + input + ".msi " + input + ".wixobj -ext WixUIExtension -cultures:en-us"
+    a = input + ".msi"
+    DeleteFile(a)
+    command = light + " -out " + a + input + ".wixobj -ext WixUIExtension -cultures:en-us"
     print(command)
     os.system(command)
 
 #MakeMSIWithWix("C:\\stage1\\cm3-min-NT386-d5.8.1")
 #sys.exit(1)
 
+def ReadFile(f):
+    return open(f).read()
+
+def ReadLicense(dir, a):
+    return "\n\n**** " + a + " ****\n\n" + ReadFile(os.path.join(dir, a))
+
+def MakeMSILicense(dir):
+    dir = os.path.join(dir, "license")
+    license = ReadLicense(dir, "COPYRIGHTS")
+    license += ReadLicense(dir, "COPYRIGHT-DEC")
+    for a in os.listdir(dir):
+        if (a != "COPYRIGHTS" and a.find("CVSUP") == -1 and a.find("CALTECH") == -1 and a != "COPYRIGHT-DEC") or a == "COPYRIGHT-CALTECH-1":
+            license += ReadLicense(dir, a)
+    for a in os.listdir(dir):
+        if (a.find("CALTECH") != -1 or a.find("CVSUP") != -1) and a != "COPYRIGHT-CALTECH-1":
+            license += ReadLicense(dir, a)
+    return license
+    
+open("\\1.txt", "w").write(MakeMSILicense("c:\\stage1\\cm3-min-NT386-d5.8.1"))
+sys.exit(1)
+
 def DiscoverHardLinks(r):
+#
+# return a hash of inode to array of paths
+#
     result = { }
     for root, dirs, files in os.walk(r):
         for f in files:
@@ -2667,6 +2698,10 @@ def DiscoverHardLinks(r):
     return result
 
 def BreakHardLinks(links):
+#
+# take the output from DiscoverHardLinks and replace all but the first
+# element in each array with a zero size file
+#
     for inode in links:
         first = links[inode][0]
         for other in links[inode][1:]:
@@ -2675,6 +2710,9 @@ def BreakHardLinks(links):
             open(other, "w")
 
 def RestoreHardLinks(links):
+#
+# take the output of DiscoverHardLinks and reestablish the links
+#
     for inode in links:
         first = links[inode][0]
         for other in links[inode][1:]:
@@ -2683,6 +2721,18 @@ def RestoreHardLinks(links):
             os.link(first, other)
 
 def MoveSkel(prefix):
+#
+# Move the usual toplevel cm3 directories under another directory.
+# for example:
+#  /tmp/stage/cm3-min/bin
+#  /tmp/stage/cm3-min/lib
+# =>
+#  /tmp/stage/cm3-min/usr/local/cm3/bin
+#  /tmp/stage/cm3-min/usr/local/cm3/lib
+#
+# This is temporarily destructive, for the purposes of building Debian packages.
+# It is reversed by RestoreSkel.
+#
     CreateDirectory("." + prefix)
     for a in ["bin", "pkg", "lib", "www", "man", "etc"]:
         if os.path.isdir(a):
@@ -2690,6 +2740,9 @@ def MoveSkel(prefix):
             os.rename(a, "." + prefix + "/" + a)
 
 def RestoreSkel(prefix):
+#
+# Undo the work of MoveSkel;
+#
     for a in ["bin", "pkg", "lib", "www", "man", "etc"]:
         if os.path.isdir("." + prefix + "/" + a):
             print("mv ." + prefix + "/" + a + " " + a)
