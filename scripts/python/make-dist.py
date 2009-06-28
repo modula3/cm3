@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.63 2009-06-28 18:09:38 jkrell Exp $
+# $Id: make-dist.py,v 1.64 2009-06-28 18:53:00 jkrell Exp $
 
 import sys
 import os.path
@@ -172,8 +172,8 @@ def MakeArchives():
 def BuildShip(Packages):
     # This is more indirect than necessary.
     CreateSkel()
-    # return Do("buildship", Packages)
-    return True
+    return Do("buildship", Packages)
+    #return True
 
 def RealClean(Packages):
     # This is more indirect than necessary.
