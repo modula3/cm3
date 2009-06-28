@@ -10,7 +10,6 @@ import platform
 import re
 import tempfile
 import shutil
-import uuid
 
 #-----------------------------------------------------------------------------
 # Several important variables are gotten from the environment or probed.
@@ -2589,6 +2588,7 @@ def FormInstallRoot(PackageSetName):
     return os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
 
 def MakeMSIWithWix(input):
+    import uuid
 #
 # input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1
 # The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)
@@ -2604,7 +2604,7 @@ def MakeMSIWithWix(input):
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='INSTALLDIR' Name='cm3'>""" % (str(uuid.uuid4()).upper()))
 
-    class State():
+    class State:
         pass
 
     state = State()
@@ -2637,10 +2637,18 @@ def MakeMSIWithWix(input):
     for a in range(0, state.componentID):
         wix.write("<ComponentRef Id='c%d'/>\n" % a)
 
+    #
+    # WixUI_Advanced
+    # WixUI_Mondo
+    # WixUI_InstallDir
+    # WixUI_FeatureTree
+    # are all good, but we need the package sets for some of them to make more sense
+    #
     wix.write("""
         </Feature>
 
-        <UIRef Id="WixUI_Mondo" />
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
+        <UIRef Id="WixUI_InstallDir" />
         <UIRef Id="WixUI_ErrorProgressText" />
     </Product>
 </Wix>
@@ -2657,7 +2665,10 @@ def MakeMSIWithWix(input):
     os.system(command)
     a = input + ".msi"
     DeleteFile(a)
-    command = light + " -out " + a + input + ".wixobj -ext WixUIExtension -cultures:en-us"
+
+    license = input + "-license.txt"
+    open(license, "w").write(MakeMSILicense(input))
+    command = light + " -out " + a + input + ".wixobj -ext WixUIExtension -cultures:en-us " + "-dWixUILicenseRtf=" + license
     print(command)
     os.system(command)
 
@@ -2681,9 +2692,6 @@ def MakeMSILicense(dir):
         if (a.find("CALTECH") != -1 or a.find("CVSUP") != -1) and a != "COPYRIGHT-CALTECH-1":
             license += ReadLicense(dir, a)
     return license
-    
-open("\\1.txt", "w").write(MakeMSILicense("c:\\stage1\\cm3-min-NT386-d5.8.1"))
-sys.exit(1)
 
 def DiscoverHardLinks(r):
 #
