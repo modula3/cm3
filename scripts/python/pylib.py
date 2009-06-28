@@ -2591,27 +2591,71 @@ def FormInstallRoot(PackageSetName):
 def MakeMSIWithWix(input):
 
     wix = open(input + ".wxs", "w")
-    wix.write(
-"""<?xml version='1.0' encoding='windows-1252'?>
+    wix.write("""<?xml version='1.0' encoding='windows-1252'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
     <Product Name='Modula-3' Id='%s' Language='1033' Codepage='1252' Version='1.0.0' Manufacturer='.'>
         <Package Id='*' Keywords='.' Description="." Comments='.' Manufacturer='.' InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252'/>
         <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes'/>
         <UIRef Id="WixUI_Mondo" />
         <UIRef Id="WixUI_ErrorProgressText" />
-        <Feature Id='Complete' Title='Modula-3' Description='everything.' Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR'>
         <Directory Id='TARGETDIR' Name='SourceDir'>
-            <Directory Id='INSTALLDIR' Name='cm3'>
-""" % (str(uuid.uuid4()).upper()))
+            <Directory Id='INSTALLDIR' Name='cm3'>""" % (str(uuid.uuid4()).upper()))
 
-    for a in os.listdir(input):
-        print(a)
+    class State():
+        pass
 
-    candle = "C:\\Program Files\\Windows Installer XML v3\\bin\\candle.exe"
-    light =  "C:\\Program Files\\Windows Installer XML v3\\bin\\light.exe"
+    state = State()
+    state.dirID = 0
+    state.fileID = 0
+    state.componentID = 0
 
-#MakeMSIWithWix("C:\\stage1\\cm3-min-NT386-d5.8.1")
-#sys.exit(1)
+    def HandleDir(state, dir):
+        for a in os.listdir(dir):
+            b = os.path.join(dir, a)
+            if os.path.isdir(b):
+                wix.write("""<Directory Id='d%s' Name='%s'>\n""" % (str(state.dirID), a))
+                state.dirID += 1
+                HandleDir(state, b)
+                wix.write("</Directory>\n")
+            else:
+                wix.write("""<Component Id='c%s' Guid='%s'>\n""" % (str(state.componentID), str(uuid.uuid4())))
+                state.componentID += 1
+                wix.write("""<File Id='f%s' Name='%s' Source='%s'/>\n""" % (str(state.fileID), a, b))
+                state.fileID += 1
+                wix.write("</Component>\n")
+
+    HandleDir(state, input)
+
+    wix.write("</Directory>\n")
+    wix.write("</Directory>\n")
+
+    wix.write("<Feature Id='Complete' Title='Modula-3' Description='everything.' Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR'>\n")
+
+    for a in range(0, state.componentID):
+        wix.write("<ComponentRef Id='c%s'/>\n" % str(a))
+
+    wix.write("""
+        </Feature>
+
+        <UIRef Id="WixUI_Mondo" />
+        <UIRef Id="WixUI_ErrorProgressText" />
+    </Product>
+</Wix>
+""")
+
+    candle = "\"C:\\Program Files\\Windows Installer XML v3\\bin\\candle.exe\""
+    light =  "\"C:\\Program Files\\Windows Installer XML v3\\bin\\light.exe\""
+
+    wix.close()
+    command = candle + " " + input + ".wxs"
+    print(command)
+    os.system(command)
+    command = light + " " + GetLastPathElement(input) + ".wixobj -ext WixUIExtension -cultures:en-us"
+    print(command)
+    os.system(command)
+
+MakeMSIWithWix("C:\\stage1\\cm3-min-NT386-d5.8.1")
+sys.exit(1)
 
 def DiscoverHardLinks(r):
     result = { }
