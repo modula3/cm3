@@ -2650,12 +2650,12 @@ def MakeMSIWithWix(input):
     command = candle + " " + input + ".wxs"
     print(command)
     os.system(command)
-    command = light + " " + GetLastPathElement(input) + ".wixobj -ext WixUIExtension -cultures:en-us"
+    command = light + " -out " + input + ".msi " + input + ".wixobj -ext WixUIExtension -cultures:en-us"
     print(command)
     os.system(command)
 
-MakeMSIWithWix("C:\\stage1\\cm3-min-NT386-d5.8.1")
-sys.exit(1)
+#MakeMSIWithWix("C:\\stage1\\cm3-min-NT386-d5.8.1")
+#sys.exit(1)
 
 def DiscoverHardLinks(r):
     result = { }
