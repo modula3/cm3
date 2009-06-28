@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.59 2009-06-28 13:32:29 jkrell Exp $
+# $Id: make-dist.py,v 1.60 2009-06-28 14:13:09 jkrell Exp $
 
 import sys
 import os.path
@@ -17,7 +17,7 @@ def Echo(a):
 
 def Run(a):
 
-    #print(a + " in " + os.getcwd())
+    print(a + " in " + os.getcwd())
     #return True
     return (os.system(a) == 0)
 
@@ -51,12 +51,40 @@ def MakeArchive(PackageSetName, Command, Extension):
     InstallRoot = FormInstallRoot(PackageSetName)
     SymbolsRoot = FormInstallRoot(PackageSetName) + "-symbols"
 
-    CreateDirectory(os.path.join(InstallRoot, "license"))
+    license = os.path.join(InstallRoot, "license")
+    CreateDirectory(license)
 
     for a in glob.glob(os.path.join(Root, "COPYRIGHT*")):
-        CopyFile(a, os.path.join(InstallRoot, "license", a)) or FatalError()
+        CopyFile(a, os.path.join(license, GetLastPathElement(a))) or FatalError()
 
-    CopyFile(os.path.join(Root, "m3-libs", "arithmetic", "copyrite.txt"), os.path.join(InstallRoot, "license", "COPYRIGHT-M3NA")) or FatalError()
+    CopyFile(os.path.join(Root, "m3-libs", "arithmetic", "copyrite.txt"), os.path.join(license, "COPYRIGHT-M3NA")) or FatalError()
+    CopyFile(os.path.join(Root, "m3-tools", "cvsup", "License"), os.path.join(license, "COPYRIGHT-JDP-CVSUP")) or FatalError()
+    CopyFile(os.path.join(Root, "m3-sys", "COPYRIGHT-CMASS"), os.path.join(license, "COPYRIGHT-CMASS")) or FatalError()
+
+    open(os.path.join(license, "COPYRIGHT-ELEGO-SYSUTILS"), "w").write(
+"""Copyright 1999-2002 elego Software Solutions GmbH, Berlin, Germany.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+""")
 
     class State():
         pass
@@ -68,7 +96,7 @@ def MakeArchive(PackageSetName, Command, Extension):
         for a in entries:
             if a == "COPYRIGHT":
                 state.id += 1
-                CopyFile(os.path.join(dir, a), InstallRoot, "license",  "COPYRIGHT-CALTECH-" + str(state.id))
+                CopyFile(os.path.join(dir, a), os.path.join(license, "COPYRIGHT-CALTECH-" + str(state.id)))
 
     os.path.walk(os.path.join(Root, "caltech-parser"), Callback, state)
 
@@ -84,16 +112,12 @@ def MakeArchive(PackageSetName, Command, Extension):
             Extension = os.path.splitext(Name)[1].lower()
             if (Extension == ".pdb"):
                 shutil.move(os.path.join(Directory, Name), SymbolsRoot)
-            elif (Extension == ".m3"
-                    or Extension == ".m3web"
-                    or Extension == ".sa"
-                    ):
+            elif (Extension == ".m3" or Extension == ".m3web" or Extension == ".sa"):
                 #
                 # Keep m3.lib.sa, m3core.lib.sa, sysutils.lib.sa for bootstrapping of cm3.
                 # This check is loose to allow for multiple naming schemes.
                 #
-                if ((Name.find("m3") == -1)
-                        and (Name.find("sysutils") == -1)):
+                if ((Name.find("m3") == -1) and (Name.find("sysutils") == -1)):
                     DeleteFile(os.path.join(Directory, Name))
 
     CreateDirectory(SymbolsRoot)
