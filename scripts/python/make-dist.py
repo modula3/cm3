@@ -105,7 +105,7 @@ otherwise arising out of or in connection with the use or performance
 of this software.
 """)
 
-    class State():
+    class State:
         pass
 
     state = State()
@@ -417,8 +417,7 @@ if contains(t, "linux"):
 
 if contains(t, "nt386") or contains(t, "interix") or contains(t, "cygwin") or contains(t, "mingw")  or contains(t, "uwin") or t.endswith("_nt"):
     for name in ["min", "std"]:
-        pass
-        #MakeMSIWithWix(FormInstallRoot(name))
+        MakeMSIWithWix(FormInstallRoot(name))
 
 for a in glob.glob(os.path.join(STAGE, "*")):
     if (a and os.path.isfile(a)):
