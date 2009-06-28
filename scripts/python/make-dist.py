@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.62 2009-06-28 15:23:14 jkrell Exp $
+# $Id: make-dist.py,v 1.63 2009-06-28 18:09:38 jkrell Exp $
 
 import sys
 import os.path
@@ -120,24 +120,16 @@ of this software.
     os.path.walk(os.path.join(Root, "caltech-parser"), Callback, state)
 
     #
-    # delete .m3 and .m3web files, they aren't needed
     # move .pdb files into the symbols directory
     # TBD: use strip and --add-gnu-debuglink
     #
     def Callback(Arg, Directory, Names):
-        if (os.path.basename(Directory).endswith("-symbols")):
+        if GetLastPathElement(Directory).endswith("-symbols"):
             return
         for Name in Names:
-            Extension = os.path.splitext(Name)[1].lower()
-            if (Extension == ".pdb"):
-                shutil.move(os.path.join(Directory, Name), SymbolsRoot)
-            elif (Extension == ".m3" or Extension == ".m3web" or Extension == ".sa"):
-                #
-                # Keep m3.lib.sa, m3core.lib.sa, sysutils.lib.sa for bootstrapping of cm3.
-                # This check is loose to allow for multiple naming schemes.
-                #
-                if ((Name.find("m3") == -1) and (Name.find("sysutils") == -1)):
-                    DeleteFile(os.path.join(Directory, Name))
+            if GetPathExtension(Name).lower() == "pdb":
+                DeleteFile(os.path.join(SymbolsRoot, Name))
+                MoveFile(os.path.join(Directory, Name), SymbolsRoot)
 
     CreateDirectory(SymbolsRoot)
     os.path.walk(InstallRoot, Callback, None)
@@ -180,7 +172,8 @@ def MakeArchives():
 def BuildShip(Packages):
     # This is more indirect than necessary.
     CreateSkel()
-    return Do("buildship", Packages)
+    # return Do("buildship", Packages)
+    return True
 
 def RealClean(Packages):
     # This is more indirect than necessary.
@@ -374,14 +367,20 @@ Echo("build minimal packages with new compiler")
 
 #:min
 
-Setup(InstallRoot_CompilerWithSelf, InstallRoot_Min)
-Packages = pylib.PackageSets["min"]
-if "m3cc" in Packages:
-    Packages.remove("m3cc")
-RealClean(Packages) or FatalError()
-BuildShip(Packages) or FatalError()
-ShipCompiler() or FatalError()
-RealClean(Packages) or FatalError()
+if False:
+
+    print("skipping..")
+
+else:
+
+    Setup(InstallRoot_CompilerWithSelf, InstallRoot_Min)
+    Packages = pylib.PackageSets["min"]
+    if "m3cc" in Packages:
+        Packages.remove("m3cc")
+    RealClean(Packages) or FatalError()
+    BuildShip(Packages) or FatalError()
+    ShipCompiler() or FatalError()
+    RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
 Echo("build standard packages with new compiler")
@@ -416,7 +415,8 @@ if contains(t, "linux"):
         MakeDebianPackage(name, FormInstallRoot(name), GetStage() + "/cm3-" + name + ".deb", "/usr/local/cm3")
 
 if contains(t, "nt386") or contains(t, "interix") or contains(t, "cygwin") or contains(t, "mingw")  or contains(t, "uwin") or t.endswith("_nt"):
-    for name in ["min", "std"]:
+    for name in ["min", "std"
+                 ]:
         MakeMSIWithWix(FormInstallRoot(name))
 
 for a in glob.glob(os.path.join(STAGE, "*")):

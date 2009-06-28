@@ -77,10 +77,22 @@ def GetPathExtension(a):
         return ""
     return a[b + 1:]
 
+def GetPathBaseName(a):
+    a = GetLastPathElement(a)
+    b = a.rfind(".")
+    if b == -1:
+        return a
+    return a[0:b]
+
 # print("1:" + GetPathExtension("a"))
 # print("2:" + GetPathExtension("a.b"))
 # print("3:" + GetPathExtension("a.b/c.d"))
 # print("4:" + GetPathExtension("a.b/c"))
+# sys.exit(1)
+# print("1:" + GetPathBaseName("a"))
+# print("2:" + GetPathBaseName("a.b"))
+# print("3:" + GetPathBaseName("a.b/c.d"))
+# print("4:" + GetPathBaseName("a.b/c"))
 # sys.exit(1)
 
 #-----------------------------------------------------------------------------
@@ -2098,6 +2110,13 @@ def DeleteFile(a):
         os.chmod(a, 0700)
         os.remove(a)
 
+def MoveFile(a, b):
+    if os.name != "nt":
+        print("mv " + a + " " + b)
+    else:
+        print("move " + a + " " + b)
+    shutil.move(a, b)
+
 #-----------------------------------------------------------------------------
 
 def CreateDirectory(a):
@@ -2201,14 +2220,14 @@ def CopyConfigForDistribution(To):
     # The distributed environment does not require a source tree.
     #
     Bin  = os.path.join(To, "bin")
-    Config = os.path.join(Bin, "config")
-    CreateDirectory(Config)
+    dir = os.path.join(Bin, "config")
+    CreateDirectory(dir)
     for b in [Target + "*", "*.common"]:
         for File in glob.glob(os.path.join(Root, "m3-sys", "cminstall", "src", "config-no-install", b)):
             if os.path.isfile(File):
-                #print(File + " => " + Config + "\n")
-                CopyFile(File, Config)
-    open(os.path.join(Bin, "cm3.cfg"), "w").write("INSTALL_ROOT = (path() & SL & \"..\")\ninclude(path() & \"/config/" + Config + "\")\n")
+                #print(File + " => " + dir + "\n")
+                CopyFile(File, dir)
+    open(os.path.join(Bin, "cm3.cfg"), "w").write("INSTALL_ROOT = (path() & \"/..\")\ninclude(path() & \"/config/" + Config + "\")\n")
     return True
 
 #-----------------------------------------------------------------------------
@@ -2599,8 +2618,6 @@ def MakeMSIWithWix(input):
     <Product Name='Modula-3' Id='%s' Language='1033' Codepage='1252' Version='1.0.0' Manufacturer='.'>
         <Package Id='*' Keywords='.' Description="." Comments='.' Manufacturer='.' InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252'/>
         <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes'/>
-        <UIRef Id="WixUI_Mondo" />
-        <UIRef Id="WixUI_ErrorProgressText" />
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='INSTALLDIR' Name='cm3'>""" % (str(uuid.uuid4()).upper()))
 
@@ -2646,7 +2663,6 @@ def MakeMSIWithWix(input):
     #
     wix.write("""
         </Feature>
-
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
         <UIRef Id="WixUI_InstallDir" />
         <UIRef Id="WixUI_ErrorProgressText" />
@@ -2656,19 +2672,23 @@ def MakeMSIWithWix(input):
 
     wix.close()
 
-    ProgramFiles = os.environ.get("ProgramFiles", "C:\\Program Files")
-    candle = SearchPath("candle") or "\"" + ProgramFiles + "\\Windows Installer XML v3\\bin\\candle.exe\""
-    light =  SearchPath("light") or "\"" + ProgramFiles + "\\Windows Installer XML v3\\bin\\light.exe\""
+    if not SearchPath("candle") or not SearchPath("light"):
+        ProgramFiles = os.environ.get("ProgramFiles", "C:\\Program Files")
+        SetEnvironmentVariable("PATH", ProgramFiles + "\\Windows Installer XML v3\\bin;" + os.environ["PATH"])
 
-    command = candle + " " + input + ".wxs"
+    command = "candle " + input + ".wxs -out " + input + ".wixobj"
     print(command)
     os.system(command)
     a = input + ".msi"
     DeleteFile(a)
 
-    license = input + "-license.txt"
-    open(license, "w").write(MakeMSILicense(input))
-    command = light + " -out " + a + input + ".wixobj -ext WixUIExtension -cultures:en-us " + "-dWixUILicenseRtf=" + license
+    license = input + "-license.rtf"
+    open(license, "w").write(
+"""{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0\\fnil\\fcharset0 Courier New;}}
+{\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + MakeMSILicense(input).replace("\n", "\\par\n")
++ "}")
+
+    command = "light -out " + a + " " + input + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + license
     print(command)
     os.system(command)
 
