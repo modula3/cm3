@@ -216,11 +216,11 @@ do-cm3-std.sh [callable]
   parseparams, realgeometry, set, slisp, sortedtableextras,
   table-list, tempfiles, tcp, netobj, netobjd, m3tk, stubgen, ui,
   vbtkit, cmvbt, jvideo, videovbt, web, formsvbtpixmaps, formsvbt,
-  formsview, formsedit 
+  formsview, formsedit, m3objfile, mklib, fix_nl, libdump, m3back,
+  m3staloneback
   no WIN32 => X11R4
-  WIN32 =>  m3objfile, tapi, mklib, fix_nl, libdump
+  WIN32 => tapi
   GCC_BACKEND => m3cc
-  no GCC_BACKEND => m3back, m3staloneback
   M3GDB => m3gdb
   HAVE_TCL => tcl
   HAVE_SERIAL => serial
