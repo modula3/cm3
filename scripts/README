@@ -141,10 +141,9 @@ do-cm3-core.sh [callable]
   m3core, libm3, m3middle, m3linker, m3front, m3quake, cm3, m3scanner,
   m3tools, m3cgcat, m3cggen, m3bundle, bitvector, digraph,
   parseparams, realgeometry, set, slisp, sortedtableextras,
-  table-list, tempfiles
+  table-list, tempfiles, m3back, m3staloneback
   WIN32 =>  m3objfile, tapi, mklib, fix_nl, libdump
   GCC_BACKEND => m3cc
-  no GCC_BACKEND => m3back, m3staloneback
   M3GDB => m3gdb
   HAVE_TCL => tcl
   OMIT_GCC => omit package m3cc
