@@ -9,21 +9,21 @@ else
     SunXArch = "v9"
 end
 
-readonly m3back_flags = "-quiet -gstabs+ -fPIC -m" & GccMBits
+m3back_flags = "-quiet -gstabs+ -fPIC -m" & GccMBits
 readonly SYSTEM_ASM = "as -s -K PIC -xarch=" & SunXArch
 
 if equal (C_COMPILER, "SUN")
-    readonly SYSTEM_CC = "cc -g -mt -xarch=" & SunXArch & " -xcode=pic32 -xldscope=symbolic"
+    SYSTEM_CC = "cc -g -mt -xarch=" & SunXArch & " -xcode=pic32 -xldscope=symbolic"
     % SYSTEM_LD = "/usr/ccs/bin/ld"
 end
 
 if equal (C_COMPILER, "GNU")
     if not defined("SYSTEM_CC")
-        readonly SYSTEM_CC = "gcc -g -fPIC -pthreads -m" & GccMBits
+        SYSTEM_CC = "gcc -g -fPIC -pthreads -m" & GccMBits
     end
 end
 
-readonly SYSTEM_LD = SYSTEM_CC & " -B direct -z ignore -z combreloc -z defs -z text"
+SYSTEM_LD = SYSTEM_CC & " -B direct -z ignore -z combreloc -z defs -z text"
     & " -i -z now -z origin "
     & " -R \\$ORIGIN/../lib"
 

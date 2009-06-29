@@ -2,8 +2,8 @@ readonly TARGET       = "PPC_LINUX"     % code generation target
 readonly WORD_SIZE    = "32BITS"        % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "powerpc-unknown-linux-gnu"  % "cpu-vendor-os" string for GNU
 
-readonly m3back_flags = "-quiet -gstabs+ -fPIC"
-readonly SYSTEM_CC = "@gcc -gstabs+ -m32 -fPIC" % C compiler
+m3back_flags = "-quiet -gstabs+ -fPIC"
+SYSTEM_CC = "@gcc -gstabs+ -m32 -fPIC" % C compiler
 readonly SYSTEM_ASM = "@as" % Assembler
 
 %

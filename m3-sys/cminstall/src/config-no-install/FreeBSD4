@@ -3,8 +3,8 @@
 readonly TARGET = "FreeBSD4"
 readonly WORD_SIZE = "32BITS"
 
-readonly m3back_flags = "-gstabs+ -quiet -m32 -fPIC"
-readonly SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"
+m3back_flags = "-gstabs+ -quiet -m32 -fPIC"
+SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"
 readonly SYSTEM_ASM = "as -32"
 
 %

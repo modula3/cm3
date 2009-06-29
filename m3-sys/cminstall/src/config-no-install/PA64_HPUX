@@ -3,9 +3,9 @@ readonly WORD_SIZE = "64BITS" % { "32BITS" or "64BITS" }
 readonly GNU_PLATFORM = "hppa64-hpux"
 
 % stabs not supported
-readonly m3back_flags = "-quiet -fPIC"
-%readonly SYSTEM_CC = "cc +DD64" % C compiler
-readonly SYSTEM_CC = "/usr/local/64/bin/gcc -g -fPIC" % C compiler
+m3back_flags = "-quiet -fPIC"
+%SYSTEM_CC = "cc +DD64" % C compiler
+SYSTEM_CC = "/usr/local/64/bin/gcc -g -fPIC" % C compiler
 readonly SYSTEM_ASM = "/usr/local/64/bin/gas" % Assembler
 
 %

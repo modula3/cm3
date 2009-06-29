@@ -2,8 +2,8 @@ readonly TARGET = "MIPS64_OPENBSD"
 readonly WORD_SIZE = "64BITS"
 readonly GNU_PLATFORM = "mips64-openbsd"
 
-readonly m3back_flags = "-gstabs+ -mabi=64 -fPIC -quiet"
-readonly SYSTEM_CC = "gcc -g -mabi=64 -fPIC"
+m3back_flags = "-gstabs+ -mabi=64 -fPIC -quiet"
+SYSTEM_CC = "gcc -g -mabi=64 -fPIC"
 readonly SYSTEM_ASM = "as"
 
 %

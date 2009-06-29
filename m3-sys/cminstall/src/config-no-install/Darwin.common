@@ -11,9 +11,9 @@
 %
 if not defined("SYSTEM_CC")
     if equal(WORD_SIZE, "32BITS")
-        readonly SYSTEM_CC  = "gcc -fPIC -m32"
+        SYSTEM_CC  = "gcc -fPIC -m32"
     else
-        readonly SYSTEM_CC  = "gcc -fPIC -m64"
+        SYSTEM_CC  = "gcc -fPIC -m64"
     end
 end
 if not defined("SYSTEM_LIBTOOL")
@@ -27,9 +27,9 @@ end
 %
 if not defined("m3back_flags")
     if equal(WORD_SIZE, "32BITS")
-        readonly m3back_flags = "-fPIC -gstabs+ -quiet -m32"
+        m3back_flags = "-fPIC -gstabs+ -quiet -m32"
     else
-        readonly m3back_flags = "-fPIC -gstabs+ -quiet -m64"
+        m3back_flags = "-fPIC -gstabs+ -quiet -m64"
     end
 end
 

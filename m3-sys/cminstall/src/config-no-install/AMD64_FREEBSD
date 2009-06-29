@@ -1,8 +1,8 @@
 readonly TARGET = "AMD64_FREEBSD"
 readonly WORD_SIZE = "64BITS"
 
-readonly m3back_flags = "-gstabs+ -quiet -m64 -fPIC"
-readonly SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC"
+m3back_flags = "-gstabs+ -quiet -m64 -fPIC"
+SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC"
 readonly SYSTEM_ASM = "as -64"
 
 %
