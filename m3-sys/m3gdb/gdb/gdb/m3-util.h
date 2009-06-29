@@ -574,8 +574,8 @@ m3_evaluate_string ( char * string );
 
 enum m3_target_typ 
   { TARGET_UNKNOWN, 
-    TARGET_NT386,
-    TARGET_ALPHA_OSF,
+    TARGET_NT386, /* NT386, NT386GNU */ 
+    TARGET_64,    /* Anything 64-bit. */ 
     TARGET_OTHER
   }; 
 
