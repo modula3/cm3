@@ -2,8 +2,8 @@ readonly TARGET = "SPARC64_OPENBSD"
 readonly WORD_SIZE = "64BITS"
 readonly GNU_PLATFORM = "sparc64-openbsd"
 
-readonly m3back_flags = "-gstabs+ -quiet"
-readonly SYSTEM_CC = "gcc -gstabs+"
+m3back_flags = "-gstabs+ -quiet"
+SYSTEM_CC = "gcc -gstabs+"
 readonly SYSTEM_ASM = "as"
 
 %

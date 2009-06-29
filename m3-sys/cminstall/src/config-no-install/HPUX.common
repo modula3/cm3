@@ -13,7 +13,7 @@ readonly SYSTEM_AR = "ar"
 % -B immediate means to resolve symbols right away at run time,
 %   and therefore catch any missing ones early
 %
-readonly SYSTEM_LD = SYSTEM_CC 
+SYSTEM_LD = SYSTEM_CC 
   & " -static-libgcc -Wl,+s,+vnoshlibunsats,+Oprocelim -B direct -B immediate"
 
 SYSTEM_LIBS = {

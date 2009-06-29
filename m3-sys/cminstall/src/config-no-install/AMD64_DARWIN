@@ -186,7 +186,7 @@ SYSTEM_LIBORDER =
 
 %---------------------------------------------------------- system programs ---
 
-readonly SYSTEM_CC  = BEGIN_CONFIG
+SYSTEM_CC  = BEGIN_CONFIG
   "Where is your C compiler?"
     0 "gcc"
     6 "/usr/bin"       "gcc"

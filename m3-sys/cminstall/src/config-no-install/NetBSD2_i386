@@ -1,9 +1,9 @@
 readonly TARGET = "NetBSD2_i386"
 readonly WORD_SIZE = "32BITS"
 
-readonly m3back_flags = "-gstabs+ -quiet -m32 -fPIC"
-readonly SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"
-readonly SYSTEM_LD = SYSTEM_CC & " -Wl,-z,now"
+m3back_flags = "-gstabs+ -quiet -m32 -fPIC"
+SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"
+SYSTEM_LD = SYSTEM_CC & " -Wl,-z,now"
 readonly SYSTEM_ASM = "as -32"
 
 %

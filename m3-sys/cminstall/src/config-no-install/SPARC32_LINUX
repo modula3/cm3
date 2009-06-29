@@ -9,8 +9,8 @@ readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
 % -fPIC leads to a crash I haven't been able to debug yet
 
-readonly m3back_flags = "-quiet -gstabs+ -m32 -munaligned-doubles"
-readonly SYSTEM_CC = "gcc -gstabs+ -m32 -munaligned-doubles" % C compiler
+m3back_flags = "-quiet -gstabs+ -m32 -munaligned-doubles"
+SYSTEM_CC = "gcc -gstabs+ -m32 -munaligned-doubles" % C compiler
 readonly SYSTEM_ASM = "as -32" % Assembler
 
 %
