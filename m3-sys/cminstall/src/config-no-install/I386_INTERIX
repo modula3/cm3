@@ -7,8 +7,8 @@ readonly GNU_PLATFORM = "i686-pc-interix3" % "cpu-vendor-os" string for GNU
 %
 readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
-readonly m3back_flags = "-quiet -gstabs+ -m32"
-readonly SYSTEM_CC = "gcc -g" % C compiler
+m3back_flags = "-quiet -gstabs+ -m32"
+SYSTEM_CC = "gcc -g" % C compiler
 readonly SYSTEM_ASM = "as" % Assembler
 
 %

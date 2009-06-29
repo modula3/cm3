@@ -7,8 +7,8 @@ readonly GNU_PLATFORM = "amd64-pc-linux-gnu" % "cpu-vendor-os" string for GNU
 %
 readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
-readonly m3back_flags = "-quiet -gstabs+ -m64 -fPIC -mno-align-double"
-readonly SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC -mno-align-double" % C compiler
+m3back_flags = "-quiet -gstabs+ -m64 -fPIC -mno-align-double"
+SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC -mno-align-double" % C compiler
 SYSTEM_LD = SYSTEM_CC
   & " -z now"
   & " -z origin"

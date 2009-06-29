@@ -7,10 +7,10 @@ readonly WORD_SIZE    = "32BITS"
 readonly GNU_PLATFORM = "arm-apple-darwin8"
 
 readonly SYSTEM_ASM = GNU_PLATFORM & "-as -arch armv6"
-readonly SYSTEM_CC = GNU_PLATFORM & "-gcc -fPIC -march=armv6 -mcpu=arm1176jzf-s"
+SYSTEM_CC = GNU_PLATFORM & "-gcc -fPIC -march=armv6 -mcpu=arm1176jzf-s"
 readonly SYSTEM_LIBTOOL = GNU_PLATFORM & "-libtool"
 
-readonly m3back_flags = "-fPIC -gstabs+ -quiet -march=armv6 -mcpu=arm1176jzf-s -fverbose-asm"
+m3back_flags = "-fPIC -gstabs+ -quiet -march=armv6 -mcpu=arm1176jzf-s -fverbose-asm"
 
 %
 % newer platforms never needed these workarounds for
