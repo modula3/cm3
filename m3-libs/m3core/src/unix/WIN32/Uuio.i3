@@ -1,4 +1,4 @@
-(* $Id: Uuio.i3,v 1.2 2008-02-12 13:29:46 jkrell Exp $ *)
+(* $Id: Uuio.i3,v 1.3 2009-06-29 19:20:41 jkrell Exp $ *)
 
 (*
 msvcr*.dll exposes a fair amount of "unix i/o".

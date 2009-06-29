@@ -6,7 +6,7 @@
 (*      modified on Wed Sep 22 14:53:33 PDT 1993 by steveg     *)
 (*      modified on Thu Mar 11 13:01:04 PST 1993 by mjordan    *)
 
-(* $Id: Time.m3,v 1.6 2008-02-11 11:27:42 jkrell Exp $ *)
+(* $Id: Time.m3,v 1.7 2009-06-29 19:20:44 jkrell Exp $ *)
 
 MODULE Time;
 
