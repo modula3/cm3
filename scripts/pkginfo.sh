@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.19 2009-06-23 13:59:05 jkrell Exp $
+# $Id: pkginfo.sh,v 1.20 2009-06-29 16:31:37 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -31,21 +31,11 @@ fi
 UsePackage()
 {
   case "$1" in
-    mklib | \
-    fix_nl | \
-    libdump | \
-    import-libs) [ "${M3OSTYPE}" = "WIN32" ] ;;
-        
     tcl) [ "${HAVE_TCL}" = yes ] ;;
     serial) [ "${HAVE_SERIAL}" = yes ] ;;
-
     tapi) [ "${M3OSTYPE}" = "WIN32" ] ;;
-
     X11R4) [ "${M3OSTYPE}" != "WIN32" ] ;;
-
-    m3staloneback) [ "${GCC_BACKEND}" != yes ] ;;
     m3cc) [ "${GCC_BACKEND}" = yes ] && [ "${OMIT_GCC}" = "" ] ;;
- 
     m3gdb)
       ([ "${M3GDB}" = yes ] || [ "${CM3_GDB}" = yes ]) \
          && [ "${TARGET}" != "NT386" ] ;;

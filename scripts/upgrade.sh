@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.20 2009-06-26 09:10:44 jkrell Exp $
+# $Id: upgrade.sh,v 1.21 2009-06-29 16:31:37 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -48,7 +48,7 @@ run "$ROOT/scripts/do-pkg.sh" "$@" "buildship" ${P} || true
 # Now build the compiler with the installed version of the runtime;
 # do _not_ compile m3core and libm3 here.
 # We start with the front end...
-P=`FilterPackages sysutils m3middle m3objfile m3linker m3back m3staloneback \
+P=`FilterPackages sysutils m3middle m3objfile m3linker m3back \
    m3front m3quake cm3 mklib`
 run "$ROOT/scripts/do-pkg.sh" "$@" "buildship" ${P} || exit 1
 

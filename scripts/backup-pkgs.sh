@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: backup-pkgs.sh,v 1.5 2009-06-07 16:03:50 wagner Exp $
+# $Id: backup-pkgs.sh,v 1.6 2009-06-29 16:31:37 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -48,7 +48,7 @@ P="${P} m3middle"
 P="${P} m3objfile"
 P="${P} m3linker"
 P="${P} m3back"
-[ "${GCC_BACKEND}" != yes ] && P="${P} m3staloneback"
+P="${P} m3staloneback"
 P="${P} m3front"
 P="${P} m3quake"
 [ "${GCC_BACKEND}" = yes -a -z "$OMIT_GCC" ] && P="${P} m3cc"
@@ -58,9 +58,9 @@ P="${P} m3tools"
 P="${P} m3cgcat"
 P="${P} m3cggen"
 P="${P} m3bundle"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} fix_nl"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} libdump"
+P="${P} mklib"
+P="${P} fix_nl"
+P="${P} libdump"
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
