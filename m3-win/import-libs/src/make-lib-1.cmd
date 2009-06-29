@@ -1,4 +1,4 @@
-@rem $Id: make-lib-1.cmd,v 1.10 2008-01-13 07:25:02 jkrell Exp $
+@rem $Id: make-lib-1.cmd,v 1.11 2009-06-29 19:53:44 jkrell Exp $
 @perl -w -x "%~f0" %* 2>&1
 @exit /b %ErrorLevel%
 #!perl -w
