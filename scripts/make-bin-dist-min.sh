@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.40 2009-06-27 01:49:51 jkrell Exp $
+# $Id: make-bin-dist-min.sh,v 1.41 2009-06-29 16:33:08 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -54,13 +54,12 @@ P="${P} m3middle"
 P="${P} m3objfile"
 P="${P} m3linker"
 P="${P} m3back"
-[ "${GCC_BACKEND}" != yes ] && P="${P} m3staloneback"
 P="${P} m3front"
 P="${P} m3quake"
 [ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
 P="${P} cm3"
 P="${P} cminstall"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
+P="${P} mklib"
 
 OPTIONS=""
 ACTION="`map_action build`"
