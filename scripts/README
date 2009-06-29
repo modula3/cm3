@@ -1,4 +1,4 @@
-CM3 Free Distribution -- scripts/README $Id: README,v 1.15 2008-11-23 18:04:58 rodney Exp $
+CM3 Free Distribution -- scripts/README $Id: README,v 1.16 2009-06-29 16:31:36 jkrell Exp $
 
 This directory contains various scripts that can be used to compile /
 build / bootstrap part or all of the CM3 source distribution.
@@ -216,11 +216,11 @@ do-cm3-std.sh [callable]
   parseparams, realgeometry, set, slisp, sortedtableextras,
   table-list, tempfiles, tcp, netobj, netobjd, m3tk, stubgen, ui,
   vbtkit, cmvbt, jvideo, videovbt, web, formsvbtpixmaps, formsvbt,
-  formsview, formsedit 
+  formsview, formsedit, m3objfile, mklib, fix_nl, libdump, m3back,
+  m3staloneback
   no WIN32 => X11R4
-  WIN32 =>  m3objfile, tapi, mklib, fix_nl, libdump
+  WIN32 => tapi
   GCC_BACKEND => m3cc
-  no GCC_BACKEND => m3back, m3staloneback
   M3GDB => m3gdb
   HAVE_TCL => tcl
   HAVE_SERIAL => serial

@@ -10,19 +10,19 @@ m3middle base core front std
 m3objfile core front
 m3linker core front
 m3back core front
-m3staloneback core front
+m3staloneback tool
 m3front core front
 m3quake base core front std
 cm3 core front
 m3scanner base core std
 m3tools base core std
-m3cgcat m3devtool std
-m3cggen m3devtool std
+m3cgcat tool std
+m3cggen tool std
 m3gdb std m3gnudevtool m3gdb
 m3bundle base core std
 mklib base core front std
-fix_nl base core std
-libdump base core std
+fix_nl tool std
+libdump tool std
 arithmetic std math
 unittest-numeric std math
 bitvector base core std
