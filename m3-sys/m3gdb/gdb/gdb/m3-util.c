@@ -2947,7 +2947,7 @@ m3_set_derived_target_info ( void )
       { case TARGET_NT386 : 
           m3_target_longint_bit = 32; 
           break; 
-        case TARGET_ALPHA_OSF : 
+        case TARGET_64 : 
           m3_target_integer_bit = 64; 
           break; 
         default: 
@@ -2973,11 +2973,20 @@ m3_set_derived_target_info ( void )
 
 enum m3_target_typ
 m3_target_pure ( char * name ) 
-  { if ( strcmp ( name, "NT386/" ) == 0 ) 
-      { return TARGET_NT386; } 
-    if ( strcmp ( name, "ALPHA_OSF/" ) == 0 ) 
-      { return TARGET_ALPHA_OSF; } 
-    /* FIXME: Positively check for all M3 compiler target names. */ 
+  { if ( strcmp ( name, "NT386/" ) == 0 )           { return TARGET_NT386; } 
+    if ( strcmp ( name, "ALPHA_OSF/" ) == 0 )       { return TARGET_64; } 
+    if ( strcmp ( name, "AMD64_DARWIN/" ) == 0 )    { return TARGET_64; } 
+    if ( strcmp ( name, "AMD64_FREEBSD/" ) == 0 )   { return TARGET_64; } 
+    if ( strcmp ( name, "AMD64_LINUX/" ) == 0 )     { return TARGET_64; } 
+    if ( strcmp ( name, "PA64_HPUX/" ) == 0 )       { return TARGET_64; } 
+    if ( strcmp ( name, "MIPS64_OPENBSD/" ) == 0 )  { return TARGET_64; } 
+    if ( strcmp ( name, "SPARC64_OPENBSD/" ) == 0 ) { return TARGET_64; } 
+    if ( strcmp ( name, "SPARC64_LINUX/" ) == 0 )   { return TARGET_64; } 
+    if ( strcmp ( name, "SPARC64_SOLARIS/" ) == 0 ) { return TARGET_64; } 
+
+    /* FIXME: Positively check for all M3 compiler target names, or at
+              least all those in m3middle/src/Target.m3 that cause a call on
+              Init64. */ 
     return TARGET_OTHER; 
   } /* m3_target_pure */ 
 
