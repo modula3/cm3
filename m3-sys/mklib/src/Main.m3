@@ -1,13 +1,21 @@
+(* Some parts copied from WinNT.i3:                     *)
+(* Copyright (C) 1994, Digital Equipment Corporation         *)
+(* All rights reserved.                                      *)
+(* See the file COPYRIGHT for a full description.            *)
+
 UNSAFE MODULE Main;
 
 IMPORT Process, IO, Rd, Wr, FileRd, FileWr, Thread, OSError, TextRefTbl;
-IMPORT WinNT, Convert, CoffTime, File, FS, Text, Word, TextWr, TextSeq;
-IMPORT Fmt, Time, IntArraySort, RegularFile, WinDef, Params, Pathname;
-IMPORT TextExtras;
-IMPORT Ctypes;
+IMPORT Convert, CoffTime, File, FS, Text, Word, TextWr, TextSeq;
+IMPORT Fmt, Time, IntArraySort, RegularFile, Params, Pathname;
+IMPORT TextExtras, BasicCtypes;
 
 TYPE
-  UINT32 = Ctypes.unsigned_int;
+  UINT8 = BasicCtypes.unsigned_char;
+  UINT16 = BasicCtypes.unsigned_short_int;
+  UINT32 = BasicCtypes.unsigned_int;
+  INT16 = BasicCtypes.short_int;
+  BYTE = UINT8;
 
 CONST
   MaxKeeper    = 10000;            (* max file size we'll hold in memory *)
@@ -17,10 +25,65 @@ CONST
   PadChar      = '\n';
 
 TYPE
-  Header = WinNT.IMAGE_ARCHIVE_MEMBER_HEADER;
-  BYTE   = WinDef.BYTE;
+  PIMAGE_SYMBOL = <* UNALIGNED *> UNTRACED REF IMAGE_SYMBOL;
+  IMAGE_SYMBOL = RECORD
+    N: ARRAY [0 .. 7] OF UINT8;
+    Value              : UINT32;
+    SectionNumber      : INT16;
+    Type               : UINT16;
+    StorageClass       : UINT8;
+    NumberOfAuxSymbols : UINT8;
+  END;
+
+CONST
+    IMAGE_SIZEOF_SYMBOL = 18;
+
+(* Section values. *)
+(* Symbols have a section number of the section in which they are *)
+(* defined. Otherwise, section numbers have the following meanings: *)
+
+  IMAGE_SYM_UNDEFINED = 0; (* Symbol is undefined or is common. *)
+  
+(* Storage classes. *)
+
+  IMAGE_SYM_CLASS_EXTERNAL = 2;
+
+(* File header format. *)
 
 TYPE
+  PIMAGE_FILE_HEADER = UNTRACED REF IMAGE_FILE_HEADER;
+  IMAGE_FILE_HEADER = RECORD
+    Machine             : UINT16;
+    NumberOfSections    : UINT16;
+    TimeDateStamp       : UINT32;
+    PointerToSymbolTable: UINT32;
+    NumberOfSymbols     : UINT32;
+    SizeOfOptionalHeader: UINT16;
+    Characteristics     : UINT16;
+  END;
+
+CONST
+  IMAGE_FILE_DLL           = 16_2000;
+  IMAGE_FILE_RELOCS_STRIPPED = 16_0001;
+  IMAGE_FILE_EXECUTABLE_IMAGE = 16_0002;
+  IMAGE_FILE_16BIT_MACHINE  = 16_0040;
+  IMAGE_FILE_BYTES_REVERSED_LO = 16_0080;
+  IMAGE_FILE_BYTES_REVERSED_HI = 16_8000;
+  IMAGE_FILE_MACHINE_I386    = 16_14c;
+
+TYPE
+  IMAGE_ARCHIVE_MEMBER_HEADER = RECORD
+    Name     : ARRAY [0 .. 15] OF UINT8;
+    Date     : ARRAY [0 .. 11] OF UINT8;
+    UserID   : ARRAY [0 .. 5]  OF UINT8;
+    GroupID  : ARRAY [0 .. 5]  OF UINT8;
+    Mode     : ARRAY [0 .. 7]  OF UINT8;
+    Size     : ARRAY [0 .. 9]  OF UINT8;
+    EndHeader: ARRAY [0 .. 1]  OF UINT8;
+  END;
+
+  Header = IMAGE_ARCHIVE_MEMBER_HEADER;
+
   FileDesc = REF RECORD
     next     : FileDesc := NIL;
     name     : TEXT     := NIL;   (* full file name *)
@@ -259,32 +322,32 @@ PROCEDURE ScanFile (f: FileDesc) =
 (*----------------------------------------------- Windows Object Files ---*)
 
 CONST (* we don't handle this stuff! *)
-  BadObjFlags = WinNT.IMAGE_FILE_RELOCS_STRIPPED
-              + WinNT.IMAGE_FILE_EXECUTABLE_IMAGE
-              + WinNT.IMAGE_FILE_16BIT_MACHINE
-              + WinNT.IMAGE_FILE_BYTES_REVERSED_LO
-              + WinNT.IMAGE_FILE_DLL
-              + WinNT.IMAGE_FILE_BYTES_REVERSED_HI;
+  BadObjFlags = IMAGE_FILE_RELOCS_STRIPPED
+              + IMAGE_FILE_EXECUTABLE_IMAGE
+              + IMAGE_FILE_16BIT_MACHINE
+              + IMAGE_FILE_BYTES_REVERSED_LO
+              + IMAGE_FILE_DLL
+              + IMAGE_FILE_BYTES_REVERSED_HI;
 
 TYPE
   ObjFile = RECORD
     file      : FileDesc;
     base      : ADDRESS;
     limit     : ADDRESS;
-    hdr       : WinNT.PIMAGE_FILE_HEADER;
-    symtab    : WinNT.PIMAGE_SYMBOL;
+    hdr       : PIMAGE_FILE_HEADER;
+    symtab    : PIMAGE_SYMBOL;
     stringtab : ADDRESS;
   END;
 
 PROCEDURE ScanExports (f: FileDesc) =
-  VAR o: ObjFile;  sym: WinNT.PIMAGE_SYMBOL;
+  VAR o: ObjFile;  sym: PIMAGE_SYMBOL;
   BEGIN
     o.file  := f;
     o.base  := ADR (f.contents[0]);           (* pin the contents so the collector*)
     o.limit := o.base + ADRSIZE (f.contents^);(* doesn't start moving them around *)
     o.hdr   := o.base;
 
-    IF (o.hdr.Machine # WinNT.IMAGE_FILE_MACHINE_I386) THEN
+    IF (o.hdr.Machine # IMAGE_FILE_MACHINE_I386) THEN
       (* this isn't an x86 object file *)
       RETURN;
     END;
@@ -303,15 +366,15 @@ PROCEDURE ScanExports (f: FileDesc) =
     END;
 
     (* locate the string table *)
-    o.stringtab := o.symtab + o.hdr.NumberOfSymbols * WinNT.IMAGE_SIZEOF_SYMBOL;
+    o.stringtab := o.symtab + o.hdr.NumberOfSymbols * IMAGE_SIZEOF_SYMBOL;
     IF (o.symtab < o.base) OR (o.limit <= o.symtab) THEN
       Die ("cannot find string table in object file \"", f.name, "\".");
     END;
 
     sym := o.symtab;
     WHILE (sym < o.stringtab) DO
-      IF sym.StorageClass = WinNT.IMAGE_SYM_CLASS_EXTERNAL THEN
-        IF sym.SectionNumber # WinNT.IMAGE_SYM_UNDEFINED THEN
+      IF sym.StorageClass = IMAGE_SYM_CLASS_EXTERNAL THEN
+        IF sym.SectionNumber # IMAGE_SYM_UNDEFINED THEN
           V ("symbol section number: ", Fmt.Int(sym.SectionNumber));
           AddExport (GetSymbolName (o, sym), f);
         ELSIF sym.Value > 0 THEN
@@ -320,7 +383,7 @@ PROCEDURE ScanExports (f: FileDesc) =
           AddExport (GetSymbolName (o, sym), f);
         END;
       END;
-      sym := sym + WinNT.IMAGE_SIZEOF_SYMBOL * (1 + sym.NumberOfAuxSymbols);
+      sym := sym + IMAGE_SIZEOF_SYMBOL * (1 + sym.NumberOfAuxSymbols);
     END;
   END ScanExports;
 
@@ -354,7 +417,7 @@ PROCEDURE AddExport (sym: TEXT;  f: FileDesc) =
     END;
   END AddExport;
 
-PROCEDURE GetSymbolName (READONLY o: ObjFile;  sym: WinNT.PIMAGE_SYMBOL): TEXT =
+PROCEDURE GetSymbolName (READONLY o: ObjFile;  sym: PIMAGE_SYMBOL): TEXT =
   TYPE IntBytes = ARRAY [0..3] OF BYTE;
   VAR
     max_len, len: INTEGER;
