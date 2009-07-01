@@ -59,7 +59,7 @@ PROCEDURE Create_ForkExec(
     END;
 
     (* grab the file descriptors from inside the traced File.Ts so
-       we don't trigger a GC after the vfork() call. *)
+       we don't trigger a GC after the fork() call. *)
     stdin_fd  := NoFileDescriptor;  
     IF (stdin  # NIL) THEN stdin_fd  := stdin.fd;  END;
     stdout_fd := NoFileDescriptor;
@@ -79,7 +79,7 @@ PROCEDURE Create_ForkExec(
     Scheduler.DisableSwitching ();
 
     execResult := 0;
-    forkResult := Unix.vfork();
+    forkResult := Unix.fork();
     IF forkResult = 0 THEN (* in the child *)
       execResult := ExecChild(argx, envp, wdstr, stdin_fd, stdout_fd,
           stderr_fd);

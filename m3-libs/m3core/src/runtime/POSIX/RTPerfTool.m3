@@ -74,9 +74,9 @@ PROCEDURE StartTool (name: TEXT; VAR r, w: Handle): BOOLEAN =
     END;
 
     (* Create the tool process *)
-    CASE Unix.vfork () OF
+    CASE Unix.fork () OF
       
-    | -1 => (* vfork failed *)
+    | -1 => (* fork failed *)
       ClosePipe (fromTool);
       ClosePipe (toTool);
       RETURN FALSE;
