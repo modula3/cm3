@@ -5,15 +5,10 @@ UNSAFE MODULE UtilsWin32 EXPORTS Utils;
 
 IMPORT Msg, OSError, Fmt, M3File(*, Unix*)(*bootstrap hack*);
 
-PROCEDURE HardLinkFile (from, to: TEXT) =
+PROCEDURE LinkFile (from, to: TEXT) =
+  VAR equal: BOOLEAN := FALSE;
   BEGIN
-    SymbolicOrHardLink((*Unix.*)(*bootstrap hack*)link, "", from, to);
-  END HardLinkFile;
-
-PROCEDURE SymbolicLinkFile (from, to: TEXT) =
-  VAR equal := FALSE;
-  BEGIN
-    Msg.Commands ("ln -s ", from, " ", to);
+    Msg.Commands ("link -s ", from, " ", to);
 
     TRY
       equal := M3File.IsEqual (from, to);
@@ -26,7 +21,7 @@ PROCEDURE SymbolicLinkFile (from, to: TEXT) =
     EXCEPT OSError.E(ec) =>
       Msg.FatalError (ec, Fmt.F ("unable to copy \"%s\" to \"%s\"", from, to));
     END;
-  END SymbolicLinkFile;
+  END LinkFile;
 
 BEGIN
 END UtilsWin32.

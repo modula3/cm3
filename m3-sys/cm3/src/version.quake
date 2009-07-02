@@ -155,7 +155,6 @@ proc version_impl(name) is
         else
             > "_m3version.sh" in
                 if AnyMissing
-                    write("root=" & ROOT & CR)
                     write(". ../../../scripts/sysinfo.sh || exit 1", CR)
                 end
                 foreach Name in Missing
