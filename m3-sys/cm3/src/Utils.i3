@@ -7,7 +7,6 @@
 INTERFACE Utils;
 
 IMPORT File, Wr, Arg, Thread;
-FROM Ctypes IMPORT const_char_star, int;
 
 PROCEDURE OpenWriter   (name: TEXT;  fatal: BOOLEAN): Wr.T;
 PROCEDURE AppendWriter (name: TEXT;  fatal: BOOLEAN): Wr.T;
@@ -30,8 +29,7 @@ PROCEDURE Remove (file: TEXT);
 PROCEDURE Copy (old_file, new_file: TEXT);
 PROCEDURE CopyText (old_file, new_file: TEXT);
 PROCEDURE IsEqual (a, b: TEXT): BOOLEAN;
-PROCEDURE SymbolicLinkFile (from, to: TEXT);
-PROCEDURE HardLinkFile (from, to: TEXT);
+PROCEDURE LinkFile (from, to: TEXT);
 PROCEDURE IsFile (file: TEXT): BOOLEAN;
 PROCEDURE IsDir (file: TEXT): BOOLEAN;
 
@@ -46,10 +44,6 @@ CONST NO_TIME = 0;
 PROCEDURE PrepArgs (program: TEXT;  args: Arg.List): REF ARRAY OF TEXT;
 PROCEDURE Execute  (program: TEXT;  args: Arg.List;
                      stdout: TEXT;  fatal: BOOLEAN): INTEGER;
-
 PROCEDURE MakeRelative (VAR from: TEXT;  to: TEXT);
-PROCEDURE SymbolicOrHardLink (link: PROCEDURE(name1, name2: const_char_star):int; s_for_sym, from, to: TEXT);
-(*bootstrap hack*)
-<*EXTERNAL Utils__link*> PROCEDURE link (name1, name2: const_char_star): int;
 
 END Utils.

@@ -9,15 +9,6 @@
 % remove_m3_option ("-gui")
 % m3_option ("-times")
 
-cp_if(ROOT & "/m3-libs/m3core/src/unix/Common/UnixLink.c", ".")
-cp_if(ROOT & "/m3-libs/m3core/src/unix/Common/m3unix.h", ".")
-cp_if("../src/cm3unix.c", ".")
-if equal (TARGET, "NT386")
-  derived_c("..//" & BUILD_DIR & "/cm3unix")
-else
-  derived_c("../" & BUILD_DIR & "/cm3unix")
-end
-
 import ("libm3")
 import ("m3middle")
 import ("m3linker")

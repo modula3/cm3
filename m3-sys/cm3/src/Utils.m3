@@ -6,10 +6,9 @@
 
 UNSAFE MODULE Utils;
 
-IMPORT File, FileWr, Wr, Thread, Fmt, Process, TextIntTbl, M3toC;
+IMPORT File, FileWr, Wr, Thread, Fmt, Process, TextIntTbl;
 IMPORT Stdio, OSError, ETimer, FS, RegularFile, Time, Text;
 IMPORT Msg, Arg, M3Timers, Target, CoffTime, M3File, Pathname;
-FROM Ctypes IMPORT const_char_star, char_star, int;
 
 (*--------------------------------------------------------------- writers ---*)
 
@@ -440,22 +439,6 @@ PROCEDURE MakeRelative (VAR from: TEXT;  to: TEXT) =
                  "\n         " & from_x & " -> " & to);
     from := from_x;
   END MakeRelative;
-
-(*---------------------------------------------------------------------------*)
-
-PROCEDURE SymbolicOrHardLink (link: PROCEDURE(name1, name2: const_char_star):int; s_for_sym, from, to: TEXT) =
-  VAR s_from, s_to: char_star;
-  BEGIN
-    Remove (to);
-    Msg.Commands ("ln ", s_for_sym, from, " ", to);
-    s_from := M3toC.SharedTtoS (from);
-    s_to   := M3toC.SharedTtoS (to);
-    EVAL link(s_from, s_to);
-    M3toC.FreeSharedS (from, s_from);
-    M3toC.FreeSharedS (to, s_to);
-  END SymbolicOrHardLink;
-
-(*---------------------------------------------------------------------------*)
 
 BEGIN
 END Utils.
