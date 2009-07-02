@@ -2280,7 +2280,7 @@ PROCEDURE GetLibraries (s: State;  result_time: INTEGER;
           END;
           IF (u.loc.path # NIL) THEN
             lib_link := M3Path.New (link_dir, M3Unit.FileName (u));
-            Utils.SymbolicLinkFile (lib_file, lib_link);
+            Utils.LinkFile (lib_file, lib_link);
           END;
           Arg.Prepend (libs, "-l" & M3ID.ToText (u.name));
         ELSIF (NOT shared OR s.keep_resolved) THEN
