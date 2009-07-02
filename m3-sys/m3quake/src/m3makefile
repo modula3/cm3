@@ -29,3 +29,5 @@ Module   ("M3Path")
 
 build_standalone ()
 Library("m3quake")
+
+ManPage ("quake","7")
