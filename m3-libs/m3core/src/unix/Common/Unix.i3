@@ -114,9 +114,13 @@ PROCEDURE ftruncate (file: int;             length: off_t): int;
 PROCEDURE unlink (path: const_char_star): int;
 <*EXTERNAL "Unix__utimes"*>
 PROCEDURE utimes (file: const_char_star; tvp: UNTRACED REF ARRAY [0..1] OF struct_timeval): int;
-PROCEDURE vfork (): pid_t;
 <*EXTERNAL "Unix__fork"*>
 PROCEDURE fork (): pid_t;
+
+(* Do not wrap vfork in C; doing so violates the Posix standard, because
+ callers of vfork cannot return without calling exec or _exit. *)
+PROCEDURE vfork (): pid_t;
+
 
 CONST
   MAX_FDSET = Usysdep.MAX_FDSET;
