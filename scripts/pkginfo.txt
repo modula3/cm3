@@ -34,7 +34,7 @@ slisp base core std
 sortedtableextras base core std
 table-list base core std
 tempfiles base core std
-tcl base core std
+tcl std
 tcp base core std gui comm
 cm3ide std m3devtool
 udp std comm devlib
@@ -50,7 +50,7 @@ commandrw std devlib
 tapi base std comm devlib
 serial base std comm devlib
 m3tk std comm devlib
-mtex std tool
+mtex std 
 m3totex std m3devtool
 m3tohtml std m3devtool
 m3scan std devlib
