@@ -271,7 +271,7 @@ EOF
       if [ "$b" != "import-libs" -a "$b" != "m3cc" -a "$b" != "m3gdb" ]; then
         echo "<a href=\"http://www.opencm3.net/doc/help/gen_html/${b}/INDEX.html\">Browse Sources Online</a><br>"
       fi
-      for section in 1 5 6 8; do
+      for section in 1 5 6 7 8; do
         manpages=`find ${p}/src -name "*.${section}" -print`
         if [ -n "${manpages}" ]; then
           for m in ${manpages}; do
