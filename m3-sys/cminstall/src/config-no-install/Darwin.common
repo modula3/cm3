@@ -138,17 +138,19 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
     link_file(lib_sox, lib_so)
 
     % finally, make sure the shared library stuff gets installed properly
-    install_derived (lib_soxx)
-    install_derived_link (lib_soxx, lib_sox)
-    install_derived_link (lib_sox, lib_so)
-    install_link_to_derived (lib_soxx, LIB_INSTALL)
-    install_link_to_derived (lib_sox, LIB_INSTALL)
-    install_link_to_derived (lib_so, LIB_INSTALL)
+    LibdExport(lib_soxx)
+    link_file(lib_soxx, LIB_INSTALL & SL & lib_sox)
+    link_file(lib_sox, LIB_INSTALL & SL & lib_so)
   else
     delete_file (lib_so)
     delete_file (lib_sox)
     delete_file (lib_soxx)
   end
+
+  % delete old .so files in package store
+  local pkg = PKG_INSTALL & SL & lib & SL & TARGET & SL
+  delete_file(pkg & lib_so)
+  delete_file(pkg & lib_sox)
 
   return 0
 end
@@ -172,17 +174,21 @@ proc skip_lib (lib, shared) is
     link_file(lib_sox, lib_so)
 
     % make sure the shared library stuff gets installed properly
-    install_derived (lib_soxx)
-    install_derived_link (lib_soxx, lib_sox)
-    install_derived_link (lib_sox, lib_so)
-    install_link_to_derived (lib_soxx, LIB_INSTALL)
-    install_link_to_derived (lib_sox, LIB_INSTALL)
-    install_link_to_derived (lib_so, LIB_INSTALL)
+    LibdExport(lib_soxx)
+    link_file(lib_soxx, LIB_INSTALL & SL & lib_sox)
+    link_file(lib_sox, LIB_INSTALL & SL & lib_so)
+
   else
     delete_file (lib_so)
     delete_file (lib_sox)
     delete_file (lib_soxx)
   end
+
+  % delete old .so files in package store
+  local pkg = PKG_INSTALL & SL & lib & SL & TARGET & SL
+  delete_file(pkg & lib_so)
+  delete_file(pkg & lib_sox)
+  delete_file(pkg & lib_soxx)
 
   return 0
 end
