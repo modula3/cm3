@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.17 2009-06-27 11:24:36 wagner Exp $
+# $Id: make-dist.sh,v 1.18 2009-07-03 17:53:06 wagner Exp $
 
 DESTHOST=${DESTHOST:-birch.elegosoft.com}
 
@@ -271,7 +271,7 @@ EOF
       if [ "$b" != "import-libs" -a "$b" != "m3cc" -a "$b" != "m3gdb" ]; then
         echo "<a href=\"http://www.opencm3.net/doc/help/gen_html/${b}/INDEX.html\">Browse Sources Online</a><br>"
       fi
-      for section in 1 5 6 8; do
+      for section in 1 5 6 7 8; do
         manpages=`find ${p}/src -name "*.${section}" -print`
         if [ -n "${manpages}" ]; then
           for m in ${manpages}; do
