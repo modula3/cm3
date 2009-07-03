@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.18 2009-07-03 17:53:06 wagner Exp $
+# $Id: make-dist.sh,v 1.19 2009-07-03 18:18:10 wagner Exp $
 
 DESTHOST=${DESTHOST:-birch.elegosoft.com}
 
@@ -44,7 +44,7 @@ export M3_PORTABLE_RUN_PATH
 if [ `uname` = 'Interix' ]; then
   PKG_COLLECTIONS="devlib m3devtool webdev obliq caltech-parser tool math game core"
 else
-  PKG_COLLECTIONS="devlib m3devtool m3gdb webdev gui anim database cvsup obliq juno caltech-parser demo tool math game core"
+  PKG_COLLECTIONS="devlib m3devtool m3gdb webdev gui anim database cvsup obliq juno caltech-parser demo tool math game core min"
 fi
 
 DESC_devlib='<p>
@@ -287,7 +287,7 @@ EOF
   ) > collection-${c}.html
   echo "collection-${c}.html"
   ARCHIVE="${STAGE}/cm3-bin-ws-${c}-${TARGET}-${CM3VERSION}-${DS}.tgz"
-  if [ -z "${NOARCHIVE}" ]; then
+  if [ -z "${NOARCHIVE}" -a "${c}" != "min" ]; then
     "${TAR}"  --exclude '*.o' --exclude '*.mo' --exclude '*.io' \
       --exclude '*/CVS/*' --exclude '*/CVS' --exclude '*~' \
       --exclude '*.tar.*' --exclude '*.tgz' --exclude "*/${TARGET}/gcc" \
