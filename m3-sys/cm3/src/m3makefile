@@ -68,4 +68,5 @@ end
 %BindExport ("cm3.cfg")
 
 ManPage ("cm3","1")
+ManPage ("m3makefile","7")
 
