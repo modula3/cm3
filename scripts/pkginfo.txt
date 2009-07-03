@@ -75,7 +75,7 @@ stablegen std m3devtool
 stable std m3devtool
 X11R4 std gui
 ui std gui
-PEX std devlib
+PEX std 
 vbtkit std gui
 cmvbt std gui
 jvideo std gui
