@@ -52,6 +52,7 @@ tablerow() {
         echo '<a href="collection-m3devtool.html">recommended</a>';;
       *-bin-ws-*)
         coll=`echo $f | awk -F- '{print $4}'`
+	[ "$coll" = "caltech" ] && coll="caltech-parser"
         echo "<a href=\"collection-${coll}.html\">optional</a>"
       ;;
       *) echo "-";;
