@@ -254,7 +254,7 @@ EOF
         echo "<a href=\"http://www.opencm3.net/doc/help/gen_html/${b}/INDEX.html\">Browse Sources Online</a><br>"
       fi
       for section in 1 5 6 7 8; do
-        manpages=`find ${p}/src -name "*.${section}" -print`
+        manpages=`find ${p}/src -name "[A-Za-z]*.${section}" -print`
         if [ -n "${manpages}" ]; then
           for m in ${manpages}; do
             mb=`basename ${m} .${section}`
