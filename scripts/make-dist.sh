@@ -51,9 +51,7 @@ DESC_devlib='<p>
 Miscellaneous development libraries
 </p>
 <p>Related documents:</p>
-<ul>
-<li><a href=""></a></li>
-</ul>
+<p>none found</p>
 '
 DESC_m3devtool='<p>
 Modula-3 development tools
@@ -77,9 +75,7 @@ DESC_webdev='<p>
 Packages for web development
 </p>
 <p>Related documents:</p>
-<ul>
-<li><a href=""></a></li>
-</ul>
+<p>none found</p>
 '
 DESC_gui='<p>
 Graphical User Interface Libraries
@@ -109,18 +105,14 @@ DESC_database='<p>
 Database interfaces and implementations
 </p>
 <p>Related documents:</p>
-<ul>
-<li><a href=""></a></li>
-</ul>
+<p>none found</p>
 '
 DESC_cvsup='<p>
 Efficient CVS repository and general file replication program.
 See <a href="http://www.cvsup.org">www.cvsup.org<a>.
 </p>
 <p>Related documents:</p>
-<ul>
-<li><a href=""></a></li>
-</ul>
+<p>none found</p>
 '
 DESC_obliq='<p>
 The Obliq language
@@ -145,41 +137,31 @@ DESC_caltechparser='<p>
 Parser Generator in Modula-3
 </p>
 <p>Related documents:</p>
-<ul>
-<li><a href=""></a></li>
-</ul>
+<p>none found</p>
 '
 DESC_demo='<p>
 Miscellaneous demo programs
 </p>
 <p>Related documents:</p>
-<ul>
-<li><a href=""></a></li>
-</ul>
+<p>none found</p>
 '
 DESC_tool='<p>
 Miscellaneous small tools
 </p>
 <p>Related documents:</p>
-<ul>
-<li><a href=""></a></li>
-</ul>
+<p>none found</p>
 '
 DESC_math='<p>
 Arithmetic and other mathematical support packages
 </p>
 <p>Related documents:</p>
-<ul>
-<li><a href=""></a></li>
-</ul>
+<p>none found</p>
 '
 DESC_game='<p>
 Games written in Modula-3
 </p>
 <p>Related documents:</p>
-<ul>
-<li><a href=""></a></li>
-</ul>
+<p>none found</p>
 '
 DESC_core='<p>
 The core packages comprise the actual compiler packages, quake,
