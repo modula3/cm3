@@ -3,20 +3,18 @@
 
 UNSAFE MODULE UtilsPosix EXPORTS Utils;
 
-IMPORT Ctypes, Unix, M3toC, Msg;
+IMPORT Unix;
 
-PROCEDURE LinkFile (from, to: TEXT) =
-  VAR s_from, s_to: Ctypes.char_star;
+PROCEDURE SymbolicLinkFile (from, to: TEXT) =
   BEGIN
-    Remove (to);
     MakeRelative (from, to);
-    Msg.Commands ("link -s ", from, " ", to);
-    s_from := M3toC.SharedTtoS (from);
-    s_to   := M3toC.SharedTtoS (to);
-    EVAL Unix.symlink (s_from, s_to);
-    M3toC.FreeSharedS (from, s_from);
-    M3toC.FreeSharedS (to, s_to);
-  END LinkFile;
+    SymbolicOrHardLink(Unix.symlink, "-s ", from, to);
+  END SymbolicLinkFile;
+
+PROCEDURE HardLinkFile (from, to: TEXT) =
+  BEGIN
+    SymbolicOrHardLink((*Unix.*)(*bootstrap hack*)link, "", from, to);
+  END HardLinkFile;
 
 BEGIN
 END UtilsPosix.
