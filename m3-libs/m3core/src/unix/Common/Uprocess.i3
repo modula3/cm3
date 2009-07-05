@@ -6,6 +6,6 @@
 
 FROM Ctypes IMPORT int;
 
-PROCEDURE getpid (): int;
+<*EXTERNAL "Uprocess__getpid"*>PROCEDURE getpid (): int;
 
 END Uprocess.
