@@ -7,7 +7,7 @@
 FROM Ctypes IMPORT int, void_star, const_void_star;
 FROM Cstddef IMPORT size_t, ssize_t;
 
-PROCEDURE read (d: int; buf: void_star; nbytes: size_t): ssize_t;
-PROCEDURE write (d: int; buf: const_void_star; nbytes: size_t): ssize_t;
+<*EXTERNAL "Uuio__read"*>PROCEDURE read (d: int; buf: void_star; nbytes: size_t): ssize_t;
+<*EXTERNAL "Uuio__write"*>PROCEDURE write (d: int; buf: const_void_star; nbytes: size_t): ssize_t;
 
 END Uuio.

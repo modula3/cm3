@@ -58,6 +58,6 @@ TYPE
 <*EXTERNAL "Utime__get_daylight"*>PROCEDURE get_daylight(): int32_t;
 <*EXTERNAL "Utime__get_tzname"*>PROCEDURE get_tzname(a: [0..1]): const_char_star;
 
-PROCEDURE tzset();
+<*EXTERNAL "Utime__tzset"*>PROCEDURE tzset();
 
 END Utime.
