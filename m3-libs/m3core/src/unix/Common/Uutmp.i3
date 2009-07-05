@@ -6,6 +6,6 @@ INTERFACE Uutmp;
 
 FROM Ctypes IMPORT char_star;
 
-<*EXTERNAL*> PROCEDURE getlogin (): char_star;
+<*EXTERNAL "Uutmp__getlogin"*> PROCEDURE getlogin (): char_star;
 
 END Uutmp.

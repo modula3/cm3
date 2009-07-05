@@ -56,6 +56,8 @@ const char* Utime__get_tzname(unsigned a)
 
 #endif /* M3BSD */
 
+#ifndef _WIN32
+
 int Utime__gettimeofday (timeval_t* t, timezone_t* z)
 {
     return gettimeofday(t, z);
@@ -70,6 +72,8 @@ int Utime__getitimer(int which, itimerval_t* value)
 {
     return getitimer(which, value);
 }
+
+#endif
 
 time_t Utime__time(time_t* tloc)
 {
@@ -96,6 +100,7 @@ tm_t* Utime__gmtime(time_t* clock)
     return gmtime(clock);
 }
 
+#ifndef _WIN32
 #ifndef __sun /* Solaris ctime_r is different than Posix. */
 
 char* Utime__ctime_r(time_t* clock, char* buffer)
@@ -103,7 +108,7 @@ char* Utime__ctime_r(time_t* clock, char* buffer)
     return ctime_r(clock, buffer);
 }
 
-#endif
+#endif /* __sun */
 
 tm_t* Utime__localtime_r(time_t* clock, tm_t* result)
 {
@@ -127,7 +132,17 @@ int Utime__nanosleep(timespec_t* req, timespec_t* rem)
     return nanosleep(req, rem);
 }
 
+#endif /* __INTERIX */
+#endif /* _WIN32 */
+
+void Utime__tzset(void)
+{
+#ifdef _WIN32
+    _tzset();
+#else
+    tzset();
 #endif
+}
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -20,6 +20,6 @@ TYPE
   SignalActionHandler = PROCEDURE (sig: int; sip: siginfo_t_star; uap: ADDRESS (* Uucontext.ucontext_t_star *) );
   siginfo_t_star = ADDRESS;
 
-PROCEDURE kill (pid: pid_t; sig: int): int;
+<*EXTERNAL "Usignal__kill"*>PROCEDURE kill (pid: pid_t; sig: int): int;
 
 END Usignal.

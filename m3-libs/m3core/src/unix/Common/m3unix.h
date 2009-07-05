@@ -56,6 +56,8 @@ struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses *
 #include <netdb.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <pwd.h>
+#define ZeroMemory(a,b) (memset((a), 0, (b)))
 #endif
 
 #ifdef __INTERIX
@@ -71,8 +73,6 @@ typedef struct timespec timespec_t;
 typedef struct timezone timezone_t;
 typedef struct tm tm_t;
 typedef struct utimbuf utimbuf_t;
-
-#define ZeroMemory(a,b) (memset((a), 0, (b)))
 
 typedef   signed char       INT8;
 typedef unsigned char      UINT8;
@@ -269,7 +269,6 @@ UINT32 Uin__ntohl(UINT32 x);
 UINT16 Uin__ntohs(UINT16 x);
 UINT32 Uin__htonl(UINT32 x);
 UINT16 Uin__htons(UINT16 x);
-
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -6,7 +6,7 @@
 
 FROM Utypes IMPORT gid_t, uid_t;
 
-PROCEDURE geteuid (): uid_t;
-PROCEDURE getegid (): gid_t;
+<*EXTERNAL "Uugid__geteuid"*>PROCEDURE geteuid (): uid_t;
+<*EXTERNAL "Uugid__getegid"*>PROCEDURE getegid (): gid_t;
 
 END Uugid.
