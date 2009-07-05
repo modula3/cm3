@@ -248,16 +248,25 @@ int Unix__isatty(int file)
 #endif
 }
 
+int Unix__pipe(int files[2])
+{
+#ifdef _WIN32
+    return _pipe(files, 0, _O_BINARY);
+#else
+    return pipe(files);
+#endif
+}
+
 #ifndef _WIN32
 
 INTEGER Unix__readlink(const char* path, void* buf, INTEGER bufsize) { return readlink(path, buf, bufsize); }
 
 int Unix__symlink(const char* name1, const char* name2) { return symlink(name1, name2); }
 
-int Unix__pipe(int files[2]) { return pipe(files); }
-
 #ifndef __INTERIX
+
 int Unix__utimes(const char* file, const timeval_t* tvp) { return utimes(file, tvp); }
+
 #endif
 
 #endif
@@ -282,9 +291,110 @@ int Unix__unlink(const char* path)
 #endif
 }
 
+void Unix__underscore_exit(int exit_code)
+{
+    _exit(exit_code);
+}
+
 int Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout)
 {
     return select(nfds, readfds, writefds, exceptfds, timeout);
+}
+
+#ifndef _WIN32
+
+int Unix__fsync(int file)
+{
+    return fsync(file);
+}
+
+int Unix__getdtablesize()
+{
+    return getdtablesize();
+}
+
+#endif
+
+int Unix__gethostname(char* name, size_t namelen)
+{
+    return gethostname(name, namelen);
+}
+
+#ifndef _WIN32
+
+int Unix__getpagesize(void)
+{
+    return getpagesize();
+}
+
+#endif
+
+char* Unix__getcwd(char* pathname, size_t size)
+{
+#ifdef _WIN32
+    return _getcwd(pathname, size);
+#else
+    return getcwd(pathname, size);
+#endif
+}
+
+int Unix__access(const char* path, int mode)
+{
+#ifdef _WIN32
+    return _access(path, mode);
+#else
+    return access(path, mode);
+#endif
+}
+
+#ifndef _WIN32
+
+void* Unix__sbrk(INTEGER inc)
+{
+    return sbrk(inc);
+}
+
+#endif
+
+int Unix__chdir(const char* path)
+{
+#ifdef _WIN32
+    return _chdir(path);
+#else
+    return chdir(path);
+#endif
+}
+
+int Unix__close(int d)
+{
+#ifdef _WIN32
+    return _close(d);
+#else
+    return close(d);
+#endif
+}
+
+int Unix__dup2(int oldd, int newd)
+{
+#ifdef _WIN32
+    return _dup2(oldd, newd);
+#else
+    return dup2(oldd, newd);
+#endif
+}
+
+#ifndef _WIN32
+
+int Unix__execve(const char* name, char** argv, char** envp)
+{
+    return execve(name, argv, envp);
+}
+
+#endif
+
+void Unix__exit(int i)
+{
+    exit(i);
 }
 
 #ifdef __cplusplus

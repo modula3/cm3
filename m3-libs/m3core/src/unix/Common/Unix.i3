@@ -39,33 +39,30 @@ CONST
 <*EXTERNAL "Unix__X_OK"*> VAR X_OK: int; (* executable *)
 <*EXTERNAL "Unix__W_OK"*> VAR W_OK: int; (* writable *)
 <*EXTERNAL "Unix__R_OK"*> VAR R_OK: int; (* readable *)
-PROCEDURE access (path: const_char_star; mode: int): int;
+<*EXTERNAL "Unix__access"*>PROCEDURE access (path: const_char_star; mode: int): int;
 
-PROCEDURE sbrk (inc: INTEGER): char_star;
-PROCEDURE chdir (path: const_char_star): int;
-PROCEDURE close (d: int): int;
-<*EXTERNAL "Unix__dup"*>
-PROCEDURE dup (oldd: int): int;
-PROCEDURE dup2 (oldd, newd: int): int;
-PROCEDURE execve (name: const_char_star;  argv, envp: char_star_star): int;
+<*EXTERNAL "Unix__sbrk"*>PROCEDURE sbrk (inc: INTEGER): char_star;
+<*EXTERNAL "Unix__chdir"*>PROCEDURE chdir (path: const_char_star): int;
+<*EXTERNAL "Unix__close"*>PROCEDURE close (d: int): int;
+<*EXTERNAL "Unix__dup"*>PROCEDURE dup (oldd: int): int;
+<*EXTERNAL "Unix__dup2"*>PROCEDURE dup2 (oldd, newd: int): int;
+<*EXTERNAL "Unix__execve"*>PROCEDURE execve (name: const_char_star;  argv, envp: char_star_star): int;
 
-PROCEDURE exit (i: int);
-<*EXTERNAL "_exit"*>
-PROCEDURE underscore_exit (i: int);
+<*EXTERNAL "Unix__exit"*>PROCEDURE exit (i: int);
+<*EXTERNAL "Unix__underscore_exit"*>PROCEDURE underscore_exit (i: int);
 
 (* CONST *)
 <*EXTERNAL "Unix__F_SETFD"*> VAR F_SETFD: int; (* Set close-on-exec flag *)
 <*EXTERNAL "Unix__F_GETFL"*> VAR F_GETFL: int; (* Get fd status flags *)
 <*EXTERNAL "Unix__F_SETFL"*> VAR F_SETFL: int; (* Set fd status flags *)
 
-<*EXTERNAL "Unix__fcntl"*>
-PROCEDURE fcntl (fd, request, arg: int): int;
+<*EXTERNAL "Unix__fcntl"*>PROCEDURE fcntl (fd, request, arg: int): int;
 
-PROCEDURE fsync (fd: int): int;
-PROCEDURE getdtablesize (): int;
-PROCEDURE gethostname (name: char_star; namelen: size_t): int;
-PROCEDURE getpagesize (): int;
-PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
+<*EXTERNAL "Unix__fsync"*>PROCEDURE fsync (fd: int): int;
+<*EXTERNAL "Unix__getdtablesize"*>PROCEDURE getdtablesize (): int;
+<*EXTERNAL "Unix__gethostname"*>PROCEDURE gethostname (name: char_star; namelen: size_t): int;
+<*EXTERNAL "Unix__getpagesize"*>PROCEDURE getpagesize (): int;
+<*EXTERNAL "Unix__getcwd"*>PROCEDURE getcwd (pathname: char_star; size: size_t): char_star;
 
 (* CONST *)
 <*EXTERNAL "Unix__FIONREAD"*> VAR FIONREAD: int;
@@ -96,7 +93,7 @@ PROCEDURE open (name: const_char_star; flags: int; mode: int(*mode_t*)): int;
 CONST
   readEnd = 0;
   writeEnd = 1;
-PROCEDURE pipe (VAR fildes: ARRAY [0..1] OF int): int;
+<*EXTERNAL "Unix__pipe"*>PROCEDURE pipe (VAR fildes: ARRAY [0..1] OF int): int;
 
 <*EXTERNAL "Unix__readlink"*>
 PROCEDURE readlink (path: const_char_star; buf: ADDRESS; bufsize: INTEGER): INTEGER;

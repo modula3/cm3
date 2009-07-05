@@ -13,6 +13,12 @@ Interface ("Ugrp")
 c_source ("Ugrp")
 c_source ("Uin")
 
+c_source("Uugid")
+c_source("Uuio")
+c_source("Uutmp")
+c_source("Usignal")
+c_source("Upwd")
+
 %
 % This is meant to be all systems with user-thread support,
 % when it is implemented using get/set/make/swapcontext instead of setjmp/longjmp.
