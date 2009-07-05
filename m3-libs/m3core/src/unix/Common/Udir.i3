@@ -11,6 +11,6 @@ TYPE
   DIR_star = ADDRESS;
 
 <*EXTERNAL Udir__opendir*> PROCEDURE opendir (filename: const_char_star): DIR_star;
-<*EXTERNAL*> PROCEDURE closedir(dirp: DIR_star): int;
+<*EXTERNAL Udir__closedir*> PROCEDURE closedir(dirp: DIR_star): int;
 
 END Udir.
