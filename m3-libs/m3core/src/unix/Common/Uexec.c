@@ -28,7 +28,7 @@ void Uexec__RepackStatus(int* var_status)
 
 #endif
 
-#if defined(_WIN64)
+#ifdef _WIN64
 typedef intptr_t m3_exec_t; /* correct for Win32 but requires newer headers */
 #else
 typedef int m3_exec_t;
@@ -46,18 +46,18 @@ m3_exec_t Uexec__execv(const char* name, char** argv)
 m3_exec_t Uexec__execvp(const char* name, char** argv)
 {
 #ifdef _WIN32
-    return _execvp(name, argv)
+    return _execvp(name, argv);
 #else
-    return execvp(name, argv)
+    return execvp(name, argv);
 #endif
 }
 
 m3_exec_t Uexec__execve(const char* name, char** argv, char** envp)
 {
 #ifdef _WIN32
-    return _execve(name, argv, envp)
+    return _execve(name, argv, envp);
 #else
-    return execve(name, argv, envp)
+    return execve(name, argv, envp);
 #endif
 }
 
