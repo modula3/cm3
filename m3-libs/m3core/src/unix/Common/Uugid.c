@@ -10,7 +10,7 @@ extern "C" {
 
 #ifndef _WIN32
 
-gid_t Uugid__geteuid(void)
+uid_t Uugid__geteuid(void)
 {
     return geteuid();
 }
@@ -21,7 +21,6 @@ gid_t Uugid__getegid(void)
 }
 
 #endif
-
 
 #ifdef __cplusplus
 }
