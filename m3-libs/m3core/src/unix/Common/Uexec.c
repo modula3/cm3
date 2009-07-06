@@ -28,6 +28,48 @@ void Uexec__RepackStatus(int* var_status)
 
 #endif
 
+#if defined(_WIN64)
+typedef intptr_t m3_exec_t; /* correct for Win32 but requires newer headers */
+#else
+typedef int m3_exec_t;
+#endif
+
+m3_exec_t Uexec__execv(const char* name, char** argv)
+{
+#ifdef _WIN32
+    return _execv(name, argv);
+#else
+    return execv(name, argv);
+#endif
+}
+
+m3_exec_t Uexec__execvp(const char* name, char** argv)
+{
+#ifdef _WIN32
+    return _execvp(name, argv)
+#else
+    return execvp(name, argv)
+#endif
+}
+
+m3_exec_t Uexec__execve(const char* name, char** argv, char** envp)
+{
+#ifdef _WIN32
+    return _execve(name, argv, envp)
+#else
+    return execve(name, argv, envp)
+#endif
+}
+
+#ifndef _WIN32
+
+pid_t Uexec__waitpid(pid_t pid, int* status, int options)
+{
+    return waitpid(pid, status, options);
+}
+
+#endif
+
 #ifdef __cplusplus
 }
 #endif
