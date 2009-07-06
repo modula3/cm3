@@ -46,6 +46,7 @@ struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses *
 #include <io.h>
 #include <winsock.h>
 #include <process.h>
+typedef ptrdiff_t ssize_t;
 #else
 #include <sys/ioctl.h>
 #include <sys/mman.h>

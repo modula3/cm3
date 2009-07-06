@@ -8,8 +8,6 @@
 extern "C" {
 #endif
 
-#ifndef _WIN32
-
 ssize_t Uuio__read (int d, void* buf, size_t nbytes)
 {
 #ifdef _WIN32
@@ -27,8 +25,6 @@ ssize_t Uuio__write (int d, const void* buf, size_t nbytes)
     return write(d, buf, nbytes);
 #endif
 }
-
-#endif
 
 #ifdef __cplusplus
 }
