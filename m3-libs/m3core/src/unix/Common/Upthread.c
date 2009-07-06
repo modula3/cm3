@@ -21,13 +21,13 @@ Only convert integers to/from integers, and pointer-sized integers to/from point
     
 int Upthread__detach(m3_pthread_t thread)
 {
-    pthread_t a = PTHREAD_FROM_M3(thread);
-    return pthread_detach(a);
+    return pthread_detach(PTHREAD_FROM_M3(thread));
 }
 
 m3_pthread_t Upthread__self(void)
 {
-    return PTHREAD_TO_M3(pthread_self());
+    pthread_t a = pthread_self();
+    return PTHREAD_FROM_M3(a);
 }
 
 int Upthread__equal(m3_pthread_t t1, m3_pthread_t t2)
