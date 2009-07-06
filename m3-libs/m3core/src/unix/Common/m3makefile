@@ -19,6 +19,7 @@ c_source("Uutmp")
 c_source("Usignal")
 c_source("Upwd")
 c_source("Uprocess")
+c_source("Upthread")
 
 %
 % This is meant to be all systems with user-thread support,
