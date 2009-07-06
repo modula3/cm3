@@ -14,7 +14,6 @@ TYPE
 <*EXTERNAL pthread_detach*> PROCEDURE detach (thread: pthread_t): int;
 <*EXTERNAL pthread_self*> PROCEDURE self (): pthread_t;
 <*EXTERNAL pthread_equal*> PROCEDURE equal (t1, t2: pthread_t): int;
-<*EXTERNAL pthread_yield*> PROCEDURE yield (): int;
 <*EXTERNAL pthread_kill*> PROCEDURE kill (thread: pthread_t; sig: int): int;
 
 END Upthread.
