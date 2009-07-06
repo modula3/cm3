@@ -27,7 +27,7 @@ int Upthread__detach(m3_pthread_t thread)
 m3_pthread_t Upthread__self(void)
 {
     pthread_t a = pthread_self();
-    return PTHREAD_FROM_M3(a);
+    return PTHREAD_TO_M3(a);
 }
 
 int Upthread__equal(m3_pthread_t t1, m3_pthread_t t2)
