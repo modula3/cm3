@@ -39,6 +39,7 @@ include("Unix.common")
 SYSTEM_LD = SYSTEM_CC
   & " -Bsymbolic"
   & " -Wl,--fatal-warnings"
+  & " -Wl,-rpath,\\$ORIGIN"
   & " -Wl,-rpath,\\$ORIGIN/../lib"
 
 include("gnuld.common")

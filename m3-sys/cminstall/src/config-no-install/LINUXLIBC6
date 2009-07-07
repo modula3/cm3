@@ -13,6 +13,7 @@ SYSTEM_LD = SYSTEM_CC
 % & " -Wl,--as-needed"
   & " -Wl,--fatal-warnings"
 % & " -Wl,-no-allow-shlib-undefined"
+  & " -Wl,-rpath,\\$ORIGIN"
   & " -Wl,-rpath,\\$ORIGIN/../lib"
   & " -Wl,--warn-common"
 
