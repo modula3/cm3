@@ -33,6 +33,7 @@ SYSTEM_LD = SYSTEM_CC
   & " -Wl,-z,origin"
   & " -Bsymbolic"
   & " -Wl,--fatal-warnings"
+  & " -Wl,-rpath,\\$ORIGIN"
   & " -Wl,-rpath,\\$ORIGIN/../lib"
   & " -Wl,--warn-common"
 readonly POSITION_INDEPENDENT_EXECUTABLE = "-pie"
