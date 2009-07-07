@@ -25,6 +25,7 @@ end
 
 SYSTEM_LD = SYSTEM_CC & " -B direct -z ignore -z combreloc -z defs -z text"
     & " -i -z now -z origin "
+    & " -R \\$ORIGIN"
     & " -R \\$ORIGIN/../lib"
 
 SYSTEM_LIBS = {
