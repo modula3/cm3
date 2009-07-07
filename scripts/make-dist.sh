@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.21 2009-07-03 18:56:21 wagner Exp $
+# $Id: make-dist.sh,v 1.22 2009-07-07 13:57:11 jkrell Exp $
 
 DESTHOST=${DESTHOST:-birch.elegosoft.com}
 
@@ -26,6 +26,10 @@ STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
 
+# keep short runpaths
+M3_PORTABLE_RUN_PATH=1
+export M3_PORTABLE_RUN_PATH
+
 DS="RC1"; export DS
 if [ -z "${NOBUILD}" ]; then
   DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
@@ -36,10 +40,6 @@ if [ -z "${NOBUILD}" ]; then
   PATH="${INSTALLROOT}/bin:${PATH}"
   "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
 fi
-# keep short runpaths
-M3_PORTABLE_RUN_PATH=1
-export M3_PORTABLE_RUN_PATH
-
 
 if [ `uname` = 'Interix' ]; then
   PKG_COLLECTIONS="devlib m3devtool webdev obliq caltech-parser tool math game core"
