@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-all.sh,v 1.7 2009-06-07 16:03:50 wagner Exp $
+# $Id: make-src-dist-all.sh,v 1.8 2009-07-08 06:27:30 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -33,7 +33,7 @@ header "building CM3 source distribution in ${ARCHIVE}"
 # build the source distribution archive
 #
 cd "${ROOT}" || exit 1
-/bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC scripts m3-* > .tar-include
+/bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC scripts m3-* caltech-* > .tar-include
 /bin/ls -1d compat.quake >> .tar-include
 /bin/ls -1d m3-*/*/${TARGET} > .tar-exclude
 /bin/ls -1d m3-*/*/${TARGET}p >> .tar-exclude
