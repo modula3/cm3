@@ -14,6 +14,7 @@ FROM Utypes IMPORT pid_t;
 <*EXTERNAL "Usignal__SIGCHLD"*> VAR SIGCHLD: int;
 <*EXTERNAL "Usignal__SIGHUP"*>  VAR SIGHUP:  int;
 <*EXTERNAL "Usignal__SIGTERM"*> VAR SIGTERM: int;
+<*EXTERNAL "Usignal__SIGSTOP"*> VAR SIGSTOP: int;
 
 TYPE
   SignalHandler = PROCEDURE (sig: int);
