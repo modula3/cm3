@@ -59,6 +59,7 @@ X(SIGKILL)
 X(SIGCHLD)
 X(SIGALRM)
 X(SIGHUP)
+X(SIGSTOP)
 #endif
 
 #undef X
