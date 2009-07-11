@@ -598,7 +598,6 @@ PROCEDURE GrayBetween (h, he: RefHeader; r: PromoteReason) =
 
 PROCEDURE FlushThreadState (VAR thread: ThreadState) =
   BEGIN
-    <*ASSERT thread.inCritical = 0*>
     WITH pool = thread.pool DO
       pool.next := NIL;
       pool.limit := NIL;
