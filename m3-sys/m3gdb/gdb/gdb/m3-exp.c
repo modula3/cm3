@@ -214,7 +214,7 @@ m3_write_id_ref ( struct symbol * sym, const char * name )
     struct stoken tok;
 
     if ( m3_is_globals_record_symbol ( sym ) ) 
-      { /* This is the ugly case of a global variable, and it has 
+      { /* This is the ugly case of a global variable, which has 
            no symbol.  Instead, lookup_symbol returned the globals
            record, to signal the case, and we have to concoct a
            little field-selecting subexpression from it. */ 
