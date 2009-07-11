@@ -3135,6 +3135,7 @@ static const struct bfd_elf_special_section
 #define elf_backend_plt_sym_val		    elf64_x86_64_plt_sym_val
 #define elf_backend_object_p		    elf64_x86_64_elf_object_p
 #define bfd_elf64_mkobject		    elf64_x86_64_mkobject
+#define elf_backend_sign_extend_vma	    TRUE
 
 #define elf_backend_section_from_shdr \
 	elf64_x86_64_section_from_shdr
