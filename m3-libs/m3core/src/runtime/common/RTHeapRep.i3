@@ -216,10 +216,9 @@ PROCEDURE RegisterFinalCleanup (r: REFANY; p: PROCEDURE (r: REFANY));
 (* There are various status variables. *)
 
 VAR
-  (* how many more Disables than Enables *)
-  disableCount: CARDINAL := 1;		 (* initially disabled *)
-  (* how many more DisableMotions than EnableMotions *)
-  disableMotionCount: CARDINAL := 0;
+  disableCount: CARDINAL := 0;   (* how many more Disables than Enables *)
+  disableMotionCount: CARDINAL := 0; (* how many more DisableMotions than
+                                        EnableMotions *)
 
 PROCEDURE Crash (): BOOLEAN;
 (* Crash is called by the runtime when the program is about to crash.  When
