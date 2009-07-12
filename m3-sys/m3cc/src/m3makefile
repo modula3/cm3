@@ -305,17 +305,11 @@ if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
 local SourceDir = "../gcc"
 local GCC42 = FALSE
-if equal(M3CC_TARGET, "ARM_DARWIN") or equal(M3CC_TARGET, "I386_INTERIX")
+if equal(M3CC_TARGET, "ARM_DARWIN")
     GCC42 = TRUE
     local Defines = ""
-    if equal(M3CC_TARGET, "ARM_DARWIN")
-        SourceDir = "../gcc-apple"
-        Defines = "#define GCC_APPLE\n#define GCC42\n"
-    end
-    if equal(M3CC_TARGET, "I386_INTERIX")
-        SourceDir = "../gcc-interix"
-        Defines = "#define GCC42\n"
-    end
+    SourceDir = "../gcc-apple"
+    Defines = "#define GCC_APPLE\n#define GCC42\n"
     fs_mkdir(SourceDir & "/gcc/m3cg")
     foreach a in ["config-lang.in", "lang-options.h", "lang-specs.h", "lang.opt", "m3-convert.c", "m3cg.h", "Make-lang.in"]
         cp_if("../gcc/gcc/m3cg/" & a, SourceDir & "/gcc/m3cg/" & a)
