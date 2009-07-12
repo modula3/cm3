@@ -5,6 +5,14 @@
 readonly TARGET       = "PPC_DARWIN"
 readonly WORD_SIZE    = "32BITS"
 readonly GNU_PLATFORM = "powerpc-apple-darwin6.3"
-readonly SYSTEM_ASM = "as"
+
+proc FileExists(x) is
+    return not stale(x, x)
+end
+
+SYSTEM_ASM = "/usr/libexec/gcc/darwin/ppc/as"
+if not FileExists(SYSTEM_ASM)
+    SYSTEM_ASM = "as"
+end
 
 include("Darwin.common")
