@@ -568,7 +568,10 @@ elif UName.startswith("darwin"):
     if UNameArchP == "powerpc":
         Host = "PPC_DARWIN"
     elif re.match("i[3456]86", UNameArchP):
-        Host = "I386_DARWIN"
+        if os.popen("sysctl hw.cpu64bit_capable").read() == "hw.cpu64bit_capable: 1\n":
+            Host = "AMD64_DARWIN"
+        else:
+            Host = "I386_DARWIN"
     elif UNameArchP == "x86-64":
         Host = "AMD64_DARWIN"
     elif UNameArchP == "powerpc64":
