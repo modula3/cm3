@@ -11,10 +11,17 @@
 %
 if not defined("SYSTEM_CC")
     if equal(WORD_SIZE, "32BITS")
-        SYSTEM_CC  = "gcc -fPIC -m32"
+        SYSTEM_CC  = "32"
     else
-        SYSTEM_CC  = "gcc -fPIC -m64"
+        SYSTEM_CC  = "64"
     end
+    SYSTEM_CC = "gcc -fPIC -m" & SYSTEM_CC
+    local a = SYSTEM_CC & " -arch " & {"PPC_DARWIN":"ppc", "PPC64_DARWIN":"ppc64", "I386_DARWIN":"i386", "AMD64_DARWIN":"x86_64"}{TARGET}
+    local b = try_exec("@" & a & " -v 2>/dev/null")
+    if equal(b, 0)
+        SYSTEM_CC = a
+    end
+    %write("SYSTEM_CC is " & SYSTEM_CC & "\n")
 end
 if not defined("SYSTEM_LIBTOOL")
     readonly SYSTEM_LIBTOOL = "libtool"
