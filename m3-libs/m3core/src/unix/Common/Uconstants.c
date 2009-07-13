@@ -62,6 +62,110 @@ X(SIGHUP)
 X(SIGSTOP)
 #endif
 
+#ifdef SIGQUIT
+X(SIGQUIT)
+#endif
+#ifdef SIGILL
+X(SIGILL)
+#endif
+#ifdef SIGTRAP
+X(SIGTRAP)
+#endif
+#ifdef SIGABRT
+X(SIGABRT)
+#endif
+#ifdef SIGEXCEPT
+X(SIGEXCEPT)
+#endif
+#ifdef SIGFPE
+X(SIGFPE)
+#endif
+#ifdef SIGBUS
+X(SIGBUS)
+#endif
+#ifdef SIGSEGV
+X(SIGSEGV)
+#endif
+#ifdef SIGSYS
+X(SIGSYS)
+#endif
+#ifdef SIGPIPE
+X(SIGPIPE)
+#endif
+#ifdef SIGUSR1
+X(SIGUSR1)
+#endif
+#ifdef SIGUSR2
+X(SIGUSR2)
+#endif
+#ifdef SIGIO
+X(SIGIO)
+#endif
+#ifdef SIGWINCH
+X(SIGWINCH)
+#endif
+#ifdef SIGURG
+X(SIGURG)
+#endif
+#ifdef SIGPOLL
+X(SIGPOLL)
+#endif
+#ifdef SIGTSTP
+X(SIGTSTP)
+#endif
+#ifdef SIGCONT
+X(SIGCONT)
+#endif
+#ifdef SIGTTIN
+X(SIGTTIN)
+#endif
+#ifdef SIGTTOU
+X(SIGTTOU)
+#endif
+#ifdef SIGVTALRM
+X(SIGVTALRM)
+#endif
+#ifdef SIGPROF
+X(SIGPROF)
+#endif
+#ifdef SIGXCPU
+X(SIGXCPU)
+#endif
+#ifdef SIGXFSZ
+X(SIGXFSZ)
+#endif
+#ifdef SIGCANCEL
+X(SIGCANCEL)
+#endif
+
+#ifdef NSIG
+X(NSIG)
+#endif
+#ifdef SIGIOT
+X(SIGIOT)
+#endif
+#ifdef SIGCLD
+X(SIGCLD)
+#endif
+#ifdef SA_NOCLDSTOP
+X(SA_NOCLDSTOP)
+#endif
+#ifdef SA_RESTART
+X(SA_RESTART)
+#endif
+#ifdef SA_RESETHAND
+X(SA_RESETHAND)
+#endif
+#ifdef SIG_BLOCK
+X(SIG_BLOCK)
+#endif
+#ifdef SIG_UNBLOCK
+X(SIG_UNBLOCK)
+#endif
+#ifdef SIG_SETMASK
+X(SIG_SETMASK)
+#endif
+
 #undef X
 #define X(x) const int Unix__##x = x;
 #undef Y
