@@ -1,12 +1,19 @@
 readonly SYSTEM_AR = "ar"
 
-if equal (WORD_SIZE, "32BITS")
-    GccMBits = "32"
+if equal(TARGET, "SOLsun") or equal(TARGET, "SOLgnu")
     SunXArch = "v8plus"
     M3_USE_STACK_WALKER = TRUE
+end
+
+if equal(TARGET, "SPARC64_SOLARIS")
+    SunXArch = "v9"
+end
+% need SunXArch for I386_SOLARIS, AMD64_SOLARIS
+
+if equal (WORD_SIZE, "32BITS")
+    GccMBits = "32"
 else
     GccMBits = "64"
-    SunXArch = "v9"
 end
 
 m3back_flags = "-quiet -gstabs+ -fPIC -m" & GccMBits
@@ -81,22 +88,9 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
         if not equal (ret_code, 0)
             return ret_code
         end
-
-        % create the version aliases
-        link_file(lib_sox, lib_so)
-
-        % finally, make sure the shared library stuff gets installed properly
-        LibdExport(lib_sox)
-        link_file(lib_sox, LIB_INSTALL & SL & lib_so)
-    else
-        delete_file (lib_so)
-        delete_file (lib_sox)
     end
 
-    % delete old .so files in package store
-    local pkg = PKG_INSTALL & SL & lib & SL & TARGET & SL
-    delete_file(pkg & lib_so)
-    delete_file(pkg & lib_sox)
+    local a = skip_lib(lib, shared)
 
     return 0
 end
