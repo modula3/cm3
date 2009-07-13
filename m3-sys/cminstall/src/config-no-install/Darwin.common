@@ -108,10 +108,12 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local lib_soxx = format ("lib%s.%s.dylib", lib, version)
   local lib_pn   = LIB_INSTALL & "/" & lib_soxx
 
-  delete_file("_m3ship2")
-
   % first, build the non-shared library
-  ret_code = try_exec ("@" & SYSTEM_LIBTOOL, "-static", "-o", lib_a, objects)
+  local arch = ""
+  if IsX86
+      arch = " -arch_only " & GccArch & " "
+  end
+  ret_code = try_exec ("@" & SYSTEM_LIBTOOL, arch, "-static", "-o", lib_a, objects)
   if not equal (ret_code, 0) return ret_code end
 
   if shared
@@ -127,11 +129,11 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
         %"-install_name", lib_pn
 
         % leaf only path -- does it work? And require environment varilable?
-        "-install_name", lib_sox,
+        %"-install_name", lib_sox,
         
         % relative to the executable, computed at runtime,
         % can still be override with environment for uninstalled binaries
-        %"-install_name", "@executable_path/../lib/" & lib_sox,
+        "-install_name", "@executable_path/../lib/" & lib_sox,
 
         % allow user to run install_name_tool with maximum flexibility
         "-headerpad_max_install_names",
@@ -147,9 +149,25 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
       delete_file (lib_a)
       return ret_code
     end
+
+    % create the version aliases
+    link_file(lib_soxx, lib_sox)
+    link_file(lib_sox, lib_so)
+
+    % finally, make sure the shared library stuff gets installed properly
+    LibdExport(lib_soxx)
+    link_file(lib_soxx, LIB_INSTALL & SL & lib_sox)
+    link_file(lib_sox, LIB_INSTALL & SL & lib_so)
+  else
+    delete_file (lib_so)
+    delete_file (lib_sox)
+    delete_file (lib_soxx)
   end
 
-  local a = skip_lib(lib, shared)
+  % delete old .so files in package store
+  local pkg = PKG_INSTALL & SL & lib & SL & TARGET & SL
+  delete_file(pkg & lib_so)
+  delete_file(pkg & lib_sox)
 
   return 0
 end
@@ -167,21 +185,6 @@ proc skip_lib (lib, shared) is
   local lib_sox  = format ("lib%s.%s.dylib", lib, vmaj)
   local lib_soxx = format ("lib%s.%s.dylib", lib, version)
 
-  if equal(lib, "m3")
-    lib = "libm3"
-  end
-
-  delete_file("_m3ship2")
-  >> ".M3SHIP" in
-      write("include(\"_m3ship2\")\n")
-  end
-  local pkg = "PKG_INSTALL & \"/" & lib & "/\" & TARGET"
-  > "_m3ship2" in
-      write("make_dir(" & pkg & ")\n")
-      write("make_dir(LIB_INSTALL)\n")
-  end
-  pkg = pkg & " & \"/"
-
   if shared
     % create the version aliases
     link_file(lib_soxx, lib_sox)
@@ -189,10 +192,8 @@ proc skip_lib (lib, shared) is
 
     % make sure the shared library stuff gets installed properly
     LibdExport(lib_soxx)
-    >> "_m3ship2" in
-        write(format("link_file(\"%s\", LIB_INSTALL & \"/%s\")\n", lib_sox, lib_so))
-        write(format("link_file(\"%s\", LIB_INSTALL & \"/%s\")\n", lib_soxx, lib_sox))
-    end
+    link_file(lib_soxx, LIB_INSTALL & SL & lib_sox)
+    link_file(lib_sox, LIB_INSTALL & SL & lib_so)
 
   else
     delete_file (lib_so)
@@ -200,24 +201,13 @@ proc skip_lib (lib, shared) is
     delete_file (lib_soxx)
   end
 
+  % delete old .so files in package store
+  local pkg = PKG_INSTALL & SL & lib & SL & TARGET & SL
+  delete_file(pkg & lib_so)
+  delete_file(pkg & lib_sox)
+  delete_file(pkg & lib_soxx)
 
-  >> "_m3ship2" in
-
-    % delete old .so files in package store
-
-    write(format("delete_file(" & pkg & "%s\")\n", lib_so))
-    write(format("delete_file(" & pkg & "%s\")\n", lib_sox))
-    write(format("delete_file(" & pkg & "%s\")\n", lib_soxx))
-  
-    % and link them to lib
-    
-    write(format("link_file(\"../../../lib/%s\", " & pkg & "%s\")\n", lib_so, lib_so))
-    write(format("link_file(\"../../../lib/%s\", " & pkg & "%s\")\n", lib_sox, lib_sox))
-    write(format("link_file(\"../../../lib/%s\", " & pkg & "%s\")\n", lib_soxx, lib_soxx))
-  end
-  
   return 0
-
 end
 
 %------------------------------------------------------------------- linker ---
