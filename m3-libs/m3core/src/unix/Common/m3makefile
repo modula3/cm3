@@ -38,38 +38,30 @@ include_dir("context")
 c_source("Uconstants")
 Interface("Uutmp")
 
-%
-% This is meant to be all systems but isn't yet.
-% It is systems using the newer/smaller/more portable Unix/*.i3 files.
-%
+Interface ("Umman")
+c_source("UstatC")
+Interface ("Uuio")
+Interface ("Upwd")
+Interface ("Uugid")
+Interface ("Uprocess")
 
-if not equal (TARGET, "AMD64_DARWIN")
+Module("Unix")
+Interface("Utime")
+Interface("Utypes")
 
-    Interface ("Umman")
-    c_source("UstatC")
-    Interface ("Uuio")
-    Interface ("Upwd")
-    Interface ("Uugid")
-    Interface ("Uprocess")
+Interface("Uerror")
+c_source("Uconstants")
+h_source("UerrorX")
 
-    Module("Unix")
-    Interface("Utime")
-    Interface("Utypes")
+Interface("Upthread")
+Interface("Usched")
 
-    Interface("Uerror")
-    c_source("Uconstants")
-    h_source("UerrorX")
+Interface("Usocket")
+c_source("Usocket")
 
-    Interface("Upthread")
-    Interface("Usched")
-
-    Interface("Usocket")
-    c_source("Usocket")
-
-    Interface ("Ustat")
-    Interface ("Udir")
-    c_source("UdirC")
-end
+Interface ("Ustat")
+Interface ("Udir")
+c_source("UdirC")
 
 %
 % This is systems that don't provide user-thread support.
