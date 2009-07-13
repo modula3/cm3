@@ -356,7 +356,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 11 * Address.size;
 
     |  Systems.AMD64_FREEBSD =>
-                 Jumpbuf_size              := 16_80 * Char.size;
+                 Jumpbuf_size              := 16_60 * Char.size;
 
     |  Systems.HP300 =>
                  max_align                 := 16;
