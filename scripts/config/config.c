@@ -48,6 +48,7 @@ then use them. */
 #include <signal.h>
 #include <sys/param.h>
 #include <sys/time.h>
+#include <sys/socket.h>
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
