@@ -335,17 +335,15 @@ proc skip_lib(lib, shared) is
 
         % make sure the shared library stuff gets installed properly
         LibdExport(lib_sox)
-        link_file(lib_sox, LIB_INSTALL & SL & lib_so)
         ShipM3CoreStaticObjs(lib)
+        install_link_to_derived(lib_so, LIB_INSTALL)
+        install_derived_link("../../../lib/" & lib_sox, lib_so)
+        install_derived_link("../../../lib/" & lib_sox, lib_sox)
+
     else
         delete_file(lib_so)
         delete_file(lib_sox)
     end
-
-    % delete old .so files in package store
-    local pkg = PKG_INSTALL & SL & lib & SL & TARGET & SL
-    delete_file(pkg & lib_so)
-    delete_file(pkg & lib_sox)
 
     return 0
 end
