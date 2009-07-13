@@ -1,6 +1,5 @@
 readonly TARGET = "SPARC64_LINUX"
 readonly WORD_SIZE = "64BITS"
-readonly GNU_PLATFORM = "sparc64-linux"
 
 %
 % add s switch to ar and remove need for ranlib

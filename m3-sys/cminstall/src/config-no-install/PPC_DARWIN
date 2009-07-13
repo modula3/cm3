@@ -4,7 +4,6 @@
 
 readonly TARGET       = "PPC_DARWIN"
 readonly WORD_SIZE    = "32BITS"
-readonly GNU_PLATFORM = "powerpc-apple-darwin6.3"
 
 proc FileExists(x) is
     return not stale(x, x)
