@@ -1,6 +1,5 @@
 readonly TARGET = "I386_OPENBSD"
 readonly WORD_SIZE = "32BITS"
-readonly GNU_PLATFORM = "i686-openbsd"
 
 m3back_flags = "-gstabs+ -quiet -m32 -fPIC"
 SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"

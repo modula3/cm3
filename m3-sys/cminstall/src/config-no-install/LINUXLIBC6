@@ -1,6 +1,5 @@
 readonly TARGET       = "LINUXLIBC6"      % code generation target
 readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "i686-pc-linux-gnu"  % "cpu-vendor-os" string for GNU
 
 m3back_flags = "-quiet -gstabs+ -fPIC -mno-align-double"
 SYSTEM_CC       = "@gcc -gstabs+ -m32 -fPIC -mno-align-double" % C compiler

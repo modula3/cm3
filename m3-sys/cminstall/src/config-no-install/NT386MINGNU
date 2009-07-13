@@ -1,5 +1,5 @@
 %
-% $Id: NT386MINGNU,v 1.2 2009-06-29 19:53:47 jkrell Exp $
+% $Id: NT386MINGNU,v 1.3 2009-07-13 09:27:16 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -18,7 +18,6 @@
 readonly TARGET       = "NT386"             % code generation target
 
 readonly OS_TYPE      = "WIN32"
-readonly GNU_PLATFORM = "i686-pc-mingw32"
 
 if M3_PROFILING
     readonly PROFILING_P = "p"

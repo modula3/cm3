@@ -4,7 +4,6 @@
 
 readonly TARGET       = "I386_DARWIN"
 readonly WORD_SIZE    = "32BITS"
-readonly GNU_PLATFORM = "i686-apple-darwin8.0.1"
 
 %
 % newer platforms never needed these workarounds for
