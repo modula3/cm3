@@ -74,6 +74,7 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "SPARC32_LINUX") or equal (TARGET, "SPARC64_LINUX")
         or equal (TARGET, "PA32_HPUX") or equal (TARGET, "PA64_HPUX")
         or equal (TARGET, "NT386") or equal (TARGET, "AMD64_FREEBSD")
+        or equal (TARGET, "AMD64_OPENBSD") or equal (TARGET, "AMD64_NETBSD")
         or equal (TARGET, "I386_INTERIX")
 
     Interface("Uucontext")
