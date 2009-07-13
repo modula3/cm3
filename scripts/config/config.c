@@ -329,14 +329,14 @@ Methodology:
             a[j++] = "fprintf(File, \"sizeof(%s):\", \"";
             a[j++] = NativeName;
             a[j++] = "\");\n";
-            a[j++] = "  fprintf(File, \"%u\\n\", (U)sizeof(";
+            a[j++] = "  fprintf(File, \"0x%X\\n\", (U)sizeof(";
             a[j++] = NativeName;
             a[j++] = "));\n";
 
             a[j++] = "fprintf(File, \"ALIGN_OF_TYPE(%s):\", \"";
             a[j++] = NativeName;
             a[j++] = "\");\n";
-            a[j++] = "  fprintf(File, \"%u\\n\", (U)ALIGN_OF_TYPE(";
+            a[j++] = "  fprintf(File, \"0x%X\\n\", (U)ALIGN_OF_TYPE(";
             a[j++] = NativeName;
             a[j++] = "));\n";
         }
@@ -346,7 +346,7 @@ Methodology:
         a[j++] = "\", \"";
         a[j++] = Struct->Fields[i].Name;
         a[j++] = "\");\n";
-        a[j++] = "  fprintf(File, \"%u\\n\", (U)offsetof(";
+        a[j++] = "  fprintf(File, \"0x%X\\n\", (U)offsetof(";
         a[j++] = NativeName;
         a[j++] = ", ";
         a[j++] = Struct->Fields[i].Name;
@@ -357,7 +357,7 @@ Methodology:
         a[j++] = "\", \"";
         a[j++] = Struct->Fields[i].Name;
         a[j++] = "\");\n";
-        a[j++] = "  fprintf(File, \"%u\\n\", (U)SIZEOF_FIELD(";
+        a[j++] = "  fprintf(File, \"0x%X\\n\", (U)SIZEOF_FIELD(";
         a[j++] = NativeName;
         a[j++] = ", ";
         a[j++] = Struct->Fields[i].Name;
@@ -383,7 +383,7 @@ void DefineOpaqueType(Name, Size, Align)
 
     if ((Size % Align) != 0)
     {
-        Print("Size must be multiple of Align (%s, %u, %u)\n", Name, (U)Size, (U)Align);
+        Print("Size must be multiple of Align (%s, 0x%X, 0x%X)\n", Name, (U)Size, (U)Align);
         exit(1);
     }
 
@@ -412,7 +412,7 @@ void DefineOpaqueType(Name, Size, Align)
     }
     else if (Align > ALIGN_OF_TYPE(__int64))
     {
-        Print("WARNING: %s alignment lowered from %u to LONGINT\n", Name, (U)Align);
+        Print("WARNING: %s alignment lowered from 0x%X to LONGINT\n", Name, (U)Align);
         Element = "LONGINT";
         Align = ALIGN_OF_TYPE(__int64);
     }
@@ -430,16 +430,16 @@ void DefineOpaqueType(Name, Size, Align)
     }
     else
     {
-        Print("ERROR: unable to represent alignment %u for type %s\n", (U)Align, Name);
+        Print("ERROR: unable to represent alignment 0x%X for type %s\n", (U)Align, Name);
         exit(1);
     }
     /* need to check that a is an even multiple */
     if ((Size % Align) != 0)
     {
-        printf("ERROR: size (%u) is not an even multiple of align (%u) for type %s\n", (U)Size, (U)Align, Name);
+        printf("ERROR: size (0x%X) is not an even multiple of align (0x%X) for type %s\n", (U)Size, (U)Align, Name);
         exit(1);
     }
-    Print("%s = RECORD opaque: ARRAY [1..%u] OF %s; END\n", Name, (U)(Size / Align), Element);
+    Print("%s = RECORD opaque: ARRAY [1..16_%X] OF %s; END\n", Name, (U)(Size / Align), Element);
 }
 
 #ifdef __STDC__
@@ -466,7 +466,7 @@ char* GetIntegerType(Size, Signed)
     case 64|1: return "int64_t";
     default:
         /* consider using array of smaller type */
-        printf("ERROR: not able to represent size %u\n", (U)Size);
+        printf("ERROR: not able to represent size 0x%X\n", (U)Size);
         exit(1);
     }
 }
@@ -478,7 +478,7 @@ void DefineIntegerType(Name, Size, Signed, Align)
     size_t Align;
 {
     Align *= 8;
-    Print("%s = %s; %s align = %u %s\n", Name, GetIntegerType(Size, Signed), BeginComment, (U)Align, EndComment);
+    Print("%s = %s; %s align = 0x%X %s\n", Name, GetIntegerType(Size, Signed), BeginComment, (U)Align, EndComment);
 }
 
 #ifdef __STDC__
@@ -1027,7 +1027,7 @@ void DetermineJmpBufSize()
             {
                 if ((k ? ((unsigned char*)&sjb) : ((unsigned char*)&jb))[j - 1] != i)
                 {
-                    printf("apparent %sjmpbuf size: %u\n", k ? "sig" : "", j);
+                    printf("apparent %sjmpbuf size: 0x%X\n", k ? "sig" : "", j);
                     break;
                 }
             }
@@ -1035,8 +1035,8 @@ void DetermineJmpBufSize()
     }
 #endif
 
-    printf("claimed jmpbuf size: %u\n", (U)sizeof(jb));
-    printf("claimed sigjmpbuf size: %u\n", (U)sizeof(sjb));
+    printf("claimed jmpbuf size: 0x%X\n", (U)sizeof(jb));
+    printf("claimed sigjmpbuf size: 0x%X\n", (U)sizeof(sjb));
 }
 
 void Config()
