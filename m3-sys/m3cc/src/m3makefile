@@ -12,7 +12,7 @@ readonly Platform_info = {
   "ALPHA_OPENBSD" : "alpha-openbsd",
   "ALPHA_OSF" : "alpha-dec-osf1",
   "ALPHA_VMS" : "alpha-vms",
-  "AMD64_DARWIN" : "i686-apple-darwin8.7.1",
+  "AMD64_DARWIN" : "i686-apple-darwin8",
   "AMD64_FREEBSD" : "amd64-freebsd7",
   "AMD64_LINUX" : "amd64-pc-linux-gnu",
   "AMD64_NETBSD" : "amd64-netbsd",
@@ -32,7 +32,7 @@ readonly Platform_info = {
   "FreeBSD4"  : "i386-unknown-freebsd4",
   "HP300"     : "m68k-hp-hpux",
   "HPPA"      : "hppa1.1-hp-hpux",
-  "I386_DARWIN" : "i686-apple-darwin8.7.1",
+  "I386_DARWIN" : "i686-apple-darwin8",
   "I386_INTERIX" : "i686-pc-interix3",
   "I386_MSDOS" : "i586-pc-msdosdjgpp",
   "I386_OPENBSD" : "i686-openbsd",
@@ -70,7 +70,7 @@ readonly Platform_info = {
   "PPC32_OPENBSD" : "powerpc-openbsd",
   "PPC64_AIX" : "powerpc64-aix",
   "PPC64_DARWIN" : "powerpc64-darwin",
-  "PPC_DARWIN"  : "powerpc-apple-darwin6.3",
+  "PPC_DARWIN"  : "powerpc-apple-darwin6",
   "PPC_LINUX"   : "powerpc-apple-linuxelf",
   "SEQUENT"   : "i386-sequent-bsd",
   "SOLgnu"    : "sparc-sun-solaris2",
@@ -88,22 +88,9 @@ readonly Platform_info = {
   "VAX"       : "vax-dec-ultrix",
 }
 
-%
-% not currently used
-%
-readonly proc Platform_WordSize (Platform) is
-  if {"ALPHA_OSF":1,"AMD64_DARWIN":1,"AMD64_LINUX":1,"AMD64_NT":1,
-      "AMD64_FREEBSD":1,"AMD64_NETBSD":1,"AMD64_OPENBSD":1,"AMD64_SOLARIS":1,
-      "IA64_NT":1,"FBSD_ALPHA":1,"Tru64v5":1,"SPARC64_LINUX":1,
-      "PPC64_AIX":1,"PPC64_DARWIN":1,"PPC64_LINUX":1,
-      "SPARC64_OPENBSD":1,"SPARC64_SOLARIS":1,"MIPS64_IRIX":1,"MIPS64_OPENBSD":1} contains Platform
-    return "64"
-  end
-  return "32"
-end
-
 readonly proc Platform_IsOpenBSD (Platform) is
-  return {"I386_OPENBSD":1,"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1,"MIPS64_OPENBSD":1} contains Platform
+  return {"I386_OPENBSD":1,"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1,
+    "MIPS64_OPENBSD":1,"AMD64_OPENBSD":1} contains Platform
 end
 
 %
@@ -295,6 +282,7 @@ end
 %       This requires HT=AA to build fixincludes, AB to build gcc, AC to build libgcc, producing a BC compiler.
 %
 % check for overrides, otherwise use the defaults from the configuration file
+
 if not defined ("M3CC_BUILD")   M3CC_BUILD  = TARGET     end
 if not defined ("M3CC_HOST")    M3CC_HOST   = TARGET     end
 if not defined ("M3CC_TARGET")  M3CC_TARGET = TARGET     end
@@ -398,6 +386,15 @@ if defined ("FORCE")
   end
 end
 
+local Configure = " "
+
+if equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD) and equal (M3CC_BUILD, "PPC_DARWIN") and FileExists("/usr/libexec/oah/translate")
+    M3CC_CFLAGS = M3CC_CFLAGS & " -arch ppc"
+    Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+    Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
+    Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
+end
+
 %
 % Configure does not seem to ferry environment variables from itself to make,
 % so these must be specified on both the configure command and the make command.
@@ -425,7 +422,6 @@ ApplyPatches (M3CC_TARGET)
 if not defined ("no_config")
   % configure the sources
   if not FileExists (done)
-    local Configure = " "
 
     %
     % Workaround Canadian fixincludes not understanding sysroot of the cross compiler used to build it.
