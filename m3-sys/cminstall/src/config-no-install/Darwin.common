@@ -150,10 +150,6 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
       return ret_code
     end
 
-  else
-    delete_file (lib_so)
-    delete_file (lib_sox)
-    delete_file (lib_soxx)
   end
 
   local a = skip_lib(lib, shared)
