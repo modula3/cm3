@@ -105,6 +105,11 @@ void Print(Format, va_alist)
     va_start(Args);
 #endif
     vprintf(Format, Args);
+#ifdef __STDC__
+    va_start(Args, Format);
+#else
+    va_start(Args);
+#endif
     vfprintf(LogFile, Format, Args);
     va_end(Args);
 }
