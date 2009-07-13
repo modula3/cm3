@@ -3,7 +3,7 @@
 % See the file COPYRIGHT for a full description.
 %
 
-if equal(TARGET, "PPC_DARWIN") or equal(TARGET, "I386_DARWIN")
+if TRUE
 
 Module ("Usignal")
 
