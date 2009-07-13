@@ -1,6 +1,5 @@
 readonly TARGET = "PPC32_OPENBSD"
 readonly WORD_SIZE = "32BITS"
-readonly GNU_PLATFORM = "powerpc-openbsd"
 
 m3back_flags = "-gstabs+ -quiet -m32 -fPIC"
 SYSTEM_CC = "gcc -gstabs+ -fPIC"

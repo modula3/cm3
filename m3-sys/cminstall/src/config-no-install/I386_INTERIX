@@ -1,6 +1,5 @@
 readonly TARGET = "I386_INTERIX" % code generation target
 readonly WORD_SIZE = "32BITS" % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "i686-pc-interix3" % "cpu-vendor-os" string for GNU
 
 %
 % add s switch to ar and remove need for ranlib

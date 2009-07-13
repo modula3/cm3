@@ -25,7 +25,6 @@ end
 
 readonly BUILD_DIR    = "NT386" & PROFILING_P
 readonly OS_TYPE      = "WIN32"
-readonly GNU_PLATFORM = "i686-pc-mingw32" % "cpu-vendor-os" string for GNU
 
 readonly M3_BACKEND_MODE = "0"
 % -- defines how the frontend, backend, and assembler interact

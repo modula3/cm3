@@ -1,6 +1,5 @@
 readonly TARGET = "AMD64_LINUX" % code generation target
 readonly WORD_SIZE = "64BITS" % { "32BITS" or "64BITS" }
-readonly GNU_PLATFORM = "amd64-pc-linux-gnu" % "cpu-vendor-os" string for GNU
 
 %
 % add s switch to ar and remove need for ranlib
