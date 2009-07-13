@@ -4,19 +4,24 @@
 
 %-------------------------------------------------------------------
 
-%
-% fPIC is not usually needed here.
-% It is the default for Apple gcc and left
-% here in case user is using a self-built FSF gcc.
-%
+GccArch = {"PPC_DARWIN":"ppc", "PPC64_DARWIN":"ppc64", "I386_DARWIN":"i386",
+    "AMD64_DARWIN":"x86_64"}{TARGET}
+
+IsX86 = equal(TARGET, "I386_DARWIN") or equal(TARGET, "AMD64_DARWIN")
+
 if not defined("SYSTEM_CC")
     if equal(WORD_SIZE, "32BITS")
         SYSTEM_CC  = "32"
     else
         SYSTEM_CC  = "64"
     end
+%
+% fPIC is not usually needed here.
+% It is the default for Apple gcc and left
+% here in case user is using a self-built FSF gcc.
+%
     SYSTEM_CC = "gcc -fPIC -m" & SYSTEM_CC
-    local a = SYSTEM_CC & " -arch " & {"PPC_DARWIN":"ppc", "PPC64_DARWIN":"ppc64", "I386_DARWIN":"i386", "AMD64_DARWIN":"x86_64"}{TARGET}
+    local a = SYSTEM_CC & " -arch " & GccArch
     local b = try_exec("@" & a & " -v 2>/dev/null")
     if equal(b, 0)
         SYSTEM_CC = a
@@ -34,10 +39,11 @@ end
 %
 if not defined("m3back_flags")
     if equal(WORD_SIZE, "32BITS")
-        m3back_flags = "-fPIC -gstabs+ -quiet -m32"
+        m3back_flags = "32"
     else
-        m3back_flags = "-fPIC -gstabs+ -quiet -m64"
+        m3back_flags = "64"
     end
+    m3back_flags = "-fPIC -gstabs+ -quiet -m" & m3back_flags
 end
 
 %------------------------------------------------ external system libraries ---
@@ -103,7 +109,11 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   local lib_pn   = LIB_INSTALL & "/" & lib_soxx
 
   % first, build the non-shared library
-  ret_code = try_exec ("@" & SYSTEM_LIBTOOL, "-static", "-o", lib_a, objects)
+  local arch = ""
+  if IsX86
+      arch = " -arch_only " & GccArch & " "
+  end
+  ret_code = try_exec ("@" & SYSTEM_LIBTOOL, arch, "-static", "-o", lib_a, objects)
   if not equal (ret_code, 0) return ret_code end
 
   if shared
@@ -210,6 +220,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     options,
     objects,
     imported_libs,
+%   "-allow_stack_execute",
     "-multiply_defined suppress", % unfortunately needed for __cxa_atexit?
     "-bind_at_load",
     "-shared-libgcc",
