@@ -58,7 +58,7 @@ SYSTEM_LIBS = {
   "ODBC"       : [ "-liodbc", ],
 % "MOTIF"      : [ "-lXm" ],
   "X11"        : [
-  	"-L/usr/X11R6/lib",
+    "-L/usr/X11R6/lib",
     "-lXaw",
     "-lXmu",
     "-lXext",
@@ -246,9 +246,9 @@ else
 %
 %error("old version")
 M3_SPLIT_LIBNAMES = FALSE
-M3_SPLIT_LIBNAMES_IF_SHARED = TRUE  	 
-% --- split library names and pass -L/-l arguments to the linker if linking 	 
-%     dynamically, pass full library names else 	 
+M3_SPLIT_LIBNAMES_IF_SHARED = TRUE
+% --- split library names and pass -L/-l arguments to the linker if linking
+%     dynamically, pass full library names else
 %     (assumes M3_SPLIT_LIBNAMES = FALSE)
 end
 end
