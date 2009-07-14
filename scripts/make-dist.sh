@@ -255,6 +255,7 @@ EOF
       fi
       for section in 1 5 6 7 8; do
         manpages=`find ${p}/src -name "[A-Za-z]*.${section}" -print`
+	[ ${p} = m3-tools/m3tk ] && manpages="" # only fragments in m3tk, ignore
         if [ -n "${manpages}" ]; then
           for m in ${manpages}; do
             mb=`basename ${m} .${section}`
