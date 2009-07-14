@@ -8,4 +8,7 @@ readonly TARGET       = "SOLgnu"
 readonly WORD_SIZE    = "32BITS"
 readonly C_COMPILER = "GNU"
 
+SunXArch = "v8plus"
+M3_USE_STACK_WALKER = TRUE
+
 include ("Solaris.common")

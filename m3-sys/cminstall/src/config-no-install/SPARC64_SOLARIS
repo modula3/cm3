@@ -5,6 +5,8 @@
 readonly TARGET = "SPARC64_SOLARIS"
 readonly WORD_SIZE = "64BITS"
 readonly C_COMPILER = "SUN"
+%SunXArch = "v9"
+SunXArch = "generic64"
 
 
 %
@@ -14,6 +16,5 @@ readonly C_COMPILER = "SUN"
 readonly proc GetGcWrapFlags() is return "" end
 readonly proc FixM3GcDefs(x) is return x end
 readonly proc GetM3BackFlag(x) is return x end
-
 
 include ("Solaris.common")
