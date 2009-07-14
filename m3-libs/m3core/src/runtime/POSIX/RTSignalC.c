@@ -11,12 +11,15 @@
 #endif
 #include <unistd.h>
 #include <signal.h>
-typedef struct sigaction sigaction_t;
 #include <assert.h>
-#if defined(__APPLE__) && defined(__arm)
-/* nothing -- ucontext_t is from signal.h and #including ucontext.h gives #error */
-#elif defined(__CYGWIN__)
-typedef void ucontext_t;
+typedef struct sigaction sigaction_t;
+#if defined(__OpenBSD__) || (defined(__APPLE__) && defined(__arm)) \
+ || defined(__CYGWIN__)
+/* Apple/arm: ucontext_t is in signal.h
+              #including ucontext.h gives #error
+ OpenBSD 4.3: ucontext.h doesn't exist, ucontext_t is in signal.h
+      Cygwin: no state provided to signal handler?
+*/
 #else
 #include <ucontext.h>
 #endif
@@ -74,85 +77,103 @@ static void Quit SIGNAL_HANDLER_SIGNATURE;
 static void InstallOneHandler(size_t i);
 static void RestoreOneHandler(size_t i);
 
-#ifdef SA_SIGINFO
+#if defined(__CYGWIN__) || defined(__INTERIX) \
+|| (defined(__APPLE__) && defined(__arm))
 
-static size_t GetPC(void* VoidContext)
-/* PC: program counter aka instruction pointer, etc. */
-{
-    size_t pc = 0;
-    ucontext_t *Context = (ucontext_t *)VoidContext;
+/* Revisit Apple/arm */
 
-    if (Context != NULL) {
-#if defined(__APPLE__)
-#if defined(__i386__)
-#if __DARWIN_UNIX03
-      pc = Context->uc_mcontext->__ss.__eip;
-#else
-      pc = Context->uc_mcontext->sc.sc_eip;
-#endif
-#elif defined(__x86_64__)
-#if __DARWIN_UNIX03
-      pc = Context->uc_mcontext->__ss.__rip;
-#else
-      pc = Context->uc_mcontext->ss.rip;
-#endif
-#elif defined(__ppc__) || defined(__ppc64__)
-#if __DARWIN_UNIX03
-      pc = Context->uc_mcontext->__ss.__srr0;
-#else
-      pc = Context->uc_mcontext->ss.srr0;
-#endif
-#elif defined(__arm)
-      /* Apparently missing support? Revisit when I get an official toolset. */
-#else
-#error Unknown __APPLE__ target
-#endif
-#elif defined(__sparc)
-      pc = Context->uc_mcontext.gregs[REG_PC];
-#elif defined(__linux)
-#if defined(__i386)
-      pc = Context->uc_mcontext.gregs[REG_EIP];
-#elif defined(__amd64)
-      pc = Context->uc_mcontext.gregs[REG_RIP];
-#elif defined(__powerpc)
-      pc = Context->uc_mcontext.uc_regs->gregs[PT_NIP];
-#else
-#error Unknown __linux target
-#endif
-#endif
-    }
+#define GetPC(x) 0
 
-#if 0 /* FUTURE, each or at least some of these need investigation and testing */
-    ucontext_t* Context = (ucontext_t*) VoidContext;
-    if (Context != NULL)
-    {
-#if defined(__CYGWIN__)
-#error update GetPC
-#elif defined(__amd64)
-        pc = Context->uc_mcontext->ss.rip;
-#elif defined(__i386) && defined(__linux)
-        pc = Context->uc_mcontext.gregs[REG_EIP];
-#elif defined(__i386) && defined(__FreeBSD__)
-        pc = Context->uc_mcontext->scp_eip;
-#elif defined(__powerpc)
-        pc = Context->uc_mcontext->ss.srr0;
-#elif defined(__mips)
-        pc = Context->uc_mcontext->scp_pc.lo;
-#elif defined(__hpux) && defined(__hppa)
-        pc = Context->uc_mcontext->scp_pc;
 #else
-#error update GetPC
-#endif
-    }
-#endif
-    return pc;
-}
 
 typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
 
-#else
+static size_t GetPC(void* xcontext)
+/* PC: program counter aka instruction pointer, etc. */
+{
+    ucontext_t* context = (ucontext_t*)xcontext;
 
-#define GetPC(x) 0
+    if (context == NULL)
+        return 0;
+
+    return
+
+#if defined(__APPLE__)
+
+#if defined(__i386__)
+#if __DARWIN_UNIX03
+    context->uc_mcontext->__ss.__eip
+#else
+    context->uc_mcontext->sc.sc_eip
+#endif
+#elif defined(__x86_64__)
+#if __DARWIN_UNIX03
+    context->uc_mcontext->__ss.__rip
+#else
+    context->uc_mcontext->ss.rip
+#endif
+#elif defined(__ppc__) || defined(__ppc64__)
+#if __DARWIN_UNIX03
+    context->uc_mcontext->__ss.__srr0
+#else
+    context->uc_mcontext->ss.srr0
+#endif
+#else
+/* arm is dealt with earlier */
+#error Unknown __APPLE__ target
+#endif
+
+#elif defined(__sun)
+      context->uc_mcontext.gregs[REG_PC]
+
+#elif defined(__linux)
+
+#if defined(__i386)
+      context->uc_mcontext.gregs[REG_EIP]
+#elif defined(__amd64)
+      context->uc_mcontext.gregs[REG_RIP]
+#elif defined(__powerpc)
+      context->uc_mcontext.uc_regs->gregs[PT_NIP]
+#else
+#error unknown __linux target
+#endif
+
+#elif defined(__NetBSD__)
+    _UC_MACHINE_PC(context)
+
+#elif defined(__OpenBSD__)
+#if defined(__amd64)
+    context->sc_rip
+#elif defined(__powerpc)
+    context->sc_frame.srr0
+#else
+    context->sc_pc
+#endif
+
+#elif defined(__FreeBSD__)
+#if defined(__amd64)
+    context->uc_mcontext.mc_rip
+#elif defined(__i386)
+    context->uc_mcontext.mc_eip
+#else
+    context->uc_mcontext.mc_pc
+#endif
+
+#elif defined(__mips)
+    context->uc_mcontext.scp_pc.lo
+#elif defined(__hppa)
+    context->uc_mcontext.scp_pc
+#elif defined(__i386)
+    context->uc_mcontext.ss.eip
+#elif defined(__amd64)
+    context->uc_mcontext.ss.rip
+#elif defined(__powerpc)
+    context->uc_mcontext.ss.srr0
+#else
+#error unknown target
+#endif
+    ;
+}
 
 #endif
 
@@ -230,7 +251,7 @@ void RestoreHandlers(void)
 {
     size_t i = { 0 };
 
-    for (; i != NUMBER_OF(Handlers) ; ++i)
+    for (; i < NUMBER_OF(Handlers); ++i)
     {
         RestoreOneHandler(i);
     }
