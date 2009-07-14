@@ -4,13 +4,15 @@
 
 void RTSignalPrivate__MsgPCSegV (size_t a)
 {
-  fprintf(stderr, "%s %lx\n", __FUNCTION__, (unsigned long)a);
+  static const char Function[] = "RTSignalPrivate__MsgPCSegV";
+  fprintf(stderr, "%s %lx\n", Function, (unsigned long)a);
   exit(1);
 }
 
 void RTSignalPrivate__MsgPCAbort (size_t a)
 {
-  fprintf(stderr, "%s %lx\n", __FUNCTION__, (unsigned long)a);
+  static const char Function[] = "RTSignalPrivate__MsgPCAbort";
+  fprintf(stderr, "%s %lx\n", Function, (unsigned long)a);
   exit(1);
 }
 
