@@ -8,5 +8,7 @@ readonly TARGET       = "SOLsun"
 readonly WORD_SIZE    = "32BITS"
 readonly C_COMPILER = "SUN"
 
+SunXArch = "v8plus"
+M3_USE_STACK_WALKER = TRUE
 
 include ("Solaris.common")

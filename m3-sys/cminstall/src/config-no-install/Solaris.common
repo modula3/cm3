@@ -1,15 +1,5 @@
 readonly SYSTEM_AR = "ar"
 
-if equal(TARGET, "SOLsun") or equal(TARGET, "SOLgnu")
-    SunXArch = "v8plus"
-    M3_USE_STACK_WALKER = TRUE
-end
-
-if equal(TARGET, "SPARC64_SOLARIS")
-    SunXArch = "v9"
-end
-% need SunXArch for I386_SOLARIS, AMD64_SOLARIS
-
 if equal (WORD_SIZE, "32BITS")
     GccMBits = "32"
 else
