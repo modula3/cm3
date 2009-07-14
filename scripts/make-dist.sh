@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.22 2009-07-07 13:57:11 jkrell Exp $
+# $Id: make-dist.sh,v 1.23 2009-07-14 20:23:14 wagner Exp $
 
 DESTHOST=${DESTHOST:-birch.elegosoft.com}
 
@@ -255,6 +255,7 @@ EOF
       fi
       for section in 1 5 6 7 8; do
         manpages=`find ${p}/src -name "[A-Za-z]*.${section}" -print`
+	[ ${p} = m3-tools/m3tk ] && manpages="" # only fragments in m3tk, ignore
         if [ -n "${manpages}" ]; then
           for m in ${manpages}; do
             mb=`basename ${m} .${section}`
