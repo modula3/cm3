@@ -30,7 +30,7 @@ rm -rf ${INSTALLROOT}
 M3_PORTABLE_RUN_PATH=1
 export M3_PORTABLE_RUN_PATH
 
-DS="RC1"; export DS
+DS="RC2"; export DS
 if [ -z "${NOBUILD}" ]; then
   DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
   DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
