@@ -9,10 +9,10 @@ if not defined("_PARSER_TOP")
 end
 
 if not defined("_PARSER_CMDS")
-	local _TOK = _PARSER_TOP & SL & "ktok" & SL & BUILD_DIR & SL & "tok"
-	local _LEX = _PARSER_TOP & SL & "klex" & SL & BUILD_DIR & SL & "lex"
-	local _YACC= _PARSER_TOP & SL & "kyacc" & SL& BUILD_DIR & SL & "yacc"
-	local _EXT = _PARSER_TOP & SL & "kext" & SL & BUILD_DIR & SL & "ext"
+	local _TOK = _PARSER_TOP & SL & "ktok" & SL & BUILD_DIR & SL & "ktok"
+	local _LEX = _PARSER_TOP & SL & "klex" & SL & BUILD_DIR & SL & "klex"
+	local _YACC= _PARSER_TOP & SL & "kyacc" & SL& BUILD_DIR & SL & "kyacc"
+	local _EXT = _PARSER_TOP & SL & "kext" & SL & BUILD_DIR & SL & "kext"
 	_PARSER_CMDS = {"t": _TOK, "l": _LEX, "y": _YACC, "e": _EXT}
 	_PARSER_SOURCES = []
 end
