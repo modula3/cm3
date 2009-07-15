@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.23 2009-07-14 20:23:14 wagner Exp $
+# $Id: make-dist.sh,v 1.24 2009-07-15 06:14:40 wagner Exp $
 
 DESTHOST=${DESTHOST:-birch.elegosoft.com}
 
@@ -30,7 +30,7 @@ rm -rf ${INSTALLROOT}
 M3_PORTABLE_RUN_PATH=1
 export M3_PORTABLE_RUN_PATH
 
-DS="RC1"; export DS
+DS="RC2"; export DS
 if [ -z "${NOBUILD}" ]; then
   DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
   DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
