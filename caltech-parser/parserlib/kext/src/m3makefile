@@ -18,5 +18,5 @@ module("Override")
 module("LoadSpec")
 implementation("Main")
 build_standalone()
-Program("ext")
+Program("kext")
 
