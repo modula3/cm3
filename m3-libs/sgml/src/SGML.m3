@@ -23,7 +23,7 @@ MODULE SGML EXPORTS SGML, SGMLRep;
 
 IMPORT SGML, SGMLC, SGMLCScanner, Text, RefSeq, TextRefTbl, TextTextTbl, Atom,
     ASCII, FileRd, TextRd, Pathname, FS, Process, OSError, 
-    IO, Rd, FSM, Fmt, M3Config;
+    IO, Rd, FSM, Fmt, MxConfig;
 
 REVEAL
 
@@ -174,9 +174,9 @@ PROCEDURE InitParser(self: SGML.Parser;
     CopyTextArray(self.options.includeParam);
     CopyTextArray(self.options.enableWarning);
     InitWarnings(self);
-    CopyTextArray(self.options.addSearchDir,M3Config.PKG_USE & 
-        M3Config.PATH_SEP & "sgml" & M3Config.PATH_SEP & "src" &
-        M3Config.PATH_SEP & "dtd");
+    CopyTextArray(self.options.addSearchDir,MxConfig.Get("PKG_USE") & 
+        MxConfig.HOST_PATH_SEP & "sgml" & MxConfig.HOST_PATH_SEP & "src" &
+        MxConfig.HOST_PATH_SEP & "dtd");
     CopyTextArray(self.options.activateLink);
     CopyTextArray(self.options.architecture);
     self.programName := programName;

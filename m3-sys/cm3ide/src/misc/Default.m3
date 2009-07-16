@@ -5,7 +5,7 @@ IMPORT Params, Text, ErrLog;
 IMPORT Env, Process, Fmt, IP, Pathname, FS;
 IMPORT Thread, IO, TextList, OSError, Wr;
 IMPORT Quake, QCompiler, QIdent, QMachine, QValue;
-IMPORT ConfigItem, ID, MxConfig AS M3Config, M3File, PkgRoot, UserState;
+IMPORT ConfigItem, ID, MxConfig, M3File, PkgRoot, UserState;
 
 TYPE CI = ConfigItem.T;
 
@@ -27,16 +27,16 @@ PROCEDURE Init () =
     path_sep := PathSep [on_unix];
 
     (* cm3 configuration *)
-    IF M3Config.FindFile () = NIL THEN
+    IF MxConfig.FindFile () = NIL THEN
       Die ("Unable to locate a cm3 configuration file.", Wr.EOL,
            "Apparently \"cm3\" is not on your search path.");
     END;
 
-    build_dir       := M3Config.Get ("BUILD_DIR");
-    system_root     := M3Config.Get ("PKG_USE"); (* note: system_root is the public package root *)
-    doc_root        := M3Config.Get ("DOC_INSTALL");
-    initial_browser := M3Config.Get ("INITIAL_CM3_IDE_BROWSER");
-    initial_editor  := M3Config.Get ("INITIAL_CM3_IDE_EDITOR");
+    build_dir       := MxConfig.Get ("BUILD_DIR");
+    system_root     := MxConfig.Get ("PKG_USE"); (* note: system_root is the public package root *)
+    doc_root        := MxConfig.Get ("DOC_INSTALL");
+    initial_browser := MxConfig.Get ("INITIAL_CM3_IDE_BROWSER");
+    initial_editor  := MxConfig.Get ("INITIAL_CM3_IDE_EDITOR");
 
 (* Following code added by RCC to attempt to find/construct certain critical roots if they weren't found above *)
 (* Note that the typical installation's pathname hierarchy (using POSIX-style path syntax) is:
@@ -48,7 +48,7 @@ PROCEDURE Init () =
 *)
    IF (build_dir = NIL)
    THEN (* attempt to substitute 'TARGET' for 'BUILD_DIR' *)
-      WITH p = M3Config.Get ("TARGET") DO
+      WITH p = MxConfig.Get ("TARGET") DO
          IF (p # NIL) THEN
             build_dir :=  p;
             ErrLog.Msg ("CAUTION:  BUILD_DIR not defined in cm3.cfg, setting it to TARGET:  ", build_dir);
@@ -57,7 +57,7 @@ PROCEDURE Init () =
    END;
    IF (system_root = NIL)
    THEN (* attempt to construct pkg root from 'INSTALL_ROOT' *)
-      WITH p = M3Config.Get ("INSTALL_ROOT") DO
+      WITH p = MxConfig.Get ("INSTALL_ROOT") DO
          IF (p # NIL) THEN
             system_root := Pathname.Join (p, "pkg", NIL);
             IF M3File.IsDirectory(system_root) THEN
@@ -71,7 +71,7 @@ PROCEDURE Init () =
    IF (system_root = NIL)
    THEN (* attempt to construct pkg root using the path to the cm3.cfg *)
       TRY
-         WITH p = M3Config.FindFile (), (* earlier code checked that result is not NIL *)
+         WITH p = MxConfig.FindFile (), (* earlier code checked that result is not NIL *)
               folder = Pathname.Prefix (FS.GetAbsolutePathname(p)),
               parent = Pathname.Prefix (folder),
               tryPkgRoot = Pathname.Join (parent, "pkg", NIL)
@@ -120,13 +120,13 @@ PROCEDURE Init () =
 
     IF (build_dir = NIL) THEN
       Die ("The build directory was not defined.  Either the configuration"
-         & Wr.EOL & "file, ", M3Config.FindFile (), ", contains a syntax error or"
+         & Wr.EOL & "file, ", MxConfig.FindFile (), ", contains a syntax error or"
          & Wr.EOL & "it doesn't define BUILD_DIR.");
     END;
 
     IF (system_root = NIL) THEN
       Die ("The system package root was not defined.  Either the configuration"
-         & Wr.EOL & "file, ", M3Config.FindFile (), ", contains a syntax error or"
+         & Wr.EOL & "file, ", MxConfig.FindFile (), ", contains a syntax error or"
          & Wr.EOL & "it doesn't define PKG_USE.");
     END;
 

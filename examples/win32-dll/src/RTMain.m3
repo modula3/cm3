@@ -22,7 +22,7 @@ IMPORT (* libm3 *)
   File, FileRd, FileWr, Fmt, FmtBuf, FmtBufF, FmtBufTest, Formatter, IO, Int32, 
   IntArraySort, IntAtomTbl, IntIntTbl, IntList, IntListSort, IntPQ, IntPQRep, 
   IntRefTbl, IntSeq, IntSeqRep, IntTextTbl, Integer, Interval, Lex, 
-  LongFloatExtras, LongSqrt, LongrealType, LowPerfTool, M3Config, MProperty, 
+  LongFloatExtras, LongSqrt, LongrealType, LowPerfTool, MxConfig, MProperty, 
   MPropertyF, MachineID, Math, MsgRd, MsgWr, NullRd, NullWr, OSError, PackingTbl, 
   PackingTypeCode, Params, Path, PathPrivate, Pathname, PerfTool, Pickle, 
   PickleRd, PickleStubs, Pipe, PklAction, PklActionSeq, PklActionSeqRep, 

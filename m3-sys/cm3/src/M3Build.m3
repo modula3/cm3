@@ -7,7 +7,7 @@ IMPORT Env, IntArraySort, IntRefTbl, M3ID, Pathname, Text, TextList, Thread, Wr;
 IMPORT Quake, QValue, QCode, QMachine, QVal, QVSeq, QVTbl, M3Timers;
 IMPORT Arg, Builder, M3Loc, M3Options, M3Path, M3Unit, Msg, Utils;
 FROM QMachine IMPORT PushText, PopText, PopID, PopBool;
-IMPORT MxConfig AS M3Config;
+IMPORT MxConfig;
 IMPORT OSError, Process, Dirs, TextUtils;
 
 TYPE
@@ -2441,7 +2441,7 @@ PROCEDURE ConfigErr (t: T;  symbol, msg: TEXT)
   RAISES {Quake.Error} =
   BEGIN
     t.error ("Unable to use definition of \"" & symbol
-             & "\" from configuration file \"" & M3Config.FindFile ()
+             & "\" from configuration file \"" & MxConfig.FindFile ()
              & "\": " & msg);
   END ConfigErr;
 

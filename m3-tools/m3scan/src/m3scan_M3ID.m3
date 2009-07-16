@@ -2,10 +2,10 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
-(* File: M3ID.m3                                               *)
+(* File: m3scan_M3ID.m3                                               *)
 (* Last modified on Fri May 28 09:52:06 PDT 1993 by kalsow     *)
 
-UNSAFE MODULE M3ID;
+UNSAFE MODULE m3scan_M3ID;
 
 IMPORT M3Token;
 TYPE TK = M3Token.T;
@@ -352,4 +352,4 @@ PROCEDURE Classify (READONLY x: ARRAY OF CHAR): M3Token.T =
   END Classify;
 
 BEGIN
-END M3ID.
+END m3scan_M3ID.
