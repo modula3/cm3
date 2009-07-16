@@ -119,7 +119,7 @@ def SearchPath(name, paths = getenv("PATH")):
             candidate = os.path.join(path, name)
             if os.path.isfile(candidate):
                 return os.path.abspath(candidate)
-    print("SearchPath " + name + " returning None 2")
+    #print("SearchPath " + name + " returning None 2")
     return None
 
 #-----------------------------------------------------------------------------
