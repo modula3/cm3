@@ -166,6 +166,7 @@ proc skip_lib (lib, shared) is
   local vmaj     = "5"
   local vmin     = "2"
   local version  = vmaj & "." & vmin
+  local lib_a    = format ("lib%s.a", lib)
   local lib_so   = format ("lib%s.dylib", lib)
   local lib_sox  = format ("lib%s.%s.dylib", lib, vmaj)
   local lib_soxx = format ("lib%s.%s.dylib", lib, version)
@@ -177,6 +178,7 @@ proc skip_lib (lib, shared) is
 
     % make sure the shared library stuff gets installed properly
     LibdExport(lib_soxx)
+    install_link_to_derived(lib_a, LIB_INSTALL)
     install_link_to_derived(lib_so , LIB_INSTALL)
     install_link_to_derived(lib_sox, LIB_INSTALL)
     install_derived_link("../../../lib/" & lib_soxx, lib_so)

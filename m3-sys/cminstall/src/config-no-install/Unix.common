@@ -326,6 +326,8 @@ proc skip_lib(lib, shared) is
     if equal (TARGET, "PA32_HPUX")
       suffix = "sl" 
     end
+
+    local lib_a   = format("lib%s.a", lib)
     local lib_so = format("lib%s.%s", lib, suffix)
     local lib_sox = format("lib%s.%s.5", lib, suffix)
 
@@ -336,6 +338,7 @@ proc skip_lib(lib, shared) is
         % make sure the shared library stuff gets installed properly
         LibdExport(lib_sox)
         ShipM3CoreStaticObjs(lib)
+        install_link_to_derived(lib_a, LIB_INSTALL)
         install_link_to_derived(lib_so, LIB_INSTALL)
         install_derived_link("../../../lib/" & lib_sox, lib_so)
         install_derived_link("../../../lib/" & lib_sox, lib_sox)
