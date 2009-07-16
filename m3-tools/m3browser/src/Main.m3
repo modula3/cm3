@@ -13,13 +13,13 @@ MODULE Main;
 
 IMPORT Text, Rd, Wr, TextRd, Thread, Time, Fmt, IntRefTbl, IntList;
 IMPORT Process, Params, Lex, OS, FloatMode, Word, IntIntTbl, TextIntTbl;
-IMPORT FileWr, OSError, Atom, FmtTime, M3Config, RTParams, RTCollector;
+IMPORT FileWr, OSError, Atom, FmtTime, MxConfig, RTParams, RTCollector;
 IMPORT FS, RefList, IntSeq, XFormat, RefSeq, TextRefTbl, CharMap, IP;
 IMPORT Buf, ID, Wx, MarkUp, CMarkUp, TCPServer, ErrLog, RTutils, RTHeapStats;
 
 CONST
   Title_page = "m3browser.html";
-  SLASH      = M3Config.PATH_SEP;
+  SLASH      = MxConfig.HOST_PATH_SEP;
   StartPage  = "<HTML>\n<HEAD>\n";
   StartTitle = "<TITLE>";
   Body       = "<BODY BGCOLOR=\"#ffffff\" VLINK=\"#006633\">\n";
@@ -28,13 +28,13 @@ CONST
   EndPage    = "</BODY>\n</HTML>\n";
 
 VAR (* configuration *)
-  package_root     := M3Config.PKG_USE;
+  package_root     := MxConfig.Get("PKG_USE");
   server_machine   :  TEXT; (* initialized in "ParseOptions" *)
   server_socket    := 3829;
   server_address   := IP.GetHostAddr();
   accept_address   := server_address;
   accept_maskBits: [0 .. 32] := 0;
-  derived_dirs     := IntList.List1 (ID.Add (M3Config.BUILD_DIR));
+  derived_dirs     := IntList.List1 (ID.Add (MxConfig.Get("BUILD_DIR")));
   n_workers        := 3;
   refresh_interval := 30.0d0; (* minutes *)
   start_time       := Time.Now ();

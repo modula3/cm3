@@ -55,7 +55,7 @@ PROCEDURE Check(exts := M3Extension.All): M3FindFile.T RAISES {}=
 
 (*
       IF NOT M3Args.GetFlag(tool_g, NOSTD_Arg) THEN
-        VAR pub := M3Config.Pub();
+        VAR pub := MxConfig.Pub();
         BEGIN
           WHILE pub # NIL DO
             dirs := M3PathDefaults.Add(dirs,

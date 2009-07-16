@@ -9,7 +9,7 @@ MODULE FilePath;
 IMPORT ASCII, Pathname, Text, TextSeq;
 FROM Msg IMPORT D;
 (*
-IMPORT M3Config, Fmt;
+IMPORT MxConfig, Fmt;
 *)
 
 PROCEDURE Normalize (dest, src: TEXT): TEXT =

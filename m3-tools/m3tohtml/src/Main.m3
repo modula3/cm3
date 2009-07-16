@@ -7,7 +7,7 @@
 MODULE Main;
 
 IMPORT Text, Rd, Wr, Stdio, Thread, Fmt, Time, FmtTime, TextSeq, TextUtils;
-IMPORT OSError, FileRd, FileWr, Pathname, FS, M3Config, ParseParams;
+IMPORT OSError, FileRd, FileWr, Pathname, FS, MxConfig, ParseParams;
 IMPORT MarkUp, M3DB, HTMLDir, FilePath, Process, FSUtils, Msg, System;
 FROM Msg IMPORT M, V, F;
 <*FATAL Thread.Alerted*>
@@ -134,7 +134,7 @@ TYPE
 VAR
   sources: Source := NIL;
   n_sources: INTEGER := 0;
-  pkgRoot := M3Config.PKG_USE;
+  pkgRoot := MxConfig.Get("PKG_USE");
   targets : TextSeq.T;
   nTargets : INTEGER;
   force := FALSE;
@@ -240,7 +240,7 @@ PROCEDURE ReadFileList () =
               proj_pkg := Text.Sub(pkg, i + 1);
               pkg := Text.Sub(pkg, 0, i);
             ELSE
-              proj_pkg := pkgRoot & M3Config.PATH_SEP & pkg;
+              proj_pkg := pkgRoot & MxConfig.HOST_PATH_SEP & pkg;
             END;
           END;
           V(pkg, " ==> ", proj_pkg);
@@ -267,7 +267,7 @@ PROCEDURE ReadFileList () =
     sources := b;
   END ReadFileList;
 
-VAR(*CONST*) Build_dir_len := Text.Length (M3Config.BUILD_DIR);
+VAR(*CONST*) Build_dir_len := Text.Length (MxConfig.Get("BUILD_DIR"));
 
 PROCEDURE FixDerived (filename: TEXT): TEXT =
   VAR i: INTEGER;
@@ -278,13 +278,13 @@ PROCEDURE FixDerived (filename: TEXT): TEXT =
 
     i := 0;
     WHILE (i < Build_dir_len) DO
-      IF Text.GetChar (filename, i) # Text.GetChar (M3Config.BUILD_DIR, i) THEN
+      IF Text.GetChar (filename, i) # Text.GetChar (MxConfig.Get("BUILD_DIR"), i) THEN
         RETURN filename;
       END;
       INC (i);
     END;
 
-    IF Text.GetChar (filename, i) = Text.GetChar (M3Config.PATH_SEP, 0) THEN
+    IF Text.GetChar (filename, i) = Text.GetChar (MxConfig.HOST_PATH_SEP, 0) THEN
       filename := "derived" & Text.Sub (filename, i);
     END;
     RETURN filename;

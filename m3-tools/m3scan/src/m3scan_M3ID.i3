@@ -2,10 +2,10 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
-(* File: M3ID.i3                                               *)
+(* File: m3scan_M3ID.i3                                               *)
 (* Last modified on Fri May 28 08:28:03 PDT 1993 by kalsow     *)
 
-INTERFACE M3ID;
+INTERFACE m3scan_M3ID;
 
 IMPORT M3Token;
 
@@ -14,4 +14,4 @@ PROCEDURE Classify (READONLY x: ARRAY OF CHAR): M3Token.T;
    otherwise return M3Token.Ident.  It is a checked runtime
    error if NUMBER(x) is less than one. *)
 
-END M3ID.
+END m3scan_M3ID.

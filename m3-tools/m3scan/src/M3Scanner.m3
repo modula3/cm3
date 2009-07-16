@@ -10,7 +10,7 @@
 MODULE M3Scanner;
 
 IMPORT Rd, Thread, Fmt;
-IMPORT M3Token, M3ID;
+IMPORT M3Token, m3scan_M3ID;
 
 CONST
   EOFChar   = '\000';
@@ -130,7 +130,7 @@ PROCEDURE GetToken (t: Default) =
       | 'a'..'z', 'A'..'Z' =>
           (* scan an identifier *)
           WHILE AlphaNumerics[ch] DO INC (offset); ch := buf[offset]; END;
-          t.token := M3ID.Classify (SUBARRAY (buf^, t.offset, offset - t.offset));
+          t.token := m3scan_M3ID.Classify (SUBARRAY (buf^, t.offset, offset - t.offset));
           EXIT;
 
       | '0'..'9' => ScanNumber (t);                          RETURN;
