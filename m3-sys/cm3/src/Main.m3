@@ -7,7 +7,7 @@ IMPORT M3Timers, Pathname, Process, Quake;
 IMPORT RTCollector, RTParams, RTutils, Thread, Wr;
 
 IMPORT Builder, Dirs, M3Build, M3Options, Makefile, Msg, Utils, WebFile;
-IMPORT MxConfig, M3Config(*, CMKey, CMCurrent *);
+IMPORT MxConfig(*, M3Config, CMKey, CMCurrent *);
 (* IMPORT Fmt, Time; only needed for key and expiration check *)
 IMPORT Version;
 
@@ -51,20 +51,20 @@ PROCEDURE DoIt () =
 
         (* Default to a native build, so the config file can say less. *)
 
-        Quake.Define(mach, "TARGET", M3Config.TARGET);
-        Quake.Define(mach, "OS_TYPE", M3Config.OS_TYPE);
+        Quake.Define(mach, "TARGET", MxConfig.HOST);
+        Quake.Define(mach, "OS_TYPE", MxConfig.HOST_OS_TYPE);
         Quake.Define(mach, "BACKEND_MODE", Version.BackendMode);
         Quake.Define(mach, "C_COMPILER", Version.CCompiler);
         Quake.Define(mach, "LINKER", Version.Linker);
         Quake.Define(mach, "THREAD_LIBRARY", Version.ThreadLibrary);
         Quake.Define(mach, "WINDOW_LIBRARY", Version.WindowLibrary);
-        Quake.Define(mach, "WORD_SIZE", M3Config.WORD_SIZE);
+        Quake.Define(mach, "WORD_SIZE", MxConfig.HOST_WORD_SIZE);
 
         (* Even if the config file overrides the defaults, such as to do
            a cross build, the host characteristics are still available. *)
 
-        Quake.Define(mach, "HOST", M3Config.TARGET);
-        Quake.Define(mach, "HOST_OS_TYPE", M3Config.OS_TYPE);
+        Quake.Define(mach, "HOST", MxConfig.HOST);
+        Quake.Define(mach, "HOST_OS_TYPE", MxConfig.HOST_OS_TYPE);
         Quake.Define(mach, "HOST_GNU_MAKE", Version.GNUMake);
 
         (* define the site configuration *)

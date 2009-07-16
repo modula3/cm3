@@ -5,7 +5,7 @@
 MODULE Obliq;
 IMPORT Thread, SynWr, SynLocation, ObErr, ObCommand, ObLib, ObTree, ObScope, 
        ObCheck, ObValue, ObEval, ObBuiltIn, NetObj, Text, SharedObj,
-       M3Config, ObPathSep;
+       MxConfig, ObPathSep;
 FROM ObValue IMPORT Error, Exception;
 
   VAR 
@@ -54,9 +54,9 @@ FROM ObValue IMPORT Error, Exception;
           nextFrame := NIL);
     TRY
       env := NewEnv("hostName", NewText(ObValue.machineAddress), env);
-      env := NewEnv("target", NewText(M3Config.TARGET), env);
-      env := NewEnv("osType", NewText(M3Config.OS_TYPE), env);
-      env := NewEnv("pathSep", NewText(M3Config.PATH_SEP), env);
+      env := NewEnv("target", NewText(MxConfig.HOST), env);
+      env := NewEnv("osType", NewText(MxConfig.HOST_OS_TYPE), env);
+      env := NewEnv("pathSep", NewText(MxConfig.HOST_PATH_SEP), env);
       env := NewEnv("searchPathSep", 
                     NewText(Text.FromChar(ObPathSep.SearchPathSeparator)),
                     env);

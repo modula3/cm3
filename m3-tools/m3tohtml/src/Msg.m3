@@ -1,6 +1,6 @@
 MODULE Msg;
 
-IMPORT Wr, Stdio, M3Config, Text, Process;
+IMPORT Wr, Stdio, MxConfig, Text, Process;
 
 PROCEDURE M(a, b, c, d, e, f : TEXT := NIL) =
   BEGIN
@@ -35,7 +35,7 @@ PROCEDURE F(a, b, c, d, e, f : TEXT := NIL) =
 VAR
   EOL : TEXT := "\n";
 BEGIN
-  IF Text.Equal(M3Config.OS_TYPE, "WIN32") THEN
+  IF Text.Equal(MxConfig.HOST_OS_TYPE, "WIN32") THEN
     EOL := "\r\n";
   END;
 END Msg.

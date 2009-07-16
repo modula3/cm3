@@ -13,6 +13,7 @@
 import("netobj")
 import("sharedobj")
 import("synloc")
+import("m3quake")
 
 interface ("OpSys")
 Interface ("ObPathSep")

@@ -9,6 +9,7 @@ import ("tcp")
 import ("http")
 import ("m3scan")
 import ("m3markup")
+import ("m3quake")
 
 module ("OS")
 module ("TCPServer")

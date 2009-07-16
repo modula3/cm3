@@ -5,7 +5,7 @@ MODULE Makefile;
 
 IMPORT FS, M3File, M3Timers, OSError, Params, Process, Text, Thread, Wr;
 IMPORT Arg, M3Build, M3Options, M3Path, Msg, Utils, TextSeq, TextTextTbl;
-IMPORT MxConfig AS M3Config;
+IMPORT MxConfig;
 IMPORT Dirs, Version;
 
 TYPE
@@ -574,8 +574,9 @@ PROCEDURE PrintVersion (exit: BOOLEAN) =
     Msg.Out ("Critical Mass Modula-3 version ", Val("CM3_RELEASE"), Wr.EOL);
     Msg.Out ("  last updated: ", Val("CM3_CHANGED"), Wr.EOL);
     Msg.Out ("  compiled: ", Val("CM3_COMPILED"), Wr.EOL);
-    Msg.Out ("  configuration: ", M3Config.FindFile(), Wr.EOL);
-    Msg.Out ("  target: ", M3Config.Get("TARGET"), Wr.EOL);
+    Msg.Out ("  configuration: ", MxConfig.FindFile(), Wr.EOL);
+    Msg.Out ("  host: ", MxConfig.HOST, Wr.EOL);
+    Msg.Out ("  target: ", MxConfig.Get("TARGET"), Wr.EOL);
     Msg.Out (Wr.EOL);
     IF exit THEN Process.Exit (0); END;
   END PrintVersion;

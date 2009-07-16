@@ -11,7 +11,7 @@ IMPORT M3File, M3ID, M3CG, M3Timers, M3Front, Target, WebFile;
 IMPORT Mx, MxMerge, MxCheck, MxGen, MxIn, MxOut, MxVS;
 IMPORT Msg, Arg, Utils, M3Path, M3Backend, M3Compiler;
 IMPORT Quake, QMachine, QValue, QVal, QVSeq;
-IMPORT M3Loc, M3Unit, M3Options, MxConfig AS M3Config;
+IMPORT M3Loc, M3Unit, M3Options, MxConfig;
 IMPORT QIdent;
 FROM Target IMPORT M3BackendMode_t, BackendAssembly, BackendModeStrings;
 FROM M3Path IMPORT OSKind, OSKindStrings;
@@ -249,7 +249,7 @@ PROCEDURE CompileUnits (main     : TEXT;
 
     SetupNamingConventionsInternal (s, mach);
     s.result_name   := main;
-    s.config_file   := M3Config.FindFile ();
+    s.config_file   := MxConfig.FindFile ();
     s.sys_libs      := sys_libs;
     s.units         := units;
     s.link_base     := NIL;

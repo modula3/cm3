@@ -9,7 +9,7 @@ import ("libm3")
 
 Module ("M3Token")
 Module ("M3Scanner")
-Module ("M3ID")
+module ("m3scan_M3ID")
 
 Library ("m3scan")
 % implementation ("Main")
