@@ -18,7 +18,7 @@ readonly Platform_info = {
   "AMD64_NETBSD" : "amd64-netbsd",
   "AMD64_NT"  : "amd64-pc-mingw32",
   "AMD64_OPENBSD" : "amd64-openbsd",
-  "AMD64_SOLARIS" : "amd64-sun-solaris2",
+  "AMD64_SOLARIS" : "i686-sun-solaris2.10", % deliberately i686 but willing to change
   "AP3000"    : "apollo68-bsd",
   "ARM"       : "arm-riscos",
   "ARM_DARWIN" : "arm-apple-darwin8",
@@ -36,7 +36,7 @@ readonly Platform_info = {
   "I386_INTERIX" : "i686-pc-interix3",
   "I386_MSDOS" : "i586-pc-msdosdjgpp",
   "I386_OPENBSD" : "i686-openbsd",
-  "I386_SOLARIS" : "i686-sun-solaris2",
+  "I386_SOLARIS" : "i686-sun-solaris2.10",
   "I386_NT"     : "i686-pc-mingw32",
   "I386_MINGW"	: "i686-pc-mingw32",
   "I386_CYGWIN" : "i686-pc-cygwin",
