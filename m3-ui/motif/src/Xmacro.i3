@@ -12,21 +12,21 @@ IMPORT Xt;
 FROM Ctypes IMPORT
   char_star,short,unsigned_short;
 
-<*EXTERNAL"XtVaSetValues"*>
+<*EXTERNAL*>
 PROCEDURE XtVaSetValues(widget:Xt.Widget;
 		 val1, val2, val3, val4, val5,
 		 val6, val7, val8, val9, val10,
 		 val11,val12,val13,val14,val15,
 		 val16:ADDRESS:=NIL);
 
-<*EXTERNAL"XtVaGetValues"*>
+<*EXTERNAL*>
 PROCEDURE XtVaGetValues(widget:Xt.Widget;
 		 val1, val2, val3, val4, val5,
 		 val6, val7, val8, val9, val10,
 		 val11,val12,val13,val14,val15,
 		 val16:ADDRESS:=NIL);
 
-<*EXTERNAL "XtVaCreateManagedWidget"*>
+<*EXTERNAL*>
 PROCEDURE XtVaCreateManagedWidget(name:char_star;
 	         widget_class: Xt.WidgetClass;
 		 parent: Xt.Widget;
