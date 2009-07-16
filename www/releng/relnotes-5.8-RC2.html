@@ -33,20 +33,24 @@
     </p>
     <ul>
       <li>Updated support for various Windows platforms (native,
-      Cygwin, Mingwin, Interix). It is possible to use many Microsoft
-      SDKs (including free ones) as the basis for native support now.</li>
+        Cygwin, Mingwin, Interix). It is possible to use many Microsoft
+        SDKs (including free ones) as the basis for native support now.</li>
       <li>Many improvements to m3gdb, the Modula-3-aware extension of
-      the GNU debugger. It's still not perfect, but then, what is?</li>
+        the GNU debugger. It's still not perfect, but then, what is?</li>
       <li>System pthread threading is now the default on all
-      platforms. The original (fast) M3 user level thread code is
-      still there and can be used if necessary (on most platforms). On
-      many systems, this allows M3 applications to scale over all
-      available hardware processors.</li>
+        platforms.  On
+        many systems, this allows M3 applications to scale over all
+        available hardware processors.The original (fast) M3 user
+        level thread code is still there and can be used if necessary
+        (on most platforms).
+      </li> 
       <li>Many fixes and improvements of the garbage collector.</li>
       <li>Many fixes and improvements of the system pthreads
       implementation.</li>
-      <li>New data type LONGINT (64 bit integer) on all target
-      platforms except Windows (still in the queue).</li>
+      <li>New data type LONGINT which represents a long integer value of
+      64 bit integer on all target platforms. Exception: the Windows
+      backend hasn't been adated yet, it's still 32 bits there (still
+      in the queue).</li>
       <li>Much improved and restructured CM3 config files.</li>
       <li>Added lots of new quake functions and fixed several quake
       bugs.</li>
@@ -87,7 +91,7 @@
     <address><a href="mailto:wagner@elegosoft.com">Olaf Wagner</a></address>
 <!-- Created: Wed Jul 15 19:38:16 CEST 2009 -->
 <!-- hhmts start -->
-Last modified: Thu Jul 16 02:04:46 CEST 2009
+Last modified: Thu Jul 16 08:15:52 CEST 2009
 <!-- hhmts end -->
   </body>
 </html>
