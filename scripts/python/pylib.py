@@ -1476,21 +1476,13 @@ PackageSets = {
 
     "std" :
         [
+
     # demo programs
 
         "cube",
         "calculator",
         "fisheye",
         "mentor",
-
-    # base libraries
-
-        "import-libs",
-        "libm3",
-        "windowsResources",
-        "sysutils",
-        "patternmatching",
-        "m3core",
 
     # system / compiler libraries and tools
 
@@ -1512,6 +1504,8 @@ PackageSets = {
         "mklib",
         "fix_nl",
         "libdump",
+        "windowsResources",
+        "cm3ide",
 
     # more useful quasi-standard libraries
 
@@ -1536,8 +1530,8 @@ PackageSets = {
         "m3tk-misc",
         "http",
         "binIO",
-        # "deepcopy",
-        # "sgml",
+        "deepcopy",
+        "sgml",
         "commandrw",
 
         # some CM3 communication extensions
@@ -1650,6 +1644,12 @@ PackageSets = {
         "deckscape",
         "webscape",
         "webcat",
+
+        "import-libs",
+        "m3core",
+        "libm3",
+        "sysutils",
+
         ],
 
 
@@ -1714,6 +1714,8 @@ PackageSets = {
         "deepcopy",
         "sgml",
         "commandrw",
+
+        "cm3ide",
 
         # some CM3 communication extensions
 
