@@ -98,32 +98,31 @@ CONST CharsInWordMask = Word.And ( Word.And (CharMask, CharMask1)
 TYPE WordPtr = UNTRACED REF Word.T;  
 
 PROCEDURE HasWideChars (a: ADDRESS; len: CARDINAL): BOOLEAN =
-(* Return ORD(a[i] > LAST (CHAR), for some "i" in "[0~..~len-1]". *) 
+(* Return ORD(a[i]) > LAST (CHAR), for some "i" in "[0~..~len-1]". *) 
 (* PRE: a MOD ADRSIZE(WIDECHAR) = 0 *)
 (* This algorithm assumes ADRSIZE(Word.T) MOD ADRSIZE(WIDECHAR) = 0. *)  
 (* This algorithm assumes FIRST(CHAR) = 0 AND LAST(CHAR) = 16_FF. *)  
+  VAR p := LOOPHOLE (a, Ptr);
   BEGIN
-    (* Do non-word-aligned WIDECHARs at the left. *) 
-    WHILE Word.Mod (LOOPHOLE(a, Word.T), ADRSIZE (Word.T)) # 0 AND len > 0 DO
-      IF Word.And (ORD (LOOPHOLE (a, Ptr)^), CharMask) # 0 
-      THEN RETURN TRUE; END;
-      INC (a, ADRSIZE (WIDECHAR));
+    IF (p = NIL) THEN RETURN FALSE; END;
+    (* Do non-word-aligned WIDECHARs at the left. *)
+    WHILE Word.Mod (LOOPHOLE(p, Word.T), ADRSIZE (Word.T)) # 0 AND len > 0 DO
+      IF Word.And (ORD (p^), CharMask) # 0 THEN RETURN TRUE; END;
+      INC (p, ADRSIZE (p^));
       DEC (len);  
     END;  
     (* Do word-aligned WIDECHARs in the middle. *) 
     WHILE len >= WideCharsPerWord DO 
-      IF Word.And (ORD (LOOPHOLE (a, WordPtr)^), CharsInWordMask) # 0 
-      THEN 
+      IF Word.And (ORD (LOOPHOLE (p, WordPtr)^), CharsInWordMask) # 0 THEN 
         RETURN TRUE; 
       END;
-      INC (a, ADRSIZE (Word.T));
+      INC (p, ADRSIZE (Word.T));
       DEC (len, WideCharsPerWord);
     END; 
     (* Do remaining non-word-aligned WIDECHARs at the right. *) 
     WHILE len > 0 DO
-      IF Word.And (ORD (LOOPHOLE (a, Ptr)^), CharMask) # 0 
-      THEN RETURN TRUE; END;
-      INC (a, ADRSIZE (WIDECHAR));
+      IF Word.And (ORD (p^), CharMask) # 0 THEN RETURN TRUE; END;
+      INC (p, ADRSIZE (p^));
       DEC (len);  
     END;  
     RETURN FALSE; 
