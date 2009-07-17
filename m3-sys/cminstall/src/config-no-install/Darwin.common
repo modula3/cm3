@@ -179,8 +179,8 @@ proc skip_lib (lib, shared) is
     % make sure the shared library stuff gets installed properly
     LibdExport(lib_soxx)
     install_link_to_derived(lib_a, LIB_INSTALL)
-    install_link_to_derived(lib_so , LIB_INSTALL)
-    install_link_to_derived(lib_sox, LIB_INSTALL)
+    install_symbolic_link(lib_soxx, LIB_INSTALL & "/" & lib_so)
+    install_symbolic_link(lib_soxx, LIB_INSTALL & "/" & lib_sox)
     install_derived_link("../../../lib/" & lib_soxx, lib_so)
     install_derived_link("../../../lib/" & lib_soxx, lib_sox)
     install_derived_link("../../../lib/" & lib_soxx, lib_soxx)

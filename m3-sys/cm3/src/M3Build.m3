@@ -454,6 +454,7 @@ CONST
     Builtin {"install_link_to_derived",       DoInstallSymbolLinkToDerived, 2, FALSE},
     Builtin {"install_symbolic_link_to_derived", DoInstallSymbolLinkToDerived, 2, FALSE},
     Builtin {"install_hard_link_to_derived",  DoInstallHardLinkToDerived, 2, FALSE},
+    Builtin {"install_symbolic_link",         DoInstallSymbolLink, 2, FALSE},
     Builtin {"install_file",                  DoInstallFile,     3, FALSE},
 
     (* installation functions *)
@@ -1765,39 +1766,48 @@ PROCEDURE DoInstallDerived (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
 
 PROCEDURE DoInstallDerivedSymbolicLink (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
-  VAR t := Self (m);  from, to: TEXT;
+  VAR t := Self (m);
+      to   := PopText (t);
+      from := PopText (t);
   BEGIN
-    to   := PopText (t);
-    from := PopText (t);
-    InstallDerivedLink (t, from, to, "link_file");
+    InstallDerivedLink (t, from, to, "symbolic_link_file");
   END DoInstallDerivedSymbolicLink;
 
 PROCEDURE DoInstallDerivedHardLink (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
-  VAR t := Self (m);  from, to: TEXT;
+  VAR t := Self (m);
+      to   := PopText (t);
+      from := PopText (t);
   BEGIN
-    to   := PopText (t);
-    from := PopText (t);
     InstallDerivedLink (t, from, to, "hard_link_file");
   END DoInstallDerivedHardLink;
 
 PROCEDURE DoInstallSymbolLinkToDerived (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
-  VAR t := Self (m);  src, dest: TEXT;
+  VAR t := Self (m);
+      dest := PopText (t);
+      src  := PopText (t);
   BEGIN
-    dest := PopText (t);
-    src  := PopText (t);
-    InstallLinkToDerived (t, src, dest, "link_file");
+    InstallLinkToDerived (t, src, dest, "symbolic_link_file");
   END DoInstallSymbolLinkToDerived;
 
 PROCEDURE DoInstallHardLinkToDerived (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
-  VAR t := Self (m);  src, dest: TEXT;
+  VAR t := Self (m);
+      dest := PopText (t);
+      src  := PopText (t);
   BEGIN
-    dest := PopText (t);
-    src  := PopText (t);
     InstallLinkToDerived (t, src, dest, "hard_link_file");
   END DoInstallHardLinkToDerived;
+
+PROCEDURE DoInstallSymbolLink (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
+  RAISES {Quake.Error} =
+  VAR t := Self (m);
+      dest := PopText (t);
+      src  := PopText (t);
+  BEGIN
+    InstallLink (t, src, dest, "symbolic_link_file");
+  END DoInstallSymbolLink;
 
 PROCEDURE DoInstallFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   RAISES {Quake.Error} =
@@ -1927,25 +1937,31 @@ PROCEDURE UseDerivedDir (t: T): TEXT =
     RETURN M3Path.New (t.pkg_use, pkg, dir);
   END UseDerivedDir;
 
-PROCEDURE InstallLinkToDerived (t: T;   src, dest: TEXT; ship_function: TEXT)
+PROCEDURE InstallLink (t: T;   src, dest: TEXT; ship_function: TEXT)
   RAISES {Quake.Error} =
 
   PROCEDURE Emit (wr: Wr.T) RAISES {Wr.Failure, Thread.Alerted} =
-    VAR
-      target := M3Path.New (UseDerivedDir (t), src);
-      link   := M3Path.New (dest, src);
+    VAR dest_dir := Pathname.Prefix(dest);
     BEGIN
-      InstallDir (t, dest, wr);
-      Out (wr, ship_function, "(", Unresolve (t, M3Path.Convert (target)), C);
-      Out (wr, Unresolve (t, M3Path.Convert (link)), RPCR)
+      InstallDir (t, dest_dir, wr);
+      Out (wr, ship_function, "(", Unresolve (t, M3Path.Convert (src)), C);
+      Out (wr, Unresolve (t, M3Path.Convert (dest)), RPCR)
     END Emit;
 
   BEGIN
-    IF t.have_pkgtools THEN
+    IF t.have_pkgtools THEN (* ? *)
       InstallFile (t, src, dest, ModeX, derived := TRUE);
     ELSE
       Utils.WriteFile (M3Ship, Emit, append := TRUE);
     END;
+  END InstallLink;
+
+PROCEDURE InstallLinkToDerived (t: T;   src, dest: TEXT; ship_function: TEXT)
+  RAISES {Quake.Error} =
+  VAR target := M3Path.New (UseDerivedDir (t), src);
+      link   := M3Path.New (dest, src);
+  BEGIN
+    InstallLink(t, target, link, ship_function);
   END InstallLinkToDerived;
 
 PROCEDURE InstallDir (t: T;  dir: TEXT;  wr: Wr.T)
