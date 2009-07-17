@@ -33,9 +33,11 @@ FROM Ctypes IMPORT int;
 <*EXTERNAL "Uerror__ENETRESET"*>     VAR ENETRESET: int;
 <*EXTERNAL "Uerror__ENETUNREACH"*>   VAR ENETUNREACH: int;
 <*EXTERNAL "Uerror__ENFILE"*>        VAR ENFILE: int;
+<*EXTERNAL "Uerror__ENOBUFS"*>       VAR ENOBUFS: int;
 <*EXTERNAL "Uerror__ENOENT"*>        VAR ENOENT: int;
 <*EXTERNAL "Uerror__ENOEXEC"*>       VAR ENOEXEC: int;
 <*EXTERNAL "Uerror__ENOMEM"*>        VAR ENOMEM: int;
+<*EXTERNAL "Uerror__ENOTDIR"*>       VAR ENOTDIR: int;
 <*EXTERNAL "Uerror__ENOTEMPTY"*>     VAR ENOTEMPTY: int;
 <*EXTERNAL "Uerror__ENOTSOCK"*>      VAR ENOTSOCK: int;
 <*EXTERNAL "Uerror__EPERM"*>         VAR EPERM: int;
@@ -43,8 +45,6 @@ FROM Ctypes IMPORT int;
 <*EXTERNAL "Uerror__ERANGE"*>        VAR ERANGE: int;
 <*EXTERNAL "Uerror__ETIMEDOUT"*>     VAR ETIMEDOUT: int;
 <*EXTERNAL "Uerror__EWOULDBLOCK"*>   VAR EWOULDBLOCK: int;
-<*EXTERNAL "Uerror__ENOBUFS"*>       VAR ENOBUFS: int;
-<*EXTERNAL "Uerror__ENOTDIR"*>       VAR ENOTDIR: int;
 
 CONST
   Max = 248; (* approx, verified to be adequate in Uconstants.c *)
