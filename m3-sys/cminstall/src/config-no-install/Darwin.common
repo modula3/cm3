@@ -60,8 +60,8 @@ SYSTEM_LIBS = {
   "FLEX-BISON" : [ "-lfl" ],
 % not present by default, but this is the default install location
 % "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
-  "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
-  "ODBC"       : [ "-liodbc", ],
+  "OPENGL"     : [ "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib", "-L/usr/X11R6/lib", "-lGLU", "-lGL", "-lXext" ],
+  "ODBC"       : [ "-liodbc", "-liodbcinst" ],
 % "MOTIF"      : [ "-lXm" ],
   "X11"        : [
     "-L/usr/X11R6/lib",
