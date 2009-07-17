@@ -74,10 +74,10 @@ PROCEDURE FindCharR (a: ADDRESS;  len: CARDINAL;  c: WIDECHAR): INTEGER =
 (* If "c = a[i]" for some "i" in "[0~..~len-1]", return the
    largest such "i"; otherwise, return "-1". *)
 (* PRE: a MOD ADRSIZE(WIDECHAR) = 0 *) 
-  VAR p: Ptr;
+  VAR p := LOOPHOLE (a, Ptr);
   BEGIN
-    IF (a = NIL) THEN RETURN -1; END;
-    p := LOOPHOLE (a + len * ADRSIZE (WIDECHAR), Ptr);
+    IF (p = NIL) THEN RETURN -1; END;
+    INC (p, len * ADRSIZE (p^));
     WHILE (len > 0) DO
       DEC (p, ADRSIZE (p^));  DEC (len);
       IF (p^ = c) THEN RETURN len; END;
