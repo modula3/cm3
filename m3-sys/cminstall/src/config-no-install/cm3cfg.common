@@ -8,6 +8,13 @@
 %M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (option -profile)
 %M3_PROFILING = FALSE
 
+%-------------------------------------------------------------------
+% defined by cm3, but not the other MxConfig users
+if not defined("SL") SL = "/" end
+if not defined("CR") CR = "\n" end
+if not defined("M3_PROFILING") M3_PROFILING = FALSE end
+%-------------------------------------------------------------------
+
 if not defined("PROFILING_P")
     if M3_PROFILING
         readonly PROFILING_P = "p"

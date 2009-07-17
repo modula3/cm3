@@ -1,5 +1,5 @@
 %
-% $Id: NT386GNU,v 1.2 2009-07-13 09:27:16 jkrell Exp $
+% $Id: NT386GNU,v 1.3 2009-07-17 23:15:54 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -20,6 +20,13 @@
 % for the sake m3cgcat.exe + M3CONFIG environment variable.
 %
 readonly TARGET       = "NT386"             % code generation target
+
+%-------------------------------------------------------------------
+% defined by cm3, but not the other MxConfig users
+if not defined("SL") SL = "/" end
+if not defined("CR") CR = "\n" end
+if not defined("M3_PROFILING") M3_PROFILING = FALSE end
+%-------------------------------------------------------------------
 
 if M3_PROFILING
     readonly PROFILING_P = "p"
