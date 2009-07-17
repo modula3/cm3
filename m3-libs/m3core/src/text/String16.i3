@@ -35,7 +35,7 @@ PROCEDURE FindCharR (a: ADDRESS;  len: CARDINAL;  c: WIDECHAR): INTEGER;
 (* PRE: a MOD ADRSIZE(WIDECHAR) = 0 *) 
 
 PROCEDURE HasWideChars (a: ADDRESS; len: CARDINAL): BOOLEAN;
-(* Return ORD(a[i] > LAST (CHAR), for some "i" in "[0~..~len-1]". *) 
+(* Return ORD(a[i]) > LAST (CHAR), for some "i" in "[0~..~len-1]". *) 
 (* PRE: a MOD ADRSIZE(WIDECHAR) = 0 *) 
 
 PROCEDURE ArrayStart (READONLY a: ARRAY OF WIDECHAR): ADDRESS;
