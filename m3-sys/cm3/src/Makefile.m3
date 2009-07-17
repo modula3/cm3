@@ -576,8 +576,7 @@ PROCEDURE PrintVersion (exit: BOOLEAN) =
     Msg.Out ("  compiled: ", Val("CM3_COMPILED"), Wr.EOL);
     Msg.Out ("  configuration: ", MxConfig.FindFile(), Wr.EOL);
     Msg.Out ("  host: ", MxConfig.HOST, Wr.EOL);
-    (* Why doesn't this work? *)
-    (* Msg.Out ("  target: ", MxConfig.Get("TARGET"), Wr.EOL); *)
+    Msg.Out ("  target: ", MxConfig.Get("TARGET"), Wr.EOL);
     Msg.Out (Wr.EOL);
     IF exit THEN Process.Exit (0); END;
   END PrintVersion;
