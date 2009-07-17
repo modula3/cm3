@@ -141,30 +141,32 @@ PROCEDURE HashBuf (t: T;  len: CARDINAL): Word.T =
     RETURN result;
   END HashBuf;
 
+
 PROCEDURE HasWideChars (t: T): BOOLEAN =
   VAR i: Info;
   BEGIN
     t.get_info (i);
-    IF NOT i.wide THEN RETURN FALSE;
-    ELSIF i.start = NIL THEN RETURN HasWideCharsBuf16 (t, i.length);
-    ELSE RETURN String16.HasWideChars (i.start, i.length);
+    IF i.wide THEN
+      IF i.start = NIL
+        THEN RETURN HasWideCharsBuf16 (t, i.length);
+        ELSE RETURN String16.HasWideChars (i.start, i.length);
+      END;
     END;
+    RETURN FALSE;
   END HasWideChars;
 
 PROCEDURE HasWideCharsBuf16 (t: T;  len: CARDINAL): BOOLEAN =
-  (* PRE: len = Length(t). *) 
+  (* PRE: len = Length(t). *)
   VAR
     start  : CARDINAL := 0;
     buf    : ARRAY [0..127] OF WIDECHAR;
   BEGIN
     WHILE start < len DO
       t.get_wide_chars (buf, start);
-      IF String16.HasWideChars 
-           (ADR (buf[0]), MIN (len - start, NUMBER (buf)))
-      THEN RETURN TRUE; 
-      ELSE 
-        INC (start, NUMBER (buf));
-      END; 
+      IF String16.HasWideChars (ADR (buf[0]), MIN (len - start, NUMBER (buf)))
+        THEN RETURN TRUE;
+        ELSE INC (start, NUMBER (buf));
+      END;
     END;
     RETURN FALSE;
   END HasWideCharsBuf16;
@@ -306,7 +308,7 @@ PROCEDURE FindCharR (t: T;  c: CHAR;  start := LAST (INTEGER)): INTEGER =
   END FindCharR;
 
 PROCEDURE FindWideCharR (t: T;  c: WIDECHAR;  start := LAST (INTEGER)): INTEGER =
-  VAR i: Info; 
+  VAR i: Info;
   BEGIN
     t.get_info (i);
     IF (start < 0) THEN
