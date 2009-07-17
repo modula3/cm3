@@ -47,3 +47,202 @@ X(ENOTEMPTY)
 X(EPERM)
 X(EPIPE)
 X(ERANGE)
+
+#ifdef E2BIG
+X(E2BIG)
+#endif
+#ifdef EAFNOSUPPORT
+X(EAFNOSUPPORT)
+#endif
+#ifdef EAUTH
+X(EAUTH)
+#endif
+#ifdef EBADARCH
+X(EBADARCH)
+#endif
+#ifdef EBADEXEC
+X(EBADEXEC)
+#endif
+#ifdef EBADMACHO
+X(EBADMACHO)
+#endif
+#ifdef EBADMSG
+X(EBADMSG)
+#endif
+#ifdef EBADRPC
+X(EBADRPC)
+#endif
+#ifdef EBUSY
+X(EBUSY)
+#endif
+#ifdef ECANCELED
+X(ECANCELED)
+#endif
+#ifdef EDEADLK
+X(EDEADLK)
+#endif
+#ifdef EDESTADDRREQ
+X(EDESTADDRREQ)
+#endif
+#ifdef EDEVERR
+X(EDEVERR)
+#endif
+#ifdef EDQUOT
+X(EDQUOT)
+#endif
+#ifdef EFAULT
+X(EFAULT)
+#endif
+#ifdef EFBIG
+X(EFBIG)
+#endif
+#ifdef EFTYPE
+X(EFTYPE)
+#endif
+#ifdef EIDRM
+X(EIDRM)
+#endif
+#ifdef EILSEQ
+X(EILSEQ)
+#endif
+#ifdef ELOOP
+X(ELOOP)
+#endif
+#ifdef EMLINK
+X(EMLINK)
+#endif
+#ifdef EMSGSIZE
+X(EMSGSIZE)
+#endif
+#ifdef EMULTIHOP
+X(EMULTIHOP)
+#endif
+#ifdef ENEEDAUTH
+X(ENEEDAUTH)
+#endif
+#ifdef ENOATTR
+X(ENOATTR)
+#endif
+#ifdef ENODATA
+X(ENODATA)
+#endif
+#ifdef ENODEV
+X(ENODEV)
+#endif
+#ifdef ENOLCK
+X(ENOLCK)
+#endif
+#ifdef ENOLINK
+X(ENOLINK)
+#endif
+#ifdef ENOMSG
+X(ENOMSG)
+#endif
+#ifdef ENOPOLICY
+X(ENOPOLICY)
+#endif
+#ifdef ENOPROTOOPT
+X(ENOPROTOOPT)
+#endif
+#ifdef ENOSPC
+X(ENOSPC)
+#endif
+#ifdef ENOSR
+X(ENOSR)
+#endif
+#ifdef ENOSTR
+X(ENOSTR)
+#endif
+#ifdef ENOSYS
+X(ENOSYS)
+#endif
+#ifdef ENOTBLK
+X(ENOTBLK)
+#endif
+#ifdef ENOTCONN
+X(ENOTCONN)
+#endif
+#ifdef ENOTSUP
+X(ENOTSUP)
+#endif
+#ifdef ENOTTY
+X(ENOTTY)
+#endif
+#ifdef ENXIO
+X(ENXIO)
+#endif
+#ifdef EOPNOTSUPP
+X(EOPNOTSUPP)
+#endif
+#ifdef EOVERFLOW
+X(EOVERFLOW)
+#endif
+#ifdef EPFNOSUPPORT
+X(EPFNOSUPPORT)
+#endif
+#ifdef EPROCLIM
+X(EPROCLIM)
+#endif
+#ifdef EPROCUNAVAIL
+X(EPROCUNAVAIL)
+#endif
+#ifdef EPROGMISMATCH
+X(EPROGMISMATCH)
+#endif
+#ifdef EPROGUNAVAIL
+X(EPROGUNAVAIL)
+#endif
+#ifdef EPROTO
+X(EPROTO)
+#endif
+#ifdef EPROTONOSUPPORT
+X(EPROTONOSUPPORT)
+#endif
+#ifdef EPROTOTYPE
+X(EPROTOTYPE)
+#endif
+#ifdef EPWROFF
+X(EPWROFF)
+#endif
+#ifdef EREMOTE
+X(EREMOTE)
+#endif
+#ifdef EROFS
+X(EROFS)
+#endif
+#ifdef ERPCMISMATCH
+X(ERPCMISMATCH)
+#endif
+#ifdef ESHLIBVERS
+X(ESHLIBVERS)
+#endif
+#ifdef ESHUTDOWN
+X(ESHUTDOWN)
+#endif
+#ifdef ESOCKTNOSUPPORT
+X(ESOCKTNOSUPPORT)
+#endif
+#ifdef ESPIPE
+X(ESPIPE)
+#endif
+#ifdef ESRCH
+X(ESRCH)
+#endif
+#ifdef ESTALE
+X(ESTALE)
+#endif
+#ifdef ETIME
+X(ETIME)
+#endif
+#ifdef ETOOMANYREFS
+X(ETOOMANYREFS)
+#endif
+#ifdef ETXTBSY
+X(ETXTBSY)
+#endif
+#ifdef EUSERS
+X(EUSERS)
+#endif
+#ifdef EXDEV
+X(EXDEV)
+#endif
