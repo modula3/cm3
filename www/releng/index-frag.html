@@ -59,7 +59,9 @@
       Packages have explicit import and export declarations, i.e.
       they implement the principle of information hiding on a
       higher level than modules. For details on packages see
-      http://...
+      <a href="http://www.opencm3.net/doc/help/cm3/packages.html">
+        Organizing software in packages</a> from the M3 operations
+      guide.
     </p>
 
     <p>
@@ -409,8 +411,8 @@
     <ul>
       <li>
         <b>binary archives</b> of the central
-        installation hierarchy and package pool, which are named
-        <tt>-bin-min-</tt> and <tt>-bin-core-</tt>
+        installation hierarchy and package pool (e.g. /usr/local/cm3/pkg),
+        which are named <tt>-bin-min-</tt> and <tt>-bin-core-</tt>
       </li>
       <li>
         <b>source archives</b> of the CM3 workspace, which are named
@@ -419,7 +421,8 @@
       <li>
         <b>combined binary and source workspace archives</b> which
         contain parts of a precompiled user workspace, which are named
-        <tt>-bin-ws-</tt>
+        <tt>-bin-ws-</tt> and may be shipped to the central package
+        pool with the <tt>install.sh/cmd</tt> script.
       </li>
     </ul>
     <p>
@@ -431,6 +434,12 @@
       collection adds some useful libraries and tools which are
       usually needed for most purposes. This is all you absolutely
       need to download and install in order to use Modula-3.
+    </p>
+    <p>
+      In case you wonder about the names `min' and `core', they're not
+      really accurate but legacy. We recommend to download the
+      <b><tt>cm3-bin-core-*.tgz</tt></b> archives unless you really
+      want something minimalistic.
     </p>
     <p>
       Three special source archives contain parts or all the available
@@ -845,7 +854,7 @@
         On Linux and System V file systems you may need to add the
         <b><tt>s</tt></b> mode flag to directories, too:<br>
         <b><tt>find /usr/local/cm3 -type d -print | xargs chmod g+s</tt></b><br>
-        Now all members of the group m3 should be able to shop M3
+        Now all members of the group m3 should be able to ship M3
         packages to <tt>/usr/local/cm3</tt> as long as their UMASK is
         set to the appropriate 0002 (group-writable). If you only want
         one administrator to be able to ship packages, leave out the
@@ -902,7 +911,7 @@
         the m3devel list will be better as the forum there is much
         wider. Of course everybody will do his or her best to help you
         use and enjoy CM3. But please consider that this is a
-        volunteers project and nobody gets paid for his support.
+        volunteer project and nobody gets paid for his/her support.
       </li>
     </ol>
 
