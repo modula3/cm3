@@ -9,8 +9,8 @@ UNSAFE MODULE OpSysPosix EXPORTS OpSys;
 IMPORT M3toC, Unix, Upwd, Uugid, Ustat;
 FROM Ctypes IMPORT int, char_star;
 
-CONST
-  rwMask = Ustat.S_GWRITE + Ustat.S_OWRITE;
+VAR
+  rwMask := Ustat.S_GWRITE + Ustat.S_OWRITE;
 
 PROCEDURE Init () =
   BEGIN
