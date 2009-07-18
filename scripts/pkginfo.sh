@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.20 2009-06-29 16:31:37 jkrell Exp $
+# $Id: pkginfo.sh,v 1.21 2009-07-18 18:50:44 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -38,6 +38,11 @@ UsePackage()
     m3cc) [ "${GCC_BACKEND}" = yes ] && [ "${OMIT_GCC}" = "" ] ;;
     m3gdb)
       ([ "${M3GDB}" = yes ] || [ "${CM3_GDB}" = yes ]) \
+         && [ "${TARGET}" != "ARM_DARWIN" ] \
+         && [ "${TARGET}" != "PPC_DARWIN" ] \
+         && [ "${TARGET}" != "PPC64_DARWIN" ] \
+         && [ "${TARGET}" != "I386_DARWIN" ] \
+         && [ "${TARGET}" != "AMD64_DARWIN" ] \
          && [ "${TARGET}" != "NT386" ] ;;
 
     *) true;;
