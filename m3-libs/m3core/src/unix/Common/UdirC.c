@@ -30,6 +30,11 @@ DIR* Udir__opendir(const char* a)
     return opendir(a);
 }
 
+void* Udir__readdir(DIR* a)
+{
+    return readdir(a);
+}
+
 int Udir__closedir(DIR* a)
 {
     return closedir(a);
