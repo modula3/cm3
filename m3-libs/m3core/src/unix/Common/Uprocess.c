@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-int Uprocess__getpid(void)
+m3_pid_t Uprocess__getpid(void)
 {
 #ifdef _WIN32
     return _getpid();
