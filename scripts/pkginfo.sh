@@ -39,10 +39,10 @@ UsePackage()
     m3gdb)
       ([ "${M3GDB}" = yes ] || [ "${CM3_GDB}" = yes ]) \
          && [ "${TARGET}" != "ARM_DARWIN" ] \
+         && [ "${TARGET}" != "AMD64_DARWIN" ] \
+         && [ "${TARGET}" != "I386_DARWIN" ] \
          && [ "${TARGET}" != "PPC_DARWIN" ] \
          && [ "${TARGET}" != "PPC64_DARWIN" ] \
-         && [ "${TARGET}" != "I386_DARWIN" ] \
-         && [ "${TARGET}" != "AMD64_DARWIN" ] \
          && [ "${TARGET}" != "NT386" ] ;;
 
     *) true;;
