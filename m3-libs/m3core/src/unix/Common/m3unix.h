@@ -40,6 +40,7 @@ struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses *
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
+#include <signal.h>
 
 #ifdef _WIN32
 #include <direct.h>
