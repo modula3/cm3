@@ -259,7 +259,7 @@ int Unix__pipe(int files[2])
 
 #ifndef _WIN32
 
-INTEGER Unix__readlink(const char* path, void* buf, INTEGER bufsize) { return readlink(path, buf, bufsize); }
+INTEGER Unix__readlink(const char* path, char* buf, INTEGER bufsize) { return readlink(path, buf, bufsize); }
 
 int Unix__symlink(const char* name1, const char* name2) { return symlink(name1, name2); }
 
