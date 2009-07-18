@@ -63,7 +63,7 @@ m3_exec_t Uexec__execve(const char* name, char** argv, char** envp)
 
 #ifndef _WIN32
 
-pid_t Uexec__waitpid(pid_t pid, int* status, int options)
+m3_pid_t Uexec__waitpid(m3_pid_t pid, int* status, int options)
 {
     return waitpid(pid, status, options);
 }
