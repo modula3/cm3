@@ -16,9 +16,9 @@ IsX86 = equal(TARGET, "I386_DARWIN") or equal(TARGET, "AMD64_DARWIN")
 
 if not defined("SYSTEM_CC")
     if equal(WORD_SIZE, "32BITS")
-        SYSTEM_CC  = "32"
+        SYSTEM_CC = "32"
     else
-        SYSTEM_CC  = "64"
+        SYSTEM_CC = "64"
     end
 %
 % fPIC is not usually needed here.
