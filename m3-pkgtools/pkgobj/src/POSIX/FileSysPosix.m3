@@ -11,11 +11,11 @@ IMPORT Cerrno, (* Cstring, *) Pathname, OSError, OSErrorPosix, Udir;
 
 FROM Ctypes IMPORT char_star, int;
 
-CONST
-  rMode = Ustat.S_IREAD + Ustat.S_GREAD + Ustat.S_OREAD;
-  rwMode = Ustat.S_IREAD + Ustat.S_IWRITE + Ustat.S_GREAD + Ustat.S_OREAD;
-  rwxMode = rwMode + Ustat.S_IEXEC + Ustat.S_GEXEC + Ustat.S_OEXEC;
-  rxMode = rMode + Ustat.S_IEXEC + Ustat.S_GEXEC + Ustat.S_OEXEC;
+VAR
+  rMode := Ustat.S_IREAD + Ustat.S_GREAD + Ustat.S_OREAD;
+  rwMode := Ustat.S_IREAD + Ustat.S_IWRITE + Ustat.S_GREAD + Ustat.S_OREAD;
+  rwxMode := rwMode + Ustat.S_IEXEC + Ustat.S_GEXEC + Ustat.S_OEXEC;
+  rxMode := rMode + Ustat.S_IEXEC + Ustat.S_GEXEC + Ustat.S_OEXEC;
 
 VAR
   errENOENT, errENOTDIR, errEACCES, errEEXIST, errENOSPC, errEIO: Atom.T;
