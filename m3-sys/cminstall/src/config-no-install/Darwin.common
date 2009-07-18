@@ -121,7 +121,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   ret_code = try_exec ("@" & SYSTEM_LIBTOOL, arch, "-static", "-o", lib_a, objects)
   if not equal (ret_code, 0) return ret_code end
 
-  if shared
+  if shared and defined("install_symbolic_link")
     % build the shared library
     ret_code = try_exec (
         "@" & SYSTEM_CC, "-dynamiclib",
@@ -176,7 +176,7 @@ proc skip_lib (lib, shared) is
   local lib_sox  = format ("lib%s.%s.dylib", lib, vmaj)
   local lib_soxx = format ("lib%s.%s.dylib", lib, version)
 
-  if shared
+  if shared and defined("install_symbolic_link")
     % create the version aliases
     link_file(lib_soxx, lib_sox)
     link_file(lib_sox, lib_so)
