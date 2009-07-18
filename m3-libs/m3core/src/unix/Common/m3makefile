@@ -17,6 +17,7 @@ c_source("Uugid")
 c_source("Uuio")
 c_source("Uutmp")
 c_source("Usignal")
+Interface("Usignal")
 c_source("Upwd")
 c_source("Uprocess")
 c_source("Upthread")
@@ -65,7 +66,6 @@ c_source("UdirC")
 
 %
 % This is systems that don't provide user-thread support.
-% And non-Darwin.
 %
 
 if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
@@ -78,15 +78,6 @@ if equal (TARGET, "MIPS64_OPENBSD") or equal (TARGET, "I386_OPENBSD")
         or equal (TARGET, "I386_INTERIX")
 
     Interface("Uucontext")
-    Interface("Usignal")
-
-end
-
-% all platforms should switch to this
-
-if equal (TARGET, "ARM_DARWIN")
-
-    Interface("Usignal")
 
 end
 
