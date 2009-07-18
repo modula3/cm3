@@ -3,11 +3,7 @@
 % See the file COPYRIGHT for a full description.
 %
 
-if TRUE
-
-Module ("Usignal")
-
-else
+if FALSE
 
 Interface ("Udir")
 Interface ("Uerror")
