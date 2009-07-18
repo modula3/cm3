@@ -42,7 +42,7 @@ readonly _UnixPieces = {
   "OS2"             : [ "os2",                                     "uin-common" ],
   "PA32_HPUX"       : [ "hpux-common",                             "uin-common" ],
   "PA64_HPUX"       : [ "hpux-common",                             "uin-common" ],
-  "PPC32_OPENBSD"   : [ "openbsd-common",                           "uin-len" ],
+  "PPC32_OPENBSD"   : [ "openbsd-common",                          "uin-len" ],
   "PPC_DARWIN"      : [ "darwin-common", "darwin-generic", "darwin-ppc", "uin-len" ],
   "PPC_LINUX"       : [ "linux-common",                            "uin-common" ],
   "SEQUENT"         : [ "ultrix-3-1.generic", "ultrix-3-1.SEQUENT","uin-common" ],
@@ -53,10 +53,10 @@ readonly _UnixPieces = {
   "SPARC64_LINUX"   : [ "linux-common", "uin-common" ],
   "SPARC64_OPENBSD" : [ "openbsd-common",                          "uin-len" ],
   "SPARC64_SOLARIS" : [ "solaris-common", "solaris-2-x",           "uin-common" ],
-  "SUN3"            : [ "ultrix-3-1.generic", "ultrix-3-1.SUN3",    "uin-common" ],
-  "SUN386"          : [ "ultrix-3-1.generic", "ultrix-3-1.SUN386",  "uin-common" ],
-  "UMAX"            : [ "ultrix-3-1.generic", "ultrix-3-1.UMAX",    "uin-common" ],
-  "VAX"             : [ "ultrix-3-1.generic", "ultrix-3-1.VAX",     "uin-common" ],
+  "SUN3"            : [ "ultrix-3-1.generic", "ultrix-3-1.SUN3",   "uin-common" ],
+  "SUN386"          : [ "ultrix-3-1.generic", "ultrix-3-1.SUN386", "uin-common" ],
+  "UMAX"            : [ "ultrix-3-1.generic", "ultrix-3-1.UMAX",   "uin-common" ],
+  "VAX"             : [ "ultrix-3-1.generic", "ultrix-3-1.VAX",    "uin-common" ],
 }
 
 if equal (OS_TYPE, "WIN32")
