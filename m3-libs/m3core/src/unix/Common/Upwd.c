@@ -12,7 +12,7 @@ extern "C" {
 
 typedef struct passwd passwd_t;
 
-passwd_t* Upwd__getpwuid(int uid)
+passwd_t* Upwd__getpwuid(m3_uid_t uid)
 {
     return getpwuid(uid);
 }

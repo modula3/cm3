@@ -10,7 +10,7 @@ extern "C" {
 
 #ifndef _WIN32
 
-int Usignal__kill(pid_t pid, int sig)
+int Usignal__kill(m3_pid_t pid, int sig)
 {
     return kill(pid, sig);
 }
