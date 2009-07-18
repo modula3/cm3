@@ -47,10 +47,9 @@
       <li>Many fixes and improvements of the garbage collector.</li>
       <li>Many fixes and improvements of the system pthreads
       implementation.</li>
-      <li>New data type LONGINT which represents a long integer value of
-      64 bit integer on all target platforms. Exception: the Windows
-      backend hasn't been adated yet, it's still 32 bits there (still
-      in the queue).</li>
+      <li> There is a new type LONGINT. It is a 64bit signed integer
+      on all platforms except the native NT "NT386" platform. On NT386
+      is a 32bits, for now, but we would like to fix that.</li>
       <li>Much improved and restructured CM3 config files.</li>
       <li>Added lots of new quake functions and fixed several quake
       bugs.</li>
@@ -91,7 +90,7 @@
     <address><a href="mailto:wagner@elegosoft.com">Olaf Wagner</a></address>
 <!-- Created: Wed Jul 15 19:38:16 CEST 2009 -->
 <!-- hhmts start -->
-Last modified: Thu Jul 16 08:15:52 CEST 2009
+Last modified: Sat Jul 18 11:48:18 CEST 2009
 <!-- hhmts end -->
   </body>
 </html>
