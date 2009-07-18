@@ -15,6 +15,11 @@ uid_t Uugid__geteuid(void)
     return geteuid();
 }
 
+int Uugid__setreuid(m3_uid_t ruid, m3_uid_t euid)
+{
+    return setreuid(ruid, euid);
+}
+
 gid_t Uugid__getegid(void)
 {
     return getegid();
