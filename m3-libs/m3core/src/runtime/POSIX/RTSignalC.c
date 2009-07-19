@@ -123,7 +123,7 @@ static size_t GetPC(void* xcontext)
 #error Unknown __APPLE__ target
 #endif
 
-#elif defined(__sun)
+#elif defined(__sun) || defined(__sparc)
       context->uc_mcontext.gregs[REG_PC]
 
 #elif defined(__linux)
