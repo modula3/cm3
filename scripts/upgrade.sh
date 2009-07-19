@@ -15,11 +15,12 @@ else
     exit 1
   fi
   export root
+  ROOT="${root}"; export ROOT
 fi
 
 . "$sysinfo"
-. "$ROOT/scripts/pkginfo.sh"
-. "$ROOT/scripts/pkgcmds.sh"
+. "$root/scripts/pkginfo.sh"
+. "$root/scripts/pkgcmds.sh"
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
@@ -40,12 +41,13 @@ run() {
 }
 
 cp_config_files() {
-  mkdir "${INSTALLROOT}/bin/config" 2>/dev/null
-  CFGS="${ROOT}/m3-sys/cminstall/src/config-no-install"
+  CFGD="${INSTALLROOT}/bin/config"
+  mkdir -p "${CFGD}" 2>/dev/null
+  CFGS="${root}/m3-sys/cminstall/src/config-no-install"
   for f in ${CFGS}/*; do
     b=`basename ${f}`
-    rm ${CFGD}/${b} 2>/dev/null
-    cp -v ${f} ${CFGD}/config/${b}
+    rm -f ${CFGD}/${b} 2>/dev/null
+    cp -v ${f} ${CFGD}/${b}
   done
   ( echo "INSTALL_ROOT = \"${INSTALLROOT}\""
     echo "include(path() & \"/config/${TARGET}\")"
@@ -57,35 +59,42 @@ cp_config_files() {
 # These are only needed in case of cm3.cfg updates later. We need
 # to build them in advance though, but ignore errors in this step.
 P="sysutils m3bundle m3middle m3quake patternmatching cminstall"
-run "$ROOT/scripts/do-pkg.sh" "$@" "buildship" ${P} || true
+run "$root/scripts/do-pkg.sh" "$@" "buildship" ${P} || true
 
 # Now build the compiler with the installed version of the runtime;
 # do _not_ compile m3core and libm3 here.
 # We start with the front end...
 P=`FilterPackages sysutils m3middle m3objfile m3linker m3back \
    m3front m3quake cm3 mklib`
-run "$ROOT/scripts/do-pkg.sh" "$@" "buildship" ${P} || exit 1
+run "$root/scripts/do-pkg.sh" "$@" "buildship" ${P} || exit 1
 
 if [ "${GCC_BACKEND}" = yes ]; then
   # ... and continue with the backend, if needed
-  run "$ROOT/scripts/do-pkg.sh" "$@" "build" m3cc || exit 1
+  run "$root/scripts/do-pkg.sh" "$@" "build" m3cc || exit 1
 fi
 
 # Up to now, the compiler binaries have not been installed.
 # We do this now but keep backups of the old ones.
-run "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
+run "$root/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
 
 # Now try the new compiler but building the core system (without
 # m3cc, as this is written in C) from scratch with it.
-OMIT_GCC=yes run "$ROOT/scripts/do-cm3-core.sh" "$@" "realclean" || exit 1
+OMIT_GCC=yes run "$root/scripts/do-cm3-core.sh" "$@" "realclean" || exit 1
 
+DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
+CFG="${INSTALLROOT}/bin/cm3.cfg"
+CFGBAK="${CFG}--${DS}"
+if [ -f "${CFG}" ]; then
+  echo "backing up ${CFG} in ${CFGBAK}"
+  cp -p "${CFG}" "${CFGBAK}" || exit 1
+fi
 if [ ! -d  "${INSTALLROOT}/bin/config" ]; then
   echo "create new config sub directory ${INSTALLROOT}/bin/config"
   cp_config_files
 fi
 
 if [ "${UPGRADE_CM3_CFG}" != "yes" ]; then
-  run "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
+  run "$root/scripts/do-cm3-core.sh" "$@" "buildship"
   ret=$?
 fi
 
@@ -99,10 +108,6 @@ if [ "${UPGRADE_CM3_CFG}" = "yes" -o "${ret}" != 0 ]; then (
     echo "performing forced cm3.cfg upgrade..."
   fi
 
-  DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
-  CFG="${INSTALLROOT}/bin/cm3.cfg"
-  CFGBAK="${CFG}--${DS}"
-  cp -p "${CFG}" "${CFGBAK}" || exit 1
   if grep m3_backend "${CFG}"; then
     "${INSTALLROOT}/pkg/cminstall/${TARGET}/cminstall" -c "${INSTALLROOT}" \
       -o > "${CFG}" || exit 1
@@ -113,11 +118,11 @@ if [ "${UPGRADE_CM3_CFG}" = "yes" -o "${ret}" != 0 ]; then (
 
   echo "trying recompile after cleanup..."
 
-  OMIT_GCC=yes run "$ROOT/scripts/do-cm3-core.sh" "$@" "realclean" || exit 1
+  OMIT_GCC=yes run "$root/scripts/do-cm3-core.sh" "$@" "realclean" || exit 1
 
-  run "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
+  run "$root/scripts/do-cm3-core.sh" "$@" "buildship"
 
 ) fi || exit 1
 
 # If everything has been successfull, we do another compiler upgrade.
-run "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
+run "$root/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
