@@ -112,6 +112,8 @@ case "${UNAME}" in
       CM3_TARGET=PPC_LINUX
     elif [ "${UNAMEM}" = "x86_64" ] ; then
       CM3_TARGET=AMD64_LINUX
+    elif [ "${UNAMEM}" = "sparc64" ] ; then
+      CM3_TARGET=SPARC32_LINUX
     else
       CM3_TARGET=LINUXLIBC6
     fi
