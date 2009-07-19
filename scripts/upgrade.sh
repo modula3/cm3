@@ -39,6 +39,20 @@ run() {
   ( "$@" )
 }
 
+cp_config_files() {
+  mkdir "${INSTALLROOT}/bin/config" 2>/dev/null
+  CFGS="${ROOT}/m3-sys/cminstall/src/config-no-install"
+  for f in ${CFGS}/*; do
+    b=`basename ${f}`
+    rm ${CFGD}/${b} 2>/dev/null
+    cp -v ${f} ${CFGD}/config/${b}
+  done
+  ( echo "INSTALL_ROOT = \"${INSTALLROOT}\""
+    echo "include(path() & \"/config/${TARGET}\")"
+  ) > ${CFG}
+  echo "new config files copied/generated in ${CFG}, backup in ${CFGBAK}"
+}
+
 # Try to make sure that m3bundle and cminstall are available.
 # These are only needed in case of cm3.cfg updates later. We need
 # to build them in advance though, but ignore errors in this step.
@@ -65,6 +79,11 @@ run "$ROOT/scripts/install-cm3-compiler.sh" $OPTIONS upgrade || exit 1
 # m3cc, as this is written in C) from scratch with it.
 OMIT_GCC=yes run "$ROOT/scripts/do-cm3-core.sh" "$@" "realclean" || exit 1
 
+if [ ! -d  "${INSTALLROOT}/bin/config" ]; then
+  echo "create new config sub directory ${INSTALLROOT}/bin/config"
+  cp_config_files
+fi
+
 if [ "${UPGRADE_CM3_CFG}" != "yes" ]; then
   run "$ROOT/scripts/do-cm3-core.sh" "$@" "buildship"
   ret=$?
@@ -89,17 +108,7 @@ if [ "${UPGRADE_CM3_CFG}" = "yes" -o "${ret}" != 0 ]; then (
       -o > "${CFG}" || exit 1
     echo "new config file generated in ${CFG}, backup in ${CFGBAK}"
   else
-    mkdir "${INSTALLROOT}/bin/config" 2>/dev/null
-    CFGS="${ROOT}/m3-sys/cminstall/src/config-no-install"
-    for f in ${CFGS}/*; do
-      b=`basename ${f}`
-      rm ${CFGD}/${b} 2>/dev/null
-      cp -v ${f} ${CFGD}/config/${b}
-    done
-    ( echo "INSTALL_ROOT = \"${INSTALLROOT}\""
-      echo "include(path() & \"/config/${TARGET}\")"
-    ) > ${CFG}
-    echo "new config files copied/generated in ${CFG}, backup in ${CFGBAK}"
+    cp_config_files
   fi
 
   echo "trying recompile after cleanup..."
