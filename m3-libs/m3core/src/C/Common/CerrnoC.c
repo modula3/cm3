@@ -4,6 +4,10 @@
 
 #include <errno.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int
 Cerrno__GetErrno(void)
 {
@@ -15,3 +19,7 @@ Cerrno__SetErrno(int e)
 {
     errno = e;
 }
+
+#ifdef __cplusplus
+}
+#endif
