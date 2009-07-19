@@ -14,30 +14,8 @@ Interface ("Ctypes")
 Module ("M3toC")
 c_source ("CerrnoC")
 
-% not yet common to all, but should be, will be
-
-if     equal (TARGET, "AMD64_LINUX")
-    or equal (TARGET, "AMD64_DARWIN")
-    or equal (TARGET, "AMD64_FREEBSD")
-    or equal (TARGET, "AMD64_NETBSD")
-    or equal (TARGET, "AMD64_OPENBSD")
-    or equal (TARGET, "SPARC32_LINUX")
-    or equal (TARGET, "SPARC64_LINUX")
-    or equal (TARGET, "MIPS64_OPENBSD")
-    or equal (TARGET, "PPC32_OPENBSD")
-    or equal (TARGET, "SPARC64_OPENBSD")
-    or equal (TARGET, "SPARC64_SOLARIS")
-    or equal (TARGET, "NT386")
-    or equal (TARGET, "LINUXLIBC6")
-    or equal (TARGET, "PPC_LINUX")
-    or equal (TARGET, "I386_OPENBSD")
-    or equal (TARGET, "PA32_HPUX")
-    or equal (TARGET, "PA64_HPUX")
-    or equal (TARGET, "ARM_DARWIN")
-    or equal (TARGET, "I386_INTERIX")
-  Interface ("Cstring")
-  Interface ("Cstdio")
-end
+Interface ("Cstring")
+Interface ("Cstdio")
 
 % not used by all ports
 

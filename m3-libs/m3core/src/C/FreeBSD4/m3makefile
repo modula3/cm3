@@ -8,9 +8,3 @@
 %      Olaf Wagner 16.09.1994
 
 Interface ("Csetjmp")
-Interface ("Cstring")
-Module ("Cstdio")
-
-c_source ("CstdioC")
-
-

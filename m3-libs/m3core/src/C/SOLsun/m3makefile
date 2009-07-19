@@ -5,6 +5,3 @@
 % Last modified on Fri Sep 10 14:33:36 PDT 1993 by muller
 
 Interface ("Csetjmp")
-Interface ("Cstdio")
-Interface ("Cstring")
-
