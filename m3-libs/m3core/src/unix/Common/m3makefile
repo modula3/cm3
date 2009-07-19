@@ -21,9 +21,9 @@ c_source("Upwd")
 c_source("Uprocess")
 c_source("Upthread")
 
-if not (equal (TARGET, "SOLgnu") or equal (TARGET, "SOLsun") or equal (TARGET, "SPARC_SOLARIS")
-        or equal (TARGET, "NetBSD2_i386") or equal (TARGET, "I386_NETBSD")
-        or equal (TARGET, "I386_FREEBSD") or equal (TARGET, "FreeBSD4"))
+if not (equal (TARGET, "SOLgnu") or equal (TARGET, "SOLsun")
+        or equal (TARGET, "LINUXLIBC6") or equal (TARGET, "NetBSD2_i386")
+        or equal (TARGET, "FreeBSD4"))
     % Eventually this should be all platforms.
     Interface("Usignal")
 end
