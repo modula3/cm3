@@ -471,6 +471,13 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
     echo " >>> OK build_${1}_upgrade ${DS} ${WS}"
   fi
 
+  echo pwd
+  pwd
+  echo ls
+  ls
+  echo ls ./scripts
+  ls ./scripts
+
   echo " === build ${BSET} system with current compiler"
   BUILDSCRIPT="./scripts/do-cm3-${BSET}.sh"
   if [ "$1" = "rel" ]; then
