@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.13 2009-05-18 01:59:44 jkrell Exp $
+% $Id: m3makefile,v 1.14 2009-07-20 19:30:31 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -7,6 +7,9 @@
 %
 % Last modified on Fri Feb 10 13:17:23 PST 1995 by kalsow
 %
+
+if not (equal(TARGET, "AMD64_DARWIN") or equal(TARGET, "ARM_DARWIN") or equal(TARGET, "I386_DARWIN")
+ or equal(TARGET, "PPC_DARWIN") or equal(TARGET, "PPC64_DARWIN") or equal(OS_TYPE, "WIN32"))
 
 % Define quick to avoid doing a configure.  It should only need to be done
 %  once on a given platform. 
@@ -170,3 +173,5 @@ ManPage ("m3gdb","1")
 %HtmlFile("index")
 
 %OtherPackage("m3gdb")
+
+end
