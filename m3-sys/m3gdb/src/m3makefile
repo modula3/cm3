@@ -8,6 +8,9 @@
 % Last modified on Fri Feb 10 13:17:23 PST 1995 by kalsow
 %
 
+if not (equal(TARGET, "AMD64_DARWIN") or equal(TARGET, "ARM_DARWIN") or equal(TARGET, "I386_DARWIN")
+ or equal(TARGET, "PPC_DARWIN") or equal(TARGET, "PPC64_DARWIN") or equal(OS_TYPE, "WIN32"))
+
 % Define quick to avoid doing a configure.  It should only need to be done
 %  once on a given platform. 
 %quick = 1
@@ -170,3 +173,5 @@ ManPage ("m3gdb","1")
 %HtmlFile("index")
 
 %OtherPackage("m3gdb")
+
+end
