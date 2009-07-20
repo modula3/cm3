@@ -273,7 +273,7 @@ checkout()
     mkdir -p "${WS}"
   fi
   cd "${WS}" || exit 1
-  cvs -z3 -q -d ${CM3CVSROOT} checkout ${COVERSION} cm3 2>&1 | tee cvs-co.log
+  (cvs -z3 -q -d ${CM3CVSROOT} checkout ${COVERSION} cm3 2>&1 | tee cvs-co.log) || exit 1
   echo " >>> OK checkout ${DS} ${WS} ${COVERSION}"
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` checkout cm3 done"
 }
