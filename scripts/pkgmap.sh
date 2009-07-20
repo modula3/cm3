@@ -79,6 +79,7 @@ fi
 if [ -n "${REPORT}" ]; then
   DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
   R="${HTML_REPORT:-${TMPDIR}/cm3-pkg-report-${TARGET}-${DS}.html}"
+  RW="${WORKSPACE}/cm3-pkg-report-${TARGET}.html"
   R2="`basename ${R} .html`.part2}"
   ERRS=""
   REDPKGS=""
@@ -375,6 +376,10 @@ if [ -n "${REPORT}" ]; then
     WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
     WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/logs}
     scp "${R}" "${WWWDEST}" < /dev/null
+  fi
+  if [ -n "${WORKSPACE}" ]; then
+    echo "moving report to ${RW}"
+    mv "${R}" "${RW}"
   fi
 fi
 
