@@ -28,6 +28,8 @@
 %
 % $Id$
 
+if equal(OS_TYPE, "POSIX")
+
 include(path() & "/../../quake/cvsup.quake")
 
 if defined("STATIC")
@@ -72,3 +74,5 @@ implementation("Main")
 Program("cvsupd")
 ManPage("cvsupd","8")
 ManPage("cvsupd.class","5")
+
+end

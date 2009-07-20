@@ -28,6 +28,8 @@
 %
 % $Id$
 
+if equal(OS_TYPE, "POSIX")
+
 include(path() & "/../../quake/cvsup.quake")
 
 no_shared_lib()
@@ -254,3 +256,5 @@ export_interface("WatchDog")
 export_interface("WrLogger")
 
 library("suplib")
+
+end

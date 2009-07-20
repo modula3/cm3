@@ -28,6 +28,8 @@
 %
 % $Id$
 
+if equal(OS_TYPE, "POSIX")
+
 include(path() & "/../../quake/cvsup.quake")
 
 if defined("STATIC")
@@ -44,3 +46,5 @@ implementation("Main")
 
 program("cvpasswd")
 ManPage("cvpasswd","1")
+
+end
