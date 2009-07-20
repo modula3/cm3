@@ -428,15 +428,16 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     | Systems.NT386, Systems.NT386GNU =>
 
-                 (* Cygwin is 13, Visual C++ is 16. Always use 16
-                    so the code has a chance of interoperating.
+                 (* Cygwin is 13, Visual C++ is 16. Interix is 18.
+                    Use 18 for interop.
+                    Note that Cygwin's setjmp.h header is wrong, off by a factor of 4.
                     Cygwin provides setjmp and _setjmp that resolve the same.
                     Visual C++ provides only _setjmp.
                     Visual C++ also has _setjmp3 that the compiler generates
                     a call to. In fact _setjmp appears to only use 8 ints
                     and _setjmp3 appears to use more. Consider switching to _setjmp3.
                  *)
-                 Jumpbuf_size := (16 * Address.size);
+                 Jumpbuf_size := (18 * Address.size);
 
                  IF Text.Equal(OS_name, "WIN32") THEN
                    EOL := "\r\n";
