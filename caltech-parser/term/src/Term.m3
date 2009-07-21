@@ -1,4 +1,4 @@
-(* $Id: Term.m3,v 1.2 2001-09-19 14:10:17 wagner Exp $ *)
+(* $Id: Term.m3,v 1.3 2009-07-21 10:58:57 jkrell Exp $ *)
 
 UNSAFE MODULE Term;
 IMPORT Stdio;
@@ -6,44 +6,31 @@ IMPORT Wr AS Wrr;
 IMPORT Rd;
 IMPORT Termios;
 IMPORT Text;
-IMPORT RTCollector;
 IMPORT Thread;
+IMPORT TermC;
 
 <* FATAL Thread.Alerted, Wrr.Failure, Rd.Failure, Rd.EndOfFile *>
 
 VAR
   Endl: TEXT := "\n";
   Raw: BOOLEAN := FALSE;
-  TermCooked, TermRaw: Termios.T := NIL;
 
 PROCEDURE MakeRaw(flag: BOOLEAN) =
   VAR
     termNew: Termios.T;
   BEGIN
-    TRY
-      RTCollector.Disable();
-      IF flag # Raw THEN
-        Raw := flag;
-        Wrr.Flush(Stdio.stdout);
-        IF Raw THEN
-            IF TermCooked = NIL THEN
-              TermCooked := NEW(Termios.T);
-              TermRaw := NEW(Termios.T);
-              Termios.tcgetattr(Termios.Stdin, TermCooked);
-              TermRaw^ := TermCooked^;
-              Termios.cfmakeraw(TermRaw);
-            END;
-            termNew := TermRaw;
-            Endl := "\015\012";
-          ELSE
-            termNew := TermCooked;
-            Endl := "\n";
-          END;
-        Termios.tcsetattr(Termios.Stdin, Termios.Tcsanow, termNew);
+    IF flag # Raw THEN
+      Raw := flag;
+      Wrr.Flush(Stdio.stdout);
+      IF Raw THEN
+          termNew := TermC.GetTermRaw();
+          Endl := "\015\012";
+        ELSE
+          termNew := TermC.GetTermCooked();
+          Endl := "\n";
         END;
-    FINALLY
-      RTCollector.Enable()
-    END
+      Termios.tcsetattr(Termios.Stdin, Termios.Tcsanow, termNew);
+      END;
   END MakeRaw;
 
 PROCEDURE GetCharDR(): CHAR RAISES {SpecialChar} =
@@ -118,4 +105,6 @@ PROCEDURE WrLn(s: TEXT; flush := FALSE) =
     END;
   END WrLn;
 
-BEGIN END Term.
+BEGIN
+    TermC.Init();
+END Term.

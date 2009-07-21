@@ -19,20 +19,22 @@ extern "C" {
 #define STDIN_FILENO 0
 #endif
 
+/* not used */
 #ifndef STDOUT_FILENO
 #define STDOUT_FILENO 1
 #endif
 
+/* not used */
 #ifndef STDERR_FILENO
 #define STDERR_FILENO 2
 #endif
 
 EXTERN_CONST int Termios__Stdin = STDIN_FILENO;
-EXTERN_CONST int Termios__Stdout = STDOUT_FILENO ;
-EXTERN_CONST int Termios__Stderr = STDERR_FILENO;
+EXTERN_CONST int Termios__Stdout = STDOUT_FILENO; /* not used */
+EXTERN_CONST int Termios__Stderr = STDERR_FILENO; /* not used */
 EXTERN_CONST int Termios__Tcsanow = TCSANOW;
-EXTERN_CONST int Termios__Tcsadrain = TCSADRAIN;
-EXTERN_CONST int Termios__Tcsaflush = TCSAFLUSH;
+EXTERN_CONST int Termios__Tcsadrain = TCSADRAIN; /* not used */
+EXTERN_CONST int Termios__Tcsaflush = TCSAFLUSH; /* not used */
 
 typedef struct termios termios_t;
 
@@ -63,11 +65,11 @@ void Termios__cfmakeraw(termios_t* t)
 #else
 
 EXTERN_CONST int Termios__Stdin = 0;
-EXTERN_CONST int Termios__Stdout = 0;
-EXTERN_CONST int Termios__Stderr = 0;
+EXTERN_CONST int Termios__Stdout = 0; /* not used */
+EXTERN_CONST int Termios__Stderr = 0; /* not used */
 EXTERN_CONST int Termios__Tcsanow = 0;
-EXTERN_CONST int Termios__Tcsadrain = 0;
-EXTERN_CONST int Termios__Tcsaflush = 0;
+EXTERN_CONST int Termios__Tcsadrain = 0; /* not used */
+EXTERN_CONST int Termios__Tcsaflush = 0; /* not used */
 
 void Termios__tcgetattr(int fd, void* t)
 {
