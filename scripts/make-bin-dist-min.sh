@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.41 2009-06-29 16:33:08 jkrell Exp $
+# $Id: make-bin-dist-min.sh,v 1.42 2009-07-21 08:48:05 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -89,18 +89,6 @@ if [ "${M3OSTYPE}" = "WIN32" ] ; then
     || exit 1
   strip_exe "${INSTALLROOT}/bin/mklib${EXE}"
 fi
-if [ -n "${SYSLIBS}" ] ; then
-  echo "installing low-level system libraries"
-  for f in ${SYSLIBS} ; do
-    if [ -f "${SYSLIBDIR}/${f}" ] ; then
-      echo "${SYSLIBDIR}/${f} -->" "${INSTALLROOT}/lib/${f}"
-      cp "${SYSLIBDIR}/${f}" "${INSTALLROOT}/lib/${f}"
-    else
-      echo "${SYSLIBDIR}/${f} not found" 1>&2
-      exit 1
-    fi
-  done
-fi
 
 #-----------------------------------------------------------------------------
 # configure a temporary config file
@@ -117,8 +105,6 @@ if [ "${NEWCFG}" != "y" ]; then
   fi
   sed -e '
     /^INSTALL_ROOT[ \t]*=/s;^.*$;INSTALL_ROOT = "'${INSTALLROOT}${SL}'";
-    /^readonly DEV_LIB[ \t]*=/s;^.*$;readonly DEV_LIB = "'${DEV_LIB}${SL}'";
-    /^readonly DEV_BIN[ \t]*=/s;^.*$;readonly DEV_BIN = "'${DEV_BIN}${SL}'";
   ' "${CFG1}" > "${INSTALLROOT}/bin/cm3.cfg"
 else
   # delete old config files
@@ -187,29 +173,6 @@ echo ".../cminstall/${TARGET}/cminstall${EXE} -->" "${STAGE}"
 cp "${ROOT}/m3-sys/cminstall/${TARGET}/cminstall${EXE}" "${STAGE}" ||  exit 1
 strip_exe "${STAGE}/cminstall${EXE}"
 cp "${ROOT}/m3-sys/COPYRIGHT-CMASS" "${STAGE}" || exit 1
-if [ "${M3OSTYPE}" = "WIN32" ] ; then
-  ITAR="`find_file tar.exe ${CM3BINSEARCHPATH}`"
-  IGZIP="`find_file gzip.exe ${CM3BINSEARCHPATH}`"
-  CYGWINDLL="`find_file cygwin.dll ${CM3BINSEARCHPATH}`"
-  if [ -f "${ITAR}" ] ; then
-    cp "${ITAR}" "${STAGE}"
-    INSTDATA="${INSTDATA} tar.exe"
-  else
-    echo "no tar.exe found on WIN32 for installation archive" 1>&2
-  fi
-  if [ -f "${IGZIP}" ] ; then
-    cp "${IGZIP}" "${STAGE}"
-    INSTDATA="${INSTDATA} gzip.exe"
-  else
-    echo "no gzip.exe found on WIN32 for installation archive" 1>&2
-  fi
-  if [ -f "${CYGWINDLL}" ] ; then
-    cp "${CYGWINDLL}" "${STAGE}"
-    INSTDATA="${INSTDATA} cygwin.dll"
-  else
-    echo "no tar.exe found on WIN32 for installation archive" 1>&2
-  fi
-fi
 echo "creating distribution archive ${ABSARCH2}"
 ${TAR} -C "${STAGE}" -czf ${ABSARCH2} ${INSTDATA} || exit 1
 ls -l "${ABSARCH2}"
