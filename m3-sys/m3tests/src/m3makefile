@@ -30,6 +30,9 @@ end
 % build the test library
 %
 import ("libm3")
+if equal(OS_TYPE, "WIN32")
+    interface ("Usysdep")
+end
 Module ("Test")
 c_source("TestC")
 build_standalone ()
