@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.72 2009-06-24 00:21:06 jkrell Exp $
+# $Id: sysinfo.sh,v 1.73 2009-07-21 08:33:58 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -121,8 +121,6 @@ strip_exe() {
 
 #-----------------------------------------------------------------------------
 # evaluate uname information
-GCWRAPFLAGS=""
-export GCWRAPFLAGS
 case "${UNAME}" in
 
   Windows*|WinNT*|Cygwin*|CYGWIN*)
@@ -233,7 +231,6 @@ case "${UNAME}" in
   Linux*)
     CM3_OSTYPE=POSIX
     GMAKE=${GMAKE:-make}
-    GCWRAPFLAGS="-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
     if [ "${UNAMEM}" = "ppc" ] ; then
       CM3_TARGET=PPC_LINUX
     elif [ "${UNAMEM}" = "x86_64" ] ; then
