@@ -1,17 +1,9 @@
 readonly TARGET = "AMD64_OPENBSD"
 readonly WORD_SIZE = "64BITS"
 
-m3back_flags = "-gstabs+ -quiet -m64 -fPIC"
+m3back_flags = "-gstabs+ -m64 -fPIC -funwind-tables"
 SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC"
 readonly SYSTEM_ASM = "as -64"
-
-%
-% newer platforms never needed these workarounds for
-% bootstrapping with older builds
-%
-readonly proc GetGcWrapFlags() is return "" end
-readonly proc FixM3GcDefs(x) is return x end
-readonly proc GetM3BackFlag(x) is return x end
 
 GNU_MAKE = "gmake"
 

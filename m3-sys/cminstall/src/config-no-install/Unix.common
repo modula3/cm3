@@ -60,20 +60,13 @@ end
 % translate Modula-3 intermediate code to object code.
 
 proc m3_backend(source, object, optimize, debug) is
-    %
-    % These flags are local instead of global to avoid the probe when we compile nothing.
-    %
-    local args = [ GetM3BackFlag ("-fno-reorder-blocks") ]
+    local args = [ "-quiet", "-fno-reorder-blocks" ]
     if optimize and not equal(TARGET, "I386_INTERIX")
         args += "-O3"
     end
     if M3_PROFILING
         args += "-p"
     end
-    if equal (WORD_SIZE, "32BITS")
-        args += GetM3BackFlag("-m32")
-    end
-    args += GetM3BackFlag("-funwind-tables")
     local m3back = GetM3Back()
     return try_exec (m3back, args, source, "-o", object)
 end
@@ -103,138 +96,6 @@ proc assemble(source, object) is
         configure_assembler()
     end
     return try_exec("@" & SYSTEM_ASM, source, "-o", object)
-end
-
-%------------------------------------------------------------------------------
-%
-% GcWrapFlags is needed for older toolsets and this config file
-% strives to work with old and new automatically.
-% This should go in some "Linux-common" file.
-%
-
-GcWrapFlags = ""
-
-if not defined ("GetGcWrapFlags")
-    readonly proc GetGcWrapFlags() is
-        if not GcWrapFlags
-            % write("checking for GcWrapFlags" & CR)
-            GcWrapFlags = " " % tricky non-false value -- the default
-            local ExitCode = try_exec("@fgrep m3gcdefs " & PKG_USE & "/m3core/" & TARGET & "/.M3EXPORTS 2>/dev/null >/dev/null")
-            if equal(ExitCode, 0)
-                GcWrapFlags = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
-                % find libm3gcdefs here
-                % GcWrapFlags = GcWrapFlags & " -L" & LIB_USE & " -lm3gcdefs"
-                % GcWrapFlags = GcWrapFlags & " " & LIB_USE & "/libm3gcdefs.a"
-            end
-        end
-        return GcWrapFlags
-    end
-end
-
-%
-% The 5.1.8 distribution seems to look for libm3gcdefs
-% in a hard-coded place unlikely to be correct. Fix it.
-%
-% Also old distributions reference errno directly.
-% That is bad in multithreaded programs but should be
-% ok for bootstrapping. This code should probably
-% be gated by if defined("BOOT") or defined("OLD_BOOT")
-% or such.
-%
-% GcWrapFlags does not necessarily coincide with references to errno.
-%
-if not defined ("FixM3GcDefs")
-    readonly proc FixM3GcDefs(Args) is
-        local GcWrapFlags = GetGcWrapFlags()
-        if equal(GcWrapFlags, " ")
-            return Args
-        end
-        % if equal(LIB_USE, "/pub/lang/m3/cm3-dist/cm3/lib")
-        %     return Args
-        % end
-        % if equal(LIB_USE, "/pub/lang/m3/cm3-dist/cm3/bin/..lib")
-        %     return Args
-        % end
-        % local Result = [ ]
-        % Result += "-L" & LIB_USE
-        % foreach Arg in Args
-        %    write("Arg is " & Arg & CR)
-        %    if equal(Arg, "-L/pub/lang/m3/cm3-dist/cm3/lib")
-        %        write("changing arg" & CR)
-        %        Result += "-L" & LIB_USE
-        %    else
-        %        Result += Arg
-        %    end
-        %end
-        %Result += "/usr/lib/libc.a"
-        %return Result
-        %Args += "-L" & LIB_USE
-        %Args += "/usr/lib/libc.a"
-        return Args
-    end
-end
-
-%
-% Hash of command line option to TRUE or FALSE,
-% to avoid probing more than once. 
-%
-local IsM3BackFlagSupported_Cache = { }
-
-readonly proc _IsM3BackFlagSupported(x) is
-    local Result = 0
-    if IsM3BackFlagSupported_Cache contains x
-        Result = IsM3BackFlagSupported_Cache{x}
-    else
-        local m3back = GetM3Back()
-        % write("probing " & m3back & " for " & x & CR)
-        Result = not equal(try_exec(
-            m3back & " " & x & " /dev/null 2>&1 "
-            & "| fgrep -i -e \"Invalid option\" -e \"unrecognized command line option\" 2>/dev/null >/dev/null"), 0)
-        IsM3BackFlagSupported_Cache{x} = Result
-    end
-    return Result
-end
-    
-if not defined ("GetM3BackFlag")
-    readonly proc IsM3BackFlagSupported(x) is
-        return _IsM3BackFlagSupported(x)
-    end
-        
-    readonly proc GetM3BackFlag(x) is
-        if not IsM3BackFlagSupported(x)
-            x = ""
-        end
-        return x
-    end
-end
-
-%------------------------------------------------------------------------------
-% A general mechanism for part of m3core to always be statically linked.
-% For example data on NT should not be dynamically linked, and the
-% libgcc helper functions are small and not worth dynamic linking.
-%
-% This does not currently work where it is needed.
-
-proc GetM3CoreStaticObjs(lib) is
-    local Result = [ ]
-    if defined ("M3CoreStaticObjs") and not equal (lib, "m3core")
-        foreach a in M3CoreStaticObjs
-            local b = LIB_INSTALL & SL & a & ".o"
-            if exists (b)
-                Result += [ b ]
-            end
-        end
-    end
-    return Result
-end
-
-proc ShipM3CoreStaticObjs(lib) is
-    local Result = [ ]
-    if defined ("M3CoreStaticObjs") and equal (lib, "m3core")
-        foreach a in M3CoreStaticObjs
-            LibdExport(a & ".o")
-        end
-    end
 end
 
 %--------------------------------------------------------- library creation ---
@@ -291,13 +152,11 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         ret_code =
             try_exec(
                 "@" & SYSTEM_LD,
-                GetGcWrapFlags(),
                 pg,
                 "-shared",
                 soname_opt,
                 "-o", lib_sox,
                 objects,
-                GetM3CoreStaticObjs(lib),
                 imported_libs)
         if not equal(ret_code, 0)
             return ret_code
@@ -334,7 +193,6 @@ proc skip_lib(lib, shared) is
 
         % make sure the shared library stuff gets installed properly
         LibdExport(lib_sox)
-        ShipM3CoreStaticObjs(lib)
         install_link_to_derived(lib_a, LIB_INSTALL)
         install_symbolic_link(lib_sox, LIB_INSTALL & "/" & lib_so)
         install_derived_link("../../../lib/" & lib_sox, lib_so)
@@ -358,12 +216,10 @@ if not defined("m3_link")
 proc m3_link(prog, options, objects, imported_libs, shared) is
     local args =
     [
-        GetGcWrapFlags(),
         "-o", prog,
         options,
         objects,
-        FixM3GcDefs(imported_libs),
-        GetM3CoreStaticObjs(""),
+        imported_libs,
     ]
     if M3_PROFILING
         args += "-pg"

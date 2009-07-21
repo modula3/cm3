@@ -9,19 +9,11 @@ readonly AR_AND_RANLIB_ARE_ONE = TRUE
 %
 % fPIC not working?
 %
- m3back_flags = "-quiet -gstabs+ -m64"
-%m3back_flags = "-quiet -gstabs+ -m64 -fPIC"
+ m3back_flags = "-gstabs+ -m64 -funwind-tables"
+%m3back_flags = "-gstabs+ -m64 -fPIC -funwind-tables"
  SYSTEM_CC = "gcc -gstabs+ -m64"
 %SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC"
 
 readonly SYSTEM_ASM = "as -64"
-
-%
-% newer platforms never needed these workarounds for
-% bootstrapping with older builds
-%
-readonly proc GetGcWrapFlags() is return "" end
-readonly proc FixM3GcDefs(x) is return x end
-readonly proc GetM3BackFlag(x) is return x end
 
 include("Linux.common")
