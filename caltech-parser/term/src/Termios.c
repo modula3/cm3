@@ -14,6 +14,7 @@ extern "C" {
 
 #include <termios.h>
 #include <unistd.h>
+#include "TermC.h"
 
 #ifndef STDIN_FILENO
 #define STDIN_FILENO 0
@@ -26,7 +27,10 @@ typedef struct termios termios_t;
 
 void Termios__tcsetattr(int fd, int action, termios_t* t)
 {
-    tcsetattr(fd, action, t);
+    if (TermC__Inited() && (t == TermC__GetTermRaw() || t == TermC__GetTermCooked()) && action == TCSANOW && fd == STDIN_FILENO)
+    {
+        tcsetattr(fd, action, t);
+    }
 }
 
 #else
