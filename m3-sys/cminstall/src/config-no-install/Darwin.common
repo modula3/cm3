@@ -228,29 +228,4 @@ include ("Unix.common")
 
 %-------------------------------------------------------------------
 
-if equal(TARGET, "PPC_DARWIN")
-if not equal(try_exec("@grep -F M3_SPLIT_LIBNAMES_IF_SHARED " & BIN_USE & "/cm3 > /dev/null"), 0)
-%
-% This is critical on MacOSX to achieve dynamic linking.
-% Specifying /foo/bar.a statically links to bar.a.
-% Specifying -L/foo -lbar probes first for /foo/bar.dylib
-% and then for /foo/bar.a, achieving dynamic linking if possible.
-% See "man ld".
-%
-%error("new version")
-M3_SPLIT_LIBNAMES = TRUE
-% --- split shared library names and pass -L/-l arguments to the linker
-else
-%
-% On older releases, the above breaks building standalone.
-%
-%error("old version")
-M3_SPLIT_LIBNAMES = FALSE
-M3_SPLIT_LIBNAMES_IF_SHARED = TRUE
-% --- split library names and pass -L/-l arguments to the linker if linking
-%     dynamically, pass full library names else
-%     (assumes M3_SPLIT_LIBNAMES = FALSE)
-end
-end
-
 M3_SHARED_LIB_ARG = ""
