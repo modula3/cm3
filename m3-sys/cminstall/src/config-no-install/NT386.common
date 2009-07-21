@@ -137,6 +137,9 @@ SYSTEM_LIBS_GNU =
 %       LibIn("advapi32"),
 %       LibIn("kernel32"),
     ],
+
+    "FLEX-BISON" : [ "-lfl" ],
+
     "ODBC" : [LibIn("odbc32")], %  -lodbccp32 ?
     % for MS Windows
     % "OPENGL" : [LibIn("glu32"), LibIn("opengl32")], % -lglut32 ?
@@ -214,7 +217,7 @@ else
 end
 
 if equal(OS_TYPE, "POSIX")
-    SYSTEM_LIBORDER += ["Z"]
+    SYSTEM_LIBORDER += ["Z", "FLEX-BISON"]
 end
 
 %--------------------------------------------------------- Modula-3 backend ---
