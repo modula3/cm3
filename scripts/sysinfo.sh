@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.73 2009-07-21 08:33:58 jkrell Exp $
+# $Id: sysinfo.sh,v 1.74 2009-07-21 08:48:05 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -58,10 +58,6 @@ M3BUILD=${M3BUILD:-m3build}
 M3SHIP=${M3SHIP:-m3ship}
 EXE=""
 SL="/"
-SYSLIBDIR="$CM3_INSTALL/lib"
-SYSLIBS=""
-XDEV_LIB=""
-XDEV_BIN=""
 TAR=tar
 
 if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
@@ -94,22 +90,6 @@ if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
 fi
 
 #-----------------------------------------------------------------------------
-# some localization functions
-
-find_file() {
-  f="$1"
-  shift
-  for d in $@ ; do
-    if [ -d "$d" -a -f "$d/$f" ] ; then
-      echo "$d/$f"
-      return 0
-    fi
-  done
-  echo "$f"
-  return 1
-}
-
-#-----------------------------------------------------------------------------
 # abstraction functions
 cygpath() {
   echo "$2"
@@ -136,39 +116,6 @@ case "${UNAME}" in
       HAVE_SERIAL=yes
       EXE=".exe"
       SL='\\\\'
-      SYSLIBS='
-	advapi32.lib
-	comctl32.lib
-	comdlg32.lib
-	gdi32.lib
-	glu32.lib
-	kernel32.lib
-	netapi32.lib
-	odbc32.lib
-	opengl32.lib
-	user32.lib
-	winspool.lib
-	wsock32.lib
-      '
-      L="c:/cm3/bin d:/cm3/bin e:/cm3/bin c:/reactor5/bin d:/reactor5/bin"
-      #L="${L} e:/reactor5/bin c:/reactor/bin d:/reactor/bin"
-      #L="${L} e:/reactor/bin /usr/local/cm3/bin /usr/local/reactor/bin"
-      L="${L} /usr/cm3/bin /usr/reactor/bin"
-      C="/cygdrive/c/cm3/lib /cygdrive/d/cm3/lib /usr/cm3/lib /usr/local/cm3/lib"
-      CM3BINSEARCHPATH="${L}"
-      if f="`find_file kernel32.lib ${C}`" ; then
-        SYSLIBDIR="`dirname $f`"
-      else
-        SYSLIBDIR="unknown"
-      fi
-      D="c:/msdev/bin d:/msdev/bin e:/msdev/bin f:/msdev/bin g:/msdev/bin"
-      if f="`find_file cl.exe ${D}`" ; then
-        XDEV_BIN="`dirname ${f}`"
-        XDEV_LIB="`dirname ${XDEV_BIN}`/lib"
-      else
-        XDEV_LIB=""
-        XDEV_BIN=""
-      fi
       if [ -f /usr/bin/tar.exe ] ; then
         TAR=/usr/bin/tar.exe
       fi
@@ -267,9 +214,6 @@ case "${UNAME}" in
 
 esac
 
-DEV_BIN=${DEV_BIN:-${XDEV_BIN}}
-DEV_LIB=${DEV_LIB:-${XDEV_LIB}}
-
 #-----------------------------------------------------------------------------
 # define the exported values
 if [ -n "$root" ] ; then
@@ -344,10 +288,6 @@ debug "GMAKE       = $GMAKE"
 debug "TMPDIR      = $TMPDIR"
 debug "EXE         = $EXE"
 debug "SL          = $SL"
-debug "SYSLIBDIR   = $SYSLIBDIR"
-debug "SYSLIBS     = $SYSLIBS"
-debug "DEV_BIN     = $DEV_BIN"
-debug "DEV_LIB     = $DEV_LIB"
 debug "TAR         = $TAR"
 debug "CM3ROOT     = $CM3ROOT"
 debug "CM3VERSION  = $CM3VERSION"
@@ -355,8 +295,8 @@ debug "CM3VERSIONNUM = $CM3VERSIONNUM"
 debug "CM3LASTCHANGED = $CM3LASTCHANGED"
 
 export ROOT M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB
-export GREP TMPDIR EXE SL CM3VERSION SYSLIBDIR SYSLIB DEV_BIN DEV_LIB TAR
-export CM3BINSEARCHPATH CM3ROOT CM3 CM3_ROOT
+export GREP TMPDIR EXE SL CM3VERSION TAR
+export CM3ROOT CM3 CM3_ROOT
 export SYSINFO_DONE CM3VERSIONNUM CM3LASTCHANGED
 
 fi
