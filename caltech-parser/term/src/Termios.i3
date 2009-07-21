@@ -1,21 +1,21 @@
 (* $Id$ *)
 UNSAFE INTERFACE Termios;
 
-CONST
-  Stdin = 0;
-  Stdout = 1;
-  Stderr = 2;
+FROM Ctypes IMPORT int;
 
-  Tcsanow = 0;
-  Tcsadrain = 1;
-  Tcsaflush = 2;
-  Tcsasoft = 16;
+(*CONST*)
+<*EXTERNAL Termios__Stdin*>     VAR Stdin: int;
+<*EXTERNAL Termios__Stdout*>    VAR Stdout: int; (* not used *)
+<*EXTERNAL Termios__Stderr*>    VAR Stderr: int; (* not used *)
+<*EXTERNAL Termios__Tcsanow*>   VAR Tcsanow: int;
+<*EXTERNAL Termios__Tcsadrain*> VAR Tcsadrain: int; (* not used *)
+<*EXTERNAL Termios__Tcsaflush*> VAR Tcsaflush: int; (* not used *)
 
 TYPE
-  T = REF ARRAY [0..511] OF CHAR;
+  T = ADDRESS;
 
-<*EXTERNAL tcgetattr*> PROCEDURE tcgetattr(fd: INTEGER; t: T);
-<*EXTERNAL cfmakeraw*> PROCEDURE cfmakeraw(t: T);
-<*EXTERNAL tcsetattr*> PROCEDURE tcsetattr(fd, action: INTEGER; t: T);
+<*EXTERNAL Termios__tcgetattr*> PROCEDURE tcgetattr(fd: int; t: T); (* not used *)
+<*EXTERNAL Termios__cfmakeraw*> PROCEDURE cfmakeraw(t: T); (* not used *)
+<*EXTERNAL Termios__tcsetattr*> PROCEDURE tcsetattr(fd, action: int; t: T);
 
 END Termios.

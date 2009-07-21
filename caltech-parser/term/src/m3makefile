@@ -1,13 +1,8 @@
-if equal (OS_TYPE, "POSIX")
-
 import("libm3")
-h_source("termios")
-if equal (TARGET, "SOLgnu") or equal(TARGET, "SOLsun")
-  c_source("cfmakeraw")
-end
 interface("Termios")
+c_source("Termios")
 Module("Term")
+interface("TermC")
+c_source("TermC")
 Module("TermIO")
 Library("term")
-
-end
