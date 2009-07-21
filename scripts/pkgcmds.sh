@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgcmds.sh,v 1.13 2009-06-07 16:03:50 wagner Exp $
+# $Id: pkgcmds.sh,v 1.14 2009-07-21 23:01:39 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -20,49 +20,14 @@ fi
 
 # define build and ship programs for Critical Mass Modula-3
 DEFS="-DROOT='${CM3ROOT}' -DCM3_VERSION_TEXT='${CM3VERSION}' -DCM3_VERSION_NUMBER='${CM3VERSIONNUM}' -DCM3_LAST_CHANGED='${CM3LASTCHANGED}'"
-CM3_BUILDLOCAL="${BUILDLOCAL:-${CM3} -build -override \$RARGS ${DEFS} ${BUILDARGS}}"
-CM3_CLEANLOCAL="${CLEANLOCAL:-${CM3} -clean -override \$RARGS ${DEFS} ${CLEANARGS}}"
-CM3_BUILDGLOBAL="${BUILDGLOBAL:-${CM3} -build ${DEFS} \$RARGS ${BUILDARGS}}"
-CM3_CLEANGLOBAL="${CLEANGLOBAL:-${CM3} -clean ${DEFS} \$RARGS ${CLEANARGS}}"
-CM3_SHIP="${SHIP:-${CM3} -ship \$RARGS ${DEFS} ${SHIPARGS}}"
-
-# define build and ship programs for Poly. Modula-3 from Montreal
-PM3_BUILDLOCAL="${BUILDLOCAL:-${M3BUILD} -O ${DEFS} ${BUILDARGS}}"
-PM3_CLEANLOCAL="${CLEANLOCAL:-${M3BUILD} clean -O ${DEFS} ${CLEANARGS}}"
-PM3_BUILDGLOBAL="${BUILDGLOBAL:-${M3BUILD} ${DEFS} ${BUILDARGS}}"
-PM3_CLEANGLOBAL="${CLEANGLOBAL:-${M3BUILD} clean ${DEFS} ${CLEANARGS}}"
-PM3_SHIP="${SHIP:-${M3SHIP} ${DEFS} ${SHIPARGS}}"
-
-# define build and ship programs for DEC SRC Modula-3
-SRC_BUILDLOCAL="${BUILDLOCAL:-${M3BUILD} -O ${DEFS} ${BUILDARGS}}"
-SRC_CLEANLOCAL="${CLEANLOCAL:-${M3BUILD} clean -O ${DEFS} ${CLEANARGS}}"
-SRC_BUILDGLOBAL="${BUILDGLOBAL:-${M3BUILD} ${DEFS} ${BUILDARGS}}"
-SRC_CLEANGLOBAL="${CLEANGLOBAL:-${M3BUILD} clean ${DEFS} ${CLEANARGS}}"
-SRC_SHIP="${SHIP:-${M3SHIP} ${DEFS} ${SHIPARGS}}"
+BUILDLOCAL="${BUILDLOCAL:-${CM3} -build -override \$RARGS ${DEFS} ${BUILDARGS}}"
+CLEANLOCAL="${CLEANLOCAL:-${CM3} -clean -override \$RARGS ${DEFS} ${CLEANARGS}}"
+BUILDGLOBAL="${BUILDGLOBAL:-${CM3} -build ${DEFS} \$RARGS ${BUILDARGS}}"
+CLEANGLOBAL="${CLEANGLOBAL:-${CM3} -clean ${DEFS} \$RARGS ${CLEANARGS}}"
+SHIP="${SHIP:-${CM3} -ship \$RARGS ${DEFS} ${SHIPARGS}}"
 
 # other commands
 REALCLEAN="${REALCLEAN:-rm -rf ${TARGET}}"
-
-# choose the compiler to use
-if type ${CM3} 2>/dev/null >/dev/null ; then
-  BUILDLOCAL="${CM3_BUILDLOCAL}"
-  CLEANLOCAL="${CM3_CLEANLOCAL}"
-  BUILDGLOBAL="${CM3_BUILDGLOBAL}"
-  CLEANGLOBAL="${CM3_CLEANGLOBAL}"
-  SHIP="${CM3_SHIP}"
-elif type ${M3BUILD} 2>/dev/null >/dev/null ; then
-  BUILDLOCAL="${PM3_BUILDLOCAL}"
-  CLEANLOCAL="${PM3_CLEANLOCAL}"
-  BUILDGLOBAL="${PM3_BUILDGLOBAL}"
-  CLEANGLOBAL="${PM3_CLEANGLOBAL}"
-  SHIP="${CM3_SHIP}"
-else
-  if [ -z "${BUILDLOCAL}" -o -z "${BUILDGLOBAL}" -o -z "${SHIP}" ] ; then
-    echo "${CM3} or ${M3BUILD} not found in your path, don't know how to compile" \
-      1>&2
-    exit 1
-  fi
-fi
 
 map_action() {
   skip=true
