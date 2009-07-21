@@ -1,3 +1,4 @@
+if equal (OS_TYPE, "POSIX")
 
 import("libm3")
 h_source("termios")
@@ -8,3 +9,5 @@ interface("Termios")
 Module("Term")
 Module("TermIO")
 Library("term")
+
+end
