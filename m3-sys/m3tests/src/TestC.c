@@ -2,10 +2,13 @@
 /* All rights reserved.                               */
 /* See the file COPYRIGHT for a full description.     */
 
+#include <stddef.h>
+
+#ifndef _WIN32
+
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
-#include <stddef.h>
 #include <time.h>
 #include <netdb.h>
 #include <assert.h>
@@ -92,3 +95,11 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
     }
 #endif
 }
+
+#else
+
+void Test__CheckFloatsAndTypes(void* t2, size_t size, size_t jbsize)
+{
+}
+
+#endif
