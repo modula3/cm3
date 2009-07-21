@@ -29,11 +29,20 @@ static void TermC__cfmakeraw(termios_t* t)
 #endif
 }
 
+static volatile int inited;
+
+int TermC__Inited(void)
+{
+    return inited;
+}
+
 void TermC__Init(void)
 {
     tcgetattr(STDIN_FILENO, &TermCooked);
     TermRaw = TermCooked;
     TermC__cfmakeraw(&TermRaw);
+    /* memory barrier needed here, volatile does it for some compilers */
+    inited = 1;
 }
 
 void* TermC__GetTermRaw(void)
