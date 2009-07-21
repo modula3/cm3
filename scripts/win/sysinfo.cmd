@@ -232,25 +232,11 @@ if "%TARGET%" == "NT386" (
 @rem TBD: Too many environment variables!
 @rem TBD: Too much code here!
 @rem TBD: More Modula-3, less sh/cmd/perl!
-@rem TBD: Support bootstrapping from DEC SRC Modula-3, PM3, etc.
 @rem TBD: Finish make-bin-dist-min
 @rem
 
-if defined CM3LIBSEARCHPATH set CM3LIBSEARCHPATH=
-if defined CM3BINSEARCHPATH set CM3BINSEARCHPATH=
 set EXE=.exe
-if defined GCWRAPFLAGS  set GCWRAPFLAGS=
-if defined GREP         set GREP=
-if defined SCRIPTS      set SCRIPTS=
-if defined SL           set SL=
-if defined SYSLIBDIR    set SYSLIBDIR=
-if defined SYSLIBS      set SYSLIBS=
-if defined TMPDIR       set TMPDIR=
-if defined TAR          set TAR=
 
-@rem
-@rem TBD: Support bootstrapping from DEC SRC Modula-3, PM3, etc.
-@rem
 call :set_if_empty M3BUILD m3build
 call :set_if_empty M3SHIP m3ship
 
