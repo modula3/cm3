@@ -1,5 +1,3 @@
-if equal (OS_TYPE, "POSIX")
-
 if not defined("TOP")
   TOP = PACKAGE_DIR & SL & ".." 
 end
@@ -57,5 +55,3 @@ channel("PMRequest", "PaneManRequest")
 module("RequestDaemon")
 
 Library("paneman")
-
-end
