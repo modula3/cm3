@@ -261,7 +261,7 @@ rem ------first try the package itself as a relative path
 if exist "%CM3_Pkg%\src" set CM3_PkgPath=%CM3_Pkg%
 
 rem ------if that doesn't work, look in the various m3-* folders
-if (%CM3_PkgPath%)==() for /f "usebackq" %%i in (`dir /b m3-* caltech*`) do if exist "%%i\%CM3_Pkg%\src" set CM3_PkgPath=%%i\%CM3_Pkg%
+if (%CM3_PkgPath%)==() for /f %%i in ('dir /b m3-* caltech*') do if exist "%%i\%CM3_Pkg%\src" set CM3_PkgPath=%%i\%CM3_Pkg%
 
 rem ------if we found it, great, otherwise report we are skipping it
 popd
