@@ -8,19 +8,30 @@
 
 MODULE Main;
 IMPORT Test, Word;
+FROM Ctypes IMPORT int;
 
 (* BITINSERT and BITEXTRACT *)
 
 VAR i, j, k, l, m: INTEGER;
+CONST I32 = (BITSIZE(INTEGER) = 32);
 
 BEGIN
   j := 16_7FFFFFFF;
-  Test.checkI (j, LAST(INTEGER));
+  IF I32 THEN
+    Test.checkI (j, LAST(INTEGER));
+  END;
+  Test.checkI (j, LAST(int));
 
   i := -8_20000000000;
-  Test.checkI (i, FIRST(INTEGER));
+  IF I32 THEN
+    Test.checkI (i, FIRST(INTEGER));
+  END;
+  Test.checkI (j, LAST(int));
 
-  Test.checkI (8_17777777777, LAST(INTEGER));
+  IF I32 THEN
+    Test.checkI (8_17777777777, LAST(INTEGER));
+  END;
+  Test.checkI (8_17777777777, LAST(int));
 
   Test.check  (ABS(FIRST(INTEGER) + LAST(INTEGER)) < 2);
 
