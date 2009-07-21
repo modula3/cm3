@@ -74,8 +74,8 @@ sysinfo.sh [include]
   defines variables containing general system information, specifying
   the M3OSTYPE (WIN32|POSIX), compiler TARGET, if a GCC_BACKEND is used,
   the INSTALLROOT etc. This script needs to be adapted for every new
-  supported platform. Also exports find_file() for the location of
-  files, and some other general useful functions like debug() and header().
+  supported platform. Also exports some other general useful functions
+  like debug() and header().
 
 find-packages.sh [include | callable ]
 ----------------
