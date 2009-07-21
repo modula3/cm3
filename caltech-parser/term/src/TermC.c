@@ -8,8 +8,6 @@ extern "C"
 #include <unistd.h> 
 typedef struct termios termios_t;
 
-void Termios__cfmakeraw(termios_t* t);
-
 static termios_t TermCooked;
 static termios_t TermRaw;
 
@@ -17,21 +15,52 @@ static termios_t TermRaw;
 #define STDIN_FILENO 0
 #endif
 
+static void TermC__cfmakeraw(termios_t* t)
+{
+#ifdef __CYGWIN__
+/* http://linux.about.com/library/cmd/blcmdl3_cfmakeraw.htm */
+    t->c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+    t->c_oflag &= ~OPOST;
+    t->c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+    t->c_cflag &= ~(CSIZE|PARENB);
+    t->c_cflag |= CS8;
+#else
+    cfmakeraw(t);
+#endif
+}
+
 void TermC__Init(void)
 {
     tcgetattr(STDIN_FILENO, &TermCooked);
     TermRaw = TermCooked;
-    Termios__cfmakeraw(&TermRaw);
+    TermC__cfmakeraw(&TermRaw);
 }
 
-void* TermC__GetTermRaw(void) { return &TermRaw; }
-void* TermC__GetTermCooked(void) { return &TermCooked; }
+void* TermC__GetTermRaw(void)
+{
+    return &TermRaw;
+}
+
+void* TermC__GetTermCooked(void)
+{
+    return &TermCooked;
+}
 
 #else
 
-void TermC__Init(void) { }
-void* TermC__GetTermRaw(void) { return 0; }
-void* TermC__GetTermCooked(void) { return 0; }
+void TermC__Init(void)
+{
+}
+
+void* TermC__GetTermRaw(void)
+{
+    return 0;
+}
+
+void* TermC__GetTermCooked(void)
+{
+    return 0;
+}
 
 #endif
 
