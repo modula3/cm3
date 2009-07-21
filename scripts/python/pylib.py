@@ -520,7 +520,6 @@ UNameArchM = UNameTuple[4].lower()
 UNameRevision = UNameTuple[2].lower()
 
 Host = None
-TurnOffGarbageCollection = False
 
 if (UName.startswith("windows")
         or UNameCommand.startswith("mingw")
@@ -684,15 +683,6 @@ if Target.startswith("NT386"):
 
     Target = "NT386"
 
-elif Target.find("LINUX") != -1:
-    #
-    # Support for bootstrapping from older toolsets.
-    # Expand and reduce this through time.
-    # Latest PPC_LINUX release is 5.2.6 and it requires these flags.
-    #
-    if (Target.find("AMD64") == -1) and (Target.find("SPARC") == -1):
-        GCWRAPFLAGS = "-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3"
-
 #-----------------------------------------------------------------------------
 
 M3GDB = (M3GDB or CM3_GDB)
@@ -818,23 +808,6 @@ NativeRoot = Root
 Root = ConvertPath(Root).replace("\\", "/")
 DEFS = (DEFS % vars())
 Root = NativeRoot
-
-#-----------------------------------------------------------------------------
-# workaround crash when booting from 5.1.3 that is
-# difficult to debug -- crashes earlier in debugger
-# without this switch, no repro with this switch
-#
-# This has no effect with current tools/libraries.
-#
-
-DEFS += " @M3novm"
-
-if TurnOffGarbageCollection:
-    DEFS += " @M3nogc"
-
-#
-#
-#
 
 #-----------------------------------------------------------------------------
 # Make sure these variables all start with a space if they are non-empty.
