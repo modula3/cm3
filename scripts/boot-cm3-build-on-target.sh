@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: boot-cm3-build-on-target.sh,v 1.9 2009-06-07 16:03:50 wagner Exp $
+# $Id: boot-cm3-build-on-target.sh,v 1.10 2009-07-21 08:33:58 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -127,7 +127,7 @@ for p in ${P}; do
   if [ "$DOCLEAN" = obj ] ; then
     ${GMAKE} PROGNAME="${pkg}" LIBS="`get_libs ${pkg}`" clean-obj
   fi
-  ${GMAKE} PROGNAME="${pkg}" LINKFLAGS="${GCWRAPFLAGS}" \
+  ${GMAKE} PROGNAME="${pkg}" \
            LIBS="`get_libs ${pkg}`" all
 done
 
