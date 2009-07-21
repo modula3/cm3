@@ -127,7 +127,7 @@ for p in ${P}; do
   if [ "$DOCLEAN" = obj ] ; then
     ${GMAKE} PROGNAME="${pkg}" LIBS="`get_libs ${pkg}`" clean-obj
   fi
-  ${GMAKE} PROGNAME="${pkg}" LINKFLAGS="${GCWRAPFLAGS}" \
+  ${GMAKE} PROGNAME="${pkg}" \
            LIBS="`get_libs ${pkg}`" all
 done
 
