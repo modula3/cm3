@@ -88,10 +88,8 @@ if [ -f "${CFG}" ]; then
   echo "backing up ${CFG} in ${CFGBAK}"
   cp -p "${CFG}" "${CFGBAK}" || exit 1
 fi
-if [ ! -d  "${INSTALLROOT}/bin/config" ]; then
-  echo "create new config sub directory ${INSTALLROOT}/bin/config"
-  cp_config_files
-fi
+echo "create or update config sub directory ${INSTALLROOT}/bin/config"
+cp_config_files
 
 if [ "${UPGRADE_CM3_CFG}" != "yes" ]; then
   run "$root/scripts/do-cm3-core.sh" "$@" "buildship"
