@@ -134,7 +134,12 @@ msg ("FIRST  (a4) = " & Int (FIRST (a4)) & " [0]");
 v := FIRST (a5^);
 msg ("FIRST  (a5^) = " & Int (v) & " [0]"); check (v = 0);
 v := FIRST (INTEGER);
-msg ("FIRST (INTEGER) = " & Int (v) & " [-2147483648]"); check (v+1 = -2147483647);
+IF BITSIZE(INTEGER) = 32 THEN
+    msg ("FIRST (INTEGER) = " & Int (v) & " [-2147483648]"); check (v+1 = -2147483647);
+END;
+IF BITSIZE(INTEGER) = 64 THEN
+    msg ("FIRST (INTEGER) = " & Int (v) & " [-9223372036854775808]"); (*check (v+1 = -9223372036854775807);*)
+END;
 
   msg ("\n---- Last ----\n");
 
