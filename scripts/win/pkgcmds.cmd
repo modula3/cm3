@@ -1,4 +1,4 @@
-@rem $Id: pkgcmds.cmd,v 1.4 2008-05-08 11:36:42 jkrell Exp $
+@rem $Id: pkgcmds.cmd,v 1.5 2009-07-21 08:17:36 jkrell Exp $
 
 @if "%_echo%" == "" @echo off
 
@@ -13,151 +13,18 @@ call %~dp0sysinfo || exit /b 1
 
 set DEFS=-DROOT=%CM3ROOT% -DCM3_VERSION_TEXT=%CM3VERSION% -DCM3_VERSION_NUMBER=%CM3VERSIONNUM% -DCM3_LAST_CHANGED=%CM3LASTCHANGED%
 
-if not defined CM3_BUILDLOCAL (
-    if not defined BUILDLOCAL (
-        set CM3_BUILDLOCAL=%CM3% -build -override %DEFS% %BUILDARGS%
-    ) else (
-        set CM3_BUILDLOCAL=%BUILDLOCAL%
-    )
-)
-if not defined CM3_CLEANLOCAL (
-    if not defined CLEANLOCAL (
-        set CM3_CLEANLOCAL=%CM3% -clean -override %DEFS% %CLEANARGS%
-    ) else (
-        set CM3_CLEANLOCAL=%CLEANLOCAL%
-    )
-)
-if not defined CM3_BUILDGLOBAL (
-    if not defined BUILDGLOBAL (
-        set CM3_BUILDGLOBAL=%CM3% -build  %DEFS% %BUILDARGS%
-    ) else (
-        set CM3_BUILDGLOBAL=%BUILDGLOBAL%
-    )
-)
-if not defined CM3_CLEANGLOBAL (
-    if not defined CLEANGLOBAL (
-        set CM3_CLEANGLOBAL=%CM3% -clean %DEFS% %CLEANARGS%
-    ) else (
-        set CM3_CLEANGLOBAL=%CLEANGLOBAL%
-    )
-)
-if not defined CM3_SHIP (
-    if not defined SHIP (
-        set CM3_SHIP=%CM3% -ship %DEFS% %SHIPARGS%
-    ) else (
-        set CM3_SHIP=%SHIP%
-    )
-)
-
-@rem
-@rem define build and ship programs for Poly. Modula-3 from Montreal
-@rem
-
-if not defined PM3_BUILDLOCAL (
-    if not defined BUILDLOCAL (
-        set PM3_BUILDLOCAL=%M3BUILD% -O %DEFS% %BUILDARGS%
-    ) else (
-        set PM3_BUILDLOCAL=%BUILDLOCAL%
-    )
-)
-if not defined PM3_CLEANLOCAL (
-    if not defined CLEANLOCAL (
-        set PM3_CLEANLOCAL=%M3BUILD% clean -O %DEFS% %CLEANARGS%
-    ) else (
-        set PM3_CLEANLOCAL=%CLEANLOCAL%
-    )
-)
-if not defined PM3_BUILDGLOBAL (
-    if not defined BUILDGLOBAL (
-        set PM3_BUILDGLOBAL=%M3BUILD% %DEFS% %BUILDARGS%
-    ) else (
-        set PM3_BUILDGLOBAL=%BUILDGLOBAL%
-    )
-)
-if not defined PM3_CLEANGLOBAL (
-    if not defined CLEANGLOBAL (
-        set PM3_CLEANGLOBAL=%M3BUILD% clean %DEFS% %CLEANARGS%
-    ) else (
-        set PM3_CLEANGLOBAL=%CLEANGLOBAL%
-    )
-)
-if not defined PM3_SHIP (
-    if not defined SHIP (
-        set PM3_SHIP=%M3SHIP% %DEFS% %SHIPARGS%
-    ) else (
-        set PM3_SHIP=%SHIP%
-    )
-)
-
-@rem
-@rem define build and ship programs for DEC SRC Modula-3
-@rem
-
-if not defined SRC_BUILDLOCAL (
-    if not defined BUILDLOCAL (
-        set SRC_BUILDLOCAL=%M3BUILD% -O %DEFS% %BUILDARGS%
-    ) else (
-        set SRC_BUILDLOCAL=%BUILDLOCAL%
-    )
-)
-if not defined SRC_CLEANLOCAL (
-    if not defined CLEANLOCAL (
-        set SRC_CLEANLOCAL=%M3BUILD% clean -O %DEFS% %CLEANARGS%
-    ) else (
-        set SRC_CLEANLOCAL=%CLEANLOCAL%
-    )
-)
-if not defined SRC_BUILDGLOBAL (
-    if not defined BUILDGLOBAL (
-        set SRC_BUILDGLOBAL=%M3BUILD% %DEFS% %BUILDARGS%
-    ) else (
-        set SRC_BUILDGLOBAL=%BUILDGLOBAL%
-    )
-)
-if not defined SRC_CLEANGLOBAL (
-    if not defined CLEANGLOBAL (
-        set SRC_CLEANGLOBAL=%M3BUILD% clean %DEFS% %CLEANARGS%
-    ) else (
-        set SRC_CLEANGLOBAL=%CLEANGLOBAL%
-    )
-)
-if not defined SRC_SHIP (
-    if not defined SHIP (
-        set SRC_SHIP=%M3SHIP% %DEFS% %SHIPARGS%
-    ) else (
-        set SRC_SHIP=%SHIP%
-    )
-)
+set BUILDLOCAL=%CM3% -build -override %DEFS% %BUILDARGS%
+set CLEANLOCAL=%CM3% -clean -override %DEFS% %CLEANARGS%
+set BUILDGLOBAL=%CM3% -build  %DEFS% %BUILDARGS%
+set CLEANGLOBAL=%CM3% -clean %DEFS% %CLEANARGS%
+set SHIP=%CM3% -ship %DEFS% %SHIPARGS%
 
 @rem
 @rem other commands
 @rem
+
 set REALCLEAN=if exist %TARGET% rmdir /q/s %TARGET%
 set CLEANLINK=if exist %TARGET% del %TARGET%\*.exe %TARGET%\*.exe.manifest %TARGET%\*.dll %TARGET%\*.dll.manifest %TARGET%\*.pdb
-
-@rem
-@rem choose the compiler to use
-@rem (This SHOULD be via searching %PATH% for cm3.exe and m3build.exe.)
-@rem
-if defined USE_SRC (
-    set BUILDLOCAL=%SRC_BUILDLOCAL%
-    set CLEANLOCAL=%SRC_CLEANLOCAL%
-    set BUILDGLOBAL=%SRC_BUILDGLOBAL%
-    set CLEANGLOBAL=%SRC_CLEANGLOBAL%
-    set SHIP=%SRC_SHIP%
-) else if defined USE_PM3 (
-    set BUILDLOCAL=%PM3_BUILDLOCAL%
-    set CLEANLOCAL=%PM3_CLEANLOCAL%
-    set BUILDGLOBAL=%PM3_BUILDGLOBAL%
-    set CLEANGLOBAL=%PM3_CLEANGLOBAL%
-    set SHIP=%PM3_SHIP%
-) else (
-    set BUILDLOCAL=%CM3_BUILDLOCAL%
-    set CLEANLOCAL=%CM3_CLEANLOCAL%
-    set BUILDGLOBAL=%CM3_BUILDGLOBAL%
-    set CLEANGLOBAL=%CM3_CLEANGLOBAL%
-    set SHIP=%CM3_SHIP%
-)
 
 call :trim_trailing_space BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 
