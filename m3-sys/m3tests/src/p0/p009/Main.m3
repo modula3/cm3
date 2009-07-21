@@ -169,7 +169,12 @@ v := LAST (a3);
 v := LAST (a5^);
   msg ("LAST  (a5^) = " & Int (v) & " [9]"); check (v = 9);
 v := LAST (INTEGER);
+IF BITSIZE(INTEGER) = 32 THEN
   msg ("LAST (INTEGER) = " & Int (v) & " [2147483647]"); check (v = 2147483647);
+END;
+IF BITSIZE(INTEGER) = 64 THEN
+  msg ("LAST (INTEGER) = " & Int (v) & " [9223372036854775807]"); (*check (v = 9223372036854775807);*)
+END;
 
   done ();
 END Main.
