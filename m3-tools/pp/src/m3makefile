@@ -13,6 +13,8 @@
 %  or src/flex-bison directory and run the standard make.
 %
 
+if SYSTEM_LIBS contains "LEX-YACC" or SYSTEM_LIBS contains "FLEX-BISON"
+
 import ("vbtkit")
 
 include_dir("afm")
@@ -48,3 +50,4 @@ generate_tfile()
 Program ("m3pp")
 ManPage ("m3pp",1)
 
+end
