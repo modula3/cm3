@@ -10,6 +10,7 @@ typedef struct termios termios_t;
 
 static termios_t TermCooked;
 static termios_t TermRaw;
+static volatile int inited;
 
 #ifndef STDIN_FILENO
 #define STDIN_FILENO 0
@@ -17,19 +18,20 @@ static termios_t TermRaw;
 
 static void TermC__cfmakeraw(termios_t* t)
 {
+    if (inited && (t == &TermCooked || t == &TermRaw))
+    {
 #if defined(__CYGWIN__) || defined(__sun)
-/* http://linux.about.com/library/cmd/blcmdl3_cfmakeraw.htm */
-    t->c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
-    t->c_oflag &= ~OPOST;
-    t->c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
-    t->c_cflag &= ~(CSIZE|PARENB);
-    t->c_cflag |= CS8;
+    /* http://linux.about.com/library/cmd/blcmdl3_cfmakeraw.htm */
+        t->c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+        t->c_oflag &= ~OPOST;
+        t->c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+        t->c_cflag &= ~(CSIZE|PARENB);
+        t->c_cflag |= CS8;
 #else
-    cfmakeraw(t);
+        cfmakeraw(t);
 #endif
+    }
 }
-
-static volatile int inited;
 
 int TermC__Inited(void)
 {
