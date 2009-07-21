@@ -10,23 +10,8 @@ readonly SYSTEM_ASM = GNU_PLATFORM & "-as -arch armv6"
 SYSTEM_CC = GNU_PLATFORM & "-gcc -fPIC -march=armv6 -mcpu=arm1176jzf-s"
 readonly SYSTEM_LIBTOOL = GNU_PLATFORM & "-libtool"
 
-m3back_flags = "-fPIC -gstabs+ -quiet -march=armv6 -mcpu=arm1176jzf-s -fverbose-asm"
-
-%
-% newer platforms never needed these workarounds for
-% bootstrapping with older builds
-%
-readonly proc GetGcWrapFlags() is return "" end
-readonly proc FixM3GcDefs(x) is return x end
-
-readonly proc GetM3BackFlag(x) is
-    if equal (x, "-fno-reorder-blocks")
-        return x
-    end
-    if equal (x, "-m32") or equal (x, "-m64") or equal (x, "-funwind-tables")
-        return ""
-    end
-    error ("unknown flag: " & x)
-end
+m3back_flags = "-fPIC -gstabs+ -march=armv6 -mcpu=arm1176jzf-s -fverbose-asm"
+% -funwind-tables?
+% -m32?
 
 include("Darwin.common")

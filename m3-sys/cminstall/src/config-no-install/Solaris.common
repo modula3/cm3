@@ -13,7 +13,7 @@ else
     GccMBits = "64"
 end
 
-m3back_flags = "-quiet -gstabs+ -fPIC -m" & GccMBits
+m3back_flags = "-funwind-tables -gstabs+ -fPIC -m" & GccMBits
 readonly SYSTEM_ASM = "as -s -K PIC -xarch=" & SunXArch
 
 if equal (C_COMPILER, "SUN")
