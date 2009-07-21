@@ -3,32 +3,38 @@
 /* See the file COPYRIGHT for a full description.     */
 
 #include <stddef.h>
+#include <setjmp.h>
+#include <time.h>
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+
+typedef unsigned char U8;
+typedef unsigned U;
+#define OFFSET(a, b) ((U)offsetof(a, b))
+#define SIZE(a) ((U)sizeof(a))
+
+typedef struct T T;
 
 #ifndef _WIN32
 
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
-#include <time.h>
 #include <netdb.h>
-#include <assert.h>
-#include <setjmp.h>
-#include <stdio.h>
-#include <string.h>
 
 typedef struct linger linger_t;
 typedef struct timeval timeval_t;
+
+#endif
+
 typedef struct tm tm_t;
-typedef unsigned U;
-typedef unsigned char U8;
 
-#define OFFSET(a, b) ((U)offsetof(a, b))
-#define SIZE(a) ((U)sizeof(a))
-
-typedef struct T
+struct T
 {
     double d[10];
     float f[10];
+#ifndef _WIN32
     struct {
         /* keep these sorted by name for easier human comprehension */
         size_t linger;
@@ -36,24 +42,28 @@ typedef struct T
         size_t timeval;
         size_t tm;
     } sizes;
+#endif
     double align;
-} T;
+};
 
 static const T t1 =
 {
     { 0.0, 0.5, 1.0, 2.0, -1.0, -3.0, 12.34, -124.456, 1000.0, -10000.0 },
     { 0.0, 0.5, 1.0, 2.0, -1.0, -3.5, 12.34, -124.456, 1000.0, -10000.0 },
+#ifndef _WIN32
     {
     SIZE(linger_t),
     SIZE(time_t),
     SIZE(timeval_t),
     SIZE(tm_t),
     },
+#endif
     0
 };
 
 void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
 {
+#ifndef _WIN32
     if (size != SIZE(t1))
     {
         printf("size: %x vs. %x\n", (U)size, SIZE(t1));
@@ -81,7 +91,14 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
         assert(memcmp(&t1, t2, SIZE(t1)) == 0);
     }
     assert(size == SIZE(t1));
-#if defined(__CYGWIN__)
+#endif /* Win32 */
+
+    assert(memcmp(&t1.d, &t2->d, SIZE(t1.d)) == 0);
+    assert(memcmp(&t1.f, &t2->f, SIZE(t1.f)) == 0);
+
+#if defined(_WIN32)
+    assert(jbsize >= SIZE(jmp_buf));
+#elif defined(__CYGWIN__)
     assert(jbsize >= (SIZE(jmp_buf) / 4));
 #elif defined(__FreeBSD__) && defined(__i386__)
     assert(jbsize == SIZE(jmp_buf) || (jbsize + 4) == SIZE(jmp_buf));
@@ -95,11 +112,3 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
     }
 #endif
 }
-
-#else
-
-void Test__CheckFloatsAndTypes(void* t2, size_t size, size_t jbsize)
-{
-}
-
-#endif
