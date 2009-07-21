@@ -45,6 +45,13 @@ else
            SL & "src" & SL & "float" & SL & "m3makefile")
 end
 
+proc File64(Path) is
+  if equal (WORD_SIZE, "64BITS") and FileExists (Path & "64")
+    Path = Path & "64"
+  end
+  return Path
+end
+
 if not defined ("LIB_ONLY")
 %------------------------------------------------------------------------------
 % misc. utilities
@@ -70,6 +77,8 @@ proc compare_file (dir, OutputPath) is
   ExpectedPath = subst_chars (ExpectedPath, SL, diff_slash)
   OutputPath = subst_chars (OutputPath, SL, diff_slash)
 
+  ExpectedPath = File64(ExpectedPath)
+
   exec (diff, ExpectedPath, OutputPath, head)
   if defined("HTML")
     exec (diff, ExpectedPath, OutputPath, ">>", report)
@@ -89,9 +98,7 @@ proc cmp_file (dir, file) is
   local ExpectedPath = dir & SL & file
   local OutputPath = dir & SL & BUILD_DIR & SL & file
 
-  if equal (WORD_SIZE, "64BITS") and FileExists (ExpectedPath & "64")
-    ExpectedPath = ExpectedPath & "64"
-  end
+  ExpectedPath = File64(ExpectedPath)
 
   %write ("cmp OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
   if stale (OutputPath, OutputPath)
