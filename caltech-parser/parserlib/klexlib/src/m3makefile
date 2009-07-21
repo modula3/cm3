@@ -3,10 +3,15 @@ import("ktoklib")
 
 
 if not defined("_clean")
-  if stale("RegExpLex.m3", 
-    ".." & SL & "src" & SL & "boot" & SL & "RegExpLex.m3")
-    %local result = exec([".." & SL & "src" & SL & "boot" & SL & "install"])
-    exec(["sh -c ../src/boot/install"])
+  if stale("RegExpLex.m3",  ".." & SL & "src" & SL & "boot" & SL & "RegExpLex.m3")
+    if not defined("HOST_OS_TYPE")
+        HOST_OS_TYPE = OS_TYPE
+    end
+    if equal(HOST_OS_TYPE, "WIN32")
+        exec(["..\\src\\boot\\installcmd.cmd"])
+    else
+        exec(["sh -c ../src/boot/install"])
+    end
   end
 end
 readonly proc _dmodule(nm) is
