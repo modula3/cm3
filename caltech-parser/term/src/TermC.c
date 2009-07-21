@@ -17,7 +17,7 @@ static termios_t TermRaw;
 
 static void TermC__cfmakeraw(termios_t* t)
 {
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__) || defined(__sun)
 /* http://linux.about.com/library/cmd/blcmdl3_cfmakeraw.htm */
     t->c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
     t->c_oflag &= ~OPOST;
