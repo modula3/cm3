@@ -77,6 +77,8 @@ static void Quit SIGNAL_HANDLER_SIGNATURE;
 static void InstallOneHandler(size_t i);
 static void RestoreOneHandler(size_t i);
 
+typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
+
 #if defined(__CYGWIN__) || defined(__INTERIX) \
 || (defined(__APPLE__) && defined(__arm))
 
@@ -85,8 +87,6 @@ static void RestoreOneHandler(size_t i);
 #define GetPC(x) 0
 
 #else
-
-typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
 
 static size_t GetPC(void* xcontext)
 /* PC: program counter aka instruction pointer, etc. */
