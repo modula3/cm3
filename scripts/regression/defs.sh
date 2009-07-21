@@ -122,6 +122,21 @@ case "${UNAME}" in
     CM3_OSTYPE=POSIX
     CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
   ;;
+
+  OpenBSD*)
+    CM3_OSTYPE=POSIX
+    ARCH=`arch -s`
+    if [ "${UNAMEM}" = "macppc" ] ; then
+      CM3_TARGET=PPC32_OPENBSD
+    elif [ "${UNAMEM}" = "sparc64" ] ; then
+      CM3_TARGET=SPARC64_OPENBSD
+    elif [ "${ARCH}" = "mips64" ] ; then
+      CM3_TARGET=MIPS64_OPENBSD
+    else
+      echo Update $0 for ${ARCH}
+      exit 1
+    fi
+  ;;
 esac
 
 # files for result aggregation of m3-sys/m3tests
