@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.24 2009-07-21 23:05:00 jkrell Exp $
+# $Id: upgrade.sh,v 1.25 2009-07-21 23:06:44 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -46,6 +46,7 @@ cp_config_files() {
   CFGS="${root}/m3-sys/cminstall/src/config-no-install"
   for f in ${CFGS}/*; do
     b=`basename ${f}`
+    rm -f ${INSTALLROOT}/bin/${b} 2>/dev/null
     rm -f ${CFGD}/${b} 2>/dev/null
     cp -v ${f} ${CFGD}/${b}
   done
