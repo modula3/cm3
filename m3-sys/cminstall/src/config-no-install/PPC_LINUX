@@ -1,7 +1,7 @@
 readonly TARGET       = "PPC_LINUX"     % code generation target
 readonly WORD_SIZE    = "32BITS"        % { "32BITS" or "64BITS" }
 
-m3back_flags = "-quiet -gstabs+ -fPIC"
+m3back_flags = "-gstabs+ -fPIC -m32 -funwind-tables"
 SYSTEM_CC = "@gcc -gstabs+ -m32 -fPIC" % C compiler
 readonly SYSTEM_ASM = "@as" % Assembler
 
@@ -9,23 +9,6 @@ readonly SYSTEM_ASM = "@as" % Assembler
 % add s switch to ar and remove need for ranlib
 %
 readonly AR_AND_RANLIB_ARE_ONE = TRUE
-
-%
-% Avoid support for bootstrapping from older builds.
-% There are such old PPC_LINUX releases, but these
-% checks are hanging.
-%
-readonly proc GetGcWrapFlags() is return "" end
-readonly proc FixM3GcDefs(x) is return x end
-
-readonly proc GetM3BackFlag(x) is
-    % not supported on older build
-    if equal(x, "-m32")
-        return ""
-    end
-    return x
-end
-
 
 SYSTEM_LD = SYSTEM_CC
   & " -Wl,-z,now"

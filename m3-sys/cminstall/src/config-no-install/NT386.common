@@ -246,11 +246,6 @@ if equal(OS_TYPE, "WIN32")
     m3back_flags += "-mno-cygwin"
 end
 
-%
-% Don't report timings and such.
-%
-m3back_flags += "-quiet"
-
 m3back_optimize = [ ]
 m3back_optimize += "-O"
 
@@ -262,7 +257,7 @@ m3back_optimize += "-Wuninitialized"
 %------------------------------------------------------------------------------
 
 proc m3_backend(source, object, optimize, debug) is
-    local args = [source, "-o", object]
+    local args = [ "-quiet", "-fno-reorder-blocks", source, "-o", object]
     if optimize
         args += m3back_optimize
     end

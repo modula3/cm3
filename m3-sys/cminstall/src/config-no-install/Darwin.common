@@ -48,7 +48,7 @@ if not defined("m3back_flags")
     else
         m3back_flags = "64"
     end
-    m3back_flags = "-fPIC -gstabs+ -quiet -m" & m3back_flags
+    m3back_flags = "-funwind-tables -fPIC -gstabs+ -m" & m3back_flags
 end
 
 %------------------------------------------------ external system libraries ---

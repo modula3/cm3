@@ -6,7 +6,7 @@ readonly WORD_SIZE = "64BITS" % { "32BITS" or "64BITS" }
 %
 readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
-m3back_flags = "-quiet -gstabs+ -m64 -fPIC -mno-align-double"
+m3back_flags = "-gstabs+ -m64 -fPIC -mno-align-double -funwind-tables"
 SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC -mno-align-double" % C compiler
 SYSTEM_LD = SYSTEM_CC
   & " -z now"
@@ -25,14 +25,6 @@ SYSTEM_LD = SYSTEM_CC
 % Imho position-dependent code should just never exist, oh well.
 %readonly POSITION_INDEPENDENT_EXECUTABLE = "-pie"
 readonly SYSTEM_ASM = "as --64" % Assembler
-
-%
-% newer platforms never needed these workarounds for
-% bootstrapping with older builds
-%
-readonly proc GetGcWrapFlags() is return "" end
-readonly proc FixM3GcDefs(x) is return x end
-readonly proc GetM3BackFlag(x) is return x end
 
 include("Linux.common")
 include("gnuld.common")
