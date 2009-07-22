@@ -780,8 +780,8 @@ if defined("HTML")
     nall = compress(fs_contents ("nall"))
     > juxreport in
       write ("<testsuite name=\"m3tests\" ")
-      write ("tests=\"" & nall & " \"")
-      write ("errors=\"" & nko & " \">", CR)
+      write ("tests=\"" & nall & "\" ")
+      write ("errors=\"" & nko & "\">", CR)
     end
   else
     > juxreport in
