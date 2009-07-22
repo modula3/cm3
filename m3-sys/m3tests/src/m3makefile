@@ -87,7 +87,10 @@ proc compare_file (dir, OutputPath) is
   exec (diff, ExpectedPath, OutputPath, head)
   if defined("HTML")
     exec (diff, ExpectedPath, OutputPath, ">>", report)
-    exec (diff, ExpectedPath, OutputPath, ">>", jureport)
+    if equal(OS_TYPE, "POSIX")
+      d = quote_xml(q_exec_get (["diff", "-u", ExpectedPath, OutputPath])[1])
+      jux (d)
+    end
   end
 end
 
@@ -175,6 +178,13 @@ proc jux (args) is
       write( args )
     end
   end
+end
+
+proc quote_xml (arg) is
+  ret = subst (arg, "&", "&amp;", 0)
+  ret = subst (ret, "<", "&lt;", 0)
+  ret = subst (ret, ">", "&gt;", 0)
+  return ret
 end
 
 > "res.ok" in write("") end
@@ -273,7 +283,7 @@ readonly proc run_test (class, group, uid, comment, should_run) is
       html (["<tr class=\"bggreen tl\"><td>", uid,
              "</td><td class=\"small\" width=\"45%\">", comment])
       jux (["<testcase time=\"" & ttime & "\" name=\"" & uid & ": " &
-             comment & "\">", CR])
+             quote_xml( comment ) & "\">", CR])
       >> "res.ok" in
         write (uid, CR)
       end
@@ -281,7 +291,7 @@ readonly proc run_test (class, group, uid, comment, should_run) is
       html (["<tr class=\"bgred tl\"><td>", uid,
              "</td><td class=\"small\" width=\"45%\">", comment])
       jux (["<testcase time=\"" & ttime & "\" name=\"" & uid & ": " &
-             comment & "\">", CR])
+             quote_xml( comment ) & "\">", CR])
       if not ok1 msg = "build failed" end
       if not ok2 msg = "output of program run differs" end
       jux (["<error message=\"", msg, "\">", CR])
