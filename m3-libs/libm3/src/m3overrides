@@ -1,3 +1,0 @@
-override("m3core", ROOT & "/m3-libs")
-M3_FRONT_FLAGS += "-vsdebug"
-_M3BUNDLE_OVERRIDE = "T"
