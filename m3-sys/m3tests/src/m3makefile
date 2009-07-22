@@ -68,12 +68,14 @@ proc compare_file (dir, OutputPath) is
   if stale (OutputPath, OutputPath)
     write (OutputPath, " is missing", CR)
     html ([OutputPath, "missing"])
+    jux ([OutputPath, "missing", CR])
     return
   end
 
   if stale (ExpectedPath, ExpectedPath)
     write (ExpectedPath, " is missing", CR)
     html ([ExpectedPath, "missing"])
+    jux ([ExpectedPath, "missing", CR])
     return
   end
 
@@ -85,6 +87,7 @@ proc compare_file (dir, OutputPath) is
   exec (diff, ExpectedPath, OutputPath, head)
   if defined("HTML")
     exec (diff, ExpectedPath, OutputPath, ">>", report)
+    exec (diff, ExpectedPath, OutputPath, ">>", jureport)
   end
 end
 
@@ -146,9 +149,14 @@ end
 
 %NOW = "-" & datetime()
 report = PACKAGE_DIR & SL & "m3tests.html"
+jureport = PACKAGE_DIR & SL & "m3tests-results.xml.new"
+juxreport = PACKAGE_DIR & SL & "m3tests-results.xml"
 
 if defined("HTML")
   > report in
+    write( "" )
+  end
+  > jureport in
     write( "" )
   end
 end
@@ -160,6 +168,17 @@ proc html (args) is
     end
   end
 end
+
+proc jux (args) is
+  if defined("HTML")
+    >> jureport in
+      write( args )
+    end
+  end
+end
+
+> "res.ok" in write("") end
+> "res.ko" in write("") end
 
 html(["<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">", CR])
 html(["<html>", CR])
@@ -217,6 +236,8 @@ readonly proc run_test (class, group, uid, comment, should_run) is
 
   local dir = ".." & SL & "src" & SL & group & SL & uid
   fs_rmrec (dir & SL & BUILD_DIR)
+  tstart = compress (q_exec_get ("date '+%s'")[1]) % second resolution only
+  %write (tstart, CR)
 
   if defined ("_all") or defined (class) or defined ("_" & uid)
     write ("--- ", uid, " --- ", comment, CR)
@@ -243,16 +264,27 @@ readonly proc run_test (class, group, uid, comment, should_run) is
       ok2 = cmp_file (dir, "stdout.pgm") and
             cmp_file (dir, "stderr.pgm")
     end
+    tstop = compress (q_exec_get ("date '+%s'")[1])
+    %write (tstop, CR)
+    ret = q_exec ("echo " & tstop & "-" & tstart & " | bc > ttime")
+    ttime = compress (q_exec_get ("cat ttime")[1])
 
     if ok1 and ok2
       html (["<tr class=\"bggreen tl\"><td>", uid,
              "</td><td class=\"small\" width=\"45%\">", comment])
+      jux (["<testcase time=\"" & ttime & "\" name=\"" & uid & ": " &
+             comment & "\">", CR])
       >> "res.ok" in
         write (uid, CR)
       end
     else
       html (["<tr class=\"bgred tl\"><td>", uid,
              "</td><td class=\"small\" width=\"45%\">", comment])
+      jux (["<testcase time=\"" & ttime & "\" name=\"" & uid & ": " &
+             comment & "\">", CR])
+      if not ok1 msg = "build failed" end
+      if not ok2 msg = "output of program run differs" end
+      jux (["<error message=\"", msg, "\">", CR])
       >> "res.ko" in
         write (uid, CR)
       end
@@ -265,6 +297,11 @@ readonly proc run_test (class, group, uid, comment, should_run) is
       compare_file (dir, "stdout.pgm")
       compare_file (dir, "stderr.pgm")
     end
+    if not ok1 or not ok2
+       jux (["</error>", CR])
+    end
+    jux (["</testcase>", CR])
+
     html (["</pre></td></tr>", CR])
 
     if not defined ("keep")
@@ -732,4 +769,28 @@ html(["    <address><a href=\"mailto:m3-support{at}elego.de\">m3-support{at}eleg
 html(["  </body>", CR])
 html(["</html>", CR])
 
+if defined("HTML")
+  if equal(OS_TYPE, "POSIX")
+    ret = q_exec ("wc res.ok | awk '{print $1}' > nok")
+    ret = q_exec ("wc res.ko | awk '{print $1}' > nko")
+    ret = q_exec ("cat res.ok res.ko | wc > nall1")
+    ret = q_exec ("awk '{print $1}' nall1 > nall")
+    nok = compress(fs_contents ("nok"))
+    nko = compress(fs_contents ("nko"))
+    nall = compress(fs_contents ("nall"))
+    > juxreport in
+      write ("<testsuite name=\"m3tests\" ")
+      write ("tests=\"" & nall & " \"")
+      write ("errors=\"" & nko & " \">", CR)
+    end
+  else
+    > juxreport in
+      write ("<testsuite name=\"m3tests\">", CR)
+    end
+  end
+  ret = q_exec ("cat " & jureport & ">> " & juxreport)
+  >> juxreport in
+    write ("</testsuite>", CR)
+  end
+end
 end % NOT LIB_ONLY
