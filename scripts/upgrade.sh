@@ -48,7 +48,8 @@ cp_config_files() {
     b=`basename ${f}`
     rm -f ${INSTALLROOT}/bin/${b} 2>/dev/null
     rm -f ${CFGD}/${b} 2>/dev/null
-    cp -v ${f} ${CFGD}/${b}
+    echo cp ${f} ${CFGD}/${b}
+    cp ${f} ${CFGD}/${b}
   done
   ( echo "INSTALL_ROOT = \"${INSTALLROOT}\""
     echo "include(path() & \"/config/${TARGET}\")"
