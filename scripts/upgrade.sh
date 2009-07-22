@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.25 2009-07-21 23:06:44 jkrell Exp $
+# $Id: upgrade.sh,v 1.26 2009-07-22 15:00:55 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -48,7 +48,8 @@ cp_config_files() {
     b=`basename ${f}`
     rm -f ${INSTALLROOT}/bin/${b} 2>/dev/null
     rm -f ${CFGD}/${b} 2>/dev/null
-    cp -v ${f} ${CFGD}/${b}
+    echo cp ${f} ${CFGD}/${b}
+    cp ${f} ${CFGD}/${b}
   done
   ( echo "INSTALL_ROOT = \"${INSTALLROOT}\""
     echo "include(path() & \"/config/${TARGET}\")"
