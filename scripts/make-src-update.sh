@@ -49,7 +49,7 @@ echo "using packages $P"
 #
 
 cd "${ROOT}" || exit 1
-/bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC ${P} > .tar-include
+/bin/ls -1d m3overrides COPYRIGHT-CMASS COPYRIGHT-DEC ${P} > .tar-include
 echo "building exclude list..."
 for p in ${P} ; do
   find ${p} \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \

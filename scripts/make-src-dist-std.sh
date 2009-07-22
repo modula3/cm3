@@ -40,7 +40,7 @@ PKGS=`pkgpath ${P}`
 #echo ${PKGS}
 cd "${ROOT}" || exit 1
 /bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC scripts ${PKGS} > .tar-include
-/bin/ls -1d compat.quake >> .tar-include
+/bin/ls -1d m3overrides compat.quake >> .tar-include
 /bin/ls -1d m3-*/*/${TARGET} > .tar-exclude
 /bin/ls -1d m3-*/*/${TARGET}p >> .tar-exclude
 echo "building exclude list..."

@@ -38,7 +38,7 @@ echo "using files listed in $1"
 
 cp "$1" "${ROOT}/.tar-include"
 cd "${ROOT}" || exit 1
-/bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC >> .tar-include
+/bin/ls -1d m3overrides COPYRIGHT-CMASS COPYRIGHT-DEC >> .tar-include
 
 echo "archiving..."
 export GZIP="-9 -v"
