@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-update.sh,v 1.4 2009-06-07 16:03:50 wagner Exp $
+# $Id: make-src-update.sh,v 1.5 2009-07-22 20:14:35 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -49,7 +49,7 @@ echo "using packages $P"
 #
 
 cd "${ROOT}" || exit 1
-/bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC ${P} > .tar-include
+/bin/ls -1d m3overrides COPYRIGHT-CMASS COPYRIGHT-DEC ${P} > .tar-include
 echo "building exclude list..."
 for p in ${P} ; do
   find ${p} \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
