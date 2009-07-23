@@ -79,7 +79,11 @@ fi
 if [ -n "${REPORT}" ]; then
   DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
   R="${HTML_REPORT:-${TMPDIR}/cm3-pkg-report-${TARGET}-${DS}.html}"
+  RJ="${XML_REPORT:-${TMPDIR}/cm3-pkg-report-${TARGET}-${DS}.xml}"
+  RJT="${XML_REPORT:-${TMPDIR}/cm3-pkg-test-report-${TARGET}-${DS}.xml}"
   RW="${WORKSPACE}/cm3-pkg-report-${TARGET}.html"
+  RJW="${WORKSPACE}/cm3-pkg-report-${TARGET}.xml"
+  RJTW="${WORKSPACE}/cm3-pkg-test-report-${TARGET}.xml"
   R2="`basename ${R} .html`.part2}"
   ERRS=""
   REDPKGS=""
@@ -164,6 +168,8 @@ EOF
     echo "<hr>"
     echo "<h3>Package Test Result Details</hr>"
   ) > "${R2}"
+  echo "" >${RJ}
+  echo "" >${RJT}
 }
 
 report_footer() {
@@ -187,6 +193,18 @@ EOF
 EOF
   ) >> "${R}"
 }
+
+quote_xml() {
+  while [ -n "$1" ]; do
+    echo "$1" | sed -e 's/&/&amp;/g' -e 's/</&lt;/g' -e 's/>/&gt;/g' 
+    shift
+  done
+}
+
+pall=0
+pko=0
+tall=0
+tko=0
 
 write_pkg_report() {
   res=""
@@ -251,6 +269,23 @@ write_pkg_report() {
     echo "  </td>"
     echo "</tr>"
   ) >> "${R}"
+  (
+    echo "  <testcase name=\"$1\">"
+    if [ "$2" = "0" ] ; then
+      echo "  build OK"
+    elif [ "$2" = "2" ] ; then
+      echo "  not supported on ${TARGET} (skipped)"
+    else
+      echo "  <failure type=\"build failed\">"
+      if FOLD="`find_exe fold /usr/bin`/fold" ; then
+        quote_xml $(echo "$errlines" | ${FOLD} -s -w 64)
+      else
+        quote_xml "$errlines"
+      fi
+      echo "  </failure>"
+    fi
+    echo "  </testcase>"
+  ) >> "${RJ}"
   # log errors to stdout
   echo "${ERRS}"
 
@@ -271,6 +306,21 @@ write_pkg_report() {
       echo "</div>"
     fi
   ) >> "${R2}"
+
+  # write test report for packages tests
+  (
+    if [ "${tbgt}" != "bgyellow" ]; then
+      echo "<testcase name=\"${pname} tests\">"
+      echo "  Test Result Details for $1"
+      echo "$3"
+      if [ -n "$4" ]; then
+        echo "    <failure type=\"package tests failed\">"
+        quote_xml "$4"
+        echo "</failure>"
+      fi
+      echo "</testcase>"
+    fi
+  ) >> "${RJT}"
 }
 
 if [ -n "${REPORT}" ]; then
@@ -296,9 +346,11 @@ for PKG in ${PKGS} ; do
         res=1
         OK=""
         REDPKGS=`printf "${REDPKGS}${PKG}\\\\\\n"`
+        pko=$(expr $pko + 1)
       elif [ "${res}" = "1" ]; then
         OK=""
         REDPKGS=`printf "${REDPKGS}${PKG}\\\\\\n"`
+        pko=$(expr $pko + 1)
       else
         GREENPKGS=`printf "${GREENPKGS}${PKG}\\\\\\n"`
         HERE=`pwd`
@@ -313,6 +365,7 @@ for PKG in ${PKGS} ; do
         fi
         if [ -z "${tres}" ]; then
           if [ -r "src/m3makefile" ]; then
+            tall=$(expr $tall + 1)
             echo "=== tests in `pwd` ==="
             echo " +++ cm3 -build -override -DTEST -DRUN -DROOT=$ROOT +++"
             LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${PKG}/${TARGET}"
@@ -320,6 +373,9 @@ for PKG in ${PKGS} ; do
             export LD_LIBRARY_PATH DYLD_LIBRARY_PATH
             tres=`cm3 -build -override -DTEST -DRUN -DROOT="${ROOT}" 2> stderr`
             terr=`cat stderr`
+            if [ -n "${terr}" ]; then
+              tko=$(expr $tko + 1)
+            fi
           else
             tres="no src/m3makefile"
           fi
@@ -347,6 +403,7 @@ for PKG in ${PKGS} ; do
     #  res=2
     #fi
     ERRS=`write_pkg_report "${PKG}" "${res}" "${tres}" "${terr}"`
+    pall=$(expr $pall + 1)
   fi
   if [ "$res" != "0" -a "$res" != "2" ] ; then
     if [ "${KEEP_GOING}" != "yes" ] ; then
@@ -372,6 +429,20 @@ if [ -n "${REPORT}" ]; then
     printf "${REDPKGS}"
   fi
   echo "HTML package report in $R"
+
+  rj=$(cat ${RJ})
+  rjt=$(cat ${RJT})
+
+  echo "<testsuite tests=\"${pall}\" failures=\"${pko}\" name=\"CM3 package build status\">" > ${RJ}
+  echo "<testsuite tests=\"${tall}\" failures=\"${tko}\" name=\"CM3 package tests status\">" > ${RJT}
+  echo "${rj}" >> ${RJ}
+  echo "${rjt}" >> ${RJT}
+  echo "</testsuite>" >> ${RJ}
+  echo "</testsuite>" >> ${RJT}
+
+  echo "XML package status report in ${RJ}"
+  echo "XML package test report in ${RJT}"
+
   if [ -n "${DOSHIP}" ]; then
     WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
     WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/logs}
@@ -380,6 +451,8 @@ if [ -n "${REPORT}" ]; then
   if [ -n "${WORKSPACE}" ]; then
     echo "moving report to ${RW}"
     mv "${R}" "${RW}"
+    mv "${RJ}" "${RJW}"
+    mv "${RJT}" "${RJTW}"
   fi
 fi
 
