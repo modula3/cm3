@@ -297,10 +297,10 @@ write_pkg_report() {
       echo "</a></h4>"
       echo "<div class=\"$tbgt\">"
       echo "  <pre class=\"small\">"
-      echo "$3"
+      quote_xml "$3"
       if [ -n "$4" ]; then
         echo "stderr:"
-        echo "$4"
+        quote_xml "$4"
       fi
       echo "  </pre>"
       echo "</div>"
