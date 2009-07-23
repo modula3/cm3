@@ -212,6 +212,33 @@ for c in ${PKG_COLLECTIONS}; do
   ) > install.sh
   chmod 755 install.sh
   (
+    echo 'REM ---BEGIN---'
+    echo '@echo off'
+    printf 'for %%%%p in ('
+    for p in ${PKGS}; do
+      pw=$(echo $p | sed -e 's;/;\\;g')
+      printf "%s; " ${pw}
+    done
+    echo ') do call :ShipIt %%p'
+    cat <<EOF
+goto End
+ 
+:ShipIt
+echo ...shipping %1...
+pushd %1
+cm3 -ship %SHIPARGS%
+popd
+echo.
+goto :EOF
+ 
+:End
+echo done
+@echo on
+REM ---END---
+EOF
+  ) > install.cmd
+  chmod 755 install.cmd
+  (
     echo "<html>"
     cat <<EOF
   <head>
@@ -275,7 +302,7 @@ EOF
       --exclude '*/CVS/*' --exclude '*/CVS' --exclude '*~' \
       --exclude '*.tar.*' --exclude '*.tgz' --exclude "*/${TARGET}/gcc" \
       --exclude "*/${TARGET}/*/*" \
-      -czf "${ARCHIVE}" collection-${c}.html install.sh ${PKGS}
+      -czf "${ARCHIVE}" collection-${c}.html install.sh install.cmd ${PKGS}
       ls -l "${ARCHIVE}"
   fi
 done
