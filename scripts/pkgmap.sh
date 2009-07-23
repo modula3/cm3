@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.34 2009-07-23 21:19:32 wagner Exp $
+# $Id: pkgmap.sh,v 1.35 2009-07-23 22:27:03 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -297,10 +297,10 @@ write_pkg_report() {
       echo "</a></h4>"
       echo "<div class=\"$tbgt\">"
       echo "  <pre class=\"small\">"
-      echo "$3"
+      quote_xml "$3"
       if [ -n "$4" ]; then
         echo "stderr:"
-        echo "$4"
+        quote_xml "$4"
       fi
       echo "  </pre>"
       echo "</div>"
