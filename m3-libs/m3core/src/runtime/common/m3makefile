@@ -68,6 +68,6 @@ if equal (TARGET, "SPARC64_OPENBSD") or equal (TARGET, "PPC32_OPENBSD")
     or equal (TARGET, "NetBSD2_i386") or equal (TARGET, "I386_INTERIX")
     or equal (TARGET, "AMD64_OPENBSD") or equal (TARGET, "AMD64_NETBSD")
     
- Interface      ("RTMachine")   
+  Interface      ("RTMachine")   
     
- end 
+end 
