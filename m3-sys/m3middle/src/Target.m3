@@ -8,7 +8,7 @@
 
 MODULE Target;
 
-IMPORT Text, TargetMap, M3RT;
+IMPORT Text, TargetMap, M3RT, TextUtils;
 
 VAR (*CONST*)
   CCs : REF ARRAY OF CallingConvention;
@@ -191,106 +191,68 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     (* add the system-specific customization *)
 
+    (* OS *)
+
+    (* newer platfors are ARCHITECTURE_OS, handle those generically *)
+
+    system := TextUtils.Upper(system);
+    IF TextUtils.CountChar(system, '_') = 1 THEN
+        OS := TextUtils.Split(system, "-").get(1);
+    ELSE
+        (* handle active platforms with legacy naming style
+        dormant platforms will leave OS empty *)
+
+        CASE System OF
+        | Systems.LINUXLIBC6 => OS := "LINUX";
+        | Systems.FreeBSD4 => OS := "FREEBSD";
+        | Systems.NetBSD2_i386 => OS := "NETBSD";
+        | Systems.SOLgnu,
+          Systems.SOLsun => OS := "SOLARIS";
+        | Systems.NT386 =>
+            IF Text.Equal(OS_name, "WIN32") THEN
+              OS := "NT";
+            ELSE
+              OS := "CYGWIN";
+            END;
+        ELSE
+        END;
+    END;
+
     (* 64bit *)
 
-    CASE System OF
-    | Systems.ALPHA_OSF,
-(*    Systems.ALPHA_LINUX,
-      Systems.ALPHA_FREEBSD,
-      Systems.ALPHA_OPENBSD,
-      Systems.ALPHA_NETBSD,
-      Systems.ALPHA_VMS,
-
-      Systems.AMD64_CYGWIN, *)
-      Systems.AMD64_DARWIN,
-      Systems.AMD64_FREEBSD,
-      Systems.AMD64_NETBSD,
-      Systems.AMD64_OPENBSD,
-      Systems.AMD64_LINUX,
-(*    Systems.AMD64_NT,
-      Systems.AMD64_SOLARIS,
-
-      Systems.PA64_LINUX,
-*)
-      Systems.PA64_HPUX,
-(*
-      Systems.IA64_FREEBSD,
-      Systems.IA64_HPUX,
-      Systems.IA64_LINUX,
-      Systems.IA64_NT,
-      Systems.IA64_VMS,
-
-      Systems.MIPS64_LINUX,
-      Systems.MIPS64_IRIX, *)
-      Systems.MIPS64_OPENBSD,
-(*    Systems.MIPS64_NETBSD,
-
-      Systems.PPC64_AIX,
-      Systems.PPC64_LINUX,
-      Systems.PPC64_DARWIN,
-
-      Systems.SPARC64_FREEBSD,
-      Systems.SPARC64_NETBSD, *)
-      Systems.SPARC64_OPENBSD,
-      Systems.SPARC64_LINUX,
-      Systems.SPARC64_SOLARIS
-    =>
+    IF TextUtils.StartsWith(system, "ALPHA_")
+            OR TextUtils.Contains(system, "64_") THEN
         Init64();
-    ELSE
     END;
 
     (* big endian *)
 
-    CASE System OF
-    | 
-      Systems.PA32_HPUX,
-      Systems.PA64_HPUX,
-(*    Systems.PA32_LINUX,
-      Systems.PA64_LINUX,
+    IF TextUtils.StartsWith(system, "PA")
 
-      Systems.MIPS32_LINUX,
-      Systems.MIPS32_IRIX,
-      Systems.MIPS32_OPENBSD,
-      Systems.MIPS32_NETBSD,
-      Systems.MIPS64_LINUX,
-      Systems.MIPS64_IRIX, *)
-      Systems.MIPS64_OPENBSD,
-(*    Systems.MIPS64_NETBSD, *)
+            (* MIPS is definitely ambiguous! *)
+            OR TextUtils.StartsWith(system, "MIPS")
+   
+            (* PPC is a little ambiguous? *)
+            OR TextUtils.StartsWith(system, "PPC")
 
-      Systems.PPC_LINUX,
-      Systems.PPC_DARWIN,
-(*    Systems.PPC32_AIX,
-      Systems.PPC32_FREEBSD,
-      Systems.PPC32_NETBSD, *)
-      Systems.PPC32_OPENBSD,
-(*    Systems.PPC64_AIX,
-      Systems.PPC64_LINUX,
-      Systems.PPC64_DARWIN, *)
-
-      Systems.SPARC32_LINUX,
-(*    Systems.SPARC32_SOLARIS,
-      Systems.SPARC64_FREEBSD,
-      Systems.SPARC64_NETBSD, *)
-      Systems.SPARC64_OPENBSD,
-      Systems.SPARC64_LINUX,
-      Systems.SPARC64_SOLARIS,
-
-      Systems.SOLgnu,
-      Systems.SOLsun,
-
-      Systems.AP3000,
-      Systems.ARM,
-      Systems.HP300,
-      Systems.HPPA,
-      Systems.IBMR2,
-      Systems.IBMRT,
-      Systems.IRIX5,
-      Systems.NEXT,
-      Systems.SPARC,
-      Systems.SUN3
-    =>
+            OR TextUtils.StartsWith(system, "SPARC")
+            OR TextUtils.StartsWith(system, "SOL") THEN
         Little_endian := FALSE;
     ELSE
+        CASE System OF
+        | Systems.AP3000,
+          Systems.ARM,
+          Systems.HP300,
+          Systems.HPPA,
+          Systems.IBMR2,
+          Systems.IBMRT,
+          Systems.IRIX5,
+          Systems.NEXT,
+          Systems.SUN3
+        =>
+            Little_endian := FALSE;
+        ELSE
+        END;
     END;
 
     (* Solaris (should we put all "setjmp" platforms here?) *)
