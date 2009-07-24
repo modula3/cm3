@@ -1,18 +1,12 @@
 readonly TARGET = "SPARC64_LINUX"
+readonly TARGET_ENDIAN = "BIG"
 readonly WORD_SIZE = "64BITS"
-
-%
-% add s switch to ar and remove need for ranlib
-%
-readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
 %
 % fPIC not working?
 %
- m3back_flags = "-gstabs+ -m64 -funwind-tables"
-%m3back_flags = "-gstabs+ -m64 -fPIC -funwind-tables"
- SYSTEM_CC = "gcc -gstabs+ -m64"
-%SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC"
+m3back_flags = "-gstabs+ -m64 -funwind-tables"
+SYSTEM_CC = "gcc -gstabs+ -m64"
 
 readonly SYSTEM_ASM = "as -64"
 

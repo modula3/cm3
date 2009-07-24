@@ -1,4 +1,5 @@
 readonly TARGET = "PA32_HPUX" % code generation target
+readonly TARGET_ENDIAN = "BIG"
 readonly WORD_SIZE = "32BITS" % { "32BITS" or "64BITS" }
 
 %

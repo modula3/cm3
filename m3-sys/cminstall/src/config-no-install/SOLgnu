@@ -5,6 +5,7 @@
 %
 
 readonly TARGET       = "SOLgnu"
+readonly TARGET_ENDIAN = "BIG"
 readonly WORD_SIZE    = "32BITS"
 readonly C_COMPILER = "GNU"
 

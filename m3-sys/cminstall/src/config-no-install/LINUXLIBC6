@@ -1,4 +1,5 @@
 readonly TARGET       = "LINUXLIBC6"      % code generation target
+readonly TARGET_ENDIAN = "LITTLE"
 readonly WORD_SIZE    = "32BITS"          % { "32BITS" or "64BITS" }
 
 m3back_flags = "-gstabs+ -fPIC -mno-align-double -m32 -funwind-tables"
@@ -15,11 +16,6 @@ SYSTEM_LD = SYSTEM_CC
   & " -Wl,-rpath,\\$ORIGIN"
   & " -Wl,-rpath,\\$ORIGIN/../lib"
   & " -Wl,--warn-common"
-
-%
-% add s switch to ar and remove need for ranlib
-%
-readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
 include("Linux.common")
 include("gnuld.common")

@@ -3,6 +3,7 @@
 %
 
 readonly TARGET       = "AMD64_DARWIN"
+readonly TARGET_ENDIAN = "LITTLE"
 readonly WORD_SIZE    = "64BITS"
 
 proc FileExists(x) is

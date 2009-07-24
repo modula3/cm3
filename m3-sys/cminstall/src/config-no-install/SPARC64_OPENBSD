@@ -1,4 +1,6 @@
 readonly TARGET = "SPARC64_OPENBSD"
+readonly TARGET_ENDIAN = "BIG"
+readonly TARGET_OS = "OPENBSD"
 readonly WORD_SIZE = "64BITS"
 
 % -m64?

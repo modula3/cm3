@@ -1,4 +1,6 @@
 readonly TARGET = "AMD64_FREEBSD"
+readonly TARGET_ENDIAN = "LITTLE"
+readonly TARGET_OS = "FREEBSD"
 readonly WORD_SIZE = "64BITS"
 
 m3back_flags = "-gstabs+ -m64 -fPIC -funwind-tables"
