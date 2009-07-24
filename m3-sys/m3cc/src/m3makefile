@@ -4,6 +4,31 @@
 % See the file COPYRIGHT for a full description.
 %
 
+% omit unnecessary builds during regression testing
+NOACTION = ""
+if defined("subst_env") and subst_env("$WORKSPACE") and
+   subst_env("$PREBUILT_CM3CG")
+  PREBUILT_CM3CG = subst_env("$PREBUILT_CM3CG")
+  CM3CG = "cm3cg"
+  if equal(M3_MODE, "build")
+    write( "using pre-built backend from", PREBUILT_CM3CG, CR )
+    cp_if( PREBUILT_CM3CG, CM3CG )
+    >> ".M3SHIP" in
+      write( "make_dir(BIN_INSTALL & \"\")", CR )
+      write( "install_file(\"" & CM3CG & "\", BIN_INSTALL, \"0775\")", CR )
+    end
+  end
+  if equal(M3_MODE, "clean")
+    write( "removing ", CM3CG, CR )
+    fs_rmfile( CM3CG )
+  end
+  if equal(M3_MODE, "ship")
+    write( TARGET & SL & CM3CG, "-->", BIN_INSTALL & SL & CM3CG, CR )
+    cp_if( CM3CG, BIN_INSTALL & SL & CM3CG )
+  end
+  NOACTION = "T"
+end
+
 readonly Platform_info = {
   "AIX386"    : "i486-ibm-aix",
   "ALPHA_FREEBSD" : "alpha-freebsd6",
@@ -293,7 +318,7 @@ if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
 local SourceDir = "../gcc"
 local GCC42 = FALSE
-if equal(M3CC_TARGET, "ARM_DARWIN")
+if equal(M3CC_TARGET, "ARM_DARWIN") and not NOACTION
     GCC42 = TRUE
     local Defines = ""
     SourceDir = "../gcc-apple"
@@ -415,11 +440,13 @@ env = env & " LEX='touch lex.yy.c'"
 env = env & " MAKEINFO=:"
 M3CC_MAKE = M3CC_MAKE & " " & env
 
-ApplyPatches (M3CC_TARGET)
+if not NOACTION
+  ApplyPatches (M3CC_TARGET)
+end
 
 % check for non-default flags
 
-if not defined ("no_config")
+if not defined ("no_config") and not NOACTION
   % configure the sources
   if not FileExists (done)
 
@@ -527,7 +554,9 @@ end
 % configure
 %
 
-m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host | tee -a " & Log])
+if not NOACTION
+  m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host | tee -a " & Log])
+end
 
 proc Sed (file0, find, replace) is
   if FileExists (file0)
@@ -536,6 +565,8 @@ proc Sed (file0, find, replace) is
     m3cc_Run (["../gcc/move-if-change", file1, file0])
   end
 end
+
+if not NOACTION
 
 foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
     foreach leaf in ["Makefile", "auto-host.h", "config.h"]
@@ -602,3 +633,5 @@ m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & " libcpp.a | te
 m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes insn-config.h m3cg | tee -a " & Log])
 
 postcp ()
+
+end % NOACTION
