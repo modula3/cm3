@@ -6,8 +6,8 @@
 readonly TARGET_OS = "LINUX"
 
 SYSTEM_LD = SYSTEM_CC
-  & " -z now"
-  & " -z origin"
+  & " -Wl,-z,now"
+  & " -Wl,-z,origin"
   & " -Bsymbolic"
   & " -Wl,--fatal-warnings"
   & " -Wl,-rpath,\\$ORIGIN"
