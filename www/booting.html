@@ -31,6 +31,21 @@
         <tt>cm3/m3-sys/m3middle/src/Target.m3</tt><br>
         <tt>cm3/m3-sys/cm3/src/config/${TARGET}</tt><br>
       </li>
+
+	  <li>
+		Create the file compat.quake at the root of the source tree
+		with this content:<pre><tt>% Determine whether we are using the PM3 release of Modula-3.
+if not defined("PM3")
+  % The procedure "build_standalone" exists only in SRC Modula-3.
+  if not defined("build_standalone")
+    PM3 = "T"
+  end
+end
+if defined("PM3")
+  proc build_standalone() is
+    option("standalone", "T")
+  end
+end</pre></li>
       <li>
         Compile and link the CM3 compiler using the libraries of the
         PM3 system. You can do this with the the script
