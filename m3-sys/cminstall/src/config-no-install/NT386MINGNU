@@ -16,7 +16,7 @@
 % for the sake m3cgcat.exe + M3CONFIG environment variable.
 %
 readonly TARGET       = "NT386"             % code generation target
-
+readonly TARGET_OS = "NT"
 readonly OS_TYPE      = "WIN32"
 
 %-------------------------------------------------------------------

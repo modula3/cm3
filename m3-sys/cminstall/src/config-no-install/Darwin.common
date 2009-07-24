@@ -9,6 +9,8 @@ if not defined("CR") CR = "\n" end
 if not defined("M3_PROFILING") M3_PROFILING = FALSE end
 %-------------------------------------------------------------------
 
+readonly TARGET_OS = "DARWIN"
+
 GccArch = {"PPC_DARWIN":"ppc", "PPC64_DARWIN":"ppc64", "I386_DARWIN":"i386",
     "AMD64_DARWIN":"x86_64"}{TARGET}
 

@@ -1,4 +1,6 @@
 readonly TARGET = "I386_INTERIX" % code generation target
+readonly TARGET_ENDIAN = "LITTLE"
+readonly TARGET_OS = "INTERIX"
 readonly WORD_SIZE = "32BITS" % { "32BITS" or "64BITS" }
 
 %

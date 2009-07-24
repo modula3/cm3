@@ -1,4 +1,6 @@
 readonly TARGET = "MIPS64_OPENBSD"
+readonly TARGET_ENDIAN = "BIG"
+readonly TARGET_OS = "OPENBSD"
 readonly WORD_SIZE = "64BITS"
 
 % -funwind-tables causes internal compiler errors

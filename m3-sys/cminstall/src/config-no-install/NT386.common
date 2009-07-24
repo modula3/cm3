@@ -8,6 +8,7 @@ include("cm3cfg.common")
 
 %-------------------------------------------------- compilation environment ---
 
+readonly TARGET_ENDIAN = "LITTLE"
 readonly WORD_SIZE    = "32BITS"            % { "32BITS" or "64BITS" }
 
 %------------------------------------------------------------------------------

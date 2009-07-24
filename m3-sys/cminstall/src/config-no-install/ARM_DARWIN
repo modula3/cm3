@@ -3,6 +3,7 @@
 %
 
 readonly TARGET       = "ARM_DARWIN"
+readonly TARGET_ENDIAN = "LITTLE"
 readonly WORD_SIZE    = "32BITS"
 readonly GNU_PLATFORM = "arm-apple-darwin8"
 

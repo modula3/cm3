@@ -3,6 +3,13 @@
 % common configuration file for various Linux platforms
 %
 
+readonly TARGET_OS = "LINUX"
+
+%
+% add s switch to ar and remove need for ranlib
+%
+readonly AR_AND_RANLIB_ARE_ONE = TRUE
+
 if not defined ("SYSTEM_LIBS")
 
 SYSTEM_LIBS =
