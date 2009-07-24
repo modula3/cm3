@@ -528,7 +528,15 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   fi
 
   echo " === update last ok from ${INSTROOT_CUR}"
-  cp -pR ${INSTROOT_CUR} ${INSTROOT_LOK}
+  cp -pR ${INSTROOT_CUR} ${INSTROOT_LOK}.$$
+  mv ${INSTROOT_LOK} ${INSTROOT_LOK}.bak && \
+  mv ${INSTROOT_LOK}.$$ ${INSTROOT_LOK} && rm -rf ${INSTROOT_LOK}.bak || {
+    echo "update of ${INSTROOT_LOK} failed... trying to restore..."
+    [ -d ${INSTROOT_LOK}.bak -a ! -d ${INSTROOT_LOK} ] && \
+    mv ${INSTROOT_LOK}.bak ${INSTROOT_LOK} || {
+      echo "HELP: restore of ${INSTROOT_LOK} failed!" 1>&2
+    }
+  }
   cm3config ${INSTROOT_LOK}
   echo " >>> OK build_${1}_${BSET}_lastok ${DS} ${WS} ${INSTROOT_LOK}"
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 release build done"
