@@ -73,7 +73,6 @@ readonly _DateImpls = {
   "OPENBSD" : "DateBsd",
   "SOLARIS" : "DatePosix",
   "TRU64"   : "DateBsd",
-  "VMS"     : "DateBsd",
 }
 
 if defined("TARGET_OS")
