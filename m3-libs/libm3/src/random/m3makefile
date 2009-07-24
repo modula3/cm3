@@ -2,71 +2,10 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 
-% floating-point formats
-readonly _LittleEndian = "IEEE"
-readonly _BigEndian = "IEEE"
-readonly _VAX = "VAX"
+include_dir ("Common")
 
-readonly _RandomPieces = {
-  "ALPHA_OSF"  : [ _LittleEndian ],
-  "AIX386"     : [ _LittleEndian ],
-  "AMD64_DARWIN": [ _LittleEndian ],
-  "AMD64_FREEBSD": [ _LittleEndian ],
-  "AMD64_NETBSD": [ _LittleEndian ],
-  "AMD64_OPENBSD": [ _LittleEndian ],
-  "AMD64_LINUX": [ _LittleEndian ],
-  "AP3000"     : [ _LittleEndian ],
-  "ARM"        : [ _LittleEndian ],
-  "ARM_DARWIN" : [ _LittleEndian ],
-  "BSDI4"      : [ _LittleEndian ],
-  "DS3100"     : [ _LittleEndian ],
-  "DS3100_OSF" : [ _LittleEndian ],
-  "FBSD_ALPHA" : [ _LittleEndian ],
-  "FreeBSD"    : [ _LittleEndian ],
-  "FreeBSD2"   : [ _LittleEndian ],
-  "FreeBSD3"   : [ _LittleEndian ],
-  "FreeBSD4"   : [ _LittleEndian ],
-  "HP300"      : [ _BigEndian ],
-  "HPPA"       : [ _BigEndian ],
-  "I386_INTERIX" : [ _LittleEndian ],
-  "IBMR2"      : [ _BigEndian ],
-  "IBMRT"      : [ _BigEndian ],
-  "IRIX5"      : [ _BigEndian ],
-  "LINUX"      : [ _LittleEndian ],
-  "LINUXELF"   : [ _LittleEndian ],
-  "LINUXLIBC6" : [ _LittleEndian ],
-  "MIPS64_OPENBSD" : [ _BigEndian ],
-  "NEXT"       : [ _BigEndian ],
-  "NT386"      : [ _LittleEndian ],
-  "NT386GNU"   : [ _LittleEndian ],
-  "OKI"        : [ _LittleEndian ],
-  "OS2"        : [ _LittleEndian ],
-  "PA32_HPUX"  : [ _BigEndian ],
-  "PA64_HPUX"  : [ _BigEndian ],
-  "SEQUENT"    : [ _LittleEndian ],
-  "SOLgnu"     : [ _BigEndian ],
-  "SOLsun"     : [ _BigEndian ],
-  "SPARC"      : [ _BigEndian ],
-  "SPARC32_LINUX" : [ _BigEndian ],
-  "SPARC64_LINUX" : [ _BigEndian ],
-  "SPARC64_OPENBSD" : [ _BigEndian ],
-  "SPARC64_SOLARIS" : [ _BigEndian ],
-  "SUN3"       : [ _BigEndian ],
-  "SUN386"     : [ _LittleEndian ],
-  "UMAX"       : [ _LittleEndian ],
-  "VAX"        : [ _VAX ],
-  "I386_DARWIN": [ _LittleEndian ],
-  "PPC_DARWIN" : [ _BigEndian ],
-  "PPC_LINUX"  : [ _BigEndian ],
-  "PPC32_OPENBSD" : [ _BigEndian ],
-  "I386_OPENBSD" : [ _LittleEndian ],
-  "NetBSD2_i386"  : [ _LittleEndian ]
-}
-
-if _RandomPieces contains TARGET
-  include_dir ("Common")
-  local pieces = _RandomPieces {TARGET}
-  foreach f in pieces  include_dir (f)  end
+if equal (TARGET, "VAX")
+  include_dir (TARGET)
 else
-  error (format ("random: unsupported platform: \"%s\"%s", TARGET, CR))
+  include_dir ("IEEE")
 end
