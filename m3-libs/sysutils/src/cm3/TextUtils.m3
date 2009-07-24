@@ -671,6 +671,41 @@ PROCEDURE Contains(READONLY s, t : TEXT; caseSensitive := TRUE) : BOOLEAN =
   END Contains;
 
 (*---------------------------------------------------------------------------*)
+PROCEDURE StartsWith(s, t : TEXT; caseSensitive := TRUE) : BOOLEAN =
+  VAR
+    tlen := Text.Length(t);
+    slen := Text.Length(s);
+    sub: TEXT;
+  BEGIN
+    IF tlen > slen THEN
+      RETURN FALSE;
+    END;
+    sub := Text.Sub(s, 0, tlen);
+    IF caseSensitive THEN
+      RETURN Text.Equal(sub, t);
+    END;
+    RETURN TextEx.CIEqual(sub, t);
+  END StartsWith;
+
+(*---------------------------------------------------------------------------*)
+
+PROCEDURE EndsWith(s, t : TEXT; caseSensitive := TRUE) : BOOLEAN =
+  VAR
+    tlen := Text.Length(t);
+    slen := Text.Length(s);
+    sub: TEXT;
+  BEGIN
+    IF tlen > slen THEN
+      RETURN FALSE;
+    END;
+    sub := Text.Sub(s, slen - tlen, tlen);
+    IF caseSensitive THEN
+      RETURN Text.Equal(sub, t);
+    END;
+    RETURN TextEx.CIEqual(sub, t);
+  END EndsWith;
+
+(*---------------------------------------------------------------------------*)
 PROCEDURE BoolVal(READONLY s : TEXT; default := FALSE) : BOOLEAN =
   BEGIN
     WITH t = Compress(s) DO

@@ -143,6 +143,14 @@ PROCEDURE CountChar(s: TEXT; ch: CHAR; caseSensitive := TRUE) : INTEGER;
   (* the number of occurences of ch in s *)
 
 (*---------------------------------------------------------------------------*)
+PROCEDURE StartsWith(s, t: TEXT; caseSensitive := TRUE) : BOOLEAN;
+  (* does s start with t *)
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE EndsWith(s, t: TEXT; caseSensitive := TRUE) : BOOLEAN;
+  (* does s end with t *)
+
+(*---------------------------------------------------------------------------*)
 PROCEDURE BoolVal(READONLY t : TEXT; default := FALSE) : BOOLEAN;
   (* Evaluate the text t to a boolean value. For "yes", "true", "1", and
      "on", TRUE is returned, for "no", "false", "0", and "off", FALSE
@@ -156,4 +164,3 @@ PROCEDURE Sort (VAR a: ARRAY OF TEXT;  cmp := Elem_Compare);
 (* quick sort from libm3 for convenience *)
 
 END TextUtils.
-
