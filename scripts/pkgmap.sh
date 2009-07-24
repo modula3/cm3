@@ -339,7 +339,7 @@ for PKG in ${PKGS} ; do
       exec_cmd "$PKG" > "${STDOUTLOG}" 2>&1
       res=$?
       pend=`date +%s`
-      ptime=`expr $pend - $pstart`
+      ptime=`expr \( $pend - $pstart \) \* 1000 + 500`
       cat "${STDOUTLOG}"
       if grep 'Fatal Error:' "${STDOUTLOG}" >/dev/null 2>&1; then
         res=1
@@ -373,7 +373,7 @@ for PKG in ${PKGS} ; do
             tstart=`date +%s`
             tres=`cm3 -build -override -DTEST -DRUN -DROOT="${ROOT}" 2> stderr`
             tend=`date +%s`
-            ttime=`expr $tend - $tstart`
+            ttime=`expr \( $tend - $tstart \) \* 1000 + 500`
             terr=`cat stderr`
             if [ -n "${terr}" ]; then
               tko=`expr $tko + 1`
