@@ -191,33 +191,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     (* add the system-specific customization *)
 
-    (* OS *)
-
-    (* newer platfors are ARCHITECTURE_OS, handle those generically *)
-
-    system := TextUtils.Upper(system);
-    IF TextUtils.CountChar(system, '_') = 1 THEN
-        OS := TextUtils.Split(system, "-").get(1);
-    ELSE
-        (* handle active platforms with legacy naming style
-        dormant platforms will leave OS empty *)
-
-        CASE System OF
-        | Systems.LINUXLIBC6 => OS := "LINUX";
-        | Systems.FreeBSD4 => OS := "FREEBSD";
-        | Systems.NetBSD2_i386 => OS := "NETBSD";
-        | Systems.SOLgnu,
-          Systems.SOLsun => OS := "SOLARIS";
-        | Systems.NT386 =>
-            IF Text.Equal(OS_name, "WIN32") THEN
-              OS := "NT";
-            ELSE
-              OS := "CYGWIN";
-            END;
-        ELSE
-        END;
-    END;
-
     (* 64bit *)
 
     IF TextUtils.StartsWith(system, "ALPHA_")
