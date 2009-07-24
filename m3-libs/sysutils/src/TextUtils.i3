@@ -139,6 +139,10 @@ PROCEDURE Contains(READONLY s, t : TEXT; caseSensitive := TRUE) : BOOLEAN;
   (* <=> Text `s' contains text `t'. *)
 
 (*---------------------------------------------------------------------------*)
+PROCEDURE CountChar(s: TEXT; ch: CHAR; caseSensitive := TRUE) : INTEGER;
+  (* the number of occurences of ch in s *)
+
+(*---------------------------------------------------------------------------*)
 PROCEDURE BoolVal(READONLY t : TEXT; default := FALSE) : BOOLEAN;
   (* Evaluate the text t to a boolean value. For "yes", "true", "1", and
      "on", TRUE is returned, for "no", "false", "0", and "off", FALSE

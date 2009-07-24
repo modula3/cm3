@@ -517,6 +517,24 @@ PROCEDURE Upper(t : TEXT) : TEXT =
   END Upper; 
 
 (*---------------------------------------------------------------------------*)
+PROCEDURE CountChar(s : TEXT; ch: CHAR; caseSensitive := TRUE) : INTEGER =
+  VAR
+    len := Text.Length(s);
+    count := 0;
+  BEGIN
+    IF NOT caseSensitive THEN
+      s := Lower(s);
+      ch := ASCII.Lower[ch];
+    END;
+    FOR i := 0 TO len - 1 DO
+        IF s^[i] = ch THEN
+            INC(count);
+        END
+    END;
+    RETURN count;
+  END CountChar;
+
+(*---------------------------------------------------------------------------*)
 PROCEDURE SubstituteVariables(t : TEXT; parameters : TextTextTbl.T) : TEXT
   RAISES {Error} =
   VAR
