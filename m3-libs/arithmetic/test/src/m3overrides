@@ -1,4 +1,1 @@
-%override("arithmetic",WDROOT)
-%override("arithmetic",ROOT)
-%override("arithmetic","/home/thielema/cm3/src/m3-libs")
-override("arithmetic", PACKAGE_DIR & SL & ".." & SL & "..")
+include(ROOT & "/m3overrides")

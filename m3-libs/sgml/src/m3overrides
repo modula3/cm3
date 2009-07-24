@@ -1,3 +1,1 @@
-override("libm3", ROOT & "/m3-libs")
-override("deepcopy", ROOT & "/m3-libs")
-override("m3quake", ROOT & "/m3-sys")
+include(ROOT & "/m3overrides")

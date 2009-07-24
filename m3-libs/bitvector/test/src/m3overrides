@@ -1,4 +1,1 @@
-%override ("libm3", ROOT & SL & "m3-libs")
-override ("bitvector", ROOT & SL & "m3-libs")
-override("libm3", PACKAGE_DIR & SL & ".." & SL & "..")
-override("arithmetic", PACKAGE_DIR & SL & ".." & SL & "..")
+include(ROOT & "/m3overrides")

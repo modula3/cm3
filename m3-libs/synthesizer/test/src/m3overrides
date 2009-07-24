@@ -1,1 +1,1 @@
-override("synthesizer", $PWD & SL & ".." & SL & "..")
+include(ROOT & "/m3overrides")
