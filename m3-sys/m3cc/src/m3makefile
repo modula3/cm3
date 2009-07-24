@@ -6,27 +6,28 @@
 
 % omit unnecessary builds during regression testing
 NOACTION = ""
-if defined("subst_env") and subst_env("$WORKSPACE") and
-   subst_env("$PREBUILT_CM3CG")
-  PREBUILT_CM3CG = subst_env("$PREBUILT_CM3CG")
-  CM3CG = "cm3cg"
-  if equal(M3_MODE, "build")
-    write( "using pre-built backend from", PREBUILT_CM3CG, CR )
-    cp_if( PREBUILT_CM3CG, CM3CG )
-    >> ".M3SHIP" in
-      write( "make_dir(BIN_INSTALL & \"\")", CR )
-      write( "install_file(\"" & CM3CG & "\", BIN_INSTALL, \"0775\")", CR )
+if defined("subst_env")
+  if subst_env("$WORKSPACE") and subst_env("$PREBUILT_CM3CG")
+    PREBUILT_CM3CG = subst_env("$PREBUILT_CM3CG")
+    CM3CG = "cm3cg"
+    if equal(M3_MODE, "build")
+      write( "using pre-built backend from", PREBUILT_CM3CG, CR )
+      cp_if( PREBUILT_CM3CG, CM3CG )
+      >> ".M3SHIP" in
+        write( "make_dir(BIN_INSTALL & \"\")", CR )
+        write( "install_file(\"" & CM3CG & "\", BIN_INSTALL, \"0775\")", CR )
+      end
     end
+    if equal(M3_MODE, "clean")
+      write( "removing ", CM3CG, CR )
+      fs_rmfile( CM3CG )
+    end
+    if equal(M3_MODE, "ship")
+      write( TARGET & SL & CM3CG, "-->", BIN_INSTALL & SL & CM3CG, CR )
+      cp_if( CM3CG, BIN_INSTALL & SL & CM3CG )
+    end
+    NOACTION = "T"
   end
-  if equal(M3_MODE, "clean")
-    write( "removing ", CM3CG, CR )
-    fs_rmfile( CM3CG )
-  end
-  if equal(M3_MODE, "ship")
-    write( TARGET & SL & CM3CG, "-->", BIN_INSTALL & SL & CM3CG, CR )
-    cp_if( CM3CG, BIN_INSTALL & SL & CM3CG )
-  end
-  NOACTION = "T"
 end
 
 readonly Platform_info = {
