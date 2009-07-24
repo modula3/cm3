@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-std.sh,v 1.10 2009-07-22 20:14:35 jkrell Exp $
+# $Id: make-src-dist-std.sh,v 1.11 2009-07-24 04:22:35 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -40,7 +40,7 @@ PKGS=`pkgpath ${P}`
 #echo ${PKGS}
 cd "${ROOT}" || exit 1
 /bin/ls -1d COPYRIGHT-CMASS COPYRIGHT-DEC scripts ${PKGS} > .tar-include
-/bin/ls -1d m3overrides compat.quake >> .tar-include
+/bin/ls -1d m3overrides >> .tar-include
 /bin/ls -1d m3-*/*/${TARGET} > .tar-exclude
 /bin/ls -1d m3-*/*/${TARGET}p >> .tar-exclude
 echo "building exclude list..."
