@@ -12,11 +12,7 @@
 cp_if("../../../m3-libs/m3core/src/unix/Common/UnixLink.c", ".")
 cp_if("../../../m3-libs/m3core/src/unix/Common/m3unix.h", ".")
 cp_if("../src/cm3unix.c", ".")
-if equal (TARGET, "NT386")
-  derived_c("..//" & BUILD_DIR & "/cm3unix")
-else
-  derived_c("../" & BUILD_DIR & "/cm3unix")
-end
+derived_c("cm3unix")
 
 import ("libm3")
 import ("m3middle")
