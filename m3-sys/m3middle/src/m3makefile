@@ -9,6 +9,7 @@
 % m3_option("-keep")
 
 import ("libm3")
+import ("sysutils")
 
 include_dir (OS_TYPE)
 
