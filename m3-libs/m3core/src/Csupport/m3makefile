@@ -63,6 +63,17 @@ readonly _CSupportPieces = {
   "NetBSD2_i386" : [ "little-endian" ],
 }
 
+if defined ("TARGET_ENDIAN")
+  if equal ("TARGET_ENDIAN", "BIG")
+    include_dir ("big-endian")
+  else
+    include_dir ("little-endian")
+  end
+  if FileExists (path() & "/" & TARGET & "/m3makefile")
+    include_dir (TARGET)
+  end
+else
+
 if _CSupportPieces contains TARGET
   local pieces = _CSupportPieces {TARGET}
   foreach f in pieces
@@ -70,6 +81,8 @@ if _CSupportPieces contains TARGET
   end
 else
   error (format ("csupport: unsupported platform: \"%s\"%s", TARGET, CR))
+end
+
 end
 
 include_dir ("libgcc")
