@@ -253,7 +253,7 @@ write_pkg_report() {
     fi
     echo "  <td class=\"small\"><pre>"
     if FOLD="`find_exe fold /usr/bin`/fold" ; then
-      quote_xml $(echo "$errlines" | ${FOLD} -s -w 64)
+      quote_xml "`echo "$errlines" | ${FOLD} -s -w 64`"
     else
       quote_xml "$errlines"
     fi
@@ -335,21 +335,21 @@ for PKG in ${PKGS} ; do
   if [ "${REPORT}" = "yes" ] ; then
     rm -f "${STDOUTLOG}"
     if UsePackage `basename "${PKG}"` || [ "${CM3_ALL}" = yes ]; then
-      pstart=$(date +%s)
+      pstart=`date +%s`
       exec_cmd "$PKG" > "${STDOUTLOG}" 2>&1
-      pend=$(date +%s)
-      ptime=$(expr $pend - $pstart)
       res=$?
+      pend=`date +%s`
+      ptime=`expr $pend - $pstart`
       cat "${STDOUTLOG}"
       if grep 'Fatal Error:' "${STDOUTLOG}" >/dev/null 2>&1; then
         res=1
         OK=""
         REDPKGS=`printf "${REDPKGS}${PKG}\\\\\\n"`
-        pko=$(expr $pko + 1)
+        pko=`expr $pko + 1`
       elif [ "${res}" = "1" ]; then
         OK=""
         REDPKGS=`printf "${REDPKGS}${PKG}\\\\\\n"`
-        pko=$(expr $pko + 1)
+        pko=`expr $pko + 1`
       else
         GREENPKGS=`printf "${GREENPKGS}${PKG}\\\\\\n"`
         HERE=`pwd`
@@ -364,19 +364,19 @@ for PKG in ${PKGS} ; do
         fi
         if [ -z "${tres}" ]; then
           if [ -r "src/m3makefile" ]; then
-            tall=$(expr $tall + 1)
+            tall=`expr $tall + 1`
             echo "=== tests in `pwd` ==="
             echo " +++ cm3 -build -override -DTEST -DRUN -DROOT=$ROOT +++"
             LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${PKG}/${TARGET}"
             DYLD_LIBRARY_PATH="$LD_LIBRARY_PATH"
             export LD_LIBRARY_PATH DYLD_LIBRARY_PATH
-            tstart=$(date +%s)
+            tstart=`date +%s`
             tres=`cm3 -build -override -DTEST -DRUN -DROOT="${ROOT}" 2> stderr`
-            tend=$(date +%s)
-            ttime=$(expr $tend - $tstart)
+            tend=`date +%s`
+            ttime=`expr $tend - $tstart`
             terr=`cat stderr`
             if [ -n "${terr}" ]; then
-              tko=$(expr $tko + 1)
+              tko=`expr $tko + 1`
             fi
           else
             tres="no src/m3makefile"
@@ -405,7 +405,7 @@ for PKG in ${PKGS} ; do
     #  res=2
     #fi
     ERRS=`write_pkg_report "${PKG}" "${res}" "${tres}" "${terr}" "${ptime}" "${ttime}"`
-    pall=$(expr $pall + 1)
+    pall=`expr $pall + 1`
   fi
   if [ "$res" != "0" -a "$res" != "2" ] ; then
     if [ "${KEEP_GOING}" != "yes" ] ; then
@@ -432,8 +432,8 @@ if [ -n "${REPORT}" ]; then
   fi
   echo "HTML package report in $R"
 
-  rj=$(cat ${RJ})
-  rjt=$(cat ${RJT})
+  rj=`cat ${RJ}`
+  rjt=`cat ${RJT}`
 
   echo "<testsuite tests=\"${pall}\" failures=\"${pko}\" name=\"CM3 package build status\">" > ${RJ}
   echo "<testsuite tests=\"${tall}\" failures=\"${tko}\" name=\"CM3 package tests status\">" > ${RJT}
