@@ -216,7 +216,7 @@ for c in ${PKG_COLLECTIONS}; do
     echo '@echo off'
     printf 'for %%%%p in ('
     for p in ${PKGS}; do
-      pw=$(echo $p | sed -e 's;/;\\;g')
+      pw="`echo $p | sed -e 's;/;\\;g'`"
       printf "%s; " ${pw}
     done
     echo ') do call :ShipIt %%p'
