@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.25 2009-07-23 19:22:49 wagner Exp $
+# $Id: make-dist.sh,v 1.26 2009-07-24 13:40:48 wagner Exp $
 
 DESTHOST=${DESTHOST:-birch.elegosoft.com}
 
@@ -216,7 +216,7 @@ for c in ${PKG_COLLECTIONS}; do
     echo '@echo off'
     printf 'for %%%%p in ('
     for p in ${PKGS}; do
-      pw=$(echo $p | sed -e 's;/;\\;g')
+      pw="`echo $p | sed -e 's;/;\\;g'`"
       printf "%s; " ${pw}
     done
     echo ') do call :ShipIt %%p'
