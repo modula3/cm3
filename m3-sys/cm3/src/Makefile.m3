@@ -518,7 +518,7 @@ PROCEDURE ScanCommandLine () : TextTextTbl.T =
   BEGIN
     FOR i := 1 TO Params.Count-1 DO
       arg := Params.Get (i);
-      IF Text.GetChar (arg, 1) = '-' THEN
+      IF Text.Length(arg) > 1 AND Text.GetChar (arg, 1) = '-' THEN
         arg := Text.Sub (arg, 1);
       END;
       IF    Text.Equal (arg, "-build")     THEN  SetMode (cnt, MM.Build);
