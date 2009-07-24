@@ -1,6 +1,8 @@
+if not equal(TARGET, "NT386")
 
 import("http")
 implementation ("WebContact")
 
 program("webcontact")
 
+end
