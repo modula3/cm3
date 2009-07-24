@@ -1437,7 +1437,9 @@ PROCEDURE DoLibrary (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
     DeleteDeriveds (t, lib_a, NoExtension);
     DeleteDeriveds (t, lib_m3x, NoExtension);
     DeleteDeriveds (t, M3Web, NoExtension);
-    DeleteDeriveds (t, name & ".lst", NoExtension);
+    DeleteDeriveds (t, name, ARRAY OF TEXT {".lst", ".def", ".dll", ".exp", ".lib.sa", ".pdb"});
+    DeleteDeriveds (t, "_m3responsefile0.txt", NoExtension);
+    DeleteDeriveds (t, "_m3responsefile1.txt", NoExtension);
     InitGlobals (t);  (* forget about the accumulated sources... *)
   END DoLibrary;
 
