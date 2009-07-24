@@ -11,19 +11,13 @@
 %   use native Windows threads, gui, C runtime
 %
 
-%
-% This could be NT386.common, but put it here
-% for the sake m3cgcat.exe + M3CONFIG environment variable.
-%
-readonly TARGET = "NT386" % code generation target
-readonly TARGET_ARCH = "I386"
+%-------------------------------------------------------------------
+
 readonly TARGET_OS = "NT"
 readonly OS_TYPE = "WIN32"
 
 %-------------------------------------------------------------------
 % defined by cm3, but not the other MxConfig users
-if not defined("SL") SL = "/" end
-if not defined("CR") CR = "\n" end
 if not defined("M3_PROFILING") M3_PROFILING = FALSE end
 %-------------------------------------------------------------------
 
