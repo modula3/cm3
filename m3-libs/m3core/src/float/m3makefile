@@ -64,7 +64,7 @@ _FloatPieces = {
 }
 
 if not _FloatPieces contains TARGET
-    if equal("TARGET_ENDIAN", "BIG")
+    if equal(TARGET_ENDIAN, "BIG")
         _FloatPieces{TARGET} = _float_be
     else
         _FloatPieces{TARGET} = _float_le

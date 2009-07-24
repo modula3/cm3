@@ -63,7 +63,7 @@ readonly _CSupportPieces = {
   "NetBSD2_i386" : [ "little-endian" ],
 }
 
-if defined ("TARGET_ENDIAN")
+if FALSE % defined ("TARGET_ENDIAN")
   if equal ("TARGET_ENDIAN", "BIG")
     include_dir ("big-endian")
   else
