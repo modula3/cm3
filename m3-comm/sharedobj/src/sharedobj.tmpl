@@ -44,6 +44,12 @@ readonly proc _v_sharedobjv1(intf, types, v, useintfs, proxy) is
     args += format("%s.%s", intf, i)
   end
 
+  if defined("M3_MODE")
+    if equal(M3_MODE, "clean")
+      return
+    end
+  end
+
   if stalei
     generate_tfile()
     exec(_SHAREDOBJ_STUBGEN, "-o", intf, initArgs, "-so", args, "-i", useintfs,
