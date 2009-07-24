@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.40 2009-07-24 19:22:17 wagner Exp $
+# $Id: pkgmap.sh,v 1.41 2009-07-24 21:44:39 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -340,6 +340,7 @@ for PKG in ${PKGS} ; do
       res=$?
       pend=`date +%s`
       ptime=`expr \( $pend - $pstart \) \* 1000 + 500`
+      ptime=`echo "scale=3; ${ptime} / 1000" | bc`
       cat "${STDOUTLOG}"
       if grep 'Fatal Error:' "${STDOUTLOG}" >/dev/null 2>&1; then
         res=1
@@ -374,6 +375,7 @@ for PKG in ${PKGS} ; do
             tres=`cm3 -build -override -DTEST -DRUN -DROOT="${ROOT}" 2> stderr`
             tend=`date +%s`
             ttime=`expr \( $tend - $tstart \) \* 1000 + 500`
+            ttime=`echo "scale=3; ${ttime} / 1000" | bc`
             terr=`cat stderr`
             if [ -n "${terr}" ]; then
               tko=`expr $tko + 1`
