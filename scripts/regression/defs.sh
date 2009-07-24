@@ -528,6 +528,7 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   fi
 
   echo " === update last ok from ${INSTROOT_CUR}"
+  cp -pR ${INSTROOT_LOK} ${INSTROOT_LOK}.$$
   cp -pR ${INSTROOT_CUR} ${INSTROOT_LOK}.$$
   mv ${INSTROOT_LOK} ${INSTROOT_LOK}.bak && \
   mv ${INSTROOT_LOK}.$$ ${INSTROOT_LOK} && rm -rf ${INSTROOT_LOK}.bak || {
