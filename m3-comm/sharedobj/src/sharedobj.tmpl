@@ -35,6 +35,12 @@ readonly proc _v_sharedobjv1(intf, types, v, useintfs, proxy) is
   derived_implementation (intf & "CB")
   derived_implementation (intf & "SO")
 
+  if defined("M3_MODE")
+    if equal(M3_MODE, "clean")
+      return
+    end
+  end
+
   local stalei = stale(intf & "SO.m3", intf_pn) 
   foreach i in useintfs 
     stalei = stalei and stale(intf & "SO.m3", i & ".i3") 
@@ -42,12 +48,6 @@ readonly proc _v_sharedobjv1(intf, types, v, useintfs, proxy) is
   local args = []
   foreach i in types
     args += format("%s.%s", intf, i)
-  end
-
-  if defined("M3_MODE")
-    if equal(M3_MODE, "clean")
-      return
-    end
   end
 
   if stalei
