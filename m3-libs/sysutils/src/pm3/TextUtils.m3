@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: TextUtils.m3,v 1.2 2009-07-24 05:21:30 jkrell Exp $ *)
+ * $Id: TextUtils.m3,v 1.3 2009-07-24 05:45:34 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 MODULE TextUtils EXPORTS TextUtils;
@@ -672,6 +672,41 @@ PROCEDURE Contains(READONLY s, t : TEXT; caseSensitive := TRUE) : BOOLEAN =
   BEGIN
     RETURN Pos(s, t, caseSensitive) > -1;
   END Contains;
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE StartsWith(s, t : TEXT; caseSensitive := TRUE) : BOOLEAN =
+  VAR
+    tlen := Text.Length(t);
+    slen := Text.Length(s);
+    sub: TEXT;
+  BEGIN
+    IF tlen > slen THEN
+      RETURN FALSE;
+    END;
+    sub := Text.Sub(s, 0, tlen);
+    IF caseSensitive THEN
+      RETURN Text.Equal(sub, t);
+    END;
+    RETURN TextEx.CIEqual(sub, t);
+  END StartsWith;
+
+(*---------------------------------------------------------------------------*)
+
+PROCEDURE EndsWith(s, t : TEXT; caseSensitive := TRUE) : BOOLEAN =
+  VAR
+    tlen := Text.Length(t);
+    slen := Text.Length(s);
+    sub: TEXT;
+  BEGIN
+    IF tlen > slen THEN
+      RETURN FALSE;
+    END;
+    sub := Text.Sub(s, slen - tlen, tlen);
+    IF caseSensitive THEN
+      RETURN Text.Equal(sub, t);
+    END;
+    RETURN TextEx.CIEqual(sub, t);
+  END EndsWith;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE BoolVal(READONLY s : TEXT; default := FALSE) : BOOLEAN =

@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: TextUtils.i3,v 1.4 2009-07-24 05:21:25 jkrell Exp $ *)
+ * $Id: TextUtils.i3,v 1.5 2009-07-24 05:45:31 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 INTERFACE TextUtils;
@@ -143,6 +143,14 @@ PROCEDURE CountChar(s: TEXT; ch: CHAR; caseSensitive := TRUE) : INTEGER;
   (* the number of occurences of ch in s *)
 
 (*---------------------------------------------------------------------------*)
+PROCEDURE StartsWith(s, t: TEXT; caseSensitive := TRUE) : BOOLEAN;
+  (* does s start with t *)
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE EndsWith(s, t: TEXT; caseSensitive := TRUE) : BOOLEAN;
+  (* does s end with t *)
+
+(*---------------------------------------------------------------------------*)
 PROCEDURE BoolVal(READONLY t : TEXT; default := FALSE) : BOOLEAN;
   (* Evaluate the text t to a boolean value. For "yes", "true", "1", and
      "on", TRUE is returned, for "no", "false", "0", and "off", FALSE
@@ -156,4 +164,3 @@ PROCEDURE Sort (VAR a: ARRAY OF TEXT;  cmp := Elem_Compare);
 (* quick sort from libm3 for convenience *)
 
 END TextUtils.
-
