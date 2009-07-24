@@ -315,6 +315,10 @@ VAR (*CONST*)
   Set_grain : CARDINAL; (* allocation unit for large sets *)
   Set_align : CARDINAL; (* alignment for large sets *)
 
+  OS := "";
+  (* "NT", "LINUX", "FREEBSD", "SOLARIS", "NETBSD", "OPENBSD", "DARWIN", "CYGWIN, "INTERIX", "HPUX", "IRIX",
+     "AIX", "PLAN9", "OS2", "VMS", "TRU64" ?or? "OSF" ?or? "OSF1", "OS2", "MSDOS" ?or? "DJGPP", etc. *)
+
   Little_endian : BOOLEAN;
   (* TRUE => byte[0] of an integer contains its least-significant bits *)
 
