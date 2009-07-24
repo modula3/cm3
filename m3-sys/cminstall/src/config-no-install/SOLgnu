@@ -4,12 +4,11 @@
 % Standard configuration file for SOLgnu (Solaris 2.x w/gcc)
 %
 
-readonly TARGET       = "SOLgnu"
-readonly TARGET_ENDIAN = "BIG"
-readonly WORD_SIZE    = "32BITS"
+readonly TARGET = "SOLgnu"
 readonly C_COMPILER = "GNU"
 
 SunXArch = "v8plus"
 M3_USE_STACK_WALKER = TRUE
 
-include ("Solaris.common")
+include("SPARC.common")
+include("Solaris.common")

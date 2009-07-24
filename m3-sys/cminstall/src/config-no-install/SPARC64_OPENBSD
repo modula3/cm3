@@ -1,13 +1,8 @@
 readonly TARGET = "SPARC64_OPENBSD"
-readonly TARGET_ENDIAN = "BIG"
-readonly TARGET_OS = "OPENBSD"
-readonly WORD_SIZE = "64BITS"
 
-% -m64?
 m3back_flags = "-gstabs+ -funwind-tables"
 SYSTEM_CC = "gcc -gstabs+"
 readonly SYSTEM_ASM = "as"
 
-GNU_MAKE = "gmake"
-
-include("Unix.common")
+include("SPARC64.common")
+include("OpenBSD.common")

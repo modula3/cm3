@@ -3,10 +3,9 @@
 % 
 
 readonly TARGET = "SPARC64_SOLARIS"
-readonly TARGET_ENDIAN = "BIG"
-readonly WORD_SIZE = "64BITS"
 readonly C_COMPILER = "SUN"
 %SunXArch = "v9"
 SunXArch = "generic64"
 
-include ("Solaris.common")
+include("SPARC64.common")
+include("Solaris.common")

@@ -19,7 +19,8 @@
 % This could be in NT386.common, but put it here
 % for the sake m3cgcat.exe + M3CONFIG environment variable.
 %
-readonly TARGET       = "NT386"             % code generation target
+readonly TARGET = "NT386" % code generation target
+readonly TARGET_ARCH = "I386"
 readonly TARGET_OS = "CYGWIN"
 
 %-------------------------------------------------------------------

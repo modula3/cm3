@@ -2,9 +2,7 @@
 % See file COPYRIGHT-CMASS for details.
 %
 
-readonly TARGET       = "PPC_DARWIN"
-readonly TARGET_ENDIAN = "BIG"
-readonly WORD_SIZE    = "32BITS"
+readonly TARGET = "PPC_DARWIN"
 
 proc FileExists(x) is
     return not stale(x, x)
@@ -15,4 +13,5 @@ if not FileExists(SYSTEM_ASM)
     SYSTEM_ASM = "as"
 end
 
+include("PPC.common")
 include("Darwin.common")
