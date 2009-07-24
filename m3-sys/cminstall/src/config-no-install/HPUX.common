@@ -1,3 +1,4 @@
+readonly TARGET_OS = "HPUX"
 readonly SYSTEM_AR = "ar"
 
 %

@@ -3,6 +3,7 @@
 %
 
 readonly TARGET       = "PPC_DARWIN"
+readonly TARGET_ENDIAN = "BIG"
 readonly WORD_SIZE    = "32BITS"
 
 proc FileExists(x) is

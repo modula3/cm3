@@ -3,6 +3,7 @@
 % 
 
 readonly TARGET       = "AMD64_SOLARIS"
+readonly TARGET_ENDIAN = "LITTLE"
 readonly WORD_SIZE    = "64BITS"
 readonly C_COMPILER = "SUN" % or GNU
 

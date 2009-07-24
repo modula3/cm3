@@ -3,6 +3,7 @@
 % 
 
 readonly TARGET = "SPARC64_SOLARIS"
+readonly TARGET_ENDIAN = "BIG"
 readonly WORD_SIZE = "64BITS"
 readonly C_COMPILER = "SUN"
 %SunXArch = "v9"

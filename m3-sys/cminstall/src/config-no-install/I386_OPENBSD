@@ -1,4 +1,6 @@
 readonly TARGET = "I386_OPENBSD"
+readonly TARGET_ENDIAN = "LITTLE"
+readonly TARGET_OS = "OPENBSD"
 readonly WORD_SIZE = "32BITS"
 
 m3back_flags = "-gstabs+ -m32 -fPIC -funwind-tables"

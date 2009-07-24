@@ -1,10 +1,6 @@
 readonly TARGET = "SPARC32_LINUX" % code generation target
+readonly TARGET_ENDIAN = "BIG"
 readonly WORD_SIZE = "32BITS" % { "32BITS" or "64BITS" }
-
-%
-% add s switch to ar and remove need for ranlib
-%
-readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
 % -fPIC leads to a crash I haven't been able to debug yet
 
