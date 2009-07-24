@@ -1492,6 +1492,8 @@ PROCEDURE BuildProgram (t: T;  nm: M3ID.T)
     DeleteDeriveds (t, M3Web, NoExtension);
     DeleteDeriveds (t, name, Junk);
     DeleteDeriveds (t, "", Extras);
+    DeleteDeriveds (t, name, ARRAY OF TEXT {".pdb"});
+    DeleteDeriveds (t, "_m3responsefile0.txt", NoExtension);
     InitGlobals (t);  (* forget about the accumulated sources... *)
   END BuildProgram;
 
