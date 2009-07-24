@@ -2,9 +2,7 @@
 % See file COPYRIGHT-CMASS for details.
 %
 
-readonly TARGET       = "AMD64_DARWIN"
-readonly TARGET_ENDIAN = "LITTLE"
-readonly WORD_SIZE    = "64BITS"
+readonly TARGET = "AMD64_DARWIN"
 
 proc FileExists(x) is
     return not stale(x, x)
@@ -15,4 +13,5 @@ if not FileExists(SYSTEM_ASM)
     SYSTEM_ASM = "as"
 end
 
+include("AMD64.common")
 include("Darwin.common")

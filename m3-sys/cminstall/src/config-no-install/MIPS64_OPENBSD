@@ -1,7 +1,7 @@
 readonly TARGET = "MIPS64_OPENBSD"
-readonly TARGET_ENDIAN = "BIG"
-readonly TARGET_OS = "OPENBSD"
-readonly WORD_SIZE = "64BITS"
+readonly TARGET_ARCH = "MIPS64"
+readonly TARGET_ENDIAN = "BIG"  % { "BIG" OR "LITTLE" }
+readonly WORD_SIZE = "64BITS"   % { "32BITS" or "64BITS" }
 
 % -funwind-tables causes internal compiler errors
 % -mabi=64 presumably substitutes for -m64
@@ -9,6 +9,4 @@ m3back_flags = "-gstabs+ -mabi=64 -fPIC"
 SYSTEM_CC = "gcc -g -mabi=64 -fPIC"
 readonly SYSTEM_ASM = "as"
 
-GNU_MAKE = "gmake"
-
-include("Unix.common")
+include("OpenBSD.common")

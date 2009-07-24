@@ -1,0 +1,5 @@
+readonly TARGET_OS = "OPENBSD"
+
+GNU_MAKE = "gmake"
+
+include("Unix.common")

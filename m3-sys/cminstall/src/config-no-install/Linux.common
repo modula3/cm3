@@ -5,12 +5,19 @@
 
 readonly TARGET_OS = "LINUX"
 
+SYSTEM_LD = SYSTEM_CC
+  & " -z now"
+  & " -z origin"
+  & " -Bsymbolic"
+  & " -Wl,--fatal-warnings"
+  & " -Wl,-rpath,\\$ORIGIN"
+  & " -Wl,-rpath,\\$ORIGIN/../lib"
+  & " -Wl,--warn-common"
+
 %
 % add s switch to ar and remove need for ranlib
 %
 readonly AR_AND_RANLIB_ARE_ONE = TRUE
-
-if not defined ("SYSTEM_LIBS")
 
 SYSTEM_LIBS =
 {
@@ -25,6 +32,5 @@ SYSTEM_LIBS =
     "X11" :      [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
 }
 
-end
-
 include("Unix.common")
+include("gnuld.common")

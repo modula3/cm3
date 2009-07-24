@@ -1,32 +1,8 @@
-% at least enough for building bootstrap packages
-
 readonly TARGET = "FreeBSD4"
-readonly TARGET_ENDIAN = "LITTLE"
-readonly TARGET_OS = "FREEBSD"
-readonly WORD_SIZE = "32BITS"
 
 m3back_flags = "-gstabs+ -m32 -fPIC -funwind-tables"
 SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"
 readonly SYSTEM_ASM = "as -32"
 
-GNU_MAKE = "gmake"
-
-include("Unix.common")
-
-SYSTEM_LIBS{"ODBC"} = [ "-Wl,-R/usr/local/lib", "-L/usr/local/lib", "-lodbc" ]
-SYSTEM_LIBS{"POSTGRES95"} = [ "-Wl,-R/usr/local/lib", "-L/usr/local/lib", "-lpq" ]
-
-SYSTEM_LD = SYSTEM_CC
-  & " -z now"
-  & " -z origin"
-  & " -Bsymbolic"
-% I thought -as-needed was generally considered good, but it is
-% breaking Linux/x86 so disable here for now.
-% & " -Wl,--as-needed"
-  & " -Wl,--fatal-warnings"
-% & " -Wl,-no-allow-shlib-undefined"
-  & " -Wl,--warn-common"
-  & " -Wl,-rpath,\\$ORIGIN"
-  & " -Wl,-rpath,\\$ORIGIN/../lib"
-
-include("gnuld.common")
+include("I386.common")
+include("FreeBSD.common")

@@ -4,12 +4,11 @@
 % Standard configuration file for SOLsun (Solaris 2.x w/Sun C)
 %
 
-readonly TARGET       = "SOLsun"
-readonly TARGET_ENDIAN = "BIG"
-readonly WORD_SIZE    = "32BITS"
+readonly TARGET = "SOLsun"
 readonly C_COMPILER = "SUN"
 
 SunXArch = "v8plus"
 M3_USE_STACK_WALKER = TRUE
 
-include ("Solaris.common")
+include("SPARC.common")
+include("Solaris.common")

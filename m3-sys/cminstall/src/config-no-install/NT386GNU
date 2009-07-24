@@ -1,5 +1,5 @@
 %
-% $Id: NT386GNU,v 1.4 2009-07-24 06:33:52 jkrell Exp $
+% $Id: NT386GNU,v 1.5 2009-07-24 08:34:41 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -19,7 +19,8 @@
 % This could be in NT386.common, but put it here
 % for the sake m3cgcat.exe + M3CONFIG environment variable.
 %
-readonly TARGET       = "NT386"             % code generation target
+readonly TARGET = "NT386" % code generation target
+readonly TARGET_ARCH = "I386"
 readonly TARGET_OS = "CYGWIN"
 
 %-------------------------------------------------------------------
