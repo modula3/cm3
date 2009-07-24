@@ -1434,7 +1434,7 @@ PROCEDURE DoLibrary (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
       Builder.EmitPkgImports (t.units); 
       done := TRUE;
     END;
-    DeleteDeriveds (t, "", ARRAY OF TEXT {lib_a, lib_m3x, M3Web, "_m3responsefile0.txt", "_m3responsefile1.txt"});
+    DeleteDeriveds (t, "", ARRAY OF TEXT {lib_a, lib_m3x, M3Web, M3TFile, "_m3responsefile0.txt", "_m3responsefile1.txt"});
     DeleteDeriveds (t, name, ARRAY OF TEXT {".lst", ".def", ".dll", ".exp", ".lib.sa", ".pdb"});
     InitGlobals (t);  (* forget about the accumulated sources... *)
   END DoLibrary;
@@ -1465,7 +1465,7 @@ PROCEDURE DoProgramX (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
 
 PROCEDURE BuildProgram (t: T;  nm: M3ID.T)
   RAISES {Quake.Error} =
-  CONST Extras = ARRAY OF TEXT { "_m3main.c","_m3main.o","_m3main.obj", "_m3responsefile0.txt", M3Web };
+  CONST Extras = ARRAY OF TEXT { "_m3main.c","_m3main.o","_m3main.obj", "_m3responsefile0.txt", M3Web, M3TFile };
   CONST Junk = ARRAY OF TEXT { ".map", ".lst", ".pdb" };
   VAR name := M3ID.ToText (nm);
   BEGIN
