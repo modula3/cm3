@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.37 2009-07-24 09:57:18 wagner Exp $
+# $Id: pkgmap.sh,v 1.38 2009-07-24 10:18:40 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -270,18 +270,14 @@ write_pkg_report() {
     echo "</tr>"
   ) >> "${R}"
   (
-    echo "  <testcase name=\"$1\">"
+    echo "  <testcase name=\"$1\" time=\"$5\">"
     if [ "$2" = "0" ] ; then
       echo "  build OK"
     elif [ "$2" = "2" ] ; then
       echo "  not supported on ${TARGET} (skipped)"
     else
       echo "  <failure type=\"build failed\">"
-      if FOLD="`find_exe fold /usr/bin`/fold" ; then
-        quote_xml $(echo "$errlines" | ${FOLD} -s -w 64)
-      else
-        quote_xml "$errlines"
-      fi
+      quote_xml "$errlines"
       echo "  </failure>"
     fi
     echo "  </testcase>"
@@ -310,7 +306,7 @@ write_pkg_report() {
   # write test report for packages tests
   (
     if [ "${tbgt}" != "bgyellow" ]; then
-      echo "<testcase name=\"${pname} tests\">"
+      echo "<testcase name=\"${pname} tests\" time=\"$6\">"
       echo "  Test Result Details for $1"
       quote_xml "$3"
       if [ -n "$4" ]; then
@@ -339,7 +335,10 @@ for PKG in ${PKGS} ; do
   if [ "${REPORT}" = "yes" ] ; then
     rm -f "${STDOUTLOG}"
     if UsePackage `basename "${PKG}"` || [ "${CM3_ALL}" = yes ]; then
+      pstart=$(date +%s)
       exec_cmd "$PKG" > "${STDOUTLOG}" 2>&1
+      pend=$(date +%s)
+      ptime=$(expr $pend - $pstart)
       res=$?
       cat "${STDOUTLOG}"
       if grep 'Fatal Error:' "${STDOUTLOG}" >/dev/null 2>&1; then
@@ -371,7 +370,10 @@ for PKG in ${PKGS} ; do
             LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${PKG}/${TARGET}"
             DYLD_LIBRARY_PATH="$LD_LIBRARY_PATH"
             export LD_LIBRARY_PATH DYLD_LIBRARY_PATH
+            tstart=$(date +%s)
             tres=`cm3 -build -override -DTEST -DRUN -DROOT="${ROOT}" 2> stderr`
+            tend=$(date +%s)
+            ttime=$(expr $tend - $tstart)
             terr=`cat stderr`
             if [ -n "${terr}" ]; then
               tko=$(expr $tko + 1)
@@ -402,7 +404,7 @@ for PKG in ${PKGS} ; do
     #if grep ': imported interface' "${STDOUTLOG}" >/dev/null 2>&1; then
     #  res=2
     #fi
-    ERRS=`write_pkg_report "${PKG}" "${res}" "${tres}" "${terr}"`
+    ERRS=`write_pkg_report "${PKG}" "${res}" "${tres}" "${terr}" "${ptime}" "${ttime}"`
     pall=$(expr $pall + 1)
   fi
   if [ "$res" != "0" -a "$res" != "2" ] ; then
