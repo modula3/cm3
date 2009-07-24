@@ -1434,12 +1434,8 @@ PROCEDURE DoLibrary (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
       Builder.EmitPkgImports (t.units); 
       done := TRUE;
     END;
-    DeleteDeriveds (t, lib_a, NoExtension);
-    DeleteDeriveds (t, lib_m3x, NoExtension);
-    DeleteDeriveds (t, M3Web, NoExtension);
+    DeleteDeriveds (t, "", ARRAY OF TEXT {lib_a, lib_m3x, M3Web, "_m3responsefile0.txt", "_m3responsefile1.txt"});
     DeleteDeriveds (t, name, ARRAY OF TEXT {".lst", ".def", ".dll", ".exp", ".lib.sa", ".pdb"});
-    DeleteDeriveds (t, "_m3responsefile0.txt", NoExtension);
-    DeleteDeriveds (t, "_m3responsefile1.txt", NoExtension);
     InitGlobals (t);  (* forget about the accumulated sources... *)
   END DoLibrary;
 
@@ -1469,8 +1465,8 @@ PROCEDURE DoProgramX (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
 
 PROCEDURE BuildProgram (t: T;  nm: M3ID.T)
   RAISES {Quake.Error} =
-  CONST Extras = ARRAY OF TEXT { "_m3main.c","_m3main.o","_m3main.obj", M3Web };
-  CONST Junk = ARRAY OF TEXT { ".map", ".lst" };
+  CONST Extras = ARRAY OF TEXT { "_m3main.c","_m3main.o","_m3main.obj", "_m3responsefile0.txt", M3Web };
+  CONST Junk = ARRAY OF TEXT { ".map", ".lst", ".pdb" };
   VAR name := M3ID.ToText (nm);
   BEGIN
     (*** AddDerived (t, nm, UK.EXE, hidden := TRUE);  -- not needed ***)
@@ -1489,11 +1485,8 @@ PROCEDURE BuildProgram (t: T;  nm: M3ID.T)
     DeleteDeriveds (t, M3Path.ProgramName (name), NoExtension);
     DeleteDeriveds (t, M3Path.Join (NIL, name, UK.PGMX), 
                     NoExtension);
-    DeleteDeriveds (t, M3Web, NoExtension);
     DeleteDeriveds (t, name, Junk);
     DeleteDeriveds (t, "", Extras);
-    DeleteDeriveds (t, name, ARRAY OF TEXT {".pdb"});
-    DeleteDeriveds (t, "_m3responsefile0.txt", NoExtension);
     InitGlobals (t);  (* forget about the accumulated sources... *)
   END BuildProgram;
 
