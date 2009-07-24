@@ -36,14 +36,7 @@ UsePackage()
     tapi) [ "${M3OSTYPE}" = "WIN32" ] ;;
     X11R4) [ "${M3OSTYPE}" != "WIN32" ] ;;
     m3cc) [ "${GCC_BACKEND}" = yes ] && [ "${OMIT_GCC}" = "" ] ;;
-    m3gdb)
-      ([ "${M3GDB}" = yes ] || [ "${CM3_GDB}" = yes ]) \
-         && [ "${TARGET}" != "ARM_DARWIN" ] \
-         && [ "${TARGET}" != "AMD64_DARWIN" ] \
-         && [ "${TARGET}" != "I386_DARWIN" ] \
-         && [ "${TARGET}" != "PPC_DARWIN" ] \
-         && [ "${TARGET}" != "PPC64_DARWIN" ] \
-         && [ "${TARGET}" != "NT386" ] ;;
+    m3gdb) [ "${M3GDB}" = yes ] || [ "${CM3_GDB}" = yes ] ;;
 
     *) true;;
   esac
