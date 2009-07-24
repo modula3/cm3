@@ -1,3 +1,1 @@
-%import_lib("plplotd","/home/thielema/applications/plplot/lib")
-override ("libm3", ROOT & "/m3-libs")
-override ("set", ROOT & "/m3-libs")
+include(ROOT & "/m3overrides")

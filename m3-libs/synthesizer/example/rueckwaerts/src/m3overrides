@@ -1,1 +1,1 @@
-override("synthesizer", $HOME)
+include(ROOT & "/m3overrides")
