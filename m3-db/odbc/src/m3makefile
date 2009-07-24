@@ -12,5 +12,5 @@ if SYSTEM_LIBS contains "ODBC"
         include_dir (OS_TYPE)
     end
 
-    Library("odbc")
+    Library("m3odbc")
 end
