@@ -506,39 +506,38 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   $BUILDSCRIPT buildship || exit 1
   echo " >>> OK build_${1}_${BSET} ${DS} ${WS}"
 
-  if [ -d ${INSTROOT_POK} ]; then
+  echo " === build intermediate lastok in ${INSTROOT_CUR}.$$"
+  cp -pR ${INSTROOT_LOK} ${INSTROOT_LOK}.$$
+  cp -pR ${INSTROOT_CUR} ${INSTROOT_LOK}.$$
+
+  if [ -d ${INSTROOT_LOK} -a -d ${INSTROOT_POK} ]; then
     echo " === remove previous ok version at ${INSTROOT_POK}"
     rm -rf ${INSTROOT_POK}
   fi
 
   echo " === move last ok version at ${INSTROOT_LOK} to previous ok version"
-  if [ -d "${INSTROOT_POK}" ]; then
-    mv ${INSTROOT_POK} ${INSTROOT_POK}-rm
-  else
-    echo " === no installation in ${INSTROOT_POK}"
-  fi
   if [ -d "${INSTROOT_LOK}" ]; then
     mv ${INSTROOT_LOK} ${INSTROOT_POK}
     cm3config ${INSTROOT_POK}
   else
     echo " === no installation in ${INSTROOT_LOK}"
   fi
-  if [ -d "${INSTROOT_POK}-rm" ]; then
-    rm -rf ${INSTROOT_POK}-rm
-  fi
 
   echo " === update last ok from ${INSTROOT_CUR}"
-  cp -pR ${INSTROOT_LOK} ${INSTROOT_LOK}.$$
-  cp -pR ${INSTROOT_CUR} ${INSTROOT_LOK}.$$
-  mv ${INSTROOT_LOK} ${INSTROOT_LOK}.bak && \
-  mv ${INSTROOT_LOK}.$$ ${INSTROOT_LOK} && rm -rf ${INSTROOT_LOK}.bak || {
+  mv ${INSTROOT_LOK}.$$ ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+    sleep 30
     echo "update of ${INSTROOT_LOK} failed... trying to restore..."
-    [ -d ${INSTROOT_LOK}.bak -a ! -d ${INSTROOT_LOK} ] && \
-    mv ${INSTROOT_LOK}.bak ${INSTROOT_LOK} || {
+    [ -d ${INSTROOT_POK} -a ! -d ${INSTROOT_LOK} ] && \
+    mv ${INSTROOT_POK} ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+      echo "restore of ${INSTROOT_LOK} failed!" 1>&2
+    }
+    # try again later...
+    sleep 30
+    [ -d ${INSTROOT_POK} -a ! -d ${INSTROOT_LOK} ] && \
+    mv ${INSTROOT_POK} ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
       echo "HELP: restore of ${INSTROOT_LOK} failed!" 1>&2
     }
   }
-  cm3config ${INSTROOT_LOK}
   echo " >>> OK build_${1}_${BSET}_lastok ${DS} ${WS} ${INSTROOT_LOK}"
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 release build done"
 }
