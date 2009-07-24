@@ -1,5 +1,5 @@
 %
-% $Id: NT386GNU,v 1.5 2009-07-24 08:34:41 jkrell Exp $
+% $Id: NT386GNU,v 1.6 2009-07-24 09:17:02 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -15,18 +15,13 @@
 % arbitrary configurations can be produced by changing them.
 %
 
-%
-% This could be in NT386.common, but put it here
-% for the sake m3cgcat.exe + M3CONFIG environment variable.
-%
-readonly TARGET = "NT386" % code generation target
-readonly TARGET_ARCH = "I386"
+%-------------------------------------------------------------------
+
 readonly TARGET_OS = "CYGWIN"
+readonly OS_TYPE   = "POSIX"           % { "WIN32" or "POSIX" }
 
 %-------------------------------------------------------------------
 % defined by cm3, but not the other MxConfig users
-if not defined("SL") SL = "/" end
-if not defined("CR") CR = "\n" end
 if not defined("M3_PROFILING") M3_PROFILING = FALSE end
 %-------------------------------------------------------------------
 
@@ -37,7 +32,6 @@ else
 end
 
 readonly BUILD_DIR    = "NT386GNU" & PROFILING_P
-readonly OS_TYPE      = "POSIX"
 
 readonly M3_BACKEND_MODE = "3"
 % -- defines how the frontend, backend, and assembler interact

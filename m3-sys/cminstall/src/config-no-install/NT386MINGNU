@@ -1,5 +1,5 @@
 %
-% $Id: NT386MINGNU,v 1.6 2009-07-24 08:34:41 jkrell Exp $
+% $Id: NT386MINGNU,v 1.7 2009-07-24 09:17:02 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -11,19 +11,13 @@
 %   use native Windows threads, gui, C runtime
 %
 
-%
-% This could be NT386.common, but put it here
-% for the sake m3cgcat.exe + M3CONFIG environment variable.
-%
-readonly TARGET = "NT386" % code generation target
-readonly TARGET_ARCH = "I386"
+%-------------------------------------------------------------------
+
 readonly TARGET_OS = "NT"
 readonly OS_TYPE = "WIN32"
 
 %-------------------------------------------------------------------
 % defined by cm3, but not the other MxConfig users
-if not defined("SL") SL = "/" end
-if not defined("CR") CR = "\n" end
 if not defined("M3_PROFILING") M3_PROFILING = FALSE end
 %-------------------------------------------------------------------
 
