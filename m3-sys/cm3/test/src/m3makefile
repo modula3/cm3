@@ -1,15 +1,6 @@
 import("m3core")
 import("libm3")
 import("m3quake")
-if equal(OS_TYPE, "POSIX")
-  CP = "cp"
-else
-  CP = "copy"
-end
-M3P = ".." & SL & ".." & SL & "src" & SL & "M3Path.*"
-exec(CP & " " & M3P &  " .")
-derived_implementation("M3Path")
-derived_interface("M3Path", HIDDEN)
 implementation("t")
 program("t")
 build_standalone()
