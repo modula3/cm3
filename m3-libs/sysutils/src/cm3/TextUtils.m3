@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: TextUtils.m3,v 1.3 2008-02-09 17:18:00 wagner Exp $ *)
+ * $Id: TextUtils.m3,v 1.4 2009-07-24 05:21:29 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 MODULE TextUtils EXPORTS TextUtils;
@@ -512,6 +512,24 @@ PROCEDURE Upper(t : TEXT) : TEXT =
     END;
     RETURN res;
   END Upper; 
+
+(*---------------------------------------------------------------------------*)
+PROCEDURE CountChar(s : TEXT; ch: CHAR; caseSensitive := TRUE) : INTEGER =
+  VAR
+    len := Text.Length(s);
+    count := 0;
+  BEGIN
+    IF NOT caseSensitive THEN
+      s := Lower(s);
+      ch := ASCII.Lower[ch];
+    END;
+    FOR i := 0 TO len - 1 DO
+        IF TextClass.GetChar(s, i) = ch THEN
+            INC(count);
+        END
+    END;
+    RETURN count;
+  END CountChar;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE SubstituteVariables(t : TEXT; parameters : TextTextTbl.T) : TEXT
