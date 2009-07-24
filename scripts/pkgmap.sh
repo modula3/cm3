@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.35 2009-07-23 22:27:03 wagner Exp $
+# $Id: pkgmap.sh,v 1.36 2009-07-24 06:49:04 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -253,9 +253,9 @@ write_pkg_report() {
     fi
     echo "  <td class=\"small\"><pre>"
     if FOLD="`find_exe fold /usr/bin`/fold" ; then
-      echo "$errlines" | ${FOLD} -s -w 64
+      quote_xml $(echo "$errlines" | ${FOLD} -s -w 64)
     else
-      echo "$errlines"
+      quote_xml "$errlines"
     fi
     echo "  </pre></td>"
     echo "  <td class=\"${tbgt}\">"
@@ -312,7 +312,7 @@ write_pkg_report() {
     if [ "${tbgt}" != "bgyellow" ]; then
       echo "<testcase name=\"${pname} tests\">"
       echo "  Test Result Details for $1"
-      echo "$3"
+      quote_xml "$3"
       if [ -n "$4" ]; then
         echo "    <failure type=\"package tests failed\">"
         quote_xml "$4"
