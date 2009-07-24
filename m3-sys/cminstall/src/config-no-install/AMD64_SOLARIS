@@ -2,11 +2,10 @@
 % See file COPYRIGHT-CMASS for details.
 % 
 
-readonly TARGET       = "AMD64_SOLARIS"
-readonly TARGET_ENDIAN = "LITTLE"
-readonly WORD_SIZE    = "64BITS"
+readonly TARGET = "AMD64_SOLARIS"
 readonly C_COMPILER = "SUN" % or GNU
 
 SunXArch = "generic64"
 
-include ("Solaris.common")
+include("AMD64.common")
+include("Solaris.common")

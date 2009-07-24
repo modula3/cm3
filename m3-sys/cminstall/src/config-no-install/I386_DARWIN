@@ -2,9 +2,7 @@
 % See file COPYRIGHT-CMASS for details.
 %
 
-readonly TARGET       = "I386_DARWIN"
-readonly TARGET_ENDIAN = "LITTLE"
-readonly WORD_SIZE    = "32BITS"
+readonly TARGET = "I386_DARWIN"
 
 %
 % The assembler on Darwin 8.0.1 (10.4) cannot handle the rep
@@ -37,4 +35,5 @@ proc configure_assembler() is
     %
 end
 
+include("I386.common")
 include("Darwin.common")

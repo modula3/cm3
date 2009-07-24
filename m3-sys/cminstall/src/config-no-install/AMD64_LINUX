@@ -1,27 +1,8 @@
 readonly TARGET = "AMD64_LINUX" % code generation target
-readonly TARGET_ENDIAN = "LITTLE"
-readonly WORD_SIZE = "64BITS" % { "32BITS" or "64BITS" }
 
 m3back_flags = "-gstabs+ -m64 -fPIC -mno-align-double -funwind-tables"
 SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC -mno-align-double" % C compiler
-SYSTEM_LD = SYSTEM_CC
-  & " -z now"
-  & " -z origin"
-  & " -Bsymbolic"
-% I thought -as-needed was generally considered good, but it is
-% breaking Linux/x86 so disable here for now.
-% & " -Wl,--as-needed"
-  & " -Wl,--fatal-warnings"
-% & " -Wl,-no-allow-shlib-undefined"
-  & " -Wl,-rpath,\\$ORIGIN"
-  & " -Wl,-rpath,\\$ORIGIN/../lib"
-  & " -Wl,--warn-common"
-% -pie is broken by linking to positition-dependent static libraries,
-% such as libz.a by cvsup on birch (elegosoft machine).
-% Imho position-dependent code should just never exist, oh well.
-%readonly POSITION_INDEPENDENT_EXECUTABLE = "-pie"
 readonly SYSTEM_ASM = "as --64" % Assembler
 
+include("AMD64.common")
 include("Linux.common")
-include("gnuld.common")
-

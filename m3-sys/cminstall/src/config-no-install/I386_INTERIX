@@ -1,7 +1,5 @@
 readonly TARGET = "I386_INTERIX" % code generation target
-readonly TARGET_ENDIAN = "LITTLE"
 readonly TARGET_OS = "INTERIX"
-readonly WORD_SIZE = "32BITS" % { "32BITS" or "64BITS" }
 
 %
 % add s switch to ar and remove need for ranlib
@@ -27,6 +25,7 @@ SYSTEM_LIBS =
 %   "X11" :      [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
 }
 
+include("I386.common")
 include("Unix.common")
 
 SYSTEM_LD = SYSTEM_CC

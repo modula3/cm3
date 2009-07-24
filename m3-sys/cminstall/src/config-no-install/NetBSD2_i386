@@ -1,28 +1,9 @@
 readonly TARGET = "NetBSD2_i386"
-readonly TARGET_ENDIAN = "LITTLE"
-readonly TARGET_OS = "NETBSD"
-readonly WORD_SIZE = "32BITS"
 
 m3back_flags = "-gstabs+ -m32 -fPIC -funwind-tables"
 SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"
 SYSTEM_LD = SYSTEM_CC & " -Wl,-z,now"
 readonly SYSTEM_ASM = "as -32"
 
-GNU_MAKE = "gmake"
-
-%
-% Do not record build-time paths for searching at runtime.
-% Users should set LD_LIBRARY_PATH.
-%
-
-M3_SHARED_LIB_ARG = "-Wl,-rpath-link,"
-
-include("Unix.common")
-
-%
-% update lib locations
-%
-
-SYSTEM_LIBS{"ODBC"} = [ "-Wl,-R/usr/pkg/lib", "-L/usr/pkg/lib", "-lodbc" ]
-SYSTEM_LIBS{"POSTGRES95"} = [ "-Wl,-R/usr/pkg/lib", "-L/usr/pkg/lib", "-lpq" ]
-SYSTEM_LIBS{"X11"} = [ "-Wl,-R/usr/X11R6/lib", SYSTEM_LIBS{"X11"} ]
+include("I386.common")
+include("NetBSD.common")
