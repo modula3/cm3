@@ -1,4 +1,5 @@
 readonly TARGET = "NetBSD2_i386"
+readonly GNU_PLATFORM = "i686-netbsd" % "cpu-os" string for GNU
 
 m3back_flags = "-gstabs+ -m32 -fPIC -funwind-tables"
 SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"

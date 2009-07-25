@@ -3,6 +3,7 @@
 %
 
 readonly TARGET = "I386_DARWIN"
+readonly GNU_PLATFORM = "i686-darwin8" % "cpu-os" string for GNU
 
 %
 % The assembler on Darwin 8.0.1 (10.4) cannot handle the rep

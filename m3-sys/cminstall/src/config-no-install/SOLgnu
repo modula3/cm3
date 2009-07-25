@@ -5,6 +5,7 @@
 %
 
 readonly TARGET = "SOLgnu"
+readonly GNU_PLATFORM = "sparc-solaris2" % "cpu-os" string for GNU
 readonly C_COMPILER = "GNU"
 
 SunXArch = "v8plus"

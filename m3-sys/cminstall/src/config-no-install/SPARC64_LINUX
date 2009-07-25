@@ -1,4 +1,5 @@
 readonly TARGET = "SPARC64_LINUX"
+readonly GNU_PLATFORM = "sparc64-linux" % "cpu-os" string for GNU
 
 m3back_flags = "-gstabs+ -m64 -funwind-tables"
 SYSTEM_CC = "gcc -gstabs+ -m64"
