@@ -14,6 +14,7 @@
 %-------------------------------------------------------------------
 
 readonly TARGET_OS = "NT"
+readonly GNU_PLATFORM = "i686-mingw" % "cpu-os" string for GNU
 readonly OS_TYPE = "WIN32"
 
 %-------------------------------------------------------------------

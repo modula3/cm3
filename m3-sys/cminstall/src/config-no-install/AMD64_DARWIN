@@ -3,6 +3,7 @@
 %
 
 readonly TARGET = "AMD64_DARWIN"
+readonly GNU_PLATFORM = "i686-darwin8" % "cpu-os" string for GNU
 
 proc FileExists(x) is
     return not stale(x, x)

@@ -1,4 +1,5 @@
 readonly TARGET = "PA32_HPUX" % code generation target
+readonly GNU_PLATFORM = "hppa-hpux" % "cpu-os" string for GNU
 
 %
 % PA/RISC 2.0 has apparently been around a while,

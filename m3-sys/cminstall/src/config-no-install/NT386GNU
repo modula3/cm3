@@ -18,6 +18,7 @@
 %-------------------------------------------------------------------
 
 readonly TARGET_OS = "CYGWIN"
+readonly GNU_PLATFORM = "i686-cygwin" % "cpu-os" string for GNU
 readonly OS_TYPE   = "POSIX"           % { "WIN32" or "POSIX" }
 
 %-------------------------------------------------------------------

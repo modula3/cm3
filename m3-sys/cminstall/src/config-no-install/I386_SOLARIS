@@ -3,6 +3,7 @@
 % 
 
 readonly TARGET = "I386_SOLARIS"
+readonly GNU_PLATFORM = "i686-solaris2.10" % "cpu-os" string for GNU
 readonly C_COMPILER = "SUN" % or GNU
 
 SunXArch = "pentium_pro"

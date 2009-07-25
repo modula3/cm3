@@ -1,4 +1,5 @@
 readonly TARGET = "AMD64_FREEBSD"
+readonly GNU_PLATFORM = "amd64-freebsd" % "cpu-os" string for GNU
 
 m3back_flags = "-gstabs+ -m64 -fPIC -funwind-tables"
 SYSTEM_CC = "gcc -gstabs+ -m64 -fPIC"
