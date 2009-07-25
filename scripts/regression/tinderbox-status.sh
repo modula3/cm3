@@ -46,7 +46,7 @@ fi
 echo ""
 echo tinderbox: tree: $TREE_NAME
 echo tinderbox: starttime: $STARTTIME
-echo tinderbox: timenow: `date +%s`
+echo tinderbox: timenow: `date`
 echo tinderbox: status: $STATUS
 echo tinderbox: buildname: $BUILD_NAME
 echo tinderbox: errorparser: unix
