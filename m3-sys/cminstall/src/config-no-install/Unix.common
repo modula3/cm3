@@ -137,20 +137,20 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         end
     end
 
-    if shared and defined("install_symbolic_link")
+    if shared
+        if defined("install_symbolic_link")
 
-        local soname_opt = "-Wl," & soname_flag & "," & lib_sox
-        if equal (TARGET, "I386_INTERIX")
-            soname_opt = ""
-        end
+            local soname_opt = "-Wl," & soname_flag & "," & lib_sox
+            if equal (TARGET, "I386_INTERIX")
+                soname_opt = ""
+            end
 
-        % build the shared library
-        local pg = ""
-        if M3_PROFILING
-            pg = "-pg"
-        end
-        ret_code =
-            try_exec(
+            % build the shared library
+            local pg = ""
+            if M3_PROFILING
+                pg = "-pg"
+            end
+            ret_code = try_exec(
                 "@" & SYSTEM_LD,
                 pg,
                 "-shared",
@@ -158,8 +158,11 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
                 "-o", lib_sox,
                 objects,
                 imported_libs)
-        if not equal(ret_code, 0)
-            return ret_code
+            if not equal(ret_code, 0)
+                return ret_code
+            end
+        else
+            write("WARNING: using current config file with old cm3\n")
         end
     end
 
@@ -187,17 +190,23 @@ proc skip_lib(lib, shared) is
     local lib_so = format("lib%s.%s", lib, suffix)
     local lib_sox = format("lib%s.%s.5", lib, suffix)
 
+    if shared
+        if defined("install_symbolic_link")
+            % create the version aliases
+            link_file(lib_sox, lib_so)
+
+            % make sure the shared library stuff gets installed properly
+            LibdExport(lib_sox)
+            install_link_to_derived(lib_a, LIB_INSTALL)
+            install_symbolic_link(lib_sox, LIB_INSTALL & "/" & lib_so)
+            install_derived_link("../../../lib/" & lib_sox, lib_so)
+            install_derived_link("../../../lib/" & lib_sox, lib_sox)
+        else
+            write("WARNING: using current config file with old cm3\n")
+        end
+    end
     if shared and defined("install_symbolic_link")
-        % create the version aliases
-        link_file(lib_sox, lib_so)
-
-        % make sure the shared library stuff gets installed properly
-        LibdExport(lib_sox)
-        install_link_to_derived(lib_a, LIB_INSTALL)
-        install_symbolic_link(lib_sox, LIB_INSTALL & "/" & lib_so)
-        install_derived_link("../../../lib/" & lib_sox, lib_so)
-        install_derived_link("../../../lib/" & lib_sox, lib_sox)
-
+        % nothing
     else
         delete_file(lib_so)
         delete_file(lib_sox)
