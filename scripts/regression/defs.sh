@@ -506,9 +506,9 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   $BUILDSCRIPT buildship || exit 1
   echo " >>> OK build_${1}_${BSET} ${DS} ${WS}"
 
-  echo " === build intermediate lastok in ${INSTROOT_CUR}.$$"
-  cp -pR ${INSTROOT_LOK} ${INSTROOT_LOK}.$$
-  cp -pR ${INSTROOT_CUR} ${INSTROOT_LOK}.$$
+  echo " === build intermediate lastok in ${INSTROOT_LOK}.$$"
+  cp -pR ${INSTROOT_LOK}   ${INSTROOT_LOK}.$$
+  cp -pR ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
 
   if [ -d ${INSTROOT_LOK} -a -d ${INSTROOT_POK} ]; then
     echo " === remove previous ok version at ${INSTROOT_POK}"
