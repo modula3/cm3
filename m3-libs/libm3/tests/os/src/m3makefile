@@ -41,5 +41,6 @@ if defined("RUN")
     ok = cmp_files( tid, pout, pexp )
   end
   delete_file( "/tmp/axq4628" )
+  delete_file( "a" )
 
 end
