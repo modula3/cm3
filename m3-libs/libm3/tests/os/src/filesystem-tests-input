@@ -5,5 +5,5 @@
 ( fs_openro "a" )
 ( file_read ( file 4 ) 5 )
 ( pr_setwd "/tmp" )
-( fs_open "a" )
-( fs_getabs "a" )
+( fs_open "axq4628" )
+( fs_getabs "axq4628" )
