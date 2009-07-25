@@ -1,5 +1,7 @@
 
 dirs = [ 
+  % ".." & SL & "sqrt", 
+  % disabled recently by Jay Krell as Sqrt is not implemented in CM3
   ".." & SL & "os",
   ".." & SL & "pqueue" & SL & "fromtty",
   ".." & SL & "pqueue" & SL & "heapsort1",

@@ -44,7 +44,7 @@ BEGIN
     END;
     WITH t1 = Time.Now() - t0 DO
       Wr.PutText(
-        Stdio.stderr, "Time: " & Fmt.LongReal(t1) & " Chars: "
+        Stdio.stdout, "Time: " & Fmt.LongReal(t1) & " Chars: "
                         & Fmt.Int(moved) & " Time/char: "
                         & Fmt.LongReal(t1 / FLOAT(moved, LONGREAL),
                                        Fmt.Style.Sci, 6) & "\n");

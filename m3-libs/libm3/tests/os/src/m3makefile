@@ -30,6 +30,7 @@ testids = [
 
 if defined("RUN")
 
+  delete_file( "/tmp/axq4628" )
   foreach tid in testids
     write( "performing " & tid & "...", CR )
     write( getwd(), CR )
