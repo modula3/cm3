@@ -1,6 +1,6 @@
 OS test shell
-("a" "m3make.args" ".M3SHIP" ".M3EXPORTS" "OSTest.mx" "Subr.io" "PathnameTests.io" "PathnameTests.mo" ".M3WEB" "TextSubrTbl.io" "TextSubrTbl.mo" "_m3main.mc" "OSTest.mo" "OSTest" "pathname-tests-output" "process-tests-output" "_m3main.o" "filesystem-tests-output")
-(("a" RegularFile) ("m3make.args" RegularFile) (".M3SHIP" RegularFile) (".M3EXPORTS" RegularFile) ("OSTest.mx" RegularFile) ("Subr.io" RegularFile) ("PathnameTests.io" RegularFile) ("PathnameTests.mo" RegularFile) (".M3WEB" RegularFile) ("TextSubrTbl.io" RegularFile) ("TextSubrTbl.mo" RegularFile) ("_m3main.mc" RegularFile) ("OSTest.mo" RegularFile) ("OSTest" RegularFile) ("pathname-tests-output" RegularFile) ("process-tests-output" RegularFile) ("_m3main.o" RegularFile) ("filesystem-tests-output" RegularFile))
+("m3make.args" ".M3SHIP" ".M3EXPORTS" "OSTest.mx" "Subr.io" "PathnameTests.io" "PathnameTests.mo" ".M3WEB" "TextSubrTbl.io" "TextSubrTbl.mo" "OSTest.mo" "_m3main.mc" "OSTest" "_m3main.o" "pathname-tests-output" "process-tests-output" "filesystem-tests-output")
+(("m3make.args" RegularFile) (".M3SHIP" RegularFile) (".M3EXPORTS" RegularFile) ("OSTest.mx" RegularFile) ("Subr.io" RegularFile) ("PathnameTests.io" RegularFile) ("PathnameTests.mo" RegularFile) (".M3WEB" RegularFile) ("TextSubrTbl.io" RegularFile) ("TextSubrTbl.mo" RegularFile) ("OSTest.mo" RegularFile) ("_m3main.mc" RegularFile) ("OSTest" RegularFile) ("_m3main.o" RegularFile) ("pathname-tests-output" RegularFile) ("process-tests-output" RegularFile) ("filesystem-tests-output" RegularFile))
 (file 3)
 
 (file 4)
