@@ -1,4 +1,5 @@
 readonly TARGET = "I386_INTERIX" % code generation target
+readonly GNU_PLATFORM = "i686-interix3" % "cpu-os" string for GNU
 readonly TARGET_OS = "INTERIX"
 
 %

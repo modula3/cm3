@@ -1,4 +1,5 @@
 readonly TARGET = "LINUXLIBC6" % code generation target
+readonly GNU_PLATFORM = "i686-linux" % "cpu-os" string for GNU
 
 m3back_flags = "-gstabs+ -fPIC -mno-align-double -m32 -funwind-tables"
 SYSTEM_CC = "@gcc -gstabs+ -m32 -fPIC -mno-align-double" % C compiler

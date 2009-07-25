@@ -1,4 +1,5 @@
 readonly TARGET = "PA64_HPUX" % code generation target
+readonly GNU_PLATFORM = "hppa64-hpux" % "cpu-os" string for GNU
 
 % stabs not supported
 % -m64?

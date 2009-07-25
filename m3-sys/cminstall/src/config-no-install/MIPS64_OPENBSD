@@ -1,4 +1,5 @@
 readonly TARGET = "MIPS64_OPENBSD"
+readonly GNU_PLATFORM = "mips64-openbsd" % "cpu-os" string for GNU
 readonly TARGET_ARCH = "MIPS64"
 readonly TARGET_ENDIAN = "BIG"  % { "BIG" OR "LITTLE" }
 readonly WORD_SIZE = "64BITS"   % { "32BITS" or "64BITS" }

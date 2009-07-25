@@ -3,6 +3,8 @@
 % 
 
 readonly TARGET = "AMD64_SOLARIS"
+readonly GNU_PLATFORM = "i686-solaris2.10" % "cpu-os" string for GNU
+                                           % deliberately i686 but willing to change
 readonly C_COMPILER = "SUN" % or GNU
 
 SunXArch = "generic64"

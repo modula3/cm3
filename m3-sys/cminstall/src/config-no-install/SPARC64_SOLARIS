@@ -3,6 +3,7 @@
 % 
 
 readonly TARGET = "SPARC64_SOLARIS"
+readonly GNU_PLATFORM = "sparc64-solaris2" % "cpu-os" string for GNU
 readonly C_COMPILER = "SUN"
 %SunXArch = "v9"
 SunXArch = "generic64"

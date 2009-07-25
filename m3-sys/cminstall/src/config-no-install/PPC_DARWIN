@@ -3,6 +3,7 @@
 %
 
 readonly TARGET = "PPC_DARWIN"
+readonly GNU_PLATFORM = "powerpc-darwin6" % "cpu-os" string for GNU
 
 proc FileExists(x) is
     return not stale(x, x)
