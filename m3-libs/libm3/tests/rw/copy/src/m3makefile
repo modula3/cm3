@@ -7,7 +7,7 @@
 include( ".." & SL & ".." & SL & ".." & SL & "src" & SL & "defs.quake" )
 
 src = ".." & SL & "src"
-inp = src & SL & "Pump.m3"
+inp = src & SL & "COPYRIGHT"
 
 import("libm3")
 implementation("Pump")
@@ -19,11 +19,13 @@ if defined("RUN")
   write( CR, "performing " & tid & "...", CR )
   r = q_exec( "." & SL & "Pump 10000 1 <" & inp & ">x")
   write( CR, "program returned ", r, CR )
-  ok = cmp_files( tid, "x", inp )
+  r = q_exec( "grep -v 'Time:' <x >y" )
+  ok = cmp_files( tid, "y", inp )
   if not ok write( "FAILED", CR ) end
   r = q_exec( "." & SL & "Pump 10000 2 <" & inp & ">x")
   write( CR, "program returned ", r, CR )
-  ok = cmp_files( tid, "x", inp )
+  r = q_exec( "grep -v 'Time:' <x >y" )
+  ok = cmp_files( tid, "y", inp )
   if not ok write( "FAILED", CR ) end
 
 end

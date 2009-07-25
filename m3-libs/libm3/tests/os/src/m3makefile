@@ -40,5 +40,6 @@ if defined("RUN")
     r = q_exec( "." & SL & "OSTest < " & pin & " 2> " & pout )
     ok = cmp_files( tid, pout, pexp )
   end
+  delete_file( "/tmp/axq4628" )
 
 end
