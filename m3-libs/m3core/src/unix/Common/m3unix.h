@@ -32,6 +32,10 @@ struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses *
 #endif
 #endif
 
+#ifdef __OpenBSD__
+#define ucontext_t openbsd_ucontext_t
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
@@ -65,6 +69,10 @@ typedef ptrdiff_t ssize_t;
 
 #ifdef __INTERIX
 #include <utime.h>
+#endif
+
+#ifdef __OpenBSD__
+#undef ucontext_t
 #endif
 
 typedef struct sockaddr sockaddr_t;
