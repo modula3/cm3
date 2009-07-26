@@ -8,9 +8,13 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-
 #ifdef __CYGWIN__
 #include <windows.h>
+#endif
+
+#ifdef __cplusplus
+extern "C"
+{
 #endif
 
 #ifdef __OpenBSD__
@@ -59,7 +63,7 @@ static void print_context(const char* name, const ucontext_t* context)
     if (context)
     {
         printf(" st:%p pc:%pc ", context->uc_mcontext.a[CONTEXT_STACK], context->uc_mcontext.a[CONTEXT_PC]);
-        for (i = 0 ; i != sizeof(jmp_buf) / sizeof(void*) ; ++i)
+        for (i = 0; i < (sizeof(jmp_buf) / sizeof(void*)); ++i)
         {
             if (context->uc_mcontext[i])
                 printf("%p ", context->uc_mcontext.a[i]);
@@ -120,7 +124,7 @@ static void internal_setcontext(
     va_list args;
     size_t i;
     va_start(args, argc);
-    for (i = 0 ; (i != 8) && (i != argc) ; ++i)
+    for (i = 0; (i < 8) && (i != argc); ++i)
         (&r3)[i] = va_arg(args, size_t);
     va_end(args);
 #endif
@@ -144,7 +148,7 @@ void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
     stack = (size_t*)(((size_t)context->uc_stack.ss_sp) + context->uc_stack.ss_size);
 #if defined(Apple_ppc) || defined(OpenBSD_powerpc)
     stack -= argc;
-    for (i = 0 ; i < argc ; ++i)
+    for (i = 0; i < argc; ++i)
         stack[i] = va_arg(args, size_t);
 #endif
     *--stack = (size_t)argc;
@@ -152,7 +156,7 @@ void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
     *--stack = (size_t)context->uc_link;
     *--stack = 0x12345678 << 8; /* marker */
 #if 0 /* fish around for the stack layout */
-    for (i = 0 ; i != 255 ; ++i)
+    for (i = 0; i < 255; ++i)
     {
         *--stack = (i << 16) | ((i + 1) << 8) | (i + 2);
     }
@@ -165,7 +169,7 @@ void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
 #endif
 #ifdef OpenBSD_i386
     stack -= 8;
-    for (i = 0 ; i < argc ; ++i)
+    for (i = 0; i < argc; ++i)
         stack[i] = va_arg(args, size_t);
     stack -= 2; /* experimentally derived; 1 for
                    return address, 1 for ? */
@@ -183,5 +187,6 @@ int swapcontext(ucontext_t* old_context, const ucontext_t* new_context)
     return 0;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
-
