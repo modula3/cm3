@@ -139,6 +139,14 @@ end
 
 %------------------------------------------------------------------------------
 
+if not defined("GetM3BackFlags")
+
+proc GetM3BackFlags() is
+    return m3back_flags
+end
+
+end
+
 proc GetM3Back() is
     if defined("m3back")
         % write("using " & m3back & "\n")
@@ -233,7 +241,7 @@ proc GetM3Back() is
                                                 % write("probing " & a & "\n")
                                                 if FileExists(a)
                                                     % write("using " & a & "\n")
-                                                    m3back = "@" & a & " " & m3back_flags
+                                                    m3back = "@" & a & " " & GetM3BackFlags()
                                                     return m3back
                                                 else
                                                     Cache{a} = 1
@@ -250,7 +258,7 @@ proc GetM3Back() is
         end
     end
     % write("using cm3cg in PATH (if there is one)\n")
-    m3back = "@cm3cg " & m3back_flags
+    m3back = "@cm3cg " & GetM3BackFlags()
     return m3back
 end
 
