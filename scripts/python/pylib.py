@@ -1145,6 +1145,7 @@ def Boot():
         "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
         "LINUXLIBC6"      : " -m32 -mno-align-double ",
         "MIPS64_OPENBSD"  : " -mabi=64 ",
+        "SOLgnu"          : " -m32 ",
         "SOLsun"          : " -xarch=v8plus ",
         "SPARC32_LINUX"   : " -m32 -munaligned-doubles ",
         "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
@@ -1160,7 +1161,7 @@ def Boot():
         "I386_INTERIX"    : " -lm ",
         "PPC_DARWIN"      : " ",
         "PPC64_DARWIN"    : " ",
-        # SOLgnu?
+        "SOLgnu"          : SunLink,
         "SOLsun"          : SunLink,
         "SPARC64_SOLARIS" : SunLink,
         "PA32_HPUX"       : " -lrt -lm ",
@@ -1179,6 +1180,9 @@ def Boot():
         "SOLsun"            : " -s -K PIC -xarch=v8plus ",
         "SPARC64_SOLARIS"   : " -s -K PIC -xarch=v9 ",
         }.get(Target) or ""))
+
+    if Target == "SOLgnu":
+        Assemble = "/usr/sfw/bin/gas"
 
     GnuPlatformPrefix = {
         "ARM_DARWIN"      : "arm-apple-darwin8-",
