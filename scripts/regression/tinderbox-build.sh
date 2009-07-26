@@ -13,6 +13,9 @@ then
   exit 1
 fi
 
+# source user build config, if it exists
+[ -f `dirname $0`/user-defs.sh ] && . "`dirname $0`/user-defs.sh"
+
 #source build config
 . "$1"
  
