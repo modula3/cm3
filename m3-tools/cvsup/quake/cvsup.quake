@@ -128,8 +128,8 @@ proc findpath(paths, fn) is
 end
 
 proc findlib(fn) is
-  paths = ["/usr/lib", "/usr/local/lib", "/lib", "/usr/contrib/lib", 
-           "/opt/lib"]
+  paths = ["/usr/lib", "/usr/local/lib", "/lib", "/usr/contrib/lib",
+           "/opt/lib", "/opt/csw/lib"]
   return findpath(paths, fn)
 end
 
@@ -139,5 +139,3 @@ end
 if equal(TARGET, "PPC_DARWIN") or equal(TARGET, "I386_DARWIN") or equal(TARGET, "AMD64_DARWIN")
   SYSTEM_LIBS{"LIBC"} += "-lz"
 end
-
-
