@@ -10,13 +10,14 @@ typedef unsigned char _JBTYPE __attribute__((aligned(4)));
 #include <setjmp.h>
 #include <stdlib.h>
 #include <string.h>
+typedef unsigned U;
 
 typedef size_t JB[sizeof(jmp_buf) / sizeof(size_t)];
 
 void find(JB jb1, size_t a)
 {
-    unsigned i;
-    for (i = 0 ; i != sizeof(JB) / sizeof(size_t) ; ++i)
+    U i;
+    for (i = 0; i < (sizeof(JB) / sizeof(size_t)); ++i)
     {
         if (jb1[i] == a)
         {
@@ -27,8 +28,8 @@ void find(JB jb1, size_t a)
 
 void diff(JB jb1, JB jb2)
 {
-    unsigned i;
-    for (i = 0 ; i != sizeof(JB) / sizeof(size_t) ; ++i)
+    U i;
+    for (i = 0; i < (sizeof(JB) / sizeof(size_t)); ++i)
     {
         if (jb1[i] != jb2[i])
         {
@@ -92,8 +93,8 @@ int main()
 {
     char a;
     
-    printf("alignof(jmp_buf) %u\n", (unsigned) __alignof(jmp_buf));
-    printf("sizeof(jmp_buf) %u\n", (unsigned) sizeof(jmp_buf));
+    printf("alignof(jmp_buf) %u\n", (U)__alignof(jmp_buf));
+    printf("sizeof(jmp_buf) %u\n", (U)sizeof(jmp_buf));
     
     stack_grow(&a);
 
