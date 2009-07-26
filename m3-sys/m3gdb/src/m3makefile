@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.14 2009-07-20 19:30:31 jkrell Exp $
+% $Id: m3makefile,v 1.15 2009-07-26 10:57:32 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -55,6 +55,12 @@ readonly Platform_info = {
   "PPC_DARWIN"  : "powerpc-apple-darwin6.3",
   "PPC_LINUX"   : "powerpc-apple-linuxelf",
   "NetBSD2_i386" : "i686-unknown-netbsdelf"
+
+  "SPARC32_LINUX" : "sparc-linux",
+  "SPARC32_OPENBSD" : "sparc-openbsd",
+  "SPARC64_LINUX" : "sparc64-linux",
+  "SPARC64_OPENBSD" : "sparc64-openbsd",
+  "SPARC64_SOLARIS" : "sparc64-solaris2",
 }
 
 readonly proc GNU_platform (x) is
