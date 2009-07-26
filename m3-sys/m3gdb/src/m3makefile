@@ -55,6 +55,12 @@ readonly Platform_info = {
   "PPC_DARWIN"  : "powerpc-apple-darwin6.3",
   "PPC_LINUX"   : "powerpc-apple-linuxelf",
   "NetBSD2_i386" : "i686-unknown-netbsdelf"
+
+  "SPARC32_LINUX" : "sparc-linux",
+  "SPARC32_OPENBSD" : "sparc-openbsd",
+  "SPARC64_LINUX" : "sparc64-linux",
+  "SPARC64_OPENBSD" : "sparc64-openbsd",
+  "SPARC64_SOLARIS" : "sparc64-solaris2",
 }
 
 readonly proc GNU_platform (x) is
