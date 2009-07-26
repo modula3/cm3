@@ -129,7 +129,7 @@ end
 
 proc findlib(fn) is
   paths = ["/usr/lib", "/usr/local/lib", "/lib", "/usr/contrib/lib", 
-           "/opt/lib"]
+           "/opt/lib", "/opt/csw/lib"]
   return findpath(paths, fn)
 end
 
