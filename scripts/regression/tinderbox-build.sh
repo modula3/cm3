@@ -78,7 +78,7 @@ tinderbox_header () {
   echo ""
   echo tinderbox: tree: $TREE_NAME
   echo tinderbox: starttime: $STARTTIME
-  echo tinderbox: timenow: `date +%s`
+  echo tinderbox: timenow: `date -u '+%m/%d/%y %H:%M:%S'`
   echo tinderbox: status: $STATUS
   echo tinderbox: buildname: $BUILD_NAME
   echo tinderbox: errorparser: unix
@@ -126,7 +126,7 @@ cleanup() {
   do_cleanup
 }
 
-STARTTIME=`date +%s`
+STARTTIME=`date -u '+%m/%d/%y %H:%M:%S'`
 
 #echo "${NAME}" 
  
