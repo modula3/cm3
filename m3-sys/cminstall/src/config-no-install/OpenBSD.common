@@ -1,7 +1,18 @@
 readonly TARGET_OS = "OPENBSD"
 
+
+SYSTEM_LD = SYSTEM_CC
+  & " -Wl,-z,now"
+  & " -Wl,-z,origin"
+  & " -Bsymbolic"
+  & " -Wl,--fatal-warnings"
+  & " -Wl,-rpath,\\$ORIGIN"
+  & " -Wl,-rpath,\\$ORIGIN/../lib"
+  & " -Wl,--warn-common"
+
 GNU_MAKE = "gmake"
 
 include("Unix.common")
+include("gnuld.common")
 
 SYSTEM_LIBS{"ODBC"} = [ "-Wl,-R/usr/local/lib", "-L/usr/local/lib", "-liodbc" ]
