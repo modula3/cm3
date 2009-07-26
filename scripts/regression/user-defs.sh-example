@@ -1,0 +1,8 @@
+# This file is strictly user editable.
+# Remove "-example" from the end of it and edit it.
+# CVS_RSH=ssh
+# PATH=/cm3/bin:$PATH
+# CM3CVSUSER=jkrell
+# BUILD_REL=lastok
+# CM3_NKEEP=2
+# NKEEP=2
