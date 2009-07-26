@@ -41,7 +41,7 @@ CM3CVSSERVER=${CM3CVSSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
 CM3CVSROOT=${CM3CVSROOT:-${CM3CVSSERVER}:/usr/cvs}
 
 # WWW server site
-WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
 
 # the whole test log
 RLOG=${RLOG:-${HTMP}/cm3-rlog-${DS}}
