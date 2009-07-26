@@ -5,7 +5,8 @@ SYSTEM_LD = SYSTEM_CC
   & " -Wl,-z,now"
   & " -Wl,-z,origin"
   & " -Bsymbolic"
-  & " -Wl,--fatal-warnings"
+% too many warnings e.g. about strcpy, sprintf, common, in X libraries
+% & " -Wl,--fatal-warnings"
   & " -Wl,-rpath,\\$ORIGIN"
   & " -Wl,-rpath,\\$ORIGIN/../lib"
   & " -Wl,--warn-common"
