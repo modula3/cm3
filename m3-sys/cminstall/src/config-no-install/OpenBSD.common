@@ -3,3 +3,5 @@ readonly TARGET_OS = "OPENBSD"
 GNU_MAKE = "gmake"
 
 include("Unix.common")
+
+SYSTEM_LIBS{"ODBC"} = [ "-Wl,-R/usr/local/lib", "-L/usr/local/lib", "-liodbc" ]
