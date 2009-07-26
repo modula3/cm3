@@ -211,7 +211,14 @@ readonly m3cc_config = {
   % unless perhaps building binutils along with m3cg.
   % If m3cg omits the .register psuedo ops, assembly completely fails, with lots of errors.
   %
-  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes",
+  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld",
+
+  %
+  % This is recommended and has been seen to make a difference.
+  %
+
+  "I386_SOLARIS" :  "-with-gnu-as -with-as=/usr/sfw/bin/gas -without-gnu-ld -with-ld=/usr/ccs/bin/ld",
+  "AMD64_SOLARIS" : "-with-gnu-as -with-as=/usr/sfw/bin/gas -without-gnu-ld -with-ld=/usr/ccs/bin/ld",
 
   %
   % Bootstrap procedure for gcc on HPPA{64}-HPUX:
