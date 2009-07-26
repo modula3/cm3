@@ -15,7 +15,14 @@ else
     GccMBits = "64"
 end
 
-m3back_flags = "-funwind-tables -gstabs+ -fPIC -m" & GccMBits
+proc GetM3BackFlags() is
+    if defined("M3_BOOTSTRAP") or defined("BOOT")
+        return "-m" & GccMBits
+    else
+        return "-funwind-tables -gstabs+ -fPIC -m" & GccMBits
+    end
+end
+
 readonly SYSTEM_ASM = "as -s -K PIC -xarch=" & SunXArch
 
 if equal (C_COMPILER, "SUN")
