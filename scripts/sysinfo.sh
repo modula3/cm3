@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.74 2009-07-21 08:48:05 jkrell Exp $
+# $Id: sysinfo.sh,v 1.75 2009-07-26 18:37:52 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -204,6 +204,8 @@ case "${UNAME}" in
       CM3_TARGET=SPARC64_OPENBSD
     elif [ "${ARCH}" = "mips64" ] ; then
       CM3_TARGET=MIPS64_OPENBSD
+    elif [ "${ARCH}" = "i386" ] ; then
+      CM3_TARGET=I386_OPENBSD
     else
       echo Update $0 for ${ARCH}
       exit 1
