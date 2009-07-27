@@ -1,7 +1,13 @@
 #bash
-# $Id: make-dist.sh,v 1.26 2009-07-24 13:40:48 wagner Exp $
+# $Id: make-dist.sh,v 1.27 2009-07-27 15:50:45 jkrell Exp $
 
-DESTHOST=${DESTHOST:-birch.elegosoft.com}
+if test "x${CM3CVSUSER}" != "x"; then
+  CM3CVSUSER_AT="${CM3CVSUSER}@"
+else
+  CM3CVSUSER_AT=""
+fi
+
+DESTHOST=${DESTHOST:-${CM3CVSUSER_AT}birch.elegosoft.com}
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.42 2009-07-21 08:48:05 jkrell Exp $
+# $Id: make-bin-dist-min.sh,v 1.43 2009-07-27 15:50:44 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -176,8 +176,14 @@ cp "${ROOT}/m3-sys/COPYRIGHT-CMASS" "${STAGE}" || exit 1
 echo "creating distribution archive ${ABSARCH2}"
 ${TAR} -C "${STAGE}" -czf ${ABSARCH2} ${INSTDATA} || exit 1
 ls -l "${ABSARCH2}"
+
 if [ -n "${DOSHIP}" ]; then
-  WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+  if test "x${CM3CVSUSER}" != "x"; then
+    CM3CVSUSER_AT="${CM3CVSUSER}@"
+  else
+    CM3CVSUSER_AT=""
+  fi
+  WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
   WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
   scp "${ABSARCH2}" "${WWWDEST}" < /dev/null
 fi
