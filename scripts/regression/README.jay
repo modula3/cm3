@@ -8,6 +8,8 @@ it you get many errors.
    make sure it runs
  control-d
 
+You also need flex and maybe bison to build m3pp:
+ sudo apt-get install flex bison
 
 First have a working minimal cm3 install.
 All you need is cm3 and cm3cg.
