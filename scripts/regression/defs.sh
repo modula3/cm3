@@ -859,6 +859,7 @@ main()
 {
   time testall 2>&1 | tee ${RLOG}
   cleanup_all ${CM3_NKEEP}
+  echo done with main
 }
 
 #----------------------------------------------------------------------------
