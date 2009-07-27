@@ -3,10 +3,10 @@ MODULE WebContact EXPORTS Main;
 
 (* A simple web-based application. *)
 
-IMPORT HTTPApp, HTTPControl, HTTPControlValue, App; 
+IMPORT HTTPApp, HTTPControl, HTTPControlValue, App;
 (* Import Web Application framework. *)
 
-IMPORT Text, TextTextTbl;
+IMPORT Text, TextTextTbl, HTTP;
 FROM IO IMPORT Put;
 
 (* Create two fields for names and e-mail addresses. Each is displayed
@@ -20,18 +20,21 @@ VAR
 
 VAR
   name_value := NEW(HTTPControlValue.TextValue,
-		leader := "<strong>Name: </strong>",  id := "name",
-		set := SetName, get := GetName, setDefault := Default);
+                leader := "<strong>Name: </strong>",  id := "name",
+                set := SetName, get := GetName, setDefault := Default);
 
-PROCEDURE SetName(self: HTTPControlValue.TextValue; val: TEXT; log: App.Log) = 
+PROCEDURE SetName(<* UNUSED *>self: HTTPControlValue.TextValue; <* UNUSED *>req: HTTP.Request; val: TEXT; log: App.Log) =
 BEGIN
   name := val;
   IF db.get(name, email) THEN
+    log.log ("SetName:  found (" & name & ", " & email & ")", App.LogStatus.Status);
     email := "";
+  ELSE
+    log.log ("SetName:  name=" & name & ", not found.", App.LogStatus.Status);
   END;
 END SetName;
 
-PROCEDURE GetName(self: HTTPControlValue.TextValue): TEXT =
+PROCEDURE GetName(<* UNUSED *>self: HTTPControlValue.TextValue; <* UNUSED *>req: HTTP.Request): TEXT =
 BEGIN
   RETURN name;
 END GetName;
@@ -42,28 +45,32 @@ END GetName;
 
 VAR
   email_value := NEW(HTTPControlValue.TextValue,
-			leader := "<strong> Email:</strong>", id := "email",
-			set := SetEmail, get := GetEmail, setDefault := Default);
+                        leader := "<strong> Email:</strong>", id := "email",
+                        set := SetEmail, get := GetEmail, setDefault := Default);
 
-PROCEDURE GetEmail (self: HTTPControlValue.TextValue): TEXT = 
+PROCEDURE GetEmail (<* UNUSED *>self: HTTPControlValue.TextValue; <* UNUSED *>req: HTTP.Request): TEXT =
 BEGIN
   RETURN email;
 END GetEmail;
 
-PROCEDURE SetEmail (self: HTTPControlValue.TextValue;
-		     val: TEXT; log : App.Log) = 
+PROCEDURE SetEmail (<* UNUSED *>self: HTTPControlValue.TextValue;
+                     <* UNUSED *>req: HTTP.Request; val: TEXT; log : App.Log) =
 
 BEGIN
   IF Text.Empty (val) THEN
     IF NOT db.get(name, email) THEN
       email := "";
+      log.log ("SetEmail:  name=" & name & ", not found.", App.LogStatus.Status);
+    ELSE
+      log.log ("SetEmail:  found email for " & name & " is " & email, App.LogStatus.Status);
     END;
   ELSE
     EVAL db.put(name, val);
+    log.log ("SetEmail:  saved email for " & name & " as " & val, App.LogStatus.Status);
   END;
 END SetEmail;
 
-PROCEDURE Default (<* UNUSED *>x : HTTPControlValue.TextValue; <* UNUSED *>log : App.Log ) =
+PROCEDURE Default (<* UNUSED *>x : HTTPControlValue.TextValue; <* UNUSED *>req: HTTP.Request; <* UNUSED *>log : App.Log ) =
 BEGIN
 END Default;
 
@@ -85,7 +92,7 @@ BEGIN
 (* Add a title. *)
 
     root.addValue(NEW(HTTPControlValue.MessageValue).init("\n" &
- 							  "<H2>Contact Database</H2>"));
+                                                          "<H2>Contact Database</H2>"));
 
 (* Add the two text fields. *)
 
@@ -95,12 +102,12 @@ BEGIN
 (* Pointer back to the root. *)
 
    root.addValue(NEW(HTTPControlValue.MessageValue).init("\n" &
- 							  "<a href=/>[Top]"));
-                
+                                                          "<a href=/>[Top]"));
+
 (* Serve at port # 80. If there is a problem, raise "App.Error". *)
 
     TRY
-      HTTPApp.Serve(80); (* Unhandled: App.Error *)
+      HTTPApp.Serve(80, 0); (* Unhandled: App.Error *)
     EXCEPT
       App.Error => Put ("A problem occured\n");
     END;
