@@ -289,9 +289,17 @@ checkout()
     mkdir -p "${WS}"
   fi
   cd "${WS}" || exit 1
-  (cvs -z1 -q -d ${CM3CVSROOT} checkout ${COVERSION} cm3 2>&1 | tee cvs-co.log) || exit 1
-  echo " >>> OK checkout ${DS} ${WS} ${COVERSION}"
-  echo " === `date -u +'%Y-%m-%d %H:%M:%S'` checkout cm3 done"
+  echo "cvs -z1 -q -d ${CM3CVSROOT} checkout ${COVERSION} cm3"
+  cvs -z1 -q -d ${CM3CVSROOT} checkout ${COVERSION} cm3 >cvs-co.log 2>&1
+  rc=$?
+  cat cvs-co.log
+  if [ $rc = 0 ]; then
+    echo " >>> OK checkout ${DS} ${WS} ${COVERSION}"
+    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` checkout cm3 done"
+  else
+    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` checkout cm3 failed"
+  fi
+  return rc
 }
 
 #----------------------------------------------------------------------------
@@ -512,8 +520,12 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   echo " >>> OK build_${1}_${BSET} ${DS} ${WS}"
 
   echo " === build intermediate lastok in ${INSTROOT_LOK}.$$"
-  cp -pR ${INSTROOT_LOK}   ${INSTROOT_LOK}.$$
-  cp -pR ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
+  [ -d ${INSTROOT_LOK} ] && cp -pR ${INSTROOT_LOK}   ${INSTROOT_LOK}.$$
+  if [ -d ${INSTROOT_LOK}.$$ ]; then
+    cp -pR ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
+  else
+    mv ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
+  fi
 
   if [ -d ${INSTROOT_LOK} -a -d ${INSTROOT_POK} ]; then
     echo " === remove previous ok version at ${INSTROOT_POK}"
