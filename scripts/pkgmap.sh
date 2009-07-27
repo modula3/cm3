@@ -24,21 +24,26 @@ SYSINFO_DONE=""
 exec_cmd() {
   echo " +++ $PKG_ACTION +++"
   [ "$NO_ACTION" = yes ] || {
-    SOL="$1/tmp-stdout-$$"
-    /bin/sh -c "cd $1 && $PKG_ACTION" >"${SOL}"
-    rc=$?
-    if [ "$rc" != 0 ]; then
-      if echo "${PKG_ACTION}" | grep -q -- -build >/dev/null 2>&1; then
-        if [ -n "${WORKSPACE}" -o -n "${CM3_CLEAN_RETRY}" ]; then
-          echo "retry build after cleaning" >"${SOL}"
-          /bin/sh -c "cd $1 && cm3 -clean" >>"${SOL}"
-          /bin/sh -c "cd $1 && $PKG_ACTION" >>"${SOL}"
-          rc=$?
+    if [ -n "${WORKSPACE}" -o -n "${CM3_CLEAN_RETRY}" ]; then
+      SOL="$1/tmp-stdout-$$"
+      /bin/sh -c "cd $1 && $PKG_ACTION" >"${SOL}"
+      rc=$?
+      if [ "$rc" != 0 ]; then
+        if echo "${PKG_ACTION}" | grep -q -- -build >/dev/null 2>&1; then
+          if [ -n "${WORKSPACE}" -o -n "${CM3_CLEAN_RETRY}" ]; then
+            echo "retry build after cleaning" >"${SOL}"
+            /bin/sh -c "cd $1 && cm3 -clean" >>"${SOL}"
+            /bin/sh -c "cd $1 && $PKG_ACTION" >>"${SOL}"
+            rc=$?
+          fi
         fi
       fi
+      cat "${SOL}"
+      rm -f "${SOL}"
+    else
+      /bin/sh -c "cd $1 && $PKG_ACTION"
+      rc=$?
     fi
-    cat "${SOL}"
-    rm -f "${SOL}"
     return $rc
   }
 }
