@@ -5,6 +5,7 @@ REM Version History
 REM ---------------
 REM v1.00, 07/20/2009, R.Coleburn
 REM v1.01, 07/21/2009, R.Coleburn, minor formatting changes for readability, add error log summary
+REM v1.02, 07/27/2009, R.Coleburn, add noPause option; optimize a bit, including removing FN_Normalize_CM3_Pkg in favor of optimization suggested by Jay Krell
 REM ===========================================================================
 
 :Init
@@ -21,6 +22,7 @@ set CM3_PkgPath=
 set CM3_PkgTree=
 set CM3_TMP1=
 set CM3_TempFile=
+set CM3_NoPause=FALSE
 
 
 
@@ -36,8 +38,9 @@ shift
 :ExamineArg1
 if (%1)==() goto ArgEnd
 if /I %1==HELP goto Help
+if /I %1==NOPAUSE set CM3_NoPause=TRUE& goto NextArg
 if /I %1==(-P) goto Arg_P
-if /I %1==buildship goto Arg_buildship
+if /I %1==buildship set CM3_CM3Args=%CM3_CM3Args% -build -ship& goto NextArg
 
 rem check to see if %1 is a group tag
 if (%CM3_Group%)==() for %%a in (min core std base all) do if /I %%a==%1 set CM3_Group=%1
@@ -48,36 +51,33 @@ if /I (%CM3_Group%)==(%1) goto NextArg
 rem check to see if %1 is a cm3 compiler mode argument
 set CM3_Arg=
 for %%a in (find depend realclean clean build ship buildship) do if /I %%a==%1 set CM3_Arg=-%1
-if (%CM3_Arg%)==() echo ERROR:  Unknown or unsupported argument:  %1
-if (%CM3_Arg%)==() goto Usage
+if (%CM3_Arg%)==() echo ERROR:  Unknown or unsupported argument:  %1 & goto Usage
 set CM3_CM3Args=%CM3_CM3Args% %CM3_Arg%
-goto NextArg
-
-:Arg_buildship
-rem handle special case of buildship as alias for -build followed by -ship
-set CM3_CM3Args=%CM3_CM3Args% -build -ship
 goto NextArg
 
 :Arg_P
 rem we've seen -P, now get the path
 shift
-if (%1)==() echo ERROR:  Missing path after -P argument.
-if (%1)==() goto Usage
+if (%1)==() echo ERROR:  Missing path after -P argument. & goto Usage
 set CM3_PkgInfo=%1
 goto NextArg
 
 :ArgEnd
 rem no more parameters, so make sure we've got the minimum required
-if (%CM3_Group%)==() echo ERROR:  Must specify a package group, e.g., min, core, std, all, etc.
-if (%CM3_Group%)==() goto Usage
+if (%CM3_Group%)==() echo ERROR:  Must specify a package group, e.g., min, core, std, all, etc. & goto Usage
 
 
 
 :SetupCM3
 :--------
 REM Ensure CM3 command line environment has been setup.
+REM
+REM !******************************************************************************************!
 REM !*** This check can be skipped by setting CM3_DoneSetup=TRUE, (remove REM on next line) ***!
+REM !******************************************************************************************!
 REM set CM3_DoneSetup=TRUE
+REM !******************************************************************************************!
+REM
 if (%CM3_DoneSetup%)==(TRUE) goto Welcome
 if not exist "c:\cm3\bin\cm3SetupCmdEnv.CMD" goto FatalSetupCM3
 call c:\cm3\bin\cm3SetupCmdEnv.CMD
@@ -90,9 +90,9 @@ if not (%CM3_DoneSetup%)==(TRUE) goto FatalSetupCM3
 :-------
 REM Identify this script.
 echo.
-echo ====== --------------------------------
-echo do-cm3, v1.1, 7/21/2009, Randy Coleburn
-echo ====== --------------------------------
+echo ====== ---------------------------------
+echo do-cm3, v1.02, 7/27/2009, Randy Coleburn
+echo ====== ---------------------------------
 echo.
 
 
@@ -162,6 +162,7 @@ echo CM3 ARGS = %CM3_CM3Args%
 echo  PkgInfo = %CM3_PkgInfo%
 echo Pkg Tree = %CM3_PkgTree%
 echo    Group = %CM3_Group%
+if %CM3_NoPause%==TRUE echo NoPause Option in Effect.
 echo.
 echo Searching for packages in group "%CM3_Group%" ...
 echo -------------------------------
@@ -172,6 +173,7 @@ echo ------------------------
 if exist %CM3_TempFile% type %CM3_TempFile%
 echo ---END-of-List---
 echo.
+if %CM3_NoPause%==TRUE goto DoIt
 :AskContinue
 set /P CM3_Answ=Do you want to continue (y=yes, n=no) ? 
 if /I (%CM3_Answ%)==(Y) goto DoIt
@@ -195,8 +197,7 @@ echo WARNING:  One or packages experienced a failure.  See result detail above.
 echo.
 echo ERROR LOG SUMMARY:
 echo -----------------
-if exist %CM3_ErrLog% type %CM3_ErrLog%
-if exist %CM3_ErrLog% del %CM3_ErrLog%
+if exist %CM3_ErrLog% type %CM3_ErrLog% & del %CM3_ErrLog%
 echo ---END-of-List---
 echo.
 goto END
@@ -214,7 +215,7 @@ goto END
 :FN_FullPath
 :-----------
 REM Make a full (non-relative) path.
-REM 1=relative path, 2=env var for result
+REM %1=relative path, %2=env var for result
 set %2=%~f1
 goto :EOF
 
@@ -223,7 +224,7 @@ goto :EOF
 :FN_DriveAndPathOnly
 :-------------------
 REM Convert %1 to a drive letter and path only.
-REM 1=path, 2=env var for result
+REM %1=path, %2=env var for result
 set %2=%~dp1
 goto :EOF
 
@@ -232,7 +233,7 @@ goto :EOF
 :FN_RemoveQuotes
 :---------------
 REM Remove quotes surrounding path.
-REM 1=quoted path, 2=env var for result
+REM %1=quoted path, %2=env var for result
 set %2=%~1
 goto :EOF
 
@@ -241,7 +242,7 @@ goto :EOF
 :FN_CheckPkg
 :-----------
 REM If this package (%1) should be processed and can be found, add it to the temporary file.
-REM 1=package, 2*=group tags for this package
+REM %1=package, %2*=group tags for this package
 
 rem ---first see if this package is tagged with the desired group
 set CM3_Pkg=
@@ -250,7 +251,7 @@ if /I %CM3_Group%==all set CM3_Pkg=%1
 if (%CM3_Pkg%)==() goto :EOF
 
 rem ---sometimes the package has a relative path in unix-style, so convert it to DOS-style
-call :FN_Normalize_CM3_Pkg
+if not "%CM3_Pkg%"=="" set CM3_Pkg=%CM3_Pkg:/=\%
 rem echo normalized = %CM3_Pkg%
 
 rem ---make sure we can find this package in the source tree
@@ -269,22 +270,14 @@ if not (%CM3_PkgPath%)==() goto foundPkg
 echo WARNING:  Unable to locate package "%CM3_Pkg%" in "%CM3_PkgTree%"
 echo           (this package will be skipped)
 echo.
+if %CM3_NoPause%==TRUE goto :EOF
+pause
 goto :EOF
 
 :foundPkg
 echo %CM3_Pkg%, found "%CM3_Group%" in (%*), at "%CM3_PkgPath%"
 echo %CM3_PkgPath% >>%CM3_TempFile%
 goto :EOF
-
-
-
-:FN_Normalize_CM3_Pkg
-:--------------------
-REM convert %CM3_Pkg% from unix-style path to DOS-style path
-echo %CM3_Pkg%|find "/" >>NUL:
-if errorlevel 1 goto :EOF
-for /f "tokens=1* delims=/" %%i in ("%CM3_Pkg%") do set CM3_Pkg=%%i\%%j
-goto FN_Normalize_CM3_Pkg
 
 
 
@@ -304,8 +297,8 @@ goto :EOF
 :FN_DoCM3
 :--------
 REM Invoke CM3
-REM 1=CM3 mode (e.g. -build, -ship, -find, -depend, -clean, -realclean)
-REM 2=package
+REM %1=CM3 mode (e.g. -build, -ship, -find, -depend, -clean, -realclean)
+REM %2=package
 if (%CM3_CM3Failure%)==(STOP) goto :EOF
 cm3 %1
 if not errorlevel 1 goto :EOF
@@ -314,6 +307,7 @@ echo.
 echo WARNING:  Encountered an error when processing package %2 for %1
 echo WARNING:  Errors in package %2 for %1>>%CM3_ErrLog%
 echo.
+if %CM3_NoPause%==TRUE goto :EOF
 
 :AskStop
 set /P CM3_Answ=Do you want to stop (y=yes, n=no) ? 
@@ -346,9 +340,11 @@ echo folder), or in the current directory, or in the parent directory.
 :Usage
 :-----
 echo.
-echo Usage:  do-cm3 {help} [min core std all] {-p path} {cm3args}
+echo Usage:  do-cm3 {help noPause} [min core std all] {-p path} {cm3args}
 echo.
 echo help    = display help, then exit.
+echo.
+echo noPause = Don't ask whether to continue; just keep on going.
 echo.
 echo [min core std all] = must specify only one package group.  The list of groups
 echo                      shown here is not exhaustive.
@@ -379,6 +375,8 @@ rem echo CM3_ErrLog=%CM3_ErrLog%
 set CM3_ErrLog=
 rem echo CM3_Group=%CM3_Group%
 set CM3_Group=
+rem echo CM3_NoPause=%CM3_NoPause%
+set CM3_NoPause=
 rem echo CM3_Pkg=%CM3_Pkg%
 set CM3_Pkg=
 rem echo CM3_PkgInfo=%CM3_PkgInfo%
