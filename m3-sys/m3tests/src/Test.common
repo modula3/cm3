@@ -96,4 +96,6 @@ readonly proc RunTest () is
   end
 end
 
+build_standalone()
+
 RunTest()
