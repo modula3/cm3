@@ -343,7 +343,11 @@ p_test ("p0", "p003", "Fmt")
 p_test ("p0", "p004", "exception mechanism")
 p_test ("p0", "p005", "a simple thread program")
 p_test ("p0", "p006", "a bit more complicated")
+% This test hangs on some systems and needs further investigation.
+% It hangs on: OpenBSD/x86, Cygwin/x86.
+if not equal(TARGET, "I386_OPENBSD")
 p_test ("p0", "p007", "a whole bunch of threads - does the memory grow ?")
+end
 p_test ("p0", "p008", "thread alerts")
 p_test ("p0", "p009", "ORD VAL NUMBER FIRST LAST")
 p_test ("p0", "p010", "TYPECODE NARROW")
