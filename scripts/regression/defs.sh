@@ -393,6 +393,7 @@ cleanup_all() {
   echo "${pat}"
   ls -1d ${pat} | cleanup_all_but_last_n ${n}
   echo
+  echo done with cleanup_all
 }
 
 
