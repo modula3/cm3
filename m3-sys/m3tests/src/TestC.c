@@ -104,7 +104,7 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
     assert(jbsize == SIZE(jmp_buf) || (jbsize + 4) == SIZE(jmp_buf));
 #elif defined(__sun)
     assert(jbsize == SIZE(jmp_buf) || jbsize == SIZE(sigjmp_buf));
-#elif defined(__APPLE__) && defined(__ppc__)
+#elif defined(__APPLE__) && (defined(__ppc__) || defined(__i386__))
     if (jbsize != SIZE(sigjmp_buf))
     {
         fprintf(stderr, "%x vs. %x\n", (U)jbsize, SIZE(sigjmp_buf));
