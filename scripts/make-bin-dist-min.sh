@@ -176,8 +176,14 @@ cp "${ROOT}/m3-sys/COPYRIGHT-CMASS" "${STAGE}" || exit 1
 echo "creating distribution archive ${ABSARCH2}"
 ${TAR} -C "${STAGE}" -czf ${ABSARCH2} ${INSTDATA} || exit 1
 ls -l "${ABSARCH2}"
+
 if [ -n "${DOSHIP}" ]; then
-  WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+  if test "x${CM3CVSUSER}" != "x"; then
+    CM3CVSUSER_AT="${CM3CVSUSER}@"
+  else
+    CM3CVSUSER_AT=""
+  fi
+  WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
   WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
   scp "${ABSARCH2}" "${WWWDEST}" < /dev/null
 fi

@@ -465,7 +465,12 @@ if [ -n "${REPORT}" ]; then
   echo "XML package test report in ${RJT}"
 
   if [ -n "${DOSHIP}" ]; then
-    WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+    if test "x${CM3CVSUSER}" != "x"; then
+      CM3CVSUSER_AT="${CM3CVSUSER}@"
+    else
+      CM3CVSUSER_AT=""
+    fi
+    WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
     WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/logs}
     scp "${R}" "${WWWDEST}" < /dev/null
   fi

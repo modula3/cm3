@@ -62,7 +62,12 @@ ${TAR} -czf ${ARCHIVE} --files-from .tar-include --exclude-from .tar-exclude \
  || exit 1
 ls -l ${ARCHIVE}
 if [ -n "${DOSHIP}" ]; then
-  WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+  if test "x${CM3CVSUSER}" != "x"; then
+    CM3CVSUSER_AT="${CM3CVSUSER}@"
+  else
+    CM3CVSUSER_AT=""
+  fi
+  WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
   WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
   scp "${ARCHIVE}" "${WWWDEST}" < /dev/null
 fi
