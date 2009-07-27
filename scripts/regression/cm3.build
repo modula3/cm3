@@ -63,7 +63,7 @@ TTT="${CM3_TARGET} ${TESTMACHINE} ${TESTHOSTNAME}"
 BUILDNAME=${BUILDNAME:-"${TTT} ${BUILD_REL_NAME}-build"}
 
 do_checkout() {
-  ( checkout ) > /dev/null
+  ( checkout ) 2>&1
 }
 
 do_compile() {
