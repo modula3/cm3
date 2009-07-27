@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.42 2009-07-25 20:03:26 wagner Exp $
+# $Id: pkgmap.sh,v 1.42.2.1 2009-07-27 06:19:33 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -229,17 +229,17 @@ write_pkg_report() {
   pname=`echo $1 | sed -e 's;/;-;g'`
   errlines=`egrep '^".*, line .*:|warning:|version stamp mismatch|bad version stamps|Fatal Error|failed|quake runtime error|ignoring override|unsupported' "$1/${TARGET}/stdout.log"`
   if [ "$2" = "0" ] ; then
-    echo "<tr class=\"bggreen\">"
+    echo "<tr class=\"bggreen\">" >> "${R}"
     bgt="bggreen"
   elif [ "$2" = "2" ] ; then
-    echo "<tr class=\"bgyellow\">"
+    echo "<tr class=\"bgyellow\">" >> "${R}"
     bgt="bgyellow"
   else
-    echo "<tr class=\"bgred\">"
+    echo "<tr class=\"bgred\">" >> "${R}"
     bgt="bgred"
     ERRS=`printf "${ERRS}${errlines}\\n"`
     res=`printf "${PKG}${ERRS}\\n"`
-  fi >> "${R}"
+  fi
 
   # evaluate package test status
   tbgt="${bgt}"
