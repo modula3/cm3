@@ -299,7 +299,7 @@ checkout()
   else
     echo " === `date -u +'%Y-%m-%d %H:%M:%S'` checkout cm3 failed"
   fi
-  return rc
+  return $rc
 }
 
 #----------------------------------------------------------------------------
