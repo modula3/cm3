@@ -4,7 +4,7 @@
 
 #include "m3unix.h"
 #if defined(__OpenBSD__)
-#include "context.h"
+#include "context/setjmp/context.h"
 #define HAS_UCONTEXT_T
 #elif defined(__linux) && defined(__i386)
 #include <ucontext.h>
