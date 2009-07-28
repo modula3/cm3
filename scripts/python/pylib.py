@@ -1529,7 +1529,7 @@ PackageSets = {
         "cmpfp",
         "dirfp",
         "uniq",
-        # "pp" # needs lex and yacc or flex and bison
+        "pp",
         # "kate"   # can be shipped only on systems with KDE
         # "nedit",
 
@@ -1712,7 +1712,6 @@ PackageSets = {
         "cmpfp",
         "dirfp",
         "uniq",
-        # "pp" # needs lex and yacc or flex and bison
         # "kate"   # can be shipped only on systems with KDE
         # "nedit",
 
