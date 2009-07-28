@@ -204,6 +204,8 @@ case "${UNAME}" in
       CM3_TARGET=SPARC64_OPENBSD
     elif [ "${ARCH}" = "mips64" ] ; then
       CM3_TARGET=MIPS64_OPENBSD
+    elif [ "${ARCH}" = "i386" ] ; then
+      CM3_TARGET=I386_OPENBSD
     else
       echo Update $0 for ${ARCH}
       exit 1
