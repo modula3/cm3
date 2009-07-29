@@ -7,6 +7,7 @@ REM v1.00, 07/20/2009, R.Coleburn
 REM v1.01, 07/21/2009, R.Coleburn, minor formatting changes for readability, add error log summary
 REM v1.02, 07/27/2009, R.Coleburn, add noPause option; optimize a bit, including removing FN_Normalize_CM3_Pkg in favor of optimization suggested by Jay Krell
 REM v1.03, 07/28/2009, R.Coleburn, add showTags and verbose options
+REM v1.04, 07/29/2009, R.Coleburn, fix minor problems and force missing packages to show up in the error log when noPause option specified
 REM ===========================================================================
 
 :Init
@@ -98,7 +99,7 @@ if /I not "%CM3_DoneSetup%"=="TRUE" goto FatalSetupCM3
 REM Identify this script.
 echo.
 echo ====== ---------------------------------
-echo do-cm3, v1.03, 7/28/2009, Randy Coleburn
+echo do-cm3, v1.04, 7/29/2009, Randy Coleburn
 echo ====== ---------------------------------
 echo.
 
@@ -186,6 +187,8 @@ goto END
 REM Create a tempory file containing the names of all packages to be processed.
 set CM3_TempFile="%CD%\Temp%RANDOM%.txt"
 if not "%CM3_TempFile%"=="" if exist %CM3_TempFile% del %CM3_TempFile%
+set CM3_ErrLog="%CD%\Temp%RANDOM%ErrLog.txt"
+if not "%CM3_ErrLog%"=="" if exist %CM3_ErrLog% del %CM3_ErrLog%
 echo CM3 ARGS = %CM3_CM3Args%
 echo  PkgInfo = %CM3_PkgInfo%
 echo Pkg Tree = %CM3_PkgTree%
@@ -267,15 +270,12 @@ goto :EOF
 :----
 REM Process each of the packages named in the temporary file.
 if not exist %CM3_TempFile% goto END
-set CM3_ErrLog="%CD%\Temp%RANDOM%ErrLog.txt"
-if not "%CM3_ErrLog%"=="" if exist %CM3_ErrLog% del %CM3_ErrLog%
 set CM3_CM3Failure=
 call :FN_RemoveQuotes %CM3_TempFile% CM3_TMP1
 FOR /F "tokens=1 delims=" %%i in (%CM3_TMP1%) do call :FN_DoPkg %%i
 echo.
-if "%CM3_CM3Failure%"=="" goto END
-echo WARNING:  One or packages experienced a failure.  See result detail above.
-echo.
+if not "%CM3_CM3Failure%"=="" echo WARNING:  One or packages experienced a failure.  See result detail above.& echo.
+if not exist %CM3_ErrLog% goto END
 echo ERROR LOG SUMMARY:
 echo -----------------
 if exist %CM3_ErrLog% type %CM3_ErrLog% & del %CM3_ErrLog%
@@ -351,6 +351,7 @@ if not "%CM3_PkgPath%"=="" goto foundPkg
 echo WARNING:  Unable to locate package "%CM3_Pkg%" in "%CM3_PkgTree%"
 echo           (this package will be skipped)
 echo.
+echo WARNING:  Package "%CM3_Pkg%" was not found.>>%CM3_ErrLog%
 if /I "%CM3_NoPause%"=="TRUE" goto :EOF
 pause
 goto :EOF
@@ -466,7 +467,10 @@ set CM3_CM3Args=
 rem echo CM3_CM3Failure=%CM3_CM3Failure%
 set CM3_CM3Failure=
 rem echo CM3_ErrLog=%CM3_ErrLog%
+if "%CM3_ErrLog%"=="" goto E1
+if exist %CM3_ErrLog% del %CM3_ErrLog%
 set CM3_ErrLog=
+:E1
 rem echo CM3_Group=%CM3_Group%
 set CM3_Group=
 rem echo CM3_NoPause=%CM3_NoPause%
