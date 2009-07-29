@@ -1,6 +1,6 @@
 UNSAFE MODULE Test EXPORTS Main;
 
-IMPORT BinIO, IO, Wr, Rd, TextWr, TextRd, Fmt ;
+IMPORT Thread, BinIO, IO, Wr, Rd, (*TextWr, TextRd,*) Fmt ;
 
 VAR
   test_var : BinIO.Byte := 16_78 ;
@@ -17,6 +17,7 @@ VAR
   rd : TextRd.T ;
 *)
 
+<*FATAL Rd.Failure, Wr.Failure, Thread.Alerted*>
 BEGIN
   
   BinIO.PutByte(test_var, wr) ;
