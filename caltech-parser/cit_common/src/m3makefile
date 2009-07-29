@@ -1,6 +1,6 @@
-/* $Id: m3makefile,v 1.4 2008-02-20 11:46:41 wagner Exp $ */
-m3_option("-X2@-pg@")
-m3_option("-g")
+/* $Id: m3makefile,v 1.5 2009-07-29 17:54:16 jkrell Exp $ */
+%m3_option("-X2@-pg@")
+%m3_option("-g")
 %remove_m3_option("-O")
 m3_option("-times")
 import ("libm3")
