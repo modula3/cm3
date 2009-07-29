@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.17 2009-07-27 15:12:15 jkrell Exp $
+% $Id: m3makefile,v 1.18 2009-07-29 16:24:38 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -56,6 +56,36 @@ readonly Platform_info = {
   "PPC_LINUX"   : "powerpc-apple-linuxelf",
   "NetBSD2_i386" : "i686-unknown-netbsdelf",
 
+  "PA32_HPUX"  : "hppa-hpux",
+  "PA32_LINUX" : "hppa-linux",
+  "PA64_HPUX"  : "hppa64-hpux",
+  "PA64_LINUX" : "hppa64-linux",
+  "PPC32_AIX" : "powerpc-aix",
+  "PPC32_OPENBSD" : "powerpc-openbsd",
+  "PPC64_AIX" : "powerpc64-aix",
+  "PPC64_DARWIN" : "powerpc64-darwin",
+  "ARM_DARWIN" : "arm-apple-darwin8",
+  "ARM_LINUX" : "arm-linux-uclibc",
+  "AMD64_NT"  : "amd64-pc-mingw32",
+  "AMD64_OPENBSD" : "amd64-openbsd",
+  "AMD64_SOLARIS" : "i686-sun-solaris2.10", % deliberately i686 but willing to change
+  "AMD64_FREEBSD" : "amd64-freebsd7",
+  "AMD64_NETBSD" : "amd64-netbsd",
+  "MIPS32_IRIX" : "mips-irix",
+  "MIPS32_LINUX" : "mips-linux",
+  "MIPS64_IRIX" : "mips64-irix",
+  "MIPS64_LINUX" : "mips64-linux",
+  "MIPS64_OPENBSD" : "mips64-openbsd",
+  "IA64_FREEBSD" : "ia64-freebsd7",
+  "IA64_HPUX" : "ia64-hpux",
+  "IA64_LINUX" : "ia64-linux",
+  "IA64_NT" : "ia64-nt",
+  "IA64_VMS" : "ia64-vms",
+  "I386_NT"     : "i686-pc-mingw32",
+  "I386_CYGWIN" : "i686-pc-cygwin",
+  "I386_MINGW"	: "i686-pc-mingw32",
+  "I386_SOLARIS" : "i686-sun-solaris2.10",
+  "I386_OPENBSD" : "i686-openbsd",
   "SPARC32_LINUX" : "sparc-linux",
   "SPARC32_OPENBSD" : "sparc-openbsd",
   "SPARC64_LINUX" : "sparc64-linux",
