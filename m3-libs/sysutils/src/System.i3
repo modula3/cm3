@@ -26,7 +26,7 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*---------------------------------------------------------------------------
- * $Id: System.i3,v 1.4 2009-07-29 09:13:34 jkrell Exp $ *)
+ * $Id: System.i3,v 1.5 2009-07-29 17:28:57 jkrell Exp $ *)
 (*---------------------------------------------------------------------------*)
 
 INTERFACE System;
@@ -34,7 +34,6 @@ INTERFACE System;
 IMPORT Thread, AtomList, TextSeq, Rd, Wr, File, Process;
 IMPORT ProcessEnv, MsgIF;
 FROM Ctypes IMPORT int;
-FROM Utypes IMPORT pid_t;
 
 (*---------------------------------------------------------------------------*)
 EXCEPTION
@@ -187,6 +186,8 @@ copied from m3core/src/C/Common/Cerrno.i3 for bootstrapping against older releas
 
 <*EXTERNAL System__GetErrno*>
 PROCEDURE GetErrno(): int;
+
+TYPE pid_t = INTEGER; (* generally only 32 bits but ok *)
 
 <*EXTERNAL System__waitpid*>
 PROCEDURE waitpid (pid: pid_t; status: UNTRACED REF int; options: int): pid_t;
