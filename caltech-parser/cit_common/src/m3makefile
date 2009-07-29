@@ -1,6 +1,6 @@
 /* $Id$ */
-m3_option("-X2@-pg@")
-m3_option("-g")
+%m3_option("-X2@-pg@")
+%m3_option("-g")
 %remove_m3_option("-O")
 m3_option("-times")
 import ("libm3")
