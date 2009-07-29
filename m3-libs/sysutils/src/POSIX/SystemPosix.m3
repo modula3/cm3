@@ -26,7 +26,7 @@
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
 
-IMPORT Unix, Text, Ctypes, Uexec, Process, Fmt, Uerror;
+IMPORT Unix, Text, Ctypes, (*Uexec,*) Process, Fmt, Uerror;
 IMPORT (*SchedulerPosix*) Word;
 
 (*---------------------------------------------------------------------------*)
@@ -57,7 +57,7 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
     result := SchedulerPosix.WaitProcess (pid, status);
 *)
     (* 0 should be WNOHANG on user threads platforms, which there are presently none of *)
-    result := Uexec.waitpid (pid, ADR(status), 0);
+    result := (*Uexec.*)waitpid (pid, ADR(status), 0);
     IF result < 0 THEN 
       e := GetErrno();
       IF (e = Uerror.ECHILD) THEN err := "The process specified in pid does not exist or is not a child of the calling process.";
