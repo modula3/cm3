@@ -19,7 +19,6 @@ readonly Platform_info = {
   "AP3000"    : "apollo68-bsd",
   "ARM"       : "arm--riscos",
   "ARM_DARWIN" : "arm-apple-darwin8",
-  "ARM_DARWIN" : "arm-apple-darwin9",
   "ARM_LINUX" : "arm-linux-uclibc",
   "BSDI4"     : "i686-unknown-freebsdelf",
   "DS3100"    : "decstation",
