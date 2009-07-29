@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.42.2.1 2009-07-29 09:43:55 jkrell Exp $
+# $Id: make-bin-dist-min.sh,v 1.42.2.2 2009-07-29 19:53:15 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -103,6 +103,7 @@ if [ "${NEWCFG}" != "y" ]; then
   else
     CFG1="${ROOT}/m3-sys/cm3/src/config/${TARGET}"
   fi
+  echo "adjusting INSTALL_ROOT in old config file"
   sed -e '
     /^INSTALL_ROOT[ \t]*=/s;^.*$;INSTALL_ROOT = "'${INSTALLROOT}${SL}'";
   ' "${CFG1}" > "${INSTALLROOT}/bin/cm3.cfg"

@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26 2009-07-24 13:40:48 wagner Exp $
+# $Id: make-dist.sh,v 1.26.2.1 2009-07-29 19:53:16 jkrell Exp $
 
 DESTHOST=${DESTHOST:-birch.elegosoft.com}
 
@@ -210,6 +210,7 @@ for c in ${PKG_COLLECTIONS}; do
       echo 'cd $HERE'
     echo "done"
   ) > install.sh
+  echo "making install.cmd"
   chmod 755 install.sh
   (
     echo 'REM ---BEGIN---'
