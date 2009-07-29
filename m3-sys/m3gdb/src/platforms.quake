@@ -1,5 +1,5 @@
 %
-% $Id: platforms.quake,v 1.3 2009-07-29 16:27:17 jkrell Exp $
+% $Id: platforms.quake,v 1.4 2009-07-29 16:30:35 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -75,7 +75,7 @@ readonly Platform_info = {
   "SPARC32_OPENBSD" : "sparc-openbsd",
   "SPARC64_LINUX" : "sparc64-linux",
   "SPARC64_OPENBSD" : "sparc64-openbsd",
-  "SPARC64_SOLARIS" : "sparc64-solaris2"
+  "SPARC64_SOLARIS" : "sparc64-solaris2",
   "SUN3"      : "m68k-sun-sunos4.1",
   "SUN386"    : "i686-sun-sunos4.1",
   "Tru64v5"   : "alpha-dec-osf1",
