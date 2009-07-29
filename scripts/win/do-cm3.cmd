@@ -9,6 +9,7 @@ REM v1.02, 07/27/2009, R.Coleburn, add noPause option; optimize a bit, including
 REM v1.03, 07/28/2009, R.Coleburn, add showTags and verbose options
 REM v1.04, 07/29/2009, R.Coleburn, fix minor problems and force missing packages to show up in the error log when noPause option specified
 REM v1.05, 07/29/2009, R.Coleburn, minor fixups
+REM v1.06, 07/29/2009, R.Coleburn, optimizations
 REM ===========================================================================
 
 :Init
@@ -187,9 +188,9 @@ goto END
 :-------
 REM Create a tempory file containing the names of all packages to be processed.
 set CM3_TempFile="%CD%\Temp%RANDOM%.txt"
-if not "%CM3_TempFile%"=="" if exist %CM3_TempFile% del %CM3_TempFile%
+if defined CM3_TempFile if exist %CM3_TempFile% del %CM3_TempFile%
 set CM3_ErrLog="%CD%\Temp%RANDOM%ErrLog.txt"
-if not "%CM3_ErrLog%"=="" if exist %CM3_ErrLog% del %CM3_ErrLog%
+if defined CM3_ErrLog if exist %CM3_ErrLog% del %CM3_ErrLog%
 echo CM3 ARGS = %CM3_CM3Args%
 echo  PkgInfo = %CM3_PkgInfo%
 echo Pkg Tree = %CM3_PkgTree%
@@ -204,7 +205,7 @@ FOR /F "tokens=1* delims= " %%i in (%CM3_PkgInfo%) do call :FN_CheckPkg %%i %%j
 echo.
 echo Packages to be processed:
 echo ------------------------
-if exist %CM3_TempFile% type %CM3_TempFile%
+if defined CM3_TempFile if exist %CM3_TempFile% type %CM3_TempFile%
 echo ---END-of-List---
 echo.
 if /I "%CM3_NoPause%"=="TRUE" goto DoIt
@@ -473,10 +474,8 @@ rem echo CM3_CM3Failure=%CM3_CM3Failure%
 set CM3_CM3Failure=
 
 rem echo CM3_ErrLog=%CM3_ErrLog%
-if "%CM3_ErrLog%"=="" goto E1
-if exist %CM3_ErrLog% del %CM3_ErrLog%
+if defined CM3_ErrLog if exist %CM3_ErrLog% del %CM3_ErrLog%
 set CM3_ErrLog=
-:E1
 
 rem echo CM3_Group=%CM3_Group%
 set CM3_Group=
@@ -500,10 +499,8 @@ rem echo CM3_TMP1=%CM3_TMP1%
 set CM3_TMP1=
 
 rem echo CM3_TempFile=%CM3_TempFile%
-if "%CM3_TempFile%"=="" goto E2
-if exist %CM3_TempFile% del %CM3_TempFile%
+if defined CM3_TempFile if exist %CM3_TempFile% del %CM3_TempFile%
 set CM3_TempFile=
-:E2
 
 rem echo CM3_Verbose=%CM3_Verbose%
 set CM3_Verbose=
