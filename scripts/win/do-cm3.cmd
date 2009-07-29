@@ -10,6 +10,7 @@ REM v1.03, 07/28/2009, R.Coleburn, add showTags and verbose options
 REM v1.04, 07/29/2009, R.Coleburn, fix minor problems and force missing packages to show up in the error log when noPause option specified
 REM v1.05, 07/29/2009, R.Coleburn, minor fixups
 REM v1.06, 07/29/2009, R.Coleburn, optimizations
+REM v1.07, 07/29/2009, R.Coleburn, repair bug introduced with prior round of edits
 REM ===========================================================================
 
 :Init
@@ -101,7 +102,7 @@ if /I not "%CM3_DoneSetup%"=="TRUE" goto FatalSetupCM3
 REM Identify this script.
 echo.
 echo ====== ---------------------------------
-echo do-cm3, v1.05, 7/29/2009, Randy Coleburn
+echo do-cm3, v1.07, 7/29/2009, Randy Coleburn
 echo ====== ---------------------------------
 echo.
 
@@ -220,7 +221,7 @@ goto AskContinue
 :ShowTags
 :--------
 echo Enumerating group tags in  "%CM3_PkgInfo%" ...
-echo ... nne moment please ...
+echo ... one moment please ...
 FOR /F "tokens=1* delims= " %%i in (%CM3_PkgInfo%) do call :FN_AddTags %%j
 echo.
 echo Group Tags:
@@ -242,7 +243,7 @@ goto :EOF
 
 :FN_ChkTag
 rem %1 is a tag name; see if it is in the list, if not add it to the list
-set CM3_Answ==0
+set CM3_Answ=0
 for %%y in (%CM3_TMP1%) do if /I "%%y"=="%1" set CM3_Answ==1
 if "%CM3_Answ%"=="0" set CM3_TMP1=%CM3_TMP1%;%1
 goto :EOF
