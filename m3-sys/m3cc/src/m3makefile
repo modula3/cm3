@@ -4,8 +4,6 @@
 % See the file COPYRIGHT for a full description.
 %
 
-if not equal(OS_TYPE, "WIN32")
-
 % omit unnecessary builds during regression testing
 NOACTION = ""
 WS = $WORKSPACE
@@ -562,5 +560,3 @@ m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes insn-con
 postcp ()
 
 end % NOACTION
-
-end
