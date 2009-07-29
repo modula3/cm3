@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.1 2009-07-29 19:53:16 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.2 2009-07-29 23:44:50 wagner Exp $
 
 DESTHOST=${DESTHOST:-birch.elegosoft.com}
 
@@ -210,15 +210,14 @@ for c in ${PKG_COLLECTIONS}; do
       echo 'cd $HERE'
     echo "done"
   ) > install.sh
-  echo "making install.cmd"
   chmod 755 install.sh
+  echo "making setup.cmd"
   (
     echo 'REM ---BEGIN---'
     echo '@echo off'
     printf 'for %%%%p in ('
     for p in ${PKGS}; do
-      pw="`echo $p | sed -e 's;/;\\;g'`"
-      printf "%s; " ${pw}
+      printf "%s; " ${p}
     done
     echo ') do call :ShipIt %%p'
     cat <<EOF
@@ -237,8 +236,8 @@ echo done
 @echo on
 REM ---END---
 EOF
-  ) > install.cmd
-  chmod 755 install.cmd
+  ) > setup.cmd
+  chmod 755 setup.cmd
   (
     echo "<html>"
     cat <<EOF
@@ -303,7 +302,7 @@ EOF
       --exclude '*/CVS/*' --exclude '*/CVS' --exclude '*~' \
       --exclude '*.tar.*' --exclude '*.tgz' --exclude "*/${TARGET}/gcc" \
       --exclude "*/${TARGET}/*/*" \
-      -czf "${ARCHIVE}" collection-${c}.html install.sh install.cmd ${PKGS}
+      -czf "${ARCHIVE}" collection-${c}.html install.sh setup.cmd ${PKGS}
       ls -l "${ARCHIVE}"
   fi
 done
