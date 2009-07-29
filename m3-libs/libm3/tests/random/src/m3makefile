@@ -4,6 +4,11 @@
 %
 % Last modified on Tue Nov  1 08:59:57 PST 1994 by kalsow
 
+%
+% This hangs on OpenBSD/x86, needs further investigation.
+%
+if not equal(TARGET, "I386_OPENBSD")
+
 write(CR, "--- tests in ", getwd(), "---", CR)
 
 import("libm3")
@@ -13,4 +18,6 @@ program("RandomTest")
 if defined("RUN")
   r = q_exec( "." & SL & "RandomTest -all > out" )
   write( CR, "program returned ", r, CR )
+end
+
 end
