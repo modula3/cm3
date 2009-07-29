@@ -167,7 +167,7 @@ TYPE Int32Rec = RECORD v : Swap.Int32 END;
    type Swap.Int32.
 *) 
 VAR Int32RecVar : Int32Rec; 
-VAR CheckInt32 : [ 0 .. 0 ] := ADR(Int32RecVar) - ADR(Int32RecVar.v); 
+VAR CheckInt32 : [ 0 .. 0 ] := ADR(Int32RecVar) - ADR(Int32RecVar.v); <*NOWARN*>
 
 PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor; 
                   number: INTEGER := 1): ADDRESS RAISES 
