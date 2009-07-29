@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.43 2009-07-27 15:50:44 jkrell Exp $
+# $Id: make-bin-dist-min.sh,v 1.44 2009-07-29 09:02:07 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -117,8 +117,8 @@ else
   # new config files
   cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin/config"
   (
-    echo "INSTALL_ROOT = (path() & SL & \"..\")"
-    echo "include(path() & \"/config/${TARGET}\")"
+    echo "INSTALL_ROOT = path() & \"/..\""
+    echo "include(path() & \"/config/\" & HOST)"
   ) > "${INSTALLROOT}/bin/cm3.cfg"
 fi
 
