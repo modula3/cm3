@@ -19,7 +19,7 @@ VAR
 
 <*FATAL Rd.Failure, Wr.Failure, Thread.Alerted*>
 BEGIN
-  
+
   BinIO.PutByte(test_var, wr) ;
   BinIO.PutByte(test_var, wr, BinIO.Endian.Little) ;
   BinIO.PutByte(test_var, wr, BinIO.Endian.Big) ;
