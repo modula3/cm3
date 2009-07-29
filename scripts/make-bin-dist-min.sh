@@ -117,8 +117,8 @@ else
   # new config files
   cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin/config"
   (
-    echo "INSTALL_ROOT = (path() & SL & \"..\")"
-    echo "include(path() & \"/config/${TARGET}\")"
+    echo "INSTALL_ROOT = path() & \"/..\""
+    echo "include(path() & \"/config/\" & HOST)"
   ) > "${INSTALLROOT}/bin/cm3.cfg"
 fi
 
