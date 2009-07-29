@@ -25,7 +25,7 @@ readonly Platform_info = {
   "ARM_LINUX" : "arm-linux-uclibc",
 % "BSDI4"     : "i686-unknown-freebsdelf",
 % "DS3100"    : "decstation",
-  "FBSD_ALPHA": "alpha-unknown-freebsd",
+  "FBSD_ALPHA": "alpha-unknown-freebsd6",
 % "FreeBSD"   : "i686-unknown-bsd",
 % "FreeBSD2"  : "i686-unknown-freebsd",
 % "FreeBSD3"  : "i686-unknown-freebsd3",
