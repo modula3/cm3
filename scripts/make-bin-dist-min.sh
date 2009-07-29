@@ -103,6 +103,7 @@ if [ "${NEWCFG}" != "y" ]; then
   else
     CFG1="${ROOT}/m3-sys/cm3/src/config/${TARGET}"
   fi
+  echo "adjusting INSTALL_ROOT in old config file"
   sed -e '
     /^INSTALL_ROOT[ \t]*=/s;^.*$;INSTALL_ROOT = "'${INSTALLROOT}${SL}'";
   ' "${CFG1}" > "${INSTALLROOT}/bin/cm3.cfg"

@@ -210,6 +210,7 @@ for c in ${PKG_COLLECTIONS}; do
       echo 'cd $HERE'
     echo "done"
   ) > install.sh
+  echo "making install.cmd"
   chmod 755 install.sh
   (
     echo 'REM ---BEGIN---'
