@@ -8,6 +8,7 @@ REM v1.01, 07/21/2009, R.Coleburn, minor formatting changes for readability, add
 REM v1.02, 07/27/2009, R.Coleburn, add noPause option; optimize a bit, including removing FN_Normalize_CM3_Pkg in favor of optimization suggested by Jay Krell
 REM v1.03, 07/28/2009, R.Coleburn, add showTags and verbose options
 REM v1.04, 07/29/2009, R.Coleburn, fix minor problems and force missing packages to show up in the error log when noPause option specified
+REM v1.05, 07/29/2009, R.Coleburn, minor fixups
 REM ===========================================================================
 
 :Init
@@ -32,7 +33,7 @@ set CM3_Verbose=FALSE
 :ParseParams
 :-----------
 REM Parse parameters, see Usage.
-if "%1"=="" goto Usage
+if "%1"=="" goto ArgEnd
 goto ExamineArg1
 
 :NextArg
@@ -54,7 +55,7 @@ if "%CM3_Group%"=="" for %%a in (gui juno m3devtool m3gdb m3gnudevtool math obli
 if /I "%CM3_Group%"=="%1" goto NextArg
 
 rem check to see if %1 is a cm3 compiler mode argument
-if /I "%CM3_CM3Args%"=="SHOWTAGS" goto Usage
+if /I "%CM3_CM3Args%"=="SHOWTAGS" echo ERROR:  Parameter "%1" not valid with "ShowTags" & goto Usage
 set CM3_Arg=
 for %%a in (find depend realclean clean build ship buildship) do if /I %%a==%1 set CM3_Arg=-%%a
 for %%a in (-find -depend -realclean -clean -build -ship -buildship) do if /I %%a==%1 set CM3_Arg=%%a
@@ -99,7 +100,7 @@ if /I not "%CM3_DoneSetup%"=="TRUE" goto FatalSetupCM3
 REM Identify this script.
 echo.
 echo ====== ---------------------------------
-echo do-cm3, v1.04, 7/29/2009, Randy Coleburn
+echo do-cm3, v1.05, 7/29/2009, Randy Coleburn
 echo ====== ---------------------------------
 echo.
 
@@ -458,39 +459,54 @@ echo.
 :END
 :---
 REM Remove environment variables and temporary files, then exit.
+
 rem echo CM3_Answ=%CM3_Answ%
 set CM3_Answ=
+
 rem echo CM3_Arg=%CM3_Arg%
 set CM3_Arg=
+
 rem echo CM3_CM3Args=%CM3_CM3Args%
 set CM3_CM3Args=
+
 rem echo CM3_CM3Failure=%CM3_CM3Failure%
 set CM3_CM3Failure=
+
 rem echo CM3_ErrLog=%CM3_ErrLog%
 if "%CM3_ErrLog%"=="" goto E1
 if exist %CM3_ErrLog% del %CM3_ErrLog%
 set CM3_ErrLog=
 :E1
+
 rem echo CM3_Group=%CM3_Group%
 set CM3_Group=
+
 rem echo CM3_NoPause=%CM3_NoPause%
 set CM3_NoPause=
+
 rem echo CM3_Pkg=%CM3_Pkg%
 set CM3_Pkg=
+
 rem echo CM3_PkgInfo=%CM3_PkgInfo%
 set CM3_PkgInfo=
+
 rem echo CM3_PkgPath=%CM3_PkgPath%
 set CM3_PkgPath=
+
 rem echo CM3_PkgTree=%CM3_PkgTree%
 set CM3_PkgTree=
+
 rem echo CM3_TMP1=%CM3_TMP1%
 set CM3_TMP1=
+
 rem echo CM3_TempFile=%CM3_TempFile%
 if "%CM3_TempFile%"=="" goto E2
 if exist %CM3_TempFile% del %CM3_TempFile%
 set CM3_TempFile=
 :E2
+
 rem echo CM3_Verbose=%CM3_Verbose%
 set CM3_Verbose=
+
 echo ===END do-cm3===
 echo on
