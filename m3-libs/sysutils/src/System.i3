@@ -34,6 +34,7 @@ INTERFACE System;
 IMPORT Thread, AtomList, TextSeq, Rd, Wr, File, Process;
 IMPORT ProcessEnv, MsgIF;
 FROM Ctypes IMPORT int;
+FROM Utypes IMPORT pid_t;
 
 (*---------------------------------------------------------------------------*)
 EXCEPTION
@@ -186,5 +187,8 @@ copied from m3core/src/C/Common/Cerrno.i3 for bootstrapping against older releas
 
 <*EXTERNAL System__GetErrno*>
 PROCEDURE GetErrno(): int;
+
+<*EXTERNAL System__waitpid*>
+PROCEDURE waitpid (pid: pid_t; status: UNTRACED REF int; options: int): pid_t;
 
 END System.

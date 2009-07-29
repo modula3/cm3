@@ -26,6 +26,7 @@
 implementation("OSSpecialsPosix")
 implementation("PathReprPosix")
 implementation("SystemPosix")
+c_source("SystemPosixC")
 if equal(M3_VARIANT, "PM3")
   implementation("FSUnix_pm3")
 else
