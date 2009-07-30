@@ -161,7 +161,7 @@ PROCEDURE ReadData(v: ReadVisitor;  dest: ADDRESS; len: INTEGER)
     END;
   END ReadData;
 
-TYPE Int32Rec = BITS 32 FOR RECORD v : Swap.Int32 END; 
+TYPE Int32Rec = RECORD v : Swap.Int32 END; 
 (* We need v to be inside a record.  Otherwise, the language would allow
    a compiler to actually allocate more than the BITS 32 for a value of
    type Swap.Int32.
