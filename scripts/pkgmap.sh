@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.42.2.2 2009-07-27 20:04:19 wagner Exp $
+# $Id: pkgmap.sh,v 1.42.2.3 2009-07-31 16:06:52 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -218,7 +218,10 @@ EOF
 
 quote_xml() {
   while [ -n "$1" ]; do
-    echo "$1" | sed -e 's/&/&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+    echo "$1" | sed -e 's/&/&amp;/g' \
+                    -e 's/</\&lt;/g' \
+                    -e 's/>/\&gt;/g' \
+                    -e 's//^H/g'
     shift
   done
 }
