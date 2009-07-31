@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.2 2009-07-29 23:44:50 wagner Exp $
+# $Id: make-dist.sh,v 1.26.2.3 2009-07-31 21:57:53 wagner Exp $
 
 DESTHOST=${DESTHOST:-birch.elegosoft.com}
 
@@ -22,15 +22,18 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
+DS="RC2"; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
+
+cd "${ROOT}" || exit 1
+cvs -q up -r release_CM3_5_8_${DS} -dP
 
 # keep short runpaths
 M3_PORTABLE_RUN_PATH=1
 export M3_PORTABLE_RUN_PATH
 
-DS="RC2"; export DS
 if [ -z "${NOBUILD}" ]; then
   DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
   DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
