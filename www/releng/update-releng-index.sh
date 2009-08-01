@@ -15,12 +15,12 @@ TARGETS=`ls *RC*.tgz | egrep cm3-bin- |
          sort -u`
 echo $TARGETS
 
-INDEX=${INDEX:-index.html}
+INDEX=${INDEX:-download.html}
 
 if [ -f "${INDEX}" ]; then
   mv ${INDEX} ${INDEX}.old
 fi
-cp index-frag.html ${INDEX}
+cp download-frag.html ${INDEX}
 
 tablerow() {
   f="$1"
