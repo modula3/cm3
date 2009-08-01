@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.74.2.1 2009-07-28 13:14:31 jkrell Exp $
+# $Id: sysinfo.sh,v 1.74.2.2 2009-08-01 19:54:53 wagner Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -209,6 +209,11 @@ case "${UNAME}" in
     else
       echo Update $0 for ${ARCH}
       exit 1
+    fi
+    if gtar --help >/dev/null 2>&1; then
+      TAR=gtar
+    elif gnutar --help >/dev/null 2>&1; then
+      TAR=gnutar
     fi
   ;;
 
