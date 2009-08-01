@@ -256,9 +256,6 @@ EOF
   <body>
     <h1>CM3 Package Collection $c</h1>
 EOF
-    ddd=''
-    ddd=${ddd:=DESC_${c}}
-    echo ${!ddd}
     echo "<p>This collections contains the following packages:</p>"
     echo "<ul>"
     for p in ${PKGS}; do
