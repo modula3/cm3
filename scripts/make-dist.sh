@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.3 2009-07-31 21:57:53 wagner Exp $
+# $Id: make-dist.sh,v 1.26.2.4 2009-08-01 11:43:02 wagner Exp $
 
 DESTHOST=${DESTHOST:-birch.elegosoft.com}
 
@@ -256,9 +256,6 @@ EOF
   <body>
     <h1>CM3 Package Collection $c</h1>
 EOF
-    ddd=''
-    ddd=${ddd:=DESC_${c}}
-    echo ${!ddd}
     echo "<p>This collections contains the following packages:</p>"
     echo "<ul>"
     for p in ${PKGS}; do
