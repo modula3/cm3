@@ -210,6 +210,11 @@ case "${UNAME}" in
       echo Update $0 for ${ARCH}
       exit 1
     fi
+    if gtar --help >/dev/null 2>&1; then
+      TAR=gtar
+    elif gnutar --help >/dev/null 2>&1; then
+      TAR=gnutar
+    fi
   ;;
 
   # more need to be added here, I haven't got all the platform info ready
