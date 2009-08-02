@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.42.2.5 2009-08-02 13:27:55 jkrell Exp $
+# $Id: pkgmap.sh,v 1.42.2.6 2009-08-02 14:30:39 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -221,7 +221,7 @@ quote_xml() {
     echo "$1" | sed -e 's/&/&amp;/g' \
                     -e 's/</\&lt;/g' \
                     -e 's/>/\&gt;/g' \
-                    -e 's//^H/g'
+              | tr -d '\001\002\003\004\005\006\007\010'
     shift
   done
 }
