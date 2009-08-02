@@ -221,7 +221,7 @@ quote_xml() {
     echo "$1" | sed -e 's/&/&amp;/g' \
                     -e 's/</\&lt;/g' \
                     -e 's/>/\&gt;/g' \
-                    -e 's//^H/g'
+              | tr -d '\001\002\003\004\005\006\007\010'
     shift
   done
 }
