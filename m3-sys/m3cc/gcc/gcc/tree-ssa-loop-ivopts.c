@@ -4271,7 +4271,9 @@ iv_ca_add_use (struct ivopts_data *data, struct iv_ca *ivs,
 static comp_cost
 iv_ca_cost (struct iv_ca *ivs)
 {
-  return (ivs->bad_uses ? infinite_cost : ivs->cost);
+  if (ivs->bad_uses)
+      return infinite_cost;
+  return ivs->cost;
 }
 
 /* Returns true if all dependences of CP are among invariants in IVS.  */
