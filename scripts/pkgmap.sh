@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.42.2.3 2009-07-31 16:06:52 wagner Exp $
+# $Id: pkgmap.sh,v 1.42.2.4 2009-08-02 12:18:44 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -462,8 +462,10 @@ if [ -n "${REPORT}" ]; then
   rj=`cat ${RJ}`
   rjt=`cat ${RJT}`
 
-  echo "<testsuite tests=\"${pall}\" failures=\"${pko}\" name=\"CM3 package build status\">" > ${RJ}
-  echo "<testsuite tests=\"${tall}\" failures=\"${tko}\" name=\"CM3 package tests status\">" > ${RJT}
+  echo '<?xml version="1.0" encoding="ISO-8859-1"?>' > ${RJ}
+  echo '<?xml version="1.0" encoding="ISO-8859-1"?>' > ${RJT}
+  echo "<testsuite tests=\"${pall}\" failures=\"${pko}\" name=\"CM3 package build status\">" >> ${RJ}
+  echo "<testsuite tests=\"${tall}\" failures=\"${tko}\" name=\"CM3 package tests status\">" >> ${RJT}
   echo "${rj}" >> ${RJ}
   echo "${rjt}" >> ${RJT}
   echo "</testsuite>" >> ${RJ}
