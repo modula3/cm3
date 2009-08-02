@@ -1,7 +1,13 @@
 #bash
 # $Id$
 
-DESTHOST=${DESTHOST:-birch.elegosoft.com}
+if test "x${CM3CVSUSER}" != "x"; then
+  CM3CVSUSER_AT="${CM3CVSUSER}@"
+else
+  CM3CVSUSER_AT=""
+fi
+
+DESTHOST=${DESTHOST:-${CM3CVSUSER_AT}birch.elegosoft.com}
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
