@@ -234,8 +234,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* SPARC32_SOLARIS *)
     | Systems.SOLgnu,
       Systems.SOLsun,
-(*    Systems.I386_SOLARIS,
-      Systems.AMD64_SOLARIS, *)
+      Systems.I386_SOLARIS,
+      Systems.AMD64_SOLARIS,
       Systems.SPARC64_SOLARIS
     =>
         Setjmp := "setjmp";
@@ -361,7 +361,9 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
                 Jumpbuf_size := 18 * Address.size;
 
-    | Systems.NT386, Systems.NT386GNU =>
+    | Systems.NT386, Systems.NT386GNU,
+      Systems.I386_NT, Systems.I386_CYGWIN,
+      Systems.I386_MINGW =>
 
                  (* Cygwin is 13, Visual C++ is 16. Interix is 18.
                     Use 18 for interop.
@@ -454,8 +456,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                    Jumpbuf_size := 16_90 * Char.size;
                    Aligned_procedures := FALSE;
 
-(*               |  Systems.I386_SOLARIS =>
-                   Jumpbuf_size := 16_280 * Char.size; TBD *)
+                 |  Systems.I386_SOLARIS =>
+                   Jumpbuf_size := 16_280 * Char.size; (* TBD *)
 
                  | Systems.SPARC =>
                    Jumpbuf_size              := 10 * Address.size;
