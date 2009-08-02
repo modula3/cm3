@@ -60,6 +60,11 @@ EXE=""
 SL="/"
 TAR=tar
 
+FIND=find
+if [ -x /usr/bin/find ] ; then
+  FIND=/usr/bin/find
+fi
+
 if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
   if [ -n "$TMP" -a -d "$TMP" ] ; then
     TMPDIR="$TMP"
@@ -300,10 +305,11 @@ debug "CM3ROOT     = $CM3ROOT"
 debug "CM3VERSION  = $CM3VERSION"
 debug "CM3VERSIONNUM = $CM3VERSIONNUM"
 debug "CM3LASTCHANGED = $CM3LASTCHANGED"
+debug "FIND = $FIND"
 
 export ROOT M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB
 export GREP TMPDIR EXE SL CM3VERSION TAR
-export CM3ROOT CM3 CM3_ROOT
+export CM3ROOT CM3 CM3_ROOT FIND
 export SYSINFO_DONE CM3VERSIONNUM CM3LASTCHANGED
 
 fi

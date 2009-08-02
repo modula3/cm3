@@ -650,6 +650,11 @@ make_src_dist_snapshots()
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 source snapshot build done"
 }
 
+FIND=find
+if [ -x /usr/bin/find ] ; then
+  FIND=/usr/bin/find
+fi
+
 test_m3tests()
 {
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` run cm3 compiler and runtime regression test suite in ${WS} with lastok version"
@@ -686,7 +691,7 @@ test_m3tests()
   fi
   
   echo " >>> test_m3tests error extract:"
-  find ${CM3_TARGET} -type f -name stderr.pgm -print | \
+  $FIND ${CM3_TARGET} -type f -name stderr.pgm -print | \
     xargs egrep '^\*\*|error.*and.*warning|fail' | grep -v '0 error' | \
     tee ${M3TERR}.extract 1>&2
 

@@ -19,6 +19,6 @@ fi
 
 . "$sysinfo"
 
-find "${root}" -name m3makefile -print | \
+$FIND "${root}" -name m3makefile -print | \
   sed -e 's;/m3makefile$;;' -e 's;^;dir ;'
 

@@ -37,7 +37,7 @@ else
 fi
 
 for d in `listpkgs "$@" | sed -e "s;\$;/src;"`; do
-  find "$d" -type d \! -name CVS -print
+  $FIND "$d" -type d \! -name CVS -print
 done | sed -e "s;^;${PREFIX};"
 
 #echo "
