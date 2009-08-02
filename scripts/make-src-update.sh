@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-update.sh,v 1.5 2009-07-22 20:14:35 jkrell Exp $
+# $Id: make-src-update.sh,v 1.5.2.1 2009-08-02 12:17:25 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -52,7 +52,7 @@ cd "${ROOT}" || exit 1
 /bin/ls -1d m3overrides COPYRIGHT-CMASS COPYRIGHT-DEC ${P} > .tar-include
 echo "building exclude list..."
 for p in ${P} ; do
-  find ${p} \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
+  $FIND ${p} \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
             -name '*.rej'  -or -name 'cvs-nq-up' -or -name '*-diffs' -or \
             \( -name 'CVS' -a -type d \) \) -print | \
     sed -e 's;^./;;' >> .tar-exclude

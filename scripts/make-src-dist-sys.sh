@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-sys.sh,v 1.12 2009-07-24 04:22:35 jkrell Exp $
+# $Id: make-src-dist-sys.sh,v 1.12.2.1 2009-08-02 12:17:24 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -46,7 +46,7 @@ cd "${ROOT}" || exit 1
 /bin/ls -1d m3-*/*/${TARGET} > .tar-exclude
 /bin/ls -1d m3-*/*/${TARGET}p >> .tar-exclude
 echo "building exclude list..."
-find . \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
+$FIND . \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
           -name '*.rej'  -or -name 'cvs-nq-up' -or -name '*-diffs' -or \
           -name 'PkgDep' -or -name 'PkgKind' -or -name '.bok' -or \
           -name '*.o' -or -name '*.a' -or -name '*.dll' -or -name '*.obj' -or \

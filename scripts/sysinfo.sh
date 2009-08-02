@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.74.2.2 2009-08-01 19:54:53 wagner Exp $
+# $Id: sysinfo.sh,v 1.74.2.3 2009-08-02 12:17:25 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -59,6 +59,11 @@ M3SHIP=${M3SHIP:-m3ship}
 EXE=""
 SL="/"
 TAR=tar
+
+FIND=find
+if [ -x /usr/bin/find ] ; then
+  FIND=/usr/bin/find
+fi
 
 if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
   if [ -n "$TMP" -a -d "$TMP" ] ; then
@@ -300,10 +305,11 @@ debug "CM3ROOT     = $CM3ROOT"
 debug "CM3VERSION  = $CM3VERSION"
 debug "CM3VERSIONNUM = $CM3VERSIONNUM"
 debug "CM3LASTCHANGED = $CM3LASTCHANGED"
+debug "FIND = $FIND"
 
 export ROOT M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB
 export GREP TMPDIR EXE SL CM3VERSION TAR
-export CM3ROOT CM3 CM3_ROOT
+export CM3ROOT CM3 CM3_ROOT FIND
 export SYSINFO_DONE CM3VERSIONNUM CM3LASTCHANGED
 
 fi
