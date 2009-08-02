@@ -131,6 +131,9 @@ readonly m3cc_config = {
   %
   "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld",
 
+  "SOLgnu" : "-with-as=/usr/ccs/bin/as -without-gnu-as -with-ld=/usr/ccs/bin/ld -without-gnu-ld",
+  "SOLsun" : "-with-as=/usr/ccs/bin/as -without-gnu-as -with-ld=/usr/ccs/bin/ld -without-gnu-ld",
+
   %
   % This is recommended and has been seen to make a difference.
   %
