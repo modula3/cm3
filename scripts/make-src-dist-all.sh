@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-all.sh,v 1.10.2.1 2009-08-02 12:17:23 jkrell Exp $
+# $Id: make-src-dist-all.sh,v 1.10.2.2 2009-08-02 13:27:55 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -54,7 +54,12 @@ ${TAR} -czf ${ARCHIVE} --files-from .tar-include --exclude-from .tar-exclude \
  || exit 1
 ls -l ${ARCHIVE}
 if [ -n "${DOSHIP}" ]; then
-  WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+  if test "x${CM3CVSUSER}" != "x"; then
+    CM3CVSUSER_AT="${CM3CVSUSER}@"
+  else
+    CM3CVSUSER_AT=""
+  fi
+  WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
   WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
   scp "${ARCHIVE}" "${WWWDEST}" < /dev/null
 fi

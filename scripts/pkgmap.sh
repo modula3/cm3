@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.42.2.4 2009-08-02 12:18:44 wagner Exp $
+# $Id: pkgmap.sh,v 1.42.2.5 2009-08-02 13:27:55 jkrell Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -475,7 +475,12 @@ if [ -n "${REPORT}" ]; then
   echo "XML package test report in ${RJT}"
 
   if [ -n "${DOSHIP}" ]; then
-    WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+  if test "x${CM3CVSUSER}" != "x"; then
+    CM3CVSUSER_AT="${CM3CVSUSER}@"
+  else
+    CM3CVSUSER_AT=""
+  fi
+    WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
     WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/logs}
     scp "${R}" "${WWWDEST}" < /dev/null
   fi
