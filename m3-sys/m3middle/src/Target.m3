@@ -257,7 +257,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  First_readable_addr       := 16_1000;
                  (* 200 bytes with 8 byte alignment *)
                  Jumpbuf_size              := 50 * Address.size;
-                 Jumpbuf_align             := 8;
+                 Jumpbuf_align             := 64;
                  Aligned_procedures        := FALSE;
 
     |  Systems.PA64_HPUX =>
