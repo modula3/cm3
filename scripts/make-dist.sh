@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.6 2009-08-02 13:31:53 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.7 2009-08-02 14:24:25 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -288,7 +288,7 @@ EOF
       fi
       for section in 1 5 6 7 8; do
         manpages=`$FIND ${p}/src -name "[A-Za-z]*.${section}" -print`
-	[ ${p} = m3-tools/m3tk ] && manpages="" # only fragments in m3tk, ignore
+        [ ${p} = m3-tools/m3tk ] && manpages="" # only fragments in m3tk, ignore
         if [ -n "${manpages}" ]; then
           for m in ${manpages}; do
             mb=`basename ${m} .${section}`
@@ -312,6 +312,8 @@ EOF
       ls -l "${ARCHIVE}"
   fi
 done
+
+set -x
 
 if [ `hostname` = 'birch' ]; then
   ARCHIVE="${STAGE}/cm3-scripts-${CM3VERSION}-${DS}.tgz"
