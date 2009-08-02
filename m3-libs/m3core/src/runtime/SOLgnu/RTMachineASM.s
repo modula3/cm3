@@ -1,6 +1,8 @@
-        .seg    "text"
-        .globl  RTMachine__SaveRegsInStack
-        .align 4
+  .file "RTMachineASM.s"
+  .section ".text",#alloc,#execinstr
+  .align 8
+  .global RTMachine__SaveRegsInStack
+  .type RTMachine__SaveRegsInStack,#function
 RTMachine__SaveRegsInStack:
         ta      0x3   ! ST_FLUSH_WINDOWS
         mov     %sp,%o0
