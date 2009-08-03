@@ -3,7 +3,8 @@ REM RCC_upgradeCM3, written by Randy Coleburn, 07/28/2009
 REM ===========================================================================
 REM Version History
 REM ---------------
-REM v1.00, 07/29/2009, R.Coleburn
+REM v1.0, 07/29/2009, R.Coleburn
+REM v1.1, 08/02/2009, R.Coleburn, min is not sufficient, use m3front
 REM ===========================================================================
 
 :Init
@@ -63,7 +64,7 @@ rem no more parameters, so make sure we've got the minimum required
 REM Identify this script.
 echo.
 echo =============== ---------------------------------
-echo  RCC_upgradeCM3, v1.00, 7/29/2009, Randy Coleburn
+echo  RCC_upgradeCM3, v1.10, 8/02/2009, Randy Coleburn
 echo =============== ---------------------------------
 echo.
 
@@ -199,20 +200,29 @@ type %CM3_ROOT%\bin\cm3.cfg
 echo ------------------------------------------------------------------------------
 echo.
 echo ========================================================================
-echo STAGE-1:  Building Minimal CM3 Compiler
+echo STAGE-1:  Building CM3 Compiler
 echo ========================================================================
 echo.
-call %CM3_DO% min -realclean -clean -build -ship nopause
+call %CM3_DO% front -realclean -clean -build -ship nopause
 @echo off
 echo.
 echo ========================================================================
 echo STAGE-2:  REPEATING BUILD to Ensure New Compiler Is Used to Build Itself
 echo ========================================================================
 echo.
+call %CM3_DO% front -realclean -clean -build -ship nopause
+@echo off
+echo.
+echo ========================================================================
+echo STAGE-3:  Building minimal distribution "min"
+echo ========================================================================
+echo.
 call %CM3_DO% min -realclean -clean -build -ship nopause
 @echo off
 echo.
+echo ========================================================================
 cm3 -version
+echo ========================================================================
 goto END
 
 :FN_UpdateConfig
