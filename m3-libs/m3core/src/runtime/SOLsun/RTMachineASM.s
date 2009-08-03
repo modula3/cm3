@@ -1,6 +1,6 @@
   .file "RTMachineASM.s"
   .section ".text",#alloc,#execinstr
-  .align 8
+  .align 4
   .global RTMachine__SaveRegsInStack
   .type RTMachine__SaveRegsInStack,#function
 RTMachine__SaveRegsInStack:
