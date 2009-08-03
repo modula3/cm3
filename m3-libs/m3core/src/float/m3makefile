@@ -22,6 +22,7 @@ _FloatPieces = {
   "I386_FREEBSD": _float_le,
   "I386_INTERIX": _float_le,
   "I386_LINUX": _float_le,
+  "I386_MINGW": _float_le,
   "I386_NETBSD": _float_le,
   "I386_OPENBSD": _float_le,
   "LINUXLIBC6" : _float_le,
