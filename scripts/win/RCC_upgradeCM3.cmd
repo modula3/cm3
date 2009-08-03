@@ -15,7 +15,6 @@ set CM3_Arg=
 set CM3_CM3Args=-realclean -clean -build -ship
 set CM3_CM3Failure=
 set CM3_Group=min
-set CM3_Pkg=
 set CM3_PkgInfo=
 set CM3_PkgPath=
 set CM3_PkgTree=
@@ -342,9 +341,6 @@ set CM3_Group=
 
 rem echo CM3_NoPause=%CM3_NoPause%
 set CM3_NoPause=
-
-rem echo CM3_Pkg=%CM3_Pkg%
-set CM3_Pkg=
 
 rem echo CM3_PkgInfo=%CM3_PkgInfo%
 set CM3_PkgInfo=
