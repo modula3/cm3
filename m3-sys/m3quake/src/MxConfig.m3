@@ -41,7 +41,7 @@ PROCEDURE FindConfig () =
     IF (found) THEN RETURN END;
 
     (* try the current directory *)
-    IF TryConfig (Filename) THEN RETURN END;
+    IF TryConfig (".", Filename) THEN RETURN END;
 
     (* try the immediate source directory *)
     IF TryConfig ("src", Filename) THEN RETURN END;
