@@ -52,7 +52,7 @@ cp_config_files() {
     cp ${f} ${CFGD}/${b}
   done
   ( echo "INSTALL_ROOT = path() & \"/..\""
-    echo "include(path() & \"/config/\" & HOST)"
+    echo "include(path() & \"/config/${TARGET}\")"
   ) > ${CFG}
   echo "new config files copied/generated in ${CFG}, backup in ${CFGBAK}"
 }

@@ -119,7 +119,7 @@ else
   cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin/config"
   (
     echo "INSTALL_ROOT = path() & \"/..\""
-    echo "include(path() & \"/config/\" & HOST)"
+    echo "include(path() & \"/config/${TARGET}\")"
   ) > "${INSTALLROOT}/bin/cm3.cfg"
 fi
 
