@@ -11,6 +11,7 @@ readonly _UnixPieces = {
   "AMD64_SOLARIS"   : [ "solaris-common",                          "uin-common" ],
   "ARM_DARWIN"      : [ "darwin-common", "darwin-arm",             "uin-len" ],
   "FreeBSD4"        : [ "freebsd-common", "freebsd-4",             "uin-len" ],
+  "I386_CYGWIN"     : [ "cygwin",                                  "uin-common" ],
   "I386_DARWIN"     : [ "darwin-common", "darwin-i386",            "uin-len" ],
   "I386_FREEBSD"    : [ "freebsd-common",                          "uin-len" ],
   "I386_INTERIX"    : [ "interix-common", "uin-common" ],
