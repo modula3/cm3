@@ -11,6 +11,7 @@ REM v1.04, 07/29/2009, R.Coleburn, fix minor problems and force missing packages
 REM v1.05, 07/29/2009, R.Coleburn, minor fixups
 REM v1.06, 07/29/2009, R.Coleburn, optimizations
 REM v1.07, 07/29/2009, R.Coleburn, repair bug introduced with prior round of edits
+REM v1.08, 08/02/2009, R.Coleburn, rename CM3_Pkg to CM3_Package to prevent overloaded use of CM3_Pkg with cm3SetupCmdEnv.cmd
 REM ===========================================================================
 
 :Init
@@ -21,7 +22,7 @@ set CM3_Arg=
 set CM3_CM3Args=
 set CM3_CM3Failure=
 set CM3_Group=
-set CM3_Pkg=
+set CM3_Package=
 set CM3_PkgInfo=
 set CM3_PkgPath=
 set CM3_PkgTree=
@@ -102,7 +103,7 @@ if /I not "%CM3_DoneSetup%"=="TRUE" goto FatalSetupCM3
 REM Identify this script.
 echo.
 echo ====== ---------------------------------
-echo do-cm3, v1.07, 7/29/2009, Randy Coleburn
+echo do-cm3, v1.08, 8/02/2009, Randy Coleburn
 echo ====== ---------------------------------
 echo.
 
@@ -261,10 +262,10 @@ goto :EOF
 
 :FN_EnumGroup
 rem %1=package, %2*=list of groups in this package
-set CM3_Pkg=
-for %%a in (%*) do if /I %%a==%CM3_Group% set CM3_Pkg=%1
-if /I "%CM3_Group%"=="ALL" set CM3_Pkg=%1
-if not "%CM3_Pkg%"=="" echo %CM3_Pkg%
+set CM3_Package=
+for %%a in (%*) do if /I %%a==%CM3_Group% set CM3_Package=%1
+if /I "%CM3_Group%"=="ALL" set CM3_Package=%1
+if not "%CM3_Package%"=="" echo %CM3_Package%
 goto :EOF
 
 
@@ -329,32 +330,32 @@ REM If this package (%1) should be processed and can be found, add it to the tem
 REM %1=package, %2*=group tags for this package
 
 rem ---first see if this package is tagged with the desired group
-set CM3_Pkg=
-for %%a in (%*) do if /I %%a==%CM3_Group% set CM3_Pkg=%1
-if /I "%CM3_Group%"=="ALL" set CM3_Pkg=%1
-if "%CM3_Pkg%"=="" goto :EOF
+set CM3_Package=
+for %%a in (%*) do if /I %%a==%CM3_Group% set CM3_Package=%1
+if /I "%CM3_Group%"=="ALL" set CM3_Package=%1
+if "%CM3_Package%"=="" goto :EOF
 
 rem ---sometimes the package has a relative path in unix-style, so convert it to DOS-style
-if not "%CM3_Pkg%"=="" set CM3_Pkg=%CM3_Pkg:/=\%
-rem echo normalized = %CM3_Pkg%
+if not "%CM3_Package%"=="" set CM3_Package=%CM3_Package:/=\%
+rem echo normalized = %CM3_Package%
 
 rem ---make sure we can find this package in the source tree
 set CM3_PkgPath=
 pushd %CM3_PkgTree%
 
 rem ------first try the package itself as a relative path
-if exist "%CM3_Pkg%\src" set CM3_PkgPath=%CM3_Pkg%
+if exist "%CM3_Package%\src" set CM3_PkgPath=%CM3_Package%
 
 rem ------if that doesn't work, look in the various m3-* folders
-if "%CM3_PkgPath%"=="" for /f %%i in ('dir /b m3-* caltech*') do if exist "%%i\%CM3_Pkg%\src" set CM3_PkgPath=%%i\%CM3_Pkg%
+if "%CM3_PkgPath%"=="" for /f %%i in ('dir /b m3-* caltech*') do if exist "%%i\%CM3_Package%\src" set CM3_PkgPath=%%i\%CM3_Package%
 
 rem ------if we found it, great, otherwise report we are skipping it
 popd
 if not "%CM3_PkgPath%"=="" goto foundPkg
-echo WARNING:  Unable to locate package "%CM3_Pkg%" in "%CM3_PkgTree%"
+echo WARNING:  Unable to locate package "%CM3_Package%" in "%CM3_PkgTree%"
 echo           (this package will be skipped)
 echo.
-echo WARNING:  Package "%CM3_Pkg%" was not found.>>%CM3_ErrLog%
+echo WARNING:  Package "%CM3_Package%" was not found.>>%CM3_ErrLog%
 if /I "%CM3_NoPause%"=="TRUE" goto :EOF
 pause
 goto :EOF
@@ -484,8 +485,8 @@ set CM3_Group=
 rem echo CM3_NoPause=%CM3_NoPause%
 set CM3_NoPause=
 
-rem echo CM3_Pkg=%CM3_Pkg%
-set CM3_Pkg=
+rem echo CM3_Package=%CM3_Package%
+set CM3_Package=
 
 rem echo CM3_PkgInfo=%CM3_PkgInfo%
 set CM3_PkgInfo=
