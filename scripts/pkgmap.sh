@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.42.2.6 2009-08-02 14:30:39 wagner Exp $
+# $Id: pkgmap.sh,v 1.42.2.7 2009-08-04 22:40:46 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -332,8 +332,8 @@ write_pkg_report() {
   (
     if [ "${tbgt}" != "bgyellow" ]; then
       echo "<testcase name=\"${pname} tests\" time=\"$6\">"
-      echo "  Test Result Details for $1"
-      quote_xml "$3"
+      # echo "  Test Result Details for $1" #
+      # quote_xml "$3" # FIXME: leave out stdout test output for now
       if [ -n "$4" ]; then
         echo "    <failure type=\"package tests failed\">"
         quote_xml "$4"
