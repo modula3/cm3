@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.42.2.7 2009-08-04 22:40:46 wagner Exp $
+# $Id: pkgmap.sh,v 1.42.2.8 2009-08-04 22:47:39 wagner Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -106,7 +106,7 @@ if [ -n "${REPORT}" ]; then
   RW="${WORKSPACE}/cm3-pkg-report-${TARGET}.html"
   RJW="${WORKSPACE}/cm3-pkg-report-${TARGET}.xml"
   RJTW="${WORKSPACE}/cm3-pkg-test-report-${TARGET}.xml"
-  R2="`basename ${R} .html`.part2}"
+  R2="`basename ${R} .html`.part2"
   ERRS=""
   REDPKGS=""
   GREENPKGS=""
