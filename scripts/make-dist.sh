@@ -41,13 +41,27 @@ M3_PORTABLE_RUN_PATH=1
 export M3_PORTABLE_RUN_PATH
 
 if [ -z "${NOBUILD}" ]; then
-  DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
-  DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
+  DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh" \
+    2>&1 | tee build-min.log
+  if egrep 'version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error' build-min.log; then
+    echo "building cm3-bin-min archive failed" 1>&2
+    exit 1
+  fi
+  DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh" \
+    2>&1 | tee build-core.log
+  if egrep 'version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error' build-core.log; then
+    echo "building cm3-bin-core archive failed" 1>&2
+    exit 1
+  fi
   if [ `hostname` = 'birch' ]; then
     SYSINFO_DONE="" "$ROOT/scripts/make-src-dist-all.sh"
   fi
   PATH="${INSTALLROOT}/bin:${PATH}"
-  "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
+  "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution \
+    -group-writable 2>&1 |tee build-all.log
+  if egrep 'version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error' build-all.log; then
+    echo "errors during build-all; some packages will be missing" 1>&2
+  fi
 fi
 
 if [ `uname` = 'Interix' ]; then
