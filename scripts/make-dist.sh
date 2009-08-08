@@ -28,23 +28,40 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
+DS="RC2"; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
+
+cd "${ROOT}" || exit 1
+cvs -q up -r release_CM3_5_8_${DS} -dP
 
 # keep short runpaths
 M3_PORTABLE_RUN_PATH=1
 export M3_PORTABLE_RUN_PATH
 
-DS="RC2"; export DS
 if [ -z "${NOBUILD}" ]; then
-  DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
-  DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
+  DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh" \
+    2>&1 | tee build-min.log
+  if egrep 'version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error' build-min.log; then
+    echo "building cm3-bin-min archive failed" 1>&2
+    exit 1
+  fi
+  DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh" \
+    2>&1 | tee build-core.log
+  if egrep 'version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error' build-core.log; then
+    echo "building cm3-bin-core archive failed" 1>&2
+    exit 1
+  fi
   if [ `hostname` = 'birch' ]; then
     SYSINFO_DONE="" "$ROOT/scripts/make-src-dist-all.sh"
   fi
   PATH="${INSTALLROOT}/bin:${PATH}"
-  "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
+  "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution \
+    -group-writable 2>&1 |tee build-all.log
+  if egrep 'version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error' build-all.log; then
+    echo "errors during build-all; some packages will be missing" 1>&2
+  fi
 fi
 
 if [ `uname` = 'Interix' ]; then
@@ -217,13 +234,13 @@ for c in ${PKG_COLLECTIONS}; do
     echo "done"
   ) > install.sh
   chmod 755 install.sh
+  echo "making setup.cmd"
   (
     echo 'REM ---BEGIN---'
     echo '@echo off'
     printf 'for %%%%p in ('
     for p in ${PKGS}; do
-      pw="`echo $p | sed -e 's;/;\\;g'`"
-      printf "%s; " ${pw}
+      printf "%s; " ${p}
     done
     echo ') do call :ShipIt %%p'
     cat <<EOF
@@ -242,8 +259,8 @@ echo done
 @echo on
 REM ---END---
 EOF
-  ) > install.cmd
-  chmod 755 install.cmd
+  ) > setup.cmd
+  chmod 755 setup.cmd
   (
     echo "<html>"
     cat <<EOF
@@ -259,9 +276,6 @@ EOF
   <body>
     <h1>CM3 Package Collection $c</h1>
 EOF
-    ddd=''
-    ddd=${ddd:=DESC_${c}}
-    echo ${!ddd}
     echo "<p>This collections contains the following packages:</p>"
     echo "<ul>"
     for p in ${PKGS}; do
@@ -275,7 +289,7 @@ EOF
       if [ -r ${p}/index.html ]; then
         echo "<a href=\"ws/${p}/index.html\">Description</a><br>"
       fi
-      readmes=`find "${p}" -type f -name README -print`
+      readmes=`$FIND "${p}" -type f -name README -print`
       if [ -n "$readmes" ]; then
         for f in $readmes; do
           if [ -r ${f} ]; then
@@ -287,8 +301,8 @@ EOF
         echo "<a href=\"http://www.opencm3.net/doc/help/gen_html/${b}/INDEX.html\">Browse Sources Online</a><br>"
       fi
       for section in 1 5 6 7 8; do
-        manpages=`find ${p}/src -name "[A-Za-z]*.${section}" -print`
-	[ ${p} = m3-tools/m3tk ] && manpages="" # only fragments in m3tk, ignore
+        manpages=`$FIND ${p}/src -name "[A-Za-z]*.${section}" -print`
+        [ ${p} = m3-tools/m3tk ] && manpages="" # only fragments in m3tk, ignore
         if [ -n "${manpages}" ]; then
           for m in ${manpages}; do
             mb=`basename ${m} .${section}`
@@ -308,10 +322,12 @@ EOF
       --exclude '*/CVS/*' --exclude '*/CVS' --exclude '*~' \
       --exclude '*.tar.*' --exclude '*.tgz' --exclude "*/${TARGET}/gcc" \
       --exclude "*/${TARGET}/*/*" \
-      -czf "${ARCHIVE}" collection-${c}.html install.sh install.cmd ${PKGS}
+      -czf "${ARCHIVE}" collection-${c}.html install.sh setup.cmd ${PKGS}
       ls -l "${ARCHIVE}"
   fi
 done
+
+set -x
 
 if [ `hostname` = 'birch' ]; then
   ARCHIVE="${STAGE}/cm3-scripts-${CM3VERSION}-${DS}.tgz"
