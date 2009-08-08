@@ -1129,17 +1129,17 @@ def Boot():
     # TBD: put it only in one place.
     # The older bootstraping method does get that right.
 
-    SunCompile = "cc -g -mt -xcode=pic32 -xldscope=symbolic "
+    SunCompile = "/usr/ccs/bin/cc -g -mt -xcode=pic32 -xldscope=symbolic "
 
     GnuCompile = {
         # gcc -fPIC generates incorrect code on Interix
         "I386_INTERIX"    : "gcc -g "
         }.get(Target) or "gcc -g -fPIC "
 
-    Compile = {
-        "SOLsun"          : SunCompile,
-        "SPARC64_SOLARIS" : SunCompile,
-        }.get(Target) or GnuCompile
+    if Target.endswith("_SOLARIS") or Target == "SOLsun":
+        Compile = SunCompile
+    else:
+        Compile = GnuCompile
 
     Compile = Compile + ({
         "AMD64_LINUX"     : " -m64 -mno-align-double ",
