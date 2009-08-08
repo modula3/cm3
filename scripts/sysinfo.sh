@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.74.2.3 2009-08-02 12:17:25 jkrell Exp $
+# $Id: sysinfo.sh,v 1.74.2.4 2009-08-08 21:00:45 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -163,7 +163,12 @@ case "${UNAME}" in
       powerpc*)
         CM3_TARGET=PPC_DARWIN;;
       i[3456]86*)
-        CM3_TARGET=I386_DARWIN;;
+        if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
+          CM3_TARGET=AMD64_DARWIN
+        else
+          CM3_TARGET=I386_DARWIN
+        fi
+        ;;
     esac
     GMAKE=${GMAKE:-make}
   ;;
