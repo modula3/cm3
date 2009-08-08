@@ -1176,15 +1176,17 @@ def Boot():
         Assemble = "/usr/ccs/bin/as "
     else:
         Assemble = "as "
+        
+    if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
+        if Target.find("64") != -1 or Target.find("ALPHA") != -1:
+            Assemble = Assemble + " --64"
+        else:
+            Assemble = Assemble + " --32"
 
     Assemble = (Assemble + ({
-        "AMD64_LINUX"       : " --64 ",
         "AMD64_DARWIN"      : " -arch x86_64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
-        "LINUXLIBC6"        : " --32 ",
-        "SPARC32_LINUX"     : " -32 ",
-        "SPARC64_LINUX"     : " -64 ",
-        "SPARC64_LINUX"     : " -64 -Av9 ",
+        "SOLgnu"            : " -s -K PIC -xarch=v8plus ",
         "SOLsun"            : " -s -K PIC -xarch=v8plus ",
         "SPARC64_SOLARIS"   : " -s -K PIC -xarch=v9 ",
         }.get(Target) or ""))
