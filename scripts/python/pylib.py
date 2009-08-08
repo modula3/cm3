@@ -1172,7 +1172,7 @@ def Boot():
     # not in Link
     Compile += " -c "
     
-    if Target.endswith("_SOLARIS") or Target.startswith("SOL):
+    if Target.endswith("_SOLARIS") or Target.startswith("SOL"):
         Assemble = "/usr/ccs/bin/as "
     else:
         Assemble = "as "
