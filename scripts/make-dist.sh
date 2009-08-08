@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.28 2009-08-08 17:19:02 jkrell Exp $
+# $Id: make-dist.sh,v 1.29 2009-08-08 17:21:07 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -28,13 +28,11 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
-DS="RC2"; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
 
 cd "${ROOT}" || exit 1
-cvs -q up -r release_CM3_5_8_${DS} -dP
 
 # keep short runpaths
 M3_PORTABLE_RUN_PATH=1
