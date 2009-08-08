@@ -338,7 +338,7 @@ Root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 # these paths (even though underlying Win32 does). So try leaving things alone.
 
 # if Root.find(":\\") == 1:
-#	Root = Root[2:]
+#   Root = Root[2:]
 #
 # Root = Root.replace("\\\\", "/")
 # Root = Root.replace("\\", "/")
@@ -1171,8 +1171,13 @@ def Boot():
 
     # not in Link
     Compile += " -c "
+    
+    if Target.endswith("_SOLARIS") or Target.startswith("SOL):
+        Assemble = "/usr/ccs/bin/as "
+    else:
+        Assemble = "as "
 
-    Assemble = ("as " + ({
+    Assemble = (Assemble + ({
         "AMD64_LINUX"       : " --64 ",
         "AMD64_DARWIN"      : " -arch x86_64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
@@ -1183,9 +1188,6 @@ def Boot():
         "SOLsun"            : " -s -K PIC -xarch=v8plus ",
         "SPARC64_SOLARIS"   : " -s -K PIC -xarch=v9 ",
         }.get(Target) or ""))
-
-    if Target == "SOLgnu":
-        Assemble = "/usr/sfw/bin/gas"
 
     GnuPlatformPrefix = {
         "ARM_DARWIN"      : "arm-apple-darwin8-",
@@ -2386,16 +2388,16 @@ def SetupEnvironment():
         # VS80CommonTools = os.environ.get("VS80COMNTOOLS") # E:\Program Files\Microsoft Visual Studio 8\Common7\Tools
         VCInstallDir = os.environ.get("VCINSTALLDIR") # E:\Program Files\Microsoft Visual Studio 8\VC
 
-		# 9.0 Express
-		# always, global
-		#VS90COMNTOOLS=D:\msdev\90\Common7\Tools\
-		# after running the shortcut
-		#VCINSTALLDIR=D:\msdev\90\VC
-		#VSINSTALLDIR=D:\msdev\90
-		#
-		# The Windows SDK is carried with the express edition and tricky to find.
-		# Best if folks just run the installed shortcut probably.
-		#
+        # 9.0 Express
+        # always, global
+        #VS90COMNTOOLS=D:\msdev\90\Common7\Tools\
+        # after running the shortcut
+        #VCINSTALLDIR=D:\msdev\90\VC
+        #VSINSTALLDIR=D:\msdev\90
+        #
+        # The Windows SDK is carried with the express edition and tricky to find.
+        # Best if folks just run the installed shortcut probably.
+        #
 
         #
         # This is not yet finished.
