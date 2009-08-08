@@ -163,7 +163,12 @@ case "${UNAME}" in
       powerpc*)
         CM3_TARGET=PPC_DARWIN;;
       i[3456]86*)
-        CM3_TARGET=I386_DARWIN;;
+        if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
+          CM3_TARGET=AMD64_DARWIN
+        else
+          CM3_TARGET=I386_DARWIN
+        fi
+        ;;
     esac
     GMAKE=${GMAKE:-make}
   ;;
