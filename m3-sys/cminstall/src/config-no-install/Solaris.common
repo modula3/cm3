@@ -7,7 +7,7 @@ if not defined("M3_PROFILING") M3_PROFILING = FALSE end
 
 readonly TARGET_OS = "SOLARIS"
 
-readonly SYSTEM_AR = "ar"
+readonly SYSTEM_AR = "/usr/ccs/bin/ar"
 
 if equal (WORD_SIZE, "32BITS")
     GccMBits = "32"
@@ -23,16 +23,16 @@ proc GetM3BackFlags() is
     end
 end
 
-readonly SYSTEM_ASM = "as -s -K PIC -xarch=" & SunXArch
+readonly SYSTEM_ASM = "/usr/ccs/bin/as -s -K PIC -xarch=" & SunXArch
 
 if equal (C_COMPILER, "SUN")
-    SYSTEM_CC = "cc -g -mt -xarch=" & SunXArch & " -xcode=pic32 -xldscope=symbolic"
+    SYSTEM_CC = "/usr/bin/cc -g -mt -xarch=" & SunXArch & " -xcode=pic32 -xldscope=symbolic"
     % SYSTEM_LD = "/usr/ccs/bin/ld"
 end
 
 if equal (C_COMPILER, "GNU")
     if not defined("SYSTEM_CC")
-        SYSTEM_CC = "gcc -g -fPIC -pthreads -m" & GccMBits
+        SYSTEM_CC = "/usr/sfw/bin/gcc -gstabs+ -fPIC -pthreads -m" & GccMBits
     end
 end
 
