@@ -23,6 +23,7 @@ REVEAL
     text_build_dir    : TEXT;   (* " *)
 
     (* READONLY state that is fixed by the configuration file *)
+    install_root      : TEXT;     (* Root directory *)
     pkg_use           : TEXT;     (* Root directory for public packages *)
     pkg_install       : TEXT;     (* Root directory for public packages *)
     bin_install       : TEXT;     (* Directory to install binaries *)
@@ -147,8 +148,8 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     t.bin_use         := M3Path.New (GetConfig (t, "BIN_USE"));
     t.lib_use         := M3Path.New (GetConfig (t, "LIB_USE"));
 *)
-
     t.pkg_install     := M3Path.New (GetConfig (t, "PKG_INSTALL"));
+    t.install_root    := M3Path.New (GetConfig (t, "INSTALL_ROOT"));
     t.bin_install     := M3Path.New (GetConfig (t, "BIN_INSTALL"));
     t.lib_install     := M3Path.New (GetConfig (t, "LIB_INSTALL"));
     t.emacs_install   := M3Path.New (GetConfig (t, "EMACS_INSTALL"));
@@ -1862,6 +1863,7 @@ PROCEDURE MakeRoom (t: T;  space: INTEGER) =
 PROCEDURE DoUnresolve (t: T;  res: TEXT): TEXT =
   BEGIN
     
+    res := TextUtils.Substitute(res, t.bin_install, "\" & BIN_INSTALL & \"");
     res := TextUtils.Substitute(res, t.lib_install, "\" & LIB_INSTALL & \"");
     res := TextUtils.Substitute(res, t.doc_install, "\" & DOC_INSTALL & \"");
     res := TextUtils.Substitute(res, t.man_install, "\" & MAN_INSTALL & \"");
@@ -1870,6 +1872,7 @@ PROCEDURE DoUnresolve (t: T;  res: TEXT): TEXT =
     res := TextUtils.Substitute(res, t.pkg_install, "\" & PKG_INSTALL & \"");
     res := TextUtils.Substitute(res, t.pkg_use, "\" & PKG_USE & \"");
     res := TextUtils.Substitute(res, t.text_build_dir, "\" & TARGET & \"");
+    res := TextUtils.Substitute(res, t.install_root, "\" & INSTALL_ROOT & \"");
     res := TextUtils.Substitute(res, "\"\" & ", "");
     res := TextUtils.Substitute(res, " & \"\"", "");
 (*
