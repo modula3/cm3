@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.42.2.3 2009-08-03 07:59:19 jkrell Exp $
+# $Id: make-bin-dist-min.sh,v 1.42.2.4 2009-08-08 19:32:09 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -45,6 +45,7 @@ export M3_PORTABLE_RUN_PATH
 # compile the core system
 header "stage 1: building cm3 compiler"
 P=""
+[ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
 P="${P} m3core"
 P="${P} libm3"
 P="${P} sysutils"
@@ -56,7 +57,6 @@ P="${P} m3linker"
 P="${P} m3back"
 P="${P} m3front"
 P="${P} m3quake"
-[ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
 P="${P} cm3"
 P="${P} cminstall"
 P="${P} mklib"
