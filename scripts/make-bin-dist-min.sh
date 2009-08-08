@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.44 2009-07-29 09:02:07 jkrell Exp $
+# $Id: make-bin-dist-min.sh,v 1.45 2009-08-08 17:46:44 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -28,8 +28,6 @@ INSTALLROOT="${STAGE}/cm3"
 DIST="${DIST:-std}" # may be min, core, std, all
 header "building CM3 installation in ${INSTALLROOT}"
 NOCLEAN=${NOCLEAN:-""}
-
-NEWCFG=${NEWCFG:-y}
 
 DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
 
@@ -93,34 +91,19 @@ fi
 #-----------------------------------------------------------------------------
 # configure a temporary config file
 echo configuring temporary config file "${INSTALLROOT}/bin/cm3.cfg"
-if [ "${NEWCFG}" != "y" ]; then
-  # old style installation
-  if [ "${TARGET}" = "NT386" -o "${TARGET}" = "NT386GNU" ]; then
-    CFG1="${ROOT}/m3-sys/cm3/src/config/${TARGET}.main"
-    CFG2="${ROOT}/m3-sys/cminstall/src/config/${TARGET}.main"
-    CFG3="${ROOT}/m3-sys/cminstall/src/config/${TARGET}.common"
-    cp "${CFG3}" "${INSTALLROOT}/bin"
-  else
-    CFG1="${ROOT}/m3-sys/cm3/src/config/${TARGET}"
+# delete old config files
+for f in ${ROOT}/m3-sys/cminstall/src/config-no-install/*; do
+  b=`basename ${f}`
+  if [ -f "${INSTALLROOT}/bin/${b}" ] ; then
+    rm "${INSTALLROOT}/bin/${b}" > /dev/null
   fi
-  sed -e '
-    /^INSTALL_ROOT[ \t]*=/s;^.*$;INSTALL_ROOT = "'${INSTALLROOT}${SL}'";
-  ' "${CFG1}" > "${INSTALLROOT}/bin/cm3.cfg"
-else
-  # delete old config files
-  for f in ${ROOT}/m3-sys/cminstall/src/config-no-install/*; do
-    b=`basename ${f}`
-    if [ -f "${INSTALLROOT}/bin/${b}" ] ; then
-      rm "${INSTALLROOT}/bin/${b}" > /dev/null
-    fi
-  done
-  # new config files
-  cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin/config"
-  (
-    echo "INSTALL_ROOT = path() & \"/..\""
-    echo "include(path() & \"/config/\" & HOST)"
-  ) > "${INSTALLROOT}/bin/cm3.cfg"
-fi
+ done
+# new config files
+cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin/config"
+(
+  echo "INSTALL_ROOT = path() & \"/..\""
+  echo "include(path() & \"/config/\" & HOST)"
+) > "${INSTALLROOT}/bin/cm3.cfg"
 
 #-----------------------------------------------------------------------------
 # clean everything
@@ -144,16 +127,6 @@ export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 header "stage 4: installing libraries using new cm3 compiler"
 "${ROOT}/scripts/do-cm3-${DIST}.sh" buildglobal || exit 1
 
-if [ "${NEWCFG}" != "y" ]; then
-  header "stage 5: re-adjusting cm3.cfg"
-  echo "${CFG2} -->" "${INSTALLROOT}/bin/cm3.cfg"
-  cp "${CFG2}" "${INSTALLROOT}/bin/cm3.cfg"
-  echo "${CFG1} -->" "${INSTALLROOT}/bin/cm3.cfg--default"
-  cp "${CFG1}" "${INSTALLROOT}/bin/cm3.cfg--default"
-else
-  echo "no new config"
-fi
-
 #-----------------------------------------------------------------------------
 # build binary distribution archives
 ARCHIVE1="system.tgz"
@@ -163,7 +136,7 @@ ABSARCH2="`cygpath -u ${STAGE}/${ARCHIVE2}`"
 DUSK="du-sk"
 ABSDUSK="`cygpath -u ${STAGE}/du-sk`"
 INSTDATA="cminstall${EXE} COPYRIGHT-CMASS ${ARCHIVE1} ${DUSK}"
-header "stage 6: building archive in ${ARCHIVE2}"
+header "stage 5: building archive in ${ARCHIVE2}"
 echo "creating system archive in ${ABSARCH1}"
 du -sk "${INSTALLROOT}" > "${ABSDUSK}"
 echo "cat ${ABSDUSK}"
