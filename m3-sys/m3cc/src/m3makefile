@@ -105,13 +105,18 @@ readonly m3cc_config = {
   "ARM_LINUX": "-with-float=soft -enable-target-optspace -enable-threads -enable-shared",
 
   %
+  % AIX almost always requires native as and ld -- cross builds are not possible.
+  % Not all of this is relevant to m3cg?, but user can build gcc/cc1 here.
+  %
+
+  "PPC32_AIX" : "-with-as=/usr/bin/as -without-gnu-as -with-ld=/us/bin/ld -without-gnu-ld",
+  "PPC64_AIX" : "-with-as=/usr/bin/as -without-gnu-as -with-ld=/us/bin/ld -without-gnu-ld",
+
+  %
   % Irix requires GNU as and GNU ld should work but presently does not.
   % Irix native ld works.
-  % AIX almost always requires native as and ld -- cross builds are not possible.
-  % Not all of this is relevant to m3cg, but user can build gcc/cc1 here.
   %
-  "PPC32_AIX" : "-with-ld=/us/bin/ld -with-as=/usr/bin/as",
-  "PPC64_AIX" : "-with-ld=/us/bin/ld -with-as=/usr/bin/as",
+
   "MIPS32_IRIX" : "-with-ld=/us/bin/ld -with-gnu-as",
   "MIPS64_IRIX" : "-with-ld=/us/bin/ld -with-gnu-as",
 
@@ -129,10 +134,8 @@ readonly m3cc_config = {
   % unless perhaps building binutils along with m3cg.
   % If m3cg omits the .register psuedo ops, assembly completely fails, with lots of errors.
   %
-  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld",
 
-  "SOLgnu" : "-with-as=/usr/ccs/bin/as -without-gnu-as -with-ld=/usr/ccs/bin/ld -without-gnu-ld",
-  "SOLsun" : "-with-as=/usr/ccs/bin/as -without-gnu-as -with-ld=/usr/ccs/bin/ld -without-gnu-ld",
+  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes -with-as=/usr/ccs/bin/as -without-gnu-as -with-ld=/usr/ccs/bin/ld -without-gnu-ld",
 
   %
   % This is recommended and has been seen to make a difference.
@@ -140,6 +143,9 @@ readonly m3cc_config = {
 
   "I386_SOLARIS" :  "-with-gnu-as -with-as=/usr/sfw/bin/gas -without-gnu-ld -with-ld=/usr/ccs/bin/ld",
   "AMD64_SOLARIS" : "-with-gnu-as -with-as=/usr/sfw/bin/gas -without-gnu-ld -with-ld=/usr/ccs/bin/ld",
+
+  "SOLgnu"        : "-with-ld=/usr/ccs/bin/ld -without-gnu-ld -with-as=/usr/ccs/bin/as -without-gnu-as",
+  "SOLsun"        : "-with-ld=/usr/ccs/bin/ld -without-gnu-ld -with-as=/usr/ccs/bin/as -without-gnu-as",
 
   %
   % Bootstrap procedure for gcc on HPPA{64}-HPUX:
@@ -244,6 +250,57 @@ if not defined ("M3CC_CFLAGS")  M3CC_CFLAGS = GNU_CFLAGS end
 if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
+local Native = equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD)
+
+local env = ""
+
+if Native and (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGET, "SPARC32_SOLARIS")
+        or equal(TARGET, "SPARC64_SOLARIS") or equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS"))
+
+    if equal(M3CC_MAKE, "make")
+            and equal($MAKE, "")
+            and not equal(try_exec("type gmake > /dev/null"), 0)
+            and not equal(try_exec("type gnumake > /dev/null"), 0)
+            and FileExists("/usr/sfw/bin/gmake")
+
+        % make doesn't work, HOST_GNU_MAKE may be incorrect, and /usr/sfw/bin/gmake is where
+        % Sun installs GNU make.
+
+        M3CC_MAKE = "/usr/sfw/bin/gmake"
+    end
+
+    if equal($CC, "")
+            and equal($CFLAGS, "")
+            and equal(M3CC_CC, "*")
+            and equal(M3CC_CFLAGS, "-g -O2")
+            and not equal(try_exec("type gcc > /dev/null"), 0)
+            and equal(try_exec("type cc > /dev/null"), 0)
+            and equal(try_exec("cc -O2 2>&1 | grep \"Warning: option -2 passed to ld\" > /dev/null"), 0)
+
+        % Sun cc doeson't like -O2 and it causes configuring gcc to fail
+        % If /usr/sfw/bin/gcc exists, we should probably use that here.
+
+        M3CC_CC = "cc"
+        M3CC_CFLAGS = "-g -O"
+
+        % libcpp/configure runs make to test its result and that fails if /usr/ccs/bin
+        % isn't in $PATH, so just tell it the answer
+
+        if equal($MAKE, "") and not equal(try_exec("type make > /dev/null"), 0)
+            env = env & " am_cv_CC_dependencies_compiler_type=dashXmstdout "
+        end
+    end
+
+    % in a minimal environment, such as with an empty .profile, ar is not in the path
+    % and building gcc fails as a result; gcc's build doesn't know to look in /usr/ccs/bin/ar
+
+    if equal($AR, "")
+            and not equal(try_exec("type ar > /dev/null"), 0)
+            and equal(try_exec("type " & SYSTEM_AR & " > /dev/null"), 0)
+        env = env & " AR=" & SYSTEM_AR & " "
+    end
+end
+
 local SourceDir = "../gcc"
 local GCC42 = FALSE
 if equal(M3CC_TARGET, "ARM_DARWIN") and not NOACTION
@@ -266,7 +323,6 @@ end
 % figure out where we're going to build gcc
 local build_dir = "."  % let m3build set the build directory
 
-local Native = equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD)
 local Log = ""
 if not Native
   build_dir = "../" & M3CC_HOST & "-" & M3CC_TARGET
@@ -341,6 +397,8 @@ end
 
 local Configure = " "
 
+% Try to support PPC_DARWIN on {I386,AMD64}_DARWIN hosts via the emulator.
+
 if equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD) and equal (M3CC_BUILD, "PPC_DARWIN") and FileExists("/usr/libexec/oah/translate")
     M3CC_CFLAGS = M3CC_CFLAGS & " -arch ppc"
     Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
@@ -352,7 +410,7 @@ end
 % Configure does not seem to ferry environment variables from itself to make,
 % so these must be specified on both the configure command and the make command.
 %
-local env = get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS)
+env = env & " " & get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS)
 %
 % Problems building gmp/mpfr:
 %   Documentation is built into the source tree, leading cvs diff
@@ -366,6 +424,9 @@ env = env & " AUTOCONF=:"
 env = env & " AUTOMAKE=:"
 env = env & " LEX='touch lex.yy.c'"
 env = env & " MAKEINFO=:"
+% so depcomp can detect Sun cc -xM as working
+% seems dangerous? so we set am_cv_CC_dependencies_compiler_type instead
+% env = env & " MAKE=" & M3CC_MAKE
 M3CC_MAKE = M3CC_MAKE & " " & env
 
 if not NOACTION
