@@ -1132,6 +1132,7 @@ def Boot():
     SunCompile = "cc -g -mt -xcode=pic32 -xldscope=symbolic "
 
     GnuCompile = {
+        # gcc -fPIC generates incorrect code on Interix
         "I386_INTERIX"    : "gcc -g "
         }.get(Target) or "gcc -g -fPIC "
 
@@ -1142,6 +1143,7 @@ def Boot():
 
     Compile = Compile + ({
         "AMD64_LINUX"     : " -m64 -mno-align-double ",
+        "AMD64_DARWIN"    : " -arch x86_64 ",
         "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
         "LINUXLIBC6"      : " -m32 -mno-align-double ",
         "MIPS64_OPENBSD"  : " -mabi=64 ",
@@ -1172,6 +1174,7 @@ def Boot():
 
     Assemble = ("as " + ({
         "AMD64_LINUX"       : " --64 ",
+        "AMD64_DARWIN"      : " -arch x86_64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
         "LINUXLIBC6"        : " --32 ",
         "SPARC32_LINUX"     : " -32 ",
