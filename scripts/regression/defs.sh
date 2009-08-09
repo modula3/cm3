@@ -57,11 +57,12 @@ if [ ! -d "${TMPDIR}" ]; then
   TMPDIR="${HTMP}"
 fi
 
+CM3_OSTYPE=POSIX
+
 case "${UNAME}" in
 
   Windows*|WinNT*|Cygwin*|CYGWIN*)
     if [ x$TARGET = xNT386GNU ] ; then
-      CM3_OSTYPE=POSIX
       CM3_TARGET=NT386GNU
     else
       CM3_OSTYPE=WIN32
@@ -70,12 +71,10 @@ case "${UNAME}" in
   ;;
 
   NT386GNU*)
-    CM3_OSTYPE=POSIX
     CM3_TARGET=NT386GNU
   ;;
 
   FreeBSD*)
-    CM3_OSTYPE=POSIX
     if [ "`uname -m`" = i386 ] ; then
       case "`uname -r`" in
         1*) CM3_TARGET=FreeBSD;;
@@ -90,7 +89,6 @@ case "${UNAME}" in
   ;;
 
   Darwin*)
-    CM3_OSTYPE=POSIX
     case "`uname -p`" in
       powerpc*)
         CM3_TARGET=PPC_DARWIN;;
@@ -105,12 +103,10 @@ case "${UNAME}" in
   ;;
 
   SunOS*)
-    CM3_OSTYPE=POSIX
     CM3_TARGET=SOLgnu
   ;;
 
   Linux*)
-    CM3_OSTYPE=POSIX
     GMAKE=${GMAKE:-make}
     if [ "${UNAMEM}" = "ppc" ] ; then
       CM3_TARGET=PPC_LINUX
@@ -124,12 +120,10 @@ case "${UNAME}" in
   ;;
 
   NetBSD*)
-    CM3_OSTYPE=POSIX
     CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
   ;;
 
   OpenBSD*)
-    CM3_OSTYPE=POSIX
     ARCH=`arch -s`
     if [ "${UNAMEM}" = "macppc" ] ; then
       CM3_TARGET=PPC32_OPENBSD

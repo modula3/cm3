@@ -106,11 +106,13 @@ strip_exe() {
 
 #-----------------------------------------------------------------------------
 # evaluate uname information
+
+CM3_OSTYPE=POSIX
+
 case "${UNAME}" in
 
   Windows*|WinNT*|Cygwin*|CYGWIN*)
     if [ x$TARGET = xNT386GNU ] ; then
-      CM3_OSTYPE=POSIX
       CM3_TARGET=NT386GNU
       GMAKE=${GMAKE:-make}
     else
@@ -136,13 +138,11 @@ case "${UNAME}" in
   ;;
 
   NT386GNU*)
-    CM3_OSTYPE=POSIX
     CM3_TARGET=NT386GNU
     GMAKE=${GMAKE:-make}
   ;;
 
   FreeBSD*)
-    CM3_OSTYPE=POSIX
     if [ "`uname -m`" = i386 ] ; then
       case "`uname -r`" in
         1*) CM3_TARGET=FreeBSD;;
@@ -157,7 +157,6 @@ case "${UNAME}" in
   ;;
 
   Darwin*)
-    CM3_OSTYPE=POSIX
     # detect the m3 platform (Darwin runs on ppc and ix86
     case "`uname -p`" in
       powerpc*)
@@ -174,19 +173,16 @@ case "${UNAME}" in
   ;;
 
   SunOS*)
-    CM3_OSTYPE=POSIX
     CM3_TARGET=${CM3_TARGET:-"SOLgnu"}
     #CM3_TARGET=${CM3_TARGET:-"SOLsun"}
   ;;
 
   Interix*)
-    CM3_OSTYPE=POSIX
     GMAKE=${GMAKE:-gmake}
     CM3_TARGET=I386_INTERIX
   ;;
 
   Linux*)
-    CM3_OSTYPE=POSIX
     GMAKE=${GMAKE:-make}
     if [ "${UNAMEM}" = "ppc" ] ; then
       CM3_TARGET=PPC_LINUX
@@ -200,13 +196,11 @@ case "${UNAME}" in
   ;;
 
   NetBSD*)
-    CM3_OSTYPE=POSIX
     GMAKE=${GMAKE:-gmake}
     CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
   ;;
 
   OpenBSD*)
-    CM3_OSTYPE=POSIX
     ARCH=`arch -s`
     if [ "${UNAMEM}" = "macppc" ] ; then
       CM3_TARGET=PPC32_OPENBSD
