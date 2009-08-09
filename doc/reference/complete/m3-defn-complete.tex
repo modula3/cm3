@@ -2759,7 +2759,7 @@ modules, \verb|LOOPHOLE| can also produce a designator.
 \subsubsection*{2.6.4 Numeric literals}
 
 Numeric literals denote constant non-negative integers or reals.  The types of
-these literals are \verb|INTEGER|, \verb|LONGING|, \verb|REAL|,
+these literals are \verb|INTEGER|, \verb|LONGINT|, \verb|REAL|,
 \verb|LONGREAL|, and \verb|EXTENDED|.
 
 A literal \verb|INTEGER| has the form \verb|base_digits|, where \verb|base| is
@@ -2773,8 +2773,8 @@ example, \verb|16_FF| and \verb|255| are equivalent integer literals.
 If no explicit base is present, the value of the literal must be at most
 \verb|LAST(INTEGER)|.  If an explicit base is present, the value of the
 literal must be less than \verb|2^Word.Size|, and its interpretation uses the
-convention of the \verb|Word| interface.  For example, on a sixteen-bit two's
-complement machine, \verb|16_FFFF| and \verb|-1| represent the same value.
+convention of the \verb|Word| interface.  For example, on a 32-bit two's
+complement machine, \verb|16_FFFFFFFF| and \verb|-1| represent the same value.
 
 A literal \verb|LONGINT| has the form \verb|integer L|, where \verb|integer|
 has the same form as a literal \verb|INTEGER|.  If no explicit base is
