@@ -61,6 +61,3 @@ Equivalence("Text", "Text", "TextTextTbl")
 Module("TextTextTblExtras")
 
 Library("cit_util")
-
-
-
