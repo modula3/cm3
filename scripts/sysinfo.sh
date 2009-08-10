@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.74.2.5 2009-08-09 07:10:28 jkrell Exp $
+# $Id: sysinfo.sh,v 1.74.2.6 2009-08-10 18:34:28 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -163,9 +163,9 @@ case "${UNAME}" in
         CM3_TARGET=PPC_DARWIN;;
       i[3456]86*)
         if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
-          CM3_TARGET=AMD64_DARWIN
+          CM3_TARGET=${CM3_TARGET:-AMD64_DARWIN}
         else
-          CM3_TARGET=I386_DARWIN
+          CM3_TARGET=${CM3_TARGET:-I386_DARWIN}
         fi
         ;;
     esac
