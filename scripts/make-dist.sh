@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.9 2009-08-10 19:02:54 wagner Exp $
+# $Id: make-dist.sh,v 1.26.2.10 2009-08-10 20:56:39 wagner Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -242,8 +242,11 @@ for c in ${PKG_COLLECTIONS}; do
     echo '#!/bin/sh'
     echo 'HERE=`pwd`'
     echo "for p in ${PKGS}; do"
+      echo 'echo "installing package ${p}"'
       echo 'cd $p'
-      echo 'cm3 -ship ${SHIPARGS}'
+      echo 'cm3 -ship ${SHIPARGS} || {'
+      echo '  echo "installation of ${p} failed" 1>&2'
+      echo '}'
       echo 'cd $HERE'
     echo "done"
   ) > install.sh
