@@ -242,8 +242,11 @@ for c in ${PKG_COLLECTIONS}; do
     echo '#!/bin/sh'
     echo 'HERE=`pwd`'
     echo "for p in ${PKGS}; do"
+      echo 'echo "installing package ${p}"'
       echo 'cd $p'
-      echo 'cm3 -ship ${SHIPARGS}'
+      echo 'cm3 -ship ${SHIPARGS} || {'
+      echo '  echo "installation of ${p} failed" 1>&2'
+      echo '}'
       echo 'cd $HERE'
     echo "done"
   ) > install.sh
