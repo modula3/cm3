@@ -28,13 +28,18 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
-DS="RC2"; export DS
+DS="pre-RC3"; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
 
 cd "${ROOT}" || exit 1
-cvs -q up -r release_CM3_5_8_${DS} -dP
+if [ -z "${OMIT_UPDATE}" ]; then
+  case ${DS} in
+    RC*) cvs -q up -r release_CM3_5_8_${DS} -dP;;
+    *) cvs -q up -r release_branch_cm3_5_8 -dP;;
+  esac
+fi
 
 # keep short runpaths
 M3_PORTABLE_RUN_PATH=1
@@ -212,6 +217,7 @@ for c in ${PKG_COLLECTIONS}; do
   P=`fgrep " $c" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
   PKGS=""
   for x in $P; do
+    p="$x"
     if [ -d "$x" ] ; then
       PKGS="${PKGS} $x"
     else
@@ -220,6 +226,14 @@ for c in ${PKG_COLLECTIONS}; do
         PKGS="${PKGS} $p"
       else
         echo " *** cannot find package $x / $p" 1>&2
+        exit 1
+      fi
+    fi
+    m3ship="${p}/${TARGET}/.M3SHIP"
+    if [ -f ${m3ship} ]; then
+      if res=`egrep '/home|/var|/tmp' ${m3ship}`; then
+        echo "${m3ship} seems to be broken:" 1>&2
+        echo "${res}" 1>&2
         exit 1
       fi
     fi
@@ -327,7 +341,7 @@ EOF
   fi
 done
 
-set -x
+#set -x
 
 if [ `hostname` = 'birch' ]; then
   ARCHIVE="${STAGE}/cm3-scripts-${CM3VERSION}-${DS}.tgz"
