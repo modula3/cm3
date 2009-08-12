@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.14.2.1 2009-07-29 17:12:31 jkrell Exp $
+% $Id: m3makefile,v 1.14.2.2 2009-08-12 19:01:33 wagner Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -125,7 +125,7 @@ m3gdb_Run([M3GDB_MAKE])
 EXE = Platform_ExeExtension (M3GDB_HOST)
 
 % build the exportable link and man page and export them
-link_file ("gdb/gdb" & EXE, "m3gdb" & EXE)
+cp_if ("gdb/gdb" & EXE, "m3gdb" & EXE)
 BindExport ("m3gdb" & EXE)
 ManPage ("m3gdb","1")
 
