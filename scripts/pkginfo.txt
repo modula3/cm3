@@ -168,3 +168,31 @@ m3-games/fours game
 m3-games/maze game
 m3-games/solitaire game
 m3-games/tetris game
+examples/browsing std m3devtool
+examples/c-calling-m3 std m3devtool
+examples/calling-c-unix std m3devtool
+examples/calling-c-win32 std m3devtool
+examples/copy std m3devtool
+examples/enum std m3devtool
+examples/exceptions std m3devtool
+examples/files std m3devtool
+examples/finger std m3devtool
+examples/fingerprint std m3devtool
+examples/generics std m3devtool
+examples/hello std m3devtool
+examples/httpd std m3devtool
+examples/istvan std m3devtool
+examples/m3sh std m3devtool
+examples/netobj-client std m3devtool
+examples/netobj-interface std m3devtool
+examples/netobj-server std m3devtool
+examples/opaque std m3devtool
+examples/partially-opaque std m3devtool
+examples/pickles std m3devtool
+examples/refman std m3devtool
+examples/sieve-1 std m3devtool
+examples/sieve-2 std m3devtool
+examples/threads std m3devtool
+examples/unsafe std m3devtool
+examples/web std m3devtool
+examples/win32-dll std m3devtool
