@@ -50,7 +50,7 @@ commandrw std devlib
 tapi base std comm devlib
 serial base std comm devlib
 m3tk std comm devlib
-mtex std 
+mtex std core
 m3totex std m3devtool
 m3tohtml std m3devtool
 m3scan std devlib
