@@ -181,7 +181,6 @@ examples/fingerprint std m3devtool
 examples/generics std m3devtool
 examples/hello std m3devtool
 examples/httpd std m3devtool
-examples/istvan std m3devtool
 examples/m3sh std m3devtool
 examples/netobj-client std m3devtool
 examples/netobj-interface std m3devtool
