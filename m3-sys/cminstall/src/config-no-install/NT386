@@ -1,5 +1,5 @@
 %
-% $Id: NT386,v 1.7 2009-08-03 22:12:10 jkrell Exp $
+% $Id: NT386,v 1.8 2009-08-14 23:13:07 jkrell Exp $
 %
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
@@ -112,7 +112,7 @@ proc SetupEnvironment() is
         local DevEnvDir = $DevEnvDir % E:\Program Files\Microsoft Visual Studio 8\Common7\IDE
         local VSInstallDir = $VSINSTALLDIR % E:\Program Files\Microsoft Visual Studio 8
         local VS80CommonTools = $VS80COMNTOOLS % E:\Program Files\Microsoft Visual Studio 8\Common7\Tools
-        locla VCInstallDir = $VCINSTALLDIR % E:\Program Files\Microsoft Visual Studio 8\VC
+        local VCInstallDir = $VCINSTALLDIR % E:\Program Files\Microsoft Visual Studio 8\VC
 
         % 9.0 Express
         % always, global
