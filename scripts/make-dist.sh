@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.10 2009-08-10 20:56:39 wagner Exp $
+# $Id: make-dist.sh,v 1.26.2.11 2009-08-14 20:53:34 wagner Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -32,6 +32,7 @@ DS="pre-RC3"; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
+COLLDEPS="${ROOT}/www/releng/collection-deps.txt"
 
 cd "${ROOT}" || exit 1
 if [ -z "${OMIT_UPDATE}" ]; then
@@ -72,7 +73,7 @@ fi
 if [ `uname` = 'Interix' ]; then
   PKG_COLLECTIONS="devlib m3devtool webdev obliq caltech-parser tool math game core"
 else
-  PKG_COLLECTIONS="devlib m3devtool m3gdb webdev gui anim database cvsup obliq juno caltech-parser demo tool math game core min"
+  PKG_COLLECTIONS="min core devlib gui webdev m3gdb m3devtool anim database cvsup obliq juno caltech-parser demo tool math game"
 fi
 
 DESC_devlib='<p>
@@ -293,7 +294,15 @@ EOF
   <body>
     <h1>CM3 Package Collection $c</h1>
 EOF
-    echo "<p>This collections contains the following packages:</p>"
+    if [ -r ${COLLDEPS} ]; then
+      CHEADER=`egrep -C 5 "^collection $c" ${COLLDEPS} | tail -5`
+      echo "<h2 style=\"text-align:left\">Dependencies</h2>"
+      echo "<pre>${CHEADER}</pre>"
+    fi
+    echo "<h2 style=\"text-align:left\">Description</h2>"
+    ddd=${ddd:=DESC_${c}}
+    echo ${!ddd}
+    echo "<h2 style=\"text-align:left\">Package Details</h2>"
     echo "<ul>"
     for p in ${PKGS}; do
       b=`basename ${p}`
