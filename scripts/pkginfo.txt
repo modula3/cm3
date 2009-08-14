@@ -35,7 +35,7 @@ sortedtableextras base core std
 table-list base core std
 tempfiles base core std
 tcl std
-tcp base core std gui comm
+tcp base core std comm
 cm3ide std m3devtool
 udp std comm devlib
 libsio std devlib
@@ -60,13 +60,13 @@ cmpdir std tool
 cmpfp std tool
 dirfp std tool
 uniq std tool
-netobj std comm m3devtool
+netobj std comm devlib
 netobjd std comm m3devtool
 stubgen std comm m3devtool
 events std devlib
 rdwr std devlib
-sharedobj std m3devtool
-sharedobjgen std m3devtool
+sharedobj std obliq
+sharedobjgen std obliq
 odbc std database
 postgres95 std database
 db std database
@@ -119,9 +119,9 @@ visualobliq std obliq
 vocgi std obliq
 voquery std obliq
 vorun std obliq
-webvbt std gui webdev
+webvbt std webdev
 recordheap std m3devtool
-rehearsecode std m3devtool
+rehearsecode std anim
 replayheap std m3devtool
 showheap std m3devtool
 shownew std m3devtool
