@@ -24,6 +24,7 @@
 #include <process.h>
 #include <sys/termios.h>
 #endif
+#include <net/if.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -724,6 +725,281 @@ X(VTIME)
 X(TCSANOW)
 
 #endif /* cygwin */
+
+#undef X
+#define X(x) const int Unix__##x = x;
+
+#ifdef TIOCCAR
+X(TIOCCAR)
+#endif
+
+#ifdef TIOCCBRK
+X(TIOCCBRK)
+#endif
+
+#ifdef TIOCCDTR
+X(TIOCCDTR)
+#endif
+
+#ifdef TIOCCINUSE
+X(TIOCCINUSE)
+#endif
+
+#ifdef TIOCCMLB
+X(TIOCCMLB)
+#endif
+
+#ifdef TIOCEXCL
+X(TIOCEXCL)
+#endif
+
+#ifdef TIOCFLUSH
+X(TIOCFLUSH)
+#endif
+
+#ifdef TIOCGETC
+X(TIOCGETC)
+#endif
+
+#ifdef TIOCGETD
+X(TIOCGETD)
+#endif
+
+#ifdef TIOCGETP
+X(TIOCGETP)
+#endif
+
+#ifdef TIOCGLTC
+X(TIOCGLTC)
+#endif
+
+#ifdef TIOCGPGRP
+X(TIOCGPGRP)
+#endif
+
+#ifdef TIOCGWINSZ
+X(TIOCGWINSZ)
+#endif
+
+#ifdef TIOCHPCL
+X(TIOCHPCL)
+#endif
+
+#ifdef TIOCLBIC
+X(TIOCLBIC)
+#endif
+
+#ifdef TIOCLBIS
+X(TIOCLBIS)
+#endif
+
+#ifdef TIOCLGET
+X(TIOCLGET)
+#endif
+
+#ifdef TIOCLSET
+X(TIOCLSET)
+#endif
+
+#ifdef TIOCMASTER
+X(TIOCMASTER)
+#endif
+
+#ifdef TIOCMBIC
+X(TIOCMBIC)
+#endif
+
+#ifdef TIOCMBIS
+X(TIOCMBIS)
+#endif
+
+#ifdef TIOCMGET
+X(TIOCMGET)
+#endif
+
+#ifdef TIOCMODEM
+X(TIOCMODEM)
+#endif
+
+#ifdef TIOCMODG
+X(TIOCMODG)
+#endif
+
+#ifdef TIOCMODS
+X(TIOCMODS)
+#endif
+
+#ifdef TIOCMSET
+X(TIOCMSET)
+#endif
+
+#ifdef TIOCM_CAR
+X(TIOCM_CAR)
+#endif
+
+#ifdef TIOCM_CD
+X(TIOCM_CD)
+#endif
+
+#ifdef TIOCM_CTS
+X(TIOCM_CTS)
+#endif
+
+#ifdef TIOCM_DSR
+X(TIOCM_DSR)
+#endif
+
+#ifdef TIOCM_DTR
+X(TIOCM_DTR)
+#endif
+
+#ifdef TIOCM_LE
+X(TIOCM_LE)
+#endif
+
+#ifdef TIOCM_RI
+X(TIOCM_RI)
+#endif
+
+#ifdef TIOCM_RNG
+X(TIOCM_RNG)
+#endif
+
+#ifdef TIOCM_RTS
+X(TIOCM_RTS)
+#endif
+
+#ifdef TIOCM_SR
+X(TIOCM_SR)
+#endif
+
+#ifdef TIOCM_ST
+X(TIOCM_ST)
+#endif
+
+#ifdef TIOCNCAR
+X(TIOCNCAR)
+#endif
+
+#ifdef TIOCNMODEM
+X(TIOCNMODEM)
+#endif
+
+#ifdef TIOCNOTTY
+X(TIOCNOTTY)
+#endif
+
+#ifdef TIOCNXCL
+X(TIOCNXCL)
+#endif
+
+#ifdef TIOCOUTQ
+X(TIOCOUTQ)
+#endif
+
+#ifdef TIOCPKT
+X(TIOCPKT)
+#endif
+
+#ifdef TIOCPKT_DATA
+X(TIOCPKT_DATA)
+#endif
+
+#ifdef TIOCPKT_DOSTOP
+X(TIOCPKT_DOSTOP)
+#endif
+
+#ifdef TIOCPKT_FLUSHREAD
+X(TIOCPKT_FLUSHREAD)
+#endif
+
+#ifdef TIOCPKT_FLUSHWRITE
+X(TIOCPKT_FLUSHWRITE)
+#endif
+
+#ifdef TIOCPKT_IOCTL
+X(TIOCPKT_IOCTL)
+#endif
+
+#ifdef TIOCPKT_NOSTOP
+X(TIOCPKT_NOSTOP)
+#endif
+
+#ifdef TIOCPKT_START
+X(TIOCPKT_START)
+#endif
+
+#ifdef TIOCPKT_STOP
+X(TIOCPKT_STOP)
+#endif
+
+#ifdef TIOCREMOTE
+X(TIOCREMOTE)
+#endif
+
+#ifdef TIOCSBRK
+X(TIOCSBRK)
+#endif
+
+#ifdef TIOCSDTR
+X(TIOCSDTR)
+#endif
+
+#ifdef TIOCSETC
+X(TIOCSETC)
+#endif
+
+#ifdef TIOCSETD
+X(TIOCSETD)
+#endif
+
+#ifdef TIOCSETN
+X(TIOCSETN)
+#endif
+
+#ifdef TIOCSETP
+X(TIOCSETP)
+#endif
+
+#ifdef TIOCSINUSE
+X(TIOCSINUSE)
+#endif
+
+#ifdef TIOCSLTC
+X(TIOCSLTC)
+#endif
+
+#ifdef TIOCSMLB
+X(TIOCSMLB)
+#endif
+
+#ifdef TIOCSPGRP
+X(TIOCSPGRP)
+#endif
+
+#ifdef TIOCSTART
+X(TIOCSTART)
+#endif
+
+#ifdef TIOCSTI
+X(TIOCSTI)
+#endif
+
+#ifdef TIOCSTOP
+X(TIOCSTOP)
+#endif
+
+#ifdef TIOCSWINSZ
+X(TIOCSWINSZ)
+#endif
+
+#ifdef TIOCUCNTL
+X(TIOCUCNTL)
+#endif
+
+#ifdef TIOCWONLINE
+X(TIOCWONLINE)
+#endif
 
 #ifdef __cplusplus
 }
