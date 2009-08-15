@@ -1,8 +1,0 @@
-import("libm3")
-
-Module("DosToUnixRd")
-%Module("DosToUnixWr")
-%Module("UnixToDosRd")
-%Module("UnixToDosWr") - not working
-
-library("dosunixrw")
