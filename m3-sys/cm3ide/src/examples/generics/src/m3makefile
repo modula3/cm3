@@ -1,0 +1,12 @@
+
+import ("libm3")
+
+% Call to table will generate an Action
+table("AtomAction", "Atom", "Action")
+module("Action")
+
+% the main program is called "Generics"
+implementation ("Generics")
+
+program ("atom-db")
+
