@@ -1,7 +1,5 @@
 #!/bin/sh
 
-ROOT=${ROOT:-.}
-
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
   root="${ROOT}"; export root
@@ -21,20 +19,22 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
-ALL=`awk "{print \\$1}" ./scripts/pkginfo.txt | tr '\\n' ' '`
+ALL=`awk "{print \\$1}" ${ROOT}/scripts/pkginfo.txt | tr '\\n' ' '`
+ALLDEPS=${ROOT}/scripts/all-deps
+#echo "ALLDEPS=${ALLDEPS}"
+#echo "ALL=${ALL}"
+PKG_COLLECTIONS="core devlib gui webdev m3gdb m3devtool anim database cvsup obliq juno caltech-parser demo tool math game"
 
-[ ! -f all-deps ] && {
+[ ! -f ${ALLDEPS} ] && {
   CM3_ALL=yes \
-  ${ROOT}/scripts/pkgmap.sh -Q -c m3dep $ALL 2>/dev/null | 
+  ${ROOT}/scripts/pkgmap.sh -c m3dep $ALL 2>/dev/null | 
   egrep -v '^ |^$' | 
-  sed -e 's;/d/home/wagner/work/cm3/;;' \
+  sed -e "s;${ROOT}/;;" \
       -e 's;=== package ;|;' \
       -e 's; ===; ;' | 
   tr -d '\n' | tr '|' '\n' |
-  sed -e 's;^./;;' > all-deps
+  sed -e 's;^./;;' > ${ALLDEPS}
 }
-
-PKG_COLLECTIONS="core devlib gui webdev m3gdb m3devtool anim database cvsup obliq juno caltech-parser demo tool math game"
 
 list_contains() {
   str="$1"
@@ -72,7 +72,7 @@ for c in ${PKG_COLLECTIONS}; do
         exit 1
       fi
     fi
-    depline=`grep "^${p} " all-deps`
+    depline=`grep "^${p} " ${ALLDEPS}`
     pdeps=`echo ${depline} | sed -e 's/.*://'`
     adeps="${adeps}${depline}|"
     for dep in ${pdeps}; do
