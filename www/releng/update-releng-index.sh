@@ -49,7 +49,7 @@ tablerow() {
       *-bin-min-*)
         echo '<a href="collection-min.html">minimal</a>';;
       *-bin-ws-m3devtool*)
-        echo '<a href="collection-m3devtool.html">recommended</a>';;
+        echo '<a href="collection-m3devtool.html">optional</a>';;
       *-bin-ws-*)
         coll=`echo $f | awk -F- '{print $4}'`
 	[ "$coll" = "caltech" ] && coll="caltech-parser"

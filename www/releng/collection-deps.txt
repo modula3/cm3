@@ -1,5 +1,5 @@
 collection core
-  PKGS= import-libs m3cc m3core libm3 patternmatching sysutils unittest m3middle m3objfile m3linker m3back m3front m3quake cm3 m3scanner m3tools m3bundle mklib bitvector digraph parseparams realgeometry set slisp sortedtableextras table-list tempfiles tcp mtex
+  PKGS= import-libs m3cc m3core libm3 patternmatching sysutils unittest m3middle m3objfile m3linker m3back m3front m3quake cm3 m3scanner m3tools m3bundle mklib bitvector digraph parseparams realgeometry set slisp sortedtableextras table-list tempfiles tcp cm3ide mtex
   EXTDEPS=
   EXTDEPS-CORE=
   COLLDEPS=
@@ -34,11 +34,11 @@ collection m3gdb
   CAUSES: 
 
 collection m3devtool
-  PKGS= cm3ide m3totex m3tohtml m3browser netobjd stubgen stablegen stable formsview formsedit recordheap replayheap showheap shownew showthread pp examples/browsing examples/c-calling-m3 examples/calling-c-unix examples/calling-c-win32 examples/copy examples/enum examples/exceptions examples/files examples/finger examples/fingerprint examples/generics examples/hello examples/httpd examples/m3sh examples/netobj-client examples/netobj-interface examples/netobj-server examples/opaque examples/partially-opaque examples/pickles examples/refman examples/sieve-1 examples/sieve-2 examples/threads examples/unsafe examples/web examples/win32-dll
-  EXTDEPS= m3quake m3tools tcp libm3 mtex parseparams sysutils m3markup m3scan http windowsResources netobj m3tk formsvbt ui vbtkit m3core netobj-interface
-  EXTDEPS-CORE= m3markup m3scan http windowsResources netobj m3tk formsvbt ui vbtkit netobj-interface
+  PKGS= m3totex m3tohtml m3browser netobjd stubgen stablegen stable formsview formsedit recordheap replayheap showheap shownew showthread pp
+  EXTDEPS= libm3 mtex parseparams sysutils m3tools m3quake m3markup m3scan http tcp windowsResources netobj m3tk formsvbt ui vbtkit
+  EXTDEPS-CORE= m3markup m3scan http windowsResources netobj m3tk formsvbt ui vbtkit
   COLLDEPS= core devlib webdev gui
-  CAUSES:  core(m3quake) devlib(m3markup) webdev(http) gui(formsvbt)
+  CAUSES:  core(libm3) devlib(m3markup) webdev(http) gui(formsvbt)
 
 collection anim
   PKGS= codeview mg mgkit anim3D zeus m3zume rehearsecode mentor
