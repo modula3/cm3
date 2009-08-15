@@ -1,0 +1,8 @@
+
+import("libm3")
+import("netobj")
+import("netobj-interface")
+
+implementation ("NetObjClient")
+program("netobj-client")
+

@@ -1,0 +1,8 @@
+
+
+import("m3core")
+import("libm3")
+
+implementation ("OK")
+program ("ok")
+
