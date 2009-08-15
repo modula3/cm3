@@ -303,6 +303,13 @@ if Native and (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGE
 
             if equal(try_exec("file /usr/sfw/bin/gcc > /dev/null"), 0)
                 M3CC_CC = "/usr/sfw/bin/gcc"
+
+                % As above, libcpp/configure runs make to probe for dependency style
+                % but there might not be any make so give it the answer.
+
+                if equal($MAKE, "") and not equal(try_exec("type make > /dev/null"), 0)
+                    env = env & " am_cv_CC_dependencies_compiler_type=gcc3 "
+                end
             end
         end
     end
