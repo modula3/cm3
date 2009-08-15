@@ -23,11 +23,13 @@ BODY { font-family: 'Times New Roman', 'New Century Schoolbook', serif ; }
 
 
 BODY { font-family: Helvetica, Arial, sans-serif ;
-       background:  #ffffd0 ;
+       /*background:  #ffffd0 ;*/
+       background:  #e0ffe0 ;
        color     :  #000000 ; 
      }
 
-.stdbgnav { background: #FFFFB0; }
+/* .stdbgnav { background: #FFFFB0; } */
+.stdbgnav { background: #b0f0b0; }
 
 /* TD.highlight { background: #99CCFF } */
 /* TD.highlight { background: #FFFFFF } */
@@ -138,11 +140,13 @@ B.pink { background: transparent ;
            padding-left: 1em;
           }
 
-.topnav { background: #ffffd0;
+.topnav { /* background: #ffffd0; */
+          background:  #e0ffe0;
           color: #0077FF;
           font-size: 1em;
           /* font-weight: bold; */
           text-align: center;
         }
 
-.datebg { background: #FFFFB0; }
+/* .datebg { background: #FFFFB0; } */
+.datebg { background: #d0FFb0; }
