@@ -274,30 +274,57 @@ if Native and (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGE
             and equal(M3CC_CC, "*")
             and equal(M3CC_CFLAGS, "-g -O2")
             and not equal(try_exec("type gcc > /dev/null"), 0)
-            and equal(try_exec("type cc > /dev/null"), 0)
-            and equal(try_exec("cc -O2 2>&1 | grep \"Warning: option -2 passed to ld\" > /dev/null"), 0)
 
-        % Sun cc doeson't like -O2 and it causes configuring gcc to fail
-        % If /usr/sfw/bin/gcc exists, we should probably use that here.
+        % if gcc not in path and cc is, use cc
+        % if cc -O2 gives expected error, use cc -O
 
-        M3CC_CC = "cc"
-        M3CC_CFLAGS = "-g -O"
+        if equal(try_exec("type cc > /dev/null"), 0)
+                and equal(try_exec("cc -O2 2>&1 | grep \"Warning: option -2 passed to ld\" > /dev/null"), 0)
 
-        % libcpp/configure runs make to test its result and that fails if /usr/ccs/bin
-        % isn't in $PATH, so just tell it the answer
+            % Sun cc doeson't like -O2 and it causes configuring gcc to fail
+            % If /usr/sfw/bin/gcc exists, we should probably use that here.
 
-        if equal($MAKE, "") and not equal(try_exec("type make > /dev/null"), 0)
-            env = env & " am_cv_CC_dependencies_compiler_type=dashXmstdout "
+            M3CC_CC = "cc"
+            M3CC_CFLAGS = "-g -O"
+
+            % libcpp/configure runs make to test its result and that fails if /usr/ccs/bin
+            % isn't in $PATH, so just tell it the answer
+
+            if equal($MAKE, "") and not equal(try_exec("type make > /dev/null"), 0)
+                env = env & " am_cv_CC_dependencies_compiler_type=dashXmstdout "
+            end
+        else
+            % if no gcc in path and no cc in path, try /usr/sfw/bin/gcc, which
+            % is where Sun installs it
+            %
+            % TODO: try /usr/ccs/bin/cc or /usr/ucb/cc
+            % Currently my /usr/ucb/cc prints "language optional software package not installed"
+            % and I think if you do install a working cc, you get /usr/bin/cc anyway, which is in $PATH
+
+            if equal(try_exec("file /usr/sfw/bin/gcc > /dev/null"), 0)
+                M3CC_CC = "/usr/sfw/bin/gcc"
+
+                % As above, libcpp/configure runs make to probe for dependency style
+                % but there might not be any make so give it the answer.
+
+                if equal($MAKE, "") and not equal(try_exec("type make > /dev/null"), 0)
+                    env = env & " am_cv_CC_dependencies_compiler_type=gcc3 "
+                end
+            end
         end
     end
 
     % in a minimal environment, such as with an empty .profile, ar is not in the path
     % and building gcc fails as a result; gcc's build doesn't know to look in /usr/ccs/bin/ar
 
-    if equal($AR, "")
-            and not equal(try_exec("type ar > /dev/null"), 0)
-            and equal(try_exec("type " & SYSTEM_AR & " > /dev/null"), 0)
-        env = env & " AR=" & SYSTEM_AR & " "
+    if equal($AR, "") and not equal(try_exec("type ar > /dev/null"), 0)
+        % SYSTEM_AR doesn't necessarily work
+        if not equal(SYSTEM_AR, "ar") and equal(try_exec("type " & SYSTEM_AR & " > /dev/null"), 0)
+            env = env & " AR=" & SYSTEM_AR & " "
+        end
+        if equal(SYSTEM_AR, "ar") and equal(try_exec("type /usr/ccs/bin/ar > /dev/null"), 0)
+            env = env & " AR=/usr/ccs/bin/ar "
+        end
     end
 end
 
