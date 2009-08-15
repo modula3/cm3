@@ -169,29 +169,3 @@ m3-games/fours fours: vbtkit libbuf
 m3-games/maze maze: libm3
 m3-games/solitaire solitaire: bicycle
 m3-games/tetris tetris: X11R4
-examples/browsing browsing: 
-examples/c-calling-m3 c-calling-m3: libm3
-examples/calling-c-unix calling-c-unix: libm3
-examples/calling-c-win32 calling-c-win32: libm3 m3core
-examples/copy copy: libm3
-examples/enum enum: libm3
-examples/exceptions exceptions: libm3
-examples/files files: libm3
-examples/finger finger: tcp libm3
-examples/fingerprint fingerprint: libm3
-examples/generics generics: libm3
-examples/hello hello: libm3
-examples/httpd httpd: tcp libm3
-examples/m3sh m3sh: libm3
-examples/netobj-client netobj-client: netobj-interface netobj libm3
-examples/netobj-interface netobj-interface: netobj
-examples/netobj-server netobj-server: netobj-interface netobj
-examples/opaque opaque: libm3
-examples/partially-opaque partially-opaque: libm3
-examples/pickles pickles: libm3
-examples/refman refman: 
-examples/sieve-1 sieve-1: libm3
-examples/sieve-2 sieve-2: libm3
-examples/threads threads: libm3
-examples/unsafe unsafe: libm3
-examples/web 
