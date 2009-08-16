@@ -3,26 +3,24 @@
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
-SYSINFO_DONE="yes"
+#-----------------------------------------------------------------------------
+# output functions
 
-UNAME=${UNAME:-`uname`}
-UNAMEM=${UNAMEM:=`uname -m`}
+debug() {
+  if [ -n "$CM3_DEBUG" ] ; then
+    echo "$*"
+  fi
+}
 
-PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
+header() {
+  echo ""
+  echo '----------------------------------------------------------------------------'
+  echo $@
+  echo '----------------------------------------------------------------------------'
+  echo ""
+}
 
 #-----------------------------------------------------------------------------
-# set some defaults
-#
-
-eval `awk '{ print "default_" $1 "=" $2 }' < $root/scripts/version`
-
-CM3VERSION=${CM3VERSION:-${default_CM3VERSION}}
-CM3VERSIONNUM=${CM3VERSIONNUM:-${default_CM3VERSIONNUM}}
-CM3LASTCHANGED=${CM3LASTCHANGED:-${default_CM3LASTCHANGED}}
-
-CM3_GCC_BACKEND=yes
-CM3_GDB=${CM3_GDB:-yes}
-#
 # Utility function to find first occurrence of executable file in
 # $PATH.
 # Arguments are filename and default pathname.
@@ -46,6 +44,45 @@ find_exe() {
     return 1
   fi
 }
+
+#-----------------------------------------------------------------------------
+
+qgrep() {
+  egrep $@ >/dev/null 2>/dev/null
+}
+
+#-----------------------------------------------------------------------------
+# abstraction functions
+cygpath() {
+  echo "$2"
+}
+
+strip_exe() {
+  strip $@
+}
+
+#-----------------------------------------------------------------------------
+
+SYSINFO_DONE="yes"
+
+UNAME=${UNAME:-`uname`}
+UNAMEM=${UNAMEM:=`uname -m`}
+
+PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
+
+#-----------------------------------------------------------------------------
+# set some defaults
+#
+
+eval `awk '{ print "default_" $1 "=" $2 }' < $root/scripts/version`
+
+CM3VERSION=${CM3VERSION:-${default_CM3VERSION}}
+CM3VERSIONNUM=${CM3VERSIONNUM:-${default_CM3VERSIONNUM}}
+CM3LASTCHANGED=${CM3LASTCHANGED:-${default_CM3LASTCHANGED}}
+
+CM3_GCC_BACKEND=yes
+CM3_GDB=${CM3_GDB:-yes}
+
 #
 # If CM3_INSTALL is not set, it will be set to the the parent directory
 # of the first path element where an executable cm3 is found.
@@ -93,16 +130,6 @@ if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
     exit 1
   fi
 fi
-
-#-----------------------------------------------------------------------------
-# abstraction functions
-cygpath() {
-  echo "$2"
-}
-
-strip_exe() {
-  strip $@
-}
 
 #-----------------------------------------------------------------------------
 # evaluate uname information
@@ -242,32 +269,12 @@ PKGSDB=${PKGSDB:-$ROOT/scripts/PKGS}
 GREP=${GREP:-egrep}
 GMAKE=${GMAKE:-gmake}
 
-qgrep() {
-  egrep $@ >/dev/null 2>/dev/null
-}
-
 if [ "${M3OSTYPE}" = "WIN32" ] ; then
   CM3ROOT="`cygpath -w ${ROOT} | sed -e 's;\\\;\\\\\\\\;g'`"
 else
   CM3ROOT="${ROOT}"
 fi
 
-
-#-----------------------------------------------------------------------------
-# output functions
-debug() {
-  if [ -n "$CM3_DEBUG" ] ; then
-    echo "$*"
-  fi
-}
-
-header() {
-  echo ""
-  echo '----------------------------------------------------------------------------'
-  echo $@
-  echo '----------------------------------------------------------------------------'
-  echo ""
-}
 
 #-----------------------------------------------------------------------------
 # elego customizations
