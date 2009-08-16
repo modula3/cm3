@@ -147,7 +147,7 @@ proc SetupEnvironment() is
             end
 
             if not DevEnvDir
-                DevEnvDir = VSInstallDir & \\Common7\\IDE"
+                DevEnvDir = VSInstallDir & "\\Common7\\IDE"
             end
 
             MspdbDir = DevEnvDir
@@ -242,8 +242,8 @@ proc SetupEnvironment() is
 %         if not SearchPath("msvcrt.lib", Lib)
 %             os.environ["USE_MSVCRT"] = "0"
 %             print("set USE_MSVCRT=0")
-
-
+%         end
+    end
 end
 
 SetupEnvironment()
