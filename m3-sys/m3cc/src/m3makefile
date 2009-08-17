@@ -209,17 +209,85 @@ readonly proc get_overrides (nm, ov) is
   end
 end
 
+proc ConfigureGNUMake() is
+
+    proc CheckGNUMake(a) is
+        if equal($OS, "Windows_NT")
+            if equal(try_exec(a & " --version | findstr /c:\"GNU Make\""), 0)
+                return a
+            else
+                write("rejecting " & a & " because it does not appear to be GNU make\n")
+                return FALSE
+            end
+        else
+            if equal(try_exec("type " & a), 0)
+                if equal(try_exec(a & " --version | grep \"GNU Make\""), 0)
+                    return a
+                else
+                    write("rejecting " & a & " because it does not appear to be GNU make\n")
+                    return FALSE
+                end
+            end
+        end
+        return FALSE
+    end
+
+    if defined("M3CC_MAKE")
+        if CheckGNUMake(M3CC_MAKE)
+            return
+        end
+    end
+
+    if defined("GNU_MAKE")
+        if CheckGNUMake(GNU_MAKE)
+            M3CC_MAKE = GNU_MAKE
+            return
+        end
+    end
+
+    if not equal($GMAKE, "")
+        if CheckGNUMake($GMAKE)
+            M3CC_MAKE = $GMAKE
+            return
+        end
+    end
+
+    % future
+    % if defined("HOST") and defined("HOST_GNU_MAKE")
+    %   if equal(HOST, TARGET) and CheckGNUMake(HOST_GNU_MAKE)
+    %       M3CC_MAKE = HOST_GNU_MAKE
+    %       return
+    %   end
+    % end
+
+    foreach a in [
+            %"ls",                  % test case for CheckGNUMake
+            "gmake",                % search path for popular option
+            "gnumake",              % search path for reasonable but less popular option
+            "/usr/pkg/bin/gmake",   % NetBSD
+            "/usr/sfw/bin/gmake",   % Solaris
+            "/usr/local/gmake",     % FreeBSD, OpenBSD, otherwise popular
+            "/usr/local/gnumake",   % reasonable
+            "make",                 % search path for popular Linux option, that is often wrong on non-Linux systems
+            ]
+        if CheckGNUMake(a)
+            M3CC_MAKE = a
+            return
+        end
+    end
+    error("no GNU make found")
+end
+
+ConfigureGNUMake()
+%error("GNU_MAKE is " & GNU_MAKE & CR)
+
 %
 % star means default
 % These are meant to come from the config file, but it can omit them
 %
+
 if not defined("GNU_CC")     GNU_CC     = "*"    end
 if not defined("GNU_CFLAGS") GNU_CFLAGS = "-g -O2"    end
-if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
-
-if defined("HOST_GNU_MAKE")
-  GNU_MAKE = HOST_GNU_MAKE
-end
 
 % See gcc configure documentation.
 % "Build" is the present machine we are running on, the machine that is building the compiler.
@@ -247,7 +315,6 @@ if not defined ("M3CC_HOST")    M3CC_HOST   = TARGET     end
 if not defined ("M3CC_TARGET")  M3CC_TARGET = TARGET     end
 if not defined ("M3CC_CC")      M3CC_CC     = GNU_CC     end
 if not defined ("M3CC_CFLAGS")  M3CC_CFLAGS = GNU_CFLAGS end
-if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
 local Native = equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD)
@@ -256,18 +323,6 @@ local env = ""
 
 if Native and (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGET, "SPARC32_SOLARIS")
         or equal(TARGET, "SPARC64_SOLARIS") or equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS"))
-
-    if equal(M3CC_MAKE, "make")
-            and equal($MAKE, "")
-            and not equal(try_exec("type gmake > /dev/null"), 0)
-            and not equal(try_exec("type gnumake > /dev/null"), 0)
-            and FileExists("/usr/sfw/bin/gmake")
-
-        % make doesn't work, HOST_GNU_MAKE may be incorrect, and /usr/sfw/bin/gmake is where
-        % Sun installs GNU make.
-
-        M3CC_MAKE = "/usr/sfw/bin/gmake"
-    end
 
     if equal($CC, "")
             and equal($CFLAGS, "")
