@@ -230,6 +230,8 @@ pall=0
 pko=0
 tall=0
 tko=0
+psk=0
+tsk=0
 
 write_pkg_report() {
   res=""
@@ -300,6 +302,7 @@ write_pkg_report() {
       echo "  build OK"
     elif [ "$2" = "2" ] ; then
       echo "  not supported on ${TARGET} (skipped)"
+      echo "  <skipped type=\"NEX\" message=\"not supported on ${TARGET}\"/>"
     else
       echo "  <failure type=\"build failed\">"
       quote_xml "$errlines"
@@ -416,6 +419,7 @@ for PKG in ${PKGS} ; do
       echo "=== package omitted on this platform ==="
       res=2
       YELLOWPKGS=`printf "${YELLOWPKGS}${PKG}\\\\\\n"`
+      psk=`expr $psk + 1`
     fi
     #deps=`cd "${PKG}" && cm3 -depend | head -1`
   else
@@ -464,8 +468,8 @@ if [ -n "${REPORT}" ]; then
 
   echo '<?xml version="1.0" encoding="ISO-8859-1"?>' > ${RJ}
   echo '<?xml version="1.0" encoding="ISO-8859-1"?>' > ${RJT}
-  echo "<testsuite tests=\"${pall}\" failures=\"${pko}\" name=\"CM3 package build status\">" >> ${RJ}
-  echo "<testsuite tests=\"${tall}\" failures=\"${tko}\" name=\"CM3 package tests status\">" >> ${RJT}
+  echo "<testsuite tests=\"${pall}\" failures=\"${pko}\" skipped=\"${psk}\" name=\"CM3 package build status\">" >> ${RJ}
+  echo "<testsuite tests=\"${tall}\" failures=\"${tko}\" skipped=\"${tsk}\" name=\"CM3 package tests status\">" >> ${RJT}
   echo "${rj}" >> ${RJ}
   echo "${rjt}" >> ${RJT}
   echo "</testsuite>" >> ${RJ}
