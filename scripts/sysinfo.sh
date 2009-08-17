@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.76 2009-08-17 01:48:58 jkrell Exp $
+# $Id: sysinfo.sh,v 1.77 2009-08-17 03:32:22 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -91,8 +91,6 @@ CM3_GDB=${CM3_GDB:-yes}
 #
 CM3_INSTALL=${CM3_INSTALL:-`dirname \`find_exe cm3 /usr/local/cm3/\ \``}
 CM3=${CM3:-cm3}
-M3BUILD=${M3BUILD:-m3build}
-M3SHIP=${M3SHIP:-m3ship}
 EXE=""
 SL="/"
 TAR=tar
