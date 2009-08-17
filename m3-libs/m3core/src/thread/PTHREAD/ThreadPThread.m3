@@ -868,7 +868,7 @@ PROCEDURE WaitProcess (pid: int; VAR status: int): int =
 
 (*--------------------------------------------------- Stack size controls ---*)
 
-VAR defaultStackSize := 4096;
+VAR defaultStackSize := 32 * 1024;
 
 PROCEDURE GetDefaultStackSize (): CARDINAL =
   BEGIN
