@@ -301,7 +301,7 @@ EOF
     fi
     echo "<h2 style=\"text-align:left\">Description</h2>"
     ddd=${ddd:=DESC_${c}}
-    echo ${!ddd}
+    echo ${ddd}
     echo "<h2 style=\"text-align:left\">Package Details</h2>"
     echo "<ul>"
     for p in ${PKGS}; do
