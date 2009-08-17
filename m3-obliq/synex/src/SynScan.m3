@@ -127,14 +127,14 @@ PROCEDURE IsIdentifier(sc: T; string: TEXT): BOOLEAN =
     IF length=0 THEN RETURN FALSE END;
     IF sc^.charTable[Text.GetChar(string,0)]=CharacterClass.LetterCharCase THEN
       FOR i:=0 TO length-1 DO 
-	class := sc^.charTable[Text.GetChar(string,i)];     
+        class := sc^.charTable[Text.GetChar(string,i)];     
         IF (class # CharacterClass.LetterCharCase) AND 
-	    (class # CharacterClass.DigitCharCase) THEN RETURN FALSE END;
+            (class # CharacterClass.DigitCharCase) THEN RETURN FALSE END;
       END;
       RETURN TRUE;
     ELSIF sc^.charTable[Text.GetChar(string,0)]=CharacterClass.SpecialCharCase THEN
       FOR i:=0 TO length-1 DO 
-	class := sc^.charTable[Text.GetChar(string,i)];     
+        class := sc^.charTable[Text.GetChar(string,i)];     
         IF (class # CharacterClass.SpecialCharCase) THEN RETURN FALSE END;
       END;
       RETURN TRUE;
@@ -281,13 +281,13 @@ PROCEDURE LookChar(sc: T): CHAR RAISES {NoReader} =
       EXCEPT
       |  Rd.EndOfFile => 
         IF z.input^.generateEOF THEN
-	  PopInput(sc);
-	  z.lookAheadChar := EofChar;
-	  z.lookAheadReady := TRUE;
-	  RETURN EofChar;
+          PopInput(sc);
+          z.lookAheadChar := EofChar;
+          z.lookAheadReady := TRUE;
+          RETURN EofChar;
         ELSE
-	  PopInput(sc);
-	  RETURN LookChar(sc);
+          PopInput(sc);
+          RETURN LookChar(sc);
         END;
       | Rd.Failure, Thread.Alerted => RAISE NoReader;
       END;
@@ -674,9 +674,9 @@ RAISES {NoReader, Fail} =
   BEGIN
     IF LookToken(sc) = TokenClass.IntCase THEN
       IF sc^.tokenInt >= 0 THEN
-	EVAL(GetToken(sc));
+        EVAL(GetToken(sc));
         nat := sc^.tokenInt; 
-	RETURN TRUE;
+        RETURN TRUE;
       ELSE
         RETURN FALSE;
       END;
@@ -727,12 +727,12 @@ RAISES {NoReader, Fail} =
       IF (class = TokenClass.IdeCase) OR (class = TokenClass.InfixCase) THEN
         IF z.scanBufferSize # 0 THEN
           name := Text.FromChars(SUBARRAY(z.scanBuffer^, 0, z.scanBufferSize));
-	  IF z.keySet.table.get(name, (*VAR OUT*) value) THEN
-	    z.tokenSym := NARROW(value, Symbol);
-	  ELSE
-	    z.tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
-	    EVAL z.keySet.table.put(name, z.tokenSym);
-	  END;
+          IF z.keySet.table.get(name, (*VAR OUT*) value) THEN
+            z.tokenSym := NARROW(value, Symbol);
+          ELSE
+            z.tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
+            EVAL z.keySet.table.put(name, z.tokenSym);
+          END;
           z.scanBufferSize := 0;
         END;
         IF z.tokenSym.keyword THEN RETURN FALSE END;
@@ -752,13 +752,13 @@ RAISES {NoReader, Fail} =
       class := LookToken(sc);
       IF (class = TokenClass.IdeCase) OR (class = TokenClass.InfixCase) THEN
         IF z.scanBufferSize # 0 THEN
-	  name := Text.FromChars(SUBARRAY(z.scanBuffer^, 0, z.scanBufferSize));
-	  IF z.keySet.table.get(name, (*VAR OUT*) value) THEN
-	    z.tokenSym := NARROW(value, Symbol);
-	  ELSE
-	    z.tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
-	    EVAL z.keySet.table.put(name, z.tokenSym);
-	  END;
+          name := Text.FromChars(SUBARRAY(z.scanBuffer^, 0, z.scanBufferSize));
+          IF z.keySet.table.get(name, (*VAR OUT*) value) THEN
+            z.tokenSym := NARROW(value, Symbol);
+          ELSE
+            z.tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
+            EVAL z.keySet.table.put(name, z.tokenSym);
+          END;
           z.scanBufferSize := 0;
         END;
         EVAL(GetToken(sc));
@@ -790,13 +790,13 @@ RAISES {NoReader, Fail} =
       class := LookToken(sc);
       IF (class = TokenClass.IdeCase) OR (class = TokenClass.InfixCase) THEN
         IF z.scanBufferSize # 0 THEN
-	  name := Text.FromChars(SUBARRAY(z.scanBuffer^, 0, z.scanBufferSize));
-	  IF z.keySet.table.get(name, (*VAR OUT*) value) THEN
-	    z.tokenSym := NARROW(value, Symbol);
-	  ELSE
-	    z.tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
-	    EVAL z.keySet.table.put(name, z.tokenSym);
-	  END;
+          name := Text.FromChars(SUBARRAY(z.scanBuffer^, 0, z.scanBufferSize));
+          IF z.keySet.table.get(name, (*VAR OUT*) value) THEN
+            z.tokenSym := NARROW(value, Symbol);
+          ELSE
+            z.tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
+            EVAL z.keySet.table.put(name, z.tokenSym);
+          END;
           z.scanBufferSize := 0;
         END;
         IF z.tokenSym.keyword THEN RETURN FALSE END;
@@ -816,13 +816,13 @@ RAISES {NoReader, Fail} =
       class := LookToken(sc);
       IF (class = TokenClass.IdeCase) OR (class = TokenClass.InfixCase) THEN
         IF z.scanBufferSize # 0 THEN
-	  name := Text.FromChars(SUBARRAY(z.scanBuffer^, 0, z.scanBufferSize));
-	  IF z.keySet.table.get(name, (*VAR OUT*) value) THEN
-	    z.tokenSym := NARROW(value, Symbol);
-	  ELSE
-	    z.tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
-	    EVAL z.keySet.table.put(name, z.tokenSym);
-	  END;
+          name := Text.FromChars(SUBARRAY(z.scanBuffer^, 0, z.scanBufferSize));
+          IF z.keySet.table.get(name, (*VAR OUT*) value) THEN
+            z.tokenSym := NARROW(value, Symbol);
+          ELSE
+            z.tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
+            EVAL z.keySet.table.put(name, z.tokenSym);
+          END;
           z.scanBufferSize := 0;
         END;
         IF NOT Text.Equal(text, z.tokenSym.name) THEN RETURN FALSE END;
@@ -840,13 +840,13 @@ PROCEDURE HaveTokenKey(sc: T; key: TEXT): BOOLEAN RAISES {NoReader, Fail} =
       class := LookToken(sc);
       IF (class = TokenClass.IdeCase) OR (class = TokenClass.InfixCase) THEN
         IF z.scanBufferSize # 0 THEN
-	  name := Text.FromChars(SUBARRAY(z.scanBuffer^, 0, z.scanBufferSize));
-	  IF z.keySet.table.get(name, (*VAR OUT*) value) THEN
-	    z.tokenSym := NARROW(value, Symbol);
-	  ELSE
-	    z.tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
-	    EVAL z.keySet.table.put(name, z.tokenSym);
-	  END;
+          name := Text.FromChars(SUBARRAY(z.scanBuffer^, 0, z.scanBufferSize));
+          IF z.keySet.table.get(name, (*VAR OUT*) value) THEN
+            z.tokenSym := NARROW(value, Symbol);
+          ELSE
+            z.tokenSym := NEW(Symbol, name:=name, keyword:=FALSE);
+            EVAL z.keySet.table.put(name, z.tokenSym);
+          END;
           z.scanBufferSize := 0;
         END;
         IF NOT z.tokenSym.keyword THEN RETURN FALSE END;
