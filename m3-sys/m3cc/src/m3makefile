@@ -238,6 +238,12 @@ proc ConfigureGNUMake() is
         end
     end
 
+    if defined("M3GDB_MAKE")
+        if CheckGNUMake(M3GDB_MAKE)
+            return
+        end
+    end
+
     if defined("GNU_MAKE")
         if CheckGNUMake(GNU_MAKE)
             M3CC_MAKE = GNU_MAKE
