@@ -53,11 +53,11 @@ PROCEDURE DoIt () =
 
         Quake.Define(mach, "TARGET", MxConfig.HOST);
         Quake.Define(mach, "OS_TYPE", MxConfig.HOST_OS_TYPE);
-        Quake.Define(mach, "BACKEND_MODE", Version.BackendMode);
-        Quake.Define(mach, "C_COMPILER", Version.CCompiler);
-        Quake.Define(mach, "LINKER", Version.Linker);
-        Quake.Define(mach, "THREAD_LIBRARY", Version.ThreadLibrary);
-        Quake.Define(mach, "WINDOW_LIBRARY", Version.WindowLibrary);
+        (* Quake.Define(mach, "BACKEND_MODE", Version.BackendMode); *)
+        (* Quake.Define(mach, "C_COMPILER", Version.CCompiler); *)
+        (* Quake.Define(mach, "LINKER", Version.Linker); *)
+        (* Quake.Define(mach, "THREAD_LIBRARY", Version.ThreadLibrary); *)
+        (* Quake.Define(mach, "WINDOW_LIBRARY", Version.WindowLibrary); *)
         Quake.Define(mach, "WORD_SIZE", MxConfig.HOST_WORD_SIZE);
 
         (* Even if the config file overrides the defaults, such as to do
@@ -65,7 +65,7 @@ PROCEDURE DoIt () =
 
         Quake.Define(mach, "HOST", MxConfig.HOST);
         Quake.Define(mach, "HOST_OS_TYPE", MxConfig.HOST_OS_TYPE);
-        Quake.Define(mach, "HOST_GNU_MAKE", Version.GNUMake);
+        (* Quake.Define(mach, "HOST_GNU_MAKE", Version.GNUMake); *)
 
         (* define the site configuration *)
         Msg.Verbose ("EVAL (\"", config, "\")");
