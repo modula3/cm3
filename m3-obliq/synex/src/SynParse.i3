@@ -157,8 +157,8 @@ TYPE
     Grammar BRANDED OBJECT
       key: TEXT;
       Build: PROCEDURE(self: GivenKeyword; g: T;
-	READONLY info: SynLocation.Info): Tree RAISES {Fail}
-	:= BuildNoGivenKeyword;
+        READONLY info: SynLocation.Info): Tree RAISES {Fail}
+        := BuildNoGivenKeyword;
     END;
   (* A grammar to parse a given keyword "key". Parsing this causes the
      Build procedure to be invoked, and its result returned. The default
@@ -169,8 +169,8 @@ TYPE
     Grammar BRANDED OBJECT
       ide: TEXT;
       Build: PROCEDURE(self: GivenIdentifier; g: T;
-	READONLY info: SynLocation.Info): Tree RAISES {Fail}
-	:= BuildNoGivenIdentifier;
+        READONLY info: SynLocation.Info): Tree RAISES {Fail}
+        := BuildNoGivenIdentifier;
     END;
   (* A grammar to parse a given non-keyword identifier "ide". Parsing this 
      causes the Build procedure to be invoked, and its result returned. 
@@ -181,8 +181,8 @@ TYPE
     Grammar BRANDED OBJECT
       text: TEXT;
       Build: PROCEDURE(self: GivenName; g: T;
-	READONLY info: SynLocation.Info): Tree RAISES {Fail}
-	:= BuildNoGivenName;
+        READONLY info: SynLocation.Info): Tree RAISES {Fail}
+        := BuildNoGivenName;
     END;
   (* A grammar to parse a given identifier or keyword "text". Parsing this 
      causes the Build procedure to be invoked, and its result returned. 
@@ -193,8 +193,8 @@ TYPE
     Grammar BRANDED OBJECT
       delim: CHAR;
       Build: PROCEDURE(self: GivenDelimiter; g: T;
-	READONLY info: SynLocation.Info): Tree RAISES {Fail}
-	:= BuildNoGivenDelimiter;
+        READONLY info: SynLocation.Info): Tree RAISES {Fail}
+        := BuildNoGivenDelimiter;
     END;
   (* A grammar to parse a given delimiter "delim". Parsing this 
      causes the Build procedure to be invoked, and its result returned. 
@@ -204,8 +204,8 @@ TYPE
   Eof =
     Grammar BRANDED OBJECT
       Build: PROCEDURE(self: Eof; g: T;
-	READONLY info: SynLocation.Info): Tree RAISES {Fail}
-	:= BuildNoEof;
+        READONLY info: SynLocation.Info): Tree RAISES {Fail}
+        := BuildNoEof;
     END; 
   (* A grammar to parse an end-of-file marker. Parsing this 
      causes the Build procedure to be invoked, and its result
@@ -215,8 +215,8 @@ TYPE
   Identifier =
     Grammar BRANDED OBJECT
       Build: PROCEDURE(self: Identifier; g: T; name: TEXT; 
-	READONLY info: SynLocation.Info): Tree RAISES {Fail}
-	:= BuildNoIdentifier;
+        READONLY info: SynLocation.Info): Tree RAISES {Fail}
+        := BuildNoIdentifier;
     END;
   (* A grammar to parse any identifier from the input. Parsing this 
      causes the Build procedure to be invoked with the scanned identifier
@@ -226,8 +226,8 @@ TYPE
   Name =
     Grammar BRANDED OBJECT
       Build: PROCEDURE(self: Name; g: T; name: TEXT; 
-	READONLY info: SynLocation.Info): Tree RAISES {Fail}
-	:= BuildNoName;
+        READONLY info: SynLocation.Info): Tree RAISES {Fail}
+        := BuildNoName;
     END;
   (* A grammar to parse any identifier or keyword from the input. Parsing this 
      causes the Build procedure to be invoked with the scanned entity
@@ -238,8 +238,8 @@ TYPE
   QuotedChar =
     Grammar BRANDED OBJECT
       Build: PROCEDURE(self: QuotedChar; g: T; char: CHAR; 
-	READONLY info: SynLocation.Info): Tree RAISES {Fail}
-	:= BuildNoQuotedChar;
+        READONLY info: SynLocation.Info): Tree RAISES {Fail}
+        := BuildNoQuotedChar;
     END;
   (* A grammar to parse any quoted character from the input. Parsing this 
      causes the Build procedure to be invoked with the scanned entity
@@ -249,8 +249,8 @@ TYPE
   Integer =
     Grammar BRANDED OBJECT
       Build: PROCEDURE(self: Integer; g: T; int: INTEGER; 
-	READONLY info: SynLocation.Info): Tree RAISES {Fail}
-	:= BuildNoInteger;
+        READONLY info: SynLocation.Info): Tree RAISES {Fail}
+        := BuildNoInteger;
     END;
   (* A grammar to parse any integer from the input. Parsing this 
      causes the Build procedure to be invoked with the scanned entity
@@ -260,8 +260,8 @@ TYPE
   Real =
     Grammar BRANDED OBJECT
       Build:PROCEDURE(self: Real; g: T; real: LONGREAL; 
-	READONLY info: SynLocation.Info): Tree RAISES {Fail}
-	:= BuildNoReal;
+        READONLY info: SynLocation.Info): Tree RAISES {Fail}
+        := BuildNoReal;
    END;
   (* A grammar to parse any real number from the input. Parsing this 
      causes the Build procedure to be invoked with the scanned entity
@@ -271,8 +271,8 @@ TYPE
   QuotedString =
     Grammar BRANDED OBJECT
       Build: PROCEDURE(self: QuotedString; g: T; string: TEXT; 
-	READONLY info: SynLocation.Info): Tree RAISES {Fail}
-	:= BuildNoQuotedString;
+        READONLY info: SynLocation.Info): Tree RAISES {Fail}
+        := BuildNoQuotedString;
     END;
   (* A grammar to parse any quoted string from the input. Parsing this 
      causes the Build procedure to be invoked with the scanned entity
@@ -294,7 +294,7 @@ TYPE
   Choice =
     Grammar BRANDED OBJECT
       choice: GrammarList;
-	(* returns what the succesful choice returns *)
+        (* returns what the succesful choice returns *)
     END;
   (* A grammar to parse one of a number (possibly zero) of branch grammars, 
      to be tried in the order given. Parsing this is the same as parsing the 
@@ -328,19 +328,19 @@ TYPE
      established within that "iter" are undone. *)
 
      (* Iter(a,b) can be made to produces left-associative parse trees:    
-	a, ab, (ab)b, ((ab)b)b, ...
+        a, ab, (ab)b, ((ab)b)b, ...
        which are not otherwise constructable by Sequence and Choice alone.
        Examples of use of Iter, using [] for Sequence and ".." for terminals:
-	Iter(ide,"'")
-		ide, ide', (ide')', ...
-	Iter(ide,["("ide")"])
-		ide, ide(ide), (ide(ide))(ide), ...
-	Iter(ide,["-"ide])
-		ide, ide"-"ide, (ide-ide)-ide, ...
-	Iter([], "$")
-		$, ($$), (($$)$), ...
-	Iter(ide, [";" ide])
-		ide, ide;ide, (ide;ide);ide, ...
+        Iter(ide,"'")
+                ide, ide', (ide')', ...
+        Iter(ide,["("ide")"])
+                ide, ide(ide), (ide(ide))(ide), ...
+        Iter(ide,["-"ide])
+                ide, ide"-"ide, (ide-ide)-ide, ...
+        Iter([], "$")
+                $, ($$), (($$)$), ...
+        Iter(ide, [";" ide])
+                ide, ide;ide, (ide;ide);ide, ...
     *)
 
 PROCEDURE Setup();
@@ -392,5 +392,3 @@ PROCEDURE BuildNoQuotedString(self: QuotedString; g: T; string: TEXT; READONLY i
 PROCEDURE BuildNoEof(self: Eof; g: T; READONLY info: SynLocation.Info): Tree;
 
 END SynParse.
-
-
