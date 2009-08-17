@@ -213,7 +213,7 @@ proc ConfigureGNUMake() is
 
     proc CheckGNUMake(a) is
         if equal($OS, "Windows_NT")
-            if equal(try_exec(a & " --version | findstr /c:\"GNU Make\""), 0)
+            if equal(try_exec(a & " --version | findstr.exe /c:\"GNU Make\""), 0)
                 return a
             else
                 write("rejecting " & a & " because it does not appear to be GNU make\n")
