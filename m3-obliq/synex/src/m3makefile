@@ -8,11 +8,6 @@
 import("libm3")
 import("synloc")
 
-% optimization reduces SynParse.Read0 stack usage
-% in half, though it could be better
-
-m3_optimize(TRUE)
-
 Module("SynScan")
 Module("SynParse")
 
