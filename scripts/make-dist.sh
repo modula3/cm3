@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.11 2009-08-14 20:53:34 wagner Exp $
+# $Id: make-dist.sh,v 1.26.2.12 2009-08-17 06:24:12 wagner Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -301,7 +301,7 @@ EOF
     fi
     echo "<h2 style=\"text-align:left\">Description</h2>"
     ddd=${ddd:=DESC_${c}}
-    echo ${!ddd}
+    echo ${ddd}
     echo "<h2 style=\"text-align:left\">Package Details</h2>"
     echo "<ul>"
     for p in ${PKGS}; do
