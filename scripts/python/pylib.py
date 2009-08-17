@@ -380,18 +380,6 @@ Variables = [
     "CM3_CleanGlobal",
     "CM3_Ship",
 
-    "PM3_BuildLocal",
-    "PM3_CleanLocal",
-    "PM3_BuildGlobal",
-    "PM3_CleanGlobal",
-    "PM3_Ship",
-
-    "SRC_BuildLocal",
-    "SRC_CleanLocal",
-    "SRC_BuildGlobal",
-    "SRC_CleanGlobal",
-    "SRC_Ship",
-
     "RealClean",
     "HAVE_TCL",
     "HAVE_SERIAL",
@@ -818,33 +806,11 @@ if ShipArgs:
 # form the various commands we might run
 #
 
-CM3_BuildLocal = BuildLocal or "%(CM3)s %(CM3_FLAGS)s -build -override %(DEFS)s%(BuildArgs)s"
-CM3_CleanLocal = CleanLocal or "%(CM3)s %(CM3_FLAGS)s -clean -build -override %(DEFS)s%(CleanArgs)s"
-CM3_BuildGlobal = BuildGlobal or "%(CM3)s %(CM3_FLAGS)s -build %(DEFS)s%(BuildArgs)s"
-CM3_CleanGlobal = CleanGlobal or "%(CM3)s %(CM3_FLAGS)s -clean %(DEFS)s%(CleanArgs)s"
-CM3_Ship = Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(ShipArgs)s"
-
-#-----------------------------------------------------------------------------
-# define build and ship programs for Poly. Modula-3 from Montreal
-# This will not likely ever work, but maybe.
-#
-
-PM3_BuildLocal = BuildLocal or "%(M3Build)s -O %(DEFS)s%(BuildArgs)s"
-PM3_CleanLocal = CleanLocal or "%(M3Build)s clean -O %(DEFS)s%(CleanArgs)s"
-PM3_BuildGlobal = BuildGlobal or "%(M3Build)s %(DEFS)s %(BuildArgs)s)s"
-PM3_CleanGlobal = CleanGlobal or "%(M3Build)s clean %(DEFS)s%(CleanArgs)s"
-PM3_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
-
-#-----------------------------------------------------------------------------
-# define build and ship programs for DEC SRC Modula-3
-# This will not likely ever work, but maybe.
-#
-
-SRC_BuildLocal = BuildLocal or "%(M3Build)s -O %(DEFS)s%(BuildArgs)s"
-SRC_CleanLocal = CleanLocal or "%(M3Build)s clean -O %(DEFS)s%(CleanArgs)s"
-SRC_BuildGlobal = BuildGlobal or "%(M3Build)s %(DEFS)s%(BuildArgs)s"
-SRC_CleanGlobal = CleanGlobal or "%(M3Build)s clean %(DEFS)s%(CleanArgs)s"
-SRC_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
+CM3_BuildLocal = CM3_BuildLocal or BuildLocal or "%(CM3)s %(CM3_FLAGS)s -build -override %(DEFS)s%(BuildArgs)s"
+CM3_CleanLocal = CM3_CleanLocal or CleanLocal or "%(CM3)s %(CM3_FLAGS)s -clean -build -override %(DEFS)s%(CleanArgs)s"
+CM3_BuildGlobal = CM3_BuildGlobal or BuildGlobal or "%(CM3)s %(CM3_FLAGS)s -build %(DEFS)s%(BuildArgs)s"
+CM3_CleanGlobal = CM3_CleanGlobal or CleanGlobal or "%(CM3)s %(CM3_FLAGS)s -clean %(DEFS)s%(CleanArgs)s"
+CM3_Ship = CM3_Ship or Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(ShipArgs)s"
 
 # other commands
 
@@ -865,12 +831,6 @@ if SearchPath(CM3):
     CleanLocal = CM3_CleanLocal
     BuildGlobal = CM3_BuildGlobal
     CleanGlobal = CM3_CleanGlobal
-    Ship = CM3_Ship
-elif SearchPath(M3Build):
-    BuildLocal = PM3_BuildLocal
-    CleanLocal = PM3_CleanLocal
-    BuildGlobal = PM3_BuildGlobal
-    CleanGlobal = PM3_CleanGlobal
     Ship = CM3_Ship
 else:
     if (not BuildLocal) or (not BuildGlobal) or (not Ship):
