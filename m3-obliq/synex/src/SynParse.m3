@@ -423,6 +423,7 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
   BEGIN
     TYPECASE gram OF
     | NonTerminal(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           grammar: Grammar;
           args: Args;
@@ -453,8 +454,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
           base := saveBase; max := saveMax;
           IF failed#NIL THEN RETURN NIL; END;
           RETURN tree;
+        END F;
+        BEGIN
+          RETURN F();
         END;
     | Storage(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           tree: Tree;
         BEGIN
@@ -476,8 +481,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
           g.stack[base+node.position] := tree;
           max := MAX(max, node.position+1);
           RETURN NIL;
+        END F;
+        BEGIN
+          RETURN F();
         END;
      | Action(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           locInfo: SynLocation.Info;
         BEGIN
@@ -487,8 +496,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
               (*out*)failed, name);
           IF failed#NIL THEN RETURN NIL END;
           RETURN node.Build(node, g, base, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
         END;
      | GivenKeyword(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           locInfo: SynLocation.Info;
         BEGIN
@@ -497,8 +510,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
           ELSE failed:=gram; g.failedName:=name; RETURN NIL;
           END;
           RETURN node.Build(node, g, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
         END;
      | GivenIdentifier(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           locInfo: SynLocation.Info;
         BEGIN
@@ -507,8 +524,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
           ELSE failed:=gram; g.failedName:=name; RETURN NIL;
           END;
           RETURN node.Build(node, g, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
         END;
      | GivenName(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           locInfo: SynLocation.Info;
         BEGIN
@@ -517,8 +538,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
           ELSE failed:=gram; g.failedName:=name; RETURN NIL;
           END;
           RETURN node.Build(node, g, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
         END;
      | GivenDelimiter(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           locInfo: SynLocation.Info;
         BEGIN
@@ -527,8 +552,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
           ELSE failed:=gram; g.failedName:=name; RETURN NIL;
           END;
           RETURN node.Build(node, g, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
         END;
     | Identifier(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           ide: TEXT;
           locInfo: SynLocation.Info;
@@ -538,8 +567,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
           ELSE failed:=gram; g.failedName:=name; RETURN NIL;
           END;
           RETURN node.Build(node, g, ide, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
         END;
     | Name(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           text: TEXT;
           locInfo: SynLocation.Info;
@@ -549,8 +582,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
           ELSE failed:=gram; g.failedName:=name; RETURN NIL;
           END;
           RETURN node.Build(node, g, text, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
         END;
      | Eof(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           locInfo: SynLocation.Info;
         BEGIN
@@ -559,8 +596,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
           ELSE failed:=gram; g.failedName:=name; RETURN NIL;
           END;
           RETURN node.Build(node, g, (*in*) locInfo);
+        END F;
+        BEGIN
+          RETURN F();
         END;
      | QuotedChar(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           char: CHAR;
           locInfo: SynLocation.Info;
@@ -570,8 +611,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
           ELSE failed:=gram; g.failedName:=name; RETURN NIL;
           END;
           RETURN node.Build(node, g, char, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
         END;
      | Integer(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           int: INTEGER; 
           locInfo: SynLocation.Info;
@@ -581,8 +626,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
           ELSE failed:=gram; g.failedName:=name; RETURN NIL;
           END;
           RETURN node.Build(node, g, int, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
         END;
      | Real(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           real: LONGREAL;
           locInfo: SynLocation.Info;
@@ -592,8 +641,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
           ELSE failed:=gram; g.failedName:=name; RETURN NIL;
           END;
           RETURN node.Build(node, g, real, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
         END;
      | QuotedString(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           string: TEXT;
           locInfo: SynLocation.Info;
@@ -603,8 +656,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
           ELSE failed:=gram; g.failedName:=name; RETURN NIL;
           END;
           RETURN node.Build(node, g, string, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
         END;
      | Sequence(node) =>
+        PROCEDURE F() RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR 
           gramList: GrammarList;
         BEGIN
@@ -618,9 +675,13 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
             IF failed#NIL THEN EXIT END;
             gramList := gramList.rest; 
           END;
+        END F;
+        BEGIN
+          F();
+          RETURN NIL;
         END;
-        RETURN NIL;
     | Choice(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           tree: Tree;
           list: GrammarList; 
@@ -645,8 +706,12 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
             END;
             list := list.rest;
           END;
+        END F;
+        BEGIN
+          RETURN F();
         END;
     | Iter(node) =>
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           tree: Tree;
           scanPoint: INTEGER;
@@ -690,6 +755,9 @@ PROCEDURE Lookup(g: T; name: TEXT; VAR (*out*) args: Args): Grammar
               g.stack[base+node.accumPosition] := tree;
             END;
           END;
+        END F;
+        BEGIN
+          RETURN F();
         END;
     ELSE 
       Fault(g, "SynParse.Read0");
