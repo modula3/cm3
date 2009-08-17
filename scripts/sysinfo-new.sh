@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo-new.sh,v 1.2 2009-08-17 03:32:22 jkrell Exp $
+# $Id: sysinfo-new.sh,v 1.3 2009-08-17 10:31:44 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -171,8 +171,14 @@ else
     check2 CM3_INSTALL INSTALLROOT || exit 1
 fi
 
-find_in_list GMAKE "gmake gnumake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake make" || exit 1
-find_in_list TAR "gtar gnutar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar tar" || exit 1
+#
+# /usr/pkg is NetBSD default
+# /usr/sfw is Solaris default (Sun FreeWare)
+# /usr/local is FreeBSD and OpenBSD default and popular otherwise
+#
+
+find_in_list GMAKE "gmake gnumake /usr/pkg/bin/gmake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake make" || exit 1
+find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar tar" || exit 1
 
 # The vast majority of platforms:
     CM3_GCC_BACKEND=yes
