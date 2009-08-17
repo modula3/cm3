@@ -278,8 +278,12 @@ proc ConfigureGNUMake() is
     error("no GNU make found")
 end
 
+local env = ""
+
 ConfigureGNUMake()
-%error("GNU_MAKE is " & GNU_MAKE & CR)
+write("GNU_MAKE is " & GNU_MAKE & CR)
+
+env = env & " MAKE=" & GNU_MAKE & " "
 
 %
 % star means default
@@ -318,8 +322,6 @@ if not defined ("M3CC_CFLAGS")  M3CC_CFLAGS = GNU_CFLAGS end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
 local Native = equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD)
-
-local env = ""
 
 if Native and (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGET, "SPARC32_SOLARIS")
         or equal(TARGET, "SPARC64_SOLARIS") or equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS"))
