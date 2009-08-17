@@ -209,6 +209,10 @@ readonly proc get_overrides (nm, ov) is
   end
 end
 
+% temporary until cm3cfg.common is updated
+
+if not defined("ConfigureGNUMake")
+
 proc ConfigureGNUMake() is
 
     proc CheckGNUMake(a) is
@@ -282,6 +286,8 @@ proc ConfigureGNUMake() is
         end
     end
     error("no GNU make found")
+end
+
 end
 
 local env = ""
