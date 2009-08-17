@@ -268,7 +268,7 @@ proc ConfigureGNUMake() is
             "/usr/sfw/bin/gmake",   % Solaris
             "/usr/local/gmake",     % FreeBSD, OpenBSD, otherwise popular
             "/usr/local/gnumake",   % reasonable
-            "make",                 % search path for popular Linux option, that is often wrong on non-Linux systems
+            "make",                 % GNU/Linux, often otherwise wrong
             ]
         if CheckGNUMake(a)
             M3CC_MAKE = a
