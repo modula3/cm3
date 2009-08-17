@@ -91,8 +91,6 @@ CM3_GDB=${CM3_GDB:-yes}
 #
 CM3_INSTALL=${CM3_INSTALL:-`dirname \`find_exe cm3 /usr/local/cm3/\ \``}
 CM3=${CM3:-cm3}
-M3BUILD=${M3BUILD:-m3build}
-M3SHIP=${M3SHIP:-m3ship}
 EXE=""
 SL="/"
 TAR=tar

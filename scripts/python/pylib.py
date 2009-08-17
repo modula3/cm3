@@ -483,14 +483,6 @@ CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetVersion("CM3LASTCHANGED")
 
 CM3_GDB = False
 
-#-----------------------------------------------------------------------------
-#
-# nascent support for building via SRC or PM3, probably will never work
-#
-
-M3Build = getenv("M3BUILD") or "m3build"
-M3Ship = getenv("M3SHIP") or "m3ship"
-
 
 #-----------------------------------------------------------------------------
 #

@@ -174,13 +174,13 @@ fi
 find_in_list GMAKE "gmake gnumake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake make" || exit 1
 find_in_list TAR "gtar gnutar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar tar" || exit 1
 
-exit 0
-
-CM3_GCC_BACKEND=yes
+# The vast majority of platforms:
+    CM3_GCC_BACKEND=yes
+    CM3_OSTYPE=POSIX
+    EXE=""
+    SL="/"
 
 CM3=${CM3:-cm3}
-M3BUILD=${M3BUILD:-m3build}
-M3SHIP=${M3SHIP:-m3ship}
 
 if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
   if [ -n "$TMP" -a -d "$TMP" ] ; then
@@ -251,7 +251,6 @@ if [ "x$CM3_TARGET$OS" = "xWindows_NT" ]; then
 fi
 
 # now translate CM3_TARGET on NT back to NT386 plus the other variables
-# and default a little for all non-NT platforms
 
 case "x$CM3_TARGET" in
     xI386_NT|xNT386|xI386_MINGW|xNT386MINGNU)
@@ -289,12 +288,6 @@ case "x$CM3_TARGET" in
         HAVE_SERIAL=yes
         EXE=".exe"
         ;;
-
-    *)
-        CM3_OSTYPE=POSIX
-        EXE=""
-        SL="/"
-        ;;
 esac
 
 if [ "x$CM3_TARGET" = "x" ]; then
@@ -330,7 +323,7 @@ if [ "x$CM3_TARGET" = "x" ]; then
             #CM3_TARGET=SOLsun
             ;;
 
-      Interix*)
+        Interix*)
             CM3_TARGET=I386_INTERIX
             ;;
 
@@ -343,14 +336,14 @@ if [ "x$CM3_TARGET" = "x" ]; then
             esac
             ;;
 
-      NetBSD*)
+        NetBSD*)
             case "`uname -m`" in
                 x86_64) CM3_TARGET=AMD64_NETBSD;;
                 i386) CM3_TARGET=NetBSD2_i386;;
             esac
             ;;
 
-      OpenBSD*)
+        OpenBSD*)
             case "`uname -m`" in
                 macppc) CM3_TARGET=PPC_LINUX;;
                 x86_64) CM3_TARGET=AMD64_LINUX;;
