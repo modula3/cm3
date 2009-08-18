@@ -1,7 +1,31 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.74.2.7 2009-08-16 11:18:57 jkrell Exp $
+# $Id: sysinfo.sh,v 1.74.2.8 2009-08-18 14:08:43 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
+
+#-----------------------------------------------------------------------------
+# mark that we have run (or are about to)
+
+SYSINFO_DONE="yes"
+
+#-----------------------------------------------------------------------------
+# determine $root
+
+if [ -n "$ROOT" -a -d "$ROOT" ] ; then
+  sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
+else
+  root=`pwd`
+  while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do
+    root=`dirname $root`
+  done
+  sysinfo="$root/scripts/sysinfo.sh"
+  if [ ! -f "$sysinfo" ] ; then
+    echo "scripts/sysinfo.sh not found" 1>&2
+    exit 1
+  fi
+  export root
+fi
 
 #-----------------------------------------------------------------------------
 # output functions
@@ -62,8 +86,6 @@ strip_exe() {
 }
 
 #-----------------------------------------------------------------------------
-
-SYSINFO_DONE="yes"
 
 UNAME=${UNAME:-`uname`}
 UNAMEM=${UNAMEM:=`uname -m`}
