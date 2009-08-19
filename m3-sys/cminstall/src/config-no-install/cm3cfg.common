@@ -394,7 +394,6 @@ proc skip_link(prog, shared) is
     % make sure files get cleaned up
     deriveds("", Outputs)
 
-    BindExport(pgm_file)
     DeleteFile(manifest_file)
     PdbExport(pdb_file)
 
