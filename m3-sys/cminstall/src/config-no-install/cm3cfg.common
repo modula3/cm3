@@ -367,6 +367,8 @@ M3_NEED_STANDALONE_LINKS = FALSE
 
 readonly proc PdbExport(pdb) is
     if FileExists(pdb)
+        % This isn't quite right. The compiler
+        % should handle it.
         BindExport(pdb)
     end
 end
@@ -394,7 +396,6 @@ proc skip_link(prog, shared) is
     % make sure files get cleaned up
     deriveds("", Outputs)
 
-    BindExport(pgm_file)
     DeleteFile(manifest_file)
     PdbExport(pdb_file)
 
