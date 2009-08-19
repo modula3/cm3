@@ -497,7 +497,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 200 * Char.size;
 
     |  Systems.I386_DARWIN,
-    |  Systems.AMD64_DARWIN =>
+       Systems.AMD64_DARWIN =>
                  Jumpbuf_size              := 19 * Address.size;
                  Setjmp                    := "setjmp";
 
