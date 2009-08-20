@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.74.2.8 2009-08-18 14:08:43 jkrell Exp $
+# $Id: sysinfo.sh,v 1.74.2.9 2009-08-20 08:01:52 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -88,7 +88,6 @@ strip_exe() {
 #-----------------------------------------------------------------------------
 
 UNAME=${UNAME:-`uname`}
-UNAMEM=${UNAMEM:=`uname -m`}
 
 PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 
@@ -192,24 +191,18 @@ case "${UNAME}" in
   ;;
 
   FreeBSD*)
-    if [ "`uname -m`" = i386 ] ; then
-      case "`uname -r`" in
-        1*) CM3_TARGET=FreeBSD;;
-        2*) CM3_TARGET=FreeBSD2;;
-        3*) CM3_TARGET=FreeBSD3;;
-        4*) CM3_TARGET=FreeBSD4;;
-        *) CM3_TARGET=FreeBSD4;;
-      esac
-    else
-      CM3_TARGET=FBSD_ALPHA
-    fi
+    case "`uname -p`" in
+      amd64)    CM3_TARGET=${CM3_TARGET:-AMD64_FREEBSD};;
+      i*86)     CM3_TARGET=${CM3_TARGET:-FreeBSD4};;
+      *)        echo "$0 does not know about `uname -a`"
+                exit 1;;
+    esac
   ;;
 
   Darwin*)
-    # detect the m3 platform (Darwin runs on ppc and ix86
     case "`uname -p`" in
       powerpc*)
-        CM3_TARGET=PPC_DARWIN;;
+        CM3_TARGET=${CM3_TARGET:-PPC_DARWIN};;
       i[3456]86*)
         if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
           CM3_TARGET=${CM3_TARGET:-AMD64_DARWIN}
@@ -217,31 +210,32 @@ case "${UNAME}" in
           CM3_TARGET=${CM3_TARGET:-I386_DARWIN}
         fi
         ;;
+      *) echo "$0 does not know about `uname -a`"
+         exit 1;;
     esac
     GMAKE=${GMAKE:-make}
   ;;
 
   SunOS*)
-    CM3_TARGET=${CM3_TARGET:-"SOLgnu"}
-    #CM3_TARGET=${CM3_TARGET:-"SOLsun"}
+    CM3_TARGET=${CM3_TARGET:-SOLgnu}
+    #CM3_TARGET=${CM3_TARGET:-SOLsun}
   ;;
 
   Interix*)
     GMAKE=${GMAKE:-gmake}
-    CM3_TARGET=I386_INTERIX
+    CM3_TARGET=${CM3_TARGET:-I386_INTERIX}
   ;;
 
   Linux*)
     GMAKE=${GMAKE:-make}
-    if [ "${UNAMEM}" = "ppc" ] ; then
-      CM3_TARGET=PPC_LINUX
-    elif [ "${UNAMEM}" = "x86_64" ] ; then
-      CM3_TARGET=AMD64_LINUX
-    elif [ "${UNAMEM}" = "sparc64" ] ; then
-      CM3_TARGET=SPARC32_LINUX
-    else
-      CM3_TARGET=LINUXLIBC6
-    fi
+    case "`uname -m`" in
+      ppc*)    CM3_TARGET=${CM3_TARGET:-PPC_LINUX};;
+      x86_64)  CM3_TARGET=${CM3_TARGET:-AMD64_LINUX};;
+      sparc64) CM3_TARGET=${CM3_TARGET:-SPARC32_LINUX};;
+      i*86)    CM3_TARGET=${CM3_TARGET:-LINUXLIBC6};;
+      *)       echo "$0 does not know about `uname -a`"
+               exit 1;;
+    esac
   ;;
 
   NetBSD*)
@@ -250,27 +244,20 @@ case "${UNAME}" in
   ;;
 
   OpenBSD*)
-    ARCH=`arch -s`
-    if [ "${UNAMEM}" = "macppc" ] ; then
-      CM3_TARGET=PPC32_OPENBSD
-    elif [ "${UNAMEM}" = "sparc64" ] ; then
-      CM3_TARGET=SPARC64_OPENBSD
-    elif [ "${ARCH}" = "mips64" ] ; then
-      CM3_TARGET=MIPS64_OPENBSD
-    elif [ "${ARCH}" = "i386" ] ; then
-      CM3_TARGET=I386_OPENBSD
-    else
-      echo Update $0 for ${ARCH}
-      exit 1
-    fi
+    case "`uname -m`" in
+      macppc)   CM3_TARGET=${CM3_TARGET:-PPC32_OPENBSD};;
+      sparc64)  CM3_TARGET=${CM3_TARGET:-SPARC64_OPENBSD};;
+      mips64)   CM3_TARGET=${CM3_TARGET:-MIPS64_OPENBSD};;
+      i386)     CM3_TARGET=${CM3_TARGET:-I386_OPENBSD};;
+      *)        echo "$0 does not know about `uname -a`"
+                exit 1;;
+    esac
     if gtar --help >/dev/null 2>&1; then
       TAR=gtar
     elif gnutar --help >/dev/null 2>&1; then
       TAR=gnutar
     fi
   ;;
-
-  # more need to be added here, I haven't got all the platform info ready
 
 esac
 
