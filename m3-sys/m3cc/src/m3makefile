@@ -4,6 +4,10 @@
 % See the file COPYRIGHT for a full description.
 %
 
+%
+% user can say cm3 -DM3CC_TARGET=FreeBSD4, for example.
+%
+
 % omit unnecessary builds during regression testing
 NOACTION = ""
 WS = $WORKSPACE
@@ -222,104 +226,16 @@ write("GNU_MAKE is " & GNU_MAKE & CR)
 env = env & " MAKE=" & GNU_MAKE & " "
 
 %
-% star means default
-% These are meant to come from the config file, but it can omit them
+% some common code for determining GNU_CC, GNU_CFLAGS
 %
 
-if not defined("GNU_CC")     GNU_CC     = "*"    end
-if not defined("GNU_CFLAGS") GNU_CFLAGS = "-g -O2"    end
+include ("../../cminstall/src/config-no-install/gnucc.common")
 
-% See gcc configure documentation.
-% "Build" is the present machine we are running on, the machine that is building the compiler.
-% "Host" is the machine the compiler will run on.
-% "Target" is the machine the compiler's output will run on.
-% Typically, in a "native" build, all three are the same.
-% There are five variations.
-% BHT - Build Host Target
-%  HT -       Host Target
-% AAA - native building a native compiler
-%       This requires having an HT=AA compiler, and produces another AA compiler.
-% AAB - building a cross compiler that will run on current machine
-%       This requires HT=AA to build fixincludes and gcc, AB to build libgcc, producing a AB compiler (which is used to build libgcc)
-% ABA - building a cross compiler that runs on another machine, targeting current machine ("cross back"?)
-%       This requires HT=AA to build fixincludes, AB to build gcc, AA to build libgcc, producing a BA compiler.
-% ABB - cross building a native compiler
-%       This requires HT=AA to build fixincludes, AB to build gcc and libgcc, producing a BB compiler.
-% ABC - cross building a cross compiler
-%       This requires HT=AA to build fixincludes, AB to build gcc, AC to build libgcc, producing a BC compiler.
-%
 % check for overrides, otherwise use the defaults from the configuration file
-
-if not defined ("M3CC_BUILD")   M3CC_BUILD  = TARGET     end
-if not defined ("M3CC_HOST")    M3CC_HOST   = TARGET     end
-if not defined ("M3CC_TARGET")  M3CC_TARGET = TARGET     end
 if not defined ("M3CC_CC")      M3CC_CC     = GNU_CC     end
 if not defined ("M3CC_CFLAGS")  M3CC_CFLAGS = GNU_CFLAGS end
+if not defined ("M3CC_MAKE")    M3CC_MAKE   = GNU_MAKE   end
 if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
-
-local Native = equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD)
-
-if Native and (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGET, "SPARC32_SOLARIS")
-        or equal(TARGET, "SPARC64_SOLARIS") or equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS"))
-
-    if equal($CC, "")
-            and equal($CFLAGS, "")
-            and equal(M3CC_CC, "*")
-            and equal(M3CC_CFLAGS, "-g -O2")
-            and not equal(try_exec("type gcc > /dev/null"), 0)
-
-        % if gcc not in path and cc is, use cc
-        % if cc -O2 gives expected error, use cc -O
-
-        if equal(try_exec("type cc > /dev/null"), 0)
-                and equal(try_exec("cc -O2 2>&1 | grep \"Warning: option -2 passed to ld\" > /dev/null"), 0)
-
-            % Sun cc doeson't like -O2 and it causes configuring gcc to fail
-            % If /usr/sfw/bin/gcc exists, we should probably use that here.
-
-            M3CC_CC = "cc"
-            M3CC_CFLAGS = "-g -O"
-
-            % libcpp/configure runs make to test its result and that fails if /usr/ccs/bin
-            % isn't in $PATH, so just tell it the answer
-
-            if equal($MAKE, "") and not equal(try_exec("type make > /dev/null"), 0)
-                env = env & " am_cv_CC_dependencies_compiler_type=dashXmstdout "
-            end
-        else
-            % if no gcc in path and no cc in path, try /usr/sfw/bin/gcc, which
-            % is where Sun installs it
-            %
-            % TODO: try /usr/ccs/bin/cc or /usr/ucb/cc
-            % Currently my /usr/ucb/cc prints "language optional software package not installed"
-            % and I think if you do install a working cc, you get /usr/bin/cc anyway, which is in $PATH
-
-            if equal(try_exec("file /usr/sfw/bin/gcc > /dev/null"), 0)
-                M3CC_CC = "/usr/sfw/bin/gcc"
-
-                % As above, libcpp/configure runs make to probe for dependency style
-                % but there might not be any make so give it the answer.
-
-                if equal($MAKE, "") and not equal(try_exec("type make > /dev/null"), 0)
-                    env = env & " am_cv_CC_dependencies_compiler_type=gcc3 "
-                end
-            end
-        end
-    end
-
-    % in a minimal environment, such as with an empty .profile, ar is not in the path
-    % and building gcc fails as a result; gcc's build doesn't know to look in /usr/ccs/bin/ar
-
-    if equal($AR, "") and not equal(try_exec("type ar > /dev/null"), 0)
-        % SYSTEM_AR doesn't necessarily work
-        if not equal(SYSTEM_AR, "ar") and equal(try_exec("type " & SYSTEM_AR & " > /dev/null"), 0)
-            env = env & " AR=" & SYSTEM_AR & " "
-        end
-        if equal(SYSTEM_AR, "ar") and equal(try_exec("type /usr/ccs/bin/ar > /dev/null"), 0)
-            env = env & " AR=/usr/ccs/bin/ar "
-        end
-    end
-end
 
 local SourceDir = "../gcc"
 local GCC42 = FALSE
