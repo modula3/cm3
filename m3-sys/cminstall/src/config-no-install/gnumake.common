@@ -15,77 +15,82 @@
 
 proc ConfigureGNUMake() is
 
-    proc CheckGNUMake(a) is
-        if equal($OS, "Windows_NT")
-            if equal(try_exec(a & " --version | findstr.exe /c:\"GNU Make\""), 0)
-                return a
-            else
-                write("rejecting " & a & " because it does not appear to be GNU make\n")
-                return FALSE
-            end
-        else
-            if equal(try_exec("type " & a), 0)
-                if equal(try_exec(a & " --version | grep \"GNU Make\""), 0)
+    proc GetGNUMake() is
+
+        proc CheckGNUMake(a) is
+            if equal($OS, "Windows_NT")
+                if equal(try_exec(a & " --version | findstr.exe /c:\"GNU Make\""), 0)
                     return a
                 else
                     write("rejecting " & a & " because it does not appear to be GNU make\n")
                     return FALSE
                 end
+            else
+                if equal(try_exec("type " & a), 0)
+                    if equal(try_exec(a & " --version | grep \"GNU Make\""), 0)
+                        return a
+                    else
+                        write("rejecting " & a & " because it does not appear to be GNU make\n")
+                        return FALSE
+                    end
+                end
+            end
+            return FALSE
+        end
+
+        if defined("M3CC_MAKE")
+            if CheckGNUMake(M3CC_MAKE)
+                return M3CC_MAKE
             end
         end
-        return FALSE
-    end
 
-    if defined("M3CC_MAKE")
-        if CheckGNUMake(M3CC_MAKE)
-            return
+        if defined("M3GDB_MAKE")
+            if CheckGNUMake(M3GDB_MAKE)
+                return M3GDB_MAKE
+            end
         end
-    end
 
-    if defined("M3GDB_MAKE")
-        if CheckGNUMake(M3GDB_MAKE)
-            return
+        if defined("GNU_MAKE")
+            if CheckGNUMake(GNU_MAKE)
+                return GNU_MAKE
+            end
         end
-    end
 
-    if defined("GNU_MAKE")
-        if CheckGNUMake(GNU_MAKE)
-            M3CC_MAKE = GNU_MAKE
-            return
+        if not equal($GMAKE, "")
+            if CheckGNUMake($GMAKE)
+                return $GMAKE
+            end
         end
-    end
 
-    if not equal($GMAKE, "")
-        if CheckGNUMake($GMAKE)
-            M3CC_MAKE = $GMAKE
-            return
+        % future
+        % if defined("HOST") and defined("HOST_GNU_MAKE")
+        %   if equal(HOST, TARGET) and CheckGNUMake(HOST_GNU_MAKE)
+        %       M3CC_MAKE = HOST_GNU_MAKE
+        %       return
+        %   end
+        % end
+
+        foreach a in [
+                %"ls",                  % test case for CheckGNUMake
+                "gmake",                % search path for popular option
+                "gnumake",              % search path for reasonable but less popular option
+                "/usr/pkg/bin/gmake",   % NetBSD
+                "/usr/sfw/bin/gmake",   % Solaris
+                "/usr/local/gmake",     % FreeBSD, OpenBSD, otherwise popular
+                "/usr/local/gnumake",   % reasonable
+                "make",                 % GNU/Linux, often otherwise wrong
+                ]
+            if CheckGNUMake(a)
+                return a
+            end
         end
+        error("no GNU make found")
     end
 
-    % future
-    % if defined("HOST") and defined("HOST_GNU_MAKE")
-    %   if equal(HOST, TARGET) and CheckGNUMake(HOST_GNU_MAKE)
-    %       M3CC_MAKE = HOST_GNU_MAKE
-    %       return
-    %   end
-    % end
-
-    foreach a in [
-            %"ls",                  % test case for CheckGNUMake
-            "gmake",                % search path for popular option
-            "gnumake",              % search path for reasonable but less popular option
-            "/usr/pkg/bin/gmake",   % NetBSD
-            "/usr/sfw/bin/gmake",   % Solaris
-            "/usr/local/gmake",     % FreeBSD, OpenBSD, otherwise popular
-            "/usr/local/gnumake",   % reasonable
-            "make",                 % GNU/Linux, often otherwise wrong
-            ]
-        if CheckGNUMake(a)
-            M3CC_MAKE = a
-            return
-        end
-    end
-    error("no GNU make found")
+    local a = GetGNUMake()
+    GNU_MAKE = a
+    M3CC_MAKE = a
+    M3GDB_MAKE = a
 end
 
 %------------------------------------------------------------------------------
