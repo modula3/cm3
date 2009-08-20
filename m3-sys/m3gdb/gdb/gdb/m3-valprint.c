@@ -47,7 +47,7 @@ m3_print_scalar (
 
   { LONGEST rawval, val; 
 
-    rawval = m3_extract_ord ( valaddr, bitpos, bitsize, trunc_bits > 0 );
+    rawval = m3_extract_ord ( valaddr, bitpos, bitsize, trunc_bits > false );
     val = m3_trunc_to_bits ( rawval, trunc_bits ) ;
     switch ( format ) {
       case '&':
@@ -117,7 +117,7 @@ compare (const gdb_byte *valaddr, int bitpos1, int bitpos2, int bitsize)
 
 struct type_info {
   char *        type_name;
-  int           uid; 
+  LONGEST       uid; 
   struct type * type; 
   CORE_ADDR     tc_addr;
   int           wide_mode; /* 0=CHAR, 
@@ -140,9 +140,10 @@ get_TEXT_subtype_info (
     char *nm, 
     int wide_mode, 
     struct type_info *ti, 
-    int default_uid /* If can't find type named nm in symbol tables, use this
-                       to match types.  This happens if the CM3 libraries are
-                       compiled without debug info. */ 
+    LONGEST default_uid 
+            /* ^If can't find type named nm in symbol tables, use this
+               to match types.  This happens if the CM3 libraries are
+               compiled without debug info. */ 
   )
 
   { struct type *t;
@@ -343,7 +344,7 @@ init_m3_text_info ( )
 static bool 
 type_info_matches ( CORE_ADDR tc_addr, struct type_info * info ) 
 
-  { int uid; 
+  { LONGEST uid; 
 
     if ( info -> tc_addr != 0 && tc_addr == info -> tc_addr ) { return true; } 
     uid = m3_int_uid_from_tc_addr ( tc_addr ); 
@@ -435,8 +436,7 @@ m3_text_field_boolean (
 
     addr = ref + fi -> bitpos / TARGET_CHAR_BIT; 
     read_memory ( addr, buf, fi -> bitsize / TARGET_CHAR_BIT );  
-    result 
-      = m3_extract_ord ( buf, 0, fi -> bitsize, 0); 
+    result = m3_extract_ord ( buf, 0, fi -> bitsize, false); 
     return result != 0; 
   }  /* m3_text_field_boolean */ 
 
@@ -447,7 +447,7 @@ m3_text_field_length (
     CORE_ADDR ref, 
     struct type_info * ti, 
     struct field_info * fi, 
-    int sign_extend 
+    bool sign_extend 
   )  
 
   { CORE_ADDR addr; 
@@ -525,7 +525,7 @@ m3_check_TextLiteral_buf (
          && strcmp ( field_name, TextLiteral_buf . field_name ) == 0 
        ) /* It's the TextLiteral.T.buf field we are looking for. */ 
       { string_length 
-          = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 ) ;
+          = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , true);
         if ( string_length < 0 ) 
           { TYPE_M3_SUBRANGE_MAX 
               ( library_type_m3_TextLiteral_buf_widechar_index )
@@ -643,7 +643,7 @@ m3_print_widechars (
     byte_length = 2 * len; 
     for (i = 0; i < byte_length; i+=2) 
       { m3_emit_widechar 
-         ( m3_extract_ord ( & wstr [ i ], 0, TARGET_M3_WIDECHAR_BIT, 0), 
+         ( m3_extract_ord ( & wstr [ i ], 0, TARGET_M3_WIDECHAR_BIT, false), 
            stream, 
            '"' 
          );
@@ -667,7 +667,7 @@ m3_print_cm3_TextLiteral_object (
     LONGEST string_length;
 
     string_length 
-      = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 ) ;
+      = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , true);
     fputs_filtered ("(*", stream); 
     fputs_filtered ( TextLiteral.type_name, stream); 
     fputs_filtered ("*) ", stream); 
@@ -722,7 +722,7 @@ m3_print_cm3_text (
       } 
     else if ( type_info_matches ( tc_addr, &TextLiteral ) ) 
       { string_length 
-          = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 ) ;
+          = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , true);
         chars = m3_text_field_addr ( ref, &TextLiteral, &TextLiteral_buf );   
         if (string_length < 0) /* Wide chars. */ 
           { string_length = - string_length - start; 
@@ -772,7 +772,7 @@ m3_print_cm3_text (
 
     else if ( type_info_matches ( tc_addr, &Text8Short ) ) 
       { string_length 
-          = m3_text_field_length ( ref, &Text8Short, &Text8Short_len, 0 ) 
+          = m3_text_field_length ( ref, &Text8Short, &Text8Short_len, false) 
             - start;
         if ( string_length 
              > Text8Short_contents . bitsize / TARGET_CHAR_BIT - start 
@@ -790,7 +790,7 @@ m3_print_cm3_text (
     else if ( type_info_matches ( tc_addr, &Text16Short ) ) 
       { string_length 
           = m3_text_field_length 
-              ( ref, &Text16Short, &Text16Short_len, 0 ) - start;
+              ( ref, &Text16Short, &Text16Short_len, false) - start;
         if ( string_length 
              > Text16Short_contents . bitsize / TARGET_M3_WIDECHAR_BIT - start 
            ) 
@@ -834,7 +834,8 @@ m3_print_cm3_text (
           } 
         if ( length > 0 ) 
           { a_tc_addr = m3_tc_addr_from_inf_object_addr (a_object);
-            a_len = m3_text_field_length ( ref , &TextCat, &TextCat_a_len, 0 ); 
+            a_len = m3_text_field_length 
+                      ( ref , &TextCat, &TextCat_a_len, false); 
             if ( start >= a_len ) 
               { start -= a_len; } 
             else 
@@ -888,9 +889,10 @@ m3_print_cm3_text (
             return - 2; 
           } 
         substart 
-          = m3_text_field_length ( ref , &TextSub, &TextSub_start, 0 ) + start;
+          = m3_text_field_length 
+              ( ref , &TextSub, &TextSub_start, false) + start;
         string_length 
-          = m3_text_field_length ( ref , &TextSub, &TextSub_len, 0 );
+          = m3_text_field_length ( ref , &TextSub, &TextSub_len, false);
         if ( length < string_length) 
           { print_length = length; result = - 1; }
         else { print_length = string_length; result = string_length; } 
@@ -1201,7 +1203,7 @@ m3_val_print2 (
         for ( i = 0; i < length; i += 2 )
           { m3_emit_widechar 
               ( m3_extract_ord 
-                  ( & valaddr [ i ], 0, TARGET_M3_WIDECHAR_BIT, 0 ),
+                  ( & valaddr [ i ], 0, TARGET_M3_WIDECHAR_BIT, false),
                 stream, 
                 '"' 
               ); 
@@ -1261,7 +1263,7 @@ m3_val_print2 (
       bitpos = 0;
 
       nelems = m3_extract_ord (valaddr + TARGET_PTR_BIT/HOST_CHAR_BIT,
-				       bitpos, m3_target_integer_bit, 0);
+				       bitpos, m3_target_integer_bit, false);
       /*FIXME: Redundancy here and a few lines below, fetching the element count. */ 
       { struct type *e = elt_type;
 	const gdb_byte *nelem_addr = valaddr
@@ -1269,7 +1271,8 @@ m3_val_print2 (
         open_dimension_ct = 1; 
 	while (TYPE_CODE (e) == TYPE_CODE_M3_OPEN_ARRAY) 
           { eltsize 
-              = eltsize * m3_extract_ord (nelem_addr, 0, m3_target_integer_bit,0);
+              = eltsize * m3_extract_ord 
+                            (nelem_addr, 0, m3_target_integer_bit, false);
 	    nelem_addr += m3_target_integer_bit / HOST_CHAR_BIT;
 	    e = TYPE_M3_OPEN_ARRAY_ELEM (e); 
             open_dimension_ct ++; 
@@ -1441,7 +1444,7 @@ m3_val_print2 (
       fputs_filtered ("{", stream);
       
       for (i = 0; i < TYPE_LENGTH (type) / sizeof (long); i++) {
-	val = m3_extract_ord (valaddr, bitpos, m3_target_integer_bit, 0);
+	val = m3_extract_ord (valaddr, bitpos, m3_target_integer_bit, false);
 	for (j = 0; j < m3_target_integer_bit; j++) {
 	  LONGEST ord = i * m3_target_integer_bit + j + lower;
 	  if ((val & 1 << j) && (ord <= upper)) {
@@ -1500,7 +1503,7 @@ m3_val_print2 (
       break;
 
     case TYPE_CODE_M3_BOOLEAN :
-      if (m3_extract_ord (valaddr, bitpos, bitsize, 0)) {
+      if (m3_extract_ord (valaddr, bitpos, bitsize, false)) {
 	fputs_filtered ("TRUE", stream); }
       else {
 	fputs_filtered ("FALSE", stream); }
@@ -1508,14 +1511,14 @@ m3_val_print2 (
 
     case TYPE_CODE_M3_CHAR :
       m3_print_char_lit 
-       ( (int) m3_extract_ord (valaddr, bitpos, TARGET_CHAR_BIT, 0), stream);
+       ( (int)m3_extract_ord (valaddr, bitpos, TARGET_CHAR_BIT, false), stream);
       break;
 
     case TYPE_CODE_M3_WIDECHAR :
       m3_print_widechar_lit  
-        ( (int) m3_extract_ord (valaddr, bitpos, TARGET_M3_WIDECHAR_BIT , 0), 
-          stream 
-        );
+       ( (int)m3_extract_ord (valaddr, bitpos, TARGET_M3_WIDECHAR_BIT , false), 
+         stream 
+       );
       break;
 
     case TYPE_CODE_M3_INTEGER :
