@@ -49,7 +49,6 @@ RLOG=${RLOG:-${HTMP}/cm3-rlog-${DS}}
 CM3_NKEEP=${CM3_NKEEP:-7}
 
 UNAME=${UNAME:-`uname`}
-UNAMEM=${UNAMEM:-`uname -m`}
 
 TMP=${TMP:-/tmp}
 TMPDIR=${TMPDIR:-${TMP}}
@@ -75,13 +74,18 @@ case "${UNAME}" in
   ;;
 
   FreeBSD*)
-    CM3_TARGET=FreeBSD4
+    case "`uname -p`" in
+      amd64)    CM3_TARGET=${CM3_TARGET:-AMD64_FREEBSD};;
+      i*86)     CM3_TARGET=${CM3_TARGET:-FreeBSD4};;
+      *)        echo "$0 does not know about `uname -a`"
+                exit 1;;
+    esac
   ;;
 
   Darwin*)
     case "`uname -p`" in
       powerpc*)
-        CM3_TARGET=PPC_DARWIN;;
+        CM3_TARGET=${CM3_TARGET:-PPC_DARWIN};;
       i[3456]86*)
         if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
           CM3_TARGET=${CM3_TARGET:-AMD64_DARWIN}
@@ -89,43 +93,52 @@ case "${UNAME}" in
           CM3_TARGET=${CM3_TARGET:-I386_DARWIN}
         fi
         ;;
+      *) echo "$0 does not know about `uname -a`"
+         exit 1;;
     esac
+    GMAKE=${GMAKE:-make}
   ;;
 
   SunOS*)
-    CM3_TARGET=${CM3_TARGET:-"SOLgnu"}
+    CM3_TARGET=${CM3_TARGET:-SOLgnu}
+    #CM3_TARGET=${CM3_TARGET:-SOLsun}
+  ;;
+
+  Interix*)
+    GMAKE=${GMAKE:-gmake}
+    CM3_TARGET=${CM3_TARGET:-I386_INTERIX}
   ;;
 
   Linux*)
     GMAKE=${GMAKE:-make}
-    if [ "${UNAMEM}" = "ppc" ] ; then
-      CM3_TARGET=PPC_LINUX
-    elif [ "${UNAMEM}" = "x86_64" ] ; then
-      CM3_TARGET=AMD64_LINUX
-    elif [ "${UNAMEM}" = "sparc64" ] ; then
-      CM3_TARGET=SPARC32_LINUX
-    else
-      CM3_TARGET=LINUXLIBC6
-    fi
+    case "`uname -m`" in
+      ppc*)    CM3_TARGET=${CM3_TARGET:-PPC_LINUX};;
+      x86_64)  CM3_TARGET=${CM3_TARGET:-AMD64_LINUX};;
+      sparc64) CM3_TARGET=${CM3_TARGET:-SPARC32_LINUX};;
+      i*86)    CM3_TARGET=${CM3_TARGET:-LINUXLIBC6};;
+      *)       echo "$0 does not know about `uname -a`"
+               exit 1;;
+    esac
   ;;
 
   NetBSD*)
+    GMAKE=${GMAKE:-gmake}
     CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
   ;;
 
   OpenBSD*)
-    ARCH=`arch -s`
-    if [ "${UNAMEM}" = "macppc" ] ; then
-      CM3_TARGET=PPC32_OPENBSD
-    elif [ "${UNAMEM}" = "sparc64" ] ; then
-      CM3_TARGET=SPARC64_OPENBSD
-    elif [ "${ARCH}" = "mips64" ] ; then
-      CM3_TARGET=MIPS64_OPENBSD
-    elif [ "${ARCH}" = "i386" ] ; then
-      CM3_TARGET=I386_OPENBSD
-    else
-      echo Update $0 for ${ARCH}
-      exit 1
+    case "`arch -s`" in
+      macppc)   CM3_TARGET=${CM3_TARGET:-PPC32_OPENBSD};;
+      sparc64)  CM3_TARGET=${CM3_TARGET:-SPARC64_OPENBSD};;
+      mips64)   CM3_TARGET=${CM3_TARGET:-MIPS64_OPENBSD};;
+      i386)     CM3_TARGET=${CM3_TARGET:-I386_OPENBSD};;
+      *)        echo "$0 does not know about `uname -a`"
+                exit 1;;
+    esac
+    if gtar --help >/dev/null 2>&1; then
+      TAR=gtar
+    elif gnutar --help >/dev/null 2>&1; then
+      TAR=gnutar
     fi
   ;;
 esac
