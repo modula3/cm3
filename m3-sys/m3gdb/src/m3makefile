@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.20 2009-08-20 11:05:50 jkrell Exp $
+% $Id: m3makefile,v 1.21 2009-08-20 11:39:37 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -118,8 +118,23 @@ if not defined ("M3GDB_CONFIG")  M3GDB_CONFIG = get_config (M3GDB_HOST) end
 % check for non-default flags
 env = env & " " & get_overrides ("CC", M3GDB_CC) & " " & get_overrides ("CFLAGS", M3GDB_CFLAGS)
 env = env & " MAKEINFO=echo"
+
+
+%
+% code based on m3cc/src/m3makefile
+% should be shared; thinking about it still
+%
+
+if (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGET, "SPARC32_SOLARIS")
+        or equal(TARGET, "SPARC64_SOLARIS") or equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS"))
+        and (equal(SYSTEM_AR, "ar") or equal(SYSTEM_AR, "/usr/ccs/bin/ar"))
+        and equal(try_exec("type /usr/ccs/bin/ar > /dev/null"), 0)
+    env = env & " AR=/usr/ccs/bin/ar "
+end
+
 M3GDB_CONFIG = M3GDB_CONFIG & " " & env
 M3GDB_MAKE = M3GDB_MAKE & " " & env
+
 
 if not defined ("quick")
   % configure the sources
