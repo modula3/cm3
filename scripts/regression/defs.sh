@@ -75,17 +75,7 @@ case "${UNAME}" in
   ;;
 
   FreeBSD*)
-    if [ "`uname -m`" = i386 ] ; then
-      case "`uname -r`" in
-        1*) CM3_TARGET=FreeBSD;;
-        2*) CM3_TARGET=FreeBSD2;;
-        3*) CM3_TARGET=FreeBSD3;;
-        4*) CM3_TARGET=FreeBSD4;;
-        *) CM3_TARGET=FreeBSD4;;
-      esac
-    else
-      CM3_TARGET=FBSD_ALPHA
-    fi
+    CM3_TARGET=FreeBSD4
   ;;
 
   Darwin*)
@@ -103,7 +93,7 @@ case "${UNAME}" in
   ;;
 
   SunOS*)
-    CM3_TARGET=SOLgnu
+    CM3_TARGET=${CM3_TARGET:-"SOLgnu"}
   ;;
 
   Linux*)
