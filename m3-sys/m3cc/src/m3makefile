@@ -44,7 +44,7 @@ end
 % fs_exists is deliberately not used here, in order to build
 % starting with versions of cm3 that do not have it.
 %
-readonly proc FileExists (a) is
+proc FileExists (a) is
     return not stale (a, a)
 end
 
