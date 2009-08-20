@@ -4,12 +4,61 @@
 % See the file COPYRIGHT for a full description.
 %
 
+%------------------------------------------------------------------------------
+
+%
+% This should be called gnucc.quake or gcc.quake, but I am assuming that code copies *.common
+%
+% This helps configure the compiler to use for building m3gdb and m3cc, which
+% perhaps should be gcc, even if the C compiler is otherwise not gcc.
+%
+% For example on SOLsun.
+%
+% This also assists other configuration for the m3cc and m3gdb directories -- specifically ar.
+%
+%
+% This is not general purpose code.
+% It is specifically for use in the m3cc and m3gdb directories.
+%
+
+%------------------------------------------------------------------------------
+
+% Check that env is defined.
+
+env = env
+
+%------------------------------------------------------------------------------
+
+if not defined("HOST")
+    HOST = TARGET
+end
+
+% check for overrides, otherwise use the defaults
+% user can say cm3 -DM3CC_TARGET=FreeBSD4, for example.
+%
+% m3cc and m3gdb settings are presumed to be the same for any one
+% invocation of cm3
+%
+
+if defined ("M3GDB_HOST")
+    M3CC_HOST = M3GDB_HOST
+else if defined ("M3CC_HOST")
+    M3GDB_HOST = M3CC_HOST
+else
+    M3GDB_HOST = HOST
+    M3CC_HOST = HOST
+end end
+
+if defined ("M3GDB_TARGET")
+    M3CC_TARGET = M3GDB_TARGET
+else if defined ("M3CC_TARGET")
+    M3GDB_TARGET = M3CC_TARGET
+else
+    M3GDB_TARGET = TARGET
+    M3CC_TARGET = TARGET
+end end
+
 if not defined ("M3CC_BUILD")   M3CC_BUILD  = TARGET     end
-if not defined ("M3CC_HOST")    M3CC_HOST   = TARGET     end
-if not defined ("M3CC_TARGET")  M3CC_TARGET = TARGET     end
-if not defined ("M3CC_CC")      M3CC_CC     = GNU_CC     end
-if not defined ("M3CC_CFLAGS")  M3CC_CFLAGS = GNU_CFLAGS end
-if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
 
 local Native = equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD)
 
@@ -18,8 +67,12 @@ if Native and (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGE
 
     if equal($CC, "")
             and equal($CFLAGS, "")
-            and equal(M3CC_CC, "*")
-            and equal(M3CC_CFLAGS, "-g -O2")
+            and not defined("GNU_CC")
+            and not defined("GNU_CFLAGS")
+            and not defined("M3CC_CC")
+            and not defined("M3GDB_CC")
+            and not defined("M3CC_CFLAGS")
+            and not defined("M3GDB_CFLAGS")
             and not equal(try_exec("type gcc > /dev/null"), 0)
 
         % if gcc not in path and cc is, use cc
@@ -28,11 +81,19 @@ if Native and (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGE
         if equal(try_exec("type cc > /dev/null"), 0)
                 and equal(try_exec("cc -O2 2>&1 | grep \"Warning: option -2 passed to ld\" > /dev/null"), 0)
 
-            % Sun cc doeson't like -O2 and it causes configuring gcc to fail
+            % Sun cc doesn't like -O2 and it causes configuring gcc to fail.
             % If /usr/sfw/bin/gcc exists, we should probably use that here.
 
-            M3CC_CC = "cc"
-            M3CC_CFLAGS = "-g -O"
+            % Probably when we upgrade gcc we can remove a lot of this -- newer gcc can be
+            % built with Sun cc.
+
+            GNU_CC = "cc"
+            GNU_CFLAGS = "-g -O"
+
+            % M3CC_CC  = GNU_CC
+            % M3GDB_CC = GNU_CC
+            % M3CC_CFLAGS  = GNU_CFLAGS
+            % M3GDB_CFLAGS = GNU_CFLAGS
 
             % libcpp/configure runs make to test its result and that fails if /usr/ccs/bin
             % isn't in $PATH, so just tell it the answer
@@ -49,7 +110,9 @@ if Native and (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGE
             % and I think if you do install a working cc, you get /usr/bin/cc anyway, which is in $PATH
 
             if equal(try_exec("file /usr/sfw/bin/gcc > /dev/null"), 0)
-                M3CC_CC = "/usr/sfw/bin/gcc"
+                GNU_CC = "/usr/sfw/bin/gcc"
+                % M3CC_CC = GNU_CC
+                % M3GDB_CC = GNU_CC
 
                 % As above, libcpp/configure runs make to probe for dependency style
                 % but there might not be any make so give it the answer.
@@ -74,3 +137,17 @@ if Native and (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGE
         end
     end
 end
+
+%------------------------------------------------------------------------------
+
+%
+% star means default
+% These historically came from the config file.
+%
+
+if not defined("GNU_CC")     GNU_CC     = "*"    end
+% consider changing this to "*"
+% esp. once gcc/gdb in tree updated -- if they build ok with Sun cc
+if not defined("GNU_CFLAGS") GNU_CFLAGS = "-g -O2"    end
+
+%------------------------------------------------------------------------------
