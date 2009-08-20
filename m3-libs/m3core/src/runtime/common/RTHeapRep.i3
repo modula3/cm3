@@ -266,7 +266,10 @@ PROCEDURE VisitAllRefs (proc: RefVisitor);
 
 (****** INITIALIZATION ******)
 
-PROCEDURE Init();
+PROCEDURE Init1();
+(* MUST be called to initialize allocator/collector state *)
+
+PROCEDURE Init2();
 (* MUST be called to initialize allocator/collector state *)
 
 END RTHeapRep.
