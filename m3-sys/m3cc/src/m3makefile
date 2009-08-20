@@ -213,23 +213,15 @@ readonly proc get_overrides (nm, ov) is
   end
 end
 
-if not defined("ConfigureGNUMake")
-    % temporary until cm3cfg.common is updated
-    include("../../cminstall/src/config-no-install/gnumake.common")
-end
-
 local env = ""
+
+include ("../../m3cc/src/gnumake.common")
+include ("../../m3cc/src/gnucc.common")
 
 ConfigureGNUMake()
 write("GNU_MAKE is " & GNU_MAKE & CR)
 
 env = env & " MAKE=" & GNU_MAKE & " "
-
-%
-% some common code for determining GNU_CC, GNU_CFLAGS
-%
-
-include ("../../cminstall/src/config-no-install/gnucc.common")
 
 % check for overrides, otherwise use the defaults from the configuration file
 if not defined ("M3CC_CC")      M3CC_CC     = GNU_CC     end

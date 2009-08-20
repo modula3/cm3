@@ -89,18 +89,14 @@ readonly proc m3gdb_Run (x) is
     end
 end
 
-if not defined("ConfigureGNUMake")
-    % temporary until cm3cfg.common is updated
-    include("../../cminstall/src/config-no-install/gnumake.common")
-end
-
 local env = ""
+
+include ("../../m3cc/src/gnumake.common")
+include ("../../m3cc/src/gnucc.common")
 
 ConfigureGNUMake()
 write("GNU_MAKE is " & GNU_MAKE & CR)
 env = env & " MAKE=" & GNU_MAKE & " "
-
-include ("../../cminstall/src/config-no-install/gnucc.common")
 
 M3GDB_CFLAGS="-g"
 
