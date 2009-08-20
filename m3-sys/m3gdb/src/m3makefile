@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.22 2009-08-20 12:27:48 jkrell Exp $
+% $Id: m3makefile,v 1.23 2009-08-20 12:33:38 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -89,18 +89,14 @@ readonly proc m3gdb_Run (x) is
     end
 end
 
-if not defined("ConfigureGNUMake")
-    % temporary until cm3cfg.common is updated
-    include("../../cminstall/src/config-no-install/gnumake.common")
-end
-
 local env = ""
+
+include ("../../m3cc/src/gnumake.common")
+include ("../../m3cc/src/gnucc.common")
 
 ConfigureGNUMake()
 write("GNU_MAKE is " & GNU_MAKE & CR)
 env = env & " MAKE=" & GNU_MAKE & " "
-
-include ("../../cminstall/src/config-no-install/gnucc.common")
 
 M3GDB_CFLAGS="-g"
 
