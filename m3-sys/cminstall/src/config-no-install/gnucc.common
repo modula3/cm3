@@ -1,0 +1,646 @@
+%
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+
+% omit unnecessary builds during regression testing
+NOACTION = ""
+WS = $WORKSPACE
+PREBUILT_CM3CG = $PREBUILT_CM3CG
+if WS and PREBUILT_CM3CG
+  CM3CG = "cm3cg"
+  if equal(M3_MODE, "build")
+    write( "using pre-built backend from", PREBUILT_CM3CG, CR )
+    cp_if( PREBUILT_CM3CG, CM3CG )
+    >> ".M3SHIP" in
+      write( "make_dir(BIN_INSTALL & \"\")", CR )
+      write( "install_file(\"" & CM3CG & "\", BIN_INSTALL, \"0775\")", CR )
+    end
+  end
+  if equal(M3_MODE, "clean")
+    write( "removing ", CM3CG, CR )
+    delete_file( CM3CG )
+  end
+  if equal(M3_MODE, "ship")
+    write( TARGET & SL & CM3CG, "-->", BIN_INSTALL & SL & CM3CG, CR )
+    cp_if( CM3CG, BIN_INSTALL & SL & CM3CG )
+  end
+  NOACTION = "T"
+end
+
+include("platforms.quake")
+
+readonly proc Platform_IsOpenBSD (Platform) is
+  return {"I386_OPENBSD":1,"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1,
+    "MIPS64_OPENBSD":1,"AMD64_OPENBSD":1} contains Platform
+end
+
+%
+% fs_exists is deliberately not used here, in order to build
+% starting with versions of cm3 that do not have it.
+%
+readonly proc FileExists (a) is
+    return not stale (a, a)
+end
+
+readonly proc ApplyPatches (Platform) is
+  if not Platform_IsOpenBSD (Platform)
+    return
+  end
+  pushd ("../gcc")
+  foreach a in fs_lsfiles ("../src/patches/openbsd", FALSE)
+    if not tcontains(a, ".done")
+      if not FileExists (a & ".done")
+        if not tcontains(a, "readme.txt")
+          exec("patch -z .orig -p0 < " & a)
+          > a & ".done" in
+            write("")
+          end
+        end
+      end
+    end
+  end
+  popd ()
+end
+
+readonly proc HostIsNT () is
+  return equal ($OS, "Windows_NT")
+end
+
+local DevNull1 = "1>/dev/null"
+local DevNull2 = "2>/dev/null"
+if HostIsNT ()
+  DevNull1 = "1>nul:"
+  DevNull2 = "2>nul:"
+end
+
+readonly proc GNU_platform (x) is
+  if Platform_info contains x
+    return Platform_info{x}
+  else
+    error ("GNU platform is not known for \"" & x & "\"")
+    return "unknown-unknown-unknown"
+  end
+end
+
+readonly m3cc_config = {
+%
+% Note about configuring which assembler to use:
+%  When building m3cg and not gcc driver, the configured assembler is never going
+%  to be run (by m3cg) but it does matter.
+%  Cconfiguration in the "gcc/gcc" directory, which is done as part of
+%  building m3cg, does locate and test an assembler. Building on HP-UX will
+%  fail and say the GNU assembler is required, if it is not the one found.
+%
+
+  %
+  % The NT386GNU hosted tools work.
+  % The native ones do not.
+  % -disable-tls consistently to reduce noise
+  % when comparing them, since we don't use this feature anyway.
+  %
+  "SPARC64_OPENBSD" : "-disable-tls",
+
+  "ARM_LINUX": "-with-float=soft -enable-target-optspace -enable-threads -enable-shared",
+
+  %
+  % AIX almost always requires native as and ld -- cross builds are not possible.
+  % Not all of this is relevant to m3cg?, but user can build gcc/cc1 here.
+  %
+
+  "PPC32_AIX" : "-with-as=/usr/bin/as -without-gnu-as -with-ld=/us/bin/ld -without-gnu-ld",
+  "PPC64_AIX" : "-with-as=/usr/bin/as -without-gnu-as -with-ld=/us/bin/ld -without-gnu-ld",
+
+  %
+  % Irix requires GNU as and GNU ld should work but presently does not.
+  % Irix native ld works.
+  %
+
+  "MIPS32_IRIX" : "-with-ld=/us/bin/ld -with-gnu-as",
+  "MIPS64_IRIX" : "-with-ld=/us/bin/ld -with-gnu-as",
+
+  %
+  % Hm -- I thought this was just about what assembler/linker the gcc driver runs,
+  % but it might also affect the contents of the assembly.
+  % For example, SPARC64_SOLARIS output isn't being accepted by SUN as, let's see..
+  % #ifdef HAVE_AS_REGISTER_PSEUDO_OP
+  % D:\dev2\cm3.2\m3-sys\m3cc\gcc\gcc\config\sparc\sparc.c(3842):	  fprintf (file, "\t.register\t%%g%d, #%s\n", i,
+  %
+  % "SPARC64_SOLARIS" : "-without-gnu-ld -without-gnu-as",
+  %
+  % Note for my initial build I patched config.h manually, but this should the same thing.
+  % Also, native builds will probably just figure it out. This is needed for cross builds,
+  % unless perhaps building binutils along with m3cg.
+  % If m3cg omits the .register psuedo ops, assembly completely fails, with lots of errors.
+  %
+
+  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes -with-as=/usr/ccs/bin/as -without-gnu-as -with-ld=/usr/ccs/bin/ld -without-gnu-ld",
+
+  %
+  % This is recommended and has been seen to make a difference.
+  %
+
+  "I386_SOLARIS" :  "-with-gnu-as -with-as=/usr/sfw/bin/gas -without-gnu-ld -with-ld=/usr/ccs/bin/ld",
+  "AMD64_SOLARIS" : "-with-gnu-as -with-as=/usr/sfw/bin/gas -without-gnu-ld -with-ld=/usr/ccs/bin/ld",
+
+  "SOLgnu"        : "-with-ld=/usr/ccs/bin/ld -without-gnu-ld -with-as=/usr/ccs/bin/as -without-gnu-as",
+  "SOLsun"        : "-with-ld=/usr/ccs/bin/ld -without-gnu-ld -with-as=/usr/ccs/bin/as -without-gnu-as",
+
+  %
+  % Bootstrap procedure for gcc on HPPA{64}-HPUX:
+  % See http://gcc.gnu.org/install/specific.html.
+  % Lots of caveats for GNU ld, so use vendor ld.
+  %  Build gcc 3.3.6 with bundled cc.
+  %    32bit: CC="cc       -Wp,-H16376 -D_CLASSIC_TYPES -D_HPUX_SOURCE"
+  %    64bit: CC="cc +DD64 -Wp,-H16376 -D_CLASSIC_TYPES -D_HPUX_SOURCE"
+  %  Getting patches for ld can help, esp. if building libstdc++.
+  %  This gcc won't support -g.
+  %  Build current binutils with gcc -- just gas.
+  %     http://gcc.gnu.org/install/specific.html offers building
+  %     binutils first but current binutils doesn't work that way.
+  %  Rebuild gcc 3.3.6 with -with-as=path -with-gnu-as.
+  %  Build current gcc also with -with-as=path -with-gnu-as.
+  %  32bit and 64bit HPPA-HPUX require separate -prefix.
+  %    -program-suffix=32 does not suffice.
+  %  I use /usr/local/32 and /usr/local/64.
+  %  Also, vendor tar often can't extract all of gcc, e.g. libstdc++,
+  %  so use GNU tar. And vendor make often can't build gcc, get GNU make.
+  %
+  % m3cg is not actually ever going to run as, only the gcc driver does,
+  % but build/configure is still picky about it -- it affects
+  % the generated assembly for SPARC64, whether or not some versions
+  % of gcc will support -g on HP-UX, and I think whether or not
+  % configure will even succeed on HP-UX (with newer gcc).
+  %
+  "PA32_HPUX"  : "-with-gnu-as -with-as=/usr/local/32/bin/gas",
+  "PA64_HPUX"  : "-with-gnu-as -with-as=/usr/local/64/bin/gas",
+  % If this suffices, good, otherwise specify the full path to the GNU assembler.
+  %"PA32_HPUX"  : "-with-gnu-as",
+  %"PA64_HPUX"  : "-with-gnu-as",
+
+  "HPPA"  : "-with-gnu-as",
+  % The HP assembler doesn't understand inline debugger info.
+
+  "IRIX5" : "-with-stabs -with-gnu-as"
+  % mips-sgi-irix5 does not support debugging using the native
+  % assembler.  If you don't have gas, delete the config options above.
+  % You will need the latest version of gas (binutils-2.5 or better).
+  % -with-stabs is necessary because Modula-3 v3.3 generates funny
+  % symbol names that can't be parsed by the ECOFF debugging
+  % directives.  [Modula-3 v3.4 and later don't generate funny
+  % symbol names. -- Bill Kalsow 1/13/94]
+
+} % m3cc_config
+
+readonly proc get_config (target) is
+  if m3cc_config contains target
+    return m3cc_config {target}
+  else
+    return ""
+  end
+end
+
+readonly proc get_overrides (nm, ov) is
+  if equal (ov, "*")
+    return ""
+  else
+    return format ("%s=\"%s\" ", nm, ov)
+  end
+end
+
+if not defined("ConfigureGNUMake")
+    % temporary until cm3cfg.common is updated
+    include("../../cminstall/src/config-no-install/gnumake.common")
+end
+
+local env = ""
+
+ConfigureGNUMake()
+write("GNU_MAKE is " & GNU_MAKE & CR)
+
+env = env & " MAKE=" & GNU_MAKE & " "
+
+%
+% star means default
+% These are meant to come from the config file, but it can omit them
+%
+
+if not defined("GNU_CC")     GNU_CC     = "*"    end
+if not defined("GNU_CFLAGS") GNU_CFLAGS = "-g -O2"    end
+
+% See gcc configure documentation.
+% "Build" is the present machine we are running on, the machine that is building the compiler.
+% "Host" is the machine the compiler will run on.
+% "Target" is the machine the compiler's output will run on.
+% Typically, in a "native" build, all three are the same.
+% There are five variations.
+% BHT - Build Host Target
+%  HT -       Host Target
+% AAA - native building a native compiler
+%       This requires having an HT=AA compiler, and produces another AA compiler.
+% AAB - building a cross compiler that will run on current machine
+%       This requires HT=AA to build fixincludes and gcc, AB to build libgcc, producing a AB compiler (which is used to build libgcc)
+% ABA - building a cross compiler that runs on another machine, targeting current machine ("cross back"?)
+%       This requires HT=AA to build fixincludes, AB to build gcc, AA to build libgcc, producing a BA compiler.
+% ABB - cross building a native compiler
+%       This requires HT=AA to build fixincludes, AB to build gcc and libgcc, producing a BB compiler.
+% ABC - cross building a cross compiler
+%       This requires HT=AA to build fixincludes, AB to build gcc, AC to build libgcc, producing a BC compiler.
+%
+% check for overrides, otherwise use the defaults from the configuration file
+
+if not defined ("M3CC_BUILD")   M3CC_BUILD  = TARGET     end
+if not defined ("M3CC_HOST")    M3CC_HOST   = TARGET     end
+if not defined ("M3CC_TARGET")  M3CC_TARGET = TARGET     end
+if not defined ("M3CC_CC")      M3CC_CC     = GNU_CC     end
+if not defined ("M3CC_CFLAGS")  M3CC_CFLAGS = GNU_CFLAGS end
+if not defined ("M3CC_CONFIG")  M3CC_CONFIG = get_config (M3CC_TARGET) end
+
+local Native = equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD)
+
+if Native and (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGET, "SPARC32_SOLARIS")
+        or equal(TARGET, "SPARC64_SOLARIS") or equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS"))
+
+    if equal($CC, "")
+            and equal($CFLAGS, "")
+            and equal(M3CC_CC, "*")
+            and equal(M3CC_CFLAGS, "-g -O2")
+            and not equal(try_exec("type gcc > /dev/null"), 0)
+
+        % if gcc not in path and cc is, use cc
+        % if cc -O2 gives expected error, use cc -O
+
+        if equal(try_exec("type cc > /dev/null"), 0)
+                and equal(try_exec("cc -O2 2>&1 | grep \"Warning: option -2 passed to ld\" > /dev/null"), 0)
+
+            % Sun cc doeson't like -O2 and it causes configuring gcc to fail
+            % If /usr/sfw/bin/gcc exists, we should probably use that here.
+
+            M3CC_CC = "cc"
+            M3CC_CFLAGS = "-g -O"
+
+            % libcpp/configure runs make to test its result and that fails if /usr/ccs/bin
+            % isn't in $PATH, so just tell it the answer
+
+            if equal($MAKE, "") and not equal(try_exec("type make > /dev/null"), 0)
+                env = env & " am_cv_CC_dependencies_compiler_type=dashXmstdout "
+            end
+        else
+            % if no gcc in path and no cc in path, try /usr/sfw/bin/gcc, which
+            % is where Sun installs it
+            %
+            % TODO: try /usr/ccs/bin/cc or /usr/ucb/cc
+            % Currently my /usr/ucb/cc prints "language optional software package not installed"
+            % and I think if you do install a working cc, you get /usr/bin/cc anyway, which is in $PATH
+
+            if equal(try_exec("file /usr/sfw/bin/gcc > /dev/null"), 0)
+                M3CC_CC = "/usr/sfw/bin/gcc"
+
+                % As above, libcpp/configure runs make to probe for dependency style
+                % but there might not be any make so give it the answer.
+
+                if equal($MAKE, "") and not equal(try_exec("type make > /dev/null"), 0)
+                    env = env & " am_cv_CC_dependencies_compiler_type=gcc3 "
+                end
+            end
+        end
+    end
+
+    % in a minimal environment, such as with an empty .profile, ar is not in the path
+    % and building gcc fails as a result; gcc's build doesn't know to look in /usr/ccs/bin/ar
+
+    if equal($AR, "") and not equal(try_exec("type ar > /dev/null"), 0)
+        % SYSTEM_AR doesn't necessarily work
+        if not equal(SYSTEM_AR, "ar") and equal(try_exec("type " & SYSTEM_AR & " > /dev/null"), 0)
+            env = env & " AR=" & SYSTEM_AR & " "
+        end
+        if equal(SYSTEM_AR, "ar") and equal(try_exec("type /usr/ccs/bin/ar > /dev/null"), 0)
+            env = env & " AR=/usr/ccs/bin/ar "
+        end
+    end
+end
+
+local SourceDir = "../gcc"
+local GCC42 = FALSE
+if equal(M3CC_TARGET, "ARM_DARWIN") and not NOACTION
+    GCC42 = TRUE
+    local Defines = ""
+    SourceDir = "../gcc-apple"
+    Defines = "#define GCC_APPLE\n#define GCC42\n"
+    fs_mkdir(SourceDir & "/gcc/m3cg")
+    foreach a in ["config-lang.in", "lang-options.h", "lang-specs.h", "lang.opt", "m3-convert.c", "m3cg.h", "Make-lang.in"]
+        cp_if("../gcc/gcc/m3cg/" & a, SourceDir & "/gcc/m3cg/" & a)
+    end
+    local a = Defines & fs_contents("../gcc/gcc/m3cg/parse.c")
+    local b = SourceDir & "/gcc/m3cg/parse.c"
+    > b & ".temp" in
+        write(a)
+    end
+    cp_if(b & ".temp", b)
+end
+
+% figure out where we're going to build gcc
+local build_dir = "."  % let m3build set the build directory
+
+local Log = ""
+if not Native
+  build_dir = "../" & M3CC_HOST & "-" & M3CC_TARGET
+  Log = path() & "/" & build_dir & "/_m3.log"
+else
+  Log = path() & "/../" & BUILD_DIR & "/_m3.log"
+end
+
+if defined("subst_chars")
+    % only some scenarios need this so ok without
+    Log = subst_chars(Log, "\\", "/")
+end
+
+if defined("fs_mkdir")
+  fs_mkdir (build_dir)
+end
+
+m3cc_ResponseFileCounter0 = "0"
+m3cc_ResponseFileCounter1 = "0"
+m3cc_ResponseFileCounter2 = "0"
+
+readonly proc m3cc_Run (x) is
+    local ShLeaf = "_m3" & m3cc_ResponseFileCounter0 & m3cc_ResponseFileCounter1 & m3cc_ResponseFileCounter2 & ".sh"
+    local Sh = build_dir & "/" & ShLeaf
+    if not FileExists(Log) > Log in write("") end end
+    >> Log in write(x & "\n") end
+    if not HostIsNT()
+        write(x & "\n")
+        exec(x)
+        return
+    end
+    write(ShLeaf & ":" & x & "\n")
+    > Sh in
+        write(x & "\n")
+    end
+    local a = try_exec("@chmod +x " & Sh)
+    exec("@sh -ec " & Sh)
+    local Inc = { "0":"1","1":"2","2":"3","3":"4","4":"5",
+                  "5":"6","6":"7","7":"8","8":"9","9":"0" }
+    m3cc_ResponseFileCounter2 = Inc{m3cc_ResponseFileCounter2}
+    if equal(m3cc_ResponseFileCounter2, "0")
+        m3cc_ResponseFileCounter1 = Inc{m3cc_ResponseFileCounter1}
+        if equal(m3cc_ResponseFileCounter1, "0")
+            m3cc_ResponseFileCounter0 = Inc{m3cc_ResponseFileCounter0}
+        end
+    end
+end
+
+done = build_dir & "/.configure-done"
+
+if defined ("FORCE")
+  %
+  % Note: this block is hard to maintain correctly and I personally
+  % just rmdir /q/s <target> or rm -rf <target>.
+  %
+  % Why not just rm -rf build_dir/*?
+  % Scared of getting it wrong?
+  %
+  if FileExists (build_dir & "/Makefile")
+    exec("-cd " & build_dir & " && " & M3CC_MAKE & " distclean")
+  end
+  foreach a in ["cm3cg", "cm3cg.exe", "confdefs.h", "config.log", "cm3cg", ".M3SHIP", done, Log, "_m3sh0.sh"]
+    delete_file(build_dir & "/" & a)
+  end
+  %
+  % Now delete directories.
+  %
+  foreach a in ["gcc", "gmp", "libcpp", "libdecnumber", "mpfr", "libiberty"]
+    fs_rmrec(build_dir & "/" & a)
+  end
+end
+
+local Configure = " "
+
+% Try to support PPC_DARWIN on {I386,AMD64}_DARWIN hosts via the emulator.
+
+if equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD) and equal (M3CC_BUILD, "PPC_DARWIN") and FileExists("/usr/libexec/oah/translate")
+    M3CC_CFLAGS = M3CC_CFLAGS & " -arch ppc"
+    Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+    Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
+    Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
+end
+
+%
+% Configure does not seem to ferry environment variables from itself to make,
+% so these must be specified on both the configure command and the make command.
+%
+env = env & " " & get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS)
+%
+% Problems building gmp/mpfr:
+%   Documentation is built into the source tree, leading cvs diff
+%   to output a LOT of extra content, not good, avoid that.
+%   Automake and autoconf are causing problems building on NT, even when they are installed.
+%   We don't need their results usually. Libtool is also a problem, possibly a cascade.
+%
+% env = env & " CC='gcc -g'"
+% env = env & " CFLAGS="
+env = env & " AUTOCONF=:"
+env = env & " AUTOMAKE=:"
+env = env & " LEX='touch lex.yy.c'"
+env = env & " MAKEINFO=:"
+% so depcomp can detect Sun cc -xM as working
+% seems dangerous? so we set am_cv_CC_dependencies_compiler_type instead
+% env = env & " MAKE=" & M3CC_MAKE
+M3CC_MAKE = M3CC_MAKE & " " & env
+
+if not NOACTION
+  ApplyPatches (M3CC_TARGET)
+end
+
+% check for non-default flags
+
+if not defined ("no_config") and not NOACTION
+  % configure the sources
+  if not FileExists (done)
+
+    %
+    % Workaround Canadian fixincludes not understanding sysroot of the cross compiler used to build it.
+    % http://gcc.gnu.org/bugzilla/show_bug.cgi?id=37036
+    % This does not affect m3cg.
+    %
+    if equal (M3CC_HOST, M3CC_TARGET) and not equal (M3CC_HOST, M3CC_BUILD)
+        Configure = Configure & " -with-sysroot=/"
+        local Prefix = "/usr/local"
+        local DefaultSysroot = Prefix & "/" & GNU_platform (M3CC_TARGET) & "/sys-root"
+        Configure = Configure & " -with-build-sysroot=" & DefaultSysroot
+        Configure = Configure & " -host=" & GNU_platform (M3CC_HOST)
+        Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+    else
+        if not equal (M3CC_HOST, M3CC_TARGET)
+          Configure = Configure & " -with-sysroot"
+          Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+        end
+    end
+
+    %
+    % Config.guess on SPARC32_LINUX yields sparc64 and m3cg
+    % then just always fails with internal errors, so be explicit.
+    % This is reasonable in all builds, but let's not upset that apple cart.
+    % We still let host and build be guessed, leading to a typically
+    % sparc64 hosted cm3cg. Actual sparc32 systems (vs. sparc64) are rare
+    % (Linux kernel no longer supports such hardware) so this should be ok.
+    % If we really wanted sparc32 cm3 to produce a sparc32 hosted cm3cg,
+    % we could be explicit about host and/or build.
+    %
+    if equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD) and equal (M3CC_BUILD, "SPARC32_LINUX")
+          Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+          %Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
+          %Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
+    end
+    Configure = Configure & " -srcdir=" & SourceDir
+    Configure = Configure & " -disable-bootstrap"
+    Configure = Configure & " -disable-intl"
+    Configure = Configure & " -disable-libgomp"
+    Configure = Configure & " -disable-libmudflap"
+    Configure = Configure & " -disable-libssp"
+    Configure = Configure & " -disable-nls"
+    Configure = Configure & " -enable-languages=m3cg"
+    Configure = Configure & " -enable-targets=all"
+
+    % Save some libtool wrapping layers to speed up esp. on NT?
+    Configure = Configure & " -disable-dependency-tracking"
+
+    % These are compatible with just building m3cg, but user might
+    % build gcc/cc1/libgcc here.
+    Configure = Configure & " -disable-fixincludes"
+    Configure = Configure & " -disable-libgcc"
+    Configure = Configure & " -disable-decimal-float"
+    Configure = Configure & " -disable-fixed-point"
+
+    m3cc_Run (["cd", build_dir, "&&", env, SourceDir & "/configure", M3CC_CONFIG, Configure, " | tee -a " & Log])
+    > done in
+      write("done")
+    end
+  end
+end
+
+readonly proc ProbeExeExtension (a) is
+  return equal (TARGET, "NT386") or FileExists (a & ".exe")
+end
+
+readonly proc AppendExeExtension (a) is
+  if ProbeExeExtension (a)
+    return a & ".exe"
+  end
+  return a
+end
+
+local DoMipsTfile = (equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF"))
+
+readonly proc postcp() is
+  pSrc  = build_dir & "/gcc/m3cgc1"
+  pDest = build_dir & "/cm3cg"
+  if ProbeExeExtension (pSrc)
+    pSrc = pSrc & ".exe"
+	pDest = pDest & ".exe"
+  end
+  if stale(pDest, pSrc)
+    cp_if(pSrc, pDest)
+  end
+  if DoMipsTfile
+    pSrc = build_dir & "/gcc/mips-tfile"
+    pDest = build_dir & "/mips-tfile"
+    if stale(pDest, pSrc)
+      cp_if(pSrc, pDest)
+    end
+  end
+end
+
+if Native
+  BindExport (AppendExeExtension ("cm3cg"))
+  if DoMipsTfile
+    BindExport ("mips-tfile")
+  end
+end
+
+%
+% configure
+%
+
+if not NOACTION
+  m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " configure-host | tee -a " & Log])
+end
+
+proc Sed (file0, find, replace) is
+  if FileExists (file0)
+    local file1 = file0 & ".1"
+    m3cc_Run (["sed", "-e", "'s/" & find & "/" & replace & "/'", "<", file0, ">", file1])
+    m3cc_Run (["../gcc/move-if-change", file1, file0])
+  end
+end
+
+if not NOACTION
+
+foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
+    foreach leaf in ["Makefile", "auto-host.h", "config.h"]
+        local file = build_dir & "/" & dir & "/" & leaf
+        if FileExists(file)
+
+            %
+            % Remove unnecessary patsubst use for compatibility
+            % with older make.
+            %
+
+            if equal(leaf, "Makefile")
+                Sed(file, "^CATALOGS = .*$", "CATALOGS =")
+            end
+
+            %
+            % Remove libiconv dependency
+            % It isn't needed, and stock Solaris install lacks it.
+            %
+
+            if equal(leaf, "Makefile")
+                Sed(file, "^LIBICONV = .*$", "LIBICONV =")
+                Sed(file, "^LIBICONV_DEP = .*$", "LIBICONV_DEP =")
+            end
+            if not equal(leaf, "Makefile")
+                Sed(file, "^#define HAVE_ICONV 1$", "")
+                Sed(file, "^#define HAVE_ICONV_H 1$", "")
+            end
+
+            %
+            % gcc 4.2 seems to have some optional dependency on gmp/mpfr, and doesn't
+            % have the support in the makefile to build the source if it is there.
+            % When Apple moves to 4.3 or newer, we'll symlink the gmp/mpfr directories
+            % from mainline to Apple.
+            %
+            if GCC42 and equal(leaf, "Makefile")
+                Sed(file, "^GMPLIBS =.*$", "GMPLIBS =")
+                Sed(file, "^GMPINC =.*$", "GMPINC =")
+            end
+            %
+            % Configure is for some reason unable to find Cygwin /usr/bin/libtool.
+            %
+            if HostIsNT() and equal(leaf, "Makefile")
+                Sed(file, "@LIBTOOL@", "libtool")
+            end
+        end
+    end
+end
+
+%
+% Build only what is needed to build m3 backend, e.g. not the C frontend.
+% User can still cd into build directory and run make to get gcc/cc1/libgcc.
+%
+if GCC42
+    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-libiberty all-libdecnumber | tee -a " & Log])
+else
+    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-mpfr all-build-libiberty all-libiberty all-libdecnumber | tee -a " & Log])
+end
+
+%
+% make just libcpp.a, don't bother with makedepend.exe
+%
+m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & " libcpp.a | tee -a " & Log])
+m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes insn-config.h m3cg | tee -a " & Log])
+
+postcp ()
+
+end % NOACTION
