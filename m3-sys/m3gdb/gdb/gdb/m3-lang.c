@@ -1174,7 +1174,7 @@ char *
 m3_demangle (const char *mangled, int options)
 {
   int i;
-  int uid;
+  LONGEST num_uid;
   int mangled_len; 
   int len; 
   char *char_p;
@@ -1243,7 +1243,8 @@ m3_demangle (const char *mangled, int options)
 
     case '3':
       /* local variable encoding: M3_<uid>_<name> Demangled: <name> */
-      if (mangled_len > 4 + M3UID_LEN && m3uid_to_int (mangled + 3, &uid)) {
+      if (mangled_len > 4 + M3UID_LEN && m3uid_to_num (mangled + 3, &num_uid)) 
+        {
         sprintf (demangled, "%s", mangled + 4 + M3UID_LEN);
         return savestring (demangled, strlen(demangled));
       };
@@ -1267,7 +1268,8 @@ m3_demangle (const char *mangled, int options)
 
     case 'N':
       /* m3 type name for type uid: MN_<uid> Demangled: G$<uid> */
-      if (mangled_len >= 3 + M3UID_LEN && m3uid_to_int (mangled + 3, &uid)) {
+      if (mangled_len >= 3 + M3UID_LEN && m3uid_to_num (mangled + 3, &num_uid)) 
+        {
 	sprintf (demangled, "G$%.*s", M3UID_LEN, mangled + 3);
         return savestring (demangled, strlen(demangled));
       };
@@ -1277,7 +1279,8 @@ m3_demangle (const char *mangled, int options)
       /* m3 type uid for type name: Mn_zzzzzz_<moduleName.typeName>
          Name is not fully qualified.  
          Demangled: B$<name> */
-      if (mangled_len >= 4 + M3UID_LEN && m3uid_to_int (mangled + 3, &uid)) {
+      if (mangled_len >= 4 + M3UID_LEN && m3uid_to_num (mangled + 3, &num_uid))
+        {
         /* TODO: For purposes of looking up user-typed type names, it would be 
            more straightforward to strip off the interface qualifier from
            the type name, as by this statement: 
@@ -1295,7 +1298,8 @@ m3_demangle (const char *mangled, int options)
 
     case 'i':
       /* m3 exported interfaces Mi_zzzzzz_<module> Demangled: H$<module> */
-      if (mangled_len > 10 && m3uid_to_int (mangled + 3, &uid)) {
+      if (mangled_len > 10 && m3uid_to_num (mangled + 3, &num_uid)) 
+        {
   	sprintf (demangled, "H$%s", mangled + 4 + M3UID_LEN);
         return savestring (demangled, strlen(demangled));
       };
@@ -1314,7 +1318,8 @@ m3_demangle (const char *mangled, int options)
     case 'P':
     case 'Q':
       /* m3 type encoding: M?_<uid>* Demangled: <uid> */
-      if (mangled_len >= 3 + M3UID_LEN && m3uid_to_int (mangled + 3, &uid)) {
+      if (mangled_len >= 3 + M3UID_LEN && m3uid_to_num (mangled + 3, &num_uid)) 
+        {
 	sprintf (demangled, "%.*s", M3UID_LEN, mangled + 3);
         return savestring (demangled, strlen(demangled));
       };
@@ -1345,7 +1350,7 @@ m3_demangle (const char *mangled, int options)
       && mangled [5 + M3UID_LEN] == 'I'
       && mangled [6 + M3UID_LEN] == 'T'
       && mangled [7 + M3UID_LEN] == 0) {
-    if (m3uid_to_int (mangled + 2, &uid)) {
+    if (m3uid_to_num (mangled + 2, &num_uid)) {
       sprintf (demangled, "D$%.*s", M3UID_LEN, mangled + 2); 
       return savestring (demangled, strlen(demangled));
     }
@@ -1982,7 +1987,7 @@ m3_fix_target_type (t)
 struct type *
 m3_resolve_type ( char *uid ) 
 
-{ int uid_val;
+{ LONGEST num_uid;
   struct symbol *sym = lookup_symbol ( uid, 0, STRUCT_DOMAIN, 0, 0);
 
   if (sym) {
@@ -1993,28 +1998,28 @@ m3_resolve_type ( char *uid )
     return t;
   };
 
-  if (m3uid_to_int (uid, &uid_val)) {
-    if      (uid_val == 0x195c2a74) { return builtin_type_m3_integer; }
-    else if (uid_val == 0x05562176) { return builtin_type_m3_longint; }
-    else if (uid_val == 0x50f86574) { return builtin_type_m3_text; }
-    else if (uid_val == 0x97e237e2) { return builtin_type_m3_cardinal; }
-    else if (uid_val == 0x1e59237d) { return builtin_type_m3_boolean; }
-    else if (uid_val == 0x08402063) { return builtin_type_m3_address; }
-    else if (uid_val == 0x9d8fb489) { return builtin_type_m3_root; }
-    else if (uid_val == 0xa973d3a6) { return builtin_type_m3_transient_root; }
-    else if (uid_val == 0x56e16863) { return builtin_type_m3_char; }
-    /* For widechar, the uid_val was once 0xb0830411.  Presumably, this is an
+  if (m3uid_to_num (uid, &num_uid)) {
+    if      (num_uid == 0x195c2a74) { return builtin_type_m3_integer; }
+    else if (num_uid == 0x05562176) { return builtin_type_m3_longint; }
+    else if (num_uid == 0x50f86574) { return builtin_type_m3_text; }
+    else if (num_uid == 0x97e237e2) { return builtin_type_m3_cardinal; }
+    else if (num_uid == 0x1e59237d) { return builtin_type_m3_boolean; }
+    else if (num_uid == 0x08402063) { return builtin_type_m3_address; }
+    else if (num_uid == 0x9d8fb489) { return builtin_type_m3_root; }
+    else if (num_uid == 0xa973d3a6) { return builtin_type_m3_transient_root; }
+    else if (num_uid == 0x56e16863) { return builtin_type_m3_char; }
+    /* For widechar, the num_uid was once 0xb0830411.  Presumably, this is an
        outdated leftover from a transitional implementation of widechar, at
        Critical Mass, before the final one came from them. */
-    else if (uid_val == 0x88f439fc) { return builtin_type_m3_widechar; }
-    else if (uid_val == 0x48e16572) { return builtin_type_m3_real; }
-    else if (uid_val == 0x94fe32f6) { return builtin_type_m3_longreal; }
-    else if (uid_val == 0x9ee024e3) { return builtin_type_m3_extended; }
-    else if (uid_val == 0x48ec756e) { return builtin_type_m3_null; }
-    else if (uid_val == 0x1c1c45e6) { return builtin_type_m3_refany; }
-    else if (uid_val == 0x51e4b739) { return builtin_type_m3_transient_refany; }
-    else if (uid_val == 0x898ea789) { return builtin_type_m3_untraced_root; }
-    else if (uid_val == 0x00000000) { return builtin_type_m3_void; }
+    else if (num_uid == 0x88f439fc) { return builtin_type_m3_widechar; }
+    else if (num_uid == 0x48e16572) { return builtin_type_m3_real; }
+    else if (num_uid == 0x94fe32f6) { return builtin_type_m3_longreal; }
+    else if (num_uid == 0x9ee024e3) { return builtin_type_m3_extended; }
+    else if (num_uid == 0x48ec756e) { return builtin_type_m3_null; }
+    else if (num_uid == 0x1c1c45e6) { return builtin_type_m3_refany; }
+    else if (num_uid == 0x51e4b739) { return builtin_type_m3_transient_refany; }
+    else if (num_uid == 0x898ea789) { return builtin_type_m3_untraced_root; }
+    else if (num_uid == 0x00000000) { return builtin_type_m3_void; }
   }
 
   error ("Cannot resolve type with uid %s", uid);

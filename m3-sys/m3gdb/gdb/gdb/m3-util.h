@@ -275,7 +275,7 @@ m3_ordinal_base_type ( struct type * param_type, bool * is_int_or_card );
    PRE: addr is the inferior address of a object with a typecode header,
         i.e., either it's a traced ref or an untraced object type. 
 */ 
-LONGEST 
+extern LONGEST 
 m3_typecode_from_inf_object_addr ( CORE_ADDR addr ); 
 
 /* Return the inferior address of the typecell for the dyanamic (allocated) 
@@ -285,7 +285,7 @@ extern CORE_ADDR
 m3_tc_addr_from_inf_object_addr ( CORE_ADDR );
 
 /* Given a type from a Modula-3 program, return its numeric uid. */ 
-extern int 
+extern LONGEST 
 int_uid_from_m3_type ( struct type * t );  
 
 /* given a gdb type, find the address of the corresponding typecell */
@@ -293,7 +293,7 @@ extern CORE_ADDR
 m3_tc_addr_from_type ( struct type * t );
 
 /* given the address of a typecell, find the M3 numeric uid for it. */
-extern int 
+extern LONGEST 
 m3_int_uid_from_tc_addr ( CORE_ADDR addr );
 
 /* given the address of a typecell, find the gdb type for it */
@@ -355,7 +355,7 @@ extern gdb_byte *
 m3_read_object_fields_bits (CORE_ADDR);
 
 extern LONGEST 
-m3_extract_ord (const gdb_byte *, int, int, int);
+m3_extract_ord (const gdb_byte *, int, int, bool);
 
 extern CORE_ADDR 
 m3_extract_address (const gdb_byte *, int);
