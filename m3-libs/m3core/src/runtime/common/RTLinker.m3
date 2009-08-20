@@ -55,8 +55,9 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     (* finally, initialize the runtime. *)
     RTSignal.InstallHandlers ();
     RTParams.Init ();
-    RTHeapRep.Init ();
+    RTHeapRep.Init1 ();
     ThreadF.Init ();
+    RTHeapRep.Init2 ();
     RTDebug.Init ();
     RTHeapInfo.Init ();
     IF RTParams.IsPresent("tracelinker") THEN
