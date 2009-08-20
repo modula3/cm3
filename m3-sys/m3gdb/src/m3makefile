@@ -85,14 +85,25 @@ readonly proc m3gdb_Run (x) is
     end
 end
 
+if not defined("ConfigureGNUMake")
+    % temporary until cm3cfg.common is updated
+    include("../../cminstall/src/config-no-install/gnumake.common")
+end
+
+local env = ""
+
+ConfigureGNUMake()
+write("GNU_MAKE is " & GNU_MAKE & CR)
+
+env = env & " MAKE=" & GNU_MAKE & " "
 
 %
 % star means default
 % These are meant to come from the config file, but it can omit them
 %
+
 if not defined("GNU_CC")     GNU_CC     = "*"    end
 if not defined("GNU_CFLAGS") GNU_CFLAGS = "*"    end
-if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
 
 
 M3GDB_CFLAGS="-g"
@@ -105,7 +116,7 @@ if not defined ("M3GDB_MAKE")    M3GDB_MAKE   = GNU_MAKE   end
 if not defined ("M3GDB_CONFIG")  M3GDB_CONFIG = get_config (M3GDB_HOST) end
 
 % check for non-default flags
-local env = get_overrides ("CC", M3GDB_CC) & " " & get_overrides ("CFLAGS", M3GDB_CFLAGS)
+env = env & " " & get_overrides ("CC", M3GDB_CC) & " " & get_overrides ("CFLAGS", M3GDB_CFLAGS)
 env = env & " MAKEINFO=echo"
 M3GDB_CONFIG = M3GDB_CONFIG & " " & env
 M3GDB_MAKE = M3GDB_MAKE & " " & env
