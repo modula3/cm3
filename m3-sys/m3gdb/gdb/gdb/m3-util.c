@@ -121,6 +121,10 @@ init_m3_constants ( )
       } 
     m3_find_rec_field (rt0_tc, "selfID",
 		     &rt0_tc_selfID_size, &rt0_tc_selfID_offset, 0);
+    /* I don't know why, but the compiler seems to be sign-extending
+       uid values into 64 bits on 64-bit targets.  Artificially change
+       rt0_tc_selfID_size to compensate. */
+    rt0_tc_selfID_size = 32;  
     m3_find_rec_field (rt0_tc, "dataSize",
 		     &rt0_tc_dataSize_size, &rt0_tc_dataSize_offset, 0);
 
@@ -165,6 +169,7 @@ init_m3_constants ( )
         m3_find_rec_field (SYMBOL_TYPE (rt0u), "types", 
                            &rt0u_types_size, &rt0u_types_offset, 0);
 
+        rt0u_types_value = 0; /* So as to left-extend with zeros. */
         read_memory (SYMBOL_VALUE_ADDRESS (rt0u) 
                               + rt0u_types_offset / TARGET_CHAR_BIT
                            , (char *)&rt0u_types_value
@@ -1249,6 +1254,7 @@ m3_typecode_from_inf_object_addr ( CORE_ADDR addr )
 
   /* the typecode is in Modula-3 bits 1..21 */
   typecode = m3_extract_ord((char *)&typecodeword, 1, 20, 0);
+  /* FIXME: ^Get these bit nos from symbol for RT0.RefHeader.typecode.*/ 
   return typecode; 
 
 } /* m3_typecode_from_inf_object_addr */ 
@@ -1260,17 +1266,17 @@ CORE_ADDR
 m3_tc_addr_from_inf_object_addr ( CORE_ADDR addr )
 
 { LONGEST typecode, n_types;
-  CORE_ADDR result, map_ptr, debugee_addr;
+  CORE_ADDR result, map_ptr, debugee_addr, info_ptr;
   int result_code; 
 
   if (!addr) { return 0; }
 
   typecode = m3_typecode_from_inf_object_addr ( addr ) ; 
 
-  init_m3_constants ();
-
+  init_m3_constants (); 
   if ( m3_compiler_kind ( ) == m3_ck_cm3 ) 
-    { n_types = 0;
+    { /* Read from RTType.types.cnt, of type CARDINAL. */ 
+      n_types = 0; /* So as to left-extend with zeros. */
       debugee_addr = rttype_types_addr + rttype_infomap_cnt_offset / 8;
       result_code 
         = target_read_memory 
@@ -1294,7 +1300,8 @@ m3_tc_addr_from_inf_object_addr ( CORE_ADDR addr )
           return 0;
         }
 
-      map_ptr = 0;
+      /* Read from RTType.types.map, of type ADDRESS. */ 
+      map_ptr = 0; /* So as to left-extend with zeros. */
       debugee_addr = rttype_types_addr + rttype_infomap_map_offset / 8,
       result_code 
         = target_read_memory 
@@ -1317,11 +1324,13 @@ m3_tc_addr_from_inf_object_addr ( CORE_ADDR addr )
           return 0;
         }
 
+      /* Read from RTType.types.map^[typecode], of type RTType.InfoPtr.*/ 
+      info_ptr = 0; /* So as to left-extend with zeros. */
       debugee_addr = map_ptr + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT;
       result_code 
         = target_read_memory 
             ( debugee_addr,
-              (char *) &result, 
+              (char *) &info_ptr, 
               TARGET_PTR_BIT / TARGET_CHAR_BIT
             );
       if (result_code != 0)
@@ -1333,7 +1342,7 @@ m3_tc_addr_from_inf_object_addr ( CORE_ADDR addr )
             ); 
           return 0; 
         } 
-      if (result == 0) 
+      if (info_ptr == 0) 
         { warning 
             ( "Typecode %d (ref: 16_%lx) has NIL RTType.InfoPtr value",
               (int) typecode, 
@@ -1342,7 +1351,9 @@ m3_tc_addr_from_inf_object_addr ( CORE_ADDR addr )
           return 0;
         }
 
-      debugee_addr = result + rttype_info_def_offset / 8;
+      /* Read from info_ptr^.def, of type RT0.TypeDefn. */ 
+      result = 0; /* So as to left-extend with zeros. */
+      debugee_addr = info_ptr + rttype_info_def_offset / 8;
       result_code 
         = target_read_memory 
             ( debugee_addr,
@@ -1370,7 +1381,9 @@ m3_tc_addr_from_inf_object_addr ( CORE_ADDR addr )
       return result;
     } 
   else if ( m3_compiler_kind ( ) == m3_ck_pm3 ) 
-    { debugee_addr 
+    { /* Read RT0u.types[typecode], of type RT0.TypeDefn. */ 
+      result = 0; /* So as to left-extend with zeros. */
+      debugee_addr 
         = rt0u_types_value + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT;
       result_code 
         = target_read_memory 
@@ -1402,11 +1415,12 @@ m3_tc_addr_from_inf_object_addr ( CORE_ADDR addr )
 } /* m3_tc_addr_from_inf_object_addr */
 
 /* Given a type from a Modula-3 program, return its numeric uid. */ 
-int /* Numeric uid. */ 
+LONGEST /* Numeric uid. */ 
 int_uid_from_m3_type ( struct type * t ) 
 
-{ int uid; 
-   if ( m3uid_to_int ( TYPE_TAG_NAME ( t ), &uid) ) { return uid; } 
+{ LONGEST num_uid; 
+   if ( m3uid_to_num ( TYPE_TAG_NAME ( t ), &num_uid) ) 
+     { return num_uid; } 
    return 0;
 } /* int_uid_from_m3_type */ 
 
@@ -1418,7 +1432,7 @@ m3_tc_addr_from_type ( struct type * t )
 {
   LONGEST typecode, n_types;
   CORE_ADDR map_ptr, info_ptr, tc_addr;
-  int selfID, uid;
+  LONGEST selfID, num_uid;
 
   init_m3_constants ( );
 
@@ -1431,7 +1445,7 @@ m3_tc_addr_from_type ( struct type * t )
     return 0;  /* not an OBJECT or REF type */
   }
 
-  if (!m3uid_to_int (TYPE_TAG_NAME (t), &uid)) {
+  if (!m3uid_to_num (TYPE_TAG_NAME (t), &num_uid)) {
     return 0; /* no name or bad format */
   }
 
@@ -1448,32 +1462,36 @@ m3_tc_addr_from_type ( struct type * t )
 
   for (typecode = 0;  typecode < n_types;  typecode++) {
     /* get the InfoPtr */
+    info_ptr = 0; 
     read_memory (map_ptr
 		      + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT,
 		      (char*)&info_ptr, TARGET_PTR_BIT / TARGET_CHAR_BIT);
     if (!info_ptr) { continue; }
 
     /* get the typecell pointer */
+    tc_addr = 0; 
     read_memory (info_ptr + rttype_info_def_offset / 8,
 		      (char*)&tc_addr, TARGET_PTR_BIT / TARGET_CHAR_BIT);
     if (!tc_addr) { continue; }
 
     /* get the type's UID */
+    selfID = 0; 
     read_memory (tc_addr + rt0_tc_selfID_offset / TARGET_CHAR_BIT,
 		      (char*)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
-    if (selfID == uid) { return tc_addr; }
+    if (selfID == num_uid) { return tc_addr; }
   }
 
   return 0;
 } /* m3_tc_addr_from_type */ 
 
-int 
+LONGEST 
 m3_int_uid_from_tc_addr ( CORE_ADDR tc_addr )
 {
-  int selfID;
+  LONGEST selfID = 0; /* So as to left-extend with zeros. */ 
 
   init_m3_constants ();
 
+  selfID = 0; 
   read_memory (tc_addr + rt0_tc_selfID_offset / TARGET_CHAR_BIT,
 		      (char *)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
 
@@ -1483,14 +1501,15 @@ m3_int_uid_from_tc_addr ( CORE_ADDR tc_addr )
 struct type *
 m3_type_from_tc ( CORE_ADDR tc_addr ) 
 {
-  int selfID;
+  LONGEST selfID;
 
   init_m3_constants ();
 
+  selfID = 0; 
   read_memory (tc_addr + rt0_tc_selfID_offset / TARGET_CHAR_BIT,
 		      (char *)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
 
-  return (m3_resolve_type (m3uid_from_int (selfID)));
+  return (m3_resolve_type (m3uid_from_num (selfID)));
 } /* m3_type_from_tc */ 
 
 /* Given a heap reference, find it's actual type. 
@@ -1506,8 +1525,10 @@ m3_allocated_type_from_object_addr ( CORE_ADDR addr )
 
 /* return LOOPHOLE (tc_addr, RT0.ObjectTypeDefn).dataOffset */
 int 
+/* TODO: make this return a LONGEST, and propagate this change all over
+         m3gdb, wherever bit postions are used? */ 
 m3_dataOffset_from_tc_addr ( CORE_ADDR tc_addr ) 
-{ int result;
+{ LONGEST result;
   char kind;
 
   init_m3_constants ();
@@ -1516,19 +1537,23 @@ m3_dataOffset_from_tc_addr ( CORE_ADDR tc_addr )
     { kind = 0;
       read_memory (tc_addr + rt0_tc_kind_offset / TARGET_CHAR_BIT,
                           (char *)&kind, sizeof(kind));
+      /* TODO: Don't assume RT0.Typecell.kind is one byte. */ 
 
       if (kind != 2/*RT0.TypeKind.Obj*/) { return 0; }
     } 
 
+  result = 0; 
   read_memory (tc_addr + rt0_dataOffset_offset / TARGET_CHAR_BIT,
 		      (char *)&result, rt0_dataOffset_size / TARGET_CHAR_BIT);
   return result;
 } /* m3_dataOffset_from_tc_addr */ 
 
 int 
+/* TODO: make this return a LONGEST, and propagate this change all over
+         m3gdb, wherever bit postions are used? */ 
 m3_methodOffset_from_tc_addr ( CORE_ADDR tc_addr ) 
 {
-  int result;
+  LONGEST result;
   char kind;
 
   init_m3_constants ();
@@ -1537,11 +1562,13 @@ m3_methodOffset_from_tc_addr ( CORE_ADDR tc_addr )
     { kind = 0;
       read_memory (tc_addr + rt0_tc_kind_offset / TARGET_CHAR_BIT,
                           (char *)&kind, sizeof(kind));
+      /* TODO: Don't assume RT0.Typecell.kind is one byte. */ 
 
       if (kind != 2 /*RT0.TypeKind.Obj*/) 
         { return 0; }
     } 
 
+  result = 0; 
   read_memory (tc_addr + rt0_methodOffset_offset / TARGET_CHAR_BIT,
 		      (char *)&result, rt0_methodOffset_size / TARGET_CHAR_BIT);
   return result;
@@ -1550,8 +1577,9 @@ m3_methodOffset_from_tc_addr ( CORE_ADDR tc_addr )
 int 
 m3_dataSize_from_tc_addr ( CORE_ADDR tc_addr ) 
 {
-  int result;
+  LONGEST result;
   init_m3_constants ();
+  result = 0;
   read_memory (tc_addr + rt0_tc_dataSize_offset / TARGET_CHAR_BIT,
 		      (char *)&result, rt0_tc_dataSize_size / TARGET_CHAR_BIT);
   return result;
@@ -1568,10 +1596,12 @@ m3_super_tc_addr_from_tc_addr ( CORE_ADDR tc_addr )
     { kind = 0;
       read_memory (tc_addr + rt0_tc_kind_offset / TARGET_CHAR_BIT,
                           (char *)&kind, sizeof(kind));
+      /* TODO: Don't assume RT0.Typecell.kind is one byte. */ 
 
       if (kind != 2/*RT0.TypeKind.Obj*/) { return 0; }
     } 
 
+  result = 0; 
   read_memory (tc_addr + rt0_parent_offset / TARGET_CHAR_BIT,
 		      (char *)&result, rt0_parent_size / TARGET_CHAR_BIT);
   return result;
@@ -1587,10 +1617,12 @@ m3_defaultMethods_from_tc_addr ( CORE_ADDR tc_addr )
     { kind = 0;
       read_memory (tc_addr + rt0_tc_kind_offset / TARGET_CHAR_BIT,
                           (char *)&kind, sizeof(kind));
+      /* TODO: Don't assume RT0.Typecell.kind is one byte. */ 
 
       if (kind != 2/*RT0.TypeKind.Obj*/) { return 0; }
     } 
 
+  result = 0; 
   read_memory ( tc_addr + rt0_defaultMethods_offset / TARGET_CHAR_BIT,
 	        (char *)&result, rt0_defaultMethods_size / TARGET_CHAR_BIT);
   return result;
@@ -1840,21 +1872,22 @@ m3_read_object_fields_bits ( CORE_ADDR ref )
 {
   CORE_ADDR tc_addr;
   int dataSize;
-  gdb_byte *bits;
+  gdb_byte *buf;
 
   if (ref == 0) { return 0; }
   tc_addr = m3_tc_addr_from_inf_object_addr (ref);
   dataSize = m3_dataSize_from_tc_addr (tc_addr);
-  bits = malloc (dataSize);
+  buf = malloc (dataSize);
   /* FIXME^ Surely this is not the right way to allocate space in gdb. 
      rodney.bates@wichita.edu */
-  read_memory (ref, bits, dataSize);
-  return bits;
+  read_memory (ref, buf, dataSize);
+  return buf;
 }
 
+/* Extract an ordinal bitfield from a gdb-space buffer. */
 LONGEST
 m3_extract_ord (
-  const gdb_byte* valaddr, int bitpos, int bitsize, int sign_extend )
+  const gdb_byte* valaddr, int bitpos, int bitsize, bool sign_extend )
 
   {
     ULONGEST val;
@@ -1932,7 +1965,7 @@ m3_value_as_integer ( struct value * val )
 CORE_ADDR
 m3_extract_address (const gdb_byte* valaddr, int bitpos)
 {
-  return (CORE_ADDR) m3_extract_ord (valaddr, bitpos, TARGET_PTR_BIT, 0);
+  return (CORE_ADDR) m3_extract_ord (valaddr, bitpos, TARGET_PTR_BIT, false);
 }
 
 double 
@@ -1979,7 +2012,7 @@ m3_ensure_value_is_unpacked ( struct value * packed_val )
        m3_unpack_ord. */ 
     if ( byte_length > sizeof ( value ) ) 
       { error ( "Packed field has %d bytes, can only unpack %d.", 
-                byte_length,
+                (int)byte_length,
                 sizeof ( value )
               ); 
       } 
@@ -2054,7 +2087,7 @@ m3_open_array_shape_component ( const gdb_byte * addr , int dimension )
 
     target_offset = m3_shape_component_offset ( dimension );
     result 
-      = m3_extract_ord ( addr + target_offset, 0, m3_target_integer_bit, 0 );
+      = m3_extract_ord ( addr + target_offset, 0, m3_target_integer_bit, false);
     return result; 
   } /* m3_open_array_shape_component */ 
 
@@ -2106,7 +2139,7 @@ m3_inf_open_array_shape_component ( CORE_ADDR ref, int dimension )
      a target offset here. */ 
   read_memory 
     ( ref + target_offset, buf, m3_target_integer_bit/TARGET_CHAR_BIT );  
-  result = m3_extract_ord (buf, 0, m3_target_integer_bit, 0);
+  result = m3_extract_ord (buf, 0, m3_target_integer_bit, false);
   return result; 
 } /* m3_inf_open_array_shape_component */ 
 
@@ -2155,7 +2188,7 @@ m3_value_open_array_shape_component (
     result 
       = m3_extract_ord 
           ( ( gdb_byte * ) value_contents ( array_value ) + target_offset, 
-            0, m3_target_integer_bit, 0
+            0, m3_target_integer_bit, false
           );
     return result; 
   } /* m3_value_open_array_shape_component */ 
