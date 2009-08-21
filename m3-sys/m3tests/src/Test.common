@@ -78,7 +78,7 @@ if defined ("local_m3")
 end
 
 proc M3TestsNoEcho () is
-  if defined ("xM3TESTS")
+  if defined ("M3TESTS")
     return "@"
   end
   return ""
@@ -90,7 +90,7 @@ readonly proc RunTest () is
   else
     runopts = ""
   end
-  write ("runopts = " & runopts & EOL)
+  %write ("runopts = " & runopts & EOL)
   if not M3TestsRoot
     program("pgm")
     local f = program_name ("pgm")
