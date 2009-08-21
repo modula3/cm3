@@ -11,6 +11,7 @@ VAR
   found  : BOOLEAN       := FALSE;
   config : TEXT          := NIL;
   mach   : Quake.Machine := NIL;
+  trace  : BOOLEAN       := TRUE;
 
 PROCEDURE FindFile (): TEXT =
   BEGIN
@@ -31,6 +32,12 @@ PROCEDURE Get (param: TEXT): TEXT =
       END;
     END;
   END Get;
+
+PROCEDURE EnableQuakeTrace() =
+  BEGIN
+    trace := TRUE;
+  END EnableQuakeTrace;
+
 
 (*----------------------------------------------------------- internal ---*)
 
@@ -122,6 +129,7 @@ PROCEDURE EvalConfig () =
     IF (mach # NIL) THEN RETURN END;
     FindConfig ();
     mach := Quake.NewMachine (Quake.NewIDMap (Str2ID, Txt2ID, ID2Txt));
+    mach.trace (trace);
     TRY
       IF (config # NIL) THEN Quake.Run (mach, config); END;
     EXCEPT Quake.Error, Thread.Alerted =>

@@ -36,6 +36,7 @@ TYPE
     cur_wr    (): Wr.T;
     set_wr    (wr: Wr.T);
     exec_echo (b: BOOLEAN): BOOLEAN;
+    trace     (b: BOOLEAN);
   END;
 
 PROCEDURE PushBool (t: T;  b: BOOLEAN);
