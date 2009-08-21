@@ -1,3 +1,0 @@
-PROC Cmd0() IS 
-  IF VAR x ~ 1.97 IN (1000 + x) * (1000 - x) = 1e6 - 2 -> SKIP END FI 
-END;
