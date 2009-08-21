@@ -1,5 +1,0 @@
-<p>
-Debugging support: This interface provides an object for maintaining
-a trace of program flow and controlling the amount of debug printing
-done at run-time.
-</p>

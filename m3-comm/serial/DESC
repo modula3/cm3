@@ -1,7 +1,0 @@
-<p>
-Serial input/output support:
-A "SerialPort.T" or serial port represents a serial communications
-   device.  It is a subtype of "File.T" that can be read or written.
-   The configuration details of the underlying device can also be
-   read or written.
-</p>
