@@ -2747,7 +2747,8 @@ VAR align: ARRAY MaxAlignRange, [1 .. MaxAlignment] OF CARDINAL;
 (* align[i,j] == RTMisc.Align (i, j) - i *)
 
 VAR initialized := FALSE;
-PROCEDURE Init () =
+
+PROCEDURE Init1 () =
   BEGIN
     <*ASSERT LOOPHOLE(0, ADDRESS) = NIL*>
 
@@ -2766,10 +2767,15 @@ PROCEDURE Init () =
     IF RTParams.IsPresent("nogc") THEN disableCount := 1; END;
     IF RTParams.IsPresent("noincremental") THEN incremental := FALSE; END;
     IF RTParams.IsPresent("nogenerational") THEN generational := FALSE; END;
-    IF RTParams.IsPresent("paranoidgc") THEN InstallSanityCheck(); END;
     IF RTParams.IsPresent("heapstats") THEN heap_stats := TRUE; END;
     PerfStart();
-  END Init;
+  END Init1;
+
+
+PROCEDURE Init2 () =
+  BEGIN
+    IF RTParams.IsPresent("paranoidgc") THEN InstallSanityCheck(); END;
+  END Init2;
 
 VAR
   minorCollections := 0;                 (* the number of minor GCs begun *)
