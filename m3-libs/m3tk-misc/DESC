@@ -1,5 +1,0 @@
-<p>
-This package has been extracted from m3tk as several of its modules
-are used in different other packages, which do not need to depend on
-the whole huge m3tk package. (ow 2001-12-06)
-</p>

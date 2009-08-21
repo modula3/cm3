@@ -1,7 +1,0 @@
-if not defined("TOP")
-  TOP = PACKAGE_DIR & SL & ".." & SL & ".."
-end
-
-import("paneman")
-implementation("Main")
-Program("kemacs")
