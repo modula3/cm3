@@ -470,6 +470,8 @@ CONST
     Builtin {"MandExport",                    DoMandExport,      2, FALSE},
     Builtin {"ManExport",                     DoManExport,       2, FALSE},
     Builtin {"HtmlExport",                    DoHtmlExport,      1, FALSE},
+    Builtin {"RootExport",                    DoRootExport,      2, FALSE},
+    Builtin {"RootdExport",                   DoRootdExport,     2, FALSE},
 
     (* misc *)
     Builtin {"gen_m3exports",                 DoGenM3Exports,    1, FALSE},
@@ -2172,6 +2174,36 @@ PROCEDURE DoHtmlExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
   BEGIN
     InstallSource (t, file, t.html_install, ModeF);
   END DoHtmlExport;
+
+PROCEDURE DoRootExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
+  RAISES {Quake.Error} =
+  VAR 
+    t := Self (m);  
+    reldir := PopText (t);
+    file := PopText (t);
+  BEGIN
+    IF Pathname.Absolute (reldir) THEN
+      RAISE Quake.Error ("can only export relative to INSTALL_ROOT");
+    END;
+    WITH dir = Pathname.Join( t.install_root, reldir ) DO
+      InstallFile (t, file, dir, ModeF, derived := FALSE);
+    END;
+  END DoRootExport; 
+
+PROCEDURE DoRootdExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
+  RAISES {Quake.Error} =
+  VAR 
+    t := Self (m);  
+    reldir := PopText (t);
+    file := PopText (t);
+  BEGIN
+    IF Pathname.Absolute (reldir) THEN
+      RAISE Quake.Error ("can only export relative to INSTALL_ROOT");
+    END;
+    WITH dir = Pathname.Join( t.install_root, reldir ) DO
+      InstallFile (t, file, dir, ModeF, derived := FALSE);
+    END;
+  END DoRootdExport; 
 
 (*------------------------------------------------------------- .M3EXPORTS --*)
 
