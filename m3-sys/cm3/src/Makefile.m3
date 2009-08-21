@@ -543,6 +543,8 @@ PROCEDURE ScanCommandLine () : TextTextTbl.T =
         Msg.SetLevel (Msg.Level.Debug);
       ELSIF Text.Equal (arg, "-profile") THEN
         EVAL defs.put("M3_PROFILING", "TRUE");
+      ELSIF Text.Equal (arg, "-trace") THEN
+        traceQuake := TRUE;
       ELSIF Text.Equal (arg, "-x") OR Text.Equal (arg, "-override") THEN
         use_overrides := TRUE;
       ELSIF Text.Equal (arg, "-pretend") THEN
@@ -692,6 +694,7 @@ PROCEDURE Val(name: TEXT) : TEXT =
 
 VAR
   defs := NEW(TextTextTbl.Default).init();
+  traceQuake := FALSE;
 BEGIN
   EVAL defs.put("CM3_RELEASE", Version.Text);  (* readable release version *)
   EVAL defs.put("CM3_VERSION", Version.Number);(* version as number *)
