@@ -3,7 +3,7 @@
 
 MODULE MxConfig;
 
-IMPORT Env, Params, Pathname, M3File, M3ID, Quake, Text, Thread;
+IMPORT Env, Params, Pathname, M3File, M3ID, Quake, RTIO, Text, Thread;
 IMPORT QMachine;
 
 VAR
@@ -132,8 +132,11 @@ PROCEDURE EvalConfig () =
     mach.trace (trace);
     TRY
       IF (config # NIL) THEN Quake.Run (mach, config); END;
-    EXCEPT Quake.Error, Thread.Alerted =>
-      (* ouch *)
+    EXCEPT 
+      Quake.Error(e) => RTIO.PutText ("quake runtime error: " & e);
+                        RTIO.Flush ();
+    | Thread.Alerted => RTIO.PutText ("interrupted");
+                        RTIO.Flush ();
     END;
   END EvalConfig;
 
