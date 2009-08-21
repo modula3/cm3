@@ -1,2 +1,0 @@
-override ("netobj", ROOT & "/m3-comm")
-override ("tcp", ROOT & "/m3-comm")

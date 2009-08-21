@@ -1,9 +1,0 @@
-readonly TARGET = "PPC32_OPENBSD"
-readonly GNU_PLATFORM = "powerpc-openbsd" % "cpu-os" string for GNU
-
-m3back_flags = "-gstabs+ -m32 -fPIC -funwind-tables"
-SYSTEM_CC = "gcc -gstabs+ -fPIC"
-readonly SYSTEM_ASM = "as"
-
-include("PPC.common")
-include("OpenBSD.common")
