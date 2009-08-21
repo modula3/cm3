@@ -1,6 +1,0 @@
-<p>
-  This is the "juno-compiler" package, which contains interfaces and
-  implementations of the Juno II abstract syntax trees (AST's), scopes, lexer,
-  parser, unparser, and compiler. It also contains the LL(1) Juno grammar (for
-  use with Bill Kalsow's LLGen(1) tool).
-</p>

@@ -1,4 +1,0 @@
-import_sys_lib ("MYSQL")
-Interface("MySQL")
-Interface("MySQLDBRep")
-implementation("MySQLDB")

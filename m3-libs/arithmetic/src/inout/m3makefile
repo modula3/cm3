@@ -1,3 +1,0 @@
-include_dir("text")
-% see separate package 'plplot'
-%include_dir("graphic")
