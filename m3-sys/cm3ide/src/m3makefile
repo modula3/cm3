@@ -17,6 +17,7 @@ include_dir ("nodes")
 include_dir ("misc")
 include_dir ("forms")
 include_dir ("rsrc")
+include_dir ("examples")
 
 bundle ("CM3_IDE_Bundle")
 implementation ("Main") 
