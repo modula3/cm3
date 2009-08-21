@@ -1,5 +1,0 @@
-import("fftw")
-
-implementation("Main")
-
-program("test")
