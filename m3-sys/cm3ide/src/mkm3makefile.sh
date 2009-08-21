@@ -4,7 +4,7 @@
 
 #DIRS=`find examples -type d -print | egrep -v "CVS|${TARGET}"`
 FILES=`find examples -type f -print | \
-       egrep -v "CVS|${TARGET}|examples/m3makefile"`
+       egrep -v "CVS|${TARGET}|examples/m3makefile|~$|.bak"`
 
 M=${M:-examples/m3makefile}
 

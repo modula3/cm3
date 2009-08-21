@@ -115,7 +115,6 @@ if defined("RootExport")
   RootExport("httpd/src/index.html", "examples/httpd/src")
   RootExport("README", "examples")
   RootExport("index.html", "examples")
-  RootExport("mkm3makefile.sh~", "examples")
 else
   write("This compiler is too old to ship the examples." & EOL)
   write("Please copy them manually or upgrade cm3." & EOL)
