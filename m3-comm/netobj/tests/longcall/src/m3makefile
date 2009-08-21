@@ -6,14 +6,14 @@
 % Last modified on Mon Dec 20 14:15:15 PST 1993 by kalsow
 %      modified on Wed Aug 25 17:44:44 PDT 1993 by wobber
 
-import(netobj)
-import(tcp)
-import(libm3)
+import("netobj")
+import("tcp")
+import("libm3")
 
-interface(LongCall)
-implementation(LongCallTest)
-netobj(LongCall,T)
+interface("LongCall")
+implementation("LongCallTest")
+netobj("LongCall", "T")
 
-program(longcall)
+program("longcall")
 
 
