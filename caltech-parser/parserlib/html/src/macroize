@@ -1,9 +1,0 @@
-#!/bin/sh
-cat -e ../../parserlib/test/src/$1 > itemp
-echo "" >> itemp
-sed s/\$/\<\\\/TT\>/g itemp > itemp2
-sed s/\\\ /\\\&nbsp\\\;/g itemp2 > itemp
-echo "#define _Z_`echo $2` <TT>\\" > itemp2
-sed s/\\\$\<\\\/TT\>/\ \<BR\>\ \\\\/g itemp >> itemp2
-echo >> itemp2
-cat itemp2 >>../macroizations
