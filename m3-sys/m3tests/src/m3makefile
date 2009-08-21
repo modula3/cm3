@@ -243,7 +243,12 @@ html(["      <tbody>", CR])
 %
 
 readonly proc run_test (class, group, uid, comment, should_run) is
+  local cm3opts = ""
+  local runopts = ""
+  run_test2 (class, group, uid, comment, should_run, cm3opts, runopts)
+end
 
+readonly proc run_test2 (class, group, uid, comment, should_run, cm3opts, runopts) is
   local dir = ".." & SL & "src" & SL & group & SL & uid
   fs_rmrec (dir & SL & BUILD_DIR)
   tstart = compress (q_exec_get ("date '+%s'")[1]) % second resolution only
@@ -252,7 +257,9 @@ readonly proc run_test (class, group, uid, comment, should_run) is
   if defined ("_all") or defined (class) or defined ("_" & uid)
     write ("--- ", uid, " --- ", comment, CR)
     fs_mkdir (dir & SL & BUILD_DIR)
-    exec ("-cd", dir, "&& cm3", "-silent", "-DM3TESTS", ">" & BUILD_DIR & SL & "stdout.build.raw 2>" & BUILD_DIR & SL & "stderr.build.raw")
+    fs_putfile (dir & SL & BUILD_DIR & SL & "runopts", runopts)
+
+    exec ("-cd", dir, "&& cm3", "-silent", "-DM3TESTS", cm3opts, ">" & BUILD_DIR & SL & "stdout.build.raw 2>" & BUILD_DIR & SL & "stderr.build.raw")
 
     NormalizeFile (dir & SL & BUILD_DIR & SL & "stdout.build")
     NormalizeFile (dir & SL & BUILD_DIR & SL & "stderr.build")
@@ -328,7 +335,17 @@ readonly proc p_test (group, uid, comment) is
   run_test ("_ptests", group, uid, comment, "run")
 end
 
+readonly proc pr_test (group, uid, comment, runopts) is
+  run_test2 ("_ptests", group, uid, comment, "run", "", runopts)
+end
+
+readonly proc c2_test (group, uid, comment, cm3opts) is
+  run_test2 ("_ctests", group, uid, comment, "", cm3opts, "")
+end
+
 % some currently failing tests...
+%pr_test ("p2", "p213", "runtime arguments: @M3paranoidgc", "@M3paranoidgc")
+
 %p_test ("p2", "p204", "IP address initializers")
 %p_test ("p2", "p206", "ARRAY constructors in var decls using named open array types")
 %p_test ("p2", "p207", "subrange declarations")

@@ -78,18 +78,24 @@ if defined ("local_m3")
 end
 
 proc M3TestsNoEcho () is
-  if defined ("M3TESTS")
+  if defined ("xM3TESTS")
     return "@"
   end
   return ""
 end
 
 readonly proc RunTest () is
+  if fs_readable ("runopts")
+    runopts = " " & fs_contents ("runopts")
+  else
+    runopts = ""
+  end
+  write ("runopts = " & runopts & EOL)
   if not M3TestsRoot
     program("pgm")
     local f = program_name ("pgm")
     if not stale (f, f)
-      exec (M3TestsNoEcho () & "-." & SL & f & " >stdout.pgm.raw 2>stderr.pgm.raw")
+      exec (M3TestsNoEcho () & "-." & SL & f & runopts & " >stdout.pgm.raw 2>stderr.pgm.raw")
       NormalizeFile ("stdout.pgm")
       NormalizeFile ("stderr.pgm")
     end
