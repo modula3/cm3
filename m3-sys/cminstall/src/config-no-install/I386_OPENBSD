@@ -1,9 +1,0 @@
-readonly TARGET = "I386_OPENBSD"
-readonly GNU_PLATFORM = "i686-openbsd" % "cpu-os" string for GNU
-
-m3back_flags = "-gstabs+ -m32 -fPIC -funwind-tables"
-SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"
-readonly SYSTEM_ASM = "as -32"
-
-include("I386.common")
-include("OpenBSD.common")
