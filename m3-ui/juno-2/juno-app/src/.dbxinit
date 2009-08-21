@@ -1,3 +1,0 @@
-use . ../../juno-compiler/src ../../juno-machine/src /proj/m3/pkg/formsvbt/src
-ignore 26
-stop in JunoCompile__RaiseError
