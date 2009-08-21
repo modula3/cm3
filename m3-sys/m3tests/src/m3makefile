@@ -344,7 +344,6 @@ readonly proc c2_test (group, uid, comment, cm3opts) is
 end
 
 % some currently failing tests...
-%pr_test ("p2", "p213", "runtime arguments: @M3paranoidgc", "@M3paranoidgc")
 
 %p_test ("p2", "p204", "IP address initializers")
 %p_test ("p2", "p206", "ARRAY constructors in var decls using named open array types")
@@ -565,6 +564,11 @@ p_test ("p2", "p207", "subrange declarations")
 p_test ("p2", "p208", "catching runtime errors")
 p_test ("p2", "p209", "open array initializers compile failure")
 p_test ("p2", "p210", "open array initializers runtime failure")
+
+pr_test ("p2", "p213", "runtime arguments: @M3paranoidgc", "@M3paranoidgc")
+pr_test ("p2", "p214", "runtime arguments: @M3noincremental", "@M3noincremental")
+pr_test ("p2", "p215", "runtime arguments: @M3nogenerational", "@M3nogenerational")
+pr_test ("p2", "p216", "runtime arguments: @M3nogc", "@M3nogc")
 
 %------------------------------------------------------------------- rtests ---
 %  RUNTIME tests: modules containing runtime error where the generated
