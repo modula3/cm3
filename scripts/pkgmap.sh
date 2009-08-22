@@ -420,6 +420,11 @@ for PKG in ${PKGS} ; do
       res=2
       YELLOWPKGS=`printf "${YELLOWPKGS}${PKG}\\\\\\n"`
       psk=`expr $psk + 1`
+      HERE=`pwd`
+      cd "${PKG}"
+      echo "write(\"package ${PKG} not supported on this platform\" & EOL)" \
+        > ${TARGET}/.M3SHIP
+      cd "${HERE}"
     fi
     #deps=`cd "${PKG}" && cm3 -depend | head -1`
   else
@@ -428,6 +433,11 @@ for PKG in ${PKGS} ; do
       res=$?
     else
       echo "=== package omitted on this platform ==="
+      HERE=`pwd`
+      cd "${PKG}"
+      echo "write(\"package ${PKG} not supported on this platform\" & EOL)" \
+        > ${TARGET}/.M3SHIP
+      cd "${HERE}"
       res=0
     fi
   fi
