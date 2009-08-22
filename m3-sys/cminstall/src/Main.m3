@@ -147,7 +147,7 @@ PROCEDURE DoIt () =
     END;
 
     VAR
-      line1 := "INSTALL_ROOT = (path() & SL & \"..\")";
+      line1 := "INSTALL_ROOT = (path() & \"/..\")";
       line2 := "include(path() & \"/config/" & InstallTarget.Target & "\")";
     BEGIN
       IF NOT TextUtils.Contains (initial_cfg, "INSTALL_ROOT") THEN
