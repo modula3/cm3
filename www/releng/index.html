@@ -474,6 +474,12 @@
       by shipping all these packages to the central package pool.
       If a working CM3 system is installed, these archives can be
       installed with the included shell script <b><tt>install.sh</tt></b>.
+      If you want to be able to compile the source, too, you need to
+      heed the collection dependencies documented in the description
+      of each collection. Assuming you install cm3-bin-core and then
+      the bin-ws collections, the topological order for the complete
+      set in the table below is correct (which means you can install
+      them in that order).
     </p>
     <p>
       Here is a complete list of all available archives with detailed
@@ -501,7 +507,7 @@
             cm3-bin-min-*.tgz
           </td>
           <td width="25%" align="left">
-            mandatory for minimal systems
+            mandatory for minimal systems (only for minimalists and experts)
           </td>
           <td width="50%" align="left">
             contains compiler, m3core and libm3
@@ -517,7 +523,7 @@
             mandatory for standard installations
           </td>
           <td width="50%" align="left">
-            contains compiler, standard libraries, and several useful
+            contains compiler, cm3ide, standard libraries, and several useful
             tools and library packages
           </td>
         </tr>
@@ -529,7 +535,7 @@
             source, optional
           </td>
           <td width="50%" align="left">
-            complete documentation in HTML, PS and PDF
+            complete documentation in HTML, PS and PDF (recommended)
           </td>
         </tr>
         <tr>
@@ -556,41 +562,15 @@
         </tr>
         <tr>
           <td width="25%" align="left">
-            <a href="collection-anim.html">
-              cm3-bin-ws-anim-*.tgz
+            <a href="collection-database.html">
+              cm3-bin-ws-database-*.tgz
             </a>
           </td>
           <td width="25%" align="left">
             source/binary, optional
           </td>
           <td width="50%" align="left">
-            animation libraries, tools and programs
-          </td>
-        </tr>
-        <tr>
-          <td width="25%" align="left">
-            <a href="collection-caltech-parser.html">
-              cm3-bin-ws-caltech-parser-*.tgz
-            </a>
-          </td>
-          <td width="25%" align="left">
-            source/binary, optional
-          </td>
-          <td width="50%" align="left">
-            Scanner and parser generators written in Modula-3
-          </td>
-        </tr>
-        <tr>
-          <td width="25%" align="left">
-            <a href="collection-core.html">
-              cm3-bin-ws-core-*.tgz
-            </a>
-          </td>
-          <td width="25%" align="left">
-            source/binary, optional
-          </td>
-          <td width="50%" align="left">
-            The core system as a workspace package
+            database interfaces and implementations
           </td>
         </tr>
         <tr>
@@ -606,30 +586,21 @@
             CVSup file replication application
           </td>
         </tr>
+      </tbody>
+    </table>
+    <table border="3" cellspacing="2" cellpadding="4"
+      width="95%" align="center">
         <tr>
           <td width="25%" align="left">
-            <a href="collection-database.html">
-              cm3-bin-ws-database-*.tgz
+            <a href="collection-core.html">
+              cm3-bin-ws-core-*.tgz
             </a>
           </td>
           <td width="25%" align="left">
             source/binary, optional
           </td>
           <td width="50%" align="left">
-            database interfaces and implementations
-          </td>
-        </tr>
-        <tr>
-          <td width="25%" align="left">
-            <a href="collection-demo.html">
-              cm3-bin-ws-demo-*.tgz
-            </a>
-          </td>
-          <td width="25%" align="left">
-            source/binary, optional
-          </td>
-          <td width="50%" align="left">
-            demo programs
+            The core system as a workspace package
           </td>
         </tr>
         <tr>
@@ -647,19 +618,6 @@
         </tr>
         <tr>
           <td width="25%" align="left">
-            <a href="collection-game.html">
-              cm3-bin-ws-game-*.tgz
-            </a>
-          </td>
-          <td width="25%" align="left">
-            source/binary, optional
-          </td>
-          <td width="50%" align="left">
-            games written in Modula-3
-          </td>
-        </tr>
-        <tr>
-          <td width="25%" align="left">
             <a href="collection-gui.html">
               cm3-bin-ws-gui-*.tgz
             </a>
@@ -673,30 +631,16 @@
         </tr>
         <tr>
           <td width="25%" align="left">
-            <a href="collection-juno.html">
-              cm3-bin-ws-juno-*.tgz
+            <a href="collection-webdev.html">
+              cm3-bin-ws-webdev-*.tgz
             </a>
           </td>
           <td width="25%" align="left">
-            source/binary, application, optional
+            source/binary, optional
           </td>
           <td width="50%" align="left">
-            A constraint-based graphical editor
-          </td>
-        </tr>
-        <tr>
-          <td width="25%" align="left">
-            <a href="collection-m3devtool.html">
-              cm3-bin-ws-m3devtool-*.tgz
-            </a>
-          </td>
-          <td width="25%" align="left">
-            source/binary, optional but recommended
-          </td>
-          <td width="50%" align="left">
-            Modula-3 development tools: cm3ide, m3totex, m3tohtml,
-            m3browser, network objects, shared objects, stablegen,
-            formsedit, showheap, shownew, showthread etc.
+            libraries for web development (HTML/HTTP support), tools,
+            and experimental browsers
           </td>
         </tr>
         <tr>
@@ -714,15 +658,30 @@
         </tr>
         <tr>
           <td width="25%" align="left">
-            <a href="collection-math.html">
-              cm3-bin-ws-math-*.tgz
+            <a href="collection-m3devtool.html">
+              cm3-bin-ws-m3devtool-*.tgz
             </a>
           </td>
           <td width="25%" align="left">
             source/binary, optional
           </td>
           <td width="50%" align="left">
-            mathematical libraries
+            Modula-3 development tools: m3totex, m3tohtml,
+            m3browser, network objects, shared objects, stablegen,
+            formsedit, showheap, shownew, showthread etc.
+          </td>
+        </tr>
+        <tr>
+          <td width="25%" align="left">
+            <a href="collection-anim.html">
+              cm3-bin-ws-anim-*.tgz
+            </a>
+          </td>
+          <td width="25%" align="left">
+            source/binary, optional
+          </td>
+          <td width="50%" align="left">
+            animation libraries, tools and programs
           </td>
         </tr>
         <tr>
@@ -740,6 +699,45 @@
         </tr>
         <tr>
           <td width="25%" align="left">
+            <a href="collection-juno.html">
+              cm3-bin-ws-juno-*.tgz
+            </a>
+          </td>
+          <td width="25%" align="left">
+            source/binary, application, optional
+          </td>
+          <td width="50%" align="left">
+            A constraint-based graphical editor
+          </td>
+        </tr>
+        <tr>
+          <td width="25%" align="left">
+            <a href="collection-caltech-parser.html">
+              cm3-bin-ws-caltech-parser-*.tgz
+            </a>
+          </td>
+          <td width="25%" align="left">
+            source/binary, optional
+          </td>
+          <td width="50%" align="left">
+            Scanner and parser generators written in Modula-3
+          </td>
+        </tr>
+        <tr>
+          <td width="25%" align="left">
+            <a href="collection-demo.html">
+              cm3-bin-ws-demo-*.tgz
+            </a>
+          </td>
+          <td width="25%" align="left">
+            source/binary, optional
+          </td>
+          <td width="50%" align="left">
+            demo programs
+          </td>
+        </tr>
+        <tr>
+          <td width="25%" align="left">
             <a href="collection-tool.html">
               cm3-bin-ws-tool-*.tgz
             </a>
@@ -753,16 +751,28 @@
         </tr>
         <tr>
           <td width="25%" align="left">
-            <a href="collection-webdev.html">
-              cm3-bin-ws-webdev-*.tgz
+            <a href="collection-math.html">
+              cm3-bin-ws-math-*.tgz
             </a>
           </td>
           <td width="25%" align="left">
             source/binary, optional
           </td>
           <td width="50%" align="left">
-            libraries for web development (HTML/HTTP support), tools,
-            and experimental browsers
+            mathematical libraries
+          </td>
+        </tr>
+        <tr>
+          <td width="25%" align="left">
+            <a href="collection-game.html">
+              cm3-bin-ws-game-*.tgz
+            </a>
+          </td>
+          <td width="25%" align="left">
+            source/binary, optional
+          </td>
+          <td width="50%" align="left">
+            games written in Modula-3
           </td>
         </tr>
       </tbody>
