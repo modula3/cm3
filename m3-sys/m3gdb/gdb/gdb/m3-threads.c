@@ -170,7 +170,8 @@ get_m3_thread ( LONGEST ref, struct m3_thread  * t )
     t->bits = m3_read_object_fields_bits (tmpref);
     if (!t->bits) return;
 
-    t->id = m3_extract_ord (t->bits, thread__t__id_offset,thread__t__id_size,0);
+    t->id = m3_extract_ord 
+              (t->bits, thread__t__id_offset,thread__t__id_size, false);
 } /* get_m3_thread */ 
 
 static void
@@ -293,7 +294,7 @@ threads_command ( char *args, int from_tty )
     printf_filtered ("  ");
 
     state = m3_extract_ord (cur.bits, thread__t__state_offset,
-			   thread__t__state_size, 0);
+			   thread__t__state_size, false);
     switch (state) {
       case 0 /* alive */:
 	printf_filtered ("alive");
