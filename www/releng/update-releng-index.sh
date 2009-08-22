@@ -61,7 +61,7 @@ tablerow() {
   echo "</td></tr>"
 }
 
-for rc in RC2 RC3 RC4 RC5 RC6 RC7 RC8 RC9; do
+for rc in RC3 RC4 RC5 RC6 RC7 RC8 RC9; do
 
   if [ "`echo *${rc}*.tgz`" = '*'${rc}'*.tgz' ]; then
     break
