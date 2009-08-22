@@ -28,7 +28,7 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
-DS="pre-RC3"; export DS
+DS="RC3"; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
@@ -243,10 +243,11 @@ for c in ${PKG_COLLECTIONS}; do
   (
     echo '#!/bin/sh'
     echo 'HERE=`pwd`'
+    echo 'ACTION=${ACTION:-"cm3 -ship"}'
     echo "for p in ${PKGS}; do"
       echo 'echo "installing package ${p}"'
       echo 'cd $p'
-      echo 'cm3 -ship ${SHIPARGS} || {'
+      echo '${ACTION} ${SHIPARGS} || {'
       echo '  echo "installation of ${p} failed" 1>&2'
       echo '}'
       echo 'cd $HERE'
