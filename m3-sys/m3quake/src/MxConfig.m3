@@ -11,7 +11,7 @@ VAR
   found  : BOOLEAN       := FALSE;
   config : TEXT          := NIL;
   mach   : Quake.Machine := NIL;
-  trace  : BOOLEAN       := TRUE;
+  trace  : BOOLEAN       := FALSE;
 
 PROCEDURE FindFile (): TEXT =
   BEGIN
