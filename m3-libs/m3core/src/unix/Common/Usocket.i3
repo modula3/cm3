@@ -118,6 +118,7 @@ IMPORT Utypes;
 <*EXTERNAL "Usocket__SOMAXCONN"*>   VAR SOMAXCONN: int; (* Maximum queue length specifiable by listen. *)
 
 TYPE
+ struct_sockaddr_un = Uin.struct_sockaddr_un;
   struct_linger = Usysdep.struct_linger;
   socklen_t = Utypes.socklen_t;
   socklen_t_star = UNTRACED REF socklen_t;
