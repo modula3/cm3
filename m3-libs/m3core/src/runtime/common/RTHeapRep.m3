@@ -9,7 +9,7 @@
 
 UNSAFE MODULE RTHeapRep;
 
-IMPORT RT0, RTType;
+IMPORT RT0, RTType, RTOS, ThreadF;
 
 (*----------------------------------------------------------- open arrays ---*)
 
