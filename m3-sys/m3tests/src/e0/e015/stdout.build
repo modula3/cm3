@@ -1,4 +1,0 @@
-"../Main.m3", line 8: illegal recursive declaration (x)
-"../Main.m3", line 7: illegal recursive declaration (y)
-2 errors encountered
-Fatal Error: package build failed

@@ -1,8 +1,0 @@
-% Last modified on Mon Apr 29 13:55:51 PDT 1996 by heydon
-
-import		("libm3")
-import		("juno-machine")
-export_interface("JunoSolve")
-
-implementation	("SolveTest")
-program		("SolveTest")

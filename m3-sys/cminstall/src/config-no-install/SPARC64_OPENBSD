@@ -1,9 +1,0 @@
-readonly TARGET = "SPARC64_OPENBSD"
-readonly GNU_PLATFORM = "sparc64-openbsd" % "cpu-os" string for GNU
-
-m3back_flags = "-gstabs+ -funwind-tables"
-SYSTEM_CC = "gcc -gstabs+"
-readonly SYSTEM_ASM = "as"
-
-include("SPARC64.common")
-include("OpenBSD.common")

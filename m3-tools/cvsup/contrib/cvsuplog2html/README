@@ -1,9 +1,0 @@
-Perl script to reformat CVSup log files into HTML. Links references
-to files, deltas, and committers to the CVS web CGI program and the
-FreeBSD web site.
-
-Submitted by: John Reynolds <jjreynold@home.com>.
-
-The idea for this program originated from an 'awk' script created
-by <Dom.Mitchell@palmerharvey.co.uk>, with other ideas and patches
-submitted by Marcel Moolenaar <marcel@scc.nl>.

@@ -1,6 +1,0 @@
-------- code table 1
-L0	INCSP 11
-L2	JUMP L0
-
-Running program...
-Stack Overflow in "CodeSegment1"
