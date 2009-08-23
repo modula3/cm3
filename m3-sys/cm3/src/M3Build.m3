@@ -2201,7 +2201,7 @@ PROCEDURE DoRootdExport (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
       RAISE Quake.Error ("can only export relative to INSTALL_ROOT");
     END;
     WITH dir = Pathname.Join( t.install_root, reldir ) DO
-      InstallFile (t, file, dir, ModeF, derived := FALSE);
+      InstallFile (t, file, dir, ModeF, derived := TRUE);
     END;
   END DoRootdExport; 
 
