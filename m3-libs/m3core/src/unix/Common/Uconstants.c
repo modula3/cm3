@@ -234,77 +234,69 @@ X(SO_KEEPALIVE)
 X(SO_LINGER)
 
 X(SOL_SOCKET)
-X(AF_INET)
 X(MSG_PEEK)
 
-/* other Usocket that others might use, maybe less portable? */
+X(AF_INET)
 
-#ifdef AF_UNSPEC
-X(AF_UNSPEC)
-#endif
-#ifdef AF_INET6
-X(AF_INET6)
-#endif
-#ifdef AF_NETBIOS
-X(AF_NETBIOS)
-#endif
-#ifdef AF_IRDA
-X(AF_IRDA) /* infrared */
-#endif
-#ifdef AF_BTH
-X(AF_BTH) /* bluetooth */
+#ifdef AF_LOCAL
+X(AF_LOCAL)
 #endif
 #ifdef AF_UNIX
 X(AF_UNIX)
 #endif
-#ifdef AF_LOCAL
-X(AF_LOCAL)
-#endif
-#ifdef AF_IPX
-X(AF_IPX)
+#ifdef AF_UNSPEC
+X(AF_UNSPEC)
 #endif
 
+#ifdef PF_INET
+X(PF_INET)
+#endif
+#ifdef PF_LOCAL
+X(PF_LOCAL)
+#endif
+#ifdef PF_UNIX
+X(PF_UNIX)
+#endif
+#ifdef PF_UNSPEC
+X(PF_UNSPEC)
+#endif
+
+#ifdef AF_INET6
+X(AF_INET6)
+#endif
+
+#ifdef PF_INET6
+X(PF_INET6)
+#endif
+
+/* other Usocket that others might use, maybe less portable? */
+
+#ifdef AF_AAL5
+X(AF_AAL5)
+#endif
+#ifdef AF_APPLETALK
+X(AF_APPLETALK)
+#endif
 #ifdef AF_AX25
 X(AF_AX25)
-#endif
-#ifdef AF_NETROM
-X(AF_NETROM)
 #endif
 #ifdef AF_BRIDGE
 X(AF_BRIDGE)
 #endif
-#ifdef AF_AAL5
-X(AF_AAL5)
+#ifdef AF_BSC
+X(AF_BSC)
 #endif
-#ifdef AF_X25
-X(AF_X25)
-#endif
-#ifdef AF_IMPLINK
-X(AF_IMPLINK)
-#endif
-#ifdef AF_PUP
-X(AF_PUP)
-#endif
-#ifdef AF_CHAOS
-X(AF_CHAOS)
-#endif
-#ifdef AF_NS
-X(AF_NS)
-#endif
-#ifdef AF_NBS
-X(AF_NBS)
-#endif
-#ifdef AF_ECMA
-X(AF_ECMA)
-#endif
-#ifdef AF_DATAKIT
-X(AF_DATAKIT)
+#ifdef AF_BTH
+X(AF_BTH)
 #endif
 #ifdef AF_CCITT
 X(AF_CCITT)
 #endif
-#ifdef AF_SNA
-X(AF_SNA)
+#ifdef AF_CHAOS
+X(AF_CHAOS)
+#endif
+#ifdef AF_DATAKIT
+X(AF_DATAKIT)
 #endif
 #ifdef AF_DECnet
 X(AF_DECnet)
@@ -312,20 +304,107 @@ X(AF_DECnet)
 #ifdef AF_DLI
 X(AF_DLI)
 #endif
-#ifdef AF_LAT
-X(AF_LAT)
+#ifdef AF_DSS
+X(AF_DSS)
+#endif
+#ifdef AF_ECMA
+X(AF_ECMA)
 #endif
 #ifdef AF_HYLINK
 X(AF_HYLINK)
 #endif
-#ifdef AF_APPLETALK
-X(AF_APPLETALK)
+#ifdef AF_IMPLINK
+X(AF_IMPLINK)
 #endif
-#ifdef AF_BSC
-X(AF_BSC)
+#ifdef AF_IPX
+X(AF_IPX)
 #endif
-#ifdef AF_DSS
-X(AF_DSS)
+#ifdef AF_IRDA
+X(AF_IRDA)
+#endif
+#ifdef AF_ISO
+X(AF_ISO)
+#endif
+#ifdef AF_LAT
+X(AF_LAT)
+#endif
+#ifdef AF_MAX
+X(AF_MAX)
+#endif
+#ifdef AF_NBS
+X(AF_NBS)
+#endif
+#ifdef AF_NETBIOS
+X(AF_NETBIOS)
+#endif
+#ifdef AF_NETROM
+X(AF_NETROM)
+#endif
+#ifdef AF_NS
+X(AF_NS)
+#endif
+#ifdef AF_OSI
+X(AF_OSI)
+#endif
+#ifdef AF_PUP
+X(AF_PUP)
+#endif
+#ifdef AF_SNA
+X(AF_SNA)
+#endif
+#ifdef AF_X25
+X(AF_X25)
+#endif
+#ifdef PF_APPLETALK
+X(PF_APPLETALK)
+#endif
+#ifdef PF_CCITT
+X(PF_CCITT)
+#endif
+#ifdef PF_CHAOS
+X(PF_CHAOS)
+#endif
+#ifdef PF_DATAKIT
+X(PF_DATAKIT)
+#endif
+#ifdef PF_DECnet
+X(PF_DECnet)
+#endif
+#ifdef PF_DLI
+X(PF_DLI)
+#endif
+#ifdef PF_ECMA
+X(PF_ECMA)
+#endif
+#ifdef PF_HYLINK
+X(PF_HYLINK)
+#endif
+#ifdef PF_IMPLINK
+X(PF_IMPLINK)
+#endif
+#ifdef PF_ISO
+X(PF_ISO)
+#endif
+#ifdef PF_LAT
+X(PF_LAT)
+#endif
+#ifdef PF_MAX
+X(PF_MAX)
+#endif
+#ifdef PF_NETBIOS
+X(PF_NETBIOS)
+#endif
+#ifdef PF_NS
+X(PF_NS)
+#endif
+#ifdef PF_OSI
+X(PF_OSI)
+#endif
+#ifdef PF_PUP
+X(PF_PUP)
+#endif
+#ifdef PF_SNA
+X(PF_SNA)
 #endif
 
 #ifdef AI_PASSIVE
