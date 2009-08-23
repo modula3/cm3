@@ -25,7 +25,7 @@ TYPE
   struct_sockaddr_un = RECORD
     sun_len: unsigned_char;
     sun_family: unsigned_char;
-    sun_path: ARRAY [0..103] OF Ctypes.char;
+    sun_path: ARRAY [0..103] OF char;
   END;
 
 <*EXTERNAL "Uin__ntohl"*> PROCEDURE ntohl(x: unsigned): unsigned;
