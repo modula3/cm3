@@ -2,7 +2,7 @@ import-libs base core front min std gui comm caltech-parser
 m3cc core front m3gnudevtool
 m3core base core front min std
 libm3 base core front min std
-windowsResources std devlib
+windowsResources std core
 patternmatching core std
 sysutils core std front
 unittest core std
