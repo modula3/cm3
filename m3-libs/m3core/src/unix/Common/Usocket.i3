@@ -7,8 +7,7 @@ INTERFACE Usocket;
 FROM Ctypes IMPORT int, void_star, const_void_star, const_char_star, char_star;
 FROM Cstddef IMPORT size_t;
 FROM Uin IMPORT struct_sockaddr_in;
-IMPORT Usysdep;
-IMPORT Utypes;
+IMPORT Usysdep, Utypes, Uin;
 
 (* CONST *)
 
