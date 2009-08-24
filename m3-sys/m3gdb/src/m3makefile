@@ -1,11 +1,15 @@
 %
-% $Id: m3makefile,v 1.14.2.2 2009-08-12 19:01:33 wagner Exp $
+% $Id: m3makefile,v 1.14.2.3 2009-08-24 03:18:56 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 %
 % Last modified on Fri Feb 10 13:17:23 PST 1995 by kalsow
+%
+
+%
+% user can say cm3 -DM3GDB_HOST=FreeBSD4, for example.
 %
 
 if not (equal(TARGET, "AMD64_DARWIN") or equal(TARGET, "ARM_DARWIN") or equal(TARGET, "I386_DARWIN")
@@ -85,30 +89,30 @@ readonly proc m3gdb_Run (x) is
     end
 end
 
+local env = ""
 
-%
-% star means default
-% These are meant to come from the config file, but it can omit them
-%
-if not defined("GNU_CC")     GNU_CC     = "*"    end
-if not defined("GNU_CFLAGS") GNU_CFLAGS = "*"    end
-if not defined("GNU_MAKE")   GNU_MAKE   = "make" end
+include ("../../m3cc/src/gnumake.common")
+include ("../../m3cc/src/gnucc.common")
 
+ConfigureGNUMake()
+write("GNU_MAKE is " & GNU_MAKE & CR)
+env = env & " MAKE=" & GNU_MAKE & " "
 
 M3GDB_CFLAGS="-g"
 
 % check for overrides, otherwise use the defaults from the configuration file
-if not defined ("M3GDB_HOST")    M3GDB_HOST   = TARGET     end
 if not defined ("M3GDB_CC")      M3GDB_CC     = GNU_CC     end
 if not defined ("M3GDB_CFLAGS")  M3GDB_CFLAGS = GNU_CFLAGS end
 if not defined ("M3GDB_MAKE")    M3GDB_MAKE   = GNU_MAKE   end
 if not defined ("M3GDB_CONFIG")  M3GDB_CONFIG = get_config (M3GDB_HOST) end
 
 % check for non-default flags
-local env = get_overrides ("CC", M3GDB_CC) & " " & get_overrides ("CFLAGS", M3GDB_CFLAGS)
+env = env & " " & get_overrides ("CC", M3GDB_CC) & " " & get_overrides ("CFLAGS", M3GDB_CFLAGS)
 env = env & " MAKEINFO=echo"
+
 M3GDB_CONFIG = M3GDB_CONFIG & " " & env
 M3GDB_MAKE = M3GDB_MAKE & " " & env
+
 
 if not defined ("quick")
   % configure the sources
@@ -120,6 +124,7 @@ end
 if (equal(M3GDB_HOST, "SOLgnu"))
   M3GDB_MAKE = M3GDB_MAKE & " LDFLAGS=-lintl"
 end
+
 m3gdb_Run([M3GDB_MAKE])
 
 EXE = Platform_ExeExtension (M3GDB_HOST)
