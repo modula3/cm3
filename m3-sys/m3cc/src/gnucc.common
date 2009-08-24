@@ -60,7 +60,21 @@ end end
 
 if not defined ("M3CC_BUILD")   M3CC_BUILD  = TARGET     end
 
-local Native = equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD)
+
+proc SameUnderlyingPlatform (x, y) is
+    if equal(x, y)
+        return TRUE
+    end
+    if equal(x, "SOLgnu") and equal(y, "SOLsun")
+        return TRUE
+    end
+    if equal(x, "SOLsun") and equal(y, "SOLgnu")
+        return TRUE
+    end
+    return FALSE
+end
+
+local Native = SameUnderlyingPlatform (M3CC_HOST, M3CC_TARGET) and SameUnderlyingPlatform (M3CC_HOST, M3CC_BUILD)
 
 proc FileExists (a) is
     return not stale (a, a)
