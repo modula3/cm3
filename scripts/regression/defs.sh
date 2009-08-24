@@ -247,19 +247,6 @@ prependpathelem()
   echo "${1}:${2}"
 }
 
-appendpathelem()
-{
-  # $1 elem, $2 path
-  echo "${2}:${1}"
-}
-
-appendpath()
-{
-  # $1 elem to append to the path
-  PATH=`appendpathelem $1 $PATH`
-  export PATH
-}
-
 prependpath()
 {
   # $1 elem to append to the path
