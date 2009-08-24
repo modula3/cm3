@@ -1,10 +1,47 @@
 
+#-----------------------------------------------------------------------------
+
+find_in_list() {
+    (
+        set -e
+        #set -x
+        a="x`eval echo \\$$1`"
+        if [ "$a" = "x" ]; then
+            for a in $2; do
+                for b in $a ${a}.exe; do
+                    if type $b >/dev/null 2>/dev/null; then
+                        echo $1=$b
+                        eval $1=$b
+                        echo export $1
+                        export $1
+                        return
+                    fi
+                done
+            done
+            echo "none of $2 found"
+            exit 1
+        fi
+    )
+}
+
 #----------------------------------------------------------------------------
 # global definitions
 
 # nice, but need more testing
 #set -e
 #set -x
+
+#
+# Look for GNU make and GNU tar.
+# TODO: run them and grep for GNU tar and GNU make
+#
+# /usr/pkg is NetBSD default
+# /usr/sfw is Solaris default (Sun FreeWare)
+# /usr/local is FreeBSD and OpenBSD default and popular otherwise
+#
+
+find_in_list GMAKE "gmake gnumake /usr/pkg/bin/gmake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake make" || exit 1
+find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar tar" || exit 1
 
 # our hostname
 TESTHOSTNAME=${TESTHOSTNAME:-`hostname | sed -e 's/\..*//'`}
@@ -106,7 +143,6 @@ case "${UNAME}" in
 
   Linux*)
     CM3_OSTYPE=POSIX
-    GMAKE=${GMAKE:-make}
     if [ "${UNAMEM}" = "ppc" ] ; then
       CM3_TARGET=PPC_LINUX
     elif [ "${UNAMEM}" = "x86_64" ] ; then
