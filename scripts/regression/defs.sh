@@ -1,10 +1,47 @@
 
+#-----------------------------------------------------------------------------
+
+find_in_list() {
+    (
+        set -e
+        #set -x
+        a="x`eval echo \\$$1`"
+        if [ "$a" = "x" ]; then
+            for a in $2; do
+                for b in $a ${a}.exe; do
+                    if type $b >/dev/null 2>/dev/null; then
+                        echo $1=$b
+                        eval $1=$b
+                        echo export $1
+                        export $1
+                        return
+                    fi
+                done
+            done
+            echo "none of $2 found"
+            exit 1
+        fi
+    )
+}
+
 #----------------------------------------------------------------------------
 # global definitions
 
 # nice, but need more testing
 #set -e
 #set -x
+
+#
+# Look for GNU make and GNU tar.
+# TODO: run them and grep for GNU tar and GNU make
+#
+# /usr/pkg is NetBSD default
+# /usr/sfw is Solaris default (Sun FreeWare)
+# /usr/local is FreeBSD and OpenBSD default and popular otherwise
+#
+
+find_in_list GMAKE "gmake gnumake /usr/pkg/bin/gmake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake make" || exit 1
+find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar tar" || exit 1
 
 # our hostname
 TESTHOSTNAME=${TESTHOSTNAME:-`hostname | sed -e 's/\..*//'`}
@@ -96,7 +133,6 @@ case "${UNAME}" in
       *) echo "$0 does not know about `uname -a`"
          exit 1;;
     esac
-    GMAKE=${GMAKE:-make}
   ;;
 
   SunOS*)
@@ -105,12 +141,10 @@ case "${UNAME}" in
   ;;
 
   Interix*)
-    GMAKE=${GMAKE:-gmake}
     CM3_TARGET=${CM3_TARGET:-I386_INTERIX}
   ;;
 
   Linux*)
-    GMAKE=${GMAKE:-make}
     case "`uname -m`" in
       ppc*)    CM3_TARGET=${CM3_TARGET:-PPC_LINUX};;
       x86_64)  CM3_TARGET=${CM3_TARGET:-AMD64_LINUX};;
@@ -122,7 +156,6 @@ case "${UNAME}" in
   ;;
 
   NetBSD*)
-    GMAKE=${GMAKE:-gmake}
     CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
   ;;
 
@@ -135,11 +168,6 @@ case "${UNAME}" in
       *)        echo "$0 does not know about `uname -a`"
                 exit 1;;
     esac
-    if gtar --help >/dev/null 2>&1; then
-      TAR=gtar
-    elif gnutar --help >/dev/null 2>&1; then
-      TAR=gnutar
-    fi
   ;;
 esac
 

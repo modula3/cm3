@@ -87,6 +87,31 @@ strip_exe() {
 
 #-----------------------------------------------------------------------------
 
+find_in_list() {
+    (
+        set -e
+        #set -x
+        a="x`eval echo \\$$1`"
+        if [ "$a" = "x" ]; then
+            for a in $2; do
+                for b in $a ${a}.exe; do
+                    if type $b >/dev/null 2>/dev/null; then
+                        echo $1=$b
+                        eval $1=$b
+                        echo export $1
+                        export $1
+                        return
+                    fi
+                done
+            done
+            echo "none of $2 found"
+            exit 1
+        fi
+    )
+}
+
+#-----------------------------------------------------------------------------
+
 UNAME=${UNAME:-`uname`}
 
 PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
@@ -100,6 +125,18 @@ eval `awk '{ print "default_" $1 "=" $2 }' < $root/scripts/version`
 CM3VERSION=${CM3VERSION:-${default_CM3VERSION}}
 CM3VERSIONNUM=${CM3VERSIONNUM:-${default_CM3VERSIONNUM}}
 CM3LASTCHANGED=${CM3LASTCHANGED:-${default_CM3LASTCHANGED}}
+
+#
+# Look for GNU make and GNU tar.
+# TODO: run them and grep for GNU tar and GNU make
+#
+# /usr/pkg is NetBSD default
+# /usr/sfw is Solaris default (Sun FreeWare)
+# /usr/local is FreeBSD and OpenBSD default and popular otherwise
+#
+
+find_in_list GMAKE "gmake gnumake /usr/pkg/bin/gmake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake make" || exit 1
+find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar tar" || exit 1
 
 CM3_GCC_BACKEND=yes
 CM3_GDB=${CM3_GDB:-yes}
@@ -116,7 +153,6 @@ M3BUILD=${M3BUILD:-m3build}
 M3SHIP=${M3SHIP:-m3ship}
 EXE=""
 SL="/"
-TAR=tar
 
 FIND=find
 if [ -x /usr/bin/find ] ; then
@@ -162,7 +198,6 @@ case "${UNAME}" in
   Windows*|WinNT*|Cygwin*|CYGWIN*)
     if [ x$TARGET = xNT386GNU ] ; then
       CM3_TARGET=NT386GNU
-      GMAKE=${GMAKE:-make}
     else
       CM3_OSTYPE=WIN32
       CM3_TARGET=NT386
@@ -171,10 +206,6 @@ case "${UNAME}" in
       HAVE_SERIAL=yes
       EXE=".exe"
       SL='\\\\'
-      if [ -f /usr/bin/tar.exe ] ; then
-        TAR=/usr/bin/tar.exe
-      fi
-      GMAKE=${GMAKE:-make}
 
       cygpath() {
         /usr/bin/cygpath $@
@@ -187,7 +218,6 @@ case "${UNAME}" in
 
   NT386GNU*)
     CM3_TARGET=NT386GNU
-    GMAKE=${GMAKE:-make}
   ;;
 
   FreeBSD*)
@@ -213,7 +243,6 @@ case "${UNAME}" in
       *) echo "$0 does not know about `uname -a`"
          exit 1;;
     esac
-    GMAKE=${GMAKE:-make}
   ;;
 
   SunOS*)
@@ -222,12 +251,10 @@ case "${UNAME}" in
   ;;
 
   Interix*)
-    GMAKE=${GMAKE:-gmake}
     CM3_TARGET=${CM3_TARGET:-I386_INTERIX}
   ;;
 
   Linux*)
-    GMAKE=${GMAKE:-make}
     case "`uname -m`" in
       ppc*)    CM3_TARGET=${CM3_TARGET:-PPC_LINUX};;
       x86_64)  CM3_TARGET=${CM3_TARGET:-AMD64_LINUX};;
@@ -239,7 +266,6 @@ case "${UNAME}" in
   ;;
 
   NetBSD*)
-    GMAKE=${GMAKE:-gmake}
     CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
   ;;
 
@@ -252,11 +278,6 @@ case "${UNAME}" in
       *)        echo "$0 does not know about `uname -a`"
                 exit 1;;
     esac
-    if gtar --help >/dev/null 2>&1; then
-      TAR=gtar
-    elif gnutar --help >/dev/null 2>&1; then
-      TAR=gnutar
-    fi
   ;;
 
 esac
@@ -276,7 +297,6 @@ GCC_BACKEND=${GCC_BACKEND:-${CM3_GCC_BACKEND}}
 INSTALLROOT=${INSTALLROOT:-${CM3_INSTALL}}
 PKGSDB=${PKGSDB:-$ROOT/scripts/PKGS}
 GREP=${GREP:-egrep}
-GMAKE=${GMAKE:-gmake}
 
 if [ "${M3OSTYPE}" = "WIN32" ] ; then
   CM3ROOT="`cygpath -w ${ROOT} | sed -e 's;\\\;\\\\\\\\;g'`"
