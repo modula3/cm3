@@ -1,0 +1,114 @@
+%
+% Copyright (C) 1994, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+%
+
+%------------------------------------------------------------------------------
+
+%
+% This should be called gnucc.quake or gcc.quake, but I am assuming that code copies *.common
+%
+% This helps configure the compiler to use for building m3gdb and m3cc, which
+% perhaps should be gcc, even if the C compiler is otherwise not gcc.
+%
+% For example on SOLsun.
+%
+% This also assists other configuration for the m3cc and m3gdb directories -- specifically ar.
+%
+%
+% This is not general purpose code.
+% It is specifically for use in the m3cc and m3gdb directories.
+%
+
+%------------------------------------------------------------------------------
+
+% Check that env is defined.
+
+env = env
+
+%------------------------------------------------------------------------------
+
+if not defined("HOST")
+    HOST = TARGET
+end
+
+% check for overrides, otherwise use the defaults
+% user can say cm3 -DM3CC_TARGET=FreeBSD4, for example.
+%
+% m3cc and m3gdb settings are presumed to be the same for any one
+% invocation of cm3
+%
+
+if defined ("M3GDB_HOST")
+    M3CC_HOST = M3GDB_HOST
+else if defined ("M3CC_HOST")
+    M3GDB_HOST = M3CC_HOST
+else
+    M3GDB_HOST = HOST
+    M3CC_HOST = HOST
+end end
+
+if defined ("M3GDB_TARGET")
+    M3CC_TARGET = M3GDB_TARGET
+else if defined ("M3CC_TARGET")
+    M3GDB_TARGET = M3CC_TARGET
+else
+    M3GDB_TARGET = TARGET
+    M3CC_TARGET = TARGET
+end end
+
+if not defined ("M3CC_BUILD")   M3CC_BUILD  = TARGET     end
+
+local Native = equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD)
+
+proc FileExists (a) is
+    return not stale (a, a)
+end
+
+if Native and (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGET, "SPARC32_SOLARIS")
+        or equal(TARGET, "SPARC64_SOLARIS") or equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS"))
+
+    local ccs = ""
+    local sfw = ""
+
+    if (   (not equal(try_exec("type ar   > /dev/null"), 0) and FileExists("/usr/ccs/bin/ar"))
+        or (not equal(try_exec("type make > /dev/null"), 0) and FileExists("/usr/ccs/bin/make")))
+
+        ccs = "/usr/ccs/bin:"
+
+    end
+
+    if equal($CC, "")
+            and equal($CFLAGS, "")
+            and not defined("GNU_CC")
+            and not defined("GNU_CFLAGS")
+            and not defined("M3CC_CC")
+            and not defined("M3GDB_CC")
+            and not defined("M3CC_CFLAGS")
+            and not defined("M3GDB_CFLAGS")
+            and (not equal(try_exec("type gcc > /dev/null"), 0) and FileExists("/usr/sfw/bin/gcc"))
+
+        sfw = "/usr/sfw/bin:"
+
+    end
+
+    if ccs or sfw
+        env = "PATH=\"" & sfw & ccs & "$PATH\""
+    end
+
+end
+
+%------------------------------------------------------------------------------
+
+%
+% star means default
+% These historically came from the config file.
+%
+
+if not defined("GNU_CC")     GNU_CC     = "*"    end
+% consider changing this to "*"
+% esp. once gcc/gdb in tree updated -- if they build ok with Sun cc
+if not defined("GNU_CFLAGS") GNU_CFLAGS = "-g -O2"    end
+
+%------------------------------------------------------------------------------
