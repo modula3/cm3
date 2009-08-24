@@ -130,7 +130,7 @@ m3gdb_Run([M3GDB_MAKE])
 EXE = Platform_ExeExtension (M3GDB_HOST)
 
 % build the exportable link and man page and export them
-link_file ("gdb/gdb" & EXE, "m3gdb" & EXE)
+cp_if ("gdb/gdb" & EXE, "m3gdb" & EXE)
 BindExport ("m3gdb" & EXE)
 ManPage ("m3gdb","1")
 
