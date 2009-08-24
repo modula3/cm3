@@ -217,13 +217,6 @@ appendpathelem()
   echo "${2}:${1}"
 }
 
-delpath()
-{
-  # $1 elem to delete from path
-  PATH=`delpathelem $1 $PATH`
-  export PATH
-}
-
 appendpath()
 {
   # $1 elem to append to the path
