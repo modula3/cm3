@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo-new.sh,v 1.3 2009-08-17 10:31:44 jkrell Exp $
+# $Id: sysinfo-new.sh,v 1.4 2009-08-24 12:04:58 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -171,6 +171,9 @@ else
     check2 CM3_INSTALL INSTALLROOT || exit 1
 fi
 
+#
+# Look for GNU make and GNU tar.
+# TODO: run them and grep for GNU tar and GNU make
 #
 # /usr/pkg is NetBSD default
 # /usr/sfw is Solaris default (Sun FreeWare)
