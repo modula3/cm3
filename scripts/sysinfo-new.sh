@@ -172,6 +172,9 @@ else
 fi
 
 #
+# Look for GNU make and GNU tar.
+# TODO: run them and grep for GNU tar and GNU make
+#
 # /usr/pkg is NetBSD default
 # /usr/sfw is Solaris default (Sun FreeWare)
 # /usr/local is FreeBSD and OpenBSD default and popular otherwise
