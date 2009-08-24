@@ -205,47 +205,6 @@ fi
 #----------------------------------------------------------------------------
 # path functions
 
-pathelems()
-{
-  echo $1 | tr ':' ' '
-}
-
-makepath()
-{
-  #local p
-  p="$1"
-  shift
-  while [ -n "$1" ] ; do
-    p="${p}:${1}"
-    shift
-  done
-  echo $p
-}
-
-  # $1 elem, $2 path
-delpathelem()
-{
-  #local e
-  #local p
-  p=""
-  if [ -z "$1" ] ; then
-    return
-  fi
-  if [ -z "$2" ] ; then
-    return
-  fi
-  for e in `pathelems $2` ; do
-    if [ "$1" != "$e" ] ; then
-      if [ -z "$p" ] ; then
-         p=$e
-      else
-         p="${p}:${e}"
-      fi
-    fi
-  done
-  echo $p
-}
-
 prependpathelem()
 {
   # $1 elem, $2 path
