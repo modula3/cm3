@@ -62,7 +62,11 @@ cygpath() {
 }
 
 strip_exe() {
-  strip $@
+  if [ -x /usr/ccs/bin/strip ]; then
+    /usr/ccs/bin/strip $@
+  else
+    strip $@
+  end
 }
 
 #-----------------------------------------------------------------------------
