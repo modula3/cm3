@@ -9,6 +9,7 @@ IMPORT Arg, Builder, M3Loc, M3Options, M3Path, M3Unit, Msg, Utils;
 FROM QMachine IMPORT PushText, PopText, PopID, PopBool;
 IMPORT MxConfig;
 IMPORT OSError, Process, Dirs, TextUtils;
+IMPORT RTIO;
 
 TYPE
   UK = M3Unit.Kind;
@@ -160,6 +161,11 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     t.at_SRC          := GetConfigBool (t, "AT_SRC");
     t.system_liborder := QVal.ToArray (t, ConfigDefn (t, "SYSTEM_LIBORDER").value);
     t.system_libs     := QVal.ToTable (t, ConfigDefn (t, "SYSTEM_LIBS").value);
+
+    IF Text.Equal(build_dir, "NT386") THEN
+      RTIO.PutText("LIB_INSTALL is " & t.lib_install & "\n");
+      RTIO.Flush();
+    END;
 
     t.cur_pkg         := t.build_pkg;
     t.cur_pkg_dir     := t.build_pkg_dir;
