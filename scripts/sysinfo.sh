@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.74.2.14 2009-08-25 09:29:57 jkrell Exp $
+# $Id: sysinfo.sh,v 1.74.2.15 2009-08-25 09:38:51 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -154,6 +154,7 @@ M3SHIP=${M3SHIP:-m3ship}
 EXE=""
 SL="/"
 
+# NT has \windows\system32\find.exe, completely different
 FIND=find
 if [ -x /usr/bin/find ] ; then
   FIND=/usr/bin/find
