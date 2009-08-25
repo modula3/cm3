@@ -624,6 +624,11 @@ make_src_dist_snapshots()
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 source snapshot build done"
 }
 
+FIND=find
+if [ -x /usr/bin/find ] ; then
+  FIND=/usr/bin/find
+fi
+
 test_m3tests()
 {
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` run cm3 compiler and runtime regression test suite in ${WS} with lastok version"
