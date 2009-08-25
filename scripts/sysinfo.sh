@@ -154,6 +154,7 @@ M3SHIP=${M3SHIP:-m3ship}
 EXE=""
 SL="/"
 
+# NT has \windows\system32\find.exe, completely different
 FIND=find
 if [ -x /usr/bin/find ] ; then
   FIND=/usr/bin/find
