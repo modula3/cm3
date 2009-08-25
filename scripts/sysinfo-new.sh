@@ -73,69 +73,60 @@ check2() {
     # $a is the value of $1
     # $b is the value of $2
 
-    (
-        set -e
-        #set -x
+    a="`eval echo \\$$1`"
+    b="`eval echo \\$$2`"
 
-        a="`eval echo \\$$1`"
-        b="`eval echo \\$$2`"
-
-        if [ "xx$a$b" = "xx" ]; then
-            if [ "x" = "x$3" ]; then
-                echo "neither $1 nor $2 are set, ok"
-            else
-                echo "defaulting both $1 and $2 to $3, ok"
-                eval $1=$3
-                eval $2=$3
-                export $1
-                export $2
-            fi
-            return
-        fi
-        if [ "x$a" = "x" ]; then
-            echo "$1 is not set and $2 is, defaulting $1 to $2 ($b)"
-            eval $1=$b
+    if [ "xx$a$b" = "xx" ]; then
+        if [ "x" = "x$3" ]; then
+            echo "neither $1 nor $2 are set, ok"
+        else
+            echo "defaulting both $1 and $2 to $3, ok"
+            eval $1=$3
+            eval $2=$3
             export $1
-            return
-        fi
-        if [ "x$b" = "x" ]; then
-            echo "$2 is not set and $1 is, defaulting $2 to $1 ($a)"
-            eval $2=$a
             export $2
-            return
         fi
-        if [ "$a" = "$b" ]; then
-            echo "$1 and $2 both set and equal ($a), ok"
-            return
-        fi
-        echo "if $1 and $2 are both set, they must be equal but they are $a and $b"
-        exit 1
-    )
+        return
+    fi
+    if [ "x$a" = "x" ]; then
+        echo "$1 is not set and $2 is, defaulting $1 to $2 ($b)"
+        eval $1=$b
+        export $1
+        return
+    fi
+    if [ "x$b" = "x" ]; then
+        echo "$2 is not set and $1 is, defaulting $2 to $1 ($a)"
+        eval $2=$a
+        export $2
+        return
+    fi
+    if [ "$a" = "$b" ]; then
+        echo "$1 and $2 both set and equal ($a), ok"
+        return
+    fi
+    echo "if $1 and $2 are both set, they must be equal but they are $a and $b"
+    exit 1
 }
 
 #-----------------------------------------------------------------------------
 
 find_in_list() {
-    (
-        set -e
-        #set -x
-        a="x`eval echo \\$$1`"
-        if [ "$a" = "x" ]; then
-            for a in $2; do
-                for b in $a ${a}.exe; do
-                    if type $b >/dev/null 2>/dev/null; then
-                        echo $1=$b
-                        eval $1=$b
-                        echo export $1
-                        export $1
-                        return
-                    fi
-                done
+    a="x`eval echo \\$$1`"
+    if [ "$a" = "x" ]; then
+        for a in $2; do
+            for b in $a ${a}.exe; do
+                if type $b >/dev/null 2>/dev/null; then
+                    echo $1=$b
+                    eval $1=$b
+                    echo export $1
+                    export $1
+                    return
+                fi
             done
-            echo "none of $2 found"
-            exit 1
-        fi
-    )
+        done
+        echo "none of $2 found"
+        exit 1
+    fi
 }
 
 #-----------------------------------------------------------------------------
