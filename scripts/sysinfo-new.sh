@@ -186,6 +186,7 @@ find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gta
 
 CM3=${CM3:-cm3}
 
+# NT has \windows\system32\find.exe, completely different
 FIND=find
 if [ -x /usr/bin/find ] ; then
   FIND=/usr/bin/find

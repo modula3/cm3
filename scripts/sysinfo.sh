@@ -132,6 +132,7 @@ CM3=${CM3:-cm3}
 EXE=""
 SL="/"
 
+# NT has \windows\system32\find.exe, completely different
 FIND=find
 if [ -x /usr/bin/find ] ; then
   FIND=/usr/bin/find
