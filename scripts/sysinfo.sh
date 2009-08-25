@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.82 2009-08-25 09:31:48 jkrell Exp $
+# $Id: sysinfo.sh,v 1.83 2009-08-25 09:34:47 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -131,6 +131,11 @@ CM3_INSTALL=${CM3_INSTALL:-`dirname \`find_exe cm3 /usr/local/cm3/\ \``}
 CM3=${CM3:-cm3}
 EXE=""
 SL="/"
+
+FIND=find
+if [ -x /usr/bin/find ] ; then
+  FIND=/usr/bin/find
+fi
 
 if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
   if [ -n "$TMP" -a -d "$TMP" ] ; then
@@ -333,7 +338,7 @@ debug "CM3LASTCHANGED = $CM3LASTCHANGED"
 
 export ROOT M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB
 export GREP TMPDIR EXE SL CM3VERSION TAR
-export CM3ROOT CM3 CM3_ROOT
+export CM3ROOT CM3 CM3_ROOT FIND EGREP
 export SYSINFO_DONE CM3VERSIONNUM CM3LASTCHANGED
 
 fi
