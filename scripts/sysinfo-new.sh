@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo-new.sh,v 1.7 2009-08-25 09:21:36 jkrell Exp $
+# $Id: sysinfo-new.sh,v 1.8 2009-08-25 09:31:48 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -387,6 +387,11 @@ INSTALLROOT=$CM3_INSTALL
 CM3_ROOT=${CM3_ROOT:-${ROOT}}
 PKGSDB=${PKGSDB:-$ROOT/scripts/PKGS}
 GREP=${GREP:-egrep}
+
+EGREP=egrep
+if [ -x /usr/sfw/bin/gegrep ] ; then
+  EGREP=/usr/sfw/bin/gegrep
+fi
 
 if [ "${M3OSTYPE}" = "WIN32" ] ; then
   CM3ROOT="`cygpath -w ${ROOT} | sed -e 's;\\\;\\\\\\\\;g'`"
