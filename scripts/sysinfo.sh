@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.74.2.10 2009-08-24 12:18:59 jkrell Exp $
+# $Id: sysinfo.sh,v 1.74.2.11 2009-08-25 01:54:29 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -88,26 +88,22 @@ strip_exe() {
 #-----------------------------------------------------------------------------
 
 find_in_list() {
-    (
-        set -e
-        #set -x
-        a="x`eval echo \\$$1`"
-        if [ "$a" = "x" ]; then
-            for a in $2; do
-                for b in $a ${a}.exe; do
-                    if type $b >/dev/null 2>/dev/null; then
-                        echo $1=$b
-                        eval $1=$b
-                        echo export $1
-                        export $1
-                        return
-                    fi
-                done
+    a="x`eval echo \\$$1`"
+    if [ "$a" = "x" ]; then
+        for a in $2; do
+            for b in $a ${a}.exe; do
+                if type $b >/dev/null 2>/dev/null; then
+                    echo $1=$b
+                    eval $1=$b
+                    echo export $1
+                    export $1
+                    return
+                fi
             done
-            echo "none of $2 found"
-            exit 1
-        fi
-    )
+        done
+        echo "none of $2 found"
+        exit 1
+    fi
 }
 
 #-----------------------------------------------------------------------------

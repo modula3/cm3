@@ -2,26 +2,22 @@
 #-----------------------------------------------------------------------------
 
 find_in_list() {
-    (
-        set -e
-        #set -x
-        a="x`eval echo \\$$1`"
-        if [ "$a" = "x" ]; then
-            for a in $2; do
-                for b in $a ${a}.exe; do
-                    if type $b >/dev/null 2>/dev/null; then
-                        echo $1=$b
-                        eval $1=$b
-                        echo export $1
-                        export $1
-                        return
-                    fi
-                done
+    a="x`eval echo \\$$1`"
+    if [ "$a" = "x" ]; then
+        for a in $2; do
+            for b in $a ${a}.exe; do
+                if type $b >/dev/null 2>/dev/null; then
+                    echo $1=$b
+                    eval $1=$b
+                    echo export $1
+                    export $1
+                    return
+                fi
             done
-            echo "none of $2 found"
-            exit 1
-        fi
-    )
+        done
+        echo "none of $2 found"
+        exit 1
+    fi
 }
 
 #----------------------------------------------------------------------------
