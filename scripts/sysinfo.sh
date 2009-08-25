@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.80 2009-08-25 07:13:55 jkrell Exp $
+# $Id: sysinfo.sh,v 1.81 2009-08-25 09:21:35 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -64,7 +64,7 @@ strip_exe() {
     /usr/ccs/bin/strip $@
   else
     strip $@
-  end
+  fi
 }
 
 #-----------------------------------------------------------------------------
