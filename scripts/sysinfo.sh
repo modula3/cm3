@@ -284,6 +284,11 @@ INSTALLROOT=${INSTALLROOT:-${CM3_INSTALL}}
 PKGSDB=${PKGSDB:-$ROOT/scripts/PKGS}
 GREP=${GREP:-egrep}
 
+EGREP=egrep
+if [ -x /usr/sfw/bin/gegrep ] ; then
+  EGREP=/usr/sfw/bin/gegrep
+fi
+
 if [ "${M3OSTYPE}" = "WIN32" ] ; then
   CM3ROOT="`cygpath -w ${ROOT} | sed -e 's;\\\;\\\\\\\\;g'`"
 else
