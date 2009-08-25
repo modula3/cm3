@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.83 2009-08-25 09:34:47 jkrell Exp $
+# $Id: sysinfo.sh,v 1.84 2009-08-25 09:37:45 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -132,6 +132,7 @@ CM3=${CM3:-cm3}
 EXE=""
 SL="/"
 
+# NT has \windows\system32\find.exe, completely different
 FIND=find
 if [ -x /usr/bin/find ] ; then
   FIND=/usr/bin/find

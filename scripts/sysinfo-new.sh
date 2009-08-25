@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo-new.sh,v 1.9 2009-08-25 09:34:47 jkrell Exp $
+# $Id: sysinfo-new.sh,v 1.10 2009-08-25 09:37:45 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -186,6 +186,7 @@ find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gta
 
 CM3=${CM3:-cm3}
 
+# NT has \windows\system32\find.exe, completely different
 FIND=find
 if [ -x /usr/bin/find ] ; then
   FIND=/usr/bin/find
