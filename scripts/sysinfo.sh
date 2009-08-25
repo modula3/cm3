@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.74.2.13 2009-08-25 09:22:44 jkrell Exp $
+# $Id: sysinfo.sh,v 1.74.2.14 2009-08-25 09:29:57 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -298,6 +298,11 @@ INSTALLROOT=${INSTALLROOT:-${CM3_INSTALL}}
 PKGSDB=${PKGSDB:-$ROOT/scripts/PKGS}
 GREP=${GREP:-egrep}
 
+EGREP=egrep
+if [ -x /usr/sfw/bin/gegrep ] ; then
+  EGREP=/usr/sfw/bin/gegrep
+fi
+
 if [ "${M3OSTYPE}" = "WIN32" ] ; then
   CM3ROOT="`cygpath -w ${ROOT} | sed -e 's;\\\;\\\\\\\\;g'`"
 else
@@ -341,10 +346,11 @@ debug "CM3VERSION  = $CM3VERSION"
 debug "CM3VERSIONNUM = $CM3VERSIONNUM"
 debug "CM3LASTCHANGED = $CM3LASTCHANGED"
 debug "FIND = $FIND"
+debug "EGREP = $EGREP"
 
 export ROOT M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB
 export GREP TMPDIR EXE SL CM3VERSION TAR
-export CM3ROOT CM3 CM3_ROOT FIND
+export CM3ROOT CM3 CM3_ROOT FIND EGREP
 export SYSINFO_DONE CM3VERSIONNUM CM3LASTCHANGED
 
 fi

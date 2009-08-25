@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.14 2009-08-22 12:43:51 wagner Exp $
+# $Id: make-dist.sh,v 1.26.2.15 2009-08-25 09:29:57 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -297,7 +297,7 @@ EOF
     <h1>CM3 Package Collection $c</h1>
 EOF
     if [ -r ${COLLDEPS} ]; then
-      CHEADER=`egrep -C 5 "^collection $c" ${COLLDEPS} | tail -5`
+      CHEADER=`${EGREP} -C 5 "^collection $c" ${COLLDEPS} | tail -5`
       echo "<h2 style=\"text-align:left\">Dependencies</h2>"
       echo "<pre>${CHEADER}</pre>"
     fi
