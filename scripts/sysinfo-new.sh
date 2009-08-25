@@ -186,6 +186,11 @@ find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gta
 
 CM3=${CM3:-cm3}
 
+FIND=find
+if [ -x /usr/bin/find ] ; then
+  FIND=/usr/bin/find
+fi
+
 if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
   if [ -n "$TMP" -a -d "$TMP" ] ; then
     TMPDIR="$TMP"
@@ -437,7 +442,7 @@ debug "CM3LASTCHANGED = $CM3LASTCHANGED"
 
 export ROOT M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB
 export GREP TMPDIR EXE SL CM3VERSION TAR
-export CM3ROOT CM3 CM3_ROOT
+export CM3ROOT CM3 CM3_ROOT FIND EGREP
 export SYSINFO_DONE CM3VERSIONNUM CM3LASTCHANGED
 
 fi
