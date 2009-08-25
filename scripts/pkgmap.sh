@@ -106,7 +106,7 @@ if [ -n "${REPORT}" ]; then
   RW="${WORKSPACE}/cm3-pkg-report-${TARGET}.html"
   RJW="${WORKSPACE}/cm3-pkg-report-${TARGET}.xml"
   RJTW="${WORKSPACE}/cm3-pkg-test-report-${TARGET}.xml"
-  R2="`basename ${R} .html`.part2}"
+  R2="`basename ${R} .html`.part2"
   ERRS=""
   REDPKGS=""
   GREENPKGS=""
@@ -230,6 +230,8 @@ pall=0
 pko=0
 tall=0
 tko=0
+psk=0
+tsk=0
 
 write_pkg_report() {
   res=""
@@ -300,6 +302,7 @@ write_pkg_report() {
       echo "  build OK"
     elif [ "$2" = "2" ] ; then
       echo "  not supported on ${TARGET} (skipped)"
+      echo "  <skipped type=\"NEX\" message=\"not supported on ${TARGET}\"/>"
     else
       echo "  <failure type=\"build failed\">"
       quote_xml "$errlines"
@@ -332,8 +335,8 @@ write_pkg_report() {
   (
     if [ "${tbgt}" != "bgyellow" ]; then
       echo "<testcase name=\"${pname} tests\" time=\"$6\">"
-      echo "  Test Result Details for $1"
-      quote_xml "$3"
+      # echo "  Test Result Details for $1" #
+      # quote_xml "$3" # FIXME: leave out stdout test output for now
       if [ -n "$4" ]; then
         echo "    <failure type=\"package tests failed\">"
         quote_xml "$4"
@@ -416,6 +419,12 @@ for PKG in ${PKGS} ; do
       echo "=== package omitted on this platform ==="
       res=2
       YELLOWPKGS=`printf "${YELLOWPKGS}${PKG}\\\\\\n"`
+      psk=`expr $psk + 1`
+      HERE=`pwd`
+      cd "${PKG}"
+      echo "write(\"package ${PKG} not supported on this platform\" & EOL)" \
+        > ${TARGET}/.M3SHIP
+      cd "${HERE}"
     fi
     #deps=`cd "${PKG}" && cm3 -depend | head -1`
   else
@@ -424,6 +433,11 @@ for PKG in ${PKGS} ; do
       res=$?
     else
       echo "=== package omitted on this platform ==="
+      HERE=`pwd`
+      cd "${PKG}"
+      echo "write(\"package ${PKG} not supported on this platform\" & EOL)" \
+        > ${TARGET}/.M3SHIP
+      cd "${HERE}"
       res=0
     fi
   fi
@@ -464,8 +478,8 @@ if [ -n "${REPORT}" ]; then
 
   echo '<?xml version="1.0" encoding="ISO-8859-1"?>' > ${RJ}
   echo '<?xml version="1.0" encoding="ISO-8859-1"?>' > ${RJT}
-  echo "<testsuite tests=\"${pall}\" failures=\"${pko}\" name=\"CM3 package build status\">" >> ${RJ}
-  echo "<testsuite tests=\"${tall}\" failures=\"${tko}\" name=\"CM3 package tests status\">" >> ${RJT}
+  echo "<testsuite tests=\"${pall}\" failures=\"${pko}\" skipped=\"${psk}\" name=\"CM3 package build status\">" >> ${RJ}
+  echo "<testsuite tests=\"${tall}\" failures=\"${tko}\" skipped=\"${tsk}\" name=\"CM3 package tests status\">" >> ${RJT}
   echo "${rj}" >> ${RJ}
   echo "${rjt}" >> ${RJT}
   echo "</testsuite>" >> ${RJ}

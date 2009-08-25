@@ -1,10 +1,43 @@
 
+#-----------------------------------------------------------------------------
+
+find_in_list() {
+    a="x`eval echo \\$$1`"
+    if [ "$a" = "x" ]; then
+        for a in $2; do
+            for b in $a ${a}.exe; do
+                if type $b >/dev/null 2>/dev/null; then
+                    echo $1=$b
+                    eval $1=$b
+                    echo export $1
+                    export $1
+                    return
+                fi
+            done
+        done
+        echo "none of $2 found"
+        exit 1
+    fi
+}
+
 #----------------------------------------------------------------------------
 # global definitions
 
 # nice, but need more testing
 #set -e
 #set -x
+
+#
+# Look for GNU make and GNU tar.
+# TODO: run them and grep for GNU tar and GNU make
+#
+# /usr/pkg is NetBSD default
+# /usr/sfw is Solaris default (Sun FreeWare)
+# /usr/local is FreeBSD and OpenBSD default and popular otherwise
+#
+
+find_in_list GMAKE "gmake gnumake /usr/pkg/bin/gmake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake make" || exit 1
+find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar tar" || exit 1
 
 # our hostname
 TESTHOSTNAME=${TESTHOSTNAME:-`hostname | sed -e 's/\..*//'`}
@@ -49,7 +82,6 @@ RLOG=${RLOG:-${HTMP}/cm3-rlog-${DS}}
 CM3_NKEEP=${CM3_NKEEP:-7}
 
 UNAME=${UNAME:-`uname`}
-UNAMEM=${UNAMEM:-`uname -m`}
 
 TMP=${TMP:-/tmp}
 TMPDIR=${TMPDIR:-${TMP}}
@@ -57,11 +89,12 @@ if [ ! -d "${TMPDIR}" ]; then
   TMPDIR="${HTMP}"
 fi
 
+CM3_OSTYPE=POSIX
+
 case "${UNAME}" in
 
   Windows*|WinNT*|Cygwin*|CYGWIN*)
     if [ x$TARGET = xNT386GNU ] ; then
-      CM3_OSTYPE=POSIX
       CM3_TARGET=NT386GNU
     else
       CM3_OSTYPE=WIN32
@@ -70,74 +103,67 @@ case "${UNAME}" in
   ;;
 
   NT386GNU*)
-    CM3_OSTYPE=POSIX
     CM3_TARGET=NT386GNU
   ;;
 
   FreeBSD*)
-    CM3_OSTYPE=POSIX
-    if [ "`uname -m`" = i386 ] ; then
-      case "`uname -r`" in
-        1*) CM3_TARGET=FreeBSD;;
-        2*) CM3_TARGET=FreeBSD2;;
-        3*) CM3_TARGET=FreeBSD3;;
-        4*) CM3_TARGET=FreeBSD4;;
-        *) CM3_TARGET=FreeBSD4;;
-      esac
-    else
-      CM3_TARGET=FBSD_ALPHA
-    fi
+    case "`uname -p`" in
+      amd64)    CM3_TARGET=${CM3_TARGET:-AMD64_FREEBSD};;
+      i*86)     CM3_TARGET=${CM3_TARGET:-FreeBSD4};;
+      *)        echo "$0 does not know about `uname -a`"
+                exit 1;;
+    esac
   ;;
 
   Darwin*)
-    CM3_OSTYPE=POSIX
     case "`uname -p`" in
       powerpc*)
-        CM3_TARGET=PPC_DARWIN;;
+        CM3_TARGET=${CM3_TARGET:-PPC_DARWIN};;
       i[3456]86*)
-        CM3_TARGET=I386_DARWIN;;
+        if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
+          CM3_TARGET=${CM3_TARGET:-AMD64_DARWIN}
+        else
+          CM3_TARGET=${CM3_TARGET:-I386_DARWIN}
+        fi
+        ;;
+      *) echo "$0 does not know about `uname -a`"
+         exit 1;;
     esac
   ;;
 
   SunOS*)
-    CM3_OSTYPE=POSIX
-    CM3_TARGET=SOLgnu
+    CM3_TARGET=${CM3_TARGET:-SOLgnu}
+    #CM3_TARGET=${CM3_TARGET:-SOLsun}
+  ;;
+
+  Interix*)
+    CM3_TARGET=${CM3_TARGET:-I386_INTERIX}
   ;;
 
   Linux*)
-    CM3_OSTYPE=POSIX
-    GMAKE=${GMAKE:-make}
-    if [ "${UNAMEM}" = "ppc" ] ; then
-      CM3_TARGET=PPC_LINUX
-    elif [ "${UNAMEM}" = "x86_64" ] ; then
-      CM3_TARGET=AMD64_LINUX
-    elif [ "${UNAMEM}" = "sparc64" ] ; then
-      CM3_TARGET=SPARC32_LINUX
-    else
-      CM3_TARGET=LINUXLIBC6
-    fi
+    case "`uname -m`" in
+      ppc*)    CM3_TARGET=${CM3_TARGET:-PPC_LINUX};;
+      x86_64)  CM3_TARGET=${CM3_TARGET:-AMD64_LINUX};;
+      sparc64) CM3_TARGET=${CM3_TARGET:-SPARC32_LINUX};;
+      i*86)    CM3_TARGET=${CM3_TARGET:-LINUXLIBC6};;
+      *)       echo "$0 does not know about `uname -a`"
+               exit 1;;
+    esac
   ;;
 
   NetBSD*)
-    CM3_OSTYPE=POSIX
     CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
   ;;
 
   OpenBSD*)
-    CM3_OSTYPE=POSIX
-    ARCH=`arch -s`
-    if [ "${UNAMEM}" = "macppc" ] ; then
-      CM3_TARGET=PPC32_OPENBSD
-    elif [ "${UNAMEM}" = "sparc64" ] ; then
-      CM3_TARGET=SPARC64_OPENBSD
-    elif [ "${ARCH}" = "mips64" ] ; then
-      CM3_TARGET=MIPS64_OPENBSD
-    elif [ "${ARCH}" = "i386" ] ; then
-      CM3_TARGET=I386_OPENBSD
-    else
-      echo Update $0 for ${ARCH}
-      exit 1
-    fi
+    case "`arch -s`" in
+      macppc)   CM3_TARGET=${CM3_TARGET:-PPC32_OPENBSD};;
+      sparc64)  CM3_TARGET=${CM3_TARGET:-SPARC64_OPENBSD};;
+      mips64)   CM3_TARGET=${CM3_TARGET:-MIPS64_OPENBSD};;
+      i386)     CM3_TARGET=${CM3_TARGET:-I386_OPENBSD};;
+      *)        echo "$0 does not know about `uname -a`"
+                exit 1;;
+    esac
   ;;
 esac
 
@@ -205,77 +231,10 @@ fi
 #----------------------------------------------------------------------------
 # path functions
 
-pathelems()
-{
-  echo $1 | tr ':' ' '
-}
-
-makepath()
-{
-  #local p
-  p="$1"
-  shift
-  while [ -n "$1" ] ; do
-    p="${p}:${1}"
-    shift
-  done
-  echo $p
-}
-
-  # $1 elem, $2 path
-delpathelem()
-{
-  #local e
-  #local p
-  p=""
-  if [ -z "$1" ] ; then
-    return
-  fi
-  if [ -z "$2" ] ; then
-    return
-  fi
-  for e in `pathelems $2` ; do
-    if [ "$1" != "$e" ] ; then
-      if [ -z "$p" ] ; then
-         p=$e
-      else
-         p="${p}:${e}"
-      fi
-    fi
-  done
-  echo $p
-}
-
-prependpathelem()
-{
-  # $1 elem, $2 path
-  echo "${1}:${2}"
-}
-
-appendpathelem()
-{
-  # $1 elem, $2 path
-  echo "${2}:${1}"
-}
-
-delpath()
-{
-  # $1 elem to delete from path
-  PATH=`delpathelem $1 $PATH`
-  export PATH
-}
-
-appendpath()
-{
-  # $1 elem to append to the path
-  PATH=`appendpathelem $1 $PATH`
-  export PATH
-}
-
 prependpath()
 {
-  # $1 elem to append to the path
-  PATH=`prependpathelem $1 $PATH`
+  # $1 elem to prepend to the path
+  PATH="$1:$PATH"
   export PATH
 }
 

@@ -36,7 +36,7 @@ if defined("STATIC")
   build_standalone()
 end
 
-override("suplib", path() & "/../..")
+%override("suplib", path() & "/../..")
 import("libm3")
 import("suplib")
 

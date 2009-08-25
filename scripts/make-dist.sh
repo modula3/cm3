@@ -28,32 +28,53 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
-DS="RC2"; export DS
+DS="RC3"; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
+COLLDEPS="${ROOT}/www/releng/collection-deps.txt"
 
 cd "${ROOT}" || exit 1
-cvs -q up -r release_CM3_5_8_${DS} -dP
+if [ -z "${OMIT_UPDATE}" ]; then
+  case ${DS} in
+    RC*) cvs -q up -r release_CM3_5_8_${DS} -dP;;
+    *) cvs -q up -r release_branch_cm3_5_8 -dP;;
+  esac
+fi
 
 # keep short runpaths
 M3_PORTABLE_RUN_PATH=1
 export M3_PORTABLE_RUN_PATH
 
+ERROR_INDICATORS='version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error|collect2: ld returned|librarian failed building'
 if [ -z "${NOBUILD}" ]; then
-  DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
-  DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
+  DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh" \
+    2>&1 | tee build-min.log
+  if egrep "${ERROR_INDICATORS}" build-min.log; then
+    echo "building cm3-bin-min archive failed" 1>&2
+    exit 1
+  fi
+  DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh" \
+    2>&1 | tee build-core.log
+  if egrep "${ERROR_INDICATORS}" build-core.log; then
+    echo "building cm3-bin-core archive failed" 1>&2
+    exit 1
+  fi
   if [ `hostname` = 'birch' ]; then
     SYSINFO_DONE="" "$ROOT/scripts/make-src-dist-all.sh"
   fi
   PATH="${INSTALLROOT}/bin:${PATH}"
-  "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
+  "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution \
+    -group-writable 2>&1 |tee build-all.log
+  if egrep "${ERROR_INDICATORS}" build-all.log; then
+    echo "errors during build-all; some packages will be missing" 1>&2
+  fi
 fi
 
 if [ `uname` = 'Interix' ]; then
   PKG_COLLECTIONS="devlib m3devtool webdev obliq caltech-parser tool math game core"
 else
-  PKG_COLLECTIONS="devlib m3devtool m3gdb webdev gui anim database cvsup obliq juno caltech-parser demo tool math game core min"
+  PKG_COLLECTIONS="min core devlib gui webdev m3gdb m3devtool anim database cvsup obliq juno caltech-parser demo tool math game"
 fi
 
 DESC_devlib='<p>
@@ -198,6 +219,7 @@ for c in ${PKG_COLLECTIONS}; do
   P=`fgrep " $c" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
   PKGS=""
   for x in $P; do
+    p="$x"
     if [ -d "$x" ] ; then
       PKGS="${PKGS} $x"
     else
@@ -209,13 +231,25 @@ for c in ${PKG_COLLECTIONS}; do
         exit 1
       fi
     fi
+    m3ship="${p}/${TARGET}/.M3SHIP"
+    if [ -f ${m3ship} ]; then
+      if res=`egrep '/home|/var|/tmp' ${m3ship}`; then
+        echo "${m3ship} seems to be broken:" 1>&2
+        echo "${res}" 1>&2
+        exit 1
+      fi
+    fi
   done
   (
     echo '#!/bin/sh'
     echo 'HERE=`pwd`'
+    echo 'ACTION=${ACTION:-"cm3 -ship"}'
     echo "for p in ${PKGS}; do"
+      echo 'echo "installing package ${p}"'
       echo 'cd $p'
-      echo 'cm3 -ship ${SHIPARGS}'
+      echo '${ACTION} ${SHIPARGS} || {'
+      echo '  echo "installation of ${p} failed" 1>&2'
+      echo '}'
       echo 'cd $HERE'
     echo "done"
   ) > install.sh
@@ -262,7 +296,15 @@ EOF
   <body>
     <h1>CM3 Package Collection $c</h1>
 EOF
-    echo "<p>This collections contains the following packages:</p>"
+    if [ -r ${COLLDEPS} ]; then
+      CHEADER=`egrep -C 5 "^collection $c" ${COLLDEPS} | tail -5`
+      echo "<h2 style=\"text-align:left\">Dependencies</h2>"
+      echo "<pre>${CHEADER}</pre>"
+    fi
+    echo "<h2 style=\"text-align:left\">Description</h2>"
+    ddd=${ddd:=DESC_${c}}
+    echo ${ddd}
+    echo "<h2 style=\"text-align:left\">Package Details</h2>"
     echo "<ul>"
     for p in ${PKGS}; do
       b=`basename ${p}`
@@ -313,7 +355,7 @@ EOF
   fi
 done
 
-set -x
+#set -x
 
 if [ `hostname` = 'birch' ]; then
   ARCHIVE="${STAGE}/cm3-scripts-${CM3VERSION}-${DS}.tgz"

@@ -3,26 +3,48 @@
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
+#-----------------------------------------------------------------------------
+# mark that we have run (or are about to)
+
 SYSINFO_DONE="yes"
 
-UNAME=${UNAME:-`uname`}
-UNAMEM=${UNAMEM:=`uname -m`}
+#-----------------------------------------------------------------------------
+# determine $root
 
-PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
+if [ -n "$ROOT" -a -d "$ROOT" ] ; then
+  sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
+else
+  root=`pwd`
+  while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do
+    root=`dirname $root`
+  done
+  sysinfo="$root/scripts/sysinfo.sh"
+  if [ ! -f "$sysinfo" ] ; then
+    echo "scripts/sysinfo.sh not found" 1>&2
+    exit 1
+  fi
+  export root
+fi
 
 #-----------------------------------------------------------------------------
-# set some defaults
-#
+# output functions
 
-eval `awk '{ print "default_" $1 "=" $2 }' < $root/scripts/version`
+debug() {
+  if [ -n "$CM3_DEBUG" ] ; then
+    echo "$*"
+  fi
+}
 
-CM3VERSION=${CM3VERSION:-${default_CM3VERSION}}
-CM3VERSIONNUM=${CM3VERSIONNUM:-${default_CM3VERSIONNUM}}
-CM3LASTCHANGED=${CM3LASTCHANGED:-${default_CM3LASTCHANGED}}
+header() {
+  echo ""
+  echo '----------------------------------------------------------------------------'
+  echo $@
+  echo '----------------------------------------------------------------------------'
+  echo ""
+}
 
-CM3_GCC_BACKEND=yes
-CM3_GDB=${CM3_GDB:-yes}
-#
+#-----------------------------------------------------------------------------
 # Utility function to find first occurrence of executable file in
 # $PATH.
 # Arguments are filename and default pathname.
@@ -46,6 +68,75 @@ find_exe() {
     return 1
   fi
 }
+
+#-----------------------------------------------------------------------------
+
+qgrep() {
+  egrep $@ >/dev/null 2>/dev/null
+}
+
+#-----------------------------------------------------------------------------
+# abstraction functions
+cygpath() {
+  echo "$2"
+}
+
+strip_exe() {
+  strip $@
+}
+
+#-----------------------------------------------------------------------------
+
+find_in_list() {
+    a="x`eval echo \\$$1`"
+    if [ "$a" = "x" ]; then
+        for a in $2; do
+            for b in $a ${a}.exe; do
+                if type $b >/dev/null 2>/dev/null; then
+                    echo $1=$b
+                    eval $1=$b
+                    echo export $1
+                    export $1
+                    return
+                fi
+            done
+        done
+        echo "none of $2 found"
+        exit 1
+    fi
+}
+
+#-----------------------------------------------------------------------------
+
+UNAME=${UNAME:-`uname`}
+
+PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
+
+#-----------------------------------------------------------------------------
+# set some defaults
+#
+
+eval `awk '{ print "default_" $1 "=" $2 }' < $root/scripts/version`
+
+CM3VERSION=${CM3VERSION:-${default_CM3VERSION}}
+CM3VERSIONNUM=${CM3VERSIONNUM:-${default_CM3VERSIONNUM}}
+CM3LASTCHANGED=${CM3LASTCHANGED:-${default_CM3LASTCHANGED}}
+
+#
+# Look for GNU make and GNU tar.
+# TODO: run them and grep for GNU tar and GNU make
+#
+# /usr/pkg is NetBSD default
+# /usr/sfw is Solaris default (Sun FreeWare)
+# /usr/local is FreeBSD and OpenBSD default and popular otherwise
+#
+
+find_in_list GMAKE "gmake gnumake /usr/pkg/bin/gmake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake make" || exit 1
+find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar tar" || exit 1
+
+CM3_GCC_BACKEND=yes
+CM3_GDB=${CM3_GDB:-yes}
+
 #
 # If CM3_INSTALL is not set, it will be set to the the parent directory
 # of the first path element where an executable cm3 is found.
@@ -58,7 +149,6 @@ M3BUILD=${M3BUILD:-m3build}
 M3SHIP=${M3SHIP:-m3ship}
 EXE=""
 SL="/"
-TAR=tar
 
 FIND=find
 if [ -x /usr/bin/find ] ; then
@@ -95,24 +185,15 @@ if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ] ; then
 fi
 
 #-----------------------------------------------------------------------------
-# abstraction functions
-cygpath() {
-  echo "$2"
-}
-
-strip_exe() {
-  strip $@
-}
-
-#-----------------------------------------------------------------------------
 # evaluate uname information
+
+CM3_OSTYPE=POSIX
+
 case "${UNAME}" in
 
   Windows*|WinNT*|Cygwin*|CYGWIN*)
     if [ x$TARGET = xNT386GNU ] ; then
-      CM3_OSTYPE=POSIX
       CM3_TARGET=NT386GNU
-      GMAKE=${GMAKE:-make}
     else
       CM3_OSTYPE=WIN32
       CM3_TARGET=NT386
@@ -121,10 +202,6 @@ case "${UNAME}" in
       HAVE_SERIAL=yes
       EXE=".exe"
       SL='\\\\'
-      if [ -f /usr/bin/tar.exe ] ; then
-        TAR=/usr/bin/tar.exe
-      fi
-      GMAKE=${GMAKE:-make}
 
       cygpath() {
         /usr/bin/cygpath $@
@@ -136,93 +213,68 @@ case "${UNAME}" in
   ;;
 
   NT386GNU*)
-    CM3_OSTYPE=POSIX
     CM3_TARGET=NT386GNU
-    GMAKE=${GMAKE:-make}
   ;;
 
   FreeBSD*)
-    CM3_OSTYPE=POSIX
-    if [ "`uname -m`" = i386 ] ; then
-      case "`uname -r`" in
-        1*) CM3_TARGET=FreeBSD;;
-        2*) CM3_TARGET=FreeBSD2;;
-        3*) CM3_TARGET=FreeBSD3;;
-        4*) CM3_TARGET=FreeBSD4;;
-        *) CM3_TARGET=FreeBSD4;;
-      esac
-    else
-      CM3_TARGET=FBSD_ALPHA
-    fi
+    case "`uname -p`" in
+      amd64)    CM3_TARGET=${CM3_TARGET:-AMD64_FREEBSD};;
+      i*86)     CM3_TARGET=${CM3_TARGET:-FreeBSD4};;
+      *)        echo "$0 does not know about `uname -a`"
+                exit 1;;
+    esac
   ;;
 
   Darwin*)
-    CM3_OSTYPE=POSIX
-    # detect the m3 platform (Darwin runs on ppc and ix86
     case "`uname -p`" in
       powerpc*)
-        CM3_TARGET=PPC_DARWIN;;
+        CM3_TARGET=${CM3_TARGET:-PPC_DARWIN};;
       i[3456]86*)
-        CM3_TARGET=I386_DARWIN;;
+        if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
+          CM3_TARGET=${CM3_TARGET:-AMD64_DARWIN}
+        else
+          CM3_TARGET=${CM3_TARGET:-I386_DARWIN}
+        fi
+        ;;
+      *) echo "$0 does not know about `uname -a`"
+         exit 1;;
     esac
-    GMAKE=${GMAKE:-make}
   ;;
 
   SunOS*)
-    CM3_OSTYPE=POSIX
-    CM3_TARGET=${CM3_TARGET:-"SOLgnu"}
-    #CM3_TARGET=${CM3_TARGET:-"SOLsun"}
+    CM3_TARGET=${CM3_TARGET:-SOLgnu}
+    #CM3_TARGET=${CM3_TARGET:-SOLsun}
   ;;
 
   Interix*)
-    CM3_OSTYPE=POSIX
-    GMAKE=${GMAKE:-gmake}
-    CM3_TARGET=I386_INTERIX
+    CM3_TARGET=${CM3_TARGET:-I386_INTERIX}
   ;;
 
   Linux*)
-    CM3_OSTYPE=POSIX
-    GMAKE=${GMAKE:-make}
-    if [ "${UNAMEM}" = "ppc" ] ; then
-      CM3_TARGET=PPC_LINUX
-    elif [ "${UNAMEM}" = "x86_64" ] ; then
-      CM3_TARGET=AMD64_LINUX
-    elif [ "${UNAMEM}" = "sparc64" ] ; then
-      CM3_TARGET=SPARC32_LINUX
-    else
-      CM3_TARGET=LINUXLIBC6
-    fi
+    case "`uname -m`" in
+      ppc*)    CM3_TARGET=${CM3_TARGET:-PPC_LINUX};;
+      x86_64)  CM3_TARGET=${CM3_TARGET:-AMD64_LINUX};;
+      sparc64) CM3_TARGET=${CM3_TARGET:-SPARC32_LINUX};;
+      i*86)    CM3_TARGET=${CM3_TARGET:-LINUXLIBC6};;
+      *)       echo "$0 does not know about `uname -a`"
+               exit 1;;
+    esac
   ;;
 
   NetBSD*)
-    CM3_OSTYPE=POSIX
-    GMAKE=${GMAKE:-gmake}
     CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
   ;;
 
   OpenBSD*)
-    CM3_OSTYPE=POSIX
-    ARCH=`arch -s`
-    if [ "${UNAMEM}" = "macppc" ] ; then
-      CM3_TARGET=PPC32_OPENBSD
-    elif [ "${UNAMEM}" = "sparc64" ] ; then
-      CM3_TARGET=SPARC64_OPENBSD
-    elif [ "${ARCH}" = "mips64" ] ; then
-      CM3_TARGET=MIPS64_OPENBSD
-    elif [ "${ARCH}" = "i386" ] ; then
-      CM3_TARGET=I386_OPENBSD
-    else
-      echo Update $0 for ${ARCH}
-      exit 1
-    fi
-    if gtar --help >/dev/null 2>&1; then
-      TAR=gtar
-    elif gnutar --help >/dev/null 2>&1; then
-      TAR=gnutar
-    fi
+    case "`uname -m`" in
+      macppc)   CM3_TARGET=${CM3_TARGET:-PPC32_OPENBSD};;
+      sparc64)  CM3_TARGET=${CM3_TARGET:-SPARC64_OPENBSD};;
+      mips64)   CM3_TARGET=${CM3_TARGET:-MIPS64_OPENBSD};;
+      i386)     CM3_TARGET=${CM3_TARGET:-I386_OPENBSD};;
+      *)        echo "$0 does not know about `uname -a`"
+                exit 1;;
+    esac
   ;;
-
-  # more need to be added here, I haven't got all the platform info ready
 
 esac
 
@@ -241,11 +293,6 @@ GCC_BACKEND=${GCC_BACKEND:-${CM3_GCC_BACKEND}}
 INSTALLROOT=${INSTALLROOT:-${CM3_INSTALL}}
 PKGSDB=${PKGSDB:-$ROOT/scripts/PKGS}
 GREP=${GREP:-egrep}
-GMAKE=${GMAKE:-gmake}
-
-qgrep() {
-  egrep $@ >/dev/null 2>/dev/null
-}
 
 if [ "${M3OSTYPE}" = "WIN32" ] ; then
   CM3ROOT="`cygpath -w ${ROOT} | sed -e 's;\\\;\\\\\\\\;g'`"
@@ -253,22 +300,6 @@ else
   CM3ROOT="${ROOT}"
 fi
 
-
-#-----------------------------------------------------------------------------
-# output functions
-debug() {
-  if [ -n "$CM3_DEBUG" ] ; then
-    echo "$*"
-  fi
-}
-
-header() {
-  echo ""
-  echo '----------------------------------------------------------------------------'
-  echo $@
-  echo '----------------------------------------------------------------------------'
-  echo ""
-}
 
 #-----------------------------------------------------------------------------
 # elego customizations
