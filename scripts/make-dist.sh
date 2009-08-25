@@ -297,7 +297,7 @@ EOF
     <h1>CM3 Package Collection $c</h1>
 EOF
     if [ -r ${COLLDEPS} ]; then
-      CHEADER=`egrep -C 5 "^collection $c" ${COLLDEPS} | tail -5`
+      CHEADER=`${EGREP} -C 5 "^collection $c" ${COLLDEPS} | tail -5`
       echo "<h2 style=\"text-align:left\">Dependencies</h2>"
       echo "<pre>${CHEADER}</pre>"
     fi
