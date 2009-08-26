@@ -9,6 +9,7 @@ IMPORT Arg, Builder, M3Loc, M3Options, M3Path, M3Unit, Msg, Utils;
 FROM QMachine IMPORT PushText, PopText, PopID, PopBool;
 IMPORT MxConfig;
 IMPORT OSError, Process, Dirs, TextUtils;
+IMPORT RTIO;
 
 TYPE
   UK = M3Unit.Kind;
@@ -160,6 +161,11 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     t.at_SRC          := GetConfigBool (t, "AT_SRC");
     t.system_liborder := QVal.ToArray (t, ConfigDefn (t, "SYSTEM_LIBORDER").value);
     t.system_libs     := QVal.ToTable (t, ConfigDefn (t, "SYSTEM_LIBS").value);
+
+    IF Text.Equal(build_dir, "NT386") THEN
+      RTIO.PutText("LIB_INSTALL is " & t.lib_install & "\n");
+      RTIO.Flush();
+    END;
 
     t.cur_pkg         := t.build_pkg;
     t.cur_pkg_dir     := t.build_pkg_dir;
@@ -1484,8 +1490,7 @@ PROCEDURE BuildProgram (t: T;  nm: M3ID.T)
       done := TRUE;
     END;
     DeleteDeriveds (t, M3Path.ProgramName (name), NoExtension);
-    DeleteDeriveds (t, M3Path.Join (NIL, name, UK.PGMX), 
-                    NoExtension);
+    DeleteDeriveds (t, M3Path.Join (NIL, name, UK.PGMX), NoExtension);
     DeleteDeriveds (t, name, Junk);
     DeleteDeriveds (t, "", Extras);
     InitGlobals (t);  (* forget about the accumulated sources... *)
@@ -1862,6 +1867,12 @@ PROCEDURE MakeRoom (t: T;  space: INTEGER) =
 
 PROCEDURE DoUnresolve (t: T;  res: TEXT): TEXT =
   BEGIN
+
+    IF TextUtils.EndsWith(res, "lib") AND TextUtils.Contains(res, "cygwin") AND TextUtils.Contains(res, "home") AND TextUtils.Contains(res, "elego") AND TextUtils.Contains(res, "tmp") THEN
+      RTIO.PutText("LIB_INSTALL is " & t.lib_install & "\n");
+      RTIO.PutText("res is " & res & "\n");
+      RTIO.Flush();
+    END;
     
     res := TextUtils.Substitute(res, t.bin_install, "\" & BIN_INSTALL & \"");
     res := TextUtils.Substitute(res, t.lib_install, "\" & LIB_INSTALL & \"");
