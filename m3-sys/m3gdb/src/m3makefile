@@ -1,5 +1,5 @@
 %
-% $Id: m3makefile,v 1.14.2.3 2009-08-24 03:18:56 jkrell Exp $
+% $Id: m3makefile,v 1.14.2.4 2009-08-26 05:11:46 jkrell Exp $
 %
 % Copyright (C) 1994, Digital Equipment Corporation
 % All rights reserved.
@@ -118,11 +118,6 @@ if not defined ("quick")
   % configure the sources
   CONFIG_PLATFORM = GNU_platform (M3GDB_HOST)
   m3gdb_Run([M3GDB_CONFIG, "../gdb/configure", CONFIG_PLATFORM])
-end
-
-% compile
-if (equal(M3GDB_HOST, "SOLgnu"))
-  M3GDB_MAKE = M3GDB_MAKE & " LDFLAGS=-lintl"
 end
 
 m3gdb_Run([M3GDB_MAKE])
