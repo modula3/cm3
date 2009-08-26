@@ -1492,8 +1492,7 @@ PROCEDURE BuildProgram (t: T;  nm: M3ID.T)
       done := TRUE;
     END;
     DeleteDeriveds (t, M3Path.ProgramName (name), NoExtension);
-    DeleteDeriveds (t, M3Path.Join (NIL, name, UK.PGMX), 
-                    NoExtension);
+    DeleteDeriveds (t, M3Path.Join (NIL, name, UK.PGMX), NoExtension);
     DeleteDeriveds (t, name, Junk);
     DeleteDeriveds (t, "", Extras);
     InitGlobals (t);  (* forget about the accumulated sources... *)
@@ -1870,6 +1869,12 @@ PROCEDURE MakeRoom (t: T;  space: INTEGER) =
 
 PROCEDURE DoUnresolve (t: T;  res: TEXT): TEXT =
   BEGIN
+
+    IF TextUtils.EndsWith(res, "lib") AND TextUtils.Contains(res, "cygwin") AND TextUtils.Contains(res, "home") AND TextUtils.Contains(res, "elego") AND TextUtils.Contains(res, "tmp") THEN
+      RTIO.PutText("LIB_INSTALL is " & t.lib_install & "\n");
+      RTIO.PutText("res is " & res & "\n");
+      RTIO.Flush();
+    END;
     
     res := TextUtils.Substitute(res, t.bin_install, "\" & BIN_INSTALL & \"");
     res := TextUtils.Substitute(res, t.lib_install, "\" & LIB_INSTALL & \"");
