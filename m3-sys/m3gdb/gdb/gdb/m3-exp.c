@@ -20,7 +20,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 /* This file contains code to parse, print (unevaluated) and dump
    Modula-3 expressions. */ 
 
-#include <stdbool.h> 
+#include "m3-bool.h" 
 
 #include "defs.h"
 #include "block.h"

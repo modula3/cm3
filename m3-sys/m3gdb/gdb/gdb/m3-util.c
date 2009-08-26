@@ -21,7 +21,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
   /* This file contains utility routines for Modula-3 debugging support. */ 
 
-#include <stdbool.h>
+#include "m3-bool.h"
 
 #include "defs.h"
 #include "gdb_assert.h"

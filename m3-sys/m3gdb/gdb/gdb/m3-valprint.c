@@ -3,7 +3,7 @@
 /* Support for printing Modula-3 values for GDB, the GNU debugger.
    Copyright 1994, Digital Equipement Corporation */
 
-#include <stdbool.h>
+#include "m3-bool.h"
 
 #include "defs.h"
 #include "gdbtypes.h"

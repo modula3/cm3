@@ -59,7 +59,7 @@
 
 #include "stabsread.h"
 
-#include <stdbool.h>
+#include "m3-bool.h"
 
 /* List of free `struct pending' structures for reuse.  */
 
