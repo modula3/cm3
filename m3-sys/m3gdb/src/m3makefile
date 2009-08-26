@@ -120,11 +120,6 @@ if not defined ("quick")
   m3gdb_Run([M3GDB_CONFIG, "../gdb/configure", CONFIG_PLATFORM])
 end
 
-% compile
-if (equal(M3GDB_HOST, "SOLgnu"))
-  M3GDB_MAKE = M3GDB_MAKE & " LDFLAGS=-lintl"
-end
-
 m3gdb_Run([M3GDB_MAKE])
 
 EXE = Platform_ExeExtension (M3GDB_HOST)
