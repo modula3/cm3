@@ -1872,8 +1872,8 @@ PROCEDURE DoUnresolve (t: T;  res: TEXT): TEXT =
 
     IF TextUtils.EndsWith(res, "lib") AND TextUtils.Contains(res, "cygwin") AND TextUtils.Contains(res, "home") AND TextUtils.Contains(res, "elego") AND TextUtils.Contains(res, "tmp") THEN
       RTIO.PutText("BIN_INSTALL is " & t.bin_install & "\n");
-      RTIO.PutText("LIB_INSTALL is " & t.install_root & "\n");
-      RTIO.PutText("INSTALL_ROOT is " & t.lib_install & "\n");
+      RTIO.PutText("LIB_INSTALL is " & t.lib_install  & "\n");
+      RTIO.PutText("INSTALL_ROOT is " & t.install_root & "\n");
       RTIO.PutText("res is " & res & "\n");
       RTIO.Flush();
     END;
