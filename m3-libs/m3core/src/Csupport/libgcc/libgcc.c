@@ -35,15 +35,11 @@ void m3_quash_darwin_libtool_warning_that_libgcc_has_no_symbols(void)
 #ifndef __GNUC__
 
 #ifdef _MSC_VER
-typedef __int32 INT32;
 typedef __int64 INT64;
-typedef unsigned __int32 UINT32;
 typedef unsigned __int64 UINT64;
 #else
 typedef long long INT64;
 typedef unsigned long long UINT64;
-typedef int INT32;
-typedef unsigned int UINT32;
 #endif
 
 /*
