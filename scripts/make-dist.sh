@@ -37,10 +37,19 @@ COLLDEPS="${ROOT}/www/releng/collection-deps.txt"
 cd "${ROOT}" || exit 1
 if [ -z "${OMIT_UPDATE}" ]; then
   case ${DS} in
-    RC*) cvs -q up -r release_CM3_5_8_${DS} -dP;;
-    *) cvs -q up -r release_branch_cm3_5_8 -dP;;
+    RC*)
+        echo cvs -q up -r release_CM3_5_8_${DS} -dP
+        cvs -q up -r release_CM3_5_8_${DS} -dP;;
+    *)
+        echo cvs -q up -r release_branch_cm3_5_8 -dP
+        cvs -q up -r release_branch_cm3_5_8 -dP;;
   esac
 fi
+
+echo dos2unix scripts/*
+dos2unix scripts/*
+echo dos2unix scripts/regression/*
+dos2unix scripts/regression/*
 
 # keep short runpaths
 M3_PORTABLE_RUN_PATH=1
