@@ -73,6 +73,12 @@ UINT64 __udivmoddi4 (UINT64 x, UINT64 y, UINT64 *r) { *r = x % y; return x / y; 
 int  __cmpdi2 ( INT64 x , INT64 y) { return x < y ? 0 : x == y ? 1 : 2; }
 int __ucmpdi2 (UINT64 x, UINT64 y) { return x < y ? 0 : x == y ? 1 : 2; }
 
+/* INT64 to float (double int to single float) */
+float __floatdisf (INT64 x) { return x; }
+
+/* INT64 to double (double int to double float) */
+double __floatdidf (INT64 x) { return x; }
+
 /*
 count leading zeros?
 int __clzsi2 (UINT32 x) { return __builtin_clz (x); }
