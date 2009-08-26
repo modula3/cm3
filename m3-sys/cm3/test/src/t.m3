@@ -25,6 +25,17 @@ PROCEDURE BoolToText(a: BOOLEAN) : TEXT =
 BEGIN
   T("");
   T("a");
+  T("a/");
+  T("a//");
+  T("a/.");
+  T("a//.");
+
+  T("abc");
+  T("abc/");
+  T("abc//");
+  T("abc/.");
+  T("abc//.");
+
   T("/");
   T("/foo");
   T("/foo/bar");
