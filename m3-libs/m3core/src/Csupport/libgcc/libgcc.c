@@ -34,18 +34,12 @@ void m3_quash_darwin_libtool_warning_that_libgcc_has_no_symbols(void)
 
 #ifndef __GNUC__
 
-typedef int word_type;
-
 #ifdef _MSC_VER
-typedef __int32 INT32;
 typedef __int64 INT64;
-typedef unsigned __int32 UINT32;
 typedef unsigned __int64 UINT64;
 #else
 typedef long long INT64;
 typedef unsigned long long UINT64;
-typedef int INT32;
-typedef unsigned int UINT32;
 #endif
 
 /*
@@ -56,9 +50,9 @@ l is logical -- unsigned
 a is arithmetic -- signed
 */
 
- INT64 __ashldi3 ( INT64 x, word_type c) { return x << c; }
- INT64 __ashrdi3 ( INT64 x, word_type c) { return x >> c; }
-UINT64 __lshrdi3 (UINT64 x, word_type c) { return x >> c; }
+ INT64 __ashldi3 ( INT64 x, int c) { return x << c; }
+ INT64 __ashrdi3 ( INT64 x, int c) { return x >> c; }
+UINT64 __lshrdi3 (UINT64 x, int c) { return x >> c; }
 
  INT64  __divdi3 ( INT64 x,  INT64 y) { return x / y; }
 UINT64 __udivdi3 (UINT64 x, UINT64 y) { return x / y; }
@@ -72,8 +66,14 @@ INT64 __negdi2 (INT64 x) { return -x; }
 
 UINT64 __udivmoddi4 (UINT64 x, UINT64 y, UINT64 *r) { *r = x % y; return x / y; }
 
-word_type  __cmpdi2 ( INT64 x , INT64 y) { return x < y ? 0 : x == y ? 1 : 2; }
-word_type __ucmpdi2 (UINT64 x, UINT64 y) { return x < y ? 0 : x == y ? 1 : 2; }
+int  __cmpdi2 ( INT64 x , INT64 y) { return x < y ? 0 : x == y ? 1 : 2; }
+int __ucmpdi2 (UINT64 x, UINT64 y) { return x < y ? 0 : x == y ? 1 : 2; }
+
+/* INT64 to float (double int to single float) */
+float __floatdisf (INT64 x) { return x; }
+
+/* INT64 to double (double int to double float) */
+double __floatdidf (INT64 x) { return x; }
 
 /*
 count leading zeros?
