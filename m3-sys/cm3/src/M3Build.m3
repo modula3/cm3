@@ -1870,7 +1870,7 @@ PROCEDURE MakeRoom (t: T;  space: INTEGER) =
 PROCEDURE DoUnresolve (t: T;  res: TEXT): TEXT =
   BEGIN
 
-    IF TextUtils.EndsWith(res, "lib") AND TextUtils.Contains(res, "cygwin") AND TextUtils.Contains(res, "home") AND TextUtils.Contains(res, "elego") AND TextUtils.Contains(res, "tmp") THEN
+    IF TextUtils.EndsWith(res, "lib") AND TextUtils.Contains(res, "cygwin") AND TextUtils.Contains(res, "home") AND TextUtils.Contains(res, "elego") THEN
       RTIO.PutText("BIN_INSTALL is " & t.bin_install & "\n");
       RTIO.PutText("LIB_INSTALL is " & t.lib_install  & "\n");
       RTIO.PutText("INSTALL_ROOT is " & t.install_root & "\n");
