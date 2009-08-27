@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.16 2009-08-26 20:28:06 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.17 2009-08-27 01:33:52 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -46,10 +46,12 @@ if [ -z "${OMIT_UPDATE}" ]; then
   esac
 fi
 
-echo dos2unix scripts/*
-dos2unix scripts/*
-echo dos2unix scripts/regression/*
-dos2unix scripts/regression/*
+if [ type dos2unix > /dev/null ]; then
+    echo dos2unix scripts/*
+    dos2unix scripts/*
+    echo dos2unix scripts/regression/*
+    dos2unix scripts/regression/*
+fi
 
 # keep short runpaths
 M3_PORTABLE_RUN_PATH=1
