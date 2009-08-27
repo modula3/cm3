@@ -1,5 +1,5 @@
 /*
-This is a wrapper for \cygwin\bin\cvs.exe that doesn't requiring changing %PATH%.
+This is a wrapper for \cygwin\bin\cvs.exe that doesn't require changing %PATH%.
 Put it in some directory already in %PATH%, such as %WinDir% or %WinDir%\system32.
 As well, on the Elego Windows VM, \Program Files\CVSNT has been renamed to CVSNT.1
 to get it out of %PATH%. It ruins line endings.
