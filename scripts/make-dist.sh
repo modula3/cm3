@@ -46,13 +46,6 @@ if [ -z "${OMIT_UPDATE}" ]; then
   esac
 fi
 
-if [ type dos2unix > /dev/null ]; then
-    echo dos2unix scripts/*
-    dos2unix scripts/*
-    echo dos2unix scripts/regression/*
-    dos2unix scripts/regression/*
-fi
-
 # keep short runpaths
 M3_PORTABLE_RUN_PATH=1
 export M3_PORTABLE_RUN_PATH
