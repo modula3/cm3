@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.17 2009-08-27 01:33:52 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.18 2009-08-27 01:59:30 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -44,13 +44,6 @@ if [ -z "${OMIT_UPDATE}" ]; then
         echo cvs -q up -r release_branch_cm3_5_8 -dP
         cvs -q up -r release_branch_cm3_5_8 -dP;;
   esac
-fi
-
-if [ type dos2unix > /dev/null ]; then
-    echo dos2unix scripts/*
-    dos2unix scripts/*
-    echo dos2unix scripts/regression/*
-    dos2unix scripts/regression/*
 fi
 
 # keep short runpaths
