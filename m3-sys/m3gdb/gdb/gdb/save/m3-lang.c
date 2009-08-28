@@ -728,7 +728,7 @@ m3_print_subexp (struct expression *exp, int *pos,
     default:
       (*pos)--; /* I hate this kludge, but it sure saves code. */
       print_subexp_standard (exp, pos, stream, prec ) ;
-  };
+  }
 } /* m3_print_subexp */
 
 void
@@ -3823,11 +3823,11 @@ m3_evaluate_subexp_maybe_packed (
       arg1_type = value_type (arg1);
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER) {
 	LONGEST val = m3_value_as_integer (arg1);
-	if (val < 0) { val = -val; };
+	if (val < 0) { val = -val; }
 	return m3_value_from_longest (arg1_type, val);
       } else if (TYPE_CODE (arg1_type) == TYPE_CODE_FLT) {
 	double val = m3_value_as_float (arg1);
-	if (val < 0.0) { val = -val; };
+	if (val < 0.0) { val = -val; }
 	return value_from_double (arg1_type, val);
       } else {
 	error ("ABS requires an INTEGER, REAL, LONGREAL, or EXTENDED parameter");
@@ -4883,7 +4883,7 @@ skip_underscores (s, n)
   while ((n > 0) && (*s)) {
     if (*s == '_') n--;
     s++;
-  };
+  }
   if (n > 0) s = NULL;
   return s;
 }
@@ -5229,7 +5229,7 @@ m3_demangle (const char *mangled, int options)
       if (mangled_len > 4 + M3UID_LEN && m3uid_to_int (mangled + 3, &uid)) {
         sprintf (demangled, "%s", mangled + 4 + M3UID_LEN);
         return savestring (demangled, strlen(demangled));
-      };
+      }
       break;
 
     case 'I':
@@ -5253,7 +5253,7 @@ m3_demangle (const char *mangled, int options)
       if (mangled_len >= 3 + M3UID_LEN && m3uid_to_int (mangled + 3, &uid)) {
 	sprintf (demangled, "G$%.*s", M3UID_LEN, mangled + 3);
         return savestring (demangled, strlen(demangled));
-      };
+      }
       break;
 
     case 'n':
@@ -5261,7 +5261,7 @@ m3_demangle (const char *mangled, int options)
       if (mangled_len >= 4 + M3UID_LEN && m3uid_to_int (mangled + 3, &uid)) {
 	sprintf (demangled, "B$%s", mangled + 4 + M3UID_LEN);
         return savestring (demangled, strlen(demangled));
-      };
+      }
       break;
 
     case 'i':
@@ -5269,7 +5269,7 @@ m3_demangle (const char *mangled, int options)
       if (mangled_len > 10 && m3uid_to_int (mangled + 3, &uid)) {
   	sprintf (demangled, "H$%s", mangled + 4 + M3UID_LEN);
         return savestring (demangled, strlen(demangled));
-      };
+      }
       break;
 
     case 'A':
@@ -5288,7 +5288,7 @@ m3_demangle (const char *mangled, int options)
       if (mangled_len >= 3 + M3UID_LEN && m3uid_to_int (mangled + 3, &uid)) {
 	sprintf (demangled, "%.*s", M3UID_LEN, mangled + 3);
         return savestring (demangled, strlen(demangled));
-      };
+      }
       break;
     }  /* switch */
   }  /* if "M?_" */
@@ -5827,10 +5827,10 @@ m3_resolve_type (uid)
   if (sym) {
     struct type *t = SYMBOL_TYPE (sym);
     if (TYPE_CODE (t) == TYPE_CODE_M3_OPAQUE) {
-      t = m3_resolve_type (TYPE_FIELD_M3_UID (t, 0)); };
+      t = m3_resolve_type (TYPE_FIELD_M3_UID (t, 0)); }
     m3_fix_target_type (t);
     return t;
-  };
+  }
 
   if (m3uid_to_int (uid, &uid_val)) {
     if      (uid_val == 0x195c2a74) { return builtin_type_m3_integer; }
@@ -5871,7 +5871,7 @@ find_m3_type_named (name, must_find)
   if (s == NULL) {
     if (must_find) error ("unable to find type named \"%s\"\n", name);
     return NULL;
-  };
+  }
   return TYPE_M3_NAME_TYPE (SYMBOL_TYPE (s));
 }
 
