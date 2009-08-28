@@ -554,7 +554,7 @@ static struct   field_info TextCat_b_len;
 static struct   field_info TextCat_a_or_b_wide;
 
 static void
-init_m3_text_info ( )
+init_m3_text_info (void)
 { /* The hard-wired defaults here for uids of types and of (bit) offsets and sizes
      of fields will allow m3gdb to handle TEXT values even if the Modula-3 text
      library code was compiled without debug information.  However, they have
@@ -653,7 +653,7 @@ static struct type * library_type_m3_TextLiteral_buf_widechar;
 static struct type * library_type_m3_TextLiteral_buf_widechar_index;
 static BOOL TextLiteral_types_initialized = FALSE;
 
-static void init_m3_TextLiteral_library_types ( )
+static void init_m3_TextLiteral_library_types (void)
 
 { if ( ! TextLiteral_types_initialized )
     { library_type_m3_TextLiteral_buf_char_index
