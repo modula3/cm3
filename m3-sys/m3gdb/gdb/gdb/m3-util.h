@@ -61,10 +61,10 @@ extern int rttype_infomap_map_offset;
 extern int rttype_infomap_cnt_size;
 extern int rttype_infomap_cnt_offset;
 
-extern bool m3_constant_init_done;
+extern BOOL m3_constant_init_done;
 
 /* We are allowing unsafe operations. */
-extern bool
+extern BOOL
 is_unsafe ( void );
 
 /* Special value attached to "type" values
@@ -106,7 +106,7 @@ m3_allocate_value_that_is_type ( struct type * type_of_value );
 /* Modula-3 expressions can be either values or types.  m3gdb
    'struct value's represent either, despite the name.  This
    distinguishes. */
-extern bool
+extern BOOL
 m3_value_is_type ( struct value * val );
 
 /* Given a block, return the symtab it belongs to. */
@@ -117,7 +117,7 @@ extern
 struct type *
 find_m3_type_named
   ( char * name
-  ,  bool must_find /* Emit an error message, if can't find it. */
+  ,  BOOL must_find /* Emit an error message, if can't find it. */
   );
 
 extern char * find_m3_type_name (struct type *);
@@ -167,13 +167,13 @@ m3_unit_name_globals_symbol (
 
 /* Is sym the symbol of a Modula-3 globals record for either an interface
    of a module? */
-extern bool
+extern BOOL
 m3_is_globals_record_symbol ( const struct symbol * sym );
 
-extern bool
+extern BOOL
 m3_is_interface_global_record ( struct symbol * sym );
 
-extern bool
+extern BOOL
 m3_is_module_global_record ( struct symbol * sym );
 
 /* Return the pseudo-record-type that has one field for each exported
@@ -185,7 +185,7 @@ extern struct type *
 find_m3_exported_interfaces ( const char * module_name );
 
 /* Is sym the symbol of a Modula-3 type name? */
-extern bool
+extern BOOL
 m3_is_type_name_symbol ( const struct symbol * sym );
 
 /* Look in 'block' for a declaration of a type. */
@@ -269,7 +269,7 @@ m3_revealed_unpacked_direct_type ( struct type * param_type );
 /* The base type of param_type, if, after stripping indirects and packeds,
    it is an ordinal type. Otherwise, NULL. */
 extern struct type *
-m3_ordinal_base_type ( struct type * param_type, bool * is_int_or_card );
+m3_ordinal_base_type ( struct type * param_type, BOOL * is_int_or_card );
 
 /* Return the typecode of the object at inferior address addr.
    PRE: addr is the inferior address of a object with a typecode header,
@@ -322,24 +322,24 @@ m3_super_tc_addr_from_tc_addr (CORE_ADDR);
 extern CORE_ADDR
 m3_defaultMethods_from_tc_addr (CORE_ADDR);
 
-extern bool
+extern BOOL
 m3_find_rec_field (struct type *, const char *, int *, int *,
                   struct type **);
 
-extern bool
+extern BOOL
 m3_find_obj_field (struct type *, char *, int *, int *,
                   struct type **);
 
-extern bool
+extern BOOL
 m3_find_obj_method (struct type *obj_type,
                                char *name,
                                int *size, int *offset,
                                struct type **type);
 
-extern bool
+extern BOOL
 m3_is_ordinal_type (struct type *);
 
-extern bool
+extern BOOL
 m3_type_is_signed ( struct type *type );
 
 extern void
@@ -355,7 +355,7 @@ extern gdb_byte *
 m3_read_object_fields_bits (CORE_ADDR);
 
 extern LONGEST
-m3_extract_ord (const gdb_byte *, int, int, bool);
+m3_extract_ord (const gdb_byte *, int, int, BOOL);
 
 extern CORE_ADDR
 m3_extract_address (const gdb_byte *, int);
@@ -497,11 +497,11 @@ m3_build_gdb_proc_closure (
   );
 
 /* Is inf_addr the inferior address of a Modula-3 procedure closure? */
-extern bool
+extern BOOL
 m3_inf_address_is_proc_closure ( CORE_ADDR inf_addr );
 
 /* Is closure_value a Modula-3 procedure closure value?  */
-extern bool
+extern BOOL
 m3_value_is_proc_closure ( struct value * closure_value );
 
 /* valaddr/bitpos point to a gdb-space value of Modula-3 procedure type,
@@ -521,7 +521,7 @@ m3_proc_env_ptr ( const gdb_byte * valaddr, int bitpos );
 extern struct block *
 m3_block_proc_block ( struct block * blk );
 
-extern bool
+extern BOOL
 m3_address_lies_within_frame_locals (
     CORE_ADDR address,
     struct frame_info * frame

@@ -29,7 +29,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 */
 
 /* We are allowing unsafe operations. */
-extern bool is_unsafe ( void );
+extern BOOL is_unsafe ( void );
 
 extern int
 m3_parse PARAMS ((void));   /* Defined in c-exp.y */
@@ -77,7 +77,7 @@ m3_set_value_open_array_shape_component (
    object.  This type is good until the next call on this function.  If not,
    return zero.
 */
-extern bool /* Yes, it's that field of that type. */
+extern BOOL /* Yes, it's that field of that type. */
 m3_check_TextLiteral_buf
   ( CORE_ADDR ref,
     CORE_ADDR tc_addr,
@@ -171,13 +171,13 @@ extern CORE_ADDR m3_tc_addr_to_super_tc_addr (CORE_ADDR);
 
 extern CORE_ADDR m3_tc_address_to_defaultMethods (CORE_ADDR);
 
-extern bool m3_types_equal ( struct type * left, struct type * right );
+extern BOOL m3_types_equal ( struct type * left, struct type * right );
 
 extern int is_m3_type ( struct type * m3_type );
 
 extern int is_m3_ordinal_type (struct type *);
 
-extern bool m3_type_is_signed ( struct type *type );
+extern BOOL m3_type_is_signed ( struct type *type );
 
 extern void m3_ordinal_bounds (struct type *, LONGEST *, LONGEST *);
 

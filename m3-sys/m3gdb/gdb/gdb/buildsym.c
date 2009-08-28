@@ -830,7 +830,7 @@ end_symtab (CORE_ADDR end_addr, struct objfile *objfile, int section)
   struct context_stack *cstk;
   struct subfile *nextsub;
 #ifdef _LANG_m3
-  bool m3_patch_done = false;
+  BOOL m3_patch_done = FALSE;
 #endif
 
   /* Finish the lexical context of the last function in the file; pop
@@ -946,7 +946,7 @@ end_symtab (CORE_ADDR end_addr, struct objfile *objfile, int section)
              compilation, but I'm paranoid. rodney.bates@wichita.edu */
           if (subfile->language == language_m3 && !m3_patch_done)
             { m3_patch_nested_procs ( blockvector );
-              m3_patch_done = true;
+              m3_patch_done = TRUE;
             }
 #endif
    	  if (subfile->line_vector)

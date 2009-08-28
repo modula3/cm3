@@ -48,42 +48,42 @@ commute_subtype_relation ( enum subtype_rel param_rel )
       }
   } /* commute_subtype_relation */
 
-static bool
+static BOOL
 m3_types_equal ( struct type * left, struct type * right );
 
-static bool
+static BOOL
 m3_type_fields_equal ( struct type * left, struct type * right )
 
 { int i;
 
   if ( TYPE_NFIELDS ( left ) != TYPE_NFIELDS ( right ) )
-    { return false; }
+    { return FALSE; }
   for ( i = 0; i < TYPE_NFIELDS ( left ); i ++ )
     { if ( ! m3_types_equal
                ( TYPE_M3_FIELD_TYPE ( left, i ),
                  TYPE_M3_FIELD_TYPE ( right, i )
                )
-         ) { return false; }
+         ) { return FALSE; }
     }
-  return true;
+  return TRUE;
 }
 
-bool
+BOOL
 m3_types_equal ( struct type * left, struct type * right )
 
 { struct type * left_direct;
   struct type * right_direct;
   int i;
 
-  if ( left == NULL || right == NULL ) { return false; }
+  if ( left == NULL || right == NULL ) { return FALSE; }
   left_direct = m3_direct_type ( left );
   right_direct = m3_direct_type ( right );
   /* Avoid stripping off packed, because it affects type equality. */
   left_direct = m3_revealed_type ( left_direct );
   right_direct = m3_revealed_type ( right_direct );
-  if ( left_direct == right_direct ) { return true; }
+  if ( left_direct == right_direct ) { return TRUE; }
   if ( TYPE_CODE ( left_direct ) != TYPE_CODE ( right_direct ) )
-    { return false; }
+    { return FALSE; }
   switch ( TYPE_CODE ( left_direct ) )
     { case TYPE_CODE_M3_ARRAY :
         return m3_type_fields_equal ( left_direct, right_direct );
@@ -97,7 +97,7 @@ m3_types_equal ( struct type * left, struct type * right )
         return m3_type_fields_equal ( left_direct, right_direct );
       case TYPE_CODE_M3_SUBRANGE :
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         return
           TYPE_M3_SUBRANGE_MIN ( left_direct )
           == TYPE_M3_SUBRANGE_MIN ( right_direct )
@@ -105,65 +105,65 @@ m3_types_equal ( struct type * left, struct type * right )
              == TYPE_M3_SUBRANGE_MAX ( right_direct );
       case TYPE_CODE_M3_POINTER :
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_POINTER_TRACED ( left_direct )
              != TYPE_M3_POINTER_TRACED ( right_direct )
            )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_POINTER_BRANDED ( left_direct )
              != TYPE_M3_POINTER_BRANDED ( right_direct )
            )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_POINTER_BRANDED ( left_direct ) )
           { return TYPE_M3_POINTER_BRAND ( left_direct )
                    == TYPE_M3_POINTER_BRAND ( right_direct );
           }
-        return true;
+        return TRUE;
       case TYPE_CODE_M3_OPAQUE :
-        return false; /* Shouldn't happen. */
+        return FALSE; /* Shouldn't happen. */
 
       case TYPE_CODE_M3_RECORD :
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         for ( i = 0; i < TYPE_NFIELDS ( left_direct ); i ++ )
           { if ( TYPE_FIELD_NAME ( left_direct, i )
                  != TYPE_FIELD_NAME ( right_direct, i )
                )
-              { return false; }
+              { return FALSE; }
             if ( TYPE_M3_REC_FIELD_BITPOS ( left_direct, i )
                  != TYPE_M3_REC_FIELD_BITPOS ( right_direct, i )
                )
-              { return false; }
+              { return FALSE; }
             if ( TYPE_M3_REC_FIELD_BITSIZE ( left_direct, i )
                  != TYPE_M3_REC_FIELD_BITSIZE ( right_direct, i )
                )
-              { return false; }
+              { return FALSE; }
           }
-        return true;
+        return TRUE;
       case TYPE_CODE_M3_OBJECT :
         if ( TYPE_M3_OBJ_NFIELDS ( left_direct )
              != TYPE_M3_OBJ_NFIELDS ( right_direct)
            )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_OBJ_NMETHODS ( left_direct )
              != TYPE_M3_OBJ_NMETHODS ( right_direct)
            )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_OBJ_TRACED ( left_direct )
              != TYPE_M3_OBJ_TRACED ( right_direct )
            )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_OBJ_BRANDED ( left_direct )
              != TYPE_M3_OBJ_BRANDED ( right_direct )
            )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_OBJ_BRANDED ( left_direct ) )
           { if ( strcmp ( TYPE_M3_OBJ_BRAND ( left_direct )
                         , TYPE_M3_OBJ_BRAND ( right_direct )
                         )
                  != 0
                )
-            { return false; }
+            { return FALSE; }
           }
         for ( i = 0; i < TYPE_M3_OBJ_NMETHODS ( left_direct ); i ++ )
           { if ( strcmp ( TYPE_M3_OBJ_METHOD_NAME ( left_direct, i ),
@@ -171,13 +171,13 @@ m3_types_equal ( struct type * left, struct type * right )
                         )
                  != 0
                )
-              { return false; }
+              { return FALSE; }
             if ( ! m3_types_equal
                      ( TYPE_M3_OBJ_METHOD_TYPE ( left_direct, i ),
                        TYPE_M3_OBJ_METHOD_TYPE ( right_direct, i )
                      )
                )
-              { return false; }
+              { return FALSE; }
           }
         for ( i = 0; i < TYPE_M3_OBJ_NFIELDS ( left_direct ); i ++ )
           { if ( strcmp ( TYPE_M3_OBJ_FIELD_NAME ( left_direct, i ),
@@ -185,13 +185,13 @@ m3_types_equal ( struct type * left, struct type * right )
                         )
                  != 0
                )
-              { return false; }
+              { return FALSE; }
             if ( ! m3_types_equal
                      ( TYPE_M3_OBJ_FIELD_TYPE ( left_direct, i ),
                        TYPE_M3_OBJ_FIELD_TYPE ( right_direct, i )
                      )
                )
-              { return false; }
+              { return FALSE; }
             /* Perhaps it would be safe to assume that if the types
                are really the same, then the compiler will have ensured
                the bit packing is the same too, but then there is no
@@ -199,11 +199,11 @@ m3_types_equal ( struct type * left, struct type * right )
             if ( TYPE_M3_OBJ_FIELD_BITPOS ( left_direct, i )
                  != TYPE_M3_OBJ_FIELD_BITPOS ( right_direct, i )
                )
-              { return false; }
+              { return FALSE; }
             if ( TYPE_M3_OBJ_FIELD_BITSIZE ( left_direct, i )
                  != TYPE_M3_OBJ_FIELD_BITSIZE ( right_direct, i )
                )
-              { return false; }
+              { return FALSE; }
           }
         return m3_types_equal
                  ( TYPE_M3_OBJ_SUPER ( left_direct ),
@@ -215,16 +215,16 @@ m3_types_equal ( struct type * left, struct type * right )
         if ( TYPE_M3_PROC_NRAISES ( left_direct )
              != TYPE_M3_PROC_NRAISES ( right_direct )
            )
-          { return false; }
+          { return FALSE; }
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         for ( i = 0; i < TYPE_NFIELDS ( left_direct ); i ++ )
           { if ( TYPE_FIELD_NAME ( left_direct, i )
                  != TYPE_FIELD_NAME ( right_direct, i )
                )
-              { return false; }
+              { return FALSE; }
           }
-        return true;
+        return TRUE;
 
       case TYPE_CODE_M3_ADDRESS :
       case TYPE_CODE_M3_BOOLEAN :
@@ -245,7 +245,7 @@ m3_types_equal ( struct type * left, struct type * right )
       case TYPE_CODE_M3_VOID :
         /* There is only one type with each of these codes. */
         return TYPE_CODE ( left_direct ) == TYPE_CODE ( right_direct );
-      default : { return false; }
+      default : { return FALSE; }
     } /* switch */
 } /* m3_types_equal */
 
@@ -414,7 +414,7 @@ m3_value_equal (struct value *arg1, struct value *arg2)
     }
 }
 
-static bool
+static BOOL
 m3_value_less (struct value *arg1, struct value *arg2)
 {
   struct type * type1;
@@ -602,7 +602,7 @@ m3_allocated_type ( struct value * val )
   } /* m3_allocated_type*/
 
 /* FIXME: This has been replaced by m3_types_equal.  Take it out. */
-static bool
+static BOOL
 m3_equal_object_types ( struct type * left, struct type * right )
 
   { enum type_code left_code;
@@ -623,32 +623,32 @@ m3_equal_object_types ( struct type * left, struct type * right )
 
         case TYPE_CODE_M3_OBJECT :
           if ( left_code != TYPE_CODE ( right ) )
-            { return false; }
+            { return FALSE; }
           if ( TYPE_M3_OBJ_TRACED ( left ) != TYPE_M3_OBJ_TRACED ( right ) )
-            { return false; }
+            { return FALSE; }
           if ( TYPE_M3_OBJ_BRANDED ( left ) != TYPE_M3_OBJ_BRANDED ( right ) )
-            { return false; }
+            { return FALSE; }
           if ( TYPE_M3_OBJ_BRANDED ( left )
                && TYPE_M3_OBJ_BRAND ( left ) != TYPE_M3_OBJ_BRAND ( right )
              )
-            { return false; }
+            { return FALSE; }
           if ( TYPE_M3_OBJ_NFIELDS ( left ) != TYPE_M3_OBJ_NFIELDS ( right ) )
-            { return false; }
+            { return FALSE; }
           if ( TYPE_M3_OBJ_NMETHODS ( left ) != TYPE_M3_OBJ_NMETHODS ( right ) )
-            { return false; }
+            { return FALSE; }
           for ( i = 0; i < TYPE_M3_OBJ_NMETHODS ( left ); i ++ )
             { if ( strcmp ( TYPE_M3_OBJ_METHOD_NAME ( left, i ),
                             TYPE_M3_OBJ_METHOD_NAME ( right, i )
                           )
                    != 0
                  )
-                { return false; }
+                { return FALSE; }
               if ( ! m3_types_equal
                        ( TYPE_M3_OBJ_METHOD_TYPE ( left, i ),
                          TYPE_M3_OBJ_METHOD_TYPE ( right, i )
                        )
                  )
-                { return false; }
+                { return FALSE; }
             }
           for ( i = 0; i < TYPE_M3_OBJ_NFIELDS ( left ); i ++ )
             { if ( strcmp ( TYPE_M3_OBJ_FIELD_NAME ( left, i ),
@@ -656,18 +656,18 @@ m3_equal_object_types ( struct type * left, struct type * right )
                           )
                    != 0
                  )
-                { return false; }
+                { return FALSE; }
               if ( ! m3_types_equal
                        ( TYPE_M3_OBJ_FIELD_TYPE ( left, i ),
                          TYPE_M3_OBJ_FIELD_TYPE ( right, i )
                        )
                  )
-                { return false; }
+                { return FALSE; }
             }
           return m3_equal_object_types
                    ( TYPE_M3_OBJ_SUPER ( left ), TYPE_M3_OBJ_SUPER ( right ) );
         default:
-          return false;
+          return FALSE;
       }
 
   }  /* m3_equal_object_types */
@@ -681,7 +681,7 @@ reference_type_depth ( struct type * start_type )
 
   result = 0;
   l_type = start_type;
-  while ( true )
+  while ( TRUE )
     { if ( l_type == NULL )
         { return result; }
       switch ( TYPE_CODE ( l_type ) )
@@ -715,69 +715,69 @@ reference_type_depth ( struct type * start_type )
    BRANDED "Text-1.0" REF ARRAY OF CHAR?
    PRE: Indirects, packed, and opaque have been removed from 'text_type'.
 */
-static bool
+static BOOL
 is_pm3_text_revelation ( struct type * text_type )
 
 { struct type * array_type;
   struct type * elem_type;
 
   if ( text_type == NULL )
-    { return false; }
+    { return FALSE; }
   if ( m3_compiler_kind ( ) != m3_ck_pm3  )
-    { return false; }
+    { return FALSE; }
   switch ( TYPE_CODE ( text_type ) )
     { case TYPE_CODE_M3_TEXT:
       case TYPE_CODE_M3GDB_STRING:
       case TYPE_CODE_M3GDB_WIDESTRING:
-        return true;
+        return TRUE;
       case TYPE_CODE_M3_POINTER:
         if ( ! TYPE_M3_POINTER_BRANDED ( text_type ) )
-          { return false; }
+          { return FALSE; }
         if ( strcmp ( TYPE_M3_POINTER_BRAND ( text_type ), "Text-1.0" ) != 0 )
-          { return false; }
+          { return FALSE; }
         array_type = TYPE_M3_POINTER_TARGET ( text_type );
         if ( array_type == NULL
              || TYPE_CODE ( array_type ) != TYPE_CODE_M3_OPEN_ARRAY
            )
-          { return false; }
+          { return FALSE; }
         elem_type = TYPE_M3_OPEN_ARRAY_ELEM ( array_type );
         if ( elem_type == NULL
              || TYPE_CODE ( elem_type ) != TYPE_CODE_M3_CHAR
            )
-          { return false; }
-        return true;
+          { return FALSE; }
+        return TRUE;
       default:
-        return false;
+        return FALSE;
     }
 } /* is_pm3_text_revelation */
 
 /* Is this type CM3 TEXT, its revelation, or any subtype thereof?
    PRE: Indirects, packed, and opaque have been removed from 'text_type'.
 */
-static bool
+static BOOL
 is_cm3_text_subtype ( struct type * text_type )
 
 { struct type * supertype;
 
   if ( m3_compiler_kind ( ) != m3_ck_cm3 )
-    { return false; }
+    { return FALSE; }
   supertype = text_type;
-  while ( true )
+  while ( TRUE )
     { if ( supertype == NULL )
-        { return false; }
+        { return FALSE; }
       switch ( TYPE_CODE ( supertype ) )
         { case TYPE_CODE_M3_TEXT:
           case TYPE_CODE_M3GDB_STRING:
           case TYPE_CODE_M3GDB_WIDESTRING:
-            return true;
+            return TRUE;
           case TYPE_CODE_M3_OBJECT:
             if ( TYPE_M3_POINTER_BRANDED ( supertype )
                  && strcmp ( TYPE_M3_POINTER_BRAND ( supertype ), "Text-2.0" )
                     == 0 )
-              { return true; }
+              { return TRUE; }
             supertype = TYPE_M3_OBJ_SUPER ( supertype );
           default:
-            return false;
+            return FALSE;
         }
     }
 } /* is_cm3_text_subtype */
@@ -1023,8 +1023,8 @@ m3_check_and_coerce_ordinal (
     LONGEST rhs_lower;
     LONGEST rhs_upper;
     LONGEST contents;
-    bool lhs_is_int_or_card = false;
-    bool rhs_is_int_or_card = false;
+    BOOL lhs_is_int_or_card = FALSE;
+    BOOL rhs_is_int_or_card = FALSE;
 
     lhs_base_type = m3_ordinal_base_type ( lhs_type, & lhs_is_int_or_card );
     if ( lhs_base_type == NULL ) { return NULL; }
@@ -1286,7 +1286,7 @@ m3_get_array_info ( struct type * array_type,
   int l_fixed_dims = 0;
 
   if ( l_type != NULL )
-    { while ( true )
+    { while ( TRUE )
         { switch ( TYPE_CODE ( l_type ) )
             { case TYPE_CODE_M3_ARRAY:
                 l_fixed_dims ++;
@@ -1474,7 +1474,7 @@ m3_check_and_coerce_array (
        )
       /* Reusing dope. No check or change to shape required. */
       { return result; }
-    while ( true )
+    while ( TRUE )
       { switch ( TYPE_CODE ( l_lhs_type ) )
           { case TYPE_CODE_M3_OPEN_ARRAY:
               switch ( TYPE_CODE ( l_rhs_type ) )
@@ -1615,12 +1615,12 @@ m3_check_and_coerce_array (
 
    This function patches the result type of the procedure constant symbol
    and also returns its result type.  result_is_ref_param  (which may be NULL)
-   is set to true iff it is a result that is, at machine-code level,
+   is set to TRUE iff it is a result that is, at machine-code level,
    implemented as a VAR parameter.
 */
 static struct type *
 m3_patched_proc_result_type (
-  CORE_ADDR code_addr, char * name, bool * result_is_ref_param )
+  CORE_ADDR code_addr, char * name, BOOL * result_is_ref_param )
 
 { struct symbol * proc_sym;
   struct type * proc_type;
@@ -1628,9 +1628,9 @@ m3_patched_proc_result_type (
   struct block * body_block;
   struct symbol * result_sym;
   struct type * result_type;
-  bool l_result_is_ref_param;
+  BOOL l_result_is_ref_param;
 
-  if ( result_is_ref_param != NULL ) { * result_is_ref_param = false; }
+  if ( result_is_ref_param != NULL ) { * result_is_ref_param = FALSE; }
   proc_sym = find_pc_function ( code_addr );
   if ( proc_sym == NULL )
     { error
@@ -1651,7 +1651,7 @@ m3_patched_proc_result_type (
     /* CHECK:  This could happen just because of inadequate debug info,
                even for a function procedure.  Is there anything we
                can do? */
-    { l_result_is_ref_param = false;
+    { l_result_is_ref_param = FALSE;
       result_type = builtin_type_m3_void;
       TYPE_M3_FUNC_RESULT_CODE ( proc_type ) = m3_res_none;
     }
@@ -1673,7 +1673,7 @@ m3_patched_proc_result_type (
                        "_result" ) == 0
                      )
             { TYPE_M3_FUNC_RESULT_CODE ( proc_type ) = m3_res_rightmost; }
-          else { gdb_assert ( false ); }
+          else { gdb_assert ( FALSE ); }
         }
     }
   if ( result_is_ref_param != NULL )
@@ -1804,7 +1804,7 @@ m3_check_and_coerce_proc (
        )
       { return NULL; }
     /* FIXME: Do type check of two similar procedure types. */
-    if ( false )
+    if ( FALSE )
       { if ( proc_name == NULL )
           { error (_("Procedure type not assignable.")); /* NORETURN */ }
         else
@@ -1996,7 +1996,7 @@ m3_evaluate_call (
 
   { struct type * result_type;
     struct type * proc_type;
-    bool result_is_ref_param;
+    BOOL result_is_ref_param;
     struct value * * argvec;
     int downward_nargs; /* number in argvec, passed at machine level. */
     int expected_args;
@@ -2134,7 +2134,7 @@ m3_evaluate_enum_const (
   * pos += 6 + BYTES_TO_EXP_ELEM ( field_name_len + 1 );
   nconsts = TYPE_M3_ENUM_NVALS ( lhs_type );
   i = 0;
-  while ( true )
+  while ( TRUE )
     { if ( i >= nconsts )
         { error
             (("Enumeration type \"%s\" has no value named \"%s\"."),
@@ -2262,7 +2262,7 @@ m3_evaluate_dot (
                typecodes: */
             supertype_tc_addr = allocated_tc_addr;
             supertype = m3_type_from_tc ( supertype_tc_addr );
-            if ( false )
+            if ( FALSE )
           { while ( supertype != lhs_type )
               { supertype_tc_addr
                   = m3_super_tc_addr_from_tc_addr ( supertype_tc_addr );
@@ -2272,7 +2272,7 @@ m3_evaluate_dot (
             /* Here, supertype_tc_addr and supertype are for the static type. */
           }
             /* Here, supertype_tc_addr and supertype are for the allocated type. */
-            while ( true ) /* Search supertypes for field/method. */
+            while ( TRUE ) /* Search supertypes for field/method. */
               { if ( TYPE_CODE ( supertype ) != TYPE_CODE_M3_OBJECT )
                   { error
                       (_("Object has no field or method named \"%s\".")
@@ -2519,10 +2519,10 @@ m3_evaluate_text_literal (
   } /* m3_evaluate_text_literal */
 
 /* If 'arg' is any ordinal value (including a type) that FIRST, LAST, or
-   NUMBER can be applied to, return 'true' and set the ordinal base type
+   NUMBER can be applied to, return 'TRUE' and set the ordinal base type
    and bounds of 'arg'.  Write an error (and don't return) if something
-   is known illegal.  Return false if other legal possibilities exist. */
-static bool
+   is known illegal.  Return FALSE if other legal possibilities exist. */
+static BOOL
 m3_ordinal_FIRST_info (
     struct value * arg,
     struct type * * base_type,
@@ -2563,10 +2563,10 @@ m3_ordinal_FIRST_info (
           { * upper = m3_value_open_array_shape_component ( arg, 0 ) - 1; }
         ordinal_type = builtin_type_m3_integer;
       }
-    else { return false; } /* Let caller try something else. */
+    else { return FALSE; } /* Let caller try something else. */
     if ( base_type != NULL )
       { * base_type = m3_ordinal_base_type ( ordinal_type, NULL ); }
-    return true;
+    return TRUE;
   } /* m3_ordinal_FIRST_info */
 
 static struct value *
@@ -2578,7 +2578,7 @@ m3_eval_VAL ( struct expression *exp, int *pos, enum noside noside )
     struct type * arg2_type;
     struct type * arg1_base_type;
     LONGEST sval;
-    bool arg1_is_int_or_card;
+    BOOL arg1_is_int_or_card;
 
     (*pos) += 1;
     arg1 = m3_evaluate_subexp ( NULL_TYPE, exp, pos, noside );

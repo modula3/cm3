@@ -55,7 +55,7 @@ static void write_exp_var (struct symbol *sym, struct block *blk)
 }
 
 /* If unit.entry is a global, build an OP_VAR_VALUE expression node
-   and return true.  Else return false. */
+   and return TRUE.  Else return FALSE. */
 
 static int
 m3_find_global (unit, entry)
@@ -550,18 +550,18 @@ static int m3_parse_e7 ()
 
       case TK_LPAREN: {
         extern int arglist_len;
-        bool more_args;
+        BOOL more_args;
         get_token ();
         start_arglist ();
         if (cur_tok.kind == TK_RPAREN) {get_token ();}
         else {
-          more_args = true;
+          more_args = TRUE;
           while (more_args) {
             if (m3_parse_expr ()) {return 1;}
             arglist_len++;
             switch (cur_tok.kind) {
               case TK_COMMA: { get_token(); break; }
-              case TK_RPAREN: { get_token(); more_args = false; break; }
+              case TK_RPAREN: { get_token(); more_args = FALSE; break; }
               default: { error ("missing ')'"); return 1;}
             } /* switch */
           } /* while */

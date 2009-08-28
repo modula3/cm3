@@ -36,7 +36,7 @@ extern char *
 m3uid_from_num (const LONGEST x);
 /* converts the integer uid 'x' to its string representation */
 
-extern bool
+extern BOOL
 m3uid_to_num (const char *uid, LONGEST *num_val);
 /* converts the string 'uid' to a numeric 'int_val',
    returns a boolean indicating success. */
