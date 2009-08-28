@@ -6377,7 +6377,7 @@ find_m3_rec_field (
     if ( bitpos != NULL ) { * bitpos = 0; }
     return 0;
   } /* find_m3_rec_field */
-                
+
 int
 find_m3_obj_field (
     struct type *obj_type,
