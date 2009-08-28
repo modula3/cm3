@@ -191,47 +191,47 @@ m3_scan_number (char *input, struct m3_token *tok)
     val = 0;
     if (*c == '0' && ( *(c+1) == 'x' || *(c+1) == 'X' ) )
       { /* Go ahead and accept the C lexical syntax for hex numbers. */
-	is_based = TRUE;
-	base = 16;
-	c = c + 2;
+        is_based = TRUE;
+        base = 16;
+        c = c + 2;
       }
     else
       { /* Scan and convert the leading decimal digits */
-	while ('0' <= *c && *c <= '9')
-	  { digit = *c - '0';
-	    if ( ( ULONGEST_MAX - digit ) / 10 < val )
-	      { error
+        while ('0' <= *c && *c <= '9')
+          { digit = *c - '0';
+            if ( ( ULONGEST_MAX - digit ) / 10 < val )
+              { error
                   (_("Numeric literal value too large.\n")); /* NORETURN */
               }
-	    val = val * 10 + digit;
-	    c++;
-	  }
-	if (*c == '_')
-	  { /* It's a based value in Modula-3 syntax. */
-	    is_based = TRUE;
-	    base = val;
-	    c++;
-	    if ((base < 2) || (16 < base))
-	      { error
-		  (_("%d is an illegal base for a Modula-3 literal.")
-		  , (int) base
-		  ); /* NORETURN */
-	      }
-	  }
-	else is_based = FALSE;
+            val = val * 10 + digit;
+            c++;
+          }
+        if (*c == '_')
+          { /* It's a based value in Modula-3 syntax. */
+            is_based = TRUE;
+            base = val;
+            c++;
+            if ((base < 2) || (16 < base))
+              { error
+                  (_("%d is an illegal base for a Modula-3 literal.")
+                  , (int) base
+                  ); /* NORETURN */
+              }
+          }
+        else is_based = FALSE;
       }
 
     /* See if it's a real literal. If so, throw away the converted integer
        value, lexically check it, then call atof to convert. */
     if ( (*c == '.') && (c[1] != '.') )
       { if ( is_based )
-	  { error (_("Based number cannot be real.\n") ); /* NORETURN */ }
+          { error (_("Based number cannot be real.\n") ); /* NORETURN */ }
         /* scan a floating point number */
         c++; /* skip the decimal point */
 
         /* scan the fractional digits */
         if ( (*c < '0') || ('9' < *c) )
-	  { error (_("Missing digits in real fraction") ); /* NORETURN */ }
+          { error (_("Missing digits in real fraction") ); /* NORETURN */ }
 
         while ( '0' <= *c && *c <= '9' )
           { c++; }
@@ -239,15 +239,15 @@ m3_scan_number (char *input, struct m3_token *tok)
         /* check for the exponent */
         if ( ( *c == 'e' ) || ( *c == 'E' ) )
           { *c++ = 'e';  /* since atof only knows about 'e' */
-	    tok->kind = TK_REAL_LIT;
+            tok->kind = TK_REAL_LIT;
           }
         else if ( ( *c == 'd' ) || ( *c == 'D' ) )
           { *c++ = 'e';  /* since atof only knows about 'e' */
-	    tok->kind = TK_LREAL_LIT;
+            tok->kind = TK_LREAL_LIT;
           }
         else if ( ( *c == 'x' ) || ( *c == 'X' ) )
           { *c++ = 'e';  /* since atof only knows about 'e' */
-	    tok->kind = TK_XREAL_LIT;
+            tok->kind = TK_XREAL_LIT;
           }
         else /* real constant with no exponent */
           { tok->kind = TK_REAL_LIT;
@@ -255,48 +255,48 @@ m3_scan_number (char *input, struct m3_token *tok)
             return c;
           }
 
-	/* check for an exponent sign */
-	if ( ( *c == '+' ) || ( *c == '-' ) )
-	  { c++; }
+        /* check for an exponent sign */
+        if ( ( *c == '+' ) || ( *c == '-' ) )
+          { c++; }
 
-	/* scan the exponent digits */
-	if ( ( *c < '0' ) || ( '9' < *c ) )
-	  { error (_("Missing digits in real exponent") ); /* NORETURN */ }
-	while ( '0' <= *c && *c <= '9' )
-	  { c++; }
+        /* scan the exponent digits */
+        if ( ( *c < '0' ) || ( '9' < *c ) )
+          { error (_("Missing digits in real exponent") ); /* NORETURN */ }
+        while ( '0' <= *c && *c <= '9' )
+          { c++; }
 
-	/* and do the conversion... */
-	tok->floatval = atof (input);
+        /* and do the conversion... */
+        tok->floatval = atof (input);
         return c;
       }
 
     /* It wasn't real.  Must be INTEGER or LONGINT. */
     if ( is_based )
       { /* scan a based integer */
-	val = 0;
-	based_start = c;
-	while ( TRUE )
-	  { if ('0' <= *c && *c <= '9')
-	      { digit = *c - '0'; }
-	    else if ('A' <= *c && *c <= 'F')
-	      { digit = *c - 'A' + 10; }
-	    else if ('a' <= *c && *c <= 'f')
-	      { digit = *c - 'a' + 10; }
-	    else { break; }
-	    if (digit >= base)
-	      { error
+        val = 0;
+        based_start = c;
+        while ( TRUE )
+          { if ('0' <= *c && *c <= '9')
+              { digit = *c - '0'; }
+            else if ('A' <= *c && *c <= 'F')
+              { digit = *c - 'A' + 10; }
+            else if ('a' <= *c && *c <= 'f')
+              { digit = *c - 'a' + 10; }
+            else { break; }
+            if (digit >= base)
+              { error
                   (_("Numeric literal digit too large.\n") ); /* NORETURN */
               }
-	    if ( ( ULONGEST_MAX - digit ) / base < val )
-	      { error
+            if ( ( ULONGEST_MAX - digit ) / base < val )
+              { error
                   (_("Numeric literal value too large.\n") ); /* NORETURN */
               }
-	    val = val * base + digit;
-	    c++;
-	  }
+            val = val * base + digit;
+            c++;
+          }
 
-	if ( c == based_start )
-	  { error
+        if ( c == based_start )
+          { error
               (_("Based integer literal has no digits.") ); /* NORETURN */
           }
       }
@@ -304,34 +304,34 @@ m3_scan_number (char *input, struct m3_token *tok)
     /* See if it's LONGINT. */
     if ( * c == 'l' || * c == 'L' )
       { if ( m3_compiler_kind ( ) != m3_ck_cm3 )
-	/* FIXME: ^This error condition is too weak.  Earlier CM3 compilers
-		   do not support LONGINT either, but how do we detect this? */
-	  { error
-	      (_("LONGINT literals not supported by this "
-		 "Modula-3 compiler ") );
-	  } /* NORETURN */
-	tok->kind   = TK_LONGINT_LIT;
-	m3_ordinal_bounds ( builtin_type_m3_longint, & lower, & upper );
-	c ++;
+        /* FIXME: ^This error condition is too weak.  Earlier CM3 compilers
+                   do not support LONGINT either, but how do we detect this? */
+          { error
+              (_("LONGINT literals not supported by this "
+                 "Modula-3 compiler ") );
+          } /* NORETURN */
+        tok->kind   = TK_LONGINT_LIT;
+        m3_ordinal_bounds ( builtin_type_m3_longint, & lower, & upper );
+        c ++;
       }
     else /* It's INTEGER. */
       { tok->kind   = TK_INTEGER_LIT; /* Could change. */
-	m3_ordinal_bounds ( builtin_type_m3_integer, & lower, & upper );
+        m3_ordinal_bounds ( builtin_type_m3_integer, & lower, & upper );
       }
 
     if ( is_based )
       { if ( val / 2 > upper )
-	  { error
-	      (_("Based integer literal value too large.\n"));
-	      /* NORETURN */
-	  }
+          { error
+              (_("Based integer literal value too large.\n"));
+              /* NORETURN */
+          }
       }
     else
       { if ( val > upper )
-	  { error
-	      (_("Integer literal value too large.\n"));
-	      /* NORETURN */
-	  }
+          { error
+              (_("Integer literal value too large.\n"));
+              /* NORETURN */
+          }
       }
     signed_val = (LONGEST) val; /* Hopefully, no overflow checks happen. */
     tok->intval = val;
@@ -602,13 +602,13 @@ scan_text (input, tok)
       else if (*input == '\'') { *next++ = '\'';  input++; }
       else if (*input == '"')  { *next++ = '"';   input++; }
       else if (*input == 'x' || *input == 'X') {
-	LONGEST hexval;
+        LONGEST hexval;
         input = scan_hex (++input, &hexval, FALSE);
-	*next++ = hexval;
+        *next++ = hexval;
       } else if (('0' <= *input) && (*input <= '7')) {
-	LONGEST octval;
+        LONGEST octval;
         input = scan_octal (input, &octval, FALSE);
-	*next++ = octval;
+        *next++ = octval;
       } else {
         error (_("Unknown escape sequence in text literal") ); /* NORETURN */
       }

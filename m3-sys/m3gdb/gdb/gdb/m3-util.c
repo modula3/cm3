@@ -120,13 +120,13 @@ init_m3_constants (void)
         return; /* without setting m3_constant_init_done. */
       }
     m3_find_rec_field (rt0_tc, "selfID",
-		     &rt0_tc_selfID_size, &rt0_tc_selfID_offset, 0);
+                     &rt0_tc_selfID_size, &rt0_tc_selfID_offset, 0);
     /* I don't know why, but the compiler seems to be sign-extending
        uid values into 64 bits on 64-bit targets.  Artificially change
        rt0_tc_selfID_size to compensate. */
     rt0_tc_selfID_size = 32;
     m3_find_rec_field (rt0_tc, "dataSize",
-		     &rt0_tc_dataSize_size, &rt0_tc_dataSize_offset, 0);
+                     &rt0_tc_dataSize_size, &rt0_tc_dataSize_offset, 0);
 
     rt0_otc = find_m3_type_named ("RT0.ObjectTypecell", /*must_find =*/ FALSE);
     is_cm3 = (rt0_otc != 0);
@@ -178,14 +178,14 @@ init_m3_constants (void)
       }
 
     m3_find_rec_field (rt0_otc, "dataOffset",
-		     &rt0_dataOffset_size, &rt0_dataOffset_offset, 0);
+                     &rt0_dataOffset_size, &rt0_dataOffset_offset, 0);
     m3_find_rec_field (rt0_otc, "methodOffset",
-		     &rt0_methodOffset_size, &rt0_methodOffset_offset, 0);
+                     &rt0_methodOffset_size, &rt0_methodOffset_offset, 0);
     m3_find_rec_field (rt0_otc, "parent",
-		     &rt0_parent_size, &rt0_parent_offset, 0);
+                     &rt0_parent_size, &rt0_parent_offset, 0);
     m3_find_rec_field (rt0_otc, "defaultMethods",
-		     &rt0_defaultMethods_size,
-		     &rt0_defaultMethods_offset, 0);
+                     &rt0_defaultMethods_size,
+                     &rt0_defaultMethods_offset, 0);
   }
 
   m3_constant_init_done = TRUE;
@@ -214,12 +214,12 @@ m3_emit_char (
 { c &= 0xFF; /* Avoid sign bit follies */
   if ( PRINT_LITERAL_FORM ( c ) )
     { if (c == '\\' || c == quoter)
-	{ fputs_filtered ("\\", stream); }
+        { fputs_filtered ("\\", stream); }
       fprintf_filtered (stream, "%c", c);
     }
   else
     { switch (c)
-	{ case '\n':
+        { case '\n':
             fputs_filtered ("\\n", stream);
             break;
           case '\b':
@@ -237,7 +237,7 @@ m3_emit_char (
           default:
             fprintf_filtered (stream, "\\%.3o", (unsigned int) c);
             break;
-	}
+        }
     }
 } /* m3_emit_char */
 
@@ -337,7 +337,7 @@ m3_print_string (
   for (i = 0; i < length && things_printed < print_max; ++i)
     {
       /* Position of the character we are examining
-	 to see whether it is repeated.  */
+         to see whether it is repeated.  */
       unsigned int rep1;
       /* Number of repetitions we have detected so far.  */
       unsigned int reps;
@@ -346,61 +346,61 @@ m3_print_string (
       QUIT;
 
       if (need_comma)
-	{
-	  fputs_filtered (", ", stream);
-	  need_comma = 0;
-	}
+        {
+          fputs_filtered (", ", stream);
+          need_comma = 0;
+        }
 
       current_char = extract_unsigned_integer (string + i * width, width);
 
       rep1 = i + 1;
       reps = 1;
       while (rep1 < length
-	     && extract_unsigned_integer (string + rep1 * width, width)
-	     == current_char)
-	{
-	  ++rep1;
-	  ++reps;
-	}
+             && extract_unsigned_integer (string + rep1 * width, width)
+             == current_char)
+        {
+          ++rep1;
+          ++reps;
+        }
 
       if (reps > repeat_count_threshold)
-	{
-	  if (in_quotes)
-	    {
-	      if (inspect_it)
-		fputs_filtered ("\\\", ", stream);
-	      else
-		fputs_filtered ("\", ", stream);
-	      in_quotes = 0;
-	    }
-	  m3_print_char_lit (string[i], stream);
-	  fprintf_filtered (stream, " <repeats %u times>", reps);
-	  i = rep1 - 1;
-	  things_printed += repeat_count_threshold;
-	  need_comma = 1;
-	}
+        {
+          if (in_quotes)
+            {
+              if (inspect_it)
+                fputs_filtered ("\\\", ", stream);
+              else
+                fputs_filtered ("\", ", stream);
+              in_quotes = 0;
+            }
+          m3_print_char_lit (string[i], stream);
+          fprintf_filtered (stream, " <repeats %u times>", reps);
+          i = rep1 - 1;
+          things_printed += repeat_count_threshold;
+          need_comma = 1;
+        }
       else
-	{
-	  if (!in_quotes)
-	    {
-	      if (inspect_it)
-		fputs_filtered ("\\\"", stream);
-	      else
-		fputs_filtered ("\"", stream);
-	      in_quotes = 1;
-	    }
-	  m3_emit_char (string[i], stream, '"');
-	  ++things_printed;
-	}
+        {
+          if (!in_quotes)
+            {
+              if (inspect_it)
+                fputs_filtered ("\\\"", stream);
+              else
+                fputs_filtered ("\"", stream);
+              in_quotes = 1;
+            }
+          m3_emit_char (string[i], stream, '"');
+          ++things_printed;
+        }
     }
 
   /* Terminate the quotes if necessary.  */
   if (in_quotes)
     {
       if (inspect_it)
-	fputs_filtered ("\\\"", stream);
+        fputs_filtered ("\\\"", stream);
       else
-	fputs_filtered ("\"", stream);
+        fputs_filtered ("\"", stream);
     }
 
   if (force_ellipsis || i < length)
@@ -1062,7 +1062,7 @@ m3_lookup_exported (
           { interface_name = TYPE_FIELD_NAME ( exports, i );
             sym = m3_lookup_interface_id ( interface_name, ident, symtab );
             if ( sym != NULL ) { return sym; }
-	  }
+          }
       }
 
     /* Not found. */
@@ -1249,8 +1249,8 @@ m3_typecode_from_inf_object_addr ( CORE_ADDR addr )
   if (!addr) { return 0; }
 
   read_memory (addr - (TARGET_PTR_BIT / TARGET_CHAR_BIT),
-		      (char *)&typecodeword,
-		      TARGET_PTR_BIT / TARGET_CHAR_BIT);
+                      (char *)&typecodeword,
+                      TARGET_PTR_BIT / TARGET_CHAR_BIT);
 
   /* the typecode is in Modula-3 bits 1..21 */
   typecode = m3_extract_ord((char *)&typecodeword, 1, 20, 0);
@@ -1388,7 +1388,7 @@ m3_tc_addr_from_inf_object_addr ( CORE_ADDR addr )
       result_code
         = target_read_memory
             ( debugee_addr,
-	      (char *)&result,
+              (char *)&result,
               TARGET_PTR_BIT / TARGET_CHAR_BIT
             );
       if (result_code != 0)
@@ -1451,11 +1451,11 @@ m3_tc_addr_from_type ( struct type * t )
 
   n_types = 0;
   read_memory (rttype_types_addr + rttype_infomap_cnt_offset / 8,
-		      (char*)&n_types, rttype_infomap_cnt_size / 8);
+                      (char*)&n_types, rttype_infomap_cnt_size / 8);
 
   map_ptr = 0;
   read_memory (rttype_types_addr + rttype_infomap_map_offset / 8,
-		      (char*)&map_ptr, rttype_infomap_map_size / 8);
+                      (char*)&map_ptr, rttype_infomap_map_size / 8);
   if (map_ptr == 0) {
     return 0;  /* no mapped typecells yet */
   }
@@ -1464,20 +1464,20 @@ m3_tc_addr_from_type ( struct type * t )
     /* get the InfoPtr */
     info_ptr = 0;
     read_memory (map_ptr
-		      + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT,
-		      (char*)&info_ptr, TARGET_PTR_BIT / TARGET_CHAR_BIT);
+                      + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT,
+                      (char*)&info_ptr, TARGET_PTR_BIT / TARGET_CHAR_BIT);
     if (!info_ptr) { continue; }
 
     /* get the typecell pointer */
     tc_addr = 0;
     read_memory (info_ptr + rttype_info_def_offset / 8,
-		      (char*)&tc_addr, TARGET_PTR_BIT / TARGET_CHAR_BIT);
+                      (char*)&tc_addr, TARGET_PTR_BIT / TARGET_CHAR_BIT);
     if (!tc_addr) { continue; }
 
     /* get the type's UID */
     selfID = 0;
     read_memory (tc_addr + rt0_tc_selfID_offset / TARGET_CHAR_BIT,
-		      (char*)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
+                      (char*)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
     if (selfID == num_uid) { return tc_addr; }
   }
 
@@ -1493,7 +1493,7 @@ m3_int_uid_from_tc_addr ( CORE_ADDR tc_addr )
 
   selfID = 0;
   read_memory (tc_addr + rt0_tc_selfID_offset / TARGET_CHAR_BIT,
-		      (char *)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
+                      (char *)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
 
   return selfID;
 } /* m3_int_uid_from_tc_addr */
@@ -1507,7 +1507,7 @@ m3_type_from_tc ( CORE_ADDR tc_addr )
 
   selfID = 0;
   read_memory (tc_addr + rt0_tc_selfID_offset / TARGET_CHAR_BIT,
-		      (char *)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
+                      (char *)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
 
   return (m3_resolve_type (m3uid_from_num (selfID)));
 } /* m3_type_from_tc */
@@ -1544,7 +1544,7 @@ m3_dataOffset_from_tc_addr ( CORE_ADDR tc_addr )
 
   result = 0;
   read_memory (tc_addr + rt0_dataOffset_offset / TARGET_CHAR_BIT,
-		      (char *)&result, rt0_dataOffset_size / TARGET_CHAR_BIT);
+                      (char *)&result, rt0_dataOffset_size / TARGET_CHAR_BIT);
   return result;
 } /* m3_dataOffset_from_tc_addr */
 
@@ -1570,10 +1570,10 @@ m3_methodOffset_from_tc_addr ( CORE_ADDR tc_addr )
 
   result = 0;
   read_memory (tc_addr + rt0_methodOffset_offset / TARGET_CHAR_BIT,
-		      (char *)&result, rt0_methodOffset_size / TARGET_CHAR_BIT);
+                      (char *)&result, rt0_methodOffset_size / TARGET_CHAR_BIT);
   return result;
 } /* m3_methodOffset_from_tc_addr */
-		
+                
 int
 m3_dataSize_from_tc_addr ( CORE_ADDR tc_addr )
 {
@@ -1581,10 +1581,10 @@ m3_dataSize_from_tc_addr ( CORE_ADDR tc_addr )
   init_m3_constants ();
   result = 0;
   read_memory (tc_addr + rt0_tc_dataSize_offset / TARGET_CHAR_BIT,
-		      (char *)&result, rt0_tc_dataSize_size / TARGET_CHAR_BIT);
+                      (char *)&result, rt0_tc_dataSize_size / TARGET_CHAR_BIT);
   return result;
 } /* m3_dataSize_from_tc_addr */
-		
+                
 CORE_ADDR
 m3_super_tc_addr_from_tc_addr ( CORE_ADDR tc_addr )
 { char kind;
@@ -1603,10 +1603,10 @@ m3_super_tc_addr_from_tc_addr ( CORE_ADDR tc_addr )
 
   result = 0;
   read_memory (tc_addr + rt0_parent_offset / TARGET_CHAR_BIT,
-		      (char *)&result, rt0_parent_size / TARGET_CHAR_BIT);
+                      (char *)&result, rt0_parent_size / TARGET_CHAR_BIT);
   return result;
 } /* m3_super_tc_addr_from_tc_addr */
-		
+                
 CORE_ADDR
 m3_defaultMethods_from_tc_addr ( CORE_ADDR tc_addr )
 { char kind;
@@ -1624,7 +1624,7 @@ m3_defaultMethods_from_tc_addr ( CORE_ADDR tc_addr )
 
   result = 0;
   read_memory ( tc_addr + rt0_defaultMethods_offset / TARGET_CHAR_BIT,
-	        (char *)&result, rt0_defaultMethods_size / TARGET_CHAR_BIT);
+                (char *)&result, rt0_defaultMethods_size / TARGET_CHAR_BIT);
   return result;
 } /* m3_defaultMethods_from_tc_addr */
 
@@ -1670,7 +1670,7 @@ m3_find_rec_field (
     if ( bitpos != NULL ) { * bitpos = 0; }
     return 0;
   } /* m3_find_rec_field */
-		
+                
 BOOL
 m3_find_obj_field (
     struct type *obj_type,
@@ -1957,7 +1957,7 @@ m3_value_as_integer ( struct value * val )
   return m3_extract_ord
            ( value_contents ( val ),
              value_bitpos ( val ),
-	     bitsize,
+             bitsize,
              is_signed
            );
 } /* m3_value_as_integer */

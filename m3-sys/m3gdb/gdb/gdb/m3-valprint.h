@@ -26,8 +26,8 @@ extern int m3_val_print2 (struct type *, const gdb_byte *, int, int,
                           struct ui_file *, int, int, int);
 
 extern int m3_val_print (struct type *, const gdb_byte *, int, CORE_ADDR,
-			 struct ui_file *, int, int, int,
-			 enum val_prettyprint);
+                         struct ui_file *, int, int, int,
+                         enum val_prettyprint);
 
 #endif /* !defined (M3_VALPRINT_H) */
 
