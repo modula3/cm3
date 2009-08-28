@@ -521,7 +521,7 @@ find_m3_type_named (
     if (s == NULL) {
       if (must_find) error ("unable to find type named \"%s\"\n", name);
       return NULL;
-    };
+    }
     return TYPE_M3_TYPE_TYPE (SYMBOL_TYPE (s));
   } /* find_m3_type_named */
 
