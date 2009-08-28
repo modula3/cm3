@@ -153,7 +153,7 @@ struct m3_thread {
   LONGEST ref;   /* the Thread.T value */
   int     id;    /* the thread's internal ID */
   char   *bits;  /* the pointer to the Thread.T's data fields */
-} ;
+};
 
 static void
 get_m3_thread ( LONGEST ref, struct m3_thread  * t )

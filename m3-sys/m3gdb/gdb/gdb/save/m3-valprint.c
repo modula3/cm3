@@ -44,7 +44,7 @@ m3_extract_ord (
               ( bitsize + bitpos ) / HOST_CHAR_BIT + 1
             );
     if ( BITS_BIG_ENDIAN )
-      lsbcount = sizeof val * HOST_CHAR_BIT - bitpos % HOST_CHAR_BIT - bitsize ;
+      lsbcount = sizeof val * HOST_CHAR_BIT - bitpos % HOST_CHAR_BIT - bitsize;
     else
       lsbcount = bitpos % HOST_CHAR_BIT;
     val >>= lsbcount;
@@ -192,7 +192,7 @@ static void
 set_open_array_elems_addr ( gdb_byte * addr, CORE_ADDR val )
 
   { store_unsigned_integer
-      ( addr, TARGET_PTR_BIT / HOST_CHAR_BIT, ( ULONGEST ) val ) ;
+      ( addr, TARGET_PTR_BIT / HOST_CHAR_BIT, ( ULONGEST ) val );
   } /* set_open_array_elems_addr */
 
 /* Return the dimension-th shape component (i.e., the element count for the
@@ -232,7 +232,7 @@ static CORE_ADDR
 m3_inf_open_array_elems_addr ( CORE_ADDR ref )
 
 { CORE_ADDR result;
-  gdb_byte buf [16] ; /* liberal. */
+  gdb_byte buf [16]; /* liberal. */
 
   read_memory ( ref, buf, TARGET_PTR_BIT );
   result = open_array_elems_addr ( buf );
@@ -283,7 +283,7 @@ m3_set_value_open_array_elems_addr (
     ( ( gdb_byte * ) value_contents_raw ( array_value ),
       TARGET_PTR_BIT / HOST_CHAR_BIT,
       ( ULONGEST ) val
-    ) ;
+    );
 } /* m3_set_value_open_array_elems_addr */
 
 /* Return the dimension-th shape component (i.e., the element count for the
@@ -320,13 +320,13 @@ m3_set_value_open_array_shape_component (
     ( ( gdb_byte * ) value_contents_raw ( array_value ) + target_offset,
       TARGET_LONG_BIT / HOST_CHAR_BIT,
       val
-    ) ;
+    );
 } /* m3_set_value_open_array_shape_component */
 
 static ULONGEST
 m3_truncate_to_target_longest ( ULONGEST val )
 
-{ ULONGEST mask ;
+{ ULONGEST mask;
 
   if ( TARGET_INT_BIT / TARGET_CHAR_BIT < sizeof ( LONGEST ) )
     { mask = ( ( ULONGEST ) - 1 ) >> TARGET_INT_BIT;
@@ -815,7 +815,7 @@ m3_check_TextLiteral_buf (
        && strcmp ( field_name, TextLiteral_buf . field_name ) == 0
      ) /* It's the TextLiteral.T.buf field we are looking for. */
     { string_length
-        = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 ) ;
+        = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 );
       if ( string_length < 0 )
         { TYPE_M3_SUBRANGE_MAX ( library_type_m3_TextLiteral_buf_widechar_index )
             = - string_length;
@@ -823,7 +823,7 @@ m3_check_TextLiteral_buf (
             = ( - string_length + 1 ) * TARGET_WIDECHAR_BIT / TARGET_CHAR_BIT;
           TYPE_LENGTH ( library_type_m3_TextLiteral_buf_widechar ) = byte_length;
           TYPE_M3_SIZE ( library_type_m3_TextLiteral_buf_widechar )
-            = ( - string_length + 1 ) * TARGET_WIDECHAR_BIT ;
+            = ( - string_length + 1 ) * TARGET_WIDECHAR_BIT;
           if ( bitsize != NULL ) { * bitsize = byte_length * TARGET_CHAR_BIT; }
           if ( bitpos != NULL ) { * bitpos = TextLiteral_buf . bitpos; }
           if ( field_type != NULL )
@@ -942,7 +942,7 @@ m3_print_cm3_TextLiteral_object (
   LONGEST string_length;
 
   string_length
-    = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 ) ;
+    = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 );
   fputs_filtered ("(*", stream);
   fputs_filtered ( TextLiteral.type_name, stream);
   fputs_filtered ("*) ", stream);
@@ -996,7 +996,7 @@ m3_print_cm3_text (
     }
   else if ( type_info_matches ( tc_addr, &TextLiteral ) )
     { string_length
-        = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 ) ;
+        = m3_text_field_length ( ref, &TextLiteral, &TextLiteral_cnt , 1 );
       chars = m3_text_field_addr ( ref, &TextLiteral, &TextLiteral_buf );
       if (string_length < 0) /* Wide chars. */
         { string_length = - string_length - start;
@@ -1045,7 +1045,7 @@ m3_print_cm3_text (
         { return - 2; }
       chars = m3_text_field_addr ( ref, &Text8Short, &Text8Short_contents );
       if ( length < string_length ) { print_length = length; result = - 1; }
-      else { print_length = string_length ; result = string_length; }
+      else { print_length = string_length; result = string_length; }
       if (add_quotes) { fputs_filtered ("\"", stream); }
       m3_print_chars ( chars, start, print_length, stream);
     }
@@ -1060,7 +1060,7 @@ m3_print_cm3_text (
         { return - 2; }
       chars = m3_text_field_addr ( ref, &Text16Short, &Text16Short_contents );
       if ( length < string_length ) { print_length = length; result = - 1; }
-      else { print_length = string_length ; result = string_length; }
+      else { print_length = string_length; result = string_length; }
       if (add_quotes) { fputs_filtered ("W\"", stream); }
       m3_print_widechars ( chars, start, print_length, stream);
     }
@@ -1274,7 +1274,7 @@ m3_print_object(
       switch ( actual_printed )
         { case - 1: /* CM3 string, was truncated at requested max length. */
             { fputs_filtered ("...", stream);
-              return ;
+              return;
             }
           case - 2: /* Ill-formed CM3 string.  Also print it as an object. */
           case - 3: /* Wasn't a CM3 string. */ { break; }
