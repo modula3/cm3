@@ -61,25 +61,25 @@ ensure_init_thread_constants ( void )
   thread__t = find_m3_type_named ("Thread.T", /*must_find =*/ TRUE);
 
   m3_find_rec_field (thread__t, "id",
-		     &thread__t__id_size, &thread__t__id_offset, 0);
+                     &thread__t__id_size, &thread__t__id_offset, 0);
   m3_find_rec_field (thread__t, "state",
-		     &thread__t__state_size, &thread__t__state_offset, 0);
+                     &thread__t__state_size, &thread__t__state_offset, 0);
   m3_find_rec_field (thread__t, "next",
-		     &thread__t__next_size, &thread__t__next_offset, 0);
+                     &thread__t__next_size, &thread__t__next_offset, 0);
   m3_find_rec_field (thread__t, "waitingForCondition",
-		     &thread__t__cond_size, &thread__t__cond_offset,
-		     &thread__t__cond_type);
+                     &thread__t__cond_size, &thread__t__cond_offset,
+                     &thread__t__cond_type);
   m3_find_rec_field (thread__t, "waitingForMutex",
-		     &thread__t__mutex_size, &thread__t__mutex_offset,
-		     &thread__t__mutex_type);
+                     &thread__t__mutex_size, &thread__t__mutex_offset,
+                     &thread__t__mutex_type);
   m3_find_rec_field (thread__t, "waitingForTime",
-		     &thread__t__time_size, &thread__t__time_offset,
-		     &thread__t__time_type);
+                     &thread__t__time_size, &thread__t__time_offset,
+                     &thread__t__time_type);
   m3_find_rec_field (thread__t, "context",
-		     &thread__t__context_size, &thread__t__context_offset,
-		     &thread__t__context_type);
+                     &thread__t__context_size, &thread__t__context_offset,
+                     &thread__t__context_type);
   m3_find_rec_field (thread__t__context_type, "buf",
-		     &thread__t__buf_size, &thread__t__buf_offset, 0);
+                     &thread__t__buf_size, &thread__t__buf_offset, 0);
 
   /* skip past the method pointer */
 #if defined(sparc)
@@ -212,7 +212,7 @@ look_in_thread ( int regno )
     if (regno < 0) { first_reg = 0; last_reg = NUM_REGS; }
     for (regno = first_reg; regno < last_reg; regno++) {
       reg_offset = thread__t__buf_offset / HOST_CHAR_BIT
-	+ regno_to_jmpbuf [regno] * TARGET_PTR_BIT / HOST_CHAR_BIT;
+        + regno_to_jmpbuf [regno] * TARGET_PTR_BIT / HOST_CHAR_BIT;
       regcache_raw_supply
         (current_regcache, regno, cur_m3_thread.bits + reg_offset);
     }
@@ -221,11 +221,11 @@ look_in_thread ( int regno )
   if ((regno >= 0) && (regno < NUM_REGS)) {
     error ( "%s, line %d: don't know where to find register \"%s\" "
             "in stopped thread",
-	    __FILE__, __LINE__, REGISTER_NAME ( regno )
+            __FILE__, __LINE__, REGISTER_NAME ( regno )
           );
   } else {
     error ("%s, line %d: don't know where to find registers in stopped thread",
-	   __FILE__, __LINE__);
+           __FILE__, __LINE__);
   }
 #endif
 } /* look_in_thread */
@@ -294,36 +294,36 @@ threads_command ( char *args, int from_tty )
     printf_filtered ("  ");
 
     state = m3_extract_ord (cur.bits, thread__t__state_offset,
-			   thread__t__state_size, FALSE);
+                           thread__t__state_size, FALSE);
     switch (state) {
       case 0 /* alive */:
-	printf_filtered ("alive");
-	break;
+        printf_filtered ("alive");
+        break;
       case 1 /* waiting */:
-	printf_filtered ("waiting for condition 16_%lx",
-		  m3_extract_address (cur.bits, thread__t__cond_offset));
-	break;
+        printf_filtered ("waiting for condition 16_%lx",
+                  m3_extract_address (cur.bits, thread__t__cond_offset));
+        break;
       case 2 /* locking */:
-	printf_filtered ("waiting for mutex 16_%lx",
-		  m3_extract_address (cur.bits, thread__t__mutex_offset));
-	break;
+        printf_filtered ("waiting for mutex 16_%lx",
+                  m3_extract_address (cur.bits, thread__t__mutex_offset));
+        break;
       case 3 /* pausing */:
-	printf_filtered ("waiting until ");
-	m3_val_print2 (thread__t__time_type, cur.bits, thread__t__time_offset,
-		       thread__t__time_size, gdb_stdout, 0, 0, 1);
-	break;
+        printf_filtered ("waiting until ");
+        m3_val_print2 (thread__t__time_type, cur.bits, thread__t__time_offset,
+                       thread__t__time_size, gdb_stdout, 0, 0, 1);
+        break;
       case 4 /* blocking */:
-	printf_filtered ("waiting for I/O");
-	break;
+        printf_filtered ("waiting for I/O");
+        break;
       case 5 /* dying */:
-	printf_filtered ("waiting for somebody to join");
-	break;
+        printf_filtered ("waiting for somebody to join");
+        break;
       case 6 /* dead */:
-	printf_filtered ("dead");
-	break;
+        printf_filtered ("dead");
+        break;
       default:
-	printf_filtered ("<unknown state = %d>", state);
-	break;
+        printf_filtered ("<unknown state = %d>", state);
+        break;
       }
     puts_filtered ("\n");
 

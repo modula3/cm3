@@ -68,7 +68,7 @@ m3_dump_subexp_body (struct expression *exp, struct ui_file *stream, int elt);
 
 static struct value *
 m3_evaluate_subexp(struct type *expect_type,
-		   struct expression *exp, int *pos,
+                   struct expression *exp, int *pos,
                    enum noside noside);
 
 struct symbol * find_m3_ir ( int, char * );
@@ -84,39 +84,39 @@ m3_emit_char (c, stream, quoter)
      int quoter;
 {
 
-  c &= 0xFF;			/* Avoid sign bit follies */
+  c &= 0xFF;                        /* Avoid sign bit follies */
 
   if (PRINT_LITERAL_FORM (c))
     {
       if (c == '\\' || c == quoter)
-	{
-	  fputs_filtered ("\\", stream);
-	}
+        {
+          fputs_filtered ("\\", stream);
+        }
       fprintf_filtered (stream, "%c", c);
     }
   else
     {
       switch (c)
-	{
-	case '\n':
-	  fputs_filtered ("\\n", stream);
-	  break;
-	case '\b':
-	  fputs_filtered ("\\b", stream);
-	  break;
-	case '\t':
-	  fputs_filtered ("\\t", stream);
-	  break;
-	case '\f':
-	  fputs_filtered ("\\f", stream);
-	  break;
-	case '\r':
-	  fputs_filtered ("\\r", stream);
-	  break;
-	default:
-	  fprintf_filtered (stream, "\\%.3o", (unsigned int) c);
-	  break;
-	}
+        {
+        case '\n':
+          fputs_filtered ("\\n", stream);
+          break;
+        case '\b':
+          fputs_filtered ("\\b", stream);
+          break;
+        case '\t':
+          fputs_filtered ("\\t", stream);
+          break;
+        case '\f':
+          fputs_filtered ("\\f", stream);
+          break;
+        case '\r':
+          fputs_filtered ("\\r", stream);
+          break;
+        default:
+          fprintf_filtered (stream, "\\%.3o", (unsigned int) c);
+          break;
+        }
     }
 }
 
@@ -127,39 +127,39 @@ m3_emit_widechar (c, stream, quoter)
      int quoter;
 {
 
-  c &= 0xFFFF;			/* Avoid sign bit follies */
+  c &= 0xFFFF;                        /* Avoid sign bit follies */
 
   if ((c <= 0xFF) && PRINT_LITERAL_FORM (c))
     {
       if (c == '\\' || c == quoter)
-	{
-	  fputs_filtered ("\\", stream);
-	}
+        {
+          fputs_filtered ("\\", stream);
+        }
       fprintf_filtered (stream, "%c", c);
     }
   else
     {
       switch (c)
-	{
-	case '\n':
-	  fputs_filtered ("\\n", stream);
-	  break;
-	case '\b':
-	  fputs_filtered ("\\b", stream);
-	  break;
-	case '\t':
-	  fputs_filtered ("\\t", stream);
-	  break;
-	case '\f':
-	  fputs_filtered ("\\f", stream);
-	  break;
-	case '\r':
-	  fputs_filtered ("\\r", stream);
-	  break;
-	default:
-	  fprintf_filtered (stream, "\\x%.4x", (unsigned int) c);
-	  break;
-	}
+        {
+        case '\n':
+          fputs_filtered ("\\n", stream);
+          break;
+        case '\b':
+          fputs_filtered ("\\b", stream);
+          break;
+        case '\t':
+          fputs_filtered ("\\t", stream);
+          break;
+        case '\f':
+          fputs_filtered ("\\f", stream);
+          break;
+        case '\r':
+          fputs_filtered ("\\r", stream);
+          break;
+        default:
+          fprintf_filtered (stream, "\\x%.4x", (unsigned int) c);
+          break;
+        }
     }
 }
 
@@ -220,7 +220,7 @@ m3_printstr (stream, string, length, width, force_ellipsis)
   for (i = 0; i < length && things_printed < print_max; ++i)
     {
       /* Position of the character we are examining
-	 to see whether it is repeated.  */
+         to see whether it is repeated.  */
       unsigned int rep1;
       /* Number of repetitions we have detected so far.  */
       unsigned int reps;
@@ -229,61 +229,61 @@ m3_printstr (stream, string, length, width, force_ellipsis)
       QUIT;
 
       if (need_comma)
-	{
-	  fputs_filtered (", ", stream);
-	  need_comma = 0;
-	}
+        {
+          fputs_filtered (", ", stream);
+          need_comma = 0;
+        }
 
       current_char = extract_unsigned_integer (string + i * width, width);
 
       rep1 = i + 1;
       reps = 1;
       while (rep1 < length
-	     && extract_unsigned_integer (string + rep1 * width, width)
-	     == current_char)
-	{
-	  ++rep1;
-	  ++reps;
-	}
+             && extract_unsigned_integer (string + rep1 * width, width)
+             == current_char)
+        {
+          ++rep1;
+          ++reps;
+        }
 
       if (reps > repeat_count_threshold)
-	{
-	  if (in_quotes)
-	    {
-	      if (inspect_it)
-		fputs_filtered ("\\\", ", stream);
-	      else
-		fputs_filtered ("\", ", stream);
-	      in_quotes = 0;
-	    }
-	  m3_printchar (string[i], stream);
-	  fprintf_filtered (stream, " <repeats %u times>", reps);
-	  i = rep1 - 1;
-	  things_printed += repeat_count_threshold;
-	  need_comma = 1;
-	}
+        {
+          if (in_quotes)
+            {
+              if (inspect_it)
+                fputs_filtered ("\\\", ", stream);
+              else
+                fputs_filtered ("\", ", stream);
+              in_quotes = 0;
+            }
+          m3_printchar (string[i], stream);
+          fprintf_filtered (stream, " <repeats %u times>", reps);
+          i = rep1 - 1;
+          things_printed += repeat_count_threshold;
+          need_comma = 1;
+        }
       else
-	{
-	  if (!in_quotes)
-	    {
-	      if (inspect_it)
-		fputs_filtered ("\\\"", stream);
-	      else
-		fputs_filtered ("\"", stream);
-	      in_quotes = 1;
-	    }
-	  m3_emit_char (string[i], stream, '"');
-	  ++things_printed;
-	}
+        {
+          if (!in_quotes)
+            {
+              if (inspect_it)
+                fputs_filtered ("\\\"", stream);
+              else
+                fputs_filtered ("\"", stream);
+              in_quotes = 1;
+            }
+          m3_emit_char (string[i], stream, '"');
+          ++things_printed;
+        }
     }
 
   /* Terminate the quotes if necessary.  */
   if (in_quotes)
     {
       if (inspect_it)
-	fputs_filtered ("\\\"", stream);
+        fputs_filtered ("\\\"", stream);
       else
-	fputs_filtered ("\"", stream);
+        fputs_filtered ("\"", stream);
     }
 
   if (force_ellipsis || i < length)
@@ -323,110 +323,110 @@ m3_create_fundamental_type (objfile, typeid)
   switch (typeid)
     {
       default:
-	/* FIXME:  For now, if we are asked to produce a type not in this
-	   language, create the equivalent of a C integer type with the
-	   name "<?type?>".  When all the dust settles from the type
-	   reconstruction work, this should probably become an error. */
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_INT_BIT / TARGET_CHAR_BIT,
-			  0, "<?type?>", objfile);
+        /* FIXME:  For now, if we are asked to produce a type not in this
+           language, create the equivalent of a C integer type with the
+           name "<?type?>".  When all the dust settles from the type
+           reconstruction work, this should probably become an error. */
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_INT_BIT / TARGET_CHAR_BIT,
+                          0, "<?type?>", objfile);
         warning ("internal error: no C/C++ fundamental type %d", typeid);
-	break;
+        break;
       case FT_VOID:
-	type = init_type (TYPE_CODE_VOID,
-			  TARGET_CHAR_BIT / TARGET_CHAR_BIT,
-			  0, "void", objfile);
-	break;
+        type = init_type (TYPE_CODE_VOID,
+                          TARGET_CHAR_BIT / TARGET_CHAR_BIT,
+                          0, "void", objfile);
+        break;
       case FT_CHAR:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_CHAR_BIT / TARGET_CHAR_BIT,
-			  0, "char", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_CHAR_BIT / TARGET_CHAR_BIT,
+                          0, "char", objfile);
+        break;
       case FT_SIGNED_CHAR:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_CHAR_BIT / TARGET_CHAR_BIT,
-			  0, "signed char", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_CHAR_BIT / TARGET_CHAR_BIT,
+                          0, "signed char", objfile);
+        break;
       case FT_UNSIGNED_CHAR:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_CHAR_BIT / TARGET_CHAR_BIT,
-			  TYPE_FLAG_UNSIGNED, "unsigned char", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_CHAR_BIT / TARGET_CHAR_BIT,
+                          TYPE_FLAG_UNSIGNED, "unsigned char", objfile);
+        break;
       case FT_SHORT:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_SHORT_BIT / TARGET_CHAR_BIT,
-			  0, "short", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_SHORT_BIT / TARGET_CHAR_BIT,
+                          0, "short", objfile);
+        break;
       case FT_SIGNED_SHORT:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_SHORT_BIT / TARGET_CHAR_BIT,
-			  0, "short", objfile);	/* FIXME-fnf */
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_SHORT_BIT / TARGET_CHAR_BIT,
+                          0, "short", objfile);        /* FIXME-fnf */
+        break;
       case FT_UNSIGNED_SHORT:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_SHORT_BIT / TARGET_CHAR_BIT,
-			  TYPE_FLAG_UNSIGNED, "unsigned short", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_SHORT_BIT / TARGET_CHAR_BIT,
+                          TYPE_FLAG_UNSIGNED, "unsigned short", objfile);
+        break;
       case FT_INTEGER:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_INT_BIT / TARGET_CHAR_BIT,
-			  0, "int", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_INT_BIT / TARGET_CHAR_BIT,
+                          0, "int", objfile);
+        break;
       case FT_SIGNED_INTEGER:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_INT_BIT / TARGET_CHAR_BIT,
-			  0, "int", objfile); /* FIXME -fnf */
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_INT_BIT / TARGET_CHAR_BIT,
+                          0, "int", objfile); /* FIXME -fnf */
+        break;
       case FT_UNSIGNED_INTEGER:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_INT_BIT / TARGET_CHAR_BIT,
-			  TYPE_FLAG_UNSIGNED, "unsigned int", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_INT_BIT / TARGET_CHAR_BIT,
+                          TYPE_FLAG_UNSIGNED, "unsigned int", objfile);
+        break;
       case FT_LONG:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_LONG_BIT / TARGET_CHAR_BIT,
-			  0, "long", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_LONG_BIT / TARGET_CHAR_BIT,
+                          0, "long", objfile);
+        break;
       case FT_SIGNED_LONG:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_LONG_BIT / TARGET_CHAR_BIT,
-			  0, "long", objfile); /* FIXME -fnf */
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_LONG_BIT / TARGET_CHAR_BIT,
+                          0, "long", objfile); /* FIXME -fnf */
+        break;
       case FT_UNSIGNED_LONG:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_LONG_BIT / TARGET_CHAR_BIT,
-			  TYPE_FLAG_UNSIGNED, "unsigned long", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_LONG_BIT / TARGET_CHAR_BIT,
+                          TYPE_FLAG_UNSIGNED, "unsigned long", objfile);
+        break;
       case FT_LONG_LONG:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_LONG_LONG_BIT / TARGET_CHAR_BIT,
-			  0, "long long", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_LONG_LONG_BIT / TARGET_CHAR_BIT,
+                          0, "long long", objfile);
+        break;
       case FT_SIGNED_LONG_LONG:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_LONG_LONG_BIT / TARGET_CHAR_BIT,
-			  0, "signed long long", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_LONG_LONG_BIT / TARGET_CHAR_BIT,
+                          0, "signed long long", objfile);
+        break;
       case FT_UNSIGNED_LONG_LONG:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_LONG_LONG_BIT / TARGET_CHAR_BIT,
-			  TYPE_FLAG_UNSIGNED, "unsigned long long", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_LONG_LONG_BIT / TARGET_CHAR_BIT,
+                          TYPE_FLAG_UNSIGNED, "unsigned long long", objfile);
+        break;
       case FT_FLOAT:
-	type = init_type (TYPE_CODE_FLT,
-			  TARGET_FLOAT_BIT / TARGET_CHAR_BIT,
-			  0, "float", objfile);
-	break;
+        type = init_type (TYPE_CODE_FLT,
+                          TARGET_FLOAT_BIT / TARGET_CHAR_BIT,
+                          0, "float", objfile);
+        break;
       case FT_DBL_PREC_FLOAT:
-	type = init_type (TYPE_CODE_FLT,
-			  TARGET_DOUBLE_BIT / TARGET_CHAR_BIT,
-			  0, "double", objfile);
-	break;
+        type = init_type (TYPE_CODE_FLT,
+                          TARGET_DOUBLE_BIT / TARGET_CHAR_BIT,
+                          0, "double", objfile);
+        break;
       case FT_EXT_PREC_FLOAT:
-	type = init_type (TYPE_CODE_FLT,
-			  TARGET_LONG_DOUBLE_BIT / TARGET_CHAR_BIT,
-			  0, "long double", objfile);
-	break;
+        type = init_type (TYPE_CODE_FLT,
+                          TARGET_LONG_DOUBLE_BIT / TARGET_CHAR_BIT,
+                          0, "long double", objfile);
+        break;
       }
   return (type);
 }
@@ -521,37 +521,37 @@ static const struct exp_descriptor m3_exp_descriptor = {
 };
 
 const struct language_defn m3_language_defn = {
-  "m3",				 /* la_name: Language name */
-  language_m3,                   /* la_language: */
-  m3_builtin_types,              /* la_builtin_type_vector: */
-  range_check_on,                /* la_range_check: */
-  type_check_off,                /* la_type_check: */
-  case_sensitive_on,             /* la_case_sensitivity: */
-  array_row_major,               /* la_array_ordering: */
-  &m3_exp_descriptor,            /* la_exp_desc: */
-  m3_parse,                      /* la_parser: */
-  m3_error,                      /* la_error: */
-  null_post_parser,              /* la_post_parser: */
-  m3_printchar,			 /* la_printchar: Print a character constant */
-  m3_printstr,			 /* la_printstr: Print a string constant */
-  m3_emit_char,			 /* la_emitchar: Print a character constant */
-  m3_create_fundamental_type,	 /* la_fund_type: Create fundamental type */
-  m3_print_type,		 /* la_print_type: */
-  m3_val_print,			 /* la_val_print */
-  m3_value_print,		 /* la_value_print: a top-level value */
-  NULL,                          /* la_skip_trampoline: */
-  NULL,                          /* la_value_of_this: */
-  basic_lookup_symbol_nonlocal,  /* la_lookup_symbol_nonlocal: */
-  basic_lookup_transparent_type, /* la_lookup_transparent_type: */
-  m3_demangle,                   /* la_demangle: symbol demangler */
-  NULL,                          /* la_class_name_from_physname: */
-  m3_op_print_tab,               /* la_op_print_tab: */
-  0,				 /* c_style_arrays: arrays are first-class */
-  0,				 /* string_lower_bound: */
-  &builtin_type_m3_char,	 /* string_char_type: Type of string elements */
-  default_word_break_characters, /* la_word_break_characters: */
-  NULL,                          /* FIXME: la_language_arch_info: */
-  default_print_array_index,     /* la_print_array_index: */
+  "m3",                             /* la_name: Language name */
+  language_m3,                      /* la_language: */
+  m3_builtin_types,                 /* la_builtin_type_vector: */
+  range_check_on,                   /* la_range_check: */
+  type_check_off,                   /* la_type_check: */
+  case_sensitive_on,                /* la_case_sensitivity: */
+  array_row_major,                  /* la_array_ordering: */
+  &m3_exp_descriptor,               /* la_exp_desc: */
+  m3_parse,                         /* la_parser: */
+  m3_error,                         /* la_error: */
+  null_post_parser,                 /* la_post_parser: */
+  m3_printchar,                     /* la_printchar: Print a character constant */
+  m3_printstr,                      /* la_printstr: Print a string constant */
+  m3_emit_char,                     /* la_emitchar: Print a character constant */
+  m3_create_fundamental_type,       /* la_fund_type: Create fundamental type */
+  m3_print_type,                    /* la_print_type: */
+  m3_val_print,                     /* la_val_print */
+  m3_value_print,                   /* la_value_print: a top-level value */
+  NULL,                             /* la_skip_trampoline: */
+  NULL,                             /* la_value_of_this: */
+  basic_lookup_symbol_nonlocal,     /* la_lookup_symbol_nonlocal: */
+  basic_lookup_transparent_type,    /* la_lookup_transparent_type: */
+  m3_demangle,                      /* la_demangle: symbol demangler */
+  NULL,                             /* la_class_name_from_physname: */
+  m3_op_print_tab,                  /* la_op_print_tab: */
+  0,                                /* c_style_arrays: arrays are first-class */
+  0,                                /* string_lower_bound: */
+  &builtin_type_m3_char,            /* string_char_type: Type of string elements */
+  default_word_break_characters,    /* la_word_break_characters: */
+  NULL,                             /* FIXME: la_language_arch_info: */
+  default_print_array_index,        /* la_print_array_index: */
 
   LANG_MAGIC
 };
@@ -616,7 +616,7 @@ m3_value_from_longest (struct type *type, LONGEST num)
 
 static void
 m3_print_subexp (struct expression *exp, int *pos,
-		       struct ui_file *stream, enum precedence prec)
+                       struct ui_file *stream, enum precedence prec)
 {
   unsigned length;
   int pc;
@@ -631,30 +631,30 @@ m3_print_subexp (struct expression *exp, int *pos,
 
     case OP_VAR_VALUE:
       { struct block *b;
-	(*pos) += 3;
+        (*pos) += 3;
 #if 0
         /* This code was present when the OP_VAR_VALUE case in
            print_subexp_standard was specialized for Modula-3.
            It is unneeded for now, but I wonder if it might be
            wanted someday to print qualified names? */
         b = exp->elts[pc + 1].block;
-	if (b != NULL
-	    && BLOCK_FUNCTION (b) != NULL
-	    && SYMBOL_PRINT_NAME (BLOCK_FUNCTION (b)) != NULL) {
+        if (b != NULL
+            && BLOCK_FUNCTION (b) != NULL
+            && SYMBOL_PRINT_NAME (BLOCK_FUNCTION (b)) != NULL) {
 
             if (exp->language_defn->la_language != language_m3) {
-	      fputs_filtered (SYMBOL_PRINT_NAME (BLOCK_FUNCTION (b)), stream);
-	      fputs_filtered ("::", stream);
+              fputs_filtered (SYMBOL_PRINT_NAME (BLOCK_FUNCTION (b)), stream);
+              fputs_filtered ("::", stream);
             }
-	}
+        }
 #endif
         sym_name = SYMBOL_PRINT_NAME (exp->elts[pc + 2].symbol);
         if ((sym_name[0] == 'I' || sym_name[0] == 'M') &&
              sym_name[1] == '$')
-	  fputs_filtered (sym_name+2, stream);
+          fputs_filtered (sym_name+2, stream);
         else
-	  fputs_filtered (sym_name, stream);
-	}
+          fputs_filtered (sym_name, stream);
+        }
       return;
 
     /* Modula-3-specific ops: */
@@ -664,8 +664,8 @@ m3_print_subexp (struct expression *exp, int *pos,
     case OP_M3_WIDECHAR:
       (*pos) += 3;
       value_print ( m3_value_from_longest ( exp->elts[pc + 1].type,
-			      	            exp->elts[pc + 2].longconst),
-		   stream, 0, Val_no_prettyprint);
+                                                  exp->elts[pc + 2].longconst),
+                   stream, 0, Val_no_prettyprint);
       return;
 
     case OP_M3_REEL:
@@ -673,8 +673,8 @@ m3_print_subexp (struct expression *exp, int *pos,
     case OP_M3_XREEL:
       (*pos) += 3;
       value_print (value_from_double (exp->elts[pc + 1].type,
-				      exp->elts[pc + 2].doubleconst),
-		   stream, 0, Val_no_prettyprint);
+                                      exp->elts[pc + 2].doubleconst),
+                   stream, 0, Val_no_prettyprint);
       return;
 
     case OP_M3_WIDETEXT:
@@ -733,7 +733,7 @@ m3_print_subexp (struct expression *exp, int *pos,
 
 void
 m3_operator_length (struct expression *expr, int endpos,
-			  int *oplenp, int *argsp)
+                          int *oplenp, int *argsp)
 { enum exp_opcode opcode;
   int strlen;
 
@@ -901,7 +901,7 @@ m3_dump_subexp_body (struct expression *exp, struct ui_file *stream, int elt)
       type_print (exp->elts[elt].type, NULL, stream, 0);
       longval = (long) exp->elts[elt + 1].longconst;
       fprintf_filtered (stream, "), value %ld (0x%lx)",
-			longval, longval);
+                        longval, longval);
       elt += 3;
       break;
 
@@ -913,7 +913,7 @@ m3_dump_subexp_body (struct expression *exp, struct ui_file *stream, int elt)
       fprintf_filtered (stream, " (");
       type_print (exp->elts[elt].type, NULL, stream, 0);
       fprintf_filtered (stream, "), value %g",
-			(double) exp->elts[elt + 1].doubleconst);
+                        (double) exp->elts[elt + 1].doubleconst);
       elt += 3;
       break;
 
@@ -1010,7 +1010,7 @@ m3_div (a, b)
   if (a < 0) {
     return (b < 0)
              ? ((-a) / (-b))
-	     : (- ((-a-1) / b) - 1);
+             : (- ((-a-1) / b) - 1);
   } else {
     return (b < 0)
              ? (- ((a - 1) / (-b)) - 1)
@@ -2917,9 +2917,9 @@ m3_check_and_coerce_actual (
         /* Must take address of actual. */
         { result_value = value_from_pointer
             ( lookup_m3_indirect_type ( actual_direct_type ),
-	      ( VALUE_ADDRESS ( result_direct_value )
-		+ value_offset ( result_direct_value )
-		+ value_embedded_offset ( result_direct_value )
+              ( VALUE_ADDRESS ( result_direct_value )
+                + value_offset ( result_direct_value )
+                + value_embedded_offset ( result_direct_value )
               )
             );
           return result_value;
@@ -3227,7 +3227,7 @@ m3_evaluate_dot
                 field_name
               ); /* NORETURN */
           }
-	allocated_tc_addr = find_m3_heap_tc_addr ( lhs_inf_addr );
+        allocated_tc_addr = find_m3_heap_tc_addr ( lhs_inf_addr );
         if ( m3_check_TextLiteral_buf
               ( lhs_inf_addr, allocated_tc_addr, field_name, & bitsize, & bitpos,
                 & dot_type
@@ -3563,31 +3563,31 @@ m3_evaluate_subexp_maybe_packed (
 
     case OP_REGISTER:
       {
-	int regno = longest_to_int (exp->elts[pc + 1].longconst);
-	struct value *val
+        int regno = longest_to_int (exp->elts[pc + 1].longconst);
+        struct value *val
            = value_of_register (regno, get_selected_frame ("No frame"));
-	(*pos) += 3;
-	if (val == NULL)
-	  error ("Value of register %s not available.",
-		 frame_map_regnum_to_name
+        (*pos) += 3;
+        if (val == NULL)
+          error ("Value of register %s not available.",
+                 frame_map_regnum_to_name
                    (get_selected_frame ("No frame"), regno));
 
- 	else {
- 	  arg1
+         else {
+           arg1
             = value_of_register
                 (longest_to_int (exp->elts[pc +1].longconst)
                 , get_selected_frame("No frame")
                 );
- 	  /* hack to convert registers to Modula-3 types... */
- 	  if (value_type(arg1) == builtin_type_long) {
- 	    deprecated_set_value_type(arg1, builtin_type_m3_integer);
-   	    return arg1;
-  	  }
- 	  else if (value_type(arg1) == builtin_type_double) {
- 	    deprecated_set_value_type(arg1, builtin_type_m3_longreal);
-   	    return arg1;
- 	  }
- 	  else return val;
+           /* hack to convert registers to Modula-3 types... */
+           if (value_type(arg1) == builtin_type_long) {
+             deprecated_set_value_type(arg1, builtin_type_m3_integer);
+               return arg1;
+            }
+           else if (value_type(arg1) == builtin_type_double) {
+             deprecated_set_value_type(arg1, builtin_type_m3_longreal);
+               return arg1;
+           }
+           else return val;
         }
       }
 
@@ -3612,7 +3612,7 @@ m3_evaluate_subexp_maybe_packed (
     case OP_M3_XREEL: {
       (*pos) += 4;
       return value_from_double (exp->elts[pc + 1].type,
-				exp->elts[pc + 2].doubleconst); }
+                                exp->elts[pc + 2].doubleconst); }
 
     case STRUCTOP_M3_INTERFACE:
     case STRUCTOP_M3_MODULE:
@@ -3707,7 +3707,7 @@ m3_evaluate_subexp_maybe_packed (
 
       while (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INDIRECT)
         { arg1_type = TYPE_M3_TARGET (arg1_type);
-	  arg1 = value_at_lazy (arg1_type, m3_value_as_address (arg1));
+          arg1 = value_at_lazy (arg1_type, m3_value_as_address (arg1));
         }
 
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_REFANY)
@@ -3718,7 +3718,7 @@ m3_evaluate_subexp_maybe_packed (
         /* REVIEWME:  Do we really want to allow dereferencing of REFANY to
            take the allocated type?  If so, don't we want to do the same
            for a traced pointer type as well? */
-	  res_type = find_m3_heap_type (value_as_address (arg1));
+          res_type = find_m3_heap_type (value_as_address (arg1));
           return value_at_lazy (res_type, m3_value_as_address (arg1));
         }
 
@@ -3753,12 +3753,12 @@ m3_evaluate_subexp_maybe_packed (
       arg1 = m3_evaluate_subexp (0, exp, pos, noside);
       neg_type = value_type (arg1);
       if (TYPE_CODE (neg_type) == TYPE_CODE_FLT)
-	return value_from_double (neg_type, - m3_value_as_float (arg1));
+        return value_from_double (neg_type, - m3_value_as_float (arg1));
       else if (TYPE_CODE (neg_type) == TYPE_CODE_M3_INTEGER)
-	return m3_value_from_longest (neg_type, - m3_value_as_integer (arg1));
+        return m3_value_from_longest (neg_type, - m3_value_as_integer (arg1));
       else {
-	error ("'-' must be applied to an integer or floating-point value");
-	return arg1;
+        error ("'-' must be applied to an integer or floating-point value");
+        return arg1;
       }}
 
     case UNOP_M3_NOT: {
@@ -3768,7 +3768,7 @@ m3_evaluate_subexp_maybe_packed (
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
       val  = ! m3_value_as_integer (arg1);
       return m3_value_from_longest (builtin_type_m3_boolean, val);  }
-	
+        
     case UNOP_M3_FIRST:
     case UNOP_M3_LAST:
     case UNOP_M3_NUMBER: {
@@ -3781,32 +3781,32 @@ m3_evaluate_subexp_maybe_packed (
       array_type = value_type (array);
 
       while (TYPE_CODE (array_type) == TYPE_CODE_M3_POINTER
-	     || TYPE_CODE (array_type) == TYPE_CODE_M3_INDIRECT) {
-	array_type = TYPE_M3_TARGET (array_type);
-	array = value_at_lazy (array_type, m3_value_as_address (array));
+             || TYPE_CODE (array_type) == TYPE_CODE_M3_INDIRECT) {
+        array_type = TYPE_M3_TARGET (array_type);
+        array = value_at_lazy (array_type, m3_value_as_address (array));
         if (array == 0) {
           error ("FIRST, LAST or NUMBER applied to NIL");  }}
 
       if (TYPE_CODE (array_type) == TYPE_CODE_M3_ARRAY) {
-	index_type = TYPE_M3_ARRAY_INDEX (array_type);
-	m3_ordinal_bounds (index_type, &lowerbound, &upperbound);
+        index_type = TYPE_M3_ARRAY_INDEX (array_type);
+        m3_ordinal_bounds (index_type, &lowerbound, &upperbound);
       } else if (TYPE_CODE (array_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	lowerbound = 0;
-	upperbound = *(long*) (value_contents (array) + sizeof(long)) - 1;
+        lowerbound = 0;
+        upperbound = *(long*) (value_contents (array) + sizeof(long)) - 1;
         index_type = builtin_type_m3_integer;
       } else if (is_m3_ordinal_type (array_type)) {
-	index_type = array_type;
-	m3_ordinal_bounds (index_type, &lowerbound, &upperbound);
+        index_type = array_type;
+        m3_ordinal_bounds (index_type, &lowerbound, &upperbound);
       } else {
-	error ("FIRST, LAST, NUMBER can only be applied to arrays.");
+        error ("FIRST, LAST, NUMBER can only be applied to arrays.");
       }
 
       res = allocate_value (builtin_type_m3_integer);
       set_value_lazy (res, 0);
       switch (op) {
-	case UNOP_M3_FIRST:   val = lowerbound;  break;
-	case UNOP_M3_LAST:    val = upperbound;  break;
-	case UNOP_M3_NUMBER:  val = upperbound - lowerbound + 1;
+        case UNOP_M3_FIRST:   val = lowerbound;  break;
+        case UNOP_M3_LAST:    val = upperbound;  break;
+        case UNOP_M3_NUMBER:  val = upperbound - lowerbound + 1;
                               index_type = builtin_type_m3_cardinal;  break;
       }
       res = allocate_value (index_type);
@@ -3822,16 +3822,16 @@ m3_evaluate_subexp_maybe_packed (
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
       arg1_type = value_type (arg1);
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER) {
-	LONGEST val = m3_value_as_integer (arg1);
-	if (val < 0) { val = -val; }
-	return m3_value_from_longest (arg1_type, val);
+        LONGEST val = m3_value_as_integer (arg1);
+        if (val < 0) { val = -val; }
+        return m3_value_from_longest (arg1_type, val);
       } else if (TYPE_CODE (arg1_type) == TYPE_CODE_FLT) {
-	double val = m3_value_as_float (arg1);
-	if (val < 0.0) { val = -val; }
-	return value_from_double (arg1_type, val);
+        double val = m3_value_as_float (arg1);
+        if (val < 0.0) { val = -val; }
+        return value_from_double (arg1_type, val);
       } else {
-	error ("ABS requires an INTEGER, REAL, LONGREAL, or EXTENDED parameter");
-	return arg1;
+        error ("ABS requires an INTEGER, REAL, LONGREAL, or EXTENDED parameter");
+        return arg1;
       }}
 
     case UNOP_M3_ADR:
@@ -3852,8 +3852,8 @@ m3_evaluate_subexp_maybe_packed (
       arg1_type = value_type (arg1);
       sz = TYPE_M3_SIZE (arg1_type) / HOST_CHAR_BIT;
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error ("ADRSIZE(open array) not implemented");
-	sz = 1;
+        error ("ADRSIZE(open array) not implemented");
+        sz = 1;
       }
       return m3_value_from_longest (builtin_type_m3_integer, sz); }
 
@@ -3866,8 +3866,8 @@ m3_evaluate_subexp_maybe_packed (
       arg1_type = value_type (arg1);
       sz = TYPE_M3_SIZE (arg1_type);
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error ("BITSIZE(open array) not implemented");
-	sz = 8;
+        error ("BITSIZE(open array) not implemented");
+        sz = 8;
       }
       return m3_value_from_longest (builtin_type_m3_integer, sz); }
 
@@ -3880,8 +3880,8 @@ m3_evaluate_subexp_maybe_packed (
       arg1_type = value_type (arg1);
       sz = TYPE_M3_SIZE (arg1_type) / 8;
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error ("BYTESIZE(open array) not implemented");
-	sz = 1;
+        error ("BYTESIZE(open array) not implemented");
+        sz = 1;
       }
       return m3_value_from_longest (builtin_type_m3_integer, sz);
     }
@@ -3901,8 +3901,8 @@ m3_evaluate_subexp_maybe_packed (
         if ((val > 0.0e0) && ((double)intval != val)) { intval++; }
         return m3_value_from_longest (builtin_type_m3_integer, intval);
       } else {
-	error ("CEILING must be applied to a floating-point value");
-	return arg1;
+        error ("CEILING must be applied to a floating-point value");
+        return arg1;
       }
     }
 
@@ -3921,8 +3921,8 @@ m3_evaluate_subexp_maybe_packed (
         if ((val < 0.0e0) && ((double)intval != val)) { intval--; }
         return m3_value_from_longest (builtin_type_m3_integer, intval);
       } else {
-	error ("FLOOR must be applied to a floating-point value");
-	return arg1;
+        error ("FLOOR must be applied to a floating-point value");
+        return arg1;
       }
     }
 
@@ -3940,8 +3940,8 @@ m3_evaluate_subexp_maybe_packed (
         intval = (LONGEST) (val + 0.5);
         return m3_value_from_longest (builtin_type_m3_integer, intval);
       } else {
-	error ("ROUND must be applied to a floating-point value");
-	return arg1;
+        error ("ROUND must be applied to a floating-point value");
+        return arg1;
       }
     }
 
@@ -3959,8 +3959,8 @@ m3_evaluate_subexp_maybe_packed (
         intval = (LONGEST) (val);
         return m3_value_from_longest (builtin_type_m3_integer, intval);
       } else {
-	error ("TRUNC must be applied to a floating-point value");
-	return arg1;
+        error ("TRUNC must be applied to a floating-point value");
+        return arg1;
       }
     }
 
@@ -3972,7 +3972,7 @@ m3_evaluate_subexp_maybe_packed (
         val  = m3_value_as_integer (arg1);
         return m3_value_from_longest (builtin_type_m3_integer, val);
       } else {
-	error ("value passed to ORD is not of an ordinal type");
+        error ("value passed to ORD is not of an ordinal type");
         return arg1;
       }
     }
@@ -3986,19 +3986,19 @@ m3_evaluate_subexp_maybe_packed (
       arg1_type = value_type (arg1);
 
       if (TYPE_CODE (arg1_type) != TYPE_CODE_M3_INTEGER) {
-	error ("first argument of VAL must be an integer");
-	return arg1;
+        error ("first argument of VAL must be an integer");
+        return arg1;
       } else if ((*(LONGEST *) value_contents (arg2) != m3_type_magic_value) ||
-		 (! is_m3_ordinal_type (value_type(arg2)))) {
-	error ("second argument of VAL must be an ordinal type");
-	return arg1;
+                 (! is_m3_ordinal_type (value_type(arg2)))) {
+        error ("second argument of VAL must be an ordinal type");
+        return arg1;
       } else {
         LONGEST val, lower, upper;
         val  = m3_value_as_integer (arg1);
-	m3_ordinal_bounds (value_type(arg2), &lower, &upper);
-	if ((val < lower) || (upper < val)) {
-	  error ("value passed to VAL is out of range");
-	  return arg1;
+        m3_ordinal_bounds (value_type(arg2), &lower, &upper);
+        if ((val < lower) || (upper < val)) {
+          error ("value passed to VAL is out of range");
+          return arg1;
         } else {
           return m3_value_from_longest (value_type(arg2), val);
         }
@@ -4019,17 +4019,17 @@ m3_evaluate_subexp_maybe_packed (
       } else if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER) {
         val = (double) m3_value_as_integer (arg1);
       } else {
-	error
+        error
           ("first parameter of FLOAT must be an INTEGER, REAL, LONGREAL, "
             "or EXTENDED value"
           );
-	return arg1;
+        return arg1;
       }
 
       if ((*(LONGEST *) value_contents (arg2) != m3_type_magic_value)
-	 || (TYPE_CODE (value_type(arg2)) != TYPE_CODE_FLT)) {
-	error ("second parameter of FLOAT must be REAL, LONGREAL, or EXTENDED");
-	return arg1;
+         || (TYPE_CODE (value_type(arg2)) != TYPE_CODE_FLT)) {
+        error ("second parameter of FLOAT must be REAL, LONGREAL, or EXTENDED");
+        return arg1;
       }
 
       return value_from_double (value_type(arg2), val);
@@ -4045,17 +4045,17 @@ m3_evaluate_subexp_maybe_packed (
       arg2_type = value_type (arg2);
 
       if (TYPE_CODE(arg1_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error ("LOOPHOLE of open array values is illegal");
+        error ("LOOPHOLE of open array values is illegal");
         return arg1;
       } else if (*(LONGEST *) value_contents (arg2) != m3_type_magic_value) {
-	error ("second parameter of LOOPHOLE must be a type");
-	return arg1;
+        error ("second parameter of LOOPHOLE must be a type");
+        return arg1;
       } else if (TYPE_CODE (arg2_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error ("LOOPHOLE to an open array type is not (yet) supported");
+        error ("LOOPHOLE to an open array type is not (yet) supported");
         return arg1;
       } else if (TYPE_M3_SIZE (arg1_type) != TYPE_M3_SIZE (arg2_type)) {
-	error ("size of value and type passed to LOOPHOLE don't agree");
-	return arg1;
+        error ("size of value and type passed to LOOPHOLE don't agree");
+        return arg1;
       }
 
       deprecated_set_value_type (arg1, arg2_type);
@@ -4076,80 +4076,80 @@ m3_evaluate_subexp_maybe_packed (
       array_type = value_type (array);
 
       while (TYPE_CODE (array_type) == TYPE_CODE_M3_POINTER
-	     || TYPE_CODE (array_type) == TYPE_CODE_M3_INDIRECT) {
-	array_type = TYPE_M3_TARGET (array_type);
-	array = value_at_lazy (array_type, m3_value_as_address (array)); }
+             || TYPE_CODE (array_type) == TYPE_CODE_M3_INDIRECT) {
+        array_type = TYPE_M3_TARGET (array_type);
+        array = value_at_lazy (array_type, m3_value_as_address (array)); }
 
       if (TYPE_CODE (array_type) == TYPE_CODE_M3_ARRAY) {
-	index_type = TYPE_M3_ARRAY_INDEX (array_type);
-	elem_type  = TYPE_M3_ARRAY_ELEM (array_type);
-	elt_size   = TYPE_M3_SIZE (elem_type);
-	m3_ordinal_bounds (index_type, &lowerbound, &upperbound); }
+        index_type = TYPE_M3_ARRAY_INDEX (array_type);
+        elem_type  = TYPE_M3_ARRAY_ELEM (array_type);
+        elt_size   = TYPE_M3_SIZE (elem_type);
+        m3_ordinal_bounds (index_type, &lowerbound, &upperbound); }
       else if (TYPE_CODE (array_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	elem_type = TYPE_M3_OPEN_ARRAY_ELEM (array_type);
-	lowerbound = 0;
+        elem_type = TYPE_M3_OPEN_ARRAY_ELEM (array_type);
+        lowerbound = 0;
         /* FIXME: this needs to be a target long.  Use the fetch functions
            for open array dope. */
-	upperbound
+        upperbound
           = *(long*) (value_contents (array) + TARGET_PTR_BIT/HOST_CHAR_BIT) - 1;
         { struct type *e = elem_type;
-	  long n = (TARGET_PTR_BIT + TARGET_LONG_BIT) / HOST_CHAR_BIT;
-	  elt_size = 1;
-	  while (TYPE_CODE (e) == TYPE_CODE_M3_OPEN_ARRAY) {
+          long n = (TARGET_PTR_BIT + TARGET_LONG_BIT) / HOST_CHAR_BIT;
+          elt_size = 1;
+          while (TYPE_CODE (e) == TYPE_CODE_M3_OPEN_ARRAY) {
             /* FIXME: This should be a target long, not a host long. */
-	    elt_size *= *(long*) (value_contents (array) + n);
+            elt_size *= *(long*) (value_contents (array) + n);
             n += TARGET_LONG_BIT / HOST_CHAR_BIT;
-	    e = TYPE_M3_OPEN_ARRAY_ELEM (e); }
-	  elt_size *= TYPE_M3_SIZE (e); }}
+            e = TYPE_M3_OPEN_ARRAY_ELEM (e); }
+          elt_size *= TYPE_M3_SIZE (e); }}
       else {
-	error ("indexed expression is not an array"); }
+        error ("indexed expression is not an array"); }
 
       array = coerce_ref (array);
 
       index_val = m3_value_as_integer (index);
       if (lowerbound > index_val || index_val > upperbound) {
-	error ("range fault on array access");
-	return 0; }
+        error ("range fault on array access");
+        return 0; }
 
       offset = elt_size * (index_val - lowerbound);
       if (offset % 8 != 0) {
-	error ("Non-byte-aligned, bit-packed array elements not supported.");
-	return 0; }
+        error ("Non-byte-aligned, bit-packed array elements not supported.");
+        return 0; }
 
       v = allocate_value (elem_type);
 
       if (TYPE_CODE (array_type) == TYPE_CODE_M3_OPEN_ARRAY) {
 
-	if (TYPE_CODE (elem_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	  /* recreate a dope vector for the next guy */
-	  memcpy (value_contents_raw (v) + (TARGET_PTR_BIT / HOST_CHAR_BIT),
-		  value_contents (array)
-		    + (TARGET_PTR_BIT + TARGET_LONG_BIT)/ HOST_CHAR_BIT,
-		  TYPE_LENGTH (elem_type) - TARGET_LONG_BIT / HOST_CHAR_BIT);
-	  *(char **)value_contents_raw (v) =
-	    *(char **)value_contents (array) + offset / 8; }
+        if (TYPE_CODE (elem_type) == TYPE_CODE_M3_OPEN_ARRAY) {
+          /* recreate a dope vector for the next guy */
+          memcpy (value_contents_raw (v) + (TARGET_PTR_BIT / HOST_CHAR_BIT),
+                  value_contents (array)
+                    + (TARGET_PTR_BIT + TARGET_LONG_BIT)/ HOST_CHAR_BIT,
+                  TYPE_LENGTH (elem_type) - TARGET_LONG_BIT / HOST_CHAR_BIT);
+          *(char **)value_contents_raw (v) =
+            *(char **)value_contents (array) + offset / 8; }
 
-	else {
-	  /* mark the thing as not read yet */
-	  set_value_lazy (v, 1);
-	  VALUE_LVAL (v) = VALUE_LVAL (array);
-	  VALUE_ADDRESS (v) =
-	    (*(long*)(value_contents (array))) + offset / 8;
-	  set_value_offset (v, 0); }}
+        else {
+          /* mark the thing as not read yet */
+          set_value_lazy (v, 1);
+          VALUE_LVAL (v) = VALUE_LVAL (array);
+          VALUE_ADDRESS (v) =
+            (*(long*)(value_contents (array))) + offset / 8;
+          set_value_offset (v, 0); }}
 
       else {
 
-	if (value_lazy (array)) {
-	  set_value_lazy (v, 1); }
-	else {
-	  memcpy (value_contents_raw (v),
-		  value_contents (array) + offset / 8,
-		  TYPE_LENGTH (elem_type)); }
-	VALUE_LVAL (v) = VALUE_LVAL (array);
-	if (VALUE_LVAL (array) == lval_internalvar) {
-	  VALUE_LVAL (v) = lval_internalvar_component; }
-	VALUE_ADDRESS (v) = VALUE_ADDRESS (array);
-	set_value_offset (v, value_offset (array) + offset / 8);  }
+        if (value_lazy (array)) {
+          set_value_lazy (v, 1); }
+        else {
+          memcpy (value_contents_raw (v),
+                  value_contents (array) + offset / 8,
+                  TYPE_LENGTH (elem_type)); }
+        VALUE_LVAL (v) = VALUE_LVAL (array);
+        if (VALUE_LVAL (array) == lval_internalvar) {
+          VALUE_LVAL (v) = lval_internalvar_component; }
+        VALUE_ADDRESS (v) = VALUE_ADDRESS (array);
+        set_value_offset (v, value_offset (array) + offset / 8);  }
       return v;
       break; }
 
@@ -4185,109 +4185,109 @@ m3_evaluate_subexp_maybe_packed (
       arg1_type = value_type (arg1);
     restart:
       switch (TYPE_CODE (arg1_type))
-	{
-	case TYPE_CODE_M3_INDIRECT:
-	  arg1_type = TYPE_M3_TARGET (arg1_type);
-	  arg1 = value_at_lazy (arg1_type, m3_value_as_address (arg1));
-	  goto restart;
-	case TYPE_CODE_M3_PACKED:
-	  arg1_type = TYPE_M3_TARGET (arg1_type);
-	  goto restart;
-	case TYPE_CODE_M3_CARDINAL:
-	case TYPE_CODE_M3_SUBRANGE:
-	  arg1_type = builtin_type_m3_integer;
-	  /* fall through */
-	case TYPE_CODE_M3_INTEGER:
-	  ival1 = m3_value_as_integer (arg1);
-	  break;
-	case TYPE_CODE_FLT:
-	  fval1 = m3_value_as_float (arg1);
-	  arg1_type = builtin_type_double;
-	  break;
-	case TYPE_CODE_INT:
-	  ival1 = value_as_long (arg1);
-	  arg1_type = builtin_type_m3_integer;
-	  break;
+        {
+        case TYPE_CODE_M3_INDIRECT:
+          arg1_type = TYPE_M3_TARGET (arg1_type);
+          arg1 = value_at_lazy (arg1_type, m3_value_as_address (arg1));
+          goto restart;
+        case TYPE_CODE_M3_PACKED:
+          arg1_type = TYPE_M3_TARGET (arg1_type);
+          goto restart;
+        case TYPE_CODE_M3_CARDINAL:
+        case TYPE_CODE_M3_SUBRANGE:
+          arg1_type = builtin_type_m3_integer;
+          /* fall through */
+        case TYPE_CODE_M3_INTEGER:
+          ival1 = m3_value_as_integer (arg1);
+          break;
+        case TYPE_CODE_FLT:
+          fval1 = m3_value_as_float (arg1);
+          arg1_type = builtin_type_double;
+          break;
+        case TYPE_CODE_INT:
+          ival1 = value_as_long (arg1);
+          arg1_type = builtin_type_m3_integer;
+          break;
         case TYPE_CODE_M3_ADDRESS:
         case TYPE_CODE_M3_POINTER:
         case TYPE_CODE_M3_NULL:
         case TYPE_CODE_M3_UN_ROOT:
           /* FIXME:  And the rest of the reference types? */
           ival1 = (LONGEST) m3_value_as_address (arg1);
-	  arg1_type = builtin_type_m3_integer;
-	  break;
-	default:
-	  arg1_type = builtin_type_m3_void;
-	  break; }
+          arg1_type = builtin_type_m3_integer;
+          break;
+        default:
+          arg1_type = builtin_type_m3_void;
+          break; }
 
       arg2_type = value_type (arg2);
     restart2:
       switch (TYPE_CODE (arg2_type))
-	{
-	case TYPE_CODE_M3_INDIRECT:
-	  arg2_type = TYPE_M3_TARGET (arg2_type);
-	  arg2 = value_at_lazy (arg2_type, m3_value_as_address (arg2));
-	  goto restart2;
-	case TYPE_CODE_M3_PACKED:
-	  arg2_type = TYPE_M3_TARGET (arg2_type);
-	  goto restart2;
-	case TYPE_CODE_M3_CARDINAL:
-	case TYPE_CODE_M3_SUBRANGE:
-	  arg2_type = builtin_type_m3_integer;
-	  /* fall through */
-	case TYPE_CODE_M3_INTEGER:
-	  ival2 = m3_value_as_integer (arg2);
-	  break;
-	case TYPE_CODE_FLT:
-	  fval2 = m3_value_as_float (arg2);
-	  arg2_type = builtin_type_double;
-	  break;
-	case TYPE_CODE_INT:
-	  ival2 = value_as_long (arg2);
-	  arg2_type = builtin_type_m3_integer;
-	  break;
+        {
+        case TYPE_CODE_M3_INDIRECT:
+          arg2_type = TYPE_M3_TARGET (arg2_type);
+          arg2 = value_at_lazy (arg2_type, m3_value_as_address (arg2));
+          goto restart2;
+        case TYPE_CODE_M3_PACKED:
+          arg2_type = TYPE_M3_TARGET (arg2_type);
+          goto restart2;
+        case TYPE_CODE_M3_CARDINAL:
+        case TYPE_CODE_M3_SUBRANGE:
+          arg2_type = builtin_type_m3_integer;
+          /* fall through */
+        case TYPE_CODE_M3_INTEGER:
+          ival2 = m3_value_as_integer (arg2);
+          break;
+        case TYPE_CODE_FLT:
+          fval2 = m3_value_as_float (arg2);
+          arg2_type = builtin_type_double;
+          break;
+        case TYPE_CODE_INT:
+          ival2 = value_as_long (arg2);
+          arg2_type = builtin_type_m3_integer;
+          break;
         case TYPE_CODE_M3_ADDRESS:
         case TYPE_CODE_M3_POINTER:
         case TYPE_CODE_M3_NULL:
         case TYPE_CODE_M3_UN_ROOT:
           /* FIXME:  And the rest of the reference types? */
           ival2 = (LONGEST) m3_value_as_address (arg2);
-	  arg2_type = builtin_type_m3_integer;
-	  break;
-	default:
-	  arg2_type = builtin_type_m3_void;
-	  break; }
+          arg2_type = builtin_type_m3_integer;
+          break;
+        default:
+          arg2_type = builtin_type_m3_void;
+          break; }
 
 
       if (TYPE_CODE (arg1_type) != TYPE_CODE (arg2_type)
-	  || TYPE_CODE (arg1_type) == TYPE_CODE_M3_VOID
-	  || (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER && !int_ok)
-	  || (TYPE_CODE (arg1_type) == TYPE_CODE_FLT && !float_ok)) {
-	error ("wrong arguments for binary operation");
+          || TYPE_CODE (arg1_type) == TYPE_CODE_M3_VOID
+          || (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER && !int_ok)
+          || (TYPE_CODE (arg1_type) == TYPE_CODE_FLT && !float_ok)) {
+        error ("wrong arguments for binary operation");
       }
 
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER) {
-	LONGEST res = 0;
-	switch (op) {
-	  case BINOP_M3_MULT: 	res = ival1 * ival2;          break;
-	  case BINOP_M3_ADD:	res = ival1 + ival2;          break;
-	  case BINOP_M3_MINUS:  res = ival1 - ival2;          break;
-	  case BINOP_M3_DIV:    res = m3_div (ival1, ival2);  break;
-	  case BINOP_M3_MOD:    res = m3_modi (ival1, ival2); break;
-	} /* switch */
-	return m3_value_from_longest (builtin_type_m3_integer, res);
+        LONGEST res = 0;
+        switch (op) {
+          case BINOP_M3_MULT:         res = ival1 * ival2;          break;
+          case BINOP_M3_ADD:        res = ival1 + ival2;          break;
+          case BINOP_M3_MINUS:  res = ival1 - ival2;          break;
+          case BINOP_M3_DIV:    res = m3_div (ival1, ival2);  break;
+          case BINOP_M3_MOD:    res = m3_modi (ival1, ival2); break;
+        } /* switch */
+        return m3_value_from_longest (builtin_type_m3_integer, res);
       }
 
       if (TYPE_CODE (arg1_type) == TYPE_CODE_FLT) {
-	double res = 0.0;
-	switch (op) {
-	  case BINOP_M3_DIVIDE: res = fval1 / fval2;          break;
-	  case BINOP_M3_MULT:   res = fval1 * fval2;          break;
-	  case BINOP_M3_ADD:    res = fval1 + fval2;          break;
-	  case BINOP_M3_MINUS:  res = fval1 - fval2;          break;
-	  case BINOP_M3_MOD:    res = m3_modf (fval1, fval2); break;
-	}
-	return value_from_double (arg1_type, res);
+        double res = 0.0;
+        switch (op) {
+          case BINOP_M3_DIVIDE: res = fval1 / fval2;          break;
+          case BINOP_M3_MULT:   res = fval1 * fval2;          break;
+          case BINOP_M3_ADD:    res = fval1 + fval2;          break;
+          case BINOP_M3_MINUS:  res = fval1 - fval2;          break;
+          case BINOP_M3_MOD:    res = m3_modf (fval1, fval2); break;
+        }
+        return value_from_double (arg1_type, res);
       }
     }
 
@@ -4295,14 +4295,14 @@ m3_evaluate_subexp_maybe_packed (
 
       (*pos) += 1;
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
-      if (m3_value_as_integer (arg1) == 0) {	return arg1; }
+      if (m3_value_as_integer (arg1) == 0) {        return arg1; }
       return m3_evaluate_subexp (NULL_TYPE, exp, pos, noside); }
 
     case BINOP_M3_OR: {
 
       (*pos) += 1;
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
-      if (m3_value_as_integer (arg1) == 1) {	return arg1; }
+      if (m3_value_as_integer (arg1) == 1) {        return arg1; }
       return m3_evaluate_subexp (NULL_TYPE, exp, pos, noside); }
 
     case BINOP_M3_EQUAL: {
@@ -4381,7 +4381,7 @@ m3_evaluate_subexp_maybe_packed (
       arg1 = m3_evaluate_subexp_maybe_packed ( NULL_TYPE, exp, pos, noside );
       arg2 = m3_evaluate_subexp ( value_type ( arg1 ), exp, pos, noside );
       if ( noside == EVAL_SKIP || noside == EVAL_AVOID_SIDE_EFFECTS )
-	{ return arg1; }
+        { return arg1; }
       arg2 = m3_check_and_coerce_assignment ( arg1, arg2 );
       return value_assign ( arg1, arg2 );
 
@@ -4423,25 +4423,25 @@ init_thread_constants ( void )
   thread__t = find_m3_type_named ("Thread.T",1);
 
   find_m3_rec_field (thread__t, "id",
-		     &thread__t__id_size, &thread__t__id_offset, 0);
+                     &thread__t__id_size, &thread__t__id_offset, 0);
   find_m3_rec_field (thread__t, "state",
-		     &thread__t__state_size, &thread__t__state_offset, 0);
+                     &thread__t__state_size, &thread__t__state_offset, 0);
   find_m3_rec_field (thread__t, "next",
-		     &thread__t__next_size, &thread__t__next_offset, 0);
+                     &thread__t__next_size, &thread__t__next_offset, 0);
   find_m3_rec_field (thread__t, "waitingForCondition",
-		     &thread__t__cond_size, &thread__t__cond_offset,
-		     &thread__t__cond_type);
+                     &thread__t__cond_size, &thread__t__cond_offset,
+                     &thread__t__cond_type);
   find_m3_rec_field (thread__t, "waitingForMutex",
-		     &thread__t__mutex_size, &thread__t__mutex_offset,
-		     &thread__t__mutex_type);
+                     &thread__t__mutex_size, &thread__t__mutex_offset,
+                     &thread__t__mutex_type);
   find_m3_rec_field (thread__t, "waitingForTime",
-		     &thread__t__time_size, &thread__t__time_offset,
-		     &thread__t__time_type);
+                     &thread__t__time_size, &thread__t__time_offset,
+                     &thread__t__time_type);
   find_m3_rec_field (thread__t, "context",
-		     &thread__t__context_size, &thread__t__context_offset,
-		     &thread__t__context_type);
+                     &thread__t__context_size, &thread__t__context_offset,
+                     &thread__t__context_type);
   find_m3_rec_field (thread__t__context_type, "buf",
-		     &thread__t__buf_size, &thread__t__buf_offset, 0);
+                     &thread__t__buf_size, &thread__t__buf_offset, 0);
 
   /* skip past the method pointer */
 #if defined(sparc)
@@ -4577,7 +4577,7 @@ look_in_thread (regno)
     if (regno < 0) { first_reg = 0; last_reg = NUM_REGS; }
     for (regno = first_reg; regno < last_reg; regno++) {
       reg_offset = thread__t__buf_offset / HOST_CHAR_BIT
-	+ regno_to_jmpbuf [regno] * TARGET_PTR_BIT / HOST_CHAR_BIT;
+        + regno_to_jmpbuf [regno] * TARGET_PTR_BIT / HOST_CHAR_BIT;
       regcache_raw_supply
         (current_regcache, regno, cur_m3_thread.bits + reg_offset);
     }
@@ -4586,11 +4586,11 @@ look_in_thread (regno)
   if ((regno >= 0) && (regno < NUM_REGS)) {
     error ( "%s, line %d: don't know where to find register \"%s\" "
             "in stopped thread",
-	    __FILE__, __LINE__, REGISTER_NAME ( regno )
+            __FILE__, __LINE__, REGISTER_NAME ( regno )
           );
   } else {
     error ("%s, line %d: don't know where to find registers in stopped thread",
-	   __FILE__, __LINE__);
+           __FILE__, __LINE__);
   }
 #endif
 }
@@ -4665,36 +4665,36 @@ threads_command (args, from_tty)
     printf_filtered ("  ");
 
     state = m3_extract_ord (cur.bits, thread__t__state_offset,
-			   thread__t__state_size, 0);
+                           thread__t__state_size, 0);
     switch (state) {
       case 0 /* alive */:
-	printf_filtered ("alive");
-	break;
+        printf_filtered ("alive");
+        break;
       case 1 /* waiting */:
-	printf_filtered ("waiting for condition 16_%lx",
-		  m3_extract_address (cur.bits, thread__t__cond_offset));
-	break;
+        printf_filtered ("waiting for condition 16_%lx",
+                  m3_extract_address (cur.bits, thread__t__cond_offset));
+        break;
       case 2 /* locking */:
-	printf_filtered ("waiting for mutex 16_%lx",
-		  m3_extract_address (cur.bits, thread__t__mutex_offset));
-	break;
+        printf_filtered ("waiting for mutex 16_%lx",
+                  m3_extract_address (cur.bits, thread__t__mutex_offset));
+        break;
       case 3 /* pausing */:
-	printf_filtered ("waiting until ");
-	m3_val_print2 (thread__t__time_type, cur.bits, thread__t__time_offset,
-		       thread__t__time_size, gdb_stdout, 0, 0, 1);
-	break;
+        printf_filtered ("waiting until ");
+        m3_val_print2 (thread__t__time_type, cur.bits, thread__t__time_offset,
+                       thread__t__time_size, gdb_stdout, 0, 0, 1);
+        break;
       case 4 /* blocking */:
-	printf_filtered ("waiting for I/O");
-	break;
+        printf_filtered ("waiting for I/O");
+        break;
       case 5 /* dying */:
-	printf_filtered ("waiting for somebody to join");
-	break;
+        printf_filtered ("waiting for somebody to join");
+        break;
       case 6 /* dead */:
-	printf_filtered ("dead");
-	break;
+        printf_filtered ("dead");
+        break;
       default:
-	printf_filtered ("<unknown state = %d>", state);
-	break;
+        printf_filtered ("<unknown state = %d>", state);
+        break;
       }
     puts_filtered ("\n");
 
@@ -4767,95 +4767,95 @@ _initialize_m3_language ()
 
   builtin_type_m3_integer =
     init_type (TYPE_CODE_M3_INTEGER, TARGET_LONG_BIT / HOST_CHAR_BIT,
-	       0,
-	       "INTEGER", (struct objfile *) NULL);
+               0,
+               "INTEGER", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_integer) = TARGET_LONG_BIT;
 
   builtin_type_m3_cardinal =
     init_type (TYPE_CODE_M3_CARDINAL, TARGET_LONG_BIT / HOST_CHAR_BIT,
-	       0,
-	       "CARDINAL", (struct objfile *) NULL);
+               0,
+               "CARDINAL", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_cardinal) = TARGET_LONG_BIT;
 
   builtin_type_m3_boolean =
     init_type (TYPE_CODE_M3_BOOLEAN, 1,
-	       0,
-	       "BOOLEAN", (struct objfile *) NULL);
+               0,
+               "BOOLEAN", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_boolean) = 8;
 
   builtin_type_m3_void =
     init_type (TYPE_CODE_M3_VOID, 0, 0,
-	       "VOID", (struct objfile *) NULL);
+               "VOID", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_void) = 0;
 
   builtin_type_m3_address =
     init_type (TYPE_CODE_M3_ADDRESS, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "ADDRESS", (struct objfile *) NULL);
+               "ADDRESS", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_address) = TARGET_PTR_BIT;
 
   builtin_type_m3_root =
     init_type (TYPE_CODE_M3_ROOT, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "ROOT", (struct objfile *) NULL);
+               "ROOT", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_root) = TARGET_PTR_BIT;
 
   builtin_type_m3_transient_root =
     init_type (TYPE_CODE_M3_TRANSIENT_ROOT, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "TRANSIENT_ROOT", (struct objfile *) NULL);
+               "TRANSIENT_ROOT", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_transient_root) = TARGET_PTR_BIT;
 
   builtin_type_m3_char =
     init_type (TYPE_CODE_M3_CHAR, TARGET_CHAR_BIT / HOST_CHAR_BIT, 0,
-	       "CHAR", (struct objfile *) NULL);
+               "CHAR", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_char) = TARGET_CHAR_BIT;
 
   builtin_type_m3_widechar =
     init_type (TYPE_CODE_M3_WIDECHAR, (2*TARGET_CHAR_BIT) / HOST_CHAR_BIT, 0,
-	       "WIDECHAR", (struct objfile *) NULL);
+               "WIDECHAR", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_widechar) = 2*TARGET_CHAR_BIT;
 
   builtin_type_m3_real =
     init_type (TYPE_CODE_FLT, TARGET_FLOAT_BIT / TARGET_CHAR_BIT, 0,
-	       "REAL", (struct objfile *) NULL);
+               "REAL", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_real) = TARGET_FLOAT_BIT;
 
   builtin_type_m3_longreal =
     init_type (TYPE_CODE_FLT, TARGET_DOUBLE_BIT / TARGET_CHAR_BIT, 0,
-	       "LONGREAL", (struct objfile *) NULL);
+               "LONGREAL", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_longreal) = TARGET_DOUBLE_BIT;
 
   builtin_type_m3_extended =
     init_type (TYPE_CODE_FLT, TARGET_DOUBLE_BIT / TARGET_CHAR_BIT, 0,
-	       "EXTENDED", (struct objfile *) NULL);
+               "EXTENDED", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_extended) = TARGET_DOUBLE_BIT;
 
   builtin_type_m3_null =
     init_type (TYPE_CODE_M3_NULL, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "NULL", (struct objfile *) NULL);
+               "NULL", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_null) = TARGET_PTR_BIT;
 
   builtin_type_m3_refany =
     init_type (TYPE_CODE_M3_REFANY, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "REFANY", (struct objfile *) NULL);
+               "REFANY", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_refany) = TARGET_PTR_BIT;
 
   builtin_type_m3_transient_refany =
     init_type (TYPE_CODE_M3_TRANSIENT_REFANY, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "TRANSIENT_REFANY", (struct objfile *) NULL);
+               "TRANSIENT_REFANY", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_transient_refany) = TARGET_PTR_BIT;
 
   builtin_type_m3_text =
     init_type (TYPE_CODE_M3_TEXT, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "TEXT", (struct objfile *) NULL);
+               "TEXT", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_text) = TARGET_PTR_BIT;
 
   builtin_type_m3_mutex =
     init_type (TYPE_CODE_M3_MUTEX, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "MUTEX", (struct objfile *) NULL);
+               "MUTEX", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_mutex) = TARGET_PTR_BIT;
 
   builtin_type_m3_untraced_root =
     init_type (TYPE_CODE_M3_UN_ROOT, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "UNTRACED_ROOT", (struct objfile *) NULL);
+               "UNTRACED_ROOT", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_untraced_root) = TARGET_PTR_BIT;
 
   builtin_type_m3_proc_closure =
@@ -4933,7 +4933,7 @@ m3_decode_struct (t)
   /* The format is M<kind>_<uid>_<size>_<other info>
       where kind is a one letter code,
             uid  is a 6 byte base-62 number
-	    size is the type's size in bits
+            size is the type's size in bits
             other info depends on the type; */
 
   key = TYPE_TAG_NAME (t);
@@ -4972,12 +4972,12 @@ m3_decode_struct (t)
     case 'R':
       TYPE_CODE (t) = TYPE_CODE_M3_RECORD;
       for (i = 0; i < TYPE_NFIELDS (t); i++) {
-	set_field_uid (t, i);
-	sscanf (TYPE_FIELD_NAME (t, i), "_%ld_%ld", &tmp1, &tmp2);
+        set_field_uid (t, i);
+        sscanf (TYPE_FIELD_NAME (t, i), "_%ld_%ld", &tmp1, &tmp2);
         TYPE_FIELD_BITPOS (t, i) = tmp1;
-	TYPE_FIELD_BITSIZE (t, i) = tmp2;
-	TYPE_FIELD_NAME (t, i) =
-	  skip_underscores (TYPE_FIELD_NAME (t, i), 3); }
+        TYPE_FIELD_BITSIZE (t, i) = tmp2;
+        TYPE_FIELD_NAME (t, i) =
+          skip_underscores (TYPE_FIELD_NAME (t, i), 3); }
       break;
 
     case 'O':
@@ -4987,20 +4987,20 @@ m3_decode_struct (t)
       TYPE_M3_OBJ_TRACED (t) = tmp2;
       TYPE_M3_OBJ_BRANDED (t) = tmp3;
       if (TYPE_M3_OBJ_BRANDED (t)) {
-	TYPE_M3_OBJ_BRAND (t) = skip_underscores (type_specific_info, 3); }
+        TYPE_M3_OBJ_BRAND (t) = skip_underscores (type_specific_info, 3); }
       else {
-	TYPE_M3_OBJ_BRAND (t) = 0; }
+        TYPE_M3_OBJ_BRAND (t) = 0; }
 
       TYPE_M3_OBJ_NMETHODS (t) = TYPE_NFIELDS (t) - TYPE_M3_OBJ_NFIELDS(t) - 1;
       set_field_uid (t, 0);
 
       for (i = 1; i < TYPE_NFIELDS (t); i++) {
-	set_field_uid (t, i);
-	sscanf (TYPE_FIELD_NAME (t, i), "_%ld_%ld_", &tmp1, &tmp2);
+        set_field_uid (t, i);
+        sscanf (TYPE_FIELD_NAME (t, i), "_%ld_%ld_", &tmp1, &tmp2);
         TYPE_FIELD_BITPOS (t, i) = tmp1;
-	TYPE_FIELD_BITSIZE (t, i) = tmp2;
-	TYPE_FIELD_NAME (t, i) =
-	  skip_underscores (TYPE_FIELD_NAME (t, i), 3); }
+        TYPE_FIELD_BITSIZE (t, i) = tmp2;
+        TYPE_FIELD_NAME (t, i) =
+          skip_underscores (TYPE_FIELD_NAME (t, i), 3); }
       break;
 
     case 'S':
@@ -5022,9 +5022,9 @@ m3_decode_struct (t)
       TYPE_M3_POINTER_TRACED (t) = tmp1;
       TYPE_M3_POINTER_BRANDED (t) = tmp2;
       if (TYPE_M3_POINTER_BRANDED (t)) {
-	TYPE_M3_POINTER_BRAND (t) = skip_underscores (type_specific_info, 2); }
+        TYPE_M3_POINTER_BRAND (t) = skip_underscores (type_specific_info, 2); }
       else {
-	TYPE_M3_POINTER_BRAND (t) = 0; }
+        TYPE_M3_POINTER_BRAND (t) = 0; }
       set_field_uid (t, 0);
       break;
 
@@ -5056,15 +5056,15 @@ m3_decode_struct (t)
       TYPE_TARGET_TYPE ( t ) = TYPE_FIELDS ( t ) [ 0 ] . type ;
       sscanf (type_specific_info, "%c%ld", &c, &tmp1);
       TYPE_M3_PROC_NRAISES (t) = tmp1;
-      if (c == 'A') {		/* RAISES ANY */
-	TYPE_M3_PROC_NARGS (t) = TYPE_NFIELDS (t);
-	TYPE_M3_PROC_NRAISES (t) = - 1;
-	for (i = 0; i < TYPE_NFIELDS (t); i++) {
-	  set_field_uid (t, i); }}
+      if (c == 'A') {                /* RAISES ANY */
+        TYPE_M3_PROC_NARGS (t) = TYPE_NFIELDS (t);
+        TYPE_M3_PROC_NRAISES (t) = - 1;
+        for (i = 0; i < TYPE_NFIELDS (t); i++) {
+          set_field_uid (t, i); }}
       else {
-	TYPE_M3_PROC_NARGS (t) = TYPE_NFIELDS (t) - TYPE_M3_PROC_NRAISES (t);
-	for (i = 0; i < TYPE_NFIELDS (t) - TYPE_M3_PROC_NRAISES (t); i++) {
-	  set_field_uid (t, i); }}
+        TYPE_M3_PROC_NARGS (t) = TYPE_NFIELDS (t) - TYPE_M3_PROC_NRAISES (t);
+        for (i = 0; i < TYPE_NFIELDS (t) - TYPE_M3_PROC_NRAISES (t); i++) {
+          set_field_uid (t, i); }}
       break; }
 
     case 'Q':
@@ -5251,7 +5251,7 @@ m3_demangle (const char *mangled, int options)
     case 'N':
       /* m3 type name for type uid: MN_<uid> Demangled: G$<uid> */
       if (mangled_len >= 3 + M3UID_LEN && m3uid_to_int (mangled + 3, &uid)) {
-	sprintf (demangled, "G$%.*s", M3UID_LEN, mangled + 3);
+        sprintf (demangled, "G$%.*s", M3UID_LEN, mangled + 3);
         return savestring (demangled, strlen(demangled));
       }
       break;
@@ -5259,7 +5259,7 @@ m3_demangle (const char *mangled, int options)
     case 'n':
       /* m3 type uid for type name: Mn_<uid>_<name> Demangled: B$<name> */
       if (mangled_len >= 4 + M3UID_LEN && m3uid_to_int (mangled + 3, &uid)) {
-	sprintf (demangled, "B$%s", mangled + 4 + M3UID_LEN);
+        sprintf (demangled, "B$%s", mangled + 4 + M3UID_LEN);
         return savestring (demangled, strlen(demangled));
       }
       break;
@@ -5267,7 +5267,7 @@ m3_demangle (const char *mangled, int options)
     case 'i':
       /* m3 exported interfaces Mi_zzzzzz_<module> Demangled: H$<module> */
       if (mangled_len > 10 && m3uid_to_int (mangled + 3, &uid)) {
-  	sprintf (demangled, "H$%s", mangled + 4 + M3UID_LEN);
+          sprintf (demangled, "H$%s", mangled + 4 + M3UID_LEN);
         return savestring (demangled, strlen(demangled));
       }
       break;
@@ -5286,7 +5286,7 @@ m3_demangle (const char *mangled, int options)
     case 'Q':
       /* m3 type encoding: M?_<uid>* Demangled: <uid> */
       if (mangled_len >= 3 + M3UID_LEN && m3uid_to_int (mangled + 3, &uid)) {
-	sprintf (demangled, "%.*s", M3UID_LEN, mangled + 3);
+        sprintf (demangled, "%.*s", M3UID_LEN, mangled + 3);
         return savestring (demangled, strlen(demangled));
       }
       break;
@@ -5926,11 +5926,11 @@ find_m3_type_name (t)
     } else {
       char *n;
       if (uid == NULL) {
-	  n = malloc (strlen("<typeid=(null)>")+1);
-	  strcpy(n, "<typeid=(null)>");
+          n = malloc (strlen("<typeid=(null)>")+1);
+          strcpy(n, "<typeid=(null)>");
       } else {
-	  n = malloc (strlen(uid)+strlen("<typeid=>")+1);
-	  sprintf (n, "<typeid=%s>", uid);
+          n = malloc (strlen(uid)+strlen("<typeid=>")+1);
+          sprintf (n, "<typeid=%s>", uid);
       }
       TYPE_NAME (t) = n;
     }
@@ -5975,9 +5975,9 @@ init_m3_constants ()
         return; /* without setting constant_init_done. */
       }
     find_m3_rec_field (rt0_tc, "selfID",
-		     &rt0_tc_selfID_size, &rt0_tc_selfID_offset, 0);
+                     &rt0_tc_selfID_size, &rt0_tc_selfID_offset, 0);
     find_m3_rec_field (rt0_tc, "dataSize",
-		     &rt0_tc_dataSize_size, &rt0_tc_dataSize_offset, 0);
+                     &rt0_tc_dataSize_size, &rt0_tc_dataSize_offset, 0);
 
     rt0_otc = find_m3_type_named ("RT0.ObjectTypecell",0);
     is_cm3 = (rt0_otc != 0);
@@ -6026,14 +6026,14 @@ init_m3_constants ()
       }
 
     find_m3_rec_field (rt0_otc, "dataOffset",
-		     &rt0_dataOffset_size, &rt0_dataOffset_offset, 0);
+                     &rt0_dataOffset_size, &rt0_dataOffset_offset, 0);
     find_m3_rec_field (rt0_otc, "methodOffset",
-		     &rt0_methodOffset_size, &rt0_methodOffset_offset, 0);
+                     &rt0_methodOffset_size, &rt0_methodOffset_offset, 0);
     find_m3_rec_field (rt0_otc, "parent",
-		     &rt0_parent_size, &rt0_parent_offset, 0);
+                     &rt0_parent_size, &rt0_parent_offset, 0);
     find_m3_rec_field (rt0_otc, "defaultMethods",
-		     &rt0_defaultMethods_size,
-		     &rt0_defaultMethods_offset, 0);
+                     &rt0_defaultMethods_size,
+                     &rt0_defaultMethods_offset, 0);
   }
 
   constant_init_done = 1;
@@ -6055,8 +6055,8 @@ m3_typecode ( CORE_ADDR addr )
   if (!addr) { return 0; }
 
   read_memory (addr - (TARGET_PTR_BIT / TARGET_CHAR_BIT),
-		      (char *)&typecodeword,
-		      TARGET_PTR_BIT / TARGET_CHAR_BIT);
+                      (char *)&typecodeword,
+                      TARGET_PTR_BIT / TARGET_CHAR_BIT);
 
   /* the typecode is in Modula-3 bits 1..21 */
   typecode = m3_extract_ord((char *)&typecodeword, 1, 20, 0);
@@ -6124,8 +6124,8 @@ find_m3_heap_tc_addr (CORE_ADDR addr)
   else /* pm3, etc. */
     {
       read_memory (rt0u_types_value
-	  	          + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT,
-		          (char *)&result, TARGET_PTR_BIT / TARGET_CHAR_BIT);
+                            + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT,
+                          (char *)&result, TARGET_PTR_BIT / TARGET_CHAR_BIT);
       return result;
 
     }
@@ -6167,11 +6167,11 @@ find_tc_from_m3_type (t)
 
   n_types = 0;
   read_memory (rttype_types_addr + rttype_infomap_cnt_offset / 8,
-		      (char*)&n_types, rttype_infomap_cnt_size / 8);
+                      (char*)&n_types, rttype_infomap_cnt_size / 8);
 
   map_ptr = 0;
   read_memory (rttype_types_addr + rttype_infomap_map_offset / 8,
-		      (char*)&map_ptr, rttype_infomap_map_size / 8);
+                      (char*)&map_ptr, rttype_infomap_map_size / 8);
   if (map_ptr == 0) {
     return 0;  /* no mapped typecells yet */
   }
@@ -6179,18 +6179,18 @@ find_tc_from_m3_type (t)
   for (typecode = 0;  typecode < n_types;  typecode++) {
     /* get the InfoPtr */
     read_memory (map_ptr
-		      + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT,
-		      (char*)&info_ptr, TARGET_PTR_BIT / TARGET_CHAR_BIT);
+                      + typecode * TARGET_PTR_BIT / TARGET_CHAR_BIT,
+                      (char*)&info_ptr, TARGET_PTR_BIT / TARGET_CHAR_BIT);
     if (!info_ptr) { continue; }
 
     /* get the typecell pointer */
     read_memory (info_ptr + rttype_info_def_offset / 8,
-		      (char*)&tc_addr, TARGET_PTR_BIT / TARGET_CHAR_BIT);
+                      (char*)&tc_addr, TARGET_PTR_BIT / TARGET_CHAR_BIT);
     if (!tc_addr) { continue; }
 
     /* get the type's UID */
     read_memory (tc_addr + rt0_tc_selfID_offset / TARGET_CHAR_BIT,
-		      (char*)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
+                      (char*)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
     if (selfID == uid) { return tc_addr; }
   }
 
@@ -6206,7 +6206,7 @@ find_m3_uid_from_tc (tc_addr)
   init_m3_constants ();
 
   read_memory (tc_addr + rt0_tc_selfID_offset / TARGET_CHAR_BIT,
-		      (char *)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
+                      (char *)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
 
   return selfID;
 } /* find_m3_uid_from_tc */
@@ -6220,7 +6220,7 @@ find_m3_type_from_tc (tc_addr)
   init_m3_constants ();
 
   read_memory (tc_addr + rt0_tc_selfID_offset / TARGET_CHAR_BIT,
-		      (char *)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
+                      (char *)&selfID, rt0_tc_selfID_size / HOST_CHAR_BIT);
 
   return (m3_resolve_type (m3uid_from_int (selfID)));
 }
@@ -6253,7 +6253,7 @@ m3_tc_address_to_dataOffset (tc_addr)
     }
 
   read_memory (tc_addr + rt0_dataOffset_offset / TARGET_CHAR_BIT,
-		      (char *)&result, rt0_dataOffset_size / TARGET_CHAR_BIT);
+                      (char *)&result, rt0_dataOffset_size / TARGET_CHAR_BIT);
   return result;
 }
 
@@ -6276,10 +6276,10 @@ m3_tc_address_to_methodOffset (tc_addr)
     }
 
   read_memory (tc_addr + rt0_methodOffset_offset / TARGET_CHAR_BIT,
-		      (char *)&result, rt0_methodOffset_size / TARGET_CHAR_BIT);
+                      (char *)&result, rt0_methodOffset_size / TARGET_CHAR_BIT);
   return result;
 }
-		
+                
 int
 m3_tc_address_to_dataSize (tc_addr)
      CORE_ADDR tc_addr;
@@ -6287,10 +6287,10 @@ m3_tc_address_to_dataSize (tc_addr)
   int result;
   init_m3_constants ();
   read_memory (tc_addr + rt0_tc_dataSize_offset / TARGET_CHAR_BIT,
-		      (char *)&result, rt0_tc_dataSize_size / TARGET_CHAR_BIT);
+                      (char *)&result, rt0_tc_dataSize_size / TARGET_CHAR_BIT);
   return result;
 }
-		
+                
 CORE_ADDR
 m3_tc_addr_to_super_tc_addr (tc_addr)
      CORE_ADDR tc_addr;
@@ -6310,10 +6310,10 @@ m3_tc_addr_to_super_tc_addr (tc_addr)
     }
 
   read_memory (tc_addr + rt0_parent_offset / TARGET_CHAR_BIT,
-		      (char *)&result, rt0_parent_size / TARGET_CHAR_BIT);
+                      (char *)&result, rt0_parent_size / TARGET_CHAR_BIT);
   return result;
 }
-		
+                
 CORE_ADDR
 m3_tc_address_to_defaultMethods ( CORE_ADDR tc_addr )
 {
@@ -6331,7 +6331,7 @@ m3_tc_address_to_defaultMethods ( CORE_ADDR tc_addr )
     }
 
   read_memory ( tc_addr + rt0_defaultMethods_offset / TARGET_CHAR_BIT,
-	        (char *)&result, rt0_defaultMethods_size / TARGET_CHAR_BIT);
+                (char *)&result, rt0_defaultMethods_size / TARGET_CHAR_BIT);
   return result;
 }
 
@@ -6377,7 +6377,7 @@ find_m3_rec_field (
     if ( bitpos != NULL ) { * bitpos = 0; }
     return 0;
   } /* find_m3_rec_field */
-		
+                
 int
 find_m3_obj_field (
     struct type *obj_type,

@@ -320,7 +320,7 @@ m3_div (a, b)
   if (a < 0) {
     return (b < 0)
              ? ((-a) / (-b))
-	     : (- ((-a-1) / b) - 1);
+             : (- ((-a-1) / b) - 1);
   } else {
     return (b < 0)
              ? (- ((a - 1) / (-b)) - 1)
@@ -448,7 +448,7 @@ m3_value_less (struct value *arg1, struct value *arg2)
   else if ( code1 == TYPE_CODE_FLT && code2 == TYPE_CODE_FLT )
     { if ( m3_types_equal ( type1, type2 ) )
         { /* NOTE: kettenis/20050816: Avoid compiler bug on systems where
-	 `   long double' values are returned in static storage (m68k).  */
+         `   long double' values are returned in static storage (m68k).  */
           d1 = value_as_double ( arg1 );
           d2 = value_as_double ( arg2 );
           /* FIXME: ^This seems very unlikely to be right for the 3 Modula-3
@@ -2241,7 +2241,7 @@ m3_evaluate_dot (
                 field_name
               ); /* NORETURN */
           }
-	allocated_tc_addr = m3_tc_addr_from_inf_object_addr ( lhs_inf_addr );
+        allocated_tc_addr = m3_tc_addr_from_inf_object_addr ( lhs_inf_addr );
         if ( m3_check_TextLiteral_buf
               ( lhs_inf_addr, allocated_tc_addr, field_name, & bitsize,
                 & bitpos, & dot_type
@@ -2727,31 +2727,31 @@ m3_evaluate_subexp_maybe_packed (
 
     case OP_REGISTER:
       {
-	int regno = longest_to_int (exp->elts[pc + 1].longconst);
-	struct value *val
+        int regno = longest_to_int (exp->elts[pc + 1].longconst);
+        struct value *val
            = value_of_register (regno, get_selected_frame ("No frame"));
-	(*pos) += 3;
-	if (val == NULL)
-	  error (_("Value of register %s not available."),
-		 frame_map_regnum_to_name
+        (*pos) += 3;
+        if (val == NULL)
+          error (_("Value of register %s not available."),
+                 frame_map_regnum_to_name
                    (get_selected_frame ("No frame"), regno));
 
- 	else {
- 	  arg1
+         else {
+           arg1
             = value_of_register
                 (longest_to_int (exp->elts[pc +1].longconst)
                 , get_selected_frame("No frame")
                 );
- 	  /* hack to convert registers to Modula-3 types... */
- 	  if (value_type(arg1) == builtin_type_long) {
- 	    deprecated_set_value_type(arg1, builtin_type_m3_integer);
-   	    return arg1;
-  	  }
- 	  else if (value_type(arg1) == builtin_type_double) {
- 	    deprecated_set_value_type(arg1, builtin_type_m3_longreal);
-   	    return arg1;
- 	  }
- 	  else return val;
+           /* hack to convert registers to Modula-3 types... */
+           if (value_type(arg1) == builtin_type_long) {
+             deprecated_set_value_type(arg1, builtin_type_m3_integer);
+               return arg1;
+            }
+           else if (value_type(arg1) == builtin_type_double) {
+             deprecated_set_value_type(arg1, builtin_type_m3_longreal);
+               return arg1;
+           }
+           else return val;
         }
       }
 
@@ -2787,7 +2787,7 @@ m3_evaluate_subexp_maybe_packed (
     case OP_M3_XREEL: {
       (*pos) += 4;
       return value_from_double (exp->elts[pc + 1].type,
-				exp->elts[pc + 2].doubleconst); }
+                                exp->elts[pc + 2].doubleconst); }
 
     case STRUCTOP_M3_ENUM:
       arg1 = m3_evaluate_enum_const ( exp, pos, noside );
@@ -2889,7 +2889,7 @@ m3_evaluate_subexp_maybe_packed (
 
       while ( TYPE_CODE ( arg1_type ) == TYPE_CODE_M3_INDIRECT )
         { arg1_type = TYPE_M3_TARGET (arg1_type);
-	  arg1 = value_at_lazy ( arg1_type, m3_value_as_address ( arg1 ) );
+          arg1 = value_at_lazy ( arg1_type, m3_value_as_address ( arg1 ) );
         }
       revealed_type = m3_revealed_type ( arg1_type );
 
@@ -2969,7 +2969,7 @@ m3_evaluate_subexp_maybe_packed (
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
       val  = ! m3_value_as_integer (arg1);
       return m3_value_from_longest (builtin_type_m3_boolean, val);  }
-	
+        
     case UNOP_M3_FIRST:
       { struct value * arg;
         struct value * res;
@@ -3062,7 +3062,7 @@ m3_evaluate_subexp_maybe_packed (
               return value_from_double ( arg1_type, val );
             }
           default:
-	    error (_("ABS requires an INTEGER, LONGINT, REAL, LONGREAL, "
+            error (_("ABS requires an INTEGER, LONGINT, REAL, LONGREAL, "
                      "or EXTENDED parameter.\n"
                   ) );
         }
@@ -3085,8 +3085,8 @@ m3_evaluate_subexp_maybe_packed (
       arg1_type = value_type (arg1);
       sz = TYPE_M3_SIZE (arg1_type) / HOST_CHAR_BIT;
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error (_("ADRSIZE(<open array>) not implemented"));
-	sz = 1;
+        error (_("ADRSIZE(<open array>) not implemented"));
+        sz = 1;
       }
       return m3_value_from_longest (builtin_type_m3_integer, sz); }
 
@@ -3099,8 +3099,8 @@ m3_evaluate_subexp_maybe_packed (
       arg1_type = value_type (arg1);
       sz = TYPE_M3_SIZE (arg1_type);
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error (_("BITSIZE(<open array>) not implemented"));
-	sz = 8;
+        error (_("BITSIZE(<open array>) not implemented"));
+        sz = 8;
       }
       return m3_value_from_longest (builtin_type_m3_integer, sz); }
 
@@ -3113,8 +3113,8 @@ m3_evaluate_subexp_maybe_packed (
       arg1_type = value_type (arg1);
       sz = TYPE_M3_SIZE (arg1_type) / 8;
       if (TYPE_CODE (arg1_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error (_("BYTESIZE(<open array>) not implemented"));
-	sz = 1;
+        error (_("BYTESIZE(<open array>) not implemented"));
+        sz = 1;
       }
       return m3_value_from_longest (builtin_type_m3_integer, sz);
     }
@@ -3134,8 +3134,8 @@ m3_evaluate_subexp_maybe_packed (
         if ((val > 0.0e0) && ((double)intval != val)) { intval++; }
         return m3_value_from_longest (builtin_type_m3_integer, intval);
       } else {
-	error (_("CEILING must be applied to a floating-point value"));
-	return arg1;
+        error (_("CEILING must be applied to a floating-point value"));
+        return arg1;
       }
     }
 
@@ -3154,8 +3154,8 @@ m3_evaluate_subexp_maybe_packed (
         if ((val < 0.0e0) && ((double)intval != val)) { intval--; }
         return m3_value_from_longest (builtin_type_m3_integer, intval);
       } else {
-	error (_("FLOOR must be applied to a floating-point value"));
-	return arg1;
+        error (_("FLOOR must be applied to a floating-point value"));
+        return arg1;
       }
     }
 
@@ -3173,8 +3173,8 @@ m3_evaluate_subexp_maybe_packed (
         intval = (LONGEST) (val + 0.5);
         return m3_value_from_longest (builtin_type_m3_integer, intval);
       } else {
-	error (_("ROUND must be applied to a floating-point value"));
-	return arg1;
+        error (_("ROUND must be applied to a floating-point value"));
+        return arg1;
       }
     }
 
@@ -3192,8 +3192,8 @@ m3_evaluate_subexp_maybe_packed (
         intval = (LONGEST) (val);
         return m3_value_from_longest (builtin_type_m3_integer, intval);
       } else {
-	error (_("TRUNC must be applied to a floating-point value"));
-	return arg1;
+        error (_("TRUNC must be applied to a floating-point value"));
+        return arg1;
       }
     }
 
@@ -3296,9 +3296,9 @@ m3_evaluate_subexp_maybe_packed (
         }
 
       if ( ! m3_value_is_type ( arg2 )
-	   || (TYPE_CODE ( value_type( arg2 ) ) != TYPE_CODE_FLT )
+           || (TYPE_CODE ( value_type( arg2 ) ) != TYPE_CODE_FLT )
          ) {
-	error
+        error
           (_("Second parameter to FLOAT must be REAL, LONGREAL, "
              "or EXTENDED.\n"
           ) ); /* NORETURN */
@@ -3317,18 +3317,18 @@ m3_evaluate_subexp_maybe_packed (
       arg2_type = value_type (arg2);
 
       if (TYPE_CODE(arg1_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error (_("LOOPHOLE of open array values is illegal"));
+        error (_("LOOPHOLE of open array values is illegal"));
         return arg1;
       }
       else if ( ! m3_value_is_type ( arg2 ) ) {
-	error (_("Second parameter of LOOPHOLE must be a type"));
-	return arg1;
+        error (_("Second parameter of LOOPHOLE must be a type"));
+        return arg1;
       } else if (TYPE_CODE (arg2_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	error (_("LOOPHOLE to an open array type is not (yet) supported"));
+        error (_("LOOPHOLE to an open array type is not (yet) supported"));
         return arg1;
       } else if (TYPE_M3_SIZE (arg1_type) != TYPE_M3_SIZE (arg2_type)) {
-	error (_("Size of value and type passed to LOOPHOLE don't agree"));
-	return arg1;
+        error (_("Size of value and type passed to LOOPHOLE don't agree"));
+        return arg1;
       }
 
       deprecated_set_value_type (arg1, arg2_type);
@@ -3349,82 +3349,82 @@ m3_evaluate_subexp_maybe_packed (
       array_type = value_type (array);
 
       while (TYPE_CODE (array_type) == TYPE_CODE_M3_POINTER
-	     || TYPE_CODE (array_type) == TYPE_CODE_M3_INDIRECT) {
-	array_type = TYPE_M3_TARGET (array_type);
-	array = value_at_lazy (array_type, m3_value_as_address (array)); }
+             || TYPE_CODE (array_type) == TYPE_CODE_M3_INDIRECT) {
+        array_type = TYPE_M3_TARGET (array_type);
+        array = value_at_lazy (array_type, m3_value_as_address (array)); }
 
       if (TYPE_CODE (array_type) == TYPE_CODE_M3_ARRAY) {
-	index_type = TYPE_M3_ARRAY_INDEX (array_type);
-	elem_type  = TYPE_M3_ARRAY_ELEM (array_type);
-	elt_size   = TYPE_M3_SIZE (elem_type);
-	m3_ordinal_bounds (index_type, &lowerbound, &upperbound); }
+        index_type = TYPE_M3_ARRAY_INDEX (array_type);
+        elem_type  = TYPE_M3_ARRAY_ELEM (array_type);
+        elt_size   = TYPE_M3_SIZE (elem_type);
+        m3_ordinal_bounds (index_type, &lowerbound, &upperbound); }
       else if (TYPE_CODE (array_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	elem_type = TYPE_M3_OPEN_ARRAY_ELEM (array_type);
-	lowerbound = 0;
+        elem_type = TYPE_M3_OPEN_ARRAY_ELEM (array_type);
+        lowerbound = 0;
         /* FIXME: this needs to be a target long.  Use the fetch functions
            for open array dope. */
-	upperbound
+        upperbound
           = *(long*) (value_contents (array) + TARGET_PTR_BIT/HOST_CHAR_BIT) - 1;
         { struct type *e = elem_type;
-	  long n = (TARGET_PTR_BIT + m3_target_integer_bit) / HOST_CHAR_BIT;
-	  elt_size = 1;
-	  while (TYPE_CODE (e) == TYPE_CODE_M3_OPEN_ARRAY) {
+          long n = (TARGET_PTR_BIT + m3_target_integer_bit) / HOST_CHAR_BIT;
+          elt_size = 1;
+          while (TYPE_CODE (e) == TYPE_CODE_M3_OPEN_ARRAY) {
             /* FIXME: This should be a target long, not a host long. */
-	    elt_size *= *(long*) (value_contents (array) + n);
+            elt_size *= *(long*) (value_contents (array) + n);
             n += m3_target_integer_bit / HOST_CHAR_BIT;
-	    e = TYPE_M3_OPEN_ARRAY_ELEM (e); }
-	  elt_size *= TYPE_M3_SIZE (e); }}
+            e = TYPE_M3_OPEN_ARRAY_ELEM (e); }
+          elt_size *= TYPE_M3_SIZE (e); }}
       else {
-	error (_("Indexed expression is not an array")); }
+        error (_("Indexed expression is not an array")); }
 
       array = coerce_ref (array);
 
       index_val = m3_value_as_integer (index);
       if (lowerbound > index_val || index_val > upperbound) {
-	error (_("Range fault on array access"));
-	return 0; }
+        error (_("Range fault on array access"));
+        return 0; }
 
       offset = elt_size * (index_val - lowerbound);
       if (offset % 8 != 0) {
-	error
+        error
           (_("Non-byte-aligned, bit-packed array elements not supported."));
-	return 0; }
+        return 0; }
 
       v = allocate_value (elem_type);
 
       if (TYPE_CODE (array_type) == TYPE_CODE_M3_OPEN_ARRAY) {
 
-	if (TYPE_CODE (elem_type) == TYPE_CODE_M3_OPEN_ARRAY) {
-	  /* recreate a dope vector for the next guy */
-	  memcpy (value_contents_raw (v) + (TARGET_PTR_BIT / HOST_CHAR_BIT),
-		  value_contents (array)
-		    + (TARGET_PTR_BIT + m3_target_integer_bit)/ HOST_CHAR_BIT,
-		  TYPE_LENGTH (elem_type) - m3_target_integer_bit
+        if (TYPE_CODE (elem_type) == TYPE_CODE_M3_OPEN_ARRAY) {
+          /* recreate a dope vector for the next guy */
+          memcpy (value_contents_raw (v) + (TARGET_PTR_BIT / HOST_CHAR_BIT),
+                  value_contents (array)
+                    + (TARGET_PTR_BIT + m3_target_integer_bit)/ HOST_CHAR_BIT,
+                  TYPE_LENGTH (elem_type) - m3_target_integer_bit
                   / HOST_CHAR_BIT);
-	  *(char **)value_contents_raw (v) =
-	    *(char **)value_contents (array) + offset / 8; }
+          *(char **)value_contents_raw (v) =
+            *(char **)value_contents (array) + offset / 8; }
 
-	else {
-	  /* mark the thing as not read yet */
-	  set_value_lazy (v, 1);
-	  VALUE_LVAL (v) = VALUE_LVAL (array);
-	  VALUE_ADDRESS (v) =
-	    (*(long*)(value_contents (array))) + offset / 8;
-	  set_value_offset (v, 0); }}
+        else {
+          /* mark the thing as not read yet */
+          set_value_lazy (v, 1);
+          VALUE_LVAL (v) = VALUE_LVAL (array);
+          VALUE_ADDRESS (v) =
+            (*(long*)(value_contents (array))) + offset / 8;
+          set_value_offset (v, 0); }}
 
       else {
 
-	if (value_lazy (array)) {
-	  set_value_lazy (v, 1); }
-	else {
-	  memcpy (value_contents_raw (v),
-		  value_contents (array) + offset / 8,
-		  TYPE_LENGTH (elem_type)); }
-	VALUE_LVAL (v) = VALUE_LVAL (array);
-	if (VALUE_LVAL (array) == lval_internalvar) {
-	  VALUE_LVAL (v) = lval_internalvar_component; }
-	VALUE_ADDRESS (v) = VALUE_ADDRESS (array);
-	set_value_offset (v, value_offset (array) + offset / 8);  }
+        if (value_lazy (array)) {
+          set_value_lazy (v, 1); }
+        else {
+          memcpy (value_contents_raw (v),
+                  value_contents (array) + offset / 8,
+                  TYPE_LENGTH (elem_type)); }
+        VALUE_LVAL (v) = VALUE_LVAL (array);
+        if (VALUE_LVAL (array) == lval_internalvar) {
+          VALUE_LVAL (v) = lval_internalvar_component; }
+        VALUE_ADDRESS (v) = VALUE_ADDRESS (array);
+        set_value_offset (v, value_offset (array) + offset / 8);  }
       return v;
       break; }
 
@@ -3462,39 +3462,39 @@ m3_evaluate_subexp_maybe_packed (
       result_type = builtin_type_m3_integer;
     restart:
       switch (TYPE_CODE (arg1_type))
-	{
-	case TYPE_CODE_M3_INDIRECT:
-	  arg1_type = TYPE_M3_TARGET (arg1_type);
-	  arg1 = value_at_lazy (arg1_type, m3_value_as_address (arg1));
-	  goto restart;
-	case TYPE_CODE_M3_PACKED:
-	  arg1_type = TYPE_M3_PACKED_TARGET (arg1_type);
-	  goto restart;
-	case TYPE_CODE_M3_CARDINAL:
-	case TYPE_CODE_M3_SUBRANGE:
-	  arg1_type = builtin_type_m3_integer;
-	  ival1 = m3_value_as_integer (arg1);
-	  break;
-	case TYPE_CODE_M3_INTEGER:
-	  ival1 = m3_value_as_integer (arg1);
-	  break;
-	case TYPE_CODE_M3_LONGCARD:
-	  arg1_type = builtin_type_m3_longint;
+        {
+        case TYPE_CODE_M3_INDIRECT:
+          arg1_type = TYPE_M3_TARGET (arg1_type);
+          arg1 = value_at_lazy (arg1_type, m3_value_as_address (arg1));
+          goto restart;
+        case TYPE_CODE_M3_PACKED:
+          arg1_type = TYPE_M3_PACKED_TARGET (arg1_type);
+          goto restart;
+        case TYPE_CODE_M3_CARDINAL:
+        case TYPE_CODE_M3_SUBRANGE:
+          arg1_type = builtin_type_m3_integer;
+          ival1 = m3_value_as_integer (arg1);
+          break;
+        case TYPE_CODE_M3_INTEGER:
+          ival1 = m3_value_as_integer (arg1);
+          break;
+        case TYPE_CODE_M3_LONGCARD:
+          arg1_type = builtin_type_m3_longint;
           result_type = builtin_type_m3_longint;
-	  ival1 = m3_value_as_integer (arg1);
-	  break;
-	case TYPE_CODE_M3_LONGINT:
+          ival1 = m3_value_as_integer (arg1);
+          break;
+        case TYPE_CODE_M3_LONGINT:
           result_type = builtin_type_m3_longint;
-	  ival1 = m3_value_as_integer (arg1);
-	  break;
-	case TYPE_CODE_FLT:
-	  fval1 = m3_value_as_float (arg1);
-	  arg1_type = builtin_type_double;
-	  break;
-	case TYPE_CODE_INT:
-	  ival1 = value_as_long (arg1);
-	  arg1_type = builtin_type_m3_integer;
-	  break;
+          ival1 = m3_value_as_integer (arg1);
+          break;
+        case TYPE_CODE_FLT:
+          fval1 = m3_value_as_float (arg1);
+          arg1_type = builtin_type_double;
+          break;
+        case TYPE_CODE_INT:
+          ival1 = value_as_long (arg1);
+          arg1_type = builtin_type_m3_integer;
+          break;
         case TYPE_CODE_M3_REFANY:
         case TYPE_CODE_M3_TRANSIENT_REFANY:
         case TYPE_CODE_M3_ADDRESS:
@@ -3507,48 +3507,48 @@ m3_evaluate_subexp_maybe_packed (
         case TYPE_CODE_M3_MUTEX:
         case TYPE_CODE_M3_NULL:
           ival1 = (LONGEST) m3_value_as_address (arg1);
-	  arg1_type = builtin_type_m3_integer;
-	  break;
-	default:
-	  arg1_type = builtin_type_m3_void;
-	  break; }
+          arg1_type = builtin_type_m3_integer;
+          break;
+        default:
+          arg1_type = builtin_type_m3_void;
+          break; }
 
       arg2_type = value_type (arg2);
     restart2:
       switch (TYPE_CODE (arg2_type))
-	{
-	case TYPE_CODE_M3_INDIRECT:
-	  arg2_type = TYPE_M3_TARGET (arg2_type);
-	  arg2 = value_at_lazy (arg2_type, m3_value_as_address (arg2));
-	  goto restart2;
-	case TYPE_CODE_M3_PACKED:
-	  arg2_type = TYPE_M3_TARGET (arg2_type);
-	  goto restart2;
-	case TYPE_CODE_M3_CARDINAL:
-	case TYPE_CODE_M3_SUBRANGE:
-	  arg2_type = builtin_type_m3_integer;
-	  ival2 = m3_value_as_integer (arg2);
-	  break;
-	case TYPE_CODE_M3_INTEGER:
-	  ival2 = m3_value_as_integer (arg2);
-	  break;
-	case TYPE_CODE_M3_LONGCARD:
-	  arg2_type = builtin_type_m3_longint;
+        {
+        case TYPE_CODE_M3_INDIRECT:
+          arg2_type = TYPE_M3_TARGET (arg2_type);
+          arg2 = value_at_lazy (arg2_type, m3_value_as_address (arg2));
+          goto restart2;
+        case TYPE_CODE_M3_PACKED:
+          arg2_type = TYPE_M3_TARGET (arg2_type);
+          goto restart2;
+        case TYPE_CODE_M3_CARDINAL:
+        case TYPE_CODE_M3_SUBRANGE:
+          arg2_type = builtin_type_m3_integer;
+          ival2 = m3_value_as_integer (arg2);
+          break;
+        case TYPE_CODE_M3_INTEGER:
+          ival2 = m3_value_as_integer (arg2);
+          break;
+        case TYPE_CODE_M3_LONGCARD:
+          arg2_type = builtin_type_m3_longint;
           result_type = builtin_type_m3_longint;
-	  ival2 = m3_value_as_integer (arg2);
-	  break;
-	case TYPE_CODE_M3_LONGINT:
+          ival2 = m3_value_as_integer (arg2);
+          break;
+        case TYPE_CODE_M3_LONGINT:
           result_type = builtin_type_m3_longint;
-	  ival2 = m3_value_as_integer (arg2);
-	  break;
-	case TYPE_CODE_FLT:
-	  fval2 = m3_value_as_float (arg2);
-	  arg2_type = builtin_type_double;
-	  break;
-	case TYPE_CODE_INT:
-	  ival2 = value_as_long (arg2);
-	  arg2_type = builtin_type_m3_integer;
-	  break;
+          ival2 = m3_value_as_integer (arg2);
+          break;
+        case TYPE_CODE_FLT:
+          fval2 = m3_value_as_float (arg2);
+          arg2_type = builtin_type_double;
+          break;
+        case TYPE_CODE_INT:
+          ival2 = value_as_long (arg2);
+          arg2_type = builtin_type_m3_integer;
+          break;
         case TYPE_CODE_M3_REFANY:
         case TYPE_CODE_M3_TRANSIENT_REFANY:
         case TYPE_CODE_M3_ADDRESS:
@@ -3561,11 +3561,11 @@ m3_evaluate_subexp_maybe_packed (
         case TYPE_CODE_M3_MUTEX:
         case TYPE_CODE_M3_NULL:
           ival2 = (LONGEST) m3_value_as_address (arg2);
-	  arg2_type = builtin_type_m3_integer;
-	  break;
-	default:
-	  arg2_type = builtin_type_m3_void;
-	  break; }
+          arg2_type = builtin_type_m3_integer;
+          break;
+        default:
+          arg2_type = builtin_type_m3_void;
+          break; }
 
       if ( TYPE_CODE (arg1_type) == TYPE_CODE (arg2_type)
            || ( TYPE_CODE (arg1_type) == TYPE_CODE_M3_INTEGER
@@ -3588,14 +3588,14 @@ m3_evaluate_subexp_maybe_packed (
            { error (_("Binary operation requires integer typed operands."));
              /* NORETURN */
            }
-	  switch (op)
+          switch (op)
             { case BINOP_M3_MULT:   res = ival1 * ival2;          break;
-	      case BINOP_M3_ADD:    res = ival1 + ival2;          break;
-	      case BINOP_M3_MINUS:  res = ival1 - ival2;          break;
-	      case BINOP_M3_DIV:    res = m3_div (ival1, ival2);  break;
-	      case BINOP_M3_MOD:    res = m3_modi (ival1, ival2); break;
-	    } /* switch */
-	  return m3_value_from_longest (result_type, res);
+              case BINOP_M3_ADD:    res = ival1 + ival2;          break;
+              case BINOP_M3_MINUS:  res = ival1 - ival2;          break;
+              case BINOP_M3_DIV:    res = m3_div (ival1, ival2);  break;
+              case BINOP_M3_MOD:    res = m3_modi (ival1, ival2); break;
+            } /* switch */
+          return m3_value_from_longest (result_type, res);
         }
 
       if (TYPE_CODE (arg1_type) == TYPE_CODE_FLT)
@@ -3620,14 +3620,14 @@ m3_evaluate_subexp_maybe_packed (
 
       (*pos) += 1;
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
-      if (m3_value_as_integer (arg1) == 0) {	return arg1; }
+      if (m3_value_as_integer (arg1) == 0) {        return arg1; }
       return m3_evaluate_subexp (NULL_TYPE, exp, pos, noside); }
 
     case BINOP_M3_OR: {
 
       (*pos) += 1;
       arg1 = m3_evaluate_subexp (NULL_TYPE, exp, pos, noside);
-      if (m3_value_as_integer (arg1) == 1) {	return arg1; }
+      if (m3_value_as_integer (arg1) == 1) {        return arg1; }
       return m3_evaluate_subexp (NULL_TYPE, exp, pos, noside); }
 
     case BINOP_M3_EQUAL: {
@@ -3715,7 +3715,7 @@ m3_evaluate_subexp_maybe_packed (
       arg1 = m3_evaluate_subexp_maybe_packed ( NULL_TYPE, exp, pos, noside );
       arg2 = m3_evaluate_subexp ( value_type ( arg1 ), exp, pos, noside );
       if ( noside == EVAL_SKIP || noside == EVAL_AVOID_SIDE_EFFECTS )
-	{ return arg1; }
+        { return arg1; }
       arg2 = m3_check_and_coerce_assignment ( arg1, arg2 );
       return value_assign ( arg1, arg2 );
 

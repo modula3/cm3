@@ -171,110 +171,110 @@ m3_create_fundamental_type (objfile, typeid)
   switch (typeid)
     {
       default:
-	/* FIXME:  For now, if we are asked to produce a type not in this
-	   language, create the equivalent of a C integer type with the
-	   name "<?type?>".  When all the dust settles from the type
-	   reconstruction work, this should probably become an error. */
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_INT_BIT / TARGET_CHAR_BIT,
-			  0, "<?type?>", objfile);
+        /* FIXME:  For now, if we are asked to produce a type not in this
+           language, create the equivalent of a C integer type with the
+           name "<?type?>".  When all the dust settles from the type
+           reconstruction work, this should probably become an error. */
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_INT_BIT / TARGET_CHAR_BIT,
+                          0, "<?type?>", objfile);
         warning ("internal error: no C/C++ fundamental type %d", typeid);
-	break;
+        break;
       case FT_VOID:
-	type = init_type (TYPE_CODE_VOID,
-			  TARGET_CHAR_BIT / TARGET_CHAR_BIT,
-			  0, "void", objfile);
-	break;
+        type = init_type (TYPE_CODE_VOID,
+                          TARGET_CHAR_BIT / TARGET_CHAR_BIT,
+                          0, "void", objfile);
+        break;
       case FT_CHAR:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_CHAR_BIT / TARGET_CHAR_BIT,
-			  0, "char", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_CHAR_BIT / TARGET_CHAR_BIT,
+                          0, "char", objfile);
+        break;
       case FT_SIGNED_CHAR:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_CHAR_BIT / TARGET_CHAR_BIT,
-			  0, "signed char", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_CHAR_BIT / TARGET_CHAR_BIT,
+                          0, "signed char", objfile);
+        break;
       case FT_UNSIGNED_CHAR:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_CHAR_BIT / TARGET_CHAR_BIT,
-			  TYPE_FLAG_UNSIGNED, "unsigned char", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_CHAR_BIT / TARGET_CHAR_BIT,
+                          TYPE_FLAG_UNSIGNED, "unsigned char", objfile);
+        break;
       case FT_SHORT:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_SHORT_BIT / TARGET_CHAR_BIT,
-			  0, "short", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_SHORT_BIT / TARGET_CHAR_BIT,
+                          0, "short", objfile);
+        break;
       case FT_SIGNED_SHORT:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_SHORT_BIT / TARGET_CHAR_BIT,
-			  0, "short", objfile);	/* FIXME-fnf */
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_SHORT_BIT / TARGET_CHAR_BIT,
+                          0, "short", objfile);        /* FIXME-fnf */
+        break;
       case FT_UNSIGNED_SHORT:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_SHORT_BIT / TARGET_CHAR_BIT,
-			  TYPE_FLAG_UNSIGNED, "unsigned short", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_SHORT_BIT / TARGET_CHAR_BIT,
+                          TYPE_FLAG_UNSIGNED, "unsigned short", objfile);
+        break;
       case FT_INTEGER:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_INT_BIT / TARGET_CHAR_BIT,
-			  0, "int", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_INT_BIT / TARGET_CHAR_BIT,
+                          0, "int", objfile);
+        break;
       case FT_SIGNED_INTEGER:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_INT_BIT / TARGET_CHAR_BIT,
-			  0, "int", objfile); /* FIXME -fnf */
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_INT_BIT / TARGET_CHAR_BIT,
+                          0, "int", objfile); /* FIXME -fnf */
+        break;
       case FT_UNSIGNED_INTEGER:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_INT_BIT / TARGET_CHAR_BIT,
-			  TYPE_FLAG_UNSIGNED, "unsigned int", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_INT_BIT / TARGET_CHAR_BIT,
+                          TYPE_FLAG_UNSIGNED, "unsigned int", objfile);
+        break;
       case FT_LONG:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_LONG_BIT / TARGET_CHAR_BIT,
-			  0, "long", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_LONG_BIT / TARGET_CHAR_BIT,
+                          0, "long", objfile);
+        break;
       case FT_SIGNED_LONG:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_LONG_BIT / TARGET_CHAR_BIT,
-			  0, "long", objfile); /* FIXME -fnf */
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_LONG_BIT / TARGET_CHAR_BIT,
+                          0, "long", objfile); /* FIXME -fnf */
+        break;
       case FT_UNSIGNED_LONG:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_LONG_BIT / TARGET_CHAR_BIT,
-			  TYPE_FLAG_UNSIGNED, "unsigned long", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_LONG_BIT / TARGET_CHAR_BIT,
+                          TYPE_FLAG_UNSIGNED, "unsigned long", objfile);
+        break;
       case FT_LONG_LONG:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_LONG_LONG_BIT / TARGET_CHAR_BIT,
-			  0, "long long", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_LONG_LONG_BIT / TARGET_CHAR_BIT,
+                          0, "long long", objfile);
+        break;
       case FT_SIGNED_LONG_LONG:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_LONG_LONG_BIT / TARGET_CHAR_BIT,
-			  0, "signed long long", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_LONG_LONG_BIT / TARGET_CHAR_BIT,
+                          0, "signed long long", objfile);
+        break;
       case FT_UNSIGNED_LONG_LONG:
-	type = init_type (TYPE_CODE_INT,
-			  TARGET_LONG_LONG_BIT / TARGET_CHAR_BIT,
-			  TYPE_FLAG_UNSIGNED, "unsigned long long", objfile);
-	break;
+        type = init_type (TYPE_CODE_INT,
+                          TARGET_LONG_LONG_BIT / TARGET_CHAR_BIT,
+                          TYPE_FLAG_UNSIGNED, "unsigned long long", objfile);
+        break;
       case FT_FLOAT:
-	type = init_type (TYPE_CODE_FLT,
-			  TARGET_FLOAT_BIT / TARGET_CHAR_BIT,
-			  0, "float", objfile);
-	break;
+        type = init_type (TYPE_CODE_FLT,
+                          TARGET_FLOAT_BIT / TARGET_CHAR_BIT,
+                          0, "float", objfile);
+        break;
       case FT_DBL_PREC_FLOAT:
-	type = init_type (TYPE_CODE_FLT,
-			  TARGET_DOUBLE_BIT / TARGET_CHAR_BIT,
-			  0, "double", objfile);
-	break;
+        type = init_type (TYPE_CODE_FLT,
+                          TARGET_DOUBLE_BIT / TARGET_CHAR_BIT,
+                          0, "double", objfile);
+        break;
       case FT_EXT_PREC_FLOAT:
-	type = init_type (TYPE_CODE_FLT,
-			  TARGET_LONG_DOUBLE_BIT / TARGET_CHAR_BIT,
-			  0, "long double", objfile);
-	break;
+        type = init_type (TYPE_CODE_FLT,
+                          TARGET_LONG_DOUBLE_BIT / TARGET_CHAR_BIT,
+                          0, "long double", objfile);
+        break;
       }
   return (type);
 }
@@ -333,7 +333,7 @@ static const struct op_print m3_op_print_tab[] =
 
 void
 m3_operator_length (struct expression *expr, int endpos,
-			  int *oplenp, int *argsp)
+                          int *oplenp, int *argsp)
 { enum exp_opcode opcode;
   int strlen;
 
@@ -535,37 +535,37 @@ static const struct exp_descriptor m3_exp_descriptor = {
 };
 
 const struct language_defn m3_language_defn = {
-  "Modula-3",			 /* la_name: Language name */
-  language_m3,                   /* la_language: */
-  m3_builtin_types,              /* la_builtin_type_vector: */
-  range_check_on,                /* la_range_check: */
-  type_check_off,                /* la_type_check: */
-  case_sensitive_on,             /* la_case_sensitivity: */
-  array_row_major,               /* la_array_ordering: */
-  &m3_exp_descriptor,            /* la_exp_desc: */
-  m3_parse,                      /* la_parser: */
-  m3_error,                      /* la_error: */
-  null_post_parser,              /* la_post_parser: */
-  m3_print_char_lit,   		 /* la_printchar: Print a character constant */
-  m3_print_string,		 /* la_printstr: Print a string constant */
-  m3_emit_char,			 /* la_emitchar: Print a character constant */
-  m3_create_fundamental_type,	 /* la_fund_type: Create fundamental type */
-  m3_print_type,		 /* la_print_type: */
-  m3_val_print,			 /* la_val_print */
-  m3_value_print,		 /* la_value_print: a top-level value */
-  NULL,                          /* la_skip_trampoline: */
-  NULL,                          /* la_value_of_this: */
-  m3_lookup_symbol_nonlocal,     /* la_lookup_symbol_nonlocal: */
-  basic_lookup_transparent_type, /* la_lookup_transparent_type: */
-  m3_demangle,                   /* la_demangle: symbol demangler */
-  NULL,                          /* la_class_name_from_physname: */
-  m3_op_print_tab,               /* la_op_print_tab: */
-  0,				 /* c_style_arrays: arrays are first-class */
-  0,				 /* string_lower_bound: */
-  &builtin_type_m3_char,	 /* string_char_type: Type of string elements */
-  default_word_break_characters, /* la_word_break_characters: */
-  NULL,                          /* FIXME: la_language_arch_info: */
-  default_print_array_index,     /* la_print_array_index: */
+  "Modula-3",                       /* la_name: Language name */
+  language_m3,                      /* la_language: */
+  m3_builtin_types,                 /* la_builtin_type_vector: */
+  range_check_on,                   /* la_range_check: */
+  type_check_off,                   /* la_type_check: */
+  case_sensitive_on,                /* la_case_sensitivity: */
+  array_row_major,                  /* la_array_ordering: */
+  &m3_exp_descriptor,               /* la_exp_desc: */
+  m3_parse,                         /* la_parser: */
+  m3_error,                         /* la_error: */
+  null_post_parser,                 /* la_post_parser: */
+  m3_print_char_lit,                /* la_printchar: Print a character constant */
+  m3_print_string,                  /* la_printstr: Print a string constant */
+  m3_emit_char,                     /* la_emitchar: Print a character constant */
+  m3_create_fundamental_type,       /* la_fund_type: Create fundamental type */
+  m3_print_type,                    /* la_print_type: */
+  m3_val_print,                     /* la_val_print */
+  m3_value_print,                   /* la_value_print: a top-level value */
+  NULL,                             /* la_skip_trampoline: */
+  NULL,                             /* la_value_of_this: */
+  m3_lookup_symbol_nonlocal,        /* la_lookup_symbol_nonlocal: */
+  basic_lookup_transparent_type,    /* la_lookup_transparent_type: */
+  m3_demangle,                      /* la_demangle: symbol demangler */
+  NULL,                             /* la_class_name_from_physname: */
+  m3_op_print_tab,                  /* la_op_print_tab: */
+  0,                                /* c_style_arrays: arrays are first-class */
+  0,                                /* string_lower_bound: */
+  &builtin_type_m3_char,            /* string_char_type: Type of string elements */
+  default_word_break_characters,    /* la_word_break_characters: */
+  NULL,                             /* FIXME: la_language_arch_info: */
+  default_print_array_index,        /* la_print_array_index: */
 
   LANG_MAGIC
 };
@@ -768,7 +768,7 @@ m3_decode_struct ( struct type *t )
   /* The format is M<kind>_<uid>_<bitsize>_<other info>
       where kind is a one letter code,
             uid  is a 6 byte base-62 number
-	    bitsize is the type's size in bits
+            bitsize is the type's size in bits
             other info depends on the type; */
 
   key = TYPE_TAG_NAME (t);
@@ -814,12 +814,12 @@ m3_decode_struct ( struct type *t )
     case 'R':
       TYPE_CODE (t) = TYPE_CODE_M3_RECORD;
       for (i = 0; i < TYPE_NFIELDS (t); i++) {
-	set_field_uid (t, i);
-	sscanf (TYPE_FIELD_NAME (t, i), "_%li_%li", &tmp1, &tmp2);
+        set_field_uid (t, i);
+        sscanf (TYPE_FIELD_NAME (t, i), "_%li_%li", &tmp1, &tmp2);
         TYPE_FIELD_BITPOS (t, i) = tmp1;
-	TYPE_FIELD_BITSIZE (t, i) = tmp2;
-	TYPE_FIELD_NAME (t, i) =
-	  skip_underscores (TYPE_FIELD_NAME (t, i), 3); }
+        TYPE_FIELD_BITSIZE (t, i) = tmp2;
+        TYPE_FIELD_NAME (t, i) =
+          skip_underscores (TYPE_FIELD_NAME (t, i), 3); }
       break;
 
     case 'O':
@@ -829,20 +829,20 @@ m3_decode_struct ( struct type *t )
       TYPE_M3_OBJ_TRACED (t) = tmp2;
       TYPE_M3_OBJ_BRANDED (t) = tmp3;
       if (TYPE_M3_OBJ_BRANDED (t)) {
-	TYPE_M3_OBJ_BRAND (t) = skip_underscores (type_specific_info, 3); }
+        TYPE_M3_OBJ_BRAND (t) = skip_underscores (type_specific_info, 3); }
       else {
-	TYPE_M3_OBJ_BRAND (t) = 0; }
+        TYPE_M3_OBJ_BRAND (t) = 0; }
 
       TYPE_M3_OBJ_NMETHODS (t) = TYPE_NFIELDS (t) - TYPE_M3_OBJ_NFIELDS(t) - 1;
       set_field_uid (t, 0);
 
       for (i = 1; i < TYPE_NFIELDS (t); i++) {
-	set_field_uid (t, i);
-	sscanf (TYPE_FIELD_NAME (t, i), "_%li_%li_", &tmp1, &tmp2);
+        set_field_uid (t, i);
+        sscanf (TYPE_FIELD_NAME (t, i), "_%li_%li_", &tmp1, &tmp2);
         TYPE_FIELD_BITPOS (t, i) = tmp1;
-	TYPE_FIELD_BITSIZE (t, i) = tmp2;
-	TYPE_FIELD_NAME (t, i) =
-	  skip_underscores (TYPE_FIELD_NAME (t, i), 3); }
+        TYPE_FIELD_BITSIZE (t, i) = tmp2;
+        TYPE_FIELD_NAME (t, i) =
+          skip_underscores (TYPE_FIELD_NAME (t, i), 3); }
       break;
 
     case 'S':
@@ -869,9 +869,9 @@ m3_decode_struct ( struct type *t )
       TYPE_M3_POINTER_TRACED (t) = tmp1;
       TYPE_M3_POINTER_BRANDED (t) = tmp2;
       if (TYPE_M3_POINTER_BRANDED (t)) {
-	TYPE_M3_POINTER_BRAND (t) = skip_underscores (type_specific_info, 2); }
+        TYPE_M3_POINTER_BRAND (t) = skip_underscores (type_specific_info, 2); }
       else {
-	TYPE_M3_POINTER_BRAND (t) = 0; }
+        TYPE_M3_POINTER_BRAND (t) = 0; }
       set_field_uid (t, 0);
       break;
 
@@ -903,15 +903,15 @@ m3_decode_struct ( struct type *t )
       TYPE_TARGET_TYPE ( t ) = TYPE_FIELDS ( t ) [ 0 ] . type ;
       sscanf (type_specific_info, "%c%li", &c, &tmp1);
       TYPE_M3_PROC_NRAISES (t) = tmp1;
-      if (c == 'A') {		/* RAISES ANY */
-	TYPE_M3_PROC_NARGS (t) = TYPE_NFIELDS (t);
-	TYPE_M3_PROC_NRAISES (t) = - 1;
-	for (i = 0; i < TYPE_NFIELDS (t); i++) {
-	  set_field_uid (t, i); }}
+      if (c == 'A') {                /* RAISES ANY */
+        TYPE_M3_PROC_NARGS (t) = TYPE_NFIELDS (t);
+        TYPE_M3_PROC_NRAISES (t) = - 1;
+        for (i = 0; i < TYPE_NFIELDS (t); i++) {
+          set_field_uid (t, i); }}
       else {
-	TYPE_M3_PROC_NARGS (t) = TYPE_NFIELDS (t) - TYPE_M3_PROC_NRAISES (t);
-	for (i = 0; i < TYPE_NFIELDS (t) - TYPE_M3_PROC_NRAISES (t); i++) {
-	  set_field_uid (t, i); }}
+        TYPE_M3_PROC_NARGS (t) = TYPE_NFIELDS (t) - TYPE_M3_PROC_NRAISES (t);
+        for (i = 0; i < TYPE_NFIELDS (t) - TYPE_M3_PROC_NRAISES (t); i++) {
+          set_field_uid (t, i); }}
       break; }
 
     case 'Q':
@@ -1270,7 +1270,7 @@ m3_demangle (const char *mangled, int options)
       /* m3 type name for type uid: MN_<uid> Demangled: G$<uid> */
       if (mangled_len >= 3 + M3UID_LEN && m3uid_to_num (mangled + 3, &num_uid))
         {
-	sprintf (demangled, "G$%.*s", M3UID_LEN, mangled + 3);
+        sprintf (demangled, "G$%.*s", M3UID_LEN, mangled + 3);
         return savestring (demangled, strlen(demangled));
       }
       break;
@@ -1284,14 +1284,14 @@ m3_demangle (const char *mangled, int options)
         /* TODO: For purposes of looking up user-typed type names, it would be
            more straightforward to strip off the interface qualifier from
            the type name, as by this statement:
-	sprintf (demangled, "B$%s", simple_name ( mangled + 4 + M3UID_LEN ) );
+        sprintf (demangled, "B$%s", simple_name ( mangled + 4 + M3UID_LEN ) );
            And also eliminate the B$ from the demangled name, so a plain
            lookup could find either a type or a procedure.  But there are
            lots of places that use the qualified name to lookup  a hard-coded
            reference to a runtime type, that need the qualified name.  So
            leave this, for now.
         */
-	sprintf (demangled, "B$%s", mangled + 4 + M3UID_LEN );
+        sprintf (demangled, "B$%s", mangled + 4 + M3UID_LEN );
         return savestring (demangled, strlen(demangled));
       }
       break;
@@ -1300,7 +1300,7 @@ m3_demangle (const char *mangled, int options)
       /* m3 exported interfaces Mi_zzzzzz_<module> Demangled: H$<module> */
       if (mangled_len > 10 && m3uid_to_num (mangled + 3, &num_uid))
         {
-  	sprintf (demangled, "H$%s", mangled + 4 + M3UID_LEN);
+          sprintf (demangled, "H$%s", mangled + 4 + M3UID_LEN);
         return savestring (demangled, strlen(demangled));
       }
       break;
@@ -1320,7 +1320,7 @@ m3_demangle (const char *mangled, int options)
       /* m3 type encoding: M?_<uid>* Demangled: <uid> */
       if (mangled_len >= 3 + M3UID_LEN && m3uid_to_num (mangled + 3, &num_uid))
         {
-	sprintf (demangled, "%.*s", M3UID_LEN, mangled + 3);
+        sprintf (demangled, "%.*s", M3UID_LEN, mangled + 3);
         return savestring (demangled, strlen(demangled));
       }
       break;
@@ -2333,107 +2333,107 @@ _initialize_m3_language (void)
 
   builtin_type_m3_integer =
     init_type (TYPE_CODE_M3_INTEGER, m3_target_integer_bit / HOST_CHAR_BIT,
-	       0,
-	       "INTEGER", (struct objfile *) NULL);
+               0,
+               "INTEGER", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_integer) = m3_target_integer_bit;
 
   builtin_type_m3_cardinal =
     init_type (TYPE_CODE_M3_CARDINAL, m3_target_integer_bit / HOST_CHAR_BIT,
-	       0,
-	       "CARDINAL", (struct objfile *) NULL);
+               0,
+               "CARDINAL", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_cardinal) = m3_target_integer_bit;
 
   builtin_type_m3_longint =
     init_type (TYPE_CODE_M3_LONGINT, m3_target_longint_bit / HOST_CHAR_BIT,
-	       0,
-	       "LONGINT", (struct objfile *) NULL);
+               0,
+               "LONGINT", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_longint) = m3_target_longint_bit;
 
   builtin_type_m3_longcard =
     init_type (TYPE_CODE_M3_LONGCARD, m3_target_longint_bit / HOST_CHAR_BIT,
-	       0,
-	       "LONGCARD", (struct objfile *) NULL);
+               0,
+               "LONGCARD", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_longcard) = m3_target_longint_bit;
 
   builtin_type_m3_boolean =
     init_type (TYPE_CODE_M3_BOOLEAN, 1,
-	       0,
-	       "BOOLEAN", (struct objfile *) NULL);
+               0,
+               "BOOLEAN", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_boolean) = 8;
 
   builtin_type_m3_void =
     init_type (TYPE_CODE_M3_VOID, 0, 0,
-	       "VOID", (struct objfile *) NULL);
+               "VOID", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_void) = 0;
 
   builtin_type_m3_address =
     init_type (TYPE_CODE_M3_ADDRESS, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "ADDRESS", (struct objfile *) NULL);
+               "ADDRESS", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_address) = TARGET_PTR_BIT;
 
   builtin_type_m3_root =
     init_type (TYPE_CODE_M3_ROOT, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "ROOT", (struct objfile *) NULL);
+               "ROOT", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_root) = TARGET_PTR_BIT;
 
   builtin_type_m3_transient_root =
     init_type (TYPE_CODE_M3_TRANSIENT_ROOT, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "TRANSIENT_ROOT", (struct objfile *) NULL);
+               "TRANSIENT_ROOT", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_transient_root) = TARGET_PTR_BIT;
 
   builtin_type_m3_char =
     init_type (TYPE_CODE_M3_CHAR, TARGET_CHAR_BIT / HOST_CHAR_BIT, 0,
-	       "CHAR", (struct objfile *) NULL);
+               "CHAR", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_char) = TARGET_CHAR_BIT;
 
   builtin_type_m3_widechar =
     init_type (TYPE_CODE_M3_WIDECHAR, (2*TARGET_CHAR_BIT) / HOST_CHAR_BIT, 0,
-	       "WIDECHAR", (struct objfile *) NULL);
+               "WIDECHAR", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_widechar) = 2*TARGET_CHAR_BIT;
 
   builtin_type_m3_real =
     init_type (TYPE_CODE_M3_REAL, TARGET_FLOAT_BIT / TARGET_CHAR_BIT, 0,
-	       "REAL", (struct objfile *) NULL);
+               "REAL", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_real) = TARGET_FLOAT_BIT;
 
   builtin_type_m3_longreal =
     init_type (TYPE_CODE_M3_LONGREAL, TARGET_DOUBLE_BIT / TARGET_CHAR_BIT, 0,
-	       "LONGREAL", (struct objfile *) NULL);
+               "LONGREAL", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_longreal) = TARGET_DOUBLE_BIT;
 
   builtin_type_m3_extended =
     init_type (TYPE_CODE_M3_EXTENDED, TARGET_DOUBLE_BIT / TARGET_CHAR_BIT, 0,
-	       "EXTENDED", (struct objfile *) NULL);
+               "EXTENDED", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_extended) = TARGET_DOUBLE_BIT;
 
   builtin_type_m3_null =
     init_type (TYPE_CODE_M3_NULL, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "NULL", (struct objfile *) NULL);
+               "NULL", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_null) = TARGET_PTR_BIT;
 
   builtin_type_m3_refany =
     init_type (TYPE_CODE_M3_REFANY, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "REFANY", (struct objfile *) NULL);
+               "REFANY", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_refany) = TARGET_PTR_BIT;
 
   builtin_type_m3_transient_refany =
     init_type (TYPE_CODE_M3_TRANSIENT_REFANY, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "TRANSIENT_REFANY", (struct objfile *) NULL);
+               "TRANSIENT_REFANY", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_transient_refany) = TARGET_PTR_BIT;
 
   builtin_type_m3_text =
     init_type (TYPE_CODE_M3_TEXT, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "TEXT", (struct objfile *) NULL);
+               "TEXT", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_text) = TARGET_PTR_BIT;
 
   builtin_type_m3_mutex =
     init_type (TYPE_CODE_M3_MUTEX, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "MUTEX", (struct objfile *) NULL);
+               "MUTEX", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_mutex) = TARGET_PTR_BIT;
 
   builtin_type_m3_untraced_root =
     init_type (TYPE_CODE_M3_UN_ROOT, TARGET_PTR_BIT / HOST_CHAR_BIT, 0,
-	       "UNTRACED_ROOT", (struct objfile *) NULL);
+               "UNTRACED_ROOT", (struct objfile *) NULL);
   TYPE_M3_SIZE (builtin_type_m3_untraced_root) = TARGET_PTR_BIT;
 
   builtin_type_m3_proc_closure =
@@ -2918,8 +2918,8 @@ m3_value_print (
       return
         ( val_print /* will be m3_val_print. */
             ( val_type, value_contents (val),
-	      value_embedded_offset (val),
-	      VALUE_ADDRESS (val) + value_offset ( val ),
+              value_embedded_offset (val),
+              VALUE_ADDRESS (val) + value_offset ( val ),
               stream, format, 1, 0, pretty
             )
         );
