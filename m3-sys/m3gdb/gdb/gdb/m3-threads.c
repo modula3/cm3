@@ -58,7 +58,7 @@ ensure_init_thread_constants ( void )
   m3_unit_name_globals_symbol ('I', "Thread", NULL );
   m3_unit_name_globals_symbol ('M', "ThreadPosix", NULL );
 
-  thread__t = find_m3_type_named ("Thread.T", /*must_find =*/ true);
+  thread__t = find_m3_type_named ("Thread.T", /*must_find =*/ TRUE);
 
   m3_find_rec_field (thread__t, "id",
 		     &thread__t__id_size, &thread__t__id_offset, 0);
@@ -171,7 +171,7 @@ get_m3_thread ( LONGEST ref, struct m3_thread  * t )
     if (!t->bits) return;
 
     t->id = m3_extract_ord
-              (t->bits, thread__t__id_offset,thread__t__id_size, false);
+              (t->bits, thread__t__id_offset,thread__t__id_size, FALSE);
 } /* get_m3_thread */
 
 static void
@@ -294,7 +294,7 @@ threads_command ( char *args, int from_tty )
     printf_filtered ("  ");
 
     state = m3_extract_ord (cur.bits, thread__t__state_offset,
-			   thread__t__state_size, false);
+			   thread__t__state_size, FALSE);
     switch (state) {
       case 0 /* alive */:
 	printf_filtered ("alive");

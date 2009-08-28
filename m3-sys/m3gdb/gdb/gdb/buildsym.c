@@ -59,7 +59,7 @@
 
 #include "stabsread.h"
 
-#include <stdbool.h>
+#include "m3-bool.h"
 
 /* List of free `struct pending' structures for reuse.  */
 
@@ -491,7 +491,7 @@ make_blockvector (struct objfile *objfile)
      order, which happens to put the blocks into the proper order
      (ascending starting address). finish_block has hair to insert
      each block into the list after its subblocks in order to make
-     sure this is true.  */
+     sure this is TRUE.  */
 
   BLOCKVECTOR_NBLOCKS (blockvector) = i;
   for (next = pending_blocks; next; next = next->next)
@@ -830,7 +830,7 @@ end_symtab (CORE_ADDR end_addr, struct objfile *objfile, int section)
   struct context_stack *cstk;
   struct subfile *nextsub;
 #ifdef _LANG_m3
-  bool m3_patch_done = false;
+  BOOL m3_patch_done = FALSE;
 #endif 
 
   /* Finish the lexical context of the last function in the file; pop
@@ -857,7 +857,7 @@ end_symtab (CORE_ADDR end_addr, struct objfile *objfile, int section)
     }
 
   /* Reordered executables may have out of order pending blocks; if
-     OBJF_REORDERED is true, then sort the pending blocks.  */
+     OBJF_REORDERED is TRUE, then sort the pending blocks.  */
   if ((objfile->flags & OBJF_REORDERED) && pending_blocks)
     {
       /* FIXME!  Remove this horrid bubble sort and use merge sort!!! */
@@ -946,7 +946,7 @@ end_symtab (CORE_ADDR end_addr, struct objfile *objfile, int section)
              compilation, but I'm paranoid. rodney.bates@wichita.edu */
           if (subfile->language == language_m3 && !m3_patch_done)
             { m3_patch_nested_procs ( blockvector ); 
-              m3_patch_done = true;
+              m3_patch_done = TRUE;
             } 
 #endif
    	  if (subfile->line_vector)
@@ -964,7 +964,7 @@ end_symtab (CORE_ADDR end_addr, struct objfile *objfile, int section)
 
 	      /* Like the pending blocks, the line table may be
 	         scrambled in reordered executables.  Sort it if
-	         OBJF_REORDERED is true.  */
+	         OBJF_REORDERED is TRUE.  */
 	      if (objfile->flags & OBJF_REORDERED)
 		qsort (subfile->line_vector->item,
 		       subfile->line_vector->nitems,

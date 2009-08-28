@@ -42,13 +42,13 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "gdbarch.h"
 #include "gdb_string.h"
 
-#include <stdbool.h>
+#include "m3-bool.h"
 
-bool
+BOOL
 is_unsafe ( void )
 
   { /* FIXME: Implement this. */
-    return true;
+    return TRUE;
   } /* is_unsafe */
 
 /* Special value attached to "type" values
@@ -1102,23 +1102,23 @@ m3_value_equal (struct value *arg1, struct value *arg2)
     }
 }
 
-bool
+BOOL
 m3_types_equal ( struct type * left, struct type * right );
 
-bool m3_type_fields_equal ( struct type * left, struct type * right )
+BOOL m3_type_fields_equal ( struct type * left, struct type * right )
 
 { int i;
 
   if ( TYPE_NFIELDS ( left ) != TYPE_NFIELDS ( right ) )
-    { return false; }
+    { return FALSE; }
   for ( i = 0; i < TYPE_NFIELDS ( left ); i ++ )
     { if ( ! m3_types_equal
                ( TYPE_M3_FIELD_TYPE ( left, i ),
                  TYPE_M3_FIELD_TYPE ( right, i )
                )
-         ) { return false; }
+         ) { return FALSE; }
     }
-  return true;
+  return TRUE;
 }
 
 int is_m3_type ( struct type * m3_type )
@@ -1180,20 +1180,20 @@ m3_revealed_type ( struct type * opaque_type )
     return opaque_type;
   } /* m3_revealed_type */
 
-bool
+BOOL
 m3_types_equal ( struct type * left, struct type * right )
 
 { struct type * left_direct;
   struct type * right_direct;
   int i;
 
-  if ( left == NULL || right == NULL ) { return false; }
+  if ( left == NULL || right == NULL ) { return FALSE; }
   left_direct = m3_direct_type ( left );
   right_direct = m3_direct_type ( right );
   left_direct = m3_revealed_type ( left );
   right_direct = m3_revealed_type ( right );
   if ( TYPE_CODE ( left_direct ) != TYPE_CODE ( right_direct ) )
-    { return false; }
+    { return FALSE; }
   switch ( TYPE_CODE ( left_direct ) )
     { case TYPE_CODE_M3_ARRAY :
         return m3_type_fields_equal ( left_direct, right_direct );
@@ -1207,7 +1207,7 @@ m3_types_equal ( struct type * left, struct type * right )
         return m3_type_fields_equal ( left_direct, right_direct );
       case TYPE_CODE_M3_SUBRANGE :
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         return
           TYPE_M3_SUBRANGE_MIN ( left_direct )
           == TYPE_M3_SUBRANGE_MIN ( right_direct )
@@ -1215,91 +1215,91 @@ m3_types_equal ( struct type * left, struct type * right )
              == TYPE_M3_SUBRANGE_MAX ( right_direct );
       case TYPE_CODE_M3_POINTER :
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_POINTER_TRACED ( left_direct )
              != TYPE_M3_POINTER_TRACED ( right_direct )
            )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_POINTER_BRANDED ( left_direct )
              != TYPE_M3_POINTER_BRANDED ( right_direct )
            )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_POINTER_BRANDED ( left_direct ) )
           { return TYPE_M3_POINTER_BRAND ( left_direct )
                    == TYPE_M3_POINTER_BRAND ( right_direct );
           }
-        return true;
+        return TRUE;
       case TYPE_CODE_M3_OPAQUE :
-        return false; /* Shouldn't happen. */
+        return FALSE; /* Shouldn't happen. */
 
       case TYPE_CODE_M3_RECORD :
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         for ( i = 0; i < TYPE_NFIELDS ( left_direct ); i ++ )
           { if ( TYPE_FIELD_NAME ( left_direct, i )
                  != TYPE_FIELD_NAME ( right_direct, i )
                )
-              { return false; }
+              { return FALSE; }
             if ( TYPE_M3_REC_FIELD_BITPOS ( left_direct, i )
                  != TYPE_M3_REC_FIELD_BITPOS ( right_direct, i )
                )
-              { return false; }
+              { return FALSE; }
             if ( TYPE_M3_REC_FIELD_BITSIZE ( left_direct, i )
                  != TYPE_M3_REC_FIELD_BITSIZE ( right_direct, i )
                )
-              { return false; }
+              { return FALSE; }
           }
-        return true;
+        return TRUE;
       case TYPE_CODE_M3_OBJECT :
         if ( TYPE_M3_OBJ_NMETHODS ( left_direct )
              != TYPE_M3_OBJ_NMETHODS ( right_direct)
            )
-          { return false; }
+          { return FALSE; }
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         for ( i = 0; i < TYPE_NFIELDS ( left_direct ); i ++ )
           { if ( TYPE_FIELD_NAME ( left_direct, i )
                  != TYPE_FIELD_NAME ( right_direct, i )
                )
-              { return false; }
+              { return FALSE; }
             if ( TYPE_M3_OBJ_FIELD_BITPOS ( left_direct, i )
                  != TYPE_M3_OBJ_FIELD_BITPOS ( right_direct, i )
                )
-              { return false; }
+              { return FALSE; }
             if ( TYPE_M3_OBJ_FIELD_BITSIZE ( left_direct, i )
                  != TYPE_M3_OBJ_FIELD_BITSIZE ( right_direct, i )
                )
-              { return false; }
+              { return FALSE; }
           }
         if ( TYPE_M3_OBJ_TRACED ( left_direct )
              != TYPE_M3_OBJ_TRACED ( right_direct )
            )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_OBJ_BRANDED ( left_direct )
              != TYPE_M3_OBJ_BRANDED ( right_direct )
            )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_OBJ_BRANDED ( left_direct ) )
           { return TYPE_M3_OBJ_BRAND ( left_direct )
                    == TYPE_M3_OBJ_BRAND ( right_direct );
           }
-        return true;
+        return TRUE;
 
       case TYPE_CODE_M3_PROC :
       case TYPE_CODE_M3_METHOD :
         if ( TYPE_M3_PROC_NRAISES ( left_direct )
              != TYPE_M3_PROC_NRAISES ( right_direct )
            )
-          { return false; }
+          { return FALSE; }
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         for ( i = 0; i < TYPE_NFIELDS ( left_direct ); i ++ )
           { if ( TYPE_FIELD_NAME ( left_direct, i )
                  != TYPE_FIELD_NAME ( right_direct, i )
                )
-              { return false; }
+              { return FALSE; }
           }
-        return true;
+        return TRUE;
 
       case TYPE_CODE_M3_ADDRESS :
       case TYPE_CODE_M3_BOOLEAN :
@@ -1318,7 +1318,7 @@ m3_types_equal ( struct type * left, struct type * right )
       case TYPE_CODE_M3_VOID :
         /* There is only one type with each of these code. */
         return TYPE_CODE ( left_direct ) == TYPE_CODE ( right_direct );
-      default : { return false; }
+      default : { return FALSE; }
     } /* switch */
 } /* m3_types_equal */
 
@@ -1405,7 +1405,7 @@ m3_ordinal_bounds ( struct type *type, LONGEST *lower, LONGEST *upper )
   { enum type_code tc;
 
     tc = TYPE_CODE (type);
-    while ( true )
+    while ( TRUE )
       { if ( tc == TYPE_CODE_M3_INDIRECT )
           { type = TYPE_M3_INDIRECT_TARGET ( type );
             tc = TYPE_CODE ( type );
@@ -1455,14 +1455,14 @@ m3_ordinal_bounds ( struct type *type, LONGEST *lower, LONGEST *upper )
       }
   } /* m3_ordinal_bounds */
 
-bool
+BOOL
 m3_type_is_signed ( struct type *type )
 
   { enum type_code tc;
     LONGEST lower;
 
     tc = TYPE_CODE (type);
-    while ( true )
+    while ( TRUE )
       { if ( tc == TYPE_CODE_M3_INDIRECT )
           { type = TYPE_M3_INDIRECT_TARGET ( type );
             tc = TYPE_CODE ( type );
@@ -1479,9 +1479,9 @@ m3_type_is_signed ( struct type *type )
           lower = TYPE_M3_SUBRANGE_MIN (type);
           return lower < 0;
         case TYPE_CODE_M3_INTEGER:
-          return true;
+          return TRUE;
         default:
-          return false;
+          return FALSE;
       }
   } /* m3_type_is_signed */
 
@@ -1575,7 +1575,7 @@ m3_ordinal_subtype_relation (
     return subtype_norel;
   } /* m3_ordinal_subtype_relation */
 
-static bool
+static BOOL
 m3_equal_object_types ( struct type * left, struct type * right )
 
   { enum type_code left_code;
@@ -1596,32 +1596,32 @@ m3_equal_object_types ( struct type * left, struct type * right )
 
         case TYPE_CODE_M3_OBJECT :
           if ( left_code != TYPE_CODE ( right ) )
-            { return false; }
+            { return FALSE; }
           if ( TYPE_M3_OBJ_TRACED ( left ) != TYPE_M3_OBJ_TRACED ( right ) )
-            { return false; }
+            { return FALSE; }
           if ( TYPE_M3_OBJ_BRANDED ( left ) != TYPE_M3_OBJ_BRANDED ( right ) )
-            { return false; }
+            { return FALSE; }
           if ( TYPE_M3_OBJ_BRANDED ( left )
                && TYPE_M3_OBJ_BRAND ( left ) != TYPE_M3_OBJ_BRAND ( right )
              )
-            { return false; }
+            { return FALSE; }
           if ( TYPE_M3_OBJ_NFIELDS ( left ) != TYPE_M3_OBJ_NFIELDS ( right ) )
-            { return false; }
+            { return FALSE; }
           if ( TYPE_M3_OBJ_NMETHODS ( left ) != TYPE_M3_OBJ_NMETHODS ( right ) )
-            { return false; }
+            { return FALSE; }
           for ( i = 0; i < TYPE_M3_OBJ_NMETHODS ( left ); i ++ )
             { if ( strcmp ( TYPE_M3_OBJ_METHOD_NAME ( left, i ),
                             TYPE_M3_OBJ_METHOD_NAME ( right, i )
                           )
                    != 0
                  )
-                { return false; }
+                { return FALSE; }
               if ( ! m3_types_equal
                        ( TYPE_M3_OBJ_METHOD_TYPE ( left, i ),
                          TYPE_M3_OBJ_METHOD_TYPE ( right, i )
                        )
                  )
-                { return false; }
+                { return FALSE; }
             }
           for ( i = 0; i < TYPE_M3_OBJ_NFIELDS ( left ); i ++ )
             { if ( strcmp ( TYPE_M3_OBJ_FIELD_NAME ( left, i ),
@@ -1629,18 +1629,18 @@ m3_equal_object_types ( struct type * left, struct type * right )
                           )
                    != 0
                  )
-                { return false; }
+                { return FALSE; }
               if ( ! m3_types_equal
                        ( TYPE_M3_OBJ_FIELD_TYPE ( left, i ),
                          TYPE_M3_OBJ_FIELD_TYPE ( right, i )
                        )
                  )
-                { return false; }
+                { return FALSE; }
             }
           return m3_equal_object_types
                    ( TYPE_M3_OBJ_SUPER ( left ), TYPE_M3_OBJ_SUPER ( right ) );
         default:
-          return false;
+          return FALSE;
       }
 
   }  /* m3_equal_object_types */
@@ -1654,7 +1654,7 @@ reference_type_depth ( struct type * start_type )
 
   result = 0;
   l_type = start_type;
-  while ( true )
+  while ( TRUE )
     { if ( l_type == NULL )
         { return result; }
       switch ( TYPE_CODE ( l_type ) )
@@ -1687,34 +1687,34 @@ reference_type_depth ( struct type * start_type )
 /* Is this type TEXT or the PM3 revelation of TEXT, namely
    BRANDED "Text-1.0" REF ARRAY OF CHAR?
 */
-static bool
+static BOOL
 is_pm3_text_revelation ( struct type * text_type )
 
 { struct type * array_type;
   struct type * elem_type;
 
-  if ( text_type == NULL ) { return false; }
+  if ( text_type == NULL ) { return FALSE; }
   switch ( TYPE_CODE ( text_type ) )
     { case TYPE_CODE_M3_TEXT:
-        return true;
+        return TRUE;
       case TYPE_CODE_M3_POINTER:
         if ( ! TYPE_M3_POINTER_BRANDED ( text_type ) )
-          { return false; }
+          { return FALSE; }
         if ( strcmp ( TYPE_M3_POINTER_BRAND ( text_type ), "Text-1.0" ) != 0 )
-          { return false; }
+          { return FALSE; }
         array_type = TYPE_M3_POINTER_TARGET ( text_type );
         if ( array_type == NULL
              || TYPE_CODE ( array_type ) != TYPE_CODE_M3_OPEN_ARRAY
            )
-          { return false; }
+          { return FALSE; }
         elem_type = TYPE_M3_OPEN_ARRAY_ELEM ( array_type );
         if ( elem_type == NULL
              || TYPE_CODE ( elem_type ) != TYPE_CODE_M3_CHAR
            )
-          { return false; }
-        return true;
+          { return FALSE; }
+        return TRUE;
       default:
-        return false;
+        return FALSE;
     }
 } /* is_pm3_text_revelation */
 
@@ -1948,7 +1948,7 @@ m3_proc_block ( struct block * blk )
     return l_block;
   } /* m3_proc_block */
 
-bool use_static_link = true;
+BOOL use_static_link = TRUE;
 
 /* Follow static links, as needed, to get the right frame for target_block. */
 static struct frame_info *
@@ -1973,7 +1973,7 @@ m3_frame_for_block (struct block *target_block )
          parsing and stored in the OP_VAR_VALUE node, which would have
          to be changed to M3_OP_VAR_VALUE. */
       l_target_proc_block = m3_proc_block ( target_block );
-      while ( true )
+      while ( TRUE )
         { l_frame_proc_block
             = m3_proc_block
                 ( get_frame_block ( l_frame , NULL )
@@ -1996,7 +1996,7 @@ m3_frame_for_block (struct block *target_block )
       */
       start = BLOCK_START ( target_block );
       end = BLOCK_END ( target_block );
-      while ( true )
+      while ( TRUE )
         { if ( l_frame == NULL ) { return NULL; }
           calling_pc = get_frame_address_in_block ( l_frame );
           if ( start <= calling_pc && calling_pc < end ) { return l_frame; }
@@ -2027,11 +2027,11 @@ m3_check_and_coerce_ordinal (
     LONGEST rhs_lower;
     LONGEST rhs_upper;
     LONGEST contents;
-    bool lhs_is_int_or_card = false;
-    bool rhs_is_int_or_card = false;
+    BOOL lhs_is_int_or_card = FALSE;
+    BOOL rhs_is_int_or_card = FALSE;
 
     lhs_base_type = lhs_type;
-    while ( true )
+    while ( TRUE )
       { switch ( TYPE_CODE ( lhs_base_type ) )
           { case TYPE_CODE_M3_PACKED :
               /* The value should still be in packed form, with bitpos and
@@ -2046,13 +2046,13 @@ m3_check_and_coerce_ordinal (
               break; /* And loop. */
             case TYPE_CODE_M3_INTEGER :
             case TYPE_CODE_M3_CARDINAL :
-              lhs_is_int_or_card = true;
+              lhs_is_int_or_card = TRUE;
               goto lhs_exit;
             case TYPE_CODE_M3_BOOLEAN :
             case TYPE_CODE_M3_CHAR :
             case TYPE_CODE_M3_WIDECHAR :
             case TYPE_CODE_M3_ENUM :
-              lhs_is_int_or_card = false;
+              lhs_is_int_or_card = FALSE;
               goto lhs_exit;
             default:
               return NULL;
@@ -2061,7 +2061,7 @@ m3_check_and_coerce_ordinal (
   lhs_exit:
     m3_ordinal_bounds ( lhs_type, & lhs_lower, & lhs_upper );
     rhs_base_type = rhs_type;
-    while ( true )
+    while ( TRUE )
       { switch ( TYPE_CODE ( rhs_base_type ) )
           { case TYPE_CODE_M3_PACKED :
               /* Unpacking the value will already been taken care of when
@@ -2073,13 +2073,13 @@ m3_check_and_coerce_ordinal (
               break; /* And loop. */
             case TYPE_CODE_M3_INTEGER :
             case TYPE_CODE_M3_CARDINAL :
-              rhs_is_int_or_card = true;
+              rhs_is_int_or_card = TRUE;
               goto rhs_exit;
             case TYPE_CODE_M3_BOOLEAN :
             case TYPE_CODE_M3_CHAR :
             case TYPE_CODE_M3_WIDECHAR :
             case TYPE_CODE_M3_ENUM :
-              rhs_is_int_or_card = false;
+              rhs_is_int_or_card = FALSE;
               goto rhs_exit;
             default:
               if ( proc_name == NULL )
@@ -2264,7 +2264,7 @@ get_array_info ( struct type * array_type,
   int l_fixed_dims = 0;
 
   if ( l_type != NULL )
-    { while ( true )
+    { while ( TRUE )
         { switch ( TYPE_CODE ( l_type ) )
             { case TYPE_CODE_M3_ARRAY:
                 l_fixed_dims ++;
@@ -2414,7 +2414,7 @@ m3_check_and_coerce_array (
        )
       /* Reusing dope. No check or change to shape required. */
       { return result; }
-    while ( true )
+    while ( TRUE )
       { switch ( TYPE_CODE ( l_lhs_type ) )
           { case TYPE_CODE_M3_OPEN_ARRAY:
               switch ( TYPE_CODE ( l_rhs_type ) )
@@ -2547,20 +2547,20 @@ m3_check_and_coerce_array (
    generated name "_result" can't be spoofed by the Modula-3 programmer.
    This function patches the result type of the procedure constant symbol
    and also returns its result type.  is_formal (which may be NULL) is set to
-   true iff it is a result that is, at machine-code level, implemented as a
+   TRUE iff it is a result that is, at machine-code level, implemented as a
    VAR parameter.
 */
 static struct type *
 m3_patch_proc_result_type (
-  CORE_ADDR code_addr, char * name, bool * result_is_ref_param )
+  CORE_ADDR code_addr, char * name, BOOL * result_is_ref_param )
 
 { struct symbol * proc_sym;
   struct block * proc_block;
   struct symbol * result_sym;
   struct type * result_type;
-  bool l_result_is_ref_param;
+  BOOL l_result_is_ref_param;
 
-  if ( result_is_ref_param != NULL ) { * result_is_ref_param = false; }
+  if ( result_is_ref_param != NULL ) { * result_is_ref_param = FALSE; }
   proc_sym = find_pc_function ( code_addr );
   if ( proc_sym == NULL )
     { error ( "Can't get symbol for procedure \"%s\".", name ); /* NORETURN */ }
@@ -2677,33 +2677,33 @@ m3_build_gdb_proc_closure
   } /* m3_build_gdb_proc_closure */
 
 /* Is inf_addr the inferior address of a Modula-3 procedure closure? */
-bool
+BOOL
 m3_inf_address_is_proc_closure ( CORE_ADDR inf_addr )
 
 { struct value * deref_value;
   CORE_ADDR l_closure_mark;
 
-  if ( inf_addr == 0 ) { return false; }
+  if ( inf_addr == 0 ) { return FALSE; }
   deref_value = value_at_lazy ( builtin_type_m3_integer, inf_addr );
   l_closure_mark = m3_value_as_integer ( deref_value );
   return l_closure_mark == closure_mark;
 } /* m3_inf_address_is_proc_closure */
 
 /* Is closure_value a Modula-3 procedure closure value?  */
-bool
+BOOL
 m3_value_is_proc_closure ( struct value * closure_value )
 
   { struct type * closure_type;
     struct m3_proc_closure * closure;
 
-    if ( closure_value == NULL ) { return false; }
+    if ( closure_value == NULL ) { return FALSE; }
     closure_type = value_type ( closure_value );
-    if ( closure_type == NULL ) { return false; }
+    if ( closure_type == NULL ) { return FALSE; }
     if ( TYPE_CODE ( closure_type ) == TYPE_CODE_M3_PROC_CLOSURE )
       { closure = ( struct m3_proc_closure * ) value_contents ( closure_value );
         return closure -> closure_mark == closure_mark;
       }
-    else { return false; }
+    else { return FALSE; }
   } /* m3_value_is_proc_closure */
 
 /* If closure is a Modula-3 procedure closure value, return its result type.
@@ -2812,7 +2812,7 @@ m3_check_and_coerce_proc (
     if ( TYPE_CODE ( lhs_type ) != TYPE_CODE_M3_PROC ) { return NULL; }
     if ( TYPE_CODE ( rhs_type ) != TYPE_CODE_FUNC ) { return NULL; }
     /* FIXME: Do type check of two similar procedure types. */
-    if ( false )
+    if ( FALSE )
       { if ( proc_name == NULL )
           { error ( "Procedure type not assignable." ); /* NORETURN */ }
         else
@@ -3038,7 +3038,7 @@ m3_evaluate_call
   )
 
   { struct type * result_type;
-    bool result_is_ref_param;
+    BOOL result_is_ref_param;
     struct value * * argvec;
     int downward_nargs; /* number in argvec, passed at machine level. */
     int expected_args;
@@ -3251,7 +3251,7 @@ m3_evaluate_dot
               }
             supertype = lhs_type;
             /* Here, supertype_tc_addr and supertype are for the static type. */
-            while ( true ) /* Search supertypes for field/method. */
+            while ( TRUE ) /* Search supertypes for field/method. */
               { if ( TYPE_CODE ( supertype ) != TYPE_CODE_M3_OBJECT )
                   { error
                       ( "Object has no field or method named \"%s\"."
@@ -5195,7 +5195,7 @@ m3_demangle (const char *mangled, int options)
   char_p = strchr (next_mangled, '_');
   if ( char_p != NULL && char_p != next_mangled && char_p[ 1 ] == '_' )
      /* Two underscores. */
-    { while ( true )
+    { while ( TRUE )
         { len = char_p - next_mangled;
           strncpy (next_demangled, next_mangled, (size_t)(len));
           next_demangled [len] = '.';
@@ -5402,15 +5402,15 @@ dump_blockvector ( struct blockvector * block_vec, int max_syms_per_block )
    procedure and return some places needed to find its parent block.
    If the string at start has the form
    <id>__<int>__<int>__ ... __<int>__<id> ... , for zero or more <int>s,
-   return true, set *first_end to point to the first "__", and
+   return TRUE, set *first_end to point to the first "__", and
    set *next_start to point to the first char of the second <id>.
-   Otherwise, leave first_end and next_start alone and return false. */
+   Otherwise, leave first_end and next_start alone and return FALSE. */
 
 /* FIXME:  Names of this form can easily be spoofed by the Modula-3 programmer
    by declaring things with "__" in their names.  Avoiding this without
    another character that is acceptable in linker names would be hard.  Any
    fix would require coordinated fixes in the compilers. */
-static bool
+static BOOL
 find_m3_nested_component
   ( char * start, char ** first_end, char ** next_start )
 
@@ -5424,9 +5424,9 @@ find_m3_nested_component
     ch = * start;
     if ( ( 'A' <= ch && ch <= 'Z' ) || ( 'a' <= ch && ch <= 'z' ) )
       { start ++;
-        while ( true )
+        while ( TRUE )
           { l_first_end  = start + strspn ( start, m3_id_chars_no_underscore );
-            if ( * l_first_end != '_' ) { return false; }
+            if ( * l_first_end != '_' ) { return FALSE; }
             else if ( * ( l_first_end + 1 ) == '_' )
               /* We have "__", beginning at l_first_end. */
               { l_next_start = l_first_end + 2;
@@ -5434,18 +5434,18 @@ find_m3_nested_component
                    produce would reduce the likelyhood of spoofing. */
                 l_next_start
                   = l_next_start + strcspn ( l_next_start , m3_id_letters );
-                if ( * l_next_start == '\0' ) { return false; }
+                if ( * l_next_start == '\0' ) { return FALSE; }
                 else
                   { if ( next_start != NULL ) { * next_start = l_next_start; }
                     if ( first_end != NULL ) { * first_end = l_first_end; }
-                    return true;
+                    return TRUE;
                   }
               }
             else
               { start = l_first_end + 1; /* And loop. */ }
           }
       }
-    else { return false; }
+    else { return FALSE; }
   } /* find_m3_nested_component */
 
 /* Used to keep track of a heap-allocated object. */
@@ -5491,7 +5491,7 @@ find_m3_proc_in_blockvector (
      can't put a symbol in >1 hashed dictionary, because the symbols
      are linked using a field located right in the symbol node. */
   block_ss = 0;
-  while ( true )
+  while ( TRUE )
     { if ( block_ss >= BLOCKVECTOR_NBLOCKS ( block_vec ) )
         { return - 1; }
       else
@@ -5556,7 +5556,7 @@ m3_fix_symtab ( struct symtab *st )
       ALL_BLOCK_SYMBOLS (bl, iter, sym)
         { char *name = SYMBOL_LINKAGE_NAME (sym);
 
-          if (false && info_verbose)
+          if (FALSE && info_verbose)
             { printf_filtered
                 ("Fixing block %d M3 symbol \"%sym\"\n", block_ss , name );
               gdb_flush (gdb_stdout);
@@ -5682,7 +5682,7 @@ m3_fix_symtab ( struct symtab *st )
               /* Handle any anonymous blocks between parent and nested. */
               while ( prev_end < next_start ) /* There is an anonymous  block. */
                 { block_num = 0;
-                  while ( true )
+                  while ( TRUE )
                     { ch = * prev_end;
                       if ( '0' <= ch && ch <= '9' )
                         { block_num = block_num * 10 + ch - '0';
@@ -5699,7 +5699,7 @@ m3_fix_symtab ( struct symtab *st )
                    */
                   child_ss = parent_block_ss + 1;
                   block_num_2 = block_num;
-                  while ( true )
+                  while ( TRUE )
                     { if ( child_ss >= BLOCKVECTOR_NBLOCKS (block_vec) )
                         { printf_filtered
                             ( "Can't find child block %d, at level %d, "
@@ -6501,7 +6501,7 @@ m3_patch_nested_procs
 
 #if 1
 /*  -------------------DEBUG -----------------------*/
-  if (false && info_verbose)
+  if (FALSE && info_verbose)
     { int i;
       struct block * b;
       struct symbol * s;
