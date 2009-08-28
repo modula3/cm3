@@ -20,7 +20,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #if !defined (M3_LANG_H)
 #define M3_LANG_H 1
 
-#include <stdbool.h>
+#include "m3-bool.h"
 
 #include "defs.h"
 #include "gdbtypes.h"
