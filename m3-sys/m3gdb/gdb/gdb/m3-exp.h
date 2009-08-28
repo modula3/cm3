@@ -20,22 +20,22 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #if !defined (M3_EXP_H)
 #define M3_EXP_H 1
 
-#include "defs.h" 
-#include "expression.h" 
-#include "parser-defs.h" 
- 
+#include "defs.h"
+#include "expression.h"
+#include "parser-defs.h"
+
 extern int m3_parse PARAMS ((void));
 
 extern void m3_print_subexp (
-    struct expression *exp, 
+    struct expression *exp,
     int *pos,
-    struct ui_file *stream, 
+    struct ui_file *stream,
     enum precedence prec
  );
 
-extern int 
+extern int
 m3_dump_subexp ( struct expression *exp, struct ui_file *stream, int elt );
 
 #endif /* !defined (M3_EXP_H) */
 
-/* End of file m3-exp.h */ 
+/* End of file m3-exp.h */
