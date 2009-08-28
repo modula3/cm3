@@ -99,9 +99,9 @@ m3_type_print_base (type, stream, show, level)
     case TYPE_CODE_M3_ENUM:
       fprintf_filtered (stream, "{");
       for (i = 0; i < TYPE_M3_ENUM_NVALS (type); i++) {
-	if (i != 0) { fprintf_filtered (stream, ", "); }
-	wrap_here ("    ");
-	fputs_filtered (TYPE_M3_ENUM_VALNAME (type, i), stream); }
+        if (i != 0) { fprintf_filtered (stream, ", "); }
+        wrap_here ("    ");
+        fputs_filtered (TYPE_M3_ENUM_VALNAME (type, i), stream); }
       fprintf_filtered (stream, "}");
       break;
 
@@ -113,79 +113,79 @@ m3_type_print_base (type, stream, show, level)
       int sc = TYPE_CODE (TYPE_M3_OBJ_SUPER (type));
 
        if (sc == TYPE_CODE_M3_ROOT) {
-	 /* nothing */ }
+         /* nothing */ }
        else if (sc == TYPE_CODE_M3_TRANSIENT_ROOT) {
-	 fprintf_filtered (stream, "TRANSIENT "); }
+         fprintf_filtered (stream, "TRANSIENT "); }
        else if (sc == TYPE_CODE_M3_UN_ROOT) {
-	 fprintf_filtered (stream, "UNTRACED "); }
+         fprintf_filtered (stream, "UNTRACED "); }
        else {
-	 m3_type_print_base (TYPE_M3_OBJ_SUPER (type) , stream, show-1, level);
-	 fprintf_filtered (stream, " ");
+         m3_type_print_base (TYPE_M3_OBJ_SUPER (type) , stream, show-1, level);
+         fprintf_filtered (stream, " ");
          wrap_here ("  "); }
 
       if (TYPE_M3_OBJ_BRANDED (type)) {
-	fprintf_filtered (stream, "BRANDED \"%s\" ",
-			  TYPE_M3_OBJ_BRAND (type)); }
+        fprintf_filtered (stream, "BRANDED \"%s\" ",
+                          TYPE_M3_OBJ_BRAND (type)); }
 
       fprintf_filtered (stream, "OBJECT ");
       for (i = 0; i < TYPE_M3_OBJ_NFIELDS (type); i++) {
-	fprintf_filtered (stream, "%s: ", TYPE_M3_OBJ_FIELD_NAME (type, i));
-	m3_type_print_base (TYPE_M3_OBJ_FIELD_TYPE (type, i),
-			    stream, show-1, level);
-	fprintf_filtered (stream, "; ");
-	wrap_here ("    "); }
+        fprintf_filtered (stream, "%s: ", TYPE_M3_OBJ_FIELD_NAME (type, i));
+        m3_type_print_base (TYPE_M3_OBJ_FIELD_TYPE (type, i),
+                            stream, show-1, level);
+        fprintf_filtered (stream, "; ");
+        wrap_here ("    "); }
 
       if (TYPE_M3_OBJ_NMETHODS (type) > 0) fprintf_filtered (stream, "METHODS ");
       for (i = 0; i < TYPE_M3_OBJ_NMETHODS (type); i++) {
-	fprintf_filtered (stream, "%s: ", TYPE_M3_OBJ_METHOD_NAME (type, i));
-	m3_type_print_base (TYPE_M3_OBJ_METHOD_TYPE (type, i), stream, show-1, level);
-	fprintf_filtered (stream, "; ");
-	wrap_here ("    "); }
+        fprintf_filtered (stream, "%s: ", TYPE_M3_OBJ_METHOD_NAME (type, i));
+        m3_type_print_base (TYPE_M3_OBJ_METHOD_TYPE (type, i), stream, show-1, level);
+        fprintf_filtered (stream, "; ");
+        wrap_here ("    "); }
       fprintf_filtered (stream, "END");
       break; }
 
     case TYPE_CODE_M3_PROC:
     case TYPE_CODE_M3_METHOD: /* REVIEWME: What do we want to do here? */
       if (show < 0) {
-	fprintf_filtered (stream, "PROCEDURE ...");
-	break; }
+        fprintf_filtered (stream, "PROCEDURE ...");
+        break; }
 
       fprintf_filtered (stream, "PROCEDURE (");
       for (i = 0; i < TYPE_M3_PROC_NARGS (type); i++) {
-	if (i != 0) {
-	  fprintf_filtered (stream, "; ");
-	  wrap_here ("    "); }
-	fprintf_filtered (stream, "%s: ", TYPE_M3_PROC_ARG_NAME (type, i) + 1);
-	m3_type_print_base (TYPE_M3_PROC_ARG_TYPE (type, i),
-			    stream, 0, level); }
+        if (i != 0) {
+          fprintf_filtered (stream, "; ");
+          wrap_here ("    "); }
+        fprintf_filtered (stream, "%s: ", TYPE_M3_PROC_ARG_NAME (type, i) + 1);
+        m3_type_print_base (TYPE_M3_PROC_ARG_TYPE (type, i),
+                            stream, 0, level); }
       fprintf_filtered (stream, ")");
       if (M3_TYPEP (TYPE_CODE (TYPE_TARGET_TYPE (type)))
-	  && TYPE_CODE (TYPE_TARGET_TYPE (type)) != TYPE_CODE_M3_VOID) {
-	fprintf_filtered (stream, ": ");
-	m3_type_print_base (TYPE_TARGET_TYPE (type),
-			    stream, 0, level); }
+          && TYPE_CODE (TYPE_TARGET_TYPE (type)) != TYPE_CODE_M3_VOID) {
+        fprintf_filtered (stream, ": ");
+        m3_type_print_base (TYPE_TARGET_TYPE (type),
+                            stream, 0, level); }
       switch (TYPE_M3_PROC_NRAISES (type))
-	{
-	case -1: fprintf_filtered (stream, " RAISES ANY");  break;
+        {
+        case -1: fprintf_filtered (stream, " RAISES ANY");  break;
         case  0:                                            break;
-	default: fprintf_filtered (stream, " RAISES {");
-	  for (i = 0; i < TYPE_M3_PROC_NRAISES (type); i++) {
-	    if (i != 0) {
-	      fprintf_filtered (stream, ", ");
-	      wrap_here ("    "); }
-	    fprintf_filtered (stream, "%s",
-			      TYPE_M3_PROC_RAISE_NAME (type, i)); }
-	  fprintf_filtered (stream, "}"); }
+        default: fprintf_filtered (stream, " RAISES {");
+          for (i = 0; i < TYPE_M3_PROC_NRAISES (type); i++) {
+            if (i != 0) {
+              fprintf_filtered (stream, ", ");
+              wrap_here ("    "); }
+            fprintf_filtered (stream, "%s",
+                              TYPE_M3_PROC_RAISE_NAME (type, i)); }
+          fprintf_filtered (stream, "}"); }
       break;
-	
+        
     case TYPE_CODE_M3_RECORD:
       fprintf_filtered (stream, "RECORD ");
       for (i = 0; i < TYPE_M3_REC_NFIELDS (type); i++) {
-	fprintf_filtered (stream, "%s: ", TYPE_M3_REC_FIELD_NAME (type, i));
-	m3_type_print_base (TYPE_M3_REC_FIELD_TYPE (type, i),
-			    stream, show-1, level);
-	fprintf_filtered (stream, "; ");
-	wrap_here ("    "); }
+        fprintf_filtered (stream, "%s: ", TYPE_M3_REC_FIELD_NAME (type, i));
+        m3_type_print_base (TYPE_M3_REC_FIELD_TYPE (type, i),
+                            stream, show-1, level);
+        fprintf_filtered (stream, "; ");
+        wrap_here ("    "); }
       fprintf_filtered (stream, "END");
       break;
 
@@ -201,24 +201,24 @@ m3_type_print_base (type, stream, show, level)
       /* Texts are passed as TYPE_CODE_M3_POINTER, not as TYPE_CODE_M3_TEXT ... */
       struct type *target = TYPE_M3_POINTER_TARGET (type);
       if (TYPE_CODE (target) == TYPE_CODE_M3_OPEN_ARRAY
-	  && TYPE_CODE (TYPE_M3_OPEN_ARRAY_ELEM (target)) == TYPE_CODE_M3_CHAR) {
-	fprintf_filtered (stream, "TEXT"); }
+          && TYPE_CODE (TYPE_M3_OPEN_ARRAY_ELEM (target)) == TYPE_CODE_M3_CHAR) {
+        fprintf_filtered (stream, "TEXT"); }
       else {
-	if (! TYPE_M3_POINTER_TRACED (type)) {
-	  fprintf_filtered (stream, "UNTRACED "); }
-	
-	if (TYPE_M3_POINTER_BRANDED (type)) {
-	  fprintf_filtered (stream, "BRANDED \"%s\" ",
-			    TYPE_M3_POINTER_BRAND (type)); }
-	fprintf_filtered (stream, "REF ");
-	if (show >= 0) {
-	  m3_type_print_base (TYPE_M3_POINTER_TARGET (type), stream,
-			      show-1, level); }
-	else {
-	  fprintf_filtered (stream, "..."); }
+        if (! TYPE_M3_POINTER_TRACED (type)) {
+          fprintf_filtered (stream, "UNTRACED "); }
+        
+        if (TYPE_M3_POINTER_BRANDED (type)) {
+          fprintf_filtered (stream, "BRANDED \"%s\" ",
+                            TYPE_M3_POINTER_BRAND (type)); }
+        fprintf_filtered (stream, "REF ");
+        if (show >= 0) {
+          m3_type_print_base (TYPE_M3_POINTER_TARGET (type), stream,
+                              show-1, level); }
+        else {
+          fprintf_filtered (stream, "..."); }
       }
-	break; }
-	
+        break; }
+        
     case TYPE_CODE_M3_SUBRANGE: {
       LONGEST lower, upper;
       struct type *target = TYPE_M3_SUBRANGE_TARGET (type);
@@ -227,14 +227,14 @@ m3_type_print_base (type, stream, show, level)
       m3_ordinal_bounds (type, &lower, &upper);
       fprintf_filtered (stream, "[");
       if (en) {
-	fputs_filtered (TYPE_M3_ENUM_VALNAME (target, lower), stream); }
+        fputs_filtered (TYPE_M3_ENUM_VALNAME (target, lower), stream); }
       else {
-	print_longest (stream, 'd', 1, lower); }
+        print_longest (stream, 'd', 1, lower); }
       fprintf_filtered (stream, " .. ");
       if (en) {
-	fputs_filtered (TYPE_M3_ENUM_VALNAME (target, upper), stream); }
+        fputs_filtered (TYPE_M3_ENUM_VALNAME (target, upper), stream); }
       else {
-	print_longest (stream, 'd', 1, upper); }
+        print_longest (stream, 'd', 1, upper); }
       fprintf_filtered (stream, "]");
       break; }
 
@@ -304,17 +304,17 @@ m3_type_print_base (type, stream, show, level)
 
     default:
       /* Handle types not explicitly handled by the other cases,
-	 such as fundamental types.  For these, just print whatever
-	 the type name is, as recorded in the type itself.  If there
-	 is no type name, then complain. */
+         such as fundamental types.  For these, just print whatever
+         the type name is, as recorded in the type itself.  If there
+         is no type name, then complain. */
       if (TYPE_NAME (type) != NULL)
-	{
-	  fputs_filtered (TYPE_NAME (type), stream);
-	}
+        {
+          fputs_filtered (TYPE_NAME (type), stream);
+        }
       else
-	{
-	  c_type_print_base (type, stream, show, level);
-	}
+        {
+          c_type_print_base (type, stream, show, level);
+        }
       break;
     }
 } /* m3_type_print_base */

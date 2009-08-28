@@ -106,7 +106,7 @@ is_m3_type ( struct type * m3_type );
 
 extern int
 m3_value_print (struct value *, struct ui_file *, int,
-			   enum val_prettyprint);
+               enum val_prettyprint);
 
 extern void
 m3_fix_param (

@@ -32,7 +32,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 extern bool is_unsafe ( void );
 
 extern int
-m3_parse PARAMS ((void));	/* Defined in c-exp.y */
+m3_parse PARAMS ((void));   /* Defined in c-exp.y */
 
 extern char * m3_demangle (const char *mangled, int options /*UNUSED*/);
 
@@ -88,8 +88,8 @@ m3_check_TextLiteral_buf
   );
 
 extern int m3_val_print (struct type *, const gdb_byte *, int, CORE_ADDR,
-			 struct ui_file *, int, int, int,
-			 enum val_prettyprint);
+                         struct ui_file *, int, int, int,
+                         enum val_prettyprint);
 extern int m3_val_print2 (struct type *, const gdb_byte *, int, int,
                           struct ui_file *, int, int, int);
 
@@ -186,7 +186,7 @@ extern void m3_printchar (int, struct ui_file *);
 extern void m3_printwidechar (int, struct ui_file *);
 
 extern int m3_value_print (struct value *, struct ui_file *, int,
-			   enum val_prettyprint);
+                           enum val_prettyprint);
 
 extern void  m3_fix_param
   ( struct type * func_type, int fieldno, struct symbol * param_sym );
@@ -196,10 +196,10 @@ extern void m3_decode_struct (struct type *);
 extern void m3_fix_symtab (struct symtab *st);
 
 extern int find_m3_rec_field (struct type *, char *, int *, int *,
-			      struct type **);
+                              struct type **);
 
 extern int find_m3_obj_field (struct type *, char *, int *, int *,
-			      struct type **);
+                              struct type **);
 
 extern int find_m3_obj_method (struct type *obj_type,
                                char *name,

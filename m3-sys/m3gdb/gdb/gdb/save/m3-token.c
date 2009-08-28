@@ -518,13 +518,13 @@ scan_text (input, tok)
       else if (*input == '\'') { *next++ = '\'';  input++; }
       else if (*input == '"')  { *next++ = '"';   input++; }
       else if (*input == 'x') {
-	LONGEST hexval;
+        LONGEST hexval;
         input = scan_hex (++input, &hexval, 0);
-	*next++ = hexval;
+        *next++ = hexval;
       } else if (('0' <= *input) && (*input <= '7')) {
-	LONGEST octval;
+        LONGEST octval;
         input = scan_octal (input, &octval, 0);
-	*next++ = octval;
+        *next++ = octval;
       } else {
         error ("unknown escape sequence in text literal");
       }
@@ -578,11 +578,11 @@ scan_widetext (input, tok, wide)
       else if (*input == '\'') { len++;  input++; }
       else if (*input == '"')  { len++;  input++; }
       else if (*input == 'x')  {
-	len++;  input++;  /* assume the hex digits each count as characters */
+        len++;  input++;  /* assume the hex digits each count as characters */
       } else if (('0' <= *input) && (*input <= '7')) {
-	len++;  input++;  /* assume the octal digits each count as characters */
+        len++;  input++;  /* assume the octal digits each count as characters */
       } else {
-	len++;  input++;  /* ??? */
+        len++;  input++;  /* ??? */
       }
 
     } else if (*input == 0) {
@@ -620,15 +620,15 @@ scan_widetext (input, tok, wide)
       else if (*input == '\'') { *out++ = 0;  *out++ = '\'';  input++; }
       else if (*input == '"')  { *out++ = 0;  *out++ = '"';   input++; }
       else if (*input == 'x') {
-	LONGEST hexval;
+        LONGEST hexval;
         input = scan_hex (++input, &hexval, wide);
-	*out++ = (hexval & 0xffff) >> 8;
-	*out++ = (hexval & 0xff);
+        *out++ = (hexval & 0xffff) >> 8;
+        *out++ = (hexval & 0xff);
       } else if (('0' <= *input) && (*input <= '7')) {
-	LONGEST octval;
+        LONGEST octval;
         input = scan_octal (input, &octval, wide);
-	*out++ = (octval & 0xffff) >> 8;
-	*out++ = (octval & 0xff);
+        *out++ = (octval & 0xffff) >> 8;
+        *out++ = (octval & 0xff);
       } else {
         error ("unknown escape sequence in text literal");
       }
@@ -711,12 +711,12 @@ scan_m3_token (input, tok)
       input = tokstart + 1;
 
       if (*input == '\'') {
-	/* oops, it's a wide char */
+        /* oops, it's a wide char */
         input = scan_char (tokstart, tok, 1);
         break;
       }
       if (*input == '"') {
-	/* oops, it's a wide text literal */
+        /* oops, it's a wide text literal */
         input = scan_widetext (tokstart, tok);
         break;
       }
