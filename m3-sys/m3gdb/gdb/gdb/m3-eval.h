@@ -17,12 +17,12 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
-/* This file contains globals and initialization for Modula-3 support. */ 
+/* This file contains globals and initialization for Modula-3 support. */
 
 #if !defined (M3_EVAL_H)
 #define M3_EVAL_H 1
- 
-#include <stdbool.h> 
+
+#include <stdbool.h>
 
 #include "defs.h"
 #include "expression.h"
@@ -36,4 +36,4 @@ m3_evaluate_subexp(struct type *expect_type,
 
 #endif /* !defined (M3_EVAL_H) */
 
-/* End of file m3-eval.h */ 
+/* End of file m3-eval.h */

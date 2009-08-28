@@ -1,4 +1,4 @@
-#include <stdbool.h> 
+#include <stdbool.h>
 
 #include "defs.h"
 #include "expression.h"
@@ -131,7 +131,7 @@ recognize_reserved_word (tok)
     mid = (low + high) / 2;
     cmp = strcmp (reserved [mid].name, tok->string);
     if (cmp == 0) {
-      tok->kind = reserved [mid].kind; 
+      tok->kind = reserved [mid].kind;
       return;
     } else if (cmp < 0) {
       low  = mid + 1;
@@ -141,7 +141,7 @@ recognize_reserved_word (tok)
   }
 
   tok->kind = TK_IDENT;
-  return; 
+  return;
 } /* recognize_reserved_word */
 
 /*--------------------------------------------------------------- numbers ---*/
@@ -154,40 +154,40 @@ scan_number (char *input, m3_token *tok)
   int digit;
   LONGEST val;
   LONGEST base;
-  bool is_based; 
+  bool is_based;
 
-  c = input; 
+  c = input;
   val = 0;
-  if (*c == '0' && ( *(c+1) == 'x' || *(c+1) == 'X' ) ) 
-    { /* Go ahead and accept the C lexical syntax for hex numbers. */ 
+  if (*c == '0' && ( *(c+1) == 'x' || *(c+1) == 'X' ) )
+    { /* Go ahead and accept the C lexical syntax for hex numbers. */
       is_based = true;
-      base = 16; 
+      base = 16;
       c = c + 2;
-    } 
-  else 
+    }
+  else
     { /* scan the leading decimal digits */
-      while ('0' <= *c && *c <= '9') 
+      while ('0' <= *c && *c <= '9')
         { digit = *c - '0';
           val = val * 10 + digit;
-          c++; 
+          c++;
         }
-      if (*c == '_') 
-        { /* It's a based value in Modula-3 syntax. */ 
-          is_based = true; 
+      if (*c == '_')
+        { /* It's a based value in Modula-3 syntax. */
+          is_based = true;
           base = val;
-          c++; 
-          if ((base < 2) || (16 < base)) 
-            { error 
-                ("%d is an illegal base for a Modula-3 literal, using 10 instead." 
-                , (int) base 
+          c++;
+          if ((base < 2) || (16 < base))
+            { error
+                ("%d is an illegal base for a Modula-3 literal, using 10 instead."
+                , (int) base
                 );
               base = 10;
             }
-        } 
-      else is_based = false; 
-    } 
+        }
+      else is_based = false;
+    }
 
-  if ( is_based ) 
+  if ( is_based )
   { /* scan a based integer */
     /* scan the value */
     val = 0;
@@ -284,7 +284,7 @@ scan_gdb_token (input, tok)
       tok->kind = TK_GDB_HISTORY;
       tok->intval = sign * ((input == tokstart)? 1 : atoi(tokstart));
       return input;
-          
+
     default: break;
   }
 
@@ -315,16 +315,16 @@ scan_gdb_token (input, tok)
   }
 
   /* check for a pseudo-register name */
-#if 0 
+#if 0
   for (c = 0; c < num_std_regs; c++) {
     if (len == strlen (std_regs [c].name)
         && strncmp (tokstart, std_regs[c].name, len) == 0) {
       tok->kind = TK_REGISTER;
-      tok->intval = std_regs[c].regnum; 
+      tok->intval = std_regs[c].regnum;
       return input;
     }
   }
-#endif 
+#endif
 
   /* ? must be a GDB variable */
   tok->kind = TK_GDB_VAR;
@@ -723,7 +723,7 @@ scan_m3_token (input, tok)
 
       while (   ('a' <= *input && *input <= 'z')
              || ('A' <= *input && *input <= 'Z')
-             || ('0' <= *input && *input <= '9') 
+             || ('0' <= *input && *input <= '9')
              || (*input == '_')) {
         input++;
       }
@@ -816,7 +816,7 @@ scan_m3_token (input, tok)
 
 static char* toknames[] = {
 
-  "<EOF>", 
+  "<EOF>",
 
   /* literals */
 
