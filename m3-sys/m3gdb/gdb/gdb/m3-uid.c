@@ -69,7 +69,7 @@ m3uid_to_num (const char *uid, LONGEST *num_val)
   if (strlen (uid) < M3UID_LEN) return false;
 
   if (strncmp (uid, "zzzzzz", M3UID_LEN ) == 0)
-    { *num_val = -1;  return true; };
+    { *num_val = -1;  return true; }
 
   value = 0;
   for (i = 0; i < M3UID_LEN; i++) {

@@ -511,7 +511,7 @@ m3_parse_e8 ( )
           ("Modula-3 type constructors in expressions not implemented: \"%s\".",
             m3_token_name (&cur_tok)
           ); /* NORETURN */
-      };
+      }
       write_m3_type (builtin_type_m3_untraced_root);
       break;
 
@@ -924,7 +924,7 @@ m3_print_subexp (
     default:
       (*pos)--; /* I hate this kludge, but it sure saves code. */
       print_subexp_standard (exp, pos, stream, prec );
-  };
+  }
 } /* m3_print_subexp */
 
 int
