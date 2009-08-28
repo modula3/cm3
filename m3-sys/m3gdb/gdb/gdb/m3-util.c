@@ -103,7 +103,7 @@ m3_term_strings_equal (
   }
 
 void
-init_m3_constants ( )
+init_m3_constants (void)
 { BOOL is_cm3;
 
   if ( m3_constant_init_done ) { return; }
@@ -1117,7 +1117,7 @@ m3_ascertain_compiler_kind ( void )
   } /* m3_ascertain_compiler_kind */
 
 enum m3_compiler_kind_typ
-m3_compiler_kind ( )
+m3_compiler_kind (void)
   { m3_ascertain_compiler_kind ( );
     return m3_compiler_kind_value;
   } /* m3_compiler_kind */
@@ -2040,7 +2040,7 @@ m3_ensure_value_is_unpacked ( struct value * packed_val )
   } /* m3_ensure_value_is_unpacked */
 
 int
-m3_open_array_dope_align ( )
+m3_open_array_dope_align (void)
   { return TARGET_PTR_BIT / TARGET_CHAR_BIT; }
 
 /* Return the gdb-space offset of 'dimension'-th shape component, relative
@@ -2678,7 +2678,7 @@ m3_static_ancestor_frame (
 
 /* Inferior alignment for procedure closures. */
 int
-m3_proc_closure_align ( )
+m3_proc_closure_align (void)
   { return m3_target_integer_bit / TARGET_CHAR_BIT; }
  /* CHECK: ^Is this value always right? */
 
