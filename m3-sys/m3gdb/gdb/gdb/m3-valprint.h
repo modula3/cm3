@@ -12,7 +12,7 @@
 #include "defs.h"
 #include "gdbtypes.h"
 
-extern bool /* Yes, it's that field of that type. */
+extern BOOL /* Yes, it's that field of that type. */
 m3_check_TextLiteral_buf
   ( CORE_ADDR ref,
     CORE_ADDR tc_addr,

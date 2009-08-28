@@ -729,7 +729,7 @@ call_function_by_hand (struct value *function, int nargs, struct value **args)
             return_arg = nargs - 1; 
             break; 
           default:  
-            gdb_assert ( false ); /* NORETURN */ 
+            gdb_assert ( FALSE ); /* NORETURN */ 
         } 
       *(CORE_ADDR *) value_contents_raw ( args [ return_arg] ) = struct_addr; 
     }

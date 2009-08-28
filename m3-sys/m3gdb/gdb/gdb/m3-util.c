@@ -21,7 +21,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
   /* This file contains utility routines for Modula-3 debugging support. */
 
-#include <stdbool.h>
+#include "m3-bool.h"
 
 #include "defs.h"
 #include "gdb_assert.h"
@@ -70,28 +70,28 @@ int rttype_infomap_map_offset = 0;
 int rttype_infomap_cnt_size = 0;
 int rttype_infomap_cnt_offset = 0;
 
-bool m3_constant_init_done = false;
+BOOL m3_constant_init_done = FALSE;
 
 /* Compare two terminated strings for equality.  A terminated string is
    described by a from pointer and a to pointer.  Its last character is
    the character before either a null byte or before the character pointed
    to by the to pointer. */
-static bool
+static BOOL
 m3_term_strings_equal (
     const char * left,
     const char * left_to,
     const char * right,
     const char * right_to
   )
-  { bool left_done, right_done;
+  { BOOL left_done, right_done;
 
     left_done = ( left == NULL || left == left_to || * left == '\0' );
     right_done = ( right == NULL || right == right_to || * right == '\0' );
-    while ( true )
+    while ( TRUE )
       { if ( left_done ) { return right_done; }
         else /* ! left_done */
-          { if ( right_done ) { return false; }
-            else if ( * left != * right ) { return false; }
+          { if ( right_done ) { return FALSE; }
+            else if ( * left != * right ) { return FALSE; }
             else
               { left ++;
                 left_done = ( left == left_to || * left == '\0' );
@@ -104,14 +104,14 @@ m3_term_strings_equal (
 
 void
 init_m3_constants ( )
-{ bool is_cm3;
+{ BOOL is_cm3;
 
   if ( m3_constant_init_done ) { return; }
 
   { struct type* rt0_tc;
     struct type* rt0_otc;
 
-    rt0_tc = find_m3_type_named ("RT0.Typecell", /*must_find =*/ false);
+    rt0_tc = find_m3_type_named ("RT0.Typecell", /*must_find =*/ FALSE);
     if (!rt0_tc)
       {
         error ("Can't find RT0.Typecell. Maybe M3 libraries are compiled "
@@ -128,7 +128,7 @@ init_m3_constants ( )
     m3_find_rec_field (rt0_tc, "dataSize",
 		     &rt0_tc_dataSize_size, &rt0_tc_dataSize_offset, 0);
 
-    rt0_otc = find_m3_type_named ("RT0.ObjectTypecell", /*must_find =*/ false);
+    rt0_otc = find_m3_type_named ("RT0.ObjectTypecell", /*must_find =*/ FALSE);
     is_cm3 = (rt0_otc != 0);
 
     if (is_cm3)
@@ -140,13 +140,13 @@ init_m3_constants ( )
         m3_find_rec_field
           (rt0_tc, "kind", &rt0_tc_kind_size, &rt0_tc_kind_offset, 0);
 
-        t = find_m3_type_named ("RTType.InfoMap", /*must_find =*/ true);
+        t = find_m3_type_named ("RTType.InfoMap", /*must_find =*/ TRUE);
         m3_find_rec_field (t, "map",
           &rttype_infomap_map_size, &rttype_infomap_map_offset, 0);
         m3_find_rec_field (t, "cnt",
           &rttype_infomap_cnt_size, &rttype_infomap_cnt_offset, 0);
 
-        t = find_m3_type_named ("RTType.Info", /*must_find =*/ true);
+        t = find_m3_type_named ("RTType.Info", /*must_find =*/ TRUE);
 
         m3_find_rec_field (t, "def",
            &rttype_info_def_size, &rttype_info_def_offset, 0);
@@ -188,14 +188,14 @@ init_m3_constants ( )
 		     &rt0_defaultMethods_offset, 0);
   }
 
-  m3_constant_init_done = true;
+  m3_constant_init_done = TRUE;
 }
 
-bool
+BOOL
 is_unsafe ( void )
 
   { /* FIXME: Implement this. */
-    return true;
+    return TRUE;
   } /* is_unsafe */
 
 
@@ -467,9 +467,9 @@ m3_allocate_value_that_is_type ( struct type * type_of_value )
 /* Modula-3 expressions can be either values or types.  m3gdb
    'struct value's represent either, despite the name.  This
    distinguishes. */
-bool
+BOOL
 m3_value_is_type ( struct value * val )
-  { bool result;
+  { BOOL result;
 
     result = ( * ( LONGEST * ) value_contents ( val ) == m3_type_magic_value );
     return result;
@@ -504,7 +504,7 @@ m3_symtab_of_block ( const struct block * blk )
 struct type *
 find_m3_type_named (
     char * name,
-    bool must_find /* Emit an error message, if can't find it. */
+    BOOL must_find /* Emit an error message, if can't find it. */
   )
 
   { char struct_name [ M3_MAX_SYMBOLLEN ];
@@ -687,51 +687,51 @@ m3_unit_name_globals_symbol (
 
 /* Is sym the symbol of a Modula-3 globals record for either an interface
    or a module? */
-bool
+BOOL
 m3_is_globals_record_symbol ( const struct symbol * sym )
 
 { char * name;
   size_t len;
 
   name = SYMBOL_LINKAGE_NAME ( sym );
-  if ( name == NULL ) { return false; }
+  if ( name == NULL ) { return FALSE; }
   len = strlen ( name );
-  if ( len < 4 ) { return false; }
+  if ( len < 4 ) { return FALSE; }
   if ( name [ 0 ] == 'M'
        && ( name [ 1 ] == 'I' || name [ 1 ] == 'M' )
        && name [ 2 ] == '_' )
-    { return true; }
-  else { return false; }
+    { return TRUE; }
+  else { return FALSE; }
 } /* m3_is_globals_record_symbol */
 
-bool
+BOOL
 m3_is_interface_global_record ( struct symbol * sym )
 
 { char * name;
   size_t len;
 
   name = SYMBOL_LINKAGE_NAME ( sym );
-  if ( name == NULL ) { return false; }
+  if ( name == NULL ) { return FALSE; }
   len = strlen ( name );
-  if ( len < 4 ) { return false; }
+  if ( len < 4 ) { return FALSE; }
   if ( name [ 0 ] == 'M' && name [ 1 ] == 'I' && name [ 2 ] == '_' )
-    { return true; }
-  else { return false; }
+    { return TRUE; }
+  else { return FALSE; }
 } /* m3_is_interface_global_record */
 
-bool
+BOOL
 m3_is_module_global_record ( struct symbol * sym )
 
 { char * name;
   size_t len;
 
   name = SYMBOL_LINKAGE_NAME ( sym );
-  if ( name == NULL ) { return false; }
+  if ( name == NULL ) { return FALSE; }
   len = strlen ( name );
-  if ( len < 4 ) { return false; }
+  if ( len < 4 ) { return FALSE; }
   if ( name [ 0 ] == 'M' && name [ 1 ] == 'M' && name [ 2 ] == '_' )
-    { return true; }
-  else { return false; }
+    { return TRUE; }
+  else { return FALSE; }
 } /* m3_is_module_global_record */
 
 /* Return the pseudo-record-type that has one field for each exported
@@ -781,21 +781,21 @@ find_m3_type_name ( struct type * t )
   } /* find_m3_type_name */
 
 /* Is sym the symbol of a Modula-3 type name? */
-bool
+BOOL
 m3_is_type_name_symbol ( const struct symbol * sym )
 
   { char * name;
     size_t len;
 
     name = SYMBOL_SEARCH_NAME ( sym );
-    if ( name == NULL ) { return false; }
+    if ( name == NULL ) { return FALSE; }
     len = strlen ( name );
-    if ( len < 3 ) { return false; }
+    if ( len < 3 ) { return FALSE; }
     if ( name [ 0 ] == 'B'
          && name [ 1 ] == '$'
        )
-      { return true; }
-    else { return false; }
+      { return TRUE; }
+    else { return FALSE; }
   } /* m3_is_type_name_symbol */
 
 /* Look in 'block' for a declaration of a type. */
@@ -854,7 +854,7 @@ m3_lookup_interface_id (
     struct blockvector *bv;
     struct symtab * interface_symtab;
     struct symtab * module_symtab;
-    bool found;
+    BOOL found;
 
     /* Look for the interface global record. */
     interface_rec_sym
@@ -963,7 +963,7 @@ m3_lookup_module_id (
     struct blockvector *bv;
     struct symtab * module_symtab;
     struct symtab * l_symtab;
-    bool found;
+    BOOL found;
 
     /* Look for the module global record. */
     module_rec_sym
@@ -1145,7 +1145,7 @@ m3_unpacked_direct_type ( struct type * param_type )
     if ( param_type == NULL )
       { return NULL; }
     l_type = param_type;
-    while ( true )
+    while ( TRUE )
       { switch  ( TYPE_CODE ( l_type ) )
           { case TYPE_CODE_M3_INDIRECT:
               l_type = TYPE_M3_INDIRECT_TARGET ( l_type );
@@ -1178,7 +1178,7 @@ m3_revealed_unpacked_direct_type ( struct type * param_type )
 
     if ( param_type == NULL ) { return NULL; }
     l_type = param_type;
-    while ( true )
+    while ( TRUE )
       { switch  ( TYPE_CODE ( l_type ) )
           { case TYPE_CODE_M3_INDIRECT:
               l_type = TYPE_M3_INDIRECT_TARGET ( l_type );
@@ -1198,12 +1198,12 @@ m3_revealed_unpacked_direct_type ( struct type * param_type )
 /* The base type of param_type, if, after stripping indirects and packeds,
    it is an ordinal type. Otherwise, NULL. */
 struct type *
-m3_ordinal_base_type ( struct type * param_type, bool * is_int_or_card )
+m3_ordinal_base_type ( struct type * param_type, BOOL * is_int_or_card )
   { struct type * result_type;
 
-    if ( is_int_or_card != NULL ) { * is_int_or_card = false; }
+    if ( is_int_or_card != NULL ) { * is_int_or_card = FALSE; }
     result_type = param_type;
-    while ( true )
+    while ( TRUE )
       { switch ( TYPE_CODE ( result_type ) )
           { case TYPE_CODE_M3_INDIRECT :
               result_type = TYPE_M3_INDIRECT_TARGET ( result_type );
@@ -1224,7 +1224,7 @@ m3_ordinal_base_type ( struct type * param_type, bool * is_int_or_card )
             case TYPE_CODE_M3_LONGINT :
             case TYPE_CODE_M3_LONGCARD :
               if ( is_int_or_card != NULL )
-                { * is_int_or_card = true; }
+                { * is_int_or_card = TRUE; }
               return result_type;
             case TYPE_CODE_M3_BOOLEAN :
             case TYPE_CODE_M3_CHAR :
@@ -1641,9 +1641,9 @@ m3_defaultMethods_from_tc_addr ( CORE_ADDR tc_addr )
  *
  * If SIZE, OFFSET or TYPE are NULL they won't be set.
  *
- * RETURNs true iff NAME was found in REC_TYPE.
+ * RETURNs TRUE iff NAME was found in REC_TYPE.
  */
-bool
+BOOL
 m3_find_rec_field (
     struct type * rec_type,
     const char * name,
@@ -1671,7 +1671,7 @@ m3_find_rec_field (
     return 0;
   } /* m3_find_rec_field */
 		
-bool
+BOOL
 m3_find_obj_field (
     struct type *obj_type,
     char *name,
@@ -1697,7 +1697,7 @@ m3_find_obj_field (
     return 0;
   } /* m3_find_obj_field */
 
-bool
+BOOL
 m3_find_obj_method (
     struct type *obj_type,
     char *name,
@@ -1723,7 +1723,7 @@ m3_find_obj_method (
     return 0;
   } /* m3_find_obj_method */
 
-bool
+BOOL
 m3_is_ordinal_type ( struct type * param_type )
   { struct type *unpacked_type;
     enum type_code tc;
@@ -1741,13 +1741,13 @@ m3_is_ordinal_type ( struct type * param_type )
         case TYPE_CODE_M3_CARDINAL :
         case TYPE_CODE_M3_LONGINT :
         case TYPE_CODE_M3_LONGCARD :
-          return true;
+          return TRUE;
         default:
-          return false;
+          return FALSE;
       }
   } /* m3_is_ordinal_type */
 
-bool
+BOOL
 m3_type_is_signed ( struct type * param_type )
 
   { struct type *unpacked_type;
@@ -1762,9 +1762,9 @@ m3_type_is_signed ( struct type * param_type )
           return lower < 0;
         case TYPE_CODE_M3_INTEGER :
         case TYPE_CODE_M3_LONGINT :
-          return true;
+          return TRUE;
         default:
-          return false;
+          return FALSE;
       }
   } /* m3_type_is_signed */
 
@@ -1887,7 +1887,7 @@ m3_read_object_fields_bits ( CORE_ADDR ref )
 /* Extract an ordinal bitfield from a gdb-space buffer. */
 LONGEST
 m3_extract_ord (
-  const gdb_byte* valaddr, int bitpos, int bitsize, bool sign_extend )
+  const gdb_byte* valaddr, int bitpos, int bitsize, BOOL sign_extend )
 
   {
     ULONGEST val;
@@ -1937,7 +1937,7 @@ m3_value_as_integer ( struct value * val )
   int typebitsize;
   int valbitsize;
   int bitsize;
-  bool is_signed;
+  BOOL is_signed;
 
   if ( m3_type_is_signed ( val_type ) )
     { m3_ordinal_bounds ( val_type, & lower, & upper );
@@ -1948,7 +1948,7 @@ m3_value_as_integer ( struct value * val )
          not sign-extend.  OTOH, if there is a sign bit, it won't hurt to not
          sign-extend. */
     }
-  else { is_signed = false; }
+  else { is_signed = FALSE; }
   typebitsize = TYPE_M3_SIZE ( val_type );
   valbitsize = value_bitsize ( val );
   if ( valbitsize == 0 )
@@ -1965,7 +1965,7 @@ m3_value_as_integer ( struct value * val )
 CORE_ADDR
 m3_extract_address (const gdb_byte* valaddr, int bitpos)
 {
-  return (CORE_ADDR) m3_extract_ord (valaddr, bitpos, TARGET_PTR_BIT, false);
+  return (CORE_ADDR) m3_extract_ord (valaddr, bitpos, TARGET_PTR_BIT, FALSE);
 }
 
 double
@@ -2031,7 +2031,7 @@ m3_ensure_value_is_unpacked ( struct value * packed_val )
       { source_addr = & value + sizeof ( value ) - byte_length; }
     else { source_addr = & value; }
     /* Host-to-host, no byte order problem: */
-    /* FIXME: Not true.  struct value contents are in target order. */
+    /* FIXME: Not TRUE.  struct value contents are in target order. */
     memcpy ( value_contents_raw ( result_val ), source_addr, byte_length );
     set_value_lazy ( result_val, 0 );
 #endif
@@ -2087,7 +2087,7 @@ m3_open_array_shape_component ( const gdb_byte * addr , int dimension )
 
     target_offset = m3_shape_component_offset ( dimension );
     result
-      = m3_extract_ord ( addr + target_offset, 0, m3_target_integer_bit, false);
+      = m3_extract_ord ( addr + target_offset, 0, m3_target_integer_bit, FALSE);
     return result;
   } /* m3_open_array_shape_component */
 
@@ -2139,7 +2139,7 @@ m3_inf_open_array_shape_component ( CORE_ADDR ref, int dimension )
      a target offset here. */
   read_memory
     ( ref + target_offset, buf, m3_target_integer_bit/TARGET_CHAR_BIT );
-  result = m3_extract_ord (buf, 0, m3_target_integer_bit, false);
+  result = m3_extract_ord (buf, 0, m3_target_integer_bit, FALSE);
   return result;
 } /* m3_inf_open_array_shape_component */
 
@@ -2188,7 +2188,7 @@ m3_value_open_array_shape_component (
     result
       = m3_extract_ord
           ( ( gdb_byte * ) value_contents ( array_value ) + target_offset,
-            0, m3_target_integer_bit, false
+            0, m3_target_integer_bit, FALSE
           );
     return result;
   } /* m3_value_open_array_shape_component */
@@ -2528,7 +2528,7 @@ m3_static_link_pointing_to_frame (struct frame_info * start_frame)
 
   } /* m3_static_link_pointing_to_frame */
 
-bool use_static_link = true;
+BOOL use_static_link = TRUE;
 
 /* Like m3_static_ancestor_frame, except just return NULL
    if can't get a good ancestor frame and static link value.
@@ -2572,7 +2572,7 @@ m3_inner_static_ancestor_frame (
         if (l_frame != NULL)
           { l_proc_block
               = m3_block_proc_block (get_frame_block (l_frame, NULL));
-            while (true)
+            while (TRUE)
               { if (l_proc_block == ancestor_proc_block)
                   /* Found the link and frame for the right block. */
                   { if (ancestor_static_link != 0)
@@ -2611,7 +2611,7 @@ m3_inner_static_ancestor_frame (
     start = BLOCK_START ( ancestor_block );
     end = BLOCK_END ( ancestor_block );
     l_frame = start_frame;
-    while ( true )
+    while ( TRUE )
       { if ( l_frame == NULL ) { return NULL; }
         calling_pc = get_frame_address_in_block ( l_frame );
         if ( start <= calling_pc && calling_pc < end )
@@ -2737,33 +2737,33 @@ m3_build_gdb_proc_closure (
   } /* m3_build_gdb_proc_closure */
 
 /* Is inf_addr the inferior address of a Modula-3 procedure closure? */
-bool
+BOOL
 m3_inf_address_is_proc_closure ( CORE_ADDR inf_addr )
 
   { struct value * deref_value;
     CORE_ADDR l_closure_mark;
 
-    if ( inf_addr == 0 ) { return false; }
+    if ( inf_addr == 0 ) { return FALSE; }
     deref_value = value_at_lazy ( builtin_type_m3_integer, inf_addr );
     l_closure_mark = m3_value_as_integer ( deref_value );
     return l_closure_mark == closure_mark;
   } /* m3_inf_address_is_proc_closure */
 
 /* Is closure_value a Modula-3 procedure closure value?  */
-bool
+BOOL
 m3_value_is_proc_closure ( struct value * closure_value )
 
   { struct type * closure_type;
     struct m3_proc_closure  * closure;
 
-    if ( closure_value == NULL ) { return false; }
+    if ( closure_value == NULL ) { return FALSE; }
     closure_type = value_type ( closure_value );
-    if ( closure_type == NULL ) { return false; }
+    if ( closure_type == NULL ) { return FALSE; }
     if ( TYPE_CODE ( closure_type ) == TYPE_CODE_M3_PROC_CLOSURE )
       { closure = ( struct m3_proc_closure * ) value_contents ( closure_value );
         return closure -> closure_mark == closure_mark;
       }
-    else { return false; }
+    else { return FALSE; }
   } /* m3_value_is_proc_closure */
 
 /* valaddr/bitpos point to a gdb-space value of Modula-3 procedure type,
@@ -2857,7 +2857,7 @@ m3_block_locals_range ( struct block * blk, LONGEST * min, LONGEST * max )
 /* Does (inferior) address lie within the range of the parameters and local
    variables of frame?
 */
-bool
+BOOL
 m3_address_lies_within_frame_locals (
     CORE_ADDR address,
     struct frame_info * frame
@@ -2873,9 +2873,9 @@ m3_address_lies_within_frame_locals (
   LONGEST max_displ = 0;
   CORE_ADDR locals_address;
 
-  if ( frame == NULL ) { return false; }
+  if ( frame == NULL ) { return FALSE; }
   proc_block = m3_block_proc_block ( get_frame_block ( frame, NULL ) );
-  if ( proc_block == NULL ) { return false; }
+  if ( proc_block == NULL ) { return FALSE; }
   body_block = m3_proc_body_block (proc_block);
   m3_block_locals_range (body_block, & min_body_displ, & max_body_displ);
   /* Accounting for displacements in the proc block could be a bit of
@@ -2888,9 +2888,9 @@ m3_address_lies_within_frame_locals (
   if (max_proc_displ > max_body_displ) { max_displ = max_proc_displ; }
   else { max_displ = max_body_displ; }
   locals_address = get_frame_locals_address ( frame );
-  if ( address < locals_address + min_displ ) { return false; }
-  if ( address > locals_address + max_displ ) { return false; }
-  return true;
+  if ( address < locals_address + min_displ ) { return FALSE; }
+  if ( address > locals_address + max_displ ) { return FALSE; }
+  return TRUE;
 } /* m3_address_lies_within_block_locals */
 
 /* PRE: string,string_to are a terminated string that is all digits.
