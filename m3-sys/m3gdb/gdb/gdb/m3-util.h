@@ -248,7 +248,7 @@ extern void
 m3_ascertain_compiler_kind ( void );
 
 extern enum m3_compiler_kind_typ
-m3_compiler_kind ( );
+m3_compiler_kind (void);
 
 /* Strip away any indirect types from a type. */
 extern struct type *
@@ -370,7 +370,7 @@ extern struct value *
 m3_ensure_value_is_unpacked ( struct value * packed_val );
 
 extern int
-m3_open_array_dope_align ( );
+m3_open_array_dope_align (void);
 
 /* Return the gdb-space byte offset of 'dimension'-th shape component, relative
    to the beginning of open arrray dope. */
@@ -467,7 +467,7 @@ m3_static_ancestor_frame (
   );
 
 extern int
-m3_proc_closure_align ( );
+m3_proc_closure_align (void);
 
 /* FIXME:  This struct is the wrong way to do this, because it now needs
    to reflect target layout, in addition to values constructed entirely
