@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.42.2.4 2009-08-08 19:32:09 jkrell Exp $
+# $Id: make-bin-dist-min.sh,v 1.42.2.5 2009-08-28 06:34:27 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -85,8 +85,7 @@ if [ "${GCC_BACKEND}" = yes ] ; then
 fi
 if [ "${M3OSTYPE}" = "WIN32" ] ; then
   echo "installing ${INSTALLROOT}/bin/mklib${EXE}"
-  cp "${ROOT}/m3-sys/mklib/${TARGET}/mklib${EXE}" "${INSTALLROOT}/bin" \
-    || exit 1
+  cp "${ROOT}/m3-sys/mklib/${TARGET}/mklib${EXE}" "${INSTALLROOT}/bin" || exit 1
   strip_exe "${INSTALLROOT}/bin/mklib${EXE}"
 fi
 
@@ -140,9 +139,11 @@ SHIP="${CM3} -ship -DROOT='${CM3ROOT}'"
 export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 
 [ ${TARGET} != NT386 ] && "${ROOT}/scripts/do-pkg.sh" buildship
+echo "${ROOT}/scripts/do-cm3-${DIST}.sh" buildlocal
 "${ROOT}/scripts/do-cm3-${DIST}.sh" buildlocal || exit 1
 
 header "stage 4: installing libraries using new cm3 compiler"
+echo "${ROOT}/scripts/do-cm3-${DIST}.sh" buildglobal
 "${ROOT}/scripts/do-cm3-${DIST}.sh" buildglobal || exit 1
 
 if [ "${NEWCFG}" != "y" ]; then
