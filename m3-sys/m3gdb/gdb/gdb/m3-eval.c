@@ -1153,7 +1153,7 @@ m3_coerce_m3gdb_string ( struct value * m3gdb_string )
              is cm3-compiled code, so FromWideChars will exist in m3core. */
           break;
         default:
-          return m3gdb_string; ;
+          return m3gdb_string;
       }
     proc_val = m3_proc_value_from_qualified_name ( "Text", proc_name );
     if ( proc_val == NULL ) /* Shouldn't be possible. */
