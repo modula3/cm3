@@ -1171,7 +1171,7 @@ m3_val_print2 (
      int deref_ref,
      int toplevel)
 {
-  unsigned int i = 0;		/* Number of characters printed */
+  unsigned int i = 0;   /* Number of characters printed */
   unsigned len;
   struct type *elttype;
   unsigned eltlen;
@@ -1223,27 +1223,27 @@ m3_val_print2 (
       n = upper - lower + 1;
 
       for (i = things_printed = 0; i < n && things_printed < print_max; i++) {
-	if (i != 0) {
-	  fputs_filtered (", ", stream);
-	  wrap_here ("    "); }
+        if (i != 0) {
+          fputs_filtered (", ", stream);
+          wrap_here ("    "); }
 
         tmpbitsize = TYPE_M3_SIZE (elt);
-	m3_val_print2 (elt, valaddr,
-		       bitpos + i * tmpbitsize, tmpbitsize,
-		       stream, format, 0, 0);
+        m3_val_print2 (elt, valaddr,
+                       bitpos + i * tmpbitsize, tmpbitsize,
+                       stream, format, 0, 0);
         things_printed++;
-	for (j = i + 1, reps = 1;
-	     j < n &&  compare (valaddr, bitpos + i * tmpbitsize,
-				bitpos + j * tmpbitsize,
-				tmpbitsize);
-	     j++, reps++);
-	if (reps > repeat_count_threshold) {
-	  fprintf_filtered (stream, " <repeats %d times>", reps);
-	  i += reps - 1;
-	  things_printed += repeat_count_threshold; }}
-	
+        for (j = i + 1, reps = 1;
+             j < n &&  compare (valaddr, bitpos + i * tmpbitsize,
+                                bitpos + j * tmpbitsize,
+                                tmpbitsize);
+             j++, reps++);
+        if (reps > repeat_count_threshold) {
+          fprintf_filtered (stream, " <repeats %d times>", reps);
+          i += reps - 1;
+          things_printed += repeat_count_threshold; }}
+        
       if (i < n) {
-	fputs_filtered ("...", stream); }
+        fputs_filtered ("...", stream); }
 
       fputs_filtered ("}", stream);
       break; }
@@ -1257,29 +1257,29 @@ m3_val_print2 (
 
 
       if (bitpos % HOST_CHAR_BIT != 0) {
-	error (_("Improperly aligned open array dope.")); }
+        error (_("Improperly aligned open array dope.")); }
 
       valaddr += (bitpos / HOST_CHAR_BIT);
       bitpos = 0;
 
       nelems = m3_extract_ord (valaddr + TARGET_PTR_BIT/HOST_CHAR_BIT,
-				       bitpos, m3_target_integer_bit, false);
+                                       bitpos, m3_target_integer_bit, false);
       /*FIXME: Redundancy here and a few lines below, fetching the element count. */
       { struct type *e = elt_type;
-	const gdb_byte *nelem_addr = valaddr
-	                    + (TARGET_PTR_BIT + m3_target_integer_bit)/HOST_CHAR_BIT;
+        const gdb_byte *nelem_addr = valaddr
+                            + (TARGET_PTR_BIT + m3_target_integer_bit)/HOST_CHAR_BIT;
         open_dimension_ct = 1;
-	while (TYPE_CODE (e) == TYPE_CODE_M3_OPEN_ARRAY)
+        while (TYPE_CODE (e) == TYPE_CODE_M3_OPEN_ARRAY)
           { eltsize
               = eltsize * m3_extract_ord
                             (nelem_addr, 0, m3_target_integer_bit, false);
-	    nelem_addr += m3_target_integer_bit / HOST_CHAR_BIT;
-	    e = TYPE_M3_OPEN_ARRAY_ELEM (e);
+            nelem_addr += m3_target_integer_bit / HOST_CHAR_BIT;
+            e = TYPE_M3_OPEN_ARRAY_ELEM (e);
             open_dimension_ct ++;
           }
-	eltsize = eltsize * TYPE_M3_SIZE (e); }
+        eltsize = eltsize * TYPE_M3_SIZE (e); }
       if (eltsize % 8 != 0) {
-	error (_("Improperly aligned open array elements")); }
+        error (_("Improperly aligned open array elements")); }
       eltsize = eltsize / 8;
 
       fputs_filtered ("{", stream);
@@ -1315,63 +1315,63 @@ m3_val_print2 (
       else {
         gdb_byte *a = alloca (eltsize);
         gdb_byte *previous = alloca (eltsize);
-	reps = 0;
-	for (i = things_printed = 0;
-	     i < nelems && things_printed < print_max; i++) {
-	  read_memory (elems, a, eltsize);
-	  if (reps > 0 && memcmp (a, previous, eltsize) == 0) {
-	    reps++; }
-	  else {
-	    if (reps > 1) {
-	      if (reps > repeat_count_threshold) {
-		fprintf_filtered (stream, _(" <repeats %d times>"), reps); }
-	      else {
-		for (j = 0; j < reps - 1 && things_printed < print_max; j++) {
-		  if (things_printed) {
-		    fputs_filtered (",", stream);
-		    wrap_here ("    "); }
+        reps = 0;
+        for (i = things_printed = 0;
+             i < nelems && things_printed < print_max; i++) {
+          read_memory (elems, a, eltsize);
+          if (reps > 0 && memcmp (a, previous, eltsize) == 0) {
+            reps++; }
+          else {
+            if (reps > 1) {
+              if (reps > repeat_count_threshold) {
+                fprintf_filtered (stream, _(" <repeats %d times>"), reps); }
+              else {
+                for (j = 0; j < reps - 1 && things_printed < print_max; j++) {
+                  if (things_printed) {
+                    fputs_filtered (",", stream);
+                    wrap_here ("    "); }
                   tmpbitsize = TYPE_M3_SIZE (elt_type);
-		  m3_val_print2 (elt_type, previous,
-				 0, tmpbitsize,
-				 stream, format, 0, 0);
-		  things_printed++; }}
-	      things_printed += reps; }
-	    if (things_printed < print_max) {
-	      if (things_printed) {
-		fputs_filtered (",", stream);
-		wrap_here ("    "); }
+                  m3_val_print2 (elt_type, previous,
+                                 0, tmpbitsize,
+                                 stream, format, 0, 0);
+                  things_printed++; }}
+              things_printed += reps; }
+            if (things_printed < print_max) {
+              if (things_printed) {
+                fputs_filtered (",", stream);
+                wrap_here ("    "); }
               tmpbitsize = TYPE_M3_SIZE (elt_type);
-	      m3_val_print2 (elt_type, a,
-			     0, tmpbitsize,
-			     stream, format, 0, 0);
-	      things_printed++; }
-	    reps = 1;
-	    memcpy (previous, a, eltsize); }
-	  elems += eltsize; }
-	if (reps > 1) {
-	  if (reps > repeat_count_threshold) {
-	    fprintf_filtered (stream, _(" <repeats %d times>"), reps);
-	    things_printed += reps - 1; }
-	  else {
-	    for (j = 0; j < reps - 1 && things_printed < print_max; j++) {
-	      if (things_printed) {
-		fputs_filtered (",", stream);
-		wrap_here ("    ");  }
+              m3_val_print2 (elt_type, a,
+                             0, tmpbitsize,
+                             stream, format, 0, 0);
+              things_printed++; }
+            reps = 1;
+            memcpy (previous, a, eltsize); }
+          elems += eltsize; }
+        if (reps > 1) {
+          if (reps > repeat_count_threshold) {
+            fprintf_filtered (stream, _(" <repeats %d times>"), reps);
+            things_printed += reps - 1; }
+          else {
+            for (j = 0; j < reps - 1 && things_printed < print_max; j++) {
+              if (things_printed) {
+                fputs_filtered (",", stream);
+                wrap_here ("    ");  }
               tmpbitsize = TYPE_M3_SIZE (elt_type);
-	      m3_val_print2 (elt_type, previous,
-			     0, tmpbitsize,
-			     stream, format, 0, 0);
-	      things_printed++; }}}}
+              m3_val_print2 (elt_type, previous,
+                             0, tmpbitsize,
+                             stream, format, 0, 0);
+              things_printed++; }}}}
       if (things_printed < nelems) {
-	fputs_filtered ("...", stream); }
+        fputs_filtered ("...", stream); }
       fputs_filtered ("}", stream);
       break; }
 
     case TYPE_CODE_M3_PACKED: {
       tmpbitsize = TYPE_M3_SIZE (type);
       m3_val_print2 (TYPE_M3_PACKED_TARGET (type), valaddr,
-		     bitpos, tmpbitsize,
-		     stream, format, 0, 0);
+                     bitpos, tmpbitsize,
+                     stream, format, 0, 0);
       break; }
 
     case TYPE_CODE_M3_ENUM: {
@@ -1381,13 +1381,13 @@ m3_val_print2 (
       if ((lower <= val) && (val <= upper)) {
         fputs_filtered (TYPE_M3_ENUM_VALNAME (type, val), stream);
       } else {
-	fprintf_filtered (stream, "<enum value ");
-	print_longest (stream, 'd', 1, val);
-	fprintf_filtered (stream, " out of range [");
-	print_longest (stream, 'd', 1, lower);
-	fprintf_filtered (stream, "..");
-	print_longest (stream, 'd', 1, upper);
-	fprintf_filtered (stream, "]>");
+        fprintf_filtered (stream, "<enum value ");
+        print_longest (stream, 'd', 1, val);
+        fprintf_filtered (stream, " out of range [");
+        print_longest (stream, 'd', 1, lower);
+        fprintf_filtered (stream, "..");
+        print_longest (stream, 'd', 1, upper);
+        fprintf_filtered (stream, "]>");
       }
       break; }
 
@@ -1400,8 +1400,8 @@ m3_val_print2 (
       read_memory (target_addr, target_val, target_size);
       tmpbitsize = TYPE_M3_SIZE (target);
       m3_val_print2 (target, target_val,
-		     0, tmpbitsize,
-		     stream, format, deref_ref, toplevel);
+                     0, tmpbitsize,
+                     stream, format, deref_ref, toplevel);
       break; }
 
     case TYPE_CODE_M3_METHOD:
@@ -1416,16 +1416,16 @@ m3_val_print2 (
     case TYPE_CODE_M3_RECORD: {
       fputs_filtered ("RECORD ", stream);
       for (i = 0; i < TYPE_M3_REC_NFIELDS (type); i++) {
-	if (TYPE_M3_REC_FIELD_NAME (type, i)[0] != '_') {
-	  fputs_filtered (TYPE_M3_REC_FIELD_NAME (type, i), stream);
-	  fputs_filtered (" = ", stream);
+        if (TYPE_M3_REC_FIELD_NAME (type, i)[0] != '_') {
+          fputs_filtered (TYPE_M3_REC_FIELD_NAME (type, i), stream);
+          fputs_filtered (" = ", stream);
           tmpbitsize = TYPE_M3_SIZE (TYPE_M3_REC_FIELD_TYPE (type, i));
-	  m3_val_print2 (TYPE_M3_REC_FIELD_TYPE (type, i), valaddr,
-			 bitpos + TYPE_M3_REC_FIELD_BITPOS (type, i),
-			 tmpbitsize,
-			 stream, format, 0, 0);
-	  fputs_filtered ("; ", stream);
-	  wrap_here ("    ");  }}
+          m3_val_print2 (TYPE_M3_REC_FIELD_TYPE (type, i), valaddr,
+                         bitpos + TYPE_M3_REC_FIELD_BITPOS (type, i),
+                         tmpbitsize,
+                         stream, format, 0, 0);
+          fputs_filtered ("; ", stream);
+          wrap_here ("    ");  }}
       fputs_filtered (" END", stream);
       break; }
 
@@ -1438,28 +1438,28 @@ m3_val_print2 (
       int en = (TYPE_CODE (target) == TYPE_CODE_M3_ENUM);
       int ch = (TYPE_CODE (target) == TYPE_CODE_M3_CHAR);
       int chs = (TYPE_CODE (target) == TYPE_CODE_M3_SUBRANGE)
-	&& (TYPE_CODE (TYPE_M3_SUBRANGE_TARGET (target)) == TYPE_CODE_M3_CHAR);
+        && (TYPE_CODE (TYPE_M3_SUBRANGE_TARGET (target)) == TYPE_CODE_M3_CHAR);
 
       m3_ordinal_bounds (target, &lower, &upper);
       fputs_filtered ("{", stream);
 
       for (i = 0; i < TYPE_LENGTH (type) / sizeof (long); i++) {
-	val = m3_extract_ord (valaddr, bitpos, m3_target_integer_bit, false);
-	for (j = 0; j < m3_target_integer_bit; j++) {
-	  LONGEST ord = i * m3_target_integer_bit + j + lower;
-	  if ((val & 1 << j) && (ord <= upper)) {
-	    if (n > 0) {
-	      fputs_filtered (", ", stream); }
-	    if (en) {
-	      fputs_filtered (TYPE_FIELD_NAME (target, ord), stream); }
-	    else if (ch) {
-	      fprintf_filtered (stream, "'%c'", (char)ord); }
-	    else if (chs) {
-	      fprintf_filtered (stream, "'%c'", (char)ord); }
-	    else {
-	      print_longest (stream, 'd', 1, ord); }
-	    n++; }}
-	valaddr += sizeof (long); }
+        val = m3_extract_ord (valaddr, bitpos, m3_target_integer_bit, false);
+        for (j = 0; j < m3_target_integer_bit; j++) {
+          LONGEST ord = i * m3_target_integer_bit + j + lower;
+          if ((val & 1 << j) && (ord <= upper)) {
+            if (n > 0) {
+              fputs_filtered (", ", stream); }
+            if (en) {
+              fputs_filtered (TYPE_FIELD_NAME (target, ord), stream); }
+            else if (ch) {
+              fprintf_filtered (stream, "'%c'", (char)ord); }
+            else if (chs) {
+              fprintf_filtered (stream, "'%c'", (char)ord); }
+            else {
+              print_longest (stream, 'd', 1, ord); }
+            n++; }}
+        valaddr += sizeof (long); }
 
       fputs_filtered ("}", stream);
 
@@ -1467,19 +1467,19 @@ m3_val_print2 (
 
     case TYPE_CODE_M3_SUBRANGE :
       { LONGEST lower, upper, val;
-	struct type *target = TYPE_M3_SUBRANGE_TARGET (type);
+        struct type *target = TYPE_M3_SUBRANGE_TARGET (type);
 
-	m3_ordinal_bounds ( type, &lower, &upper );
-	val = m3_extract_ord ( valaddr, bitpos, bitsize, ( lower < 0 ) );
-	if ( ( val < lower ) || ( upper < val ) )
+        m3_ordinal_bounds ( type, &lower, &upper );
+        val = m3_extract_ord ( valaddr, bitpos, bitsize, ( lower < 0 ) );
+        if ( ( val < lower ) || ( upper < val ) )
           { fprintf_filtered(stream, "<subrange value ");
-	    print_longest (stream, 'd', 1, val);
-	    fprintf_filtered(stream, " out of range [");
+            print_longest (stream, 'd', 1, val);
+            fprintf_filtered(stream, " out of range [");
             print_longest (stream, 'd', 1, lower);
             fprintf_filtered(stream, "..");
             print_longest (stream, 'd', 1, upper);
-	    fprintf_filtered(stream, "]>");
-	  }
+            fprintf_filtered(stream, "]>");
+          }
         else if ( TYPE_CODE ( target ) == TYPE_CODE_M3_ENUM )
           { fputs_filtered ( TYPE_M3_ENUM_VALNAME ( target, val ), stream ); }
         else if ( 0 <= lower )
@@ -1489,24 +1489,24 @@ m3_val_print2 (
               ( valaddr, bitpos, bitsize, stream, format,
                 m3_target_longint_bit
               );
-	  }
+          }
         else
           { m3_print_scalar
               ( valaddr, bitpos, bitsize, stream, format, TARGET_INT_BIT );
-	  }
+          }
         break;
       }
 
     case TYPE_CODE_M3_ADDRESS :
       m3_print_scalar (valaddr, bitpos, bitsize, stream,
-		       format ? format : '&', 0);
+                       format ? format : '&', 0);
       break;
 
     case TYPE_CODE_M3_BOOLEAN :
       if (m3_extract_ord (valaddr, bitpos, bitsize, false)) {
-	fputs_filtered ("TRUE", stream); }
+        fputs_filtered ("TRUE", stream); }
       else {
-	fputs_filtered ("FALSE", stream); }
+        fputs_filtered ("FALSE", stream); }
       break;
 
     case TYPE_CODE_M3_CHAR :
@@ -1549,16 +1549,16 @@ m3_val_print2 (
     case TYPE_CODE_M3_UN_ROOT :
     case TYPE_CODE_M3_OBJECT : {
       if ( deref_ref && ( format == 0 || format == m3_text_object_format ) ) {
-	m3_print_object (valaddr, bitpos, type, stream, format); }
+        m3_print_object (valaddr, bitpos, type, stream, format); }
       else {
-	m3_print_scalar (valaddr, bitpos, bitsize, stream,
-			 format ? format : '&', 0); }
+        m3_print_scalar (valaddr, bitpos, bitsize, stream,
+                         format ? format : '&', 0); }
       break; }
 
     case TYPE_CODE_M3_REFANY :
     case TYPE_CODE_M3_TRANSIENT_REFANY : {
       m3_print_scalar (valaddr, bitpos, bitsize, stream,
-		       format ? format : '&', 0);
+                       format ? format : '&', 0);
       break; }
 
     case TYPE_CODE_M3_POINTER : {
@@ -1617,11 +1617,11 @@ m3_val_print2 (
 
     case TYPE_CODE_FLT: {
       if (format) {
-	m3_print_scalar (valaddr, bitpos, bitsize, stream, format, 0); }
+        m3_print_scalar (valaddr, bitpos, bitsize, stream, format, 0); }
       else {
-	if (bitpos % 8 != 0) {
-	  error ("improperly aligned floating point value"); }
-	print_floating (valaddr + bitpos / 8, type, stream); }
+        if (bitpos % 8 != 0) {
+          error ("improperly aligned floating point value"); }
+        print_floating (valaddr + bitpos / 8, type, stream); }
       break; }
 
     case TYPE_CODE_STRING:
@@ -1676,10 +1676,10 @@ m3_val_print (
        passed to m3_val_print_2. */
     { m3_print_proc_value ( address, 0, stream ); }
   else if (m3_val_print2 (type, valaddr, 0, tmpbitsize,
-		     stream, format, deref_ref, 1)) {
+                     stream, format, deref_ref, 1)) {
     /* like the value of registers */
     return c_val_print (type, valaddr, embedded_offset, address, stream,
-			format, deref_ref, recurse, pretty);
+                        format, deref_ref, recurse, pretty);
   }
   return 0;
 }

@@ -324,11 +324,11 @@ m3_defaultMethods_from_tc_addr (CORE_ADDR);
 
 extern bool
 m3_find_rec_field (struct type *, const char *, int *, int *,
-			      struct type **);
+                  struct type **);
 
 extern bool
 m3_find_obj_field (struct type *, char *, int *, int *,
-			      struct type **);
+                  struct type **);
 
 extern bool
 m3_find_obj_method (struct type *obj_type,

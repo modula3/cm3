@@ -31,7 +31,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 extern struct value *
 m3_evaluate_subexp(struct type *expect_type,
-		   struct expression *exp, int *pos,
+                   struct expression *exp, int *pos,
                    enum noside noside);
 
 #endif /* !defined (M3_EVAL_H) */
