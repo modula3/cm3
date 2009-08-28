@@ -27,7 +27,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #if !defined (M3_UID_H)
 #define M3_UID_H 1
- 
+
 #include <stdbool.h>
 
 #define M3UID_LEN 6
@@ -43,4 +43,4 @@ m3uid_to_num (const char *uid, LONGEST *num_val);
 
 #endif /* !defined (M3_UID_H) */
 
-/* End of file "m3-uid.h" */ 
+/* End of file "m3-uid.h" */

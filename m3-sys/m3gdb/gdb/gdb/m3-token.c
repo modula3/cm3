@@ -17,9 +17,9 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
-/* This file contains code to lexically scan Modula-3 code. */ 
+/* This file contains code to lexically scan Modula-3 code. */
 
-#include <stdbool.h> 
+#include <stdbool.h>
 
 #include "defs.h"
 #include "expression.h"
@@ -158,7 +158,7 @@ recognize_reserved_word (tok)
     mid = (low + high) / 2;
     cmp = strcmp (reserved [mid].name, tok->string);
     if (cmp == 0) {
-      tok->kind = reserved [mid].kind; 
+      tok->kind = reserved [mid].kind;
       return;
     } else if (cmp < 0) {
       low  = mid + 1;
@@ -168,7 +168,7 @@ recognize_reserved_word (tok)
   }
 
   tok->kind = TK_IDENT;
-  return; 
+  return;
 } /* recognize_reserved_word */
 
 /*--------------------------------------------------------------- numbers ---*/
@@ -177,162 +177,162 @@ static char *
 m3_scan_number (char *input, struct m3_token *tok)
 
   { char *c;
-    char *based_start; 
+    char *based_start;
     int i;
     int digit;
     ULONGEST val;
     ULONGEST base;
-    LONGEST signed_val; 
-    LONGEST lower; 
-    LONGEST upper; 
-    bool is_based; 
+    LONGEST signed_val;
+    LONGEST lower;
+    LONGEST upper;
+    bool is_based;
 
-    c = input; 
+    c = input;
     val = 0;
-    if (*c == '0' && ( *(c+1) == 'x' || *(c+1) == 'X' ) ) 
-      { /* Go ahead and accept the C lexical syntax for hex numbers. */ 
+    if (*c == '0' && ( *(c+1) == 'x' || *(c+1) == 'X' ) )
+      { /* Go ahead and accept the C lexical syntax for hex numbers. */
 	is_based = true;
-	base = 16; 
+	base = 16;
 	c = c + 2;
-      } 
-    else 
+      }
+    else
       { /* Scan and convert the leading decimal digits */
-	while ('0' <= *c && *c <= '9') 
+	while ('0' <= *c && *c <= '9')
 	  { digit = *c - '0';
-	    if ( ( ULONGEST_MAX - digit ) / 10 < val ) 
-	      { error 
-                  (_("Numeric literal value too large.\n")); /* NORETURN */ 
+	    if ( ( ULONGEST_MAX - digit ) / 10 < val )
+	      { error
+                  (_("Numeric literal value too large.\n")); /* NORETURN */
               }
 	    val = val * 10 + digit;
-	    c++; 
+	    c++;
 	  }
-	if (*c == '_') 
-	  { /* It's a based value in Modula-3 syntax. */ 
-	    is_based = true; 
+	if (*c == '_')
+	  { /* It's a based value in Modula-3 syntax. */
+	    is_based = true;
 	    base = val;
-	    c++; 
-	    if ((base < 2) || (16 < base)) 
-	      { error 
-		  (_("%d is an illegal base for a Modula-3 literal.") 
-		  , (int) base 
-		  ); /* NORETURN */ 
+	    c++;
+	    if ((base < 2) || (16 < base))
+	      { error
+		  (_("%d is an illegal base for a Modula-3 literal.")
+		  , (int) base
+		  ); /* NORETURN */
 	      }
-	  } 
-	else is_based = false; 
-      } 
+	  }
+	else is_based = false;
+      }
 
     /* See if it's a real literal. If so, throw away the converted integer
-       value, lexically check it, then call atof to convert. */ 
-    if ( (*c == '.') && (c[1] != '.') ) 
-      { if ( is_based ) 
-	  { error (_("Based number cannot be real.\n") ); /* NORETURN */ } 
+       value, lexically check it, then call atof to convert. */
+    if ( (*c == '.') && (c[1] != '.') )
+      { if ( is_based )
+	  { error (_("Based number cannot be real.\n") ); /* NORETURN */ }
         /* scan a floating point number */
         c++; /* skip the decimal point */
 
         /* scan the fractional digits */
-        if ( (*c < '0') || ('9' < *c) ) 
-	  { error (_("Missing digits in real fraction") ); /* NORETURN */ } 
-       
-        while ( '0' <= *c && *c <= '9' ) 
+        if ( (*c < '0') || ('9' < *c) )
+	  { error (_("Missing digits in real fraction") ); /* NORETURN */ }
+
+        while ( '0' <= *c && *c <= '9' )
           { c++; }
 
         /* check for the exponent */
-        if ( ( *c == 'e' ) || ( *c == 'E' ) ) 
+        if ( ( *c == 'e' ) || ( *c == 'E' ) )
           { *c++ = 'e';  /* since atof only knows about 'e' */
 	    tok->kind = TK_REAL_LIT;
-          } 
-        else if ( ( *c == 'd' ) || ( *c == 'D' ) ) 
+          }
+        else if ( ( *c == 'd' ) || ( *c == 'D' ) )
           { *c++ = 'e';  /* since atof only knows about 'e' */
 	    tok->kind = TK_LREAL_LIT;
-          } 
-        else if ( ( *c == 'x' ) || ( *c == 'X' ) ) 
+          }
+        else if ( ( *c == 'x' ) || ( *c == 'X' ) )
           { *c++ = 'e';  /* since atof only knows about 'e' */
 	    tok->kind = TK_XREAL_LIT;
-          } 
+          }
         else /* real constant with no exponent */
-          { tok->kind = TK_REAL_LIT;  
+          { tok->kind = TK_REAL_LIT;
             tok->floatval = atof (input);
             return c;
-          } 
+          }
 
 	/* check for an exponent sign */
-	if ( ( *c == '+' ) || ( *c == '-' ) ) 
-	  { c++; } 
+	if ( ( *c == '+' ) || ( *c == '-' ) )
+	  { c++; }
 
 	/* scan the exponent digits */
-	if ( ( *c < '0' ) || ( '9' < *c ) ) 
+	if ( ( *c < '0' ) || ( '9' < *c ) )
 	  { error (_("Missing digits in real exponent") ); /* NORETURN */ }
-	while ( '0' <= *c && *c <= '9' ) 
+	while ( '0' <= *c && *c <= '9' )
 	  { c++; }
 
 	/* and do the conversion... */
 	tok->floatval = atof (input);
-        return c; 
+        return c;
       }
 
-    /* It wasn't real.  Must be INTEGER or LONGINT. */ 
-    if ( is_based ) 
+    /* It wasn't real.  Must be INTEGER or LONGINT. */
+    if ( is_based )
       { /* scan a based integer */
 	val = 0;
 	based_start = c;
-	while ( true ) 
-	  { if ('0' <= *c && *c <= '9') 
+	while ( true )
+	  { if ('0' <= *c && *c <= '9')
 	      { digit = *c - '0'; }
-	    else if ('A' <= *c && *c <= 'F') 
+	    else if ('A' <= *c && *c <= 'F')
 	      { digit = *c - 'A' + 10; }
-	    else if ('a' <= *c && *c <= 'f') 
+	    else if ('a' <= *c && *c <= 'f')
 	      { digit = *c - 'a' + 10; }
 	    else { break; }
-	    if (digit >= base) 
-	      { error 
-                  (_("Numeric literal digit too large.\n") ); /* NORETURN */ 
+	    if (digit >= base)
+	      { error
+                  (_("Numeric literal digit too large.\n") ); /* NORETURN */
               }
-	    if ( ( ULONGEST_MAX - digit ) / base < val ) 
-	      { error 
-                  (_("Numeric literal value too large.\n") ); /* NORETURN */ 
+	    if ( ( ULONGEST_MAX - digit ) / base < val )
+	      { error
+                  (_("Numeric literal value too large.\n") ); /* NORETURN */
               }
 	    val = val * base + digit;
 	    c++;
 	  }
 
-	if ( c == based_start ) 
-	  { error 
-              (_("Based integer literal has no digits.") ); /* NORETURN */ 
+	if ( c == based_start )
+	  { error
+              (_("Based integer literal has no digits.") ); /* NORETURN */
           }
       }
 
-    /* See if it's LONGINT. */ 
-    if ( * c == 'l' || * c == 'L' ) 
-      { if ( m3_compiler_kind ( ) != m3_ck_cm3 ) 
+    /* See if it's LONGINT. */
+    if ( * c == 'l' || * c == 'L' )
+      { if ( m3_compiler_kind ( ) != m3_ck_cm3 )
 	/* FIXME: ^This error condition is too weak.  Earlier CM3 compilers
 		   do not support LONGINT either, but how do we detect this? */
-	  { error 
+	  { error
 	      (_("LONGINT literals not supported by this "
-		 "Modula-3 compiler ") ); 
-	  } /* NORETURN */ 
-	tok->kind   = TK_LONGINT_LIT; 
-	m3_ordinal_bounds ( builtin_type_m3_longint, & lower, & upper );  
-	c ++; 
-      } 
-    else /* It's INTEGER. */ 
-      { tok->kind   = TK_INTEGER_LIT; /* Could change. */ 
-	m3_ordinal_bounds ( builtin_type_m3_integer, & lower, & upper );  
-      } 
+		 "Modula-3 compiler ") );
+	  } /* NORETURN */
+	tok->kind   = TK_LONGINT_LIT;
+	m3_ordinal_bounds ( builtin_type_m3_longint, & lower, & upper );
+	c ++;
+      }
+    else /* It's INTEGER. */
+      { tok->kind   = TK_INTEGER_LIT; /* Could change. */
+	m3_ordinal_bounds ( builtin_type_m3_integer, & lower, & upper );
+      }
 
-    if ( is_based ) 
-      { if ( val / 2 > upper ) 
-	  { error 
-	      (_("Based integer literal value too large.\n")); 
-	      /* NORETURN */ 
+    if ( is_based )
+      { if ( val / 2 > upper )
+	  { error
+	      (_("Based integer literal value too large.\n"));
+	      /* NORETURN */
 	  }
       }
-    else 
-      { if ( val > upper ) 
-	  { error 
-	      (_("Integer literal value too large.\n")); 
-	      /* NORETURN */ 
+    else
+      { if ( val > upper )
+	  { error
+	      (_("Integer literal value too large.\n"));
+	      /* NORETURN */
 	  }
-      } 
+      }
     signed_val = (LONGEST) val; /* Hopefully, no overflow checks happen. */
     tok->intval = val;
 
@@ -367,7 +367,7 @@ scan_gdb_token (input, tok)
       tok->kind = TK_GDB_HISTORY;
       tok->intval = sign * ((input == tokstart)? 1 : atoi(tokstart));
       return input;
-          
+
     default: break;
   }
 
@@ -398,16 +398,16 @@ scan_gdb_token (input, tok)
   }
 
   /* check for a pseudo-register name */
-#if 0 
+#if 0
   for (c = 0; c < num_std_regs; c++) {
     if (len == strlen (std_regs [c].name)
         && strncmp (tokstart, std_regs[c].name, len) == 0) {
       tok->kind = TK_REGISTER;
-      tok->intval = std_regs[c].regnum; 
+      tok->intval = std_regs[c].regnum;
       return input;
     }
   }
-#endif 
+#endif
 
   /* ? must be a GDB variable */
   tok->kind = TK_GDB_VAR;
@@ -423,23 +423,23 @@ scan_gdb_token (input, tok)
 static void
 bad_octal ( bool wide )
 
-  { error (_("Octal %sCHAR escape sequence must have exactly %d digits"), 
-            ( wide ? "WIDE" : "" ), 
+  { error (_("Octal %sCHAR escape sequence must have exactly %d digits"),
+            ( wide ? "WIDE" : "" ),
             ( wide ? 6 : 3)
-          ); /* NORETURN */ 
+          ); /* NORETURN */
   } /* bad_octal */
 
 static bool
-octal_digit ( char ch, int *digit ) 
+octal_digit ( char ch, int *digit )
 
 {
-  if ( '0' <= ch && ch <= '7' ) 
+  if ( '0' <= ch && ch <= '7' )
     { *digit = ch - '0';  return true; }
   return false;
 } /* octal_digit */
 
 static char *
-scan_octal ( char *input, LONGEST *val,  bool wide ) 
+scan_octal ( char *input, LONGEST *val,  bool wide )
 
   { int digit;
     *val = 0;
@@ -464,28 +464,28 @@ scan_octal ( char *input, LONGEST *val,  bool wide )
   } /* scan_octal */
 
 static void
-bad_hex ( bool wide ) 
+bad_hex ( bool wide )
 
-  { error (_("Hex %scharacter escape sequence must exactly have %d digits"), 
-            ( wide ? "wide " : "" ), 
+  { error (_("Hex %scharacter escape sequence must exactly have %d digits"),
+            ( wide ? "wide " : "" ),
             ( wide ? 4 : 2 )
-          ); /* NORETURN */ 
+          ); /* NORETURN */
   } /* bad_hex */
 
 static bool
 hex_digit ( char ch, int *digit )
 
-  { if ( '0' <= ch && ch <= '9' ) 
+  { if ( '0' <= ch && ch <= '9' )
       { *digit = ch - '0';       return true; }
-    if ( 'A' <= ch && ch <= 'F' ) 
+    if ( 'A' <= ch && ch <= 'F' )
       { *digit = ch - 'A' + 10;  return true; }
-    if ( 'a' <= ch && ch <= 'f' ) 
+    if ( 'a' <= ch && ch <= 'f' )
       { *digit = ch - 'a' + 10;  return true; }
     return false;
   } /* hex_digit */
 
 static char *
-scan_hex ( char *input, LONGEST *val, bool wide ) 
+scan_hex ( char *input, LONGEST *val, bool wide )
 
   { int digit;
     *val = 0;
@@ -505,9 +505,9 @@ scan_hex ( char *input, LONGEST *val, bool wide )
     return input;
   } /* scan_hex */
 
-/* PRE: input points to the opening single quote. */ 
+/* PRE: input points to the opening single quote. */
 static char *
-scan_char ( char *input, struct m3_token *tok, bool wide ) 
+scan_char ( char *input, struct m3_token *tok, bool wide )
 
 {
   int val = 0;
@@ -518,7 +518,7 @@ scan_char ( char *input, struct m3_token *tok, bool wide )
   input++;  /* skip opening quote */
 
   if (*input == '\'') {
-    error (_("No character in character literal") ); /* NORETURN */ 
+    error (_("No character in character literal") ); /* NORETURN */
     return input+1;
 
   } else if ((*input == '\n') || (*input == '\r') || (*input == '\f')) {
@@ -544,7 +544,7 @@ scan_char ( char *input, struct m3_token *tok, bool wide )
     }
 
   } else if (*input == 0) {
-    error (_("EOF encountered in character literal") ); /* NORETURN */ 
+    error (_("EOF encountered in character literal") ); /* NORETURN */
     return input;
 
   } else {
@@ -555,19 +555,19 @@ scan_char ( char *input, struct m3_token *tok, bool wide )
   if (*input == '\'') {
     input++;
   } else {
-    error (_("Missing closing quote on character literal") ); /* NORETURN */ 
+    error (_("Missing closing quote on character literal") ); /* NORETURN */
   }
 
   return input;
 } /* scan_char */
 
 /* Do not insert a trailing zero character.  A Modula-3 text literal can have
-   embedded zero characters, and all uses of this string will use a separate 
-   length. */ 
+   embedded zero characters, and all uses of this string will use a separate
+   length. */
 /* BEWARE: This just changes a portion of the user-typed command, in place,
            into the collected string, with escapes and trailing quote
            removed, and trailing \0 inserted; and puts the pointer to
-           that into the token.  Don't ever try to rescan the input line! */ 
+           that into the token.  Don't ever try to rescan the input line! */
 static char *
 scan_text (input, tok)
   char *input;
@@ -588,7 +588,7 @@ scan_text (input, tok)
       break;
 
     } else if ((*input == '\n') || (*input == '\r') || (*input == '\f')) {
-      error (_("End-of-line encountered in text literal") ); /* NORETURN */ 
+      error (_("End-of-line encountered in text literal") ); /* NORETURN */
       input++;
       break;
 
@@ -610,11 +610,11 @@ scan_text (input, tok)
         input = scan_octal (input, &octval, false);
 	*next++ = octval;
       } else {
-        error (_("Unknown escape sequence in text literal") ); /* NORETURN */ 
+        error (_("Unknown escape sequence in text literal") ); /* NORETURN */
       }
 
     } else if (*input == 0) {
-      error (_("EOF encountered in text literal") ); /* NORETURN */ 
+      error (_("EOF encountered in text literal") ); /* NORETURN */
       break;
 
     } else {
@@ -629,21 +629,21 @@ scan_text (input, tok)
 } /* scan_text */
 
 /* Do not insert a trailing zero character.  A Modula-3 text literal can have
-   embedded zero characters, and all uses of this string will use a separate 
-   length. */ 
-/* PRE: input points to the opening double quote. 
+   embedded zero characters, and all uses of this string will use a separate
+   length. */
+/* PRE: input points to the opening double quote.
    POST: tok->string is a newly-allocated (by malloc) array of bytes,
-         possibly a bit overlength, containing the wide characters 
+         possibly a bit overlength, containing the wide characters
          and terminated by a wide null.
    POST: tok->length is length in bytes of the actual contents of
-         tok->string. 
-*/ 
+         tok->string.
+*/
 static char *
-scan_widetext ( char *input, struct m3_token *tok ) 
+scan_widetext ( char *input, struct m3_token *tok )
 
   { char *start;
     char *out;
-    int wchar_value; 
+    int wchar_value;
     int len;
 
     input++;  /* skip the leading quote */
@@ -687,7 +687,7 @@ scan_widetext ( char *input, struct m3_token *tok )
 
     /* finally, scan and build the string */
     out   = (char *) malloc (2 * (len + 1));
-    /* ^ This gets freed in m3-exp.c, m3_parse_e8. */ 
+    /* ^ This gets freed in m3-exp.c, m3_parse_e8. */
     input = start;
 
     tok->kind   = TK_WIDETEXT_LIT;
@@ -696,12 +696,12 @@ scan_widetext ( char *input, struct m3_token *tok )
     while ( true ) {
       if (*input == '"') {
         input++;
-        break; /* Exit loop. */ 
+        break; /* Exit loop. */
 
       } else if ((*input == '\n') || (*input == '\r') || (*input == '\f')) {
-        warning (_("End-of-line encountered in text literal") ); 
+        warning (_("End-of-line encountered in text literal") );
         input++;
-        break; /* Exit loop. */ 
+        break; /* Exit loop. */
 
       } else if (*input == '\\') {
         input ++;
@@ -721,20 +721,20 @@ scan_widetext ( char *input, struct m3_token *tok )
           input = scan_octal (input, &octval, true );
           wchar_value = octval & 0xffff;
         } else {
-          error 
+          error
             (_("Unknown escape sequence in wide text literal") ); /* NORETURN */
         }
 
       } else if (*input == 0) {
-        error (_("EOF encountered in wide text literal") ); /* NORETURN */ 
+        error (_("EOF encountered in wide text literal") ); /* NORETURN */
         break;
 
       } else {
         /* vanilla character */
         wchar_value = *input++;
       }
-      store_unsigned_integer ( out, TARGET_M3_WIDECHAR_BYTE, wchar_value ); 
-      out += 2; 
+      store_unsigned_integer ( out, TARGET_M3_WIDECHAR_BYTE, wchar_value );
+      out += 2;
     }
 
     /* finish the string */
@@ -756,9 +756,9 @@ skip_comment (input)
       input++;  if (*input == ')') { nest--; input++; }
     } else if (*input == '(') {
       input++;  if (*input == '*') { nest++; input++; }
-    } else if (*input == 0) { 
-      nest = 0; 
-      error (_("EOF encountered in comment" ) ); /* NORETURN */ 
+    } else if (*input == 0) {
+      nest = 0;
+      error (_("EOF encountered in comment" ) ); /* NORETURN */
     } else {
       input++;
     }
@@ -803,31 +803,31 @@ scan_m3_token (input, tok)
       /* scan an identifier */
       input = tokstart + 1;
 
-      if (*input == '\'' && ( * tokstart == 'w' || * tokstart == 'W' ) ) 
+      if (*input == '\'' && ( * tokstart == 'w' || * tokstart == 'W' ) )
         { /* oops, it's actually a wide char literal. */
-          if ( m3_compiler_kind ( ) != m3_ck_cm3 ) 
-            { error 
+          if ( m3_compiler_kind ( ) != m3_ck_cm3 )
+            { error
                 (_("WIDECHAR literals not supported by this "
-                   "Modula-3 compiler ") ); 
-            } /* NORETURN */ 
+                   "Modula-3 compiler ") );
+            } /* NORETURN */
           input = scan_char ( input, tok, true );
            break;
         }
 
-      if (*input == '"' && ( * tokstart == 'w' || * tokstart == 'W' ) ) 
+      if (*input == '"' && ( * tokstart == 'w' || * tokstart == 'W' ) )
         { /* oops, it's actually a wide text literal. */
-          if ( m3_compiler_kind ( ) != m3_ck_cm3 ) 
-            { error 
+          if ( m3_compiler_kind ( ) != m3_ck_cm3 )
+            { error
                 (_("Wide text literals not supported by this "
-                   "Modula-3 compiler ") ); 
-            } /* NORETURN */ 
+                   "Modula-3 compiler ") );
+            } /* NORETURN */
           input = scan_widetext ( input, tok);
           break;
         }
 
       while (   ('a' <= *input && *input <= 'z')
              || ('A' <= *input && *input <= 'Z')
-             || ('0' <= *input && *input <= '9') 
+             || ('0' <= *input && *input <= '9')
              || (*input == '_')) {
         input++;
       }
@@ -910,7 +910,7 @@ scan_m3_token (input, tok)
 
     default:
       error (_("Can't recognize start of Modula-3 token: %s"), input );
-        /* ^NORETURN */ 
+        /* ^NORETURN */
 
     } /* switch */
 
@@ -921,9 +921,9 @@ scan_m3_token (input, tok)
 
 static char* toknames[] = {
 
-  /* KEEP-ME-UP-TO-DATE: This must match enum m3_token_kind, in m3-token.h */ 
+  /* KEEP-ME-UP-TO-DATE: This must match enum m3_token_kind, in m3-token.h */
 
-  "<EOF>", 
+  "<EOF>",
 
   /* literals */
 
@@ -984,4 +984,4 @@ m3_token_name (tok)
     /* good enough for now... */
 }
 
-/* End of file m3-token.c */ 
+/* End of file m3-token.c */

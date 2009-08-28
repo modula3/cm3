@@ -21,7 +21,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define M3_TOKEN_H 1
 
 #include "defs.h"
- 
+
 enum m3_token_kind {
 
   TK_EOF,              /* end-of-file */
@@ -64,9 +64,9 @@ enum m3_token_kind {
   TK_ABS, TK_ADDRESS, TK_ADR, TK_ADRSIZE, TK_BITSIZE, TK_BOOLEAN,
   TK_BYTESIZE, TK_CARDINAL, TK_CEILING, TK_CHAR, TK_DEC, TK_DISPOSE,
   TK_EXTENDED, TK_FALSE, TK_FIRST, TK_FLOAT, TK_FLOOR, TK_INC,
-  TK_INTEGER, TK_ISTYPE, TK_LAST, TK_LONGCARD, TK_LONGINT, TK_LONGREAL, 
-  TK_LOOPHOLE, TK_MAX, TK_MIN, TK_MUTEX, TK_NARROW, TK_NEW, TK_NIL, TK_NULL, 
-  TK_NUMBER, TK_ORD, TK_REAL, TK_REFANY, TK_ROUND, TK_SUBARRAY, TK_TEXT, 
+  TK_INTEGER, TK_ISTYPE, TK_LAST, TK_LONGCARD, TK_LONGINT, TK_LONGREAL,
+  TK_LOOPHOLE, TK_MAX, TK_MIN, TK_MUTEX, TK_NARROW, TK_NEW, TK_NIL, TK_NULL,
+  TK_NUMBER, TK_ORD, TK_REAL, TK_REFANY, TK_ROUND, TK_SUBARRAY, TK_TEXT,
   TK_TRUE, TK_TRUNC, TK_TYPECODE, TK_VAL, TK_WIDECHAR,
 
   /* misc. debugger tokens */
@@ -94,4 +94,4 @@ m3_token_name PARAMS ((struct m3_token *));
 
 #endif /* !defined (M3_TOKEN_H) */
 
-/* End of file "m3-token.h" */ 
+/* End of file "m3-token.h" */
