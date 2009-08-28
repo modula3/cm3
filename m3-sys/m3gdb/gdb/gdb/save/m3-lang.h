@@ -94,7 +94,7 @@ extern int m3_val_print2 (struct type *, const gdb_byte *, int, int,
                           struct ui_file *, int, int, int);
 
 /* True if debugging CM3-compiled Modula-3 code. */
-extern int m3_is_cm3 ( void ) ;
+extern int m3_is_cm3 ( void );
 
 extern struct type *m3_find_export_type (struct type *);
 

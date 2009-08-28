@@ -1271,7 +1271,7 @@ m3_tc_addr_from_inf_object_addr ( CORE_ADDR addr )
 
   if (!addr) { return 0; }
 
-  typecode = m3_typecode_from_inf_object_addr ( addr ) ;
+  typecode = m3_typecode_from_inf_object_addr ( addr );
 
   init_m3_constants ();
   if ( m3_compiler_kind ( ) == m3_ck_cm3 )
@@ -2073,7 +2073,7 @@ void
 m3_set_open_array_elems_addr ( gdb_byte * addr, CORE_ADDR val )
 
   { store_unsigned_integer
-      ( addr, TARGET_PTR_BIT / HOST_CHAR_BIT, ( ULONGEST ) val ) ;
+      ( addr, TARGET_PTR_BIT / HOST_CHAR_BIT, ( ULONGEST ) val );
   } /* m3_set_open_array_elems_addr */
 
 /* Return the dimension-th shape component (i.e., the element count for the
@@ -2113,7 +2113,7 @@ CORE_ADDR
 m3_inf_open_array_elems_addr ( CORE_ADDR ref )
 
 { CORE_ADDR result;
-  gdb_byte buf [64] ; /* liberal. */
+  gdb_byte buf [64]; /* liberal. */
 
   read_memory ( ref, buf, TARGET_PTR_BIT / TARGET_CHAR_BIT );
   result = m3_open_array_elems_addr ( buf );
@@ -2171,7 +2171,7 @@ m3_set_value_open_array_elems_addr (
         value_contents_raw ( array_value ) + value_offset ( array_value ),
       TARGET_PTR_BIT / HOST_CHAR_BIT,
       ( ULONGEST ) val
-    ) ;
+    );
 } /* m3_set_value_open_array_elems_addr */
 
 /* Return the dimension-th shape component (i.e., the element count for the
@@ -2209,7 +2209,7 @@ m3_set_value_open_array_shape_component (
     ( ( gdb_byte * ) value_contents_raw ( array_value ) + target_offset,
       m3_target_integer_bit / HOST_CHAR_BIT,
       val
-    ) ;
+    );
 } /* m3_set_value_open_array_shape_component */
 
 /* For a Modula-3 type, we will construct only one indirect type to it.
@@ -2477,7 +2477,7 @@ static struct frame_info *
 m3_frame_containing_inf_addr (
     CORE_ADDR inf_addr, struct frame_info * start_frame )
 
-  { struct frame_info * frame ;
+  { struct frame_info * frame;
     CORE_ADDR inf_static_link;
 
     frame = start_frame;
@@ -2722,17 +2722,17 @@ m3_build_gdb_proc_closure (
       ( ( gdb_byte * ) & closure -> closure_mark,
         TARGET_PTR_BIT / HOST_CHAR_BIT,
         ( ULONGEST ) closure_mark
-      ) ;
+      );
     store_unsigned_integer
       ( ( gdb_byte * ) & closure -> code_addr,
         TARGET_PTR_BIT / HOST_CHAR_BIT,
         ( ULONGEST ) code_addr
-      ) ;
+      );
     store_unsigned_integer
       ( ( gdb_byte * ) & closure -> env_ptr,
         TARGET_PTR_BIT / HOST_CHAR_BIT,
         ( ULONGEST ) env_ptr
-      ) ;
+      );
     return result;
   } /* m3_build_gdb_proc_closure */
 
@@ -2816,9 +2816,9 @@ m3_block_proc_block ( struct block * blk )
 
   { struct block * l_block;
 
-    l_block = blk ;
+    l_block = blk;
     while ( l_block != NULL && BLOCK_FUNCTION ( l_block ) == NULL )
-      { l_block = BLOCK_SUPERBLOCK ( l_block ) ; }
+      { l_block = BLOCK_SUPERBLOCK ( l_block ); }
     return l_block;
   } /* m3_block_proc_block */
 
