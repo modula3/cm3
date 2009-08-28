@@ -65,7 +65,7 @@ m3uid_to_int (const char *uid, int *val)
 
   if (strlen (uid) < M3UID_LEN) return 0;
 
-  if (strcmp (uid, "zzzzzz") == 0) { *val = -1;  return 1; };
+  if (strcmp (uid, "zzzzzz") == 0) { *val = -1;  return 1; }
 
   value = 0;
   for (i = 0; i < M3UID_LEN; i++) {

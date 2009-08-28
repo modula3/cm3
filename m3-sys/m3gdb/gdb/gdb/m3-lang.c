@@ -579,7 +579,7 @@ skip_underscores (s, n)
   while ((n > 0) && (*s)) {
     if (*s == '_') n--;
     s++;
-  };
+  }
   if (n > 0) s = NULL;
   return s;
 }
@@ -1247,7 +1247,7 @@ m3_demangle (const char *mangled, int options)
         {
         sprintf (demangled, "%s", mangled + 4 + M3UID_LEN);
         return savestring (demangled, strlen(demangled));
-      };
+      }
       break;
 
     case 'I':
@@ -1272,7 +1272,7 @@ m3_demangle (const char *mangled, int options)
         {
 	sprintf (demangled, "G$%.*s", M3UID_LEN, mangled + 3);
         return savestring (demangled, strlen(demangled));
-      };
+      }
       break;
 
     case 'n':
@@ -1293,7 +1293,7 @@ m3_demangle (const char *mangled, int options)
         */
 	sprintf (demangled, "B$%s", mangled + 4 + M3UID_LEN );
         return savestring (demangled, strlen(demangled));
-      };
+      }
       break;
 
     case 'i':
@@ -1302,7 +1302,7 @@ m3_demangle (const char *mangled, int options)
         {
   	sprintf (demangled, "H$%s", mangled + 4 + M3UID_LEN);
         return savestring (demangled, strlen(demangled));
-      };
+      }
       break;
 
     case 'A':
@@ -1322,7 +1322,7 @@ m3_demangle (const char *mangled, int options)
         {
 	sprintf (demangled, "%.*s", M3UID_LEN, mangled + 3);
         return savestring (demangled, strlen(demangled));
-      };
+      }
       break;
     }  /* switch */
   }  /* if "M?_" */
@@ -1993,10 +1993,10 @@ m3_resolve_type ( char *uid )
   if (sym) {
     struct type *t = SYMBOL_TYPE (sym);
     if (TYPE_CODE (t) == TYPE_CODE_M3_OPAQUE) {
-      t = m3_resolve_type (TYPE_FIELD_M3_UID (t, 0)); };
+      t = m3_resolve_type (TYPE_FIELD_M3_UID (t, 0)); }
     m3_fix_target_type (t);
     return t;
-  };
+  }
 
   if (m3uid_to_num (uid, &num_uid)) {
     if      (num_uid == 0x195c2a74) { return builtin_type_m3_integer; }

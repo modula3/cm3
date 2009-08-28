@@ -487,7 +487,7 @@ static int m3_parse_e8 ()
       get_token ();
       if (cur_tok.kind != TK_ROOT) {
 	error ("UNTRACED not followed by ROOT");
-      };
+      }
       write_m3_type (builtin_type_m3_untraced_root);
       break;
 

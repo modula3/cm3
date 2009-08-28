@@ -1388,7 +1388,7 @@ m3_val_print2 (
 	fprintf_filtered (stream, "..");
 	print_longest (stream, 'd', 1, upper);
 	fprintf_filtered (stream, "]>");
-      };
+      }
       break; }
 
     case TYPE_CODE_M3_INDIRECT: {

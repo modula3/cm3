@@ -20,7 +20,7 @@ int nested_prefix_len ( char * name)
     current++;
     current = strchr (current, '.');
     if (current == 0) return 0;
-    while ( (i = strchr (current + 1 , '.') ) > current) { current = i };
+    while ( (i = strchr (current + 1 , '.') ) > current) { current = i }
     return current - name;
   }
 
