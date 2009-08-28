@@ -1,4 +1,4 @@
-#include <stdbool.h>
+#include "m3-bool.h"
 
 #include "defs.h"
 #include "expression.h"

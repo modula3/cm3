@@ -22,7 +22,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #include "value.h"
 
-#include <stdbool.h>
+#include "m3-bool.h"
 
 /* FIXME: This is a mess.  Prototypes are here for functions that are
      defined all over the place.

@@ -17,7 +17,7 @@
 #include "m3-lang.h"
 #include "gdb_string.h"
 
-#include <stdbool.h>
+#include "m3-bool.h"
 
 /* FIXME: define TARGET_WIDECHAR_BIT properly. */
 #define TARGET_WIDECHAR_BIT ( ( TARGET_CHAR_BIT ) * 2 )

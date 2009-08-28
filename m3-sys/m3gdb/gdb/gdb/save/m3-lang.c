@@ -42,7 +42,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "gdbarch.h"
 #include "gdb_string.h"
 
-#include <stdbool.h>
+#include "m3-bool.h"
 
 BOOL
 is_unsafe ( void )
