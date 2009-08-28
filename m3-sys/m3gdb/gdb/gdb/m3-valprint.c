@@ -29,7 +29,7 @@ m3_trunc_to_bits ( ULONGEST val, int bitct )
       { return val; }
     if ( bitct < TARGET_CHAR_BIT * sizeof ( ULONGEST ) )
       { mask = ( ( ULONGEST ) - 1 ) << bitct;
-        return val & ( ~ mask) ;
+        return val & ( ~ mask);
       }
     else { return val; }
 
@@ -48,7 +48,7 @@ m3_print_scalar (
   { LONGEST rawval, val;
 
     rawval = m3_extract_ord ( valaddr, bitpos, bitsize, trunc_bits > false );
-    val = m3_trunc_to_bits ( rawval, trunc_bits ) ;
+    val = m3_trunc_to_bits ( rawval, trunc_bits );
     switch ( format ) {
       case '&':
         if ( val == 0 )
@@ -534,7 +534,7 @@ m3_check_TextLiteral_buf (
             TYPE_LENGTH ( library_type_m3_TextLiteral_buf_widechar )
               = byte_length;
             TYPE_M3_SIZE ( library_type_m3_TextLiteral_buf_widechar )
-              = ( - string_length + 1 ) * TARGET_M3_WIDECHAR_BIT ;
+              = ( - string_length + 1 ) * TARGET_M3_WIDECHAR_BIT;
             if ( bitsize != NULL )
               { * bitsize = byte_length * TARGET_CHAR_BIT; }
             if ( bitpos != NULL ) { * bitpos = TextLiteral_buf . bitpos; }
@@ -781,7 +781,7 @@ m3_print_cm3_text (
         chars = m3_text_field_addr ( ref, &Text8Short, &Text8Short_contents );
         if ( length < string_length )
           { print_length = length; result = - 1; }
-        else { print_length = string_length ; result = string_length; }
+        else { print_length = string_length; result = string_length; }
         if (add_quotes)
           { fputs_filtered ("\"", stream); }
         m3_print_chars ( chars, start, print_length, stream);
@@ -798,7 +798,7 @@ m3_print_cm3_text (
         chars = m3_text_field_addr ( ref, &Text16Short, &Text16Short_contents );
         if ( length < string_length )
           { print_length = length; result = - 1; }
-        else { print_length = string_length ; result = string_length; }
+        else { print_length = string_length; result = string_length; }
         if (add_quotes)
           { fputs_filtered ("W\"", stream); }
         m3_print_widechars ( chars, start, print_length, stream);
@@ -1027,7 +1027,7 @@ m3_print_object (
         switch ( actual_printed )
           { case - 1: /* CM3 string, was truncated at requested max length. */
               { fputs_filtered ("...", stream);
-                return ;
+                return;
               }
             case - 2: /* Ill-formed CM3 string.  Also print it as an object. */
             case - 3: /* Wasn't a CM3 string. */
