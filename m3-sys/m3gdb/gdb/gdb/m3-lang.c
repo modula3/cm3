@@ -84,7 +84,7 @@ is_digit ( char the_char )
    starts taking it's fundamental type information directly from the
    debugging information supplied by the compiler.  fnf@cygnus.com */
 
-extern void _initialize_m3_language ( );
+extern void _initialize_m3_language (void);
 
 /* Nonzero if a Modula-3 compiler that does not use a gcc code generator.
    NOTE: Some Modula-3 compilers use a gcc-derived code generator.  They
@@ -2093,7 +2093,7 @@ static enum m3_gc_kind_typ m3_gc_kind_cached = gc_unknown;
 
 /* PRE: symbols for libm3core have been loaded. */
 static enum m3_gc_kind_typ
-m3_gc_kind_pure ( )
+m3_gc_kind_pure (void)
   { struct minimal_symbol * minsym;
 
     minsym = lookup_minimal_symbol ( "RTCollectorSRC__DisableVM", NULL, NULL);
@@ -2108,7 +2108,7 @@ m3_gc_kind_pure ( )
 
 /* PRE: symbols for libm3core have been loaded. */
 static enum m3_gc_kind_typ
-m3_gc_kind ( )
+m3_gc_kind (void)
   { if ( m3_gc_kind_cached == gc_unknown
          && ! m3_waiting_for_libm3core_so_to_unload
        )
@@ -2118,7 +2118,7 @@ m3_gc_kind ( )
 
 /* PRE: symbols for libm3core have been loaded. */
 static void
-m3_disable_vm_gc ( )
+m3_disable_vm_gc (void)
   { struct value * val;
     const struct language_defn * saved_language;
 
@@ -2147,7 +2147,7 @@ static enum m3_thread_kind_typ m3_old_thread_kind = tk_unknown;
 
 /* PRE: Symbols for libm3core have been loaded. */
 static enum m3_thread_kind_typ
-m3_thread_kind_pure ( )
+m3_thread_kind_pure (void)
   { struct symbol * sym;
     struct minimal_symbol * minsym;
 
@@ -2165,7 +2165,7 @@ m3_thread_kind_pure ( )
 
 /* PRE: Symbols for libm3core have been loaded. */
 static enum m3_thread_kind_typ
-m3_thread_kind ( )
+m3_thread_kind (void)
   { struct symbol * sym;
     struct minimal_symbol * minsym;
 
@@ -2325,7 +2325,7 @@ m3_info_m3_command ( char * args, int from_tty )
   } /* m3_info_m3_command */
 
 void
-_initialize_m3_language ( )
+_initialize_m3_language (void)
 {
 #ifdef AT_SRC
   a_client ();
@@ -3323,7 +3323,7 @@ m3_decode_linespec (
   } /* m3_decode_linespec */
 
 char *
-m3_main_name ( )
+m3_main_name (void)
   { /* These places will result in stopping after all internal runtime
        initialization, but before any user-coded initialization (i.e,
        before executing any module body code). */
