@@ -180,8 +180,8 @@ all_blocks_and_syms ( struct block * b )
 { struct block * bl;
   struct symbol * sym;
   struct dict_iterator iter;
-  char * name ;
-  char * linkage_name ;
+  char * name;
+  char * linkage_name;
   int i;
 
   bl = b;
@@ -316,7 +316,7 @@ m3_parse_e8 ( )
                view that every unit name is accessible to m3gdb expressions as
                if declared in a kind of superglobal scope,  without needing
                anything like an IMPORT or EXPORTS. */
-            unit_name = name ;
+            unit_name = name;
             if ( cur_tok . kind == TK_DOT )
               { get_token ( ); /* Consume TK_DOT */
                 if ( cur_tok . kind != TK_IDENT )
@@ -923,7 +923,7 @@ m3_print_subexp (
        Modula-3 version of la_op_print_tab. */
     default:
       (*pos)--; /* I hate this kludge, but it sure saves code. */
-      print_subexp_standard (exp, pos, stream, prec ) ;
+      print_subexp_standard (exp, pos, stream, prec );
   };
 } /* m3_print_subexp */
 

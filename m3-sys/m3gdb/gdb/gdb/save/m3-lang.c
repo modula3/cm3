@@ -727,7 +727,7 @@ m3_print_subexp (struct expression *exp, int *pos,
        Modula-3 version of la_op_print_tab. */
     default:
       (*pos)--; /* I hate this kludge, but it sure saves code. */
-      print_subexp_standard (exp, pos, stream, prec ) ;
+      print_subexp_standard (exp, pos, stream, prec );
   };
 } /* m3_print_subexp */
 
@@ -1494,7 +1494,7 @@ m3_allocated_type ( struct value * val )
     struct type * result_type;
     CORE_ADDR val_contents;
 
-    val_type = value_type ( val ) ;
+    val_type = value_type ( val );
     if ( * ( LONGEST * ) value_contents ( val ) == m3_type_magic_value )
       { return val_type; }
     else
@@ -1905,12 +1905,12 @@ lookup_m3_indirect_type (struct type *type)
 
 /* Where static link is stored, relative to frame locals. */
 /* TODO:  Make this value more dependable: */
-const int static_link_offset = 0 ;
+const int static_link_offset = 0;
 
 static struct frame_info*
 m3_static_parent_frame ( struct frame_info *start_frame)
 
-{ struct frame_info * frame ;
+{ struct frame_info * frame;
   CORE_ADDR static_link;
   CORE_ADDR frame_base_addr;
 
@@ -1932,7 +1932,7 @@ m3_static_parent_frame ( struct frame_info *start_frame)
       }
       frame_base_addr = get_frame_base_address ( frame );
     }
-  while ( static_link != frame_base_addr) ;
+  while ( static_link != frame_base_addr);
   return frame;
 } /* m3_static_parent_frame */
 
@@ -1942,9 +1942,9 @@ m3_proc_block ( struct block * blk )
 
   { struct block * l_block;
 
-    l_block = blk ;
+    l_block = blk;
     while ( l_block != NULL && BLOCK_FUNCTION ( l_block ) == NULL )
-      { l_block = BLOCK_SUPERBLOCK ( l_block ) ; }
+      { l_block = BLOCK_SUPERBLOCK ( l_block ); }
     return l_block;
   } /* m3_proc_block */
 
@@ -1956,7 +1956,7 @@ m3_frame_for_block (struct block *target_block )
 {
   struct frame_info *l_frame;
   struct block * l_frame_proc_block;
-  struct block * l_target_proc_block ;
+  struct block * l_target_proc_block;
 
   CORE_ADDR start;
   CORE_ADDR end;
@@ -3123,7 +3123,7 @@ m3_field_value (
       ( result_val,
         value_offset ( parent_val ) + bitpos / TARGET_CHAR_BIT
       );
-    set_value_bitpos ( result_val, bitpos % TARGET_CHAR_BIT ) ;
+    set_value_bitpos ( result_val, bitpos % TARGET_CHAR_BIT );
 #if 0 /* But we never let these get anywhere but to m3_specific code. */
     if ( bitpos % TARGET_CHAR_BIT == 0
          && TYPE_LENGTH ( field_type ) == bitpos / TARGET_CHAR_BIT )
@@ -5053,7 +5053,7 @@ m3_decode_struct (t)
       */
       TYPE_CODE (t) = TYPE_CODE_M3_PROC;
       gdb_assert ( TYPE_NFIELDS ( t ) >= 1 );
-      TYPE_TARGET_TYPE ( t ) = TYPE_FIELDS ( t ) [ 0 ] . type ;
+      TYPE_TARGET_TYPE ( t ) = TYPE_FIELDS ( t ) [ 0 ] . type;
       sscanf (type_specific_info, "%c%ld", &c, &tmp1);
       TYPE_M3_PROC_NRAISES (t) = tmp1;
       if (c == 'A') {		/* RAISES ANY */
@@ -5345,7 +5345,7 @@ m3_demangle (const char *mangled, int options)
       return savestring (demangled, strlen(demangled));
     }
 
-  return NULL ;
+  return NULL;
 } /* m3_demangle */
 
 /* print, one per line, the search names of at most max symbols of blk. */
@@ -5688,7 +5688,7 @@ m3_fix_symtab ( struct symtab *st )
                         { block_num = block_num * 10 + ch - '0';
                           prev_end ++; /* and loop */
                         }
-                      else { break ; }
+                      else { break; }
                     } /* while */
                   /* Now block_num is a block sequence number of an M3 anonymous
                      block that is immediately inside the one identified by
@@ -6076,7 +6076,7 @@ find_m3_heap_tc_addr (CORE_ADDR addr)
 
   if (!addr) { return 0; }
 
-  typecode = m3_typecode ( addr ) ;
+  typecode = m3_typecode ( addr );
 
   init_m3_constants ();
 

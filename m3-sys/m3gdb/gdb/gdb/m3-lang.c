@@ -670,7 +670,7 @@ m3_scan_stabs_integer ( char * string, LONGEST * result )
     char * p = string;
     bool is_neg = false;
     int bitct = 0;
-    LONGEST l_result = 0L ;
+    LONGEST l_result = 0L;
     LONGEST longest_bitct = sizeof ( LONGEST ) * HOST_CHAR_BIT;
     LONGEST one = 1L;
 
@@ -900,7 +900,7 @@ m3_decode_struct ( struct type *t )
       */
       TYPE_CODE (t) = TYPE_CODE_M3_PROC;
       gdb_assert ( TYPE_NFIELDS ( t ) >= 1 );
-      TYPE_TARGET_TYPE ( t ) = TYPE_FIELDS ( t ) [ 0 ] . type ;
+      TYPE_TARGET_TYPE ( t ) = TYPE_FIELDS ( t ) [ 0 ] . type;
       sscanf (type_specific_info, "%c%li", &c, &tmp1);
       TYPE_M3_PROC_NRAISES (t) = tmp1;
       if (c == 'A') {		/* RAISES ANY */
@@ -1414,7 +1414,7 @@ m3_demangle (const char *mangled, int options)
           (m3_static_link_copy_field_name, m3_static_link_copy_field_name_len);
     }
 
-  return NULL ;
+  return NULL;
 } /* m3_demangle */
 
 /* print, one per line, the search names of at most max symbols of blk. */
@@ -1594,7 +1594,7 @@ find_m3_proc_in_blockvector (
           if ( sym != NULL )
             { linkage_name = SYMBOL_LINKAGE_NAME ( sym );
               linkage_len = strlen ( linkage_name );
-              fixed_len = linkage_len - 1 ;
+              fixed_len = linkage_len - 1;
               if ( linkage_len <= space_len
                    && is_digit ( linkage_name [ fixed_len ] )
                  )
@@ -1844,7 +1844,7 @@ m3_fix_symtab ( struct symtab *st )
                         { block_num = block_num * 10 + ch - '0';
                           prev_end ++; /* and loop */
                         }
-                      else { break ; }
+                      else { break; }
                     } /* while */
 
                   /* Now block_num is a block sequence number of one
@@ -2085,7 +2085,7 @@ struct type *builtin_type_m3_array_of_widechar;
 
 static bool new_executable = true;
 static bool m3_libm3core_so_is_loaded = false;
-static bool m3_waiting_for_libm3core_so_to_unload = false ;
+static bool m3_waiting_for_libm3core_so_to_unload = false;
 
 enum m3_gc_kind_typ { gc_unknown, gc_vm, gc_multicore };
 
