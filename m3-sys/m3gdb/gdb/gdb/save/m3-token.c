@@ -154,13 +154,13 @@ scan_number (char *input, m3_token *tok)
   int digit;
   LONGEST val;
   LONGEST base;
-  bool is_based;
+  BOOL is_based;
 
   c = input;
   val = 0;
   if (*c == '0' && ( *(c+1) == 'x' || *(c+1) == 'X' ) )
     { /* Go ahead and accept the C lexical syntax for hex numbers. */
-      is_based = true;
+      is_based = TRUE;
       base = 16;
       c = c + 2;
     }
@@ -173,7 +173,7 @@ scan_number (char *input, m3_token *tok)
         }
       if (*c == '_')
         { /* It's a based value in Modula-3 syntax. */
-          is_based = true;
+          is_based = TRUE;
           base = val;
           c++;
           if ((base < 2) || (16 < base))
@@ -184,7 +184,7 @@ scan_number (char *input, m3_token *tok)
               base = 10;
             }
         }
-      else is_based = false;
+      else is_based = FALSE;
     }
 
   if ( is_based )

@@ -40,18 +40,18 @@ enum m3_result_code
 
 /* Nonzero if a Modula-3 compiler that does not use a gcc code generator.
    NOTE: Some Modula-3 compilers use a gcc-derived code generator.  They
-   do not cause this to be true, but they do cause
+   do not cause this to be TRUE, but they do cause
    processing_gcc_compilation to be nonzero. */
-extern bool processing_pm3_compilation;
+extern BOOL processing_pm3_compilation;
 
-/* true indicates that the debug info will show an extra block
+/* TRUE indicates that the debug info will show an extra block
    surrounding the non-prologue-non-epilogue part of every procedure.
    The outer block of the pair has the procedure symbol in block_function
    and contains the formals.  The inner has NULL block_function and
    contains the locals.  This happens when code was produced by a code
    generator derived from later gcc versions (3.4.5, for example).
 */
-extern bool procedures_have_extra_block;
+extern BOOL procedures_have_extra_block;
 
 extern const char * m3_static_link_var_name;
 extern const char * m3_nonlocal_var_rec_name;

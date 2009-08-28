@@ -56,7 +56,7 @@ m3uid_from_num (const LONGEST x)
   return res;
 }
 
-bool
+BOOL
 m3uid_to_num (const char *uid, LONGEST *num_val)
 {
   LONGEST value;
@@ -64,12 +64,12 @@ m3uid_to_num (const char *uid, LONGEST *num_val)
   char c;
 
   *num_val = 0;
-  if (uid == NULL) return false;
+  if (uid == NULL) return FALSE;
 
-  if (strlen (uid) < M3UID_LEN) return false;
+  if (strlen (uid) < M3UID_LEN) return FALSE;
 
   if (strncmp (uid, "zzzzzz", M3UID_LEN ) == 0)
-    { *num_val = -1;  return true; }
+    { *num_val = -1;  return TRUE; }
 
   value = 0;
   for (i = 0; i < M3UID_LEN; i++) {
@@ -77,11 +77,11 @@ m3uid_to_num (const char *uid, LONGEST *num_val)
     if      (('A' <= c) && (c <= 'Z')) digit = c - 'A';
     else if (('a' <= c) && (c <= 'z')) digit = c - 'a' + 26;
     else if (('0' <= c) && (c <= '9')) digit = c - '0' + 52;
-    else return false;
+    else return FALSE;
     value = value * 62 + digit;
   }
   *num_val = value;
-  return true;
+  return TRUE;
 }
 
 /* End of file m3-uid.c */

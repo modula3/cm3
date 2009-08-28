@@ -186,7 +186,7 @@ all_blocks_and_syms ( struct block * b )
 
   bl = b;
   i = 0;
-  while ( true )
+  while ( TRUE )
     { if ( bl == NULL )
         { break; }
       printf ( "Block no %d\n", i );
@@ -279,7 +279,7 @@ m3_parse_e8 (void)
         char * unit_name = NULL;
         char * decl_name = NULL;
         struct symtab * l_symtab;
-        bool dot_consumed = false;
+        BOOL dot_consumed = FALSE;
 
         name = cur_tok . string;
         get_token  ( ); /* Consume TK_IDENT. */
@@ -580,18 +580,18 @@ m3_parse_e7 (void)
 
       case TK_LPAREN: {
         extern int arglist_len;
-        bool more_args;
+        BOOL more_args;
         get_token ();
         start_arglist ();
         if (cur_tok.kind == TK_RPAREN) {get_token ();}
         else {
-          more_args = true;
+          more_args = TRUE;
           while (more_args) {
             if (m3_parse_e0 ()) {return 1;}
             arglist_len++;
             switch (cur_tok.kind) {
               case TK_COMMA: { get_token(); break; }
-              case TK_RPAREN: { get_token(); more_args = false; break; }
+              case TK_RPAREN: { get_token(); more_args = FALSE; break; }
               default: { error ("missing ')'"); return 1;}
             } /* switch */
           } /* while */

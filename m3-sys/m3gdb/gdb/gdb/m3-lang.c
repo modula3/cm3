@@ -47,7 +47,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "m3-valprint.h"
 
 /* Do I even need to describe what this does? */
-static bool
+static BOOL
 is_digit ( char the_char )
   { switch ( the_char )
       { /* Before you roll your eyes, remember, you'll thank me for this
@@ -55,9 +55,9 @@ is_digit ( char the_char )
            in a character code where the digits are not contiguous. */
         case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
-          { return true; }
+          { return TRUE; }
         default:
-          { return false; }
+          { return FALSE; }
       }
   } /* is_digit */
 
@@ -88,18 +88,18 @@ extern void _initialize_m3_language (void);
 
 /* Nonzero if a Modula-3 compiler that does not use a gcc code generator.
    NOTE: Some Modula-3 compilers use a gcc-derived code generator.  They
-   do not cause this to be true, but they do cause
+   do not cause this to be TRUE, but they do cause
    processing_gcc_compilation to be nonzero. */
-bool processing_pm3_compilation = false;
+BOOL processing_pm3_compilation = FALSE;
 
-/* true indicates that the debug info will show an extra block
+/* TRUE indicates that the debug info will show an extra block
    surrounding the non-prologue-non-epilogue part of every procedure.
    The outer block of the pair has the procedure symbol in block_function
    and contains the formals.  The inner has NULL block_function and
    contains the locals.  This happens when code was produced by a code
    generator derived from later gcc versions (3.4.5, for example).
 */
-bool procedures_have_extra_block = false;
+BOOL procedures_have_extra_block = FALSE;
 
 static const char * SRC_compiler_string = "SRC-Modula3_compiled.";
 
@@ -155,9 +155,9 @@ void
 m3_check_compiler ( char * name )
 
   { if ( strcmp ( name, SRC_compiler_string ) == 0 )
-      { processing_pm3_compilation = true; }
+      { processing_pm3_compilation = TRUE; }
     if ( strcmp ( name, procedures_have_extra_block_string ) == 0 )
-      { procedures_have_extra_block = true; }
+      { procedures_have_extra_block = TRUE; }
   } /* m3_check_compiler */
 
 static struct type *
@@ -632,7 +632,7 @@ simple_name ( const char * name )
 
   start = name;
   remaining_len = strlen ( start );
-  while ( true )
+  while ( TRUE )
     { prefix_len = strcspn ( start, dot_only );
       if ( prefix_len >= remaining_len )
         { return start; }
@@ -668,7 +668,7 @@ m3_scan_stabs_integer ( char * string, LONGEST * result )
     */
 
     char * p = string;
-    bool is_neg = false;
+    BOOL is_neg = FALSE;
     int bitct = 0;
     LONGEST l_result = 0L;
     LONGEST longest_bitct = sizeof ( LONGEST ) * HOST_CHAR_BIT;
@@ -682,7 +682,7 @@ m3_scan_stabs_integer ( char * string, LONGEST * result )
       { if ( * ( p + 1 ) == 'x' || * ( p + 1 ) == 'X' )
           { /* Hex twos-complement format. */
             p += 2;
-            while ( true )
+            while ( TRUE )
               { if ( '0' <= * p && * p <= '9' )
                   { l_result = ( l_result << 4 ) - '0' + * p;
                     bitct += 4;
@@ -713,7 +713,7 @@ m3_scan_stabs_integer ( char * string, LONGEST * result )
           }
         else /* Octal twos-complement format. */
           { p ++;
-            while ( true )
+            while ( TRUE )
               { if ( '0' <= * p && * p <= '7' )
                   { l_result = ( l_result << 3 ) - '0' + * p;
                     bitct += 3;
@@ -735,7 +735,7 @@ m3_scan_stabs_integer ( char * string, LONGEST * result )
       }
     else
       { if ( * p == '-' )
-          { is_neg = true; p ++; }
+          { is_neg = TRUE; p ++; }
         if ( '0' <= * p && * p <= '9' )
           { /* Signed decimal format. */
             l_result = * p - '0';
@@ -1065,7 +1065,7 @@ m3_lookup_symbol_nonlocal (
   int i;
   char type_name [ M3_MAX_SYMBOLLEN ];
   char * unit_name = NULL;
-  bool field_found;
+  BOOL field_found;
 
   /* Look in the static block surrounding the execution context, where we
      will find all global procedures in PM3 etc. and nonexported global
@@ -1212,7 +1212,7 @@ m3_demangle (const char *mangled, int options)
   char_p = strchr (next_mangled, '_');
   if ( char_p != NULL && char_p != next_mangled && char_p[ 1 ] == '_' )
      /* Two underscores. */
-    { while ( true )
+    { while ( TRUE )
         { len = char_p - next_mangled;
           strncpy (next_demangled, next_mangled, (size_t)(len));
           next_demangled [len] = '.';
@@ -1481,15 +1481,15 @@ dump_blockvector ( struct blockvector * block_vec, int max_syms_per_block )
    procedure and return some places needed to find its parent block.
    If the string at start has the form
    <id>__<int>__<int>__ ... __<int>__<id> ... , for zero or more <int>s,
-   return true, set *first_end to point to the first "__", and
+   return TRUE, set *first_end to point to the first "__", and
    set *next_start to point to the first char of the second <id>.
-   Otherwise, leave first_end and next_start alone and return false. */
+   Otherwise, leave first_end and next_start alone and return FALSE. */
 
 /* FIXME:  Names of this form can easily be spoofed by the Modula-3 programmer
    by declaring things with "__" in their names.  Avoiding this without
    another character that is acceptable in linker names would be hard.  Any
    fix would require coordinated fixes in the compilers. */
-static bool
+static BOOL
 find_m3_nested_component (
     char * start, char ** first_end, char ** next_start )
 
@@ -1505,10 +1505,10 @@ find_m3_nested_component (
     ch = * start;
     if ( ( 'A' <= ch && ch <= 'Z' ) || ( 'a' <= ch && ch <= 'z' ) )
       { start ++;
-        while ( true )
+        while ( TRUE )
           { l_first_end  = start + strspn ( start, m3_id_chars_no_underscore );
             if ( * l_first_end != '_' )
-              { return false; }
+              { return FALSE; }
             else if ( * ( l_first_end + 1 ) == '_' )
               /* We have "__", beginning at l_first_end. */
               { l_next_start = l_first_end + 2;
@@ -1517,20 +1517,20 @@ find_m3_nested_component (
                 l_next_start
                   = l_next_start + strcspn ( l_next_start , m3_id_letters );
                 if ( * l_next_start == '\0' )
-                  { return false; }
+                  { return FALSE; }
                 else
                   { if ( next_start != NULL )
                       { * next_start = l_next_start; }
                     if ( first_end != NULL )
                       { * first_end = l_first_end; }
-                    return true;
+                    return TRUE;
                   }
               }
             else
               { start = l_first_end + 1; /* And loop. */ }
           }
       }
-    else { return false; }
+    else { return FALSE; }
   } /* find_m3_nested_component */
 
 /* Used to keep track of a heap-allocated object. */
@@ -1585,7 +1585,7 @@ find_m3_proc_in_blockvector (
   space_len = proc_len + 22;
   space = ( char * ) alloca ( space_len + 1 );
     /* ^Parent name has to be shorter than this. */
-  while ( true )
+  while ( TRUE )
     { if ( block_ss >= BLOCKVECTOR_NBLOCKS ( block_vec ) )
         { return - 1; }
       else
@@ -1838,7 +1838,7 @@ m3_fix_symtab ( struct symtab *st )
               /* Handle any anonymous blocks between parent and nested. */
               while ( prev_end < next_start ) /* There is an anonymous block. */
                 { block_num = 0;
-                  while ( true )
+                  while ( TRUE )
                     { ch = * prev_end;
                       if ( '0' <= ch && ch <= '9' )
                         { block_num = block_num * 10 + ch - '0';
@@ -1860,7 +1860,7 @@ m3_fix_symtab ( struct symtab *st )
                   child_ss = parent_block_ss + 1;
                   child_ss = 0;
                   block_num_2 = block_num;
-                  while ( true )
+                  while ( TRUE )
                     { if ( child_ss >= BLOCKVECTOR_NBLOCKS (block_vec) )
                         { printf_filtered
                             ( "Can't find child block %d, at level %d, "
@@ -2083,9 +2083,9 @@ struct type *builtin_type_m3_proc_closure;
 struct type *builtin_type_m3_array_of_char;
 struct type *builtin_type_m3_array_of_widechar;
 
-static bool new_executable = true;
-static bool m3_libm3core_so_is_loaded = false;
-static bool m3_waiting_for_libm3core_so_to_unload = false;
+static BOOL new_executable = TRUE;
+static BOOL m3_libm3core_so_is_loaded = FALSE;
+static BOOL m3_waiting_for_libm3core_so_to_unload = FALSE;
 
 enum m3_gc_kind_typ { gc_unknown, gc_vm, gc_multicore };
 
@@ -2128,7 +2128,7 @@ m3_disable_vm_gc (void)
         val = m3_evaluate_string ( "RTHeapRep.disableVMCount:=1" );
         if ( val != NULL )
           { printf_filtered
-              (_("VM-synchronized GC disabled, because it causes false stops "
+              (_("VM-synchronized GC disabled, because it causes FALSE stops "
                  "in the debugger.\n"
               ) );
             printf_filtered
@@ -2198,7 +2198,7 @@ m3_observer_executable_changed ( void * unused )
     m3_waiting_for_libm3core_so_to_unload = m3_libm3core_so_is_loaded;
     m3_current_target = TARGET_UNKNOWN;
     m3_set_derived_target_info ( );
-    new_executable = true;
+    new_executable = TRUE;
   } /* m3_observer_executable_changed */
 
 /* Pointer to the next function on the objfile event chain.  */
@@ -2211,7 +2211,7 @@ static void (* m3_old_objfile_chain ) ( struct objfile * objfile );
    dynamically linked. */
 static void
 m3_new_objfile ( struct objfile *objfile )
-  { new_executable = false;
+  { new_executable = FALSE;
 
     /* Maybe somebody else had other callbacks registered for this event. */
     if ( m3_old_objfile_chain != NULL )
@@ -2231,8 +2231,8 @@ m3_observer_solib_symbols_loaded ( struct so_list * so )
            things in the RTS, because RT initialization has not been done.
            But we can lookup symbols and examine or change global variables.
         */
-        m3_libm3core_so_is_loaded = true;
-        m3_constant_init_done = false;
+        m3_libm3core_so_is_loaded = TRUE;
+        m3_constant_init_done = FALSE;
         m3_disable_vm_gc ( );
         l_thread_kind = m3_thread_kind ( );
         if ( l_thread_kind == tk_pthread )
@@ -2259,9 +2259,9 @@ m3_observer_solib_unloaded ( struct so_list * so )
            afraid to mess with unloading shared libraries sooner than
            stock gdb does.
         */
-        m3_libm3core_so_is_loaded = false;
-        m3_constant_init_done = false;
-        m3_waiting_for_libm3core_so_to_unload = false;
+        m3_libm3core_so_is_loaded = FALSE;
+        m3_constant_init_done = FALSE;
+        m3_waiting_for_libm3core_so_to_unload = FALSE;
       }
   } /* m3_observer_solib_loaded */
 
@@ -2551,7 +2551,7 @@ m3_patch_nested_procs ( struct blockvector *bv )
 
 #if 1
 /*  -------------------DEBUG -----------------------*/
-  if (false && info_verbose)
+  if (FALSE && info_verbose)
     { int i;
       struct block * b;
       struct symbol * s;
@@ -3220,7 +3220,7 @@ m3_decode_linespec (
        dot qualifiers.  qual_block is the block identified so far, and it
        lies inside procedure qual_sym and in qual_symtab; . */
 
-    while ( true ) /* Thru additional tokens. */
+    while ( TRUE ) /* Thru additional tokens. */
       { if ( * tok == '\0' )
           /* We are at the end of the linespec. */
           { if ( qual_sym != NULL )

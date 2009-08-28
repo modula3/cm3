@@ -139,7 +139,7 @@ m3_subtype_relation ( struct type * left, struct type * right )
         case TYPE_CODE_M3_RECORD :
         case TYPE_CODE_M3_METHOD :
         case TYPE_CODE_M3_VOID :
-        default : { return false; }
+        default : { return FALSE; }
       } /* switch ( TYPE_CODE ( right_direct ) ) */
 
   switch ( TYPE_CODE ( left_direct ) )
@@ -155,89 +155,89 @@ m3_subtype_relation ( struct type * left, struct type * right )
         return m3_type_fields_equal ( left_direct, right_direct );
       case TYPE_CODE_M3_SUBRANGE :
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         return
           TYPE_M3_SUBRANGE_MIN ( left ) == TYPE_M3_SUBRANGE_MIN ( right )
           && TYPE_M3_SUBRANGE_MAX ( left ) == TYPE_M3_SUBRANGE_MAX ( right );
       case TYPE_CODE_M3_POINTER :
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_POINTER_TRACED ( left ) != TYPE_M3_POINTER_TRACED ( left ) )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_POINTER_BRANDED ( left )
              != TYPE_M3_POINTER_BRANDED ( left )
            )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_POINTER_BRANDED ( left ) )
           { return TYPE_M3_POINTER_BRAND ( left )
                    == TYPE_M3_POINTER_BRAND ( left );
           }
-        return true;
+        return TRUE;
       case TYPE_CODE_M3_OPAQUE :
         return m3_type_fields_equal ( left_direct, right_direct );
 
       case TYPE_CODE_M3_RECORD :
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         for ( i = 0; i < TYPE_NFIELDS ( left ); i ++ )
           { if ( TYPE_FIELD_NAME ( left, i )
                  != TYPE_FIELD_NAME ( right, i )
                )
-              { return false; }
+              { return FALSE; }
             if ( TYPE_M3_REC_FIELD_BITPOS ( left, i )
                  != TYPE_M3_REC_FIELD_BITPOS ( right, i )
                )
-              { return false; }
+              { return FALSE; }
             if ( TYPE_M3_REC_FIELD_BITSIZE ( left, i )
                  != TYPE_M3_REC_FIELD_BITSIZE ( right, i )
                )
-              { return false; }
+              { return FALSE; }
           }
-        return true;
+        return TRUE;
       case TYPE_CODE_M3_OBJECT :
         if ( TYPE_M3_OBJ_NMETHODS ( left ) != TYPE_M3_OBJ_NMETHODS ( left ) )
-          { return false; }
+          { return FALSE; }
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         for ( i = 1; i < TYPE_NFIELDS ( left ); i ++ )
           { if ( TYPE_FIELD_NAME ( left, i )
                  != TYPE_FIELD_NAME ( right, i )
                )
-              { return false; }
+              { return FALSE; }
             if ( TYPE_M3_OBJ_FIELD_BITPOS ( left, i )
                  != TYPE_M3_OBJ_FIELD_BITPOS ( right, i )
                )
-              { return false; }
+              { return FALSE; }
             if ( TYPE_M3_OBJ_FIELD_BITSIZE ( left, i )
                  != TYPE_M3_OBJ_FIELD_BITSIZE ( right, i )
                )
-              { return false; }
+              { return FALSE; }
           }
         if ( TYPE_M3_OBJ_TRACED ( left ) != TYPE_M3_OBJ_TRACED ( left ) )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_OBJ_BRANDED ( left )
              != TYPE_M3_OBJ_BRANDED ( left )
            )
-          { return false; }
+          { return FALSE; }
         if ( TYPE_M3_OBJ_BRANDED ( left ) )
           { return TYPE_M3_OBJ_BRAND ( left )
                    == TYPE_M3_OBJ_BRAND ( left );
           }
-        return true;
+        return TRUE;
 
       case TYPE_CODE_M3_PROC :
       case TYPE_CODE_M3_METHOD :
         if ( TYPE_M3_PROC_NRAISES ( left ) != TYPE_M3_PROC_NRAISES ( left ) )
-          { return false; }
+          { return FALSE; }
         if ( ! m3_type_fields_equal ( left_direct, right_direct ) )
-          { return false; }
+          { return FALSE; }
         for ( i = 1; i < TYPE_NFIELDS ( left ); i ++ )
           { if ( TYPE_FIELD_NAME ( left, i )
                  != TYPE_FIELD_NAME ( right, i )
                )
-              { return false; }
+              { return FALSE; }
           }
-        return true;
+        return TRUE;
 
       case TYPE_CODE_M3_ADDRESS :
       case TYPE_CODE_M3_BOOLEAN :
@@ -256,7 +256,7 @@ m3_subtype_relation ( struct type * left, struct type * right )
       case TYPE_CODE_M3_VOID :
         /* There is only one type with each of these code. */
         return TYPE_CODE ( left_direct ) == TYPE_CODE ( right_direct );
-      default : { return false; }
+      default : { return FALSE; }
     } /* switch */
   } /* m3_subtype_relation */
 
