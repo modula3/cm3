@@ -19,7 +19,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* This file contains code to lexically scan Modula-3 code. */
 
-#include "m3-BOOL.h"
+#include "m3-bool.h"
 
 #include "defs.h"
 #include "expression.h"
