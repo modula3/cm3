@@ -43,7 +43,7 @@ static struct m3_token cur_tok;
 /** #define DEBUG_M3_SCANNER **/
 
 static void
-get_token ( )
+get_token (void)
 
 {
 #ifdef DEBUG_M3_SCANNER
@@ -103,7 +103,7 @@ write_m3_type ( struct type *tipe )
   get_token ();
 }
 
-static int m3_parse_e0 ( ); /* Forward decl. */
+static int m3_parse_e0 (void); /* Forward decl. */
 
 static void
 m3_builtin_1_param ( enum exp_opcode op )
@@ -262,7 +262,7 @@ m3_write_id_ref ( struct symbol * sym, const char * name )
   } /* m3_write_id_ref */
 
 static int
-m3_parse_e8 ( )
+m3_parse_e8 (void)
 { struct dict_iterator iter;
 
   switch (cur_tok.kind) {
@@ -549,7 +549,7 @@ m3_parse_e8 ( )
 } /* m3_parse_e8 */
 
 static int
-m3_parse_e7 ( )
+m3_parse_e7 (void)
 {
 
   if (m3_parse_e8 ()) { return 1; }
@@ -626,7 +626,7 @@ m3_parse_e7 ( )
 
 
 static int
-m3_parse_e6 ( )
+m3_parse_e6 (void)
 {
   int m = 0;
 
@@ -641,7 +641,7 @@ m3_parse_e6 ( )
 } /* m3_parse_e6 */
 
 static int
-m3_parse_e5 ( )
+m3_parse_e5 (void)
 {
   if (m3_parse_e6 ()) { return 1; }
   while (1) {
@@ -700,7 +700,7 @@ m3_parse_e4 ()
 } /* m3_parse_e4 */
 
 static int
-m3_parse_e3 ( )
+m3_parse_e3 (void)
 {
   enum exp_opcode op;
 
@@ -728,7 +728,7 @@ m3_parse_e3 ( )
 } /* m3_parse_e3 */
 
 static int
-m3_parse_e2 ( )
+m3_parse_e2 (void)
 {
   int n = 0;
 
@@ -740,7 +740,7 @@ m3_parse_e2 ( )
 } /* m3_parse_e2 */
 
 static int
-m3_parse_e1 ( )
+m3_parse_e1 (void)
 {
   if (m3_parse_e2 ()) { return 1; }
   while (cur_tok.kind == TK_AND) {
@@ -752,7 +752,7 @@ m3_parse_e1 ( )
 } /* m3_parse_e1 */
 
 static int
-m3_parse_e0 ( )
+m3_parse_e0 (void)
 {
   if (m3_parse_e1 ()) { return 1; }
   while (cur_tok.kind == TK_OR) {
@@ -764,7 +764,7 @@ m3_parse_e0 ( )
 } /* m3_parse_e0 */
 
 static int
-m3_parse_expr ( )
+m3_parse_expr (void)
 {
   int lhs = 0, rhs = 0;
   lhs = m3_parse_e0 ();
@@ -778,7 +778,7 @@ m3_parse_expr ( )
 } /* m3_parse_expr */
 
 int
-m3_parse ( )
+m3_parse (void)
 {
   get_token ();
   if (m3_parse_expr ()) { return 1; }

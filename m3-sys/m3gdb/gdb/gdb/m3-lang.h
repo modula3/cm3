@@ -214,7 +214,7 @@ m3_decode_linespec (
   );
 
 extern char *
-m3_main_name ( );
+m3_main_name (void);
 
 #endif /* !defined (M3_LANG_H) */
 
