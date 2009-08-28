@@ -559,7 +559,7 @@ m3_allocated_type ( struct value * val )
     struct type * direct_type;
     CORE_ADDR val_contents;
 
-    val_type = value_type ( val ) ;
+    val_type = value_type ( val );
     if ( m3_value_is_type ( val ) )
       { return val_type; }
     else
@@ -694,7 +694,7 @@ reference_type_depth ( struct type * start_type )
           case TYPE_CODE_M3_UN_ROOT :
             return result + 1;
           case TYPE_CODE_M3_TEXT :
-            return result + ( int ) m3_compiler_kind ( ) == m3_ck_cm3 ;
+            return result + ( int ) m3_compiler_kind ( ) == m3_ck_cm3;
 
           case TYPE_CODE_M3_MUTEX :
             return result + 2;
@@ -2095,7 +2095,7 @@ m3_field_value (
       ( result_val,
         value_offset ( parent_val ) + bitpos / TARGET_CHAR_BIT
       );
-    set_value_bitpos ( result_val, bitpos % TARGET_CHAR_BIT ) ;
+    set_value_bitpos ( result_val, bitpos % TARGET_CHAR_BIT );
 #if 0 /* But we never let these get anywhere but to m3_specific code. */
     if ( bitpos % TARGET_CHAR_BIT == 0
          && TYPE_LENGTH ( field_type ) == bitpos / TARGET_CHAR_BIT )
@@ -2901,7 +2901,7 @@ m3_evaluate_subexp_maybe_packed (
           case TYPE_CODE_M3_REFANY :
           case TYPE_CODE_M3_TRANSIENT_REFANY:
           case TYPE_CODE_M3_POINTER:
-            ref_value = m3_value_as_address ( arg1 ) ;
+            ref_value = m3_value_as_address ( arg1 );
             { if ( ref_value == 0 )
                 { error (_("^ applied to NIL")); /* NORETURN */
                   return arg1;
@@ -2950,7 +2950,7 @@ m3_evaluate_subexp_maybe_packed (
       switch ( TYPE_CODE ( neg_type ) )
         { case TYPE_CODE_FLT:
             return
-              value_from_double ( neg_type, - m3_value_as_float ( arg1 ) ) ;
+              value_from_double ( neg_type, - m3_value_as_float ( arg1 ) );
           case TYPE_CODE_M3_INTEGER:
           case TYPE_CODE_M3_LONGINT:
             return
