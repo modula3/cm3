@@ -21,11 +21,11 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #define M3_TYPEPRINT_H 1
 
 #include "defs.h"
-#include "gdbtypes.h" 
- 
-extern void 
+#include "gdbtypes.h"
+
+extern void
 m3_type_print_base ( struct type *, struct ui_file *, int, int );
 
 #endif /* !defined (M3_TYPEPRINT_H) */
 
-/* End of file m3-typeprint.h */ 
+/* End of file m3-typeprint.h */

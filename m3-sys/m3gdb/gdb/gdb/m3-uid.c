@@ -40,7 +40,7 @@ m3uid_from_num (const LONGEST x)
   if (lx == -1) return "zzzzzz";
 
   res = (char *) malloc (M3UID_LEN + 1);
-  /* FIXME: ^This can't be the right way to allocate in gdb. */ 
+  /* FIXME: ^This can't be the right way to allocate in gdb. */
   res[M3UID_LEN] = 0;
   for (i = M3UID_LEN-1; i >= 0; i--) {
     digit = lx % 62;
@@ -68,7 +68,7 @@ m3uid_to_num (const char *uid, LONGEST *num_val)
 
   if (strlen (uid) < M3UID_LEN) return false;
 
-  if (strncmp (uid, "zzzzzz", M3UID_LEN ) == 0) 
+  if (strncmp (uid, "zzzzzz", M3UID_LEN ) == 0)
     { *num_val = -1;  return true; };
 
   value = 0;
@@ -84,4 +84,4 @@ m3uid_to_num (const char *uid, LONGEST *num_val)
   return true;
 }
 
-/* End of file m3-uid.c */ 
+/* End of file m3-uid.c */

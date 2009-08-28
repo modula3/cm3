@@ -23,7 +23,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "c-lang.h"
 
 
-#include "m3-typeprint.h" 
+#include "m3-typeprint.h"
 #include "m3-util.h"
 
 
@@ -73,7 +73,7 @@ m3_type_print_base (type, stream, show, level)
       return; }}
 
   if (show < 0) {
-    fprintf_filtered (stream, "..."); 
+    fprintf_filtered (stream, "...");
     return; }
 
   switch (TYPE_CODE (type))
@@ -91,7 +91,7 @@ m3_type_print_base (type, stream, show, level)
       break;
 
     case TYPE_CODE_M3_PACKED:
-      fprintf_filtered 
+      fprintf_filtered
         (stream, "BITS %d FOR ", (int)TYPE_M3_SIZE (type));
       m3_type_print_base (TYPE_M3_PACKED_TARGET (type), stream, show-1, level);
       break;
@@ -124,13 +124,13 @@ m3_type_print_base (type, stream, show, level)
          wrap_here ("  "); }
 
       if (TYPE_M3_OBJ_BRANDED (type)) {
-	fprintf_filtered (stream, "BRANDED \"%s\" ", 
+	fprintf_filtered (stream, "BRANDED \"%s\" ",
 			  TYPE_M3_OBJ_BRAND (type)); }
 
       fprintf_filtered (stream, "OBJECT ");
       for (i = 0; i < TYPE_M3_OBJ_NFIELDS (type); i++) {
 	fprintf_filtered (stream, "%s: ", TYPE_M3_OBJ_FIELD_NAME (type, i));
-	m3_type_print_base (TYPE_M3_OBJ_FIELD_TYPE (type, i), 
+	m3_type_print_base (TYPE_M3_OBJ_FIELD_TYPE (type, i),
 			    stream, show-1, level);
 	fprintf_filtered (stream, "; ");
 	wrap_here ("    "); }
@@ -145,9 +145,9 @@ m3_type_print_base (type, stream, show, level)
       break; }
 
     case TYPE_CODE_M3_PROC:
-    case TYPE_CODE_M3_METHOD: /* REVIEWME: What do we want to do here? */ 
+    case TYPE_CODE_M3_METHOD: /* REVIEWME: What do we want to do here? */
       if (show < 0) {
-	fprintf_filtered (stream, "PROCEDURE ..."); 
+	fprintf_filtered (stream, "PROCEDURE ...");
 	break; }
 
       fprintf_filtered (stream, "PROCEDURE (");
@@ -156,7 +156,7 @@ m3_type_print_base (type, stream, show, level)
 	  fprintf_filtered (stream, "; ");
 	  wrap_here ("    "); }
 	fprintf_filtered (stream, "%s: ", TYPE_M3_PROC_ARG_NAME (type, i) + 1);
-	m3_type_print_base (TYPE_M3_PROC_ARG_TYPE (type, i), 
+	m3_type_print_base (TYPE_M3_PROC_ARG_TYPE (type, i),
 			    stream, 0, level); }
       fprintf_filtered (stream, ")");
       if (M3_TYPEP (TYPE_CODE (TYPE_TARGET_TYPE (type)))
@@ -173,11 +173,11 @@ m3_type_print_base (type, stream, show, level)
 	    if (i != 0) {
 	      fprintf_filtered (stream, ", ");
 	      wrap_here ("    "); }
-	    fprintf_filtered (stream, "%s", 
+	    fprintf_filtered (stream, "%s",
 			      TYPE_M3_PROC_RAISE_NAME (type, i)); }
 	  fprintf_filtered (stream, "}"); }
       break;
-	  
+	
     case TYPE_CODE_M3_RECORD:
       fprintf_filtered (stream, "RECORD ");
       for (i = 0; i < TYPE_M3_REC_NFIELDS (type); i++) {
@@ -188,16 +188,16 @@ m3_type_print_base (type, stream, show, level)
 	wrap_here ("    "); }
       fprintf_filtered (stream, "END");
       break;
-      
+
     case TYPE_CODE_M3_SET:
       fprintf_filtered (stream, "SET OF ");
       m3_type_print_base (TYPE_M3_SET_TARGET (type), stream, show-1, level);
-      break; 
+      break;
 
     case TYPE_CODE_M3_POINTER: {
       /* FIXME: This isn't right.  There can be real REF ARRAY OF CHAR that
          are not TEXT.  Arrange so the statment below is no longer true,
-         then delete this case. rodney.bates@wichita.edu */ 
+         then delete this case. rodney.bates@wichita.edu */
       /* Texts are passed as TYPE_CODE_M3_POINTER, not as TYPE_CODE_M3_TEXT ... */
       struct type *target = TYPE_M3_POINTER_TARGET (type);
       if (TYPE_CODE (target) == TYPE_CODE_M3_OPEN_ARRAY
@@ -223,7 +223,7 @@ m3_type_print_base (type, stream, show, level)
       LONGEST lower, upper;
       struct type *target = TYPE_M3_SUBRANGE_TARGET (type);
       int en = (TYPE_CODE (target) == TYPE_CODE_M3_ENUM);
-      
+
       m3_ordinal_bounds (type, &lower, &upper);
       fprintf_filtered (stream, "[");
       if (en) {
@@ -240,67 +240,67 @@ m3_type_print_base (type, stream, show, level)
 
     case TYPE_CODE_M3_ADDRESS:
       fprintf_filtered (stream, "ADDRESS");
-      break; 
+      break;
 
     case TYPE_CODE_M3_BOOLEAN:
       fprintf_filtered (stream, "BOOLEAN");
-      break; 
+      break;
 
     case TYPE_CODE_M3_CHAR:
       fprintf_filtered (stream, "CHAR");
-      break; 
+      break;
 
     case TYPE_CODE_M3_INTEGER:
       fprintf_filtered (stream, "INTEGER");
-      break; 
+      break;
 
     case TYPE_CODE_M3_CARDINAL:
       fprintf_filtered (stream, "CARDINAL");
-      break; 
+      break;
 
     case TYPE_CODE_M3_LONGINT:
       fprintf_filtered (stream, "LONGINT");
-      break; 
+      break;
 
     case TYPE_CODE_M3_LONGCARD:
       fprintf_filtered (stream, "LONGCARD");
-      break; 
+      break;
 
     case TYPE_CODE_M3_REFANY:
       fprintf_filtered (stream, "REFANY");
-      break; 
+      break;
 
     case TYPE_CODE_M3_TRANSIENT_REFANY:
       fprintf_filtered (stream, "TRANSIENT REFANY");
-      break; 
+      break;
 
     case TYPE_CODE_M3_MUTEX:
       fprintf_filtered (stream, "MUTEX");
-      break; 
+      break;
 
     case TYPE_CODE_M3_NULL:
       fprintf_filtered (stream, "NULL");
-      break; 
+      break;
 
     case TYPE_CODE_M3_ROOT:
       fprintf_filtered (stream, "ROOT");
-      break; 
+      break;
 
     case TYPE_CODE_M3_TRANSIENT_ROOT:
       fprintf_filtered (stream, "TRANSIENT ROOT");
-      break; 
+      break;
 
     case TYPE_CODE_M3_TEXT:
       fprintf_filtered (stream, "TEXT");
-      break; 
+      break;
 
     case TYPE_CODE_M3_UN_ROOT:
       fprintf_filtered (stream, "UNTRACED ROOT");
-      break; 
+      break;
 
     case TYPE_CODE_M3_VOID:
       fprintf_filtered (stream, "VOID");
-      break; 
+      break;
 
     default:
       /* Handle types not explicitly handled by the other cases,
@@ -317,6 +317,6 @@ m3_type_print_base (type, stream, show, level)
 	}
       break;
     }
-} /* m3_type_print_base */ 
+} /* m3_type_print_base */
 
-/* End of file m3-typeprint.c */ 
+/* End of file m3-typeprint.c */

@@ -45,8 +45,8 @@
 #include "block.h"
 #include "cp-support.h"
 #include "dictionary.h"
-#include "language.h" 
-#include "m3-lang.h" 
+#include "language.h"
+#include "m3-lang.h"
 
 /* Ask buildsym.h to define the vars it normally declares `extern'.  */
 #define	EXTERN
@@ -96,7 +96,7 @@ add_free_pendings (struct pending *list)
       free_pendings = list;
     }
 }
-      
+
 /* Add a symbol to one of the lists of symbols.  While we're at it, if
    we're in the C++ case and don't have full namespace debugging info,
    check to see if it references an anonymous namespace; if so, add an
@@ -134,7 +134,7 @@ add_symbol_to_list (struct symbol *symbol, struct pending **listhead)
 
   /* Check to see if we might need to look for a mention of anonymous
      namespaces.  */
-  
+
   if (SYMBOL_LANGUAGE (symbol) == language_cplus)
     cp_scan_for_anonymous_namespaces (symbol);
 }
@@ -325,8 +325,8 @@ finish_block (struct symbol *symbol, struct pending **listhead,
 		      TYPE_FIELD_TYPE (ftype, iparams) = SYMBOL_TYPE (sym);
 		      TYPE_FIELD_ARTIFICIAL (ftype, iparams) = 0;
 #ifdef _LANG_m3
-                      m3_fix_param ( ftype, iparams, sym); 
-#endif 
+                      m3_fix_param ( ftype, iparams, sym);
+#endif
 		      iparams++;
 		      break;
 		    case LOC_UNDEF:
@@ -398,8 +398,8 @@ finish_block (struct symbol *symbol, struct pending **listhead,
      start of this scope that don't have superblocks yet.  */
 
   opblock = NULL;
-  for (pblock = pending_blocks; 
-       pblock && pblock != old_blocks; 
+  for (pblock = pending_blocks;
+       pblock && pblock != old_blocks;
        pblock = pblock->next)
     {
       if (BLOCK_SUPERBLOCK (pblock->block) == NULL)
@@ -646,8 +646,8 @@ patch_subfile_names (struct subfile *subfile, char *name)
       subfile->name = savestring (name, strlen (name));
       last_source_file = name;
 #ifdef _LANG_m3
-      m3_check_target ( subfile->dirname, subfile->name ); 
-#endif /* _LANG_m3 */ 
+      m3_check_target ( subfile->dirname, subfile->name );
+#endif /* _LANG_m3 */
 
       /* Default the source language to whatever can be deduced from
          the filename.  If nothing can be deduced (such as for a C/C++
@@ -831,7 +831,7 @@ end_symtab (CORE_ADDR end_addr, struct objfile *objfile, int section)
   struct subfile *nextsub;
 #ifdef _LANG_m3
   bool m3_patch_done = false;
-#endif 
+#endif
 
   /* Finish the lexical context of the last function in the file; pop
      the context stack.  */
@@ -945,9 +945,9 @@ end_symtab (CORE_ADDR end_addr, struct objfile *objfile, int section)
           /* Presumably, there should only be one subfile for a Modula-3
              compilation, but I'm paranoid. rodney.bates@wichita.edu */
           if (subfile->language == language_m3 && !m3_patch_done)
-            { m3_patch_nested_procs ( blockvector ); 
+            { m3_patch_nested_procs ( blockvector );
               m3_patch_done = true;
-            } 
+            }
 #endif
    	  if (subfile->line_vector)
 	    {
