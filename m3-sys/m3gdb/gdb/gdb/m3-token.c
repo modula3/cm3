@@ -19,7 +19,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* This file contains code to lexically scan Modula-3 code. */
 
-#include <stdbool.h>
+#include "m3-bool.h"
 
 #include "defs.h"
 #include "expression.h"
@@ -185,13 +185,13 @@ m3_scan_number (char *input, struct m3_token *tok)
     LONGEST signed_val;
     LONGEST lower;
     LONGEST upper;
-    bool is_based;
+    BOOL is_based;
 
     c = input;
     val = 0;
     if (*c == '0' && ( *(c+1) == 'x' || *(c+1) == 'X' ) )
       { /* Go ahead and accept the C lexical syntax for hex numbers. */
-	is_based = true;
+	is_based = TRUE;
 	base = 16;
 	c = c + 2;
       }
@@ -208,7 +208,7 @@ m3_scan_number (char *input, struct m3_token *tok)
 	  }
 	if (*c == '_')
 	  { /* It's a based value in Modula-3 syntax. */
-	    is_based = true;
+	    is_based = TRUE;
 	    base = val;
 	    c++;
 	    if ((base < 2) || (16 < base))
@@ -218,7 +218,7 @@ m3_scan_number (char *input, struct m3_token *tok)
 		  ); /* NORETURN */
 	      }
 	  }
-	else is_based = false;
+	else is_based = FALSE;
       }
 
     /* See if it's a real literal. If so, throw away the converted integer
@@ -275,7 +275,7 @@ m3_scan_number (char *input, struct m3_token *tok)
       { /* scan a based integer */
 	val = 0;
 	based_start = c;
-	while ( true )
+	while ( TRUE )
 	  { if ('0' <= *c && *c <= '9')
 	      { digit = *c - '0'; }
 	    else if ('A' <= *c && *c <= 'F')
@@ -421,7 +421,7 @@ scan_gdb_token (input, tok)
 /*-------------------------------------------------- char & text literals ---*/
 
 static void
-bad_octal ( bool wide )
+bad_octal ( BOOL wide )
 
   { error (_("Octal %sCHAR escape sequence must have exactly %d digits"),
             ( wide ? "WIDE" : "" ),
@@ -429,17 +429,17 @@ bad_octal ( bool wide )
           ); /* NORETURN */
   } /* bad_octal */
 
-static bool
+static BOOL
 octal_digit ( char ch, int *digit )
 
 {
   if ( '0' <= ch && ch <= '7' )
-    { *digit = ch - '0';  return true; }
-  return false;
+    { *digit = ch - '0';  return TRUE; }
+  return FALSE;
 } /* octal_digit */
 
 static char *
-scan_octal ( char *input, LONGEST *val,  bool wide )
+scan_octal ( char *input, LONGEST *val,  BOOL wide )
 
   { int digit;
     *val = 0;
@@ -464,7 +464,7 @@ scan_octal ( char *input, LONGEST *val,  bool wide )
   } /* scan_octal */
 
 static void
-bad_hex ( bool wide )
+bad_hex ( BOOL wide )
 
   { error (_("Hex %scharacter escape sequence must exactly have %d digits"),
             ( wide ? "wide " : "" ),
@@ -472,20 +472,20 @@ bad_hex ( bool wide )
           ); /* NORETURN */
   } /* bad_hex */
 
-static bool
+static BOOL
 hex_digit ( char ch, int *digit )
 
   { if ( '0' <= ch && ch <= '9' )
-      { *digit = ch - '0';       return true; }
+      { *digit = ch - '0';       return TRUE; }
     if ( 'A' <= ch && ch <= 'F' )
-      { *digit = ch - 'A' + 10;  return true; }
+      { *digit = ch - 'A' + 10;  return TRUE; }
     if ( 'a' <= ch && ch <= 'f' )
-      { *digit = ch - 'a' + 10;  return true; }
-    return false;
+      { *digit = ch - 'a' + 10;  return TRUE; }
+    return FALSE;
   } /* hex_digit */
 
 static char *
-scan_hex ( char *input, LONGEST *val, bool wide )
+scan_hex ( char *input, LONGEST *val, BOOL wide )
 
   { int digit;
     *val = 0;
@@ -507,7 +507,7 @@ scan_hex ( char *input, LONGEST *val, bool wide )
 
 /* PRE: input points to the opening single quote. */
 static char *
-scan_char ( char *input, struct m3_token *tok, bool wide )
+scan_char ( char *input, struct m3_token *tok, BOOL wide )
 
 {
   int val = 0;
@@ -603,11 +603,11 @@ scan_text (input, tok)
       else if (*input == '"')  { *next++ = '"';   input++; }
       else if (*input == 'x' || *input == 'X') {
 	LONGEST hexval;
-        input = scan_hex (++input, &hexval, false);
+        input = scan_hex (++input, &hexval, FALSE);
 	*next++ = hexval;
       } else if (('0' <= *input) && (*input <= '7')) {
 	LONGEST octval;
-        input = scan_octal (input, &octval, false);
+        input = scan_octal (input, &octval, FALSE);
 	*next++ = octval;
       } else {
         error (_("Unknown escape sequence in text literal") ); /* NORETURN */
@@ -651,7 +651,7 @@ scan_widetext ( char *input, struct m3_token *tok )
 
     /* prescan the string to estimate its final length */
     len = 0;
-    while ( true ) {
+    while ( TRUE ) {
       if (*input == '"') {
         input++;
         break;
@@ -693,7 +693,7 @@ scan_widetext ( char *input, struct m3_token *tok )
     tok->kind   = TK_WIDETEXT_LIT;
     tok->string = (char *) out;
 
-    while ( true ) {
+    while ( TRUE ) {
       if (*input == '"') {
         input++;
         break; /* Exit loop. */
@@ -714,11 +714,11 @@ scan_widetext ( char *input, struct m3_token *tok )
         else if (*input == '"')  { wchar_value = '"';   input++; }
         else if (*input == 'x' || *input == 'X') {
           LONGEST hexval;
-          input = scan_hex (++input, &hexval, true );
+          input = scan_hex (++input, &hexval, TRUE );
           wchar_value = hexval & 0xffff;
         } else if (('0' <= *input) && (*input <= '7')) {
           LONGEST octval;
-          input = scan_octal (input, &octval, true );
+          input = scan_octal (input, &octval, TRUE );
           wchar_value = octval & 0xffff;
         } else {
           error
@@ -810,7 +810,7 @@ scan_m3_token (input, tok)
                 (_("WIDECHAR literals not supported by this "
                    "Modula-3 compiler ") );
             } /* NORETURN */
-          input = scan_char ( input, tok, true );
+          input = scan_char ( input, tok, TRUE );
            break;
         }
 
@@ -846,7 +846,7 @@ scan_m3_token (input, tok)
       break;
 
     case '\'':
-      input = scan_char (tokstart, tok, false );
+      input = scan_char (tokstart, tok, FALSE );
       break;
 
     case '"':

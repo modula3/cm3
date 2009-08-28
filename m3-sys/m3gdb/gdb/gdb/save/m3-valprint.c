@@ -17,7 +17,7 @@
 #include "m3-lang.h"
 #include "gdb_string.h"
 
-#include <stdbool.h>
+#include "m3-bool.h"
 
 /* FIXME: define TARGET_WIDECHAR_BIT properly. */
 #define TARGET_WIDECHAR_BIT ( ( TARGET_CHAR_BIT ) * 2 )
@@ -442,7 +442,7 @@ struct field_info {
 
 static int text_debug__warning_ct = 0;
 
-static bool /* success */
+static BOOL /* success */
 get_type_info
   ( char *nm,
     int wide_mode,
@@ -454,7 +454,7 @@ get_type_info
 
 { struct type *t;
 /* REVIEWME: Failure cases. */
-  if ( ti -> tc_addr != 0 || ti -> uid != 0 ) { return true; }
+  if ( ti -> tc_addr != 0 || ti -> uid != 0 ) { return TRUE; }
   ti->type_name = nm;
   ti->wide_mode = wide_mode;
 
@@ -465,7 +465,7 @@ get_type_info
       ti -> tc_addr   = find_tc_from_m3_type (t);
       ti -> uid = 0; /* TODO: It would be nice to get the real uid from the
                               typecell. See find_tc_from_m3_type for inspiration. */
-      return true;
+      return TRUE;
     }
   else if ( default_uid != 0 )
     { ti -> type = 0;
@@ -476,15 +476,15 @@ get_type_info
         { warning
             ( "This probably means libm3core was compiled without debug info." );
         }
-      return true;
+      return TRUE;
     }
   else
     { warning ( "No information on TEXT subtype %s." , nm );
-      return false;
+      return FALSE;
     }
 } /* get_type_info */
 
-static bool /* success */
+static BOOL /* success */
 get_obj_field_info  ( struct type_info * ti,
     char * field_name ,
     struct field_info * fi,
@@ -506,7 +506,7 @@ get_obj_field_info  ( struct type_info * ti,
          )
          { fi-> bitpos
              += TARGET_CHAR_BIT * m3_tc_address_to_dataOffset ( l_tc_addr );
-           return true;
+           return TRUE;
          }
 
        l_tc_addr = m3_tc_addr_to_super_tc_addr ( l_tc_addr );
@@ -521,10 +521,10 @@ get_obj_field_info  ( struct type_info * ti,
     { warning
         ( "This probably means libm3core was compiled without debug info." );
     }
-  return false;
+  return FALSE;
 } /* get_obj_field_info */
 
-static bool text_info_is_initialized = false;
+static BOOL text_info_is_initialized = FALSE;
 
 static struct type_info  Text;
 static struct type_info  TextLiteral;
@@ -633,25 +633,25 @@ init_m3_text_info ( )
         { if ( ! Text . tc_addr & ! Text . uid )
             { get_type_info ( "Text.T", 2, &Text, 0xcd7f2264 ); }
         }
-      text_info_is_initialized = true;
+      text_info_is_initialized = TRUE;
     }
 } /* init_m3_text_info */
 
-bool type_info_matches ( CORE_ADDR tc_addr, struct type_info * info )
+BOOL type_info_matches ( CORE_ADDR tc_addr, struct type_info * info )
 
 { int uid;
 
-  if ( info -> tc_addr != 0 && tc_addr == info -> tc_addr ) { return true; }
+  if ( info -> tc_addr != 0 && tc_addr == info -> tc_addr ) { return TRUE; }
   uid = find_m3_uid_from_tc ( tc_addr );
-  if ( info -> uid != 0 && uid == info -> uid ) { return true; }
-  return false;
+  if ( info -> uid != 0 && uid == info -> uid ) { return TRUE; }
+  return FALSE;
 } /* type_info_matches */
 
 static struct type * library_type_m3_TextLiteral_buf_char;
 static struct type * library_type_m3_TextLiteral_buf_char_index;
 static struct type * library_type_m3_TextLiteral_buf_widechar;
 static struct type * library_type_m3_TextLiteral_buf_widechar_index;
-static bool TextLiteral_types_initialized = false;
+static BOOL TextLiteral_types_initialized = FALSE;
 
 static void init_m3_TextLiteral_library_types ( )
 
@@ -710,13 +710,13 @@ static void init_m3_TextLiteral_library_types ( )
       LHS_TYPE_M3_ARRAY_ELEM ( library_type_m3_TextLiteral_buf_widechar )
         = builtin_type_m3_widechar;
 
-      TextLiteral_types_initialized = true;
+      TextLiteral_types_initialized = TRUE;
     }
 } /* init_m3_TextLiteral_library_types */
 
 /* Fetch the contents of the boolean field described by fi, of the object at
    inferior address ref, of object type described by ti. */
-static bool
+static BOOL
 m3_text_field_boolean
   ( CORE_ADDR ref, struct type_info * ti, struct field_info * fi )
 
@@ -788,14 +788,14 @@ m3_text_field_addr (
    'buf' field's type shows it as a very long field, but the actual
    value length is encoded in the 'cnt' field.
 
-   If not, return false. If so, return true and construct trumped-up
+   If not, return FALSE. If so, return TRUE and construct trumped-up
    type that is right for printing the buf field, having computed its
    element count and element type from the object.  This type is good
    until the next call on this function.  Also supply the 'bitsize',
    'bitpos', and 'field_name', for consistency with other field/method
    lookup functions.
 */
-bool /* Yes, it's that field of that type. */
+BOOL /* Yes, it's that field of that type. */
 m3_check_TextLiteral_buf (
     CORE_ADDR ref,
     CORE_ADDR tc_addr,
@@ -828,7 +828,7 @@ m3_check_TextLiteral_buf (
           if ( bitpos != NULL ) { * bitpos = TextLiteral_buf . bitpos; }
           if ( field_type != NULL )
             { * field_type = library_type_m3_TextLiteral_buf_widechar; }
-          return true;
+          return TRUE;
         }
       else
         { TYPE_M3_SUBRANGE_MAX ( library_type_m3_TextLiteral_buf_char_index )
@@ -841,10 +841,10 @@ m3_check_TextLiteral_buf (
           if ( bitpos != NULL ) { * bitpos = TextLiteral_buf . bitpos; }
           if ( field_type != NULL )
             { * field_type = library_type_m3_TextLiteral_buf_char; }
-          return true;
+          return TRUE;
         }
     }
-  else { return false; }
+  else { return FALSE; }
 } /* m3_check_TextLiteral_buf */
 
 /* Normally stops on a null byte, but will not exceed len chars. */
@@ -980,7 +980,7 @@ m3_print_cm3_text (
     CORE_ADDR tc_addr,  /* Inferior address of its Typecell. */
     ULONGEST start,     /* skip this many chars before starting printing. */
     ULONGEST length,    /* print at most this many, (beyond start). */
-    bool add_quotes,
+    BOOL add_quotes,
     struct ui_file *stream
   )
 
@@ -1085,7 +1085,7 @@ m3_print_cm3_text (
            return - 2;
          }
       if (add_quotes)
-        { bool a_or_b_wide
+        { BOOL a_or_b_wide
             = m3_text_field_boolean ( ref, &TextCat, &TextCat_a_or_b_wide );
           if (a_or_b_wide) { fputs_filtered ("W\"", stream); }
           else { fputs_filtered ("\"", stream); }
@@ -1097,7 +1097,7 @@ m3_print_cm3_text (
           else
             { a_printed
                 = m3_print_cm3_text
-                    ( a_object, a_tc_addr, start, length, false, stream );
+                    ( a_object, a_tc_addr, start, length, FALSE, stream );
               switch ( a_printed )
                 { case - 2: /* Substring is not good CM3 TEXT subtype. */
                     { fputs_filtered ("<Ill-formed CM3 TEXT value>", stream );
@@ -1119,7 +1119,7 @@ m3_print_cm3_text (
         { b_tc_addr = find_m3_heap_tc_addr (b_object);
           b_printed
             = m3_print_cm3_text
-                ( b_object, b_tc_addr, start, length, false, stream );
+                ( b_object, b_tc_addr, start, length, FALSE, stream );
           switch (b_printed )
             { case - 2 : /* Substring is not good CM3 TEXT subtype. */
                 { fputs_filtered ("<Ill-formed CM3 TEXT value>", stream );
@@ -1153,7 +1153,7 @@ m3_print_cm3_text (
       result
         = m3_print_cm3_text
             ( base, tc_addr, start + substart, print_length, add_quotes, stream);
-      add_quotes = false;
+      add_quotes = FALSE;
       if ( result == - 1 ) /* We expect this. */ { result = print_length; }
       /* result values - 2 and - 3 just get passed up. */
     }
@@ -1270,7 +1270,7 @@ m3_print_object(
 
       actual_printed
         = m3_print_cm3_text
-            ( ref , tc_addr, 0, max_string_length, true, stream );
+            ( ref , tc_addr, 0, max_string_length, TRUE, stream );
       switch ( actual_printed )
         { case - 1: /* CM3 string, was truncated at requested max length. */
             { fputs_filtered ("...", stream);

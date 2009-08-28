@@ -28,7 +28,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #if !defined (M3_UID_H)
 #define M3_UID_H 1
 
-#include <stdbool.h>
+#include "m3-bool.h"
 
 #define M3UID_LEN 6
 
@@ -36,7 +36,7 @@ extern char *
 m3uid_from_num (const LONGEST x);
 /* converts the integer uid 'x' to its string representation */
 
-extern bool
+extern BOOL
 m3uid_to_num (const char *uid, LONGEST *num_val);
 /* converts the string 'uid' to a numeric 'int_val',
    returns a boolean indicating success. */
