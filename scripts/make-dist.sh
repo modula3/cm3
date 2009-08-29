@@ -360,7 +360,10 @@ EOF
   fi
 done
 
-#set -x
+set -x
+echo "SCP=$SCP"
+echo "hostname=`hostname`"
+echo "SHIPRC=$SHIPRC"
 
 if [ `hostname` = 'birch' ]; then
   ARCHIVE="${STAGE}/cm3-scripts-${CM3VERSION}-${DS}.tgz"
