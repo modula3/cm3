@@ -67,8 +67,8 @@ for (i = 0; i < Lines.length; ++i)
     if (DirectoryExists(Directory))
     {
         Echo("...shipping " + Directory + "...")
-        WshShell.CurrentDirectory = Directory;
         Echo("cd " + WshShell.CurrentDirectory)
+        WshShell.CurrentDirectory = Directory;
 
         //
         // It is important to merge stdout and stderr to avoid deadlock.
