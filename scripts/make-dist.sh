@@ -361,7 +361,6 @@ EOF
 done
 
 set -x
-echo "SCP=$SCP"
 echo "hostname=`hostname`"
 echo "SHIPRC=$SHIPRC"
 
@@ -377,8 +376,8 @@ if [ `hostname` = 'birch' ]; then
   ls -l "${ARCHIVE}"
 fi
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
-  "${SCP}" ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+  scp ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
   if [ `hostname` = 'birch' ]; then
-    "${SCP}" collection-*.html $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+    scp collection-*.html $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
   fi
 fi

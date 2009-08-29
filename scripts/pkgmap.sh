@@ -496,7 +496,7 @@ if [ -n "${REPORT}" ]; then
   fi
     WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
     WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/logs}
-    "${SCP}" "${R}" "${WWWDEST}" < /dev/null
+    scp "${R}" "${WWWDEST}" < /dev/null
   fi
   if [ -n "${WORKSPACE}" ]; then
     echo "moving report to ${RW}"
