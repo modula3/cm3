@@ -1,7 +1,6 @@
-@if (1 == 0) /* (
+@if (1 == 0) /*
 @cscript.exe /e:jscript /nologo "%~f0" %*
-@exit /b %errorlevel%
-) */
+@exit /b %errorlevel% */
 @end
 
 /*
