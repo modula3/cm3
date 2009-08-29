@@ -30,8 +30,8 @@ function DirectoryExists(s)
 
 function IsEnvironmentVariableDefined(s)
 {
-    var a = "%" + s + "%";
-    return (WshShell.ExpandEnvironmentStrings(a) != a);
+    s = "%" + s + "%";
+    return (WshShell.ExpandEnvironmentStrings(s) != s);
 }
 
 function GetEnvironmentVariable(s)
