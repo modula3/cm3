@@ -64,39 +64,41 @@ var Shell = GetEnvironmentVariableElse("COMSPEC", "cmd.exe");
 for (i = 0; i < Lines.length; ++i)
 {
     var Directory = ScriptDirectory + "\\" + Lines[i];
-    if (DirectoryExists(Directory))
+
+    if (DirectoryExists(Directory) == false)
     {
-        Echo("...shipping " + Directory + "...")
-        Echo("cd " + WshShell.CurrentDirectory)
-        WshShell.CurrentDirectory = Directory;
-
-        //
-        // It is important to merge stdout and stderr to avoid deadlock.
-        // We need to wrap in cmd for 2>&1 to work, and there is perhaps
-        // no other way to achieve such merging.
-        //
-
-        var CommandLine = (Shell + " /c " + Action + " " + ShipArgs + " 2>&1").replace(/ +/g, " ");
-        Echo(CommandLine);
-        var Process = WshShell.Exec(CommandLine);
-        while (Process.Status == 0)
-        {
-            if (Process.StdOut.AtEndOfStream == false)
-                Echo(Process.StdOut.ReadAll());
-            if (Process.Status == 0)
-                WScript.Sleep(100);
-        }
-        if (Process.ExitCode != 0)
-        {
-            ErrorCount += 1;
-            Echo("failed " + Directory + " with ExitCode " + Process.ExitCode);
-            if (ExitCode == 0)
-                ExitCode = Process.ExitCode;
-        }
+        Echo("skipping " + Directory);
+        continue;
     }
-    else
+
+    Echo("...shipping " + Directory + "...")
+
+    Echo("cd " + WshShell.CurrentDirectory)
+    WshShell.CurrentDirectory = Directory;
+
+    //
+    // It is important to merge stdout and stderr to avoid deadlock.
+    // We need to wrap in cmd for 2>&1 to work, and there is perhaps
+    // no other way to achieve such merging.
+    //
+
+    var CommandLine = (Shell + " /c " + Action + " " + ShipArgs + " 2>&1").replace(/ +/g, " ");
+    Echo(CommandLine);
+    var Process = WshShell.Exec(CommandLine);
+    while (Process.Status == 0)
     {
-        Echo("skipping " + Directory)
+        if (Process.StdOut.AtEndOfStream == false)
+            Echo(Process.StdOut.ReadAll());
+        if (Process.Status == 0)
+            WScript.Sleep(100);
+    }
+    if (Process.ExitCode != 0)
+    {
+        ErrorCount += 1;
+        Echo("failed " + Directory + " with ExitCode " + Process.ExitCode);
+        if (ExitCode == 0)
+            ExitCode = Process.ExitCode;
+        }
     }
 }
 
