@@ -98,7 +98,6 @@ for (i = 0; i < Lines.length; ++i)
         Echo("failed " + Directory + " with ExitCode " + Process.ExitCode);
         if (ExitCode == 0)
             ExitCode = Process.ExitCode;
-        }
     }
 }
 
