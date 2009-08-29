@@ -138,7 +138,6 @@ CLEANGLOBAL="${CM3} -clean -DROOT='${CM3ROOT}'"
 SHIP="${CM3} -ship -DROOT='${CM3ROOT}'"
 export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 
-[ ${TARGET} != NT386 ] && "${ROOT}/scripts/do-pkg.sh" buildship
 echo "${ROOT}/scripts/do-cm3-${DIST}.sh" buildlocal
 "${ROOT}/scripts/do-cm3-${DIST}.sh" buildlocal || exit 1
 
