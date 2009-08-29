@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.20 2009-08-29 01:11:04 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.21 2009-08-29 04:22:33 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -360,7 +360,10 @@ EOF
   fi
 done
 
-#set -x
+set -x
+echo "SCP=$SCP"
+echo "hostname=`hostname`"
+echo "SHIPRC=$SHIPRC"
 
 if [ `hostname` = 'birch' ]; then
   ARCHIVE="${STAGE}/cm3-scripts-${CM3VERSION}-${DS}.tgz"
