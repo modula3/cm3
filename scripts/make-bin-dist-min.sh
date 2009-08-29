@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.42.2.6 2009-08-29 01:11:03 jkrell Exp $
+# $Id: make-bin-dist-min.sh,v 1.42.2.7 2009-08-29 02:12:46 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -138,7 +138,6 @@ CLEANGLOBAL="${CM3} -clean -DROOT='${CM3ROOT}'"
 SHIP="${CM3} -ship -DROOT='${CM3ROOT}'"
 export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 
-[ ${TARGET} != NT386 ] && "${ROOT}/scripts/do-pkg.sh" buildship
 echo "${ROOT}/scripts/do-cm3-${DIST}.sh" buildlocal
 "${ROOT}/scripts/do-cm3-${DIST}.sh" buildlocal || exit 1
 
