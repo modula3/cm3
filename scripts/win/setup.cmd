@@ -25,15 +25,13 @@ function GetFullPath(s)
 
 function DirectoryExists(s)
 {
-    return true;
     return FileSystemObject.FolderExists(s);
 }
 
 function IsEnvironmentVariableDefined(s)
 {
     var a = "%" + s + "%";
-    var b = WshShell.ExpandEnvironmentStrings(a);
-    return (a != b);
+    return (WshShell.ExpandEnvironmentStrings(a) != a);
 }
 
 function GetEnvironmentVariable(s)
