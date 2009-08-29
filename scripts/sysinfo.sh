@@ -126,14 +126,14 @@ if [ "x$SCP" = "x" ]; then
     if [ -x "/cygdrive/C/Program Files/PuTTY/pscp.exe" ]; then
         if [ -x /bin/cygpath.exe ]; then
             if [ -r "$HOME/.ssh/id_rsa.ppk" ]; then
-                if [ -x "${ROOT}/scripts/ssh.sh" ]; then
-                    SCP="${ROOT}/scripts/ssh.sh"
+                if [ -x "$ROOT/scripts/ssh.sh" ]; then
+                    SCP="$ROOT/scripts/ssh.sh"
                 fi
             fi
         fi
     fi
     export SCP
-    echo "SCP=${SCP}"
+    echo "SCP=$SCP"
 fi
 
 #-----------------------------------------------------------------------------
