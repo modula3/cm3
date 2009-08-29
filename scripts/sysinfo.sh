@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.74.2.17 2009-08-29 01:37:08 jkrell Exp $
+# $Id: sysinfo.sh,v 1.74.2.18 2009-08-29 05:57:33 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -113,28 +113,6 @@ find_in_list() {
 #-----------------------------------------------------------------------------
 
 PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
-
-#-----------------------------------------------------------------------------
-
-#
-# There seems no hope of getting this command line into an environment
-# variable, so use a wrapper .sh.
-#
-
-if [ "x$SCP" = "x" ]; then
-    SCP=scp
-    if [ -x "/cygdrive/C/Program Files/PuTTY/pscp.exe" ]; then
-        if [ -x /bin/cygpath.exe ]; then
-            if [ -r "$HOME/.ssh/id_rsa.ppk" ]; then
-                if [ -x "$ROOT/scripts/ssh.sh" ]; then
-                    SCP="$ROOT/scripts/ssh.sh"
-                fi
-            fi
-        fi
-    fi
-    export SCP
-    echo "SCP=$SCP"
-fi
 
 #-----------------------------------------------------------------------------
 # set some defaults

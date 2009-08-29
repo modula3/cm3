@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-sys.sh,v 1.12.2.3 2009-08-29 01:11:03 jkrell Exp $
+# $Id: make-src-dist-sys.sh,v 1.12.2.4 2009-08-29 05:57:30 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -69,7 +69,7 @@ if [ -n "${DOSHIP}" ]; then
   fi
   WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
   WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
-  "${SCP}" "${ARCHIVE}" "${WWWDEST}" < /dev/null
+  scp "${ARCHIVE}" "${WWWDEST}" < /dev/null
 fi
 echo "done"
 exit 0
