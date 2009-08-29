@@ -67,13 +67,15 @@ for (i = 0; i < Lines.length; ++i)
     if (DirectoryExists(Directory))
     {
         Echo("...shipping " + Directory + "...")
-        //WshShell.CurrentDirectory = Directory;
+        WshShell.CurrentDirectory = Directory;
         Echo("cd " + WshShell.CurrentDirectory)
+
         //
         // It is important to merge stdout and stderr to avoid deadlock.
         // We need to wrap in cmd for 2>&1 to work, and there is perhaps
         // no other way to achieve such merging.
         //
+
         var CommandLine = (Shell + " /c " + Action + " " + ShipArgs + " 2>&1").replace(/ +/g, " ");
         Echo(CommandLine);
         var Process = WshShell.Exec(CommandLine);
