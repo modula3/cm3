@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.22 2009-08-29 05:57:28 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.23 2009-08-29 08:15:45 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -219,7 +219,14 @@ support tools like m3bundle and some general useful libraries.
 </ul>
 '
 
+#
+# Windows setup is one constant setup.cmd, with a setup.txt
+# next to it, containing relative directories from $ROOT.
+# Unix setup is a generated install.sh at least for now.
+#
+
 cd "${ROOT}"
+rm setup.txt || true
 for c in ${PKG_COLLECTIONS}; do
   P=`fgrep " $c" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
   PKGS=""
@@ -227,10 +234,12 @@ for c in ${PKG_COLLECTIONS}; do
     p="$x"
     if [ -d "$x" ] ; then
       PKGS="${PKGS} $x"
+      echo "$x" >> setup.txt
     else
       p=`pkgpath $x`
       if [ -d "$p" ] ; then
         PKGS="${PKGS} $p"
+        echo "$p" >> setup.txt
       else
         echo " *** cannot find package $x / $p" 1>&2
         exit 1
@@ -259,33 +268,7 @@ for c in ${PKG_COLLECTIONS}; do
     echo "done"
   ) > install.sh
   chmod 755 install.sh
-  echo "making setup.cmd"
-  (
-    echo 'REM ---BEGIN---'
-    echo '@echo off'
-    printf 'for %%%%p in ('
-    for p in ${PKGS}; do
-      printf "%s; " ${p}
-    done
-    echo ') do call :ShipIt %%p'
-    cat <<EOF
-goto End
- 
-:ShipIt
-echo ...shipping %1...
-pushd %1
-cm3 -ship %SHIPARGS%
-popd
-echo.
-goto :EOF
- 
-:End
-echo done
-@echo on
-REM ---END---
-EOF
-  ) > setup.cmd
-  chmod 755 setup.cmd
+  cp -p $ROOT/scripts/win/setup.cmd $ROOT/setup.cmd
   (
     echo "<html>"
     cat <<EOF
@@ -355,7 +338,7 @@ EOF
       --exclude '*/CVS/*' --exclude '*/CVS' --exclude '*~' \
       --exclude '*.tar.*' --exclude '*.tgz' --exclude "*/${TARGET}/gcc" \
       --exclude "*/${TARGET}/*/*" \
-      -czf "${ARCHIVE}" collection-${c}.html install.sh setup.cmd ${PKGS}
+      -czf "${ARCHIVE}" collection-${c}.html install.sh setup.txt setup.cmd ${PKGS}
       ls -l "${ARCHIVE}"
   fi
 done
