@@ -93,14 +93,14 @@ if [ "x$SCP" = "x" ]; then
     if [ -x "/cygdrive/C/Program Files/PuTTY/pscp.exe" ]; then
         if [ -x /bin/cygpath.exe ]; then
             if [ -r "$HOME/.ssh/id_rsa.ppk" ]; then
-                if [ -x "${WS}/scripts/ssh.sh" ]; then
-                    SCP="${WS}/scripts/ssh.sh"
+                if [ -x "$WS/scripts/ssh.sh" ]; then
+                    SCP="$WS/scripts/ssh.sh"
                 fi
             fi
         fi
     fi
     export SCP
-    echo "SCP=${SCP}"
+    echo "SCP=$SCP"
 fi
 
 #-----------------------------------------------------------------------------
