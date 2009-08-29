@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.42.2.10 2009-08-22 10:37:15 wagner Exp $
+# $Id: pkgmap.sh,v 1.42.2.11 2009-08-29 01:11:03 jkrell Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
@@ -496,7 +496,7 @@ if [ -n "${REPORT}" ]; then
   fi
     WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
     WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/logs}
-    scp "${R}" "${WWWDEST}" < /dev/null
+    "${SCP}" "${R}" "${WWWDEST}" < /dev/null
   fi
   if [ -n "${WORKSPACE}" ]; then
     echo "moving report to ${RW}"

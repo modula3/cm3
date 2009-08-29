@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.42.2.5 2009-08-28 06:34:27 jkrell Exp $
+# $Id: make-bin-dist-min.sh,v 1.42.2.6 2009-08-29 01:11:03 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -187,7 +187,7 @@ if [ -n "${DOSHIP}" ]; then
   fi
   WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
   WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
-  scp "${ABSARCH2}" "${WWWDEST}" < /dev/null
+  "${SCP}" "${ABSARCH2}" "${WWWDEST}" < /dev/null
 fi
 if [ -z "${NOCLEAN}" ]; then
   echo "cleaning up"

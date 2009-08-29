@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.19 2009-08-28 06:34:23 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.20 2009-08-29 01:11:04 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -374,8 +374,8 @@ if [ `hostname` = 'birch' ]; then
   ls -l "${ARCHIVE}"
 fi
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
-  scp ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+  "${SCP}" ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
   if [ `hostname` = 'birch' ]; then
-    scp collection-*.html $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+    "${SCP}" collection-*.html $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
   fi
 fi
