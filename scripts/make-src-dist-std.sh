@@ -75,7 +75,7 @@ if [ -n "${DOSHIP}" ]; then
   fi
   WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
   WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
-  scp "${ARCHIVE}" "${WWWDEST}" < /dev/null
+  "${SCP}" "${ARCHIVE}" "${WWWDEST}" < /dev/null
 fi
 echo "done"
 exit 0

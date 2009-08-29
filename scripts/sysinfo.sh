@@ -112,9 +112,29 @@ find_in_list() {
 
 #-----------------------------------------------------------------------------
 
-UNAME=${UNAME:-`uname`}
-
 PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
+
+#-----------------------------------------------------------------------------
+
+#
+# There seems no hope of getting this command line into an environment
+# variable, so use a wrapper .sh.
+#
+
+if [ "x$SCP" = "x" ]; then
+    SCP=scp
+    if [ -x "/cygdrive/C/Program Files/PuTTY/pscp.exe" ]; then
+        if [ -x /bin/cygpath.exe ]; then
+            if [ -r "$HOME/.ssh/id_rsa.ppk" ]; then
+                if [ -x "${ROOT}/scripts/ssh.sh" ]; then
+                    SCP="${ROOT}/scripts/ssh.sh"
+                fi
+            fi
+        fi
+    fi
+    export SCP
+    echo "SCP=${SCP}"
+fi
 
 #-----------------------------------------------------------------------------
 # set some defaults
@@ -194,7 +214,7 @@ fi
 
 CM3_OSTYPE=POSIX
 
-case "${UNAME}" in
+case "`uname`" in
 
   Windows*|WinNT*|Cygwin*|CYGWIN*)
     if [ x$TARGET = xNT386GNU ] ; then

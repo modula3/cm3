@@ -81,7 +81,29 @@ RLOG=${RLOG:-${HTMP}/cm3-rlog-${DS}}
 # number of last run results to keep (for cleanup in main)
 CM3_NKEEP=${CM3_NKEEP:-7}
 
-UNAME=${UNAME:-`uname`}
+#-----------------------------------------------------------------------------
+
+#
+# There seems no hope of getting this command line into an environment
+# variable, so use a wrapper .sh.
+#
+
+if [ "x$SCP" = "x" ]; then
+    SCP=scp
+    if [ -x "/cygdrive/C/Program Files/PuTTY/pscp.exe" ]; then
+        if [ -x /bin/cygpath.exe ]; then
+            if [ -r "$HOME/.ssh/id_rsa.ppk" ]; then
+                if [ -x "${WS}/scripts/ssh.sh" ]; then
+                    SCP="${WS}/scripts/ssh.sh"
+                fi
+            fi
+        fi
+    fi
+    export SCP
+    echo "SCP=${SCP}"
+fi
+
+#-----------------------------------------------------------------------------
 
 TMP=${TMP:-/tmp}
 TMPDIR=${TMPDIR:-${TMP}}
@@ -91,7 +113,7 @@ fi
 
 CM3_OSTYPE=POSIX
 
-case "${UNAME}" in
+case "`uname`" in
 
   Windows*|WinNT*|Cygwin*|CYGWIN*)
     if [ x$TARGET = xNT386GNU ] ; then
@@ -646,7 +668,7 @@ test_m3tests()
   cm3 -build -DHTML 2>&1 | tee ${M3TERR}
   WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/m3tests}
   if [ -r "m3tests.html" ]; then
-    scp "m3tests.html" "${WWWDEST}/m3tests-${CM3_TARGET}-${DS}.html" \
+    "${SCP}" "m3tests.html" "${WWWDEST}/m3tests-${CM3_TARGET}-${DS}.html" \
       < /dev/null
   fi
   
