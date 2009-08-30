@@ -1,5 +1,9 @@
 %------------------------------------------------------------------------------
 
+build_standalone()
+
+%------------------------------------------------------------------------------
+
 readonly proc NormalizeString (String) is
   String = subst (String, " (core dumped)", "", 9)
   String = del_chars (subst (String, " (core dumped)", "", 9), "\r")
