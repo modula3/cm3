@@ -13,6 +13,7 @@ write(CR, "--- tests in ", getwd(), "---", CR)
 
 import("libm3")
 implementation("RandomTest")
+build_standalone()
 program("RandomTest")
 
 if defined("RUN")
