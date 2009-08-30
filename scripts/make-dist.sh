@@ -359,8 +359,14 @@ if [ `hostname` = 'birch' ]; then
   ls -l "${ARCHIVE}"
 fi
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
-  scp ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+  RSYNC=${RSYNC:-"rsync -vu"}
+  type rsync || RSYNC=scp
+  false; while [ $? != 0 ]; do
+    $RSYNC ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+  done
   if [ `hostname` = 'birch' ]; then
-    scp collection-*.html $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+    false; while [ $? != 0 ]; do
+      $RSYNC collection-*.html $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+    done
   fi
 fi

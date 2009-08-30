@@ -98,8 +98,8 @@ m3_type_print_base (type, stream, show, level)
      int level;
 {
   char *name;
-  int i;
-  int len;
+  register int i;
+  register int len;
   char *mangled_name;
   char *demangled_name;
   enum {s_none, s_public, s_private, s_protected} section_type;

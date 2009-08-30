@@ -1329,7 +1329,7 @@ m3_val_print2 (
      int deref_ref,
      int toplevel)
 {
-  unsigned int i = 0;  /* Number of characters printed */
+  register unsigned int i = 0;  /* Number of characters printed */
   unsigned len;
   struct type *elttype;
   unsigned eltlen;

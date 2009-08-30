@@ -48,8 +48,8 @@ m3_type_print_base (type, stream, show, level)
      int level;
 {
   char *name;
-  int i;
-  int len;
+  register int i;
+  register int len;
   char *mangled_name;
   char *demangled_name;
   enum {s_none, s_public, s_private, s_protected} section_type;
@@ -196,7 +196,7 @@ m3_type_print_base (type, stream, show, level)
 
     case TYPE_CODE_M3_POINTER: {
       /* FIXME: This isn't right.  There can be real REF ARRAY OF CHAR that
-         are not TEXT.  Arrange so the statment below is no longer true,
+         are not TEXT.  Arrange so the statment below is no longer TRUE,
          then delete this case. rodney.bates@wichita.edu */
       /* Texts are passed as TYPE_CODE_M3_POINTER, not as TYPE_CODE_M3_TEXT ... */
       struct type *target = TYPE_M3_POINTER_TARGET (type);
