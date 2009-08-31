@@ -277,4 +277,6 @@ PROCEDURE Shutdown () =
     END
   END Shutdown;
 
-BEGIN Process.RegisterExitor(Shutdown); END AutoFlushWr.
+BEGIN
+    Process.RegisterExitor(Shutdown);
+END AutoFlushWr.
