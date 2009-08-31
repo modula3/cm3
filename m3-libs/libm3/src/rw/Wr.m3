@@ -138,9 +138,7 @@ PROCEDURE PutString (wr: T; READONLY a: ARRAY OF CHAR)
   RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
-      IF wr.closed THEN Die() END;
-      wr.putString(a);
-      IF NOT wr.buffered THEN wr.flush(); END;
+      FastPutString(wr, a);
     END;
   END PutString;
 
