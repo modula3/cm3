@@ -104,6 +104,19 @@ PROCEDURE Seek (wr: T; n: CARDINAL) RAISES {Failure, Alerted} =
     TRY
       wr.child.cur := wr.cur;
       wr.child.seek(n);
+    FINALLY
+      WrClass.Unlock(wr.child);
+    END;
+
+    (* Historically no lock here.
+       We could extend the previous lock, however
+       Unlock is documented as not only unlocking,
+       but also restoring invariants, so going
+       through an extra Unlock/Lock ensures
+       invariants hold. *)
+
+    WrClass.Lock(wr.child);
+    TRY
       wr.buff := wr.child.buff;
       wr.st := wr.child.st;
       wr.cur := wr.child.cur;
@@ -112,6 +125,7 @@ PROCEDURE Seek (wr: T; n: CARDINAL) RAISES {Failure, Alerted} =
     FINALLY
       WrClass.Unlock(wr.child);
     END;
+
     LOCK mu DO
       IF NOT wr.onQ THEN
         wr.onQ := TRUE;
