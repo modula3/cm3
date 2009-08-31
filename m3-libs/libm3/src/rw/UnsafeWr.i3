@@ -105,5 +105,15 @@ PROCEDURE FastPutLongReal(
 (* Like Wr.PutText(wr, Fmt.LongReal(wr, precision, style)). *)
 
 PROCEDURE FastClose (wr: Wr.T) RAISES {Failure, Alerted};
+(* Like Wr.Close *)
+
+PROCEDURE FastSeek(wr: Wr.T; n: CARDINAL) RAISES {Failure, Alerted};
+(* Like Wr.Seek *)
+
+PROCEDURE FastFlush(wr: Wr.T) RAISES {Failure, Alerted};
+(* Like Wr.Flush *)
+
+PROCEDURE FastLength(wr: Wr.T): CARDINAL RAISES {Failure, Alerted};
+(* Like Wr.Length *)
 
 END UnsafeWr.
