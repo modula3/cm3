@@ -1,4 +1,0 @@
-<p>
-import libraries for Windows
-    usually not needed, but 1) older cm3 releases contained bad ones, 2) some C toolsets are missing them
-</p>
