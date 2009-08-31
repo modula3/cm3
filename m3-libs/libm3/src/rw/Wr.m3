@@ -14,9 +14,6 @@ FROM Thread IMPORT Alerted;
 REVEAL
   Private = Thread.Mutex BRANDED OBJECT END;
 
-(* FastPutChar and PutChar are identical except that PutChar acquires
-   and releases the lock while FastPutChar assumes it is already held. *)
-
 (* It is invariant that for a closed writer "wr", "wr.buff = NIL" and
    "wr.lo = wr.hi".  Therefore the check that "wr" is ready need
    not inspect "wr.closed" on the fast path. *)
@@ -31,14 +28,14 @@ PROCEDURE Unlock(wr: T) =
     Thread.Release(wr)
   END Unlock;
 
+(* FastPutChar and PutChar are identical except that PutChar acquires
+   and releases the lock while FastPutChar assumes it is already held. *)
+
 <*INLINE*>
 PROCEDURE PutChar (wr: T; ch: CHAR) RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
-      IF wr.cur = wr.hi THEN DoSeek(wr) END;
-      wr.buff[wr.st + wr.cur - wr.lo] := ch;
-      INC(wr.cur);
-      IF NOT wr.buffered THEN wr.flush(); END;
+      FastPutChar(wr, ch);
     END;
   END PutChar;
 
@@ -55,8 +52,7 @@ PROCEDURE FastPutChar (wr: T; ch: CHAR) RAISES {Failure, Alerted} =
 PROCEDURE PutWideChar (wr: T; ch: WIDECHAR) RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
-      PutWC (wr, ch);
-      IF NOT wr.buffered THEN wr.flush(); END;
+      FastPutWideChar(wr, ch);
     END;
   END PutWideChar;
 
@@ -329,4 +325,3 @@ PROCEDURE Die() =
 
 BEGIN
 END Wr.
-
