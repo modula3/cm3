@@ -53,7 +53,7 @@ proc ConfigureGNUMake() is
 
     % a += "ls"                 % test case for CheckGNUMake
     a += "gmake"                % search path for popular option
-    a += "gnumake"              % search path for reasonable but less popular option
+    a += "gnumake"              % MacOS X (Darwin) 
     a += "/usr/pkg/bin/gmake"   % NetBSD
     a += "/usr/sfw/bin/gmake"   % Solaris
     a += "/usr/local/gmake"     % FreeBSD, OpenBSD, otherwise popular
