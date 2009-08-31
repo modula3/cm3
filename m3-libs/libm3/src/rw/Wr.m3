@@ -225,19 +225,29 @@ PROCEDURE FastPutLongReal (wr: T; r: LONGREAL; p: CARDINAL := 6;
   END FastPutLongReal;
 
    
+PROCEDURE FastSeek(wr: T; n: CARDINAL) RAISES {Failure, Alerted} =
+  BEGIN
+    IF wr.closed OR NOT wr.seekable THEN Die() END;
+    wr.seek(n);
+  END FastSeek;
+   
 PROCEDURE Seek(wr: T; n: CARDINAL) RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
-      IF wr.closed OR NOT wr.seekable THEN Die() END;
-      wr.seek(n);
+      FastSeek(wr, n);
     END
   END Seek;
+
+PROCEDURE FastFlush (wr: T) RAISES {Failure, Alerted} =
+  BEGIN
+    IF wr.closed THEN Die() END;
+    wr.flush();
+  END FastFlush;
 
 PROCEDURE Flush (wr: T) RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
-      IF wr.closed THEN Die() END;
-      wr.flush();
+      FastFlush(wr);
     END;
   END Flush;
 
@@ -249,11 +259,16 @@ PROCEDURE Index(wr: T): CARDINAL RAISES {} =
     END
   END Index;
 
+PROCEDURE FastLength (wr: T): CARDINAL RAISES {Failure, Alerted} =
+  BEGIN
+    IF wr.closed THEN Die() END;
+    RETURN wr.length ();
+  END FastLength;
+
 PROCEDURE Length (wr: T): CARDINAL RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
-      IF wr.closed THEN Die() END;
-      RETURN wr.length ();
+      RETURN FastLength(wr);
     END
   END Length;
 
