@@ -104,14 +104,14 @@ PROCEDURE Seek (wr: T; n: CARDINAL) RAISES {Failure, Alerted} =
     TRY
       wr.child.cur := wr.cur;
       wr.child.seek(n);
+      wr.buff := wr.child.buff;
+      wr.st := wr.child.st;
+      wr.cur := wr.child.cur;
+      wr.lo := wr.child.lo;
+      wr.hi := wr.child.hi;
     FINALLY
       WrClass.Unlock(wr.child);
     END;
-    wr.buff := wr.child.buff;
-    wr.st := wr.child.st;
-    wr.cur := wr.child.cur;
-    wr.lo := wr.child.lo;
-    wr.hi := wr.child.hi;
     LOCK mu DO
       IF NOT wr.onQ THEN
         wr.onQ := TRUE;
