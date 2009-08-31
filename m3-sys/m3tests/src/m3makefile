@@ -339,7 +339,7 @@ readonly proc pr_test (group, uid, comment, runopts) is
   run_test2 ("_ptests", group, uid, comment, "run", "", runopts)
 end
 
-readonly proc c2_test (group, uid, comment, cm3opts) is
+readonly proc pb_test (group, uid, comment, cm3opts) is
   run_test2 ("_ctests", group, uid, comment, "", cm3opts, "")
 end
 
@@ -569,6 +569,16 @@ pr_test ("p2", "p213", "runtime arguments: @M3paranoidgc", "@M3paranoidgc")
 pr_test ("p2", "p214", "runtime arguments: @M3noincremental", "@M3noincremental")
 pr_test ("p2", "p215", "runtime arguments: @M3nogenerational", "@M3nogenerational")
 pr_test ("p2", "p216", "runtime arguments: @M3nogc", "@M3nogc")
+
+pb_test ("p2", "p217", ".M3SHIP program", "-no-m3ship-resolution")
+pb_test ("p2", "p218", ".M3SHIP Program", "-no-m3ship-resolution")
+pb_test ("p2", "p219", ".M3SHIP Program group-writable", "-no-m3ship-resolution -group-writable")
+pb_test ("p2", "p220", ".M3SHIP library", "-no-m3ship-resolution")
+pb_test ("p2", "p221", ".M3SHIP Library", "-no-m3ship-resolution")
+pb_test ("p2", "p222", ".M3SHIP Library", "-no-m3ship-resolution -group-writable")
+% The following test won't run until FSUtils.RmRec() is fixed
+%pb_test ("p2", "p223", ".M3SHIP Library", "-no-m3ship-resolution -group-writable")
+
 
 %------------------------------------------------------------------- rtests ---
 %  RUNTIME tests: modules containing runtime error where the generated
