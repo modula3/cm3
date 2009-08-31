@@ -16,6 +16,7 @@ MODULE AutoFlushWr;
 IMPORT Wr, WrClass, Time, Thread, Process;
 FROM Wr IMPORT Failure;
 FROM Thread IMPORT Alerted;
+FROM UnsafeWr IMPORT FastClose, FastFlush, FastLength;
 
 (* A writer wr is *inactive* if wr.cur=wr.hi=wr.lo, and *active* otherwise.  
    Notice that if wr is inactive, c(wr) = target(wr) (by WrClass.V2) 
@@ -64,6 +65,21 @@ REVEAL
         init      := Init;
       END;
 
+PROCEDURE Copy(from, to: Wr.T) =
+(* Copy the public fields from "from" to "to".
+   We don't necessarily need to copy all of them, but we do anyway.
+   Caller handles locking. *)
+BEGIN
+    to.buff := from.buff;
+    to.st := from.st;
+    to.cur := from.cur;
+    to.lo := from.lo;
+    to.hi := from.hi;
+    to.closed := from.closed;
+    to.seekable := from.seekable;
+    to.buffered := from.buffered;
+END Copy;
+
 (* For wr of type T, wr.child is the writer to which wr's writing 
    is forwarded.  wr.delay is the inverse of the frequency with which 
    wr will be flushed.  If wr is active, wr.alarm is the next time 
@@ -78,13 +94,7 @@ PROCEDURE Init (wr: T; ch: Wr.T; p := -1.0D0): T =
     WrClass.Lock(wr);
     WrClass.Lock(ch);
     TRY
-      wr.buff := ch.buff;
-      wr.st := ch.st;
-      wr.cur := ch.cur;
-      wr.lo := ch.lo;
-      wr.hi := ch.hi;
-      wr.closed := ch.closed;
-      wr.seekable := ch.seekable;
+      Copy(ch, wr);
       wr.buffered := TRUE;
       wr.child := ch;
       wr.onQ := FALSE;
@@ -102,26 +112,10 @@ PROCEDURE Seek (wr: T; n: CARDINAL) RAISES {Failure, Alerted} =
   BEGIN
     WrClass.Lock(wr.child);
     TRY
-      wr.child.cur := wr.cur;
+      Copy(wr, wr.child);
+      (* We don't call FastSeek here because it fails if wr.child is not seekable, even if n = wr.cur. *)
       wr.child.seek(n);
-    FINALLY
-      WrClass.Unlock(wr.child);
-    END;
-
-    (* Historically no lock here.
-       We could extend the previous lock, however
-       Unlock is documented as not only unlocking,
-       but also restoring invariants, so going
-       through an extra Unlock/Lock ensures
-       invariants hold. *)
-
-    WrClass.Lock(wr.child);
-    TRY
-      wr.buff := wr.child.buff;
-      wr.st := wr.child.st;
-      wr.cur := wr.child.cur;
-      wr.lo := wr.child.lo;
-      wr.hi := wr.child.hi;
+      Copy(wr.child, wr);
     FINALLY
       WrClass.Unlock(wr.child);
     END;
@@ -151,44 +145,35 @@ PROCEDURE Flush (wr: T) RAISES {Failure, Alerted} =
   BEGIN
     WrClass.Lock(wr.child);
     TRY
-      wr.child.cur := wr.cur;
-      wr.child.flush();
-
-      wr.buff := wr.child.buff;
-      (* Set everything empty. *)
-      wr.st := wr.child.st + wr.child.cur - wr.child.lo;
-      wr.cur := wr.child.cur;
-      wr.lo := wr.child.cur;
-      wr.hi := wr.child.cur;
+      Copy(wr, wr.child);
+      FastFlush(wr.child);
+      Copy(wr.child, wr);
     FINALLY
       WrClass.Unlock(wr.child);
     END;
   END Flush;
 
 PROCEDURE Length (wr: T): CARDINAL RAISES {Failure, Alerted} =
+  VAR res: CARDINAL;
   BEGIN
     WrClass.Lock(wr.child);
     TRY
-      wr.child.cur := wr.cur;
-      WITH res = wr.child.length() DO
-        wr.buff := wr.child.buff;
-        wr.st := wr.child.st;
-        wr.cur := wr.child.cur;
-        wr.lo := wr.child.lo;
-        wr.hi := wr.child.hi;
-        RETURN res;
-      END;
+      Copy(wr, wr.child);
+      res := FastLength(wr.child);
+      Copy(wr.child, wr);
     FINALLY
       WrClass.Unlock(wr.child);
     END;
+    RETURN res;
   END Length;
 
 PROCEDURE Close(wr: T) RAISES {Failure, Alerted} =
   BEGIN
     WrClass.Lock(wr.child);
     TRY
-      wr.child.cur := wr.cur;
-      wr.child.close();
+      Copy(wr, wr.child);
+      FastClose(wr.child);
+      Copy(wr.child, wr);
     FINALLY
       WrClass.Unlock(wr.child);
     END;
