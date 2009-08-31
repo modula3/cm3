@@ -74,7 +74,7 @@ proc SameUnderlyingPlatform (x, y) is
     return FALSE
 end
 
-local Native = SameUnderlyingPlatform (M3CC_HOST, M3CC_TARGET) and SameUnderlyingPlatform (M3CC_HOST, M3CC_BUILD)
+Native = SameUnderlyingPlatform (M3CC_HOST, M3CC_TARGET) and SameUnderlyingPlatform (M3CC_HOST, M3CC_BUILD)
 
 proc FileExists (a) is
     return not stale (a, a)
