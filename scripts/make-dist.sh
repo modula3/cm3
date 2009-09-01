@@ -28,7 +28,7 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
-DS="RC3"; export DS
+DS="pre-RC4"; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
