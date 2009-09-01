@@ -28,7 +28,7 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
-DS="pre-RC4"; export DS
+DS=${DS:-"pre-RC4"}; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
@@ -39,7 +39,12 @@ if [ -z "${OMIT_UPDATE}" ]; then
   case ${DS} in
     RC*)
         echo cvs -q up -r release_CM3_5_8_${DS} -dP
-        cvs -q up -r release_CM3_5_8_${DS} -dP;;
+        cvs -q up -r release_CM3_5_8_${DS} -dP
+        N=`echo ${DS} | sed -e 's/RC//'`
+        VERSION="5.8.${N}"
+        CM3VERSION="${VERSION}"
+        export VERSION CM3VERSION
+    ;;
     *)
         echo cvs -q up -r release_branch_cm3_5_8 -dP
         cvs -q up -r release_branch_cm3_5_8 -dP;;
