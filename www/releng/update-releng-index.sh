@@ -70,8 +70,11 @@ for rc in RC3 RC4 RC5 RC6 RC7 RC8 RC9; do
   echo "  <h2><a name=\"doc-${rc}\">Documentation and Support Scripts ${rc}</a></h2>" >> ${INDEX}
   echo "" >> ${INDEX}
   echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>" >> ${INDEX}
-  for f in cm3-src-*.tgz cm3-doc-*.tgz cm3-scripts-*.tgz; do
-    tablerow $f
+  for f in cm3-src-*${rc}.tgz cm3-doc-*${rc}.tgz cm3-scripts-*${rc}.tgz; do
+    case $f in
+      *-pre-*);;
+      *) [ -s "$f" ] && tablerow $f;;
+    esac
   done >> ${INDEX}
   echo "</tbody></table>" >> ${INDEX}
 
@@ -82,13 +85,22 @@ for rc in RC3 RC4 RC5 RC6 RC7 RC8 RC9; do
   for t in ${TARGETS}; do
     all=`ls -1 cm3-bin-*-${t}-*-${rc}.tgz cm3-bin-*-${t}-*-${rc}.tar.gz cm3-bin-*-${t}-*-${rc}.tar.lzma cm3-bin-*-${t}-*-${rc}.tar.xz`
     #ln -sf "${last}" "${FNPAT1}${t}${FNPATSUF}"
-    echo "<h3>Target Platform ${t}</h3>"
-    echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
-    for f in ${all}; do
-      tablerow $f
-    done
-    echo "</tbody></table>"
-    echo "<p></p>"
+    case $t in
+      p5*);;
+      d5*);;
+      *)
+        echo "<h3>Target Platform ${t}</h3>"
+        echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
+        for f in ${all}; do
+          case $f in
+            *-pre-*);;
+            *) [ -s "$f" ] && tablerow $f;;
+          esac
+        done
+        echo "</tbody></table>"
+        echo "<p></p>"
+      ;;
+    esac
   done >> ${INDEX}
 
 # (
