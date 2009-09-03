@@ -1,3 +1,4 @@
+override("EyesVBT", "/m3-ui/ui/test")
 override("PEX", ROOT & "/m3-ui")
 override("X11R4", ROOT & "/m3-ui")
 override("anim3D", ROOT & "/m3-ui")
