@@ -6,5 +6,4 @@
 
 /* m3overrides for /proj/m3/pkg/juno-compiler/tests/lexer/src */
 
-override(juno-machine,  WDROOT)
-override(juno-compiler, WDROOT)
+include(ROOT & "/m3overrides")
