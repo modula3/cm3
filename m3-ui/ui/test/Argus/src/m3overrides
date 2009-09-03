@@ -1,2 +1,1 @@
-override ("ui", "../../../..")
-override ("EyesVBT", "../..")
+include(ROOT & "/m3overrides")
