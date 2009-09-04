@@ -20,6 +20,8 @@ PROCEDURE Get (param: TEXT): TEXT;
 (* Returns the defined value of "param" in current configuration file.
    If no configuration file is found, "param" is not defined, or it
    cannot be converted to a text value, "NIL" is returned. *)
+
+PROCEDURE EnableQuakeTrace();
    
 END MxConfig.
 
