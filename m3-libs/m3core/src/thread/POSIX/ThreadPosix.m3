@@ -1550,28 +1550,28 @@ PROCEDURE QQ(): ADDRESS =
 VAR
   heapCond: Condition;
 
-PROCEDURE LockHeap (VAR thread: RTHeapRep.ThreadState) =
+PROCEDURE LockHeap (<*UNUSED*> VAR me: RTHeapRep.ThreadState) =
   BEGIN
-    INC(thread.inCritical);
+    INC(inCritical);
   END LockHeap;
 
-PROCEDURE UnlockHeap (VAR thread: RTHeapRep.ThreadState) =
+PROCEDURE UnlockHeap (<*UNUSED*> VAR thread: RTHeapRep.ThreadState) =
   BEGIN
-    DEC(thread.inCritical);
+    DEC(inCritical);
   END UnlockHeap;
 
-PROCEDURE WaitHeap (VAR thread: RTHeapRep.ThreadState) =
+PROCEDURE WaitHeap (<*UNUSED*> VAR me: RTHeapRep.ThreadState) =
   BEGIN
     self.alertable := FALSE;
     ICannotRun (State.waiting);
     self.waitingForCondition := heapCond;
     self.nextWaiting := heapCond.waitingForMe;
     heapCond.waitingForMe := self;
-    DEC(thread.inCritical);
-    <*ASSERT thread.inCritical = 0*>
+    DEC(inCritical);
+    <*ASSERT inCritical = 0*>
     InternalYield ();
-    <*ASSERT thread.inCritical = 0*>
-    INC(thread.inCritical);
+    <*ASSERT inCritical = 0*>
+    INC(inCritical);
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =

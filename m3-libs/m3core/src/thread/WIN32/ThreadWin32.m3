@@ -1046,21 +1046,22 @@ PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
    and collector. *)
 
 VAR
+  inCritical := 0;      (* LL = cs *)
   heapCond: Condition;
 
-PROCEDURE LockHeap (VAR thread: RTHeapRep.ThreadState) =
+PROCEDURE LockHeap (<*UNUSED*> VAR me: RTHeapRep.ThreadState) =
   BEGIN
     EnterCriticalSection_cs();
-    INC(thread.inCritical);
+    INC(inCritical);
   END LockHeap;
 
-PROCEDURE UnlockHeap (VAR thread: RTHeapRep.ThreadState) =
+PROCEDURE UnlockHeap (<*UNUSED*> VAR me: RTHeapRep.ThreadState) =
   BEGIN
-    DEC(thread.inCritical);
+    DEC(inCritical);
     LeaveCriticalSection_cs();
   END UnlockHeap;
 
-PROCEDURE WaitHeap (VAR thread: RTHeapRep.ThreadState) =
+PROCEDURE WaitHeap (<*UNUSED*> VAR me: RTHeapRep.ThreadState) =
   VAR self := Self();
   BEGIN
     EnterCriticalSection_cm();
@@ -1071,8 +1072,8 @@ PROCEDURE WaitHeap (VAR thread: RTHeapRep.ThreadState) =
     heapCond.waiters := self;
     LeaveCriticalSection_cm();
 
-    DEC(thread.inCritical);
-    <*ASSERT thread.inCritical = 0*>
+    DEC(inCritical);
+    <*ASSERT inCritical = 0*>
     LeaveCriticalSection_cs();
 
     IF WaitForSingleObject(self.waitSema, INFINITE) # 0 THEN
@@ -1080,8 +1081,8 @@ PROCEDURE WaitHeap (VAR thread: RTHeapRep.ThreadState) =
     END;
 
     EnterCriticalSection_cs();
-    <*ASSERT thread.inCritical = 0*>
-    INC(thread.inCritical);
+    <*ASSERT inCritical = 0*>
+    INC(inCritical);
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =
