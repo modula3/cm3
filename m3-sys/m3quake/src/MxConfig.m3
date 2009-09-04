@@ -3,7 +3,7 @@
 
 MODULE MxConfig;
 
-IMPORT Env, Params, Pathname, M3File, M3ID, Quake, Text, Thread;
+IMPORT Env, Params, Pathname, M3File, M3ID, Quake, RTIO, Text, Thread;
 IMPORT QMachine;
 
 VAR
@@ -11,6 +11,7 @@ VAR
   found  : BOOLEAN       := FALSE;
   config : TEXT          := NIL;
   mach   : Quake.Machine := NIL;
+  trace  : BOOLEAN       := FALSE;
 
 PROCEDURE FindFile (): TEXT =
   BEGIN
@@ -31,6 +32,12 @@ PROCEDURE Get (param: TEXT): TEXT =
       END;
     END;
   END Get;
+
+PROCEDURE EnableQuakeTrace() =
+  BEGIN
+    trace := TRUE;
+  END EnableQuakeTrace;
+
 
 (*----------------------------------------------------------- internal ---*)
 
@@ -122,10 +129,14 @@ PROCEDURE EvalConfig () =
     IF (mach # NIL) THEN RETURN END;
     FindConfig ();
     mach := Quake.NewMachine (Quake.NewIDMap (Str2ID, Txt2ID, ID2Txt));
+    mach.trace (trace);
     TRY
       IF (config # NIL) THEN Quake.Run (mach, config); END;
-    EXCEPT Quake.Error, Thread.Alerted =>
-      (* ouch *)
+    EXCEPT 
+      Quake.Error(e) => RTIO.PutText ("quake runtime error: " & e);
+                        RTIO.Flush ();
+    | Thread.Alerted => RTIO.PutText ("interrupted");
+                        RTIO.Flush ();
     END;
   END EvalConfig;
 

@@ -65,6 +65,7 @@ REVEAL
     cur_wr    := CurWr;
     set_wr    := SetWr;
     exec_echo := ExecEcho;
+    trace     := Trace;
   END;
 
 TYPE
@@ -1432,6 +1433,11 @@ PROCEDURE ExecEcho (t: T;  b: BOOLEAN): BOOLEAN =
     t.do_echo := b;
     RETURN old;
   END ExecEcho;
+
+PROCEDURE Trace (t: T; b: BOOLEAN) =
+  BEGIN
+    t.tracing := b;
+  END Trace;
 
 PROCEDURE DoExec (t: T;  n_args: INTEGER)
   RAISES {Error, Thread.Alerted} =
