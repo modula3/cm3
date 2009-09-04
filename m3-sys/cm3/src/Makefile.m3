@@ -543,6 +543,8 @@ PROCEDURE ScanCommandLine () : TextTextTbl.T =
         Msg.SetLevel (Msg.Level.Debug);
       ELSIF Text.Equal (arg, "-profile") THEN
         EVAL defs.put("M3_PROFILING", "TRUE");
+      ELSIF Text.Equal (arg, "-trace") THEN
+        traceQuake := TRUE;
       ELSIF Text.Equal (arg, "-x") OR Text.Equal (arg, "-override") THEN
         use_overrides := TRUE;
       ELSIF Text.Equal (arg, "-pretend") THEN
@@ -571,12 +573,13 @@ PROCEDURE SetMode (VAR cnt: INTEGER;  mode: MM) =
 
 PROCEDURE PrintVersion (exit: BOOLEAN) =
   BEGIN
+    IF traceQuake THEN MxConfig.EnableQuakeTrace() END;
     Msg.Out ("Critical Mass Modula-3 version ", Val("CM3_RELEASE"), Wr.EOL);
     Msg.Out ("  last updated: ", Val("CM3_CHANGED"), Wr.EOL);
     Msg.Out ("  compiled: ", Val("CM3_COMPILED"), Wr.EOL);
     Msg.Out ("  configuration: ", MxConfig.FindFile(), Wr.EOL);
     Msg.Out ("  host: ", MxConfig.HOST, Wr.EOL);
-    (*Msg.Out ("  target: ", MxConfig.Get("TARGET"), Wr.EOL);*)
+    Msg.Out ("  target: ", MxConfig.Get("TARGET"), Wr.EOL);
     Msg.Out (Wr.EOL);
     IF exit THEN Process.Exit (0); END;
   END PrintVersion;
@@ -692,6 +695,7 @@ PROCEDURE Val(name: TEXT) : TEXT =
 
 VAR
   defs := NEW(TextTextTbl.Default).init();
+  traceQuake := FALSE;
 BEGIN
   EVAL defs.put("CM3_RELEASE", Version.Text);  (* readable release version *)
   EVAL defs.put("CM3_VERSION", Version.Number);(* version as number *)
