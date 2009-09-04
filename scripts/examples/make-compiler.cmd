@@ -4,7 +4,8 @@ if not defined CM3_VERSION (
     set CM3_VERSION=2009-05-01
 )
 set CM3_ROOT=C:\dev2\cm3.%CM3_VERSION%
-set CM3=c:\cm3.%CM3_VERSION%\bin\cm3 -DROOT=%CM3_ROOT:\=/%
+set CM3=c:\cm3.%CM3_VERSION%\bin\cm3.exe
+set CM3_FLAGS=-DROOT=%CM3_ROOT:\=/%
 set TARGET=NT386
 
 set p=^
@@ -47,6 +48,6 @@ SetLocal
 set a=%1
 set a=%a:/=\%
 cd %CM3_ROOT%\%a% || exit /b 1
-%CM3% || exit /b 1
-%CM3% -ship || exit /b 1
+%CM3% %CM3_FLAGS% || exit /b 1
+%CM3% %CM3_FLAGS% -ship || exit /b 1
 goto :eof
