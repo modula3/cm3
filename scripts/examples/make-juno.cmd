@@ -1,7 +1,10 @@
 SetLocal
 
-set CM3_ROOT=C:\dev2\cm3.2008-01-01
-set CM3=c:\cm3\bin\cm3
+if not defined CM3_VERSION (
+    set CM3_VERSION=2009-05-01
+)
+set CM3_ROOT=C:\dev2\cm3.%CM3_VERSION%
+set CM3=c:\cm3.%CM3_VERSION%\bin\cm3 -DROOT=%CM3_ROOT:\=/%
 set TARGET=NT386
 
 set p=^
