@@ -395,9 +395,14 @@ PROCEDURE PageToRef (p: Page): RefPage =
 (* To move a heap object to the new space, modifying the original reference
    to it *)
 
-TYPE Mover = RTHeapMap.Visitor OBJECT OVERRIDES apply := Move END;
+TYPE Mover = RTHeapMap.Visitor OBJECT OVERRIDES apply := MoverMove END;
 
-PROCEDURE Move (<*UNUSED*> self: Mover;  cp: ADDRESS) =
+PROCEDURE MoverMove (<*UNUSED*> self: Mover;  cp: ADDRESS) =
+  BEGIN
+    Move(cp);
+  END MoverMove;
+
+PROCEDURE Move (cp: ADDRESS) =
   VAR
     refref := LOOPHOLE(cp, UNTRACED REF RefReferent);
     ref    := refref^;
@@ -1179,10 +1184,10 @@ PROCEDURE WeakWalk1 (s: Stacker; ref: RefReferent) =
         BEGIN
           IF header.marka THEN
             <* ASSERT NOT header.markb *>
-            Move(NIL, ADR(ref));
+            Move(ADR(ref));
           ELSIF NOT header.markb THEN
             IF header.weak AND ref # ref0 THEN
-              Move(NIL, ADR(ref));
+              Move(ADR(ref));
             ELSE
               header.markb := TRUE;
               RTHeapMap.WalkRef (header, s);
@@ -1233,7 +1238,7 @@ PROCEDURE PostHandleWeakRefs () =
         WITH entry = weakTable[i] DO
           IF Moved(entry.r) THEN
             (* no cleanup this time; note new address *)
-            Move(NIL, ADR(entry.r));
+            Move(ADR(entry.r));
             previous := i;
             i := entry.next;
           ELSE
@@ -1272,7 +1277,7 @@ PROCEDURE PostHandleWeakRefs () =
       WHILE i # -1 DO
         WITH entry = weakTable[i] DO
           <* ASSERT entry.t.a = -1 *>
-          Move(NIL, ADR(entry.r));
+          Move(ADR(entry.r));
           i := entry.next;
         END;
       END;
@@ -1286,7 +1291,7 @@ PROCEDURE PostHandleWeakRefs () =
         WITH entry = weakTable[i] DO
           IF Moved(entry.r) THEN
             (* no cleanup this time; note new address *)
-            Move(NIL, ADR(entry.r));
+            Move(ADR(entry.r));
             previous := i;
             i := entry.next;
           ELSE
@@ -2144,7 +2149,7 @@ PROCEDURE WeakRefToRef (READONLY t: WeakRef): REFANY =
               IF PageToRef(p).desc.space = Space.Previous THEN
                 TRY
                   CollectorOn(t0);
-                  Move(NIL, ADR(entry.r));
+                  Move(ADR(entry.r));
                 FINALLY
                   CollectorOff(t0);
                 END;
@@ -2208,7 +2213,7 @@ PROCEDURE WeakCleaner (<*UNUSED*> closure: Thread.Closure): REFANY =
           <* ASSERT entry.t.a = -1 *>
           TRY
             CollectorOn(t0);
-            Move(NIL, ADR(entry.r));
+            Move(ADR(entry.r));
           FINALLY
             CollectorOff(t0);
           END;
