@@ -16,9 +16,9 @@ set p=^
     m3-tools/m3bundle ^
     m3-tools/m3tk ^
     m3-tools/mtex ^
+    m3-comm/tcp ^
     m3-comm/netobj ^
     m3-comm/stubgen ^
-    m3-comm/tcp ^
     m3-ui/ui ^
     m3-ui/vbtkit ^
     m3-www/web ^
