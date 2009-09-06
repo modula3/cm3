@@ -60,6 +60,7 @@ p=" m3-libs/m3tk-misc \
     m3-comm/tcp \
     m3-comm/netobj \
     m3-comm/stubgen \
+    m3-ui/X11R4 \
     m3-ui/ui \
     m3-ui/vbtkit \
     m3-www/web \
@@ -74,3 +75,5 @@ p=" m3-libs/m3tk-misc \
 
 for a in $p; do clean $a || exit 1; done
 for a in $p; do buildship $a || exit 1; done
+
+echo success
