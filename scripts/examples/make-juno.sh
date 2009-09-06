@@ -1,30 +1,56 @@
 #!/bin/sh
 
+#
+# echo everything and fail on any error
+#
+
+set -e
+set -x
+
+#
+# establish some parameters
+#
+
 if [ "x$CM3_VERSION" = "x" ]; then
     CM3_VERSION=2009-05-01
 fi
 
-CM3_ROOT=/dev2/cm3.$CM3_VERSION
-CM3=/cm3/$CM3_VERSION/bin/cm3
-CM3_FLAGS=-DROOT=$CM3_ROOT
+SOURCE=/dev2/cm3.$CM3_VERSION
+INSTALL=/cm3.$CM3_VERSION
+CM3_FLAGS=-DROOT=$SOURCE
 TARGET=I386_DARWIN
 
-PATH=$CM3_ROOT/bin:/cm3/bin:$PATH
-export PATH
+CM3_TARGET=$TARGET
+export CM3_TARGET
+
+#
+# functions
+#
+
+copy_exe() {
+  a=`basename $1`
+  rm -f $2/$a $2/$a.exe
+  cp $1.exe $2 && exit 0
+  cp $1 $2 || exit 1
+}
 
 clean() {
-    cd $CM3_ROOT/$1 || exit 1
+    cd $SOURCE/$1 || exit 1
     rm -rf $TARGET
 }
 
 buildship() {
-	cd $CM3_ROOT/$1 || exit 1
-	$CM3 $CM3_FLAGS || exit 1
-	$CM3 $CM3_FLAGS -ship || exit 1
+	cd $SOURCE/$1 || exit 1
+	type cm3 || exit 1
+	cm3 $CM3_FLAGS || exit 1
+	cm3 $CM3_FLAGS -ship || exit 1
 }
 
-p=\
-    m3-libs/m3tk-misc \
+PATH="$INSTALL/bin:$PATH"
+export PATH
+hash -r || true
+
+p=" m3-libs/m3tk-misc \
     m3-sys/m3scanner \
     m3-sys/m3tools \
     m3-tools/m3scan \
@@ -44,7 +70,7 @@ p=\
     m3-ui/juno-2/juno-machine \
     m3-ui/juno-2/juno-compiler \
     m3-ui/juno-2/juno-app/pkl-fonts \
-    m3-ui/juno-2/juno-app
+    m3-ui/juno-2/juno-app"
 
 for a in $p; do clean $a || exit 1; done
 for a in $p; do buildship $a || exit 1; done
