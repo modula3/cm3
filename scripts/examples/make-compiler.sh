@@ -93,11 +93,14 @@ export PATH
 
 #
 # create config files from current source
+# old compilers don't like my GetM3Back function, so
+# make it simple
 #
 
 echo "
-  INSTALL_ROOT = path() & \"/..\"
-  include(path() & \"/config/$TARGET\")
+INSTALL_ROOT = path() & \"/..\"
+m3back = \"@\" & INSTALL_ROOT & \"/bin/cm3cg\"
+include(path() & \"/config/$TARGET\")
 " > $INSTALL/bin/cm3.cfg
 
 for a in $LATEST_SOURCE/m3-sys/cminstall/src/config-no-install/*; do
