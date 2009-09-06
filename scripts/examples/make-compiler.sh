@@ -31,6 +31,14 @@ CM3_TARGET=$TARGET
 export CM3_TARGET
 
 #
+# workaround buggy text
+#
+
+if [ "x$CM3_VERSION" = "x2009-02-16-02-00" ]; then
+  cp $LATEST_SOURCE/m3-libs/m3core/src/text/*3 $SOURCE/m3-libs/m3core/src/text
+fi
+
+#
 # functions
 #
 
