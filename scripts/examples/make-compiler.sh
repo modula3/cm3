@@ -30,6 +30,39 @@ TARGET=I386_DARWIN
 CM3_TARGET=$TARGET
 export CM3_TARGET
 
+#
+# functions
+#
+
+copy_exe() {
+  a=`basename $1`
+  rm -f $2/$a $2/$a.exe
+  if [ -f $1.exe ]; then
+    cp $1.exe $2
+    exit 0
+  fi
+  cp $1 $2
+}
+
+clean() {
+    cd $SOURCE/$1 || exit 1
+    rm -rf $TARGET
+}
+
+buildlocal() {
+	cd $SOURCE/$1 || exit 1
+	type cm3 || exit 1
+	cm3 -x $CM3_FLAGS || exit 1
+}
+
+buildship() {
+	cd $SOURCE/$1 || exit 1
+	type cm3 || exit 1
+	cm3 $CM3_FLAGS || exit 1
+	cm3 $CM3_FLAGS -ship || exit 1
+}
+
+
 #for a in $LATEST_SOURCE $SOURCE; do
 #  if [ -d $a/m3-sys ]; then : else
 #    echo "$a/m3-sys does not exist"
@@ -41,7 +74,7 @@ export CM3_TARGET
 # create install directories
 #
 
-mkdir -p $INSTALL/bin/config
+mkdir -p $INSTALL/bin/config || exit 1
 
 #
 # set PATH
@@ -72,45 +105,23 @@ rm $INSTALL/bin/config/cm3.cfg
 #
 
 for a in cm3 cm3cg mklib; do
-  for b in $a $a.exe; do
-    if [ -x $BOOT/bin/$b ]; then
-      cp $BOOT/bin/$b $INSTALL/bin
-    fi
-  done
+  copy_exe $BOOT/bin/$a $INSTALL/bin
 done
-
-clean() {
-    cd $SOURCE/$1 || exit 1
-    rm -rf $TARGET
-}
-
-buildlocal() {
-	cd $SOURCE/$1 || exit 1
-	type cm3
-	cm3 -x $CM3_FLAGS || exit 1
-}
-
-buildship() {
-	cd $SOURCE/$1 || exit 1
-	type cm3
-	cm3 $CM3_FLAGS || exit 1
-	cm3 $CM3_FLAGS -ship || exit 1
-}
 
 #
 # build cm3cg
 #
 
 rm -rf $INSTALL/pkg
-clean m3-sys/m3cc || exit 1
+#clean m3-sys/m3cc || exit 1
 buildship m3-sys/m3cc || exit 1
-cp $SOURCE/m3-sys/m3cc/$TARGET/cm3cg `dirname $CM3`/bin
+copy_exe $SOURCE/m3-sys/m3cc/$TARGET/cm3cg $INSTALL/bin
 
 #
 # build up to cm3 and mklib
 #
 
-p=  m3-libs/m3core \
+p=" m3-libs/m3core \
     m3-libs/libm3 \
     m3-libs/sysutils \
     m3-sys/m3middle \
@@ -120,7 +131,7 @@ p=  m3-libs/m3core \
     m3-sys/m3objfile \
     m3-sys/m3back \
     m3-sys/cm3 \
-    m3-sys/mklib
+    m3-sys/mklib"
 
 #
 # Do it twice so it builds itself.
@@ -130,12 +141,12 @@ rm -rf $INSTALL/pkg
 for a in $p; do clean $a || exit 1; done
 for a in $p; do buildlocal $a || exit 1; done
 for a in cm3 mklib; do
-  cp $SOURCE/m3-sys/$a/$TARGET/$a* $INSTALL/bin
+  copy_exe $SOURCE/m3-sys/$a/$TARGET/$a $INSTALL/bin
 done
 
 rm -rf $INSTALL/pkg
 for a in $p; do clean $a || exit 1; done
 for a in $p; do buildship $a || exit 1; done
 for a in cm3 mklib; do
-  cp $SOURCE/m3-sys/$a/$TARGET/$a* $INSTALL/bin
+  copy_exe $SOURCE/m3-sys/$a/$TARGET/$a $INSTALL/bin
 done
