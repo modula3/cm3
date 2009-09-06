@@ -162,3 +162,5 @@ for a in $p; do buildship $a || exit 1; done
 for a in cm3 mklib; do
   copy_exe $SOURCE/m3-sys/$a/$TARGET/$a $INSTALL/bin
 done
+
+echo success
