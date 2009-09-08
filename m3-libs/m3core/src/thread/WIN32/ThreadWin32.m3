@@ -6,7 +6,7 @@
 (* See file COPYRIGHT-CMASS for details.                           *)
 
 UNSAFE MODULE ThreadWin32 EXPORTS
-Thread, ThreadF, Scheduler, ThreadInternal, RTOS, RTHooks, ThreadWin32;
+Thread, ThreadF, ThreadUnsafe, Scheduler, ThreadInternal, RTOS, RTHooks, ThreadWin32;
 
 IMPORT RTError, WinGDI, RTParams;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
