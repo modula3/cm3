@@ -908,7 +908,7 @@ PROCEDURE MyId(): Id RAISES {}=
     RETURN self.id;
   END MyId;
 
-PROCEDURE MyHeapState(): UNTRACED REF RTHeapRep.ThreadState =
+PROCEDURE MyHeapState(): ADDRESS =
   VAR me := GetActivation();
   BEGIN
     RETURN ADR(me.heapState);
