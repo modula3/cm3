@@ -26,8 +26,6 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS));
 (* Feature:  Windows threads not created by Thread.Fork are not suspended
     or resumed, and their stacks are not processed. *)
 
-PROCEDURE MyHeapState (): ADDRESS;
-
 (*------------------------------------------------------------ preemption ---*)
 
 PROCEDURE SetSwitchingInterval (usec: CARDINAL);

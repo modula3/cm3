@@ -29,8 +29,6 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS));
    of the stack.  Each thread is suspended individually.  ProcessEachStack
    exists solely for the garbage collector.  *)
 
-PROCEDURE MyHeapState (): ADDRESS;
-
 (*------------------------------------------------ floating point support ---*)
 
 (* access to the saved floating point state for the current thread. *)

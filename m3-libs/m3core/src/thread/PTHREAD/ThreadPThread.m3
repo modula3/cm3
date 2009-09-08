@@ -3,7 +3,7 @@
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
 UNSAFE MODULE ThreadPThread EXPORTS
-Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
+Thread, ThreadF, ThreadUnsafe, Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError, RTHeapRep, RTIO, RTMachine, RTParams,
@@ -1285,7 +1285,7 @@ PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
     writer(me.floatState);
   END SetMyFPState;
 
-PROCEDURE MyHeapState (): ADDRESS =
+PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
   VAR me := GetActivation();
   BEGIN
     RETURN ADR(me.heapState);
