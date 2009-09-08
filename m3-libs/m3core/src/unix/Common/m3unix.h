@@ -163,6 +163,16 @@ typedef ADDRESS m3_pthread_t;
 typedef LONGINT m3_off_t;
 typedef INTEGER m3_uid_t;
 
+/*
+ m3_pthread_t is void*.
+ pthread_t might be any of: size_t, ptrdiff_t, int, void*, another pointer.
+ pthread_t will not be larger than a pointer/size_t. (see Unix__Assertions)
+ Only convert integers to/from integers, and pointer-sized integers to/from pointers.
+ That is, for example, do NOT convert int <=> pointer.
+ */
+#define PTHREAD_TO_M3(x)   ((m3_pthread_t)(size_t)(x))
+#define PTHREAD_FROM_M3(x) ((pthread_t)(size_t)(x))
+
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #define HAS_STAT_FLAGS
 #endif
