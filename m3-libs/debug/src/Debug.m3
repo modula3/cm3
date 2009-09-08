@@ -16,6 +16,13 @@
  * Update Count    : 16
  * 
  * $Log$
+ * Revision 1.2  2001-12-01 14:34:16  wagner
+ * add copyright notes
+ *
+ * added: debug/src/COPYRIGHT-COLUMBIA
+ * modified: debug/src/Debug.i3
+ * modified: debug/src/Debug.m3
+ *
  * Revision 1.3  1997/08/04 20:15:05  bm
  * Fixed BRANDs
  *
@@ -26,7 +33,7 @@
  * HISTORY
  *)
 
-MODULE Debug;
+UNSAFE MODULE Debug;
 
 IMPORT Atom, AtomList, IO, Process, ThreadF, Fmt;
 
