@@ -24,6 +24,8 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS));
    of the stack.  All other threads must be suspended.  ProcessStacks
    exists solely for the garbage collector.  *)
 
+PROCEDURE MyHeapState (): ADDRESS;
+
 (*------------------------------------------------ floating point support ---*)
 
 (* access to the saved floating point state for the current thread. *)

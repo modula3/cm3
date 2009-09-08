@@ -14,4 +14,3 @@ if equal (OS_TYPE, "POSIX")
 end
 Interface ("MutexRep")
 Interface ("ThreadEvent")
-interface ("ThreadUnsafe")

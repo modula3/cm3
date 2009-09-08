@@ -11,7 +11,7 @@
 (*|      modified on Mon Feb 22 10:08:49 PST 1993 by jdd     *)
 
 UNSAFE MODULE ThreadPosix EXPORTS
-Thread, ThreadF, ThreadUnsafe, Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPosix;
+Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPosix;
 
 IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
        RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
@@ -1277,8 +1277,7 @@ PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
   END SetMyFPState;
 
 VAR heapState: RTHeapRep.ThreadState;
-
-PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
+PROCEDURE MyHeapState (): ADDRESS =
   BEGIN
     RETURN ADR(heapState);
   END MyHeapState;

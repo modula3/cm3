@@ -3,7 +3,6 @@
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
 (* This interface exists to bridge SchedulerPosix to WIN32 threads *)
-
 INTERFACE ThreadInternal;
 
 FROM ThreadF IMPORT Id, State;
