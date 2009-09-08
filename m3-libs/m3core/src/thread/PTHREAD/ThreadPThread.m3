@@ -1285,7 +1285,7 @@ PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
     writer(me.floatState);
   END SetMyFPState;
 
-PROCEDURE MyHeapState (): ADDRESS =
+PROCEDURE MyHeapState(): UNTRACED REF RTHeapRep.ThreadState =
   VAR me := GetActivation();
   BEGIN
     RETURN ADR(me.heapState);
