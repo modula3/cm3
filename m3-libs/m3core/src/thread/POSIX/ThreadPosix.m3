@@ -1277,6 +1277,7 @@ PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
   END SetMyFPState;
 
 VAR heapState: RTHeapRep.ThreadState;
+
 PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
   BEGIN
     RETURN ADR(heapState);

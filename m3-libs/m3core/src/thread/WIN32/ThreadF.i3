@@ -5,7 +5,9 @@
 (* Last modified on Thu Jun 15 09:00:08 PDT 1995 by kalsow     *)
 (*      modified on Wed Mar 10 17:29:04 PST 1993 by mjordan    *)
 
-INTERFACE ThreadF;
+UNSAFE INTERFACE ThreadF;
+
+IMPORT RTHeapRep;
 
 (*--------------------------------------------- garbage collector support ---*)
 
@@ -26,7 +28,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS));
 (* Feature:  Windows threads not created by Thread.Fork are not suspended
     or resumed, and their stacks are not processed. *)
 
-PROCEDURE MyHeapState (): ADDRESS;
+PROCEDURE MyHeapState(): UNTRACED REF RTHeapRep.ThreadState;
 
 (*------------------------------------------------------------ preemption ---*)
 
