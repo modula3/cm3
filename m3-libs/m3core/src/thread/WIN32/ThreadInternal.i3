@@ -4,7 +4,7 @@
 
 (* This interface exists to bridge SchedulerPosix to WIN32 threads *)
 
-UNSAFE INTERFACE ThreadInternal;
+INTERFACE ThreadInternal;
 
 FROM ThreadF IMPORT Id, State;
 FROM Thread IMPORT T;
