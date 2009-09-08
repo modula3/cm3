@@ -16,6 +16,9 @@
  * Update Count    : 16
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.3  2009-09-08 11:16:27  jkrell
+ * add UNSAFE here so it compiles; maybe MyId should be moved to Thread or ThreadF split into ThreadF and ThreadUnsafeF?
+ *
  * Revision 1.2  2001-12-01 14:34:16  wagner
  * add copyright notes
  *
@@ -33,7 +36,7 @@
  * HISTORY
  *)
 
-UNSAFE MODULE Debug;
+MODULE Debug;
 
 IMPORT Atom, AtomList, IO, Process, ThreadF, Fmt;
 
