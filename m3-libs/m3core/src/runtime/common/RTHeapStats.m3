@@ -74,7 +74,6 @@ VAR
 
 PROCEDURE ReportReachable () =
   CONST MByte = 1024 * 1024;
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
     (* allocate space for the stats *)
     outerVisitor := NEW (RTHeapMap.Visitor, apply := Visit);
@@ -96,7 +95,7 @@ PROCEDURE ReportReachable () =
 
     (* freeze the world *)
     RTCollector.Disable ();
-    RTOS.LockHeap (thread^); (* freeze the heap *)
+    RTOS.LockHeap (); (* freeze the heap *)
     ThreadF.SuspendOthers ();
 
     (* capture the heap limits *)
@@ -148,7 +147,7 @@ PROCEDURE ReportReachable () =
     DISPOSE (visit_stack);
     DISPOSE (map);
     ThreadF.ResumeOthers ();
-    RTOS.UnlockHeap (thread^); (* unfreeze the heap *)
+    RTOS.UnlockHeap (); (* unfreeze the heap *)
     RTCollector.Enable ();
   END ReportReachable;
 

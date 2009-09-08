@@ -10,9 +10,8 @@
 (*|      modified On Mon Apr  5 14:51:30 PDT 1993 by muller  *)
 (*|      modified on Mon Feb 22 10:08:49 PST 1993 by jdd     *)
 
-UNSAFE MODULE ThreadPosix
-EXPORTS Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks,
-        ThreadPosix;
+UNSAFE MODULE ThreadPosix EXPORTS
+Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPosix;
 
 IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
        RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
@@ -1550,28 +1549,28 @@ PROCEDURE QQ(): ADDRESS =
 VAR
   heapCond: Condition;
 
-PROCEDURE LockHeap (VAR thread: RTHeapRep.ThreadState) =
+PROCEDURE LockHeap () =
   BEGIN
-    INC(thread.inCritical);
+    INC(inCritical);
   END LockHeap;
 
-PROCEDURE UnlockHeap (VAR thread: RTHeapRep.ThreadState) =
+PROCEDURE UnlockHeap () =
   BEGIN
-    DEC(thread.inCritical);
+    DEC(inCritical);
   END UnlockHeap;
 
-PROCEDURE WaitHeap (VAR thread: RTHeapRep.ThreadState) =
+PROCEDURE WaitHeap () =
   BEGIN
     self.alertable := FALSE;
     ICannotRun (State.waiting);
     self.waitingForCondition := heapCond;
     self.nextWaiting := heapCond.waitingForMe;
     heapCond.waitingForMe := self;
-    DEC(thread.inCritical);
-    <*ASSERT thread.inCritical = 0*>
+    DEC(inCritical);
+    <*ASSERT inCritical = 0*>
     InternalYield ();
-    <*ASSERT thread.inCritical = 0*>
-    INC(thread.inCritical);
+    <*ASSERT inCritical = 0*>
+    INC(inCritical);
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =

@@ -9,7 +9,7 @@
 
 INTERFACE ThreadF;
 
-IMPORT FloatMode, RTHeapRep;
+IMPORT FloatMode;
 
 (*--------------------------------------------- garbage collector support ---*)
 
@@ -29,7 +29,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS));
    of the stack.  Each thread is suspended individually.  ProcessEachStack
    exists solely for the garbage collector.  *)
 
-PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState;
+PROCEDURE MyHeapState (): ADDRESS;
 
 (*------------------------------------------------ floating point support ---*)
 
