@@ -2,8 +2,7 @@
 (* All rights reserved.                                            *)
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
-UNSAFE MODULE ThreadPThread
-EXPORTS
+UNSAFE MODULE ThreadPThread EXPORTS
 Thread, ThreadF, Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep,
@@ -1286,7 +1285,7 @@ PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
     writer(me.floatState);
   END SetMyFPState;
 
-PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
+PROCEDURE MyHeapState (): ADDRESS =
   VAR me := GetActivation();
   BEGIN
     RETURN ADR(me.heapState);
@@ -1403,23 +1402,22 @@ PROCEDURE XX (): ADDRESS =
    and collector. *)
 
 VAR
-  holder: ADDRESS;
+  holder: pthread_t;
   inCritical := 0;
 
-PROCEDURE LockHeap (VAR me: RTHeapRep.ThreadState) =
+PROCEDURE LockHeap () =
+  VAR self := Upthread.self();
   BEGIN
-    IF holder # ADR(me) THEN
+    IF Upthread.equal(holder, self) = 0 THEN
       WITH r = pthread_mutex_lock_heap() DO <*ASSERT r=0*> END;
-      holder := ADR(me);
+      holder := self;
     END;
     INC(inCritical);
-    INC(me.inCritical);
   END LockHeap;
 
-PROCEDURE UnlockHeap (VAR me: RTHeapRep.ThreadState) =
+PROCEDURE UnlockHeap () =
   BEGIN
-    <*ASSERT holder = ADR(me)*>
-    DEC(me.inCritical);
+    <*ASSERT Upthread.equal(holder, Upthread.self()) # 0*>
     DEC(inCritical);
     IF inCritical = 0 THEN
       holder := NIL;
@@ -1427,17 +1425,16 @@ PROCEDURE UnlockHeap (VAR me: RTHeapRep.ThreadState) =
     END;
   END UnlockHeap;
 
-PROCEDURE WaitHeap (VAR me: RTHeapRep.ThreadState) =
+PROCEDURE WaitHeap () =
+  VAR self := Upthread.self();
   BEGIN
-    <*ASSERT holder = ADR(me)*>
-    DEC(me.inCritical);
+    <*ASSERT Upthread.equal(holder, self) # 0*>
     DEC(inCritical);
     <*ASSERT inCritical = 0*>
     WITH r = pthread_cond_wait_heap() DO <*ASSERT r=0*> END;
-    holder := ADR(me);
+    holder := self;
     <*ASSERT inCritical = 0*>
     INC(inCritical);
-    INC(me.inCritical);
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =
