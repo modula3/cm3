@@ -9,7 +9,7 @@
 
 INTERFACE ThreadF;
 
-IMPORT FloatMode;
+IMPORT FloatMode, RTHeapRep;
 
 (*--------------------------------------------- garbage collector support ---*)
 
