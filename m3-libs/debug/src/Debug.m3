@@ -14,26 +14,6 @@
  * Last Modified By: Blair MacIntyre
  * Last Modified On: Mon Aug  4 12:30:02 1997
  * Update Count    : 16
- * 
- * $Log: not supported by cvs2svn $
- * Revision 1.3  2009-09-08 11:16:27  jkrell
- * add UNSAFE here so it compiles; maybe MyId should be moved to Thread or ThreadF split into ThreadF and ThreadUnsafeF?
- *
- * Revision 1.2  2001-12-01 14:34:16  wagner
- * add copyright notes
- *
- * added: debug/src/COPYRIGHT-COLUMBIA
- * modified: debug/src/Debug.i3
- * modified: debug/src/Debug.m3
- *
- * Revision 1.3  1997/08/04 20:15:05  bm
- * Fixed BRANDs
- *
- * Revision 1.2  1997/03/12 21:46:33  bm
- * small addition
- *
- * 
- * HISTORY
  *)
 
 MODULE Debug;
