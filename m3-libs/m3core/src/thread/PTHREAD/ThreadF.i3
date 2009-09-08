@@ -7,7 +7,7 @@
 (*      modified on Mon Apr  5 14:50:26 PDT 1993 by muller     *)
 (*      modified on Mon Jul  6 16:43:19 PDT 1992 by muller     *)
 
-INTERFACE ThreadF;
+UNSAFE INTERFACE ThreadF;
 
 IMPORT FloatMode, RTHeapRep;
 
