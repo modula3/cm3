@@ -64,10 +64,30 @@ def FatalError(a = ""):
     if __name__ != "__main__":
         sys.exit(1)
 
+def RemoveTrailingSlashes(a):
+    while len(a) > 0 and (a[-1] == '\\' or a[-1] == '/'):
+        a = a[:-1]
+    return a
+
+def RemoveTrailingSlash(a):
+    if len(a) > 0 and (a[-1] == '\\' or a[-1] == '/'):
+        a = a[:-1]
+    return a
+
+#print("RemoveTrailingSlash(a\\/):" + RemoveTrailingSlash("a\\/"))
+#print("RemoveTrailingSlash(a/\\):" + RemoveTrailingSlash("a/\\"))
+#print("RemoveTrailingSlash(a):" + RemoveTrailingSlash("a"))
+#print("RemoveTrailingSlashes(a\\\\):" + RemoveTrailingSlashes("a\\\\"))
+#print("RemoveTrailingSlashes(a//):" + RemoveTrailingSlashes("a//"))
+#print("RemoveTrailingSlashes(a):" + RemoveTrailingSlashes("a"))
+#sys.exit(1)
+
 def GetLastPathElement(a):
+    a = RemoveTrailingSlashes(a)
     return a[max(a.rfind("/"), a.rfind("\\")) + 1:]
 
 def RemoveLastPathElement(a):
+    a = RemoveTrailingSlashes(a)
     return a[0:max(a.rfind("/"), a.rfind("\\"))]
 
 def GetPathExtension(a):
@@ -2282,15 +2302,21 @@ def CopyCompiler(From, To):
     return True
 
 #-----------------------------------------------------------------------------
-#
-# Need to figure out how to do this properly, if at all.
-#
-#
-# Pretty specific to my setup.
-# We could also honor MSDevDir, MSVCDir, VCToolkitInstallDir, VCINSTALLDIR, etc.
-# see scripts\win\sysinfo.cmd. Some of these are set always by those installers.
-# (Though I delete them. :) )
-#
+
+def GetProgramFiles():
+    # Look for Program Files.
+    # This is expensive and callers are expected to cache it.
+    ProgramFiles = []
+    for d in ["ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"]:
+        e = os.environ.get(d)
+        if e and (not (e in ProgramFiles)) and os.path.isdir(e):
+            ProgramFiles.append(e)
+    if len(ProgramFiles) == 0:
+        SystemDrive = os.environ.get("SystemDrive", "")
+        a = os.path.join(SystemDrive, "Program Files")
+        if os.path.isdir(a):
+            ProgramFiles.append(a)
+    return ProgramFiles
 
 def SetupEnvironment():
     SystemDrive = os.environ.get("SystemDrive", "")
@@ -2303,20 +2329,18 @@ def SetupEnvironment():
     if SystemDrive:
         SystemDrive += os.path.sep
 
-    #
     # Do this earlier so that its link isn't a problem.
     # Looking in the registry HKEY_LOCAL_MACHINE\SOFTWARE\Cygnus Solutions\Cygwin\mounts v2
     # would be reasonable here.
-    #
+
     if HostIsCygwin:
         _SetupEnvironmentVariableAll(
             "PATH",
             ["cygwin1.dll"],
             os.path.join(SystemDrive, "cygwin", "bin"))
 
-    #
     # some host/target confusion here..
-    #
+
     if Target == "NT386" and HostIsNT and Config == "NT386" and (not GCC_BACKEND) and OSType == "WIN32":
 
         VCBin = ""
@@ -2348,12 +2372,17 @@ def SetupEnvironment():
         # after running the shortcut
         #VCINSTALLDIR=D:\msdev\90\VC
         #VSINSTALLDIR=D:\msdev\90
-        #
+        
+        VSCommonTools = os.environ.get("VS90COMNTOOLS")
+        
+        if VSCommonTools and not VSInstallDir:
+            VSInstallDir = RemoveLastPathElement(RemoveLastPathElement(VSCommonTools))
+        
         # The Windows SDK is carried with the express edition and tricky to find.
         # Best if folks just run the installed shortcut probably.
-        #
+        # We do a pretty good job now of finding it, be need to encode
+        # more paths to known versions.
 
-        #
         # This is not yet finished.
         #
         # Probe the partly version-specific less-polluting environment variables,
@@ -2362,45 +2391,43 @@ def SetupEnvironment():
         # a great idea, but having setup set DevEnvDir, VSINSTALLDIR, VS80COMNTOOLS, etc.
         # isn't so bad and we can temporarily establish the first set from the second
         # set.
-        #
+
         if VSInstallDir:
-            #
             # Visual C++ 2005/8.0, at least the Express Edition, free download
-            #
+            # also Visual C++ 2008/9.0 Express Edition
+
             if not VCInstallDir:
                 VCInstallDir = os.path.join(VSInstallDir, "VC")
+                #print("VCInstallDir:" + VCInstallDir)
             if not DevEnvDir:
                 DevEnvDir = os.path.join(VSInstallDir, "Common7", "IDE")
+                #print("DevEnvDir:" + DevEnvDir)
 
             MspdbDir = DevEnvDir
 
         elif VCToolkitInstallDir:
-            #
             # free download Visual C++ 2003; no longer available
-            #
+
             VCInstallDir = VCToolkitInstallDir
 
         elif MSVCDir and MSDevDir:
-            #
             # Visual C++ 5.0
-            #
+
             pass # do more research
             # VCInstallDir = MSVCDir
 
         elif MSDevDir:
-            #
             # Visual C++ 4.0, 5.0
-            #
+
             pass # do more research
             # VCInstallDir = MSDevDir
 
         else:
-            #
             # This is what really happens on my machine, for 8.0.
             # It might be good to guide pylib.py to other versions,
             # however setting things up manually suffices and I have, um,
             # well automated.
-            #
+
             Msdev = os.path.join(SystemDrive, "msdev", "80")
             VCInstallDir = os.path.join(Msdev, "VC")
             DevEnvDir = os.path.join(Msdev, "Common7", "IDE")
@@ -2415,37 +2442,71 @@ def SetupEnvironment():
         #elif VCBin:
         #    MspdbDir = VCBin
 
+        # Look for SDKs.
+        # expand this as they are released/discovered
+        # ordering is from newest to oldest
+        
+        PossibleSDKs = [os.path.join("Microsoft SDKs", "Windows", "v6.0A"), "Microsoft Platform SDK for Windows Server 2003 R2"]        
+        SDKs = []
+
+        for a in GetProgramFiles():
+            #print("checking " + a)
+            for b in PossibleSDKs:
+                c = os.path.join(a, b)
+                #print("checking " + c)
+                if os.path.isdir(c) and not (c in SDKs):
+                    SDKs.append(c)
+
+        # Make sure %INCLUDE% contains errno.h and windows.h.
+
         if _CheckSetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc):
-            a = os.path.join(SystemDrive, "Program Files")
-            b = os.path.join(a, "Microsoft Platform SDK for Windows Server 2003 R2", "Include")
-            c = os.path.join(a, "Microsoft SDKs", "Windows", "v6.0A", "Include")
-            _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc + ";" + c + ";" + b)
+            for a in SDKs:
+                b = os.path.join(a, "include")
+                if os.path.isfile(os.path.join(b, "windows.h")):
+                    _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc + os.path.pathsep + b)
+                    break
+
+        # Make sure %LIB% contains kernel32.lib and libcmt.lib.
+        # We carry our own kernel32.lib so we don't look in the SDKs.
+        # We usually use msvcrt.lib and not libcmt.lib, but Express 2003 had libcmt.lib and not msvcrt.lib
+        # I think, and libcmt.lib is always present.
 
         _SetupEnvironmentVariableAll(
             "LIB",
             ["kernel32.lib", "libcmt.lib"],
             VCLib + os.path.pathsep + os.path.join(InstallRoot, "lib"))
 
+        # Check that cl.exe and link.exe are in path, and if not, add VCBin to it,
+        # checking that they are in it.
         #
         # Do this before mspdb*dll because it sometimes gets it in the path.
-        #
+        # (Why do we care?)
+
         _SetupEnvironmentVariableAll("PATH", ["cl", "link"], VCBin)
+        
+        # If none of mspdb*.dll are in PATH, add MpsdbDir to PATH, and check that one of them is in it.
 
         _SetupEnvironmentVariableAny(
             "PATH",
             ["mspdb80.dll", "mspdb71.dll", "mspdb70.dll", "mspdb60.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
             MspdbDir)
 
-        _SetupEnvironmentVariableAny(
-            "PATH",
-            ["msobj80.dll", "msobj71.dll", "msobj10.dll", "msobj10.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
-            MspdbDir)
+        # Try to get mt.exe in %PATH% if it isn't already.
+        # We only need this for certain toolsets.
 
-        #
+        if not SearchPath("mt.exe", os.environ.get("PATH")):
+            for a in SDKs:
+                b = os.path.join(a, "bin")
+                if os.path.isfile(os.path.join(b, "mt.exe")):
+                    SetEnvironmentVariable("PATH", os.environ.get("PATH") + os.path.pathsep + b)
+                    break
+
+        # sys.exit(1)
+
         # The free Visual C++ 2003 has neither delayimp.lib nor msvcrt.lib.
         # Very old toolsets have no delayimp.lib.
         # The Quake config file checks these environment variables.
-        #
+
         Lib = os.environ.get("LIB")
         if not SearchPath("delayimp.lib", Lib):
             os.environ["USE_DELAYLOAD"] = "0"
@@ -2455,9 +2516,8 @@ def SetupEnvironment():
             os.environ["USE_MSVCRT"] = "0"
             print("set USE_MSVCRT=0")
 
-    #
     # some host/target confusion here..
-    #
+
     if Target == "NT386MINGNU" or (Target == "NT386" and GCC_BACKEND and OSType == "WIN32"):
 
         _ClearEnvironmentVariable("LIB")
@@ -2468,7 +2528,6 @@ def SetupEnvironment():
             ["gcc", "as", "ld"],
             os.path.join(SystemDrive, "mingw", "bin"))
 
-        #
         # need to probe for ld that accepts response files.
         # For example, this version does not:
         # C:\dev2\cm3\scripts\python>ld -v
@@ -2479,21 +2538,19 @@ def SetupEnvironment():
         # C:\dev2\cm3\scripts\python>ld -v
         # GNU ld version 2.17.50 20060824
 
-        #
         # Ensure msys make is ahead of mingwin make, by adding
         # msys to the start of the path after adding mingw to the
         # start of the path. Modula-3 does not generally use
         # make, but this might matter when building m3cg, and
         # is usually the right thing.
-        #
+
         _SetupEnvironmentVariableAll(
             "PATH",
             ["sh", "sed", "gawk", "make"],
             os.path.join(SystemDrive, "msys", "1.0", "bin"))
 
-    #
     # some host/target confusion here..
-    #
+
     if Target == "NT386GNU" or (Target == "NT386" and GCC_BACKEND and OSType == "POSIX"):
 
         #_ClearEnvironmentVariable("LIB")
@@ -2538,20 +2595,19 @@ def GetStage():
         SetEnvironmentVariable("STAGE", STAGE)
     return STAGE
 
-#
 # The way this SHOULD work is we build the union of all desired,
 # and then pick and chose from the output into the .zip/.tar.bz2.
 # For now though, we only build min.
-#
+
 def FormInstallRoot(PackageSetName):
     return os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
 
 def MakeMSIWithWix(input):
     import uuid
-#
+
 # input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1
 # The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)
-#
+
     wix = open(input + ".wxs", "w")
     wix.write("""<?xml version='1.0' encoding='windows-1252'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
@@ -2583,7 +2639,6 @@ def MakeMSIWithWix(input):
                 if state.componentID == 1:
                     wix.write("""<Environment Id="envPath" Action="set" Name="PATH" Part="last" Permanent="no" Separator=";" Value='[INSTALLDIR]bin'/>\n""")
 
-
                 wix.write("""<File Id='f%d' Name='%s' Source='%s'/>\n""" % (state.fileID, a, b))
                 state.fileID += 1
                 wix.write("</Component>\n")
@@ -2598,13 +2653,12 @@ def MakeMSIWithWix(input):
     for a in range(0, state.componentID):
         wix.write("<ComponentRef Id='c%d'/>\n" % a)
 
-    #
     # WixUI_Advanced
     # WixUI_Mondo
     # WixUI_InstallDir
     # WixUI_FeatureTree
     # are all good, but we need the package sets for some of them to make more sense
-    #
+
     wix.write("""
         </Feature>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
@@ -2617,8 +2671,11 @@ def MakeMSIWithWix(input):
     wix.close()
 
     if not SearchPath("candle") or not SearchPath("light"):
-        ProgramFiles = os.environ.get("ProgramFiles", "C:\\Program Files")
-        SetEnvironmentVariable("PATH", ProgramFiles + "\\Windows Installer XML v3\\bin;" + os.environ["PATH"])
+        for a in GetProgramFiles():
+            b = os.path.join(a, "Windows Installer XML v3", "bin")
+            if os.path.isdir(b):
+                SetEnvironmentVariable("PATH", b + os.pathsep + os.environ["PATH"])
+                break
 
     command = "candle " + input + ".wxs -out " + input + ".wixobj"
     print(command)
@@ -2646,6 +2703,8 @@ def ReadLicense(dir, a):
     return "\n\n**** " + a + " ****\n\n" + ReadFile(os.path.join(dir, a))
 
 def MakeMSILicense(dir):
+# This really needs work. The result is very ugly.
+# We should just say "There are a bunch of licenses in the license directory."
     dir = os.path.join(dir, "license")
     license = ReadLicense(dir, "COPYRIGHTS")
     license += ReadLicense(dir, "COPYRIGHT-DEC")
