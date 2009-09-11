@@ -135,10 +135,15 @@ def SearchPath(name, paths = getenv("PATH")):
         if ext == ".":
             ext = ""
         name = (base + ext)
-        for path in paths.split(os.path.pathsep):
-            candidate = os.path.join(path, name)
-            if os.path.isfile(candidate):
-                return os.path.abspath(candidate)
+        seps = [os.path.pathsep]
+        # use ; for portable separator where possible
+        if os.path.pathsep != ';':
+            seps.append(';')
+        for sep in seps:
+            for path in paths.split(sep):
+                candidate = os.path.join(path, name)
+                if os.path.isfile(candidate):
+                    return os.path.abspath(candidate)
     #print("SearchPath " + name + " returning None 2")
     return None
 
