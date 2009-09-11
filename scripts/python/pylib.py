@@ -2673,10 +2673,11 @@ def FormInstallRoot(PackageSetName):
     return os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
 
 def MakeMSIWithWix(input):
-    import uuid
-
 # input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1
-# The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)
+# The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)M
+    import uuid
+    
+    InstallLicense(Root, input)
 
     wix = open(input + ".wxs", "w")
     wix.write("""<?xml version='1.0' encoding='windows-1252'?>
@@ -2753,10 +2754,16 @@ def MakeMSIWithWix(input):
     a = input + ".msi"
     DeleteFile(a)
 
+    # This is similar to the toplevel README in the source tree.
+    licenseText = \
+"""The Critical Mass Modula-3 Software Distribution may be freely distributed as
+open source according to the various copyrights under which different parts of
+the sources are placed. Please read the files found in the license directory."""
+
     license = input + "-license.rtf"
     open(license, "w").write(
 """{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0\\fnil\\fcharset0 Courier New;}}
-{\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + MakeMSILicense().replace("\n", "\\par\n")
+{\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + licenseText.replace("\n", "\\par\n")
 + "}")
 
     command = "light -out " + a + " " + input + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + license
@@ -2765,14 +2772,6 @@ def MakeMSIWithWix(input):
 
 #MakeMSIWithWix("C:\\stage1\\cm3-min-NT386-d5.8.1")
 #sys.exit(1)
-
-def MakeMSILicense():
-    # This is similar to the toplevel README in the source tree.
-    return 
-"""The Critical Mass Modula-3 Software Distribution may be freely distributed
-as open source according to the various
-copyrights under which different parts of the sources are placed.
-Please read the files found in the license directory."""
 
 def DiscoverHardLinks(r):
 #
