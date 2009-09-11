@@ -231,7 +231,7 @@ support tools like m3bundle and some general useful libraries.
 #
 
 cd "${ROOT}"
-rm setup.txt || true
+rm -f setup.txt
 for c in ${PKG_COLLECTIONS}; do
   P=`fgrep " $c" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
   PKGS=""
