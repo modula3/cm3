@@ -2640,7 +2640,7 @@ otherwise arising out of or in connection with the use or performance
 of this software.
 """)
 
-   class State:
+    class State:
         pass
 
     state = State()
