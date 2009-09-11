@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.27 2009-09-11 13:36:05 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.28 2009-09-11 14:07:43 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -231,8 +231,8 @@ support tools like m3bundle and some general useful libraries.
 #
 
 cd "${ROOT}"
-rm -f setup.txt
 for c in ${PKG_COLLECTIONS}; do
+  rm -f setup.txt
   P=`fgrep " $c" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
   PKGS=""
   for x in $P; do
