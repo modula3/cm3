@@ -354,7 +354,7 @@ if [ "x$TARGET" = "xNT386" ]; then
   if [ -x "$ROOT/scripts/python/make-msi.py" ]; then
     if type python; then
       python "$ROOT/scripts/python/make-msi.py" "$STAGE"
-      mv "$STAGE.msi" "$STAGE/cm3-$DS.msi"
+      mv "$STAGE/cm3.msi" "$STAGE/cm3-$DS.msi"
     else
       echo "python not available, skipping .msi creation"
     fi
