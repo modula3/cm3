@@ -153,6 +153,9 @@ def _FormatEnvironmentVariable(Name):
 #-----------------------------------------------------------------------------
 
 def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
+    # We need Attempt in Win32 and Posix form, roughly speaking.
+    # That isn't the whole story. We need a form that Python can verify,
+    # and we need to know which form to set -- Python form and other form.
     AnyMissing = False
     Value = os.environ.get(Name)
     if Value:
@@ -178,6 +181,7 @@ def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
     return None
 
 def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
+    # We need Attempt in Win32 and Posix form, roughly speaking.
     Error = _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt)
     if Error:
         print(Error)
@@ -293,6 +297,40 @@ def _GetAllTargets():
 
     return Targets
 
+
+#-----------------------------------------------------------------------------
+
+def _ConvertToCygwinPath(a):
+    if IsInterix() or env_OS != "Windows_NT" or a == None:
+        return a
+    if (a.find('\\') == -1) and (a.find(':') == -1):
+        return a
+    a = a.replace("\\", "/")
+    if a.find(":/") == 1:
+        a = "/cygdrive/" + a[0:1] + a[2:]
+    return a
+
+#-----------------------------------------------------------------------------
+
+def _ConvertFromCygwinPath(a):
+    if IsInterix() or env_OS != "Windows_NT" or a == None:
+        return a
+    a = a.replace("/", "\\")
+    #a = a.replace("\\", "/")
+    if (a.find("\\cygdrive\\") == 0):
+        a = a[10] + ":" + a[11:]
+    return a
+
+def ConvertPathForWin32(a):
+    return _ConvertFromCygwinPath(a)
+
+if os.name == "posix":
+    def ConvertPathForPython(a):
+        return _ConvertToCygwinPath(a)
+else:
+    def ConvertPathForPython(a):
+        return _ConvertFromCygwinPath(a)
+
 #-----------------------------------------------------------------------------
 
 CM3_FLAGS = ""
@@ -301,7 +339,7 @@ if "boot" in sys.argv:
 if "keep" in sys.argv:
     CM3_FLAGS = CM3_FLAGS + " -keep"
 
-CM3 = getenv("CM3") or "cm3"
+CM3 = ConvertPathForPython(getenv("CM3")) or "cm3"
 CM3 = SearchPath(CM3)
 
 #-----------------------------------------------------------------------------
@@ -310,7 +348,7 @@ CM3 = SearchPath(CM3)
 # if the defaults contain a cm3.
 #
 
-InstallRoot = getenv("CM3_INSTALL")
+InstallRoot = ConvertPathForPython(getenv("CM3_INSTALL"))
 # print("InstallRoot is " + InstallRoot)
 
 if not CM3 and not InstallRoot:
@@ -725,61 +763,20 @@ def IsCygwinBinary(a):
     a = a.replace("/cygdrive/c/", "c:\\")
     a = a.replace("/cygdrive/d/", "d:\\")
     a = a.replace("/", "\\")
+    a = _ConvertFromCygwinPath(a)
     #print("a is " + a)
     return (os.system("findstr 2>&1 >nul /m cygwin1.dll \"" + a + "\"") == 0)
 
 #-----------------------------------------------------------------------------
 
-def _ConvertToCygwinPath(a):
-    if IsInterix() or env_OS != "Windows_NT":
-        return a
-    if (a.find('\\') == -1) and (a.find(':') == -1):
-        return a
-    a = a.replace("\\", "/")
-    if a.find(":/") == 1:
-        a = "/cygdrive/" + a[0:1] + a[2:]
-    return a
-
-#-----------------------------------------------------------------------------
-
-def _ConvertFromCygwinPath(a):
-    if IsInterix() or env_OS != "Windows_NT":
-        return a
-    a = a.replace("/", "\\")
-    #a = a.replace("\\", "/")
-    if (a.find("\\cygdrive\\") == 0):
-        a = a[10] + ":" + a[11:]
-    return a
-
-#-----------------------------------------------------------------------------
-
 if IsCygwinBinary(CM3):
-
-    HostIsCygwin = True
-
-    def ConvertToCygwinPath(a):
+    CM3IsCygwin = True
+    def ConvertPathForCM3(a):
         return _ConvertToCygwinPath(a)
-
-    def ConvertFromCygwinPath(a):
-        return a
-
 else:
-
-    HostIsCygwin = False
-
-    def ConvertToCygwinPath(a):
-        return a
-
-    def ConvertFromCygwinPath(a):
+    CM3IsCygwin = False
+    def ConvertPathForCM3(a):
         return _ConvertFromCygwinPath(a)
-
-#-----------------------------------------------------------------------------
-
-def ConvertPath(a):
-    # This isn't "roundtrip", this is one (or both) is a nop.
-    b = ConvertFromCygwinPath(ConvertToCygwinPath(a))
-    # print("converted " + a + " to " + b)
-    return b
 
 #-----------------------------------------------------------------------------
 #
@@ -792,10 +789,10 @@ if _Program != "make-msi.py":
 # general problem of way too much stuff at global scope
 # workaround some of it
     SetEnvironmentVariable("CM3_TARGET", Target)
-    SetEnvironmentVariable("CM3_INSTALL", ConvertPath(InstallRoot))
-    SetEnvironmentVariable("M3CONFIG", ConvertPath(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
-    #SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "\\\\"))
-    SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "/"))
+    SetEnvironmentVariable("CM3_INSTALL", ConvertPathForCM3(InstallRoot))
+    SetEnvironmentVariable("M3CONFIG", ConvertPathForCM3(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
+    #SetEnvironmentVariable("CM3_ROOT", ConvertPathForCM3(Root).replace("\\", "\\\\"))
+    SetEnvironmentVariable("CM3_ROOT", ConvertPathForCM3(Root).replace("\\", "/"))
 
 # sys.exit(1)
 
@@ -809,8 +806,8 @@ DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
 DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
 
 NativeRoot = Root
-#Root = ConvertPath(Root).replace("\\", "\\\\")
-Root = ConvertPath(Root).replace("\\", "/")
+#Root = ConvertPathForCM3(Root).replace("\\", "\\\\")
+Root = ConvertPathForCM3(Root).replace("\\", "/")
 DEFS = (DEFS % vars())
 Root = NativeRoot
 
@@ -2312,14 +2309,14 @@ def GetProgramFiles():
     # Look for Program Files.
     # This is expensive and callers are expected to cache it.
     ProgramFiles = []
-    for d in ["ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"]:
+    for d in ["PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMW6432"]:
         e = os.environ.get(d)
-        if e and (not (e in ProgramFiles)) and os.path.isdir(e):
+        if e and (not (e in ProgramFiles)) and os.path.isdir(ConvertPathForPython(e)):
             ProgramFiles.append(e)
     if len(ProgramFiles) == 0:
         SystemDrive = os.environ.get("SystemDrive", "")
         a = os.path.join(SystemDrive, "Program Files")
-        if os.path.isdir(a):
+        if os.path.isdir(ConvertPathForPython(a)):
             ProgramFiles.append(a)
     return ProgramFiles
 
@@ -2338,7 +2335,7 @@ def SetupEnvironment():
     # Looking in the registry HKEY_LOCAL_MACHINE\SOFTWARE\Cygnus Solutions\Cygwin\mounts v2
     # would be reasonable here.
 
-    if HostIsCygwin:
+    if CM3IsCygwin:
         _SetupEnvironmentVariableAll(
             "PATH",
             ["cygwin1.dll"],
@@ -2355,13 +2352,13 @@ def SetupEnvironment():
 
         # 4.0 e:\MSDEV
         # 5.0 E:\Program Files\DevStudio\SharedIDE
-        MSDevDir = os.environ.get("MSDevDir")
+        MSDevDir = os.environ.get("MSDEVDIR")
 
         # 5.0
-        MSVCDir = os.environ.get("MSVCDir") # E:\Program Files\DevStudio\VC
+        MSVCDir = os.environ.get("MSVCDIR") # E:\Program Files\DevStudio\VC
 
         # 7.1 Express
-        VCToolkitInstallDir = os.environ.get("VCToolkitInstallDir") # E:\Program Files\Microsoft Visual C++ Toolkit 2003 (not set by vcvars32)
+        VCToolkitInstallDir = os.environ.get("VCTOOLKITINSTALLDIR") # E:\Program Files\Microsoft Visual C++ Toolkit 2003 (not set by vcvars32)
 
         # 8.0 Express
         # E:\Program Files\Microsoft Visual Studio 8\VC
@@ -2459,16 +2456,17 @@ def SetupEnvironment():
             for b in PossibleSDKs:
                 c = os.path.join(a, b)
                 #print("checking " + c)
-                if os.path.isdir(c) and not (c in SDKs):
+                if os.path.isdir(ConvertPathForPython(c)) and not (c in SDKs):
                     SDKs.append(c)
 
         # Make sure %INCLUDE% contains errno.h and windows.h.
+        # This doesn't work correctly for Cygwin Python, ok.
 
         if _CheckSetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc):
             for a in SDKs:
                 b = os.path.join(a, "include")
-                if os.path.isfile(os.path.join(b, "windows.h")):
-                    _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc + os.path.pathsep + b)
+                if os.path.isfile(ConvertPathForPython(os.path.join(b, "windows.h"))):
+                    _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc + ";" + b)
                     break
 
         # Make sure %LIB% contains kernel32.lib and libcmt.lib.
@@ -2479,7 +2477,7 @@ def SetupEnvironment():
         _SetupEnvironmentVariableAll(
             "LIB",
             ["kernel32.lib", "libcmt.lib"],
-            VCLib + os.path.pathsep + os.path.join(InstallRoot, "lib"))
+            VCLib + ";" + os.path.join(InstallRoot, "lib"))
 
         # Check that cl.exe and link.exe are in path, and if not, add VCBin to it,
         # checking that they are in it.
@@ -2661,7 +2659,7 @@ of this software.
 
 def GetStage():
     global STAGE
-    STAGE = getenv("STAGE")
+    STAGE = ConvertPathForPython(getenv("STAGE"))
 
     if (not STAGE):
         #tempfile.tempdir = os.path.join(tempfile.gettempdir(), "cm3", "make-dist")
@@ -2748,7 +2746,7 @@ def MakeMSIWithWix(input):
 
     if not SearchPath("candle") or not SearchPath("light"):
         for a in GetProgramFiles():
-            b = os.path.join(a, "Windows Installer XML v3", "bin")
+            b = os.path.join(ConvertPathForPython(a), "Windows Installer XML v3", "bin")
             if os.path.isdir(b):
                 SetEnvironmentVariable("PATH", b + os.pathsep + os.environ["PATH"])
                 break
