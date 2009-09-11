@@ -180,9 +180,9 @@ def SearchPath(name, paths = getenv("PATH")):
         if ext == ".":
             ext = ""
         name = (base + ext)
-        seps = [os.path.pathsep]
+        seps = [os.pathsep]
         # use ; for portable separator where possible
-        if os.path.pathsep != ';':
+        if os.pathsep != ';':
             seps.append(';')
         for sep in seps:
             for path in paths.split(sep):
@@ -202,7 +202,7 @@ def _FormatEnvironmentVariable(Name):
 
 #-----------------------------------------------------------------------------
 
-def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep = os.path.pathsep):
+def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep = os.pathsep):
     AnyMissing = False
     Value = os.environ.get(Name)
     if Value:
@@ -227,7 +227,7 @@ def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep = os
             print(Name + "=" + Attempt)
     return None
 
-def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep = os.path.pathsep):
+def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep = os.pathsep):
     Error = _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep)
     if Error:
         print(Error)
@@ -236,7 +236,7 @@ def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep = os.path
 
 #-----------------------------------------------------------------------------
 
-def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt, pathsep = os.path.pathsep):
+def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt, pathsep = os.pathsep):
     Value = os.environ.get(Name)
     if Value:
         for File in RequiredFiles:
@@ -2507,7 +2507,7 @@ def SetupEnvironment():
             for a in SDKs:
                 b = os.path.join(a, "bin")
                 if isfile(os.path.join(b, "mt.exe")):
-                    SetEnvironmentVariable("PATH", os.environ.get("PATH") + os.path.pathsep + b)
+                    SetEnvironmentVariable("PATH", os.environ.get("PATH") + os.pathsep + b)
                     break
 
         # sys.exit(1)
