@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: make-dist.py,v 1.65 2009-09-11 14:51:32 jkrell Exp $
+# $Id: make-dist.py,v 1.66 2009-09-11 15:03:48 jkrell Exp $
 
 import sys
 import os.path
@@ -52,20 +52,6 @@ def MakeArchive(PackageSetName, Command, Extension):
     SymbolsRoot = FormInstallRoot(PackageSetName) + "-symbols"
     
     InstallLicense(Root, InstallRoot)
-
-    class State:
-        pass
-
-    state = State()
-    state.id = 0
-
-    def Callback(state, dir, entries):
-        for a in entries:
-            if a == "COPYRIGHT":
-                state.id += 1
-                CopyFile(os.path.join(dir, a), os.path.join(license, "COPYRIGHT-CALTECH-" + str(state.id)))
-
-    os.path.walk(os.path.join(Root, "caltech-parser"), Callback, state)
 
     #
     # move .pdb files into the symbols directory
