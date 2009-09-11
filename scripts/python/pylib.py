@@ -237,8 +237,6 @@ def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep = os.path
 #-----------------------------------------------------------------------------
 
 def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt, pathsep = os.path.pathsep):
-    # This doesn't always use the correct path separator, such
-    # if Python is Cygwin and setting LIB or INCLUDE for MSVC.
     Value = os.environ.get(Name)
     if Value:
         for File in RequiredFiles:
@@ -270,10 +268,10 @@ def _ClearEnvironmentVariable(Name):
 #-----------------------------------------------------------------------------
 
 def _MapTarget(a):
-    #
+
     # Convert sensible names that the user might provide on the
     # command line into the legacy names other code knows about.
-    #
+
     return {
         "I386_LINUX" : "LINUXLIBC6",
         "I386_NT" : "NT386",
@@ -284,9 +282,8 @@ def _MapTarget(a):
         "I386_FREEBSD" : "FreeBSD4",
         "I386_NETBSD" : "NetBSD2_i386",
 
-        #
         # both options sensible, double HP a bit redundant in the HPUX names
-        #
+
         "HPPA32_HPUX"  : "PA32_HPUX",
         "HPPA64_HPUX"  : "PA64_HPUX",
         "HPPA32_LINUX" : "PA32_LINUX",
