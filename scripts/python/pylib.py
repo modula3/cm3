@@ -64,10 +64,30 @@ def FatalError(a = ""):
     if __name__ != "__main__":
         sys.exit(1)
 
+def RemoveTrailingSlashes(a):
+    while len(a) > 0 and (a[-1] == '\\' or a[-1] == '/'):
+        a = a[:-1]
+    return a
+
+def RemoveTrailingSlash(a):
+    if len(a) > 0 and (a[-1] == '\\' or a[-1] == '/'):
+        a = a[:-1]
+    return a
+
+#print("RemoveTrailingSlash(a\\/):" + RemoveTrailingSlash("a\\/"))
+#print("RemoveTrailingSlash(a/\\):" + RemoveTrailingSlash("a/\\"))
+#print("RemoveTrailingSlash(a):" + RemoveTrailingSlash("a"))
+#print("RemoveTrailingSlashes(a\\\\):" + RemoveTrailingSlashes("a\\\\"))
+#print("RemoveTrailingSlashes(a//):" + RemoveTrailingSlashes("a//"))
+#print("RemoveTrailingSlashes(a):" + RemoveTrailingSlashes("a"))
+#sys.exit(1)
+
 def GetLastPathElement(a):
+    a = RemoveTrailingSlashes(a)
     return a[max(a.rfind("/"), a.rfind("\\")) + 1:]
 
 def RemoveLastPathElement(a):
+    a = RemoveTrailingSlashes(a)
     return a[0:max(a.rfind("/"), a.rfind("\\"))]
 
 def GetPathExtension(a):
@@ -338,7 +358,7 @@ Root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 # these paths (even though underlying Win32 does). So try leaving things alone.
 
 # if Root.find(":\\") == 1:
-#	Root = Root[2:]
+#   Root = Root[2:]
 #
 # Root = Root.replace("\\\\", "/")
 # Root = Root.replace("\\", "/")
@@ -379,18 +399,6 @@ Variables = [
     "CM3_BuildGlobal",
     "CM3_CleanGlobal",
     "CM3_Ship",
-
-    "PM3_BuildLocal",
-    "PM3_CleanLocal",
-    "PM3_BuildGlobal",
-    "PM3_CleanGlobal",
-    "PM3_Ship",
-
-    "SRC_BuildLocal",
-    "SRC_CleanLocal",
-    "SRC_BuildGlobal",
-    "SRC_CleanGlobal",
-    "SRC_Ship",
 
     "RealClean",
     "HAVE_TCL",
@@ -482,14 +490,6 @@ CM3VERSIONNUM = getenv("CM3VERSIONNUM") or GetVersion("CM3VERSIONNUM")
 CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetVersion("CM3LASTCHANGED")
 
 CM3_GDB = False
-
-#-----------------------------------------------------------------------------
-#
-# nascent support for building via SRC or PM3, probably will never work
-#
-
-M3Build = getenv("M3BUILD") or "m3build"
-M3Ship = getenv("M3SHIP") or "m3ship"
 
 
 #-----------------------------------------------------------------------------
@@ -826,33 +826,11 @@ if ShipArgs:
 # form the various commands we might run
 #
 
-CM3_BuildLocal = BuildLocal or "%(CM3)s %(CM3_FLAGS)s -build -override %(DEFS)s%(BuildArgs)s"
-CM3_CleanLocal = CleanLocal or "%(CM3)s %(CM3_FLAGS)s -clean -build -override %(DEFS)s%(CleanArgs)s"
-CM3_BuildGlobal = BuildGlobal or "%(CM3)s %(CM3_FLAGS)s -build %(DEFS)s%(BuildArgs)s"
-CM3_CleanGlobal = CleanGlobal or "%(CM3)s %(CM3_FLAGS)s -clean %(DEFS)s%(CleanArgs)s"
-CM3_Ship = Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(ShipArgs)s"
-
-#-----------------------------------------------------------------------------
-# define build and ship programs for Poly. Modula-3 from Montreal
-# This will not likely ever work, but maybe.
-#
-
-PM3_BuildLocal = BuildLocal or "%(M3Build)s -O %(DEFS)s%(BuildArgs)s"
-PM3_CleanLocal = CleanLocal or "%(M3Build)s clean -O %(DEFS)s%(CleanArgs)s"
-PM3_BuildGlobal = BuildGlobal or "%(M3Build)s %(DEFS)s %(BuildArgs)s)s"
-PM3_CleanGlobal = CleanGlobal or "%(M3Build)s clean %(DEFS)s%(CleanArgs)s"
-PM3_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
-
-#-----------------------------------------------------------------------------
-# define build and ship programs for DEC SRC Modula-3
-# This will not likely ever work, but maybe.
-#
-
-SRC_BuildLocal = BuildLocal or "%(M3Build)s -O %(DEFS)s%(BuildArgs)s"
-SRC_CleanLocal = CleanLocal or "%(M3Build)s clean -O %(DEFS)s%(CleanArgs)s"
-SRC_BuildGlobal = BuildGlobal or "%(M3Build)s %(DEFS)s%(BuildArgs)s"
-SRC_CleanGlobal = CleanGlobal or "%(M3Build)s clean %(DEFS)s%(CleanArgs)s"
-SRC_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
+CM3_BuildLocal = CM3_BuildLocal or BuildLocal or "%(CM3)s %(CM3_FLAGS)s -build -override %(DEFS)s%(BuildArgs)s"
+CM3_CleanLocal = CM3_CleanLocal or CleanLocal or "%(CM3)s %(CM3_FLAGS)s -clean -build -override %(DEFS)s%(CleanArgs)s"
+CM3_BuildGlobal = CM3_BuildGlobal or BuildGlobal or "%(CM3)s %(CM3_FLAGS)s -build %(DEFS)s%(BuildArgs)s"
+CM3_CleanGlobal = CM3_CleanGlobal or CleanGlobal or "%(CM3)s %(CM3_FLAGS)s -clean %(DEFS)s%(CleanArgs)s"
+CM3_Ship = CM3_Ship or Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(ShipArgs)s"
 
 # other commands
 
@@ -873,12 +851,6 @@ if SearchPath(CM3):
     CleanLocal = CM3_CleanLocal
     BuildGlobal = CM3_BuildGlobal
     CleanGlobal = CM3_CleanGlobal
-    Ship = CM3_Ship
-elif SearchPath(M3Build):
-    BuildLocal = PM3_BuildLocal
-    CleanLocal = PM3_CleanLocal
-    BuildGlobal = PM3_BuildGlobal
-    CleanGlobal = PM3_CleanGlobal
     Ship = CM3_Ship
 else:
     if (not BuildLocal) or (not BuildGlobal) or (not Ship):
@@ -1129,19 +1101,21 @@ def Boot():
     # TBD: put it only in one place.
     # The older bootstraping method does get that right.
 
-    SunCompile = "cc -g -mt -xcode=pic32 -xldscope=symbolic "
+    SunCompile = "/usr/ccs/bin/cc -g -mt -xcode=pic32 -xldscope=symbolic "
 
     GnuCompile = {
+        # gcc -fPIC generates incorrect code on Interix
         "I386_INTERIX"    : "gcc -g "
         }.get(Target) or "gcc -g -fPIC "
 
-    Compile = {
-        "SOLsun"          : SunCompile,
-        "SPARC64_SOLARIS" : SunCompile,
-        }.get(Target) or GnuCompile
+    if Target.endswith("_SOLARIS") or Target == "SOLsun":
+        Compile = SunCompile
+    else:
+        Compile = GnuCompile
 
     Compile = Compile + ({
         "AMD64_LINUX"     : " -m64 -mno-align-double ",
+        "AMD64_DARWIN"    : " -arch x86_64 ",
         "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
         "LINUXLIBC6"      : " -m32 -mno-align-double ",
         "MIPS64_OPENBSD"  : " -mabi=64 ",
@@ -1169,20 +1143,25 @@ def Boot():
 
     # not in Link
     Compile += " -c "
+    
+    if Target.endswith("_SOLARIS") or Target.startswith("SOL"):
+        Assemble = "/usr/ccs/bin/as "
+    else:
+        Assemble = "as "
+        
+    if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
+        if Target.find("64") != -1 or Target.find("ALPHA") != -1:
+            Assemble = Assemble + " --64"
+        else:
+            Assemble = Assemble + " --32"
 
-    Assemble = ("as " + ({
-        "AMD64_LINUX"       : " --64 ",
+    Assemble = (Assemble + ({
+        "AMD64_DARWIN"      : " -arch x86_64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
-        "LINUXLIBC6"        : " --32 ",
-        "SPARC32_LINUX"     : " -32 ",
-        "SPARC64_LINUX"     : " -64 ",
-        "SPARC64_LINUX"     : " -64 -Av9 ",
+        "SOLgnu"            : " -s -K PIC -xarch=v8plus ",
         "SOLsun"            : " -s -K PIC -xarch=v8plus ",
         "SPARC64_SOLARIS"   : " -s -K PIC -xarch=v9 ",
         }.get(Target) or ""))
-
-    if Target == "SOLgnu":
-        Assemble = "/usr/sfw/bin/gas"
 
     GnuPlatformPrefix = {
         "ARM_DARWIN"      : "arm-apple-darwin8-",
@@ -1529,7 +1508,7 @@ PackageSets = {
         "cmpfp",
         "dirfp",
         "uniq",
-        # "pp" # needs lex and yacc or flex and bison
+        "pp",
         # "kate"   # can be shipped only on systems with KDE
         # "nedit",
 
@@ -1712,7 +1691,6 @@ PackageSets = {
         "cmpfp",
         "dirfp",
         "uniq",
-        # "pp" # needs lex and yacc or flex and bison
         # "kate"   # can be shipped only on systems with KDE
         # "nedit",
 
@@ -1811,25 +1789,25 @@ PackageSets = {
         "cit_common",
         "m3tmplhack",
         "cit_util",
-        #"term",
+        "term",
         "deepcopy",
-        #"paneman",
-        #"paneman/kemacs",
+        "paneman",
+        "paneman/kemacs",
         "drawcontext",
-        #"drawcontext/dcpane",
-        #"drawcontext/kgv",
+        "drawcontext/dcpane",
+        "drawcontext/kgv",
         "hack",
         "m3browserhack",
         "parserlib/ktoklib",
         "parserlib/klexlib",
         "parserlib/kyacclib",
         "parserlib/ktok",
-        #"parserlib/klex",
-        #"parserlib/kyacc",
+        "parserlib/klex",
+        "parserlib/kyacc",
         "parserlib/kext",
         "parserlib/parserlib",
         #"parserlib/parserlib/test",
-        #"pp",
+        "pp",
         #"kate",
         "sgml",
 
@@ -2324,15 +2302,21 @@ def CopyCompiler(From, To):
     return True
 
 #-----------------------------------------------------------------------------
-#
-# Need to figure out how to do this properly, if at all.
-#
-#
-# Pretty specific to my setup.
-# We could also honor MSDevDir, MSVCDir, VCToolkitInstallDir, VCINSTALLDIR, etc.
-# see scripts\win\sysinfo.cmd. Some of these are set always by those installers.
-# (Though I delete them. :) )
-#
+
+def GetProgramFiles():
+    # Look for Program Files.
+    # This is expensive and callers are expected to cache it.
+    ProgramFiles = []
+    for d in ["ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"]:
+        e = os.environ.get(d)
+        if e and (not (e in ProgramFiles)) and os.path.isdir(e):
+            ProgramFiles.append(e)
+    if len(ProgramFiles) == 0:
+        SystemDrive = os.environ.get("SystemDrive", "")
+        a = os.path.join(SystemDrive, "Program Files")
+        if os.path.isdir(a):
+            ProgramFiles.append(a)
+    return ProgramFiles
 
 def SetupEnvironment():
     SystemDrive = os.environ.get("SystemDrive", "")
@@ -2345,20 +2329,18 @@ def SetupEnvironment():
     if SystemDrive:
         SystemDrive += os.path.sep
 
-    #
     # Do this earlier so that its link isn't a problem.
     # Looking in the registry HKEY_LOCAL_MACHINE\SOFTWARE\Cygnus Solutions\Cygwin\mounts v2
     # would be reasonable here.
-    #
+
     if HostIsCygwin:
         _SetupEnvironmentVariableAll(
             "PATH",
             ["cygwin1.dll"],
             os.path.join(SystemDrive, "cygwin", "bin"))
 
-    #
     # some host/target confusion here..
-    #
+
     if Target == "NT386" and HostIsNT and Config == "NT386" and (not GCC_BACKEND) and OSType == "WIN32":
 
         VCBin = ""
@@ -2384,18 +2366,23 @@ def SetupEnvironment():
         # VS80CommonTools = os.environ.get("VS80COMNTOOLS") # E:\Program Files\Microsoft Visual Studio 8\Common7\Tools
         VCInstallDir = os.environ.get("VCINSTALLDIR") # E:\Program Files\Microsoft Visual Studio 8\VC
 
-		# 9.0 Express
-		# always, global
-		#VS90COMNTOOLS=D:\msdev\90\Common7\Tools\
-		# after running the shortcut
-		#VCINSTALLDIR=D:\msdev\90\VC
-		#VSINSTALLDIR=D:\msdev\90
-		#
-		# The Windows SDK is carried with the express edition and tricky to find.
-		# Best if folks just run the installed shortcut probably.
-		#
+        # 9.0 Express
+        # always, global
+        #VS90COMNTOOLS=D:\msdev\90\Common7\Tools\
+        # after running the shortcut
+        #VCINSTALLDIR=D:\msdev\90\VC
+        #VSINSTALLDIR=D:\msdev\90
+        
+        VSCommonTools = os.environ.get("VS90COMNTOOLS")
+        
+        if VSCommonTools and not VSInstallDir:
+            VSInstallDir = RemoveLastPathElement(RemoveLastPathElement(VSCommonTools))
+        
+        # The Windows SDK is carried with the express edition and tricky to find.
+        # Best if folks just run the installed shortcut probably.
+        # We do a pretty good job now of finding it, be need to encode
+        # more paths to known versions.
 
-        #
         # This is not yet finished.
         #
         # Probe the partly version-specific less-polluting environment variables,
@@ -2404,45 +2391,43 @@ def SetupEnvironment():
         # a great idea, but having setup set DevEnvDir, VSINSTALLDIR, VS80COMNTOOLS, etc.
         # isn't so bad and we can temporarily establish the first set from the second
         # set.
-        #
+
         if VSInstallDir:
-            #
             # Visual C++ 2005/8.0, at least the Express Edition, free download
-            #
+            # also Visual C++ 2008/9.0 Express Edition
+
             if not VCInstallDir:
                 VCInstallDir = os.path.join(VSInstallDir, "VC")
+                #print("VCInstallDir:" + VCInstallDir)
             if not DevEnvDir:
                 DevEnvDir = os.path.join(VSInstallDir, "Common7", "IDE")
+                #print("DevEnvDir:" + DevEnvDir)
 
             MspdbDir = DevEnvDir
 
         elif VCToolkitInstallDir:
-            #
             # free download Visual C++ 2003; no longer available
-            #
+
             VCInstallDir = VCToolkitInstallDir
 
         elif MSVCDir and MSDevDir:
-            #
             # Visual C++ 5.0
-            #
+
             pass # do more research
             # VCInstallDir = MSVCDir
 
         elif MSDevDir:
-            #
             # Visual C++ 4.0, 5.0
-            #
+
             pass # do more research
             # VCInstallDir = MSDevDir
 
         else:
-            #
             # This is what really happens on my machine, for 8.0.
             # It might be good to guide pylib.py to other versions,
             # however setting things up manually suffices and I have, um,
             # well automated.
-            #
+
             Msdev = os.path.join(SystemDrive, "msdev", "80")
             VCInstallDir = os.path.join(Msdev, "VC")
             DevEnvDir = os.path.join(Msdev, "Common7", "IDE")
@@ -2457,37 +2442,71 @@ def SetupEnvironment():
         #elif VCBin:
         #    MspdbDir = VCBin
 
+        # Look for SDKs.
+        # expand this as they are released/discovered
+        # ordering is from newest to oldest
+        
+        PossibleSDKs = [os.path.join("Microsoft SDKs", "Windows", "v6.0A"), "Microsoft Platform SDK for Windows Server 2003 R2"]        
+        SDKs = []
+
+        for a in GetProgramFiles():
+            #print("checking " + a)
+            for b in PossibleSDKs:
+                c = os.path.join(a, b)
+                #print("checking " + c)
+                if os.path.isdir(c) and not (c in SDKs):
+                    SDKs.append(c)
+
+        # Make sure %INCLUDE% contains errno.h and windows.h.
+
         if _CheckSetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc):
-            a = os.path.join(SystemDrive, "Program Files")
-            b = os.path.join(a, "Microsoft Platform SDK for Windows Server 2003 R2", "Include")
-            c = os.path.join(a, "Microsoft SDKs", "Windows", "v6.0A", "Include")
-            _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc + ";" + c + ";" + b)
+            for a in SDKs:
+                b = os.path.join(a, "include")
+                if os.path.isfile(os.path.join(b, "windows.h")):
+                    _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc + os.path.pathsep + b)
+                    break
+
+        # Make sure %LIB% contains kernel32.lib and libcmt.lib.
+        # We carry our own kernel32.lib so we don't look in the SDKs.
+        # We usually use msvcrt.lib and not libcmt.lib, but Express 2003 had libcmt.lib and not msvcrt.lib
+        # I think, and libcmt.lib is always present.
 
         _SetupEnvironmentVariableAll(
             "LIB",
             ["kernel32.lib", "libcmt.lib"],
             VCLib + os.path.pathsep + os.path.join(InstallRoot, "lib"))
 
+        # Check that cl.exe and link.exe are in path, and if not, add VCBin to it,
+        # checking that they are in it.
         #
         # Do this before mspdb*dll because it sometimes gets it in the path.
-        #
+        # (Why do we care?)
+
         _SetupEnvironmentVariableAll("PATH", ["cl", "link"], VCBin)
+        
+        # If none of mspdb*.dll are in PATH, add MpsdbDir to PATH, and check that one of them is in it.
 
         _SetupEnvironmentVariableAny(
             "PATH",
             ["mspdb80.dll", "mspdb71.dll", "mspdb70.dll", "mspdb60.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
             MspdbDir)
 
-        _SetupEnvironmentVariableAny(
-            "PATH",
-            ["msobj80.dll", "msobj71.dll", "msobj10.dll", "msobj10.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
-            MspdbDir)
+        # Try to get mt.exe in %PATH% if it isn't already.
+        # We only need this for certain toolsets.
 
-        #
+        if not SearchPath("mt.exe", os.environ.get("PATH")):
+            for a in SDKs:
+                b = os.path.join(a, "bin")
+                if os.path.isfile(os.path.join(b, "mt.exe")):
+                    SetEnvironmentVariable("PATH", os.environ.get("PATH") + os.path.pathsep + b)
+                    break
+
+        # sys.exit(1)
+
         # The free Visual C++ 2003 has neither delayimp.lib nor msvcrt.lib.
         # Very old toolsets have no delayimp.lib.
         # The Quake config file checks these environment variables.
-        #
+
         Lib = os.environ.get("LIB")
         if not SearchPath("delayimp.lib", Lib):
             os.environ["USE_DELAYLOAD"] = "0"
@@ -2497,9 +2516,8 @@ def SetupEnvironment():
             os.environ["USE_MSVCRT"] = "0"
             print("set USE_MSVCRT=0")
 
-    #
     # some host/target confusion here..
-    #
+
     if Target == "NT386MINGNU" or (Target == "NT386" and GCC_BACKEND and OSType == "WIN32"):
 
         _ClearEnvironmentVariable("LIB")
@@ -2510,7 +2528,6 @@ def SetupEnvironment():
             ["gcc", "as", "ld"],
             os.path.join(SystemDrive, "mingw", "bin"))
 
-        #
         # need to probe for ld that accepts response files.
         # For example, this version does not:
         # C:\dev2\cm3\scripts\python>ld -v
@@ -2521,21 +2538,19 @@ def SetupEnvironment():
         # C:\dev2\cm3\scripts\python>ld -v
         # GNU ld version 2.17.50 20060824
 
-        #
         # Ensure msys make is ahead of mingwin make, by adding
         # msys to the start of the path after adding mingw to the
         # start of the path. Modula-3 does not generally use
         # make, but this might matter when building m3cg, and
         # is usually the right thing.
-        #
+
         _SetupEnvironmentVariableAll(
             "PATH",
             ["sh", "sed", "gawk", "make"],
             os.path.join(SystemDrive, "msys", "1.0", "bin"))
 
-    #
     # some host/target confusion here..
-    #
+
     if Target == "NT386GNU" or (Target == "NT386" and GCC_BACKEND and OSType == "POSIX"):
 
         #_ClearEnvironmentVariable("LIB")
@@ -2569,6 +2584,76 @@ def CheckForLinkSwitch(Switch):
 
 # packaging support
 
+def InstallLicense(Root, InstallRoot):
+
+    license = os.path.join(InstallRoot, "license")
+    CreateDirectory(license)
+
+    for a in glob.glob(os.path.join(Root, "COPYRIGHT*")):
+        CopyFile(a, os.path.join(license, GetLastPathElement(a))) or FatalError()
+
+    CopyFile(os.path.join(Root, "m3-libs", "arithmetic", "copyrite.txt"), os.path.join(license, "COPYRIGHT-M3NA")) or FatalError()
+    CopyFile(os.path.join(Root, "m3-tools", "cvsup", "License"), os.path.join(license, "COPYRIGHT-JDP-CVSUP")) or FatalError()
+    CopyFile(os.path.join(Root, "m3-sys", "COPYRIGHT-CMASS"), os.path.join(license, "COPYRIGHT-CMASS")) or FatalError()
+
+    open(os.path.join(license, "COPYRIGHT-ELEGO-SYSUTILS"), "w").write(
+"""Copyright 1999-2002 elego Software Solutions GmbH, Berlin, Germany.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+""")
+
+    open(os.path.join(license, "COPYRIGHT-OLIVETTI"), "w").write(
+"""                      Copyright (C) Olivetti 1989 
+                          All Rights reserved
+
+Use and copy of this software and preparation of derivative works based
+upon this software are permitted to any person, provided this same
+copyright notice and the following Olivetti warranty disclaimer are
+included in any copy of the software or any modification thereof or
+derivative work therefrom made by any person.
+
+This software is made available AS IS and Olivetti disclaims all
+warranties with respect to this software, whether expressed or implied
+under any law, including all implied warranties of merchantibility and
+fitness for any purpose. In no event shall Olivetti be liable for any
+damages whatsoever resulting from loss of use, data or profits or
+otherwise arising out of or in connection with the use or performance
+of this software.
+""")
+
+    class State:
+        pass
+
+    state = State()
+    state.id = 0
+
+    def Callback(state, dir, entries):
+        for a in entries:
+            if a == "COPYRIGHT":
+                state.id += 1
+                CopyFile(os.path.join(dir, a), os.path.join(license, "COPYRIGHT-CALTECH-" + str(state.id)))
+
+    os.path.walk(os.path.join(Root, "caltech-parser"), Callback, state)
+
 def GetStage():
     global STAGE
     STAGE = getenv("STAGE")
@@ -2580,20 +2665,20 @@ def GetStage():
         SetEnvironmentVariable("STAGE", STAGE)
     return STAGE
 
-#
 # The way this SHOULD work is we build the union of all desired,
 # and then pick and chose from the output into the .zip/.tar.bz2.
 # For now though, we only build min.
-#
+
 def FormInstallRoot(PackageSetName):
     return os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
 
 def MakeMSIWithWix(input):
-    import uuid
-#
 # input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1
-# The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)
-#
+# The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)M
+    import uuid
+    
+    InstallLicense(Root, input)
+
     wix = open(input + ".wxs", "w")
     wix.write("""<?xml version='1.0' encoding='windows-1252'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
@@ -2625,7 +2710,6 @@ def MakeMSIWithWix(input):
                 if state.componentID == 1:
                     wix.write("""<Environment Id="envPath" Action="set" Name="PATH" Part="last" Permanent="no" Separator=";" Value='[INSTALLDIR]bin'/>\n""")
 
-
                 wix.write("""<File Id='f%d' Name='%s' Source='%s'/>\n""" % (state.fileID, a, b))
                 state.fileID += 1
                 wix.write("</Component>\n")
@@ -2640,13 +2724,12 @@ def MakeMSIWithWix(input):
     for a in range(0, state.componentID):
         wix.write("<ComponentRef Id='c%d'/>\n" % a)
 
-    #
     # WixUI_Advanced
     # WixUI_Mondo
     # WixUI_InstallDir
     # WixUI_FeatureTree
     # are all good, but we need the package sets for some of them to make more sense
-    #
+
     wix.write("""
         </Feature>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
@@ -2659,8 +2742,11 @@ def MakeMSIWithWix(input):
     wix.close()
 
     if not SearchPath("candle") or not SearchPath("light"):
-        ProgramFiles = os.environ.get("ProgramFiles", "C:\\Program Files")
-        SetEnvironmentVariable("PATH", ProgramFiles + "\\Windows Installer XML v3\\bin;" + os.environ["PATH"])
+        for a in GetProgramFiles():
+            b = os.path.join(a, "Windows Installer XML v3", "bin")
+            if os.path.isdir(b):
+                SetEnvironmentVariable("PATH", b + os.pathsep + os.environ["PATH"])
+                break
 
     command = "candle " + input + ".wxs -out " + input + ".wixobj"
     print(command)
@@ -2668,10 +2754,16 @@ def MakeMSIWithWix(input):
     a = input + ".msi"
     DeleteFile(a)
 
+    # This is similar to the toplevel README in the source tree.
+    licenseText = \
+"""The Critical Mass Modula-3 Software Distribution may be freely distributed as
+open source according to the various copyrights under which different parts of
+the sources are placed. Please read the files found in the license directory."""
+
     license = input + "-license.rtf"
     open(license, "w").write(
 """{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0\\fnil\\fcharset0 Courier New;}}
-{\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + MakeMSILicense(input).replace("\n", "\\par\n")
+{\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + licenseText.replace("\n", "\\par\n")
 + "}")
 
     command = "light -out " + a + " " + input + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + license
@@ -2680,24 +2772,6 @@ def MakeMSIWithWix(input):
 
 #MakeMSIWithWix("C:\\stage1\\cm3-min-NT386-d5.8.1")
 #sys.exit(1)
-
-def ReadFile(f):
-    return open(f).read()
-
-def ReadLicense(dir, a):
-    return "\n\n**** " + a + " ****\n\n" + ReadFile(os.path.join(dir, a))
-
-def MakeMSILicense(dir):
-    dir = os.path.join(dir, "license")
-    license = ReadLicense(dir, "COPYRIGHTS")
-    license += ReadLicense(dir, "COPYRIGHT-DEC")
-    for a in os.listdir(dir):
-        if (a != "COPYRIGHTS" and a.find("CVSUP") == -1 and a.find("CALTECH") == -1 and a != "COPYRIGHT-DEC") or a == "COPYRIGHT-CALTECH-1":
-            license += ReadLicense(dir, a)
-    for a in os.listdir(dir):
-        if (a.find("CALTECH") != -1 or a.find("CVSUP") != -1) and a != "COPYRIGHT-CALTECH-1":
-            license += ReadLicense(dir, a)
-    return license
 
 def DiscoverHardLinks(r):
 #

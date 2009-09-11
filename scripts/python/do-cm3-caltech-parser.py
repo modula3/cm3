@@ -19,12 +19,13 @@ DoPackage(sys.argv, [
     "paneman/kemacs",
     "parserlib/ktoklib",
     "parserlib/klexlib",
+    "parserlib/kyacclib",
     "parserlib/ktok",
     "parserlib/klex",
     "parserlib/kyacc",
     "parserlib/kext",
     "parserlib/parserlib",
-    "parserlib/parserlib/test",
+    #"parserlib/parserlib/test",
     ])
 
 print("%s: Success." % os.path.basename(sys.argv[0]))

@@ -50,74 +50,8 @@ def MakeArchive(PackageSetName, Command, Extension):
 
     InstallRoot = FormInstallRoot(PackageSetName)
     SymbolsRoot = FormInstallRoot(PackageSetName) + "-symbols"
-
-    license = os.path.join(InstallRoot, "license")
-    CreateDirectory(license)
-
-    for a in glob.glob(os.path.join(Root, "COPYRIGHT*")):
-        CopyFile(a, os.path.join(license, GetLastPathElement(a))) or FatalError()
-
-    CopyFile(os.path.join(Root, "m3-libs", "arithmetic", "copyrite.txt"), os.path.join(license, "COPYRIGHT-M3NA")) or FatalError()
-    CopyFile(os.path.join(Root, "m3-tools", "cvsup", "License"), os.path.join(license, "COPYRIGHT-JDP-CVSUP")) or FatalError()
-    CopyFile(os.path.join(Root, "m3-sys", "COPYRIGHT-CMASS"), os.path.join(license, "COPYRIGHT-CMASS")) or FatalError()
-
-    open(os.path.join(license, "COPYRIGHT-ELEGO-SYSUTILS"), "w").write(
-"""Copyright 1999-2002 elego Software Solutions GmbH, Berlin, Germany.
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-1. Redistributions of source code must retain the above copyright
-   notice, this list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
-IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-""")
-
-    open(os.path.join(license, "COPYRIGHT-OLIVETTI"), "w").write(
-"""                      Copyright (C) Olivetti 1989 
-                          All Rights reserved
-
-Use and copy of this software and preparation of derivative works based
-upon this software are permitted to any person, provided this same
-copyright notice and the following Olivetti warranty disclaimer are
-included in any copy of the software or any modification thereof or
-derivative work therefrom made by any person.
-
-This software is made available AS IS and Olivetti disclaims all
-warranties with respect to this software, whether expressed or implied
-under any law, including all implied warranties of merchantibility and
-fitness for any purpose. In no event shall Olivetti be liable for any
-damages whatsoever resulting from loss of use, data or profits or
-otherwise arising out of or in connection with the use or performance
-of this software.
-""")
-
-    class State:
-        pass
-
-    state = State()
-    state.id = 0
-
-    def Callback(state, dir, entries):
-        for a in entries:
-            if a == "COPYRIGHT":
-                state.id += 1
-                CopyFile(os.path.join(dir, a), os.path.join(license, "COPYRIGHT-CALTECH-" + str(state.id)))
-
-    os.path.walk(os.path.join(Root, "caltech-parser"), Callback, state)
+    
+    InstallLicense(Root, InstallRoot)
 
     #
     # move .pdb files into the symbols directory
