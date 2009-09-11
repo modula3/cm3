@@ -788,10 +788,9 @@ def ConvertPath(a):
 
 _Program = os.path.basename(sys.argv[0])
 
+if _Program != "make-msi.py":
 # general problem of way too much stuff at global scope
 # workaround some of it
-
-if _Program != "make-msi.py":
     SetEnvironmentVariable("CM3_TARGET", Target)
     SetEnvironmentVariable("CM3_INSTALL", ConvertPath(InstallRoot))
     SetEnvironmentVariable("M3CONFIG", ConvertPath(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
