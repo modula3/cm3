@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.29 2009-09-11 15:43:27 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.30 2009-09-11 16:13:46 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -351,9 +351,9 @@ done
 set -x
 
 if [ "x$TARGET" = "xNT386" ]; then
-  if [ -x "$ROOT/scripts/make-msi.py" ]; then
+  if [ -x "$ROOT/scripts/python/make-msi.py" ]; then
     if [ type python ]; then
-      python "$ROOT/scripts/make-msi.py" "$STAGE"
+      python "$ROOT/scripts/python/make-msi.py" "$STAGE"
       mv "$STAGE.msi" "$STAGE/cm3-$DS.msi"
     else
       echo "python not available, skipping .msi creation"
