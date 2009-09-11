@@ -2640,6 +2640,19 @@ otherwise arising out of or in connection with the use or performance
 of this software.
 """)
 
+   class State:
+        pass
+
+    state = State()
+    state.id = 0
+
+    def Callback(state, dir, entries):
+        for a in entries:
+            if a == "COPYRIGHT":
+                state.id += 1
+                CopyFile(os.path.join(dir, a), os.path.join(license, "COPYRIGHT-CALTECH-" + str(state.id)))
+
+    os.path.walk(os.path.join(Root, "caltech-parser"), Callback, state)
 
 def GetStage():
     global STAGE
@@ -2743,7 +2756,7 @@ def MakeMSIWithWix(input):
     license = input + "-license.rtf"
     open(license, "w").write(
 """{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0\\fnil\\fcharset0 Courier New;}}
-{\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + MakeMSILicense(input).replace("\n", "\\par\n")
+{\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + MakeMSILicense().replace("\n", "\\par\n")
 + "}")
 
     command = "light -out " + a + " " + input + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + license
@@ -2753,25 +2766,13 @@ def MakeMSIWithWix(input):
 #MakeMSIWithWix("C:\\stage1\\cm3-min-NT386-d5.8.1")
 #sys.exit(1)
 
-def ReadFile(f):
-    return open(f).read()
-
-def ReadLicense(dir, a):
-    return "\n\n**** " + a + " ****\n\n" + ReadFile(os.path.join(dir, a))
-
-def MakeMSILicense(dir):
-# This really needs work. The result is very ugly.
-# We should just say "There are a bunch of licenses in the license directory."
-    dir = os.path.join(dir, "license")
-    license = ReadLicense(dir, "COPYRIGHTS")
-    license += ReadLicense(dir, "COPYRIGHT-DEC")
-    for a in os.listdir(dir):
-        if (a != "COPYRIGHTS" and a.find("CVSUP") == -1 and a.find("CALTECH") == -1 and a != "COPYRIGHT-DEC") or a == "COPYRIGHT-CALTECH-1":
-            license += ReadLicense(dir, a)
-    for a in os.listdir(dir):
-        if (a.find("CALTECH") != -1 or a.find("CVSUP") != -1) and a != "COPYRIGHT-CALTECH-1":
-            license += ReadLicense(dir, a)
-    return license
+def MakeMSILicense():
+    # This is similar to the toplevel README in the source tree.
+    return 
+"""The Critical Mass Modula-3 Software Distribution may be freely distributed
+as open source according to the various
+copyrights under which different parts of the sources are placed.
+Please read the files found in the license directory."""
 
 def DiscoverHardLinks(r):
 #
