@@ -349,6 +349,18 @@ EOF
 done
 
 set -x
+
+if [ "x$TARGET" = "xNT386" ]; then
+  if [ -x "$ROOT/scripts/make-msi.py" ]; then
+    if [ type python ]; then
+      python "$ROOT/scripts/make-msi.py" "$STAGE"
+      mv "$STAGE.msi" "$STAGE/cm3-$DS.msi"
+    else
+      echo "python not available, skipping .msi creation"
+    fi
+  fi
+fi
+
 echo "hostname=`hostname`"
 echo "SHIPRC=$SHIPRC"
 
@@ -368,6 +380,10 @@ if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
   type rsync || RSYNC=scp
   false; while [ $? != 0 ]; do
     $RSYNC ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+    # Can we just list this on the previous line, or only if it exists?
+    if [ -r "$STAGE/cm3-$DS.msi" ]; then
+      $RSYNC "$STAGE/cm3-$DS.msi" $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+    fi
   done
   if [ `hostname` = 'birch' ]; then
     false; while [ $? != 0 ]; do
