@@ -786,11 +786,17 @@ def ConvertPath(a):
 # reflect what we decided back into the environment
 #
 
-SetEnvironmentVariable("CM3_TARGET", Target)
-SetEnvironmentVariable("CM3_INSTALL", ConvertPath(InstallRoot))
-SetEnvironmentVariable("M3CONFIG", ConvertPath(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
-#SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "\\\\"))
-SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "/"))
+_Program = os.path.basename(sys.argv[0])
+
+# general problem of way too much stuff at global scope
+# workaround some of it
+
+if _Program != "make-msi.py":
+    SetEnvironmentVariable("CM3_TARGET", Target)
+    SetEnvironmentVariable("CM3_INSTALL", ConvertPath(InstallRoot))
+    SetEnvironmentVariable("M3CONFIG", ConvertPath(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
+    #SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "\\\\"))
+    SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "/"))
 
 # sys.exit(1)
 
