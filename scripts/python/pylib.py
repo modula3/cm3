@@ -115,6 +115,51 @@ def GetPathBaseName(a):
 # print("4:" + GetPathBaseName("a.b/c"))
 # sys.exit(1)
 
+
+#-----------------------------------------------------------------------------
+
+def _ConvertToCygwinPath(a):
+    if IsInterix() or env_OS != "Windows_NT" or a == None:
+        return a
+    if (a.find('\\') == -1) and (a.find(':') == -1):
+        return a
+    a = a.replace("\\", "/")
+    if a.find(":/") == 1:
+        a = "/cygdrive/" + a[0:1] + a[2:]
+    return a
+
+#-----------------------------------------------------------------------------
+
+def _ConvertFromCygwinPath(a):
+    if IsInterix() or env_OS != "Windows_NT" or a == None:
+        return a
+    a = a.replace("/", "\\")
+    #a = a.replace("\\", "/")
+    if (a.find("\\cygdrive\\") == 0):
+        a = a[10] + ":" + a[11:]
+    return a
+
+def ConvertPathForWin32(a):
+    return _ConvertFromCygwinPath(a)
+
+if os.name == "posix":
+    def ConvertPathForPython(a):
+        return _ConvertToCygwinPath(a)
+else:
+    def ConvertPathForPython(a):
+        return _ConvertFromCygwinPath(a)
+
+#-----------------------------------------------------------------------------
+
+def isfile(a):
+    return os.path.isfile(ConvertPathForPython(a))
+
+def isdir(a):
+    return os.path.isdir(ConvertPathForPython(a))
+
+def FileExists(a):
+    return isfile(a)
+
 #-----------------------------------------------------------------------------
 #
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52224
@@ -123,7 +168,7 @@ def GetPathBaseName(a):
 def SearchPath(name, paths = getenv("PATH")):
     #Given a search path, find file
     if (name.find("/") != -1) or (name.find("\\") != -1):
-        if os.path.isfile(name):
+        if isfile(name):
             return name
     if paths == "":
         print("SearchPath returning None 1")
@@ -142,7 +187,7 @@ def SearchPath(name, paths = getenv("PATH")):
         for sep in seps:
             for path in paths.split(sep):
                 candidate = os.path.join(path, name)
-                if os.path.isfile(candidate):
+                if isfile(candidate):
                     return os.path.abspath(candidate)
     #print("SearchPath " + name + " returning None 2")
     return None
@@ -157,10 +202,7 @@ def _FormatEnvironmentVariable(Name):
 
 #-----------------------------------------------------------------------------
 
-def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
-    # We need Attempt in Win32 and Posix form, roughly speaking.
-    # That isn't the whole story. We need a form that Python can verify,
-    # and we need to know which form to set -- Python form and other form.
+def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep = os.path.pathsep):
     AnyMissing = False
     Value = os.environ.get(Name)
     if Value:
@@ -172,7 +214,7 @@ def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
         AnyMissing = True
     if AnyMissing:
         if Value:
-            NewValue = Attempt + os.path.pathsep + Value
+            NewValue = Attempt + pathsep + Value
         else:
             NewValue = Attempt
         for File in RequiredFiles:
@@ -180,14 +222,13 @@ def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
                 return "ERROR: " + File + " not found in " + _FormatEnvironmentVariable(Name) + "(" + NewValue + ")"
         os.environ[Name] = NewValue
         if Value:
-            print(Name + "=" + Attempt + os.pathsep + _FormatEnvironmentVariable(Name))
+            print(Name + "=" + Attempt + pathsep + _FormatEnvironmentVariable(Name))
         else:
             print(Name + "=" + Attempt)
     return None
 
-def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
-    # We need Attempt in Win32 and Posix form, roughly speaking.
-    Error = _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt)
+def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep = os.path.pathsep):
+    Error = _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep)
     if Error:
         print(Error)
         if __name__ != "__main__":
@@ -195,21 +236,23 @@ def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
 
 #-----------------------------------------------------------------------------
 
-def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt):
+def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt, pathsep = os.path.pathsep):
+    # This doesn't always use the correct path separator, such
+    # if Python is Cygwin and setting LIB or INCLUDE for MSVC.
     Value = os.environ.get(Name)
     if Value:
         for File in RequiredFiles:
             if SearchPath(File, Value):
                 return
     if Value:
-        NewValue = Attempt + os.path.pathsep + Value
+        NewValue = Attempt + pathsep + Value
     else:
         NewValue = Attempt
     for File in RequiredFiles:
         if SearchPath(File, NewValue):
             os.environ[Name] = NewValue
             if Value:
-                print(Name + "=" + NewValue + os.pathsep + _FormatEnvironmentVariable(Name))
+                print(Name + "=" + NewValue + pathsep + _FormatEnvironmentVariable(Name))
             else:
                 print(Name + "=" + NewValue)
             return
@@ -302,40 +345,6 @@ def _GetAllTargets():
 
     return Targets
 
-
-#-----------------------------------------------------------------------------
-
-def _ConvertToCygwinPath(a):
-    if IsInterix() or env_OS != "Windows_NT" or a == None:
-        return a
-    if (a.find('\\') == -1) and (a.find(':') == -1):
-        return a
-    a = a.replace("\\", "/")
-    if a.find(":/") == 1:
-        a = "/cygdrive/" + a[0:1] + a[2:]
-    return a
-
-#-----------------------------------------------------------------------------
-
-def _ConvertFromCygwinPath(a):
-    if IsInterix() or env_OS != "Windows_NT" or a == None:
-        return a
-    a = a.replace("/", "\\")
-    #a = a.replace("\\", "/")
-    if (a.find("\\cygdrive\\") == 0):
-        a = a[10] + ":" + a[11:]
-    return a
-
-def ConvertPathForWin32(a):
-    return _ConvertFromCygwinPath(a)
-
-if os.name == "posix":
-    def ConvertPathForPython(a):
-        return _ConvertToCygwinPath(a)
-else:
-    def ConvertPathForPython(a):
-        return _ConvertFromCygwinPath(a)
-
 #-----------------------------------------------------------------------------
 
 CM3_FLAGS = ""
@@ -358,7 +367,7 @@ InstallRoot = ConvertPathForPython(getenv("CM3_INSTALL"))
 
 if not CM3 and not InstallRoot:
     for a in ["c:\\cm3\\bin\\cm3.exe", "d:\\cm3\\bin\\cm3.exe", "/cm3/bin/cm3", "/usr/local/bin/cm3"]:
-        if os.path.isfile(a):
+        if isfile(a):
             CM3 = a
             bin = os.path.dirname(CM3)
             print("using " + CM3)
@@ -740,7 +749,7 @@ def GetConfigForDistribution(Target):
     if False:
         a = os.path.join(Root, "m3-sys", "cminstall", "src")
         b = os.path.join(a, "config-no-install", Target)
-        if os.path.isfile(b):
+        if isfile(b):
             return b
         # b = os.path.join(a, "config", Target)
         b = os.path.join(a, "config-no-install", Target)
@@ -763,7 +772,7 @@ def SetEnvironmentVariable(Name, Value):
 def IsCygwinBinary(a):
     if IsInterix() or env_OS != "Windows_NT":
         return False
-    if not os.path.isfile(a):
+    if not isfile(a):
         FatalError(a + " does not exist")
     a = a.replace("/cygdrive/c/", "c:\\")
     a = a.replace("/cygdrive/d/", "d:\\")
@@ -946,7 +955,7 @@ def ShowUsage(args, Usage, P):
 #-----------------------------------------------------------------------------
 
 def MakePackageDB():
-    if not os.path.isfile(PKGSDB):
+    if not isfile(PKGSDB):
         #
         # Look for all files src/m3makefile in the CM3 source
         # and write their relative paths from Root to PKGSDB.
@@ -962,7 +971,7 @@ def MakePackageDB():
                 return
             if not "m3makefile" in Names:
                 return
-            if not os.path.isfile(os.path.join(Directory, "m3makefile")):
+            if not isfile(os.path.join(Directory, "m3makefile")):
                 return
             Result.append(Directory[len(Root) + 1:-4].replace('\\', "/") + "\n")
 
@@ -974,7 +983,7 @@ def MakePackageDB():
         Result.sort()
         open(PKGSDB, "w").writelines(Result)
 
-        if not os.path.isfile(PKGSDB):
+        if not isfile(PKGSDB):
             File = __file__
             sys.stderr.write("%(File)s: cannot generate package list\n" % vars())
             sys.exit(1)
@@ -2020,7 +2029,7 @@ GenericCommand:
             sys.exit(1)
 
         q = os.path.join(Root, q)
-        if os.path.isfile(os.path.join(q, "src", "m3makefile")):
+        if isfile(os.path.join(q, "src", "m3makefile")):
             PackageDirectories.append(q)
             continue
 
@@ -2073,16 +2082,16 @@ def DeleteFile(a):
         print("rm -f " + a)
     else:
         print("del /f /a " + a)
-    if os.path.isfile(a):
-        os.chmod(a, 0700)
-        os.remove(a)
+    if isfile(a):
+        os.chmod(ConvertPathForPython(a), 0700)
+        os.remove(ConvertPathForPython(a))
 
 def MoveFile(a, b):
     if os.name != "nt":
         print("mv " + a + " " + b)
     else:
         print("move " + a + " " + b)
-    shutil.move(a, b)
+    shutil.move(ConvertPathForPython(a), ConvertPathForPython(b))
 
 #-----------------------------------------------------------------------------
 
@@ -2091,7 +2100,7 @@ def CreateDirectory(a):
         print("mkdir -p " + a)
     else:
         print("mkdir " + a)
-    if not os.path.isdir(a):
+    if not isdir(a):
         os.makedirs(a)
     return True
 
@@ -2109,34 +2118,29 @@ MakeTempDir()
 
 #-----------------------------------------------------------------------------
 
-def FileExists(a):
-    return os.path.isfile(a)
-
-#-----------------------------------------------------------------------------
-
 def CopyFile(From, To):
-    if os.path.isdir(To):
+    if isdir(To):
         To = os.path.join(To, os.path.basename(From))
     # Cygwin says foo exists when only foo.exe exists, and then remove fails.
-    if os.path.isfile(To):
+    if isfile(To):
         try:
-            os.remove(To)
+            os.remove(ConvertPathForPython(To))
         except:
             pass
     CopyCommand = "copy"
     if os.name != "nt":
         CopyCommand = "cp -Pv"
     print(CopyCommand + " " + From + " " + To)
-    if os.path.islink(From):
-        os.symlink(os.readlink(From), To)
+    if os.path.islink(ConvertPathForPython(From)):
+        os.symlink(os.readlink(ConvertPathForPython(From)), ConvertPathForPython(To))
     else:
-        shutil.copy(From, To)
+        shutil.copy(ConvertPathForPython(From), ConvertPathForPython(To))
     return True
 
 #-----------------------------------------------------------------------------
 
 def CopyFileIfExist(From, To):
-    if os.path.isfile(From):
+    if isfile(From):
         return CopyFile(From, To)
     return True
 
@@ -2160,7 +2164,7 @@ def CopyConfigForDevelopment():
 
     for b in ["config", "config-no-install"]:
         for File in glob.glob(os.path.join(a, b, "*")):
-            if os.path.isfile(File):
+            if isfile(File):
                 DeleteFile(os.path.join(To, os.path.basename(File)))
 
     # CopyFile(os.path.join(Root, a, "config", "cm3.cfg"), To) or FatalError()
@@ -2172,7 +2176,7 @@ def CopyConfigForDevelopment():
 #def CopyDirectoryNonRecursive(From, To):
 #    CreateDirectory(To)
 #    for File in glob.glob(os.path.join(From, "*")):
-#        if os.path.isfile(File):
+#        if isfile(File):
 #            print(File + " => " + To + "\n")
 #            CopyFile(File, To)
 #    return True
@@ -2191,7 +2195,7 @@ def CopyConfigForDistribution(To):
     CreateDirectory(dir)
     for b in [Target + "*", "*.common"]:
         for File in glob.glob(os.path.join(Root, "m3-sys", "cminstall", "src", "config-no-install", b)):
-            if os.path.isfile(File):
+            if isfile(File):
                 #print(File + " => " + dir + "\n")
                 CopyFile(File, dir)
     open(os.path.join(Bin, "cm3.cfg"), "w").write("INSTALL_ROOT = (path() & \"/..\")\ninclude(path() & \"/config/" + Config + "\")\n")
@@ -2316,12 +2320,12 @@ def GetProgramFiles():
     ProgramFiles = []
     for d in ["PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMW6432"]:
         e = os.environ.get(d)
-        if e and (not (e in ProgramFiles)) and os.path.isdir(ConvertPathForPython(e)):
+        if e and (not (e in ProgramFiles)) and isdir(e):
             ProgramFiles.append(e)
     if len(ProgramFiles) == 0:
         SystemDrive = os.environ.get("SystemDrive", "")
         a = os.path.join(SystemDrive, "Program Files")
-        if os.path.isdir(ConvertPathForPython(a)):
+        if isdir(a):
             ProgramFiles.append(a)
     return ProgramFiles
 
@@ -2461,7 +2465,7 @@ def SetupEnvironment():
             for b in PossibleSDKs:
                 c = os.path.join(a, b)
                 #print("checking " + c)
-                if os.path.isdir(ConvertPathForPython(c)) and not (c in SDKs):
+                if isdir(c) and not (c in SDKs):
                     SDKs.append(c)
 
         # Make sure %INCLUDE% contains errno.h and windows.h.
@@ -2470,8 +2474,8 @@ def SetupEnvironment():
         if _CheckSetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc):
             for a in SDKs:
                 b = os.path.join(a, "include")
-                if os.path.isfile(ConvertPathForPython(os.path.join(b, "windows.h"))):
-                    _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc + ";" + b)
+                if isfile(os.path.join(b, "windows.h")):
+                    _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc + ";" + b, ";")
                     break
 
         # Make sure %LIB% contains kernel32.lib and libcmt.lib.
@@ -2505,7 +2509,7 @@ def SetupEnvironment():
         if not SearchPath("mt.exe", os.environ.get("PATH")):
             for a in SDKs:
                 b = os.path.join(a, "bin")
-                if os.path.isfile(os.path.join(b, "mt.exe")):
+                if isfile(os.path.join(b, "mt.exe")):
                     SetEnvironmentVariable("PATH", os.environ.get("PATH") + os.path.pathsep + b)
                     break
 
@@ -2707,7 +2711,7 @@ def MakeMSIWithWix(input):
     def HandleDir(state, dir):
         for a in os.listdir(dir):
             b = os.path.join(dir, a)
-            if os.path.isdir(b):
+            if isdir(b):
                 wix.write("""<Directory Id='d%d' Name='%s'>\n""" % (state.dirID, a))
                 state.dirID += 1
                 HandleDir(state, b) # recursion!
@@ -2752,7 +2756,7 @@ def MakeMSIWithWix(input):
     if not SearchPath("candle") or not SearchPath("light"):
         for a in GetProgramFiles():
             b = os.path.join(ConvertPathForPython(a), "Windows Installer XML v3", "bin")
-            if os.path.isdir(b):
+            if isdir(b):
                 SetEnvironmentVariable("PATH", b + os.pathsep + os.environ["PATH"])
                 break
 
@@ -2802,8 +2806,8 @@ def BreakHardLinks(links):
         first = links[inode][0]
         for other in links[inode][1:]:
             print("breaking link " + other + " <=> " + first)
-            os.remove(other)
-            open(other, "w")
+            os.remove(ConvertPathForPython(other))
+            open(ConvertPathForPython(other), "w")
 
 def RestoreHardLinks(links):
 #
@@ -2813,8 +2817,8 @@ def RestoreHardLinks(links):
         first = links[inode][0]
         for other in links[inode][1:]:
             print("restoring link " + other + " <=> " + first)
-            os.remove(other)
-            os.link(first, other)
+            os.remove(ConvertPathForPython(other))
+            os.link(ConvertPathForPython(first), ConvertPathForPython(other))
 
 def MoveSkel(prefix):
 #
@@ -2831,7 +2835,7 @@ def MoveSkel(prefix):
 #
     CreateDirectory("." + prefix)
     for a in ["bin", "pkg", "lib", "www", "man", "etc"]:
-        if os.path.isdir(a):
+        if isdir(a):
             print("mv " + a + " ." + prefix + "/" + a)
             os.rename(a, "." + prefix + "/" + a)
 
@@ -2840,7 +2844,7 @@ def RestoreSkel(prefix):
 # Undo the work of MoveSkel;
 #
     for a in ["bin", "pkg", "lib", "www", "man", "etc"]:
-        if os.path.isdir("." + prefix + "/" + a):
+        if isdir("." + prefix + "/" + a):
             print("mv ." + prefix + "/" + a + " " + a)
             os.rename("." + prefix + "/" + a, a)
 
@@ -2899,13 +2903,13 @@ def MakeDebianPackage(name, input, output, prefix):
     os.system(command)
     os.chdir(input)
     command = "tar cf data.tar ." + prefix
-    if os.path.isfile("data.tar." + compressed_extension) or os.path.isfile("data.tar"):
+    if isfile("data.tar." + compressed_extension) or isfile("data.tar"):
         print("skipping " + command)
     else:
         print(command)
         os.system(command)
     command = compresser + " data.tar"
-    if os.path.isfile("data.tar." + compressed_extension):
+    if isfile("data.tar." + compressed_extension):
         print("skipping " + command)
     else:
         print(command)
