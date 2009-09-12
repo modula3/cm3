@@ -10,6 +10,8 @@
 #include <ucontext.h>
 #include <sys/frame.h>
 
+void RTMachine__SaveRegsInStack(void);
+
 /*
 TYPE FrameInfo = RECORD
   pc, sp, true_sp: ADDRESS;		 (* sp here is actually SPARC fp *)
