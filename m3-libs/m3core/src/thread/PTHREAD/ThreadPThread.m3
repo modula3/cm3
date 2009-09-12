@@ -533,12 +533,9 @@ PROCEDURE CreateT (act: Activation): T =
     mutex := pthread_mutex_new();
     cond := pthread_cond_new();
   BEGIN
-    IF mutex = NIL THEN
-      IF cond # NIL THEN pthread_cond_delete(cond) END;
-      RTE.Raise(RTE.T.OutOfMemory);
-    END;
-    IF cond = NIL THEN
-      IF mutex # NIL THEN pthread_mutex_delete(mutex); END;
+    IF (mutex = NIL) OR (cond = NIL) THEN
+      pthread_mutex_delete(mutex);
+      pthread_cond_delete(cond);
       RTE.Raise(RTE.T.OutOfMemory);
     END;
     t.mutex := mutex;
