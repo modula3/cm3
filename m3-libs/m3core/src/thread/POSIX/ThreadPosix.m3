@@ -10,8 +10,8 @@
 (*|      modified On Mon Apr  5 14:51:30 PDT 1993 by muller  *)
 (*|      modified on Mon Feb 22 10:08:49 PST 1993 by jdd     *)
 
-UNSAFE MODULE ThreadPosix EXPORTS
-Thread, ThreadF, ThreadUnsafe, Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPosix;
+UNSAFE MODULE ThreadPosix EXPORTS Thread, ThreadF, ThreadUnsafe,
+Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPosix;
 
 IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
        RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,

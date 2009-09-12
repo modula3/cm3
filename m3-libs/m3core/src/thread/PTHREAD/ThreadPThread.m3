@@ -2,8 +2,8 @@
 (* All rights reserved.                                            *)
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
-UNSAFE MODULE ThreadPThread EXPORTS
-Thread, ThreadF, ThreadUnsafe, Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
+UNSAFE MODULE ThreadPThread EXPORTS Thread, ThreadF, ThreadUnsafe,
+Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError, RTHeapRep, RTIO, RTMachine, RTParams,
