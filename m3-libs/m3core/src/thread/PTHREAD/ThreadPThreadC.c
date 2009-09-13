@@ -2,15 +2,9 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-#if defined(__INTERIX) && !defined(_ALL_SOURCE)
-#define _ALL_SOURCE
-#endif
-#include <assert.h>
+#include "m3unix.h"
 #include <stdlib.h>
-#include <errno.h>
 #include <pthread.h>
-#include <time.h>
-typedef struct timespec timespec_t;
 
 #ifdef __APPLE__
 /* MacOSX diverges in a good way and therefore many functions
@@ -18,9 +12,7 @@ in this file are just stubs for it, that other code dynamically choses
 not to call (statically, but the compiler can't or won't tell). */
 #define APPLE_ASSERT_FALSE assert(0 && "MacOS X should not get here.");
 #else
-#include <signal.h>
 #include <semaphore.h>
-#include <string.h>
 #ifdef __hpux
 #include <stdio.h>
 #endif /* hpux */
@@ -302,7 +294,7 @@ void ThreadPThread__pthread_cond_delete(pthread_cond_t* p)
     free(p);
 }
 
-int ThreadPThread__Nanosleep(timespec_t* req, timespec_t* rem)
+int ThreadPThread__Nanosleep(timespec_T* req, timespec_T* rem)
 {
 #ifdef __INTERIX
     /* This is only an approximation. */
@@ -330,7 +322,7 @@ int
 ThreadPThread__pthread_cond_timedwait(
 	pthread_cond_t* cond,
 	pthread_mutex_t* mutex,
-	const timespec_t* abs)
+	const timespec_T* abs)
 {
     return pthread_cond_timedwait(cond, mutex, abs);
 }
