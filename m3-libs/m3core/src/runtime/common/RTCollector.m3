@@ -434,7 +434,7 @@ PROCEDURE Move (<*UNUSED*> self: Mover;  cp: ADDRESS) =
       np       : RefReferent;
     BEGIN
       IF (def.gc_map = NIL) AND (def.kind # ORD(TK.Obj)) THEN
-        np := AllocTraced(dataSize, def.dataAlignment, pureCopy);
+        np := AllocCopy(dataSize, def.dataAlignment, pureCopy);
         IF (np = NIL) THEN
           RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
         END;
@@ -444,7 +444,7 @@ PROCEDURE Move (<*UNUSED*> self: Mover;  cp: ADDRESS) =
           nh.dirty := TRUE;
         END;
       ELSE
-        np := AllocTraced(dataSize, def.dataAlignment, impureCopy);
+        np := AllocCopy(dataSize, def.dataAlignment, impureCopy);
         IF (np = NIL) THEN
           RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
         END;
@@ -1371,8 +1371,8 @@ PROCEDURE StackEmpty (s: Stacker): BOOLEAN =
     RETURN s.xA = s.x0;
   END StackEmpty;
 
-PROCEDURE AllocTraced (dataSize, dataAlignment: CARDINAL;
-                       VAR pool: AllocPool): RefReferent =
+PROCEDURE AllocCopy (dataSize, dataAlignment: CARDINAL;
+                     VAR pool: AllocPool): RefReferent =
   (* Allocates space from "pool" in the traced heap. *)
   (* LL >= RTOS.LockHeap *)
   VAR
@@ -1396,7 +1396,7 @@ PROCEDURE AllocTraced (dataSize, dataAlignment: CARDINAL;
 
     pool.next := nextPtr;
     RETURN res;
-  END AllocTraced;
+  END AllocCopy;
 
 PROCEDURE LongAlloc (dataSize, dataAlignment: CARDINAL;
                      VAR pool: AllocPool): RefReferent =
