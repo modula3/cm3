@@ -66,13 +66,6 @@ PROCEDURE RegisterHooks (h: Hooks; init := TRUE): Hooks RAISES {};
 PROCEDURE MyId(): Id RAISES {};
 (* return Id of caller *)
 
-(*------------------------------------------------------------ preemption ---*)
-
-PROCEDURE SetSwitchingInterval (usec: CARDINAL);
-(* Sets the time between thread preemptions to 'usec' microseconds.
-   Note that most Unix systems dont guarantee much if any precision
-   on timer interrupts.  The default value is 100 milliseconds. *)
-
 (*---------------------------------------------------- exception delivery ---*)
 
 PROCEDURE GetCurrentHandlers(): ADDRESS;

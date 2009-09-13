@@ -26,12 +26,6 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS));
 (* Feature:  Windows threads not created by Thread.Fork are not suspended
     or resumed, and their stacks are not processed. *)
 
-(*------------------------------------------------------------ preemption ---*)
-
-PROCEDURE SetSwitchingInterval (usec: CARDINAL);
-(* Sets the time between thread preemptions to 'usec' microseconds.
-   This procedure is a no-op on Windows/NT. *)
-
 (*------------------------------------------------------------ thread IDs ---*)
 
 TYPE

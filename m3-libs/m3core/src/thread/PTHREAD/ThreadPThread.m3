@@ -995,55 +995,6 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     END;
   END ProcessStacks;
 
-PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
-  (* LL=0 *)
-  VAR
-    me := GetActivation();
-    act: Activation;
-    acks: int;
-  BEGIN
-    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
-
-    ProcessMe(me, p);
-
-    act := me.next;
-    WHILE act # me DO
-      (* stop *)
-      LOOP
-        IF StopThread(act) THEN EXIT END;
-        IF SignalThread(act, ActState.Stopping) THEN
-          WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
-          IF acks > 0 THEN
-            WHILE sem_wait() # 0 DO
-              <*ASSERT Cerrno.GetErrno() = Uerror.EINTR*>
-            END;
-            EXIT;
-          END;
-        END;
-        CommonSleep();
-      END;
-      (* process *)
-      ProcessOther(act, p);
-      (* start *)
-      LOOP
-        IF StartThread(act) THEN EXIT END;
-        IF SignalThread(act, ActState.Starting) THEN
-          WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
-          IF acks > 0 THEN
-            WHILE sem_wait() # 0 DO
-              <*ASSERT Cerrno.GetErrno() = Uerror.EINTR*>
-            END;
-            EXIT;
-          END;
-        END;
-        CommonSleep();
-      END;
-      act := act.next;
-    END;
-
-    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
-  END ProcessEachStack;
-
 PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu *)
   VAR
