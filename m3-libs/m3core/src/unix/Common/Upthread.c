@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 #ifndef _WIN32
-    
+
 int Upthread__detach(m3_pthread_t thread)
 {
     return pthread_detach(PTHREAD_FROM_M3(thread));
