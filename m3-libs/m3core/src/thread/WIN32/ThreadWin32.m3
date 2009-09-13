@@ -5,8 +5,8 @@
 (* Portions Copyright 1996-2000, Critical Mass, Inc.               *)
 (* See file COPYRIGHT-CMASS for details.                           *)
 
-UNSAFE MODULE ThreadWin32
-EXPORTS ThreadWin32, ThreadInternal, Scheduler, Thread, ThreadF, RTOS, RTHooks;
+UNSAFE MODULE ThreadWin32 EXPORTS RTHooks, RTOS, Scheduler, Thread,
+ThreadF, ThreadInternal, ThreadUnsafe, ThreadWin32;
 
 IMPORT RTError, WinGDI, RTParams;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
@@ -1046,21 +1046,22 @@ PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
    and collector. *)
 
 VAR
+  inCritical := 0;      (* LL = cs *)
   heapCond: Condition;
 
-PROCEDURE LockHeap (VAR thread: RTHeapRep.ThreadState) =
+PROCEDURE LockHeap () =
   BEGIN
     EnterCriticalSection_cs();
-    INC(thread.inCritical);
+    INC(inCritical);
   END LockHeap;
 
-PROCEDURE UnlockHeap (VAR thread: RTHeapRep.ThreadState) =
+PROCEDURE UnlockHeap () =
   BEGIN
-    DEC(thread.inCritical);
+    DEC(inCritical);
     LeaveCriticalSection_cs();
   END UnlockHeap;
 
-PROCEDURE WaitHeap (VAR thread: RTHeapRep.ThreadState) =
+PROCEDURE WaitHeap () =
   VAR self := Self();
   BEGIN
     EnterCriticalSection_cm();
@@ -1071,8 +1072,8 @@ PROCEDURE WaitHeap (VAR thread: RTHeapRep.ThreadState) =
     heapCond.waiters := self;
     LeaveCriticalSection_cm();
 
-    DEC(thread.inCritical);
-    <*ASSERT thread.inCritical = 0*>
+    DEC(inCritical);
+    <*ASSERT inCritical = 0*>
     LeaveCriticalSection_cs();
 
     IF WaitForSingleObject(self.waitSema, INFINITE) # 0 THEN
@@ -1080,8 +1081,8 @@ PROCEDURE WaitHeap (VAR thread: RTHeapRep.ThreadState) =
     END;
 
     EnterCriticalSection_cs();
-    <*ASSERT thread.inCritical = 0*>
-    INC(thread.inCritical);
+    <*ASSERT inCritical = 0*>
+    INC(inCritical);
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =

@@ -161,11 +161,19 @@ PROCEDURE pthread_cond_new():pthread_mutex_t;
 <*EXTERNAL "ThreadPThread__pthread_cond_delete"*>
 PROCEDURE pthread_cond_delete(a:pthread_cond_t);
 
-<*EXTERNAL*>
+<*EXTERNAL ThreadPThread__pthread_cond_wait*>
 PROCEDURE pthread_cond_wait(cond: pthread_cond_t; mutex: pthread_mutex_t):int;
 
-<*EXTERNAL*>
+<*EXTERNAL ThreadPThread__pthread_cond_timedwait*>
+PROCEDURE pthread_cond_timedwait(cond: pthread_cond_t;
+                                 mutex: pthread_mutex_t;
+                                 READONLY abs: struct_timespec):int;
+
+<*EXTERNAL ThreadPThread__pthread_cond_signal*>
 PROCEDURE pthread_cond_signal(cond: pthread_cond_t):int;
+
+<*EXTERNAL ThreadPThread__pthread_cond_broadcast*>
+PROCEDURE pthread_cond_broadcast(cond: pthread_cond_t):int;
 
 (*---------------------------------------------------------------------------*)
 

@@ -7,8 +7,6 @@
 
 INTERFACE ThreadF;
 
-IMPORT RTHeapRep;
-
 (*--------------------------------------------- garbage collector support ---*)
 
 PROCEDURE SuspendOthers ();
@@ -27,8 +25,6 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS));
    exists solely for the garbage collector.  *)
 (* Feature:  Windows threads not created by Thread.Fork are not suspended
     or resumed, and their stacks are not processed. *)
-
-PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState;
 
 (*------------------------------------------------------------ preemption ---*)
 

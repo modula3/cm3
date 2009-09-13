@@ -7,8 +7,7 @@ INTERFACE Usocket;
 FROM Ctypes IMPORT int, void_star, const_void_star, const_char_star, char_star;
 FROM Cstddef IMPORT size_t;
 FROM Uin IMPORT struct_sockaddr_in;
-IMPORT Usysdep;
-IMPORT Utypes;
+IMPORT Usysdep, Utypes, Uin;
 
 (* CONST *)
 
@@ -118,6 +117,7 @@ IMPORT Utypes;
 <*EXTERNAL "Usocket__SOMAXCONN"*>   VAR SOMAXCONN: int; (* Maximum queue length specifiable by listen. *)
 
 TYPE
+  struct_sockaddr_un = Uin.struct_sockaddr_un;
   struct_linger = Usysdep.struct_linger;
   socklen_t = Utypes.socklen_t;
   socklen_t_star = UNTRACED REF socklen_t;

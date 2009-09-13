@@ -9,7 +9,7 @@
 
 UNSAFE MODULE RTHeapRep;
 
-IMPORT RT0, RTType, RTOS, ThreadF;
+IMPORT RT0, RTType, RTOS;
 
 (*----------------------------------------------------------- open arrays ---*)
 
@@ -61,10 +61,8 @@ PROCEDURE InvokeMonitors (before: BOOLEAN) =
   END InvokeMonitors;
 
 PROCEDURE RegisterMonitor (cl: MonitorClosure) =
-  VAR
-    thread := ThreadF.MyHeapState();
   BEGIN
-    RTOS.LockHeap(thread^);
+    RTOS.LockHeap();
     TRY
       cl.next := monitorsHead;
       IF monitorsHead = NIL THEN
@@ -74,15 +72,13 @@ PROCEDURE RegisterMonitor (cl: MonitorClosure) =
       END;
       monitorsHead := cl;
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
   END RegisterMonitor;
 
 PROCEDURE UnregisterMonitor (cl: MonitorClosure) =
-  VAR
-    thread := ThreadF.MyHeapState();
   BEGIN
-    RTOS.LockHeap(thread^);
+    RTOS.LockHeap();
     TRY
       IF cl = monitorsHead THEN
         IF cl = monitorsTail THEN
@@ -102,7 +98,7 @@ PROCEDURE UnregisterMonitor (cl: MonitorClosure) =
         END;
       END;
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
   END UnregisterMonitor;
 
