@@ -38,6 +38,7 @@ def IsInterix():
     return os.name == "posix" and os.uname()[0].lower().startswith("interix")
 
 env_OS = getenv("OS")
+
 if env_OS == "Windows_NT" and not IsInterix():
     def uname():
         PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
@@ -54,6 +55,10 @@ if env_OS == "Windows_NT" and not IsInterix():
     #    print("set PATHEXT=.;%PATHEXT%")
 else:
     from os import uname
+
+#-----------------------------------------------------------------------------
+
+_Program = os.path.basename(sys.argv[0])
 
 #-----------------------------------------------------------------------------
 
@@ -135,8 +140,10 @@ def _ConvertFromCygwinPath(a):
         return a
     a = a.replace("/", "\\")
     #a = a.replace("\\", "/")
-    if (a.find("\\cygdrive\\") == 0):
+    if a.startswith("\\cygdrive\\"):
         a = a[10] + ":" + a[11:]
+    elif a.startswith("\\home\\elego\\"):
+        a = "c:\\cygwin\\" + a
     return a
 
 def ConvertPathForWin32(a):
@@ -780,21 +787,22 @@ def IsCygwinBinary(a):
 
 #-----------------------------------------------------------------------------
 
-if IsCygwinBinary(CM3):
-    CM3IsCygwin = True
-    def ConvertPathForCM3(a):
-        return _ConvertToCygwinPath(a)
-else:
-    CM3IsCygwin = False
-    def ConvertPathForCM3(a):
-        return _ConvertFromCygwinPath(a)
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    if IsCygwinBinary(CM3):
+        CM3IsCygwin = True
+        def ConvertPathForCM3(a):
+            return _ConvertToCygwinPath(a)
+    else:
+        CM3IsCygwin = False
+        def ConvertPathForCM3(a):
+            return _ConvertFromCygwinPath(a)
 
 #-----------------------------------------------------------------------------
 #
 # reflect what we decided back into the environment
 #
-
-_Program = os.path.basename(sys.argv[0])
 
 if _Program != "make-msi.py":
 # general problem of way too much stuff at global scope
@@ -2728,7 +2736,7 @@ def MakeMSIWithWix(input):
     wix.write("</Directory>\n")
     wix.write("</Directory>\n")
 
-    wix.write("<Feature Id='Complete' Title='Modula-3' Description='everything.' Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR'>\n")
+    wix.write("<Feature Id='Complete' Title='Modula-3' Description='everything' Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR'>\n")
 
     for a in range(0, state.componentID):
         wix.write("<ComponentRef Id='c%d'/>\n" % a)
@@ -2750,6 +2758,8 @@ def MakeMSIWithWix(input):
 
     wix.close()
 
+    print("SearchPath candle light")
+
     if not SearchPath("candle") or not SearchPath("light"):
         for a in GetProgramFiles():
             b = os.path.join(ConvertPathForPython(a), "Windows Installer XML v3", "bin")
@@ -2757,11 +2767,10 @@ def MakeMSIWithWix(input):
                 SetEnvironmentVariable("PATH", b + os.pathsep + os.environ["PATH"])
                 break
 
-    command = "candle " + input + ".wxs -out " + input + ".wixobj"
+    command = "candle " + ConvertPathForWin32(input) + ".wxs -out " + ConvertPathForWin32(input) + ".wixobj"
     print(command)
     os.system(command)
-    a = input + ".msi"
-    DeleteFile(a)
+    DeleteFile(input + ".msi")
 
     # This is similar to the toplevel README in the source tree.
     licenseText = \
@@ -2775,7 +2784,7 @@ the sources are placed. Please read the files found in the license directory."""
 {\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + licenseText.replace("\n", "\\par\n")
 + "}")
 
-    command = "light -out " + a + " " + input + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + license
+    command = "light -out " + ConvertPathForWin32(input) + ".msi " + ConvertPathForWin32(input) + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + ConvertPathForWin32(license)
     print(command)
     os.system(command)
 
