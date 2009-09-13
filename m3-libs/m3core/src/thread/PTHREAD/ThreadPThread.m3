@@ -2,7 +2,7 @@
 (* All rights reserved.                                            *)
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
-UNSAFE MODULE ThreadPThread EXPORTS Thread, ThreadF, ThreadUnsafe,
+UNSAFE MODULE ThreadPThread EXPORTS Thread, ThreadF, ThreadInternal,
 Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep,
@@ -1316,7 +1316,6 @@ PROCEDURE Die (lineno: INTEGER; msg: TEXT) =
 
 VAR
   perfW : RTPerfTool.Handle;
-  perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
 
 PROCEDURE PerfStart () =
   BEGIN

@@ -20,7 +20,7 @@ PROCEDURE disallow_sigvtalrm();
 
 <*EXTERNAL ThreadPosix__InitC*>
 PROCEDURE InitC();
-(* There is already ThreadF.Init exported by the same module that exports this
+(* There is already ThreadInternal.Init exported by the same module that exports this
    interface, so we chose an arbitrary different name here. *)
 
 END ThreadPosix.
